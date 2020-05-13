@@ -1,0 +1,52 @@
+object MDBBaseObjFrame: TMDBBaseObjFrame
+  Left = 0
+  Top = 0
+  Width = 345
+  Height = 246
+  Align = alClient
+  TabOrder = 0
+  DesignSize = (
+    345
+    246)
+  object PathLabel: TLabel
+    Left = 19
+    Top = 2
+    Width = 32
+    Height = 16
+    Caption = #1055#1091#1090#1100':'
+  end
+  object DscLabel: TLabel
+    Left = 19
+    Top = 50
+    Width = 62
+    Height = 16
+    Caption = #1054#1087#1080#1089#1072#1085#1080#1077':'
+  end
+  object PathEdit: TEdit
+    Left = 19
+    Top = 24
+    Width = 306
+    Height = 24
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 0
+    ExplicitWidth = 414
+  end
+  object DscEdit: TEdit
+    Left = 19
+    Top = 72
+    Width = 306
+    Height = 24
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 1
+    ExplicitWidth = 444
+  end
+  object Panel1: TPanel
+    Left = 0
+    Top = 120
+    Width = 345
+    Height = 126
+    Align = alBottom
+    TabOrder = 2
+    ExplicitWidth = 483
+  end
+end

@@ -1,0 +1,24 @@
+[Mera]
+Test=
+Info=
+Time=13.05.2010 22:10:48
+[D2_Taho]
+Freq=1000
+XUnits=date
+YUnits=rpm
+XFormat=single
+YFormat=single
+k0=0
+k1=1
+maxY=963.367919921875
+minY=478.646392822266
+[cTrend_001]
+Freq=1000
+XUnits=
+YUnits=
+XFormat=single
+YFormat=single
+k0=0
+k1=1
+maxY=1.999984741211
+minY=-2.000076293945e+000

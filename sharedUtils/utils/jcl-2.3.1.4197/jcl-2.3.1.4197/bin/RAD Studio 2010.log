@@ -1,0 +1,224 @@
+================================================================================
+JCL 2.3 Release Build 4197
+==========RAD Studio 2010=======================================================
+Installed personalities :
+32 bit Delphi
+32 bit C++Builder
+================================================================================
+Multiple profile installation
+Single profile installation
+================================================================================
+Saving conditional defines...
+Loaded template for include file D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include\jcl.template.inc
+Saved include file D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include\jcld14.inc
+Building source\common library units for RAD Studio 2010...
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" bzip2 Jcl8087 JclAbstractContainers JclAlgorithms JclAnsiStrings JclArrayLists JclArraySets JclBase JclBinaryTrees JclCharsets JclCompilerUtils JclComplex JclCompression JclContainerIntf JclCounter JclDateTime JclDevToolsResources JclExprEval JclFileUtils JclHashMaps JclHashSets JclIDEUtils JclIniFiles JclLinkedLists JclLogic JclMath JclMIDI JclMime JclNotify JclPCRE JclPreProcessorAlgorithmsTemplates JclPreProcessorArrayListsTemplates JclPreProcessorArraySetsTemplates JclPreProcessorBinaryTreesTemplates JclPreProcessorContainer1DTemplates JclPreProcessorContainer2DTemplates JclPreProcessorContainerIntfTemplates JclPreProcessorContainerKnownMaps JclPreProcessorContainerKnownTypes JclPreProcessorContainerTemplates JclPreProcessorContainerTypes JclPreProcessorExcDlgTemplates JclPreProcessorHashMapsTemplates JclPreProcessorLexer JclPreProcessorLinkedListsTemplates JclPreProcessorParser JclPreProcessorQueuesTemplates JclPreProcessorSortedMapsTemplates JclPreProcessorStacksTemplates JclPreProcessorTemplates JclPreProcessorTreesTemplates JclPreProcessorVectorsTemplates JclQueues JclResources JclRTTI JclSchedule JclSimpleXml JclSortedMaps JclStacks JclStatistics JclStreams JclStrHashMap JclStringConversions JclStringLists JclStrings JclSynch JclSysInfo JclSysUtils JclTrees JclUnicode JclUnitConv JclUnitVersioning JclUnitVersioningProviders JclUsesUtils JclValidation JclVectors JclWideStrings pcre zlibh --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C- -$D- -$I- -$L- -$O+ -$Q- -$R- -$W- -$Y- -N0"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -D_RTLDLL;NO_STRICT;USEPACKAGES -NO"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -N1"C:\Program Files\Embarcadero\RAD Studio\7.0\Include\Vcl" -JPHNE --BCB -I"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include" -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl" -R"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+JclStrings.pas(2849) Hint: H2445 Inline function 'TJclFormatSettings.GetDecimalSeparator' has not been expanded because its unit 'JclSysUtils' is specified in USES statement of IMPLEMENTATION section and current function is inline function or being inline function
+JclStrings.pas(2854) Hint: H2445 Inline function 'TJclFormatSettings.GetDecimalSeparator' has not been expanded because its unit 'JclSysUtils' is specified in USES statement of IMPLEMENTATION section and current function is inline function or being inline function
+703728 lines, 7.33 seconds, 53231 bytes code, 16852 bytes data.
+Building source\windows library units for RAD Studio 2010...
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" Hardlinks JclAppInst JclCIL JclCLR JclCOM JclConsole JclCppException JclDebug JclDebugSerialization JclDebugXMLDeserializer JclDebugXMLSerializer JclDotNet JclHelpUtils JclHookExcept JclLANMan JclLocales JclMapi JclMetadata JclMiscel JclMsBuild JclMsdosSys JclMultimedia JclNTFS JclPeImage JclRegistry JclSecurity JclShell JclStructStorage JclSvcCtrl JclTask JclTD32 JclTimeZones JclWin32 JclWin32Ex JclWinMIDI mscoree_TLB mscorlib_TLB MSHelpServices_TLB MSTask sevenzip Snmp --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C- -$D- -$I- -$L- -$O+ -$Q- -$R- -$W- -$Y- -N0"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -D_RTLDLL;NO_STRICT;USEPACKAGES -NO"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -N1"C:\Program Files\Embarcadero\RAD Studio\7.0\Include\Vcl" -JPHNE --BCB -I"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include" -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl" -R"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+190171 lines, 2.50 seconds, 4294 bytes code, 188 bytes data.
+Building source\vcl library units for RAD Studio 2010...
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" JclFont JclGraphics JclGraphUtils JclOpenDialogFavorites JclOpenDialogHooks JclPrint JclVclResources JclVersionControl JclVersionCtrlCVSImpl JclVersionCtrlGITImpl JclVersionCtrlSVNImpl --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C- -$D- -$I- -$L- -$O+ -$Q- -$R- -$W- -$Y- -N0"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -D_RTLDLL;NO_STRICT;USEPACKAGES -NO"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -N1"C:\Program Files\Embarcadero\RAD Studio\7.0\Include\Vcl" -JPHNE --BCB -I"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include" -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl" -R"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+42295 lines, 0.59 seconds, 4799 bytes code, 36 bytes data.
+Building source\common library debug units for RAD Studio 2010...
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" bzip2 Jcl8087 JclAbstractContainers JclAlgorithms JclAnsiStrings JclArrayLists JclArraySets JclBase JclBinaryTrees JclCharsets JclCompilerUtils JclComplex JclCompression JclContainerIntf JclCounter JclDateTime JclDevToolsResources JclExprEval JclFileUtils JclHashMaps JclHashSets JclIDEUtils JclIniFiles JclLinkedLists JclLogic JclMath JclMIDI JclMime JclNotify JclPCRE JclPreProcessorAlgorithmsTemplates JclPreProcessorArrayListsTemplates JclPreProcessorArraySetsTemplates JclPreProcessorBinaryTreesTemplates JclPreProcessorContainer1DTemplates JclPreProcessorContainer2DTemplates JclPreProcessorContainerIntfTemplates JclPreProcessorContainerKnownMaps JclPreProcessorContainerKnownTypes JclPreProcessorContainerTemplates JclPreProcessorContainerTypes JclPreProcessorExcDlgTemplates JclPreProcessorHashMapsTemplates JclPreProcessorLexer JclPreProcessorLinkedListsTemplates JclPreProcessorParser JclPreProcessorQueuesTemplates JclPreProcessorSortedMapsTemplates JclPreProcessorStacksTemplates JclPreProcessorTemplates JclPreProcessorTreesTemplates JclPreProcessorVectorsTemplates JclQueues JclResources JclRTTI JclSchedule JclSimpleXml JclSortedMaps JclStacks JclStatistics JclStreams JclStrHashMap JclStringConversions JclStringLists JclStrings JclSynch JclSysInfo JclSysUtils JclTrees JclUnicode JclUnitConv JclUnitVersioning JclUnitVersioningProviders JclUsesUtils JclValidation JclVectors JclWideStrings pcre zlibh --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib\debug" -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C+ -$D+ -$I+ -$L+ -$O- -$Q+ -$R+ -$W+ -$Y+ -N0"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\debug" -D_RTLDLL;NO_STRICT;USEPACKAGES -NO"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\debug" -N1"C:\Program Files\Embarcadero\RAD Studio\7.0\Include\Vcl" -JPHNE --BCB -I"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include" -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl" -R"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+JclStrings.pas(2849) Hint: H2445 Inline function 'TJclFormatSettings.GetDecimalSeparator' has not been expanded because its unit 'JclSysUtils' is specified in USES statement of IMPLEMENTATION section and current function is inline function or being inline function
+JclStrings.pas(2854) Hint: H2445 Inline function 'TJclFormatSettings.GetDecimalSeparator' has not been expanded because its unit 'JclSysUtils' is specified in USES statement of IMPLEMENTATION section and current function is inline function or being inline function
+703728 lines, 7.19 seconds, 53407 bytes code, 16852 bytes data.
+Building source\windows library debug units for RAD Studio 2010...
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" Hardlinks JclAppInst JclCIL JclCLR JclCOM JclConsole JclCppException JclDebug JclDebugSerialization JclDebugXMLDeserializer JclDebugXMLSerializer JclDotNet JclHelpUtils JclHookExcept JclLANMan JclLocales JclMapi JclMetadata JclMiscel JclMsBuild JclMsdosSys JclMultimedia JclNTFS JclPeImage JclRegistry JclSecurity JclShell JclStructStorage JclSvcCtrl JclTask JclTD32 JclTimeZones JclWin32 JclWin32Ex JclWinMIDI mscoree_TLB mscorlib_TLB MSHelpServices_TLB MSTask sevenzip Snmp --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib\debug" -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C+ -$D+ -$I+ -$L+ -$O- -$Q+ -$R+ -$W+ -$Y+ -N0"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\debug" -D_RTLDLL;NO_STRICT;USEPACKAGES -NO"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\debug" -N1"C:\Program Files\Embarcadero\RAD Studio\7.0\Include\Vcl" -JPHNE --BCB -I"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include" -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl" -R"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+190171 lines, 2.05 seconds, 4439 bytes code, 188 bytes data.
+Building source\vcl library debug units for RAD Studio 2010...
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" JclFont JclGraphics JclGraphUtils JclOpenDialogFavorites JclOpenDialogHooks JclPrint JclVclResources JclVersionControl JclVersionCtrlCVSImpl JclVersionCtrlGITImpl JclVersionCtrlSVNImpl --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib\debug" -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C+ -$D+ -$I+ -$L+ -$O- -$Q+ -$R+ -$W+ -$Y+ -N0"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\debug" -D_RTLDLL;NO_STRICT;USEPACKAGES -NO"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\debug" -N1"C:\Program Files\Embarcadero\RAD Studio\7.0\Include\Vcl" -JPHNE --BCB -I"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include" -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl" -R"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+42295 lines, 0.47 seconds, 5069 bytes code, 36 bytes data.
+Checking .hpp files
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\bcc32.exe" -c -Ve -X -a8 -b -k- -tWM -w-par -w-aus -I"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl;C:\Program Files\Embarcadero\RAD Studio\7.0\include;C:\Program Files\Embarcadero\RAD Studio\7.0\Include\Vcl" "jcl_a2z.cpp"
+Embarcadero C++ 6.20 for Win32 Copyright (c) 1993-2009 Embarcadero Technologies, Inc.
+jcl_a2z.cpp:
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\bcc32.exe" -c -Ve -X -a8 -b -k- -tWM -w-par -w-aus -I"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl;C:\Program Files\Embarcadero\RAD Studio\7.0\include;C:\Program Files\Embarcadero\RAD Studio\7.0\Include\Vcl" "jcl_z2a.cpp"
+Embarcadero C++ 6.20 for Win32 Copyright (c) 1993-2009 Embarcadero Technologies, Inc.
+jcl_z2a.cpp:
+Building D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\Jcl.dpk...
+Cleaning package cache for Jcl140.bpl
+Cleaning ok
+Compiling package D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\Jcl.dpk
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\Jcl.dpk" --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include" -R"..\..\lib\d14;..\..\source\include" -DBCB;BCB;WIN32;CONDITIONALEXPRESSIONS;VER210;RELEASE -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\;\Dcp;..\..\lib\d14;..\..\source\include" -LU"rtl" -LN"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -LE"\Bpl"  -JL -NB"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -NO"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+130 lines, 1.36 seconds, 2087644 bytes code, 732320 bytes data.
+Compilation success
+...done.
+Building D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclContainers.dpk...
+Cleaning package cache for JclContainers140.bpl
+Cleaning ok
+Compiling package D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclContainers.dpk
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclContainers.dpk" --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include" -R"..\..\lib\d14;..\..\source\include" -DBCB;BCB;WIN32;CONDITIONALEXPRESSIONS;VER210;RELEASE -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\;\Dcp;..\..\lib\d14;..\..\source\include" -LU"rtl;Jcl" -LN"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -LE"\Bpl"  -JL -NB"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -NO"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+68 lines, 0.67 seconds, 1979864 bytes code, 1088 bytes data.
+Compilation success
+...done.
+Building D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclDeveloperTools.dpk...
+Cleaning package cache for JclDeveloperTools140.bpl
+Cleaning ok
+Compiling package D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclDeveloperTools.dpk
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclDeveloperTools.dpk" --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include" -R"..\..\lib\d14;..\..\source\include" -DBCB;BCB;WIN32;CONDITIONALEXPRESSIONS;VER210;RELEASE -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\;\Dcp;..\..\lib\d14;..\..\source\include" -LU"rtl;vcl;Jcl;JclContainers" -LN"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -LE"\Bpl"  -JL -NB"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -NO"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+85 lines, 0.31 seconds, 408488 bytes code, 13124 bytes data.
+Compilation success
+...done.
+Building D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclVcl.dpk...
+Cleaning package cache for JclVcl140.bpl
+Cleaning ok
+Compiling package D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclVcl.dpk
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclVcl.dpk" --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include" -R"..\..\lib\d14;..\..\source\include" -DBCB;BCB;WIN32;CONDITIONALEXPRESSIONS;VER210;RELEASE -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\;\Dcp;..\..\lib\d14;..\..\source\include" -LU"rtl;vcl;vclimg;Jcl" -LN"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -LE"\Bpl"  -JL -NB"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -NO"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+67 lines, 0.17 seconds, 128236 bytes code, 1836 bytes data.
+Compilation success
+...done.
+Building D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclBaseExpert.dpk...
+Cleaning package cache for JclBaseExpert140.bpl
+Cleaning ok
+Compiling package D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclBaseExpert.dpk
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclBaseExpert.dpk" --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include" -R"..\..\lib\d14;..\..\source\include" -DBCB;BCB;WIN32;CONDITIONALEXPRESSIONS;VER210;RELEASE -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\;\Dcp;..\..\lib\d14;..\..\source\include" -LU"rtl;vcl;vclx;designide;Jcl;JclDeveloperTools" -LN"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -LE"\Bpl"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+22649 lines, 0.27 seconds, 56356 bytes code, 632 bytes data.
+Compilation success
+...done.
+Building D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclDebugExpert.dpk...
+Cleaning package cache for JclDebugExpert140.bpl
+Cleaning ok
+Compiling package D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclDebugExpert.dpk
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclDebugExpert.dpk" --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include" -R"..\..\lib\d14;..\..\source\include" -DBCB;BCB;WIN32;CONDITIONALEXPRESSIONS;VER210;RELEASE -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\;\Dcp;..\..\lib\d14;..\..\source\include" -LU"rtl;vcl;designide;Jcl;JclBaseExpert;JclDeveloperTools" -LN"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -LE"\Bpl"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\debug\converter\JclDebugIdeConfigFrame.pas(2
+6305 lines, 0.16 seconds, 35476 bytes code, 392 bytes data.
+Compilation success
+...done.
+Building D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclProjectAnalysisExpert.dpk...
+Cleaning package cache for JclProjectAnalysisExpert140.bpl
+Cleaning ok
+Compiling package D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclProjectAnalysisExpert.dpk
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclProjectAnalysisExpert.dpk" --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include" -R"..\..\lib\d14;..\..\source\include" -DBCB;BCB;WIN32;CONDITIONALEXPRESSIONS;VER210;RELEASE -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\;\Dcp;..\..\lib\d14;..\..\source\include" -LU"rtl;vcl;designide;Jcl;JclBaseExpert" -LN"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -LE"\Bpl"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\projectanalyzer\JclProjectAnalyzerFrm.pas(73
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\projectanalyzer\JclProjectAnalyzerImpl.pas(5
+5134 lines, 0.19 seconds, 25052 bytes code, 252 bytes data.
+Compilation success
+...done.
+Building D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclFavoriteFoldersExpert.dpk...
+Cleaning package cache for JclFavoriteFoldersExpert140.bpl
+Cleaning ok
+Compiling package D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclFavoriteFoldersExpert.dpk
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclFavoriteFoldersExpert.dpk" --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include" -R"..\..\lib\d14;..\..\source\include" -DBCB;BCB;WIN32;CONDITIONALEXPRESSIONS;VER210;RELEASE -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\;\Dcp;..\..\lib\d14;..\..\source\include" -LU"rtl;vcl;designide;Jcl;JclVcl;JclBaseExpert" -LN"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -LE"\Bpl"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\favfolders\JclIdeOpenDlgFavoriteUnit.pas(169
+2125 lines, 0.12 seconds, 6240 bytes code, 112 bytes data.
+Compilation success
+...done.
+Building D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclRepositoryExpert.dpk...
+Cleaning package cache for JclRepositoryExpert140.bpl
+Cleaning ok
+Compiling package D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclRepositoryExpert.dpk
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclRepositoryExpert.dpk" --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include" -R"..\..\lib\d14;..\..\source\include" -DBCB;BCB;WIN32;CONDITIONALEXPRESSIONS;VER210;RELEASE -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\;\Dcp;..\..\lib\d14;..\..\source\include" -LU"rtl;vcl;designide;Jcl;JclContainers;JclBaseExpert;JclDeveloperTools" -LN"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -LE"\Bpl"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\repository\ExceptionDialog\JclOtaExcDlgFileF
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\repository\ExceptionDialog\JclOtaExcDlgFormF
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\repository\ExceptionDialog\JclOtaExcDlgSyste
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\repository\ExceptionDialog\JclOtaExcDlgLogFr
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\repository\ExceptionDialog\JclOtaExcDlgTrace
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\repository\ExceptionDialog\JclOtaExcDlgThrea
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\repository\ExceptionDialog\JclOtaExcDlgIgnor
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\repository\ExceptionDialog\JclOtaExcDlgWizar
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\repository\ExceptionDialog\JclOtaExcDlgRepos
+23442 lines, 0.27 seconds, 45508 bytes code, 616 bytes data.
+Compilation success
+...done.
+Building D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclSIMDViewExpert.dpk...
+Cleaning package cache for JclSIMDViewExpert140.bpl
+Cleaning ok
+Compiling package D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclSIMDViewExpert.dpk
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclSIMDViewExpert.dpk" --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include" -R"..\..\lib\d14;..\..\source\include" -DBCB;BCB;WIN32;CONDITIONALEXPRESSIONS;VER210;RELEASE -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\;\Dcp;..\..\lib\d14;..\..\source\include" -LU"rtl;vcl;designide;Jcl;JclBaseExpert" -LN"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -LE"\Bpl"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+13209 lines, 0.22 seconds, 56460 bytes code, 888 bytes data.
+Compilation success
+...done.
+Building D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclStackTraceViewerExpert.dpk...
+Cleaning package cache for JclStackTraceViewerExpert140.bpl
+Cleaning ok
+Compiling package D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclStackTraceViewerExpert.dpk
+"C:\Program Files\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\packages\d14\JclStackTraceViewerExpert.dpk" --no-config -U"C:\Program Files\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include" -R"..\..\lib\d14;..\..\source\include" -DBCB;BCB;WIN32;CONDITIONALEXPRESSIONS;VER210;RELEASE -U"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\;\Dcp;..\..\lib\d14;..\..\source\include" -LU"rtl;vcl;designide;Jcl;JclBaseExpert" -LN"D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14" -LE"\Bpl"
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\stacktraceviewer\JclStackTraceViewerOptions.
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\stacktraceviewer\JclStackTraceViewerAPI.pas(
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\stacktraceviewer\JclStackTraceViewerStackCod
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\stacktraceviewer\JclStackTraceViewerStackFra
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\stacktraceviewer\JclStackTraceViewerModuleFr
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\stacktraceviewer\JclStackTraceViewerClasses.
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\stacktraceviewer\JclStackTraceViewerExceptIn
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\stacktraceviewer\JclStackTraceViewerThreadFr
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\stacktraceviewer\JclStackTraceViewerAPIImpl.
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\stacktraceviewer\JclStackTraceViewerStackUti
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\stacktraceviewer\JclStackTraceViewerConfigFr
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\stacktraceviewer\JclStackTraceViewerImpl.pas
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\stacktraceviewer\JclStackTraceViewerMainForm
+D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\experts\stacktraceviewer\JclStackTraceViewerMainFram
+30988 lines, 0.30 seconds, 69236 bytes code, 692 bytes data.
+Compilation success
+...done.
+Added "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include" to library search path.
+Added "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include" to cpp search path.
+Added "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl" to library browsing path.
+Added "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\vcl" to cpp browsing path.
+Added "D:\oburec\project2010\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\lib\d14\debug" to Debug DCU Path.
+Cleaning package cache for JclBaseExpert140.bpl
+Cleaning ok
+Registering package \Bpl\JclBaseExpert140.bpl
+Registration ok
+Cleaning package cache for JclDebugExpert140.bpl
+Cleaning ok
+Registering package \Bpl\JclDebugExpert140.bpl
+Registration ok
+Cleaning package cache for JclProjectAnalysisExpert140.bpl
+Cleaning ok
+Registering package \Bpl\JclProjectAnalysisExpert140.bpl
+Registration ok
+Cleaning package cache for JclFavoriteFoldersExpert140.bpl
+Cleaning ok
+Registering package \Bpl\JclFavoriteFoldersExpert140.bpl
+Registration ok
+Cleaning package cache for JclRepositoryExpert140.bpl
+Cleaning ok
+Registering package \Bpl\JclRepositoryExpert140.bpl
+Registration ok
+Cleaning package cache for JclSIMDViewExpert140.bpl
+Cleaning ok
+Registering package \Bpl\JclSIMDViewExpert140.bpl
+Registration ok
+Cleaning package cache for JclStackTraceViewerExpert140.bpl
+Cleaning ok
+Registering package \Bpl\JclStackTraceViewerExpert140.bpl
+Registration ok

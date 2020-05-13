@@ -1,0 +1,98 @@
+package ComponentsLib;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  vcl,
+  inet,
+  bdertl,
+  dbrtl,
+  vcldb,
+  vclx,
+  vclactnband,
+  xmlrtl,
+  designide,
+  dcl_own,
+  glPackage,
+  VclSmp;
+
+contains
+  uChart in 'chart\uChart.pas',
+  uPoint in 'chart\items\uPoint.pas',
+  uAxis in 'chart\items\uAxis.pas',
+  uTrend in 'chart\items\uTrend.pas',
+  uDrawObj in 'chart\items\uDrawObj.pas',
+  upage in 'chart\items\upage.pas',
+  uText in 'chart\utils\uText.pas',
+  uChartClickFrListener in 'chart\items\framelisteners\uChartClickFrListener.pas',
+  uRegisterComponent in 'uRegisterComponent.pas',
+  uMarkers in 'chart\items\uMarkers.pas',
+  uChartCfgForm in 'chart\forms\uChartCfgForm.pas' {ChartCfgForm},
+  uEditMenuChartForm in 'chart\forms\uEditMenuChartForm.pas' {EditMenuChartForm},
+  uDescObj in '..\..\utils\uDescObj.pas',
+  uSimpleSetList in '..\..\utils\lists\uSimpleSetList.pas',
+  uDrawObjFrame in 'chart\forms\uDrawObjFrame.pas' {DrawObjFrame: TFrame},
+  uGistForm in 'chart\forms\uGistForm.pas' {GistForm},
+  uGistogram in 'chart\items\uGistogram.pas',
+  uCursorForm in 'chart\forms\uCursorForm.pas' {CursorForm},
+  uLegend in 'chart\items\uLegend.pas',
+  uDoubleCursor in 'chart\items\uDoubleCursor.pas',
+  uDrawObjEditForm in 'chart\forms\uDrawObjEditForm.pas' {DrawObjEditForm},
+  uTextLabelForm in 'chart\forms\uTextLabelForm.pas' {TextLabelForm},
+  uTrendForm in 'chart\forms\uTrendForm.pas',
+  uChartCursor in 'chart\items\uChartCursor.pas',
+  uDoubleCursorForm in 'chart\forms\uDoubleCursorForm.pas' {DoubleCursorForm},
+  uTextLabel in 'chart\items\uTextLabel.pas',
+  uObjFrameListener in 'chart\items\framelisteners\uObjFrameListener.pas',
+  uEditChartObjFrame in 'chart\forms\uEditChartObjFrame.pas' {EditDrawObjFrame: TFrame},
+  uTrendFrame in 'chart\forms\uTrendFrame.pas' {TrendFrame: TFrame},
+  uGistFrame in 'chart\forms\uGistFrame.pas' {GistFrame: TFrame},
+  uCreateTrendFrame in 'chart\forms\uCreateTrendFrame.pas' {EditChartCfgFrame: TFrame},
+  uPageFrameListener in 'chart\items\framelisteners\uPageFrameListener.pas',
+  uPageMng in 'chart\items\uPageMng.pas',
+  uPageForm in 'chart\forms\uPageForm.pas',
+  uCreateObjForm in 'chart\forms\uCreateObjForm.pas' {CreateObjForm},
+  uChartInputFrame in 'chart\forms\frames\uChartInputFrame.pas' {ChartInputFrame: TFrame},
+  uDrawObjMng in 'chart\items\uDrawObjMng.pas',
+  uBasicTrend in 'chart\items\uBasicTrend.pas',
+  uBuffTrend1d in 'chart\items\uBuffTrend1d.pas',
+  uBuffTrend2d in 'chart\items\uBuffTrend2d.pas',
+  uGraphObj in 'chart\items\uGraphObj.pas',
+  uAutoPage in 'chart\items\uAutoPage.pas',
+  uFontMng in 'chart\items\uFontMng.pas',
+  uEdit in 'chart\items\uEdit.pas',
+  uBasePage in 'chart\items\uBasePage.pas',
+  uFloatEdit in 'chart\items\uFloatEdit.pas',
+  uLabel_simple in 'chart\items\uLabel_simple.pas',
+  uFloatLabel in 'chart\items\uFloatLabel.pas',
+  uGrid in 'chart\items\uGrid.pas',
+  JclDebug in '..\..\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows\JclDebug.pas',
+  uCreateObjFrm in 'chart\forms\uCreateObjFrm.pas' {CreateObjFrm},
+  uChartEvents in 'chart\utils\lists\uChartEvents.pas',
+  u2DMath in '..\..\math\u2DMath.pas';
+
+end.
+

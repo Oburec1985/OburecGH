@@ -1,0 +1,41 @@
+unit uRZDTareFrame;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, DCL_MYOWN, posbase, Winpos_ole_TLB, uWPProc;
+
+type
+  TRZDTareFrame = class(TFrame)
+    HFCbox: TComboBox;
+    Path: TComboBox;
+    S1Cbox: TComboBox;
+    S2Cbox: TComboBox;
+    S3Cbox: TComboBox;
+    S4Cbox: TComboBox;
+    VFCbox: TComboBox;
+    PathBtn: TButton;
+    SelectIntervalCursorBtn: TButton;
+    SelectIntervalGraphBtn: TButton;
+    T1FE: TFloatEdit;
+    T2FE: TFloatEdit;
+    T1Label: TLabel;
+    T2Label: TLabel;
+    procedure SelectIntervalCursorBtnClick(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+implementation
+
+{$R *.dfm}
+
+procedure TRZDTareFrame.SelectIntervalCursorBtnClick(Sender: TObject);
+begin
+  GetActiveCursorX
+end;
+
+end.

@@ -1,0 +1,643 @@
+unit uObrFile;
+
+interface
+uses
+  Windows,  SysUtils, Classes, MathFunction, TextureGl,uMeshObr, uMaterial,
+  uselectools, uMatrix, uLight, ubasecamera, uSelectLoadedObjects,
+  uTestObjects, uNodeObject, uObject,uObjectTypes, uEventList, uNode, uGroupObjects,
+  uMesh,opengl,
+  uConfigFile3d,
+  uLoadskin,
+  uObaFile,
+  uVBOMesh,
+  uGlEventTypes,
+  uBaseObj,
+  uCommonTypes, uShape, uBinFile;
+
+ // Записывает объект в файл
+procedure writeObject(FileHeaderObjectInfo:cFileHeadObjInfoList;
+                             const obj:cNodeObject;const F:file);
+// Возвращает true если файл формата Obr и список объектов сцены.
+// Курсор должен стоять вначале файла
+function readHeader(var FileHeaderObjectInfo:cFileHeadObjInfoList;const F:file):boolean;
+// Читает всю информацию об объекте. Курсор должен стоять на метке начала объекта ABCD
+function readObj(const F:file;p_scene:tobject;list:cBaseObjList;
+                 var matmng:cmaterialmanager;
+                 pathcfgfile:cCfgFile):cnodeobject;
+procedure writeHeader(var FileHeaderObjectInfo:cFileHeadObjInfoList; const F:file; MainNode:cNodeObject);
+// Загрузить сцену из файла
+function LoadObrFile(path:string;pathcfgfile:cCfgFile;scene:tobject):boolean;
+//
+const
+  ID_MATERIAL_SECTION = $ABC1;
+  ID_NODE_HEADER =  $ABCD;
+  ID_MTL_HEADER = $1FF1;
+  ID_VERTEX_HEADER = $2FF2;
+  ID_TVERTEX_HEADER = $2EE2;
+  ID_GROUP_HEADER = $3FF3;
+  UseARBVertexBuffer = false;
+implementation
+uses
+  uSceneMng,
+  uRender,
+  uUI;
+
+function GetObjFromList(list:tstringlist;name:string):cnodeobject;
+var
+  ind:integer;
+begin
+  result:=nil;
+  if list.Find(name,ind) then
+  begin
+    result:=cnodeobject(list.Objects[ind]);
+  end;
+end;
+
+
+procedure writestring(const F:file;const str:string);
+var
+   ch:char;
+begin
+  ch:=char(0);
+  Blockwrite(F,str[1],length(str));
+  Blockwrite(F,Ch,1);
+end;
+
+procedure readString(const F:file;var str:string);
+var
+  Ch:ansichar;
+  Readed:integer;
+begin
+  str:='';
+  BlockRead(F,Ch,1,Readed);
+  if Ch<>char(0) then
+  begin
+    str:=str + Ch;
+    while Ch<>char(0) do
+    begin
+     BlockRead(F,Ch,1,Readed);
+     if Ch<>char(0) then
+       str:=str + Ch;
+    end;
+  end
+end;
+
+// обновить позицию объекта в заголовке. В качестве позиции пишется текущая
+// позиция курсора в файле
+procedure UpdateObjInfo(var FileHeaderObjectInfo:cFileHeadObjInfoList;
+                        obj:cnodeobject;const f:file);
+var index,pos:integer;
+    objinfo:cFileHeadObjInfo;
+begin
+  objinfo:=FileHeaderObjectInfo.GetByName(obj.name);
+  objinfo.DataPosInFile:=filepos(f);
+  seek(f,objinfo.DataPosInHeader);
+  BlockWrite(F,objinfo.DataPosInFile,4);
+  seek(f,objinfo.DataPosInFile);
+end;
+
+procedure WriteTM(const F:file;var m_fTM:matrixgl);
+begin
+  //TransposeMatrix4(m_fTM);
+  // считать матрицу трансформации 3*4*sizeof(single) байт
+  BlockWrite(F,m_fTM[0],3*sizeof(single));
+  BlockWrite(F,m_fTM[4],3*sizeof(single));
+  BlockWrite(F,m_fTM[8],3*sizeof(single));
+  BlockWrite(F,m_fTM[12],3*sizeof(single));
+end;
+
+procedure readTM(const F:file;var m_fTM:array of single);
+var numcol,Readed,i,j:integer;
+    TM:array[0..15] of single;
+begin
+BlockRead(F,TM,3*4*sizeof(single),Readed); // считать матрицу трансформации
+numcol:=0;
+for i := 0 to 3 do
+  for j := 0 to 2 do
+  begin
+   m_fTM[i*3+j+numcol]:=TM[i*3+j];
+   if j=2 then
+   begin
+     numcol:=numcol+1;
+     if i=3 then
+        m_fTM[i*3+j+numcol]:=1
+     else
+        m_fTM[i*3+j+numcol]:=0;
+   end;
+end;
+end;
+
+procedure WriteHeadObj(const obj:cNodeObject;const F:file);
+var
+  m,rot,trans:matrixGL;
+  ltype:byte;
+  header:word;
+begin
+  WriteString(F,obj.name);
+  // Записать матрицу перевода в WorldSpace и матрицу узла
+  m:=obj.noderestm;
+  WriteTM(F,m);
+  m:=obj.LocalTM;
+  rot:=NoTranslateMatrix4(m);
+  trans:=EvalRightMatrix(rot,m);
+  m:=multmatrix4(trans,rot);
+  WriteTM(F,m);
+  // Запись информацию о родительском объекте
+  header:=ID_GROUP_HEADER;
+  //BlockWrite(F,header,2); //Заголовок группы 3FF3
+  ltype:=1;
+  if obj.parent<>nil then
+  begin
+    BlockWrite(F,header,2); //Заголовок группы 3FF3
+    ltype:=0;
+    Blockwrite(F,ltype,1);
+    if ltype=0 then // Если объект дочерний
+    begin
+      WriteString(F,obj.parent.name);
+    end
+  end
+  else
+  begin
+    ltype:=0;
+    Blockwrite(F,ltype,1);
+    Blockwrite(F,ltype,1);
+  end;
+end;
+
+procedure readHeadObj(var obj:cNodeobject;Objects:tstringlist;const F:file);
+var casestring:string;
+    chunk:word;
+    readed:integer;
+    ltype:byte;
+    parentobj:cNodeObject;
+    m,rot,trans:matrixgl;
+begin
+  readString(F,CaseString);
+  obj.name:=CaseString;
+  // Считать матрицу перевода в WorldSpace и матрицу узла
+  readTM(F,m);
+  obj.nodetm:=m;
+  //----------------- Локальная система координат ------------------------
+  readTM(F,m);
+  rot:=NoTranslateMatrix4(m);
+  trans:=NoRotateMatrix4(m);
+  //obj.localtm:=multmatrix4(rot,trans);
+  obj.localtm:=m;
+  BlockRead(F,Chunk,2,Readed); //Заголовок группы 3FF3
+  CaseString:=IntToHex(chunk,4);
+  if CaseString='3FF3' then
+  begin
+    //Заголовок группы 3FF3
+    BlockRead(F,ltype,1,Readed);
+    if ltype=0 then // Если объект дочерний
+    begin
+      readString(F,CaseString);
+      parentobj:=cnodeobject(getobjfromlist(Objects,CaseString));
+      groupto(obj,parentobj);
+    end
+  end;
+  obj.SetObjToWorld;
+end;
+
+function readTexture(const F:file;var Texture:TTextureGL;texmng:ctexturemanager;pathcfgfile:cCfgFile):boolean;
+var CaseString:string;
+   Ch:char;
+   Readed:integer;
+   deep:integer;
+begin
+  texture:=nil;
+  CaseString:='';
+  BlockRead(F,Ch,1,Readed);
+  result:=false;
+  if Ch<>char(0) then
+  begin  //Если текстура существует.
+    Texture:=TTextureGl.Create(texmng);
+    while Ch<>char(0) do
+    begin
+      BlockRead(F,Ch,1,Readed);
+      if Ch<>char(0) then
+        CaseString:=CaseString + Ch;
+     end;
+   Texture.name := CaseString;
+   deep:=3;
+   Texture.name:=pathcfgfile.findTextureFile(Texture.name);
+   Texture.LoadFromFile(Texture.name);
+   result:=true;
+  end;
+end;
+
+function readMaterial(const F:file;pathcfgfile:cCfgFile;matmng:cmaterialmanager):cmaterial;
+var chunk:word;
+    readed:integer;
+    casestring:string;
+    shin:single;
+    str:string;
+    mat:cmaterial;
+    t:ttexturegl;
+begin
+   result:=nil;
+   //-------------- Чтение информации о материале -------------------------
+   BlockRead(F,chunk,2,Readed); // 1ff1 либо 0000
+   CaseString:=IntToHex(chunk,4);
+   if CaseString<>'1FF1' then
+   begin
+   end
+   else
+   begin  // если материал есть
+     mat:=cmaterial.create(matmng);
+     ReadString(F,str);
+     mat.name:=str;
+     BlockRead(F,mat.Ambient,12,Readed);
+     BlockRead(F,mat.Diffuse,12,Readed);
+     BlockRead(F,mat.Specular,12,Readed);
+     BlockRead(F,shin,4,Readed);
+     mat.Shininess:=round(128*shin);
+     mat.MtlExist:=true;
+     if readTexture(F,t,matmng.m_texturemanager,pathcfgfile) then
+     begin
+       mat.difTexture:=matmng.m_texturemanager.Add(t);
+       if mat.difTexture<>t then
+         t.Destroy;
+     end;
+     if readTexture(F,t,matmng.m_texturemanager,pathcfgfile) then
+     begin
+       mat.BumpTexture:=matmng.m_texturemanager.Add(t);
+       if mat.BumpTexture<>t then
+         t.Destroy;
+     end;
+     result:=mat;
+   end;
+end;
+
+function readHeader(var FileHeaderObjectInfo:cFileHeadObjInfoList;const F:file):boolean;
+var
+  str:string;
+  pos,readed:integer;
+  objinfo:cFileHeadObjInfo;
+begin
+ FileHeaderObjectInfo.cleardata;
+ readstring(f,str);
+ if str<>'ObrFile' then
+ begin
+   result:=false;
+   exit;
+ end
+ else
+ begin
+   while str<>'ObrFile_Body' do
+   begin
+     result:=true;
+     readstring(f,str);
+     if str='ObrFile_Body' then
+       exit;
+     BlockRead(F,pos,4,Readed);
+     objinfo:=cFileHeadObjInfo.Create;
+     objinfo.DataPosInFile:=pos;
+     objinfo.objname:=str;
+     FileHeaderObjectInfo.AddObject(str,objinfo);
+   end;
+ end;
+end;
+
+procedure writeObjInfo(FileHeaderObjectInfo:cFileHeadObjInfoList;obj:cnodeobject;
+                       const f:file);
+var
+  zero,i,index:integer;
+  world:cnodeobject;
+  child:cnodeobject;
+  objinfo:cFileHeadObjInfo;
+  count:integer;
+begin
+  if not obj.fHelper then
+  begin
+    // Если объект был добавлен в сцену, а не загружен, то создаем его,
+    // иначе получаем из списка загруженных объектов
+    objinfo:=FileHeaderObjectInfo.GetByName(obj.name);
+    if objinfo=nil  then
+    begin
+      objinfo:=cFileHeadObjInfo.Create;
+      objinfo.objname:=obj.name;
+      FileHeaderObjectInfo.addobject(obj.name,objinfo);
+    end;
+    Writestring(f,objinfo.objname);
+    zero:=0;
+    // Пишем в позицию объекта ересь, чтобы позже перезаписать данные
+    objinfo.DataPosInHeader:=FilePos(f);
+    BlockWrite(F,zero,4);
+  end;
+  count:=obj.ChildCount;
+  for I := 0 to count - 1 do
+  begin
+    child:=cnodeobject(obj.getChild(i));
+    writeobjinfo(FileHeaderObjectInfo,child,f);
+  end;
+end;
+
+procedure writeHeader(var FileHeaderObjectInfo:cFileHeadObjInfoList; const F:file; MainNode:cNodeObject);
+var
+  str:string;
+  i,pos,readed:integer;
+  objinfo:cFileHeadObjInfo;
+begin
+ str:='ObrFile';
+ writestring(f,str);
+ // Запись заголовочной информации
+ FileHeaderObjectInfo.ClearAndDeleteObjects;
+ writeObjInfo(FileHeaderObjectInfo,MainNode,f);
+ str:='ObrFile_Body';
+ writestring(f,str);
+end;
+
+
+function readObj(const F:file;p_scene:tobject;list:cBaseObjList;var matmng:cmaterialmanager;pathcfgfile:cCfgFile):cnodeobject;
+var i,readed,count:integer;
+    casestring:string;
+    chunk:word;
+    bbuf,objtype:byte;
+    obj:cNodeObject;
+    mesh_obr, inst:cMeshObr;
+    shape:cShapeObj;
+    material:cmaterial;
+    VPointer:cVPointer;
+    m:matrixgl;
+    dir:point3;
+    function readVPoint(const p_f:file):cVPointer;
+    var VPointer:cVPointer;
+        j,c:integer;
+    begin
+      vpointer:=cVPointer.create;
+      BlockRead(F,VPointer.ind,4,Readed);// Число уникальных вершин
+      BlockRead(F,c,4,Readed);// Число уникальных вершин
+      setlength(vpointer.Pointers,c);
+      for j := 0 to c - 1 do
+      begin
+        BlockRead(F,vpointer.Pointers[j],4,Readed);// Число уникальных вершин
+      end;
+      result:=vpointer;
+    end;
+begin
+   result:=nil;
+   BlockRead(F,Chunk,2,Readed);
+   CaseString:=IntToHex(chunk,4);
+   if CaseString<>'ABCD' then exit; //Если тип файла не Obr, выход из процедуры
+   BlockRead(F,objtype,1,Readed); //тип объекта
+   case objtype of
+     constCamera:
+     begin
+       obj:=cBaseCamera.Create;
+       obj.objtype:=objtype;
+       readHeadObj(obj,list,F);
+       obj.RotateNodeLocal(0,180,0);
+       Result:=obj;
+     end;
+     constLight:
+     begin
+       obj:=clight.Create(gl_light0,p_scene);
+       obj.objtype:=objtype;
+       readHeadObj(obj,list,F);
+       Result:=obj;
+     end;
+     constdummy:// пустышка
+     begin
+       obj:=cobject.Create;
+       obj.objtype:=objtype;
+       readHeadObj(obj,list,F);
+       Result:=obj;
+     end;
+     constShape:
+     begin
+       shape:=cShapeObj.Create;
+       readHeadObj(cNodeObject(shape),list,f);
+       shape.LineCount:=ReadInt(f);
+       setlength(shape.Lines,shape.LineCount);
+       for I := 0 to shape.LineCount - 1 do
+       begin
+         shape.lines[i].closed:=ReadByte(f);
+         count:=ReadInt(f);
+         setlength(shape.lines[i].data, count);
+         BlockRead(F,shape.lines[i].data[0],sizeof(point3)*count,Readed);//Число вершин
+       end;
+       shape.needRecompile:=true;
+       result:=shape;
+     end;
+     constmesh:// меш
+     begin
+       Mesh_Obr:=cMeshObr.Create;
+       readHeadObj(cNodeObject(Mesh_Obr),list,f);
+       BlockRead(F,Chunk,2,Readed); //Заголовок вершинного экспорта 2FF2
+       CaseString:=IntToHex(chunk,4);
+       if CaseString<>'2FF2' then exit;
+       BlockRead(F,bbuf,1,Readed); //Заголовок вершинного экспорта 2FF2
+       if bbuf=1 then
+       begin
+         if UseARBVertexBuffer then
+           Mesh_Obr.Mesh:=cARBMesh.Create
+         else
+           Mesh_Obr.Mesh:=cMesh.Create;
+         BlockRead(F,Mesh_Obr.Mesh.FaceCount,4,Readed);//Число вершин
+         BlockRead(F,Mesh_Obr.Mesh.VertexCount,4,Readed);//Число вершин
+         SetLength(Mesh_Obr.Mesh.FaceArray,Mesh_Obr.Mesh.FaceCount);
+         SetLength(Mesh_Obr.Mesh.DrawArray,Mesh_Obr.Mesh.VertexCount);
+         SetLength(Mesh_Obr.Mesh.DrawNormals,Mesh_Obr.Mesh.VertexCount);
+         SetLength(Mesh_Obr.Mesh.TexVertexArray,Mesh_Obr.Mesh.VertexCount);
+         BlockRead(F,Mesh_Obr.Mesh.FaceArray[0],4*3*Mesh_Obr.Mesh.FaceCount,Readed);//указатель вершин
+         BlockRead(F,Mesh_Obr.Mesh.DrawArray[0],4*3*Mesh_Obr.Mesh.VertexCount,Readed);//вершинный массив
+         BlockRead(F,Mesh_Obr.Mesh.DrawNormals[0],4*3*Mesh_Obr.Mesh.VertexCount,Readed);//массив нормалей
+         BlockRead(F,Mesh_Obr.Mesh.TexVertexArray[0],4*2*Mesh_Obr.Mesh.VertexCount,Readed);//массив нормалей
+         BlockRead(F,count,4,Readed);// Число уникальных вершин
+         for I := 0 to Count - 1 do
+         begin
+           Mesh_Obr.Mesh.VPointers.AddObject(@I,readVPoint(f));
+         end;
+       end
+       else
+       begin
+         readString(f,CaseString);
+         mesh_Obr.instname:=casestring;
+         mesh_Obr.inst:=true;
+         inst:=cMeshObr(getobjfromlist(list,CaseString));
+         mesh_Obr.Mesh:=inst.Mesh;
+       end;
+       LoadSkinObj(f,mesh_Obr);
+       // ---------------- Запись цвета ---------------------------------------
+       BlockRead(F,bbuf,1,Readed); // красный
+       Mesh_Obr.Mesh.defoultcolor.x:=bbuf/255;
+       BlockRead(F,bbuf,1,Readed); // зеленый
+       Mesh_Obr.Mesh.defoultcolor.y:=bbuf/255;
+       BlockRead(F,bbuf,1,Readed); // голубой
+       Mesh_Obr.Mesh.defoultcolor.z:=bbuf/255;
+       //-------------- Чтение информации о материале -------------------------
+       material:=readMaterial(f,pathcfgfile,matmng);
+       if material=nil then material:=matmng.defMat;
+       Mesh_Obr.m_MatMng:=matmng;
+       if not Mesh_Obr.AddMaterial(material) then
+       begin
+         if material<>matmng.defMat then
+           material.destroy;
+       end;
+       Mesh_Obr.UpdateBounds;
+       // цвета вершин
+       setlength(Mesh_Obr.Mesh.colorArray,Mesh_Obr.Mesh.VertexCount);
+       for I := 0 to Mesh_Obr.Mesh.VertexCount - 1 do
+       begin
+         initp3array(blue,Mesh_Obr.Mesh.colorArray);
+       end;
+       mesh_obr.mesh.prepareVertexBuffer;
+       Result:=cNodeObject(Mesh_Obr);
+     End; //Конец файла
+   end; // case
+end;
+
+procedure writeObject(FileHeaderObjectInfo:cFileHeadObjInfoList;
+                             const obj:cNodeObject;const F:file);
+var
+  i:integer;
+  material:cmaterial;
+  shin:single;
+  header:word;
+  buf:byte;
+  procedure WriteVPoint(const p_f:file;p:cVPointer);
+  var j,len:integer;
+  begin
+    BlockWrite(F,p.ind,4);// Число уникальных вершин
+    len := length(p.Pointers);
+    BlockWrite(F,len,4);// Число уникальных вершин
+    for j := 0 to len - 1 do
+    begin
+      BlockWrite(F,p.Pointers[j],4);// Число уникальных вершин
+    end;
+  end;
+  procedure WriteTexture(const F:file;const texture:TTextureGL);
+  var ch:char;
+  begin
+    if texture<>nil then
+      ch:=char(1)
+    else
+      ch:=char(0);
+    BlockWrite(F,Ch,1);
+    //Если текстура существует.
+    if Ch<>char(0) then
+    begin
+      writestring(f,extractfilename(Texture.name));
+    end;
+  end;
+begin
+   UpdateObjInfo(FileHeaderObjectInfo,obj,f);
+   if obj.parent.fHelper then
+    obj.parent:=nil;
+   header:=ID_NODE_HEADER;
+   Blockwrite(F,header,2);
+   Blockwrite(F,obj.objtype,1); //тип объекта
+   WriteHeadObj(obj,F);
+   case obj.objtype of
+   3:// пустышка
+     begin
+     end;
+   0:// меш
+     begin
+       header:=ID_VERTEX_HEADER;
+       BlockWrite(F,header,2); //Заголовок вершинного экспорта 2FF2
+       if cMeshObr(obj).inst then
+       begin
+         buf:=0;
+         BlockWrite(F,buf,1);
+         writeString(f,cMeshObr(obj).instname);
+       end
+       else
+       begin
+         buf:=1;
+         BlockWrite(F,buf,1);
+         BlockWrite(F,cMeshObr(obj).mesh.FaceCount,4);//Число вершин
+         BlockWrite(F,cMeshObr(obj).mesh.VertexCount,4);//Число вершин
+         BlockWrite(F,cMeshObr(obj).mesh.FaceArray[0],4*3*cMeshObr(obj).mesh.FaceCount);//указатель вершин
+         BlockWrite(F,cMeshObr(obj).mesh.DrawArray[0],4*3*cMeshObr(obj).mesh.VertexCount);//вершинный массив
+         BlockWrite(F,cMeshObr(obj).mesh.DrawNormals[0],4*3*cMeshObr(obj).mesh.VertexCount);//массив нормалей
+         BlockWrite(F,cMeshObr(obj).mesh.TexVertexArray[0],4*2*cMeshObr(obj).mesh.VertexCount);//массив нормалей
+         BlockWrite(F,cMeshObr(obj).mesh.VPointers.count,4);
+         for I := 0 to cMeshObr(obj).mesh.VPointers.count - 1 do
+         begin
+           WriteVPoint(f,cMeshObr(obj).mesh.UnicVert[i]);
+         end;
+       end;
+       Material:= cMeshObr(obj).getmaterial;
+       SaveSkin(f,cMeshObr(obj));
+       // ---------------- Запись цвета ---------------------------------------
+       buf:=round(cMeshObr(obj).mesh.defoultcolor.x*255);
+       BlockWrite(F,buf,1); // красный
+       buf:=round(cMeshObr(obj).mesh.defoultcolor.y*255);
+       BlockWrite(F,buf,1); // зеленый
+       buf:=round(cMeshObr(obj).mesh.defoultcolor.z*255);
+       BlockWrite(F,buf,1); // голубой
+       //-------------- Чтение информации о материале -------------------------
+       if material.MtlExist then
+        header:=ID_MTL_HEADER
+       else
+        header:=0;
+       BlockWrite(F,header,2); // 1ff1 либо 0000
+       if material.MtlExist then
+       begin  // если материал есть
+         WriteString(F,Material.name);
+         BlockWrite(F,material.Ambient,12);
+         BlockWrite(F,material.Diffuse,12);
+         BlockWrite(F,material.Specular,12);
+         shin:=material.Shininess/128;
+         BlockWrite(F,shin,4);//массив нормалей
+         material.MtlExist:=true;
+         WriteTexture(F,material.DifTexture);
+         WriteTexture(F,material.BumpTexture);
+       end;
+     End; //Конец файла
+   end; // case
+end;
+
+function LoadObrFile(path:string;pathcfgfile:cCfgFile;scene:tobject):boolean;
+var
+  F:file;//читаемый файл
+  obj:cNodeObject;
+  texturedir:string;
+  bRead:boolean;
+  sc:cScene;
+  bufferscene:cobjects;
+  I: Integer;
+begin
+  result:=false;
+  if not FileExists(path) then
+  begin
+    exit;
+  end;
+  AssignFile(F,path);
+  bufferscene:=cobjects.Create; // Создаем промежуточную сцену и помещаем считанные объекты в нее
+  result:=true;
+  obj:=nil;
+  sc:=cScene(scene);
+  Reset(F,1);//второй параметр - длина одной читаемой записи.
+  readHeader(sc.FileHeaderObjectInfo,f);
+  bread:=true;
+  while bread do
+  Begin
+    obj:=readObj(f,sc,bufferscene,sc.m_MatMng,pathcfgfile);
+    bread:= (obj<>nil);
+    if bread then
+      bufferscene.AddObject(obj.name,obj);
+  end;
+  CloseFile(f);
+  // инициация модификаторов
+  for I := 0 to bufferscene.Count - 1 do
+  begin
+    InitSkin(cnodeobject(bufferscene.objects[i]),bufferscene);
+  end;
+  for I := 0 to bufferscene.Count - 1 do
+  begin
+    sc.Add(cnodeobject(bufferscene.objects[i]));
+  end;
+  path:=ChangeFileExt(path,'.oba');
+  if FileExists(path) then
+  begin
+    LoadObaFile(path,cui(crender(cscene(scene).render).ui),bufferscene);
+  end;
+  bufferscene.Clear;
+  bufferscene.Destroy;
+  cscene(scene).Events.CallAllEvents(E_glLoadScene);
+end;
+
+end.

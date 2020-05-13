@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2020.02.07 12:06:31.368.ridl,C:\Users\Skripnik\Documents\RAD Studio\Projects\Project1.ridl=D:\Oburec\delphi\2011\wp\SubdiveFilePlg\SubdivFilePlg.ridl</Transaction>
+    <Transaction>2020.02.07 12:06:31.384.pas,C:\Users\Skripnik\Documents\RAD Studio\Projects\Project1_TLB.pas=D:\Oburec\delphi\2011\wp\SubdiveFilePlg\Project1_TLB.pas</Transaction>
+    <Transaction>2020.02.07 12:06:31.386.pas,D:\Oburec\delphi\2011\wp\SubdiveFilePlg\Project1_TLB.pas=D:\Oburec\delphi\2011\wp\SubdiveFilePlg\SubdivFilePlg_TLB.pas</Transaction>
+    <Transaction>2020.02.07 12:06:47.294.dproj,C:\Users\Skripnik\Documents\RAD Studio\Projects\Project1.dproj=D:\Oburec\delphi\2011\wp\SubdiveFilePlg\SubdivFilePlg.dproj</Transaction>
+    <Transaction>2020.02.07 12:10:42.141.pas,D:\Oburec\delphi\2011\wp\SubdiveFilePlg\Unit1.pas=D:\Oburec\delphi\2011\wp\SubdiveFilePlg\uSubdivePlg.pas</Transaction>
+    <Transaction>2020.02.07 17:13:20.016.pas,D:\Oburec\delphi\2011\wp\SubdiveFilePlg\Winpos_ole_TLB.pas=</Transaction>
+  </Transactions>
+</BorlandProject>

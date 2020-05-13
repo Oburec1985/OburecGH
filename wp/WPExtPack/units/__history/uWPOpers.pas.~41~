@@ -1,0 +1,175 @@
+unit uWPOpers;
+
+interface
+
+uses
+  Windows, ActiveX, Classes, ComObj, uNiiPMlib_TLB, StdVcl,
+  uBaseObjService, variants, sysutils,
+  Winpos_ole_TLB, uCommonMath,  uCommonTypes, uWPServices, mathfunction,
+  uWPEvents, posbase,
+  math;
+
+function GetIntervalSignal (t1t2:point2d; s:iwpsignal):iwpsignal;
+// привести к интервалу 0..1 dt
+function Normalise0_1(const sig: olevariant; MinMax:point2d): iwpsignal;
+// Умножение на константу
+function Multiply(const sig: olevariant; const d:double): iwpsignal;
+// Передискретизация
+function Resample(const sig: olevariant; const freq:double): iwpsignal;
+// Усреднение
+function TrendMO(const sig: olevariant; const points:integer): iwpsignal;
+function LPF(const sig: olevariant; const order:integer; freq:double): iwpsignal;
+// Фиьлтр Oburec
+function H2Flt(const sig: olevariant; const points:integer; resample:integer): iwpsignal;
+// параметр по параметру (возвращает сигнал xy)
+// sx, sy - iwpsignal
+function BuildWPDependence(sx, sy: olevariant): iwpSignal;
+
+
+implementation
+
+uses
+  uWPExtPack, uWPExtOperHilbFilter;
+
+
+
+function GetIntervalSignal (t1t2:point2d; s:iwpsignal):iwpsignal;
+begin
+  result:=wp.GetInterval(s,s.IndexOf(t1t2.x), s.IndexOf(t1t2.y)) as iwpsignal;
+end;
+
+function BuildWPDependence(sx, sy: olevariant): iwpSignal;
+var
+  oper: iwpoperator;
+  pars: tstringlist;
+  opts, str, flP: string;
+  r1, r2: olevariant;
+  s1, s2: iwpSignal;
+begin
+  oper := WP.GetObject('/Operators/Параметрический график') as iwpoperator;
+  opts :=
+    'type=0,p2xy=0,crop=0,left=0,right=0,top=0,bottom=0,angle0=0,clcw=0,degr=0';
+  oper.loadProperties(opts);
+  oper.Exec(sy, sx, refvar(r1), refvar(r2));
+  result := iwpSignal(TVarData(r1).VPointer);
+end;
+
+function Resample(const sig: olevariant; const freq:double):iwpsignal;
+var
+  oper:iwpoperator;
+  pars:tstringlist;
+  opts, str, flP:string;
+  r1,r2:olevariant;
+  s1, s2:iwpsignal;
+begin
+  oper:=WP.GetObject('/Operators/Передискретизация') as IWPOperator;
+  flP:=replaceChar(floattostr(freq),',','.');
+
+  // 2- умножение на константу
+  opts:='kind=1,type=0,freq='+flP;
+  oper.loadProperties(opts);
+  oper.Exec(sig,sig,refvar(r1),refvar(r2));
+  result:=iwpsignal(TVarData(r1).VPointer);
+end;
+
+function H2Flt(const sig: olevariant; const points:integer; resample:integer): iwpsignal;
+var
+  oper:iwpoperator;
+  pars:tstringlist;
+  opts, str, flP:string;
+  r1,r2:olevariant;
+  s1, s2:iwpsignal;
+begin
+  oper:=WP.GetObject('/Расширения/'+HilbFltRegName) as IWPOperator;
+  opts:=TExtOperHilbertFlt(oper).m_opts;
+  ChangeParamF(opts,c_NPoints,inttostr(points));
+  //ChangeParamF(opts,c_Resample,resample);
+  //oper.SetPropStr
+  // 2- умножение на константу
+  opts:='typeRes=3,bEquivMag=0,nPoints='+flP;
+  oper.loadProperties(opts);
+  oper.Exec(sig,sig,refvar(r1),refvar(r2));
+  result:=iwpsignal(TVarData(r1).VPointer);
+end;
+
+function LPF(const sig: olevariant; const order:integer; freq:double): iwpsignal;
+var
+  oper:iwpoperator;
+  pars:tstringlist;
+  opts, str:string;
+  r1,r2:olevariant;
+  s1, s2:iwpsignal;
+begin
+  oper:=WP.GetObject('/Operators/Нерекурсивная фильтрация') as IWPOperator;
+  opts:='flag=0,nOrder=51,iType=1,iKind=1,iTypeWin=3,fsr=30,fn=1,fv=30,fs=602.353';
+  str:='nOrder='+inttostr(order)+',';
+  //s1:=sig.vt;
+  str:=str+'fs='+replaceChar(floattostr(1/sig.DeltaX),',','.')+',';
+  str:=str+'fsr='+replaceChar(floattostr(freq),',','.');
+  opts:=updateParams(opts, str);
+  oper.loadProperties(opts);
+  oper.Exec(sig,sig,refvar(r1),refvar(r2));
+  result:=iwpsignal(TVarData(r1).VPointer);
+end;
+
+function TrendMO(const sig: olevariant; const points:integer): iwpsignal;
+var
+  oper:iwpoperator;
+  pars:tstringlist;
+  opts, str, flP:string;
+  r1,r2:olevariant;
+  s1, s2:iwpsignal;
+begin
+  oper:=WP.GetObject('/VibroOpers/Последовательная обработка (тренды)') as IWPOperator;
+  flP:=inttostr(points);
+  // 3- среднее 0 -RMS
+  opts:='typeRes=3,bEquivMag=0,nPoints='+flP;
+  oper.loadProperties(opts);
+  oper.Exec(sig,sig,refvar(r1),refvar(r2));
+  result:=iwpsignal(TVarData(r1).VPointer);
+end;
+
+function Multiply(const sig: olevariant; const d:double): iwpsignal;
+var
+  oper:iwpoperator;
+  pars:tstringlist;
+  opts, str, flP:string;
+  r1,r2:olevariant;
+  s1, s2:iwpsignal;
+begin
+  oper:=WP.GetObject('/Operators/Арифм. операции') as IWPOperator;
+  flP:=replaceChar(floattostr(d),',','.');
+  // 2- умножение на константу
+  opts:='kind=2,const='+flP;
+  oper.loadProperties(opts);
+  oper.Exec(sig,sig,refvar(r1),refvar(r2));
+  result:=iwpsignal(TVarData(r1).VPointer);
+end;
+
+function Normalise0_1(const sig: olevariant; MinMax:point2d): iwpsignal;
+var
+  oper:iwpoperator;
+  pars:tstringlist;
+  opts, str, flP:string;
+  r1,r2:olevariant;
+  s1, s2:iwpsignal;
+begin
+  oper:=WP.GetObject('/Operators/Арифм. операции') as IWPOperator;
+  // вычитание
+  flP:=replaceChar(floattostr(minMax.x),',','.');
+  opts:='kind=1,const='+flP;
+  oper.loadProperties(opts);
+  oper.Exec(sig,sig,refvar(r1),refvar(r2));
+  // деление
+  s1 := iwpsignal(TVarData(r1).VPointer);
+  flP:=replaceChar(floattostr(minMax.y-minMax.x),',','.');
+  opts:='kind=3,const='+flp;
+  oper.loadProperties(opts);
+  oper.Exec(s1,s1,refvar(r1),refvar(r2));
+
+  s2 := iwpsignal(TVarData(r1).VPointer);
+  wp.Link('/Signals/results', s2.sname, s2 as IDispatch);
+  result:=s2;
+end;
+
+end.

@@ -1,0 +1,138 @@
+unit uDrawObjMng;
+
+interface
+
+uses
+  classes, types, uCommonTypes, ubaseobj, uBaseObjMng, NativeXML,
+  uFontMng, windows, uCommonMath;
+
+type
+  cDrawObjMng = class(cBaseObjMng)
+  public
+  protected
+    fontmng: cfontmng;
+    fchart: tobject;
+  protected
+    procedure setchart(ch: tobject);
+    procedure regObjClasses; override;
+    procedure AddBaseObjInstance(obj: cbaseobj); override;
+  public
+    property chart: tobject read fchart write setchart;
+    procedure initfonts;
+    function fmng: cfontmng;
+    constructor create; override;
+    destructor destroy; override;
+  end;
+
+var
+  //v_fontname:string = 'Arial CYR';
+  v_fontname: string = 'Arial';
+  //v_fontname:string = 'Courier New';
+
+const
+  textWidth = 4;
+  textSelOffset = 5;
+  textHeigth = 8;
+
+implementation
+
+uses
+  upage, utrend, ugistogram, umarkers, uaxis, uPageMng, uTextLabel, uFloatEdit,
+  uChart, uBuffTrend1d, uBuffTrend2d, uGraphObj, uAutoPage, uEdit, uBasePage,
+  udrawobj, uFreqBand;
+
+
+function NameLayerComparator(p1,p2:pointer):integer;
+var
+  o1,o2:cdrawobj;
+  s1,s2:ansistring;
+begin
+  o1:=cdrawobj(p1);
+  o2:=cdrawobj(p2);
+  if o1.m_layer=o2.m_layer then
+  begin
+    s1:=cbaseobj(p1).name;
+    s2:=cbaseobj(p2).name;
+    result:=NameComparatorStrBaseNum(s1, s2);
+  end
+  else
+  begin
+    if o1.m_layer>o2.m_layer then
+      result:=1
+    else
+      result:=0;
+  end;
+end;
+
+functio
+
+procedure cDrawObjMng.setchart(ch: tobject);
+begin
+  fchart := ch;
+end;
+
+procedure cDrawObjMng.AddBaseObjInstance(obj: cbaseobj);
+begin
+  if (obj is cbasepage) or (obj is cMoveObj) or (obj is cmarkerlist) or
+    (obj is cPageMng) or (obj is cTextLabel) or (obj is caxis) or
+    (obj is cPageMngList) or (obj is cFreqBand) then
+  begin
+    inherited AddBaseObjInstance(obj);
+    if obj is cPageMngList then
+    begin
+      if chart <> nil then
+      begin
+        cchart(chart).tabs := cPageMngList(obj);
+      end;
+    end;
+  end;
+end;
+
+procedure cDrawObjMng.regObjClasses;
+begin
+  inherited;
+  regclass(cpage);
+  regclass(ctrend);
+  regclass(cgistogram);
+  regclass(cmarkerlist);
+  regclass(cPageMng);
+  regclass(cTextLabel);
+  regclass(caxis);
+  regclass(cPageMngList);
+  regclass(cBuffTrend1d);
+  regclass(cBuffTrend2d);
+  regclass(cAutoPage);
+  regclass(cEdit);
+  regclass(cFloatEdit);
+  regclass(cFreqBand);
+end;
+
+constructor cDrawObjMng.create;
+begin
+  inherited;
+end;
+
+destructor cDrawObjMng.destroy;
+begin
+  if fontmng <> nil then
+  begin
+    fontmng.destroy;
+    fontmng := nil;
+  end;
+  inherited;
+end;
+
+procedure cDrawObjMng.initfonts;
+begin
+  fontmng := cfontmng.create;
+  fontmng.AddFont(v_fontname, 0, cchart(fchart).dc, -12, textWidth,  0,       0, false);
+  fontmng.AddFont(v_fontname, 1, cchart(fchart).dc, 12 , textWidth,  FW_BOLD, 0, true);
+  fontmng.AddFont(v_fontname, 2, cchart(fchart).dc, 12 , textWidth,  0,       0, true);
+end;
+
+function cDrawObjMng.fmng: cfontmng;
+begin
+  result := fontmng;
+end;
+
+end.

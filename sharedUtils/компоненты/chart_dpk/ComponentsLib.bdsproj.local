@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2009.07.16 20:11:23.281.bdsproj,C:\Documents and Settings\Admin\Мои документы\Borland Studio Projects\Package1.bdsproj=D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\ComponentsLib.bdsproj</Transaction>
+    <Transaction>2009.07.16 20:18:24.859.pas,D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\Unit1.pas=D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\chart\items\uPage.pas</Transaction>
+    <Transaction>2009.07.16 20:19:25.828.pas,D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\chart\items\uPage.pas=D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\chart\items\uTrend.pas</Transaction>
+    <Transaction>2009.07.16 20:52:33.890.pas,D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\chart\items\uTrend.pas=D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\chart\items\uPoint.pas</Transaction>
+    <Transaction>2009.07.16 20:58:32.578.pas,D:\Oburec\project\Delphi\3dProj\Loader_\Scene\objects\helputils\uVectorList.pas=D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\chart\utils\lists\uVectorList.pas</Transaction>
+    <Transaction>2009.07.16 20:59:55.765.pas,D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\Unit1.pas=D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\chart\utils\lists\uListMath.pas</Transaction>
+    <Transaction>2009.07.16 22:48:11.734.pas,D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\Unit1.pas=D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\chart\utils\uCommonTypes.pas</Transaction>
+    <Transaction>2009.07.16 23:06:08.765.pas,D:\Oburec\project\Delphi\3dProj\Loader_\helpTools\Opengl tools\uOglExpFunc.pas=D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\chart\utils\uOglExpFunc.pas</Transaction>
+    <Transaction>2009.07.16 23:54:26.937.pas,D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\Unit1.pas=D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\chart\utils\uCommonMath.pas</Transaction>
+    <Transaction>2009.07.16 23:55:17.968.pas,D:\Oburec\project\Delphi\3dProj\Loader_\math\MathFunction.pas=</Transaction>
+    <Transaction>2009.07.17 22:25:11.119.pas,D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\BlEng\BldStruct\uBaseObj.pas=D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\chart\items\uBaseObj.pas</Transaction>
+    <Transaction>2009.07.17 22:44:11.509.pas,D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\Unit1.pas=D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\chart\items\uDrawObj.pas</Transaction>
+    <Transaction>2009.07.17 22:47:10.478.pas,D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\компоненты\chart\items\uBaseObj.pas=D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\BlEng\BldStruct\uBaseObj.pas</Transaction>
+    <Transaction>2009.07.17 22:47:28.634.pas,D:\Oburec\project\Delphi\Lopatki_BDS\Lopatki_BDS\BlEng\BldStruct\uBaseObj.pas=</Transaction>
+  </Transactions>
+</BorlandProject>

@@ -1,0 +1,42 @@
+unit uDensityForm;
+
+interface
+
+uses
+  Windows, SysUtils, Classes, Forms, uBaseBldAlg, uSensor, uSensorList,
+  StdCtrls, Spin, CommonOptsFrame, uSpin, Controls, uDensityAlg, uChart;
+
+type
+  TDensityForm = class(TForm)
+    ApplyGB: TGroupBox;
+    OkBtn: TButton;
+    CancelBtn: TButton;
+    OrderFE: TFloatSpinEdit;
+    OrderLabel: TLabel;
+    SensorEdit: TEdit;
+    SensorLabel: TLabel;
+    procedure OrderSpinEditChange(Sender: TObject);
+    procedure UpdateLabel;
+    procedure FormShow(Sender: TObject);
+  private
+  public
+    Function ShowModal(t:csensor; s:calgSensorList;c:cchart):integer;
+  end;
+var
+  DensityForm: TDensityForm;
+
+implementation
+
+{$R *.dfm}
+
+Function TDensityForm.ShowModal(t:csensor; s:calgSensorList;c:cchart):integer;
+begin
+  result:= inherited showmodal;
+  if Result=mrok then
+  begin
+    EvalDensity(t,s,c,orderfe.Value);
+  end;
+end;
+
+
+end.

@@ -1,0 +1,318 @@
+unit uGlTurbine;
+
+interface
+uses
+  SysUtils, Classes, Controls, messages, dialogs, usceneMng, mathfunction,
+  uUI, uRender, uobject,ueditobj, uNodeObject, uObrfile,
+  uglbaseitem, ueventlist, uglEventTypes, uCommonTypes, uGroupObjects;
+
+type
+  cGlTurbine = class;
+
+  cGlStage = class
+  public
+    glturbine:cGlTurbine;
+    // ступень
+    st:cnodeobject;
+    // список лопаток
+    blades:tlist;
+  protected
+    procedure setbladecount(c:integer);
+    Function Getbladecount:integer;
+    procedure setBladesPos(blades:tlist);
+  public
+    constructor create(t:cglturbine);
+    destructor destroy;
+  public
+    property bladecount:integer read getbladecount write setbladecount;
+  end;
+
+  cGlTurbine = class(glRegItem)
+  private
+    blade:cnodeobject;
+    stageObj:cnodeobject;
+    res:string; // путь к ресурсам (сохраненный объект)
+  // данные для реализации свойств
+    stages:tstringlist;
+  protected
+    // начальное положение лопатки
+    startm:matrixgl;
+    fphase:single;
+  private
+    function getscene:cscene;
+  private
+    function getname:string;
+  protected
+    // подвязывается на событие cBaseGlComponent и вызывается при инициации сцены
+    // либо при назначении объекту glRegItem родителя cBaseGlComponent
+    procedure init;override;
+    procedure setphase(p:single);
+    // подвязывается на событие движка и вызывается из метода cScene.Add()
+    procedure beforeaddobj(obj:cnodeobject);override;
+  protected
+    procedure setstagecount(c:integer);
+    function GetStageCount:integer;
+  public
+    procedure addstage;
+    function GetStage(i:integer):cGlStage;
+    destructor destroy;override;
+  published
+    property Phase:single read fPhase write setPhase;
+    property stageCount:integer read getstagecount write setstagecount;
+  end;
+
+implementation
+  uses uBaseGlComponent, uConfigFile3d;
+
+  const sourceData = 'turbina_insts_1Blade.obr';
+
+//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
+destructor cGlTurbine.destroy;
+var
+  I: Integer;
+  st:cglstage;
+begin
+  if stages<>nil then
+  begin
+    for I := 0 to stages.Count - 1 do
+    begin
+      st:=getstage(i);
+      st.destroy;
+    end;
+    stages.clear;
+    stages.destroy;
+  end;
+  inherited;
+end;
+
+procedure cGlTurbine.setphase(p:single);
+var
+  d:single;
+  i:integer;
+  rot:point3;
+begin
+  i:=trunc(p/360);
+  p:=p-360*i;
+  d:=fphase-p;
+  rot.x:=0;
+  rot.y:=d;
+  rot.z:=0;
+  node.RotateNodeInLocalNodeWorld(rot);
+  fphase:=p;
+end;
+
+function cGlTurbine.getname:string;
+begin
+  result:=node.name;
+end;
+
+function cGlTurbine.getscene:cscene;
+var ui:cUI;
+begin
+  ui:=cbaseglcomponent(basegl).mUI;
+  if ui<>nil then
+    result:=ui.scene
+  else
+    result:=nil;
+end;
+
+procedure cGlTurbine.beforeaddobj(obj:cnodeobject);
+var
+  p3:point3;
+  st:cglstage;
+begin
+  inherited;
+  if not allinit then
+  begin
+    if (stageObj=nil) and (obj.name='Cylinder01') then
+      stageObj:=obj;
+    if (node=nil) and (obj.name='Group01') then
+      node:=obj;
+    if (blade=nil) and (obj.name='Loft01') then
+    begin
+      blade:=obj;
+      startm:=blade.nodetm;
+    end;
+    if (stageObj<>nil) and (node<>nil) and (blade<>nil) then
+    begin
+      allinit:=true;
+    end;
+    if allinit then
+    begin
+      stages:=TStringList.Create;
+      stages.Sorted:=true;
+      st:=cglstage.create(self);
+      st.st:=stageobj;
+      st.blades.Add(blade);
+      stages.AddObject(st.st.name,st);
+    end;
+  end;
+end;
+
+procedure cGlTurbine.init;
+var
+  scene:cscene;
+  p3:point3;
+begin
+  // добавляем события сцены
+  if cBaseGlComponent(basegl).mUI=nil then exit;
+  cBaseGlComponent(basegl).mUI.EventList.AddEvent(name+' BeforeAddObjToScene', E_BeforeAddObj,doBeforeAddObj);
+  scene:=getscene;
+  if scene=nil then exit;
+  res:=cbaseglcomponent(basegl).mUI.m_RenderScene.ConfigFile.findMeshFile(sourcedata);
+  //meshes.strings[0]+sourceData;
+  if node=nil then
+  begin
+    if LoadObrFile(res,scene.pathfile,scene) then
+    begin
+      fphase:=0;
+      if blade<>nil then
+      begin
+        //startm:=stick.nodetm;
+        //p3.x:=-90; p3.y:=0; p3.z:=0;
+        //stick.RotateNodeLocal(p3);
+        //endtm:=stick.nodetm;
+        //cobject(node).fOnClick:=doClick;
+        //allinit:=true;
+        cBaseGlComponent(basegl).mUI.EventList.removeEvent(doBeforeAddObj,E_BeforeAddObj);
+      end;
+    end;
+  end;
+  inherited;
+end;
+
+procedure cGlTurbine.addstage;
+var
+  newstage:cglstage;
+  scene:cscene;
+  obj:cnodeObject;
+begin
+  scene:=getscene;
+  newstage:=cGlStage.Create(self);
+  obj:=scene.CopyObject(stageObj);
+  newstage.st:=obj;
+  stages.AddObject(obj.name,newstage);
+end;
+
+procedure cGlTurbine.setstagecount(c:integer);
+var
+  st:cglstage;
+begin
+  if c=stages.Count then exit;
+  if c>stages.Count then
+  begin
+    while c>stages.Count do
+    begin
+      addstage;
+    end;
+  end
+  else
+  begin
+    while c<stages.Count do
+    begin
+      st:=cglstage(stages.Objects[stages.Count-1]);
+      stages.Delete(stages.Count-1);
+    end;
+  end;
+end;
+
+function cGlTurbine.GetStageCount:integer;
+begin
+  result:=stages.Count;
+end;
+
+function cGlTurbine.GetStage(i:integer):cGlStage;
+begin
+  result:=cglstage(stages.Objects[i]);
+end;
+
+constructor cGlStage.create(t:cglturbine);
+begin
+  glturbine:=t;
+  blades:=TList.Create;
+end;
+
+destructor cGlStage.destroy;
+var
+  I: Integer;
+  obj:cnodeobject;
+begin
+  if glturbine.InitUI then
+  begin
+    for I := 0 to blades.Count - 1 do
+    begin
+      obj:=cnodeobject(blades.Items[i]);
+      obj.destroy;
+    end;
+    st.destroy;
+  end;
+  blades.Destroy;
+end;
+
+procedure cGlStage.setBladesPos(blades:tlist);
+var
+  blCount:integer;
+  d:single;
+  I: Integer;
+  bl:cnodeobject;
+  StartBladeTM:matrixgl;
+begin
+  blCount:=blades.Count;
+  d:=360/blCount;
+  StartBladeTM:=cnodeobject(blades.Items[0]).nodetm;
+  for I := 1 to blades.Count - 1 do
+  begin
+    bl:=cnodeobject(blades.Items[i]);
+    bl.nodetm:=StartBladeTM;
+    bl.RotateNodeInParentWorld(p3(0,d*i,0));
+  end;
+end;
+
+procedure cGlStage.SetBladeCount(c:integer);
+var
+  i:integer;
+  bl:cnodeobject;
+  scene:cscene;
+begin
+  if c=blades.Count then exit;
+  scene:=glturbine.getscene;
+  if c>blades.Count then
+  begin
+    SetGroupState(st,false);
+    while c>blades.Count do
+    begin
+      bl:=scene.CopyObject(glturbine.blade);
+      bl.parent:=glturbine.blade.parent;
+      blades.Add(bl);
+    end;
+    SetGroupState(st,true);    
+  end
+  else
+  begin
+    while c<blades.Count do
+    begin
+      bl:=cnodeobject(blades.Items[blades.Count-1]);
+      bl.destroy;
+      blades.Delete(blades.Count-1);
+    end;
+  end;
+  setBladesPos(blades);
+  cBaseGlComponent(glturbine.basegl).Invalidate;
+end;
+
+Function cGlStage.GetBladeCount:integer;
+begin
+  Result:=blades.Count;
+end;
+
+
+
+
+
+initialization
+
+finalization
+
+
+end.

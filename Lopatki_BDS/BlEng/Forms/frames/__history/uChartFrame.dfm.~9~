@@ -1,0 +1,155 @@
+object ChartFrame: TChartFrame
+  Left = 0
+  Top = 0
+  Width = 809
+  Height = 357
+  Align = alClient
+  TabOrder = 0
+  TabStop = True
+  ExplicitWidth = 451
+  ExplicitHeight = 304
+  object formulyarsTC: TPageControl
+    Left = 0
+    Top = 0
+    Width = 809
+    Height = 357
+    ActivePage = ChartTabSheet
+    Align = alClient
+    TabOrder = 0
+    ExplicitWidth = 451
+    ExplicitHeight = 304
+    object ChartTabSheet: TTabSheet
+      Caption = #1043#1088#1072#1092#1080#1082#1080
+      ExplicitWidth = 443
+      ExplicitHeight = 276
+      object Splitter2: TSplitter
+        Left = 148
+        Top = 0
+        Width = 5
+        Height = 329
+        ExplicitTop = -24
+        ExplicitHeight = 512
+      end
+      object cChart1: cChart
+        Left = 153
+        Top = 0
+        Width = 648
+        Height = 329
+        Align = alClient
+        Caption = 'cChart1'
+        TabOrder = 0
+        OnInit = cChart1Init
+        ExplicitWidth = 290
+        ExplicitHeight = 276
+      end
+      object EventsListView: TBtnListView
+        Left = 0
+        Top = 0
+        Width = 148
+        Height = 329
+        Align = alLeft
+        Columns = <
+          item
+            Caption = #8470
+          end
+          item
+            Caption = #1048#1084#1103
+          end
+          item
+            Caption = #1058#1080#1087
+          end>
+        RowSelect = True
+        TabOrder = 1
+        ViewStyle = vsReport
+        BtnCol = 0
+        QuoteColumnBtnClick = False
+        QuoteColumnDblClick = False
+        DrawColorBox = False
+        ExplicitHeight = 276
+      end
+    end
+    object DigitFormTabSheet: TTabSheet
+      Caption = #1062#1080#1092#1088#1086#1074#1086#1081' '#1092#1086#1088#1084#1091#1083#1103#1088
+      ImageIndex = 1
+      ExplicitWidth = 443
+      ExplicitHeight = 276
+      object DigitsLV: TBtnListView
+        Left = 0
+        Top = 0
+        Width = 801
+        Height = 329
+        Align = alClient
+        Columns = <>
+        RowSelect = True
+        TabOrder = 0
+        ViewStyle = vsReport
+        OnAdvancedCustomDrawItem = DigitsLVAdvancedCustomDrawItem
+        OnDrawItem = DigitsLVDrawItem
+        BtnCol = -1
+        QuoteColumnBtnClick = False
+        QuoteColumnDblClick = False
+        DrawColorBox = False
+        ExplicitWidth = 443
+        ExplicitHeight = 276
+      end
+    end
+    object VisualTabSheet: TTabSheet
+      Caption = #1043#1088#1072#1092#1080#1095#1077#1089#1082#1080#1081' '#1092#1086#1088#1084#1091#1083#1103#1088
+      ImageIndex = 2
+      ExplicitWidth = 443
+      ExplicitHeight = 276
+      object TurbineGLGB: TGroupBox
+        Left = 0
+        Top = 0
+        Width = 801
+        Height = 329
+        Align = alClient
+        TabOrder = 0
+        ExplicitWidth = 443
+        ExplicitHeight = 276
+        object Splitter1: TSplitter
+          Left = 2
+          Top = 318
+          Width = 797
+          Height = 9
+          Cursor = crVSplit
+          Align = alBottom
+          Beveled = True
+          Color = clGray
+          ParentColor = False
+          ExplicitLeft = 17
+          ExplicitTop = 217
+          ExplicitWidth = 520
+        end
+        inline glTurbineFrame1: TglTurbineFrame
+          Left = 2
+          Top = 15
+          Width = 797
+          Height = 303
+          Align = alClient
+          TabOrder = 0
+          TabStop = True
+          ExplicitLeft = 2
+          ExplicitTop = 15
+          ExplicitWidth = 439
+          ExplicitHeight = 250
+          inherited cBaseGlComponent1: cBaseGlComponent
+            Width = 678
+            Height = 297
+            ExplicitWidth = 320
+            ExplicitHeight = 244
+          end
+          inherited EditTurbGB: TGroupBox
+            Height = 303
+            ExplicitHeight = 250
+            inherited ApplyBtn: TButton
+              Top = 118
+              OnClick = glTurbineFrame1ApplyBtnClick
+              ExplicitTop = 65
+            end
+          end
+        end
+      end
+    end
+  end
+end

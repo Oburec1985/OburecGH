@@ -1,0 +1,638 @@
+// добавляет к оконной процедуре функционирование связанное с кликом мыши
+unit uChartClickFrListener;
+
+interface
+uses
+  uFrameListener, messages, classes, windows, uCommonTypes, uPage, uTrend, uAxis,
+  uPoint, uCommonMath, types, opengl, uOglExpFunc, uChartEvents, udrawobj,
+  ucursors, controls, math;
+
+type
+  cClickFrListener = class(cFrameListener)
+  public
+    selectMode:boolean;
+    // призумливаемая область
+    Rect:frect;
+    DrawSelectRect,
+    moveCamera:boolean;
+  protected
+    cursowner:integer;  
+    overaxis:boolean;
+    selectAxis:integer;
+
+    iStartRect:tpoint;
+    iEndRect:tpoint;
+
+    normalWndSelSize:single;
+    chrt:tobject;
+  protected
+    function gethandle:thandle;
+    function getpage:cpage;
+    function getObj(i:integer):cdrawobj;
+    function heigth:integer;
+    function width:integer;
+    procedure invalidate;
+    procedure init(p_data:tobject; p_name:string);override;
+    // Определяет границы выбора точки по x
+    function FindPoint(p2i:tpoint):selectpoint;
+    function CheckPoint(p2i:tpoint):tpoint;
+    // найти точку на лог шкале
+    function FindPoint_lg(p2i:tpoint):selectpoint;
+    // Возвращает тренд к которому применяется поиск точек
+    function ActiveObj:cdrawobj;
+    // если выбран тренд то возвращает его иначе nil
+    function Activetrend:ctrend;
+    // преобразовать размер в пикселях в кординаты чарта
+    function PixelSizeToTrend(x:integer):single;
+    // отрисовать селектирующий прямоугольник
+    procedure ProcDrawSelectRect(sender:tobject);
+    // передвигает выделенные точки
+    procedure MovePoints(const mouse:smousestruct);
+  public
+    procedure WndProc(var msg:tmessage;var mouse:smousestruct);override;
+  end;
+
+implementation
+uses uChart;
+
+procedure cClickFrListener.init(p_data:tobject; p_name:string);
+begin
+  inherited;
+  cursowner:=cchart(data).GenCursOwnerName;
+  selectMode:=true;
+  chrt:=p_data;
+  cchart(p_data).OBJmNG.Events.AddEvent('drawSelectRect', e_onDraw, ProcDrawSelectRect);
+end;
+
+procedure cClickFrListener.invalidate;
+begin
+  cchart(data).needRedraw:=true;
+end;
+
+function cClickFrListener.heigth:integer;
+begin
+  result:=cchart(data).Height;
+end;
+
+function cClickFrListener.width:integer;
+begin
+  result:=cchart(data).width;
+end;
+
+function cClickFrListener.gethandle:thandle;
+begin
+  result:=cchart(data).Handle;
+end;
+
+function cClickFrListener.getpage:cpage;
+begin
+  result:=cpage(cchart(data).activepage);
+end;
+
+function cClickFrListener.getObj(i:integer):cdrawobj;
+begin
+  result:=cdrawobj(getpage.activeAxis.getChild(i));
+end;
+
+function cClickFrListener.Activetrend:ctrend;
+var
+  obj:cdrawobj;
+begin
+  obj:=activeobj;
+  if (obj<>nil) and (obj is ctrend) then
+    result:=ctrend(obj)
+  else
+    result:=nil;
+end;
+
+procedure cClickFrListener.WndProc(var msg:tmessage;var mouse:smousestruct);
+var
+  p2i, checkp:tpoint;
+  ltrend:ctrend;
+  obj:ctrend;
+  page:cdrawobj;
+  I, low,hi, axPos: Integer;
+  axis:caxis;
+  lrect:frect;
+  b:boolean;
+  cp, bp:cBeziePoint;
+begin
+  if getflag(c_blockAllWM) then exit;
+  page:=getpage;
+  if page=nil then
+    exit;
+  if not (page is cpage) then
+    exit;
+  ltrend:=Activetrend;
+  case msg.Msg of
+    wm_mousemove:
+    begin
+      if drawselectrect then
+      begin
+        rect.TopRight:=mouse.activeAxisPos;
+        invalidate;
+      end;
+      // передвижение точек
+      if SelectMode then
+      begin
+        if ltrend<>nil then
+        begin
+          if ltrend.selectCount<>0 then
+            MovePoints(mouse)
+          else
+          // проверка что навели курсор на точку
+          begin
+            if ltrend.parent=nil then
+              exit;
+            if caxis(ltrend.parent).lg then
+            begin
+              //FindPoint_lg(p2i)
+            end
+            else
+            begin
+              checkp:=checkpoint(mouse.iPos_inv);
+              if checkp.x<>-1 then
+              begin
+                cchart(data).setcursor(crCross, cursowner);
+                exit;
+              end
+              else
+              begin
+                cchart(data).setcursor(crDefault, cursowner)
+              end;
+            end;
+          end;
+        end;
+      end;
+      // проверка выбора оси
+      overaxis:=false;
+      for I := 0 to cpage(page).getAxisCount - 1 do
+      begin
+        axPos:=cpage(page).getaxis(i).iaxispos+cpage(page).bound.Left;
+        hi:=axPos+cchart(data).selectsize;
+        low:=axPos-cchart(data).selectsize;
+        b:=((mouse.ipos.x>=cpage(page).bound.Left) and (mouse.ipos.x<=cpage(page).bound.Right) and
+           ((mouse.iPos_inv.y>=cpage(page).bound.Bottom) and (mouse.iPos_inv.y<=cpage(page).bound.Top)));
+        if b then
+        begin
+          if (mouse.ipos.X<=hi) and (mouse.ipos.X>=low) then
+          begin
+            overaxis:=true;
+            selectaxis:=i;
+            break;
+          end;
+        end;
+      end;
+      if overaxis then
+        cchart(data).setcursor(crSize, cursowner)
+      else
+        cchart(data).setcursor(crDefault, cursowner);
+      if moveCamera then
+      begin
+        lRect.BottomLeft:=DecP2(cpage(page).activeAxis.min,mouse.activeaxisstrafe);
+        lRect.TopRight:=DecP2(cpage(page).activeAxis.max,mouse.activeaxisstrafe);
+        cpage(page).ZoomfRect(lrect);
+        mouse.activeAxisPos.x:=mouse.activeAxisPos.x-mouse.activeaxisstrafe.x;
+        mouse.activeAxisPos.y:=mouse.activeAxisPos.y-mouse.activeaxisstrafe.y;
+        invalidate;
+      end;
+    end;
+    WM_LBUTTONDOWN:
+    begin
+      Windows.SetFocus(gethandle);
+      p2i:=mouse.iPos_inv;
+      // Призумливание области если нажат контрол
+      if GetKeyState(VK_CONTROL)<0 then
+      begin
+        page:=cchart(data).activepage;
+        if cpage(page).MouseInPage(mouse.iPos_inv) then
+        begin
+          DrawSelectRect:=true;
+          iStartRect.y:=heigth-HIWORD(msg.Lparam);
+          iStartRect.x:=LOWORD(msg.LParam);
+          rect.BottomLeft:=mouse.activeAxisPos;
+          rect.TopRight:=rect.BottomLeft;
+          invalidate;
+        end;
+      end;
+      if ltrend<>nil then
+      begin
+        ltrend.deselectAll;
+        // Выделение точек при одиночном клике
+        if SelectMode then
+        begin
+          if ltrend.parent<>nil then
+          begin
+            if caxis(ltrend.parent).lg then
+              FindPoint_lg(p2i)
+            else
+              FindPoint(p2i);
+          end;
+        end;
+      end;
+      if overaxis then
+      begin
+        Axis:=cpage(page).getaxis(selectAxis);
+        cpage(page).activeAxis:=axis;
+      end;
+      if GetKeyState(VK_Shift)<0 then
+      begin
+        // Если отпустили контрол то не рисовать
+        moveCamera:=true;
+      end;
+      invalidate;
+    end;
+    WM_RBUTTONUP:
+    begin
+      // изменение типа выделенных точек
+      ltrend.changetype;
+      invalidate;
+    end;
+    WM_LBUTTONUP:
+    begin
+      moveCamera:=false;
+      if GetKeyState(VK_CONTROL)<0 then // Если нажат VK_CONTROL
+      begin
+        if drawselectrect then
+        begin
+          // Запоминаем границу выделительной рамки
+          iendRect.y:=HIWORD(msg.Lparam);
+          iendRect.x:=LOWORD(msg.LParam);
+          if (mouse.DragBegginPos.x<mouse.iPos.x) and
+             (mouse.DragBegginPos.y<mouse.ipos.y) then
+            cpage(page).ZoomfRect(rect)
+          else
+            cpage(page).Normalise;
+        end;
+      end;
+      DrawSelectRect:=false;
+    end;
+    WM_KEYUP: // при отпускании клавиши контрол сбрасывается
+              // флаг необходиvjcnb рисовать область выделения
+    begin
+      if integer(msg.WParam)=VK_CONTROL then
+      begin
+        // Если отпустили контрол то не рисовать
+        DrawSelectRect:=false;
+      end;
+      if integer(msg.WParam)=VK_Shift then
+      begin
+        // Если отпустили контрол то не рисовать
+        moveCamera:=false;
+      end;
+    end;
+    WM_KEYDown:
+    begin
+      if integer(msg.WParam)=VK_insert then
+      begin
+        if ltrend<>nil then
+        begin
+          cp:=ltrend.insertpoint(mouse.activeAxisPos.x);
+          if cp.UniqIndex>0 then
+          begin
+            bp:=ltrend.getPoint(cp.UniqIndex-1);
+            if bp.right.x>cp.point.x then
+            begin
+              bp.right.x:=bp.point.x+(cp.point.x-bp.point.x)/2;
+            end;
+          end;
+          if cp.UniqIndex<ltrend.count-1 then
+          begin
+            bp:=ltrend.getPoint(cp.UniqIndex+1);
+            if bp.left.x<cp.point.x then
+            begin
+              bp.left.x:=cp.point.x+(bp.point.x-cp.point.x)/2;
+            end;
+          end;
+          cchart(chrt).doOnInsertPoint(ltrend, cp);
+          invalidate;
+        end;
+      end;
+    end;
+  end;
+end;
+
+function cClickFrListener.FindPoint_lg(p2i:tpoint):selectpoint;
+var
+  i,low,hi:integer;
+  // мин макс выделяющей области по x и y
+  p2_y, p2_x:point2d;
+  p2:point2;
+
+  page:cpage;
+  ltrend:ctrend;
+  size:point2;
+  fr:cframelistener;
+  trendY:single;
+begin
+  result:=nil;
+  ltrend:=Activetrend;
+  if ltrend<>nil then
+  begin
+    page:=getpage;
+    // находим мин макс выделения на линейной оси
+    p2_y:=page.yiminmax_ToTrend(point(p2i.y-cchart(data).selectSize,
+                            p2i.y+cchart(data).selectSize),
+                            page.activeAxis);
+    p2_x:=page.ximinmax_ToTrend(point(p2i.x-cchart(data).selectSize,
+                            p2i.x+cchart(data).selectSize),
+                            page.activeAxis);
+    p2:=page.p2itotrend(p2i,page.activeAxis);
+
+    low:=ltrend.GetLowInd(p2_x.x);
+    hi:=ltrend.GetHiInd(p2_x.y);
+    if (low<0) or (hi=0) then exit;
+    for i:=low to hi do
+    begin
+      trendY:=ltrend.getY_log(i);
+      if (trendY>p2_y.x)and (trendY<p2_y.y) then
+      begin
+        if (ltrend.GetP2(i).x>p2_x.x)and (ltrend.GetP2(i).x<p2_x.y) then
+        begin
+          // тип выделенной вершины - corner
+          ltrend.NeedRecompile:=true;
+          result:=ltrend.selectvertex(i,c_point);
+        end;
+      end;
+    end;
+  end;
+  fr:=cchart(data).frList.GetFrame('cObjFrListener');
+  if result<>nil then
+  begin
+    fr.active:=false;
+  end
+  else
+  begin
+    fr.active:=true;
+  end;
+end;
+
+function cClickFrListener.CheckPoint(p2i: tpoint): tpoint;
+var
+  ltrend:ctrend;
+  p2_,p,
+  // размер выбранной области дл проверки выбора вершины в координатах тренда
+  size:point2;
+  pi:tpoint;
+  bp:cBeziePoint;
+  page:cpage;
+  low, hi, i:integer;
+begin
+  result.x:=-1;
+  ltrend:=Activetrend;
+  if ltrend<>nil then
+  begin
+    page:=getpage;
+    p2_:=page.p2iToTrend(p2i,page.activeAxis);
+    p:=p2_;
+    pi.x:=cchart(data).selectsize;
+    pi.y:=cchart(data).selectsize;
+    p2_.x:=p.x - size.x;
+    p2_.y:=p.x + size.x;
+    low:=ltrend.GetLowInd(p2_.x);
+    hi:=ltrend.GetHiInd(p2_.y);
+    for i:=low to hi do
+    begin
+      bp:=cBeziePoint(ltrend.getpoint(i));
+      pi:=page.trendptop2i(bp.point);
+      if abs(p2i.y - pi.y)<cchart(data).selectSize then
+      begin
+        if abs(p2i.x - pi.x)<cchart(data).selectSize then
+        begin
+          // тип выделенной вершины - corner
+          result.x:=i;
+          Result.y:=c_point;
+          exit;
+        end;
+        // Выделение направляющих векторов
+        if ltrend.smooth then
+        begin
+          if bp.smooth then
+          begin
+            pi:=page.TrendPtoP2i(bp.left);
+            if abs(p2i.y - pi.y)<cchart(data).selectSize then
+            begin
+              if abs(p2i.x - pi.x)<cchart(data).selectSize then
+              begin
+                result.x:=i;
+                Result.y:=c_left;
+                exit;
+              end;
+            end;
+            pi:=page.trendptop2i(bp.right);
+            if abs(p2i.y - pi.y)<cchart(data).selectSize then
+            begin
+              if abs(p2i.x - pi.x)<cchart(data).selectSize then
+              begin
+                result.x:=i;
+                Result.y:=c_right;
+                exit;
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
+
+// Определяет границы выбора точки по x
+function cClickFrListener.FindPoint(p2i:tpoint):selectpoint;
+var i,low,hi:integer;
+    p2_,p:point2;
+    pi:tpoint;
+    bp:cBeziePoint;
+    page:cpage;
+    ltrend:ctrend;
+    size:point2;
+    fr:cframelistener;
+begin
+  result:=nil;
+  ltrend:=Activetrend;
+  if ltrend<>nil then
+  begin
+    page:=getpage;
+    p2_:=page.p2iToTrend(p2i,page.activeAxis);
+    p:=p2_;
+    pi.x:=cchart(data).selectsize;
+    pi.y:=cchart(data).selectsize;
+    size:=getpage.PixelSizeToTrend(pi, page.activeAxis);
+    p2_.x:=p.x - size.x;
+    p2_.y:=p.x + size.x;
+    low:=ltrend.GetLowInd(p2_.x);
+    hi:=ltrend.GetHiInd(p2_.y);
+    if (low<0) or (hi=0) then exit;
+    for i:=low to hi do
+    begin
+      bp:=cBeziePoint(ltrend.getpoint(i));
+      pi:=page.trendptop2i(bp.point);
+      if abs(p2i.y - pi.y)<cchart(data).selectSize then
+      if abs(p2i.x - pi.x)<cchart(data).selectSize then
+      begin
+        // тип выделенной вершины - corner
+        result:=ltrend.selectvertex(i,c_point);
+      end;
+      // Выделение направляющих векторов
+      if ltrend.smooth then
+      begin
+        if bp.smooth then
+        begin
+          pi:=page.TrendPtoP2i(bp.left);
+          if abs(p2i.y - pi.y)<cchart(data).selectSize then
+          if abs(p2i.x - pi.x)<cchart(data).selectSize then
+          begin
+            result:=ltrend.selectvertex(i,c_left);
+          end;
+          pi:=page.trendptop2i(bp.right);
+          if abs(p2i.y - pi.y)<cchart(data).selectSize then
+          if abs(p2i.x - pi.x)<cchart(data).selectSize then
+          begin
+            result:=ltrend.selectvertex(i,c_right);
+          end;
+        end;
+      end;
+    end;
+  end;
+  fr:=cchart(data).frList.GetFrame('cObjFrListener');
+  if result<>nil then
+  begin
+    fr.active:=false;
+  end
+  else
+  begin
+    fr.active:=true;
+  end;
+end;
+
+function cClickFrListener.ActiveObj:cdrawobj;
+begin
+  result:=cchart(data).selected;
+end;
+
+// переводит пиксельную длину в координаты в координаты чарта
+function cClickFrListener.PixelSizeToTrend(x:integer):single;
+var
+  page:cpage;
+  axis:caxis;
+  l_p2:point2;
+  p:tpoint;
+  y,val:single;
+  ival:integer;
+  b:boolean;
+begin
+  page:=getpage;
+  axis:=page.activeAxis;
+  l_p2:=p2(axis.getdx,axis.getdy);
+  val:=uCommonMath.min(l_p2.x,l_p2.y,b);
+  p.x:=width;  p.y:=heigth;
+  ival:=uCommonMath.min(width,heigth);
+  result:=x*val/ival;
+end;
+
+Procedure cClickFrListener.ProcDrawSelectRect(sender:tobject);
+const Colors:array [0..19] of single = (0.2,0.2,0.2,0.1,  0.2,0.2,0.2,0.1,
+                                        0.2,0.2,0.2,0.1,  0.2,0.2,0.2,0.1,
+                                        0.2,0.2,0.2,0.1 );
+var
+  RectData:Array [0..4] of point2;
+  a:caxis;
+  p:cpage;
+begin
+  if DrawSelectRect then
+  begin
+    p:=getpage;
+    a:=p.activeAxis;
+    if a=nil then
+    begin
+      if p.getAxisCount<>0 then
+      begin
+        a:=p.getaxis(0);
+        p.activeAxis:=a;
+      end
+      else
+        exit;
+    end;
+    getpage.setDrawObjVP;
+    a.loadstate;
+    RectData[0].x:=Rect.BottomLeft.x;RectData[0].y:=Rect.BottomLeft.y;
+    RectData[1].x:=Rect.BottomLeft.x;RectData[1].y:=Rect.TopRight.y;
+    RectData[2].x:=Rect.TopRight.x;RectData[2].y:=Rect.TopRight.y;
+    RectData[3].x:=Rect.TopRight.x;RectData[3].y:=Rect.BottomLeft.y;
+    RectData[4].x:=Rect.BottomLeft.x;RectData[4].y:=Rect.BottomLeft.y;
+    glLineStipple (1, $F0F0);
+    // Рисуем сам прямоугольник ---------------------------------------
+    glEnable (GL_LINE_STIPPLE);
+    glEnableClientState(GL_COLOR_ARRAY);
+    glColorPointer(4, GL_FLOAT, 0,@Colors[0]);    // указатель на массив цветов
+    glEnableClientState(GL_VERTEX_ARRAY) ;        // вкл. режим рисования
+    glVertexPointer(2, GL_FLOAT, 0,@RectData[0]); // указатель на массив данных
+    glDrawArrays(GL_LINE_STRIP,0,5);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    //-----------------------------------------------------------------
+    glDisable (GL_LINE_STIPPLE);
+  end;
+end;
+
+procedure cClickFrListener.MovePoints(const mouse:smousestruct);
+var i:integer;
+    ltrend:ctrend;
+    sp:selectpoint;
+    p:cbeziepoint;
+    point:point2;
+    pos:point2;
+    page:cpage;
+    range, lgrange, lgmin:single;
+begin
+  if not mouse.mousedown then exit;
+  page:=getpage;
+  ltrend:=Activetrend;
+  if ltrend.parent<>page.activeAxis then
+  begin
+    if ltrend.parent <>nil then
+      pos:=page.Point2ToTrend(mouse.pos, caxis(ltrend.parent));
+  end
+  else
+    pos:=mouse.activeAxisPos;
+  if ltrend=nil then exit;
+  for I := 0 to ltrend.selectcount - 1 do
+  begin
+    sp:=ltrend.GetSelectPoint(i);
+    p:=ltrend.GetSelected(i);
+    case sp.t of
+      c_point:
+      begin
+        point:=pos;
+      end;
+      c_left:
+      begin
+        point:=pos;
+      end;
+      c_right:
+      begin
+        point:=pos;
+      end;
+    end;
+  end;
+  //DoSetPoint(p,ltrend.m_trend.m_selectedPoints[i]);
+  if caxis(ltrend.parent).lg then
+  begin
+    range:=caxis(ltrend.parent).max.y-caxis(ltrend.parent).min.y;
+    // переводим в относительные координаты для лин оси
+    pos.y:=(pos.y-caxis(ltrend.parent).min.y)/range;
+    lgmin:=log10(caxis(ltrend.parent).min.y);
+    lgrange:=log10(caxis(ltrend.parent).max.y)-lgmin;
+    pos.y:=pos.y*lgrange+lgmin;
+    pos.y:=power(10,pos.y);
+    point:=pos;
+  end;
+  ltrend.SetPoint(point,sp);
+  invalidate;
+end;
+
+
+
+
+
+end.

@@ -1,0 +1,158 @@
+#headerPrint,
+#footerPrint { display:block}
+
+#headerPrint,
+#footerPrint,
+.content,
+.path { margin-left:50px; width:90%}
+
+#content,
+.content,
+.path { padding:0}
+
+#headerPrint { border-bottom:1px solid #666; padding-bottom:20px; margin-bottom:1em; padding-top:30px}
+#headerPrint .logoSub { font-size:3em}
+#headerPrint .source { font-size:1.1em; margin-top:2px}
+
+#footerPrint { width:90%; margin-top:2em; padding-top:1em; border-top:1px solid #666}
+
+/* цвета */
+body { color:#000000; background-color:#fff;}
+a { color:#0D89C7;}
+
+.path em { color:#ADADAD}
+.path a { color:#ADADAD;}
+
+.newsPrew { background-color:#DFDFDF; border-color:#C0C0C0;}
+.newsPrew .item a {color:#000000;}
+.newsPrew .item a:hover { color:#000000;}
+.newsPrew .date { color:#AEAEAE;}
+.newsPrew .notice {color:#000000;}
+
+.firmattributes { border-color:#C0C0C0; color:#9C9FA6;}
+.firmattributes a {color:#0D89C7;}
+
+.noticeBlock div.period { color:#666666;}
+.noticeBlock div.price { color:#003E6E;}
+
+.consultantList h4,
+.consultantList span.position { color:#666;}
+
+.news div.image { border-color:#ccc;}
+.news div.date { color:#989898;}
+.news div.source,
+.news div.source a { color:#666666}
+.news div.source span.delim { color:#989898}
+.news div.source span.date { color:#989898}
+
+.photogal .item img { background-color:#eee;}
+
+.form_plain .form_err_item { color:#FF0000;}
+.form_plain .form_err .form_field_title { color: #FF0000;}
+.form_plain .form_errors { color:#FF0000;}
+.form_plain .form_field_required {color:#FF0000;}
+
+.pagelist,
+.commonList div.image,
+.viewTable,
+.viewTable div.image,
+.viewGallery,
+.viewGallery div.image { border-color:#ccc;}
+
+.switchers { color:#666}
+.switchers strong { background-color:#ADADAD; color:#fff }
+
+.priceLabel ul { background-color:#538B0E;}
+.priceLabel li { color:#fff;}
+
+.catalogItem div.blockTitle { color:#666}
+
+.side div.textblock h4.title { color:#666}
+
+/* шрифты и отступы */
+body { font-family:Arial, Helvetica, sans-serif;}
+
+.path { font-size:1em;}
+.path em { font-size:1.4em;}
+
+.content { font-size:1.2em;}
+
+h1.title { font-size:234%; font-weight:normal; line-height:1.1em;}
+.content div.textblock h4.title { font-size:234%; line-height:1.1em;}
+
+.section h1 { font-size:159%; font-weight:normal}
+.section h2 { font-size:159%; font-weight:normal}
+.section h3 { font-size:159%; font-weight:normal; font-style:italic}
+.section h4 { font-size:134%; font-weight:normal}
+.section h5 { font-size:117%; font-weight:normal; font-style:italic}
+.section h6 { font-size:100%;}
+
+.section blockquote { font-style:italic}
+
+.section table.price caption { font-size:134%;}
+.section table.price caption * { font-size:100%}
+
+.newsPrew .item { font-size:1.1em;}
+
+.firmattributes { font-size:1.1em;}
+
+.noticeBlock div.title { font-size:1.4em;}
+.noticeBlock div.notice { font-size:1.1em; line-height:1.4em;}
+.noticeBlock div.price { font-size:1.6em;}
+
+.consultantList h4 { font-size:1.4em; font-weight:normal}
+.consultantList div.item { font-size:1.2em;}
+
+.searchPrew input { font-family:Arial, Helvetica, sans-serif; font-size:1.2em;}
+
+.news div.date { font-size:90%}
+.news h2 {font-size:134%;}
+.news a.detail { font-size:78%}
+.news div.notice { font-size:117%; line-height:1.3em}
+.news div.source { font-size:90%;}
+.news div.source span.delim { font-size:130%;}
+
+.photogal .item { font-size:90%; line-height:120%}
+
+#footerPrint { font-size:1.1em;}
+
+.searchForm input,
+.searchForm button { font-family: Arial, Helvetica, sans-serif; font-size:1em;}
+
+.form_plain .form_field_desc,
+.form_plain .checkboxNotice { font-style:italic}
+
+.form_plain .form_field_required { font-family:Verdana, Arial, Helvetica, sans-serif; font-weight:bold;}
+
+.form_plain .form_item_input,
+.form_plain .form_item_textarea,
+.form_plain .form_item_file { font-family:Arial, Helvetica, sans-serif; font-size:1em;}
+
+.selectfield { font-family: Arial, Helvetica, sans-serif;}
+
+.commonList h2 {font-size:117%;}
+.commonList a.detail { font-style:italic; font-size:90%}
+.commonList div.notice { line-height:1.3em}
+
+.switchers { font-size:83%;}
+
+.viewTable h2,
+.viewGallery h2 { font-size:134%;}
+
+.catalogItem div.blockTitle { font-size:117%;}
+.catalogItem .filesList li.item span { font-size:90%}
+
+.priceLabel li { font-size:134%}
+
+/* для media=screen */
+
+.container { background:#fff}
+
+#header,
+#footer,
+.side,
+.printLink,
+.clear { display:none}
+
+.section table.styled div.plus { background:none !important}
+.section table.styled div.plus span { visibility:visible; font-size:117%}

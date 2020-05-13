@@ -1,0 +1,19 @@
+<?xml version=1.0 encoding=UTF-8?>
+<Root>
+  <WinПОС ResFolder=>
+    <cWPPage ObjType=cWPPage AutoCreate=false>
+      <cWPGraph ObjType=cWPGraph AutoCreate=false Min.X=-49.9663 Max.X=63.3836 ZoomMin.X=-1.19188E-3 ZoomMax.X=20.5988 XAxisName=X szftempl= XLog=false XAutoScale=false>
+        <cWPAxis ObjType=cWPAxis AutoCreate=false MinY=0 MaxY=0 ZoomMinY=-49.9663 ZoomMaxY=63.3836 AxisName=Y szftempl= Color=16711680 LogScale=false AutoScale=false>
+          <cWPLine ObjType=cWPLine AutoCreate=false SrcName=E:\mera\1203\backup\19.10.12\signal0428_Удар\signal0428.mera SrcSignal=3-_1 Color=16711680 LINE2BASE=false ONLYPOINTS=false VISIBLE=false HIST=false HISTTRANSP=false PARAM=false/>
+          <cWPLine_001 ObjType=cWPLine AutoCreate=false SrcName=E:\mera\1203\backup\19.10.12\signal0428_Удар\signal0428.mera SrcSignal=3-_3 Color=16711680 LINE2BASE=false ONLYPOINTS=false VISIBLE=false HIST=false HISTTRANSP=false PARAM=false/>
+        </cWPAxis>
+      </cWPGraph>
+      <cWPGraph_001 ObjType=cWPGraph AutoCreate=false Min.X=-38.4223 Max.X=65.9801 ZoomMin.X=-1.19188E-3 ZoomMax.X=20.5988 XAxisName=X szftempl= XLog=false XAutoScale=false>
+        <cWPAxis_001 ObjType=cWPAxis AutoCreate=false MinY=0 MaxY=0 ZoomMinY=-38.4223 ZoomMaxY=65.9801 AxisName=Y szftempl= Color=16711680 LogScale=false AutoScale=false>
+          <cWPLine_2 ObjType=cWPLine AutoCreate=false SrcName=E:\mera\1203\backup\19.10.12\signal0428_Удар\signal0428.mera SrcSignal=3-_2 Color=16711680 LINE2BASE=false ONLYPOINTS=false VISIBLE=false HIST=false HISTTRANSP=false PARAM=false/>
+        </cWPAxis_001>
+      </cWPGraph_001>
+    </cWPPage>
+    <SRC SRC_0=signals\Results_16.05.2013 SRC_1=E:\mera\1203\backup\19.10.12\signal0428_Удар\signal0428.mera/>
+  </WinПОС>
+</Root>

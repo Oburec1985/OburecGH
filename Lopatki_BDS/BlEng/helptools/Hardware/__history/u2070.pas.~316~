@@ -1,0 +1,284 @@
+unit u2070;
+
+interface
+uses
+  MxxxxAPI, MxxxxTypes,  inifiles, SysUtils, classes, uBaseObjMng,
+  uBaseObj, uBldObj, uBaseObjTypes, controls, ubldeng, uPlat,  Types4Bld,
+  uTag, ubldglobalstrings;
+
+type
+  LWArr = array of longword;
+  ArrLWArr = array of LWArr;
+  WordArray = array of Word;
+  PWordArray = array of WordArray;
+
+  cM2070 = class(cPlat)
+  protected
+    // идентификатор устройства. Заполняется при вызове CreateDevice
+    handle:ppointer;
+    // буфер для получения данных из платы в синхронном режиме
+    DigBuff:array of longWord;
+    // теги по аналоговым
+    aTags:array of cvectortag;
+  protected
+    procedure init(inipath:ansistring; devinfo:TDevice);override;
+    // конфигурировать асинхронный ввод данных
+    procedure ConfigASync;override;
+    procedure Config;override;
+    // Установить размер буфера
+    procedure SetBufferSize(size:cardinal);override;
+    procedure CreateTags;override;
+    procedure StopASync;override;
+  public
+  public
+    constructor create;override;
+    destructor destroy;override;
+    procedure Stop;override;
+    // Получить буфер данных. Осциллографирование. Получает состояние всех каналов
+    procedure GetData;override;
+  end;
+
+  // процедура callback на прерывания от платы
+  function DataHandler(sender : tobject):cardinal; stdcall;
+
+  const
+    // обьем памяти для handler
+    memsize = 1000000;
+    // Секция из которой читается число лопаток
+    section = 'Lopatki';
+    // число аналоговых каналов
+    c_AChanCount = 1;
+    c_OscBuff = 4096;
+      // частота опроса аналоговых каналов
+    cRate = 10000;
+
+implementation
+
+Function DataHandler(sender : tobject):cardinal; stdcall; //обработчик прерывания
+var
+  dir: Word;
+  plat:cM2070;
+  BSize, szLost, szOverflow:LongInt;
+begin
+  plat:=cm2070(sender);
+  GetDirection(plat.handle,@dir);
+  GetReadBufSize(plat.handle,@BSize,@szLost,@szOverflow);
+  MxxxxApi.ReadBuf(plat.handle, @plat.ASyncData[0], @plat.BSize);
+  result:=0;
+end;
+
+procedure cM2070.init(inipath:ansistring; devinfo:TDevice);
+var
+  inifile:tinifile;
+  res:cardinal;
+  p:pointer;
+begin
+  inherited;
+  // p - должен указывать хоть куда-то (не nil)
+  getmem(p, memsize);
+  handle:=@p;
+  res:=MxxxxApi.CreateDevice(devinfo, handle);
+  handle:=p;
+
+  inifile:=TIniFile.Create(inipath);
+  freq:=inifile.ReadFloat('Lopatki','FreqInN',999);
+  inifile.Destroy;
+  // если не было ошибок
+  if res=ERROR_NOERROR then
+  begin
+    Res:=ReadPropertyEx(handle,PAnsiChar(inipath),PAnsiChar(section));
+    if Res = ERROR_NOERROR then
+    begin
+      SetInterrupt(handle, self, @DataHandler);
+      // чтобы правильно прошла инициация в ini файле должен быть правильно
+      // прописан путь к Flex файлу
+      Res :=Load(handle);
+      if Res <> ERROR_NOERROR then
+      begin
+        // если произошла ошибка, закрываем устройство
+        CloseDevice(@handle);
+        handle:=nil;
+      end
+      else //плата 2070 готова
+      begin
+        finit:=true;
+      end;
+    end
+  end;
+  Config;
+end;
+
+procedure cM2070.ConfigASync;
+var
+  size:cardinal;
+  v:variant;
+  // маска используемых каналов
+  ChannelMask:word;
+  i:integer;
+  res:cardinal;
+begin
+  //GetMem(Bf.Buf,SizeOf(Word)*size*cSafetyfactor);
+  //Bf.BufEnd:=(SizeOf(Word)*bSize*cSafetyfactor) div glSizeTIndex;
+  //заполняем маску каналов
+  //ChannelMask:=0;
+  //for i:=1 to 16 do
+  //begin
+  //  ChannelMask:=ChannelMask+(1 shl (i-1) );
+  //end;
+  GetMaxBufSize(handle,@size);
+  setlength(ASyncData,size);
+  ChannelMask:=65535;
+  VarClear(v);
+  TVarData(v).VType:=varSmallint;
+  TVarData(v).VSmallint:=Smallint(ChannelMask);
+  SetProperty(handle, PROP_POS_FRONT_0, v);
+  res := ConfigDevice(handle);
+  res := res OR ResetCount(handle);
+  res := res OR Start(handle);
+end;
+
+procedure cM2070.Config;
+var
+  res:cardinal;
+  v:variant;
+begin
+  // считать свойства платы
+  Res:=ReadPropertyEx(handle,PAnsiChar(m_inipath),PAnsiChar(section));
+  // частота аналогового сбора
+  VarClear(v);
+  TVarData(v).VType := varDouble;
+  TVarData(v).VDouble:=freq;
+  // 999
+  SetProperty(handle, PROP_FREQ_IN, v);
+  // размер буфера
+  VarClear(v);
+  TVarData(v).VType := varSmallint;
+  TVarData(v).VSmallint:=c_BuffSize;
+  // 1023
+  SetProperty(handle,PROP_NWORD, v);
+  // число фрэймов
+  VarClear(v);
+  TVarData(v).VType := varSmallint;
+  TVarData(v).VSmallint:=c_FrameCount;
+  // 10
+  SetProperty(handle,PROP_CNT_FRAME, v);
+  //число полубуферов ФИФО
+  VarClear(v);
+  TVarData(v).VType := varSmallint;
+  TVarData(v).VSmallint:= cPartFifo;
+  // 8
+  SetProperty(handle,PROP_CNT_PART_FIFO, v);
+  // канал аналогового коммутатора
+  VarClear(v);
+  TVarData(v).VType := varSmallint;
+  TVarData(v).VSmallint:=$004+(0); //$004+( ME052.Chan div 8);
+  // 4
+  SetProperty(handle,PROP_CMD_REG_0, v);
+  res := mxxxxapi.Config(handle);
+end;
+
+destructor cM2070.destroy;
+begin
+  CloseDevice(@handle);
+  //freemem(handle^, memsize);
+  inherited;
+end;
+
+procedure cM2070.GetData;
+var
+  res:cardinal;
+  AChans: array [0..4] of word;
+  i,j:integer;
+  Mask, MaskA:LongWord;
+  bufsize:word;
+  tag:cvectortag;
+begin
+  for I := 0 to tags.count - 1 do
+  begin
+    tag:=cvectortag(gettag(i));
+    tag.length:=(cBufSize div NumPort);
+    tag.clear;
+  end;
+
+  AChans[0]:=0;
+  AChans[1]:=1;
+  AChans[2]:=2;
+  AChans[3]:=3;
+  //<=4096 в 16-битных словах
+  bufsize:=c_OscBuff;
+  res:=LpOscil(handle, cRate, @AChans, c_AChanCount, @DigBuff[1], bufsize);
+  if res=ERROR_NOERROR then
+  begin
+    MaskA:=$FFF00000;
+    for i:=0 to (bufsize div NumPort)-1 do  //выделим соответствующий бит
+    begin
+       for j:= 0 to fChanCount - 1 do
+       begin
+         // TODO : здесь распаковка кодов АЦП
+         // маска для выделения j- ого канала
+         Mask:=1 shl j;
+         digtags[j].Add((DigBuff[i] and Mask) shr j);
+       end;
+       atags[0].add((DigBuff[i] and MaskA) shr 20);
+    end;
+  end;
+end;
+
+procedure cM2070.Stop;
+begin
+  inherited;
+end;
+
+constructor cM2070.create;
+begin
+  inherited;
+  GetDataMode:=c_ASyncMode;
+  objtype:=c_2070;
+  fChanCount:=22;
+  // буфер данных для аналоговых каналов
+  setlength(aTags,2);
+end;
+
+procedure cM2070.SetBufferSize(size:cardinal);
+var
+  I: Integer;
+  tag:cvectortag;
+begin
+  inherited;
+  setlength(DigBuff ,cBufSize);
+  for I := 0 to tags.count - 1 do
+  begin
+    tag:=cvectortag(gettag(i));
+    tag.length:=(cBufSize div NumPort);
+    cvectortag(tag).dx:=1/cRate;
+  end;
+end;
+
+procedure cM2070.CreateTags;
+var
+  I: Integer;
+  tag:cVectorTag;
+begin
+  setlength(aTags,2);
+  for I := 0 to 1 do
+  begin
+    tag:=cvectortag.create;
+    aTags[i]:=cvectortag(tag);
+    tag.OnSetActive:=cPlatsList(getmng).OnTagSetActive;
+    tag.name:=Name+'.a_'+inttostr(i);
+    tag.dsc:=v_OscTagDsc;
+    tag.blocked:=true;
+    tags.addobj(tag);
+    if finit then
+      tag.active:=true;
+  end;
+  inherited;
+end;
+
+procedure cM2070.StopASync;
+begin
+  //остановка приема/передачи данных
+  mxxxxapi.Stop(handle);
+end;
+
+end.

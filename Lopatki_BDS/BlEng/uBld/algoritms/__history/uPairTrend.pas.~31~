@@ -1,0 +1,205 @@
+// при выполнении данного алгоритма нельзя задавать пропуск между датчиками пары, он
+// считается автоматом по положению датчиков. В результате исключена ситуация когда будет
+// замерено расстояние между разными лопатками
+unit uPairTrend;
+
+interface
+uses
+  classes, sysutils,Graphics,  controls, stdctrls, uchart, uaxis,
+  uBldMath, uCommonMath, uErrorProc, uBldObj, uTickdata, usensor, uProgressDlg,
+  ubldeng, uBaseBldAlg, ustage, uBaseObj, RepODS, uturbina, PathUtils,
+  usensorlist, uCommonTypes, uGistogram, uBldTypes, upair, uTag, NativeXML;
+
+type
+  sArray = array of single;
+
+  // алгоритм восстанавливает сигнал вибрации по всему колесу
+  cPairTrend = class(cBaseBldAlg)
+  protected
+    base:single;
+    pair:cpair;
+    ticks1,ticks2:array of stickdata;
+    m_XYArTag:array of c2vectortag;
+  public
+    constructor create;override;
+  protected
+    // вызывается для каждого корректного оборота CommonSensorProc
+    // при этом индекс оборота, начало и конец оборота, храняться в protected
+    // мемберах
+    function TurnSensorProc(s:csensor):integer;override;
+    procedure CommonSensorProc(taho:csensor;sensors:cAlgSensorList);override;
+    // обработка ошибок. если возникает ошибка возвращает false
+    function ProcessErrors(taho:csensor; sensors:cAlgSensorList):boolean;override;
+    // создать теги
+    procedure createTags;override;
+    procedure InitOpts;override;
+    procedure LoadObjAttributes(xmlNode:txmlNode; mng:tobject);override;
+    procedure SaveObjAttributes(xmlNode:txmlNode);override;
+    procedure GetNewData(turncount:integer);override;
+    procedure OnEndTurn;override;
+  public
+    function AlgID:integer;override;
+  end;
+
+  procedure BuildPairTrends(taho:csensor; sensors:cAlgSensorList; data:pointer);
+
+implementation
+uses
+  uPairTrendForm;
+
+constructor cPairTrend.create;
+begin
+  inherited;
+  // если бракуется один датчик то бракуется весь оборот
+  LinkedSensors:=true;
+end;
+
+function cPairTrend.TurnSensorProc(s:csensor):integer;
+var
+  i,bladeindex,sensorind:integer;
+begin
+  for I := 0 to bladecount - 1 do
+  begin
+    if m_XYArTag[i].active then
+    begin
+      bladeindex:=GetBladeImpulsIndex(s, i);
+      if CurSensorInd=0 then
+        ticks1[i]:=s.chan.ticks.gettick(sensorind+bladeindex)
+      else
+        ticks2[i]:=s.chan.ticks.gettick(sensorind+bladeindex);
+    end;
+  end;
+end;
+
+
+procedure cPairTrend.CommonSensorProc(taho:csensor;sensors:cAlgSensorList);
+begin
+  base:=pair.getBase;
+  inherited;
+end;
+
+
+function cPairTrend.ProcessErrors(taho:csensor;sensors:cAlgsensorList):boolean;
+var
+  l:integer;
+  sensor:csensor;
+begin
+  if inherited ProcessErrors(taho,sensors)=false then
+  begin
+    result:=false;
+    exit;
+  end;
+  result:=ProcClusterError(taho,sensors);
+end;
+
+
+function cPairTrend.AlgID:integer;
+begin
+  result:=c_PairShapeTrend;
+end;
+
+procedure cPairTrend.InitOpts;
+begin
+  inherited;
+end;
+
+
+procedure cPairTrend.createTags;
+var
+  tag:cBaseTag;
+  i:integer;
+begin
+  setlength(ticks1,bladecount);
+  setlength(ticks2,bladecount);
+  setlength(m_XYArTag,bladecount);
+  for I := 0 to bladecount - 1 do
+  begin
+    tag:=c2VectorTag.create;
+    tag.active:=true;
+    tag.name:='XYArray_'+inttostr(i);
+    tag.dsc:='Расчет отклонений по импульсу №_'+inttostr(i);
+    tags.addobj(tag);
+    m_XYArTag[i]:=c2VectorTag(tag);
+  end;
+  for i := 0 to tags.Count - 1 do
+  begin
+    tag:=cBaseTag(tags.getobj(i));
+    // запрещаем удалять объект менеджеру тегов
+    tag.blocked:=true;
+  end;
+end;
+
+procedure cPairTrend.LoadObjAttributes(xmlNode:txmlNode; mng:tobject);
+begin
+  inherited;
+end;
+
+procedure cPairTrend.SaveObjAttributes(xmlNode:txmlNode);
+begin
+  inherited;
+end;
+
+procedure cPairTrend.GetNewData(turncount:integer);
+var
+  i:integer;
+begin
+  for I := 0 to bladecount - 1 do
+  begin
+    if turncount>m_XYArTag[i].length then
+      m_XYArTag[i].length:=turncount;
+  end;
+end;
+
+procedure cPairTrend.OnEndTurn;
+var
+  i, dist:integer;
+  p:point2;
+begin
+  for I := 0 to bladecount - 1 do
+  begin
+    if m_XYArTag[i].active then
+    begin
+      dist:=evDecTicks(ticks1[i],ticks2[i]);
+      // отклонение положения лопатки от ожидаемого в градусах
+      p.y:=EvalTickDPos(t1,t2,dist);
+      // в качестве времени нахлабучиваем время большего из тиков
+      if compareticks(ticks1[i],ticks2[i])=1 then
+      begin
+        p.x:=ticktosec(ticks1[i]);
+      end
+      else
+        p.x:=ticktosec(ticks2[i]);
+      m_XYArTag[i].Add(p);
+    end;
+  end;
+end;
+
+procedure BuildPairTrends(taho:csensor; sensors:cAlgSensorList; data:pointer);
+var
+  alg: cPairTrend;
+  PairShapeForm: TPairTrendForm;
+  opts:cBaseOpts;
+  slist:cAlgSensorList;
+  i:integer;
+  p:cpair;
+begin
+  slist:=cAlgSensorList.create;
+  slist.destroydata:=false;
+  // выделямс пару
+  p:=cpair(sensors.GetObj(0));
+  for I := 0 to p.sensors.Count - 1 do
+  begin
+    slist.add(csensor(p.sensors.getobj(i)));
+  end;
+  // опции алгоритма
+  opts:=cPairShapeOpts.Create;
+  opts.chart:=cchart(data);
+  opts.useBladesPos:=true;
+  alg:=cPairShape.create;
+  alg.PointForEvalCount:=opts.PointForEvalCount;
+  alg.skipblade:=opts.skipblade;
+  //alg.apply(taho,slist,opts);
+  result:=alg;
+end;
+
+end.

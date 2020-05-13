@@ -1,0 +1,15 @@
+program XNetDetect_Demo;
+
+uses
+  Forms,
+  uXNetDetect_Demo in 'uXNetDetect_Demo.pas' {Form1},
+  XuConnCheckThread in 'C:\Program Files\Borland\Delphi7\Components\!_XCRYComps_!\XuConnCheckThread.pas',
+  XuNetUtil in 'C:\Program Files\Borland\Delphi7\Components\!_XCRYComps_!\XuNetUtil.pas';
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.CreateForm(TForm1, Form1);
+  Application.Run;
+end.

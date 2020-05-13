@@ -1,0 +1,254 @@
+unit uTmpltNameFrame;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
+  Dialogs, StdCtrls, ExtCtrls, uCommonMath, uWPProc, PathUtils, inifiles;
+
+type
+  TTmpltNameFrame = class(TFrame)
+    tmpltLabel: TLabel;
+    TmpltEdit: TEdit;
+    FolderLabel: TLabel;
+    FolderEdit: TEdit;
+    FolderBtn: TButton;
+    TmpltBtn: TButton;
+    DateCB: TCheckBox;
+    MakeDefaultNameBtn: TButton;
+    NameEdit: TEdit;
+    NameLabel: TLabel;
+    AutoPathCB: TCheckBox;
+    Label2: TLabel;
+    SavePathEdit: TEdit;
+    NameRG: TRadioGroup;
+    FolderRG: TRadioGroup;
+    OpenDialog1: TOpenDialog;
+    OpenDialog2: TOpenDialog;
+    SaveDialog1: TSaveDialog;
+    SaveDialog2: TSaveDialog;
+    PathBtn: TButton;
+    procedure TmpltBtnClick(Sender: TObject);
+    procedure FolderBtnClick(Sender: TObject);
+    procedure FolderRGClick(Sender: TObject);
+    procedure NameRGClick(Sender: TObject);
+    procedure AutoPathCBClick(Sender: TObject);
+    procedure NameEditChange(Sender: TObject);
+    procedure DateCBClick(Sender: TObject);
+    procedure MakeDefaultNameBtnClick(Sender: TObject);
+    procedure PathBtnClick(Sender: TObject);
+  private
+    // настройки сохранени€ конфигурации
+    m_ifile, m_section, m_key,
+    // путь к плагину
+    m_startdir:string;
+    // дефолтное им€ каталога и файла по умолчанию
+    defName, defFolder,
+    // путь на основании которого стро€тьс€ относительныен пути
+    objectName: string;
+  private
+    function GenPath: string;
+    function GenName: string;
+    function GenFolder: string;
+    function GenTmpltPath: string;
+    function CheckTmpltPath(str: string): boolean;
+  public
+    // установить путь по которому будут сохран€тьс€ настройки
+    Procedure SetIFile(fname, section, key, startdir:string);
+    procedure SaveParams;
+    // путь на основании которого стро€тьс€ относительныен пути
+    Procedure SetObjectPath(ObjName:string);
+  end;
+
+implementation
+
+{$R *.dfm}
+
+procedure TTmpltNameFrame.SaveParams;
+var
+  ifile: tinifile;
+begin
+  ifile := tinifile.create(m_ifile);
+  if FolderRG.ItemIndex = 0 then
+    ifile.WriteString('CyclRep', 'DefFolder', FolderEdit.Text)
+  else
+    ifile.WriteString('CyclRep', 'DefFolder', defFolder);
+
+  ifile.WriteString('CyclRep', 'DefName', defName);
+  ifile.WriteInteger('CyclRep', 'DefFolderRG', FolderRG.ItemIndex);
+  ifile.WriteInteger('CyclRep', 'DefNameRG', NameRG.ItemIndex);
+  ifile.WriteBool('CyclRep', 'AutoPath', AutoPathCB.Checked);
+  ifile.WriteBool('CyclRep', 'IncludeDate', DateCB.Checked);
+  ifile.WriteString('CyclRep', 'Temlate', TmpltEdit.Text);
+  ifile.destroy;
+end;
+
+function TTmpltNameFrame.GenTmpltPath: string;
+begin
+  result := TmpltEdit.Text;
+  if ((pos('/', TmpltEdit.Text) < 1) or (pos('.', TmpltEdit.Text) > 0) or
+      (pos('.', TmpltEdit.Text) > 0)) then
+  begin
+    result := RelativePathToAbsolute(m_startdir, TmpltEdit.Text);
+  end;
+end;
+
+Procedure TTmpltNameFrame.SetObjectPath(ObjName:string);
+begin
+  objectName:=ObjName;
+end;
+
+function TTmpltNameFrame.GenName: string;
+begin
+  case NameRG.ItemIndex of
+    0:
+      begin
+        if DateCB.Checked then
+          NameEdit.Text := defName + '_' + datetostr(now)
+        else
+          NameEdit.Text := defName;
+      end;
+    1:
+      begin
+        if DateCB.Checked then
+          NameEdit.Text := trimExt(TrimName(objectName)) + '_' + datetostr(now)
+        else
+          NameEdit.Text := trimExt(TrimName(objectName));
+        // NameEdit.Text := trimExt(ExtractFileName(src.name));
+      end;
+  end;
+  if ExtractFileExt(NameEdit.Text) <> '.xls' then
+    NameEdit.Text := NameEdit.Text + '.xls';
+  result := NameEdit.Text;
+end;
+
+function TTmpltNameFrame.GenPath: string;
+begin
+  SavePathEdit.Text := FolderEdit.Text + '\' + NameEdit.Text;
+  result:=SavePathEdit.Text;
+end;
+
+procedure TTmpltNameFrame.MakeDefaultNameBtnClick(Sender: TObject);
+begin
+  defName := NameEdit.Text;
+  NameRG.ItemIndex := 0;
+end;
+
+procedure TTmpltNameFrame.AutoPathCBClick(Sender: TObject);
+begin
+  if AutoPathCB.Checked then
+    GenPath;
+end;
+
+procedure TTmpltNameFrame.DateCBClick(Sender: TObject);
+begin
+  NameRGClick(nil);
+end;
+
+procedure TTmpltNameFrame.FolderBtnClick(Sender: TObject);
+begin
+  if SaveDialog2.Execute then
+  begin
+    FolderEdit.Text := SaveDialog2.filename;
+  end;
+end;
+
+function TTmpltNameFrame.GenFolder: string;
+begin
+  case FolderRG.ItemIndex of
+    0:
+      begin
+        FolderEdit.Text := defFolder;
+      end;
+    1:
+      begin
+        if objectName <> '' then
+          FolderEdit.Text := extractfiledir(objectName);
+      end;
+  end;
+  result := FolderEdit.Text;
+end;
+
+procedure TTmpltNameFrame.FolderRGClick(Sender: TObject);
+begin
+  case FolderRG.ItemIndex of
+    0:
+      begin
+        FolderBtn.Enabled := True;
+        FolderLabel.Caption := ' аталог по умолчанию';
+        GenFolder;
+      end;
+    1:
+      begin
+        FolderLabel.Caption := ' аталог замера';
+        FolderBtn.Enabled := false;
+        GenFolder;
+      end;
+  end;
+end;
+
+procedure TTmpltNameFrame.NameEditChange(Sender: TObject);
+begin
+  // пользовательское им€
+  if NameEdit.Focused then
+    NameRG.ItemIndex := 2;
+end;
+
+procedure TTmpltNameFrame.NameRGClick(Sender: TObject);
+begin
+  case NameRG.ItemIndex of
+    0:
+      begin
+        NameRG.Caption := '»м€ замера по умолчанию';
+        GenName;
+      end;
+    1:
+      begin
+        NameRG.Caption := '»м€ замера';
+        GenName;
+      end;
+  end;
+  AutoPathCBClick(nil);
+end;
+
+procedure TTmpltNameFrame.PathBtnClick(Sender: TObject);
+begin
+  if SaveDialog1.Execute then
+  begin
+    SavePathEdit.Text := SaveDialog1.filename;
+  end;
+end;
+
+function TTmpltNameFrame.CheckTmpltPath(str: string): boolean;
+begin
+  if fileexists(str) then
+  begin
+    result := True;
+    TmpltEdit.Color := clwindow;
+  end
+  else
+  begin
+    result := false;
+    TmpltEdit.Color := $008080FF;
+  end;
+end;
+
+procedure TTmpltNameFrame.TmpltBtnClick(Sender: TObject);
+begin
+  if OpenDialog1.Execute then
+  begin
+    TmpltEdit.Text := OpenDialog1.filename;
+  end;
+end;
+
+Procedure TTmpltNameFrame.SetIFile(fname, section, key, startdir:string);
+begin
+  m_ifile:=fname;
+  m_section:=section;
+  m_key:=key;
+  m_startdir:=startdir;
+end;
+
+end.
+
+

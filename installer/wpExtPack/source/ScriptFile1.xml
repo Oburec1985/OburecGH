@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Root Code="{d}=0.2
+{d1}=Abs({Q1}-{Q2})
+{d2}=Abs({Q1}-{Q3})
+{d3}=Abs({Q2}-{Q3})
+
+If ({d1}&lt;{d}) And ({d2}&lt;{d}) And ({d3}&lt;{d}) Then
+    {Qобщ}=({Q1}+{Q2}+{Q3})/3
+Else
+    If {d1}&gt;{d} Then
+        If {d2}&gt;{d} Then
+            If {d3}&gt;{d} Then
+                {Qобщ}=-1
+            Else &apos; Не исправен первый датчик
+                {Qобщ}=({Q2}+{Q3})/2
+            End If
+        Else &apos; Не исправен второй
+            {Qобщ}=({Q1}+{Q3})/2
+        End If
+    Else &apos; d1 в норме
+        If {d3}&gt;{d} Then &apos; Третий не в норме
+            {Qобщ}=({Q1}+{Q2})/2
+        End If
+    End If
+End If">
+	<Channels Count="1">
+		<SI_1 Name="Qобщ" Type="Sensor" Freq="100" UnitsY="0" UnitsX="0"/>
+	</Channels>
+</Root>

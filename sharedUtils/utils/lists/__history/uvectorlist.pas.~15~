@@ -1,0 +1,572 @@
+// Аналог сишного вектора (индексированный список) обеспечивающий быструю вставку
+unit uVectorList;
+
+interface
+uses
+  Windows, SysUtils, Classes, uListMath;
+type
+
+  fcomparator = function (p1,p2:pointer):integer;
+
+  cVectorList = class;
+  cVList = class;
+
+  cVectorObj = class
+    pointer:tobject;
+    parentList:cVectorList;
+  protected
+    procedure setKey(k:pointer);virtual;abstract;
+  public
+    // Сортировать дочерние узлы по числу потомков
+    // Возвращенное целое число имеет следующее значение :
+    //   > 0 : (положительное) больше чем k
+    //     0 : key равно k
+    //   <0 : (negative) меньше чем k
+    function compare(k:cVectorObj):integer;overload;virtual;
+    function compare(k:pointer):integer;overload;virtual;
+    destructor destroy(destroyData:boolean);
+    constructor create;virtual;
+  end;
+
+  cIntVectorObj = class(cVectorObj)
+  public
+    key:integer;
+  protected
+    procedure setKey(k:pointer);override;
+  public
+    procedure setiKey(k:integer);
+    function compare(k:cVectorObj):integer;overload;override;
+    function compare(k:pointer):integer;overload;override;
+  end;
+
+  cFloatVectorObj = class(cVectorObj)
+  public
+    key:single;
+  protected
+    procedure setKey(k:pointer);override;
+  public
+    procedure setfKey(k:single);
+    function compare(k:cVectorObj):integer;overload;override;
+    function compare(k:pointer):integer;overload;override;
+  end;
+
+  cVList = class(tlist)
+  public
+    // сюда передавать удаляемый объект
+    fDelData:tNotifyEvent;
+    destroydata:boolean;
+    // функция которая позволяет произвести произвольную сортировку
+  private
+    fsorted:boolean;
+  protected
+    fCustomSort:fcomparator;
+    useCustomSort:boolean;
+  private
+    procedure setsorted(value:boolean);
+    function getsorted:boolean;
+    procedure SortChildrens;
+  protected
+
+  public
+    procedure CustomSort(SortProc:fcomparator);
+    constructor create;virtual;
+    destructor destroy;virtual;
+    function createObj:cVectorObj;virtual;abstract;
+    // удалить объект по ключу из списка. Возвращает объект с данными
+    function deleteobj(key:pointer):tobject;
+    function deleteIndObj(index:integer):tobject;
+    // возвращает индекс найденного объекта или -1
+    function GetIndex(key:pointer):integer;
+    // найти ближайший объект слева от ключа
+    function GetLow(key:pointer;var index:integer):tobject;
+    // найти ближайший объект справа от ключа
+    function GetHight(key:pointer; var index:integer):tobject;
+    function findObj(key:pointer;var index:integer):tobject;overload;
+    function findObj(key:pointer):tobject;overload;
+    procedure AddObject(key:pointer;obj:tobject);
+    function getObj(i:integer):tobject;
+    procedure clear;
+    property sorted:boolean read getsorted write setsorted;
+  end;
+
+  cVectorList = class(TList)
+  public
+    // сюда передавать удаляемый объект
+    fDelData:tNotifyEvent;
+    destroydata:boolean;
+    // функция которая позволяет произвести произвольную сортировку
+  private
+    fsorted:boolean;
+  protected
+    fCustomSort:fcomparator;
+    useCustomSort:boolean;
+  private
+    procedure setsorted(value:boolean);
+    function getsorted:boolean;
+    procedure SortChildrens;
+  protected
+
+  public
+    procedure CustomSort(SortProc:fcomparator);
+    constructor create;virtual;
+    destructor destroy;virtual;
+    function createObj:cVectorObj;virtual;abstract;
+    // удалить объект по ключу из списка. Возвращает объект с данными
+    function deleteobj(key:pointer):tobject;
+    function deleteIndObj(index:integer):tobject;
+    // возвращает индекс найденного объекта или -1
+    function GetIndex(key:pointer):integer;
+    // найти ближайший объект слева от ключа
+    function GetLow(key:pointer;var index:integer):tobject;
+    // найти ближайший объект справа от ключа
+    function GetHight(key:pointer; var index:integer):tobject;
+    function findObj(key:pointer;var index:integer):tobject;overload;
+    function findObj(key:pointer):tobject;overload;
+    procedure AddObject(key:pointer;obj:tobject);
+    function getNode(i:integer):cVectorobj;
+    function getObj(i:integer):tobject;
+    procedure clear;
+    property sorted:boolean read getsorted write setsorted;
+  end;
+
+  cIntVectorList = class(cVectorList)
+  public
+    function createObj:cVectorObj;override;
+  end;
+
+  cFloatVectorList = class(cVectorList)
+  public
+    function createObj:cVectorObj;override;
+  end;
+
+  cVObj = class
+    parentList:cVList;
+  protected
+    procedure setKey(k:pointer);virtual;abstract;
+  public
+    function compare(k:pointer):integer;overload;virtual;
+    destructor destroy(destroyData:boolean);
+    constructor create;virtual;
+  end;
+
+implementation
+
+function cVObj.compare(k:pointer):integer;
+begin
+  result:=parentlist.fCustomSort(pointer,k);
+end;
+
+constructor cVectorObj.create;
+begin
+  inherited;
+end;
+
+destructor cVectorObj.destroy(destroydata:boolean);
+begin
+  if destroyData then
+  begin
+    if assigned(parentlist.fDelData) then
+      parentlist.fDelData(pointer)
+    else
+    begin
+      if pointer<>nil then
+        pointer.destroy;
+    end;
+  end;
+  inherited destroy;
+end;
+
+function cVectorObj.compare(k:cVectorObj):integer;
+begin
+  result:=parentlist.fCustomSort(self,k);
+end;
+
+function cVectorObj.compare(k:pointer):integer;
+begin
+  result:=parentlist.fCustomSort(pointer,k);
+end;
+
+function cIntVectorObj.compare(k:cVectorObj):integer;
+begin
+  if parentlist<>nil then
+  begin
+    if parentList.useCustomSort then
+    begin
+      result:=inherited compare(k);
+      exit;
+    end
+  end;
+  // Теперь сравнение строк
+  if key > cIntVectorObj(k).key then
+    Result := 1
+  else
+    if key = cIntVectorObj(k).key then
+      Result := 0
+    else Result := -1;
+end;
+
+function cIntVectorObj.compare(k:pointer):integer;
+begin
+  if parentlist<>nil then
+  begin
+    if parentList.useCustomSort then
+    begin
+      result:=inherited compare(k);
+      exit;
+    end
+  end;
+  // Теперь сравнение строк
+  if key > integer(k^) then
+    Result := 1
+  else
+    if key = integer(k^) then
+      Result := 0
+    else
+      Result := -1;
+end;
+
+procedure cIntVectorObj.setKey(k:pointer);
+begin
+  key:=integer(k^);
+end;
+
+procedure cIntVectorObj.setiKey(k:integer);
+begin
+  setkey(@k);
+end;
+
+
+procedure cFloatVectorObj.setfKey(k:single);
+begin
+  setkey(@k);
+end;
+
+procedure cFloatVectorObj.setKey(k:pointer);
+begin
+  key:=single(k^);
+end;
+
+function cFloatVectorObj.compare(k:cVectorObj):integer;
+begin
+  if parentlist<>nil then
+  begin
+    if parentList.useCustomSort then
+    begin
+      result:=inherited compare(k);
+      exit;
+    end
+  end;
+  // Теперь сравнение строк
+  if key > cFloatVectorObj(k).key then
+    Result := 1
+  else
+    if key = cFloatVectorObj(k).key then
+      Result := 0
+    else Result := -1;
+end;
+
+function cFloatVectorObj.compare(k:pointer):integer;
+begin
+  if parentlist<>nil then
+  begin
+    if parentList.useCustomSort then
+    begin
+      result:=inherited compare(k);
+      exit;
+    end
+  end;
+  // Теперь сравнение строк
+  if key > single(k^) then
+    Result := 1
+  else
+    if key = single(k^) then
+      Result := 0
+    else Result := -1;
+end;
+
+function cIntVectorList.createObj:cVectorObj;
+begin
+  result:=cintvectorobj.Create;
+  result.parentList:=self;
+end;
+
+function cFloatVectorList.createObj:cVectorObj;
+begin
+  result:=cFloatVectorObj.Create;
+  result.parentList:=self;
+end;
+
+function Comparator(p1,p2:pointer):integer;
+var
+  obj1, obj2:cVectorObj;
+begin
+  obj1 := cVectorObj(p1);
+  obj2 := cVectorObj(p2);
+  // Теперь сравнение строк
+  result:=obj1.compare(obj2);
+end;
+
+constructor cVectorList.create;
+begin
+  inherited;
+  fsorted:=true;
+  destroydata:=true;
+end;
+
+destructor cVectorList.destroy;
+var i:integer;
+begin
+  for I := 0 to count - 1 do
+  begin
+    getNode(i).destroy(destroydata);
+  end;
+  inherited;
+end;
+
+function cVectorList.getObj(i:integer):tobject;
+begin
+  result:=nil;
+  if i>=count then exit;
+  result:=tobject(getnode(i).pointer);
+end;
+
+function cVectorList.getNode(i:integer):cVectorObj;
+begin
+  result:=cVectorObj(items[i]);
+end;
+
+procedure cVectorList.CustomSort(SortProc:fcomparator);
+begin
+  useCustomSort:=true;
+  fCustomSort:=sortproc;
+end;
+
+procedure cVectorList.setsorted(value:boolean);
+begin
+  fsorted:=value;
+  if fsorted=true then
+    SortChildrens;
+end;
+
+function cVectorList.getsorted:boolean;
+begin
+  result:=fsorted;
+end;
+
+procedure cVectorList.SortChildrens;
+begin
+  Sort(Comparator);
+end;
+
+procedure cVectorList.AddObject(key:pointer;obj:tobject);
+var i:integer;
+    vectorobj:cVectorObj;
+begin
+  vectorobj:=createObj;
+  vectorobj.pointer:=obj;
+  vectorobj.setkey(key);
+  if sorted then
+  begin
+    // находим индекс куда вставлять объект
+    i:=FindInListLowBound(self,vectorobj,comparator);
+    if (count<>0) then
+    begin
+      if i=0 then
+      begin
+        if getnode(i).compare(key)=1 then
+          insert(i,vectorobj)
+        else
+          insert(i+1,vectorobj);
+      end
+      else
+      begin
+        if (i+1)=count then
+          add(vectorobj)
+        else
+          insert(i+1,vectorobj);
+      end;
+    end
+    else
+      add(vectorobj);
+  end
+  else
+    add(vectorobj);
+end;
+
+function cVectorList.deleteIndObj(index:integer):tobject;
+var
+  vectorobj:cvectorobj;
+begin
+  vectorobj:=getNode(index);
+  // Исключаем объект из списка
+  self.Delete(index);
+  // возвращаем данные
+  result:=vectorobj.pointer;
+  // Удаляем вспомогательный объект
+  vectorobj.Destroy(destroydata);
+end;
+
+function cVectorList.deleteobj(key:pointer):tobject;
+var i:integer;
+    vectorobj:cvectorobj;
+begin
+  vectorobj:=createObj;
+  vectorobj.setkey(key);
+  i:=FindInListLowBound(self,vectorobj,comparator);
+  vectorobj.Destroy(false);
+  vectorobj:=getNode(i);
+  if vectorobj.compare(key)=0 then
+  begin
+    // Исключаем объект из списка
+    self.Delete(i);
+    // возвращаем данные
+    result:=vectorobj.pointer;
+    // Удаляем вспомогательный объект
+    vectorobj.Destroy(destroydata);
+  end;
+end;
+
+function cVectorList.GetLow(key:pointer;var index:integer):tobject;
+var i:integer;
+    vectorobj:cvectorobj;
+begin
+  result:=nil;
+  if count<>0 then
+  begin
+    vectorobj:=createObj;
+    vectorobj.setkey(key);
+    i:=FindInListLowBound(self,vectorobj,comparator);
+    vectorobj.Destroy(destroydata);
+    vectorobj:=getNode(i);
+    index:=i;
+    if i=0 then
+    begin
+      if vectorobj.compare(key)=1 then
+      begin
+        result:=nil;
+        exit;
+      end
+      else
+        result:=vectorobj.pointer;
+    end
+    else
+    begin
+      if vectorobj.compare(key)<=0 then
+      begin
+        result:=vectorobj.pointer;
+        exit;
+      end;
+    end;
+  end;
+end;
+
+function cVectorList.GetHight(key:pointer; var index:integer):tobject;
+var i:integer;
+    vectorobj:cvectorobj;
+begin
+  result:=nil;
+  if count<>0 then
+  begin
+    vectorobj:=createObj;
+    vectorobj.setkey(key);
+    i:=FindInListHiBound(self,vectorobj,comparator);
+    index:=i;
+    vectorobj.Destroy(destroydata);
+    vectorobj:=getNode(i);
+    if i=0 then
+    begin
+      if vectorobj.compare(key)=-1 then
+      begin
+        result:=vectorobj.pointer;
+        exit;
+      end;
+    end
+    else
+    begin
+      if vectorobj.compare(key)=1 then
+      begin
+        result:=vectorobj.pointer;
+        exit;
+      end;
+    end;
+  end
+  else
+  begin
+    index:=0;
+  end;
+end;
+
+function cVectorList.findObj(key:pointer):tobject;
+var i:integer;
+begin
+  result:=findobj(key,i);
+end;
+
+function cVectorList.findObj(key:pointer;var index:integer):tobject;
+var i:integer;
+    vectorobj:cvectorobj;
+begin
+  index:=-1;
+  result:=nil;
+  if count<>0 then
+  begin
+    vectorobj:=createObj;
+    vectorobj.setkey(key);
+    i:=FindInListLowBound(self,vectorobj,comparator);
+    vectorobj.Destroy(destroydata);
+    vectorobj:=getNode(i);
+    if vectorobj.compare(key)=0 then
+    begin
+      index:=i;
+      result:=vectorobj.pointer;
+      exit;
+    end
+    else
+    begin
+      if (i+1)<count then
+      begin
+        vectorobj:=getNode(i+1);
+        if vectorobj.compare(key)=0 then
+        begin
+          index:=i+1;
+          result:=vectorobj.pointer;
+          exit;
+        end
+      end;
+    end;
+  end;
+end;
+
+function cVectorList.GetIndex(key:pointer):integer;
+var i:integer;
+    vectorobj:cvectorobj;
+begin
+  result:=-1;
+  if count<>0 then
+  begin
+    vectorobj:=createObj;
+    vectorobj.setkey(key);
+    i:=FindInListLowBound(self,vectorobj,comparator);
+    if vectorobj.compare(key)=0 then
+      result:=i
+    else
+    begin
+      if getnode(i+1).compare(key)=0 then
+        result:=i+1;
+    end;
+    vectorobj.destroy(false);
+  end;
+end;
+
+procedure cVectorList.clear;
+var
+  vectorobj:cvectorobj;
+  i:integer;
+begin
+  while count<>0 do
+  begin
+    deleteIndObj(0);
+  end;
+end;
+
+end.

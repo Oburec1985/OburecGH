@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path="..\..\Demos"/>
+    <File Path="..\SortGrid"/>
+    <File Path="..\SortGrid\SortGrid.pas"/>
+    <File Path="..\SortGrid\SortGridPreview.pas"/>
+    <File Path="..\SortGrid\SortGridPreview.dfm"/>
+    <File Path="..\..\..\ZipMaster"/>
+    <File Path="..\..\DZUtils.pas"/>
+    <File Path="..\..\SFXInterface.pas"/>
+    <File Path="..\..\SFXStructs.pas"/>
+    <File Path="..\..\ZipFix.pas"/>
+    <File Path="..\..\ZipMsg.pas"/>
+    <File Path="..\..\ZipMstr.pas"/>
+    <File Path="..\..\ZipSFX.pas"/>
+    <File Path="..\..\ZMCompat.pas"/>
+    <File Path="..\..\ZMCore.pas"/>
+    <File Path="..\..\ZMCtx.pas"/>
+    <File Path="..\..\ZMDBind.pas"/>
+    <File Path="..\..\ZMDefMsgs.pas"/>
+    <File Path="..\..\ZMDelZip.pas"/>
+    <File Path="..\..\ZMDlg.pas"/>
+    <File Path="..\..\ZMExtrLZ77.pas"/>
+    <File Path="..\..\ZMHash.pas"/>
+    <File Path="..\..\ZMMsgStr.pas"/>
+    <File Path="..\..\ZMSBind.pas"/>
+    <File Path="..\..\ZMStructs.pas"/>
+    <File Path="..\..\ZMUtils.pas"/>
+    <File Path="..\..\ZMWrkr.pas"/>
+    <File Path="..\..\ZMXcpt.pas"/>
+    <File Path="Addunit.pas"/>
+    <File Path="Addunit.dfm"/>
+    <File Path="extrunit.pas"/>
+    <File Path="extrunit.dfm"/>
+    <File Path="MainUnit.pas"/>
+    <File Path="MainUnit.dfm"/>
+    <File Path="msgunit.pas"/>
+    <File Path="msgunit.dfm"/>
+    <File Path="renunit.pas"/>
+    <File Path="renunit.dfm"/>
+    <File Path="sfxunit.pas"/>
+    <File Path="sfxunit.dfm"/>
+  </ProjectSortOrder>
+</BorlandProject>

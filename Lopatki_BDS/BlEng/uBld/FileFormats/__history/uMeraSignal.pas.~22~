@@ -1,0 +1,48 @@
+unit uMeraSignal;
+
+interface
+uses
+  uCommonTypes;
+
+type
+
+  cSignal = class
+    // обект с данными
+    obj:tobject;
+    // опции Mera файла
+    k1:single;
+    k0:single;
+    // частота
+    freqX:single;
+    WriteXY:boolean;
+    xUnits, yUnits, zUnits:string;
+    b_3d:boolean;
+    dZ,
+    portionsize:integer;
+  public
+    function GetT0:single;virtual; abstract;
+    function SignalType:integer;virtual; abstract;
+    function Count:integer;virtual; abstract;
+    function GetP2(i:integer):point2;virtual; abstract;
+    function GetY(i:integer):single;overload; virtual; abstract;
+    function GetY(t:single):single;overload; virtual; abstract;
+    function GetX(i:integer):single;virtual; abstract;
+    function getname:string;virtual; abstract;
+    function GetTEnd:single;virtual; abstract;
+    constructor create;virtual;
+  end;
+
+  const
+    c_1DSignal = 1;
+    c_2DSignal = 2;
+    c_3DSignal = 3;
+
+implementation
+
+constructor cSignal.create;
+begin
+  k1:=1;
+  k0:=0;
+end;
+
+end.

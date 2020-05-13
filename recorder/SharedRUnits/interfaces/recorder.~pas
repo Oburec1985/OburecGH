@@ -1,0 +1,509 @@
+{---------------------------------------------------------------------}
+{ Проект (Модуль) реслизации plug-in`а для измерительного ПО Recorder }
+{ Модуль описания интерфейса для управления Recorder`ом и реализации  }
+{ специализированных классов (форм) отображения измеренной информации }
+{ Компилятор: Borland Delphi 6.0                                      }
+{ НПП "ООО Мера" 2004г.                                               }
+{---------------------------------------------------------------------}
+unit recorder;
+interface
+uses Windows, tags, modules, device;
+{$ALIGN 8}
+const
+   // Коды ошибок рекордера
+   RCERROR_NOERROR =              0;
+   RCERROR_UNKNOWNERROR =         1;
+   RCERROR_NOTIMPLEMENT =         2;
+   RCERROR_PLUGINNOTCREATED =     3;
+   RCERROR_OUTOFRANGE =           4;
+   RCERROR_NOTFOUND =             5;
+   RCERROR_DLLNOTFOUND =          6;
+   RCERROR_FUNCTIONNOTFOUND =     7;
+   RCERROR_CANTOPEN =             8;
+   RCERROR_CANTCREATE =           9;
+   RCERROR_SYSTEMBUSY =          10;
+   RCERROR_FILENOTFOUND =        11;
+   RCERROR_INVALIDARGUMENT =     12;
+   RCERROR_INVALIDTYPECAST =     13;
+   RCERROR_ALREADYEXIST =        14;
+   RCERROR_ABNORMALTERMINATION = 15;
+   RCERROR_NOTSUPPORTED =        16;
+   RCERROR_ACCESSVIOLATION =     17;
+   RCERROR_USERABORT =           18;
+   RCERROR_ACCESSDENIED =        19;
+   LAST_ERROR_INDEX =            RCERROR_ACCESSDENIED;
+
+   //Константы состояний Recorder`а
+   RS_STOP              = $0001;     //Измерение остановлено
+   RS_VIEW              = $0002;     //Измерение и просмотр
+   RS_REC               = $0004;     //Измерение и сохранение в файлы
+   RS_PLAYING           = $0008;     //Проигрывание из файлов
+   RS_BASESTATE         = RS_REC + RS_VIEW + RS_STOP + RS_PLAYING;
+   RS_HARDWAREFAULT     = $0010;     // Инициализация системы не прошла успешно
+   RS_INITFAULT         = $0020;     // Инициализация системы не прошла успешно
+   RS_NEEDDEVICERESET   = $0040;     // Требуется Reset драйвера
+   RS_NEEDHARDWARERESET = $0040;     // Требуется Reset драйвера
+
+   RS_NEEDSOFTWARERESET = $0080;     // Требуется програмной части драйвера
+   RS_NEEDLINKSREFRESH  = $0100;     // Требуется обновление ссылок
+   RS_FAULT             = RS_HARDWAREFAULT + RS_INITFAULT;
+
+   RS_PLAYMODE          = $0200;     // Настройка и работа в режиме воспроизведения
+   RS_SIGNALLOADED      = $0400;     // Конфигурирование прошло успешно
+
+   RS_CONFIGCHANGED     = $0800;     // Изменена конфигурация, требуется сохранение
+
+   RS_CONFIGMODE        = $1000;     // Режим конфигурирования
+
+   RS_PACKETLOST        = $00010000; // Потери во время приема
+   RS_RECEIVEERROR      = $00020000; // Сейчас идут потери
+
+   RS_TERMINATION       = $80000000; // состояние завершения работы
+
+   RS_FULLMASK          = $FFFFFFFF;
+
+   // Уведомления рекордеру
+   RCN_RECONFIG =         0; // Переконфигурироваться
+   RCN_VIEW =             1; // Старт режима просмотр
+   RCN_REC =              2; // Старт записи
+   RCN_STOP =             3; // Остановка рекордера
+   RCN_SHOW =             4; // Сделать главное окно видимым
+   RCN_HIDE =             5; // Скрыть главное окно
+   RCN_CLOSE =            6; // Завершить работу рекордера
+   RCN_SETCURFORM =       7; // Сменить формуляр
+   RCN_ENABLESETUP =      8; // Разрешить / запретить настройки
+   RCN_CLOSEPLUGIN =      9; // Завершить работу плагина
+   RCN_SETCURTAG =       10; // Установить текущий канал   a_dwParam = номер канала
+   RCN_CHANGECURTAG =    11; // Установить текущий канал = старый канал + a_dwParam
+   RCN_CHANGETAGRANGE =  12; // Поменять границы отображения для тега use TAGRANGEDATA
+
+   RCN_RESORTTAGS =      13;// Пересортировать теги
+   RCN_LAUNCHWINPOS =    14;// Запустить пакет обработки зарегистрированной информации
+   RCN_TEST =            15;// Запустить процедуру самотестирования
+   RCN_SAVECONFIG =      16;// Сохранить конфигурацию
+   RCN_CLOSEALLPLUGINS = 17;// Закрыть все запущенные плагины
+   RCN_OPENPLUGIN =      18;// Загрузка и запуск плагина
+
+   RCN_INTERNAL_BASE = $8000;
+   RCN_UPDATEGROUPSLINKS = RCN_INTERNAL_BASE + 1;// Сделать апдейт ссылкам на группы dwParam == ByNames:BOOL
+   RCN_DRIVERSRESET =      RCN_INTERNAL_BASE + 2;// Сделать ресет девайсам
+   RCN_DRIVERSCONFIG =     RCN_INTERNAL_BASE + 3;// Сделать конфиг девайсам
+   RCN_CHECKTAGSNAMES =    RCN_INTERNAL_BASE + 4;// Проверить имена тегов на уникальность
+   RCN_BROADCAST =         RCN_INTERNAL_BASE + 5;// Разослать всем уведомление
+
+
+   //Широковещательные уведомления
+   RCBC_PLUGINSLISTUPDATED = 0;
+
+   //Свойства рекордера
+   RCPROP_HOSTDEVICE =           0; // [in] номер требуемого хоста [out] интерфейс носта
+   RCPROP_DATAFOLDER =           1; // Рабочий каталог [in] [out]
+   RCPROP_STARTRECLEVCTRLPROPS = 2; // Свойства старта записи по уровню RCLEVELCONTROLPROPS [out]
+   RCPROP_STARTTIME =            3; // Время старта просмотра/регистрации VT_FILETIME [out]
+   RCPROP_CALIBRDBNAME =         4; // Имя каталога с тарировочными характеристиками [out] VT_BST
+   RCPROP_REFRESHPERIOD =        5; // период обновления/размер блока данных в секундах   [in][out] VT_R8
+   RCPROP_VIEWTIME =             6; // время отображения/длинна вектора данных в секундах   [in][out] VT_R8
+   RCPROP_VERSION =              7; // версия рекордера                                           [out] VT_I4
+   RCPROP_TAGSSORTMODE =         8; // метод сортировки тегов                                 [in][out] VT_I4
+   RCPROP_TIMERTICPERIOD =       9; // интервал таймера для отображения
+   RCPROP_MODIFYFRAMENAME =      10; // автоматически модифицировать имя кадра при записи
+   RCPROP_CONVERTTOUSML =        11; // преобразовывать в УСМЛ по остановке записи
+   RCPROP_ENABLEDLEVELSTARTREC = 12; // Разрешен старт записи по уровню
+   RCPROP_TRIGGERSTART =         13; // Состояние триггерног старта
+   RCPROP_ENABLEDAUTOSTOPTIME =  14; // Автоматический останов записи по времени
+   RCPROP_AUTOSTOPTIME =         15; // Период для автоматического останова записи по времени
+   RCPROP_CONFIGNAME =           16; // Имя файла конфигурации
+   RCPROP_UISERVERLINK =         17; // Линка на UI сервер
+   RCPROP_SUMMARYDATAFLOW =      18; // Суммарный поток данных
+   RCPROP_PROJECTNAME =          19;
+   RCPROP_CURRENTTAGNAME =       20; // Имя текущего тега [in, out] VT_BSTR
+   RCPROP_CHANGEDSETTINGS =      21; // Измененные настройки SCF_XXX [in, out] U32
+   RCPROP_ENABLEDLEVELSTOPREC =  22; // Разрешен стоп записи по уровню
+   RCPROP_STOPRECLEVCTRLPROPS =  23; // Свойства стопа записи по уровню RCLEVELCONTROLPROPS        [out]
+   RCPROP_PREHISTORY_ENABLED =   24; // Разрешена предзапись                                       [in, out] VT_BOOL
+   RCPROP_PREHISTORY_TIME =      25; // Время предзаписи в секундах                                [in, out] VT_I4
+   RCPROP_RESET_TIME_AT_START =  26; // Делать сброс счетчиков времени при старте просмотра/записи [in, out] VT_BOOL
+   RCPROP_TRIGGER_START_MODE =   27; // Фронт для триггерного старта 1 - "1", 0 - "0"
+
+   RCPROP_INTERNAL_BASE = $8000;
+   RCPROP_USERMODE =        RCPROP_INTERNAL_BASE + 1; // Режим пользователя Simple/Advanced/More                    [out] VT_I4
+   RCPROP_SHOWDISBALANCE =  RCPROP_INTERNAL_BASE + 2; // Показыватьразбаланс после балансировки                     [out] VT_BOOL
+   RCPROP_ENABLEDRECPAUSE = RCPROP_INTERNAL_BASE + 3; // Разрешена пауза во время записи [out] VT_BOOL
+
+    // Методы сортировки тегов для проперти RCPROP_TAGSSORTMODE
+   SRTMD_BY_NAME =             0;// Сортировать по имени
+   SRTMD_BY_ADDRESS =          1;//             по аппаратному адресу
+   SRTMD_BY_DEVICENAME =       2;//             по имени устройства владельца
+
+   //Флаги для функции DriverReset (RCN_DRIVERSRESET)
+   DRF_SHOWPROCINDICATOR = 1; //Индицировать процесс ресета драйвера
+   DRF_ONLYHOST =          2; //Делать ресет трлько хосту
+
+
+   //Флаги системы управления режимом конфигурации
+   //Config mode sharing flags
+   CMSF_CONFIGCHANGED = $0001;   //Принудительная установка флага изменеия конфигурации
+   //Флаги системы экспорта импорта настроек
+   IESF_DEFAULTSETTINGS = $0001; //Сделать импортируемые/экспортируемые настройки
+                                 //загружаемыми по умолчанию
+   IESF_LOCAL_MODE =      $0002;
+
+   //Коды изменения настроек и состояний рекордера
+   //передаются вместе с нотификацией PN_LEAVERCCONFIG
+   SCF_NOTING      = $0000;
+   SCF_TAGSLIST    = $0001;
+   SCF_TAGSCONTENT = $0002;
+
+   //Стандартный размер строки                              
+   STDSTRSIZE = 256;
+
+   //Нотификации формуляров
+   VSN_ENTERRCCONFIG = 0;  //Рекордер перешел в режим настройки
+   VSN_LEAVERCCONFIG = 1;  //Рекордер вышел из режима настройки
+   VSN_CHANGECURTAG  = 2;  //Сменился текущий тег, в параметре dwData
+                           // номер тега, который становится выбранным.
+
+   VSN_RCSAVECONFIG  = 8;  //Рекордер сохранил конфигурацию
+   VSN_RCLOADCONFIG  = 9;  //Рекордер загрузил конфигурацию
+
+   VSN_RCSTART       = 3;  //Рекордер перешел в режим измерения
+   VSN_RCPLAY        = 4;  //Рекордер перешел в режим воспроизведения
+   VSN_RCSTOP        = 5;  //Рекордер остановлен
+   VSN_BEFORE_RCSTART= 14; //Рекордер переходит в режим измерения
+   VSN_BEFORE_RCSTOP = 15; //Рекордер останавливается
+   VSN_ABORT_RCSTART = 16; //Опереция старта была прервана
+
+   // Индивидуальные нотификации
+   VSN_SPECIFIED =      $4000; //
+   VSN_RESIZE =         $4001; //Команда на изменение размера окна формуляра,
+                               //  папраметр dwData содержит адрес структуры
+                               //  типа TRect.
+   VSN_CHANGEVIEWTIME = $4002; //Смена интервала отображения
+   VSN_CHANGETIMESHIFT= $4003; //Смена смещения интервала отображения
+   VSN_CHANGERCSTATE  = $4004; //Изменилось состояние Recorder в
+                               //  dwData новое состояния.
+
+   VSN_USER =           $7000; //Юзерские нотификации VFN_USER+XXXX
+
+
+type
+   //Тип ссылка на аппаратный ресурс - псевдоним
+   HARDLINK = DWORD;
+   //Перечисление типа 
+   LEVEL = (
+      LV_EQUAL,
+      LV_ABOVE,
+      LV_BELOW
+   );
+
+   tagRCLEVELCONTROLPROPS = record
+      pTag: ITag;
+      pchTagName: array[0 .. STDSTRSIZE - 1] of char;
+      dblLevel: double;
+      level: LEVEL;
+   end;
+   RCLEVELCONTROLPROPS = tagRCLEVELCONTROLPROPS;
+   PRCLEVELCONTROLPROPS = ^RCLEVELCONTROLPROPS;
+
+
+   //структура для сообщения
+   //RCN_CHANGETAGRANGE  -  Поменять границы отображения для тега
+   tagTAGRANGEDATA = record
+      pTag: ITag;       {ссылка на интерфейс тега}
+      dblBX: double;    {граница слева}
+      dblBY: double;    {граница сверху}
+      dblEX: double;    {граница справа}
+      dblEY: double;    {граница снизу}
+   end;
+   TAGRANGEDATA = tagTAGRANGEDATA;
+   PTAGRANGEDATA = ^TAGRANGEDATA;
+
+   //Псевдоним для состояния Recorder`а
+   RECORDERSTATE = DWORD;
+
+   //Интерфейс формуляра отображения
+   IVForm = interface;
+
+   //Интерфейс для управления ядром измерительного ПО
+   IRecorder = interface
+   ['{EE880620-53EF-11d7-9244-00E029288A7F}']
+      // Зарегистрировать формуляр отображения
+      function RegisterIForm(const pIVForm: IVForm;
+                            const lParam: longint): boolean; stdcall;
+      // Исключить формуляр отображения из зарегистрированных объектов
+      function UnregisterIForm(const pIVForm: IVForm): boolean; stdcall;
+
+      // Получить формуляр отображения по имени
+      function GetIFormByName(const pchName: LPCSTR): pointer{IVForm}; stdcall;
+      // Получить формуляр отображения по индексу
+      function GetIFormByIndex(const nIndex: ULONG): pointer{IVForm}; stdcall;
+
+      //Получить тег по имени
+      function GetTagByName(const pchName: LPCSTR): pointer{ITag}; stdcall;
+      //Получить тег по индексу
+      function GetTagByIndex(const nIndex: ULONG): pointer{ITag}; stdcall;
+      //Получить число тегов
+      function GetTagsCount: ULONG; stdcall;
+
+      //Получить модуль по индексу
+      function GetModuleByIndex(const nHostDeviceNum: ULONG;
+                                const nIndex: ULONG): pointer{IModule}; stdcall;
+      //Получить число модулей
+      function GetModulesCount(const nHostDeviceNum: ULONG): ULONG; stdcall;
+
+      //Получить группу по индексу
+      function GetGroupByIndex(const nIndex: ULONG): pointer{ITagsGroup}; stdcall;
+      //Получить число групп тегов
+      function GetGroupsCount: ULONG; stdcall;
+
+      //Получить состояние рекордера
+      function GetState(const rsMask: RECORDERSTATE): RECORDERSTATE; stdcall;
+      //Проверить состояние рекордера
+      function CheckState(const rsState: RECORDERSTATE): boolean; stdcall;
+
+      //Получить имя файла для сохранения сигнала
+      function GetSignalFrameName: LPCSTR; stdcall;
+      //Получить имя папки для сохранения сигнала
+      function GetSignalFolderName: LPCSTR; stdcall;
+
+      //Создать новый тег
+      function CreateTag(const pchName: LPCSTR; const ls: LINKSTATE;
+                         const a_pParams: pointer): pointer{ITag}; stdcall;
+      //Уничтожить новый тег
+      function CloseTag(const piTag: ITag): boolean; stdcall;
+
+      //Уведомить рекордер о неком событии
+      function Notify(const dwCommand: DWORD; const dwParam: DWORD): boolean; stdcall;
+
+      {Установка кода последней ошибки}
+      procedure SetLastError(const dwErrorCode: DWORD); stdcall;
+      {получение кода последней ошибки}
+      function GetLastError: DWORD; stdcall;
+      {Формирование строки описания ошибки по коду}
+      function ConvertErrorCodeToString(const dwErrorCode: DWORD): LPCSTR; stdcall;
+
+      // Получить свойство
+      function GetProperty(const dwPropertyID: DWORD;
+                          var Value: OleVariant): HRESULT; stdcall;
+      // Задать свойство
+      function SetProperty(const dwPropertyID: DWORD;
+                           {const} Value: OleVariant): HRESULT; stdcall;
+
+      //Переменные окружения
+      //Задать текущий каталог переменных окружения
+      function SetEnvironmentCurDir(const pchDir: LPCSTR): boolean; stdcall;
+      //Получить текущий каталог переменных окружения
+      function GetEnvironmentCurDir(const pchDir: LPCSTR;
+                                   const nLength: integer): boolean; stdcall;
+
+      //Получить значение переменной окружения в виде варианта
+      function GetEnvironmentVar(const pchVarID: LPCSTR;
+                                var varVal: OleVariant): boolean; stdcall;
+      //Установить значение переменной окружения в виде варианта
+      function SetEnvironmentVar(const pchVarID: LPCSTR;
+                                var varVal: OleVariant): boolean; stdcall;
+
+      //Получить значение переменной окружения в виде long
+      function GetEnvironmentLong(const pchVarID: LPCSTR;
+                                 var lVal: longint): boolean; stdcall;
+      //Установить значение переменной окружения в виде long
+      function SetEnvironmentLong(const pchVarID: LPCSTR;
+                                 const lVal: longint): boolean; stdcall;
+
+      //Получить значение переменной окружения в виде double
+      function GetEnvironmentDouble(const pchVarID: LPCSTR;
+                                   var dblVal: double): boolean; stdcall;
+      //Установить значение переменной окружения в виде double
+      function SetEnvironmentDouble(const pchVarID: LPCSTR;
+                                   const dblVal: double): boolean; stdcall;
+
+      //Получить значение переменной окружения в виде char*
+      function GetEnvironmentString(const pchVarID: LPCSTR; const pchVal: LPCSTR;
+                                   var pnLength: integer): boolean; stdcall;
+
+      //Установить значение переменной окружения в виде char*
+      function SetEnvironmentString(const pchVarID: LPCSTR;
+                                   const pchlVal: LPCSTR): boolean; stdcall;
+
+      //Добавить в лог строку с переводом каретки
+      function LogMessage(const pchMessage: LPCSTR): boolean; stdcall;
+      //Получить манипулятро (handle) главного окна приложения 
+      function GetHWND: HWND; stdcall;
+      //получить ссылку на интерфейс выбранного в данный момент тега
+      function GetCurrentTag: pointer{ITag}; stdcall;
+      //выбрать тег
+      function SetCurrentTag(const nIndex: ULONG): HRESULT; stdcall;
+
+      //Получить индекс тега по указателю
+      // v1.06.2+
+      function GetTagIndexByPointer(const pTag: ITag): integer; stdcall;
+
+      //Получить число устройств
+      // v1.09
+      function GetDevicesCount: integer; stdcall;
+
+      //Получить имя файла проэкта *.cfg
+      // v1.09.2.3
+      function GetProjectName: LPCSTR; stdcall;
+
+      //Получить полный путь
+      // v1.10
+      function GetRcBasePath: LPCSTR; stdcall;
+
+      //Управление группами тегов
+      //Получить группу по имени
+      // v1.10.1
+      function GetGroupByName(const pchName: LPCSTR): pointer{ITagsGroup}; stdcall;
+      //Удалить группу
+      function DeleteTagsGroup(const pGrp: ITagsGroup): HRESULT; stdcall;
+      //Добавить группу
+      function CreateTagsGroup(const a_pchName: LPCSTR): pointer{ITagsGroup}; stdcall;
+
+      //Импортировать настройки
+      function ImportSettings(const pchName: LPCSTR;
+                             const dwFlags: DWORD): HRESULT; stdcall;
+      //Экспортировать настройки
+      function ExportSettings(const pchName: LPCSTR;
+                             const dwFlags: DWORD): HRESULT; stdcall;
+
+      //Методы разграничения доступа к настройкам рекордера
+      //Очень настоятельно рекомендуется использовать при конфигурировании
+
+      //Войти в режим настройки
+      function EnterConfigMode(const pInitiator: IUnknown;
+                              const dwFlags: DWORD): HRESULT; stdcall;
+
+      //Выйти из режима настройки
+      function LeaveConfigMode(const pInitiator: IUnknown;
+                              const dwFlags: DWORD): HRESULT; stdcall;
+
+      //Получить текщее состояние режима настройки
+      function GetConfigModeState(var dwFlags: DWORD): ULONG; stdcall;
+
+      //Получить инициатора режима настройки
+      function GetConfigModeInitiator: pointer{IUnknown}; stdcall;
+
+      //Интерфейсы для работы с аппаратными каналами
+
+      //Получить список доступных каналов
+      function dvchGetAvailableChansCount: ULONG; stdcall;
+      //Получить идентификатор аппаратного канала по индексу
+      function dvchGetChansList(var pIDList: HARDLINK): HRESULT; stdcall;
+      //Получить адрес аппаратного канала по идентификатору
+      function dvchGetAddress(const hlID: HARDLINK; const pchAddress: LPCSTR;
+                             var nBuffLen: integer): HRESULT; stdcall;
+      //Получить название устройства владельца аппаратного канала по идентификатору
+      function dvchGetDeviceName(const hlID: HARDLINK; const pchDeviceName: LPCSTR;
+                                var nBuffLen: integer): HRESULT; stdcall;
+      //Получить название устройства владельца аппаратного канала по идентификатору
+      function dvchGetDeviceInfo(const hlID: HARDLINK; const pchDeviceInfo: LPCSTR;
+                                var nBuffLen: integer): HRESULT; stdcall;
+
+      function MultiTagSynchroReadDataBlock(const dwCount: DWORD;
+           var pTag: ITag; const dwPortionLen: DWORD; var pdblFreq: double;
+           var ppdblData; const boolViaTransformer: BOOL): HRESULT; stdcall;
+
+    // since v 1.19
+
+    //Сформировать полный путь к файлу относительно рекордера
+    function MakeFullPath(const pchLocalPath: LPCSTR): LPCSTR; stdcall;
+
+    //Взвести флаг состояния рекордера
+    procedure PushState( const rsState: integer); stdcall;
+    //Сбросить флаг состояния рекордера
+    procedure PopState( const rsState: integer); stdcall;
+
+    //Получить ссылку на устройство по индексу
+    function GetDeviceByIndex( var pDevice: IDevice;
+                               const ulIndex: ULONG): HRESULT; stdcall;
+
+    //Получить код инициализации устройства по индексу
+    function GetDeviceInitStateByIndex(const ulIndex: ULONG): ULONG; stdcall;
+
+
+
+    //Добавить устройство в список рекордера
+    function AddDevice( pDevice: IDevice; const ulIndex: ULONG): HRESULT; stdcall;
+    //Удалить устройство из списка рекордера
+    function RemoveDevice( const ulIndex: ULONG): HRESULT; stdcall;
+
+    function GetDeviceControlClassObject( var ppv): HRESULT; stdcall;
+    function GetPluginsControlClassObject( var ppv): HRESULT; stdcall;
+
+    function CreateInfoFile( const pchPath: LPCSTR;
+                             pGroup: ITagsGroup): HRESULT; stdcall;
+
+    //Задать имя фрейма для сохранения сигнала
+    function SetSignalFrameName( const pcFrameName: LPCSTR): HRESULT; stdcall;
+    
+    //Счетчик времени в секундах с момента запуска просмотра/записи
+    function GetTimeCounter: double; stdcall;
+
+    //Получить глобальный счетчик принятых пакетов,
+    //можно отслеживать стабильность получения данных
+    function GetSummaryReceivedPacketsCount: ULONG; stdcall;
+
+    //Получить счетчик принятых пакетов до с броса функцией ResetReceivedPacketsCount
+    //можно отслеживать стабильность получения данных
+    function GetReceivedPacketsCount: ULONG; stdcall;
+    function GetSummaryCounter: ULONG; stdcall;
+    function ResetReceivedPacketsCount: ULONG; stdcall;
+
+    function IncSummaryTime( const liVal: LONGLONG): ULONG; stdcall;
+
+    function GetWorkTime( var dblTime: double): HRESULT; stdcall;
+
+    function ResetWorkTime: HRESULT; stdcall;
+
+    //Получить уровень загрузки процессора на уровне обработчика IRQ
+    function GetPerformanceTimeIRQ( var dblTime: double): HRESULT; stdcall;
+
+    function ResetPerformanceTimeIRQ: HRESULT; stdcall;
+
+    //Получить уровень загрузки процессора на уровне ядра драйвера
+    function GetPerformanceTimeDriver( var dblTime: double): HRESULT; stdcall;
+
+    function ResetPerformanceTimeDriver: HRESULT; stdcall;
+
+    //Получить уровень загрузки процессора
+    function GetCPUUsage( var pdblCPU: double): HRESULT; stdcall;
+
+    //Получить серийный номер устройства по идентификатору
+    function dvchGetDeviceSerialNumber( const hlID: HARDLINK;
+             pchDeviceSerialNumber: LPCSTR;
+             var nBuffLen: integer): HRESULT; stdcall;
+   end;
+
+   //Тип для работы с массивом ссылок на теги
+   TagsArray = array[0..0] of ITag;
+
+   //Интерфейс для управления специализированными формулярами отображения
+   IVForm = interface
+   ['{95001263-E83C-11d6-9243-00E029288A7F}']
+      //Получить имя формы должно быть уникальным, используется при регистрации
+      function GetName: LPCSTR; stdcall;
+      //Инициализация формы
+      function Init(pParent: IRecorder; hParent: HWND; lParam: longint): boolean; stdcall;
+      //Получить HWND формы
+      function GetHWnd: HWND; stdcall;
+      //Вызывается при закрытии формы
+      function Close: boolean; stdcall;
+      function Prepare: boolean; stdcall;
+      function Update: boolean; stdcall;
+      //Перерисовка формы
+      function Repaint: boolean; stdcall;
+      //Привязка к тегам рекордера
+      function LinkTags( var pTagsList: TagsArray;
+                         var nTagsCount: ULONG): boolean; stdcall;
+      //Активизация формы
+      function Activate: boolean; stdcall;
+      //Деактивизация формы
+      function Deactivate: boolean; stdcall;
+      //Вызов окна редактирования
+      function Edit: boolean; stdcall;
+      //События, уведомления, команды
+      function Notify(const dwCommand: DWORD; const dwData: DWORD): boolean; stdcall;
+   end;
+
+implementation
+end.

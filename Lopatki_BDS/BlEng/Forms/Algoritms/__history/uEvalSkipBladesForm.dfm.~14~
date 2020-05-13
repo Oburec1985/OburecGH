@@ -1,0 +1,185 @@
+object EvalSkipBladesForm: TEvalSkipBladesForm
+  Left = 0
+  Top = 0
+  Caption = #1056#1072#1089#1095#1077#1090' '#1095#1080#1089#1083#1072' '#1087#1088#1086#1087#1091#1097#1077#1085#1085#1099#1093' '#1083#1086#1087#1072#1090#1086#1082
+  ClientHeight = 814
+  ClientWidth = 531
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  OnCreate = FormCreate
+  PixelsPerInch = 96
+  TextHeight = 13
+  inline BaseAlgOptsFrame1: TBaseAlgOptsFrame
+    Left = 0
+    Top = 0
+    Width = 531
+    Height = 399
+    Align = alTop
+    Constraints.MinHeight = 399
+    Constraints.MinWidth = 451
+    TabOrder = 0
+    ExplicitWidth = 531
+    ExplicitHeight = 399
+    inherited StageGB: TGroupBox
+      Width = 531
+      ExplicitWidth = 531
+      inherited UseBladesPos: TRadioGroup
+        Width = 527
+        ExplicitWidth = 527
+      end
+      inherited StageCB: TComboBox
+        OnChange = BaseAlgOptsFrame1StageCBChange
+      end
+      inherited ValidBladeGB: TGroupBox
+        Width = 527
+        ExplicitWidth = 527
+      end
+    end
+    inherited CommonGB: TGroupBox
+      Width = 531
+      ExplicitWidth = 531
+      inherited TahoCB: TComboBox
+        OnChange = BaseAlgOptsFrame1TahoCBChange
+      end
+      inherited SensorsNameCB: TComboBox
+        OnChange = BaseAlgOptsFrame1SensorsNameCBChange
+      end
+    end
+    inherited TagsGB: TGroupBox
+      Width = 531
+      ExplicitWidth = 531
+      inherited AlgTagList1: TAlgTagListFrame
+        Width = 527
+        ExplicitWidth = 527
+        inherited TagListLV: TBtnListView
+          Width = 525
+          ExplicitWidth = 525
+        end
+      end
+    end
+  end
+  object EvalBladesOptsGB: TGroupBox
+    Left = 0
+    Top = 399
+    Width = 531
+    Height = 415
+    Align = alClient
+    Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1072#1083#1075#1086#1088#1080#1090#1084#1072
+    TabOrder = 1
+    object ApplyGB: TGroupBox
+      Left = 2
+      Top = 354
+      Width = 527
+      Height = 59
+      Align = alBottom
+      Caption = #1042#1099#1073#1080#1088#1080#1090#1077' '#1076#1077#1081#1089#1090#1074#1080#1077
+      TabOrder = 0
+      DesignSize = (
+        527
+        59)
+      object OkBtn: TButton
+        Left = 449
+        Top = 17
+        Width = 75
+        Height = 25
+        Anchors = [akRight, akBottom]
+        Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
+        ModalResult = 1
+        TabOrder = 0
+      end
+      object CancelBtn: TButton
+        Left = 3
+        Top = 17
+        Width = 75
+        Height = 25
+        Anchors = [akLeft, akBottom]
+        Caption = #1054#1090#1084#1077#1085#1080#1090#1100
+        ModalResult = 2
+        TabOrder = 1
+      end
+    end
+    object GroupBox1: TGroupBox
+      Left = 2
+      Top = 15
+      Width = 527
+      Height = 67
+      Align = alTop
+      TabOrder = 1
+      object SkipLabel: TLabel
+        Left = 14
+        Top = 6
+        Width = 146
+        Height = 13
+        Caption = #1053#1072#1095#1072#1083#1100#1085#1099#1081' '#1087#1088#1086#1087#1091#1089#1082' '#1083#1086#1087#1072#1090#1086#1082
+      end
+      object StepLabel: TLabel
+        Left = 200
+        Top = 6
+        Width = 140
+        Height = 13
+        Caption = #1050#1086#1085#1077#1095#1085#1099#1081' '#1087#1088#1086#1087#1091#1089#1082' '#1083#1086#1087#1072#1090#1086#1082
+      end
+      object SkipBladeLabel: TLabel
+        Left = 369
+        Top = 20
+        Width = 87
+        Height = 13
+        Caption = #1055#1088#1086#1087#1091#1089#1082' '#1083#1086#1087#1072#1090#1086#1082
+      end
+      object FirstSkipSE: TSpinEdit
+        Left = 14
+        Top = 25
+        Width = 121
+        Height = 22
+        MaxValue = 0
+        MinValue = 0
+        TabOrder = 0
+        Value = 0
+      end
+      object LastSkipSE: TSpinEdit
+        Left = 200
+        Top = 25
+        Width = 121
+        Height = 22
+        MaxValue = 0
+        MinValue = 0
+        TabOrder = 1
+        Value = 0
+      end
+      object PreviewCB: TCheckBox
+        Left = 369
+        Top = 3
+        Width = 74
+        Height = 17
+        Caption = #1055#1088#1086#1089#1084#1086#1090#1088
+        TabOrder = 2
+        OnClick = PreviewCBClick
+      end
+      object SkipBladeSE: TSpinEdit
+        Left = 369
+        Top = 39
+        Width = 121
+        Height = 22
+        MaxValue = 0
+        MinValue = 0
+        TabOrder = 3
+        Value = 0
+        OnChange = SkipBladeSEChange
+      end
+    end
+    object cChart1: cChart
+      Left = 2
+      Top = 82
+      Width = 527
+      Height = 272
+      Align = alClient
+      Caption = 'cChart1'
+      TabOrder = 2
+    end
+  end
+end

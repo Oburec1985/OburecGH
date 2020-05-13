@@ -1,0 +1,84 @@
+unit uComplexDiagram;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ExtCtrls, ComCtrls, uBtnListView;
+
+type
+  TComplexDiagramFrm = class(TForm)
+    SignalsLV: TBtnListView;
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+ ISpmFrm = class(cRecBasicIFrm)
+  public
+    function doRepaint: boolean; override;
+    function doGetName: LPCSTR; override;
+    procedure doClose; override;
+    function doCreateFrm: TRecFrm; override;
+  end;
+
+  cComplexDiagramFact = class(cRecBasicFactory)
+  public
+    constructor create;
+    destructor destroy; override;
+    function doCreateForm: cRecBasicIFrm; override;
+    procedure doSetDefSize(var pSize: SIZE); override;
+  end;
+
+var
+  g_ComplexDiagramFact:cComplexDiagramFact;
+
+const
+  // происходит при смене имени объекта
+  E_CURSMOVE = $00000001;
+  E_SETACTSPMCHART = $00000002;
+
+const
+  c_Pic = 'CPXFRM';
+  c_Name = 'Комплексная диаграмма';
+
+  c_SpmChart_defXSize = 400;
+  c_SpmChart_defYSize = 400;
+
+  c_graphtype_spm = 0;
+
+  // ctrl+shift+G
+  // ['{EFED70A7-68F8-48A4-8AF2-E0B2E222BD6F}']
+  IID_CHARTSPM: TGuid = (D1: $EFED70A7; D2: $68F8; D3: $48A4;
+    D4: ($8A, $F2, $E0, $B2, $E2, $22, $BD, $6F));
+
+implementation
+
+{$R *.dfm}
+
+{ cComplexDiagramFact }
+
+constructor cComplexDiagramFact.create;
+begin
+
+end;
+
+destructor cComplexDiagramFact.destroy;
+begin
+
+  inherited;
+end;
+
+function cComplexDiagramFact.doCreateForm: cRecBasicIFrm;
+begin
+
+end;
+
+procedure cComplexDiagramFact.doSetDefSize(var pSize: SIZE);
+begin
+  inherited;
+
+end;
+
+end.

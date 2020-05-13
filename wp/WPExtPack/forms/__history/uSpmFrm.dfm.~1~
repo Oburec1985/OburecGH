@@ -1,0 +1,66 @@
+object SpmFrm: TSpmFrm
+  Left = 0
+  Top = 0
+  Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1072#1089#1095#1077#1090#1072' '#1089#1087#1077#1082#1090#1088#1072
+  ClientHeight = 243
+  ClientWidth = 473
+  Color = clBtnFace
+  Constraints.MinHeight = 199
+  Constraints.MinWidth = 360
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Panel1: TPanel
+    Left = 0
+    Top = 0
+    Width = 473
+    Height = 175
+    Align = alClient
+    TabOrder = 0
+    inline SpmFrame1: TSpmFrame
+      Left = 1
+      Top = 1
+      Width = 471
+      Height = 173
+      Align = alClient
+      TabOrder = 0
+      ExplicitLeft = 1
+      ExplicitTop = 1
+      ExplicitWidth = 471
+      ExplicitHeight = 173
+    end
+  end
+  object Panel2: TPanel
+    Left = 0
+    Top = 175
+    Width = 473
+    Height = 68
+    Align = alBottom
+    TabOrder = 1
+    ExplicitTop = 131
+    ExplicitWidth = 360
+    object CancelBtn: TButton
+      Left = 4
+      Top = 35
+      Width = 75
+      Height = 25
+      Caption = #1054#1090#1084#1077#1085#1072
+      ModalResult = 2
+      TabOrder = 0
+    end
+    object ApplyBtn: TButton
+      Left = 276
+      Top = 35
+      Width = 75
+      Height = 25
+      Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
+      ModalResult = 1
+      TabOrder = 1
+    end
+  end
+end

@@ -1,0 +1,23 @@
+unit uTagOwnerObj;
+
+interface
+uses
+  uBaseObjStr, utag, ubaseobj;
+
+  type
+    cTagOwnerObj = class(cBaseObjStr)
+    public
+      tags:cBaseObjListStr;
+    protected
+      procedure createTags;virtual;
+    end;
+
+implementation
+
+procedure cTagOwnerObj.createTags;
+begin
+
+end;
+
+
+end.

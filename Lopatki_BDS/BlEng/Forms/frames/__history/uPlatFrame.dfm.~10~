@@ -1,0 +1,38 @@
+object Platframe: TPlatframe
+  Left = 0
+  Top = 0
+  Width = 532
+  Height = 86
+  TabOrder = 0
+  object BuffSizeLabel: TLabel
+    Left = 16
+    Top = 13
+    Width = 76
+    Height = 13
+    Caption = #1056#1072#1079#1084#1077#1088' '#1073#1091#1092#1077#1088#1072
+  end
+  object BufSizeCB: TComboBox
+    Left = 16
+    Top = 32
+    Width = 169
+    Height = 21
+    TabOrder = 0
+    Text = '128'
+    Items.Strings = (
+      '128'
+      '255'
+      '510'
+      '1023'
+      '2046'
+      '4095'
+      '6141')
+  end
+  object FindPlatsBtn: TButton
+    Left = 208
+    Top = 30
+    Width = 75
+    Height = 25
+    Caption = #1055#1086#1080#1089#1082
+    TabOrder = 1
+  end
+end

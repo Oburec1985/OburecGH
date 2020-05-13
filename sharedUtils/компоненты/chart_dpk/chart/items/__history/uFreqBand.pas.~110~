@@ -1,0 +1,240 @@
+unit uFreqBand;
+
+interface
+uses
+  ubtnlistview, classes, stdctrls, controls, ExtCtrls, ComCtrls, uchartevents,
+  uBaseObj, utrend, ucommonmath, uCommonTypes, sysutils, uDrawObj, opengl,  uaxis,
+  uFrameListener, messages, windows, uCursors, ulogFile, uLabel, uPage,
+  uSimpleObjects,
+  uBasicTrend,
+  mathfunction
+  ;
+
+type
+  cTrendPair = class
+  public
+    tr:cbasictrend;
+    l:clabel;
+  end;
+
+  cFreqBand = class(cdrawobj)
+  public
+    // подпись линии
+    m_LineLabel:cLabel;
+    m_trendLabels:tlist;
+  protected
+    m_LineColor:point3;
+    m_drawline:boolean;
+    // Граница слева (отступ в координатах +-1)
+    m_x1:double;
+    // Граница справа (отступ в координатах +-1)
+    m_x2:double;
+    // центральная частота в координатах +-1
+    m_x:double;
+  public
+    // влияет только на подпись. Пока реализация размещения в координатах
+    // отрисовки на совести пользователя (см. uSpmChart как пример)
+    m_realX:double;
+  protected
+    procedure cleartrendlabels;
+    // происходит при назначении нового родителя
+    procedure DoLincParent; override;
+    procedure drawdata;override;
+    procedure setx(v:double);
+    procedure setx1(v:double);
+    procedure setx2(v:double);
+    procedure setdrawline(v:boolean);
+    // вызывается с пмоощью механизма event-ов при обновлении страницы
+    procedure doUpdatePageSize(sender:tobject);
+    procedure DeleteEvents;Override;
+    procedure CreateEvents;override;
+    procedure setname(s:string);override;
+    function getLineText:string;
+    procedure setLineText(s:string);
+  public
+    procedure inittrendlabels;
+    constructor create;override;
+    destructor destroy;override;
+    property linetext:string read getLineText write setLineText;
+    property x:double read m_x write setx;
+    property x1:double read m_x1 write setx1;
+    property x2:double read m_x2 write setx2;
+    property drawline:boolean read m_drawline write setdrawline;
+    //destructor destroy;override;
+    //procedure drawdata;override;
+  end;
+
+implementation
+
+{ cFreqBand }
+
+procedure cFreqBand.cleartrendlabels;
+var
+  I: Integer;
+  l:cLabel;
+begin
+  for I := 0 to m_trendLabels.Count - 1 do
+  begin
+    l:=clabel(m_trendLabels.Items[i]);
+    l.destroy;
+  end;
+  m_trendLabels.Clear;
+end;
+
+constructor cFreqBand.create;
+begin
+  inherited;
+  m_trendLabels:=tlist.create;
+
+  fhelper:=false;
+  autocreate:=true;
+  m_drawline:=true;
+  color:=Brightgray;
+  m_linecolor:=red;
+  m_x1:=0.1;
+  m_x2:=0.1;
+
+  m_LineLabel:=clabel.create;
+  m_LineLabel.m_drawobjvp:=true;
+  m_LineLabel.locked:=true;
+  m_LineLabel.fHelper:=false;
+  m_LineLabel.autocreate:=true;
+  m_LineLabel.Transparent:=false;
+  //AddChild(m_LineLabel);
+end;
+
+
+procedure cFreqBand.DoLincParent;
+var
+  page: cpage;
+  rect: TRect;
+  index:integer;
+begin
+  inherited;
+  page := cpage(getpage);
+  page.addchild(m_LineLabel);
+  m_LineLabel.Text:=m_LineLabel.Text;
+  m_LineLabel.Position:=p2(0, page.m_TabSpace.BottomLeft.y+m_LineLabel.GetTextHeigth);
+end;
+
+procedure cFreqBand.drawdata;
+var
+  page: cpage;
+begin
+  inherited;
+  page := cpage(getpage);
+  page.setDrawObjVP;
+  drawrect(boundrect, color);
+  if drawline then
+  begin
+    glColor3fv(@m_LineColor);
+    //uSimpleObjects.DrawLine(p2(m_x,boundrect.BottomLeft.y), p2(m_x,boundrect.TopRight.y));
+    uSimpleObjects.DrawLine(p2(m_x,-1), p2(m_x,1));
+  end;
+end;
+
+
+procedure cFreqBand.setdrawline(v: boolean);
+begin
+  EnterCS;
+  m_drawline:=v;
+  exitcs;
+end;
+
+function cFreqBand.getLineText: string;
+begin
+  result:=m_LineLabel.text;
+end;
+
+procedure cFreqBand.inittrendlabels;
+var
+  o:cdrawobj;
+  p:cpage;
+  a:caxis;
+  I, j: Integer;
+begin
+  cleartrendlabels;
+  p := cpage(getpage);
+  for I := 0 to p.getAxisCount - 1 do
+  begin
+    a:=p.getaxis(i);
+    for j := 0 to a.ChildCount - 1 do
+    begin
+      o:=a.getChild(j);
+      if o is cbasictrend then
+      begin
+
+      end;
+    end;
+  end;
+end;
+
+procedure cFreqBand.setLineText(s: string);
+begin
+  m_LineLabel.text:=s;
+end;
+
+procedure cFreqBand.setname(s: string);
+begin
+  inherited;
+  //m_LineLabel.Text:=s+char(10)+format(' X:%.3g', [m_realX]);
+  m_LineLabel.Text:=s+char(10)+'X: '+formatstrNoE(m_realX, 3);
+end;
+
+procedure cFreqBand.setx(v: double);
+begin
+  EnterCS;
+  m_x:=v;
+  boundrect.BottomLeft.x:=m_x-m_x1;
+  boundrect.TopRight.x:=m_x+m_x2;
+  m_LineLabel.Position:=p2(m_x,m_LineLabel.Position.y);
+  exitcs;
+end;
+
+procedure cFreqBand.setx1(v:double);
+begin
+  EnterCS;
+  m_x1:=v;
+  boundrect.BottomLeft.x:=m_x-m_x1;
+  exitcs;
+end;
+
+procedure cFreqBand.setx2(v:double);
+begin
+  EnterCS;
+  m_x2:=v;
+  boundrect.TopRight.x:=m_x+m_x2;
+  exitcs;
+end;
+
+procedure cFreqBand.doUpdatePageSize(sender:tobject);
+var
+  page:cpage;
+begin
+  page := cpage(getpage);
+  //boundrect.BottomLeft.y:=page.m_TabSpace.BottomLeft.y;
+  //boundrect.TopRight.y:=page.m_TabSpace.TopRight.y;
+  boundrect.BottomLeft.y:=-1;
+  boundrect.TopRight.y:=1;
+end;
+
+procedure cFreqBand.CreateEvents;
+begin
+  //events.AddEvent('trendAddpoint', e_onAddpoint, doaddpoint);
+  events.AddEvent(name+'_OnPageSizeFreqBand', e_onResize, doUpdatePageSize);
+end;
+
+procedure cFreqBand.DeleteEvents;
+begin
+  inherited;
+  events.removeEvent(doUpdatePageSize, e_onResize);
+end;
+
+destructor cFreqBand.destroy;
+begin
+  cleartrendlabels;
+  m_trendLabels:=TList.destroy;
+  inherited;
+end;
+
+end.

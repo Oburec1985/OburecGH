@@ -1,0 +1,304 @@
+// US: default [1252]
+#include "ZipMsg.h"
+// edited R.Peters 2005-11-27
+
+// SPANISH - Arpe Software (tecnico@arpesoft.com) 14/03/2001
+//           Francisco Rueda 10/12/2002
+//           Xavier Mor-Mur  18/07/2004  03/11/2004  20/06/2005  14/10/2005  18/12/2005  13/02/2010
+
+STRINGTABLE
+LANGUAGE 0x0A, 1 // 040A
+{
+DT_Language,             "ES: Spanish";
+DT_Author,               "X.Mor-Mur";
+DT_Desc,                 "Idioma neutro";
+
+GE_FatalZip,             "Error Fatal en DLL: excepción abortar";
+GE_NoZipSpecified,       "Error - archivo zip no especificado";
+GE_NoMem,                "Memoria solicitada no disponible";
+GE_WrongPassword,        "Error - las contraseñas de acceso no coinciden\nContraseña de Acceso ignorada";
+//GE_CopyFile,             "Copiando: ";
+GE_Except,               "Excepción en el Gestor de Eventos ";
+//GE_Reentered,            "estaba ocupado, Las instrucciones pueden haberse perdido!";
+//GE_Busy,                 " Ocupado, Por favor espere";
+GE_Inactive,             "no Activo";
+GE_RangeError,           "Indice (%d) fuera del rango 1..%d";
+GE_TempZip,              "Fichero zip temporal: %s";
+GE_WasBusy,              "Ocupado + %s";
+GE_EventEx,              "Excepción en el evento ";
+//GE_DLLAbort,             "DLL Error - Abortando";
+//GE_DLLBusy,              "DLL Error - Ocupada";
+//GE_DLLCancel,            "DLL Error - Cancelado por el usuario";
+//GE_DLLMem,               "DLL Error - Memoria insuficiente";
+//GE_DLLStruct,            "DLL Error - Estructura incorrecta";
+//GE_DLLEvent,             "DLL Error - Excepción en el 'handler' ";
+GE_DLLCritical,          "Error critico de la DLL %d";
+GE_Unknown,              " Error desconocido %d";
+GE_Skipped,              "Omitido %s %d";
+GE_Copying,              "Copiando: %s";
+GE_Abort,                "Cancelación del usuario";
+//GE_NotPermitted,         "No permitido!";
+GE_ExceptErr,            "Error de Excepción: ";
+GE_NoSkipping,           "Omitir no permitido";
+GE_FileChanged,          "El fichero Zip ha cambiado!";
+
+//RN_ZipSFXData,           "Error mientras se copia la cabecera SFX";
+//RN_NoRenOnSpan,          "No es posible renombrar archivos Zip divididos";
+//RN_ProcessFile,          "Procesando: ";
+//RN_RenameTo,             " renombrado a: ";
+RN_InvalidDateTime,      "argumento fecha/hora incorrecto para el fichero: ";
+
+PW_UnatAddPWMiss,        "Error - no se ha dado contraseña de acceso para agregar";
+PW_UnatExtPWMiss,        "Error - no se ha dado contraseña de acceso para extraer";
+PW_Caption,              "Contraseña";
+PW_MessageEnter,         "Introduzca la contraseña ";
+PW_MessageConfirm,       "Confirme la contraseña ";
+//PW_ForFile,              " para el fichero: ";
+
+CF_SourceIsDest,         "El archivo origen es el mismo que el archivo destino";
+CF_OverwriteYN,          "¿Sobrescribir el fichero '%s' en '%s' ?";
+CF_CopyFailed,           "Copia fallida del fichero '%s' en '%s'";
+//CF_SourceNotFound,       "El fichero '%s' no esta presente en '%s'";
+CF_SFXCopyError,         "Error mientras se copiaban los datos de SFX";
+//CF_DestFileNoOpen,       "El archivo zip destino no pudo abrirse";
+CF_NoDest,               "No se ha especificado el destino";
+//CF_NoCopyOnSpan,         "No es posible copiar archivos ZIP divididos";
+
+LI_ReadZipError,         "Error de búsqueda al leer el archivo Zip";
+LI_ErrorUnknown,         "Error desconocido en función List()";
+LI_WrongZipStruct,       "Precaución - Error en la estructura del zip";
+//LI_GarbageAtEOF,         "Precaución - Basura al final del archivo zip";
+//LI_FileTooBig,           "Tamaño fichero supera los 4GB";
+//LI_MethodUnknown,        "Método de compresión desconocido";
+
+ZB_Yes,                  "&Si";
+ZB_No,                   "&No";
+ZB_OK,                   "&OK";
+ZB_Cancel,               "&Cancelar";
+ZB_Abort,                "&Abortar";
+ZB_Retry,                "&Reintentar";
+ZB_Ignore,               "&Ignorar";
+ZB_CancelAll,            "CancelarTodo";
+ZB_NoToAll,              "NoATodo";
+ZB_YesToAll,             "SiATodo";
+
+AD_NothingToZip,         "Error - no hay ficheros para incluir en el archivo Zip";
+AD_UnattPassword,        "Acción desatendida sin contraseña";
+//AD_NoFreshenUpdate,      "AgregarRefrescar o AgregarActualizar no es posible en un archivo Zip dividido";
+AD_AutoSFXWrong,         "Error %.ld ocurrido durante la creación del archivo autoextraible";
+AD_InIsOutStream,        "El flujo de entrada no puede ser asignado al flujo de salida";
+AD_InvalidName,          "No se permiten caracteres comodín en el nombre o la especificación del archivo Zip";
+AD_NoDestDir,            "La carpeta destino '%s' debe existir";
+AD_BadFileName,          "Nombre de fichero incorrecto";
+AD_InvalidEncode,        "Opciones de codificación incorrectas";
+
+AZ_NothingToDo,          "Nada para hacer";
+AZ_SameAsSource,         "origen y destino en el mismo dispositivo extraible";
+AZ_InternalError,        "Error interno";
+
+DL_NothingToDel,         "Error - no se seleccionaron ficheros para borrar";
+//DL_NoDelOnSpan,          "No es posible borrar ficheros de un archivo Zip dividido";
+
+//EX_FatalUnZip,           "Error Fatal en UnzDLL.DLL: excepción abortar";
+EX_UnAttPassword,        "Aviso - Extracción desatendida: posiblemente no se hayan extraído todos los ficheros";
+EX_NoExtrDir,            "La carpeta de extracción '%s' debe existir";
+
+LD_NoDll,                "Fallo al cargar %s";
+//LD_BadDll,               "Imposible cargar %s. Fichero antiguo o corrupto";
+LD_DllLoaded,            "Cargada %s";
+LD_DllUnloaded,          "Descargada %s";
+LD_LoadErr,              "Error [%d %s] cargando %s";
+
+SF_StringTooLong,        "Error - Una o mas de las 4 propiedades de cadenas mencionadas anteriormente exceden los 255 caracteres!";
+SF_NoZipSFXBin,          "Error - No se encuentra %s";
+//SF_InputIsNoZip,         "Error - El fichero de entrada no es un archivo Zip";
+//SF_NoSFXSupport,         "Funciones SFX no soportadas";
+//SF_MsgTooLong,           "SFX la cadena Mensaje excede 255 caracteres!";
+//SF_DefPathTooLong,       "SFX Ruta por defecto excede 255 caracteres!";
+//SF_DlgTitleTooLong,      "SFX El título de la ventana de dialogo excede 255 caracteres!";
+//SF_CmdLineTooLong,       "SFX línea de comando excede 255 caracteres!";
+//SF_FBkPathTooLong,       "SFX ruta 'Fallback' excede 255 caracteres!";
+SF_DetachedHeaderTooBig, "Cabecera Independiente SFX demasiado grande";
+//SF_DetachedErr,          "Error preparando SFX independiente";
+//SF_NameNeeded,           "Nombre de fichero necesario";
+
+//CZ_NoExeSpecified,       "Error - no se ha especificado el fichero .EXE";
+CZ_InputNotExe,          "Error - El fichero de entrada no es un archivo .EXE";
+//CZ_SFXTypeUnknown,       "Error al identificar el tipo de archivo autoextraible";
+//CZ_WrongConvert,         "Solo puede convertirse de ZIP a EXE o EXE a ZIP";
+//CZ_UnknownHeader,        "Formato de cabecera SFX desconocido en %s";
+CZ_BrowseError,          "Error en la búsqueda de recursos.";
+CZ_NoExeResource,        "No se han encontrado recursos en el ejecutable.";
+CZ_ExeSections,          "Error durante la lectura de secciones del ejecutable.";
+CZ_NoExeIcon,            "No se ha encontrado un icono en el ejecutable.";
+CZ_NoIcon,               "No se ha encontrado ningún icono.";
+CZ_NoCopyIcon,           "No se puede copiar el icono.";
+CZ_NoIconFound,          "No se ha encontrado el icono asociado.";
+
+DS_NoInFile,             "El archivo de entrada no existe";
+DS_FileOpen,             "No pudo abrirse el archivo Zip";
+DS_NotaDrive,            "Unidad %s no válida";
+DS_DriveNoMount,         "La unidad %s no está definida";
+DS_NoVolume,             "No pudo especificarse una etiqueta de volumen";
+DS_NoMem,                "No hay suficiente memoria para mostrar MsgBox";
+DS_Canceled,             "Operación cancelada por el usuario";
+DS_FailedSeek,           "Error de búsqueda dentro del archivo de entrada";
+DS_NoOutFile,            "No se pudo crear el archivo de salida";
+DS_NoWrite,              "Error de escritura en el archivo de salida";
+DS_EOCBadRead,           "Error al leer el Final del Directorio Central";
+DS_LOHBadRead,           "Error al leer una cabecera local";
+DS_CEHBadRead,           "Error al leer una cabecera central";
+//DS_LOHWrongSig,          "Una firma de cabecera local es incorrecta";
+DS_CEHWrongSig,          "Una firma de cabecera central es incorrecta";
+//DS_LONameLen,            "Error al leer un nombre de fichero local";
+DS_CENameLen,            "Error al leer un nombre de fichero central";
+//DS_LOExtraLen,           "Error al leer un campo extra local";
+//DS_CEExtraLen,           "Error al leer un campo extra central";
+DS_DataDesc,             "Error al leer/escribir un área de descripción de datos";
+//DS_ZipData,              "Error al leer los datos comprimidos";
+DS_CECommentLen,         "Error al leer el comentario de un fichero";
+//DS_EOArchComLen,         "Error al leer el comentario del archivo Zip";
+DS_ErrorUnknown,         "Error desconocido en la función ReadSpan(), WriteSpan(), ChangeFileDetails() or CopyZippedFiles()\n";
+DS_NoUnattSpan,          "La expansión desatendida en varios discos no está implementada";
+//DS_EntryLost,            "No se encuentra una cabecera local en la estructura interna";
+DS_NoTempFile,           "No pudo crearse el fichero temporal";
+DS_LOHBadWrite,          "Error al escribir una cabecera local";
+DS_CEHBadWrite,          "Error al escribir una cabecera central";
+DS_EOCBadWrite,          "Error al escribir el Final del Directorio Central";
+//DS_ExtWrongSig,          "Error al leer una firma local extendida";
+DS_NoDiskSpace,          "El disco no tiene suficiente espacio libre";
+DS_InsertDisk,           "Por favor, inserte el último disco";
+DS_InsertVolume,         "Por favor, inserte el disco %.ld de %.ld";
+DS_InDrive,              "\nen la unidad %s";
+DS_NoValidZip,           "Este archivo no es un archivo Zip válido";
+//DS_FirstInSet,           "Este es el primer disco del conjunto.\nPor favor, inserte el último";
+//DS_NotLastInSet,         "Este es el primer disco nº %d del conjunto.\nPor favor, inserte el último";
+DS_AskDeleteFile,        "El fichero %s ya existe.\n¿Desea reemplazarlo?";
+DS_AskPrevFile,          "ATENCION: este es el disco previo nº %d.\n¿Desea reemplazar su contenido?";
+//DS_NoSFXSpan,            "Error - Los archivos autoextraibles (.exe) no pueden dividirse";
+//DS_CEHBadCopy,           "Error al copiar un fichero de una estructura CEH";
+//DS_EOCBadSeek,           "Error de búsqueda al saltar una estructura EOC";
+//DS_EOCBadCopy,           "Error al copiar el comentario del archivo Zip";
+//DS_FirstFileOnHD,        "Este es el primer disco del conjunto.\nPor favor, seleccione el último";
+DS_InsertAVolume,        "Por favor, inserte el disco nº %.ld";
+DS_CopyCentral,          "Directorio Central";
+DS_NoDiskSpan,           "DiskSpanning no está soportado";
+DS_UnknownError,         "Error desconocido";
+DS_NoRenamePart,         "Último trozo guardado como : %s";
+DS_NotChangeable,        "No se puede escribir en %s";
+DS_Zip64FieldError,      "Error leyendo campo Zip64";
+DS_Unsupported,          "Versión zip n soportada";
+DS_ReadError,            "Error leyendo el fichero";
+DS_WriteError,           "Error escribiendo el fichero";
+DS_FileError,            "Error de fichero";
+DS_FileChanged,          "El fichero ha cambiado";
+DS_SFXBadRead,           "Error leyendo SFX";
+DS_BadDrive,             "no se puede usar el dispositivo";
+DS_LOHWrongName,         "Nombres Local y Central distintos : %s";
+DS_BadCRC,               "Error de CRC";
+DS_NoEncrypt,            "encriptación no soportada";
+DS_NoInStream,           "No hay corriente de entrada";
+DS_NoOutStream,          "No hay corriente de salida";
+DS_SeekError,            "Error de posicionamiento en el fichero";
+DS_DataCopy,             "Error copiando datos comprimidos";
+DS_CopyError,            "Error copiando el fichero";
+DS_TooManyParts,         "Más de 999 partes en un archivo multi volumen";
+DS_AnotherDisk,          "Este disco es parte de un conjunto de copia,\npor favor introduzca otro disco";
+
+FM_Erase,                "Borrar ";
+FM_Confirm,              "Confirmar";
+
+//ED_SizeTooLarge,         "El tamaño de FileExtraData es mayor que la matriz disponible";
+
+//SS_StreamError,          "error de operación en el corriente";
+
+//CD_NoCDOnSpan,           "ChangeFileDetails no está implementado para ficheros zip partidos";
+//CD_NoEventHndlr,         "No se ha encontrado un Gestor de Eventos para Cambiar Propiedades del Fichero";
+//CD_LOExtraLen,           "Error escribiendo un campo local extra";
+//CD_CEExtraLen,           "Error escribiendo un campo central extra";
+//CD_CEComLen,             "Error escribiendo el comentario del fichero";
+CD_CEHDataSize,          "La combinación de CEH + NombreFichero + ComentarioFichero + DatosExtra exceden 65535";
+//CD_Changing,             "Cambiando propiedades de: ";
+CD_DuplFileName,         "Nombre de Fichero Duplicado: %s";
+CD_NoProtected,          "No se pueden cambiar las propiedades de un Fichero Encriptado";
+//CD_InvalidFileName,      "Nombre de Fichero Incorrecto: '%s'";
+CD_NoChangeDir,          "No se puede cambiar el path";
+//CD_FileSpecSkip,         "Tipo de fichero '%s' omitido";
+
+//DU_InvalidName,          "Nombre incorrecto '%s'";
+//DU_WrongMethod,          "compresión no soportada en '%s'";
+
+PR_Archive,              "*Restaurando el bit de Archivo";
+PR_CopyZipFile,          "*Copiando el archivo Zip";
+PR_SFX,                  "*SFX";
+PR_Header,               "*??";
+PR_Finish,               "*Finalizando";
+PR_Copying,              "*Copiando";
+PR_CentrlDir,            "*Directorio Central";
+PR_Checking,             "*Comprobando";
+PR_Loading,              "*Cargando Directorio";
+PR_Joining,              "*Uniendo fichero zip partido";
+PR_Splitting,            "*Partiendo fichero zip";
+PR_Writing,              "*Escribiendo fichero zip";
+PR_PreCalc,              "*Precálculo CRC";
+
+DZ_Skipped,              "Especificación de archivo '%s' omitida";
+DZ_InUse,                "No se puede abrir '%s', está en uso";
+DZ_Refused,              "no se ha permitido abrir '%s'";
+DZ_NoOpen,               "No se puede abrir '%s'";
+DZ_NoFiles,              "no se han encontrado ficheros";
+DZ_SizeChanged,          "el tamaño de '%s' ha cambiado";
+//DZ_InvalidName,          "'%s' no es un nombre válido";
+//DZ_TooBig,               "fichero demasiado grande";
+DZ_ERR_DUPNAME,          "Nombre interno duplicado";
+DZ_ERR_DENIED,           "Acceso denegado";
+DZ_ERR_LOCKED,           "Fichero bloqueado";
+DZ_ERR_SKIPPING,         "Omitiendo: ";
+DZ_ERR_FATAL_IMPORT,     "Error Fatal - no se puede importar el símbolo!";
+DZ_ERR_ERROR_DELETE,     "Ha fallado el borrado";
+DZ_RES_WARNING,          "Atención: ";
+DZ_RES_MISS,             "No se ha encontrado nada";
+DZ_RES_GENERAL,          "Error ";
+DZ_RES_INVAL_NAME,       "Caracteres incorrectos en el nombre del fichero!";
+DZ_RES_EMPTY_ZIP,        "Fichero zip omitido o vacío!";
+DZ_RES_ERROR_SEEK,       "Error de posicionamiento en el fichero!";
+DZ_RES_ERROR_WRITE,      "Error escribiendo el fichero!";
+DZ_RES_ERROR_CREATE,     "Error creando el fichero!";
+DZ_RES_ERROR_READ,       "Error leyendo el fichero!";
+DZ_RES_NO_FILE_OPEN,     "Fichero no encontrado o sin permisos!";
+DZ_RES_TEMP_FAILED,      "Fallo en el fichero temporal!";
+DZ_RES_BAD_OPTIONS,      "Opciones especificadas incorrectas!";
+DZ_RES_NOTHING_TO_DO,    "Nada para hacer!";
+DZ_RES_LOGIC_ERROR,      "Error de lógica interna!";
+DZ_RES_NOT_FOUND,        "Fichero no encontrado!";
+DZ_RES_ZIP_MULTI,        "Zip Multi-volumen no soportado!";
+DZ_RES_ZIP_NOOPEN,       "Error abriendo el fichero Zip!";
+DZ_RES_ZIP_END,          "Fin de fichero prematuro!";
+DZ_RES_ZIP_EOF,          "Fin de fichero Zip inesperado!";
+DZ_RES_NO_CENTRAL,       "No hay directorio Central!";
+DZ_RES_INVAL_ZIP,        "Estructura zip incorrecta!";
+DZ_RES_PASSWORD_CANCEL,  "Contraseña cancelada!";
+DZ_RES_PASSWORD_FAIL,    "Contraseña errónea!";
+DZ_RES_ERROR,            "Error fatal";
+DZ_RES_STRUCT,           "Estructura incorrecta";
+DZ_RES_MEMORY,           "No hay memoria";
+DZ_RES_CALLBACK,         "Excepción Callback";
+DZ_RES_ABORT,            "Abortado por el Usuario!";
+DZ_RES_CANCELLED,        "Cancelado";
+DZ_RES_GOOD,             "Bien";
+
+//WZ_DropDirOnly,          "Creando %d entradas de carpetas vacías";
+//WZ_NothingToWrite,       "No hay nada que escribir";
+
+TM_Erasing,              "EraseFloppy - Borrando %s";
+TM_Deleting,             "EraseFloppy - Eliminando %s";
+TM_GetNewDisk,           "Trace : Abriendo nuevo disco: %s";
+TM_SystemError,          "Error de sistema: %d";
+TM_Trace,                "Traza: ";
+TM_Verbose,              "info: ";
+//TM_Opened,               "#Abierto %s";
+//TM_Closed,               "#Cerrado %s";
+//TM_Created,              "#Creado %s";
+
+}
+

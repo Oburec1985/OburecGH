@@ -1,0 +1,467 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{1df6e789-d0a2-46cb-995a-4da6567b97de}</ProjectGuid>
+			<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+			<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+			<DCC_DependencyCheckOutputName>BlEng.exe</DCC_DependencyCheckOutputName>
+			<MainSource>BlEng.dpr</MainSource>
+			<ProjectVersion>12.0</ProjectVersion>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_UnitSearchPath>..\..\3dProj\Loader_\Render\Shaders;..\..\sharedUtils\utils\files;..\..\sharedUtils\utils;..\..\3dProj\Loader_\;..\..\3dProj\Loader_\helpTools;..\..\sharedUtils\utils\PathUtils;..\..\sharedUtils\utils\jcl-2.3.1.4197;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\sharedUtils\компоненты\VirtualTreeView;..\..\sharedUtils\компоненты\VirtualTreeView\VirtualEditTree;..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source;..\..\sharedUtils\utils\xml;..\..\sharedUtils\utils\reports;..\..\sharedUtils\utils\reports\ZipMaster19;..\..\3d\3dComponents;..\..\3d\3dComponents\components;..\..\3d\3dComponents\components\asutp;..\..\3d\objects;..\..\3d\core;..\..\3d\forms;..\..\3d\tools;..\..\3d\math;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UsePackage>vclx;vcl;dbrtl;Rave76VCL;bdertl;rtl;vclactnband;xmlrtl;vcldb;vcldbx;dsnap;dsnapcon;TeeUI;TeeDB;Tee;adortl;vclib;ibxpress;IndyCore;IndySystem;IndyProtocols;inet;intrawebdb_100_120;Intraweb_100_120;VclSmp;vclie;websnap;webdsnap;inetdbbde;inetdbxpress;soaprtl;vclribbon;dbexpress;DbxCommonDriver;DataSnapIndy10ServerTransport;DataSnapProviderClient;DataSnapServer;DBXSybaseASADriver;DBXInterBaseDriver;DBXMySQLDriver;dbxcds;DbxClientDriver;DBXSybaseASEDriver;DBXOracleDriver;DBXMSSQLDriver;DBXInformixDriver;DBXDb2Driver;dcl_own;ComponentsLib</DCC_UsePackage>
+			<DCC_DependencyCheckOutputName>BlEng.exe</DCC_DependencyCheckOutputName>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<Version>7.0</Version>
+			<DCC_DebugInformation>False</DCC_DebugInformation>
+			<DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<Version>7.0</Version>
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+			<DCC_UnitSearchPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;$(BDS)\RaveReports\Lib;..\..\sharedUtils\компоненты\chart_dpk;..\..\sharedUtils\компоненты\chart_dpk\chart;..\..\sharedUtils\компоненты\chart_dpk\chart\items;..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners;..\..\sharedUtils\компоненты\chart_dpk\chart\utils;..\..\sharedUtils\компоненты\chart_dpk\chart\utils\lists;..\..\sharedUtils;..\..\sharedUtils\math;..\..\sharedUtils\utils\lists;..\..\sharedUtils\objects;..\..\sharedUtils\компоненты\dcl_dpk;..\..\3dProj\Loader_\Uinterface;..\..\3dProj\Loader_\Render;..\..\3dProj\Loader_\Scene;..\..\3dProj\Loader_\Scene\objects\helputils;..\..\3dProj\Loader_\Scene\objects;..\..\3dProj\Loader_\Scene\objects\camera;..\..\3dProj\Loader_\helpTools\Opengl tools;..\..\3dProj\Loader_\Scene\materials;..\..\3dProj\Loader_\Scene\forms;..\..\3dProj\Loader_\Forms;..\..\3dProj\Loader_\helpTools\Lists;..\..\3dProj\Loader_\Scene\objects\helputils\SceneLists;..\..\3dProj\Loader_\Scene\modify;..\..\3dProj\Loader_\Scene\modify\deformers;..\..\3dProj\Loader_\Scene\modify\Edit;..\..\3dProj\Loader_\Scene\modify\Forms;..\..\3dProj\Loader_\Scene\fileformats;..\..\3dProj\Loader_\Render\forms;..\..\3dProj\Loader_\Scene\fileformats\obrFunc;..\..\3dProj\Loader_\Forms\frames;..\..\3dProj\Loader_\Uinterface\frameListeners;..\..\3dProj\Loader_\Uinterface\;$(BDS)\source\ToolsAPI;..\..\3dProj\Loader_\3dComponents;..\..\3dProj\Loader_\3dComponents\components;..\..\3dProj\Loader_\3dComponents\components\Asutp;..\..\3dProj\Loader_\math;..\..\sharedUtils\компоненты\chart_dpk\chart\forms;..\..\sharedUtils\ogl\;..\..\sharedUtils\utils\FastMM;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_ResourcePath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;$(BDS)\RaveReports\Lib;..\..\sharedUtils\компоненты\chart_dpk;..\..\sharedUtils\компоненты\chart_dpk\chart;..\..\sharedUtils\компоненты\chart_dpk\chart\items;..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners;..\..\sharedUtils\компоненты\chart_dpk\chart\utils;..\..\sharedUtils\компоненты\chart_dpk\chart\utils\lists;..\..\sharedUtils;..\..\sharedUtils\math;..\..\sharedUtils\utils;..\..\sharedUtils\utils\lists;..\..\sharedUtils\objects;..\..\sharedUtils\компоненты\dcl_dpk;..\..\3dProj\Loader_\Uinterface;..\..\3dProj\Loader_\Render;..\..\3dProj\Loader_\Scene;..\..\3dProj\Loader_\Scene\objects\helputils;..\..\3dProj\Loader_\Scene\objects;..\..\3dProj\Loader_\Scene\objects\camera;..\..\3dProj\Loader_\helpTools;..\..\3dProj\Loader_\helpTools\Opengl tools;..\..\3dProj\Loader_\Render\Shaders;..\..\3dProj\Loader_\Scene\materials;..\..\3dProj\Loader_\Scene\forms;..\..\3dProj\Loader_\Forms;..\..\3dProj\Loader_\helpTools\Lists;..\..\3dProj\Loader_\Scene\objects\helputils\SceneLists;..\..\3dProj\Loader_\Scene\modify;..\..\3dProj\Loader_\Scene\modify\deformers;..\..\3dProj\Loader_\Scene\modify\Edit;..\..\3dProj\Loader_\Scene\modify\Forms;..\..\3dProj\Loader_\Scene\fileformats;..\..\3dProj\Loader_\Render\forms;..\..\3dProj\Loader_\Scene\fileformats\obrFunc;..\..\3dProj\Loader_\Forms\frames;..\..\3dProj\Loader_\Uinterface\frameListeners;..\..\3dProj\Loader_\Uinterface\;$(BDS)\source\ToolsAPI;..\..\3dProj\Loader_\3dComponents;..\..\3dProj\Loader_\3dComponents\components;..\..\3dProj\Loader_\3dComponents\components\Asutp;..\..\3dProj\Loader_\math;..\..\sharedUtils\utils\PathUtils;..\..\sharedUtils\компоненты\chart_dpk\chart\forms;..\..\sharedUtils\ogl\;..\..\sharedUtils\utils\reports;..\..\sharedUtils\utils\FastMM;$(DCC_ResourcePath)</DCC_ResourcePath>
+			<DCC_ObjPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;$(BDS)\RaveReports\Lib;..\..\sharedUtils\компоненты\chart_dpk;..\..\sharedUtils\компоненты\chart_dpk\chart;..\..\sharedUtils\компоненты\chart_dpk\chart\items;..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners;..\..\sharedUtils\компоненты\chart_dpk\chart\utils;..\..\sharedUtils\компоненты\chart_dpk\chart\utils\lists;..\..\sharedUtils;..\..\sharedUtils\math;..\..\sharedUtils\utils;..\..\sharedUtils\utils\lists;..\..\sharedUtils\objects;..\..\sharedUtils\компоненты\dcl_dpk;..\..\3dProj\Loader_\Uinterface;..\..\3dProj\Loader_\Render;..\..\3dProj\Loader_\Scene;..\..\3dProj\Loader_\Scene\objects\helputils;..\..\3dProj\Loader_\Scene\objects;..\..\3dProj\Loader_\Scene\objects\camera;..\..\3dProj\Loader_\helpTools;..\..\3dProj\Loader_\helpTools\Opengl tools;..\..\3dProj\Loader_\Render\Shaders;..\..\3dProj\Loader_\Scene\materials;..\..\3dProj\Loader_\Scene\forms;..\..\3dProj\Loader_\Forms;..\..\3dProj\Loader_\helpTools\Lists;..\..\3dProj\Loader_\Scene\objects\helputils\SceneLists;..\..\3dProj\Loader_\Scene\modify;..\..\3dProj\Loader_\Scene\modify\deformers;..\..\3dProj\Loader_\Scene\modify\Edit;..\..\3dProj\Loader_\Scene\modify\Forms;..\..\3dProj\Loader_\Scene\fileformats;..\..\3dProj\Loader_\Render\forms;..\..\3dProj\Loader_\Scene\fileformats\obrFunc;..\..\3dProj\Loader_\Forms\frames;..\..\3dProj\Loader_\Uinterface\frameListeners;..\..\3dProj\Loader_\Uinterface\;$(BDS)\source\ToolsAPI;..\..\3dProj\Loader_\3dComponents;..\..\3dProj\Loader_\3dComponents\components;..\..\3dProj\Loader_\3dComponents\components\Asutp;..\..\3dProj\Loader_\math;..\..\sharedUtils\utils\PathUtils;..\..\sharedUtils\компоненты\chart_dpk\chart\forms;..\..\sharedUtils\ogl\;..\..\sharedUtils\utils\reports;..\..\sharedUtils\utils\FastMM;$(DCC_ObjPath)</DCC_ObjPath>
+			<DCC_IncludePath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;$(BDS)\RaveReports\Lib;..\..\sharedUtils\компоненты\chart_dpk;..\..\sharedUtils\компоненты\chart_dpk\chart;..\..\sharedUtils\компоненты\chart_dpk\chart\items;..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners;..\..\sharedUtils\компоненты\chart_dpk\chart\utils;..\..\sharedUtils\компоненты\chart_dpk\chart\utils\lists;..\..\sharedUtils;..\..\sharedUtils\math;..\..\sharedUtils\utils;..\..\sharedUtils\utils\lists;..\..\sharedUtils\objects;..\..\sharedUtils\компоненты\dcl_dpk;..\..\3dProj\Loader_\Uinterface;..\..\3dProj\Loader_\Render;..\..\3dProj\Loader_\Scene;..\..\3dProj\Loader_\Scene\objects\helputils;..\..\3dProj\Loader_\Scene\objects;..\..\3dProj\Loader_\Scene\objects\camera;..\..\3dProj\Loader_\helpTools;..\..\3dProj\Loader_\helpTools\Opengl tools;..\..\3dProj\Loader_\Render\Shaders;..\..\3dProj\Loader_\Scene\materials;..\..\3dProj\Loader_\Scene\forms;..\..\3dProj\Loader_\Forms;..\..\3dProj\Loader_\helpTools\Lists;..\..\3dProj\Loader_\Scene\objects\helputils\SceneLists;..\..\3dProj\Loader_\Scene\modify;..\..\3dProj\Loader_\Scene\modify\deformers;..\..\3dProj\Loader_\Scene\modify\Edit;..\..\3dProj\Loader_\Scene\modify\Forms;..\..\3dProj\Loader_\Scene\fileformats;..\..\3dProj\Loader_\Render\forms;..\..\3dProj\Loader_\Scene\fileformats\obrFunc;..\..\3dProj\Loader_\Forms\frames;..\..\3dProj\Loader_\Uinterface\frameListeners;..\..\3dProj\Loader_\Uinterface\;$(BDS)\source\ToolsAPI;..\..\3dProj\Loader_\3dComponents;..\..\3dProj\Loader_\3dComponents\components;..\..\3dProj\Loader_\3dComponents\components\Asutp;..\..\3dProj\Loader_\math;..\..\sharedUtils\utils\PathUtils;..\..\sharedUtils\компоненты\chart_dpk\chart\forms;..\..\sharedUtils\ogl\;..\..\sharedUtils\utils\reports;..\..\sharedUtils\utils\FastMM;$(DCC_IncludePath)</DCC_IncludePath>
+			<DCC_IntegerOverflowCheck>True</DCC_IntegerOverflowCheck>
+			<DCC_RangeChecking>True</DCC_RangeChecking>
+			<DCC_MapFile>3</DCC_MapFile>
+			<DCC_GenerateStackFrames>True</DCC_GenerateStackFrames>
+			<DCC_DebugInfoInExe>True</DCC_DebugInfoInExe>
+			<DCC_DebugVN>True</DCC_DebugVN>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="BlEng.dpr">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="Forms\MainForm.pas">
+				<Form>MainBldForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\lists\uEventTypes.pas"/>
+			<DCCReference Include="BldStruct\uStage.pas"/>
+			<DCCReference Include="BldStruct\uTurbina.pas"/>
+			<DCCReference Include="BldStruct\uBldObj.pas"/>
+			<DCCReference Include="BldStruct\uPair.pas"/>
+			<DCCReference Include="BldStruct\uSensor.pas"/>
+			<DCCReference Include="BldStruct\uBldEng.pas"/>
+			<DCCReference Include="BldStruct\uBlade.pas"/>
+			<DCCReference Include="Forms\frames\uBaseObjPropertyFrame.pas">
+				<Form>BaseObjPropertyFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\frames\uStageFrame.pas">
+				<Form>StageFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\uCreateObjDlg.pas">
+				<Form>CreateObjDlg</Form>
+			</DCCReference>
+			<DCCReference Include="Forms\frames\uTurbineFrame.pas">
+				<Form>TurbineFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\frames\uPairFrame.pas">
+				<Form>PairFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\frames\uSensorFrame.pas">
+				<Form>SensorFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="uBld\uBldCompProc.pas"/>
+			<DCCReference Include="BldStruct\ticks\uTickData.pas"/>
+			<DCCReference Include="..\..\sharedUtils\objects\uBaseObjService.pas"/>
+			<DCCReference Include="BldStruct\uBaseObjTypes.pas"/>
+			<DCCReference Include="Forms\frames\uBlInterfaceFrame.pas">
+				<Form>ObjInterfaceFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\frames\uCompaundFrame.pas">
+				<Form>CompaundFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\uCfgForm.pas">
+				<Form>CfgForm</Form>
+			</DCCReference>
+			<DCCReference Include="uBld\FileFormats\uLfmFile.pas"/>
+			<DCCReference Include="..\..\sharedUtils\uBinFile.pas"/>
+			<DCCReference Include="..\..\sharedUtils\uCommonTypes.pas"/>
+			<DCCReference Include="..\..\sharedUtils\objects\uBaseObj.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\uMyMath.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\u2DMath.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\uCommonMath.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\uListMath.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\uFrameListener.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\lists\uEventList.pas"/>
+			<DCCReference Include="BldStruct\uChan.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\lists\uvectorlist.pas"/>
+			<DCCReference Include="Forms\frames\uFrameEvents.pas"/>
+			<DCCReference Include="Forms\FilesDlg\uLoadBldForm.pas">
+				<Form>LoadBldDlg</Form>
+			</DCCReference>
+			<DCCReference Include="uBld\uBldMath.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\lists\uSimpleSetList.pas"/>
+			<DCCReference Include="uBld\uErrorProc.pas"/>
+			<DCCReference Include="..\..\sharedUtils\forms\uSystemInfoFrame.pas">
+				<Form>SystemInfoFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\platform\uPlatformInfo.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\platform\adCpuUsage.pas"/>
+			<DCCReference Include="Forms\frames\uEditListFrame.pas">
+				<Form>EditEngListFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\frames\uChanFrame.pas">
+				<Form>ChanFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\uGenBldForm.pas">
+				<Form>GeneratorForm</Form>
+			</DCCReference>
+			<DCCReference Include="Forms\frames\uSelAlgFrame.pas">
+				<Form>SelectAlgFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\uSelectAlgDlg.pas">
+				<Form>SelAlgDlg</Form>
+			</DCCReference>
+			<DCCReference Include="Forms\frames\uGlTurbineFrame.pas">
+				<Form>glTurbineFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\uGetEngObjForm.pas">
+				<Form>GetEngObjForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\ufileMng.pas"/>
+			<DCCReference Include="uBld\uBldTypes.pas"/>
+			<DCCReference Include="uBld\FileFormats\uBldFile.pas"/>
+			<DCCReference Include="uBld\algoritms\uBaseBldAlg.pas"/>
+			<DCCReference Include="uBld\algoritms\uShapeAlg.pas"/>
+			<DCCReference Include="uBld\algoritms\uDensityAlg.pas"/>
+			<DCCReference Include="uBld\algoritms\uTrendAlg.pas"/>
+			<DCCReference Include="Forms\Algoritms\uXYTrendPos.pas">
+				<Form>XYTrendForm</Form>
+			</DCCReference>
+			<DCCReference Include="uBld\algoritms\uRestoreVibrationAlg.pas"/>
+			<DCCReference Include="uBld\algoritms\uSensorRep.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\uPathMng.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\PathUtils\PathUtils.pas"/>
+			<DCCReference Include="BldStruct\uBldPathMng.pas"/>
+			<DCCReference Include="..\..\sharedUtils\forms\uProgressDlg.pas">
+				<Form>ProgresDlg</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uAxis.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uDrawObj.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uMarkers.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\upage.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uPoint.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uTrend.pas"/>
+			<DCCReference Include="Forms\Algoritms\CommonOptsFrame.pas">
+				<Form>BaseAlgOptsFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\Algoritms\uStageShapeForm.pas">
+				<Form>StageShapeForm</Form>
+			</DCCReference>
+			<DCCReference Include="Forms\Algoritms\uMultiSensorForm.pas">
+				<Form>MultiSensorForm</Form>
+			</DCCReference>
+			<DCCReference Include="Forms\Algoritms\uStageReConfig.pas">
+				<Form>StageReConfigForm</Form>
+			</DCCReference>
+			<DCCReference Include="Forms\Algoritms\uRestoreAlgForm.pas">
+				<Form>RestoreAlgForm</Form>
+			</DCCReference>
+			<DCCReference Include="BldStruct\uSensorList.pas"/>
+			<DCCReference Include="BldStruct\uBldObjList.pas"/>
+			<DCCReference Include="uBld\algoritms\uMultiSensor.pas"/>
+			<DCCReference Include="Forms\Algoritms\uSensorRepForm.pas">
+				<Form>SensorRepForm</Form>
+			</DCCReference>
+			<DCCReference Include="uBld\algoritms\uPairTrend.pas"/>
+			<DCCReference Include="Forms\Algoritms\uPairShapeForm.pas">
+				<Form>PairShapeForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\lists\uSetList.pas"/>
+			<DCCReference Include="Forms\uCreateTrendForm.pas">
+				<Form>SelGraphForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\math\MathFunction.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\uLogFile.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\uMeraFile.pas"/>
+			<DCCReference Include="Forms\frames\uSignalsTVFrame.pas">
+				<Form>SignalsTVFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\uSaveSignalForm.pas">
+				<Form>SaveSignalsForm</Form>
+			</DCCReference>
+			<DCCReference Include="uBld\algoritms\uEvalFirstBladeOffset.pas"/>
+			<DCCReference Include="Forms\Algoritms\uBaseAlgForm.pas">
+				<Form>BaseAlgForm</Form>
+			</DCCReference>
+			<DCCReference Include="Forms\uGetSkipBladesForm.pas">
+				<Form>GetSkipBladesForm</Form>
+			</DCCReference>
+			<DCCReference Include="uBld\algoritms\uGetSkipBladesAlg.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\uComponentServises.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners\uObjFrameListener.pas"/>
+			<DCCReference Include="Forms\frames\uBladeEditFrame.pas">
+				<Form>BladePosFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\uBladeForm.pas">
+				<Form>BladeForm</Form>
+			</DCCReference>
+			<DCCReference Include="Forms\Algoritms\uEvalSkipBladesForm.pas">
+				<Form>EvalSkipBladesForm</Form>
+			</DCCReference>
+			<DCCReference Include="helptools\uSaveEng.pas"/>
+			<DCCReference Include="Forms\uProgramForm.pas">
+				<Form>EditProjForm</Form>
+			</DCCReference>
+			<DCCReference Include="BldStruct\uBldTimeProc.pas"/>
+			<DCCReference Include="Forms\uBldTimeProcForm.pas">
+				<Form>BldTimeProcForm</Form>
+			</DCCReference>
+			<DCCReference Include="Forms\frames\uAlgEditFrame.pas">
+				<Form>AlgEditFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\Algoritms\uPairShapeFrame.pas">
+				<Form>pairShapeFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\uGetSensorsForm.pas">
+				<Form>SelectSensorsForm</Form>
+			</DCCReference>
+			<DCCReference Include="uBld\algoritms\uAlgorithms.pas"/>
+			<DCCReference Include="uBld\algoritms\uEvalTahoAlg.pas"/>
+			<DCCReference Include="..\..\sharedUtils\forms\ulogFrame.pas">
+				<Form>LogFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\forms\uJournalForm.pas">
+				<Form>JournalForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\objects\uBaseObjMng.pas"/>
+			<DCCReference Include="helptools\uBldEngEventTypes.pas"/>
+			<DCCReference Include="Forms\Tags\uTagsCfgFrame.pas">
+				<Form>TagsCfgFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\Tags\uTagPropertiesFrame.pas">
+				<Form>TagPropertiesFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\objects\uTag.pas"/>
+			<DCCReference Include="uBld\uTagUtils.pas"/>
+			<DCCReference Include="Forms\frames\uAlgTagListFrame.pas">
+				<Form>AlgTagListFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateObjForm.pas">
+				<Form>TCreateObjForm</Form>
+				<DesignClass>TCreateObjForm</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\Tags\uEditTagForm.pas">
+				<Form>EditTagForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames\uChartInputFrame.pas">
+				<Form>ChartInputFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\frames\uChartFrame.pas">
+				<Form>ChartFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="BldStruct\uAlarms.pas"/>
+			<DCCReference Include="Forms\frames\uAlarmEditFrame.pas">
+				<Form>EditAlarmFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Forms\uEditAlarmForm.pas">
+				<Form>EditAlarmForm</Form>
+			</DCCReference>
+			<DCCReference Include="Forms\DataBase\uAlarmsHistoryForm.pas">
+				<Form>AlarmsHistoryBase</Form>
+			</DCCReference>
+			<DCCReference Include="BldStruct\uHistoryMng.pas"/>
+			<DCCReference Include="BldStruct\tasks\uProcessAlgTask.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\xml\NativeXmlObjectStorage.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\xml\NativeXml.pas"/>
+			<DCCReference Include="..\..\sharedUtils\objects\utils\uObjXML.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\lists\uRegClassesList.pas"/>
+			<DCCReference Include="uBld\FileFormats\uXMLFile.pas"/>
+			<DCCReference Include="BldStruct\tasks\uTaskMng.pas"/>
+			<DCCReference Include="BldStruct\uAlgMng.pas"/>
+			<DCCReference Include="Forms\frames\uTaskFrame.pas">
+				<Form>TaskFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\forms\uGetMngObjForm.pas">
+				<Form>GetMngObjForm</Form>
+			</DCCReference>
+			<DCCReference Include="uBld\FileFormats\uBladeTicksFile.pas"/>
+			<DCCReference Include="BldStruct\ticks\uTicks.pas"/>
+			<DCCReference Include="BldStruct\ticks\uArrayTicks.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\PathUtils\UDirChangeNotifier.pas"/>
+			<DCCReference Include="Forms\uEgineMonitorForm.pas">
+				<Form>EngineMonitorForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\PathUtils\uObjDb.pas"/>
+			<DCCReference Include="Forms\Algoritms\uDensityForm.pas">
+				<Form>DensityForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\objects\uTagSignal.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\umeraSignal.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uTrendSignal.pas"/>
+			<DCCReference Include="uBld\algoritms\uPairShape.pas"/>
+			<DCCReference Include="Forms\Algoritms\uPairTrendForm.pas">
+				<Form>PairTrendForm</Form>
+			</DCCReference>
+			<DCCReference Include="Forms\FilesDlg\uGetTimeForm.pas">
+				<Form>GetTimeForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\mera\uts\universal_time.pas"/>
+			<DCCReference Include="BldStruct\uUTSSensor.pas"/>
+			<DCCReference Include="Forms\frames\uUTSFrame.pas">
+				<Form>UTSFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\uGlobalStrings.pas"/>
+			<DCCReference Include="uBld\algoritms\uPairRestore.pas"/>
+			<DCCReference Include="Forms\Algoritms\uPairRestoreForm.pas">
+				<Form>PairRestoreForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\objects\uMetaData.pas"/>
+			<DCCReference Include="..\..\sharedUtils\forms\uAddPropertieForm.pas">
+				<Form>AddPropertieForm</Form>
+			</DCCReference>
+			<DCCReference Include="Forms\uHardwareCFGForm.pas">
+				<Form>HardwareCFGForm</Form>
+			</DCCReference>
+			<DCCReference Include="helptools\Hardware\MxxxxTypes.pas"/>
+			<DCCReference Include="helptools\Hardware\MxxxxAPI.pas"/>
+			<DCCReference Include="helptools\Hardware\Types4bld.pas"/>
+			<DCCReference Include="Forms\frames\uPlatFrame.pas">
+				<Form>Platframe</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="helptools\Hardware\uPlat.pas"/>
+			<DCCReference Include="helptools\Hardware\u2081.pas"/>
+			<DCCReference Include="helptools\Hardware\u2070.pas"/>
+			<DCCReference Include="BldStruct\uTagOwnerObj.pas"/>
+			<DCCReference Include="Forms\uEditGraphForm.pas">
+				<Form>EditPraphForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\math\uMatrix.pas"/>
+			<DCCReference Include="uBld\uBldGlobalStrings.pas"/>
+			<DCCReference Include="uBld\algoritms\uMeasureTest.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\uSignalsUtils.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\uBuffSignal.pas"/>
+			<DCCReference Include="BldStruct\uDataThread.pas"/>
+			<DCCReference Include="BldStruct\uFileThread.pas"/>
+			<DCCReference Include="..\..\sharedUtils\forms\uDBForm.pas">
+				<Form>DBForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\uDBase.pas"/>
+			<DCCReference Include="Forms\DataBase\uBladeBase.pas">
+				<Form>BladeFrm</Form>
+			</DCCReference>
+			<DCCReference Include="Forms\ME415.pas">
+				<Form>Form2</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\xml\sdDebug.pas"/>
+			<DCCReference Include="..\..\3d\objects\uMNode.pas"/>
+			<DCCReference Include="..\..\3d\objects\uNode.pas"/>
+			<DCCReference Include="..\..\3d\math\uquat.pas"/>
+			<DCCReference Include="..\..\3d\tools\uConfigFile3d.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\reports\RepODS.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\reports\RepODT.pas"/>
+			<DCCReference Include="..\..\3d\objects\uObaFile.pas"/>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Parameters>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">1</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1049</VersionInfo>
+						<VersionInfo Name="CodePage">1251</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName"/>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+					<Source>
+						<Source Name="MainSource">BlEng.dpr</Source>
+					</Source>
+					<Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\bcboffice2k140.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\bcbofficexp140.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dcloffice2k140.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dclofficexp140.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+					</Excluded_Packages>
+				</Delphi.Personality>
+				<ModelSupport>False</ModelSupport>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>

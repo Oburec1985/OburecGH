@@ -1,0 +1,145 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{57724586-ab5a-45e1-aba7-8d61655745ec}</ProjectGuid>
+			<MainSource>dcl_own.dpk</MainSource>
+			<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+			<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+			<DCC_DependencyCheckOutputName>C:\Documents and Settings\All Users\Документы\RAD Studio\5.0\Bpl\dcl_own.bpl</DCC_DependencyCheckOutputName>
+			<ProjectVersion>12.0</ProjectVersion>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_UnitSearchPath>..\VirtualTreeView;..\VirtualTreeView\VirtualTreeViewV5.1.1\Source;C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\source\ToolsAPI;$(BDS)\source\ToolsAPI;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DesignOnlyPackage>false</DesignOnlyPackage>
+			<DCC_WriteableConstants>true</DCC_WriteableConstants>
+			<DCC_DependencyCheckOutputName>C:\Users\Public\Documents\RAD Studio\7.0\Bpl\dcl_own.bpl</DCC_DependencyCheckOutputName>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
+			<GenDll>true</GenDll>
+			<GenPackage>true</GenPackage>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<Version>7.0</Version>
+			<DCC_DebugInformation>False</DCC_DebugInformation>
+			<DCC_WriteableConstants>True</DCC_WriteableConstants>
+			<DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_OutputDRCFile>True</DCC_OutputDRCFile>
+			<DCC_UnitSearchPath>D:\Oburec\project\Delphi\Lopatki_BDS\Проект компонента GlChart\компон;D:\Oburec\project\Delphi\Lopatki_BDS\Проект компонента GlChart\компон\GlChart;D:\Oburec\project\Delphi\Lopatki_BDS\Проект компонента GlChart\компон\GlChart\sdl;D:\Oburec\project\Delphi\Lopatki_BDS\BladeGenerator\helptools;D:\Oburec\project\Delphi\Lopatki_BDS\BladeGenerator\uBld;C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон;C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон\GlChart;C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон\GlChart\sdl;C:\Mera\Lopatki_BDS\BladeGenerator\uBld;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_ResourcePath>D:\Oburec\project\Delphi\Lopatki_BDS\Проект компонента GlChart\компон;D:\Oburec\project\Delphi\Lopatki_BDS\Проект компонента GlChart\компон\GlChart;D:\Oburec\project\Delphi\Lopatki_BDS\Проект компонента GlChart\компон\GlChart\sdl;D:\Oburec\project\Delphi\Lopatki_BDS\BladeGenerator\helptools;D:\Oburec\project\Delphi\Lopatki_BDS\BladeGenerator\uBld;C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон;C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон\GlChart;C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон\GlChart\sdl;C:\Mera\Lopatki_BDS\BladeGenerator\uBld;$(DCC_ResourcePath)</DCC_ResourcePath>
+			<DCC_ObjPath>D:\Oburec\project\Delphi\Lopatki_BDS\Проект компонента GlChart\компон;D:\Oburec\project\Delphi\Lopatki_BDS\Проект компонента GlChart\компон\GlChart;D:\Oburec\project\Delphi\Lopatki_BDS\Проект компонента GlChart\компон\GlChart\sdl;D:\Oburec\project\Delphi\Lopatki_BDS\BladeGenerator\helptools;D:\Oburec\project\Delphi\Lopatki_BDS\BladeGenerator\uBld;C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон;C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон\GlChart;C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон\GlChart\sdl;C:\Mera\Lopatki_BDS\BladeGenerator\uBld;$(DCC_ObjPath)</DCC_ObjPath>
+			<DCC_IncludePath>D:\Oburec\project\Delphi\Lopatki_BDS\Проект компонента GlChart\компон;D:\Oburec\project\Delphi\Lopatki_BDS\Проект компонента GlChart\компон\GlChart;D:\Oburec\project\Delphi\Lopatki_BDS\Проект компонента GlChart\компон\GlChart\sdl;D:\Oburec\project\Delphi\Lopatki_BDS\BladeGenerator\helptools;D:\Oburec\project\Delphi\Lopatki_BDS\BladeGenerator\uBld;C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон;C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон\GlChart;C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон\GlChart\sdl;C:\Mera\Lopatki_BDS\BladeGenerator\uBld;$(DCC_IncludePath)</DCC_IncludePath>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<Version>7.0</Version>
+			<DCC_WriteableConstants>True</DCC_WriteableConstants>
+			<DCC_OutputDRCFile>True</DCC_OutputDRCFile>
+			<DCC_UnitSearchPath>.\Проект компонента GlChart\компон\GlChart;.\Проект компонента GlChart\компон\GlChart\sdl;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_ResourcePath>.\Проект компонента GlChart\компон\GlChart;.\Проект компонента GlChart\компон\GlChart\sdl;$(DCC_ResourcePath)</DCC_ResourcePath>
+			<DCC_ObjPath>.\Проект компонента GlChart\компон\GlChart;.\Проект компонента GlChart\компон\GlChart\sdl;$(DCC_ObjPath)</DCC_ObjPath>
+			<DCC_IncludePath>.\Проект компонента GlChart\компон\GlChart;.\Проект компонента GlChart\компон\GlChart\sdl;$(DCC_IncludePath)</DCC_IncludePath>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="dcl_own.dpk">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="DCL_MYOWN.dcr"/>
+			<DCCReference Include="vcl.dcp"/>
+			<DCCReference Include="rtl.dcp"/>
+			<DCCReference Include="inet.dcp"/>
+			<DCCReference Include="vclx.dcp"/>
+			<DCCReference Include="bdertl.dcp"/>
+			<DCCReference Include="dbrtl.dcp"/>
+			<DCCReference Include="vcldb.dcp"/>
+			<DCCReference Include="DCL_MYOWN.pas"/>
+			<DCCReference Include="ubtnlistview.pas"/>
+			<DCCReference Include="uSpin.pas"/>
+			<DCCReference Include="uAlignEdit.pas"/>
+			<DCCReference Include="..\..\utils\uVTServices.pas"/>
+			<DCCReference Include="uStringGridExt.pas"/>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType>Package</Borland.ProjectType>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Parameters>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">1</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1049</VersionInfo>
+						<VersionInfo Name="CodePage">1251</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName"/>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+					<Source>
+						<Source Name="MainSource">dcl_own.dpk</Source>
+					</Source>
+					<Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\bcboffice2k140.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\bcbofficexp140.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dcloffice2k140.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dclofficexp140.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="\Bpl\JclBaseExpert140.bpl">JCL Package containing common units for JCL Experts</Excluded_Packages>
+						<Excluded_Packages Name="\Bpl\JclDebugExpert140.bpl">JCL Debug IDE extension</Excluded_Packages>
+						<Excluded_Packages Name="\Bpl\JclProjectAnalysisExpert140.bpl">JCL Project Analyzer</Excluded_Packages>
+						<Excluded_Packages Name="\Bpl\JclFavoriteFoldersExpert140.bpl">JCL Open and Save IDE dialogs with favorite folders</Excluded_Packages>
+						<Excluded_Packages Name="\Bpl\JclRepositoryExpert140.bpl">JCL Package containing repository wizards</Excluded_Packages>
+						<Excluded_Packages Name="\Bpl\JclSIMDViewExpert140.bpl">JCL Debug Window of XMM registers</Excluded_Packages>
+						<Excluded_Packages Name="\Bpl\JclStackTraceViewerExpert140.bpl">JCL Stack Trace Viewer</Excluded_Packages>
+					</Excluded_Packages>
+				</Delphi.Personality>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>

@@ -1,0 +1,38 @@
+unit uSyncThread;
+
+interface
+
+uses
+  Classes;
+
+type
+  cSyncThread = class(TThread)
+  private
+    { Private declarations }
+  protected
+    procedure Execute; override;
+  public
+    constructor create;override;
+  end;
+
+implementation
+
+uses
+  uWpExtPack;
+
+
+constructor cSyncThread.create;
+begin
+  // false - автозапуск потока
+  inherited create(false);
+  FreeOnTerminate:=true;
+end;
+
+procedure cSyncThread.Execute;
+begin
+  extPack.CreateFrm;
+  while True do
+    if Terminated then break;
+end;
+
+end.

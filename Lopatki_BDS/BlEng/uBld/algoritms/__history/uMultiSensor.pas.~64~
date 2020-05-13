@@ -1,0 +1,259 @@
+unit uMultiSensor;
+
+interface
+uses
+  classes, sysutils,Graphics,  controls, stdctrls,
+  uBldMath, uCommonMath, uErrorProc, uBldObj, uTickdata, usensor, uProgressDlg,
+  ubldeng, uBaseBldAlg, ustage, uBaseObj, RepODS, uturbina, PathUtils,
+  usensorlist, uCommonTypes, utrend, uTag, uBldGlobalStrings;
+
+type
+  tFloatArray = array of point2;
+
+  cMultiSensorOpts = class(cbaseopts)
+  public
+    constructor create;override;
+  end;
+  // алгоритм восстанавливает сигнал вибрации по всему колесу
+  cMultiSensor = class(cBaseBldAlg)
+  protected
+    // буфер данных для 1-о оборота
+    SensorsBuffer:array of tFloatArray;
+    // число отработавших на обороте датчиков
+    ValidSensors:integer;
+    m_XYArTag:array of c2vectortag;
+  protected
+    procedure GetNewData(turncount:integer);override;
+    // вызывается для каждого корректного оборота CommonSensorProc
+    // при этом индекс оборота, начало и конец оборота, храняться в protected
+    // мемберах
+    function TurnSensorProc(s:csensor):integer;override;
+    procedure AfterTurnProc;override;
+    procedure CommonSensorProc(taho:csensor;sensors:cAlgSensorList);override;
+    // обработка ошибок. если возникает ошибка возвращает false
+    function ProcessErrors(taho:csensor; sensors:cAlgSensorList):boolean;override;
+    // создать теги
+    procedure createTags;override;
+    function BeforeCommonSensorProc:boolean;override;
+    // тсортировать по времени набор отклонений по датчикам за оборот
+    // первый индекс - номер датчика , второй номер лопатки
+    // на каждом обороте сортируем по возрастанию элементы по validsensors (по x)
+    procedure sortframe;
+    function FindMin(blade:integer;beginInd:integer):integer;
+  public
+  end;
+
+  procedure BuildMultiSensor(taho:csensor; sensors:cAlgSensorList; data:pointer);
+
+implementation
+uses
+  uMultiSensorForm;
+
+
+constructor cMultiSensorOpts.create;
+begin
+  inherited;
+end;
+
+
+function cMultiSensor.TurnSensorProc(s:csensor):integer;
+var
+  j:integer;
+  // ожидаемое время прихода от лопатки
+  t0:stickdata;
+  // тик от нужной лопатки на очередном обороте
+  tick:stickdata;
+  // отклонение лопатки от ожидаемого положения в тиках
+  i,
+  dt,
+  blade,
+  bladeindex:integer;
+  // точка тренда. хранит отклонение лопатки от нулевого положения и время точки
+  p2:point2;
+  path:single;
+begin
+  // Подсчитываем число импульсов укладывающихся в каждый столбец гистограммы
+  result:=0;
+  for I := 0 to bladecount - 1 do
+  begin
+    blade:=i;
+    if m_XYArTag[blade].active then
+    begin
+      bladeindex:=GetBladeImpulsIndex(s, blade);
+      path:=GetSensorBladePos(s, blade);
+      // ожидаемое время прихода от лопатки
+      t0:=EvSensorTickInTurn(t1,t2,path);
+      // реальное время импульса от нужной лопатки на очередном обороте
+      tick:=s.chan.ticks.gettick(sensorind+bladeindex);
+      // отклонение положения лопатки от ожидаемого в тиках
+      dt:=evDecTicks(t0,tick);
+      // отклонение положения лопатки от ожидаемого в градусах
+      p2.y:=EvalTickDPos(t1,t2,dt);
+      // время в секундах прихода импульса от лопатки
+      p2.x:=TickToSec(tick);
+      SensorsBuffer[validsensors,blade]:=p2;
+    end;
+  end;
+  Inc(validsensors);
+end;
+
+procedure cMultiSensor.AfterTurnProc;
+var
+  i, blade:integer;
+  tag:c2vectortag;
+begin
+  sortframe;
+  for blade := 0 to bladeCount - 1 do
+  begin
+    tag:=m_XYArTag[blade];
+    for I := 0 to validsensors - 1 do
+    begin
+      tag.Add(sensorsbuffer[i,blade]);
+    end;
+  end;
+  validsensors:=0;
+end;
+
+procedure cMultiSensor.CommonSensorProc(taho:csensor;sensors:cAlgSensorList);
+begin
+  inherited;
+end;
+
+
+function cMultiSensor.ProcessErrors(taho:csensor;sensors:cAlgsensorList):boolean;
+var
+  l:integer;
+  sensor:csensor;
+begin
+  if inherited ProcessErrors(taho,sensors)=false then
+  begin
+    result:=false;
+    exit;
+  end;
+  result:=ProcClusterError(taho,sensors);
+end;
+
+procedure BuildMultiSensor(taho:csensor; sensors:cAlgSensorList; data:pointer);
+var
+  alg: cMultiSensor;
+  // форма настройки пары
+  PairShapeForm: TMultiSensorForm;
+  // опции алгоритма
+  opts:cMultiSensorOpts;
+  str:string;
+  I: Integer;
+begin
+  opts:=cMultiSensorOpts.Create;
+  opts.eng:=taho.eng;
+  opts.stage:=cstage(sensors.stage);
+  opts.useBladesPos:=true;
+  opts.callBadTicksProc:=true;
+  for I := 0 to sensors.count - 1 do
+  begin
+    str:=str+sensors.GetSensor(i).name;
+    if i<>sensors.count-1 then
+    begin
+      str:=str+'_';
+    end;
+  end;
+  opts.testname:= v_ShortDscMultiSensor+'_'+str;
+  PairShapeForm:=TMultiSensorForm.Create(nil);
+  if PairShapeForm.ShowModal(taho,sensors,opts)=mrok then
+  begin
+    alg:=cMultiSensor.create;
+    alg.getOpts(opts);
+    alg.apply(taho,sensors,opts);
+    alg.Destroy;
+  end;
+  PairShapeForm.Destroy;
+  opts.Destroy;
+end;
+
+procedure cMultiSensor.createTags;
+var
+  tag:cBaseTag;
+  i:integer;
+begin
+  tags.cleardata;
+  if bladecount>0 then
+  begin
+    setlength(m_XYArTag,bladecount);
+    for I := 0 to bladecount - 1 do
+    begin
+      tag:=c2VectorTag.create;
+      tag.active:=true;
+      tag.name:='XYArray_'+inttostr(i);
+      tag.dsc:='Расчет отклонений по импульсу №_'+inttostr(i);
+      tags.addobj(tag);
+      m_XYArTag[i]:=c2VectorTag(tag);
+    end;
+    for i := 0 to tags.Count - 1 do
+    begin
+      tag:=cBaseTag(tags.getobj(i));
+      // запрещаем удалять объект менеджеру тегов
+      tag.blocked:=true;
+    end;
+  end;
+end;
+
+function cMultiSensor.BeforeCommonSensorProc:boolean;
+var
+  i, j:integer;
+begin
+  result:=inherited;
+  setlength(SensorsBuffer,sensorsList.Count);
+  for j := 0 to sensorsList.Count - 1 do
+  begin
+    setlength(SensorsBuffer[j],bladecount);
+  end;
+end;
+
+function cMultiSensor.FindMin(blade:integer;beginInd:integer):integer;
+var
+  min:single;
+  i, imin:integer;
+begin
+  min:=SensorsBuffer[beginind,blade].x;
+  imin:=beginind;
+  for i:=beginind+1 to validsensors-1 do
+  begin
+    if SensorsBuffer[i,blade].x<min then
+    begin
+      min:=SensorsBuffer[i,blade].x;
+      imin:=i;
+    end;
+  end;
+  result:=imin;
+end;
+
+procedure cMultiSensor.sortframe;
+var
+  i,j, blade:integer;
+  v:point2;
+begin
+  for blade := 0 to bladeCount - 1 do
+  begin
+    for I := 0 to validsensors-1 do
+    begin
+      j:=FindMin(blade,i);
+      if i<>j then
+      begin
+        v:=SensorsBuffer[i, blade];
+        SensorsBuffer[i, blade]:=SensorsBuffer[j, blade];
+        SensorsBuffer[j, blade]:=v;
+      end;
+    end;
+  end;
+end;
+
+
+procedure cMultiSensor.GetNewData(turncount:integer);
+begin
+  for I := 0 to bladeCount - 1 do
+  begin
+    m_XYArTag[i].length:=(EndInd-beginind)*sensorslist.count;
+  end;
+end;
+
+
+end.

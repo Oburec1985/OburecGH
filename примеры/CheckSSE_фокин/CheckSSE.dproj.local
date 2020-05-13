@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2019.06.03 12:11:54.161.dproj,C:\Users\Сергей\Documents\RAD Studio\Projects\Project1.dproj=C:\Users\Сергей\Documents\RAD Studio\Projects\CheckSSE.dproj</Transaction>
+    <Transaction>2019.06.03 12:15:11.404.dproj,C:\Users\Сергей\Documents\RAD Studio\Projects\CheckSSE.dproj=D:\Out\delphi\recorder\CheckSSE\CheckSSE.dproj</Transaction>
+    <Transaction>2019.06.03 12:15:51.027.pas,C:\Users\Сергей\Documents\RAD Studio\Projects\Unit1.pas=D:\Out\delphi\recorder\CheckSSE\Unit1.pas</Transaction>
+    <Transaction>2019.06.03 12:15:51.027.dfm,C:\Users\Сергей\Documents\RAD Studio\Projects\Unit1.dfm=D:\Out\delphi\recorder\CheckSSE\Unit1.dfm</Transaction>
+  </Transactions>
+</BorlandProject>

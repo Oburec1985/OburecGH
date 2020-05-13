@@ -1,0 +1,394 @@
+{ --------------------------------------------------------------------- }
+{ Проект (Модуль) реслизации plug-in`а для измерительного ПО Recorder }
+{ Модуль описания интерфейса для управления тегом и группой тегов }
+{ Компилятор: Borland Delphi 6.0 }
+{ НПП "ООО Мера" 2004г.
+{ @date 2001-2012 }
+{ @version 3.0 }
+{ --------------------------------------------------------------------- }
+
+unit tags;
+
+interface
+
+uses Windows, signal;
+
+type
+  // Состояние связи тега с железом
+  LINKSTATE =
+   (LS_HARDWARE, // Тег связан с железом
+    LS_VIRTUAL, // Тег никогда не был связан с железом, он виргуален
+    LS_LOST, // Тег был связан с железом, но связь утеряна
+    LS_PIPE // Тег безымянный носитель данных для связи блоков, например обработки
+    );
+
+   //TAGID=Int64;
+   TAGID=Int64;
+
+
+const
+  // F020021F-624A-4076-9DA4-4F45121E2C0B
+  //                                        F020021F     624A     4076      9D  A4  4F  45  12  1E  2C  0B
+  IID_ITagBlockVectorControl: TGUID = ( D1:$F020021F;D2:$624A;D3:$4076;D4:($9D,$A4,$4F,$45,$12,$1E,$2C,$0B));
+
+  //E8DAE361-53EE-11d7-9244-00E029288A7F
+  IID_ITAG: TGUID = (
+    D1:$E8DAE361;D2:$53EE;D3:$11d7;D4:($92,$44,$00,$E0,$29,$28,$8A,$7F));
+
+    // Нотификации тега через @ref ITag::Notify
+    TN_UPDATETAGTX               = 0;  // Обновить ТХ
+    TN_ERASETAGTX                = 1;  // Удалить тарировочную характеристику Тега
+    TN_SETVECTORDELTA            = 2;  // Задать dX для вектора данных, используется для VirtualTags
+    TN_WRITETAGTXINFOFILE        = 3;  // Прописать тарировки тега (служебное)
+
+    TN_PREPARE_TARGETS           = 4;  // Подготовить таргеты dwParams==MASK (служебное)
+    TN_FINISH_TARGETS            = 5;  // Завершить работу таргетов dwParams==MASK (служебное)
+    TN_STARTREC                  = 6;  // Перевести тег в режим записи (служебное)
+    TN_STOPREC                   = 7;  // Остановить режим записи тега (служебное)
+    TN_ERASEDEVTX                = 8;  // Удалить тарировочную характеристику аппаратного канала
+    TN_TRYTORELINK               = 9;  // Попытаться переподцепиться к аппаратному каналу по хардлинке
+    TN_UPDATEDEVTAREDB           = 10; // Произвести апдейт базы даннх аппаратных ТХ
+    TN_ZEROBALANCE               = 11; // Произвести балансировку нуля аппаратного канала
+    TN_EDITOWNER                 = 12; // Вызвать окно редактирования объекта устройство
+    TN_RESETOWNER                = 13; // Сделать ресет устройству владеющему тегом
+    TN_UPDATEDEVCHAN             = 14; // Произвести апдейт свойств аппаратного канала
+    TN_DOWNLOAD_TARE_FROM_DEVICE = 15; // Скачать ГХ из пзу модуля
+    TN_UPLOAD_TARE_TO_DEVICE     = 16; // Загрузить ГХ в пзу модуля
+    TN_LOAD_DEV_TARE_FROM_DB     = 17; // Загрузить ГХ модуля из БД
+    TN_UNLINKDEVCHAN             = 18; // Убить аппаратный канал тега
+    TN_PROCESSLOST               = 19; // Пересоздать канал если он отвалится от девайса значит мертв
+    TN_RECALCRANGES              = 20; // Пересчитать диапазоны
+    TN_UPDATEALARMS              = 21; // Произвести перенастройку уставок (пересортировку)
+    TN_PUTPORTIONINFO            = 22; // Записать информацию о порции
+                                       // struct @ref PORTIONINFO
+    TN_WRITEALARMSINFO           = 23; // Прописать информацию по уставкам (служебное)
+    TN_UPDATECHANID              = 24; // Обновить ChanID по хендлу канала
+    TN_UPDATEUNITS               = 25; // Обновить единицы измерения
+    TN_RESET_DATA_BUF            = 26; // Сброс накопительного буфера данных,
+                                       // используется при работе с векторными каналами через PushValue
+    TN_DISABLE_TARGETS           = 27; // Выключить обработчики по маске dwParams==MASK (служебное)
+    TN_FLUSH_TARGETS             = 28; // Пропихнуть буфера обработчиков по маске dwParams==MASK (служебное)
+    TN_ON_STOP_TARGETS           = 29; // Отработать остановку приема данных в обработчиках
+
+    // Свойства тегов которые можно получить/задать с помощью ITag::GetProperty/ITag::SetProperty
+    TAGPROP_BUFFSIZE =        0; // Размер блока FIFO                           [out]
+    TAGPROP_ESTIMATOR =       1; // Оценочная функция                           [in, out]
+    TAGPROP_ESTIMATE =        2; // Оценка                                      [out]
+    TAGPROP_DATATYPE =        3; // Тип данных                                  [in, out]
+    TAGPROP_HARDWAREADRESS =  4; // Аппаратный адрес канала                     [out]
+    TAGPROP_TYPE =            5; // Вектор или скаляр                           [in, out]
+    TAGPROP_DEVCHANID =       6; // Идентификатор аппаратного канала            [out]
+    TAGPROP_MINVALUE =        7; // Минимальное значение                        [in, out]
+    TAGPROP_MAXVALUE =        8; // Максимальное значение                       [in, out]
+    TAGPROP_TARE =            9; // Тарировочная характеристика                 [in, out]
+    TAGPROP_OWNER =          10; // Владелец (интерфейс IRecorderPlugin)        [out]
+    TAGPROP_MODULE =         11; // Модуль (HardLink)                           [out]
+    TAGPROP_DEVSIGNALTYPE =  12; // Тип сигнала от устройства код, эл.в.        [in, out]
+    TAGPROP_UNITS =          13; // Единицы измерения                           [in, out]
+    TAGPROP_RECENABLED =     14; // Разрешена запись данны тега в файл          [out]
+    TAGPROP_DESCRIBE =       15; // Описание                                    [in, out]
+    TAGPROP_MODULENAME =     16; // Имя модуля                                  [out]
+    TAGPROP_MODULESERNUM =   17; // Серийный номер модуля                       [out]
+    TAGPROP_DEVTARE =        18; // Тарир. характеристика аппаратного канала    [in, out]
+    TAGPROP_MINUSERVALUE =   19; // Мин значение определенное рользователем     [in, out]
+    TAGPROP_MAXUSERVALUE =   20; // Макс значение определенное рользователем    [in, out]
+    TAGPROP_AUTORANGE =      21; //                                             [in, out]
+    TAGPROP_IRECORDER =      22; // Получить интерфейс IRecorder рекордера      [out]
+    TAGPROP_LEVELEXCEED =    23; // Уставка превышена                           [in, out]
+    TAGPROP_VIEWRANGE =      24; // Диапазон отображения                        [in]
+    TAGPROP_MAXXVIEWRANGE =  25; // Максимальный диапазон отображения по оси X  [in, out]
+    TAGPROP_MODCHANNUMBER =  26; // Номер канала в модуле                       [out]
+    TAGPROP_DEFAULTESTIMATOR     = 27; // Оценочная функция по умолчанию        [in, out]
+                                       // для отображения в ЦФ
+    TAGPROP_DEVCHAN              = 28; // Ссылка на аппаратный канал                   [out]
+    TAGPROP_DEVCHANINFO          = 29; // Информация об настройках аппаратного канала  [out]
+    TAGPROP_FREQCOUNT            = 30; // Количество Доступных частот опроса канала    [out]
+    TAGPROP_HASTARE              = 31; // Есть ли у канала ГХ                          [out]       VT_BOOL
+    TAGPROP_CLB_PROPS_BIN_SIZE   = 32; // Размер памяти для хранеия калибровочных свойств
+    TAGPROP_AVERAGEESTIMATE      = 33; // Усреднять оценку                             [in, out]   VT_BOOL
+    TAGPROP_AVERAGEESTIMATEALPHA = 34; // Параметр усреднения                          [in, out]   VT_R8
+    TAGPROP_ESTIMATEPORTION      = 35; // Размер порции для вычисляемых оценок         [in, out]   VT_I4
+    TAGPROP_ENABLEFREQCORRECTION = 36; // Разрешить коррекцию частоты для VT           [in]        VT_BOOL
+    TAGPROP_STOPLEVELEXCEED      = 37; // Уставка на стоп превышена                    [in, out]   VT_BOOL
+    TAGPROP_TARE_ENABLED         = 38; // Разрешить проход через канальную ГХ          [in]        VT_BOOL
+    TAGPROP_ATTRIB_UNEDITABLE    = 39; // Атрибут тега: нередактируемый                [in, out] VT_BOOL
+                                       // (тег стандартными средствами rc не отображается)
+    TAGPROP_ATTRIB_HIDEN         = 40; // Атрибут тега:скрытый                         [in, out] VT_BOOL
+                                       // (тег редактируется стандартными средствами rc, но данные не отображаются )
+    TAGPROP_SIGNAL_START_TIME    = 41; // Время начала сигнала в секундах от старта просмотра [out] VT_R8
+    TAGPROP_UTS_CHAN_NAME        = 42; // Имя канала СЕВ [in (только виртуальные), out] VT_BSTR
+    TAGPROP_FLASH_TARE_INFO      = 43; // Строковая информация о ГХ во флеше модуля [out] VT_BSTR
+    TAGPROP_IS_UTS_CHANNEL       = 44; // Это канал СЕВ [out] VT_BOOL
+    TAGPROP_RESERVED_SPACE_SIZE  = 45; // Размер области предварительного резервирования места на диске	[out] VT_UI4
+    TAGPROP_STATUS_WORD          = 46; // Слово состояния тега [out] VT_UI4
+    TAGPROP_TARES_COUNT          = 47; // Число ГХ [out] VT_I4
+    TAGPROP_HWCH_PROPS           = 48; // Интрерфейс низкоуровневого доступа к свойствам [out] VT_UNK
+    TAGPROP_ALARMS_STATE_W       = 49; // Слово состояния уставок [out] VT_UI4
+    TAGPROP_ALARMS_COLOR         = 50; // Цвет сработавшей уставки [out] VT_UI4
+    TAGPROP_ALARMS_TIMESTAMP     = 51; // Штамп врмени сработавшей уставки аппаратного канала [out] VT_DATE
+    TAGPROP_DEV_CHAN_TYPE        = 52; // Тип аппаратного канала, по devapi::const.h [out] VT_I4
+    TAGPROP_AUTOUNITS            = 53; // Автоматическое определение единиц измерения	[in,out] VT_BOOL {ver:3.0.4.40}
+    TAGPROP_CHAR_TP_WORD         = 54; // Слово харектеристик .mera канала "CharTp"    [in,out] VT_UI4   {ver:3.0.4.52}
+    TAGPROP_WRITE_CODES          = 55; // Запись в кодах устройств [out] VT_BOOL
+    TAGPROP_DESTROYED_FLAG       = 56; // Признак того, что тег является уничтоженным                [out] VT_BOOL
+                                       // По сути это уже не тег, а пустая шкурка, объекта
+    TAGPROP_CAN_ZBALANCE         = 57; // Умеет ли тег балансироваться [out] VT_BOOL
+    TAGPROP_PERMANENT_ID         = 58; // Идентификатор источника данных канала, расширенный "ChanId" [out] VT_BSTR
+	  TAGPROP_UNITS_CODE           = 59; //< meUnits код единиц измерения [out] VT_UI8
+
+
+    EXTENDED_TAGPROP_BASE        = $8000;
+    TAGPROPEX_AVL_FREQ           = $8001; // Доступная частота
+    TAGPROPEX_CLB_PROPS_BIN      = $8002; // память для хранеия калибровочных свойств
+    TAGPROPEX_TEXTCOLOR          = $8003; // Цвет для отображения в текстовом виде        [in,out]   VT_UI4
+    TAGPROPEX_PH_FINISH_TIME     = $8004; // Время окончания предзаписи / начала записи   [in]  VT_R8
+    TAGPROPEX_PH_START_TIME      = $8005; // Время начала предзаписи [in]  VT_R8
+    TAGPROPEX_TARE_BY_INDEX      = $8006; // ГХ по индексу [in,out] VT_UNK
+    TAGPROPEX_TARE_ST_BY_INDEX   = $8007; // Слово состояния тарировки [in,out] VT_UI4
+    TAGPROPEX_ESTIMATE_PRECISION = $8008; // Точность для отображения скалярной оценки (число значащих цифр).
+                                          // Значение 0, использование общей точности "по умолчанию"
+                                          // В параметре lSubPropertyIndex передается идентификатор оценки [in,out] VT_I4
+
+    // TAGPROPEX_TARE_ST_BY_INDEX
+    TARESTAT_NULL    = 0;
+    TARESTAT_ENABLED = 1;
+
+    // Информация о скалярной оценке SCALARESTIMATEINFOCODE
+    SEIC_NAME      = 0; // Название
+    SEIC_DESC      = 1; // Описание
+    SEIC_SHORTNAME = 2; // Короткое название
+
+    // Типы тегов
+    TTAG_VECTOR     = $0001;     // Векторный тег
+    TTAG_SCALAR     = $0002;     // Скалярный тег
+    TTAG_IRREGULAR  = $0004;     // Тег с нерегулярными поступлениями данных
+	                               // своего рода векторный скаляр
+    TTAG_OUTPUT     = $0100;     // Тег вывода
+    TTAG_INPUT      = $0200;     // Тег ввода
+    TTAG_PIPE       = $0400;     // трубка
+
+    // Типы оценок
+    ESTIMATOR_EMPTY = $0000000;   // Отсутствие оценки
+    ESTIMATOR_MEAN  = $0000001;   // MO
+    ESTIMATOR_RMSV  = $0000002;   // СКЗ
+    ESTIMATOR_RMSD  = $0000004;   // СКО
+    ESTIMATOR_PEAK  = $0000008;   // Пик
+    ESTIMATOR_P2P   = $0000010;   // Пик-Пик
+    ESTIMATOR_MIN   = $0000020;   // Минимум
+	  ESTIMATOR_MAX   = $0000040;   // Максимум
+    ESTIMATOR_LAST  = $0000041;
+    ESTIMATOR_DEFAULT = $FFFFFFFF;
+
+    // Специфические флаги состояния канала
+	  TGST_EMPTY               = $000000;   // Нулевой флаг
+	  TGST_LOST_SOURCE         = $00000001; // Потеря связи с источником данных
+	  TGST_WALARM_WAS_SIGNALED = $00000002; // Срабатывала предупредительная уставка
+	                                        // Это отдельное состояние именно канала, а не данных
+	                                        // Есть еще флаги состояния данных вида DATAST_ALARM_XXX
+	                                        // Set/GetScalarStatus
+	  TGST_AALARM_WAS_SIGNALED = $00000004; // Срабатывала аварийная уставка
+
+const
+   // Свойства групп которые можно получить/задать с помощью
+   // ITagsGroup::GetProperty/ITagsGroup::SetProperty
+   TGRPROP_WRITETOPERSONALFRAME = 0; // Писать в собственный кадр        [in,out]
+   TGRPROP_PERSONALFRAMENAME =    1; // Имя собственного кадра           [in,out]
+   TGRPROP_ENABLEREC =            2; // Разрешить запись каналов группы  [in,out]
+   TGRPROP_DESCRIBE =             3; // Описание группы                  [in,out]
+   TGRPROP_EXPANDEDVIEW =         4; // Раскрытый вид в дереве           [in,out]
+
+   // Уведомления группе
+   TGRNTF_PREPAREFRAME =   0; // Подготовить кадр для записи dwParam=(LPCSTR)DataFolder
+   TGRNTF_CREATEINFOFILE = 1; // Создать файл описатель .mera dwParam=(LPCSTR)DataFolder
+
+type
+   // Итерфейс группы тегов
+   ITagsGroup = interface;
+
+   // Интерфейс для управления тегом
+   ITag = interface
+   ['{E8DAE361-53EE-11d7-9244-00E029288A7F}']
+      // Состояние связи с аппаратным каналом
+      function GetLinkState: LINKSTATE; stdcall;
+      // Показать окно редактирования свойств
+      function Edit: boolean; stdcall;
+      // Установить имя
+      function SetName(const pchName: LPCSTR): boolean; stdcall;
+      // Получить имя
+      function GetName: LPCSTR; stdcall;
+
+      // Установить частоту дискретизации
+      procedure SetFreq(const dblFreq: double); stdcall;
+      // Получить частоту дискретизации
+      function GetFreq: double; stdcall;
+
+      // Послать тегу уведомление
+      function Notify(const dwCommand: DWORD; const dwParam: DWORD): boolean; stdcall;
+
+      // Установить свойство тега
+      function SetProperty(const dwPropertyID: DWORD;
+      { const } Value: OleVariant): boolean; stdcall;
+      // Получить свойство тега
+      function GetProperty(const dwPropertyID: DWORD;
+                           var Value: OleVariant): boolean; stdcall;
+
+      // Получить вектор с данными (устаревшее)
+      function GetData: pointer { ISignal } ; stdcall;
+      // Синхронное чтение данных (устаревшее)
+      function SynchroReadDataBlock(const dblFreq: double; const dwPortionLen: DWORD;
+                                    var dblBuffer; {вектор элементов типа DOUBLE}
+                                    const Tare: boolean): HRESULT; stdcall;
+
+      // Проверить свойство записываемости ( надо ли тег сохранять в конфигурации)
+      function isCfgWritable: boolean; stdcall;
+      // Установить свойство записываемости ( надо ли тег сохранять в конфигурации)
+      function CfgWritable(const fNewState: boolean): boolean; stdcall;
+      // Положить данные в тег (для плагинов)
+      function PushData(var pData; const nCount: integer): boolean; stdcall;
+      // Положить одно измерение в тег (для плагинов)
+    // -1 автоматом системное время налепит
+      function PushValue(const dValue: double; const dXValue: double): boolean; stdcall;
+
+      // Установить масштаб по оси значений в процентах
+      function SetYRange(const a_fltRange: single): boolean; stdcall;
+      // Получить масштаб по оси значений в процентах
+      function GetYRange: single; stdcall;
+
+      // Установить сдвиг по оси значений в 0.1%
+      function SetYShift(const fltShift: single): boolean; stdcall;
+
+      // Получить сдвиг по оси значений в 0.1%
+      function GetYShift: single; stdcall;
+
+      // Подключить тег к группе
+      function LinkGroup(const Group: ITagsGroup): HRESULT; stdcall;
+      // Получить ссылку на группу тега
+      function GetGroup(var ppGroup: ITagsGroup): HRESULT; stdcall;
+
+      // Получить код типа данных, это идентифиуатор типа данных Variant
+      function GetDataType: TVarType; stdcall;
+
+      // Задать оценку
+      procedure SetEstimate(const dblValue: double; const nMask: ULONG); stdcall;
+      // Получить оценку
+      function GetEstimate(const nEstimator: ULONG): double; stdcall;
+      // Задать маску оценок оценок
+      function SetEstimatorsMask(const nMask: ULONG): HRESULT; stdcall;
+      // Получить маску оценок оценок
+      function GetEstimatorsMask: ULONG; stdcall;
+
+      // Прогнать значение через ТХ канала
+      function Eval(const a_dblValue: double): double; stdcall;
+
+      // v1.06.2+
+      // Установить масштаб по оси времени в процентах
+      function SetXRange(const a_fltRange: single): boolean; stdcall;
+      // Получить масштаб по оси времени в процентах
+      function GetXRange: single; stdcall;
+
+      // Установить сдвиг по оси времени в процентах
+      function SetXShift(const fltShift: single): boolean; stdcall;
+      // Получить сдвиг по оси времени в процентах
+      function GetXShift: single; stdcall;
+      // Некий размер тега приделанный для rcTMI
+		  function GetSize: integer; stdcall;
+
+      // Получить слово статуса тега
+		  function GetScalarStatus: Integer; stdcall;
+
+		  // Задать слово статуса тега
+		  procedure SetScalarStatus(const dwStatus: Integer); stdcall;
+
+		  // Получить скалярную оценку для векторра
+		  function GetScalarEstimate(var &dblValue: double; dwEstimator: Integer): HRESULT; stdcall;
+
+		  // Получить информацию по оценке
+		  function GetScalarEstimateInfo(var dwEstimator: Integer; var dwInfoCode: Integer): LPCSTR; stdcall;
+
+		  // Положить данные в тег (для плагинов) и положить время блока СЕВ и внутреннее
+		  function PushDataEx(var pData; nCount: Integer = -1;
+				dblTimeUTS: double = 0;	dblTimeInternal: double = 0): HRESULT; stdcall;
+
+		  // Установить расширенное свойство тега
+		  function SetPropertyEx(const dwPropertyID : DWORD; Value: VARIANT;
+				lSubPropertyIndex: Integer; dwReserved: DWORD = 0): HRESULT; stdcall;
+
+		  // Получить расширенное свойство тега
+		  function GetPropertyEx(const dwPropertyID: DWORD; var Value: OleVariant;
+				const lSubPropertyIndex: Integer;	dwReserved: DWORD = 0): HRESULT; stdcall;
+
+		  // Получить скалярную оценку для векторра с дополнительной информацией
+		  // @details since v2.0.6 <br>см. так же<br> @ref GetScalarEstimate или @ref GetEstimate
+		  function GetScalarEstimateEx(var dblValue: Double;
+                                   dwEstimator: DWORD;
+			                             pdblDeviceTime: PDouble = 0;
+                                   pdblUTSTime: PDouble = 0): HRESULT; stdcall;
+		  // since v2.7.7.8
+		  // Получить состояние последней обработки через ГХ
+		  function GetLastEvalState(var state: PLongint): HRESULT; stdcall;
+
+		  function Destroy(): HRESULT; stdcall;
+
+		  // Получить постоянный идентификатор канала
+      //function GetTagId(var a_pId: PInt64): HRESULT; stdcall;
+      function GetTagId(var a_pId: TAGID): HRESULT; stdcall;
+    end;
+
+
+   //Интерфейс группы тегов
+   ITagsGroup = interface
+   ['{76B0B801-4FCA-11d7-9244-00E029288A7F}']
+      // Получить имя группы
+      { В функцию необходимо передать ссылку на буфер, размер которого не менее
+      STDSTRSIZE, то есть 256 символов, в этот буфер будет скопировано наименование }
+      function GetName(const pchName: LPCSTR): HRESULT; stdcall;
+      // Установить имя группы
+      function SetName(const pchName: LPCSTR): HRESULT; stdcall;
+
+      // Добавить тег в группу
+      function AddTag(pTag: ITag): HRESULT; stdcall;
+      // Удалить тег из группы, после удаления из группы тег переходит в основную группу
+      function RemoveTag(pTag: ITag): HRESULT; stdcall;
+
+      // Получить число тегов
+      function GetTagsCount: ULONG; stdcall;
+      // Найти тег по индексу
+      function GetTagByIndex(var pTag: ITag; const nIndex: ULONG): HRESULT; stdcall;
+      // Найти тег по имени
+      function GetTagByName(var pTag: ITag; const pchName: LPCSTR): HRESULT; stdcall;
+
+      // Старт записи для группы
+      function StartRec: HRESULT; stdcall;
+      // Останов записи для группы
+      function StopRec: HRESULT; stdcall;
+
+      // Получить свойство запись разрешена
+      function GetRecEnabled: boolean; stdcall;
+
+      // Задать свойство запись разрешена
+      procedure SetRecEnabled(const bValue: boolean); stdcall;
+
+      // Послать группе уведомление
+      function Notify(const dwCommand: DWORD; const dwParam: DWORD): HRESULT; stdcall;
+      // Установить свойство группы
+      function SetProperty(const dwPropertyID: DWORD; { const} Value: OleVariant): HRESULT; stdcall;
+      // Получить свойство группы
+      function GetProperty(const dwPropertyID: DWORD; var Value: OleVariant): HRESULT; stdcall;
+   end;
+
+
+
+/// @interface ITagBlockVectorControl
+/// Управление параметрами блочного вектора данных тега
+ITagBlockVectorControl = interface
+['{F020021F-624A-4076-9DA4-4F45121E2C0B}']
+  // ConfigBlockVector((ULONG nBlockLen, ULONG nBlocksCounter) = 0;
+  function ConfigBlockVector(nBlockLen:ULONG; nBlocksCounter: ULONG): HRESULT; stdcall;
+end;
+
+
+implementation
+
+end.
+
+

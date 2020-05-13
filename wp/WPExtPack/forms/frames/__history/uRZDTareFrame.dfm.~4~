@@ -1,0 +1,115 @@
+object RZDTareFrame: TRZDTareFrame
+  Left = 0
+  Top = 0
+  Width = 398
+  Height = 173
+  TabOrder = 0
+  DesignSize = (
+    398
+    173)
+  object HFCbox: TComboBox
+    Left = 1
+    Top = 51
+    Width = 390
+    Height = 21
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 0
+    ExplicitWidth = 468
+  end
+  object Path: TComboBox
+    Left = 1
+    Top = 5
+    Width = 365
+    Height = 21
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 1
+    ExplicitWidth = 443
+  end
+  object S1Cbox: TComboBox
+    Left = 1
+    Top = 74
+    Width = 390
+    Height = 21
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 2
+    ExplicitWidth = 468
+  end
+  object S2Cbox: TComboBox
+    Left = 1
+    Top = 97
+    Width = 390
+    Height = 21
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 3
+    ExplicitWidth = 468
+  end
+  object S3Cbox: TComboBox
+    Left = 1
+    Top = 120
+    Width = 390
+    Height = 21
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 4
+    ExplicitWidth = 468
+  end
+  object S4Cbox: TComboBox
+    Left = 1
+    Top = 144
+    Width = 390
+    Height = 21
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 5
+    ExplicitWidth = 468
+  end
+  object VFCbox: TComboBox
+    Left = 1
+    Top = 28
+    Width = 390
+    Height = 21
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 6
+    ExplicitWidth = 468
+  end
+  object PathBtn: TButton
+    Left = 366
+    Top = 5
+    Width = 24
+    Height = 19
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akTop, akRight]
+    Caption = '...'
+    TabOrder = 7
+    ExplicitLeft = 444
+  end
+end

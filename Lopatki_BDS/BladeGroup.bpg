@@ -1,0 +1,29 @@
+#------------------------------------------------------------------------------
+VERSION = BWS.01
+#------------------------------------------------------------------------------
+!ifndef ROOT
+ROOT = $(MAKEDIR)\..
+!endif
+#------------------------------------------------------------------------------
+MAKE = $(ROOT)\bin\make.exe -$(MAKEFLAGS) -f$**
+DCC = $(ROOT)\bin\dcc32.exe $**
+BRCC = $(ROOT)\bin\brcc32.exe $**
+#------------------------------------------------------------------------------
+PROJECTS = DctrBld.exe BladeProcessor.exe BladeRecorder2070.exe dcl_own.bpl
+#------------------------------------------------------------------------------
+default: $(PROJECTS)
+#------------------------------------------------------------------------------
+
+DctrBld.exe: DoctorBlade\DctrBld.dpr
+  $(DCC)
+
+BladeProcessor.exe: BladeProcessor\BladeProcessor.dpr
+  $(DCC)
+
+BladeRecorder2070.exe: BladeRecorder2070\BladeRecorder2070.dpr
+  $(DCC)
+
+dcl_own.bpl: Lib\dcl_own.dpk
+  $(DCC)
+
+

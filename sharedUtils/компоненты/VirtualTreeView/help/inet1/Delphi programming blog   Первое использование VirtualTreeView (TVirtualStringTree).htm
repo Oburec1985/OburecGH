@@ -1,0 +1,927 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0048)http://teran.karelia.pro/articles/item_5845.html -->
+<html xmlns="http://www.w3.org/1999/xhtml" style="height: 100%;"><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<title>Delphi programming blog | Первое использование VirtualTreeView (TVirtualStringTree)</title>
+
+<meta name="copyright" content="Terekhov Andrey">
+	<meta name="keywords" content="VirtualTreeView, VitualStringTree, checkbox, columns, AfterCellPaint, Delphi">
+
+	<meta name="description" content="Блог о программировании в среде Embarcadero Delphi">
+
+
+
+<link href="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/960.css" type="text/css" rel="stylesheet" media="screen">
+<link href="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/main.css" rel="stylesheet" type="text/css">
+<link href="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/main_3.css" rel="stylesheet" type="text/css" media="screen">
+<link href="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/fonts_1.css" rel="stylesheet" type="text/css" media="screen">
+<link href="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/print.css" rel="stylesheet" type="text/css" media="print">
+
+<script src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/cb=gapi.loaded_1" async=""></script><script src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/cb=gapi.loaded_0" async=""></script><script type="text/javascript" async="" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/ga.js"></script><script type="text/javascript" async="" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/plusone.js" gapi_processed="true"></script><script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/jquery.min.js"></script>
+<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/jquery.cookie.pack.js" language="javascript"></script>
+
+
+<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/shCore.js"></script>
+<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/shBrushDelphi.js"></script>
+<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/shBrushSql.js"></script>
+<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/shBrushVb.js"></script>
+<link href="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/shCore.css" rel="stylesheet" type="text/css">
+<link href="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/shThemeDefault.css" rel="stylesheet" type="text/css">
+
+<script type="text/javascript" srct="/plain/LightBox/js/jquery.js"></script>
+<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/jquery.lightbox-0.5.js"></script>
+<link rel="stylesheet" type="text/css" href="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/jquery.lightbox-0.5.css" media="screen">
+
+<script type="text/javascript">
+    window.___gcfg = {
+                lang: 'ru-RU'
+              };
+
+  (function() {
+      var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+      po.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+  })();
+</script>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-20962377-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+<meta name="google-translate-customization" content="b1cfa1024ad6ef63-b3e5749838c72195-g64846b11c72e3e9c-11">
+<link type="text/css" rel="stylesheet" charset="UTF-8" href="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/translateelement.css"><script type="text/javascript" charset="UTF-8" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/main_ru.js"></script><script type="text/javascript" charset="UTF-8" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/element_main.js"></script></head>
+<body style="position: relative; min-height: 100%; top: 0px;">
+
+<div id="headerPrint">
+
+    <div class="logoSub">Delphi programming blog</div>
+    <div class="source">Источник: <a href="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree).htm">http://teran.karelia.pro/articles/item_5845.html</a></div>
+
+</div>
+<div class="container container_12">
+
+    <div class="grid_12" id="header" style="z-index:1000; background:url(/img/main.jpg) no-repeat; height:220px;">
+
+        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+   <tbody><tr>
+      <td class="toplinks" align="right"><a href="http://teran.karelia.pro/">на главную</a><span>|</span><a href="http://teran.karelia.pro/search/">поиск по сайту</a><span>|</span><a href="http://teran.karelia.pro/map/">карта сайта</a></td>
+   </tr>
+</tbody></table>
+		<div style="height:160px"></div>
+        
+        <div class="mainMenu">
+<ul id="mainmenu">
+    <li><a href="http://teran.karelia.pro/articles/" class="current">Статьи</a>
+           <ul>
+                  <li><a href="http://teran.karelia.pro/articles/all/">Все статьи</a></li>
+              </ul>
+        </li>
+    <li><a href="http://teran.karelia.pro/tags/">Метки</a>
+        </li>
+    <li><a href="http://teran.karelia.pro/myshows/">Клиент MyShows.ru</a>
+        </li>
+    <li class="last"><a href="http://teran.karelia.pro/about/">Кто это?</a>
+           <ul>
+                  <li><a href="http://teran.karelia.pro/about/cv/">Резюме</a></li>
+              </ul>
+        </li>
+</ul>
+<div class="rss"><a href="http://teran.karelia.pro/rss"><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/rss.png" width="24" height="24"></a></div>
+</div>
+    </div> <!-- #header -->
+
+    <div class="clear">&nbsp;</div>
+
+    <div class="grid_9" id="content">
+
+			        <div class="path">
+  <span><a href="http://teran.karelia.pro/">Главная</a><em>&#8594;</em></span>
+        <span><a href="http://teran.karelia.pro/articles/">Статьи</a></span>
+        </div>
+
+          
+        <div class="content" id="content">
+
+            <h1>
+    Первое использование VirtualTreeView (TVirtualStringTree)
+</h1>
+
+            
+<div class="published">Опубликовано 30.01.2013 г.  14:10</div>
+
+
+<div class="section bottomMargin">
+	<p style="text-align: justify">Никогда ранее не использовал упомянутый в названии статьи компонент, тем не менее давно было желание попробовать его в работе. И вот наконец возникла на работе задача, к которой его было бы неплохо применить. Эта статья - обобщенее полученного опыта первого использования.</p>
+<h4 style="text-align: justify">Описание задачи</h4>
+<p style="text-align: justify">Имеется редатор исходных данных. В редакторе данные представлены в виде таблиц. Таблицы сгруппированы в блоки (блоки вида Экономика,&nbsp;Образование, Демография и т.п.). Каждое значение исходных данных привязывается к источнику данных. Источники могут быть разные - справочники,&nbsp;формы отчетности и т.п. Моя задача - организовать управление списком источников. Цель - нет смысла при редактировании исходных данных из блока экономики показывать источники, которые относятся,&nbsp;например, к статистическим формам по образованию. В связи с этим:<br>
+Необходимо реализовать функционал управления источниками данных. Каждый источник относится к какой-либо категории по его типу (справочник,&nbsp;стат.форма и т.д.). Для каждого источника необходимо настраивать блоки редактора,&nbsp;в которых он отображается. Дополнительно -&nbsp;доабвление/удаление/редактирование и слияние источников, а также перемещение в категориях (желательно мышью).</p>
+<h4 style="text-align: justify">Инструментарий</h4>
+<p style="text-align: justify">На уровне БД источники и&nbsp; их типы (назовем их категорями) хранятся в БД в виде двух таблиц - <em>sources</em> и <em>sourceCategories</em>. Таблицы связаны через поле <em>sources.category_id</em>. Для хранения выбора блоков отображения для источника используется битовая маска - поле <em>sources.deCategoryMask </em>(число блоков отображения не привязано к БД, и жестко (почти жестко (: ) указано в программном коде). Доступ к даннм в БД - dbGo - ADO. Пользовательский интерфейс представление данных&nbsp; - TVirtualStringTree. Первый уровень узлов - типы источников. Второй уровень - сами источники.</p>
+<p style="text-align: justify">Для наглядности ниже приведет скриншот&nbsp;того, что получилось в итоге:</p>
+<p style="text-align: center"><img alt="" width="577" height="410" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/5846-original.png"></p>
+<h4>Лирическое отступление</h4>
+<p style="text-align: justify">В набор <a href="http://www.lischke-online.de/index.php/controls/virtual-treeview">VirtualTreeView</a>&nbsp;входят два основных компонента: VirtualDrawTree и VirtualStringTree. Компоненты предназначены для отображения в первую очередь древовидного представления данных. Исходя из названия компонентов,&nbsp;в DrawTree вы в полной мере ответственны за отображение информации, в StringTree более ориентирован на представление текстовых узлов. Компоненты имеют в названии слово Virtual, которое означает, что данные,&nbsp;которые представляются с точки зрения самого компонента&nbsp;- виртуальны. Компонент не знает ничего об их типе. Таким образом,&nbsp;компонент ответственен за иерархическую структуру данных и действия с узлами. Вы же должны манипулировать теми струтурами данных, которые стоят за этими узлами. Какие проблемы могут возникнуть: документация по компоненту далеко не самая актуальная - в колонтитулах руководства стоит 2005-й год. Само руководство занимает 810 страниц. Установка проблем не вызывает - только один bpl-пакет. Исходный код содержит множество комментариев. Демо проекты могут вызывать ошибки компиляции из за разных версий компонента (встречалось несколько ошибко связанных с разной сигнатурой событий). Компонент,&nbsp;что называется pure-pascal, не привязан к системным компонентам Windows. Изначальная цель компонента - обеспечить работу с большим количеством данных (тысячи и миллионы узлов).</p>
+<h4>Наполнение дерева</h4>
+<p style="text-align: justify">Заполнение дерева узлами может быть выполнена двумя способами. Способ первый это ручное создание узлов и добавление их в дерево с помощью методов <em>AddChild()</em>. Использование данного метода оправдано, когда вам необходимо сразу же загрузить все дерево и отобразить его. В моем случае у меня всего порядка 40-50 узлов,&nbsp;и этот способ был мне вполне удобен. Второй способ - заполнение через события. Данный способ является первоочередным, но более сложным в реализации. Первоочередность определяется тем, что узлы загружаются по мере отображения. Если в вашем дереве максимум может быть например, миллион узлов, а на экране вы показываете в большинстве случаев только 20, то смысла загружать остальные 999980 записей нет. Для работы второго способа вам необходимо указать количество узлов первого уровня. Далее компонент через события <em>OnInitNode</em> запросит вас необходимые данные для инициализации узла. Раскроете верхний узел - и компонент инициализирует вложенные узлы.</p>
+<p style="text-align: justify">Перед началом работы, необходимо определить вашу логическую структуру, которая связывается с узлом дерева. Компонент оперирует узлами <em>TVirtualNode</em>, каждый узел при инициализации связывается с вашей структурой данных. На самом деле не обязательно использовать какие-либо структуры, вы можете хранить указатель на объект и т.п. В начале работы следует указать размер ваших данных, и при иницилизации узла TreeView выделит нужное количество памяти.</p>
+<p style="text-align: justify">&nbsp;В моем случае я использовал структуру <em>TSourceNode</em>. Описание получилось немного громоздким, т.к у структуры есть и методы и свойства. Но полей всего несколько:</p>
+<ul>
+    <li style="text-align: justify">Тип объекта (категория, источник) FNodeType&nbsp;: TNodeType = (ntCategory, ntSource)</li>
+    <li style="text-align: justify">ID объекта (значение ключа&nbsp;соответствующей записи в&nbsp;БД) - FId</li>
+    <li style="text-align: justify">Caption&nbsp; - FCaption</li>
+    <li style="text-align: justify">Категория&nbsp;источника&nbsp; FCatID</li>
+    <li style="text-align: justify">Маска блоков отображения - FDEMask</li>
+    <li style="text-align: justify">Событие изменения узла FOnNodeChanged</li>
+</ul>
+<p style="text-align: justify">в общем и целом, необходимые пользовательские типы данных выглядели следующим образом:</p>
+<div><div id="highlighter_337334" class="syntaxhighlighter  delphi"><div class="toolbar"><span><a href="http://teran.karelia.pro/articles/item_5845.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div><div class="line number19 index18 alt2">19</div><div class="line number20 index19 alt1">20</div><div class="line number21 index20 alt2">21</div><div class="line number22 index21 alt1">22</div><div class="line number23 index22 alt2">23</div><div class="line number24 index23 alt1">24</div><div class="line number25 index24 alt2">25</div><div class="line number26 index25 alt1">26</div><div class="line number27 index26 alt2">27</div><div class="line number28 index27 alt1">28</div><div class="line number29 index28 alt2">29</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="delphi plain">TNodeType = (ntCategory, ntSource);</code></div><div class="line number2 index1 alt1">&nbsp;</div><div class="line number3 index2 alt2"><code class="delphi plain">PSourceNode = ^TSourceNode;</code></div><div class="line number4 index3 alt1">&nbsp;</div><div class="line number5 index4 alt2"><code class="delphi plain">TNodeChangedEvent = </code><code class="delphi keyword">procedure</code> <code class="delphi plain">(sender : PSourceNode) </code><code class="delphi keyword">of</code> <code class="delphi keyword">object</code><code class="delphi plain">;</code></div><div class="line number6 index5 alt1">&nbsp;</div><div class="line number7 index6 alt2"><code class="delphi plain">TSourceNode = </code><code class="delphi keyword">record</code></div><div class="line number8 index7 alt1"><code class="delphi spaces">&nbsp;&nbsp;</code><code class="delphi plain">strict </code><code class="delphi keyword">private</code></div><div class="line number9 index8 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FNodeType : TNodeType;</code></div><div class="line number10 index9 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FId : </code><code class="delphi keyword">integer</code><code class="delphi plain">;</code></div><div class="line number11 index10 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FCaption : </code><code class="delphi keyword">string</code><code class="delphi plain">;</code></div><div class="line number12 index11 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FCatId : </code><code class="delphi keyword">integer</code><code class="delphi plain">;</code></div><div class="line number13 index12 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FMask : </code><code class="delphi keyword">integer</code><code class="delphi plain">;</code></div><div class="line number14 index13 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FOnNodeChanged : TNodeChangedEvent;</code></div><div class="line number15 index14 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">procedure</code> <code class="delphi plain">SetMask(newMask : </code><code class="delphi keyword">integer</code><code class="delphi plain">);</code></div><div class="line number16 index15 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">procedure</code> <code class="delphi plain">SetCatId(newCat : </code><code class="delphi keyword">integer</code><code class="delphi plain">);</code></div><div class="line number17 index16 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">procedure</code> <code class="delphi plain">SetCaption(newCaption : </code><code class="delphi keyword">string</code><code class="delphi plain">);</code></div><div class="line number18 index17 alt1"><code class="delphi spaces">&nbsp;&nbsp;</code><code class="delphi keyword">public</code></div><div class="line number19 index18 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">procedure</code> <code class="delphi plain">InitCategoryNode(id : </code><code class="delphi keyword">integer</code><code class="delphi plain">; caption : </code><code class="delphi keyword">string</code><code class="delphi plain">);</code></div><div class="line number20 index19 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">procedure</code> <code class="delphi plain">InitSourceNode(id : </code><code class="delphi keyword">integer</code><code class="delphi plain">; caption : </code><code class="delphi keyword">string</code><code class="delphi plain">; catId : </code><code class="delphi keyword">integer</code><code class="delphi plain">; aMask : </code><code class="delphi keyword">integer</code><code class="delphi plain">);</code></div><div class="line number21 index20 alt2">&nbsp;</div><div class="line number22 index21 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">property</code> <code class="delphi plain">NodeType : TNodeType read FNodeType;</code></div><div class="line number23 index22 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">property</code> <code class="delphi plain">ID : </code><code class="delphi keyword">integer</code> <code class="delphi plain">read FId </code><code class="delphi keyword">write</code> <code class="delphi plain">FId;</code></div><div class="line number24 index23 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">property</code> <code class="delphi plain">Caption : </code><code class="delphi keyword">string</code> <code class="delphi plain">read FCaption </code><code class="delphi keyword">write</code> <code class="delphi plain">SetCaption;</code></div><div class="line number25 index24 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">property</code> <code class="delphi plain">CategoryId : </code><code class="delphi keyword">integer</code> <code class="delphi plain">read FCatId </code><code class="delphi keyword">write</code> <code class="delphi plain">SetCatId;</code></div><div class="line number26 index25 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">property</code> <code class="delphi plain">DEMask : </code><code class="delphi keyword">integer</code> <code class="delphi plain">read FMask </code><code class="delphi keyword">write</code> <code class="delphi plain">setMask;</code></div><div class="line number27 index26 alt2">&nbsp;</div><div class="line number28 index27 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">property</code> <code class="delphi plain">OnNodeChanged : TNodeChangedEvent read FOnNodeChanged </code><code class="delphi keyword">write</code> <code class="delphi plain">FOnNodeChanged;</code></div><div class="line number29 index28 alt2"><code class="delphi keyword">end</code><code class="delphi plain">;</code></div></div></td></tr></tbody></table></div></div>
+<p style="text-align: justify">С&nbsp;точки зрения редактирования узла, у источника может изменятся категория,&nbsp;название и маска отображения. Поэтому запись этих свойств происходит через соответствующие set-методы, которые в свою очередь вызывают обработчик события <em>OnNodeChanged</em>. За обработку события будет отвечать форма, которая, зная ID&nbsp;измененного источника (через параметр события) произведет необходимые изменения с набором данных ADO.&nbsp;Наборов данных испоьзуется два - CategoriesQuery и SourcesQuery. В целом,&nbsp;при инициализации дерева необходимо указать размер пользовательских данных узла, и заполнить их. Например,&nbsp;так:</p>
+<div><div id="highlighter_40144" class="syntaxhighlighter  delphi"><div class="toolbar"><span><a href="http://teran.karelia.pro/articles/item_5845.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">SourcesTree</code><code class="delphi value">.</code><code class="delphi plain">NodeDataSize&nbsp; := SizeOf(TSourceNode);</code></div><div class="line number2 index1 alt1"><code class="delphi plain">...</code></div><div class="line number3 index2 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">with</code> <code class="delphi plain">CategoriesQuery </code><code class="delphi keyword">do</code> <code class="delphi keyword">begin</code></div><div class="line number4 index3 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">while</code> <code class="delphi keyword">not</code> <code class="delphi plain">eof </code><code class="delphi keyword">do</code> <code class="delphi keyword">begin</code></div><div class="line number5 index4 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">pvnode := SourcesTree</code><code class="delphi value">.</code><code class="delphi plain">AddChild(SourcesTree</code><code class="delphi value">.</code><code class="delphi plain">RootNode);&nbsp; </code><code class="delphi comments">//возврат созданного узла PVirtualTree</code></div><div class="line number6 index5 alt1">&nbsp;</div><div class="line number7 index6 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">sn := sourcesTree</code><code class="delphi value">.</code><code class="delphi plain">GetNodeData(pvnode);&nbsp; </code><code class="delphi comments">//пользовательские данны узла PSourceData</code></div><div class="line number8 index7 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">id := FieldByName(</code><code class="delphi string">'id'</code><code class="delphi plain">).AsInteger;</code></div><div class="line number9 index8 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">title := FieldByName(</code><code class="delphi string">'title'</code><code class="delphi plain">).AsString;</code></div><div class="line number10 index9 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">sn</code><code class="delphi value">.</code><code class="delphi plain">InitCategoryNode(id, title);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code><code class="delphi comments">//инициализациия категории источника </code></div><div class="line number11 index10 alt2">&nbsp;</div><div class="line number12 index11 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">catNodes</code><code class="delphi value">.</code><code class="delphi plain">Add(sn</code><code class="delphi value">.</code><code class="delphi plain">ID, pvnode);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code><code class="delphi comments">//вспомогательный словарик для заполнения источников</code></div><div class="line number13 index12 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">Next();</code></div><div class="line number14 index13 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number15 index14 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div></div></td></tr></tbody></table></div></div>
+<p>&nbsp;</p>
+<p style="text-align: justify">&nbsp;Далее аналогичным образом заполняются источники. Как видно в данном случае,&nbsp;дерево отвечает за выделение памяти пользовательских узлов, и возвращает указательна буфер памяти. Как вариант, мы можем сами сначала выделить память, и передать указатель на нее при добавлении узла через второй параметр&nbsp;<em>AddChild</em>.&nbsp;Очистка памяти для инициализированных узлов проводится в событии <em>OnFreeNode</em>. В простейшем&nbsp;случае, вам потребуется&nbsp;вызвать <em>Finalize/Dispose </em>для указателя на вашу структуру.&nbsp;Теперь дерево готово к отображению.</p>
+<h4 style="text-align: justify">Вывод данных</h4>
+<p style="text-align: justify">&nbsp;Для отображения текста&nbsp;в дереве используется событие <em>OnGextText</em>. Данное событие вызывается для каждого узла (строки)&nbsp;и&nbsp; ячейки. На входе имеем узел и номер столбца, на выходе должны вернуть текст для ячейки. Само собой,&nbsp;событие вызывается лишь тогда, когда текст требуется отобразить на экране. В моем случае, текст содержится в главной (нулевой) и последней колонке. Последняя колонка содержит количество записей в таблицах данных, связанных с этим источником. Поэтому название в первом столбце следует выводить для всех узлов дерева, а последний столбец заполнять только для узлов-источников данных. В данном случае словарь FUsage содержит статистику использования источников, статистика эта собирается в отдельном потоке, поэтому следует проверять,&nbsp;получена ли она, прежде чем использовать FUsage.</p>
+<div><div id="highlighter_400794" class="syntaxhighlighter  delphi"><div class="toolbar"><span><a href="http://teran.karelia.pro/articles/item_5845.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="delphi keyword">procedure</code> <code class="delphi plain">TManageSourcesForm</code><code class="delphi value">.</code><code class="delphi plain">SourcesTreeGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;</code></div><div class="line number2 index1 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">TextType: TVSTTextType;&nbsp; </code><code class="delphi keyword">var</code> <code class="delphi plain">CellText: </code><code class="delphi keyword">string</code><code class="delphi plain">);</code></div><div class="line number3 index2 alt2"><code class="delphi keyword">var</code> <code class="delphi plain">data : PSourceNode;</code></div><div class="line number4 index3 alt1"><code class="delphi keyword">begin</code></div><div class="line number5 index4 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">Data := Sender</code><code class="delphi value">.</code><code class="delphi plain">GetNodeData(node);</code></div><div class="line number6 index5 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">CellText := </code><code class="delphi string">''</code><code class="delphi plain">;</code></div><div class="line number7 index6 alt2">&nbsp;</div><div class="line number8 index7 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi plain">column = </code><code class="delphi value">0</code> <code class="delphi keyword">then</code> <code class="delphi keyword">begin</code></div><div class="line number9 index8 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">CellText := data</code><code class="delphi value">.</code><code class="delphi plain">Caption;</code></div><div class="line number10 index9 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code></div><div class="line number11 index10 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">else</code> <code class="delphi keyword">if</code> <code class="delphi plain">column = FUsageCol </code><code class="delphi keyword">then</code> <code class="delphi keyword">begin</code></div><div class="line number12 index11 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi plain">data</code><code class="delphi value">.</code><code class="delphi plain">NodeType &lt;&gt; ntSource </code><code class="delphi keyword">then</code> <code class="delphi plain">exit;</code></div><div class="line number13 index12 alt2">&nbsp;</div><div class="line number14 index13 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi plain">assigned(FUsage) </code><code class="delphi keyword">and</code> <code class="delphi plain">FUsage</code><code class="delphi value">.</code><code class="delphi plain">ContainsKey(data</code><code class="delphi value">.</code><code class="delphi plain">id) </code><code class="delphi keyword">then</code></div><div class="line number15 index14 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">CellText := IntToStr(FUsage[data</code><code class="delphi value">.</code><code class="delphi plain">ID])</code></div><div class="line number16 index15 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">else</code> <code class="delphi plain">CellText := </code><code class="delphi string">'0'</code><code class="delphi plain">;</code></div><div class="line number17 index16 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number18 index17 alt1"><code class="delphi keyword">end</code><code class="delphi plain">;</code></div></div></td></tr></tbody></table></div></div>
+<p style="text-align: justify">Далее, чтобы сделать несколько акцентов на узлах, изменим шрифт. Названия категорий, а также&nbsp;статистика использования&nbsp;будут выводится жирным шрифтом.&nbsp;Кроме того, для статистики, если значение нулевое (отсутствует) будем использовать красный цвет. Установка шарифта ячеек выполняется с помощью события <em>OnPaintText</em>.</p>
+<div><div id="highlighter_598510" class="syntaxhighlighter  delphi"><div class="toolbar"><span><a href="http://teran.karelia.pro/articles/item_5845.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div><div class="line number19 index18 alt2">19</div><div class="line number20 index19 alt1">20</div><div class="line number21 index20 alt2">21</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="delphi keyword">procedure</code> <code class="delphi plain">TManageSourcesForm</code><code class="delphi value">.</code><code class="delphi plain">SourcesTreePaintText(Sender: TBaseVirtualTree; </code><code class="delphi keyword">const</code> <code class="delphi plain">TargetCanvas: TCanvas; Node: PVirtualNode;</code></div><div class="line number2 index1 alt1"><code class="delphi spaces">&nbsp;&nbsp;</code><code class="delphi plain">Column: TColumnIndex; TextType: TVSTTextType);</code></div><div class="line number3 index2 alt2"><code class="delphi keyword">var</code> <code class="delphi plain">level : </code><code class="delphi keyword">integer</code><code class="delphi plain">;</code></div><div class="line number4 index3 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">d : PSourceNode;</code></div><div class="line number5 index4 alt2"><code class="delphi keyword">begin</code></div><div class="line number6 index5 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi plain">column </code><code class="delphi keyword">in</code> <code class="delphi plain">FDEColRange </code><code class="delphi keyword">then</code> <code class="delphi plain">exit;</code></div><div class="line number7 index6 alt2">&nbsp;</div><div class="line number8 index7 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">d := sender</code><code class="delphi value">.</code><code class="delphi plain">GetNodeData(node);</code></div><div class="line number9 index8 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi plain">column = </code><code class="delphi value">0</code> <code class="delphi keyword">then</code> <code class="delphi keyword">begin</code></div><div class="line number10 index9 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi plain">d</code><code class="delphi value">.</code><code class="delphi plain">NodeType = ntCategory </code><code class="delphi keyword">then</code></div><div class="line number11 index10 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">targetCanvas</code><code class="delphi value">.</code><code class="delphi plain">Font</code><code class="delphi value">.</code><code class="delphi plain">Style := targetCanvas</code><code class="delphi value">.</code><code class="delphi plain">Font</code><code class="delphi value">.</code><code class="delphi plain">Style + [fsBold];</code></div><div class="line number12 index11 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code></div><div class="line number13 index12 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">else</code> <code class="delphi keyword">if</code> <code class="delphi plain">(column = FUsageCol) </code><code class="delphi keyword">and</code> <code class="delphi plain">Assigned(FUsage) </code><code class="delphi keyword">then</code> <code class="delphi keyword">begin</code></div><div class="line number14 index13 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi plain">d</code><code class="delphi value">.</code><code class="delphi plain">NodeType = ntSource </code><code class="delphi keyword">then</code> <code class="delphi keyword">begin</code></div><div class="line number15 index14 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi keyword">not</code> <code class="delphi plain">(FUsage</code><code class="delphi value">.</code><code class="delphi plain">ContainsKey(d</code><code class="delphi value">.</code><code class="delphi plain">Id) </code><code class="delphi keyword">and</code> <code class="delphi plain">(FUsage[d</code><code class="delphi value">.</code><code class="delphi plain">Id] &gt; </code><code class="delphi value">0</code><code class="delphi plain">)) </code><code class="delphi keyword">then</code> <code class="delphi keyword">begin</code></div><div class="line number16 index15 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">TargetCanvas</code><code class="delphi value">.</code><code class="delphi plain">Font</code><code class="delphi value">.</code><code class="delphi plain">Style := TargetCanvas</code><code class="delphi value">.</code><code class="delphi plain">Font</code><code class="delphi value">.</code><code class="delphi plain">Style + [fsBold];</code></div><div class="line number17 index16 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">TargetCanvas</code><code class="delphi value">.</code><code class="delphi plain">Font</code><code class="delphi value">.</code><code class="delphi plain">Color := clRed;</code></div><div class="line number18 index17 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number19 index18 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number20 index19 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number21 index20 alt2"><code class="delphi keyword">end</code><code class="delphi plain">;</code></div></div></td></tr></tbody></table></div></div>
+<p>&nbsp;</p>
+<p style="text-align: justify">&nbsp;Для получения индекса иконки узла применяется событие <em>OnGetImageIndex</em>. Логика работы в событиях в целом всегда схожа. В качестве входного параметра мы получаем узел дерева PVirtualNode, используя который извлекаем соответствующие пользовательские данные. На основании этих данных, в данном случае свойства <em>NodeType </em>мы возвращаем нужный индекс рисунка. Текст всплывающей подсказки возвращается аналогично через событие <em>OnGetHint</em>.</p>
+<h4>Флажки выбора блоков отображения (checkbox)</h4>
+<p style="text-align: justify">После того как текстовые метки&nbsp;в дереве мы получили, необходимо добавить чекбоксы для выбора блоков отображения. По умолчанию дерево может показывать чекбоксы (радио-кнпки и т.п.) только в главном столбце. Таким образом, вы можете получить лишь один чекбокс для узла. В нашей задаче флажки необходимо разместить в нескольких дополнительных колонках. Дерево может функционировать в двух режимах - режим просмотра и режим редактирования. Режим редактирования (в который узел переводится автоматиечски, или с помощью вызова метода <em>EditNode()</em>) позволяет отображать произвольные редакторы для ячеек. Реализация редакторов полностью в ваших руках. Экземпляр редактора должен поддерживать интерфейс <em>IVTEditLink</em> и создается при обработке события <em>OnCreateEditor</em>. Редакторы отображаются пока узел находится в режиме редактирования.&nbsp;Как только режим снимается, редактор исчезает. Такой подход нам не подходит, т.к. для наглядности и удобства лучше наблюдать чекбоксы постоянно. Чтобы получить постоянно видимые чекбоксы потребуется нарисовать их вручную. Сложности это&nbsp;не представляет, особенно в последних версиях Delphi, используя <em>TStyleServices</em>. Конечно, у чекбоксов достаточно много различных визуальных состояний. Помимо checked/unchecked чекбокс выглядит по разному при наведении мыши и т.п., но для простоты я использовал только эти два.</p>
+<p style="text-align: justify">Итак, в для двух состояний чебокса нам необходимо иметь детали их отрисовки,&nbsp;и размеры чекбоса. Чтобы не извлекать их при каждой отрисовке, извлечем их при запуске приложения.</p>
+<div><div id="highlighter_419717" class="syntaxhighlighter  delphi"><div class="toolbar"><span><a href="http://teran.karelia.pro/articles/item_5845.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FCBSize : TSize;</code></div><div class="line number2 index1 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FCBDetails : </code><code class="delphi keyword">array</code><code class="delphi plain">[</code><code class="delphi keyword">boolean</code><code class="delphi plain">] </code><code class="delphi keyword">of</code> <code class="delphi plain">TThemedElementDetails;</code></div><div class="line number3 index2 alt2"><code class="delphi plain">...</code></div><div class="line number4 index3 alt1"><code class="delphi keyword">procedure</code> <code class="delphi plain">TManageSourcesForm</code><code class="delphi value">.</code><code class="delphi plain">InitCheckBoxDrawing();</code></div><div class="line number5 index4 alt2"><code class="delphi keyword">begin</code></div><div class="line number6 index5 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">with</code> <code class="delphi plain">TStyleManager</code><code class="delphi value">.</code><code class="delphi plain">ActiveStyle </code><code class="delphi keyword">do</code> <code class="delphi keyword">begin</code></div><div class="line number7 index6 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FCBDetails[</code><code class="delphi keyword">true</code><code class="delphi plain">]&nbsp; := GetElementDetails(tbCheckBoxCheckedNormal);</code></div><div class="line number8 index7 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FCBDetails[</code><code class="delphi keyword">false</code><code class="delphi plain">] := GetElementDetails(tbCheckBoxUncheckedNormal);</code></div><div class="line number9 index8 alt2">&nbsp;</div><div class="line number10 index9 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">GetElementSize(canvas</code><code class="delphi value">.</code><code class="delphi plain">Handle, FCBdetails[</code><code class="delphi keyword">true</code><code class="delphi plain">], esActual, FCBSize);</code></div><div class="line number11 index10 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number12 index11 alt1"><code class="delphi keyword">end</code><code class="delphi plain">;</code></div></div></td></tr></tbody></table></div></div>
+<p style="text-align: justify">Теперь, используя событие <em>OnAfterCellPaint</em>, можем нарисовать чекбоксы в нужных ячейках (FDEColRange - диапазон ячеек для чекбоксов). Ячейки следует рисовать только для источников, поэтому узлы категорий пропускаем.&nbsp;Для каждого чекбокса необходимо определить его состояние, которое задается битовой маской. Также необходимо центрировать прямоугольник отрисовки в ячейке в зависимости от разницы между высотой ячейки и размерами самого чекбокса. Сама отрисовка чекбокса делается весьма просто. Необходимо лишь вызвать метод <em>TSyleManager.ActiveStyle.DrawElement()</em> с нужными параметрами - на чем рисовать,&nbsp;что рисовать,&nbsp;и в каком месте.</p>
+<div><div id="highlighter_495766" class="syntaxhighlighter  delphi"><div class="toolbar"><span><a href="http://teran.karelia.pro/articles/item_5845.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div><div class="line number19 index18 alt2">19</div><div class="line number20 index19 alt1">20</div><div class="line number21 index20 alt2">21</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="delphi keyword">procedure</code> <code class="delphi plain">TManageSourcesForm</code><code class="delphi value">.</code><code class="delphi plain">SourcesTreeAfterCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;</code></div><div class="line number2 index1 alt1"><code class="delphi spaces">&nbsp;&nbsp;</code><code class="delphi plain">Column: TColumnIndex; CellRect: TRect);</code></div><div class="line number3 index2 alt2"><code class="delphi keyword">var</code> <code class="delphi plain">data : PSourceNode;</code></div><div class="line number4 index3 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">dy : </code><code class="delphi keyword">integer</code><code class="delphi plain">;</code></div><div class="line number5 index4 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">mflag : </code><code class="delphi keyword">integer</code><code class="delphi plain">;</code></div><div class="line number6 index5 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">checked : </code><code class="delphi keyword">boolean</code><code class="delphi plain">;</code></div><div class="line number7 index6 alt2"><code class="delphi keyword">begin</code></div><div class="line number8 index7 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi keyword">not</code> <code class="delphi plain">(column </code><code class="delphi keyword">in</code> <code class="delphi plain">FDEColRange) </code><code class="delphi keyword">then</code> <code class="delphi plain">exit;</code></div><div class="line number9 index8 alt2">&nbsp;</div><div class="line number10 index9 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">data := sender</code><code class="delphi value">.</code><code class="delphi plain">GetNodeData(node);</code></div><div class="line number11 index10 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi plain">data</code><code class="delphi value">.</code><code class="delphi plain">NodeType &lt;&gt; ntSource </code><code class="delphi keyword">then</code> <code class="delphi plain">exit;</code></div><div class="line number12 index11 alt1">&nbsp;</div><div class="line number13 index12 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">mflag := column - </code><code class="delphi value">1</code><code class="delphi plain">;</code></div><div class="line number14 index13 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">checked := mflag </code><code class="delphi keyword">in</code> <code class="delphi plain">TIntegerSet(data</code><code class="delphi value">.</code><code class="delphi plain">DEMask);</code></div><div class="line number15 index14 alt2">&nbsp;</div><div class="line number16 index15 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">dy := (CellRect</code><code class="delphi value">.</code><code class="delphi plain">Height - FCBSize</code><code class="delphi value">.</code><code class="delphi plain">Height) </code><code class="delphi keyword">div</code> <code class="delphi value">2</code><code class="delphi plain">;</code></div><div class="line number17 index16 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">inc(CellRect</code><code class="delphi value">.</code><code class="delphi plain">Top,&nbsp;&nbsp;&nbsp; dy);</code></div><div class="line number18 index17 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">CellRect</code><code class="delphi value">.</code><code class="delphi plain">Bottom := Cellrect</code><code class="delphi value">.</code><code class="delphi plain">Top + FCBSize</code><code class="delphi value">.</code><code class="delphi plain">cy;</code></div><div class="line number19 index18 alt2">&nbsp;</div><div class="line number20 index19 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">TStyleManager</code><code class="delphi value">.</code><code class="delphi plain">ActiveStyle</code><code class="delphi value">.</code><code class="delphi plain">DrawElement(TargetCanvas</code><code class="delphi value">.</code><code class="delphi plain">Handle, FCBDetails[checked], CellRect);</code></div><div class="line number21 index20 alt2"><code class="delphi keyword">end</code><code class="delphi plain">;</code></div></div></td></tr></tbody></table></div></div>
+<p style="text-align: justify">&nbsp;После того как флажки нарисованы,&nbsp;требуется обработать клик мыши по флажку. Делается это весьма просто. Необходимо написать обработчик события клика в узел. Зная узел и номер столбца, в которые был совершен клик (информация из HitInfo), мы можем получить прямоугольник этой ячейки (<em>GetDisplayRect</em>). Зная механизм расположения чекбокса в этом прямоугольнике мы можем определить, был ли совершен клик в чекбокс,&nbsp;или вне его:.</p>
+<div><div id="highlighter_104003" class="syntaxhighlighter  delphi"><div class="toolbar"><span><a href="http://teran.karelia.pro/articles/item_5845.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div><div class="line number19 index18 alt2">19</div><div class="line number20 index19 alt1">20</div><div class="line number21 index20 alt2">21</div><div class="line number22 index21 alt1">22</div><div class="line number23 index22 alt2">23</div><div class="line number24 index23 alt1">24</div><div class="line number25 index24 alt2">25</div><div class="line number26 index25 alt1">26</div><div class="line number27 index26 alt2">27</div><div class="line number28 index27 alt1">28</div><div class="line number29 index28 alt2">29</div><div class="line number30 index29 alt1">30</div><div class="line number31 index30 alt2">31</div><div class="line number32 index31 alt1">32</div><div class="line number33 index32 alt2">33</div><div class="line number34 index33 alt1">34</div><div class="line number35 index34 alt2">35</div><div class="line number36 index35 alt1">36</div><div class="line number37 index36 alt2">37</div><div class="line number38 index37 alt1">38</div><div class="line number39 index38 alt2">39</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="delphi keyword">procedure</code> <code class="delphi plain">TManageSourcesForm</code><code class="delphi value">.</code><code class="delphi plain">SourcesTreeNodeClick(Sender: TBaseVirtualTree; </code><code class="delphi keyword">const</code> <code class="delphi plain">HitInfo: THitInfo);</code></div><div class="line number2 index1 alt1"><code class="delphi keyword">var</code> <code class="delphi plain">data : PSourceNode;</code></div><div class="line number3 index2 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">im : TIntegerSet;</code></div><div class="line number4 index3 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">mPos : </code><code class="delphi keyword">integer</code><code class="delphi plain">;</code></div><div class="line number5 index4 alt2">&nbsp;</div><div class="line number6 index5 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">MousePos : TPoint;</code></div><div class="line number7 index6 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">cbRect, cellRect : TRect;</code></div><div class="line number8 index7 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">dy,dx : </code><code class="delphi keyword">integer</code><code class="delphi plain">;</code></div><div class="line number9 index8 alt2"><code class="delphi keyword">begin</code></div><div class="line number10 index9 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">data := sender</code><code class="delphi value">.</code><code class="delphi plain">GetNodeData(hitinfo</code><code class="delphi value">.</code><code class="delphi plain">HitNode);</code></div><div class="line number11 index10 alt2">&nbsp;</div><div class="line number12 index11 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi keyword">not</code> <code class="delphi plain">(hiOnItemRight </code><code class="delphi keyword">in</code> <code class="delphi plain">HitInfo</code><code class="delphi value">.</code><code class="delphi plain">HitPositions) </code><code class="delphi keyword">then</code> <code class="delphi plain">exit;</code></div><div class="line number13 index12 alt2">&nbsp;</div><div class="line number14 index13 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi plain">hitINfo</code><code class="delphi value">.</code><code class="delphi plain">HitColumn </code><code class="delphi keyword">in</code> <code class="delphi plain">FDEColRange </code><code class="delphi keyword">then</code> <code class="delphi keyword">begin</code></div><div class="line number15 index14 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">mousePos := SourcesTree</code><code class="delphi value">.</code><code class="delphi plain">ScreenToClient(mouse</code><code class="delphi value">.</code><code class="delphi plain">CursorPos);</code></div><div class="line number16 index15 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">CellRect := SourcesTree</code><code class="delphi value">.</code><code class="delphi plain">GetDisplayRect(hitInfo</code><code class="delphi value">.</code><code class="delphi plain">HitNode, hitInfo</code><code class="delphi value">.</code><code class="delphi plain">HitColumn, </code><code class="delphi keyword">false</code><code class="delphi plain">);</code></div><div class="line number17 index16 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">cbRect&nbsp;&nbsp; := CellRect;</code></div><div class="line number18 index17 alt1">&nbsp;</div><div class="line number19 index18 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">dy := (CellRect</code><code class="delphi value">.</code><code class="delphi plain">Height - FCBSize</code><code class="delphi value">.</code><code class="delphi plain">Height ) </code><code class="delphi keyword">div</code> <code class="delphi value">2</code><code class="delphi plain">;</code></div><div class="line number20 index19 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">inc(cbRect</code><code class="delphi value">.</code><code class="delphi plain">Top, dy);</code></div><div class="line number21 index20 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">cbRect</code><code class="delphi value">.</code><code class="delphi plain">Bottom := cbRect</code><code class="delphi value">.</code><code class="delphi plain">Top + FCBSize</code><code class="delphi value">.</code><code class="delphi plain">cy;</code></div><div class="line number22 index21 alt1">&nbsp;</div><div class="line number23 index22 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">dx := (CellRect</code><code class="delphi value">.</code><code class="delphi plain">Width - FCBSize</code><code class="delphi value">.</code><code class="delphi plain">Width) </code><code class="delphi keyword">div</code> <code class="delphi value">2</code><code class="delphi plain">;</code></div><div class="line number24 index23 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">inc(cbRect</code><code class="delphi value">.</code><code class="delphi plain">Left, dx);</code></div><div class="line number25 index24 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">cbRect</code><code class="delphi value">.</code><code class="delphi plain">Right := cbRect</code><code class="delphi value">.</code><code class="delphi plain">Left + FCBSize</code><code class="delphi value">.</code><code class="delphi plain">cx;</code></div><div class="line number26 index25 alt1">&nbsp;</div><div class="line number27 index26 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi keyword">not</code> <code class="delphi plain">cbRect</code><code class="delphi value">.</code><code class="delphi plain">Contains(mousePos) </code><code class="delphi keyword">then</code></div><div class="line number28 index27 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">exit;</code></div><div class="line number29 index28 alt2">&nbsp;</div><div class="line number30 index29 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">mPos := HitInfo</code><code class="delphi value">.</code><code class="delphi plain">HitColumn - </code><code class="delphi value">1</code><code class="delphi plain">;</code></div><div class="line number31 index30 alt2">&nbsp;</div><div class="line number32 index31 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi plain">data</code><code class="delphi value">.</code><code class="delphi plain">NodeType &lt;&gt; ntSource </code><code class="delphi keyword">then</code></div><div class="line number33 index32 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">exit;</code></div><div class="line number34 index33 alt1">&nbsp;</div><div class="line number35 index34 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">data</code><code class="delphi value">.</code><code class="delphi plain">DEMask := data</code><code class="delphi value">.</code><code class="delphi plain">DEMask </code><code class="delphi keyword">xor</code> <code class="delphi plain">(</code><code class="delphi value">1</code> <code class="delphi keyword">shl</code> <code class="delphi plain">mPos);</code></div><div class="line number36 index35 alt1">&nbsp;</div><div class="line number37 index36 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">sender</code><code class="delphi value">.</code><code class="delphi plain">InvalidateNode(hitinfo</code><code class="delphi value">.</code><code class="delphi plain">HitNode);</code></div><div class="line number38 index37 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number39 index38 alt2"><code class="delphi keyword">end</code><code class="delphi plain">;</code></div></div></td></tr></tbody></table></div></div>
+<p>Дле перерисовки чекбокса следует перерисовать узел целиком, вызвав метод <em>InvalidateNode()</em>.</p>
+<h4>Перемещение узлов</h4>
+<p style="text-align: justify">Для данной конкретной задачи при перемещении узлов есть несколько ограничений. Во первых, мы можем перемещать только источники,&nbsp;но не категории. Во вторых - источники мы можем перемещать только в категорию отличную от текущей категории источника. На уровне БД&nbsp;это означает изменение ID категории в таблице источников. Для учета таких ограничений, нам следует выбрать ручной режим Drag&amp;Drop. Снала следует определить, можно ли вообще перемещать узел (категория или источник). Для этих целей используем событие OnDragAllowed. Параметр Allowed - выходной, определяющий разрешено ли перемещение, будет зависеть от типа нашего узла.</p>
+<p style="text-align: justify">Далее&nbsp;-&nbsp;сам процесс перемещения. Когда мы тащим узел, следует определить можем ли мы его бросить в данный момент. Перетскаивая источник, мы можем его бросить только на "не свою" категорию. За процесс перетаскивание отвеачает событие <em>OnDragOver</em>:</p>
+<div><div id="highlighter_322799" class="syntaxhighlighter  delphi"><div class="toolbar"><span><a href="http://teran.karelia.pro/articles/item_5845.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="delphi keyword">var</code> <code class="delphi plain">dropNode, dragNode : PSourceNode;</code></div><div class="line number2 index1 alt1"><code class="delphi keyword">begin</code></div><div class="line number3 index2 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi keyword">not</code> <code class="delphi plain">Assigned(sender</code><code class="delphi value">.</code><code class="delphi plain">DropTargetNode) </code><code class="delphi keyword">then</code> <code class="delphi plain">exit;</code></div><div class="line number4 index3 alt1">&nbsp;</div><div class="line number5 index4 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">dropNode := sender</code><code class="delphi value">.</code><code class="delphi plain">GetNodeData(sender</code><code class="delphi value">.</code><code class="delphi plain">DropTargetNode);</code></div><div class="line number6 index5 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">dragNode := sender</code><code class="delphi value">.</code><code class="delphi plain">GetNodeData(sender</code><code class="delphi value">.</code><code class="delphi plain">GetSortedSelection(</code><code class="delphi keyword">true</code><code class="delphi plain">)[</code><code class="delphi value">0</code><code class="delphi plain">]);</code></div><div class="line number7 index6 alt2">&nbsp;</div><div class="line number8 index7 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">Accept := (dropNode</code><code class="delphi value">.</code><code class="delphi plain">NodeType = ntCategory) </code><code class="delphi keyword">and</code> <code class="delphi plain">(dragNode</code><code class="delphi value">.</code><code class="delphi plain">CategoryId &lt;&gt; dropNode</code><code class="delphi value">.</code><code class="delphi plain">ID);</code></div><div class="line number9 index8 alt2"><code class="delphi keyword">end</code><code class="delphi plain">;</code></div></div></td></tr></tbody></table></div></div>
+<p style="text-align: justify">И последние - отпускание узла и его перемещение. Когда DragOver вернул <em>Accept = true</em> и мы отпустили мышь возникает событие <em>OnDragDrop</em>. Здесь нам требуется определить эффект перетаскавания (перемещение, копирование и&nbsp; т.п.), переместить узел, изменить ID категории в пользовательской структуре данных:</p>
+<div><div id="highlighter_268779" class="syntaxhighlighter  delphi"><div class="toolbar"><span><a href="http://teran.karelia.pro/articles/item_5845.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="delphi keyword">var</code> <code class="delphi plain">nodes : TNodeArray;</code></div><div class="line number2 index1 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">d, cat : PSourceNode;</code></div><div class="line number3 index2 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">i : </code><code class="delphi keyword">integer</code><code class="delphi plain">;</code></div><div class="line number4 index3 alt1"><code class="delphi keyword">begin</code></div><div class="line number5 index4 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi keyword">not</code> <code class="delphi plain">(Source </code><code class="delphi keyword">is</code> <code class="delphi plain">TVirtualStringTree) </code><code class="delphi keyword">then</code> <code class="delphi plain">exit;</code></div><div class="line number6 index5 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">effect := DROPEFFECT_MOVE;</code></div><div class="line number7 index6 alt2">&nbsp;</div><div class="line number8 index7 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">nodes := sender</code><code class="delphi value">.</code><code class="delphi plain">GetSortedSelection(</code><code class="delphi keyword">true</code><code class="delphi plain">);</code></div><div class="line number9 index8 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">cat := SourcesTree</code><code class="delphi value">.</code><code class="delphi plain">GetNodeData(SourcesTree</code><code class="delphi value">.</code><code class="delphi plain">DropTargetNode);</code></div><div class="line number10 index9 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">for</code> <code class="delphi plain">i := </code><code class="delphi value">0</code> <code class="delphi keyword">to</code> <code class="delphi plain">high(nodes) </code><code class="delphi keyword">do</code> <code class="delphi keyword">begin</code></div><div class="line number11 index10 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">sender</code><code class="delphi value">.</code><code class="delphi plain">MoveTo(nodes[i], SourcesTree</code><code class="delphi value">.</code><code class="delphi plain">DropTargetNode, amAddChildFirst, </code><code class="delphi keyword">false</code><code class="delphi plain">);</code></div><div class="line number12 index11 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">d := sender</code><code class="delphi value">.</code><code class="delphi plain">GetNodeData(nodes[i]);</code></div><div class="line number13 index12 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">d</code><code class="delphi value">.</code><code class="delphi plain">CategoryId := cat</code><code class="delphi value">.</code><code class="delphi plain">ID;</code></div><div class="line number14 index13 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number15 index14 alt2"><code class="delphi keyword">end</code><code class="delphi plain">;</code></div></div></td></tr></tbody></table></div></div>
+<h4>&nbsp;Добавление&nbsp; узла</h4>
+<p style="text-align: justify">&nbsp;Панель инструментов позволяет создавать, редактировать, удалять, перемещать и объединять узлы. Эти операции сами по себе достаточно просты. Для добавления узла нам необходимо взять текущий выделенный узел, определить в какой категории он находится, и создать в ней новый узел, по аналогии с изначальным заполнением дерева. ID источника при этом установим в -1, что для обработчика события OnNodeChanged будет обозначать, что узел добавлен, а не изменен:</p>
+<div><div id="highlighter_293350" class="syntaxhighlighter  delphi"><div class="toolbar"><span><a href="http://teran.karelia.pro/articles/item_5845.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div><div class="line number19 index18 alt2">19</div><div class="line number20 index19 alt1">20</div><div class="line number21 index20 alt2">21</div><div class="line number22 index21 alt1">22</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="delphi keyword">procedure</code> <code class="delphi plain">TManageSourcesForm</code><code class="delphi value">.</code><code class="delphi plain">AddSourceButtonClick(Sender: TObject);</code></div><div class="line number2 index1 alt1"><code class="delphi keyword">var</code> <code class="delphi plain">d, nps : PSourceNode;</code></div><div class="line number3 index2 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">catId : </code><code class="delphi keyword">integer</code><code class="delphi plain">;</code></div><div class="line number4 index3 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">targetNode, newNode : PVirtualNode;</code></div><div class="line number5 index4 alt2"><code class="delphi keyword">begin</code></div><div class="line number6 index5 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">targetNode := SourcesTree</code><code class="delphi value">.</code><code class="delphi plain">FocusedNode;</code></div><div class="line number7 index6 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi keyword">not</code> <code class="delphi plain">Assigned(targetNode) </code><code class="delphi keyword">then</code> <code class="delphi plain">exit;</code></div><div class="line number8 index7 alt1">&nbsp;</div><div class="line number9 index8 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">d := sourcesTree</code><code class="delphi value">.</code><code class="delphi plain">GetNodeData(targetNode);</code></div><div class="line number10 index9 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi plain">d</code><code class="delphi value">.</code><code class="delphi plain">NodeType = ntSource </code><code class="delphi keyword">then</code> <code class="delphi keyword">begin</code></div><div class="line number11 index10 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">targetNode := targetNode</code><code class="delphi value">.</code><code class="delphi plain">Parent;</code></div><div class="line number12 index11 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">d := sourcesTree</code><code class="delphi value">.</code><code class="delphi plain">GetNodeData(targetNode);</code></div><div class="line number13 index12 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number14 index13 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">catId := d</code><code class="delphi value">.</code><code class="delphi plain">ID;</code></div><div class="line number15 index14 alt2">&nbsp;</div><div class="line number16 index15 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">newNode := SourcesTree</code><code class="delphi value">.</code><code class="delphi plain">AddChild(TargetNode);</code></div><div class="line number17 index16 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">nps := SourcesTree</code><code class="delphi value">.</code><code class="delphi plain">GetNodeData(newNode);</code></div><div class="line number18 index17 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">nps</code><code class="delphi value">.</code><code class="delphi plain">InitSourceNode(-</code><code class="delphi value">1</code><code class="delphi plain">, </code><code class="delphi string">'Новый источник'</code><code class="delphi plain">, catId, DEFAULT_CATEGORY_MASK);</code></div><div class="line number19 index18 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">nps</code><code class="delphi value">.</code><code class="delphi plain">OnNodeChanged := SourceNodeChanged;</code></div><div class="line number20 index19 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">SourcesTree</code><code class="delphi value">.</code><code class="delphi plain">FocusedNode := newNode;</code></div><div class="line number21 index20 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">SourcesTree</code><code class="delphi value">.</code><code class="delphi plain">EditNode(newNode, </code><code class="delphi value">0</code><code class="delphi plain">);</code></div><div class="line number22 index21 alt1"><code class="delphi keyword">end</code><code class="delphi plain">;</code></div></div></td></tr></tbody></table></div></div>
+<p style="text-align: justify">После добавления узла переводим фокус на него,&nbsp;и включаем режим редактирования. Редактирование осуществляется еще проще. Если узел - источник, то просто вызываем <em>EditNode()</em>. Новоое значение загловка из главного столбца можно получить с&nbsp;помощью события <em>OnNewText</em>.&nbsp;В&nbsp;случае удаления&nbsp;необходимо удалить узел из дерева - <em>DeleteNode()</em>, и удалить его из БД. Причем провести эти действия в обратном порядке, чтобы не удалить узел из дерева раньше времени, в случае если удаление записи из БД вызовет исключение.</p>
+<p style="text-align: justify">Объединение узлов операция специфическая,&nbsp;ибо будет зависеть скорее от БД. С точки зрения интерфейса в моем случае это реализовано слеудющим образом: пользователь выбирает какой-нибудь узел, жмет кнопку объединения. При этом свойство/поле формы JoinMode/FJoinMode устанавливается в значение true. Кнопка фиксируется в "нажатом" состоянии. Цвет выбранной строки изменяется (фон, шрифт). Выбранный узел запоминается в FJoinTarget (это узел, которому будет присоединен другой источник). Далее пользователь должен выбрать второй источник (который будет в дальнешем удален). Обработчик клика в узел <em>OnNodeClick </em>получает дополнительный функционал: если <em>FJoinMode </em>установлен в <em>true</em>, и выбранный узел - источник, а не категория, то выполняется слияние. JoinMode устанавливается в <em>false</em>, цвета возвращаются в исходные. Выглядит это как то так:</p>
+<p style="text-align: center"><img alt="" width="437" height="198" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/5847-original.png"></p>
+<p>&nbsp;</p>
+<h4>Обновление данных в БД</h4>
+<p>Как я отмечал в начале статьи, при измении любого из свойств <em>Caption, CategoryId, Mask </em>пользовательско структуры <em>TSourceNode </em>вызывается обработчик события <em>OnNodeChagned</em>. Обработчик этот имеет весьма простой вид. Все что от него требуется - перевести набор данных <em>SourcesQuery&nbsp;</em>&nbsp;в нужное состояние - <em>Insert</em> или <em>Edit</em>. Далее изменить значения полей и выполнить Post() для обновления данных в БД. В случе если узел создавался,&nbsp;то вернуть созданный ID:</p>
+<div><div id="highlighter_184687" class="syntaxhighlighter  delphi"><div class="toolbar"><span><a href="http://teran.karelia.pro/articles/item_5845.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div><div class="line number19 index18 alt2">19</div><div class="line number20 index19 alt1">20</div><div class="line number21 index20 alt2">21</div><div class="line number22 index21 alt1">22</div><div class="line number23 index22 alt2">23</div><div class="line number24 index23 alt1">24</div><div class="line number25 index24 alt2">25</div><div class="line number26 index25 alt1">26</div><div class="line number27 index26 alt2">27</div><div class="line number28 index27 alt1">28</div><div class="line number29 index28 alt2">29</div><div class="line number30 index29 alt1">30</div><div class="line number31 index30 alt2">31</div><div class="line number32 index31 alt1">32</div><div class="line number33 index32 alt2">33</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="delphi keyword">procedure</code> <code class="delphi plain">TManageSourcesForm</code><code class="delphi value">.</code><code class="delphi plain">SourceNodeChanged(Sender: PSourceNode);</code></div><div class="line number2 index1 alt1"><code class="delphi keyword">var</code> <code class="delphi plain">isNew : </code><code class="delphi keyword">boolean</code><code class="delphi plain">;</code></div><div class="line number3 index2 alt2"><code class="delphi keyword">begin</code></div><div class="line number4 index3 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">with</code> <code class="delphi plain">SourcesQuery </code><code class="delphi keyword">do</code> <code class="delphi keyword">begin</code></div><div class="line number5 index4 alt2">&nbsp;</div><div class="line number6 index5 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">isNew := (sender</code><code class="delphi value">.</code><code class="delphi plain">ID = -</code><code class="delphi value">1</code><code class="delphi plain">);</code></div><div class="line number7 index6 alt2">&nbsp;</div><div class="line number8 index7 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code>&nbsp; <code class="delphi plain">isNew </code><code class="delphi keyword">then</code></div><div class="line number9 index8 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">Insert()</code></div><div class="line number10 index9 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">else</code> <code class="delphi keyword">begin</code></div><div class="line number11 index10 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi keyword">not</code> <code class="delphi plain">Locate(</code><code class="delphi string">'id'</code><code class="delphi plain">, sender</code><code class="delphi value">.</code><code class="delphi plain">ID, []) </code><code class="delphi keyword">then</code> <code class="delphi plain">exit;</code></div><div class="line number12 index11 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">Edit();</code></div><div class="line number13 index12 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number14 index13 alt1">&nbsp;</div><div class="line number15 index14 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">try</code></div><div class="line number16 index15 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FieldByName(</code><code class="delphi string">'name'</code><code class="delphi plain">).AsString := sender</code><code class="delphi value">.</code><code class="delphi plain">Caption;</code></div><div class="line number17 index16 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FieldByName(</code><code class="delphi string">'deCategoryMask'</code><code class="delphi plain">).AsInteger := sender</code><code class="delphi value">.</code><code class="delphi plain">DEMask;</code></div><div class="line number18 index17 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FieldByName(</code><code class="delphi string">'category_id'</code><code class="delphi plain">).AsInteger&nbsp;&nbsp;&nbsp; := sender</code><code class="delphi value">.</code><code class="delphi plain">CategoryId;</code></div><div class="line number19 index18 alt2">&nbsp;</div><div class="line number20 index19 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">Post();</code></div><div class="line number21 index20 alt2">&nbsp;</div><div class="line number22 index21 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi plain">isNew </code><code class="delphi keyword">then</code> <code class="delphi keyword">begin</code></div><div class="line number23 index22 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">sender</code><code class="delphi value">.</code><code class="delphi plain">ID := FieldByName(</code><code class="delphi string">'id'</code><code class="delphi plain">).AsInteger;</code></div><div class="line number24 index23 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number25 index24 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">except</code></div><div class="line number26 index25 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">on</code> <code class="delphi plain">e : Exception </code><code class="delphi keyword">do</code> <code class="delphi keyword">begin</code></div><div class="line number27 index26 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">Cancel();</code></div><div class="line number28 index27 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">MessageDlg(</code><code class="delphi string">'Произошла ошибка при изменении узла'</code><code class="delphi plain">#</code><code class="delphi value">13</code> <code class="delphi plain">+</code></div><div class="line number29 index28 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">e</code><code class="delphi value">.</code><code class="delphi plain">ClassName + </code><code class="delphi string">' '</code> <code class="delphi plain">+ e</code><code class="delphi value">.</code><code class="delphi plain">Message, mtError, [mbOk],</code><code class="delphi value">0</code><code class="delphi plain">);</code></div><div class="line number30 index29 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number31 index30 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number32 index31 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number33 index32 alt2"><code class="delphi keyword">end</code><code class="delphi plain">;</code></div></div></td></tr></tbody></table></div></div>
+<h4>Заключение</h4>
+<p style="text-align: justify">История развития этого компонента в 3 раза дольше чем мой опыт программирования в Delphi. Из-за существующих пробелов в документации может быть сложновато осваивать работу с компонентом, тем не менее основные принципы описаны.&nbsp;Google обычно может направить вас в верном направлении, например, мне было не совсем очеивден способ, как создать чекбоксы в дополнительных колонках. Немножко поискав,&nbsp;понмимаешь, что приедтся рисовать их самому. Хотелось бы конечно, чтобы дерево могло строиться самостоятельно, используя набор данных. Но здесь компонент сохраняет свой нейтралитет и истинную виртуальность по отношению к данным, оставляя вам просто для творчества. В целом, поняв идеологию работы, использование компонента становится весьма простым.</p>
+</div>
+
+
+
+
+
+	<div class="tags">
+	Метки:&nbsp;
+		<a href="http://teran.karelia.pro/tags/VirualTreeView">VirualTreeView</a>&nbsp;
+			</div>
+
+<div style="padding-top:10px;">
+  <div style="margin-bottom:10px;border-bottom: dotted 1px #555;"><h3>Комментарии</h3></div>
+
+  <div class="comments" id="comments">  	
+    
+  	<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/article_comments.js"></script>
+
+	
+	<div class="post_comment comment_even" id="comment-5856">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/26a6ecc69db33059b0cdcc6aeb95c086" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							Анатолий Краснов
+			<br>
+			30.01.2013 в 18:23
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		Если внимательно почитать документацию, то на OnFreeNode необходимо еще проделать ряд действий. Во всяком случае в Вашем случае необходимо сделать присвоение строкам пустых значений. Например:<br>
+title :='';<br>
+Иначе получите утечку памяти. Маленькую, но утечку :)
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5856);">Ответить</a></div>
+				
+		<div id="comment_5856">
+		</div>		
+					<div style="padding-top:5px;">
+			<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/article_comments.js"></script>
+
+	
+	<div class="post_comment comment_odd" id="comment-5857">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/349181eae95f0ef2706bcad895118455" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							<a href="http://teran.karelia.pro/" target="_blank">teran</a>
+			<br>
+			30.01.2013 в 18:19
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		<p>честно сказать посмотрел документацию, ничего кроме</p><br>
+<blockquote>You should however finalize the data in such a case if it contains references to external memory objects (e.g. variants, strings, interfaces).</blockquote><br>
+<p>там не нашел. следующий код, в ХЕ2 об утечках не рапортует, а я так понимаю в VST механизм примерно такой же.</p><br>
+<div><div id="highlighter_686882" class="syntaxhighlighter  delphi"><div class="toolbar"><span><a href="http://teran.karelia.pro/articles/item_5845.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="delphi keyword">program</code> <code class="delphi plain">Project4;</code></div><div class="line number2 index1 alt1"><code class="delphi color1">{$APPTYPE CONSOLE}</code></div><div class="line number3 index2 alt2"><code class="delphi keyword">type</code></div><div class="line number4 index3 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">TTest = </code><code class="delphi keyword">record</code></div><div class="line number5 index4 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">value : </code><code class="delphi keyword">string</code><code class="delphi plain">;</code></div><div class="line number6 index5 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number7 index6 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">PTest = ^TTest;</code></div><div class="line number8 index7 alt1"><code class="delphi keyword">var</code> <code class="delphi plain">p : PTest;</code></div><div class="line number9 index8 alt2"><code class="delphi keyword">begin</code></div><div class="line number10 index9 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">ReportMemoryLeaksOnShutdown := </code><code class="delphi keyword">true</code><code class="delphi plain">;</code></div><div class="line number11 index10 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">p := AllocMem(sizeof(TTest));</code></div><div class="line number12 index11 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">p</code><code class="delphi value">.</code><code class="delphi plain">value := </code><code class="delphi string">'qwe'</code><code class="delphi plain">;</code></div><div class="line number13 index12 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">Dispose(p);</code></div><div class="line number14 index13 alt1"><code class="delphi keyword">end</code><code class="delphi plain">.</code></div></div></td></tr></tbody></table></div></div>
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5857);">Ответить</a></div>
+				
+		<div id="comment_5857">
+		</div>		
+					<div style="padding-top:5px;">
+			<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/article_comments.js"></script>
+
+	
+	<div class="post_comment comment_even" id="comment-5859">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/97abe1f5bd643e5be80a99f72f87e27a" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							<a href="http://preferansgame.com/" target="_blank">Smike</a>
+			<br>
+			30.01.2013 в 21:45
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		Строки освобождаются автоматически. Но... при завершении программы :) Поэтому ReportMemoryLeaksOnShutdown не работает. Но лик есть, я тоже помню, что при работе с VirtualTreeView строки нужно было принудительно освобождать.
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5859);">Ответить</a></div>
+				
+		<div id="comment_5859">
+		</div>		
+					<div style="padding-top:5px;">
+			<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/article_comments.js"></script>
+
+	
+	<div class="post_comment comment_odd" id="comment-5860">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/349181eae95f0ef2706bcad895118455" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							<a href="http://teran.karelia.pro/" target="_blank">teran</a>
+			<br>
+			30.01.2013 в 23:31
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		так-то при завершении программы освобождается вообще все что менеджер памяти навыделял (: так что в таком случае ReportMemoryLeaks вообще никогда не рапортовал бы об утечках. В данном случае если освободить с FreeMem то утечка будет. Если же перед вызовом FreeMem сделать строку пустой, то утечки нет, о чем речь и шла.<br>
+Так что выходит либо <em>Dispose(p)</em> либо <em>p.value := ''; FreeMem(p);</em>
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5860);">Ответить</a></div>
+				
+		<div id="comment_5860">
+		</div>		
+				
+	</div>
+			</div>
+				
+	</div>
+			</div>
+				
+	</div>
+	
+	<div class="post_comment comment_even" id="comment-5858">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/349181eae95f0ef2706bcad895118455" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							<a href="http://teran.karelia.pro/" target="_blank">teran</a>
+			<br>
+			30.01.2013 в 18:34
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		Вообще говоря в паре с Alloc следовало бы использовать FreeMem, но как пишут тут http://stackoverflow.com/a/5530577/1216425 как раз таки и следует использовать dispose для избежания утечек в т.ч. со строками.
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5858);">Ответить</a></div>
+				
+		<div id="comment_5858">
+		</div>		
+				
+	</div>
+			</div>
+				
+	</div>
+	
+	<div class="post_comment comment_odd" id="comment-5861">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/26a6ecc69db33059b0cdcc6aeb95c086" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							Анатолий Краснов
+			<br>
+			31.01.2013 в 10:32
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		&gt;&gt;честно сказать посмотрел документацию, ничего кроме<br>
+Место в документации я конечно не помню, но там есть пример как раз со строками.<br>
+Правда здесь в комментариях все уже обсудили :) Действительно утечка будет на FreeMem. На Dispose не проверял, но скорее всего не будет. У меня еще утечка появляется, если использовать запись (record). Например, так:<br>
+  PNodeDataRecord = ^TNodeDataRecord;<br>
+  TNodeDataRecord = record<br>
+    FullName: string;<br>
+    ImageIndex: integer;<br>
+    SelectedIndex: integer;<br>
+    StateIndex: integer;<br>
+  end;<br>
+Если не сделать Fullname:='' - потечет :)
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5861);">Ответить</a></div>
+				
+		<div id="comment_5861">
+		</div>		
+				
+	</div>
+	
+	<div class="post_comment comment_even" id="comment-5862">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/38dd43c22b74a4e3475b88109f29d4bc" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							Кузан Дмитрий
+			<br>
+			01.02.2013 в 16:37
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		Хорошая статья по Virtual Treeview<br>
+http://delphigears.blogspot.ru/2011/08/virtual-treeview.html
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5862);">Ответить</a></div>
+				
+		<div id="comment_5862">
+		</div>		
+				
+	</div>
+	
+	<div class="post_comment comment_odd" id="comment-5870">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/51d63ee8337145f38dc79ecabf8c2e58" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							Alex Zaslav
+			<br>
+			14.02.2013 в 00:29
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		Статья понравилась. Некоторые моменты не ясны. Можете ли выложить исходник или как-то иначе, чтобы понять до конца применение VT с БД?
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5870);">Ответить</a></div>
+				
+		<div id="comment_5870">
+		</div>		
+					<div style="padding-top:5px;">
+			<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/article_comments.js"></script>
+
+	
+	<div class="post_comment comment_even" id="comment-5871">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/349181eae95f0ef2706bcad895118455" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							<a href="http://teran.karelia.pro/" target="_blank">teran</a>
+			<br>
+			14.02.2013 в 11:42
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		Исходник полностью выкладывать не буду, так как проект с работы, а не личный. <br>
+Что касается работы с БД, то пример начального заполнения дерева из датасетов был приведен (в данном случае, дерево заполняется полностью и сразу, т.к. количество узлов мало). Приведен правда только для категорий, но датасета всего два - CatagegoriesQuery &amp; SourcesQuery. Каждый пользовательский узел  хранит соответствующий ID из БД. У узла есть событие onNodeChanged, которое вызывается при смене имени, клике в чекбоксы, или перемещении узла в другую категорию (смене категории). Обработчик события имеет следующий код:<br>
+<div><div id="highlighter_307219" class="syntaxhighlighter  delphi"><div class="toolbar"><span><a href="http://teran.karelia.pro/articles/item_5845.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div><div class="line number19 index18 alt2">19</div><div class="line number20 index19 alt1">20</div><div class="line number21 index20 alt2">21</div><div class="line number22 index21 alt1">22</div><div class="line number23 index22 alt2">23</div><div class="line number24 index23 alt1">24</div><div class="line number25 index24 alt2">25</div><div class="line number26 index25 alt1">26</div><div class="line number27 index26 alt2">27</div><div class="line number28 index27 alt1">28</div><div class="line number29 index28 alt2">29</div><div class="line number30 index29 alt1">30</div><div class="line number31 index30 alt2">31</div><div class="line number32 index31 alt1">32</div><div class="line number33 index32 alt2">33</div><div class="line number34 index33 alt1">34</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="delphi keyword">procedure</code> <code class="delphi plain">TManageSourcesForm</code><code class="delphi value">.</code><code class="delphi plain">SourceNodeChanged(Sender: PSourceNode);</code></div><div class="line number2 index1 alt1"><code class="delphi keyword">var</code> <code class="delphi plain">isNew : </code><code class="delphi keyword">boolean</code><code class="delphi plain">;</code></div><div class="line number3 index2 alt2"><code class="delphi keyword">begin</code></div><div class="line number4 index3 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi keyword">not</code> <code class="delphi plain">FCanManageSources </code><code class="delphi keyword">then</code> <code class="delphi plain">exit;</code></div><div class="line number5 index4 alt2">&nbsp;</div><div class="line number6 index5 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">with</code> <code class="delphi plain">SourcesQuery </code><code class="delphi keyword">do</code> <code class="delphi keyword">begin</code></div><div class="line number7 index6 alt2">&nbsp;</div><div class="line number8 index7 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">isNew := (sender</code><code class="delphi value">.</code><code class="delphi plain">ID = -</code><code class="delphi value">1</code><code class="delphi plain">);</code></div><div class="line number9 index8 alt2">&nbsp;</div><div class="line number10 index9 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code>&nbsp; <code class="delphi plain">isNew </code><code class="delphi keyword">then</code></div><div class="line number11 index10 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">Insert()</code></div><div class="line number12 index11 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">else</code> <code class="delphi keyword">begin</code></div><div class="line number13 index12 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi keyword">not</code> <code class="delphi plain">Locate(</code><code class="delphi string">'id'</code><code class="delphi plain">, sender</code><code class="delphi value">.</code><code class="delphi plain">ID, []) </code><code class="delphi keyword">then</code> <code class="delphi plain">exit;</code></div><div class="line number14 index13 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">Edit();</code></div><div class="line number15 index14 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number16 index15 alt1">&nbsp;</div><div class="line number17 index16 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">try</code></div><div class="line number18 index17 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FieldByName(</code><code class="delphi string">'name'</code><code class="delphi plain">).AsString := sender</code><code class="delphi value">.</code><code class="delphi plain">Caption;</code></div><div class="line number19 index18 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FieldByName(</code><code class="delphi string">'deCategoryMask'</code><code class="delphi plain">).AsInteger := sender</code><code class="delphi value">.</code><code class="delphi plain">DEMask;</code></div><div class="line number20 index19 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">FieldByName(</code><code class="delphi string">'category_id'</code><code class="delphi plain">).AsInteger&nbsp;&nbsp;&nbsp; := sender</code><code class="delphi value">.</code><code class="delphi plain">CategoryId;</code></div><div class="line number21 index20 alt2">&nbsp;</div><div class="line number22 index21 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">Post();</code></div><div class="line number23 index22 alt2">&nbsp;</div><div class="line number24 index23 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">if</code> <code class="delphi plain">isNew </code><code class="delphi keyword">then</code> <code class="delphi keyword">begin</code></div><div class="line number25 index24 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">sender</code><code class="delphi value">.</code><code class="delphi plain">ID := FieldByName(</code><code class="delphi string">'id'</code><code class="delphi plain">).AsInteger;</code></div><div class="line number26 index25 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number27 index26 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">except</code></div><div class="line number28 index27 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">on</code> <code class="delphi plain">e : Exception </code><code class="delphi keyword">do</code> <code class="delphi keyword">begin</code></div><div class="line number29 index28 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">Cancel();</code></div><div class="line number30 index29 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi plain">MessageDlg(</code><code class="delphi string">'....'</code><code class="delphi plain">, mtError, [mbOk],</code><code class="delphi value">0</code><code class="delphi plain">);</code></div><div class="line number31 index30 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number32 index31 alt1"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number33 index32 alt2"><code class="delphi spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="delphi keyword">end</code><code class="delphi plain">;</code></div><div class="line number34 index33 alt1"><code class="delphi keyword">end</code><code class="delphi plain">;</code></div></div></td></tr></tbody></table></div></div><br>
+т.е. если узел новый то ID = -1, переводим датасет в режим вставки и записываем поля. Если было редактирование, то делаем Edit, и опять таки записываем поля.<br>
+Удаление делается в отдельном методе,  но там тоже ничего сложного - locate по ID и Delete().<br>
+<br>
+В общем в данном случае структура таблиц (всего две) и число записей в них делают код достаточно простым. В более сложных случаях, механизмы работы будут другими, и дерево не должно заполняться целиком сразу, а только по необходимости отобразить тот или иной узел.
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5871);">Ответить</a></div>
+				
+		<div id="comment_5871">
+		</div>		
+				
+	</div>
+			</div>
+				
+	</div>
+	
+	<div class="post_comment comment_even" id="comment-5878">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/1d4987110b56bb086667f561681cbd2e" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							<a href="http://siteedit.ru/" target="_blank">Владимир</a>
+			<br>
+			28.02.2013 в 10:24
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		<p>Все перерыл, но процедуры OnNodeChanged не нашел: procedure TManageSourcesForm.SourceNodeChanged(Sender: PSourceNode); Есть только OnChange: procedure TfmPermissions.RoleObjectTreeChange(Sender: TBaseVirtualTree; Node: PVirtualNode);</p>
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5878);">Ответить</a></div>
+				
+		<div id="comment_5878">
+		</div>		
+				
+	</div>
+	
+	<div class="post_comment comment_odd" id="comment-5879">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/1d4987110b56bb086667f561681cbd2e" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							<a href="http://siteedit.ru/" target="_blank">Владимир</a>
+			<br>
+			28.02.2013 в 11:18
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		<p>А, вижу, она у Вас в описании записи: TSourceNode = record Но, видимо, опять у меня пробел в знаниях - в теле записи (record) можно писать методы??</p>
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5879);">Ответить</a></div>
+				
+		<div id="comment_5879">
+		</div>		
+					<div style="padding-top:5px;">
+			<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/article_comments.js"></script>
+
+	
+	<div class="post_comment comment_even" id="comment-5881">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/349181eae95f0ef2706bcad895118455" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							<a href="http://teran.karelia.pro/" target="_blank">teran</a>
+			<br>
+			28.02.2013 в 11:44
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		OnNodeChanged это не процедура в данном случае а событие (т.е. событие, которое мы сами генерируем при изменении названия, маски или категории), а в от форма уже это событие обрабатывает с помощью метода SourceNodeChanged.<br>
+В целом да, записи уже достаточно давно позволяют включать процедуры и функции. В данном случае имеются 3 процедуры SetMask, SetCaption, SetCatID и еще 2 для Init*.<br>
+Вообще записи могут содержать почти все те же элементы что и классы, за исключением деструктора, конечно исключая часть с наследованием и поддержкой интерфейсов.
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5881);">Ответить</a></div>
+				
+		<div id="comment_5881">
+		</div>		
+				
+	</div>
+			</div>
+				
+	</div>
+	
+	<div class="post_comment comment_even" id="comment-5883">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/1d4987110b56bb086667f561681cbd2e" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							<a href="http://teran.karelia.pro/articles/siteedit.ru" target="_blank">Владимир</a>
+			<br>
+			01.03.2013 в 10:35
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		В delphi 2010 следующие элементы не опознаются:<br>
+TThemedElementDetails<br>
+TStyleManager<br>
+GetElementDetails<br>
+GetElementSize<br>
+<br>
+Можно ли реализовать чекбоксы в столбцах в Delphi 2010?
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5883);">Ответить</a></div>
+				
+		<div id="comment_5883">
+		</div>		
+					<div style="padding-top:5px;">
+			<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/article_comments.js"></script>
+
+	
+	<div class="post_comment comment_odd" id="comment-5884">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/349181eae95f0ef2706bcad895118455" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							<a href="http://teran.karelia.pro/" target="_blank">teran</a>
+			<br>
+			01.03.2013 в 10:18
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		TStyleManager и все остальное появилось начиная с XE2, когда ввели визуальные стили для приложения.<br>
+<br>
+конечно, в D2010 и более ранних версиях все это тоже можно сделать. Вот, например, вариант рисования чекбоксов в TStringGrid - http://stackoverflow.com/questions/5306037/how-to-set-a-checkbox-tstringgrid-in-delphi .
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5884);">Ответить</a></div>
+				
+		<div id="comment_5884">
+		</div>		
+					<div style="padding-top:5px;">
+			<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/article_comments.js"></script>
+
+	
+	<div class="post_comment comment_even" id="comment-5885">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/1d4987110b56bb086667f561681cbd2e" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							<a href="http://teran.karelia.pro/articles/siteedit.ru" target="_blank">Владимир</a>
+			<br>
+			01.03.2013 в 11:30
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		Принципы отрисовки в TStringGrid и в TVirtualStringTree те же самые? (у меня VirtualStringTree)
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5885);">Ответить</a></div>
+				
+		<div id="comment_5885">
+		</div>		
+					<div style="padding-top:5px;">
+			<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/article_comments.js"></script>
+
+	
+	<div class="post_comment comment_odd" id="comment-5886">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/349181eae95f0ef2706bcad895118455" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							<a href="http://teran.karelia.pro/" target="_blank">teran</a>
+			<br>
+			01.03.2013 в 16:52
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		да, принцип отрисовки в любом месте будет одинаков. <br>
+Компонент предоставит участок канвы для рисования, а вы в свою очередь запросите у системы изображение чекбокса в разных состояниях, после чего отрисовываете это изображение в нужном месте на предоставленной канве.<br>
+В случае со StringGrid примере по ссылке рисование на канве грида с помощью метода DrawThemeBackground где первым параметром является дескриптор канвы (StringGrid1.canvas.handle). <br>
+Вот собственно для VirtualStringTree канва придет в качестве параметра TargetCanvas метода AfterCellPaint
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(5886);">Ответить</a></div>
+				
+		<div id="comment_5886">
+		</div>		
+				
+	</div>
+			</div>
+				
+	</div>
+			</div>
+				
+	</div>
+			</div>
+				
+	</div>
+	
+	<div class="post_comment comment_odd" id="comment-6054">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/42b30cea208373bcdda7238b0f0c086b" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							Павел
+			<br>
+			16.07.2013 в 20:57
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		Будет ещё один "подход к снаряду"? Компонент хороший, а толковых статей по нему мало.
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(6054);">Ответить</a></div>
+				
+		<div id="comment_6054">
+		</div>		
+					<div style="padding-top:5px;">
+			<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/article_comments.js"></script>
+
+	
+	<div class="post_comment comment_even" id="comment-6058">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/349181eae95f0ef2706bcad895118455" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							<a href="http://teran.karelia.pro/" target="_blank">teran</a>
+			<br>
+			06.08.2013 в 16:02
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		Может и будет :) с тех пор просто компонент не использовал в задачах :)
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(6058);">Ответить</a></div>
+				
+		<div id="comment_6058">
+		</div>		
+				
+	</div>
+			</div>
+				
+	</div>
+	
+	<div class="post_comment comment_even" id="comment-6143">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/ada0b82bc15a69ed98e33ffa924a35d4" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							Дмитрий
+			<br>
+			10.11.2013 в 16:38
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		при добавлении узлов нет скролла<br>
+ хотя все настройки установлены<br>
+почему так?<br>
+что сделать чтобы появился?
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(6143);">Ответить</a></div>
+				
+		<div id="comment_6143">
+		</div>		
+				
+	</div>
+	
+	<div class="post_comment comment_odd" id="comment-6229">
+		<table cellspacing="0" cellpadding="0"><tbody><tr>
+		<td><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/1191bbdca376508388d7beb33952999d" height="32" width="32" class="comment_avt"></td>
+		<td width="100%">
+			<div class="comment_info">
+							PAULO
+			<br>
+			08.05.2014 в 02:25
+			</div>
+		</td>
+		</tr></tbody></table>
+		<div class="comment_content">
+		Boa Noite.<br>
+Sou do brasil.<br>
+Gostaria de saber se tem como vc disponibilizar para mim os fontes do projeto exemplo de<br>
+Primeiro uso VirtualTreeview (TVirtualStringTree)<br>
+ Postado em 2013/01/30, &#224;s 14:10 <br>
+Quero come&#231;ar a trabalhar com ele e gostei do seu post.<br>
+Obrigado.
+		</div>
+
+	
+				<div class="comment_reply"><a href="http://teran.karelia.pro/articles/item_5845.html#" onclick="return MoveCommentForm(6229);">Ответить</a></div>
+				
+		<div id="comment_6229">
+		</div>		
+				
+	</div>
+    	    <div id="reply_form">
+  	  <div name="comment_form" class="comment_form" id="comment_form">
+	
+	<form method="POST" action="http://teran.karelia.pro/articles/item_5845.html#comment_form" name="post_form">		
+	<input type="hidden" name="article_id" value="5845">
+	<input type="hidden" name="parent_id" id="comment_form_parent_id" value="0">
+	<div class="input">
+		<img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/author.png" height="16" width="16">
+		<input type="text" name="author" value=""> - Имя
+	</div>
+	<div class="input">
+		<img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/email.png" height="16" width="16">	
+		<input type="text" name="email" value=""> - e-mail<span class="red">*</span>
+	</div>
+	<div class="input">
+		<img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/website.png" height="16" width="16">	
+		<input type="text" name="website" value=""> - Сайт
+	</div>
+	<div class="input">
+		<table cellspacing="0" cellpadding="0" width="100%">
+		<tbody><tr>
+		  <td>
+		  	<img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/lock.png" height="16" width="16">
+			<input type="text" name="7679b5" value="" style="width:50px;"> - магические буквы<span class="red">*</span>
+		  </td>
+		  <td align="right">		   
+		  	<span class="xcode"><span style="visibility:block;">2f8<span style="visibility:hidden;font-size:0px;">c69</span><span style="visibility:block;">c26</span></span>
+		  </span></td>
+		</tr>
+		</tbody></table>
+	</div>
+	<div>
+		<div style="color:grey; font-size:0.7em">вы можете использовать теги [i],[b],[code],[quote]</div>
+		<textarea name="content" cols="50" rows="10"></textarea>
+	</div>
+	<div align="right">
+		<input type="submit" value="Отправить" name="reply">
+	</div>
+	
+	</form>
+</div>
+    </div>  	  
+      </div>
+</div>
+
+
+<div class="printLink"><span><a href="http://teran.karelia.pro/articles/item_5845.html?mode=print&" target="_blank" rel="nofollow">Версия для печати</a></span></div>
+
+
+        </div> <!-- .content -->
+
+    </div>
+
+    <div class="grid_3 side">
+
+         <div class="column_block">
+	<div style="height:24px;">
+		<div id="___plusone_0" style="text-indent: 0px; margin: 0px; padding: 0px; border-style: none; float: none; line-height: normal; font-size: 1px; vertical-align: baseline; display: inline-block; width: 210px; height: 24px; background: transparent;"><iframe frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" style="position: static; top: 0px; width: 210px; margin: 0px; border-style: none; left: 0px; visibility: visible; height: 24px;" tabindex="0" vspace="0" width="100%" id="I0_1409930206659" name="I0_1409930206659" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/fastbutton.htm" data-gapiattached="true" title="+1"></iframe></div>
+	</div>
+
+	<div class="block_content" style="margin-top:10px;">	
+	<div id="google_translate_element"><div class="skiptranslate goog-te-gadget" dir="ltr"><div id=":0.targetLanguage" class="goog-te-gadget-simple" style="white-space: nowrap;"><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/cleardot.gif" class="goog-te-gadget-icon" style="background-image: url(https://translate.googleapis.com/translate_static/img/te_ctrl3.gif); background-position: -65px 0px;"><span style="vertical-align: middle;"><a class="goog-te-menu-value" href="javascript:void(0)"><span>Выбрать язык</span><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/cleardot.gif" width="1" height="1"><span style="border-left-width: 1px; border-left-style: solid; border-left-color: rgb(187, 187, 187);">&#8203;</span><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/cleardot.gif" width="1" height="1"><span style="color: rgb(155, 155, 155);">&#9660;</span></a></span></div></div></div>
+	
+	<script type="text/javascript">
+
+		function googleTranslateElementInit() {
+		  new google.translate.TranslateElement({pageLanguage: 'ru', layout: google.translate.TranslateElement.InlineLayout.SIMPLE, autoDisplay: false, gaTrack: true, gaId: 'UA-20962377-1'}, 'google_translate_element');
+	  }
+	</script>
+	<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/element.js"></script>	
+	
+	</div>
+</div>
+
+<div class="column_block">
+	<div class="block_header">
+		Ссылки
+	</div>
+	<div class="block_content">
+	<a href="http://docwiki.embarcadero.com/RADStudio/en/" target="_blank">Delphi online help</a><br>	
+	<a href="http://delphifeeds.ru/" target="_blank">DelphiFeeds.ru</a><br>
+	<a href="http://delphifeeds.com/" target="_blank">DelphiFeeds.com</a><br>
+	<a href="http://stackoverflow.com/questions/tagged/delphi" target="_blank">StackOverflow</a><br>
+	<a href="http://blaisepascal.ru/" target="_blank">Blaise Pascal Magazine</a><br>	
+	</div>	
+</div>
+
+
+<div class="column_block">
+	<div class="block_header">
+		Метки
+	</div>
+	<div class="block_content">
+			<a href="http://teran.karelia.pro/tags/Direct2D" title="Direct2D (20)">Direct2D</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/rtti" title="rtti (11)">rtti</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/windows+7" title="windows 7 (7)">windows 7</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/generics" title="generics (7)">generics</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/vkontakte+API" title="vkontakte API (7)">vkontakte API</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/animation" title="animation (7)">animation</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/FireMonkey" title="FireMonkey (6)">FireMonkey</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/error" title="error (6)">error</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/WIC" title="WIC (6)">WIC</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/%CE%CE%CF" title="ООП (6)">ООП</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/delphi" title="delphi (5)">delphi</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/Delphi+XE2" title="Delphi XE2 (5)">Delphi XE2</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/outlook" title="outlook (4)">outlook</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/anonymous+methods" title="anonymous methods (4)">anonymous methods</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/messages" title="messages (3)">messages</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/threads" title="threads (3)">threads</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/xml" title="xml (3)">xml</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/bitmap" title="bitmap (3)">bitmap</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/sets" title="sets (2)">sets</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/DirectWrite" title="DirectWrite (2)">DirectWrite</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/IEnumerable" title="IEnumerable (2)">IEnumerable</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/idhttp" title="idhttp (2)">idhttp</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/api" title="api (2)">api</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/SQL" title="SQL (2)">SQL</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/attributes" title="attributes (2)">attributes</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/UML" title="UML (2)">UML</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/debug" title="debug (2)">debug</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/wmi" title="wmi (2)">wmi</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/MyShows+API" title="MyShows API (2)">MyShows API</a>&nbsp;
+			<a href="http://teran.karelia.pro/tags/dll" title="dll (2)">dll</a>&nbsp;
+		</div>	
+</div>
+
+<div class="column_block">
+	<div class="block_header">
+		Дополнительно
+	</div>
+	<div class="block_content">
+		<a href="http://stackoverflow.com/users/1216425/teran">
+			<img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/1216425.png" width="208" height="58" title="profile for teran at Stack Overflow, Q&amp;A for professional and enthusiast programmers">
+		</a>		
+		<img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/MVP_Logo_Delphi_100x100.png" width="100" height="100" alt="Embarcadero Delphi MVP" title="Embarcadero MVP Program">		
+		<p>		
+		<a href="http://www.wwf.ru/" target="_blank">
+			<img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/banner.php" width="88" height="31" alt="www.wwf.ru">
+		</a>
+
+	</p></div>	
+</div>
+    </div> <!-- #side -->
+
+    <div class="clear">&nbsp;</div>
+
+    <div class="grid_12" id="footer">
+
+                  <table width="100%" class="footer">
+               <tbody><tr>
+                  <td class="left">
+                     <p>
+                     Разработка сайта © 2012, <a href="https://plus.google.com/+AndrewTerekhov?rel=author">Терехов Андрей</a><br>
+                     Сайт создан при технической поддержке компании <a href="http://interso.ru/" target="_blank"><b>Interso</b></a></p>
+                  </td>
+                  <td class="right">
+                	                  </td>
+               </tr>
+         </tbody></table>
+    </div>
+
+    <div class="clear">&nbsp;</div>
+
+</div>
+<div id="footerPrint" class="section"></div>
+<script type="text/javascript" language="javascript">
+	SyntaxHighlighter.all();
+</script>
+
+<script type="text/javascript" language="javascript">
+</script>
+
+
+
+
+<!--[if IE 6]>
+<script type="text/javascript" src="/plain/js/jquery.pngFix.pack.js" language="javascript"></script>
+<![endif]-->
+
+<script type="text/javascript" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/site.js"></script>
+
+
+
+
+<div id="goog-gt-tt" class="skiptranslate" dir="ltr"><div style="padding: 8px;"><div><div class="logo"><img src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/translate-32.png" width="20" height="20"></div><iframe style="width:348px;height:1.1em;float:right;" id="signin_status" border="0" frameborder="0" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/tminfo.htm"></iframe></div></div><div class="top" style="padding: 8px; float: left; width: 100%;"><h1 class="title gray">Исходный текст</h1></div><div class="middle" style="padding: 8px;"><div class="original-text"></div></div><div class="bottom" style="padding: 8px;"><div class="activity-links"><span class="activity-link">Предложить лучший вариант перевода</span><span class="activity-link"></span></div><div class="started-activity-container"><hr style="color: #CCC; background-color: #CCC; height: 1px; border: none;"><div class="activity-root"></div></div></div><div class="status-message" style="display: none;"></div></div><iframe name="oauth2relay697375946" id="oauth2relay697375946" src="./Delphi programming blog   Первое использование VirtualTreeView (TVirtualStringTree)_files/postmessageRelay.htm" tabindex="-1" style="width: 1px; height: 1px; position: absolute; top: -100px;"></iframe><iframe frameborder="0" class="goog-te-menu-frame skiptranslate" style="visibility: visible; box-sizing: content-box; width: 888px; height: 274px; display: none;"></iframe></body></html>

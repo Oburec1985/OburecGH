@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2012.10.31 01:08:39.765.pas,C:\Documents and Settings\Admin\Мои документы\RAD Studio\Projects\Unit2.pas=D:\oburec\project2010\2011\wlog\uWLogFrm.pas</Transaction>
+    <Transaction>2012.10.31 01:08:39.765.dfm,C:\Documents and Settings\Admin\Мои документы\RAD Studio\Projects\Unit2.dfm=D:\oburec\project2010\2011\wlog\uWLogFrm.dfm</Transaction>
+    <Transaction>2012.10.31 01:08:58.843.dproj,C:\Documents and Settings\Admin\Мои документы\RAD Studio\Projects\Project1.dproj=D:\oburec\project2010\2011\wlog\uLogPr.dproj</Transaction>
+    <Transaction>2012.10.31 23:41:20.843.pas,D:\oburec\project2010\key logger\3_Keylogger2b_Pro\Shared.pas=</Transaction>
+    <Transaction>2012.11.07 23:35:07.765.pas,D:\oburec\project2010\2011\wlog\Shared.pas=</Transaction>
+    <Transaction>2012.11.07 23:35:57.343.pas,D:\oburec\project2010\2011\wlog\Unit1.pas=D:\oburec\project2010\2011\wlog\uSniff.pas</Transaction>
+    <Transaction>2012.11.08 00:44:39.687.pas,D:\oburec\project2010\2011\wlog\Unit1.pas=D:\oburec\project2010\2011\wlog\uSysUtils.pas</Transaction>
+    <Transaction>2012.11.08 21:07:16.078.pas,D:\oburec\project2010\2011\wlog\uSniff.pas=D:\oburec\project2010\2011\wlog\uSniff_.pas</Transaction>
+    <Transaction>2012.11.08 21:22:54.531.pas,D:\oburec\project2010\2011\wlog\uSniff_.pas=D:\oburec\project2010\2011\wlog\uSniff.pas</Transaction>
+    <Transaction>2012.11.13 23:47:46.968.pas,D:\oburec\project2010\2011\wlog\Unit1.pas=D:\oburec\project2010\2011\wlog\uEMail.pas</Transaction>
+    <Transaction>2012.11.14 00:08:46.937.pas,D:\oburec\project2010\2011\wlog\uSysUtils.pas=</Transaction>
+    <Transaction>2012.11.21 00:51:17.312.pas,D:\oburec\project2010\2011\wlog\Unit1.pas=D:\oburec\project2010\2011\wlog\uGetAppPath.pas</Transaction>
+    <Transaction>2012.11.21 22:06:39.359.pas,D:\oburec\project2010\2011\wlog\uWLogFrm.pas=</Transaction>
+    <Transaction>2012.11.21 22:06:39.359.dfm,D:\oburec\project2010\2011\wlog\uWLogFrm.dfm=</Transaction>
+    <Transaction>2012.11.24 14:06:26.859.pas,D:\oburec\project2010\2011\sharedUtils\uBinFile.pas=</Transaction>
+  </Transactions>
+</BorlandProject>

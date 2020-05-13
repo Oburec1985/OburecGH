@@ -1,0 +1,198 @@
+unit uDownloadRegsFrm;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, pathutils,
+  Dialogs, ExtCtrls, StdCtrls, ComCtrls, uBtnListView, uMeasureBase, uBaseObj,
+  uPathMng, uComponentServises, ImgList, uCommonMath;
+
+type
+  TDownloadRegsFrm = class(TForm)
+    ActionPanel: TPanel;
+    DownloadBtn: TButton;
+    RegsLV: TBtnListView;
+    ImageList_16: TImageList;
+    DelBatRegsBtn: TButton;
+    procedure DownloadBtnClick(Sender: TObject);
+    procedure DelBatRegsBtnClick(Sender: TObject);
+  private
+    m_db:cMBase;
+  public
+    Procedure ShowDB(db:cMBase);
+  end;
+
+var
+  DownloadRegsFrm: TDownloadRegsFrm;
+
+
+implementation
+
+{$R *.dfm}
+
+const
+  c_image_del=0;
+  c_image_ok=1;
+
+
+{ TDownloadRegsFrm }
+
+procedure TDownloadRegsFrm.DelBatRegsBtnClick(Sender: TObject);
+var
+  I, j: Integer;
+  li:tlistitem;
+  r:cRegFolder;
+  s:TBaseSignal;
+  sigFolder, str:string;
+  del:boolean;
+begin
+  for I := 0 to RegsLV.items.Count - 1 do
+  begin
+    li:=RegsLV.Items[i];
+    if li.ImageIndex=c_image_del then
+    begin
+      r:=cregfolder(li.data);
+      RegsLV.GetSubItemByColumnName('Путь',li,sigFolder);
+      for j:= 0 to r.m_signals.Count - 1 do
+      begin
+        s:=r.getSignal(j);
+        if s.m_path=sigfolder then
+        begin
+          s.Destroy;
+          r.m_signals.Delete(j);
+          break;
+        end;
+      end;
+    end;
+    del:=true;
+    for j := 0 to r.m_signals.Count - 1 do
+    begin
+      s:=r.getSignal(j);
+      if s.m_path<>'' then
+      begin
+        del:=false;
+        break;
+      end;
+    end;
+    if del then
+    begin
+      r.delFolder;
+      r.destroy;
+    end;
+  end;
+  i:=0;
+  while I <RegsLV.items.Count - 1 do
+  begin
+    li:=RegsLV.Items[i];
+    if li.ImageIndex=c_image_del then
+    begin
+      li.Destroy;
+    end
+    else
+      inc(i);
+  end;
+end;
+
+procedure TDownloadRegsFrm.DownloadBtnClick(Sender: TObject);
+var
+  I, j: Integer;
+  li:tlistitem;
+  reg:cRegFolder;
+  s:tbasesignal;
+  path, newpath:string;
+begin
+  for I := 0 to RegsLV.items.Count - 1 do
+  begin
+    li:=RegsLV.Items[i];
+    if li.Checked then
+    begin
+      reg:=cRegFolder(li.data);
+      for j := 0 to reg.m_signals.Count - 1 do
+      begin
+        RegsLV.GetSubItemByColumnName('Путь',li,path);
+        s:=reg.getSignal(j);
+        if s.m_path=path then
+        begin
+          newpath:=AddSlashToPath(reg.Absolutepath)+s.m_folder;
+          path:=ExtractFileDir(path);
+          if CopyDir(path, newpath, handle) then
+          begin
+            s.m_copy:=true;
+            li.Checked:=false;
+          end;
+          continue;
+        end;
+      end;
+      reg.CreateXMLDesc;
+    end;
+  end;
+  i:=0;
+  while i<RegsLV.items.Count do
+  begin
+    li:=RegsLV.Items[i];
+    if not li.Checked then
+    begin
+      li.Delete;
+    end
+    else
+      inc(i);
+  end;
+end;
+
+procedure TDownloadRegsFrm.ShowDB(db:cMBase);
+var
+  I: Integer;
+  obj:cbaseobj;
+  reg:cRegFolder;
+  testobj, test:cxmlfolder;
+  j: Integer;
+  s:tbasesignal;
+  li:tlistitem;
+begin
+  m_db:=db;
+  regslv.clear;
+  for I := 0 to m_db.Count - 1 do
+  begin
+    obj:=m_db.GetObj(i);
+    if obj is cRegFolder then
+    begin
+      reg:=obj as cRegFolder;
+      if not reg.empty then
+      begin
+        if not reg.Complete then
+        begin
+          if not reg.rar then
+          begin
+            for j := 0 to reg.m_signals.Count - 1 do
+            begin
+              s:=reg.getSignal(j);
+              if s.m_path<>'' then
+              begin
+                if not s.m_copy then
+                begin
+                  li:=regslv.Items.Add;
+                  regslv.SetSubItemByColumnName('Регистрация',reg.caption, li);
+                  if fileexists(s.m_path) then
+                    li.ImageIndex:=c_image_ok
+                  else
+                    li.ImageIndex:=c_image_del;
+                  regslv.SetSubItemByColumnName('Путь',s.m_path, li);
+                  test:=cxmlfolder(reg.GetParentByClassName('cTestFolder'));
+                  testObj:=cxmlfolder(test.GetParentByClassName('cObjFolder'));
+                  regslv.SetSubItemByColumnName('Объект',testObj.path, li);
+                  regslv.SetSubItemByColumnName('Испытание',test.path, li);
+                  li.Checked:=true;
+                  li.data:=reg;
+                end;
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+  LVChange(regsLV);
+  Show;
+end;
+
+end.

@@ -1,0 +1,61 @@
+unit uMDBRegObjFrame;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, uMDBBaseObjFrame, ExtCtrls, StdCtrls, uMeasureBase, uComponentServises,
+  ComCtrls, uBtnListView;
+
+type
+  TMDBRegObjFrame = class(TMDBBaseObjFrame)
+    TestDateLabel: TLabel;
+    TestDate: TDateTimePicker;
+    RegistratorLV: TBtnListView;
+  private
+    procedure ShowRegistrators(r:cregobj);
+  public
+    procedure init(p_db:cMBase);override;
+    procedure showObjProps(obj:cXmlFolder);override;
+    function SupportObj(obj:cxmlFolder):boolean;override;
+  end;
+
+var
+  MDBRegObjFrame: TMDBRegObjFrame;
+
+implementation
+
+{$R *.dfm}
+
+
+procedure TMDBRegObjFrame.init(p_db: cMBase);
+var
+  I: Integer;
+  str:string;
+begin
+  inherited;
+end;
+
+procedure TMDBRegObjFrame.showObjProps(obj: cXmlFolder);
+begin
+  inherited;
+  TestDate.DateTime:=cRegFolder(obj).DateTime;
+end;
+
+procedure TMDBRegObjFrame.ShowRegistrators(r: cregobj);
+begin
+
+
+end;
+
+function TMDBRegObjFrame.SupportObj(obj: cxmlFolder): boolean;
+begin
+  if obj is cRegFolder then
+    result:=true
+  else
+  begin
+    result:=false;
+  end;
+end;
+
+end.

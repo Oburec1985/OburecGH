@@ -1,0 +1,274 @@
+unit uTrendAlg;
+
+interface
+uses
+  uBldMath, uCommonMath, uCommonTypes, uErrorProc, uBldObj, uTickdata, usensor, uchart,
+  uGistogram, uTrend, ubldeng, uBaseBldAlg, ustage, uBaseObj, uAxis, usensorlist,
+  sysutils, uTag, uEventList, ubldEngEventTypes;
+
+
+// нулевое положение лопатки определяется по  предварительно заполненной форме колеса
+// (stage.shape.blades[i]) если useBladesPos=true и stage.shape.offsets[i] -
+// если useBladesPos=false
+type
+  cTrendAlgOpts = class(cBaseOpts)
+    // период вибрации в секундах. Если <0, то период
+    // бесконечный и свертка не происходит
+    T:single;
+  end;
+
+  cTrendAlg = class(cBaseBldAlg)
+  protected
+    trend:ctrend;
+    useBladesPos:boolean;
+    // период вибрации в секундах. Если <0, то период
+    // бесконечный и свертка не происходит
+    period:single;
+    m_XYArTag:array of c2vectortag;
+    m_MTag,m_DTag:array of cscalartag;
+  protected
+    function getBladePos(s:csensor;bladeindex:integer):single;
+    // вызывается для каждого корректного оборота CommonSensorProc
+    // при этом индекс оборота, начало и конец оборота, храняться в protected
+    // мемберах
+    function TurnSensorProc(s:csensor):integer;override;
+    function CollapsTime(t:single):single;
+    procedure GetNewData(turncount:integer);override;
+    procedure CommonSensorProc(taho:csensor;sensors:calgsensorlist);override;
+    function ProcessErrors(taho:csensor;sensors:calgsensorlist):boolean;override;
+    // создать теги
+    procedure createTags;override;
+    procedure setTagsBuffers(data:cbaseopts);override;
+    procedure OnChangeStageInFrame(sender:tobject);
+  public
+    function InitTags(blCount:integer);
+    function AlgID:integer;override;
+    function CreateOpts:cbaseopts;override;
+    procedure getOpts(opts:cBaseOpts);override;
+  end;
+
+  function generateTrend(t:csensor;sensors:calgsensorlist;tr:tobject):integer;
+
+implementation
+uses
+  uXYTrendPos, commonoptsframe, uUTSSensor;
+
+function cTrendAlg.AlgID:integer;
+begin
+  result:=c_BladeTrend;
+end;
+
+procedure cTrendAlg.OnChangeStageInFrame(sender:tobject);
+begin
+  if TBaseAlgOptsFrame(sender).StageCB.Items.count<>0 then
+  begin
+    stage:=cstage(TBaseAlgOptsFrame(sender).StageCB.Items.Objects[0]);
+    if stage<>nil then
+    begin
+      initTags(stage.BladeCount);
+    end;
+    //TBaseAlgOptsFrame(sender).AlgTagList1.getAlg(tags);
+  end;
+end;
+
+function cTrendAlg.getBladePos(s:csensor;bladeindex:integer):single;
+begin
+  result:=GetSensorBladePos(s,bladeindex);
+end;
+
+function cTrendAlg.CollapsTime(t:single):single;
+begin
+  if period<=0 then
+  begin
+    result:=t;
+  end
+  else
+  begin
+    result:=frac(t/period);
+  end;
+end;
+
+function cTrendAlg.ProcessErrors(taho:csensor;sensors:calgsensorlist):boolean;
+var
+  s:csensor;
+begin
+  s:=sensors.GetSensor(0);
+  result:=inherited ProcessErrors(taho,sensors);
+  if result then
+  begin
+    result:=ProcClusterError(taho,sensors);
+  end;
+end;
+
+procedure cTrendAlg.getOpts(opts:cBaseOpts);
+var
+  s:csensor;
+begin
+  inherited;
+  s:=sensorslist.GetSensor(0);
+  period:=cTrendAlgOpts(opts).t;
+  trend:=cTrendAlgOpts(opts).trend;
+  if trend<>nil then
+  begin
+    //trend.name:=trend.name+'_Bl'+inttostr(blade);
+    trend.Clear;
+  end;
+  useBladesPos:=cTrendAlgOpts(opts).useBladesPos;
+end;
+
+procedure cTrendAlg.CommonSensorProc(taho:csensor;sensors:calgsensorlist);
+var
+  i:integer;
+begin
+  inherited;
+  for I := 0 to bladecount - 1 do
+  begin
+    if m_XYArTag[i].active then
+    begin
+      if m_MTag[i].active then
+        m_MTag[i].Value:=m_XYArTag[i].M;
+      if m_DTag[i].active then
+        m_DTag[i].Value:=m_XYArTag[i].D;
+    end;
+  end;
+end;
+
+function cTrendAlg.TurnSensorProc(s:csensor):integer;
+var
+  j:integer;
+  // ожидаемое время прихода от лопатки
+  t0:stickdata;
+  // тик от нужной лопатки на очередном обороте
+  tick:stickdata;
+  // отклонение лопатки от ожидаемого положения в тиках
+  i,
+  dt,
+  blade,
+  bladeindex:integer;
+  // точка тренда. хранит отклонение лопатки от нулевого положения и время точки
+  p2:point2;
+  path:single;
+begin
+  // Подсчитываем число импульсов укладывающихся в каждый столбец гистограммы
+  result:=0;
+  for I := 0 to bladecount - 1 do
+  begin
+    blade:=i;
+    if m_XYArTag[blade].active then
+    begin
+      bladeindex:=GetBladeImpulsIndex(s, blade);
+      path:=GetSensorBladePos(s, blade);
+      // ожидаемое время прихода от лопатки
+      t0:=EvSensorTickInTurn(t1,t2,path);
+      // реальное время импульса от нужной лопатки на очередном обороте
+      tick:=s.chan.ticks.gettick(sensorind+bladeindex);
+      // отклонение положения лопатки от ожидаемого в тиках
+      dt:=evDecTicks(t0,tick);
+      // отклонение положения лопатки от ожидаемого в градусах
+      p2.y:=EvalTickDPos(t1,t2,dt);
+      // время в секундах прихода импульса от лопатки
+      p2.x:=TickToSec(tick);
+      m_XYArTag[blade].add(p2);
+    end;
+  end;
+end;
+
+
+
+function cTrendAlg.InitTags(blCount:integer);
+begin
+  bladecount:=blCount;
+  createTags;
+end;
+
+function cTrendAlg.CreateOpts:cbaseopts;
+begin
+  result:=cTrendAlgOpts.create;
+  setopts(result);
+end;
+
+procedure cTrendAlg.GetNewData(turncount:integer);
+var
+  i:integer;
+begin
+  inherited;
+  for I := 0 to bladecount - 1 do
+  begin
+    if m_XYArTag[i].active then
+      m_XYArTag[i].length:=turncount;
+  end;
+end;
+
+procedure cTrendAlg.setTagsBuffers(data:cbaseopts);
+begin
+  inherited;
+end;
+
+procedure cTrendAlg.createTags;
+var
+  tag:cBaseTag;
+  i:integer;
+begin
+  if tags.Count<>0 then exit;
+  if bladecount>0 then
+  begin
+    setlength(m_XYArTag,bladecount);
+    setlength(m_DTag,bladecount);
+    setlength(m_MTag,bladecount);
+    for I := 0 to bladecount - 1 do
+    begin
+      tag:=c2VectorTag.create;
+      tag.active:=true;
+      tag.name:='XYArray_'+inttostr(i);
+      tag.dsc:='Расчет отклонений по лопатке '+inttostr(i);
+      tags.addobj(tag);
+      m_XYArTag[i]:=c2VectorTag(tag);
+
+      tag:=cScalarTag.create;
+      tag.active:=true;
+      tag.name:='D_'+inttostr(i);
+      tag.dsc:='Расчет дисперсии по порции оборотов ' +inttostr(i);
+      tags.addobj(tag);
+      m_DTag[i]:=cScalarTag(tag);
+
+      tag:=cScalarTag.create;
+      tag.active:=true;
+      tag.name:='M_'+inttostr(i);
+      tag.dsc:='Расчет мат. ожидания по порции оборотов ' +inttostr(i);
+      tags.addobj(tag);
+      m_MTag[i]:=cScalarTag(tag);
+
+    end;
+    for i := 0 to tags.Count - 1 do
+    begin
+      tag:=cBaseTag(tags.getobj(i));
+      // запрещаем удалять объект менеджеру тегов, т.к. теги
+      // создаются и удаляются алгоритмом
+      tag.blocked:=true;
+      tag.active:=false;
+    end;
+  end;
+end;
+
+
+function generateTrend(t:csensor;sensors:calgsensorlist;tr:tobject):integer;
+var
+  opts:ctrendalgopts;
+  s:csensor;
+begin
+  opts:=ctrendalgopts.create;
+  if tr is ctrend then
+    opts.trend:=ctrend(tr)
+  else
+    opts.chart:=cchart(tr);
+  opts.T:=0;
+  s:=sensors.GetSensor(0);
+  opts.eng:=t.eng;
+  opts.stage:=cstage(s.eng.GetObjDlg(s,c_Stage));
+  XYTrendForm.showmodal(t,sensors,opts);
+  opts.Destroy;
+end;
+
+
+
+end.

@@ -1,0 +1,44 @@
+package dcl_own;
+
+{$R *.res}
+{$R 'DCL_MYOWN.dcr'}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST ON}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$IMPLICITBUILD OFF}
+
+requires
+  vcl,
+  rtl,
+  inet,
+  vclx,
+  bdertl,
+  dbrtl,
+  vcldb;
+
+contains
+  DCL_MYOWN in 'DCL_MYOWN.pas',
+  ubtnlistview in 'ubtnlistview.pas',
+  uSpin in 'uSpin.pas',
+  uAlignEdit in 'uAlignEdit.pas',
+  uVTServices in '..\..\utils\uVTServices.pas';
+
+end.

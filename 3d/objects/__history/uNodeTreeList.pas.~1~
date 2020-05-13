@@ -1,0 +1,31 @@
+unit uNodeTreeList;
+
+interface
+uses
+  uTreeList;
+type
+  cNodeTreeList = class(cTreeList)
+  public
+    constructor create;
+    procedure AddObject(obj:tobject);override;
+  end;
+
+implementation
+uses
+  uNodeObject;
+
+constructor cNodeTreeList.create;
+begin
+  inherited;
+end;
+
+procedure cNodeTreeList.AddObject(obj:tobject);
+var node:cnodeobj;
+begin
+  node:=cnodeobj.create;
+  node.pointer:=obj;
+  node.childrens:=ctreelist(cnodeobject(obj).m_childrens);
+  addnode(node);
+end;
+
+end.

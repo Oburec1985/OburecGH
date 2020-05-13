@@ -1,0 +1,99 @@
+unit uPairTrendForm;
+
+interface
+
+uses
+  Windows, SysUtils, Forms,  StdCtrls, DCL_MYOWN, Classes, uMeraSignal,
+  uTickData,uBldMath, uBldFile, usensor, Controls,  utrend, ustage, uTrendSignal,
+  Spin, CommonOptsFrame, uBaseBldAlg, usensorlist, uTag, uAxis, uSaveSignalForm,
+  uTagSignal, uPair;
+
+type
+  TPairTrendForm = class(TForm)
+    BaseAlgOptsFrame1: TBaseAlgOptsFrame;
+    ApplyGB: TGroupBox;
+    OkBtn: TButton;
+    CancelBtn: TButton;
+    BladeIndLabel: TLabel;
+    Label1: TLabel;
+    StartBladeSE: TSpinEdit;
+    EndBladeSE: TSpinEdit;
+  private
+    { Private declarations }
+  public
+    function ShowModal(t:csensor;sensors:calgsensorlist; opts:cBaseOpts):integer;
+  end;
+
+var
+  PairTrendForm: TPairTrendForm;
+
+implementation
+uses
+  uPairTrend;
+
+{$R *.dfm}
+
+
+function TPairTrendForm.ShowModal(t:csensor;sensors:calgsensorlist; opts:cBaseOpts):integer;
+var
+  alg:cPairTrend;
+  s:csensor;
+  i:integer;
+  ax:caxis;
+  tr:ctrend;
+  tag:cbasetag;
+begin
+  BaseAlgOptsFrame1.SetOpts(t,sensors,Opts);
+  if opts.stage<>nil then
+  begin
+    EndBladeSE.Value:=opts.stage.BladeCount-1;
+    EndBladeSE.MaxValue:=opts.stage.BladeCount-1;
+    EndBladeSE.MinValue:=0;
+
+    StartBladeSE.Value:=0;
+    StartBladeSE.MaxValue:=opts.stage.BladeCount-1;
+    StartBladeSE.MinValue:=0;
+  end;
+  if inherited showmodal = mrok then
+  begin
+    BaseAlgOptsFrame1.GetOpts(opts);
+    // выполняем алгоритм
+    alg:=cPairTrend.create;
+    alg.pair:=cpair(opts.data);
+    alg.sensorsList:=sensors;
+    alg.getOpts(opts);
+    if opts.trend<>nil then
+      ax:=caxis(opts.trend.GetParentByClassName('cAxis'))
+    else
+      ax:=opts.chart.tabs.activepage.activeAxis;
+    for i:=StartBladeSE.Value to EndBladeSE.Value do
+    begin
+      tag:=cbasetag(alg.tags.getobj('XYArray_'+inttostr(i)));
+      tag.active:=true;
+      // сохранение в мера файл
+      if BaseAlgOptsFrame1.MeraFileCB.Checked then
+      begin
+      end
+      else
+      // отрисовка в график
+      begin
+        if (i=StartBladeSE.Value) and (opts.trend<>nil) then
+        begin
+          tag.DrawObj:=opts.trend;
+          tag.DrawObj.name:=tag.name;
+        end
+        else
+        begin
+          tr:=ax.AddTrend;
+          tag.DrawObj:=tr;
+          tag.DrawObj.name:=tag.name;
+        end;
+      end;
+    end;
+    alg.apply(t,sensors,opts);
+    // очистка данных
+    alg.Destroy;
+  end;
+end;
+
+end.

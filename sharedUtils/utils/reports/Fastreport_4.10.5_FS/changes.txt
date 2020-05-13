@@ -1,0 +1,444 @@
+version 4.10
+---------------
++ added support of Embarcadero Rad Studio XE (Delphi EX/C++Builder EX)
++ added support of TeeChart 2010 packages (new series type aren't support in this release)
++ added a property TruncateLongTexts to the XLS OLE export that allows to disable truncating texts longer than a specified limit
++ added option EmbedProt which allows to disable embedding fonts into an encrypted PDF file
++ added TfrxDateEditControl.WeekNumbers property
+- fixed bug in the XLS XML export about striked-out texts
+- fixed bug about exporting an empty page via the XLS OLE export
+- fixed bug in the PDF export about coloring the background of pages
+- fixed bug in  embedded designer when using break point in script
+- fixed bug with lost of focus in font size combo-box in designer
+- fixed bug with truncate of font size combo-box in Windows Vista/7 in designer (lost of vertical scroll bar)
+- fixed bug when lost file name in inherited report
+- fixed bug in multi-page report with EndlessHeight/EndlessWidth
+- fixed bug wit TfrxHeader.ReprintOnNewpage and KeepTogether
+- fixed bug in multi-column report with child bands
+- improved split mechanism (added TfrxStretcheable.HasNextDataPart for complicated data like RTF tables)
+- improved crosstab speed when using repeat band with crosstab object
+
+version 4.9
+---------------
++ added outline to PDF export
++ added anchors to PDF export
+- fixed bug with embedded TTC fonts in PDF export
++ added an ability to create multiimage TIFF files
++ added export headers/footers in ODF export
++ added ability to print/export transparent pictures (properties TfrxPictureView.Transparent and TfrxPictureView.TransparentColor) (PDF export isn't supported)
++ added new "split to sheet" modes for TfrxXMLExport 
++ added support of /PAGE tag in TfrxRichView, engine automatically break report pages when find /PAGE tag  
++ added ability to hide Null values in TfrxChartView (TfrxChartView.IgnoreNulls = True)
++ added ability to set any custom page order for printing (i.e. 3,2,1,5,4 )
++ [enterprise] added variables "AUTHLOGIN" and "AUTHGROUP" inside the any report  
++ [enterprise] now any report file can be matched with any (one and more) group, these reports are accessible only in matched groups
++ [enterprise] now you can set-up cache delays for each report file (reports.xml)
++ [enterprise] added new properties editor for reports in Configuration utility (see Reports tab)
++ [enterprise] added property "Xml" - "SplitType" in server configuration - allow to select split on pages type between none/pages/printonprev/rowscount
++ [enterprise] added property "Xml" - "SplitRowsCount" in server configuration - sets the count of rows for "rowscount" split type
++ [enterprise] added property "Xml" - "Extension" in server configuration - allow select between ".xml" and ".xls" extension for output file
++ [enterprise] added property "Html" - "URLTarget" in server configuration - allow select the target attribute for report URLs
++ [enterprise] added property "ReportsFile" - path to file with reports to groups associations and cache delays 
++ [enterprise] added property "ReportsListRenewTimeout" in server configuration
++ [enterprise] added property "ConfigRenewTimeout" in server configuration
++ [enterprise] added property "MimeType" for each output format in server configuration 
++ [enterprise] added property "BrowserPrint" in server configuration - allow printing by browser, added new template nav_print_browser.html
++ [enterprise] added dynamic file name generation of resulting formats (report_name_date_time)
+* [enterprise] SERVER_REPORTS_LIST and SERVER_REPORTS_HTML variables (list of available reports) depend from user group (for internal authentification)
++ added drawing shapes in PDF export (not bitmap)
++ added rotated text in PDF export (not bitmap)
++ added EngineOptions.IgnoreDevByZero property allow to ignore division by zero exception in expressions
++ added properties TfrxDBLookupComboBox.DropDownWidth, TfrxDBLookupComboBox.DropDownRows
++ added event TfrxCustomExportFilter.OnBeginExport
++ added ability to decrease font size in barcode object
++ added ability to inseret FNC1 to "code 128" barcode
++ added event TfrxPreview.OnMouseDown
++ added support of new unicode-PDF export in D4-D6 and BCB4-BCB6
+* improved AddFrom method - anchor coping
+- fixed bug with WordWrap in PDF export
+- fixed bug with underlines in PDF export
+- fixed bug with rounded rectangles in PDF export
+- fixed CSV export to fit to the RFC 4180 specification
+- fixed bug with strikeout text in PDF export
+- fixed bug with incorrect export of TfrxRichView object in RTF format (wrong line spacing)
+- [enterprise] added critical section in TfrxServerLog.Write
+- fixed bug with setting up of the Protection Flags in the PDF export dialog window
+- fixed bug in PDF export (file structure)
+- fixed bug with pictures in Open Office Writer (odt) export
+- [enterprise] fixed bug with TfrxReportServer component in Delphi 2010
+- fixed minor errors in Embarcedero RAD Studio 2010
+- fixed bug with endless loop with using vertical bands together with page header and header with ReprintOnNewPage
+- fixed bug when using "Keeping" and Cross tables (incorrect cross transfer)
+- fixed bug with [CopyName#] macros when use  "Join small pages"  print mode
+- fixed bug  when try to split page with endless height to several pages (NewPage, StartNewPage)
+- fixed bug with empty line TfrxRichView when adding text via expression
+- fixed bug when Footer prints even if main band is invisible (FooterAfterEach = True)
+- fixed resetting of Page variable in double-pass report with TfrxCrossView
+- fixed bug with loosing of  aligning when split TfrxRichView
+- fixed buzz in reports with TfrxRichView when using RTF 4.1
+
+version 4.8
+---------------
++ added support of Embarcadero Rad Studio 2010 (Delphi/C++Builder)
++ added TfrxDBDataset.BCDToCurrency property
++ added TfrxReportOptions.HiddenPassword property to set password silently from code
++ added TfrxADOConnection.OnAfterDisconnect event 
++ added TfrxDesigner.MemoParentFont property
++ added new TfrxDesignerRestriction: drDontEditReportScript and drDontEditInternalDatasets
++ adedd checksum calculating for  2 5 interleaved barcode
++ added TfrxGroupHeader.ShowChildIfDrillDown property  
++ added TfrxMailExport.OnSendMail event 
++ added RTF 4.1 support for TfrxRichText object
++ [enterprise] added Windows Authentification mode
++ added confirmation reading for TfrxMailExport
++ added TimeOut field to TfrxMailExport form 
++ added ability to use keeping(KeepTogether/KeepChild/KeepHeader) in multi-column report
++ added ability to split big bands(biggest than page height) by default 
+* [enterprise] improved CGI for IIS/Apache server
+* changed PDF export (D7 and upper): added full unicode support, improved performance, decreased memory requirements
+  old PDF export engine saved in file frxExportPDF_old.pas
+- changed inheritance mechanism, correct inherits of linked objects (fixups)
+- fixed bug with Mirror Mrgins in RTF, HTML, XLS, XML, OpenOffice exports
+- fixed bug when cross tab cut the text in corner, when corner height greater than column height
+- [fs] improved script compilation
+- improved WatchForm TListBox changet to TCheckListBox
+- improved AddFrom method - copy outline
+- Improved functional of vertical bands, shows memos placed on H-band which doesn't across VBand, also calculate expression inside it and call events (like in FR2)
+- Improved unsorted mode in crosstab(join same columns correctly)
+- Improved converter from Report Builder
+- Improved TfrxDesigner.OnInsertObject, should call when drag&drop field from data tree
+- improved DrillDownd mechanism, should work correct with master-detail-subtetail nesting 
+- fixed bug with DownThenAcross in Cross Tab
+- fixed several bugs under CodeGear RAD Studio (Delphi/C++Builder) 2009 
+- fixed bug with emf in ODT export
+- fixed bug with outline when build several composite reports in double pass mode
+- fixed bug when group doesn't fit on the whole page
+- fixed "Page" and "Line" variables inside vertical bands
+- fixed bug with using KeepHeader in some cases
+- fixed bug with displacement of subreport when use PrintOnParent property in some cases
+- fixed small memory leak in subreports
+- fixed problem with PageFooter and ReportSymmary when use PrintOnPreviousPage property
+- fixed bug when designer shows commented functions in object inspector
+- fixed bug when designer place function in commented text block
+- fixed bug when Engine try to split non-stretcheable view and gone to endless loop
+- fixed bug with HTML tags in memo when use shot text and WordWrap
+- [enterprise] fixed bug with variables lost on refresh/export
+- fixed bug whih PDF,ODT export in Delphi4 and CBuilder4
+- fixed bug with some codepage which use two bytes for special symbols (Japanese ans Chinese codepages)
+- fixed bug when engine delete first space from text in split Memo
+- fixed bug in multi-column page when band overlap stretched PageHeader
+- fixed bug with using ReprintOnNewPage
+
+version 4.7
+---------------
++ CodeGear RAD Studio (Delphi/C++Builder) 2009 support
++ [enterprise] enchanced error description in logs
++ added properties TfrxHTMLExport.HTMLDocumentBegin: TStrings, 
+  TfrxHTMLExport.HTMLDocumentBody: TStrings, TfrxHTMLExport.HTMLDocumentEnd: TStrings
++ improved RTF export (with line spacing, vertical gap etc)
++ added support of Enhanced Metafile (EMF) images in Rich Text (RTF), Open Office (ODS), Excel (XLS) exports
++ added OnAfterScriptCompile event 
++ added onLoadRecentFile Event
++ added C++ Builder demos
++ added hot-key Ctrl + mouseWheel - Change scale in designer
++ added TfrxMemoView.AnsiText property
+- fixed bug in RTF export with EMF pictures in OpenOffice Writer
+- fixed some multi-thread isuues in engine, PDF, ODF exports
+- [enterprise] fixed integrated template of report navigator
+- [enterprise] fixed bug with export in Internet Explorer browser
+- fixed bug with font size of dot-matix reports in Excel and XML exports
+- fixed bug in e-mail export with many addresses
+- fixed bug in XLS export (with fast export unchecked and image object is null)
+- [enterprise] fixed bug in TfrxReportServer.OnGetVariables event
+- fixed bug in Calcl function
+- fixed memory leak in Cross editor
+- fixed progress bar and find dialog bug in DualView
+- fixed bug in PostNET and ean13 barcodes
+- fixed bug with TruncOutboundText in Dot Matrix report 
+- fixed bugs with break points in syntaxis memo
+- improved BeforeConnect event in ADO  
+- fixed bug in inhehited report with internal dataset
+- fixed bug in TfrxPanelControl with background color(Delphi 2005 and above)
+
+
+version 4.6
+---------------
++ added &amp; , &lt; , &gt; to XML reader
++ added <nowrap> tag, the text concluded in tag is not broken by WordWrap, it move entirely 
++ added ability to move band without objects (Alt + Move)
++ added ability to output pages in the preview from right to left ("many pages" mode), for RTL languages(PreviewOptions.RTLPreview) 
++ added ability to storing picture cache in "temp" file (PreviewOptions.PictureCacheInFile)
++ added EngineOptions.UseGlobalDataSetList (added for multi-thread applications) - set it to False if you don't want use Global DataSet list(use Report.EnabledDataSet.Add() to add dataset in local list) 
++ added new property Hint for all printed objects, hints at the dialog objects now shows in StatusBar 
++ added new property TfrxDBLookupComboBox.AutoOpenDataSet (automatically opens the attached dataset after onActivate event) 
++ added new property TfrxReportPage.PageCount like TfrxDataBand.RowCount
++ added new property WordWrap for dialog buttons (Delphi 7 and above). 
++ added sort by name to data tree
++ added TfrxDesigner.TemplatesExt property
++ added TfrxStyles class in script rtti
++ changes in the Chart editor: ability to change the name of the series, ability to move created series, other small changes 
++ [enterprise] added configurations values refresh in run-time 
++ [enterprise] added new demo \Demos\ClientServer\ISAPI
++ [enterprise] added output to server printers from user browser (see config.xml "AllowPrint", set to "no" by default), note: experimental feature
++ [enterprise] added reports list refresh in run-time
++ [enterprise] added templates feature
++ [enterprise] improved speed and stability
++ [fs] added TfsScript.IncludePath property
++ [fs] added TfsScript.UseClassLateBinding property 
++ [fs] fixed type casting from variant(string) to integer/float
+- changes in report inherit: FR get relative path from current loaded report(old reports based on application path works too)
+- corrected module for converting reports from Report Builder
+- fixed bug in CrossTab when set charset different from DEFAULT_CHARSET
+- fixed bug in RTF export with some TfrxRichView objects
+- fixed bug when print on landscape orientation with custom paper size
+- fixed bug when use network path for parent report
+- fixed bug with Band.Allowslit = True and ColumnFooter
+- fixed bug with drawing subreport on stretched band
+- fixed bug with embedded fonts in PDF export
+- fixed bug with long ReportTitle + Header + MaterData.KeepHeader = true
+- fixed bug with minimizing of Modal designer  in BDS2005 and above
+- fixed bug with paths in HTML export 
+- fixed bug with RTL in PDF export
+- fixed bug with SubReport in multi column page
+- fixed bug with Subreport.PrintOnParent = true in inherited report
+- fixed bug with SYMBOL_CHARSET in PDF export
+- fixed bug with the addition of datasets by inheritance report 
+- fixed bug with width calculation when use HTML tags in memo 
+- fixed compatibility with WideStrings module in BDS2006/2007
+- fixed flicking in preview when use OnClickObject event
+- fixed free space calculation when use PrintOnPreviousPage
+- fixed preview bug with winXP themes and in last update
+- fixed subreports  inherit
+- Thumbnail and Outline shows at right side for RTL languages 
+- [fs] fixed bug with late binding
+
+version 4.5
+---------------
++ added ConverterRB2FR.pas unit for converting reports from Report Builder to Fast Report
++ added ConverterQR2FR.pas unit for converting reports from QuickReport to FastReport
++ added support of multiple attachments in e-mail export (html with images as example)
++ added support of unicode (UTF-8) in e-mail export
++ added ability to change templates path in designer
++ added OnReportPrint script event
++ added PNG support in all version (start from Basic)
++ added TfrxDMPMemoView.TruncOutboundText property - truncate outbound text in matrix report when WordWrap=false
++ added new frames styles fsAltDot and fsSquare
++ added new event OnPreviewDblClick in all TfrxView components
++ added ability to call dialogs event after report run when set DestroyForms = false
++ added ability to change AllowExpressions and HideZeros properties in cross Cells (default=false)
++ added IgnoreDupParams property to DB components
++ added auto open dataset in TfrxDBLookupComboBox
++ added new property TfrxADOQuery.LockType
++ added define DB_CAT (frx.inc) for grouping DB components
++ added TfrxPictureView.HightQuality property(draw picture in preview with hight quality, but slow down drawing procedure)
++ [FRViewer] added comandline options "/print filename" and "/silent_print filename"
++ added unicode input support in RichEditor
++ added new define HOOK_WNDPROC_FOR_UNICODE (frx.inc) - set hook on GetMessage function for unicode input support in D4-D7/BCB4-BCB6
++ added ability chose path to FIB packages in "Recompile Wizard"
++ added new function TfrxPreview.GetTopPosition, return a position on current preview page
++ added new hot-keys to Code Editor - Ctrl+Del delete the word before cursor, Ctrl+BackSpace delete the word after cursor(as in Delhi IDE) 
++ added "MDI Designer" example
+- all language resources moved to UTF8, XML
+- fixed bug with html tags [sup] and [sub]
+- fixed width calculation in TfrxMemoView when use HTML tags
+- fixed bug with suppressRepeated in Vertical bands
+- fixed bug when designer not restore scrollbars position after undo/redo
+- fixed visual bug in toolbars when use Windows Vista + XPManifest + Delphi 2006 
+- fixed bug in CalcHeight when use negative LineSpace
+- fixed bug in frx2xto30 when import query/table components, added import for TfrDBLookupControl component
+- fixed bug with Cross and TfrxHeader.ReprintOnNewPage = true
+- fixed  converting from unicode in TfrxMemoView when use non default charset
+- [fs] fixed bug with "in" operator
+- fixed bug with aggregate function SUM 
+- fixed bug when use unicode string with [TotalPages#] in TfrxMemoView
+- fixed bug with TSQLTimeStampField field type
+- fixed designer dock-panels("Object Inspector", "Report Tree", "Data Tree")  when use designer as MDI or use several non-modal designer windows
+- fixed bug with hide/show dock-panels("Object Inspector", "Report Tree", "Data Tree"), now it restore size after hiding
+- fixed bug in XML/XLS export - wrong encode numbers in memo after CR/LF
+- fiexd bug in RTF export 
+- fixed bug with undo/redo commands in previewPages designer
+- fixed bug with SuppressRepeated when use KeepTogether in group
+- fixed bug with SuppressRepeated on new page all events fired twice(use Engine.SecondScriptcall to determinate it)
+
+
+version 4.4
+---------------
++ added support for CodeGear RAD Studio 2007
++ improved speed of PDF, HTML, RTF, XML, ODS, ODT exports
++ added TfrxReportPage.BackPictureVisible, BackPicturePrintable properties
++ added rtti for the TfrxCrossView.CellFunctions property
++ added properties TfrxPDFExport.Keywords, TfrxPDFExport.Producer, TfrxPDFExport.HideToolbar,
+  TfrxPDFExport.HideMenubar, TfrxPDFExport.HideWindowUI, TfrxPDFExport.FitWindow, 
+  TfrxPDFExport.CenterWindow, TfrxPDFExport.PrintScaling
++ added ability recompile frxFIB packages in "recompile wizard"
++ added ability to set color property for all teechart series which support it
++ added, setting frame style for each frame line in style editor
++ added TfrxPreview.Locked property and TfrxPreview.DblClick event
++ added 'invalid password' exception when load report without crypt
++ added new parameter to InheritFromTemplate (by default = imDefault) imDefault - show Error dialog, imDelete - delete duplicates, imRename - rename duplicates
++ added property TfrxRTFExport.AutoSize (default is "False") for set vertical autosize in table cells
+* redesigned dialog window of PDF export
+* improved WYSIWYG in PDF export
+- fixed bug, the PageFooter band overlap the ReportSummary band when use EndlessHeight
+- fixed bug with lage paper height in preview
+- fixed bug with outline and encryption in PDF export
+- fixed bug with solid arrows in PDF export
+- fixed bug when print TfrxHeader on a new page if ReprintOnNewPage = true and KeepFooter = True
+- fixed bug when used AllowSplit and TfrxGroupHeader.KeepTogether 
+- fixed page numbers when print dotMatrix report without dialog
+- fixed bug with EndlessHeight in multi-columns report
+- fixed font dialog in rich editor
+- [fs] fixed bug when create TWideStrings in script code
+- fixed bug with dialog form  when set  TfrxButtonControl.Default property to True
+- fixed twice duplicate name error in PreviewPages designer when copy - past object
+- fixed bug with Preview.Clear and ZmWholePage mode
+- fixed bug with using "outline" together "embedded fonts" options in PDF export
+- fixed multi-thread bug in PDF export
+- fixed bug with solid fill of transparent rectangle shape in PDF export
+- fixed bug with export OEM_CODEPAGE in RTF, Excel exports
+- fixed bug with vertical size of single page in RTF export
+- fixed bug with vertical arrows in PDF export
+- fixed memory leak with inherited reports
+
+
+version 4.3
+---------------
++ added support for C++Builder 2007
++ added encryption in PDF export
++ added TeeChart Pro 8 support
++ added support of OEM code page in PDF export
++ added TfrxReport.CaseSensitiveExpressions property
++ added "OverwritePrompt" property in all export components
++ improved RTF export (WYSIWYG)
++ added support of thai and vietnamese charsets in PDF export
++ added support of arrows in PDF export
+* at inheritance of the report the script from the report of an ancestor is added to the current report (as comments)
+* some changes in PDF export core
+- fixed bug with number formats in Open Document Spreadsheet export
+- fixed bug when input text in number property(Object Inspector) and close Designer(without apply changes)
+- fixed bug in TfrxDBDataset with reCurrent
+- fixed bug with memory leak in export of empty outline in PDF format
+- line# fix (bug with subreports)
+- fixed bug with edit prepared report with rich object
+- fixed bug with shadows in PDF export
+- fixed bug with arrows in designer
+- fixed bug with margins in HTML, RTF, XLS, XML exports
+- fixed bug with arrows in exports
+- fixed bug with printers enumeration in designer (list index of bound)
+- fixed papersize bug in inherited reports
+
+
+version 4.2
+---------------
++ added support for CodeGear Delphi 2007 
++ added export of html tags in RTF format 
++ improved split of the rich object
++ improved split of the memo object
++ added TfrxReportPage.ResetPageNumbers property
++ added support of underlines property in PDF export
+* export of the memos formatted as fkNumeric to float in ODS export
+- fixed bug keeptogether with aggregates
+- fixed bug with double-line draw in RTF export
+- fix multi-thread problem in PDF export
+- fixed bug with the shading of the paragraph in RTF export when external rich-text was inserted
+- fixed bug with unicode in xml/xls export
+- fixed bug in the crop of page in BMP, TIFF, Jpeg, Gif
+- "scale" printmode fixed
+- group & userdataset bugfix
+- fixed cross-tab pagination error
+- fixed bug with round brackets in PDF export
+- fixed bug with gray to black colors in RTF export
+- fixed outline with page.endlessheight
+- fixed SuppressRepeated & new page
+- fixed bug with long time export in text format
+- fixed bug with page range and outline in PDF export
+- fixed undo in code window
+- fixed error when call DesignReport twice
+- fixed unicode in the cross object
+- fixed designreportinpanel with dialog forms
+- fixed paste of DMPCommand object
+- fixed bug with the export of null images
+- fixed code completion bug
+- fixed column footer & report summary problem
+
+
+
+version 4.1
+---------------
++ added ability to show designer inside panel (TfrxReport.DesignReportInPanel method). See new demo Demos\EmbedDesigner
++ added TeeChart7 Std support
++ [server] added "User" parameter in TfrxReportServer.OnGetReport, TfrxReportServer.OnGetVariables and TfrxReportServer.OnAfterBuildReport events
++ added Cross.KeepTogether property
++ added TfrxReport.PreviewOptions.PagesInCache property
+- barcode fix (export w/o preview bug)
+- fixed bug in preview (AV with zoommode = zmWholePage)
+- fixed bug with outline + drilldown
+- fixed datasets in inherited report
+- [install] fixed bug with library path set up in BDS/Turbo C++ Builder installation
+- fixed pagefooter position if page.EndlessWidth is true
+- fixed shift bug
+- fixed design-time inheritance (folder issues)
+- fixed chm help file path
+- fixed embedded fonts in PDF
+- fixed preview buttons
+- fixed bug with syntax highlight
+- fixed bug with print scale mode
+- fixed bug with control.Hint
+- fixed edit preview page
+- fixed memory leak in cross-tab
+
+
+
+version 4.0 initial release
+---------------------
+Report Designer:
+- new XP-style interface
+- the "Data" tab with all report datasets
+- ability to draw diagrams in the "Data" tab
+- code completion (Ctrl+Space)
+- breakpoints
+- watches
+- report templates
+- local guidelines (appears when you move or resize an object)
+- ability to work in non-modal mode, mdi child mode
+
+Report Preview:
+- thumbnails
+
+Print:
+- split a big page to several small pages
+- print several small pages on one big
+- print a page on a specified sheet (with scale)
+- duplex handling from print dialogue
+- print copy name on each printed copy (for example, "First copy", "Second copy")
+
+Report Core:
+- "endless page" mode
+- images handling, increased speed
+- the "Reset page numbers" mode for groups
+- reports crypting (Rijndael algorithm)
+- report inheritance (both file-based and dfm-based)
+- drill-down groups
+- frxGlobalVariables object
+- "cross-tab" object enhancements:
+  - improved cells appearance
+  - cross elements visible in the designer
+  - fill corner (ShowCorner property)
+  - side-by-side crosstabs (NextCross property)
+  - join cells with the same value (JoinEqualCells property)
+  - join the same string values in a cell (AllowDuplicates property)
+  - ability to put an external object inside cross-tab
+  - AddWidth, AddHeight properties to increase width&height of the cell
+  - AutoSize property, ability to resize cells manually
+- line object can have arrows
+- added TfrxPictureView.FileLink property (can contain variable or a file name)
+- separate settings for each frame line (properties Frame.LeftLine,
+TopLine, RightLine, BottomLine can be set in the object inspector)
+- PNG images support (uncomment {$DEFINE PNG} in the frx.inc file)
+- Open Document Format for Office Applications (OASIS) exports, spreadsheet (ods) and text (odt)
+
+Enterprise components:
+- Users/Groups security support (see a demo application Demos\ClientServer\UserManager)
+- Templates support
+- Dynamically refresh of configuration, users/groups
+

@@ -1,0 +1,25 @@
+unit uBladeBase;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, VirtualTrees;
+
+type
+  TBladeFrm = class(TForm)
+    VirtualDrawTree1: TVirtualDrawTree;
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  BladeFrm: TBladeFrm;
+
+implementation
+
+{$R *.dfm}
+
+end.

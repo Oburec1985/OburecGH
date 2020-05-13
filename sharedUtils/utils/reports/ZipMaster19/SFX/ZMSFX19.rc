@@ -1,0 +1,61 @@
+/* ZMSFX19.rc
+    machine generated 
+      by ZipHelper (c) 
+     Do NOT edit 
+  ZMSFX19.rc - resource script
+  ZipMaster by Chris Vleghert, Eric W. Engler, Roger Aelbrecht and Russell Peters
+  1.9.0
+  Copyright (C) 2010  Russell Peters
+ 
+    Copyright (C) 2009, 2010  by Russell J. Peters, Roger Aelbrecht,
+      Eric W. Engler and Chris Vleghert.
+ 
+	This file is part of TZipMaster Version 1.9.
+ 
+    TZipMaster is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+ 
+    TZipMaster is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+ 
+    You should have received a copy of the GNU Lesser General Public License
+    along with TZipMaster.  If not, see <http://www.gnu.org/licenses/>.
+ 
+    contact: problems@delphizip.org (include ZipMaster in the subject).
+    updates: http://www.delphizip.org
+    DelphiZip maillist subscribe at http://www.freelists.org/list/delphizip
+ 
+  generated 13 Feb 2010 3:38 PM
+---------------------------------------------------------------------------*/
+1 VERSIONINFO
+FILEVERSION 1,9,0,28
+PRODUCTVERSION 1,9,0,28
+FILEOS 0x4
+FILETYPE 0x1
+FILESUBTYPE 0x0L
+{
+  BLOCK "StringFileInfo"
+  {
+        BLOCK "040904E4"
+        {
+            VALUE "CompanyName", "DelphiZip\0"
+            VALUE "FileDescription", "Zip Self Extractor\0"
+            VALUE "FileVersion", "1.9.0.0028\0"
+            VALUE "InternalName", "ZMSFX19.exe\0"
+            VALUE "LegalCopyright", "Copyright © 2010, Russell Peters\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "ZMSFX19.exe\0"
+            VALUE "ProductName", "ZipMaster.ZMSFX19\0"
+            VALUE "ProductVersion", "1.9.0\0"
+            VALUE "Comments","DelphiZip Self Extractor\0"
+        }
+  }
+  BLOCK "VarFileInfo"
+  {
+        VALUE "Translation", 0x0409, 1252
+  }
+}

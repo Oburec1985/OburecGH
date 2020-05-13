@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Root Code="If {A}&gt;0 Then
+ {вых}={A}
+Else
+ {A}=0
+End If">
+	<Channels Count="1">
+		<SI_1 Name="вых" Type="Sensor" Freq="10" UnitsY="0" UnitsX="0"/>
+	</Channels>
+</Root>

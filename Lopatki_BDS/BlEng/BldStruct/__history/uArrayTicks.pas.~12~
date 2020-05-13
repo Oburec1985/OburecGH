@@ -1,0 +1,85 @@
+unit uArrayTicks;
+
+interface
+
+uses math, sysutils, uVectorList, classes, uListMath, usetlist, uTickData;
+
+type
+  cArrayTicks = class(cBaseTicks)
+  protected
+  public
+    // ссыль на менеджер памяти для выделенных тиков
+    BldMemMng:cBldMemMng;
+  public
+    constructor create;override;
+    destructor destroy;override;
+    //procedure add(tick:stickdata);
+    function gettick(i:integer):stickdata;override;
+    function GetLoTick(tick:stickdata; var index:integer):stickdata;override;
+    function GetHiTick(tick:stickdata; var index:integer):stickdata;override;
+    function Count:integer;override;
+    // найти ближайший объект слева от ключа
+    function GetLow(key:pointer;var index:integer):pointer;override;
+    // найти ближайший объект справа от ключа
+    function GetHight(key:pointer; var index:integer):pointer;override;
+    procedure clear;override;
+  end;
+
+implementation
+
+constructor cArrayTicks.create;
+begin
+  inherited;
+  BldMemMng:=cBldMemMng.Create(c_blockcapacity);
+end;
+
+destructor cArrayTicks.destroy;
+begin
+  BldMemMng.ClearMem;
+  BldMemMng.destroy;
+  inherited;
+end;
+
+function cArrayTicks.gettick(i:integer):stickdata;
+var
+  // номер блока в котором нужный тик
+  block:integer;
+begin
+  block:=trunc(i/BldMemMng.m_blockcapacity);
+  result:=BldMemMng.
+end;
+
+function cArrayTicks.GetLoTick(tick:stickdata; var index:integer):stickdata;
+begin
+
+end;
+
+function cArrayTicks.GetHiTick(tick:stickdata; var index:integer):stickdata;
+begin
+
+end;
+
+function cArrayTicks.Count:integer;
+begin
+  result:=BldMemMng.count;
+end;
+
+// найти ближайший объект слева от ключа
+function cArrayTicks.GetLow(key:pointer;var index:integer):pointer;
+begin
+
+end;
+
+// найти ближайший объект справа от ключа
+function cArrayTicks.GetHight(key:pointer; var index:integer):pointer;
+begin
+
+end;
+
+procedure cArrayTicks.clear;
+begin
+  BldMemMng.clearmem;
+end;
+
+
+end.

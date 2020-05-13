@@ -1,0 +1,186 @@
+unit uNiiPM;
+
+{$WARN SYMBOL_PLATFORM OFF}
+
+interface
+
+uses
+  Windows, ActiveX, Classes, ComObj, uNiiPMlib_TLB, StdVcl, uBaseObjService,
+  Winpos_ole_TLB, POSBase, SysUtils, Forms, uNIIPMTenzopluginForm, uWPProcFrm,
+  uWPProc, dialogs, variants, uCommonMath, uWPServices, uFindMax;
+
+type
+  TNiiPM = class(TAutoObject, INIIPM)
+  protected
+    eoAmpFind: TExtOperAmpFind;
+  protected
+    function Connect(const app: IDispatch): Integer; safecall;
+    function Disconnect: Integer; safecall;
+    function NotifyPlugin(what: Integer; var param: OleVariant): Integer;
+      safecall;
+  end;
+
+implementation
+
+uses ComServ;
+
+const
+  vbEmpty=0;
+  vbNull=1;
+  vbInteger=2;
+  vbLong=3;
+  vbSingle=4;
+  vbDouble=5;
+  vbCurrency=6;
+  vbDate=7;
+  vbString=8;
+  vbObject=9;
+  vbError=10;
+  vbBoolean=11;
+  vbVariant=12;
+  vbDataObject=13;
+  vbDecimal=14;
+  vbByte = 17;
+  vbArray=8192;
+
+var
+  ID_RunNIIPM : Integer=0;
+  ID_RunFx : Integer=0;
+  // происходит по событию выполнения алгоритма
+  ID_NotifyEvent : cardinal;
+// указатель на тулбар винпоса
+
+var
+  bar_ID : Integer;
+  mng:cWPObjMng;
+
+function TNiiPM.Connect(const app: IDispatch): Integer;
+var
+  hbmp,hbmp2:THandle;
+begin
+  WINPOS:=app as IWinPOS;
+
+  eoAmpFind:= TExtOperAmpFind.Create();
+  WINPOS.RegisterExtOper( eoAmpFind, 1, 1, 'Поиск экстремумов', 'AmpFind', FALSE );
+
+
+  ID_NotifyEvent:=9 shl 16 +1;
+  ID_RunNIIPM:= WINPOS.RegisterCommand();
+  ID_RunFx:= WINPOS.RegisterCommand();
+
+  bar_ID:=WINPOS.CreateToolbar();
+  // hinstans - глобальная переменная которая является идентификатором приложения
+  hbmp:= LoadBitmap(HInstance,'NIIPMBUTTON');
+  hbmp2:= LoadBitmap(HInstance,'Fx');
+  WINPOS.CreatetoolbarButton(bar_ID,ID_RunNIIPM,hbmp,
+          'НИИПМ_Тензоплагин'#10'НИИПМ_Тензоплагин');
+
+  WINPOS.CreatetoolbarButton(bar_ID,ID_RunFx,hbmp2,
+         'Пакетная обработка'#10'Пакетная обработка');
+
+  //hbmp:= LoadBitmap(HInstance,'RANDOM');
+  //WINPOS.CreatetoolbarButton(bar_ID,ID_RunRnd,hbmp,'Окно генератора шума'#10'Генератор шума');
+  Result:=0;
+  LoadStrings(extractfiledir(application.exename)+'\plugins\NIIPM\Services.Ini');
+
+  mng:=cWPObjMng.create;
+
+  // создание форм
+  NIIPMForm:=TNIIPMForm.Create(nil);
+  FxForm:=TFxForm.Create(nil);
+end;
+
+function TNiiPM.Disconnect: Integer;
+begin
+  Result:=0;
+end;
+
+var InPlugunCode : Boolean = False;
+
+function TNiiPM.NotifyPlugin(what: Integer;var param: OleVariant): Integer;
+var
+  alg, src:string;
+  str1, str2:string;
+  strList:tstringlist;
+  o:coperobj;
+  signalopts:csignalsopt;
+  I: Integer;
+  // в алгоритм передается несколько сигналов
+  double:boolean;
+begin
+  Result:= 0;
+  if not InPlugunCode then
+  begin
+  InPlugunCode:= true;
+  try
+    try
+      // Здесь не удастся использовать case, т.к. ID_Run1 - переменная, а не конмтанта
+      // здесь LoWord(what)=2 - "2" соответствует нажатию кнопки тулбара
+      if HiWord(what)=ID_RunNIIPM
+      then
+      begin
+        NIIPMForm.ShowModal;
+      end;
+      if HiWord(what)=ID_RunFx
+      then
+      begin
+        FxForm.ShowModal(mng);
+      end;
+      if what=$000a0001
+      then
+      begin
+
+      end
+      else
+      // строка описания вызова алгоритма и список сигналов
+      if what=$000f0001
+      then
+      begin
+        STR1:=param;
+        // парсим что за алгоритм был вызван
+        strList:=ParsStrParam(str1);
+        o:=mng.AddOper(GetOperName(strlist),GetOperParams(strlist));
+        signalopts:=GetSignalOpts(strlist,0);
+        o.AddSrc(signalopts);
+        if signalopts<>nil then
+        begin
+          for I := 1 to strlist.Count - 1 do
+          begin
+            signalopts:=GetSignalOpts(strlist,i);
+            if signalopts<>nil then
+            begin
+              o.AddSrc(signalopts);
+            end
+            else
+            begin
+              break;
+            end;
+          end;
+        end;
+        // удаляем результат парсинга
+        DeleteParsResult(strlist);
+      end;
+      // событие выполнения алгоритма
+      if what=ID_NotifyEvent
+      then
+      begin
+        //str1:=VarArrayGet(param,[0]);
+        //str2:=VarArrayGet(param,[1]);
+        //mng.AddOper(str1,str2);
+      end;
+      Result:=0;
+    finally
+      begin
+        InPlugunCode:= False;
+      end;
+    end
+  except
+  end;
+  end;
+end;
+
+initialization
+  TAutoObjectFactory.Create(ComServer, TNiiPM, Class_Generator, ciMultiInstance,
+    tmApartment);
+
+end.

@@ -1,0 +1,230 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{9138d09f-b1ab-46cf-8f7e-5493655b95a2}</ProjectGuid>
+		</PropertyGroup>
+		<ItemGroup>
+			<Projects Include="BlEng\BlEng.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\sharedUtils\компоненты\dcl_dpk\dcl_own.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\3d\3dComponents\GlPackage.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\3d\GlScene.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\profileGenerator\Proilegenerator.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\recorder\plgGateControl\plgGateControl.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\recorder\SharedRUnits\RC_lib\RC_lib.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\recorder\plgControlCyclogram\plgControlCyclogram.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\recorder\plgRecorderIVPDDI\plgRecorderIVPDDI.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\tests\TestAlgLib\ProjectFFT.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\примеры\CheckSSE\CheckSSE.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\tests\delphi\fft1\TestFFTprj.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\wp\SubdiveFilePlg\SubdivFilePlg.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\key_logger\Key_Logger\SniffDll.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\wp\WPServicePlg\WpServicePlg.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\wp\WPExtPack\WPExtPack.dproj">
+				<Dependencies/>
+			</Projects>
+		</ItemGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Default.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<BorlandProject>
+					<Default.Personality/>
+				</BorlandProject>
+			</BorlandProject>
+		</ProjectExtensions>
+		<Target Name="BlEng">
+			<MSBuild Projects="BlEng\BlEng.dproj"/>
+		</Target>
+		<Target Name="BlEng:Clean">
+			<MSBuild Targets="Clean" Projects="BlEng\BlEng.dproj"/>
+		</Target>
+		<Target Name="BlEng:Make">
+			<MSBuild Targets="Make" Projects="BlEng\BlEng.dproj"/>
+		</Target>
+		<Target Name="dcl_own">
+			<MSBuild Projects="..\sharedUtils\компоненты\dcl_dpk\dcl_own.dproj"/>
+		</Target>
+		<Target Name="dcl_own:Clean">
+			<MSBuild Targets="Clean" Projects="..\sharedUtils\компоненты\dcl_dpk\dcl_own.dproj"/>
+		</Target>
+		<Target Name="dcl_own:Make">
+			<MSBuild Targets="Make" Projects="..\sharedUtils\компоненты\dcl_dpk\dcl_own.dproj"/>
+		</Target>
+		<Target Name="GlPackage">
+			<MSBuild Projects="..\3d\3dComponents\GlPackage.dproj"/>
+		</Target>
+		<Target Name="GlPackage:Clean">
+			<MSBuild Targets="Clean" Projects="..\3d\3dComponents\GlPackage.dproj"/>
+		</Target>
+		<Target Name="GlPackage:Make">
+			<MSBuild Targets="Make" Projects="..\3d\3dComponents\GlPackage.dproj"/>
+		</Target>
+		<Target Name="ComponentsLib">
+			<MSBuild Projects="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj"/>
+		</Target>
+		<Target Name="ComponentsLib:Clean">
+			<MSBuild Targets="Clean" Projects="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj"/>
+		</Target>
+		<Target Name="ComponentsLib:Make">
+			<MSBuild Targets="Make" Projects="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj"/>
+		</Target>
+		<Target Name="GlScene">
+			<MSBuild Projects="..\3d\GlScene.dproj"/>
+		</Target>
+		<Target Name="GlScene:Clean">
+			<MSBuild Targets="Clean" Projects="..\3d\GlScene.dproj"/>
+		</Target>
+		<Target Name="GlScene:Make">
+			<MSBuild Targets="Make" Projects="..\3d\GlScene.dproj"/>
+		</Target>
+		<Target Name="Proilegenerator">
+			<MSBuild Projects="..\profileGenerator\Proilegenerator.dproj"/>
+		</Target>
+		<Target Name="Proilegenerator:Clean">
+			<MSBuild Targets="Clean" Projects="..\profileGenerator\Proilegenerator.dproj"/>
+		</Target>
+		<Target Name="Proilegenerator:Make">
+			<MSBuild Targets="Make" Projects="..\profileGenerator\Proilegenerator.dproj"/>
+		</Target>
+		<Target Name="plgGateControl">
+			<MSBuild Projects="..\recorder\plgGateControl\plgGateControl.dproj"/>
+		</Target>
+		<Target Name="plgGateControl:Clean">
+			<MSBuild Targets="Clean" Projects="..\recorder\plgGateControl\plgGateControl.dproj"/>
+		</Target>
+		<Target Name="plgGateControl:Make">
+			<MSBuild Targets="Make" Projects="..\recorder\plgGateControl\plgGateControl.dproj"/>
+		</Target>
+		<Target Name="RC_lib">
+			<MSBuild Projects="..\recorder\SharedRUnits\RC_lib\RC_lib.dproj"/>
+		</Target>
+		<Target Name="RC_lib:Clean">
+			<MSBuild Targets="Clean" Projects="..\recorder\SharedRUnits\RC_lib\RC_lib.dproj"/>
+		</Target>
+		<Target Name="RC_lib:Make">
+			<MSBuild Targets="Make" Projects="..\recorder\SharedRUnits\RC_lib\RC_lib.dproj"/>
+		</Target>
+		<Target Name="plgControlCyclogram">
+			<MSBuild Projects="..\recorder\plgControlCyclogram\plgControlCyclogram.dproj"/>
+		</Target>
+		<Target Name="plgControlCyclogram:Clean">
+			<MSBuild Targets="Clean" Projects="..\recorder\plgControlCyclogram\plgControlCyclogram.dproj"/>
+		</Target>
+		<Target Name="plgControlCyclogram:Make">
+			<MSBuild Targets="Make" Projects="..\recorder\plgControlCyclogram\plgControlCyclogram.dproj"/>
+		</Target>
+		<Target Name="plgRecorderIVPDDI">
+			<MSBuild Projects="..\recorder\plgRecorderIVPDDI\plgRecorderIVPDDI.dproj"/>
+		</Target>
+		<Target Name="plgRecorderIVPDDI:Clean">
+			<MSBuild Targets="Clean" Projects="..\recorder\plgRecorderIVPDDI\plgRecorderIVPDDI.dproj"/>
+		</Target>
+		<Target Name="plgRecorderIVPDDI:Make">
+			<MSBuild Targets="Make" Projects="..\recorder\plgRecorderIVPDDI\plgRecorderIVPDDI.dproj"/>
+		</Target>
+		<Target Name="ProjectFFT">
+			<MSBuild Projects="..\tests\TestAlgLib\ProjectFFT.dproj"/>
+		</Target>
+		<Target Name="ProjectFFT:Clean">
+			<MSBuild Targets="Clean" Projects="..\tests\TestAlgLib\ProjectFFT.dproj"/>
+		</Target>
+		<Target Name="ProjectFFT:Make">
+			<MSBuild Targets="Make" Projects="..\tests\TestAlgLib\ProjectFFT.dproj"/>
+		</Target>
+		<Target Name="CheckSSE">
+			<MSBuild Projects="..\примеры\CheckSSE\CheckSSE.dproj"/>
+		</Target>
+		<Target Name="CheckSSE:Clean">
+			<MSBuild Targets="Clean" Projects="..\примеры\CheckSSE\CheckSSE.dproj"/>
+		</Target>
+		<Target Name="CheckSSE:Make">
+			<MSBuild Targets="Make" Projects="..\примеры\CheckSSE\CheckSSE.dproj"/>
+		</Target>
+		<Target Name="TestFFTprj">
+			<MSBuild Projects="..\tests\delphi\fft1\TestFFTprj.dproj"/>
+		</Target>
+		<Target Name="TestFFTprj:Clean">
+			<MSBuild Targets="Clean" Projects="..\tests\delphi\fft1\TestFFTprj.dproj"/>
+		</Target>
+		<Target Name="TestFFTprj:Make">
+			<MSBuild Targets="Make" Projects="..\tests\delphi\fft1\TestFFTprj.dproj"/>
+		</Target>
+		<Target Name="SubdivFilePlg">
+			<MSBuild Projects="..\wp\SubdiveFilePlg\SubdivFilePlg.dproj"/>
+		</Target>
+		<Target Name="SubdivFilePlg:Clean">
+			<MSBuild Targets="Clean" Projects="..\wp\SubdiveFilePlg\SubdivFilePlg.dproj"/>
+		</Target>
+		<Target Name="SubdivFilePlg:Make">
+			<MSBuild Targets="Make" Projects="..\wp\SubdiveFilePlg\SubdivFilePlg.dproj"/>
+		</Target>
+		<Target Name="SniffDll">
+			<MSBuild Projects="..\key_logger\Key_Logger\SniffDll.dproj"/>
+		</Target>
+		<Target Name="SniffDll:Clean">
+			<MSBuild Targets="Clean" Projects="..\key_logger\Key_Logger\SniffDll.dproj"/>
+		</Target>
+		<Target Name="SniffDll:Make">
+			<MSBuild Targets="Make" Projects="..\key_logger\Key_Logger\SniffDll.dproj"/>
+		</Target>
+		<Target Name="WpServicePlg">
+			<MSBuild Projects="..\wp\WPServicePlg\WpServicePlg.dproj"/>
+		</Target>
+		<Target Name="WpServicePlg:Clean">
+			<MSBuild Targets="Clean" Projects="..\wp\WPServicePlg\WpServicePlg.dproj"/>
+		</Target>
+		<Target Name="WpServicePlg:Make">
+			<MSBuild Targets="Make" Projects="..\wp\WPServicePlg\WpServicePlg.dproj"/>
+		</Target>
+		<Target Name="WPExtPack">
+			<MSBuild Projects="..\wp\WPExtPack\WPExtPack.dproj"/>
+		</Target>
+		<Target Name="WPExtPack:Clean">
+			<MSBuild Targets="Clean" Projects="..\wp\WPExtPack\WPExtPack.dproj"/>
+		</Target>
+		<Target Name="WPExtPack:Make">
+			<MSBuild Targets="Make" Projects="..\wp\WPExtPack\WPExtPack.dproj"/>
+		</Target>
+		<Target Name="Build">
+			<CallTarget Targets="BlEng;dcl_own;GlPackage;ComponentsLib;GlScene;Proilegenerator;plgGateControl;RC_lib;plgControlCyclogram;plgRecorderIVPDDI;ProjectFFT;CheckSSE;TestFFTprj;SubdivFilePlg;SniffDll;WpServicePlg;WPExtPack"/>
+		</Target>
+		<Target Name="Clean">
+			<CallTarget Targets="BlEng:Clean;dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;GlScene:Clean;Proilegenerator:Clean;plgGateControl:Clean;RC_lib:Clean;plgControlCyclogram:Clean;plgRecorderIVPDDI:Clean;ProjectFFT:Clean;CheckSSE:Clean;TestFFTprj:Clean;SubdivFilePlg:Clean;SniffDll:Clean;WpServicePlg:Clean;WPExtPack:Clean"/>
+		</Target>
+		<Target Name="Make">
+			<CallTarget Targets="BlEng:Make;dcl_own:Make;GlPackage:Make;ComponentsLib:Make;GlScene:Make;Proilegenerator:Make;plgGateControl:Make;RC_lib:Make;plgControlCyclogram:Make;plgRecorderIVPDDI:Make;ProjectFFT:Make;CheckSSE:Make;TestFFTprj:Make;SubdivFilePlg:Make;SniffDll:Make;WpServicePlg:Make;WPExtPack:Make"/>
+		</Target>
+		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+	</Project>

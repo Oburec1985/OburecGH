@@ -1,0 +1,257 @@
+object ObjInterfaceFrame: TObjInterfaceFrame
+  Left = 0
+  Top = 0
+  Width = 752
+  Height = 345
+  Align = alClient
+  TabOrder = 0
+  object ScrollBox1: TScrollBox
+    Left = 0
+    Top = 0
+    Width = 752
+    Height = 345
+    Align = alClient
+    TabOrder = 0
+    ExplicitWidth = 1049
+    object Splitter1: TSplitter
+      Left = 0
+      Top = 287
+      Width = 748
+      Height = 5
+      Cursor = crVSplit
+      Align = alBottom
+      ExplicitLeft = 11
+      ExplicitTop = 173
+      ExplicitWidth = 350
+    end
+    object MainObjGB: TGroupBox
+      Left = 0
+      Top = 0
+      Width = 748
+      Height = 287
+      Align = alClient
+      Caption = #1043#1083#1072#1074#1085#1099#1081' '#1086#1073#1098#1077#1082#1090
+      TabOrder = 0
+      ExplicitWidth = 1045
+      inline MainObjFrame: TCompaundFrame
+        Left = 2
+        Top = 15
+        Width = 744
+        Height = 270
+        Align = alClient
+        TabOrder = 0
+        ExplicitLeft = 2
+        ExplicitTop = 15
+        ExplicitWidth = 744
+        ExplicitHeight = 270
+        inherited MainObjSB: TScrollBox
+          Width = 744
+          Height = 270
+          ExplicitWidth = 744
+          ExplicitHeight = 270
+          inherited Splitter2: TSplitter
+            Width = 740
+            Height = 4
+            ExplicitLeft = 0
+            ExplicitTop = 145
+            ExplicitWidth = 740
+            ExplicitHeight = 4
+          end
+          inherited BaseObjPropertyFrame1: TBaseObjPropertyFrame
+            Width = 740
+            ExplicitWidth = 439
+            inherited MetaDataLV: TBtnListView
+              Width = 988
+              ExplicitWidth = 687
+            end
+          end
+          inherited ChanFrame1: TChanFrame
+            Top = 149
+            Width = 740
+            Height = 117
+            ExplicitWidth = 723
+            ExplicitHeight = 0
+            inherited CommonGB: TGroupBox
+              Width = 740
+              Height = 117
+              ExplicitWidth = 439
+              ExplicitHeight = 161
+              inherited ChanLV: TBtnListView
+                Width = 678
+                Height = 66
+                ExplicitWidth = 377
+                ExplicitHeight = 110
+              end
+            end
+          end
+          inherited SensorFrame1: TSensorFrame
+            Top = 149
+            Width = 740
+            Height = 117
+            ExplicitWidth = 723
+            ExplicitHeight = 0
+            inherited SensorsGB: TGroupBox
+              Top = -149
+              Width = 740
+              ExplicitTop = -105
+              ExplicitWidth = 439
+              inherited StateGB: TGroupBox
+                Width = 736
+                ExplicitWidth = 435
+                inherited PairsListView: TBtnListView
+                  Width = 1215
+                  ExplicitWidth = 914
+                end
+              end
+            end
+          end
+          inherited StageFrame1: TStageFrame
+            Top = 149
+            Width = 740
+            Height = 117
+            ExplicitWidth = 723
+            ExplicitHeight = 0
+            inherited StageGB: TGroupBox
+              Width = 740
+              Height = 117
+              ExplicitWidth = 439
+              ExplicitHeight = 161
+              inherited SignalSetupPageControl: TPageControl
+                Width = 736
+                Height = 100
+                ExplicitWidth = 435
+                ExplicitHeight = 144
+                inherited TabSheet1: TTabSheet
+                  ExplicitWidth = 427
+                  ExplicitHeight = 116
+                  inherited Splitter2: TSplitter
+                    Left = 147
+                    Height = 72
+                    ExplicitLeft = 100
+                    ExplicitHeight = 116
+                  end
+                  inherited BladesGB: TGroupBox
+                    Height = 72
+                    ExplicitHeight = 116
+                    inherited Splitter1: TSplitter
+                      Height = 55
+                      ExplicitLeft = 440
+                      ExplicitHeight = 99
+                    end
+                    inherited BladesLV: TBtnListView
+                      Height = 55
+                      ExplicitHeight = 99
+                    end
+                  end
+                  inherited ShapeGB: TGroupBox
+                    Width = 406
+                    Height = 72
+                    ExplicitWidth = 105
+                    ExplicitHeight = 116
+                    inherited ShapeLV: TBtnListView
+                      Width = 402
+                      Height = 55
+                      ExplicitWidth = 98
+                      ExplicitHeight = 59
+                    end
+                  end
+                  inherited StagePropertysGB: TGroupBox
+                    Left = 153
+                    Height = 72
+                    ExplicitLeft = 153
+                    ExplicitHeight = 116
+                  end
+                end
+              end
+            end
+          end
+          inherited TurbineFrame1: TTurbineFrame
+            Top = 149
+            Width = 740
+            Height = 117
+            Visible = True
+            ExplicitWidth = 723
+            ExplicitHeight = 0
+            inherited TurbinePropGB: TGroupBox
+              Width = 740
+              Height = 117
+              ExplicitWidth = 439
+              ExplicitHeight = 161
+              inherited CfgTV: TTreeView
+                Width = 2062
+                ExplicitWidth = 1761
+              end
+              inherited RecentFileEdit: TEdit
+                Width = 2062
+                ExplicitWidth = 1761
+              end
+            end
+          end
+          inherited PairFrame1: TPairFrame
+            Top = 149
+            Width = 740
+            Height = 117
+            ExplicitWidth = 723
+            ExplicitHeight = 0
+            inherited PairGB: TGroupBox
+              Width = 740
+              Height = 117
+              ExplicitWidth = 439
+              ExplicitHeight = 161
+              DesignSize = (
+                740
+                117)
+              inherited SensorsLV: TBtnListView
+                Width = 1280
+                Height = 174
+                ExplicitWidth = 979
+              end
+            end
+          end
+          inherited UTSFrame1: TUTSFrame
+            Top = 149
+            Width = 740
+            Height = 117
+            inherited UTSLV: TBtnListView
+              Height = 94
+              ExplicitHeight = 98
+            end
+          end
+        end
+      end
+    end
+    object SelectActionGB: TGroupBox
+      Left = 0
+      Top = 292
+      Width = 748
+      Height = 49
+      Align = alBottom
+      Caption = #1042#1099#1073#1077#1088#1080#1090#1077' '#1076#1077#1081#1089#1090#1074#1080#1077
+      TabOrder = 1
+      ExplicitTop = 251
+      ExplicitWidth = 447
+      DesignSize = (
+        748
+        49)
+      object CancelBtn: TButton
+        Left = 8
+        Top = 19
+        Width = 75
+        Height = 25
+        Caption = #1054#1090#1084#1077#1085#1072
+        TabOrder = 0
+      end
+      object ApplyBtn: TButton
+        Left = 715
+        Top = 19
+        Width = 75
+        Height = 25
+        Anchors = [akTop, akRight]
+        Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
+        TabOrder = 1
+        OnClick = ApplyBtnClick
+        ExplicitLeft = 414
+      end
+    end
+  end
+end

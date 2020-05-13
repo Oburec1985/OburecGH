@@ -1,0 +1,100 @@
+unit uUTSFrame;
+
+interface
+
+uses
+  Windows, SysUtils, Classes, Forms, uUtsSensor, ubldobj, uChan, uBldGlobalStrings,
+  StdCtrls, ComCtrls, uBtnListView, uBaseObjService, utickdata, Controls,
+  uBldCompProc;
+
+type
+  TUTSFrame = class(TFrame)
+    UTSChannel: TComboBox;
+    UtsLabel: TLabel;
+    UTSLV: TBtnListView;
+  private
+    s:cUTSSensor;
+  private
+    procedure initUtsLV;
+    procedure ShowTicks;
+    procedure addtick(tick:stickdata; t:single);
+  public
+    //  отобразить свойства объекта в фрейм
+    procedure GetObj(obj:cbldobj);
+    //  перенести свойства объекта из фрейма в объект
+    procedure SetObj(obj:cbldobj);
+    constructor create(aOwner:tcomponent);override;
+  end;
+
+implementation
+
+{$R *.dfm}
+
+procedure TUTSFrame.initUtsLV;
+var
+  col:tlistcolumn;
+begin
+
+  UTSLV.Columns.Clear;
+  col:=UTSLV.Columns.Add;
+  col.Caption:=v_ColNum;
+  col.width:=100;
+  // добавляем колонку время в тиках
+  col:=UTSLV.Columns.Add;
+  col.Caption:=v_ColTick;
+  col.width:=100;
+  // добавляем колонку время в секундах
+  col:=UTSLV.Columns.Add;
+  col.Caption:=v_Time;
+  col.width:=100;
+end;
+
+procedure TUTSFrame.addtick(tick:stickdata; t:single);
+var
+  li:tlistitem;
+begin
+  li:=UTSLV.items.Add;
+  UTSLV.SetSubItemByColumnName(inttostr(li.Index),v_ColNum, li);
+  UTSLV.SetSubItemByColumnName(ticktostr(tick), v_ColTick, li);
+  UTSLV.SetSubItemByColumnName(floattostr(t), v_Time, li);
+end;
+
+procedure TUTSFrame.ShowTicks;
+var
+  I: Integer;
+begin
+  UTSLV.Clear;
+  for I := 0 to s.Count - 1 do
+  begin
+    addtick(s.gettick(i),s.gettime(i));
+  end;
+end;
+
+procedure TUTSFrame.GetObj(obj:cbldobj);
+begin
+  s:=cUTSSensor(obj);
+  showChanInCB(s.eng,UTSChannel);
+  if s.channumber<>-1 then
+  begin
+    UTSChannel.text:=s.chan.name;
+  end;
+  if s.chan<>nil then
+    ShowTicks;
+end;
+
+procedure TUTSFrame.SetObj(obj:cbldobj);
+begin
+  if UTSChannel.ItemIndex<>-1 then
+  begin
+    s.SetUtsChan(cChan(UTSChannel.Items.Objects[UTSChannel.ItemIndex]));
+    ShowTicks;
+  end;
+end;
+
+constructor TUTSFrame.create(aOwner:tcomponent);
+begin
+  inherited;
+  initUtsLV;
+end;
+
+end.

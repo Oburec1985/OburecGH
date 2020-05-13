@@ -1,0 +1,14 @@
+program Proilegenerator;
+
+uses
+  Forms,
+  ProfileGenerator in '..\ProfileGenerator.pas' {EditProfileForm};
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TEditProfileForm, EditProfileForm);
+  Application.Run;
+end.

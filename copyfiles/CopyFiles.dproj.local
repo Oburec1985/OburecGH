@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2017.10.25 10:53:14.721.pas,C:\Users\Скрипник\Documents\RAD Studio\Projects\Unit1.pas=E:\Oburec\delphi\2011\CopyFiles.pas</Transaction>
+    <Transaction>2017.10.25 10:53:14.732.dfm,C:\Users\Скрипник\Documents\RAD Studio\Projects\Unit1.dfm=E:\Oburec\delphi\2011\CopyFiles.dfm</Transaction>
+    <Transaction>2017.10.25 10:54:13.819.pas,E:\Oburec\delphi\2011\CopyFiles.pas=E:\Oburec\delphi\2011\copyfiles\uCopyFiles.pas</Transaction>
+    <Transaction>2017.10.25 10:54:13.819.dfm,E:\Oburec\delphi\2011\CopyFiles.dfm=E:\Oburec\delphi\2011\copyfiles\uCopyFiles.dfm</Transaction>
+    <Transaction>2017.10.25 10:54:23.091.dproj,C:\Users\Скрипник\Documents\RAD Studio\Projects\Project1.dproj=E:\Oburec\delphi\2011\copyfiles\CopyFiles.dproj</Transaction>
+  </Transactions>
+</BorlandProject>

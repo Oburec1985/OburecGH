@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2017.12.28 14:04:42.945.dproj,C:\Users\Скрипник\Documents\RAD Studio\Projects\Package1.dproj=E:\Oburec\delphi\2011\recorder\SharedRUnits\RC_lib\RC_lib.dproj</Transaction>
+    <Transaction>2017.12.28 14:06:05.487.pas,E:\Oburec\delphi\2011\recorder\SharedRUnits\RC_lib\Unit1.pas=E:\Oburec\delphi\2011\recorder\SharedRUnits\RC_lib\uRcCtrls.pas</Transaction>
+    <Transaction>2017.12.28 14:14:25.031.pas,E:\Oburec\delphi\2011\recorder\SharedRUnits\uCreateComponents.pas=</Transaction>
+    <Transaction>2017.12.28 14:15:07.306.pas,E:\Oburec\delphi\2011\recorder\SharedRUnits\RC_lib\Unit1.pas=E:\Oburec\delphi\2011\recorder\SharedRUnits\uRCFunc.pas</Transaction>
+    <Transaction>2017.12.28 14:39:33.891.pas,E:\Oburec\delphi\2011\recorder\SharedRUnits\PluginClass.pas=</Transaction>
+    <Transaction>2017.12.28 14:39:44.563.pas,E:\Oburec\delphi\2011\recorder\SharedRUnits\uTrigChain.pas=</Transaction>
+    <Transaction>2017.12.28 14:39:56.042.pas,E:\Oburec\delphi\2011\recorder\SharedRUnits\uCompMng.pas=</Transaction>
+    <Transaction>2017.12.28 14:40:00.385.pas,E:\Oburec\delphi\2011\recorder\SharedRUnits\uRecBasicFactory.pas=</Transaction>
+    <Transaction>2017.12.28 14:40:09.505.pas,E:\Oburec\delphi\2011\recorder\SharedRUnits\uTagMng.pas=</Transaction>
+    <Transaction>2017.12.28 14:40:16.614.pas,E:\Oburec\delphi\2011\recorder\SharedRUnits\uFrmSync.pas=</Transaction>
+    <Transaction>2017.12.28 14:40:16.614.dfm,E:\Oburec\delphi\2011\recorder\SharedRUnits\uFrmSync.dfm=</Transaction>
+    <Transaction>2017.12.28 14:52:20.642.PAS,E:\Oburec\delphi\2011\recorder\SharedRUnits\interfaces\GUIDDEF.PAS=</Transaction>
+    <Transaction>2017.12.28 14:53:12.696.PAS,E:\Oburec\delphi\2011\recorder\SharedRUnits\interfaces\IVFORM.PAS=</Transaction>
+  </Transactions>
+</BorlandProject>

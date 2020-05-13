@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Root>
+	<ControlCyclogram>
+		<cControlList ObjType="cControlList" Node="cControlList" AutoCreate="true">
+			<Control_01 ObjType="cDacControl" Node="Control_01" AutoCreate="false" FeedBackName="Feedback_01" DACName="Control_01" DACID="1"/>
+			<Control_02 ObjType="cDacControl" Node="Control_02" AutoCreate="false" FeedBackName="Feedback_02" DACName="Control_02" DACID="2"/>
+		</cControlList>
+		<cProgramList ObjType="cProgramList" Node="cProgramList" AutoCreate="true">
+			<Pr_01 ObjType="cProgramObj" Node="Pr_01" AutoCreate="false" ControlCount="2" Control0="Control_01" Control1="Control_02" ProgRepeat="1" ProgStartOnPlay="true">
+				<Pr_01_Режимы ObjType="cBaseObj" Node="Pr_01_Режимы" AutoCreate="true">
+					<m1 ObjType="cModeObj" Node="m1" AutoCreate="false" Length="10">
+						<TaskList NCount="2">
+							<T0 TaskName="Control_01" TaskVal="0" TaskType="0" LeftTangX="0" LeftTangY="0" RightTangX="0" RightTangY="0"/>
+							<T1 TaskName="Control_02" TaskVal="0" TaskType="0" LeftTangX="0" LeftTangY="0" RightTangX="0" RightTangY="0"/>
+							<Step0 StepChannel="St_01" StepVal="1"/>
+							<Step1 StepChannel="St_02" StepVal="1"/>
+							<Step2 StepChannel="St_03" StepVal="1"/>
+						</TaskList>
+						<StepList NCount="3"/>
+					</m1>
+					<m2 ObjType="cModeObj" Node="m2" AutoCreate="false" Length="10">
+						<TaskList NCount="2">
+							<T0 TaskName="Control_01" TaskVal="5" TaskType="2" LeftTangX="4.43773" LeftTangY="9.8785" RightTangX="14.2684" RightTangY=".878505"/>
+							<T1 TaskName="Control_02" TaskVal="7" TaskType="0" LeftTangX="0" LeftTangY="2.11215" RightTangX="0" RightTangY="2.11215"/>
+							<Step0 StepChannel="St_01" StepVal="0"/>
+							<Step1 StepChannel="St_02" StepVal="0"/>
+							<Step2 StepChannel="St_03" StepVal="0"/>
+						</TaskList>
+						<StepList NCount="3"/>
+					</m2>
+					<m3 ObjType="cModeObj" Node="m3" AutoCreate="false" Length="10">
+						<TaskList NCount="2">
+							<T0 TaskName="Control_01" TaskVal="10" TaskType="1" LeftTangX="0" LeftTangY="0" RightTangX="0" RightTangY="0"/>
+							<T1 TaskName="Control_02" TaskVal="0" TaskType="0" LeftTangX="0" LeftTangY="0" RightTangX="0" RightTangY="0"/>
+							<Step0 StepChannel="St_01" StepVal="1"/>
+							<Step1 StepChannel="St_02" StepVal="1"/>
+							<Step2 StepChannel="St_03" StepVal="1"/>
+						</TaskList>
+						<StepList NCount="3"/>
+					</m3>
+				</Pr_01_Режимы>
+			</Pr_01>
+			<Pr_02 ObjType="cProgramObj" Node="Pr_02" AutoCreate="false" ControlCount="1" Control0="Control_02" ProgRepeat="1" ProgStartOnPlay="false">
+				<Pr_02_Режимы ObjType="cBaseObj" Node="Pr_02_Режимы" AutoCreate="true">
+					<Pr02_m1 ObjType="cModeObj" Node="Pr02_m1" AutoCreate="false" Length="60">
+						<TaskList NCount="2">
+							<T0 TaskName="Control_01" TaskVal="0" TaskType="0" LeftTangX="0" LeftTangY="0" RightTangX="0" RightTangY="0"/>
+							<T1 TaskName="Control_02" TaskVal="0" TaskType="0" LeftTangX="0" LeftTangY="0" RightTangX="0" RightTangY="0"/>
+						</TaskList>
+						<StepList NCount="0"/>
+					</Pr02_m1>
+				</Pr_02_Режимы>
+			</Pr_02>
+		</cProgramList>
+		<TrigsNode>
+			<ActionTrig_0 Name="Tr_fall" Type="1" Inverse="false" EnableOnStart="true" DisableOnApply="false" Trigname="Tr_fall" Threshold=".5" OrCount="0" AndCount="0" ChildCount="0">
+				<Actions>
+					<Act_0 TargetName="Pr_02" ActionType="0" ActionFront="true"/>
+				</Actions>
+			</ActionTrig_0>
+			<ActionTrig_1 Name="Tr_front" Type="0" Inverse="false" EnableOnStart="true" DisableOnApply="false" Trigname="Tr_front" Threshold=".5" OrCount="0" AndCount="0" ChildCount="0">
+				<Actions>
+					<Act_0 TargetName="Tr_pause" ActionType="5" ActionFront="true"/>
+				</Actions>
+			</ActionTrig_1>
+			<ActionTrig_2 Name="Tr_NextMode" Type="0" Inverse="false" EnableOnStart="true" DisableOnApply="false" Trigname="Tr_NextMode" Threshold=".5" OrCount="0" AndCount="0" ChildCount="0">
+				<Actions>
+					<Act_0 TargetName="Pr_01" ActionType="2" ActionFront="true"/>
+				</Actions>
+			</ActionTrig_2>
+			<ActionTrig_3 Name="Tr_pause" Type="4" Inverse="false" EnableOnStart="false" DisableOnApply="true" dueTime="5000" OrCount="0" AndCount="0" ChildCount="0">
+				<Actions>
+					<Act_0 TargetName="Pr_02" ActionType="1" ActionFront="true"/>
+				</Actions>
+			</ActionTrig_3>
+			<ActionTrig_4 Name="Tr_PrevMode" Type="0" Inverse="false" EnableOnStart="true" DisableOnApply="false" Trigname="Tr_PrevMode" Threshold=".5" OrCount="0" AndCount="0" ChildCount="0">
+				<Actions>
+					<Act_0 TargetName="Pr_01" ActionType="3" ActionFront="true"/>
+				</Actions>
+			</ActionTrig_4>
+			<ActionTrig_5 Name="TrStartRecorder" Type="5" Inverse="false" EnableOnStart="false" DisableOnApply="false" Trigname="TrStartRecorder" Threshold="0" OrCount="0" AndCount="0" ChildCount="0">
+				<Actions/>
+			</ActionTrig_5>
+			<ActionTrig_6 Name="TrStoptRecorder" Type="6" Inverse="false" EnableOnStart="false" DisableOnApply="false" Trigname="TrStoptRecorder" Threshold="0" OrCount="0" AndCount="0" ChildCount="0">
+				<Actions>
+					<Act_0 TargetName="Объект" ActionType="7" ActionFront="true" MDBPropName="Digit" MDBPropVal="1"/>
+				</Actions>
+			</ActionTrig_6>
+		</TrigsNode>
+	</ControlCyclogram>
+	<Algorithm>
+		<cCounterAlg ObjType="cCounterAlg" Node="cCounterAlg" AutoCreate="false" Properties="Hi=0.7,Lo=0.3,Channel=plgEmul_sin100Hz">
+			<InputTags>
+				<Tag_0 TagName="plgEmul_sin100Hz" TagID="6618499029238022160"/>
+			</InputTags>
+			<OutputTags>
+				<Tag_0 TagName="plgEmul_sin100Hz_cnt" TagID="6618499033532989469"/>
+			</OutputTags>
+		</cCounterAlg>
+		<cGrmsAlg ObjType="cGrmsAlg" Node="cGrmsAlg" AutoCreate="false" Properties="Band1=0.9,Band2=1.1,FFTCount=16384,UseTaho=-1,UseBand=-1,Percent=-1,dX=0.1,Channel=plgEmul_sin100Hz,TahoChannel=plgEmul_sin100Hz,Taho=plgEmul_sin100Hz">
+			<InputTags>
+				<Tag_0 TagName="plgEmul_sin100Hz" TagID="6618499029238022160"/>
+				<Tag_1 TagName="plgEmul_sin100Hz" TagID="6618499029238022160"/>
+			</InputTags>
+			<OutputTags>
+				<Tag_0 TagName="plgEmul_sin100Hz_Grms" TagID="6618499033532989470"/>
+			</OutputTags>
+		</cGrmsAlg>
+		<cSrcList ObjType="cSrcList" Node="cSrcList" AutoCreate="true">
+			<cSpm ObjType="cSpm" Node="cSpm" AutoCreate="false" Properties="FFTCount=256,Overflow=0,dx=-1,blockcount=1,Channel=plgEmul_sin100Hz,OutChannel=plgEmul_sin100Hz_Spm" ResName="plgEmul_sin100Hz_spm">
+				<InputTag TagName="plgEmul_sin100Hz" TagID="6618499029238022160"/>
+			</cSpm>
+			<plgEmul_sin100Hz_spm_001 ObjType="cSpm" Node="plgEmul_sin100Hz_spm_001" AutoCreate="false" Properties="FFTCount=1024,Overflow=0,dx=-1,blockcount=1,Channel=plgEmul_sin100Hz,OutChannel=plgEmul_sin100Hz_Spm_001" ResName="plgEmul_sin100Hz_spm_001">
+				<InputTag TagName="plgEmul_sin100Hz" TagID="6618499029238022160"/>
+			</plgEmul_sin100Hz_spm_001>
+		</cSrcList>
+		<cTahoAlg ObjType="cTahoAlg" Node="cTahoAlg" AutoCreate="false" Properties="TahoType=FFT,LHi=70,LLo=30,FFTCount=16384,Period=0.1,Channel=plgEmul_sin100Hz,FFTThreshold=0.1,FFTUseBand=-1,FFTBand1=10,FFTBand2=20000">
+			<InputTags>
+				<Tag_0 TagName="plgEmul_sin100Hz" TagID="6618499029238022160"/>
+			</InputTags>
+			<OutputTags>
+				<Tag_0 TagName="plgEmul_sin100Hz_Taho" TagID="6618499033532989473"/>
+			</OutputTags>
+		</cTahoAlg>
+		<plgEmul_sin100Hz_FillFct ObjType="cFillingFactorAlg" Node="plgEmul_sin100Hz_FillFct" AutoCreate="false" Properties="Lvl=0.5,Fs=10,Channel=plgEmul_sin100Hz">
+			<InputTags>
+				<Tag_0 TagName="plgEmul_sin100Hz" TagID="6618499029238022160"/>
+			</InputTags>
+			<OutputTags>
+				<Tag_0 TagName="plgEmul_sin100Hz_FillFct" TagID="6618499033532989474"/>
+			</OutputTags>
+		</plgEmul_sin100Hz_FillFct>
+		<plgEmul_sin100Hz_Ph ObjType="cPhaseAlg" Node="plgEmul_sin100Hz_Ph" AutoCreate="false" Properties="FFTCount=512,Bandwidth=0.1,dX=0.1,Channel2=plgEmul_sin100Hz,Channel1=plgEmul_sin100Hz,OutChannel=plgEmul_sin100Hz_Ph">
+			<InputTags>
+				<Tag_0 TagName="plgEmul_sin100Hz" TagID="6618499029238022160"/>
+				<Tag_1 TagName="plgEmul_sin100Hz" TagID="6618499029238022160"/>
+			</InputTags>
+			<OutputTags>
+				<Tag_0 TagName="plgEmul_sin100Hz_Ph" TagID="6618499037827956771"/>
+			</OutputTags>
+		</plgEmul_sin100Hz_Ph>
+		<plgEmul_sin100Hz_rms ObjType="cGrmsSrcAlg" Node="plgEmul_sin100Hz_rms" AutoCreate="false" Properties="FFTCount=256,Band1=0.9,Band2=1.1,dX=0.2,Percent=-1,NumGarm=1,Channel=plgEmul_sin100Hz,Taho=plgEmul_sin100Hz">
+			<InputTags>
+				<Tag_0 TagName="plgEmul_sin100Hz" TagID="6618499029238022160"/>
+				<Tag_1 TagName="plgEmul_sin100Hz" TagID="6618499029238022160"/>
+			</InputTags>
+			<OutputTags>
+				<Tag_0 TagName="plgEmul_sin100Hz_rms" TagID="6618499037827956772"/>
+			</OutputTags>
+		</plgEmul_sin100Hz_rms>
+	</Algorithm>
+</Root>

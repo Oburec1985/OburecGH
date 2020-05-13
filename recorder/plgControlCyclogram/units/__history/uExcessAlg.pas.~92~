@@ -1,0 +1,310 @@
+// Алгоритм расчета эксцесса по временной области
+unit uExcessAlg;
+interface
+uses
+  classes, windows, activex, ubasealg, uCommonMath, uRCFunc, tags, recorder,
+  blaccess, nativexml, ucommontypes, uFFT, Ap, uSpm, uMyMath, math,
+  pluginclass, sysutils;
+
+type
+  PhaseRecord = record
+    r:double;
+    im:double;
+    // время
+    time:double;
+    // частота записи
+    freq:double;
+  end;
+
+  cExcessAlg = class(cbasealg)
+  public
+    m_InTag: cTag;
+  protected
+    m_outTag: cTag;
+    // тип алгоритма временная/ частотная область
+    m_type: integer;
+    // число точек для расчета одного значения
+    m_PortionSize: integer;
+    // размер порции для расчета в секундах
+    m_PortionSize_d: double;
+  private
+  protected
+    procedure setinptag(t: itag);
+    procedure doAfterload; override;
+    procedure SetProperties(str: string); override;
+    function  GetProperties: string; override;
+    procedure doOnStart; override;
+    function genTagName: string;override;
+    procedure doEval(tag: cTag; time: double); override;
+    //procedure doUpdateSrcData(sender: tobject); override;
+    //procedure doEndEvalBlock(sender: tobject); override;
+    // если поменялось имя входного канала то пересоздаем имя выходного канала, а может и тип
+    // вызывается при загрузке или при установке входного тега
+    procedure createOutChan;
+    procedure LoadObjAttributes(xmlNode: txmlNode; mng: tobject); override;
+    function ready: boolean; override;
+    procedure SaveObjAttributes(xmlNode: txmlNode); override;
+    procedure setfirstchannel(t: itag);override;
+  public
+    constructor create; override;
+    destructor destroy; override;
+    class function getdsc: string; override;
+  end;
+
+const
+  sqrt2 = 1.4142135623730950488016887242097;
+  C_ExcessOpts = 'dT=1, Type=0, pCount=1000' ;
+  // разница в секундах меньше которой считаем что были потери данных
+  c_mindT=0.0001;
+
+implementation
+
+{ cExcessAlg }
+
+procedure cExcessAlg.LoadObjAttributes(xmlNode: txmlNode; mng: tobject);
+var
+  str: string;
+begin
+  inherited;
+end;
+
+procedure cExcessAlg.SaveObjAttributes(xmlNode: txmlNode);
+begin
+  inherited;
+end;
+
+procedure cExcessAlg.setfirstchannel(t: itag);
+var
+  lstr:string;
+  fs:double;
+begin
+  lstr := GetParam(m_Properties, 'Channel');
+  m_InTag.tag:=t;
+  fs:=m_InTag.freq;
+  // число точек за период рекордера
+  m_PortionSize:=trunc(fs*GetREFRESHPERIOD);
+  m_PortionSize_d:=GetREFRESHPERIOD;
+  AddParamF(m_Properties,'dT',FLOATTOSTR(m_PortionSize_d));
+  m_Properties:=AddParamF(m_Properties,'Channel',m_InTag.tagname);
+  if lstr='' then
+  begin
+    name:=resname;
+  end;
+end;
+
+procedure cExcessAlg.setinptag(t: itag);
+var
+  bl: IBlockAccess;
+begin
+  if t = nil then
+    exit;
+  m_intag.tag := t;
+  if not FAILED(t.QueryInterface(IBlockAccess, bl)) then
+  begin
+    m_intag.block := bl;
+    bl := nil;
+  end;
+  if m_outTag = nil then
+    createOutChan
+  else
+  begin
+    // оставлено только в setprops и в loadprops
+    //updateOutChan;
+  end;
+end;
+
+constructor cExcessAlg.create;
+begin
+  inherited;
+  Properties := C_ExcessOpts;
+  m_InTag:=cTag.create;
+  //addInputTag(m_InTag);
+  m_outTag:=cTag.create;
+  //addInputTag(m_outTag);
+end;
+
+destructor cExcessAlg.destroy;
+begin
+  m_InTag.destroy;
+  m_InTag:=nil;
+  m_outTag.destroy;
+  m_outTag:=nil;
+  inherited;
+end;
+
+procedure cExcessAlg.createOutChan;
+var
+  tagname: string;
+  bl: IBlockAccess;
+  outfreq: double;
+  inTag: cTag;
+  t:itag;
+begin
+  if m_outTag.tag<>nil then exit;
+  if isalive(m_outTag.tag) then
+    exit
+  else
+    m_outTag.tag:=nil;
+  // если выходного тега нет, то генерим новый
+  if inTag.tag <> nil then
+  begin
+    ecm;
+    if m_outTag.tagname='' then
+      tagname:=genTagName;
+    t:=getTagByName(tagname);
+    if t<>nil then
+      m_outTag.tag:=t
+    else
+      m_outTag.tag := createScalar(tagname, true);
+    if not FAILED(m_outTag.tag.QueryInterface(IBlockAccess, bl)) then
+    begin
+      m_outTag.block := bl;
+      bl := nil;
+    end;
+    lcm;
+  end;
+end;
+
+
+procedure cExcessAlg.doAfterload;
+begin
+  inherited;
+end;
+
+procedure cExcessAlg.doEval(tag: cTag; time: double);
+var
+  I,len, l:integer;
+  d,ld,m,maxv,minv,a, excess:single;
+  darr:dArray;
+begin
+  l:=length(tag.m_ReadData);
+  len:=l-tag.lastindex;
+  darr:=dArray(@tag.m_ReadData[tag.lastindex]);
+  m:=Sum(darr)/len;
+  for I:= tag.lastindex to l - 1 do
+  begin
+    ld:=(tag.m_ReadData[i]-m);
+    d:=d*d+d;
+  end;
+  d:=d/len;
+  maxv:=maxvalue(darr);
+  minv:=minvalue(darr);
+  a:=max(abs(maxv-m),abs(minv-m));
+  excess:=a/d;
+  m_outTag.tag.PushValue(excess,-1);
+end;
+
+procedure cExcessAlg.doOnStart;
+begin
+  inherited;
+  m_InTag.doOnStart;
+  m_outTag.doOnStart;
+end;
+
+function cExcessAlg.genTagName: string;
+var
+  tagname: string;
+begin
+  tagname := m_InTag.tagname;
+  result := tagname + '_Excess';
+end;
+
+class function cExcessAlg.getdsc: string;
+begin
+  result := 'Эксцесс';
+end;
+
+function cExcessAlg.GetProperties: string;
+var
+  pars: tstringlist;
+  b: boolean;
+  t: itag;
+  str: string;
+begin
+  //  'dT=1, Type=0, pCount=1000';
+  pars := tstringlist.create;
+  addParam(pars, 'dT', replaceChar(floattostr(m_PortionSize_d),',','.'));
+  addParam(pars, 'Type', inttostr(m_type));
+  addParam(pars, 'pCount', inttostr(m_PortionSize));
+  if m_intag.tagname <> '' then
+  begin
+    addParam(pars, 'Channel', m_intag.tagname);
+    // если тег существует то берем его имя иначе генерим новое
+    if m_outTag.tag<>nil then
+    begin
+      str:=m_outTag.tagname;
+    end
+    else
+    begin
+      str := genTagName;
+      b := true;
+      while b do
+      begin
+        t := getTagByName(str);
+        if ((t = nil) or (t = m_outTag.tag)) then
+        begin
+          b := false
+        end
+        else
+          str := ModName(str, false);
+      end;
+    end;
+    addParam(pars, 'OutChannel', str);
+  end;
+  m_properties := ParsToStr(pars);
+  result:=m_properties;
+  delpars(pars);
+  pars.destroy;
+end;
+
+procedure cExcessAlg.SetProperties(str: string);
+var
+  lstr: string;
+  t: itag;
+  changed: boolean;
+begin
+  //inherited;
+  m_properties:=updateParams(m_properties, str, '', ' ');
+  changed := false;
+
+  lstr := GetParam(str, 'dT');
+  m_PortionSize_d:=strtoFloatExt(lstr);
+
+  lstr := GetParam(str, 'Type');
+  if isValue(str) then
+    m_type:=strtoint(lstr)
+  else
+    m_type:=0;
+
+  lstr := GetParam(str, 'Channel');
+  if CheckStr(lstr) then
+  begin
+    t := getTagByName(lstr);
+    if t<>nil then
+    begin
+      m_InTag.tag:=t;
+    end;
+  end;
+  lstr := GetParam(str, 'OutChannel');
+  if CheckStr(lstr) then
+  begin
+    t := getTagByName(lstr);
+    if t<>nil then
+    begin
+      m_OutTag.tag:=t;
+    end;
+  end;
+end;
+
+function cExcessAlg.ready: boolean;
+begin
+  result := false;
+  if m_InTag.tag <> nil then
+  begin
+    result := true;
+  end;
+end;
+
+
+
+end.

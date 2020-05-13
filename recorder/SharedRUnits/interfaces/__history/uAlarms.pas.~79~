@@ -1,0 +1,168 @@
+unit uAlarms;
+
+interface
+
+uses Windows, ActiveX, signal, tags;
+
+type
+  VARIANT_BOOL = short;
+
+  BStr = TBStr;
+  COLORREF = integer;
+
+const
+  Variant_True=-1;
+  Variant_False=0;
+
+
+
+// {25AB9A87-EE0E-4a65-B535-761FD235C232}
+  IID_IAlarmEvent: TGUID = (
+    D1:$25ab9a87;  D2: $ee0e; D3: $4a65; D4: ($b5, $35, $76, $1f, $d2, $35, $c2, $32 ));
+
+
+  // {5DCF608C-846A-4af6-8976-636D45D80765}
+  IID_IAlarmsHandler: TGUID = (
+    D1:$5dcf608c;  D2: $846a; D3: $4af6; D4: ($89, $76, $63, $6d, $45, $d8, $07, $65));
+
+  // {4555B4F4-721B-4781-BF28-2F3B3D51BC20}
+  IID_IAlarmsControl_1: TGUID = (
+    //   4555b4f4       721b       4781        bf   28   2f   3b   3d   51   bc   20
+    D1: $4555b4f4; D2: $721B; D3: $4781; D4: ($bf, $28, $2f, $3b, $3d, $51, $bc, $20));
+
+  // {47248BF5-198C-417c-9A6A-EE3AB8F46020}
+  IID_IAlarmsControl: TGUID = (
+    //   47248BF5       198C       417c           9a   6a   ee   3a   b8   f4   60   20
+    D1: $47248BF5; D2: $198C; D3: $417c;    D4: ($9A, $6A, $EE, $3A, $B8, $F4, $60, $20));
+
+  // {A6C5971C-E555-45f7-9392-01E8C49E8624}
+  IID_IAlarm: TGUID = (
+    //   a6c5971c       e555       45f7        93   92   01   e8  c4    9e   86   24
+    D1: $A6C5971C; D2: $E555; D3: $45F7; D4: ($93, $92, $01, $E8, $C4, $9E, $86, $24));
+
+// {4CBF0ABB-76D7-439c-8F3B-DDE85BB0A138}
+  IID_IAlarmEventHandler: TGUID = (
+    //   4cbf0abb      76d7        439c        8f   3b   dd   e8   5b   b0   a1   38
+    D1: $4cbf0abb; D2: $76d7; D3: $439c; D4: ($8f, $3b, $dd, $e8, $5b, $b0, $a1, $38));
+
+
+
+
+
+
+type
+  IAlarmHolder = interface
+    ['{25AB9A87-EE0E-4a65-B535-761FD235C233}']
+    //virtual HRESULT STDMETHODCALLTYPE GetState(ULONG* a_pnState)const=0;
+    function GetState(var a_pnState: ULONG): HRESULT;
+  end;
+
+  // IAlarmEvent
+  // callback интерфейс для оповещения о срабатывании уставки
+  // желающие получать уставку должны реализовать объекты
+  // поддерживающие IAlarmEvent и зарегистрировать их в соответствующем IAlarmHolder
+  IAlarmEvent = interface
+    ['{25AB9A87-EE0E-4a65-B535-761FD235C232}']
+		// Событие - сработала уставка
+		// virtual HRESULT STDMETHODCALLTYPE OnAlarm(/*IAlarmHolder* a_pAlarm*/)=0;
+    function OnAlarm(var a_pAlarm: IAlarmHolder): HRESULT;
+		// Событие - выход из состояния "сработала уставка"
+		// virtual HRESULT STDMETHODCALLTYPE OnAlarmLeave(/*IAlarmHolder* a_pAlarm*/)=0;
+    function OnAlarmLeave(var a_pAlarm: IAlarmHolder): HRESULT;
+  end;
+
+
+  IAlarmsHandler = interface
+    ['{A6C5971C-E555-45f7-9392-01E8C49E8624}']
+		// Проверить значение
+		//virtual HRESULT STDMETHODCALLTYPE ProcessValue(double a_dblValue, VARIANT_BOOL* a_pAlarm)=0;
+    function ProcessValue(a_dblValue: double; var a_pAlarm: VARIANT_BOOL): HRESULT;
+  end;
+
+  IAlarm = interface
+    ['{A6C5971C-E555-45f7-9392-01E8C49E8624}']
+    // Получить уровень
+    // virtual HRESULT STDMETHODCALLTYPE GetLevel(double* a_pdblLevel)=0;
+    function GetLevel(var a_pdblLevel: double): HRESULT;
+    // Установить уровень
+    // virtual HRESULT STDMETHODCALLTYPE SetLevel(double a_dblLevel)=0;
+    function SetLevel(a_dblLevel: double): HRESULT;
+    // virtual HRESULT STDMETHODCALLTYPE GetEnabled(VARIANT_BOOL* a_pbFlag)=0;
+    function GetEnabled(var a_pbFlag: VARIANT_BOOL): HRESULT;
+    // virtual HRESULT STDMETHODCALLTYPE SetEnabled(VARIANT_BOOL a_bFlag)=0;
+    function SetEnabled(a_pbFlag: VARIANT_BOOL): HRESULT;
+    // virtual HRESULT STDMETHODCALLTYPE GetRecTrigger(VARIANT_BOOL* a_pbFlag)=0;
+    function GetRecTrigger(var a_pbFlag: VARIANT_BOOL): HRESULT;
+    // virtual HRESULT STDMETHODCALLTYPE SetRecTrigger(VARIANT_BOOL a_bFlag)=0;
+    function SetRecTrigger(a_pbFlag: VARIANT_BOOL): HRESULT;
+    // virtual HRESULT STDMETHODCALLTYPE GetSignalTo(BSTR* a_pbstrName)=0;
+    function GetSignalTo(var a_pbstrName: BStr): HRESULT;
+    // virtual HRESULT STDMETHODCALLTYPE SetSignalTo(BSTR a_pbstrName)=0;
+    function SetSignalTo(a_pbstrName: BStr): HRESULT;
+    // virtual HRESULT STDMETHODCALLTYPE GetSignalToValue(double* a_pdblVal)=0;
+    function GetSignalToValue(var a_pdblVal: double): HRESULT;
+    // virtual HRESULT STDMETHODCALLTYPE SetSignalToValue(double a_dblVal)=0;
+    function SetSignalToValue(var a_dblVal: double): HRESULT;
+    // Получить имя уставки
+    // выделение памяти соответствует правилам COM
+    // поэтому после получения имени требуется освободить память
+    // virtual HRESULT STDMETHODCALLTYPE GetName(BSTR* a_pbstrName)=0;
+    function GetName(var a_pbstrName: BStr): HRESULT;
+    // Установить имя уставки
+    // virtual HRESULT STDMETHODCALLTYPE SetName(BSTR a_pbstrName)=0;
+    function SetName(a_pbstrName: BStr): HRESULT;
+    // Получить цвет
+    // virtual HRESULT STDMETHODCALLTYPE GetColor(COLORREF* a_pColor)=0;
+    function GetColor(var a_pColor: COLORREF): HRESULT;
+    // virtual HRESULT STDMETHODCALLTYPE SetColor(COLORREF a_clColor)=0;
+    function SetColor(a_clColor: COLORREF): HRESULT;
+    // virtual HRESULT STDMETHODCALLTYPE Reset()=0;
+    function Reset(): HRESULT;
+    // virtual HRESULT STDMETHODCALLTYPE AddEventHandler(IAlarmEvent* a_pHandler)=0;
+    function AddEventHandler(a_pHandler: IAlarmEvent): HRESULT;
+		// Путь к звуковому файлу воспроизводимому при срабатывании уставки
+		// Если строка пустая,значит звуковой сигнал отключен
+    //virtual HRESULT STDMETHODCALLTYPE GetSoundName(BSTR* a_pbstrPath)=0;
+    function GetSoundName(var a_pbstrPath: BSTR): HRESULT;
+		//virtual HRESULT STDMETHODCALLTYPE SetSoundName(BSTR a_bstrPath)=0;
+    function SetSoundName(a_pbstrName: BStr): HRESULT;
+    // Гистерезис в процентах
+    // virtual HRESULT STDMETHODCALLTYPE GetGistPerc(double* a_pdblP)=0;
+    function GetGistPerc(var a_pdblP: double): HRESULT;
+    // virtual HRESULT STDMETHODCALLTYPE SetGistPerc(double a_dblP)=0;
+    function SetGistPerc(var a_dblP: double): HRESULT;
+  end;
+
+  // подписать в iRecorder.notify (rcn_subscribealarmevent)
+  IAlarmEventHandler = interface
+    ['{25AB9A87-EE0E-4a65-B535-761FD235C232}']
+	  //public:	virtual HRESULT STDMETHODCALLTYPE OnAlarmEvent(
+		//	ITag* pTag, 		// Канал на котором сработала уставка
+		//	IAlarm* pAlarm, // Уставка которая сработала
+		// 	int nIndex,			// Уставка которая сработала номер
+		//	double dblVal,	// Значения
+		//	ULONG flags			// флаги,
+		//	)=0;
+    function OnAlarmEvent(pTag: ITag; pAlarm:IAlarm; nIndex:integer; dblVal:double; flags:ULONG): HRESULT;
+  end;
+
+// @interface IAlarmsControl
+// Интерфейс настройки и управления уставками тега
+// можно получить посредством ITag::QueryInterface(IID_IAlarmsControl)
+// Интерфейс для управления тегом
+  IAlarmsControl = interface
+    ['{47248BF5-198C-417c-9a6a-ee3ab8f46020}']
+    // Разрешить / запретить обрботку уставок
+    // virtual HRESULT STDMETHODCALLTYPE EnableAlarmsProcessing(VARIANT_BOOL vbEnable) = 0;
+    function EnableAlarmsProcessing(vbEnable: VARIANT_BOOL): HRESULT;
+    /// Получить число уставок
+    // virtual HRESULT STDMETHODCALLTYPE GetAlarmsCount(/*[out, retval]*/ULONG* punCount) = 0;
+    function GetAlarmsCount(var punCount: cardinal): HRESULT;
+    /// Получить уставоку
+    // virtual HRESULT STDMETHODCALLTYPE GetAlarm(/*[in]*/ ULONG a_unIndex, /*[out]*/IAlarm** ppAlarm) = 0;
+    function GetAlarm(var ppAlarm: IAlarm): HRESULT;
+  end;
+
+implementation
+
+end.

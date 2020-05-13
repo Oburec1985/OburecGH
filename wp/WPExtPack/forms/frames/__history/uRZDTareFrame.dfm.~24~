@@ -1,0 +1,184 @@
+object RZDTareFrame: TRZDTareFrame
+  Left = 0
+  Top = 0
+  Width = 942
+  Height = 211
+  TabOrder = 0
+  DesignSize = (
+    942
+    211)
+  object T1Label: TLabel
+    Left = 4
+    Top = 186
+    Width = 24
+    Height = 16
+    Anchors = [akLeft, akBottom]
+    Caption = 'T1='
+    ExplicitTop = 175
+  end
+  object T2Label: TLabel
+    Left = 106
+    Top = 185
+    Width = 24
+    Height = 16
+    Anchors = [akLeft, akBottom]
+    Caption = 'T2='
+  end
+  object HFCbox: TComboBox
+    Left = 1
+    Top = 54
+    Width = 934
+    Height = 24
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 0
+    ExplicitWidth = 631
+  end
+  object Path: TComboBox
+    Left = 1
+    Top = 5
+    Width = 909
+    Height = 24
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 1
+    ExplicitWidth = 606
+  end
+  object S1Cbox: TComboBox
+    Left = 1
+    Top = 79
+    Width = 934
+    Height = 24
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 2
+    ExplicitWidth = 631
+  end
+  object S2Cbox: TComboBox
+    Left = 1
+    Top = 103
+    Width = 934
+    Height = 24
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 3
+    ExplicitWidth = 631
+  end
+  object S3Cbox: TComboBox
+    Left = 1
+    Top = 128
+    Width = 934
+    Height = 24
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 4
+    ExplicitWidth = 631
+  end
+  object S4Cbox: TComboBox
+    Left = 1
+    Top = 153
+    Width = 934
+    Height = 24
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 5
+    ExplicitWidth = 631
+  end
+  object VFCbox: TComboBox
+    Left = 1
+    Top = 29
+    Width = 934
+    Height = 24
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 6
+    ExplicitWidth = 631
+  end
+  object PathBtn: TButton
+    Left = 910
+    Top = 7
+    Width = 24
+    Height = 19
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akTop, akRight]
+    Caption = '...'
+    TabOrder = 7
+    OnClick = PathBtnClick
+    ExplicitLeft = 607
+  end
+  object SelectIntervalCursorBtn: TButton
+    Left = 634
+    Top = 184
+    Width = 147
+    Height = 24
+    Hint = #1053#1072#1079#1085#1072#1095#1080#1090#1100' '#1084#1072#1090#1088#1080#1094#1091' '#1090#1077#1082#1091#1097#1077#1084#1091' '#1089#1077#1095#1077#1085#1080#1102
+    Anchors = [akRight, akBottom]
+    Caption = #1042#1099#1073#1088#1072#1090#1100' '#1087#1086' '#1082#1091#1088#1089#1086#1088#1091
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 8
+    OnClick = SelectIntervalCursorBtnClick
+    ExplicitLeft = 332
+  end
+  object SelectIntervalGraphBtn: TButton
+    Left = 787
+    Top = 183
+    Width = 146
+    Height = 25
+    Hint = #1053#1072#1079#1085#1072#1095#1080#1090#1100' '#1084#1072#1090#1088#1080#1094#1091' '#1090#1077#1082#1091#1097#1077#1084#1091' '#1089#1077#1095#1077#1085#1080#1102
+    Anchors = [akRight, akBottom]
+    Caption = #1044#1080#1072#1087#1072#1079#1086#1085' '#1075#1088#1072#1092#1080#1082#1072
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 9
+    OnClick = SelectIntervalGraphBtnClick
+    ExplicitLeft = 485
+  end
+  object T1FE: TFloatEdit
+    Left = 34
+    Top = 184
+    Width = 68
+    Height = 24
+    Anchors = [akLeft, akBottom]
+    TabOrder = 10
+    Text = '0.0'
+  end
+  object T2FE: TFloatEdit
+    Left = 125
+    Top = 183
+    Width = 76
+    Height = 24
+    Anchors = [akLeft, akBottom]
+    TabOrder = 11
+    Text = '0.0'
+  end
+  object OpenDialog1: TOpenDialog
+    Filter = 'mera '#1092#1072#1081#1083'|*.mera'
+    Left = 56
+    Top = 72
+  end
+end

@@ -1,0 +1,124 @@
+﻿<?xml version=1.0 encoding=UTF-8?>
+<Root>
+  <ObjectsCfg>
+    <17D3 ObjType=cSensor AutoCreate=false Chan=3 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <17D4 ObjType=cSensor AutoCreate=false Chan=4 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <5LD3 ObjType=cSensor AutoCreate=false Chan=9 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <5RD3 ObjType=cSensor AutoCreate=false Chan=17 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <DO ObjType=cSensor AutoCreate=false Chan=12 Position=0 SensorType=4 SkipBlades=0 FirstBladeOffset=0/>
+    <DOex ObjType=cSensor AutoCreate=false Chan=13 Position=0 SensorType=4 SkipBlades=0 FirstBladeOffset=0/>
+    <SunRise_ADimitr.LFM ObjType=cTurbine AutoCreate=false Filename=D:\oburec\project2010\Delphi\projects2010\Lopatki_BDS\файлы\sdt\sunrise16\sunrise16.sdt>
+      <17st ObjType=cStage AutoCreate=false Diametr=3052 BladeCount=96 blade_0=0 blade_1=3.7495 blade_2=7.4909 blade_3=11.225 blade_4=14.984 blade_5=18.697 blade_6=22.438 blade_7=26.203 blade_8=29.942 blade_9=33.709 blade_10=37.456 blade_11=41.224 blade_12=44.959 blade_13=48.68 blade_14=52.46 blade_15=56.219 blade_16=60.002 blade_17=63.738 blade_18=67.485 blade_19=71.195 blade_20=74.966 blade_21=78.729 blade_22=82.49 blade_23=86.244 blade_24=90.016 blade_25=93.791 blade_26=97.552 blade_27=101.27 blade_28=105.04 blade_29=108.75 blade_30=112.51 blade_31=116.25 blade_32=119.97 blade_33=123.72 blade_34=127.48 blade_35=131.23 blade_36=135.01 blade_37=138.79 blade_38=142.47 blade_39=146.24 blade_40=149.99 blade_41=153.71 blade_42=157.44 blade_43=161.23 blade_44=165.01 blade_45=168.75 blade_46=172.46 blade_47=176.24 blade_48=179.98 blade_49=183.71 blade_50=187.46 blade_51=191.21 blade_52=195.02 blade_53=198.72 blade_54=202.49 blade_55=206.28 blade_56=210.02 blade_57=213.74 blade_58=217.51 blade_59=221.18 blade_60=224.94 blade_61=228.71 blade_62=232.47 blade_63=236.24 blade_64=240.01 blade_65=243.74 blade_66=247.44 blade_67=251.19 blade_68=254.95 blade_69=258.73 blade_70=262.43 blade_71=266.22 blade_72=270.01 blade_73=273.76 blade_74=277.57 blade_75=281.25 blade_76=285.03 blade_77=288.78 blade_78=292.5 blade_79=296.25 blade_80=299.97 blade_81=303.76 blade_82=307.48 blade_83=311.22 blade_84=314.99 blade_85=318.75 blade_86=322.48 blade_87=326.22 blade_88=329.97 blade_89=333.79 blade_90=337.51 blade_91=341.26 blade_92=344.99 blade_93=348.74 blade_94=352.52 blade_95=356.26>
+        <Датчики ObjType=cSensorList AutoCreate=true>
+          <17D1 ObjType=cSensor AutoCreate=false Chan=0 Position=2.9461 SensorType=0 SkipBlades=0 FirstBladeOffset=2.94614/>
+          <17D2 ObjType=cSensor AutoCreate=false Chan=2 Position=0 SensorType=0 SkipBlades=0 FirstBladeOffset=-1/>
+          <17D3_001 ObjType=cSensor AutoCreate=false Chan=2 Position=29.27 SensorType=0 SkipBlades=7 FirstBladeOffset=3.06705/>
+          <17D4_001 ObjType=cSensor AutoCreate=false Chan=3 Position=32.996 SensorType=0 SkipBlades=8 FirstBladeOffset=3.05326/>
+          <17D5 ObjType=cSensor AutoCreate=false Chan=5 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+          <17D6 ObjType=cSensor AutoCreate=false Chan=5 Position=63.015 SensorType=1 SkipBlades=16 FirstBladeOffset=3.01359/>
+        </Датчики>
+        <Пары ObjType=cPairList AutoCreate=true>
+          <5pair ObjType=cPair AutoCreate="false"/>
+          <6pair ObjType=cPair AutoCreate="false"/>
+        </Пары>
+      </17st>
+      <5stLPleft ObjType=cStage AutoCreate=false Diametr=3052 BladeCount=95 blade_0=0 blade_1=3.7492 blade_2=7.4568 blade_3=11.221 blade_4=14.967 blade_5=18.702 blade_6=22.445 blade_7=26.217 blade_8=29.996 blade_9=33.718 blade_10=37.478 blade_11=41.229 blade_12=44.956 blade_13=48.737 blade_14=52.488 blade_15=56.272 blade_16=60.001 blade_17=63.708 blade_18=67.533 blade_19=71.222 blade_20=75.002 blade_21=78.7 blade_22=82.476 blade_23=86.113 blade_24=89.895 blade_25=97.409 blade_26=101.21 blade_27=104.97 blade_28=108.69 blade_29=112.46 blade_30=116.25 blade_31=119.99 blade_32=123.74 blade_33=127.46 blade_34=131.25 blade_35=134.96 blade_36=138.72 blade_37=142.45 blade_38=146.27 blade_39=150 blade_40=153.69 blade_41=157.48 blade_42=161.22 blade_43=165 blade_44=168.75 blade_45=172.5 blade_46=176.25 blade_47=180.03 blade_48=183.8 blade_49=187.48 blade_50=191.19 blade_51=194.99 blade_52=198.72 blade_53=202.47 blade_54=206.23 blade_55=209.99 blade_56=213.75 blade_57=217.55 blade_58=221.28 blade_59=225.08 blade_60=228.74 blade_61=232.45 blade_62=236.32 blade_63=240.06 blade_64=243.77 blade_65=247.5 blade_66=251.23 blade_67=255.02 blade_68=258.74 blade_69=262.52 blade_70=266.3 blade_71=269.99 blade_72=273.75 blade_73=277.45 blade_74=281.26 blade_75=284.99 blade_76=288.74 blade_77=292.47 blade_78=296.28 blade_79=300 blade_80=303.74 blade_81=307.46 blade_82=311.24 blade_83=314.97 blade_84=318.69 blade_85=322.42 blade_86=326.2 blade_87=329.98 blade_88=333.72 blade_89=337.44 blade_90=341.24 blade_91=345.02 blade_92=348.75 blade_93=352.42 blade_94=356.22>
+        <Датчики ObjType=cSensorList AutoCreate=true>
+          <5LD1 ObjType=cSensor AutoCreate=false Chan=6 Position=0 SensorType=0 SkipBlades=0 FirstBladeOffset=0/>
+          <5LD2 ObjType=cSensor AutoCreate=false Chan=8 Position=0 SensorType=0 SkipBlades=0 FirstBladeOffset=0/>
+          <5LD3_001 ObjType=cSensor AutoCreate=false Chan=8 Position=0 SensorType=0 SkipBlades=0 FirstBladeOffset=0/>
+          <5LD4 ObjType=cSensor AutoCreate=false Chan=10 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=0/>
+          <5LD5 ObjType=cSensor AutoCreate=false Chan=11 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=0/>
+          <5LD6 ObjType=cSensor AutoCreate=false Chan=11 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=0/>
+        </Датчики>
+        <Пары ObjType=cPairList AutoCreate=true>
+          <3pair ObjType=cPair AutoCreate="false"/>
+          <4pair ObjType=cPair AutoCreate="false"/>
+        </Пары>
+      </5stLPleft>
+      <5stLPright ObjType=cStage AutoCreate=false Diametr=3052 BladeCount=93 blade_0=0 blade_1=3.7821 blade_2=7.4711 blade_3=11.232 blade_4=15 blade_5=18.752 blade_6=22.485 blade_7=26.268 blade_8=29.963 blade_9=33.742 blade_10=37.479 blade_11=41.259 blade_12=45.058 blade_13=48.812 blade_14=52.534 blade_15=56.239 blade_16=60.044 blade_17=63.766 blade_18=67.496 blade_19=71.245 blade_20=75.007 blade_21=78.766 blade_22=82.514 blade_23=86.3 blade_24=90.082 blade_25=93.813 blade_26=97.544 blade_27=101.24 blade_28=105.1 blade_29=108.79 blade_30=112.5 blade_31=120.07 blade_32=123.81 blade_33=127.54 blade_34=131.23 blade_35=134.96 blade_36=138.76 blade_37=142.55 blade_38=146.25 blade_39=150.04 blade_40=153.77 blade_41=157.47 blade_42=161.23 blade_43=164.99 blade_44=168.75 blade_45=172.49 blade_46=176.31 blade_47=180.03 blade_48=183.79 blade_49=187.53 blade_50=191.28 blade_51=195.07 blade_52=198.78 blade_53=202.53 blade_54=206.29 blade_55=210.02 blade_56=213.72 blade_57=217.51 blade_58=221.2 blade_59=225.02 blade_60=228.72 blade_61=232.45 blade_62=240.01 blade_63=243.81 blade_64=247.56 blade_65=251.29 blade_66=255.03 blade_67=258.79 blade_68=262.54 blade_69=266.25 blade_70=270.04 blade_71=273.76 blade_72=277.44 blade_73=281.23 blade_74=284.98 blade_75=288.77 blade_76=292.52 blade_77=296.3 blade_78=300.08 blade_79=303.79 blade_80=307.55 blade_81=311.26 blade_82=315.03 blade_83=318.8 blade_84=322.56 blade_85=326.25 blade_86=330.04 blade_87=333.79 blade_88=337.5 blade_89=341.18 blade_90=348.71 blade_91=352.49 blade_92=356.28>
+        <Датчики ObjType=cSensorList AutoCreate=true>
+          <5RD1 ObjType=cSensor AutoCreate=false Chan=14 Position=0 SensorType=0 SkipBlades=0 FirstBladeOffset=.50936/>
+          <5RD2 ObjType=cSensor AutoCreate=false Chan=16 Position=0 SensorType=0 SkipBlades=7 FirstBladeOffset=.469707/>
+          <5RD3_001 ObjType=cSensor AutoCreate=false Chan=16 Position=0 SensorType=0 SkipBlades=7 FirstBladeOffset=.469707/>
+          <5RD4 ObjType=cSensor AutoCreate=false Chan=18 Position=0 SensorType=1 SkipBlades=12 FirstBladeOffset=.488572/>
+          <5RD5 ObjType=cSensor AutoCreate=false Chan=19 Position=0 SensorType=1 SkipBlades=16 FirstBladeOffset=.526256/>
+          <5RD6 ObjType=cSensor AutoCreate=false Chan=19 Position=0 SensorType=1 SkipBlades=16 FirstBladeOffset=.526256/>
+        </Датчики>
+        <Пары ObjType=cPairList AutoCreate=true>
+          <1pair ObjType=cPair AutoCreate="false"/>
+          <2pair ObjType=cPair AutoCreate="false"/>
+        </Пары>
+      </5stLPright>
+    </SunRise_ADimitr.LFM>
+  </ObjectsCfg>
+  <UICfg>
+    <cPageMngList ObjType=cPageMngList AutoCreate=false Color_R=0 Color_G=0 Color_B=0>
+      <Страницы ObjType=cPageMng AutoCreate=false Color_R=0 Color_G=0 Color_B=0>
+        <Page ObjType=cPage AutoCreate=false Color_R=1 Color_G=1 Color_B=1 Bound_Left=0 Bound_Right=.47 Bound_Top=1 Bound_Bottom=.73 Caption=PageLabel Cursor_visible=true>
+          <Axises ObjType=cDrawObj AutoCreate=true Color_R=0 Color_G=0 Color_B=0>
+            <cAxis ObjType=cAxis AutoCreate=false Color_R=0 Color_G=0 Color_B=0 Min.X=20.2123 Min.Y=50.0077 Max.X=25.2511 Max.Y=50.0169>
+              <Taho_Trend ObjType=cTrend AutoCreate=false Color_R=0 Color_G=0 Color_B=0 Weight=1/>
+            </cAxis>
+          </Axises>
+          <cDoubleCursor ObjType=cDoubleCursor AutoCreate=true Color_R=1 Color_G=0 Color_B=0/>
+        </Page>
+        <Page_001 ObjType=cPage AutoCreate=false Color_R=1 Color_G=1 Color_B=1 Bound_Left=.47 Bound_Right=1 Bound_Top=1 Bound_Bottom=.73 Caption=PageLabel_001 Cursor_visible=false>
+          <Axises ObjType=cDrawObj AutoCreate=true Color_R=0 Color_G=0 Color_B=0>
+            <cAxis_4 ObjType=cAxis AutoCreate=false Color_R=0 Color_G=0 Color_B=0 Min.X=0 Min.Y=3.7189 Max.X=352.5 Max.Y=3.73335>
+              <cGistogram ObjType=cGistogram AutoCreate=false Color_R=0 Color_G=0 Color_B=0>
+                <cMarkerList ObjType=cMarkerList AutoCreate=true Color_R=1 Color_G=0 Color_B=0/>
+              </cGistogram>
+            </cAxis_4>
+          </Axises>
+          <cDoubleCursor ObjType=cDoubleCursor AutoCreate=true Color_R=1 Color_G=0 Color_B=0/>
+        </Page_001>
+        <Page_2 ObjType=cPage AutoCreate=false Color_R=1 Color_G=1 Color_B=1 Bound_Left=0 Bound_Right=1 Bound_Top=.73 Bound_Bottom=0 Caption=PageLabel_2 Cursor_visible=false>
+          <Axises ObjType=cDrawObj AutoCreate=true Color_R=0 Color_G=0 Color_B=0>
+            <cAxis_6 ObjType=cAxis AutoCreate=false Color_R=0 Color_G=0 Color_B=0 Min.X=22.6034 Min.Y=-2.97089E-3 Max.X=23.4032 Max.Y=5.67174E-3>
+              <cTrend ObjType=cTrend AutoCreate=false Color_R=.501961 Color_G=.247059 Color_B=.247059 Weight=1.5/>
+            </cAxis_6>
+            <cAxis_7 ObjType=cAxis AutoCreate=false Color_R=.501961 Color_G=0 Color_B=0 Min.X=22.6034 Min.Y=-4.23127E-3 Max.X=23.4032 Max.Y=3.33102E-3>
+              <cTrend_001 ObjType=cTrend AutoCreate=false Color_R=0 Color_G=0 Color_B=1 Weight=1.5/>
+            </cAxis_7>
+            <cAxis_8 ObjType=cAxis AutoCreate=false Color_R=0 Color_G=.501961 Color_B=0 Min.X=22.6034 Min.Y=-6.12174E-3 Max.X=23.4032 Max.Y=2.52072E-3>
+              <cTrend_2 ObjType=cTrend AutoCreate=false Color_R=1 Color_G=.501961 Color_B=0 Weight=1.5/>
+            </cAxis_8>
+          </Axises>
+          <cDoubleCursor ObjType=cDoubleCursor AutoCreate=true Color_R=1 Color_G=0 Color_B=0/>
+        </Page_2>
+      </Страницы>
+    </cPageMngList>
+  </UICfg>
+  <TaskCfg>
+    <cTask ObjType=cTask AutoCreate=false TahoName=DO dT=.8 Period=.1/>
+    <cTask_001 ObjType=cTask AutoCreate=false TahoName=DO dT=.8 Period=.1/>
+  </TaskCfg>
+  <AlgCfg TahoName= ScreenUpdateT=.298>
+    <cPairShape ObjType=cPairShape AutoCreate=false useStageInfo=true useNearest=true usefreqfilter="true" useDist=true useCorr=false useBladesPos=true offset=2 FreqThreshold=1.5 TaskName=cTask Task=cTask StageName=17st SensorsCount=2 s_0=17D3_001 s_1=17D4_001 taho=DO activeTagCount=4 skipblade="1" PointForEvalCount="30">
+      <DArray AlarmCount=0/>
+      <MArray DrawObj=cGistogram AlarmCount=0/>
+      <MinMaxDArray AlarmCount=0/>
+      <MinMaxMArray DrawObj=cMarkerList AlarmCount=0/>
+    </cPairShape>
+    <cTahoAlg ObjType=cTahoAlg AutoCreate=false useStageInfo=false useNearest=false usefreqfilter="false" useDist=true useCorr=false useBladesPos=true offset=2 FreqThreshold=0 TaskName=cTask Task=cTask StageName=17st SensorsCount=1 s_0=DO taho=DO activeTagCount=4>
+      <DTaho AlarmCount=0/>
+      <MinMaxTaho AlarmCount=0/>
+      <MTaho AlarmCount=0/>
+      <Taho DrawObj=Taho_Trend AlarmCount=0/>
+    </cTahoAlg>
+    <cTrendAlg ObjType=cTrendAlg AutoCreate=false useStageInfo=true useNearest=true usefreqfilter="true" useDist=true useCorr=false useBladesPos=true offset=2 FreqThreshold=1.5 TaskName=cTask_001 Task=cTask_001 StageName=17st SensorsCount=1 s_0=17D3_001 taho=DO activeTagCount=9>
+      <D_0 AlarmCount=1 AlarmName=D_0_Alarm_001 Desc= LoAlarm=false Thereshold=3.3E-6 Gisterezis=5/>
+      <D_1 AlarmCount=0/>
+      <D_10 AlarmCount=0/>
+      <M_0 AlarmCount=0/>
+      <M_1 AlarmCount=0/>
+      <M_10 AlarmCount=0/>
+      <XYArray_0 DrawObj=cTrend AlarmCount=0/>
+      <XYArray_1 DrawObj=cTrend_001 AlarmCount=0/>
+      <XYArray_10 DrawObj=cTrend_2 AlarmCount=0/>
+    </cTrendAlg>
+  </AlgCfg>
+  <TagsMng TagsFolder= LogTags=false/>
+  <CommonProperties PlayMode=true Folder=D:\oburec\project2010\Delphi\projects2010\Lopatki_BDS\файлы\sdt FileName=d:\oburec\project2010\delphi\projects2010\lopatki_bds\файлы\sdt\sunrise16\sunrise16.sdt/>
+</Root>

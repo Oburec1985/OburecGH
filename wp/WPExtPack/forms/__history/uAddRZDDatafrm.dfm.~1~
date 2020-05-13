@@ -1,0 +1,204 @@
+object AddRZDDataFrm: TAddRZDDataFrm
+  Left = 0
+  Top = 0
+  Caption = #1044#1086#1073#1072#1074#1083#1077#1085#1080#1077' '#1076#1072#1085#1085#1099#1093' '#1074' '#1073#1072#1079#1091
+  ClientHeight = 369
+  ClientWidth = 865
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Splitter2: TSplitter
+    Left = 423
+    Top = 0
+    Width = 2
+    Height = 317
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Align = alRight
+    ExplicitLeft = 438
+    ExplicitHeight = 333
+  end
+  object ApplyGB: TGroupBox
+    Left = 0
+    Top = 317
+    Width = 865
+    Height = 52
+    Align = alBottom
+    TabOrder = 0
+    DesignSize = (
+      865
+      52)
+    object ApplyBtnMR: TButton
+      Left = 785
+      Top = 16
+      Width = 72
+      Height = 31
+      Anchors = [akRight, akBottom]
+      Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
+      TabOrder = 0
+      OnClick = ApplyBtnMRClick
+    end
+  end
+  object LV1: TBtnListView
+    Left = 0
+    Top = 0
+    Width = 423
+    Height = 317
+    Align = alClient
+    Columns = <
+      item
+        Caption = #1060#1072#1081#1083
+      end
+      item
+        Caption = #1058#1080#1087
+      end>
+    MultiSelect = True
+    RowSelect = True
+    TabOrder = 1
+    ViewStyle = vsReport
+    OnChange = LV1Change
+    BtnCol = 0
+    QuoteColumnBtnClick = False
+    QuoteColumnDblClick = False
+    DrawColorBox = False
+    Editable = False
+  end
+  object Panel2: TPanel
+    Left = 425
+    Top = 0
+    Width = 440
+    Height = 317
+    Align = alRight
+    TabOrder = 2
+    DesignSize = (
+      440
+      317)
+    object SigNameLabel: TLabel
+      Left = 192
+      Top = 13
+      Width = 61
+      Height = 13
+      Caption = #1048#1084#1103' '#1079#1072#1084#1077#1088#1072':'
+    end
+    object Label2: TLabel
+      Left = 192
+      Top = 58
+      Width = 64
+      Height = 13
+      Caption = #1055#1091#1090#1100' '#1074' '#1073#1072#1079#1077':'
+    end
+    object RegionLabel: TLabel
+      Left = 192
+      Top = 140
+      Width = 89
+      Height = 13
+      Caption = #1059#1095#1072#1089#1090#1086#1082' '#1087#1091#1090#1080' '#8470':'
+    end
+    object SigName: TEdit
+      Left = 192
+      Top = 32
+      Width = 232
+      Height = 21
+      Anchors = [akLeft, akTop, akRight]
+      TabOrder = 0
+    end
+    object Panel1: TPanel
+      Left = 1
+      Top = 1
+      Width = 185
+      Height = 315
+      Align = alLeft
+      TabOrder = 1
+      object CalibrRG: TRadioGroup
+        Left = 1
+        Top = 89
+        Width = 183
+        Height = 225
+        Align = alClient
+        Caption = #1058#1080#1087' '#1079#1072#1084#1077#1088#1072
+        ItemIndex = 0
+        Items.Strings = (
+          #1042#1077#1088#1090'. '#1094#1077#1085#1090#1088'.'
+          #1043#1086#1088#1080#1079'. '#1089#1080#1083#1072
+          #1042#1077#1088#1090'. '#1089' '#1089#1084#1077#1097'. '#1085#1072#1088#1091#1078#1091
+          #1042#1077#1088#1090'. '#1089' '#1089#1084#1077#1097'. '#1074#1085#1091#1090#1088#1100)
+        TabOrder = 0
+      end
+      object TypeRG: TRadioGroup
+        Left = 1
+        Top = 1
+        Width = 183
+        Height = 88
+        Align = alTop
+        Caption = #1058#1080#1087' '#1079#1072#1084#1077#1088#1072
+        ItemIndex = 1
+        Items.Strings = (
+          #1047#1072#1077#1079#1076
+          #1050#1072#1083#1080#1073#1088#1086#1074#1082#1072)
+        TabOrder = 1
+        OnClick = TypeRGClick
+      end
+    end
+    object CalibrPanel: TPanel
+      Left = 192
+      Top = 196
+      Width = 243
+      Height = 115
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      TabOrder = 2
+      object Label1: TLabel
+        Left = 2
+        Top = 60
+        Width = 63
+        Height = 13
+        Caption = #1057#1077#1095#1077#1085#1080#1077' '#8470':'
+      end
+      object SegSE: TSpinEdit
+        Left = -1
+        Top = 79
+        Width = 121
+        Height = 22
+        MaxValue = 0
+        MinValue = 0
+        TabOrder = 0
+        Value = 0
+      end
+    end
+    object BasePath: TEdit
+      Left = 192
+      Top = 77
+      Width = 232
+      Height = 21
+      Anchors = [akLeft, akTop, akRight]
+      TabOrder = 3
+    end
+    object AplyBtn1: TButton
+      Left = 192
+      Top = 104
+      Width = 121
+      Height = 31
+      Caption = #1053#1072#1079#1085#1072#1095#1080#1090#1100
+      TabOrder = 4
+      OnClick = ApplyBtnClick
+    end
+    object RegSE: TSpinEdit
+      Left = 192
+      Top = 159
+      Width = 121
+      Height = 22
+      MaxValue = 0
+      MinValue = 0
+      TabOrder = 5
+      Value = 0
+    end
+  end
+end

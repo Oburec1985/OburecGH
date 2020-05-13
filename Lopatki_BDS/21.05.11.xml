@@ -1,0 +1,183 @@
+<?xml version=1.0 encoding=UTF-8?>
+<Root>
+  <ObjectsCfg>
+    <cTurbine ObjType=cTurbine AutoCreate=false Filename=D:\oburec\data\data\280411\04\04.sdt>
+      <СТ1 ObjType=cStage AutoCreate=false Diametr=577 BladeCount=21 blade_0=0 blade_1=17.1420 blade_2=34.3260 blade_3=51.5040 blade_4=68.6660 blade_5=85.8320 blade_6=102.980 blade_7=120.110 blade_8=137.220 blade_9=154.330 blade_10=171.460 blade_11=188.610 blade_12=205.770 blade_13=222.940 blade_14=240.110 blade_15=257.25 blade_16=274.350 blade_17=291.450 blade_18=308.600 blade_19=325.75 blade_20=342.850>
+        <Датчики ObjType=cSensorList AutoCreate=true>
+          <D1 ObjType=cSensor AutoCreate=false Chan=0 Position=0 SensorType=4 SkipBlades=0 FirstBladeOffset=-1/>
+          <D12 ObjType=cSensor AutoCreate=false Chan=12 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+          <D2 ObjType=cSensor AutoCreate=false Chan=1 Position=8.43625 SensorType=0 SkipBlades=0 FirstBladeOffset=8.43625/>
+          <D3 ObjType=cSensor AutoCreate=false Chan=2 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+          <D4 ObjType=cSensor AutoCreate=false Chan=3 Position=18.8875 SensorType=1 SkipBlades=1 FirstBladeOffset=1.74545/>
+          <D5 ObjType=cSensor AutoCreate=false Chan=4 Position=24.0616 SensorType=1 SkipBlades=1 FirstBladeOffset=6.91963/>
+          <D6 ObjType=cSensor AutoCreate=false Chan=5 Position=8.05165 SensorType=1 SkipBlades=0 FirstBladeOffset=8.05165/>
+        </Датчики>
+        <Пары ObjType=cPairList AutoCreate=true>
+          <D2_D5 ObjType=cPair AutoCreate="false" SensorsCount=2 Sensor_0=D2 Sensor_1=D5/>
+        </Пары>
+      </СТ1>
+      <СТ2 ObjType=cStage AutoCreate=false Diametr=556 BladeCount=37 blade_0=0 blade_1=9.75090 blade_2=19.5760 blade_3=29.4300 blade_4=39.3050 blade_5=49.0620 blade_6=58.7610 blade_7=68.5100 blade_8=78.1900 blade_9=87.9430 blade_10=97.5410 blade_11=107.25 blade_12=117.010 blade_13=126.580 blade_14=136.360 blade_15=146 blade_16=155.660 blade_17=165.410 blade_18=175.130 blade_19=184.910 blade_20=194.720 blade_21=204.490 blade_22=214.240 blade_23=224 blade_24=233.75 blade_25=243.580 blade_26=253.220 blade_27=262.920 blade_28=272.630 blade_29=282.170 blade_30=291.920 blade_31=301.440 blade_32=311.200 blade_33=320.850 blade_34=330.570 blade_35=340.390 blade_36=350.200>
+        <Датчики ObjType=cSensorList AutoCreate=true>
+          <D11 ObjType=cSensor AutoCreate=false Chan=10 Position=6.97991 SensorType=0 SkipBlades=0 FirstBladeOffset=6.97991/>
+        </Датчики>
+        <Пары ObjType=cPairList AutoCreate=true/>
+      </СТ2>
+    </cTurbine>
+    <D10 ObjType=cSensor AutoCreate=false Chan=10 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <D13 ObjType=cSensor AutoCreate=false Chan=13 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <D14 ObjType=cSensor AutoCreate=false Chan=14 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <D15 ObjType=cSensor AutoCreate=false Chan=15 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <D16 ObjType=cSensor AutoCreate=false Chan=16 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <D17 ObjType=cSensor AutoCreate=false Chan=17 Position=0 SensorType=8 SkipBlades=0 FirstBladeOffset=-1/>
+    <D18 ObjType=cSensor AutoCreate=false Chan=18 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <D19 ObjType=cSensor AutoCreate=false Chan=19 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <D20 ObjType=cSensor AutoCreate=false Chan=20 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <D21 ObjType=cSensor AutoCreate=false Chan=21 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <D22 ObjType=cSensor AutoCreate=false Chan=22 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <D23 ObjType=cSensor AutoCreate=false Chan=23 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <D24 ObjType=cSensor AutoCreate=false Chan=24 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <D7 ObjType=cSensor AutoCreate=false Chan=7 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <D8 ObjType=cSensor AutoCreate=false Chan=8 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <D9 ObjType=cSensor AutoCreate=false Chan=9 Position=0 SensorType=1 SkipBlades=0 FirstBladeOffset=-1/>
+    <СЕВ ObjType=cUTSSensor AutoCreate=false Chan=16 UTSType=1/>
+  </ObjectsCfg>
+  <UICfg>
+    <cPageMngList ObjType=cPageMngList AutoCreate=false Color_R=0 Color_G=0 Color_B=0>
+      <Pages ObjType=cPageMng AutoCreate=false Color_R=0 Color_G=0 Color_B=0>
+        <Page_вибрации_001 ObjType=cPage AutoCreate=false Color_R=1 Color_G=1 Color_B=1 Bound_Left=.501496 Bound_Right=1 Bound_Top=1 Bound_Bottom=.498246 Caption=Page_вибрации_001 Cursor_visible=false>
+          <Axises ObjType=cDrawObj AutoCreate=true Color_R=0 Color_G=0 Color_B=0>
+            <cAxis_2 ObjType=cAxis AutoCreate=false Color_R=0 Color_G=0 Color_B=0 Min.X=0 Min.Y=-2 Max.X=1.99 Max.Y=2>
+              <Blade_3 ObjType=cTrend AutoCreate=false Color_R=1 Color_G=.501961 Color_B=.247059 Weight=1/>
+            </cAxis_2>
+          </Axises>
+          <cDoubleCursor ObjType=cDoubleCursor AutoCreate=true Color_R=1 Color_G=0 Color_B=0/>
+          <PageLabel ObjType=cLabel AutoCreate=false Color_R=0 Color_G=1 Color_B=0/>
+          <XMaxEdit ObjType=cFloatLabel AutoCreate=false Color_R=0 Color_G=1 Color_B=0/>
+          <XMinEdit ObjType=cFloatLabel AutoCreate=false Color_R=0 Color_G=1 Color_B=0/>
+          <yMaxEdit ObjType=cFloatLabel AutoCreate=false Color_R=0 Color_G=1 Color_B=0/>
+          <YMinEdit ObjType=cFloatLabel AutoCreate=false Color_R=0 Color_G=1 Color_B=0/>
+        </Page_вибрации_001>
+        <Page_Тахо ObjType=cPage AutoCreate=false Color_R=1 Color_G=1 Color_B=1 Bound_Left=0 Bound_Right=.501496 Bound_Top=1 Bound_Bottom=.498246 Caption=Page_Тахо Cursor_visible=true>
+          <Axises ObjType=cDrawObj AutoCreate=true Color_R=0 Color_G=0 Color_B=0>
+            <cAxis ObjType=cAxis AutoCreate=false Color_R=0 Color_G=0 Color_B=0 Min.X=4.55825E-3 Min.Y=159.769 Max.X=277.141 Max.Y=190.124>
+              <Taho ObjType=cBuffTrend2d AutoCreate=false Color_R=0 Color_G=.501961 Color_B=1 Weight=0/>
+            </cAxis>
+          </Axises>
+          <cDoubleCursor ObjType=cDoubleCursor AutoCreate=true Color_R=1 Color_G=0 Color_B=0/>
+          <PageLabel_001 ObjType=cLabel AutoCreate=false Color_R=0 Color_G=1 Color_B=0/>
+          <XMaxEdit_001 ObjType=cFloatLabel AutoCreate=false Color_R=0 Color_G=1 Color_B=0/>
+          <XMinEdit_001 ObjType=cFloatLabel AutoCreate=false Color_R=0 Color_G=1 Color_B=0/>
+          <yMaxEdit_001 ObjType=cFloatLabel AutoCreate=false Color_R=0 Color_G=1 Color_B=0/>
+          <YMinEdit_001 ObjType=cFloatLabel AutoCreate=false Color_R=0 Color_G=1 Color_B=0/>
+        </Page_Тахо>
+        <Page_Форма ObjType=cPage AutoCreate=false Color_R=1 Color_G=1 Color_B=1 Bound_Left=0 Bound_Right=.997009 Bound_Top=.498246 Bound_Bottom=0 Caption=Page_Форма Cursor_visible=true>
+          <Axises ObjType=cDrawObj AutoCreate=true Color_R=0 Color_G=0 Color_B=0>
+            <cAxis_001 ObjType=cAxis AutoCreate=false Color_R=0 Color_G=0 Color_B=0 Min.X=0 Min.Y=14.0076 Max.X=325.714 Max.Y=16.2749>
+              <cGistogram ObjType=cGistogram AutoCreate=false Color_R=0 Color_G=.501961 Color_B=.752941>
+                <cMarkerList ObjType=cMarkerList AutoCreate=true Color_R=1 Color_G=0 Color_B=0/>
+              </cGistogram>
+            </cAxis_001>
+          </Axises>
+          <cDoubleCursor ObjType=cDoubleCursor AutoCreate=true Color_R=1 Color_G=0 Color_B=0/>
+          <PageLabel_2 ObjType=cLabel AutoCreate=false Color_R=0 Color_G=1 Color_B=0/>
+          <XMaxEdit_2 ObjType=cFloatLabel AutoCreate=false Color_R=0 Color_G=1 Color_B=0/>
+          <XMinEdit_2 ObjType=cFloatLabel AutoCreate=false Color_R=0 Color_G=1 Color_B=0/>
+          <yMaxEdit_2 ObjType=cFloatLabel AutoCreate=false Color_R=0 Color_G=1 Color_B=0/>
+          <YMinEdit_2 ObjType=cFloatLabel AutoCreate=false Color_R=0 Color_G=1 Color_B=0/>
+        </Page_Форма>
+      </Pages>
+    </cPageMngList>
+  </UICfg>
+  <HardWare>
+    <cM2070 ObjType=cM2070 AutoCreate=true DataMode=1>
+      <cM2070.a_0/>
+      <cM2070.a_1/>
+      <cM2070_0/>
+      <cM2070_1/>
+      <cM2070_10/>
+      <cM2070_11/>
+      <cM2070_12/>
+      <cM2070_13/>
+      <cM2070_14/>
+      <cM2070_15/>
+      <cM2070_16/>
+      <cM2070_17/>
+      <cM2070_18/>
+      <cM2070_19/>
+      <cM2070_2/>
+      <cM2070_20/>
+      <cM2070_21/>
+      <cM2070_3/>
+      <cM2070_4/>
+      <cM2070_5/>
+      <cM2070_6/>
+      <cM2070_7/>
+      <cM2070_8/>
+      <cM2070_9/>
+    </cM2070>
+  </HardWare>
+  <TaskCfg>
+    <cTask ObjType=cTask AutoCreate=false TahoName=D1 dT=2 Period=.1/>
+    <cTask_001 ObjType=cTask AutoCreate=false TahoName=D1 dT=2 Period=.1/>
+  </TaskCfg>
+  <AlgCfg TahoName= ScreenUpdateT=.3>
+    <cPairShape ObjType=cPairShape AutoCreate=false useStageInfo=true useNearest=true useDist=true useCorr=false useBladesPos=true offset=2 TaskName=cTask_001 Task=cTask_001 StageName=СТ1 SensorsCount=2 s_0=D2 s_1=D5 taho=D1 activeTagCount=4 PointForEvalCount=100 skipblade=1 EvalPointCount=false>
+      <DArray AlarmCount=0/>
+      <MArray DrawObj=cGistogram AlarmCount=0/>
+      <MinMaxDArray AlarmCount=0/>
+      <MinMaxMArray DrawObj=cMarkerList AlarmCount=0/>
+    </cPairShape>
+    <cTahoAlg ObjType=cTahoAlg AutoCreate=false useStageInfo=false useNearest=false useDist=true useCorr=false useBladesPos=false offset=2 TaskName=cTask_001 Task=cTask_001 StageName= SensorsCount=1 s_0=D1 taho=D1 activeTagCount=4>
+      <DTaho AlarmCount=0/>
+      <MinMaxTaho AlarmCount=0/>
+      <MTaho AlarmCount=0/>
+      <Taho DrawObj=Taho AlarmCount=0/>
+    </cTahoAlg>
+    <cTrendAlg ObjType=cTrendAlg AutoCreate=false useStageInfo=true useNearest=true useDist=true useCorr=false useBladesPos=true offset=2 TaskName=cTask Task=cTask StageName=СТ1 SensorsCount=1 s_0=D2 taho=D1 activeTagCount=42>
+      <D_0 AlarmCount=1 AlarmName=D_0_Alarm Desc= LoAlarm=false Thereshold=.04 Gisterezis=-5/>
+      <D_1 AlarmCount=0/>
+      <D_10 AlarmCount=0/>
+      <D_11 AlarmCount=0/>
+      <D_12 AlarmCount=0/>
+      <D_13 AlarmCount=0/>
+      <D_14 AlarmCount=0/>
+      <D_15 AlarmCount=0/>
+      <D_16 AlarmCount=0/>
+      <D_17 AlarmCount=0/>
+      <D_18 AlarmCount=0/>
+      <D_19 AlarmCount=0/>
+      <D_2 AlarmCount=0/>
+      <D_20 AlarmCount=0/>
+      <D_3 AlarmCount=0/>
+      <D_4 AlarmCount=0/>
+      <D_5 AlarmCount=0/>
+      <D_6 AlarmCount=0/>
+      <D_7 AlarmCount=0/>
+      <D_8 AlarmCount=0/>
+      <D_9 AlarmCount=0/>
+      <XYArray_0 AlarmCount=0/>
+      <XYArray_1 AlarmCount=0/>
+      <XYArray_10 AlarmCount=0/>
+      <XYArray_11 DrawObj=Blade_3 AlarmCount=0/>
+      <XYArray_12 AlarmCount=0/>
+      <XYArray_13 AlarmCount=0/>
+      <XYArray_14 AlarmCount=0/>
+      <XYArray_15 AlarmCount=0/>
+      <XYArray_16 AlarmCount=0/>
+      <XYArray_17 AlarmCount=0/>
+      <XYArray_18 AlarmCount=0/>
+      <XYArray_19 AlarmCount=0/>
+      <XYArray_2 AlarmCount=0/>
+      <XYArray_20 AlarmCount=0/>
+      <XYArray_3 AlarmCount=0/>
+      <XYArray_4 AlarmCount=0/>
+      <XYArray_5 AlarmCount=0/>
+      <XYArray_6 AlarmCount=0/>
+      <XYArray_7 AlarmCount=0/>
+      <XYArray_8 AlarmCount=0/>
+      <XYArray_9 AlarmCount=0/>
+    </cTrendAlg>
+  </AlgCfg>
+  <TagsMng TagsFolder= LogTags=false/>
+  <CommonProperties Folder=H:\Oburec\data\data\280411\ FileName=04/>
+</Root>

@@ -1,0 +1,390 @@
+// класс предназначен дл€ обработки файлов в realtime
+unit uBldTimeProc;
+
+interface
+uses
+  uBldEng, usensor, ustage, utickdata, ubldmath, classes, ubldEngEventTypes,
+  uBaseBldAlg, uCommonMath, uEventtypes, uTag, uBaseObjMng, windows, SysUtils;
+
+type
+  cBldTimeProc = class
+  public
+    feng:cbldeng;
+    // список тегов
+    fTagMng:cTagMng;
+    alarms:cBaseObjMng;
+    HistMng:tobject;
+    // завежует подключением данных к движку
+    FileLoaderMng:tobject;
+    // список алгоритмов которые будут выполн€тьс€ дл€ каждого фрейма
+    algList:cBaseObjMng;
+    // список потоков
+    TaskList:cBaseObjMng;
+    // частота обновлени€ экрана
+    fViewTime:single;
+    // текущий замер обработан
+    m_ProcFile:boolean;
+    m_DataProcEvent:thandle;
+  protected
+    ft1,ft2:single;
+    // состо€ние двига (Run/Pause)
+    fstate:boolean;
+  protected
+    procedure OnTagSetActive(sender:tobject);
+  private
+    // найти индекс справа от t
+    procedure setEng(p_eng:cbldEng);
+    // происходит после загрузки данных
+    procedure OnGetData(sender:tobject);
+    // происходит когда данные в обрабатываемом файле кончились кончились
+    // (файл обработан полностью)
+    procedure OnFinishPlayData(sender:tobject);
+  protected
+    procedure setplaymode(b:boolean);
+    function getplaymode:boolean;
+    procedure SetT1(t:single);
+    procedure SetT2(t:single);
+    function checkT(t:single):boolean;
+  public
+    constructor create(p_eng:tobject);
+    destructor destroy;
+    procedure addalgtags(alg:cbaseBldAlg);
+    // добавить алгоритм
+    procedure addAlg(a:cBaseBldAlg);
+    // получить ссылку на алгоритм по имени и по индексу
+    function Getalg(i:integer):cBaseBldAlg;overload;
+    function Getalg(name:string):cBaseBldAlg;overload;
+    function AlgCount:integer;
+    procedure clear;
+    // запуск потока воспроизведени€ данных
+    procedure play;
+    // останов потока воспроизведени€ данных
+    procedure stop;
+    procedure deleteAlg(alg:cbasebldalg);
+    function getprec:integer;
+    // вызываетс€ в потоках (task) после того как поток обсчитал все данные
+    procedure OnTaskFinishEval(sender:tobject);
+    function waitDataProcEvent:boolean;
+    // включить ожидание событи€ прихода новых данных
+    procedure SetDataProcEvent;
+    // сбросить событие
+    procedure DropDataProcEvent;
+    // запустить задачи на обработку очередного файла с нул€
+    procedure RestartTasks;
+    function GetState:integer;
+  public
+    // —осто€ние потоков задач (false если все в паузе)
+    property PlayMode:boolean read getPlayMode write setPlayMode;
+    property eng:cbldeng read feng write seteng;
+    property prec:integer read getprec;
+    property ViewTime:single read fviewtime write fviewtime;
+    property t1:single read ft1 write sett1;
+    property t2:single read ft2 write sett2;
+    property ProcFile:boolean read m_ProcFile write m_ProcFile;
+  end;
+
+implementation
+uses
+  uAlarms,uAlgMng, uHistoryMng, uTaskMng, uProcessAlgtask, uFileLoaderMng;
+
+constructor cBldTimeProc.create(p_eng:tobject);
+begin
+  feng:=cbldeng(p_eng);
+  alarms:=cAlarmMng.create;
+  cAlarmMng(alarms).linc(self);
+  fTagMng:=ctagmng.create;
+  alglist:=cAlgMng.Create;
+  calgmng(alglist).linc(self);
+  HistMng:=cHistoryMng.create;
+  // создаем список задач
+  TaskList:=cTaskMng.create;
+  TaskList.events.AddEvent('cBldTimeProc_OnTaskFinishEval',e_OnFinishPlayData,OnTaskFinishEval);
+
+  m_DataProcEvent:=CreateEvent(nil, True, False, nil);
+  // создаем загрузчик данных
+  FileLoaderMng:=cFileLoaderMng.create(self);
+end;
+
+destructor cBldTimeProc.destroy;
+var
+  I: Integer;
+  a:cbasebldalg;
+begin
+  stop;
+  TaskList.destroy;
+  cFileLoaderMng(FileLoaderMng).destroy;
+  alglist.Destroy;
+  fTagMng.destroy;
+  cHistoryMng(histmng).destroy;
+  alarms.destroy;
+end;
+
+
+procedure cBldTimeProc.OnFinishPlayData(sender:tobject);
+begin
+  // вызываем событие что данные обработаны и пора бы подгрузить новый файл
+  SetDataProcEvent;
+  PostThreadMessage( cFileLoaderMng(FileLoaderMng).ThreadID, wm_OnStopTasksMessage, 0, 0);
+  //cFileLoaderMng(FileLoaderMng).OnStopPlay(sender);
+  if feng<>nil then
+  begin
+    feng.Events.CallAllEvents(e_OnFinishPlayData);
+  end;
+end;
+
+procedure cBldTimeProc.OnTagSetActive(sender:tobject);
+begin
+  if cBaseTag(sender).active then
+  begin
+    ftagmng.Add(cBaseTag(sender));
+  end
+  else
+  begin
+    ftagmng.removeObj(cBaseTag(sender));
+  end;
+  eng.Events.CallAllEventsWithSender(e_OnAddRemoveTag,cBaseTag(sender));
+end;
+
+procedure cBldTimeProc.addalgtags(alg:cbaseBldAlg);
+var
+  I: Integer;
+  tag:cbasetag;
+begin
+  for I := 0 to alg.tags.Count - 1 do
+  begin
+    tag:=cbasetag(alg.tags.getobj(i));
+    tag.onsetactive:=OnTagSetActive;
+    if tag.active then
+      ftagmng.Add(tag);
+  end;
+end;
+
+procedure cBldTimeProc.addAlg(a:cBaseBldAlg);
+begin
+  if a<>nil then
+  begin
+    alglist.Add(a, nil);
+  end;
+end;
+
+function cBldTimeProc.Getalg(i:integer):cBaseBldAlg;
+begin
+  Result:=cBaseBldAlg(alglist.getobj(i));
+end;
+
+function cBldTimeProc.Getalg(name:string):cBaseBldAlg;
+var
+  i:integer;
+  obj:cBaseBldAlg;
+begin
+  obj:=cBaseBldAlg(algList.getobj(name));
+  if obj<>nil then
+  begin
+    result:=obj;
+  end
+  else
+    result:=nil;
+end;
+
+function cBldTimeProc.AlgCount:integer;
+begin
+  result:=alglist.count;
+end;
+
+procedure cBldTimeProc.play;
+var
+  id:thandle;
+begin
+  cFileLoaderMng(FileLoaderMng).DropExchangeEvent;
+  // переводим в режим play
+  cFileLoaderMng(FileLoaderMng).mode:=true;
+  RestartTasks;
+  SetDataProcEvent;
+  eng.Events.CallAllEvents(E_OnTimeStartStop);
+end;
+
+procedure cBldTimeProc.RestartTasks;
+var
+  I: Integer;
+  t,activetask:ctask;
+begin
+  if ProcFile then
+  begin
+    procfile:=false;
+    begin
+      for I := 0 to TaskList.count - 1 do
+      begin
+        if i=0 then
+          fstate:=true;
+        activetask:=ctaskmng(TaskList).activetask;
+        t:=ctask(TaskList.getobj(i));
+        t.Thread.t1:=activetask.Thread.t0;
+        t.Thread.t2:=activetask.Thread.t1+activetask.Thread.dt;
+        t.Thread.state:=c_Run;
+      end;
+    end;
+  end;
+end;
+
+procedure cBldTimeProc.stop;
+var
+  I: Integer;
+  t:ctask;
+begin
+  SetDataProcEvent;
+  cFileLoaderMng(FileLoaderMng).mode:=false;
+  for I := 0 to TaskList.count - 1 do
+  begin
+    t:=ctask(TaskList.getobj(i));
+    t.Thread.state:=c_Stop;
+  end;
+  fstate:=false;
+  eng.Events.CallAllEvents(E_OnTimeStartStop);
+end;
+
+procedure cBldTimeProc.setplaymode(b:boolean);
+begin
+  if b then
+    play
+  else
+    stop;
+end;
+
+function cBldTimeProc.getplaymode:boolean;
+var
+  I: Integer;
+  t:ctask;
+begin
+  result:=false;
+  for I := 0 to TaskList.count - 1 do
+  begin
+    t:=ctask(TaskList.getobj(i));
+    if checkFlag(t.Thread.state,c_Run) then
+    begin
+      result:=true;
+      exit;
+    end;
+  end;
+end;
+
+procedure cBldTimeProc.clear;
+var
+  I: Integer;
+  a:cBaseBldAlg;
+begin
+  for I := 0 to algList.Count - 1 do
+  begin
+    a:=Getalg(i);
+    a.Destroy;
+  end;
+  alglist.Clear;
+end;
+
+procedure cBldTimeProc.setEng(p_eng:cbldEng);
+begin
+  feng:=p_eng;
+  cHistoryMng(histmng).linc(feng);
+  cTaskMng(TaskList).linc(p_eng);
+  eng.Events.AddEvent('cBldTimeProc_OnLoadCfg',E_OnEngLoadCfg,OnGetData);
+end;
+
+
+procedure cBldTimeProc.OnGetData(sender:tobject);
+begin
+  //if taho<>nil then
+  //begin
+  //  if taho.tickscount<>0 then
+  //  begin
+  //    t1:=0;
+  //    t2:=t1+fdt;
+  //  end;
+  //end;
+end;
+
+procedure cBldTimeProc.deleteAlg(alg:cbasebldalg);
+begin
+  alg.destroy;
+end;
+
+function cBldTimeProc.getprec:integer;
+begin
+  result:=eng.prec;
+end;
+
+// проверка если врем€ > длины сигнала то остановка двига
+function cBldTimeProc.checkT(t:single):boolean;
+begin
+
+end;
+
+procedure cBldTimeProc.SetT1(t:single);
+begin
+  ft1:=t;
+  if checkT(t) then
+  begin
+
+  end;
+end;
+
+procedure cBldTimeProc.SetT2(t:single);
+begin
+  ft2:=t;
+end;
+
+procedure cBldTimeProc.OnTaskFinishEval(sender:tobject);
+var
+  res:boolean;
+begin
+  res:=PlayMode;
+  if not res then
+  begin
+    if fstate then
+    begin
+      fstate:=false;
+      OnFinishPlayData(nil);
+    end;
+  end;
+end;
+
+
+procedure cBldTimeProc.SetDataProcEvent;
+var
+  id:cid;
+begin
+  m_ProcFile:=true;
+  SetEvent(m_DataProcEvent);
+  if cFileLoaderMng(FileLoaderMng).curid>0 then
+  begin
+    id:=cFileLoaderMng(FileLoaderMng).m_IDList.GetID(cFileLoaderMng(FileLoaderMng).curid-1);
+    id.time:=now;
+    eng.Events.CallAllEvents(E_OnEngDataProc);
+  end;  
+end;
+
+// сбросить событие
+procedure cBldTimeProc.DropDataProcEvent;
+begin
+  ResetEvent(m_DataProcEvent);
+end;
+
+function cBldTimeProc.waitDataProcEvent:boolean;
+begin
+ result:=waitforsingleobject(m_DataProcEvent,infinite)=WAIT_OBJECT_0;
+ DropDataProcEvent;
+end;
+
+function cBldTimeProc.GetState:integer;
+begin
+  result:=0;
+  if playmode then
+    result:=2
+  else
+  begin
+    if cFileLoaderMng(FileLoaderMng).mode then
+    begin
+      result:=1;
+    end;
+  end;
+end;
+
+end.

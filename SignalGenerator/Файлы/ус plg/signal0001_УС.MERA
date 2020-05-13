@@ -1,0 +1,49 @@
+[MERA]
+Date=21.03.2011
+Time=17:40:28
+[shock_HI]
+Comment=Испытание: Дата: 21.03.2011
+DateTime=40623.736550925925
+XUnits=Гц
+YUnits=Y
+Start=0
+Step=0
+Freq=0
+k0=0
+k1=1.000000000000
+XFormat=R8
+YFormat=R8
+[shock_LO]
+Comment=Испытание: Дата: 21.03.2011
+DateTime=40623.736550925925
+XUnits=Гц
+YUnits=Y
+Start=0
+Step=0
+Freq=0
+k0=0
+k1=1.000000000000
+XFormat=R8
+YFormat=R8
+[shock_ShSp_1]
+Comment=Испытание: Дата: 21.03.2011
+DateTime=40623.736550925925
+XUnits=с
+YUnits=Y
+Start=0
+Step=0
+Freq=0
+k0=0
+k1=1.000000000000
+XFormat=R8
+YFormat=R8
+[shock_src_1]
+Comment=Испытание: Дата: 21.03.2011
+XUnits=с
+YUnits=Y
+Start=0
+Step=5.000000000000e-005
+Freq=20000.000000000000
+k0=0
+k1=1.000000000000
+YFormat=R4

@@ -1,0 +1,180 @@
+unit MxxxxAPI;
+{$OPTIMIZATION OFF}
+interface
+uses
+  MxxxxTypes;
+
+  Type
+   PLongWord=^LongWord;
+   PWord         = ^Word;
+   PIRQEvent=^TIRQEvent;
+   TIRQEvent=Record
+        scan_id       : LongWord;       // Id скана
+        event_id      : LongWord;       // Id самого события
+        time          : LongWord;       // время 
+        local_number  : LongWord;       // ...доп. параметры...
+        global_number : LongWord;       // ...доп. параметры...
+   end;
+   THandler=Function(Device:Pointer;Event:PIRQEvent;Data:Pointer):Integer;cdecl;
+
+
+   // Работа с 2070
+   function SearchDevicesEx(DeviceEnum : PDeviceEnum) : cardinal;  stdcall;
+   // выделяем память от устройства device
+   function CreateDevice(DevInfo : TDevice; device : ppointer) : cardinal; stdcall;
+   // освобождает память от устройства device
+   function CloseDevice(device : ppointer)  : cardinal;  stdcall;
+   function Load(device : ppointer) : cardinal; stdcall;
+   function LoadBios(device : ppointer) : cardinal; stdcall;
+   function LoadFlex(device : ppointer) : cardinal; stdcall;
+   function Config(device : ppointer) : cardinal;  stdcall;
+   function ConfigDevice(device : ppointer) : cardinal;  stdcall;
+   // function ConfigurePort(device : ppointer;lpFileName : pointer;lpAppName : pointer; Port : word; Task : word) : cardinal;  stdcall;
+   function Start(device : ppointer) : cardinal;  stdcall;
+   function Stop(device : ppointer) : cardinal;  stdcall;
+   function GetDirection(device : ppointer;direction : PWord): cardinal;  stdcall;
+   function WritePropertyEx(device : ppointer;lpFileName : pointer;lpAppName : pointer): cardinal;  stdcall;
+   function ReadPropertyEx(device : ppointer;lpFileName : pointer;lpAppName : pointer): cardinal;  stdcall;
+   function GetReadBufSize(device : ppointer; pSizeBuf : PLongint; pSizeLost : PLongint; pSizeOverflow : PLongint) : cardinal;  stdcall;
+   function GetWriteBufSize(device : ppointer; pSizeBuf : PLongint; pSizeLost : PLongint; pSizeOverflow : PLongint): cardinal;  stdcall;
+   function ReadBuf(device : ppointer; pBuf : PWord; dSizeBuf : PLongint): cardinal;  stdcall;
+   function WriteBuf(device : ppointer; pBuf : PWord; dSizeBuf : PLongint): cardinal;  stdcall;
+   // function ReadProperty(device : ppointer; lpFileName : pointer; wMode : word) : cardinal;  stdcall;
+   // function WriteProperty(device : ppointer; lpFileName : pointer; wMode : word): cardinal;  stdcall;
+   // установка callback на прерывания от платы
+   function SetInterrupt(device : ppointer; DataHandler : pointer; IntHandler : pointer): cardinal;  stdcall;
+   function ResetCount(device : ppointer): cardinal;  stdcall;
+   function GetMaxBufSize(device : ppointer;dwMaxBufSize : PLongint): cardinal;  stdcall;
+   function GetProperty(device : ppointer; TypeProp:Longint;var VarProp: Variant): cardinal; stdcall;
+   function SetProperty(device : ppointer; TypeProp:Longint;var VarProp: Variant): cardinal; stdcall;
+   function AddISADevice(pDeviceEnum :PDeviceEnum; TypeCard: longint;  Port: longint; Irq: longint; SN: longint) : cardinal; stdcall;
+   function Test(device : ppointer; lpFileName : pointer; lpAppName : pointer; dwTest : PLongint): cardinal;  stdcall;
+   function CallCommand(device : ppointer;command : word; wLengthInParam : word; pInParam : pword; wLengthOutParam : word; pOutParam : pword) : cardinal; stdcall;
+   // Получить данные (аналоговое осциллографирование)
+   // осциллографирование с платы M2070
+   // в массиве pBuf - последовательность 32-разрядных слов. первые 20 бит хранят информацию о состоянии
+   // каналов. Причем первый бит - состояние первого канала, 2торой - второго и т.д.
+   function LpOscil(device : pPointer; freq:double; Vars:PWord; vSize:word; pBuf:PWord; var BufSize:word): cardinal;  stdcall;
+   function LpProgramME052(device : ppointer; channel:word; VeryLongWord:PWord): cardinal;  stdcall;
+   function LpSetAnalogChan(device : ppointer; chan:word): cardinal;  stdcall;
+
+  // Создание устройства M2081:
+  // здесь device_id - уникальный идентификатор устройства (хэндл),
+  //       vendor_num - номер изготовителя,
+  //       device_num - номер устройства,
+  //       num - дополнительный номер
+  //       _bios_size - длина _bios_code
+  //       _bios_code - код bios, подчитанный из файла *.bio
+  //       _flex_size - длина _flex_code
+  //       _flex_code - код flex, подчитанный из файла *.rbf
+  //   _NWord, _CntFrame, _CntPartFifo - размеры буфера (_CntPartFifo частей по
+  //                                         _CntFrame буферов по _NWord слов),
+  //       _name - поле WD_CARD_REGISTER: name of card (NB: пока не используется - резерв)
+  //       _description - поле WD_CARD_REGISTER: description (NB: пока не используется - резерв)
+  function  CreateM2081Device(pIdDevice:System.PLongWord;Vendor:LongWord;Device:LongWord;Num:LongWord;SizeBios:LongWord;Bios:Pointer;SizeFlex:LongWord;Flex:Pointer;
+                                  NWord:LongWord;CntFrame:LongWord;CntPartFifo:LongWord;const Name:PansiChar;const Description:PansiChar):Integer;stdcall;
+  function Close2081Device(IdDevice:LongWord):Integer;stdcall;
+  function  Load2081BIOS(const IdDevice:LongWord;const BiosModule:Integer):Integer;stdcall;
+  function  LoadFlexM2081(const IdDevice:LongWord):Integer;stdcall;
+  // создание callback на асинхронные события
+  function  CreateScan(IdDevice:LongWord;IdScan:System.PLongWord;IdScanType:LongWord;
+                            Prior:LongWord;Handler:THandler;Data:Pointer):Integer;stdcall;
+  function  FreeScan(IdDevice,IdScan:LongWord):Integer;stdcall;
+  function  StartScanMain(IdDevice:LongWord):Integer;stdcall;
+  function  StopScanMain(IdDevice:LongWord):Integer;stdcall;
+  function  ResetScanMain(IdDevice:LongWord):Integer;stdcall;
+  function  Read2081Buf(IdDevice:LongWord;IdScanL:LongWord;Buf:Pointer;Bufsize:PWord):Integer;stdcall;
+  function  ProgrammingComp(IdDevice:LongWord;NumChan:LongWord;Data:LongWord):Integer;stdcall;
+  // Программирование модуля MC052V5 size- размер массива в битах  data - массив
+  function ProgrammingMC052V5(IDdevice, num, size: LongWord; Buf:Pointer):Cardinal;stdcall;
+  //--------------------------------------------------------------------
+  // Старт задачи "лопатки" сихронного ввода
+  // size_out - размер буфера channel_out в словах (макс = 2720)
+  // channel_out - указатель на массив каналов, размер - слово 16р
+  // buf - массив времен, размер - двойное слово 32 р
+  // timeout -  мс
+  //--------------------------------------------------------------------
+  function  Read_Blade(IdDevice:LongWord;const InSize:LongWord;InChannel:Pointer;const OutSize:LongWord;OutChannel:Pointer;Buf:Pointer;Timeout:LongWord):Integer;stdcall;
+  procedure Config_Blade(IdDevice:LongWord;InSize:LongWord;InChannel:Pointer;Datasize:LongWord);stdcall;
+  // Функция для чтения порта ввода по выбранным каналам с использованием внутреннего таймера
+  // mode =
+  //     0-2 бит - режим работы
+  //        0 - первый порт
+  //        1 - второй порт
+  //        2 - оба порта
+  //    3 бит = 0 - быстрый ввод
+  //             1 - по таймеру
+  //     4 бит = 0 - нет синхронизации
+  //             1 - синхронизация
+  // syncchan - синхроканал
+  //      0-31 - номер канала
+  //      15 бит - фронт = 0 - положительный
+  //                       1 - отрицательный
+  // freq = 3 ... 300000 Гц
+  // size_out = 1... 8192
+  // быстр. (8.25 МГц - один порт, 5.5 МГц - оба порта)
+  // по таймеру (2 Гц ... 3 МГц - один порт, 2 Гц...2.5 МГц - оба)
+  procedure DigBlIn(IdDevice:LongWord;Mode:LongWord;SyncChan:LongWord;Freq:LongWord;BufSize:LongWord;Buf:Pointer);stdcall;
+  //Function ReadRemoteWordPCI(Adress:Word):Word;stdcall;
+
+
+  Const
+    LO_TIMER      = $4;             //  работа по таймеру
+    LO_SYNC       = $8;             //  синхронизация по фронту 
+    LO_NEG_FRONT  = $8000;          //  по негативному фронту
+
+implementation
+
+  function  CreateM2081Device(pIdDevice:System.PLongWord;Vendor:LongWord;Device:LongWord;Num:LongWord;SizeBios:LongWord;Bios:Pointer;SizeFlex:LongWord;Flex:Pointer;
+                                  NWord:LongWord;CntFrame:LongWord;CntPartFifo:LongWord;const Name:PansiChar;const Description:PansiChar):Integer;External 'M2081LOP.DLL' name '_CreateM2081Device@52';
+  function Close2081Device(IdDevice:LongWord):Integer; External 'DevApi81.dll' name '_CloseDevice@4';
+  function  Load2081BIOS(const IdDevice:LongWord;const BiosModule:Integer):Integer; External 'DevApi81.dll' name '_LoadBIOS@8';
+  function  LoadFlexM2081(const IdDevice:LongWord):Integer; External 'M2081LOP.DLL' name '_LoadFlexM2081@4';
+  function  CreateScan(IdDevice:LongWord;IdScan:System.PLongWord;IdScanType:LongWord;
+                             Prior:LongWord;Handler:THandler;Data:Pointer):Integer;External 'DevApi81.dll' name '_CreateScan@24';
+  function  FreeScan(IdDevice,IdScan:LongWord):Integer;External 'DevApi81.dll' name '_DeleteScan@8';
+  function  StartScanMain(IdDevice:LongWord):Integer;External 'DevApi81.dll' name '_StartScanMain@4';
+  function  StopScanMain(IdDevice:LongWord):Integer;External 'DevApi81.dll' name '_StopScanMain@4';
+  function  ResetScanMain(IdDevice:LongWord):Integer;External 'DevApi81.dll' name '_ResetScanMain@4';
+  function  Read2081Buf(IdDevice:LongWord;IdScanL:LongWord;buf:Pointer;Bufsize:PWord):Integer;External 'DevApi81.dll' name '_ReadBuf@16';
+  function  ProgrammingComp(IdDevice:LongWord;NumChan:LongWord;Data:LongWord):Integer;External 'M2081LOP.DLL' name '_ProgrammingComp@12';
+  function ProgrammingMC052V5(IDdevice, num, size: LongWord; Buf:Pointer):Cardinal;External 'M2081LOP.DLL' name '_ProgrammingMC052V5@16';
+  function  Read_Blade(IdDevice:LongWord;const InSize:LongWord;InChannel:Pointer;const OutSize:LongWord;
+                            OutChannel:Pointer;Buf:Pointer;Timeout:LongWord):Integer; External 'M2081LOP.DLL' name '_COMP@28';
+  procedure Config_Blade(IdDevice:LongWord;InSize:LongWord;InChannel:Pointer;Datasize:LongWord);External 'M2081LOP.DLL' name '_CONFIG_COMP@16';
+  procedure DigBlIn(IdDevice:LongWord;Mode:LongWord;SyncChan:LongWord;Freq:LongWord;BufSize:LongWord;Buf:Pointer);External 'M2081LOP.DLL' name '_DigBlIn@24';
+  //Function  ReadRemoteWordPCI(Adress:Word):Word;external 'M1XXX.DLL';
+
+   function SearchDevicesEx(DeviceEnum : PDeviceEnum) : cardinal;  External 'Mxxxx.dll' name 'SearchDevicesEx' ;
+   function CreateDevice(DevInfo : TDevice; device : ppointer) : cardinal;  External 'Mxxxx.dll' name 'CreateDevice';
+   function CloseDevice(device : ppointer)  : cardinal;  External 'Mxxxx.dll' name 'CloseDevice';
+   function Load(device : ppointer) : cardinal;  External 'Mxxxx.dll' name 'Load';
+   function LoadBios(device : ppointer) : cardinal;  External 'Mxxxx.dll' name 'LoadBios' ;
+   function LoadFlex(device : ppointer) : cardinal;  External 'Mxxxx.dll' name 'LoadFlex'  ;
+   function Config(device : ppointer) : cardinal;  External 'Mxxxx.dll' name 'Config'       ;
+   function ConfigDevice(device : ppointer) : cardinal;  External 'Mxxxx.dll' name 'ConfigDevice'  ;
+//   function ConfigurePort(device : ppointer;lpFileName : pointer;lpAppName : pointer; Port : word; Task : word) : cardinal;  External 'Mxxxx.dll' name 'ConfigurePort'
+   function Start(device : ppointer) : cardinal;  External 'Mxxxx.dll' name 'Start';
+   function Stop(device : ppointer) : cardinal;  External 'Mxxxx.dll' name 'Stop'   ;
+   function GetDirection(device : ppointer;direction : PWord): cardinal;  External 'Mxxxx.dll' name 'GetDirection';
+   function WritePropertyEx(device : ppointer;lpFileName : pointer;lpAppName : pointer): cardinal;  External 'Mxxxx.dll' name 'WritePropertyEx';
+   function ReadPropertyEx(device : ppointer;lpFileName : pointer;lpAppName : pointer): cardinal;  External 'Mxxxx.dll' name 'ReadPropertyEx';
+   function GetReadBufSize(device : ppointer; pSizeBuf : PLongint; pSizeLost : PLongint; pSizeOverflow : PLongint) : cardinal;  External 'Mxxxx.dll' name 'GetReadBufSize';
+   function GetWriteBufSize(device : ppointer; pSizeBuf : PLongint; pSizeLost : PLongint; pSizeOverflow : PLongint): cardinal;  External 'Mxxxx.dll' name 'GetWriteBufSize';
+   function ReadBuf(device : ppointer; pBuf : PWord; dSizeBuf : PLongint): cardinal;  External 'Mxxxx.dll' name 'ReadBuf';
+   function WriteBuf(device : ppointer; pBuf : PWord; dSizeBuf : PLongint): cardinal;  External 'Mxxxx.dll' name 'WriteBuf';
+//   function ReadProperty(device : ppointer; lpFileName : pointer; wMode : word) : cardinal;  External 'Mxxxx.dll' name 'ReadProperty'
+//   function WriteProperty(device : ppointer; lpFileName : pointer; wMode : word): cardinal;  External 'Mxxxx.dll' name 'WriteProperty'
+   function SetInterrupt(device : ppointer; DataHandler : pointer; IntHandler : pointer): cardinal;  External 'Mxxxx.dll' name 'SetInterrupt';
+   function ResetCount(device : ppointer): cardinal;  External 'Mxxxx.dll' name 'ResetCount';
+   function GetMaxBufSize(device : ppointer;dwMaxBufSize : PLongint): cardinal; External 'Mxxxx.dll' name 'GetMaxBufSize';
+   function GetProperty(device : ppointer; TypeProp:Longint; var VarProp: Variant): cardinal;  External 'Mxxxx.dll' name 'GetProperty';
+   function SetProperty(device : ppointer; TypeProp:Longint; var VarProp: Variant): cardinal;  External 'Mxxxx.dll' name 'SetProperty' ;
+   function AddISADevice(pDeviceEnum :PDeviceEnum; TypeCard: longint;  Port: longint; Irq: longint; SN: longint) : cardinal; External 'Mxxxx.dll' name 'AddISADevice';
+   function Test(device : ppointer; lpFileName : pointer; lpAppName : pointer; dwTest : PLongint): cardinal;  External 'Mxxxx.dll' name 'Test';
+   function CallCommand(device : ppointer;command : word; wLengthInParam : word; pInParam : pword; wLengthOutParam : word; pOutParam : pword) : cardinal;  External 'Mxxxx.dll' name 'CallCommand';
+   function LpOscil(device : ppointer; freq:double; Vars:PWord; vSize:word; pBuf:PWord; var BufSize:word): cardinal;  External 'M2070.dll' name 'LpOscil';
+   function LpProgramME052(device : ppointer; channel:word; VeryLongWord:PWord): cardinal;  External 'M2070.dll' name 'LpProgramME052';
+   function LpSetAnalogChan(device : ppointer; chan:word): cardinal;  External 'M2070.dll' name 'LpSetAnalogChan';
+end.
+

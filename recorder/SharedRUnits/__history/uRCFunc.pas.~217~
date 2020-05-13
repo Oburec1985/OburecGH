@@ -1,0 +1,1380 @@
+unit uRCFunc;
+
+interface
+
+uses
+  Windows,
+  recorder,
+  tags,
+  types,
+  plugin,
+  iplgmngr,
+  ActiveX,
+  SysUtils,
+  SyncObjs,
+  Classes,
+  ExtCtrls,
+  blaccess,
+  uEventList,
+  uRecorderEvents,
+  dialogs,
+  nativexml,
+  inifiles,
+  uCommonTypes,
+  ucommonmath,
+  u2dmath,
+  uPathMng,
+  variants;
+
+type
+  cFileTag = class
+  private
+    m_threadID:cardinal;
+    m_f:file;
+    m_freq:double;
+    m_filename:string;
+    m_Datafilename:string;
+
+    m_name:string;
+    m_block:pointer;
+    m_blSize:cardinal;
+    m_start:double;
+    m_record:boolean;
+    m_time:double;
+    procedure setBlockSize(size: cardinal);
+  protected
+  public
+    constructor create(p_name:string; p_freq:double);
+    procedure saveBlock(time:double);
+    procedure StopRecord;
+    procedure StartRecord(merafile:string);
+    function recordState:boolean;
+    procedure setBlock(size:cardinal;var block:array of double);
+  public
+    property name:string read m_name write m_name;
+    property freq:double read m_freq write m_freq;
+  end;
+
+  cTag = class
+  private
+    ftag: itag;
+    ftagname: string;
+
+    // индекс последнего актуального значения в массиве m_ReadData/ Точнее адрес
+    // в который придет новый буфер данных.
+    m_lastindex: integer;
+
+    // отладочная переменная
+    fdevicetime:double;
+  public
+    m_createOutTag:boolean;
+    // кол-во обработанных блоков исходного тега
+    // должно быть приватным. Не в точности равно readyBlock считанному из IBlockAccess
+    // т.к. нужна переменная которая хранит число обработанных блоков именно алгоритмом для определения кол-ва новых блоков
+    // становится равно readyBlock считанному из IBlockAccess в методе dogetdata после чего новые данные
+    // из m_ReadData попадают в обработку
+    m_readyBlock: integer;
+    ftagid: tagid;
+
+    fBlock: IBlockAccess;
+    // определяет размер буфера который сможет вместить m_ReadData
+    fBlCount: integer;
+
+    // данные последнего блока. По идее бы сделать его Private
+    // считывается из itag
+    m_TagData: array of double;
+    //  function GetVectorPairR8(var Block; const Index: longint; const Size: longint;
+    //                           const Tare: boolean): HRESULT; stdcall;
+    m_TagData2d: array of point2d;
+    // размер буфера m_ReadData
+    m_ReadSize: integer;
+    // Несколько сшитых блоков. Можно пропустить событие обновления данных тега
+    // тогда на очередном шаге вычитки данных придется вычитать несколько блоков
+    // из кольцевого буфера Recorder. данные складываются в m_ReadData
+    // m_ReadData не кольцевой!!!
+    m_ReadData: array of double;
+    // время первого отсчета в m_ReadData
+    m_ReadDataTime: double;
+
+    // массив значений который пишется в itag (по идее здесь результаты расчетов алгоритмов)
+    // кольцевой буфер
+    m_WriteData: array of double;
+    m_WriteDataX: array of double;
+    // Размер кольцевого буфера
+    m_WriteDataSize: integer;
+    // индекс последнего актуального значения в массиве m_WriteData/ Точнее адрес
+    // в который придет новый буфер данных.
+    m_lastIndWriteData: integer;
+    // количество посчитанных выходных данных с момента doOnStart
+    m_ReadyVals: cardinal;
+
+    // время последнего блока
+    m_timeShtamp: double;
+    // нгомер последнего блока
+    m_timeShtamp_i: cardinal;
+  public
+
+  protected
+    procedure setBlock(b: IBlockAccess);
+    procedure settagname(s: string);
+    function Gettagname: string;
+    function getfreq: double;
+    procedure setfreq(f: double);
+    // работа с выходным кольцевым буфером
+    function getReadyVals: cardinal;
+    procedure setReadyVals(f: cardinal);
+    procedure settagid(t: tagid);
+
+    function ConvertIndInLoopBuff(i:integer):integer;
+  public
+    function readyBlockCount:cardinal;
+    // возвращает время i-о отсчета в m_readData/ в зависимости от типа тега по разному
+    // реализует расчет времени
+    function getReadTime(i:integer):double;
+    // t время
+    procedure PutOutValue(v, t: double);
+    // получить i-е значение тега. При этом результат ведет себя так будто выходной буфер не кольцевой
+    // т.е. посл значение может быть в нулевом индексе, однако посл. значению будет соответствовать i=OutSize-1
+    function GetOutValue(i: integer):double;
+
+    procedure settag(t: itag);
+    constructor create;
+    destructor destroy;
+    procedure doOnStart;
+    // установить массив m_TagData
+    // BlCount определяет количество буферов m_TagData которое может вместить m_ReadData
+    procedure initTagData(blCount: integer);
+    // вызывается в событии doGetData для вычитки данных из тега в m_TagData
+    // возвращает true если пришли новые данные
+    function UpdateTagData(tare: boolean):boolean;
+    // необходимо вызывать каждый раз когда расчет по накопленным данным m_ReadData завершен
+    // в результате копируются неиспользованные данные в начало буфера и происходит перевод
+    // m_lastindex в начало буфера
+    // portionSize - период расчета алгоритма использующего m_ReadData. из m_ReadData сбрасывается
+    // кратное portionSize количество значений
+    procedure ResetTagData(portionSize: integer);overload;
+    procedure ResetTagData;overload;
+    // резетим буфер по индексу первого нужного элемента в m_readData (забываем все до endTimeInd)
+    procedure ResetTagDataTimeInd(endTimeInd:integer);
+    procedure InitWriteData(Size: integer);
+    function GetValByTime(time:double; interp:boolean; var error:boolean): point2d;
+    // получить индекс последнего элемента в массиве m_ReadData
+    function getlastindex:integer;
+    // начало и конец в секундах данных в m_readdata
+    function getPortionTime:point2d;
+    // индексы начала и конца интервала
+    function getIntervalInd(interval:point2d):tpoint;
+    function getIndex(t:double):integer;
+  public
+    function GetDefaultEst: double;
+    function GetMeanEst: double;
+    function GetRMSEst: double;
+    function GetPeakEst: double;
+
+    property tag: itag read ftag write settag;
+    property block: IBlockAccess read fBlock write setBlock;
+    property blockCount: integer read fBlCount write fBlCount;
+    property tagname: string read Gettagname write settagname;
+    property tag_id: tagid read ftagid write settagid;
+    property freq: double read getfreq write setfreq;
+    property readyVals: cardinal read getReadyVals write setReadyVals;
+    property lastindex:integer read getlastindex write m_lastindex;
+  end;
+
+  TMBaseNotify = record
+    // идентификатор объекта которому надо добавит/ удалшить свойство
+    ObjID: String;
+    // тип операции 0 - добавить/изменить свойство 1 - удалить
+    OperType: integer;
+    // строка свойств и значение
+    // Если добавляем меняем свойство через разделитель ";" идут <имя свойства>,<значение свойства>
+    // Если удаляем то через разделитель ";" идут имена свойств
+    Operation: string;
+  end;
+
+function GetMeraFile:string;
+
+procedure saveTag(t: cTag; node: txmlnode);
+function LoadTag(node: txmlnode): cTag;
+procedure saveTagToIni(ifile: tinifile; t: cTag; sect, ident: string);
+function LoadTagIni(ifile: tinifile; sect, ident: string): cTag;
+procedure LoadExTagIni(ifile: tinifile; t: cTag; sect, ident: string);
+
+procedure GlobDetach;
+procedure GlobInit(p_plg: IRecorderPlugin; p_ir: irecorder);
+
+procedure AddTagProp(t: itag; propname: string; propval: string);
+function GetConfigName: string;
+function getIR: irecorder;
+
+function getTagByName(s: string): itag;
+function getTagById(id: tagid): itag;
+function Check_outputTag(t: itag): boolean;
+// путь конфигурации рекордера
+function getRConfig: string;
+// рекордер в настройке
+function RStateConfig: boolean;
+// рекордер в состоянии измерения
+function RStatePlay: boolean;
+function RStateStop: boolean;
+// рекордер в состоянии записи
+function RStateRec: boolean;
+function RState: dword;
+function GetTagUnits(t: itag): string;
+procedure SetTagUnits(t: itag; s: string);
+function GetREFRESHPERIOD: double;
+procedure SetMeanEval(t: itag; val: boolean);
+procedure SetPeakEval(t: itag; val: boolean);
+// Работа с тегами
+function GetMean(t: itag): double;
+function GetAmp(t: itag): double;
+// получить посл значение
+function GetScalar(t: itag): double;
+function isScalar(t: itag): boolean;
+function IsAlive(t: itag): boolean;
+function CloseTag(t: itag): boolean;
+function TagUnits(t: itag): string;
+// вход рекордера в настройку
+function ecm: boolean;overload;
+function ecm(var changeState:boolean): boolean;overload;
+// выход рекордера из настройки
+function lcm: boolean;
+function StrToAnsi(s: string): ansistring;
+// НЕ РАБОТАЕТ С FASTMM. Из функции не удается вернуть указатель на строку, строка запарывается
+function StrToPAnsi(s: string): pansichar;
+function ReadBlockData(dBlock: IBlockAccess; readNextBlock: boolean;
+  var data: array of double): boolean;
+function createCTag(tagname: string): cTag;
+// заменить тег в ct по имени нового тега (обновится tagid и имя)
+// возвращает true если были изменения
+function ChangeCTag(ct: cTag; tagname: string): boolean;
+
+function CreateStateTag(tagname: string; owner: tobject): itag;
+
+function createVectorTagR8(tagname: string; freq: double; CfgWritable: boolean;  irregular: boolean; freqcorrection: boolean): itag;
+
+//function createXYVectorR8(tagname: string; freq: double; CfgWritable: boolean): itag;
+
+function createScalar(tagname: string; CfgWritable: boolean): itag;
+// получить значение тега по времени t - исходный тег; time - аргумент искомого значения
+// interp - если true то при неточном совпопадении времени time с временем значения тега
+// значение будет проинтерполировано между двумя соседними значениями, есил false берется
+// точное значение ближайшего по времени значения тега
+function FuncGetValByTime(t:ctag; time:double; interp:boolean; var error:boolean): point2d;
+
+
+var
+  g_IR: irecorder = nil;
+  G_Plg: IRecorderPlugin = nil;
+  g_configmode: boolean;
+  g_merafile:string;
+  g_configCS:TRTLCriticalSection;
+
+const
+  // количество порций которое может накопить алгоритм между двумя периодами расчета выходного значения
+  c_blockCount = 10;
+
+  c_MBaseName = 'Циклограмма работы регуляторов';
+
+implementation
+
+uses
+   pluginclass;
+
+// uMBaseControl;
+
+procedure GlobDetach;
+begin
+  G_Plg := nil;
+  g_IR := nil;
+  DeleteCriticalSection(g_configCS);
+end;
+
+procedure GlobInit(p_plg: IRecorderPlugin; p_ir: irecorder);
+begin
+  G_Plg := p_plg;
+  g_IR := p_ir;
+  InitializeCriticalSection(g_configCS);
+end;
+
+function FuncGetValByTime(t:ctag; time:double; interp:boolean; var error:boolean): point2d;
+var
+  t1, t2, dt, d1, d2:double;
+  I: Integer;
+begin
+  result.x:=-1;
+  result.y:=-1;
+  dt:=1/t.getfreq;
+  error:=false;
+  if time<t.m_ReadDataTime then
+  begin
+    if time<t.m_ReadDataTime-dt then
+    begin
+      error:=true;
+    end
+    else
+    begin
+      result.x:=t.m_ReadDataTime;
+      result.y:=t.m_ReadData[0];
+    end;
+    exit;
+  end;
+
+
+  if time>t.getReadTime(t.m_lastindex-1) then
+  begin
+    if time>t.getReadTime(t.m_lastindex-1)+dt then
+    begin
+      error:=true;
+    end
+    else
+    begin
+      result.y:=t.m_ReadData[t.m_lastindex-1];
+      result.x:=t.getReadTime(t.m_lastindex-1);
+    end;
+    exit;
+  end;
+  t2:=0;
+  if t.m_lastindex-2<0 then
+  begin
+    result.x:=t.getReadTime(0);
+    result.y:=t.m_ReadData[0];
+    exit;
+  end;
+  for I := 0 to t.m_lastindex-2 do
+  begin
+    t1:=t.getReadTime(i);
+    if i<t.m_lastindex-1 then
+      t2:=t.getReadTime(i+1);
+    if (time>=t1) and (time<=t2) then
+    begin
+      if interp then
+      begin
+        result.y:=EvalLineYd(time, t1,t.m_ReadData[i], t2,t.m_ReadData[i+1]);
+        result.x:=time;
+      end
+      else
+      begin
+        d1:=time-t1;
+        d2:=t2-time;
+        if d1<d2 then
+        begin
+          result.x:=t1;
+          result.y:=t.m_ReadData[i];
+        end
+        else
+        begin
+          result.x:=t2;
+          result.y:=t.m_ReadData[i+1];
+        end;
+      end;
+      exit;
+    end;
+  end;
+end;
+
+
+
+function createVectorTagR8(tagname: string; freq: double; CfgWritable: boolean;
+  irregular: boolean; freqcorrection: boolean): itag;
+var
+  ir: irecorder;
+  Name, errMes: string;
+  err: cardinal;
+  v: OleVariant;
+begin
+  ir := getIR;
+  result := itag(ir.CreateTag(lpcstr(StrToAnsi(tagname)), LS_VIRTUAL, nil));
+  if result = nil then // ошибка создания виртуального тега
+  begin
+    err := ir.GetLastError;
+    errMes := ir.ConvertErrorCodeToString(err);
+    exit;
+    // showmessage(errMes);
+  end;
+  // установка типа тега : вектор, прием и передача
+  VariantInit(v);
+  VariantClear(v);
+  TPropVariant(v).vt := VT_UI4;
+
+  if irregular then
+    v := TTAG_VECTOR or TTAG_INPUT or TTAG_IRREGULAR
+  else
+    v := TTAG_VECTOR or TTAG_INPUT;
+
+  result.SetProperty(TAGPROP_TYPE, v);
+  // частота опроса
+  result.SetProperty(TAGPROP_ENABLEFREQCORRECTION, freqcorrection);
+  VariantClear(v);
+  // v := fintag.tag.GetFreq; // частота опроса датчика
+  result.setfreq(freq);
+  // тип передаваемых данных
+  VariantClear(v);
+  TPropVariant(v).vt := VT_R8;
+  // v := VarAsType(v, varDouble);
+  result.SetProperty(TAGPROP_DATATYPE, v);
+  result.CfgWritable(CfgWritable);
+
+  // минимальное и максимальное значение диапазона
+  // VariantClear(v);
+  // m_TestWriteVTag.getProperty(TAGPROP_MINVALUE, v);
+  // m_TestVTag.SetProperty(TAGPROP_MINVALUE, v);
+  // VariantClear(v);
+  // m_TestWriteVTag.getProperty(TAGPROP_MAXVALUE, v);
+  // m_TestWriteVTag.SetProperty(TAGPROP_MAXVALUE, v);
+end;
+
+procedure saveTag(t: cTag; node: txmlnode);
+begin
+  node.WriteAttributeString('TagName', t.tagname);
+  node.WriteAttributeInt64('TagID', t.tag_id);
+end;
+
+function LoadTag(node: txmlnode): cTag;
+var
+  t: itag;
+  ir: irecorder;
+  id: tagid;
+begin
+  result := cTag.create;
+  result.tagname := node.ReadAttributeString('TagName', '');
+  result.ftagid := node.ReadAttributeInt64('TagID', -1);
+  if result.tagname <> '' then
+  begin
+    t := getTagByName(result.tagname);
+    if t <> nil then
+    begin
+      // t.GetTagId(result.tagid)
+      result.tag := t;
+    end
+    else
+    begin
+      ir := getIR;
+      ir.GetTagByTagId(result.ftagid, t);
+      if t <> nil then
+      begin
+        result.tag := t;
+      end;
+    end;
+  end;
+end;
+
+procedure saveTagToIni(ifile: tinifile; t: cTag; sect, ident: string);
+var
+  str: string;
+begin
+  str := t.tagname + ';' + inttostr(t.tag_id);
+  ifile.WriteString(sect, ident, str);
+end;
+
+procedure LoadExTagIni(ifile: tinifile; t: cTag; sect, ident: string);
+var
+  val, str: string;
+  index: integer;
+begin
+  str := ifile.ReadString(sect, ident, '');
+  if str <> '' then
+  begin
+    val := GetSubString(str, ';', 0, index);
+    t.tagname := val;
+    if t.tag = nil then
+    begin
+      val := GetSubString(str, ';', index + 1, index);
+      t.ftagid := StrToInt64(val);
+    end;
+  end;
+end;
+
+function LoadTagIni(ifile: tinifile; sect, ident: string): cTag;
+var
+  val, str: string;
+  index: integer;
+begin
+  result := nil;
+  str := ifile.ReadString(sect, ident, '');
+  if str <> '' then
+  begin
+    result := cTag.create;
+    val := GetSubString(str, ';', 0, index);
+    result.tagname := val;
+    if result.tag = nil then
+    begin
+      val := GetSubString(str, ';', index + 1, index);
+      result.tag_id := StrToInt64(val);
+    end;
+  end;
+end;
+
+function ReadBlockData(dBlock: IBlockAccess; readNextBlock: boolean;
+  var data: array of double): boolean;
+begin
+
+end;
+
+function getIR: irecorder;
+begin
+  result := g_IR;
+end;
+
+procedure AddTagProp(t: itag; propname: string; propval: string);
+var
+  PropI: IUserProperties;
+  i, ind: integer;
+  a_varValue: OleVariant;
+  a_pPropId: TBStr;
+begin
+  t.QueryInterface(IID_IUserProperties, PropI);
+  a_pPropId := TBStr(propname);
+  a_varValue := propval;
+  PropI.SetUserProperty(a_pPropId, a_varValue, UPROPFLAG_MERA_FILE);
+end;
+
+function GetConfigName: string;
+var
+  val: OleVariant;
+begin
+  g_IR.GetProperty(RCPROP_CONFIGNAME, val);
+  result := val;
+end;
+
+function getTagByName(s: string): itag;
+var
+  ansi: ansistring;
+begin
+  ansi := s;
+  result := itag(g_IR.getTagByName(pansichar(ansi)));
+end;
+
+function getTagById(id: tagid): itag;
+var
+  t: itag;
+begin
+  result := nil;
+  g_IR.GetTagByTagId(id, t);
+  if t <> nil then
+  begin
+    result := t;
+  end;
+end;
+
+function createCTag(tagname: string): cTag;
+var
+  it: itag;
+begin
+  it := getTagByName(tagname);
+  result := nil;
+  if it <> nil then
+  begin
+    result := cTag.create;
+    result.tag := it;
+  end;
+end;
+
+function ChangeCTag(ct: cTag; tagname: string): boolean;
+var
+  it: itag;
+begin
+  result := false;
+  it := getTagByName(tagname);
+  if it <> nil then
+  begin
+    if it <> ct.tag then
+    begin
+      ct.tag := it;
+      result := true;
+    end;
+  end;
+end;
+
+function CreateStateTag(tagname: string; owner: tobject): itag;
+var
+  ir: irecorder;
+  astr: ansistring;
+  var_type: Variant;
+  v: OleVariant;
+begin
+  ir := getIR;
+  result := itag(ir.CreateTag(lpcstr(StrToAnsi(tagname)), LS_VIRTUAL, nil));
+  AddTagProp(result, 'NullPoly', '1');
+
+  // сохранять в конфиге
+  // установка типа тега : вектор, прием и передача
+  VariantInit(v);
+  VariantClear(v);
+  TPropVariant(v).vt := VT_UI4;
+  v := TTAG_SCALAR or TTAG_INPUT;
+  result.SetProperty(TAGPROP_TYPE, v);
+  // частота опроса
+  result.SetProperty(TAGPROP_ENABLEFREQCORRECTION, false);
+  VariantClear(v);
+  result.setfreq(0);
+  // тип передаваемых данных
+  VariantClear(v);
+  TPropVariant(v).vt := VT_R8;
+  result.SetProperty(TAGPROP_DATATYPE, v);
+  result.CfgWritable(false);
+  // result.SetProperty(TAGPROP_OWNER, G_Plg);
+
+  // сохранять в конфиге
+  { result.CfgWritable(false);
+    result.SetProperty(TAGPROP_TYPE, TTAG_SCALAR or TTAG_INPUT or TTAG_OUTPUT);
+    result.SetProperty(TAGPROP_OWNER, g_IR);
+    result.SetProperty(TAGPROP_ATTRIB_HIDEN, false);
+    result.SetProperty(TAGPROP_ENABLEFREQCORRECTION, false);
+    TVarData(var_type).VType := varDouble;
+    // TVarData(var_type).VLongWord := varDouble;
+    result.SetProperty(TAGPROP_DATATYPE, var_type); }
+end;
+
+function isScalar(t: itag): boolean;
+var
+  var_type: Variant;
+  v: OleVariant;
+begin
+  t.getProperty(TAGPROP_TYPE, v);
+  result:=TTAG_SCALAR and v;
+end;
+
+function IsAlive(t: itag): boolean;
+var
+  var_type: Variant;
+  v: OleVariant;
+begin
+  t.getProperty(TAGPROP_TYPE, v);
+  result:=TAGPROP_DESTROYED_FLAG and v;
+end;
+
+function CloseTag(t: itag): boolean;
+begin
+  if isAlive(t) then
+  begin
+    result:=true;
+    if g_configmode then
+      getir.CloseTag(t);
+  end
+  else
+  begin
+    result:=false;
+  end;
+end;
+
+function TagUnits(t: itag): string;
+var
+  v: OleVariant;
+begin
+  t.getProperty(TAGPROP_UNITS, v);
+  result:=v;
+end;
+
+
+
+
+
+function createScalar(tagname: string; CfgWritable: boolean): itag;
+var
+  ir: irecorder;
+  astr: ansistring;
+  var_type: Variant;
+  v: OleVariant;
+begin
+  ir := getIR;
+  result := itag(ir.CreateTag(lpcstr(StrToAnsi(tagname)), LS_VIRTUAL, nil));
+
+  // сохранять в конфиге
+  // установка типа тега : вектор, прием и передача
+  VariantInit(v);
+  VariantClear(v);
+  TPropVariant(v).vt := VT_UI4;
+  v := TTAG_SCALAR or TTAG_INPUT;
+  result.SetProperty(TAGPROP_TYPE, v);
+  // частота опроса
+  result.SetProperty(TAGPROP_ENABLEFREQCORRECTION, false);
+  VariantClear(v);
+  result.setfreq(0);
+  // тип передаваемых данных
+  VariantClear(v);
+  TPropVariant(v).vt := VT_R8;
+  result.SetProperty(TAGPROP_DATATYPE, v);
+  result.CfgWritable(CfgWritable);
+  // result.SetProperty(TAGPROP_OWNER, G_Plg);
+
+  { result.CfgWritable(CfgWritable);
+    result.SetProperty(TAGPROP_TYPE, TTAG_SCALAR or TTAG_INPUT or TTAG_OUTPUT);
+    // если раскоментить падает
+    //  result.SetProperty(TAGPROP_OWNER, g_IR);
+    result.SetProperty(TAGPROP_ATTRIB_HIDEN, false);
+    result.SetProperty(TAGPROP_ENABLEFREQCORRECTION, false);
+    TVarData(var_type).VType := varDouble;
+    result.SetProperty(TAGPROP_DATATYPE, var_type); }
+end;
+
+function Check_outputTag(t: itag): boolean;
+var
+  res: OleVariant;
+begin
+  t.GetProperty(TTAG_OUTPUT, res);
+  if not VarIsNull(res) then
+    result := res
+  else
+    result := false;
+end;
+
+function getRConfig: string;
+var
+  res: OleVariant;
+begin
+  g_IR.GetProperty(RCPROP_CONFIGNAME, res);
+  if not VarIsNull(res) then
+    result := res
+  else
+    result := '';
+end;
+
+function RStateConfig: boolean;
+begin
+  result := g_IR.CheckState(RS_CONFIGMODE);
+end;
+
+function RStatePlay: boolean;
+begin
+  // result:=TExtRecorderPack(GPluginInstance).FIRecorder.CheckState(RS_VIEW or RS_REC);
+  result := not g_IR.CheckState(RS_stop);
+end;
+
+function RStateStop: boolean;
+begin
+  result := g_IR.CheckState(RS_stop);
+end;
+
+function RStateRec: boolean;
+begin
+  // RS_STOP  //RS_VIEW  //RS_REC
+  result := g_IR.CheckState(RS_REC);
+end;
+
+function RState: dword;
+begin
+  // RS_STOP  //RS_VIEW  //RS_REC
+  result := g_IR.getState(RS_BASESTATE);
+end;
+
+function GetTagUnits(t: itag): string;
+var
+  res: OleVariant;
+begin
+  t.GetProperty(TAGPROP_UNITS, res);
+  if not VarIsNull(res) then
+    result := res
+  else
+    result := '';
+end;
+
+procedure SetTagUnits(t: itag; s: string);
+var
+  res: OleVariant;
+begin
+  res := s;
+  t.SetProperty(TAGPROP_UNITS, res);
+end;
+
+function GetREFRESHPERIOD: double;
+var
+  res: OleVariant;
+begin
+  g_IR.GetProperty(RCPROP_REFRESHPERIOD, res);
+  if not VarIsNull(res) then
+    result := res
+  else
+    result := 0;
+end;
+
+
+function GetScalar(t: itag): double;
+var
+  d: double;
+begin
+  // result:=t.GetEstimate(ESTIMATOR_LAST);
+  result := t.GetEstimate(ESTIMATOR_MEAN);
+end;
+
+procedure SetMeanEval(t: itag; val: boolean);
+var
+  v: OleVariant;
+begin
+  // VariantClear(v);
+  // TPropVariant(v).vt := VT_UI4;
+  // v := TTAG_VECTOR or TTAG_INPUT;
+  // result.SetProperty(TAGPROP_TYPE, v);
+  // result.SetProperty(TAGPROP_ENABLEFREQCORRECTION, true);
+
+  VariantInit(v);
+  TPropVariant(v).vt := VT_UI4;
+  VariantClear(v);
+  t.GetProperty(ESTIMATOR_MEAN, v);
+  if val then
+  begin
+    v := v or ESTIMATOR_MEAN;
+  end
+  else
+  begin
+    v := v - ESTIMATOR_MEAN;
+  end;
+  t.SetProperty(ESTIMATOR_MEAN, v);
+end;
+
+procedure SetPeakEval(t: itag; val: boolean);
+var
+  v: OleVariant;
+begin
+  // VariantClear(v);
+  // TPropVariant(v).vt := VT_UI4;
+  // v := TTAG_VECTOR or TTAG_INPUT;
+  // result.SetProperty(TAGPROP_TYPE, v);
+  // result.SetProperty(TAGPROP_ENABLEFREQCORRECTION, true);
+
+  VariantInit(v);
+  TPropVariant(v).vt := VT_UI4;
+  VariantClear(v);
+  t.GetProperty(ESTIMATOR_MEAN, v);
+  if val then
+  begin
+    v := v or ESTIMATOR_PEAK;
+  end
+  else
+  begin
+    v := v - ESTIMATOR_PEAK;
+  end;
+  t.SetProperty(ESTIMATOR_MEAN, v);
+end;
+
+function GetMean(t: itag): double;
+var
+  d: double;
+begin
+  result := t.GetEstimate(ESTIMATOR_MEAN);
+end;
+
+function GetAmp(t: itag): double;
+var
+  d: double;
+begin
+  result := t.GetEstimate(ESTIMATOR_PEAK);
+end;
+
+function ecm(var changeState:boolean): boolean;
+begin
+  if RStateConfig then
+  begin
+    result:=false;
+    changeState:=false;
+    exit;
+  end
+  else
+  begin
+    result:=ecm;
+    if result then
+    begin
+      changeState:=true;
+    end;
+  end;
+end;
+
+function ecm: boolean;
+var
+  ir: irecorder;
+begin
+  ir := getIR;
+  result := false;
+  EnterCriticalSection(g_configCS);
+  if not g_configmode then
+  begin
+    result := true;
+    ir.EnterConfigMode(G_Plg, 0);
+  end;
+  g_configmode := true;
+  LeaveCriticalSection(g_configCS);
+end;
+
+function lcm: boolean;
+var
+  param: integer;
+  ir: irecorder;
+begin
+  result := false;
+  EnterCriticalSection(g_configCS);
+  if g_configmode then
+  begin
+    result := true;
+    ir := getIR;
+    // говорим рекордеру, чтобы обновил все списки тегов
+    param := SCF_TAGSLIST or SCF_TAGSCONTENT;
+    ir.SetProperty(RCPROP_CHANGEDSETTINGS, param);
+    ir.LeaveConfigMode(G_Plg, 0);
+    g_configmode := false;
+  end;
+  LeaveCriticalSection(g_configCS);
+end;
+
+function StrToAnsi(s: string): ansistring;
+var
+  astr: ansistring;
+  i: integer;
+begin
+  for i := 1 to length(s) do
+  begin
+    astr := astr + s[i];
+  end;
+  result := lpcstr(astr);
+end;
+
+function StrToPAnsi(s: string): pansichar;
+begin
+  result := lpcstr(StrToAnsi(s));
+end;
+
+{ cTag }
+
+function cTag.ConvertIndInLoopBuff(i: integer): integer;
+begin
+  if m_ReadyVals<m_WriteDataSize then
+    result:=i
+  else
+  begin
+    if True then
+
+  end;
+end;
+
+constructor cTag.create;
+begin
+  m_createOutTag:=true;
+  ftag := nil;
+  ftagid := -1;
+  ftagname := '';
+  fBlCount := c_blockCount;
+end;
+
+destructor cTag.destroy;
+var
+  changeState:boolean;
+begin
+  ftagname := 'freedTag';
+  ecm(changeState);
+  ftag := nil;
+  if changeState then
+    lcm;
+end;
+
+procedure cTag.doOnStart;
+begin
+  m_readyBlock:=0;
+  m_lastindex := 0;
+  m_lastIndWriteData := 0;
+  m_ReadyVals := 0;
+
+  m_timeShtamp := 0;
+  m_timeShtamp_i := 0;
+end;
+
+function cTag.GetDefaultEst: double;
+begin
+  result := tag.GetEstimate(ESTIMATOR_DEFAULT);
+end;
+
+function cTag.GetMeanEst: double;
+begin
+  result := tag.GetEstimate(ESTIMATOR_MEAN);
+end;
+
+function cTag.GetOutValue(i: integer): double;
+begin
+
+end;
+
+function cTag.GetRMSEst: double;
+begin
+  result := tag.GetEstimate(ESTIMATOR_RMSD);
+end;
+
+function cTag.GetPeakEst: double;
+begin
+  result := tag.GetEstimate(ESTIMATOR_PEAK);
+end;
+
+function cTag.Gettagname: string;
+begin
+  if ftag <> nil then
+    result := ftag.GetName
+  else
+    result := ftagname;
+end;
+
+function cTag.GetValByTime(time: double; interp: boolean;
+  var error: boolean): point2d;
+begin
+  Result:=FuncGetValByTime(self,time,interp,error);
+end;
+
+procedure cTag.initTagData(blCount: integer);
+var
+  v: OleVariant;
+begin
+  ftag.GetProperty(TAGPROP_BUFFSIZE, v);
+  // iBlock.GetBlocksSize - дает тот же результат???
+  SetLength(m_TagData, integer(v));
+  SetLength(m_TagData2d, integer(v));
+  m_ReadSize := integer(v) * blCount;
+  SetLength(m_ReadData, m_ReadSize);
+end;
+
+procedure cTag.InitWriteData(Size: integer);
+begin
+  m_WriteDataSize := Size;
+  SetLength(m_WriteData, Size);
+  SetLength(m_WriteDataX, Size);
+end;
+
+procedure cTag.PutOutValue(v, t: double);
+begin
+  m_WriteData[m_lastIndWriteData] := v;
+  m_WriteDataX[m_lastIndWriteData] := t;
+  inc(m_lastIndWriteData);
+  if m_lastIndWriteData>=m_WriteDataSize then
+    m_lastIndWriteData:=0;
+end;
+
+function cTag.readyBlockCount: cardinal;
+begin
+  result:=0;
+  if block<>nil then
+    result:=block.GetReadyBlocksCount;
+end;
+
+procedure cTag.ResetTagData;
+var
+  datacount, blCount, portionSize: integer;
+begin
+  if m_lastindex<>0 then
+  begin
+    portionSize:=block.GetBlocksSize;
+    blCount := trunc(m_lastindex / portionSize);
+    datacount := blCount*portionSize;
+    if m_ReadSize-datacount<>0 then
+    begin
+      move(m_ReadData[datacount], m_ReadData[0], m_lastindex - datacount);
+    end;
+    m_lastindex:=m_lastindex-datacount;
+    m_ReadDataTime:=m_ReadDataTime+(1/getfreq)*datacount;
+  end;
+end;
+
+procedure cTag.ResetTagData(portionSize: integer);
+var
+  datacount, blCount: integer;
+  DT:double;
+begin
+  if m_lastindex<>0 then
+  begin
+    blCount := trunc(m_lastindex / portionSize);
+    datacount := blCount * portionSize;
+    if m_ReadSize - datacount <> 0 then
+      move(m_ReadData[datacount], m_ReadData[0], (m_lastindex - datacount)*sizeof(double));
+    m_lastindex := m_lastindex - datacount;
+    m_ReadDataTime:=m_ReadDataTime+(1/getfreq)*datacount;
+    ZeroMemory(@m_ReadData[lastindex], (m_ReadSize-m_lastindex)*sizeof(double));
+  end;
+end;
+
+procedure cTag.ResetTagDataTimeInd(endTimeInd:integer);
+var
+  datacount: integer;
+  DT:double;
+begin
+  if m_lastindex<>0 then
+  begin
+    datacount := m_lastindex-endTimeInd;
+    if m_ReadSize - datacount <> 0 then
+      move(m_ReadData[datacount], m_ReadData[0], (m_lastindex - datacount)*sizeof(double));
+    m_lastindex := m_lastindex - datacount;
+    m_ReadDataTime:=m_ReadDataTime+(1/getfreq)*datacount;
+    ZeroMemory(@m_ReadData[lastindex], (m_ReadSize-m_lastindex)*sizeof(double));
+  end;
+end;
+
+
+procedure cTag.setBlock(b: IBlockAccess);
+begin
+  fBlock := b;
+  initTagData(fBlCount);
+end;
+
+procedure cTag.setfreq(f: double);
+begin
+  ftag.setfreq(f);
+end;
+
+procedure cTag.setReadyVals(f: cardinal);
+begin
+  m_ReadyVals := f;
+end;
+
+function cTag.getPortionTime: point2d;
+begin
+  result.x:=m_ReadDataTime;
+  result.y:=m_ReadDataTime+m_lastindex*(1/getfreq);
+end;
+
+function cTag.getIntervalInd(interval:point2d):tpoint;
+begin
+  result.x:=trunc((interval.x-m_ReadDataTime)*freq);
+  result.y:=trunc((interval.y-m_ReadDataTime)*freq)-1;
+end;
+
+function cTag.getIndex(t:double):integer;
+begin
+  result:=trunc((t-m_ReadDataTime)*freq);
+end;
+
+function cTag.getReadTime(i: integer): double;
+begin
+  if not isscalar(tag) then
+  begin
+    result:=m_ReadDataTime+i*(1/getfreq);
+  end;
+end;
+
+function cTag.getReadyVals: cardinal;
+begin
+  result := m_ReadyVals;
+end;
+
+function cTag.getfreq: double;
+begin
+  if ftag <> nil then
+    result := ftag.getfreq
+  else
+  begin
+    result := 0;
+  end;
+end;
+
+function cTag.getlastindex: integer;
+begin
+  result:=m_lastindex;
+end;
+
+procedure cTag.settag(t: itag);
+var
+  bl:IBlockAccess;
+begin
+  ftag := t;
+  if (t <> nil) then
+  begin
+    t.GetTagId(ftagid);
+    ftagname := t.GetName;
+    if not isscalar(t) then
+    begin
+      if not FAILED(t.QueryInterface(IBlockAccess, bl)) then
+      begin
+        block := bl;
+        bl := nil;
+      end;
+    end;
+  end;
+end;
+
+procedure cTag.settagid(t: tagid);
+var
+  it: itag;
+begin
+  it := getTagById(t);
+  if it <> nil then
+  begin
+    tag := it;
+  end;
+end;
+
+procedure cTag.settagname(s: string);
+var
+  b: boolean;
+  astr: ansistring;
+begin
+  b := false;
+  if Gettagname <> s then
+  begin
+    if not RStateConfig then
+    begin
+      b := true;
+      ecm;
+    end;
+    astr := s;
+    if tag <> nil then
+    begin
+      tag.SetName(pansichar(lpcstr(StrToAnsi(s))));
+      // tag.SetName(pansichar(astr));
+    end
+    else
+    begin
+      tag := getTagByName(s);
+    end;
+    ftagname := s;
+    if b then
+      lcm;
+  end;
+end;
+
+function cTag.UpdateTagData(tare: boolean):boolean;
+var
+  i, BufCount, // кол-о блоков которое кладется в m_ReadData. Похорошему равно newBlockCount
+  // но из за лагов может превысить размер буфера и тогда равно кол-ву блоков выходного буфера
+  newBlockCount, // кол-о новых (не обработанных) блоков в кольцевом буфере
+  blCount, // кол-о блоков в кольцевом буфере
+  blSize, // размер блока
+  readyBlockCount, // кол-о готовых к считыванию блоков
+  blInd, writeBlockSize: integer;
+begin
+  result:=false;
+  if tag=nil then exit;
+  block.LockVector;
+  blCount := block.GetBlocksCount;
+  blSize := block.GetBlocksSize;
+  if blCount > 0 then
+  begin
+    // сколько всего
+    readyBlockCount := block.GetReadyBlocksCount;
+    // если количество блоков больше чем кол-во обработанных блоков (т.е. есть новые данные)
+    if readyBlockCount > m_readyBlock then
+    begin
+      newBlockCount := readyBlockCount - m_readyBlock;
+      BufCount := newBlockCount;
+      // если готовых блоков больше чем размер буфера (blCount), = потери,
+      // но с этим уже ничего не поделать
+      if newBlockCount > blCount then
+        BufCount := newBlockCount;
+      // m_lastindex := 0; // сбрасывается в resetdata
+      for i := 0 to BufCount - 1 do
+      begin
+        m_readyBlock := readyBlockCount;
+        tare := true;
+        // например новых блоков 2. Последний блок в буфере всегда имеет последний тайм штамп.
+        // Тогда, в цикле получаем блоки с последнего необработанного
+        blInd := i + blCount - newBlockCount;
+        if SUCCEEDED(block.GetVectorR8(pointer(m_TagData)^, blInd, blSize,
+            tare)) then
+        begin
+          //block.GetVectorPairR8(pointer(m_TagData2d)^, blInd, blSize, tare);
+          fdevicetime:= block.GetBlockDeviceTime(blInd);
+          if m_lastindex=0 then
+          begin
+            m_ReadDataTime := fdevicetime;
+          end;
+        end;
+        if m_ReadSize>=m_lastindex+blSize then
+        begin
+          move(m_TagData[0], m_ReadData[m_lastindex], blSize * (sizeof(double)));
+          m_lastindex:=m_lastindex+blSize;
+        end
+        else
+        begin
+          // m_ReadSize не вмещает новые данные!!!
+          break;
+        end;
+      end;
+      result:=true;
+    end;
+  end;
+  block.unLockVector;
+end;
+
+function GetMeraFile:string;
+var
+  fname,folder:string;
+begin
+  //folder:=g_ir.GetSignalFolderName;
+  folder:=g_ir.GetSignalFrameName;
+  fname:=FindFile('*.mera', folder, 1);
+  //result:=folder+fname;
+  result:=fname;
+  g_merafile:=fname;
+end;
+
+{ cFileTag }
+
+constructor cFileTag.create(p_name: string; p_freq: double);
+begin
+  m_time:=-1;
+  name:=p_name;
+  freq:=p_freq;
+end;
+
+function cFileTag.recordState: boolean;
+begin
+  result:=m_record;
+end;
+
+procedure cFileTag.saveBlock(time:double);
+begin
+  if m_time=-1 then
+    m_start:=time;
+  m_time:=time;
+
+  Seek(m_f,FileSize(m_f));
+  BlockWrite(m_f, TDoubleDynArray(m_block)[0] , m_blSize*sizeof(double));
+end;
+
+procedure cFileTag.setBlock(size: cardinal; var block: array of double);
+begin
+  m_blSize:=size;
+  m_block:=Addr(block);
+end;
+
+procedure cFileTag.setBlockSize(size: cardinal);
+begin
+  m_blSize:=size;
+end;
+
+procedure cFileTag.StartRecord(merafile:string);
+var
+  fname:string;
+begin
+  m_threadID:=GetCurrentThreadId;
+  m_record:=false;
+  if RStateRec then
+  begin
+    m_filename:=merafile;
+    fname:=ExtractFileDir(m_filename)+'\'+name+'.dat';
+    m_Datafilename:=fname;
+    if not fileexists(fname) then
+    begin
+      m_record:=true;
+      AssignFile(m_f,m_Datafilename);
+      Rewrite(m_f,1);
+    end;
+  end;
+end;
+
+procedure cFileTag.StopRecord;
+var
+  ifile:tinifile;
+begin
+  if m_threadID=GetCurrentThreadId then
+  begin
+    if recordstate then
+    begin
+      closefile(m_f);
+      ifile:=TIniFile.Create(m_filename);
+      ifile.WriteFloat(name, 'Freq', m_freq);
+      ifile.WriteString(name, 'YFormat', 'R8');
+      ifile.WriteFloat(name, 'Start', m_start);
+      // k0
+      ifile.WriteFloat(name,'k0',0);
+      // k1
+      ifile.WriteFloat(name,'k1',1);
+      ifile.destroy;
+      m_record:=false;
+    end;
+  end;
+end;
+
+
+end.

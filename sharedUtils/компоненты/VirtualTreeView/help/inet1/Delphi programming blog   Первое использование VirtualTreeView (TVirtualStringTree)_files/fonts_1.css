@@ -1,0 +1,126 @@
+body { font-family:Arial, Helvetica, sans-serif;}
+
+.toplinks { font-family:Tahoma, Arial, Courier, Verdana; font-size: 0.9em;}
+
+.article_published {color: #888; margin-bottom: 0.5em; margin-top:0.2em;}
+.article_tags {padding-left : 0.5em; padding-top: 0.5em; color : #888;}
+.notice #more {margin-left: 1em;}
+
+blockquote {font-style:italic; border-left:solid 3px #CCC; padding-left:5px;}
+
+.comments {border-bottom: dotted 1px #555}
+.post_comment {border : solid 1px #CCC; margin:5px; padding-left:10px; padding-right:10px; padding-top:10px;}
+.post_comment table {padding:0px; margin:0px;}
+.comment_info {margin-left : 10px;}
+.comment_content {}
+.comment_even {background-color : #FAFAFA}
+.comment_odd {background-color : #EAEAEA;}
+.comment_avt {border: solid 1px #CCC; margin:3px;}
+.comment_reply {text-align:right; padding-right:10px; padding:10px;}
+
+.comment_form {margin:5px; margin-top: 15px; background-color:#FAFAFA; border: solid 1px #DDD; padding:5px;}
+.comment_form .red {color : red; font-weight:bold; padding-left:3px;}
+.comment_form .input {margin:3px;}
+.comment_form input {width:250px;}
+.reply_errors {color:red; padding-left:20px; padding-bottom:10px; padding-top:5px;}
+.comment_form .xcode {color:#aaa; background-color:white; padding:2px; border: solid 1px #cacaca; margin-right:10px;}
+
+
+.path { font-size:1em;}
+.path em { font-size:1.4em;}
+
+.content { font-size:1em;}
+.content pre {font-size : 120%;}
+.content .section { line-height:1.5em}
+
+h1.title { font-size:234%; font-weight:normal; line-height:1.1em;}
+.content div.textblock h4.title { font-size:234%; line-height:1.1em;}
+
+.article_header {font-size:250%}
+
+.section h1 { font-size:159%; font-weight:normal}
+.section h2 { font-size:159%; font-weight:normal}
+.section h3 { font-size:139%; font-weight:normal;}
+.section h4 { font-size:134%; font-weight:normal}
+.section h5 { font-size:117%; font-weight:normal; font-style:italic}
+.section h6 { font-size:100%;}
+
+.section blockquote { font-style:italic}
+
+.contactInfoPlace div.text,
+
+.mainMenu li { font-size:12px}
+
+.side div.textblock { font-size:1.2em;}
+.side div.textblock h1,
+.side div.textblock h2,
+.side div.textblock h3,
+.side div.textblock h4,
+.side div.textblock h5,
+.side div.textblock h6 { font-size:117%}
+
+.mainMenuColumn,
+.rightMenu { font-size:1.2em;}
+
+.extraMenu h4 { font-size:1.4em; font-weight:normal}
+.extraMenu .item { font-weight:bold; font-size:1.2em;}
+
+.newsPrew .item { font-size:1.1em;}
+
+.firmattributes { font-size:1.1em;}
+
+
+.searchPrew input { font-family:Arial, Helvetica, sans-serif; font-size:1.2em;}
+
+.filesList h4 { font-size:1.4em;}
+.filesList div.item { font-size:1.1em;}
+.filesList div.item a { font-size:109%}
+
+.pagelist div.title { font-size:83%;}
+.pagelist a.prev,
+.pagelist a.next { font-family:Arial;  font-size:117%}
+
+
+.news div.date { font-size:90%}
+.news h2 {font-size:160%;}
+.news a.detail { font-size:78%}
+.news div.notice { font-size:117%; line-height:1.3em}
+.news div.source { font-size:90%;}
+.news div.source span.delim { font-size:130%;}
+
+.photogal .item { font-size:90%; line-height:120%}
+
+#footer { font-size: 0.8em;}
+
+.searchForm input,
+.searchForm button { font-family: Arial, Helvetica, sans-serif; font-size:1em;}
+
+.form_plain .form_field_desc,
+.form_plain .checkboxNotice { font-style:italic}
+
+.form_plain .form_field_required { font-family:Verdana, Arial, Helvetica, sans-serif; font-weight:bold;}
+
+.form_plain .form_item_input,
+.form_plain .form_item_textarea,
+.form_plain .form_item_file { font-family:Arial, Helvetica, sans-serif; font-size:1em;}
+
+.selectfield { font-family: Arial, Helvetica, sans-serif;}
+
+.commonList h2 {font-size:117%;}
+.commonList a.detail { font-style:italic; font-size:90%}
+.commonList div.notice { line-height:1.3em}
+
+.switchers { font-size:83%;}
+
+.viewTable h2,
+.viewGallery h2 { font-size:134%;}
+
+
+.unfoldedMenu td div { font-size:1.7em}
+.unfoldedMenu td ul { font-size:1.1em}
+#logo_text div.text { font-size:1.1em; line-height:1.5em}
+
+
+.calIntro { line-height:1.3em}
+.calendarItems div.title { font-size:134%}
+.calendarItems div.notice { font-size:117%}

@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{17843fac-20c4-49d5-9b8c-304302d01b5c}</ProjectGuid>
+    <MainSource>GlPackage.dpk</MainSource>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+    <DCC_DependencyCheckOutputName>C:\Documents and Settings\All Users\Документы\RAD Studio\5.0\Bpl\GlPackage.bpl</DCC_DependencyCheckOutputName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Version>7.0</Version>
+    <DCC_DebugInformation>False</DCC_DebugInformation>
+    <DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
+    <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+    <DCC_UnitSearchPath>..\Scene\objects\helputils;..\Uinterface\;..\Render;..\math;..\Scene\objects;..\Scene\objects\camera;..\helpTools;..\helpTools\Opengl tools;..\Render\Shaders;..\Scene;..\Scene\materials;..\components;..\Scene\forms;..\Forms;..\helpTools\Lists;..\Scene\objects\helputils\SceneLists;..\Scene\modify;..\Scene\modify\deformers;..\Scene\modify\Edit;..\Scene\modify\Forms;$(BDS)\source\ToolsAPI;D:\soft\BDS\source\ToolsAPI;..\Scene\fileformats;..\Render\forms;..\Scene\fileformats\obrFunc;..\Forms\frames;..\Uinterface\frameListeners</DCC_UnitSearchPath>
+    <DCC_ResourcePath>..\Scene\objects\helputils;..\Uinterface\;..\Render;..\math;..\Scene\objects;..\Scene\objects\camera;..\helpTools;..\helpTools\Opengl tools;..\Render\Shaders;..\Scene;..\Scene\materials;..\components;..\Scene\forms;..\Forms;..\helpTools\Lists;..\Scene\objects\helputils\SceneLists;..\Scene\modify;..\Scene\modify\deformers;..\Scene\modify\Edit;..\Scene\modify\Forms;$(BDS)\source\ToolsAPI;D:\soft\BDS\source\ToolsAPI;..\Scene\fileformats;..\Render\forms;..\Scene\fileformats\obrFunc;..\Forms\frames;..\Uinterface\frameListeners</DCC_ResourcePath>
+    <DCC_ObjPath>..\Scene\objects\helputils;..\Uinterface\;..\Render;..\math;..\Scene\objects;..\Scene\objects\camera;..\helpTools;..\helpTools\Opengl tools;..\Render\Shaders;..\Scene;..\Scene\materials;..\components;..\Scene\forms;..\Forms;..\helpTools\Lists;..\Scene\objects\helputils\SceneLists;..\Scene\modify;..\Scene\modify\deformers;..\Scene\modify\Edit;..\Scene\modify\Forms;$(BDS)\source\ToolsAPI;D:\soft\BDS\source\ToolsAPI;..\Scene\fileformats;..\Render\forms;..\Scene\fileformats\obrFunc;..\Forms\frames;..\Uinterface\frameListeners</DCC_ObjPath>
+    <DCC_IncludePath>..\Scene\objects\helputils;..\Uinterface\;..\Render;..\math;..\Scene\objects;..\Scene\objects\camera;..\helpTools;..\helpTools\Opengl tools;..\Render\Shaders;..\Scene;..\Scene\materials;..\components;..\Scene\forms;..\Forms;..\helpTools\Lists;..\Scene\objects\helputils\SceneLists;..\Scene\modify;..\Scene\modify\deformers;..\Scene\modify\Edit;..\Scene\modify\Forms;$(BDS)\source\ToolsAPI;D:\soft\BDS\source\ToolsAPI;..\Scene\fileformats;..\Render\forms;..\Scene\fileformats\obrFunc;..\Forms\frames;..\Uinterface\frameListeners</DCC_IncludePath>
+    <DCC_Define>RELEASE</DCC_Define>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <Version>7.0</Version>
+    <DCC_UnitSearchPath>..\Scene\objects\helputils;..\Uinterface\;..\Render;..\math;..\Scene\objects;..\Scene\objects\camera;..\helpTools;..\helpTools\Opengl tools;..\Render\Shaders;..\Scene;..\Scene\materials;..\components;..\Scene\forms;..\Forms;..\helpTools\Lists;..\Scene\objects\helputils\SceneLists;..\Scene\modify;..\Scene\modify\deformers;..\Scene\modify\Edit;..\Scene\modify\Forms;$(BDS)\source\ToolsAPI;..\Scene\fileformats;..\Render\forms;..\Scene\fileformats\obrFunc;..\Forms\frames;..\Uinterface\frameListeners;..\..\..\sharedUtils\компоненты\dcl_dpk;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\math;..\..\..\sharedUtils\utils;..\..\..\sharedUtils;..\..\..\sharedUtils\utils\PathUtils;..\..\..\sharedUtils\ogl</DCC_UnitSearchPath>
+    <DCC_ResourcePath>..\Scene\objects\helputils;..\Uinterface\;..\Render;..\math;..\Scene\objects;..\Scene\objects\camera;..\helpTools;..\helpTools\Opengl tools;..\Render\Shaders;..\Scene;..\Scene\materials;..\components;..\Scene\forms;..\Forms;..\helpTools\Lists;..\Scene\objects\helputils\SceneLists;..\Scene\modify;..\Scene\modify\deformers;..\Scene\modify\Edit;..\Scene\modify\Forms;$(BDS)\source\ToolsAPI;..\Scene\fileformats;..\Render\forms;..\Scene\fileformats\obrFunc;..\Forms\frames;..\Uinterface\frameListeners;..\..\..\sharedUtils\компоненты\dcl_dpk;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\math;..\..\..\sharedUtils\utils;..\..\..\sharedUtils;..\..\..\sharedUtils\utils\PathUtils;..\..\..\sharedUtils\ogl</DCC_ResourcePath>
+    <DCC_ObjPath>..\Scene\objects\helputils;..\Uinterface\;..\Render;..\math;..\Scene\objects;..\Scene\objects\camera;..\helpTools;..\helpTools\Opengl tools;..\Render\Shaders;..\Scene;..\Scene\materials;..\components;..\Scene\forms;..\Forms;..\helpTools\Lists;..\Scene\objects\helputils\SceneLists;..\Scene\modify;..\Scene\modify\deformers;..\Scene\modify\Edit;..\Scene\modify\Forms;$(BDS)\source\ToolsAPI;..\Scene\fileformats;..\Render\forms;..\Scene\fileformats\obrFunc;..\Forms\frames;..\Uinterface\frameListeners;..\..\..\sharedUtils\компоненты\dcl_dpk;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\math;..\..\..\sharedUtils\utils;..\..\..\sharedUtils;..\..\..\sharedUtils\utils\PathUtils;..\..\..\sharedUtils\ogl</DCC_ObjPath>
+    <DCC_IncludePath>..\Scene\objects\helputils;..\Uinterface\;..\Render;..\math;..\Scene\objects;..\Scene\objects\camera;..\helpTools;..\helpTools\Opengl tools;..\Render\Shaders;..\Scene;..\Scene\materials;..\components;..\Scene\forms;..\Forms;..\helpTools\Lists;..\Scene\objects\helputils\SceneLists;..\Scene\modify;..\Scene\modify\deformers;..\Scene\modify\Edit;..\Scene\modify\Forms;$(BDS)\source\ToolsAPI;..\Scene\fileformats;..\Render\forms;..\Scene\fileformats\obrFunc;..\Forms\frames;..\Uinterface\frameListeners;..\..\..\sharedUtils\компоненты\dcl_dpk;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\math;..\..\..\sharedUtils\utils;..\..\..\sharedUtils;..\..\..\sharedUtils\utils\PathUtils;..\..\..\sharedUtils\ogl</DCC_IncludePath>
+  </PropertyGroup>
+  <ProjectExtensions>
+    <Borland.Personality>Delphi.Personality</Borland.Personality>
+    <Borland.ProjectType>Package</Borland.ProjectType>
+    <BorlandProject>
+<BorlandProject><Delphi.Personality><Parameters><Parameters Name="UseLauncher">False</Parameters><Parameters Name="LoadAllSymbols">True</Parameters><Parameters Name="LoadUnspecifiedSymbols">False</Parameters></Parameters><Package_Options><Package_Options Name="ImplicitBuild">False</Package_Options><Package_Options Name="DesigntimeOnly">True</Package_Options><Package_Options Name="RuntimeOnly">False</Package_Options></Package_Options><VersionInfo><VersionInfo Name="IncludeVerInfo">True</VersionInfo><VersionInfo Name="AutoIncBuild">False</VersionInfo><VersionInfo Name="MajorVer">1</VersionInfo><VersionInfo Name="MinorVer">0</VersionInfo><VersionInfo Name="Release">0</VersionInfo><VersionInfo Name="Build">0</VersionInfo><VersionInfo Name="Debug">False</VersionInfo><VersionInfo Name="PreRelease">False</VersionInfo><VersionInfo Name="Special">False</VersionInfo><VersionInfo Name="Private">False</VersionInfo><VersionInfo Name="DLL">False</VersionInfo><VersionInfo Name="Locale">1049</VersionInfo><VersionInfo Name="CodePage">1251</VersionInfo></VersionInfo><VersionInfoKeys><VersionInfoKeys Name="CompanyName"></VersionInfoKeys><VersionInfoKeys Name="FileDescription"></VersionInfoKeys><VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="InternalName"></VersionInfoKeys><VersionInfoKeys Name="LegalCopyright"></VersionInfoKeys><VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys><VersionInfoKeys Name="OriginalFilename"></VersionInfoKeys><VersionInfoKeys Name="ProductName"></VersionInfoKeys><VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="Comments"></VersionInfoKeys></VersionInfoKeys><Source><Source Name="MainSource">GlPackage.dpk</Source></Source><Excluded_Packages>
+      <Excluded_Packages Name="C:\Documents and Settings\All Users\Документы\RAD Studio\5.0\Bpl\ComponentsLib.bpl">(untitled)</Excluded_Packages>
+      <Excluded_Packages Name="$(BDS)\bin\bcboffice2k100.bpl">CodeGear C++Builder Office 2000 Servers Package</Excluded_Packages>
+      <Excluded_Packages Name="$(BDS)\bin\bcbofficexp100.bpl">CodeGear C++Builder Office XP Servers Package</Excluded_Packages>
+      <Excluded_Packages Name="$(BDS)\bin\dcloffice2k100.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+      <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+    </Excluded_Packages></Delphi.Personality></BorlandProject></BorlandProject>
+  </ProjectExtensions>
+  <Import Project="$(MSBuildBinPath)\Borland.Delphi.Targets" />
+  <ItemGroup>
+    <DelphiCompile Include="GlPackage.dpk">
+      <MainSource>MainSource</MainSource>
+    </DelphiCompile>
+    <DCCReference Include="..\..\..\sharedUtils\ogl\ComponentsLib.dcp" />
+    <DCCReference Include="..\helpTools\uGlEventTypes.pas" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\bdertl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\dbrtl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\dcl_own.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\designide.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\inet.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\rtl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\vcl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\vclactnband.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\vcldb.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\vcljpg.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\vclx.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\xmlrtl.dcp" />
+    <DCCReference Include="components\Asutp\uGlTurbine.pas" />
+    <DCCReference Include="components\TestUnit.pas" />
+    <DCCReference Include="components\uBaseGlComponent.pas" />
+    <DCCReference Include="components\uEditObj.pas" />
+    <DCCReference Include="components\uGlBaseItem.pas" />
+    <DCCReference Include="components\uGlComponent.pas" />
+    <DCCReference Include="dialogs\uObjectsPropertyForm.pas">
+      <Form>ObjExplorerDlg</Form>
+    </DCCReference>
+    <DCCReference Include="PropertEditors\TestEditor.pas" />
+    <DCCReference Include="PropertEditors\uEditPoint3.pas" />
+    <DCCReference Include="PropertEditors\uGlBasePropertyEdior.pas" />
+    <DCCReference Include="PropertEditors\uPathEdior.pas" />
+    <DCCReference Include="uGlPackage.pas" />
+  </ItemGroup>
+</Project>

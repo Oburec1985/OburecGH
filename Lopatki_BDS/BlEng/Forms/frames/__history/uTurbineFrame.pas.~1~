@@ -1,0 +1,88 @@
+unit uTurbineFrame;
+
+interface
+
+uses
+  Windows, Classes, Forms,  StdCtrls, Controls, uBldObj, ImgList, ToolWin,
+  ComCtrls, uBldEng, ExtCtrls, DCL_MYOWN, uBaseObjPropertyFrame,
+  uTurbina, uStageFrame, uBaseObjService, uEventList, uframeevents;
+
+type
+  TTurbineFrame = class(TFrame)
+    TurbinePropGB: TGroupBox;
+    StageCountLabel: TLabel;
+    CfgLabel: TLabel;
+    StageCountIE: TIntEdit;
+    CfgTV: TTreeView;
+    RecentFileEdit: TEdit;
+    RecentFileLabel: TLabel;
+    procedure CfgTVChange(Sender: TObject; Node: TTreeNode);
+  public
+    events:ceventlist;
+  private
+    eng:cBldEng;
+  protected
+    procedure showcfg(obj:cbldobj);
+  public
+    procedure LincToEng(p_eng:cBldEng);
+    //  отобразить свойства объекта в фрейм
+    procedure GetObj(obj:cbldobj);
+    //  перенести свойства объекта из фрейма в объект
+    procedure SetObj(obj:cbldobj);
+  end;
+
+
+
+implementation
+
+{$R *.dfm}
+
+procedure TTurbineFrame.LincToEng(p_eng:cBldEng);
+begin
+  eng:=p_eng;
+end;
+
+//  отобразить свойства объекта в фрейм
+procedure TTurbineFrame.CfgTVChange(Sender: TObject; Node: TTreeNode);
+begin
+  if events<>nil then
+  begin
+    // происходит при выборе нового нода
+    events.CallAllEventsWithSender(SelectStageEvent,node.data);
+  end;
+end;
+
+procedure TTurbineFrame.GetObj(obj:cbldobj);
+begin
+  if obj<>nil then
+  begin
+    RecentFileEdit.Text:=cturbine(obj).lastfile;
+    StageCountIE.IntNum:=cturbine(obj).StageCount;
+  end
+  else
+  begin
+    RecentFileEdit.Text:='';
+    StageCountIE.IntNum:=0;
+  end;
+  showcfg(obj);
+end;
+
+//  перенести свойства объекта из фрейма в объект
+procedure TTurbineFrame.SetObj(obj:cbldobj);
+begin
+  cturbine(obj).lastfile:=RecentFileEdit.Text;
+end;
+
+procedure TTurbineFrame.showcfg(obj:cbldobj);
+begin
+  CfgTV.Items.Clear;
+  if obj<>nil then
+  begin
+    cfgTV.Images:=obj.images;
+    showInTreeView(CfgTV, obj);
+  end;
+end;
+
+
+
+end.

@@ -1,0 +1,285 @@
+.flaggedrevs_basic {
+	CLEAR: both; BORDER-RIGHT: #aaa 1px solid; PADDING-RIGHT: 5px; BORDER-TOP: #aaa 1px solid; PADDING-LEFT: 5px; FONT-WEIGHT: normal; PADDING-BOTTOM: 5px; MARGIN: 0.5em 1em 0em 0em; BORDER-LEFT: #aaa 1px solid; LINE-HEIGHT: 1.5em; PADDING-TOP: 5px; BORDER-BOTTOM: #aaa 1px solid; TEXT-ALIGN: center
+}
+.flaggedrevs_quality {
+	CLEAR: both; BORDER-RIGHT: #aaa 1px solid; PADDING-RIGHT: 5px; BORDER-TOP: #aaa 1px solid; PADDING-LEFT: 5px; FONT-WEIGHT: normal; PADDING-BOTTOM: 5px; MARGIN: 0.5em 1em 0em 0em; BORDER-LEFT: #aaa 1px solid; LINE-HEIGHT: 1.5em; PADDING-TOP: 5px; BORDER-BOTTOM: #aaa 1px solid; TEXT-ALIGN: center
+}
+.flaggedrevs_pristine {
+	CLEAR: both; BORDER-RIGHT: #aaa 1px solid; PADDING-RIGHT: 5px; BORDER-TOP: #aaa 1px solid; PADDING-LEFT: 5px; FONT-WEIGHT: normal; PADDING-BOTTOM: 5px; MARGIN: 0.5em 1em 0em 0em; BORDER-LEFT: #aaa 1px solid; LINE-HEIGHT: 1.5em; PADDING-TOP: 5px; BORDER-BOTTOM: #aaa 1px solid; TEXT-ALIGN: center
+}
+.flaggedrevs_notice {
+	CLEAR: both; BORDER-RIGHT: #aaa 1px solid; PADDING-RIGHT: 5px; BORDER-TOP: #aaa 1px solid; PADDING-LEFT: 5px; FONT-WEIGHT: normal; PADDING-BOTTOM: 5px; MARGIN: 0.5em 1em 0em 0em; BORDER-LEFT: #aaa 1px solid; LINE-HEIGHT: 1.5em; PADDING-TOP: 5px; BORDER-BOTTOM: #aaa 1px solid; TEXT-ALIGN: center
+}
+.flaggedrevs_editnotice {
+	CLEAR: both; BORDER-RIGHT: #aaa 1px solid; PADDING-RIGHT: 5px; BORDER-TOP: #aaa 1px solid; PADDING-LEFT: 5px; FONT-WEIGHT: normal; PADDING-BOTTOM: 5px; MARGIN: 0.5em 1em 0em 0em; BORDER-LEFT: #aaa 1px solid; LINE-HEIGHT: 1.5em; PADDING-TOP: 5px; BORDER-BOTTOM: #aaa 1px solid; TEXT-ALIGN: center
+}
+.flaggedrevs_diffnotice {
+	CLEAR: both; BORDER-RIGHT: #aaa 1px solid; PADDING-RIGHT: 5px; BORDER-TOP: #aaa 1px solid; PADDING-LEFT: 5px; FONT-WEIGHT: normal; PADDING-BOTTOM: 5px; MARGIN: 0.5em 1em 0em 0em; BORDER-LEFT: #aaa 1px solid; LINE-HEIGHT: 1.5em; PADDING-TOP: 5px; BORDER-BOTTOM: #aaa 1px solid; TEXT-ALIGN: center
+}
+.flaggedrevs_warning {
+	CLEAR: both; BORDER-RIGHT: #aaa 1px solid; PADDING-RIGHT: 5px; BORDER-TOP: #aaa 1px solid; PADDING-LEFT: 5px; FONT-WEIGHT: normal; PADDING-BOTTOM: 5px; MARGIN: 0.5em 1em 0em 0em; BORDER-LEFT: #aaa 1px solid; LINE-HEIGHT: 1.5em; PADDING-TOP: 5px; BORDER-BOTTOM: #aaa 1px solid; TEXT-ALIGN: center
+}
+.flaggedrevs_preview {
+	CLEAR: both; BORDER-RIGHT: #aaa 1px solid; PADDING-RIGHT: 5px; BORDER-TOP: #aaa 1px solid; PADDING-LEFT: 5px; FONT-WEIGHT: normal; PADDING-BOTTOM: 5px; MARGIN: 0.5em 1em 0em 0em; BORDER-LEFT: #aaa 1px solid; LINE-HEIGHT: 1.5em; PADDING-TOP: 5px; BORDER-BOTTOM: #aaa 1px solid; TEXT-ALIGN: center
+}
+.flaggedrevs_basic {
+	BACKGROUND-COLOR: #f0f8ff
+}
+.flaggedrevs_quality {
+	BACKGROUND-COLOR: #f0fff0
+}
+.flaggedrevs_pristine {
+	BACKGROUND-COLOR: #fffff0
+}
+.flaggedrevs_notice {
+	BACKGROUND-COLOR: #f9f9f9
+}
+.flaggedrevs_preview {
+	COLOR: #8b0000; BACKGROUND-COLOR: #f9f9f9
+}
+.flaggedrevs_warning {
+	FONT-SIZE: 85%; MARGIN: 0em 1em 0em 0em; BACKGROUND-COLOR: #fffff0
+}
+.flaggedrevs_editnotice {
+	FONT-SIZE: 85%; BACKGROUND-COLOR: #f9f9f9
+}
+.flaggedrevs_diffnotice {
+	FONT-SIZE: 85%; BACKGROUND-COLOR: #f9f9f9
+}
+.flaggedrevs_notes {
+	BORDER-RIGHT: #aaa 1px solid; PADDING-RIGHT: 5px; BORDER-TOP: #aaa 1px solid; PADDING-LEFT: 5px; FONT-SIZE: 85%; PADDING-BOTTOM: 5px; MARGIN-LEFT: 50px; BORDER-LEFT: #aaa 1px solid; MARGIN-RIGHT: 50px; PADDING-TOP: 5px; BORDER-BOTTOM: #aaa 1px solid; BACKGROUND-COLOR: #f9f9f9; TEXT-ALIGN: center
+}
+.fr-text-value {
+	WIDTH: 100px
+}
+.fr-checkbox {
+	PADDING-RIGHT: 0px; BACKGROUND-POSITION: 0px 0px; PADDING-LEFT: 0px; RIGHT: 0px; FLOAT: left; BACKGROUND-IMAGE: url(../FlaggedRevs/img/boxC.png); PADDING-BOTTOM: 0px; WIDTH: 16px; PADDING-TOP: 0px; BACKGROUND-REPEAT: no-repeat; POSITION: relative; TOP: 0px; HEIGHT: 16px
+}
+.fr-marker-20 {
+	BACKGROUND-POSITION: left bottom; PADDING-BOTTOM: 3px; BACKGROUND-REPEAT: no-repeat
+}
+.fr-marker-40 {
+	BACKGROUND-POSITION: left bottom; PADDING-BOTTOM: 3px; BACKGROUND-REPEAT: no-repeat
+}
+.fr-marker-60 {
+	BACKGROUND-POSITION: left bottom; PADDING-BOTTOM: 3px; BACKGROUND-REPEAT: no-repeat
+}
+.fr-marker-80 {
+	BACKGROUND-POSITION: left bottom; PADDING-BOTTOM: 3px; BACKGROUND-REPEAT: no-repeat
+}
+.fr-marker-100 {
+	BACKGROUND-POSITION: left bottom; PADDING-BOTTOM: 3px; BACKGROUND-REPEAT: no-repeat
+}
+.fr-marker-20 {
+	BACKGROUND-IMAGE: url(../FlaggedRevs/img/bar_20.png)
+}
+.fr-marker-40 {
+	BACKGROUND-IMAGE: url(../FlaggedRevs/img/bar_40.png)
+}
+.fr-marker-60 {
+	BACKGROUND-IMAGE: url(../FlaggedRevs/img/bar_60.png)
+}
+.fr-marker-80 {
+	BACKGROUND-IMAGE: url(../FlaggedRevs/img/bar_80.png)
+}
+.fr-marker-100 {
+	BACKGROUND-IMAGE: url(../FlaggedRevs/img/bar_100.png)
+}
+.flaggedrevs_short {
+	BORDER-TOP-WIDTH: 0px; PADDING-RIGHT: 1px; PADDING-LEFT: 1px; FONT-WEIGHT: normal; BORDER-LEFT-WIDTH: 0px; FONT-SIZE: 95%; FLOAT: right; BORDER-BOTTOM-WIDTH: 0px; MAX-WIDTH: 450px; PADDING-BOTTOM: 1px; MARGIN: 0em 0em 0em 1em; LINE-HEIGHT: 16px; PADDING-TOP: 1px; BACKGROUND-COLOR: #f9f9f9; TEXT-ALIGN: left; BORDER-RIGHT-WIDTH: 0px
+}
+.rtl .flaggedrevs_short {
+	FLOAT: left; MARGIN: 0px 1em 0px 0px
+}
+.fr-text {
+	PADDING-RIGHT: 0px; PADDING-LEFT: 0px; FONT-WEIGHT: bold; PADDING-BOTTOM: 0px; MARGIN: 0px 7px 0px 0px; WIDTH: 80px; LINE-HEIGHT: 1em; PADDING-TOP: 0px; HEIGHT: 1em
+}
+.fr-value20 {
+	BACKGROUND-POSITION: 50% 50%; FLOAT: left; WIDTH: 95px; LINE-HEIGHT: 1em; BACKGROUND-REPEAT: no-repeat; HEIGHT: 1em; TEXT-ALIGN: center
+}
+.fr-value40 {
+	BACKGROUND-POSITION: 50% 50%; FLOAT: left; WIDTH: 95px; LINE-HEIGHT: 1em; BACKGROUND-REPEAT: no-repeat; HEIGHT: 1em; TEXT-ALIGN: center
+}
+.fr-value60 {
+	BACKGROUND-POSITION: 50% 50%; FLOAT: left; WIDTH: 95px; LINE-HEIGHT: 1em; BACKGROUND-REPEAT: no-repeat; HEIGHT: 1em; TEXT-ALIGN: center
+}
+.fr-value80 {
+	BACKGROUND-POSITION: 50% 50%; FLOAT: left; WIDTH: 95px; LINE-HEIGHT: 1em; BACKGROUND-REPEAT: no-repeat; HEIGHT: 1em; TEXT-ALIGN: center
+}
+.fr-value100 {
+	BACKGROUND-POSITION: 50% 50%; FLOAT: left; WIDTH: 95px; LINE-HEIGHT: 1em; BACKGROUND-REPEAT: no-repeat; HEIGHT: 1em; TEXT-ALIGN: center
+}
+.fr-value20 {
+	BACKGROUND-IMAGE: url(../FlaggedRevs/img/fr-marker-20.png)
+}
+.fr-value40 {
+	BACKGROUND-IMAGE: url(../FlaggedRevs/img/fr-marker-40.png)
+}
+.fr-value60 {
+	BACKGROUND-IMAGE: url(../FlaggedRevs/img/fr-marker-60.png)
+}
+.fr-value80 {
+	BACKGROUND-IMAGE: url(../FlaggedRevs/img/fr-marker-80.png)
+}
+.fr-value100 {
+	BACKGROUND-IMAGE: url(../FlaggedRevs/img/fr-marker-100.png)
+}
+.flaggedrevs-box0 {
+	CLEAR: both; BORDER-RIGHT: #aaa 1px solid; BORDER-TOP: #aaa 1px solid; FONT-SIZE: 85%; BORDER-LEFT: #aaa 1px solid; BORDER-BOTTOM: #aaa 1px solid; TEXT-ALIGN: center
+}
+.flaggedrevs-box1 {
+	CLEAR: both; BORDER-RIGHT: #aaa 1px solid; BORDER-TOP: #aaa 1px solid; FONT-SIZE: 85%; BORDER-LEFT: #aaa 1px solid; BORDER-BOTTOM: #aaa 1px solid; TEXT-ALIGN: center
+}
+.flaggedrevs-box2 {
+	CLEAR: both; BORDER-RIGHT: #aaa 1px solid; BORDER-TOP: #aaa 1px solid; FONT-SIZE: 85%; BORDER-LEFT: #aaa 1px solid; BORDER-BOTTOM: #aaa 1px solid; TEXT-ALIGN: center
+}
+.flaggedrevs-box3 {
+	CLEAR: both; BORDER-RIGHT: #aaa 1px solid; BORDER-TOP: #aaa 1px solid; FONT-SIZE: 85%; BORDER-LEFT: #aaa 1px solid; BORDER-BOTTOM: #aaa 1px solid; TEXT-ALIGN: center
+}
+.flaggedrevs-box0 {
+	BACKGROUND-COLOR: #f9f9f9
+}
+.flaggedrevs-box1 {
+	BACKGROUND-COLOR: #f0f8ff
+}
+.flaggedrevs-box2 {
+	BACKGROUND-COLOR: #f0fff0
+}
+.flaggedrevs-box3 {
+	BACKGROUND-COLOR: #fffff0
+}
+.flaggedrevs-color-0 {
+	BACKGROUND-COLOR: #f9f9f9
+}
+.flaggedrevs-color-1 {
+	BACKGROUND-COLOR: #f0f8ff
+}
+.flaggedrevs-color-2 {
+	BACKGROUND-COLOR: #f0fff0
+}
+.flaggedrevs-color-3 {
+	BACKGROUND-COLOR: #fffff0
+}
+.flaggedrevs-unreviewed {
+	BACKGROUND-COLOR: #fffff0
+}
+.flaggedrevs-unreviewed2 {
+	BACKGROUND-COLOR: #faebd7
+}
+.flaggedrevs_toggle {
+	CURSOR: pointer; COLOR: blue; WHITE-SPACE: nowrap
+}
+.fr-icon-current {
+	PADDING-RIGHT: 0px; BACKGROUND-POSITION: center center; PADDING-LEFT: 0px; FLOAT: left; PADDING-BOTTOM: 0px; MARGIN: 0em 0.2em 0em 0em; WIDTH: 16px; PADDING-TOP: 0px; BACKGROUND-REPEAT: no-repeat; HEIGHT: 16px
+}
+.fr-icon-stable {
+	PADDING-RIGHT: 0px; BACKGROUND-POSITION: center center; PADDING-LEFT: 0px; FLOAT: left; PADDING-BOTTOM: 0px; MARGIN: 0em 0.2em 0em 0em; WIDTH: 16px; PADDING-TOP: 0px; BACKGROUND-REPEAT: no-repeat; HEIGHT: 16px
+}
+.fr-icon-quality {
+	PADDING-RIGHT: 0px; BACKGROUND-POSITION: center center; PADDING-LEFT: 0px; FLOAT: left; PADDING-BOTTOM: 0px; MARGIN: 0em 0.2em 0em 0em; WIDTH: 16px; PADDING-TOP: 0px; BACKGROUND-REPEAT: no-repeat; HEIGHT: 16px
+}
+.fr-icon-locked {
+	PADDING-RIGHT: 0px; BACKGROUND-POSITION: center center; PADDING-LEFT: 0px; FLOAT: left; PADDING-BOTTOM: 0px; MARGIN: 0em 0.2em 0em 0em; WIDTH: 16px; PADDING-TOP: 0px; BACKGROUND-REPEAT: no-repeat; HEIGHT: 16px
+}
+.fr-icon-unlocked {
+	PADDING-RIGHT: 0px; BACKGROUND-POSITION: center center; PADDING-LEFT: 0px; FLOAT: left; PADDING-BOTTOM: 0px; MARGIN: 0em 0.2em 0em 0em; WIDTH: 16px; PADDING-TOP: 0px; BACKGROUND-REPEAT: no-repeat; HEIGHT: 16px
+}
+.fr-icon-current {
+	BACKGROUND-IMAGE: url(../FlaggedRevs/img/1.png)
+}
+.fr-icon-stable {
+	BACKGROUND-IMAGE: url(../FlaggedRevs/img/2.png)
+}
+.fr-icon-quality {
+	BACKGROUND-IMAGE: url(../FlaggedRevs/img/3.png)
+}
+.fr-icon-locked {
+	BACKGROUND-IMAGE: url(../FlaggedRevs/img/lock-closed.png)
+}
+.fr-icon-unlocked {
+	BACKGROUND-IMAGE: url(../FlaggedRevs/img/lock-open.png); WIDTH: 23px
+}
+.fr-diff-ratings {
+	FONT-SIZE: 90%; LINE-HEIGHT: 1em
+}
+.fr-diff-to-stable {
+	LINE-HEIGHT: 1em
+}
+.fr-hist-stable-user {
+	FONT-WEIGHT: bold
+}
+.fr-hist-quality-user {
+	FONT-WEIGHT: bold
+}
+.fr-hist-autoreviewed {
+	FONT-WEIGHT: bold
+}
+.fr-backlognotice {
+	BORDER-RIGHT: #990000 1px solid; PADDING-RIGHT: 3px; BORDER-TOP: #990000 1px solid; PADDING-LEFT: 3px; PADDING-BOTTOM: 3px; MARGIN: 5px; BORDER-LEFT: #990000 1px solid; PADDING-TOP: 3px; BORDER-BOTTOM: #990000 1px solid; BACKGROUND-COLOR: #f5ecec
+}
+.fr-watchlist-old-notice {
+	BORDER-RIGHT: #990000 1px solid; PADDING-RIGHT: 3px; BORDER-TOP: #990000 1px solid; PADDING-LEFT: 3px; PADDING-BOTTOM: 3px; MARGIN: 5px; BORDER-LEFT: #990000 1px solid; PADDING-TOP: 3px; BORDER-BOTTOM: #990000 1px solid; BACKGROUND-COLOR: #feecd7
+}
+.fr-pending-long {
+	BACKGROUND-COLOR: #f5ecec
+}
+.fr-pending-long2 {
+	BACKGROUND-COLOR: #f5dddd
+}
+.fr-pending-long3 {
+	BACKGROUND-COLOR: #e2caca
+}
+.fr-unreviewed-unwatched {
+	BACKGROUND-COLOR: #faebd7
+}
+.fr-under-review {
+	BACKGROUND-COLOR: yellow
+}
+.flaggedrevs_reviewform {
+	CLEAR: both; FONT-SIZE: 90%; BACKGROUND-COLOR: #f9f9f9
+}
+.fr-rating-controls {
+	VERTICAL-ALIGN: middle; LINE-HEIGHT: 1em
+}
+.fr-rating-controls-disabled {
+	VERTICAL-ALIGN: middle; LINE-HEIGHT: 1em
+}
+.fr-rating-controls-disabled {
+	COLOR: graytext
+}
+.fr-rating-options {
+	MARGIN-RIGHT: 1.5em
+}
+.fr-rating-option-0 {
+	BACKGROUND-COLOR: #f5ecec
+}
+.fr-rating-option-1 {
+	BACKGROUND-COLOR: #f0f8ff
+}
+.fr-rating-option-2 {
+	BACKGROUND-COLOR: #f0fff0
+}
+.fr-rating-option-3 {
+	BACKGROUND-COLOR: #fef0db
+}
+.fr-rating-option-4 {
+	BACKGROUND-COLOR: #fffff0
+}
+.fr-diff-patrollink {
+	TEXT-ALIGN: center
+}
+.fr-notes-box {
+	MARGIN: 0em 1em 0em 0.5em; WIDTH: 95%
+}
+.fr-comment-box {
+	MARGIN-TOP: 0.25em
+}
+.fr-rating-dave {
+	BACKGROUND-COLOR: #e0ecf8
+}
+.fr-rating-rave {
+	BACKGROUND-COLOR: #e0f8ec
+}
+.fr-hiddenform {
+	DISPLAY: none
+}

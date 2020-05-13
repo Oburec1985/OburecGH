@@ -1,0 +1,263 @@
+unit uRZDBase;
+
+interface
+uses
+  uDBObject, ubaseobj;
+
+type
+  cTestObj = class(cDBObject)
+
+  end;
+  // папка с испытанием калибровки
+  cCalibrFolder = class(cdbFolder)
+  protected
+    ftype:integer;
+    fmera:string;
+  protected
+    function CreateDBObj(str:string):cDBobject;override;
+    function testpath(str:string):integer;override;
+    function getMeraFile:string;
+    function getimageindex:integer;override;
+  public
+    constructor create;override;
+  end;
+
+  cSegmentFolder  =class(cdbFolder)
+  protected
+    function CreateDBObj(str:string):cDBobject;override;
+    function getimageindex:integer;override;
+  public
+    procedure DoLincParent;override;
+  end;
+
+  cRegionFolder = class(cdbFolder)
+  protected
+    function getimageindex:integer;override;
+    function CreateDBObj(str:string):cDBobject;override;
+  public
+    procedure DoLincParent;override;
+  end;
+
+  cBaseCalibr = class(cdbFolder)
+  protected
+    function CreateDBObj(str:string):cDBobject;override;
+  end;
+
+  cMatrixFolder = class(cdbFolder)
+  protected
+    function CreateDBObj(str:string):cDBobject;override;
+  end;
+
+
+  cRZDBaseFolder = class(cdbFolder)
+  public
+    // список файлов калибровки матриц
+    m_CalibrFolder:cdbFolder;
+    // список матриц
+    m_MatrixFolder:cMatrixFolder;
+    // список заездов
+    m_TestsFolder:cdbFolder;
+  protected
+    function CreateDBObj(str:string):cDBobject;override;
+  public
+    procedure SetMatrixPref(str:string);
+    procedure SetTestsPref(str:string);
+    // определяем пути к матрицам калибровкам и заездам
+    procedure SetMainPath(m, c, t:string);
+    constructor create;override;
+  end;
+
+  cRZDbase = class(cDB)
+  protected
+    m_regionPref:string;
+  public
+    m_MeraPref,
+    m_vcpref,
+    m_Hpref,
+    m_Hinpref,
+    m_HOutpref,
+    m_SegPref,
+    // имена базовых папок
+    m_calibrPref,
+    m_matrixPref,
+    m_TestsPref:string;
+  protected
+    function createBaseFolder:cDBFolder;override;
+    procedure setregionpref(str:string);
+  public
+    property regionPref:string read m_regionPref write setregionpref;
+  end;
+
+
+implementation
+
+const
+  c_DBMatrix = 32;
+  c_DBBlackMatrix = 33;
+  c_DBMeasure = 27;
+  c_DBRails = 25;
+  c_RailSeg=26;
+
+
+
+procedure cRegionFolder.DoLincParent;
+begin
+  inherited;
+  AddPrefix(cRZDbase(getmng).m_SegPref);
+end;
+
+function cRegionFolder.CreateDBObj(str:string):cDBobject;
+begin
+  Result:=cSegmentFolder.create;
+end;
+
+function cRegionFolder.getimageindex:integer;
+begin
+  result:=c_DBRails;
+end;
+
+function cRZDBaseFolder.CreateDBObj(str:string):cDBobject;
+begin
+  result:=cRegionFolder.create;
+end;
+
+procedure cRZDBaseFolder.SetMatrixPref(str:string);
+var
+  mng:cRZDbase;
+begin
+  mng:=cRZDbase(getmng);
+  mng.m_matrixPref:=str;
+  m_MatrixFolder.AddPrefix(str);
+end;
+
+procedure cRZDBaseFolder.SetTestsPref(str:string);
+var
+  mng:cRZDbase;
+begin
+  mng:=cRZDbase(getmng);
+  mng.m_TestsPref:=str;
+  m_TestsFolder.AddPrefix(str);
+end;
+
+constructor cRZDBaseFolder.create;
+begin
+  inherited;
+  m_CalibrFolder:=cBaseCalibr.create;
+  m_CalibrFolder.imageindex:=c_DBMeasure;
+  AddChild(m_CalibrFolder);
+
+  m_MatrixFolder:=cMatrixFolder.create;
+  m_MatrixFolder.ScanFolder:=false;
+  m_MatrixFolder.imageindex:=c_DBMatrix;
+  AddChild(m_MatrixFolder);
+
+  m_TestsFolder:=cdbFolder.create;
+  AddChild(m_MatrixFolder);
+end;
+
+procedure cRZDBaseFolder.SetMainPath(m, c, t:string);
+begin
+  m_MatrixFolder.path:=m;
+  m_CalibrFolder.path:=c;
+  m_TestsFolder.path:=t;
+end;
+
+function cRZDbase.CreateBaseFolder:cDBFolder;
+begin
+  result:=cRZDBaseFolder.create;
+  m_MeraPref:='.mera';
+end;
+
+procedure cRZDbase.setregionpref(str:string);
+begin
+  m_regionPref:=str;
+  cRZDBaseFolder(m_BaseFolder).m_CalibrFolder.AddPrefix(m_regionPref);
+end;
+
+{ cSegmentFolder }
+function cSegmentFolder.getimageindex:integer;
+begin
+  result:=c_RailSeg;
+end;
+
+function cSegmentFolder.CreateDBObj(str: string): cDBobject;
+begin
+  result:=cCalibrFolder.create;
+  cCalibrFolder(result).ftype:=ftestresult;
+  cdbFolder(result).AddPrefix(crzdbase(getmng).m_MeraPref);
+  case ftestresult of
+    0:;
+    1:;
+    2:;
+    3:;
+    4:;
+  end;
+end;
+
+procedure cSegmentFolder.DoLincParent;
+begin
+  inherited;
+  AddPrefix(crzdbase(getmng).m_VcPref);
+  AddPrefix(crzdbase(getmng).m_HPref);
+  AddPrefix(crzdbase(getmng).m_HinPref);
+  AddPrefix(crzdbase(getmng).m_HOutPref);
+end;
+
+{ cCalibrFolder }
+
+function cCalibrFolder.getimageindex:integer;
+begin
+  if fmera<>'' then
+  begin
+    case ftype of
+      0:result:=c_BlueDown;
+      1:result:=c_BlueUpdate;
+      2:result:=c_BlueRight;
+      3:result:=c_BlueLeft;
+    else
+      result:=c_DBMeasure;
+    end;
+  end
+  else
+    result:=c_DBPathError;
+end;
+
+function cCalibrFolder.getMeraFile:string;
+begin
+  result:=fmera;
+end;
+
+constructor cCalibrFolder.create;
+begin
+  inherited;
+  fScanFolders:=false;
+  fScanFiles:=true;
+end;
+
+function cCalibrFolder.testpath(str:string):integer;
+begin
+  result:=inherited testpath(str);
+  if result=0 then
+    fmera:=str;
+end;
+
+function cCalibrFolder.CreateDBObj(str:string):cDBobject;
+begin
+  result:=nil;
+end;
+
+{ cBaseCalibr }
+function cBaseCalibr.CreateDBObj(str: string): cDBobject;
+begin
+  result:=cRegionFolder.create;
+end;
+
+{ cMatrixFolder }
+
+function cMatrixFolder.CreateDBObj(str: string): cDBobject;
+begin
+  result:=inherited CreateDBObj(str);
+  result.imageindex:=c_DBBlackMatrix
+end;
+
+end.

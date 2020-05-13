@@ -1,0 +1,259 @@
+object CompaundFrame: TCompaundFrame
+  Left = 0
+  Top = 0
+  Width = 451
+  Height = 304
+  Align = alClient
+  TabOrder = 0
+  object MainObjSB: TScrollBox
+    Left = 0
+    Top = 0
+    Width = 451
+    Height = 304
+    Align = alClient
+    TabOrder = 0
+    inline BaseObjPropertyFrame1: TBaseObjPropertyFrame
+      Left = 0
+      Top = 0
+      Width = 447
+      Height = 145
+      Align = alTop
+      Constraints.MinHeight = 64
+      Constraints.MinWidth = 293
+      TabOrder = 0
+      TabStop = True
+      Visible = False
+      ExplicitWidth = 447
+      ExplicitHeight = 145
+      inherited TypeLabel: TLabel
+        Left = 152
+        ExplicitLeft = 152
+      end
+      inherited TypeImage: TImage
+        Left = 279
+        ExplicitLeft = 279
+      end
+      inherited TypeEdit: TEdit
+        Left = 152
+        ExplicitLeft = 152
+      end
+      inherited MetaDataLV: TBtnListView
+        Width = 557
+        Height = 191
+        ExplicitWidth = 557
+      end
+    end
+    inline ChanFrame1: TChanFrame
+      Left = 0
+      Top = 145
+      Width = 447
+      Height = 155
+      Align = alClient
+      TabOrder = 1
+      Visible = False
+      ExplicitTop = 64
+      ExplicitWidth = 447
+      ExplicitHeight = 236
+      inherited CommonGB: TGroupBox
+        Width = 447
+        Height = 155
+        ExplicitWidth = 447
+        ExplicitHeight = 236
+        inherited ChanLVLabel: TLabel
+          Left = 152
+          ExplicitLeft = 152
+        end
+        inherited ChanLV: TBtnListView
+          Left = 153
+          Width = 259
+          Height = 104
+          ExplicitLeft = 153
+          ExplicitWidth = 259
+          ExplicitHeight = 185
+        end
+      end
+    end
+    inline SensorFrame1: TSensorFrame
+      Left = 0
+      Top = 145
+      Width = 447
+      Height = 155
+      Align = alClient
+      Constraints.MinWidth = 265
+      TabOrder = 2
+      Visible = False
+      ExplicitTop = 64
+      ExplicitWidth = 447
+      ExplicitHeight = 236
+      inherited SensorsGB: TGroupBox
+        Top = -111
+        Width = 447
+        Align = alBottom
+        ExplicitTop = -30
+        ExplicitWidth = 447
+        inherited StateGB: TGroupBox
+          Width = 443
+          ExplicitWidth = 443
+          inherited StageCB: TComboBox
+            Top = 36
+            ExplicitTop = 36
+          end
+          inherited PairsListView: TBtnListView
+            Top = 36
+            Width = 917
+            ExplicitTop = 36
+            ExplicitWidth = 917
+          end
+        end
+      end
+    end
+    inline StageFrame1: TStageFrame
+      Left = 0
+      Top = 145
+      Width = 447
+      Height = 155
+      Align = alClient
+      Constraints.MinWidth = 265
+      TabOrder = 3
+      TabStop = True
+      Visible = False
+      ExplicitTop = 64
+      ExplicitWidth = 447
+      ExplicitHeight = 236
+      inherited StageGB: TGroupBox
+        Width = 447
+        Height = 155
+        ExplicitWidth = 447
+        ExplicitHeight = 236
+        inherited SignalSetupPageControl: TPageControl
+          Width = 443
+          Height = 138
+          ExplicitWidth = 443
+          ExplicitHeight = 219
+          inherited TabSheet1: TTabSheet
+            ExplicitWidth = 435
+            ExplicitHeight = 191
+            inherited Splitter2: TSplitter
+              Left = 316
+              Height = 110
+              ExplicitLeft = 472
+              ExplicitHeight = 234
+            end
+            inherited BladesGB: TGroupBox
+              Left = 0
+              Height = 110
+              ExplicitLeft = 0
+              ExplicitHeight = 191
+              inherited Splitter1: TSplitter
+                Height = 93
+                ExplicitLeft = 812
+                ExplicitHeight = 234
+              end
+              inherited BladesLV: TBtnListView
+                Height = 93
+                ExplicitHeight = 174
+              end
+            end
+            inherited ShapeGB: TGroupBox
+              Width = 113
+              Height = 110
+              ExplicitWidth = 113
+              ExplicitHeight = 191
+              inherited ShapeLV: TBtnListView
+                Width = 109
+                Height = 93
+                ExplicitWidth = 109
+                ExplicitHeight = 174
+              end
+            end
+            inherited StagePropertysGB: TGroupBox
+              Left = 147
+              Height = 110
+              ExplicitLeft = 147
+              ExplicitHeight = 191
+            end
+          end
+          inherited TabSheet2: TTabSheet
+            ExplicitLeft = 4
+            ExplicitTop = 24
+            ExplicitWidth = 439
+            ExplicitHeight = 259
+          end
+        end
+      end
+    end
+    inline TurbineFrame1: TTurbineFrame
+      Left = 0
+      Top = 145
+      Width = 447
+      Height = 155
+      Align = alClient
+      Constraints.MinWidth = 265
+      TabOrder = 4
+      TabStop = True
+      Visible = False
+      ExplicitTop = 64
+      ExplicitWidth = 447
+      inherited TurbinePropGB: TGroupBox
+        Width = 447
+        Height = 155
+        ExplicitWidth = 447
+        inherited CfgTV: TTreeView
+          Width = 421
+          ExplicitWidth = 421
+        end
+        inherited RecentFileEdit: TEdit
+          Width = 562
+          ExplicitWidth = 562
+        end
+      end
+    end
+    inline PairFrame1: TPairFrame
+      Left = 0
+      Top = 145
+      Width = 447
+      Height = 155
+      Align = alClient
+      Constraints.MinWidth = 265
+      TabOrder = 5
+      TabStop = True
+      Visible = False
+      ExplicitTop = 64
+      ExplicitWidth = 447
+      ExplicitHeight = 236
+      inherited PairGB: TGroupBox
+        Width = 447
+        Height = 155
+        ExplicitWidth = 447
+        ExplicitHeight = 236
+        DesignSize = (
+          447
+          155)
+        inherited SensorsLV: TBtnListView
+          Top = 63
+          Width = 564
+          Height = 137
+          ExplicitTop = 63
+          ExplicitWidth = 564
+          ExplicitHeight = 218
+        end
+      end
+    end
+    inline UTSFrame1: TUTSFrame
+      Left = 0
+      Top = 145
+      Width = 447
+      Height = 155
+      Align = alClient
+      TabOrder = 6
+      Visible = False
+      ExplicitTop = 64
+      ExplicitWidth = 447
+      ExplicitHeight = 236
+      inherited UTSLV: TBtnListView
+        Height = 146
+        ExplicitHeight = 227
+      end
+    end
+  end
+end

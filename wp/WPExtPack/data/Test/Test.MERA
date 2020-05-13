@@ -1,0 +1,25 @@
+[MERA]
+Test=Папка создана пакетом WinПОС
+Prod=Генератор
+Date=18.01.2013
+Time=13:43:38.453
+[X]
+DateTime=41292.548067129632
+XUnits=с
+YUnits=V
+Start=0
+Step=0.001666666667
+Freq=600.000000000000
+k0=0
+k1=1.000000000000
+YFormat=R8
+[Y]
+DateTime=41292.548113425924
+XUnits=с
+YUnits=V
+Start=0
+Step=0.001666666667
+Freq=600.000000000000
+k0=0
+k1=1.000000000000
+YFormat=R8

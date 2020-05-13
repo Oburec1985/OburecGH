@@ -1,0 +1,61 @@
+//package Package1;
+package GlPackage;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESIGNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  vcl,
+  designide,
+  xmlrtl,
+  vclactnband,
+  vclx,
+  dcl_own,
+  vcldb,
+  dbrtl,
+  bdertl,
+  inet,
+  vclimg;
+
+contains
+  uBaseGlComponent in 'components\uBaseGlComponent.pas',
+  uGlPackage in 'uGlPackage.pas',
+  uPathEdior in 'PropertEditors\uPathEdior.pas',
+  uGlBasePropertyEdior in 'PropertEditors\uGlBasePropertyEdior.pas',
+  uObjectsPropertyForm in 'dialogs\uObjectsPropertyForm.pas' {ObjExplorerDlg},
+  uEditObj in 'components\uEditObj.pas',
+  uEditPoint3 in 'PropertEditors\uEditPoint3.pas',
+  uGlComponent in 'components\uGlComponent.pas',
+  uGlBaseItem in 'components\uGlBaseItem.pas',
+  TestUnit in 'components\TestUnit.pas',
+  TestEditor in 'PropertEditors\TestEditor.pas',
+  uGlEventTypes in '..\helpTools\uGlEventTypes.pas',
+  uGlTurbine in 'components\Asutp\uGlTurbine.pas'
+  //,uChartEvents in '..\..\..\sharedUtils\компоненты\chart_dpk\chart\utils\lists\uChartEvents.pas'
+  ;
+
+end.
+

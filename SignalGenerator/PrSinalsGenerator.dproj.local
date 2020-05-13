@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2011.03.04 21:19:16.140.pas,C:\Documents and Settings\Oburec\Мои документы\RAD Studio\Projects\Unit1.pas=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\SignalsGenerator.pas</Transaction>
+    <Transaction>2011.03.04 21:19:16.140.dfm,C:\Documents and Settings\Oburec\Мои документы\RAD Studio\Projects\Unit1.dfm=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\SignalsGenerator.dfm</Transaction>
+    <Transaction>2011.03.04 21:20:07.671.dproj,C:\Documents and Settings\Oburec\Мои документы\RAD Studio\Projects\Project1.dproj=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\PrSinalsGenerator.dproj</Transaction>
+    <Transaction>2011.03.04 22:31:41.296.pas,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Unit1.pas=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\frames\uSinFrame.pas</Transaction>
+    <Transaction>2011.03.04 22:31:41.296.dfm,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Unit1.dfm=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\frames\uSinFrame.dfm</Transaction>
+    <Transaction>2011.03.05 00:06:25.062.pas,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Unit1.pas=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\uSignal.pas</Transaction>
+    <Transaction>2011.03.19 22:21:18.458.pas,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Unit1.pas=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Forms\uSaveSignalForm.pas</Transaction>
+    <Transaction>2011.03.19 22:21:18.458.dfm,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Unit1.dfm=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Forms\uSaveSignalForm.dfm</Transaction>
+    <Transaction>2011.03.19 22:51:11.896.pas,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Forms\uSaveSignalForm.pas=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Forms\uLoadSignalForm.pas</Transaction>
+    <Transaction>2011.03.19 22:51:11.896.dfm,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Forms\uSaveSignalForm.dfm=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Forms\uLoadSignalForm.dfm</Transaction>
+    <Transaction>2011.03.19 23:34:56.099.pas,D:\oburec\project2010\Delphi\projects2010\Lopatki_BDS\BlEng\uBld\FileFormats\uMeraFile.pas=</Transaction>
+    <Transaction>2011.03.20 00:54:24.750.pas,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Unit1.pas=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\algs\uSRS.pas</Transaction>
+    <Transaction>2011.03.20 04:27:10.593.pas,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Unit1.pas=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Forms\uSrsForm.pas</Transaction>
+    <Transaction>2011.03.20 04:27:10.593.dfm,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Unit1.dfm=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Forms\uSrsForm.dfm</Transaction>
+    <Transaction>2011.03.20 16:04:26.843.pas,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Unit1.pas=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Forms\uGenShockForm.pas</Transaction>
+    <Transaction>2011.03.20 16:04:26.843.dfm,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Unit1.dfm=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Forms\uGenShockForm.dfm</Transaction>
+    <Transaction>2011.03.20 16:15:47.437.pas,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Unit1.pas=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\frames\uShockFrame.pas</Transaction>
+    <Transaction>2011.03.20 16:15:47.437.dfm,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Unit1.dfm=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\frames\uShockFrame.dfm</Transaction>
+    <Transaction>2011.03.20 16:15:53.687.pas,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Forms\uGenShockForm.pas=</Transaction>
+    <Transaction>2011.03.20 16:15:53.687.dfm,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Forms\uGenShockForm.dfm=</Transaction>
+    <Transaction>2011.03.21 20:03:15.578.pas,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\algs\uSRS.pas=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\algs\uKoltSRS.pas</Transaction>
+    <Transaction>2011.03.21 22:03:12.484.pas,D:\oburec\project2010\Delphi\projects2010\SignalGenerator\Unit1.pas=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\algs\uPageSRS.pas</Transaction>
+    <Transaction>2012.02.08 14:19:38.296.pas,H:\Oburec\delphi\2011\sharedUtils\objects\uBaseObjInt.pas=</Transaction>
+    <Transaction>2012.02.08 14:19:41.984.pas,H:\Oburec\delphi\2011\sharedUtils\objects\uBaseObjStr.pas=</Transaction>
+    <Transaction>2012.02.08 14:24:37.687.pas,H:\Oburec\delphi\2011\SignalGenerator\uSignal.pas=</Transaction>
+    <Transaction>2012.02.08 14:43:56.406.pas,H:\Oburec\delphi\2011\SignalGenerator\Unit1.pas=H:\Oburec\delphi\2011\sharedUtils\mera\uBuffSignal1d.pas</Transaction>
+    <Transaction>2012.02.08 15:59:57.109.pas,H:\Oburec\delphi\2011\SignalGenerator\Unit1.pas=H:\Oburec\delphi\2011\sharedUtils\mera\uSignalsUtils.pas</Transaction>
+    <Transaction>2012.02.08 17:59:38.281.pas,H:\Oburec\delphi\2011\SignalGenerator\Unit1.pas=H:\Oburec\delphi\2011\sharedUtils\mera\uBuffSignal2d.pas</Transaction>
+    <Transaction>2012.02.09 10:59:49.937.pas,H:\Oburec\delphi\2011\sharedUtils\mera\uBuffSignal1d.pas=H:\Oburec\delphi\2011\sharedUtils\mera\uBuffSignal.pas</Transaction>
+    <Transaction>2012.02.09 10:59:55.500.pas,H:\Oburec\delphi\2011\sharedUtils\mera\uBuffSignal2d.pas=</Transaction>
+  </Transactions>
+</BorlandProject>

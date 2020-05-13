@@ -1,0 +1,691 @@
+unit uHardwareMath;
+
+interface
+uses
+  Windows, complex;
+
+type
+  DoubleSSEArray = array of double;
+  //TCmxArray    = array of TComplex_d;
+  PDoubleSSEArray = ^DoubleSSEArray;
+
+function SUM_SSE_d(const Data: array of Double): Extended;overload;
+function SUM_SSE_d(const Data: array of Double; first, stop:integer): Extended;overload;
+// с разбиением на потоки
+function SUM_SSE_thread_d(const Data: array of Double): Extended;
+
+
+function OSEnabledXmmYmm: boolean;
+function IsAVX2supported: boolean;
+
+procedure FreeMemAligned(const src: Pointer; var DstUnaligned: Pointer; var DstSize: Integer);
+
+procedure GetMemAligned(const bits: Integer; const src: Pointer;
+  const SrcSize: Integer; out DstAligned, DstUnaligned: Pointer;
+  out DstSize: Integer);
+// bits - задает количество байт по каторым происходит выравнивание
+//procedure GetMemAligned_cmpxd(const bits: Integer; const src: Pointer; const SrcSize: Integer; out DstAligned, DstUnaligned: Pointer; out DstSize: Integer);
+
+const
+  PF_FLOATING_POINT_PRECISION_ERRATA  = 0; // On a Pentium, a floating-point precision error can occur in rare circumstances.
+  PF_FLOATING_POINT_EMULATED          = 1; // Floating-point operations are emulated using a software emulator.
+                                           // This function returns a nonzero value if floating-point operations are emulated; otherwise, it returns zero.
+  PF_COMPARE_EXCHANGE_DOUBLE          = 2; // The atomic compare and exchange operation (cmpxchg) is available.
+  PF_MMX_INSTRUCTIONS_AVAILABLE       = 3; // The MMX instruction set is available.
+  PF_PPC_MOVEMEM_64BIT_OK             = 4;
+  PF_ALPHA_BYTE_INSTRUCTIONS          = 5;
+  PF_XMMI_INSTRUCTIONS_AVAILABLE      = 6; // The SSE instruction set is available.
+  PF_3DNOW_INSTRUCTIONS_AVAILABLE     = 7; // The 3D-Now instruction set is available.
+  PF_RDTSC_INSTRUCTION_AVAILABLE      = 8; // The RDTSC instruction is available.
+  PF_PAE_ENABLED                      = 9; // The processor is PAE-enabled. For more information, see Physical Address Extension.
+                                           // All x64 processors always return a nonzero value for this feature.
+  PF_XMMI64_INSTRUCTIONS_AVAILABLE    = 10; // The SSE2 instruction set is available.
+                                            // Windows 2000:  This feature is not supported.
+  PF_SSE_DAZ_MODE_AVAILABLE           = 11;
+  PF_NX_ENABLED                       = 12; // Data execution prevention is enabled.
+                                            // Windows XP/2000:  This feature is not supported until Windows XP with SP2 and Windows Server 2003 with SP1.
+  PF_SSE3_INSTRUCTIONS_AVAILABLE      = 13; // The SSE3 instruction set is available.
+                                            // Windows Server 2003 and Windows XP/2000:  This feature is not supported.
+  PF_COMPARE_EXCHANGE128              = 14; // The atomic compare and exchange 128-bit operation (cmpxchg16b) is available.
+                                            // Windows Server 2003 and Windows XP/2000:  This feature is not supported.
+  PF_COMPARE64_EXCHANGE128            = 15; // The atomic compare 64 and exchange 128-bit operation (cmp8xchg16) is available.
+                                            // Windows Server 2003 and Windows XP/2000:  This feature is not supported.
+  PF_CHANNELS_ENABLED                 = 16; // The processor channels are enabled.
+  PF_XSAVE_ENABLED                    = 17; // The processor implements the XSAVE and XRSTOR instructions.
+                                            // Windows Server 2008, Windows Vista, Windows Server 2003 and Windows XP/2000:  This feature is not supported until Windows 7 and Windows Server 2008 R2.
+  PF_ARM_VFP_32_REGISTERS_AVAILABLE   = 18; // The VFP/Neon: 32 x 64bit register bank is present. This flag has the same meaning as PF_ARM_VFP_EXTENDED_REGISTERS.
+
+  PF_SECOND_LEVEL_ADDRESS_TRANSLATION = 20; // Second Level Address Translation is supported by the hardware.
+  PF_VIRT_FIRMWARE_ENABLED            = 21; // Virtualization is enabled in the firmware.
+  PF_RDWRFSGSBASE_AVAILABLE           = 22; // RDFSBASE, RDGSBASE, WRFSBASE, and WRGSBASE instructions are available.
+  PF_FASTFAIL_AVAILABLE               = 23; // _fastfail() is available.
+  PF_ARM_DIVIDE_INSTRUCTION_AVAILABLE = 24; // The divide instructions are available.
+  PF_ARM_64BIT_LOADSTORE_ATOMIC       = 25; // The 64-bit load/store atomic instructions are available.
+  PF_ARM_EXTERNAL_CACHE_AVAILABLE     = 26; // The external cache is available.
+  PF_ARM_FMAC_INSTRUCTIONS_AVAILABLE  = 27; // The floating-point multiply-accumulate instruction is available.
+
+var
+  zero_align:pointer;
+  zero_n_align:pointer;
+  zero_n_size:integer;
+
+implementation
+
+{procedure GetMemAlignedArray_cmpxd(const bits: Integer; const src: Pointer;
+  const SrcSize: Integer; out DstAligned:TCmxArray;out DstUnaligned: Pointer;
+  out DstSize: Integer);
+var
+  Bytes: NativeInt;
+  i: NativeInt;
+  pint:pinteger;
+  p:pointer;
+begin
+  if src <> nil then
+  begin
+    i := NativeInt(src);
+    i := i shr bits;
+    i := i shl bits;
+    if i = NativeInt(src) then
+    begin
+      // the source is already aligned, nothing to do
+      DstAligned := src;
+      DstUnaligned := src;
+      DstSize := SrcSize;
+      Exit;
+    end;
+  end;
+  Bytes := 1 shl bits;
+  DstSize := SrcSize + Bytes;
+  GetMem(DstUnaligned, DstSize);
+  FillChar(DstUnaligned^, DstSize, 0);
+  i := NativeInt(DstUnaligned) + Bytes;
+  i := i shr bits;
+  i := i shl bits;
+  DstAligned := Pointer(i);
+  pint:=pinteger(integer(@DstAligned[0])-4);
+  pint^:=round(srcsize/sizeof(TComplex_d));
+  if src <> nil then
+    Move(src^, DstAligned[0], srcsize);
+end;}
+
+
+function SUM_SSE_thread_d(const Data: array of Double): Extended;
+var
+  threads: array [0..1] of thandle;
+begin
+
+end;
+
+function SUM_SSE_d(const Data: array of Double; first, stop:integer): Extended;overload;
+//const
+//  zero_d: array [0..1] of Double = (0,0);
+var
+  r2,r1:double;
+  shift:integer;
+asm
+  pushad
+  // edx - длина массива (точнее номер hight элемента)
+  // ecx - целое без остатка количество итераций по сложению буферов sse (16 даблов на итерацию)
+  // ebx - остаток деления (элементы не уместившиеся в целое число итераций)
+  // esi - цказатель по массиву суммируемых данных (начинается с начала адреса data и ползет до посл. элемента)
+  mov esi, data // сохраняем в esi адрес массива data. В дальнейшем eax будет испорчен при делении (а указатель на data как раз лежит в eax)
+
+  // вычисляем сдвижку начала данныхы
+  mov eax, 8
+  mul first;
+  add esi, [eax] // сдвигаем начало данных
+
+  MOV ECX, [stop] // в ecx кладем hight длина массива
+  dec ecx      // уменьшаем еще на 1 элемент т.к. в xmm0 2 числа
+
+  push edx // сохраняем т.к. edx служебный и заполняется при операции div
+  // делим на 14 чтобы понять число блков кратное 14 значениям в 7-и регистрах
+  sub stop, first
+  MOV eax, stop
+  MOV ecx, 14
+  cdq
+  IDIV ECX // результат автоматом попадает в eax
+  MOV ecx, eax // в ecx кладем hight длина массива
+
+  // сохраняем остаток от деления на 14 (неявно попадает в edx при выполнении div)
+  MOV Ebx, EDX
+  pop edx
+  cmp ecx, 0
+  jnz @@StartProg
+  MOV Ebx, edx // корректируем остаток если число блоков 0
+
+  @@StartProg:
+  movups xmm0, [esi] // здесь результат сложения всех регистров
+  sub ecx, 1         // прочитали блок
+  js @@endSum         // переход если SF=1
+
+  // Зануляем r2
+  fldz
+  fstp r2
+  add esi, 16
+  @@loop:            // есть полные итерации
+    movups xmm1, [esi]
+    movups xmm2, [esi+16]
+    movups xmm3, [esi+32]
+    movups xmm4, [esi+48]
+    movups xmm5, [esi+64]
+    movups xmm6, [esi+80]
+    movups xmm7, [esi+96]
+
+    addpd xmm0, xmm1
+    addpd xmm2, xmm3
+    addpd xmm4, xmm5
+    addpd xmm6, xmm7
+
+    addpd xmm0, xmm2
+    addpd xmm4, xmm6
+    addpd xmm0, xmm4
+
+    add esi, 112 // указатель на следующий блок массива
+    sub ecx, 1   // прочитали блок
+  jns @@loop // переход если SF=1
+  haddpd xmm0, xmm0
+  movsd r2, xmm0
+
+  @@endSum:
+  xorps  xmm0, xmm0
+  xorps  xmm1, xmm1
+  xorps  xmm2, xmm2
+  xorps  xmm3, xmm3
+  xorps  xmm4, xmm4
+  xorps  xmm5, xmm5
+  xorps  xmm6, xmm6
+  xorps  xmm7, xmm7
+
+  // суммируем некратный кусок
+  //inc ebx // увеличим на 1, т.к. если регистр не полный то все равно нужно класть в регистр
+  shr ebx, 1 // определяем сколько даблов можно положить в регистры
+             // (делим на 2 оставшиеся элеенты тк регистр sse вмещает по 2 элемента)
+  JMP @Vec.Pointer[Ebx*4]
+  @Vec:
+       DD @@1
+       DD @@2
+       DD @@3
+       DD @@4
+       DD @@5
+       DD @@6
+       DD @@7
+       DD @@8
+  @@1: // 1, 2 чисел
+    movups xmm0, [esi]
+    jmp @@endProg
+  @@2: // 3, 4 чисел
+    movups xmm0, [esi]
+    movups xmm1, [esi+16]
+    addpd xmm0, xmm1
+
+    jmp @@endProg
+  @@3: // 5, 6 чисел
+    movups xmm0, [esi]
+    movups xmm1, [esi+16]
+    movups xmm2, [esi+32]
+    addpd xmm0, xmm1
+    addpd xmm0, xmm2
+    jmp @@endProg
+  @@4: // 7, 8 чисел
+    movups xmm0, [esi]
+    movups xmm1, [esi+16]
+    movups xmm2, [esi+32]
+    movups xmm3, [esi+48]
+    addpd xmm0, xmm1
+    addpd xmm2, xmm3
+    addpd xmm0, xmm2
+    jmp @@endProg
+  @@5: // 10
+    movups xmm0, [esi]
+    movups xmm1, [esi+16]
+    movups xmm2, [esi+32]
+    movups xmm3, [esi+48]
+    movups xmm4, [esi+64]
+
+    addpd xmm0, xmm1
+    addpd xmm2, xmm3
+    addpd xmm4, xmm5
+    addpd xmm0, xmm2
+    addpd xmm0, xmm4
+    jmp @@endProg
+  @@6: // 12
+    movups xmm0, [esi]
+    movups xmm1, [esi+16]
+    movups xmm2, [esi+32]
+    movups xmm3, [esi+48]
+    movups xmm4, [esi+64]
+    movups xmm5, [esi+80]
+
+    addpd xmm0, xmm1
+    addpd xmm2, xmm3
+    addpd xmm4, xmm5
+
+    addpd xmm0, xmm2
+    addpd xmm0, xmm4
+    jmp @@endProg
+  @@7: // 2
+    movups xmm0, [esi]
+    movups xmm1, [esi+16]
+    movups xmm2, [esi+32]
+    movups xmm3, [esi+48]
+    movups xmm4, [esi+64]
+    movups xmm5, [esi+80]
+    movups xmm6, [esi+96]
+
+    addpd xmm0, xmm1
+    addpd xmm2, xmm3
+    addpd xmm4, xmm5
+
+    addpd xmm0, xmm2
+    addpd xmm4, xmm6
+    addpd xmm0, xmm4
+    jmp @@endProg
+  @@8: // 14, 15 чисел в некратном остатке
+    movups xmm0, [esi]
+    movups xmm1, [esi+16]
+    movups xmm2, [esi+32]
+    movups xmm3, [esi+48]
+    movups xmm4, [esi+64]
+    movups xmm5, [esi+80]
+    movups xmm6, [esi+96]
+    movups xmm7, [esi+112]
+
+    addpd xmm0, xmm1
+    addpd xmm2, xmm3
+    addpd xmm4, xmm5
+    addpd xmm6, xmm7
+    addpd xmm0, xmm2
+    addpd xmm4, xmm6
+    addpd xmm0, xmm4
+  @@endProg:
+  // функция возвращает значение через eax???
+  haddpd xmm0, xmm0
+  movsd r1, xmm0
+  fld r1
+  fld r2
+  faddp st(1), st
+  //fstp st(0)
+  FSTP result      // SumOfSquares := Sum1; Pop Sum1
+  //fwait
+  popad
+end;
+
+function SUM_SSE_d(const Data: array of Double): Extended;
+//const
+//  zero_d: array [0..1] of Double = (0,0);
+var
+  r2,r1:double;
+asm
+  pushad
+  // edx - длина массива (точнее номер hight элемента)
+  // ecx - целое без остатка количество итераций по сложению буферов sse (16 даблов на итерацию)
+  // ebx - остаток деления (элементы не уместившиеся в целое число итераций)
+  // esi - цказатель по массиву суммируемых данных (начинается с начала адреса data и ползет до посл. элемента)
+  mov esi, data // сохраняем в esi адрес массива data. В дальнейшем eax будет испорчен при делении (а указатель на data как раз лежит в eax)
+
+  MOV ECX, EDX // в ecx кладем hight длина массива
+  dec ecx      // уменьшаем еще на 1 элемент т.к. в xmm0 2 числа
+  push edx
+  // делим на 14 чтобы понять число блков кратное 14 значениям в 7-и регистрах
+  MOV eax, ecx
+  MOV ecx, 14
+  cdq
+  IDIV ECX // результат автоматом попадает в eax
+  MOV ecx, eax // в ecx кладем hight длина массива
+  // сохраняем остаток от деления на 14 (неявно попадает в edx при выполнении div)
+  MOV Ebx, EDX
+  pop edx
+  cmp ecx, 0
+  jnz @@StartProg
+  MOV Ebx, edx // корректируем остаток если число блоков 0
+
+  @@StartProg:
+  movups xmm0, [esi] // здесь результат сложения всех регистров
+  sub ecx, 1         // прочитали блок
+  js @@endSum         // переход если SF=1
+
+  // Зануляем r2
+  fldz
+  fstp r2
+  add esi, 16
+  @@loop:            // есть полные итерации
+    movups xmm1, [esi]
+    movups xmm2, [esi+16]
+    movups xmm3, [esi+32]
+    movups xmm4, [esi+48]
+    movups xmm5, [esi+64]
+    movups xmm6, [esi+80]
+    movups xmm7, [esi+96]
+
+    addpd xmm0, xmm1
+    addpd xmm2, xmm3
+    addpd xmm4, xmm5
+    addpd xmm6, xmm7
+
+    addpd xmm0, xmm2
+    addpd xmm4, xmm6
+    addpd xmm0, xmm4
+
+    add esi, 112 // указатель на следующий блок массива
+    sub ecx, 1   // прочитали блок
+  jns @@loop // переход если SF=1
+  haddpd xmm0, xmm0
+  movsd r2, xmm0
+
+  @@endSum:
+  xorps  xmm0, xmm0
+  xorps  xmm1, xmm1
+  xorps  xmm2, xmm2
+  xorps  xmm3, xmm3
+  xorps  xmm4, xmm4
+  xorps  xmm5, xmm5
+  xorps  xmm6, xmm6
+  xorps  xmm7, xmm7
+
+  // суммируем некратный кусок
+  //inc ebx // увеличим на 1, т.к. если регистр не полный то все равно нужно класть в регистр
+  shr ebx, 1 // определяем сколько даблов можно положить в регистры
+             // (делим на 2 оставшиеся элеенты тк регистр sse вмещает по 2 элемента)
+  JMP @Vec.Pointer[Ebx*4]
+  @Vec:
+       DD @@1
+       DD @@2
+       DD @@3
+       DD @@4
+       DD @@5
+       DD @@6
+       DD @@7
+       DD @@8
+  @@1: // 1, 2 чисел
+    movups xmm0, [esi]
+    jmp @@endProg
+  @@2: // 3, 4 чисел
+    movups xmm0, [esi]
+    movups xmm1, [esi+16]
+    addpd xmm0, xmm1
+
+    jmp @@endProg
+  @@3: // 5, 6 чисел
+    movups xmm0, [esi]
+    movups xmm1, [esi+16]
+    movups xmm2, [esi+32]
+    addpd xmm0, xmm1
+    addpd xmm0, xmm2
+    jmp @@endProg
+  @@4: // 7, 8 чисел
+    movups xmm0, [esi]
+    movups xmm1, [esi+16]
+    movups xmm2, [esi+32]
+    movups xmm3, [esi+48]
+    addpd xmm0, xmm1
+    addpd xmm2, xmm3
+    addpd xmm0, xmm2
+    jmp @@endProg
+  @@5: // 10
+    movups xmm0, [esi]
+    movups xmm1, [esi+16]
+    movups xmm2, [esi+32]
+    movups xmm3, [esi+48]
+    movups xmm4, [esi+64]
+
+    addpd xmm0, xmm1
+    addpd xmm2, xmm3
+    addpd xmm4, xmm5
+    addpd xmm0, xmm2
+    addpd xmm0, xmm4
+    jmp @@endProg
+  @@6: // 12
+    movups xmm0, [esi]
+    movups xmm1, [esi+16]
+    movups xmm2, [esi+32]
+    movups xmm3, [esi+48]
+    movups xmm4, [esi+64]
+    movups xmm5, [esi+80]
+
+    addpd xmm0, xmm1
+    addpd xmm2, xmm3
+    addpd xmm4, xmm5
+
+    addpd xmm0, xmm2
+    addpd xmm0, xmm4
+    jmp @@endProg
+  @@7: // 2
+    movups xmm0, [esi]
+    movups xmm1, [esi+16]
+    movups xmm2, [esi+32]
+    movups xmm3, [esi+48]
+    movups xmm4, [esi+64]
+    movups xmm5, [esi+80]
+    movups xmm6, [esi+96]
+
+    addpd xmm0, xmm1
+    addpd xmm2, xmm3
+    addpd xmm4, xmm5
+
+    addpd xmm0, xmm2
+    addpd xmm4, xmm6
+    addpd xmm0, xmm4
+    jmp @@endProg
+  @@8: // 14, 15 чисел в некратном остатке
+    movups xmm0, [esi]
+    movups xmm1, [esi+16]
+    movups xmm2, [esi+32]
+    movups xmm3, [esi+48]
+    movups xmm4, [esi+64]
+    movups xmm5, [esi+80]
+    movups xmm6, [esi+96]
+    movups xmm7, [esi+112]
+
+    addpd xmm0, xmm1
+    addpd xmm2, xmm3
+    addpd xmm4, xmm5
+    addpd xmm6, xmm7
+    addpd xmm0, xmm2
+    addpd xmm4, xmm6
+    addpd xmm0, xmm4
+  @@endProg:
+  // функция возвращает значение через eax???
+  haddpd xmm0, xmm0
+  movsd r1, xmm0
+  fld r1
+  fld r2
+  faddp st(1), st
+  //fstp st(0)
+  FSTP result      // SumOfSquares := Sum1; Pop Sum1
+  //fwait
+  popad
+end;
+
+
+procedure FreeMemAligned(const src: Pointer; var DstUnaligned: Pointer;
+  var DstSize: Integer);
+begin
+  if src <> DstUnaligned then
+  begin
+    if DstUnaligned <> nil then
+      FreeMem(DstUnaligned, DstSize);
+  end;
+  DstUnaligned := nil;
+  DstSize := 0;
+end;
+
+procedure GetMemAlignedArray(const bits: Integer; const src: Pointer;
+  const SrcSize: Integer; out DstAligned:TCmxArray_d;out DstUnaligned: Pointer;
+  out DstSize: Integer);
+var
+  Bytes: NativeInt;
+  i: NativeInt;
+  pint:pinteger;
+  p:pointer;
+begin
+  if src <> nil then
+  begin
+    i := NativeInt(src);
+    i := i shr bits;
+    i := i shl bits;
+    if i = NativeInt(src) then
+    begin
+      // the source is already aligned, nothing to do
+      DstAligned := src;
+      DstUnaligned := src;
+      DstSize := SrcSize;
+      Exit;
+    end;
+  end;
+  Bytes := 1 shl bits;
+  DstSize := SrcSize + Bytes;
+  GetMem(DstUnaligned, DstSize);
+  FillChar(DstUnaligned^, DstSize, 0);
+  i := NativeInt(DstUnaligned) + Bytes;
+  i := i shr bits;
+  i := i shl bits;
+  DstAligned := Pointer(i);
+  pint:=pinteger(integer(@DstAligned[0])-4);
+  pint^:=round(srcsize/sizeof(TComplex_d));
+  if src <> nil then
+    Move(src^, DstAligned[0], srcsize);
+end;
+
+
+procedure GetMemAligned(const bits: Integer; const src: Pointer;
+  const SrcSize: Integer; out DstAligned, DstUnaligned: Pointer;
+  out DstSize: Integer);
+var
+  Bytes: NativeInt;
+  i: NativeInt;
+begin
+  if src <> nil then
+  begin
+    i := NativeInt(src);
+    i := i shr bits;
+    i := i shl bits;
+    if i = NativeInt(src) then
+    begin
+      // the source is already aligned, nothing to do
+      DstAligned := src;
+      DstUnaligned := src;
+      DstSize := SrcSize;
+      Exit;
+    end;
+  end;
+  Bytes := 1 shl bits;
+  DstSize := SrcSize + Bytes;
+  GetMem(DstUnaligned, DstSize);
+  FillChar(DstUnaligned^, DstSize, 0);
+  i := NativeInt(DstUnaligned) + Bytes;
+  i := i shr bits;
+  i := i shl bits;
+  DstAligned := Pointer(i);
+  if src <> nil then
+    Move(src^, DstAligned^, SrcSize);
+end;
+
+
+function IsAVX2supported: boolean;
+asm
+    // Save EBX
+    {$IFDEF CPUx86}
+      push ebx
+    {$ELSE CPUx64}
+      //mov r10, rbx
+    {$ENDIF}
+    //Check CPUID.0
+    xor eax, eax
+    cpuid //modifies EAX,EBX,ECX,EDX
+    cmp al, 7 // do we have a CPUID leaf 7 ?
+    jge @Leaf7
+      xor eax, eax
+      jmp @Exit
+    @Leaf7:
+      //Check CPUID.7
+      mov eax, 7h
+      xor ecx, ecx
+      cpuid
+      bt ebx, 5 //AVX2: CPUID.(EAX=07H, ECX=0H):EBX.AVX2[bit 5]=1
+      setc al
+   @Exit:
+   // Restore EBX
+   {$IFDEF CPUx86}
+     pop ebx
+   {$ELSE CPUx64}
+     //mov rbx, r10
+   {$ENDIF}
+end;
+
+function OSEnabledXmmYmm: boolean;
+// necessary to check before using AVX, FMA or AES instructions!
+asm
+  {$IFDEF CPUx86}
+  push ebx
+  {$ELSE CPUx64}
+  //mov r10, rbx
+  {$ENDIF}
+  mov eax,1
+  cpuid
+  bt ecx, 27  // CPUID.1:ECX.OSXSAVE[bit 27] = 1 (XGETBV enabled for application use; implies XGETBV is an available instruction also)
+  jnc @not_supported
+    xor ecx,ecx //Specify control register XCR0 = XFEATURE_ENABLED_MASK register
+    db 0Fh, 01h, 0D0h // xgetbv //Reads XCR (extended control register) -> EDX:EAX
+    {lgdt eax = db 0Fh, 01h = privileged instruction, so don't go here unless xgetbv is allowed}
+      //CHECK XFEATURE_ENABLED_MASK[2:1] = ‘11b’
+      and eax, 06h //06h= 00000000000000000000000000000110b
+      cmp eax, 06h//; check OS has enabled both XMM (bit 1) and YMM (bit 2) state management support
+    jne @not_supported
+      mov eax,1
+      jmp @out
+  @not_supported:
+    xor eax,eax
+  @out:
+ {$IFDEF CPUx86}
+  pop ebx
+  {$ELSE CPUx64}
+  //mov rbx, r10
+  {$ENDIF}
+end;
+
+
+// умножение массивов на SSE
+{asm
+push esi
+push edi
+mov ecx,k
+lea esi,a
+lea edi,b
+
+lea edx,u
+xor eax,eax
+lea ebx,c
+xor eax,eax
+@@loop:
+movups xmm1,[esi]
+movups xmm2,[edi]
+
+mulps xmm1,xmm2
+
+movups [edx],xmm1
+
+add esi,16
+add edi,16
+add ebx,16
+add edx,16
+
+dec ecx
+
+jne @@loop
+
+pop edi
+pop esi
+
+fld x
+fld y
+fmul
+fadd q
+fstp z
+
+xor eax,eax
+xor ebx,ebx
+end;}
+
+
+end.

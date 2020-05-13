@@ -1,0 +1,250 @@
+object CompaundFrame: TCompaundFrame
+  Left = 0
+  Top = 0
+  Width = 451
+  Height = 304
+  Align = alClient
+  TabOrder = 0
+  object MainObjSB: TScrollBox
+    Left = 0
+    Top = 0
+    Width = 451
+    Height = 304
+    Align = alClient
+    TabOrder = 0
+    inline BaseObjPropertyFrame1: TBaseObjPropertyFrame
+      Left = 0
+      Top = 0
+      Width = 447
+      Height = 274
+      Align = alTop
+      Constraints.MinHeight = 64
+      Constraints.MinWidth = 293
+      TabOrder = 0
+      TabStop = True
+      Visible = False
+      ExplicitWidth = 447
+      ExplicitHeight = 274
+      DesignSize = (
+        447
+        274)
+      inherited TypeLabel: TLabel
+        Left = 152
+        ExplicitLeft = 152
+      end
+      inherited TypeImage: TImage
+        Left = 279
+        ExplicitLeft = 279
+      end
+      inherited TypeEdit: TEdit
+        Left = 152
+        ExplicitLeft = 152
+      end
+      inherited MetaDataLV: TBtnListView
+        Width = 557
+        Height = 320
+        ExplicitWidth = 557
+        ExplicitHeight = 320
+      end
+    end
+    inline ChanFrame1: TChanFrame
+      Left = 0
+      Top = 274
+      Width = 447
+      Height = 26
+      Align = alClient
+      TabOrder = 1
+      Visible = False
+      ExplicitTop = 278
+      ExplicitWidth = 447
+      ExplicitHeight = 22
+      inherited CommonGB: TGroupBox
+        Width = 447
+        Height = 26
+        ExplicitWidth = 447
+        ExplicitHeight = 22
+        inherited ChanLVLabel: TLabel
+          Left = 152
+          ExplicitLeft = 152
+        end
+        inherited ChanLV: TBtnListView
+          Left = 153
+          Width = 259
+          Height = 4
+          ExplicitLeft = 153
+          ExplicitWidth = 259
+          ExplicitHeight = 0
+        end
+      end
+    end
+    inline SensorFrame1: TSensorFrame
+      Left = 0
+      Top = 274
+      Width = 447
+      Height = 26
+      Align = alClient
+      Constraints.MinWidth = 265
+      TabOrder = 2
+      Visible = False
+      ExplicitTop = 278
+      ExplicitWidth = 447
+      ExplicitHeight = 22
+      inherited SensorsGB: TGroupBox
+        Top = -240
+        Width = 447
+        Align = alBottom
+        ExplicitTop = -244
+        ExplicitWidth = 447
+        inherited StateGB: TGroupBox
+          Width = 443
+          ExplicitWidth = 443
+          inherited StageCB: TComboBox
+            Top = 36
+            ExplicitTop = 36
+          end
+          inherited PairsListView: TBtnListView
+            Top = 36
+            Width = 917
+            ExplicitTop = 36
+            ExplicitWidth = 917
+          end
+        end
+      end
+    end
+    inline StageFrame1: TStageFrame
+      Left = 0
+      Top = 274
+      Width = 447
+      Height = 26
+      Align = alClient
+      Constraints.MinWidth = 265
+      TabOrder = 3
+      TabStop = True
+      Visible = False
+      ExplicitTop = 278
+      ExplicitWidth = 447
+      ExplicitHeight = 22
+      inherited StageGB: TGroupBox
+        Width = 447
+        Height = 26
+        ExplicitWidth = 447
+        ExplicitHeight = 22
+        inherited SignalSetupPageControl: TPageControl
+          Width = 443
+          Height = 9
+          ExplicitWidth = 443
+          ExplicitHeight = 5
+          inherited TabSheet1: TTabSheet
+            ExplicitWidth = 435
+            inherited Splitter2: TSplitter
+              Left = 316
+              ExplicitLeft = 472
+              ExplicitHeight = 234
+            end
+            inherited BladesGB: TGroupBox
+              Left = 0
+              ExplicitLeft = 0
+              inherited Splitter1: TSplitter
+                ExplicitLeft = 812
+                ExplicitHeight = 234
+              end
+            end
+            inherited ShapeGB: TGroupBox
+              Width = 113
+              ExplicitWidth = 113
+              inherited ShapeLV: TBtnListView
+                Width = 109
+                ExplicitWidth = 109
+              end
+            end
+            inherited StagePropertysGB: TGroupBox
+              Left = 147
+              ExplicitLeft = 147
+            end
+          end
+          inherited TabSheet2: TTabSheet
+            ExplicitLeft = 4
+            ExplicitTop = 24
+            ExplicitWidth = 439
+            ExplicitHeight = 259
+          end
+        end
+      end
+    end
+    inline TurbineFrame1: TTurbineFrame
+      Left = 0
+      Top = 274
+      Width = 447
+      Height = 26
+      Align = alClient
+      Constraints.MinWidth = 265
+      TabOrder = 4
+      TabStop = True
+      Visible = False
+      ExplicitTop = 278
+      ExplicitWidth = 447
+      ExplicitHeight = 22
+      inherited TurbinePropGB: TGroupBox
+        Width = 447
+        Height = 26
+        ExplicitWidth = 447
+        ExplicitHeight = 22
+        inherited CfgTV: TTreeView
+          Width = 421
+          ExplicitWidth = 421
+        end
+        inherited RecentFileEdit: TEdit
+          Width = 562
+          ExplicitWidth = 562
+        end
+      end
+    end
+    inline PairFrame1: TPairFrame
+      Left = 0
+      Top = 274
+      Width = 447
+      Height = 26
+      Align = alClient
+      Constraints.MinWidth = 265
+      TabOrder = 5
+      TabStop = True
+      Visible = False
+      ExplicitTop = 278
+      ExplicitWidth = 447
+      ExplicitHeight = 22
+      inherited PairGB: TGroupBox
+        Width = 447
+        Height = 26
+        ExplicitWidth = 447
+        ExplicitHeight = 22
+        DesignSize = (
+          447
+          26)
+        inherited SensorsLV: TBtnListView
+          Top = 63
+          Width = 564
+          Height = 8
+          ExplicitTop = 63
+          ExplicitWidth = 564
+          ExplicitHeight = 4
+        end
+      end
+    end
+    inline UTSFrame1: TUTSFrame
+      Left = 0
+      Top = 274
+      Width = 447
+      Height = 26
+      Align = alClient
+      TabOrder = 6
+      Visible = False
+      ExplicitTop = 278
+      ExplicitWidth = 447
+      ExplicitHeight = 22
+      inherited UTSLV: TBtnListView
+        Height = 4
+        ExplicitHeight = 0
+      end
+    end
+  end
+end

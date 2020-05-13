@@ -1,0 +1,214 @@
+
+unit Types4bld;
+{$OPTIMIZATION OFF}
+interface
+uses Windows,Classes,Series;
+
+
+
+type
+
+  //динамические массивы
+ TArrofSer=array of TLineSeries;
+ //TArrofDbBuf=array of TCDBuff;
+ TArrofboolean=array of boolean;
+ TArrofInteger=array of Integer;
+
+  TIndex=packed record
+           Chan:Byte;  //нумерация с нуля
+           Marker:Byte;
+           Ticks:Cardinal;
+  end;
+
+  TVideo=packed record
+           Chan1:byte;
+           Sample1:Word;
+           Chan2:Byte;
+           Sample2:Word;
+         end;
+
+  TChangeStateType = (
+    tcstEnterRise,   {разгон начало}
+    tcstLeaveRise,   {разгон завершение}
+    tcstEnterDrain,  {выбег начало}
+    tcstLeaveDrain); {выбег заверешение}
+
+  type TTypeOfTime=(SEV,IRIG);
+
+  TAngleGate=packed record //непрерывная угловая зона в которой разрешено/запрещено
+               Chan:Byte;  // лежать импульсу, проходящему по каналу Chan
+               TachoChan:Byte; //при тахоимпульсах по этому каналу
+               Blade:Byte;     //выделяет лопатку с этим номером
+               AdjChan:Byte;   //канал "спаренный" с этим каналом
+               Marker3:Byte;
+               Marker4:Byte;
+               lpillar:Single;//левый предел 0-1
+               rpillar:Single;// правый предел 0-1
+             end;
+
+
+  TMyHead=packed record
+           Ident: String[15];
+           HeadLength:Word;//общая длина заголовка, позволяющая дописывать в него, что угодно.
+       end;
+
+
+    TTypeSensor=(srRoot,srPeak,srInEdge,srOutEdge,srTaho,srRoot_cap,srPeak_cap,srUTS,srIRIG_B);
+
+    TMode=(mdDynamic,mdStatic);
+
+ TSensor=packed record     // Описываем датчик
+   NameSensor:String;       // Имя(обозначение) датчика
+   Chan:Word;               // Номер канала в устройстве (начиная с нуля)
+   TypeSensor:TTypeSensor;  // Тип датчика (оборотный,периферийный,корневой)
+  end;
+
+
+
+
+
+  TArrIndex=array[0..$fffffff] of TIndex; //ОБК
+  PArrayIndex = ^TArrIndex;
+  ArrLongWord=array[0..1000000] of LongWord;{Unsigned 32}
+  PArrLongWord=^ArrLongWord;
+  TState=(stStopped,stOscill,stProcessing);
+  TStatus=(stOn,stOff);
+  Tacquisition=(taPlate,taDisk,taNo);// брать данные с платы или из файла
+  TArr_of_Indx = array[0..$fffffff] of TIndex;
+  TpArr_of_Indx = ^TArr_of_Indx;
+  PArrDouble=^TArrDouble;
+  TArrDouble=array[0..1000000] of Double;
+  TArrSmallInt=array[0..1024-1] of SmallInt;
+    PArrSingle=^TArrSingle;
+  TArrSingle=array[0..1000000] of Single;
+  TMtxDouble=array[0..32-1,0..32-1] of Double;
+  PMtxDbl=^TMtxDouble;
+  TMArray=array of array[0..1] of Single;
+
+
+  TFlags=packed record
+        {}  Exit :Integer;    //комментарии к flgExit:
+        {}           (*управление циклом сбора: 2 - запрос на прекращение цикла ;
+        {}            при 1 -выполнить финальную часть и присвоить 0. если 0 таймер выключен *)
+        {}  flgRecord :Integer;//=0;
+        {}     (*комментарии к flgRecord: 7-исходное состояние перед началом записи нового файла- запрос на запись нового файла
+        {}                     Если =7 то проверить существование файла, записать заголовок файла, присвоить 6
+        {}                     если = 6 если в Processing - писать получаемые блоки в файл,
+        {}                     если =4 - запрос на закрытие файла, следует закрыть файл и присвоить 2
+        {}                     если 2 файл уже закрыт, но существует возможность запуска новой записи  по таймеру без выхода
+        {}                      из цикла (режим авто).В это время может писаться сопряженный файл
+        {}                     если =0 запись не производится, новая запись возможна только после рестарта сбора данных *)
+        {}  Contasq:Boolean;//=FAlse;//указание работать без выхода из асинхронного сбора данных
+        {}  Auto:Boolean;//=False; //указание работать в автономном режиме с Watсhdog-ом и без модальных окон
+        {}                       // а также автоматически включать запись
+        {}  Server:Boolean;//=False;//указание инициализировать сервер
+        {}  WDT:Boolean;//=False;//watchdog инициализирован ?
+        {}  SEV:Boolean;//=False; //указание работать с сигналом СЕВ
+        {}  Conjugatefile:Boolean;//флаг записи промежутков между файлами *.bld в "сопряженные" файлы *.bldc
+        {}  FirstCycle:Boolean; // флаг первого цикла сбрасывается для второго цикла
+        {}  BurstFile:Boolean;  // флаг наличия в файле выброса тахо
+        {}  autogain:Boolean;//=False;//указание использовать подстройку усиления под частоту ТАхо
+        {}  irror:Integer;  // кол-во буферов на которое отстает обработка
+        {}  Jrnl,JrnlFlash:Boolean;//указание вести журнал
+        {}  Loss:Boolean;//=False;
+        {}  InRange:Boolean; //флаг для управления
+        {}  View: Boolean; // отображать или нет 
+        {}
+        end;
+   PFlags=^TFlags;
+
+  TBuf=packed record
+         Buf: PArrayIndex;  //Буфер куда плата скидает асинхронные измерения
+         BufEnd:Cardinal; // размер этого буфера в индексах.
+         BuffSize:Cardinal; //размер обрабатываемой части буфера в байтах, сделать бы volatile
+         BSIndx:Cardinal; //размер буфера, вычитываемого из API платы  - то же, что BuffSize, только в индексах
+         AcqIndex:Cardinal; //сделать бы volatile
+         ProcIndex:Cardinal;//индексы частей Buf для вычитки и обработки, ProcIndex "догоняет" AcqIndex.
+         BaseTime:Double;//1/40 или 1/32 в зависимости от платы
+       end;
+PBuf=^TBuf;       
+
+
+TInternalPluginInfo = record
+   Name: string; //наименование plug-in`а
+   Dsc: string; //строка описания
+   Vendor: string; //строка наименования фирмы
+   Version: integer; //номер версии
+   SubVersion: integer; //номер подверсии
+end;
+   PluginInfo=^TInternalPluginInfo;
+
+const
+
+ maskBurst:Byte=$01;
+ maskRotRise:Byte=$02;
+ maskRotFall:Byte=$04;
+
+ BsTimeM2081=1/40{ МГц };
+ //BsTimeM2070=1/32{ МГц };
+ BsTimeM2070=1/40{ МГц };
+ cMera=$10B5;
+ cM2081=$6081;
+ cM2070=$6083;
+ //Для асинхронного ввода размер буфера платы в словах
+ //      -размер фрейма, кратный трем словам, в половину FIFO входят NFrame таких буферов
+ NWord: array[0..6] of Word = ( 126, 255,510,1023,2046,4095, 6141 );
+                //модули по которым производится автоикремент имени файла
+ cIncrmdls: array[0..7] of Word=(0, 20, 40, 100, 200, 500, 1000,5000);
+                //времена остановки в секундах
+ cStopTimes: array[0..9] of Word=(0,5,15,45,60,120,300,600,1800,3600);
+
+                //времена записи в секундах
+ cStartTimes: array[0..9] of Word=(0,5,15,45,60,120,300,600,1800,3600);
+
+ cPartFifo=8;//количество половин FIFO в буфере DMA APIшника(если не успевает обработка)
+ cSafetyfactor=10;//количество буферов памяти BladeRecorder на случай если не успевает обработка
+ cFrame=10;//кол-во буферов платы, заполняющих половину FIFO
+ //Для цифрового ввода (осциллографирования)
+ cMode=$6;
+ cBufSize=4096;
+ cRate=10000;
+ SynchChan=0;
+// KfTaho=33.25/33;
+ NumPort=2;
+
+ cGateIdent='Mera DFM Gates ';
+ //Файлы с загружаемыми программами в плату
+ FileNameBios= 'BIOS\m2081lop.bio';  //имена от 7.05.03
+ FileNameFlex= 'BIOS\fl2081lpn.rbf';    //  v4_lpn.rbf для версии 4 М2081, с заказа 374
+                                     // fl2081lpn.rbf - для старых версий
+ //Текущая версия заголовка
+ Vers=1000;
+ // NumberFiles=99; //100 поскольку число файлов начинается с нуля
+
+
+ TwoPi:Double=2*Pi;
+ HistL=131072{65536}; //Разрешение гистограммы представления статистики
+ HistLDraft=16384{8192};//Разрешение черновых гистограмм
+
+ cMaxChan = 32;
+ cMaxBlade = 255;//где-то используется один байт
+ cSignatureMarker=cMaxBlade; // распознавание варианта определения тахо по сигнатуре
+ cMaxTaho = 4;
+ cMaxPairs = cMaxChan div 2;
+ cMaxStages = 3{MaxPairs};
+ cMaxSensors = cMaxChan;
+ cMaxImpuls = cMaxBlade*2;
+ cMaxHarm = 32;
+ MaxResonance = 12;
+ CfBadBlade = 0.2;
+
+
+
+function Sngl2Dbl(sng:Single):Double;
+
+
+ implementation
+
+function Sngl2Dbl(sng:Single):Double;//
+begin Result:=sng;                   //
+end; ////----------------------------//
+
+
+
+end.

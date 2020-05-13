@@ -1,0 +1,41 @@
+unit uMDBBaseObjFrame;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
+  Dialogs, StdCtrls, ExtCtrls, uMeasureBase;
+
+type
+  TMDBBaseObjFrame = class(TFrame)
+    PathEdit: TEdit;
+    PathLabel: TLabel;
+    DscEdit: TEdit;
+    DscLabel: TLabel;
+    Panel1: TPanel;
+  private
+    { Private declarations }
+  public
+    procedure init(p_db:cMBase);virtual;
+    procedure showObjProps(obj:cXmlFolder);virtual;
+  end;
+
+implementation
+
+{$R *.dfm}
+
+{ TMDBBaseObjFrame }
+
+procedure TMDBBaseObjFrame.init(p_db: cMBase);
+begin
+
+end;
+
+procedure TMDBBaseObjFrame.showObjProps(obj: cXmlFolder);
+begin
+  PathEdit.Text:=obj.Absolutepath;
+  DscEdit.text:=obj.dsc;
+
+end;
+
+end.

@@ -1,0 +1,69 @@
+unit uTrendSignal;
+
+interface
+uses
+  uMeraSignal, uTrend, uCommonTypes;
+
+type
+  cTrendSignal = class(cSignal)
+  public
+    function Count:integer;override;
+    function GetY(i:integer):single;overload; override;
+    function GetY(t:single):single;overload; override;
+    function GetX(i:integer):single;override;
+    function getname:string;override;
+    function SignalType:integer;override;
+    function GetT0:single;override;
+    function GetTEnd:single;override;
+    function GetP2(i:integer):point2;override;
+  end;
+
+
+implementation
+
+function cTrendSignal.Count:integer;
+begin
+  result:=cTrend(obj).count;
+end;
+
+function cTrendSignal.getname:string;
+begin
+  result:=cTrend(obj).name;
+end;
+
+function cTrendSignal.SignalType:integer;
+begin
+  result:=c_2dSignal;
+end;
+
+function cTrendSignal.GetT0:single;
+begin
+  result:=cTrend(obj).getPoint(0).point.x;
+end;
+
+function cTrendSignal.GetP2(i:integer):point2;
+begin
+  result:=cTrend(obj).getPoint(i).point;
+end;
+
+function cTrendSignal.GetY(i:integer):single;
+begin
+  result:=cTrend(obj).getPoint(i).point.y;
+end;
+
+function cTrendSignal.GetY(t:single):single;
+begin
+  result:=cTrend(obj).gety(t);
+end;
+
+function cTrendSignal.GetX(i:integer):single;
+begin
+  result:=cTrend(obj).getPoint(i).point.x;
+end;
+
+function cTrendSignal.GetTEnd:single;
+begin
+  result:=cTrend(obj).getPoint(cTrend(obj).count-1).point.x;
+end;
+
+end.

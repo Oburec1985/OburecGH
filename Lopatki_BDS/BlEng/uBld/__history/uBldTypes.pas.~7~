@@ -1,0 +1,113 @@
+unit uBldTypes;
+
+interface
+uses
+  uTickData, usensor, uErrorProc, ubldobj, uSensorList;
+
+type
+
+  // класс описывает форму колеса. хранит все растояния между лопатками в градусах
+  cShape = class
+  protected
+    // датчик по которому построена форма
+    sensor:csensor;
+    // тахо
+    taho:csensor;
+  public
+    // говорит о том что форма заполнена
+    init:boolean;
+    // массив положений лопаток
+    blades:array of single;
+    // массив растояний между лопатками. Первый элемент: лопатка1 - лопатка0,
+    // последний: 360-лопатка(n-1)+лопатка0,
+    // первое смещение
+    offset:array of single;
+    firstimpulse:single;
+  public
+    procedure Eval(taho:csensor; sensor:csensor; stage:cbldobj;showForm:boolean);
+    constructor create;
+  protected
+    procedure setBladeNumber(count:integer);
+    function getBladeNumber:integer;
+  public
+    procedure PrepareBladePos(offset:array of single);
+    procedure PrepareOffsetsFromBladePos(BladePos:array of single);
+    property bladeCount:integer read getBladeNumber write setBladeNumber;
+  end;
+
+implementation
+uses uBldMath, ushapealg, ubaseBldAlg, ustage, uStageShapeForm, controls;
+
+constructor cShape.create;
+begin
+  init:=false;
+end;
+
+procedure cShape.PrepareOffsetsFromBladePos(BladePos:array of single);
+var
+  I, bladecount: Integer;
+  p:single;
+begin
+  bladecount:=length(BladePos);
+  setlength(offset, bladecount);
+  for I := 0 to bladecount - 2 do
+  begin
+    offset[i]:=bladepos[i+1]-bladepos[i];
+  end;
+  offset[bladecount - 1]:=360-bladepos[bladecount - 1]+bladepos[0];
+end;
+
+procedure cShape.PrepareBladePos(offset:array of single);
+var
+  I, bladecount: Integer;
+  p:single;
+begin
+  bladecount:=length(offset)+1;
+  setlength(blades, bladecount);
+  p:=0;
+  for I := 0 to bladecount - 2 do
+  begin
+    blades[i]:=offset[i] + p;
+    p:=blades[i];
+  end;
+end;
+
+procedure cShape.setBladeNumber(count:integer);
+begin
+  setlength(offset,count);
+  setlength(blades,count);
+end;
+
+function cShape.getBladeNumber:integer;
+begin
+  result:=length(blades);
+end;
+
+procedure cShape.Eval(taho:csensor; Sensor:cSensor; stage:cbldobj;showForm:boolean);
+var
+  alg:cshapealg;
+  opts:cBaseOpts;
+  slist:cAlgsensorList;
+begin
+  if sensor=nil then Exit;
+  alg:=cshapealg.create;
+  opts:=cBaseOpts.Create;
+  opts.showFrm:=showForm;
+  opts.eng:=taho.eng;
+  opts.stage:=cstage(stage);
+  opts.useNearest:=false;
+  opts.evalSkipBladesInTurn:=false;
+  slist:=cAlgsensorList.create;
+  slist.destroydata:=false;
+  slist.add(sensor);
+  if StageShapeForm.ShowModal(taho,slist,opts) = mrok then
+  begin
+    alg.apply(taho, slist, opts);
+  end;
+  slist.destroy;
+  alg.destroy;
+  opts.Destroy;
+  init:=true;
+end;
+
+end.

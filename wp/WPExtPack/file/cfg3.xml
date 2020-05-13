@@ -1,0 +1,30 @@
+<?xml version=1.0 encoding=UTF-8?>
+<Root>
+  <WinПОС ResFolder=>
+    <cWPPage ObjType=cWPPage AutoCreate=false>
+      <cWPGraph ObjType=cWPGraph AutoCreate=false Min.X=0 Max.X=10 ZoomMin.X=0 ZoomMax.X=10 XAxisName=X szftempl= XLog=false XAutoScale=false>
+        <cWPAxis ObjType=cWPAxis AutoCreate=false MinY=0 MaxY=0 ZoomMinY=-1 ZoomMaxY=11 AxisName=Y szftempl= Color=0 LogScale=false AutoScale=false/>
+      </cWPGraph>
+    </cWPPage>
+    <cWPPage_001 ObjType=cWPPage AutoCreate=false>
+      <cWPGraph_001 ObjType=cWPGraph AutoCreate=false Min.X=-3.08348 Max.X=.440497 ZoomMin.X=56.1266 ZoomMax.X=340.327 XAxisName=X szftempl= XLog=false XAutoScale=false>
+        <cWPAxis_001 ObjType=cWPAxis AutoCreate=false MinY=0 MaxY=0 ZoomMinY=-3.08348 ZoomMaxY=.440497 AxisName=Y szftempl= Color=16711680 LogScale=false AutoScale=false>
+          <cWPLine ObjType=cWPLine AutoCreate=false SrcName=E:\mera\1203\280613\2013_05_28  Signals_0431\signal0431\signal0431.mera SrcSignal=3-_1 Color=16711680 LINE2BASE=false ONLYPOINTS=false VISIBLE=false HIST=false HISTTRANSP=false PARAM=false/>
+        </cWPAxis_001>
+      </cWPGraph_001>
+    </cWPPage_001>
+    <cWPPage_2 ObjType=cWPPage AutoCreate=false>
+      <cWPGraph_2 ObjType=cWPGraph AutoCreate=false Min.X=-193.478 Max.X=2116.26 ZoomMin.X=56.6065 ZoomMax.X=339.606 XAxisName=X szftempl= XLog=false XAutoScale=false>
+        <cWPAxis_2 ObjType=cWPAxis AutoCreate=false MinY=0 MaxY=0 ZoomMinY=-193.478 ZoomMaxY=2116.26 AxisName=Y szftempl= Color=16711680 LogScale=false AutoScale=false>
+          <cWPLine_001 ObjType=cWPLine AutoCreate=false SrcName=/Signals/Результаты/signal0431_Ae(f).mera SrcSignal=18-_1_Taho_f Color=16711680 LINE2BASE=false ONLYPOINTS=false VISIBLE=false HIST=false HISTTRANSP=false PARAM=false/>
+        </cWPAxis_2>
+      </cWPGraph_2>
+      <cWPGraph_3 ObjType=cWPGraph AutoCreate=false Min.X=-.0358418 Max.X=.394437 ZoomMin.X=56.6266 ZoomMax.X=339.627 XAxisName=X szftempl= XLog=false XAutoScale=false>
+        <cWPAxis_3 ObjType=cWPAxis AutoCreate=false MinY=0 MaxY=0 ZoomMinY=-.0358418 ZoomMaxY=.394437 AxisName=Y szftempl= Color=16711680 LogScale=false AutoScale=false>
+          <cWPLine_2 ObjType=cWPLine AutoCreate=false SrcName=/Signals/Результаты/signal0431_Ae(f).mera SrcSignal=3-_1_Ae(f) Color=16711680 LINE2BASE=false ONLYPOINTS=false VISIBLE=false HIST=false HISTTRANSP=false PARAM=false/>
+        </cWPAxis_3>
+      </cWPGraph_3>
+    </cWPPage_2>
+    <SRC SRC_1=E:\mera\1203\280613\2013_05_28  Signals_0431\signal0431\signal0431.mera SRC_2=signal0431_Ae(f).mera/>
+  </WinПОС>
+</Root>

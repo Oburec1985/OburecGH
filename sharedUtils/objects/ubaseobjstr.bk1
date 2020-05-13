@@ -1,0 +1,302 @@
+// потомок базового объекта, но индексирован строками
+unit uBaseObjStr;
+
+interface
+uses ubaseobj, controls, classes;
+
+type
+
+  // именованый список объктов
+  cBaseObjListStr = class(cBaseObjList)
+  protected
+    fdestroydata:boolean;
+  protected
+    procedure destroylist;override;
+    function getdestroydata:boolean;override;
+    procedure SetDestroyData(b:boolean);override;
+  public
+    childrens:tstringlist;
+  public
+    constructor create;override;
+    destructor destroy;override;
+    procedure renameKey(obj:cBaseObj;name:string);override;
+    procedure renameStringKey(name:string;newname:string);    
+    function getobj(name:string):cbaseobj;overload;override;
+    function getobj(i:integer):cbaseobj;overload;override;
+    procedure addobj(obj:cbaseobj);override;
+    procedure removeobj(obj:cbaseobj);overload;override;
+    procedure removeobj(i:integer);overload;override;
+    procedure sortByChildCount;
+    function find(name:string;var index:integer):boolean;overload;override;
+    function find(obj:cbaseobj;var index:integer):boolean;overload;override;
+    function count:integer;override;
+    procedure deletechild(obj:cbaseobj);override;
+  public
+    // новый метод
+    procedure sort;
+  end;
+
+  cbaseobjstr = class(cbaseobj)
+  public
+    constructor create;override;
+  // новые методы
+  protected
+    // Отсортировать по имени
+    procedure SortByName;
+  protected
+    // Установка типа сортировки
+    procedure setsorted(value:integer);override;
+  end;
+
+  const
+    NameSort = 1;
+    ChildSort = 2;
+
+implementation{>>GpProfile U} uses GpProf; {GpProfile U>>}
+
+// Сортировать дочерние узлы по числу потомков
+// Возвращенное целое число имеет следующее значение :
+//   > 0 : (положительное) Item1 является меньше чем Item2
+//     0 : Item1 равно Item2
+//   <0 : (negative) больше чем item2
+function ChildCountComparator(p1,p2:pointer):integer;
+var
+  obj1, obj2:cBaseObj;
+begin{>>GpProfile} ProfilerEnterProc(1); try {GpProfile>>}
+  obj1 := cBaseObj(p1);
+  obj2 := cBaseObj(p2);
+  // Теперь сравнение строк
+  if obj1.ChildCount > obj2.ChildCount then
+    Result := 1
+  else
+    if obj1.ChildCount = obj2.ChildCount then
+      Result := 0
+    else
+      Result := -1;
+{>>GpProfile} finally ProfilerExitProc(1); end; {GpProfile>>}end;
+
+function StrListChildCountComparator(List: TStringList; Index1, Index2: Integer): Integer;
+var
+  obj1, obj2:cBaseObj;
+begin{>>GpProfile} ProfilerEnterProc(2); try {GpProfile>>}
+  obj1 := cBaseObj(list.Objects[index1]);
+  obj2 := cBaseObj(list.Objects[index2]);
+  // Теперь сравнение строк
+  if obj1.ChildCount > obj2.ChildCount then
+    Result := 1
+  else
+    if obj1.ChildCount = obj2.ChildCount then
+      Result := 0
+    else
+      Result := -1;
+{>>GpProfile} finally ProfilerExitProc(2); end; {GpProfile>>}end;
+
+
+constructor cBaseObjStr.create;
+begin{>>GpProfile} ProfilerEnterProc(3); try {GpProfile>>}
+  inherited;
+  fname:=classname;
+  imageindex:=c_baseobj_img;
+  childrens:=cBaseObjListStr.create;
+{>>GpProfile} finally ProfilerExitProc(3); end; {GpProfile>>}end;
+
+procedure cBaseObjStr.setsorted(value:integer);
+begin{>>GpProfile} ProfilerEnterProc(4); try {GpProfile>>}
+  fsort:=value;
+  case fsort of
+    NameSort: SortByName;
+    ChildSort: cBaseObjListStr(childrens).sortByChildCount;
+  end;
+{>>GpProfile} finally ProfilerExitProc(4); end; {GpProfile>>}end;
+
+procedure cBaseObjStr.SortByName;
+begin{>>GpProfile} ProfilerEnterProc(5); try {GpProfile>>}
+  cBaseObjListStr(childrens).sort;
+{>>GpProfile} finally ProfilerExitProc(5); end; {GpProfile>>}end;
+
+constructor cBaseObjListStr.create;
+begin{>>GpProfile} ProfilerEnterProc(6); try {GpProfile>>}
+  inherited;
+  childrens:=tstringlist.create;
+  childrens.Sorted:=true;
+{>>GpProfile} finally ProfilerExitProc(6); end; {GpProfile>>}end;
+
+procedure cBaseObjListStr.destroylist;
+begin{>>GpProfile} ProfilerEnterProc(7); try {GpProfile>>}
+  childrens.Destroy;
+  childrens:=nil;
+{>>GpProfile} finally ProfilerExitProc(7); end; {GpProfile>>}end;
+
+destructor cBaseObjListStr.destroy;
+begin{>>GpProfile} ProfilerEnterProc(8); try {GpProfile>>}
+  inherited;
+{>>GpProfile} finally ProfilerExitProc(8); end; {GpProfile>>}end;
+
+procedure cBaseObjListStr.addobj(obj:cbaseobj);
+begin{>>GpProfile} ProfilerEnterProc(9); try {GpProfile>>}
+  childrens.addobject(obj.name,obj);
+{>>GpProfile} finally ProfilerExitProc(9); end; {GpProfile>>}end;
+
+procedure cBaseObjListStr.removeobj(obj:cbaseobj);
+var i:integer;
+begin{>>GpProfile} ProfilerEnterProc(10); try {GpProfile>>}
+  if childrens.sorted then
+  begin
+    if childrens.find(obj.name,i) then
+    begin
+      if obj=getobj(i) then
+        childrens.delete(i);
+    end;
+  end
+  else
+  begin
+    for I := 0 to childrens.count - 1 do
+    begin
+      if getobj(i)=obj then
+        childrens.delete(i)
+    end;
+  end;
+{>>GpProfile} finally ProfilerExitProc(10); end; {GpProfile>>}end;
+
+procedure cBaseObjListStr.removeobj(i:integer);
+begin{>>GpProfile} ProfilerEnterProc(11); try {GpProfile>>}
+  if i<count then
+  begin
+    childrens.Delete(i);
+  end;
+{>>GpProfile} finally ProfilerExitProc(11); end; {GpProfile>>}end;
+
+procedure cBaseObjListStr.renameStringKey(name:string;newname:string);
+var
+  index:integer;
+  obj:tobject;
+begin{>>GpProfile} ProfilerEnterProc(12); try {GpProfile>>}
+  if childrens.Find(name,index) then
+  begin
+    if index<childrens.Count then
+    begin
+      obj:=childrens.Objects[index];
+    end
+    else
+      obj:=nil;
+    childrens.Delete(index);
+    if obj<>nil then
+    begin
+      childrens.addobject(newname,obj);
+    end
+    else
+    begin
+      childrens.Add(newname);
+    end;
+  end;
+{>>GpProfile} finally ProfilerExitProc(12); end; {GpProfile>>}end;
+
+procedure cBaseObjListStr.renameKey(obj:cBaseObj;name:string);
+var index:integer;
+begin{>>GpProfile} ProfilerEnterProc(13); try {GpProfile>>}
+  if childrens.Find(obj.name,index) then
+  begin
+    if obj=childrens.Objects[index] then
+    begin
+      childrens.Delete(index);
+      childrens.addobject(name,obj);
+    end;
+  end;
+{>>GpProfile} finally ProfilerExitProc(13); end; {GpProfile>>}end;
+
+function cBaseObjListStr.find(name:string;var index:integer):boolean;
+var i:integer;
+    obj:cBaseObj;
+begin{>>GpProfile} ProfilerEnterProc(14); try {GpProfile>>}
+  if childrens.sorted then // Если включена сортировка по именам
+  begin
+    result:= childrens.Find(name,index);
+  end
+  else // Если сортировки по именам нет
+  begin
+    for I := 0 to count - 1 do
+    begin
+      obj:=cbaseobj(childrens.objects[i]);
+      if obj.name=name then
+      begin
+        index:=i;
+        result:=true;
+        exit;
+      end;
+    end;
+  end;
+{>>GpProfile} finally ProfilerExitProc(14); end; {GpProfile>>}end;
+
+function cBaseObjListStr.find(obj:cbaseobj;var index:integer):boolean;
+begin{>>GpProfile} ProfilerEnterProc(15); try {GpProfile>>}
+  result:=find(obj.name,index);
+{>>GpProfile} finally ProfilerExitProc(15); end; {GpProfile>>}end;
+
+
+function cBaseObjListStr.getobj(name:string):cbaseobj;
+var index:integer;
+    obj:cBaseObj;
+begin{>>GpProfile} ProfilerEnterProc(16); try {GpProfile>>}
+  if not find(name,index) then
+  begin
+    result:=nil;
+  end
+  else
+  begin
+    result:=getobj(index);
+  end;
+{>>GpProfile} finally ProfilerExitProc(16); end; {GpProfile>>}end;
+
+function cBaseObjListStr.getobj(i:integer):cbaseobj;
+begin{>>GpProfile} ProfilerEnterProc(17); try {GpProfile>>}
+  if i<count then
+  begin
+    result:=cbaseobj(childrens.objects[i])
+  end
+  else
+    result:=nil;
+{>>GpProfile} finally ProfilerExitProc(17); end; {GpProfile>>}end;
+
+procedure cBaseObjListStr.sort;
+begin{>>GpProfile} ProfilerEnterProc(18); try {GpProfile>>}
+  childrens.Sort;
+{>>GpProfile} finally ProfilerExitProc(18); end; {GpProfile>>}end;
+
+procedure cBaseObjListStr.sortByChildCount;
+begin{>>GpProfile} ProfilerEnterProc(19); try {GpProfile>>}
+  childrens.CustomSort(StrListChildCountComparator);
+{>>GpProfile} finally ProfilerExitProc(19); end; {GpProfile>>}end;
+
+function cBaseObjListStr.count:integer;
+begin{>>GpProfile} ProfilerEnterProc(20); try {GpProfile>>}
+  if childrens<>nil then
+    result:=childrens.Count
+  else
+    result:=0;
+{>>GpProfile} finally ProfilerExitProc(20); end; {GpProfile>>}end;
+
+procedure cBaseObjListStr.deletechild(obj:cbaseobj);
+var
+  i:integer;
+  lobj:cbaseobj;
+begin{>>GpProfile} ProfilerEnterProc(21); try {GpProfile>>}
+  if find(obj.name,i) then
+  begin
+    if lobj=obj then
+    begin
+      deletechild(i);
+    end;
+  end;
+{>>GpProfile} finally ProfilerExitProc(21); end; {GpProfile>>}end;
+
+function cBaseObjListStr.getdestroydata:boolean;
+begin{>>GpProfile} ProfilerEnterProc(22); try {GpProfile>>}
+  result:=fdestroydata;
+{>>GpProfile} finally ProfilerExitProc(22); end; {GpProfile>>}end;
+
+procedure cBaseObjListStr.SetDestroyData(b:boolean);
+begin{>>GpProfile} ProfilerEnterProc(23); try {GpProfile>>}
+  fdestroydata:=b;
+{>>GpProfile} finally ProfilerExitProc(23); end; {GpProfile>>}end;
+
+end.

@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2008.10.03 15:19:14.468.pas,C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон\Spin.pas=</Transaction>
+    <Transaction>2008.10.03 15:24:26.859.pas,C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон\uSpin.pas=</Transaction>
+    <Transaction>2009.01.22 18:33:49.375.pas,C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон\Spin.pas=C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон\uSpin.pas</Transaction>
+    <Transaction>2009.02.24 18:06:47.125.pas,C:\Mera\Lopatki_BDS\Проект компонента GlChart\компон\uSpin.pas=</Transaction>
+    <Transaction>2009.08.15 01:01:32.203.pas,D:\Oburec\project\Delphi\projects2009\Lopatki_BDS\Проект компонента GlChart\компон\GlChart\sdl\DeCAL.pas=</Transaction>
+    <Transaction>2009.08.15 01:01:32.250.pas,D:\Oburec\project\Delphi\projects2009\Lopatki_BDS\Проект компонента GlChart\компон\GlChart\sdl\mwFixedRecSort.pas=</Transaction>
+    <Transaction>2009.08.15 01:01:36.640.pas,D:\Oburec\project\Delphi\projects2009\Lopatki_BDS\Проект компонента GlChart\компон\GlChart\uOglChart.pas=</Transaction>
+    <Transaction>2009.08.15 01:01:40.453.pas,D:\Oburec\project\Delphi\projects2009\Lopatki_BDS\Проект компонента GlChart\компон\GlChart\uOGLProcess.pas=</Transaction>
+    <Transaction>2009.09.19 21:13:17.375.pas,D:\Oburec\project\Delphi\projects2009\sharedUtils\компоненты\dcl_dpk\Unit1.pas=D:\Oburec\project\Delphi\projects2009\sharedUtils\компоненты\dcl_dpk\uAlignEdit.pas</Transaction>
+  </Transactions>
+</BorlandProject>

@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2011.03.05 00:09:38.625.groupproj,C:\Documents and Settings\Oburec\Мои документы\RAD Studio\Projects\ProjectGroup1.groupproj=D:\oburec\project2010\Delphi\projects2010\SignalGenerator\SignalsGroup.groupproj</Transaction>
+  </Transactions>
+	<Default.Personality>
+		<Projects ActiveProject="PrSinalsGenerator.exe"/>
+	</Default.Personality>
+</BorlandProject>

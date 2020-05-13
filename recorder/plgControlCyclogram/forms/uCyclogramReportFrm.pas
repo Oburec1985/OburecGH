@@ -1,0 +1,252 @@
+unit uCyclogramReportFrm;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ImgList, VirtualTrees,  StdCtrls, ExtCtrls,
+  ubaseobj, uComponentServises, uVTServices,
+  uCommonMath, ComCtrls, uBtnListView, uPage, uCommonTypes,
+  uControlObj, uBaseObjService, uEventTypes,
+  PluginClass, recorder, uRcCtrls, uRCFunc, uRvclService, tags,
+  uRTrig, uTagsListFrame, utrend, uaxis, uPoint,
+  uChart;
+
+type
+  TCyclogramReportFrm = class(TForm)
+    LeftPan: TPanel;
+    CyclogramGB: TGroupBox;
+    TrigsGB: TGroupBox;
+    ProgramTV: TVTree;
+    TrigTV: TVTree;
+    ImageList16: TImageList;
+    TrigsImages16: TImageList;
+    cChart1: cChart;
+    ImageList_16: TImageList;
+    procedure FormShow(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+  private
+    eventsCreated:boolean;
+    CfgChanged:boolean;
+  private
+    procedure createEvents;
+    procedure destroyEvents;
+    procedure OnChangeConfig(sender:tobject);
+    procedure ShowProgram(p:cprogramobj);
+    function showControlInChart(con:ccontrolobj; p:cprogramObj):ctrend;
+    procedure addpoint(tr:ctrend;t:ctask);
+  private
+    procedure ShowTrigs;
+  public
+    procedure ShowConfig;
+  end;
+
+var
+  CyclogramReportFrm: TCyclogramReportFrm;
+
+implementation
+
+{$R *.dfm}
+
+{ TCyclogramReportFrm }
+
+procedure TCyclogramReportFrm.addpoint(tr: ctrend; t: ctask);
+var
+  prev:cTask;
+  prevval:double;
+  bp:cBeziePoint;
+begin
+  case t.TaskType of
+    uControlObj.ptNullPoly:
+    begin
+      bp:=cBeziePoint.create;
+      case t.TaskType of
+        uControlObj.ptNullPoly: bp.PType:=ptNullPoly;
+        uControlObj.ptLinePoly: bp.PType:=ptLinePoly;
+        uControlObj.ptCubePoly: bp.PType:=ptCubePoly;
+      end;
+      bp.point:=p2(t.mode.gettimeinterval.x,t.task);
+      tr.AddPoint(bp);
+    end;
+    uControlObj.ptLinePoly:
+    begin
+      bp:=cBeziePoint.create;
+      case t.TaskType of
+        uControlObj.ptNullPoly: bp.PType:=ptNullPoly;
+        uControlObj.ptLinePoly: bp.PType:=ptLinePoly;
+        uControlObj.ptCubePoly: bp.PType:=ptCubePoly;
+      end;
+      bp.point:=p2(t.mode.gettimeinterval.x,t.task);
+      bp.left:=t.leftTang;
+      bp.right:=t.rightTang;
+      tr.AddPoint(bp);
+    end;
+    uControlObj.ptCubePoly:
+    begin
+      bp:=cBeziePoint.create;
+      case t.TaskType of
+        uControlObj.ptNullPoly: bp.PType:=ptNullPoly;
+        uControlObj.ptLinePoly: bp.PType:=ptLinePoly;
+        uControlObj.ptCubePoly: bp.PType:=ptCubePoly;
+      end;
+      bp.point:=p2(t.mode.gettimeinterval.x,t.task);
+      bp.left:=t.leftTang;
+      bp.right:=t.rightTang;
+      tr.AddPoint(bp);
+    end;
+  end;
+end;
+
+function TCyclogramReportFrm.showControlInChart(con:ccontrolobj; p:cprogramObj):ctrend;
+var
+  I: Integer;
+  m:cmodeobj;
+  t:ctask;
+  tr:ctrend;
+  page:cpage;
+  ax:caxis;
+begin
+  tr:=nil;
+  ax:=nil;
+  if p=nil then
+    exit;
+  page:=cpage(cChart1.activePage);
+  if page<>nil then
+  begin
+    page.Caption:=p.name;
+  end
+  else
+  begin
+    exit;
+  end;
+  for I := 0 to p.ModeCount - 1 do
+  begin
+    m:=p.getMode(i);
+    t:=m.gettask(con.name);
+    if t<>nil then
+    begin
+      if tr=nil then
+      begin
+        page:=cpage(cChart1.activePage);
+        if page<>nil then
+        begin
+          ax:=page.getaxis(con.units);
+          if ax=nil then
+          begin
+            ax:=page.Newaxis;
+            ax.name:=con.units;
+            ax.m_YUnits:=ax.name;
+            //page.addaxis(ax);
+          end;
+          tr:=ax.AddTrend;
+          // свойство означает возможность выбрать объект по клику мышкой
+          tr.enabled:=true;
+          tr.color:= ColorArray[ax.childcount-1];
+          tr.name:=con.name;
+          tr.m_userdata:=con;
+          tr.locked:=true;
+          tr.selectable:=false;
+        end
+        else
+        begin
+          exit;
+        end;
+      end;
+      addpoint(tr,t);
+    end;
+  end;
+  if ax<>nil then
+    page.Normalise(ax);
+end;
+
+procedure TCyclogramReportFrm.ShowProgram(p: cprogramobj);
+var
+  I: Integer;
+  con:ccontrolobj;
+begin
+  if cchart1.initGl then
+  begin
+    cpage(cchart1.activePage).clear;
+    for I := 0 to p.ControlCount - 1 do
+    begin
+      con:=p.getOwnControl(i);
+      showControlInChart(con, p);
+    end;
+  end;
+end;
+
+procedure TCyclogramReportFrm.ShowTrigs;
+var
+  I: Integer;
+  t: cBaseTrig;
+begin
+  TrigTV.Clear;
+  for I := 0 to g_conmng.TrigCount - 1 do
+  begin
+    t := g_conmng.getTrig(I);
+    if t.Parent = nil then
+    begin
+      if t.m_actions <> nil then
+      begin
+        ShowBaseObjectInVTreeView(TrigTV, t, nil);
+      end;
+    end;
+  end;
+end;
+
+procedure TCyclogramReportFrm.createEvents;
+begin
+  if g_conmng<>nil then
+  begin
+    if not eventsCreated then
+    begin
+      eventsCreated:=true;
+      g_conmng.Events.AddEvent('TCyclogramReportFrm_UpdateCfg',
+                      E_OnEngUpdateList+E_OnChangeCfg,
+                      OnChangeConfig);
+    end;
+  end;
+end;
+
+procedure TCyclogramReportFrm.destroyEvents;
+begin
+  if g_conmng<>nil then
+    g_conmng.Events.removeEvent(OnChangeConfig, E_OnEngUpdateList+E_OnChangeCfg);
+end;
+
+procedure TCyclogramReportFrm.FormCreate(Sender: TObject);
+begin
+  eventsCreated:=false;
+  if g_conmng.configChanged then
+    CfgChanged:=true;
+end;
+
+procedure TCyclogramReportFrm.FormShow(Sender: TObject);
+begin
+  if CfgChanged then
+  begin
+    ShowConfig;
+    CfgChanged:=false;
+  end;
+end;
+
+procedure TCyclogramReportFrm.OnChangeConfig(sender: tobject);
+begin
+
+end;
+
+procedure TCyclogramReportFrm.ShowConfig;
+var
+  p:cprogramobj;
+begin
+  showInVTreeView(ProgramTV, g_conmng.programs, ImageList16);
+  ShowTrigs;
+  p:=g_conmng.getProgram(0);
+  if p<>nil then
+  begin
+    ShowProgram(p);
+  end;
+  CfgChanged:=false;
+end;
+
+end.

@@ -1,0 +1,11 @@
+[Mera]
+Time=21.03.2011 21:16:07
+[shock]
+Dsc=F=10000/ Длительность=0,005/ A=10/ T0=0,2/ T1=0,5
+Freq=10000
+XUnits=
+YUnits=
+XFormat=single
+YFormat=single
+k0=0
+k1=1

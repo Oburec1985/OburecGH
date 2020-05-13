@@ -1,0 +1,20 @@
+[Mera]
+Test=
+Info=
+Time=15.06.2010 20:42:19
+[17D3_001_Restore]
+Freq=1000
+XUnits=
+YUnits=
+XFormat=single
+YFormat=single
+k0=0
+k1=1
+[cTrend]
+Freq=1000
+XUnits=
+YUnits=
+XFormat=single
+YFormat=single
+k0=0
+k1=1

@@ -1,0 +1,57 @@
+package RC_lib;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  vcl,
+  VclSmp,
+  dcl_own,
+  GlPackage,
+  ComponentsLib;
+
+contains
+  uRcCtrls in 'uRcCtrls.pas',
+  uRecorderEvents in '..\uRecorderEvents.pas',
+  uRvclService in '..\uRvclService.pas',
+  blaccess in '..\interfaces\blaccess.pas',
+  CFREG in '..\interfaces\CFREG.PAS',
+  DevAPI in '..\interfaces\DevAPI.pas',
+  device in '..\interfaces\device.pas',
+  journal in '..\interfaces\journal.pas',
+  modules in '..\interfaces\modules.pas',
+  plugin in '..\interfaces\plugin.pas',
+  rcPlugin in '..\interfaces\rcPlugin.pas',
+  recorder in '..\interfaces\recorder.pas',
+  signal in '..\interfaces\signal.pas',
+  tags in '..\interfaces\tags.pas',
+  transf in '..\interfaces\transf.pas',
+  transformers in '..\interfaces\transformers.pas',
+  waitwnd in '..\interfaces\waitwnd.pas',
+  uRCFunc in '..\uRCFunc.pas',
+  iplgmngr in '..\interfaces\iplgmngr.pas',
+  scales in '..\interfaces\scales.pas';
+
+end.

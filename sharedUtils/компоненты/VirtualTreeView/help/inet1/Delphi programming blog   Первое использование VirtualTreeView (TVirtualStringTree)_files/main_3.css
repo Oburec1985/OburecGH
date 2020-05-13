@@ -1,0 +1,135 @@
+body { color:#444; background:url(/img/colors/3/body_bg.png) left top repeat #4E5963;}
+a {color:#be261e; text-decoration:none}
+
+.container_12 { background-color:#fff;}
+
+.path em { color:#ADADAD}
+.path a { color:#ADADAD;}
+
+h1.title { color:#8A8C50}
+
+.toplinks span { color: #ADADAD} 
+.toplinks a { color: #ADADAD} 
+
+.headerTable { background-color:#fff;}
+
+.mainMenu,
+.mainMenu li ul { background: #ECEAC1}
+.mainMenu li ul { border-color:#B0B366}
+
+.mainMenu li a:hover,
+.mainMenu li ul li a:hover { background: #DEDCB6}
+
+.mainMenu a { color: #8A8C50;}
+.mainMenu a.current { background-color:#fff !important; color:#8A8C50 !important; 
+		border-right : solid 1px #ADADAD;
+		border-left : solid 1px #ADADAD}
+
+.side div.delim { border-color:#B0B366;}
+
+.rightMenu .item,
+.rightMenu .itemcur { border-color:#b0b366 }
+.rightMenu .item a { color:#8a8c50;}
+.rightMenu .itemcur a { color:#8a8c50; background-color:#eceac1;}
+.rightMenu .item a:hover { color:#989898;}
+.rightMenu .subitem a { color:#8a8c50;}
+.rightMenu .subitem a.cur { color:#8a8c50;}
+.rightMenu .subitem a:hover { color:#989898;}
+
+.mainMenuColumn,
+.mainMenuColumn li { border-color:#D9D9D9}
+.mainMenuColumn li ul { background: #ECEAC1; border-color:#8A8C50}
+.mainMenuColumn a { color: #8A8C50;}
+
+.mainMenuColumn a.current { background: #ECEAC1;}
+.mainMenuColumn li a:hover,
+.mainMenuColumn li ul li a:hover { background: #DEDCB6}
+
+.extraMenu { border-color:#B0B366; }
+.extraMenu h4 { color:#8A8C50}
+
+.newsPrew { background-color:#F7F6DD; border-color:#B0B366;}
+.newsPrew .item a {color:#444;}
+.newsPrew .date { color:#C4B9A3;}
+
+.firmattributes { border-color:#B0B366;}
+
+.noticeBlock div.title,
+.noticeBlock div.title a { color:#8A8C50;}
+
+
+.searchPrew { border-color:#B0B366; background-color:#F7F6DD;}
+.searchPrew input { background-color:#FFFFFF;}
+.searchPrew input { color:#666; border-color:#989898;}
+.searchPrew input.textBlack { color:#000000;}
+.searchPrew input.textGray { color:#666}
+
+
+.filesList h4 { color:#8A8C50;}
+.filesList .item { color:#9C9FA6; background-image:url(/img/colors/3/file_icon.gif); }
+
+.pagelist div.title { color:#AEAEAE;}
+.pagelist div.pages span { color:#fff; background-color:#AEAEAE;}
+
+.news div.image { border-color:#ccc;}
+.news div.date { color:#989898;}
+
+.photogal .item img { background-color:#eee;}
+
+.footer { background-color:#ECEAC1; border-color:#B0B366;}
+#footer a { color:#8A8C50}
+
+.form_plain .form_err_item { color:#FF0000;}
+.form_plain .form_err .form_field_title { color: #FF0000;}
+.form_plain .form_errors { color:#FF0000;}
+.form_plain .form_field_required {color:#FF0000;}
+
+.pagelist,
+.commonList div.image,
+.viewTable,
+.viewTable div.image,
+.viewGallery,
+.viewGallery div.image { border-color:#ccc;}
+
+.switchers { color:#444}
+.switchers strong { background-color:#ADADAD; color:#fff }
+
+
+.side div.textblock h4.title { color:#8A8C50}
+
+.section table.styled th,
+.section table.styled td { border-color:#ccc}
+.section table.styled th { background-color:#eee}
+.section table.styled tr.over td { background-color:#eee}
+
+.section table.price caption { background-color:#eee}
+
+.exRubricList .cur { background:#f1f1f2}
+.exSelectedList {background:#f1f1f2}
+
+.unfoldedMenu td { border-color:#DEDCB6}
+.unfoldedMenu div a { color:#8A8C50}
+.unfoldedMenu ul li.current { background: #ECEAC1;}
+.unfoldedMenu ul li.current a { text-decoration:none}
+body.theme_default9 .toplinks span { color:#444}
+body.theme_default9 .toplinks a { color:#B0B366}
+
+/* гостевая книга */
+.gbAddMessage div.link,
+.gbAddMessage div.right { color:#8A8C50; background-image:url(/img/colors/3/gb_add_bg.png)}
+.gbAddMessage div.link a { color:#8A8C50;}
+
+.gbMessages div.date,
+.gbMessages div.sender { color:#727272;}
+.gbMessages div.message { background:#F7F6DD; border-top-color:#B0B366;}
+.gbMessages div.answer { background-image:url(/img/colors/3/gb_answer.gif);}
+.gbMessages div.answer div.message { border-top-color:#B0B366; background:#EDECDD;}
+/* гостевая книга */
+
+
+
+/* календарь */
+.switcher { border-color:#F7F6DD;}
+.switcher li.active { background-image:url(/img/colors/3/switcher.gif); background-color:#eceac1;}
+.calendarItems div.date { color:#989898}
+/* календарь */

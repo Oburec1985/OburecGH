@@ -1,0 +1,159 @@
+unit uTagsCfgFrame;
+
+interface
+
+uses
+  Windows, SysUtils, Classes, Controls, Forms,
+  StdCtrls, ComCtrls, uBtnListView, ExtCtrls, ImgList,
+  uTagPropertiesFrame, ubldtimeproc, ToolWin, uComponentServises, utag,
+  ubldengEventTypes, uBaseBldAlg, Dialogs, uBaseObj;
+
+type
+  TTagsCfgFrame = class(TFrame)
+    ControlGB: TGroupBox;
+    TagsLV: TBtnListView;
+    Splitter1: TSplitter;
+    CancelBtn: TButton;
+    ApplyBtn: TButton;
+    TagPropertiesGB: TGroupBox;
+    Splitter2: TSplitter;
+    TagGB: TGroupBox;
+    TagPropertiesFrame1: TTagPropertiesFrame;
+    TagsMngGB: TGroupBox;
+    LogTagsCheckBox: TCheckBox;
+    TagsBaseEdit: TEdit;
+    TagNameLabel: TLabel;
+    SelectTagsBaseBtn: TButton;
+    OpenDialog1: TOpenDialog;
+    procedure TagsLVChange(Sender: TObject; Item: TListItem;
+      Change: TItemChange);
+    procedure TagPropertiesFrame1DrawObjSelectBtnClick(Sender: TObject);
+    procedure ApplyBtnClick(Sender: TObject);
+    procedure SelectTagsBaseBtnClick(Sender: TObject);
+  private
+    tproc:cbldtimeproc;
+  protected
+    procedure OnChangeTagList(sender:tobject);
+  private
+    procedure ShowTags;
+    procedure TagListLVChange;
+    procedure changeitem(li:tlistitem;t:cbasetag);
+  public
+    procedure Linc(p_timeproc:cBldTimeProc);
+    constructor create(aowner:tcomponent);override;
+  end;
+
+implementation
+
+{$R *.dfm}
+
+procedure TTagsCfgFrame.TagListLVChange;
+begin
+  LVChange(TagsLV);
+end;
+
+procedure TTagsCfgFrame.TagPropertiesFrame1DrawObjSelectBtnClick(
+  Sender: TObject);
+begin
+  TagPropertiesFrame1.DrawObjSelectBtnClick(Sender);
+
+end;
+
+procedure TTagsCfgFrame.TagsLVChange(Sender: TObject; Item: TListItem;
+  Change: TItemChange);
+var
+  b:boolean;
+begin
+  if item<>nil then
+  begin
+    b:=(tobject(item.data) is cbasetag);
+    if b then
+    begin
+      tagpropertiesframe1.setTag(cbasetag(item.Data));
+    end;
+  end;
+end;
+
+procedure TTagsCfgFrame.SelectTagsBaseBtnClick(Sender: TObject);
+begin
+  if opendialog1.Execute then
+  begin
+    TagsBaseEdit.Text:=opendialog1.FileName;
+  end;
+end;
+
+procedure TTagsCfgFrame.ShowTags;
+var
+  I: Integer;
+  li:tListItem;
+  tag:cbasetag;
+begin
+  TagsLV.Clear;
+  for I := 0 to tproc.fTagMng.count - 1 do
+  begin
+    li:=TagsLV.Items.Add;
+    tag:=tproc.fTagMng.gettag(i);
+    changeitem(li,tag)
+  end;
+  TagListLVChange;
+end;
+
+procedure TTagsCfgFrame.ApplyBtnClick(Sender: TObject);
+begin
+  tproc.fTagMng.TagsFolder:=TagsBaseEdit.Text;
+  tproc.fTagMng.logtags:=LogTagsCheckBox.checked;
+end;
+
+procedure TTagsCfgFrame.changeitem(li:tlistitem;t:cbasetag);
+begin
+  li.Data:=t;
+  li.Checked:=t.active;
+  TagsLV.SetSubItemByColumnName(c_Num,inttostr(li.Index),li);
+  TagsLV.SetSubItemByColumnName(c_NameCol,t.name,li);
+  TagsLV.SetSubItemByColumnName(c_TypeCol,t.typestring,li);
+  TagsLV.SetSubItemByColumnName(c_DscCol,t.dsc,li);
+  if t.source<>nil then
+  begin
+    if t.source is cBaseObj then
+      TagsLV.SetSubItemByColumnName(c_srcCol,cBaseObj(t.source).ClassName,li);
+  end;
+  if t.DrawObj<>nil then
+    TagsLV.SetSubItemByColumnName(c_DrawCol,t.DrawObj.name,li)
+end;
+
+procedure TTagsCfgFrame.OnChangeTagList(sender:tobject);
+begin
+  ShowTags;
+  TagsBaseEdit.Text:=tproc.fTagMng.TagsFolder;
+  LogTagsCheckBox.checked:=tproc.fTagMng.logtags;
+end;
+
+procedure TTagsCfgFrame.Linc(p_timeproc:cBldTimeProc);
+begin
+  tproc:=p_timeproc;
+  TagPropertiesFrame1.linc(tproc);
+  tproc.eng.Events.AddEvent('TTagsCfgFrame OnChangeTagList',
+                             e_OnAddRemoveTag,OnChangeTagList);
+  ShowTags;
+end;
+
+constructor TTagsCfgFrame.create(aowner:tcomponent);
+var
+  col:tListColumn;
+begin
+  inherited;
+  col:=tagsLV.Columns.Add;
+  col.Caption:=c_Num;
+  col:=tagsLV.Columns.Add;
+  col.Caption:=c_NameCol;
+  col:=tagsLV.Columns.Add;
+  col.Caption:=c_TypeCol;  
+  col:=tagsLV.Columns.Add;
+  col.Caption:=c_DscCol;
+  col:=tagsLV.Columns.Add;
+  col.Caption:=c_SrcCol;
+  col:=tagsLV.Columns.Add;
+  col.Caption:=c_DrawCol;
+end;
+
+end.

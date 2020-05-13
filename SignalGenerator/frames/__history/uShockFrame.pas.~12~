@@ -1,0 +1,61 @@
+unit uShockFrame;
+
+interface
+
+uses
+  Windows, Forms,  StdCtrls, DCL_MYOWN, uSignal, Controls, Classes, math, uCommonMath;
+
+type
+  TShockFrame = class(TFrame)
+    LengthLabel: TLabel;
+    LengthFE: TFloatEdit;
+    ALabel: TLabel;
+    AFE: TFloatEdit;
+    FreqLabel: TLabel;
+    FreqFE: TFloatEdit;
+    BeforeShockLabel: TLabel;
+    BeforeShockFE: TFloatEdit;
+    AfterShockLabel: TLabel;
+    AfterShockFE: TFloatEdit;
+    DscLabel: TLabel;
+    DscEdit: TEdit;
+  private
+    function createDsc:string;
+  public
+    procedure CreateSignal(s:csignal);
+  end;
+
+implementation
+
+{$R *.dfm}
+function TShockFrame.createDsc:string;
+begin
+  result:='F='+formatstr(FreqFE.FloatNum,3)+'/ Длительность=' +formatstr(LengthFE.FloatNum,3)+
+  +'/ A='+formatstr(AFE.FloatNum,3)+'/ T0='+formatstr(BeforeShockFE.FloatNum,3)+
+  '/ T1='+formatstr(AfterShockFE.FloatNum,3);
+  dscEdit.text:=result;
+end;
+
+
+procedure TShockFrame.CreateSignal(s:csignal);
+var
+  i:integer;
+  // текущее время
+  t,
+  // приращение времени при данной частоте дискретизации
+  dt,
+  pi2
+  :single;
+begin
+  s.dsc:=s.dsc+createDsc;
+  dt:=s.getdt;
+  // удвоенное число pi
+  pi2:=2*pi;
+  t:=0;
+  while t<BeforeShockFE.FloatNum do
+  begin
+
+  end;
+end;
+
+end.

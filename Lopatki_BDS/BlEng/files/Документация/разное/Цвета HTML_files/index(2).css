@@ -1,0 +1,90 @@
+#siteSub {
+	DISPLAY: inline; FONT-WEIGHT: normal; FONT-SIZE: 92%
+}
+#toc {
+	MARGIN-TOP: 0.5em
+}
+#ca-edit A {
+	FONT-WEIGHT: bold
+}
+#content {
+	BACKGROUND: #f8fcff
+}
+#p-cactions LI A {
+	BACKGROUND: #f8fcff
+}
+.ns-0 #content {
+	BACKGROUND-COLOR: white
+}
+.ns-100 #content {
+	BACKGROUND-COLOR: white
+}
+.ns-0 #p-cactions LI A {
+	BACKGROUND-COLOR: white
+}
+.ns-100 #p-cactions LI A {
+	BACKGROUND-COLOR: white
+}
+DIV.thumb {
+	BORDER-LEFT-COLOR: #f8fcff; BORDER-BOTTOM-COLOR: #f8fcff; BORDER-TOP-COLOR: #f8fcff; BORDER-RIGHT-COLOR: #f8fcff
+}
+.ns-0 DIV.thumb {
+	BORDER-LEFT-COLOR: white; BORDER-BOTTOM-COLOR: white; BORDER-TOP-COLOR: white; BORDER-RIGHT-COLOR: white
+}
+.ns-100 DIV.thumb {
+	BORDER-LEFT-COLOR: white; BORDER-BOTTOM-COLOR: white; BORDER-TOP-COLOR: white; BORDER-RIGHT-COLOR: white
+}
+BODY.ns--1 TABLE {
+	BACKGROUND: none transparent scroll repeat 0% 0%
+}
+FORM TABLE {
+	BACKGROUND: none transparent scroll repeat 0% 0%
+}
+BODY.page-Заглавная_страница #t-cite {
+	DISPLAY: none! important
+}
+BODY.page-Заглавная_страница #lastmod {
+	DISPLAY: none! important
+}
+BODY.page-Заглавная_страница #siteSub {
+	DISPLAY: none! important
+}
+BODY.page-Заглавная_страница #contentSub {
+	DISPLAY: none! important
+}
+BODY.page-Заглавная_страница #catlinks {
+	DISPLAY: none! important
+}
+BODY.page-Заглавная_страница H1.firstHeading {
+	DISPLAY: none! important
+}
+BODY.page-Портал_Заглавная_страница #t-cite {
+	DISPLAY: none! important
+}
+BODY.page-Портал_Заглавная_страница #lastmod {
+	DISPLAY: none! important
+}
+BODY.page-Портал_Заглавная_страница #siteSub {
+	DISPLAY: none! important
+}
+BODY.page-Портал_Заглавная_страница #contentSub {
+	DISPLAY: none! important
+}
+BODY.page-Портал_Заглавная_страница #catlinks {
+	DISPLAY: none! important
+}
+BODY.page-Портал_Заглавная_страница H1.firstHeading {
+	DISPLAY: none! important
+}
+#searchGoButton {
+	PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; PADDING-TOP: 0px
+}
+.portlet LI {
+	LIST-STYLE-IMAGE: url(http://upload.wikimedia.org/wikipedia/en/1/18/Monobook-bullet.png)
+}
+.floating_object {
+	Z-INDEX: 100; RIGHT: 10px; OVERFLOW: hidden; POSITION: absolute; TOP: 10px
+}
+.searchresults-hint {
+	RIGHT: 20px; POSITION: absolute; TOP: 50px
+}

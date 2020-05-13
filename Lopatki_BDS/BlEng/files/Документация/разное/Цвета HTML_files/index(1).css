@@ -1,0 +1,42 @@
+BODY.ns-0 .navbox {
+	DISPLAY: none
+}
+BODY.ns-0 .NavFrame {
+	DISPLAY: none
+}
+BODY.ns-0 .metadata {
+	DISPLAY: none
+}
+.dablink {
+	DISPLAY: none
+}
+#catlinks {
+	DISPLAY: none
+}
+.toccolours {
+	BORDER-RIGHT: #aaa 1px solid; BORDER-TOP: #aaa 1px solid; BORDER-LEFT: #aaa 1px solid; BORDER-BOTTOM: #aaa 1px solid
+}
+.collapse-refs-p {
+	DISPLAY: none
+}
+.reflist {
+	PADDING-RIGHT: 0px! important; PADDING-LEFT: 0px! important; PADDING-BOTTOM: 0px! important; MARGIN: 0px; OVERFLOW: visible! important; MAX-HEIGHT: none! important; PADDING-TOP: 0px! important; HEIGHT: auto! important
+}
+.reflist1 {
+	PADDING-RIGHT: 0px! important; PADDING-LEFT: 0px! important; PADDING-BOTTOM: 0px! important; MARGIN: 0px; OVERFLOW: visible! important; MAX-HEIGHT: none! important; PADDING-TOP: 0px! important; HEIGHT: auto! important
+}
+.reflist2 {
+	PADDING-RIGHT: 0px! important; PADDING-LEFT: 0px! important; PADDING-BOTTOM: 0px! important; MARGIN: 0px; OVERFLOW: visible! important; MAX-HEIGHT: none! important; PADDING-TOP: 0px! important; HEIGHT: auto! important
+}
+.reflist3 {
+	PADDING-RIGHT: 0px! important; PADDING-LEFT: 0px! important; PADDING-BOTTOM: 0px! important; MARGIN: 0px; OVERFLOW: visible! important; MAX-HEIGHT: none! important; PADDING-TOP: 0px! important; HEIGHT: auto! important
+}
+.reflist4 {
+	PADDING-RIGHT: 0px! important; PADDING-LEFT: 0px! important; PADDING-BOTTOM: 0px! important; MARGIN: 0px; OVERFLOW: visible! important; MAX-HEIGHT: none! important; PADDING-TOP: 0px! important; HEIGHT: auto! important
+}
+.references-scroll {
+	PADDING-RIGHT: 0px! important; PADDING-LEFT: 0px! important; PADDING-BOTTOM: 0px! important; MARGIN: 0px; OVERFLOW: visible! important; MAX-HEIGHT: none! important; PADDING-TOP: 0px! important; HEIGHT: auto! important
+}
+.printonly {
+	DISPLAY: inline
+}

@@ -1,0 +1,72 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{B4F1E65A-EFEA-4570-A9B1-636BA8DB7D50}</ProjectGuid>
+		</PropertyGroup>
+		<ItemGroup>
+			<Projects Include="PrSinalsGenerator.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\sharedUtils\компоненты\dcl_dpk\dcl_own.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\3dProj\Loader_\3dComponents\GlPackage.dproj">
+				<Dependencies/>
+			</Projects>
+		</ItemGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Default.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Default.Personality/>
+			</BorlandProject>
+		</ProjectExtensions>
+		<Target Name="PrSinalsGenerator">
+			<MSBuild Projects="PrSinalsGenerator.dproj"/>
+		</Target>
+		<Target Name="PrSinalsGenerator:Clean">
+			<MSBuild Targets="Clean" Projects="PrSinalsGenerator.dproj"/>
+		</Target>
+		<Target Name="PrSinalsGenerator:Make">
+			<MSBuild Targets="Make" Projects="PrSinalsGenerator.dproj"/>
+		</Target>
+		<Target Name="dcl_own">
+			<MSBuild Projects="..\sharedUtils\компоненты\dcl_dpk\dcl_own.dproj"/>
+		</Target>
+		<Target Name="dcl_own:Clean">
+			<MSBuild Targets="Clean" Projects="..\sharedUtils\компоненты\dcl_dpk\dcl_own.dproj"/>
+		</Target>
+		<Target Name="dcl_own:Make">
+			<MSBuild Targets="Make" Projects="..\sharedUtils\компоненты\dcl_dpk\dcl_own.dproj"/>
+		</Target>
+		<Target Name="ComponentsLib">
+			<MSBuild Projects="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj"/>
+		</Target>
+		<Target Name="ComponentsLib:Clean">
+			<MSBuild Targets="Clean" Projects="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj"/>
+		</Target>
+		<Target Name="ComponentsLib:Make">
+			<MSBuild Targets="Make" Projects="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj"/>
+		</Target>
+		<Target Name="GlPackage">
+			<MSBuild Projects="..\3dProj\Loader_\3dComponents\GlPackage.dproj"/>
+		</Target>
+		<Target Name="GlPackage:Clean">
+			<MSBuild Targets="Clean" Projects="..\3dProj\Loader_\3dComponents\GlPackage.dproj"/>
+		</Target>
+		<Target Name="GlPackage:Make">
+			<MSBuild Targets="Make" Projects="..\3dProj\Loader_\3dComponents\GlPackage.dproj"/>
+		</Target>
+		<Target Name="Build">
+			<CallTarget Targets="PrSinalsGenerator;dcl_own;ComponentsLib;GlPackage"/>
+		</Target>
+		<Target Name="Clean">
+			<CallTarget Targets="PrSinalsGenerator:Clean;dcl_own:Clean;ComponentsLib:Clean;GlPackage:Clean"/>
+		</Target>
+		<Target Name="Make">
+			<CallTarget Targets="PrSinalsGenerator:Make;dcl_own:Make;ComponentsLib:Make;GlPackage:Make"/>
+		</Target>
+		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+	</Project>

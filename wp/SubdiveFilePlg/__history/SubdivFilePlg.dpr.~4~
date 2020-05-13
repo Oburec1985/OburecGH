@@ -1,0 +1,70 @@
+library SubdivFilePlg;
+
+uses
+  ComServ,
+  SubdivFilePlg_TLB in 'SubdivFilePlg_TLB.pas',
+  Winpos_ole_TLB in 'Winpos_ole_TLB.pas',
+  uSubdivePlg in 'uSubdivePlg.pas' {SubdivePlgClass: CoClass};
+
+exports
+  DllGetClassObject,
+  DllCanUnloadNow,
+  DllRegisterServer,
+  DllUnregisterServer;
+
+{$R *.TLB}
+
+{$R *.RES}
+
+function  DllRegisterServer: hresult; stdcall;
+var
+  reg:tregistry;
+var
+  buffer:array[0..255] of char;
+begin
+  reg :=tregistry.Create;
+  try
+    reg.rootkey := hkey_local_machine;
+    getmodulefilename(hinstance, buffer, 255);
+    reg.openkey('\Software\MERA\Winpos\COMPlugins', True);
+    reg.writestring(string(buffer),'WPExtPack.ExtPack');
+    // showmessage(string(buffer));
+    // делаем не через кокласс а через connect главного класса .Connect(
+    // reg.writestring(string(buffer),'WPExtPack.IEMeraPlg');
+    // showmessage(string(buffer));
+  finally
+    reg.Free;
+  end;
+  Result := comserv.dllregisterserver;
+end;
+
+
+function dllunregisterserver: hresult; stdcall;
+var
+  reg: tregistry;
+var
+  buffer: array[0..255] of char;
+begin
+  reg := tregistry.Create;
+  try
+    reg.rootkey := hkey_local_machine;
+    getmodulefilename(hinstance, buffer, 255);
+    if (reg.openkey('\Software\MERA\Winpos\COMPlugins', False)) then
+    begin
+      //showmessage('unreg: '+string(buffer));
+      reg.DeleteValue(string(buffer));
+    end;
+  finally
+    reg.Free;
+   end;
+  Result := comserv.dllunregisterserver;
+end;
+
+
+exports dllgetclassobject Name 'DllGetClassObject',
+  dllcanunloadnow Name 'DllCanUnloadNow',
+  dllregisterserver name 'DllRegisterServer',
+  dllunregisterserver Name 'DllUnregisterServer';
+
+begin
+end.

@@ -1,0 +1,1600 @@
+unit uPage;
+
+interface
+
+uses
+  ubaseobj, udrawobj, uTrend, uCommonTypes, uOglExpFunc, classes, stdctrls,
+  Graphics, windows, uAxis, messages, utext, sysutils, uEventList, mathfunction,
+  uChartEvents, uPoint, dialogs, types, controls, forms, uAlignEdit,
+  uDoubleCursor, usimpleobjects, NativeXML, uBasePage, dglopengl, uFloatLabel,
+  uLabel, math;
+
+type
+
+  SelectOpts = record
+    m_DrawSelectRect: boolean; // рисовать выделяющий прямоугольник
+    // размер выделяющей области при клике
+    // (в координатах чарта(пересчитывается из пиксельного размера))
+    m_selectSize: glFloat;
+    m_selectSizei: glFloat;
+    // Размер выделяющей области в пикселях
+    m_PixelselectSize: integer;
+    // Включить режим перемещения точек
+    b_moveX, b_moveY,
+    // Включить режим выделения
+    m_SelectMode: boolean;
+    // Цвет выделенной вершины
+    SelectPointColor: point3;
+  end;
+
+  // настройки страницы
+  PageCfg = record
+    GridColor: point3;
+    // активный шрифт
+    activefont: integer;
+    // Отступ текста
+    pixelTabText: TPoint;
+    // Отступ текста в кординатах вьюпорта
+    m_TabText: point2;
+    // Размер отрисовываемых точек
+    m_PointSize: glFloat;
+    // опции выделения объектов
+    selOpt: SelectOpts;
+  end;
+
+  cPage = class(cBasePage)
+  public
+    cursor: cdoublecursor;
+    fgridlinecount_X, fgridlinecount_Y: integer;
+
+    // число знаков в тексте
+    m_prec: integer;
+  protected
+    prevgridcountY, prevgridcountX:integer;
+    // логарифм по оси X
+    fLg:boolean;
+    TextCS: TRTLCriticalSection;
+    PageLabel: clabel;
+    // текстовые метки отвечающие за масштаб оси
+    YMaxEdit: cfloatlabel;
+    YMinEdit: cfloatlabel;
+    XMaxEdit: cfloatlabel;
+    XMinEdit: cfloatlabel;
+    // настройки страницы
+    cfg: PageCfg;
+    // число осей
+    axisCount: integer;
+    // нормализовать график по x, y
+    NormalizeXButton, NormalizeYButton: TButton;
+    // узел дерева к которому крепится список осей
+    axises: cdrawobj;
+    fNeedUpdateText: boolean;
+  public
+    // сетка. В координатах от -1..1
+    yGridData: array of point2;
+    xGridData: array of point2;
+  protected
+    // сетка рисуется в относительных координатах
+    procedure preparelinedata(axis: integer);
+    // рисуется для текущего окна
+    procedure DrawLinesData(NumberGridLines: integer;
+      var data: array of point2);
+    procedure drawGrid;
+    // отрисовать подложку страницы
+    procedure drawPage;
+    procedure BeforeDrawChild; override;
+    procedure DoLincParent; override;
+    procedure OnEngCreate; override;
+    procedure destroyevents; override;
+    procedure createevents; override;
+    // установка отступов
+    // установить смещение текста
+    procedure SetTabText(tabs: TPoint); overload;
+    procedure SetTabText(x, y: integer); overload;
+    procedure LoadObjAttributes(xmlNode: txmlNode; mng: tobject); override;
+    procedure SaveObjAttributes(xmlNode: txmlNode); override;
+    // обновить координаты по которым отрисовываются оси.
+    // зависит от tabspace и размеров окна
+    procedure updateAxisPos;
+    // происходит при обновлении minMax оси
+    procedure DoChangeAxisScale(Sender: tobject);
+    // обновить текст осей (в tedit-ах)
+    procedure UpdateAxisText(Sender: tobject);
+    // разместить метки подписывающие оси
+    procedure setEditPos(Sender: tobject);
+    // шаг сетки
+    procedure initTEdit(edit: cdrawobj);
+    procedure SetLabelPos;
+    // При вводе текста в EditText обновить шкалы
+    procedure UpdateAxisbyText(Sender: tobject; var Key: Word;
+      Shift: TShiftState);
+    procedure OnSetText(Sender: tobject);
+    // Перевести координаты TRect в координаты окна
+    // Результирующее окно получается в нормализованых координатах
+    function OffsetRectTofRect(rect: TRect): fRect;
+    // Перевести координаты TRect в координаты окна
+    // Результирующее окно получается в нормализованых координатах если
+    // второй параметр true
+    function RectTofRect(rect: TRect): fRect;
+    // установить размер выделительной области при одиночном клике
+    procedure setSelectSize(i: integer);
+    procedure OnDraw(Sender: tobject);
+  public
+    // Получить размер точки. Передаваемый параметр - предполагаемый размер,
+    // Функция возвращает поддерживаемый.
+    Function SetPointSize(size: glFloat): glFloat;
+    Function GetPointSize: glFloat;
+    procedure addaxis(a: caxis);
+    procedure prepareYLgLineData;
+    procedure prepareXLgLineData;
+  protected
+    // хедл окна
+    function getHandle: thandle;
+    function getDC: hdc;
+    function gethrc: HGLRC;
+  public
+    constructor create; override;
+    destructor destroy; override;
+    // Установить поля
+    procedure SetTabSpace(rect: TRect); override;
+    // удалить все оси
+    procedure clear;
+    function GetTypeString: string; override;
+    function XToTrend(x: single): single;
+    function iXToTrend(ix: integer): single;
+    // отрисовка
+    procedure draw; override;
+    procedure drawData; override;
+    // рисовать метку показывающую что страница активна
+    procedure drawActiveLabel;
+    // прилинковаться к компоненту в котором будет происходить отрисовка
+    procedure linc(p_chart: tcomponent); override;
+
+    // перевод размера в пикселях в координаты вьюпорта
+    function PixelSizeToTrend(p: TPoint; axis: caxis): point2;
+    // перевод координаты в пикселях в вьюпорт
+    function p2iToTrend(p: TPoint; axis: caxis): point2;
+    // то же что и предыдущее но только для y
+    function yiToTrend(y: integer; axis: caxis): double;
+    // то же что предыдущая ф-ия но для 2-х точек по y
+    function yiminmax_ToTrend(y: tpoint; axis: caxis): point2d;
+    function ximinmax_ToTrend(x: tpoint; axis: caxis): point2d;
+    // Преобразует точку(нормализованного окна OpenGl в координаты графика)
+    function Point2ToTrend(const p: point2; axis: caxis): point2;
+    // перевод координаты тренда в координаты окна
+    function TrendPToP2i(p: point2): TPoint;
+    // преобразовать координаты тренда в нормализованные координаты чарта
+    // причем чарта с учетом полей? т.е. правый верхний угол 1,1 равен правому
+    // страницы cPage
+    function TrendPToP2(p: point2; axis: caxis): point2;
+    // в нормализованные координаты чарта с учетом отступов на оси
+    function TrendPToP2View(p: point2; axis: caxis): point2;
+    // призумливает прямойгольник и выставляет правильно текст в осях
+    // при призумливании события вызываются только для активной оси
+    Procedure ZoomfRect(var rect: fRect);overload;
+    Procedure ZoomfRect(var rect: fRect; ax:caxis);overload;
+    // призумить весь график
+    Procedure Normalise;overload;
+    Procedure Normalise(a:caxis);overload;
+    Procedure NormaliseX;
+    Procedure NormaliseY;
+    // перемасштабировать страницу. Вызывает все методы связанные с преобразованием размеров окна
+    procedure ChangeSize;
+    procedure setBound(rect: TRect); override;
+    // получает границы которые охватывает весь рисунок (все потомки)
+    function getbound: fRect;overload;
+    function getbound(ax:caxis): fRect;overload;
+    // получить смещение текста
+    function getpixeltabtext: TPoint;
+    function GetPixelTabSpace: TRect;
+    function GetTabSpace: fRect;
+    function GetTabText: point2;
+    function getAxisCount: integer;
+  protected
+    function ModComponentName(p_name: string): string;
+    function getActiveaxis: caxis;
+    procedure setLgX(v: boolean);
+    procedure setaxis(ax: caxis);
+    function getGridColor: point3;
+    procedure setGridColor(c: point3);
+    procedure setcolor(p: point3); override;
+    procedure setname(str:string);override;
+    function getCaption: string;
+    procedure setCaption(s: string);override;
+
+    procedure SetGridLineCount_X(x: integer);
+    procedure SetGridLineCount_Y(y: integer);
+    function getNeedUpdateText: boolean;
+    procedure setNeedUpdateText(b: boolean);
+    procedure setPrec(i: integer);
+  public
+    property gridlinecount_X: integer read fgridlinecount_X write
+      SetGridLineCount_X;
+    property gridlinecount_Y: integer read fgridlinecount_Y write
+      SetGridLineCount_Y;
+    function Newaxis: caxis;
+    function getaxis(i: integer): caxis; overload;
+    function getaxis(name: string): caxis; overload;
+    property Caption: string read getCaption write setCaption;
+    property activeAxis: caxis read getActiveaxis write setaxis;
+    // цвет фона
+    property GridColor: point3 read getGridColor write setGridColor;
+    property NeedUpdateText: boolean read getNeedUpdateText write
+      setNeedUpdateText;
+    property prec: integer read m_prec write setPrec;
+    property LgX: boolean read fLg write setLgx;
+  end;
+
+  // l_b_updatebound - границы обновились
+procedure updateBound(var boundrect: fRect; p: point2;
+  var l_b_updatebound: boolean);
+
+const
+  GridPixels = 60;
+  GLF_START_LIST = 1000;
+  pi = 3.14159265;
+  // Обусчловлен изменением размеров текста из за меньших размеров
+  // окна вывода (вьюпорта)
+  identMatrix4d: array [0 .. 15] of double =
+    (1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+
+implementation
+
+uses uChart, uCommonMath, uPageMng;
+
+const
+  colors: array [0 .. 51] of integer = (clBlack, clMaroon, clGreen, clOlive,
+    clNavy, clPurple, clTeal, clGray, clSilver, clRed, clLime, clYellow,
+    clBlue, clFuchsia, clAqua, clWhite, clMoneyGreen, clSkyBlue, clCream,
+    clMedGray, clActiveBorder, clActiveCaption, clAppWorkSpace, clBackground,
+    clBtnFace, clBtnHighlight, clBtnShadow, clBtnText, clCaptionText,
+    clDefault, clGrayText, clGradientActiveCaption, clGradientInactiveCaption,
+    clHighlight, clHighlightText, clHotLight, clInactiveBorder,
+    clInactiveCaption, clInactiveCaptionText, clInfoBk, clInfoText, clMenu,
+    clMenuBar, clMenuHighlight, clMenuText, clNone, clScrollBar, cl3DDkShadow,
+    cl3DLight, clWindow, clWindowFrame, clWindowText);
+
+function generatecolor(i: integer): integer;
+begin
+  result := colors[i];
+end;
+
+function generatecolorp3(i: integer): point3;
+begin
+  result := inttoRGB(generatecolor(i));
+end;
+
+procedure updateBound(var boundrect: fRect; p: point2;
+  var l_b_updatebound: boolean);
+var
+  b: boolean;
+begin
+  l_b_updatebound := false;
+  boundrect.BottomLeft.x := min(boundrect.BottomLeft.x, p.x, b);
+  if not b then
+    l_b_updatebound := true;
+  boundrect.BottomLeft.y := min(boundrect.BottomLeft.y, p.y, b);
+  if not b then
+    l_b_updatebound := true;
+  boundrect.TopRight.x := max(boundrect.TopRight.x, p.x, b);
+  if not b then
+    l_b_updatebound := true;
+  boundrect.TopRight.y := max(boundrect.TopRight.y, p.y, b);
+  if not b then
+    l_b_updatebound := true;
+end;
+
+function cPage.getNeedUpdateText: boolean;
+begin
+  EnterCriticalSection(TextCS);
+  result := fNeedUpdateText;
+  LeaveCriticalSection(TextCS);
+end;
+
+procedure cPage.setNeedUpdateText(b: boolean);
+begin
+  EnterCriticalSection(TextCS);
+  fNeedUpdateText := b;
+  cchart(chart).redraw;
+  LeaveCriticalSection(TextCS);
+end;
+
+procedure cPage.LoadObjAttributes(xmlNode: txmlNode; mng: tobject);
+var
+  rect: fRect;
+begin
+  inherited;
+  // габариты
+  rect.BottomLeft.x := xmlNode.ReadAttributeFloat('Bound_Left');
+  rect.TopRight.x := xmlNode.ReadAttributeFloat('Bound_Right');
+  rect.TopRight.y := xmlNode.ReadAttributeFloat('Bound_Top');
+  rect.BottomLeft.y := xmlNode.ReadAttributeFloat('Bound_Bottom');
+  Relativebound := rect;
+  // метка
+  Caption := xmlNode.ReadAttributeString('Caption');
+  // видимость курсора
+  cursor.visible := xmlNode.ReadAttributeBool('Cursor_visible');
+end;
+
+procedure cPage.SaveObjAttributes(xmlNode: txmlNode);
+var
+  rect: fRect;
+begin
+  inherited;
+  rect := Relativebound;
+  // габариты
+  xmlNode.WriteAttributeFloat('Bound_Left', rect.BottomLeft.x);
+  xmlNode.WriteAttributeFloat('Bound_Right', rect.TopRight.x);
+  xmlNode.WriteAttributeFloat('Bound_Top', rect.TopRight.y);
+  xmlNode.WriteAttributeFloat('Bound_Bottom', rect.BottomLeft.y);
+  // метка
+  xmlNode.WriteAttributeString('Caption', Caption);
+  // видимость курсора
+  xmlNode.WriteAttributeBool('Cursor_visible', cursor.visible);
+end;
+
+procedure cPage.prepareYLgLineData;
+var
+  ax:caxis;
+  i,j, ylinecount, linecount:integer;
+  // min max на логарифмической оси
+  minorder, maxorder:double;
+  l_min, prev, Pos, range:double;
+  usestep:boolean;
+begin
+  ax:=getActiveaxis;
+  // минимальный порядок
+  minorder:=log10(ax.min.y);
+  // максимальный порядок
+  maxorder:=log10(ax.max.y);
+
+  l_min:=intpower(10,round(minorder));
+  //l_min:=ax.min.y;
+
+  ylinecount:=round(maxorder)-round(minorder);
+  inc(ylinecount);
+
+  SetLength(yGridData, ylinecount * 2);
+  pos:=-1;
+  // число полезных итераций
+  j:=0;
+  linecount:=ylinecount;
+  setlength(ax.yGridDataVal,linecount);
+  for i := 0 to (ylinecount) - 1 do
+  begin
+    usestep:=true;
+    prev:=pos;
+    pos:=log10(l_min);
+    // Первая точка. приводим к диапазону 0..1
+    Pos:=(pos-minorder)/(maxorder-minorder);
+    // приводим к диапазону -1..1
+    Pos:=2*pos-1;
+    if i<>0 then
+    begin
+      if pos-prev<0.1 then
+      begin
+        usestep:=false;
+        dec(linecount);
+      end;
+    end;
+    if usestep then
+    begin
+      ax.yGridDataVal[j]:=l_min;
+      yGridData[j*2].y := pos;
+      yGridData[j*2].x := -1;
+      // Вторая точка
+      yGridData[j*2 + 1].y := pos;
+      yGridData[j*2 + 1].x := 1;
+      inc(j);
+    end;
+    l_min:=l_min*10;
+  end;
+  prevgridcountY:=fgridlinecount_Y;
+  fgridlinecount_Y:=linecount;
+  setlength(ax.yGridDataVal,linecount);
+  SetLength(yGridData, linecount * 2);
+end;
+
+procedure cPage.prepareXLgLineData;
+var
+  i,j, Xlinecount, linecount:integer;
+  // min max на логарифмической оси
+  minorder, maxorder:double;
+  l_min, prev, Pos, range:double;
+  usestep:boolean;
+  p:point2;
+  a:caxis;
+begin
+  a:=activeAxis;
+  // минимальный порядок
+  p:=a.min;
+  minorder:=log10(p.x);
+  // максимальный порядок
+  p:=a.max;
+  maxorder:=log10(p.x);
+
+  l_min:=intpower(10,round(minorder));
+  //l_min:=ax.min.y;
+
+  xlinecount:=round(maxorder)-round(minorder);
+  inc(xlinecount);
+
+  SetLength(xGridData, xlinecount * 2);
+  pos:=-1;
+  // число полезных итераций
+  j:=0;
+  linecount:=xlinecount;
+  setlength(a.xGridDataVal,linecount);
+  for i := 0 to (xlinecount) - 1 do
+  begin
+    usestep:=true;
+    prev:=pos;
+    pos:=log10(l_min);
+    // Первая точка. приводим к диапазону 0..1
+    Pos:=(pos-minorder)/(maxorder-minorder);
+    // приводим к диапазону -1..1
+    Pos:=2*pos-1;
+    if i<>0 then
+    begin
+      if pos-prev<0.1 then
+      begin
+        usestep:=false;
+        dec(linecount);
+      end;
+    end;
+    if usestep then
+    begin
+      A.xGridDataVal[j]:=l_min;
+      xGridData[j*2].x := pos;
+      xGridData[j*2].y := -1;
+      // Вторая точка
+      xGridData[j*2 + 1].x := pos;
+      xGridData[j*2 + 1].y := 1;
+      inc(j);
+    end;
+    l_min:=l_min*10;
+  end;
+  prevgridcountX:=fgridlinecount_X;
+  fgridlinecount_X:=linecount;
+  //setlength(a.xGridDataVal,linecount);
+  //SetLength(xGridData, linecount * 2);
+end;
+
+procedure cPage.preparelinedata(axis: integer);
+var
+  i: integer;
+  step: point2;
+  lNumberGridLines_X, lNumberGridLines_Y: integer;
+begin
+  // ось X
+  if axis = 0 then
+  begin
+    if gridlinecount_X <= 1 then
+      exit;
+    lNumberGridLines_X := gridlinecount_X;
+    step.x := 2 / gridlinecount_X;
+    dec(lNumberGridLines_X);
+    // ----------------------------------------------
+    SetLength(xGridData, lNumberGridLines_X * 2);
+    // Каждая линия состоит из 4-х точек
+    for i := 0 to (lNumberGridLines_X) - 1 do
+    begin
+      // Первая точка
+      xGridData[i * 2].x := step.x * (i + 1) - 1;
+      xGridData[i * 2].y := -1;
+      // Вторая точка
+      xGridData[i * 2 + 1].x := xGridData[i * 2].x;
+      xGridData[i * 2 + 1].y := 1;
+    end;
+  end;
+  // ось Y
+  if axis = 1 then
+  begin
+    if gridlinecount_Y <= 1 then
+      exit;
+    lNumberGridLines_Y := gridlinecount_Y;
+    step.y := 2 / gridlinecount_Y;
+    dec(lNumberGridLines_Y);
+    SetLength(yGridData, lNumberGridLines_Y * 2);
+    for i := 0 to (lNumberGridLines_Y) - 1 do
+    begin
+      // Первая точка
+      yGridData[i * 2].y := step.y * (i + 1) - 1;
+      yGridData[i * 2].x := -1;
+      // Вторая точка
+      yGridData[i * 2 + 1].y := yGridData[i * 2].y;
+      yGridData[i * 2 + 1].x := 1;
+    end;
+  end;
+end;
+
+procedure cPage.DrawLinesData(NumberGridLines: integer;
+  var data: array of point2);
+begin
+  if NumberGridLines <> 0 then
+  begin
+    glEnableClientState(GL_VERTEX_ARRAY); // вкл. режим рисования
+    glVertexPointer(2, GL_FLOAT, 0, @data[0]); // указатель на массив
+    glDrawArrays(GL_LINES, 0, NumberGridLines * 2);
+    glDisableClientState(GL_VERTEX_ARRAY);
+  end;
+end;
+
+procedure cPage.drawPage;
+begin
+  glcolor3fv(@color);
+  // отрисовка полигона
+  glBegin(GL_QUADs);
+  glvertex2f(-1, -1);
+  glvertex2f(-1, 1);
+  glvertex2f(1, 1);
+  glvertex2f(1, -1);
+  glend;
+end;
+
+procedure cPage.drawData;
+var
+  i: integer;
+  obj: cdrawobj;
+
+  // отступы квадратика в нормальном окне
+  tabs: point2;
+  rect: fRect;
+  // размер квадратика в нормальном окне
+  p2: point2;
+begin
+  cfg.m_PointSize := GetAcceptedPointSize(5);
+  glPointSize(cfg.m_PointSize);
+  glMatrixMode(gl_projection);
+  glpushmatrix;
+  glloadidentity;
+  setCommonVP;
+  // отрисовка фона страницы
+  drawPage;
+  // отрисовка метки активной страницы
+  if chart <> nil then
+  begin
+    if cchart(chart).activepage = self then
+      drawActiveLabel;
+  end;
+  // отрисовка рамки страницы
+  drawBound;
+  setDrawObjVP;
+  drawGrid;
+  glpopmatrix;
+  // отрисовка осей
+  inherited;
+end;
+
+procedure cPage.draw;
+begin
+  inherited;
+end;
+
+procedure cPage.drawActiveLabel;
+var
+  rect: fRect;
+  // размер квадратика в нормальном окне
+  p2: point2;
+  // отступы квадратика в нормальном окне
+  tabs: point2;
+  // позиция буквы "а" в метке
+  position: point2;
+  pixS: TPoint;
+  b: boolean;
+  max: integer;
+begin
+  pixS.y := abs(getfont(0).getPixelHeight);
+  pixS.x := getfont(0).getPixelWidth('a');
+  if pixS.x > pixS.y then
+    max := pixS.x
+  else
+  begin
+    max := pixS.y;
+  end;
+  p2 := GetSizeNormalVP(point(max, max));
+  tabs := GetSizeNormalVP(point(3, 7));
+  rect.BottomLeft.x := m_TabSpace.BottomLeft.x + tabs.x;
+  rect.TopRight.y := m_TabSpace.TopRight.y - tabs.y;
+  rect.TopRight.x := rect.BottomLeft.x + p2.x;
+  rect.BottomLeft.y := rect.TopRight.y - p2.y;
+  position.x := (rect.TopRight.x + rect.BottomLeft.x) / 2;
+  position.y := (rect.BottomLeft.y + rect.TopRight.y) / 2;
+  position.y := position.y - (rect.TopRight.y - rect.BottomLeft.y) / 4;
+  usimpleobjects.drawrect(rect, red);
+  usimpleobjects.drawBorder(rect, black);
+  // вывод текста
+  glcolor3fv(@black);
+  getfont(0).OutText('a', position, c_centr);
+end;
+
+procedure cPage.drawGrid;
+var
+  color: point3;
+begin
+  // шаг в координатах нормированного вьюпорта
+  color := GridColor;
+  // установка типа линии (пунктир)
+  glLineStipple(1, $F0F0);
+  glEnable(GL_LINE_STIPPLE);
+  glMatrixMode(gl_projection);
+  glpushmatrix;
+  glloadidentity;
+  glcolor3fv(@color);
+  if gridlinecount_X <> 0 then
+    DrawLinesData(gridlinecount_X, xGridData);
+  if gridlinecount_Y <> 0 then
+    DrawLinesData(gridlinecount_Y, yGridData);
+  glDisable(GL_LINE_STIPPLE);
+  glpopmatrix;
+end;
+
+procedure cPage.createevents;
+begin
+  events.AddEvent('PageOnResize', e_OnResize, setEditPos);
+  events.AddEvent('PageOnResize', e_OnChangeAxisScale, DoChangeAxisScale);
+  events.AddEvent(name + ' PageOnDraw', e_OnDraw, OnDraw);
+end;
+
+procedure cPage.destroyevents;
+begin
+  events.RemoveEvent(setEditPos, e_OnResize);
+  events.RemoveEvent(DoChangeAxisScale, e_OnChangeAxisScale);
+  events.RemoveEvent(OnDraw, e_OnDraw);
+  inherited;
+end;
+
+procedure cPage.DoChangeAxisScale(Sender: tobject);
+begin
+  // если событие произошло в дочерней оси
+  if caxis(Sender).parent.parent = self then
+    NeedUpdateText := true;
+end;
+
+procedure cPage.UpdateAxisText(Sender: tobject);
+begin
+  if activeAxis = nil then
+  begin
+    if getAxisCount <> 0 then
+      activeAxis := getaxis(0);
+  end;
+  if activeAxis <> nil then
+  begin
+    YMaxEdit.Text := formatstr(activeAxis.max.y, m_prec) + activeAxis.m_YUnits;
+    YMinEdit.Text := formatstr(activeAxis.min.y, m_prec);
+    XMaxEdit.Text := formatstr(activeAxis.max.x, m_prec) + activeAxis.m_XUnits;
+    XMinEdit.Text := formatstr(activeAxis.min.x, m_prec);
+    NeedUpdateText := false;
+  end;
+end;
+
+function GetStartVal(str:string):double;
+var
+  i:integer;
+begin
+  for I := length(str) downto 1 do
+  begin
+    if isdigit(str[i]) then
+    begin
+      setlength(str, i);
+      break;
+    end;
+  end;
+  result:=strtoFloatExt(str);
+end;
+
+// Обновить оси при вводе текста в TEdit
+procedure cPage.UpdateAxisbyText(Sender: tobject; var Key: Word;
+  Shift: TShiftState);
+var
+  rect: fRect;
+  function getnum(str: string; default: single): single;
+  var
+    f: single;
+    substr:string;
+  begin
+    if (str = '') or (str[1] = ',') then
+      f := default
+    else
+    begin
+      f := GetStartVal(str);
+    end;
+    result := f;
+  end;
+
+begin
+  if Key = 13 then
+  begin
+    rect.BottomLeft.x := getnum(XMinEdit.Text, activeAxis.min.x);
+    rect.BottomLeft.y := getnum(YMinEdit.Text, activeAxis.min.y);
+    rect.TopRight.x := getnum(XMaxEdit.Text, activeAxis.max.x);
+    rect.TopRight.y := getnum(YMaxEdit.Text, activeAxis.max.y);
+    ZoomfRect(rect);
+  end;
+  cchart(chart).redraw;
+end;
+
+procedure cPage.setEditPos(Sender: tobject);
+var
+  bounds, tabs: TRect;
+  tabtext: TPoint;
+  topoffset: integer;
+begin
+  if YMaxEdit <> nil then
+  begin
+    bounds := bound;
+    tabs := GetPixelTabSpace;
+    tabtext := getpixeltabtext;
+    topoffset := twincontrol(chart).Height - bounds.Top;
+    // по хорошему нужно выравнивать текст по краницам page.tabspace
+    YMaxEdit.position := p2(m_TabSpace.BottomLeft.x, m_TabSpace.TopRight.y);
+    YMinEdit.position := m_TabSpace.BottomLeft;
+    XMaxEdit.position := p2(m_TabSpace.TopRight.x,
+      m_TabSpace.BottomLeft.y - XMaxEdit.GetTextHeigth);
+    XMinEdit.position := p2(m_TabSpace.BottomLeft.x,
+      m_TabSpace.BottomLeft.y - XMaxEdit.GetTextHeigth);
+    SetLabelPos;
+  end;
+end;
+
+procedure cPage.SetLabelPos;
+var
+  pos: point2;
+  h: single;
+begin
+  if getwidth<>0 then
+  begin
+    if getheight<>0 then
+    begin
+      h := PageLabel.GetTextHeigth;
+      pos.y := 1 - 2 * h;
+      pos.x := 0 - PageLabel.GetTextWidth / 2;
+      PageLabel.position := pos;
+    end;
+  end;
+end;
+
+procedure cPage.initTEdit(edit: cdrawobj);
+begin
+  edit.fhelper := true;
+  cfloatlabel(edit).OnKeyEnter := UpdateAxisbyText;
+  AddChild(edit);
+end;
+
+Procedure cPage.ZoomfRect(var rect: fRect; ax:caxis);
+var
+  i: integer;
+  zoomrect: fRect;
+begin
+  if ax = nil then
+    exit;
+  ax.ZoomfRect(rect);
+  setSelectSize(cfg.selOpt.m_PixelselectSize);
+  // призумливаем ось x других осей
+  for i := 0 to getAxisCount - 1 do
+  begin
+    ax := getaxis(i);
+    if not ax.active then
+    begin
+      zoomrect := ax.getzoomrect;
+      zoomrect.BottomLeft.x := rect.BottomLeft.x;
+      zoomrect.TopRight.x := rect.TopRight.x;
+      ax.ZoomfRect(zoomrect);
+    end;
+  end;
+  // cchart(chart).redraw;
+  if events <> nil then
+    events.CallAllEvents(e_onZoom);
+end;
+
+// --------------------- Призумить прямоугольник ----------------------
+Procedure cPage.ZoomfRect(var rect: fRect);
+var
+  ax: caxis;
+begin
+  ax:=activeAxis;
+  ZoomfRect(rect,ax);
+end;
+
+// Преобразовать точку в координатах пикселя в координаты тренда
+function cPage.p2iToTrend(p: TPoint; axis: caxis): point2;
+var
+  p2: point2;
+begin
+  p2 := axis.p2itop2(p);
+  result := p2;
+end;
+
+function cPage.yiToTrend(y: integer; axis: caxis): double;
+var
+  min,max, range:double;
+begin
+  min:=axis.min.y;
+  max:=axis.max.y;
+  range:=max-min;
+  y:=y-m_viewport[1];
+  result:=range*(y/m_viewport[3])+min;
+end;
+
+function cPage.yiminmax_ToTrend(y: tpoint; axis: caxis): point2d;
+var
+  range:double;
+begin
+  range:=axis.max.y-axis.min.y;
+  y.x:=y.x-m_viewport[1];
+  y.y:=y.y-m_viewport[1];
+  result.x:=range*(y.x/m_viewport[3])+axis.min.y;
+  result.y:=range*(y.y/m_viewport[3])+axis.min.y;
+end;
+
+function cPage.ximinmax_ToTrend(x: tpoint; axis: caxis): point2d;
+var
+  range:double;
+begin
+  range:=axis.max.x-axis.min.x;
+  x.x:=x.x-m_viewport[0];
+  x.y:=x.y-m_viewport[0];
+  result.x:=range*(x.x/m_viewport[2])+axis.min.x;
+  result.y:=range*(x.y/m_viewport[2])+axis.min.x;
+end;
+
+// Узнать размер пикселя в координатах тренда
+function cPage.PixelSizeToTrend(p: TPoint; axis: caxis): point2;
+var
+  res, l_p2: point2;
+  p2i: TPoint;
+begin
+  if axis <> nil then
+  begin
+    p2i.x := m_pixelTabSpace.Left;
+    p2i.y := m_pixelTabSpace.bottom;
+    l_p2 := axis.min;
+    p2i.x := p2i.x + p.x + bound.Left;
+    p2i.y := p2i.y + p.y + bound.bottom;
+    res := p2iToTrend(p2i, axis);
+    result.x := abs(l_p2.x - res.x);
+    result.y := abs(l_p2.y - res.y);
+  end
+  else
+  begin
+    l_p2 := p2(-1, -1);
+    p2i.x := p.x + bound.Left;
+    p2i.y := p.y + bound.bottom;
+    res := p2itop2(p2i);
+    result.x := abs(l_p2.x - res.x);
+    result.y := abs(l_p2.y - res.y);
+  end;
+end;
+
+// установить размер выделительной области при одиночном клике
+procedure cPage.setSelectSize(i: integer);
+var
+  p2i: TPoint;
+  p2: point2;
+begin
+  p2i.x := i;
+  p2i.y := i;
+  p2 := PixelSizeToTrend(p2i, activeAxis);
+  if p2.x > p2.y then
+    p2.x := p2.y;
+  cfg.selOpt.m_selectSize := p2.x; // радиус выделяемого обьема
+  cfg.selOpt.m_selectSizei := i;
+end;
+
+function cPage.Newaxis: caxis;
+begin
+  result := caxis.create;
+  addaxis(result);
+  updateAxisPos;
+end;
+
+procedure cPage.addaxis(a: caxis);
+begin
+  axises.AddChild(a);
+  if axises.ChildCount = 1 then
+    activeAxis := a;
+  // a.UpdateAxisData(axises.ChildCount-1);
+  a.color := generatecolorp3(axises.ChildCount - 1);
+end;
+
+procedure cPage.linc(p_chart: tcomponent);
+var
+  trend: ctrend;
+  tabspace: TRect;
+  rect: fRect;
+  bp: cBeziePoint;
+  sp: selectpoint;
+begin
+  if p_chart = nil then
+    exit;
+  if chart <> nil then
+    exit;
+  inherited;
+  SetTabText(8, 13);
+  // метка страницы
+  PageLabel := clabel.create;
+  PageLabel.Name := ModComponentName('PageLabel');
+  PageLabel.autocreate:=true;
+  PageLabel.fhelper := true;
+  PageLabel.Transparent:=true;
+  AddChild(PageLabel);
+  PageLabel.OnSetText := OnSetText;
+
+  // создание меток для подписи осей
+  YMaxEdit := cfloatlabel.create;
+  YMaxEdit.autocreate:=true;
+  YMaxEdit.textcolor := blue;
+  YMaxEdit.align := c_right;
+  YMaxEdit.Name := ModComponentName('yMaxEdit');
+  initTEdit(YMaxEdit);
+
+  YMinEdit := cfloatlabel.create;
+  YMinEdit.autocreate:=true;
+  YMinEdit.textcolor := blue;
+  YMinEdit.align := c_right;
+  YMinEdit.Name := ModComponentName('YMinEdit');
+  initTEdit(YMinEdit);
+
+  XMaxEdit := cfloatlabel.create;
+  XMaxEdit.autocreate:=true;
+  XMaxEdit.Name := ModComponentName('XMaxEdit');
+  initTEdit(XMaxEdit);
+
+  XMinEdit := cfloatlabel.create;
+  XMinEdit.autocreate:=true;
+  XMinEdit.Name := ModComponentName('XMinEdit');
+  initTEdit(XMinEdit);
+
+  UpdateAxisText(nil);
+
+  cursor.events := cchart(chart).objmng.events;
+  // обновить габариты страницы
+  updateRelativeBound;
+
+  cursor.chart := chart;
+end;
+
+procedure cPage.DoLincParent;
+begin
+  inherited;
+  if parent <> nil then
+  begin
+    if parent.ChildCount = 1 then
+    begin
+      cpagemng(parent).activepage := self;
+    end;
+  end;
+end;
+
+procedure cPage.OnEngCreate;
+begin
+  inherited;
+  clear;
+end;
+
+function cPage.getHandle: thandle;
+begin
+  result := cchart(chart).handle;
+end;
+
+function cPage.getDC: hdc;
+begin
+  result := cchart(chart).dc;
+end;
+
+function cPage.gethrc: HGLRC;
+begin
+  result := cchart(chart).hrc;
+end;
+
+function cPage.getaxis(name: string): caxis;
+var
+  obj: cbaseobj;
+begin
+  result := nil;
+  if axises = nil then
+    exit;
+  obj := axises.GetChild(name);
+  if obj is caxis then
+  begin
+    result := caxis(obj);
+  end;
+end;
+
+function cPage.getaxis(i: integer): caxis;
+begin
+  result := nil;
+  if axises = nil then
+    exit;
+  if i >= axises.ChildCount then
+    exit;
+  result := caxis(axises.GetChild(i));
+end;
+
+function cPage.getActiveaxis: caxis;
+var
+  i: integer;
+  ax: caxis;
+begin
+  result := nil;
+  if axises = nil then
+    exit;
+  for i := 0 to axises.ChildCount - 1 do
+  begin
+    ax := caxis(axises.GetChild(i));
+    if ax is caxis then
+    begin
+      if ax.active then
+      begin
+        result := ax;
+        exit;
+      end
+    end
+    else
+      showmessage('not axis');
+  end;
+end;
+
+procedure cPage.setaxis(ax: caxis);
+var
+  l_axis: caxis;
+begin
+  l_axis := activeAxis;
+  if l_axis <> nil then
+  begin
+    l_axis.active := false;
+  end;
+  ax.active := true;
+end;
+
+function cPage.OffsetRectTofRect(rect: TRect): fRect;
+var
+  res: fRect;
+  w, h: integer;
+begin
+  w := getWidth;
+  h := getheight;
+  if (w = 0) or (h = 0) then
+    exit;
+  res.BottomLeft.x := rect.Left * 2 / w - 1;
+  res.BottomLeft.y := rect.bottom * 2 / h - 1;
+  res.TopRight.x := (w - rect.Right) * 2 / w - 1;
+  res.TopRight.y := (h - rect.Top) * 2 / h - 1;
+  result := res;
+end;
+
+function cPage.RectTofRect(rect: TRect): fRect;
+var
+  res: fRect;
+  p2i: TPoint;
+begin
+  p2i.x := rect.Left;
+  p2i.y := rect.bottom;
+  res.BottomLeft := p2itop2(p2i);
+  p2i.x := rect.Right;
+  p2i.y := rect.Top;
+  res.TopRight := p2itop2(p2i);
+  result := res;
+end;
+
+// Переводит нормализованные координаты точки чарта в координаты тренда
+function cPage.Point2ToTrend(const p: point2; axis: caxis): point2;
+var
+  res: point2;
+  dx, dy, len, width, Height: single;
+begin
+  if p.x > m_TabSpace.TopRight.x then
+    res.x := axis.max.x
+  else
+  begin
+    if p.x < m_TabSpace.BottomLeft.x then
+      res.x := axis.min.x
+    else
+    begin
+      width := m_TabSpace.TopRight.x - m_TabSpace.BottomLeft.x;
+      // Длина отображаемого интервала на новый вьюпорт
+      dx := axis.getdx;
+      // проекция растояния нормированного окна в трендовый вьюпорт
+      len := dx * (p.x - m_TabSpace.BottomLeft.x) / width;
+      res.x := axis.min.x + len;
+    end;
+  end;
+  // ----------------------------------------------------
+  if p.y > m_TabSpace.TopRight.y then
+    res.y := axis.max.y
+  else
+  begin
+    if p.y < m_TabSpace.BottomLeft.y then
+      res.y := axis.min.y
+    else
+    begin
+      Height := m_TabSpace.TopRight.y - m_TabSpace.BottomLeft.y;
+      dy := axis.getdy;
+      len := dy * (p.y - m_TabSpace.BottomLeft.y) / Height;
+      res.y := axis.min.y + len;
+      // -----------------------------------------------------
+    end;
+  end;
+  result := res;
+end;
+
+procedure cPage.updateAxisPos;
+var
+  i, j: integer;
+  a: caxis;
+begin
+  j := 0;
+  for i := 0 to axises.ChildCount - 1 do
+  begin
+    a := caxis(axises.GetChild(i));
+    if a is caxis then
+    begin
+      a.UpdateAxisData(j);
+      inc(j);
+    end;
+  end;
+end;
+
+procedure cPage.SetGridLineCount_X(x: integer);
+begin
+  fgridlinecount_X := x;
+  preparelinedata(0);
+end;
+
+procedure cPage.SetGridLineCount_Y(y: integer);
+begin
+  fgridlinecount_Y := y;
+  preparelinedata(1);
+end;
+
+// Изменить размер окна
+procedure cPage.ChangeSize;
+var
+  ps: PaintStruct;
+begin
+  if parent <> nil then
+  begin
+    bound := getClientBound;
+    GetNormalViewport(m_NormalViewport);
+    SetTabSpace(m_pixelTabSpace);
+    GetViewport(m_viewport);
+    SetTabText(cfg.pixelTabText);
+    setCommonVP;
+    CallEventsWithSender(e_OnResize, self);
+  end;
+end;
+
+constructor cPage.create;
+begin
+  inherited;
+  prevgridcountY:=1;
+  feditable:=true;
+  InitializeCriticalSection(TextCS);
+
+  m_pixelTabSpace.Left := 40;
+  m_pixelTabSpace.Right := 20;
+  m_pixelTabSpace.Top := 20;
+  m_pixelTabSpace.bottom := 20;
+  gridlinecount_X := 10;
+  gridlinecount_Y := 10;
+  m_prec := 3;
+  name := 'Page';
+  axises := cdrawobj.create;
+  axises.fhelper := true;
+  axises.autocreate := true;
+  AddChild(axises);
+  axises.name := 'Axises';
+  activeAxis := Newaxis;
+
+  // NormalizeXButton:=TButton.Create(chart);
+  // NormalizeYButton:=TButton.Create(chart);
+  color := white;
+  BorderColor := p3(0.8, 0.8, 0.8);
+  cfg.GridColor := gray;
+  imageindex := c_page_img;
+
+  cursor := cdoublecursor.create;
+  cursor.autocreate := true;
+  cursor.parent := self;
+end;
+
+destructor cPage.destroy;
+var
+  i: integer;
+begin
+  DeleteCriticalSection(TextCS);
+
+  // удаление осей
+  axises.destroy;
+  destroyevents;
+
+  inherited;
+end;
+
+procedure cPage.SetTabText(x, y: integer);
+var
+  tab: TPoint;
+begin
+  tab.x := x;
+  tab.y := y;
+  SetTabText(tab);
+end;
+
+procedure cPage.SetTabText(tabs: TPoint);
+begin
+  cfg.pixelTabText := tabs;
+  cfg.m_TabText.y := cfg.pixelTabText.y * 2 / getheight;
+  cfg.m_TabText.x := cfg.pixelTabText.x * 2 / getWidth;
+end;
+
+procedure cPage.SetTabSpace(rect: TRect);
+var
+  p: GLUInt;
+begin
+  m_pixelTabSpace := rect;
+  m_TabSpace := OffsetRectTofRect(rect);
+  glGetIntegerv(gl_Matrix_Mode, @p);
+  glMatrixMode(GL_MODELVIEW);
+  glpushmatrix;
+  glloadidentity;
+  // -----------
+  glpopmatrix;
+  if p = GL_MODELVIEW then
+    glMatrixMode(GL_MODELVIEW);
+  if p = gl_projection then
+    glMatrixMode(gl_projection);
+  updateAxisPos;
+  GetViewport(m_viewport);
+  // setEditPos(NIL);
+end;
+
+Function cPage.SetPointSize(size: glFloat): glFloat;
+var
+  res, step: glFloat;
+  Range: array [0 .. 1] of glFloat;
+  ps: PaintStruct;
+begin
+  glGetFloatv(GL_POINT_SIZE_GRANULARITY, @step);
+  glGetFloatv(GL_POINT_SIZE_RANGE, @Range);
+  res := round(size / step) * step;
+  // Проверка на выход за диапазон
+  if res < Range[0] then
+    res := Range[0];
+  if res > Range[1] then
+    res := Range[1];
+  result := res;
+  cfg.m_PointSize:=res;
+end;
+
+function cPage.TrendPToP2(p: point2; axis: caxis): point2;
+var
+  pi: TPoint;
+begin
+  // pi:=axis.p2ToP2i(p);
+  // pi.y:=cchart(Chart).Height-pi.y;
+  // result:=p2iTop2(pi);
+  p.x := 2 * (p.x - axis.min.x) / axis.getdx - 1;
+  p.y := 2 * (p.y - axis.min.y) / axis.getdy - 1;
+  result := p;
+end;
+
+function cPage.TrendPToP2View(p: point2; axis: caxis): point2;
+var
+  min,max:point2;
+begin
+  max:=m_TabSpace.TopRight;
+  min:=m_TabSpace.BottomLeft;
+  p.x := (max.x-min.x) * (p.x - axis.min.x) / (axis.getdx) + min.x;
+  p.y := (max.y-min.y) * (p.y - axis.min.y) / axis.getdy + min.y;
+  result := p;
+end;
+
+// Преобразовать точку bp координат чарта в оконную пиксельную позицию
+function cPage.TrendPToP2i(p: point2): TPoint;
+var
+  p2: point2;
+  w, h: glFloat;
+begin
+  w := activeAxis.getdx;
+  h := activeAxis.getdy;
+  p2.x := getWidth - m_pixelTabSpace.Left;
+  p2.x := p2.x - m_pixelTabSpace.Right;
+  p2.x := (p.x - activeAxis.min.x) * ((p2.x / w));
+  p2.x := p2.x + m_pixelTabSpace.Left;
+
+  p2.y := getheight - m_pixelTabSpace.Top;
+  p2.y := p2.y - m_pixelTabSpace.bottom;
+  p2.y := (p.y - activeAxis.min.y) * ((p2.y / h));
+  p2.y := p2.y + m_pixelTabSpace.bottom;
+
+  result.x := trunc(p2.x) + bound.Left;
+  result.y := trunc(p2.y) + bound.bottom;
+end;
+
+function cPage.getbound(ax:caxis): fRect;
+var
+  obj: cdrawobj;
+  i: integer;
+  childbound: fRect;
+  init, b: boolean;
+begin
+  if ax.ChildCount = 0 then
+  begin
+    result.BottomLeft := p2(0, 0);
+    result.TopRight := p2(1, 1);
+  end;
+  if ax = nil then
+    exit;
+  init := false;
+  if ax.ChildCount > 0 then
+  begin
+    for i := 0 to ax.ChildCount - 1 do
+    begin
+      obj := cdrawobj(ax.GetChild(i));
+      if obj.visible then
+      begin
+        childbound := obj.getbound;
+        if not init then
+        begin
+          result := childbound;
+          init := true;
+        end;
+        if i = 0 then
+        begin
+          result := childbound;
+        end
+        else
+        begin
+          uPage.updateBound(result, childbound.BottomLeft, b);
+          uPage.updateBound(result, childbound.TopRight, b);
+        end;
+      end;
+    end;
+  end;
+end;
+
+// получить границы которые охватят весь рисунок
+function cPage.getbound: fRect;
+var
+  axis: caxis;
+begin
+  axis := activeAxis;
+  result:=getbound(axis);
+end;
+
+Procedure cPage.Normalise(a:caxis);
+var
+  rect: fRect;
+  dy: single;
+begin
+  if a = nil then
+    exit;
+  rect := getbound(a);
+  dy := rect.TopRight.y - rect.BottomLeft.y;
+  dy := dy * 0.1;
+  rect.TopRight.y := rect.TopRight.y + dy;
+  rect.BottomLeft.y := rect.BottomLeft.y - dy;
+  ZoomfRect(rect, a);
+end;
+
+Procedure cPage.Normalise;
+var
+  a: caxis;
+begin
+  a := activeAxis;
+  Normalise(a);
+end;
+
+Procedure cPage.NormaliseX;
+var
+  rect: fRect;
+  dy: single;
+  a: caxis;
+begin
+  a := activeAxis;
+  if a = nil then
+    exit;
+  rect := getbound;
+  rect.TopRight.y := a.max.y;
+  rect.BottomLeft.y := a.min.y;
+  ZoomfRect(rect);
+end;
+
+Procedure cPage.NormaliseY;
+var
+  rect: fRect;
+  dy: single;
+  a: caxis;
+begin
+  a := activeAxis;
+  if a = nil then
+    exit;
+  rect := getbound;
+  dy := rect.TopRight.y - rect.BottomLeft.y;
+  dy := dy * 0.1;
+  rect.TopRight.y := rect.TopRight.y + dy;
+  rect.BottomLeft.y := rect.BottomLeft.y - dy;
+  rect.TopRight.x := a.max.x;
+  rect.BottomLeft.x := a.min.x;
+  ZoomfRect(rect);
+end;
+
+function cPage.getpixeltabtext: TPoint;
+begin
+  result := cfg.pixelTabText;
+end;
+
+function cPage.getGridColor: point3;
+begin
+  result := cfg.GridColor;
+end;
+
+procedure cPage.setGridColor(c: point3);
+begin
+  cfg.GridColor := c;
+end;
+
+function cPage.GetPointSize: glFloat;
+begin
+  result:=cfg.m_PointSize;
+end;
+
+function cPage.GetTabSpace: fRect;
+begin
+  result := m_TabSpace;
+end;
+
+function cPage.GetTabText: point2;
+begin
+  result := cfg.m_TabText;
+end;
+
+function cPage.GetPixelTabSpace: TRect;
+begin
+  result := m_pixelTabSpace;
+end;
+
+function cPage.GetTypeString: string;
+begin
+  result := 'Страница';
+end;
+
+function cPage.getAxisCount: integer;
+begin
+  result := axises.ChildCount;
+end;
+
+function cPage.iXToTrend(ix: integer): single;
+begin
+  if activeAxis<>nil then
+    result := p2iToTrend(point(ix, 0), activeAxis).x
+  else
+    result:=0;
+end;
+
+function cPage.XToTrend(x: single): single;
+var
+  page: cPage;
+  dx, dy, len, width, Height: single;
+begin
+  if x > m_TabSpace.TopRight.x then
+    result := activeAxis.max.x
+  else
+  begin
+    if x < m_TabSpace.BottomLeft.x then
+      result := activeAxis.min.x
+    else
+    begin
+      width := m_TabSpace.TopRight.x - m_TabSpace.BottomLeft.x;
+      // Длина отображаемого интервала на новый вьюпорт
+      dx := activeAxis.getdx;
+      // проекция растояния нормированного окна в трендовый вьюпорт
+      len := dx * (x - m_TabSpace.BottomLeft.x) / width;
+      result := activeAxis.min.x + len;
+    end;
+  end;
+end;
+
+procedure cPage.setcolor(p: point3);
+var
+  c: integer;
+begin
+  inherited;
+end;
+
+function cPage.getCaption: string;
+begin
+  result := PageLabel.Text;
+end;
+
+procedure cPage.setCaption(s: string);
+begin
+  inherited;
+  PageLabel.Text := s;
+end;
+
+procedure cPage.setBound(rect: TRect);
+begin
+  inherited;
+  setEditPos(self);
+  SetTabText(cfg.pixelTabText);
+  gridlinecount_X := round((rect.Right - rect.Left) / GridPixels);
+  gridlinecount_Y := round((rect.Top - rect.bottom) / GridPixels);
+end;
+
+function cPage.ModComponentName(p_name: string): string;
+var
+  obj: tcomponent;
+  i: integer;
+begin
+  for i := 0 to cchart(self.chart).ComponentCount - 1 do
+  begin
+    obj := cchart(self.chart).Components[i];
+  end;
+  obj := cchart(self.chart).FindComponent(p_name);
+  while obj <> nil do
+  begin
+    p_name := ModName(p_name, false);
+    obj := cchart(self.chart).FindComponent(p_name);
+  end;
+  result := p_name;
+end;
+
+procedure cPage.setLgX(v: boolean);
+var
+  r:frect;
+  ax:caxis;
+begin
+  fLg:=v;
+  if v then
+  begin
+    ax:=activeAxis;
+    r := ax.getzoomrect;
+    cursor.setLgx1(cursor.getfx1);
+    cursor.setLgx2(cursor.getfx2);
+    ax.ZoomfRect(r);
+  end
+  else
+  begin
+    cursor.setx1(cursor.m_lgx1);
+    cursor.setx2(cursor.m_lgx2);
+  end;
+  NormaliseX;
+end;
+
+procedure cPage.setname(str: string);
+begin
+  inherited;
+  if PageLabel <> nil then
+    Caption := name;
+end;
+
+procedure cPage.clear;
+begin
+  axises.destroychildrens;
+end;
+
+procedure cPage.OnDraw(Sender: tobject);
+begin
+  if NeedUpdateText then
+    UpdateAxisText(nil);
+end;
+
+procedure cPage.setPrec(i: integer);
+begin
+  m_prec := i;
+end;
+
+procedure cPage.BeforeDrawChild;
+begin
+  inherited;
+  glMatrixMode(GL_PROJECTION_MATRIX);
+  glloadidentity;
+end;
+
+procedure cPage.OnSetText(Sender: tobject);
+begin
+  SetLabelPos;
+end;
+
+end.

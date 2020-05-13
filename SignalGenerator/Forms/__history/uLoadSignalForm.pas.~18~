@@ -1,0 +1,87 @@
+unit uLoadSignalForm;
+
+interface
+
+uses
+  Windows, SysUtils, Classes, Graphics, Forms, usignal, inifiles,
+  Dialogs, StdCtrls, DCL_MYOWN, Controls;
+
+type
+  TLoadSignalForm = class(TForm)
+    PathBtn: TButton;
+    OpenDialog1: TOpenDialog;
+    PathEdit: TEdit;
+    CancelBtn: TButton;
+    ApplyBtn: TButton;
+    procedure PathBtnClick(Sender: TObject);
+  private
+    signals:cSignalsMng;
+  private
+  public
+    procedure LoadMera(path:string);
+    procedure LoadSignals(p_signals:csignalsMng);
+  end;
+
+var
+  LoadSignalForm: TLoadSignalForm;
+
+implementation
+
+{$R *.dfm}
+
+procedure TLoadSignalForm.LoadSignals(p_signals:csignalsMng);
+begin
+  signals:=p_signals;
+  if showmodal=mrok then
+  begin
+    LoadMera(PathEdit.Text);
+  end;
+end;
+
+procedure TLoadSignalForm.PathBtnClick(Sender: TObject);
+begin
+  if OpenDialog1.execute then
+  begin
+    pathedit.Text:=opendialog1.FileName;
+  end;
+end;
+
+procedure TLoadSignalForm.LoadMera(path:string);
+var
+  ifile:tinifile;
+  sections:tstringlist;
+  folder,fname:string;
+  I,len: Integer;
+  signal:csignal;
+  f:file;
+begin
+  ifile:=TIniFile.Create(path);
+  sections:=tstringlist.Create;
+  ifile.ReadSections(sections);
+  folder:=extractfiledir(path);
+  signals.clear;
+  signals.Events.active:=false;
+  for I := 0 to sections.Count - 1 do
+  begin
+    if lowercase(sections.Strings[i])<>'mera' then
+    begin
+      fname:=folder+'\'+sections.Strings[i]+'.dat';
+      if fileexists(fname) then
+      begin
+        if (i=sections.Count - 1) then
+          signals.Events.active:=true;
+        signal:=csignal.create;
+        signal.name:=sections.Strings[i];
+        signal.fs:=ifile.ReadInteger(sections.Strings[i],'freq',1);
+        AssignFile(f,fname);
+        reset(f,1);
+        len:=trunc(FileSize(f)/4);
+        signal.SignalLength:=len;
+        blockread(f,signal.points[0],FileSize(f),len);
+        signals.add(signal);
+      end;
+    end;
+  end;
+end;
+
+end.

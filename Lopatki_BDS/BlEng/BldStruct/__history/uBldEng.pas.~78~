@@ -1,0 +1,469 @@
+unit uBldEng;
+
+interface
+uses
+  controls, stdctrls, classes, sysutils, uEventList, uEventTypes, uBaseObj,
+  uCommonMath, uVectorList, forms, uBldPathMng,
+  uLogFile, dialogs, uBaseObjMng, ubldEngEventTypes
+  ;
+
+type
+
+  cBldEng = class(cBaseObjMng)
+  private
+    ftimeproc:tobject;
+  public
+    // Содержит флаги (пока только показывать сообщения об ошибках)
+    flags:cardinal;
+    // Пути
+    PathMng:cBldPathMng;
+    // путь к текущей конфигурации
+    curCfg,
+    // последний прочитанный файл с данными
+    lastfile,
+    // каталог для сохранения расчетов по умолчанию
+    SaveFolder:string;
+    logFile:cLogFile;
+    prec:integer;
+    HardWare:cBaseObjMng;
+  public
+    // список каналов
+    channels:cBaseObj;
+  protected
+    GetEngObjForm:TForm;
+  protected
+    procedure AddBaseObjInstance(obj:cbaseobj);override;
+    procedure regObjClasses;override;
+    procedure setTimeProc(tp:tobject);
+  private
+  public
+    constructor create;override;
+    destructor destroy;override;
+    procedure clear;override;
+    procedure setEngFlag(flag:cardinal; b:boolean);
+    // найти датчик по номеру канала
+    function FindSensor(chan:integer):cbaseobj;
+    // получить канал по номеру
+    function findchan(i:integer):cbaseobj;
+    // получить канал по индексу
+    function getchan(i:integer):cbaseobj;
+    // получить первую попавшуюся в конфигурации турбину
+    function getTurbine:cbaseobj;
+    // добавить канал платы
+    function Addchan(i:integer):cbaseobj;overload;
+    // добавить канал платы
+    function Addchan(chan:cbaseobj):cbaseobj;overload;
+    // Число каналов
+    function ChanCount:integer;
+    // получить ссыль на датчик UTS
+    function UTS:cbaseobj;
+    // удалить объект из списка
+    procedure removeObj(obj:cBaseObj);override;
+    // процедура проходит по всем датчикам в движке, вызывает процедуру передаваемую в параметр
+    // и передает туда датчик.
+    procedure EnumSensors(proc:enumproc; data:pointer);
+    // получить тахо датчик. Если объект obj на ступени у которой есть тахо датчик,
+    // то он возвращается, иначе отображается форма для выбора датчика вручную.
+    // Если тахо датчика нет то возвращает nil
+    // если showSelectDlg true то диалог вызывается в любом случае
+    // obj - объект который задает контекст. Если это ступень то тахо датчик
+    // изначально ищется на этой ступени.
+    function GetTaho(obj:cbaseobj; showSelectDlg:boolean):cbaseobj;
+    // obj - объект который задает контекст. Например если это ступень
+    // и ищется тахо датчик, то изначально ищется на этой ступени.
+    function GetObjDlg(obj:cbaseobj; objtype:integer):cbaseobj;
+    // установить путь и имя файла для
+    procedure SetFolderPath(Folder,fname:string);
+    function GetFolder:string;
+    function GetFName:string;
+    function GetDataThread(name:string):tobject;
+    // обработать движком сообщение
+    procedure getmessage(str:string; messType:integer);
+    property timeproc:tobject read ftimeproc write setTimeproc;
+  end;
+
+  const
+    c_errorMessage = 1;
+    c_infoMessage = 2;
+    // Частота платы 40 МГГц
+    CardFreq = 40000000;
+    // путь к текущей конфигурации
+    c_curCfg = '\files\BldEngCfgPath.cfg';
+    // флаги движка
+    c_ignore = $00000001;
+    c_ShowMessage = $00000002;
+    c_LogMessage = $00000004;
+    c_EngLoading = $00000008;
+
+
+implementation
+uses usensor, ustage, upair, uBldObj, uChan, uTurbina, uUTSSensor,
+     uerrorproc, uGetEngObjForm, uLfmFile, uBldFile, u2070, u2081, uPlat,
+     uFileThread, ubldtimeproc, uDatathread;
+
+procedure cBldEng.regObjClasses;
+begin
+  inherited;
+  regclass(cUTSSensor);
+  regclass(cSensor);
+  regclass(cPair);
+  regclass(cTurbine);
+  regclass(cStage);
+  regclass(cChan);
+  regclass(cM2070);
+  regclass(cM2081);
+end;
+
+
+constructor cBldEng.create;
+var
+  res:cardinal;
+  path,section:ansistring;
+begin
+  inherited;
+  SaveFolder:='';
+  prec:=5;
+  logFile:=clogFile.create(extractfiledir(Application.ExeName)+'\journal.log',';');
+  setflag(flags,c_ShowMessage+c_LogMessage);
+  // загрузка путей к ресурсам
+  PathMng:=cBldPathMng.create(extractfiledir(Application.ExeName)+c_curCfg);
+
+  // список доступных каналов
+  channels:=cChanobj.create;
+  channels.name:='Каналы';
+  channels.destroydata:=True;
+  GetEngObjForm:=tGetEngObjForm.create(nil);
+  HardWare:=cPlatsList.create;
+  cPlatsList(HardWare).eng:=self;
+  tGetEngObjForm(GetEngObjForm).linc(self);
+end;
+
+procedure cBldEng.clear;
+begin
+  inherited;
+  if channels<>nil then
+  begin
+    channels.childrens.cleardata;
+  end;
+end;
+
+destructor cBldEng.destroy;
+begin
+  GetEngObjForm.destroy;
+  channels.destroy;
+  channels:=nil;
+  logfile.destroy;
+  PathMng.destroy;
+  HardWare.destroy;
+  inherited;
+end;
+
+procedure cBldEng.setTimeProc(tp:tobject);
+begin
+  ftimeproc:=tp;
+end;
+
+// удалить объект из списка
+procedure cBldEng.removeObj(obj:cBaseObj);
+begin
+  if obj is cchan then
+  begin
+    obj.unlinc;
+  end
+  else
+  begin
+    inherited removeobj(obj);
+  end;
+end;
+
+procedure cBldEng.AddBaseObjInstance(obj:cbaseobj);
+var
+  ch:cchan;
+begin
+  if not cbldobj(obj).helper then
+  begin
+    if obj is cPlat then
+    begin
+      HardWare.Add(obj);
+      obj.ReplaceObjMng(HardWare);
+      exit;
+    end;
+    if obj is csensor then
+    begin
+      ch:=cchan(Addchan(csensor(obj).channumber));
+    end;
+    if not (obj is cchan) then
+    begin
+      inherited AddBaseObjInstance(obj);
+      exit;
+    end
+    // если линкуем энджин к каналу
+    else
+    begin
+      channels.addchild(obj);
+      obj.ReplaceObjMng(self);
+    end;
+  end;
+end;
+
+
+function cBldEng.FindSensor(chan:integer):cbaseobj;
+var
+  I: Integer;
+  obj:cbaseobj;
+begin
+  for I := 0 to objects.Count - 1 do
+  begin
+    obj:=getobj(i);
+    if obj is csensor then
+    begin
+      if csensor(obj).chan.chan=chan then
+      begin
+        result:=obj;
+      end;
+    end;
+  end;
+end;
+
+// получить канал по номеру
+function cBldEng.findchan(i:integer):cbaseobj;
+var
+  chan:cchan;
+  ind:integer;
+begin
+  chan:=cchan(channels.findObj(@i, ind));
+  result:=chan;
+end;
+// получить канал по индексу
+function cBldEng.getchan(i:integer):cbaseobj;
+begin
+  result:=cbaseobj(channels.getChild(i));
+end;
+
+function cBldEng.Addchan(i:integer):cbaseobj;
+var
+  chan:cchan;
+  ind:integer;
+begin
+  if i<>-1 then
+  begin
+    chan:=cchan(channels.findObj(@i, ind));
+    if chan=nil then
+    begin
+      chan:=cchan.create;
+      chan.chan:=i;
+      Addchan(chan);
+    end;
+    result:=chan;
+  end
+  else
+    result:=nil;
+end;
+
+function cBldEng.Addchan(chan:cbaseobj):cbaseobj;
+var
+  lchan:cchan;
+  ind:integer;
+begin
+  lchan:=cchan(channels.findObj(@cchan(chan).chan,ind));
+  if (lchan=nil) then
+  begin
+    cbldobj(chan).eng:=self;
+    lchan:=cchan(chan);
+  end
+  else
+  // если канал с таким индексом существует то затираем предыдущий канал
+  begin
+    if lchan<>chan then
+    begin
+      channels.deletechild(ind);
+      lchan.destroy;
+    end;
+  end;
+  events.CallAllEventsWithSender(E_OnAddObj, chan);
+  result:=lchan;
+end;
+
+function cBldEng.ChanCount:integer;
+begin
+  result:=channels.ChildCount;
+end;
+
+function cBldEng.getTurbine:cbaseobj;
+var
+  obj:cbaseobj;
+  i:integer;
+begin
+  result:=nil;
+  for I := 0 to count - 1 do
+  begin
+    obj:=getobj(i);
+    if obj is cTurbine then
+    begin
+      result:=obj;
+      exit;
+    end;
+  end;
+end;
+
+procedure cBldEng.EnumSensors(proc:enumproc; data:pointer);
+var
+  I: Integer;
+  obj:cbldobj;
+begin
+  for I := 0 to count - 1 do
+  begin
+    obj:=cbldobj(getobj(i));
+    if obj is csensor then
+      proc(obj,data);
+  end;
+end;
+
+function cBldEng.GetObjDlg(obj:cbaseobj; objtype:integer):cbaseobj;
+var
+  header:string;
+begin
+  case objtype of
+    c_edgeSensor: header:= 'Выбор периферийного датчика';
+    c_RootSensor: header:= 'Выбор корневого датчика';
+    c_tahoSensor: header:= 'Выбор тахо датчика';
+    c_Turbine: header:= 'Выбор турбины';
+    c_Sensor: header:= 'Выбор датчика';
+    c_Stage: header:= 'Выбор ступени';
+    c_Chan: header:= 'Выбор канала';
+    c_pair: header:= 'Выбор пары';
+  end;
+  result := csensor(tGetEngObjForm(GetEngObjForm).GetObj(objtype, obj, header));
+end;
+
+function cBldEng.GetTaho(obj:cbaseobj; showselectdlg:boolean):cbaseobj;
+var
+  parent:cbaseobj;
+  taho:csensor;
+begin
+  taho:=nil;
+  if not showselectdlg then
+  begin
+    // если переданный объект - датчик
+    if obj is csensor then
+    begin
+      parent:=csensor(obj).stage;
+      if parent<>nil then
+      begin
+        taho:=cstage(parent).GetTaho;
+      end;
+    end;
+    // если переданный объект - пара
+    if obj is cpair then
+    begin
+      parent:=cpair(obj).stage;
+      if parent<>nil then
+      begin
+        taho:=cstage(parent).GetTaho;
+      end;
+    end;
+    // если переданный ступень
+    if obj is cstage then
+    begin
+      taho:=cstage(obj).GetTaho;
+    end;
+  end;
+  if showselectdlg and (taho=nil) then
+  begin
+    taho:=csensor(tGetEngObjForm(GetEngObjForm).GetObj(c_tahoSensor, nil, 'Выбор тахо датчика'));
+  end;
+  result:=taho;
+end;
+
+procedure cBldEng.getmessage(str:string; messType:integer);
+begin
+  if CheckFlag(flags, c_ShowMessage) then
+  begin
+    showmessage(str);
+  end;
+  if CheckFlag(flags, c_LogMessage) then
+  begin
+    if messType=c_errorMessage then
+    begin
+      logFile.addErrorMes(str);
+    end;
+    if messType=c_infoMessage then
+    begin
+      logFile.addInfoMes(str);
+    end;
+  end;
+end;
+
+procedure cBldEng.setEngFlag(flag:cardinal; b:boolean);
+begin
+  if b then
+    setFlag(flags,flag)
+  else
+    dropFlag(flags,flag);
+end;
+
+function cBldEng.UTS:cbaseobj;
+var
+  i:integer;
+  obj:cbaseobj;
+begin
+  result:=nil;
+  for I := 0 to objects.Count - 1 do
+  begin
+    obj:=getObj(i);
+    if obj is cUTSSensor then
+    begin
+      if cUTSSensor(obj).chan<>nil then
+      begin
+        result:=obj;
+        exit;
+      end;
+    end;
+  end;
+end;
+
+procedure cBldEng.SetFolderPath(Folder,fname:string);
+var
+  t:cFileThread;
+begin
+  t:=cFileThread(cDataThreadMng(cbldtimeproc(ftimeproc).dataThreads).GetThread('cFileThread'));
+  if t<>nil then
+  begin
+    t.Init(folder,fname);
+  end
+  else
+  begin
+    getmessage('Попытка установить путь к каталогу воспроизведения до создания класса cFileThread',c_errorMessage);
+  end;
+end;
+
+function cBldEng.GetFolder:string;
+var
+  t:cFileThread;
+begin
+  result:='';
+  t:=cFileThread(cDataThreadMng(cbldtimeproc(ftimeproc).dataThreads).GetThread('cFileThread'));
+  if t<>nil then
+  begin
+    result:=cFileThread(t).folder;
+  end
+end;
+
+function cBldEng.GetFName:string;
+var
+  t:cFileThread;
+begin
+  result:='';
+  t:=cFileThread(GetDataThread('cFileThread'));
+  if t<>nil then
+  begin
+    result:=cFileThread(t).namePart;
+  end
+end;
+
+function cBldEng.GetDataThread(name:string):tobject;
+begin
+  result:=cDataThreadMng(cbldtimeproc(ftimeproc).dataThreads).GetThread('cFileThread');
+end;
+
+end.

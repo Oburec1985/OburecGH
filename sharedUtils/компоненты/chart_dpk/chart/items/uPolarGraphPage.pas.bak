@@ -1,0 +1,365 @@
+unit uPolarGraphPage;
+
+interface
+
+uses
+  Controls, windows, ubaseobj, udrawobj, uTrend, uCommonTypes, opengl, uOglExpFunc, classes,
+  uAxis, messages, utext, sysutils, uEventList, uSetList, uFrameListener, math,
+  mathfunction, uChartEvents, uPoint, dialogs, types, forms, uSimpleObjects,
+  uDoubleCursor, NativeXML, uBasePage, Clipbrd;
+
+type
+  cPolarGraphPage = class(cBasePage)
+  private
+    // пиксельный центр
+    m_center:tpoint;
+    // матрица вида оси
+    stateM: matrixgl;
+
+    // установки сетки
+    // lg10_step, Line_Step
+    m_gridType:integer;
+    // количество кругов на сетке
+    m_GridCount:integer;
+    m_gridStep:double;
+    // количество линий по кругу
+    m_AngelGridCount:integer;
+    // на всю длину/ риски
+    m_AngelGridType:integer;
+    fGridListId:cardinal;
+  private
+    // отступ в пикселях
+    m_Tab:integer;
+    fNeedRecompile:boolean;
+    // максимум в координатах графика
+    m_Max:double;
+  private
+    procedure DrawGraphBorder;
+    // отрисовка осей абсцисс и ординат. Не устанавливает вьюпорт поэтому перед
+    // вызовом надо поставить DrawObjVp
+    procedure DrawCross;
+    procedure DrawGrid;
+    procedure drawPage;
+    Procedure SetZoom;
+    procedure compile;
+    procedure CompileGrid;
+    procedure drawAngelGrid(f:cfont);
+    procedure drawCyclesGrid(f:cfont);
+    // подготовить видовую матрицу
+    procedure PrepareZomm;
+  protected
+    procedure BeforeDrawChild; override;
+    //procedure DoClick(i_p:tpoint;f_p:point2);override;
+    //procedure DoButtonUp(i_p:tpoint;f_p:point2);override;
+    //procedure DoMouseMove(i_p:tpoint;f_p:point2);override;
+    //procedure doOnExit;override;
+    procedure UpdatePixTabs;
+    procedure setBound(rect: trect); override;
+    //procedure linc(p_chart: tcomponent); override;
+    procedure DrawData; override;
+  public
+    constructor create; override;
+    destructor destroy; override;
+  public
+  end;
+
+const
+  lg10_step=0;
+  Line_step=1;
+  AngelGrid_sections=0;
+  AngelGrid_Ray=1;
+  c_digits=4;
+
+
+implementation
+
+{ cPolarGraphPage }
+
+procedure cPolarGraphPage.BeforeDrawChild;
+begin
+  inherited;
+  setDrawObjVP;
+  SetZoom;
+end;
+
+procedure cPolarGraphPage.compile;
+begin
+  if fneedrecompile then
+  begin
+    fneedrecompile:=false;
+    CompileGrid;
+  end;
+end;
+
+procedure cPolarGraphPage.CompileGrid;
+var
+  f:cFont;
+begin
+  f:=GetFont(c_AxisFontInd);
+  if fGridListId<>0 then
+    glDeleteLists(fGridListId, 1);
+  fGridListId := glGenLists(1);
+  glNewList(fGridListId, GL_COMPILE);
+  drawCyclesGrid(f);
+  drawAngelGrid(f);
+  glEndList;
+end;
+
+procedure cPolarGraphPage.drawCyclesGrid(f:cfont);
+var
+  i, ord:integer;
+  r:glfloat;
+begin
+  case m_gridType of
+    lg10_step:
+    begin
+      ord:=trunc(log10(m_max));
+
+      for I := 0 to m_GridCount - 1 do
+      begin
+        r:=Power(10,ord-m_GridCount+i);
+        DrawCycle(r);
+      end;
+      glEndList;
+    end;
+    Line_step:
+    begin
+      ord:=trunc(m_max/m_gridStep);
+      for I := 0 to ord do
+      begin
+        r:=(i+1)*m_gridStep;
+        if r<=m_max then
+        begin
+          glColor3fv(@gray);
+          DrawCycle(r);
+          // отрисовка текста масштаба
+          glColor3fv(@black);
+          f.scaleVectorText:=p2(1,1);
+          f.OutText(formatstrNoE(r, c_digits), p2(r,0), m_max, c_right);
+          f.OutText(formatstrNoE(-r, c_digits), p2(-r,0), m_max, c_left);
+          f.OutText(formatstrNoE(r, c_digits), p2(0,r), m_max, c_left);
+          f.OutText(formatstrNoE(-r, c_digits), p2(0,-r), m_max, c_left);
+        end
+        else
+          break;
+      end;
+
+    end;
+  end;
+end;
+
+procedure cPolarGraphPage.drawAngelGrid(f:cfont);
+var
+  lp1,lp2:point2;
+  angel:double;
+  i:integer;
+begin
+  // рисуем угловую сетку
+  lp1:=p2(0,0);
+  case m_AngelGridType of
+    AngelGrid_sections:
+    begin
+
+    end;
+    AngelGrid_Ray:
+    begin
+      // лучи окружности
+      lp2.x:=m_max;
+      lp2.y:=0;
+    end;
+  end;
+  // установка типа линии (пунктир)
+  glColor3fv(@gray);
+  glLineStipple(1, $F0F0);
+  glEnable(GL_LINE_STIPPLE);
+  glMatrixMode(GL_MODELVIEW);
+  glpushmatrix;
+  glLoadIdentity;
+  for I := 0 to m_AngelGridCount - 1 do
+  begin
+    //angel:=2*pi/m_AngelGridCount;
+    angel:=360/m_AngelGridCount;
+    case m_AngelGridType of
+      AngelGrid_sections:
+      begin
+
+      end;
+      AngelGrid_Ray:
+      begin
+        f.OutText(formatstrNoE(angel*i, c_digits), p2(0.95*m_max,0), m_max, c_right);
+        glBegin (GL_LINES);
+          glVertex2fv (@lp1);
+          glVertex2fv (@lp2);
+        glEnd;
+        glrotate(angel,0,0,1);
+      end;
+    end;
+  end;
+  glpopmatrix;
+  glDisable(GL_LINE_STIPPLE);
+end;
+
+constructor cPolarGraphPage.create;
+begin
+  inherited;
+  m_gridType:=Line_Step;
+  //m_gridType:=lg10_step;
+  m_gridStep:=5;
+  m_GridCount:=4;
+  m_AngelGridType:=AngelGrid_Ray;
+  m_AngelGridCount:=36;
+  m_Tab:=14;
+  m_max:=10;
+  // Фон страницы
+  color := white;
+  PrepareZomm;
+end;
+
+destructor cPolarGraphPage.destroy;
+begin
+
+  inherited;
+end;
+
+
+procedure cPolarGraphPage.drawPage;
+begin
+  glcolor3fv(@color);
+  // отрисовка полигона ащте
+  glBegin(GL_QUADs);
+  glvertex2f(-1, -1);
+  glvertex2f(-1, 1);
+  glvertex2f(1, 1);
+  glvertex2f(1, -1);
+  glend;
+end;
+
+
+procedure cPolarGraphPage.setBound(rect: trect);
+begin
+  inherited;
+  UpdatePixTabs;
+end;
+
+procedure cPolarGraphPage.SetZoom;
+begin
+  // ======================Подготовка к рисованию=========================
+  //glGetIntegerv(gl_Matrix_Mode, @p);
+  //glMatrixMode(gl_projection);
+  //glpushmatrix;
+  //glloadidentity;
+
+  glMatrixMode(gl_projection);
+  glloadmatrixf(@stateM);
+
+  //glpopmatrix;
+  //if p = GL_MODELVIEW then
+  //  glMatrixMode(GL_MODELVIEW);
+  //if p = gl_projection then
+  //  glMatrixMode(gl_projection);
+end;
+
+procedure cPolarGraphPage.UpdatePixTabs;
+var
+  rad,w,h:integer;
+begin
+  w:=getwidth; w:=round(w/2);
+  h:=getwidth; h:=round(h/2);
+  m_center.x:=bound.Left+w;
+  m_center.y:=bound.Bottom+h;
+  if w>h then
+  begin
+    rad:=h-m_Tab;
+    m_pixelTabSpace.Top:=m_Tab;
+    m_pixelTabSpace.Bottom:=m_Tab;
+    m_pixelTabSpace.left:=w-rad;
+    m_pixelTabSpace.Right:=m_pixelTabSpace.left;
+  end
+  else
+  begin
+    rad:=w-m_Tab;
+    m_pixelTabSpace.Top:=h-rad;
+    m_pixelTabSpace.Bottom:=m_pixelTabSpace.Top;
+    m_pixelTabSpace.left:=m_Tab;
+    m_pixelTabSpace.Right:=m_Tab;
+  end;
+  fneedrecompile:=True;
+end;
+
+procedure cPolarGraphPage.PrepareZomm;
+var
+  ord:integer;
+  r:glfloat;
+  I: Integer;
+begin
+  // заменена стандартная функция т.к. в случае изменения зума
+  // из другого потока glOrtho не работает
+  mathfunction.CreateOrthoMatrix(-m_max, m_max, -m_max, m_max, -1, 1, stateM);
+  fNeedRecompile:=true;
+end;
+
+procedure cPolarGraphPage.DrawCross;
+var
+  width,w:double;
+begin
+  glcolor3fv(@gray);
+  glGetDoubleV(GL_LINE_WIDTH, @w);
+  width:=1;
+  glLineWidth(width);
+  glbegin(GL_LINES);
+    glvertex2f(-1,0);
+    glvertex2f(1,0);
+    glvertex2f(0,-1);
+    glvertex2f(0,1);
+  glend;
+  glLineWidth(w);
+end;
+
+procedure cPolarGraphPage.DrawData;
+begin
+  inherited;
+  compile;
+  glMatrixMode(gl_projection);
+  glpushmatrix;
+  glloadidentity;
+  setCommonVP;
+  // отрисовка фона страницы
+  drawPage;
+  // отрисовка рамки страницы
+  drawBound;
+  setDrawObjVP;
+  // отрисовка крестика
+  DrawCross;
+  // отрисовка рамки поля вывода самого графика
+  DrawGraphBorder;
+  // установка матрицы вида для отрисовки внутри поляв ывода
+  SetZoom;
+  DrawGrid;
+  glpopmatrix;
+end;
+
+procedure cPolarGraphPage.DrawGraphBorder;
+var
+  width,w:double;
+begin
+  glcolor3fv(@red);
+  glGetDoubleV(GL_LINE_WIDTH,@w);
+  width:=2;
+  glLineWidth(width);
+  glbegin(GL_LINE_STRIP);
+    glvertex2f(-1,-1);
+    glvertex2f(-1,1);
+    glvertex2f(1,1);
+    glvertex2f(1,-1);
+    glvertex2f(-1,-1);
+  glend;
+  glLineWidth(w);
+end;
+
+procedure cPolarGraphPage.DrawGrid;
+begin
+  glColor3fv(@gray);
+  glCallList(fGridListId);
+end;
+
+end.

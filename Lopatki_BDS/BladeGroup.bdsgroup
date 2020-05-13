@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<PersonalityInfo>
+		<Option>
+			<Option Name="Personality">Default.Personality</Option>
+			<Option Name="ProjectType"></Option>
+			<Option Name="Version">1.0</Option>
+			<Option Name="GUID">{75A590D1-F54B-4923-8577-F8C28CCF86F0}</Option>
+		</Option>
+	</PersonalityInfo>
+	<Default.Personality>  <Projects>
+      <Projects Name="DctrBld.exe">DoctorBlade\DctrBld.bdsproj</Projects>
+      <Projects Name="BladeProcessor.exe">BladeProcessor\BladeProcessor.bdsproj</Projects>
+      <Projects Name="BladeRecorder2070.exe">BladeRecorder\BladeRecorder2070.bdsproj</Projects>
+      <Projects Name="BladeGenerator.exe">BladeGenerator\BladeGenerator.bdsproj</Projects>
+      <Projects Name="dcl_own.bpl">Проект компонента GlChart\компон\dcl_own.bdsproj</Projects>
+      <Projects Name="BlEng.exe">BlEng\BlEng.bdsproj</Projects>
+      <Projects Name="ComponentsLib.bpl">компоненты\ComponentsLib.bdsproj</Projects>
+      <Projects Name="Targets">DctrBld.exe BladeProcessor.exe BladeRecorder2070.exe BladeGenerator.exe dcl_own.bpl BlEng.exe ComponentsLib.bpl</Projects>
+    </Projects>
+    <Dependencies/>
+  </Default.Personality>
+	<StarTeamAssociation></StarTeamAssociation>
+	<StarTeamNonRelativeFiles></StarTeamNonRelativeFiles>
+</BorlandProject>

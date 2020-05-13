@@ -1,0 +1,107 @@
+object RZDTareFrame: TRZDTareFrame
+  Left = 0
+  Top = 0
+  Width = 476
+  Height = 182
+  TabOrder = 0
+  DesignSize = (
+    476
+    182)
+  object HFCbox: TComboBox
+    Left = 5
+    Top = 60
+    Width = 468
+    Height = 21
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 0
+  end
+  object Path: TComboBox
+    Left = 5
+    Top = 14
+    Width = 443
+    Height = 21
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 1
+  end
+  object S1Cbox: TComboBox
+    Left = 5
+    Top = 83
+    Width = 468
+    Height = 21
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 2
+  end
+  object S2Cbox: TComboBox
+    Left = 5
+    Top = 106
+    Width = 468
+    Height = 21
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 3
+  end
+  object S3Cbox: TComboBox
+    Left = 5
+    Top = 129
+    Width = 468
+    Height = 21
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 4
+  end
+  object S4Cbox: TComboBox
+    Left = 5
+    Top = 153
+    Width = 468
+    Height = 21
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 5
+  end
+  object VFCbox: TComboBox
+    Left = 5
+    Top = 37
+    Width = 468
+    Height = 21
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 6
+  end
+  object PathBtn: TButton
+    Left = 448
+    Top = 14
+    Width = 24
+    Height = 19
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Anchors = [akTop, akRight]
+    Caption = '...'
+    TabOrder = 7
+  end
+end

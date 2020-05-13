@@ -1,0 +1,270 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{AFB93D77-DC69-45C7-B5D7-8C8E465EE77A}</ProjectGuid>
+			<ProjectVersion>12.0</ProjectVersion>
+			<MainSource>PrSinalsGenerator.dpr</MainSource>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_UnitSearchPath>$(BDS)\RaveReports\Li;..\3dProj\Loader_\Render\Shaders;..\sharedUtils\utils\files;..\sharedUtils\utils;..\3dProj\Loader_\;..\3dProj\Loader_\helpTools;..\sharedUtils\utils\PathUtils;..\sharedUtils\objects;..\sharedUtils\objects\utils;..\sharedUtils\utils\lists;..\sharedUtils\компоненты\chart_dpk\chart\items;..\sharedUtils\компоненты\chart_dpk\chart\utils;..\sharedUtils\компоненты\chart_dpk\chart\utils\lists;..\sharedUtils\компоненты\chart_dpk\chart\forms;..\sharedUtils\компоненты\chart_dpk\chart\forms\frames;..\3dProj\Loader_\Scene;..\3dProj\Loader_\shaders;..\3dProj\Loader_\Uinterface;..\3dProj\Loader_\Render;..\3dProj\Loader_\math;..\3dProj\Loader_\Scene\objects;H:\Oburec\delphi\2011\3dProj\Loader_\Scene\objects;..\sharedUtils\mera;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+			<DCC_RangeChecking>true</DCC_RangeChecking>
+			<DCC_DependencyCheckOutputName>PrSinalsGenerator.exe</DCC_DependencyCheckOutputName>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<DCC_Platform>x86</DCC_Platform>
+			<BRCC_IncludePath>..\sharedUtils\компоненты\chart_dpk;..\sharedUtils\компоненты\chart_dpk\chart;..\sharedUtils\компоненты\chart_dpk\chart\items;..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners;..\sharedUtils\компоненты\chart_dpk\chart\utils\lists;..\sharedUtils\ogl;$(BRCC_IncludePath)</BRCC_IncludePath>
+			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
+			<DCC_N>false</DCC_N>
+			<DCC_S>false</DCC_S>
+			<DCC_K>false</DCC_K>
+			<DCC_E>false</DCC_E>
+			<DCC_F>false</DCC_F>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_IOChecking>false</DCC_IOChecking>
+			<DCC_RangeChecking>false</DCC_RangeChecking>
+			<DCC_IntegerOverflowCheck>false</DCC_IntegerOverflowCheck>
+			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_RunTimeTypeInfo>true</DCC_RunTimeTypeInfo>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="PrSinalsGenerator.dpr">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="SignalsGenerator.pas">
+				<Form>GeneratorForm</Form>
+			</DCCReference>
+			<DCCReference Include="frames\uSinFrame.pas">
+				<Form>SinFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\objects\uBaseObj.pas"/>
+			<DCCReference Include="..\sharedUtils\objects\uBaseObjMng.pas"/>
+			<DCCReference Include="..\sharedUtils\objects\uBaseObjService.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\uComponentServises.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\uCursors.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\uDescObj.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\uFrameListener.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\uLogFile.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\uPathMng.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\lists\uEventList.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\lists\uEventTypes.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\lists\uRegClassesList.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\lists\usetlist.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\lists\uSimpleSetList.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\lists\uvectorlist.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\dcl_dpk\uSpin.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\dcl_dpk\DCL_MYOWN.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\dcl_dpk\Spin.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\dcl_dpk\uAlignEdit.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\dcl_dpk\ubtnlistview.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\uAxis.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\uChartCursor.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\uDoubleCursor.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\uDrawObj.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\uDrawObjMng.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\uGistogram.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\uLegend.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\uMarkers.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\upage.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\uPageMng.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\uPoint.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\uTabObj.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\uTextLabel.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\uTrend.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\xml\NativeXmlObjectStorage.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\xml\NativeXml.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\xml\NativeXmlAppend.pas"/>
+			<DCCReference Include="..\sharedUtils\uBinFile.pas"/>
+			<DCCReference Include="..\sharedUtils\uCommonTypes.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\utils\uText.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\utils\lists\uChartEvents.pas"/>
+			<DCCReference Include="..\sharedUtils\forms\uSystemInfoFrame.pas">
+				<Form>SystemInfoFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\forms\uGetMngObjForm.pas">
+				<Form>GetMngObjForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\forms\ulogFrame.pas">
+				<Form>LogFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\forms\uProgressDlg.pas">
+				<Form>ProgresDlg</Form>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\math\MathFunction.pas"/>
+			<DCCReference Include="..\sharedUtils\math\u2DMath.pas"/>
+			<DCCReference Include="..\sharedUtils\math\uCommonMath.pas"/>
+			<DCCReference Include="..\sharedUtils\math\uListMath.pas"/>
+			<DCCReference Include="..\sharedUtils\math\uMatrix.pas"/>
+			<DCCReference Include="..\sharedUtils\math\uMyMath.pas"/>
+			<DCCReference Include="..\sharedUtils\objects\utils\uObjXML.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners\uChartClickFrListener.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners\uObjFrameListener.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners\uPageFrameListener.pas"/>
+			<DCCReference Include="..\sharedUtils\ogl\uSimpleObjects.pas"/>
+			<DCCReference Include="..\sharedUtils\ogl\dglOpenGL.pas"/>
+			<DCCReference Include="..\sharedUtils\ogl\uOglExpFunc.pas"/>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\frames\uChartInputFrame.pas">
+				<Form>ChartInputFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.pas">
+				<Form>ChartCfgForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateObjForm.pas">
+				<Form>CreateObjForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateTrendFrame.pas">
+				<Form>EditChartCfgFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\uCursorForm.pas">
+				<Form>CursorForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\uDoubleCursorForm.pas">
+				<Form>DoubleCursorForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjEditForm.pas">
+				<Form>DrawObjEditForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.pas">
+				<Form>DrawObjFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditChartObjFrame.pas">
+				<Form>EditDrawObjFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.pas">
+				<Form>EditMenuChartForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\uGistForm.pas">
+				<Form>GistForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\uGistFrame.pas">
+				<Form>GistFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\uPageForm.pas">
+				<Form>PageForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\uTextLabelForm.pas">
+				<Form>TextLabelForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.pas">
+				<Form>TrendForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendFrame.pas">
+				<Form>TrendFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\utils\PathUtils\uObjDb.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\PathUtils\PathUtils.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\PathUtils\UDirChangeNotifier.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\platform\uPlatformInfo.pas"/>
+			<DCCReference Include="..\sharedUtils\utils\platform\adCpuUsage.pas">
+				<Form>/,</Form>
+			</DCCReference>
+			<DCCReference Include="Forms\uLoadSignalForm.pas">
+				<Form>LoadSignalForm</Form>
+			</DCCReference>
+			<DCCReference Include="algs\uKoltSRS.pas"/>
+			<DCCReference Include="Forms\uSrsForm.pas">
+				<Form>SRSForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\utils\ufileMng.pas"/>
+			<DCCReference Include="Forms\uSaveSignalForm.pas">
+				<Form>SaveSignalForm</Form>
+			</DCCReference>
+			<DCCReference Include="frames\uShockFrame.pas">
+				<Form>ShockFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="algs\uSRS.pas"/>
+			<DCCReference Include="algs\uPageSRS.pas"/>
+			<DCCReference Include="..\sharedUtils\mera\uMeraFile.pas"/>
+			<DCCReference Include="..\sharedUtils\objects\utils\uTagUtils.pas"/>
+			<DCCReference Include="..\sharedUtils\mera\umeraSignal.pas"/>
+			<DCCReference Include="..\sharedUtils\mera\uBuffSignal.pas"/>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Source>
+						<Source Name="MainSource">PrSinalsGenerator.dpr</Source>
+					</Source>
+					<Parameters>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">1</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1049</VersionInfo>
+						<VersionInfo Name="CodePage">1251</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName"/>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+				</Delphi.Personality>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>

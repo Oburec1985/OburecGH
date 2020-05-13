@@ -1,0 +1,189 @@
+object HilbFltFrm: THilbFltFrm
+  Left = 0
+  Top = 0
+  Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1092#1080#1083#1100#1090#1088#1072
+  ClientHeight = 503
+  ClientWidth = 360
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  PixelsPerInch = 96
+  TextHeight = 13
+  object NumPointsLabel: TLabel
+    Left = 8
+    Top = 19
+    Width = 63
+    Height = 13
+    Caption = #1063#1080#1089#1083#1086' '#1090#1086#1095#1077#1082
+  end
+  object Label1: TLabel
+    Left = 8
+    Top = 245
+    Width = 69
+    Height = 13
+    Caption = #1063#1080#1089#1083#1086' '#1073#1083#1086#1082#1086#1074
+  end
+  object Label2: TLabel
+    Left = 8
+    Top = 123
+    Width = 86
+    Height = 13
+    Caption = #1056#1072#1079#1084#1077#1088' '#1087#1086#1088#1094#1080#1080', '#1089
+  end
+  object Label3: TLabel
+    Left = 8
+    Top = 317
+    Width = 12
+    Height = 13
+    Caption = 'T1'
+  end
+  object Label4: TLabel
+    Left = 8
+    Top = 365
+    Width = 12
+    Height = 13
+    Caption = 'T2'
+  end
+  object NumPointsCB: TComboBox
+    Left = 8
+    Top = 38
+    Width = 145
+    Height = 21
+    ItemIndex = 5
+    TabOrder = 0
+    Text = '4096'
+    OnChange = NumPointsCBChange
+    Items.Strings = (
+      '128'
+      '256'
+      '512'
+      '1024'
+      '2048'
+      '4096'
+      '8192'
+      '16384'
+      '32768'
+      '65536'
+      '131072'
+      '262144'
+      '524288')
+  end
+  object nBlocksIE: TIntEdit
+    Left = 8
+    Top = 264
+    Width = 145
+    Height = 21
+    TabOrder = 1
+    Text = '000'
+  end
+  object TimeFE: TFloatEdit
+    Left = 8
+    Top = 142
+    Width = 137
+    Height = 21
+    Enabled = False
+    TabOrder = 2
+    Text = '0.0'
+  end
+  object GroupBox1: TGroupBox
+    Left = 0
+    Top = 459
+    Width = 360
+    Height = 44
+    Align = alBottom
+    TabOrder = 3
+    DesignSize = (
+      360
+      44)
+    object CancelBtn: TButton
+      Left = 5
+      Top = 13
+      Width = 75
+      Height = 25
+      Anchors = [akLeft, akBottom]
+      Caption = #1054#1090#1084#1077#1085#1072
+      ModalResult = 2
+      TabOrder = 0
+    end
+    object ApplyBtn: TButton
+      Left = 278
+      Top = 13
+      Width = 75
+      Height = 25
+      Anchors = [akRight, akBottom]
+      Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
+      ModalResult = 1
+      TabOrder = 1
+      OnClick = ApplyBtnClick
+    end
+  end
+  object SignalLB: TListBox
+    Left = 192
+    Top = 0
+    Width = 168
+    Height = 459
+    Align = alRight
+    ItemHeight = 13
+    TabOrder = 4
+    OnClick = SignalLBClick
+  end
+  object AutoCB: TCheckBox
+    Left = 8
+    Top = 216
+    Width = 97
+    Height = 17
+    Caption = #1040#1074#1090#1086
+    Checked = True
+    Enabled = False
+    State = cbChecked
+    TabOrder = 5
+  end
+  object ResampleCB: TCheckBox
+    Left = 8
+    Top = 65
+    Width = 97
+    Height = 17
+    Caption = #1055#1077#1088#1077#1076#1080#1089#1082#1088#1077#1090#1080#1079#1072#1094#1080#1103
+    TabOrder = 6
+  end
+  object ResampleIE: TIntEdit
+    Left = 8
+    Top = 94
+    Width = 145
+    Height = 21
+    TabOrder = 7
+    Text = '-1'
+    OnChange = ResampleIEChange
+  end
+  object T1fe: TFloatEdit
+    Left = 8
+    Top = 336
+    Width = 121
+    Height = 21
+    TabOrder = 8
+    Text = '0.0'
+  end
+  object T2fe: TFloatEdit
+    Left = 8
+    Top = 384
+    Width = 121
+    Height = 21
+    TabOrder = 9
+    Text = '0.0'
+  end
+  object LengthCB: TCheckBox
+    Left = 8
+    Top = 297
+    Width = 97
+    Height = 17
+    Caption = #1042#1077#1089#1100' '#1089#1080#1075#1085#1072#1083
+    Checked = True
+    Enabled = False
+    State = cbChecked
+    TabOrder = 10
+  end
+end

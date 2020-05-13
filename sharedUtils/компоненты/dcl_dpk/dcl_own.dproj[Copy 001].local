@@ -1,0 +1,31 @@
+s on startup/shutdown and when errors occur.}
+{.$define UseOutputDebugString}
+
+{Set this option to use the assembly language version which is faster than the
+ pascal version. Disable only for debugging purposes. Setting the
+ CheckHeapForCorruption option automatically disables this option.}
+{$define ASMVersion}
+
+{FastMM always catches attempts to free the same memory block twice, however it
+ can also check for corruption of the memory heap (typically due to the user
+ program overwriting the bounds of allocated memory). These checks are
+ expensive, and this option should thus only be used for debugging purposes.
+ If this option is set then the ASMVersion option is automatically disabled.}
+{.$define CheckHeapForCorruption}
+
+{Enable this option to catch attempts to perform MM operations after FastMM has
+ been uninstalled. With this option set when FastMM is uninstalled it will not
+ install the previous MM, but instead a dummy MM handler that throws an error
+ if any MM operation is attempted. This will catch attempts to use the MM
+ after FastMM has been uninstalled.}
+{$define DetectMMOperationsAfterUninstall}
+
+{Set the following option to do extensive checking of all memory blocks. All
+ blocks are padded with both a header and trailer that are used to verify the
+ integrity of the heap. Freed blocks are also cleared to to ensure that they
+ cannot be reused after being freed. This option slows down memory operations
+ dramatically and should only be used to debug an application that is
+ overwriting memory or reusing freed pointers. Setting this option
+ automatically enables CheckHeapForCorruption and disables ASMVersion.
+ Very important: If you enable this option your application will require the
+ FastMM_FullDebugMode.dll library. If t

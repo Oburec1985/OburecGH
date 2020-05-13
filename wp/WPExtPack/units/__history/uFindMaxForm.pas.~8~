@@ -1,0 +1,34 @@
+unit uFindMaxForm;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ComCtrls, uBtnListView, StdCtrls, uSpin, ExtCtrls;
+
+type
+  TFindMaxForm = class(TForm)
+    GroupBox2: TGroupBox;
+    GroupBox1: TGroupBox;
+    OperatorsLV: TBtnListView;
+    GroupBox3: TGroupBox;
+    ProfLV: TBtnListView;
+    Panel1: TPanel;
+    ComboBox1: TComboBox;
+    Label1: TLabel;
+    GroupBox4: TGroupBox;
+    Splitter1: TSplitter;
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FindMaxForm: TFindMaxForm;
+
+implementation
+
+{$R *.dfm}
+
+end.

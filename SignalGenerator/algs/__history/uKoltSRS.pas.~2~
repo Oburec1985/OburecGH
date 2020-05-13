@@ -1,0 +1,257 @@
+unit uKoltSRS;
+
+interface
+uses
+  uSignal, uBaseObj, uBaseObjStr, uCommonTypes, math, classes;
+type
+
+  // структура описывает удар
+  cShock = class
+  public
+    // номер удара
+    ind,
+    // границы удара
+    i1,i2,
+    // максимальная амплитуда (по модулю) - индекс
+    iAmax:integer;
+    // время пика
+    tmax,
+    // начало и конец удара
+    t1,t2,
+    // максимальная амплитуда (по модулю)
+    Amax:single;
+  end;
+
+  cSRSAlg = class(cBaseObjStr)
+  public
+    // начальный и конечный отступ относительно удара по времени
+    offset1,offset2,
+    // начальная и конечная частота
+    f1,f2,
+    // приращение по частоте при расчете спектра
+    dF,
+    // демпфирование
+    e
+    :single;
+    // пороговое значение в процентах (от шкалы) для расчета
+    Threshold, GistThrehold:integer;
+    ShockList:tList;
+  protected
+    cursignal:csignal;
+  protected
+    procedure clearShockList;
+  public
+    // вычисляем начало и конеч ударов в секундах
+    procedure EvalShockEdges(s:csignal);
+    function Eval(signal:csignal; shockindex:integer):csignal;
+    function EvalTimeRealisation(signal:csignal; shockindex:integer; wn:single):csignal;
+    function GetShock(i:integer):cShock;
+    constructor create;
+    destructor destroy;
+  end;
+
+  function EvalSRS(s:csignal):csignal;
+
+implementation
+uses
+  uSRSForm;
+
+constructor cSRSAlg.create;
+begin
+  ShockList:=TList.Create;
+end;
+
+destructor cSRSAlg.destroy;
+begin
+  ClearShockList;
+  ShockList.Destroy;
+end;
+
+procedure cSRSAlg.EvalShockEdges(s:csignal);
+var
+  aMax, r, thresholdMax, thresholdMin, gist_max, gist_min:single;
+  iMax,I: Integer;
+  shock:cShock;
+  // найден удар
+  Detected,
+  // взводиться когда оперделено что конец удара выходит за рамки сигнала
+  // следовательно после этого удара искать новые нет смысла
+  needBreak:boolean;
+begin
+  cursignal:=s;
+  // очистка листа ударов
+  ClearShockList;
+
+  r:=cursignal.r*Threshold/200;
+  thresholdMax:=cursignal.m+r;
+  thresholdMin:=cursignal.m-r;
+  r:=cursignal.r*GistThrehold/100;
+  gist_max:=thresholdMax-r;
+  gist_min:=thresholdMin+r;
+  Detected:=false;
+  needbreak:=false;
+
+  i:=0;
+  while i<(cursignal.signallength-1) do
+  begin
+    // началось выделение положительного удара
+    if cursignal.points[i]>thresholdMax then
+    begin
+      detected:=true;
+      // амплитуда максимума в ударе
+      aMax:=cursignal.points[i];
+      // Индекс максимума в ударе
+      iMax:=i;
+      while cursignal.points[i]>gist_max do
+      begin
+        if i>s.SignalLength then
+        begin
+          break;
+        end;
+        if aMax<cursignal.points[i] then
+        begin
+          aMax:=cursignal.points[i];
+          iMax:=i;
+        end;
+        inc(i);
+      end;
+    end
+    else
+    begin
+      // началось выделение отрицательного удара
+      if cursignal.points[i]<thresholdMin then
+      begin
+        detected:=true;
+        // амплитуда максимума в ударе
+        aMax:=cursignal.points[i];
+        // Индекс максимума в ударе
+        iMax:=i;
+        while cursignal.points[i]<gist_min do
+        begin
+          if i>s.SignalLength then
+          begin
+            break;
+          end;
+          if aMax<cursignal.points[i] then
+          begin
+            aMax:=cursignal.points[i];
+            iMax:=i;
+          end;
+          inc(i);
+        end;
+      end;
+    end;
+    if detected then
+    begin
+      shock:=cshock.create;
+      shock.ind:=shocklist.Count;
+      shock.iAmax:=iMax;
+      shock.Amax:=aMax;
+      shock.tmax:=shock.iAmax*s.dx;
+      // начало и конец удара
+      shock.t1:=shock.Tmax-offset1;
+      if shock.t1<0 then
+      begin
+        shock.t1:=0;
+        shock.i1:=0;
+      end
+      else
+      begin
+        shock.i1:=round(shock.t1/s.dx);
+      end;
+      shock.t2:=shock.Tmax+offset2;
+      if shock.t2>s.getTimelength then
+      begin
+        shock.t2:=s.getTimelength;
+        shock.i2:=s.SignalLength-1;
+        needbreak:=true;
+      end
+      else
+      begin
+        shock.i2:=round(shock.t2/s.dx);
+        i:=shock.i2;
+      end;
+      ShockList.Add(shock);
+      detected:=false;
+    end;
+    if needbreak then
+      break;
+    inc(i);
+  end;
+end;
+
+// signal - исходныйе данные для расчета спектра удара. то что было замерено датчиком
+function cSRSAlg.Eval(signal:csignal; shockindex:integer):csignal;
+var
+  shock:cShock;
+  e, dt, rab, w, f_t, w_s, A_1, A_2, B_b, Ud, Y1, Y2, y3, yy:single;
+  f,i1,i2,SpectrumLength:integer;
+  I,j: Integer;
+  о: Integer;
+begin
+  Shock:=GetShock(ShockIndex);
+
+  SpectrumLength:=trunc((f2-f1)/df);
+  result:=csignal.create;
+  result.SignalLength:=SpectrumLength;
+  result.dx:=trunc(df);
+  result.x0:=f1;
+
+  dt:=signal.dx;
+  i1:=Shock.i1;
+  i2:=Shock.i2;
+
+  rab:=sqrt(1-e*e);
+  f:=f1;
+  for I := 0 to SpectrumLength - 1 do
+  begin
+    w:=2*pi*f;
+    f_t:=w*dt;
+    w_s:=w*rab;
+    a_1:=exp(-e*f_t);
+    a_2:=-a_1*a_1;
+    b_b:=f_t*a_1*sin(w_s*dt)/rab;
+    a_1:=a_1*2*cos(w_s*dt);
+    ud:=0;
+    y1:=0;
+    y2:=0;
+    for j := i1 to i2-i1 - 1 do
+    begin
+      y3:=B_b*signal.points[j]+a_1*y2+a_2*y1;
+      y1:=y2;
+      y2:=y3;
+      yy:=abs(y3);
+      if yy>=ud then
+        ud:=yy;
+    end;
+    result.points[i]:=ud;
+  end;
+end;
+
+procedure cSRSAlg.clearShockList;
+var
+  I: Integer;
+  shock:cShock;
+begin
+  for I := 0 to ShockList.Count - 1 do
+  begin
+    Shock:=cShock(ShockList.Items[i]);
+    Shock.Destroy;
+  end;
+  ShockList.Clear;
+end;
+
+function EvalSRS(s:csignal):csignal;
+begin
+  result:=SRSForm.EvalSRS(s);
+end;
+
+function cSRSAlg.GetShock(i:integer):cShock;
+begin
+  if i<=ShockList.count-1 then
+  begin
+    result:=cshock(ShockList.Items[i]);
+  end;
+end;
+
+end.
