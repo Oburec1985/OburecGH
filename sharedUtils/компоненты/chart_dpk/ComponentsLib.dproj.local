@@ -148,19 +148,6 @@
     <Transaction>2019.02.15 16:55:01.545.pas,D:\Oburec\delphi\2011\sharedUtils\компоненты\chart_dpk\Unit1.pas=D:\Oburec\delphi\2011\sharedUtils\компоненты\chart_dpk\chart\items\uPolarGraphPage.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
-    <File Path="bdertl.dcp"/>
-    <File Path="dbrtl.dcp"/>
-    <File Path="dcl_own.dcp"/>
-    <File Path="designide.dcp"/>
-    <File Path="glPackage.dcp"/>
-    <File Path="inet.dcp"/>
-    <File Path="rtl.dcp"/>
-    <File Path="vcl.dcp"/>
-    <File Path="vclactnband.dcp"/>
-    <File Path="vcldb.dcp"/>
-    <File Path="VclSmp.dcp"/>
-    <File Path="vclx.dcp"/>
-    <File Path="xmlrtl.dcp"/>
     <File Path="..\..\..\sharedUtils"/>
     <File Path="..\..\math"/>
     <File Path="..\..\math\u2DMath.pas"/>
@@ -246,5 +233,18 @@
     <File Path="chart\utils\uText.pas"/>
     <File Path="chart\uChart.pas"/>
     <File Path="uRegisterComponent.pas"/>
+    <File Path="bdertl.dcp"/>
+    <File Path="dbrtl.dcp"/>
+    <File Path="dcl_own.dcp"/>
+    <File Path="designide.dcp"/>
+    <File Path="glPackage.dcp"/>
+    <File Path="inet.dcp"/>
+    <File Path="rtl.dcp"/>
+    <File Path="vcl.dcp"/>
+    <File Path="vclactnband.dcp"/>
+    <File Path="vcldb.dcp"/>
+    <File Path="VclSmp.dcp"/>
+    <File Path="vclx.dcp"/>
+    <File Path="xmlrtl.dcp"/>
   </ProjectSortOrder>
 </BorlandProject>

@@ -93,7 +93,6 @@ type
     function getK(row:integer):double;
     function getTagName(row:integer):string;
     function genName:string;
-    function
   public
     procedure LinkBands(bl:tstringlist; pl:tplaces; pairlist:TTagBandPairList);
     constructor create(aowner:tcomponent);override;

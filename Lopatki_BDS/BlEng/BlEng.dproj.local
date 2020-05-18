@@ -323,7 +323,7 @@
     <Transaction>2015.08.31 15:04:13.062.dfm,E:\Oburec\delphi\2011\Lopatki_BDS\BlEng\Forms\uJournalForm.dfm=E:\Oburec\delphi\2011\sharedUtils\forms\uJournalForm.dfm</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
-    <File Path="..\..\..\2011"/>
+    <File Path="..\..\..\OburecGH"/>
     <File Path="..\..\3d"/>
     <File Path="..\..\3d\math"/>
     <File Path="..\..\3d\math\uquat.pas"/>

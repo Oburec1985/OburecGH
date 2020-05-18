@@ -58,17 +58,17 @@ object MainBldForm: TMainBldForm
         inherited ChartTabSheet: TTabSheet
           ExplicitLeft = 4
           ExplicitTop = 24
-          ExplicitWidth = 611
-          ExplicitHeight = 449
+          ExplicitWidth = 443
+          ExplicitHeight = 276
           inherited Splitter2: TSplitter
-            Height = 449
+            Height = 276
             ExplicitLeft = 0
             ExplicitTop = 0
             ExplicitHeight = 463
           end
           inherited cChart1: cChart
-            Width = 606
-            Height = 449
+            Width = 438
+            Height = 276
             Margins.Left = 2
             Margins.Top = 2
             Margins.Right = 2
@@ -76,18 +76,18 @@ object MainBldForm: TMainBldForm
             OnDraw = ChartFrame1cChart1Draw
             ExplicitLeft = 5
             ExplicitTop = 0
-            ExplicitWidth = 606
-            ExplicitHeight = 449
+            ExplicitWidth = 438
+            ExplicitHeight = 276
           end
         end
         inherited DigitFormTabSheet: TTabSheet
           ExplicitLeft = 4
-          ExplicitTop = 28
+          ExplicitTop = 24
           ExplicitWidth = 443
-          ExplicitHeight = 272
+          ExplicitHeight = 276
           inherited DigitsLV: TBtnListView
             Width = 443
-            Height = 272
+            Height = 276
             Margins.Left = 2
             Margins.Top = 2
             Margins.Right = 2
@@ -95,20 +95,20 @@ object MainBldForm: TMainBldForm
             ExplicitLeft = 0
             ExplicitTop = 0
             ExplicitWidth = 443
-            ExplicitHeight = 272
+            ExplicitHeight = 276
           end
         end
         inherited VisualTabSheet: TTabSheet
           ExplicitLeft = 4
-          ExplicitTop = 28
+          ExplicitTop = 24
           ExplicitWidth = 443
-          ExplicitHeight = 272
+          ExplicitHeight = 276
           inherited TurbineGLGB: TGroupBox
             Width = 443
-            Height = 272
-            ExplicitHeight = 272
+            Height = 276
+            ExplicitHeight = 276
             inherited Splitter1: TSplitter
-              Top = 262
+              Top = 266
               Width = 439
               Height = 8
               ExplicitLeft = 2
@@ -119,15 +119,15 @@ object MainBldForm: TMainBldForm
             inherited glTurbineFrame1: TglTurbineFrame
               Top = 15
               Width = 439
-              Height = 247
+              Height = 251
               ExplicitTop = 15
-              ExplicitHeight = 247
+              ExplicitHeight = 251
               inherited EditTurbGB: TGroupBox
-                Height = 247
-                ExplicitHeight = 247
+                Height = 251
+                ExplicitHeight = 251
                 inherited ApplyBtn: TButton
-                  Top = -58
-                  ExplicitTop = -58
+                  Top = -54
+                  ExplicitTop = -54
                 end
                 inherited BlCountIE: TIntEdit
                   Left = 11
@@ -160,7 +160,7 @@ object MainBldForm: TMainBldForm
               end
               inherited cBaseGlComponent1: cBaseGlComponent
                 Width = 326
-                Height = 247
+                Height = 251
                 Margins.Left = 2
                 Margins.Top = 2
                 Margins.Right = 2
@@ -168,18 +168,19 @@ object MainBldForm: TMainBldForm
                 ExplicitLeft = 113
                 ExplicitTop = 0
                 ExplicitWidth = 326
-                ExplicitHeight = 247
+                ExplicitHeight = 251
               end
             end
           end
         end
         inherited AutoPage: TTabSheet
           ExplicitLeft = 4
-          ExplicitTop = 28
-          ExplicitWidth = 443
-          ExplicitHeight = 272
+          ExplicitTop = 24
+          ExplicitWidth = 611
+          ExplicitHeight = 449
           inherited ToolBar1: TToolBar
             Width = 611
+            ExplicitWidth = 611
             inherited PageCountSE: TSpinEdit
               OnChange = ChartFrame1PageCountSEChange
             end
@@ -191,7 +192,8 @@ object MainBldForm: TMainBldForm
             Margins.Top = 2
             Margins.Right = 2
             Margins.Bottom = 2
-            ExplicitHeight = 243
+            ExplicitWidth = 611
+            ExplicitHeight = 420
           end
         end
       end

@@ -165,13 +165,10 @@
     <Transaction>2017.12.07 23:09:24.209.pas,G:\oburec\project2010\2011\wp\SharedWP\uWPOpers.pas=G:\oburec\project2010\2011\wp\SharedWP\uWPservices.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
-    <File Path="WPServicePack_TLB.pas"/>
-    <File Path="units"/>
-    <File Path="units\POSBase.pas"/>
-    <File Path="units\UWPEvents.pas"/>
-    <File Path="units\uWpServicePlg.pas"/>
-    <File Path="Winpos_ole_TLB.pas"/>
-    <File Path="..\..\..\2011"/>
+    <File Path="..\..\wp"/>
+    <File Path="..\SharedWP"/>
+    <File Path="..\SharedWP\uWPservices.pas"/>
+    <File Path="..\..\..\OburecGH"/>
     <File Path="..\..\sharedUtils"/>
     <File Path="..\..\sharedUtils\math"/>
     <File Path="..\..\sharedUtils\math\u2DMath.pas"/>
@@ -198,9 +195,12 @@
     <File Path="..\..\sharedUtils\utils\uVTServices.pas"/>
     <File Path="..\..\sharedUtils\uBinFile.pas"/>
     <File Path="..\..\sharedUtils\uCommonTypes.pas"/>
-    <File Path="..\..\wp"/>
-    <File Path="..\SharedWP"/>
-    <File Path="..\SharedWP\uWPservices.pas"/>
+    <File Path="units"/>
+    <File Path="units\POSBase.pas"/>
+    <File Path="units\UWPEvents.pas"/>
+    <File Path="units\uWpServicePlg.pas"/>
+    <File Path="Winpos_ole_TLB.pas"/>
+    <File Path="WPServicePack_TLB.pas"/>
     <File Path="WPServicePlg.ridl"/>
   </ProjectSortOrder>
 </BorlandProject>
