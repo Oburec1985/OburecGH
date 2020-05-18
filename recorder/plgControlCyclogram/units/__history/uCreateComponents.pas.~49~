@@ -39,6 +39,7 @@ uses
   uTagInfoFrm,
   uTagInfoEditFrm,
   uCyclogramReportFrm,
+  uIRDiagram,
   uMBaseControl;
 
 type
@@ -124,9 +125,9 @@ begin
   ControlCyclogramEditFrm.LinkPlg(g_conmng);
 
   CyclogramReportFrm := TCyclogramReportFrm.create(nil);
-  ControlCyclogramEditFrm.HandleNeeded;
-  ControlCyclogramEditFrm.show;
-  ControlCyclogramEditFrm.close;
+  CyclogramReportFrm.HandleNeeded;
+  CyclogramReportFrm.show;
+  CyclogramReportFrm.close;
 
   TrigsFrm := TTrigsFrm.create(nil);
   TrigsFrm.HandleNeeded;
@@ -189,7 +190,8 @@ end;
 
 procedure destroyFormsRecorderUIThread(compMng: cCompMng);
 begin
-  logmessage('destroyFormsRecorderUIThread_enter');
+{$IfDef DEBUG}
+  LogRecorderMessage('destroyFormsRecorderUIThread_enter');
   // удаление форм в UIThread
   // ВАЖНО!!! Первое изменение свойств формы имеет право происходить только в UIThread
   // Если произойдет в MainThread (например менять форму при загрузке объектов программы),
@@ -246,8 +248,7 @@ begin
     SpmChartEditFrm:=nil;
   end;
   if EditCntlWrnFrm<>nil then
-  begin
-    EditCntlWrnFrm.Destroy;
+  begin                                 EditCntlWrnFrm.Destroy;
     EditCntlWrnFrm:=nil;
   end;
 
@@ -270,7 +271,8 @@ begin
   end;
 
   g_delFrms:=true;
-  logmessage('destroyFormsRecorderUIThread_enter');
+  LogRecorderMessage('destroyFormsRecorderUIThread_exit');
+{$EndIf}
 end;
 
 procedure createForms(compMng: cCompMng);
@@ -289,6 +291,7 @@ end;
 
 procedure destroyForms(compMng: cCompMng);
 begin
+  LogRecorderMessage('destroyForms_enter');
   if GetCurrentThreadId = MainThreadID then
   begin
     if TagInfoEditFrm<>nil then
@@ -297,6 +300,7 @@ begin
       TagInfoEditFrm:=nil;
     end;
   end;
+  LogRecorderMessage('destroyForms_exit');
 end;
 
 procedure createComponents(compMng: cCompMng);
@@ -341,11 +345,17 @@ begin
 end;
 
 procedure destroyEngine;
+var
+  b:boolean;
 begin
+// обьявле в начале проекта
+{$IfDef DEBUG}
+  LogRecorderMessage('destroyEngine_enter');
   if g_conmng <> nil then
   begin
-    g_conmng.Events.active := false;
+    //logRCInfo('c:\RCInfo1.txt');
     g_conmng.clear;
+    //logRCInfo('c:\RCInfo3.txt');
     g_conmng.destroy;
     g_conmng := nil;
   end;
@@ -354,6 +364,8 @@ begin
     g_algMng.destroy;
     g_algMng:=nil;
   end;
+  LogRecorderMessage('destroyEngine_exit');
+{$EndIf}
 end;
 
 function ProcessShowVersionInfo(pMsgInfo: PCB_MESSAGE): boolean;

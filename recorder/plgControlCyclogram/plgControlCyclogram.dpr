@@ -179,7 +179,8 @@ uses
   uComplexDiagram in 'forms\uComplexDiagram.pas' {ComplexDiagramFrm},
   uCounterAlg in 'units\uCounterAlg.pas',
   uCounterAlgFrame in 'forms\uCounterAlgFrame.pas' {CounterAlgFrame: TFrame},
-  uRCTags in '..\SharedRUnits\uRCTags.pas';
+  uRCTags in '..\SharedRUnits\uRCTags.pas',
+  uIRDiagram in 'forms\uIRDiagram.pas' {IRDiagramFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

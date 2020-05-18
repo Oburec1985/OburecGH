@@ -39,6 +39,7 @@ uses
   uTagInfoFrm,
   uTagInfoEditFrm,
   uCyclogramReportFrm,
+  uIRDiagram,
   uMBaseControl;
 
 type
@@ -330,6 +331,9 @@ begin
 
   g_TagInfoFactory:=cTagInfoFactory.create;
   compMng.Add(g_TagInfoFactory);
+
+  g_IRDiagramFactory:=cIRDiagramFactory.create;
+  compMng.Add(g_IRDiagramFactory);
 
   cfg := extractfiledir(getRConfig);
   if DirectoryExists(cfg) then

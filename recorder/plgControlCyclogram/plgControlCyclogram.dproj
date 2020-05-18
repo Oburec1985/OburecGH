@@ -393,6 +393,9 @@
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="..\SharedRUnits\uRCTags.pas"/>
+			<DCCReference Include="forms\uIRDiagram.pas">
+				<Form>IRDiagramFrm</Form>
+			</DCCReference>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

@@ -11,29 +11,39 @@ uses
 
 type
   cPolarGraph = class(cGraphObj)
-  private
+  public
     fneedrecompile: boolean;
+  private
     fListId: cardinal;
     // отрисовка специальной точки (предназначено для отрисовки начала оборота)
     fDrawFirstPoint: boolean;
     fFPArrSize:integer; // размер массива
     fFPArrUsed:integer; // используется элементов
-    fFirstPointsIndexArray:array of integer; // индексы вершин которые нужно отрисовать как первые точки
 
+    fDrawFP: boolean;
     fDrawLines: boolean;
     fDrawPoints: boolean;
     fPointColor: point3;
+    fFirstPointColor: point3;
+    fDrawFPLine: boolean;
   protected
     procedure doLincParent;override;
     procedure compile; virtual;
     procedure DrawData; override;
     procedure setmainParent(p: cbaseObj); override;
+    function FPcount:integer;virtual;abstract;
+    function FPindex(i:integer):integer;virtual;abstract;
+    procedure SetDrawFPLine(b:boolean);virtual;
+    function GetDrawFPLine:boolean;virtual;
   public
     function gety(i: integer): double; virtual; abstract;
     function getx(i: integer): double; virtual; abstract;
     property DrawLines: boolean read fDrawLines write fDrawLines;
     property DrawPoints: boolean read fDrawPoints write fDrawPoints;
     property PointColor: point3 read fPointColor write fPointColor;
+    property FirstPointColor: point3 read fFirstPointColor write fFirstPointColor;
+    property UseFirstPoint: boolean read fDrawFP write fDrawFP;
+    property drawFPLine : boolean read GetDrawFPLine write SetDrawFPLine;
     constructor create;override;
   end;
 
@@ -93,6 +103,7 @@ type
 
   cPolarGraphPage = class(cBasePage)
   private
+    fPSize:double;
     m_graphs:cPolarAxis;
     // пиксельный центр
     m_center: tpoint;
@@ -116,6 +127,7 @@ type
     fneedrecompile: boolean;
     // максимум в координатах графика
     m_Max: double;
+    m_PageLabel:cLabel;
     m_MaxXedit, m_MaxYedit:cfloatlabel;
   private
     procedure UpdateAxisByText(Sender: tobject; var Key: Word; Shift: TShiftState);
@@ -134,10 +146,16 @@ type
     procedure drawAngelGrid(f: cfont);
     procedure drawCyclesGrid(f: cfont);
     // подготовить видовую матрицу
-    procedure PrepareZomm;
+    procedure PrepareZoom;
     procedure setmax(v:double);
     procedure setEditPos(Sender: tobject);
+    procedure SetLabelPos;
+    procedure OnSetText(Sender: tobject);
+    procedure setPSize(p_size:double);
   protected
+    // прилинковаться к компоненту в котором будет происходить отрисовка
+    procedure linc(p_chart: tcomponent); override;
+    procedure setCaption(s: string);override;
     procedure BeforeDrawChild; override;
     // procedure DoClick(i_p:tpoint;f_p:point2);override;
     // procedure DoButtonUp(i_p:tpoint;f_p:point2);override;
@@ -148,8 +166,10 @@ type
     // procedure linc(p_chart: tcomponent); override;
     procedure DrawData; override;
   public
+    function isCarrier: boolean;override;
     // добавить объект потомок
     property Max:double read m_max write setMax;
+    property PSize:double read fPSize write setPSize;
     constructor create; override;
     destructor destroy; override;
   public
@@ -356,11 +376,10 @@ begin
       ipos.x:=bounds.Right-tabs.Right;
       ipos.y:=bounds.top-(getheight shr 1);
       p:=p2iTop2(ipos);
-      p.x:=p.x-m_MaxXedit.GetTextWidth;
       m_MaxXedit.position := p;
     end;
     // положение метки страницы
-    //SetLabelPos;
+    SetLabelPos;
   end;
 end;
 
@@ -370,6 +389,55 @@ begin
   cfloatlabel(edit).OnKeyEnter := UpdateAxisbyText;
   cfloatlabel(edit).Transparent:=false;
   AddChild(edit);
+end;
+
+
+function cPolarGraphPage.isCarrier: boolean;
+begin
+  result:=true;
+end;
+
+
+procedure cPolarGraphPage.SetLabelPos;
+var
+  pos: point2;
+  h: single;
+  w:integer;
+begin
+  w:=getwidth;
+  if w<>0 then
+  begin
+    if getheight<>0 then
+    begin
+      h := m_PageLabel.GetTextHeigth;
+      pos.y := 1 - 2 * h;
+      //pos.x := 0 - m_PageLabel.GetTextWidth / 2+0.5;
+      pos.x := 0.3;
+      m_PageLabel.position := pos;
+    end;
+  end;
+end;
+
+procedure cPolarGraphPage.OnSetText(Sender: tobject);
+begin
+  SetLabelPos;
+end;
+
+procedure cPolarGraphPage.linc(p_chart: tcomponent);
+begin
+  if p_chart = nil then
+    exit;
+  if chart <> nil then
+    exit;
+  inherited;
+  m_PageLabel := clabel.create;
+  m_PageLabel.Name := ModComponentName('PageLabel');
+  m_PageLabel.autocreate:=true;
+  m_PageLabel.fhelper := true;
+  m_PageLabel.Transparent:=false;
+  m_PageLabel.locked:=true;
+  AddChild(m_PageLabel);
+  m_PageLabel.OnSetText := OnSetText;
 end;
 
 
@@ -405,7 +473,7 @@ begin
   m_Max := 10;
   // Фон страницы
   color := white;
-  PrepareZomm;
+  PrepareZoom;
 end;
 
 destructor cPolarGraphPage.destroy;
@@ -464,11 +532,37 @@ begin
   fneedrecompile:=true;
 end;
 
+procedure cPolarGraphPage.setCaption(s: string);
+begin
+  inherited;
+  m_PageLabel.Text := s;
+end;
+
 procedure cPolarGraphPage.setmax(v: double);
 begin
   m_max:=v;
+  PrepareZoom;
+  m_MaxXedit.text:=floattostr(v);
+  m_MaxYedit.text:=floattostr(v);
   fneedrecompile:=true;
+  CallEventsWithSender(e_onZoom, self);
   compile;
+end;
+
+procedure cPolarGraphPage.setPSize(p_size: double);
+var
+  res, step: glFloat;
+  range: array [0 .. 1] of glFloat;
+begin
+  glGetFloatv(GL_POINT_SIZE_GRANULARITY, @step);
+  glGetFloatv(GL_POINT_SIZE_RANGE, @Range);
+  res := round(p_size / step) * step;
+  // Проверка на выход за диапазон
+  if res < Range[0] then
+    res := Range[0];
+  if res > Range[1] then
+    res := Range[1];
+  fpsize:=res;
 end;
 
 procedure cPolarGraphPage.SetZoom;
@@ -518,7 +612,7 @@ begin
   fneedrecompile := True;
 end;
 
-procedure cPolarGraphPage.PrepareZomm;
+procedure cPolarGraphPage.PrepareZoom;
 var
   ord: integer;
   r: glfloat;
@@ -550,7 +644,7 @@ end;
 
 procedure cPolarGraphPage.DrawData;
 begin
-  inherited;
+  glPointSize(fPSize);
   compile;
   glMatrixMode(gl_projection);
   glpushmatrix;
@@ -569,6 +663,7 @@ begin
   SetZoom;
   DrawGrid;
   glpopmatrix;
+  inherited;
 end;
 
 procedure cPolarGraphPage.DrawGraphBorder;
@@ -706,6 +801,16 @@ begin
   glCallList(fListId);
 end;
 
+function cPolarGraph.GetDrawFPLine: boolean;
+begin
+  result:=false;
+end;
+
+procedure cPolarGraph.SetDrawFPLine(b: boolean);
+begin
+
+end;
+
 procedure cPolarGraph.setmainParent(p: cbaseObj);
 begin
   if p is cPolarGraph then
@@ -716,7 +821,7 @@ end;
 
 procedure cPolarGraph.compile;
 var
-  i: integer;
+  i, ind: integer;
   lp: point2;
 begin
   if fneedrecompile then
@@ -749,6 +854,37 @@ begin
         glVertex2fv(@lp);
       end;
       glEnd;
+    end;
+    if UseFirstPoint then
+    begin
+      glColor3fv(@fFirstPointColor);
+      glBegin(GL_Points);
+      for i := 0 to FPcount - 1 do
+      begin
+        ind:=fpindex(i);
+        if ((ind>0)) and (ind<(count - 1)) then
+        begin
+          lp.x := getx(ind);
+          lp.y := gety(ind);
+          glVertex2fv(@lp);
+        end;
+      end;
+      glEnd;
+      if drawFPLine then
+      begin
+        glBegin(GL_LINE_STRIP);
+        for i := 0 to FPcount - 1 do
+        begin
+          ind:=fpindex(i);
+          if ((ind>0)) and (ind<(count - 1)) then
+          begin
+            lp.x := getx(ind);
+            lp.y := gety(ind);
+            glVertex2fv(@lp);
+          end;
+        end;
+        glEnd;
+      end;
     end;
     glEndList;
   end;

@@ -1659,12 +1659,9 @@ begin
   if m_regularX then
   begin
     i := trunc(p2d.x / m_dx);
-    if i<length(fdxPCount) then
-    begin
-      lcount := fdxPCount[i];
-      p2d.y := (fdrawarray[i].y * lcount + p2d.y) / (lcount + 1);
-      fdxPCount[i] := (lcount + 1);
-    end;
+    lcount := fdxPCount[i];
+    p2d.y := (fdrawarray[i].y * lcount + p2d.y) / (lcount + 1);
+    fdxPCount[i] := (lcount + 1);
   end;
   if alarmLvl = 0 then
   begin

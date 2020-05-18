@@ -1,0 +1,728 @@
+unit uIRDiagram;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, Buttons, Grids, ExtCtrls, uRecBasicFactory, inifiles,
+  uControlObj, uEventList, udrawobj,
+  uComponentservises, uEventTypes, ComCtrls, uBtnListView, recorder,
+  ucommonmath, MathFunction, uMyMath, uDoubleCursor, uChartEvents, uLabel,
+  uRecorderEvents, ubaseObj, uCommonTypes, uEditProfileFrm, uControlWarnFrm,
+  uRTrig, uRCFunc, ubasealg, uBuffTrend1d, utextlabel, tags,
+  PluginClass, ImgList, uChart, uGrmsSrcAlg, uPhaseAlg, usetlist, upage, uGraphObj,
+  uBasePage,
+  OpenGL,
+  uHardwareMath,
+  ufloatlabel,
+  uSpm;
+
+type
+
+  IRDiagramTag = class(cGraphObj)
+  private
+    // отрисовка линии
+    fListId: cardinal;
+    fneedrecompile: boolean;
+    fPCount:integer;
+    // рисовать линии
+    fDrawLines: boolean;
+    // рисовать точки
+    fDrawPoints: boolean;
+    // цвет вершин
+    fPointColor: point3;
+    m_MaxXedit, m_MaxYedit:cfloatlabel;
+
+    // исходные теги и их спектры
+    fTag, fTaho:cTag;
+    fspm, ftahospm:cspm;
+    // Посчитанные данные
+    fYpoints:array of double;
+    fXpoints:array of double;
+  public
+    m_owner:tlist; // список в котором лежит график
+  protected
+    procedure doLincParent;override;
+    procedure compile; virtual;
+    procedure DrawData; override;
+    procedure setmainParent(p: cbaseObj); override;
+  private
+    function getPCount: integer;
+    procedure setPCount(const Value: integer); // число точек
+  public
+    property PCount:integer read getPCount write setPCount;
+    property DrawLines: boolean read fDrawLines write fDrawLines;
+    property DrawPoints: boolean read fDrawPoints write fDrawPoints;
+    property PointColor: point3 read fPointColor write fPointColor;
+  end;
+
+  cIRPage = class(cBasePage)
+  private
+    fneedrecompile:boolean;
+    // матрица вида оси
+    stateM: matrixgl;
+    // шаг сетки
+    m_gridStep: double;
+    // отрисовка сетки
+    fGridListId: cardinal;
+  protected
+    fXAxis,
+    fYAxis:point2d;
+  protected
+    procedure setXAxis(p2:point2d);
+    procedure setYAxis(p2:point2d);
+    procedure compile;
+    procedure drawPage;
+  protected
+    // прилинковаться к компоненту в котором будет происходить отрисовка
+    procedure linc(p_chart: tcomponent); override;
+    procedure setCaption(s: string);override;
+    procedure BeforeDrawChild; override;
+    procedure setBound(rect: trect); override;
+    procedure DrawData; override;
+  end;
+
+  TIRDiagramFrm = class(TRecFrm)
+  private
+    m_graphlist: tlist;
+  public
+    chart: cchart;
+    fGraphName: string;
+    fGraphMax: double;
+    fpsize: double;
+  protected
+    procedure ChartInit(Sender: TObject);
+    procedure RBtnClick(Sender: TObject);
+    function getGraphMax: double;
+    procedure setGraphMax(v: double);
+    function getPSize: double;
+    procedure setPSize(v: double);
+    function getGraphName: string;
+    procedure setGraphName(v: string);
+    procedure createevents;
+    procedure destroyevents;
+    procedure doOnZoom(Sender: TObject);
+    procedure UpdateView;
+    procedure UpdateData;
+    procedure doStart;
+    procedure clearGraphList;
+  public
+    function GraphCount: integer;
+    function getGraph(i: integer): IRDiagramTag;overload;
+    function getGraph(gname: string): IRDiagramTag;overload;
+    function addGraph(p_name: string): IRDiagramTag;
+    property GraphMax: double read getGraphMax write setGraphMax;
+    procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
+    procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
+    constructor create(Aowner: tcomponent); override;
+    destructor destroy; override;
+    property GraphName: string read getGraphName write setGraphName;
+    property PSize: double read getPSize write setPSize;
+  end;
+
+  IRDiagramFrm = class(cRecBasicIFrm)
+  public
+    function doRepaint: boolean; override;
+    function doGetName: LPCSTR; override;
+    procedure doClose; override;
+    function doCreateFrm: TRecFrm; override;
+  end;
+
+  cIRDiagramFactory = class(cRecBasicFactory)
+  private
+    m_counter: integer;
+  protected
+    procedure doDestroyForms; override;
+    procedure CreateEvents;
+    procedure DestroyEvents;
+  public
+    procedure doAfterLoad; override;
+    procedure doUpdateData(Sender: TObject);
+    procedure doChangeRState(Sender: TObject);
+    procedure doStart;
+  public
+    constructor create;
+    destructor destroy;override;
+    function doCreateForm: cRecBasicIFrm; override;
+    procedure doSetDefSize(var pSize: SIZE); override;
+  end;
+
+var
+  g_IRDiagramFactory: cIRDiagramFactory;
+
+const
+  c_Pic = 'IRDIAGRAM';
+  c_Name = 'Диаграмма Найквиста';
+  c_defXSize = 400;
+  c_defYSize = 400;
+
+  // ctrl+shift+G
+  // ['{DE3939E6-AF72-47FB-B17B-C741AA578B13}']
+  IID_DIAGRAM: TGuid = (D1: $DE3939E6; D2: $AF72; D3: $47FB;
+                        D4: ($B1, $7B, $C7, $41, $AA, $57, $8B, $13));
+
+implementation
+
+uses uEditPolarFrm;
+
+{$R *.dfm}
+
+{ cIRDiagramFactory }
+
+constructor cIRDiagramFactory.create;
+begin
+  inherited;
+  m_lRefCount := 1;
+  m_counter := 0;
+  m_name := c_Name;
+  m_picname := c_Pic;
+  m_Guid := IID_DIAGRAM;
+  CreateEvents;
+end;
+
+destructor cIRDiagramFactory.destroy;
+begin
+  DestroyEvents;
+  inherited;
+end;
+
+procedure cIRDiagramFactory.CreateEvents;
+begin
+  //addplgevent('cCtrlWrnFactory_doChangeRState', c_RC_DoChangeRCState,   doChangeRState);
+  //addplgevent('cCtrlWrnFactory_doLoad', c_RC_LoadCfg, doLoad);
+  //addplgevent('cCtrlWrnFactory_doSave', c_RC_SaveCfg, doSave);
+  addplgevent('cIRDiagramFactory_doUpdateData', c_RUpdateData, doUpdateData);
+  addplgevent('cIRDiagramFactory_doChangeRState', c_RC_DoChangeRCState,
+    doChangeRState);
+end;
+
+procedure cIRDiagramFactory.DestroyEvents;
+begin
+  //removeplgEvent(doChangeRState, c_RC_ChangeState);
+  //removeplgEvent(doLoad, c_RC_LoadCfg);
+  //removeplgEvent(doSave, c_RC_SaveCfg);
+  removeplgEvent(doUpdateData, c_RUpdateData);
+  removeplgEvent(doChangeRState, c_RC_DoChangeRCState);
+end;
+
+procedure cIRDiagramFactory.doUpdateData(Sender: TObject);
+var
+  i: integer;
+  Frm: TRecFrm;
+begin
+  for i := 0 to m_CompList.Count - 1 do
+  begin
+    Frm := GetFrm(i);
+    TIRDiagramFrm(Frm).UpdateData;
+  end;
+end;
+
+procedure cIRDiagramFactory.doAfterLoad;
+begin
+  inherited;
+end;
+
+procedure cIRDiagramFactory.doChangeRState(Sender: TObject);
+begin
+  case GetRCStateChange of
+    RSt_Init:
+      begin
+        doStart;
+      end;
+    RSt_StopToView:
+      begin
+        doStart;
+      end;
+    RSt_StopToRec:
+      begin
+        doStart;
+      end;
+    RSt_ViewToStop:
+      begin
+
+      end;
+    RSt_ViewToRec:
+      begin
+
+      end;
+    RSt_initToRec:
+      begin
+        doStart;
+      end;
+    RSt_initToView:
+      begin
+        doStart;
+      end;
+    RSt_RecToStop:
+      begin
+      end;
+    RSt_RecToView:
+      begin
+        doStart;
+      end;
+  end;
+end;
+
+function cIRDiagramFactory.doCreateForm: cRecBasicIFrm;
+begin
+  result := nil;
+  if m_counter < 1 then
+  begin
+    result := IRDiagramFrm.create();
+  end;
+end;
+
+procedure cIRDiagramFactory.doDestroyForms;
+begin
+  inherited;
+
+end;
+
+procedure cIRDiagramFactory.doSetDefSize(var pSize: SIZE);
+begin
+  inherited;
+  pSize.cx := c_defXSize;
+  pSize.cy := c_defYSize;
+end;
+
+procedure cIRDiagramFactory.doStart;
+var
+  i: integer;
+  Frm: TRecFrm;
+begin
+  for i := 0 to m_CompList.Count - 1 do
+  begin
+    Frm := GetFrm(i);
+    TIRDiagramFrm(Frm).doStart;
+  end;
+end;
+
+{ TPolarGraph }
+function TIRDiagramFrm.addGraph(p_name: string): IRDiagramTag;
+begin
+  result := IRDiagramTag.create;
+  //result.m_owner := m_graphlist;
+  //result.name := p_name;
+  //result.fPolarGraph:=self;
+  //m_graphlist.Add(result);
+  //if page<>nil then
+  //  page.AddChild(result.m_tr)
+  //else
+  //begin
+    //showmessage('TPolarGraph.addGraph_Попытка добавить график при несозданной странице!')
+  //end;
+end;
+
+procedure TIRDiagramFrm.ChartInit(Sender: TObject);
+var
+  page: cIRPage;
+  i:integer;
+  g:IRDiagramTag;
+begin
+  page := cIRPage.create;
+  chart.activeTab.AddChild(page);
+  chart.activePage.destroy;
+  chart.activeTab.Alignpages(1);
+  page := page;
+  GraphName := 'Диаграмма Найквиста';
+  createevents;
+  if GraphMax <> 0 then
+  begin
+    //page.Max := GraphMax;
+  end;
+  PSize:=PSize;
+  for i := 0 to GraphCount - 1 do
+  begin
+    //g := getGraph(i);
+    //g.initgraph;
+  end;
+end;
+
+procedure TIRDiagramFrm.RBtnClick(Sender: TObject);
+begin
+  if EditPolarFrm <> nil then
+  begin
+    //EditPolarFrm.EditChart(self);
+  end;
+end;
+
+procedure TIRDiagramFrm.setGraphMax(v: double);
+begin
+
+end;
+
+procedure TIRDiagramFrm.clearGraphList;
+var
+  I: Integer;
+  gr:IRDiagramTag;
+begin
+  //for I := 0 to m_graphlist.Count - 1 do
+  //begin
+  //  gr:=getGraph(i);
+  //  gr.Destroy;
+  //end;
+  //m_graphlist.Clear;
+end;
+
+constructor TIRDiagramFrm.create(Aowner: tcomponent);
+begin
+  inherited;
+  //fGraphName:='Гистограмма биений';
+  //m_graphlist := tlist.create;
+  chart := cchart.create(self);
+  chart.Align := alClient;
+  chart.showTV := false;
+  chart.showLegend := false;
+  chart.OnInit := ChartInit;
+  chart.OnRBtnClick := RBtnClick;
+
+end;
+
+destructor TIRDiagramFrm.destroy;
+begin
+  LogRecorderMessage('TIRDiagramFrm.destroy_enter');
+  clearGraphList;
+  //m_graphlist.Destroy;
+  //m_graphlist:=nil;
+  destroyevents;
+  chart.Destroy;
+  chart:=nil;
+  inherited;
+  LogRecorderMessage('IRDiagramFrm.destroy_exit');
+end;
+
+procedure TIRDiagramFrm.createevents;
+begin
+  chart.Objmng.Events.AddEvent('IRDiagram_onZoom', E_OnZoom, doOnZoom);
+end;
+
+procedure TIRDiagramFrm.destroyevents;
+begin
+  chart.Objmng.Events.removeEvent(doOnZoom, E_OnZoom);
+end;
+
+procedure TIRDiagramFrm.doOnZoom(Sender: TObject);
+begin
+  //fGraphMax := page.Max;
+end;
+
+procedure TIRDiagramFrm.doStart;
+var
+  i: integer;
+  g: IRDiagramTag;
+begin
+  for i := 0 to GraphCount - 1 do
+  begin
+    g := getGraph(i);
+    //g.init;
+  end;
+end;
+
+procedure TIRDiagramFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  i, Count: integer;
+  lstr: string;
+  gr: IRDiagramTag;
+begin
+  inherited;
+  GraphMax :=readFloatFromIni(a_pIni,str, 'GridMax');
+  PSize:=readFloatFromIni(a_pIni,str, 'PSize');
+  GraphName := a_pIni.ReadString(str, 'ComponentName', 'Гистограмма биений');
+  Count := a_pIni.ReadInteger(str, 'GraphCount', 1);
+  for i := 0 to Count - 1 do
+  begin
+    lstr := a_pIni.ReadString(str, 'GraphName_' + inttostr(i), '');
+    if lstr <> '' then
+    begin
+      gr := addGraph(lstr);
+      //gr.fload :=true;
+      //gr.DrawPoints:=a_pIni.Readbool(str, 'GraphDrawPoints_' + inttostr(i), true);
+      //gr.DrawLine:=a_pIni.Readbool(str, 'GraphDrawLine_' + inttostr(i), true);
+    end;
+  end;
+end;
+
+procedure TIRDiagramFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  i: integer;
+  gr: IRDiagramTag;
+  ax: taxis;
+begin
+  inherited;
+  a_pIni.WriteFloat(str, 'GridMax', GraphMax);
+  a_pIni.WriteFloat(str, 'PSize', PSize);
+  //a_pIni.WriteInteger(str, 'GraphCount', m_graphlist.Count);
+  a_pIni.WriteString(str, 'ComponentName', GraphName);
+  //for i := 0 to m_graphlist.Count - 1 do
+  //begin
+  //  gr := getGraph(i);
+  //  a_pIni.WriteString(str, 'GraphName_' + inttostr(i), gr.name);
+  //  a_pIni.WriteBool(str, 'GraphDrawPoints_' + inttostr(i), gr.DrawPoints);
+  //end;
+end;
+
+procedure TIRDiagramFrm.UpdateData;
+var
+  i: integer;
+  g: IRDiagramTag;
+begin
+  //logMessage('TCntrlWrnChart.UpdateData tid: '+inttostr(GetCurrentThreadId));
+  // spmChart.activePage.caption := modname(spmChart.activePage.caption, false);
+  for i := 0 to GraphCount - 1 do
+  begin
+    g := getGraph(i);
+    //g.UpdateData;
+  end;
+end;
+
+procedure TIRDiagramFrm.UpdateView;
+var
+  i: integer;
+  g: IRDiagramTag;
+begin
+  for i := 0 to GraphCount - 1 do
+  begin
+    g := getGraph(i);
+    //g.UpdateView;
+  end;
+  chart.redraw;
+end;
+
+procedure TIRDiagramFrm.setGraphName(v: string);
+begin
+  //fGraphName := v;
+  //if page <> nil then
+  //begin
+  //  page.caption := v;
+  //end;
+end;
+
+function TIRDiagramFrm.getGraph(i: integer): IRDiagramTag;
+begin
+  //result := IRDiagramTag(m_graphlist.items[i]);
+end;
+
+function TIRDiagramFrm.getGraph(gname: string): IRDiagramTag;
+var
+  I: Integer;
+  g:IRDiagramTag;
+begin
+  result:=nil;
+  //for I := 0 to m_graphlist.Count - 1 do
+  //begin
+  //  g := cTagGraph(m_graphlist.items[i]);
+  //  if g.name=gname then
+  //  begin
+  //    result:=g;
+  //    exit;
+  //  end;
+  //end;
+end;
+
+function TIRDiagramFrm.getGraphMax: double;
+begin
+  result := fGraphMax;
+end;
+
+function TIRDiagramFrm.getGraphName: string;
+begin
+  //result:=fGraphName;
+end;
+
+function TIRDiagramFrm.getPSize: double;
+begin
+  //result:=fpsize;
+end;
+
+procedure TIRDiagramFrm.setPSize(v: double);
+begin
+  //fpsize:=v;
+  //if page<>nil then
+  //begin
+  //  page.psize:=v;
+  //end;
+end;
+
+function TIRDiagramFrm.GraphCount: integer;
+begin
+  result := m_graphlist.Count;
+end;
+
+{ IPolarFrm }
+procedure IRDiagramFrm.doClose;
+begin
+  m_lRefCount := 1;
+end;
+
+function IRDiagramFrm.doCreateFrm: TRecFrm;
+begin
+  result := TIRDiagramFrm.create(nil);
+end;
+
+function IRDiagramFrm.doGetName: LPCSTR;
+begin
+  result := c_Name;
+end;
+
+function IRDiagramFrm.doRepaint: boolean;
+begin
+  inherited;
+  TIRDiagramFrm(m_pMasterWnd).UpdateView;
+end;
+
+
+{ IRDiagramTag }
+
+procedure IRDiagramTag.compile;
+var
+  i, ind: integer;
+  lp: point2;
+begin
+  if fneedrecompile then
+  begin
+    fneedrecompile := false;
+    if fListId <> 0 then
+      glDeleteLists(fListId, 1);
+    fListId := glGenLists(1);
+    glNewList(fListId, GL_COMPILE);
+    if DrawPoints then
+    begin
+      glColor3fv(@fPointColor);
+      glBegin(GL_Points);
+      for i := 0 to count - 1 do
+      begin
+        lp.x := fXpoints(i);
+        lp.y := fypoints(i);
+        glVertex2fv(@lp);
+      end;
+      glEnd;
+    end;
+    if DrawLines then
+    begin
+      glColor3fv(@color);
+      glBegin(GL_LINE_STRIP);
+      for i := 0 to count - 1 do
+      begin
+        lp.x := fXpoints(i);
+        lp.y := fYpoints(i);
+        glVertex2fv(@lp);
+      end;
+      glEnd;
+    end;
+    glEndList;
+  end;
+end;
+
+procedure IRDiagramTag.doLincParent;
+begin
+  inherited;
+
+end;
+
+procedure IRDiagramTag.DrawData;
+begin
+  inherited;
+  compile;
+  glCallList(fListId);
+end;
+
+function IRDiagramTag.getPCount: integer;
+begin
+  result:=fPCount;
+end;
+
+procedure IRDiagramTag.setmainParent(p: cbaseObj);
+begin
+  inherited;
+
+end;
+
+procedure IRDiagramTag.setPCount(const Value: integer);
+begin
+  fpCount:=Value;
+  setlength(fXpoints, Value);
+  setlength(fYpoints, Value);
+end;
+
+{ cIRPage }
+procedure cIRPage.BeforeDrawChild;
+begin
+  inherited;
+  glMatrixMode(GL_PROJECTION_MATRIX);
+  glloadidentity;
+end;
+
+procedure cIRPage.compile;
+begin
+  if fneedrecompile then
+  begin
+    fneedrecompile := false;
+    if fGridListId <> 0 then
+      glDeleteLists(fGridListId, 1);
+    fGridListId := glGenLists(1);
+    glNewList(fGridListId, GL_COMPILE);
+    glEndList;
+  end;
+end;
+
+procedure cIRPage.DrawData;
+begin
+  inherited;
+  compile;
+  glMatrixMode(gl_projection);
+  glpushmatrix;
+  glLoadIdentity;
+  setCommonVP;
+  // отрисовка фона страницы
+  drawPage;
+  // отрисовка рамки страницы
+  drawBound;
+  setDrawObjVP;
+  // установка матрицы вида для отрисовки внутри поляв ывода
+  //SetZoom;
+  glpopmatrix;
+  inherited;
+end;
+
+procedure cIRPage.drawPage;
+begin
+  glColor3fv(@color);
+  // отрисовка полигона ащте
+  glBegin(GL_QUADs);
+  glvertex2f(-1, -1);
+  glvertex2f(-1, 1);
+  glvertex2f(1, 1);
+  glvertex2f(1, -1);
+  glEnd;
+end;
+
+procedure cIRPage.linc(p_chart: tcomponent);
+begin
+  inherited;
+
+end;
+
+procedure cIRPage.setBound(rect: trect);
+begin
+  inherited;
+
+end;
+
+procedure cIRPage.setCaption(s: string);
+begin
+  inherited;
+
+end;
+
+procedure cIRPage.setXAxis(p2: point2d);
+begin
+  fXAxis:=p2;
+end;
+
+procedure cIRPage.setYAxis(p2: point2d);
+begin
+  fYAxis:=p2;
+end;
+
+end.
+

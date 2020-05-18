@@ -4,7 +4,7 @@ interface
 
 uses
   Controls, windows, ubaseobj, udrawobj, uTrend, uCommonTypes, opengl,
-  uOglExpFunc, classes,
+  uOglExpFunc, classes, utext,
   uAxis, messages, utext, sysutils, uEventList, uSetList, uFrameListener, math,
   mathfunction, uChartEvents, uPoint, dialogs, types, forms, uSimpleObjects,
   uDoubleCursor, NativeXML, uBasePage, Clipbrd, uGraphObj, uLabel, ufloatlabel, uCommonMath;
@@ -109,7 +109,6 @@ type
     m_center: tpoint;
     // матрица вида оси
     stateM: matrixgl;
-
     // установки сетки
     // lg10_step, Line_Step
     m_gridType: integer;

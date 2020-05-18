@@ -254,6 +254,8 @@
     <File Path="forms\uTrigFrame.dfm"/>
     <File Path="forms\uTrigsFrm.pas"/>
     <File Path="forms\uTrigsFrm.dfm"/>
+    <File Path="forms\uIRDiagram.pas"/>
+    <File Path="forms\uIRDiagram.dfm"/>
     <File Path="units"/>
     <File Path="units\uBaseAlg.pas"/>
     <File Path="units\uBaseAlgNP.pas"/>
@@ -298,5 +300,7 @@
     <Transaction>2019.09.06 16:25:58.145.pas,D:\Oburec\delphi\2011\recorder\plgControlCyclogram\forms\uCounterAlgFrame.pas=</Transaction>
     <Transaction>2019.09.06 16:25:58.145.dfm,D:\Oburec\delphi\2011\recorder\plgControlCyclogram\forms\uCounterAlgFrame.dfm=</Transaction>
     <Transaction>2019.09.10 22:54:15.365.pas,G:\oburec\project2010\2011\recorder\plgControlCyclogram\Unit2.pas=G:\oburec\project2010\2011\recorder\SharedRUnits\uRCTags.pas</Transaction>
+    <Transaction>2020.05.18 14:21:01.009.pas,D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit3.pas=D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uIRDiagram.pas</Transaction>
+    <Transaction>2020.05.18 14:21:01.033.dfm,D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uIRDiagram.dfm</Transaction>
   </Transactions>
 </BorlandProject>

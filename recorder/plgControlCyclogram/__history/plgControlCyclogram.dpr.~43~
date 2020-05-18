@@ -1,4 +1,4 @@
-library plgControlCyclogram;
+ library plgControlCyclogram;
 
 uses
   u2dMath,
@@ -7,7 +7,6 @@ uses
   SysUtils,
   Classes,
   PluginClass in '..\SharedRUnits\PluginClass.pas',
-  uCommonTypes in '..\..\sharedUtils\uCommonTypes.pas',
   uCompMng in '..\SharedRUnits\uCompMng.pas',
   uRecBasicFactory in '..\SharedRUnits\uRecBasicFactory.pas',
   uRecorderEvents in '..\SharedRUnits\uRecorderEvents.pas',
@@ -30,7 +29,6 @@ uses
   uModeFrame in 'forms\uModeFrame.pas' {ModeFrame: TFrame},
   uControlCyclogramEditFrm in 'forms\uControlCyclogramEditFrm.pas' {ControlCyclogramEditFrm},
   uControlDeskFrm in 'forms\uControlDeskFrm.pas' {ControlDeskFrm},
-  uTagMng in '..\SharedRUnits\uTagMng.pas',
   uBaseObj in '..\..\sharedUtils\objects\uBaseObj.pas',
   uBaseObjMng in '..\..\sharedUtils\objects\uBaseObjMng.pas',
   usetlist in '..\..\sharedUtils\utils\lists\usetlist.pas',
@@ -134,8 +132,8 @@ uses
   uAlgFrame in 'forms\uAlgFrame.pas' {BaseAlgFrame: TFrame},
   uAlgAddFrm in 'forms\uAlgAddFrm.pas' {AddAlgFrm},
   uBaseAlg in 'units\uBaseAlg.pas',
-  uCounterAlgFrame in 'forms\uCounterAlgFrame.pas' {CounterAlgFrame: TFrame},
-  uCounterAlg in 'units\uCounterAlg.pas',
+  uIntegralAlgFrame in 'forms\uIntegralAlgFrame.pas' {IntegralAlgFrame: TFrame},
+  uIntegralAlg in 'units\uIntegralAlg.pas',
   uBaseAlgNP in 'units\uBaseAlgNP.pas',
   uTahoAlgFrame in 'forms\uTahoAlgFrame.pas' {TahoAlgFrame: TFrame},
   uTahoAlg in 'units\uTahoAlg.pas',
@@ -173,8 +171,16 @@ uses
   uSpm in 'units\uSpm.pas',
   uTagInfoFrm in 'forms\uTagInfoFrm.pas' {TagInfoFrm},
   uTagInfoEditFrm in 'forms\uTagInfoEditFrm.pas' {TagInfoEditFrm},
-  uExcessAlg in 'units\uExcessAlg.pas',
-  uExcessFrame in 'forms\uExcessFrame.pas' {ExcessFrame: TFrame};
+  uPeakFactorAlg in 'units\uPeakFactorAlg.pas',
+  uPeakFactorFrame in 'forms\uPeakFactorFrame.pas' {PeakFactorFrame: TFrame},
+  uHardwareMath in '..\..\sharedUtils\math\uHardwareMath.pas',
+  uCommonTypes in '..\..\sharedUtils\uCommonTypes.pas',
+  PerformanceTime in '..\..\sharedUtils\utils\PerformanceTime.pas',
+  uComplexDiagram in 'forms\uComplexDiagram.pas' {ComplexDiagramFrm},
+  uCounterAlg in 'units\uCounterAlg.pas',
+  uCounterAlgFrame in 'forms\uCounterAlgFrame.pas' {CounterAlgFrame: TFrame},
+  uRCTags in '..\SharedRUnits\uRCTags.pas',
+  uIRDiagram in 'forms\uIRDiagram.pas' {Form3};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}
@@ -210,7 +216,7 @@ end;
 // {Ниже описаны и реализованы пять функций, которые должна экспортировать}
 // библиотека plug-in`а для Recorder`а}
 
-// Получение типа объекта, реализованного в билиотеке}
+// Получение типа объекта, реализованного в библиотеке}
 function GetPluginType: integer; cdecl;
 begin
   Result := PLUGIN_CLASS; { В данном случае, это тип объекта plug-in`а }
