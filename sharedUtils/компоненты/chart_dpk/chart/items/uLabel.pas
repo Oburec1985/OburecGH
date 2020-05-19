@@ -13,36 +13,35 @@ uses
   messages,
   uLogFile,
   jclDebug,
-  clipbrd
-  ;
+  clipbrd;
 
 type
   // рисуется в контексте общего вьюпорта (не DrawObjVP)
   cLabel = class(cMoveObj)
   protected
     // смещение пользователя на момент очередного onBeginDrag
-    m_StartuserOffset:tpoint;
+    m_StartuserOffset: tpoint;
     // смещение текста относительно рамки
-    fPixBorderOffset:tpoint;
+    fPixBorderOffset: tpoint;
     // то же что предыдущий пункт но пересчитанов координаты -1..1
-    fBorderOffset:point2d;
+    fBorderOffset: point2d;
   public
     // хранит данные на сколько пользователь удвигал компонент мышью относительно начального положения
-    m_userOffset:tpoint;
+    m_userOffset: tpoint;
   public
     // установить вьюпорт графиков перед отрисовкой
-    m_drawobjVP:boolean;
+    m_drawobjVP: boolean;
 
     align: integer;
     // пользовательский масштаб/ Скорее всего не работает определение ширины символов
     // если не равно 1 (не тестилось на 29.01.19)
-    m_addscalex,m_addscaley:double;
+    m_addscalex, m_addscaley: double;
   protected
-    fbufStrList:tstringlist;
+    fbufStrList: tstringlist;
     fOnSetText: TNotifyEvent;
     // индексы выделенных букв
     fSelectText: array [0 .. 1] of tpoint;
-    fText: TstringList;
+    fText: tstringlist;
     // индекс рабочего шрифта
     fontIndex: integer;
     // позиция курсора (перед каким символом стоит позиция для вставки текста)
@@ -93,7 +92,7 @@ type
   public
     property OnKeyEnter: TKeyEvent read fKeyDown write fKeyDown;
   public
-    procedure setMng(m:tobject);override;
+    procedure setMng(m: tobject); override;
     function EvalRowHeigth: double; overload;
     function EvalRowHeigth(p_font: cfont): double; overload;
     function GetTextHeigth: double;
@@ -138,49 +137,47 @@ begin
   end;
 end;
 
-
-
 procedure cLabel.correctBorderBorderOffset;
 var
-  p2:point2;
-  rh, MaxRowWidth:Double;
+  p2: point2;
+  rh, MaxRowWidth: double;
 begin
-  //boundrect.TopRight.y := boundrect.TopRight.Y+fBorderOffset.y;
-  //boundrect.TopRight.x := boundrect.TopRight.x-fBorderOffset.x;
-  //boundrect.BottomLeft.y := boundrect.BottomLeft.Y-fBorderOffset.y;
-  //boundrect.BottomLeft.x := boundrect.BottomLeft.x-fBorderOffset.x;
+  // boundrect.TopRight.y := boundrect.TopRight.Y+fBorderOffset.y;
+  // boundrect.TopRight.x := boundrect.TopRight.x-fBorderOffset.x;
+  // boundrect.BottomLeft.y := boundrect.BottomLeft.Y-fBorderOffset.y;
+  // boundrect.BottomLeft.x := boundrect.BottomLeft.x-fBorderOffset.x;
 
   // габариты метки в координатах Ogl
   // при этом первая строка начало соответствует 0.0
-  p2 := GetSize(point(fWidth,
-                      fHeigth));
+  p2 := GetSize(point(fWidth, fHeigth));
   rh := EvalRowHeigth;
   MaxRowWidth := GetTextWidth;
 
-  boundrect.TopRight.y := rh+fBorderOffset.y;
-  boundrect.BottomLeft.y := rh - p2.y-fBorderOffset.y;
+  boundrect.TopRight.y := rh + fBorderOffset.y;
+  boundrect.BottomLeft.y := rh - p2.y - fBorderOffset.y;
   if align = c_left then
   begin
     boundrect.TopRight.x := boundrect.BottomLeft.x + MaxRowWidth;
-    boundrect.TopRight.x := p2.x+fBorderOffset.x;
-    boundrect.BottomLeft.x := -fBorderOffset.x; //+boundrect.BottomLeft.x;
+    boundrect.TopRight.x := p2.x + fBorderOffset.x;
+    boundrect.BottomLeft.x := -fBorderOffset.x; // +boundrect.BottomLeft.x;
   end
   else
   begin
     boundrect.TopRight.x := fBorderOffset.x;
-    boundrect.BottomLeft.x := boundrect.TopRight.x - MaxRowWidth-fBorderOffset.x;
+    boundrect.BottomLeft.x := boundrect.TopRight.x - MaxRowWidth -
+      fBorderOffset.x;
   end;
 end;
 
 constructor cLabel.create;
 begin
   inherited;
-  m_drawobjVP:=false;
-  m_addscalex:=1;
-  m_addscaley:=1;
+  m_drawobjVP := false;
+  m_addscalex := 1;
+  m_addscaley := 1;
 
-  fbufStrList:=TstringList.create;
-  fText := TstringList.create;
+  fbufStrList := tstringlist.create;
+  fText := tstringlist.create;
   fText.Sorted := false;
   fText.Delimiter := char(10);
   fText.StrictDelimiter := true;
@@ -200,7 +197,7 @@ begin
   fHeigth := 20;
   Text := name;
 
-  fPixBorderOffset:=point(2,2);
+  fPixBorderOffset := point(2, 2);
 
   fTransparent := true;
   locked := true;
@@ -208,11 +205,9 @@ begin
   selectable := true;
 end;
 
-
-
 destructor cLabel.destroy;
 begin
-  fbufStrList.Destroy;
+  fbufStrList.destroy;
   fText.destroy;
   inherited;
 end;
@@ -220,43 +215,43 @@ end;
 procedure cLabel.SetPos(p: point2);
 var
   callStack: TJclStackInfoList;
-  I, j: Integer;
-  str:string;
+  I, j: integer;
+  str: string;
 begin
   inherited;
-  {if pos('001_cLabel',name)>0 then
-  begin
-      // кусок кода для вывода стека процедур в лог
-      // Raw – определяет метод, используемый для получения информации о стеке вызова. При значении
-      //       False анализируются только стековые фреймы.
-      //       Использование значения True позволяет провести анализ непосредственно стека программы
-      //       и по кодам команд процессора, которые используются при вызове подпрограмм
-      //       (в частности машинной команды call) в ряде случаев получить более полную
-      //       информацию о стеке вызовов подпрограмм.
-      // AIgnoreLevels – определяет количество первых вызовов подпрограмм в стеке, которые не будут анализироваться. Например, при создании экземпляра класса с помощью функции JclCreateStackList её вызов будет первым. Но обычно интерес представляет последующие вызовы подпрограмм. Используя значение данного параметра равное 1, можно пропустить анализ вызова данной функции.
-      // FirstCaller – адрес подпрограммы, о которой требуется получить информацию дополнительно к адресам подпрограмм из стека вызовов. Параметр обычно используется при анализе исключений.
-      callStack := JclCreateStackList(true, 2, nil);
-      m_stackStrings.Clear;
-      // список строк, имя модуля, смещение адреса
-      callStack.AddToStrings(m_stackStrings, false, false, true);
-      if m_LastProcName <> '' then
-      begin
-        cchart(chart).deadLockDSC := m_LastProcName + '__' +
-          m_stackStrings.Strings[0] + '_' + name;
-        if assigned(cchart(chart).OnDeadLock) then
-          cchart(chart).OnDeadLock(self);
-      end;
-      m_LastProcName := m_stackStrings.Strings[0];
-      callStack.Free;
+  { if pos('001_cLabel',name)>0 then
+    begin
+    // кусок кода для вывода стека процедур в лог
+    // Raw – определяет метод, используемый для получения информации о стеке вызова. При значении
+    //       False анализируются только стековые фреймы.
+    //       Использование значения True позволяет провести анализ непосредственно стека программы
+    //       и по кодам команд процессора, которые используются при вызове подпрограмм
+    //       (в частности машинной команды call) в ряде случаев получить более полную
+    //       информацию о стеке вызовов подпрограмм.
+    // AIgnoreLevels – определяет количество первых вызовов подпрограмм в стеке, которые не будут анализироваться. Например, при создании экземпляра класса с помощью функции JclCreateStackList её вызов будет первым. Но обычно интерес представляет последующие вызовы подпрограмм. Используя значение данного параметра равное 1, можно пропустить анализ вызова данной функции.
+    // FirstCaller – адрес подпрограммы, о которой требуется получить информацию дополнительно к адресам подпрограмм из стека вызовов. Параметр обычно используется при анализе исключений.
+    callStack := JclCreateStackList(true, 2, nil);
+    m_stackStrings.Clear;
+    // список строк, имя модуля, смещение адреса
+    callStack.AddToStrings(m_stackStrings, false, false, true);
+    if m_LastProcName <> '' then
+    begin
+    cchart(chart).deadLockDSC := m_LastProcName + '__' +
+    m_stackStrings.Strings[0] + '_' + name;
+    if assigned(cchart(chart).OnDeadLock) then
+    cchart(chart).OnDeadLock(self);
+    end;
+    m_LastProcName := m_stackStrings.Strings[0];
+    callStack.Free;
     for I := 0 to m_stackStrings.Count - 1 do
     begin
-      j:=pos('(',m_stackStrings.Strings[i]);
-      str:=m_stackStrings.Strings[i];
-      setlength(str,j);
-      logMessage(str);
+    j:=pos('(',m_stackStrings.Strings[i]);
+    str:=m_stackStrings.Strings[i];
+    setlength(str,j);
+    logMessage(str);
     end;
-  end;}
-  //doUpdateWorldSize(nil);
+    end; }
+  // doUpdateWorldSize(nil);
 end;
 
 procedure cLabel.SetText(s: string);
@@ -293,8 +288,9 @@ begin
       boundrect.TopRight.x := 0;
       boundrect.BottomLeft.x := boundrect.TopRight.x - MaxRowWidth;
     end;
-    textH := GetTextHeigth+fBorderOffset.y*2;
-    textsize := GetiSize(p2((boundrect.TopRight.x-boundrect.BottomLeft.x), textH));
+    textH := GetTextHeigth + fBorderOffset.y * 2;
+    textsize := GetiSize(p2((boundrect.TopRight.x - boundrect.BottomLeft.x),
+        textH));
     fWidth := textsize.x;
     fHeigth := textsize.y;
     correctBorderBorderOffset;
@@ -363,37 +359,38 @@ var
   font: cfont;
   ltext: string;
   selRow, selRowCount, bufind, startrow, endrow, startindex, lastindex: integer;
-  swapRow:boolean;
-  textwidth:double;
+  swapRow: boolean;
+  textwidth: double;
 begin
   if fSelectText[0].y > -1 then
   begin
     // строки разные!!!
     font := GetFont(fontIndex);
-    if font=nil then
+    if font = nil then
       exit;
-    selRowCount := abs(fSelectText[1].x - fSelectText[0].x)+1;
-    startrow:=fSelectText[0].x;
-    endrow:=fSelectText[1].x;
-    swapRow:=false;
-    if startrow>endrow then
+    selRowCount := abs(fSelectText[1].x - fSelectText[0].x) + 1;
+    startrow := fSelectText[0].x;
+    endrow := fSelectText[1].x;
+    swapRow := false;
+    if startrow > endrow then
     begin
-      bufind:=startrow;
-      startrow:=endrow;
-      endrow:=bufind;
-      swapRow:=true;
+      bufind := startrow;
+      startrow := endrow;
+      endrow := bufind;
+      swapRow := true;
     end;
-    bufind:=startrow;
+    bufind := startrow;
     selRow := startrow;
     if selRow > -1 then
     begin
-      while selRow-startrow < selRowCount do
+      while selRow - startrow < selRowCount do
       begin
-        if fText.count=0 then exit;
-        
+        if fText.count = 0 then
+          exit;
+
         ltext := fText.Strings[selRow];
-        if swaprow then
-          startindex:=fSelectText[1].y
+        if swapRow then
+          startindex := fSelectText[1].y
         else
           startindex := fSelectText[0].y;
         if startrow <> endrow then
@@ -407,21 +404,21 @@ begin
         begin
           if selRow = endrow then
           begin
-            lastindex:=fSelectText[1].y;
+            lastindex := fSelectText[1].y;
           end;
         end;
-        if startindex>lastindex then
+        if startindex > lastindex then
         begin
-          bufind:=startindex;
-          startindex:=lastindex;
-          lastindex:=bufind;
+          bufind := startindex;
+          startindex := lastindex;
+          lastindex := bufind;
         end;
         r := EvalRowBound(selRow, font, startindex, lastindex);
-        if align=c_right then
+        if align = c_right then
         begin
           textwidth := GetTextWidth;
-          r.BottomLeft.x:=r.BottomLeft.x-textwidth;
-          r.TopRight.x:=r.TopRight.x-textwidth;
+          r.BottomLeft.x := r.BottomLeft.x - textwidth;
+          r.TopRight.x := r.TopRight.x - textwidth;
         end;
         uSimpleObjects.drawrect(r, m_SelectTextColor);
         inc(selRow);
@@ -444,11 +441,11 @@ begin
     if selected then
     begin
       font := GetFont(fontIndex);
-      if font=nil then
+      if font = nil then
         exit;
       if CursorPos.x > (fText.count - 1) then
         exit;
-      if CursorPos.x = - 1 then
+      if CursorPos.x = -1 then
         exit;
       ltext := fText.Strings[CursorPos.x];
       // узнаем высоту строки
@@ -463,8 +460,8 @@ begin
         len := boundrect.TopRight.x - textwidth + len;
       end;
       glBegin(GL_LINES);
-        glVertex2f(len, r.BottomLeft.y);
-        glVertex2f(len, r.TopRight.y);
+      glVertex2f(len, r.BottomLeft.y);
+      glVertex2f(len, r.TopRight.y);
       glend;
     end;
   end;
@@ -500,18 +497,18 @@ end;
 procedure cLabel.DrawData;
 var
   r: frect;
-  page:cpage;
-  v:array[0..3] of glint;
-  m:MatrixGl;
-  TMtype:GLint;
+  page: cpage;
+  v: array [0 .. 3] of glint;
+  m: matrixgl;
+  TMtype: glint;
 begin
-  if m_drawobjvp then
+  if m_drawobjVP then
   begin
     page := cpage(getpage);
     page.setDrawObjVP;
   end;
   glGetIntegerv(GL_VIEWPORT, @v);
-  if v[0]>=0 then
+  if v[0] >= 0 then
   begin
     DrawBorder;
     if flocked then
@@ -538,16 +535,16 @@ begin
         // при этом первая строка начало соответствует 0.0
         p2 := GetSize(point(fWidth, fHeigth));
         // расчет ширины смещения текста
-        fBorderOffset.x:=p2.x*fpixBorderOffset.x/fWidth;
-        fBorderOffset.y:=p2.y*fpixBorderOffset.y/fHeigth;
+        fBorderOffset.x := p2.x * fPixBorderOffset.x / fWidth;
+        fBorderOffset.y := p2.y * fPixBorderOffset.y / fHeigth;
 
         rh := EvalRowHeigth;
 
         // пересчитываем границу
         boundrect.TopRight.y := rh;
-        boundrect.TopRight.x := p2.x+rh;
+        boundrect.TopRight.x := p2.x + rh;
         boundrect.BottomLeft.y := rh - p2.y;
-        //boundrect.BottomLeft.x := boundrect.BottomLeft.x;
+        // boundrect.BottomLeft.x := boundrect.BottomLeft.x;
         correctBorderBorderOffset;
         reEvalScales;
       end;
@@ -564,8 +561,8 @@ begin
   p := cbasepage(getpage);
   font := GetFont(fontIndex);
   scale := font.EvalScale(GetFWidth, GetFHeigth, p.getwidth, p.getheight);
-  scale.x:=m_addscalex*scale.x;
-  scale.y:=m_addscaley*scale.y;
+  scale.x := m_addscalex * scale.x;
+  scale.y := m_addscaley * scale.y;
 end;
 
 function cLabel.GetCharIndexByPos(p: point2): tpoint;
@@ -592,9 +589,9 @@ begin
       row := trunc(dy / rh) + 1;
     end;
     result.x := row;
-    if row>fText.Count-1 then
+    if row > fText.count - 1 then
     begin
-      result:=Point(-1,-1);
+      result := point(-1, -1);
       exit;
     end;
 
@@ -639,9 +636,9 @@ begin
       row := trunc(dy / rh) + 1;
     end;
     result.x := row;
-    if row>fText.Count-1 then
+    if row > fText.count - 1 then
     begin
-      result:=Point(-1,-1);
+      result := point(-1, -1);
       exit;
     end;
     ltext := fText.Strings[row];
@@ -739,7 +736,7 @@ begin
   if enabled then
   begin
     inherited;
-    fontIndex:=c_LabelFont;
+    fontIndex := c_LabelFont;
     row := 0;
     fSelectText[0] := point(0, 0);
     row := fText.count - 1;
@@ -765,7 +762,7 @@ var
   ltext: string;
   ch: char;
   Shiftstate: tshiftstate;
-  I: Integer;
+  I: integer;
 begin
   if enabled then
   begin
@@ -783,11 +780,12 @@ begin
       if GetKeyState(VK_Shift) < 0 then
       begin
         if (fSelectText[0].y = -1) or // начали выделять текст
-           ((fSelectText[0].y - CursorPos.y) > 1) // ширина выделенного текста стала нулевой
-        then
+          ((fSelectText[0].y - CursorPos.y) > 1)
+        // ширина выделенного текста стала нулевой
+          then
         begin
           fSelectText[0].x := CursorPos.x;
-          fSelectText[0].y := CursorPos.y+1;
+          fSelectText[0].y := CursorPos.y + 1;
           fSelectText[1].x := CursorPos.x;
           fSelectText[1].y := CursorPos.y;
         end
@@ -983,42 +981,41 @@ end;
 
 procedure cLabel.DelSelectText;
 var
-  I, firstind, endind: Integer;
-  ltext:string;
+  I, firstind, endind: integer;
+  ltext: string;
 begin
   fbufStrList.Clear;
-  for I := 0 to fText.Count - 1 do
+  for I := 0 to fText.count - 1 do
   begin
-    ltext:=fText.Strings[i];
-    if (i>=fSelectText[0].x) and (i<=fSelectText[1].x) then
+    ltext := fText.Strings[I];
+    if (I >= fSelectText[0].x) and (I <= fSelectText[1].x) then
     begin
-      if (i=fSelectText[0].x) then
+      if (I = fSelectText[0].x) then
       begin
-        firstind:=fSelectText[0].y;
+        firstind := fSelectText[0].y;
       end
       else
-        firstind:=0;
-      if (i=fSelectText[1].x) then
+        firstind := 0;
+      if (I = fSelectText[1].x) then
       begin
-        endind:=fSelectText[1].y;
+        endind := fSelectText[1].y;
       end
       else
-        endind:=length(ltext);
+        endind := length(ltext);
     end;
-    Delete(ltext, firstind+1, endind-firstind);
-    if ltext<>'' then
+    delete(ltext, firstind + 1, endind - firstind);
+    if ltext <> '' then
       fbufStrList.Add(ltext);
   end;
-  fSelectText[0]:=point(-1,-1);
-  fSelectText[1]:=point(-1,-1);
-  ftext.Clear;
-  for I := 0 to fbufStrList.Count - 1 do
+  fSelectText[0] := point(-1, -1);
+  fSelectText[1] := point(-1, -1);
+  fText.Clear;
+  for I := 0 to fbufStrList.count - 1 do
   begin
-    ltext:=fbufStrList.Strings[i];
-    ftext.Add(ltext);
+    ltext := fbufStrList.Strings[I];
+    fText.Add(ltext);
   end;
 end;
-
 
 procedure cLabel.InsertChar(ch: char);
 var
@@ -1044,8 +1041,8 @@ begin
   inherited;
   if fdrag then
   begin
-    m_userOffset.x:=m_StartuserOffset.x+fCurDragI.x-fDragBeginI.x;
-    m_userOffset.y:=m_StartuserOffset.y+fCurDragI.y-fDragBeginI.y;
+    m_userOffset.x := m_StartuserOffset.x + fCurDragI.x - fDragBeginI.x;
+    m_userOffset.y := m_StartuserOffset.y + fCurDragI.y - fDragBeginI.y;
   end;
 end;
 
@@ -1060,9 +1057,9 @@ begin
   end;
   if fdrag then
   begin
-    m_userOffset.x:=m_StartuserOffset.x+fDragEndI.x-fDragBeginI.x;
-    m_userOffset.y:=m_StartuserOffset.y+fDragEndI.y-fDragBeginI.y;
-    m_StartuserOffset:=m_userOffset;
+    m_userOffset.x := m_StartuserOffset.x + fDragEndI.x - fDragBeginI.x;
+    m_userOffset.y := m_StartuserOffset.y + fDragEndI.y - fDragBeginI.y;
+    m_StartuserOffset := m_userOffset;
   end;
   inherited;
 end;
@@ -1121,10 +1118,10 @@ var
 begin
   // result:=boundrect.TopRight.y-boundrect.BottomLeft.y;
   font := GetFont(fontIndex);
-  if font<>nil then
+  if font <> nil then
     result := EvalRowHeigth(font)
   else
-    result:=0;
+    result := 0;
 end;
 
 function cLabel.GetTextWidth: single;

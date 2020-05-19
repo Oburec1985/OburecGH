@@ -12,12 +12,11 @@ type
   cFrameList = class;
 
   cFrameListener = class
-  PRIVATE
-    factive:boolean;
   protected
     name:string;
     data:tobject;
     settings:cardinal;
+    factive:boolean;
     frList:cFrameList;
     // ключ сортировки
     prioritet:integer;

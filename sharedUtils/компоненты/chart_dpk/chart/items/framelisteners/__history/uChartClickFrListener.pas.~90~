@@ -3,9 +3,11 @@ unit uChartClickFrListener;
 
 interface
 uses
-  uFrameListener, messages, classes, windows, uCommonTypes, uPage, uTrend, uAxis,
+  uFrameListener, messages, classes, windows, uCommonTypes, uPage,
+  //uPolarGraphPage,
+  uTrend, uAxis,
   uPoint, uCommonMath, types, opengl, uOglExpFunc, uChartEvents, udrawobj,
-  ucursors, controls, math;
+  ucursors, controls, math, uLogFile, uBasePage;
 
 type
   cClickFrListener = class(cFrameListener)
@@ -116,14 +118,26 @@ var
   lrect:frect;
   b:boolean;
   cp, bp:cBeziePoint;
+  fr:cframelistener;
+  lp2:point2d;
 begin
   if getflag(c_blockAllWM) then exit;
   page:=getpage;
   if page=nil then
     exit;
-  if not (page is cpage) then
+  if not cbasepage(page).isCarrier then
     exit;
   ltrend:=Activetrend;
+  if ltrend=nil then
+  begin
+    // если фрейм выбора объектов был заблокирован,
+    // при этом текущий тренд в котором редактивовалась вершина удален
+    // нужно разблокировать фрейм выбора объектов
+    fr:=cchart(data).frList.GetFrame('cObjFrListener');
+    if (fr.active=false) and (selectmode) then
+      fr.active:=true;
+  end;
+
   case msg.Msg of
     wm_mousemove:
     begin
@@ -142,6 +156,8 @@ begin
           else
           // проверка что навели курсор на точку
           begin
+            if ltrend.parent=nil then
+              exit;
             if caxis(ltrend.parent).lg then
             begin
               //FindPoint_lg(p2i)
@@ -164,35 +180,40 @@ begin
       end;
       // проверка выбора оси
       overaxis:=false;
-      for I := 0 to cpage(page).getAxisCount - 1 do
+      if page is cpage then
       begin
-        axPos:=cpage(page).getaxis(i).iaxispos+cpage(page).bound.Left;
-        hi:=axPos+cchart(data).selectsize;
-        low:=axPos-cchart(data).selectsize;
-        b:=((mouse.ipos.x>=cpage(page).bound.Left) and (mouse.ipos.x<=cpage(page).bound.Right) and
-           ((mouse.iPos_inv.y>=cpage(page).bound.Bottom) and (mouse.iPos_inv.y<=cpage(page).bound.Top)));
-        if b then
+        for I := 0 to cpage(page).getAxisCount - 1 do
         begin
-          if (mouse.ipos.X<=hi) and (mouse.ipos.X>=low) then
+          axPos:=cpage(page).getaxis(i).iaxispos+cpage(page).bound.Left;
+          hi:=axPos+cchart(data).selectsize;
+          low:=axPos-cchart(data).selectsize;
+          b:=((mouse.ipos.x>=cpage(page).bound.Left) and (mouse.ipos.x<=cpage(page).bound.Right) and
+             ((mouse.iPos_inv.y>=cpage(page).bound.Bottom) and (mouse.iPos_inv.y<=cpage(page).bound.Top)));
+          if b then
           begin
-            overaxis:=true;
-            selectaxis:=i;
-            break;
+            if (mouse.ipos.X<=hi) and (mouse.ipos.X>=low) then
+            begin
+              overaxis:=true;
+              selectaxis:=i;
+              break;
+            end;
           end;
         end;
-      end;
-      if overaxis then
-        cchart(data).setcursor(crSize, cursowner)
-      else
-        cchart(data).setcursor(crDefault, cursowner);
-      if moveCamera then
-      begin
-        lRect.BottomLeft:=DecP2(cpage(page).activeAxis.min,mouse.activeaxisstrafe);
-        lRect.TopRight:=DecP2(cpage(page).activeAxis.max,mouse.activeaxisstrafe);
-        cpage(page).ZoomfRect(lrect);
-        mouse.activeAxisPos.x:=mouse.activeAxisPos.x-mouse.activeaxisstrafe.x;
-        mouse.activeAxisPos.y:=mouse.activeAxisPos.y-mouse.activeaxisstrafe.y;
-        invalidate;
+        if overaxis then
+          cchart(data).setcursor(crSize, cursowner)
+        else
+          cchart(data).setcursor(crDefault, cursowner);
+        if moveCamera then
+        begin
+          lp2:=DecP2d(cpage(page).activeAxis.min,mouse.activeaxisstrafe);
+          lRect.BottomLeft:=p2(lp2.x,lp2.y);
+          lp2:=DecP2d(cpage(page).activeAxis.max,mouse.activeaxisstrafe);
+          lRect.TopRight:=p2(lp2.x,lp2.y);
+          cpage(page).ZoomfRect(lrect);
+          mouse.activeAxisPos.x:=mouse.activeAxisPos.x-mouse.activeaxisstrafe.x;
+          mouse.activeAxisPos.y:=mouse.activeAxisPos.y-mouse.activeaxisstrafe.y;
+          invalidate;
+        end;
       end;
     end;
     WM_LBUTTONDOWN:
@@ -203,14 +224,17 @@ begin
       if GetKeyState(VK_CONTROL)<0 then
       begin
         page:=cchart(data).activepage;
-        if cpage(page).MouseInPage(mouse.iPos_inv) then
+        if page is cpage then
         begin
-          DrawSelectRect:=true;
-          iStartRect.y:=heigth-HIWORD(msg.Lparam);
-          iStartRect.x:=LOWORD(msg.LParam);
-          rect.BottomLeft:=mouse.activeAxisPos;
-          rect.TopRight:=rect.BottomLeft;
-          invalidate;
+          if cpage(page).MouseInPage(mouse.iPos_inv) then
+          begin
+            DrawSelectRect:=true;
+            iStartRect.y:=heigth-HIWORD(msg.Lparam);
+            iStartRect.x:=LOWORD(msg.LParam);
+            rect.BottomLeft:=mouse.activeAxisPos;
+            rect.TopRight:=rect.BottomLeft;
+            invalidate;
+          end;
         end;
       end;
       if ltrend<>nil then
@@ -219,10 +243,13 @@ begin
         // Выделение точек при одиночном клике
         if SelectMode then
         begin
-          if caxis(ltrend.parent).lg then
-            FindPoint_lg(p2i)
-          else
-            FindPoint(p2i);
+          if ltrend.parent<>nil then
+          begin
+            if caxis(ltrend.parent).lg then
+              FindPoint_lg(p2i)
+            else
+              FindPoint(p2i);
+          end;
         end;
       end;
       if overaxis then
@@ -240,8 +267,11 @@ begin
     WM_RBUTTONUP:
     begin
       // изменение типа выделенных точек
-      ltrend.changetype;
-      invalidate;
+      if ltrend<>nil then
+      begin
+        ltrend.changetype;
+        invalidate;
+      end;
     end;
     WM_LBUTTONUP:
     begin
@@ -251,11 +281,20 @@ begin
         if drawselectrect then
         begin
           // Запоминаем границу выделительной рамки
+          if msg.Lparam<0 then
+            exit;
           iendRect.y:=HIWORD(msg.Lparam);
           iendRect.x:=LOWORD(msg.LParam);
           if (mouse.DragBegginPos.x<mouse.iPos.x) and
              (mouse.DragBegginPos.y<mouse.ipos.y) then
-            cpage(page).ZoomfRect(rect)
+          begin
+            // переводим в лог масштаб rect
+            axis:=cpage(page).activeAxis;
+            logMessage('uChartClickFrListener.RectToLogScale');
+            RectToLogScale(rect,p2d(axis.min.x,axis.min.y),p2d(axis.max.x,axis.max.y),cpage(page).lgx,axis.Lg);
+            logMessage('uChartClickFrListener.cpage(page).ZoomfRect(rect)');
+            cpage(page).ZoomfRect(rect);
+          end
           else
             cpage(page).Normalise;
         end;
@@ -291,12 +330,13 @@ begin
               bp.right.x:=bp.point.x+(cp.point.x-bp.point.x)/2;
             end;
           end;
-          if cp.Index< then
-
-          bp:=ltrend.getPoint(cp.Index+1);
-          if bp.left.x<cp.point.x then
+          if cp.UniqIndex<ltrend.count-1 then
           begin
-            bp.left.x:=cp.point.x+(bp.point.x-cp.point.x)/2;
+            bp:=ltrend.getPoint(cp.UniqIndex+1);
+            if bp.left.x<cp.point.x then
+            begin
+              bp.left.x:=cp.point.x+(bp.point.x-cp.point.x)/2;
+            end;
           end;
           cchart(chrt).doOnInsertPoint(ltrend, cp);
           invalidate;
@@ -584,7 +624,8 @@ begin
   ltrend:=Activetrend;
   if ltrend.parent<>page.activeAxis then
   begin
-    pos:=page.Point2ToTrend(mouse.pos, caxis(ltrend.parent));
+    if ltrend.parent <>nil then
+      pos:=page.Point2ToTrend(mouse.pos, caxis(ltrend.parent));
   end
   else
     pos:=mouse.activeAxisPos;

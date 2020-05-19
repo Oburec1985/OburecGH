@@ -5,7 +5,7 @@ interface
 uses
   Controls, windows, ubaseobj, udrawobj, uTrend, uCommonTypes, opengl,
   uOglExpFunc, classes, utext,
-  uAxis, messages, utext, sysutils, uEventList, uSetList, uFrameListener, math,
+  uAxis, messages, sysutils, uEventList, uSetList, uFrameListener, math,
   mathfunction, uChartEvents, uPoint, dialogs, types, forms, uSimpleObjects,
   uDoubleCursor, NativeXML, uBasePage, Clipbrd, uGraphObj, uLabel, ufloatlabel, uCommonMath;
 

@@ -1452,7 +1452,6 @@ begin
 end;
 
 { ISpmFrm }
-
 procedure ISpmFrm.doClose;
 begin
   m_lRefCount := 1;

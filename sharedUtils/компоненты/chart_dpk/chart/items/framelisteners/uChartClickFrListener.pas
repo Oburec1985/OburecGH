@@ -4,7 +4,7 @@ unit uChartClickFrListener;
 interface
 uses
   uFrameListener, messages, classes, windows, uCommonTypes, uPage,
-  uPolarGraphPage, uTrend, uAxis,
+  uTrend, uAxis,
   uPoint, uCommonMath, types, opengl, uOglExpFunc, uChartEvents, udrawobj,
   ucursors, controls, math, uLogFile, uBasePage;
 
