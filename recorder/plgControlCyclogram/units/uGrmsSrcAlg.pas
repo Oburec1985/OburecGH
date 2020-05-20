@@ -33,7 +33,7 @@ type
     pCount: integer;
     // ширина полосы в относительных единицах от частоты гармоники/ абсолютная полоса
     m_band: point2d;
-    // пересчитанная непосредственнов индексы спектра полоса анализа - см. updateBandWidth
+    // пересчитанная непосредственно в индексы спектра полоса анализа - см. updateBandWidth
     m_bandwidthint: tpoint;
     fdX: double;
   private
@@ -96,11 +96,8 @@ procedure cGrmsSrcAlg.doUpdateSrcData(sender: tobject);
 var
   // индекс в тестируемом спектре главной частоты по тахо
   I: integer;
-
   res: double;
-
   s: cspm;
-
   // updatetaho
   t1, t2, x: double;
   bandwidthint, startind, endind, spmInd: integer;

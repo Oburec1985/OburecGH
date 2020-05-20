@@ -20,6 +20,32 @@ uses
   uSpm;
 
 type
+  // алгоритм который собирает данные спектров канала и тахо в единий канал
+  cIRAlg = class(cbasealg)
+  private
+    // полоса анализа вокруг главной частоты тахо в долях
+    fband:point2d;
+    ftaho, fspm:cspm;
+    fOut:array of point2d;
+    // число расчитанных точек
+    pCount: integer;
+  protected
+    {function genTagName: string; override;
+    function Getdx: double; override;
+    procedure doAfterload; override;
+    procedure SetProperties(str: string); override;
+    function GetProperties: string; override;
+    procedure doEval(tag: cTag; time: double); override;
+    procedure doGetData; override;
+    procedure doEndEvalBlock(sender: tobject); override;}
+    procedure doUpdateSrcData(sender: tobject); override;
+    procedure doOnStart; override;
+    function ready: boolean; override;
+  public
+    constructor create; override;
+    destructor destroy; override;
+    class function getdsc: string; override;
+  end;
 
   IRDiagramTag = class(cGraphObj)
   private
@@ -37,6 +63,8 @@ type
     // исходные теги и их спектры
     fTag, fTaho:cTag;
     fspm, ftahospm:cspm;
+
+    xTime, yTime:double;
   public
     // Посчитанные данные
     fYpoints:array of double;
@@ -51,7 +79,8 @@ type
     function getCount: integer;override;
     procedure SetCount(i:integer);override;
   public
-
+    // пересчитать данные из fspm, ftahospm в отрисовываемые вершины
+    procedure updateData;
     property DrawLines: boolean read fDrawLines write fDrawLines;
     property DrawPoints: boolean read fDrawPoints write fDrawPoints;
     property PointColor: point3 read fPointColor write fPointColor;
@@ -495,7 +524,7 @@ begin
   for i := 0 to GraphCount - 1 do
   begin
     g := getGraph(i);
-    //g.UpdateData;
+    g.UpdateData;
   end;
 end;
 
@@ -672,6 +701,14 @@ procedure IRDiagramTag.setmainParent(p: cbaseObj);
 begin
   inherited;
 
+end;
+
+procedure IRDiagramTag.updateData;
+begin
+  if fspm.LastBlockTime>xTime then
+  begin
+
+  end;
 end;
 
 procedure IRDiagramTag.setCount(i: integer);
@@ -885,7 +922,7 @@ begin
   while pos<maxgridx do
   begin
     str := formatstr(pos, 4);
-    OutText(PCHAR(str), p2(pos, MinGridY), c_left, c_AxisFontInd);
+    OutText(PCHAR(str), p2(pos, 0), c_left, c_AxisFontInd);
     pos:=pos+gridstepx;
   end;
   // подписываем оси Y
@@ -1105,6 +1142,82 @@ begin
   // ======================Подготовка к рисованию=========================
   glMatrixMode(gl_projection);
   glloadmatrixf(@stateM);
+end;
+
+{ cIRAlg }
+
+constructor cIRAlg.create;
+begin
+  inherited;
+  Properties := '';
+end;
+
+destructor cIRAlg.destroy;
+begin
+  inherited;
+end;
+
+procedure cIRAlg.doOnStart;
+begin
+  inherited;
+  pCount := 0;
+end;
+
+procedure cIRAlg.doUpdateSrcData(sender: tobject);
+var
+  // индекс в тестируемом спектре главной частоты по тахо
+  I: integer;
+  res: double;
+  s: cspm;
+  // updatetaho
+  t1, t2, x: double;
+  bandwidthint, startind, endind, spmInd: integer;
+begin
+  if sender = ftaho then
+  begin
+      x := ftaho.max.x;
+      m_curTahoValue := x;
+      // количество отсчетов в спектре по которым усредняем
+      startind := round(x * m_band.x / m_spm.dX);
+      endind := round(x * m_band.y / m_spm.dX);
+
+    if startind < 0 then
+      startind := 0;
+    if endind = startind then
+      endind := startind + 1;
+    if endind >= (AlignBlockLength(m_spm.m_rms)) then
+      endind := AlignBlockLength(m_spm.m_rms) - 1;
+
+    m_bandwidthint.x := startind;
+    m_bandwidthint.y := endind;
+  end;
+  if sender = fspm then
+  begin
+    // пересчитываем полосу по текущему значению тахо
+    s := m_spm;
+    res := 0;
+    for I := m_bandwidthint.x to m_bandwidthint.y - 1 do
+    begin
+      res := res + tdoublearray(s.m_rms.p)[I] * tdoublearray(s.m_rms.p)[I];
+    end;
+    m_outTag.m_TagData[m_blockind] := sqrt(res);
+    //m_outTag.m_TagData[m_blockind] := m_spm.m_rmsValue;
+    m_outTagX[m_blockind] := m_spm.LastBlockTime;
+    inc(m_blockind);
+    if m_blockind = length(m_outTag.m_TagData) then
+      doEndEvalBlock(nil);
+  end;
+end;
+
+class function cIRAlg.getdsc: string;
+begin
+  result := 'Комплексный спектр';
+end;
+
+function cIRAlg.ready: boolean;
+begin
+  // алгоритм вспомогательный, поэтому не требует вызовов
+  result:=false;
 end;
 
 end.

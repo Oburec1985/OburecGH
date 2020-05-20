@@ -20,6 +20,43 @@ uses
   uSpm;
 
 type
+  // алгоритм который собирает данные спектров канала и тахо в единий канал
+  cIRAlg = class(cbasealg)
+  private
+    // размер буфера в секундах (буфер нужен для соединения данных тахо и основного тега в
+    // единый массив без ошибок по времени)
+    fBuffLength:double;
+    // время первого блока тахо
+    fTahoStartTime:double;
+    // количество блоков в буфере тахо
+    fTahoBlCount:integer;
+    fTahoBuff:array of Tcomplex;
+
+    // полоса анализа вокруг главной частоты тахо в долях
+    fband:point2d;
+    fband_i:point2d;
+    fTahoValue:double;
+    ftaho, fspm:cspm;
+    fOut:array of point2d;
+    // число расчитанных точек
+    pCount: integer;
+  protected
+    {function genTagName: string; override;
+    function Getdx: double; override;
+    procedure doAfterload; override;
+    procedure SetProperties(str: string); override;
+    function GetProperties: string; override;
+    procedure doEval(tag: cTag; time: double); override;
+    procedure doGetData; override;
+    procedure doEndEvalBlock(sender: tobject); override;}
+    procedure doUpdateSrcData(sender: tobject); override;
+    procedure doOnStart; override;
+    function ready: boolean; override;
+  public
+    constructor create; override;
+    destructor destroy; override;
+    class function getdsc: string; override;
+  end;
 
   IRDiagramTag = class(cGraphObj)
   private
@@ -37,6 +74,8 @@ type
     // исходные теги и их спектры
     fTag, fTaho:cTag;
     fspm, ftahospm:cspm;
+
+    xTime, yTime:double;
   public
     // Посчитанные данные
     fYpoints:array of double;
@@ -51,7 +90,8 @@ type
     function getCount: integer;override;
     procedure SetCount(i:integer);override;
   public
-
+    // пересчитать данные из fspm, ftahospm в отрисовываемые вершины
+    procedure updateData;
     property DrawLines: boolean read fDrawLines write fDrawLines;
     property DrawPoints: boolean read fDrawPoints write fDrawPoints;
     property PointColor: point3 read fPointColor write fPointColor;
@@ -495,7 +535,7 @@ begin
   for i := 0 to GraphCount - 1 do
   begin
     g := getGraph(i);
-    //g.UpdateData;
+    g.UpdateData;
   end;
 end;
 
@@ -672,6 +712,14 @@ procedure IRDiagramTag.setmainParent(p: cbaseObj);
 begin
   inherited;
 
+end;
+
+procedure IRDiagramTag.updateData;
+begin
+  if fspm.LastBlockTime>xTime then
+  begin
+
+  end;
 end;
 
 procedure IRDiagramTag.setCount(i: integer);
@@ -868,8 +916,6 @@ begin
   begin
     glvertex2d(pos, fYAxis.x);
     glvertex2d(pos, fYAxis.y);
-    str := formatstr(pos, 4);
-    OutText(PCHAR(str), p2(pos,MaxGridY), c_left, c_AxisFontInd);
     pos:=pos+gridstepx;
   end;
   // рисуем сетку по Y
@@ -887,13 +933,15 @@ begin
   while pos<maxgridx do
   begin
     str := formatstr(pos, 4);
-    OutText(PCHAR(str), p2(pos,MaxGridY), c_left, c_AxisFontInd);
+    OutText(PCHAR(str), p2(pos, 0), c_left, c_AxisFontInd);
     pos:=pos+gridstepx;
   end;
   // подписываем оси Y
   pos:=mingridy;
-  while pos<maxgridx do
+  while pos<maxgridY do
   begin
+    str := formatstr(pos, 4);
+    OutText(PCHAR(str), p2(0, pos), c_left, c_AxisFontInd);
     pos:=pos+gridstepy;
   end;
 end;
@@ -1105,6 +1153,80 @@ begin
   // ======================Подготовка к рисованию=========================
   glMatrixMode(gl_projection);
   glloadmatrixf(@stateM);
+end;
+
+{ cIRAlg }
+
+constructor cIRAlg.create;
+begin
+  inherited;
+  Properties := '';
+end;
+
+destructor cIRAlg.destroy;
+begin
+  inherited;
+end;
+
+procedure cIRAlg.doOnStart;
+begin
+  inherited;
+  pCount := 0;
+end;
+
+procedure cIRAlg.doUpdateSrcData(sender: tobject);
+var
+  // индекс в тестируемом спектре главной частоты по тахо
+  I: integer;
+  res: double;
+  // updatetaho
+  t1, t2, x: double;
+  v:point2d;
+  bandwidthint, startind, endind, spmInd: integer;
+begin
+  if sender = ftaho then
+  begin
+      x := ftaho.max.x;
+      fTahoValue := x;
+      // количество отсчетов в спектре по которым усредняем
+      startind := round(x * fband.x / fspm.dX);
+      endind := round(x * fband.y / fspm.dX);
+
+    if startind < 0 then
+      startind := 0;
+    if endind = startind then
+      endind := startind + 1;
+    if endind >= (AlignBlockLength(fspm.m_rms)) then
+      endind := AlignBlockLength(fspm.m_rms) - 1;
+
+    fband_i.x := startind;
+    fband_i.y := endind;
+  end;
+  if sender = fspm then
+  begin
+    // пересчитываем полосу по текущему значению тахо
+    res := fband_i.x;
+    for I := fband_i.x+1 to fband_i.y - 1 do
+    begin
+      if fspm.m_rms[i]>res then
+      begin
+        v:=fspm.cmplx_resArray[i];
+      end;
+    end;
+    if m_blockind = length(m_outTag.m_TagData) then
+      doEndEvalBlock(nil);
+  end;
+end;
+
+class function cIRAlg.getdsc: string;
+begin
+  result := 'Комплексный спектр';
+end;
+
+function cIRAlg.ready: boolean;
+begin
+  // алгоритм вспомогательный, поэтому не требует вызовов
+  result:=false;
 end;
 
 end.
