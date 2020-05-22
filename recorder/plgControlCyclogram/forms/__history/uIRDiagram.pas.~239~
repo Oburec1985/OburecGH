@@ -14,6 +14,7 @@ uses
   uBasePage,
   OpenGL,
   math,
+  complex,
   uHardwareMath,
   ufloatlabel,
   utext,
@@ -26,8 +27,16 @@ type
     // размер буфера в секундах (буфер нужен для соединения данных тахо и основного тега в
     // единый массив без ошибок по времени)
     fBuffLength:double;
+
+    fTahoBuffLength_i:integer;
     // время первого блока тахо
     fTahoStartTime:double;
+    // количество блоков в буфере тахо
+    fTahoBlCount:integer;
+    // значение комплексного спектра на главной гармонике
+    fTahoBuff:array of TComplex_d;
+    // значение главной гармоники
+    fTahoBuff:array of double;
 
     // полоса анализа вокруг главной частоты тахо в долях
     fband:point2d;

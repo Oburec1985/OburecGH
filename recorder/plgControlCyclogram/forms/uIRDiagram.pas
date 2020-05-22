@@ -27,6 +27,8 @@ type
     // размер буфера в секундах (буфер нужен для соединения данных тахо и основного тега в
     // единый массив без ошибок по времени)
     fBuffLength:double;
+
+    fTaxodx:double; // шаг между посчитанными спектрами по времени
     fTahoBuffLength_i:integer;
     // время первого блока тахо
     fTahoStartTime:double;
@@ -34,6 +36,17 @@ type
     fTahoBlCount:integer;
     // значение комплексного спектра на главной гармонике
     fTahoBuff:array of TComplex_d;
+    // значение частоты главной гармоники
+    fTahoBuffFreq:array of double;
+
+    fSpmdx:double; // шаг между посчитанными спектрами по времени
+    fSpmBuffLength_i:integer;
+    // время первого блока тахо
+    fSpmStartTime:double;
+    // количество блоков в буфере тахо
+    fSpmBlCount:integer;
+    // значение комплексного спектра на главной гармонике
+    fSpmBuff:array of TComplex_d;
 
     // полоса анализа вокруг главной частоты тахо в долях
     fband:point2d;
@@ -55,6 +68,8 @@ type
     procedure doUpdateSrcData(sender: tobject); override;
     procedure doOnStart; override;
     function ready: boolean; override;
+    // пересчитать по входным тегам размеры буферов данных, dx по времени для каналов
+    procedure UpdateChannels;
   public
     constructor create; override;
     destructor destroy; override;
@@ -68,7 +83,7 @@ type
     fneedrecompile: boolean;
     fPCount:integer;
     // рисовать линии
-    fDrawLines: boolean;
+    fDrawLines: boolean;                          з2498_выаывалвтыа
     // рисовать точки
     fDrawPoints: boolean;
     // цвет вершин
