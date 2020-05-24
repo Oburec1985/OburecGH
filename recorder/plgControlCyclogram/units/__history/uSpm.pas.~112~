@@ -7,7 +7,7 @@ uses
   pluginclass, blaccess, sysutils, uCommonTypes, uFFT, ap, fft,
   uHardwareMath,
   urecorderevents, uCommonMath, uMyMath, mathfunction, math, u2dmath, uBaseAlg,
-  complex;
+  complex, urctags;
 
 
 type
@@ -26,15 +26,11 @@ type
     // интеграл первой и второй степени (только амплитуды)
     m_magI1, m_magI2: array of double;
 
-    // буфер данных посчитанный по alglib
-    m_rmsTest: array of double;
-
     // включить первое и второе интегрирование 0 - без интеграла, 1 - 1 однократное, 2 - двукратное
     m_I:integer;
     // интеграл первой и второй степени (только амплитуды)
     m_ReIm1, m_ReIm2: array of TComplex_d;
 
-    m_algtype:integer;
     // количество посчитанных блоков спектра
     m_ReadyBlockCount: integer;
     // входной тег
@@ -42,6 +38,7 @@ type
   public
     cmplx_resArray: TAlignDCmpx;
     // блок данных по которому идет расчет. Не работает по m_spmData, т.к. может содержать дополнения нулями
+    // на сам деле не обязательно выранивать по 16 байтам тк не принимает участиев SSE расчетах
     m_EvalBlock: TAlignDarray;
     m_rms: TAlignDarray;
   protected
@@ -53,7 +50,8 @@ type
     m_outTag: cTag;
     FFTProp:TFFTProp;
     // число точек fft, число блоков по которым идет расчет спектров,
-    m_fftCount, m_blockcount,
+    m_fftCount,
+    m_blockcount,
     // перекрытие блоков m_overflowP=(1/ 2^m_overflow)
     m_overflow, m_overflowP: integer;
     // разрешение спектра
@@ -137,7 +135,6 @@ const
 constructor cSpm.create;
 begin
   inherited;
-  m_algtype:=c_wiki_spm;
   // размер буфера в секундах
   fdx := -1;
   m_blockcount := 1;
@@ -156,6 +153,15 @@ begin
     m_EvalBlockTag.destroy;
     m_EvalBlockTag := nil;
   end;
+
+  FreeMemAligned(m_EvalBlock);
+  m_EvalBlock.p:=nil;
+
+  FreeMemAligned(cmplx_resArray);
+  cmplx_resArray.p:=nil;
+
+  FreeMemAligned(m_rms);
+  m_rms.p:=nil;
 
   m_tag.destroy;
   m_tag := nil;
@@ -247,10 +253,10 @@ begin
 
   setlength(m_BlockTime, bCount * 2);
   GetMemAlignedArray_d(fOutSize, m_EvalBlock);
-  GetMemAlignedArray_d(fOutSize, m_rms);
   GetMemAlignedArray_cmpx_d(fOutSize, cmplx_resArray);
+  // отраженный спектр отбрасываем, поэтому 1/2 длины
+  GetMemAlignedArray_d(fOutSize shr 1, m_rms);
 
-  setlength(m_rmsTest, m_fftCount shr 1);
   setlength(m_magI1, m_fftCount shr 1);
   setlength(m_magI2, m_fftCount shr 1);
   setlength(m_ReIm1, m_fftCount shr 1);
@@ -269,7 +275,7 @@ begin
     end;
     m_EvalBlockTag.setBlock(fOutSize, m_EvalBlock.p);
   end;
-  FFTProp:=g_algMng.GetFFTPlan(m_fftCount);
+  FFTProp:=GetFFTPlan(m_fftCount);
 end;
 
 procedure cSpm.doEval(intag: cTag; time: double);
@@ -308,63 +314,42 @@ begin
         m_EvalBlockTag.saveBlock(intag.m_ReadDataTime + (dt)
             * fShift * procBlock);
     end;
-    if m_algtype=c_wiki_spm then
+    //if m_algtype=c_wiki_spm then
     begin
       ar:=tdoublearray(m_rms.p);
-      FFTAnalysis(TArrayValues(m_EvalBlock.p), tarrayValues(ar), m_fftCount, AlignBlockLength(m_rms));
+      //FFTAnalysis(TArrayValues(m_EvalBlock.p), tarrayValues(ar), m_fftCount, AlignBlockLength(m_rms));
       fft_al_d_sse(TDoubleArray(m_EvalBlock.p), tCmxArray_d(cmplx_resArray.p), FFTProp);
-      NormalizeAndScaleSpmMag(TCmxArray_d(cmplx_resArray.p), TDoubleArray(m_rms.p));
-      // нормировка
+      //NormalizeAndScaleSpmMag(TCmxArray_d(cmplx_resArray.p), TDoubleArray(m_rms.p));
+      k:=1/(FFTProp.PCount shr 1);
+      MULT_SSE_al_cmpx_d(tCmxArray_d(cmplx_resArray.p), k);
+      EvalSpmMag(TCmxArray_d(cmplx_resArray.p), TDoubleArray(m_rms.p));
+      // нормировка с учетом дополнения нулями
       if fNullsPoints = 0 then
       begin
         knorm := 1;
       end
       else
       begin
-        // Knorm:=(m_fftCount)/spmPointCount;
-        // Knorm:=2*(m_fftCount)/fOutSize;
         knorm := fOutSize / copycount;
-        for i := 0 to length(m_rms) - 1 do
-        begin
-          m_rms[i] := m_rms[i] * knorm;
-        end;
+        MULT_SSE_al_d(TDoubleArray(m_rms.p),knorm);
         if m_I>0 then
         begin
-          m_magI1[i]:=(k*m_rms[i])/(TwoPi*(i+1)*m_spmdx);
+          knorm:=TwoPi*m_spmdx;
+          m_magI1[i]:=(k*TDoubleArray(m_rms.p)[i])/(knorm*(i+1));
           if m_I>1 then
           begin
-            m_magI2[i]:=(m_magI1[i])/(TwoPi*(i+1)*m_spmdx);
+            m_magI2[i]:=(m_magI1[i])/(knorm*(i+1));
           end;
         end;
       end;
       evalMinMax;
-    end
-    else
-    begin
-      // расчет в alglib
-      FFTR1D(treal1darray(m_EvalBlock.p), m_fftCount, TComplex1Darray(cmplx_resArray.p));
-      k := 1 / m_fftCount;
-      for i := 0 to length(m_rms) - 1 do
-      begin
-        m_rmsTest[i] := k * sqrt(TComplex1Darray(cmplx_resArray.p)[i].x*TComplex1Darray(cmplx_resArray.p)[i]
-            .x + TComplex1Darray(cmplx_resArray.p)[i].y * TComplex1Darray(cmplx_resArray.p)[i].y);
-        if m_I>0 then
-        begin
-          m_ReIm1[i].x:=(k*TComplex1Darray(cmplx_resArray.p)[i].x)/(TwoPi*(i+1)*m_spmdx);
-          m_ReIm1[i].y:=(k*TComplex1Darray(cmplx_resArray.p)[i].y)/(TwoPi*(i+1)*m_spmdx);
-          if m_I>1 then
-          begin
-            m_ReIm2[i].x:=(m_ReIm1[i].x)/(TwoPi*(i+1)*m_spmdx);
-            m_ReIm2[i].y:=(m_ReIm1[i].y)/(TwoPi*(i+1)*m_spmdx);
-          end;
-        end;
-      end;
     end;
+
     m_BlockTime[procBlock] := intag.m_ReadDataTime + fdx * procBlock;
     m_BlockTimeInd := procBlock;
     if m_outTag.tag<>nil then
     begin
-      m_outTag.tag.PushDataEx(pointer(m_rms)^, length(m_rms), 0,m_BlockTime[procBlock]);
+      m_outTag.tag.PushDataEx(m_rms.p^, AlignBlockLength(m_rms), 0,m_BlockTime[procBlock]);
     end;
     inc(m_ReadyBlockCount);
     CallUpdateDataEvent;
@@ -413,7 +398,7 @@ begin
     m_outTag.doOnStart;
   end;
   ZeroMemory(m_EvalBlock.p, fOutSize * sizeof(double));
-  ZeroMemory(m_rms.p, fOutSize * sizeof(double));
+  ZeroMemory(m_rms.p, (fOutSize shr 1)* sizeof(double));
 
   m_ReadyBlockCount := 0;
   m_BlockTimeInd := 0;
@@ -461,6 +446,7 @@ var
   pars: tstringlist;
   b: boolean;
   t: itag;
+  refcount:integer;
   str: string;
 begin
   pars := tstringlist.create;
@@ -641,33 +627,20 @@ procedure cSpm.setrestype(i: integer);
 begin
   if i<3 then
   begin
-    m_algtype:=c_wiki_spm;
     m_i:=i;
   end
   else
   begin
-    m_algtype:=c_alglib_cpxSpm;
     m_i:=i-3;
   end;
 end;
 
 function cSpm.getrestype: integer;
 begin
-  if m_algtype= c_wiki_spm then
-  begin
-    case m_I of
-      0: result:=0;
-      1: result:=1;
-      2: result:=2;
-    end;
-  end
-  else
-  begin
-    case m_I of
-      3: result:=0; // однократный комплексный спектр
-      4: result:=1;  // интеграл комплексный спектр
-      5: result:=2; // 2интеграл комплексный спектр
-    end;
+  case m_I of
+    0: result:=0;
+    1: result:=1;
+    2: result:=2;
   end;
 end;
 
@@ -841,7 +814,7 @@ begin
     m_Properties:=AddParamF(m_Properties,'Channel',m_tag.tagname);
     if lstr='' then
     begin
-      name:=resname;
+      name:=genTagName;
     end;
   end;
 end;

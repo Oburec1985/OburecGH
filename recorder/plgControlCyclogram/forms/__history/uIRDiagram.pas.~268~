@@ -27,6 +27,8 @@ type
     // размер буфера в секундах (буфер нужен для соединения данных тахо и основного тега в
     // единый массив без ошибок по времени)
     fBuffLength:double;
+
+    fTaxodx:double; // шаг между посчитанными спектрами по времени
     fTahoBuffLength_i:integer;
     // время первого блока тахо
     fTahoStartTime:double;
@@ -34,6 +36,17 @@ type
     fTahoBlCount:integer;
     // значение комплексного спектра на главной гармонике
     fTahoBuff:array of TComplex_d;
+    // значение частоты главной гармоники
+    fTahoBuffFreq:array of double;
+
+    fSpmdx:double; // шаг между посчитанными спектрами по времени
+    fSpmBuffLength_i:integer;
+    // время первого блока тахо
+    fSpmStartTime:double;
+    // количество блоков в буфере тахо
+    fSpmBlCount:integer;
+    // значение комплексного спектра на главной гармонике
+    fSpmBuff:array of TComplex_d;
 
     // полоса анализа вокруг главной частоты тахо в долях
     fband:point2d;
@@ -50,11 +63,13 @@ type
     procedure SetProperties(str: string); override;
     function GetProperties: string; override;
     procedure doEval(tag: cTag; time: double); override;
-    procedure doGetData; override;
-    procedure doEndEvalBlock(sender: tobject); override;}
+    procedure doGetData; override;}
+    procedure doEndEvalBlock(sender: tobject); override;
     procedure doUpdateSrcData(sender: tobject); override;
     procedure doOnStart; override;
     function ready: boolean; override;
+    // пересчитать по входным тегам размеры буферов данных, dx по времени для каналов
+    procedure UpdateChannels;
   public
     constructor create; override;
     destructor destroy; override;
@@ -80,9 +95,8 @@ type
 
     xTime, yTime:double;
   public
-    // Посчитанные данные
-    fYpoints:array of double;
-    fXpoints:array of double;
+    m_irAlg:cIRAlg;
+    fxpoints, fypoints:array of double;
   protected
   protected
     procedure doLincParent;override;
@@ -684,6 +698,11 @@ end;
 constructor IRDiagramTag.create;
 begin
   inherited;
+  m_irAlg:=cIRAlg.create;
+  if g_algmng<>nil then
+  begin
+    g_algMng.add(m_irAlg);
+  end;
   DrawPoints:=true;
   fPointColor:=red;
   DrawLines:=true;
@@ -1171,9 +1190,16 @@ begin
   inherited;
 end;
 
+
+
 procedure cIRAlg.doOnStart;
 begin
   inherited;
+  fTahoStartTime:=-1;
+  fSpmStartTime:=-1;
+  fTahoBlCount:=0;
+  fSpmBlCount:=0;
+
   pCount := 0;
 end;
 
@@ -1189,11 +1215,11 @@ var
 begin
   if sender = ftaho then
   begin
-      x := ftaho.max.x;
-      fTahoValue := x;
-      // количество отсчетов в спектре по которым усредняем
-      startind := round(x * fband.x / fspm.dX);
-      endind := round(x * fband.y / fspm.dX);
+    x := ftaho.max.x;
+    fTahoValue := x;
+    // количество отсчетов в спектре по которым усредняем
+    startind := round(x * fband.x / ftaho.dX);
+    endind := round(x * fband.y / ftaho.dX);
 
     if startind < 0 then
       startind := 0;
@@ -1201,23 +1227,67 @@ begin
       endind := startind + 1;
     if endind >= (AlignBlockLength(fspm.m_rms)) then
       endind := AlignBlockLength(fspm.m_rms) - 1;
-
     fband_i.x := startind;
     fband_i.y := endind;
+
+    fTahoBuff[fTahoBlCount]:=tCmxArray_d(ftaho.cmplx_resArray.p)[ftaho.minmax_i.y];
+    fTahoBuffFreq[fTahoBlCount]:=x;
+    if fTahoBlCount=0 then
+    begin
+      fTahoStartTime:=ftaho.LastBlockTime;
+    end;
   end;
   if sender = fspm then
   begin
     // пересчитываем полосу по текущему значению тахо
-    res := fband_i.x;
-    for I := fband_i.x+1 to fband_i.y - 1 do
+    for I := startind to endind do
     begin
       if fspm.m_rms[i]>res then
       begin
         v:=fspm.cmplx_resArray[i];
       end;
     end;
-    if m_blockind = length(m_outTag.m_TagData) then
+    fSpmBuff[fTahoBlCount]:=v;
+
+    if fSpmBlCount = (length(fOut)-1) then
+    begin
+      // fSpmBlCount:=0;
       doEndEvalBlock(nil);
+    end;
+  end;
+end;
+
+procedure cIRAlg.doEndEvalBlock(sender: tobject);
+var
+  I, j: integer;
+  a1,a2,cos, alfa, alfa1,spmT, tahoT, halfstep: double;
+  c1,c2:tcomplex_d;
+begin
+  fSpmBlCount:=0;
+  halfstep:=fSpmdx/2;
+  for I := 0 to fSpmBlCount - 1 do
+  begin
+    spmT:=fSpmStartTime+i*fSpmdx;
+    for j := 0 to fTahoBlCount - 1 do
+    begin
+      tahoT:=fTahoStartTime+i*fTaxoDx;
+      if spmT-tahoT<halfstep then
+      begin
+        c1:=fSpmBuff[i];
+        c2:=fTahoBuff[i];
+        a1:=abs(fSpmBuff[i]);
+        a2:=abs(fTahoBuff[j]);
+        cos:=(c1.Re*c2.Re+c1.im*c2.im)/(a1*a2);
+        alfa:=arccos(cos);
+        alfa1:=ArcTan(c1.Im/c1.re)-alfa;
+
+
+        fOut[i+pCount].x:=a1*cos(alfa1);
+        fOut[i+pCount].y:=a1*sin(alfa1);
+        inc(pCount);
+        break;
+      end;
+    end;
   end;
 end;
 
@@ -1230,6 +1300,24 @@ function cIRAlg.ready: boolean;
 begin
   // алгоритм вспомогательный, поэтому не требует вызовов
   result:=false;
+end;
+
+procedure cIRAlg.UpdateChannels;
+begin
+  if ftaho<>nil then
+  begin
+    fTaxodx:=ftaho.dX;
+    fTahoBuffLength_i:=round(fBuffLength/fTaxodx);
+    SetLength(fTahoBuff,fTahoBuffLength_i);
+    SetLength(fTahoBuffFreq,fTahoBuffLength_i);
+  end;
+  if fspm<>nil then
+  begin
+    fSpmdx:=fspm.dX;
+    fTahoBuffLength_i:=round(fBuffLength/fTaxodx);
+    SetLength(fTahoBuff,fTahoBuffLength_i);
+    SetLength(fTahoBuffFreq,fTahoBuffLength_i);
+  end;
 end;
 
 end.

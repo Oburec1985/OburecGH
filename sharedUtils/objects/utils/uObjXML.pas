@@ -70,7 +70,8 @@ begin
     childNode:=xmlNode.nodes[i];
     if childNode.Name='Properties' then
     begin
-      obj.metadata.LoadXml(childNode);
+      if obj<>nil then
+        obj.metadata.LoadXml(childNode);
     end
     else
     begin

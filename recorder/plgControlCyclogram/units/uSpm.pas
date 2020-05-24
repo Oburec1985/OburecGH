@@ -17,6 +17,7 @@ type
   public
     min: point2d;
     max: point2d;
+    minmax_i:tpoint;
     // значение ско по временной реализации за блок (evalblock)
     // m_rmsValue:double;
     // отладочный тег с временной реализацией исходных данных
@@ -36,6 +37,7 @@ type
     // входной тег
     m_tag: cTag;
   public
+    // пример разыменования tCmxArray_d(cmplx_resArray.p)
     cmplx_resArray: TAlignDCmpx;
     // блок данных по которому идет расчет. Не работает по m_spmData, т.к. может содержать дополнения нулями
     // на сам деле не обязательно выранивать по 16 байтам тк не принимает участиев SSE расчетах
@@ -115,6 +117,7 @@ type
     procedure setinptag(t: itag); overload;
     procedure setinptag(t: cTag); overload;
     function ready: boolean; override;
+    function SpmDx:double;
     class function getdsc: string; override;
     constructor create; override;
     destructor destroy; override;
@@ -176,6 +179,9 @@ var
   i: integer;
   x, y: double;
 begin
+  minmax_i.X:=0;
+  minmax_i.y:=0;
+
   min.x := tdoubleARRAy(m_rms.p)[0];
   min.y := tdoubleARRAy(m_rms.p)[0];
   max := min;
@@ -187,6 +193,7 @@ begin
     begin
       max.y := y;
       max.x := x;
+      minmax_i.y:=i;
     end
     else
     begin
@@ -194,6 +201,7 @@ begin
       begin
         min.y := y;
         min.x := x;
+        minmax_i.x:=i;
       end;
     end;
   end;
@@ -862,6 +870,11 @@ begin
   begin
 
   end;
+end;
+
+function cSpm.SpmDx: double;
+begin
+  result:=m_spmdx;
 end;
 
 procedure cSpm.settag(str: string);

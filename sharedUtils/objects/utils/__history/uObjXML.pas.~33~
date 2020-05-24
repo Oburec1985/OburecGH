@@ -13,6 +13,7 @@ procedure XMLloadObjects(doc:TNativeXml; eng:cBaseObjMng; node:tXMLNode);overloa
 
 const
   c_type = 'ObjType';
+  c_Node = 'Node';
 
 implementation
 
@@ -27,8 +28,11 @@ var
   autocreate:boolean;
 begin
   result:=nil;
+  nodeType:=xmlNode.ReadAttributeString(c_type);
+  if nodetype='' then exit;
+
   nodename:=xmlNode.Name;
-  str:=xmlNode.ReadAttributeString('Node');
+  str:=xmlNode.ReadAttributeString(c_Node);
   if str<>'' then
   begin
     if str<>nodename then
@@ -36,8 +40,6 @@ begin
       nodename:=str;
     end;
   end;
-  nodeType:=xmlNode.ReadAttributeString(c_type);
-  if nodetype='' then exit;
   autocreate:=xmlNode.ReadAttributeBool('AutoCreate');
   if not autocreate then
   begin
@@ -52,12 +54,16 @@ begin
       // чтение свойств автосоздаваемых объектов
       obj.LoadObjAttributes(xmlNode, eng);
     end;
-    obj:=nil;
+    // WTF??? «акоментировал 07.10.2017 ƒалее по тексту добавлено р€дом с if obj=nil if not obj.autocreate
+    // obj:=nil;
   end;
   if obj<>nil then
   begin
-    obj.name:=nodename;
-    obj.LoadObjAttributes(xmlNode, eng);
+    if not obj.autocreate then
+    begin
+      obj.name:=nodename;
+      obj.LoadObjAttributes(xmlNode, eng);
+    end;
   end;
   for I := 0 to xmlNode.NodeCount - 1 do
   begin
@@ -68,6 +74,7 @@ begin
     end
     else
     begin
+      // веро€тно надо закоментировать or (obj.autocreate) и оставить этот вариант только дл€ (obj=nil)
       if (obj=nil) or (obj.autocreate) then
         child:=LoadObj(ChildNode,rootObj, eng)
       else
@@ -80,7 +87,14 @@ begin
         end
         else
         begin
-          child.mainParent:=rootObj;
+          // условие добавлено 07.10.17
+          if (rootObj=nil) and (obj<>nil) then
+          begin
+            if child.mainParent<>obj then
+              child.mainParent:=obj;
+          end
+          else
+            child.mainParent:=rootObj;
         end;
       end;
     end;
@@ -140,13 +154,14 @@ begin
       str[i]:='_';
     end;
   end;
-  ChildXmlNode:=xmlRoot.NodeNew(obj.name);
+  ChildXmlNode:=xmlRoot.NodeNew(str);
   if obj.metadata.Count>0 then
   begin
     PropertieNode:=ChildXmlNode.NodeNew('Properties');
     obj.metadata.SaveToXml(PropertieNode);
   end;
   ChildXmlNode.WriteAttributeString(c_type, obj.classname);
+  ChildXmlNode.WriteAttributeString(c_Node, obj.name);
   obj.SaveObjAttributes(ChildXmlNode);
   for I := 0 to obj.ChildCount - 1 do
   begin
