@@ -60,10 +60,10 @@ type
     {function genTagName: string; override;
     function Getdx: double; override;
     procedure doAfterload; override;
-    procedure SetProperties(str: string); override;
-    function GetProperties: string; override;
     procedure doEval(tag: cTag; time: double); override;
     procedure doGetData; override;}
+    procedure SetProperties(str: string); override;
+    function GetProperties: string; override;
     procedure doEndEvalBlock(sender: tobject); override;
     procedure doUpdateSrcData(sender: tobject); override;
     procedure doOnStart; override;
@@ -90,7 +90,6 @@ type
     fPointColor: point3;
 
     // исходные теги и их спектры
-    fTag, fTaho:cTag;
     fspm, ftahospm:cspm;
 
     xTime, yTime:double;
@@ -109,6 +108,8 @@ type
   public
     // пересчитать данные из fspm, ftahospm в отрисовываемые вершины
     procedure updateData;
+    //
+    Procedure ConfigTag(spm, taho:cspm);
     property DrawLines: boolean read fDrawLines write fDrawLines;
     property DrawPoints: boolean read fDrawPoints write fDrawPoints;
     property PointColor: point3 read fPointColor write fPointColor;
@@ -571,11 +572,21 @@ end;
 
 procedure TIRDiagramFrm.setGraphName(v: string);
 begin
-  //fGraphName := v;
+  fGraphName := v;
   //if page <> nil then
   //begin
   //  page.caption := v;
   //end;
+end;
+
+function TIRDiagramFrm.getGraphName: string;
+begin
+  if fGraphName='' then
+  begin
+    result:=classname;
+  end
+  else
+    result:=fGraphName;
 end;
 
 function TIRDiagramFrm.getGraph(i: integer): IRDiagramTag;
@@ -605,10 +616,6 @@ begin
   result := fGraphMax;
 end;
 
-function TIRDiagramFrm.getGraphName: string;
-begin
-  //result:=fGraphName;
-end;
 
 function TIRDiagramFrm.getPSize: double;
 begin
@@ -693,6 +700,12 @@ begin
     end;
     glEndList;
   end;
+end;
+
+procedure IRDiagramTag.ConfigTag(spm, taho: cspm);
+begin
+  fspm:=spm;
+  ftaho:=taho;
 end;
 
 constructor IRDiagramTag.create;
@@ -1182,6 +1195,7 @@ end;
 constructor cIRAlg.create;
 begin
   inherited;
+  autocreate:=true;
   Properties := '';
 end;
 
@@ -1210,7 +1224,7 @@ var
   res: double;
   // updatetaho
   t1, t2, x: double;
-  c:TComplex_d
+  c:TComplex_d;
   bandwidthint, startind, endind, spmInd: integer;
 begin
   if sender = ftaho then
@@ -1244,10 +1258,10 @@ begin
     begin
       if TDoubleArray(fspm.m_rms.p)[i]>res then
       begin
-        v:=tCmxArray_d(fspm.cmplx_resArray.p)[i];
+        c:=tCmxArray_d(fspm.cmplx_resArray.p)[i];
       end;
     end;
-    fSpmBuff[fTahoBlCount]:=v;
+    fSpmBuff[fTahoBlCount]:=c;
 
     if fSpmBlCount = (length(fOut)-1) then
     begin
@@ -1260,7 +1274,7 @@ end;
 procedure cIRAlg.doEndEvalBlock(sender: tobject);
 var
   I, j: integer;
-  a1,a2,cos, alfa, alfa1,spmT, tahoT, halfstep: double;
+  a1,a2, alfa, alfa1,spmT, tahoT, halfstep: double;
   c1,c2:tcomplex_d;
 begin
   fSpmBlCount:=0;
@@ -1277,10 +1291,9 @@ begin
         c2:=fTahoBuff[i];
         a1:=abs(fSpmBuff[i]);
         a2:=abs(fTahoBuff[j]);
-        cos:=(c1.Re*c2.Re+c1.im*c2.im)/(a1*a2);
-        alfa:=arccos(cos);
+        alfa:=(c1.Re*c2.Re+c1.im*c2.im)/(a1*a2);
+        alfa:=arccos(alfa);
         alfa1:=ArcTan(c1.Im/c1.re)-alfa;
-
 
         fOut[i+pCount].x:=a1*cos(alfa1);
         fOut[i+pCount].y:=a1*sin(alfa1);
@@ -1296,10 +1309,21 @@ begin
   result := 'Комплексный спектр';
 end;
 
+function cIRAlg.GetProperties: string;
+begin
+  Result:='cIRAlgProps';
+end;
+
 function cIRAlg.ready: boolean;
 begin
   // алгоритм вспомогательный, поэтому не требует вызовов
   result:=false;
+end;
+
+procedure cIRAlg.SetProperties(str: string);
+begin
+  inherited;
+
 end;
 
 procedure cIRAlg.UpdateChannels;

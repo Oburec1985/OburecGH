@@ -69,7 +69,8 @@ type
     procedure doOnStart; override;
     function ready: boolean; override;
     // пересчитать по входным тегам размеры буферов данных, dx по времени для каналов
-    procedure UpdateChannels;
+    procedure UpdateChannels(spm, taho:string);overload;
+    procedure UpdateChannels(spm, taho:cspm);overload;
   public
     constructor create; override;
     destructor destroy; override;
@@ -90,7 +91,6 @@ type
     fPointColor: point3;
 
     // исходные теги и их спектры
-    fTag, fTaho:cTag;
     fspm, ftahospm:cspm;
 
     xTime, yTime:double;
@@ -109,6 +109,8 @@ type
   public
     // пересчитать данные из fspm, ftahospm в отрисовываемые вершины
     procedure updateData;
+    //
+    Procedure ConfigTag(spm, taho:cspm);
     property DrawLines: boolean read fDrawLines write fDrawLines;
     property DrawPoints: boolean read fDrawPoints write fDrawPoints;
     property PointColor: point3 read fPointColor write fPointColor;
@@ -422,6 +424,7 @@ begin
     g.fXpoints[i]:=i;
     g.fYpoints[i]:=i*i;
   end;
+  //g.ConfigTag('','');
   g.fneedrecompile:=true;
 end;
 
@@ -699,6 +702,13 @@ begin
     end;
     glEndList;
   end;
+end;
+
+procedure IRDiagramTag.ConfigTag(spm, taho: cspm);
+begin
+  fspm:=spm;
+  ftahospm:=taho;
+  m_irAlg.UpdateChannels(fspm,ftahospm);
 end;
 
 constructor IRDiagramTag.create;
@@ -1316,11 +1326,19 @@ end;
 procedure cIRAlg.SetProperties(str: string);
 begin
   inherited;
-
 end;
 
-procedure cIRAlg.UpdateChannels;
+procedure cIRAlg.UpdateChannels(spm, taho: string);
 begin
+  fspm:=cspm(g_algmng.getSpmByTagName(spm));
+  ftaho:=cspm(g_algmng.getSpmByTagName(taho));
+  UpdateChannels(spm,taho);
+end;
+
+procedure cIRAlg.UpdateChannels(spm, taho:cspm);
+begin
+  fspm:=spm;
+  ftaho:=taho;
   if ftaho<>nil then
   begin
     fTaxodx:=ftaho.dX;

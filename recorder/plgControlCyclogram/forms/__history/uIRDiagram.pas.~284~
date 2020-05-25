@@ -60,16 +60,17 @@ type
     {function genTagName: string; override;
     function Getdx: double; override;
     procedure doAfterload; override;
-    procedure SetProperties(str: string); override;
-    function GetProperties: string; override;
     procedure doEval(tag: cTag; time: double); override;
     procedure doGetData; override;}
+    procedure SetProperties(str: string); override;
+    function GetProperties: string; override;
     procedure doEndEvalBlock(sender: tobject); override;
     procedure doUpdateSrcData(sender: tobject); override;
     procedure doOnStart; override;
     function ready: boolean; override;
     // пересчитать по входным тегам размеры буферов данных, dx по времени для каналов
-    procedure UpdateChannels;
+    procedure UpdateChannels(spm, taho:string);overload;
+    procedure UpdateChannels(spm, taho:cspm);overload;
   public
     constructor create; override;
     destructor destroy; override;
@@ -90,7 +91,6 @@ type
     fPointColor: point3;
 
     // исходные теги и их спектры
-    fTag, fTaho:cTag;
     fspm, ftahospm:cspm;
 
     xTime, yTime:double;
@@ -109,6 +109,8 @@ type
   public
     // пересчитать данные из fspm, ftahospm в отрисовываемые вершины
     procedure updateData;
+    //
+    Procedure ConfigTag(spm, taho:cspm);
     property DrawLines: boolean read fDrawLines write fDrawLines;
     property DrawPoints: boolean read fDrawPoints write fDrawPoints;
     property PointColor: point3 read fPointColor write fPointColor;
@@ -571,11 +573,21 @@ end;
 
 procedure TIRDiagramFrm.setGraphName(v: string);
 begin
-  //fGraphName := v;
+  fGraphName := v;
   //if page <> nil then
   //begin
   //  page.caption := v;
   //end;
+end;
+
+function TIRDiagramFrm.getGraphName: string;
+begin
+  if fGraphName='' then
+  begin
+    result:=classname;
+  end
+  else
+    result:=fGraphName;
 end;
 
 function TIRDiagramFrm.getGraph(i: integer): IRDiagramTag;
@@ -605,10 +617,6 @@ begin
   result := fGraphMax;
 end;
 
-function TIRDiagramFrm.getGraphName: string;
-begin
-  //result:=fGraphName;
-end;
 
 function TIRDiagramFrm.getPSize: double;
 begin
@@ -695,6 +703,13 @@ begin
   end;
 end;
 
+procedure IRDiagramTag.ConfigTag(spm, taho: cspm);
+begin
+  fspm:=spm;
+  ftaho:=taho;
+  m_irAlg.UpdateChannels(fspm,ftaho);
+end;
+
 constructor IRDiagramTag.create;
 begin
   inherited;
@@ -703,6 +718,7 @@ begin
   begin
     g_algMng.add(m_irAlg);
   end;
+  m_irAlg.
   DrawPoints:=true;
   fPointColor:=red;
   DrawLines:=true;
@@ -1182,6 +1198,7 @@ end;
 constructor cIRAlg.create;
 begin
   inherited;
+  autocreate:=true;
   Properties := '';
 end;
 
@@ -1278,7 +1295,7 @@ begin
         a1:=abs(fSpmBuff[i]);
         a2:=abs(fTahoBuff[j]);
         alfa:=(c1.Re*c2.Re+c1.im*c2.im)/(a1*a2);
-        alfa:=arccos(cos);
+        alfa:=arccos(alfa);
         alfa1:=ArcTan(c1.Im/c1.re)-alfa;
 
         fOut[i+pCount].x:=a1*cos(alfa1);
@@ -1295,14 +1312,33 @@ begin
   result := 'Комплексный спектр';
 end;
 
+function cIRAlg.GetProperties: string;
+begin
+  Result:='cIRAlgProps';
+end;
+
 function cIRAlg.ready: boolean;
 begin
   // алгоритм вспомогательный, поэтому не требует вызовов
   result:=false;
 end;
 
-procedure cIRAlg.UpdateChannels;
+procedure cIRAlg.SetProperties(str: string);
 begin
+  inherited;
+end;
+
+procedure cIRAlg.UpdateChannels(spm, taho: string);
+begin
+  fspm:=cspm(g_algmng.getSpmByTagName(spm));
+  ftaho:=cspm(g_algmng.getSpmByTagName(taho));
+  UpdateChannels(spm,taho);
+end;
+
+procedure cIRAlg.UpdateChannels(spm, taho:cspm);
+begin
+  fspm:=spm;
+  ftaho:=taho;
   if ftaho<>nil then
   begin
     fTaxodx:=ftaho.dX;

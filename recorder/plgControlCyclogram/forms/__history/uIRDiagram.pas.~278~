@@ -90,7 +90,6 @@ type
     fPointColor: point3;
 
     // исходные теги и их спектры
-    fTag, fTaho:cTag;
     fspm, ftahospm:cspm;
 
     xTime, yTime:double;
@@ -1188,6 +1187,7 @@ end;
 constructor cIRAlg.create;
 begin
   inherited;
+  autocreate:=true;
   Properties := '';
 end;
 
