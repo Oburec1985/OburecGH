@@ -47,6 +47,7 @@ type
     procedure setAlg(a: cBaseAlgContainer);
     function GetAlg:cBaseAlgContainer;
     procedure DoUpdateSpm;
+    procedure setShowLabels(b:boolean);
   public
     property alg: cbasealgcontainer reAD GetAlg write setalg;
     function update: boolean;
@@ -68,6 +69,8 @@ type
     fprofile: tprofile;
     // список полос для отображения (cFreqBand)
     m_bands:tlist;
+    // отображать быстрые флажки на максимумы
+    fShowLabels:boolean;
   protected
     fShowProfile, fShowWarnings, fShowAlarms, fShowRms, fShowPhase: boolean;
   public
@@ -118,12 +121,15 @@ type
     function addAlg(a: cbasealgcontainer):TSpmTagInfo; overload;
     function addAlg(str: string):TSpmTagInfo; overload;
 
-    procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
-    procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
     // заполнить тестовыми данными
     procedure TestInit;
+    procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
+    procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
     constructor create(Aowner: tcomponent); override;
     destructor destroy; override;
+  private
+    function getShowLabels: boolean;
+    procedure setShowLabels(const Value: boolean);
   protected
     procedure setShowProfile(b: boolean);
     function getShowProfile: boolean;
@@ -132,6 +138,7 @@ type
     procedure setShowAlarms(b: boolean);
     function getShowAlarms: boolean;
   public
+    property ShowLabels: boolean read getShowLabels write setShowLabels;
     property ShowProfile: boolean read getShowProfile write setShowProfile;
     property ShowWarnings: boolean read getShowWarnings write setShowWarnings;
     property ShowAlarms: boolean read getShowAlarms write setShowAlarms;
@@ -153,7 +160,6 @@ type
     factivechart:tSpmChart;
     m_counter: integer;
   private
-    procedure AddEvents;
   protected
     procedure doDestroyForms; override;
     procedure CreateEvents;
@@ -342,7 +348,7 @@ begin
     begin
       if g_algMng <> nil then
       begin
-        a := g_algMng.getalg(ti.m_algname);
+        a := cbasealgcontainer(g_algMng.getobj(ti.m_algname));
         if a <> nil then
         begin
           ti.alg:=a;
@@ -417,7 +423,8 @@ begin
     bandtagPair:=g_algMng.m_TagBandPairList.getPair(ti.m_algname);
     if bandtagPair=nil then
     begin
-      bandtagPair:=g_algMng.m_TagBandPairList.getPair(ti.m_spm.m_tag.tagname);
+      if ti.m_spm<>nil then
+        bandtagPair:=g_algMng.m_TagBandPairList.getPair(ti.m_spm.m_tag.tagname);
     end;
     if bandtagPair<>nil then
     begin
@@ -577,6 +584,7 @@ begin
   aY.y := IniReadFloatEx(a_pIni,str, 'Y_max', 10);
   lgX := a_pIni.ReadBool(str, 'X_Lg', false);
   lgY := a_pIni.ReadBool(str, 'Y_Lg', false);
+  ShowLabels:=a_pIni.ReadBool(str, 'ShowLabels', true);
 
   ShowProfile := a_pIni.ReadBool(str, 'ShowProfile', false);
   ShowWarnings := a_pIni.ReadBool(str, 'ShowWarnings', false);
@@ -605,6 +613,7 @@ begin
   a_pIni.WriteFloat(str, 'X_max', aX.y);
   a_pIni.WriteFloat(str, 'Y_min', aY.x);
   a_pIni.WriteFloat(str, 'Y_max', aY.y);
+  a_pIni.WriteBool(str, 'ShowLabels', ShowLabels);
   a_pIni.WriteBool(str, 'X_Lg', lgX);
   a_pIni.WriteBool(str, 'Y_Lg', lgY);
   a_pIni.WriteBool(str, 'ShowProfile', ShowProfile);
@@ -825,6 +834,24 @@ end;
 function TSpmChart.getShowAlarms: boolean;
 begin
   result := fShowAlarms;
+end;
+
+procedure TSpmChart.setShowLabels(const Value: boolean);
+var
+  I: Integer;
+  ti:TSpmTagInfo;
+begin
+  fShowLabels:=value;
+  for I := 0 to m_tagslist.Count - 1 do
+  begin
+    ti:=TagInfo(i);
+    ti.setShowLabels(value);
+  end;
+end;
+
+function TSpmChart.getShowLabels: boolean;
+begin
+  result:=fShowLabels;
 end;
 
 function TSpmChart.getShowProfile: boolean;
@@ -1248,10 +1275,6 @@ end;
 
 { cControlFactory }
 
-procedure cSpmFactory.AddEvents;
-begin
-
-end;
 
 constructor cSpmFactory.create;
 begin
@@ -1429,7 +1452,6 @@ begin
 end;
 
 { ISpmFrm }
-
 procedure ISpmFrm.doClose;
 begin
   m_lRefCount := 1;
@@ -1489,6 +1511,18 @@ begin
     m_algname := cSpm(a).resname;
     m_lastblock := cSpm(a).LastBlockTime;
     m_lastblockind := cSpm(a).m_ReadyBlockCount;
+  end;
+end;
+
+procedure TSpmTagInfo.setShowLabels(b: boolean);
+var
+  l:cTextLabel;
+  i:integer;
+begin
+  for I := 0 to flags.Count - 1 do
+  begin
+    l:=cTextLabel(flags.Items[i]);
+    l.visible:=b;
   end;
 end;
 

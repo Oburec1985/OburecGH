@@ -322,7 +322,7 @@ begin
     end;
     ti.m_spmtrend.color := ColorArray[colorind];
     ti.m_spmtrend.datatype := c_real;
-    ti.m_spmtrend.dx := ti.m_spm.dx;
+    ti.m_spmtrend.dx := ti.m_spm.SpmDx;
     ti.m_spmtrend.name := ti.m_spm.resname;
     cpage(spmChart.activePage).activeAxis.AddChild(ti.m_spmtrend);
     l := cTextLabel.create;

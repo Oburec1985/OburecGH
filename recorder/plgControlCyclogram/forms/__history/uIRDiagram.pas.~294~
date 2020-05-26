@@ -24,6 +24,7 @@ type
   // алгоритм который собирает данные спектров канала и тахо в единий канал
   cIRAlg = class(cbasealg)
   private
+    fnewData:boolean;
     // размер буфера в секундах (буфер нужен для соединения данных тахо и основного тега в
     // единый массив без ошибок по времени)
     fBuffLength:double;
@@ -72,6 +73,7 @@ type
     procedure UpdateChannels(spm, taho:string);overload;
     procedure UpdateChannels(spm, taho:cspm);overload;
   public
+    function newData:boolean;
     constructor create; override;
     destructor destroy; override;
     class function getdsc: string; override;
@@ -90,9 +92,6 @@ type
     // цвет вершин
     fPointColor: point3;
 
-    // исходные теги и их спектры
-    fspm, ftahospm:cspm;
-
     xTime, yTime:double;
   public
     m_irAlg:cIRAlg;
@@ -110,7 +109,8 @@ type
     // пересчитать данные из fspm, ftahospm в отрисовываемые вершины
     procedure updateData;
     //
-    Procedure ConfigTag(spm, taho:cspm);
+    Procedure ConfigTag(spm, taho:cspm);overload;
+    Procedure ConfigTag(spm, taho:string);overload;
     property DrawLines: boolean read fDrawLines write fDrawLines;
     property DrawPoints: boolean read fDrawPoints write fDrawPoints;
     property PointColor: point3 read fPointColor write fPointColor;
@@ -424,6 +424,7 @@ begin
     g.fXpoints[i]:=i;
     g.fYpoints[i]:=i*i;
   end;
+  g.ConfigTag('3- 1_spm','18- 1_taho_spm');
   g.fneedrecompile:=true;
 end;
 
@@ -705,9 +706,12 @@ end;
 
 procedure IRDiagramTag.ConfigTag(spm, taho: cspm);
 begin
-  fspm:=spm;
-  ftaho:=taho;
-  m_irAlg.
+  m_irAlg.UpdateChannels(spm,taho);
+end;
+
+procedure IRDiagramTag.ConfigTag(spm, taho: string);
+begin
+  m_irAlg.UpdateChannels(spm, taho);
 end;
 
 constructor IRDiagramTag.create;
@@ -718,7 +722,6 @@ begin
   begin
     g_algMng.add(m_irAlg);
   end;
-  m_irAlg.
   DrawPoints:=true;
   fPointColor:=red;
   DrawLines:=true;
@@ -754,7 +757,7 @@ end;
 
 procedure IRDiagramTag.updateData;
 begin
-  if fspm.LastBlockTime>xTime then
+  if m_irAlg.newData then
   begin
 
   end;
@@ -1301,6 +1304,7 @@ begin
         fOut[i+pCount].x:=a1*cos(alfa1);
         fOut[i+pCount].y:=a1*sin(alfa1);
         inc(pCount);
+        fnewdata:=true;
         break;
       end;
     end;
@@ -1315,6 +1319,12 @@ end;
 function cIRAlg.GetProperties: string;
 begin
   Result:='cIRAlgProps';
+end;
+
+function cIRAlg.newData: boolean;
+begin
+  result:=fnewdata;
+  fnewdata:=false;
 end;
 
 function cIRAlg.ready: boolean;

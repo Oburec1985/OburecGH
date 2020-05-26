@@ -446,7 +446,7 @@ end;
 
 function cSpm.Getdx: double;
 begin
-  result := m_spmdx;
+  result := fdx;
 end;
 
 procedure cSpm.UpdatePropStr;

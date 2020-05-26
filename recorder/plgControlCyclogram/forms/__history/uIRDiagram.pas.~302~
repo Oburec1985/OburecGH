@@ -24,6 +24,8 @@ type
   // алгоритм который собирает данные спектров канала и тахо в единий канал
   cIRAlg = class(cbasealg)
   private
+    fowner:tobject;
+    fnewData:boolean;
     // размер буфера в секундах (буфер нужен для соединения данных тахо и основного тега в
     // единый массив без ошибок по времени)
     fBuffLength:double;
@@ -72,6 +74,7 @@ type
     procedure UpdateChannels(spm, taho:string);overload;
     procedure UpdateChannels(spm, taho:cspm);overload;
   public
+    function newData:boolean;
     constructor create; override;
     destructor destroy; override;
     class function getdsc: string; override;
@@ -82,7 +85,9 @@ type
     // отрисовка линии
     fListId: cardinal;
     fneedrecompile: boolean;
+    // всего посчитано точек
     fPCount:integer;
+    fFull:boolean; // буфер переполнился, начинаем затираьт хвост
     // рисовать линии
     fDrawLines: boolean;
     // рисовать точки
@@ -90,13 +95,11 @@ type
     // цвет вершин
     fPointColor: point3;
 
-    // исходные теги и их спектры
-    fspm, ftahospm:cspm;
-
     xTime, yTime:double;
   public
     m_irAlg:cIRAlg;
-    fxpoints, fypoints:array of double;
+    fxyPoints:array of point2d;
+    //fxpoints, fypoints:array of double;
   protected
   protected
     procedure doLincParent;override;
@@ -110,7 +113,8 @@ type
     // пересчитать данные из fspm, ftahospm в отрисовываемые вершины
     procedure updateData;
     //
-    Procedure ConfigTag(spm, taho:cspm);
+    Procedure ConfigTag(spm, taho:cspm);overload;
+    Procedure ConfigTag(spm, taho:string);overload;
     property DrawLines: boolean read fDrawLines write fDrawLines;
     property DrawPoints: boolean read fDrawPoints write fDrawPoints;
     property PointColor: point3 read fPointColor write fPointColor;
@@ -421,10 +425,10 @@ begin
   g.Count:=10;
   for I := 0 to g.Count - 1 do
   begin
-    g.fXpoints[i]:=i;
-    g.fYpoints[i]:=i*i;
+    g.fXyPoints[i].x:=i;
+    g.fXyPoints[i].y:=i*i;
   end;
-  g.ConfigTag('','');
+  g.ConfigTag('3- 1_spm','18- 1_taho_spm');
   g.fneedrecompile:=true;
 end;
 
@@ -681,8 +685,8 @@ begin
       glBegin(GL_LINE_STRIP);
       for i := 0 to count - 1 do
       begin
-        lp.x := fXpoints[i];
-        lp.y := fYpoints[i];
+        lp.x := fXypoints[i].x;
+        lp.y := fxYpoints[i].y;
         glVertex2fv(@lp);
       end;
       glEnd;
@@ -694,8 +698,8 @@ begin
       glBegin(GL_Points);
       for i := 0 to count - 1 do
       begin
-        lp.x := fXpoints[i];
-        lp.y := fypoints[i];
+        lp.x := fxypoints[i].x;
+        lp.y := fxypoints[i].y;
         glVertex2fv(@lp);
       end;
       glEnd;
@@ -706,9 +710,12 @@ end;
 
 procedure IRDiagramTag.ConfigTag(spm, taho: cspm);
 begin
-  fspm:=spm;
-  ftaho:=taho;
-  m_irAlg.UpdateChannels(fspm,ftaho);
+  m_irAlg.UpdateChannels(spm,taho);
+end;
+
+procedure IRDiagramTag.ConfigTag(spm, taho: string);
+begin
+  m_irAlg.UpdateChannels(spm, taho);
 end;
 
 constructor IRDiagramTag.create;
@@ -753,18 +760,31 @@ begin
 end;
 
 procedure IRDiagramTag.updateData;
+var
+  I: Integer;
 begin
-  if fspm.LastBlockTime>xTime then
+  if m_irAlg.newData then
   begin
-
+    for I := 0 to m_irAlg.fSpmBuffLength_i - 1 do
+    begin
+      fxyPoints[fpCount].x:=m_irAlg.fOut[i].x;
+      fxyPoints[fpCount].y:=m_irAlg.fOut[i].y;
+      inc(fpCount);
+      if fpCount=Length(fxyPoints) then
+      begin
+        fpCount:=0;
+        fFull:=true;
+      end;
+    end;
   end;
 end;
 
 procedure IRDiagramTag.setCount(i: integer);
 begin
   fpCount:=i;
-  setlength(fXpoints, i);
-  setlength(fYpoints, i);
+  //setlength(fXpoints, i);
+  //setlength(fYpoints, i);
+  setlength(fxyPoints, i);
 end;
 
 { cIRPage }
@@ -1218,6 +1238,9 @@ begin
   fSpmBlCount:=0;
 
   pCount := 0;
+
+  IRDiagramTag(fowner).fFull:=false;
+  IRDiagramTag(fowner).fPCount:=0;
 end;
 
 procedure cIRAlg.doUpdateSrcData(sender: tobject);
@@ -1301,6 +1324,7 @@ begin
         fOut[i+pCount].x:=a1*cos(alfa1);
         fOut[i+pCount].y:=a1*sin(alfa1);
         inc(pCount);
+        fnewdata:=true;
         break;
       end;
     end;
@@ -1315,6 +1339,12 @@ end;
 function cIRAlg.GetProperties: string;
 begin
   Result:='cIRAlgProps';
+end;
+
+function cIRAlg.newData: boolean;
+begin
+  result:=fnewdata;
+  fnewdata:=false;
 end;
 
 function cIRAlg.ready: boolean;
