@@ -2,7 +2,7 @@ object IRDiagramFrm: TIRDiagramFrm
   Left = 0
   Top = 0
   Caption = #1044#1080#1072#1075#1088#1072#1084#1084#1072' '#1053#1072#1081#1082#1074#1080#1089#1090#1072
-  ClientHeight = 385
+  ClientHeight = 458
   ClientWidth = 598
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET

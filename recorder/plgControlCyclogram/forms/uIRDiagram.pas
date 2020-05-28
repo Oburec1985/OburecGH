@@ -18,6 +18,7 @@ uses
   uHardwareMath,
   ufloatlabel,
   utext,
+  uqueue,
   uSpm;
 
 type
@@ -32,25 +33,19 @@ type
     fBuffLength:double;
 
     fTaxodx:double; // шаг между посчитанными спектрами по времени
-    fTahoBuffLength_i:integer;
     // время первого блока тахо
     fTahoStartTime:double;
-    // количество блоков в буфере тахо
-    fTahoBlCount:integer;
     // значение комплексного спектра на главной гармонике
-    fTahoBuff:array of TComplex_d;
+    fTahoBuff:cqueue_p2d;
     // значение частоты главной гармоники
-    fTahoBuffFreq:array of double;
+    fTahoBuffFreq:cqueue_p2d;
 
     fSpmdx:double; // шаг между посчитанными спектрами по времени
-    fSpmBuffLength_i:integer;
     // время первого блока тахо
     fSpmStartTime:double;
-    // количество блоков в буфере
-    fSpmBlCount:integer;
     // значение комплексного спектра на главной гармонике
     // queue
-    fSpmBuff:array of TComplex_d;
+    fSpmBuff:cqueue_p2d;
 
     // полоса анализа вокруг главной частоты тахо в долях
     fband:point2d;
