@@ -396,6 +396,7 @@
 			<DCCReference Include="forms\uIRDiagram.pas">
 				<Form>IRDiagramFrm</Form>
 			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\lists\uQueue.pas"/>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

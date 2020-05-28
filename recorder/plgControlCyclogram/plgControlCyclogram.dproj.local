@@ -78,6 +78,7 @@
     <File Path="..\..\sharedUtils\utils\lists\ueventlist.pas"/>
     <File Path="..\..\sharedUtils\utils\lists\uEventTypes.pas"/>
     <File Path="..\..\sharedUtils\utils\lists\usetlist.pas"/>
+    <File Path="..\..\sharedUtils\utils\lists\uQueue.pas"/>
     <File Path="..\..\sharedUtils\utils\PathUtils"/>
     <File Path="..\..\sharedUtils\utils\PathUtils\PathUtils.pas"/>
     <File Path="..\..\sharedUtils\utils\socket"/>
@@ -302,5 +303,6 @@
     <Transaction>2019.09.10 22:54:15.365.pas,G:\oburec\project2010\2011\recorder\plgControlCyclogram\Unit2.pas=G:\oburec\project2010\2011\recorder\SharedRUnits\uRCTags.pas</Transaction>
     <Transaction>2020.05.18 14:21:01.009.pas,D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit3.pas=D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uIRDiagram.pas</Transaction>
     <Transaction>2020.05.18 14:21:01.033.dfm,D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uIRDiagram.dfm</Transaction>
+    <Transaction>2020.05.27 17:35:51.226.pas,D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit2.pas=D:\Oburec\delphi\2011\OburecGH\sharedUtils\utils\lists\uQueue.pas</Transaction>
   </Transactions>
 </BorlandProject>

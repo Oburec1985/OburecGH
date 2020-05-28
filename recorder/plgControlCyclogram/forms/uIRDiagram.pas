@@ -21,6 +21,7 @@ uses
   uSpm;
 
 type
+
   // алгоритм который собирает данные спектров канала и тахо в единий канал
   cIRAlg = class(cbasealg)
   private
@@ -45,9 +46,10 @@ type
     fSpmBuffLength_i:integer;
     // время первого блока тахо
     fSpmStartTime:double;
-    // количество блоков в буфере тахо
+    // количество блоков в буфере
     fSpmBlCount:integer;
     // значение комплексного спектра на главной гармонике
+    // queue
     fSpmBuff:array of TComplex_d;
 
     // полоса анализа вокруг главной частоты тахо в долях
@@ -55,8 +57,9 @@ type
     fband_i:point2d;
     fTahoValue:double;
     ftaho, fspm:cspm;
+
     fOut:array of point2d;
-    // число расчитанных точек
+    // число расчитанных точек/ счет внутри fOut
     pCount: integer;
   protected
     {function genTagName: string; override;
@@ -74,6 +77,7 @@ type
     procedure UpdateChannels(spm, taho:string);overload;
     procedure UpdateChannels(spm, taho:cspm);overload;
   public
+    procedure resetdata;
     function newData:boolean;
     constructor create; override;
     destructor destroy; override;
@@ -502,6 +506,7 @@ begin
   for i := 0 to GraphCount - 1 do
   begin
     g := getGraph(i);
+    g.m_irAlg.doOnStart;
     //g.init;
   end;
 end;
@@ -560,6 +565,7 @@ begin
   begin
     g := getGraph(i);
     g.UpdateData;
+    g.m_irAlg.resetdata;
   end;
 end;
 
@@ -751,7 +757,12 @@ end;
 
 function IRDiagramTag.getCount: integer;
 begin
-  result:=fPCount;
+  if ffull then
+  begin
+    result:=length(fxyPoints);
+  end
+  else
+    result:=fPCount;
 end;
 
 procedure IRDiagramTag.setmainParent(p: cbaseObj);
@@ -776,6 +787,7 @@ begin
         fpCount:=0;
         fFull:=true;
       end;
+      m_irAlg.resetdata;
     end;
   end;
 end;
@@ -1219,6 +1231,7 @@ end;
 constructor cIRAlg.create;
 begin
   inherited;
+  fBuffLength:=3;
   autocreate:=true;
   Properties := '';
 end;
@@ -1254,13 +1267,13 @@ var
   c:TComplex_d;
   bandwidthint, startind, endind, spmInd: integer;
 begin
+  x := ftaho.max.x;
+  fTahoValue := x;
+  // количество отсчетов в спектре по которым усредняем
+  startind := round(x * fband.x / ftaho.dX);
+  endind := round(x * fband.y / ftaho.dX);
   if sender = ftaho then
   begin
-    x := ftaho.max.x;
-    fTahoValue := x;
-    // количество отсчетов в спектре по которым усредняем
-    startind := round(x * fband.x / ftaho.dX);
-    endind := round(x * fband.y / ftaho.dX);
 
     if startind < 0 then
       startind := 0;
@@ -1273,6 +1286,7 @@ begin
 
     fTahoBuff[fTahoBlCount]:=tCmxArray_d(ftaho.cmplx_resArray.p)[ftaho.minmax_i.y];
     fTahoBuffFreq[fTahoBlCount]:=x;
+    inc(fTahoBlCount);
     if fTahoBlCount=0 then
     begin
       fTahoStartTime:=ftaho.LastBlockTime;
@@ -1288,31 +1302,31 @@ begin
         c:=tCmxArray_d(fspm.cmplx_resArray.p)[i];
       end;
     end;
-    fSpmBuff[fTahoBlCount]:=c;
 
-    if fSpmBlCount = (length(fOut)-1) then
+    fSpmBuff[fSpmBlCount]:=c;
+    if fSpmBlCount=0 then
     begin
-      // fSpmBlCount:=0;
-      doEndEvalBlock(nil);
+      fSpmStartTime:=fspm.LastBlockTime;
     end;
+    inc(fSpmBlCount);
   end;
 end;
 
 procedure cIRAlg.doEndEvalBlock(sender: tobject);
 var
   I, j: integer;
-  a1,a2, alfa, alfa1,spmT, tahoT, halfstep: double;
+  a1,a2, alfa, alfa1,spmT, tahoT, halfstepspm, halfstepTaho: double;
   c1,c2:tcomplex_d;
 begin
-  fSpmBlCount:=0;
-  halfstep:=fSpmdx/2;
+  HalfStepspm:=fSpmdx/2;
+  HalfStepTaho:=fTahoDx/2;
   for I := 0 to fSpmBlCount - 1 do
   begin
     spmT:=fSpmStartTime+i*fSpmdx;
     for j := 0 to fTahoBlCount - 1 do
     begin
-      tahoT:=fTahoStartTime+i*fTaxoDx;
-      if spmT-tahoT<halfstep then
+      tahoT:=fTahoStartTime+j*fTaxoDx;
+      if spmT-tahoT<halfstepspm then
       begin
         c1:=fSpmBuff[i];
         c2:=fTahoBuff[i];
@@ -1326,11 +1340,21 @@ begin
         fOut[i+pCount].y:=a1*sin(alfa1);
         inc(pCount);
         fnewdata:=true;
+
+        fSpmBlCount:=0;
         break;
       end;
     end;
   end;
 end;
+
+procedure cIRAlg.resetdata;
+begin
+  fTahoBlCount:=0;
+  // счет внутри fOut
+  pCount:=0;
+end;
+
 
 class function cIRAlg.getdsc: string;
 begin
@@ -1367,11 +1391,19 @@ begin
 end;
 
 procedure cIRAlg.UpdateChannels(spm, taho:cspm);
+var
+  i:integer;
 begin
+  if fspm<>nil then
+    unsubscribe(fspm);
   fspm:=spm;
+  if ftaho<>nil then
+    unsubscribe(ftaho);
   ftaho:=taho;
+
   if ftaho<>nil then
   begin
+    ftaho.subscribe(self);
     fTaxodx:=ftaho.dX;
     fTahoBuffLength_i:=round(fBuffLength/fTaxodx);
     SetLength(fTahoBuff,fTahoBuffLength_i);
@@ -1379,11 +1411,15 @@ begin
   end;
   if fspm<>nil then
   begin
+    fspm.subscribe(self);
     fSpmdx:=fspm.dX;
-    fTahoBuffLength_i:=round(fBuffLength/fTaxodx);
-    SetLength(fTahoBuff,fTahoBuffLength_i);
-    SetLength(fTahoBuffFreq,fTahoBuffLength_i);
+    fspmBuffLength_i:=round(fBuffLength/fspmdx);
+    SetLength(fSpmBuff,fspmBuffLength_i);
   end;
+  i:=fspmBuffLength_i;
+  if i<fTahoBuffLength_i then
+    i:=fTahoBuffLength_i;
+  setlength(fOut,i);
 end;
 
 end.

@@ -180,7 +180,8 @@ uses
   uCounterAlg in 'units\uCounterAlg.pas',
   uCounterAlgFrame in 'forms\uCounterAlgFrame.pas' {CounterAlgFrame: TFrame},
   uRCTags in '..\SharedRUnits\uRCTags.pas',
-  uIRDiagram in 'forms\uIRDiagram.pas' {IRDiagramFrm};
+  uIRDiagram in 'forms\uIRDiagram.pas' {IRDiagramFrm},
+  uQueue in '..\..\sharedUtils\utils\lists\uQueue.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}
