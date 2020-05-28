@@ -63,6 +63,7 @@ type
   end;
 
 const
+  c_carret = #13#10;
   cllightGreen=$0000FF80;
 
   axisX:point3 = (x:1;y:0;z:0);

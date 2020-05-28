@@ -16,7 +16,8 @@ type
     data: array of point2d;
   public
     // вытащить в порядке очереди 0 - первый в очереди на выход
-    function Get(i:integer):point2d;
+    function Peak(i:integer):point2d;
+    function GetByInd(i:integer):point2d;
     // Добавить (положить) в начало очереди (выйдет первым)
     procedure push_front(p:point2d);
     // Добавить (положить) в конец очереди (выйдет последним)
@@ -43,7 +44,7 @@ type
   end;
 
 const
-  c_capacity_step = 100;
+  c_capacity_step = 1;
 
 implementation
 
@@ -84,12 +85,27 @@ end;
 
 function cQueue_P2d.pop_front: point2d;
 begin
+  if fcount=0 then
+  begin
+    ffirst:=0;
+    flast:=0;
+    result:=p2d(0,0);
+    exit;
+  end;
   result:=data[ffirst];
   inc(ffirst);
   dec(fcount);
   if ffirst=capacity then
   begin
     ffirst:=0;
+  end
+  else
+  begin
+    if fcount=0 then
+    begin
+      ffirst:=0;
+      flast:=0;
+    end
   end;
 end;
 // выйдет последним
@@ -98,16 +114,23 @@ var
   copycount, newpos:integer;
 begin
   resize;
-  if (Flast+1)=fFirst then
+  if Flast=fFirst then
   begin
-    copycount:=fcount-fFirst;
-    newpos:=capacity-copycount;
-    move(data[fFirst], data[newpos], copycount*sizeof(point2d));
-    fFirst:=newpos;
+    if fcount<>0 then
+    begin
+      copycount:=fcount-fFirst;
+      newpos:=capacity-copycount;
+      move(data[fFirst], data[newpos], copycount*sizeof(point2d));
+      fFirst:=newpos;
+    end;
   end;
   data[fLast]:=p;
   inc(fcount);
   inc(fLast);
+  if flast=capacity then
+  begin
+    flast:=0;
+  end;
 end;
 // выйдет первым
 procedure cQueue_P2d.push_front(p: point2d);
@@ -138,13 +161,19 @@ begin
   setlength(data, c);
 end;
 
-function cQueue_P2d.Get(i: integer): point2d;
+function cQueue_P2d.Peak(i: integer): point2d;
 begin
   i:=ffirst+i;
-  if ffirst+i>capacity then
+  if i>=capacity then
   begin
     i:=i-capacity;
   end;
+  result:=data[i];
+end;
+
+function cQueue_P2d.GetByInd(i: integer): point2d;
+begin
+  result:=data[i];
 end;
 
 function cQueue_P2d.GetCapacity: integer;

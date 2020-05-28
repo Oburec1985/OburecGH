@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Math, uHardwareMath;
+  Dialogs, StdCtrls, Math, uHardwareMath, uQueue, ucommontypes;
 
 type
 
@@ -21,11 +21,24 @@ type
     Memo2: TMemo;
     Memo3: TMemo;
     TestSummSkripnik: TButton;
+    Memo4: TMemo;
+    PickBackBtn: TButton;
+    PickFrontBtn: TButton;
+    PushFrontBtn: TButton;
+    PushBackBtn: TButton;
     procedure Button2Click(Sender: TObject);
     procedure TestSummSkripnikClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure PickFrontBtnClick(Sender: TObject);
+    procedure PushBackBtnClick(Sender: TObject);
   private
     Fr, t1, t2: Int64;
     Dt: Extended;
+
+    q:cQueue_p2d;
+    counter:integer;
+  protected
+    procedure showQueue;
   private
     procedure StartTimer(comment:string);
     procedure StopTimer(comment:string);
@@ -57,6 +70,57 @@ begin
   Memo2.Text := '';
   for i := 0 to 27 do
     Memo2.Text := Memo2.Text + IntToStr(i) + ' = ' + BoolToStr( IsProcessorFeaturePresent(i), true ) + #13#10;
+end;
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  q:=cQueue_p2d.create;
+  q.capacity:=6;
+  q.push_back(p2d(1,0));
+  q.push_back(p2d(2,0));
+  q.push_back(p2d(3,0));
+  q.push_back(p2d(4,0));
+  q.push_back(p2d(5,0));
+  q.push_back(p2d(6,0));
+  counter:=7;
+
+  showQueue;
+end;
+
+procedure TForm1.PickFrontBtnClick(Sender: TObject);
+begin
+  q.pop_front;
+  showQueue;
+end;
+
+procedure TForm1.PushBackBtnClick(Sender: TObject);
+begin
+  q.push_back(p2d(counter,0));
+  inc(counter);
+  showQueue;
+end;
+
+procedure TForm1.showQueue;
+var
+  I: Integer;
+  v:double;
+  str:string;
+begin
+  str:='Peak: ';
+  for I := 0 to q.size - 1 do
+  begin
+    v:=q.peak(i).x;
+    str:=str+inttostr(round(v))+'; ';
+  end;
+  str:=str+c_carret+'Get: ';
+  memo4.Text:=str;
+  str:='';
+  for I := 0 to q.size - 1 do
+  begin
+    v:=q.GetByInd(i).x;
+    str:=str+inttostr(round(v))+'; ';
+  end;
+  memo4.Text:=memo4.Text+str;
 end;
 
 procedure TForm1.StartTimer(comment: string);
