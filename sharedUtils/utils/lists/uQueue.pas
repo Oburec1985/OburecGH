@@ -152,6 +152,10 @@ procedure cQueue_P2d.resize;
 begin
   if fCount+1>capacity then
   begin
+    if flast=0 then
+    begin
+      flast:=capacity-1;
+    end;
     capacity:=capacity+c_capacity_step;
   end;
 end;

@@ -31,6 +31,8 @@ type
     procedure FormCreate(Sender: TObject);
     procedure PickFrontBtnClick(Sender: TObject);
     procedure PushBackBtnClick(Sender: TObject);
+    procedure PickBackBtnClick(Sender: TObject);
+    procedure PushFrontBtnClick(Sender: TObject);
   private
     Fr, t1, t2: Int64;
     Dt: Extended;
@@ -87,6 +89,12 @@ begin
   showQueue;
 end;
 
+procedure TForm1.PickBackBtnClick(Sender: TObject);
+begin
+  q.pop_back;
+  showQueue;
+end;
+
 procedure TForm1.PickFrontBtnClick(Sender: TObject);
 begin
   q.pop_front;
@@ -96,6 +104,13 @@ end;
 procedure TForm1.PushBackBtnClick(Sender: TObject);
 begin
   q.push_back(p2d(counter,0));
+  inc(counter);
+  showQueue;
+end;
+
+procedure TForm1.PushFrontBtnClick(Sender: TObject);
+begin
+  q.push_front(p2d(counter,0));
   inc(counter);
   showQueue;
 end;
