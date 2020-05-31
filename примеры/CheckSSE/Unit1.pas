@@ -37,7 +37,8 @@ type
     Fr, t1, t2: Int64;
     Dt: Extended;
 
-    q:cQueue_p2d;
+    //q:cQueue_p2d;
+    q:cQueue<point2d>;
     counter:integer;
   protected
     procedure showQueue;
@@ -76,7 +77,8 @@ end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  q:=cQueue_p2d.create;
+  //q:=cQueue_p2d.create;
+  q:=cQueue<point2d>.create;
   q.capacity:=6;
   q.push_back(p2d(1,0));
   q.push_back(p2d(2,0));
@@ -104,6 +106,7 @@ end;
 procedure TForm1.PushBackBtnClick(Sender: TObject);
 begin
   q.push_back(p2d(counter,0));
+
   inc(counter);
   showQueue;
 end;
