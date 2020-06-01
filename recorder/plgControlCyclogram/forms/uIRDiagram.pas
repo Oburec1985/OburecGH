@@ -36,17 +36,16 @@ type
     // время первого блока тахо
     fTahoStartTime:double;
     // значение комплексного спектра на главной гармонике
-    fTahoBuff:cqueue_p2d;
+    fTahoBuff:cqueue<point2d>;
     // значение частоты главной гармоники
-    fTahoBuffFreq:cqueue_p2d;
+    fTahoBuffFreq:cqueue<point2d>;
 
     fSpmdx:double; // шаг между посчитанными спектрами по времени
     // время первого блока тахо
     fSpmStartTime:double;
     // значение комплексного спектра на главной гармонике
     // queue
-    fSpmBuff:cqueue_p2d;
-
+    fSpmBuff:cqueue<point2d>;
     // полоса анализа вокруг главной частоты тахо в долях
     fband:point2d;
     fband_i:point2d;
@@ -772,7 +771,7 @@ var
 begin
   if m_irAlg.newData then
   begin
-    for I := 0 to m_irAlg.fSpmBuffLength_i - 1 do
+    for I := 0 to m_irAlg.fSpmBuff.size - 1 do
     begin
       fxyPoints[fpCount].x:=m_irAlg.fOut[i].x;
       fxyPoints[fpCount].y:=m_irAlg.fOut[i].y;
@@ -1243,8 +1242,10 @@ begin
   inherited;
   fTahoStartTime:=-1;
   fSpmStartTime:=-1;
-  fTahoBlCount:=0;
-  fSpmBlCount:=0;
+
+  fSpmBuff.clear;
+  fTahoBuff.clear;
+  fTahoBuffFreq.clear;
 
   pCount := 0;
 
@@ -1260,6 +1261,7 @@ var
   // updatetaho
   t1, t2, x: double;
   c:TComplex_d;
+  p2:point2d;
   bandwidthint, startind, endind, spmInd: integer;
 begin
   x := ftaho.max.x;
@@ -1279,13 +1281,13 @@ begin
     fband_i.x := startind;
     fband_i.y := endind;
 
-    fTahoBuff[fTahoBlCount]:=tCmxArray_d(ftaho.cmplx_resArray.p)[ftaho.minmax_i.y];
-    fTahoBuffFreq[fTahoBlCount]:=x;
-    inc(fTahoBlCount);
-    if fTahoBlCount=0 then
-    begin
-      fTahoStartTime:=ftaho.LastBlockTime;
-    end;
+    p2:=tCmxArray_d(ftaho.cmplx_resArray.p)[ftaho.minmax_i.y];
+    fTahoBuff.push_back(p2);
+    fTahoBuffFreq.push_back(point2d(x,0));
+    //if fTahoBlCount=0 then
+    //begin
+    //  fTahoStartTime:=ftaho.LastBlockTime;
+    //end;
   end;
   if sender = fspm then
   begin
