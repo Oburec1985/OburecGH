@@ -1281,9 +1281,9 @@ begin
     fband_i.x := startind;
     fband_i.y := endind;
 
-    p2:=tCmxArray_d(ftaho.cmplx_resArray.p)[ftaho.minmax_i.y];
+    p2:=point2d(tCmxArray_d(ftaho.cmplx_resArray.p)[ftaho.minmax_i.y]);
     fTahoBuff.push_back(p2);
-    fTahoBuffFreq.push_back(point2d(x,0));
+    fTahoBuffFreq.push_back(p2d(x,0));
     //if fTahoBlCount=0 then
     //begin
     //  fTahoStartTime:=ftaho.LastBlockTime;
@@ -1300,12 +1300,12 @@ begin
       end;
     end;
 
-    fSpmBuff[fSpmBlCount]:=c;
-    if fSpmBlCount=0 then
-    begin
-      fSpmStartTime:=fspm.LastBlockTime;
-    end;
-    inc(fSpmBlCount);
+    fSpmBuff.push_back(point2d(c));
+    //if fSpmBlCount=0 then
+    //begin
+    //  fSpmStartTime:=fspm.LastBlockTime;
+    //end;
+    //inc(fSpmBlCount);
   end;
 end;
 
@@ -1316,19 +1316,19 @@ var
   c1,c2:tcomplex_d;
 begin
   HalfStepspm:=fSpmdx/2;
-  HalfStepTaho:=fTahoDx/2;
-  for I := 0 to fSpmBlCount - 1 do
+  HalfStepTaho:=fTaxodx/2;
+  for I := 0 to fSpmBuff.size - 1 do
   begin
     spmT:=fSpmStartTime+i*fSpmdx;
-    for j := 0 to fTahoBlCount - 1 do
+    for j := 0 to fTahoBuff.size - 1 do
     begin
       tahoT:=fTahoStartTime+j*fTaxoDx;
       if spmT-tahoT<halfstepspm then
       begin
-        c1:=fSpmBuff[i];
-        c2:=fTahoBuff[i];
-        a1:=abs(fSpmBuff[i]);
-        a2:=abs(fTahoBuff[j]);
+        c1:=tcomplex_d(fSpmBuff.Peak(I));
+        c2:=tcomplex_d(fTahoBuff.Peak(J));
+        a1:=abs(c1);
+        a2:=abs(c2);
         alfa:=(c1.Re*c2.Re+c1.im*c2.im)/(a1*a2);
         alfa:=arccos(alfa);
         alfa1:=ArcTan(c1.Im/c1.re)-alfa;
@@ -1338,7 +1338,6 @@ begin
         inc(pCount);
         fnewdata:=true;
 
-        fSpmBlCount:=0;
         break;
       end;
     end;
@@ -1347,7 +1346,9 @@ end;
 
 procedure cIRAlg.resetdata;
 begin
-  fTahoBlCount:=0;
+  fSpmBuff.clear;
+  fTahoBuff.clear;
+  fTahoBuffFreq.clear;
   // счет внутри fOut
   pCount:=0;
 end;
@@ -1389,7 +1390,7 @@ end;
 
 procedure cIRAlg.UpdateChannels(spm, taho:cspm);
 var
-  i:integer;
+  i, j:integer;
 begin
   if fspm<>nil then
     unsubscribe(fspm);
@@ -1402,20 +1403,16 @@ begin
   begin
     ftaho.subscribe(self);
     fTaxodx:=ftaho.dX;
-    fTahoBuffLength_i:=round(fBuffLength/fTaxodx);
-    SetLength(fTahoBuff,fTahoBuffLength_i);
-    SetLength(fTahoBuffFreq,fTahoBuffLength_i);
   end;
   if fspm<>nil then
   begin
     fspm.subscribe(self);
     fSpmdx:=fspm.dX;
-    fspmBuffLength_i:=round(fBuffLength/fspmdx);
-    SetLength(fSpmBuff,fspmBuffLength_i);
   end;
-  i:=fspmBuffLength_i;
-  if i<fTahoBuffLength_i then
-    i:=fTahoBuffLength_i;
+  i:=round(fBuffLength/fspmdx);
+  j:=round(fBuffLength/ftaxodx);
+  if i<j then
+    i:=j;
   setlength(fOut,i);
 end;
 
