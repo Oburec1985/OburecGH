@@ -10,7 +10,8 @@ uses
   ucommonmath, MathFunction, uMyMath, uDoubleCursor, uChartEvents, uLabel,
   uRecorderEvents, ubaseObj, uCommonTypes, uEditProfileFrm, uControlWarnFrm,
   uRTrig, uRCFunc, ubasealg, uBuffTrend1d, utextlabel, tags,
-  PluginClass, ImgList, uChart, uGrmsSrcAlg, uPhaseAlg, usetlist, upage, uGraphObj,
+  PluginClass, ImgList, uChart, uGrmsSrcAlg, uPhaseAlg, usetlist, upage,
+  uGraphObj,
   uBasePage,
   OpenGL,
   math,
@@ -26,35 +27,35 @@ type
   // алгоритм который собирает данные спектров канала и тахо в единий канал
   cIRAlg = class(cbasealg)
   private
-    fowner:tobject;
-    fnewData:boolean;
+    fowner: tobject;
+    fnewData: boolean;
     // размер буфера в секундах (буфер нужен для соединения данных тахо и основного тега в
     // единый массив без ошибок по времени)
-    fBuffLength:double;
-    fTaxodx:double; // шаг между посчитанными спектрами по времени
+    fBuffLength: double;
+    fTaxodx: double; // шаг между посчитанными спектрами по времени
     // значение комплексного спектра на главной гармонике
-    fTahoBuff:cqueue<point3d>;
+    fTahoBuff: cqueue<point3d>;
     // значение частоты главной гармоники
-    fTahoBuffFreq:cqueue<point3d>;
-    fSpmdx:double; // шаг между посчитанными спектрами по времени
+    fTahoBuffFreq: cqueue<point3d>;
+    fSpmdx: double; // шаг между посчитанными спектрами по времени
     // значение комплексного спектра на главной гармонике
     // queue
-    fSpmBuff:cqueue<point3d>;
+    fSpmBuff: cqueue<point3d>;
     // полоса анализа вокруг главной частоты тахо в долях
-    fband:point2d;
-    fband_i:point2d;
-    fTahoValue:double;
-    ftaho, fspm:cspm;
+    fband: point2d;
+    fband_i: point2d;
+    fTahoValue: double;
+    ftaho, fspm: cspm;
 
-    fOut:array of point3d;
+    fOut: array of point3d;
     // число расчитанных точек/ счет внутри fOut
     pCount: integer;
   protected
-    {function genTagName: string; override;
-    function Getdx: double; override;
-    procedure doAfterload; override;
-    procedure doEval(tag: cTag; time: double); override;
-    procedure doGetData; override;}
+    { function genTagName: string; override;
+      function Getdx: double; override;
+      procedure doAfterload; override;
+      procedure doEval(tag: cTag; time: double); override;
+      procedure doGetData; override; }
     procedure SetProperties(str: string); override;
     function GetProperties: string; override;
     procedure doEndEvalBlock(sender: tobject); override;
@@ -62,11 +63,11 @@ type
     procedure doOnStart; override;
     function ready: boolean; override;
     // пересчитать по входным тегам размеры буферов данных, dx по времени для каналов
-    procedure UpdateChannels(spm, taho:string);overload;
-    procedure UpdateChannels(spm, taho:cspm);overload;
+    procedure UpdateChannels(spm, taho: string); overload;
+    procedure UpdateChannels(spm, taho: cspm); overload;
   public
     procedure resetdata;
-    function newData:boolean;
+    function newData: boolean;
     constructor create; override;
     destructor destroy; override;
     class function getdsc: string; override;
@@ -78,8 +79,8 @@ type
     fListId: cardinal;
     fneedrecompile: boolean;
     // всего посчитано точек
-    fPCount:integer;
-    fFull:boolean; // буфер переполнился, начинаем затираьт хвост
+    fPCount: integer;
+    fFull: boolean; // буфер переполнился, начинаем затираьт хвост
     // рисовать линии
     fDrawLines: boolean;
     // рисовать точки
@@ -87,38 +88,38 @@ type
     // цвет вершин
     fPointColor: point3;
 
-    xTime, yTime:double;
+    xTime, yTime: double;
   public
-    m_irAlg:cIRAlg;
-    fxyPoints:array of point2d;
-    //fxpoints, fypoints:array of double;
+    m_irAlg: cIRAlg;
+    fxyPoints: array of point2d;
+    // fxpoints, fypoints:array of double;
   protected
   protected
-    procedure doLincParent;override;
+    procedure doLincParent; override;
     procedure compile; virtual;
     procedure DrawData; override;
     procedure setmainParent(p: cbaseObj); override;
     // число точек
-    function getCount: integer;override;
-    procedure SetCount(i:integer);override;
+    function getCount: integer; override;
+    procedure SetCount(i: integer); override;
   public
     // пересчитать данные из fspm, ftahospm в отрисовываемые вершины
     procedure updateData;
     //
-    Procedure ConfigTag(spm, taho:cspm);overload;
-    Procedure ConfigTag(spm, taho:string);overload;
+    Procedure ConfigTag(spm, taho: cspm); overload;
+    Procedure ConfigTag(spm, taho: string); overload;
     property DrawLines: boolean read fDrawLines write fDrawLines;
     property DrawPoints: boolean read fDrawPoints write fDrawPoints;
     property PointColor: point3 read fPointColor write fPointColor;
-    constructor create;override;
+    constructor create; override;
   end;
 
   cIRPage = class(cBasePage)
   private
     // хоть раз отрисовалась (границы не нулевые. Нужно для инициации текстовых меток)
-    init:boolean;
+    init: boolean;
 
-    fneedrecompile:boolean;
+    fneedrecompile: boolean;
     // матрица вида оси
     stateM: matrixgl;
     // шаг сетки
@@ -126,19 +127,19 @@ type
     // отрисовка сетки
     fGridListId: cardinal;
     // отсутупы в пикселях
-    m_Tab:integer;
+    m_Tab: integer;
     // размер точек
-    fDrawPointSize:double;
+    fDrawPointSize: double;
 
-    m_MaxXedit, m_MaxYedit:cfloatlabel;
-    m_PageLabel:cLabel;
+    m_MaxXedit, m_MaxYedit: cfloatlabel;
+    m_PageLabel: cLabel;
 
+    m_graphList:tlist;
   protected
-    fXAxis,
-    fYAxis:point2d;
+    fXAxis, fYAxis: point2d;
   protected
-    procedure setXAxis(p2:point2d);
-    procedure setYAxis(p2:point2d);
+    procedure setXAxis(p2: point2d);
+    procedure setYAxis(p2: point2d);
     procedure compile;
     procedure drawPage;
     procedure DrawCross;
@@ -146,42 +147,46 @@ type
     procedure DrawGraphBorder;
 
     procedure initTEdit(edit: cdrawobj);
-    procedure UpdateAxisbyText(Sender: tobject; var Key: Word;  Shift: TShiftState);
-    procedure setmax(e:cfloatlabel;v:double);
+    procedure UpdateAxisbyText(sender: tobject; var Key: Word;
+      Shift: TShiftState);
+    procedure setmax(e: cfloatlabel; v: double);
     function ModComponentName(p_name: string): string;
     Procedure OutText(str: PCHAR; p2: point2; align: integer; index: integer);
     // раставить эдиты
-    procedure setEditPos(Sender: tobject);
+    procedure setEditPos(sender: tobject);
     procedure SetLabelPos;
 
     procedure PrepareZoom;
     procedure setzoom;
   protected
     // обязательный признак!!! показывает что в страницу встроены другие компоненты
-    function isCarrier: boolean;override;
+    function isCarrier: boolean; override;
     // прилинковаться к компоненту в котором будет происходить отрисовка
     procedure linc(p_chart: tcomponent); override;
-    procedure setCaption(s: string);override;
+    procedure setCaption(s: string); override;
     procedure BeforeDrawChild; override;
     procedure setBound(rect: trect); override;
     procedure DrawData; override;
 
     constructor create; override;
+    destructor destroy;override;
+  public
+    function mainParentClassName: string; override;
   end;
 
   TIRDiagramFrm = class(TRecFrm)
   private
-    //m_graphlist: tlist;
+    // m_graphlist: tlist;
   public
     chart: cchart;
-    fpage:cIRPage;
+    fpage: cIRPage;
 
     fGraphName: string;
     fGraphMax: double;
     fpsize: double;
   protected
-    procedure ChartInit(Sender: TObject);
-    procedure RBtnClick(Sender: TObject);
+    procedure ChartInit(sender: tobject);
+    procedure RBtnClick(sender: tobject);
     function getGraphMax: double;
     procedure setGraphMax(v: double);
     function getPSize: double;
@@ -190,15 +195,15 @@ type
     procedure setGraphName(v: string);
     procedure createevents;
     procedure destroyevents;
-    procedure doOnZoom(Sender: TObject);
+    procedure doOnZoom(sender: tobject);
     procedure UpdateView;
-    procedure UpdateData;
+    procedure updateData;
     procedure doStart;
     procedure clearGraphList;
   public
     function GraphCount: integer;
-    function getGraph(i: integer): IRDiagramTag;overload;
-    function getGraph(gname: string): IRDiagramTag;overload;
+    function getGraph(i: integer): IRDiagramTag; overload;
+    function getGraph(gname: string): IRDiagramTag; overload;
     function addGraph(p_name: string): IRDiagramTag;
     property GraphMax: double read getGraphMax write setGraphMax;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -222,18 +227,18 @@ type
     m_counter: integer;
   protected
     procedure doDestroyForms; override;
-    procedure CreateEvents;
-    procedure DestroyEvents;
+    procedure createevents;
+    procedure destroyevents;
   public
     procedure doAfterLoad; override;
-    procedure doUpdateData(Sender: TObject);
-    procedure doChangeRState(Sender: TObject);
+    procedure doUpdateData(sender: tobject);
+    procedure doChangeRState(sender: tobject);
     procedure doStart;
   public
     constructor create;
-    destructor destroy;override;
+    destructor destroy; override;
     function doCreateForm: cRecBasicIFrm; override;
-    procedure doSetDefSize(var pSize: SIZE); override;
+    procedure doSetDefSize(var PSize: SIZE); override;
   end;
 
 var
@@ -248,14 +253,12 @@ const
   // ctrl+shift+G
   // ['{DE3939E6-AF72-47FB-B17B-C741AA578B13}']
   IID_DIAGRAM: TGuid = (D1: $DE3939E6; D2: $AF72; D3: $47FB;
-                        D4: ($B1, $7B, $C7, $41, $AA, $57, $8B, $13));
+    D4: ($B1, $7B, $C7, $41, $AA, $57, $8B, $13));
 
 implementation
 
 uses uEditPolarFrm;
-
 {$R *.dfm}
-
 { cIRDiagramFactory }
 
 constructor cIRDiagramFactory.create;
@@ -266,35 +269,35 @@ begin
   m_name := c_Name;
   m_picname := c_Pic;
   m_Guid := IID_DIAGRAM;
-  CreateEvents;
+  createevents;
 end;
 
 destructor cIRDiagramFactory.destroy;
 begin
-  DestroyEvents;
+  destroyevents;
   inherited;
 end;
 
-procedure cIRDiagramFactory.CreateEvents;
+procedure cIRDiagramFactory.createevents;
 begin
-  //addplgevent('cCtrlWrnFactory_doChangeRState', c_RC_DoChangeRCState,   doChangeRState);
-  //addplgevent('cCtrlWrnFactory_doLoad', c_RC_LoadCfg, doLoad);
-  //addplgevent('cCtrlWrnFactory_doSave', c_RC_SaveCfg, doSave);
+  // addplgevent('cCtrlWrnFactory_doChangeRState', c_RC_DoChangeRCState,   doChangeRState);
+  // addplgevent('cCtrlWrnFactory_doLoad', c_RC_LoadCfg, doLoad);
+  // addplgevent('cCtrlWrnFactory_doSave', c_RC_SaveCfg, doSave);
   addplgevent('cIRDiagramFactory_doUpdateData', c_RUpdateData, doUpdateData);
   addplgevent('cIRDiagramFactory_doChangeRState', c_RC_DoChangeRCState,
     doChangeRState);
 end;
 
-procedure cIRDiagramFactory.DestroyEvents;
+procedure cIRDiagramFactory.destroyevents;
 begin
-  //removeplgEvent(doChangeRState, c_RC_ChangeState);
-  //removeplgEvent(doLoad, c_RC_LoadCfg);
-  //removeplgEvent(doSave, c_RC_SaveCfg);
+  // removeplgEvent(doChangeRState, c_RC_ChangeState);
+  // removeplgEvent(doLoad, c_RC_LoadCfg);
+  // removeplgEvent(doSave, c_RC_SaveCfg);
   removeplgEvent(doUpdateData, c_RUpdateData);
   removeplgEvent(doChangeRState, c_RC_DoChangeRCState);
 end;
 
-procedure cIRDiagramFactory.doUpdateData(Sender: TObject);
+procedure cIRDiagramFactory.doUpdateData(sender: tobject);
 var
   i: integer;
   Frm: TRecFrm;
@@ -302,7 +305,7 @@ begin
   for i := 0 to m_CompList.Count - 1 do
   begin
     Frm := GetFrm(i);
-    TIRDiagramFrm(Frm).UpdateData;
+    TIRDiagramFrm(Frm).updateData;
   end;
 end;
 
@@ -311,7 +314,7 @@ begin
   inherited;
 end;
 
-procedure cIRDiagramFactory.doChangeRState(Sender: TObject);
+procedure cIRDiagramFactory.doChangeRState(sender: tobject);
 begin
   case GetRCStateChange of
     RSt_Init:
@@ -367,11 +370,11 @@ begin
 
 end;
 
-procedure cIRDiagramFactory.doSetDefSize(var pSize: SIZE);
+procedure cIRDiagramFactory.doSetDefSize(var PSize: SIZE);
 begin
   inherited;
-  pSize.cx := c_defXSize;
-  pSize.cy := c_defYSize;
+  PSize.cx := c_defXSize;
+  PSize.cy := c_defYSize;
 end;
 
 procedure cIRDiagramFactory.doStart;
@@ -390,41 +393,42 @@ end;
 function TIRDiagramFrm.addGraph(p_name: string): IRDiagramTag;
 begin
   result := IRDiagramTag.create;
-  result.name:=p_name;
-  fpage.AddChild(Result);
+  result.name := p_name;
+  fpage.AddChild(result);
+  fpage.m_graphList.Add(result);
 end;
 
-procedure TIRDiagramFrm.ChartInit(Sender: TObject);
+procedure TIRDiagramFrm.ChartInit(sender: tobject);
 var
-  i:integer;
-  g:IRDiagramTag;
+  i: integer;
+  g: IRDiagramTag;
 begin
   fpage := cIRPage.create;
-  chart.name:='IRDiagram';
+  chart.name := 'IRDiagram';
   chart.activeTab.AddChild(fpage);
   chart.activePage.destroy;
   chart.activeTab.Alignpages(1);
-  chart.activePage:=fpage;
+  chart.activePage := fpage;
   GraphName := 'Диаграмма Найквиста';
   createevents;
   if GraphMax <> 0 then
   begin
-    //page.Max := GraphMax;
+    // page.Max := GraphMax;
   end;
-  PSize:=PSize;
+  PSize := PSize;
 
-  g:=addGraph('test_001');
-  g.Count:=10;
-  for I := 0 to g.Count - 1 do
+  g := addGraph('test_001');
+  g.Count := 10;
+  for i := 0 to g.Count - 1 do
   begin
-    g.fXyPoints[i].x:=i;
-    g.fXyPoints[i].y:=i*i;
+    g.fxyPoints[i].x := i;
+    g.fxyPoints[i].y := i * i;
   end;
-  g.ConfigTag('3- 1','18- 1_taho');
-  g.fneedrecompile:=true;
+  g.ConfigTag('3- 1', '18- 1_taho');
+  g.fneedrecompile := true;
 end;
 
-procedure TIRDiagramFrm.RBtnClick(Sender: TObject);
+procedure TIRDiagramFrm.RBtnClick(sender: tobject);
 begin
   if TIRDiagramFrm <> nil then
   begin
@@ -438,24 +442,24 @@ end;
 
 procedure TIRDiagramFrm.clearGraphList;
 var
-  I: Integer;
-  gr:IRDiagramTag;
+  i: integer;
+  gr: IRDiagramTag;
 begin
-  //for I := 0 to m_graphlist.Count - 1 do
-  //begin
-  //  gr:=getGraph(i);
-  //  gr.Destroy;
-  //end;
-  //m_graphlist.Clear;
+  // for I := 0 to m_graphlist.Count - 1 do
+  // begin
+  // gr:=getGraph(i);
+  // gr.Destroy;
+  // end;
+  // m_graphlist.Clear;
 end;
 
 constructor TIRDiagramFrm.create(Aowner: tcomponent);
 begin
   inherited;
-  //fGraphName:='Гистограмма биений';
-  //m_graphlist := tlist.create;
+  // fGraphName:='Гистограмма биений';
+  // m_graphlist := tlist.create;
   chart := cchart.create(self);
-  chart.Align := alClient;
+  chart.align := alClient;
   chart.showTV := false;
   chart.showLegend := false;
   chart.OnInit := ChartInit;
@@ -466,8 +470,8 @@ destructor TIRDiagramFrm.destroy;
 begin
   clearGraphList;
   destroyevents;
-  chart.Destroy;
-  chart:=nil;
+  chart.destroy;
+  chart := nil;
   inherited;
 end;
 
@@ -481,9 +485,9 @@ begin
   chart.Objmng.Events.removeEvent(doOnZoom, E_OnZoom);
 end;
 
-procedure TIRDiagramFrm.doOnZoom(Sender: TObject);
+procedure TIRDiagramFrm.doOnZoom(sender: tobject);
 begin
-  //fGraphMax := page.Max;
+  // fGraphMax := page.Max;
 end;
 
 procedure TIRDiagramFrm.doStart;
@@ -495,7 +499,7 @@ begin
   begin
     g := getGraph(i);
     g.m_irAlg.doOnStart;
-    //g.init;
+    // g.init;
   end;
 end;
 
@@ -506,8 +510,8 @@ var
   gr: IRDiagramTag;
 begin
   inherited;
-  GraphMax :=readFloatFromIni(a_pIni,str, 'GridMax');
-  PSize:=readFloatFromIni(a_pIni,str, 'PSize');
+  GraphMax := readFloatFromIni(a_pIni, str, 'GridMax');
+  PSize := readFloatFromIni(a_pIni, str, 'PSize');
   GraphName := a_pIni.ReadString(str, 'ComponentName', 'Гистограмма биений');
   Count := a_pIni.ReadInteger(str, 'GraphCount', 1);
   for i := 0 to Count - 1 do
@@ -516,9 +520,9 @@ begin
     if lstr <> '' then
     begin
       gr := addGraph(lstr);
-      //gr.fload :=true;
-      //gr.DrawPoints:=a_pIni.Readbool(str, 'GraphDrawPoints_' + inttostr(i), true);
-      //gr.DrawLine:=a_pIni.Readbool(str, 'GraphDrawLine_' + inttostr(i), true);
+      // gr.fload :=true;
+      // gr.DrawPoints:=a_pIni.Readbool(str, 'GraphDrawPoints_' + inttostr(i), true);
+      // gr.DrawLine:=a_pIni.Readbool(str, 'GraphDrawLine_' + inttostr(i), true);
     end;
   end;
 end;
@@ -532,27 +536,27 @@ begin
   inherited;
   a_pIni.WriteFloat(str, 'GridMax', GraphMax);
   a_pIni.WriteFloat(str, 'PSize', PSize);
-  //a_pIni.WriteInteger(str, 'GraphCount', m_graphlist.Count);
+  // a_pIni.WriteInteger(str, 'GraphCount', m_graphlist.Count);
   a_pIni.WriteString(str, 'ComponentName', GraphName);
-  //for i := 0 to m_graphlist.Count - 1 do
-  //begin
-  //  gr := getGraph(i);
-  //  a_pIni.WriteString(str, 'GraphName_' + inttostr(i), gr.name);
-  //  a_pIni.WriteBool(str, 'GraphDrawPoints_' + inttostr(i), gr.DrawPoints);
-  //end;
+  // for i := 0 to m_graphlist.Count - 1 do
+  // begin
+  // gr := getGraph(i);
+  // a_pIni.WriteString(str, 'GraphName_' + inttostr(i), gr.name);
+  // a_pIni.WriteBool(str, 'GraphDrawPoints_' + inttostr(i), gr.DrawPoints);
+  // end;
 end;
 
-procedure TIRDiagramFrm.UpdateData;
+procedure TIRDiagramFrm.updateData;
 var
   i: integer;
   g: IRDiagramTag;
 begin
-  //logMessage('TCntrlWrnChart.UpdateData tid: '+inttostr(GetCurrentThreadId));
+  // logMessage('TCntrlWrnChart.UpdateData tid: '+inttostr(GetCurrentThreadId));
   // spmChart.activePage.caption := modname(spmChart.activePage.caption, false);
   for i := 0 to GraphCount - 1 do
   begin
     g := getGraph(i);
-    g.UpdateData;
+    g.updateData;
     g.m_irAlg.resetdata;
   end;
 end;
@@ -565,7 +569,7 @@ begin
   for i := 0 to GraphCount - 1 do
   begin
     g := getGraph(i);
-    //g.UpdateView;
+    // g.UpdateView;
   end;
   chart.redraw;
 end;
@@ -573,42 +577,42 @@ end;
 procedure TIRDiagramFrm.setGraphName(v: string);
 begin
   fGraphName := v;
-  //if page <> nil then
-  //begin
-  //  page.caption := v;
-  //end;
+  // if page <> nil then
+  // begin
+  // page.caption := v;
+  // end;
 end;
 
 function TIRDiagramFrm.getGraphName: string;
 begin
-  if fGraphName='' then
+  if fGraphName = '' then
   begin
-    result:=classname;
+    result := classname;
   end
   else
-    result:=fGraphName;
+    result := fGraphName;
 end;
 
 function TIRDiagramFrm.getGraph(i: integer): IRDiagramTag;
 begin
-  //result := IRDiagramTag(m_graphlist.items[i]);
+  result:=IRDiagramTag(fpage.m_graphList.items[i]);
 end;
 
 function TIRDiagramFrm.getGraph(gname: string): IRDiagramTag;
 var
-  I: Integer;
-  g:IRDiagramTag;
+  i: integer;
+  g: IRDiagramTag;
 begin
-  result:=nil;
-  //for I := 0 to m_graphlist.Count - 1 do
-  //begin
-  //  g := cTagGraph(m_graphlist.items[i]);
-  //  if g.name=gname then
-  //  begin
-  //    result:=g;
-  //    exit;
-  //  end;
-  //end;
+  result := nil;
+  for I := 0 to fpage.m_graphList.Count - 1 do
+  begin
+    g:=IRDiagramTag(fpage.m_graphList.items[i]);
+    if g.name=gname then
+    begin
+      result:=g;
+      exit;
+    end;
+  end;
 end;
 
 function TIRDiagramFrm.getGraphMax: double;
@@ -616,24 +620,23 @@ begin
   result := fGraphMax;
 end;
 
-
 function TIRDiagramFrm.getPSize: double;
 begin
-  //result:=fpsize;
+  // result:=fpsize;
 end;
 
 procedure TIRDiagramFrm.setPSize(v: double);
 begin
-  //fpsize:=v;
-  //if page<>nil then
-  //begin
-  //  page.psize:=v;
-  //end;
+  // fpsize:=v;
+  // if page<>nil then
+  // begin
+  // page.psize:=v;
+  // end;
 end;
 
 function TIRDiagramFrm.GraphCount: integer;
 begin
-  result := fpage.ChildCount;
+  result := fpage.m_graphList.count;
 end;
 
 { IPolarFrm }
@@ -658,7 +661,6 @@ begin
   TIRDiagramFrm(m_pMasterWnd).UpdateView;
 end;
 
-
 { IRDiagramTag }
 procedure IRDiagramTag.compile;
 var
@@ -677,10 +679,10 @@ begin
     begin
       glColor3fv(@color);
       glBegin(GL_LINE_STRIP);
-      for i := 0 to count - 1 do
+      for i := 0 to Count - 1 do
       begin
-        lp.x := fXypoints[i].x;
-        lp.y := fxYpoints[i].y;
+        lp.x := fxyPoints[i].x;
+        lp.y := fxyPoints[i].y;
         glVertex2fv(@lp);
       end;
       glEnd;
@@ -690,10 +692,10 @@ begin
     begin
       glColor3fv(@fPointColor);
       glBegin(GL_Points);
-      for i := 0 to count - 1 do
+      for i := 0 to Count - 1 do
       begin
-        lp.x := fxypoints[i].x;
-        lp.y := fxypoints[i].y;
+        lp.x := fxyPoints[i].x;
+        lp.y := fxyPoints[i].y;
         glVertex2fv(@lp);
       end;
       glEnd;
@@ -704,7 +706,7 @@ end;
 
 procedure IRDiagramTag.ConfigTag(spm, taho: cspm);
 begin
-  m_irAlg.UpdateChannels(spm,taho);
+  m_irAlg.UpdateChannels(spm, taho);
 end;
 
 procedure IRDiagramTag.ConfigTag(spm, taho: string);
@@ -715,16 +717,16 @@ end;
 constructor IRDiagramTag.create;
 begin
   inherited;
-  m_irAlg:=cIRAlg.create;
-  m_irAlg.fowner:=self;
-  if g_algmng<>nil then
+  m_irAlg := cIRAlg.create;
+  m_irAlg.fowner := self;
+  if g_algmng <> nil then
   begin
-    g_algMng.add(m_irAlg);
+    g_algmng.add(m_irAlg);
   end;
-  DrawPoints:=true;
-  fPointColor:=red;
-  DrawLines:=true;
-  fcolor:=blue;
+  DrawPoints := true;
+  fPointColor := red;
+  DrawLines := true;
+  fcolor := blue;
 end;
 
 procedure IRDiagramTag.doLincParent;
@@ -745,12 +747,12 @@ end;
 
 function IRDiagramTag.getCount: integer;
 begin
-  if ffull then
+  if fFull then
   begin
-    result:=length(fxyPoints);
+    result := length(fxyPoints);
   end
   else
-    result:=fPCount;
+    result := fPCount;
 end;
 
 procedure IRDiagramTag.setmainParent(p: cbaseObj);
@@ -761,30 +763,30 @@ end;
 
 procedure IRDiagramTag.updateData;
 var
-  I: Integer;
+  i: integer;
 begin
   if m_irAlg.newData then
   begin
-    for I := 0 to m_irAlg.fSpmBuff.size - 1 do
+    for i := 0 to m_irAlg.fSpmBuff.SIZE - 1 do
     begin
-      fxyPoints[fpCount].x:=m_irAlg.fOut[i].x;
-      fxyPoints[fpCount].y:=m_irAlg.fOut[i].y;
-      inc(fpCount);
-      if fpCount=Length(fxyPoints) then
+      fxyPoints[fPCount].x := m_irAlg.fOut[i].x;
+      fxyPoints[fPCount].y := m_irAlg.fOut[i].y;
+      inc(fPCount);
+      if fPCount = length(fxyPoints) then
       begin
-        fpCount:=0;
-        fFull:=true;
+        fPCount := 0;
+        fFull := true;
       end;
       m_irAlg.resetdata;
     end;
   end;
 end;
 
-procedure IRDiagramTag.setCount(i: integer);
+procedure IRDiagramTag.SetCount(i: integer);
 begin
-  fpCount:=i;
-  //setlength(fXpoints, i);
-  //setlength(fYpoints, i);
+  fPCount := i;
+  // setlength(fXpoints, i);
+  // setlength(fYpoints, i);
   setlength(fxyPoints, i);
 end;
 
@@ -812,60 +814,68 @@ end;
 procedure cIRPage.initTEdit(edit: cdrawobj);
 begin
   edit.fhelper := true;
-  cfloatlabel(edit).fEnabled:=true;
+  cfloatlabel(edit).fEnabled := true;
   cfloatlabel(edit).OnKeyEnter := UpdateAxisbyText;
-  cfloatlabel(edit).Transparent:=false;
+  cfloatlabel(edit).Transparent := false;
   AddChild(edit);
 end;
 
 function cIRPage.isCarrier: boolean;
 begin
-  result:=true;
+  result := true;
 end;
 
 // Обновить оси при вводе текста в TEdit
-procedure cIRPage.UpdateAxisbyText(Sender: tobject; var key: Word;  Shift: TShiftState);
+procedure cIRPage.UpdateAxisbyText(sender: tobject; var Key: Word;
+  Shift: TShiftState);
 var
   rect: fRect;
-  v:double;
+  v: double;
 begin
   if Key = 13 then
   begin
     v := strtofloatext(cfloatlabel(sender).Text);
-    setmax(cfloatlabel(sender),v);
+    setmax(cfloatlabel(sender), v);
   end;
   cchart(chart).redraw;
 end;
 
-
 constructor cIRPage.create;
 begin
   inherited;
+  m_graphList:=TList.Create;
+
   m_MaxXedit := cfloatlabel.create;
-  m_MaxXedit.autocreate:=true;
+  m_MaxXedit.autocreate := true;
   m_MaxXedit.textcolor := blue;
   m_MaxXedit.align := utext.c_right;
-  m_MaxXedit.Name := modname('IRMaxXEdit',false);
-  m_MaxXedit.Transparent:=true;
+  m_MaxXedit.Name := modname('IRMaxXEdit', false);
+  m_MaxXedit.Transparent := true;
   initTEdit(m_MaxXedit);
 
-  m_MaxYedit:=cfloatlabel.create;
-  m_MaxYedit.autocreate:=true;
+  m_MaxYedit := cfloatlabel.create;
+  m_MaxYedit.autocreate := true;
   m_MaxYedit.textcolor := blue;
   m_MaxYedit.align := utext.c_right;
-  m_MaxYedit.Name := modname('IRMaxYEdit',false);
-  m_MaxYedit.Transparent:=true;
+  m_MaxYedit.Name := modname('IRMaxYEdit', false);
+  m_MaxYedit.Transparent := true;
   initTEdit(m_MaxYedit);
 
-  fDrawPointSize:=5;
+  fDrawPointSize := 5;
 
-  fXAxis.x:= -10;
-  fXAxis.y:= 10;
-  fYAxis.x:= -10;
-  fYAxis.y:= 10;
+  fXAxis.x := -10;
+  fXAxis.y := 10;
+  fYAxis.x := -10;
+  fYAxis.y := 10;
 
   PrepareZoom;
-  color:=white;
+  color := white;
+end;
+
+destructor cIRPage.destroy;
+begin
+  m_graphList.Destroy;
+  inherited;
 end;
 
 procedure cIRPage.DrawCross;
@@ -891,7 +901,7 @@ begin
   compile;
   glMatrixMode(gl_projection);
   glpushmatrix;
-  glLoadIdentity;
+  glloadidentity;
   setCommonVP;
   // отрисовка фона страницы
   drawPage;
@@ -904,10 +914,10 @@ begin
   // отрисовка рамки поля вывода самого графика
   DrawGraphBorder;
   // установка матрицы вида для отрисовки внутри поляв ывода
-  SetZoom;
+  setzoom;
   DrawGrid;
 
-  glpopmatrix;
+  glPopMatrix;
   inherited;
 end;
 
@@ -929,79 +939,81 @@ begin
   glLineWidth(w);
 end;
 
-Procedure cIRPage.OutText(str: PCHAR; p2: point2; align: integer; index: integer);
+Procedure cIRPage.OutText(str: PCHAR; p2: point2; align: integer;
+  index: integer);
 begin
   getfont(index).OutText(str, p2, align);
 end;
 
 procedure cIRPage.DrawGrid;
 var
-  gridstepx, gridstepy, range, mingridx, maxgridx, mingridy, maxgridy, pos:double;
-  order, n:integer;
-  str:string;
+  gridstepx, gridstepy, range, mingridx, maxgridx, mingridy, maxgridy,
+    pos: double;
+  order, n: integer;
+  str: string;
 begin
   // расчет сетки по X
-  range:=fXAxis.y-fXAxis.x;
-  order:=trunc(log10(range));
+  range := fXAxis.y - fXAxis.x;
+  order := trunc(log10(range));
   dec(order);
-  gridstepx:=power(10, order);
-  n:=round((fXAxis.y-fXAxis.x)/gridstepx);
-  if n>20 then
+  gridstepx := power(10, order);
+  n := round((fXAxis.y - fXAxis.x) / gridstepx);
+  if n > 20 then
   begin
-    gridstepx:=gridstepx*5;
+    gridstepx := gridstepx * 5;
   end;
-  mingridx:=gridstepx*trunc(fXAxis.x/gridstepx);
-  maxgridx:=gridstepx*trunc(fXAxis.y/gridstepx);
+  mingridx := gridstepx * trunc(fXAxis.x / gridstepx);
+  maxgridx := gridstepx * trunc(fXAxis.y / gridstepx);
   // расчет сетки по Y
-  range:=fYAxis.y-fYAxis.x;
-  order:=trunc(log10(range));
+  range := fYAxis.y - fYAxis.x;
+  order := trunc(log10(range));
   dec(order);
-  gridstepy:=power(10, order);
-  n:=round((fYAxis.y-fYAxis.x)/gridstepy);
-  if n>20 then
+  gridstepy := power(10, order);
+  n := round((fYAxis.y - fYAxis.x) / gridstepy);
+  if n > 20 then
   begin
-    gridstepy:=gridstepy*5;
+    gridstepy := gridstepy * 5;
   end;
-  mingridy:=gridstepy*trunc(fYAxis.x/gridstepy);
-  maxgridy:=gridstepy*trunc(fYAxis.y/gridstepy);
+  mingridy := gridstepy * trunc(fYAxis.x / gridstepy);
+  maxgridy := gridstepy * trunc(fYAxis.y / gridstepy);
 
   glLineStipple(1, $F0F0);
   glEnable(GL_LINE_STIPPLE);
   glColor3fv(@gray);
   // рисуем сетку по X
   glBegin(GL_LINES);
-  pos:=mingridx;
-  while pos<maxgridx do
+  pos := mingridx;
+  while pos < maxgridx do
   begin
     glvertex2d(pos, fYAxis.x);
     glvertex2d(pos, fYAxis.y);
-    pos:=pos+gridstepx;
+    pos := pos + gridstepx;
   end;
   // рисуем сетку по Y
-  pos:=mingridy;
-  while pos<maxgridx do
+  pos := mingridy;
+  while pos < maxgridx do
   begin
     glvertex2d(fXAxis.x, pos);
     glvertex2d(fXAxis.y, pos);
-    pos:=pos+gridstepy;
+    pos := pos + gridstepy;
   end;
   glEnd;
   glDisable(GL_LINE_STIPPLE);
   // подписываем оси X
-  pos:=mingridx;
-  while pos<maxgridx do
+  pos := mingridx;
+  while pos < maxgridx do
   begin
     str := formatstr(pos, 4);
     OutText(PCHAR(str), p2(pos, 0), c_left, c_AxisFontInd);
-    pos:=pos+gridstepx;
+    pos := pos + gridstepx;
   end;
   // подписываем оси Y
-  pos:=mingridy;
-  while pos<maxgridY do
+  pos := mingridy;
+  while pos < maxgridy do
   begin
     str := formatstr(pos, 4);
     OutText(PCHAR(str), p2(0, pos), c_left, c_AxisFontInd);
-    pos:=pos+gridstepy;
+    pos := pos + gridstepy;
   end;
 end;
 
@@ -1022,7 +1034,7 @@ var
   obj: tcomponent;
   i: integer;
 begin
-  if self.chart<>nil then
+  if self.chart <> nil then
   begin
     for i := 0 to cchart(self.chart).ComponentCount - 1 do
     begin
@@ -1031,7 +1043,7 @@ begin
     obj := cchart(self.chart).FindComponent(p_name);
     while obj <> nil do
     begin
-      p_name := ModName(p_name, false);
+      p_name := modname(p_name, false);
       obj := cchart(self.chart).FindComponent(p_name);
     end;
   end;
@@ -1040,34 +1052,34 @@ end;
 
 procedure cIRPage.setBound(rect: trect);
 var
-  clientrect:trect;
-  w,h:integer;
+  clientrect: trect;
+  w, h: integer;
 begin
-  clientrect:=getClientBound;
-  if rect.Left<clientrect.Left then
-    rect.left:=clientrect.Left;
-  if rect.Top>clientrect.top then
-    rect.top:=clientrect.top;
-  if rect.Right>clientrect.Right then
-    rect.Right:=clientrect.Right;
-  if rect.Bottom<clientrect.Bottom then
-    rect.Bottom:=clientrect.Bottom;
-  if rect.Left>rect.right then
-    rect.right:=rect.Left;
-  if rect.bottom>rect.top then
-    rect.top:=rect.bottom;
-  w:=clientrect.Right-clientrect.left;
-  h:=clientrect.top-clientrect.bottom;
-  if (w<=0) or (h<=0) then
+  clientrect := getClientBound;
+  if rect.Left < clientrect.Left then
+    rect.Left := clientrect.Left;
+  if rect.Top > clientrect.Top then
+    rect.Top := clientrect.Top;
+  if rect.Right > clientrect.Right then
+    rect.Right := clientrect.Right;
+  if rect.Bottom < clientrect.Bottom then
+    rect.Bottom := clientrect.Bottom;
+  if rect.Left > rect.Right then
+    rect.Right := rect.Left;
+  if rect.Bottom > rect.Top then
+    rect.Top := rect.Bottom;
+  w := clientrect.Right - clientrect.Left;
+  h := clientrect.Top - clientrect.Bottom;
+  if (w <= 0) or (h <= 0) then
   begin
     exit;
   end;
 
-  ibound:=rect;
+  ibound := rect;
   GetNormalViewport(m_NormalViewport);
   EvalRelativeBound(ibound);
 
-  //UpdatePixTabs;
+  // UpdatePixTabs;
   SetTabSpace(m_pixelTabSpace);
 
   // расстановка меток по осям
@@ -1075,33 +1087,37 @@ begin
 
   if not init then
   begin
-    m_MaxYedit.text:=m_MaxYedit.text;
-    m_MaxXedit.text:=m_MaxXedit.text;
-    m_PageLabel.text:=m_PageLabel.text;
+    m_MaxYedit.Text := m_MaxYedit.Text;
+    m_MaxXedit.Text := m_MaxXedit.Text;
+    m_PageLabel.Text := m_PageLabel.Text;
   end;
 
   CallEventsWithSender(e_onresize, self);
-  fneedrecompile:=true;
+  fneedrecompile := true;
 end;
 
 procedure cIRPage.linc(p_chart: tcomponent);
 begin
   inherited;
-  if m_PageLabel=nil then
+  if m_PageLabel = nil then
   begin
-    m_PageLabel := clabel.create;
+    m_PageLabel := cLabel.create;
     m_PageLabel.Name := ModComponentName('PageLabel');
 
-    m_PageLabel.autocreate:=true;
+    m_PageLabel.autocreate := true;
     m_PageLabel.fhelper := true;
-    m_PageLabel.Transparent:=false;
-    m_PageLabel.locked:=true;
+    m_PageLabel.Transparent := false;
+    m_PageLabel.locked := true;
     AddChild(m_PageLabel);
 
     m_PageLabel.Text := 'Диаграмма Найквиста';
   end;
 end;
 
+function cIRPage.mainParentClassName: string;
+begin
+
+end;
 
 procedure cIRPage.setCaption(s: string);
 begin
@@ -1109,34 +1125,34 @@ begin
 
 end;
 
-procedure cIRPage.setEditPos(Sender: tobject);
+procedure cIRPage.setEditPos(sender: tobject);
 var
-  bounds, tabs: TRect;
+  bounds, tabs: trect;
   tabtext: TPoint;
   topoffset: integer;
-  ipos:tpoint;
-  p:point2;
-  w, h:integer;
+  ipos: TPoint;
+  p: point2;
+  w, h: integer;
 begin
   if m_MaxYedit <> nil then
   begin
     bounds := bound;
     tabs := m_pixelTabSpace;
     topoffset := twincontrol(chart).Height - bounds.Top;
-    w:=getwidth;
-    ipos.x:=bounds.Left+(w shr 1);
-    ipos.y:=bounds.top-tabs.Top;
-    h:=getheight;
-    if (w<>0) and (h<>0) then
+    w := getwidth;
+    ipos.x := bounds.Left + (w shr 1);
+    ipos.y := bounds.Top - tabs.Top;
+    h := getheight;
+    if (w <> 0) and (h <> 0) then
     begin
-      p:=p2iTop2(ipos);
+      p := p2iTop2(ipos);
       // по хорошему нужно выравнивать текст по краницам page.tabspace
-      p.y:=p.y-m_MaxYedit.GetTextHeigth;
+      p.y := p.y - m_MaxYedit.GetTextHeigth;
       m_MaxYedit.position := p;
 
-      ipos.x:=bounds.Right-tabs.Right;
-      ipos.y:=bounds.top-(getheight shr 1);
-      p:=p2iTop2(ipos);
+      ipos.x := bounds.Right - tabs.Right;
+      ipos.y := bounds.Top - (getheight shr 1);
+      p := p2iTop2(ipos);
       m_MaxXedit.position := p;
     end;
     // положение метки страницы
@@ -1148,50 +1164,50 @@ procedure cIRPage.SetLabelPos;
 var
   pos: point2;
   h: single;
-  w:integer;
+  w: integer;
 begin
-  w:=getwidth;
-  if w<>0 then
+  w := getwidth;
+  if w <> 0 then
   begin
-    if getheight<>0 then
+    if getheight <> 0 then
     begin
       h := m_PageLabel.GetTextHeigth;
       pos.y := 1 - 2 * h;
-      //pos.x := 0 - m_PageLabel.GetTextWidth / 2+0.5;
+      // pos.x := 0 - m_PageLabel.GetTextWidth / 2+0.5;
       pos.x := 0.3;
       m_PageLabel.position := pos;
     end;
   end;
 end;
 
-procedure cIRPage.setmax(e:cfloatlabel;v: double);
+procedure cIRPage.setmax(e: cfloatlabel; v: double);
 begin
-  if e=m_MaxXedit then
+  if e = m_MaxXedit then
   begin
-    m_MaxXedit.text:=floattostr(v);
-    fXAxis.x:=-v;
-    fXAxis.y:=v;
+    m_MaxXedit.Text := floattostr(v);
+    fXAxis.x := -v;
+    fXAxis.y := v;
   end
   else
   begin
-    m_MaxYedit.text:=floattostr(v);
-    fYAxis.x:=-v;
-    fYAxis.y:=v;
+    m_MaxYedit.Text := floattostr(v);
+    fYAxis.x := -v;
+    fYAxis.y := v;
   end;
   PrepareZoom;
-  fneedrecompile:=true;
-  CallEventsWithSender(e_onZoom, self);
+  fneedrecompile := true;
+  CallEventsWithSender(E_OnZoom, self);
   compile;
 end;
 
 procedure cIRPage.setXAxis(p2: point2d);
 begin
-  fXAxis:=p2;
+  fXAxis := p2;
 end;
 
 procedure cIRPage.setYAxis(p2: point2d);
 begin
-  fYAxis:=p2;
+  fYAxis := p2;
 end;
 
 procedure cIRPage.PrepareZoom;
@@ -1202,12 +1218,12 @@ var
 begin
   // заменена стандартная функция т.к. в случае изменения зума
   // из другого потока glOrtho не работает
-  mathfunction.CreateOrthoMatrix(fXAxis.x, fxAxis.y, fyAxis.x, fyAxis.y, -1, 1, stateM);
-  fneedrecompile := True;
+  MathFunction.CreateOrthoMatrix(fXAxis.x, fXAxis.y, fYAxis.x, fYAxis.y, -1, 1,
+    stateM);
+  fneedrecompile := true;
 end;
 
-
-procedure cIRPage.SetZoom;
+procedure cIRPage.setzoom;
 begin
   // ======================Подготовка к рисованию=========================
   glMatrixMode(gl_projection);
@@ -1219,24 +1235,25 @@ end;
 constructor cIRAlg.create;
 begin
   inherited;
-  fSpmBuff:=cqueue<point3d>.create;
-  fTahoBuff:=cqueue<point3d>.create;
-  fTahoBuffFreq:=cqueue<point3d>.create;
+  fSpmBuff := cqueue<point3d>.create;
+  fTahoBuff := cqueue<point3d>.create;
+  fTahoBuffFreq := cqueue<point3d>.create;
 
-  fBuffLength:=3;
-  autocreate:=true;
+  fband.x:=0.8;
+  fband.y:=1.2;
+
+  fBuffLength := 3;
+  autocreate := true;
   Properties := '';
 end;
 
 destructor cIRAlg.destroy;
 begin
   inherited;
-  fSpmBuff.Destroy;
-  fTahoBuff.Destroy;
-  fTahoBuffFreq.Destroy;
+  fSpmBuff.destroy;
+  fTahoBuff.destroy;
+  fTahoBuffFreq.destroy;
 end;
-
-
 
 procedure cIRAlg.doOnStart;
 begin
@@ -1247,30 +1264,30 @@ begin
 
   pCount := 0;
 
-  IRDiagramTag(fowner).fFull:=false;
-  IRDiagramTag(fowner).fPCount:=0;
+  IRDiagramTag(fowner).fFull := false;
+  IRDiagramTag(fowner).fPCount := 0;
 end;
 
 procedure cIRAlg.doUpdateSrcData(sender: tobject);
 var
   // индекс в тестируемом спектре главной частоты по тахо
-  I: integer;
+  i: integer;
   res: double;
   // updatetaho
   t1, t2, x: double;
-  c:TComplex_d;
-  p2:point2d;
-  p3:point3d;
+  c: TComplex_d;
+  p2: point2d;
+  p3: point3d;
   bandwidthint, startind, endind, spmInd: integer;
 begin
   x := ftaho.max.x;
   fTahoValue := x;
-  // количество отсчетов в спектре по которым усредняем
-  startind := round(x * fband.x / ftaho.dX);
-  endind := round(x * fband.y / ftaho.dX);
+
   if sender = ftaho then
   begin
-
+    // количество отсчетов в спектре по которым усредняем
+    startind := round(x * fband.x / ftaho.spmdX);
+    endind := round(x * fband.y / ftaho.spmdX);
     if startind < 0 then
       startind := 0;
     if endind = startind then
@@ -1279,30 +1296,35 @@ begin
       endind := AlignBlockLength(fspm.m_rms) - 1;
     fband_i.x := startind;
     fband_i.y := endind;
-    p2:=point2d(tCmxArray_d(ftaho.cmplx_resArray.p)[ftaho.minmax_i.y]);
-    p3.x:=p2.x;
-    p3.y:=p2.y;
-    p3.z:=ftaho.LastBlockTime;
+    p2 := point2d(tCmxArray_d(ftaho.cmplx_resArray.p)[ftaho.minmax_i.y]);
+    p3.x := p2.x;
+    p3.y := p2.y;
+    p3.z := ftaho.LastBlockTime;
 
     fTahoBuff.push_back(p3);
-    p3.x:=x;
+    p3.x := x;
     fTahoBuffFreq.push_back(p3);
   end;
   if sender = fspm then
   begin
     // пересчитываем полосу по текущему значению тахо
-    res:=TDoubleArray(fspm.m_rms.p)[0];
-    for I := startind to endind do
+    res := TDoubleArray(fspm.m_rms.p)[0];
+    // количество отсчетов в спектре по которым усредняем
+    startind := round(x * fband.x / fspm.SpmDx);
+    endind := round(x * fband.y / fspm.SpmDx);
+    if endind>=AlignBlockLength(fspm.m_rms) then
+      endind:=AlignBlockLength(fspm.m_rms)-1;
+    for i := startind to endind do
     begin
-      if TDoubleArray(fspm.m_rms.p)[i]>res then
+      if TDoubleArray(fspm.m_rms.p)[i] > res then
       begin
-        c:=tCmxArray_d(fspm.cmplx_resArray.p)[i];
-        res:=TDoubleArray(fspm.m_rms.p)[i]
+        c := tCmxArray_d(fspm.cmplx_resArray.p)[i];
+        res := TDoubleArray(fspm.m_rms.p)[i]
       end;
     end;
-    p3.x:=c.re;
-    p3.y:=c.im;
-    p3.z:=fspm.LastBlockTime;
+    p3.x := c.re;
+    p3.y := c.im;
+    p3.z := fspm.LastBlockTime;
 
     fSpmBuff.push_back(p3);
   end;
@@ -1310,35 +1332,35 @@ end;
 
 procedure cIRAlg.doEndEvalBlock(sender: tobject);
 var
-  I, j: integer;
-  a1,a2, alfa, alfa1, halfstepspm, halfstepTaho: double;
-  c1,c2:tcomplex_d;
-  spm3, taho3:point3d;
+  i, j: integer;
+  a1, a2, alfa, alfa1, halfstepspm, halfstepTaho: double;
+  c1, c2: TComplex_d;
+  spm3, taho3: point3d;
 begin
-  HalfStepspm:=fSpmdx/2;
-  HalfStepTaho:=fTaxodx/2;
-  for I := 0 to fSpmBuff.size - 1 do
+  halfstepspm := fSpmdx / 2;
+  halfstepTaho := fTaxodx / 2;
+  for i := 0 to fSpmBuff.SIZE - 1 do
   begin
-    spm3:=fSpmBuff.Peak(i);
-    for j := 0 to fTahoBuff.size - 1 do
+    spm3 := fSpmBuff.Peak(i);
+    for j := 0 to fTahoBuff.SIZE - 1 do
     begin
-      taho3:=point3d(fSpmBuff.Peak(I));
-      if spm3.z-taho3.z<halfstepspm then
+      taho3 := point3d(fSpmBuff.Peak(i));
+      if spm3.z - taho3.z < halfstepspm then
       begin
-        c1.re:=spm3.x;
-        c1.im:=spm3.y;
-        c2.re:=taho3.x;
-        c2.im:=taho3.y;
-        a1:=abs(c1);
-        a2:=abs(c2);
-        alfa:=(c1.Re*c2.Re+c1.im*c2.im)/(a1*a2);
-        alfa:=arccos(alfa);
-        alfa1:=ArcTan(c1.Im/c1.re)-alfa;
+        c1.re := spm3.x;
+        c1.im := spm3.y;
+        c2.re := taho3.x;
+        c2.im := taho3.y;
+        a1 := abs(c1);
+        a2 := abs(c2);
+        alfa := (c1.re * c2.re + c1.im * c2.im) / (a1 * a2);
+        alfa := arccos(alfa);
+        alfa1 := ArcTan(c1.im / c1.re) - alfa;
 
-        fOut[i+pCount].x:=a1*cos(alfa1);
-        fOut[i+pCount].y:=a1*sin(alfa1);
+        fOut[i + pCount].x := a1 * cos(alfa1);
+        fOut[i + pCount].y := a1 * sin(alfa1);
         inc(pCount);
-        fnewdata:=true;
+        fnewData := true;
         break;
       end;
     end;
@@ -1351,9 +1373,8 @@ begin
   fTahoBuff.clear;
   fTahoBuffFreq.clear;
   // счет внутри fOut
-  pCount:=0;
+  pCount := 0;
 end;
-
 
 class function cIRAlg.getdsc: string;
 begin
@@ -1362,19 +1383,19 @@ end;
 
 function cIRAlg.GetProperties: string;
 begin
-  Result:='cIRAlgProps';
+  result := 'cIRAlgProps';
 end;
 
 function cIRAlg.newData: boolean;
 begin
-  result:=fnewdata;
-  fnewdata:=false;
+  result := fnewData;
+  fnewData := false;
 end;
 
 function cIRAlg.ready: boolean;
 begin
   // алгоритм вспомогательный, поэтому не требует вызовов
-  result:=false;
+  result := false;
 end;
 
 procedure cIRAlg.SetProperties(str: string);
@@ -1384,38 +1405,37 @@ end;
 
 procedure cIRAlg.UpdateChannels(spm, taho: string);
 begin
-  fspm:=cspm(g_algmng.getSpmByTagName(spm));
-  ftaho:=cspm(g_algmng.getSpmByTagName(taho));
-  UpdateChannels(fspm,ftaho);
+  fspm := cspm(g_algmng.getSpmByTagName(spm));
+  ftaho := cspm(g_algmng.getSpmByTagName(taho));
+  UpdateChannels(fspm, ftaho);
 end;
 
-procedure cIRAlg.UpdateChannels(spm, taho:cspm);
+procedure cIRAlg.UpdateChannels(spm, taho: cspm);
 var
-  i, j:integer;
+  i, j: integer;
 begin
-  if fspm<>nil then
+  if (fspm <> nil) and (fspm <> spm) then
     unsubscribe(fspm);
-  fspm:=spm;
-  if ftaho<>nil then
+  fspm := spm;
+  if (ftaho <> nil) and (ftaho <> taho) then
     unsubscribe(ftaho);
-  ftaho:=taho;
+  ftaho := taho;
 
-  if ftaho<>nil then
+  if ftaho <> nil then
   begin
     ftaho.subscribe(self);
-    fTaxodx:=ftaho.dX;
+    fTaxodx := ftaho.dX;
   end;
-  if fspm<>nil then
+  if fspm <> nil then
   begin
     fspm.subscribe(self);
-    fSpmdx:=fspm.dX;
+    fSpmdx := fspm.dX;
   end;
-  i:=round(fBuffLength/fspmdx);
-  j:=round(fBuffLength/ftaxodx);
-  if i<j then
-    i:=j;
-  setlength(fOut,i);
+  i := round(fBuffLength / fSpmdx);
+  j := round(fBuffLength / fTaxodx);
+  if i < j then
+    i := j;
+  setlength(fOut, i);
 end;
 
 end.
-
