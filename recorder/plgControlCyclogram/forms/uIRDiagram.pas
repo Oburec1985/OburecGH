@@ -31,28 +31,22 @@ type
     // размер буфера в секундах (буфер нужен для соединения данных тахо и основного тега в
     // единый массив без ошибок по времени)
     fBuffLength:double;
-
     fTaxodx:double; // шаг между посчитанными спектрами по времени
-    // время первого блока тахо
-    fTahoStartTime:double;
     // значение комплексного спектра на главной гармонике
-    fTahoBuff:cqueue<point2d>;
+    fTahoBuff:cqueue<point3d>;
     // значение частоты главной гармоники
-    fTahoBuffFreq:cqueue<point2d>;
-
+    fTahoBuffFreq:cqueue<point3d>;
     fSpmdx:double; // шаг между посчитанными спектрами по времени
-    // время первого блока тахо
-    fSpmStartTime:double;
     // значение комплексного спектра на главной гармонике
     // queue
-    fSpmBuff:cqueue<point2d>;
+    fSpmBuff:cqueue<point3d>;
     // полоса анализа вокруг главной частоты тахо в долях
     fband:point2d;
     fband_i:point2d;
     fTahoValue:double;
     ftaho, fspm:cspm;
 
-    fOut:array of point2d;
+    fOut:array of point3d;
     // число расчитанных точек/ счет внутри fOut
     pCount: integer;
   protected
@@ -1225,6 +1219,10 @@ end;
 constructor cIRAlg.create;
 begin
   inherited;
+  fSpmBuff:=cqueue<point3d>.create;
+  fTahoBuff:=cqueue<point3d>.create;
+  fTahoBuffFreq:=cqueue<point3d>.create;
+
   fBuffLength:=3;
   autocreate:=true;
   Properties := '';
@@ -1233,6 +1231,9 @@ end;
 destructor cIRAlg.destroy;
 begin
   inherited;
+  fSpmBuff.Destroy;
+  fTahoBuff.Destroy;
+  fTahoBuffFreq.Destroy;
 end;
 
 
@@ -1240,9 +1241,6 @@ end;
 procedure cIRAlg.doOnStart;
 begin
   inherited;
-  fTahoStartTime:=-1;
-  fSpmStartTime:=-1;
-
   fSpmBuff.clear;
   fTahoBuff.clear;
   fTahoBuffFreq.clear;
@@ -1262,6 +1260,7 @@ var
   t1, t2, x: double;
   c:TComplex_d;
   p2:point2d;
+  p3:point3d;
   bandwidthint, startind, endind, spmInd: integer;
 begin
   x := ftaho.max.x;
@@ -1280,53 +1279,56 @@ begin
       endind := AlignBlockLength(fspm.m_rms) - 1;
     fband_i.x := startind;
     fband_i.y := endind;
-
     p2:=point2d(tCmxArray_d(ftaho.cmplx_resArray.p)[ftaho.minmax_i.y]);
-    fTahoBuff.push_back(p2);
-    fTahoBuffFreq.push_back(p2d(x,0));
-    //if fTahoBlCount=0 then
-    //begin
-    //  fTahoStartTime:=ftaho.LastBlockTime;
-    //end;
+    p3.x:=p2.x;
+    p3.y:=p2.y;
+    p3.z:=ftaho.LastBlockTime;
+
+    fTahoBuff.push_back(p3);
+    p3.x:=x;
+    fTahoBuffFreq.push_back(p3);
   end;
   if sender = fspm then
   begin
     // пересчитываем полосу по текущему значению тахо
+    res:=TDoubleArray(fspm.m_rms.p)[0];
     for I := startind to endind do
     begin
       if TDoubleArray(fspm.m_rms.p)[i]>res then
       begin
         c:=tCmxArray_d(fspm.cmplx_resArray.p)[i];
+        res:=TDoubleArray(fspm.m_rms.p)[i]
       end;
     end;
+    p3.x:=c.re;
+    p3.y:=c.im;
+    p3.z:=fspm.LastBlockTime;
 
-    fSpmBuff.push_back(point2d(c));
-    //if fSpmBlCount=0 then
-    //begin
-    //  fSpmStartTime:=fspm.LastBlockTime;
-    //end;
-    //inc(fSpmBlCount);
+    fSpmBuff.push_back(p3);
   end;
 end;
 
 procedure cIRAlg.doEndEvalBlock(sender: tobject);
 var
   I, j: integer;
-  a1,a2, alfa, alfa1,spmT, tahoT, halfstepspm, halfstepTaho: double;
+  a1,a2, alfa, alfa1, halfstepspm, halfstepTaho: double;
   c1,c2:tcomplex_d;
+  spm3, taho3:point3d;
 begin
   HalfStepspm:=fSpmdx/2;
   HalfStepTaho:=fTaxodx/2;
   for I := 0 to fSpmBuff.size - 1 do
   begin
-    spmT:=fSpmStartTime+i*fSpmdx;
+    spm3:=fSpmBuff.Peak(i);
     for j := 0 to fTahoBuff.size - 1 do
     begin
-      tahoT:=fTahoStartTime+j*fTaxoDx;
-      if spmT-tahoT<halfstepspm then
+      taho3:=point3d(fSpmBuff.Peak(I));
+      if spm3.z-taho3.z<halfstepspm then
       begin
-        c1:=tcomplex_d(fSpmBuff.Peak(I));
-        c2:=tcomplex_d(fTahoBuff.Peak(J));
+        c1.re:=spm3.x;
+        c1.im:=spm3.y;
+        c2.re:=taho3.x;
+        c2.im:=taho3.y;
         a1:=abs(c1);
         a2:=abs(c2);
         alfa:=(c1.Re*c2.Re+c1.im*c2.im)/(a1*a2);
@@ -1337,7 +1339,6 @@ begin
         fOut[i+pCount].y:=a1*sin(alfa1);
         inc(pCount);
         fnewdata:=true;
-
         break;
       end;
     end;

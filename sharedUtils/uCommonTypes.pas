@@ -18,6 +18,7 @@ type
   end;
 
   pPoint2d = ^point2d;
+
   point2d = record
     x,y:double;
   end;
@@ -29,6 +30,13 @@ type
     y,
     z:single;
   end;
+
+  point3d=record
+    x,
+    y,
+    z:double;
+  end;
+
 
   fRect = record
     BottomLeft: Point2;
