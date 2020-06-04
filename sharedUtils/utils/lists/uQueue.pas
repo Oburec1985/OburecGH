@@ -6,6 +6,9 @@ uses
 
 type
   cQueue<T> = class
+  public
+    // если false то новые вершины выталкивают старые
+    m_resizeMode:boolean;
   protected
     // число элементов в деке
     fCount:integer;
@@ -14,6 +17,7 @@ type
     // Последний (выйдет последним)
     fLast:integer;
     data: TArray<T>;
+  protected
   public
     // вытащить в порядке очереди 0 - первый в очереди на выход
     function Peak(i:integer):T;
@@ -34,6 +38,8 @@ type
     function size:integer;
     // Очистить дек (удалить из него все элементы)
     procedure clear;
+    // отбросить i элементов
+    procedure drop_front(i:integer);
   protected
     procedure SetCapacity(c:integer);
     function GetCapacity:integer;
@@ -67,6 +73,21 @@ begin
   fCount:=0;
   fFirst:=-1;
   fLast:=-1;
+end;
+
+procedure cQueue<T>.drop_front(i: integer);
+begin
+  if fcount<=i then
+  begin
+    clear;
+    exit;
+  end;
+  ffirst:=ffirst+i+1;
+  fcount:=fcount-i-1;
+  if ffirst>=capacity then
+  begin
+    ffirst:=ffirst-capacity;
+  end;
 end;
 
 function cQueue<T>.front: T;
@@ -120,13 +141,29 @@ begin
       flast:=-1;
     end
   end;
-
 end;
 
 procedure cQueue<T>.push_back(p: T);
 var
   copycount, newpos:integer;
 begin
+  if m_resizeMode=false then
+  begin
+    if fcount=capacity then
+    begin
+      data[fFirst]:=p;
+      if ffirst=(capacity-1) then
+      begin
+        ffirst:=0;
+      end
+      else
+      begin
+        inc(ffirst);
+      end;
+      exit;
+    end;
+  end;
+
   resize;
   if (Flast+1)=fFirst then
   begin
@@ -162,6 +199,25 @@ procedure cQueue<T>.push_front(p: T);
 var
   copycount, newpos:integer;
 begin
+  if m_resizeMode=false then
+  begin
+    if fcount=capacity then
+    begin
+      data[flast]:=p;
+      if flast=0 then
+      begin
+        flast:=capacity-1;
+        ffirst:=0;
+      end
+      else
+      begin
+        ffirst:=flast;
+        dec(flast);
+      end;
+      exit;
+    end;
+  end;
+
   resize;
   if ffirst=0 then
   begin

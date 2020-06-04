@@ -26,6 +26,7 @@ type
     PickFrontBtn: TButton;
     PushFrontBtn: TButton;
     PushBackBtn: TButton;
+    DropBtn: TButton;
     procedure Button2Click(Sender: TObject);
     procedure TestSummSkripnikClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -33,6 +34,7 @@ type
     procedure PushBackBtnClick(Sender: TObject);
     procedure PickBackBtnClick(Sender: TObject);
     procedure PushFrontBtnClick(Sender: TObject);
+    procedure DropBtnClick(Sender: TObject);
   private
     Fr, t1, t2: Int64;
     Dt: Extended;
@@ -75,11 +77,18 @@ begin
     Memo2.Text := Memo2.Text + IntToStr(i) + ' = ' + BoolToStr( IsProcessorFeaturePresent(i), true ) + #13#10;
 end;
 
+procedure TForm1.DropBtnClick(Sender: TObject);
+begin
+  q.drop_front(1);
+  showQueue;
+end;
+
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   //q:=cQueue_p2d.create;
   q:=cQueue<point2d>.create;
   q.capacity:=6;
+  q.m_resizeMode:=false;
   q.push_back(p2d(1,0));
   q.push_back(p2d(2,0));
   q.push_back(p2d(3,0));

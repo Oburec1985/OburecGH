@@ -37,6 +37,13 @@ type
     z:double;
   end;
 
+  point4d=record
+    x,
+    y,
+    z,
+    u:double;
+  end;
+
 
   fRect = record
     BottomLeft: Point2;

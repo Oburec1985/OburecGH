@@ -8,9 +8,10 @@ uses
   uControlObj, uEventList, udrawobj,
   uComponentservises, uEventTypes, ComCtrls, uBtnListView, recorder,
   ucommonmath, MathFunction, uMyMath, uDoubleCursor, uChartEvents, uLabel,
-  uRecorderEvents, ubaseObj, uCommonTypes, uEditProfileFrm, uControlWarnFrm,
+  uRecorderEvents, ubaseObj, uEditProfileFrm, uControlWarnFrm,
   uRTrig, uRCFunc, ubasealg, uBuffTrend1d, utextlabel, tags,
   PluginClass, ImgList, uChart, uGrmsSrcAlg, uPhaseAlg, usetlist, upage,
+  uCommonTypes,
   uGraphObj,
   uBasePage,
   OpenGL,
@@ -34,9 +35,8 @@ type
     fBuffLength: double;
     fTaxodx: double; // шаг между посчитанными спектрами по времени
     // значение комплексного спектра на главной гармонике
-    fTahoBuff: cqueue<point3d>;
-    // значение частоты главной гармоники
-    fTahoBuffFreq: cqueue<point3d>;
+    // x y= re im; z = t; u = Fmax
+    fTahoBuff: cqueue<point4d>;
     fSpmdx: double; // шаг между посчитанными спектрами по времени
     // значение комплексного спектра на главной гармонике
     // queue
@@ -47,7 +47,7 @@ type
     fTahoValue: double;
     ftaho, fspm: cspm;
 
-    fOut: array of point3d;
+    fOut: cqueue<point2d>;
     // число расчитанных точек/ счет внутри fOut
     pCount: integer;
   protected
@@ -78,9 +78,6 @@ type
     // отрисовка линии
     fListId: cardinal;
     fneedrecompile: boolean;
-    // всего посчитано точек
-    fPCount: integer;
-    fFull: boolean; // буфер переполнился, начинаем затираьт хвост
     // рисовать линии
     fDrawLines: boolean;
     // рисовать точки
@@ -89,9 +86,9 @@ type
     fPointColor: point3;
 
     xTime, yTime: double;
+    procedure SetCount(i: integer);
   public
     m_irAlg: cIRAlg;
-    fxyPoints: array of point2d;
     // fxpoints, fypoints:array of double;
   protected
   protected
@@ -101,8 +98,8 @@ type
     procedure setmainParent(p: cbaseObj); override;
     // число точек
     function getCount: integer; override;
-    procedure SetCount(i: integer); override;
   public
+    procedure push(p2:point2d);
     // пересчитать данные из fspm, ftahospm в отрисовываемые вершины
     procedure updateData;
     //
@@ -402,6 +399,7 @@ procedure TIRDiagramFrm.ChartInit(sender: tobject);
 var
   i: integer;
   g: IRDiagramTag;
+  p2:point2d;
 begin
   fpage := cIRPage.create;
   chart.name := 'IRDiagram';
@@ -421,8 +419,9 @@ begin
   g.Count := 10;
   for i := 0 to g.Count - 1 do
   begin
-    g.fxyPoints[i].x := i;
-    g.fxyPoints[i].y := i * i;
+    p2.x:=i;
+    p2.y:=i*i;
+    g.push(p2);
   end;
   g.ConfigTag('3- 1', '18- 1_taho');
   g.fneedrecompile := true;
@@ -666,6 +665,7 @@ procedure IRDiagramTag.compile;
 var
   i, ind: integer;
   lp: point2;
+  p2:point2d;
 begin
   if fneedrecompile then
   begin
@@ -681,8 +681,9 @@ begin
       glBegin(GL_LINE_STRIP);
       for i := 0 to Count - 1 do
       begin
-        lp.x := fxyPoints[i].x;
-        lp.y := fxyPoints[i].y;
+        p2:=m_irAlg.fOut.peak(i);
+        lp.x := p2.x;
+        lp.y := p2.y;
         glVertex2fv(@lp);
       end;
       glEnd;
@@ -694,8 +695,9 @@ begin
       glBegin(GL_Points);
       for i := 0 to Count - 1 do
       begin
-        lp.x := fxyPoints[i].x;
-        lp.y := fxyPoints[i].y;
+        p2:=m_irAlg.fOut.peak(i);
+        lp.x := p2.x;
+        lp.y := p2.y;
         glVertex2fv(@lp);
       end;
       glEnd;
@@ -747,12 +749,12 @@ end;
 
 function IRDiagramTag.getCount: integer;
 begin
-  if fFull then
-  begin
-    result := length(fxyPoints);
-  end
-  else
-    result := fPCount;
+  result := m_irAlg.fout.size;
+end;
+
+procedure IRDiagramTag.push(p2: point2d);
+begin
+  m_irAlg.fOut.push_back(p2);
 end;
 
 procedure IRDiagramTag.setmainParent(p: cbaseObj);
@@ -767,28 +769,10 @@ var
 begin
   if m_irAlg.newData then
   begin
-    for i := 0 to m_irAlg.fSpmBuff.SIZE - 1 do
-    begin
-      fxyPoints[fPCount].x := m_irAlg.fOut[i].x;
-      fxyPoints[fPCount].y := m_irAlg.fOut[i].y;
-      inc(fPCount);
-      if fPCount = length(fxyPoints) then
-      begin
-        fPCount := 0;
-        fFull := true;
-      end;
-      m_irAlg.resetdata;
-    end;
+
   end;
 end;
 
-procedure IRDiagramTag.SetCount(i: integer);
-begin
-  fPCount := i;
-  // setlength(fXpoints, i);
-  // setlength(fYpoints, i);
-  setlength(fxyPoints, i);
-end;
 
 { cIRPage }
 procedure cIRPage.BeforeDrawChild;
@@ -1235,9 +1219,11 @@ end;
 constructor cIRAlg.create;
 begin
   inherited;
+  fOut:=cqueue<point2d>.create;
+  fOut.capacity:=1000;
+
   fSpmBuff := cqueue<point3d>.create;
-  fTahoBuff := cqueue<point3d>.create;
-  fTahoBuffFreq := cqueue<point3d>.create;
+  fTahoBuff := cqueue<point4d>.create;
 
   fband.x:=0.8;
   fband.y:=1.2;
@@ -1252,7 +1238,6 @@ begin
   inherited;
   fSpmBuff.destroy;
   fTahoBuff.destroy;
-  fTahoBuffFreq.destroy;
 end;
 
 procedure cIRAlg.doOnStart;
@@ -1260,12 +1245,8 @@ begin
   inherited;
   fSpmBuff.clear;
   fTahoBuff.clear;
-  fTahoBuffFreq.clear;
 
   pCount := 0;
-
-  IRDiagramTag(fowner).fFull := false;
-  IRDiagramTag(fowner).fPCount := 0;
 end;
 
 procedure cIRAlg.doUpdateSrcData(sender: tobject);
@@ -1278,6 +1259,7 @@ var
   c: TComplex_d;
   p2: point2d;
   p3: point3d;
+  p4: point4d;
   bandwidthint, startind, endind, spmInd: integer;
 begin
   x := ftaho.max.x;
@@ -1297,13 +1279,12 @@ begin
     fband_i.x := startind;
     fband_i.y := endind;
     p2 := point2d(tCmxArray_d(ftaho.cmplx_resArray.p)[ftaho.minmax_i.y]);
-    p3.x := p2.x;
-    p3.y := p2.y;
-    p3.z := ftaho.LastBlockTime;
+    p4.x := p2.x;
+    p4.y := p2.y;
+    p4.z := ftaho.LastBlockTime;
+    p4.u := x;
 
-    fTahoBuff.push_back(p3);
-    p3.x := x;
-    fTahoBuffFreq.push_back(p3);
+    fTahoBuff.push_back(p4);
   end;
   if sender = fspm then
   begin
@@ -1332,46 +1313,59 @@ end;
 
 procedure cIRAlg.doEndEvalBlock(sender: tobject);
 var
-  i, j: integer;
-  a1, a2, alfa, alfa1, halfstepspm, halfstepTaho: double;
+  i, j, dropspm, droptaho: integer;
+
+  a1, a2, alfa, alfa1,
+  halfstepspm,
+  halfstepTaho: double;
+
   c1, c2: TComplex_d;
-  spm3, taho3: point3d;
+  p2:point2d;
+  spm3: point3d;
+  taho4: point4d;
 begin
+  if fTahoBuff.SIZE=0 then exit;
+  if fSpmBuff.SIZE=0 then exit;
+
   halfstepspm := fSpmdx / 2;
   halfstepTaho := fTaxodx / 2;
+
   for i := 0 to fSpmBuff.SIZE - 1 do
   begin
     spm3 := fSpmBuff.Peak(i);
     for j := 0 to fTahoBuff.SIZE - 1 do
     begin
-      taho3 := point3d(fSpmBuff.Peak(i));
-      if spm3.z - taho3.z < halfstepspm then
+      taho4 := point4d(fTahoBuff.Peak(i));
+      if (spm3.z - taho4.z)<halfstepspm then
       begin
+        dropspm:=i;
+        droptaho:=j;
         c1.re := spm3.x;
         c1.im := spm3.y;
-        c2.re := taho3.x;
-        c2.im := taho3.y;
+        c2.re := taho4.x;
+        c2.im := taho4.y;
         a1 := abs(c1);
         a2 := abs(c2);
         alfa := (c1.re * c2.re + c1.im * c2.im) / (a1 * a2);
         alfa := arccos(alfa);
         alfa1 := ArcTan(c1.im / c1.re) - alfa;
 
-        fOut[i + pCount].x := a1 * cos(alfa1);
-        fOut[i + pCount].y := a1 * sin(alfa1);
-        inc(pCount);
+        p2.x := a1 * cos(alfa1);
+        p2.y := a1 * sin(alfa1);
+        fout.push_back(p2);
         fnewData := true;
         break;
       end;
     end;
   end;
+  fSpmBuff.drop_front(dropSpm);
+  fTahoBuff.drop_front(dropTaho);
 end;
 
 procedure cIRAlg.resetdata;
 begin
   fSpmBuff.clear;
   fTahoBuff.clear;
-  fTahoBuffFreq.clear;
   // счет внутри fOut
   pCount := 0;
 end;
@@ -1435,7 +1429,6 @@ begin
   j := round(fBuffLength / fTaxodx);
   if i < j then
     i := j;
-  setlength(fOut, i);
 end;
 
 end.
