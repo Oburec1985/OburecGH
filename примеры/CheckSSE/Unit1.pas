@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Math, uHardwareMath, uQueue, ucommontypes;
+  Dialogs, StdCtrls, Math, uHardwareMath, uQueue, ucommontypes, complex;
 
 type
 
@@ -96,7 +96,8 @@ begin
   q.push_back(p2d(5,0));
   q.push_back(p2d(6,0));
   counter:=7;
-
+  //d:=phase_deg(0,-1,2,0);
+  //showmessage(floattostr(d));
   showQueue;
 end;
 

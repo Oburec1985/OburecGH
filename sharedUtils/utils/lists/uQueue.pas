@@ -70,7 +70,9 @@ end;
 
 constructor cQueue<T>.create;
 begin
+  m_resizeMode:=true;
   fCount:=0;
+  capacity:=10;
   fFirst:=-1;
   fLast:=-1;
 end;
@@ -149,15 +151,17 @@ var
 begin
   if m_resizeMode=false then
   begin
+    // посмотреть внимательнее в случае реализации метода drop_back
     if fcount=capacity then
     begin
-      data[fFirst]:=p;
+      data[fFirst]:=p; // выталкиваем первого в очереди
       if ffirst=(capacity-1) then
       begin
         ffirst:=0;
       end
       else
       begin
+        flast:=ffirst;
         inc(ffirst);
       end;
       exit;
@@ -211,8 +215,9 @@ begin
       end
       else
       begin
+        newpos:=flast;
         ffirst:=flast;
-        dec(flast);
+        flast:=ffirst-1;
       end;
       exit;
     end;

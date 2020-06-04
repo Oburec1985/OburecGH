@@ -1,4 +1,6 @@
 ﻿unit complex;
+
+
  {Модуль Complex содержит описание типа TComplex (Тип комплексных чисел),
  в виде класса, с переопределением (перегрузкой) основных операция над
  числами (+,-,/,*)  см ниже.
@@ -43,7 +45,7 @@ StrToComplex(S:String):TComplex; //преобразование строки в 
 interface
 
 uses
-   SysUtils,Math;
+   SysUtils,Math, ucommonmath;
 
 
 const
@@ -107,6 +109,9 @@ Type
    //function Log(const Basa:Real;const X:TComplex):TComplex; //логарифм с базой Basa
   function exp(const X:TComplex_d):TComplex_d;//экспонетна от комплексного числа
 
+  function phase_deg(r1,i1,r2,i2:double):double;
+  function phase_rad(r1,i1,r2,i2:double):double;
+
      //    Тригонометрические функции от комплексного типа
      //function Cos  (const X:TComplex):TComplex;
      //function Sin  (const X:TComplex):TComplex;
@@ -139,7 +144,80 @@ Type
 
 implementation
 
+const
+  c_radtodeg = 57.295779513;
+  c_degtorad = 0.01745329251994329576923690768489;
+  c_pi_half=c_pi/2;
+  c_pi_double=c_pi*2;
+
 //uses FormComplex;
+
+function phase_deg(r1,i1,r2,i2:double):double;
+BEGIN
+  result:=phase_rad(r1,i1,r2,i2)*c_radtodeg;
+END;
+
+function getquad(r,i:double):integer;
+begin
+  if r>0 then
+  begin
+    if i>0 then
+    begin
+      result:=1;
+    end
+    else
+    begin
+      result:=4;
+    end;
+  end
+  else
+  begin
+    if i>0 then
+    begin
+      result:=2;
+    end
+    else
+    begin
+      result:=3;
+    end;
+  end;
+end;
+
+function PhaseCmx_rad(r,i:double):double;
+var
+  q:integer;
+  a:double;
+begin
+  if r=0 then
+  begin
+    if i>0 then
+      a:=c_pi_half
+    else
+      a:=c_pi_half;
+  end
+  else
+  begin
+    a:=ArcTan(i/r);
+  end;
+  q:=getquad(r,i);
+  case q of
+   3:a:=a+c_pi;
+   2:a:=a+c_pi_double;
+  end;
+  result:=a;
+end;
+
+function phase_rad(r1,i1,r2,i2:double):double;
+var
+  a1, a2:double;
+begin
+  //m1:=sqrt(r1*r1+i1*i1);
+  //m2:=sqrt(r2*r2+i2*i2);
+  //result:=arccos((r1*r2+i1*i2)/m1*m2);
+  a1:=PhaseCmx_rad(r1,i1);
+  a2:=PhaseCmx_rad(r2,i2);
+  result:=a1-a2;
+end;
 
 class operator TComplex_d.Add(d: double; c:TComplex_d): TComplex_d;
 begin
@@ -394,4 +472,3 @@ begin
 end;
 
 end.
-

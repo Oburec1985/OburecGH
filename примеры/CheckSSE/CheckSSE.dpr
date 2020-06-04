@@ -3,9 +3,8 @@ program CheckSSE;
 uses
   Forms,
   Unit1 in 'Unit1.pas' {Form1},
-  //Iterative_fft in '..\..\tests\delphi\Iterative_fft.pas',
-  complex in '..\..\tests\delphi\complex.pas',
-  uQueue in '..\..\sharedUtils\utils\lists\uQueue.pas';
+  uQueue in '..\..\sharedUtils\utils\lists\uQueue.pas',
+  complex in '..\..\sharedUtils\math\FFT_койнов\complex.pas';
 
 {$R *.res}
 

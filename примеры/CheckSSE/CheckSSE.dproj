@@ -42,8 +42,8 @@
 			<DCCReference Include="Unit1.pas">
 				<Form>Form1</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\tests\delphi\complex.pas"/>
 			<DCCReference Include="..\..\sharedUtils\utils\lists\uQueue.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\FFT_койнов\complex.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
