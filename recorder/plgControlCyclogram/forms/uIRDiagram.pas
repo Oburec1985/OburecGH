@@ -10,7 +10,8 @@ uses
   ucommonmath, MathFunction, uMyMath, uDoubleCursor, uChartEvents, uLabel,
   uRecorderEvents, ubaseObj, uEditProfileFrm, uControlWarnFrm,
   uRTrig, uRCFunc, ubasealg, uBuffTrend1d, utextlabel, tags,
-  PluginClass, ImgList, uChart, uGrmsSrcAlg, uPhaseAlg, usetlist, upage,
+  PluginClass,
+  ImgList, uChart, uGrmsSrcAlg, uPhaseAlg, usetlist, upage,
   uCommonTypes,
   uGraphObj,
   uBasePage,
@@ -24,6 +25,12 @@ uses
   uSpm;
 
 type
+  spmPoint = record
+    spm: array of point2d;
+    t: double;
+    ind: integer;
+    len: integer;
+  end;
 
   // алгоритм который собирает данные спектров канала и тахо в единий канал
   cIRAlg = class(cbasealg)
@@ -40,7 +47,7 @@ type
     fSpmdx: double; // шаг между посчитанными спектрами по времени
     // значение комплексного спектра на главной гармонике
     // queue
-    fSpmBuff: cqueue<point3d>;
+    fSpmBuff: cqueue<spmPoint>;
     // полоса анализа вокруг главной частоты тахо в долях
     fband: point2d;
     fband_i: point2d;
@@ -237,6 +244,8 @@ type
     function doCreateForm: cRecBasicIFrm; override;
     procedure doSetDefSize(var PSize: SIZE); override;
   end;
+
+
 
 var
   g_IRDiagramFactory: cIRDiagramFactory;
@@ -570,7 +579,7 @@ begin
     g := getGraph(i);
     if g.m_irAlg.newData then
     begin
-      g.fneedrecompile:=true;
+      g.fneedrecompile := true;
     end;
   end;
   chart.redraw;
@@ -776,11 +785,11 @@ procedure IRDiagramTag.updateData;
 var
   i: integer;
 begin
-  //if m_irAlg.newData then
-  //begin
-  //  m_irAlg.newData := false;
-  //  fneedrecompile := true;
-  //end;
+  // if m_irAlg.newData then
+  // begin
+  // m_irAlg.newData := false;
+  // fneedrecompile := true;
+  // end;
 end;
 
 { cIRPage }
@@ -1232,7 +1241,7 @@ begin
   fOut.capacity := 10;
   fOut.m_resizeMode := false;
 
-  fSpmBuff := cqueue<point3d>.create;
+  fSpmBuff := cqueue<spmPoint>.create;
   fTahoBuff := cqueue<point4d>.create;
 
   fband.x := 0.8;
@@ -1262,15 +1271,15 @@ end;
 procedure cIRAlg.doUpdateSrcData(sender: tobject);
 var
   // индекс в тестируемом спектре главной частоты по тахо
-  i: integer;
+  i, ind: integer;
   res: double;
   // updatetaho
   t1, t2, x: double;
   c: TComplex_d;
   p2: point2d;
-  p3: point3d;
+  sp: spmPoint;
   p4: point4d;
-  bandwidthint, startind, endind, spmInd: integer;
+  bandwidthint, startind, endind, startind1, endind1, spmInd: integer;
 begin
   x := ftaho.max.x;
   fTahoValue := x;
@@ -1305,32 +1314,66 @@ begin
     endind := round(x * fband.y / fspm.spmdX);
     if endind >= AlignBlockLength(fspm.m_rms) then
       endind := AlignBlockLength(fspm.m_rms) - 1;
+    ind := 0;
     for i := startind to endind do
     begin
       if TDoubleArray(fspm.m_rms.p)[i] > res then
       begin
         c := tCmxArray_d(fspm.cmplx_resArray.p)[i];
-        res := TDoubleArray(fspm.m_rms.p)[i]
+        res := TDoubleArray(fspm.m_rms.p)[i];
+        ind := i;
       end;
     end;
-    p3.x := c.re;
-    p3.y := c.im;
-    p3.z := fspm.LastBlockTime;
-
-    fSpmBuff.push_back(p3);
+    sp.len := 1;
+    sp.ind := ind;
+    sp.t := fspm.LastBlockTime;
+    startind1 := ind - sp.len;
+    endind1 := ind + sp.len;
+    if startind1 < startind then
+      startind1 := startind;
+    if endind1 < endind then
+      endind1 := endind;
+    setlength(sp.spm, endind1 - startind1 + 1);
+    for i := startind1 to endind1 - 1 do
+    begin
+      c := tCmxArray_d(fspm.cmplx_resArray.p)[i];
+      sp.spm[i - startind1].x := c.re;
+      sp.spm[i - startind1].y := c.im;
+    end;
+    fSpmBuff.push_back(sp);
   end;
 end;
 
+function Cmplx_mult_sopr_p2d(c1,c2:point2d):point2d;
+begin
+  result.x := c1.x * c2.x + c1.y * c2.y;
+  result.y := c1.y * c2.x - c1.x*c2.y;
+  //mag := sqrt(TComplex1Darray(res.p)[i].y * TComplex1Darray(res.p)[i].y + TComplex1Darray(res.p)[i].x * TComplex1Darray(res.p)[i].x);
+  //timer.Free;
+  //phase := arctan(TComplex1Darray(res.p)[maxind].y / TComplex1Darray(res.p)[maxind].x) * c_radtodeg;
+end;
+
+function Cmplx_mult_sopr_cmx(c1,c2:TComplex_d):point2d;
+begin
+  result.x := c1.re * c2.re + c1.im * c2.im;
+  result.y := c1.im * c2.re - c1.re*c2.im;
+  //mag := sqrt(TComplex1Darray(res.p)[i].y * TComplex1Darray(res.p)[i].y + TComplex1Darray(res.p)[i].x * TComplex1Darray(res.p)[i].x);
+  //timer.Free;
+  //phase := arctan(TComplex1Darray(res.p)[maxind].y / TComplex1Darray(res.p)[maxind].x) * c_radtodeg;
+end;
+
+
 procedure cIRAlg.doEndEvalBlock(sender: tobject);
 var
-  i, j, dropspm, droptaho: integer;
+  i, j, k, dropspm, droptaho: integer;
 
-  a1, a2, alfa1, halfstepspm, halfstepTaho: double;
+  temp, a1a2, a1, a2, alfa1, halfstepspm, halfstepTaho: double;
 
   c1, c2: TComplex_d;
-  p2: point2d;
-  spm3: point3d;
+  res,p2: point2d;
+  spm3: spmPoint;
   taho4: point4d;
+  str: string;
 begin
   if fTahoBuff.SIZE = 0 then
     exit;
@@ -1339,29 +1382,55 @@ begin
 
   halfstepspm := fSpmdx / 2;
   halfstepTaho := fTaxodx / 2;
-
+  temp := 0;
+  str := '';
   for i := 0 to fSpmBuff.SIZE - 1 do
   begin
     spm3 := fSpmBuff.peak(i);
     for j := 0 to fTahoBuff.SIZE - 1 do
     begin
       taho4 := point4d(fTahoBuff.peak(i));
-      if (spm3.z - taho4.z) < halfstepspm then
+      if (spm3.t - taho4.z) < halfstepspm then
       begin
-        dropspm := i;
-        droptaho := j;
-        c1.re := spm3.x;
-        c1.im := spm3.y;
-        c2.re := taho4.x;
-        c2.im := taho4.y;
-        a1 := abs(c1);
-        a2 := abs(c2);
-        alfa1:=phase_rad(c1.re,c1.im,c2.re,c2.im);
+        str := str + 'spm_t=' + formatstrNoE(spm3.t, 4)
+          + ' Taho_t=' + formatstrNoE(taho4.z, 4) + '; ';
+        for k := 0 to spm3.len - 1 do
+        begin
+          dropspm := i;
+          droptaho := j;
+          p2 := spm3.spm[k];
+          c1.re := p2.x;
+          c1.im := p2.y;
+          c2.re := taho4.x;
+          c2.im := taho4.y;
+          res:=Cmplx_mult_sopr_cmx(c1,c2);
+          a1a2:=sqrt(sqr(res.x)+sqr(res.y));
+          alfa1:=arctan(res.y / res.x) * c_radtodeg;
+          str := str + 'A=' + formatstrNoE(a1a2, 4)+ ' Phase=' + formatstrNoE(alfa1, 4) + '; ';
+          a1 := abs(c1);
+          a2 := abs(c2);
+          str := str + 'spm_ri=' + formatstrNoE(c1.re, 4) + ';' + formatstrNoE
+            (c1.im, 4);
+          str := str + 'taho_ri=' + formatstrNoE(c2.re, 4) + ';' + formatstrNoE
+            (c2.im, 4);
 
-        p2.x := a1 * cos(alfa1);
-        p2.y := a1 * sin(alfa1);
-        fOut.push_back(p2);
-        fnewData := true;
+          alfa1 := phase_rad(c1.re, c1.im, c2.re, c2.im);
+          str := str + 'alfa=' + formatstrNoE(alfa1, 4)
+            + '; spm_A=' + formatstrNoE(a1, 4) + '; taho_A=' + formatstrNoE
+            (a2, 4);
+          a1a2 := a1 * a2;
+          str := str + 'A1A2=' + formatstrNoE(a1a2, 4);
+          if a1a2 > temp then
+          begin
+            p2.x := a1 * cos(alfa1);
+            p2.y := a1 * sin(alfa1);
+            str := str + 'k=' + inttostr(k) + 'p2=' + formatstrNoE(p2.x, 4)
+              + ';' + formatstrNoE(p2.y, 4);
+            fOut.push_back(p2);
+          end;
+          logMessage(str);
+          fnewData := true;
+        end;
         break;
       end;
     end;
