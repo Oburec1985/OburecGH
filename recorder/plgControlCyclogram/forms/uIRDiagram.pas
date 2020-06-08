@@ -1331,16 +1331,23 @@ begin
     endind1 := ind + sp.len;
     if startind1 < startind then
       startind1 := startind;
-    if endind1 < endind then
+    if endind1 > endind then
       endind1 := endind;
-    setlength(sp.spm, endind1 - startind1 + 1);
-    for i := startind1 to endind1 - 1 do
+    if endind1>startind1 + 1 then
     begin
-      c := tCmxArray_d(fspm.cmplx_resArray.p)[i];
-      sp.spm[i - startind1].x := c.re;
-      sp.spm[i - startind1].y := c.im;
+      setlength(sp.spm, endind1 - startind1 + 1);
+      for i := startind1 to endind1 do
+      begin
+        c := tCmxArray_d(fspm.cmplx_resArray.p)[i];
+        sp.spm[i - startind1].x := c.re;
+        sp.spm[i - startind1].y := c.im;
+      end;
+      fSpmBuff.push_back(sp);
+    end
+    else
+    begin
+      //showmessage('error');
     end;
-    fSpmBuff.push_back(sp);
   end;
 end;
 
@@ -1365,12 +1372,12 @@ end;
 
 procedure cIRAlg.doEndEvalBlock(sender: tobject);
 var
-  i, j, k, dropspm, droptaho: integer;
+  i, j, k,maxind, dropspm, droptaho: integer;
 
   temp, a1a2, a1, a2, alfa1, halfstepspm, halfstepTaho: double;
 
   c1, c2: TComplex_d;
-  res,p2: point2d;
+  res,p2, maxp2: point2d;
   spm3: spmPoint;
   taho4: point4d;
   str: string;
@@ -1394,7 +1401,9 @@ begin
       begin
         str := str + 'spm_t=' + formatstrNoE(spm3.t, 4)
           + ' Taho_t=' + formatstrNoE(taho4.z, 4) + '; ';
-        for k := 0 to spm3.len - 1 do
+        maxp2:=p2d(0,0);
+        temp:=0;
+        for k := 0 to length(spm3.spm)-1 do
         begin
           dropspm := i;
           droptaho := j;
@@ -1422,15 +1431,19 @@ begin
           str := str + 'A1A2=' + formatstrNoE(a1a2, 4);
           if a1a2 > temp then
           begin
+            temp:=a1a2;
             p2.x := a1 * cos(alfa1);
             p2.y := a1 * sin(alfa1);
+            maxp2:=p2;
             str := str + 'k=' + inttostr(k) + 'p2=' + formatstrNoE(p2.x, 4)
               + ';' + formatstrNoE(p2.y, 4);
+            maxind:=k;
             fOut.push_back(p2);
           end;
           logMessage(str);
-          fnewData := true;
         end;
+        fnewData := true;
+        fOut.push_back(maxp2);
         break;
       end;
     end;
