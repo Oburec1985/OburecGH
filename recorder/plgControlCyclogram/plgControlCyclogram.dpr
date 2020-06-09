@@ -181,7 +181,8 @@ uses
   uCounterAlgFrame in 'forms\uCounterAlgFrame.pas' {CounterAlgFrame: TFrame},
   uRCTags in '..\SharedRUnits\uRCTags.pas',
   uIRDiagram in 'forms\uIRDiagram.pas' {IRDiagramFrm},
-  uQueue in '..\..\sharedUtils\utils\lists\uQueue.pas';
+  uQueue in '..\..\sharedUtils\utils\lists\uQueue.pas',
+  uGenSignalsFrm in 'forms\uGenSignalsFrm.pas' {GenSignalsFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

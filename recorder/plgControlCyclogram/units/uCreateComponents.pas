@@ -40,6 +40,7 @@ uses
   uTagInfoEditFrm,
   uCyclogramReportFrm,
   uIRDiagram,
+  uGenSignalsFrm,
   uMBaseControl;
 
 type
@@ -334,6 +335,10 @@ begin
 
   g_IRDiagramFactory:=cIRDiagramFactory.create;
   compMng.Add(g_IRDiagramFactory);
+
+  g_GenSignalsFactory:=cGenSignalsFactory.create;
+  compMng.Add(g_GenSignalsFactory);
+
 
   cfg := extractfiledir(getRConfig);
   if DirectoryExists(cfg) then

@@ -11,6 +11,7 @@ uses
   uRecorderEvents, ubaseObj, uEditProfileFrm, uControlWarnFrm,
   uRTrig, uRCFunc, ubasealg, uBuffTrend1d, utextlabel, tags,
   PluginClass,
+  blaccess,
   ImgList, uChart, uGrmsSrcAlg, uPhaseAlg, usetlist, upage,
   uCommonTypes,
   uGraphObj,
