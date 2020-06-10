@@ -2158,6 +2158,11 @@ begin
   LeaveCriticalSection(cs_state);
 end;
 
+procedure cControlObj.entercs;
+begin
+  EnterCriticalSection(cs_state);
+end;
+
 function cControlObj.GetCheckOnMode: boolean;
 var
   // p:cProgramObj;
@@ -2177,10 +2182,6 @@ begin
   result := t.m_useTolerance;
 end;
 
-procedure cControlObj.entercs;
-begin
-  EnterCriticalSection(cs_state);
-end;
 
 procedure cControlObj.SaveObjAttributes(xmlNode: txmlnode);
 var

@@ -20,8 +20,6 @@ object GenSignalsFrm: TGenSignalsFrm
     Height = 196
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 353
-    ExplicitHeight = 291
     object AmpLabel: TLabel
       Left = 128
       Top = 4
@@ -62,6 +60,7 @@ object GenSignalsFrm: TGenSignalsFrm
       Height = 26
       Increment = 0.100000000000000000
       TabOrder = 1
+      OnChange = AmpSEChange
     end
     object FreqSE: TFloatSpinEdit
       Left = 128
@@ -78,6 +77,7 @@ object GenSignalsFrm: TGenSignalsFrm
       Height = 26
       Increment = 0.100000000000000000
       TabOrder = 3
+      OnChange = PhaseSEChange
     end
   end
   object SignalsLB: TListBox
@@ -87,9 +87,5 @@ object GenSignalsFrm: TGenSignalsFrm
     Height = 196
     Align = alRight
     TabOrder = 1
-  end
-  object Timer1: TTimer
-    Left = 8
-    Top = 136
   end
 end

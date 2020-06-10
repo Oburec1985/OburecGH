@@ -20,11 +20,30 @@ type
   public
     m_name:string;
     m_type:integer;
-    m_amp:double;
     m_freq:double;
-    m_phase:double;
+    m_phase0:double;
     m_t:ctag;
+    m_dPhase:double;
+  private
+    m_amp:double;
+    m_Phase:double;
+    cs:TRTLCriticalSection;
+  private
+    procedure InitCS;
+    procedure DeleteCS;
+    procedure entercs;
+    procedure exitcs;
+  protected
+    function getphase:double;
+    procedure setphase(p:double);
+    function getA:double;
+    procedure setA(a:double);
+    function getF:double;
+    procedure setF(f:double);
   public
+    property Freq:double read getF write setF;
+    property Amp:double read getA write setA;
+    property Phase:double read getPhase write setPhase;
     // p_freq - частота дикретизации
     constructor create(sname:string; p_freq:double);
     destructor destroy;
@@ -40,17 +59,23 @@ type
     AmpSE: TFloatSpinEdit;
     FreqSE: TFloatSpinEdit;
     PhaseSE: TFloatSpinEdit;
-    Timer1: TTimer;
+    procedure AmpSEChange(Sender: TObject);
+    procedure PhaseSEChange(Sender: TObject);
   private
     fcapacity: integer;
     fcount: integer;
+    signals:tlist;
   public
     m_tag: ctag;
     lastval: integer;
   private
+    procedure dostop;
   protected
+    function ActivSignal:cGenSig;
     procedure RBtnClick(Sender: TObject);
-    procedure UpdateData;
+    procedure UpdateData(sender:tobject);
+    function genVal(phase:double;s:cGenSig):double;
+    procedure dostart;
   public
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -67,12 +92,15 @@ type
   end;
 
   cGenSignalsFactory = class(cRecBasicFactory)
+  public
+    Timer1: TTimer;
   private
     m_counter: integer;
   protected
     procedure doUpdateData(Sender: TObject);
     procedure doChangeRState(Sender: TObject);
     procedure doStart;
+    procedure doStop;
     procedure CreateEvents;
     procedure DestroyEvents;
   public
@@ -99,6 +127,11 @@ var
 
 implementation
 
+const
+  c_sin = 0;
+  c_random = 1;
+  c_saw = 2;
+
 {$R *.dfm}
 
 { cGenSignalsFactory }
@@ -110,11 +143,15 @@ begin
   m_name := c_Name;
   m_picname := c_Pic;
   m_Guid := IID_GENSIGNALS;
+  Timer1:=TTimer.Create(nil);
+  Timer1.OnTimer:=doUpdateData;
   CreateEvents;
 end;
 
 destructor cGenSignalsFactory.destroy;
 begin
+  Timer1.Enabled:=false;
+  Timer1.destroy;
   DestroyEvents;
   inherited;
 end;
@@ -122,14 +159,14 @@ end;
 procedure cGenSignalsFactory.CreateEvents;
 begin
   //addplgevent('cPolarFactory_doUpdateData', c_RUpdateData, doUpdateData);
-  //addplgevent('cPolarFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
+  addplgevent('cGenSignalsFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
 end;
 
 
 procedure cGenSignalsFactory.DestroyEvents;
 begin
   //removeplgEvent(doUpdateData, c_RUpdateData);
-  //removeplgEvent(doChangeRState, c_RC_DoChangeRCState);
+  removeplgEvent(doChangeRState, c_RC_DoChangeRCState);
 end;
 
 procedure cGenSignalsFactory.doChangeRState(Sender: TObject);
@@ -149,7 +186,7 @@ begin
       end;
     RSt_ViewToStop:
       begin
-
+        doStop;
       end;
     RSt_ViewToRec:
       begin
@@ -165,6 +202,7 @@ begin
       end;
     RSt_RecToStop:
       begin
+        doStop;
       end;
     RSt_RecToView:
       begin
@@ -186,12 +224,33 @@ begin
 end;
 
 procedure cGenSignalsFactory.doStart;
+var
+  I: Integer;
+  sigList:TGenSignalsFrm;
 begin
+  timer1.Enabled:=true;
+  for I := 0 to m_CompList.Count- 1 do
+  begin
+    sigList:=TGenSignalsFrm(GetFrm(i));
+    sigList.dostart;
+  end;
+end;
+
+procedure cGenSignalsFactory.doStop;
+begin
+  timer1.Enabled:=false;
 end;
 
 procedure cGenSignalsFactory.doUpdateData(Sender: TObject);
+var
+  I: Integer;
+  sigList:TGenSignalsFrm;
 begin
-
+  for I := 0 to m_CompList.Count- 1 do
+  begin
+    sigList:=TGenSignalsFrm(GetFrm(i));
+    sigList.UpdateData(nil);
+  end;;
 end;
 
 { IGenSignalsFrm }
@@ -218,6 +277,44 @@ end;
 
 { TGenSignalsFrm }
 
+function TGenSignalsFrm.ActivSignal: cGenSig;
+var
+  I: Integer;
+begin
+  if signals.Count=0 then
+  begin
+    result:=nil;
+    exit;
+  end;
+  for I := 0 to signalsLB.Count - 1 do
+  begin
+    if signalslb.Selected[i] then
+    begin
+      result:=cGenSig(signals.Items[i]);
+      exit;
+    end;
+  end;
+
+  result:=cGenSig(signals.Items[0]);
+end;
+
+procedure TGenSignalsFrm.AmpSEChange(Sender: TObject);
+var
+  s:cgensig;
+begin
+  s:=ActivSignal;
+  s.Amp:=ampse.Value;
+end;
+
+procedure TGenSignalsFrm.PhaseSEChange(Sender: TObject);
+var
+  s:cgensig;
+begin
+  s:=ActivSignal;
+  s.phase:=PhaseSE.Value;
+end;
+
+
 constructor TGenSignalsFrm.create(Aowner: tcomponent);
 begin
   inherited;
@@ -230,11 +327,49 @@ begin
   inherited;
 end;
 
+procedure TGenSignalsFrm.dostart;
+var
+  I: Integer;
+  s:cGenSig;
+begin
+  for I := 0 to signals.Count - 1 do
+  begin
+    s:=cGenSig(signals.items[i]);
+    s.Phase:=s.m_Phase0;
+    // частота процесса на частоту дискретизации
+    s.m_dPhase:=c_2pi*(s.freq/s.m_t.freq);
+  end;
+end;
+
+procedure TGenSignalsFrm.dostop;
+begin
+
+end;
+
+function TGenSignalsFrm.genVal(phase: double; s: cGenSig): double;
+begin
+  case s.m_type of
+    c_sin:
+    begin
+      result:=s.m_amp*sin(phase);
+    end;
+    c_random:
+    begin
+      result:=s.m_amp*Random;
+    end;
+    c_saw:
+    begin
+      result:=s.m_amp*phase/c_2pi;
+    end;
+  end;
+end;
+
 procedure TGenSignalsFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 begin
   inherited;
 
 end;
+
 
 procedure TGenSignalsFrm.RBtnClick(Sender: TObject);
 begin
@@ -244,12 +379,29 @@ end;
 procedure TGenSignalsFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 begin
   inherited;
-
 end;
 
-procedure TGenSignalsFrm.UpdateData;
+procedure TGenSignalsFrm.UpdateData(sender:tobject);
+var
+  I: Integer;
+  s:cGenSig;
+  j, blsize: Integer;
+  p:pointer;
 begin
-
+  for I := 0 to signals.Count - 1 do
+  begin
+    s:=cGenSig(signals.items[i]);
+    blsize:=s.m_t.block.GetBlocksSize;
+    for j := 0 to blsize - 1 do
+    begin
+      s.phase:=s.phase+s.m_dphase;
+      if s.phase>c_2pi then
+        s.phase:=s.phase-c_2pi;
+      s.m_t.m_TagData[j]:=genVal(s.phase,s);
+    end;
+    p:=@s.m_t.m_TagData[0];
+    s.m_t.tag.PushDataEx(p^, BlSize, 0, -1);
+  end;
 end;
 
 { cGenSig }
@@ -258,6 +410,7 @@ constructor cGenSig.create(sname: string; p_freq: double);
 var
   bl: IBlockAccess;
 begin
+  InitCS;
   m_t:=cTag.create;
   ecm;
   m_t.tag:=createVectorTagR8(sname, p_freq, false, false, false);
@@ -271,7 +424,75 @@ end;
 
 destructor cGenSig.destroy;
 begin
+  DeleteCS;
+end;
 
+procedure cGenSig.entercs;
+begin
+  EnterCriticalSection(cs);
+end;
+
+procedure cGenSig.InitCS;
+begin
+  InitializeCriticalSection(cs);
+end;
+
+procedure cGenSig.DeleteCS;
+begin
+  DeleteCriticalSection(cs);
+end;
+
+
+procedure cGenSig.exitcs;
+begin
+  LeaveCriticalSection(cs);
+end;
+
+function cGenSig.getA: double;
+begin
+  entercs;
+  result:=m_amp;
+  exitcs;
+end;
+
+function cGenSig.getF: double;
+begin
+  entercs;
+  result:=m_freq;
+  exitcs;
+end;
+
+procedure cGenSig.setF(f: double);
+begin
+  entercs;
+  m_freq:=F;
+  // частота процесса/ на частоту дискретизации
+  m_dPhase:=c_2pi*(f/m_t.freq);
+  exitcs;
+end;
+
+procedure cGenSig.setA(a: double);
+begin
+  entercs;
+  m_amp:=a;
+  exitcs;
+end;
+
+
+function cGenSig.getphase: double;
+begin
+  entercs;
+  result:=m_phase;
+  exitcs;
+end;
+
+
+
+procedure cGenSig.setphase(p: double);
+begin
+  entercs;
+  m_phase:=p;
+  exitcs;
 end;
 
 end.
