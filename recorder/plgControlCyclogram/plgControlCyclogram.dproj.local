@@ -259,6 +259,8 @@
     <File Path="forms\uIRDiagram.dfm"/>
     <File Path="forms\uGenSignalsFrm.pas"/>
     <File Path="forms\uGenSignalsFrm.dfm"/>
+    <File Path="forms\uGenSignalsEditFrm.pas"/>
+    <File Path="forms\uGenSignalsEditFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\uBaseAlg.pas"/>
     <File Path="units\uBaseAlgNP.pas"/>
@@ -310,5 +312,7 @@
     <Transaction>2020.06.09 22:57:40.568.dfm,G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\forms\Unit3.dfm</Transaction>
     <Transaction>2020.06.09 23:03:37.608.pas,G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\forms\Unit3.pas=G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\forms\uGenSignalsFrm.pas</Transaction>
     <Transaction>2020.06.09 23:03:37.608.dfm,G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\forms\Unit3.dfm=G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\forms\uGenSignalsFrm.dfm</Transaction>
+    <Transaction>2020.06.14 22:48:10.348.pas,G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\Unit3.pas=G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\forms\uGenSignalsEditFrm.pas</Transaction>
+    <Transaction>2020.06.14 22:48:10.348.dfm,G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\forms\uGenSignalsEditFrm.dfm</Transaction>
   </Transactions>
 </BorlandProject>

@@ -400,6 +400,9 @@
 			<DCCReference Include="forms\uGenSignalsFrm.pas">
 				<Form>GenSignalsFrm</Form>
 			</DCCReference>
+			<DCCReference Include="forms\uGenSignalsEditFrm.pas">
+				<Form>GenSignalsEditFrm</Form>
+			</DCCReference>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

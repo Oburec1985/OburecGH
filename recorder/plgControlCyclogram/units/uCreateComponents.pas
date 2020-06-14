@@ -40,6 +40,7 @@ uses
   uTagInfoEditFrm,
   uCyclogramReportFrm,
   uIRDiagram,
+  uGenSignalsEditFrm,
   uGenSignalsFrm,
   uMBaseControl;
 
@@ -168,6 +169,11 @@ begin
   EditPolarFrm:=TEditPolarFrm.Create(nil);
   EditPolarFrm.Show;
   EditPolarFrm.close;
+
+  GenSignalsEditFrm:=tGenSignalsEditFrm.create(nil);
+  GenSignalsEditFrm.Show;
+  GenSignalsEditFrm.close;
+
 
   BandsFrm:=TBandsFrm.Create(nil);
   BandsFrm.Show;

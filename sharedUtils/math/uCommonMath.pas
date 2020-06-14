@@ -61,6 +61,7 @@ function isValue(Str: string): boolean;
 function isDigit(Str: string): boolean;
 // Преобразование строки в число без учета разделителя . или ,
 function strtoFloatExt(Str: string): double;
+function FloatToStrEx(f:double; sep:char):string;
 function strtoIntExt(Str: string): integer;
 // с учетом разделителя
 function readFloatFromIni(ifile:tinifile; sec,ident:string):double;
@@ -1393,6 +1394,22 @@ begin
    result:=strtoInt(str)
   else
     result:=-1;
+end;
+
+function FloatToStrEx(f:double; sep:char):string;
+var
+  p:integer;
+begin
+  result:=floattostr(f);
+  p:=pos(',',result);
+  if p=0 then
+  begin
+    p:=pos('.', result);
+  end;
+  if p<>0 then
+  begin
+    result[p]:=sep;
+  end;
 end;
 
 function strtoFloatExt(Str: string): double;

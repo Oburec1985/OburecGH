@@ -199,6 +199,10 @@ function RStateRec: boolean;
 function RState: dword;
 function GetTagUnits(t: itag): string;
 procedure SetTagUnits(t: itag; s: string);
+// старт работы рекордера
+function RecorderSysTime0: double;
+// системное время рекордера
+function RecorderSysTime: double;
 // период обновления Recorder
 function GetREFRESHPERIOD: double;
 procedure SetMeanEval(t: itag; val: boolean);
@@ -779,6 +783,29 @@ begin
   t.SetProperty(TAGPROP_UNITS, res);
 end;
 
+function RecorderSysTime0: double;
+var
+  res: OleVariant;
+begin
+  g_IR.GetProperty(RCPROP_STARTTIME, res);
+  if not VarIsNull(res) then
+    result := res
+  else
+    result := 0;
+end;
+
+// системное время рекордера
+function RecorderSysTime: double;
+var
+  res: OleVariant;
+begin
+  g_IR.GetProperty(RCPROP_TIME, res);
+  if not VarIsNull(res) then
+    result := res
+  else
+    result := 0;
+end;
+
 function GetREFRESHPERIOD: double;
 var
   res: OleVariant;
@@ -1034,8 +1061,14 @@ end;
 procedure cTag.initTagData(blCount: integer);
 var
   v: OleVariant;
+  size:integer;
 begin
   ftag.GetProperty(TAGPROP_BUFFSIZE, v);
+  size:=round(getrefreshperiod*ftag.GetFreq);
+  if (v=1) and (size>1) then
+  begin
+    v:=size;
+  end;
   // iBlock.GetBlocksSize - дает тот же результат???
   SetLength(m_TagData, integer(v));
   SetLength(m_TagData2d, integer(v));

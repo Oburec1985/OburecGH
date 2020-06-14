@@ -2,7 +2,7 @@ object GenSignalsFrm: TGenSignalsFrm
   Left = 0
   Top = 0
   Caption = 'TGenSignalsFrm'
-  ClientHeight = 196
+  ClientHeight = 201
   ClientWidth = 445
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,7 +17,7 @@ object GenSignalsFrm: TGenSignalsFrm
     Left = 0
     Top = 0
     Width = 288
-    Height = 196
+    Height = 201
     Align = alClient
     TabOrder = 0
     object AmpLabel: TLabel
@@ -40,6 +40,20 @@ object GenSignalsFrm: TGenSignalsFrm
       Width = 68
       Height = 16
       Caption = #1060#1072#1079#1072', '#1075#1088#1072#1076'.'
+    end
+    object FormTimerLabel: TLabel
+      Left = 8
+      Top = 120
+      Width = 45
+      Height = 16
+      Caption = 'T'#1092#1086#1088#1084':'
+    end
+    object SysTimerLabel: TLabel
+      Left = 8
+      Top = 152
+      Width = 31
+      Height = 16
+      Caption = 'Trec:'
     end
     object STypeRG: TRadioGroup
       Left = 0
@@ -84,8 +98,17 @@ object GenSignalsFrm: TGenSignalsFrm
     Left = 288
     Top = 0
     Width = 157
-    Height = 196
+    Height = 201
     Align = alRight
     TabOrder = 1
+    OnClick = SignalsLBClick
+  end
+  object PopupMenu1: TPopupMenu
+    Left = 72
+    Top = 144
+    object N1: TMenuItem
+      Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072
+      OnClick = N1Click
+    end
   end
 end

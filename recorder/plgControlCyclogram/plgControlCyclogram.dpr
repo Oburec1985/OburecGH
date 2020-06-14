@@ -182,7 +182,8 @@ uses
   uRCTags in '..\SharedRUnits\uRCTags.pas',
   uIRDiagram in 'forms\uIRDiagram.pas' {IRDiagramFrm},
   uQueue in '..\..\sharedUtils\utils\lists\uQueue.pas',
-  uGenSignalsFrm in 'forms\uGenSignalsFrm.pas' {GenSignalsFrm};
+  uGenSignalsFrm in 'forms\uGenSignalsFrm.pas' {GenSignalsFrm},
+  uGenSignalsEditFrm in 'forms\uGenSignalsEditFrm.pas' {GenSignalsEditFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}
