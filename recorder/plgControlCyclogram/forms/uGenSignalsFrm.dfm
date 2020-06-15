@@ -19,6 +19,7 @@ object GenSignalsFrm: TGenSignalsFrm
     Width = 288
     Height = 201
     Align = alClient
+    PopupMenu = PopupMenu1
     TabOrder = 0
     object AmpLabel: TLabel
       Left = 128
@@ -65,6 +66,7 @@ object GenSignalsFrm: TGenSignalsFrm
         #1057#1080#1085#1091#1089
         #1055#1080#1083#1072
         #1064#1059#1084)
+      PopupMenu = PopupMenu1
       TabOrder = 0
     end
     object AmpSE: TFloatSpinEdit
@@ -73,6 +75,7 @@ object GenSignalsFrm: TGenSignalsFrm
       Width = 121
       Height = 26
       Increment = 0.100000000000000000
+      PopupMenu = PopupMenu1
       TabOrder = 1
       OnChange = AmpSEChange
     end
@@ -82,6 +85,7 @@ object GenSignalsFrm: TGenSignalsFrm
       Width = 121
       Height = 26
       Increment = 0.100000000000000000
+      PopupMenu = PopupMenu1
       TabOrder = 2
     end
     object PhaseSE: TFloatSpinEdit
@@ -90,6 +94,7 @@ object GenSignalsFrm: TGenSignalsFrm
       Width = 121
       Height = 26
       Increment = 0.100000000000000000
+      PopupMenu = PopupMenu1
       TabOrder = 3
       OnChange = PhaseSEChange
     end
@@ -100,6 +105,7 @@ object GenSignalsFrm: TGenSignalsFrm
     Width = 157
     Height = 201
     Align = alRight
+    PopupMenu = PopupMenu1
     TabOrder = 1
     OnClick = SignalsLBClick
   end

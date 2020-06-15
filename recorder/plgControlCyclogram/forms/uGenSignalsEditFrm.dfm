@@ -76,6 +76,7 @@ object GenSignalsEditFrm: TGenSignalsEditFrm
     Height = 26
     Increment = 0.100000000000000000
     TabOrder = 2
+    Value = 1.000000000000000000
   end
   object FreqSE: TFloatSpinEdit
     Left = 119
@@ -84,6 +85,7 @@ object GenSignalsEditFrm: TGenSignalsEditFrm
     Height = 26
     Increment = 0.100000000000000000
     TabOrder = 3
+    Value = 10.000000000000000000
   end
   object PhaseSE: TFloatSpinEdit
     Left = 119

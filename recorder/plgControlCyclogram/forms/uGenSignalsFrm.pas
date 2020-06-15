@@ -455,7 +455,8 @@ end;
 
 procedure TGenSignalsFrm.N1Click(Sender: TObject);
 begin
-  GenSignalsEditFrm.NewSignal;
+  GenSignalsEditFrm.NewSignal(signals);
+  showsignals;
 end;
 
 procedure TGenSignalsFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);

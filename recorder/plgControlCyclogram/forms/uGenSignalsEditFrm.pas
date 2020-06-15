@@ -70,7 +70,7 @@ begin
   t:=getTagByName(str);
   while t<>nil do
   begin
-    str:=ModName(str);
+    str:=ModName(str, false);
     t:=getTagByName(str);
   end;
   result:=str;
