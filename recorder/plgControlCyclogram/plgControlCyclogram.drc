@@ -1234,7 +1234,7 @@ END
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
 /* forms\uGenSignalsEditFrm.dfm */
-/* G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\forms\uGenSignalsFrm.dfm */
+/* forms\uGenSignalsFrm.dfm */
 /* forms\uEditProfileFrm.dfm */
 /* ..\SharedRUnits\uTagsListFrame.dfm */
 /* forms\uTrigsFrm.dfm */

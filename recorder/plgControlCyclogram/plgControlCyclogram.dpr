@@ -183,7 +183,8 @@ uses
   uIRDiagram in 'forms\uIRDiagram.pas' {IRDiagramFrm},
   uQueue in '..\..\sharedUtils\utils\lists\uQueue.pas',
   uGenSignalsFrm in 'forms\uGenSignalsFrm.pas' {GenSignalsFrm},
-  uGenSignalsEditFrm in 'forms\uGenSignalsEditFrm.pas' {GenSignalsEditFrm};
+  uGenSignalsEditFrm in 'forms\uGenSignalsEditFrm.pas' {GenSignalsEditFrm},
+  uIRDiagramEditFrm in 'forms\uIRDiagramEditFrm.pas' {IRDiagrEditFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

@@ -595,6 +595,10 @@ begin
       ct.tag := it;
       result := true;
     end;
+  end
+  else
+  begin
+    ct.tagname:=tagname;
   end;
 end;
 

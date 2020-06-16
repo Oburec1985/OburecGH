@@ -441,6 +441,7 @@ procedure TIRDiagramFrm.RBtnClick(sender: tobject);
 begin
   if TIRDiagramFrm <> nil then
   begin
+
   end;
 end;
 

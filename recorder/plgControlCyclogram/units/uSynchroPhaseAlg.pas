@@ -313,8 +313,16 @@ begin
   result := false;
   if m_Taho <> nil then
   begin
+    if m_Taho.tag=nil then
+    begin
+      m_Taho.tag:=getTagByName(m_Taho.tagname);;
+    end;
     if m_Taho.tag <> nil then
     begin
+      if m_InTag.tag=nil then
+      begin
+        m_InTag.tag:=getTagByName(m_InTag.tagname);;
+      end;
       if m_InTag.tag <> nil then
       begin
         if m_InTag.freq = m_Taho.freq then
