@@ -35,6 +35,8 @@ type
 
   // алгоритм который собирает данные спектров канала и тахо в единий канал
   cIRAlg = class(cbasealg)
+  public
+    ftaho, fspm: cspm;
   private
     fowner: tobject;
     fnewData: boolean;
@@ -53,17 +55,11 @@ type
     fband: point2d;
     fband_i: point2d;
     fTahoValue: double;
-    ftaho, fspm: cspm;
 
     fOut: cqueue<point2d>;
     // число расчитанных точек/ счет внутри fOut
     pCount: integer;
   protected
-    { function genTagName: string; override;
-      function Getdx: double; override;
-      procedure doAfterload; override;
-      procedure doEval(tag: cTag; time: double); override;
-      procedure doGetData; override; }
     procedure SetProperties(str: string); override;
     function GetProperties: string; override;
     procedure doEndEvalBlock(sender: tobject); override;
@@ -163,7 +159,15 @@ type
 
     procedure PrepareZoom;
     procedure setzoom;
+
+    procedure setYAx(p:point2d);
+    function GetYAxis:point2d;
+
+    procedure SetXAx(p:point2d);
+    function GetXAxis:point2d;
   protected
+    property YAxis:point2d read GetYAxis write setYAx;
+    property XAxis:point2d read GetXAxis write SetXAx;
     // обязательный признак!!! показывает что в страницу встроены другие компоненты
     function isCarrier: boolean; override;
     // прилинковаться к компоненту в котором будет происходить отрисовка
@@ -204,8 +208,8 @@ type
     procedure UpdateView;
     procedure updateData;
     procedure doStart;
-    procedure clearGraphList;
   public
+    procedure clearGraphList;
     function GraphCount: integer;
     function getGraph(i: integer): IRDiagramTag; overload;
     function getGraph(gname: string): IRDiagramTag; overload;

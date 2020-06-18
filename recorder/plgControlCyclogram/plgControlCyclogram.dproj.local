@@ -197,10 +197,10 @@
     <File Path="forms\uControlEditFrame.dfm"/>
     <File Path="forms\uControlWarnFrm.pas"/>
     <File Path="forms\uControlWarnFrm.dfm"/>
-    <File Path="forms\uCounterAlgFrame.pas"/>
-    <File Path="forms\uCounterAlgFrame.dfm"/>
     <File Path="forms\uEditControlWrnFrm.pas"/>
     <File Path="forms\uEditControlWrnFrm.dfm"/>
+    <File Path="forms\uCounterAlgFrame.pas"/>
+    <File Path="forms\uCounterAlgFrame.dfm"/>
     <File Path="forms\uCursorFrm.pas"/>
     <File Path="forms\uCursorFrm.dfm"/>
     <File Path="forms\uCustomEditControlFrame.pas"/>

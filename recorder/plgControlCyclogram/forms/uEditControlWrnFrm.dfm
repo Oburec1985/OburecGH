@@ -23,7 +23,6 @@ object EditCntlWrnFrm: TEditCntlWrnFrm
     Height = 85
     Align = alBottom
     TabOrder = 0
-    ExplicitWidth = 1037
     object UpdateBtn: TSpeedButton
       Left = 3
       Top = 4
@@ -150,7 +149,6 @@ object EditCntlWrnFrm: TEditCntlWrnFrm
     Align = alClient
     Constraints.MinWidth = 365
     TabOrder = 1
-    ExplicitWidth = 830
     object PSizeLabel: TLabel
       Left = 299
       Top = 1
@@ -241,7 +239,7 @@ object EditCntlWrnFrm: TEditCntlWrnFrm
       Height = 796
       Align = alRight
       TabOrder = 2
-      ExplicitLeft = 544
+      ExplicitLeft = 576
       ExplicitTop = 1
       ExplicitWidth = 285
       ExplicitHeight = 796

@@ -20,8 +20,6 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
     Height = 61
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 504
-    ExplicitWidth = 932
     object UpdateBtn: TSpeedButton
       Left = 3
       Top = 4
@@ -147,10 +145,6 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
     Align = alClient
     Constraints.MinWidth = 365
     TabOrder = 1
-    ExplicitLeft = -229
-    ExplicitTop = -478
-    ExplicitWidth = 862
-    ExplicitHeight = 798
     inline TagsListFrame1: TTagsListFrame
       Left = 429
       Top = 1
@@ -158,15 +152,15 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
       Height = 434
       Align = alRight
       TabOrder = 0
-      ExplicitLeft = 576
+      ExplicitLeft = 429
       ExplicitTop = 1
       ExplicitWidth = 285
-      ExplicitHeight = 796
+      ExplicitHeight = 434
       inherited FormChannelsGB: TGroupBox
         Width = 285
         Height = 434
         ExplicitWidth = 285
-        ExplicitHeight = 796
+        ExplicitHeight = 434
         inherited ChanNamesPanel: TPanel
           Width = 281
           Height = 106
@@ -197,7 +191,7 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
           Height = 308
           ExplicitTop = 124
           ExplicitWidth = 281
-          ExplicitHeight = 670
+          ExplicitHeight = 308
         end
       end
     end
@@ -208,10 +202,6 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
       Height = 434
       Align = alClient
       TabOrder = 1
-      ExplicitLeft = 168
-      ExplicitTop = 368
-      ExplicitWidth = 185
-      ExplicitHeight = 41
       object NameLabel: TLabel
         Left = 5
         Top = 1
@@ -237,8 +227,6 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
         ParentBackground = False
         ParentColor = False
         TabOrder = 0
-        ExplicitTop = 360
-        ExplicitWidth = 436
         object pCountLabel: TLabel
           Left = 12
           Top = 64
@@ -403,7 +391,7 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
           Caption = #1054#1090#1088#1080#1089#1086#1074#1082#1072' '#1090#1086#1095#1077#1082
           TabOrder = 4
         end
-        object Panel2: TPanel
+        object ColorPanel: TPanel
           Left = 301
           Top = 24
           Width = 34
@@ -433,10 +421,8 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
         Align = alBottom
         Caption = #1054#1089#1100' X'
         TabOrder = 1
-        ExplicitTop = 152
-        ExplicitWidth = 436
         object MaxXLabel: TLabel
-          Left = 214
+          Left = 163
           Top = 18
           Width = 75
           Height = 16
@@ -450,7 +436,7 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
           Caption = #1052#1080#1085#1080#1084#1091#1084' X:'
         end
         object MaxXfe: TFloatEdit
-          Left = 213
+          Left = 162
           Top = 41
           Width = 119
           Height = 24
@@ -477,8 +463,6 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
         ParentBackground = False
         ParentColor = False
         TabOrder = 2
-        ExplicitTop = 224
-        ExplicitWidth = 436
         object MinYLabel: TLabel
           Left = 17
           Top = 25
@@ -542,8 +526,6 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
     Align = alLeft
     Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
     TabOrder = 2
-    ExplicitTop = -478
-    ExplicitHeight = 798
     object TagsTV: TVTree
       Left = 2
       Top = 18
@@ -561,7 +543,6 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
       Images = ImageList_16
       NodeDataSize = 32
       TabOrder = 0
-      ExplicitHeight = 778
       Columns = <>
     end
   end
