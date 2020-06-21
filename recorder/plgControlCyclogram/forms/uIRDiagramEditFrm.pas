@@ -136,7 +136,7 @@ begin
 end;
 
 
-function TIRDiagrEditFrm.getcurgraph: TWrkPoint;
+function TIRDiagrEditFrm.getcurgraph: IRDiagramTag;
 begin
   result:=fcurGraph;
 end;
@@ -181,7 +181,7 @@ begin
         if add then
         begin
           d:=tagsTV.GetNodeData(n.Parent);
-          curchart.addGraph(g,caxis(d.data));
+          curchart.addGraph(g);
         end;
       end;
     end;

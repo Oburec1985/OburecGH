@@ -213,7 +213,8 @@ type
     function GraphCount: integer;
     function getGraph(i: integer): IRDiagramTag; overload;
     function getGraph(gname: string): IRDiagramTag; overload;
-    function addGraph(p_name: string): IRDiagramTag;
+    function addGraph(p_name: string): IRDiagramTag;overload;
+    function addGraph(g: IRDiagramTag): IRDiagramTag;overload;
     property GraphMax: double read getGraphMax write setGraphMax;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -407,6 +408,12 @@ begin
   result.name := p_name;
   fpage.AddChild(result);
   fpage.m_graphList.Add(result);
+end;
+
+function TIRDiagramFrm.addGraph(g: IRDiagramTag): IRDiagramTag;
+begin
+  fpage.m_graphList.Add(g);
+  result:=g;
 end;
 
 procedure TIRDiagramFrm.ChartInit(sender: tobject);
@@ -1037,6 +1044,16 @@ begin
   glEnd;
 end;
 
+function cIRPage.GetXAxis: point2d;
+begin
+  Result:=fXAxis;
+end;
+
+function cIRPage.GetYAxis: point2d;
+begin
+  Result:=fYAxis;
+end;
+
 function cIRPage.ModComponentName(p_name: string): string;
 var
   obj: tcomponent;
@@ -1208,9 +1225,19 @@ begin
   compile;
 end;
 
+procedure cIRPage.SetXAx(p: point2d);
+begin
+
+end;
+
 procedure cIRPage.setXAxis(p2: point2d);
 begin
   fXAxis := p2;
+end;
+
+procedure cIRPage.setYAx(p: point2d);
+begin
+
 end;
 
 procedure cIRPage.setYAxis(p2: point2d);
