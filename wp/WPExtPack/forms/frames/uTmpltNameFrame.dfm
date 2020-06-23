@@ -10,36 +10,36 @@ object TmpltNameFrame: TTmpltNameFrame
   object tmpltLabel: TLabel
     Left = 188
     Top = 3
-    Width = 72
-    Height = 13
+    Width = 83
+    Height = 16
     Caption = #1055#1091#1090#1100' '#1096#1072#1073#1083#1086#1085#1072
   end
   object FolderLabel: TLabel
     Left = 188
     Top = 62
-    Width = 159
-    Height = 13
+    Width = 185
+    Height = 16
     Caption = #1050#1072#1090#1072#1083#1086#1075' '#1079#1072#1084#1077#1088#1072' '#1087#1086' '#1091#1084#1086#1083#1095#1072#1085#1080#1102':'
   end
   object NameLabel: TLabel
     Left = 188
     Top = 110
-    Width = 136
-    Height = 13
+    Width = 162
+    Height = 16
     Caption = #1048#1084#1103' '#1079#1072#1084#1077#1088#1072' '#1087#1086' '#1091#1084#1086#1083#1095#1072#1085#1080#1102':'
   end
   object Label2: TLabel
     Left = 188
     Top = 167
-    Width = 73
-    Height = 13
+    Width = 80
+    Height = 16
     Caption = #1055#1091#1090#1100' '#1082' '#1086#1090#1095#1077#1090#1091
   end
   object TmpltEdit: TEdit
     Left = 188
     Top = 22
     Width = 425
-    Height = 21
+    Height = 24
     Anchors = [akLeft, akTop, akRight]
     ParentShowHint = False
     ShowHint = True
@@ -51,7 +51,7 @@ object TmpltNameFrame: TTmpltNameFrame
     Left = 188
     Top = 81
     Width = 425
-    Height = 21
+    Height = 24
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 1
     OnChange = FolderEditChange
@@ -99,7 +99,7 @@ object TmpltNameFrame: TTmpltNameFrame
     Left = 188
     Top = 129
     Width = 425
-    Height = 21
+    Height = 24
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 6
     OnChange = NameEditChange
@@ -117,7 +117,7 @@ object TmpltNameFrame: TTmpltNameFrame
     Left = 3
     Top = 186
     Width = 610
-    Height = 21
+    Height = 24
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 8
   end

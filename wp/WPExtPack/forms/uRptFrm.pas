@@ -189,6 +189,8 @@ type
     procedure TmpltNameFrame1PathBtnClick(Sender: TObject);
     procedure UseMDBCBClick(Sender: TObject);
     procedure AutoBandChannelCBChange(Sender: TObject);
+    procedure TmpltNameFrame1FolderRGClick(Sender: TObject);
+    procedure TmpltNameFrame1NameRGClick(Sender: TObject);
   private
     eo: TObject;
     mng: cWPObjMng;
@@ -1334,9 +1336,21 @@ begin
   tExtOperRpt(eo).SetPropStr(str);
 end;
 
+procedure TRptFrm.TmpltNameFrame1FolderRGClick(Sender: TObject);
+begin
+  TmpltNameFrame1.FolderRGClick(Sender);
+
+end;
+
 procedure TRptFrm.TmpltNameFrame1MakeDefaultNameBtnClick(Sender: TObject);
 begin
   TmpltNameFrame1.MakeDefaultNameBtnClick(Sender);
+
+end;
+
+procedure TRptFrm.TmpltNameFrame1NameRGClick(Sender: TObject);
+begin
+  TmpltNameFrame1.NameRGClick(Sender);
 
 end;
 
@@ -1700,10 +1714,6 @@ begin
   // копирование настроек формы в оператор
   ApplyOpts;
   str := GetPropertyStr;
-
-
-
-
   tExtOperRpt(eo).props := str;
   tExtOperRpt(eo).repType := ReportTypeRG.ItemIndex;
   // установка свойств
@@ -2035,6 +2045,8 @@ end;
 procedure TRptFrm.FormShow(Sender: TObject);
 begin
   UpdateTrigs;
+  TmpltNameFrame1.FolderRGClick(Sender);
+  TmpltNameFrame1.NameRGClick(Sender);
 end;
 
 procedure RptBand.settrig1(t: ctrig);

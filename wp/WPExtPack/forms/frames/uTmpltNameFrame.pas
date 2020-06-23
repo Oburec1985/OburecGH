@@ -53,11 +53,11 @@ type
     // путь на основании которого строяться относительныен пути
     objectName: string;
   private
-    function GenPath: string;
     function GenName: string;
     function GenFolder: string;
     function CheckTmpltPath(str: string): boolean;
   public
+    function GenPath: string;
     // установить путь по которому будут сохраняться настройки
     Procedure SetIFile(fname, section, key, startdir:string);
     procedure SaveParams;
@@ -135,8 +135,9 @@ end;
 
 function TTmpltNameFrame.GenName: string;
 var
-  subname, ext,str:string;
+  subname, ext,str, tmpltext:string;
 begin
+  tmpltext:=ExtractFileext(TmpltEdit.text);
   case NameRG.ItemIndex of
     0:
       begin
@@ -160,16 +161,15 @@ begin
         end;
       end;
   end;
-  ext:=ExtractFileExt(str);
-  if  (ext= '.xlsx') or (ext= '.xls')  then
+  if tmpltext<>'' then
   begin
-    result := str;
+    ext:=tmpltext;
   end
   else
   begin
-    str := str + '.xlsx';
-    result := str;
+    ext:=ExtractFileExt(str);
   end;
+  result := str+ext;
 end;
 
 function TTmpltNameFrame.GenPath: string;

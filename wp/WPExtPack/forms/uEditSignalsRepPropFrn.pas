@@ -129,7 +129,12 @@ begin
       ChannelsList.SetSubItemByColumnName('¹', inttostr(i), li);
       ChannelsList.SetSubItemByColumnName('Èìÿ', str, li);
       s:=src.GetSignal(str);
-      li.Checked:=s.GetProperty(m_PropName)='1';
+      if s<>nil then
+        li.Checked:=s.GetProperty(m_PropName)='1'
+      else
+      begin
+        li.Checked:=false;
+      end;
     end;
   end;
 end;
