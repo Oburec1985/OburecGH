@@ -1786,7 +1786,7 @@
       Margins.Bottom = 4
       Align = alTop
       TabOrder = 2
-      object Label19: TLabel
+      object AutoBandsCountLabel: TLabel
         Left = 226
         Top = 0
         Width = 83

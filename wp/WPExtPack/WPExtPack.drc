@@ -1497,6 +1497,10 @@ END
 /* ..\..\sharedUtils\forms\uFrmSync.dfm */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\filectrl.res */
 /* ..\..\sharedUtils\ZipMaster\ZipMstr.res */
+/* forms\frames\uTmpltNameFrame.dfm */
+/* forms\uEditSignalsRepPropFrn.dfm */
+/* forms\frames\uWPSpmFrame.dfm */
+/* forms\uSpmFrm.dfm */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxInheritError.dfm */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxCtrls.res */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPrintDialog.dfm */
@@ -1528,8 +1532,6 @@ END
 /* ..\..\sharedUtils\forms\uJournalForm.dfm */
 /* forms\uAddScriptItemFrm.dfm */
 /* forms\uEditSelsinFrm.dfm */
-/* forms\frames\uWPSpmFrame.dfm */
-/* forms\uSpmFrm.dfm */
 /* ..\..\sharedUtils\utils\TmsPack\advcolorpickerdropdown.res */
 /* ..\..\sharedUtils\utils\TmsPack\asgspin.res */
 /* ..\..\sharedUtils\utils\TmsPack\advgrid.res */
@@ -1538,7 +1540,6 @@ END
 /* ..\..\sharedUtils\utils\TmsPack\asgfltr.res */
 /* forms\uTrigsFrm.dfm */
 /* .\forms\uTrigFrm.dfm */
-/* forms\frames\uTmpltNameFrame.dfm */
 /* forms\EditSignalPathFrm.dfm */
 /* forms\uGraphMngFrm.dfm */
 /* forms\uSelectPathForm.dfm */
@@ -1556,8 +1557,7 @@ END
 /* forms\uKBHMFrm.dfm */
 /* forms\uSelsinFrm.dfm */
 /* forms\uScriptFrm.dfm */
-/* forms\uEditSignalsRepPropFrn.dfm */
-/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uRptFrm.dfm */
+/* forms\uRptFrm.dfm */
 /* forms\uFrmHibFltFrm.dfm */
 /* forms\uFindMaxForm.dfm */
 /* forms\uFFTInverseFrm.dfm */

@@ -144,7 +144,7 @@ type
     Label17: TLabel;
     Label18: TLabel;
     BandCountIE: TIntEdit;
-    Label19: TLabel;
+    AutoBandsCountLabel: TLabel;
     Label13: TLabel;
     Threshold: TFloatEdit;
     procedure AddBtnClick(Sender: TObject);
@@ -1030,6 +1030,11 @@ var
 begin
   if AutoBandsCB.Checked then
   begin
+    AutoBandsPC.Visible:=true;
+    BandsTC.Visible:=false;
+    AutoBandsCountLabel.Visible:=true;
+    BandCountIE.Visible:=true;
+    BandCountIE.Color:=clGreen;
     src := GetSelectSrc;
     if src <> nil then
     begin
@@ -1052,6 +1057,14 @@ begin
         end;
       end;
     end;
+  end
+  else
+  begin
+    AutoBandsCountLabel.Visible:=false;
+    BandsTC.Visible:=true;
+    AutoBandsPC.Visible:=false;
+    BandCountIE.Visible:=false;
+    BandCountIE.Color:=clWhite;
   end;
 end;
 

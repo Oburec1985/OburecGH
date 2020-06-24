@@ -318,11 +318,11 @@ begin
     begin
       portion := trunc(portion / 2);
     end;
-    str := str + inttostr(portion) + ',ofsNextBlock=' + inttostr(portion);
+    str := str + ',ofsNextBlock=' + inttostr(portion);
     str := str + ',nBlocks=';
     size := src.size;
     portion := round(size / portion) - 1;
-
+    str:=str+inttostr(portion);
     if portion < 1 then
       portion := 1;
     optFFT := str;

@@ -5118,9 +5118,11 @@ var
   min, max: double;
   // фронт спад
   trig: boolean;
+  linitMin, linitMax:boolean;
 begin
   min := 0;
   max := 0;
+  linitMin:=false; linitMax:=false;
   // расчет всего теста
   if (IntervalOpts = c_IntervalAllTest) or (max = 0) then
   begin
@@ -5133,21 +5135,41 @@ begin
         begin
           if s.Signal <> nil then
           begin
-            min := s.Signal.MinX;
-            max := s.Signal.MaxX;
-            if min=max then
-              continue;
+            if s.Signal.size>1 then
+            begin
+              min := s.Signal.MinX;
+              max := s.Signal.MaxX;
+              if min=max then
+                continue;
+            end;
           end;
         end
         else
         begin
           if s.Signal <> nil then
           begin
+            if s.signal.size<2 then continue;
             // выбираем самые короткие сигналы
-            if s.Signal.MinX > min then
-              min := s.Signal.MinX;
-            if s.Signal.MaxX < max then
-              max := s.Signal.MaxX;
+            if not linitMin then
+            begin
+              min:=s.Signal.MinX;
+              linitMin:=true;
+            end
+            else
+            begin
+              if s.Signal.MinX > min then
+                min := s.Signal.MinX;
+            end;
+            if not linitMax then
+            begin
+              max:=s.Signal.MaxX;
+              linitMax:=true;
+            end
+            else
+            begin
+              if s.Signal.MaxX < max then
+                max := s.Signal.MaxX;
+            end;
           end;
         end;
       end;
