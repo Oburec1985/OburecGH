@@ -112,6 +112,7 @@ type
     property DrawLines: boolean read fDrawLines write fDrawLines;
     property DrawPoints: boolean read fDrawPoints write fDrawPoints;
     property PointColor: point3 read fPointColor write fPointColor;
+    property Capacity:integer read getcount write setcount;
     constructor create; override;
   end;
 
@@ -136,7 +137,7 @@ type
     m_PageLabel: cLabel;
 
     m_graphList: tlist;
-  protected
+  public
     fXAxis, fYAxis: point2d;
   protected
     procedure setXAxis(p2: point2d);

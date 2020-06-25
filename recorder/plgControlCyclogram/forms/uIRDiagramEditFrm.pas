@@ -190,8 +190,43 @@ end;
 
 
 procedure TIRDiagrEditFrm.showChartTags;
+var
+  i:integer;
+  g:IRDiagramTag;
+  p:cpage;
+  a:caxis;
+  node:pvirtualnode;
+  d:pnodedata;
+  j: Integer;
 begin
-
+  tagstv.clear;
+  p:=cpage(curChart.chart.activePage);
+  for I := 0 to p.getAxisCount - 1 do
+  begin
+    a:=p.getaxis(i);
+    node:=tagstv.AddChild(nil);
+    d:=tagstv.GetNodeData(node);
+    d.color:=tagstv.normalcolor;
+    d.caption:=a.caption;
+    d.Data:=a;
+    d.ImageIndex:=a.imageindex;
+  end;
+  for I := 0 to curChart.GraphCount - 1 do
+  begin
+    g:=curChart.getGraph(i);
+    //node:=getAxisNode(g);
+    if node<>nil then
+    begin
+      node:=tagstv.AddChild(node);
+      d:=tagstv.GetNodeData(node);
+      d.color:=tagstv.normalcolor;
+      d.caption:=g.name;
+      d.Data:=g;
+      // линия
+      d.ImageIndex:=22;
+      fcurGraph:=g;
+    end;
+  end;
 end;
 
 procedure TIRDiagrEditFrm.showGraph;
@@ -220,12 +255,14 @@ begin
       SetMultiSelectComponentString(XChan_cb, g.m_irAlg.ftaho.m_tag.tagname);
       SetMultiSelectComponentString(YChan_cb, g.m_irAlg.fspm.m_tag.tagname);
       SetMultiSelectComponentString(GraphNameEdit, g.name);
-      SetMultiSelectComponentString(PCountSE, inttostr(g.PCount));
+      SetMultiSelectComponentString(PCountSE, inttostr(g.capacity));
       SetMultiSelectComponentBool(DrawPointsCB, g.DrawPoints);
       SetMultiSelectComponentBool(DrawLineCB, g.DrawLines);
       ColorPanel.Color:=rgbtoint(g.PointColor);
-      SetMultiSelectComponentString(MinYfe, cIRPage(curChart.chart.activePage).);
-      SetMultiSelectComponentString(MaxYfe, );
+      SetMultiSelectComponentString(MinYfe, floattostr(cIRPage(curChart.chart.activePage).fyAxis.x));
+      SetMultiSelectComponentString(MaxYfe, floattostr(cIRPage(curChart.chart.activePage).fyAxis.y));
+      SetMultiSelectComponentString(MinXfe, floattostr(cIRPage(curChart.chart.activePage).fxAxis.x));
+      SetMultiSelectComponentString(MaxXfe, floattostr(cIRPage(curChart.chart.activePage).fxAxis.y));
     end;
     next := tagsTV.GetNextSelected(Node, true);
     Node := next;
