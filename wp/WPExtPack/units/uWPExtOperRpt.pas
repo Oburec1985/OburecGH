@@ -1090,7 +1090,7 @@ var
   blockcount, blockrow, blockSize, // параметр отвечает номеру блока (поправка на максимальное число колонок отчета)
   i, j, k, num, signalind, srcInd, ColCount, bcount, ind,
   // номер колонки сигнала в таблице отчета
-  colInd: integer;
+  colInd, row, row1: integer;
   rng, str: string;
 
   sig: cwpsignal;
@@ -1117,7 +1117,7 @@ begin
       E.ActiveWorkbook.Sheets.Item[1].cells.clear;
     end
     else
-    begin
+    begin                                         7
       if fileexists(fname) then
       begin
         OpenWorkBook(fname);
@@ -1245,15 +1245,12 @@ begin
       end;
       for k := 0 to blockcount - 1 do
       begin
+        row:=(j - 1) + 3 + i * (srcList.Count - 1) * bcount + k *(bcount * srcList.Count + 2);
         // Заполняем имя замера
-        SetCell(1, (j - 1) + 3 + i * (srcList.Count - 1) * bcount + k *
-            (bcount * srcList.Count + 2), 1,
-          src.name + #10 + ' Дата:' + src.merafile.Date);
-        rngObj := GetRangeObj(1,
-          point(3 + i * (srcList.Count - 1) * bcount + k *
-              (bcount * srcList.Count + 2), 1),
-          point(3 + (j - 1) + i * (srcList.Count - 1) * bcount + k *
-              (bcount * srcList.Count + 2), 1));
+        SetCell(1, row, 1, src.name + #10 + ' Дата:' + src.merafile.Date);
+        row:=3 + i * (srcList.Count - 1) * bcount + k *(bcount * srcList.Count + 2);
+        row1:=3 + (j - 1) + i * (srcList.Count - 1) * bcount + k *(bcount * srcList.Count + 2);
+        rngObj := GetRangeObj(1,point(row, 1), point(row1, 1));
         rngObj.merge;
       end;
     end;
