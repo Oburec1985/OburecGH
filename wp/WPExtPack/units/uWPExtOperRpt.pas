@@ -1117,7 +1117,7 @@ begin
       E.ActiveWorkbook.Sheets.Item[1].cells.clear;
     end
     else
-    begin                                         7
+    begin
       if fileexists(fname) then
       begin
         OpenWorkBook(fname);
@@ -1239,17 +1239,18 @@ begin
           rng := rng + ' инд.';
         for k := 0 to blockcount - 1 do
         begin
-          SetCell(1, j + 3 + i * (srcList.Count - 1) * bcount + k *
-              (bcount * srcList.Count + 2), 2, rng);
+          row:=j + 3 + i*bcount + k * (bcount * srcList.Count + 2);
+          SetCell(1, row, 2, rng);
         end;
       end;
-      for k := 0 to blockcount - 1 do
-      begin
-        row:=(j - 1) + 3 + i * (srcList.Count - 1) * bcount + k *(bcount * srcList.Count + 2);
+      for k := 0 to blockcount - 1 do // перенести в цикл по полосам?
+      begin // i номер источникаж
+        //row:=(j - 1) + 3 + i * (srcList.Count - 1) * bcount + k *(bcount * srcList.Count + 2);
+        row:=(j - 1) + 3 + i*bcount + k *(bcount * srcList.Count + 2);
         // Заполняем имя замера
         SetCell(1, row, 1, src.name + #10 + ' Дата:' + src.merafile.Date);
-        row:=3 + i * (srcList.Count - 1) * bcount + k *(bcount * srcList.Count + 2);
-        row1:=3 + (j - 1) + i * (srcList.Count - 1) * bcount + k *(bcount * srcList.Count + 2);
+        //row:=3 + i * (srcList.Count - 1) * bcount + k *(bcount * srcList.Count + 2);
+        row1:=row+bcount-1;
         rngObj := GetRangeObj(1,point(row, 1), point(row1, 1));
         rngObj.merge;
       end;
@@ -1277,7 +1278,7 @@ begin
             if o.name = 'mag1' then
             begin
               // i - номер канала (задает смещение столбцов)
-              // num - номер оценки задает смещение столбца
+              // num - номер  оценки задает смещение столбца
               // k - счетчик по номеру оценки
               // j - счетчик по номеру полосы
               SetCell(1, j + 3 + srcInd * bcount + blockrow *
