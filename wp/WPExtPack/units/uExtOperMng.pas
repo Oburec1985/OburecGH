@@ -15,6 +15,8 @@ uses
   uFFTInverseFrm,
   uExtBalanceSignals,
   uExtBalanceSignalsFrm,
+  uFFTFlt,
+  uFFTFltFrm,
   Windows
   ;
 
@@ -26,6 +28,7 @@ type
     eoAmpFind: TExtOperAmpFind;
     eoRpt: TExtOperRpt;
     eoHilbFlt: TExtOperHilbertFlt;
+    eoFFTFlt: TExtFFTflt;
     m_mng:cWPObjMng;
   public
     procedure NotifyPlugin(what:integer);
@@ -55,6 +58,9 @@ begin
   eoFFTInverse.destroy;
   eoBalanceZero.destroy;
   FFTInverseFrm.Destroy;
+
+  eoFFTFlt.destroy;
+  FFTFltFrm.destroy;
 end;
 
 
@@ -95,8 +101,14 @@ begin
 
   eoRpt := TExtOperRpt.create();
   eoRpt.linc(m_mng);
-  ID_ExcelReport := WINPOS.RegisterCommand();
 
+  eoFFTFlt:=TExtFFTflt.create();
+  eoFFTFlt.link(m_mng);
+  b:=WINPOS.RegisterExtOper(eoFFTFlt, 1, 1, 'FFT фильтр', 'FFT фильтр', true);
+  FFTFltFrm:=TFFTFltFrm.Create(nil);
+
+
+  ID_ExcelReport := WINPOS.RegisterCommand();
   ID_FFTInverse:=WINPOS.RegisterCommand();
 
   // последний параметр определеяет будет ли вызван диалог настройки оператора

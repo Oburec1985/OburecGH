@@ -99,7 +99,9 @@ uses
   fft in '..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\fft.pas',
   uExtBalanceSignals in 'units\uExtBalanceSignals.pas',
   uExtBalanceSignalsFrm in 'forms\uExtBalanceSignalsFrm.pas' {BalanceZeroFrm},
-  uLogFile in '..\..\sharedUtils\utils\uLogFile.pas';
+  uLogFile in '..\..\sharedUtils\utils\uLogFile.pas',
+  uFFTFlt in 'units\uFFTFlt.pas',
+  uFFTfltFrm in 'forms\uFFTfltFrm.pas' {FFTFltFrm};
 
 exports
   DllGetClassObject,

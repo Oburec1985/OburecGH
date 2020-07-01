@@ -146,6 +146,9 @@
     <Transaction>2019.05.28 23:19:25.636.dfm,G:\oburec\project2010\2011\wp\WPExtPack\Unit3.dfm=G:\oburec\project2010\2011\wp\WPExtPack\forms\uExtBalanceSignalsFrm.dfm</Transaction>
     <Transaction>2020.02.07 17:08:21.718.pas,D:\Oburec\delphi\2011\wp\WPExtPack\units\POSBase.pas=D:\Oburec\delphi\2011\wp\SharedWP\POSBase.pas</Transaction>
     <Transaction>2020.02.07 17:08:40.422.pas,D:\Oburec\delphi\2011\wp\WPExtPack\Winpos_ole_TLB.pas=D:\Oburec\delphi\2011\wp\SharedWP\Winpos_ole_TLB.pas</Transaction>
+    <Transaction>2020.06.30 23:10:49.282.pas,G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\Unit2.pas=G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\units\uFFTFlt.pas</Transaction>
+    <Transaction>2020.06.30 23:45:08.841.pas,G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\Unit3.pas=G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uFFTfltFrm.pas</Transaction>
+    <Transaction>2020.06.30 23:45:08.841.dfm,G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\Unit3.dfm=G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uFFTfltFrm.dfm</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\wp"/>
@@ -288,6 +291,8 @@
     <File Path="forms\uTrigsFrm.dfm"/>
     <File Path="forms\uWPProcFrm.pas"/>
     <File Path="forms\uWPProcFrm.dfm"/>
+    <File Path="forms\uFFTfltFrm.pas"/>
+    <File Path="forms\uFFTfltFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\uExtBalanceSignals.pas"/>
     <File Path="units\uExtFFTInverse.pas"/>
@@ -305,6 +310,7 @@
     <File Path="units\uWPOpers.pas"/>
     <File Path="units\uWPproc.pas"/>
     <File Path="units\uWPProcServices.pas"/>
+    <File Path="units\uFFTFlt.pas"/>
     <File Path="WPExtPack.ridl"/>
     <File Path="WPExtPack_TLB.pas"/>
   </ProjectSortOrder>
