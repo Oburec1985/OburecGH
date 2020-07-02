@@ -149,6 +149,8 @@
     <Transaction>2020.06.30 23:10:49.282.pas,G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\Unit2.pas=G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\units\uFFTFlt.pas</Transaction>
     <Transaction>2020.06.30 23:45:08.841.pas,G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\Unit3.pas=G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uFFTfltFrm.pas</Transaction>
     <Transaction>2020.06.30 23:45:08.841.dfm,G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\Unit3.dfm=G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uFFTfltFrm.dfm</Transaction>
+    <Transaction>2020.07.02 22:44:42.627.pas,G:\oburec\project2010\2011\tests\TestAlgLib\TestFFT.pas=</Transaction>
+    <Transaction>2020.07.02 22:44:42.627.dfm,G:\oburec\project2010\2011\tests\TestAlgLib\TestFFT.dfm=</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\wp"/>

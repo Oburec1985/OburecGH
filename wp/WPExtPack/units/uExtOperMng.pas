@@ -106,6 +106,7 @@ begin
   eoFFTFlt.link(m_mng);
   b:=WINPOS.RegisterExtOper(eoFFTFlt, 1, 1, 'FFT фильтр', 'FFT фильтр', true);
   FFTFltFrm:=TFFTFltFrm.Create(nil);
+  FFTFltFrm.link(eoFFTFlt);
 
 
   ID_ExcelReport := WINPOS.RegisterCommand();

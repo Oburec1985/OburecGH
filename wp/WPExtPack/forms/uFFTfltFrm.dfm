@@ -2,8 +2,8 @@
   Left = 0
   Top = 0
   Caption = 'FFT '#1092#1080#1083#1100#1090#1088
-  ClientHeight = 395
-  ClientWidth = 772
+  ClientHeight = 430
+  ClientWidth = 1016
   Color = clBtnFace
   Constraints.MinHeight = 316
   Constraints.MinWidth = 790
@@ -17,15 +17,15 @@
   TextHeight = 16
   object ActionPanel: TPanel
     Left = 0
-    Top = 336
-    Width = 772
+    Top = 371
+    Width = 1016
     Height = 59
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 328
-    ExplicitWidth = 711
+    ExplicitTop = 336
+    ExplicitWidth = 772
     DesignSize = (
-      772
+      1016
       59)
     object ApplyBtn: TButton
       Left = 10
@@ -38,23 +38,24 @@
       Margins.Bottom = 4
       Anchors = [akLeft, akBottom]
       Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
+      ModalResult = 1
       TabOrder = 0
     end
   end
   object RightPanel: TPanel
-    Left = 447
+    Left = 691
     Top = 0
     Width = 325
-    Height = 336
+    Height = 371
     Align = alRight
     TabOrder = 1
-    ExplicitLeft = 432
-    ExplicitHeight = 328
+    ExplicitLeft = 447
+    ExplicitHeight = 336
     object BtnListView1: TBtnListView
       Left = 1
       Top = 1
       Width = 175
-      Height = 334
+      Height = 369
       Align = alClient
       Columns = <
         item
@@ -75,27 +76,26 @@
       DrawColorBox = False
       ChangeTextColor = False
       Editable = True
-      ExplicitWidth = 288
-      ExplicitHeight = 326
+      ExplicitHeight = 334
     end
     object SignalsLB: TListBox
       Left = 176
       Top = 1
       Width = 148
-      Height = 334
+      Height = 369
       Align = alRight
       TabOrder = 1
-      ExplicitHeight = 326
+      ExplicitHeight = 334
     end
   end
   object EditCurvePanel: TPanel
     Left = 0
     Top = 0
     Width = 209
-    Height = 336
+    Height = 371
     Align = alLeft
     TabOrder = 2
-    ExplicitHeight = 328
+    ExplicitHeight = 336
     object F1Label: TLabel
       Left = 3
       Top = 10
@@ -130,6 +130,27 @@
       Width = 53
       Height = 16
       Caption = #1052#1072#1089#1096#1090#1072#1073
+    end
+    object FFTCountLabel: TLabel
+      Left = 6
+      Top = 234
+      Width = 61
+      Height = 16
+      Caption = #1058#1086#1095#1077#1082' FFT'
+    end
+    object OffsetLabel: TLabel
+      Left = 6
+      Top = 288
+      Width = 108
+      Height = 16
+      Caption = #1057#1084#1077#1097#1077#1085#1080#1077' '#1087#1086#1088#1094#1080#1080
+    end
+    object dFLabel: TLabel
+      Left = 114
+      Top = 259
+      Width = 23
+      Height = 16
+      Caption = 'dF='
     end
     object F1se: TSpinEdit
       Left = 3
@@ -189,12 +210,34 @@
       Caption = #1059#1089#1090#1072#1085#1086#1074#1080#1090#1100
       TabOrder = 5
     end
+    object PCountSE: TSpinEdit
+      Left = 3
+      Top = 256
+      Width = 98
+      Height = 26
+      MaxValue = 0
+      MinValue = 0
+      TabOrder = 6
+      Value = 2048
+      OnKeyDown = PCountSEKeyDown
+      OnKeyUp = PCountSEKeyUp
+    end
+    object OffsetSE: TSpinEdit
+      Left = 3
+      Top = 310
+      Width = 98
+      Height = 26
+      MaxValue = 0
+      MinValue = 0
+      TabOrder = 7
+      Value = 2048
+    end
   end
   object ScaleCurveChart: cChart
     Left = 209
     Top = 0
-    Width = 238
-    Height = 336
+    Width = 482
+    Height = 371
     Align = alClient
     Caption = 'ScaleCurveChart'
     TabOrder = 3
@@ -202,9 +245,7 @@
     showTV = False
     showLegend = True
     selectSize = 5
-    ExplicitLeft = 312
-    ExplicitTop = 56
-    ExplicitWidth = 400
-    ExplicitHeight = 400
+    ExplicitWidth = 238
+    ExplicitHeight = 336
   end
 end

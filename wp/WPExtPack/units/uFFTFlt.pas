@@ -37,6 +37,8 @@ type
     m_iFFTPlanList:array of TFFTProp;
     m_mng: cBaseObjmng;
 
+    data:TDoubleArray;
+    cmplx_al, MagFFTarray: TAlignDCmpx;
     ifftPlan,fftPlan:TFFTProp;
     // набор коэффициентов для fft спектра
     m_curveScales:array of double;
@@ -75,6 +77,7 @@ const
 {TExtFFTInverse}
 constructor TExtFFTflt.create;
 begin
+  m_fftCount:=1024;
   setlength(m_FFTPlanList,100);
   setlength(m_iFFTPlanList,100);
 end;
@@ -102,10 +105,10 @@ var
   r1, r2, err: olevariant;
   s1, interval, res:iwpsignal;
   I, size, startind:integer;
+  k:double;
   str:string;
   wstr:widestring;
-  v:cstring;
-  a1,a2,x:olevariant;
+  //a1,a2,x:olevariant;
   EndSignal:boolean;
 begin
   s1 := psrc1 as iwpsignal;
@@ -113,13 +116,28 @@ begin
   EndSignal:=false;
   while not EndSignal do
   begin
-    //GetIntervalSignal(interval, Fz);
-    interval:=wp.GetInterval(s1, startind, startind+m_fftCount) as iwpsignal;
+    interval:=wp.GetInterval(s1, startind, m_fftCount) as iwpsignal;
+    for I := 0 to m_fftCount - 1 do
+    begin
+      data[i]:=interval.GetY(i);
+    end;
+    fft_al_d_sse(data, TCmxArray_d(cmplx_al.p), fftPlan);
+    k:=1/(fftPlan.PCount shr 1);
+    MULT_SSE_al_cmpx_d(tCmxArray_d(cmplx_al.p), k);
+    EvalSpmMag(TCmxArray_d(cmplx_al.p), TDoubleArray(MagFFTarray.p));
+    //NormalizeAndScaleSpmMag(TCmxArray_d(cmplx_al.p), TDoubleArray(MagFFTarray.p));
+    // сохраняем амплитудный спектр
+    res:=iwpsignal(wp.CreateSignal(vt_r8));
+    res.DeltaX:=(1/(s1.deltaX))/m_fftCount;
+    res.size:=AlignBlockLength(MagFFTarray);
+    for I := 0 to res.size-1 do
+    begin
+      res.SetY(i, TDoubleArray(MagFFTarray.p)[i]);
+    end;
+    wp.Link('/Signals/results', s1.sname+'_'+'MagSpm', res as IDispatch);
     startind:=startind+m_offset;
-
+    EndSignal:=true;
   end;
-
-
   size:=s1.size;
   begin
     {a1 := VarArrayCreate([0, size-1], varDouble);
@@ -184,6 +202,13 @@ begin
   m_curve:=GetParam(str, 'Curve');
   fftPlan:=GetFFTPlan(m_fftCount);
   ifftPlan:=GetFFTPlan(m_fftCount);
+  setlength(data, m_fftcount);
+  GetMemAlignedArray_cmpx_d(m_fftCount, cmplx_al);
+  GetMemAlignedArray_cmpx_d(m_fftCount shr 1, MagFFTarray);
+  fftPlan.StartInd:=0;
+  fftPlan.PCount:=m_fftCount;
+  ifftPlan.StartInd:=0;
+  ifftPlan.PCount:=m_fftCount;
 end;
 
 function TExtFFTflt.GetPropStrF(out pstr: WideString): string;
