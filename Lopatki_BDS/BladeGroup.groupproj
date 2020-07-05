@@ -39,7 +39,7 @@
 			<Projects Include="..\wp\WPExtPack\WPExtPack.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\..\..\2011\tests\TestAlgLib\ProjectFFT.dproj">
+			<Projects Include="..\tests\TestAlgLib\ProjectFFT.dproj">
 				<Dependencies/>
 			</Projects>
 		</ItemGroup>
@@ -161,13 +161,13 @@
 			<MSBuild Targets="Make" Projects="..\wp\WPExtPack\WPExtPack.dproj"/>
 		</Target>
 		<Target Name="ProjectFFT">
-			<MSBuild Projects="..\..\..\2011\tests\TestAlgLib\ProjectFFT.dproj"/>
+			<MSBuild Projects="..\tests\TestAlgLib\ProjectFFT.dproj"/>
 		</Target>
 		<Target Name="ProjectFFT:Clean">
-			<MSBuild Targets="Clean" Projects="..\..\..\2011\tests\TestAlgLib\ProjectFFT.dproj"/>
+			<MSBuild Targets="Clean" Projects="..\tests\TestAlgLib\ProjectFFT.dproj"/>
 		</Target>
 		<Target Name="ProjectFFT:Make">
-			<MSBuild Targets="Make" Projects="..\..\..\2011\tests\TestAlgLib\ProjectFFT.dproj"/>
+			<MSBuild Targets="Make" Projects="..\tests\TestAlgLib\ProjectFFT.dproj"/>
 		</Target>
 		<Target Name="Build">
 			<CallTarget Targets="BlEng;dcl_own;GlPackage;ComponentsLib;GlScene;Proilegenerator;RC_lib;plgControlCyclogram;CheckSSE;SubdivFilePlg;WpServicePlg;WPExtPack;ProjectFFT"/>

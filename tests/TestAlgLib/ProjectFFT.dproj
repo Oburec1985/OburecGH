@@ -1,0 +1,276 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{8E083012-8A64-41D3-8F5B-E74716A244D2}</ProjectGuid>
+			<ProjectVersion>12.0</ProjectVersion>
+			<MainSource>ProjectFFT.dpr</MainSource>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_UnitSearchPath>..\..\sharedUtils\компоненты\dcl_dpk;..\..\sharedUtils\objects;..\..\sharedUtils\utils;..\..\sharedUtils\utils\lists;..\..\sharedUtils\utils\PathUtils;..\..\sharedUtils\math;..\..\sharedUtils;..\..\sharedUtils\utils\xml;..\..\sharedUtils\forms;..\..\sharedUtils\objects\utils;..\..\sharedUtils\utils\FastMM;..\..\sharedUtils\utils\jcl-2.3.1.4197;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\sharedUtils\компоненты\chart_dpk;..\..\sharedUtils\компоненты\chart_dpk\chart;..\..\sharedUtils\компоненты\chart_dpk\chart\utils;..\..\sharedUtils\компоненты\chart_dpk\chart\utils\lists;..\..\sharedUtils\компоненты\chart_dpk\chart\items;..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners;..\..\sharedUtils\компоненты\chart_dpk\chart\forms;..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames;..\..\sharedUtils\ogl;..\..\sharedUtils\ogl\dglOpenGL;..\..\sharedUtils\ogl\shader;..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source;..\..\3d;..\..\3d\objects;..\..\3d\forms;..\..\3d\math;..\..\3d\tools;..\..\3d\core;..\..\sharedUtils\utils\reports\ZipMaster19;..\..\sharedUtils\utils\TmsPack;..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14;..\..\sharedUtils\ZipMaster\;..\..\sharedUtils\math\FFT_койнов;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_DependencyCheckOutputName>ProjectFFT.exe</DCC_DependencyCheckOutputName>
+			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<DCC_Platform>x86</DCC_Platform>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="ProjectFFT.dpr">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="TestFFT.pas">
+				<Form>Form1</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\llstestunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testablasunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testasa.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testautogk.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testbdssunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testbdsvdunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testblasunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testchebyshevunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testconvunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testcorrunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testcreflunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testdensesolverunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testevdunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testfftunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testfhtunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testforestunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testgammaunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testgkq.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testgq.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testhblasunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testhermiteunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testhqrndunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testidwunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testinverseupdateunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testinvldltunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testkmeansunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testlaguerreunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testldaunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testldltunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testlegendreunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testlinminunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testmatgenunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testmatinvunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testmincgunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testminlbfgsunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testminlmunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testmlpeunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testmlpunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testnearestneighborunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testodesolverunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testortfacunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testpcaunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testpolintunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testpsplineunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testratinterpolation.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testrcondldltunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testrcondunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testreflectionsunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testregressunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testsafesolveunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testsblasunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testschurunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testspdgevdunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testspline1dunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testspline2dunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testsstunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testsvdunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testtrfacunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testtsortunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\testxblasunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\ablas.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\ablasf.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\airyf.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\ap.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\apserv.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\autogk.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\bdss.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\bdsvd.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\bessel.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\betaf.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\binomialdistr.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\blas.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\chebyshev.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\chisquaredistr.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\conv.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\corr.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\correlation.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\correlationtests.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\creflections.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\dawson.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\densesolver.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\descriptivestatistics.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\dforest.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\elliptic.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\estnorm.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\evd.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\expintegrals.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\fdistr.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\fft.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\fht.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\fresnel.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\ftbase.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\gammafunc.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\gkq.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\gq.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\hblas.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\hermite.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\hqrnd.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\hsschur.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\ibetaf.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\idwint.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\igammaf.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\inverseupdate.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\jacobianelliptic.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\jarquebera.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\kmeans.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\laguerre.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\lda.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\ldlt.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\legendre.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\linmin.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\linreg.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\logit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\lsfit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\mannwhitneyu.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\matdet.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\matgen.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\matinv.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\minasa.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\mincg.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\minlbfgs.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\minlm.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\mlpbase.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\mlpe.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\mlptrain.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\nearestneighbor.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\nearunityunit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\normaldistr.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\odesolver.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\ortfac.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\pca.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\poissondistr.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\polint.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\psif.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\pspline.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\ratint.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\ratinterpolation.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\rcond.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\reflections.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\rotations.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\safesolve.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\sblas.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\schur.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\sdet.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\sinverse.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\spdgevd.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\spline1d.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\spline2d.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\spline3.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\srcond.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\ssolve.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\stest.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\studenttdistr.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\studentttests.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\svd.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\trfac.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\trigintegrals.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\trlinsolve.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\tsort.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\variancetests.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\wsr.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\xblas.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\ubuffsignal.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\uMeraFile.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\umeraSignal.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\uSignalsUtils.pas"/>
+			<DCCReference Include="PerformanceTime.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\uHardwareMath.pas"/>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Source>
+						<Source Name="MainSource">ProjectFFT.dpr</Source>
+					</Source>
+					<Parameters>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">1</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1049</VersionInfo>
+						<VersionInfo Name="CodePage">1251</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName"/>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+					<Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\bcboffice2k140.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\bcbofficexp140.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dcloffice2k140.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dclofficexp140.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+					</Excluded_Packages>
+				</Delphi.Personality>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>

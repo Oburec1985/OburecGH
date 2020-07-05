@@ -60,6 +60,7 @@ procedure ifft_al_d_sse(inData: TCmxArray_d; var outData: TCmxArray_d;  FFTPlan:
 // вызов FFT. На входе выровненные данные по 16 байтам даблы и комплексы. Результат в OutData
 // OutData в обязательном порядке должен иметь размер FFTSize!!! FFTPlan влияет лишь на
 // подготовку данных из inData в OutData
+// первый элемент - двойное среднее!!!
 procedure fft_al_d_sse(inData: TDoubleArray; var outData: TCmxArray_d; FFTPlan: TFFTProp);
 // нормализация вида Abs(inData[i])*(1/FFTSize). размер OutData FFTSize/2
 // outData в 2 раза меньше чем inData, на множитель нормализации влияет только яисло точек FFT

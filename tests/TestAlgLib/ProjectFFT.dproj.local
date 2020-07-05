@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2018.06.04 22:38:00.357.pas,C:\Users\Oburec\Documents\RAD Studio\Projects\Unit1.pas=G:\oburec\project2010\2011\tests\TestAlgLib\TestFFT.pas</Transaction>
+    <Transaction>2018.06.04 22:38:00.357.dfm,C:\Users\Oburec\Documents\RAD Studio\Projects\Unit1.dfm=G:\oburec\project2010\2011\tests\TestAlgLib\TestFFT.dfm</Transaction>
+    <Transaction>2018.06.04 22:38:18.246.dproj,C:\Users\Oburec\Documents\RAD Studio\Projects\Project1.dproj=G:\oburec\project2010\2011\tests\TestAlgLib\ProjectFFT.dproj</Transaction>
+    <Transaction>2018.06.07 00:22:41.332.pas,G:\oburec\project2010\2011\tests\TestAlgLib\Unit1.pas=G:\oburec\project2010\2011\tests\TestAlgLib\cmplx.pas</Transaction>
+    <Transaction>2018.06.07 00:23:04.796.pas,G:\oburec\project2010\2011\tests\TestAlgLib\Unit1.pas=G:\oburec\project2010\2011\tests\TestAlgLib\cplxfft1.pas</Transaction>
+    <Transaction>2018.06.07 00:26:34.144.pas,G:\oburec\project2010\2011\tests\TestAlgLib\Unit1.pas=G:\oburec\project2010\2011\tests\TestAlgLib\cplxfft2.pas</Transaction>
+    <Transaction>2018.06.07 00:29:44.857.pas,G:\oburec\project2010\2011\tests\TestAlgLib\Unit3.pas=G:\oburec\project2010\2011\tests\TestAlgLib\demfrm.pas</Transaction>
+    <Transaction>2018.06.07 00:29:44.857.dfm,G:\oburec\project2010\2011\tests\TestAlgLib\Unit3.dfm=G:\oburec\project2010\2011\tests\TestAlgLib\demfrm.dfm</Transaction>
+    <Transaction>2018.06.08 22:59:48.737.pas,G:\oburec\project2010\2011\tests\TestAlgLib\Unit1.pas=G:\oburec\project2010\2011\tests\TestAlgLib\uComplex.pas</Transaction>
+    <Transaction>2018.06.08 23:03:28.431.pas,G:\oburec\project2010\2011\tests\TestAlgLib\Unit1.pas=G:\oburec\project2010\2011\tests\TestAlgLib\PerformanceTime.pas</Transaction>
+    <Transaction>2018.06.08 23:07:36.612.pas,G:\oburec\project2010\2011\tests\TestAlgLib\Unit3.pas=G:\oburec\project2010\2011\tests\TestAlgLib\TestFFT2.pas</Transaction>
+    <Transaction>2018.06.08 23:07:36.612.dfm,G:\oburec\project2010\2011\tests\TestAlgLib\Unit3.dfm=G:\oburec\project2010\2011\tests\TestAlgLib\TestFFT2.dfm</Transaction>
+    <Transaction>2018.06.08 23:55:59.154.pas,G:\oburec\project2010\2011\tests\TestAlgLib\uComplex.pas=</Transaction>
+    <Transaction>2018.06.08 23:56:04.483.pas,G:\oburec\project2010\2011\tests\TestAlgLib\TestFFT2.pas=</Transaction>
+    <Transaction>2018.06.08 23:56:04.483.dfm,G:\oburec\project2010\2011\tests\TestAlgLib\TestFFT2.dfm=</Transaction>
+    <Transaction>2018.06.08 23:56:11.406.pas,G:\oburec\project2010\2011\tests\TestAlgLib\demfrm.pas=</Transaction>
+    <Transaction>2018.06.08 23:56:11.406.dfm,G:\oburec\project2010\2011\tests\TestAlgLib\demfrm.dfm=</Transaction>
+    <Transaction>2018.06.09 23:32:19.676.pas,G:\oburec\project2010\2011\tests\TestAlgLib\cmplx.pas=</Transaction>
+    <Transaction>2018.06.09 23:32:19.693.pas,G:\oburec\project2010\2011\tests\TestAlgLib\cplxfft1.pas=</Transaction>
+    <Transaction>2018.06.09 23:32:19.702.pas,G:\oburec\project2010\2011\tests\TestAlgLib\cplxfft2.pas=</Transaction>
+  </Transactions>
+</BorlandProject>

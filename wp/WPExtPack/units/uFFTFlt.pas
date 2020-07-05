@@ -37,9 +37,10 @@ type
     m_iFFTPlanList:array of TFFTProp;
     m_mng: cBaseObjmng;
 
-    data:TDoubleArray;
-    cmplx_al, MagFFTarray: TAlignDCmpx;
-    ifftPlan,fftPlan:TFFTProp;
+    m_data:TDoubleArray;
+    cmplx_al8, fltcmplx_al8, MagFFTarray8,
+    cmplx_al,  fltcmplx_al,  MagFFTarray: TAlignDCmpx;
+    ifftPlan,fftPlan, fftPlan8, ifftPlan8:TFFTProp;
     // набор коэффициентов для fft спектра
     m_curveScales:array of double;
     resfolder:string;
@@ -65,6 +66,9 @@ type
     Constructor create;
     destructor destroy;
   end;
+
+  procedure MultArrays(scales:array of double; cmplx:array of TComplex_d;
+                       var outarray:array of TComplex_d);
 
 implementation
 uses
@@ -99,6 +103,65 @@ begin
   //  result := false;
 end;
 
+procedure SaveSignal(folder:string; name:string; data:TDoubleArray; deltaX:double; x0:double);
+var
+  res:iwpsignal;
+  i:integer;
+begin
+  res:=iwpsignal(wp.CreateSignal(vt_r8));
+  res.StartX:=x0;
+  res.DeltaX:=deltaX;
+  res.size:=length(data);
+  for I := 0 to res.size-1 do
+  begin
+    res.SetY(i, data[i]);
+  end;
+  wp.Link(folder, name, res as IDispatch);
+end;
+
+procedure SaveSignalXY(folder:string; nameX, nameY:string; data:TCmxArray_d; deltaX:double; x0:double);
+var
+  res:iwpsignal;
+  i:integer;
+begin
+  res:=iwpsignal(wp.CreateSignal(vt_r8));
+  res.StartX:=x0;
+  res.DeltaX:=deltaX;
+  res.size:=length(data);
+  for I := 0 to res.size-1 do
+  begin
+    res.SetY(i, data[i].Re);
+  end;
+  wp.Link(folder, nameX, res as IDispatch);
+
+  res:=iwpsignal(wp.CreateSignal(vt_r8));
+  res.StartX:=x0;
+  res.DeltaX:=deltaX;
+  res.size:=length(data);
+  for I := 0 to res.size-1 do
+  begin
+    res.SetY(i, data[i].Im);
+  end;
+  wp.Link(folder, nameY, res as IDispatch);
+end;
+
+
+procedure SaveSignalX(folder:string; nameX:string; data:TCmxArray_d; deltaX:double; x0:double);
+var
+  res:iwpsignal;
+  i:integer;
+begin
+  res:=iwpsignal(wp.CreateSignal(vt_r8));
+  res.StartX:=x0;
+  res.DeltaX:=deltaX;
+  res.size:=length(data);
+  for I := 0 to res.size-1 do
+  begin
+    res.SetY(i, data[i].Re);
+  end;
+  wp.Link(folder, nameX, res as IDispatch);
+end;
+
 procedure TExtFFTflt.Exec(const psrc1, psrc2: IDispatch; out pdst1,
   pdst2: IDispatch);
 var
@@ -119,55 +182,37 @@ begin
     interval:=wp.GetInterval(s1, startind, m_fftCount) as iwpsignal;
     for I := 0 to m_fftCount - 1 do
     begin
-      data[i]:=interval.GetY(i);
+      m_data[i]:=interval.GetY(i);
     end;
-    fft_al_d_sse(data, TCmxArray_d(cmplx_al.p), fftPlan);
+    // test
+    {setlength(data, 8);
+    for I := 0 to 7 do
+    begin
+      data[i]:=i;
+    end;
+    fft_al_d_sse(data, TCmxArray_d(cmplx_al8.p), fftPlan8);
+    NormalizeAndScaleSpmMag(TCmxArray_d(cmplx_al8.p), TDoubleArray(MagFFTarray8.p));
+    ifft_al_d_sse(TCmxArray_d(cmplx_al8.p), TCmxArray_d(fltcmplx_al8.p), ifftPlan8);}
+
+    fft_al_d_sse(m_data, TCmxArray_d(cmplx_al.p), fftPlan);
+    // расчет зафильтрованого спектра
+    MultArrays(m_curveScales,TCmxArray_d(cmplx_al.p),TCmxArray_d(fltcmplx_al.p));
+    // расчет нормированного исходного спектра (до фильтрации)
     k:=1/(fftPlan.PCount shr 1);
     MULT_SSE_al_cmpx_d(tCmxArray_d(cmplx_al.p), k);
     EvalSpmMag(TCmxArray_d(cmplx_al.p), TDoubleArray(MagFFTarray.p));
-    //NormalizeAndScaleSpmMag(TCmxArray_d(cmplx_al.p), TDoubleArray(MagFFTarray.p));
+    // сохраняем комплексный спектр
+    SaveSignalXY('/Signals/results',s1.sname+'_'+'SpmR',s1.sname+'_'+'SpmIm', tCmxArray_d(cmplx_al.p),(1/(s1.deltaX))/m_fftCount, 0);
     // сохраняем амплитудный спектр
-    res:=iwpsignal(wp.CreateSignal(vt_r8));
-    res.DeltaX:=(1/(s1.deltaX))/m_fftCount;
-    res.size:=AlignBlockLength(MagFFTarray);
-    for I := 0 to res.size-1 do
-    begin
-      res.SetY(i, TDoubleArray(MagFFTarray.p)[i]);
-    end;
-    wp.Link('/Signals/results', s1.sname+'_'+'MagSpm', res as IDispatch);
+    SaveSignal('/Signals/results',s1.sname+'_'+'MagSpm',TDoubleArray(MagFFTarray.p),(1/(s1.deltaX))/m_fftCount, 0);
+    ifft_al_d_sse(TCmxArray_d(fltcmplx_al.p), TCmxArray_d(cmplx_al.p), ifftPlan);
+    SaveSignalX('/Signals/results',s1.sname+'_'+'SpmFlt',TCmxArray_d(cmplx_al.p),s1.deltaX,s1.StartX);
+
+
     startind:=startind+m_offset;
     EndSignal:=true;
   end;
-  size:=s1.size;
-  begin
-    {a1 := VarArrayCreate([0, size-1], varDouble);
-    x := VarArrayCreate([0, size-1], varDouble);
-    setlength(cmpx, size*2);
-    s1.GetArray(0,size,a1,x,true);
-    s2.GetArray(0,size,a2,x,true);
-    for I := 0 to size - 1 do
-    begin
-      cmpx[i].X:=a1[i];
-      cmpx[i].y:=a2[i];
-    end;
-    // зеркалирование спектра
-    for I := size to 2*size - 1 do
-    begin
-      cmpx[i].X:=a1[size-i+size-1];
-      cmpx[i].y:=a2[size-i+size-1];
-    end;
-    FFTR1DInv(cmpx, 2*size, resArray);
-    res:=iwpsignal(wp.CreateSignal(vt_r8));
-    res.DeltaX:=1/(s1.MaxX*2);
-    res.size:=size;
-    k:=size;
-    for I := 0 to size-1 do
-    begin
-      res.SetY(i, resArray[i]*k);
-    end;
-    str:=res.sname;
-    wp.Link('/Signals/results', s1.sname+'_'+s2.sname+'fftInv', res as IDispatch);}
-  end;
+
   winpos.Refresh;
   GetPropStr(wstr);
   winpos.AddTextInLog(c_OperName, wstr, true);
@@ -196,15 +241,33 @@ begin
 end;
 
 procedure TExtFFTflt.SetPropStr(const str: WideString);
+var
+  I: Integer;
 begin
   m_fftCount:=strtoint(GetParam(str, 'FFTCount'));
   m_offset:=strtoint(GetParam(str, 'OffsetBlock'));
   m_curve:=GetParam(str, 'Curve');
+
+  fftPlan8:=GetFFTPlan(8);
+  ifftPlan8:=GetInverseFFTPlan(8);
   fftPlan:=GetFFTPlan(m_fftCount);
-  ifftPlan:=GetFFTPlan(m_fftCount);
-  setlength(data, m_fftcount);
+  ifftPlan:=GetInverseFFTPlan(m_fftCount);
+  // буфер для данных из сигнала
+  setlength(m_data, m_fftcount);
+  setlength(m_curveScales, m_fftcount);
+  for I := 0 to m_fftcount-1 do
+  begin
+    m_curveScales[i]:=1;
+  end;
+
   GetMemAlignedArray_cmpx_d(m_fftCount, cmplx_al);
+  GetMemAlignedArray_cmpx_d(m_fftCount, fltcmplx_al);
   GetMemAlignedArray_cmpx_d(m_fftCount shr 1, MagFFTarray);
+
+  GetMemAlignedArray_cmpx_d(8, cmplx_al8);
+  GetMemAlignedArray_cmpx_d(8, fltcmplx_al8);
+  GetMemAlignedArray_cmpx_d(4, MagFFTarray8);
+
   fftPlan.StartInd:=0;
   fftPlan.PCount:=m_fftCount;
   ifftPlan.StartInd:=0;
@@ -359,6 +422,18 @@ begin
   GetFFTExpTable(fftCount, true, tcmxArray_d(r.TableExp.p));
   m_iFFTPlanList[j]:=r;
   result:=m_iFFTPlanList[j];
+end;
+
+procedure MultArrays(scales:array of double;cmplx:array of TComplex_d; var outarray:array of TComplex_d);
+var
+  i,l:integer;
+begin
+  l := length(scales);
+  for I := 0 to l - 1 do
+  begin
+    outarray[I].re := cmplx[I].re * scales[I];
+    outarray[I].im := cmplx[I].im * scales[I];
+  end;
 end;
 
 end.
