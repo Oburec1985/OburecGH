@@ -38,14 +38,15 @@ type
     m_mng: cBaseObjmng;
 
     m_data:TDoubleArray;
-    cmplx_al8, fltcmplx_al8, MagFFTarray8,
+    //cmplx_al8, fltcmplx_al8, MagFFTarray8,
     cmplx_al,  fltcmplx_al,  MagFFTarray: TAlignDCmpx;
-    ifftPlan,fftPlan, fftPlan8, ifftPlan8:TFFTProp;
+    //fftPlan8, ifftPlan8,
+    ifftPlan,fftPlan:TFFTProp;
     // набор коэффициентов для fft спектра
     m_curveScales:array of double;
     resfolder:string;
     // опции оператора
-    m_fftCount, m_Offset:integer;
+    foverlap, m_fftCount, m_Offset:integer;
     m_curve:string;
   public
     procedure GetError(out pnerrcode: integer; out perrstr: WideString);safecall;
@@ -162,20 +163,48 @@ begin
   wp.Link(folder, nameX, res as IDispatch);
 end;
 
+// test
+// setlength(data, 8);
+// for I := 0 to 7 do
+// begin
+//   data[i]:=i;
+// end;
+// fft_al_d_sse(data, TCmxArray_d(cmplx_al8.p), fftPlan8);
+// NormalizeAndScaleSpmMag(TCmxArray_d(cmplx_al8.p), TDoubleArray(MagFFTarray8.p));
+// ifft_al_d_sse(TCmxArray_d(cmplx_al8.p), TCmxArray_d(fltcmplx_al8.p), ifftPlan8);}
+
 procedure TExtFFTflt.Exec(const psrc1, psrc2: IDispatch; out pdst1,
   pdst2: IDispatch);
 var
-  r1, r2, err: olevariant;
-  s1, interval, res:iwpsignal;
-  I, size, startind:integer;
-  k:double;
+  r1, err: olevariant;
+  s1, interval,
+  res:iwpsignal;
+  I, size, startind, resstart, resend, axtype:integer;
+  k, v:double;
   str:string;
   wstr:widestring;
-  //a1,a2,x:olevariant;
   EndSignal:boolean;
 begin
   s1 := psrc1 as iwpsignal;
+  res:=s1.Clone(0, s1.size) as iwpsignal;
+
+  // первый параметр nTypeType - что хотим вернуть
+  // 1 -задаем  тип оси; 2 - тип единиц измерения
+  // второй параметр - номер оси. 0 - ось X
+  // если частотная ось
+  // 5 - временная
+
+  // задаем тип оси x (1); 0 - ось X;
+  res.SetSType(1, 0, s1.GetSType(1, 0));
+  // задаем единицы
+  res.SetSType(2, 0, s1.GetSType(2, 0));
+  // задаем тип оси x (1); 1 - ось Y;
+  res.SetSType(1, 1, s1.GetSType(1, 1));
+  res.SetSType(2, 1, s1.GetSType(2, 1));
+
   startind:=0;
+  resstart:=0;
+  resend:=m_fftCount - 1;
   EndSignal:=false;
   while not EndSignal do
   begin
@@ -184,34 +213,36 @@ begin
     begin
       m_data[i]:=interval.GetY(i);
     end;
-    // test
-    {setlength(data, 8);
-    for I := 0 to 7 do
-    begin
-      data[i]:=i;
-    end;
-    fft_al_d_sse(data, TCmxArray_d(cmplx_al8.p), fftPlan8);
-    NormalizeAndScaleSpmMag(TCmxArray_d(cmplx_al8.p), TDoubleArray(MagFFTarray8.p));
-    ifft_al_d_sse(TCmxArray_d(cmplx_al8.p), TCmxArray_d(fltcmplx_al8.p), ifftPlan8);}
-
     fft_al_d_sse(m_data, TCmxArray_d(cmplx_al.p), fftPlan);
     // расчет зафильтрованого спектра
     MultArrays(m_curveScales,TCmxArray_d(cmplx_al.p),TCmxArray_d(fltcmplx_al.p));
     // расчет нормированного исходного спектра (до фильтрации)
-    k:=1/(fftPlan.PCount shr 1);
-    MULT_SSE_al_cmpx_d(tCmxArray_d(cmplx_al.p), k);
-    EvalSpmMag(TCmxArray_d(cmplx_al.p), TDoubleArray(MagFFTarray.p));
+    //k:=1/(fftPlan.PCount shr 1);
+    //MULT_SSE_al_cmpx_d(tCmxArray_d(cmplx_al.p), k);
+    //EvalSpmMag(TCmxArray_d(cmplx_al.p), TDoubleArray(MagFFTarray.p));
     // сохраняем комплексный спектр
-    SaveSignalXY('/Signals/results',s1.sname+'_'+'SpmR',s1.sname+'_'+'SpmIm', tCmxArray_d(cmplx_al.p),(1/(s1.deltaX))/m_fftCount, 0);
+    // SaveSignalXY('/Signals/results',s1.sname+'_'+'SpmR',s1.sname+'_'+'SpmIm', tCmxArray_d(cmplx_al.p),(1/(s1.deltaX))/m_fftCount, 0);
     // сохраняем амплитудный спектр
-    SaveSignal('/Signals/results',s1.sname+'_'+'MagSpm',TDoubleArray(MagFFTarray.p),(1/(s1.deltaX))/m_fftCount, 0);
+    // SaveSignal('/Signals/results',s1.sname+'_'+'MagSpm',TDoubleArray(MagFFTarray.p),(1/(s1.deltaX))/m_fftCount, 0);
     ifft_al_d_sse(TCmxArray_d(fltcmplx_al.p), TCmxArray_d(cmplx_al.p), ifftPlan);
-    SaveSignalX('/Signals/results',s1.sname+'_'+'SpmFlt',TCmxArray_d(cmplx_al.p),s1.deltaX,s1.StartX);
-
-
-    startind:=startind+m_offset;
-    EndSignal:=true;
+    for I := resstart to resEnd do
+    begin
+      if foverlap>0 then
+      begin
+        k := (I)/(foverlap - 1);
+        v:=(1-k)*res.getY(i) + k*TCmxArray_d(cmplx_al.p)[i-resstart].Re;
+        res.SetY(i,v);
+      end
+      else
+         res.SetY(i,TCmxArray_d(cmplx_al.p)[i-resstart].Re);
+    end;
+    startind:=startind+m_offset-foverlap;
+    resstart:=resstart+m_offset-foverlap;
+    resend:=resend+m_offset;
+    if resend>=s1.size then
+      EndSignal:=true;
   end;
+  wp.Link('/Signals/results',s1.sname+'_'+'SpmFlt', res as IDispatch);
 
   winpos.Refresh;
   GetPropStr(wstr);
@@ -248,8 +279,7 @@ begin
   m_offset:=strtoint(GetParam(str, 'OffsetBlock'));
   m_curve:=GetParam(str, 'Curve');
 
-  fftPlan8:=GetFFTPlan(8);
-  ifftPlan8:=GetInverseFFTPlan(8);
+  foverlap:=m_fftCount-m_offset;
   fftPlan:=GetFFTPlan(m_fftCount);
   ifftPlan:=GetInverseFFTPlan(m_fftCount);
   // буфер для данных из сигнала
@@ -264,9 +294,11 @@ begin
   GetMemAlignedArray_cmpx_d(m_fftCount, fltcmplx_al);
   GetMemAlignedArray_cmpx_d(m_fftCount shr 1, MagFFTarray);
 
-  GetMemAlignedArray_cmpx_d(8, cmplx_al8);
-  GetMemAlignedArray_cmpx_d(8, fltcmplx_al8);
-  GetMemAlignedArray_cmpx_d(4, MagFFTarray8);
+  //fftPlan8:=GetFFTPlan(8);
+  //ifftPlan8:=GetInverseFFTPlan(8);
+  //GetMemAlignedArray_cmpx_d(8, cmplx_al8);
+  //GetMemAlignedArray_cmpx_d(8, fltcmplx_al8);
+  //GetMemAlignedArray_cmpx_d(4, MagFFTarray8);
 
   fftPlan.StartInd:=0;
   fftPlan.PCount:=m_fftCount;

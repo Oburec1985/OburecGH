@@ -7,8 +7,10 @@ uses
   Dialogs, ComCtrls, uBtnListView, StdCtrls, Spin, ExtCtrls, uChart, uFFTflt,
   uWPservices, uCommonTypes, posbase, Winpos_ole_TLB,
   inifiles,
+  utrend,
+  MathFunction,
   uComponentServises,
-  uCommonMath;
+  uCommonMath, DCL_MYOWN;
 
 type
   LBRecord = class
@@ -34,17 +36,23 @@ type
     Label5: TLabel;
     Установить: TButton;
     ScaleCurveChart: cChart;
-    PCountSE: TSpinEdit;
     FFTCountLabel: TLabel;
     OffsetLabel: TLabel;
     OffsetSE: TSpinEdit;
     dFLabel: TLabel;
-    procedure PCountSEKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure PCountSEKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    pCountIE: TIntEdit;
+    pCountBtn: TSpinButton;
+    procedure pCountBtnUpClick(Sender: TObject);
+    procedure pCountBtnDownClick(Sender: TObject);
+    procedure SignalsLBClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     m_oper:TExtFFTflt;
+    curv:ctrend;
   private
+    procedure UpdateFs;
+    procedure ShowCurv;
+    function Selected:iwpSignal;
     procedure showSignals;
     function getsignal(i:integer):iwpsignal;
     function GetPropStr: string;
@@ -104,6 +112,11 @@ begin
   end;
 end;
 
+procedure TFFTFltFrm.FormCreate(Sender: TObject);
+begin
+  curv:=cTrend.create;
+end;
+
 function TFFTFltFrm.GetNotifyStr(p_opts: string): string;
 var
   i: integer;
@@ -142,7 +155,7 @@ var
   str: string;
 begin
   pars := tstringlist.Create;
-  addParam(pars, 'FFTCount', inttostr(pCountSE.Value));
+  addParam(pars, 'FFTCount', inttostr(pCountIE.IntNum));
   addParam(pars, 'OffsetBlock', inttostr(OffsetSE.Value));
   //addParam(pars, 'Curve', inttostr(pCountSE.Value));
 
@@ -164,18 +177,37 @@ begin
   m_oper := eo;
 end;
 
-procedure TFFTFltFrm.PCountSEKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+procedure TFFTFltFrm.pCountBtnDownClick(Sender: TObject);
 begin
-  if PCountSE.Value>2 then
-    PCountSE.Value:=round(PCountSE.Value/2);
+  if PCountIE.IntNum>2 then
+    PCountIE.IntNum:=round(PCountIE.IntNum/2);
+  OffsetSE.Value:=PCountIE.IntNum;
+  updatefs;
 end;
 
-procedure TFFTFltFrm.PCountSEKeyUp(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+procedure TFFTFltFrm.pCountBtnUpClick(Sender: TObject);
 begin
-  if PCountSE.Value>2 then
-    PCountSE.Value:=PCountSE.Value*2;
+  if PCountIE.IntNum>2 then
+    PCountIE.IntNum:=PCountIE.IntNum*2;
+  OffsetSE.Value:=PCountIE.IntNum;
+  updatefs;
+end;
+
+function TFFTFltFrm.Selected: iwpSignal;
+begin
+  if SignalsLB.Count=0 then
+  begin
+    result:=nil;
+    exit;
+  end;
+  if SignalsLB.ItemIndex>-1 then
+  begin
+    result:=LBRecord(SignalsLB.Items.Objects[SignalsLB.ItemIndex]).s;
+  end
+  else
+  begin
+    result:=LBRecord(SignalsLB.Items.Objects[0]).s;
+  end;
 end;
 
 procedure TFFTFltFrm.SetPropStr(str: string);
@@ -206,8 +238,24 @@ begin
       s:=TypeCastToIWSignal(ch);
       rec:=LBRecord.Create;
       rec.s:=s;
-      signalsLB.Items.AddObject(s.sname,rec);
+      signalsLB.Items.AddObject(s.sname+' F='+formatstrnoe(1/s.DeltaX, 4),rec);
     end;
+  end;
+end;
+
+procedure TFFTFltFrm.SignalsLBClick(Sender: TObject);
+begin
+  updatefs;
+end;
+
+procedure TFFTFltFrm.UpdateFs;
+var
+  s:iwpsignal;
+begin
+  s:=Selected;
+  if s<>nil then
+  begin
+    dfLabel.Caption:='dF='+formatstrNoE((1/s.DeltaX)/pCountIE.IntNum,4);
   end;
 end;
 
