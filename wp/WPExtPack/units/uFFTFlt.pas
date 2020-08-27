@@ -10,9 +10,10 @@ unit uFFTFlt;
 
 interface
 uses
-  windows, ComObj, types, Forms, ActiveX, WPExtPack_TLB, Winpos_ole_TLB,
+  windows, sysutils,
+  ComObj, types, Forms, ActiveX, WPExtPack_TLB, Winpos_ole_TLB,
   StdVcl, PosBase,
-  uFindMaxForm, uWPProc, classes, uCommonTypes, uWPservices, sysutils, utrend,
+  uFindMaxForm, uWPProc, classes, uCommonTypes, uWPservices,  utrend,
   uSetList, math, uWPEvents, ComServ, uCommonMath,
   MathFunction,
   uMyMath,
@@ -32,6 +33,8 @@ type
 // алгоритм не знает списка сигналов обработки (он получает по одному
   // сигналу перед вызовом). –аботу с группой сигналов реализует форма
   TExtFFTflt = class(TAutoObject, IWPExtOper)
+  public
+    m_Band:tStringlist;
   private
     m_FFTPlanList:array of TFFTProp;
     m_iFFTPlanList:array of TFFTProp;
@@ -48,6 +51,8 @@ type
     // опции оператора
     foverlap, m_fftCount, m_Offset:integer;
     m_curve:string;
+  private
+    procedure EvalCurve(s:iwpsignal; df:double);
   public
     procedure GetError(out pnerrcode: integer; out perrstr: WideString);safecall;
     procedure OnApply; safecall;
@@ -82,6 +87,7 @@ const
 {TExtFFTInverse}
 constructor TExtFFTflt.create;
 begin
+  m_Band:=TStringList.Create;
   m_fftCount:=1024;
   setlength(m_FFTPlanList,100);
   setlength(m_iFFTPlanList,100);
@@ -89,10 +95,9 @@ end;
 
 destructor TExtFFTflt.destroy;
 begin
+  m_Band.Destroy;
   FreeFFTPlanList;
 end;
-
-
 
 function TExtFFTflt.Execute(const psrc1: IDispatch): boolean;
 var
@@ -173,6 +178,31 @@ end;
 // NormalizeAndScaleSpmMag(TCmxArray_d(cmplx_al8.p), TDoubleArray(MagFFTarray8.p));
 // ifft_al_d_sse(TCmxArray_d(cmplx_al8.p), TCmxArray_d(fltcmplx_al8.p), ifftPlan8);}
 
+procedure TExtFFTflt.EvalCurve(s:iwpsignal; df:double);
+var
+  I,j, ind: Integer;
+  b:point3d;
+  str:string;
+  pars:tstringlist;
+begin
+  pars:=TStringList.Create;
+  pars.Delimiter:=';';
+  for I := 0 to length(m_curveScales) - 1 do
+    m_curveScales[i]:=1;
+  for I := 0 to m_band.Count - 1 do
+  begin
+    str := m_Band.Strings[i];
+    pars.DelimitedText:=str;
+    ind:=pos('..',pars.Strings[0]);
+    b.x:=StrtoFloatExt(copy(pars.Strings[0],1,ind-1));
+    b.y:=StrtoFloatExt(copy(pars.Strings[0],ind+2,length(pars.Strings[0])-ind-1));
+    b.z:=strtofloat(pars.Strings[1]);
+    // расчет индексов границ полос и установка   в curvescales
+
+  end;
+  pars.Destroy;
+end;
+
 procedure TExtFFTflt.Exec(const psrc1, psrc2: IDispatch; out pdst1,
   pdst2: IDispatch);
 var
@@ -187,6 +217,7 @@ var
 begin
   s1 := psrc1 as iwpsignal;
   res:=s1.Clone(0, s1.size) as iwpsignal;
+  EvalCurve(s1, 1);
 
   // первый параметр nTypeType - что хотим вернуть
   // 1 -задаем  тип оси; 2 - тип единиц измерени€

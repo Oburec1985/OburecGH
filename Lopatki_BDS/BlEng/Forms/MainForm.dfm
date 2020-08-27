@@ -53,6 +53,7 @@ object MainBldForm: TMainBldForm
       inherited formulyarsTC: TPageControl
         Width = 619
         Height = 477
+        ActivePage = ChartFrame1.ChartTabSheet
         ExplicitWidth = 619
         ExplicitHeight = 477
         inherited ChartTabSheet: TTabSheet
@@ -61,14 +62,14 @@ object MainBldForm: TMainBldForm
           ExplicitWidth = 443
           ExplicitHeight = 276
           inherited Splitter2: TSplitter
-            Height = 276
+            Height = 449
             ExplicitLeft = 0
             ExplicitTop = 0
             ExplicitHeight = 463
           end
           inherited cChart1: cChart
-            Width = 438
-            Height = 276
+            Width = 606
+            Height = 449
             Margins.Left = 2
             Margins.Top = 2
             Margins.Right = 2
@@ -86,8 +87,8 @@ object MainBldForm: TMainBldForm
           ExplicitWidth = 443
           ExplicitHeight = 276
           inherited DigitsLV: TBtnListView
-            Width = 443
-            Height = 276
+            Width = 611
+            Height = 449
             Margins.Left = 2
             Margins.Top = 2
             Margins.Right = 2
@@ -104,12 +105,12 @@ object MainBldForm: TMainBldForm
           ExplicitWidth = 443
           ExplicitHeight = 276
           inherited TurbineGLGB: TGroupBox
-            Width = 443
-            Height = 276
+            Width = 611
+            Height = 449
             ExplicitHeight = 276
             inherited Splitter1: TSplitter
-              Top = 266
-              Width = 439
+              Top = 439
+              Width = 607
               Height = 8
               ExplicitLeft = 2
               ExplicitTop = 198
@@ -118,15 +119,15 @@ object MainBldForm: TMainBldForm
             end
             inherited glTurbineFrame1: TglTurbineFrame
               Top = 15
-              Width = 439
-              Height = 251
+              Width = 607
+              Height = 424
               ExplicitTop = 15
               ExplicitHeight = 251
               inherited EditTurbGB: TGroupBox
-                Height = 251
+                Height = 424
                 ExplicitHeight = 251
                 inherited ApplyBtn: TButton
-                  Top = -54
+                  Top = 119
                   ExplicitTop = -54
                 end
                 inherited BlCountIE: TIntEdit
@@ -159,8 +160,8 @@ object MainBldForm: TMainBldForm
                 end
               end
               inherited cBaseGlComponent1: cBaseGlComponent
-                Width = 326
-                Height = 251
+                Width = 494
+                Height = 424
                 Margins.Left = 2
                 Margins.Top = 2
                 Margins.Right = 2
@@ -1090,7 +1091,7 @@ object MainBldForm: TMainBldForm
     Left = 24
     Top = 344
     Bitmap = {
-      494C010116001900040020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010116001900080020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       000000000000360000002800000080000000C000000001002000000000000080
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -4269,7 +4270,7 @@ object MainBldForm: TMainBldForm
     Left = 56
     Top = 344
     Bitmap = {
-      494C010116001900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010116001900080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000006000000001002000000000000060
       0000000000000000000000000000000000000000000000000000000000000000
       00000000000000000000000000002D2D2D040000000000000000000000000000

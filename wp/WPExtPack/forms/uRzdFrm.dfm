@@ -1462,8 +1462,6 @@ object RZDFrm: TRZDFrm
       TreeOptions.SelectionOptions = [toExtendedFocus, toMiddleClickSelect, toMultiSelect, toRightClickSelect]
       OnDragOver = VTree1DragOver
       OnDragDrop = VTree1DragDrop
-      ExplicitLeft = 3
-      ExplicitTop = 52
       Columns = <>
     end
   end
@@ -2963,7 +2961,7 @@ object RZDFrm: TRZDFrm
     Left = 56
     Top = 208
     Bitmap = {
-      494C010122002500040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010122002500080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000009000000001002000000000000090
       000000000000000000000000000000000000004D00FF004D00FF004D00FF004D
       00FFFFFFFFFFFFFFFFFF004D00FF004D00FF004D00FF004D00FFFFFFFFFFFFFF
@@ -4164,7 +4162,7 @@ object RZDFrm: TRZDFrm
     Left = 136
     Top = 208
     Bitmap = {
-      494C010121002500040020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010121002500080020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000002001000001002000000000000040
       0200000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -8940,244 +8938,5 @@ object RZDFrm: TRZDFrm
   object OpenDialog1: TOpenDialog
     Left = 24
     Top = 72
-  end
-  object frxPDFExport1: TfrxPDFExport
-    UseFileCache = True
-    ShowProgress = True
-    OverwritePrompt = False
-    PrintOptimized = False
-    Outline = False
-    Background = False
-    HTMLTags = True
-    Author = 'FastReport'
-    Subject = 'FastReport PDF export'
-    ProtectionFlags = [ePrint, eModify, eCopy, eAnnot]
-    HideToolbar = False
-    HideMenubar = False
-    HideWindowUI = False
-    FitWindow = False
-    CenterWindow = False
-    PrintScaling = False
-    Left = 80
-    Top = 272
-  end
-  object frxRTFExport1: TfrxRTFExport
-    UseFileCache = True
-    ShowProgress = True
-    OverwritePrompt = False
-    Wysiwyg = True
-    Creator = 'FastReport'
-    SuppressPageHeadersFooters = False
-    HeaderFooterMode = hfText
-    AutoSize = False
-    Left = 168
-    Top = 272
-  end
-  object frxHTMLExport1: TfrxHTMLExport
-    UseFileCache = True
-    ShowProgress = True
-    OverwritePrompt = False
-    FixedWidth = True
-    Background = False
-    Centered = False
-    EmptyLines = True
-    Print = False
-    Left = 176
-    Top = 344
-  end
-  object frxReport1: TfrxReport
-    Version = '4.15.13'
-    DotMatrixReport = False
-    EngineOptions.DoublePass = True
-    IniFile = '\Software\Fast Reports'
-    PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick]
-    PreviewOptions.Zoom = 1.000000000000000000
-    PrintOptions.Printer = 'Default'
-    PrintOptions.PrintOnSheet = 256
-    ReportOptions.CreateDate = 42780.322214120400000000
-    ReportOptions.LastChange = 42989.697433425930000000
-    ScriptLanguage = 'PascalScript'
-    ScriptText.Strings = (
-      'begin'
-      ''
-      'end.')
-    Left = 24
-    Top = 344
-    Datasets = <>
-    Variables = <>
-    Style = <>
-    object Data: TfrxDataPage
-      Height = 1000.000000000000000000
-      Width = 1000.000000000000000000
-    end
-    object Page1: TfrxReportPage
-      Orientation = poLandscape
-      PaperWidth = 297.000000000000000000
-      PaperHeight = 210.000000000000000000
-      PaperSize = 9
-      LeftMargin = 10.000000000000000000
-      RightMargin = 10.000000000000000000
-      TopMargin = 10.000000000000000000
-      BottomMargin = 10.000000000000000000
-      object Bmp1: TfrxPictureView
-        Left = 7.559060000000000000
-        Top = 56.692950000000000000
-        Width = 1009.134510000000000000
-        Height = 593.386210000000000000
-        ShowHint = False
-        KeepAspectRatio = False
-        HightQuality = True
-        Transparent = False
-        TransparentColor = clWhite
-      end
-      object From: TfrxMemoView
-        Left = 15.118120000000000000
-        Top = 7.559060000000000000
-        Width = 272.126160000000000000
-        Height = 18.897650000000000000
-        ShowHint = False
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clBlack
-        Font.Height = -16
-        Font.Name = 'Arial'
-        Font.Style = []
-        Memo.UTF8W = (
-          #1058#1072#1088#1080#1088#1086#1074#1082#1072' '#1086#1090':')
-        ParentFont = False
-      end
-      object Cut: TfrxMemoView
-        Left = 304.921460000000000000
-        Top = 7.338590000000000000
-        Width = 143.622140000000000000
-        Height = 18.897650000000000000
-        ShowHint = False
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clBlack
-        Font.Height = -16
-        Font.Name = 'Arial'
-        Font.Style = []
-        Memo.UTF8W = (
-          #1057#1077#1095#1077#1085#1080#1077':')
-        ParentFont = False
-      end
-      object Memo1: TfrxMemoView
-        Left = 464.882190000000000000
-        Width = 124.724490000000000000
-        Height = 18.897650000000000000
-        ShowHint = False
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clBlue
-        Font.Height = -16
-        Font.Name = 'Arial'
-        Font.Style = []
-        Memo.UTF8W = (
-          #1044#1086#1084#1082#1088#1072#1090' '#1074#1077#1088#1090'.')
-        ParentFont = False
-      end
-      object Memo2: TfrxMemoView
-        Left = 616.063390000000000000
-        Width = 124.724490000000000000
-        Height = 18.897650000000000000
-        ShowHint = False
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clGreen
-        Font.Height = -16
-        Font.Name = 'Arial'
-        Font.Style = []
-        Memo.UTF8W = (
-          #1042#1086#1089#1089#1090'. '#1074#1077#1088#1090'.')
-        ParentFont = False
-      end
-      object Memo3: TfrxMemoView
-        Left = 464.882190000000000000
-        Top = 26.456692913385800000
-        Width = 124.724490000000000000
-        Height = 18.897650000000000000
-        ShowHint = False
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clRed
-        Font.Height = -16
-        Font.Name = 'Arial'
-        Font.Style = []
-        Memo.UTF8W = (
-          #1044#1086#1084#1082#1088#1072#1090' '#1075#1086#1088#1080#1079'.')
-        ParentFont = False
-      end
-      object Memo4: TfrxMemoView
-        Left = 616.063390000000000000
-        Top = 26.456710000000000000
-        Width = 124.724490000000000000
-        Height = 18.897650000000000000
-        ShowHint = False
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clNavy
-        Font.Height = -16
-        Font.Name = 'Arial'
-        Font.Style = []
-        Memo.UTF8W = (
-          #1042#1086#1089#1090'. '#1075#1086#1088#1080#1079'.')
-        ParentFont = False
-      end
-      object TestMemo: TfrxMemoView
-        Left = 7.559060000000000000
-        Top = 695.433520000000000000
-        Width = 559.370440000000000000
-        Height = 18.897650000000000000
-        ShowHint = False
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clBlack
-        Font.Height = -16
-        Font.Name = 'Arial'
-        Font.Style = []
-        Memo.UTF8W = (
-          #1057#1077#1095#1077#1085#1080#1077':')
-        ParentFont = False
-      end
-      object Memo5: TfrxMemoView
-        Left = 7.559060000000000000
-        Top = 657.638220000000000000
-        Width = 166.299320000000000000
-        Height = 18.897650000000000000
-        ShowHint = False
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clBlue
-        Font.Height = -15
-        Font.Name = 'Arial'
-        Font.Style = []
-        Memo.UTF8W = (
-          #1042#1077#1088#1090#1080#1082#1072#1083#1100#1085#1072#1103' '#1089#1080#1083#1072)
-        ParentFont = False
-      end
-      object Memo6: TfrxMemoView
-        Left = 306.141930000000000000
-        Top = 657.638220000000000000
-        Width = 166.299320000000000000
-        Height = 18.897650000000000000
-        ShowHint = False
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clGreen
-        Font.Height = -15
-        Font.Name = 'Arial'
-        Font.Style = []
-        Memo.UTF8W = (
-          #1041#1086#1082'. '#1089#1080#1083#1072' ('#1085#1072#1073#1077#1075'. '#1086#1089#1100')')
-        ParentFont = False
-      end
-      object Memo7: TfrxMemoView
-        Left = 559.370440000000000000
-        Top = 657.638220000000000000
-        Width = 196.535560000000000000
-        Height = 18.897650000000000000
-        ShowHint = False
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clRed
-        Font.Height = -15
-        Font.Name = 'Arial'
-        Font.Style = []
-        Memo.UTF8W = (
-          #1041#1086#1082'. '#1089#1080#1083#1072' ('#1074#1077#1076#1086#1084#1072#1103'. '#1086#1089#1100')')
-        ParentFont = False
-      end
-    end
   end
 end
