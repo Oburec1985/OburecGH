@@ -116,7 +116,6 @@ object FFTFltFrm: TFFTFltFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitLeft = 153
     end
     object SignalsLV: TBtnListView
       Left = 158
@@ -157,9 +156,6 @@ object FFTFltFrm: TFFTFltFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitLeft = 283
-      ExplicitTop = -2
-      ExplicitWidth = 152
     end
   end
   object EditCurvePanel: TPanel
@@ -478,7 +474,6 @@ object FFTFltFrm: TFFTFltFrm
       ShowHint = True
       TabOrder = 10
       Text = 'C:\Winpos\FFTFltCfg\test.txt'
-      ExplicitWidth = 206
     end
     object SaveBtn: TButton
       Left = 234
@@ -489,7 +484,6 @@ object FFTFltFrm: TFFTFltFrm
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
       TabOrder = 11
       OnClick = SaveBtnClick
-      ExplicitLeft = 134
     end
     object LoadCfgCB: TComboBox
       Left = 2
@@ -531,7 +525,6 @@ object FFTFltFrm: TFFTFltFrm
     showTV = False
     showLegend = True
     selectSize = 5
-    ExplicitLeft = 315
   end
   object OpenDialog1: TOpenDialog
     Left = 261

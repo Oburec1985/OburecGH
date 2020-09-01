@@ -180,10 +180,12 @@ end;
 
 procedure TExtFFTflt.EvalCurve(s:iwpsignal; df:double);
 var
-  I,j, ind: Integer;
+  I,j, ind,
+  i1, i2: Integer;
   b:point3d;
   str:string;
   pars:tstringlist;
+  d:double;
 begin
   pars:=TStringList.Create;
   pars.Delimiter:=';';
@@ -198,7 +200,15 @@ begin
     b.y:=StrtoFloatExt(copy(pars.Strings[0],ind+2,length(pars.Strings[0])-ind-1));
     b.z:=strtofloat(pars.Strings[1]);
     // расчет индексов границ полос и установка К в curvescales
-
+    i1:=Ceil(b.x/df);
+    i2:=trunc(b.y/df);
+    //d:=frac(i1);
+    for j := i1 to i2 do
+    begin
+      m_curvescales[j]:=b.z;
+      // ЗЕРКАЛИРОВАННЫЙ СПЕКТР
+      m_curvescales[m_fftCount-i+m_fftCount-1]:=b.z;
+    end;
   end;
   pars.Destroy;
 end;
@@ -207,17 +217,26 @@ procedure TExtFFTflt.Exec(const psrc1, psrc2: IDispatch; out pdst1,
   pdst2: IDispatch);
 var
   r1, err: olevariant;
-  s1, interval,
+  s,s1, interval,
   res:iwpsignal;
   I, size, startind, resstart, resend, axtype:integer;
   k, v:double;
   str:string;
   wstr:widestring;
   EndSignal:boolean;
+  df:double;
 begin
   s1 := psrc1 as iwpsignal;
-  res:=s1.Clone(0, s1.size) as iwpsignal;
-  EvalCurve(s1, 1);
+
+  //res:=s1.Clone(0, s1.size) as iwpsignal;
+  res:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
+  res.DeltaX:=s1.DeltaX;
+  res.size:=s1.size;
+  res.StartX:=s1.startX;
+  res.SetY(0, 1);
+
+  df:=(1/s1.DeltaX)/m_fftCount;
+  EvalCurve(s1, dF);
 
   // первый параметр nTypeType - что хотим вернуть
   // 1 -задаем  тип оси; 2 - тип единиц измерения
@@ -265,7 +284,11 @@ begin
         res.SetY(i,v);
       end
       else
-         res.SetY(i,TCmxArray_d(cmplx_al.p)[i-resstart].Re);
+      begin
+         v:=TCmxArray_d(cmplx_al.p)[i-resstart].Re;
+         //IsSignal(res)
+         res.SetY(i,v);
+      end;
     end;
     startind:=startind+m_offset-foverlap;
     resstart:=resstart+m_offset-foverlap;

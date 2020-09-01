@@ -192,7 +192,6 @@ begin
   addParam(pars, 'FFTCount', inttostr(pCountIE.IntNum));
   addParam(pars, 'OffsetBlock', inttostr(OffsetSE.Value));
   //addParam(pars, 'Curve', inttostr(pCountSE.Value));
-
   result := ParsToStr(pars);
   delpars(pars);
   pars.Destroy;
