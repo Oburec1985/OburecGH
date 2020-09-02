@@ -207,7 +207,7 @@ begin
     begin
       m_curvescales[j]:=b.z;
       // «≈– ¿À»–Œ¬¿ÕÕ€… —œ≈ “–
-      m_curvescales[m_fftCount-i+m_fftCount-1]:=b.z;
+      m_curvescales[m_fftCount-j-1]:=b.z;
     end;
   end;
   pars.Destroy;
