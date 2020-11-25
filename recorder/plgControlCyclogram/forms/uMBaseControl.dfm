@@ -2,22 +2,22 @@ object MBaseControl: TMBaseControl
   Left = 0
   Top = 0
   Caption = #1059#1087#1088#1072#1074#1083#1077#1085#1080#1077' '#1073#1072#1079#1086#1081' '#1076#1072#1085#1085#1099#1093
-  ClientHeight = 630
-  ClientWidth = 544
+  ClientHeight = 701
+  ClientWidth = 726
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -10
+  Font.Height = -16
   Font.Name = 'Tahoma'
   Font.Style = []
   Menu = MainMenu1
   OldCreateOrder = False
   PixelsPerInch = 96
-  TextHeight = 12
+  TextHeight = 19
   object Splitter1: TSplitter
     Left = 0
-    Top = 526
-    Width = 544
+    Top = 558
+    Width = 726
     Height = 3
     Cursor = crVSplit
     Margins.Left = 2
@@ -33,7 +33,7 @@ object MBaseControl: TMBaseControl
   object Splitter2: TSplitter
     Left = 0
     Top = 109
-    Width = 544
+    Width = 726
     Height = 2
     Cursor = crVSplit
     Margins.Left = 2
@@ -47,8 +47,8 @@ object MBaseControl: TMBaseControl
   end
   object Splitter3: TSplitter
     Left = 0
-    Top = 231
-    Width = 544
+    Top = 268
+    Width = 726
     Height = 2
     Cursor = crVSplit
     Margins.Left = 2
@@ -58,12 +58,13 @@ object MBaseControl: TMBaseControl
     Align = alTop
     Color = clBackground
     ParentColor = False
+    ExplicitTop = 231
     ExplicitWidth = 640
   end
   object ObjGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 544
+    Width = 726
     Height = 109
     Margins.Left = 2
     Margins.Top = 2
@@ -73,10 +74,10 @@ object MBaseControl: TMBaseControl
     Caption = #1054#1073#1098#1077#1082#1090
     TabOrder = 0
     object Splitter6: TSplitter
-      Left = 329
-      Top = 14
+      Left = 359
+      Top = 21
       Width = 4
-      Height = 93
+      Height = 86
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -84,12 +85,15 @@ object MBaseControl: TMBaseControl
       Color = clBackground
       ParentColor = False
       OnMoved = Splitter4Moved
+      ExplicitLeft = 329
+      ExplicitTop = 14
+      ExplicitHeight = 93
     end
     object ObjPanel: TPanel
       Left = 2
-      Top = 14
-      Width = 327
-      Height = 93
+      Top = 21
+      Width = 357
+      Height = 86
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -98,9 +102,9 @@ object MBaseControl: TMBaseControl
       TabOrder = 0
       object ObjNameLabel: TLabel
         Left = 12
-        Top = 14
-        Width = 72
-        Height = 12
+        Top = 6
+        Width = 112
+        Height = 19
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
@@ -108,10 +112,10 @@ object MBaseControl: TMBaseControl
         Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077':'
       end
       object ObjRenameBtn: TButton
-        Left = 125
+        Left = 194
         Top = 31
-        Width = 77
-        Height = 19
+        Width = 124
+        Height = 27
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
@@ -123,8 +127,8 @@ object MBaseControl: TMBaseControl
       object ObjNameCB: TComboBox
         Left = 12
         Top = 31
-        Width = 109
-        Height = 20
+        Width = 168
+        Height = 27
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
@@ -134,10 +138,10 @@ object MBaseControl: TMBaseControl
       end
     end
     object ObjPropSG: TStringGridExt
-      Left = 333
-      Top = 14
-      Width = 209
-      Height = 93
+      Left = 363
+      Top = 21
+      Width = 361
+      Height = 86
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -151,8 +155,8 @@ object MBaseControl: TMBaseControl
   object TestGB: TGroupBox
     Left = 0
     Top = 111
-    Width = 544
-    Height = 120
+    Width = 726
+    Height = 157
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -161,9 +165,9 @@ object MBaseControl: TMBaseControl
     Caption = #1048#1089#1087#1099#1090#1072#1085#1080#1077
     TabOrder = 1
     object Splitter5: TSplitter
-      Left = 329
-      Top = 14
-      Height = 104
+      Left = 357
+      Top = 21
+      Height = 134
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -171,13 +175,15 @@ object MBaseControl: TMBaseControl
       Color = clBackground
       ParentColor = False
       OnMoved = Splitter4Moved
+      ExplicitLeft = 329
+      ExplicitTop = 14
       ExplicitHeight = 105
     end
     object TestPanel: TPanel
       Left = 2
-      Top = 14
-      Width = 327
-      Height = 104
+      Top = 21
+      Width = 355
+      Height = 134
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -186,9 +192,9 @@ object MBaseControl: TMBaseControl
       TabOrder = 0
       object TestTypeLabel: TLabel
         Left = 13
-        Top = 55
-        Width = 22
-        Height = 12
+        Top = 63
+        Width = 34
+        Height = 19
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
@@ -198,8 +204,8 @@ object MBaseControl: TMBaseControl
       object Label2: TLabel
         Left = 13
         Top = 5
-        Width = 72
-        Height = 12
+        Width = 112
+        Height = 19
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
@@ -208,9 +214,9 @@ object MBaseControl: TMBaseControl
       end
       object TestTypeCB: TComboBox
         Left = 13
-        Top = 72
-        Width = 109
-        Height = 20
+        Top = 80
+        Width = 167
+        Height = 27
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
@@ -218,22 +224,10 @@ object MBaseControl: TMBaseControl
         TabOrder = 0
         OnChange = TestTypeCBChange
       end
-      object TestSelectBtn: TButton
-        Left = 126
-        Top = 72
-        Width = 57
-        Height = 19
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        Caption = #1042#1099#1073#1088#1072#1090#1100
-        TabOrder = 1
-      end
       object TestDateNameCB: TCheckBox
-        Left = 126
+        Left = 194
         Top = 24
-        Width = 50
+        Width = 72
         Height = 13
         Hint = #1042#1089#1090#1072#1074#1080#1090#1100' '#1076#1072#1090#1091' '#1074#1084#1077#1089#1090#1086' '#1080#1084#1077#1085#1080
         Margins.Left = 2
@@ -243,26 +237,26 @@ object MBaseControl: TMBaseControl
         Caption = #1044#1072#1090#1072
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 2
+        TabOrder = 1
       end
       object TestNameCB: TComboBox
         Left = 13
-        Top = 22
-        Width = 109
-        Height = 20
+        Top = 26
+        Width = 167
+        Height = 27
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
         Margins.Bottom = 2
-        TabOrder = 3
+        TabOrder = 2
         OnChange = TestNameCBChange
       end
     end
     object TestPropSG: TStringGridExt
-      Left = 332
-      Top = 14
-      Width = 210
-      Height = 104
+      Left = 360
+      Top = 21
+      Width = 364
+      Height = 134
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -275,9 +269,9 @@ object MBaseControl: TMBaseControl
   end
   object RegGB: TGroupBox
     Left = 0
-    Top = 233
-    Width = 544
-    Height = 293
+    Top = 270
+    Width = 726
+    Height = 288
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -286,10 +280,10 @@ object MBaseControl: TMBaseControl
     Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1094#1080#1103
     TabOrder = 2
     object Splitter4: TSplitter
-      Left = 329
-      Top = 14
+      Left = 357
+      Top = 21
       Width = 4
-      Height = 277
+      Height = 265
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -297,13 +291,15 @@ object MBaseControl: TMBaseControl
       Color = clBackground
       ParentColor = False
       OnMoved = Splitter4Moved
+      ExplicitLeft = 329
+      ExplicitTop = 14
       ExplicitHeight = 276
     end
     object RegPanel: TPanel
       Left = 2
-      Top = 14
-      Width = 327
-      Height = 277
+      Top = 21
+      Width = 355
+      Height = 265
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -314,8 +310,8 @@ object MBaseControl: TMBaseControl
       object Label1: TLabel
         Left = 12
         Top = 18
-        Width = 72
-        Height = 12
+        Width = 112
+        Height = 19
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
@@ -324,8 +320,8 @@ object MBaseControl: TMBaseControl
       end
       object Splitter7: TSplitter
         Left = 1
-        Top = 164
-        Width = 325
+        Top = 110
+        Width = 353
         Height = 3
         Cursor = crVSplit
         Margins.Left = 2
@@ -335,12 +331,13 @@ object MBaseControl: TMBaseControl
         Align = alBottom
         Color = clBackground
         ParentColor = False
+        ExplicitTop = 164
         ExplicitWidth = 326
       end
       object RegistratorsLV: TBtnListView
         Left = 1
-        Top = 210
-        Width = 325
+        Top = 198
+        Width = 353
         Height = 66
         Margins.Left = 2
         Margins.Top = 2
@@ -373,10 +370,10 @@ object MBaseControl: TMBaseControl
         Editable = False
       end
       object AlarmCB: TCheckBox
-        Left = 125
-        Top = 31
+        Left = 197
+        Top = 39
         Width = 73
-        Height = 13
+        Height = 18
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
@@ -387,9 +384,9 @@ object MBaseControl: TMBaseControl
       end
       object AlarmPanel: TPanel
         Left = 1
-        Top = 167
-        Width = 325
-        Height = 43
+        Top = 113
+        Width = 353
+        Height = 85
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
@@ -400,8 +397,8 @@ object MBaseControl: TMBaseControl
         object AlarmDscLabel: TLabel
           Left = 4
           Top = 5
-          Width = 51
-          Height = 12
+          Width = 77
+          Height = 19
           Margins.Left = 2
           Margins.Top = 2
           Margins.Right = 2
@@ -411,8 +408,8 @@ object MBaseControl: TMBaseControl
         object AlarmTypeLabel: TLabel
           Left = 196
           Top = 5
-          Width = 51
-          Height = 12
+          Width = 77
+          Height = 19
           Margins.Left = 2
           Margins.Top = 2
           Margins.Right = 2
@@ -421,9 +418,9 @@ object MBaseControl: TMBaseControl
         end
         object AlarmDsc: TEdit
           Left = 4
-          Top = 19
+          Top = 27
           Width = 176
-          Height = 20
+          Height = 27
           Margins.Left = 2
           Margins.Top = 2
           Margins.Right = 2
@@ -432,9 +429,9 @@ object MBaseControl: TMBaseControl
         end
         object AlarmType: TComboBox
           Left = 196
-          Top = 19
+          Top = 27
           Width = 109
-          Height = 20
+          Height = 27
           Margins.Left = 2
           Margins.Top = 2
           Margins.Right = 2
@@ -450,9 +447,9 @@ object MBaseControl: TMBaseControl
       end
       object RegNameEdit: TComboBox
         Left = 12
-        Top = 31
-        Width = 109
-        Height = 20
+        Top = 39
+        Width = 169
+        Height = 27
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
@@ -462,10 +459,10 @@ object MBaseControl: TMBaseControl
       end
     end
     object RegPropSG: TStringGridExt
-      Left = 333
-      Top = 14
-      Width = 209
-      Height = 277
+      Left = 361
+      Top = 21
+      Width = 363
+      Height = 265
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -484,9 +481,9 @@ object MBaseControl: TMBaseControl
   end
   object ActionPanel: TPanel
     Left = 0
-    Top = 529
-    Width = 544
-    Height = 101
+    Top = 561
+    Width = 726
+    Height = 140
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -494,13 +491,13 @@ object MBaseControl: TMBaseControl
     Align = alBottom
     TabOrder = 3
     DesignSize = (
-      544
-      101)
+      726
+      140)
     object Label3: TLabel
       Left = 3
       Top = 13
-      Width = 28
-      Height = 12
+      Width = 41
+      Height = 19
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -508,8 +505,8 @@ object MBaseControl: TMBaseControl
       Caption = #1055#1091#1090#1100':'
     end
     object ViewBtnGl: TSpeedButton
-      Left = 42
-      Top = 32
+      Left = 7
+      Top = 48
       Width = 35
       Height = 31
       Hint = #1055#1088#1086#1089#1084#1086#1090#1088
@@ -856,8 +853,8 @@ object MBaseControl: TMBaseControl
       OnClick = ViewBtnClick
     end
     object RecordBtnGl: TSpeedButton
-      Left = 77
-      Top = 32
+      Left = 45
+      Top = 48
       Width = 36
       Height = 31
       Hint = #1047#1072#1087#1080#1089#1100
@@ -1204,8 +1201,8 @@ object MBaseControl: TMBaseControl
       OnClick = RecordBtnClick
     end
     object StopBtnGl: TSpeedButton
-      Left = 113
-      Top = 32
+      Left = 84
+      Top = 48
       Width = 36
       Height = 31
       Hint = #1054#1089#1090#1072#1085#1086#1074#1080#1090#1100
@@ -1552,8 +1549,8 @@ object MBaseControl: TMBaseControl
       OnClick = StopBtnClick
     end
     object DownloadRegsBtn: TSpeedButton
-      Left = 155
-      Top = 32
+      Left = 123
+      Top = 48
       Width = 35
       Height = 31
       Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1087#1086#1083#1086#1089#1091
@@ -1727,8 +1724,8 @@ object MBaseControl: TMBaseControl
       OnClick = DownloadRegsBtnClick
     end
     object CfgSB: TSpeedButton
-      Left = 196
-      Top = 32
+      Left = 660
+      Top = 48
       Width = 35
       Height = 31
       Hint = #1050#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103' '#1080#1089#1087#1099#1090#1072#1085#1080#1103
@@ -1838,11 +1835,25 @@ object MBaseControl: TMBaseControl
       ShowHint = True
       OnClick = CfgSBClick
     end
+    object PathLabel: TLabel
+      Left = 7
+      Top = 88
+      Width = 68
+      Height = 19
+      Caption = 'PathLabel'
+    end
+    object TestPathLabel: TLabel
+      Left = 7
+      Top = 113
+      Width = 98
+      Height = 19
+      Caption = 'TestPathLabel'
+    end
     object BaseFolderEdit: TEdit
-      Left = 35
+      Left = 48
       Top = 7
-      Width = 325
-      Height = 20
+      Width = 494
+      Height = 27
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -1851,10 +1862,10 @@ object MBaseControl: TMBaseControl
       TabOrder = 0
     end
     object Button1: TButton
-      Left = 424
-      Top = 31
-      Width = 56
-      Height = 18
+      Left = 444
+      Top = 47
+      Width = 98
+      Height = 25
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -1864,10 +1875,10 @@ object MBaseControl: TMBaseControl
       OnClick = Button1Click
     end
     object mdbBtn: TButton
-      Left = 303
-      Top = 33
+      Left = 292
+      Top = 49
       Width = 56
-      Height = 17
+      Height = 24
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -1877,10 +1888,10 @@ object MBaseControl: TMBaseControl
       OnClick = mdbBtnClick
     end
     object MdbPathBtn: TButton
-      Left = 364
-      Top = 31
-      Width = 56
-      Height = 19
+      Left = 368
+      Top = 46
+      Width = 55
+      Height = 26
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -1891,12 +1902,12 @@ object MBaseControl: TMBaseControl
     end
   end
   object TcpClient1: TTcpClient
-    Left = 240
+    Left = 560
     Top = 136
   end
   object ImageList1: TImageList
-    Left = 200
-    Top = 256
+    Left = 544
+    Top = 280
     Bitmap = {
       494C010105000900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
@@ -2172,11 +2183,11 @@ object MBaseControl: TMBaseControl
   object Timer1: TTimer
     Interval = 300
     OnTimer = Timer1Timer
-    Left = 224
-    Top = 8
+    Left = 480
+    Top = 40
   end
   object MainMenu1: TMainMenu
-    Left = 224
+    Left = 560
     Top = 48
     object PropertiesMenu: TMenuItem
       Caption = #1057#1074#1086#1081#1089#1090#1074#1072
@@ -2190,7 +2201,7 @@ object MBaseControl: TMBaseControl
     FavoriteLinks = <>
     FileTypes = <>
     Options = [fdoPickFolders, fdoForceFileSystem]
-    Left = 248
+    Left = 568
     Top = 184
   end
 end

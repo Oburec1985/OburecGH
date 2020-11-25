@@ -44,6 +44,7 @@ uses
   uFrmSync,
   uWPProcServices,
   uIEManchester2087,
+  PerformanceTime,
   inifiles;
 
 type
@@ -54,6 +55,9 @@ type
     // сслыка на sniffDll. Грузиться динамически
     HLib: thandle;
     WM_KeyHOOK: cardinal;
+    hooktime:double;
+    hooktimer:TPerformanceTime;
+
     // первый кто подменил оконную процедуру
     m_firstHook:boolean;
 
@@ -94,6 +98,7 @@ implementation
 uses ComServ;
 
 const
+  c_wpextpack_tag = 10001;
   vbEmpty = 0;
   vbNull = 1;
   vbInteger = 2;
@@ -145,8 +150,9 @@ begin
     WM_KeyHOOK := RegisterWindowMessage('WM_OburecKeyHook');
     // получаем указатель на необходимую процедуру
     StartHookProc := GetProcAddress(HLib, 'SetHook');
+    res := StartHookProc(true, mainwnd);
     tagproc := GetProcAddress(HLib, 'SetTag');
-    res := tagproc(integer(oldWndProc));
+    res := tagproc(-1);
     if res <> 0 then
     begin
       m_firstHook:=false;
@@ -165,11 +171,6 @@ begin
   newWndProc := MakeObjectInstance(WndProc);
   oldWndProc := pointer(SetWindowLong(mainwnd, gwl_wndProc,
       cardinal(newWndProc)));
-  if g_logFile <> nil then
-  begin
-    g_logFile.addInfoMes('TExtPack.createWndProc_' + inttostr
-        (integer(oldWndProc)));
-  end;
 end;
 
 function TExtPack.Connect(const app: IDispatch): integer;
@@ -184,7 +185,7 @@ begin
   Ie2087.Connect(app);
 
   startDir := extractfiledir(Application.ExeName) + '\plugins\WPExtPack\';
-  g_logFile := clogfile.Create(startDir + 'log.txt', ';');
+  g_logFile := clogfile.Create(startDir + 'log1.txt', ';');
 
   init := false;
   WINPOS := app as IWinPOS;
@@ -245,7 +246,7 @@ begin
   // создаем клавиатурный хук
 {$IFDEF DEBUG}
 {$ELSE}
-  //CreateWndHook;
+  CreateWndHook;
 {$ENDIF}
 end;
 
@@ -704,31 +705,54 @@ Procedure TExtPack.WndProc(var Msg: TMessage);
 var
   opt, g, p, v: integer;
   ltag: integer;
+  t:double;
 begin
+  ltag:=0;
   if Msg.Msg = WM_KeyHOOK then
   begin
-    if (mainwnd = hwnd(Msg.lParam)) then
+    logMessage('TExtPack_enter');
+    ltag := tagproc(c_wpextpack_tag);
+    if ltag=-1 then
     begin
-      if Msg.wParam = VK_F6 then
+      t:=gettimeinsec;
+      if abs(t-hooktime)>1.5 then
       begin
-        ScriptFrm.ShowModal;
-      end;
-      if Msg.wParam = VK_F5 then
-      begin
-        CorrectUTSFrm.ShowModal;
-      end;
-      // добавить замер
-      if GetKeyState(VK_Menu) < 0 then
-      begin
-        if Msg.wParam = Ord('T') then
+        logMessage(floattostr(t-hooktime));
+        if (mainwnd = hwnd(Msg.lParam)) then
         begin
-          mng.AddHelpTrig;
+          if Msg.wParam = VK_F6 then
+          begin
+            ScriptFrm.ShowModal;
+          end;
+          if Msg.wParam = VK_F5 then
+          begin
+            CorrectUTSFrm.ShowModal;
+          end;
+          // добавить замер
+          if GetKeyState(VK_Menu) < 0 then
+          begin
+            if Msg.wParam = Ord('T') then
+            begin
+              mng.AddHelpTrig;
+            end;
+          end;
         end;
+        logMessage('TExtPack_exit');
+        tagproc(-1);
+        hooktime:=t;
       end;
+    end
+    else
+    begin
+      // если заняли чужое то возврат как было
+      if ltag<>c_wpextpack_tag then
+      begin
+        logMessage('TExtPack_tagproc(ltag)');
+        tagproc(ltag);
+      end
     end;
   end;
-  Msg.Result := CallWindowProc(oldWndProc, mainwnd, Msg.Msg, Msg.wParam,
-    Msg.lParam);
+  Msg.Result := CallWindowProc(oldWndProc, mainwnd, Msg.Msg, Msg.wParam,  Msg.lParam);
 end;
 
 initialization

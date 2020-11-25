@@ -26,6 +26,7 @@ type
     m_fs:double;
     m_t:ctag;
     m_dPhase:double;
+    m_offset:double;
   private
     m_amp:double;
     m_Phase:double;
@@ -39,6 +40,9 @@ type
     // в градусах
     function getphase0:double;
     procedure setphase0(p:double);
+
+    function getOffset:double;
+    procedure setOffset(p:double);
 
     function getphase:double;
     procedure setphase(p:double);
@@ -73,10 +77,14 @@ type
     SysTimerLabel: TLabel;
     PopupMenu1: TPopupMenu;
     N1: TMenuItem;
+    OffsetFE: TFloatSpinEdit;
+    Label1: TLabel;
     procedure AmpSEChange(Sender: TObject);
     procedure PhaseSEChange(Sender: TObject);
     procedure SignalsLBClick(Sender: TObject);
     procedure N1Click(Sender: TObject);
+    procedure FreqSEChange(Sender: TObject);
+    procedure OffsetFEChange(Sender: TObject);
   private
     signals:tlist;
   public
@@ -147,8 +155,9 @@ uses
 
 const
   c_sin = 0;
-  c_random = 1;
-  c_saw = 2;
+  c_saw = 1;
+  c_random = 2;
+
 
 {$R *.dfm}
 
@@ -325,7 +334,8 @@ var
   s:cgensig;
 begin
   s:=ActivSignal;
-  s.Amp:=ampse.Value;
+  if ampse.text<>'' then
+    s.Amp:=ampse.Value;
 end;
 
 procedure TGenSignalsFrm.PhaseSEChange(Sender: TObject);
@@ -404,20 +414,29 @@ begin
 
 end;
 
+procedure TGenSignalsFrm.FreqSEChange(Sender: TObject);
+var
+  s:cGenSig;
+begin
+  s:=ActivSignal;
+  if Freqse.text<>'' then
+    s.Freq:=Freqse.Value;
+end;
+
 function TGenSignalsFrm.genVal(p: double; s: cGenSig): double;
 begin
   case s.m_type of
     c_sin:
     begin
-      result:=s.m_amp*sin(p);
+      result:=s.m_amp*sin(p)+s.m_offset;
     end;
     c_random:
     begin
-      result:=s.m_amp*Random;
+      result:=s.m_amp*Random+s.m_offset;
     end;
     c_saw:
     begin
-      result:=s.m_amp*p/c_2pi;
+      result:=s.m_amp*p/c_2pi+s.m_offset;
     end;
   end;
 end;
@@ -459,6 +478,15 @@ begin
   showsignals;
 end;
 
+procedure TGenSignalsFrm.OffsetFEChange(Sender: TObject);
+var
+  s:cGenSig;
+begin
+  s:=ActivSignal;
+  if OffsetFE.text<>'' then
+    s.m_offset:=OffsetFE.Value;
+end;
+
 procedure TGenSignalsFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 var
   i:integer;
@@ -496,6 +524,7 @@ begin
   AmpSE.Value:=s.Amp;
   FreqSE.Value:=s.Freq;
   PhaseSE.Value:=s.Phase0;
+  STypeRG.ItemIndex:=s.m_type;
 end;
 
 procedure TGenSignalsFrm.UpdateData(sender:tobject);
@@ -545,6 +574,9 @@ begin
   str:=FloatToStrEx(m_amp,'.');
   addParam(pars, 'amp', str);
 
+  str:=FloatToStrEx(m_offset,'.');
+  addParam(pars, 'offset', str);
+
   str:=FloatToStrEx(phase0,'.');
   addParam(pars, 'phase0', str);
   result:= ParsToStr(pars);
@@ -569,6 +601,8 @@ begin
   m_freq:=strtoFloatExt(str);
   str := GetParam(s, 'amp');
   m_amp:=strtoFloatExt(str);
+  str := GetParam(s, 'offset');
+  m_offset:=strtoFloatExt(str);
 end;
 
 constructor cGenSig.create(sname: string; p_Fs: double);
@@ -635,6 +669,20 @@ function cGenSig.getF: double;
 begin
   entercs;
   result:=m_freq;
+  exitcs;
+end;
+
+function cGenSig.getOffset: double;
+begin
+  entercs;
+  result:=m_offset;
+  exitcs;
+end;
+
+procedure cGenSig.setOffset(p: double);
+begin
+  entercs;
+  m_offset:=p;
   exitcs;
 end;
 

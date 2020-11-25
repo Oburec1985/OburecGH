@@ -42,6 +42,9 @@
 			<Projects Include="..\tests\TestAlgLib\ProjectFFT.dproj">
 				<Dependencies/>
 			</Projects>
+			<Projects Include="..\Key_Logger\SniffDll.dproj">
+				<Dependencies/>
+			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -169,14 +172,23 @@
 		<Target Name="ProjectFFT:Make">
 			<MSBuild Targets="Make" Projects="..\tests\TestAlgLib\ProjectFFT.dproj"/>
 		</Target>
+		<Target Name="SniffDll">
+			<MSBuild Projects="..\Key_Logger\SniffDll.dproj"/>
+		</Target>
+		<Target Name="SniffDll:Clean">
+			<MSBuild Targets="Clean" Projects="..\Key_Logger\SniffDll.dproj"/>
+		</Target>
+		<Target Name="SniffDll:Make">
+			<MSBuild Targets="Make" Projects="..\Key_Logger\SniffDll.dproj"/>
+		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="BlEng;dcl_own;GlPackage;ComponentsLib;GlScene;Proilegenerator;RC_lib;plgControlCyclogram;CheckSSE;SubdivFilePlg;WpServicePlg;WPExtPack;ProjectFFT"/>
+			<CallTarget Targets="BlEng;dcl_own;GlPackage;ComponentsLib;GlScene;Proilegenerator;RC_lib;plgControlCyclogram;CheckSSE;SubdivFilePlg;WpServicePlg;WPExtPack;ProjectFFT;SniffDll"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="BlEng:Clean;dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;GlScene:Clean;Proilegenerator:Clean;RC_lib:Clean;plgControlCyclogram:Clean;CheckSSE:Clean;SubdivFilePlg:Clean;WpServicePlg:Clean;WPExtPack:Clean;ProjectFFT:Clean"/>
+			<CallTarget Targets="BlEng:Clean;dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;GlScene:Clean;Proilegenerator:Clean;RC_lib:Clean;plgControlCyclogram:Clean;CheckSSE:Clean;SubdivFilePlg:Clean;WpServicePlg:Clean;WPExtPack:Clean;ProjectFFT:Clean;SniffDll:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="BlEng:Make;dcl_own:Make;GlPackage:Make;ComponentsLib:Make;GlScene:Make;Proilegenerator:Make;RC_lib:Make;plgControlCyclogram:Make;CheckSSE:Make;SubdivFilePlg:Make;WpServicePlg:Make;WPExtPack:Make;ProjectFFT:Make"/>
+			<CallTarget Targets="BlEng:Make;dcl_own:Make;GlPackage:Make;ComponentsLib:Make;GlScene:Make;Proilegenerator:Make;RC_lib:Make;plgControlCyclogram:Make;CheckSSE:Make;SubdivFilePlg:Make;WpServicePlg:Make;WPExtPack:Make;ProjectFFT:Make;SniffDll:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

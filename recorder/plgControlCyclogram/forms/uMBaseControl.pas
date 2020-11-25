@@ -9,8 +9,9 @@ uses
   uBtnListView, uRecBasicFactory, pluginclass, uRecorderEvents,
   uComponentServises,
   uRCFunc, recorder, PathUtils, uDownloadregsfrm, urcclientfrm,
+  iplgmngr,
   uMeasureBase, uMdbFrm, DB, DBClient, uRcClient, Sockets, ImgList, Buttons,
-  plugin,  Menus, ScktComp, ShlObj, uPathMng;
+  plugin, Menus, ScktComp, ShlObj, uPathMng;
 
 type
 
@@ -34,7 +35,6 @@ type
     ObjPanel: TPanel;
     TestTypeCB: TComboBox;
     TestTypeLabel: TLabel;
-    TestSelectBtn: TButton;
     Label2: TLabel;
     TestDateNameCB: TCheckBox;
     ObjNameLabel: TLabel;
@@ -72,6 +72,8 @@ type
     OpenDialog1: TOpenDialog;
     OpenDialog1vista: TFileOpenDialog;
     CfgSB: TSpeedButton;
+    PathLabel: TLabel;
+    TestPathLabel: TLabel;
     procedure Button1Click(Sender: TObject);
     procedure mdbBtnClick(Sender: TObject);
     procedure ObjPropSGEndEdititng(Sender: TObject; ACol, ARow: Integer;
@@ -137,6 +139,7 @@ type
     procedure FillTestsCB(o: cObjFolder);
     procedure FillRegCB(t: cTestFolder);
     procedure UpdateXmlDescr;
+    procedure doChangePathNotify(objtype:DWORD);
   public
     procedure ShowObjProps(o: cXmlFolder);
 
@@ -152,6 +155,8 @@ type
   end;
 
   IMBaseControl = class(cRecBasicIFrm)
+  protected
+    function doGetProperty(tag: Integer): LPCSTR; override;
   public
     function doGetName: LPCSTR; override;
     procedure doClose; override;
@@ -176,23 +181,28 @@ type
   end;
 
 var
-  v_NotifyMBaseSetProperties: Integer = VSN_USER + 1;
+  // VSN_USER = 28672
+  v_NotifyMBaseSetProperties: Integer = VSN_USER + 101;
+  v_NotifyMBaseChangePath: Integer = VSN_USER + 102;
+
   // Загрузка и запуск плагина
   g_MBaseControl: TMBaseControl;
-  function mBaseControl: TMBaseControl;
-
+function mBaseControl: TMBaseControl;
 
 const
   c_Pic = 'MBASECONTROL';
-  c_Name = 'Управление базой данных';
+  c_MDBFormName = 'Управление базой данных';
 
 const
+  c_changeObj = 0;
+  c_changeTest = 1;
+  c_changeReg = 3;
 
   c_Control_defXSize = 509;
   c_Control_defYSize = 641;
   // ctrl+shift+G
   // ['{78AE7E7B-774B-46CF-8A49-33D352684760}']
-  IID_ControlFactory: TGuid = (D1: $78AE7E7B; D2: $774B; D3: $46CF;
+  IID_MBaseFactory: TGuid = (D1: $78AE7E7B; D2: $774B; D3: $46CF;
     D4: ($8A, $49, $33, $D3, $52, $68, $47, $60));
 
   c_img_view = 2;
@@ -202,6 +212,11 @@ const
   c_col_propVal = 1;
   c_col_regname = 'Регистратор';
   c_col_folder = 'Подкаталог';
+
+  // путь к каталогу регистрации
+  c_CustProp_Path = 0;
+  // путь "объект;тест;регистрация"
+  c_CustProp_Obj = 1;
 
 procedure InitPropSG(sg: tstringgrid);
 
@@ -214,7 +229,7 @@ uses
 
 function mBaseControl: TMBaseControl;
 begin
-  result:=g_MBaseControl;
+  result := g_MBaseControl;
 end;
 
 procedure IMBaseControl.doClose;
@@ -242,6 +257,28 @@ begin
   result := 'БДИ';
 end;
 
+function IMBaseControl.doGetProperty(tag: Integer): LPCSTR;
+var
+  str: string;
+begin
+  result := inherited;
+  case tag of
+    // путь к испытанию
+    0:
+      begin
+        if TMBaseControl(m_pMasterWnd).GetSelectTest <> nil then
+          str := TMBaseControl(m_pMasterWnd).GetSelectTest.Absolutepath;
+      end;
+    // путь к регистрации
+    1:
+      begin
+        if TMBaseControl(m_pMasterWnd).GetSelectReg <> nil then
+          str := TMBaseControl(m_pMasterWnd).GetSelectReg.Path;
+      end;
+  end;
+  result := LPCSTR(StrToAnsi(str));
+end;
+
 { cMBaseFactory }
 
 procedure cMBaseFactory.AddEvents;
@@ -253,9 +290,9 @@ constructor cMBaseFactory.Create;
 begin
   m_lRefCount := 1;
   m_counter := 0;
-  m_name := c_Name;
+  m_name := c_MDBFormName;
   m_picname := c_Pic;
-  m_Guid := IID_ControlFactory;
+  m_Guid := IID_MBaseFactory;
   AddEvents;
 end;
 
@@ -312,6 +349,8 @@ procedure TMBaseControl.Button1Click(Sender: TObject);
 var
   objFolder, testFolder, regFolder: cXmlFolder;
 begin
+  //showmessage(getMDBRegPath);
+
   if BaseFolderEdit.text <> m_base.m_BaseFolder.Absolutepath then
   begin
     m_base.InitBaseFolder(BaseFolderEdit.text);
@@ -328,7 +367,7 @@ begin
       objFolder.fscanFolders := false;
       objFolder.fscanFiles := false;
       m_base.m_BaseFolder.AddChild(objFolder);
-      objFolder.path := ObjNameCB.text;
+      objFolder.Path := ObjNameCB.text;
       // создаем описатели и каталог
       objFolder.CreateFiles;
       ObjNameCB.AddItem(objFolder.name, objFolder);
@@ -349,11 +388,11 @@ begin
       testFolder.fscanFolders := false;
       testFolder.fscanFiles := false;
       objFolder.AddChild(testFolder);
-      testFolder.path := TestNameCB.text;
+      testFolder.Path := TestNameCB.text;
       testFolder.caption := TestNameCB.text;
       testFolder.CreateFiles;
 
-      TestNameCB.AddItem(testFolder.name, testFolder);
+      TestNameCB.AddItem(testFolder.caption, testFolder);
       setComboBoxItem(testFolder.caption, TestNameCB);
     end;
   end
@@ -415,25 +454,25 @@ end;
 
 procedure TMBaseControl.CfgSBClick(Sender: TObject);
 var
-  lastcfg: cxmlfolder;
-  cfgpath:string;
-  pstr:pansichar;
-  ir:irecorder;
+  lastcfg: cXmlFolder;
+  cfgpath: string;
+  pstr: pansichar;
+  ir: irecorder;
 begin
-  if curtest<>nil then
+  if curTest <> nil then
   begin
-    lastcfg := cxmlfolder(curtest.getChildrenByCaption('Lastcfg'));
+    lastcfg := cXmlFolder(curTest.getChildrenByCaption('Lastcfg'));
     if lastcfg <> nil then
     begin
-      cfgpath:=extractfiledir(lastcfg.Absolutepath);
-      cfgpath:=FindFile('*.rcfg', cfgpath, 1);
+      cfgpath := extractfiledir(lastcfg.Absolutepath);
+      cfgpath := FindFile('*.rcfg', cfgpath, 1);
       if not RStateConfig then
       begin
         ecm;
-        ir:=getIR;
-        pstr:=lpcstr(StrToAnsi(cfgpath));
-        ir.ImportSettings(pstr, //IESF_DEFAULTSETTINGS+
-                                IESF_LOCAL_MODE);
+        ir := getIR;
+        pstr := LPCSTR(StrToAnsi(cfgpath));
+        ir.ImportSettings(pstr, // IESF_DEFAULTSETTINGS+
+          IESF_LOCAL_MODE);
         GPluginInstance.Notify(PN_RCLOADCONFIG, 0);
         lcm;
       end;
@@ -454,7 +493,7 @@ begin
 
   m_counted := false;
   finit := false;
-  fLoaded:=false;
+  fLoaded := false;
   InitPropSG(ObjPropSG);
   InitPropSG(TestPropSG);
   InitPropSG(RegPropSG);
@@ -468,7 +507,7 @@ begin
   c.OnDelete := doDeleteRConnection;
   // showRegistrators;
   rc_pan.OnReceive := doOnRead;
-  if RcClientFrm<>nil then
+  if RcClientFrm <> nil then
   begin
     RcClientFrm.init(rc_pan);
   end;
@@ -480,7 +519,7 @@ end;
 
 destructor TMBaseControl.destroy;
 begin
-  g_MBaseControl:=nil;
+  g_MBaseControl := nil;
 
   if m_base <> nil then
   begin
@@ -501,8 +540,10 @@ end;
 procedure TMBaseControl.CreateEvents;
 begin
   AddPlgEvent('MDBSaveXmlDscFiles', c_RC_SaveCfg, doSaveCfg);
-  AddPlgEvent('TMBaseControl_doChangeRState', c_RC_DoChangeRCState, doChangeRCState);
-  m_base.Events.AddEvent('TMBaseControl_AddPropertieEvent',E_AddNotifyPropertieEvent + E_ChangePropertieEvent,doAddPropertie);
+  AddPlgEvent('TMBaseControl_doChangeRState', c_RC_DoChangeRCState,
+    doChangeRCState);
+  m_base.Events.AddEvent('TMBaseControl_AddPropertieEvent',
+    E_AddNotifyPropertieEvent + E_ChangePropertieEvent, doAddPropertie);
 end;
 
 procedure TMBaseControl.DestroyEvents;
@@ -510,12 +551,46 @@ begin
   RemovePlgEvent(doSaveCfg, c_RC_SaveCfg);
   RemovePlgEvent(doChangeRCState, c_RC_DoChangeRCState);
   if m_base <> nil then
-    m_base.Events.removeEvent(doAddPropertie,E_AddNotifyPropertieEvent+ E_ChangePropertieEvent);
+    m_base.Events.removeEvent(doAddPropertie,
+      E_AddNotifyPropertieEvent + E_ChangePropertieEvent);
 end;
 
 procedure TMBaseControl.doAddPropertie(Sender: TObject);
 begin
   ShowObjProps(cXmlFolder(Sender));
+end;
+
+procedure TMBaseControl.doChangePathNotify (objtype:DWORD);
+var
+  plgmngr: IPluginsControl;
+  i: integer;
+  point: pointer;
+  p: iRecorderPlugin;
+  plgname: lpcstr;
+begin
+  //ir:=getIR;
+  // v_NotifyMBaseChangePath: Integer = VSN_USER + 2;
+  //ir.Notify(v_NotifyMBaseChangePath, objtype);
+
+  // VSN_USER = 28672
+  // v_NotifyMBaseSetProperties: Integer = VSN_USER + 101;
+  // v_NotifyMBaseChangePath: Integer = VSN_USER + 102;
+
+  g_ir.GetPluginsControlClassObject(plgmngr);
+  for i := 0 to plgmngr.GetPluginsCount - 1 do
+  begin
+    point := plgmngr.GetPlugin(i);
+    p := iRecorderPlugin(point);
+    plgname := p.Getname;
+    //if p.Getname = c_MBaseName then
+    //begin
+    p.notify(v_NotifyMBaseChangePath, objtype);
+    p._Release;
+    pathlabel.caption:= getMDBRegPath;
+    TestPathLabel.caption:= getMDBTestPath;
+    //break;
+    //end;
+  end;
 end;
 
 procedure TMBaseControl.doChangeRCState(Sender: TObject);
@@ -651,19 +726,19 @@ end;
 
 procedure TMBaseControl.doStopRec(Sender: TObject);
 var
-  t, lastcfg: cxmlfolder;
-  b:boolean;
-  cfgpath:string;
+  t, lastcfg: cXmlFolder;
+  b: Boolean;
+  cfgpath: string;
 begin
   if assigned(fOnStopRec) then
   begin
     fOnStopRec(Sender);
   end;
-  t := TMBaseControl(sender).GetSelectTest;
-  lastcfg := cxmlfolder(t.getChildrenByCaption('Lastcfg'));
+  t := TMBaseControl(Sender).GetSelectTest;
+  lastcfg := cXmlFolder(t.getChildrenByCaption('Lastcfg'));
   if lastcfg = nil then
   begin
-    lastcfg := cLastCfgFolder.create;
+    lastcfg := cLastCfgFolder.Create;
     // lastcfg.path := path;
     lastcfg.name := 'Lastcfg';
     t.AddChild(lastcfg);
@@ -681,7 +756,7 @@ begin
     if cfgpath <> getRConfig then
     begin
       cfgpath := extractfiledir(getRConfig);
-      if cfgpath<>lastcfg.absolutepath then
+      if cfgpath <> lastcfg.Absolutepath then
       begin
         copydir(cfgpath, lastcfg.Absolutepath, 0);
         lastcfg.addpropertie('PrevCfg', getRConfig);
@@ -697,7 +772,7 @@ end;
 
 procedure TMBaseControl.DownloadRegsBtnClick(Sender: TObject);
 begin
-  if DownloadRegsFrm<>nil then
+  if DownloadRegsFrm <> nil then
     DownloadRegsFrm.ShowDB(m_base);
 end;
 
@@ -761,6 +836,11 @@ begin
   end;
   RegNameEdit.OnChange := p;
   setComboBoxItem(RegNameEdit.text, RegNameEdit);
+  if RegNameEdit.itemindex <> -1 then
+  begin
+    r := cregFolder(RegNameEdit.Items.Objects[RegNameEdit.itemindex]);
+    setcurReg(cregFolder(r));
+  end;
 end;
 
 procedure TMBaseControl.FillTestsCB(o: cObjFolder);
@@ -791,15 +871,33 @@ procedure TMBaseControl.createReg;
 var
   test: cTestFolder;
   date: tdatetime;
-  path: string;
+  Path: string;
+  objFolder: cObjFolder;
 begin
   test := GetSelectTest;
+  if test = nil then
+  BEGIN
+    test := cTestFolder.Create;
+    test.m_testType := TestTypeCB.text;
+    test.name := TestNameCB.text;
+    // для вновь создаваемых нет смысла что то искать внутри
+    test.fscanFolders := false;
+    test.fscanFiles := false;
+    objFolder := GetSelectObj;
+    objFolder.AddChild(test);
+    test.Path := TestNameCB.text;
+    test.caption := TestNameCB.text;
+    test.CreateFiles;
+
+    TestNameCB.AddItem(test.name, test);
+    setComboBoxItem(test.caption, TestNameCB);
+  END;
   if test <> nil then
   begin
-    path := createRegName(test.Absolutepath, test);
+    Path := createRegName(test.Absolutepath, test);
     if m_reg <> nil then
     begin
-      if m_reg.Absolutepath <> path then
+      if m_reg.Absolutepath <> Path then
       begin
         m_reg := nil
       end
@@ -815,7 +913,7 @@ begin
       m_reg := cregFolder.Create;
       // m_reg.name:=extractfilename(createRegName(test.Absolutepath));
 
-      m_reg.path := path;
+      m_reg.Path := Path;
 
       test.AddChild(m_reg);
       m_reg.fscanFolders := false;
@@ -930,11 +1028,11 @@ end;
 
 procedure TMBaseControl.mdbBtnClick(Sender: TObject);
 begin
-  if MDBFrm<>nil then
+  if MDBFrm <> nil then
     MDBFrm.ShowMDB(m_base);
 end;
 
-function GetOsVersion: integer;
+function GetOsVersion: Integer;
 var
   str: string;
   VersionInformation: OSVERSIONINFO;
@@ -948,7 +1046,7 @@ begin
   result := VersionInformation.dwMajorVersion;
 end;
 
-function SelectDirectoryLoc(const Title: string; var Path: string): boolean;
+function SelectDirectoryLoc(const Title: string; var Path: string): Boolean;
 var
   lpItemID, start: PItemIDList;
   BrowseInfo: TBrowseInfo;
@@ -959,7 +1057,6 @@ begin
   BrowseInfo.pszDisplayName := @Path[1];
   BrowseInfo.hwndOwner := 0;
   BrowseInfo.lpszTitle := PChar(Title);
-
   // BrowseInfo.pidlRoot:=start;
   BrowseInfo.ulFlags := BIF_RETURNONLYFSDIRS;
   lpItemID := SHBrowseForFolder(BrowseInfo);
@@ -974,25 +1071,25 @@ end;
 
 procedure TMBaseControl.MdbPathBtnClick(Sender: TObject);
 var
-  str:string;
+  str: string;
 begin
   if GetOsVersion >= 6 then
   begin
-    OpenDialog1vista.filename := BaseFolderEdit.Text;
+    OpenDialog1vista.filename := BaseFolderEdit.text;
     OpenDialog1vista.Options := [fdoPickFolders, fdoForceFileSystem];
     if OpenDialog1vista.Execute() then
     begin
-      BaseFolderEdit.Text := OpenDialog1vista.filename;
+      BaseFolderEdit.text := OpenDialog1vista.filename;
     end;
   end
   else
   begin
     // OpenDialog1.Options := [ofOldStyleDialog, fdoForceFileSystem];
-    str := BaseFolderEdit.Text;
+    str := BaseFolderEdit.text;
     // if SelectDirectory('Выбор базового каталога', '',str) then
     if SelectDirectoryLoc('Выбор базового каталога', str) then
     begin
-      BaseFolderEdit.Text := str;
+      BaseFolderEdit.text := str;
     end;
   end;
 end;
@@ -1200,6 +1297,7 @@ begin
   curObj := o;
   ShowObjProps(o);
   FillTestsCB(cObjFolder(o));
+  doChangePathNotify(c_changeObj);
 end;
 
 procedure TMBaseControl.setcurReg(r: cregFolder);
@@ -1250,32 +1348,35 @@ begin
     RegNameEdit.ShowHint := false;
     RegNameEdit.Color := clWindow;
   end;
+  doChangePathNotify(c_changeReg);
 end;
 
 procedure TMBaseControl.setcurTest(t: cTestFolder);
 var
-  lastcfg: cxmlfolder;
-  b:boolean;
-  cfgpath:string;
+  lastcfg: cXmlFolder;
+  b: Boolean;
+  cfgpath: string;
 begin
   curTest := t;
-  if t=nil then exit;
+  if t = nil then
+    exit;
 
   ShowObjProps(t);
 
   FillRegCB(cTestFolder(t));
 
-  lastcfg := cxmlfolder(t.getChildrenByCaption('Lastcfg'));
+  lastcfg := cXmlFolder(t.getChildrenByCaption('Lastcfg'));
   if lastcfg <> nil then
   begin
-    cfgpath:=extractfiledir(lastcfg.Absolutepath);
-    cfgpath:=FindFile('*.rcfg', cfgpath, 1);
-    CfgSB.Hint:='Конфигурация испытания: '+cfgpath;
+    cfgpath := extractfiledir(lastcfg.Absolutepath);
+    cfgpath := FindFile('*.rcfg', cfgpath, 1);
+    CfgSB.Hint := 'Конфигурация испытания: ' + cfgpath;
   end
   else
   begin
-    CfgSB.Hint:='Конфигурация испытания:';
+    CfgSB.Hint := 'Конфигурация испытания:';
   end;
+  doChangePathNotify(c_changeTest);
 end;
 
 procedure TMBaseControl.settestsettings(t: cTestFolder);
@@ -1293,10 +1394,11 @@ var
   localR: Boolean;
   c: TRConnection;
 begin
-  //exit;
- inherited;
-  if fLoaded then exit;
-  logrecordermessage('TMBaseControl.LoadSettings_enter');
+  // exit;
+  inherited;
+  if fLoaded then
+    exit;
+  LogRecorderMessage('TMBaseControl.LoadSettings_enter');
 
   section := String(str);
   v_NotifyMBaseSetProperties := a_pIni.ReadInteger(section,
@@ -1314,9 +1416,9 @@ begin
   lstr := a_pIni.ReadString(section, 'TestName', '');
   setComboBoxItem(lstr, TestNameCB);
   TestTypeCB.text := a_pIni.ReadString(section, 'TestType', '');
-  t:=GetSelectTest;
-  if t<>nil then
-    setcurTest(ctestfolder(t));
+  t := GetSelectTest;
+  if t <> nil then
+    setcurTest(cTestFolder(t));
 
   RegNameEdit.text := a_pIni.ReadString(section, 'RegName', '');
   obj := GetSelectTest;
@@ -1354,8 +1456,8 @@ begin
     end;
   end;
   showRegistrators;
-  fLoaded:=true;
-  logrecordermessage('TMBaseControl.LoadSettings_exit');
+  fLoaded := true;
+  LogRecorderMessage('TMBaseControl.LoadSettings_exit');
 end;
 
 procedure TMBaseControl.ShowObjProps(o: cXmlFolder);
@@ -1364,7 +1466,7 @@ var
   I: Integer;
 begin
 
-  sg:=nil;
+  sg := nil;
   if o = nil then
     exit;
   if o is cObjFolder then
@@ -1379,7 +1481,7 @@ begin
   begin
     sg := RegPropSG;
   end;
-  if sg<>nil then
+  if sg <> nil then
   begin
     sg.rowcount := 2;
     sg.rowcount := o.PropCount + 2;
@@ -1588,20 +1690,20 @@ end;
 
 procedure TMBaseControl.Timer1Timer(Sender: TObject);
 begin
-  //LogRecorderMessage('TMBaseControl.Timer1Timer_enter');
+  // LogRecorderMessage('TMBaseControl.Timer1Timer_enter');
   if rc_pan <> nil then
   begin
     rc_pan.connect;
     rc_pan.Read;
   end;
-  //LogRecorderMessage('TMBaseControl.Timer1Timer_exit');
+  // LogRecorderMessage('TMBaseControl.Timer1Timer_exit');
 end;
 
 procedure TMBaseControl.ViewBtnClick(Sender: TObject);
 begin
-  //logmessage(' TMBaseControl.ViewBtnClick_enter');
+  // logmessage(' TMBaseControl.ViewBtnClick_enter');
   rc_pan.start;
-  //logmessage(' TMBaseControl.ViewBtnClick_exit');
+  // logmessage(' TMBaseControl.ViewBtnClick_exit');
 end;
 
 procedure TMBaseControl.RecordBtnClick(Sender: TObject);
@@ -1616,7 +1718,7 @@ var
 begin
   if RStateStop then
   begin
-    if RcClientFrm<>nil then
+    if RcClientFrm <> nil then
     begin
       RcClientFrm.editConnection(TRConnection(item.data));
       c := RcClientFrm.m_curConnection;

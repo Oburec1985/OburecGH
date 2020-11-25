@@ -73,6 +73,8 @@ type
     function GetPropStr: string;
     Procedure SetPropStr(str: string);
     function GetNotifyStr(p_opts: string): string;
+    procedure save;
+    procedure load;
   public
     procedure link(eo: TExtFFTflt);
     function EditOper: string;
@@ -107,9 +109,11 @@ begin
   // переносим свойства в форму
   p2:=GetActiveCursorX;
   showSignals;
+  load;
   res := showmodal;
   if res = mrok then
   begin
+    save;
     m_oper.m_Band.Clear;
     for I := 0 to ScalesLV.Items.Count - 1 do
     begin
@@ -237,11 +241,76 @@ begin
   updatefs;
 end;
 
+procedure setSelItem(lv:tbtnlistview; str:string);
+var
+  I: Integer;
+  li:tlistitem;
+  sname:string;
+begin
+  for I := 0 to lv.items.Count - 1 do
+  begin
+    li:=lv.Items[i];
+    lv.GetSubItemByColumnName('Сигналы', li, sname);
+    if sname=str then
+    begin
+      li.Checked:=true;
+      exit;
+    end;
+  end;
+end;
+
+procedure TFFTFltFrm.save;
+var
+  ifile:tinifile;
+  j,I: Integer;
+  li, next:tlistitem;
+  str:string;
+begin
+  ifile:=TIniFile.Create(startdir+'Opers\fftflt.ini');
+  ifile.WriteString('Main', 'LoadPath', LoadCfgCB.Text);
+  ifile.WriteString('Main', 'SavePath', SaveCfgCB.Text);
+  ifile.WriteInteger('Main', 'FFTPoint', pCountIE.IntNum);
+  ifile.WriteInteger('Main', 'FFTPoint', OffsetSE.Value);
+  i:=0;
+  for j := 0 to SignalsLV.items.Count - 1 do
+  begin
+    li:=SignalsLV.items[j];
+    if li.Checked then
+    begin
+      str:=lbrecord(li.Data).s.SName;
+      ifile.WriteString('Main', 'S_'+inttostr(i), str);
+      inc(i);
+    end;
+  end;
+  ifile.WriteInteger('Main', 'SCount', i);
+  ifile.Destroy;
+end;
 
 
 
-
-
+procedure TFFTFltFrm.load;
+var
+  ifile:tinifile;
+  I, selcount: Integer;
+  s, sname:string;
+begin
+  ifile:=TIniFile.Create(startdir+'Opers\fftflt.ini');
+  LoadCfgCB.Text:=ifile.ReadString('Main', 'LoadPath', '');
+  if fileexists(LoadCfgCB.Text) then
+    LoadBtnClick(nil);
+  SaveCfgCB.Text:=ifile.ReadString('Main', 'SavePath', '');
+  pCountIE.IntNum:=ifile.readInteger('Main', 'FFTPoint', 8192);
+  OffsetSE.Value:=ifile.readInteger('Main', 'FFTPoint', 8192);
+  selcount:=ifile.readInteger('Main', 'SCount', 0);
+  for I := 0 to selcount - 1 do
+  begin
+    s:='S_'+inttostr(i);
+    sname:=ifile.ReadString('Main', s, '');
+    setSelItem(SignalsLV, sname);
+  end;
+  ifile.Destroy;
+  updatefs;
+end;
 
 
 procedure TFFTFltFrm.LoadBtnClick(Sender: TObject);

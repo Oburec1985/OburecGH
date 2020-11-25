@@ -657,18 +657,23 @@ begin
     btn.Height := ImageListBtnStates.Height;
     btn.Width := ImageListBtnStates.Width;
     c := getControlFromSG(ARow);
-    case c.State of
-      c_play:
-        imageind := c_Play_State;
-      c_Stop:
-        imageind := c_Stop_State;
-      c_pause:
-        imageind := c_Pause_State;
-    else
-      begin
-        imageind := c_Stop_State;
+    if c<>nil then
+    begin
+      case c.State of
+        c_play:
+          imageind := c_Play_State;
+        c_Stop:
+          imageind := c_Stop_State;
+        c_pause:
+          imageind := c_Pause_State;
+      else
+        begin
+          imageind := c_Stop_State;
+        end;
       end;
-    end;
+    end
+    else
+      exit;
     btn.Assign(nil);
     ImageListBtnStates.GetBitmap(imageind, btn);
     X := round((Rect.Left + Rect.Right - btn.Width) / 2);

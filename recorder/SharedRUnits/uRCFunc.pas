@@ -169,6 +169,8 @@ type
     Operation: string;
   end;
 
+
+// путь к текущему замеру
 function GetMeraFile:string;
 procedure saveTag(t: cTag; node: txmlnode);
 function LoadTag(node: txmlnode): cTag;
@@ -246,6 +248,7 @@ function FuncGetValByTime(t:ctag; time:double; interp:boolean; var error:boolean
 // узнать число ссылок на первый тег в списке рекордера (отладочная функция для поиска места в котором меняются число ссылок по всем тегам рекордера)
 function CheckRefCountT0:integer;
 function TagRefCount(t:itag):integer;
+
 
 procedure logRCInfo(fpath:string);
 

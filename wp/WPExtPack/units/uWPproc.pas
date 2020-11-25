@@ -2745,9 +2745,6 @@ begin
 
   ProgressStr := 'ќжидание';
 
-  g_logFile := cLogFile.create(extractfiledir(Application.ExeName)
-      + '\journal.log', ';');
-
   TrigList := tstringlist.create;
   TrigList.Sorted := true;
   AddSystemTrigs;

@@ -86,11 +86,12 @@ type
 		// Вычеркнуть из списка зарегистрированных фабрик
 		function UnRegisterFormFactory(pFactory:ICustomFormFactory):HRESULT;stdcall;
 		// Найти фабрику по идентификатороу
-		function FindFactoryById(ppFactory:ICustomFormFactory; pID:pGUID):HRESULT;stdcall;
+    // НЕ РАБОТАЕТ!!!! чет напутано в обьявлении!!!
+		function FindFactoryById(var Factory:ICustomFormFactory; pID:TGUID):HRESULT;stdcall;
 		// Получить количество фабрик
 		function GetFactoriesCount(nCount:PDWORD):HRESULT;stdcall;
 		// Найти фабрику по индексу
-		function GetFactoryByIndex(ppFactory:ICustomFormFactory;nIndex:ULONG):HRESULT;stdcall;
+		function GetFactoryByIndex(var ppFactory:ICustomFormFactory;nIndex:ULONG):HRESULT;stdcall;
   end;
   PCustomFormsRegistrator = ^ICustomFormsRegistrator;
 

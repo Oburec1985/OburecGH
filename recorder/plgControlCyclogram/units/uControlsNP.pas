@@ -5,6 +5,7 @@ interface
 uses
   types, ActiveX, forms, sysutils, windows, Classes, IniFiles, Dialogs,
   uCompMng, cfreg, uRecorderEvents, PluginClass, tags, Recorder, uRCFunc,
+  iplgmngr,
   Generics.Collections, Controls, uControlObj, uCommonMath, uControlCyclogramEditFrm, uMBaseControl;
 
 type
@@ -121,6 +122,14 @@ end;
 
 function cMBaseNP.ProcessNotify(a_dwCommand, a_dwData: dword): boolean;
 begin
+  if a_dwCommand=v_NotifyMBaseChangePath then
+  begin
+    case a_dwData of
+      0:logMessage('ChangeObj');
+      1:logMessage('ChangeTest');
+      2:logMessage('ChangeReg');
+    end;
+  end;
   if a_dwCommand=v_NotifyMBaseSetProperties then
   begin
     if m_base<>nil then

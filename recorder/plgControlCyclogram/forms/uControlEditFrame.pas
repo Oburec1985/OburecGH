@@ -112,6 +112,10 @@ begin
     end;
     con.config(t,nil);
     result:=con;
+  end
+  else
+  begin
+    showmessage('Необходимо назначить имя!');
   end;
 end;
 
@@ -176,10 +180,10 @@ end;
 
 procedure TControlEditFrame.Show;
 begin
+  doUpdateChannelList;
   if not m_init then
   begin
     m_init:=true;
-    doUpdateChannelList;
   end;
   ShowChannels;
 end;

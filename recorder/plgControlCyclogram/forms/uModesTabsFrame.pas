@@ -166,6 +166,8 @@ begin
     bp1_ind:=tr.GetLowInd(x1);
     bp1:=tr.getPoint(bp1_ind);
     bp2:=tr.getPoint(bp1_ind+1);
+    if bp2=nil then
+      exit;
     m:=m_p.getMode(bp1_ind);
     if m<>nil then
     begin
@@ -799,7 +801,7 @@ var
   m:cModeObj;
   mng:cControlMng;
   p2:point2d;
-  con:cControlObj;
+  con, owncon:cControlObj;
   task:ctask;
   colname:string;
 begin
@@ -808,9 +810,13 @@ begin
   for I := 0 to mng.ControlsCount - 1 do
   begin
     con:=mng.getControlObj(i);
-    if m_p.getOwnControl(con.name)=con then
+    owncon:=m_p.getOwnControl(con.name);
+    if owncon<>nil then
     begin
-      inc(controlCount);
+      if owncon=con then
+      begin
+        inc(controlCount);
+      end;
     end;
   end;
 

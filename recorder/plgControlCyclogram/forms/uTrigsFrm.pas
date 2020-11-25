@@ -90,6 +90,7 @@ type
       DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
       Pt: TPoint; var Effect: Integer; Mode: TDropMode);
     procedure TrigNameEditChange(Sender: TObject);
+    procedure MDBValueCBDragDrop(Sender, Source: TObject; X, Y: Integer);
   private
     m_conmng: cControlMng;
   protected
@@ -639,6 +640,11 @@ begin
       a.mdbtag:=nil;
     end;
   end;
+end;
+
+procedure TTrigsFrm.MDBValueCBDragDrop(Sender, Source: TObject; X, Y: Integer);
+begin
+  MDBValueCBChange(nil);
 end;
 
 function TTrigsFrm.NewTrig: cBaseTrig;

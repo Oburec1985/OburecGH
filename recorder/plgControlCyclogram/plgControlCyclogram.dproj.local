@@ -264,12 +264,12 @@
     <File Path="forms\uGenSignalsEditFrm.pas"/>
     <File Path="forms\uGenSignalsEditFrm.dfm"/>
     <File Path="units"/>
+    <File Path="units\uCreateComponents.pas"/>
     <File Path="units\uBaseAlg.pas"/>
     <File Path="units\uBaseAlgNP.pas"/>
     <File Path="units\uControlObj.pas"/>
     <File Path="units\uControlsNP.pas"/>
     <File Path="units\uCounterAlg.pas"/>
-    <File Path="units\uCreateComponents.pas"/>
     <File Path="units\uFillingFactorAlg.pas"/>
     <File Path="units\uGrmsAlg.pas"/>
     <File Path="units\uGrmsSrcAlg.pas"/>

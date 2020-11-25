@@ -661,7 +661,10 @@ end;
 
 function TIRDiagramFrm.GraphCount: integer;
 begin
-  result := fpage.m_graphList.Count;
+  if fpage=nil then
+    result:=0
+  else
+    result := fpage.m_graphList.Count;
 end;
 
 { IPolarFrm }

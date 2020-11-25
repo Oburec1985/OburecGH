@@ -15,9 +15,29 @@ uses
   forms,
   uRCFunc,
   uRecorderEvents,
-  uEventTypes;
+  uEventTypes,
+  ulogfile;
 
 type
+   // Интерфейс фабрики объектов VForm
+  // Каждый тип фабрики должен иметь уникальный идентификатор типа GUID
+  // ctrl+shift+G
+  ICustomVFormInterface = interface
+  ['{F6C43E4C-2FE3-4DEB-B01E-6AE28A10A59F}']
+		// вернуть произвольное свойство tag - id того что хотим получить
+		function GetCustomProperty(tag:integer):LPCSTR;stdcall;
+  end;
+
+   // Интерфейс фабрики объектов VForm
+  // Каждый тип фабрики должен иметь уникальный идентификатор типа GUID
+  // ctrl+shift+G
+  ICustomFactInterface = interface
+  ['{119E2EA6-C7B5-4610-B29B-759DF8AAF471}']
+		//function getChild(const i:DWORD):IVForm;stdcall;
+    function getChild(const i: DWORD; var pIVForm: IVForm): HRESULT; stdcall;
+  end;
+
+
   cRecBasicFactory = class;
   cRecBasicIFrm = class;
 
@@ -59,7 +79,7 @@ type
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR);
   end;
 
-  cRecBasicFactory = class(TObject, IInterface, ICustomFormFactory)
+  cRecBasicFactory = class(TObject, IInterface, ICustomFormFactory, ICustomFactInterface)
   public
     m_Guid: TGUID;
     m_lRefCount: integer;
@@ -104,9 +124,14 @@ type
     // virtual ULONG   STDMETHODCALLTYPE Release();
     function _Release: integer; stdcall;
     function refcount: integer;
+  public
+    // ICustomFactIntarface
+		//function getChild(var i:integer):IVForm;stdcall;
+    function getChild(const i: DWORD; var pIVForm: IVForm): HRESULT; stdcall;
+  public
   end;
 
-  cRecBasicIFrm = class(TObject, IInterface, IVForm, ISettingsINI)
+  cRecBasicIFrm = class(TObject, IInterface, IVForm, ISettingsINI, ICustomVFormInterface)
   public
     m_pMasterWnd: TRecFrm;
   protected
@@ -116,6 +141,7 @@ type
     // наша форма компонент
     m_name: LPCSTR;
   protected
+    function doGetProperty(tag:integer):lpcstr;virtual;
   public
     function getIRecorder: irecorder;
     function doNotify(const dwCommand: DWORD; const dwData: DWORD): boolean;
@@ -165,6 +191,9 @@ type
     // Прочитать настройки
     function ReadSettings(const pchPath: LPCSTR;
       const pchSection: LPCSTR): HRESULT; stdcall;
+  // ICustomVFormIntarface
+  public
+		function GetCustomProperty(tag:integer):LPCSTR;stdcall;
   public
     // IUnknown
     function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
@@ -177,8 +206,13 @@ type
 
 const
   // ctrl+shift+G
-  IID_RecBasicFactor: TGUID = (D1: $0470FC78; D2: $CCF0; D3: $46DB;
-    D4: ($82, $1F, $00, $06, $70, $B4, $80, $11));
+  IID_RecBasicFactor: TGUID = (D1: $0470FC78; D2: $CCF0; D3: $46DB; D4: ($82, $1F, $00, $06, $70, $B4, $80, $11));
+
+  IID_ICustomVForm: TGUID = ( D1:$F6C43E4C;D2:$2FE3;D3:$4DEB;D4:($B0,$1E,$6A,$E2,$8A,$10,$A5,$9F));
+
+  // ['{119E2EA6-C7B5-4610-B29B-759DF8AAF471}']
+  IID_ICustomFactInterface: TGUID = (D1: $119E2EA6; D2: $C7B5; D3: $4610;D4: ($B2, $9B, $75, $9D, $F8, $AA, $F4, $71));
+
 
   c_defXSize = 150;
   c_defYSize = 15;
@@ -236,6 +270,27 @@ begin
       m_CompList.Delete(i);
       exit;
     end;
+  end;
+end;
+
+//function cRecBasicFactory.getChild(const i: DWORD): IVForm;
+//begin
+//  result:= cRecBasicIFrm(m_CompList.Items[i]) as IVForm;
+//end;
+
+function cRecBasicFactory.getChild(const i: DWORD;var pIVForm: IVForm): HRESULT; stdcall;
+var
+  f:ivform;
+begin
+  result := S_OK;
+  if i<(m_CompList.count) then
+  begin
+    f:=cRecBasicIFrm(m_CompList.Items[i]) as IVForm;
+    pIVForm:=f;
+  end
+  else
+  begin
+    result := S_FALSE;
   end;
 end;
 
@@ -331,11 +386,11 @@ end;
 function cRecBasicFactory.QueryInterface(const IID: TGUID; out Obj): HRESULT;
 begin
   result := E_UNEXPECTED;
-  if pointer(Obj) = nil then
-  begin
-    result := E_INVALIDARG;
-  end
-  else
+  //if pointer(Obj) = nil then
+  //begin
+  //  result := E_INVALIDARG;
+  //end
+  //else
   begin
     if IsEqualIID(IID, IID_ICustomFormFactory) then
     begin
@@ -347,8 +402,19 @@ begin
     end
     else
     begin
-      pointer(Obj) := nil;
-      result := E_NOINTERFACE;
+      if IsEqualIID(IID, IID_ICustomFactInterface) then
+      begin
+        // ВАЖНО ПРИСВААИВАТЬ ИМЕННО РАЗЫМЕНОАВНЫЙ УКАЗАТЕЛЬ ИНАЧЕ УПАДЕТ НЕ ТА ТАБЛИЦА
+        ICustomFactInterface(Obj) := ICustomFactInterface(self);
+        // as ICustomFormFactory;
+        _AddRef();
+        result := S_OK;
+      end
+      else
+      begin
+        pointer(Obj) := nil;
+        result := E_NOINTERFACE;
+      end;
     end;
   end;
 end;
@@ -426,6 +492,11 @@ begin
   result := false;
 end;
 
+function cRecBasicIFrm.GetCustomProperty(tag: integer): LPCSTR;
+begin
+  result:=doGetProperty(tag);
+end;
+
 function cRecBasicIFrm.GetHWND: HWND;
 begin
   if m_pMasterWnd <> nil then
@@ -477,6 +548,11 @@ end;
 function cRecBasicIFrm.dogetname: LPCSTR;
 begin
   result := m_name;
+end;
+
+function cRecBasicIFrm.doGetProperty(tag: integer): lpcstr;
+begin
+  result:=lpcstr(StrToAnsi(classname));
 end;
 
 function cRecBasicIFrm.doNotify(const dwCommand: DWORD;
@@ -570,8 +646,11 @@ begin
     Result := 0
     else
     Result := E_NOINTERFACE; }
+  logmessage('typecast...');
   if IsEqualIID(IID, IID_IVForm) then
   begin
+    //showmessage(g_logFile.filename);
+    logmessage('typecast to IID_IVForm');
     IVForm(Obj) := IVForm(self); // self as IVForm;
     // _AddRef();
     result := S_OK;
@@ -594,8 +673,17 @@ begin
       end
       else
       begin
-        pointer(Obj) := nil;
-        result := E_NOINTERFACE;
+        if IsEqualIID(IID, IID_ICustomVForm) then
+        begin
+          ICustomVFormInterface(Obj) := ICustomVFormInterface(self); // self as IVForm;
+          // _AddRef();
+          result := S_OK;
+        end
+        else
+        begin
+          pointer(Obj) := nil;
+          result := E_NOINTERFACE;
+        end;
       end;
     end;
   end;

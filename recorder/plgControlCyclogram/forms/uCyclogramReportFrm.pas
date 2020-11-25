@@ -217,17 +217,15 @@ end;
 procedure TCyclogramReportFrm.FormCreate(Sender: TObject);
 begin
   eventsCreated:=false;
+  CfgChanged:=true;
   if g_conmng.configChanged then
     CfgChanged:=true;
 end;
 
 procedure TCyclogramReportFrm.FormShow(Sender: TObject);
 begin
-  if CfgChanged then
-  begin
-    ShowConfig;
-    CfgChanged:=false;
-  end;
+  ShowConfig;
+  CfgChanged:=false;
 end;
 
 procedure TCyclogramReportFrm.OnChangeConfig(sender: tobject);

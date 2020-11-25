@@ -7,6 +7,7 @@ uses
   //fastmm4,
   Windows,
   SysUtils,
+  activex,
   cfreg,
   dialogs,
   uCompMng,
@@ -19,9 +20,6 @@ uses
   uRcClientFrm,
   uControlsNp,
   uTrigsFrm,
-  uRCFunc,
-  iplgmngr,
-  plugin,
   uBaseAlgNP,
   uSpmChart,
   uSpmChartEdit,
@@ -42,6 +40,11 @@ uses
   uIRDiagram,
   uGenSignalsEditFrm,
   uGenSignalsFrm,
+  uRCFunc,
+  uRecBasicFactory,
+  iplgmngr,
+  recorder,
+  plugin,
   uMBaseControl;
 
 type
@@ -68,8 +71,22 @@ function ProcessShowVersionInfo(pMsgInfo: PCB_MESSAGE): boolean;
 // удаление объектов движка в потоке создани€ плагина. «десь должно удалитьс€ все, что было создано
 // и загружено до createFormsRecorderUIThread
 procedure destroyEngine;
+
 // отправить плагину MBaseControl нотификацию дл€ редактировани€ свойств объекта
+//  TMBaseNotify = record
+//    идентификатор объекта которому надо добавит/ удалшить свойство
+//    ObjID: String;
+//    тип операции 0 - добавить/изменить свойство 1 - удалить
+//    OperType: integer;
+//     строка свойств и значение
+//     ≈сли добавл€ем мен€ем свойство через разделитель ";" идут <им€ свойства>,<значение свойства>
+//     ≈сли удал€ем то через разделитель ";" идут имена свойств
+//    Operation: string;
+//  end;
 procedure sendMDBNotifyMessage(notify: TMBaseNotify);
+// получить путь к текущему испытанию
+function getMDBTestPath:lpcstr;
+function getMDBRegPath:lpcstr;
 
 const
   // √лобальна€ переменна€ дл€ храени€ описани€ plug-in`а.
@@ -85,6 +102,105 @@ implementation
 
 uses
   PluginClass;
+
+function getMDBTestPath:lpcstr;
+var
+  rep: hresult;
+  val: OleVariant;
+  UISrv: tagVARIANT;
+  FormRegistrator:ICustomFormsRegistrator;
+  f:ICustomFormFactory;
+  cf:ICustomFactInterface;
+
+  mdb:IVForm;
+
+  count:cardinal;
+  i:ULONG;
+  int:integer;
+  ws:widestring;
+  g:TGUID;
+begin
+  result:='';
+  rep := g_ir.GetProperty(RCPROP_UISERVERLINK, val);
+  UISrv := tagVARIANT(val);
+  if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
+  begin
+    //LogRecorderMessage('Ќе удалось получить сервер пользовательского интерфейса.');
+  end;
+  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator, FormRegistrator);
+  if FAILED(rep) or (FormRegistrator = niL) then
+  begin
+    //LogRecorderMessage('Ќе удалось получить интерфейс управлени€ списком зарегистрированных фабрик.');
+  end;
+  FormRegistrator.GetFactoriesCount(@count);
+  for I := 0 to count - 1 do
+  begin
+    FormRegistrator.GetFactoryByIndex(f, i);
+    f.GetFormTypeName(ws);
+    //f._Release;
+    if ws=c_MDBFormName then
+    begin
+      cf:=f as ICustomFactInterface;
+      int:=0;
+      (cf as ICustomFactInterface).getChild(int, mdb);
+      //(cf as ICustomFactInterface).getChild(int, mdb);
+  		// вернуть произвольное свойство tag - id того что хотим получить
+      // 0: путь к испытанию 1: путь к регистрации
+      result:=(mdb as ICustomVFormInterface).GetCustomProperty(0);
+    end;
+  end;
+end;
+
+function getMDBRegPath:lpcstr;
+var
+  rep: hresult;
+  val: OleVariant;
+  UISrv: tagVARIANT;
+  FormRegistrator:ICustomFormsRegistrator;
+  f:ICustomFormFactory;
+  cf:ICustomFactInterface;
+
+  mdb:IVForm;
+  lstr:lpcstr;
+
+  count:cardinal;
+  i:ULONG;
+  int:integer;
+  ws:widestring;
+  g:TGUID;
+begin
+  result:='';
+  rep := g_ir.GetProperty(RCPROP_UISERVERLINK, val);
+  UISrv := tagVARIANT(val);
+  if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
+  begin
+    //LogRecorderMessage('Ќе удалось получить сервер пользовательского интерфейса.');
+  end;
+  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator, FormRegistrator);
+  if FAILED(rep) or (FormRegistrator = niL) then
+  begin
+    //LogRecorderMessage('Ќе удалось получить интерфейс управлени€ списком зарегистрированных фабрик.');
+  end;
+  FormRegistrator.GetFactoriesCount(@count);
+  for I := 0 to count - 1 do
+  begin
+    FormRegistrator.GetFactoryByIndex(f, i);
+    f.GetFormTypeName(ws);
+    //f._Release;
+    if ws=c_MDBFormName then
+    begin
+      cf:=f as ICustomFactInterface;
+      int:=0;
+  		// вернуть произвольное свойство tag - id того что хотим получить
+      // 0: путь к испытанию 1: путь к регистрации
+      //mdb:=(cf as ICustomFactInterface).getChild(int);
+      lstr:='привет';
+      (cf as ICustomFactInterface).getChild(int, mdb);
+      result:=(mdb as ICustomVFormInterface).GetCustomProperty(1);
+    end;
+  end;
+end;
+
 
 procedure sendMDBNotifyMessage(notify: TMBaseNotify);
 var
@@ -255,7 +371,8 @@ begin
     SpmChartEditFrm:=nil;
   end;
   if EditCntlWrnFrm<>nil then
-  begin                                 EditCntlWrnFrm.Destroy;
+  begin
+    EditCntlWrnFrm.Destroy;
     EditCntlWrnFrm:=nil;
   end;
 

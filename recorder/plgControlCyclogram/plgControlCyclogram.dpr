@@ -247,12 +247,13 @@ begin
   // если счетчик ссылок его интерфейсов станет равен нулю.
   GlobDetach;
   Result := RCERROR_NOERROR;
-
+  {$ifdef DEBUG}
   TExtRecorderPack(GPluginInstance).destroyForms;
   TExtRecorderPack(GPluginInstance).destroyLog;
 
   GPluginInstance._release;
   GPluginInstance := NIL;
+  {$endif}
 end;
 
 { Функция получения строки описания plug-in`а }

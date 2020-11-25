@@ -451,8 +451,8 @@ end;
 
 procedure cTagInfoFactory.CreateEvents;
 begin
-  addplgevent('cPolarFactory_doUpdateData', c_RUpdateData, doUpdateData);
-  addplgevent('cPolarFactory_doChangeRState', c_RC_DoChangeRCState,
+  addplgevent('cTagInfoFactory_doUpdateData', c_RUpdateData, doUpdateData);
+  addplgevent('cTagInfoFactory_doChangeRState', c_RC_DoChangeRCState,
     doChangeRState);
 end;
 

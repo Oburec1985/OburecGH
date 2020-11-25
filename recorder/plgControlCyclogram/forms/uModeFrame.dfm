@@ -10,7 +10,7 @@ object ModeFrame: TModeFrame
     Top = 0
     Width = 556
     Height = 328
-    ActivePage = ModesPage
+    ActivePage = ProgramPage
     Align = alClient
     Constraints.MinHeight = 328
     Constraints.MinWidth = 556

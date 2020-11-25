@@ -223,8 +223,21 @@ begin
   if n <> nil then
   begin
     d := ProgramTV.GetNodeData(n);
-    p := cProgramObj(d.Data);
-    result:=p;
+    if tobject(d.Data) is cProgramObj then
+    begin
+      p := cProgramObj(d.Data);
+      result:=p;
+    end
+    else
+    begin
+      if tobject(d.Data) is cControlObj then
+      begin
+        n:=n.Parent.parent;
+        d := ProgramTV.GetNodeData(n);
+        p := cProgramObj(d.Data);
+        result:=p;
+      end
+    end;
   end;
 end;
 
@@ -500,7 +513,7 @@ begin
   AddPlgEvent('TControlCyclogramEditFrm_EditPlg', c_RC_PlgEdit, doPlgEdit);
   //TExtRecorderPack(GPluginInstance).EList.AddEvent('TControlCyclogramEditFrm_EditPlg', c_RC_PlgEdit, doPlgEdit);
   if g_conmng<>nil then
-    g_conmng.Events.AddEvent('TControlCyclogramEditFrm_UpdateCfg',E_OnEngUpdateList+E_OnChangeCfg,doUpdateCfg);
+    g_conmng.Events.AddEvent('TControlCyclogramEditFrm_UpdateCfg',E_OnEngUpdateList+E_OnChangeCfg, doUpdateCfg);
 end;
 
 procedure TControlCyclogramEditFrm.destroyEvents;
@@ -638,8 +651,6 @@ begin
   ModeFrame1.m_prog:=GetSelectProg;
   ModeFrame1.ShowModesTabBtnClick(Sender);
 end;
-
-
 
 procedure TControlCyclogramEditFrm.ProgramTVChange(Sender: TBaseVirtualTree;
   Node: PVirtualNode);

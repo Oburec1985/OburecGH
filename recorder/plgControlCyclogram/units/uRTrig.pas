@@ -1113,6 +1113,7 @@ var
   mdbobj:cxmlfolder;
   str:string;
   success, mdbvalue:boolean;
+  tag:itag;
 begin
   if MDBAction(self) then
   begin
@@ -1141,6 +1142,18 @@ begin
         if isvalue(mdbPropVal) then
         begin
           mdbvalue:=true;
+        end;
+      end
+      else
+      begin
+        tag:=getTagByName(str);
+        if t<>nil then
+        begin
+          mdbPropVal:=floattostr(GetMean(tag));
+          if isvalue(mdbPropVal) then
+          begin
+            mdbvalue:=true;
+          end;
         end;
       end;
       case opertype of

@@ -19,12 +19,14 @@ uses
   uJournalForm,
   uSyncThread,
   ulogfile,
+  PerformanceTime,
   inifiles;
 
 
 type
   TServicePlg = class(TAutoObject, IWPPlugin)
   protected
+    hooktime:double;
     // хендл главного окна
     mainwnd: cardinal;
     // сслыка на sniffDll. Грузиться динамически
@@ -62,6 +64,7 @@ implementation
 uses ComServ;
 
 const
+  c_wpservicepack_tag=100002;
   vbEmpty = 0;
   vbNull = 1;
   vbInteger = 2;
@@ -100,7 +103,6 @@ begin
   mainwnd := WINPOS.mainwnd;
   newWndProc := MakeObjectInstance(WndProc);
   oldWndProc := pointer(SetWindowLong(mainwnd, gwl_wndProc, cardinal(newWndProc)));
-  g_logFile.addInfoMes('TServicePlg.createWndProc_'+inttostr(integer(oldWndProc)));
 end;
 
 
@@ -120,7 +122,7 @@ begin
     StartHookProc := GetProcAddress(HLib, 'SetHook');
     tagproc:=GetProcAddress(HLib, 'SetTag');
     res := StartHookProc(true, mainwnd);
-    res:=tagproc(integer(oldwndproc));
+    res:=tagproc(-1);
     if res <> 0 then
     begin
       m_firstHook:=false;
@@ -150,6 +152,7 @@ begin
   // создаем клавиатурный хук
 {$IFDEF DEBUG}
 {$else}
+  //g_logFile.addInfoMes('TServicePlg.WndProc_'+' Mess:'+'Release');
   CreateWndHook;
 {$ENDIF}
 
@@ -441,55 +444,75 @@ end;
 Procedure TServicePlg.WndProc(var Msg: TMessage);
 
 var
-  opt, g, p, v:integer;
+  opt, g, p, v, ltag:integer;
+  t:double;
 begin
   if Msg.Msg = WM_KeyHOOK then
   begin
-    g_logFile.addInfoMes('TServicePlg.WndProc_'+' Mess:'+inttostr(Msg.lParam));
-
-    if (mainwnd = hwnd(Msg.lParam)) then
+    logMessage('TServicePlg_enter');
+    ltag:=tagproc(c_WpServicePack_tag);
+    if ltag=-1 then
     begin
-      // добавить замер
-      if GetKeyState(VK_Menu) < 0 then
+      t:=gettimeinsec;
+      logMessage(floattostr(t-hooktime));
+      if abs(t-hooktime)>0.7 then
       begin
-        if Msg.wParam = Ord('D') then
+        if (mainwnd = hwnd(Msg.lParam)) then
         begin
-          CreateSubSignals;
-        end;
-        if Msg.wParam = Ord('T') then
-        begin
+          // добавить замер
+          if GetKeyState(VK_Menu) < 0 then
+          begin
+            if Msg.wParam = Ord('D') then
+            begin
+              CreateSubSignals;
+            end;
+            if Msg.wParam = Ord('T') then
+            begin
 
-        end;
-        // перебор типов курсоров
-        if Msg.wParam = Ord('3') then
-        begin
-          p:=IWPGraphs(wp.GraphApi).ActiveGraphPage;
-          g:=IWPGraphs(wp.GraphApi).ActiveGraph(p);
-          v:=IWPGraphs(WP.GraphAPI).GetCursorType(p);
-          if v<4 then
-            inc(v)
-          else
-            v:=1;
-          IWPGraphs(WP.GraphAPI).ShowCursor(p, v);
-          IWPGraphs(WP.GraphAPI).invalidate(g);
-        end;
-        if Msg.wParam = Ord('L') then
-        begin
-          if not m_showlegend then
-          begin
-            m_showlegend:=true;
-            p:=IWPGraphs(wp.GraphApi).ActiveGraphPage;
-            g:=IWPGraphs(wp.GraphApi).ActiveGraph(p);
-            IWPGraphs(WP.GraphAPI).SetGraphOpt(g, GROPT_SHOWLEGEND, GROPT_SHOWLEGEND);
-          end
-          else
-          begin
-            m_showlegend:=false;
-            p:=IWPGraphs(wp.GraphApi).ActiveGraphPage;
-            g:=IWPGraphs(wp.GraphApi).ActiveGraph(p);
-            IWPGraphs(WP.GraphAPI).SetGraphOpt(g, 0,GROPT_SHOWLEGEND);
+            end;
+            // перебор типов курсоров
+            if Msg.wParam = Ord('3') then
+            begin
+              p:=IWPGraphs(wp.GraphApi).ActiveGraphPage;
+              g:=IWPGraphs(wp.GraphApi).ActiveGraph(p);
+              v:=IWPGraphs(WP.GraphAPI).GetCursorType(p);
+              if v<4 then
+                inc(v)
+              else
+                v:=1;
+              IWPGraphs(WP.GraphAPI).ShowCursor(p, v);
+              IWPGraphs(WP.GraphAPI).invalidate(g);
+            end;
+            if Msg.wParam = Ord('L') then
+            begin
+              if not m_showlegend then
+              begin
+                m_showlegend:=true;
+                p:=IWPGraphs(wp.GraphApi).ActiveGraphPage;
+                g:=IWPGraphs(wp.GraphApi).ActiveGraph(p);
+                IWPGraphs(WP.GraphAPI).SetGraphOpt(g, GROPT_SHOWLEGEND, GROPT_SHOWLEGEND);
+              end
+              else
+              begin
+                m_showlegend:=false;
+                p:=IWPGraphs(wp.GraphApi).ActiveGraphPage;
+                g:=IWPGraphs(wp.GraphApi).ActiveGraph(p);
+                IWPGraphs(WP.GraphAPI).SetGraphOpt(g, 0,GROPT_SHOWLEGEND);
+              end;
+            end;
           end;
         end;
+        hooktime:=t;
+      end;
+      logMessage('TServicePlg_exit');
+      tagproc(-1);
+    end
+    else
+    begin
+      if ltag<>c_WpServicePack_tag then
+      begin
+        logMessage('TServicePlg_tagproc(-1)');
+        tagproc(-1);
       end;
     end;
   end;

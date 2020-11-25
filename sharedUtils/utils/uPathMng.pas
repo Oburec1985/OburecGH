@@ -89,12 +89,32 @@ function CreateTemporaryFile(FileName: string): string;
 function CompareFiles(File1, File2: string; CreateTempFile: Boolean): Boolean;
 function TempDir: string;
 function GetFileSize(s:string):integer;
+//True - файл уже открыт. Иначе - False.
+function IsOpen(const aFileName : String) : Boolean;
+
 
 const
   MainSection = 'Main';
   deepkey = 'deep';
 
 implementation
+
+
+//True - файл уже открыт. Иначе - False.
+function IsOpen(const aFileName : String) : Boolean;
+var
+  Hf : Integer;
+begin
+  //Существует ли файл.
+  Result := FileExists(aFileName);
+  //Если файл не существует, значит он не открыт. Выходим.
+  if not Result then Exit;
+  //Проверяем, открыт ли уже файл. Для этого пытаемся открыть файл
+  //в режиме неразделяемого доступа.
+  Hf := FileOpen(aFileName, fmOpenReadWrite or fmShareExclusive);
+  Result := Hf = -1;
+  if not Result then FileClose(Hf);
+end;
 
 
 {Собственно функция сравнения: }

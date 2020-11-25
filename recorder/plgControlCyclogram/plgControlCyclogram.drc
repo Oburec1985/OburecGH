@@ -236,38 +236,38 @@
 #define JclResources_RsFileUtilsValueNotFound 65165
 #define JclResources_RsCreateFileMapping 65166
 #define JclResources_RsCreateFileMappingView 65167
-#define NativeXml_sIllegalEndTag 65168
-#define NativeXml_sQuoteCharExpected 65169
-#define NativeXml_sCannotAddNode 65170
-#define NativeXml_sCannotSetName 65171
-#define NativeXml_sCannotSetValue 65172
-#define NativeXml_sCannotManipulate 65173
-#define NativeXml_sBeginEndMismatch 65174
-#define NativeXml_sLevelMismatch 65175
-#define NativeXml_sRootElementNotDefined 65176
-#define NativeXml_sNonDefaultChardata 65177
-#define NativeXml_sSignificantDigitsOutOfRange 65178
-#define NativeXml_sMissingDataInBinaryStream 65179
-#define NativeXml_sErrorCalcStreamLength 65180
-#define NativeXml_sXmlOwnerNotAssigned 65181
+#define NativeXml_sRootElementNotDefined 65168
+#define NativeXml_sNonDefaultChardata 65169
+#define NativeXml_sSignificantDigitsOutOfRange 65170
+#define NativeXml_sMissingDataInBinaryStream 65171
+#define NativeXml_sErrorCalcStreamLength 65172
+#define NativeXml_sXmlOwnerNotAssigned 65173
+#define VirtualTrees_SWrongMoveError 65174
+#define VirtualTrees_SWrongStreamFormat 65175
+#define VirtualTrees_SWrongStreamVersion 65176
+#define VirtualTrees_SStreamTooSmall 65177
+#define VirtualTrees_SCorruptStream1 65178
+#define VirtualTrees_SCorruptStream2 65179
+#define VirtualTrees_SClipboardFailed 65180
+#define VirtualTrees_SCannotSetUserData 65181
 #define DBConsts_SBcdOverflow 65182
 #define DBConsts_SInvalidBcdValue 65183
 #define ComConst_SVarNotObject 65184
 #define ComConst_STooManyParams 65185
-#define VirtualTrees_SWrongMoveError 65186
-#define VirtualTrees_SWrongStreamFormat 65187
-#define VirtualTrees_SWrongStreamVersion 65188
-#define VirtualTrees_SStreamTooSmall 65189
-#define VirtualTrees_SCorruptStream1 65190
-#define VirtualTrees_SCorruptStream2 65191
-#define VirtualTrees_SClipboardFailed 65192
-#define VirtualTrees_SCannotSetUserData 65193
-#define NativeXml_sPrematureEnd 65194
-#define NativeXml_sUnknownEncoding 65195
-#define NativeXml_sUnsupportedEncoding 65196
-#define NativeXml_sDefaultCharUsed 65197
-#define NativeXml_sIllegalTag 65198
-#define NativeXml_sUnsupportedTag 65199
+#define NativeXml_sPrematureEnd 65186
+#define NativeXml_sUnknownEncoding 65187
+#define NativeXml_sUnsupportedEncoding 65188
+#define NativeXml_sDefaultCharUsed 65189
+#define NativeXml_sIllegalTag 65190
+#define NativeXml_sUnsupportedTag 65191
+#define NativeXml_sIllegalEndTag 65192
+#define NativeXml_sQuoteCharExpected 65193
+#define NativeXml_sCannotAddNode 65194
+#define NativeXml_sCannotSetName 65195
+#define NativeXml_sCannotSetValue 65196
+#define NativeXml_sCannotManipulate 65197
+#define NativeXml_sBeginEndMismatch 65198
+#define NativeXml_sLevelMismatch 65199
 #define ComStrs_sInsertError 65200
 #define ComStrs_sInvalidOwner 65201
 #define ComStrs_sRichEditInsertError 65202
@@ -834,24 +834,12 @@ BEGIN
 	JclResources_RsFileUtilsValueNotFound,	"The value %s was not found."
 	JclResources_RsCreateFileMapping,	"Failed to create FileMapping"
 	JclResources_RsCreateFileMappingView,	"Failed to create FileMappingView"
-	NativeXml_sIllegalEndTag,	"illegal end tag (\"%s\") at line %d (streampos %d)"
-	NativeXml_sQuoteCharExpected,	"quote char expected at pos %d"
-	NativeXml_sCannotAddNode,	"cannot add node to this type of element"
-	NativeXml_sCannotSetName,	"cannot set name on this type of element"
-	NativeXml_sCannotSetValue,	"cannot set value on this type of element"
-	NativeXml_sCannotManipulate,	"cannot manipulate nodes in this type of element"
-	NativeXml_sBeginEndMismatch,	"begin and end tag mismatch: \"%s\" and \"%s\" at line %d (pos %d)"
-	NativeXml_sLevelMismatch,	"level mismatch between subnode \"%s\" and endnode \"%s\" at line %d (pos %d)"
 	NativeXml_sRootElementNotDefined,	"XML root element not defined."
 	NativeXml_sNonDefaultChardata,	"non-default chardata at line %d (pos %d)"
 	NativeXml_sSignificantDigitsOutOfRange,	"significant digits out of range"
 	NativeXml_sMissingDataInBinaryStream,	"missing data in binary stream"
 	NativeXml_sErrorCalcStreamLength,	"error while calculating streamlength"
 	NativeXml_sXmlOwnerNotAssigned,	"XML owner is not assigned"
-	DBConsts_SBcdOverflow,	"BCD overflow"
-	DBConsts_SInvalidBcdValue,	"%s is not a valid BCD value"
-	ComConst_SVarNotObject,	"Variant does not reference an automation object"
-	ComConst_STooManyParams,	"Dispatch methods do not support more than 64 parameters"
 	VirtualTrees_SWrongMoveError,	"Target node cannot be a child node of the node to be moved."
 	VirtualTrees_SWrongStreamFormat,	"Unable to load tree structure, the format is wrong."
 	VirtualTrees_SWrongStreamVersion,	"Unable to load tree structure, the version is unknown."
@@ -860,12 +848,24 @@ BEGIN
 	VirtualTrees_SCorruptStream2,	"Stream data corrupt. Unexpected data after node's end position."
 	VirtualTrees_SClipboardFailed,	"Clipboard operation failed."
 	VirtualTrees_SCannotSetUserData,	"Cannot set initial user data because there is not enough user data space allocated."
+	DBConsts_SBcdOverflow,	"BCD overflow"
+	DBConsts_SInvalidBcdValue,	"%s is not a valid BCD value"
+	ComConst_SVarNotObject,	"Variant does not reference an automation object"
+	ComConst_STooManyParams,	"Dispatch methods do not support more than 64 parameters"
 	NativeXml_sPrematureEnd,	"stream terminated prematurely at pos %d"
 	NativeXml_sUnknownEncoding,	"unknown encoding"
 	NativeXml_sUnsupportedEncoding,	"unsupported encoding (%s)"
 	NativeXml_sDefaultCharUsed,	"default char used for codepage substitution"
 	NativeXml_sIllegalTag,	"illegal tag (\"%s\") at pos %d"
 	NativeXml_sUnsupportedTag,	"unsupported tag (\"%s\") at pos %d"
+	NativeXml_sIllegalEndTag,	"illegal end tag (\"%s\") at line %d (streampos %d)"
+	NativeXml_sQuoteCharExpected,	"quote char expected at pos %d"
+	NativeXml_sCannotAddNode,	"cannot add node to this type of element"
+	NativeXml_sCannotSetName,	"cannot set name on this type of element"
+	NativeXml_sCannotSetValue,	"cannot set value on this type of element"
+	NativeXml_sCannotManipulate,	"cannot manipulate nodes in this type of element"
+	NativeXml_sBeginEndMismatch,	"begin and end tag mismatch: \"%s\" and \"%s\" at line %d (pos %d)"
+	NativeXml_sLevelMismatch,	"level mismatch between subnode \"%s\" and endnode \"%s\" at line %d (pos %d)"
 	ComStrs_sInsertError,	"Unable to insert an item"
 	ComStrs_sInvalidOwner,	"Invalid owner"
 	ComStrs_sRichEditInsertError,	"RichEdit line insertion error"
@@ -1212,79 +1212,79 @@ END
 /* ..\..\sharedUtils\forms\uGetMngObjForm.dfm */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\filectrl.res */
 /* ..\..\sharedUtils\ZipMaster\ZipMstr.res */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\mera\database\uDownloadRegsFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\uRcClientFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\mera\database\uMDBBaseObjFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\mera\database\uMDBTestObjFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\mera\database\uMDBRegObjFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\mera\database\uMDBFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uCustomEditControlFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uDacControlEditFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uControlEditFrame.dfm */
+/* ..\..\sharedUtils\mera\database\uMDBBaseObjFrame.dfm */
+/* ..\..\sharedUtils\mera\database\uMDBRegObjFrame.dfm */
+/* ..\..\sharedUtils\mera\database\uMDBTestObjFrame.dfm */
+/* ..\..\sharedUtils\mera\database\uMDBFrm.dfm */
+/* ..\SharedRUnits\uRcClientFrm.dfm */
+/* ..\..\sharedUtils\mera\database\uDownloadRegsFrm.dfm */
 /* ..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common\JclUnicode.res */
 /* ..\..\sharedUtils\utils\./files/res/CURSORS.res */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uAxisForm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTextLabelForm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDoubleCursorForm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCursorForm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uPageForm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjEditForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTextLabelForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDoubleCursorForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCursorForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uPageForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjEditForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uGistFrame.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uGistForm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendFrame.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uModesStepFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uModesTabsFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uModesTabsForm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTrigFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uModeFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\uTagsListFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTrigsFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uControlCyclogramEditFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uCyclogramReportFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uControlDeskFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAlgFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uCounterAlgFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAlgAddFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPhaseFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPhaseCrossSpmFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTahoAlgFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uGrmsFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uGrmsSrcFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSpmFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uFillFctFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPeakFactorFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uIntegralAlgFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uBandsFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAlgFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uEditProfileFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uEditControlWrnFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSpmChartEdit.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSpmChart.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uControlWarnFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uCursorFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uEditPolarFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPolarGraph.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTagInfoEditFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTagInfoFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uIRDiagram.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uGenSignalsEditFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uGenSignalsFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uMBaseControl.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\uFrmSync.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uEditChartObjFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateTrendFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateObjForm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateObjFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\frames\uChartInputFrame.dfm */
+/* forms\uGenSignalsEditFrm.dfm */
+/* forms\uGenSignalsFrm.dfm */
+/* forms\uEditProfileFrm.dfm */
+/* ..\SharedRUnits\uTagsListFrame.dfm */
+/* forms\uTrigsFrm.dfm */
+/* forms\uModesStepFrame.dfm */
+/* forms\uModesTabsFrame.dfm */
+/* forms\uModesTabsForm.dfm */
+/* forms\uTrigFrame.dfm */
+/* forms\uModeFrame.dfm */
+/* forms\uCustomEditControlFrame.dfm */
+/* forms\uDacControlEditFrame.dfm */
+/* forms\uControlEditFrame.dfm */
+/* forms\uSpmChartEdit.dfm */
+/* forms\uSpmChart.dfm */
+/* forms\uEditControlWrnFrm.dfm */
+/* forms\uControlWarnFrm.dfm */
+/* forms\uPolarGraph.dfm */
+/* forms\uEditPolarFrm.dfm */
+/* forms\uIRDiagram.dfm */
+/* forms\uCyclogramReportFrm.dfm */
+/* forms\uTagInfoFrm.dfm */
+/* forms\uTagInfoEditFrm.dfm */
+/* forms\uBandsFrm.dfm */
+/* forms\uCursorFrm.dfm */
+/* forms\uAlgAddFrm.dfm */
+/* forms\uAlgFrame.dfm */
+/* forms\uIntegralAlgFrame.dfm */
+/* forms\uPeakFactorFrame.dfm */
+/* forms\uFillFctFrame.dfm */
+/* forms\uSpmFrame.dfm */
+/* forms\uGrmsSrcFrame.dfm */
+/* forms\uGrmsFrame.dfm */
+/* forms\uTahoAlgFrame.dfm */
+/* forms\uPhaseCrossSpmFrame.dfm */
+/* forms\uPhaseFrame.dfm */
+/* forms\uCounterAlgFrame.dfm */
+/* forms\uAlgFrm.dfm */
+/* forms\uControlCyclogramEditFrm.dfm */
+/* forms\uControlDeskFrm.dfm */
+/* forms\uMBaseControl.dfm */
+/* ..\SharedRUnits\uFrmSync.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditChartObjFrame.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateTrendFrame.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateObjForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateObjFrm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames\uChartInputFrame.dfm */
 /* ..\..\3d\forms\uSelectLoadedObjects.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAutoPropsFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAHCorrectionFrm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uComplexDiagram.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uIRDiagramEditFrm.dfm */
+/* forms\uAutoPropsFrm.dfm */
+/* forms\uAHCorrectionFrm.dfm */
+/* forms\uComplexDiagram.dfm */
+/* forms\uIRDiagramEditFrm.dfm */
 /* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
 /* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
 /* D:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */

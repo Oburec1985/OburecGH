@@ -634,6 +634,7 @@ type
       //Вызов окна редактирования
       function Edit: boolean; stdcall;
       //События, уведомления, команды
+      // virtual bool   STDMETHODCALLTYPE notify(DWORD dwCommand, DWORD dwData = 0) = 0;
       function Notify(const dwCommand: DWORD; const dwData: DWORD): boolean; stdcall;
    end;
 

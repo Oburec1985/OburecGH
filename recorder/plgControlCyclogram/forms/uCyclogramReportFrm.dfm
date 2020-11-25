@@ -2,48 +2,48 @@ object CyclogramReportFrm: TCyclogramReportFrm
   Left = 0
   Top = 0
   Caption = #1050#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103' '#1094#1080#1082#1083#1086#1075#1088#1072#1084#1084#1099
-  ClientHeight = 725
-  ClientWidth = 1035
+  ClientHeight = 544
+  ClientWidth = 776
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -10
   Font.Name = 'Tahoma'
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   OnCreate = FormCreate
   OnShow = FormShow
-  PixelsPerInch = 120
-  TextHeight = 16
+  PixelsPerInch = 96
+  TextHeight = 12
   object LeftPan: TPanel
-    Left = 758
+    Left = 569
     Top = 0
-    Width = 277
-    Height = 725
+    Width = 207
+    Height = 544
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 96
-    ExplicitHeight = 517
     object CyclogramGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 275
-      Height = 344
+      Width = 206
+      Height = 258
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alTop
       Caption = #1050#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103' '#1094#1080#1082#1083#1086#1075#1088#1072#1084#1084#1099
       TabOrder = 0
-      ExplicitLeft = 257
-      ExplicitTop = 41
       object ProgramTV: TVTree
         Left = 2
-        Top = 18
-        Width = 271
-        Height = 324
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Top = 14
+        Width = 203
+        Height = 243
         Align = alClient
         DragMode = dmAutomatic
         DragType = dtVCL
@@ -58,32 +58,26 @@ object CyclogramReportFrm: TCyclogramReportFrm
         NodeDataSize = 32
         TabOrder = 0
         TreeOptions.SelectionOptions = [toMultiSelect]
-        ExplicitLeft = 1
-        ExplicitTop = 1
-        ExplicitWidth = 247
-        ExplicitHeight = 287
         Columns = <>
       end
     end
     object TrigsGB: TGroupBox
       Left = 1
-      Top = 345
-      Width = 275
-      Height = 379
+      Top = 259
+      Width = 206
+      Height = 284
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alClient
       Caption = #1058#1088#1080#1075#1075#1077#1088#1099
       TabOrder = 1
-      ExplicitTop = 216
-      ExplicitHeight = 300
       object TrigTV: TVTree
         Left = 2
-        Top = 18
-        Width = 271
-        Height = 359
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Top = 14
+        Width = 203
+        Height = 269
         Align = alClient
         DragMode = dmAutomatic
         DragType = dtVCL
@@ -98,10 +92,6 @@ object CyclogramReportFrm: TCyclogramReportFrm
         NodeDataSize = 32
         TabOrder = 0
         TreeOptions.SelectionOptions = [toMultiSelect]
-        ExplicitLeft = 1
-        ExplicitTop = 1
-        ExplicitWidth = 231
-        ExplicitHeight = 605
         Columns = <>
       end
     end
@@ -109,8 +99,12 @@ object CyclogramReportFrm: TCyclogramReportFrm
   object cChart1: cChart
     Left = 0
     Top = 0
-    Width = 758
-    Height = 725
+    Width = 569
+    Height = 544
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 1
@@ -119,10 +113,6 @@ object CyclogramReportFrm: TCyclogramReportFrm
     showTV = True
     showLegend = True
     selectSize = 5
-    ExplicitLeft = -150
-    ExplicitTop = 1
-    ExplicitWidth = 982
-    ExplicitHeight = 117
   end
   object ImageList16: TImageList
     Left = 448

@@ -46,6 +46,7 @@ var
   sigFolder, str:string;
   del:boolean;
 begin
+  r:=nil;
   for I := 0 to RegsLV.items.Count - 1 do
   begin
     li:=RegsLV.Items[i];
@@ -67,19 +68,22 @@ begin
       end;
     end;
     del:=true;
-    for j := 0 to r.m_signals.Count - 1 do
+    if r<>nil then
     begin
-      s:=r.getSignal(j);
-      if s.m_path<>'' then
+      for j := 0 to r.m_signals.Count - 1 do
       begin
-        del:=false;
-        break;
+        s:=r.getSignal(j);
+        if s.m_path<>'' then
+        begin
+          del:=false;
+          break;
+        end;
       end;
-    end;
-    if del then
-    begin
-      r.delFolder;
-      r.destroy;
+      if del then
+      begin
+        r.delFolder;
+        r.destroy;
+      end;
     end;
   end;
   i:=0;
@@ -119,6 +123,7 @@ begin
           path:=ExtractFileDir(path);
           if CopyDir(path, newpath, handle) then
           begin
+            s.m_path:=newpath+'\'+extractfilename(s.m_path);
             s.m_copy:=true;
             li.Checked:=false;
           end;

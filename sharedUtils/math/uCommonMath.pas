@@ -1418,6 +1418,11 @@ var
   ch:char;
   resstr:string;
 begin
+  if str='' then
+  begin
+    result:=0;
+    exit;
+  end;
   i := pos('.', Str);
   if i=0 then
   begin

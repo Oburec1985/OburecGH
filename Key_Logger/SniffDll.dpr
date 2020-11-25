@@ -43,12 +43,13 @@ function KeyHookProc(code: integer; WParam: word; lParam: Longint): Longint; std
 var
   wnd:hwnd;
 begin
+
   if code < 0 then
   begin
     Result:= CallNextHookEx(GlobalData^.KeyHookHandle, Code, wParam, lParam);
     Exit;
   end;
-  CallNextHookEx(GlobalData^.KeyHookHandle, Code, wParam, lParam);
+  //CallNextHookEx(GlobalData^.KeyHookHandle, Code, wParam, lParam);
   if ((code = HC_ACTION) and (lParam <> lParam or $8000 shl 16)
      and (lParam <> lParam or $8000 shl 15))
      or(wParam=VK_SPACE)
@@ -117,15 +118,13 @@ begin
   {получаем объект файлового отображения}
   // MMFHandle:= CreateFileMapping(DWord(-1), nil, PAGE_READWRITE, 0, SizeOf(TGlobalDLLData), MMFName); // можно так, но лучше: см. след. строку
   MMFHandle:= CreateFileMapping(INVALID_HANDLE_VALUE, nil, PAGE_READWRITE, 0, SizeOf(TGlobalDLLData), MMFName);
-
   if MMFHandle = 0 then
-    begin
-      MessageBox(0, 'Can''t create FileMapping', 'Message from keyhook.dll', 0);
-      Exit;
-    end;
-
-  {отображаем глобальные данные на АП вызывающего процесса и получаем указатель
-   на начало выделенного пространства}
+  begin
+    MessageBox(0, 'Can''t create FileMapping', 'Message from keyhook.dll', 0);
+    Exit;
+  end;
+  // отображаем глобальные данные на АП вызывающего процесса и получаем указатель
+  // на начало выделенного пространства
   GlobalData:= MapViewOfFile(MMFHandle, FILE_MAP_ALL_ACCESS, 0, 0, SizeOf(TGlobalDLLData));
   if GlobalData = nil then
   begin

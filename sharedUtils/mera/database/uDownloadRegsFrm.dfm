@@ -2,43 +2,55 @@ object DownloadRegsFrm: TDownloadRegsFrm
   Left = 0
   Top = 0
   Caption = #1047#1072#1087#1080#1089#1100' '#1088#1077#1075#1080#1089#1090#1088#1072#1094#1080#1081' '#1074' '#1073#1072#1079#1091
-  ClientHeight = 479
-  ClientWidth = 781
+  ClientHeight = 359
+  ClientWidth = 586
   Color = clBtnFace
-  Constraints.MinWidth = 422
+  Constraints.MinWidth = 317
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -10
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 120
-  TextHeight = 16
+  PixelsPerInch = 96
+  TextHeight = 12
   object ActionPanel: TPanel
     Left = 0
-    Top = 408
-    Width = 781
-    Height = 71
+    Top = 306
+    Width = 586
+    Height = 53
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alBottom
     TabOrder = 0
     DesignSize = (
-      781
-      71)
+      586
+      53)
     object DownloadBtn: TButton
-      Left = 688
-      Top = 6
-      Width = 84
-      Height = 35
+      Left = 516
+      Top = 5
+      Width = 63
+      Height = 26
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Anchors = [akTop, akRight]
       Caption = #1055#1077#1088#1077#1087#1080#1089#1072#1090#1100
       TabOrder = 0
       OnClick = DownloadBtnClick
     end
     object DelBatRegsBtn: TButton
-      Left = 8
-      Top = 6
-      Width = 189
-      Height = 35
+      Left = 6
+      Top = 5
+      Width = 142
+      Height = 26
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1059#1076#1072#1083#1080#1090#1100' '#1085#1077#1089#1091#1097#1077#1089#1090#1074#1091#1102#1097#1080#1077
       TabOrder = 1
       OnClick = DelBatRegsBtnClick
@@ -47,13 +59,18 @@ object DownloadRegsFrm: TDownloadRegsFrm
   object RegsLV: TBtnListView
     Left = 0
     Top = 0
-    Width = 781
-    Height = 408
+    Width = 586
+    Height = 306
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alClient
     Checkboxes = True
     Columns = <
       item
         Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1094#1080#1103
+        Width = 38
       end
       item
         Caption = #1055#1091#1090#1100
@@ -62,9 +79,11 @@ object DownloadRegsFrm: TDownloadRegsFrm
       end
       item
         Caption = #1054#1073#1098#1077#1082#1090
+        Width = 38
       end
       item
         Caption = #1048#1089#1087#1099#1090#1072#1085#1080#1077
+        Width = 38
       end>
     RowSelect = True
     ParentShowHint = False
@@ -76,6 +95,7 @@ object DownloadRegsFrm: TDownloadRegsFrm
     QuoteColumnBtnClick = False
     QuoteColumnDblClick = False
     DrawColorBox = False
+    ChangeTextColor = False
     Editable = False
   end
   object ImageList_16: TImageList

@@ -142,8 +142,7 @@ type
     // Возобновление работы
     function Resume: boolean; stdcall;
     // Уведомление о внешних событиях
-    function Notify(const dwCommand: dword; const dwData: dword): boolean;
-      stdcall;
+    function Notify(const dwCommand: dword; const dwData: dword): boolean; stdcall;
     // Получение имени
     function GetName: LPCSTR; stdcall;
     // Получить свойство
@@ -156,6 +155,8 @@ type
     function CanClose: boolean; stdcall;
     // Завершить работу плагина
     function Close: boolean; stdcall;
+  // MBaseControl собственные интерфейсы плагина
+  //
   private
     function getConfigName: string;
     procedure setConfigName(const Value: string);

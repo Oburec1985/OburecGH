@@ -94,6 +94,8 @@ type
     m_testType:string;
     m_date:tdatetime;
   protected
+    // Установка имени
+    procedure setname(str:string);override;
     // вызывается внутри CreateXMLDesc, получает главный узел на вход
     procedure doCreateFiles(node:txmlnode);override;
     procedure doLoadDesc(node:txmlnode);override;
@@ -181,12 +183,15 @@ begin
   dir:=GetCurrentDir;
   //showmessage(dir);
   fname:=FindFile('DelZip179.dll',dir,3);
-  //showmessage(fname);
-  dir:=ExtractFileDir(fname);
-  m_zip.DLLDirectory:=dir;
-  //showmessage(m_zip.DLLDirectory);
+  if fileexists(fname) then
+  begin
+    //showmessage(fname);
+    dir:=ExtractFileDir(fname);
+    m_zip.DLLDirectory:=dir;
+    //showmessage(m_zip.DLLDirectory);
 
-  m_zip.Dll_Load := true;
+    m_zip.Dll_Load := true;
+  end;
   regclass(cTestFolder);
   regclass(cRegFolder);
   regclass(cObjFolder);
@@ -300,8 +305,12 @@ var
 begin
   path:=Absolutepath;
   xmlpath:=XMLDescPath;
-  DeleteFile(xmlpath);
-  RemoveDirAll(path);
+  if fileexists(xmlpath) then
+  begin
+    DeleteFile(xmlpath);
+  end;
+  if DirectoryExists(path) then
+    RemoveDirAll(path);
 end;
 
 procedure cXmlFolder.delpropertie(pname: string);
@@ -551,6 +560,8 @@ begin
   result.m_path:=path;
   result.m_folder:=folder;
   result.m_Rcname:=Rcname;
+  if result.m_folder='' then
+    result.m_folder:=Rcname;
   m_signals.AddObject(rcname, result);
 end;
 
@@ -713,6 +724,11 @@ end;
 function cRegFolder.getimageindex: integer;
 begin
   Result:=inherited;
+  if rar then
+  begin
+    result:=c_img_RarReg;
+    exit;
+  end;
   if NoData then
   begin
     result:=c_img_Nodata;
@@ -721,11 +737,6 @@ begin
   if empty then
   begin
     result:=c_img_emptyReg;
-    exit;
-  end;
-  if rar then
-  begin
-    result:=c_img_RarReg;
     exit;
   end;
   if Complete then
@@ -805,6 +816,7 @@ begin
       if db.m_zip.FSpecArgs.Count>0 then
       begin
         db.m_zip.add;
+        //db.m_zip.Clear;
         RemoveDirAll(path);
         //db.m_zip.SuccessCnt
         s.m_rar:=true;
@@ -843,11 +855,14 @@ begin
           datpath:=fld+sections.Strings[j]+'.dat';
           if fileexists(datpath) then
           begin
-            if GetFileSize(datpath)>0 then
+            if not IsOpen(datpath) then
             begin
-              result:=false;
-              sections.destroy;
-              exit;
+              if GetFileSize(datpath)>0 then
+              begin
+                result:=false;
+                sections.destroy;
+                exit;
+              end;
             end;
           end;
         end;
@@ -928,6 +943,18 @@ procedure cTestFolder.doLoadDesc(node: txmlnode);
 begin
   inherited;
   m_testType:=node.ReadAttributeString('TestType','');
+end;
+
+procedure cTestFolder.setname(str: string);
+var
+  s:string;
+begin
+  s:=f_caption;
+  inherited;
+  if f_caption<>extractfilename(path) then
+  begin
+    f_caption:=path;
+  end
 end;
 
 { сBaseMeaFolder }

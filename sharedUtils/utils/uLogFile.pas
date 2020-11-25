@@ -30,10 +30,10 @@ type
   cLogFile = class
   public
     records:cLogRecords;
+    filename:string;
   protected
     cs: TRTLCriticalSection;
     f:textfile;
-    filename:string;
     separator:char;
   public
     fOnAddRecord:tNotifyEvent;

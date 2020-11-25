@@ -59,7 +59,7 @@ begin
     getmodulefilename(hinstance, buffer, 255);
     reg.openkey('\Software\MERA\Winpos\COMPlugins', True);
     reg.writestring(string(buffer),'WPServicePack.WPServicePlg');
-    // showmessage(string(buffer));
+    //showmessage(string(buffer));
     // делаем не через кокласс а через connect главного класса .Connect(
     // reg.writestring(string(buffer),'WPExtPack.IEMeraPlg');
     // showmessage(string(buffer));

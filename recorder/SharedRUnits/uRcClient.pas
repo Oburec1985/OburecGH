@@ -2,7 +2,7 @@ unit uRcClient;
 
 interface
 uses
-  windows, sysutils, winSock, classes, Sockets, uScktComp;
+  windows, sysutils, winSock, classes, Sockets, uScktComp, uRCFunc;
 
 // для работы необходимо установить компонент TClientSocket (Sockets, ScktComp)
 
@@ -242,14 +242,6 @@ begin
   errorCode:=0;
 end;
 
-function cRegController.getConnectionFolder(i: integer): string;
-var
-  con:TRConnection;
-begin
-  con:=getconnection(i);
-  result:=con.folder;
-end;
-
 function cRegController.getConnectionIndex(c: TRConnection): integer;
 var
   I: Integer;
@@ -277,11 +269,38 @@ begin
   result:=Strings[i];
 end;
 
+function cRegController.getConnectionFolder(i: integer): string;
+var
+  con:TRConnection;
+begin
+  con:=getconnection(i);
+  if con.name='LocalRC' then
+  begin
+    if not con.s.Active then
+    begin
+      result:=GetMeraFile;
+    end;
+  end
+  else
+  begin
+    result:=con.folder;
+  end;
+end;
+
+
 function cRegController.getConnectionPath(i: integer): string;
 var
   s:TRConnection;
 begin
   s:=getconnection(i);
+  if s.name='LocalRC' then
+  begin
+    if not s.s.Active then
+    begin
+      result:=GetMeraFile;
+      exit;
+    end;
+  end;
   result:=s.curPath;
 end;
 

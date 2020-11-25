@@ -29,6 +29,8 @@ type
     FsEdit: TFloatEdit;
     FsLabel: TLabel;
     CreateSignalBtn: TButton;
+    OffsetFE: TFloatSpinEdit;
+    Label2: TLabel;
     procedure CreateSignalBtnClick(Sender: TObject);
   private
     m_l:tlist;
@@ -58,6 +60,7 @@ begin
   s.m_freq:=FreqSE.Value;
   s.m_fs:=FsEdit.FloatNum;
   s.m_type:=styperg.ItemIndex;
+  s.m_offset:=OffsetFE.Value;
   m_l.Add(s);
 end;
 

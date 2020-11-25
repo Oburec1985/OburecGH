@@ -1420,8 +1420,10 @@ begin
   flast := 0;
   freadyX := 0;
   freadyY := 0;
-  m_XParam.doOnStart;
-  m_YParam.doOnStart;
+  if m_XParam<>nil then
+    m_XParam.doOnStart;
+  if m_YParam<>nil then
+    m_YParam.doOnStart;
 end;
 
 procedure TWrkPoint.initgraph;

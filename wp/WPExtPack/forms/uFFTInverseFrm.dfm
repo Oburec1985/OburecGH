@@ -2,70 +2,50 @@ object FFTInverseFrm: TFFTInverseFrm
   Left = 0
   Top = 0
   Caption = #1054#1073#1088#1072#1090#1085#1086#1077' '#1087#1088#1077#1086#1073#1088#1072#1079#1086#1074#1072#1085#1080#1077' '#1060#1091#1088#1100#1077
-  ClientHeight = 731
-  ClientWidth = 1141
+  ClientHeight = 548
+  ClientWidth = 856
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -10
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 120
-  TextHeight = 16
+  PixelsPerInch = 96
+  TextHeight = 12
   object NumPointsLabel: TLabel
-    Left = 9
+    Left = 7
     Top = 1
-    Width = 72
-    Height = 16
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Width = 60
+    Height = 12
     Caption = #1063#1080#1089#1083#1086' '#1090#1086#1095#1077#1082
   end
   object Label1: TLabel
-    Left = 9
-    Top = 68
-    Width = 80
-    Height = 16
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Left = 7
+    Top = 51
+    Width = 67
+    Height = 12
     Caption = #1063#1080#1089#1083#1086' '#1073#1083#1086#1082#1086#1074
   end
   object Label3: TLabel
-    Left = 9
-    Top = 133
-    Width = 114
-    Height = 16
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Left = 7
+    Top = 100
+    Width = 92
+    Height = 12
     Caption = #1064#1072#1075' '#1087#1086' '#1095#1072#1089#1090#1086#1090#1077', '#1043#1094
   end
   object Label2: TLabel
-    Left = 11
-    Top = 232
-    Width = 86
-    Height = 16
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Left = 8
+    Top = 174
+    Width = 72
+    Height = 12
     Caption = #1055#1086#1080#1089#1082' '#1082#1072#1085#1072#1083#1086#1074
   end
   object NumPointsCB: TComboBox
-    Left = 9
-    Top = 27
-    Width = 190
-    Height = 24
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Left = 7
+    Top = 20
+    Width = 142
+    Height = 20
     ItemIndex = 5
     TabOrder = 0
     Text = '4096'
@@ -86,54 +66,38 @@ object FFTInverseFrm: TFFTInverseFrm
       '524288')
   end
   object nBlocksIE: TIntEdit
-    Left = 9
-    Top = 92
-    Width = 190
-    Height = 24
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Left = 7
+    Top = 69
+    Width = 142
+    Height = 20
     TabOrder = 1
     Text = '000'
   end
   object GroupBox1: TGroupBox
     Left = 0
-    Top = 672
-    Width = 1141
-    Height = 59
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Top = 504
+    Width = 856
+    Height = 44
     Align = alBottom
     TabOrder = 2
     DesignSize = (
-      1141
-      59)
+      856
+      44)
     object CancelBtn: TButton
-      Left = 7
-      Top = 17
-      Width = 98
-      Height = 34
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 5
+      Top = 13
+      Width = 74
+      Height = 25
       Anchors = [akLeft, akBottom]
       Caption = #1054#1090#1084#1077#1085#1072
       ModalResult = 2
       TabOrder = 0
     end
     object ApplyBtn: TButton
-      Left = 1033
-      Top = 17
-      Width = 100
-      Height = 34
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 775
+      Top = 13
+      Width = 75
+      Height = 25
       Anchors = [akRight, akBottom]
       Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
       ModalResult = 1
@@ -141,33 +105,29 @@ object FFTInverseFrm: TFFTInverseFrm
     end
   end
   object dFfe: TFloatEdit
-    Left = 11
-    Top = 157
-    Width = 188
-    Height = 24
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Left = 8
+    Top = 118
+    Width = 141
+    Height = 20
     TabOrder = 3
     Text = '0.0'
   end
   object Panel1: TPanel
-    Left = 475
+    Left = 356
     Top = 0
-    Width = 666
-    Height = 672
+    Width = 500
+    Height = 504
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alRight
     TabOrder = 4
     object SigTV: TVTree
       Left = 1
       Top = 1
-      Width = 331
-      Height = 670
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Width = 248
+      Height = 502
       Align = alLeft
       Alignment = taRightJustify
       DragMode = dmAutomatic
@@ -187,28 +147,32 @@ object FFTInverseFrm: TFFTInverseFrm
       Columns = <
         item
           Position = 0
-          Width = 327
+          Width = 244
           WideText = #1054#1073#1098#1077#1082#1090
         end>
     end
     object ChannelsLV: TBtnListView
-      Left = 332
+      Left = 249
       Top = 1
-      Width = 333
-      Height = 670
+      Width = 250
+      Height = 502
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alClient
       Columns = <
         item
           Caption = 'Re'
-          Width = 51
+          Width = 38
         end
         item
           Caption = 'Im'
-          Width = 51
+          Width = 38
         end
         item
           Caption = 'FFTCount'
-          Width = 51
+          Width = 38
         end>
       MultiSelect = True
       RowSelect = True
@@ -225,14 +189,10 @@ object FFTInverseFrm: TFFTInverseFrm
     end
   end
   object FltEdit: TEdit
-    Left = 11
-    Top = 256
-    Width = 300
-    Height = 24
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Left = 8
+    Top = 192
+    Width = 225
+    Height = 20
     TabOrder = 5
     OnChange = FltEditChange
   end
