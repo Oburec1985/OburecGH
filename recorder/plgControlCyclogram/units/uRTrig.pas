@@ -25,6 +25,7 @@ type
   private
     m_targetname:string;
     fmdbPropTag:cTag;
+    m_Val:double;
   public
     parent:cbasetrig;
     // писать по фронту триггера/ по спаду
@@ -39,6 +40,7 @@ type
     procedure settargetname(tname:string);
     function getmdbtag:itag;
     procedure setmdbtag(t:itag);
+    procedure readData;
   public
     function getctag:ctag;
     function opertypetoStr:string;
@@ -85,6 +87,7 @@ type
     // не выполнится дальше не проверяем триггеры
     function LevelEnumChildrens: boolean;
   protected
+    procedure readActionData;
     procedure setowner(o:tobject);
     function getShowInGraphs:boolean;override;
     procedure setShowInGraphs(b:boolean);override;
@@ -123,6 +126,7 @@ type
     // поменять состояние (enable/disable) триггера и его потомков
     Procedure SwitchAll(b:boolean);
     procedure setEnabled(b:boolean);virtual;
+    function getenabled:boolean;virtual;
     // включить выключить дочерние триггеры на основании уровней.
     // Функция предназначена для вставки в событие обновления триггера
     // дизаблит или наоборот дочерние триги если родители выполнились или наоборот
@@ -150,7 +154,7 @@ type
     property state: boolean read getState write setState;
     property owner: tobject read fowner write setowner;
     property Inverse: boolean read getNot write setNot;
-    property enabled: boolean read fenabled write setEnabled;
+    property enabled: boolean read getenabled write setEnabled;
   end;
 
   cTimeTrig = class(cBaseTrig)
@@ -192,6 +196,7 @@ type
     fThreshold: double;
     fdsc: string;
   protected
+    function getenabled: boolean;override;
   public
     function LvlTrigType: boolean;
     procedure setchannel(str: string); overload;
@@ -344,6 +349,7 @@ function cRTrig.CheckTrigOnNewData: boolean;
 var
   d: double;
 begin
+  readActionData;
   if ftag = nil then
   begin
     result := false;
@@ -429,6 +435,13 @@ begin
     trStop: state:=false;
   end;
   inherited;
+end;
+
+function cRTrig.getenabled: boolean;
+begin
+  result:=fenabled;
+  if trigtype=trStop then
+    result:=true;
 end;
 
 { cBaseTrig }
@@ -556,6 +569,18 @@ begin
   end
   else
     result:=false;
+end;
+
+procedure cBaseTrig.readActionData;
+var
+  I: Integer;
+  a:TTrigAction;
+begin
+  for I := 0 to ActionCount - 1 do
+  begin
+    a:=getaction(i);
+    a.readData;
+  end;
 end;
 
 procedure cBaseTrig.relinkActionTargets;
@@ -875,6 +900,11 @@ begin
   result:=cBaseTrig(m_andTrigs.objects[i]);
 end;
 
+function cBaseTrig.getenabled: boolean;
+begin
+  result:=fenabled;
+end;
+
 procedure cBaseTrig.RemoveEvent(e: TNotifyEvent);
 begin
   fEList.RemoveEvent(e, E_Trig);
@@ -1146,19 +1176,17 @@ begin
       end
       else
       begin
-        tag:=getTagByName(str);
-        if t<>nil then
-        begin
-          mdbPropVal:=floattostr(GetMean(tag));
-          if isvalue(mdbPropVal) then
-          begin
-            mdbvalue:=true;
-          end;
-        end;
+        mdbvalue:=false;
       end;
       case opertype of
         c_action_MDBaddProp:
         begin
+          if mdbtag<>nil then
+          begin
+            str:=floattostr(m_val);
+          end
+          else
+            str:='';
           if mdbvalue then
           begin
             str:=floattostr(strtofloatext(mdbPropVal)+strtofloatext(str));
@@ -1166,9 +1194,13 @@ begin
           else
           begin
             if str<>'' then
-              str:=str+';'+mdbPropVal
+            begin
+
+            end
             else
-              str:=mdbPropVal;
+            begin
+              str:=str+';'+mdbPropVal
+            end;
           end;
         end;
         c_action_MDBsetProp:str:=mdbPropVal;
@@ -1305,6 +1337,14 @@ procedure TTrigAction.settargetname(tname: string);
 begin
   m_targetname:=tname;
   relincTargetToName;
+end;
+
+procedure TTrigAction.readData;
+begin
+  if mdbtag<>nil then
+  begin
+    m_Val:=fmdbPropTag.GetDefaultEst;
+  end;
 end;
 
 procedure TTrigAction.relincTargetToName;

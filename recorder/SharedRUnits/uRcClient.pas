@@ -2,7 +2,10 @@ unit uRcClient;
 
 interface
 uses
-  windows, sysutils, winSock, classes, Sockets, uScktComp, uRCFunc;
+  windows, sysutils, winSock, classes,
+  //Sockets,
+  uScktComp,
+  uRCFunc;
 
 // для работы необходимо установить компонент TClientSocket (Sockets, ScktComp)
 

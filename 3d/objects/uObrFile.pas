@@ -24,13 +24,10 @@ procedure writeObject(FileHeaderObjectInfo: cFileHeadObjInfoList;
 function readHeader(var FileHeaderObjectInfo: cFileHeadObjInfoList;
   const F: file): boolean;
 // Читает всю информацию об объекте. Курсор должен стоять на метке начала объекта ABCD
-function readObj(const F: file; p_scene: tobject; list: cBaseObjList;
-  var matmng: cmaterialmanager; pathcfgfile: cCfgFile): cNodeObject;
-procedure writeHeader(var FileHeaderObjectInfo: cFileHeadObjInfoList;
-  const F: file; MainNode: cNodeObject);
+function readObj(const F: file; p_scene: tobject; list: cBaseObjList; var matmng: cmaterialmanager; pathcfgfile: cCfgFile): cNodeObject;
+procedure writeHeader(var FileHeaderObjectInfo: cFileHeadObjInfoList; const F: file; MainNode: cNodeObject);
 // Загрузить сцену из файла
-function LoadObrFile(path: string; pathcfgfile: cCfgFile;
-  scene: tobject): boolean;
+function LoadObrFile(path: string; pathcfgfile: cCfgFile; scene: tobject): boolean;
 
 //
 const
@@ -621,7 +618,7 @@ function LoadObrFile(path: string; pathcfgfile: cCfgFile;
 var
   F: file; // читаемый файл
   obj: cNodeObject;
-  texturedir: string;
+  texturedir, fullpath: string;
   bRead: boolean;
   sc: cScene;
   bufferscene: cBaseObjList;
@@ -630,7 +627,13 @@ begin
   result := false;
   if not FileExists(path) then
   begin
-    exit;
+    fullpath:=pathcfgfile.findMeshFile(path);
+    if not FileExists(fullpath) then
+    begin
+      exit;
+    end
+    else
+      path:=fullpath;
   end;
   AssignFile(F, path);
   bufferscene := cBaseObjList.Create; // Создаем промежуточную сцену и помещаем считанные объекты в нее
@@ -642,8 +645,7 @@ begin
   bRead := true;
   while bRead do
   Begin
-    obj := readObj(F, sc, bufferscene, crender(sc.render).m_MatMng,
-      pathcfgfile);
+    obj := readObj(F, sc, bufferscene, crender(sc.render).m_MatMng, pathcfgfile);
     bRead := (obj <> nil);
     if bRead then
       bufferscene.addobj(obj);

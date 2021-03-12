@@ -2987,6 +2987,7 @@ begin
           begin
             act.mdbPropVal := ActNode.ReadAttributeString('MDBPropVal', '');
           end;
+          act.mdbtag:=ct.tag;
           ct.destroy;
           ct := nil;
         end;

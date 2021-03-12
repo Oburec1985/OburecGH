@@ -30,6 +30,8 @@ type
 
   cBaseGlComponent = class(tpanel)
   protected
+    fOnRBtn:Tnotifyevent;
+  protected
     res: string;
     scene: string;
     // декорации на сцене. Объекты созданы без помощи idesigner
@@ -116,6 +118,7 @@ type
   protected
     Procedure SetShowTransforms(b: boolean);
   published
+    property OnRBtn:Tnotifyevent read fOnRBtn write fOnRBtn;
     // Позиция объекта
     // property position:cpoint3 read pos write pos;
     // Свойство отвечает за объекты сцены
@@ -482,16 +485,23 @@ begin
   inherited WndProc(Message);
   case Message.Msg of
     wm_paint:
+    begin
+      if mUI <> nil then
       begin
-        if mUI <> nil then
+        if handle <> mUI.m_RenderScene.m_wndContext.handle then
         begin
-          if handle <> mUI.m_RenderScene.m_wndContext.handle then
-          begin
-            mUI.updatehandle := true;
-          end;
+          mUI.updatehandle := true;
         end;
-        // mUI.m_RenderScene.RenderScene;
       end;
+      // mUI.m_RenderScene.RenderScene;
+    end;
+    WM_RBUTTONDOWN:
+    begin
+      if assigned(OnRBtn) then
+      begin
+        OnRBtn(self);
+      end;
+    end;
   end;
 end;
 

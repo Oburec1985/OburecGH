@@ -327,7 +327,8 @@ end;
 
 
 procedure cUI.updatecoord(var Msg : TMessage);
-var x,y:integer;
+var
+  x,y:integer;
 begin
    case msg.Msg of
      wm_mousemove:
@@ -348,7 +349,10 @@ begin
      end;
      wm_mousewheel:
      begin
-       mouse.wheel:=hiword(msg.wparam);
+       if msg.wparam>0 then
+       begin
+         mouse.wheel:=hiword(msg.wparam);
+       end;
      end;
    end;
 end;

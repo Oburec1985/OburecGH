@@ -727,6 +727,7 @@ begin
   showfiles;
   ShowOperators;
   InitTV;
+  wp.readgraphs;
   result:=inherited showmodal;
 end;
 

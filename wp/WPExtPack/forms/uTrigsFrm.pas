@@ -74,6 +74,8 @@ type
     NumPointsCB: TComboBox;
     ResampleCB: TCheckBox;
     ResampleIE: TIntEdit;
+    FolderCB: TComboBox;
+    FolderLabel: TLabel;
     procedure TrigTypeRGClick(Sender: TObject);
     procedure AddBtnClick(Sender: TObject);
     procedure SearchIntervalTypeRGClick(Sender: TObject);
@@ -99,7 +101,8 @@ type
     procedure ShowTrigOpts(tr:ctrig);
     procedure ApplyTrigOpts(tr:ctrig);
     procedure addchildTrigs(tr:ctrig; parent:PVirtualNode);
-    procedure FillSignalsCB;
+    procedure FillSignalsCB(src:csrc);
+    procedure FillFolderCB;
   public
     procedure ShowTriggers;
     procedure linkMng(m:cwpobjmng);
@@ -113,18 +116,32 @@ implementation
 
 {$R *.dfm}
 
-procedure TTrigsFrm.FillSignalsCB;
+procedure TTrigsFrm.FillSignalsCB(src:csrc);
 var
   I: Integer;
   s:cwpsignal;
 begin
   ChanNameCB.Items.Clear;
-  for I := 0 to selsrc.ChildCount - 1 do
+  for I := 0 to s.ChildCount - 1 do
   begin
     s:=selSrc.getSignalObj(i);
     ChanNameCB.Items.AddObject(s.name,s);
   end;
   ChanNameCB.ItemIndex:=-1;
+end;
+
+procedure TTrigsFrm.FillFolderCB;
+var
+  I: Integer;
+  s:csrc;
+begin
+  FolderCB.Items.Clear;
+  for I := 0 to mng.SrcCount - 1 do
+  begin
+    s:=mng.GetSrc(i);
+    FolderCB.Items.AddObject(s.name,s);
+  end;
+  FolderCB.ItemIndex:=0;
 end;
 
 procedure TTrigsFrm.FilterFEChange(Sender: TObject);
@@ -474,18 +491,8 @@ begin
     if tr.isHeader then
       addchildTrigs(tr, nil);
   end;
-  ChanNameCB.clear;
-  if selSRC<>nil then
-  begin
-    for I := 0 to selSrc.childcount - 1 do
-    begin
-      s:=selSrc.getSignalObj(i);
-      ChanNameCB.Items.AddObject(s.Name, s);
-    end;
-    if SelSrc.childCount>0 then
-      ChanNameCB.ItemIndex:=0;
-  end;
-
+  FillSignalsCB(selSrc);
+  FillFolderCB;
   VTree1.Header.AutoFitColumns(false,smaAllColumns,0,VTree1.Header.Columns.Count);
 end;
 

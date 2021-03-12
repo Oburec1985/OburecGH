@@ -96,6 +96,7 @@ type
     procedure SpeedButton1Click(Sender: TObject);
     procedure MdbPathBtnClick(Sender: TObject);
     procedure CfgSBClick(Sender: TObject);
+    procedure ObjPropSGExit(Sender: TObject);
   private
 
     m_rstate: dword;
@@ -130,7 +131,7 @@ type
     // происходит при обновленнии данных
     procedure doUpdateData(Sender: TObject);
     procedure doOnRead(connection: TRConnection; msg: tmsgHeader);
-    procedure createReg;
+    function createReg:cregfolder;
     // создание описателей в базе с ссылками на записи регистраторов
     procedure createSubRegs;
     procedure settestsettings(t: cTestFolder);
@@ -407,17 +408,20 @@ begin
     cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes.Add
       (cTestFolder(testFolder).m_testType);
   cregFolder(regFolder) := GetSelectReg;
-  // regFolder := m_reg;
-  // свойства регистрации
-  cregFolder(regFolder).m_alarm := AlarmCB.Checked;
-  cregFolder(regFolder).m_alarmType := AlarmType.text;
-  cregFolder(regFolder).m_alarmDsc := AlarmDsc.text;
+
   // для вновь создаваемых нет смысла что то искать внутри
   UpdateXmlDescr;
+  if regFolder=nil then
+    regfolder:=createreg;
   if regFolder <> nil then
   begin
     if regFolder is cregFolder then
     begin
+      // regFolder := m_reg;
+      // свойства регистрации
+      cregFolder(regFolder).m_alarm := AlarmCB.Checked;
+      cregFolder(regFolder).m_alarmType := AlarmType.text;
+      cregFolder(regFolder).m_alarmDsc := AlarmDsc.text;
       RegNameEdit.AddItem(regFolder.caption, regFolder);
       setComboBoxItem(regFolder.caption, RegNameEdit);
     end;
@@ -441,6 +445,7 @@ begin
     t.CreateXMLDesc;
   end;
   r := GetSelectReg;
+
   if r <> nil then
   begin
     r.CreateXMLDesc;
@@ -867,13 +872,14 @@ begin
   setComboBoxItem(TestNameCB.text, TestNameCB);
 end;
 
-procedure TMBaseControl.createReg;
+function TMBaseControl.createReg:cregfolder;
 var
   test: cTestFolder;
   date: tdatetime;
   Path: string;
   objFolder: cObjFolder;
 begin
+  result:=nil;
   test := GetSelectTest;
   if test = nil then
   BEGIN
@@ -908,6 +914,7 @@ begin
           m_reg := nil;
       end;
     end;
+
     if m_reg = nil then
     begin
       m_reg := cregFolder.Create;
@@ -919,9 +926,12 @@ begin
       m_reg.fscanFolders := false;
       m_reg.fscanFiles := false;
       m_reg.CreateFiles;
+
       RegNameEdit.AddItem(m_reg.caption, m_reg);
+      setComboBoxItem(m_reg.caption,RegNameEdit);
       setcurReg(m_reg);
     end;
+    result:=m_reg;
   end;
 end;
 
@@ -1000,8 +1010,8 @@ begin
     result := cregFolder(t.getChildrenByCaption(RegNameEdit.text));
     if result = nil then
     begin
-      createReg;
-      result := m_reg;
+      //createReg;
+      //result := m_reg;
     end;
   end;
 end;
@@ -1173,6 +1183,17 @@ begin
     end;
   end;
   SGChange(sg);
+end;
+
+procedure TMBaseControl.ObjPropSGExit(Sender: TObject);
+var
+  c,r:integer;
+  b:boolean;
+begin
+  r:=TStringGridExt(sender).RowCount-1;
+  c:=TStringGridExt(sender).ColCount-1;
+  b:=true;
+  ObjPropSGEndEdititng(sender, c, r, b);
 end;
 
 procedure TMBaseControl.ObjNameCBChange(Sender: TObject);

@@ -229,7 +229,6 @@ object MDBFrm: TMDBFrm
     Margins.Bottom = 2
     Align = alLeft
     TabOrder = 1
-    ExplicitHeight = 379
     object mdbTV: TVTree
       Left = 1
       Top = 1
@@ -252,7 +251,6 @@ object MDBFrm: TMDBFrm
       TabOrder = 0
       TreeOptions.SelectionOptions = [toMultiSelect, toSiblingSelectConstraint]
       OnChange = mdbTVChange
-      ExplicitHeight = 316
       Columns = <>
     end
     object BottonPanel: TPanel
@@ -266,10 +264,9 @@ object MDBFrm: TMDBFrm
       Margins.Bottom = 2
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 317
       object ZipBtn: TSpeedButton
         Left = 0
-        Top = 13
+        Top = 5
         Width = 35
         Height = 35
         Hint = #1040#1088#1093#1080#1074#1080#1088#1086#1074#1072#1090#1100' '#1088#1077#1075#1080#1089#1090#1088#1072#1094#1080#1080
@@ -636,7 +633,6 @@ object MDBFrm: TMDBFrm
     Margins.Bottom = 2
     Align = alClient
     TabOrder = 2
-    ExplicitHeight = 379
     object Splitter1: TSplitter
       Left = 1
       Top = 321
@@ -673,9 +669,8 @@ object MDBFrm: TMDBFrm
       QuoteColumnBtnClick = False
       QuoteColumnDblClick = False
       DrawColorBox = False
+      ChangeTextColor = False
       Editable = False
-      ExplicitTop = 336
-      ExplicitHeight = 116
     end
     object PropertiesTopPanel: TPanel
       Left = 1
@@ -700,7 +695,6 @@ object MDBFrm: TMDBFrm
         Align = alClient
         Caption = #1057#1074#1086#1081#1089#1090#1074#1072' '#1086#1073#1098#1077#1082#1090#1072
         TabOrder = 0
-        ExplicitHeight = 245
       end
     end
   end
@@ -710,7 +704,7 @@ object MDBFrm: TMDBFrm
     Left = 136
     Top = 352
     Bitmap = {
-      494C010124002900080020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010124002900040020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004001000001002000000000000080
       0200000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -6001,7 +5995,7 @@ object MDBFrm: TMDBFrm
     Left = 56
     Top = 352
     Bitmap = {
-      494C010125002900080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010125002900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       000000000000360000002800000040000000A0000000010020000000000000A0
       000000000000000000000000000000000000FFFFFF00FFFFFF00FFFFFF00FFFF
       FF00FFFFFF00FFFFFF00FFFFFF00FDFDFD00FDFDFD00ECEDEB0063648A001110

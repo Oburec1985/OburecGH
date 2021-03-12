@@ -297,8 +297,7 @@ begin
   // addplgevent('cCtrlWrnFactory_doLoad', c_RC_LoadCfg, doLoad);
   // addplgevent('cCtrlWrnFactory_doSave', c_RC_SaveCfg, doSave);
   addplgevent('cIRDiagramFactory_doUpdateData', c_RUpdateData, doUpdateData);
-  addplgevent('cIRDiagramFactory_doChangeRState', c_RC_DoChangeRCState,
-    doChangeRState);
+  addplgevent('cIRDiagramFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
 end;
 
 procedure cIRDiagramFactory.destroyevents;

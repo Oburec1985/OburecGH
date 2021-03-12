@@ -2,8 +2,8 @@ object FxForm: TFxForm
   Left = 0
   Top = 0
   Caption = #1055#1083#1072#1075#1080#1085' '#1087#1072#1082#1077#1090#1085#1086#1081' '#1086#1073#1088#1072#1073#1086#1090#1082#1080
-  ClientHeight = 721
-  ClientWidth = 962
+  ClientHeight = 705
+  ClientWidth = 854
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,40 +17,46 @@ object FxForm: TFxForm
   TextHeight = 13
   object Splitter2: TSplitter
     Left = 0
-    Top = 520
-    Width = 962
+    Top = 385
+    Width = 854
     Height = 3
     Cursor = crVSplit
     Align = alTop
     Color = clNone
     ParentColor = False
+    ExplicitTop = 520
+    ExplicitWidth = 962
   end
   object ProcSignalsGB: TGroupBox
     Left = 0
-    Top = 523
-    Width = 962
-    Height = 117
+    Top = 388
+    Width = 854
+    Height = 236
     Align = alClient
     TabOrder = 0
+    ExplicitHeight = 205
     object Splitter3: TSplitter
       Left = 486
       Top = 15
       Width = 1
-      Height = 100
+      Height = 219
+      ExplicitHeight = 100
     end
     object GroupBox2: TGroupBox
       Left = 487
       Top = 15
-      Width = 473
-      Height = 100
+      Width = 365
+      Height = 219
       Align = alClient
       Caption = #1048#1089#1090#1086#1095#1085#1080#1082#1080' '#1086#1087#1077#1088#1072#1090#1086#1088#1086#1074
       TabOrder = 0
+      ExplicitWidth = 473
+      ExplicitHeight = 100
       object OpersSrc: TBtnListView
         Left = 2
         Top = 15
-        Width = 469
-        Height = 83
+        Width = 361
+        Height = 202
         Align = alClient
         Columns = <
           item
@@ -73,21 +79,25 @@ object FxForm: TFxForm
         DrawColorBox = False
         ChangeTextColor = False
         Editable = False
+        ExplicitWidth = 469
+        ExplicitHeight = 83
       end
     end
     object GroupBox3: TGroupBox
       Left = 2
       Top = 15
       Width = 484
-      Height = 100
+      Height = 219
       Align = alLeft
       Caption = #1054#1073#1088#1072#1073#1072#1090#1099#1074#1072#1077#1084#1099#1077' '#1089#1080#1075#1085#1072#1083#1099
       TabOrder = 1
+      ExplicitLeft = -1
+      ExplicitHeight = 232
       object SrcLV: TBtnListView
         Left = 2
         Top = 15
         Width = 480
-        Height = 83
+        Height = 202
         Align = alClient
         Columns = <
           item
@@ -118,18 +128,21 @@ object FxForm: TFxForm
         DrawColorBox = False
         ChangeTextColor = False
         Editable = False
+        ExplicitHeight = 83
       end
     end
   end
   object SignalsGB: TGroupBox
     Left = 0
-    Top = 640
-    Width = 962
+    Top = 624
+    Width = 854
     Height = 81
     Align = alBottom
     TabOrder = 1
+    ExplicitTop = 640
+    ExplicitWidth = 962
     DesignSize = (
-      962
+      854
       81)
     object DelBtn: TButton
       Left = 3
@@ -141,19 +154,20 @@ object FxForm: TFxForm
       OnClick = DelBtnClick
     end
     object AddBtn: TButton
-      Left = 884
+      Left = 776
       Top = 8
       Width = 75
       Height = 25
       Anchors = [akTop, akRight]
       Caption = #1044#1086#1073#1072#1074#1080#1090#1100
       TabOrder = 1
+      ExplicitLeft = 884
     end
     object StatusBar1: TStatusBar
       AlignWithMargins = True
       Left = 5
       Top = 40
-      Width = 952
+      Width = 844
       Height = 19
       BorderWidth = 2
       DoubleBuffered = False
@@ -175,29 +189,32 @@ object FxForm: TFxForm
         end>
       ParentDoubleBuffered = False
       UseSystemFont = False
+      ExplicitWidth = 952
     end
     object ProgressBar1: TProgressBar
       Left = 2
       Top = 62
-      Width = 958
+      Width = 850
       Height = 17
       Align = alBottom
       SmoothReverse = True
       TabOrder = 3
+      ExplicitWidth = 958
     end
   end
   object LoadScriptGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 962
+    Width = 854
     Height = 169
     Align = alTop
     TabOrder = 2
+    ExplicitWidth = 962
     DesignSize = (
-      962
+      854
       169)
     object SaveBtn: TButton
-      Left = 884
+      Left = 776
       Top = 75
       Width = 75
       Height = 25
@@ -205,26 +222,29 @@ object FxForm: TFxForm
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
       TabOrder = 0
       OnClick = SaveBtnClick
+      ExplicitLeft = 884
     end
     object SavePath: TEdit
       Left = 4
       Top = 79
-      Width = 793
+      Width = 685
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 1
+      ExplicitWidth = 793
     end
     object LoadPath: TEdit
       Left = 3
       Top = 106
-      Width = 793
+      Width = 685
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 2
       OnChange = LoadPathChange
+      ExplicitWidth = 793
     end
     object LoadBtn: TButton
-      Left = 884
+      Left = 776
       Top = 106
       Width = 75
       Height = 25
@@ -232,9 +252,10 @@ object FxForm: TFxForm
       Caption = #1047#1072#1075#1088#1091#1079#1080#1090#1100
       TabOrder = 3
       OnClick = LoadBtnClick
+      ExplicitLeft = 884
     end
     object SelectSavePathBtn: TButton
-      Left = 802
+      Left = 694
       Top = 75
       Width = 75
       Height = 25
@@ -242,9 +263,10 @@ object FxForm: TFxForm
       Caption = '...'
       TabOrder = 4
       OnClick = SelectSavePathBtnClick
+      ExplicitLeft = 802
     end
     object SelectLoadPathBtn: TButton
-      Left = 803
+      Left = 695
       Top = 106
       Width = 75
       Height = 25
@@ -252,11 +274,12 @@ object FxForm: TFxForm
       Caption = '...'
       TabOrder = 5
       OnClick = SelectLoadPathBtnClick
+      ExplicitLeft = 803
     end
     object ToolBar1: TToolBar
       Left = 2
       Top = 15
-      Width = 958
+      Width = 850
       Height = 41
       ButtonHeight = 41
       ButtonWidth = 39
@@ -265,12 +288,14 @@ object FxForm: TFxForm
       ParentShowHint = False
       ShowHint = True
       TabOrder = 6
+      ExplicitWidth = 958
       object ReadGraph: TToolButton
         Left = 0
         Top = 0
         Hint = #1057#1095#1080#1090#1072#1090#1100' '#1075#1088#1072#1092#1080#1082#1091' '#1089' '#1086#1073#1098#1077#1082#1090#1086#1074' Win'#1055#1054#1057
         Caption = 'ReadGraph'
         ImageIndex = 14
+        Visible = False
         OnClick = ReadGraphClick
       end
       object EvalBtn: TToolButton
@@ -294,21 +319,23 @@ object FxForm: TFxForm
   object OperatorsGB: TGroupBox
     Left = 0
     Top = 169
-    Width = 962
-    Height = 351
+    Width = 854
+    Height = 216
     Align = alTop
     Caption = #1057#1087#1080#1089#1086#1082' '#1086#1073#1088#1072#1073#1086#1090#1086#1082
     TabOrder = 3
     object Splitter1: TSplitter
-      Left = 288
+      Left = 282
       Top = 15
-      Height = 334
+      Height = 199
+      ExplicitLeft = 288
+      ExplicitHeight = 334
     end
     object OperatorsLV: TBtnListView
       Left = 2
       Top = 15
-      Width = 286
-      Height = 334
+      Width = 280
+      Height = 199
       Align = alLeft
       Columns = <
         item
@@ -335,20 +362,24 @@ object FxForm: TFxForm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
+      ExplicitHeight = 298
     end
     object GroupBox1: TGroupBox
-      Left = 291
+      Left = 285
       Top = 15
-      Width = 669
-      Height = 334
+      Width = 567
+      Height = 199
       Align = alClient
       Caption = #1048#1089#1090#1086#1095#1085#1080#1082#1080' '#1089#1080#1075#1085#1072#1083#1086#1074
       TabOrder = 1
+      ExplicitLeft = 291
+      ExplicitWidth = 669
+      ExplicitHeight = 334
       object VTree1: TVTree
         Left = 2
         Top = 15
-        Width = 665
-        Height = 317
+        Width = 563
+        Height = 182
         Align = alClient
         DragMode = dmAutomatic
         DrawSelectionMode = smBlendedRectangle
@@ -367,10 +398,12 @@ object FxForm: TFxForm
         OnChange = VTree1Change
         OnKeyDown = VTree1KeyDown
         OnNodeDblClick = VTree1NodeDblClick
+        ExplicitWidth = 665
+        ExplicitHeight = 317
         Columns = <
           item
             Position = 0
-            Width = 611
+            Width = 509
             WideText = #1054#1087#1077#1088#1072#1090#1086#1088
           end
           item
@@ -427,7 +460,7 @@ object FxForm: TFxForm
     Left = 688
     Top = 280
     Bitmap = {
-      494C010117001900080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010117001900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000006000000001002000000000000060
       0000000000000000000000000000000000000000000000000000000000000000
       00000000000000000000000000002D2D2D040000000000000000000000000000
@@ -1232,7 +1265,7 @@ object FxForm: TFxForm
     Left = 624
     Top = 280
     Bitmap = {
-      494C010116001900080020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010116001900040020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       000000000000360000002800000080000000C000000001002000000000000080
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

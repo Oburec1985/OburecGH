@@ -29,7 +29,7 @@ function getColumn(SG:tStringGrid; name:string):integer;
 function getRow(SG:tStringGrid; name:string; col:integer):integer;
 procedure SGChange(sg:tStringGrid);
 // выровнять колонки по максимальной ширине строки в таблице
-procedure LVChange(lv:tbtnlistview);
+procedure LVChange(lv:tlistview);
 // возвращает false если попытались записать разные строки
 function SetMultiSelectComponentBool(c:twincontrol;b:boolean):boolean;
 function GetMultiSelectComponentBool(c:twincontrol;var err:boolean):boolean;
@@ -770,7 +770,7 @@ begin
   end;
 end;
 
-procedure LVChange(lv:tbtnlistview);
+procedure LVChange(lv:tlistview);
 var
   I,w,w2 : Integer;
   col:tlistcolumn;

@@ -42,6 +42,7 @@ uses
   uGenSignalsFrm,
   uRCFunc,
   uRecBasicFactory,
+  u3dObj,
   iplgmngr,
   recorder,
   plugin,
@@ -462,6 +463,8 @@ begin
   g_GenSignalsFactory:=cGenSignalsFactory.create;
   compMng.Add(g_GenSignalsFactory);
 
+  g_ObjFrm3dFactory:=cObjFrm3dFactory.create;
+  compMng.Add(g_ObjFrm3dFactory);
 
   cfg := extractfiledir(getRConfig);
   if DirectoryExists(cfg) then

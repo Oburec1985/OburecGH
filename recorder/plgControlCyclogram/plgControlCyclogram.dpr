@@ -184,7 +184,9 @@ uses
   uQueue in '..\..\sharedUtils\utils\lists\uQueue.pas',
   uGenSignalsFrm in 'forms\uGenSignalsFrm.pas' {GenSignalsFrm},
   uGenSignalsEditFrm in 'forms\uGenSignalsEditFrm.pas' {GenSignalsEditFrm},
-  uIRDiagramEditFrm in 'forms\uIRDiagramEditFrm.pas' {IRDiagrEditFrm};
+  uIRDiagramEditFrm in 'forms\uIRDiagramEditFrm.pas' {IRDiagrEditFrm},
+  u3dObj in 'forms\u3dObj.pas' {ObjFrm3d},
+  uGLFrmEdit in 'forms\uGLFrmEdit.pas' {ObjFrm3dEdit};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

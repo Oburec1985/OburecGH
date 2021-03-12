@@ -2,8 +2,8 @@ object DownloadRegsFrm: TDownloadRegsFrm
   Left = 0
   Top = 0
   Caption = #1047#1072#1087#1080#1089#1100' '#1088#1077#1075#1080#1089#1090#1088#1072#1094#1080#1081' '#1074' '#1073#1072#1079#1091
-  ClientHeight = 359
-  ClientWidth = 586
+  ClientHeight = 414
+  ClientWidth = 617
   Color = clBtnFace
   Constraints.MinWidth = 317
   Font.Charset = DEFAULT_CHARSET
@@ -16,9 +16,9 @@ object DownloadRegsFrm: TDownloadRegsFrm
   TextHeight = 12
   object ActionPanel: TPanel
     Left = 0
-    Top = 306
-    Width = 586
-    Height = 53
+    Top = 320
+    Width = 617
+    Height = 94
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -26,12 +26,12 @@ object DownloadRegsFrm: TDownloadRegsFrm
     Align = alBottom
     TabOrder = 0
     DesignSize = (
-      586
-      53)
+      617
+      94)
     object DownloadBtn: TButton
-      Left = 516
-      Top = 5
-      Width = 63
+      Left = 440
+      Top = 4
+      Width = 112
       Height = 26
       Margins.Left = 2
       Margins.Top = 2
@@ -39,28 +39,56 @@ object DownloadRegsFrm: TDownloadRegsFrm
       Margins.Bottom = 2
       Anchors = [akTop, akRight]
       Caption = #1055#1077#1088#1077#1087#1080#1089#1072#1090#1100
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -12
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
       TabOrder = 0
       OnClick = DownloadBtnClick
     end
     object DelBatRegsBtn: TButton
       Left = 6
       Top = 5
-      Width = 142
+      Width = 187
       Height = 26
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
       Margins.Bottom = 2
       Caption = #1059#1076#1072#1083#1080#1090#1100' '#1085#1077#1089#1091#1097#1077#1089#1090#1074#1091#1102#1097#1080#1077
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -12
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
       TabOrder = 1
       OnClick = DelBatRegsBtnClick
+    end
+    object RenameCB: TCheckBox
+      Left = 440
+      Top = 48
+      Width = 169
+      Height = 17
+      Caption = #1055#1077#1088#1077#1080#1084#1077#1085#1086#1074#1072#1090#1100' '#1079#1072#1084#1077#1088#1099
+      Checked = True
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -12
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      State = cbChecked
+      TabOrder = 2
     end
   end
   object RegsLV: TBtnListView
     Left = 0
     Top = 0
-    Width = 586
-    Height = 306
+    Width = 617
+    Height = 320
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2

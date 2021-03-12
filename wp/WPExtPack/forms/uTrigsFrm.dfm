@@ -3,7 +3,7 @@ object TrigsFrm: TTrigsFrm
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1090#1088#1080#1075#1075#1077#1088#1086#1074
   ClientHeight = 728
-  ClientWidth = 1057
+  ClientWidth = 1083
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,7 +16,7 @@ object TrigsFrm: TTrigsFrm
   object TriListGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 1057
+    Width = 1083
     Height = 137
     Align = alTop
     Caption = #1057#1087#1080#1089#1086#1082' '#1090#1088#1080#1075#1075#1077#1088#1086#1074
@@ -24,7 +24,7 @@ object TrigsFrm: TTrigsFrm
     object VTree1: TVTree
       Left = 2
       Top = 15
-      Width = 1053
+      Width = 1079
       Height = 120
       Align = alClient
       DragMode = dmAutomatic
@@ -48,7 +48,7 @@ object TrigsFrm: TTrigsFrm
       Columns = <
         item
           Position = 0
-          Width = 659
+          Width = 685
           WideText = #1048#1084#1103
         end
         item
@@ -85,7 +85,7 @@ object TrigsFrm: TTrigsFrm
   object AddTrigGB: TGroupBox
     Left = 0
     Top = 137
-    Width = 1057
+    Width = 1083
     Height = 591
     Align = alClient
     Caption = #1044#1086#1073#1072#1074#1083#1077#1085#1080#1077' '#1090#1088#1080#1075#1075#1077#1088#1072
@@ -181,7 +181,7 @@ object TrigsFrm: TTrigsFrm
     object CommonName: TPanel
       Left = 2
       Top = 15
-      Width = 1053
+      Width = 1079
       Height = 99
       Align = alTop
       TabOrder = 1
@@ -241,6 +241,13 @@ object TrigsFrm: TTrigsFrm
         Height = 13
         Caption = #1048#1084#1103
       end
+      object FolderLabel: TLabel
+        Left = 840
+        Top = 1
+        Width = 30
+        Height = 13
+        Caption = #1047#1072#1084#1077#1088
+      end
       object TrigShiftE: TFloatEdit
         Left = 414
         Top = 19
@@ -259,7 +266,7 @@ object TrigsFrm: TTrigsFrm
       end
       object ChanNameCB: TComboBox
         Left = 840
-        Top = 71
+        Top = 72
         Width = 129
         Height = 21
         TabOrder = 2
@@ -340,11 +347,18 @@ object TrigsFrm: TTrigsFrm
         Height = 21
         TabOrder = 9
       end
+      object FolderCB: TComboBox
+        Left = 840
+        Top = 19
+        Width = 129
+        Height = 21
+        TabOrder = 10
+      end
     end
     object Panel2: TPanel
       Left = 2
       Top = 525
-      Width = 1053
+      Width = 1079
       Height = 64
       Align = alBottom
       TabOrder = 2
@@ -991,7 +1005,7 @@ object TrigsFrm: TTrigsFrm
       object ProgressBar1: TProgressBar
         Left = 1
         Top = 46
-        Width = 1051
+        Width = 1077
         Height = 17
         Align = alBottom
         SmoothReverse = True
@@ -1025,7 +1039,7 @@ object TrigsFrm: TTrigsFrm
     object FilterGB: TGroupBox
       Left = 418
       Top = 114
-      Width = 637
+      Width = 663
       Height = 411
       Align = alClient
       Caption = #1060#1080#1083#1100#1090#1088#1072#1094#1080#1103
@@ -1885,7 +1899,7 @@ object TrigsFrm: TTrigsFrm
     Left = 992
     Top = 176
     Bitmap = {
-      494C0101170019000C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010117001900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000006000000001002000000000000060
       0000000000000000000000000000000000000000000000000000000000000000
       00000000000000000000000000002D2D2D040000000000000000000000000000

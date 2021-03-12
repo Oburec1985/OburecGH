@@ -148,6 +148,7 @@ object MBaseControl: TMBaseControl
       Margins.Bottom = 2
       Align = alClient
       TabOrder = 1
+      OnExit = ObjPropSGExit
       OnKeyDown = ObjPropSGKeyDown
       OnEndEdititng = ObjPropSGEndEdititng
     end
@@ -263,6 +264,7 @@ object MBaseControl: TMBaseControl
       Margins.Bottom = 2
       Align = alClient
       TabOrder = 1
+      OnExit = ObjPropSGExit
       OnKeyDown = ObjPropSGKeyDown
       OnEndEdititng = ObjPropSGEndEdititng
     end
@@ -469,6 +471,7 @@ object MBaseControl: TMBaseControl
       Margins.Bottom = 2
       Align = alClient
       TabOrder = 1
+      OnExit = ObjPropSGExit
       OnKeyDown = ObjPropSGKeyDown
       OnEndEdititng = ObjPropSGEndEdititng
       RowHeights = (

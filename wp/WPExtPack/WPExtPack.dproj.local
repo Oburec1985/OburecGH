@@ -251,6 +251,8 @@
     <File Path="forms\uEditTubeFrm.dfm"/>
     <File Path="forms\uExtBalanceSignalsFrm.pas"/>
     <File Path="forms\uExtBalanceSignalsFrm.dfm"/>
+    <File Path="forms\uFFTfltFrm.pas"/>
+    <File Path="forms\uFFTfltFrm.dfm"/>
     <File Path="forms\uFFTInverseFrm.pas"/>
     <File Path="forms\uFFTInverseFrm.dfm"/>
     <File Path="forms\uFindMaxForm.pas"/>
@@ -293,12 +295,11 @@
     <File Path="forms\uTrigsFrm.dfm"/>
     <File Path="forms\uWPProcFrm.pas"/>
     <File Path="forms\uWPProcFrm.dfm"/>
-    <File Path="forms\uFFTfltFrm.pas"/>
-    <File Path="forms\uFFTfltFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\uExtBalanceSignals.pas"/>
     <File Path="units\uExtFFTInverse.pas"/>
     <File Path="units\uExtOperMng.pas"/>
+    <File Path="units\uFFTFlt.pas"/>
     <File Path="units\uFindMaxOper.pas"/>
     <File Path="units\uIEManchester2087.pas"/>
     <File Path="units\uIEPlgClass.pas"/>
@@ -312,7 +313,6 @@
     <File Path="units\uWPOpers.pas"/>
     <File Path="units\uWPproc.pas"/>
     <File Path="units\uWPProcServices.pas"/>
-    <File Path="units\uFFTFlt.pas"/>
     <File Path="WPExtPack.ridl"/>
     <File Path="WPExtPack_TLB.pas"/>
   </ProjectSortOrder>

@@ -259,7 +259,15 @@ begin
     prop:=TProp.Create;
     m_Properties.AddObject(pname, prop);
   end;
-  prop.value:=val;
+  if isvalue(val) then
+  begin
+    if (prop.value='') then
+      prop.value:='0';
+    if isvalue(prop.value)  then
+    begin
+      prop.value:=floattostr(strtofloat(val)+strtofloat(prop.value));
+    end;
+  end;
   if getmng<>nil then
   begin
     cMBase(getmng).Events.CallAllEventsWithSender(E_ChangePropertieEvent,self);
@@ -760,7 +768,7 @@ begin
   result:='';
   if s.m_copy then
   begin
-    fld:=AddSlashToPath(Absolutepath)+s.m_folder;
+    fld:=AddSlashToPath(Absolutepath)+s.m_RCname;
     result:=FindFile('*.mera',fld,1);
   end
   else

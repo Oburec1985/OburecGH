@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, pathutils,
   Dialogs, ExtCtrls, StdCtrls, ComCtrls, uBtnListView, uMeasureBase, uBaseObj,
-  uPathMng, uComponentServises, ImgList, uCommonMath;
+  uPathMng, uComponentServises, ImgList, uCommonMath, inifiles;
 
 type
   TDownloadRegsFrm = class(TForm)
@@ -14,6 +14,7 @@ type
     RegsLV: TBtnListView;
     ImageList_16: TImageList;
     DelBatRegsBtn: TButton;
+    RenameCB: TCheckBox;
     procedure DownloadBtnClick(Sender: TObject);
     procedure DelBatRegsBtnClick(Sender: TObject);
   private
@@ -104,8 +105,12 @@ var
   I, j: Integer;
   li:tlistitem;
   reg:cRegFolder;
+  test:cTestFolder;
+  obj:cObjFolder;
   s:tbasesignal;
-  path, newpath:string;
+  path, newpath, oldpath, newname:string;
+
+  ifile:tinifile;
 begin
   for I := 0 to RegsLV.items.Count - 1 do
   begin
@@ -119,13 +124,29 @@ begin
         s:=reg.getSignal(j);
         if s.m_path=path then
         begin
-          newpath:=AddSlashToPath(reg.Absolutepath)+s.m_folder;
+          // s.m_folder - 'D:\USML\signal0436\signal0436.mera' в случае локального Recorder
+          // reg.Absolutepath='D:\mera\mdb\Obj_001\Test_001\Reg_0028'
+          //if s. then
+          newpath:=AddSlashToPath(reg.Absolutepath)+s.m_RCname;
           path:=ExtractFileDir(path);
           if CopyDir(path, newpath, handle) then
           begin
+            oldpath:=s.m_path;
             s.m_path:=newpath+'\'+extractfilename(s.m_path);
             s.m_copy:=true;
             li.Checked:=false;
+            if renameCB.Checked then
+            begin
+              // переименование mera файла и изменение описания
+              ifile:=tinifile.Create(s.m_path);
+              ifile.WriteString('Mera','Test','Файл источник='+ExtractFilename(s.m_path));
+              ifile.destroy;
+              test:=cTestFolder(reg.parent);
+              obj:=cobjfolder(test.parent);
+              newname:=s.m_RCname+'_'+obj.name+'_'+test.name+'_'+reg.name+'.mera';
+              RenameFile(s.m_path, extractfiledir(s.m_path)+'\'+newname);
+              s.m_path:=newpath+'\'+newname;
+            end;
           end;
           continue;
         end;

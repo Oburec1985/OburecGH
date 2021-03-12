@@ -794,10 +794,15 @@ begin
     ActionTarget.items.Add(c_MDB_objid);
     ActionTarget.items.Add(c_MDB_testid);
     ActionTarget.items.Add(c_MDB_regid);
+    if a.mdbtag<>nil then
+    begin
+      setComboBoxItem(a.mdbtag.GetName,mdbValueCB);
+    end
+    else
+      setComboBoxItem(a.mdbPropVal,MDBValueCB);
     setComboBoxItem(a.targetname,ActionTarget);
     mdbPropPanel.Visible:=true;
     PropNameEdit.Text:=a.mdbPropName;
-    setComboBoxItem(a.mdbPropVal,MDBValueCB);
   end
   else
   begin
