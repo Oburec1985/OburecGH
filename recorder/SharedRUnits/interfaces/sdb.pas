@@ -76,7 +76,7 @@ type
    IMeSDBObjectMgr = interface
    ['{C7313BB3-72EE-4A9C-AD1C-2FEA1843188B}']
      function CreateEnumerator(const riid : TGUID; out ppUnk) : HRESULT; stdcall;
-     function AddObject(szName : LPCWSTR; szDsc : LPCWSTR; bFolder : BOOL; riid : TGUID; var ppUnk : IUnknown) : HRESULT; stdcall;
+     function AddObject(const szName : LPCWSTR; szDsc : LPCWSTR; bFolder : BOOL; const riid : TGUID; out ppUnk) : HRESULT; stdcall;
      function AddScale(pScale : IUnknown; var ppUnk : IUnknown) : HRESULT; stdcall;
      function RemoveObject(szName : LPCWSTR) : HRESULT; stdcall;
      function GetObjectByName(const szName : LPCWSTR; const riid : TGUID; out ppUnk) : HRESULT; stdcall;

@@ -36,16 +36,17 @@ const
   RCERROR_ACCESSDENIED =        19;
   LAST_ERROR_INDEX     = RCERROR_ACCESSDENIED;
   //Константы состояний Recorder`а enum RECORDER_STATE
-  RS_STOP              = $0001;     //Измерение остановлено
-  RS_VIEW              = $0002;     //Измерение и просмотр
-  RS_REC               = $0004;     //Измерение и сохранение в файлы
-  RS_PLAYING           = $0008;     //Проигрывание из файлов
+  RS_STOP              = $0001;     // Измерение остановлено
+  RS_VIEW              = $0002;     // Измерение и просмотр
+  RS_REC               = $0004;     // Измерение и сохранение в файлы
+  RS_PLAY              = $0008;     // Режим воспроизведения, Проигрывание из файлов
+  RS_PLAYING           = $0008;     // Проигрывание из файлов
   RS_BASESTATE         = RS_REC + RS_VIEW + RS_STOP + RS_PLAYING;
   RS_HARDWAREFAULT     = $0010;     // Инициализация системы не прошла успешно
   RS_INITFAULT         = $0020;     // Инициализация системы не прошла успешно
   RS_NEEDDEVICERESET   = $0040;     // Требуется Reset драйвера
   RS_NEEDHARDWARERESET = $0040;     // Требуется Reset драйвера
-  RS_NEEDSOFTWARERESET = $0080;     // Требуется програмной части драйвера
+  RS_NEEDSOFTWARERESET = $0080;     // Требуется Reset програмной части драйвера
   RS_NEEDLINKSREFRESH  = $0100;     // Требуется обновление ссылок
   RS_FAULT             = RS_HARDWAREFAULT + RS_INITFAULT;
 
@@ -53,166 +54,198 @@ const
   RS_SIGNALLOADED      = $0400;     // Конфигурирование прошло успешно
   RS_CONFIGCHANGED     = $0800;     // Изменена конфигурация, требуется сохранение
   RS_CONFIGMODE        = $1000;     // Режим конфигурирования
+  RS_PAUSE             = $2000;     // Режим пауза
+
+  RS_WAIT_REC_FINISH   = $00004000; // Режим ожидания окончания записи
+	RS_CALIBRATE_MODE    = $00008000; // Режим калибровки
 
   RS_PACKETLOST        = $00010000; // Потери во время приема
   RS_RECEIVEERROR      = $00020000; // Сейчас идут потери
+  RS_PLAYMODE_ENABLED  = $00040000; // Разрешен режим воспроизведения
+	RS_ZBALANCE_PROC     = $00080000; // Находимся в процессе балансировки нуля
+  RS_ERROR_CONDITION   = $00100000; // Находимся в состоянии ошибки
+	RS_WARNING_CONDITION = $00200000; // Находимся в состоянии предупреждения
+	RS_ENABLEDPAUSE      = $40000000;
+
   RS_TERMINATION       = $80000000; // состояние завершения работы
   RS_FULLMASK          = $FFFFFFFF;
 
    // Уведомления рекордеру
-  RCN_RECONFIG =         0; // Переконфигурироваться
-  RCN_VIEW =             1; // Старт режима просмотр
-  RCN_REC =              2; // Старт записи
-  RCN_STOP =             3; // Остановка рекордера
-  RCN_SHOW =             4; // Сделать главное окно видимым
-  RCN_HIDE =             5; // Скрыть главное окно
-  RCN_CLOSE =            6; // Завершить работу рекордера
-  RCN_SETCURFORM =       7; // Сменить формуляр
-  RCN_ENABLESETUP =      8; // Разрешить / запретить настройки
-  RCN_CLOSEPLUGIN =      9; // Завершить работу плагина
-  RCN_SETCURTAG =       10; // Установить текущий канал   a_dwParam = номер канала
-  RCN_CHANGECURTAG =    11; // Установить текущий канал = старый канал + a_dwParam
-  RCN_CHANGETAGRANGE =  12; // Поменять границы отображения для тега use TAGRANGEDATA
+  RCN_RECONFIG =          0; // Переконфигурироваться
+  RCN_VIEW =              1; // Старт режима просмотр
+  RCN_REC =               2; // Старт записи
+  RCN_STOP =              3; // Остановка рекордера
+  RCN_SHOW =              4; // Сделать главное окно видимым
+  RCN_HIDE =              5; // Скрыть главное окно
+  RCN_CLOSE =             6; // Завершить работу рекордера
+  RCN_SETCURFORM =        7; // Сменить формуляр
+  RCN_ENABLESETUP =       8; // Разрешить / запретить настройки
+  RCN_CLOSEPLUGIN =       9; // Завершить работу плагина
+  RCN_SETCURTAG =        10; // Установить текущий канал   a_dwParam = номер канала
+  RCN_CHANGECURTAG =     11; // Установить текущий канал = старый канал + a_dwParam
+  RCN_CHANGETAGRANGE =   12; // Поменять границы отображения для тега use TAGRANGEDATA
+  RCN_RESORTTAGS =       13; // Пересортировать теги
+  RCN_LAUNCHWINPOS =     14; // Запустить пакет обработки зарегистрированной информации
+  RCN_TEST =             15; // Запустить процедуру самотестирования
+  RCN_SAVECONFIG =       16; // Сохранить конфигурацию
+  RCN_CLOSEALLPLUGINS =  17; // Закрыть все запущенные плагины
+  RCN_OPENPLUGIN =       18; // Загрузка и запуск плагина
 
-  RCN_RESORTTAGS =      13;// Пересортировать теги
-  RCN_LAUNCHWINPOS =    14;// Запустить пакет обработки зарегистрированной информации
-  RCN_TEST =            15;// Запустить процедуру самотестирования
-  RCN_SAVECONFIG =      16;// Сохранить конфигурацию
-  RCN_CLOSEALLPLUGINS = 17;// Закрыть все запущенные плагины
-  RCN_OPENPLUGIN =      18;// Загрузка и запуск плагина
-  RCN_REG_DF_CHANGER=   19;// Зарегистрировать плагин, сменяющий рабочую папку
-	RCN_PLAY =            20;// Старт режима воспроизведение
-	RCN_ON_PLAY_MODE=     21;   //< Уведомдение о переключении в режим воспроизведения
-	RCN_ON_REC_MODE=      22;   //< Уведомдение о переключении в режим записи
-	RCN_SUBSCRALARMSEVENT=23;   //< Подписаться на уведомление о срабатывании уставок
-	                            //< плагин должен поддерживать IAlarmEventHandler
-	RCN_UNSUBSCRALARMSEVENT=24; //< Отпиисаться от уведомления о срабатывании уставок
-	RCN_PLAY_SOUND_NOTIFY=  25; //< проиграть звуковое уведомление, данные @ref RCSNDNOTIFY
+  RCN_REG_DF_CHANGER =    19; // Зарегистрировать плагин, сменяющий рабочую папку
+	RCN_PLAY =              20; // Старт режима воспроизведение
+	RCN_ON_PLAY_MODE =      21; // Уведомление о переключении в режим воспроизведения
+	RCN_ON_REC_MODE =       22; // Уведомдение о переключении в режим записи
+	RCN_SUBSCRALARMSEVENT = 23; // Подписаться на уведомление о срабатывании уставок
+	                            // плагин должен поддерживать IAlarmEventHandler
+	RCN_UNSUBSCRALARMSEVENT = 24; // Отпиисаться от уведомления о срабатывании уставок
+	RCN_PLAY_SOUND_NOTIFY =   25; // проиграть звуковое уведомление, данные @ref RCSNDNOTIFY
+	RCN_ADD_SOUND_NOTIFY =    26; // Добавить звуковое уведомление в очередь, данные @ref ALARMSOUNDINFO
+	RCN_REMOVE_SOUND_NOTIFY = 27; // Удалить звуковое уведомление из очереди, данные @ref ALARMSOUNDINFO
 
-	RCN_INTERNAL_BASE    =  $8000;    //  0x8000,
-	RCN_UPDATEGROUPSLINKS=     26;    //< Сделать апдейт ссылкам на группы dwParam == ByNames:BOOL
-	RCN_DRIVERSRESET=          27;    //< Сделать ресет девайсам @ref RCNDRIVERSRESETFLAGS
-	RCN_DRIVERSCONFIG=         28;    //< Сделать конфиг девайсам @ref RCNDRIVERSCONFIGFLAGS
-	RCN_CHECKTAGSNAMES=        29;    //< Проверить имена тегов на уникальность
-	RCN_BROADCAST=             30;    //< Разослать всем уведомление
-	RCN_SWITCH_CALIBR_MODE=    31;    //< Переключиться в режим калибровки
+	RCN_INTERNAL_BASE            = $8000;
+	RCN_UPDATEGROUPSLINKS        = $8001; // Сделать апдейт ссылкам на группы dwParam == ByNames:BOOL
+	RCN_DRIVERSRESET             = $8002; // Сделать ресет девайсам @ref RCNDRIVERSRESETFLAGS
+	RCN_DRIVERSCONFIG            = $8003; // Сделать конфиг девайсам @ref RCNDRIVERSCONFIGFLAGS
+	RCN_CHECKTAGSNAMES           = $8004; // Проверить имена тегов на уникальность
+	RCN_BROADCAST                = $8005; // Разослать всем уведомление
+	RCN_SWITCH_CALIBR_MODE       = $8006; // Переключиться в режим калибровки
 
-	RCN_DEACTIVATE_DEVICES=    32;    //< Отключить прием данных со всех устройств для
-	                                  //< нужно для воспроизведения TRUE/FALSE
-	RCN_RUN_IN_RC_THREAD=      33;    //< будет вызван нотифай в треде рекордера с параметрами RCTRCOMMAND
-	                                  //< если RCTRCOMMAND.pPlgDest==0 то нотификация всем
-	RCN_ACTION_POPUP_SETUP=    34;    //< Запросить плагины о желании заблокировать показ окна настройки рекордера
-	RCN_ACTION_POPUP_SEL_FRAME=35;    //< Запросить плагины о желании заблокировать показ окна выбора имени замера
+	RCN_DEACTIVATE_DEVICES       = $8007; // Отключить прием данных со всех устройств для
+	                                     // нужно для воспроизведения TRUE/FALSE
+	RCN_RUN_IN_RC_THREAD         = $8008; // будет вызван нотифай в треде рекордера с параметрами RCTRCOMMAND
+	                                     // если RCTRCOMMAND.pPlgDest==0 то нотификация всем
+	RCN_ACTION_POPUP_SETUP       = $8009; // Запросить плагины о желании заблокировать показ окна настройки рекордера
+	RCN_ACTION_POPUP_SEL_FRAME   = $800A; // Запросить плагины о желании заблокировать показ окна выбора имени замера
 
-	RCN_ACTION_SAVE_CFG=       36;    //< Запросить плагины о желании заблокировать сохранение конфигурации rc
-	RCN_ACTION_SAVE_CFG_AS=    37;    //< Запросить плагины о желании заблокировать сохранение конфигурации rc
-	RCN_ACTION_LOAD_CFG=       38;    //< Запросить плагины о желании заблокировать загрузу конфигурации rc
-	RCN_DRIVER_RESET_EX=       39;    //< Расширенный ресет драйвера, в параметре передается номер устройства
-	RCN_DRIVER_CONFIG_EX=      40;    //< Расширенный конфиг драйвера, в параметре передается номер устройства
-	RCN_MARK_DEVICE_FOR_RESET= 41;    //< Внутренняя команда, ядра на ресет конкретного устройства по выходу из настройки
-	RCN_RESET_CONFIG=          42;    //< Обнулить конфигурацию
-	RCN_ACTION_CLOSE_APP=      43;    //< Запросить плагины о желании заблокировать завершение рекордера
-	RCN_FORCE_CLOSE=           44;    //< Закрыться и не спрашивать никого и ничего
-	RCN_RESET_DFT_INDEX=       45;    //< Немного подстольная штука связанная с шаблонами каталога регистрации данных
+	RCN_ACTION_SAVE_CFG          = $800B; // Запросить плагины о желании заблокировать сохранение конфигурации rc
+	RCN_ACTION_SAVE_CFG_AS       = $800C; // Запросить плагины о желании заблокировать сохранение конфигурации rc
+	RCN_ACTION_LOAD_CFG          = $800D; // Запросить плагины о желании заблокировать загрузу конфигурации rc
+	RCN_DRIVER_RESET_EX          = $800E; // Расширенный ресет драйвера, в параметре передается номер устройства
+	RCN_DRIVER_CONFIG_EX         = $800F; // Расширенный конфиг драйвера, в параметре передается номер устройства
+	RCN_MARK_DEVICE_FOR_RESET    = $8010; // Внутренняя команда, ядра на ресет конкретного устройства по выходу из настройки
+	RCN_RESET_CONFIG             = $8011; // Обнулить конфигурацию
+	RCN_ACTION_CLOSE_APP         = $8012; // Запросить плагины о желании заблокировать завершение рекордера
+	RCN_FORCE_CLOSE              = $8013; // Закрыться и не спрашивать никого и ничего
+	RCN_RESET_DFT_INDEX          = $8014; // Немного подстольная штука связанная с шаблонами каталога регистрации данных
+	RCN_ON_BEFORE_CLOSE_UISERVER = $8015;
 
 
    //Широковещательные уведомления
   RCBC_PLUGINSLISTUPDATED = 0;
 
    //Свойства рекордера
-  RCPROP_HOSTDEVICE =           0;  // [in] номер требуемого хоста [out] интерфейс носта
-  RCPROP_DATAFOLDER =           1;  // Рабочий каталог [in] [out]
-  RCPROP_STARTRECLEVCTRLPROPS = 2;  // Свойства старта записи по уровню RCLEVELCONTROLPROPS [out]
-  RCPROP_STARTTIME =            3;  // Время старта просмотра/регистрации VT_FILETIME [out]
-  RCPROP_CALIBRDBNAME =         4;  // Имя каталога с тарировочными характеристиками [out] VT_BST
-  RCPROP_REFRESHPERIOD =        5;  // период обновления/размер блока данных в секундах   [in][out] VT_R8
-  RCPROP_VIEWTIME =             6;  // время отображения/длинна вектора данных в секундах   [in][out] VT_R8
-  RCPROP_VERSION =              7;  // версия рекордера                                           [out] VT_I4
-  RCPROP_TAGSSORTMODE =         8;  // метод сортировки тегов                                 [in][out] VT_I4
-  RCPROP_TIMERTICPERIOD =       9;  // интервал таймера для отображения
-  RCPROP_MODIFYFRAMENAME =      10; // автоматически модифицировать имя кадра при записи
-  RCPROP_CONVERTTOUSML =        11; // преобразовывать в УСМЛ по остановке записи
-  RCPROP_ENABLEDLEVELSTARTREC = 12; // Разрешен старт записи по уровню
-  RCPROP_TRIGGERSTART =         13; // Состояние триггерног старта
-  RCPROP_ENABLEDAUTOSTOPTIME =  14; // Автоматический останов записи по времени
-  RCPROP_AUTOSTOPTIME =         15; // Период для автоматического останова записи по времени
-  RCPROP_CONFIGNAME =           16; // Имя файла конфигурации
-  RCPROP_UISERVERLINK =         17; // Линка на UI сервер
-  RCPROP_SUMMARYDATAFLOW =      18; // Суммарный поток данных
-  RCPROP_PROJECTNAME =          19;
-  RCPROP_CURRENTTAGNAME =       20; // Имя текущего тега [in, out] VT_BSTR
-  RCPROP_CHANGEDSETTINGS =      21; // Измененные настройки SCF_XXX [in, out] U32
-  RCPROP_ENABLEDLEVELSTOPREC =  22; // Разрешен стоп записи по уровню
-  RCPROP_STOPRECLEVCTRLPROPS =  23; // Свойства стопа записи по уровню RCLEVELCONTROLPROPS        [out]
-  RCPROP_PREHISTORY_ENABLED =   24; // Разрешена предзапись                                       [in, out] VT_BOOL
-  RCPROP_PREHISTORY_TIME =      25; // Время предзаписи в секундах                                [in, out] VT_I4
-  RCPROP_RESET_TIME_AT_START =  26; // Делать сброс счетчиков времени при старте просмотра/записи [in, out] VT_BOOL
-  RCPROP_TRIGGER_START_MODE =   27; // Фронт для триггерного старта 1 - "1", 0 - "0"
+  RCPROP_HOSTDEVICE =            0;  // [in] номер требуемого хоста [out] интерфейс носта
+  RCPROP_DATAFOLDER =            1;  // Рабочий каталог [in] [out]
+  RCPROP_STARTRECLEVCTRLPROPS =  2;  // Свойства старта записи по уровню RCLEVELCONTROLPROPS [out]
+  RCPROP_STARTTIME =             3;  // Время старта просмотра/регистрации VT_FILETIME [out]
+  RCPROP_CALIBRDBNAME =          4;  // Имя каталога с тарировочными характеристиками [out] VT_BST
+  RCPROP_REFRESHPERIOD =         5;  // период обновления/размер блока данных в секундах   [in][out] VT_R8
+  RCPROP_VIEWTIME =              6;  // время отображения/длинна вектора данных в секундах   [in][out] VT_R8
+  RCPROP_VERSION =               7;  // версия рекордера                                           [out] VT_I4
+  RCPROP_TAGSSORTMODE =          8;  // метод сортировки тегов                                 [in][out] VT_I4
+  RCPROP_TIMERTICPERIOD =        9;  // интервал таймера для отображения
+  RCPROP_MODIFYFRAMENAME =       10; // автоматически модифицировать имя кадра при записи
+  RCPROP_CONVERTTOUSML =         11; // преобразовывать в УСМЛ по остановке записи
+  RCPROP_ENABLEDLEVELSTARTREC =  12; // Разрешен старт записи по уровню
+  RCPROP_TRIGGERSTART =          13; // Состояние триггерног старта
+  RCPROP_ENABLEDAUTOSTOPTIME =   14; // Автоматический останов записи по времени
+  RCPROP_AUTOSTOPTIME =          15; // Период для автоматического останова записи по времени
+  RCPROP_CONFIGNAME =            16; // Имя файла конфигурации
+  RCPROP_UISERVERLINK =          17; // Линка на UI сервер
+  RCPROP_SUMMARYDATAFLOW =       18; // Суммарный поток данных
+  RCPROP_PROJECTNAME =           19;
+  RCPROP_CURRENTTAGNAME =        20; // Имя текущего тега [in, out] VT_BSTR
+  RCPROP_CHANGEDSETTINGS =       21; // Измененные настройки SCF_XXX [in, out] U32
+  RCPROP_ENABLEDLEVELSTOPREC =   22; // Разрешен стоп записи по уровню
+  RCPROP_STOPRECLEVCTRLPROPS =   23; // Свойства стопа записи по уровню RCLEVELCONTROLPROPS        [out]
+  RCPROP_PREHISTORY_ENABLED =    24; // Разрешена предзапись                                       [in, out] VT_BOOL
+  RCPROP_PREHISTORY_TIME =       25; // Время предзаписи в секундах                                [in, out] VT_I4
+  RCPROP_RESET_TIME_AT_START   = 26; // Делать сброс счетчиков времени при старте просмотра/записи [in, out] VT_BOOL
+  RCPROP_TRIGGER_START_MODE    = 27; // Фронт для триггерного старта 1 - "1", 0 - "0"
+  RCPROP_CALIBRATOR            = 28; // Ссылка на объект калибратор [out] VT_UNK
+	RCPROP_ENABLE_SPACE_RESERVE  = 29; // Разрешено предварительное резервирование места на диске [in, out] VT_BOOL
+	                                   // для записи. "Балонная запись"
+	RCPROP_SPACE_RESERVE_TIME    = 30; // Длина области для резервирования в секундах [in, out] VT_R8
+	RCPROP_SECURITY_STATE        = 31; // Слово состояния режима безопастности/доступа [out]VT_UI4
+	RCPROP_SYS_LOG               = 32; // Лог системных событий [out] VT_UNK
+	RCPROP_PUT_CFG_FILE_TO_DATA  = 33; // Флаг необходимости сохранения файла конфигурации
+	                                   // совместно с данными [in, out] VT_BOOL
+	RCPROP_FRAME_NAME            = 34; // Имя кадра записи, без пути [in, out] VT_BSTR
+	RCPROP_LAST_DATA_LOCATION    = 35; // Месторасположение последних записанных данных [out] VT_BSTR
+	RCPROP_USER_LOG              = 36; // Запрос (создание) юзерского лога [out]VT_UNK
+	                                   // При запросе в параметре должен быть путь к логу
+	                                   // если такой лог уже есть вернется тотже объект
+	RCPROP_BATTERY_INFO          = 37; // Информация о состоянии батареи [out] VT_BSTR
+	RCPROP_MAIN_TAGS_TABLE       = 38; // Таблица каналов ImeTagsTable [out] VT_UNK
+	RCPROP_FLUSH_BEFORE_CLOSE    = 39; // Делать сброс буферов перед закрытием файлов [in, out] VT_BOOL {v: 3.0.4.53}
+	RCPROP_WRITE_CODES           = 40; // режим записи в кодах устройства для экономии
+	                                   // места [out] VT_BOOL {v: 3.0.4.65, 3.0.5.2}
+	RCPROP_ALARM_GISTER_BY_RANGE = 41; // метод вычисления гистерезиса уставок -
+	                                   // по значению или по диапазону  [out] VT_BOOL {v: 3.0.6.15, 3.0.5.16}
+	RCPROP_PREVIEW_ENABLED       = 42; // Запись превью [out] VT_BOOL {v: 3.0.7.21}
+	RCPROP_SAVE_CONFIG_DIALOG_AT_EXIT = 43; // Отображать окно сохранения конфигурации при выходе, если были изменения
+	                                        // используется для сервернх решений [out] VT_BOOL {v: 3.0.7.40}
+	RCPROP_VIEW_AT_STOP          = 44; // Переход в режим просмотра при остановке записи по событию [in, out] VT_BOOL {v: 3.0.9.24}
+	RCPROP_DATAF_TEMPLATE_MANAGER = 45; // Менеджер шаблонов рабочего каталога [out] VT_UNK {v: 3.3.0.37
+	RCPROP_DATAF_TEMPLATE_ENABLED = 46; // Состояние менеджера шаблонов каталогов записи [in, out] VT_BOOL {v: 3.3.0.39,
 
-  RCPROP_INTERNAL_BASE = $8000;
-  RCPROP_USERMODE =        RCPROP_INTERNAL_BASE + 1; // Режим пользователя Simple/Advanced/More [out] VT_I4
-  RCPROP_SHOWDISBALANCE =  RCPROP_INTERNAL_BASE + 2; // Показыватьразбаланс после балансировки [out] VT_BOOL
-  RCPROP_ENABLEDRECPAUSE = RCPROP_INTERNAL_BASE + 3; // Разрешена пауза во время записи [out] VT_BOOL
-  RCPROP_CALIBRATOR =           28;  //< Ссылка на объект калибратор [out] VT_UNK
-  RCPROP_ENABLE_SPACE_RESERVE=  29;  //< Разрешено предварительное резервирование места на диске [in, out] VT_BOOL
-	                                    //< для записи. "Балонная запис"
-	RCPROP_SPACE_RESERVE_TIME=     30; //< Длина области для резервирования в секундах [in, out] VT_R8
-	RCPROP_SECURITY_STATE=         31; //< Слово состояния режима безопастности/доступа [out]VT_UI4
-	RCPROP_SYS_LOG=                32; //< Лог системных событий [out] VT_UNK
-	RCPROP_PUT_CFG_FILE_TO_DATA=   33; //< Флаг необходимости сохранения файла конфигурации
-	                                   //< соместно с данными [in, out] VT_BOOL
-	RCPROP_FRAME_NAME =            34; //< Имя кадра записи, без пути [in, out] VT_BSTR
-	RCPROP_LAST_DATA_LOCATION=     35; //< Месторасположение последних записанных данных [out] VT_BSTR
-	RCPROP_USER_LOG=               36; //< Запрос (создание) юзерского лога [out]VT_UNK
-	                                   //< При запросе в параметре должен быть путь к логу
-	                                   //< если такой лог уже есть вернется тотже объект
-	RCPROP_BATTERY_INFO =          37; //< Информация о состоянии батареи [out] VT_BSTR
-	RCPROP_MAIN_TAGS_TABLE =       38; //< Таблица каналов	ImeTagsTable [out] VT_UNK
-	RCPROP_FLUSH_BEFORE_CLOSE =    39; //< Делать сброс буферов перед закрытием файлов [in, out] VT_BOOL {v: 3.0.4.53}
-	RCPROP_WRITE_CODES =           40; //< режим записи в кодах устройства для экономии
-	                                   //< места [out] VT_BOOL {v: 3.0.4.65, 3.0.5.2}
-	RCPROP_ALARM_GISTER_BY_RANGE = 41; //< метод вычисления гистерезиса уставок -
-	                                   //< по значению или по диапазону  [out] VT_BOOL {v: 3.0.6.15, 3.0.5.16}
-	RCPROP_PREVIEW_ENABLED =       42; //< Запись превью [out] VT_BOOL {v: 3.0.7.21}
-	RCPROP_SAVE_CONFIG_DIALOG_AT_EXIT=43;  //< Отображать окно сохранения конфигурации при выходе, если были изменения
-	                                   //< используется для сервернх решений [out] VT_BOOL {v: 3.0.7.40}
-	RCPROP_LOST_SRC_TG_CNT=        44; //< Счетчик каналов отвалившихся от устройства [out] VT_UI4
-	RCPROP_PLAYMODE_ENABLED=       45; //< Разрешение включения режима воспроизведения [in, out] VT_BOOL
-	RCPROP_TIME=                   46; //< Системное время рекодера
-	                                   //< Предполагается установка только из плагина воспроизведения,
-	                                   //< архива, или подобных (есть своя система управления временем) [in, out] VT_R8
-	RCPROP_INCLUDE_DEV_NAME_IN_TAG=47; //< Использовать наименование усройства в имени канала
-	                                   //< по-умолчаию [out] VT_BOOL
-	RCPROP_AUTO_STORE_VISUAL_CHANGES=48;///< Сохранять ли автоматически изменения в графической части
-	RCPROP_TIME_MASHINE_PROPS=49;       ///< Ссылка на настройки машины времени [in, out] IUnknown
-	RCPROP_FLUSH_SCALAR_TAGS=50;        ///< Флаг принудительного сброса (флюша) записи скалярных тегов [out] VT_BOOL
-	RCPROP_FLUSH_SCALAR_PERIOD=51;      ///< Период для принудительного сброса (флюша) записи скалярных тегов [out] VT_I4 [мс]
-	RCPROP_TIMESTAMP_AT_RECORD_START=52;///< Фиксировать время начала регистрации в .mera файле при начале записи
-	                                  ///< обычно это делается в конце при закрытии файлов.
-	                                  ///< Включение опции потенциально может привести к проблеммам при большом  [out] VT_BOOL
+  RCPROP_INTERNAL_BASE             = $8000;
+  RCPROP_USERMODE                  = $8001; // Режим пользователя Simple/Advanced/More [out] VT_I4
+  RCPROP_SHOWDISBALANCE            = $8002; // Показывать разбаланс после балансировки [out] VT_BOOL
+  RCPROP_ENABLEDRECPAUSE           = $8003; // Разрешена пауза во время записи [out] VT_BOOL
+  RCPROP_LOST_SRC_TG_CNT           = $8004; // Счетчик каналов отвалившихся от устройства [out] VT_UI4
+	RCPROP_PLAYMODE_ENABLED          = $8005; // Разрешение включения режима воспроизведения [in, out] VT_BOOL
+	RCPROP_TIME                      = $8006; // Системное время рекодера
+	                                          // Предполагается установка только из плагина воспроизведения,
+	                                          // архива, или подобных (есть своя система управления временем) [in, out] VT_R8
+	RCPROP_INCLUDE_DEV_NAME_IN_TAG   = $8007; // Использовать наименование усройства в имени канала
+	                                          // по-умолчаию [out] VT_BOOL
+	RCPROP_AUTO_STORE_VISUAL_CHANGES = $8008; // Сохранять ли автоматически изменения в графической части
+	RCPROP_TIME_MASHINE_PROPS        = $8009; // Ссылка на настройки машины времени [in, out] IUnknown
+	RCPROP_FLUSH_SCALAR_TAGS         = $800A; // Флаг принудительного сброса (флюша) записи скалярных тегов [out] VT_BOOL
+	RCPROP_FLUSH_SCALAR_PERIOD       = $800B; // Период для принудительного сброса (флюша) записи скалярных тегов [out] VT_I4 [мс]
+	RCPROP_TIMESTAMP_AT_RECORD_START = $800C; // Фиксировать время начала регистрации в .mera файле при начале записи
+	                                          // обычно это делается в конце при закрытии файлов.
+	                                          // Включение опции потенциально может привести к проблеммам при большом  [out] VT_BOOL
+	RCPROP_USE_NEW_TRENDS            = $800D; // Специальная отладочная опция протащенная для возможности выключения эксперементальной графики тренлов [in,out] VT_BOOL
+	RCPROP_WRITE_TARED               = $800E; // Запись данных в окончательном виде виде прошедшие через ГХ и КХ  [in,out] VT_BOOL
+	RCPROP_DATA_FOLDER_TEMPLATE      = $800F; // Шаблон формирователя рабочего каталога[out] VT_UNK {v: 3.3.0.37,
+	RCPROP_DATA_FRAME_TEMPLATE       = $8010; // Шаблон формирователя имени кадра данных [out] VT_UNK {v: 3.3.0.37,
 
-	RCPROP_USE_NEW_TRENDS=53;         ///< Специальная отладочная опция протащенная для возможности выключения эксперементальной графики тренлов [in,out] VT_BOOL
-	RCPROP_WRITE_TARED=54;            ///< Запись данных в окончательном виде виде прошедшие через ГХ и КХ  [in,out] VT_BOOL
-	RCPROP_DATA_FOLDER_TEMPLATE=55;   ///< Шаблон формирователя рабочего каталога[out] VT_UNK {v: 3.3.0.37,
-	RCPROP_DATA_FRAME_TEMPLATE=56;    ///< Шаблон формирователя имени кадра данных [out] VT_UNK {v: 3.3.0.37,
+	RCPROP_GUICONFIGNAME             = $8011; // Имя файла конфигурации форм (.guis). Заполняется при отличии от штатного имени/пути [out] VT_BSTR
+	RCPROP_ALWAYS_SAVE_CONFIG        = $8012; // Автоматическое сохранение конфигурации по выходу из настройки/закрытию [out] VT_BOOL {v: 3.3.1.10}
+	RCPROP_ENABLE_FORCED_FLUSH       = $8013; // Принудительный сброс буферов данных на диск [out] VT_BOOL {since v: 3.3.2.34}
+	                                          // Полный форсированный сброс буферов предполагает вызов функции прямой записи на диск (FlushFileBuffers)
+	                                          // что приводит к сильному замедлению работы и потенциальным сбоям некоторых функций
+	RCPROP_DATA_FLOW_CHECK_BY_TIME_ENABLED = $8014; // Флаг включенного контроля входных данных по штампу времени блока. Детекция пропусков и неравномерного потока и т.д. (v:3.3.3.4)
+	                                                // по умолчанию VARIANT_TRUE, [in/out] VT_BOOL recorder.cfg::DataFlowCheckByTime=Enabled
+	XRCPROP_SUPPRESS_CRASH_AT_EXIT   = $8015; // "секретное" свойство устанавливается как костыль чтоыбы скрыть падение рекордера
+                                            // [in/out] VT_BOOL recorder.cfg::SuppressCrashAtExit=Disabled
+                                            // в некоторых непонятных ситуациях
+                                            // по умолчанию VARIANT_FALSE
+                                            // изначально применялось для плагина МОРИ
+                                            // с версии 3.3.4.26a
 
 
   // Методы сортировки тегов для проперти RCPROP_TAGSSORTMODE
-  SRTMD_BY_NAME =             0;// Сортировать по имени
-  SRTMD_BY_ADDRESS =          1;//             по аппаратному адресу
-  SRTMD_BY_DEVICENAME =       2;//             по имени устройства владельца
+  SRTMD_BY_NAME =         0; // Сортировать по имени
+  SRTMD_BY_ADDRESS =      1; //             по аппаратному адресу
+  SRTMD_BY_DEVICENAME =   2; //             по имени устройства владельца
 
    //Флаги для функции DriverReset (RCN_DRIVERSRESET)
-  DRF_SHOWPROCINDICATOR = 1; //Индицировать процесс ресета драйвера
-  DRF_ONLYHOST =          2; //Делать ресет трлько хосту
+  DRF_SHOWPROCINDICATOR = 1; // Индицировать процесс ресета драйвера
+  DRF_ONLYHOST =          2; // Делать ресет трлько хосту
 
+  // Флаги для функции DriverConfig (@ref RCN_DRIVERSCONFIG)
+	DCF_SHOWPROCINDICATOR = $0001; // Индицировать процесс конфига драйвера
+	DCF_ONLYHOST          = $0002; // Делать конфиг только хосту
 
    //Флаги системы управления режимом конфигурации
    //Config mode sharing flags
-  CMSF_CONFIGCHANGED = $0001;   //Принудительная установка флага изменеия конфигурации
+  CMSF_CONFIGCHANGED   = $0001; //Принудительная установка флага изменеия конфигурации
   //Флаги системы экспорта импорта настроек
   IESF_DEFAULTSETTINGS = $0001; //Сделать импортируемые/экспортируемые настройки
-                                 //загружаемыми по умолчанию
+                                //загружаемыми по умолчанию
   IESF_LOCAL_MODE =      $0002;
 
    //Коды изменения настроек и состояний рекордера
@@ -224,7 +257,7 @@ const
    //Стандартный размер строки
   STDSTRSIZE = 256;
 
-   //Нотификации формуляров
+   //Нотификации формуляров - Общие нотификации с плагинами
   VSN_ENTERRCCONFIG = 0;  //Рекордер перешел в режим настройки
   VSN_LEAVERCCONFIG = 1;  //Рекордер вышел из режима настройки
   VSN_CHANGECURTAG  = 2;  //Сменился текущий тег, в параметре dwData
@@ -238,7 +271,7 @@ const
   VSN_RCSTOP        = 5;  //Рекордер остановлен
   VSN_BEFORE_RCSTART= 14; //Рекордер переходит в режим измерения
   VSN_BEFORE_RCSTOP = 15; //Рекордер останавливается
-  VSN_ABORT_RCSTART = 16; //Опереция старта была прервана
+  VSN_ABORT_RCSTART = 16; //Операция старта была прервана
 
    // Индивидуальные нотификации
   VSN_SPECIFIED =      $4000; //
@@ -322,7 +355,7 @@ type
 
       //Получить тег по имени
       function GetTagByName(const pchName: LPCSTR): pointer{ITag}; stdcall;
-      //Получить тег по индексу. Увеличивает RefCount на 1!!!
+      //Получить тег по индексу
       function GetTagByIndex(const nIndex: ULONG): pointer{ITag}; stdcall;
       //Получить число тегов
       function GetTagsCount: ULONG; stdcall;
@@ -634,7 +667,6 @@ type
       //Вызов окна редактирования
       function Edit: boolean; stdcall;
       //События, уведомления, команды
-      // virtual bool   STDMETHODCALLTYPE notify(DWORD dwCommand, DWORD dwData = 0) = 0;
       function Notify(const dwCommand: DWORD; const dwData: DWORD): boolean; stdcall;
    end;
 
