@@ -86,9 +86,8 @@ Function LineCrossPlane(const L1, L2, p1, p2, p3: point3; out Cross: point3): bo
 // L1- точка на прямой; N1- вектор параллельный прямой
 Function LineCrossPlaneN(const L1, N1, p1, p2, p3: point3; out Cross: point3): boolean;overload;
 function LineCrossPlane(const L1, L2, p1, p2, p3: Vector3f; out Cross: Vector3f)  : boolean;overload;
-
-
-
+// проверяет, что вершина внутри баунда
+function insideBox3d(const v, loCorner, hiCorner: Vector3f)  : boolean;overload;
 // масштабировать вектор
 function scalevectorp3(s: single; v: point3): point3;
 //
@@ -1283,6 +1282,16 @@ begin
   p3_ := P3toV(p3);
   result := LineCrossFace(l1_, l2_, p1_, p2_, p3_, cross_);
   Cross := VtoP3(cross_);
+end;
+
+function insideBox3d(const v, loCorner, hiCorner: Vector3f)  : boolean;overload;
+var
+  I: Integer;
+begin
+  result:=false;
+  for I := 0 to 2 do
+    if v[i]<locorner[i] then exit;
+
 end;
 
 function MultScalar(const v1: Vector3f; const v2: Vector3f): GLFloat;

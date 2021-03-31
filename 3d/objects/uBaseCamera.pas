@@ -307,7 +307,7 @@ begin
   V1:=b.lo; V2:=b.hi; V3:=p3(b.lo.x, b.lo.y, b.hi.z); V4:=p3(b.hi.x, b.hi.y, b.lo.z);
   if LineCrossLine(V1,V2,V3,V4,center) then
   begin
-    // находим точку пересечения луча из center с плоскостью положения камеры и делаем туда параллельный перенос
+    // находим точку пересечения луча из center (центр баундбокса) с плоскостью положения камеры и делаем туда параллельный перенос
     up:=getup;
     lp2:=SummVectorP3(position, up);
     strafe:=GetAxisFromMatrix(restm,0);
