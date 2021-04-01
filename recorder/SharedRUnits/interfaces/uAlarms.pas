@@ -133,6 +133,9 @@ type
     function SetGistPerc(var a_dblP: double): HRESULT;stdcall;
   end;
 
+  // глобальный обработчик аварий
+  // –еализуем класс в котором прописаны методы обработки аварий
+  // создаем экземпл€р и подписываем его методом Attach
   IAlarmEventHandler = interface
     ['{4CBF0ABB-76D7-439C-8F3B-DDE85BB0A138}']
 	  //public:	virtual HRESULT STDMETHODCALLTYPE OnAlarmEvent(

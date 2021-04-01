@@ -432,21 +432,23 @@ begin
   node:=xml.Root;
   lstr:=node.ReadAttributeString('Class');
   result:=cDBobject(cMBase(getmng).CreateObjByType(lstr));
-
-  child:=node.FindNode('Properies');
-  if child<>nil then
+  if result<>nil then
   begin
-    count:=child.NodeCount;
-    for I := 0 to Count - 1 do
+    child:=node.FindNode('Properies');
+    if child<>nil then
     begin
-      propnode:=child.Nodes[i];
-      prop:=propnode.name;
-      val:=propnode.ReadAttributeString('Value', '');
-      cXmlFolder(result).addpropertie(prop, val);
+      count:=child.NodeCount;
+      for I := 0 to Count - 1 do
+      begin
+        propnode:=child.Nodes[i];
+        prop:=propnode.name;
+        val:=propnode.ReadAttributeString('Value', '');
+        cXmlFolder(result).addpropertie(prop, val);
+      end;
     end;
+    cXmlFolder(result).doLoadDesc(node);
+    xml.Destroy;
   end;
-  cXmlFolder(result).doLoadDesc(node);
-  xml.Destroy;
 end;
 
 function cXmlFolder.CreateFiles: cXmlFolder;

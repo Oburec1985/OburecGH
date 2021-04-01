@@ -498,16 +498,19 @@ begin
         if isdirectory(str) then
         begin
           obj:=cdbfolder(CreateDBObj(str));
-          o:=GetChildByPath(str);
-          if o=nil then
+          if obj<>nil then
           begin
-            AddChild(obj);
-            obj.path:=str;
-          end
-          else
-          begin
-            obj.destroy;
-            obj:=nil;
+            o:=GetChildByPath(str);
+            if o=nil then
+            begin
+              AddChild(obj);
+              obj.path:=str;
+            end
+            else
+            begin
+              obj.destroy;
+              obj:=nil;
+            end;
           end;
         end;
       end;
