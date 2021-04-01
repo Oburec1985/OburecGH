@@ -97,6 +97,7 @@ type
     procedure MdbPathBtnClick(Sender: TObject);
     procedure CfgSBClick(Sender: TObject);
     procedure ObjPropSGExit(Sender: TObject);
+    procedure FormPaint(Sender: TObject);
   private
 
     m_rstate: dword;
@@ -119,10 +120,10 @@ type
     procedure setcurTest(t: cTestFolder);
     procedure setcurReg(r: cregFolder);
     // формирует путь к регистрации на основании текущего каталога и настроек формы
-    function createRegName(basepath: string; t: cTestFolder): string;
+    function  createRegName(basepath: string; t: cTestFolder): string;
     procedure CreateEvents;
     procedure DestroyEvents;
-    function EmptyReg: cregFolder;
+    function  EmptyReg: cregFolder;
     procedure doSaveCfg(Sender: TObject);
     procedure doChangeRCState(Sender: TObject);
     procedure doCreateConnection(Sender: TObject);
@@ -408,7 +409,6 @@ begin
     cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes.Add
       (cTestFolder(testFolder).m_testType);
   cregFolder(regFolder) := GetSelectReg;
-
   // для вновь создаваемых нет смысла что то искать внутри
   UpdateXmlDescr;
   if regFolder=nil then
@@ -417,7 +417,6 @@ begin
   begin
     if regFolder is cregFolder then
     begin
-      // regFolder := m_reg;
       // свойства регистрации
       cregFolder(regFolder).m_alarm := AlarmCB.Checked;
       cregFolder(regFolder).m_alarmType := AlarmType.text;
@@ -870,6 +869,11 @@ begin
   end;
   TestNameCB.OnChange := p;
   setComboBoxItem(TestNameCB.text, TestNameCB);
+end;
+
+procedure TMBaseControl.FormPaint(Sender: TObject);
+begin
+  //showmessage('1');
 end;
 
 function TMBaseControl.createReg:cregfolder;

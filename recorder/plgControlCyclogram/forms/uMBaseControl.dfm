@@ -2,8 +2,8 @@ object MBaseControl: TMBaseControl
   Left = 0
   Top = 0
   Caption = #1059#1087#1088#1072#1074#1083#1077#1085#1080#1077' '#1073#1072#1079#1086#1081' '#1076#1072#1085#1085#1099#1093
-  ClientHeight = 701
-  ClientWidth = 726
+  ClientHeight = 667
+  ClientWidth = 795
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,12 +12,13 @@ object MBaseControl: TMBaseControl
   Font.Style = []
   Menu = MainMenu1
   OldCreateOrder = False
+  OnPaint = FormPaint
   PixelsPerInch = 96
   TextHeight = 19
   object Splitter1: TSplitter
     Left = 0
-    Top = 558
-    Width = 726
+    Top = 524
+    Width = 795
     Height = 3
     Cursor = crVSplit
     Margins.Left = 2
@@ -33,7 +34,7 @@ object MBaseControl: TMBaseControl
   object Splitter2: TSplitter
     Left = 0
     Top = 109
-    Width = 726
+    Width = 795
     Height = 2
     Cursor = crVSplit
     Margins.Left = 2
@@ -48,7 +49,7 @@ object MBaseControl: TMBaseControl
   object Splitter3: TSplitter
     Left = 0
     Top = 268
-    Width = 726
+    Width = 795
     Height = 2
     Cursor = crVSplit
     Margins.Left = 2
@@ -64,7 +65,7 @@ object MBaseControl: TMBaseControl
   object ObjGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 726
+    Width = 795
     Height = 109
     Margins.Left = 2
     Margins.Top = 2
@@ -140,7 +141,7 @@ object MBaseControl: TMBaseControl
     object ObjPropSG: TStringGridExt
       Left = 363
       Top = 21
-      Width = 361
+      Width = 430
       Height = 86
       Margins.Left = 2
       Margins.Top = 2
@@ -156,7 +157,7 @@ object MBaseControl: TMBaseControl
   object TestGB: TGroupBox
     Left = 0
     Top = 111
-    Width = 726
+    Width = 795
     Height = 157
     Margins.Left = 2
     Margins.Top = 2
@@ -256,7 +257,7 @@ object MBaseControl: TMBaseControl
     object TestPropSG: TStringGridExt
       Left = 360
       Top = 21
-      Width = 364
+      Width = 433
       Height = 134
       Margins.Left = 2
       Margins.Top = 2
@@ -272,8 +273,8 @@ object MBaseControl: TMBaseControl
   object RegGB: TGroupBox
     Left = 0
     Top = 270
-    Width = 726
-    Height = 288
+    Width = 795
+    Height = 254
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -285,7 +286,7 @@ object MBaseControl: TMBaseControl
       Left = 357
       Top = 21
       Width = 4
-      Height = 265
+      Height = 231
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -301,7 +302,7 @@ object MBaseControl: TMBaseControl
       Left = 2
       Top = 21
       Width = 355
-      Height = 265
+      Height = 231
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -322,7 +323,7 @@ object MBaseControl: TMBaseControl
       end
       object Splitter7: TSplitter
         Left = 1
-        Top = 110
+        Top = 76
         Width = 353
         Height = 3
         Cursor = crVSplit
@@ -338,7 +339,7 @@ object MBaseControl: TMBaseControl
       end
       object RegistratorsLV: TBtnListView
         Left = 1
-        Top = 198
+        Top = 164
         Width = 353
         Height = 66
         Margins.Left = 2
@@ -386,7 +387,7 @@ object MBaseControl: TMBaseControl
       end
       object AlarmPanel: TPanel
         Left = 1
-        Top = 113
+        Top = 79
         Width = 353
         Height = 85
         Margins.Left = 2
@@ -463,8 +464,8 @@ object MBaseControl: TMBaseControl
     object RegPropSG: TStringGridExt
       Left = 361
       Top = 21
-      Width = 363
-      Height = 265
+      Width = 432
+      Height = 231
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -484,8 +485,8 @@ object MBaseControl: TMBaseControl
   end
   object ActionPanel: TPanel
     Left = 0
-    Top = 561
-    Width = 726
+    Top = 527
+    Width = 795
     Height = 140
     Margins.Left = 2
     Margins.Top = 2
@@ -494,7 +495,7 @@ object MBaseControl: TMBaseControl
     Align = alBottom
     TabOrder = 3
     DesignSize = (
-      726
+      795
       140)
     object Label3: TLabel
       Left = 3
@@ -1855,7 +1856,7 @@ object MBaseControl: TMBaseControl
     object BaseFolderEdit: TEdit
       Left = 48
       Top = 7
-      Width = 494
+      Width = 563
       Height = 27
       Margins.Left = 2
       Margins.Top = 2
