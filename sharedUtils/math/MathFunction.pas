@@ -26,6 +26,9 @@ Type
   TFace = array of GlFace;
   TFaceC = array of GlFaceCard;
   TFaceFlagArray = array of word;
+// перенос вершины pos в направлении dir на растояние distance
+// dir должен быть единичным
+function MovePoint(pos:point3; n_dir:point3; distance:single):point3;
   // инициализировать массив значением p3
 procedure InitP3Array(p3: point3; var ar: array of point3);
 // Узнать знак числа (или 0)
@@ -544,6 +547,12 @@ end;
   end;
   result:=floattostr(val);
   end; }
+
+function MovePoint(pos:point3; n_dir:point3; distance:single):point3;
+begin
+  n_dir:=scalevectorp3(distance, n_dir);
+  result:=SummVectorP3(pos,n_dir);
+end;
 
 procedure InitP3Array(p3: point3; var ar: array of point3);
 var
