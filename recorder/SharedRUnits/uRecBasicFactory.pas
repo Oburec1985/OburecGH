@@ -26,6 +26,7 @@ type
   ['{F6C43E4C-2FE3-4DEB-B01E-6AE28A10A59F}']
 		// вернуть произвольное свойство tag - id того что хотим получить
 		function GetCustomProperty(tag:integer):LPCSTR;stdcall;
+		function SetCustomProperty(tag:integer; str:lpcstr):integer;stdcall;
   end;
 
    // Интерфейс фабрики объектов VForm
@@ -142,6 +143,7 @@ type
     m_name: LPCSTR;
   protected
     function doGetProperty(tag:integer):lpcstr;virtual;
+    function doSetProperty(tag:integer; str:lpcstr):integer;virtual;
   public
     function getIRecorder: irecorder;
     function doNotify(const dwCommand: DWORD; const dwData: DWORD): boolean;
@@ -194,6 +196,7 @@ type
   // ICustomVFormIntarface
   public
 		function GetCustomProperty(tag:integer):LPCSTR;stdcall;
+    function SetCustomProperty(tag:integer; str:lpcstr):Integer;stdcall;
   public
     // IUnknown
     function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
@@ -497,6 +500,11 @@ begin
   result:=doGetProperty(tag);
 end;
 
+function cRecBasicIFrm.SetCustomProperty(tag: integer; str: lpcstr): Integer;
+begin
+  result:=doSetProperty(tag, str);
+end;
+
 function cRecBasicIFrm.GetHWND: HWND;
 begin
   if m_pMasterWnd <> nil then
@@ -629,6 +637,11 @@ begin
 
 end;
 
+function cRecBasicIFrm.doSetProperty(tag:integer; str:lpcstr): integer;
+begin
+  result:=-1;
+end;
+
 function cRecBasicIFrm.Notify(const dwCommand, dwData: DWORD): boolean;
 begin
   result := doNotify(dwCommand, dwData);
@@ -694,6 +707,8 @@ begin
   result := doRepaint;
   result := false;
 end;
+
+
 
 function cRecBasicIFrm.Update: boolean;
 begin
