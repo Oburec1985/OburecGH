@@ -304,18 +304,27 @@ var
   alfa, alfa_max, cos, cos_max, tg_max, L, Ln:single;
 begin
   // находим точку пересечения диагоналей баунда
+  // перенос заведомо за пределы баунда, на случай если камера внутри
+  v1:=subVector(b.hi, b.lo);
+  l:=VectorLengthP3(v1);
+  view:=getSight;
+  //n:=MovePoint(v1,view, l*2);
+  n:=position;
   V1:=b.lo; V2:=b.hi; V3:=p3(b.lo.x, b.lo.y, b.hi.z); V4:=p3(b.hi.x, b.hi.y, b.lo.z);
   if LineCrossLine(V1,V2,V3,V4,center) then
   begin
-    // находим точку пересечения луча из center с плоскостью положения камеры и делаем туда параллельный перенос
+    // находим точку пересечения луча из center (центр баундбокса) с плоскостью положения камеры и делаем туда параллельный перенос
     up:=getup;
-    lp2:=SummVectorP3(position, up);
+
+    ///lp2:=SummVectorP3(position, up);
+    lp2:=SummVectorP3(n, up);
+
     strafe:=GetAxisFromMatrix(restm,0);
-    lp3:=SummVectorP3(position, strafe);
-    view:=getSight;
+    ///lp3:=SummVectorP3(position, strafe);
+    lp3:=SummVectorP3(n, strafe);
     viewNormalise:=view;
     NormalizeVectorP3(viewNormalise);
-    LineCrossPlaneN(center, viewNormalise, position, lp2, lp3, newpos);
+    LineCrossPlaneN(center, viewNormalise, n, lp2, lp3, newpos);
 
     //a * в = |a| * |B| * cos ф
     // находим углы к вершинам

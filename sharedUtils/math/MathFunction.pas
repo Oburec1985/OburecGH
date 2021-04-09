@@ -26,6 +26,9 @@ Type
   TFace = array of GlFace;
   TFaceC = array of GlFaceCard;
   TFaceFlagArray = array of word;
+// перенос вершины pos в направлении dir на растояние distance
+// dir должен быть единичным
+function MovePoint(pos:point3; n_dir:point3; distance:single):point3;
   // инициализировать массив значением p3
 procedure InitP3Array(p3: point3; var ar: array of point3);
 // Узнать знак числа (или 0)
@@ -86,9 +89,8 @@ Function LineCrossPlane(const L1, L2, p1, p2, p3: point3; out Cross: point3): bo
 // L1- точка на прямой; N1- вектор параллельный прямой
 Function LineCrossPlaneN(const L1, N1, p1, p2, p3: point3; out Cross: point3): boolean;overload;
 function LineCrossPlane(const L1, L2, p1, p2, p3: Vector3f; out Cross: Vector3f)  : boolean;overload;
-
-
-
+// проверяет, что вершина внутри баунда
+function insideBox3d(const v, loCorner, hiCorner: Vector3f)  : boolean;overload;
 // масштабировать вектор
 function scalevectorp3(s: single; v: point3): point3;
 //
@@ -545,6 +547,12 @@ end;
   end;
   result:=floattostr(val);
   end; }
+
+function MovePoint(pos:point3; n_dir:point3; distance:single):point3;
+begin
+  n_dir:=scalevectorp3(distance, n_dir);
+  result:=SummVectorP3(pos,n_dir);
+end;
 
 procedure InitP3Array(p3: point3; var ar: array of point3);
 var
@@ -1283,6 +1291,16 @@ begin
   p3_ := P3toV(p3);
   result := LineCrossFace(l1_, l2_, p1_, p2_, p3_, cross_);
   Cross := VtoP3(cross_);
+end;
+
+function insideBox3d(const v, loCorner, hiCorner: Vector3f)  : boolean;overload;
+var
+  I: Integer;
+begin
+  result:=false;
+  for I := 0 to 2 do
+    if v[i]<locorner[i] then exit;
+
 end;
 
 function MultScalar(const v1: Vector3f; const v2: Vector3f): GLFloat;
