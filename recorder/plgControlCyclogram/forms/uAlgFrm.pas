@@ -204,7 +204,6 @@ begin
   m_init:=false;
   m_frameList:=TStringList.Create;
 
-  TagsListFrame1.ShowChannels;
   // создаем фремй прямого управления DAC
   fr:=TTahoAlgFrame.Create(self);
   addframe(fr);
@@ -250,6 +249,7 @@ var
 begin
   //FullDebugModeScanMemoryPoolBeforeEveryOperation:=true;
   showAlgsInLV;
+  TagsListFrame1.ShowChannels;
   for I := 0 to m_frameList.Count - 1 do
   begin
     fr:=TBaseAlgFrame(m_frameList.Objects[i]);

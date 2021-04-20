@@ -9,6 +9,9 @@ uses
 type
   cSelsin = class
   public
+    // определяет формулу по которой идет расчет (3х точечная схема включения
+    // или 4х точечная с общей точкой)
+    commonPoint:boolean;
     // создать все 6 датчиков
     createAll:boolean;
     name:string;
@@ -68,6 +71,7 @@ type
     Label3: TLabel;
     RefEdit: TFloatEdit;
     CreateAllCB: TCheckBox;
+    CommonPntCB: TCheckBox;
     procedure L1CBEnter(Sender: TObject);
   private
     src:csrc;
@@ -245,6 +249,8 @@ begin
   SKOMax3.FloatNum:=s.minmax3.y;
   refedit.FloatNum:=s.reference;
   ShiftSectr.Value:=s.shiftsectr;
+  CommonPntCB.Checked:=s.commonPoint;
+
   AutoCalibrCB.Checked:=s.autocal;
   ExcFreqEdit.FloatNum:=s.freq;
 
@@ -274,6 +280,7 @@ begin
     S.shiftsectr:=ShiftSectr.Value;
     S.freq:=ExcFreqEdit.FloatNum;
     s.reference:=refedit.FloatNum;
+    s.commonPoint:=CommonPntCB.Checked;
   end;
 end;
 

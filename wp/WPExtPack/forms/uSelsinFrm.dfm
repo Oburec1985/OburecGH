@@ -51,7 +51,6 @@ object SelsinFrm: TSelsinFrm
       Width = 35
       Height = 35
       Hint = #1059#1076#1072#1083#1080#1090#1100' '#1075#1088#1091#1087#1087#1091
-      DoubleBuffered = True
       Glyph.Data = {
         C2070000424DC207000000000000C20300002800000020000000200000000100
         08000000000000040000120B0000120B0000E3000000E300000000000000FFFF
@@ -116,7 +115,6 @@ object SelsinFrm: TSelsinFrm
         0202020202020202020202020202020202020202020202020202020202020202
         0202020202020202020202020202020202020202020202020202020202020202
         020202020202}
-      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = EngDelBtnClick
     end
@@ -126,7 +124,6 @@ object SelsinFrm: TSelsinFrm
       Width = 35
       Height = 35
       Hint = #1044#1086#1073#1072#1074#1080#1090#1100' '#1075#1088#1091#1087#1087#1091
-      DoubleBuffered = True
       Glyph.Data = {
         C2070000424DC207000000000000C20300002800000020000000200000000100
         08000000000000040000120B0000120B0000E3000000E300000000000000FFFF
@@ -191,7 +188,6 @@ object SelsinFrm: TSelsinFrm
         0202020202020202020202020202020202020202020202020202020202020202
         0202020202020202020202020202020202020202020202020202020202020202
         020202020202}
-      ParentDoubleBuffered = False
       TabOrder = 3
       OnClick = EngAddBtnClick
     end
@@ -247,6 +243,9 @@ object SelsinFrm: TSelsinFrm
       end
       item
         Caption = #1052#1086#1076#1091#1083#1100
+      end
+      item
+        Caption = #1073#1077#1079' '#1086#1073#1097'. '#1090#1095#1082'.'
       end>
     DragMode = dmAutomatic
     MultiSelect = True
@@ -259,6 +258,7 @@ object SelsinFrm: TSelsinFrm
     QuoteColumnBtnClick = False
     QuoteColumnDblClick = False
     DrawColorBox = False
+    ChangeTextColor = False
     Editable = False
   end
 end

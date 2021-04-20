@@ -2,7 +2,7 @@ object EditSelsinFrm: TEditSelsinFrm
   Left = 0
   Top = 0
   Caption = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1085#1080#1077' '#1089#1077#1083#1100#1089#1080#1085#1072
-  ClientHeight = 501
+  ClientHeight = 571
   ClientWidth = 475
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -11,6 +11,9 @@ object EditSelsinFrm: TEditSelsinFrm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  DesignSize = (
+    475
+    571)
   PixelsPerInch = 96
   TextHeight = 13
   object Label6: TLabel
@@ -268,21 +271,25 @@ object EditSelsinFrm: TEditSelsinFrm
   end
   object OkBtn: TButton
     Left = 335
-    Top = 468
+    Top = 521
     Width = 75
     Height = 25
+    Anchors = [akLeft, akBottom]
     Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
     ModalResult = 1
     TabOrder = 8
+    ExplicitTop = 468
   end
   object CancelBtn: TButton
     Left = 8
-    Top = 468
+    Top = 521
     Width = 75
     Height = 25
+    Anchors = [akLeft, akBottom]
     Caption = #1054#1090#1084#1077#1085#1072
     ModalResult = 2
     TabOrder = 9
+    ExplicitTop = 468
   end
   object RefEdit: TFloatEdit
     Left = 321
@@ -294,10 +301,18 @@ object EditSelsinFrm: TEditSelsinFrm
   end
   object CreateAllCB: TCheckBox
     Left = 335
-    Top = 445
+    Top = 412
     Width = 120
     Height = 17
     Caption = #1057#1086#1079#1076#1072#1090#1100' 6'
     TabOrder = 11
+  end
+  object CommonPntCB: TCheckBox
+    Left = 183
+    Top = 412
+    Width = 120
+    Height = 17
+    Caption = #1041#1077#1079' '#1086#1073#1097'. '#1090#1095#1082'.'
+    TabOrder = 12
   end
 end

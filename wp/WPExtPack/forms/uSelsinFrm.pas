@@ -29,6 +29,7 @@ type
     src:csrc;
   private
     procedure Eval2(s:cselsin);
+    procedure Eval3(s:cselsin);
     procedure Addselsin(s:cselsin);
     procedure updateLI(li: TListItem);
     procedure CheckList;
@@ -250,7 +251,16 @@ begin
     li:=ChansLV.Items[i];
     s:=cselsin(li.Data);
     if s.valid then
-      Eval2(s);
+    begin
+      if s.commonPoint then
+      begin
+        Eval3(s);
+      end
+      else
+      begin
+        Eval2(s);
+      end;
+    end;
   end;
 end;
 
@@ -610,6 +620,7 @@ begin
   ChansLV.SetSubItemByColumnName('AutoCalibr',booltostr(s.autocal),li);
   ChansLV.SetSubItemByColumnName('SectShift',inttostr(s.shiftsectr),li);
   ChansLV.SetSubItemByColumnName('ћодуль',floattostr(s.reference),li);
+  ChansLV.SetSubItemByColumnName('без общ. тчк.', booltostr(s.commonPoint), li);
 end;
 
 procedure tSelsinFrm.Addselsin(s:cselsin);
@@ -633,6 +644,7 @@ begin
   ChansLV.SetSubItemByColumnName('AutoCalibr',booltostr(s.autocal),li);
   ChansLV.SetSubItemByColumnName('SectShift',inttostr(s.shiftsectr),li);
   ChansLV.SetSubItemByColumnName('ћодуль',floattostr(s.reference),li);
+  ChansLV.SetSubItemByColumnName('без общ. тчк.', booltostr(s.commonPoint), li);
 end;
 
 function CheckMod(module, reference:double):boolean;
@@ -713,6 +725,29 @@ begin
   result:=checkA and checkarg;
 end;
 
+function CheckSystem3(u3, tg1, module1:double; sectr:integer; var ampError, degError:double):boolean;
+var
+  sin, lcos, evalU3, tg3, arg:double;
+  checkarg, checkA:boolean;
+begin
+  lcos:=sqrt(1/(1+tg1*tg1));
+  sin:=lcos*tg1;
+  // U31 = a*2 sin120*cos(a+120)
+  evalU3:=sqrt3*(lcos*sqrt3/2-sin*sqrt3/2)*module1;
+  ampError:=abs((abs(u3)-abs(evalU3))/module1);
+  checkA:=ampError<c_Threshold;
+
+  arg:=c_radtodeg*ArcTan(tg1)-120;
+  if sectr=2 then
+  begin
+    arg:=arg+180;
+  end;
+  evalU3:=Cos(c_degtorad*arg)*module1;
+  degError:=abs(u3-evalU3)/module1;
+  checkarg:=degError<c_degThreshold;
+  result:=checkA and checkarg;
+end;
+
 function CheckSystemExt(u3, tg1, module1:double; sectr:integer; var ampError, degError:double):boolean;
 var
   sin, lcos, evalU3, tg3, arg:double;
@@ -736,6 +771,12 @@ function GetTg(u1,u2:double):double;
 begin
   result:=(-2*u2-u1)/(sqrt3*u1);
 end;
+
+function GetTg3(u1,u2:double):double;
+begin
+  result:=(2*u1+u2)/(sqrt3*u2);
+end;
+
 
 function recursEvalext(u1,u2, u3:double; var module:double;var sectr:integer; var aError, degError:double):double;
 var
@@ -1004,6 +1045,8 @@ begin
 end;
 
 
+
+
 procedure TSelsinFrm.Eval2(s: cselsin);
 var
   sig:iwpsignal;
@@ -1194,6 +1237,198 @@ begin
   end;
 end;
 
+Function GetAngel(u1,u2,u3:double; var a:double; var d:double):boolean;
+var
+  tg, cos, sin, module, module1, err:double;
+begin
+  tg:=(2*u1+u2)/(sqrt3*u2);
+  cos:=sqrt(1/(1+tg*tg));
+  sin:=tg*cos;
+  // U12=a(sina-sin(a+120))->a=u12/(1.5sina-sqrt3/2*cosa)
+  module:=u1/(1.5*sin-cos*sin60);
+  // U31 = a*(sin240-sina)
+  module1:=module*(-1.5*sin-cos*sin60);
+  Err:=abs((abs(u3)-abs(module1))/module);
+  result:=Err<c_Threshold;
+  if result then
+  begin
+    a:=module;
+    d:=radtodeg(arctan(tg));
+    exit;
+  end;
+
+  // провер€ем отрицательный cos
+  cos:=-cos;
+  sin:=-sin;
+  // U12=a(sina-sin(a+120))->a=u12/(1.5sina-sqrt3/2*cosa)
+  module:=u1/(1.5*sin-cos*sqrt3/2);
+  // U31 = a*(sin240-sina)
+  module1:=module*(-1.5*sin-cos*sin60);
+  Err:=abs((abs(u3)-abs(module1))/module);
+  result:=Err<c_Threshold;
+  if result then
+  begin
+    a:=module;
+    d:=radtodeg(arctan(tg));
+    exit;
+  end;
+end;
+
+procedure TSelsinFrm.Eval3(s: cselsin);
+var
+  sig:iwpsignal;
+  mod1, SKO1,SKO2,SKO3, Sect, iQuad, resSignal:iwpsignal;
+
+  u1,u2,u3,
+  tg, cos, sin,
+  phase1, phase2, phase3, deg, addDeg, Module:double;
+  // нельз€ использовать в 2 и 4 секторах
+  b:boolean;
+
+  interval, time:point2d;
+  i,quad, sectr, sectr1: Integer;
+
+  // ошибка по амплитуде
+  aErr,
+  // ошибка по углу
+  dErr:double;
+begin
+
+  SKO1:=GetSKOTrend(s.l1.Signal, dtFe.FloatNum);
+  SKO2:=GetSKOTrend(s.l2.Signal, dtFe.FloatNum);
+  SKO3:=GetSKOTrend(s.l3.Signal, dtFe.FloatNum);
+  // выбираем интервал обработки
+  time.x:=SKO1.minx;
+  if time.x<SKO2.minx then
+    time.x:=SKO2.minx;
+  if time.x<SKO3.minx then
+    time.x:=SKO3.minx;
+  time.y:=SKO1.maxx;
+  if time.y>SKO2.maxx then
+    time.y:=SKO2.maxx;
+  if time.y>SKO2.maxx then
+    time.y:=SKO3.maxx;
+
+  resSignal:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
+
+  // модули
+  mod1:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
+
+  Sect:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
+  iQuad:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
+
+  //-- помещаем сигнал в дерево
+  posbase.winpos.Link('/Signals/Selsin', s.name, resSignal as IDispatch);
+  posbase.winpos.Link('/Signals/Selsin', s.name+'mod_1', mod1 as IDispatch);
+  posbase.winpos.Link('/Signals/Selsin', s.name+'sko_1', sko1 as IDispatch);
+  posbase.winpos.Link('/Signals/Selsin', s.name+'sko_2', sko2 as IDispatch);
+  posbase.winpos.Link('/Signals/Selsin', s.name+'sko_3', sko3 as IDispatch);
+
+  posbase.winpos.Link('/Signals/Selsin', s.name+'sect', Sect as IDispatch);
+  posbase.winpos.Link('/Signals/Selsin', s.name+'quad', iQuad as IDispatch);
+
+
+  posbase.winpos.Refresh();
+  //-- зададим длину сигнала
+  resSignal.size:= round((time.y-time.x)/dTfe.FloatNum);
+  resSignal.DeltaX:=dTfe.FloatNum;
+
+  sect.size:= round((time.y-time.x)/dTfe.FloatNum);
+  sect.DeltaX:=dTfe.FloatNum;
+
+  iQuad.size:= round((time.y-time.x)/dTfe.FloatNum);
+  iQuad.DeltaX:=dTfe.FloatNum;
+
+
+  mod1.size:= round((time.y-time.x)/dTfe.FloatNum);
+  mod1.DeltaX:=dTfe.FloatNum;
+
+  resSignal.StartX:=time.x;
+  // настраиваем шаг обработки
+  interval.x:=time.x;
+  interval.y:=interval.x+dTfe.FloatNum;
+  i:=0;
+  while interval.y<time.y do
+  begin
+    u1:=SKO1.GetY(i);
+    u2:=SKO2.GetY(i);
+    u3:=SKO3.GetY(i);
+
+    b:=GetAngel(u1,u2,u3, deg, module);
+    if b then
+    begin
+      mod1.setY(i,module);
+    end;
+    b:=GetAngel(u1,-u2,u3, deg, module); // сектор  0, 3
+    if b then
+    begin
+      mod1.setY(i,module);
+    end;
+    b:=GetAngel(-u1,-u2,u3, deg, module); // сектор  1, 4
+    if b then
+    begin
+      mod1.setY(i,module);
+    end;
+    b:=GetAngel(-u1,u2,u3, deg, module); // сектор  2, 5
+    if b then
+    begin
+      mod1.setY(i,module);
+    end;
+
+    if b then
+    begin
+      mod1.setY(i,module);
+    end;
+    b:=GetAngel(u3,u1,u2, deg, module); // сектор  0, 3
+    if b then
+    begin
+      mod1.setY(i,module);
+    end;
+    b:=GetAngel(-u3,-u1,u2, deg, module); // сектор  1, 4
+    if b then
+    begin
+      mod1.setY(i,module);
+    end;
+    b:=GetAngel(-u3,u1,u2, deg, module); // сектор  2, 5
+    if b then
+    begin
+      mod1.setY(i,module);
+    end;
+
+    if b then
+    begin
+      mod1.setY(i,module);
+    end;
+    b:=GetAngel(u2,u1,u3, deg, module); // сектор  0, 3
+    if b then
+    begin
+      mod1.setY(i,module);
+    end;
+    b:=GetAngel(-u2,-u1,u3, deg, module); // сектор  1, 4
+    if b then
+    begin
+      mod1.setY(i,module);
+    end;
+    b:=GetAngel(-u2,u1,u3, deg, module); // сектор  2, 5
+    if b then
+    begin
+      mod1.setY(i,module);
+    end;
+
+
+    // считаем фазы
+    phase1:=GetPhaseDeg(s.l1.Signal,s.exc.Signal,interval);
+    phase2:=GetPhaseDeg(s.l2.Signal,s.exc.Signal,interval);
+    phase3:=GetPhaseDeg(s.l3.Signal,s.exc.Signal,interval);
+
+    resSignal.SetY(i,deg+addDeg);
+
+    interval.x:=interval.x+dTfe.FloatNum;
+    interval.y:=interval.y+dTfe.FloatNum;
+    inc(i);
+  end;
+end;
+
 procedure tSelsinFrm.CheckList;
 var
   I: Integer;
@@ -1241,6 +1476,7 @@ begin
     f.WriteFloat(id,'Max3',s.minmax3.y);
     f.WriteFloat(id,'Ref',s.reference);
     f.WriteString(id,'AutoCalibr',booltostr(s.autocal));
+    f.WriteString(id,'commonPoint',booltostr(s.commonPoint));
   end;
 end;
 
@@ -1310,6 +1546,12 @@ begin
       s.autocal:=true
     else
       s.autocal:=false;
+    str:=f.ReadString(id, 'CommonPoint', booltostr(s.commonPoint));
+    if str='1' then
+      s.commonPoint:=true
+    else
+      s.commonPoint:=false;
+
     Addselsin(s);
   end;
   CheckList;

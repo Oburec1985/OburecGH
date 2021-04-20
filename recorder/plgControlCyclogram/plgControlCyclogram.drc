@@ -237,13 +237,13 @@
 #define JclResources_RsFileUtilsNoVersionInfo 65165
 #define JclResources_RsFileUtilsFileDoesNotExist 65166
 #define JclResources_RsFileUtilsLanguageIndex 65167
-#define NativeXml_sLevelMismatch 65168
-#define NativeXml_sRootElementNotDefined 65169
-#define NativeXml_sNonDefaultChardata 65170
-#define NativeXml_sSignificantDigitsOutOfRange 65171
-#define NativeXml_sMissingDataInBinaryStream 65172
-#define NativeXml_sErrorCalcStreamLength 65173
-#define NativeXml_sXmlOwnerNotAssigned 65174
+#define NativeXml_sMissingDataInBinaryStream 65168
+#define NativeXml_sErrorCalcStreamLength 65169
+#define NativeXml_sXmlOwnerNotAssigned 65170
+#define ComConst_SOleError 65171
+#define ComConst_SNoMethod 65172
+#define ComConst_SVarNotObject 65173
+#define ComConst_STooManyParams 65174
 #define VirtualTrees_SWrongMoveError 65175
 #define VirtualTrees_SWrongStreamFormat 65176
 #define VirtualTrees_SWrongStreamVersion 65177
@@ -253,22 +253,22 @@
 #define VirtualTrees_SClipboardFailed 65181
 #define VirtualTrees_SCannotSetUserData 65182
 #define DBConsts_SBcdOverflow 65183
-#define ComConst_SNoMethod 65184
-#define ComConst_SVarNotObject 65185
-#define ComConst_STooManyParams 65186
-#define NativeXml_sPrematureEnd 65187
-#define NativeXml_sUnknownEncoding 65188
-#define NativeXml_sUnsupportedEncoding 65189
-#define NativeXml_sDefaultCharUsed 65190
-#define NativeXml_sIllegalTag 65191
-#define NativeXml_sUnsupportedTag 65192
-#define NativeXml_sIllegalEndTag 65193
-#define NativeXml_sQuoteCharExpected 65194
-#define NativeXml_sCannotAddNode 65195
-#define NativeXml_sCannotSetName 65196
-#define NativeXml_sCannotSetValue 65197
-#define NativeXml_sCannotManipulate 65198
-#define NativeXml_sBeginEndMismatch 65199
+#define NativeXml_sUnknownEncoding 65184
+#define NativeXml_sUnsupportedEncoding 65185
+#define NativeXml_sDefaultCharUsed 65186
+#define NativeXml_sIllegalTag 65187
+#define NativeXml_sUnsupportedTag 65188
+#define NativeXml_sIllegalEndTag 65189
+#define NativeXml_sQuoteCharExpected 65190
+#define NativeXml_sCannotAddNode 65191
+#define NativeXml_sCannotSetName 65192
+#define NativeXml_sCannotSetValue 65193
+#define NativeXml_sCannotManipulate 65194
+#define NativeXml_sBeginEndMismatch 65195
+#define NativeXml_sLevelMismatch 65196
+#define NativeXml_sRootElementNotDefined 65197
+#define NativeXml_sNonDefaultChardata 65198
+#define NativeXml_sSignificantDigitsOutOfRange 65199
 #define ComStrs_sInvalidIndex 65200
 #define ComStrs_sInsertError 65201
 #define ComStrs_sInvalidOwner 65202
@@ -284,7 +284,7 @@
 #define ComStrs_sFailSetCalMaxSelRange 65212
 #define ComStrs_sFailSetCalMinMaxRange 65213
 #define ComStrs_sFailsetCalSelRange 65214
-#define ComConst_SOleError 65215
+#define NativeXml_sPrematureEnd 65215
 #define Consts_SNoGetItemEventHandler 65216
 #define Consts_SPageControlNotSet 65217
 #define Consts_SWindowsVistaRequired 65218
@@ -836,13 +836,13 @@ BEGIN
 	JclResources_RsFileUtilsNoVersionInfo,	"File contains no version information"
 	JclResources_RsFileUtilsFileDoesNotExist,	"The file %s does not exist"
 	JclResources_RsFileUtilsLanguageIndex,	"Illegal language index"
-	NativeXml_sLevelMismatch,	"level mismatch between subnode \"%s\" and endnode \"%s\" at line %d (pos %d)"
-	NativeXml_sRootElementNotDefined,	"XML root element not defined."
-	NativeXml_sNonDefaultChardata,	"non-default chardata at line %d (pos %d)"
-	NativeXml_sSignificantDigitsOutOfRange,	"significant digits out of range"
 	NativeXml_sMissingDataInBinaryStream,	"missing data in binary stream"
 	NativeXml_sErrorCalcStreamLength,	"error while calculating streamlength"
 	NativeXml_sXmlOwnerNotAssigned,	"XML owner is not assigned"
+	ComConst_SOleError,	"OLE error %.8x"
+	ComConst_SNoMethod,	"Method '%s' not supported by automation object"
+	ComConst_SVarNotObject,	"Variant does not reference an automation object"
+	ComConst_STooManyParams,	"Dispatch methods do not support more than 64 parameters"
 	VirtualTrees_SWrongMoveError,	"Target node cannot be a child node of the node to be moved."
 	VirtualTrees_SWrongStreamFormat,	"Unable to load tree structure, the format is wrong."
 	VirtualTrees_SWrongStreamVersion,	"Unable to load tree structure, the version is unknown."
@@ -852,10 +852,6 @@ BEGIN
 	VirtualTrees_SClipboardFailed,	"Clipboard operation failed."
 	VirtualTrees_SCannotSetUserData,	"Cannot set initial user data because there is not enough user data space allocated."
 	DBConsts_SBcdOverflow,	"BCD overflow"
-	ComConst_SNoMethod,	"Method '%s' not supported by automation object"
-	ComConst_SVarNotObject,	"Variant does not reference an automation object"
-	ComConst_STooManyParams,	"Dispatch methods do not support more than 64 parameters"
-	NativeXml_sPrematureEnd,	"stream terminated prematurely at pos %d"
 	NativeXml_sUnknownEncoding,	"unknown encoding"
 	NativeXml_sUnsupportedEncoding,	"unsupported encoding (%s)"
 	NativeXml_sDefaultCharUsed,	"default char used for codepage substitution"
@@ -868,6 +864,10 @@ BEGIN
 	NativeXml_sCannotSetValue,	"cannot set value on this type of element"
 	NativeXml_sCannotManipulate,	"cannot manipulate nodes in this type of element"
 	NativeXml_sBeginEndMismatch,	"begin and end tag mismatch: \"%s\" and \"%s\" at line %d (pos %d)"
+	NativeXml_sLevelMismatch,	"level mismatch between subnode \"%s\" and endnode \"%s\" at line %d (pos %d)"
+	NativeXml_sRootElementNotDefined,	"XML root element not defined."
+	NativeXml_sNonDefaultChardata,	"non-default chardata at line %d (pos %d)"
+	NativeXml_sSignificantDigitsOutOfRange,	"significant digits out of range"
 	ComStrs_sInvalidIndex,	"Invalid index"
 	ComStrs_sInsertError,	"Unable to insert an item"
 	ComStrs_sInvalidOwner,	"Invalid owner"
@@ -883,7 +883,7 @@ BEGIN
 	ComStrs_sFailSetCalMaxSelRange,	"Failed to set maximum selection range"
 	ComStrs_sFailSetCalMinMaxRange,	"Failed to set calendar min/max range"
 	ComStrs_sFailsetCalSelRange,	"Failed to set calendar selected range"
-	ComConst_SOleError,	"OLE error %.8x"
+	NativeXml_sPrematureEnd,	"stream terminated prematurely at pos %d"
 	Consts_SNoGetItemEventHandler,	"No OnGetItem event handler assigned"
 	Consts_SPageControlNotSet,	"PageControl must first be assigned"
 	Consts_SWindowsVistaRequired,	"%s requires Windows Vista or later"
