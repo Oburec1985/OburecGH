@@ -37,6 +37,7 @@ type
 
   tBand = class
   private
+    // список Bandtag
     m_TagsList: tstringlist;
   public
     m_owner: tstringlist;
@@ -81,6 +82,7 @@ type
     destructor destroy;
   end;
 
+  //
   TTagBandPair = class
   protected
     m_places: tlist;
@@ -1441,8 +1443,9 @@ begin
   end
   else
   begin
-    m_resultBand.x := m_MainFreq - m_f1f2.x;
-    m_resultBand.y := m_MainFreq + m_f1f2.y;
+    m_MainFreq:=m_f1f2.x+(m_f1f2.y-m_f1f2.x)/2;
+    m_resultBand.x := m_f1f2.x;
+    m_resultBand.y := m_f1f2.y;
   end;
 end;
 
@@ -1558,8 +1561,21 @@ end;
 
 { TTagBandPair }
 procedure TTagBandPair.addplace(p: TPlace);
+var
+  I: Integer;
+  b:boolean;
 begin
-  m_places.add(p);
+  b:=false;
+  for I := 0 to m_places.Count - 1 do
+  begin
+    if (getplace(i)=p) then
+    begin
+      b:=true;
+      break;
+    end;
+  end;
+  if not b then
+    m_places.add(p);
 end;
 
 constructor TTagBandPair.create;

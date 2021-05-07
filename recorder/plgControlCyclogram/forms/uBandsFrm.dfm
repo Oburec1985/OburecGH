@@ -764,6 +764,7 @@ object BandsFrm: TBandsFrm
       TreeOptions.SelectionOptions = [toMultiSelect]
       OnDragOver = PairTVDragOver
       OnDragDrop = PairTVDragDrop
+      OnKeyDown = PairTVKeyDown
       Columns = <>
     end
   end

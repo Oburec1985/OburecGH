@@ -36,6 +36,8 @@ type
     m_x2:double;
     // центральна€ частота в координатах +-1
     m_x:double;
+    // значение дл€ подписи по Y
+    m_y:double;
   public
     // вли€ет только на подпись. ѕока реализаци€ размещени€ в координатах
     // отрисовки на совести пользовател€ (см. uSpmChart как пример)
@@ -57,6 +59,7 @@ type
     function getLineText:string;
     procedure setLineText(s:string);
   public
+    procedure setY(v:double);
     procedure inittrendlabels;
     constructor create;override;
     destructor destroy;override;
@@ -268,10 +271,7 @@ procedure cFreqBand.setname(s: string);
 begin
   inherited;
   //m_LineLabel.Text:=s+char(10)+format(' X:%.3g', [m_realX]);
-  m_LineLabel.Text:=s+char(10)+'X: '+formatstrNoE(m_realX, 3);
-  //m_LineLabel.Text:=s+char(10)+'X/Y: '+inttostr(m_LineLabel.m_userOffset.x)+'/'
-  //                                    +inttostr(m_LineLabel.m_userOffset.y);
-
+  m_LineLabel.Text:=s+char(10)+'X: '+formatstrNoE(m_realX, 3)+char(10)+'Y: '+formatstrNoE(m_y, 3);
 end;
 
 procedure cFreqBand.setx(v: double);
@@ -317,6 +317,13 @@ begin
   m_x2:=v;
   boundrect.TopRight.x:=m_x+m_x2;
   exitcs;
+end;
+
+procedure cFreqBand.setY(v: double);
+begin
+  EnterCS;
+  m_y:=v;
+  exitCS;
 end;
 
 procedure cFreqBand.doUpdatePageSize(sender:tobject);

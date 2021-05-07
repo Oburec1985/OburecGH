@@ -1079,7 +1079,7 @@ begin
         end;
         x:=tspmband(l.data).m_b.m_resultBand.x;
         ind:=ti.m_spm.getIndByX(x);
-        if ind<ti.m_spmtrend.count then
+        if (ind<ti.m_spmtrend.count) and (ind>0) then
         begin
           max:=ti.m_spmtrend.GetYByInd(ind);
         end
@@ -1099,6 +1099,7 @@ begin
           end;
         end;
         pos := correctPos(a, p, p2d(maxX, max));
+        tspmband(l.data).m_freqband.setY(max);
       end;
       l.Position := p2(pos.x, pos.y);
       l.line := l.Position;

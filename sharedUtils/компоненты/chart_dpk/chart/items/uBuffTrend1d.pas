@@ -134,7 +134,9 @@ begin
     c_single:
       result:=data_s[i];
     c_real:
+    begin
       result:=data_r[i];
+    end;
   end;
 end;
 

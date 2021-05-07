@@ -70,6 +70,7 @@ type
       DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
       Pt: TPoint; var Effect: Integer; Mode: TDropMode);
     procedure PlacesTVChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure PairTVKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     TagBandPairList:TTagBandPairList;
     BandsList:TStringList;
@@ -531,6 +532,42 @@ begin
     Accept:=true;
 end;
 
+procedure TBandsFrm.PairTVKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  node,next: PVirtualNode;
+  D: PNodeData;
+  I: Integer;
+  p:ttagbandpair;
+  b:tband;
+begin
+  if Key = VK_DELETE then
+  begin
+    Node := PairTV.GetFirstSelected(true);
+    while Node <> nil do
+    begin
+      next := PairTV.GetNextSelected(Node, false);
+      if next<>nil then
+      begin
+        while next.Parent=node do
+        begin
+          next:=PairTV.GetNextSelected(next, false);
+          if next=nil then
+            break;
+        end;
+      end;
+      D := PairTV.GetNodeData(Node);
+      if tobject(d.Data) is TTagBandPair then
+      begin
+        p:=TTagBandPair(d.Data);
+        p.destroy;
+        placestv.DeleteNode(node);
+      end;
+      Node := next;
+      inc(I);
+    end;
+  end;end;
+
 procedure TBandsFrm.PlacesTVChange(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
 var
@@ -552,10 +589,12 @@ procedure TBandsFrm.PlacesTVDragDrop(Sender: TBaseVirtualTree; Source: TObject;
 var
   b:tband;
   p:tplace;
-  I: Integer;
+  I, j: Integer;
   li:tlistitem;
   pnode:PVirtualNode;
   pdata:pnodedata;
+  bt:bandtag;
+  tb:TTagBandPair;
 begin
   pnode:=PlacesTV.DropTargetNode;
   if pnode=nil then
@@ -575,6 +614,15 @@ begin
       li:=BandsLV.GetNextItem(li,sdAll,[isSelected]);
       b:=tband(li.data);
       p.addband(b);
+      for j := 0 to b.tagCount - 1 do
+      begin
+        bt:=b.getbandtag(j);
+        tb:=TagBandPairList.getPair(bt.tagname);
+        if tb<>nil then
+        begin
+          tb.addplace(p);
+        end;
+      end;
     end;
   end;
   UpdateNode(pnode);
