@@ -178,8 +178,13 @@ procedure cui.Zoom;
 var
   b:tbound;
   res:boolean;
+  p3:point3;
 begin
   b:=getSelectBound(res);
+  b.hi.x:=1; b.hi.y:=1; b.hi.z:=1;
+  b.lo.x:=-1; b.lo.y:=-1; b.lo.z:=-1;
+  p3.x:=0; p3.y:=0; p3.z:=0;
+  m_RenderScene.activecamera.position:=p3;
   m_RenderScene.activecamera.ZoomBound(b);
 end;
 

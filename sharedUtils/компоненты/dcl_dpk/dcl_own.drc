@@ -28,7 +28,7 @@ BEGIN
 	VirtualTrees_SCannotSetUserData,	"Cannot set initial user data because there is not enough user data space allocated."
 END
 
-/* ..\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\dcl_dpk\dcl_own.res */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\dcl_dpk\DCL_MYOWN.dcr */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\dcl_dpk\dcl_own.drf */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\dcl_dpk\dcl_own.res */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\dcl_dpk\DCL_MYOWN.dcr */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\dcl_dpk\dcl_own.drf */
