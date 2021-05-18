@@ -467,10 +467,20 @@ begin
     g_logFile.addInfoMes(str+' Thread: '+IntToStr(GetCurrentThreadId));
 end;
 
+// system32 путь
+function GetSystemDir:string;
+begin
+ SetLength(Result,256);
+ SetLength(Result,GetSystemDirectory(PChar(Result),256));
+end;
+
 { Конструктор } { Создание формы тестового plug-in`а }
 constructor TExtRecorderPack.Create;
 begin
   g_startdir := extractfiledir(Application.ExeName) + '\plugins\';
+  g_startdir := ExtractFileDrive(GetSystemDir)+'\Mera files\Recorder\plugins\';
+  if not DirectoryExists(g_startdir) then
+    ForceDirectories(g_startdir);
   EList := cEventList.Create(nil, true);
   m_nplist := cNotifyProcessorList.Create;
 end;
