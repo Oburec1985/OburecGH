@@ -20,6 +20,11 @@ type
     acitive:boolean;
   end;
 
+  dataPoint = record
+    count:integer; // количество повторов
+    v:double; // значение
+  end;
+
   TCntrlWrnChart = class;
 
 
@@ -36,7 +41,7 @@ type
     fAxisName:string;
     fdrawarray: array of point2d;
     // количество повторений значений в интервале m_dx
-    fdxPCount: array of integer;
+    fdxPCount: array of dataPoint;
     flast: integer;
     // время последней отрисованной точки
     fLastTimeX, fLastTimeY: double;
@@ -1663,9 +1668,10 @@ begin
     i := trunc(p2d.x / m_dx);
     if i<length(fdxPCount) then
     begin
-      lcount := fdxPCount[i];
-      p2d.y := (fdrawarray[i].y * lcount + p2d.y) / (lcount + 1);
-      fdxPCount[i] := (lcount + 1);
+      lcount := fdxPCount[i].count;
+      p2d.y := (fdxPCount[i].v * lcount + p2d.y) / (lcount + 1);
+      fdxPCount[i].count := (lcount + 1);
+      fdxPCount[i].v:=p2d.y;
     end;
   end;
   if alarmLvl = 0 then
