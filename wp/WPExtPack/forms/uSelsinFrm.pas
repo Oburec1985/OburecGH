@@ -1159,6 +1159,8 @@ begin
     phase3:=GetPhaseDeg(s.l3.Signal,s.exc.Signal,interval);
 
     p1.setY(i,phase1);
+
+
     p2.setY(i,phase2);
     p3.setY(i,phase3);
 
@@ -1354,75 +1356,42 @@ begin
     u2:=SKO2.GetY(i);
     u3:=SKO3.GetY(i);
 
-    b:=GetAngel(u1,u2,u3, deg, module);
-    if b then
-    begin
-      mod1.setY(i,module);
-    end;
-    b:=GetAngel(u1,-u2,u3, deg, module); // сектор  0, 3
-    if b then
-    begin
-      mod1.setY(i,module);
-    end;
-    b:=GetAngel(-u1,-u2,u3, deg, module); // сектор  1, 4
-    if b then
-    begin
-      mod1.setY(i,module);
-    end;
-    b:=GetAngel(-u1,u2,u3, deg, module); // сектор  2, 5
-    if b then
-    begin
-      mod1.setY(i,module);
-    end;
-
-    if b then
-    begin
-      mod1.setY(i,module);
-    end;
-    b:=GetAngel(u3,u1,u2, deg, module); // сектор  0, 3
-    if b then
-    begin
-      mod1.setY(i,module);
-    end;
-    b:=GetAngel(-u3,-u1,u2, deg, module); // сектор  1, 4
-    if b then
-    begin
-      mod1.setY(i,module);
-    end;
-    b:=GetAngel(-u3,u1,u2, deg, module); // сектор  2, 5
-    if b then
-    begin
-      mod1.setY(i,module);
-    end;
-
-    if b then
-    begin
-      mod1.setY(i,module);
-    end;
-    b:=GetAngel(u2,u1,u3, deg, module); // сектор  0, 3
-    if b then
-    begin
-      mod1.setY(i,module);
-    end;
-    b:=GetAngel(-u2,-u1,u3, deg, module); // сектор  1, 4
-    if b then
-    begin
-      mod1.setY(i,module);
-    end;
-    b:=GetAngel(-u2,u1,u3, deg, module); // сектор  2, 5
-    if b then
-    begin
-      mod1.setY(i,module);
-    end;
-
 
     // считаем фазы
     phase1:=GetPhaseDeg(s.l1.Signal,s.exc.Signal,interval);
     phase2:=GetPhaseDeg(s.l2.Signal,s.exc.Signal,interval);
     phase3:=GetPhaseDeg(s.l3.Signal,s.exc.Signal,interval);
+    // Вычисляем конечное значение угла по таблице квадрантов
+    quad:=GetSect(phase1,phase2,phase3);
+    quad:=ShiftSect(quad,s.ShiftSectr);
+
+
+    b:=GetAngel(u1,-u2,u3,module, deg ); // сектор  0, 3
+    if b then
+    begin
+      mod1.setY(i,module);
+    end
+    else
+    begin
+      b:=GetAngel(-u1,-u2,u3, module, deg ); // сектор  1, 4
+      if b then
+      begin
+        mod1.setY(i,module);
+      end
+      else
+      begin
+        b:=GetAngel(-u1,u2,u3, module, deg); // сектор  2, 5
+        if b then
+        begin
+          mod1.setY(i,module);
+        end;
+      end;
+    end;
+
+
+
 
     resSignal.SetY(i,deg+addDeg);
-
     interval.x:=interval.x+dTfe.FloatNum;
     interval.y:=interval.y+dTfe.FloatNum;
     inc(i);

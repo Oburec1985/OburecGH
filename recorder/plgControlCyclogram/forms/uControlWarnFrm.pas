@@ -14,19 +14,18 @@ uses
 
 type
   Taxis = record
-    name:string;
-    min, max:double;
-    lg:boolean;
-    acitive:boolean;
+    name: string;
+    min, max: double;
+    lg: boolean;
+    acitive: boolean;
   end;
 
   dataPoint = record
-    count:integer; // количество повторов
-    v:double; // значение
+    count: integer; // количество повторов
+    v: double; // значение
   end;
 
   TCntrlWrnChart = class;
-
 
   TWrkPoint = class
   private
@@ -38,7 +37,7 @@ type
     fchart: TCntrlWrnChart;
     // кольцевой буфер данных
     fdata: array of point2d;
-    fAxisName:string;
+    fAxisName: string;
     fdrawarray: array of point2d;
     // количество повторений значений в интервале m_dx
     fdxPCount: array of dataPoint;
@@ -53,13 +52,15 @@ type
     // количество прочитанных точек по x и по для отслеждивания обновления данных
     freadyX, freadyY: cardinal;
   public
-    faxis:caxis;
+    faxis: caxis;
     // готовых к отрисовке точек
     // растет от нуля до PCount по мере заполнения буфера
     fready: integer;
     // настройки регулярной оси X
     m_regularX: boolean;
     m_dx: double;
+    // определяет количество интервалов для равномерной шкалы X
+    m_maxX: double;
 
     m_StateTag: itag;
     m_estimateX: boolean;
@@ -101,6 +102,7 @@ type
     procedure setaxisname(s: string);
     function getaxisname: string;
   public
+    procedure updateRegularAx;
     procedure initgraph;
     function ready: boolean;
     // событие обновления данных. Здесь получаем последнее положение
@@ -120,15 +122,15 @@ type
     property PColor: point3 read GetPColor write SetPColor;
     property DrawPoints: boolean read GetDrawPoints write SetDrawPoints;
     property DrawLine: boolean read GetDrawLine write SetDrawLine;
-    property axis: caxis read faxis write SetAxis;
-    property axisname: string read faxisname write SetAxisName;
+    property axis: caxis read faxis write setaxis;
+    property axisname: string read fAxisName write setaxisname;
   end;
 
   TCntrlWrnChart = class(TRecFrm)
   public
-    m_XminDefault,m_XmaxDefault:double;
-    m_lgX:boolean;
-    m_axises:array of taxis;
+    m_XminDefault, m_XmaxDefault: double;
+    m_lgX: boolean;
+    m_axises: array of Taxis;
     chart: cchart;
     m_profile, m_hihi, m_lolo, m_lo, m_hi: ctrend;
   protected
@@ -149,13 +151,15 @@ type
     procedure doStart;
     procedure setProfile(p: tprofile);
   public
-    function ProfileAxis:caxis;
+    function ProfileAxis: caxis;
     procedure delProfile;
-    function getDefAxisSettings(a:caxis; var error:boolean; var ind:integer):taxis;overload;
-    function getDefAxisSettings(axName:string; var error:boolean; var ind:integer):taxis;overload;
+    function getDefAxisSettings(a: caxis; var error: boolean;
+      var ind: integer): Taxis; overload;
+    function getDefAxisSettings(axName: string; var error: boolean;
+      var ind: integer): Taxis; overload;
     procedure clearWP;
     property profile: tprofile read fprofile write setProfile;
-    procedure addGraph(wp: TWrkPoint; a:caxis);
+    procedure addGraph(wp: TWrkPoint; a: caxis);
     // применить все настройки
     procedure UpdateOpts;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -312,12 +316,12 @@ begin
   end;
 end;
 
-procedure TCntrlWrnChart.addGraph(wp: TWrkPoint; a:caxis);
+procedure TCntrlWrnChart.addGraph(wp: TWrkPoint; a: caxis);
 begin
   wp.m_owner := m_GraphList;
   wp.fchart := self;
   m_GraphList.AddObject(wp.m_name, wp);
-  wp.axis:=a;
+  wp.axis := a;
   wp.initgraph;
 end;
 
@@ -356,29 +360,28 @@ procedure TCntrlWrnChart.DblClick(Sender: TObject);
 var
   r: frect;
   a: caxis;
-  act:caxis;
+  act: caxis;
   p: cpage;
-  defAxis:taxis;
-  err:boolean;
-  i,j:integer;
+  defAxis: Taxis;
+  err: boolean;
+  i, j: integer;
 begin
   p := cpage(chart.activePage);
-  act:=p.activeAxis;
-  for I := 0 to length(m_axises) - 1 do
+  act := p.activeAxis;
+  for i := 0 to length(m_axises) - 1 do
   begin
     a := p.getaxis(i);
-    defAxis:=getDefAxisSettings(a,err, j);
+    defAxis := getDefAxisSettings(a, err, j);
     if not err then
     begin
       r.BottomLeft := p2(m_XminDefault, defAxis.min);
       r.TopRight := p2(m_XmaxDefault, defAxis.max);
-      p.activeAxis:=a;
+      p.activeAxis := a;
       p.ZoomfRect(r);
     end;
   end;
-  p.activeAxis:=act;
+  p.activeAxis := act;
 end;
-
 
 destructor TCntrlWrnChart.destroy;
 var
@@ -398,48 +401,47 @@ end;
 
 procedure TCntrlWrnChart.LinkAxisSettings;
 var
-  I: Integer;
-  a:caxis;
-  p:cpage;
+  i: integer;
+  a: caxis;
+  p: cpage;
 begin
-  p:=cpage(chart.activePage);
-  for I := 0 to length(m_axises) - 1 do
+  p := cpage(chart.activePage);
+  for i := 0 to length(m_axises) - 1 do
   begin
-    if i=0 then
+    if i = 0 then
     begin
-      a:=p.activeAxis;
-      if m_axises[i].name<>'' then
+      a := p.activeAxis;
+      if m_axises[i].name <> '' then
       begin
-        a.name:=m_axises[i].name;
-        a.caption:=m_axises[i].name;
+        a.name := m_axises[i].name;
+        a.caption := m_axises[i].name;
       end
       else
       begin
-        m_axises[i].name:=a.caption;
+        m_axises[i].name := a.caption;
       end;
     end
     else
     begin
-      a:=p.getaxis(m_axises[i].name);
-      if a=nil then
+      a := p.getaxis(m_axises[i].name);
+      if a = nil then
       begin
-        a:=p.Newaxis;
-        a.name:=m_axises[i].name;
-        a.caption:=m_axises[i].name;
+        a := p.Newaxis;
+        a.name := m_axises[i].name;
+        a.caption := m_axises[i].name;
       end;
     end;
-    a.maxY:=m_axises[i].max;
-    a.minY:=m_axises[i].min;
-    a.lg:=m_axises[i].lg;
+    a.maxY := m_axises[i].max;
+    a.minY := m_axises[i].min;
+    a.lg := m_axises[i].lg;
   end;
 end;
-
 
 procedure TCntrlWrnChart.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 var
   i: integer;
   w: TWrkPoint;
-  ax:taxis;
+  ax: Taxis;
 begin
   inherited;
   a_pIni.WriteString(str, 'ComponentName', name);
@@ -447,14 +449,14 @@ begin
   a_pIni.WriteFloat(str, 'X_min', m_XminDefault);
   a_pIni.WriteFloat(str, 'X_max', m_XmaxDefault);
   a_pIni.WriteBool(str, 'X_Lg', m_lgX);
-  a_pIni.WriteInteger(str, 'AxisCount', Length(m_axises));
-  for I := 0 to Length(m_axises) - 1 do
+  a_pIni.WriteInteger(str, 'AxisCount', length(m_axises));
+  for i := 0 to length(m_axises) - 1 do
   begin
-    ax:=m_axises[i];
-    a_pIni.WriteString(str, 'Ax_Y_name_'+inttostr(i), ax.name);
-    a_pIni.WriteFloat(str, 'Ax_Y_min_'+inttostr(i), ax.min);
-    a_pIni.WriteFloat(str, 'Ax_Y_max_'+inttostr(i), ax.max);
-    a_pIni.WriteBool(str,  'Y_Lg_'+inttostr(i), ax.lg);
+    ax := m_axises[i];
+    a_pIni.WriteString(str, 'Ax_Y_name_' + inttostr(i), ax.name);
+    a_pIni.WriteFloat(str, 'Ax_Y_min_' + inttostr(i), ax.min);
+    a_pIni.WriteFloat(str, 'Ax_Y_max_' + inttostr(i), ax.max);
+    a_pIni.WriteBool(str, 'Y_Lg_' + inttostr(i), ax.lg);
   end;
   a_pIni.WriteFloat(str, 'PSize', PSize);
 
@@ -477,6 +479,7 @@ begin
     a_pIni.WriteBool(str, 'DrawLine_' + inttostr(i), w.DrawLine);
     a_pIni.WriteBool(str, 'regularX_' + inttostr(i), w.m_regularX);
     a_pIni.WriteFloat(str, 'dX_' + inttostr(i), w.m_dx);
+    a_pIni.WriteFloat(str, 'maxX_' + inttostr(i), w.m_maxX);
 
     a_pIni.WriteInteger(str, 'PColor_' + inttostr(i), rgbtoint(w.PColor));
     a_pIni.WriteInteger(str, 'GraphPCount_' + inttostr(i), w.PCount);
@@ -488,27 +491,27 @@ end;
 procedure TCntrlWrnChart.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 var
   alg: cbasealgcontainer;
-  i, Count: integer;
+  i, count: integer;
   lstr: string;
   w: TWrkPoint;
   p: tprofile;
-  ax:Taxis;
+  ax: Taxis;
 begin
   inherited;
   name := a_pIni.ReadString(str, 'ComponentName', 'Параметрический график');
 
-  m_XmaxDefault:=readFloatFromIni(a_pIni,str, 'X_max');
-  m_XminDefault:=readFloatFromIni(a_pIni,str, 'X_min');
-  m_lgX:=a_pIni.ReadBool(str, 'X_Lg', false);
+  m_XmaxDefault := readFloatFromIni(a_pIni, str, 'X_max');
+  m_XminDefault := readFloatFromIni(a_pIni, str, 'X_min');
+  m_lgX := a_pIni.ReadBool(str, 'X_Lg', false);
 
-  Count:=a_pIni.ReadInteger(str, 'AxisCount', 1);
+  count := a_pIni.ReadInteger(str, 'AxisCount', 1);
   SetLength(m_axises, count);
-  for I := 0 to count - 1 do
+  for i := 0 to count - 1 do
   begin
-    m_axises[i].name:=a_pIni.ReadString(str, 'Ax_Y_name_'+inttostr(i), '');
-    m_axises[i].min:=a_pIni.ReadFloat(str, 'Ax_Y_min_'+inttostr(i), 0);
-    m_axises[i].max:=a_pIni.ReadFloat(str, 'Ax_Y_max_'+inttostr(i), 10);
-    m_axises[i].lg:=a_pIni.ReadBool(str,  'Y_Lg_'+inttostr(i), false);
+    m_axises[i].name := a_pIni.ReadString(str, 'Ax_Y_name_' + inttostr(i), '');
+    m_axises[i].min := a_pIni.ReadFloat(str, 'Ax_Y_min_' + inttostr(i), 0);
+    m_axises[i].max := a_pIni.ReadFloat(str, 'Ax_Y_max_' + inttostr(i), 10);
+    m_axises[i].lg := a_pIni.ReadBool(str, 'Y_Lg_' + inttostr(i), false);
   end;
 
   PSize := IniReadFloatEx(a_pIni, str, 'PSize', 5);
@@ -521,8 +524,8 @@ begin
   p := cCtrlWrnFactory(m_f).m_pList.getprof(lstr, i);
   profile := p;
 
-  Count := a_pIni.ReadInteger(str, 'GraphCount', 0);
-  for i := 0 to Count - 1 do
+  count := a_pIni.ReadInteger(str, 'GraphCount', 0);
+  for i := 0 to count - 1 do
   begin
     w := TWrkPoint.create(chart);
     w.name := a_pIni.ReadString(str, 'GraphName_' + inttostr(i), '');
@@ -535,6 +538,8 @@ begin
     w.DrawLine := a_pIni.ReadBool(str, 'DrawLine_' + inttostr(i), true);
     w.m_regularX := a_pIni.ReadBool(str, 'regularX_' + inttostr(i), false);
     w.m_dx := IniReadFloatEx(a_pIni, str, 'dX_' + inttostr(i), 0.5);
+    w.m_maxX := a_pIni.ReadFloat(str, 'maxX_' + inttostr(i), 10000);
+    w.updateRegularAx;
 
     w.PColor := inttorgb(a_pIni.ReadInteger(str, 'PColor_' + inttostr(i),
         rgbtoint(w.PColor)));
@@ -546,7 +551,6 @@ begin
   end;
 end;
 
-
 procedure TCntrlWrnChart.SpmChartInit(Sender: TObject);
 var
   i: integer;
@@ -555,10 +559,10 @@ var
   w: TWrkPoint;
 begin
   p := cpage(chart.activePage);
-  if name='' then
-    p.Caption := 'Параметрический график'
+  if name = '' then
+    p.caption := 'Параметрический график'
   else
-    p.Caption := name;
+    p.caption := name;
   d := p.cursor;
   d.visible := false;
 
@@ -574,13 +578,13 @@ begin
     w := getWP(i);
     w.initgraph;
   end;
-  if length(m_axises)=0 then
-    setlength(m_axises,1);
-  m_axises[0].name:=p.activeAxis.name;
-  m_axises[0].name:=p.activeAxis.caption;
-  m_axises[0].min:=p.activeAxis.minY;
-  m_axises[0].max:=p.activeAxis.maxY;
-  m_axises[0].lg:=p.activeAxis.lg;
+  if length(m_axises) = 0 then
+    SetLength(m_axises, 1);
+  m_axises[0].name := p.activeAxis.name;
+  m_axises[0].name := p.activeAxis.caption;
+  m_axises[0].min := p.activeAxis.minY;
+  m_axises[0].max := p.activeAxis.maxY;
+  m_axises[0].lg := p.activeAxis.lg;
 end;
 
 procedure TCntrlWrnChart.TestInit;
@@ -608,7 +612,7 @@ begin
   m_name := s;
   if chart.activePage <> nil then
   begin
-    chart.activePage.Caption := m_name;
+    chart.activePage.caption := m_name;
   end;
 end;
 
@@ -623,7 +627,7 @@ begin
   p.evalData;
   if m_profile <> nil then
   begin
-    for i := 0 to p.Count - 1 do
+    for i := 0 to p.count - 1 do
     begin
       tr := m_profile;
       addPointsToProfile(p.x, p.m_data, 0, tr);
@@ -641,34 +645,33 @@ end;
 
 procedure TCntrlWrnChart.delProfile;
 begin
-  m_profile:=nil;
-  m_lolo:=nil;
-  m_lo:=nil;
-  m_hi:=nil;
-  m_hihi:=nil;
-  fprofile:=nil;
+  m_profile := nil;
+  m_lolo := nil;
+  m_lo := nil;
+  m_hi := nil;
+  m_hihi := nil;
+  fprofile := nil;
 end;
 
 function TCntrlWrnChart.ProfileAxis: caxis;
 begin
-  result:=nil;
-  if m_profile<>nil then
-    result:=caxis(m_profile.GetParentByClassName('cAxis'));
+  result := nil;
+  if m_profile <> nil then
+    result := caxis(m_profile.GetParentByClassName('cAxis'));
 end;
-
 
 procedure TCntrlWrnChart.initProfile;
 var
   p: cpage;
-  aX: caxis;
+  ax: caxis;
 begin
   p := cpage(chart.activePage);
-  aX := p.activeAxis;
+  ax := p.activeAxis;
 
   if m_profile = nil then
   begin
     m_profile := ctrend.create;
-    aX.AddChild(m_profile);
+    ax.AddChild(m_profile);
     m_profile.enabled := false;
     m_profile.name := 'Profile';
     m_profile.color := p3(0, 1, 0);
@@ -679,7 +682,7 @@ begin
     m_lolo.selectable := false;
     m_lolo.name := 'LoLo';
     m_lolo.color := p3(1, 0, 0);
-    aX.AddChild(m_lolo);
+    ax.AddChild(m_lolo);
   end;
   if m_lo = nil then
   begin
@@ -687,7 +690,7 @@ begin
     m_lo.selectable := false;
     m_lo.name := 'Lo';
     m_lo.color := Orange; // p3(1,1,0);
-    aX.AddChild(m_lo);
+    ax.AddChild(m_lo);
   end;
   if m_hi = nil then
   begin
@@ -695,12 +698,12 @@ begin
     m_hi.selectable := false;
     m_hi.name := 'Hi';
     m_hi.color := Orange;
-    aX.AddChild(m_hi);
+    ax.AddChild(m_hi);
   end;
   if m_hihi = nil then
   begin
     m_hihi := ctrend.create;
-    aX.AddChild(m_hihi);
+    ax.AddChild(m_hihi);
     m_hihi.selectable := false;
     m_hihi.name := 'HiHi';
     m_hihi.color := p3(1, 0, 0);
@@ -769,7 +772,7 @@ end;
 
 function TCntrlWrnChart.GraphCount: integer;
 begin
-  result := m_GraphList.Count;
+  result := m_GraphList.count;
 end;
 
 procedure TCntrlWrnChart.UpdateOpts;
@@ -777,28 +780,28 @@ var
   r: frect;
   a: caxis;
   p: cpage;
-  I: Integer;
+  i: integer;
 begin
   p := cpage(chart.activePage);
 
-  p.lgX := m_lgX;
-  for I := 0 to length(m_axises) - 1 do
+  p.LgX := m_lgX;
+  for i := 0 to length(m_axises) - 1 do
   begin
-    if m_axises[i].name<>'' then
+    if m_axises[i].name <> '' then
     begin
-      a:=caxis(p.getChildrenByCaption(m_axises[i].name));
-      if a<>nil then
-        a.caption:=m_axises[i].name
+      a := caxis(p.getChildrenByCaption(m_axises[i].name));
+      if a <> nil then
+        a.caption := m_axises[i].name
       else
-        a:=p.Newaxis;
+        a := p.Newaxis;
     end
     else
     begin
-      m_axises[i].name:=a.caption;
+      m_axises[i].name := a.caption;
     end;
-    a.maxY:=m_axises[i].max;
-    a.minY:=m_axises[i].min;
-    a.lg:=m_axises[i].lg;
+    a.maxY := m_axises[i].max;
+    a.minY := m_axises[i].min;
+    a.lg := m_axises[i].lg;
 
     r.BottomLeft := p2(m_XminDefault, m_axises[i].min);
     r.TopRight := p2(m_XmaxDefault, m_axises[i].max);
@@ -806,18 +809,19 @@ begin
   end;
 end;
 
-function TCntrlWrnChart.getDefAxisSettings(axName:string; var error:boolean; var ind:integer):taxis;
+function TCntrlWrnChart.getDefAxisSettings(axName: string; var error: boolean;
+  var ind: integer): Taxis;
 var
-  I: Integer;
+  i: integer;
 begin
-  error:=true;
-  for I := 0 to length(m_axises) - 1 do
+  error := true;
+  for i := 0 to length(m_axises) - 1 do
   begin
-    if m_axises[i].name=axName then
+    if m_axises[i].name = axName then
     begin
-      ind:=i;
-      result:=m_axises[i];
-      error:=false;
+      ind := i;
+      result := m_axises[i];
+      error := false;
       exit;
     end;
   end;
@@ -825,24 +829,24 @@ end;
 
 function TCntrlWrnChart.getLgX: boolean;
 begin
-  result:=m_lgX;
+  result := m_lgX;
 end;
 
 procedure TCntrlWrnChart.setLgX(b: boolean);
 begin
-  m_lgX:=b;
+  m_lgX := b;
   if chart.activePage <> nil then
   begin
-    cpage(chart.activePage).LgX:=m_lgx;
+    cpage(chart.activePage).LgX := m_lgX;
   end;
 end;
 
-
-function TCntrlWrnChart.getDefAxisSettings(a: caxis; var error:boolean; var ind:integer): taxis;
+function TCntrlWrnChart.getDefAxisSettings(a: caxis; var error: boolean;
+  var ind: integer): Taxis;
 var
-  I: Integer;
+  i: integer;
 begin
-  result:=getDefAxisSettings(a.caption, error, ind);
+  result := getDefAxisSettings(a.caption, error, ind);
 end;
 
 function TCntrlWrnChart.getname: string;
@@ -855,7 +859,7 @@ var
   i: integer;
   w: TWrkPoint;
 begin
-  //logMessage('TCntrlWrnChart.UpdateData tid: '+inttostr(GetCurrentThreadId));
+  // logMessage('TCntrlWrnChart.UpdateData tid: '+inttostr(GetCurrentThreadId));
   // spmChart.activePage.caption := modname(spmChart.activePage.caption, false);
   for i := 0 to GraphCount - 1 do
   begin
@@ -869,7 +873,7 @@ var
   i: integer;
   w: TWrkPoint;
 begin
-  //logMessage('TCntrlWrnChart.UpdateView tid: '+inttostr(GetCurrentThreadId));
+  // logMessage('TCntrlWrnChart.UpdateView tid: '+inttostr(GetCurrentThreadId));
   for i := 0 to GraphCount - 1 do
   begin
     w := getWP(i);
@@ -977,10 +981,10 @@ begin
   if not fileexists(g_merafile) then
     exit;
   ifile := TIniFile.create(g_merafile);
-  for i := 0 to m_CompList.Count - 1 do
+  for i := 0 to m_CompList.count - 1 do
   begin
     Frm := TCntrlWrnChart(GetFrm(i));
-    for j := 0 to Frm.m_GraphList.Count - 1 do
+    for j := 0 to Frm.m_GraphList.count - 1 do
     begin
       wp := Frm.getWP(j);
       if wp.ready then
@@ -1070,7 +1074,7 @@ var
   i: integer;
   Frm: TRecFrm;
 begin
-  for i := 0 to m_CompList.Count - 1 do
+  for i := 0 to m_CompList.count - 1 do
   begin
     Frm := GetFrm(i);
     TCntrlWrnChart(Frm).doStart;
@@ -1082,7 +1086,7 @@ var
   i: integer;
   Frm: TRecFrm;
 begin
-  for i := 0 to m_CompList.Count - 1 do
+  for i := 0 to m_CompList.count - 1 do
   begin
     Frm := GetFrm(i);
     TCntrlWrnChart(Frm).UpdateData;
@@ -1095,8 +1099,8 @@ var
   p: tprofile;
   str: string;
 begin
-  f.WriteInteger('CtrlWrnFactory', 'ProfCount', m_pList.Count);
-  for i := 0 to m_pList.Count - 1 do
+  f.WriteInteger('CtrlWrnFactory', 'ProfCount', m_pList.count);
+  for i := 0 to m_pList.count - 1 do
   begin
     p := m_pList.getprof(i);
     str := p.settings;
@@ -1117,8 +1121,8 @@ begin
   doc.LoadFromFile(f);
   node := doc.Root;
   node := node.NodeNew('GraphProfiles');
-  node.WriteAttributeInteger('PCount', m_pList.Count, 0);
-  for i := 0 to m_pList.Count - 1 do
+  node.WriteAttributeInteger('PCount', m_pList.count, 0);
+  for i := 0 to m_pList.count - 1 do
   begin
     p := m_pList.getprof(i);
     ch := node.NodeNew('Profile_' + inttostr(i));
@@ -1195,7 +1199,7 @@ end;
 function ICtrlWrnFrm.doCreateFrm: TRecFrm;
 begin
   result := TCntrlWrnChart.create(nil);
-  TCntrlWrnChart(result).name:='Параметрический график';
+  TCntrlWrnChart(result).name := 'Параметрический график';
 end;
 
 function ICtrlWrnFrm.doGetName: LPCSTR;
@@ -1220,7 +1224,7 @@ begin
   result := 0;
   if prof = nil then
     exit;
-  for i := 0 to prof.Count - 1 do
+  for i := 0 to prof.count - 1 do
   begin
     if p2d.x < prof.x[i] then
     begin
@@ -1280,6 +1284,9 @@ begin
   fPointsColor := black;
   m_estimateX := true;
   m_estimateY := true;
+  m_regularX:=true;
+  m_dx:=1;
+  m_maxx:=10000;
   PCount := 1;
   m_XParam := ctag.create;
   m_YParam := ctag.create;
@@ -1301,15 +1308,13 @@ begin
   end;
 end;
 
-
-
 destructor TWrkPoint.destroy;
 begin
   DeleteCS;
 
   m_XParam.destroy;
   m_YParam.destroy;
-  if m_tr<>nil then
+  if m_tr <> nil then
   begin
     m_tr.destroy;
   end;
@@ -1331,7 +1336,7 @@ end;
 
 procedure TWrkPoint.EnterCS;
 begin
-  //EnterCriticalSection(cs);
+  // EnterCriticalSection(cs);
   EnterTrendCS;
 end;
 
@@ -1350,16 +1355,15 @@ begin
   m_tr.EnterCS;
 end;
 
-
 function TWrkPoint.getaxisname: string;
 begin
-  if faxis<>nil then
+  if faxis <> nil then
   begin
-    result:=faxis.caption;
+    result := faxis.caption;
   end
   else
   begin
-    result:=fAxisName;
+    result := fAxisName;
   end;
 end;
 
@@ -1425,50 +1429,50 @@ begin
   flast := 0;
   freadyX := 0;
   freadyY := 0;
-  if m_XParam<>nil then
+  if m_XParam <> nil then
     m_XParam.doOnStart;
-  if m_YParam<>nil then
+  if m_YParam <> nil then
     m_YParam.doOnStart;
 end;
 
 procedure TWrkPoint.initgraph;
 var
-  index:integer;
-  I: Integer;
-  a:caxis;
+  index: integer;
+  i: integer;
+  a: caxis;
 begin
   if m_tr = nil then
     m_tr := ctrend.create;
   if fchart.chart.activePage <> nil then
   begin
-    index:=0;
-    for I := 0 to fchart.m_GraphList.Count - 1 do
+    index := 0;
+    for i := 0 to fchart.m_GraphList.count - 1 do
     begin
       if self = fchart.m_GraphList.Objects[i] then
       begin
-          index:=i;
-          break;
+        index := i;
+        break;
       end;
     end;
-    a:=axis;
-    if a=nil then
-      axisname:=fAxisName;
-    if axis=nil then
+    a := axis;
+    if a = nil then
+      axisname := fAxisName;
+    if axis = nil then
     begin
-      axis:=a;
+      axis := a;
     end;
-    if axis=nil then
+    if axis = nil then
     begin
-      if length(fchart.m_axises)=1 then
+      if length(fchart.m_axises) = 1 then
       begin
-        axis:=cpage(fchart.chart.activePage).activeAxis;
-        fchart.m_axises[0].name:=axis.caption;
-        fchart.m_axises[0].min:=axis.minY;
-        fchart.m_axises[0].max:=axis.maxY;
-        fchart.m_axises[0].lg:=axis.lg;
+        axis := cpage(fchart.chart.activePage).activeAxis;
+        fchart.m_axises[0].name := axis.caption;
+        fchart.m_axises[0].min := axis.minY;
+        fchart.m_axises[0].max := axis.maxY;
+        fchart.m_axises[0].lg := axis.lg;
       end;
     end;
-    //a.AddChild(m_tr);
+    // a.AddChild(m_tr);
     m_tr.color := ColorArray[index];
     m_tr.pointcolor := ColorArray[index];
     if fload then
@@ -1518,34 +1522,34 @@ end;
 
 procedure TWrkPoint.setaxis(a: caxis);
 begin
-  if a<>faxis then
+  if a <> faxis then
   begin
-    if m_tr<>nil then
+    if m_tr <> nil then
     begin
-      m_tr.parent:=a;
+      m_tr.parent := a;
     end;
-    faxis:=a;
-    fAxisName:=a.caption;
+    faxis := a;
+    fAxisName := a.caption;
   end;
 end;
 
 procedure TWrkPoint.setaxisname(s: string);
 var
-  p:cpage;
-  I: Integer;
-  a:caxis;
+  p: cpage;
+  i: integer;
+  a: caxis;
 begin
-  fAxisName:=s;
-  p:=cpage(fchart.chart.activePage);
-  if p=nil then
+  fAxisName := s;
+  p := cpage(fchart.chart.activePage);
+  if p = nil then
     exit;
-  for I := 0 to p.getAxisCount - 1 do
+  for i := 0 to p.getAxisCount - 1 do
   begin
-    a:=p.getaxis(i);
-    if a.caption=s then
+    a := p.getaxis(i);
+    if a.caption = s then
     begin
-      faxis:=a;
-      m_tr.parent:=a;
+      faxis := a;
+      m_tr.parent := a;
       exit;
     end;
   end;
@@ -1593,7 +1597,6 @@ begin
   fPCount := c;
   SetLength(fdata, c);
   SetLength(fdrawarray, c);
-  SetLength(fdxPCount, c);
 end;
 
 function TWrkPoint.GetDrawPoints: boolean;
@@ -1666,12 +1669,12 @@ begin
   if m_regularX then
   begin
     i := trunc(p2d.x / m_dx);
-    if i<length(fdxPCount) then
+    if i < length(fdxPCount) then
     begin
       lcount := fdxPCount[i].count;
       p2d.y := (fdxPCount[i].v * lcount + p2d.y) / (lcount + 1);
       fdxPCount[i].count := (lcount + 1);
-      fdxPCount[i].v:=p2d.y;
+      fdxPCount[i].v := p2d.y;
     end;
   end;
   if alarmLvl = 0 then
@@ -1808,13 +1811,21 @@ begin
   m_YParam.ResetTagData();
 end;
 
+procedure TWrkPoint.updateRegularAx;
+var
+  n: integer;
+begin
+  n := round((m_maxX + 0.5) / m_dx);
+  SetLength(fdxPCount,n);
+end;
+
 procedure TWrkPoint.UpdateView;
 begin
   // отрисовка
   EnterCS;
   m_tr.Clear;
   m_tr.addpoints(fdrawarray, fready);
-  exitcs;
+  ExitCS;
 end;
 
 procedure TWrkPoint.UpdateData(prof: tprofile);

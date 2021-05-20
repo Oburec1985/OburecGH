@@ -69,6 +69,8 @@ type
     ImageList_16: TImageList;
     NameAxisEdit: TEdit;
     NameAxisLabel: TLabel;
+    MaxXgraph: TFloatEdit;
+    Label2: TLabel;
     procedure UpdateBtnClick(Sender: TObject);
     procedure GraphTypeRGClick(Sender: TObject);
     procedure AddlineBtnClick(Sender: TObject);
@@ -88,6 +90,7 @@ type
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
     procedure TagsTVKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure regularXCBClick(Sender: TObject);
   private
   public
     curChart:TCntrlWrnChart;
@@ -392,6 +395,19 @@ begin
   begin
     //p:=tprofile(profilecb.Items[ProfileCB.ItemIndex]);
     //curchart.Profile:=p;
+  end;
+end;
+
+procedure TEditCntlWrnFrm.regularXCBClick(Sender: TObject);
+begin
+  dxfe.Enabled:=regularXCB.Checked;
+  if regularXCB.Checked then
+  begin
+    dxfe.Color:=clWindow;
+  end
+  else
+  begin
+    dxfe.Color:=clGray;
   end;
 end;
 
@@ -794,6 +810,7 @@ begin
 
           w.m_regularX:=regularXCB.Checked;
           w.m_dx:=dXfe.FloatNum;
+          w.m_maxX:=MaxXgraph.FloatNum;
         end;
       end;
     end;
