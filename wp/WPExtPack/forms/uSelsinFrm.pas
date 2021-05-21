@@ -1364,32 +1364,18 @@ begin
     // Вычисляем конечное значение угла по таблице квадрантов
     quad:=GetSect(phase1,phase2,phase3);
     quad:=ShiftSect(quad,s.ShiftSectr);
-
-
-    b:=GetAngel(u1,-u2,u3,module, deg ); // сектор  0, 3
+    case quad of
+      0: b:=GetAngel(u1,-u2,u3,module, deg ); // сектор  0, 3
+      3: b:=GetAngel(u1,-u2,u3,module, deg ); // сектор  0, 3
+      1: b:=GetAngel(-u1,-u2,u3, module, deg ); // сектор  1, 4
+      4: b:=GetAngel(-u1,-u2,u3, module, deg ); // сектор  1, 4
+      2: b:=GetAngel(-u1,u2,u3, module, deg); // сектор  2, 5
+      5: b:=GetAngel(-u1,u2,u3, module, deg); // сектор  2, 5
+    end;
     if b then
     begin
       mod1.setY(i,module);
-    end
-    else
-    begin
-      b:=GetAngel(-u1,-u2,u3, module, deg ); // сектор  1, 4
-      if b then
-      begin
-        mod1.setY(i,module);
-      end
-      else
-      begin
-        b:=GetAngel(-u1,u2,u3, module, deg); // сектор  2, 5
-        if b then
-        begin
-          mod1.setY(i,module);
-        end;
-      end;
     end;
-
-
-
 
     resSignal.SetY(i,deg+addDeg);
     interval.x:=interval.x+dTfe.FloatNum;
