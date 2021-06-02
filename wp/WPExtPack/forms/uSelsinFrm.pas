@@ -30,6 +30,7 @@ type
   private
     procedure Eval2(s:cselsin);
     procedure Eval3(s:cselsin);
+    procedure EvalSinCos(s:cselsin);
     procedure Addselsin(s:cselsin);
     procedure updateLI(li: TListItem);
     procedure CheckList;
@@ -79,6 +80,7 @@ const
   c_degtorad = 0.01745329251994329576923690768489;
   c_asin60 = 1.0471975511965977461542144610932;
   c_Threshold = 0.15;
+  c_sinCos_Threshold = 0.15;
   c_degThreshold = 0.1;
   tan80 = 5.67139010260751;
 
@@ -252,17 +254,26 @@ begin
     s:=cselsin(li.Data);
     if s.valid then
     begin
-      if s.commonPoint then
+      if s.bSelsin then
       begin
-        Eval3(s);
+        EvalSinCos(s);
       end
       else
       begin
-        Eval2(s);
+        if s.commonPoint then
+        begin
+          Eval3(s);
+        end
+        else
+        begin
+          Eval2(s);
+        end;
       end;
     end;
   end;
 end;
+
+
 
 procedure TSelsinFrm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
@@ -337,6 +348,15 @@ begin
 
     s1 := iwpsignal(TVarData(r1).VPointer);
     result:=p2d(s1.MinY,s1.MaxY);
+  end;
+end;
+
+function ShiftSectSinCos(sectr, shift:integer):integer;
+begin
+  result:=sectr+shift;
+  if result>3 then
+  begin
+    result:=result-3;
   end;
 end;
 
@@ -552,6 +572,11 @@ begin
     begin
       for i := 0 to 4 do
       begin
+        if s.bSelsin then
+        begin
+          if i>2 then
+            break;
+        end;
         snew:=cselsin.Create;
         snew.name:=s.name+'_s'+inttostr(i);
         snew.shiftsectr:=i;
@@ -571,8 +596,16 @@ begin
         snew.freq:=s.freq;
         Addselsin(snew);
       end;
-      s.name:=s.name+'_s5';
-      s.shiftsectr:=5;
+      if s.bSelsin then
+      begin
+        s.name:=s.name+'_s3';
+        s.shiftsectr:=3;
+      end
+      else
+      begin
+        s.name:=s.name+'_s5';
+        s.shiftsectr:=5;
+      end;
       Addselsin(s);
     end;
   end;
@@ -621,6 +654,11 @@ begin
   ChansLV.SetSubItemByColumnName('SectShift',inttostr(s.shiftsectr),li);
   ChansLV.SetSubItemByColumnName('Модуль',floattostr(s.reference),li);
   ChansLV.SetSubItemByColumnName('без общ. тчк.', booltostr(s.commonPoint), li);
+  ChansLV.SetSubItemByColumnName('без общ. тчк.', booltostr(s.commonPoint), li);
+  if s.bSelsin then
+    ChansLV.SetSubItemByColumnName('Тип', 'SinCos', li)
+  else
+    ChansLV.SetSubItemByColumnName('Тип', 'Сельсин', li);
 end;
 
 procedure tSelsinFrm.Addselsin(s:cselsin);
@@ -1432,6 +1470,7 @@ begin
     f.WriteFloat(id,'Ref',s.reference);
     f.WriteString(id,'AutoCalibr',booltostr(s.autocal));
     f.WriteString(id,'commonPoint',booltostr(s.commonPoint));
+    f.WriteBool(id,'Selsin',s.bSelsin);
   end;
 end;
 
@@ -1452,6 +1491,8 @@ begin
     id:='S_'+inttostr(i);
     s.name:=f.ReadString(id,'Name',s.name);
 
+    s.bSelsin:= f.readBool(id,'Selsin',false);
+
     str:=f.ReadString(id,'L1','');
     s.fl1:=str;
     if src<>nil then
@@ -1460,7 +1501,6 @@ begin
       if sig<>nil then
         s.l1:=sig;
     end;
-
     str:=f.ReadString(id,'L2','');
     s.fl2:=str;
     if src<>nil then
@@ -1469,7 +1509,6 @@ begin
       if sig<>nil then
         s.l2:=sig;
     end;
-
     str:=f.ReadString(id,'L3','');
     s.fl3:=str;
     if src<>nil then
@@ -1478,7 +1517,6 @@ begin
       if sig<>nil then
         s.l3:=sig;
     end;
-
     str:=f.ReadString(id,'Exc','');
     s.fexc:=str;
     if src<>nil then
@@ -1487,7 +1525,6 @@ begin
       if sig<>nil then
         s.exc:=sig;
     end;
-
     s.shiftsectr:=f.ReadInteger(id,'SectShift',s.shiftsectr);
     s.minmax1.x:=f.ReadFloat(id,'Min1',s.minmax1.x);
     s.minmax1.y:=f.ReadFloat(id,'Max1',s.minmax1.y);
@@ -1506,7 +1543,6 @@ begin
       s.commonPoint:=true
     else
       s.commonPoint:=false;
-
     Addselsin(s);
   end;
   CheckList;
@@ -1531,6 +1567,152 @@ begin
   if inherited showmodal=mrok then
   begin
 
+  end;
+end;
+
+Function GetAngelSinCos(u1,u2:double; var a:double; var d:double):boolean;
+var
+  tg, rad,  lcos, err:double;
+begin
+  tg:=(u1/u2);
+  rad:=ArcTan(tg);
+  lcos:=cos(rad);
+  a:=u2/lcos;
+  d:=RadToDeg(rad);
+  result:=true;
+end;
+
+Function GetSectSinCos(PSIN, PcOS:double):integer;
+begin
+  if (pcos>=0) and (psin>=0) then
+    result:=0;
+  if (pcos<=0) and (psin>=0) then
+    result:=1;
+  if (pcos<=0) and (psin<=0) then
+    result:=2;
+  if (pcos>=0) and (psin<=0) then
+    result:=3;
+end;
+
+
+procedure TSelsinFrm.EvalSinCos(s: cselsin);
+var
+  sig:iwpsignal;
+  mod1, SKO1,SKO2, Sect, iQuad, resSignal, ip1,ip2:iwpsignal;
+
+  u1,u2,u3,
+  tg, cos, sin,
+  phase1, phase2, deg, addDeg, Module:double;
+  // нельзя использовать в 2 и 4 секторах
+  b:boolean;
+
+  interval, time:point2d;
+  i,quad, sectr, sectr1: Integer;
+
+  // ошибка по амплитуде
+  aErr,
+  // ошибка по углу
+  dErr:double;
+begin
+  SKO1:=GetSKOTrend(s.l1.Signal, dtFe.FloatNum);
+  SKO2:=GetSKOTrend(s.l2.Signal, dtFe.FloatNum);
+  // выбираем интервал обработки
+  time.x:=SKO1.minx;
+  if time.x<SKO2.minx then
+    time.x:=SKO2.minx;
+  time.y:=SKO1.maxx;
+  if time.y>SKO2.maxx then
+    time.y:=SKO2.maxx;
+
+  if time.x<s.Exc.signal.minx then
+    time.x:=s.Exc.signal.minx;
+  if time.y>s.Exc.signal.maxx then
+    time.y:=s.Exc.signal.maxx;
+
+
+  resSignal:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
+
+  // модули
+  mod1:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
+
+  iQuad:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
+  iQuad.size:= round((time.y-time.x)/dTfe.FloatNum);
+  iQuad.DeltaX:=dTfe.FloatNum;
+
+  ip1:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
+  ip1.size:= round((time.y-time.x)/dTfe.FloatNum);
+  ip1.DeltaX:=dTfe.FloatNum;
+
+  ip2:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
+  ip2.size:= round((time.y-time.x)/dTfe.FloatNum);
+  ip2.DeltaX:=dTfe.FloatNum;
+
+
+  //-- помещаем сигнал в дерево
+  posbase.winpos.Link('/Signals/Selsin', s.name, resSignal as IDispatch);
+  posbase.winpos.Link('/Signals/Selsin', s.name+' mod_1', mod1 as IDispatch);
+  posbase.winpos.Link('/Signals/Selsin', s.name+' sko_1', sko1 as IDispatch);
+  posbase.winpos.Link('/Signals/Selsin', s.name+' sko_2', sko2 as IDispatch);
+  posbase.winpos.Link('/Signals/Selsin', s.name+' Quad', iQuad as IDispatch);
+  posbase.winpos.Link('/Signals/Selsin', s.name+' Phase_1', ip1 as IDispatch);
+  posbase.winpos.Link('/Signals/Selsin', s.name+' Phase_2', ip2 as IDispatch);
+
+  posbase.winpos.Refresh();
+  //-- зададим длину сигнала
+  resSignal.size:= round((time.y-time.x)/dTfe.FloatNum);
+  resSignal.DeltaX:=dTfe.FloatNum;
+
+  mod1.size:= round((time.y-time.x)/dTfe.FloatNum);
+  mod1.DeltaX:=dTfe.FloatNum;
+
+  resSignal.StartX:=time.x;
+  // настраиваем шаг обработки
+  interval.x:=time.x;
+  interval.y:=interval.x+dTfe.FloatNum;
+  i:=0;
+  while interval.y<time.y do
+  begin
+    u1:=SKO1.GetY(i);
+    u2:=SKO2.GetY(i);
+
+    // считаем фазы
+    phase1:=GetPhaseDeg(s.l1.Signal,s.exc.Signal,interval);
+    phase2:=GetPhaseDeg(s.l2.Signal,s.exc.Signal,interval);
+
+    b:=GetAngelSinCos(u1,u2, module, deg);
+    // Вычисляем конечное значение угла по таблице квадрантов
+    if u1/module<c_sinCos_Threshold then
+    begin
+      phase1:=1;
+    end;
+    if u2/module<c_sinCos_Threshold then
+    begin
+      phase2:=1;
+    end;
+    ip1.setY(i,phase1);
+    ip2.setY(i,phase2);
+
+    quad:=GetSectSinCos(phase1,phase2);
+    quad:=ShiftSectSinCos(quad,s.shiftsectr);
+    //quad:=0;
+    iQuad.setY(i,quad);
+
+
+    adddeg:=0;
+    case quad of
+      0:adddeg:=0;
+      1:deg:=180-deg;
+      2:deg:=180+deg;
+      3:deg:=360-deg;
+    end;
+    if b then
+    begin
+      mod1.setY(i,module);
+    end;
+    resSignal.SetY(i,deg+addDeg);
+    interval.x:=interval.x+dTfe.FloatNum;
+    interval.y:=interval.y+dTfe.FloatNum;
+    inc(i);
   end;
 end;
 
