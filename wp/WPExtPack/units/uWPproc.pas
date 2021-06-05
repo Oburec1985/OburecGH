@@ -3338,6 +3338,7 @@ begin
         m := TypeCastToIWPUSML(d);
         fcurSrc := mng.GetSrc(m.FileName);
         result := fcurSrc;
+
         exit;
       end;
       if IsSignal(d) then

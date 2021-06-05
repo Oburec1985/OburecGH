@@ -246,6 +246,9 @@ object SelsinFrm: TSelsinFrm
       end
       item
         Caption = #1073#1077#1079' '#1086#1073#1097'. '#1090#1095#1082'.'
+      end
+      item
+        Caption = #1058#1080#1087
       end>
     DragMode = dmAutomatic
     MultiSelect = True

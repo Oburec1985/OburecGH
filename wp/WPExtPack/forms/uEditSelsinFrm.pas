@@ -25,6 +25,7 @@ type
     reference:double;
     autocal:boolean;
     freq:double;
+    bSelsin:boolean;
   public
     function init:boolean;
     function getL1:string;
@@ -48,31 +49,14 @@ type
     ExcFreqEdit: TFloatEdit;
     ExcCB: TComboBox;
     NameEdit: TEdit;
-    GroupBox1: TGroupBox;
-    SKO1Label: TLabel;
-    Label8: TLabel;
-    Label9: TLabel;
-    SKO2Label: TLabel;
-    Label11: TLabel;
-    Label13: TLabel;
-    SKO3Label: TLabel;
-    Label15: TLabel;
-    Label16: TLabel;
-    SKOMax1: TFloatEdit;
-    SKOMin1: TFloatEdit;
-    SKOMax2: TFloatEdit;
-    SKOMin2: TFloatEdit;
-    SKOMax3: TFloatEdit;
-    SKOMin3: TFloatEdit;
-    AutoCalibrCB: TCheckBox;
     ShiftSectr: TSpinEdit;
     OkBtn: TButton;
     CancelBtn: TButton;
-    Label3: TLabel;
-    RefEdit: TFloatEdit;
     CreateAllCB: TCheckBox;
     CommonPntCB: TCheckBox;
+    STypeCB: TCheckBox;
     procedure L1CBEnter(Sender: TObject);
+    procedure STypeCBClick(Sender: TObject);
   private
     src:csrc;
     mng:cWPObjMng;
@@ -149,7 +133,7 @@ begin
   begin
     if l2<>nil then
     begin
-      if l3<>nil then
+      if (l3<>nil) or bSelsin then
       begin
         if exc<>nil then
         begin
@@ -241,17 +225,10 @@ begin
   SetCB(s.getL3,L3CB);
   SetCB(s.getExc,ExcCB);
   NameEdit.text:=s.name;
-  SKOMin1.FloatNum:=s.minmax1.x;
-  SKOMax1.FloatNum:=s.minmax1.y;
-  SKOMin2.FloatNum:=s.minmax2.x;
-  SKOMax2.FloatNum:=s.minmax2.y;
-  SKOMin3.FloatNum:=s.minmax3.x;
-  SKOMax3.FloatNum:=s.minmax3.y;
-  refedit.FloatNum:=s.reference;
   ShiftSectr.Value:=s.shiftsectr;
   CommonPntCB.Checked:=s.commonPoint;
+  STypeCB.Checked:=s.bSelsin;
 
-  AutoCalibrCB.Checked:=s.autocal;
   ExcFreqEdit.FloatNum:=s.freq;
 
   if ShowModal=mrok then
@@ -273,14 +250,34 @@ begin
     if s.exc=nil then
       s.fexc:=exccb.text;
 
-    S.minmax1:=p2d(SKOMin1.FloatNum,SKOMax1.FloatNum);
-    S.minmax2:=p2d(SKOMin2.FloatNum,SKOMax2.FloatNum);
-    S.minmax3:=p2d(SKOMin3.FloatNum,SKOMax3.FloatNum);
-    S.autocal:=AutoCalibrCB.Checked;
     S.shiftsectr:=ShiftSectr.Value;
     S.freq:=ExcFreqEdit.FloatNum;
-    s.reference:=refedit.FloatNum;
     s.commonPoint:=CommonPntCB.Checked;
+    s.bSelsin:=STypeCB.Checked;
+  end;
+end;
+
+procedure TEditSelsinFrm.STypeCBClick(Sender: TObject);
+begin
+  if stypecb.Checked then
+  begin
+    stypecb.Caption:='Синусно косинусный преобразователь';
+    label1.Visible:=false;
+    l3cb.Visible:=false;
+    CommonPntCB.Visible:=false;
+    CreateAllCB.Visible:=false;
+    label6.Caption:='Синус';
+    label7.Caption:='Косинус';      
+  end
+  else
+  begin
+    label6.Caption:='L1';  
+    label7.Caption:='L2';          
+    stypecb.Caption:='Сельсин';
+    label1.Visible:=true;
+    l3cb.Visible:=true;
+    CommonPntCB.Visible:=true;
+    CreateAllCB.Visible:=true;
   end;
 end;
 
@@ -297,13 +294,8 @@ begin
     Result.l2:=cwpsignal(l2cb.Items.Objects[l2cb.ItemIndex]);
     Result.l3:=cwpsignal(l3cb.Items.Objects[l3cb.ItemIndex]);
     Result.exc:=cwpsignal(l3cb.Items.Objects[exccb.ItemIndex]);
-    Result.minmax1:=p2d(SKOMin1.FloatNum,SKOMax1.FloatNum);
-    Result.minmax2:=p2d(SKOMin2.FloatNum,SKOMax2.FloatNum);
-    Result.minmax3:=p2d(SKOMin3.FloatNum,SKOMax3.FloatNum);
-    Result.autocal:=AutoCalibrCB.Checked;
     Result.shiftsectr:=ShiftSectr.Value;
     Result.freq:=ExcFreqEdit.FloatNum;
-    Result.reference:=refEdit.FloatNum;
     Result.createAll:=CreateAllCB.Checked;
   end;
 end;
