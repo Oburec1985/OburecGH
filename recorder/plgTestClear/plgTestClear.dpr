@@ -1,7 +1,7 @@
 library plgTestClear;
 
 uses
-  fastmm4,
+  //fastmm4,
   Windows,
   Themes,
   SysUtils,
@@ -38,8 +38,9 @@ uses
   transf in '..\SharedRUnits\interfaces\transf.pas',
   transformers in '..\SharedRUnits\interfaces\transformers.pas',
   waitwnd in '..\SharedRUnits\interfaces\waitwnd.pas',
-  uRecFactory in 'units\uRecFactory.pas',
-  uSyncThread in '..\..\wp\WPExtPack\units\uSyncThread.pas';
+  uRecFactory in 'units\uRecFactory.pas'
+  //,uSyncThread in '..\..\wp\WPExtPack\units\uSyncThread.pas'
+  ;
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 

@@ -243,6 +243,8 @@
     <File Path="forms\uCorrectUTS.dfm"/>
     <File Path="forms\uCyclogramRepFrm.pas"/>
     <File Path="forms\uCyclogramRepFrm.dfm"/>
+    <File Path="forms\uEditSelsinFrm.pas"/>
+    <File Path="forms\uEditSelsinFrm.dfm"/>
     <File Path="forms\uEditSignalsRepPropFrn.pas"/>
     <File Path="forms\uEditSignalsRepPropFrn.dfm"/>
     <File Path="forms\uEditTubeFrm.pas"/>
@@ -281,8 +283,6 @@
     <File Path="forms\uSelectIntervalFrm.dfm"/>
     <File Path="forms\uSelectPathForm.pas"/>
     <File Path="forms\uSelectPathForm.dfm"/>
-    <File Path="forms\uEditSelsinFrm.pas"/>
-    <File Path="forms\uEditSelsinFrm.dfm"/>
     <File Path="forms\uSelsinFrm.pas"/>
     <File Path="forms\uSelsinFrm.dfm"/>
     <File Path="forms\uSpmFrm.pas"/>
