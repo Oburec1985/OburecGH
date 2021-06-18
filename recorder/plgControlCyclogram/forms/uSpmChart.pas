@@ -12,6 +12,7 @@ uses
   uRTrig, uRCFunc, ubasealg, uBuffTrend1d, upage, utextlabel, uaxis, utrend,
   PluginClass, ImgList, uChart, uGrmsSrcAlg, uPhaseAlg, usetlist, ufreqband,
   uHardwareMath,
+  tags,
   uSpm;
 
 type
@@ -724,12 +725,18 @@ procedure TSpmChart.doStart;
 var
   i: integer;
   ti: TSpmTagInfo;
+  t:itag;
 begin
   for i := 0 to m_tagslist.Count - 1 do
   begin
     ti := TagInfo(i);
     ti.m_lastblock := 0;
     ti.m_lastblockind := 0;
+    t:=getTagByName(ti.m_spm.m_tag.tagname);
+    if t=nil then
+    begin
+      ti.m_spmtrend.visible:=false;
+    end;
   end;
 end;
 
@@ -1179,8 +1186,11 @@ var
   i: integer;
 begin
   // spmChart.activePage.caption := modname(spmChart.activePage.caption, false);
-  UpdateSpm;
-  spmChart.redraw;
+  if RStatePlay then
+  begin
+    UpdateSpm;
+    spmChart.redraw;
+  end;
 end;
 
 procedure TSpmChart.WndProc(var Message: TMessage);
@@ -1492,7 +1502,7 @@ procedure TSpmTagInfo.DoUpdateSpm;
 begin
   if m_spmtrend<>nil then
   begin
-    m_spmtrend.dx := m_spm.dx;
+    m_spmtrend.dx := m_spm.SpmDx;
     m_spmtrend.name := m_spm.resname;
   end;
 end;

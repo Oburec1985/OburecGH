@@ -232,6 +232,7 @@ begin
       else
       begin
         frame:=GetFramePrior(i);
+
         if frame.Active then
           frame.WndProc(msg,mouse);
       end;
