@@ -83,7 +83,13 @@ begin
     if a<>nil then
     begin
       a.setfirstchannel(t);
+      if t<>nil then
+      begin
+        //a.createOutChan;
+        a.updateoutchan;
+      end;
       g_algMng.Add(a, nil);
+
     end
     else
     begin
@@ -319,12 +325,15 @@ begin
         a.Properties:=str;
         if lowercase(a.name)<>lowercase(a.resname) then
         begin
-          a.name:=a.resname;
-          showAlgsInLV;
+          if a.resname<>'' then
+          begin
+            a.name:=a.resname;
+          end;
         end;
       end;
     end;
   end;
+  showAlgsInLV;
 end;
 
 end.

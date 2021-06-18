@@ -177,6 +177,9 @@ type
     // здесь сбрасываем счетчик номера блоков или другие действия завершения расчета блока
     procedure CallEndEvalBlock; virtual;
   public
+    procedure updateOutChan;virtual;
+    procedure createOutChan;overload;virtual;
+    procedure createOutChan(name:string);overload;virtual;
     procedure setfirstchannel(t:itag);virtual;
     procedure subscribe(dst: cBaseObj); virtual;
     // отписать алгоритм от источника
@@ -249,6 +252,7 @@ type
     procedure doStart;
     procedure doStopRecord;
     procedure doChangeRState(sender: tobject);
+    procedure doChangeCfg(sender: tobject);
     procedure createEvents;
     procedure DestroyEvents;
     procedure doUpdateTags(sender: tobject);
@@ -369,6 +373,16 @@ begin
   m_errors := tstringlist.create;
 end;
 
+procedure cBaseAlgContainer.createOutChan;
+begin
+
+end;
+
+procedure cBaseAlgContainer.createOutChan(name: string);
+begin
+
+end;
+
 destructor cBaseAlgContainer.destroy;
 var
   i: integer;
@@ -433,6 +447,7 @@ end;
 procedure cBaseAlgContainer.SetProperties(str: string);
 begin
   m_properties := str;
+  DoSetProperties(self);
 end;
 
 procedure cBaseAlgContainer.SetResName(s: string);
@@ -451,6 +466,11 @@ end;
 procedure cBaseAlgContainer.unsubscribe(src: cBaseObj);
 begin
   delRef(src);
+end;
+
+procedure cBaseAlgContainer.updateOutChan;
+begin
+
 end;
 
 procedure cBaseAlgContainer.delRef(a: cBaseObj);
@@ -732,6 +752,7 @@ procedure cAlgMng.createEvents;
 begin
   AddPlgEvent('cAlgMng_doUpdateTags', c_RUpdateData, doUpdateTags);
   AddPlgEvent('cAlgMng_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
+  AddPlgEvent('cAlgMng_doChangeCfg', c_RC_LeaveCfg, doChangeCfg);
 end;
 
 procedure cAlgMng.DelAHNames(AHGrad: cAHgrad);
@@ -771,6 +792,11 @@ begin
     if a is cBaseAlgContainer then
       cBaseAlgContainer(a).doAfterload;
   end;
+end;
+
+procedure cAlgMng.doChangeCfg(sender: tobject);
+begin
+
 end;
 
 procedure cAlgMng.doChangeRState(sender: tobject);

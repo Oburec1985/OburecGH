@@ -39,7 +39,6 @@ object AlgFrm: TAlgFrm
     Margins.Bottom = 2
     Align = alLeft
     TabOrder = 0
-    ExplicitHeight = 397
     object AlgLV: TBtnListView
       Left = 1
       Top = 1
@@ -71,7 +70,6 @@ object AlgFrm: TAlgFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitHeight = 354
     end
     object Panel1: TPanel
       Left = 1
@@ -84,7 +82,6 @@ object AlgFrm: TAlgFrm
       Margins.Bottom = 2
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 355
       object AddAlgBtn: TSpeedButton
         Left = 3
         Top = 4
@@ -289,8 +286,6 @@ object AlgFrm: TAlgFrm
     Margins.Bottom = 2
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 321
-    ExplicitHeight = 397
     object Splitter2: TSplitter
       Left = 567
       Top = 1
@@ -317,8 +312,6 @@ object AlgFrm: TAlgFrm
       Margins.Bottom = 2
       Align = alClient
       TabOrder = 0
-      ExplicitWidth = 317
-      ExplicitHeight = 395
     end
   end
   object BottomPanel: TPanel
@@ -332,8 +325,6 @@ object AlgFrm: TAlgFrm
     Margins.Bottom = 2
     Align = alBottom
     TabOrder = 2
-    ExplicitTop = 397
-    ExplicitWidth = 718
   end
   inline TagsListFrame1: TTagsListFrame
     Left = 777
@@ -346,9 +337,9 @@ object AlgFrm: TAlgFrm
     Margins.Bottom = 2
     Align = alRight
     TabOrder = 3
-    ExplicitLeft = 528
+    ExplicitLeft = 777
     ExplicitWidth = 190
-    ExplicitHeight = 397
+    ExplicitHeight = 630
     inherited FormChannelsGB: TGroupBox
       Width = 190
       Height = 630
@@ -357,7 +348,7 @@ object AlgFrm: TAlgFrm
       Margins.Right = 3
       Margins.Bottom = 3
       ExplicitWidth = 190
-      ExplicitHeight = 397
+      ExplicitHeight = 630
       inherited ChanNamesPanel: TPanel
         Top = 14
         Width = 186
@@ -459,7 +450,7 @@ object AlgFrm: TAlgFrm
           end>
         ExplicitTop = 95
         ExplicitWidth = 186
-        ExplicitHeight = 300
+        ExplicitHeight = 533
       end
     end
   end

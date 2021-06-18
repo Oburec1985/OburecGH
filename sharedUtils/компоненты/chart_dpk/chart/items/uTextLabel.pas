@@ -225,18 +225,21 @@ begin
   ftext:=str;
   if font<>nil then
   begin
-    w:=font.getPixelWidth(str);
-    if fAutoWidth then
+    if font.name<>'' then
     begin
-      p:=point(w,pixSize.y);
-      pixSize:=p;
-    end
-    else
-    begin
-      if pixSize.X<w then
+      w:=font.getPixelWidth(str);
+      if fAutoWidth then
       begin
         p:=point(w,pixSize.y);
         pixSize:=p;
+      end
+      else
+      begin
+        if pixSize.X<w then
+        begin
+          p:=point(w,pixSize.y);
+          pixSize:=p;
+        end;
       end;
     end;
   end;

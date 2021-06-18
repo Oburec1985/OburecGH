@@ -89,10 +89,6 @@ type
     procedure doEval(intag: cTag; time: double);
     function GetProperties: string; override;
     procedure SetProperties(str: string); override;
-    // вызывается при загрузке или при установке входного тега
-    procedure createOutChan;overload;
-    procedure createOutChan(name:string);overload;
-    procedure updateOutChan;
     function genTagName: string; override;
     function Getdx: double; override;
     // расчет fdx, foutsize, fnullpoints, fshift, fftcount
@@ -104,8 +100,11 @@ type
     procedure SetResName(s: string); override;
     function getCreateOutTag: boolean;
     procedure setCreateOutTag(b: boolean);
-
   public
+    procedure updateOutChan;override;
+    // вызывается при загрузке или при установке входного тега
+    procedure createOutChan;override;
+    procedure createOutChan(name:string);override;
     property restype:integer read getrestype write setrestype;
     procedure doStopRecord;
     property CreateOutTag:boolean read getCreateOutTag write setCreateOutTag;
@@ -260,10 +259,10 @@ begin
   f := m_tag.freq;
 
   setlength(m_BlockTime, bCount * 2);
-  GetMemAlignedArray_d(fOutSize, m_EvalBlock);
-  GetMemAlignedArray_cmpx_d(fOutSize, cmplx_resArray);
+  GetMemAlignedArray_d(m_fftCount, m_EvalBlock);
+  GetMemAlignedArray_cmpx_d(m_fftCount, cmplx_resArray);
   // отраженный спектр отбрасываем, поэтому 1/2 длины
-  GetMemAlignedArray_d(fOutSize shr 1, m_rms);
+  GetMemAlignedArray_d(m_fftCount shr 1, m_rms);
 
   setlength(m_magI1, m_fftCount shr 1);
   setlength(m_magI2, m_fftCount shr 1);
@@ -405,8 +404,8 @@ begin
   begin
     m_outTag.doOnStart;
   end;
-  ZeroMemory(m_EvalBlock.p, fOutSize * sizeof(double));
-  ZeroMemory(m_rms.p, (fOutSize shr 1)* sizeof(double));
+  ZeroMemory(m_EvalBlock.p, m_fftCount * sizeof(double));
+  ZeroMemory(m_rms.p, (m_fftCount shr 1)* sizeof(double));
 
   m_ReadyBlockCount := 0;
   m_BlockTimeInd := 0;
