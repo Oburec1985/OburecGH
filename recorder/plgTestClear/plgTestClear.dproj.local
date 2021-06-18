@@ -86,10 +86,6 @@
     <File Path="..\..\sharedUtils\utils\uComponentServises.pas"/>
     <File Path="..\..\sharedUtils\utils\uLogFile.pas"/>
     <File Path="..\..\sharedUtils\uCommonTypes.pas"/>
-    <File Path="..\..\wp"/>
-    <File Path="..\..\wp\WPExtPack"/>
-    <File Path="..\..\wp\WPExtPack\units"/>
-    <File Path="..\..\wp\WPExtPack\units\uSyncThread.pas"/>
     <File Path="forms"/>
     <File Path="forms\uExtFrm.pas"/>
     <File Path="forms\uExtFrm.dfm"/>

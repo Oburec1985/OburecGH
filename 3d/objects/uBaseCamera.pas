@@ -305,27 +305,28 @@ var
 begin
   // находим точку пересечения диагоналей баунда
   // перенос заведомо за пределы баунда, на случай если камера внутри
-  v1:=subVector(b.hi, b.lo);
+  //v1:=subVector(b.hi, b.lo);
   l:=VectorLengthP3(v1);
-  view:=getSight;
   //n:=MovePoint(v1,view, l*2);
   n:=position;
-  V1:=b.lo; V2:=b.hi; V3:=p3(b.lo.x, b.lo.y, b.hi.z); V4:=p3(b.hi.x, b.hi.y, b.lo.z);
-  if LineCrossLine(V1,V2,V3,V4,center) then
+  center.x:=0.5*(b.hi.x+b.lo.x);
+  center.y:=0.5*(b.hi.y+b.lo.y);
+  center.z:=0.5*(b.hi.z+b.lo.z);
+  //V1:=b.lo; V2:=b.hi; V3:=p3(b.lo.x, b.lo.y, b.hi.z); V4:=p3(b.hi.x, b.hi.y, b.lo.z);
+  //if LineCrossLine(V1,V2,V3,V4,center) then
   begin
     // находим точку пересечения луча из center (центр баундбокса) с плоскостью положения камеры и делаем туда параллельный перенос
     up:=getup;
-
-    ///lp2:=SummVectorP3(position, up);
-    lp2:=SummVectorP3(n, up);
-
+    lp2:=SummVectorP3(n, up); // точка над камерой (в той же плоскости)
     strafe:=GetAxisFromMatrix(restm,0);
     ///lp3:=SummVectorP3(position, strafe);
     lp3:=SummVectorP3(n, strafe);
+    view:=getSight;
     viewNormalise:=view;
     NormalizeVectorP3(viewNormalise);
+    // пересечение луча из center вдоль вектора viewNormalise
+    // с плоскостью n, lp2, lp3
     LineCrossPlaneN(center, viewNormalise, n, lp2, lp3, newpos);
-
     //a * в = |a| * |B| * cos ф
     // находим углы к вершинам
     lp2.x:=V1.x-newpos.x;
