@@ -60,8 +60,8 @@ Procedure GetNormal(const Vertex1, Vertex2, Vertex3: Vector3f;
   var Normal: Vector3f); overload;
 Procedure GetNormal(const Vertex1, Vertex2, Vertex3: point3;
   var Normal: point3); overload;
-Function VectorLength(const v: Vector3f): GLFloat;
-Function VectorLengthP3(const v: point3): GLFloat;
+Function VectorLength(const v: Vector3f): GLFloat;overload;
+Function VectorLength(const v: point3): GLFloat;overload;
 // --------------------- Нормировка вектора -----------------------------------
 Procedure NormalizeVector(var Normal: Vector3f);
 // --------------------- Нормировка вектора -----------------------------------
@@ -78,19 +78,25 @@ Function LineCrossLine(const L1begin, L1end, L2begin, L2end: Vector3f;
 Function LineCrossLine(const L1begin, L1end, L2begin, L2end: point3;
   out Cross: point3): boolean;overload;
 
+// вычисление точки пересечения прямой l1,l2 и коробки определенной двумя противоположными вершинами
+// проверятся все пересечения с каждым из полигонов, затем определяется кратчайшее растояние и принадлежность точки пересечения прямой l1, l2
+// res = -1 если пересечения не было или возвращает номер полигона с которым было пересечение
+function lineCrossBound(b_lo, b_hi,l_start, l_end:point3; var res:integer):point3;
 // -------- Определение пересечения прямой и фейса ------------------------------
-Function LineCrossFace(const L1, L2, p1, p2, p3: Vector3f; out Cross: Vector3f)
-  : boolean; overload;
-Function LineCrossFace(const L1, L2, p1, p2, p3: point3; out Cross: point3)
-  : boolean; overload;
+Function LineCrossFace(const L1, L2, p1, p2, p3: Vector3f; out Cross: Vector3f): boolean; overload;
+Function LineCrossFace(const L1, L2, p1, p2, p3: point3; out Cross: point3)  : boolean; overload;
+Function LineCrossPoly(const L1, L2, p1, p2, p3, p4: point3; out Cross: point3)  : boolean; overload;
 
 // точка пересечения прямой и плоскости
 Function LineCrossPlane(const L1, L2, p1, p2, p3: point3; out Cross: point3): boolean;overload;
 // L1- точка на прямой; N1- вектор параллельный прямой
 Function LineCrossPlaneN(const L1, N1, p1, p2, p3: point3; out Cross: point3): boolean;overload;
 function LineCrossPlane(const L1, L2, p1, p2, p3: Vector3f; out Cross: Vector3f)  : boolean;overload;
+// проверка что вершина внутри полигона (проверка что она лежит в плоскости не производится!!!)
+function insidePoly(v, p1,p2,p3,p4:point3):boolean;
 // проверяет, что вершина внутри баунда
 function insideBox3d(const v, loCorner, hiCorner: Vector3f)  : boolean;overload;
+function insideBox3d(const v, loCorner, hiCorner: point3)  : boolean;overload;
 // масштабировать вектор
 function scalevectorp3(s: single; v: point3): point3;
 //
@@ -152,6 +158,8 @@ const
   identMatrix4d: MatrixGld = (1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
 
 implementation
+uses
+    u3dtypes;
 
 const
   axisX: point3 = (x: 1; y: 0; z: 0);
@@ -912,7 +920,7 @@ begin
   result := sqrt(sqr(v[0]) + sqr(v[1]) + sqr(v[2]));
 end;
 
-Function VectorLengthP3(const v: point3): GLFloat;
+Function VectorLength(const v: point3): GLFloat;
 begin
   result := sqrt(sqr(v.x) + sqr(v.y) + sqr(v.z));
 end;
@@ -934,7 +942,7 @@ procedure NormalizeVectorP3(var Normal: point3);
 var
   VLength: GLFloat;
 begin
-  VLength := VectorLengthP3(Normal);
+  VLength := VectorLength(Normal);
   if VLength = 0 then
     VLength := 1;
   Normal.x := Normal.x / VLength;
@@ -1239,8 +1247,168 @@ begin
   Cross[2] := L1[2] + t * (L2[2] - L1[2]);
 end;
 
-function LineCrossFace(const L1, L2, p1, p2, p3: Vector3f; out Cross: Vector3f)
-  : boolean;
+function lineCrossBound(b_lo, b_hi, l_start, l_end:point3;var res:integer):point3;
+var
+  c, // центр баундбокса
+  view, // вектор взгляд камеры
+  // bottom poly
+  p1,p2,p3,p4,
+  // top poly
+  p5,p6,p7,p8,
+  cross1,cross, // точка пересечения
+  v // вектор из центра в cross
+  :point3;
+  b:tbound;
+  count, // число пересечений
+  i, ifirst :integer; // номер полигона с которым было первое пересечение
+  insidebox, bool:boolean;
+  l1,l2:single;
+begin
+  c.x:=0.5*(b_hi.x+b_lo.x);
+  c.y:=0.5*(b_hi.y+b_lo.y);
+  c.z:=0.5*(b_hi.z+b_lo.z);
+  // ищем нижний полигон
+  p1:=b_lo;
+  p2:=p1; p2.x:=b_hi.x;
+  p3:=p1; p2.z:=b_hi.z;
+  p4:=p2; p2.z:=b_hi.z;
+  // верхний поли
+  p5:=p1; p5.y:=b_hi.y;
+  p6:=p2; p6.y:=b_hi.y;
+  p7:=p3; p7.y:=b_hi.y;
+  p8:=b_hi;
+  view:=subVector(l_end, l_start);
+  NormalizeVectorP3(view);
+  b.lo:=b_lo;
+  b.hi:=b_hi;
+  //insidebox:=insideBox3d(l_start, b);
+  // если снаружи
+  count:=0;
+  ifirst:=-1;
+  bool:=LineCrossPoly(l_start, l_end, p1,p5,p6,p2, cross);
+  if bool then
+  begin
+    inc(count);
+    cross1:=cross;
+    i:=0;
+    v:=subVector(c, cross);
+    l1:=VectorLength(v);
+    ifirst:=0;
+  end;
+  bool:=LineCrossPoly(l_start, l_end, p1,p5,p7,p3, cross);
+  if bool then
+  begin
+    inc(count);
+    i:=1;
+    v:=subVector(c, cross);
+    if ifirst>-1 then
+    begin
+      cross1:=cross;
+      l1:=VectorLength(v)
+    end
+    else
+    begin
+      l2:=VectorLength(v);
+      ifirst:=i;
+    end;
+  end;
+  bool:=LineCrossPoly(l_start, l_end, p3,p7,p8,p4, cross);
+  if bool then
+  begin
+    inc(count);
+    i:=2;
+    v:=subVector(c, cross);
+    if ifirst>-1 then
+    begin
+      cross1:=cross;
+      l1:=VectorLength(v)
+    end
+    else
+    begin
+      l2:=VectorLength(v);
+      ifirst:=i;
+    end;
+  end;
+  bool:=LineCrossPoly(l_start, l_end, p2,p6,p8,p4, cross);
+  if bool then
+  begin
+    inc(count);
+    i:=3;
+    v:=subVector(c, cross);
+    if ifirst>-1 then
+    begin
+      cross1:=cross;
+      l1:=VectorLength(v)
+    end
+    else
+    begin
+      l2:=VectorLength(v);
+      ifirst:=i;
+    end;
+  end;
+  bool:=LineCrossPoly(l_start, l_end, p5,p7,p8,p6, cross);
+  if bool then
+  begin
+    inc(count);
+    i:=4;
+    v:=subVector(c, cross);
+    if ifirst>-1 then
+    begin
+      cross1:=cross;
+      l1:=VectorLength(v)
+    end
+    else
+    begin
+      l2:=VectorLength(v);
+      ifirst:=i;
+    end;
+  end;
+  bool:=LineCrossPoly(l_start, l_end, p1,p3,p4,p2, cross);
+  if bool then
+  begin
+    inc(count);
+    i:=5;
+    v:=subVector(c, cross);
+    if ifirst>-1 then
+    begin
+      cross1:=cross;
+      l1:=VectorLength(v)
+    end
+    else
+    begin
+      l2:=VectorLength(v);
+      ifirst:=i;
+    end;
+  end;
+  res:=-1;
+  if count>0 then
+  begin
+    res:=i;
+    if count=1 then
+    begin
+      result:=cross1;
+    end
+    else
+    begin
+      if l1<l2 then
+        result:=cross1
+      else
+        result:=cross;
+    end;
+  end;
+end;
+
+Function LineCrossPoly(const L1, L2, p1, p2, p3, p4: point3; out Cross: point3)  : boolean;
+begin
+  result:=LineCrossFace(L1, L2, p1, p2, p3: point3, Cross);
+  if not result then
+  begin
+    result:=insidepoly(cross, p1, p2, p3, p4);
+  end;
+end;
+
+/// нет проверки что вершина лежит на прямой L1, L2
+function LineCrossFace(const L1, L2, p1, p2, p3: Vector3f; out Cross: Vector3f)  : boolean;
 var
   Normal: Vector3f; // направляющая (искомая точка -> middle)
   d, t: single; // коеф.-ы в уравнении
@@ -1293,14 +1461,93 @@ begin
   Cross := VtoP3(cross_);
 end;
 
-function insideBox3d(const v, loCorner, hiCorner: Vector3f)  : boolean;overload;
+function insidePoly(v, p1,p2,p3,p4:point3):boolean;
+var
+  v1,v2,v3, v4:point3;
+  a:single;
+begin
+  v1 := subVector(v, p1);
+  v2 := subVector(v, p2);
+  v3 := subVector(v, p3);
+  v4 := subVector(v, p3);
+  a := GetAngel(v1, v2, true);
+  a := GetAngel(v2, v3, true) + a;
+  a := GetAngel(v3, v4, true) + a;
+  a := GetAngel(v4, v1, true) + a;
+  if abs(A - 2 * pi) < 0.00001 then
+    result := true;
+end;
+
+
+
+function insideBox3d(const v, loCorner, hiCorner: point3)  : boolean;
+var
+  // bottom poly
+  p1,p2,p3,p4,
+  // top poly
+  p5,p6,p7,p8,
+  c, // центр коробки
+  half, // длина от центра до середин полигонов
+  cx,cy,cz, // центры полигонов в направлении осей x y z
+  nx,ny,nz, // нормали к полигонам
+  vec // вектор к центру из вершины
+  :point3;
+
+begin
+  // ищем нижний полигон
+  p1:=locorner;
+  p2:=p1; p2.x:=hiCorner.x;
+  p3:=p1; p2.z:=hiCorner.z;
+  p4:=p2; p2.z:=hiCorner.z;
+  // верхний поли
+  p5:=p1; p5.y:=hiCorner.y;
+  p6:=p2; p6.y:=hiCorner.y;
+  p7:=p3; p7.y:=hiCorner.y;
+  p8:=hiCorner;
+  c.x:=(loCorner.x + hiCorner.x)*0.5;
+  c.y:=(loCorner.y + hiCorner.y)*0.5;
+  c.z:=(loCorner.z + hiCorner.z)*0.5;
+  // правый полигон
+  cx.x:=(p2.x+p8.x)*0.5;
+  cx.y:=(p2.y+p8.y)*0.5;
+  cx.z:=(p2.z+p8.z)*0.5;
+  nx:=SubP(cx,c);
+  // верхний полигон
+  cy.x:=(p5.x+p8.x)*0.5;
+  cy.y:=(p5.y+p8.y)*0.5;
+  cy.z:=(p5.z+p8.z)*0.5;
+  ny:=SubP(cy,c);
+  // дальний полигон
+  cz.x:=(p3.x+p8.x)*0.5;
+  cz.y:=(p3.y+p8.y)*0.5;
+  cz.z:=(p3.z+p8.z)*0.5;
+  nz:=SubP(cz,c);
+  // длины нормалей
+  half.x:=VectorLength(nx);
+  half.y:=VectorLength(ny);
+  half.z:=VectorLength(nz);
+  nx:=scalevectorp3(1/half.x, nx);
+  ny:=scalevectorp3(1/half.y, ny);
+  nz:=scalevectorp3(1/half.z, nz);
+  vec:=SubP(v, c);
+  result:=false;
+  if abs(MultScalarP3(vec, nx))<half.x then
+  begin
+    if abs(MultScalarP3(vec, ny))<half.y then
+    begin
+      if abs(MultScalarP3(vec, nz))<half.z then
+      begin
+        result:=true;
+      end;
+    end;
+  end;
+end;
+
+function insideBox3d(const v, loCorner, hiCorner: Vector3f)  : boolean;
 var
   I: Integer;
 begin
-  result:=false;
-  for I := 0 to 2 do
-    if v[i]<locorner[i] then exit;
-
+  result:=insideBox3d(point3(v), point3(loCorner), point3(hiCorner));
 end;
 
 function MultScalar(const v1: Vector3f; const v2: Vector3f): GLFloat;

@@ -289,7 +289,8 @@ begin
  end;
 end;
 
-procedure cBaseCamera.ZoomBound(b:tbound);
+
+{procedure cBaseCamera.ZoomBound(b:tbound);
 var
   // центр баундбокса
   center,
@@ -303,16 +304,11 @@ var
   // угол к вершинам баунда
   alfa, alfa_max, cos, cos_max, tg_max, L, Ln:single;
 begin
-  // находим точку пересечения диагоналей баунда
-  // перенос заведомо за пределы баунда, на случай если камера внутри
-  //v1:=subVector(b.hi, b.lo);
-  l:=VectorLengthP3(v1);
   //n:=MovePoint(v1,view, l*2);
   n:=position;
   center.x:=0.5*(b.hi.x+b.lo.x);
   center.y:=0.5*(b.hi.y+b.lo.y);
   center.z:=0.5*(b.hi.z+b.lo.z);
-  //V1:=b.lo; V2:=b.hi; V3:=p3(b.lo.x, b.lo.y, b.hi.z); V4:=p3(b.hi.x, b.hi.y, b.lo.z);
   //if LineCrossLine(V1,V2,V3,V4,center) then
   begin
     // находим точку пересечения луча из center (центр баундбокса) с плоскостью положения камеры и делаем туда параллельный перенос
@@ -389,19 +385,76 @@ begin
 
     // длина вектора PN (p-позиция, N нормаль из вершины на view)
     // V1 - хранит вектор pos - H
-    L:=VectorLengthP3(PH)*cos_max;
+    L:=VectorLength(PH)*cos_max;
     // ычисляем нормаль и сохраняем в V1
     N:=summvectorp3(newpos, scalevectorp3(L, viewNormalise));
     hn.x:=h.x-n.x;
     hn.y:=h.y-n.y;
     hn.z:=h.z-n.z;
     // длина нормали
-    LN:=VectorLengthP3(hn);
+    LN:=VectorLength(hn);
     // длина вектора P1N
     L:=lN/m_tg;
     V1:=scalevectorp3(-L,viewNormalise);
     position:=SummVectorP3(V1, N);
   end;
+end;}
+
+procedure cBaseCamera.ZoomBound(b:tbound);
+var
+  // bottom poly
+  p1,p2,p3,p4,
+  // top poly
+  p5,p6,p7,p8,
+
+
+  c, // центр баундбокса
+  sc, // отступ из центра вдоль вектора взгляда камеры
+  view, // вектор взгляд камеры
+  pos, // позиция камеры
+  cross, // точка пересечения
+  VertToCross //  вектор из cross к вершине
+  :point3;
+  insidebox:boolean;
+  poly:integer;
+  angel,dist, dist1:single;
+begin
+  // ищем нижний полигон
+  p1:=b.lo;
+  p2:=p1; p2.x:=b.hi.x;
+  p3:=p1; p2.z:=b.hi.z;
+  p4:=p2; p2.z:=b.hi.z;
+  // верхний поли
+  p5:=p1; p5.y:=b.hi.y;
+  p6:=p2; p6.y:=b.hi.y;
+  p7:=p3; p7.y:=b.hi.y;
+  p8:=b.hi;
+
+  pos:=position;
+  // вектор в обратную сторону от взгляда
+  view:=getSight;
+  NormalizeVectorP3(view);
+  c.x:=0.5*(b.hi.x+b.lo.x);
+  c.y:=0.5*(b.hi.y+b.lo.y);
+  c.z:=0.5*(b.hi.z+b.lo.z);
+  // отступ из центра вдоль вектора взгляда камеры
+  sc:=SummVectorP3(c, view);
+  insidebox:=insideBox3d(pos, b);
+  if insidebox then
+  begin
+
+  end
+  else
+  begin
+
+  end;
+  cross:=lineCrossBound(b.lo, b.hi, c, sc, poly);
+  dist:=0;
+  // определяем угол между отрезками L1 = (cross, boundPoint) и L2 = (newPos, cross) (при этом newpos сонаправлен с вектором взгляда)
+  c:=p1;
+  VertToCross:=subVector(c, cross);
+  cos:=MultScalar(view, VertToCross);
+
 end;
 
 function cBaseCamera.GetTargetM:matrixgl;

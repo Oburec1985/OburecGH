@@ -34,7 +34,8 @@ function min(x, y: single; var b: boolean): single; overload;
 // возвращает меньшее
 function min(x, y: integer): integer; overload;
 // вычесть координаты второй точки из первой
-function SubP(p1, p2_: point2): point2;
+function SubP(p1, p2_: point2): point2;overload;
+function SubP(p1, p2: point3): point3;overload;
 // умножить вектор на скаляр
 function ScaleP2(v: single; p: point2): point2;
 function SummP2(p0, p1: point2): point2;
@@ -911,6 +912,13 @@ end;
 function SubP(p1, p2_: point2): point2;
 begin
   result := p2((p1.x - p2_.x), (p1.y - p2_.y));
+end;
+
+function SubP(p1, p2: point3): point3;
+begin
+  result.x:=p2.x-p1.x;
+  result.y:=p2.y-p1.y;
+  result.z:=p2.z-p1.z;
 end;
 
 function SummP2(p0, p1: point2): point2;
