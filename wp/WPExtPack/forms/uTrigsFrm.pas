@@ -122,9 +122,9 @@ var
   s:cwpsignal;
 begin
   ChanNameCB.Items.Clear;
-  for I := 0 to s.ChildCount - 1 do
+  for I := 0 to src.ChildCount - 1 do
   begin
-    s:=selSrc.getSignalObj(i);
+    s:=src.getSignalObj(i);
     ChanNameCB.Items.AddObject(s.name,s);
   end;
   ChanNameCB.ItemIndex:=-1;

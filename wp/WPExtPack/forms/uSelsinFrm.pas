@@ -293,11 +293,17 @@ begin
   result:=nil;
   //12:12:51|Выполнение алгоритма ""|typeRez=6,nPoints=4800,bEquivMag=0,
   opts:='typeRez=6,'+ // Re Im спектр
-         'nPoints=4800,'+ // Число точек БПФ
+         'nPoints=4800,'+ // размер порции
+          'nOfs=4800,'+ // смещение порции
          'bEquivMag=0';
 
   pars:=ParsStrParamNoSort(opts, ',');
   if FindInPars(pars,'nPoints',ind) then
+  begin
+    v:=cstring(pars.Objects[ind]);
+    v.str:=floattostr(round(dt/src.deltax));
+  end;
+  if FindInPars(pars,'nOfs',ind) then
   begin
     v:=cstring(pars.Objects[ind]);
     v.str:=floattostr(round(dt/src.deltax));
@@ -515,10 +521,14 @@ begin
   for I := 0 to res1.size - 1 do
   begin
     if res1.GetY(i)=max then
+    begin
+      max:=(max+res1.GetY(i+1)+res1.GetY(i-1))/3;
       break;
+    end;
   end;
   res1:=iwpsignal(TVarData(r2).VPointer);
   Result:=res1.GetY(i);
+  //Result:=max;
 end;
 
 function EqvNull(d:double):boolean;
@@ -1198,7 +1208,6 @@ begin
 
     p1.setY(i,phase1);
 
-
     p2.setY(i,phase2);
     p3.setY(i,phase3);
 
@@ -1210,7 +1219,7 @@ begin
 
     deg:=arctan(tg1)*c_radtodeg;
 
-    case sectr of
+      case sectr of
       0:
       begin
         if (quad=0) or (quad=1) or (quad=5)  then // 3
@@ -1582,7 +1591,7 @@ begin
   result:=true;
 end;
 
-Function GetSectSinCos(PSIN, PcOS:double):integer;
+Function GetSectSinCos(PSIN, PcOS, asin, acos:double):integer;
 begin
   if (pcos>=0) and (psin>=0) then
     result:=0;
@@ -1598,11 +1607,11 @@ end;
 procedure TSelsinFrm.EvalSinCos(s: cselsin);
 var
   sig:iwpsignal;
-  mod1, SKO1,SKO2, Sect, iQuad, resSignal, ip1,ip2:iwpsignal;
+  mod1, SKO1,SKO2, Sect, iQuad, resSignal, ip1,ip2, ip1p2:iwpsignal;
 
   u1,u2,u3,
   tg, cos, sin,
-  phase1, phase2, deg, addDeg, Module:double;
+  phase1, phase2, p1p2,deg, addDeg, Module:double;
   // нельзя использовать в 2 и 4 секторах
   b:boolean;
 
@@ -1647,6 +1656,9 @@ begin
   ip2.size:= round((time.y-time.x)/dTfe.FloatNum);
   ip2.DeltaX:=dTfe.FloatNum;
 
+  ip1p2:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
+  ip1p2.size:= round((time.y-time.x)/dTfe.FloatNum);
+  ip1p2.DeltaX:=dTfe.FloatNum;
 
   //-- помещаем сигнал в дерево
   posbase.winpos.Link('/Signals/Selsin', s.name, resSignal as IDispatch);
@@ -1656,6 +1668,7 @@ begin
   posbase.winpos.Link('/Signals/Selsin', s.name+' Quad', iQuad as IDispatch);
   posbase.winpos.Link('/Signals/Selsin', s.name+' Phase_1', ip1 as IDispatch);
   posbase.winpos.Link('/Signals/Selsin', s.name+' Phase_2', ip2 as IDispatch);
+  posbase.winpos.Link('/Signals/Selsin', s.name+' p1p2', ip1p2 as IDispatch);
 
   posbase.winpos.Refresh();
   //-- зададим длину сигнала
@@ -1678,25 +1691,40 @@ begin
     // считаем фазы
     phase1:=GetPhaseDeg(s.l1.Signal,s.exc.Signal,interval);
     phase2:=GetPhaseDeg(s.l2.Signal,s.exc.Signal,interval);
+    p1p2:=GetPhaseDeg(s.l1.Signal,s.l2.Signal,interval);
+    if abs(p1p2)<25 then
+    begin
+      if (phase1>0)<>(phase2>0) then
+      begin
+        if u1>u2 then
+        begin
+          phase2:=phase1;
+        end
+        else
+        begin
+          phase1:=phase2;
+        end;
+      end;
+    end;
 
     b:=GetAngelSinCos(u1,u2, module, deg);
     // Вычисляем конечное значение угла по таблице квадрантов
-    if u1/module<c_sinCos_Threshold then
-    begin
-      phase1:=1;
-    end;
-    if u2/module<c_sinCos_Threshold then
-    begin
-      phase2:=1;
-    end;
+    //if u1/module<c_sinCos_Threshold then
+    //begin
+    //  phase1:=0;
+    //end;
+    //if u2/module<c_sinCos_Threshold then
+    //begin
+    //  phase2:=1;
+    //end;
     ip1.setY(i,phase1);
     ip2.setY(i,phase2);
+    ip1p2.setY(i,p1p2);
 
-    quad:=GetSectSinCos(phase1,phase2);
+    quad:=GetSectSinCos(phase1,phase2, u1, u2);
     quad:=ShiftSectSinCos(quad,s.shiftsectr);
     //quad:=0;
     iQuad.setY(i,quad);
-
 
     adddeg:=0;
     case quad of
