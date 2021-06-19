@@ -1400,7 +1400,7 @@ end;
 
 Function LineCrossPoly(const L1, L2, p1, p2, p3, p4: point3; out Cross: point3)  : boolean;
 begin
-  result:=LineCrossFace(L1, L2, p1, p2, p3: point3, Cross);
+  result:=LineCrossFace(L1, L2, p1, p2, p3, Cross);
   if not result then
   begin
     result:=insidepoly(cross, p1, p2, p3, p4);
@@ -1570,8 +1570,8 @@ var
   s, lv1, lv2: GLFloat;
 begin
   s := MultScalarP3(v1, v2);
-  lv1 := VectorLengthP3(v1);
-  lv2 := VectorLengthP3(v2);
+  lv1 := VectorLength(v1);
+  lv2 := VectorLength(v2);
   result := s / (lv1 * lv2);
 end;
 

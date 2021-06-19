@@ -38,7 +38,10 @@ type
     m_tag: cTag;
   public
     // пример разыменования tCmxArray_d(cmplx_resArray.p)
-    cmplx_resArray: TAlignDCmpx;
+    cmplx_resArray,
+    // тот же буфер но для усреднения
+    mid_cmplx_resArray: TAlignDCmpx;
+
     // блок данных по которому идет расчет. Не работает по m_spmData, т.к. может содержать дополнения нулями
     // на сам деле не обязательно выранивать по 16 байтам тк не принимает участиев SSE расчетах
     m_EvalBlock: TAlignDarray;
@@ -162,6 +165,9 @@ begin
   FreeMemAligned(cmplx_resArray);
   cmplx_resArray.p:=nil;
 
+  FreeMemAligned(mid_cmplx_resArray);
+  cmplx_resArray.p:=nil;
+
   FreeMemAligned(m_rms);
   m_rms.p:=nil;
 
@@ -259,8 +265,10 @@ begin
   f := m_tag.freq;
 
   setlength(m_BlockTime, bCount * 2);
-  GetMemAlignedArray_d(m_fftCount, m_EvalBlock);
+  GetMemAlignedArray_d(fOutSize, m_EvalBlock);
   GetMemAlignedArray_cmpx_d(m_fftCount, cmplx_resArray);
+  GetMemAlignedArray_cmpx_d(m_fftCount, mid_cmplx_resArray);
+
   // отраженный спектр отбрасываем, поэтому 1/2 длины
   GetMemAlignedArray_d(m_fftCount shr 1, m_rms);
 
@@ -299,7 +307,7 @@ var
   // дополнять нулями или копировать исходные данные вместо нулей
   copyBlocks: boolean;
   knorm, k: double;
-  i: integer;
+  i,j: integer;
 begin
   // если размер блока для расчета меньше чем кол-во готовых необработанных данных
   procBlock := 0;
@@ -321,15 +329,31 @@ begin
         m_EvalBlockTag.saveBlock(intag.m_ReadDataTime + (dt)
             * fShift * procBlock);
     end;
-    //if m_algtype=c_wiki_spm then
+    FFTProp.StartInd:=0;
     begin
       ar:=tdoublearray(m_rms.p);
       //FFTAnalysis(TArrayValues(m_EvalBlock.p), tarrayValues(ar), m_fftCount, AlignBlockLength(m_rms));
-      fft_al_d_sse(TDoubleArray(m_EvalBlock.p), tCmxArray_d(cmplx_resArray.p), FFTProp);
+      while FFTProp.StartInd<copycount do
+      begin
+        fft_al_d_sse(TDoubleArray(m_EvalBlock.p), tCmxArray_d(cmplx_resArray.p), FFTProp);
+        if FFTProp.StartInd=0 then
+        begin
+          move(cmplx_resArray.p^, mid_cmplx_resArray.p^, m_fftCount * sizeof(TComplex_d));
+        end
+        else
+        begin
+          for I := 0 to m_fftCount - 1 do
+          begin
+            tCmxArray_d(mid_cmplx_resArray.p)[i]:=tCmxArray_d(mid_cmplx_resArray.p)[i]+tCmxArray_d(cmplx_resArray.p)[i];
+          end;
+        end;
+        FFTProp.StartInd:=FFTProp.StartInd+m_fftCount;
+      end;
+
       //NormalizeAndScaleSpmMag(TCmxArray_d(cmplx_resArray.p), TDoubleArray(m_rms.p));
       k:=1/(FFTProp.PCount shr 1);
-      MULT_SSE_al_cmpx_d(tCmxArray_d(cmplx_resArray.p), k);
-      EvalSpmMag(TCmxArray_d(cmplx_resArray.p), TDoubleArray(m_rms.p));
+      MULT_SSE_al_cmpx_d(tCmxArray_d(mid_cmplx_resArray.p), k);
+      EvalSpmMag(TCmxArray_d(mid_cmplx_resArray.p), TDoubleArray(m_rms.p));
       // нормировка с учетом дополнения нулями
       if fNullsPoints = 0 then
       begin
@@ -404,7 +428,7 @@ begin
   begin
     m_outTag.doOnStart;
   end;
-  ZeroMemory(m_EvalBlock.p, m_fftCount * sizeof(double));
+  ZeroMemory(m_EvalBlock.p, fOutSize * sizeof(double));
   ZeroMemory(m_rms.p, (m_fftCount shr 1)* sizeof(double));
 
   m_ReadyBlockCount := 0;

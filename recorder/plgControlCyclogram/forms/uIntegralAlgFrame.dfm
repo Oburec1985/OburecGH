@@ -1,5 +1,4 @@
 inherited IntegralAlgFrame: TIntegralAlgFrame
-  Height = 355
   Constraints.MinHeight = 226
   Constraints.MinWidth = 302
   object ThresholdLabel1: TLabel [1]
@@ -83,10 +82,6 @@ inherited IntegralAlgFrame: TIntegralAlgFrame
     Width = 160
     Height = 110
     Caption = #1060#1080#1083#1100#1090#1088#1072#1094#1080#1103
-    Items.Strings = (
-      #1041#1077#1079' '#1092#1080#1083#1100#1090#1088#1072#1094#1080#1080
-      #1057#1082#1086#1083#1100#1079#1103#1097#1077#1077' '#1089#1088#1077#1076#1085#1077#1077
-      'FFT '#1092#1080#1083#1100#1090#1088#1072#1094#1080#1103)
     TabOrder = 5
     OnClick = FltRGClick
   end

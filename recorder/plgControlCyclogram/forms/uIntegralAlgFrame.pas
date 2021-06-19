@@ -89,6 +89,12 @@ procedure TIntegralAlgFrame.doShow;
 begin
   inherited;
   ChannelCB.updateTagsList;
+  if fltrg.Items.Count=0 then
+  begin
+    fltRg.Items.Add('Без фильтрации');
+    fltRg.Items.Add('Скользящее среднее');
+    fltRg.Items.Add('FFT фильтрация');
+  end;
   FltRGClick(nil);
 end;
 

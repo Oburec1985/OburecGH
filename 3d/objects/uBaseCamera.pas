@@ -439,7 +439,7 @@ begin
   c.z:=0.5*(b.hi.z+b.lo.z);
   // отступ из центра вдоль вектора взгляда камеры
   sc:=SummVectorP3(c, view);
-  insidebox:=insideBox3d(pos, b);
+  insidebox:=insideBox3d(pos, b.lo,b.hi);
   if insidebox then
   begin
 
@@ -453,7 +453,7 @@ begin
   // определяем угол между отрезками L1 = (cross, boundPoint) и L2 = (newPos, cross) (при этом newpos сонаправлен с вектором взгляда)
   c:=p1;
   VertToCross:=subVector(c, cross);
-  cos:=MultScalar(view, VertToCross);
+  //cos:=MultScalar(view, VertToCross);
 
 end;
 

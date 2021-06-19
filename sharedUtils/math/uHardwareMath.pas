@@ -942,6 +942,7 @@ begin
   FreeMemAligned(aldata.p,
                  aldata.nAlignedSampl,
                  aldata.nAlignedSize);
+  aldata.p:=nil;
 {$endif}
 end;
 
@@ -960,6 +961,7 @@ begin
   FreeMemAligned(aldata.p,
                  aldata.nAlignedSampl,
                  aldata.nAlignedSize);
+  aldata.p:=nil;
 {$endif}
 end;
 
@@ -1016,6 +1018,15 @@ begin
 {$ifdef fastmm}
   setlength(aldata.d, SrcSize);
 {$else}
+  if alData.p<>nil then
+  begin
+    if srcSize>AlignBlockLength(alData) then
+    begin
+      FreeMemAligned(aldata);
+    end
+    else
+      exit;
+  end;
   GetMemAlignedArray_cmpx_d(4,
                             alData.p,
                             SrcSize*sizeof(TComplex_d),
@@ -1042,17 +1053,24 @@ begin
 {$else}
   if src <> nil then
   begin
-    i := NativeInt(src);
-    i := i shr bits;
-    i := i shl bits;
-    if i = NativeInt(src) then
+    if SrcSize>DstSize then
     begin
-      // the source is already aligned, nothing to do
-      DstAligned := src;
-      if DstUnaligned=nil then
-        DstUnaligned := DstAligned;
-      DstSize := SrcSize;
-      Exit;
+      i := NativeInt(src);
+      i := i shr bits;
+      i := i shl bits;
+      if i = NativeInt(src) then
+      begin
+        // the source is already aligned, nothing to do
+        DstAligned := src;
+        if DstUnaligned=nil then
+          DstUnaligned := DstAligned;
+        DstSize := SrcSize;
+        // по смещению 4 лежит длина массива
+        // добавлено 20.06.2021
+        pint := pinteger(integer(DstAligned) - 4);
+        pint^ := round(SrcSize / sizeof(TComplex_d));
+        Exit;
+      end;
     end;
   end;
   Bytes := 1 shl bits;

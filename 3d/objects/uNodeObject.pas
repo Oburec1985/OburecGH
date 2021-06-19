@@ -452,7 +452,7 @@ end;
 procedure cNodeObject.RotateMouse(mouse:MouseStruct);
 var len:single;
 begin
-  len:=vectorlengthp3(mouse.m_Strafe);
+  len:=VectorLength(mouse.m_Strafe);
   NormalizeVectorP3(mouse.m_Strafe);
   Node.RotateNodeLocalByAxisAngle(
        mouse.m_RotSens*len*0.01,

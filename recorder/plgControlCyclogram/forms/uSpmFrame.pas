@@ -31,6 +31,7 @@ type
     AHLabel: TLabel;
     AHBtn: TButton;
     ResTypeRG: TRadioGroup;
+
     procedure FFTCountEditChange(Sender: TObject);
     procedure FFTCountSpinBtnDownClick(Sender: TObject);
     procedure FFTCountSpinBtnUpClick(Sender: TObject);
@@ -51,7 +52,7 @@ type
     procedure SetFFTCount(fftCount: Integer; changeDt, changeBCount: Boolean);
       overload;
   public
-    procedure EndMsel;override;
+    procedure EndMsel; override;
     procedure doShow; override;
     constructor create(aOwner: tcomponent); override;
     destructor destroy; override;
@@ -99,31 +100,31 @@ begin
   delPars(m_pars);
   if FFTCountEdit.text <> '' then
   begin
-    str:=GetMultiSelectComponentString(FFTCountEdit, err);
+    str := GetMultiSelectComponentString(FFTCountEdit, err);
     if not err then
     begin
       addParam(m_pars, 'FFTCount', str);
     end;
   end;
-  b:=GetMultiSelectComponentBool(AddNullCB, err);
+  b := GetMultiSelectComponentBool(AddNullCB, err);
   if not err then
   begin
     addParam(m_pars, 'Addnull', booltostr(b));
   end;
-  str:=GetMultiSelectComponentString(AlgDTFE, err);
+  str := GetMultiSelectComponentString(AlgDTFE, err);
   if not err then
   begin
     addParam(m_pars, 'dX', replaceChar(str, ',', '.'));
-    //addParam(m_pars, 'dX', replaceChar(floattostr(AlgDTFE.FloatNum), ',', '.'));
+    // addParam(m_pars, 'dX', replaceChar(floattostr(AlgDTFE.FloatNum), ',', '.'));
   end;
-  str:=GetMultiSelectComponentString(FFTBCount, err);
+  str := GetMultiSelectComponentString(FFTBCount, err);
   if not err then
   begin
     addParam(m_pars, 'BCount', str);
   end;
   if ChannelCB.text <> '' then
   begin
-    str:=GetMultiSelectComponentString(ChannelCB, err);
+    str := GetMultiSelectComponentString(ChannelCB, err);
     if not err then
     begin
       addParam(m_pars, 'Channel', str);
@@ -145,8 +146,8 @@ begin
   result := ParsToStr(m_pars);
 end;
 
-procedure TSpmFrame.SetFFTCount(fftCount: Integer;
-  changeDt, changeBCount: Boolean);
+procedure TSpmFrame.SetFFTCount(fftCount: Integer; changeDt,
+  changeBCount: Boolean);
 var
   bCount: double;
   p: TNotifyEvent;
@@ -157,7 +158,7 @@ begin
     begin
       p := AlgDTFE.OnChange;
       AlgDTFE.OnChange := nil;
-      if FsEdit.FloatNum<>0 then
+      if FsEdit.FloatNum <> 0 then
         AlgDTFE.FloatNum := FFTBCount.IntNum * fftCount / FsEdit.FloatNum;
       AlgDTFE.OnChange := p;
       exit;
@@ -257,7 +258,6 @@ begin
   end;
 end;
 
-
 procedure TSpmFrame.EndMsel;
 begin
   // m_pars обновлен в inherited
@@ -271,12 +271,11 @@ begin
   endMultiSelect(OutChannelName);
 end;
 
-
 procedure TSpmFrame.setProperties(s: string);
 var
   p: TNotifyEvent;
   str: string;
-  i:integer;
+  i: Integer;
   t: itag;
 begin
   inherited;
@@ -290,13 +289,13 @@ begin
   str := GetParsValue(m_pars, 'FFTrestype');
   if isvalue(str) then
   begin
-    i:=strtoint(str);
+    i := strtoint(str);
   end
   else
   begin
-    i:=0;
+    i := 0;
   end;
-  SetMultiSelectItemInd(ResTypeRG, i);
+  setMultiSelectItemInd(ResTypeRG, i);
 
   str := GetParsValue(m_pars, 'Addnull');
   if checkstr(str) then
@@ -320,14 +319,15 @@ begin
     SetMultiSelectComponentString(FFTBCount, str);
     FFTBCount.OnChange := p;
   end;
-  str:=GetParsValue(m_pars, 'Channel');
+  str := GetParsValue(m_pars, 'Channel');
   SetMultiSelectComponentString(ChannelCB, str);
-  if ChannelCB.ItemIndex >=0 then
+  if ChannelCB.ItemIndex >= 0 then
   begin
     str := GetParsValue(m_pars, 'OutChannel');
     t := ChannelCB.gettag(ChannelCB.ItemIndex);
     SetMultiSelectComponentString(FsEdit, floattostr(t.GetFreq));
-    SetMultiSelectComponentString(FFTdX, floattostr(FsEdit.FloatNum / (FFTCountEdit.IntNum * 2)));
+    SetMultiSelectComponentString
+      (FFTdX, floattostr(FsEdit.FloatNum / (FFTCountEdit.IntNum * 2)));
     if not checkstr(str) then
     begin
       SetMultiSelectComponentString(OutChannelName, ChannelCB.text + '_spm');
@@ -342,9 +342,9 @@ begin
   end
   else
   begin
-    OutChannelName.text:='';
+    OutChannelName.text := '';
   end;
-  if AlgDTFE.FloatNum=-1 then
+  if AlgDTFE.FloatNum = -1 then
     SetFFTCount(FFTCountEdit.IntNum, false, true);
 end;
 
@@ -415,6 +415,12 @@ procedure TSpmFrame.doShow;
 begin
   inherited;
   ChannelCB.updateTagsList;
+  if ResTypeRG.Items.Count=0 then
+  begin
+    ResTypeRG.Items.Add('Амплитудный спектр');
+    ResTypeRG.Items.Add('Интегрирование');
+    ResTypeRG.Items.Add('Двойной интеграл');
+  end;
 end;
 
 end.

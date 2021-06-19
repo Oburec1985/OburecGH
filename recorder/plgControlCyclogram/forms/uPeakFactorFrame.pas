@@ -78,6 +78,11 @@ procedure TPeakFactorFrame.doShow;
 begin
   inherited;
   ChannelCB.updateTagsList;
+  if AlgTypeRg.Items.Count=0 then
+  begin
+    AlgTypeRg.Items.Add('По времени (A/Rms)');
+    AlgTypeRg.Items.Add('По спектру A1/Rms');
+  end;
 end;
 
 function TPeakFactorFrame.getProperties: string;
