@@ -564,15 +564,15 @@ BEGIN
 	SysConst_SInvalidPointer,	"Invalid pointer operation"
 END
 
-/* c:\program files (x86)\embarcadero\rad studio\7.0\lib\Debug\Character.res */
-/* c:\program files (x86)\embarcadero\rad studio\7.0\lib\controls.res */
-/* c:\program files (x86)\embarcadero\rad studio\7.0\lib\buttons.res */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\dcl_dpk\spin.res */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\forms\uGetMngObjForm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\forms\ulogFrame.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\sharedUtils\forms\uJournalForm.dfm */
-/* D:\Oburec\delphi\2011\OburecGH\wp\WPServicePlg\WpServicePlg.tlb */
-/* D:\Oburec\delphi\2011\OburecGH\wp\WPServicePlg\WpServicePlg.res */
-/* D:\Oburec\delphi\2011\OburecGH\wp\WPServicePlg\toolbarExtPack.res */
-/* D:\Oburec\delphi\2011\OburecGH\wp\WPServicePlg\WpServicePlg.drf */
+/* s:\program files (x86)\embarcadero\rad studio\7.0\lib\Debug\character.res */
+/* s:\program files (x86)\embarcadero\rad studio\7.0\lib\Controls.res */
+/* ..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
+/* s:\program files (x86)\embarcadero\rad studio\7.0\lib\Buttons.res */
+/* ..\..\sharedUtils\компоненты\dcl_dpk\SPIN.RES */
+/* ..\..\sharedUtils\forms\uGetMngObjForm.dfm */
+/* ..\..\sharedUtils\forms\ulogFrame.dfm */
+/* ..\..\sharedUtils\forms\uJournalForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPServicePlg\WpServicePlg.TLB */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPServicePlg\WpServicePlg.res */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPServicePlg\toolbarExtPack.res */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPServicePlg\WpServicePlg.drf */

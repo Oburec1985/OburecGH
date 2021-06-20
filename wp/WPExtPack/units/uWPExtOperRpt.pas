@@ -58,6 +58,8 @@ type
     // для некоторых алгоритмов определяет расчет в процентах или абсолютные единицы
     percent: boolean;
     band: point2d;
+    // доп параметр
+    iTag:integer;
   public
     function getDsc: string;
     constructor create;
@@ -259,6 +261,7 @@ const
   c_estType_N = 'N_1';
   // СКЗ в полосе
   c_estType_Rms = 'RMS_1';
+  c_estType_SpmMax = 'SpmMax';
 
 implementation
 

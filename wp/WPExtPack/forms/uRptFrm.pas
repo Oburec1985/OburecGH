@@ -1184,6 +1184,9 @@ begin
   ParamsLB.AddItem('Максимум в полосе', nil);
   ParamsLB.AddItem('Подсчет импульсов', nil);
   ParamsLB.AddItem('СКЗ в полосе', nil);
+  // сигнал разбивается на порции, для каждой порции строится спектр и запоминается максимальная составляющая спектра
+  // в отчет попадает максимальное значение спектра из всего сигнала, время порции в которой найден максимум и частота
+  ParamsLB.AddItem('Максимальное значение в спектре', nil);
 end;
 
 procedure TRptFrm.addcursorband;
@@ -1966,6 +1969,24 @@ begin
       o.percent := false;
     end;
   end;
+  if str = 'Максимальное значение в спектре' then
+  begin
+    str := c_estType_SpmMax;
+    o.estType := str;
+    o.band.x := strtofloatext(GetParamValFromLV(ParamsPropLV, 'F1'));
+    o.band.y := strtofloatext(GetParamValFromLV(ParamsPropLV, 'F2'));
+    str := GetParamValFromLV(ParamsPropLV, 'Проц.');
+    o.size := 1;
+    if str = '1' then
+    begin
+      o.percent := true;
+    end
+    else
+    begin
+      o.percent := false;
+    end;
+  end;
+
   o.name := tExtOperRpt(eo).GenEstName(o.estType);
   tExtOperRpt(eo).AddEsimate(o);
   // p2 := P2d(F1FE.floatnum, F2FE.floatnum);
