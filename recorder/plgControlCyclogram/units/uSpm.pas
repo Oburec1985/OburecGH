@@ -333,6 +333,7 @@ begin
     begin
       ar:=tdoublearray(m_rms.p);
       //FFTAnalysis(TArrayValues(m_EvalBlock.p), tarrayValues(ar), m_fftCount, AlignBlockLength(m_rms));
+      j:=0;
       while FFTProp.StartInd<copycount do
       begin
         fft_al_d_sse(TDoubleArray(m_EvalBlock.p), tCmxArray_d(cmplx_resArray.p), FFTProp);
@@ -348,10 +349,13 @@ begin
           end;
         end;
         FFTProp.StartInd:=FFTProp.StartInd+m_fftCount;
+        inc(j);
       end;
 
       //NormalizeAndScaleSpmMag(TCmxArray_d(cmplx_resArray.p), TDoubleArray(m_rms.p));
       k:=1/(FFTProp.PCount shr 1);
+      if j>1 then
+        k:=k/j; // усреднение спектра
       MULT_SSE_al_cmpx_d(tCmxArray_d(mid_cmplx_resArray.p), k);
       EvalSpmMag(TCmxArray_d(mid_cmplx_resArray.p), TDoubleArray(m_rms.p));
       // нормировка с учетом дополнения нулями
