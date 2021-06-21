@@ -199,6 +199,8 @@
     <File Path="forms\uControlEditFrame.dfm"/>
     <File Path="forms\uControlWarnFrm.pas"/>
     <File Path="forms\uControlWarnFrm.dfm"/>
+    <File Path="forms\uEditControlWrnFrm.pas"/>
+    <File Path="forms\uEditControlWrnFrm.dfm"/>
     <File Path="forms\uCounterAlgFrame.pas"/>
     <File Path="forms\uCounterAlgFrame.dfm"/>
     <File Path="forms\uCursorFrm.pas"/>
@@ -209,8 +211,6 @@
     <File Path="forms\uCyclogramReportFrm.dfm"/>
     <File Path="forms\uDacControlEditFrame.pas"/>
     <File Path="forms\uDacControlEditFrame.dfm"/>
-    <File Path="forms\uEditControlWrnFrm.pas"/>
-    <File Path="forms\uEditControlWrnFrm.dfm"/>
     <File Path="forms\uEditPolarFrm.pas"/>
     <File Path="forms\uEditPolarFrm.dfm"/>
     <File Path="forms\uEditProfileFrm.pas"/>
@@ -268,22 +268,22 @@
     <File Path="forms\uTrigsFrm.pas"/>
     <File Path="forms\uTrigsFrm.dfm"/>
     <File Path="units"/>
-    <File Path="units\uBaseAlg.pas"/>
-    <File Path="units\uBaseAlgNP.pas"/>
-    <File Path="units\uControlObj.pas"/>
-    <File Path="units\uControlsNP.pas"/>
-    <File Path="units\uCounterAlg.pas"/>
     <File Path="units\uCreateComponents.pas"/>
-    <File Path="units\uFillingFactorAlg.pas"/>
-    <File Path="units\uGrmsAlg.pas"/>
-    <File Path="units\uGrmsSrcAlg.pas"/>
-    <File Path="units\uIntegralAlg.pas"/>
-    <File Path="units\uPeakFactorAlg.pas"/>
-    <File Path="units\uPhaseAlg.pas"/>
+    <File Path="units\uControlObj.pas"/>
     <File Path="units\uRTrig.pas"/>
-    <File Path="units\uSpm.pas"/>
-    <File Path="units\uSynchroPhaseAlg.pas"/>
+    <File Path="units\uControlsNP.pas"/>
+    <File Path="units\uBaseAlg.pas"/>
+    <File Path="units\uIntegralAlg.pas"/>
+    <File Path="units\uBaseAlgNP.pas"/>
     <File Path="units\uTahoAlg.pas"/>
+    <File Path="units\uGrmsAlg.pas"/>
+    <File Path="units\uSynchroPhaseAlg.pas"/>
+    <File Path="units\uGrmsSrcAlg.pas"/>
+    <File Path="units\uFillingFactorAlg.pas"/>
+    <File Path="units\uPhaseAlg.pas"/>
+    <File Path="units\uSpm.pas"/>
+    <File Path="units\uPeakFactorAlg.pas"/>
+    <File Path="units\uCounterAlg.pas"/>
   </ProjectSortOrder>
 	<Transactions>
     <Transaction>2019.04.19 17:13:59.172.pas,D:\Oburec\delphi\2011\recorder\plgControlCyclogram\Unit1.pas=D:\Oburec\delphi\2011\recorder\plgControlCyclogram\units\uSpm.pas</Transaction>

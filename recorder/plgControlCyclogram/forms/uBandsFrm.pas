@@ -362,6 +362,7 @@ procedure TBandsFrm.FormShow(Sender: TObject);
 begin
   if not init then
     LinkRecorder;
+  TagsListFrame1.ShowChannels;
   ShowBands(BandsList);
   placestotv(places);
   ShowPairList(TagBandPairList);
@@ -425,7 +426,7 @@ end;
 
 procedure TBandsFrm.LinkRecorder;
 begin
-  TagsListFrame1.ShowChannels;
+  //TagsListFrame1.ShowChannels;
   init:=true;
 end;
 

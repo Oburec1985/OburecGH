@@ -337,10 +337,10 @@ begin
             len := length(str);
             if len < 1 then
               exit;
-            if (str[len] = ',') or (str[len] = '.') then
-            begin
+            ///if (str[len] = ',') or (str[len] = '.') then
+            ///begin
               dec(len);
-            end;
+            ///end;
             setlength(str, len);
             width := getPixelWidth(str);
             l_p := P2iToP2Length(point(width, 8));
