@@ -246,6 +246,7 @@ const
   c_RMS_Name = 'СКЗ в полосе';
   c_N_Name = 'Подсчет импульсов';
   c_A1_Name = 'Максимум в полосе';
+  c_SPMMax_Name = 'Максимальное значение в спектре';
 
   c_SRCindex = 18;
   c_SignalIndex = 22;
@@ -477,6 +478,11 @@ begin
           ifile.WriteFloat(str, 'F1', o.band.x);
           ifile.WriteFloat(str, 'F2', o.band.y);
           ifile.WriteBool(str, 'Perc', o.percent);
+        end;
+        if o.estType = c_estType_SpmMax then
+        begin
+          ifile.WriteFloat(str, 'T', o.band.x);
+          ifile.WriteFloat(str, 'FFTNum', o.iTag);
         end;
       end;
       inc(dynCount);
@@ -762,10 +768,16 @@ begin
         o.band.x := ifile.ReadFloat(pars.Strings[I], 'T1', 0);
         o.band.y := ifile.ReadFloat(pars.Strings[I], 'T2', 0);
       end;
+      if o.estType = c_estType_SpmMax then
+      begin
+        // занимает 2 колонки
+        o.size := 3;
+        o.band.x := ifile.ReadFloat(pars.Strings[I], 'T', 0);
+        o.itag := ifile.ReadInteger(pars.Strings[I], 'FFTNum', 0);
+      end;
       tExtOperRpt(eo).AddEsimate(o);
     end;
   end;
-
   pars.Destroy;
   ifile.Destroy;
 end;
@@ -826,6 +838,14 @@ begin
   begin
     ParamsLB.ClearSelection;
     ParamsLB.Selected[2] := true;
+    str := GetSelItemFromLB(ParamsLB);
+    UpdateParams(str);
+    opt.eval := li.Checked;
+  end;
+  if (opt.estType = c_estType_SpmMax) then
+  begin
+    ParamsLB.ClearSelection;
+    ParamsLB.Selected[3] := true;
     str := GetSelItemFromLB(ParamsLB);
     UpdateParams(str);
     opt.eval := li.Checked;
@@ -990,6 +1010,12 @@ begin
         end;
         OptsLV.SetSubItemByColumnName('Описание', opt.getdsc, optLi);
       end;
+      if opt.estType = c_estType_SpmMax then
+      begin
+        opt.band.x := strtofloatext(GetParamValFromLV(ParamsPropLV, 'T'));
+        opt.itag := strtoint(GetParamValFromLV(ParamsPropLV, 'FFTNum'));
+        OptsLV.SetSubItemByColumnName('Описание', opt.getdsc, optLi);
+      end;
     end;
   end;
 end;
@@ -1080,6 +1106,7 @@ var
   opt: cOptRecord;
   str: string;
   a, b, c: double;
+  i:integer;
 begin
   opt := nil;
   optLi := OptsLV.Selected;
@@ -1175,6 +1202,30 @@ begin
     li := ParamsPropLV.Items.Add;
     ParamsPropLV.SetSubItemByColumnName('Имя', 'Проц.', li);
     ParamsPropLV.SetSubItemByColumnName('Значение', inttostr(round(c)), li);
+  end;
+  if itemName = c_SPMMax_Name then
+  begin
+    str := tExtOperRpt(eo).GenEstName(c_estType_SpmMax);
+    a := 1; // 1 секунда
+    i := 16384;
+    if opt <> nil then
+    begin
+      if opt.estType = c_estType_SpmMax then
+      begin
+        a := opt.band.x;
+        i := opt.itag;
+      end
+    end;
+    ParamsPropLV.clear;
+    li := ParamsPropLV.Items.Add;
+    ParamsPropLV.SetSubItemByColumnName('Имя', 'Название', li);
+    ParamsPropLV.SetSubItemByColumnName('Значение', str, li);
+    li := ParamsPropLV.Items.Add;
+    ParamsPropLV.SetSubItemByColumnName('Имя', 'T', li);
+    ParamsPropLV.SetSubItemByColumnName('Значение', floattostr(a), li);
+    li := ParamsPropLV.Items.Add;
+    ParamsPropLV.SetSubItemByColumnName('Имя', 'FFTNum', li);
+    ParamsPropLV.SetSubItemByColumnName('Значение', inttostr(i), li);
   end;
 end;
 
@@ -1973,18 +2024,9 @@ begin
   begin
     str := c_estType_SpmMax;
     o.estType := str;
-    o.band.x := strtofloatext(GetParamValFromLV(ParamsPropLV, 'F1'));
-    o.band.y := strtofloatext(GetParamValFromLV(ParamsPropLV, 'F2'));
-    str := GetParamValFromLV(ParamsPropLV, 'Проц.');
-    o.size := 1;
-    if str = '1' then
-    begin
-      o.percent := true;
-    end
-    else
-    begin
-      o.percent := false;
-    end;
+    o.band.x := strtofloatext(GetParamValFromLV(ParamsPropLV, 'T'));
+    o.itag := strtoint(GetParamValFromLV(ParamsPropLV, 'FFTNum'));
+    o.size := 3;
   end;
 
   o.name := tExtOperRpt(eo).GenEstName(o.estType);
