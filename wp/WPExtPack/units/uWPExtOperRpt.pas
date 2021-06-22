@@ -29,6 +29,10 @@ uses
   uExcel;
 
 type
+  ResData = class
+    data:array of point3d;
+  end;
+
   tband = record
     p2: point2d;
     // тип 0 -физ, 1 - индексы, 2 - триггеры
@@ -94,7 +98,7 @@ type
     // амплитуда первого резонанса/ частота первого резонанса/ rms в полосе
     mag1, f1, bandrms, dekr: double;
     // результаты расчетов максимумов в полосах
-    extA: array of point2d;
+    extA: array of point3d;
   end;
 
   // алгоритм не знает списка сигналов обработки (он получает по одному
@@ -220,10 +224,9 @@ function GetA_signal(s: iwpsignal): double;
 function RunStats(const src: olevariant; E: TExtOperRpt): RptSct;
 function GetAmp(const src: olevariant): double;
 // подсчет кол-ва импульсов
-function EvalCounter(const src: iwpsignal; t1, t2: double;
-  percent: boolean): integer; overload;
-function EvalCounter(const src: iwpsignal; t1, t2, start, stop: double;
-  percent: boolean): integer; overload;
+function EvalCounter(const src: iwpsignal; t1, t2: double;  percent: boolean): integer; overload;
+function EvalCounter(const src: iwpsignal; t1, t2, start, stop: double;  percent: boolean): integer; overload;
+function EvalSpmMax(const src: iwpsignal; t1, t2, t: double;  fftnum: integer): point3d;
 
 const
   c_Excel_BlackInd = 1;
@@ -431,9 +434,82 @@ begin
           result.extA[i - defaultCount].y := round(EvalCounter(s, o.band.x,
               o.band.y, o.percent));
         end;
+        // Подсчет импульсов
+        if o.estType = c_estType_SpmMax then
+        begin
+          s := iwpsignal(TVarData(src).VPointer);
+          result.extA[i - defaultCount] := EvalSpmMax(s, o.band.x, o.iTag);
+        end;
       end;
     end;
   end;
+end;
+
+function EvalSpmMax(const src: iwpsignal; t1, t: double;  fftnum: integer): point3d;
+var
+  x1x2: point2d;
+  i, spmsize:integer;
+  er,r1,r2:olevariant;
+  isig, spm:iwpsignal;
+  p3:point3d;
+begin
+    // RunFFT(const Src : OleVariant; var Rez1, Rez2, OptFFT, Err : OleVariant);
+    // typeMagnitude=1 - Эффективные значения typeWindow=1 - прямоугольное окно
+    str := 'kindFunc=4,numPoints=';
+    str := str + inttostr(fftnum) +
+      ',nLines=0,typeWindow=1,typeMagnitude=1,type=0,method=0,isMO=1,isCorrectFunc=0,isMonFase=0,isFill0=1,fMaxVal=0,fLog=0,fPrSpec=0,f3D=0,iStandart=1,fFlt=0';
+    // обновляем свойства расчета спектра
+    str := updateParams(str, TExtOperRpt(E).m_spmOpts);
+    str := str + ',ofsNextBlock=' + inttostr(fftnum);
+    str := str + ',nBlocks=';
+    x1x2.x:=src.Minx;
+    x1x2.y:=x1x2.x+t;
+    isig:=winpos.GetInterval(src, src.IndexOf(x1x2.x), src.IndexOf(x1x2.y)) as iwpsignal;
+    i := round(isig.size / fftnum) - 1;
+    str:=str+inttostr(i);
+    if i < 1 then
+      i := 1;
+
+    spmsize:=fftnum shr 1;
+    Result.x:=-1;
+    Result.y:=-1;
+    Result.z:=-1;
+    while x1x2.y<isig.MaxX do
+    begin
+      isig:=winpos.GetInterval(src, src.IndexOf(x1x2.x), src.IndexOf(x1x2.y)) as iwpsignal;
+      //i := round(isig.size / fftnum) - 1;
+      //str:=str+inttostr(i);
+      //if i < 1 then
+      //  i := 1;
+      // считаем спектр СКЗ
+      RunFFT(src, r1, r2, str, Er);
+      spm:=r1;
+      p3.z:=x1x2.x;
+      p3.x:=spm.GetX(0);
+      p3.y:=spm.GetY(0);
+
+      for I := 1 to spmsize - 1 do
+      begin
+        if spm.GetY(i)>p3.y then
+        begin
+          p3.x:=spm.GetX(i);
+          p3.y:=spm.GetY(i);
+        end;
+      end;
+      if result.x=-1 then
+      begin
+        result:=p3;
+      end
+      else
+      begin
+        if result.y<p3.y then
+        begin
+          result:=p3;
+        end;
+      end;
+      x1x2.x:=x1x2.y;
+      x1x2.x:=x1x2.y+t;
+    end;
 end;
 
 function EvalCounter(const src: iwpsignal; t1, t2: double;
@@ -1601,7 +1677,7 @@ begin
   l.destroy;
 end;
 
-function TExtOperRpt.eval(s: iwpsignal): iwpsignal;
+function TExtOperRpt.eval(s: iwpsignal; var rd:resdata): iwpsignal;
 var
   i, j, bcount, start, finish, ColCount, ind: integer;
   sInterval, isig: iwpsignal;
@@ -1732,6 +1808,8 @@ begin
   // размер сигнала - число полос * число оценок
   result.size := bcount * opts.Count;
   result.sname := s.sname + '_Report';
+  rd.
+
   ColCount := getActiveOptsCount;
   for i := 0 to bcount - 1 do
   begin
