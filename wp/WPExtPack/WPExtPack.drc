@@ -1472,11 +1472,11 @@ BEGIN
 	SysConst_SZeroDivide,	"Floating point division by zero"
 END
 
-/* s:\program files (x86)\embarcadero\rad studio\7.0\lib\Debug\character.res */
-/* s:\program files (x86)\embarcadero\rad studio\7.0\lib\Controls.res */
-/* s:\program files (x86)\embarcadero\rad studio\7.0\lib\Buttons.res */
+/* c:\program files (x86)\embarcadero\rad studio\7.0\lib\Debug\Character.res */
+/* c:\program files (x86)\embarcadero\rad studio\7.0\lib\controls.res */
+/* c:\program files (x86)\embarcadero\rad studio\7.0\lib\buttons.res */
 /* ..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
-/* ..\..\sharedUtils\компоненты\dcl_dpk\SPIN.RES */
+/* ..\..\sharedUtils\компоненты\dcl_dpk\spin.res */
 /* ..\..\sharedUtils\forms\uGetMngObjForm.dfm */
 /* ..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common\JclUnicode.res */
 /* ..\..\sharedUtils\utils\./files/res/CURSORS.res */
@@ -1495,32 +1495,36 @@ END
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
 /* forms\uSaveSimpleMeraFrm.dfm */
 /* ..\..\sharedUtils\forms\uFrmSync.dfm */
-/* s:\program files (x86)\embarcadero\rad studio\7.0\lib\FileCtrl.res */
-/* ..\..\sharedUtils\ZipMaster\ZipMstr.Res */
+/* c:\program files (x86)\embarcadero\rad studio\7.0\lib\filectrl.res */
+/* ..\..\sharedUtils\ZipMaster\ZipMstr.res */
+/* forms\frames\uTmpltNameFrame.dfm */
+/* forms\uEditSignalsRepPropFrn.dfm */
+/* forms\frames\uWPSpmFrame.dfm */
+/* forms\uSpmFrm.dfm */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxInheritError.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxCtrls.RES */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPrintDialog.DFM */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPreviewPageSettings.DFM */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxSearchDialog.DFM */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPreview.DFM */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPreview.RES */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxDialogForm.DFM */
+/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxCtrls.res */
+/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPrintDialog.dfm */
+/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPreviewPageSettings.dfm */
+/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxSearchDialog.dfm */
+/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPreview.dfm */
+/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPreview.res */
+/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxDialogForm.dfm */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPassw.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxProgress.DFM */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxClass.RES */
+/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxProgress.dfm */
+/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxClass.res */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxExportODF.dfm */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxExportImage.dfm */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxExportHTML.dfm */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxExportPDF.dfm */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxExportRTF.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditHighlight.DFM */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditFormat.DFM */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditSysMemo.DFM */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditMemo.DFM */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxRichEditor.DFM */
-/* s:\program files (x86)\embarcadero\rad studio\7.0\RaveReports\Lib\RpFormStatus.dfm */
-/* s:\program files (x86)\embarcadero\rad studio\7.0\RaveReports\Lib\RpFormSetup.dfm */
-/* s:\program files (x86)\embarcadero\rad studio\7.0\RaveReports\Lib\RpFormPreview.dfm */
+/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditHighlight.dfm */
+/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditFormat.dfm */
+/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditSysMemo.dfm */
+/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditMemo.dfm */
+/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxRichEditor.dfm */
+/* c:\program files (x86)\embarcadero\rad studio\7.0\RaveReports\Lib\RpFormStatus.dfm */
+/* c:\program files (x86)\embarcadero\rad studio\7.0\RaveReports\Lib\RpFormSetup.dfm */
+/* c:\program files (x86)\embarcadero\rad studio\7.0\RaveReports\Lib\RpFormPreview.dfm */
 /* forms\frames\uRZDTareFrame.dfm */
 /* forms\uAddRZDDatafrm.dfm */
 /* forms\uRzdFrm.dfm */
@@ -1528,17 +1532,14 @@ END
 /* ..\..\sharedUtils\forms\uJournalForm.dfm */
 /* forms\uAddScriptItemFrm.dfm */
 /* forms\uEditSelsinFrm.dfm */
-/* forms\frames\uWPSpmFrame.dfm */
-/* forms\uSpmFrm.dfm */
-/* ..\..\sharedUtils\utils\TmsPack\AdvColorPickerDropDown.RES */
-/* ..\..\sharedUtils\utils\TmsPack\ASGSPIN.RES */
-/* ..\..\sharedUtils\utils\TmsPack\ADVGRID.RES */
-/* ..\..\sharedUtils\utils\TmsPack\ASGRES.RES */
-/* ..\..\sharedUtils\utils\TmsPack\ADVMETRO.RES */
-/* ..\..\sharedUtils\utils\TmsPack\ASGFLTR.RES */
+/* ..\..\sharedUtils\utils\TmsPack\advcolorpickerdropdown.res */
+/* ..\..\sharedUtils\utils\TmsPack\asgspin.res */
+/* ..\..\sharedUtils\utils\TmsPack\advgrid.res */
+/* ..\..\sharedUtils\utils\TmsPack\asgres.res */
+/* ..\..\sharedUtils\utils\TmsPack\advmetro.res */
+/* ..\..\sharedUtils\utils\TmsPack\asgfltr.res */
 /* forms\uTrigsFrm.dfm */
 /* .\forms\uTrigFrm.dfm */
-/* forms\frames\uTmpltNameFrame.dfm */
 /* forms\EditSignalPathFrm.dfm */
 /* forms\uGraphMngFrm.dfm */
 /* forms\uSelectPathForm.dfm */
@@ -1556,8 +1557,7 @@ END
 /* forms\uKBHMFrm.dfm */
 /* forms\uSelsinFrm.dfm */
 /* forms\uScriptFrm.dfm */
-/* forms\uEditSignalsRepPropFrn.dfm */
-/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uRptFrm.dfm */
+/* forms\uRptFrm.dfm */
 /* forms\uFrmHibFltFrm.dfm */
 /* forms\uFFTInverseFrm.dfm */
 /* forms\uExtBalanceSignalsFrm.dfm */
@@ -1567,7 +1567,7 @@ END
 /* forms\uBDIFrm.dfm */
 /* forms\uMNKFrm.dfm */
 /* forms\uSubRegsFrm.dfm */
-/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\WPExtPack.TLB */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\WPExtPack.tlb */
 /* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\WPExtPack.res */
 /* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\toolbarExtPack.res */
 /* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\WPExtPack.drf */

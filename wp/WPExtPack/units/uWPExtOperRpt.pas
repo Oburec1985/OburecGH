@@ -30,6 +30,7 @@ uses
 
 type
   ResData = class
+  public
     data:array of point3d;
   end;
 
@@ -70,16 +71,6 @@ type
     destructor destroy;
   end;
 
-  // хранит
-  cRptSignal = class
-  public
-    name: string;
-    // хранит результат расчета
-    s: cwpsignal;
-    // хранит по какому сигналу расчитан
-    src: csrc;
-    // Хранит полосу по которой посчитан
-  end;
 
   // результат разового расчета для интервала
   RptSct = record
@@ -99,6 +90,18 @@ type
     mag1, f1, bandrms, dekr: double;
     // результаты расчетов максимумов в полосах
     extA: array of point3d;
+  end;
+
+  // хранит
+  cRptSignal = class
+  public
+    name: string;
+    // хранит результат расчета
+    s: cwpsignal;
+    // хранит по какому сигналу расчитан
+    src: csrc;
+    // Хранит полосу по которой посчитан
+    resData:array of RptSct;
   end;
 
   // алгоритм не знает списка сигналов обработки (он получает по одному
@@ -123,7 +126,7 @@ type
     // число колонок таблиц максимальное
     MaxColCount: integer;
     SetEstNames: boolean;
-    // массив результатов
+    // массив результатов, но только по полосам для последнего сигнала
     res: array of RptSct;
     // 0 - отчет по строкам, 1 - по столбцам
     repType: integer;
@@ -180,7 +183,8 @@ type
     // возвращает номер источника обработки
     function GetSrcInd(s: cwpsignal): integer;
     // p_name - исходное имя (источника); src - папка источника; s - сигнал с данными отчета
-    procedure AddResult(s: cwpsignal; src: csrc; p_name: string);
+    // resdata - расчет статистик по полосам
+    procedure AddResult(s: cwpsignal; src: csrc; p_name: string; resdata:array of RptSct);
     procedure ClearResults;
     function GetResult(i: integer): cwpsignal;
     function GetResultSrcSignal(i: integer): cwpsignal; overload;
@@ -226,7 +230,7 @@ function GetAmp(const src: olevariant): double;
 // подсчет кол-ва импульсов
 function EvalCounter(const src: iwpsignal; t1, t2: double;  percent: boolean): integer; overload;
 function EvalCounter(const src: iwpsignal; t1, t2, start, stop: double;  percent: boolean): integer; overload;
-function EvalSpmMax(const src: iwpsignal; t1, t2, t: double;  fftnum: integer): point3d;
+function EvalSpmMax(const src: iwpsignal;  t: double;  fftnum: integer): point3d;
 
 const
   c_Excel_BlackInd = 1;
@@ -247,7 +251,7 @@ const
   c_Interval_Error = 1;
 
   // число дефолтных оценок
-  defaultCount = 11;
+  defaultCount = 15;
   RptRegName = 'Отчет Excel';
   с_MainPage = 'Данные отчета';
   с_MDBPage = 'Данные БДИ';
@@ -438,20 +442,21 @@ begin
         if o.estType = c_estType_SpmMax then
         begin
           s := iwpsignal(TVarData(src).VPointer);
-          result.extA[i - defaultCount] := EvalSpmMax(s, o.band.x, o.iTag);
+          result.extA[i - defaultCount] := EvalSpmMax(s, o.band.x,o.iTag);
         end;
       end;
     end;
   end;
 end;
 
-function EvalSpmMax(const src: iwpsignal; t1, t: double;  fftnum: integer): point3d;
+function EvalSpmMax(const src: iwpsignal; t: double;  fftnum: integer): point3d;
 var
   x1x2: point2d;
   i, spmsize:integer;
-  er,r1,r2:olevariant;
+  er,r1,r2, fftopt:olevariant;
   isig, spm:iwpsignal;
   p3:point3d;
+  str:string;
 begin
     // RunFFT(const Src : OleVariant; var Rez1, Rez2, OptFFT, Err : OleVariant);
     // typeMagnitude=1 - Эффективные значения typeWindow=1 - прямоугольное окно
@@ -459,22 +464,24 @@ begin
     str := str + inttostr(fftnum) +
       ',nLines=0,typeWindow=1,typeMagnitude=1,type=0,method=0,isMO=1,isCorrectFunc=0,isMonFase=0,isFill0=1,fMaxVal=0,fLog=0,fPrSpec=0,f3D=0,iStandart=1,fFlt=0';
     // обновляем свойства расчета спектра
-    str := updateParams(str, TExtOperRpt(E).m_spmOpts);
     str := str + ',ofsNextBlock=' + inttostr(fftnum);
     str := str + ',nBlocks=';
     x1x2.x:=src.Minx;
     x1x2.y:=x1x2.x+t;
-    isig:=winpos.GetInterval(src, src.IndexOf(x1x2.x), src.IndexOf(x1x2.y)) as iwpsignal;
+    isig:=src;//winpos.GetInterval(src, src.IndexOf(x1x2.x), src.IndexOf(x1x2.y)) as iwpsignal;
     i := round(isig.size / fftnum) - 1;
     str:=str+inttostr(i);
     if i < 1 then
-      i := 1;
+    begin // в порции менее одного блока
+      exit;
+    end;
 
     spmsize:=fftnum shr 1;
     Result.x:=-1;
     Result.y:=-1;
     Result.z:=-1;
-    while x1x2.y<isig.MaxX do
+
+    while x1x2.y<=src.MaxX do
     begin
       isig:=winpos.GetInterval(src, src.IndexOf(x1x2.x), src.IndexOf(x1x2.y)) as iwpsignal;
       //i := round(isig.size / fftnum) - 1;
@@ -482,18 +489,22 @@ begin
       //if i < 1 then
       //  i := 1;
       // считаем спектр СКЗ
-      RunFFT(src, r1, r2, str, Er);
-      spm:=r1;
-      p3.z:=x1x2.x;
-      p3.x:=spm.GetX(0);
-      p3.y:=spm.GetY(0);
-
+      fftopt:=str;
+      RunFFT(src, r1, r2, fftopt,  Er);
+      spm:=iwpsignal(TVarData(r1).VPointer);
+      if Result.x=-1 then
+      begin
+        p3.x:=spm.GetX(0);
+        p3.y:=spm.GetY(0);
+        p3.z:=x1x2.x;
+      end;
       for I := 1 to spmsize - 1 do
       begin
         if spm.GetY(i)>p3.y then
         begin
           p3.x:=spm.GetX(i);
           p3.y:=spm.GetY(i);
+          p3.z:=x1x2.x;
         end;
       end;
       if result.x=-1 then
@@ -508,7 +519,7 @@ begin
         end;
       end;
       x1x2.x:=x1x2.y;
-      x1x2.x:=x1x2.y+t;
+      x1x2.y:=x1x2.y+t;
     end;
 end;
 
@@ -1171,11 +1182,11 @@ var
   // номер колонки сигнала в таблице отчета
   colInd, row, row1: integer;
   rng, str: string;
-
+  rptsig:cRptSignal;
   sig: cwpsignal;
   src: csrc;
   o: cOptRecord;
-  v: point2d;
+  v: point3d;
   band: tband;
   tr: ctrig;
   rngObj, sheet: olevariant;
@@ -1338,6 +1349,7 @@ begin
     for i := 0 to resSignals.Count - 1 do
     begin
       sig := GetResult(i);
+      rptsig:=cRptSignal(resSignals.Objects[i]);
       signalind := GetCollumn(cRptSignal(resSignals.Objects[i]).name);
       // blockrow:=trunc(i/maxcolcount);
       blockrow := trunc(signalind / MaxColCount);
@@ -1354,6 +1366,10 @@ begin
           begin
             v.y := sig.Signal.GetY(j * opts.Count + k);
             v.x := sig.Signal.getx(j * opts.Count + k);
+            if (k-defaultCount)>=0 then
+            begin
+              v.z:= rptsig.resdata[j].extA[k-defaultCount].z;
+            end;
             if o.name = 'mag1' then
             begin
               // i - номер канала (задает смещение столбцов)
@@ -1378,17 +1394,36 @@ begin
                 // j - счетчик по номеру полосы
                 str := formatstr(o.band.x, 3) + '..' + formatstr(o.band.y, 3);
                 SetCell(1, j + 3 + srcInd * bcount + blockrow *
-                    (bcount * srcList.Count + 2),
-                  colInd * ColCount + num + c_offset, v.x);
+                          (bcount * srcList.Count + 2),
+                          colInd * ColCount + num + c_offset, v.x);
                 SetCell(1, j + 3 + srcInd * bcount + blockrow *
-                    (bcount * srcList.Count + 2),
-                  colInd * ColCount + num + c_offset + 1, v.y);
+                          (bcount * srcList.Count + 2),
+                          colInd * ColCount + num + c_offset + 1, v.y);
               end
               else
               begin
-                SetCell(1, j + 3 + srcInd * bcount + blockrow *
-                    (bcount * srcList.Count + 2),
-                  colInd * ColCount + num + c_offset, v.y);
+                if o.estType = c_estType_SpmMax then
+                begin
+                  v.z:=rptsig.resData[j].extA[k-defaultCount].z;
+                  SetCell(1, j + 3 + srcInd * bcount + blockrow *
+                            (bcount * srcList.Count + 2),
+                            colInd * ColCount + num + c_offset, v.x);
+                  SetCell(1, j + 3 + srcInd * bcount + blockrow *
+                            (bcount * srcList.Count + 2),
+                            colInd * ColCount + num + c_offset + 1, v.y);
+                  SetCell(1,
+                          // row
+                          j + 3 + srcInd * bcount + blockrow *(bcount * srcList.Count + 2),
+                          // col
+                          colInd * ColCount + num + c_offset + 2,
+                          v.z);
+                end
+                else
+                begin
+                  SetCell(1, j + 3 + srcInd * bcount + blockrow *
+                      (bcount * srcList.Count + 2),
+                      colInd * ColCount + num + c_offset, v.y);
+                end;
               end;
             end;
             // лист; строка; колонка; значение
@@ -1677,7 +1712,7 @@ begin
   l.destroy;
 end;
 
-function TExtOperRpt.eval(s: iwpsignal; var rd:resdata): iwpsignal;
+function TExtOperRpt.eval(s: iwpsignal): iwpsignal;
 var
   i, j, bcount, start, finish, ColCount, ind: integer;
   sInterval, isig: iwpsignal;
@@ -1808,7 +1843,6 @@ begin
   // размер сигнала - число полос * число оценок
   result.size := bcount * opts.Count;
   result.sname := s.sname + '_Report';
-  rd.
 
   ColCount := getActiveOptsCount;
   for i := 0 to bcount - 1 do
@@ -1896,7 +1930,7 @@ begin
       sig := ressrc.CreateSignal(D);
     end;
   end;
-  AddResult(sig, src, s.sname);
+  AddResult(sig, src, s.sname, res);
 end;
 
 procedure TExtOperRpt.ClearResults;
@@ -1912,13 +1946,20 @@ begin
   resSignals.clear;
 end;
 
-procedure TExtOperRpt.AddResult(s: cwpsignal; src: csrc; p_name: string);
+procedure TExtOperRpt.AddResult(s: cwpsignal; src: csrc; p_name: string; resdata:array of RptSct);
 var
   sigRpt: cRptSignal;
-  i: integer;
+  i, c: integer;
   find: boolean;
 begin
   sigRpt := cRptSignal.create;
+  c:=length(resdata);
+  setlength(sigRpt.resData, c);
+  for I := 0 to c - 1 do
+  begin
+    sigRpt.resData[i]:=resdata[i];
+  end;
+
   sigRpt.name := p_name;
   sigRpt.s := s;
   sigRpt.src := src;
@@ -2116,6 +2157,10 @@ begin
   if estType = c_estType_N then
   begin
     result := 'T1=' + floattostr(band.x) + ' T2=' + floattostr(band.y);
+  end;
+  if estType = c_estType_SpmMax then
+  begin
+    result := 'T=' + floattostr(band.x) + ' FFTNum=' + floattostr(iTag);
   end;
 end;
 
