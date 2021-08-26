@@ -8,80 +8,80 @@
   resources were bound to the produced executable.
 */
 
-#define GIFConsts_sMultipleGCE 64800
-#define GIFConsts_sNoPalette 64801
-#define GIFConsts_sGIFImageFile 64802
-#define GIFConsts_sProgressLoading 64803
-#define GIFConsts_sProgressSaving 64804
-#define GIFConsts_sProgressConverting 64805
-#define GIFConsts_sProgressRendering 64806
-#define GIFConsts_sProgressCopying 64807
-#define GIFConsts_sProgressOptimizing 64808
-#define GDIPicture_GDIPERRMSG 64809
-#define GIFConsts_sBadBlockSize 64816
-#define GIFConsts_sBadBlock 64817
-#define GIFConsts_sUnsupportedClass 64818
-#define GIFConsts_sInvalidData 64819
-#define GIFConsts_sBadSize 64820
-#define GIFConsts_sScreenSizeExceeded 64821
-#define GIFConsts_sNoColorTable 64822
-#define GIFConsts_sBadPixelCoordinates 64823
-#define GIFConsts_sInvalidPixelFormat 64824
-#define GIFConsts_sBadDimension 64825
-#define GIFConsts_sNoDIB 64826
-#define GIFConsts_sInvalidStream 64827
-#define GIFConsts_sInvalidColor 64828
-#define GIFConsts_sInvalidBitSize 64829
-#define GIFConsts_sEmptyColorMap 64830
-#define GIFConsts_sEmptyImage 64831
-#define DBConsts_SInvalidSqlTimeStamp 64832
-#define GIFConsts_sOutOfData 64833
-#define GIFConsts_sTooManyColors 64834
-#define GIFConsts_sBadColorIndex 64835
-#define GIFConsts_sBadColorIndexFixed 64836
-#define GIFConsts_sGIFErrorSaveEmpty 64837
-#define GIFConsts_sBadSignature 64838
-#define GIFConsts_sScreenBadColorSize 64839
-#define GIFConsts_sImageBadColorSize 64840
-#define GIFConsts_sUnknownExtension 64841
-#define GIFConsts_sBadExtensionLabel 64842
-#define GIFConsts_sOutOfMemDIB 64843
-#define GIFConsts_sDecodeTooFewBits 64844
-#define GIFConsts_sDecodeCircular 64845
-#define GIFConsts_sBadTrailer 64846
-#define GIFConsts_sBadExtensionInstance 64847
-#define pnglang_EPNGUnexpectedEndText 64848
-#define pnglang_EPNGNoImageDataText 64849
-#define pnglang_EPNGCannotAddChunkText 64850
-#define pnglang_EPNGCannotAddInvalidImageText 64851
-#define pnglang_EPNGCouldNotLoadResourceText 64852
-#define pnglang_EPNGOutMemoryText 64853
-#define pnglang_EPNGCannotChangeTransparentText 64854
-#define pnglang_EPNGHeaderNotPresentText 64855
-#define pnglang_EInvalidNewSize 64856
-#define pnglang_EInvalidSpec 64857
-#define JConsts_sChangeJPGSize 64858
-#define JConsts_sJPEGError 64859
-#define JConsts_sJPEGImageFile 64860
-#define DBConsts_SBcdOverflow 64861
-#define DBConsts_SInvalidBcdValue 64862
-#define DBConsts_SCouldNotParseTimeStamp 64863
+#define GIFConsts_sEmptyImage 64800
+#define GIFConsts_sMultipleGCE 64801
+#define GIFConsts_sNoPalette 64802
+#define GIFConsts_sGIFImageFile 64803
+#define GIFConsts_sProgressLoading 64804
+#define GIFConsts_sProgressSaving 64805
+#define GIFConsts_sProgressConverting 64806
+#define GIFConsts_sProgressRendering 64807
+#define GIFConsts_sProgressCopying 64808
+#define GIFConsts_sProgressOptimizing 64809
+#define GIFConsts_sBadExtensionInstance 64816
+#define GIFConsts_sBadBlockSize 64817
+#define GIFConsts_sBadBlock 64818
+#define GIFConsts_sUnsupportedClass 64819
+#define GIFConsts_sInvalidData 64820
+#define GIFConsts_sBadSize 64821
+#define GIFConsts_sScreenSizeExceeded 64822
+#define GIFConsts_sNoColorTable 64823
+#define GIFConsts_sBadPixelCoordinates 64824
+#define GIFConsts_sInvalidPixelFormat 64825
+#define GIFConsts_sBadDimension 64826
+#define GIFConsts_sNoDIB 64827
+#define GIFConsts_sInvalidStream 64828
+#define GIFConsts_sInvalidColor 64829
+#define GIFConsts_sInvalidBitSize 64830
+#define GIFConsts_sEmptyColorMap 64831
+#define pnglang_EInvalidNewSize 64832
+#define pnglang_EInvalidSpec 64833
+#define GIFConsts_sOutOfData 64834
+#define GIFConsts_sTooManyColors 64835
+#define GIFConsts_sBadColorIndex 64836
+#define GIFConsts_sBadColorIndexFixed 64837
+#define GIFConsts_sGIFErrorSaveEmpty 64838
+#define GIFConsts_sBadSignature 64839
+#define GIFConsts_sScreenBadColorSize 64840
+#define GIFConsts_sImageBadColorSize 64841
+#define GIFConsts_sUnknownExtension 64842
+#define GIFConsts_sBadExtensionLabel 64843
+#define GIFConsts_sOutOfMemDIB 64844
+#define GIFConsts_sDecodeTooFewBits 64845
+#define GIFConsts_sDecodeCircular 64846
+#define GIFConsts_sBadTrailer 64847
+#define pnglang_EPNGInvalidFileHeaderText 64848
+#define pnglang_EPNGIHDRNotFirstText 64849
+#define pnglang_EPNGSizeExceedsText 64850
+#define pnglang_EPNGUnknownPalEntryText 64851
+#define pnglang_EPNGUnknownCriticalChunkText 64852
+#define pnglang_EPNGUnknownCompressionText 64853
+#define pnglang_EPNGUnknownInterlaceText 64854
+#define pnglang_EPNGCannotAssignChunkText 64855
+#define pnglang_EPNGUnexpectedEndText 64856
+#define pnglang_EPNGNoImageDataText 64857
+#define pnglang_EPNGCannotAddChunkText 64858
+#define pnglang_EPNGCannotAddInvalidImageText 64859
+#define pnglang_EPNGCouldNotLoadResourceText 64860
+#define pnglang_EPNGOutMemoryText 64861
+#define pnglang_EPNGCannotChangeTransparentText 64862
+#define pnglang_EPNGHeaderNotPresentText 64863
 #define JclResources_RsWin32Error 64864
 #define JclResources_RsELibraryNotFound 64865
 #define JclResources_RsEFunctionNotFound 64866
-#define pnglang_EPngInvalidCRCText 64867
-#define pnglang_EPNGInvalidIHDRText 64868
-#define pnglang_EPNGMissingMultipleIDATText 64869
-#define pnglang_EPNGZLIBErrorText 64870
-#define pnglang_EPNGInvalidPaletteText 64871
-#define pnglang_EPNGInvalidFileHeaderText 64872
-#define pnglang_EPNGIHDRNotFirstText 64873
-#define pnglang_EPNGSizeExceedsText 64874
-#define pnglang_EPNGUnknownPalEntryText 64875
-#define pnglang_EPNGUnknownCriticalChunkText 64876
-#define pnglang_EPNGUnknownCompressionText 64877
-#define pnglang_EPNGUnknownInterlaceText 64878
-#define pnglang_EPNGCannotAssignChunkText 64879
+#define JConsts_sChangeJPGSize 64867
+#define JConsts_sJPEGError 64868
+#define JConsts_sJPEGImageFile 64869
+#define GDIPicture_GDIPERRMSG 64870
+#define DBConsts_SBcdOverflow 64871
+#define DBConsts_SInvalidBcdValue 64872
+#define DBConsts_SCouldNotParseTimeStamp 64873
+#define DBConsts_SInvalidSqlTimeStamp 64874
+#define pnglang_EPngInvalidCRCText 64875
+#define pnglang_EPNGInvalidIHDRText 64876
+#define pnglang_EPNGMissingMultipleIDATText 64877
+#define pnglang_EPNGZLIBErrorText 64878
+#define pnglang_EPNGInvalidPaletteText 64879
 #define JclResources_RsIntelCacheDescrDD 64880
 #define JclResources_RsIntelCacheDescrDE 64881
 #define JclResources_RsIntelCacheDescrE2 64882
@@ -740,6 +740,7 @@
 #define SysConst_SZeroDivide 65535
 STRINGTABLE
 BEGIN
+	GIFConsts_sEmptyImage,	"Image is empty"
 	GIFConsts_sMultipleGCE,	"Frame contains multiple Graphic Control Extension blocks"
 	GIFConsts_sNoPalette,	"Missing, invalid or empty palette"
 	GIFConsts_sGIFImageFile,	"GIF Image"
@@ -749,7 +750,7 @@ BEGIN
 	GIFConsts_sProgressRendering,	"Rendering"
 	GIFConsts_sProgressCopying,	"Copying"
 	GIFConsts_sProgressOptimizing,	"Optimizing"
-	GDIPicture_GDIPERRMSG,	"Could not allocate memory for image"
+	GIFConsts_sBadExtensionInstance,	"Internal error: Extension Instance does not match Extension Label"
 	GIFConsts_sBadBlockSize,	"Unsupported Application Extension block size"
 	GIFConsts_sBadBlock,	"Unknown GIF block type"
 	GIFConsts_sUnsupportedClass,	"Object type not supported for operation"
@@ -765,8 +766,8 @@ BEGIN
 	GIFConsts_sInvalidColor,	"Color not in color table"
 	GIFConsts_sInvalidBitSize,	"Invalid Bits Per Pixel value"
 	GIFConsts_sEmptyColorMap,	"Color table is empty"
-	GIFConsts_sEmptyImage,	"Image is empty"
-	DBConsts_SInvalidSqlTimeStamp,	"Invalid SQL date/time values"
+	pnglang_EInvalidNewSize,	"The new size provided for image resizing is invalid."
+	pnglang_EInvalidSpec,	"The \"Portable Network Graphics\" could not be created because invalid image type parameters have being provided."
 	GIFConsts_sOutOfData,	"Premature end of data"
 	GIFConsts_sTooManyColors,	"Color table overflow"
 	GIFConsts_sBadColorIndex,	"Invalid color index"
@@ -781,31 +782,6 @@ BEGIN
 	GIFConsts_sDecodeTooFewBits,	"Decoder bit buffer under-run"
 	GIFConsts_sDecodeCircular,	"Circular decoder table entry"
 	GIFConsts_sBadTrailer,	"Invalid Image trailer"
-	GIFConsts_sBadExtensionInstance,	"Internal error: Extension Instance does not match Extension Label"
-	pnglang_EPNGUnexpectedEndText,	"This \"Portable Network Graphics\" image is invalid because the decoder found an unexpected end of the file."
-	pnglang_EPNGNoImageDataText,	"This \"Portable Network Graphics\" image contains no data."
-	pnglang_EPNGCannotAddChunkText,	"The program tried to add a existent critical chunk to the current image which is not allowed."
-	pnglang_EPNGCannotAddInvalidImageText,	"It's not allowed to add a new chunk because the current image is invalid."
-	pnglang_EPNGCouldNotLoadResourceText,	"The png image could not be loaded from the resource ID."
-	pnglang_EPNGOutMemoryText,	"Some operation could not be performed because the system is out of resources. Close some windows and try again."
-	pnglang_EPNGCannotChangeTransparentText,	"Setting bit transparency color is not allowed for png images containing alpha value for each pixel (COLOR_RGBALPHA and COLOR_GRAYSCALEALPHA)"
-	pnglang_EPNGHeaderNotPresentText,	"This operation is not valid because the current image contains no valid header."
-	pnglang_EInvalidNewSize,	"The new size provided for image resizing is invalid."
-	pnglang_EInvalidSpec,	"The \"Portable Network Graphics\" could not be created because invalid image type parameters have being provided."
-	JConsts_sChangeJPGSize,	"Cannot change the size of a JPEG image"
-	JConsts_sJPEGError,	"JPEG error #%d"
-	JConsts_sJPEGImageFile,	"JPEG Image File"
-	DBConsts_SBcdOverflow,	"BCD overflow"
-	DBConsts_SInvalidBcdValue,	"%s is not a valid BCD value"
-	DBConsts_SCouldNotParseTimeStamp,	"Could not parse SQL TimeStamp string"
-	JclResources_RsWin32Error,	"Win32 error: %s (%u)%s%s"
-	JclResources_RsELibraryNotFound,	"Library not found: %s"
-	JclResources_RsEFunctionNotFound,	"Function not found: %s.%s"
-	pnglang_EPngInvalidCRCText,	"This \"Portable Network Graphics\" image is not valid because it contains invalid pieces of data (crc error)"
-	pnglang_EPNGInvalidIHDRText,	"The \"Portable Network Graphics\" image could not be loaded because one of its main piece of data (ihdr) might be corrupted"
-	pnglang_EPNGMissingMultipleIDATText,	"This \"Portable Network Graphics\" image is invalid because it has missing image parts."
-	pnglang_EPNGZLIBErrorText,	"Could not decompress the image because it contains invalid compressed data.\r\n Description: "
-	pnglang_EPNGInvalidPaletteText,	"The \"Portable Network Graphics\" image contains an invalid palette."
 	pnglang_EPNGInvalidFileHeaderText,	"The file being read is not a valid \"Portable Network Graphics\" image because it contains an invalid header. This file may be corrupted, try obtaining it again"
 	pnglang_EPNGIHDRNotFirstText,	"This \"Portable Network Graphics\" image is not supported or it might be invalid.\r\n(IHDR chunk is not the first)"
 	pnglang_EPNGSizeExceedsText,	"This \"Portable Network Graphics\" image is not supported because either it's width or height exceeds the maximum size, which is 65535 pixels length."
@@ -814,6 +790,30 @@ BEGIN
 	pnglang_EPNGUnknownCompressionText,	"This \"Portable Network Graphics\" image is encoded with an unknown compression scheme which could not be decoded."
 	pnglang_EPNGUnknownInterlaceText,	"This \"Portable Network Graphics\" image uses an unknown interlace scheme which could not be decoded."
 	pnglang_EPNGCannotAssignChunkText,	"The chunks must be compatible to be assigned."
+	pnglang_EPNGUnexpectedEndText,	"This \"Portable Network Graphics\" image is invalid because the decoder found an unexpected end of the file."
+	pnglang_EPNGNoImageDataText,	"This \"Portable Network Graphics\" image contains no data."
+	pnglang_EPNGCannotAddChunkText,	"The program tried to add a existent critical chunk to the current image which is not allowed."
+	pnglang_EPNGCannotAddInvalidImageText,	"It's not allowed to add a new chunk because the current image is invalid."
+	pnglang_EPNGCouldNotLoadResourceText,	"The png image could not be loaded from the resource ID."
+	pnglang_EPNGOutMemoryText,	"Some operation could not be performed because the system is out of resources. Close some windows and try again."
+	pnglang_EPNGCannotChangeTransparentText,	"Setting bit transparency color is not allowed for png images containing alpha value for each pixel (COLOR_RGBALPHA and COLOR_GRAYSCALEALPHA)"
+	pnglang_EPNGHeaderNotPresentText,	"This operation is not valid because the current image contains no valid header."
+	JclResources_RsWin32Error,	"Win32 error: %s (%u)%s%s"
+	JclResources_RsELibraryNotFound,	"Library not found: %s"
+	JclResources_RsEFunctionNotFound,	"Function not found: %s.%s"
+	JConsts_sChangeJPGSize,	"Cannot change the size of a JPEG image"
+	JConsts_sJPEGError,	"JPEG error #%d"
+	JConsts_sJPEGImageFile,	"JPEG Image File"
+	GDIPicture_GDIPERRMSG,	"Could not allocate memory for image"
+	DBConsts_SBcdOverflow,	"BCD overflow"
+	DBConsts_SInvalidBcdValue,	"%s is not a valid BCD value"
+	DBConsts_SCouldNotParseTimeStamp,	"Could not parse SQL TimeStamp string"
+	DBConsts_SInvalidSqlTimeStamp,	"Invalid SQL date/time values"
+	pnglang_EPngInvalidCRCText,	"This \"Portable Network Graphics\" image is not valid because it contains invalid pieces of data (crc error)"
+	pnglang_EPNGInvalidIHDRText,	"The \"Portable Network Graphics\" image could not be loaded because one of its main piece of data (ihdr) might be corrupted"
+	pnglang_EPNGMissingMultipleIDATText,	"This \"Portable Network Graphics\" image is invalid because it has missing image parts."
+	pnglang_EPNGZLIBErrorText,	"Could not decompress the image because it contains invalid compressed data.\r\n Description: "
+	pnglang_EPNGInvalidPaletteText,	"The \"Portable Network Graphics\" image contains an invalid palette."
 	JclResources_RsIntelCacheDescrDD,	"3rd-level cache: 3 MByte, 12-way set associative, 64 byte line size"
 	JclResources_RsIntelCacheDescrDE,	"3rd-level cache: 6 MByte, 12-way set associative, 64 byte line size"
 	JclResources_RsIntelCacheDescrE2,	"3rd-level cache: 2 MByte, 16-way set associative, 64 byte line size"
@@ -1475,98 +1475,98 @@ END
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\Debug\Character.res */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\controls.res */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\buttons.res */
-/* ..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
-/* ..\..\sharedUtils\компоненты\dcl_dpk\spin.res */
-/* ..\..\sharedUtils\forms\uGetMngObjForm.dfm */
-/* ..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common\JclUnicode.res */
-/* ..\..\sharedUtils\utils\./files/res/CURSORS.res */
-/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.dfm */
-/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uAxisForm.dfm */
-/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTextLabelForm.dfm */
-/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDoubleCursorForm.dfm */
-/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCursorForm.dfm */
-/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uPageForm.dfm */
-/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjEditForm.dfm */
-/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uGistFrame.dfm */
-/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uGistForm.dfm */
-/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendFrame.dfm */
-/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.dfm */
-/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
-/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
-/* forms\uSaveSimpleMeraFrm.dfm */
-/* ..\..\sharedUtils\forms\uFrmSync.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\dcl_dpk\spin.res */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\forms\uGetMngObjForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uGenForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common\JclUnicode.res */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\./files/res/CURSORS.res */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendFrame.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistFrame.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjEditForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uPageForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCursorForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDoubleCursorForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTextLabelForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uAxisForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\EditSignalPathFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uSelectIntervalFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uGraphMngFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uAddSignalFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uTrigsFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uEditTubeFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\frames\uIntervalFrame.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uIntervalFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\forms\ulogFrame.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\forms\uJournalForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uSelectPathForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\frames\uTmpltNameFrame.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uTrigFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\TmsPack\asgspin.res */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\TmsPack\advcolorpickerdropdown.res */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\TmsPack\advgrid.res */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\TmsPack\asgres.res */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\TmsPack\advmetro.res */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\TmsPack\asgfltr.res */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uEditSelsinFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\frames\uWPSpmFrame.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uSpmFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\frames\uWPNameFilterFrame.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uSaveSimpleMeraFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\frames\uRZDTareFrame.dfm */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\filectrl.res */
-/* ..\..\sharedUtils\ZipMaster\ZipMstr.res */
-/* forms\frames\uTmpltNameFrame.dfm */
-/* forms\uEditSignalsRepPropFrn.dfm */
-/* forms\frames\uWPSpmFrame.dfm */
-/* forms\uSpmFrm.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxInheritError.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxCtrls.res */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPrintDialog.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPreviewPageSettings.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxSearchDialog.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPreview.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPreview.res */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxDialogForm.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPassw.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxProgress.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxClass.res */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxExportODF.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxExportImage.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxExportHTML.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxExportPDF.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxExportRTF.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditHighlight.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditFormat.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditSysMemo.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditMemo.dfm */
-/* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxRichEditor.dfm */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\RaveReports\Lib\RpFormStatus.dfm */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\RaveReports\Lib\RpFormSetup.dfm */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\RaveReports\Lib\RpFormPreview.dfm */
-/* forms\frames\uRZDTareFrame.dfm */
-/* forms\uAddRZDDatafrm.dfm */
-/* forms\uRzdFrm.dfm */
-/* ..\..\sharedUtils\forms\ulogFrame.dfm */
-/* ..\..\sharedUtils\forms\uJournalForm.dfm */
-/* forms\uAddScriptItemFrm.dfm */
-/* forms\uEditSelsinFrm.dfm */
-/* ..\..\sharedUtils\utils\TmsPack\advcolorpickerdropdown.res */
-/* ..\..\sharedUtils\utils\TmsPack\asgspin.res */
-/* ..\..\sharedUtils\utils\TmsPack\advgrid.res */
-/* ..\..\sharedUtils\utils\TmsPack\asgres.res */
-/* ..\..\sharedUtils\utils\TmsPack\advmetro.res */
-/* ..\..\sharedUtils\utils\TmsPack\asgfltr.res */
-/* forms\uTrigsFrm.dfm */
-/* .\forms\uTrigFrm.dfm */
-/* forms\EditSignalPathFrm.dfm */
-/* forms\uGraphMngFrm.dfm */
-/* forms\uSelectPathForm.dfm */
-/* forms\uGenForm.dfm */
-/* forms\uSelectIntervalFrm.dfm */
-/* forms\frames\uIntervalFrame.dfm */
-/* forms\uIntervalFrm.dfm */
-/* forms\uEditTubeFrm.dfm */
-/* forms\uWPProcFrm.dfm */
-/* forms\uNIIPMTenzopluginForm.dfm */
-/* forms\uCorrectUTS.dfm */
-/* forms\uAddSignalFrm.dfm */
-/* forms\uTrigLvlEditFrm.dfm */
-/* forms\uCyclogramRepFrm.dfm */
-/* forms\uKBHMFrm.dfm */
-/* forms\uSelsinFrm.dfm */
-/* forms\uScriptFrm.dfm */
-/* forms\uRptFrm.dfm */
-/* forms\uFrmHibFltFrm.dfm */
-/* forms\uFFTInverseFrm.dfm */
-/* forms\uExtBalanceSignalsFrm.dfm */
-/* forms\uFindMaxForm.dfm */
-/* forms\uFFTfltFrm.dfm */
-/* forms\frames\uWPNameFilterFrame.dfm */
-/* forms\uBDIFrm.dfm */
-/* forms\uMNKFrm.dfm */
-/* forms\uSubRegsFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxCtrls.res */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxSearchDialog.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPreviewPageSettings.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPreview.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPreview.res */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPrintDialog.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPassw.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxDialogForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxInheritError.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxClass.res */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxProgress.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditFormat.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditHighlight.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditSysMemo.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxEditMemo.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxRichEditor.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxExportRTF.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxExportPDF.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxExportImage.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxExportHTML.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxExportODF.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uRzdFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uAddRZDDatafrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\ZipMaster\ZipMstr.res */
+/* G:\oburec\project2010\GH\OburecGH\sharedUtils\forms\uFrmSync.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uEditSignalsRepPropFrn.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uRptFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uFFTfltFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uExtBalanceSignalsFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uFFTInverseFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uFrmHibFltFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uSelsinFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uKBHMFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uCyclogramRepFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uTrigLvlEditFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uNIIPMTenzopluginForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uWPProcFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uAddScriptItemFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uScriptFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uFindMaxForm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uCorrectUTS.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uBDIFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uMNKFrm.dfm */
+/* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uSubRegsFrm.dfm */
 /* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\WPExtPack.tlb */
 /* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\WPExtPack.res */
 /* G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\toolbarExtPack.res */

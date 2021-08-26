@@ -1,7 +1,7 @@
 library SniffDll;
 
 uses
-  WinTypes, WinProcs;
+  WinTypes, WinProcs, dialogs;
 
 const
   //KeyEvent=WM_USER+1;
@@ -72,6 +72,7 @@ begin
      if wnd<>0 then
      begin
        //CallNextHookEx(GlobalData^.KeyHookHandle, Code, wParam, lParam);
+       ///showmessage('WM_KeyHOOK');
        SendMessage(GlobalData^.MyAppWnd, WM_KeyHOOK, wParam, wnd)
      end
      else

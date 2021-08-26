@@ -118,6 +118,7 @@ begin
   begin
     // регестрируем свой тип сообщения в системе
     WM_KeyHOOK := RegisterWindowMessage('WM_OburecKeyHook');
+    logmessage('TServicePlg_WM_OburecKeyHook='+inttostr(WM_KeyHOOK));
     // получаем указатель на необходимую процедуру
     StartHookProc := GetProcAddress(HLib, 'SetHook');
     tagproc:=GetProcAddress(HLib, 'SetTag');
