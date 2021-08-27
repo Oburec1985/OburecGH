@@ -456,71 +456,74 @@ var
   er,r1,r2, fftopt:olevariant;
   isig, spm:iwpsignal;
   p3:point3d;
-  str:string;
+  folder,str:string;
 begin
-    // RunFFT(const Src : OleVariant; var Rez1, Rez2, OptFFT, Err : OleVariant);
-    // typeMagnitude=1 - Эффективные значения typeWindow=1 - прямоугольное окно
-    str := 'kindFunc=4,numPoints=';
-    str := str + inttostr(fftnum) +
-      ',nLines=0,typeWindow=1,typeMagnitude=1,type=0,method=0,isMO=1,isCorrectFunc=0,isMonFase=0,isFill0=1,fMaxVal=0,fLog=0,fPrSpec=0,f3D=0,iStandart=1,fFlt=0';
-    // обновляем свойства расчета спектра
-    str := str + ',ofsNextBlock=' + inttostr(fftnum);
-    str := str + ',nBlocks=';
-    x1x2.x:=src.Minx;
-    x1x2.y:=x1x2.x+t;
-    isig:=src;//winpos.GetInterval(src, src.IndexOf(x1x2.x), src.IndexOf(x1x2.y)) as iwpsignal;
-    i := round(isig.size / fftnum) - 1;
-    str:=str+inttostr(i);
-    if i < 1 then
-    begin // в порции менее одного блока
-      exit;
-    end;
+  // RunFFT(const Src : OleVariant; var Rez1, Rez2, OptFFT, Err : OleVariant);
+  // typeMagnitude=1 - Эффективные значения typeWindow=1 - прямоугольное окно
+  str := 'kindFunc=4,numPoints=';
+  str := str + inttostr(fftnum) +
+    ',nLines=0,typeWindow=1,typeMagnitude=1,type=0,method=0,isMO=1,isCorrectFunc=0,isMonFase=0,isFill0=1,fMaxVal=0,fLog=0,fPrSpec=0,f3D=0,iStandart=1,fFlt=0';
+  // обновляем свойства расчета спектра
+  str := str + ',ofsNextBlock=' + inttostr(fftnum);
+  str := str + ',nBlocks=';
+  x1x2.x:=src.Minx;
+  x1x2.y:=x1x2.x+t;
+  isig:=winpos.GetInterval(src, src.IndexOf(x1x2.x), src.IndexOf(x1x2.y)) as iwpsignal;
+  i := trunc(isig.size / fftnum);
+  str:=str+inttostr(i);
+  if i < 1 then
+  begin // в порции менее одного блока
+    exit;
+  end;
 
-    spmsize:=fftnum shr 1;
-    Result.x:=-1;
-    Result.y:=-1;
-    Result.z:=-1;
-
-    while x1x2.y<=src.MaxX do
+  spmsize:=fftnum shr 1;
+  Result.x:=-1;
+  Result.y:=-1;
+  Result.z:=-1;
+  p3:=Result;
+  while x1x2.y<=src.MaxX do
+  begin
+    isig:=winpos.GetInterval(src, src.IndexOf(x1x2.x), src.IndexOf(x1x2.y)) as iwpsignal;
+    //i := round(isig.size / fftnum) - 1;
+    //str:=str+inttostr(i);
+    //if i < 1 then
+    //  i := 1;
+    // считаем спектр СКЗ
+    fftopt:=str;
+    RunFFT(isig, r1, r2, fftopt,  Er);
+    spm:=iwpsignal(TVarData(r1).VPointer);
+    if p3.x=-1 then
     begin
-      isig:=winpos.GetInterval(src, src.IndexOf(x1x2.x), src.IndexOf(x1x2.y)) as iwpsignal;
-      //i := round(isig.size / fftnum) - 1;
-      //str:=str+inttostr(i);
-      //if i < 1 then
-      //  i := 1;
-      // считаем спектр СКЗ
-      fftopt:=str;
-      RunFFT(src, r1, r2, fftopt,  Er);
-      spm:=iwpsignal(TVarData(r1).VPointer);
-      if Result.x=-1 then
+      p3.x:=spm.GetX(0);
+      p3.y:=spm.GetY(0);
+      p3.z:=x1x2.x;
+    end;
+    for I := 1 to spmsize - 1 do
+    begin
+      if spm.GetY(i)>p3.y then
       begin
-        p3.x:=spm.GetX(0);
-        p3.y:=spm.GetY(0);
+        p3.x:=spm.GetX(i);
+        p3.y:=spm.GetY(i);
         p3.z:=x1x2.x;
       end;
-      for I := 1 to spmsize - 1 do
-      begin
-        if spm.GetY(i)>p3.y then
-        begin
-          p3.x:=spm.GetX(i);
-          p3.y:=spm.GetY(i);
-          p3.z:=x1x2.x;
-        end;
-      end;
-      if result.x=-1 then
-      begin
-        result:=p3;
-      end
-      else
-      begin
-        if result.y<p3.y then
-        begin
-          result:=p3;
-        end;
-      end;
-      x1x2.x:=x1x2.y;
-      x1x2.y:=x1x2.y+t;
     end;
+    x1x2.x:=x1x2.y;
+    x1x2.y:=x1x2.y+t;
+  end;
+  result:=p3;
+  if p3.y<>-1 then
+  begin
+    x1x2.x:=p3.z;
+    x1x2.y:=x1x2.x+t;
+    isig:=winpos.GetInterval(src, src.IndexOf(x1x2.x), src.IndexOf(x1x2.y)) as iwpsignal;
+    // считаем спектр СКЗ
+    fftopt:=str;
+    RunFFT(isig, r1, r2, fftopt,  Er);
+    spm:=iwpsignal(TVarData(r1).VPointer);
+    folder := '/Signals/rpt/' + Datetostr(Now);
+    // в виде folder=Signals/Результаты/ и s.sname=3- 1
+    winpos.Link(folder, src.sname+'SpmMax; T='+floattostr(x1x2.x), spm);
+  end;
 end;
 
 function EvalCounter(const src: iwpsignal; t1, t2: double;

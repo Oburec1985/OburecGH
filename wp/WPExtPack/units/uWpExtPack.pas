@@ -146,8 +146,11 @@ begin
   HLib := LoadLibrary(@str[1]);
   if HLib > HINSTANCE_ERROR then
   begin
+    logMessage('TExtPack_CreateWndHook');
+    //showmessage('HINSTANCE_ERROR_hook');
     // регестрируем свой тип сообщения в системе
     WM_KeyHOOK := RegisterWindowMessage('WM_OburecKeyHook');
+    logmessage('WM_OburecKeyHook='+inttostr(WM_KeyHOOK));
     // получаем указатель на необходимую процедуру
     StartHookProc := GetProcAddress(HLib, 'SetHook');
     res := StartHookProc(true, mainwnd);
@@ -186,6 +189,7 @@ begin
 
   startDir := extractfiledir(Application.ExeName) + '\plugins\WPExtPack\';
   g_logFile := clogfile.Create(startDir + 'log1.txt', ';');
+
 
   init := false;
   WINPOS := app as IWinPOS;
@@ -710,10 +714,11 @@ begin
   ltag:=0;
   if Msg.Msg = WM_KeyHOOK then
   begin
-    logMessage('TExtPack_enter');
+    logMessage('TExtPack_WndProc_enter');
     ltag := tagproc(c_wpextpack_tag);
     if ltag=-1 then
     begin
+      logMessage('TExtPack_WndProc_ltag=-1');
       t:=gettimeinsec;
       if abs(t-hooktime)>1.5 then
       begin
@@ -737,7 +742,6 @@ begin
             end;
           end;
         end;
-        logMessage('TExtPack_exit');
         tagproc(-1);
         hooktime:=t;
       end;
@@ -751,6 +755,7 @@ begin
         tagproc(ltag);
       end
     end;
+    logMessage('TExtPack_WndProc_exit');
   end;
   Msg.Result := CallWindowProc(oldWndProc, mainwnd, Msg.Msg, Msg.wParam,  Msg.lParam);
 end;
