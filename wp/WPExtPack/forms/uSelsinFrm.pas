@@ -9,6 +9,14 @@ uses
   Buttons, inifiles, uComponentServises, uwpOpers;
 
 type
+  SectrRes = record
+    sectr:integer;
+    aE,dE, dPrev:double;
+    module, addDeg:double;
+    tan:double;
+    succes:boolean;
+  end;
+
   TSelsinFrm = class(TForm)
     GroupBox1: TGroupBox;
     ChansLV: TBtnListView;
@@ -474,7 +482,7 @@ var
   r1, r2:olevariant;
   res1:iwpsignal;
   oper:iwpoperator;
-  fftcount, numpoints, count:integer;
+  fftcount, numpoints, count, nBlocks:integer;
   fs, max:double;
   I: Integer;
 begin
@@ -487,14 +495,15 @@ begin
   //+'fSwapXZ=0,iStandart=1,fFlt=0,fQual=6,log_kind=0,log_OpZn=2e-005,log_fOpZn=0,'
   //+'prs_kind=1,prs_loFreq=1,prs_s2n=100,prs_fCorr=0,prs_strCorr=9.09071e-318,prs_typeCorr=0';
 
-  opts:='kindFunc=23,numPoints=1024,nBlocks=2,nLines=0,typeWindow=1,ofsNextBlock=1024,typeMagnitude=1,type=20,method=0,isMO=1,'
+  opts:='kindFunc=23,numPoints=1024,nBlocks=1,nLines=0,typeWindow=1,ofsNextBlock=1024,typeMagnitude=1,type=20,method=0,isMO=1,'
   +'isCorrectFunc=0,isMonFase=0,isFill0=0,fMaxVal=0,fLog=0,fPrSpec=0,f3D=0,fSwapXZ=0,iStandart=1';
 
 
   pars:=ParsStrParamNoSort(opts, ',');
+  nBlocks:=strtoint(GetParam(opts, 'nBlocks'));
   // меняем число точек fft
   fs:=1/s1.DeltaX;
-  numpoints:=round(fs*(interval.y-interval.x)/4);
+  numpoints:=round(fs*(interval.y-interval.x)/nBlocks);
   numpoints:=GetNumPointsFFT(numpoints);
   ChangeParam(pars,'numPoints',inttostr(numpoints));
   ChangeParam(pars,'ofsNextBlock',inttostr(numpoints));
@@ -868,37 +877,77 @@ begin
   end;
 end;
 
-
-function GetTangAndCheckExt(u1, u2, u3:double; var module:double;var sectr:integer; var aErr, dErr:double):double;
-type
-  SectrRes = record
-    sectr:integer;
-    aE,dE:double;
-    module:double;
-    tan:double;
-    succes:boolean;
-  end;
-
-  function GetMinError(s1,s2:SectrRes):SectrRes;
+function GetMinError(s1,s2:SectrRes):SectrRes;
+begin
+  result.succes:=false;
+  if s1.succes then
   begin
-    result.succes:=false;
-    if s1.succes then
+    result:=s1;
+  end;
+  if s2.succes then
+  begin
+    // если оба верны
+    if Result.succes then
     begin
-      result:=s1;
-    end;
-    if s2.succes then
-    begin
-      if Result.succes then
-      begin
-        if Result.dE>s2.dE then
-          result:=s2;
-      end
-      else
+      // если ошибка второго меньше ошибки первого
+      if Result.dE>s2.dE then
       begin
         result:=s2;
-      end;
+      end
+    end
+    else
+    begin
+      result:=s2;
     end;
   end;
+end;
+
+function GetMinError_WithPrevVal(s1,s2:SectrRes):SectrRes;
+var
+ dprev:double;
+begin
+  result.succes:=false;
+  if s1.succes then
+  begin
+    result:=s1;
+  end;
+  if s2.succes then
+  begin
+    // если оба верны
+    if Result.succes then
+    begin
+      /// Внимание - костыль!!! 12.08.21 Скрипник А.А.
+      ///  перескок в 360 разрешен
+      if (abs(s2.dPrev)>60) and (abs(s2.dPrev)<310) then
+      begin
+        if abs(s1.dprev)<abs(s2.dprev) then
+        begin
+          result:=s1;
+          exit;
+        end
+      end;
+      if (abs(s1.dPrev)>60) and (abs(s1.dPrev)<310) then
+      begin
+        if abs(s2.dprev)<abs(s1.dprev) then
+        begin
+          result:=s2;
+          exit;
+        end
+      end;
+      // если ошибка второго меньше ошибки первого
+      if Result.dE>s2.dE then
+      begin
+        result:=s2;
+      end
+    end
+    else
+    begin
+      result:=s2;
+    end;
+  end;
+end;
+
+function GetTangAndCheckExt(u1, u2, u3:double; var module:double;var sectr:integer; var aErr, dErr:double):double;
 var
   s0,s3,s1,s4,s2,s5, s:SectrRes;
 begin
@@ -995,38 +1044,9 @@ begin
 end;
 
 
-function GetTangAndCheck(u1, u2, u3:double; var module:double;var sectr:integer; var aErr, dErr:double):double;
-type
-  SectrRes = record
-    sectr:integer;
-    aE,dE:double;
-    module:double;
-    tan:double;
-    succes:boolean;
-  end;
-
-  function GetMinError(s1,s2:SectrRes):SectrRes;
-  begin
-    result.succes:=false;
-    if s1.succes then
-    begin
-      result:=s1;
-    end;
-    if s2.succes then
-    begin
-      if Result.succes then
-      begin
-        if Result.dE>s2.dE then
-          result:=s2;
-      end
-      else
-      begin
-        result:=s2;
-      end;
-    end;
-  end;
+function GetTangAndCheck(u1, u2, u3:double; var module:double;var sectr:integer; var aErr, dErr:double; var s03, s14, s25:SectrRes):double;
 var
-  s03,s14,s25, s:SectrRes;
+  s:SectrRes;
 begin
   // 0 или 3
   sectr:=0;
@@ -1070,8 +1090,9 @@ begin
       s25.succes:=true;
     end;
   end;
-  s:=s03;
-  s:=GetMinError(s,s14);
+  // сравнение результатов
+  s:=GetMinError(s03,s14);
+  s:=GetMinError(s,s25);
   s:=GetMinError(s,s25);
   // по сути идентично проверке по аргументу. Если на 90' u1=0, u2=u3. При увеличении угла от 90 u1 снижается, u2 растет и наоборот
   if s14.succes and s25.succes then
@@ -1093,7 +1114,81 @@ begin
 end;
 
 
-
+function getAddDeg(s, q:integer; deg:double):double;
+begin
+      case s of
+      0:
+      begin
+        if (q=0) or (q=1) or (q=5)  then // 3
+        begin
+          result:=180
+        end;
+        if q=5 then
+        begin
+          if deg>0 then // 0
+            result:=0
+          else
+            result:=360 // 3
+        end;
+        if q=4 then
+        begin
+          if deg>0 then // 0
+            result:=0
+          else
+            result:=360 // 3
+        end;
+      end;
+      1:
+      begin
+        if (q=0) or (q=1) or (q=2) then // 4    5, 0
+        //if (quad=4) or (quad=5) or (quad=0) then // 4    5, 0
+          result:=180
+        else
+          result:=0    // 1    3
+      end;
+      2:
+      begin
+        if (q=1) or (q=2) or (q=3) then // 4    5, 0
+        //if quad<3 then // 2
+          result:=180
+        else
+          result:=360  // 5
+      end;
+      3:
+      begin
+        if (q=2) or (q=3) or (q=4) then // 4    5, 0
+        //if quad<3 then // 3
+          result:=180
+        else
+          result:=0    // 0
+      end;
+      4:
+      begin
+        if (q=3) or (q=4) or (q=5) then // 4    5, 0
+        //if quad<3 then // 4
+          result:=180
+        else
+          result:=0    // 1
+      end;
+      5:
+      begin
+        if (q=4) or (q=5) or (q=0) then // 4  5, 0
+        //if quad>2 then // 2
+          result:=180
+        else
+        begin
+          result:=360;
+          if q=1 then
+          begin
+            if deg<0 then
+            begin
+              result:=180
+            end;
+          end;
+        end;
+      end;
+    end;
+end;
 
 procedure TSelsinFrm.Eval2(s: cselsin);
 var
@@ -1102,7 +1197,11 @@ var
 
   u1,u2,u3,
   tg1,tg2,tg3,
-  module1, module2, module3, phase1, phase2, phase3, deg, addDeg, Module, lcos:double;
+  module1, module2, module3, phase1, phase2, phase3, deg, addDeg, Module, lcos,
+  // угол для проверок
+  a_s03,a_s14,a_s25,
+  // сохраняем значение угла для следующего шага
+  res:double;
   // нельзя использовать в 2 и 4 секторах
   useTg1:boolean;
 
@@ -1110,6 +1209,8 @@ var
   i,quad, sectr, sectr1: Integer;
 
   aErr, dErr:double;
+
+  s03,s14,s25:SectrRes;
 begin
 
   SKO1:=GetSKOTrend(s.l1.Signal, dtFe.FloatNum);
@@ -1191,11 +1292,8 @@ begin
     u1:=SKO1.GetY(i);
     u2:=SKO2.GetY(i);
     u3:=SKO3.GetY(i);
-
-
-    tg3:=GetTangAndCheck(u3,u1,u2,module3,sectr, aErr, dErr);
-    tg2:=GetTangAndCheck(u2,u3,u1,module2,sectr, aErr, dErr);
-    tg1:=GetTangAndCheck(u1,u2,u3,module1,sectr, aErr, dErr);
+                                                             // 0,1,5
+    tg1:=GetTangAndCheck(u1,u2,u3,module1,sectr, aErr, dErr, s03,s14,s25);
 
     mod1.setY(i,module1);
     mod2.setY(i,module2);
@@ -1218,67 +1316,34 @@ begin
     sect.setY(i,sectr);
 
     deg:=arctan(tg1)*c_radtodeg;
-
-      case sectr of
-      0:
-      begin
-        if (quad=0) or (quad=1) or (quad=5)  then // 3
-        //if (quad=3) or (quad=4) or (quad=5)  then // 3
-          addDeg:=180
-        else
-        begin
-          if deg>0 then // 0
-            addDeg:=0
-          else
-            addDeg:=360 // 3
-        end;
-      end;
-      1:
-      begin
-        if (quad=0) or (quad=1) or (quad=2) then // 4    5, 0
-        //if (quad=4) or (quad=5) or (quad=0) then // 4    5, 0
-          addDeg:=180
-        else
-          addDeg:=0    // 1    3
-      end;
-      2:
-      begin
-        if (quad=1) or (quad=2) or (quad=3) then // 4    5, 0
-        //if quad<3 then // 2
-          addDeg:=180
-        else
-          addDeg:=360  // 5
-      end;
-      3:
-      begin
-        if (quad=2) or (quad=3) or (quad=4) then // 4    5, 0
-        //if quad<3 then // 3
-          addDeg:=180
-        else
-          addDeg:=0    // 0
-      end;
-      4:
-      begin
-        if (quad=3) or (quad=4) or (quad=5) then // 4    5, 0
-        //if quad<3 then // 4
-          addDeg:=180
-        else
-          addDeg:=0    // 1
-      end;
-      5:
-      begin
-        if (quad=4) or (quad=5) or (quad=0) then // 4    5, 0
-        //if quad>2 then // 2
-          addDeg:=180
-        else
-          addDeg:=360  // 5
-      end;
+    adddeg:=getAddDeg(sectr, quad, deg);
+    if s03.succes then
+    begin
+      deg:=arctan(s03.tan)*c_radtodeg;
+      a_s03:=getAddDeg(s03.sectr, quad, deg);
+      s03.dPrev:=deg+a_s03-res;
+      s03.addDeg:=a_s03;
     end;
+    if s14.succes then
+    begin
+      deg:=arctan(s14.tan)*c_radtodeg;
+      a_s14:=getAddDeg(s14.sectr, quad, deg);
+      s14.dPrev:=deg+a_s14-res;
+      s14.addDeg:=a_s14;
+    end;
+    if s25.succes then
+    begin
+      deg:=arctan(s25.tan)*c_radtodeg;
+      a_s25:=getAddDeg(s25.sectr, quad, deg);
+      s25.dPrev:=deg+a_s25-res;
+      s25.addDeg:=a_s25;
+    end;
+    // пишем в s03 самый точный результат
+    s03:=GetMinError_WithPrevVal(s03, s14);
+    s03:=GetMinError_WithPrevVal(s03, s25);
 
-    if phase1<0 then
-      resSignal.SetY(i,deg+addDeg)
-    else
-      resSignal.SetY(i,deg+addDeg);
+    res:=arctan(s03.tan)*c_radtodeg+s03.addDeg;
+    resSignal.SetY(i,res);
 
     interval.x:=interval.x+dTfe.FloatNum;
     interval.y:=interval.y+dTfe.FloatNum;
