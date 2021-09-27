@@ -23,12 +23,13 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
 			<BRCC_EnableMultiByte>true</BRCC_EnableMultiByte>
 			<DCC_DebugDCUs>true</DCC_DebugDCUs>
 			<DCC_UnitSearchPath>..\..\..\3dProj\Loader_\Render\Shaders;..\..\..\sharedUtils\utils\files;..\..\..\sharedUtils\utils;..\..\..\3dProj\Loader_\;..\..\..\3dProj\Loader_\helpTools;..\..\..\sharedUtils\utils\PathUtils;..\..\..\sharedUtils\utils\jcl-2.3.1.4197;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows\obj;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes\containers;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;..\..\..\sharedUtils\компоненты\chart_dpk\chart\forms;..\..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames;..\..\..\sharedUtils\компоненты\chart_dpk\chart\items;..\..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
-			<DCC_DependencyCheckOutputName>C:\Users\Public\Documents\RAD Studio\7.0\Bpl\ComponentsLib.bpl</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>S:\Users\Public\Documents\RAD Studio\7.0\Bpl\ComponentsLib.bpl</DCC_DependencyCheckOutputName>
 			<GenDll>true</GenDll>
 			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
 			<GenPackage>true</GenPackage>
