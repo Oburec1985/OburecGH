@@ -413,6 +413,10 @@
 				<Form>ObjFrm3dEdit</Form>
 			</DCCReference>
 			<DCCReference Include="units\uAriphmAlg.pas"/>
+			<DCCReference Include="forms\uAriphmAlgFrame.pas">
+				<Form>AriphmAlgFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

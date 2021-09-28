@@ -310,7 +310,8 @@ implementation
 
 uses
   uCounterAlg, uTahoAlg, uGrmsAlg, uGrmsSrcAlg, uPhaseAlg, uFillingFactorAlg,
-  uSynchroPhaseAlg, uSpm, uPeakFactorAlg, uIntegralAlg;
+  uSynchroPhaseAlg, uSpm, uPeakFactorAlg, uIntegralAlg,
+  uAriphmAlg;
 
 function TAHUnToInt(u: tAHUnit): integer;
 begin
@@ -1104,6 +1105,7 @@ begin
   regclass(cFillingFactorAlg);
   regclass(cPeakFactorAlg);
   regclass(cIntegralAlg);
+  regclass(cAriphmAlg);
 end;
 
 procedure cAlgMng.removeObj(obj: cBaseObj);

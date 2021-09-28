@@ -28,6 +28,9 @@ type
     m_EvalBlock1, m_EvalBlock2: TAlignDarray;
 
   protected
+    function OutExists: boolean;
+    function Bexists: boolean;
+    function Aexists:boolean;
     procedure UpdateOutTag;
     procedure doAfterload; override;
     procedure SetProperties(str: string); override;
@@ -60,6 +63,42 @@ const
 implementation
 
 { cAriphmAlg }
+
+function cAriphmAlg.Aexists: boolean;
+begin
+  result:=false;
+  if m_A<>nil then
+  begin
+    if m_A.tag<>nil then
+    begin
+      result:=true;
+    end;
+  end;
+end;
+
+function cAriphmAlg.Bexists: boolean;
+begin
+  result:=false;
+  if m_A<>nil then
+  begin
+    if m_A.tag<>nil then
+    begin
+      result:=true;
+    end;
+  end;
+end;
+
+function cAriphmAlg.OutExists: boolean;
+begin
+  result:=false;
+  if m_Out<>nil then
+  begin
+    if m_Out.tag<>nil then
+    begin
+      result:=true;
+    end;
+  end;
+end;
 
 constructor cAriphmAlg.create;
 begin
@@ -155,15 +194,32 @@ begin
 end;
 
 function cAriphmAlg.GetProperties: string;
+var
+  pars:tstringlist;
 begin
   if m_properties = '' then
     m_properties := C_AriphmOpts;
-  result := m_properties;
+  pars := tstringlist.create;
+  addParam(pars, 'TypeRes', inttostr(m_opertype));
+  if Bexists then
+    addParam(pars, 'Bparam', m_B.tagname);
+  if Aexists then
+    addParam(pars, 'Aparam', m_A.tagname);
+  if OutExists then
+    addParam(pars, 'OutChannel', m_Out.tagname);
+
+  m_Properties := ParsToStr(pars);
+  result := m_Properties;
+  delpars(pars);
+  pars.destroy;
 end;
 
 function cAriphmAlg.getresname: string;
 begin
-
+  if m_out.tag <> nil then
+    result := m_out.tag.GetName
+  else
+    result := m_out.tagname;
 end;
 
 procedure cAriphmAlg.LoadObjAttributes(xmlNode: txmlNode; mng: tobject);
@@ -175,28 +231,20 @@ end;
 procedure cAriphmAlg.LoadTags(node: txmlNode);
 begin
   inherited;
-
 end;
 
 function cAriphmAlg.ready: boolean;
 begin
   result := false;
-  if (m_a<>nil) and (m_b<>nil) then
+  if Aexists and Bexists then
   begin
-    if m_A.tag <> nil then
-    begin
-      if m_B.tag<>nil then
-      begin
-        result := true;
-      end;
-    end;
+    result := true;
   end;
 end;
 
 procedure cAriphmAlg.SaveObjAttributes(xmlNode: txmlNode);
 begin
   inherited;
-
 end;
 
 procedure cAriphmAlg.SetProperties(str: string);
@@ -249,6 +297,7 @@ end;
 
 procedure cAriphmAlg.UpdateOutTag;
 var
+  str:pansichar;
   tagname: string;
   bl: IBlockAccess;
 begin
@@ -258,7 +307,7 @@ begin
     m_Out := cTag.create;
     if (m_a<>nil) and (m_b<>nil) then
     begin
-      m_Out.tag := createVectorTagR8(genTagName, m_a.tag.getfreq, true);
+      m_Out.tag := createVectorTagR8(genTagName, m_a.tag.getfreq, true, false, false);
       if not FAILED(m_Out.tag.QueryInterface(IBlockAccess, bl)) then
       begin
         m_Out.block := bl;

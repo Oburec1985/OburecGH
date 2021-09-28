@@ -9,6 +9,7 @@ uses
   uPhaseCrossSpmFrame,  uTagsListFrame, uTahoAlgFrame, uGrmsFrame, tags,
   uGrmsSrcFrame,
   uSpmFrame,
+  uAriphmAlgFrame,
   uFillFctFrame,
   uPeakFactorFrame,
   uIntegralAlgFrame,
@@ -239,6 +240,9 @@ begin
   addframe(fr);
 
   fr:=TIntegralAlgFrame.Create(self);
+  addframe(fr);
+
+  fr:=TAriphmAlgFrame.Create(self);
   addframe(fr);
 end;
 

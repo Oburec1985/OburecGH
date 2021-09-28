@@ -281,8 +281,7 @@ begin
   end;
 end;
 
-function createVectorTagR8(tagname: string; freq: double;
-  CfgWritable: boolean): itag;
+function createVectorTagR8(tagname: string; freq: double;  CfgWritable: boolean): itag;
 var
   ir: irecorder;
   Name, errMes: string;

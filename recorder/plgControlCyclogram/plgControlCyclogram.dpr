@@ -187,7 +187,8 @@ uses
   uIRDiagramEditFrm in 'forms\uIRDiagramEditFrm.pas' {IRDiagrEditFrm},
   u3dObj in 'forms\u3dObj.pas' {ObjFrm3d},
   uGLFrmEdit in 'forms\uGLFrmEdit.pas' {ObjFrm3dEdit},
-  uAriphmAlg in 'units\uAriphmAlg.pas';
+  uAriphmAlg in 'units\uAriphmAlg.pas',
+  uAriphmAlgFrame in 'forms\uAriphmAlgFrame.pas' {AriphmAlgFrame: TFrame};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}
