@@ -103,7 +103,6 @@ begin
   end;
   if ChannelCB.text<>'' then
   begin
-    addParam(m_pars, 'OutChannel', ChannelCB.text);
     case ResTypeCB.itemindex of
       c_Add: str:='Add';
       c_Dec: str:='Dec';
@@ -111,6 +110,8 @@ begin
       c_Div: str:='Div';
     end;
     OutChannelName.text:=ChanA.text+'_'+ChanB.text+'_'+str;
+    ChannelCB.text:=OutChannelName.text;
+    addParam(m_pars, 'OutChannel', ChannelCB.text);
   end;
   result:=ParsToStr(m_pars);
 end;

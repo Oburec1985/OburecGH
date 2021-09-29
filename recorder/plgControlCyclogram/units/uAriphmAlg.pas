@@ -1,4 +1,4 @@
-unit uAriphmAlg;
+п»їunit uAriphmAlg;
 
 interface
 uses
@@ -12,9 +12,9 @@ uses
   sysutils;
 
 type
-  // алгоритм отличяается от cPhaseAlg тем что не использует в качестве источников
-  // готовый расчитанный спектр а использует временные сигналы, синхронизирует общие по времени блоки
-  // и считает по ним взаимный спектр
+  // Р°Р»РіРѕСЂРёС‚Рј РѕС‚Р»РёС‡СЏР°РµС‚СЃСЏ РѕС‚ cPhaseAlg С‚РµРј С‡С‚Рѕ РЅРµ РёСЃРїРѕР»СЊР·СѓРµС‚ РІ РєР°С‡РµСЃС‚РІРµ РёСЃС‚РѕС‡РЅРёРєРѕРІ
+  // РіРѕС‚РѕРІС‹Р№ СЂР°СЃС‡РёС‚Р°РЅРЅС‹Р№ СЃРїРµРєС‚СЂ Р° РёСЃРїРѕР»СЊР·СѓРµС‚ РІСЂРµРјРµРЅРЅС‹Рµ СЃРёРіРЅР°Р»С‹, СЃРёРЅС…СЂРѕРЅРёР·РёСЂСѓРµС‚ РѕР±С‰РёРµ РїРѕ РІСЂРµРјРµРЅРё Р±Р»РѕРєРё
+  // Рё СЃС‡РёС‚Р°РµС‚ РїРѕ РЅРёРј РІР·Р°РёРјРЅС‹Р№ СЃРїРµРєС‚СЂ
   cAriphmAlg = class(cbasealg)
   public
     m_A: cTag;
@@ -23,10 +23,9 @@ type
   protected
     m_opertype:integer;
   private
-    // лок который передается на расчет в спектр. нельзя передавать tag.readdata
-    // тк блок может дополняться нулями
+    // Р»РѕРє РєРѕС‚РѕСЂС‹Р№ РїРµСЂРµРґР°РµС‚СЃСЏ РЅР° СЂР°СЃС‡РµС‚ РІ СЃРїРµРєС‚СЂ. РЅРµР»СЊР·СЏ РїРµСЂРµРґР°РІР°С‚СЊ tag.readdata
+    // С‚Рє Р±Р»РѕРє РјРѕР¶РµС‚ РґРѕРїРѕР»РЅСЏС‚СЊСЃСЏ РЅСѓР»СЏРјРё
     m_EvalBlock1, m_EvalBlock2: TAlignDarray;
-
   protected
     function OutExists: boolean;
     function Bexists: boolean;
@@ -39,14 +38,16 @@ type
     function genTagName: string; override;
     procedure doEval(tag: cTag; time: double); override;
     procedure doGetData; override;
-    // если поменялось имя входного канала то пересоздаем имя выходного канала, а может и тип
-    // вызывается при загрузке или при установке входного тега
+
+    // РµСЃР»Рё РїРѕРјРµРЅСЏР»РѕСЃСЊ РёРјСЏ РІС…РѕРґРЅРѕРіРѕ РєР°РЅР°Р»Р° С‚Рѕ РїРµСЂРµСЃРѕР·РґР°РµРј РёРјСЏ РІС‹С…РѕРґРЅРѕРіРѕ РєР°РЅР°Р»Р°, Р° РјРѕР¶РµС‚ Рё С‚РёРї
+    // РІС‹Р·С‹РІР°РµС‚СЃСЏ РїСЂРё Р·Р°РіСЂСѓР·РєРµ РёР»Рё РїСЂРё СѓСЃС‚Р°РЅРѕРІРєРµ РІС…РѕРґРЅРѕРіРѕ С‚РµРіР°
     procedure LoadObjAttributes(xmlNode: txmlNode; mng: tobject); override;
     procedure SaveObjAttributes(xmlNode: txmlNode); override;
     procedure LoadTags(node: txmlNode); override;
     function ready: boolean; override;
     function getresname: string; override;
   public
+    procedure updateOutChan; override;
     constructor create; override;
     destructor destroy; override;
     class function getdsc: string; override;
@@ -103,12 +104,20 @@ end;
 constructor cAriphmAlg.create;
 begin
   inherited;
-
+  m_A := cTag.create;
+  // addInputTag(m_InTag);
+  m_B := cTag.create;
+  m_Out := cTag.create;
 end;
 
 destructor cAriphmAlg.destroy;
 begin
-
+  m_A.destroy;
+  m_A:=nil;
+  m_B.destroy;
+  m_B:=nil;
+  m_Out.destroy;
+  m_Out:=nil;
   inherited;
 end;
 
@@ -131,7 +140,7 @@ var
   I: Integer;
 begin
   inherited;
-  // Получение данных
+  // РџРѕР»СѓС‡РµРЅРёРµ РґР°РЅРЅС‹С…
   if m_A.UpdateTagData(true) then
   begin
     i1 := m_A.getPortionTime;
@@ -190,7 +199,7 @@ end;
 
 class function cAriphmAlg.getdsc: string;
 begin
-  result := 'Арифм. опер.';
+  result := 'РђСЂРёС„Рј. РѕРїРµСЂ.';
 end;
 
 function cAriphmAlg.GetProperties: string;
@@ -256,29 +265,21 @@ begin
   //inherited;
   m_properties:=updateParams(m_properties, str, '', ' ');
   changed := false;
-  // параметр A
+  // РїР°СЂР°РјРµС‚СЂ A
   lstr := GetParam(str, 'Aparam');
   if CheckStr(lstr) then
   begin
-    if m_A = nil then
-    begin
-      m_A := cTag.create;
-      t := getTagByName(lstr);
-      m_a.settag(t);
-    end;
+    t := getTagByName(lstr);
+    m_a.settag(t);
     if ChangeCTag(m_A, lstr) then
       changed := true;
   end;
-  // параметр B
+  // РїР°СЂР°РјРµС‚СЂ B
   lstr := GetParam(str, 'Bparam');
   if CheckStr(lstr) then
   begin
-    if m_B = nil then
-    begin
-      m_B := cTag.create;
-      t := getTagByName(lstr);
-      m_b.settag(t);
-    end;
+    t := getTagByName(lstr);
+    m_b.settag(t);
     if ChangeCTag(m_B, lstr) then
       changed := true;
   end;
@@ -287,6 +288,7 @@ begin
   if CheckStr(lstr) then
   begin
     m_out.tagname := lstr;
+    changed := true;
   end;
   if changed then
   begin
@@ -295,17 +297,21 @@ begin
   DoSetProperties(self);
 end;
 
+procedure cAriphmAlg.updateOutChan;
+begin
+  UpdateOutTag;
+end;
+
 procedure cAriphmAlg.UpdateOutTag;
 var
   str:pansichar;
   tagname: string;
   bl: IBlockAccess;
 begin
-  if m_Out=nil then // создание нового тега
+  if m_Out.tag=nil then // СЃРѕР·РґР°РЅРёРµ РЅРѕРІРѕРіРѕ С‚РµРіР°
   begin
     ecm;
-    m_Out := cTag.create;
-    if (m_a<>nil) and (m_b<>nil) then
+    if Aexists and Bexists then
     begin
       m_Out.tag := createVectorTagR8(genTagName, m_a.tag.getfreq, true, false, false);
       if not FAILED(m_Out.tag.QueryInterface(IBlockAccess, bl)) then
@@ -316,10 +322,10 @@ begin
     end;
     lcm;
   end
-  else // обновление существующего тега
+  else // РѕР±РЅРѕРІР»РµРЅРёРµ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РµРіРѕ С‚РµРіР°
   begin
     ecm;
-    if (m_a<>nil) and (m_b<>nil) then
+    if Aexists and Bexists then
     begin
       str := lpcstr(StrToAnsi(genTagName));
       m_Out.tag.SetName(str);

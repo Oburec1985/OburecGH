@@ -1,5 +1,4 @@
 inherited AriphmAlgFrame: TAriphmAlgFrame
-  Height = 278
   object ChannelLabel: TLabel [2]
     Left = 8
     Top = 106
