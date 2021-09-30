@@ -232,25 +232,32 @@ procedure createFormsRecorderUIThread(compMng: cCompMng);
 var
   h: thandle;
   str, str1:string;
+  show:boolean;
 begin
   g_delFrms:=false;
   //FullDebugModeScanMemoryPoolBeforeEveryOperation:=true;
 
   // GetCurrentThreadId;
+
+  show:=true;
+
   ControlCyclogramEditFrm := TControlCyclogramEditFrm.create(nil);
   ControlCyclogramEditFrm.HandleNeeded;
-  ControlCyclogramEditFrm.show;
+  if show then
+    ControlCyclogramEditFrm.show;
   ControlCyclogramEditFrm.close;
   ControlCyclogramEditFrm.LinkPlg(g_conmng);
 
   CyclogramReportFrm := TCyclogramReportFrm.create(nil);
   CyclogramReportFrm.HandleNeeded;
-  CyclogramReportFrm.show;
+  if show then
+    CyclogramReportFrm.show;
   CyclogramReportFrm.close;
 
   TrigsFrm := TTrigsFrm.create(nil);
   TrigsFrm.HandleNeeded;
-  TrigsFrm.show;
+  if show then
+    TrigsFrm.show;
   TrigsFrm.close;
   TrigsFrm.LinkPlg(g_conmng);
 
@@ -259,41 +266,50 @@ begin
   ModesTabForm.LinkMng(g_conmng);
 
   DownloadRegsFrm := TDownloadRegsFrm.create(nil);
-  DownloadRegsFrm.Show;
+  if show then
+    DownloadRegsFrm.Show;
   DownloadRegsFrm.close;
 
   MDBFrm := TMDBFrm.create(nil);
-  MDBFrm.Show;
+  if show then
+    MDBFrm.Show;
   MDBFrm.close;
 
   RcClientFrm := TRcClientFrm.create(nil);
-  RcClientFrm.Show;
+  if show then
+    RcClientFrm.Show;
   RcClientFrm.close;
 
 
   SpmChartEditFrm:=TSpmChartEditFrm.Create(nil);
-  SpmChartEditFrm.Show;
+  if show then
+    SpmChartEditFrm.Show;
   SpmChartEditFrm.close;
 
   EditCntlWrnFrm:=TEditCntlWrnFrm.Create(nil);
-  EditCntlWrnFrm.Show;
+  if show then
+    EditCntlWrnFrm.Show;
   EditCntlWrnFrm.close;
 
   EditProfileFrm:=TEditProfileFrm.Create(nil);
-  EditProfileFrm.Show;
+  if show then
+    EditProfileFrm.Show;
   EditProfileFrm.close;
 
   EditPolarFrm:=TEditPolarFrm.Create(nil);
-  EditPolarFrm.Show;
+  if show then
+    EditPolarFrm.Show;
   EditPolarFrm.close;
 
   GenSignalsEditFrm:=tGenSignalsEditFrm.create(nil);
-  GenSignalsEditFrm.Show;
+  if show then
+    GenSignalsEditFrm.Show;
   GenSignalsEditFrm.close;
 
 
   BandsFrm:=TBandsFrm.Create(nil);
-  BandsFrm.Show;
+  if show then
+    BandsFrm.Show;
   BandsFrm.close;
   if g_algMng<>nil then
     BandsFrm.LinkBands(g_algMng.m_bands, g_algMng.m_places, g_algMng.m_TagBandPairList);
@@ -301,12 +317,14 @@ begin
   if g_algMng<>NIL then
   begin
     AlgFrm:=TAlgFrm.Create(nil);
-    AlgFrm.Show;
+    if show then
+      AlgFrm.Show;
     AlgFrm.close;
 
     addAlgFrm:=TAddAlgFrm.Create(nil);
     addAlgFrm.init(g_algMng);
-    addAlgFrm.Show;
+    if show then
+      addAlgFrm.Show;
     addAlgFrm.close;
 
   end;

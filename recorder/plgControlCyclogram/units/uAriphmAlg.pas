@@ -1,6 +1,7 @@
 ﻿unit uAriphmAlg;
 
 interface
+
 uses
   classes, windows, activex, ubasealg, uCommonMath, uRCFunc, tags, recorder,
   blaccess, nativexml, ucommontypes, uFFT, Ap, fft, dialogs,
@@ -21,7 +22,7 @@ type
     m_B: cTag;
     m_Out: cTag;
   protected
-    m_opertype:integer;
+    m_opertype: integer;
   private
     // лок который передается на расчет в спектр. нельзя передавать tag.readdata
     // тк блок может дополняться нулями
@@ -29,7 +30,7 @@ type
   protected
     function OutExists: boolean;
     function Bexists: boolean;
-    function Aexists:boolean;
+    function Aexists: boolean;
     procedure UpdateOutTag;
     procedure doAfterload; override;
     procedure SetProperties(str: string); override;
@@ -54,12 +55,11 @@ type
   end;
 
 const
-  c_Add =0;
-  c_Dec =1;
-  c_Mult =2;
-  c_Div =3;
+  c_Add = 0;
+  c_Dec = 1;
+  c_Mult = 2;
+  c_Div = 3;
   C_AriphmOpts = 'TypeRes=0';
-
 
 implementation
 
@@ -67,36 +67,36 @@ implementation
 
 function cAriphmAlg.Aexists: boolean;
 begin
-  result:=false;
-  if m_A<>nil then
+  result := false;
+  if m_A <> nil then
   begin
-    if m_A.tag<>nil then
+    if m_A.tag <> nil then
     begin
-      result:=true;
+      result := true;
     end;
   end;
 end;
 
 function cAriphmAlg.Bexists: boolean;
 begin
-  result:=false;
-  if m_A<>nil then
+  result := false;
+  if m_A <> nil then
   begin
-    if m_A.tag<>nil then
+    if m_A.tag <> nil then
     begin
-      result:=true;
+      result := true;
     end;
   end;
 end;
 
 function cAriphmAlg.OutExists: boolean;
 begin
-  result:=false;
-  if m_Out<>nil then
+  result := false;
+  if m_Out <> nil then
   begin
-    if m_Out.tag<>nil then
+    if m_Out.tag <> nil then
     begin
-      result:=true;
+      result := true;
     end;
   end;
 end;
@@ -113,11 +113,11 @@ end;
 destructor cAriphmAlg.destroy;
 begin
   m_A.destroy;
-  m_A:=nil;
+  m_A := nil;
   m_B.destroy;
-  m_B:=nil;
+  m_B := nil;
   m_Out.destroy;
-  m_Out:=nil;
+  m_Out := nil;
   inherited;
 end;
 
@@ -135,40 +135,59 @@ end;
 
 procedure cAriphmAlg.doGetData;
 var
-  i1,i2:point2d;
-  b_newData:boolean;
-  I: Integer;
+  i1, i2: point2d;
+  b_newData: boolean;
+  I, j: integer;
+  dt:double;
 begin
   inherited;
   // Получение данных
   if m_A.UpdateTagData(true) then
   begin
     i1 := m_A.getPortionTime;
-    if b_newData then
+    if m_B.UpdateTagData(true) then
     begin
-      if m_B.UpdateTagData(true) then
+      dt:=0;
+      i2:=m_B.getPortionTime;
+      j:=0;
+      if m_a.lastindex=m_b.lastindex then
       begin
-        case m_opertype of
-          c_Add:
+        for I := 0 to m_A.lastindex - 1 do
+        begin
+          // потери данных
+          if j=length(m_Out.m_TagData)-1 then
           begin
-            for I := 0 to m_A.lastindex - 1 do
-            begin
-              m_out.m_TagData[i]:=m_A.m_ReadData[i]+m_B.m_ReadData[i];
-            end;
+            j:=0;
+            m_Out.tag.PushDataEx(pointer(m_Out.m_TagData)^, length(m_Out.m_TagData), 0, m_a.m_ReadDataTime+dt);
+            dt:=dt+length(m_Out.m_TagData)/m_Out.freq;
+            //m_Out.tag.PushData(pointer(m_Out.m_TagData)^, length(m_Out.m_TagData));
           end;
-          c_Dec:
-          begin
+          case m_opertype of
+            c_Add:
+              begin
+                m_Out.m_TagData[j] := m_A.m_ReadData[I] + m_B.m_ReadData[I];
+              end;
+            c_Dec:
+              begin
+                m_Out.m_TagData[j] := m_A.m_ReadData[I] - m_B.m_ReadData[I];
+              end;
+            c_Mult:
+              begin
+                m_Out.m_TagData[j] := m_A.m_ReadData[I] * m_B.m_ReadData[I];
+              end;
+            c_Div:
+              begin
+                m_Out.m_TagData[j] := m_A.m_ReadData[I] / m_B.m_ReadData[I];
+              end;
           end;
-          c_Mult:
-          begin
-          end;
-          c_Div:
-          begin
-          end;
+          inc(j);
         end;
-        m_out.tag.PushDataEx(pointer(m_out.m_TagData)^, m_A.lastindex, 0, time);
         m_A.ResetTagData;
         m_B.ResetTagData;
+      end
+      else
+      begin
+        //showmessage('A и B несинхрон');
       end;
     end;
   end;
@@ -179,21 +198,25 @@ begin
   inherited;
   m_A.doOnStart;
   m_B.doOnStart;
-  m_out.doOnStart;
+  m_Out.doOnStart;
 end;
 
 function cAriphmAlg.genTagName: string;
 var
   tagname: string;
-  str:string;
+  str: string;
 begin
   case m_opertype of
-    c_Add: str:='Add';
-    c_Dec: str:='Dec';
-    c_Mult: str:='Mult';
-    c_Div: str:='Div';
+    c_Add:
+      str := 'Add';
+    c_Dec:
+      str := 'Dec';
+    c_Mult:
+      str := 'Mult';
+    c_Div:
+      str := 'Div';
   end;
-  tagname := m_A.tagname+'_'+m_b.tagname+'_' +Str;
+  tagname := m_A.tagname + '_' + m_B.tagname + '_' + str;
   result := tagname;
 end;
 
@@ -204,7 +227,7 @@ end;
 
 function cAriphmAlg.GetProperties: string;
 var
-  pars:tstringlist;
+  pars: tstringlist;
 begin
   if m_properties = '' then
     m_properties := C_AriphmOpts;
@@ -217,18 +240,18 @@ begin
   if OutExists then
     addParam(pars, 'OutChannel', m_Out.tagname);
 
-  m_Properties := ParsToStr(pars);
-  result := m_Properties;
+  m_properties := ParsToStr(pars);
+  result := m_properties;
   delpars(pars);
   pars.destroy;
 end;
 
 function cAriphmAlg.getresname: string;
 begin
-  if m_out.tag <> nil then
-    result := m_out.tag.GetName
+  if m_Out.tag <> nil then
+    result := m_Out.tag.GetName
   else
-    result := m_out.tagname;
+    result := m_Out.tagname;
 end;
 
 procedure cAriphmAlg.LoadObjAttributes(xmlNode: txmlNode; mng: tobject);
@@ -262,15 +285,15 @@ var
   t: itag;
   changed: boolean;
 begin
-  //inherited;
-  m_properties:=updateParams(m_properties, str, '', ' ');
+  // inherited;
+  m_properties := updateParams(m_properties, str, '', ' ');
   changed := false;
   // параметр A
   lstr := GetParam(str, 'Aparam');
   if CheckStr(lstr) then
   begin
     t := getTagByName(lstr);
-    m_a.settag(t);
+    m_A.settag(t);
     if ChangeCTag(m_A, lstr) then
       changed := true;
   end;
@@ -279,7 +302,7 @@ begin
   if CheckStr(lstr) then
   begin
     t := getTagByName(lstr);
-    m_b.settag(t);
+    m_B.settag(t);
     if ChangeCTag(m_B, lstr) then
       changed := true;
   end;
@@ -287,7 +310,7 @@ begin
   lstr := GetParam(str, 'OutChannel');
   if CheckStr(lstr) then
   begin
-    m_out.tagname := lstr;
+    m_Out.tagname := lstr;
     changed := true;
   end;
   if changed then
@@ -304,16 +327,18 @@ end;
 
 procedure cAriphmAlg.UpdateOutTag;
 var
-  str:pansichar;
+  str: pansichar;
   tagname: string;
   bl: IBlockAccess;
+  bcount:integer;
 begin
-  if m_Out.tag=nil then // создание нового тега
+  if m_Out.tag = nil then // создание нового тега
   begin
     ecm;
     if Aexists and Bexists then
     begin
-      m_Out.tag := createVectorTagR8(genTagName, m_a.tag.getfreq, true, false, false);
+      m_Out.tag := createVectorTagR8(genTagName, m_A.tag.getfreq, true, false,
+        false);
       if not FAILED(m_Out.tag.QueryInterface(IBlockAccess, bl)) then
       begin
         m_Out.block := bl;
@@ -329,8 +354,11 @@ begin
     begin
       str := lpcstr(StrToAnsi(genTagName));
       m_Out.tag.SetName(str);
-      m_Out.tag.SetFreq(m_a.tag.getfreq);
+      m_Out.tag.SetFreq(m_A.tag.getfreq);
       m_Out.block := nil;
+      bcount:=m_a.block.GetBlocksCount;
+      if bcount<=1 then
+        bcount:=4;
       if not FAILED(m_Out.tag.QueryInterface(IBlockAccess, bl)) then
       begin
         m_Out.block := bl;

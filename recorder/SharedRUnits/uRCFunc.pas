@@ -1074,7 +1074,7 @@ begin
   size:=round(getrefreshperiod*ftag.GetFreq);
   if (v=1) and (size>1) then
   begin
-    v:=size;
+    v:=size shl 2;
   end;
   // iBlock.GetBlocksSize - дает тот же результат???
   SetLength(m_TagData, integer(v));
