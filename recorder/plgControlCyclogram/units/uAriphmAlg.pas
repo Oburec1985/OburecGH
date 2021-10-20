@@ -138,7 +138,7 @@ var
   i1, i2: point2d;
   b_newData: boolean;
   I, j: integer;
-  dt:double;
+  dt: double;
 begin
   inherited;
   // Получение данных
@@ -147,20 +147,21 @@ begin
     i1 := m_A.getPortionTime;
     if m_B.UpdateTagData(true) then
     begin
-      dt:=0;
-      i2:=m_B.getPortionTime;
-      j:=0;
-      if m_a.lastindex=m_b.lastindex then
+      dt := 0;
+      i2 := m_B.getPortionTime;
+      j := 0;
+      if m_A.lastindex = m_B.lastindex then
       begin
         for I := 0 to m_A.lastindex - 1 do
         begin
           // потери данных
-          if j=length(m_Out.m_TagData)-1 then
+          if j = length(m_Out.m_TagData) - 1 then
           begin
-            j:=0;
-            m_Out.tag.PushDataEx(pointer(m_Out.m_TagData)^, length(m_Out.m_TagData), 0, m_a.m_ReadDataTime+dt);
-            dt:=dt+length(m_Out.m_TagData)/m_Out.freq;
-            //m_Out.tag.PushData(pointer(m_Out.m_TagData)^, length(m_Out.m_TagData));
+            j := 0;
+            m_Out.tag.PushDataEx(pointer(m_Out.m_TagData)^, length
+                (m_Out.m_TagData), 0, m_A.m_ReadDataTime + dt);
+            dt := dt + length(m_Out.m_TagData) / m_Out.freq;
+            // m_Out.tag.PushData(pointer(m_Out.m_TagData)^, length(m_Out.m_TagData));
           end;
           case m_opertype of
             c_Add:
@@ -187,7 +188,7 @@ begin
       end
       else
       begin
-        //showmessage('A и B несинхрон');
+        // showmessage('A и B несинхрон');
       end;
     end;
   end;
@@ -254,12 +255,6 @@ begin
     result := m_Out.tagname;
 end;
 
-procedure cAriphmAlg.LoadObjAttributes(xmlNode: txmlNode; mng: tobject);
-begin
-  inherited;
-
-end;
-
 procedure cAriphmAlg.LoadTags(node: txmlNode);
 begin
   inherited;
@@ -275,7 +270,27 @@ begin
 end;
 
 procedure cAriphmAlg.SaveObjAttributes(xmlNode: txmlNode);
+var
+  tnode, tagnode: txmlNode;
+  I: integer;
 begin
+  inherited;
+  tnode := xmlNode.NodeNew('OutputTag');
+  tagnode := tnode.NodeNew('OutChan');
+  saveTag(fOutTag, tagnode);
+end;
+
+procedure cAriphmAlg.LoadObjAttributes(xmlNode: txmlNode; mng: tobject);
+begin
+  tnode := xmlNode.FindNode('OutputTag');
+  if tnode <> nil then
+  begin
+    tagnode := tnode.FindNode('OutChan');
+    if tagnode <> nil then
+    begin
+      fOutTag := LoadTag(tagnode);
+    end;
+  end;
   inherited;
 end;
 
@@ -330,7 +345,7 @@ var
   str: pansichar;
   tagname: string;
   bl: IBlockAccess;
-  bcount:integer;
+  bcount: integer;
 begin
   if m_Out.tag = nil then // создание нового тега
   begin
@@ -356,9 +371,9 @@ begin
       m_Out.tag.SetName(str);
       m_Out.tag.SetFreq(m_A.tag.getfreq);
       m_Out.block := nil;
-      bcount:=m_a.block.GetBlocksCount;
-      if bcount<=1 then
-        bcount:=4;
+      bcount := m_A.block.GetBlocksCount;
+      if bcount <= 1 then
+        bcount := 4;
       if not FAILED(m_Out.tag.QueryInterface(IBlockAccess, bl)) then
       begin
         m_Out.block := bl;
