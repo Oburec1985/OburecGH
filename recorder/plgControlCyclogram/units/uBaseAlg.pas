@@ -663,7 +663,7 @@ begin
     for i := 0 to tnode.NodeCount - 1 do
     begin
       tagnode := tnode.FindNode('Tag_' + inttostr(i));
-      t := loadTag(tagnode);
+      t := loadTag(tagnode, nil);
       if t <> nil then
         addInputTag(t);
     end;
@@ -674,7 +674,7 @@ begin
     for i := 0 to tnode.NodeCount - 1 do
     begin
       tagnode := tnode.FindNode('Tag_' + inttostr(i));
-      t := loadTag(tagnode);
+      t := loadTag(tagnode, nil);
       if t <> nil then
         addOutTag(t);
     end;

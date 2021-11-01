@@ -222,14 +222,14 @@ begin
   tnode := node.FindNode('InTag');
   if tnode <> nil then
   begin
-    t := loadTag(tnode);
-    setinptag(t);
+    t := loadTag(tnode, t);
+    setinptag(m_InTag);
   end;
 
   tnode := node.FindNode('InTaho');
   if tnode <> nil then
   begin
-    t := loadTag(tnode);
+    t := loadTag(tnode, m_Taho);
     setTahoTag(t);
   end;
 end;

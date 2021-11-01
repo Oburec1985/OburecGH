@@ -644,7 +644,7 @@ begin
   tnode := node.FindNode('InputTag');
   if tnode <> nil then
   begin
-    t := loadTag(tnode);
+    t := loadTag(tnode, m_tag);
     setinptag(t);
   end;
 end;

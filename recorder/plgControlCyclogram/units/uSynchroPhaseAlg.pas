@@ -297,7 +297,7 @@ begin
     tagnode := tnode.FindNode('OutChan');
     if tagnode <> nil then
     begin
-      m_outTag := LoadTag(tagnode);
+      m_outTag := LoadTag(tagnode,m_outTag);
     end;
   end;
   inherited;

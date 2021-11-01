@@ -239,7 +239,7 @@ begin
 
   // GetCurrentThreadId;
 
-  show:=true;
+  show:=false;
 
   ControlCyclogramEditFrm := TControlCyclogramEditFrm.create(nil);
   ControlCyclogramEditFrm.HandleNeeded;

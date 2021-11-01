@@ -23,6 +23,7 @@ type
     m_Out: cTag;
   protected
     m_opertype: integer;
+    fOutIsNew:boolean;
   private
     // лок который передается на расчет в спектр. нельзя передавать tag.readdata
     // тк блок может дополняться нулями
@@ -108,6 +109,7 @@ begin
   // addInputTag(m_InTag);
   m_B := cTag.create;
   m_Out := cTag.create;
+  fOutIsNew:=true;
 end;
 
 destructor cAriphmAlg.destroy;
@@ -277,10 +279,12 @@ begin
   inherited;
   tnode := xmlNode.NodeNew('OutputTag');
   tagnode := tnode.NodeNew('OutChan');
-  saveTag(fOutTag, tagnode);
+  saveTag(m_Out, tagnode);
 end;
 
 procedure cAriphmAlg.LoadObjAttributes(xmlNode: txmlNode; mng: tobject);
+var
+  tnode, tagnode: txmlNode;
 begin
   tnode := xmlNode.FindNode('OutputTag');
   if tnode <> nil then
@@ -288,7 +292,8 @@ begin
     tagnode := tnode.FindNode('OutChan');
     if tagnode <> nil then
     begin
-      fOutTag := LoadTag(tagnode);
+      fOutIsNew:=false;
+      m_out := LoadTag(tagnode, m_out);
     end;
   end;
   inherited;
@@ -367,8 +372,11 @@ begin
     ecm;
     if Aexists and Bexists then
     begin
-      str := lpcstr(StrToAnsi(genTagName));
-      m_Out.tag.SetName(str);
+      if fOutIsNew then
+      begin
+        str := lpcstr(StrToAnsi(genTagName));
+        m_Out.tag.SetName(str);
+      end;
       m_Out.tag.SetFreq(m_A.tag.getfreq);
       m_Out.block := nil;
       bcount := m_A.block.GetBlocksCount;

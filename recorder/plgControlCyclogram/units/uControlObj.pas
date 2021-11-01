@@ -2952,7 +2952,7 @@ begin
       end
       else
       begin
-        ct := LoadTag(child);
+        ct := LoadTag(child, nil);
         if ct.tag <> nil then
         begin
           cAlarmTrig(t).tag.tag := ct.tag;
@@ -2982,7 +2982,7 @@ begin
           (act.opertype = c_action_MDBdecProp) then
         begin
           act.mdbPropName := ActNode.ReadAttributeString('MDBPropName', '');
-          ct := LoadTag(ActNode);
+          ct := LoadTag(ActNode, nil);
           if ct.tag = nil then
           begin
             act.mdbPropVal := ActNode.ReadAttributeString('MDBPropVal', '');

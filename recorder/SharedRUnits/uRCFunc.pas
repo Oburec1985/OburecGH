@@ -173,7 +173,7 @@ type
 // путь к текущему замеру
 function GetMeraFile:string;
 procedure saveTag(t: cTag; node: txmlnode);
-function LoadTag(node: txmlnode): cTag;
+function LoadTag(node: txmlnode; p_t:ctag): cTag;
 procedure saveTagToIni(ifile: tinifile; t: cTag; sect, ident: string);
 function LoadTagIni(ifile: tinifile; sect, ident: string): cTag;
 procedure LoadExTagIni(ifile: tinifile; t: cTag; sect, ident: string);
@@ -428,14 +428,21 @@ begin
   node.WriteAttributeInt64('TagID', t.tag_id);
 end;
 
-function LoadTag(node: txmlnode): cTag;
+function LoadTag(node: txmlnode; p_t:ctag): cTag;
 var
   t: itag;
   ir: irecorder;
   id: tagid;
   refcount:integer;
 begin
-  result := cTag.create;
+  if t=nil then
+  begin
+    result := cTag.create;
+  end
+  else
+  begin
+    result:=p_t;
+  end;
   result.tagname := node.ReadAttributeString('TagName', '');
   result.ftagid := node.ReadAttributeInt64('TagID', -1);
   if result.tagname <> '' then
