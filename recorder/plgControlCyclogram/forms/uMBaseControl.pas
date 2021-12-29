@@ -1750,6 +1750,7 @@ begin
       c.OnDelete := doDeleteRConnection;
     end;
   end;
+  showRegistrators;
 end;
 
 procedure InitPropSG(sg: tstringgrid);

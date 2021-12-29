@@ -173,7 +173,19 @@ begin
 end;
 
 function cRegController.createConnection(name: string; folder:string; ip: string; port: integer): TRConnection;
+var
+  I: Integer;
+  c:TRConnection;
 begin
+  result:=nil;
+  for I := 0 to Count - 1 do
+  begin
+    c:=getconnection(i);
+    if (c.Address=ip) and (c.port=port) then
+    begin
+      exit;
+    end;
+  end;
   result:=TRConnection.Create;
   result.RC_PAN:=self;
   result.Address:=ip;
@@ -191,10 +203,6 @@ begin
   //result.s.OnConnecting:=doSocketConnecting;
 
   AddObject(name, result);
-  //if assigned(OnCreateConnection) then
-  //begin
-  //  OnCreateConnection(result);
-  //end;
 end;
 
 destructor cRegController.destroy;

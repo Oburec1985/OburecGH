@@ -116,6 +116,7 @@ function AlignBlockLength(b:TAlignDCmpx):integer;overload;
 
 
 const
+  reg = $fa10 ;
   PF_FLOATING_POINT_PRECISION_ERRATA = 0; // On a Pentium, a floating-point precision error can occur in rare circumstances.
   PF_FLOATING_POINT_EMULATED = 1; // Floating-point operations are emulated using a software emulator.
   // This function returns a nonzero value if floating-point operations are emulated; otherwise, it returns zero.
@@ -551,7 +552,6 @@ var
   r2, r1: double;
 asm
   pushad
-
   // edx - длина массива (точнее номер hight элемента)
   // ecx - целое без остатка количество итераций по сложению буферов sse (16 даблов на итерацию)
   // ebx - остаток деления (элементы не уместившиеся в целое число итераций)
