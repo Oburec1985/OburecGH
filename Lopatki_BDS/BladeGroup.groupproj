@@ -3,9 +3,6 @@
 			<ProjectGuid>{9138d09f-b1ab-46cf-8f7e-5493655b95a2}</ProjectGuid>
 		</PropertyGroup>
 		<ItemGroup>
-			<Projects Include="BlEng\BlEng.dproj">
-				<Dependencies/>
-			</Projects>
 			<Projects Include="..\sharedUtils\компоненты\dcl_dpk\dcl_own.dproj">
 				<Dependencies/>
 			</Projects>
@@ -15,16 +12,19 @@
 			<Projects Include="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\3d\GlScene.dproj">
+			<Projects Include="..\recorder\SharedRUnits\RC_lib\RC_lib.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\recorder\plgControlCyclogram\plgControlCyclogram.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="BlEng\BlEng.dproj">
 				<Dependencies/>
 			</Projects>
 			<Projects Include="..\profileGenerator\Proilegenerator.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\recorder\SharedRUnits\RC_lib\RC_lib.dproj">
-				<Dependencies/>
-			</Projects>
-			<Projects Include="..\recorder\plgControlCyclogram\plgControlCyclogram.dproj">
+			<Projects Include="..\3d\GlScene.dproj">
 				<Dependencies/>
 			</Projects>
 			<Projects Include="..\примеры\CheckSSE\CheckSSE.dproj">
@@ -58,15 +58,6 @@
 				</BorlandProject>
 			</BorlandProject>
 		</ProjectExtensions>
-		<Target Name="BlEng">
-			<MSBuild Projects="BlEng\BlEng.dproj"/>
-		</Target>
-		<Target Name="BlEng:Clean">
-			<MSBuild Targets="Clean" Projects="BlEng\BlEng.dproj"/>
-		</Target>
-		<Target Name="BlEng:Make">
-			<MSBuild Targets="Make" Projects="BlEng\BlEng.dproj"/>
-		</Target>
 		<Target Name="dcl_own">
 			<MSBuild Projects="..\sharedUtils\компоненты\dcl_dpk\dcl_own.dproj"/>
 		</Target>
@@ -94,24 +85,6 @@
 		<Target Name="ComponentsLib:Make">
 			<MSBuild Targets="Make" Projects="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj"/>
 		</Target>
-		<Target Name="GlScene">
-			<MSBuild Projects="..\3d\GlScene.dproj"/>
-		</Target>
-		<Target Name="GlScene:Clean">
-			<MSBuild Targets="Clean" Projects="..\3d\GlScene.dproj"/>
-		</Target>
-		<Target Name="GlScene:Make">
-			<MSBuild Targets="Make" Projects="..\3d\GlScene.dproj"/>
-		</Target>
-		<Target Name="Proilegenerator">
-			<MSBuild Projects="..\profileGenerator\Proilegenerator.dproj"/>
-		</Target>
-		<Target Name="Proilegenerator:Clean">
-			<MSBuild Targets="Clean" Projects="..\profileGenerator\Proilegenerator.dproj"/>
-		</Target>
-		<Target Name="Proilegenerator:Make">
-			<MSBuild Targets="Make" Projects="..\profileGenerator\Proilegenerator.dproj"/>
-		</Target>
 		<Target Name="RC_lib">
 			<MSBuild Projects="..\recorder\SharedRUnits\RC_lib\RC_lib.dproj"/>
 		</Target>
@@ -129,6 +102,33 @@
 		</Target>
 		<Target Name="plgControlCyclogram:Make">
 			<MSBuild Targets="Make" Projects="..\recorder\plgControlCyclogram\plgControlCyclogram.dproj"/>
+		</Target>
+		<Target Name="BlEng">
+			<MSBuild Projects="BlEng\BlEng.dproj"/>
+		</Target>
+		<Target Name="BlEng:Clean">
+			<MSBuild Targets="Clean" Projects="BlEng\BlEng.dproj"/>
+		</Target>
+		<Target Name="BlEng:Make">
+			<MSBuild Targets="Make" Projects="BlEng\BlEng.dproj"/>
+		</Target>
+		<Target Name="Proilegenerator">
+			<MSBuild Projects="..\profileGenerator\Proilegenerator.dproj"/>
+		</Target>
+		<Target Name="Proilegenerator:Clean">
+			<MSBuild Targets="Clean" Projects="..\profileGenerator\Proilegenerator.dproj"/>
+		</Target>
+		<Target Name="Proilegenerator:Make">
+			<MSBuild Targets="Make" Projects="..\profileGenerator\Proilegenerator.dproj"/>
+		</Target>
+		<Target Name="GlScene">
+			<MSBuild Projects="..\3d\GlScene.dproj"/>
+		</Target>
+		<Target Name="GlScene:Clean">
+			<MSBuild Targets="Clean" Projects="..\3d\GlScene.dproj"/>
+		</Target>
+		<Target Name="GlScene:Make">
+			<MSBuild Targets="Make" Projects="..\3d\GlScene.dproj"/>
 		</Target>
 		<Target Name="CheckSSE">
 			<MSBuild Projects="..\примеры\CheckSSE\CheckSSE.dproj"/>
@@ -194,13 +194,13 @@
 			<MSBuild Targets="Make" Projects="..\recorder\plgTestClear\plgTestClear.dproj"/>
 		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="BlEng;dcl_own;GlPackage;ComponentsLib;GlScene;Proilegenerator;RC_lib;plgControlCyclogram;CheckSSE;SubdivFilePlg;WpServicePlg;WPExtPack;ProjectFFT;SniffDll;plgTestClear"/>
+			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;BlEng;Proilegenerator;GlScene;CheckSSE;SubdivFilePlg;WpServicePlg;WPExtPack;ProjectFFT;SniffDll;plgTestClear"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="BlEng:Clean;dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;GlScene:Clean;Proilegenerator:Clean;RC_lib:Clean;plgControlCyclogram:Clean;CheckSSE:Clean;SubdivFilePlg:Clean;WpServicePlg:Clean;WPExtPack:Clean;ProjectFFT:Clean;SniffDll:Clean;plgTestClear:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;BlEng:Clean;Proilegenerator:Clean;GlScene:Clean;CheckSSE:Clean;SubdivFilePlg:Clean;WpServicePlg:Clean;WPExtPack:Clean;ProjectFFT:Clean;SniffDll:Clean;plgTestClear:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="BlEng:Make;dcl_own:Make;GlPackage:Make;ComponentsLib:Make;GlScene:Make;Proilegenerator:Make;RC_lib:Make;plgControlCyclogram:Make;CheckSSE:Make;SubdivFilePlg:Make;WpServicePlg:Make;WPExtPack:Make;ProjectFFT:Make;SniffDll:Make;plgTestClear:Make"/>
+			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;BlEng:Make;Proilegenerator:Make;GlScene:Make;CheckSSE:Make;SubdivFilePlg:Make;WpServicePlg:Make;WPExtPack:Make;ProjectFFT:Make;SniffDll:Make;plgTestClear:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

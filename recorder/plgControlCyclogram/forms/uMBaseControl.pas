@@ -475,8 +475,7 @@ begin
         ecm;
         ir := getIR;
         pstr := LPCSTR(StrToAnsi(cfgpath));
-        ir.ImportSettings(pstr, // IESF_DEFAULTSETTINGS+
-          IESF_LOCAL_MODE);
+        ir.ImportSettings(pstr, IESF_DEFAULTSETTINGS+IESF_LOCAL_MODE);
         GPluginInstance.Notify(PN_RCLOADCONFIG, 0);
         lcm;
       end;

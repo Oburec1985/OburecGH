@@ -333,6 +333,7 @@ end;
 procedure destroyFormsRecorderUIThread(compMng: cCompMng);
 begin
 {$IfDef DEBUG}
+  if true then exit;
   LogRecorderMessage('destroyFormsRecorderUIThread_enter');
   // удаление форм в UIThread
   // ВАЖНО!!! Первое изменение свойств формы имеет право происходить только в UIThread

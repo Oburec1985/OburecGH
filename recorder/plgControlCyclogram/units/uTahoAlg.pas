@@ -184,6 +184,7 @@ begin
   else
   begin
     Knorm:=Knorm*(m_fftCount)/spmPointCount;
+    //Knorm:=(m_fftCount)/spmPointCount;
   end;
   startind:=0;
   len:=AlignBlockLength(outarray);

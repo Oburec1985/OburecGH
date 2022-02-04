@@ -1,5 +1,5 @@
 inherited TahoAlgFrame: TTahoAlgFrame
-  Height = 602
+  Height = 440
   Constraints.MinHeight = 440
   ExplicitHeight = 440
   object ChannelLabel: TLabel [2]
@@ -41,12 +41,11 @@ inherited TahoAlgFrame: TTahoAlgFrame
   end
   object LvlPan: TPanel
     Left = 0
-    Top = 298
+    Top = 136
     Width = 451
     Height = 120
     Align = alBottom
     TabOrder = 3
-    ExplicitTop = 136
     object L1Label: TLabel
       Left = 8
       Top = 10
@@ -82,12 +81,11 @@ inherited TahoAlgFrame: TTahoAlgFrame
   end
   object SpmPan: TPanel
     Left = 0
-    Top = 418
+    Top = 256
     Width = 451
     Height = 184
     Align = alBottom
     TabOrder = 4
-    ExplicitTop = 256
     object FFTCountLabel: TLabel
       Left = 8
       Top = 26

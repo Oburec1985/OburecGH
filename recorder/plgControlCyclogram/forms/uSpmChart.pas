@@ -305,6 +305,7 @@ begin
   ApplyBands;
   if ti.m_spm <> nil then
   begin
+    if ti.m_spm.m_tag=nil then exit;
     ti.m_spmtrend := cBuffTrend1d.create;
     ti.m_spmtrend.layer:=1;
     ti.m_spmtrend.chart := spmChart;
@@ -425,7 +426,10 @@ begin
     if bandtagPair=nil then
     begin
       if ti.m_spm<>nil then
-        bandtagPair:=g_algMng.m_TagBandPairList.getPair(ti.m_spm.m_tag.tagname);
+      begin
+        if ti.m_spm.m_tag<>nil then
+          bandtagPair:=g_algMng.m_TagBandPairList.getPair(ti.m_spm.m_tag.tagname);
+      end;
     end;
     if bandtagPair<>nil then
     begin

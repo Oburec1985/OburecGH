@@ -268,7 +268,7 @@ begin
   end;
 
   setcomboboxitem(GetParsValue(m_pars, 'Channel'), ChannelCB);
-  if channelcb.ItemIndex>0 then
+  if channelcb.ItemIndex>-1 then
   begin
     t := ChannelCB.gettag(ChannelCB.ItemIndex);
     FsEdit.FloatNum := t.GetFreq;
