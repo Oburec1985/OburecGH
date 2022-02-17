@@ -313,7 +313,7 @@
     <File Path="units\uWPOpers.pas"/>
     <File Path="units\uWPproc.pas"/>
     <File Path="units\uWPProcServices.pas"/>
-    <File Path="WPExtPack_TLB.pas"/>
     <File Path="WPExtPack.ridl"/>
+    <File Path="WPExtPack_TLB.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

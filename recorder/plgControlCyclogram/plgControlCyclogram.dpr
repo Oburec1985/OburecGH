@@ -188,7 +188,8 @@ uses
   u3dObj in 'forms\u3dObj.pas' {ObjFrm3d},
   uGLFrmEdit in 'forms\uGLFrmEdit.pas' {ObjFrm3dEdit},
   uAriphmAlg in 'units\uAriphmAlg.pas',
-  uAriphmAlgFrame in 'forms\uAriphmAlgFrame.pas' {AriphmAlgFrame: TFrame};
+  uAriphmAlgFrame in 'forms\uAriphmAlgFrame.pas' {AriphmAlgFrame: TFrame},
+  uTimeIntervalAlg in 'units\uTimeIntervalAlg.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}
