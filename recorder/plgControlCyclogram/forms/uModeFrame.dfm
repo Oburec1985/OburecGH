@@ -10,7 +10,7 @@ object ModeFrame: TModeFrame
     Top = 0
     Width = 556
     Height = 328
-    ActivePage = ProgramPage
+    ActivePage = ModesPage
     Align = alClient
     Constraints.MinHeight = 328
     Constraints.MinWidth = 556
@@ -18,10 +18,6 @@ object ModeFrame: TModeFrame
     object ProgramPage: TTabSheet
       Caption = #1055#1088#1086#1075#1088#1072#1084#1084#1099
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object ProgramCounterLabel: TLabel
         Left = 3
         Top = 53
@@ -157,7 +153,7 @@ object ModeFrame: TModeFrame
         MaxValue = 0
         MinValue = 1
         TabOrder = 0
-        Value = 0
+        Value = 1
       end
       object ProgramNameE: TEdit
         Left = 3
@@ -190,10 +186,6 @@ object ModeFrame: TModeFrame
     end
     object ModesPage: TTabSheet
       Caption = #1056#1077#1078#1080#1084#1099
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Splitter1: TSplitter
         Left = 325
         Top = 0

@@ -681,16 +681,11 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
         inherited PageControl1: TPageControl
           Width = 500
           Height = 327
-          ActivePage = ModeFrame1.ModesPage
           Constraints.MinHeight = 327
           Constraints.MinWidth = 500
           ExplicitWidth = 500
           ExplicitHeight = 327
           inherited ProgramPage: TTabSheet
-            ExplicitLeft = 4
-            ExplicitTop = 24
-            ExplicitWidth = 492
-            ExplicitHeight = 299
             inherited ShowModesTabBtn: TSpeedButton
               Left = 319
               Hint = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1085#1080#1077' '#1087#1088#1086#1075#1088#1072#1084#1084#1099
@@ -732,10 +727,8 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             end
           end
           inherited ModesPage: TTabSheet
-            ExplicitLeft = 4
-            ExplicitTop = 24
-            ExplicitWidth = 548
-            ExplicitHeight = 300
+            ExplicitWidth = 492
+            ExplicitHeight = 299
             inherited Splitter1: TSplitter
               Left = 265
               Width = 6
@@ -749,7 +742,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
               Left = 271
               Width = 221
               Height = 299
-              ExplicitLeft = 327
+              ExplicitLeft = 271
               ExplicitWidth = 221
               ExplicitHeight = 299
               inherited ChannelsLV: TBtnListView
@@ -763,7 +756,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
               Width = 265
               Height = 299
               Constraints.MinWidth = 192
-              ExplicitWidth = 321
+              ExplicitWidth = 265
               ExplicitHeight = 299
               inherited ModeTimeLabel: TLabel
                 Top = 51
@@ -920,7 +913,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
     Left = 24
     Top = 280
     Bitmap = {
-      494C01010C001100040020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010C0011000C0020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000008000000001002000000000000000
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -3062,7 +3055,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
     Left = 104
     Top = 224
     Bitmap = {
-      494C01010C001100040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010C0011000C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000004000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

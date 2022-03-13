@@ -90,7 +90,7 @@ var
   periodCount:integer;
 begin
   len := tag.lastindex;
-  inFreq := tag.tag.GetFreq;
+  {inFreq := tag.tag.GetFreq;
 
   mean := GetMean(tag.tag);
   peak := GetAmp(tag.tag);
@@ -159,7 +159,7 @@ begin
         end;
       end;
     end;
-  end;
+  end;}
   fInTag.ResetTagData(m_portionsize);
 end;
 
@@ -302,9 +302,9 @@ end;
 
 function cTimeIntervalAlg.GetProperties: string;
 begin
-  if m_properties = '' then
+ { if m_properties = '' then
     m_properties := C_TahoOpts;
-  result := m_properties;
+  result := m_properties;}
 end;
 
 
@@ -354,8 +354,8 @@ function cTimeIntervalAlg.genTagName: string;
 var
   tagname: string;
 begin
-  tagname := InTag.tagname;
-  result := tagname + '_Taho';
+{  tagname := InTag.tagname;
+  result := tagname + '_Taho';}
 end;
 
 procedure cTimeIntervalAlg.createOutChan;
@@ -363,7 +363,7 @@ var
   tagname: string;
   bl: IBlockAccess;
 begin
-  if InTag <> nil then
+{  if InTag <> nil then
   begin
     if InTag.tag <> nil then
     begin
@@ -392,7 +392,7 @@ begin
       end;
       lcm;
     end;
-  end;
+  end;}
 end;
 
 procedure cTimeIntervalAlg.updateOutChan;
@@ -403,7 +403,7 @@ var
   bl: IBlockAccess;
 begin
   ecm;
-  str := lpcstr(StrToAnsi(genTagName));
+{  str := lpcstr(StrToAnsi(genTagName));
   if fOutIsNew then
   begin
     fOutTag.tag.SetName(str);
@@ -417,6 +417,6 @@ begin
   begin
     fOutTag.block := bl;
   end;
-  lcm;
+  lcm;}
 end;
 end.

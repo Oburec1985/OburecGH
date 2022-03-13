@@ -5,12 +5,22 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, recorder, tags, uCommonMath, inifiles, uControlObj, uRCFunc,
-  uComponentServises, uCustomEditControlFrame, ubtnlistview;
+  uComponentServises, uCustomEditControlFrame, ubtnlistview, ComCtrls, ExtCtrls,
+  uEditCtrlZoneFrm,
+  Buttons;
 
 type
   TDACControlEditFrame = class(TCustomControlEditFrame)
     FeedbackLabel: TLabel;
     DACCB: TComboBox;
+    DscMemo: TMemo;
+    RightPanel: TPanel;
+    Panel1: TPanel;
+    BtnListView1: TBtnListView;
+    AddZoneBtn: TSpeedButton;
+    DelZoneBtn: TSpeedButton;
+    UnitsCB: TComboBox;
+    procedure AddZoneBtnClick(Sender: TObject);
   public
     procedure EndMS;override;
     function GetDsc:string;override;
@@ -88,6 +98,15 @@ begin
   else
     DACCB.text:=text;
   DACCB.itemindex:=-1;
+end;
+
+procedure TDACControlEditFrame.AddZoneBtnClick(Sender: TObject);
+begin
+  if EditCtrlZoneFrm=nil then
+  begin
+    EditCtrlZoneFrm:=TEditCtrlZoneFrm.Create(nil);
+  end;
+  EditCtrlZoneFrm.Show();
 end;
 
 function TDACControlEditFrame.ControlType:string;
