@@ -18,20 +18,22 @@ type
     LV: TBtnListView;
     Panel1: TPanel;
     procedure LVClick(Sender: TObject);
+    procedure LVEnter(Sender: TObject);
   protected
     // реальный X курсора с поправкой на логарифм по осис X
     realX:double;
     m_Init:boolean;
+    activChart:cChart;
   protected
   protected
     procedure AddToLegend(tr:cbasictrend; x:double);
     procedure SetX(p:cpage; x:double);
-    procedure doSetActChart(sender:tobject);
     procedure doMoveCursor(sender:tobject);
     procedure DoCreate; override;
     procedure createevents;
     procedure destroyevents;
   public
+    procedure doSetActChart(sender:tobject);
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
     destructor destroy; override;
@@ -80,7 +82,7 @@ const
   c_col_No = '№';
 
 var
-  CursorFrm: TCursorFrm;
+  g_CursorFrm: TCursorFrm;
   g_CursorFactory: cCursorFactory;
 
 
@@ -177,6 +179,7 @@ begin
   lv.ChangeTextColor:=true;
   m_Init:=false;
   createevents;
+  g_CursorFrm:=self;
 end;
 
 procedure TCursorFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -219,6 +222,11 @@ begin
 end;
 
 
+procedure TCursorFrm.LVEnter(Sender: TObject);
+begin
+  LV.clear;
+end;
+
 procedure TCursorFrm.SetX(p:cpage; x: double);
 var
   c:cDoubleCursor;
@@ -256,8 +264,11 @@ var
   tr:cbasictrend;
   x:double;
 begin
+  activChart:=cchart(sender);
   p:=getpage(sender);
   if p=nil then exit;
+  lv.Clear;
+
   c:=p.cursor;
   x:=c.getx1;
   SetX(p, x);

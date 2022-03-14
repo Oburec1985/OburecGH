@@ -413,7 +413,11 @@ begin
     begin
       if p.lgx then
       begin
-        p2.x := cpage(getpage).xGridData[i * 2].x;
+        if (i*2)>=length(p.xGridData) then
+        begin
+          break;
+        end;
+        p2.x := cpage(p).xGridData[i * 2].x;
         ValStep.x := xGridDataVal[i];
         str := formatstr(ValStep.x, textsign);
         OutText(PCHAR(str), p2, c_left, c_AxisFontInd);

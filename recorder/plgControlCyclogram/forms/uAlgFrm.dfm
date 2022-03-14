@@ -66,7 +66,7 @@ object AlgFrm: TAlgFrm
       TabOrder = 1
       object AddAlgBtn: TSpeedButton
         Left = 4
-        Top = 5
+        Top = 7
         Width = 55
         Height = 47
         Hint = #1044#1086#1073#1072#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088

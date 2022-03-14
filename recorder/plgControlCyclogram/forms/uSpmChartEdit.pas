@@ -59,6 +59,7 @@ type
     procedure TagsLBKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure GraphTypeRGClick(Sender: TObject);
     procedure ProfileBtnClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   public
     curChart: TSpmChart;
   private
@@ -83,6 +84,8 @@ var
   SpmChartEditFrm: TSpmChartEditFrm;
 
 implementation
+uses
+  uCursorFrm;
 
 {$R *.dfm}
 { TSpmChartEditFrm }
@@ -156,6 +159,14 @@ begin
     showChartTags;
     showmodal;
   end;
+end;
+
+procedure TSpmChartEditFrm.FormClose(Sender: TObject; var Action: TCloseAction);
+var
+  cursfrm:TCursorFrm;
+begin
+  if g_CursorFrm<>nil then
+    g_CursorFrm.doSetActChart(curChart);
 end;
 
 procedure TSpmChartEditFrm.GraphTypeRGClick(Sender: TObject);
@@ -317,12 +328,13 @@ begin
     if a is cSpm then
     begin
       tname := cSpm(a).resname;
-      if ((pos(lowercase(FilterEdit.text), lowercase(tname)) > 0) or
+      if ((pos(lowercase(FilterEdit.text), lowercase(cspm(a).name)) > 0) or
           (FilterEdit.text = '')) then
       begin
         li := TagsLV.items.Add;
         li.Data := pointer(a);
-        TagsLV.SetSubItemByColumnName('Имя', tname, li);
+        TagsLV.SetSubItemByColumnName('Имя', cspm(a).name, li);
+        TagsLV.SetSubItemByColumnName('Канал', cspm(a).m_tag.tagname, li);
       end;
     end;
   end;
@@ -345,7 +357,7 @@ begin
     next := TBtnListView(Source).GetNextItem(li, sdBelow, [isSelected]);
     // отрисовка свойств тега
     if CheckSpmOnAdd(alg) then
-      TagsLB.items.AddObject(alg.resname, alg);
+      TagsLB.items.AddObject(alg.name, alg);
     if li = next then
       break;
     li := next;

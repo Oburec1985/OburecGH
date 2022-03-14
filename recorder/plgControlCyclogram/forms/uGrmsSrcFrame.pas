@@ -5,8 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   uCommonMath, uComponentservises, uGrmsSrcAlg,
-  Dialogs, uAlgFrame, StdCtrls, ExtCtrls, uSpin, ubasealg, tags,
-  uRcCtrls, Spin, DCL_MYOWN;
+  Dialogs, uAlgFrame, StdCtrls, ExtCtrls, uSpin, ubasealg, tags, uSpm, ubaseobj,
+  uRcCtrls, Spin, DCL_MYOWN, ComCtrls;
 
 type
   TGrmsSrcFrame = class(TBaseAlgFrame)
@@ -31,6 +31,10 @@ type
     FFTdx: TFloatEdit;
     dFLabel: TLabel;
     AddNullCB: TCheckBox;
+    ResTypeRG: TRadioGroup;
+    TahoTypeCB: TCheckBox;
+    AlgLabel: TLabel;
+    AlgCB: TComboBox;
     procedure FFTCountSpinBtnDownClick(Sender: TObject);
     procedure FFTCountSpinBtnUpClick(Sender: TObject);
     procedure FFTCountEditChange(Sender: TObject);
@@ -40,7 +44,10 @@ type
     procedure BandF1EditChange(Sender: TObject);
     procedure BandF2EditChange(Sender: TObject);
     procedure PercentCBClick(Sender: TObject);
+    procedure AlgCBChange(Sender: TObject);
+  public
   protected
+    procedure updateAlgCB;
     function getProperties: string; override;
     procedure setProperties(s: string); override;
     function algClass:string;override;
@@ -97,7 +104,30 @@ begin
   SetFFTCount(FFTCountEdit.IntNum, true);
 end;
 
+procedure TGrmsSrcFrame.updateAlgCB;
+var
+  I: Integer;
+  o:cbaseobj;
+begin
+  AlgCB.Clear;
+  for I := 0 to g_algMng.Count - 1 do
+  begin
+    o:=g_algMng.getObj(i);
+    if o is cspm then
+    begin
+      if cspm(o).m_tag.tag=ChannelCB.gettag(ChannelCB.ItemIndex) then
+      begin
+        AlgCB.AddItem(cspm(o).name,o);
+      end;
+    end;
+  end;
+  if algcb.Items.count>0 then
+    algcb.ItemIndex:=0;
+end;
+
 function TGrmsSrcFrame.getProperties: string;
+var
+  str:string;
 begin
   //inherited;
   if AlgDTFE.text<>'' then
@@ -111,6 +141,15 @@ begin
 
   addParam(m_pars, 'Addnull', booltostr(AddNullCB.Checked));
   addParam(m_pars, 'Percent', booltostr(PercentCB.Checked));
+  // уточнение по какому алгоритму считать
+  if AlgCB.ItemIndex>0 then
+  begin
+    addParam(m_pars, 'AlgName', cbaseobj(AlgCB.Items.Objects[AlgCB.ItemIndex]).name);
+  end;
+
+
+  str := inttostr(ResTypeRG.ItemIndex);
+  addParam(m_pars, 'FFTrestype', str);
 
   if ChannelCB.text<>'' then
   begin
@@ -138,6 +177,8 @@ var
   p:tnotifyevent;
   str:string;
   t:itag;
+  i:integer;
+  o:cbaseobj;
 begin
   inherited;
   // m_pars обновлен в inherited
@@ -174,6 +215,17 @@ begin
     PercentCB.checked := strtobool(str);
   PercentCB.OnClick:=p;
 
+  str := GetParsValue(m_pars, 'FFTrestype');
+  if isvalue(str) then
+  begin
+    i := strtoint(str);
+  end
+  else
+  begin
+    i := 0;
+  end;
+  ResTypeRG.ItemIndex:=i;
+
   setcomboboxitem(GetParsValue(m_pars, 'Channel'), ChannelCB);
   if ChannelCB.ItemIndex > 0 then
   begin
@@ -185,10 +237,33 @@ begin
 
   setcomboboxitem(GetParsValue(m_pars, 'Taho'), TahoCB);
 
+  updateAlgCB;
+  str:=GetParsValue(m_pars, 'AlgName');
+  o:=g_algMng.getobj(str);
+  if o<>nil then
+  begin
+    algcb.ItemIndex:=-1;
+    for I := 0 to algcb.items.count do
+    begin
+      if algcb.items.Strings[i]=o.name then
+      begin
+        algcb.ItemIndex:=i;
+        break;
+      end;
+    end;
+    if algcb.ItemIndex=-1 then
+      algcb.AddItem(o.name,o);
+  end;
+
   SetFFTCount(FFTCountEdit.IntNum);
 end;
 
 procedure TGrmsSrcFrame.TahoCBChange(Sender: TObject);
+begin
+  updateOptsStr;
+end;
+
+procedure TGrmsSrcFrame.AlgCBChange(Sender: TObject);
 begin
   updateOptsStr;
 end;
@@ -210,6 +285,7 @@ end;
 
 procedure TGrmsSrcFrame.ChannelCBChange(Sender: TObject);
 begin
+  updatealgcb;
   updateOptsStr;
 end;
 
@@ -223,6 +299,7 @@ constructor TGrmsSrcFrame.create(aOwner: tcomponent);
 begin
   inherited;
   AlgNameEdit.Text := 'СКЗ в полосе (1.0)';
+
 end;
 
 destructor TGrmsSrcFrame.destroy;
@@ -240,6 +317,12 @@ begin
   inherited;
   ChannelCB.updateTagsList;
   TahoCB.updateTagsList;
+  if ResTypeRG.Items.Count=0 then
+  begin
+    ResTypeRG.Items.Add('Без интегрирования');
+    ResTypeRG.Items.Add('Интегрирование');
+    ResTypeRG.Items.Add('Двойной интеграл');
+  end;
 end;
 
 procedure TGrmsSrcFrame.SetFFTCount(fftCount: Integer; changeDt: boolean);

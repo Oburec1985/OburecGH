@@ -864,7 +864,8 @@ begin
   for i := 0 to GraphCount - 1 do
   begin
     w := getWP(i);
-    w.UpdateData(fprofile);
+    if w.ready then
+      w.UpdateData(fprofile);
   end;
 end;
 
@@ -877,7 +878,8 @@ begin
   for i := 0 to GraphCount - 1 do
   begin
     w := getWP(i);
-    w.UpdateView;
+    if w.ready then
+      w.UpdateView;
   end;
   chart.redraw;
 end;

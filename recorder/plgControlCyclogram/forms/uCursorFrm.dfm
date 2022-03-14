@@ -39,6 +39,7 @@ object CursorFrm: TCursorFrm
     TabOrder = 0
     ViewStyle = vsReport
     OnClick = LVClick
+    OnEnter = LVEnter
     BtnCol = 0
     QuoteColumnBtnClick = False
     QuoteColumnDblClick = False

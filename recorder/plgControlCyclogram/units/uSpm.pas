@@ -119,6 +119,7 @@ type
     procedure setinptag(t: itag); overload;
     procedure setinptag(t: cTag); overload;
     function ready: boolean; override;
+    // возвращает шаг по частте в спектре
     function SpmDx:double;
     class function getdsc: string; override;
     constructor create; override;
@@ -367,13 +368,26 @@ begin
       begin
         knorm := fOutSize / copycount;
         MULT_SSE_al_d(TDoubleArray(m_rms.p),knorm);
-        if m_I>0 then
+      end;
+      // расчет амплитудных спектров
+      if m_I>0 then
+      begin
+        if m_i=1 then
         begin
-          knorm:=TwoPi*m_spmdx;
-          m_magI1[i]:=(k*TDoubleArray(m_rms.p)[i])/(knorm*(i+1));
-          if m_I>1 then
+          knorm:=1/(TwoPi*m_spmdx);
+          for I := 1 to length(m_magI1)-1 do
           begin
-            m_magI2[i]:=(m_magI1[i])/(knorm*(i+1));
+            k:=knorm/i;
+            m_magI1[i]:=k*TDoubleArray(m_rms.p)[i];
+          end;
+        end
+        else
+        begin
+          knorm:=1/(TwoPi*m_spmdx*TwoPi*m_spmdx);
+          for I := 1 to length(m_magI2)-1 do
+          begin
+            k:=knorm/i;
+            m_magI2[i]:=k*TDoubleArray(m_rms.p)[i];
           end;
         end;
       end;

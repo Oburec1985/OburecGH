@@ -325,7 +325,7 @@ begin
     ti.m_spmtrend.color := ColorArray[colorind];
     ti.m_spmtrend.datatype := c_real;
     ti.m_spmtrend.dx := ti.m_spm.SpmDx;
-    ti.m_spmtrend.name := ti.m_spm.resname;
+    ti.m_spmtrend.name := ti.m_spm.name;
     cpage(spmChart.activePage).activeAxis.AddChild(ti.m_spmtrend);
     l := cTextLabel.create;
     ti.flags.Add(l);
@@ -378,7 +378,7 @@ begin
   ti := TSpmTagInfo.create;
   ti.alg:=a;
 
-  m_tagslist.AddObject(a.resname, ti);
+  m_tagslist.AddObject(a.name, ti);
   if spmChart.initGl then
     InitGraphs(ti);
   result:=ti;
@@ -1177,7 +1177,11 @@ begin
       continue;
     if ti.update then
     begin
-      ti.m_spmtrend.AddPoints(tdoublearray(ti.m_spm.m_rms.p));
+      case ti.m_spm.m_I of
+        0:ti.m_spmtrend.AddPoints(tdoublearray(ti.m_spm.m_rms.p));
+        1:ti.m_spmtrend.AddPoints(tdoublearray(ti.m_spm.m_magI1));
+        2:ti.m_spmtrend.AddPoints(tdoublearray(ti.m_spm.m_magI2));
+      end;
     end;
   end;
   UpdateLabels;
@@ -1507,7 +1511,7 @@ begin
   if m_spmtrend<>nil then
   begin
     m_spmtrend.dx := m_spm.SpmDx;
-    m_spmtrend.name := m_spm.resname;
+    m_spmtrend.name := m_spm.name;
   end;
 end;
 

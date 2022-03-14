@@ -148,7 +148,7 @@ begin
   if m_Taho.UpdateTagData(false) then
   begin
   end;
-  interval2 := m_InTag.getPortionTime;
+  interval2 := m_Taho.getPortionTime;
   // –асчет
   interval1 := getCommonInterval(interval1, interval2);
   if (interval1.y - interval1.x) < fdx then
@@ -207,7 +207,8 @@ begin
     ////////// ALARMA@@@@@@@@
     if startind2<0 then
       continue;
-
+    //// ---------------------------------
+    //// ¬еро€тно следует копировать данные не по размеру порции а по длине общего интервала!!!!
     move(m_Taho.m_ReadData[startind2], m_EvalBlock2.p^,(m_portionsize) * sizeof(double));
     // расчет первого спектра
     k := 2 / m_fftcount;

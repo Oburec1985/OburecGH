@@ -8,6 +8,8 @@ uses
   pluginclass, sysutils, uSpm, uHardwaremath;
 
 type
+  // алгоритм подписан на обновление спектра Тахо, предполагается что тахо и спектр обрабатываемый идут синхронно
+  // в момент получения блока данных по Тахо идет расчет спектров
   cGrmsSrcAlg = class(cbasealg)
   private
     m_addNull: boolean;
@@ -40,6 +42,7 @@ type
     // расчет в UpdateBandWidth (doeval)
     m_curTahoValue: double;
   protected
+    procedure setSpmAlg(spm:cspm);
     function genTagName: string; override;
     function Getdx: double; override;
     procedure doAfterload; override;
@@ -99,11 +102,12 @@ var
   res: double;
   s: cspm;
   // updatetaho
-  t1, t2, x: double;
+  t1, t2, x, v: double;
   bandwidthint, startind, endind, spmInd: integer;
 begin
-  if sender = m_tahoSpm then
+  //if sender = m_tahoSpm then
   begin
+    // по хорошему общую частоту нужно искать по кроссспектру на синхронных блоках
     // пересчитываем полосу по текущему значению тахо
     if m_numGarm <> 0 then
     begin
@@ -111,8 +115,8 @@ begin
       x := x * m_numGarm;
       m_curTahoValue := x;
       // количество отсчетов в спектре по которым усредняем
-      startind := round(x * m_band.x / m_spm.dX);
-      endind := round(x * m_band.y / m_spm.dX);
+      startind := round(x * m_band.x / m_spm.SpmDx);
+      endind := round(x * m_band.y / m_spm.SpmDx);
     end
     else
     begin
@@ -123,22 +127,34 @@ begin
       startind := 0;
     if endind = startind then
       endind := startind + 1;
-    if endind >= (AlignBlockLength(m_spm.m_rms)) then
-      endind := AlignBlockLength(m_spm.m_rms) - 1;
+    if endind>=(AlignBlockLength(m_spm.m_rms)) then
+      endind:=AlignBlockLength(m_spm.m_rms)-1;
 
     m_bandwidthint.x := startind;
     m_bandwidthint.y := endind;
   end;
-  if sender = m_spm then
+  //if (sender = m_spm) then
+  if (m_spm.LastBlockTime-m_tahoSpm.LastBlockTime)<m_tahoSpm.dX then
   begin
     // пересчитываем полосу по текущему значению тахо
     s := m_spm;
     res := 0;
     for I := m_bandwidthint.x to m_bandwidthint.y - 1 do
     begin
-      res := res + tdoublearray(s.m_rms.p)[I] * tdoublearray(s.m_rms.p)[I];
+      case s.m_I of
+        0:v:=tdoublearray(s.m_rms.p)[I];
+        1:v:=s.m_magI1[I];
+        2:v:=s.m_magI2[I];
+      end;
+      res := res +  v*v;
     end;
-    m_outTag.m_TagData[m_blockind] := sqrt(res);
+    // перевод единиц измерения при интегрировании
+    case m_spm.m_I of
+      0:m_outTag.m_TagData[m_blockind] := sqrt(res);
+      1:m_outTag.m_TagData[m_blockind] := sqrt(res)*1000;
+      2:m_outTag.m_TagData[m_blockind] := sqrt(res)*1000000;
+    end;
+
     //m_outTag.m_TagData[m_blockind] := m_spm.m_rmsValue;
     m_outTagX[m_blockind] := m_spm.LastBlockTime;
     inc(m_blockind);
@@ -317,6 +333,16 @@ begin
   end;
 end;
 
+procedure cGrmsSrcAlg.setSpmAlg(spm:cspm);
+begin
+  if spm=nil then
+    exit;
+  if m_spm <> nil then
+    unsubscribe(m_spm);
+  m_spm:= spm;
+  spm.subscribe(self);
+end;
+
 procedure cGrmsSrcAlg.setinptag(t: itag);
 var
   bl: IBlockAccess;
@@ -330,21 +356,11 @@ begin
   end;
   m_InTag.tag := t;
 
-  if m_spm <> nil then
-    unsubscribe(m_spm);
-  m_spm := cspm(g_algMng.getSpmByTagName(m_InTag.tagname));
-  // не корректно плодить спектры источники если еще не загрузилась конфигурация!
-  //if m_spm = nil then
-  //begin
-    //m_spm := cspm.create;
-    //m_spm.setinptag(m_InTag.tag);
-    //m_spm.name := m_spm.resname;
-    //m_spm.Properties := Properties;
-    //m_spm.UpdatePropStr;
-    //g_algMng.Add(m_spm, nil);
-  //end;
-  if m_spm<>nil then
-    m_spm.subscribe(self);
+  if spm=nil then
+  begin
+    spm:=cspm(g_algMng.getSpmByTagName(m_InTag.tagname));
+    setSpmAlg(spm);
+  end;
 
   if not FAILED(t.QueryInterface(IBlockAccess, bl)) then
   begin
@@ -418,6 +434,7 @@ var
   lstr, spmstr: string;
   fftcount: integer;
   t: itag;
+  spm:cspm;
   change: boolean;
 begin
   if str = '' then
@@ -476,6 +493,10 @@ begin
     m_numGarm := strtoint(lstr);
   end;
 
+  lstr := GetParam(str, 'AlgName');
+  spm:=cSpm(g_algMng.getObj(lstr));
+  setSpmAlg(spm);
+
   lstr := GetParam(str, 'Channel');
   if lstr <> '' then
   begin
@@ -489,6 +510,8 @@ begin
     end;
     ChangeCTag(m_InTag, lstr);
   end;
+
+
 
   lstr := GetParam(str, 'Taho');
   if lstr <> '' then

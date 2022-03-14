@@ -106,6 +106,11 @@ begin
       addParam(m_pars, 'FFTCount', str);
     end;
   end;
+  str := inttostr(ResTypeRG.ItemIndex);
+  if not err then
+  begin
+    addParam(m_pars, 'FFTrestype', str);
+  end;
   b := GetMultiSelectComponentBool(AddNullCB, err);
   if not err then
   begin
@@ -269,6 +274,7 @@ begin
   endMultiSelect(FsEdit);
   endMultiSelect(FFTdX);
   endMultiSelect(OutChannelName);
+  endMultiSelect(ResTypeRG);
 end;
 
 procedure TSpmFrame.setProperties(s: string);

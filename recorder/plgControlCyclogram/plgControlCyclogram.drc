@@ -1253,6 +1253,7 @@ END
 /* forms\uCustomEditControlFrame.dfm */
 /* forms\uDacControlEditFrame.dfm */
 /* forms\uControlEditFrame.dfm */
+/* forms\uCursorFrm.dfm */
 /* forms\uSpmChartEdit.dfm */
 /* forms\uSpmChart.dfm */
 /* forms\uEditControlWrnFrm.dfm */
@@ -1268,7 +1269,6 @@ END
 /* forms\uTagInfoFrm.dfm */
 /* forms\uTagInfoEditFrm.dfm */
 /* forms\uBandsFrm.dfm */
-/* forms\uCursorFrm.dfm */
 /* forms\uAlgAddFrm.dfm */
 /* forms\uAlgFrame.dfm */
 /* forms\uIntegralAlgFrame.dfm */
@@ -1278,7 +1278,7 @@ END
 /* forms\uSpmFrame.dfm */
 /* forms\uGrmsSrcFrame.dfm */
 /* forms\uGrmsFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTahoAlgFrame.dfm */
+/* forms\uTahoAlgFrame.dfm */
 /* forms\uPhaseCrossSpmFrame.dfm */
 /* forms\uPhaseFrame.dfm */
 /* forms\uCounterAlgFrame.dfm */

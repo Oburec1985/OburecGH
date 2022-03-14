@@ -397,6 +397,11 @@ begin
   for I := 1 to length(str) do
   begin
     abcstruct := width[byte(str[I])];
+    if (abcstruct.abcA + abcstruct.abcB + abcstruct.abcC)>32768 then
+    begin
+      result:=0;
+      exit;
+    end;
     result := abcstruct.abcA + abcstruct.abcB + abcstruct.abcC + result;
   end;
 end;

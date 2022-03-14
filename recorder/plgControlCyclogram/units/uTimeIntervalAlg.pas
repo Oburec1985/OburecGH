@@ -109,7 +109,7 @@ begin
     begin
       v := tag.m_ReadData[I];
       curT := I / inFreq + time;
-      if m_prev <> v then
+      {if m_prev <> v then
       begin
         m_prev := v;
         if startTrig then
@@ -157,7 +157,7 @@ begin
             inc(fOutTag.m_ReadyVals);
           end;
         end;
-      end;
+      end;}
     end;
   end;
   fInTag.ResetTagData(m_portionsize);
@@ -303,7 +303,7 @@ end;
 function cTimeIntervalAlg.GetProperties: string;
 begin
   if m_properties = '' then
-    m_properties := C_TahoOpts;
+  //  m_properties := C_TahoOpts;
   result := m_properties;
 end;
 
@@ -354,7 +354,7 @@ function cTimeIntervalAlg.genTagName: string;
 var
   tagname: string;
 begin
-  tagname := InTag.tagname;
+  //tagname := InTag.tagname;
   result := tagname + '_Taho';
 end;
 
@@ -363,7 +363,7 @@ var
   tagname: string;
   bl: IBlockAccess;
 begin
-  if InTag <> nil then
+  {if InTag <> nil then
   begin
     if InTag.tag <> nil then
     begin
@@ -392,7 +392,7 @@ begin
       end;
       lcm;
     end;
-  end;
+  end;}
 end;
 
 procedure cTimeIntervalAlg.updateOutChan;
@@ -404,7 +404,7 @@ var
 begin
   ecm;
   str := lpcstr(StrToAnsi(genTagName));
-  if fOutIsNew then
+  {if fOutIsNew then
   begin
     fOutTag.tag.SetName(str);
   end;
@@ -416,7 +416,7 @@ begin
   if not FAILED(fOutTag.tag.QueryInterface(IBlockAccess, bl)) then
   begin
     fOutTag.block := bl;
-  end;
+  end;}
   lcm;
 end;
 end.

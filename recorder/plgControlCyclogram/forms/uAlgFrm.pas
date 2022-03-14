@@ -7,6 +7,7 @@ uses
   Dialogs, ExtCtrls, ComCtrls, uBtnListView, Buttons, StdCtrls, uAlgFrame,
   uCounterAlgFrame, uBaseAlg, uAlgAddFrm, uComponentServises, uBaseObj, uPhaseFrame,
   uPhaseCrossSpmFrame,  uTagsListFrame, uTahoAlgFrame, uGrmsFrame, tags,
+  ucommonmath,
   uGrmsSrcFrame,
   uSpmFrame,
   uAriphmAlgFrame,
@@ -89,8 +90,11 @@ begin
         //a.createOutChan;
         a.updateoutchan;
       end;
+      while g_algMng.getAlg(a.name)<>nil do
+      begin
+        a.name:=modname(a.name, false);
+      end;
       g_algMng.Add(a, nil);
-
     end
     else
     begin
