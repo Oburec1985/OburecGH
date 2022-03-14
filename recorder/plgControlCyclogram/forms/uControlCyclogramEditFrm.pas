@@ -426,6 +426,14 @@ begin
       end;
     end;
   end;
+  if root = nil then
+  begin
+    if ModeFrame1.PageControl1.TabIndex=1 then
+    begin
+      showmessage('Требуется создать программу!');
+      exit;
+    end;
+  end;
   o := ModeFrame1.CreateObj;
   if o is cModeObj then
   begin
