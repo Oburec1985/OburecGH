@@ -317,6 +317,16 @@ type
     procedure ApplyZone(error:double);
   end;
 
+  cZoneControl = class(cControlObj)
+  public
+    m_zones:cZoneList;
+  public
+    function TypeString: string; override;
+    function Exec: boolean; override;
+    procedure SetTask(t: double); override;
+    constructor create;override;
+  end;
+
   cDacControl = class(cControlObj)
   private
     m_dac: itag;
@@ -726,6 +736,7 @@ const
 
   c_DAC_CLASSID = 'CDacControl';
   c_DAC_Typestring = 'Прямое управление ЦАП';
+  c_Zone_Typestring = 'Регулирование по зонам';
 
   c_feedback_str = 'Обр.св.:';
   c_DAC_str = 'DAC:';
@@ -742,6 +753,7 @@ uses
 procedure cControlMng.regObjClasses;
 begin
   regclass(cDacControl);
+  regclass(cZoneControl);
   regclass(cModeObj);
   regclass(cProgramObj);
   regclass(cProgramList);
@@ -4869,6 +4881,41 @@ begin
   begin
     result := m_t.getname;
   end;
+end;
+
+{ cZoneList }
+
+procedure cZoneList.ApplyZone(error: double);
+begin
+
+end;
+
+function cZoneList.GetZone(value, task: double): czone;
+begin
+
+end;
+
+{ cZoneControl }
+
+constructor cZoneControl.create;
+begin
+  inherited;
+  m_zones:=cZoneList.Create;
+end;
+
+function cZoneControl.Exec: boolean;
+begin
+
+end;
+
+procedure cZoneControl.SetTask(t: double);
+begin
+
+end;
+
+function cZoneControl.TypeString: string;
+begin
+  result:=c_Zone_Typestring;
 end;
 
 end.
