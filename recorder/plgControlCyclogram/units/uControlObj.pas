@@ -203,6 +203,7 @@ type
 
   // регулятор
   cControlObj = class(cbaseobj)
+
   private
     // программа которая в данный момент дает задание регулятору
     fOwnerProg: cProgramObj;
@@ -298,32 +299,12 @@ type
     destructor destroy; override;
   end;
 
-  cZone = class
-    // Формула при сравнеии задания
-    // Если
-
-    tolerance:double;
-
-  end;
-
-  cZoneList = class(Tlist)
-  protected
-    // допуск нулевой сверху  и снизу
-    m_NullZoneTolHi:double;
-    m_NullZoneTolLo:double;
-  protected
-    Function GetZone(value:double; task:double):czone;
-  public
-    procedure ApplyZone(error:double);
-  end;
-
   cDacControl = class(cControlObj)
   private
     m_dac: itag;
   public
     m_dac_id: tagid;
     m_dac_name: string;
-
   protected
     function getstate: integer; override;
     function getDAC: itag;
