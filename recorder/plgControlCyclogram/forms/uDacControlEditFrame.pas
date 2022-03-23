@@ -13,6 +13,13 @@ type
   TDACControlEditFrame = class(TCustomControlEditFrame)
     FeedbackLabel: TLabel;
     DACCB: TComboBox;
+    DscMemo: TMemo;
+    RightPanel: TPanel;
+    Panel1: TPanel;
+    BtnListView1: TBtnListView;
+    AddZoneBtn: TSpeedButton;
+    DelZoneBtn: TSpeedButton;
+    UnitsCB: TComboBox;
     procedure AddZoneBtnClick(Sender: TObject);
   public
     procedure EndMS;override;
@@ -99,7 +106,7 @@ begin
   begin
     EditCtrlZoneFrm:=TEditCtrlZoneFrm.Create(nil);
   end;
-  // EditCtrlZoneFrm.Show();
+  EditCtrlZoneFrm.Show();
 end;
 
 function TDACControlEditFrame.ControlType:string;

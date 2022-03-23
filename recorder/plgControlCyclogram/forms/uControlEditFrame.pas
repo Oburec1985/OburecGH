@@ -6,8 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, StdCtrls, ComCtrls, uDacControlEditFrame,
   Recorder, Tags, uBtnListView, uComponentServises, uCustomEditControlFrame,
-  inifiles, uControlObj, uCommonMath, uRCFunc, Buttons,
-  uEditCtrlZoneFrm;
+  inifiles, uControlObj, uCommonMath, uRCFunc;
 
 type
   TControlEditFrame = class(TFrame)
@@ -17,25 +16,17 @@ type
     FeedbackLabel: TLabel;
     ControlNameEdit: TEdit;
     FeedbackCB: TComboBox;
-    ZoneCtrlTab: TTabSheet;
-    RightPanel: TPanel;
-    Panel1: TPanel;
-    AddZoneBtn: TSpeedButton;
-    DelZoneBtn: TSpeedButton;
-    UnitsCB: TComboBox;
-    ZonesLV: TBtnListView;
-    DscMemo: TMemo;
-    Splitter1: TSplitter;
     procedure FeedbackCBDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure FeedbackCBDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure FeedbackCBChange(Sender: TObject);
-    procedure AddZoneBtnClick(Sender: TObject);
   private
+    m_frameList:tstringlist;
     m_init:boolean;
     m:cControlMng;
   private
     procedure doUpdateChannelList;
+    procedure addframe(fr:tCustomControlEditFrame);
   public
     procedure EndControlsMS;
     // отобразить состояние
@@ -49,11 +40,7 @@ type
     function CreateControl(p_m:cControlMng):cControlObj;
     procedure editControl(con:ccontrolobj);
     procedure ShowControlProps(con:ccontrolobj; endMS:boolean);
-    procedure ShowZonePage(con:ccontrolobj; endMS:boolean);
   end;
-
-const
-  c_ZonePage = 0;
 
 implementation
 uses
@@ -67,15 +54,10 @@ var
 begin
   endMultiSelect(ControlNameEdit);
   endMultiSelect(FeedbackCB);
-end;
-
-procedure TControlEditFrame.AddZoneBtnClick(Sender: TObject);
-begin
-  if EditCtrlZoneFrm=nil then
-    EditCtrlZoneFrm:=TEditCtrlZoneFrm.Create(nil);
-  if EditCtrlZoneFrm.ShowModal=mrok then
+  for I := 0 to m_frameList.Count - 1 do
   begin
-
+    fr:=TCustomControlEditFrame(m_frameList.Objects[i]);
+    fr.endMS;
   end;
 end;
 
@@ -106,14 +88,16 @@ end;
 function TControlEditFrame.CreateControl(p_m:cControlMng):cControlObj;
 var
   con:cControlObj;
+  fr:TCustomControlEditFrame;
   t:itag;
-  CtrlType:string;
 begin
   m:=p_m;
   result:=nil;
   if CheckControlName then
   begin
-    con:=m.createControl(ControlNameEdit.Text, cZoneControl.ClassName);
+    fr:=TCustomControlEditFrame(m_frameList.Objects[ControlsPageControl.ActivePageIndex]);
+    con:=m.createControl(ControlNameEdit.Text, fr.ControlType);
+    fr.editcontrol(con);
     t:=nil;
     if feedbackcb.Text<>'' then
     begin
@@ -139,11 +123,11 @@ end;
 
 procedure TControlEditFrame.editControl(con:ccontrolobj);
 var
-  //fr:TCustomControlEditFrame;
+  fr:TCustomControlEditFrame;
   t:itag;
   err, b:boolean;
 begin
-  //fr:=TCustomControlEditFrame(m_frameList.Objects[ControlsPageControl.ActivePageIndex]);
+  fr:=TCustomControlEditFrame(m_frameList.Objects[ControlsPageControl.ActivePageIndex]);
   if not MultiSelectState(ControlNameEdit) then
   begin
     con.name:=ControlNameEdit.text;
@@ -158,10 +142,10 @@ begin
       con.config(nil, nil);
     end;
   end;
-  //if fr<>nil then
-  //begin
-  //  fr.editcontrol(con);
-  //end;
+  if fr<>nil then
+  begin
+    fr.editcontrol(con);
+  end;
 end;
 
 
@@ -173,11 +157,11 @@ var
 begin
   f.WriteString(section, 'ControlName', ControlNameEdit.text);
   f.WriteString(section, 'ControlFeedBack', ControlNameEdit.text);
-  //for I := 0 to m_frameList.Count - 1 do
-  //begin
-  //  fr:=TCustomControlEditFrame(m_frameList.Objects[i]);
-  //  fr.Save(f, section);
-  //end;
+  for I := 0 to m_frameList.Count - 1 do
+  begin
+    fr:=TCustomControlEditFrame(m_frameList.Objects[i]);
+    fr.Save(f, section);
+  end;
 end;
 
 procedure TControlEditFrame.Load(f: tinifile; section: string);
@@ -187,11 +171,11 @@ var
 begin
   ControlNameEdit.text:=f.ReadString(section, 'ControlName', '');
   ControlNameEdit.text:=f.ReadString(section, 'ControlFeedBack', '');
-  //for I := 0 to m_frameList.Count - 1 do
-  //begin
-  //  fr:=TCustomControlEditFrame(m_frameList.Objects[i]);
-  //  fr.Load(f, section);
-  //end;
+  for I := 0 to m_frameList.Count - 1 do
+  begin
+    fr:=TCustomControlEditFrame(m_frameList.Objects[i]);
+    fr.Load(f, section);
+  end;
 end;
 
 procedure TControlEditFrame.Show;
@@ -252,11 +236,11 @@ var
   i:integer;
 begin
   showChannels;
-  //for I := 0 to m_frameList.Count - 1 do
-  //begin
-  //  fr:=TCustomControlEditFrame(m_frameList.Objects[i]);
-  //  fr.doUpdateChannelList;
-  //end;
+  for I := 0 to m_frameList.Count - 1 do
+  begin
+    fr:=TCustomControlEditFrame(m_frameList.Objects[i]);
+    fr.doUpdateChannelList;
+  end;
 end;
 
 procedure TControlEditFrame.ShowControlProps(con:ccontrolobj; endMS:boolean);
@@ -268,23 +252,15 @@ begin
   SetMultiSelectComponentString(ControlNameEdit,con.name);
   tname:=con.feedbackname;
   SetMultiSelectComponentString(FeedbackCB,tname);
-  case ControlsPageControl.TabIndex of
-    c_ZonePage: ShowZonePage(con, endMS);
-  end;
   //if endMS then
   //EndControlsMS;
-  //for I := 0 to m_frameList.Count - 1 do
-  //begin
-  //  fr:=TCustomControlEditFrame(m_frameList.Objects[i]);
-  //  fr.ShowControlProps(con, endMS);
-  //end;
+  for I := 0 to m_frameList.Count - 1 do
+  begin
+    fr:=TCustomControlEditFrame(m_frameList.Objects[i]);
+    fr.ShowControlProps(con, endMS);
+  end;
 end;
 
-
-procedure TControlEditFrame.ShowZonePage(con: ccontrolobj);
-begin
-  LVChange(zonesLV);
-end;
 
 procedure TControlEditFrame.FeedbackCBChange(Sender: TObject);
 begin
@@ -331,15 +307,34 @@ begin
   end;
 end;
 
+procedure TControlEditFrame.addframe(fr:tCustomControlEditFrame);
+var
+  page:TTabSheet;
+begin
+  m_frameList.AddObject(fr.ClassName, fr);
+  // создание подфреймов с настройками конкретных реализаций контрола
+  page:=TTabSheet.Create(self);
+  page.Caption:=fr.GetDsc;
+  page.PageControl:=ControlsPageControl;
+  fr.Parent:=page;
+  fr.linkChannelsLV(FeedbackCBDragOver, FeedbackCBDragDrop);
+end;
 
 constructor TControlEditFrame.create(aowner:tcomponent);
+var
+  fr:tCustomControlEditFrame;
 begin
   inherited;
   m_init:=false;
+  m_frameList:=TStringList.Create;
+  // создаем фремй прямого управления DAC
+  fr:=TDacControlEditFrame.Create(self);
+  addframe(fr);
 end;
 
 destructor TControlEditFrame.destroy;
 begin
+  m_frameList.Destroy;
   inherited;
 end;
 
