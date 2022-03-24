@@ -1206,13 +1206,13 @@ BEGIN
 	SysConst_SZeroDivide,	"Floating point division by zero"
 END
 
-/* c:\program files (x86)\embarcadero\rad studio\7.0\lib\Debug\Character.res */
-/* c:\program files (x86)\embarcadero\rad studio\7.0\lib\controls.res */
+/* s:\program files (x86)\embarcadero\rad studio\7.0\lib\Debug\Character.res */
+/* s:\program files (x86)\embarcadero\rad studio\7.0\lib\controls.res */
 /* ..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
-/* c:\program files (x86)\embarcadero\rad studio\7.0\lib\buttons.res */
+/* s:\program files (x86)\embarcadero\rad studio\7.0\lib\buttons.res */
 /* ..\..\sharedUtils\компоненты\dcl_dpk\spin.res */
 /* ..\..\sharedUtils\forms\uGetMngObjForm.dfm */
-/* c:\program files (x86)\embarcadero\rad studio\7.0\lib\filectrl.res */
+/* s:\program files (x86)\embarcadero\rad studio\7.0\lib\filectrl.res */
 /* ..\..\sharedUtils\ZipMaster\ZipMstr.res */
 /* ..\..\sharedUtils\mera\database\uMDBBaseObjFrame.dfm */
 /* ..\..\sharedUtils\mera\database\uMDBRegObjFrame.dfm */
@@ -1296,6 +1296,6 @@ END
 /* forms\uAHCorrectionFrm.dfm */
 /* forms\uComplexDiagram.dfm */
 /* forms\uIRDiagramEditFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */
+/* G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
+/* G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
+/* G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */

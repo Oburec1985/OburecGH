@@ -185,6 +185,8 @@
     <File Path="forms\uAlgFrame.dfm"/>
     <File Path="forms\uAlgFrm.pas"/>
     <File Path="forms\uAlgFrm.dfm"/>
+    <File Path="forms\uAriphmAlgFrame.pas"/>
+    <File Path="forms\uAriphmAlgFrame.dfm"/>
     <File Path="forms\uAutoPropsFrm.pas"/>
     <File Path="forms\uAutoPropsFrm.dfm"/>
     <File Path="forms\uBandsFrm.pas"/>
@@ -199,8 +201,6 @@
     <File Path="forms\uControlEditFrame.dfm"/>
     <File Path="forms\uControlWarnFrm.pas"/>
     <File Path="forms\uControlWarnFrm.dfm"/>
-    <File Path="forms\uEditControlWrnFrm.pas"/>
-    <File Path="forms\uEditControlWrnFrm.dfm"/>
     <File Path="forms\uCounterAlgFrame.pas"/>
     <File Path="forms\uCounterAlgFrame.dfm"/>
     <File Path="forms\uCursorFrm.pas"/>
@@ -211,6 +211,8 @@
     <File Path="forms\uCyclogramReportFrm.dfm"/>
     <File Path="forms\uDacControlEditFrame.pas"/>
     <File Path="forms\uDacControlEditFrame.dfm"/>
+    <File Path="forms\uEditControlWrnFrm.pas"/>
+    <File Path="forms\uEditControlWrnFrm.dfm"/>
     <File Path="forms\uEditPolarFrm.pas"/>
     <File Path="forms\uEditPolarFrm.dfm"/>
     <File Path="forms\uEditProfileFrm.pas"/>
@@ -267,8 +269,6 @@
     <File Path="forms\uTrigFrame.dfm"/>
     <File Path="forms\uTrigsFrm.pas"/>
     <File Path="forms\uTrigsFrm.dfm"/>
-    <File Path="forms\uAriphmAlgFrame.pas"/>
-    <File Path="forms\uAriphmAlgFrame.dfm"/>
     <File Path="units"/>
     <File Path="units\uAriphmAlg.pas"/>
     <File Path="units\uBaseAlg.pas"/>
