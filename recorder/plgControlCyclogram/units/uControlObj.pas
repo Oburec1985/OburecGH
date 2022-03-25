@@ -214,7 +214,8 @@ type
     // c_Play = 2;
     // c_Stop = 7;
     fstate: integer;
-
+    // на текущем шаге циклограммы пользователь вбил свое задание
+    f_manualMode:boolean;
     m_feedback: itag;
     m_feedbackBlA: IBlockAccess;
     fbData: array of double;
@@ -277,6 +278,7 @@ type
     function Exec: boolean; virtual;
     function InProgress: boolean;
     function GetCheckOnMode: boolean;
+    procedure SetManualTask(t: double); virtual;
     procedure SetTask(t: double); virtual; abstract;
   public
     property CheckOnMode: boolean read GetCheckOnMode write fCheckOnMode;
@@ -2182,6 +2184,12 @@ begin
   result := t.m_useTolerance;
 end;
 
+procedure cControlObj.SetManualTask(t: double);
+begin
+  f_manualMode:=true;
+  SetTask(t);
+end;
+
 
 procedure cControlObj.SaveObjAttributes(xmlNode: txmlnode);
 var
@@ -3114,10 +3122,18 @@ begin
 end;
 
 procedure cProgramObj.SetActiveMode(m: cModeObj);
+var
+  i:integer;
+  t:ctask;
 begin
   if factivemode <> nil then
   begin
     factivemode.active := false;
+    for I := 0 to factivemode.TaskCount - 1 do
+    begin
+      t:=factivemode.gettask(i);
+      t.control.f_manualMode:=false;
+    end;
   end;
   if m <> nil then
     m.active := true;
@@ -3715,7 +3731,8 @@ begin
         if not m_applyed then
         begin
           c := t.control;
-          c.SetTask(t.gettask);
+          if not c.f_manualMode then
+            c.SetTask(t.gettask);
         end;
       end
       else

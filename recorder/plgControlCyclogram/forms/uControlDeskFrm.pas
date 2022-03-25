@@ -23,13 +23,7 @@ type
     ModeTimeLabel: TLabel;
     ComTimeEdit: TEdit;
     ComTimeLabel: TLabel;
-    Splitter1: TSplitter;
-    GroupBox1: TGroupBox;
     Timer1: TTimer;
-    ModePanel: TPanel;
-    ProgramCB: TComboBox;
-    ProgramLabel: TLabel;
-    ProgramSG: TStringGrid;
     PlayPanel: TPanel;
     PlayBtn: TSpeedButton;
     PausePanel: TPanel;
@@ -42,15 +36,26 @@ type
     ProgTimeEdit: TEdit;
     ModePauseTimeEdit: TEdit;
     Label2: TLabel;
-    Splitter2: TSplitter;
-    ModesListPanel: TGroupBox;
-    ControlSG: TStringGrid;
-    GroupBox2: TGroupBox;
-    TrigSG: TStringGrid;
     CfgPanel: TPanel;
     CfgBtn: TSpeedButton;
     CheckLength: TEdit;
     CheckLengthLabel: TLabel;
+    PageControl1: TPageControl;
+    TabSheet1: TTabSheet;
+    Splitter1: TSplitter;
+    Splitter2: TSplitter;
+    GroupBox1: TGroupBox;
+    ModePanel: TPanel;
+    ProgramLabel: TLabel;
+    ProgramCB: TComboBox;
+    ProgramSG: TStringGrid;
+    ModesListPanel: TGroupBox;
+    ControlSG: TStringGrid;
+    GroupBox2: TGroupBox;
+    TrigSG: TStringGrid;
+    TabSheet2: TTabSheet;
+    TableModeGB: TGroupBox;
+    TableModeSG: TStringGrid;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -71,6 +76,10 @@ type
     procedure CfgBtnClick(Sender: TObject);
     procedure ControlSGSetEditText(Sender: TObject; ACol, ARow: Integer;
       const Value: string);
+    procedure TableModeSGSetEditText(Sender: TObject; ACol, ARow: Integer;
+      const Value: string);
+    procedure TableModeSGDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
   private
 
     m_uiThread: integer;
@@ -84,6 +93,7 @@ type
     m_row,m_col:integer;
     m_timerid, m_timerid_res: cardinal;
   protected
+    procedure ModeTabSGEditCell(r,c:integer; val:string);
     procedure ControlSGEditCell(ARow, ACol: Integer; const Value: string);
     procedure FormCfgClose(Sender: TObject; var Action: TCloseAction);
     function getprogram(row: integer): cProgramObj;
@@ -91,6 +101,7 @@ type
     procedure ClearSGButtons;
     procedure WndProc(var Message: TMessage); override;
     procedure CreateSGButtons;
+    procedure ShowModeTable;
     // Показать регулояторы
     procedure ShowControls;
     // Показать Таблицу программ и режимов
@@ -117,6 +128,8 @@ type
     procedure doLoad(Sender: TObject);
     procedure doAddObj(Sender: TObject);
     procedure doShowStop(Sender: TObject);
+    // вызывается при смене конфигурации циклограммы
+    procedure Preview;
   public
     procedure Start;
     procedure continue;
@@ -169,6 +182,8 @@ const
   IID_ControlFactory: TGuid = (D1: $ACCBBA41; D2: $AD43; D3: $44D6;
     D4: ($8E, $74, $36, $A3, $24, $34, $A1, $F0));
 
+  c_ModeTable_headerSize = 2;
+  c_ModeTable_headerCol = 2;
   c_headerSize = 1;
   c_Col_Control = 0;
   c_Col_Task = 1;
@@ -352,16 +367,12 @@ end;
 
 procedure TControlDeskFrm.doLeaveCfg(Sender: TObject);
 begin
-  ShowControls;
-  ShowModes;
-  ShowTrigs;
+  preview;
 end;
 
 procedure TControlDeskFrm.doLoad(Sender: TObject);
 begin
-  ShowControls;
-  ShowModes;
-  ShowTrigs;
+  preview;
 end;
 
 procedure TControlDeskFrm.doAddObj(Sender: TObject);
@@ -401,9 +412,7 @@ begin
   // m.m_StateTag.PushValue(1,-1);
   if g_conmng.configChanged then
   begin
-    ShowControls;
-    ShowModes;
-    ShowTrigs;
+    preview;
     g_conmng.configChanged := false;
   end;
 end;
@@ -571,6 +580,14 @@ begin
   inherited;
 end;
 
+procedure TControlDeskFrm.Preview;
+begin
+  ShowControls;
+  ShowModes;
+  ShowTrigs;
+  ShowModeTable;
+end;
+
 procedure TControlDeskFrm.ShowControls;
 var
   I, row: integer;
@@ -586,6 +603,45 @@ begin
     ShowControlRow(con);
   end;
   CreateSGButtons;
+end;
+
+procedure TControlDeskFrm.ShowModeTable;
+var
+  I, col, row: integer;
+  con: ccontrolobj;
+  p:cProgramObj;
+  m:cmodeobj;
+  j: Integer;
+  t:ctask;
+begin
+  // 2 - кол-во строк сверху имена режимов
+  TableModeSG.RowCount := c_ModeTable_headerSize + g_conmng.ControlsCount;
+  p:=g_conmng.getProgram(0);
+  if p=nil then
+    exit;
+  TableModeSG.ColCount:=  c_ModeTable_headerCol +p.ModeCount;
+  TableModeSG.Cells[0,1]:='Время работы';
+  for I := 0 to p.ModeCount - 1 do
+  begin
+    row := c_ModeTable_headerSize-1;
+    col := i+1;
+    m:=p.getMode(i);
+    TableModeSG.Cells[col,0]:=m.caption;
+    TableModeSG.Cells[col,row]:=floattostr(m.ModeLength);
+  end;
+  for I := 0 to p.ControlCount - 1 do
+  begin
+    con:=p.getOwnControl(i);
+    TableModeSG.Cells[0,c_ModeTable_headerSize+i]:=con.caption;
+    for j := 0 to p.ModeCount - 1 do
+    begin
+      m:=p.getMode(j);
+      t:=m.gettask(con.name);
+      if t<>nil then
+        TableModeSG.Cells[c_ModeTable_headerCol-1+j,c_ModeTable_headerSize+i]:=formatstrnoe(t.task,2);
+    end;
+  end;
+  SGChange(TableModeSG);
 end;
 
 function TControlDeskFrm.getControlFromSG(row: integer): ccontrolobj;
@@ -698,7 +754,7 @@ begin
   begin
     if isValue(value) then
     begin
-      c.SetTask(strtofloatext(value));
+      c.SetManualTask(strtofloatext(value));
     end;
   end;
 end;
@@ -922,6 +978,89 @@ begin
   StopPanel.Color := clBtnFace;
 end;
 
+procedure TControlDeskFrm.TableModeSGDrawCell(Sender: TObject; ACol,
+  ARow: Integer; Rect: TRect; State: TGridDrawState);
+var
+  sg: TStringGrid;
+  Color: integer;
+  p: cProgramObj;
+  m: cModeObj;
+  str: string;
+  I: integer;
+begin
+  if (g_conmng.state=c_Play) or (g_conmng.state=c_Pause) then
+  begin
+    for I := 0 to g_conmng.ProgramCount - 1 do
+    begin
+      p := g_conmng.getprogram(I);
+      m := p.ActiveMode;
+      if m <> nil then
+      begin
+        sg := TStringGrid(Sender);
+        // имя режима
+        str := sg.Cells[ACol, 0];
+        if str = m.name then
+        begin
+          Color := sg.Canvas.Brush.Color;
+          case p.State of
+            c_play:
+              sg.Canvas.Brush.Color := CLgREEN;
+            c_pause:
+              sg.Canvas.Brush.Color := clYellow;
+          end;
+          sg.Canvas.FillRect(Rect);
+          sg.Canvas.TextOut(Rect.Left, Rect.Top, sg.Cells[ACol, ARow]);
+          sg.Canvas.Brush.Color := Color;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TControlDeskFrm.TableModeSGSetEditText(Sender: TObject; ACol,
+  ARow: Integer; const Value: string);
+begin
+  m_val:=value;
+  m_col:=acol;
+  m_row:=arow;
+  ModeTabSGEditCell(m_row, m_col, m_val);
+end;
+
+procedure TControlDeskFrm.ModeTabSGEditCell(r,c:integer; val:string);
+var
+  p:cProgramObj;
+  m:cmodeobj;
+  t:ctask;
+  con:cControlObj;
+  str:string;
+begin
+  p:=g_conmng.getProgram(0);
+  if p=nil then exit;
+  if c>0 then
+  begin
+    // редактируем длительность
+    if r=1 then
+    begin
+      m:=p.getMode(c-1);
+      m.ModeLength:=strtoFloatExt(val);
+    end;
+    if r>1 then
+    begin
+      str:=TableModeSG.Cells[0,r];
+      con:=p.getOwnControl(str);
+      if con<>nil then
+      begin
+        m:=p.getMode(c-1);
+        t:=m.gettask(con.name);
+        if t<>nil then
+        begin
+          t.task:=strtoFloatExt(val);
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure TControlDeskFrm.Timer1Timer(Sender: TObject);
 var
   tid: integer;
@@ -1107,6 +1246,7 @@ begin
   UpdateProgramsSG;
   UpdateControlsSG;
   UpdateTrigs;
+  TableModeSG.Invalidate;
 end;
 
 procedure TControlDeskFrm.UpdateTrigs;
