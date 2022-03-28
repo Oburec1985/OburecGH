@@ -333,6 +333,9 @@ end;
 procedure TControlDeskFrm.doChangeRState(Sender: TObject);
 var
   Rstate: boolean;
+  p:cprogramobj;
+  c:cControlObj;
+  I: Integer;
 begin
   logrecordermessage('TControlDeskFrm.doChangeRState_enter');
   if self <> nil then
@@ -349,6 +352,17 @@ begin
     end
     else
     begin
+      // последняя итерация для срабатывания действий заложенных в стоптриг
+      p:=g_conmng.getProgram(0);
+      if p<>nil then
+      begin
+        p.exec;
+        for I := 0 to p.ControlCount - 1 do
+        begin
+          c:=p.getOwnControl(i);
+          c.exec;
+        end;
+      end;
       if g_conmng.configChanged then
       begin
         ShowControls;

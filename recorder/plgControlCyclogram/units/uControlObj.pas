@@ -35,7 +35,7 @@ type
     fstate: integer;
     // нужно ли исполнять контролы
     fExecControls: boolean;
-    m_TagGroup: ITagsGroup;
+    //m_TagGroup: ITagsGroup;
     fStoptrig: cBaseTrig;
     fprograms: cProgramList;
     // вызов на удаление происходит при удалении менеджера т.к. обьект залинкован в него
@@ -1002,11 +1002,11 @@ begin
   ir := getIR;
   group := 'ControlsGroup';
   gname := PAnsiChar(group);
-  m_TagGroup := ITagsGroup(ir.GetGroupByName(gname));
-  if m_TagGroup = nil then
-  begin
-    m_TagGroup := ITagsGroup(ir.CreateTagsGroup(gname));
-  end;
+  //m_TagGroup := ITagsGroup(ir.GetGroupByName(gname));
+  //if m_TagGroup = nil then
+  //begin
+  //  m_TagGroup := ITagsGroup(ir.CreateTagsGroup(gname));
+  //end;
 
   m_TrigAlarmHandler := cTrigsAlarmHandler.create;
   m_TrigAlarmHandler.Attach;
@@ -1016,7 +1016,7 @@ end;
 
 destructor cControlMng.destroy;
 begin
-  m_TagGroup := nil;
+  //m_TagGroup := nil;
 
   m_TrigAlarmHandler.Detach;
   // m_TrigAlarmHandler.Destroy;
@@ -2088,7 +2088,6 @@ var
 begin
   if m_stateTag <> nil then
   begin
-    ir := getIR;
     CloseTag(m_stateTag);
     m_stateTag := nil;
   end;
@@ -3461,6 +3460,8 @@ begin
   else
   begin
     result := gettask(i);
+    result.control := c;
+    result.task := task;
   end;
 end;
 
@@ -4903,6 +4904,7 @@ end;
 constructor cControlList.create;
 begin
   inherited;
+  destroydata:=true;
   fHelper := true;
   // опасно ставить True кт.к. будет разрушен и не восстановлен при загрузке
   autocreate := true;
