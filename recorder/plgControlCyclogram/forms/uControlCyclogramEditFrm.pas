@@ -10,7 +10,8 @@ uses
   pluginClass, ImgList, VirtualTrees, uVTServices, Menus, inifiles, uFilemng,
   uBaseObj, uRCFunc, uRvclService,
   tags, recorder, uBaseObjService, uModesTabsForm, activex, uRTrig,
-  DCL_MYOWN, uRcCtrls, uTrigsFrm, uEventTypes
+  DCL_MYOWN, uRcCtrls, uTrigsFrm, uEventTypes,
+  uExcel
   //, uBaseAlg
   ;
 
@@ -62,6 +63,10 @@ type
     Label1: TLabel;
     OpenDialog1: TOpenDialog;
     AllowUserModeSelectCB: TCheckBox;
+    LoadFromExcelBtn: TSpeedButton;
+    SaveToExcelBtn: TSpeedButton;
+    SaveDialog2: TSaveDialog;
+    OpenDialog2: TOpenDialog;
     procedure AddControlBtnClick(Sender: TObject);
     procedure UpdateBtnClick(Sender: TObject);
     procedure ControlsLVSelectItem(Sender: TObject; Item: TListItem;
@@ -91,6 +96,8 @@ type
     procedure FormCreate(Sender: TObject);
     procedure OpenMenuClick(Sender: TObject);
     procedure ProgramTVDblClick(Sender: TObject);
+    procedure SaveToExcelBtnClick(Sender: TObject);
+    procedure LoadFromExcelBtnClick(Sender: TObject);
   private
     m_conmng: cControlMng;
     m_fileMng: cfilemng;
@@ -126,6 +133,9 @@ type
     procedure UnLinkPlg;
     function CreateControl: cControlObj;
   end;
+
+const
+  c_ExcelPage = 'Экспорт конфигурации';
 
 var
   ControlCyclogramEditFrm: TControlCyclogramEditFrm;
@@ -604,6 +614,88 @@ begin
   end;
 end;
 
+procedure TControlCyclogramEditFrm.SaveToExcelBtnClick(Sender: TObject);
+var
+  fname:string;
+  rng:string;
+  rngObj, sheet: olevariant;
+
+  r, c:integer;
+  p:cprogramObj;
+  m:cmodeobj;
+  con: cControlObj;
+  t:ctask;
+
+  I: Integer;
+  j: Integer;
+begin
+  p:=g_conmng.getProgram(0);
+  if p=nil then exit;
+
+  if SaveDialog2.Execute then
+  begin
+    fname:=SaveDialog2.FileName;
+    if not CheckExcelInstall then
+    begin
+      showmessage('Необходима установка Excel');
+      exit;
+    end;
+    CreateExcel;
+    VisibleExcel(false);
+
+    if fileexists(fname) then
+    begin
+      OpenWorkBook(fname);
+      E.ActiveWorkbook.Sheets.Item[1].cells.clear;
+    end
+    else
+    begin
+      AddWorkBook;
+      AddSheet(c_ExcelPage);
+      DeleteSheet(2);
+    end;
+    // Установить значение ячейке 3-о листа A1
+    // SetRange(1,'A1',234.45);
+    rng := GetRange(1, 'A1');
+    // Создаем шапку отчета
+    r:=1; c:=1;
+    setCell(1, r, c, 'Программа');
+    r:=r+1;
+
+    setCell(1, r, c, p.name);
+    r:=1; c:=2;
+    setCell(1, r, c, 'Режимы');
+    setCell(1, r+1, c, 'Длительность');
+    setCell(1, r+2, c, 'Регуляторы');
+    for I := 0 to p.ControlCount - 1 do
+    begin
+      con:=p.getOwnControl(i);
+      setCell(1, r+3+i, c, con.name);
+    end;
+    c:=c+1;
+    for I := 0 to p.ModeCount - 1 do
+    begin
+      m:=p.getMode(i);
+      setCell(1, r, c+i, m.name);
+      setCell(1, r+1, c+i, m.modelength);
+      for j := 0 to p.ControlCount - 1 do
+      begin
+        con:=p.getOwnControl(j);
+        t:=m.gettask(con.name);
+        setCell(1, r+3+j, c+i, t.task);
+      end;
+    end;
+    try
+      SaveWorkBookAs(fname);
+    except
+      showmessage(
+        'Не удалось сохранить отчет. Несущесвующий каталог или файл защищен от записи');
+    end;
+    CloseWorkBook;
+    CloseExcel;
+  end;
+end;
+
 procedure TControlCyclogramEditFrm.OpenMenuClick(Sender: TObject);
 begin
   OpenDialog1.FileName:=m_lastfile;
@@ -640,6 +732,86 @@ begin
   ModeFrame1.LinkMng(p_conmng);
 
   createEvents;
+end;
+
+procedure TControlCyclogramEditFrm.LoadFromExcelBtnClick(Sender: TObject);
+var
+  fname, str:string;
+  sh, rngObj: olevariant;
+  i,j, lastrow, lastcol:integer;
+
+  con:cControlObj;
+  p:cProgramObj;
+  m:cmodeobj;
+  T:ctask;
+begin
+  if OpenDialog2.Execute then
+  begin
+    CreateExcel;
+    VisibleExcel(false);
+    fname:=OpenDialog2.FileName;
+    if fileexists(fname) then
+    begin
+      OpenWorkBook(fname);
+      sh:=E.ActiveWorkbook.Sheets.Item[1];
+      LastRow:= sh.UsedRange.Rows.count;
+      LastCol:= sh.UsedRange.Columns.count;
+      g_conmng.controls.clear;
+      p:=g_conmng.getProgram(0);
+      // создание программы если не создана
+      if p=nil then
+      begin
+        p:=cProgramObj.create;
+        p.name:='Prog_01';
+        p.RepeatCount:=1;
+        p.m_StartOnPlay:=false;
+        p.m_enableOnStart:=true;
+        g_conmng.Add(p);
+      end
+      else
+      begin
+        p.removeOwnControls;
+        p.ClearModes;
+      end;
+      for I := 4 to LastRow do
+      begin
+        str:=sh.Cells[i, 2];
+        con:=g_conmng.getControlObj(str);
+        if con=nil then
+        begin
+          con:=g_conmng.createControl(str, cDacControl.ClassName);
+          // установка задания
+          str:=sh.Cells[i, 3];
+          cDacControl(con).dac:=getTagByName(str);
+          // установка feedback
+          str:=sh.Cells[i, 4];
+          cDacControl(con).config(getTagByName(str), nil);
+          p.AddControl(con);
+        end;
+      end;
+      // проход по режимам
+      for I := 5 to lastCol do
+      begin
+        str:=sh.Cells[1,i];
+        m:=cModeObj.create;
+        m.name:=str;
+        p.addmode(m);
+        str:=sh.Cells[2,i];
+        m.ModeLength:=StrToFloat(str);
+        m.Infinity:=false;
+        m.CheckThreshold:=false;
+        cmodeobj(m).CheckLength:=0;
+        for j := 0 to p.ControlCount - 1 do
+        begin
+          con:=p.getOwnControl(j);
+          str:=sh.Cells[j+4,i];
+          m.createTask(con, strtofloat(str));
+        end;
+      end;
+    end;
+    g_conmng.configChanged := true;
+    ShowProperties;
+  end;
 end;
 
 procedure TControlCyclogramEditFrm.LoadUI;

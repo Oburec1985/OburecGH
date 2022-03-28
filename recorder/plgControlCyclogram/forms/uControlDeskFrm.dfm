@@ -747,7 +747,6 @@ object ControlDeskFrm: TControlDeskFrm
     TabOrder = 1
     object TabSheet1: TTabSheet
       Caption = #1054#1073#1097#1080#1081' '#1074#1080#1076
-      ExplicitLeft = 0
       object Splitter1: TSplitter
         Left = 1094
         Top = 0
@@ -798,9 +797,6 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 0
-        ExplicitLeft = 779
-        ExplicitTop = 167
-        ExplicitHeight = 669
         object ModePanel: TPanel
           Left = 1
           Top = 25
@@ -890,9 +886,6 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 1
-        ExplicitTop = 167
-        ExplicitWidth = 777
-        ExplicitHeight = 669
         object ControlSG: TStringGrid
           Left = 1
           Top = 25
@@ -918,7 +911,6 @@ object ControlDeskFrm: TControlDeskFrm
           OnDrawCell = ControlSGDrawCell
           OnMouseDown = ControlSGMouseDown
           OnSetEditText = ControlSGSetEditText
-          ExplicitLeft = 4
         end
       end
       object GroupBox2: TGroupBox
@@ -944,9 +936,6 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 2
-        ExplicitLeft = 1104
-        ExplicitTop = 167
-        ExplicitHeight = 669
         object TrigSG: TStringGrid
           Left = 1
           Top = 25
@@ -996,9 +985,6 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 0
-        ExplicitTop = 167
-        ExplicitWidth = 777
-        ExplicitHeight = 669
         object TableModeSG: TStringGrid
           Left = 1
           Top = 25
@@ -1020,9 +1006,9 @@ object ControlDeskFrm: TControlDeskFrm
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
           ParentFont = False
           TabOrder = 0
+          OnDblClick = TableModeSGDblClick
           OnDrawCell = TableModeSGDrawCell
           OnSetEditText = TableModeSGSetEditText
-          ExplicitLeft = 0
         end
       end
     end

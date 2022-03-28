@@ -189,7 +189,8 @@ uses
   uGLFrmEdit in 'forms\uGLFrmEdit.pas' {ObjFrm3dEdit},
   uAriphmAlg in 'units\uAriphmAlg.pas',
   uAriphmAlgFrame in 'forms\uAriphmAlgFrame.pas' {AriphmAlgFrame: TFrame},
-  uTimeIntervalAlg in 'units\uTimeIntervalAlg.pas';
+  uTimeIntervalAlg in 'units\uTimeIntervalAlg.pas',
+  uExcel in '..\..\sharedUtils\utils\reports\excel\uExcel.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

@@ -38,6 +38,7 @@ type
     m_TagGroup: ITagsGroup;
     fStoptrig: cBaseTrig;
     fprograms: cProgramList;
+    // вызов на удаление происходит при удалении менеджера т.к. обьект залинкован в него
     fcontrols: cControlList;
 
     // должен быть менеджер в отдельном файле
@@ -477,6 +478,7 @@ type
     procedure stop;
     // добавляем контрол который будет управляться программой
     procedure AddControl(c: cControlObj);
+    procedure removeOwnControls;
     procedure removeOwnControl(c: cControlObj); overload;
     procedure removeOwnControl(i: integer); overload;
     procedure removeOwnControl(cname: string); overload;
@@ -489,6 +491,8 @@ type
     // выполнить шаг программы
     procedure Exec;
     function ModeCount: integer;
+    // удаляет дочернгие режимы
+    procedure ClearModes;
     procedure addmode(m: cModeObj);
     procedure insertMode(m: cModeObj; modeIndex: integer);
     property InTolerance: boolean read fInTolerance write fInTolerance;
@@ -505,6 +509,8 @@ type
   private
     // режим состоит из запрета контролу работать (сохраняем предыдущее значение)
     fStopControlValue: boolean;
+    fapplyed:boolean;
+    cs: TRTLCriticalSection;
   public
     TaskType: TPType;
     // компоненты касательных векторов
@@ -526,7 +532,16 @@ type
     function gettask: double;
     procedure SetTask(d: double);
     procedure SetStopControlValue(b: boolean);
+    // задание применено
+    function getApplyed: boolean;
+    procedure setApplyed(b: boolean);
   public
+    procedure InitCS;
+    procedure DeleteCS;
+    procedure exitcs;
+    procedure entercs;
+
+    property applyed:boolean read getApplyed write setApplyed;
     function getNextTask: cTask;
     function getPrevTask: cTask;
     function NullSpline: boolean;
@@ -541,6 +556,7 @@ type
     property StopControlValue: boolean read fStopControlValue write
       SetStopControlValue;
     constructor create;
+    destructor destroy;
   end;
 
   cStepVal = class
@@ -633,9 +649,9 @@ type
     procedure clearTaskList;
     // обработка списка задач, где каждая задача это регулятор с заданием
     procedure doUpdateData; virtual;
-    function createTask(c: cControlObj; m: cModeObj; task: double): cTask;
+    function createTask(c: cControlObj; task: double): cTask;
       overload;
-    function createTask(ControlName: string; m: cModeObj; task: double): cTask;
+    function createTask(ControlName: string; task: double): cTask;
       overload;
     procedure editTask(c: cControlObj; task: double); overload;
     procedure editTask(ControlName: string; task: double); overload;
@@ -2459,6 +2475,12 @@ begin
   fcontrols.AddObject(c.name, c);
 end;
 
+
+procedure cProgramObj.removeOwnControls;
+begin
+  fcontrols.Clear;
+end;
+
 procedure cProgramObj.removeOwnControl(c: cControlObj);
 begin
   removeOwnControl(c.name);
@@ -2496,6 +2518,11 @@ begin
   result:=nil;
   if fcontrols.Find(name, i) then
     result := getOwnControl(i);
+end;
+
+procedure cProgramObj.ClearModes;
+begin
+  fmodes.destroychildrens;
 end;
 
 procedure cProgramObj.addmode(m: cModeObj);
@@ -3419,16 +3446,16 @@ begin
 end;
 
 { cModeObj }
-function cModeObj.createTask(c: cControlObj; m: cModeObj; task: double): cTask;
+function cModeObj.createTask(c: cControlObj; task: double): cTask;
 var
   i: integer;
 begin
-  if not m.TaskList.Find(c.name, i) then
+  if not TaskList.Find(c.name, i) then
   begin
     result := cTask.create;
     result.control := c;
     result.task := task;
-    result.mode := m;
+    result.mode := self;
     TaskList.AddObject(result.control.name, result);
   end
   else
@@ -3509,8 +3536,7 @@ begin
   DestroyTags;
 end;
 
-function cModeObj.createTask(ControlName: string; m: cModeObj;
-  task: double): cTask;
+function cModeObj.createTask(ControlName: string; task: double): cTask;
 var
   i: integer;
   con: cControlObj;
@@ -3519,7 +3545,7 @@ begin
   con := cControlObj(cControlMng(getmng).getobj(ControlName));
   if con <> nil then
   begin
-    result := createTask(con, m, task);
+    result := createTask(con, task);
   end;
 end;
 
@@ -3533,7 +3559,7 @@ begin
   for i := 0 to mng.ControlsCount - 1 do
   begin
     con := mng.getControlObj(i);
-    createTask(con, self, 0);
+    createTask(con, 0);
   end;
 end;
 
@@ -3725,14 +3751,18 @@ begin
     else
     begin
       nextT := t.getNextTask;
-
       if t.SplineInterp = ptNullPoly then
       begin
-        if not m_applyed then
+        if (not m_applyed) or (not t.applyed) then
         begin
           c := t.control;
           if not c.f_manualMode then
+          begin
+            t.entercs;
             c.SetTask(t.gettask);
+            t.applyed:=true;
+            t.exitcs;
+          end;
         end;
       end
       else
@@ -4606,7 +4636,7 @@ begin
     for J := 0 to p.ModeCount - 1 do
     begin
       m := p.getMode(J);
-      m.createTask(c, m, 0);
+      m.createTask(c, 0);
     end;
   end;
 end;
@@ -4716,6 +4746,18 @@ end;
 constructor cTask.create;
 begin
   TaskType := ptNullPoly;
+  initcs;
+end;
+
+destructor cTask.destroy;
+begin
+  DeleteCS;
+end;
+
+
+function cTask.getApplyed: boolean;
+begin
+  result:=fapplyed;
 end;
 
 function cTask.getNextTask: cTask;
@@ -4814,6 +4856,34 @@ end;
 function cTask.NullSpline: boolean;
 begin
   result := TaskType = ptNullPoly;
+end;
+
+
+procedure cTask.InitCS;
+begin
+  InitializeCriticalSection(cs);
+end;
+
+procedure cTask.DeleteCS;
+begin
+  DeleteCriticalSection(cs);
+end;
+
+
+procedure cTask.exitcs;
+begin
+  LeaveCriticalSection(cs);
+end;
+
+procedure cTask.entercs;
+begin
+  EnterCriticalSection(cs);
+end;
+
+
+procedure cTask.setApplyed(b: boolean);
+begin
+  fapplyed:=b;
 end;
 
 function cTask.strUseTol: string;

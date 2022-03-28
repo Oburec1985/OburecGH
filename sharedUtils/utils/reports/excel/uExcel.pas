@@ -6,6 +6,11 @@ interface
 
 const
   ExcelApp = 'Excel.Application';
+
+  xlByColumns=2;
+  xlByRows =1;
+  xlNext=	1;
+  xlPrevious=2;
   // ----- Параметры специальной вставки -----------------
   xlAll = 1;
   xlFormulas = 2;

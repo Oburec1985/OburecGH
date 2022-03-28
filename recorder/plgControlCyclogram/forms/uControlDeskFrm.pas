@@ -80,6 +80,7 @@ type
       const Value: string);
     procedure TableModeSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
+    procedure TableModeSGDblClick(Sender: TObject);
   private
 
     m_uiThread: integer;
@@ -98,6 +99,7 @@ type
     procedure FormCfgClose(Sender: TObject; var Action: TCloseAction);
     function getprogram(row: integer): cProgramObj;
     function getmode(row: integer): cModeObj;
+    function getTableModeSGByCol(col: integer): cModeObj;
     procedure ClearSGButtons;
     procedure WndProc(var Message: TMessage); override;
     procedure CreateSGButtons;
@@ -978,6 +980,40 @@ begin
   StopPanel.Color := clBtnFace;
 end;
 
+procedure TControlDeskFrm.TableModeSGDblClick(Sender: TObject);
+var
+  m: cModeObj;
+  pPnt:       TPoint;  // Координаты курсора
+  xCol, xRow: integer; // Адрес ячейки таблицы
+begin
+  GetCursorPos( pPnt );
+  pPnt:= TStringGrid(Sender).ScreenToClient( pPnt );
+  // Находим позицию нашей ячейки
+  xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
+  xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
+  if xrow=0 then exit;
+
+  if (g_conmng.state=c_Pause) or g_conmng.AllowUserModeSelect then
+  begin
+    if g_conmng.state<>c_stop then
+    begin
+      m := getTableModeSGByCol(xcol);
+      if m=nil then
+        exit;
+      if g_conmng.state=c_play then
+        m.TryActive
+      else
+      begin
+        if g_conmng.state=c_pause then
+        begin
+          m.active:=true;
+          m.Exec;
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure TControlDeskFrm.TableModeSGDrawCell(Sender: TObject; ACol,
   ARow: Integer; Rect: TRect; State: TGridDrawState);
 var
@@ -1054,7 +1090,10 @@ begin
         t:=m.gettask(con.name);
         if t<>nil then
         begin
+          t.entercs;
           t.task:=strtoFloatExt(val);
+          t.applyed:=false;
+          t.exitcs;
         end;
       end;
     end;
@@ -1158,6 +1197,23 @@ begin
       result := p.ActiveMode;
       if result = nil then
         result := p.getmode(0);
+    end;
+  end;
+end;
+
+function TControlDeskFrm.getTableModeSGByCol(col: integer): cModeObj;
+var
+  str:string;
+  p:cprogramobj;
+begin
+  result:=nil;
+  if col>0 then
+  begin
+    str:=TableModeSG.Cells[col, 0];
+    p:=g_conmng.getprogram(0);
+    if p<>nil then
+    begin
+      result:=p.getMode(str);
     end;
   end;
 end;

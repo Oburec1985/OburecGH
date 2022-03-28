@@ -25,15 +25,15 @@ object ModeFrame: TModeFrame
       object ProgramCounterLabel: TLabel
         Left = 3
         Top = 53
-        Width = 93
-        Height = 13
+        Width = 108
+        Height = 16
         Caption = #1063#1080#1089#1083#1086' '#1087#1086#1074#1090#1086#1088#1077#1085#1080#1081
       end
       object ProgramNameLabel: TLabel
         Left = 3
         Top = 7
-        Width = 77
-        Height = 13
+        Width = 92
+        Height = 16
         Caption = #1048#1084#1103' '#1087#1088#1086#1075#1088#1072#1084#1084#1099
       end
       object ShowModesTabBtn: TSpeedButton
@@ -157,7 +157,7 @@ object ModeFrame: TModeFrame
         MaxValue = 0
         MinValue = 1
         TabOrder = 0
-        Value = 0
+        Value = 1
       end
       object ProgramNameE: TEdit
         Left = 3
@@ -252,22 +252,22 @@ object ModeFrame: TModeFrame
         object ModeNameLabel: TLabel
           Left = 3
           Top = 2
-          Width = 60
-          Height = 13
+          Width = 73
+          Height = 16
           Caption = #1048#1084#1103' '#1088#1077#1078#1080#1084#1072
         end
         object ModeTimeLabel: TLabel
           Left = 3
           Top = 45
-          Width = 86
-          Height = 13
+          Width = 104
+          Height = 16
           Caption = #1042#1088#1077#1084#1103' '#1085#1072' '#1088#1077#1078#1080#1084#1077
         end
         object Label2: TLabel
           Left = 3
           Top = 173
-          Width = 148
-          Height = 13
+          Width = 168
+          Height = 16
           Hint = '% '#1086#1090' '#1079#1072#1076#1072#1085#1080#1103
           Caption = #1044#1083#1080#1090#1077#1083#1100#1085#1086#1089#1090#1100' '#1082#1086#1085#1090#1088#1086#1083#1103', '#1089#1077#1082
           ParentShowHint = False
