@@ -671,18 +671,20 @@ begin
     begin
       con:=p.getOwnControl(i);
       setCell(1, r+3+i, c, con.name);
+      setCell(1, r+3+i, c+1, cDacControl(con).dacname);
+      setCell(1, r+3+i, c+2, con.feedbackname);
     end;
     c:=c+1;
     for I := 0 to p.ModeCount - 1 do
     begin
       m:=p.getMode(i);
-      setCell(1, r, c+i, m.name);
-      setCell(1, r+1, c+i, m.modelength);
+      setCell(1, r, c+2+i, m.name);
+      setCell(1, r+1, c+2+i, m.modelength);
       for j := 0 to p.ControlCount - 1 do
       begin
         con:=p.getOwnControl(j);
         t:=m.gettask(con.name);
-        setCell(1, r+3+j, c+i, t.task);
+        setCell(1, r+3+j, c+2+i, t.task);
       end;
     end;
     try

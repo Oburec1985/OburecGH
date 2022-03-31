@@ -620,8 +620,6 @@ var
   v: OleVariant;
 begin
   ir := getIR;
-  result:=getTagByName(tagname);
-  if result=nil then
   result := itag(ir.CreateTag(lpcstr(StrToAnsi(tagname)), LS_VIRTUAL, nil));
   AddTagProp(result, 'NullPoly', '1');
 

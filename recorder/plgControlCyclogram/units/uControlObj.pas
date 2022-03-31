@@ -204,8 +204,13 @@ type
 
   // регулятор
   cControlObj = class(cbaseobj)
-
   private
+    fcurPWMState:boolean; // текущее состояние ШИМ on/off
+    fPWMT: double; // время в течении которого работаем на полупериоде ШИМ
+    fPWMTi: int64; // счетчик времени на предыдущем цикле для расчета ШИМ
+    fPWM_Toff:double; // время выключения при ШИМ
+    fPWM_Ton:double; // время включения при ШИМ
+    fPWM:boolean; // включение работы по ШИМ
     // программа которая в данный момент дает задание регулятору
     fOwnerProg: cProgramObj;
     // единицы в которых работает контрол
@@ -239,6 +244,10 @@ type
     fInTolerance: boolean;
     fCheckOnMode: boolean;
   protected
+    Procedure StartPWM;
+    Procedure StopPWM;
+    Procedure UpdatePWM;
+
     procedure InitCS;
     procedure DeleteCS;
     procedure entercs;
@@ -281,6 +290,7 @@ type
     function GetCheckOnMode: boolean;
     procedure SetManualTask(t: double); virtual;
     procedure SetTask(t: double); virtual; abstract;
+    function GetTask:double;
   public
     property CheckOnMode: boolean read GetCheckOnMode write fCheckOnMode;
     property InTolerance: boolean read getInTol write setInTol;
@@ -293,7 +303,7 @@ type
     property state: integer read getstate write setstate;
     property Properties: string read getProperties write setproperties;
     property feedbackname: string read getfbname write setfbname;
-    property task: double read m_dtask write m_dtask;
+    property task: double read m_dtask write getTask;
     function getTaskstr(digits: integer): string;
     property Feedback: double read getFB;
     function getFBstr: string;
@@ -504,9 +514,15 @@ type
     destructor destroy; override;
   end;
 
+  tZone = record
+
+  end;
+
+
   // класс описание задачи регулятору
   cTask = class
   private
+    zone:tZone;
     // режим состоит из запрета контролу работать (сохраняем предыдущее значение)
     fStopControlValue: boolean;
     fapplyed:boolean;
@@ -2158,6 +2174,42 @@ begin
   end;
 end;
 
+Procedure cControlObj.StartPWM;
+begin
+  QueryPerformanceCounter(fPWMTi);
+  fPWMT:=0;
+  fcurPWMState:=true;
+  fPWM:=true; // выключен ШИМ
+end;
+
+Procedure cControlObj.StopPWM;
+begin
+  fPWM:=false; // выключен ШИМ
+  fcurPWMState:=true;
+end;
+
+Procedure cControlObj.UpdatePWM;
+var
+  di64,i64, fr: int64;
+  threshold, dt:double;
+begin
+  // предусмотреть защиту от переполнения таймера
+  di64:=decI64(fPWMTi, i64);
+  QueryPerformanceFrequency(fr);
+  dt:=di64/fr;
+  fPWMT:=fPWMT+dt;
+  if fcurPWMState then
+    threshold:=fPWM_Ton
+  else
+    threshold:=fPWM_Toff;
+  if fPWMT>threshold then
+  begin
+    fcurPWMState:=not fcurPWMState;
+    fPWMt:=0;
+  end;
+  QueryPerformanceFrequency(fPWMTi);
+end;
+
 procedure cControlObj.InitCS;
 begin
   InitializeCriticalSection(cs_state);
@@ -2203,6 +2255,19 @@ procedure cControlObj.SetManualTask(t: double);
 begin
   f_manualMode:=true;
   SetTask(t);
+end;
+
+function cControlObj.GetTask:double;
+begin
+  if fPWM then
+  begin
+    if fcurPWMState then
+      result:=m_dtask
+    else
+      result:=0;
+  end
+  else
+    result:=m_dtask;
 end;
 
 
@@ -2332,11 +2397,13 @@ end;
 procedure cControlObj.Start;
 begin
   state := c_Play;
+  StartPWM;
 end;
 
 procedure cControlObj.stop;
 begin
   state := c_Stop;
+  StopPWM;
 end;
 
 Function cControlObj.PlayState: boolean;
