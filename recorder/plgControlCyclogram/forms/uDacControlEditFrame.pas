@@ -5,12 +5,24 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, recorder, tags, uCommonMath, inifiles, uControlObj, uRCFunc,
-  uComponentServises, uCustomEditControlFrame, ubtnlistview;
+  uComponentServises, uCustomEditControlFrame, ubtnlistview, ComCtrls, Buttons,
+  ExtCtrls, DCL_MYOWN;
 
 type
   TDACControlEditFrame = class(TCustomControlEditFrame)
     FeedbackLabel: TLabel;
     DACCB: TComboBox;
+    RightGB: TGroupBox;
+    LowPanel: TPanel;
+    AddZoneBtn: TSpeedButton;
+    ListBox1: TListBox;
+    ChannelsLV: TBtnListView;
+    TolEdit: TFloatEdit;
+    TolLabel: TLabel;
+    ZoneTypeCB: TCheckBox;
+    procedure ChannelsLVDragOver(Sender, Source: TObject; X, Y: Integer;
+      State: TDragState; var Accept: Boolean);
+    procedure ChannelsLVDragDrop(Sender, Source: TObject; X, Y: Integer);
   public
     procedure EndMS;override;
     function GetDsc:string;override;
@@ -137,6 +149,53 @@ end;
 procedure TDACControlEditFrame.EndMS;
 begin
   endMultiSelect(DACCB);
+end;
+
+
+procedure TDACControlEditFrame.ChannelsLVDragDrop(Sender, Source: TObject; X,
+  Y: Integer);
+var
+  t:itag;
+  s:string;
+  li, next, newli:tlistitem;
+  b:boolean;
+begin
+  li:=tbtnlistview(source).selected;//tbtnlistview(source).GetItemAt(x,y);
+  while li<>nil do
+  begin
+    b:=true;
+    t:=itag(li.data);
+    next:=tbtnlistview(source).GetNextItem(li, sdBelow, [isSelected]);
+    // отрисовка свойств тега
+    newli:=tbtnlistview(sender).items.Add;
+    newli.data:=pointer(t);
+    s:=t.getName;
+    tbtnlistview(sender).SetSubItemByColumnName('Имя',s,newli);
+    tbtnlistview(sender).SetSubItemByColumnName('Значение','1',newli);
+    if li=next then break;
+    li:=next;
+  end;
+  lvchange(tbtnlistview(sender));
+end;
+
+
+procedure TDACControlEditFrame.ChannelsLVDragOver(Sender, Source: TObject; X,
+  Y: Integer; State: TDragState; var Accept: Boolean);
+var
+  li:tlistitem;
+begin
+  if source is tBtnListView then
+  begin
+    li:=tBtnListView(source).selected;
+    if li=nil then exit;
+    if li.Data <>nil then
+    begin
+      if tListitem(source).Data <>nil then
+      begin
+        Accept:= Supports(itag(li.Data),IID_ITAG);
+      end;
+    end;
+  end;
 end;
 
 end.

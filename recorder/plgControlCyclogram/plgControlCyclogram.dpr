@@ -1,7 +1,6 @@
  library plgControlCyclogram;
 
 uses
-  //fastmm4,
   u2dMath,
   Windows,
   Themes,
@@ -191,7 +190,8 @@ uses
   uAriphmAlg in 'units\uAriphmAlg.pas',
   uAriphmAlgFrame in 'forms\uAriphmAlgFrame.pas' {AriphmAlgFrame: TFrame},
   uTimeIntervalAlg in 'units\uTimeIntervalAlg.pas',
-  uExcel in '..\..\sharedUtils\utils\reports\excel\uExcel.pas';
+  uExcel in '..\..\sharedUtils\utils\reports\excel\uExcel.pas',
+  uEditCtrlZoneFrm in 'forms\uEditCtrlZoneFrm.pas' {EditCtrlZoneFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

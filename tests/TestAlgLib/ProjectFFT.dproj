@@ -20,7 +20,14 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_UnitSearchPath>..\..\sharedUtils\компоненты\dcl_dpk;..\..\sharedUtils\objects;..\..\sharedUtils\utils;..\..\sharedUtils\utils\lists;..\..\sharedUtils\utils\PathUtils;..\..\sharedUtils\math;..\..\sharedUtils;..\..\sharedUtils\utils\xml;..\..\sharedUtils\forms;..\..\sharedUtils\objects\utils;..\..\sharedUtils\utils\FastMM;..\..\sharedUtils\utils\jcl-2.3.1.4197;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\sharedUtils\компоненты\chart_dpk;..\..\sharedUtils\компоненты\chart_dpk\chart;..\..\sharedUtils\компоненты\chart_dpk\chart\utils;..\..\sharedUtils\компоненты\chart_dpk\chart\utils\lists;..\..\sharedUtils\компоненты\chart_dpk\chart\items;..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners;..\..\sharedUtils\компоненты\chart_dpk\chart\forms;..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames;..\..\sharedUtils\ogl;..\..\sharedUtils\ogl\dglOpenGL;..\..\sharedUtils\ogl\shader;..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source;..\..\3d;..\..\3d\objects;..\..\3d\forms;..\..\3d\math;..\..\3d\tools;..\..\3d\core;..\..\sharedUtils\utils\reports\ZipMaster19;..\..\sharedUtils\utils\TmsPack;..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14;..\..\sharedUtils\ZipMaster\;..\..\sharedUtils\math\FFT_койнов;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+			<DCC_DebugDCUs>true</DCC_DebugDCUs>
+			<DCC_MapFile>3</DCC_MapFile>
+			<ImageDebugInfo>true</ImageDebugInfo>
+			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_RangeChecking>true</DCC_RangeChecking>
+			<DCC_UnitSearchPath>..\..\sharedUtils\компоненты\dcl_dpk;..\..\sharedUtils\objects;..\..\sharedUtils\utils;..\..\sharedUtils\utils\lists;..\..\sharedUtils\utils\PathUtils;..\..\sharedUtils\math;..\..\sharedUtils;..\..\sharedUtils\utils\xml;..\..\sharedUtils\forms;..\..\sharedUtils\objects\utils;..\..\sharedUtils\utils\FastMM;..\..\sharedUtils\utils\jcl-2.3.1.4197;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\sharedUtils\компоненты\chart_dpk;..\..\sharedUtils\компоненты\chart_dpk\chart;..\..\sharedUtils\компоненты\chart_dpk\chart\utils;..\..\sharedUtils\компоненты\chart_dpk\chart\utils\lists;..\..\sharedUtils\компоненты\chart_dpk\chart\items;..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners;..\..\sharedUtils\компоненты\chart_dpk\chart\forms;..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames;..\..\sharedUtils\ogl;..\..\sharedUtils\ogl\dglOpenGL;..\..\sharedUtils\ogl\shader;..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source;..\..\3d;..\..\3d\objects;..\..\3d\forms;..\..\3d\math;..\..\3d\tools;..\..\3d\core;..\..\sharedUtils\utils\reports\ZipMaster19;..\..\sharedUtils\utils\TmsPack;..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14;..\..\sharedUtils\ZipMaster\;..\..\sharedUtils\math\FFT_койнов;..\..\sharedUtils\utils\FastMM4991\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_DependencyCheckOutputName>ProjectFFT.exe</DCC_DependencyCheckOutputName>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
@@ -213,12 +220,12 @@
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
-			<BuildConfiguration Include="Debug">
-				<Key>Cfg_2</Key>
-				<CfgParent>Base</CfgParent>
-			</BuildConfiguration>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
 			</BuildConfiguration>
 		</ItemGroup>

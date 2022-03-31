@@ -272,6 +272,8 @@
     <File Path="forms\uTrigFrame.dfm"/>
     <File Path="forms\uTrigsFrm.pas"/>
     <File Path="forms\uTrigsFrm.dfm"/>
+    <File Path="forms\uEditCtrlZoneFrm.pas"/>
+    <File Path="forms\uEditCtrlZoneFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\uCreateComponents.pas"/>
     <File Path="units\uControlObj.pas"/>

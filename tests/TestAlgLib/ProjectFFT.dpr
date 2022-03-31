@@ -1,6 +1,7 @@
 program ProjectFFT;
 
 uses
+  fastmm4,
   Forms,
   TestFFT in 'TestFFT.pas' {Form1},
   llstestunit in '..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\llstestunit.pas',

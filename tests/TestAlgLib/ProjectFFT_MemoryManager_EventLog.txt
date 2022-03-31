@@ -1,0 +1,45 @@
+
+--------------------------------2022/4/1 0:17:09--------------------------------
+A memory block has been leaked. The size is: 20
+
+This block was allocated by thread 0x2D70, and the stack trace (return addresses) at the time was:
+40445E [System.pas][System][@GetMem][2979]
+4FC823 [TestFFT.pas][TestFFT][setList.addPair][283]
+4201BA [SysUtils][TThreadLocalCounter.Open]
+4FC2CD [TestFFT.pas][TestFFT][TForm1.FormCreate][192]
+4201BA [SysUtils][TThreadLocalCounter.Open]
+4B08B7 [Forms.pas][Forms][TCustomForm.DoCreate][3319]
+4B04F3 [Forms.pas][Forms][TCustomForm.AfterConstruction][3203]
+405BBC [System.pas][System][@AfterConstruction][10325]
+4B04C8 [Forms.pas][Forms][TCustomForm.Create][3198]
+4BACE9 [Forms.pas][Forms][TApplication.CreateForm][9879]
+509212 
+
+The block is currently used for an object of class: Unknown
+
+The allocation number is: 982
+
+Current memory dump of 256 bytes starting at pointer address 7FE40650:
+70 2D 00 00 0D 00 00 00 BA 01 42 00 A8 FE 19 00 80 DB 4F 03 80 80 80 80 00 00 00 00 D1 14 E4 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 DF 03 00 00 5E 44 40 00 89 7A 41 00 EC AD 4B 00
+1E 92 50 00 29 FA 72 76 7E 7A 13 77 4E 7A 13 77 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70 2D 00 00 70 2D 00 00 7A 44 40 00 76 7A 41 00 5B 67 40 00 23 92 50 00 29 FA 72 76 7E 7A 13 77
+4E 7A 13 77 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0C 00 00 00 00 00 00 00 84 FA 48 4B
+C4 61 51 00 80 80 80 80 80 80 80 80 7B 05 B7 B4 80 80 80 80 80 80 80 80 00 00 00 00 B1 07 E4 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A8 01 00 00 5E 44 40 00 B7 55 40 00 4E 5B 40 00
+EC 55 40 00 C9 9B 43 00 B7 97 43 00 2B 99 43 00 FF 03 4B 00 E9 AC 4B 00 12 92 50 00 29 FA 72 76
+p  -  .  .  .  .  .  .  º  .  B  .  ¨  þ  .  .  €  Û  O  .  €  €  €  €  .  .  .  .  Ñ  .  ä  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ß  .  .  .  ^  D  @  .  ‰  z  A  .  ì  ­  K  .
+.  ’  P  .  )  ú  r  v  ~  z  .  w  N  z  .  w  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+p  -  .  .  p  -  .  .  z  D  @  .  v  z  A  .  [  g  @  .  #  ’  P  .  )  ú  r  v  ~  z  .  w
+N  z  .  w  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  „  ú  H  K
+Ä  a  Q  .  €  €  €  €  €  €  €  €  {  .  ·  ´  €  €  €  €  €  €  €  €  .  .  .  .  ±  .  ä  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ¨  .  .  .  ^  D  @  .  ·  U  @  .  N  [  @  .
+ì  U  @  .  É  ›  C  .  ·  —  C  .  +  ™  C  .  ÿ  .  K  .  é  ¬  K  .  .  ’  P  .  )  ú  r  v
+
+--------------------------------2022/4/1 0:17:09--------------------------------
+This application has leaked memory. The small block leaks are (excluding expected leaks registered by pointer):
+
+5 - 20 bytes: Unknown x 1
+
+Note: Memory leak detail is logged to a text file in the same folder as this application. To disable this memory leak check, undefine "EnableMemoryLeakReporting".

@@ -13,6 +13,7 @@ uses
   uPathMng,
   uEventTypes,
   uAlarms,
+  uSetList,
   blaccess;
 
 type
@@ -303,7 +304,7 @@ type
     property state: integer read getstate write setstate;
     property Properties: string read getProperties write setproperties;
     property feedbackname: string read getfbname write setfbname;
-    property task: double read m_dtask write getTask;
+    property task: double read getTask write m_dtask;
     function getTaskstr(digits: integer): string;
     property Feedback: double read getFB;
     function getFBstr: string;
@@ -312,12 +313,43 @@ type
     destructor destroy; override;
   end;
 
+  pZonePair =^ZonePair;
+
+  ZonePair = record
+    tag:ctag;
+    value:double;
+  end;
+
+  cZone = class
+    // допуск в зоне
+    tol:double;
+    // теги ZonePair
+    tags:tlist;
+  public
+    procedure cleartags;
+    procedure delPair(i:integer);
+    function GetZonePair(i:integer):ZonePair;
+    procedure AddZonePair(z:ZonePair);
+    constructor create;
+    destructor destroy;
+  end;
+
+  cZoneList = class (csetlist)
+  protected
+    procedure deletechild(node:pointer);override;
+  public
+    constructor create;override;
+    function GetZone(i:integer):cZone;
+    procedure DelZone(i:integer);
+  end;
+
   cDacControl = class(cControlObj)
   private
     m_dac: itag;
   public
     m_dac_id: tagid;
     m_dac_name: string;
+
   protected
     function getstate: integer; override;
     function getDAC: itag;
@@ -514,19 +546,16 @@ type
     destructor destroy; override;
   end;
 
-  tZone = record
-
-  end;
-
 
   // класс описание задачи регулятору
   cTask = class
   private
-    zone:tZone;
     // режим состоит из запрета контролу работать (сохраняем предыдущее значение)
     fStopControlValue: boolean;
     fapplyed:boolean;
     cs: TRTLCriticalSection;
+    // дополнительные параметры отправляемые по циклограмме в контрол
+    params:string;
   public
     TaskType: TPType;
     // компоненты касательных векторов
@@ -5006,6 +5035,102 @@ begin
   begin
     result := m_t.getname;
   end;
+end;
+
+{ cZone }
+
+procedure cZone.cleartags;
+begin
+  while tags.Count<>0 do
+  begin
+    delpair(0);
+  end;
+end;
+
+constructor cZone.create;
+begin
+  tags:=tlist.create;
+end;
+
+destructor cZone.destroy;
+begin
+  cleartags;
+  tags.destroy;
+  tags:=nil;
+end;
+
+procedure cZone.AddZonePair(z: ZonePair);
+var
+  p:pZonePair;
+begin
+  getmem(p,sizeof(ZonePair));
+  p^:=z;
+  tags.Add(p);
+end;
+
+function cZone.GetZonePair(i:integer): ZonePair;
+begin
+  result:=ZonePair(tags.items[i]^);
+end;
+
+procedure cZone.delPair(i: integer);
+var
+  p:pointer;
+begin
+  p:=tags.items[i];
+  FreeMem(p, sizeof(ZonePair));
+  tags.Delete(i);
+end;
+
+
+{ cZoneList }
+
+function ZoneComparator(p1,p2:pointer):integer;
+begin
+  if cZone(p1^).tol>cZone(p2^).tol then
+  begin
+    result:=1;
+  end
+  else
+  begin
+    if cZone(p1^).tol<cZone(p2^).tol then
+    begin
+      result:=-1;
+    end
+    else
+
+    begin
+      result:=0;
+    end;
+  end;
+end;
+
+
+constructor cZoneList.create;
+begin
+  inherited;
+  comparator:=ZoneComparator;
+  destroydata:=true;
+end;
+
+procedure cZoneList.deletechild(node: pointer);
+begin
+  inherited;
+  czone(node).destroy;
+end;
+
+procedure cZoneList.DelZone(i: integer);
+var
+  z:czone;
+begin
+  z:=getzone(i);
+  z.destroy;
+  RemoveObj(i);
+end;
+
+function cZoneList.GetZone(i: integer): cZone;
+begin
+  Result:=cZone(items[i]);
 end;
 
 end.
