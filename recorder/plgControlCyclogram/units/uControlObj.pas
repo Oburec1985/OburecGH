@@ -203,6 +203,48 @@ type
     destructor destroy; override;
   end;
 
+  pZonePair =^TZonePair;
+
+  TZonePair = record
+    tag:pointer; // ссылка на itag
+    value:double;
+  end;
+
+  cZone = class
+  private
+    // допуск в зоне
+    ftol:double;
+  public
+    defaultZone:boolean;
+    // теги ZonePair
+    tags:tlist;
+    owner:tlist;
+  private
+  public
+    procedure AddZonePair(z:TZonePair);
+    procedure cleartags;
+    procedure delPair(i:integer);
+    function GetZonePair(i:integer):TZonePair;
+    function propstr:string;
+    constructor create (List:tlist);
+    destructor destroy;
+  protected
+    procedure setTol(t:double);
+  public
+    property tol:double read ftol write settol;
+  end;
+
+  cZoneList = class (csetlist)
+  protected
+    procedure deletechild(node:pointer);override;
+  public
+    procedure clearZones;
+    function NewZone(tol:double):cZone;
+    constructor create;override;
+    function GetZone(i:integer):cZone;
+    procedure DelZone(i:integer);
+  end;
+
   // регулятор
   cControlObj = class(cbaseobj)
   private
@@ -244,6 +286,9 @@ type
     // в допуске
     fInTolerance: boolean;
     fCheckOnMode: boolean;
+  public
+    // зоны регулирования
+    m_ZoneList:cZoneList;
   protected
     Procedure StartPWM;
     Procedure StopPWM;
@@ -313,43 +358,12 @@ type
     destructor destroy; override;
   end;
 
-  pZonePair =^ZonePair;
-
-  ZonePair = record
-    tag:ctag;
-    value:double;
-  end;
-
-  cZone = class
-    // допуск в зоне
-    tol:double;
-    // теги ZonePair
-    tags:tlist;
-  public
-    procedure cleartags;
-    procedure delPair(i:integer);
-    function GetZonePair(i:integer):ZonePair;
-    procedure AddZonePair(z:ZonePair);
-    constructor create;
-    destructor destroy;
-  end;
-
-  cZoneList = class (csetlist)
-  protected
-    procedure deletechild(node:pointer);override;
-  public
-    constructor create;override;
-    function GetZone(i:integer):cZone;
-    procedure DelZone(i:integer);
-  end;
-
   cDacControl = class(cControlObj)
   private
     m_dac: itag;
   public
     m_dac_id: tagid;
     m_dac_name: string;
-
   protected
     function getstate: integer; override;
     function getDAC: itag;
@@ -2123,6 +2137,9 @@ begin
   InitCS;
   funits := 'б.р.';
   fScalarTolerance := true;
+  m_ZoneList:=cZoneList.create;
+  // дефолтная зона
+  m_ZoneList.NewZone(0);
 end;
 
 destructor cControlObj.destroy;
@@ -2142,6 +2159,9 @@ begin
     p := g_conmng.getProgram(i);
     p.removeOwnControl(self);
   end;
+
+  m_ZoneList.destroy;
+  m_ZoneList:=nil;
   inherited;
 end;
 
@@ -4580,6 +4600,7 @@ begin
   m_dtask := t;
 end;
 
+
 function cDacControl.TypeString: string;
 begin
   result := c_DAC_Typestring;
@@ -5047,30 +5068,68 @@ begin
   end;
 end;
 
-constructor cZone.create;
+procedure cZone.setTol(t:double);
 begin
+  if defaultZone then
+    exit
+  else
+    ftol:=t;
+end;
+
+function cZone.propstr:string;
+var
+  t:double;
+begin
+  t:=tol;
+  if t>0 then
+    result:='+'+FloatToStr(tol)
+  else
+  begin
+    if t<0 then
+      result:='-'+FloatToStr(tol)
+    else
+      result:='0';
+  end;
+end;
+
+constructor cZone.create(list:tlist);
+begin
+  ftol:=0;
   tags:=tlist.create;
+  owner:=list;
+  csetlist(owner).AddObj(self);
+  if owner.count=1 then
+  begin
+    defaultzone:=true;
+  end
+  else
+  begin
+    defaultzone:=false;
+  end;
 end;
 
 destructor cZone.destroy;
 begin
+  owner.Remove(self);
   cleartags;
   tags.destroy;
   tags:=nil;
 end;
 
-procedure cZone.AddZonePair(z: ZonePair);
+procedure cZone.AddZonePair(z: TZonePair);
 var
   p:pZonePair;
 begin
-  getmem(p,sizeof(ZonePair));
-  p^:=z;
+  getmem(p,sizeof(TZonePair));
+  p.tag:=z.tag;
+  p.value:=z.value;
   tags.Add(p);
 end;
 
-function cZone.GetZonePair(i:integer): ZonePair;
+
+function cZone.GetZonePair(i:integer): TZonePair;
 begin
-  result:=ZonePair(tags.items[i]^);
+  result:=TZonePair(tags.items[i]^);
 end;
 
 procedure cZone.delPair(i: integer);
@@ -5078,13 +5137,12 @@ var
   p:pointer;
 begin
   p:=tags.items[i];
-  FreeMem(p, sizeof(ZonePair));
+  FreeMem(p, sizeof(TZonePair));
   tags.Delete(i);
 end;
 
 
 { cZoneList }
-
 function ZoneComparator(p1,p2:pointer):integer;
 begin
   if cZone(p1^).tol>cZone(p2^).tol then
@@ -5119,13 +5177,36 @@ begin
   czone(node).destroy;
 end;
 
+procedure cZoneList.clearZones;
+var
+  z:czone;
+begin
+  while count>1 do
+  begin
+    z:=GetZone(0);
+    if not z.defaultZone then
+      z.destroy
+    else
+    begin
+      z:=getzone(count-1);
+      z.destroy;
+    end;
+  end;
+end;
+
+function cZoneList.NewZone(tol:double):cZone;
+begin
+  // добавление в список происходит внутри конструктора
+  result:=cZone.create(self);
+  result.tol:=tol;
+end;
+
 procedure cZoneList.DelZone(i: integer);
 var
   z:czone;
 begin
   z:=getzone(i);
   z.destroy;
-  RemoveObj(i);
 end;
 
 function cZoneList.GetZone(i: integer): cZone;

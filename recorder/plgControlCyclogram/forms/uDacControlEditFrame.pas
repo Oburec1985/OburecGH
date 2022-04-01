@@ -15,15 +15,23 @@ type
     RightGB: TGroupBox;
     LowPanel: TPanel;
     AddZoneBtn: TSpeedButton;
-    ListBox1: TListBox;
+    ZonesLB: TListBox;
     ChannelsLV: TBtnListView;
     TolEdit: TFloatEdit;
     TolLabel: TLabel;
     ZoneTypeCB: TCheckBox;
+    ZonesCB: TCheckBox;
+    UpdateBtn: TSpeedButton;
     procedure ChannelsLVDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure ChannelsLVDragDrop(Sender, Source: TObject; X, Y: Integer);
+    procedure UpdateBtnClick(Sender: TObject);
   public
+    m_CurCon:cControlObj;
+    m_ZoneList:cZoneList;
+  public
+    procedure ShowZone(z:cZone);
+    procedure ShowZones(c:cControlObj);
     procedure EndMS;override;
     function GetDsc:string;override;
     procedure doUpdateChannelList;override;
@@ -119,17 +127,103 @@ end;
 
 procedure TDACControlEditFrame.ShowControlProps(con:cControlObj; endMS:boolean);
 begin
-  SetMultiSelectComponentString(DACCB,cDacControl(con).m_dac_name);
-  //if endMS then
-  //begin
-  //  endMultiSelect(DACCB);
-  //end;
+  SetMultiSelectComponentString(DACCB, cDacControl(con).m_dac_name);
+  showZones(con);
+end;
+
+procedure TDACControlEditFrame.ShowZone(z:cZone);
+var
+  I: Integer;
+  li:tlistitem;
+  p:TZonePair;
+begin
+  TolEdit.FloatNum:=z.tol;
+  ZoneTypeCB.Checked:=(z.tol>0);
+  ChannelsLV.Clear;
+  for I := 0 to z.tags.Count - 1 do
+  begin
+    p:=z.GetZonePair(i);
+    li:=ChannelsLV.Items.Add;
+    li.Data:=pointer(p.tag);
+    tbtnlistview(ChannelsLV).SetSubItemByColumnName('Канал',itag(p.tag).GetName,li);
+    tbtnlistview(ChannelsLV).SetSubItemByColumnName('Значение',floattostr(p.value),li);
+  end;
+end;
+
+procedure TDACControlEditFrame.ShowZones(c:cControlObj);
+var
+  I: Integer;
+  z:cZone;
+  srt:string;
+begin
+  m_Zonelist:=c.m_ZoneList;
+  z:=nil;
+  if ZonesLB.ItemIndex>-1 then
+  begin
+    z:=cZone(ZonesLB.Items.Objects[ZonesLB.ItemIndex]);
+  end;
+  ZonesLB.Clear;
+  for I := 0 to c.m_ZoneList.Count - 1 do
+  begin
+    z:=c.m_ZoneList.GetZone(i);
+    ZonesLB.AddItem(z.propstr,z);
+  end;
+  for I := 0 to ZonesLB.items.count - 1 do
+  begin
+    if z=cZone(ZonesLB.Items.Objects[i]) then
+    begin
+      ZonesLB.ItemIndex:=i;
+      ShowZone(z);
+      exit;
+    end;
+  end;
+  z:=cZone(c.m_ZoneList.GetZone(0));
+  ShowZone(z);
+end;
+
+procedure TDACControlEditFrame.UpdateBtnClick(Sender: TObject);
+var
+  z:cZone;
+  I: Integer;
+  pair:TZonePair;
+  li:tlistitem;
+  str:string;
+begin
+  if ZonesLB.ItemIndex>=0 then
+  begin
+    z:=cZone(ZonesLB.Items.Objects[ZonesLB.ItemIndex]);
+    if zonetypecb.Checked then
+      z.tol:=tolEdit.FloatNum
+    else
+      z.tol:=-tolEdit.FloatNum;
+    z.cleartags;
+    for I := 0 to channelsLV.items.Count - 1 do
+    begin
+      li:=channelsLV.items[i];
+      pair.tag:=(li.data);
+      channelsLV.GetSubItemByColumnName('Значение',li,str);
+      pair.value:=StrToFloat(str);
+      z.AddZonePair(pair);
+    end;
+    ShowZones(m_CurCon);
+    for I := 0 to ZonesLB.Count - 1 do
+    begin
+      if ZonesLB.Items.Objects[i]=z then
+      begin
+        ZonesLB.ItemIndex:=i;
+        break;
+      end;
+    end;
+  end;
 end;
 
 procedure TDACControlEditFrame.editcontrol(c:cControlObj);
 var
   t:itag;
+  I: Integer;
+  z:cZone;
 begin
+  m_CurCon:=c;
   t:=itag(getselectObject(DACCB));
   if t<>nil then
     cDacControl(c).dac:=t
@@ -159,6 +253,7 @@ var
   s:string;
   li, next, newli:tlistitem;
   b:boolean;
+  p:tZonePair;
 begin
   li:=tbtnlistview(source).selected;//tbtnlistview(source).GetItemAt(x,y);
   while li<>nil do
@@ -170,11 +265,12 @@ begin
     newli:=tbtnlistview(sender).items.Add;
     newli.data:=pointer(t);
     s:=t.getName;
-    tbtnlistview(sender).SetSubItemByColumnName('Имя',s,newli);
+    tbtnlistview(sender).SetSubItemByColumnName('Канал',s,newli);
     tbtnlistview(sender).SetSubItemByColumnName('Значение','1',newli);
     if li=next then break;
     li:=next;
   end;
+
   lvchange(tbtnlistview(sender));
 end;
 
