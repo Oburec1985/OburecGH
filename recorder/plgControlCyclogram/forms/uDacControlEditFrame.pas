@@ -6,7 +6,9 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, recorder, tags, uCommonMath, inifiles, uControlObj, uRCFunc,
   uComponentServises, uCustomEditControlFrame, ubtnlistview, ComCtrls, Buttons,
-  ExtCtrls, DCL_MYOWN;
+  ExtCtrls,
+  uCommonTypes,
+  DCL_MYOWN;
 
 type
   TDACControlEditFrame = class(TCustomControlEditFrame)
@@ -26,6 +28,9 @@ type
       State: TDragState; var Accept: Boolean);
     procedure ChannelsLVDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure UpdateBtnClick(Sender: TObject);
+    procedure AddZoneBtnClick(Sender: TObject);
+    procedure TolEditChange(Sender: TObject);
+    procedure ZonesLBClick(Sender: TObject);
   public
     m_CurCon:cControlObj;
     m_ZoneList:cZoneList;
@@ -127,6 +132,7 @@ end;
 
 procedure TDACControlEditFrame.ShowControlProps(con:cControlObj; endMS:boolean);
 begin
+  m_CurCon:=con;
   SetMultiSelectComponentString(DACCB, cDacControl(con).m_dac_name);
   showZones(con);
 end;
@@ -181,6 +187,14 @@ begin
   ShowZone(z);
 end;
 
+procedure TDACControlEditFrame.TolEditChange(Sender: TObject);
+begin
+  if toledit.FloatNum<>0 then
+  begin
+    toledit.Color:=clWindow;
+  end;
+end;
+
 procedure TDACControlEditFrame.UpdateBtnClick(Sender: TObject);
 var
   z:cZone;
@@ -188,14 +202,17 @@ var
   pair:TZonePair;
   li:tlistitem;
   str:string;
+  t:double;
 begin
   if ZonesLB.ItemIndex>=0 then
   begin
     z:=cZone(ZonesLB.Items.Objects[ZonesLB.ItemIndex]);
+    m_CurCon.m_zones_enabled:=ZonesCB.Checked;
+    t:=z.tol;
     if zonetypecb.Checked then
-      z.tol:=tolEdit.FloatNum
+      z.tol:=abs(tolEdit.FloatNum)
     else
-      z.tol:=-tolEdit.FloatNum;
+      z.tol:=-abs(tolEdit.FloatNum);
     z.cleartags;
     for I := 0 to channelsLV.items.Count - 1 do
     begin
@@ -205,7 +222,8 @@ begin
       pair.value:=StrToFloat(str);
       z.AddZonePair(pair);
     end;
-    ShowZones(m_CurCon);
+    //if z.tol<>t then
+      ShowZones(m_CurCon);
     for I := 0 to ZonesLB.Count - 1 do
     begin
       if ZonesLB.Items.Objects[i]=z then
@@ -217,6 +235,17 @@ begin
   end;
 end;
 
+procedure TDACControlEditFrame.ZonesLBClick(Sender: TObject);
+var
+  z:czone;
+begin
+  if zoneslb.ItemIndex<>-1 then
+  begin
+    z:=cZone(zoneslb.Items.objects[zoneslb.ItemIndex]);
+    ShowZone(z);
+  end;
+end;
+
 procedure TDACControlEditFrame.editcontrol(c:cControlObj);
 var
   t:itag;
@@ -224,6 +253,7 @@ var
   z:cZone;
 begin
   m_CurCon:=c;
+  m_CurCon.m_zones_enabled:=ZonesCB.Checked;
   t:=itag(getselectObject(DACCB));
   if t<>nil then
     cDacControl(c).dac:=t
@@ -245,6 +275,22 @@ begin
   endMultiSelect(DACCB);
 end;
 
+
+procedure TDACControlEditFrame.AddZoneBtnClick(Sender: TObject);
+var
+  z:cZone;
+begin
+  if toledit.FloatNum<>0 then
+  begin
+    if zonetypecb.Checked then
+      z:=m_CurCon.m_ZoneList.NewZone(toledit.FloatNum)
+    else
+      z:=m_CurCon.m_ZoneList.NewZone(-toledit.FloatNum);
+    ShowZones(m_CurCon);
+  end
+  else
+    toledit.Color:=clPink;
+end;
 
 procedure TDACControlEditFrame.ChannelsLVDragDrop(Sender, Source: TObject; X,
   Y: Integer);

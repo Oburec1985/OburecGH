@@ -226,7 +226,7 @@ type
     procedure delPair(i:integer);
     function GetZonePair(i:integer):TZonePair;
     function propstr:string;
-    constructor create (List:tlist);
+    constructor create (List:tlist; tol:double);
     destructor destroy;
   protected
     procedure setTol(t:double);
@@ -251,6 +251,7 @@ type
     fcurPWMState:boolean; // текущее состояние ШИМ on/off
     fPWMT: double; // время в течении которого работаем на полупериоде ШИМ
     fPWMTi: int64; // счетчик времени на предыдущем цикле для расчета ШИМ
+    // сохраняемые параметры
     fPWM_Toff:double; // время выключения при ШИМ
     fPWM_Ton:double; // время включения при ШИМ
     fPWM:boolean; // включение работы по ШИМ
@@ -287,6 +288,7 @@ type
     fInTolerance: boolean;
     fCheckOnMode: boolean;
   public
+    m_zones_enabled:boolean;
     // зоны регулирования
     m_ZoneList:cZoneList;
   protected
@@ -2323,18 +2325,85 @@ end;
 procedure cControlObj.SaveObjAttributes(xmlNode: txmlnode);
 var
   str: utf8string;
+  z:czone;
+  I, j: Integer;
+  pars:tstringlist;
+  pair:tzonepair;
 begin
   inherited;
   str := feedbackname;
   xmlNode.WriteAttributeString('FeedBackName', str);
+  xmlNode.WriteAttributeBool('PWMMode', fPWM);
+  xmlNode.WriteAttributeFloat('PWM_T_ON', fPWM_Ton);
+  xmlNode.WriteAttributeFloat('PWM_T_OFF', fPWM_Toff);
+  xmlNode.WriteAttributeInteger('ZoneCount', m_ZoneList.Count);
+  xmlNode.WriteAttributeBool('Zones_Enabled', m_zones_enabled);
+  begin
+    pars:=tstringlist.Create;
+    for I := 0 to m_ZoneList.Count - 1 do
+    begin
+      z:=m_ZoneList.GetZone(i);
+      addParam(pars, 'Tol', floattostr(z.tol));
+      addParam(pars, 'tCount', inttostr(z.tags.Count));
+      for j := 0 to z.tags.Count - 1 do
+      begin
+        pair:=z.GetZonePair(j);
+        addParam(pars, 't'+inttostr(j), itag(pair.tag).GetName);
+        addParam(pars, 'tVal'+inttostr(j), floattostr(pair.value));
+      end;
+      xmlNode.WriteAttributeString('Z'+inttostr(i), ParsToStr(pars));
+    end;
+    delpars(pars);
+  end;
   // xmlNode.WriteAttributeBool('CheckOnMode', CheckOnMode);
 end;
 
 procedure cControlObj.LoadObjAttributes(xmlNode: txmlnode; mng: tobject);
+var
+  zCount:integer;
+  pars:tstringlist;
+  z:czone;
+  pair:TZonePair;
+  i, j, c:integer;
+  str:string;
+  d:double;
 begin
   inherited;
   feedbackname := xmlNode.ReadAttributeString('FeedBackName', '');
   // CheckOnMode := xmlNode.ReadAttributeBool('CheckOnMode', false);
+  fPWM:=xmlNode.ReadAttributeBool('PWMMode', false);
+  fPWM_Ton:=xmlNode.ReadAttributeFloat('PWM_T_ON', 0);
+  fPWM_Toff:=xmlNode.ReadAttributeFloat('PWM_T_OFF', 0);
+  zCount:=xmlNode.ReadAttributeInteger('ZoneCount', 1);
+  m_zones_enabled:=xmlNode.ReadAttributeBool('Zones_Enabled', false);
+  i:=0;
+  m_ZoneList.clearZones;
+  if zCount>1 then
+  begin
+    str:=xmlNode.ReadAttributeString('z'+inttostr(i), '');
+    pars:=ParsStrParam(str,',');
+    d:=strtofloat(GetParsValue(pars, 'Tol'));
+    if d=0 then
+    begin
+      z:=m_ZoneList.GetZone(0);
+    end
+    else
+    begin
+      z:=m_ZoneList.NewZone(d);
+    end;
+    c:=strtoint(GetParsValue(pars, 'tCount'));
+    for j := 0 to z.tags.Count - 1 do
+    begin
+      pair:=z.GetZonePair(j);
+      str:=GetParsValue(pars, 't'+inttostr(j));
+      pair.tag:=pointer(getTagByName(str));
+      str:=GetParsValue(pars, 'tVal'+inttostr(j));
+      pair.value:=strtofloat(str);
+      z.AddZonePair(pair);
+    end;
+    delpars(pars);
+  end;
+
 end;
 
 function cControlObj.getProperties: string;
@@ -2630,7 +2699,7 @@ function cProgramObj.getOwnControl(name: string): cControlObj;
 var
   i: integer;
 begin
-  result:=nil;
+  result:= nil;
   if fcontrols.Find(name, i) then
     result := getOwnControl(i);
 end;
@@ -5086,15 +5155,15 @@ begin
   else
   begin
     if t<0 then
-      result:='-'+FloatToStr(tol)
+      result:=FloatToStr(tol)
     else
       result:='0';
   end;
 end;
 
-constructor cZone.create(list:tlist);
+constructor cZone.create(list:tlist; tol:double);
 begin
-  ftol:=0;
+  ftol:=tol;
   tags:=tlist.create;
   owner:=list;
   csetlist(owner).AddObj(self);
@@ -5197,8 +5266,7 @@ end;
 function cZoneList.NewZone(tol:double):cZone;
 begin
   // добавление в список происходит внутри конструктора
-  result:=cZone.create(self);
-  result.tol:=tol;
+  result:=cZone.create(self, tol);
 end;
 
 procedure cZoneList.DelZone(i: integer);

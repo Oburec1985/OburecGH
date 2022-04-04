@@ -80,6 +80,7 @@ type
 const
   c_carret = #13#10;
   cllightGreen=$0000FF80;
+  clPink=$008080FF;
 
   axisX:point3 = (x:1;y:0;z:0);
   axisY:point3 = (x:0;y:1;z:0);

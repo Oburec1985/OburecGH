@@ -641,6 +641,8 @@ begin
 end;
 
 Function CloseExcel:boolean;
+var
+  res:olevariant;
 begin
   CloseExcel:=true;
   try
@@ -648,7 +650,7 @@ begin
     E.Quit;
     // ѕослать Excel-у команду закрыти€,
     // т.к. eApp.Quit иногда сбоит, а под Win7 вообще никогда не срабатывает
-    SendMessageA(E.Hinstance, WM_QUIT, 0, 0);
+    //SendMessageA(E.Hinstance, WM_QUIT, 0, 0);
     //Marshal.FinalReleaseComObject(eApp);
     E:=null;
   end;

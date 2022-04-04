@@ -1,5 +1,5 @@
 inherited DACControlEditFrame: TDACControlEditFrame
-  Width = 909
+  Width = 839
   Height = 304
   Align = alClient
   ExplicitWidth = 451
@@ -19,14 +19,14 @@ inherited DACControlEditFrame: TDACControlEditFrame
     TabOrder = 0
   end
   object RightGB: TGroupBox
-    Left = 280
+    Left = 210
     Top = 0
     Width = 629
     Height = 304
     Align = alRight
     Caption = #1047#1086#1085#1099' '#1088#1077#1075#1091#1083#1080#1088#1086#1074#1072#1085#1080#1103
     TabOrder = 1
-    ExplicitLeft = 336
+    ExplicitLeft = -178
     object LowPanel: TPanel
       Left = 2
       Top = 249
@@ -34,7 +34,6 @@ inherited DACControlEditFrame: TDACControlEditFrame
       Height = 53
       Align = alBottom
       TabOrder = 0
-      ExplicitWidth = 567
       object AddZoneBtn: TSpeedButton
         Left = 0
         Top = 2
@@ -115,6 +114,7 @@ inherited DACControlEditFrame: TDACControlEditFrame
         ParentBiDiMode = False
         ShowHint = True
         Transparent = False
+        OnClick = AddZoneBtnClick
       end
       object TolLabel: TLabel
         Left = 141
@@ -254,6 +254,7 @@ inherited DACControlEditFrame: TDACControlEditFrame
         Margins.Bottom = 4
         TabOrder = 0
         Text = '0.0'
+        OnChange = TolEditChange
       end
       object ZoneTypeCB: TCheckBox
         Left = 423
@@ -277,6 +278,7 @@ inherited DACControlEditFrame: TDACControlEditFrame
       Height = 231
       Align = alLeft
       TabOrder = 1
+      OnClick = ZonesLBClick
     end
     object ChannelsLV: TBtnListView
       Left = 177
@@ -308,7 +310,6 @@ inherited DACControlEditFrame: TDACControlEditFrame
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitWidth = 392
     end
   end
   object ZonesCB: TCheckBox
