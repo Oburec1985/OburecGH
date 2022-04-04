@@ -224,7 +224,8 @@ type
     procedure AddZonePair(z:TZonePair);
     procedure cleartags;
     procedure delPair(i:integer);
-    function GetZonePair(i:integer):TZonePair;
+    function GetZonePair(i:integer):TZonePair; overload;
+    function GetZonePair(str:string):TZonePair; overload;
     function propstr:string;
     constructor create (List:tlist; tol:double);
     destructor destroy;
@@ -337,6 +338,9 @@ type
     function InProgress: boolean;
     function GetCheckOnMode: boolean;
     procedure SetManualTask(t: double); virtual;
+    // установить доп. свойства контрола на циклограмме.
+    // вызывается в cmode.exec, параметры читаются из задачи cTask
+    procedure setparams(params:TStringlist);virtual;
     procedure SetTask(t: double); virtual; abstract;
     function GetTask:double;
   public
@@ -571,7 +575,9 @@ type
     fapplyed:boolean;
     cs: TRTLCriticalSection;
     // дополнительные параметры отправляемые по циклограмме в контрол
-    params:string;
+    fparams:string;
+  public
+    m_Params:TStringList;
   public
     TaskType: TPType;
     // компоненты касательных векторов
@@ -614,8 +620,11 @@ type
     function strValue: string;
     function strUseTol: string;
     property task: double read gettask write SetTask;
-    property StopControlValue: boolean read fStopControlValue write
-      SetStopControlValue;
+    property StopControlValue: boolean read fStopControlValue write  SetStopControlValue;
+  protected
+    procedure setparams(str:string);
+  public
+    property params: string read fparams write setparams;
     constructor create;
     destructor destroy;
   end;
@@ -2308,6 +2317,70 @@ begin
   SetTask(t);
 end;
 
+procedure cControlObj.setparams(params:TStringlist);
+var
+  l_str, str:string;
+  b, b1:boolean;
+  i, j:integer;
+  z:cZone;
+  d:double;
+  pair:TZonePair;
+begin
+  l_str:=GetParsValue(params, 'PWM_Thi');
+  if l_str<>'' then
+  begin
+    fPWM_Ton:=strtofloat(l_str);
+  end;
+  l_str:=GetParsValue(params, 'PWM_Tlo');
+  if l_str<>'' then
+  begin
+    fPWM_Toff:=strtofloat(l_str);
+  end;
+  l_str:=GetParsValue(params, 'PWM_state');
+  if l_str<>'' then
+  begin
+    fPWM:=StrToBool(l_str);
+  end;
+  // включение работы по зонам
+  l_str:=GetParsValue(params, 'Zone_state');
+  if l_str<>'' then
+  begin
+    m_zones_enabled:=StrToBool(l_str);
+    if m_zones_enabled then
+    begin
+      b:=true;
+      i:=0;
+      while b do
+      begin
+        l_str:=GetParsValue(params, 'Tol_'+inttostr(i));
+        if l_str='' then break;
+        z:=m_ZoneList.GetZone(i);
+        d:=strtofloat(l_str);
+        if z=nil then
+          z:=m_ZoneList.NewZone(d)
+        else
+          z.tol:=d;
+        // теги в зонах управления
+        b1:=true;
+        while b1 do
+        begin
+          l_str:='z'+inttostr(i)+'_t'+inttostr(j);
+          str:=GetParsValue(params, l_str);
+          if str<>'' then
+          begin
+            pair:=z.GetZonePair(str);
+            l_str:='z'+inttostr(i)+'_tval'+inttostr(j);
+            str:=GetParsValue(params, l_str);
+            pair.value:=strtofloat(str);
+          end
+          else
+            break;
+        end;
+      end;
+    end;
+  end;
+end;
+
 function cControlObj.GetTask:double;
 begin
   if fPWM then
@@ -2378,7 +2451,7 @@ begin
   m_zones_enabled:=xmlNode.ReadAttributeBool('Zones_Enabled', false);
   i:=0;
   m_ZoneList.clearZones;
-  if zCount>1 then
+  while zCount>0 do
   begin
     str:=xmlNode.ReadAttributeString('z'+inttostr(i), '');
     pars:=ParsStrParam(str,',');
@@ -2392,18 +2465,18 @@ begin
       z:=m_ZoneList.NewZone(d);
     end;
     c:=strtoint(GetParsValue(pars, 'tCount'));
-    for j := 0 to z.tags.Count - 1 do
+    for j := 0 to c - 1 do
     begin
-      pair:=z.GetZonePair(j);
       str:=GetParsValue(pars, 't'+inttostr(j));
       pair.tag:=pointer(getTagByName(str));
       str:=GetParsValue(pars, 'tVal'+inttostr(j));
       pair.value:=strtofloat(str);
       z.AddZonePair(pair);
     end;
+    dec(zCount);
+    inc(i);
     delpars(pars);
   end;
-
 end;
 
 function cControlObj.getProperties: string;
@@ -3959,6 +4032,7 @@ begin
         c.SetTask(v);
       end;
     end;
+    c.setparams(t.m_params);
   end;
   m_applyed := true;
 end;
@@ -4934,11 +5008,14 @@ constructor cTask.create;
 begin
   TaskType := ptNullPoly;
   initcs;
+  m_Params:=TStringList.Create;
 end;
 
 destructor cTask.destroy;
 begin
   DeleteCS;
+  m_Params.Destroy;
+  m_Params:=nil;
 end;
 
 
@@ -5018,6 +5095,17 @@ end;
 procedure cTask.SetStopControlValue(b: boolean);
 begin
   fStopControlValue := b;
+end;
+
+procedure cTask.setparams(str:string);
+begin
+  if m_Params.Count>0 then
+  begin
+    // очистка парсера
+    ClearParsResult(m_Params);
+  end;
+  if str<>'' then
+    updateParams(m_params, str, ',');
 end;
 
 procedure cTask.SetTask(d: double);
@@ -5199,6 +5287,24 @@ end;
 function cZone.GetZonePair(i:integer): TZonePair;
 begin
   result:=TZonePair(tags.items[i]^);
+end;
+
+function cZone.GetZonePair(str:string):TZonePair;
+var
+  i:integer;
+  zp:tZonePair;
+begin
+  result.tag:=nil;
+  result.value:=-1;
+  for I := 0 to tags.Count - 1 do
+  begin
+    zp:=GetZonePair(i);
+    if itag(zp.tag).GetName=str then
+    begin
+      result:=zp;
+      exit;
+    end;
+  end;
 end;
 
 procedure cZone.delPair(i: integer);

@@ -113,8 +113,9 @@ function GetParamExt(str:string; key:string; tab:char):string;
 // получить строку по номеру ключа
 function GetParsValue(pars:tstringlist;i:integer):string;overload;
 function GetParsValue(pars:tstringlist;key:string):string;overload;
-
+// очистка парсера
 procedure ClearParsResult(parsres:tstringlist);
+// очистка и удаление парсера
 procedure delPars(slist:tstringlist);
 
 Function IniReadFloatEx(ifile:tinifile;section, key:string;default:double):double;
