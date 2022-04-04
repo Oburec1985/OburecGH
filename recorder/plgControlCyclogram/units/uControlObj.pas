@@ -574,9 +574,8 @@ type
     fStopControlValue: boolean;
     fapplyed:boolean;
     cs: TRTLCriticalSection;
-    // дополнительные параметры отправляемые по циклограмме в контрол
-    fparams:string;
   public
+    // доп параметры отправляемые в контрол
     m_Params:TStringList;
   public
     TaskType: TPType;

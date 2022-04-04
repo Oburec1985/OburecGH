@@ -10,7 +10,7 @@ uses
   pluginClass, ImgList, VirtualTrees, uVTServices, Menus, inifiles, uFilemng,
   uBaseObj, uRCFunc, uRvclService,
   tags, recorder, uBaseObjService, uModesTabsForm, activex, uRTrig,
-  DCL_MYOWN, uRcCtrls, uTrigsFrm, uEventTypes,
+  DCL_MYOWN, uRcCtrls, uTrigsFrm, uEventTypes, uCommonMath,
   uExcel
   //, uBaseAlg
   ;
@@ -738,14 +738,17 @@ end;
 
 procedure TControlCyclogramEditFrm.LoadFromExcelBtnClick(Sender: TObject);
 var
-  fname, str:string;
+  fname, str, params:string;
   sh, rngObj: olevariant;
-  i,j, lastrow, lastcol:integer;
+  i,j, lastrow, lastcol, modeInd:integer;
 
   con:cControlObj;
   p:cProgramObj;
   m:cmodeobj;
   T:ctask;
+  pars:tstringlist; parsRecord:cstring;
+  z:cZone;
+  pair:TZonePair;
 begin
   if OpenDialog2.Execute then
   begin
@@ -775,6 +778,7 @@ begin
         p.removeOwnControls;
         p.ClearModes;
       end;
+      // загружаем контролы
       for I := 4 to LastRow do
       begin
         str:=sh.Cells[i, 2];
@@ -788,27 +792,84 @@ begin
           // установка feedback
           str:=sh.Cells[i, 4];
           cDacControl(con).config(getTagByName(str), nil);
+          // загружаем список тегов
+          str:=sh.Cells[i, 5];
+          str:=DeleteChars(str, #13);
+          pars:=ParsStrParam(str,',');
+          if pars.Count>0 then
+          begin
+            z:=con.m_ZoneList.GetZone(0);
+            z.cleartags;
+            for j := 0 to pars.Count - 1 do
+            begin
+              parsRecord:=pars.Objects[i];
+              str:=parsRecord.str;
+              pair.tag:=getTagByName(str);
+              pair.value:=0;
+              z.AddZonePair(pair);
+            end;
+          end;
+          delpars(pars);
+          pars.Destroy;
           p.AddControl(con);
         end;
       end;
       // проход по режимам
-      for I := 5 to lastCol do
+      modeInd:=0;
+      while 5+modeind*2+1<lastCol do
       begin
-        str:=sh.Cells[1,i];
+        str:=sh.Cells[1,5+modeInd*2];
         m:=cModeObj.create;
         m.name:=str;
         p.addmode(m);
-        str:=sh.Cells[2,i];
+        str:=sh.Cells[2,5+modeInd*2];
         m.ModeLength:=StrToFloat(str);
         m.Infinity:=false;
         m.CheckThreshold:=false;
         cmodeobj(m).CheckLength:=0;
+        params:='';
         for j := 0 to p.ControlCount - 1 do
         begin
           con:=p.getOwnControl(j);
-          str:=sh.Cells[j+4,i];
-          m.createTask(con, strtofloat(str));
+          // задание контролу
+          str:=sh.Cells[j+4,5+modeind*6];
+          t:=m.createTask(con, strtofloat(str));
+          // ШИМ
+          str:=sh.Cells[j+4,5+1+modeind*6];
+          if str<>'' then
+          begin
+            params:=params+str+',';
+          end;
+          // Thi_ШИМ
+          str:=sh.Cells[j+4,5+2+modeind*6];
+          if str<>'' then
+          begin
+            params:=params+str+',';
+          end;
+          // Tlo_ШИМ
+          str:=sh.Cells[j+4,5+3+modeind*6];
+          if str<>'' then
+          begin
+            params:=params+str+',';
+          end;
+          // Зоны
+          str:=sh.Cells[j+4,5+4+modeind*6];
+          if str<>'' then
+          begin
+            params:=params+str+',';
+          end;
+          // Значения
+          str:=sh.Cells[j+4,5+4+modeind*6];
+          if str<>'' then
+          begin
+            params:=params+str+',';
+          end;
+
+
+          updateParams(t.m_params, str, ',');
+          t.params:=str;
         end;
+        inc(modeind);
       end;
     end;
     g_conmng.configChanged := true;
