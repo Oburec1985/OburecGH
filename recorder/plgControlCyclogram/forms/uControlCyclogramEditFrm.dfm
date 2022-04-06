@@ -565,6 +565,8 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
       Margins.Bottom = 4
       Align = alClient
       TabOrder = 1
+      ExplicitLeft = -4
+      ExplicitTop = 363
       object ModesGB: TGroupBox
         Left = 1
         Top = 1
@@ -1155,7 +1157,6 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            ExplicitLeft = 4
             ExplicitTop = 28
             ExplicitWidth = 647
             ExplicitHeight = 397
@@ -1211,7 +1212,6 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              Value = 0
               ExplicitTop = 94
               ExplicitWidth = 158
               ExplicitHeight = 27
@@ -1248,9 +1248,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            ExplicitLeft = 4
             ExplicitTop = 28
-            ExplicitWidth = 548
             ExplicitHeight = 296
             inherited Splitter1: TSplitter
               Left = 252

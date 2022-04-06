@@ -24,6 +24,7 @@ type
     Label3: TLabel;
     Label1: TLabel;
     Label2: TLabel;
+    TaskParamsEdit: TEdit;
     procedure ModesSGGetEditText(Sender: TObject; ACol, ARow: Integer;
       var Value: string);
     procedure ModesSGKeyDown(Sender: TObject; var Key: Word;
@@ -366,6 +367,10 @@ begin
 end;
 
 procedure TModesTabFrame.cChart1SelectPoint(Sender: TObject);
+var
+  m:cmodeobj;
+  c:cControlObj;
+  t:ctask;
 begin
   //m_curTrend:=cChart1.activetrend;
   m_bp:=cbeziepoint(sender);
@@ -387,6 +392,13 @@ begin
     begin
       PointTypeCB.ItemIndex:=2;
     end;
+  end;
+  m:=m_p.getMode(m_bp.UniqIndex);
+  c:=cControlObj(m_curTrend.m_userdata);
+  t:=m.gettask(c.name);
+  if t<>nil then
+  begin
+    TaskParamsEdit.text:=t.params;
   end;
 end;
 

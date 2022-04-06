@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, uModesTabsFrame, ExtCtrls, uControlObj, uModesStepFrame;
+  Dialogs, uModesTabsFrame, ExtCtrls, uControlObj, uModesStepFrame, StdCtrls;
 
 type
   TModesTabForm = class(TForm)

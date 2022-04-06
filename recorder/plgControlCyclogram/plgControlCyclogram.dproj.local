@@ -200,10 +200,10 @@
     <File Path="forms\uControlCyclogramEditFrm.dfm"/>
     <File Path="forms\uControlDeskFrm.pas"/>
     <File Path="forms\uControlDeskFrm.dfm"/>
-    <File Path="forms\uControlEditFrame.pas"/>
-    <File Path="forms\uControlEditFrame.dfm"/>
     <File Path="forms\uControlWarnFrm.pas"/>
     <File Path="forms\uControlWarnFrm.dfm"/>
+    <File Path="forms\uControlEditFrame.pas"/>
+    <File Path="forms\uControlEditFrame.dfm"/>
     <File Path="forms\uCounterAlgFrame.pas"/>
     <File Path="forms\uCounterAlgFrame.dfm"/>
     <File Path="forms\uCursorFrm.pas"/>

@@ -133,6 +133,7 @@ end;
 procedure TDACControlEditFrame.ShowControlProps(con:cControlObj; endMS:boolean);
 begin
   m_CurCon:=con;
+  ZonesCB.Checked:=con.m_zones_enabled;
   SetMultiSelectComponentString(DACCB, cDacControl(con).m_dac_name);
   showZones(con);
 end;

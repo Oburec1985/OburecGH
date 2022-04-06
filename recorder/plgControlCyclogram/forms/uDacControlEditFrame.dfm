@@ -1,5 +1,5 @@
 inherited DACControlEditFrame: TDACControlEditFrame
-  Width = 839
+  Width = 451
   Height = 304
   Align = alClient
   ExplicitWidth = 451
@@ -19,14 +19,13 @@ inherited DACControlEditFrame: TDACControlEditFrame
     TabOrder = 0
   end
   object RightGB: TGroupBox
-    Left = 210
+    Left = -178
     Top = 0
     Width = 629
     Height = 304
     Align = alRight
     Caption = #1047#1086#1085#1099' '#1088#1077#1075#1091#1083#1080#1088#1086#1074#1072#1085#1080#1103
     TabOrder = 1
-    ExplicitLeft = -178
     object LowPanel: TPanel
       Left = 2
       Top = 249

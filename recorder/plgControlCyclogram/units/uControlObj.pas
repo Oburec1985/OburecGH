@@ -3,7 +3,7 @@ unit uControlObj;
 interface
 
 uses
-  classes, uBaseObj, uBaseObjMng,  uRTrig, NativeXML, recorder,
+  classes, uBaseObj, uBaseObjMng, uRTrig, NativeXML, recorder,
   dialogs, activeX,
   sysutils, windows, uRecorderEvents, VirtualTrees, uVTServices,
   tags,
@@ -36,7 +36,7 @@ type
     fstate: integer;
     // нужно ли исполнять контролы
     fExecControls: boolean;
-    //m_TagGroup: ITagsGroup;
+    // m_TagGroup: ITagsGroup;
     fStoptrig: cBaseTrig;
     fprograms: cProgramList;
     // вызов на удаление происходит при удалении менеджера т.к. обьект залинкован в него
@@ -203,59 +203,65 @@ type
     destructor destroy; override;
   end;
 
-  pZonePair =^TZonePair;
+  pZonePair = ^TZonePair;
 
   TZonePair = record
-    tag:pointer; // ссылка на itag
-    value:double;
+    tag: pointer; // ссылка на itag
+    value: double;
   end;
 
   cZone = class
   private
     // допуск в зоне
-    ftol:double;
+    ftol: double;
   public
-    defaultZone:boolean;
+    defaultZone: boolean;
     // теги ZonePair
-    tags:tlist;
-    owner:tlist;
+    tags: tlist;
+    owner: tlist;
   private
   public
-    procedure AddZonePair(z:TZonePair);
+    procedure Apply;
+    procedure AddZonePair(z: TZonePair);
     procedure cleartags;
-    procedure delPair(i:integer);
-    function GetZonePair(i:integer):TZonePair; overload;
-    function GetZonePair(str:string):TZonePair; overload;
-    function propstr:string;
-    constructor create (List:tlist; tol:double);
+    procedure delPair(i: integer);
+    function GetZonePair(i: integer): TZonePair; overload;
+    function GetZonePair(str: string): TZonePair; overload;
+    function GetZonePairPointer(i: integer): pZonePair; overload;
+    function GetZonePairPointer(str: string): pZonePair; overload;
+    function propstr: string;
+    constructor create(List: tlist; tol: double);
     destructor destroy;
   protected
-    procedure setTol(t:double);
+    procedure setTol(t: double);
   public
-    property tol:double read ftol write settol;
+    property tol: double read ftol write setTol;
   end;
 
-  cZoneList = class (csetlist)
+  cZoneList = class(csetlist)
   protected
-    procedure deletechild(node:pointer);override;
+    procedure deletechild(node: pointer); override;
   public
+    procedure ApplyZone(err: double);
+    function defaultZone: cZone;
+    function GetZoneByTol(t: double): cZone;
     procedure clearZones;
-    function NewZone(tol:double):cZone;
-    constructor create;override;
-    function GetZone(i:integer):cZone;
-    procedure DelZone(i:integer);
+    function NewZone(tol: double): cZone;
+    constructor create; override;
+    function GetZone(i: integer): cZone;
+    procedure DelZone(i: integer);
   end;
 
   // регулятор
   cControlObj = class(cbaseobj)
   private
-    fcurPWMState:boolean; // текущее состояние ШИМ on/off
+    fcurPWMState: boolean; // текущее состояние ШИМ on/off
     fPWMT: double; // время в течении которого работаем на полупериоде ШИМ
     fPWMTi: int64; // счетчик времени на предыдущем цикле для расчета ШИМ
     // сохраняемые параметры
-    fPWM_Toff:double; // время выключения при ШИМ
-    fPWM_Ton:double; // время включения при ШИМ
-    fPWM:boolean; // включение работы по ШИМ
+    fPWM_Toff: double; // время выключения при ШИМ
+    fPWM_Ton: double; // время включения при ШИМ
+    fPWM: boolean; // включение работы по ШИМ
     // программа которая в данный момент дает задание регулятору
     fOwnerProg: cProgramObj;
     // единицы в которых работает контрол
@@ -266,7 +272,7 @@ type
     // c_Stop = 7;
     fstate: integer;
     // на текущем шаге циклограммы пользователь вбил свое задание
-    f_manualMode:boolean;
+    f_manualMode: boolean;
     m_feedback: itag;
     m_feedbackBlA: IBlockAccess;
     fbData: array of double;
@@ -289,13 +295,15 @@ type
     fInTolerance: boolean;
     fCheckOnMode: boolean;
   public
-    m_zones_enabled:boolean;
+    m_zones_enabled: boolean;
     // зоны регулирования
-    m_ZoneList:cZoneList;
+    m_ZoneList: cZoneList;
   protected
     Procedure StartPWM;
     Procedure StopPWM;
     Procedure UpdatePWM;
+    Procedure SetPWMVal(v: double); virtual;
+    procedure ApplyTask(v: double); virtual;
 
     procedure InitCS;
     procedure DeleteCS;
@@ -340,9 +348,9 @@ type
     procedure SetManualTask(t: double); virtual;
     // установить доп. свойства контрола на циклограмме.
     // вызывается в cmode.exec, параметры читаются из задачи cTask
-    procedure setparams(params:TStringlist);virtual;
+    procedure setparams(params: tstringlist); virtual;
     procedure SetTask(t: double); virtual; abstract;
-    function GetTask:double;
+    function GetTask: double;
   public
     property CheckOnMode: boolean read GetCheckOnMode write fCheckOnMode;
     property InTolerance: boolean read getInTol write setInTol;
@@ -355,7 +363,7 @@ type
     property state: integer read getstate write setstate;
     property Properties: string read getProperties write setproperties;
     property feedbackname: string read getfbname write setfbname;
-    property task: double read getTask write m_dtask;
+    property task: double read GetTask write m_dtask;
     function getTaskstr(digits: integer): string;
     property Feedback: double read getFB;
     function getFBstr: string;
@@ -371,6 +379,7 @@ type
     m_dac_id: tagid;
     m_dac_name: string;
   protected
+    procedure ApplyTask(v: double); override;
     function getstate: integer; override;
     function getDAC: itag;
     procedure setDAC(dac: itag);
@@ -566,17 +575,16 @@ type
     destructor destroy; override;
   end;
 
-
   // класс описание задачи регулятору
   cTask = class
   private
     // режим состоит из запрета контролу работать (сохраняем предыдущее значение)
     fStopControlValue: boolean;
-    fapplyed:boolean;
+    fapplyed: boolean;
     cs: TRTLCriticalSection;
   public
     // доп параметры отправляемые в контрол
-    m_Params:TStringList;
+    m_Params: tstringlist;
   public
     TaskType: TPType;
     // компоненты касательных векторов
@@ -595,7 +603,7 @@ type
   protected
 
   protected
-    function gettask: double;
+    function GetTask: double;
     procedure SetTask(d: double);
     procedure SetStopControlValue(b: boolean);
     // задание применено
@@ -607,7 +615,7 @@ type
     procedure exitcs;
     procedure entercs;
 
-    property applyed:boolean read getApplyed write setApplyed;
+    property applyed: boolean read getApplyed write setApplyed;
     function getNextTask: cTask;
     function getPrevTask: cTask;
     function NullSpline: boolean;
@@ -618,12 +626,16 @@ type
     function getunits: string;
     function strValue: string;
     function strUseTol: string;
-    property task: double read gettask write SetTask;
-    property StopControlValue: boolean read fStopControlValue write  SetStopControlValue;
+    property task: double read GetTask write SetTask;
+    property StopControlValue: boolean read fStopControlValue write
+      SetStopControlValue;
   protected
-    procedure setparams(str:string);
+    procedure setparams(str: string);
+    function getparams: string;
   public
-    property params: string read fparams write setparams;
+    // зачитать свойство хранящееся в m_Params
+    function getParam(key: string): string;
+    property params: string read getparams write setparams;
     constructor create;
     destructor destroy;
   end;
@@ -718,14 +730,12 @@ type
     procedure clearTaskList;
     // обработка списка задач, где каждая задача это регулятор с заданием
     procedure doUpdateData; virtual;
-    function createTask(c: cControlObj; task: double): cTask;
-      overload;
-    function createTask(ControlName: string; task: double): cTask;
-      overload;
+    function createTask(c: cControlObj; task: double): cTask; overload;
+    function createTask(ControlName: string; task: double): cTask; overload;
     procedure editTask(c: cControlObj; task: double); overload;
     procedure editTask(ControlName: string; task: double); overload;
-    function gettask(i: integer): cTask; overload;
-    function gettask(ControlName: string): cTask; overload;
+    function GetTask(i: integer): cTask; overload;
+    function GetTask(ControlName: string): cTask; overload;
     procedure clearTask;
     procedure DelTask(i: integer); overload;
     procedure DelTask(ControlName: string); overload;
@@ -870,7 +880,7 @@ begin
       m := p.getMode(mi);
       for ti := 0 to m.TaskCount - 1 do
       begin
-        t := m.gettask(ti);
+        t := m.GetTask(ti);
         t.point := p2(m.gettimeinterval.x, t.task);
         t.compilespline;
       end;
@@ -997,7 +1007,7 @@ end;
 
 procedure cControlMng.doUpdateTags(sender: tobject);
 begin
-  //LogRecorderMessage('cControlMng.doUpdateTags_enter');
+  // LogRecorderMessage('cControlMng.doUpdateTags_enter');
   // потенциально опасно в многопоточности (state)
   if fUseUpdateTagsEvent then
   begin
@@ -1008,7 +1018,7 @@ begin
     UpdateProgramState;
     UpdateModeTolerance;
   end;
-  //LogRecorderMessage('cControlMng.doUpdateTags_exit');
+  // LogRecorderMessage('cControlMng.doUpdateTags_exit');
 end;
 
 procedure cControlMng.DropTrigs;
@@ -1071,11 +1081,11 @@ begin
   ir := getIR;
   group := 'ControlsGroup';
   gname := PAnsiChar(group);
-  //m_TagGroup := ITagsGroup(ir.GetGroupByName(gname));
-  //if m_TagGroup = nil then
-  //begin
-  //  m_TagGroup := ITagsGroup(ir.CreateTagsGroup(gname));
-  //end;
+  // m_TagGroup := ITagsGroup(ir.GetGroupByName(gname));
+  // if m_TagGroup = nil then
+  // begin
+  // m_TagGroup := ITagsGroup(ir.CreateTagsGroup(gname));
+  // end;
 
   m_TrigAlarmHandler := cTrigsAlarmHandler.create;
   m_TrigAlarmHandler.Attach;
@@ -1085,7 +1095,7 @@ end;
 
 destructor cControlMng.destroy;
 begin
-  //m_TagGroup := nil;
+  // m_TagGroup := nil;
 
   m_TrigAlarmHandler.Detach;
   // m_TrigAlarmHandler.Destroy;
@@ -1776,7 +1786,7 @@ var
   p: cProgramObj;
   m: cModeObj;
   t: cTask;
-  Tol: point2d;
+  tol: point2d;
 
   v, devtime: double;
   blCount: integer;
@@ -1795,17 +1805,17 @@ begin
         m := c.fCurMode;
         if m <> nil then // 3
         begin
-          t := m.gettask(c.name);
+          t := m.GetTask(c.name);
           v := c.fCurMode.GetTaskValue(t, 1);
-          Tol.x := v - t.m_tolerance;
-          Tol.y := v + t.m_tolerance;
+          tol.x := v - t.m_tolerance;
+          tol.y := v + t.m_tolerance;
           if c.fScalarTolerance then
           begin
             v := GetMean(c.m_feedback);
             inTol := false;
-            if v > Tol.x then
+            if v > tol.x then
             begin
-              if v < Tol.y then
+              if v < tol.y then
               begin
                 inTol := true;
               end;
@@ -1830,7 +1840,7 @@ begin
             for J := 0 to len - 1 do
             begin
               v := c.fbData[J];
-              if (v > Tol.y) or (v < Tol.x) then
+              if (v > tol.y) or (v < tol.x) then
               begin
                 inTol := false;
                 break;
@@ -1855,7 +1865,7 @@ begin
   begin
     p := getProgram(i);
     v := GetScalar(p.m_stateTag);
-    if v=p.m_stateTagVal then
+    if v = p.m_stateTagVal then
       continue;
     b := false;
     case p.state of
@@ -1940,12 +1950,12 @@ end;
 
 procedure cControlMng.UpdateT1;
 var
-  di64,i64: int64;
+  di64, i64: int64;
 begin
   QueryPerformanceCounter(i64);
   QueryPerformanceFrequency(m_Freq);
   // предусмотреть защиту от переполнения таймера
-  di64:=decI64(ft64, i64);
+  di64 := decI64(ft64, i64);
   ft := ft + di64 / m_Freq;
   ft64 := i64;
 end;
@@ -1977,8 +1987,6 @@ begin
   else
     result := i1;
 end;
-
-
 
 function cControlMng.TrigCount: integer;
 begin
@@ -2147,7 +2155,7 @@ begin
   InitCS;
   funits := 'б.р.';
   fScalarTolerance := true;
-  m_ZoneList:=cZoneList.create;
+  m_ZoneList := cZoneList.create;
   // дефолтная зона
   m_ZoneList.NewZone(0);
 end;
@@ -2171,7 +2179,7 @@ begin
   end;
 
   m_ZoneList.destroy;
-  m_ZoneList:=nil;
+  m_ZoneList := nil;
   inherited;
 end;
 
@@ -2213,7 +2221,7 @@ end;
 
 function cControlObj.Exec: boolean;
 var
-  v: double;
+  v, err: double;
 begin
   result := (state = c_Play);
   if m_stateTag <> nil then
@@ -2231,42 +2239,81 @@ begin
 
     end;
   end;
+  if state = c_Play then
+  begin
+    if fPWM then
+      UpdatePWM;
+  end;
+
+  if result then // в состоянии Play
+  begin
+    // работа по ШИМ
+    if fPWM then
+    begin
+      if fcurPWMState then
+        ApplyTask(task)
+      else
+        ApplyTask(0)
+    end
+    // работа без ШИМ
+    else
+    begin
+      if not m_TaskApplyed then
+      begin
+        m_TaskApplyed := true;
+        ApplyTask(task)
+      end;
+    end;
+    if m_feedback <> nil then
+      m_dfeedback := GetMean(m_feedback);
+    if m_zones_enabled then
+    begin
+      err := m_dfeedback - task;
+      m_ZoneList.ApplyZone(err);
+    end;
+  end;
 end;
 
 Procedure cControlObj.StartPWM;
 begin
   QueryPerformanceCounter(fPWMTi);
-  fPWMT:=0;
-  fcurPWMState:=true;
-  fPWM:=true; // выключен ШИМ
+  fPWMT := 0;
+  fcurPWMState := true;
+  fPWM := true; // выключен ШИМ
 end;
 
 Procedure cControlObj.StopPWM;
 begin
-  fPWM:=false; // выключен ШИМ
-  fcurPWMState:=true;
+  fPWM := false; // выключен ШИМ
+  fcurPWMState := true;
+end;
+
+Procedure cControlObj.SetPWMVal(v: double);
+begin
+
 end;
 
 Procedure cControlObj.UpdatePWM;
 var
-  di64,i64, fr: int64;
-  threshold, dt:double;
+  di64, i64, fr: int64;
+  threshold, dt: double;
 begin
   // предусмотреть защиту от переполнения таймера
-  di64:=decI64(fPWMTi, i64);
+  QueryPerformanceCounter(i64);
+  di64 := decI64(fPWMTi, i64);
   QueryPerformanceFrequency(fr);
-  dt:=di64/fr;
-  fPWMT:=fPWMT+dt;
+  dt := di64 / fr;
+  fPWMT := fPWMT + dt;
   if fcurPWMState then
-    threshold:=fPWM_Ton
+    threshold := fPWM_Ton
   else
-    threshold:=fPWM_Toff;
-  if fPWMT>threshold then
+    threshold := fPWM_Toff;
+  if fPWMT > threshold then
   begin
-    fcurPWMState:=not fcurPWMState;
-    fPWMt:=0;
+    fcurPWMState := not fcurPWMState;
+    fPWMT := 0;
   end;
-  QueryPerformanceFrequency(fPWMTi);
+  fPWMTi := i64;
 end;
 
 procedure cControlObj.InitCS;
@@ -2304,7 +2351,7 @@ begin
   m := fCurMode;
   if m = nil then
     exit;
-  t := m.gettask(name);
+  t := m.GetTask(name);
   if t = nil then
     exit;
   result := t.m_useTolerance;
@@ -2312,95 +2359,106 @@ end;
 
 procedure cControlObj.SetManualTask(t: double);
 begin
-  f_manualMode:=true;
+  f_manualMode := true;
   SetTask(t);
 end;
 
-procedure cControlObj.setparams(params:TStringlist);
+procedure cControlObj.setparams(params: tstringlist);
 var
-  l_str, str:string;
-  b, b1:boolean;
-  i, j:integer;
-  z:cZone;
-  d:double;
-  pair:TZonePair;
+  l_str, str, str1, Vstr: string;
+  b, b1: boolean;
+  z, defZone: cZone;
+  d, tol: double;
+  i, J, ind, tagind: integer;
+  ppair: pZonePair;
+  pair: TZonePair;
 begin
-  l_str:=GetParsValue(params, 'PWM_Thi');
-  if l_str<>'' then
+  l_str := GetParsValue(params, 'PWM_Thi');
+  if l_str <> '' then
   begin
-    fPWM_Ton:=strtofloat(l_str);
+    fPWM_Ton := strtofloat(l_str);
   end;
-  l_str:=GetParsValue(params, 'PWM_Tlo');
-  if l_str<>'' then
+  l_str := GetParsValue(params, 'PWM_Tlo');
+  if l_str <> '' then
   begin
-    fPWM_Toff:=strtofloat(l_str);
+    fPWM_Toff := strtofloat(l_str);
   end;
-  l_str:=GetParsValue(params, 'PWM_state');
-  if l_str<>'' then
+  l_str := GetParsValue(params, 'PWM_state');
+  if l_str <> '' then
   begin
-    fPWM:=StrToBool(l_str);
+    fPWM := StrToBoolExt(l_str);
   end;
   // включение работы по зонам
-  l_str:=GetParsValue(params, 'Zone_state');
-  if l_str<>'' then
+  l_str := GetParsValue(params, 'Zone_state');
+  m_zones_enabled := StrToBoolExt(l_str);
+  l_str := GetParsValue(params, 'Vals');
+  defZone := m_ZoneList.defaultZone;
+  if l_str <> '' then
   begin
-    m_zones_enabled:=StrToBool(l_str);
-    if m_zones_enabled then
+    ind := 0;
+    while ind <> -1 do
     begin
-      b:=true;
-      i:=0;
-      while b do
+      str1 := getSubStrByIndex(l_str, '_', 1, ind);
+      if str1 = '' then
+        break;
+      // парсим зоны
+      J := pos(':', str1);
+      Vstr := getSubStrByIndex(str1, ';', J + 1, 0);
+      tol := strtofloatext(Vstr);
+      if tol = 0 then
       begin
-        l_str:=GetParsValue(params, 'Tol_'+inttostr(i));
-        if l_str='' then break;
-        z:=m_ZoneList.GetZone(i);
-        d:=strtofloat(l_str);
-        if z=nil then
-          z:=m_ZoneList.NewZone(d)
-        else
-          z.tol:=d;
-        // теги в зонах управления
-        b1:=true;
-        while b1 do
+        z := defZone;
+      end
+      else
+      begin
+        z := m_ZoneList.GetZoneByTol(tol);
+        if z = nil then
         begin
-          l_str:='z'+inttostr(i)+'_t'+inttostr(j);
-          str:=GetParsValue(params, l_str);
-          if str<>'' then
+          z := m_ZoneList.NewZone(tol);
+          for i := 0 to defZone.tags.Count - 1 do
           begin
-            pair:=z.GetZonePair(str);
-            l_str:='z'+inttostr(i)+'_tval'+inttostr(j);
-            str:=GetParsValue(params, l_str);
-            pair.value:=strtofloat(str);
-          end
-          else
-            break;
+            ppair := defZone.GetZonePairPointer(i);
+            pair.tag := ppair.tag;
+            pair.value := ppair.value;
+            z.AddZonePair(pair);
+          end;
         end;
       end;
+      tagind := 0;
+      while tagind <> -1 do
+      begin
+        Vstr := getSubStrByIndex(str1, ';', J, tagind + 1);
+        if Vstr = '' then
+          break;
+        ppair := z.GetZonePairPointer(tagind);
+        ppair.value := strtofloatext(Vstr);
+        inc(tagind);
+      end;
+      inc(ind);
     end;
   end;
 end;
 
-function cControlObj.GetTask:double;
+function cControlObj.GetTask: double;
 begin
-  if fPWM then
-  begin
-    if fcurPWMState then
-      result:=m_dtask
-    else
-      result:=0;
-  end
-  else
-    result:=m_dtask;
+  //if fPWM then
+  //begin
+  //  if fcurPWMState then
+  //    result := m_dtask
+  //  else
+  //    result := 0;
+  //end
+  //else
+  result := m_dtask;
 end;
-
 
 procedure cControlObj.SaveObjAttributes(xmlNode: txmlnode);
 var
   str: utf8string;
-  z:czone;
-  I, j: Integer;
-  pars:tstringlist;
-  pair:tzonepair;
+  z: cZone;
+  i, J: integer;
+  pars: tstringlist;
+  pair: TZonePair;
 begin
   inherited;
   str := feedbackname;
@@ -2411,19 +2469,19 @@ begin
   xmlNode.WriteAttributeInteger('ZoneCount', m_ZoneList.Count);
   xmlNode.WriteAttributeBool('Zones_Enabled', m_zones_enabled);
   begin
-    pars:=tstringlist.Create;
-    for I := 0 to m_ZoneList.Count - 1 do
+    pars := tstringlist.create;
+    for i := 0 to m_ZoneList.Count - 1 do
     begin
-      z:=m_ZoneList.GetZone(i);
+      z := m_ZoneList.GetZone(i);
       addParam(pars, 'Tol', floattostr(z.tol));
       addParam(pars, 'tCount', inttostr(z.tags.Count));
-      for j := 0 to z.tags.Count - 1 do
+      for J := 0 to z.tags.Count - 1 do
       begin
-        pair:=z.GetZonePair(j);
-        addParam(pars, 't'+inttostr(j), itag(pair.tag).GetName);
-        addParam(pars, 'tVal'+inttostr(j), floattostr(pair.value));
+        pair := z.GetZonePair(J);
+        addParam(pars, 't' + inttostr(J), itag(pair.tag).getname);
+        addParam(pars, 'tVal' + inttostr(J), floattostr(pair.value));
       end;
-      xmlNode.WriteAttributeString('Z'+inttostr(i), ParsToStr(pars));
+      xmlNode.WriteAttributeString('Z' + inttostr(i), ParsToStr(pars));
     end;
     delpars(pars);
   end;
@@ -2432,44 +2490,44 @@ end;
 
 procedure cControlObj.LoadObjAttributes(xmlNode: txmlnode; mng: tobject);
 var
-  zCount:integer;
-  pars:tstringlist;
-  z:czone;
-  pair:TZonePair;
-  i, j, c:integer;
-  str:string;
-  d:double;
+  zCount: integer;
+  pars: tstringlist;
+  z: cZone;
+  pair: TZonePair;
+  i, J, c: integer;
+  str: string;
+  d: double;
 begin
   inherited;
   feedbackname := xmlNode.ReadAttributeString('FeedBackName', '');
   // CheckOnMode := xmlNode.ReadAttributeBool('CheckOnMode', false);
-  fPWM:=xmlNode.ReadAttributeBool('PWMMode', false);
-  fPWM_Ton:=xmlNode.ReadAttributeFloat('PWM_T_ON', 0);
-  fPWM_Toff:=xmlNode.ReadAttributeFloat('PWM_T_OFF', 0);
-  zCount:=xmlNode.ReadAttributeInteger('ZoneCount', 1);
-  m_zones_enabled:=xmlNode.ReadAttributeBool('Zones_Enabled', false);
-  i:=0;
+  fPWM := xmlNode.ReadAttributeBool('PWMMode', false);
+  fPWM_Ton := xmlNode.ReadAttributeFloat('PWM_T_ON', 0);
+  fPWM_Toff := xmlNode.ReadAttributeFloat('PWM_T_OFF', 0);
+  zCount := xmlNode.ReadAttributeInteger('ZoneCount', 1);
+  m_zones_enabled := xmlNode.ReadAttributeBool('Zones_Enabled', false);
+  i := 0;
   m_ZoneList.clearZones;
-  while zCount>0 do
+  while zCount > 0 do
   begin
-    str:=xmlNode.ReadAttributeString('z'+inttostr(i), '');
-    pars:=ParsStrParam(str,',');
-    d:=strtofloat(GetParsValue(pars, 'Tol'));
-    if d=0 then
+    str := xmlNode.ReadAttributeString('z' + inttostr(i), '');
+    pars := ParsStrParam(str, ',');
+    d := strtofloat(GetParsValue(pars, 'Tol'));
+    if d = 0 then
     begin
-      z:=m_ZoneList.GetZone(0);
+      z := m_ZoneList.defaultZone;
     end
     else
     begin
-      z:=m_ZoneList.NewZone(d);
+      z := m_ZoneList.NewZone(d);
     end;
-    c:=strtoint(GetParsValue(pars, 'tCount'));
-    for j := 0 to c - 1 do
+    c := strtoint(GetParsValue(pars, 'tCount'));
+    for J := 0 to c - 1 do
     begin
-      str:=GetParsValue(pars, 't'+inttostr(j));
-      pair.tag:=pointer(getTagByName(str));
-      str:=GetParsValue(pars, 'tVal'+inttostr(j));
-      pair.value:=strtofloat(str);
+      str := GetParsValue(pars, 't' + inttostr(J));
+      pair.tag := pointer(getTagByName(str));
+      str := GetParsValue(pars, 'tVal' + inttostr(J));
+      pair.value := strtofloat(str);
       z.AddZonePair(pair);
     end;
     dec(zCount);
@@ -2576,6 +2634,11 @@ begin
   fCurMode := nil;
 end;
 
+procedure cControlObj.ApplyTask(v: double);
+begin
+
+end;
+
 function cControlObj.CheckMode: boolean;
 begin
   if not CheckOnMode then
@@ -2668,7 +2731,7 @@ begin
   m_enableOnStart := true;
   m_applyModeStateTag := false;
   fmodes := cbaseobj.create;
-  fmodes.destroydata:=true;
+  fmodes.destroydata := true;
   fmodes.autocreate := true;
   fmodes.fHelper := true;
   fmodes.name := name + '_Режимы';
@@ -2731,7 +2794,6 @@ begin
   fcontrols.AddObject(c.name, c);
 end;
 
-
 procedure cProgramObj.removeOwnControls;
 begin
   fcontrols.Clear;
@@ -2771,7 +2833,7 @@ function cProgramObj.getOwnControl(name: string): cControlObj;
 var
   i: integer;
 begin
-  result:= nil;
+  result := nil;
   if fcontrols.Find(name, i) then
     result := getOwnControl(i);
 end;
@@ -3098,7 +3160,7 @@ begin
         ActNode.WriteAttributeString('TargetName', cbaseobj(act.m_target).name)
       else
         ActNode.WriteAttributeString('TargetName', act.targetname);
-      ActNode.WriteAttributeinteger('ActionType', act.opertype);
+      ActNode.WriteAttributeInteger('ActionType', act.opertype);
       ActNode.WriteAttributeBool('ActionFront', act.m_Front);
       if (act.opertype = c_action_MDBaddProp) or
         (act.opertype = c_action_MDBsetProp) or
@@ -3118,20 +3180,20 @@ begin
     end;
   end;
   child.WriteAttributeString('Name', t.name);
-  child.WriteAttributeinteger('Type', TrigTypeToInt(t.Trigtype));
+  child.WriteAttributeInteger('Type', TrigTypeToInt(t.Trigtype));
   child.WriteAttributeBool('Inverse', t.Inverse);
   child.WriteAttributeBool('EnableOnStart', t.m_enableOnStart);
   child.WriteAttributeBool('DisableOnApply', t.m_DisableOnApply);
   if t is crtrig then
   begin
     child.WriteAttributeString('Trigname', crtrig(t).channame, '');
-    child.WriteAttributeFloat('Threshold', crtrig(t).Threshold);
+    child.WriteAttributeFloat('Threshold', crtrig(t).threshold);
   end
   else
   begin
     if t is cTimeTrig then
     begin
-      child.WriteAttributeinteger('dueTime', cTimeTrig(t).dueTime);
+      child.WriteAttributeInteger('dueTime', cTimeTrig(t).dueTime);
     end
     else
     begin
@@ -3142,20 +3204,20 @@ begin
     end;
   end;
 
-  child.WriteAttributeinteger('OrCount', t.m_orTrigs.Count);
+  child.WriteAttributeInteger('OrCount', t.m_orTrigs.Count);
   for i := 0 to t.m_orTrigs.Count - 1 do
   begin
     childTrig := cBaseTrig(t.m_orTrigs.Objects[i]);
     writeTrig(child, key + '_or_' + inttostr(i), childTrig);
   end;
-  child.WriteAttributeinteger('AndCount', t.m_AndTrigs.Count);
+  child.WriteAttributeInteger('AndCount', t.m_AndTrigs.Count);
   for i := 0 to t.m_AndTrigs.Count - 1 do
   begin
     childTrig := cBaseTrig(t.m_AndTrigs.Objects[i]);
     writeTrig(child, key + '_and_' + inttostr(i), childTrig);
   end;
 
-  child.WriteAttributeinteger('ChildCount', t.ChildCount);
+  child.WriteAttributeInteger('ChildCount', t.ChildCount);
   for i := 0 to t.ChildCount - 1 do
   begin
     childTrig := cBaseTrig(t.getChild(i));
@@ -3170,7 +3232,7 @@ var
   c: cControlObj;
 begin
   inherited;
-  xmlNode.WriteAttributeinteger('ControlCount', ControlCount);
+  xmlNode.WriteAttributeInteger('ControlCount', ControlCount);
   // пишем используемые контролы
   for i := 0 to ControlCount - 1 do
   begin
@@ -3178,7 +3240,7 @@ begin
     c := getOwnControl(i);
     xmlNode.WriteAttributeString(str, c.name);
   end;
-  xmlNode.WriteAttributeinteger('ProgRepeat', fRepeatCount);
+  xmlNode.WriteAttributeInteger('ProgRepeat', fRepeatCount);
   xmlNode.WriteAttributeBool('ProgStartOnPlay', m_StartOnPlay);
 
 end;
@@ -3193,25 +3255,25 @@ var
   str: string;
   trigtarget: cbaseobj;
   ct: ctag;
-  b:boolean;
+  b: boolean;
 begin
-  b:=false;
-  for j := 0 to node.NodeCount - 1 do
+  b := false;
+  for J := 0 to node.NodeCount - 1 do
   begin
-    child:=node.Nodes[j];
-    if child.name=key then
+    child := node.Nodes[J];
+    if child.name = key then
     begin
-      b:=true;
+      b := true;
       break;
     end;
   end;
   if not b then
-    child:=nil;
-  //child := node.FindNode(key);
+    child := nil;
+  // child := node.FindNode(key);
   result := nil;
   if child <> nil then
   begin
-    i := InttoTrigtype(child.ReadAttributeinteger('Type', 0));
+    i := InttoTrigtype(child.ReadAttributeInteger('Type', 0));
     case i of
       TrPause:
         begin
@@ -3233,13 +3295,13 @@ begin
     begin
       str := child.ReadAttributeString('Trigname', '');
       crtrig(t).setchannel(str);
-      crtrig(t).Threshold := child.ReadAttributeFloat('Threshold', 0.5);
+      crtrig(t).threshold := child.ReadAttributeFloat('Threshold', 0.5);
     end
     else
     begin
       if t is crtrig then
       begin
-        cTimeTrig(t).dueTime := child.ReadAttributeinteger('dueTime', 0);
+        cTimeTrig(t).dueTime := child.ReadAttributeInteger('dueTime', 0);
       end
       else
       begin
@@ -3266,7 +3328,7 @@ begin
         act := TTrigAction.create(t);
         str := ActNode.ReadAttributeString('TargetName', '');
         act.targetname := str;
-        act.opertype := ActNode.ReadAttributeinteger('ActionType', -1);
+        act.opertype := ActNode.ReadAttributeInteger('ActionType', -1);
         act.m_Front := ActNode.ReadAttributeBool('ActionFront', true);
         if (act.opertype = c_action_MDBaddProp) or
           (act.opertype = c_action_MDBsetProp) or
@@ -3278,7 +3340,7 @@ begin
           begin
             act.mdbPropVal := ActNode.ReadAttributeString('MDBPropVal', '');
           end;
-          act.mdbtag:=ct.tag;
+          act.mdbTag := ct.tag;
           ct.destroy;
           ct := nil;
         end;
@@ -3286,23 +3348,23 @@ begin
       end;
     end;
 
-    ChildCount := child.ReadAttributeinteger('OrCount', 0);
+    ChildCount := child.ReadAttributeInteger('OrCount', 0);
     for J := 0 to ChildCount - 1 do
     begin
       childTrig := ReadTrig(child, key + '_or_' + inttostr(J), p);
       t.addOrTrig(childTrig);
     end;
-    ChildCount := child.ReadAttributeinteger('AndCount', 0);
+    ChildCount := child.ReadAttributeInteger('AndCount', 0);
     for J := 0 to ChildCount - 1 do
     begin
       childTrig := ReadTrig(child, key + '_and_' + inttostr(J), p);
-      //if childTrig.name<>'Trig_m02' then
-        t.addAndTrig(childTrig)
-      //else
-      //  childTrig.destroy;
+      // if childTrig.name<>'Trig_m02' then
+      t.addAndTrig(childTrig)
+      // else
+      // childTrig.destroy;
     end;
 
-    ChildCount := child.ReadAttributeinteger('ChildCount', 0);
+    ChildCount := child.ReadAttributeInteger('ChildCount', 0);
     for J := 0 to ChildCount - 1 do
     begin
       childTrig := ReadTrig(child, key + '_' + inttostr(J), p);
@@ -3327,7 +3389,7 @@ begin
   begin
     for i := 0 to trignode.NodeCount - 1 do
     begin
-      //if i<1 then
+      // if i<1 then
       begin
         t := ReadTrig(trignode, 'ActionTrig_' + inttostr(i), nil);
         addtrig(t);
@@ -3354,7 +3416,7 @@ begin
     t := getTrig(i);
     if t.m_actions <> nil then
     begin
-      if t.owner=nil then
+      if t.owner = nil then
       begin
         writeTrig(TrigsNode, 'ActionTrig_' + inttostr(actTrigCount), t);
         inc(actTrigCount);
@@ -3372,9 +3434,9 @@ var
   t: cBaseTrig;
 begin
   inherited;
-  fRepeatCount := xmlNode.ReadAttributeinteger('ProgRepeat', 1);
+  fRepeatCount := xmlNode.ReadAttributeInteger('ProgRepeat', 1);
   m_StartOnPlay := xmlNode.ReadAttributeBool('ProgStartOnPlay', true);
-  lConCount := xmlNode.ReadAttributeinteger('ControlCount', 0);
+  lConCount := xmlNode.ReadAttributeInteger('ControlCount', 0);
   // пишем используемые контролы
   for i := 0 to lConCount - 1 do
   begin
@@ -3390,7 +3452,7 @@ begin
     end;
   end;
 
-  fRepeatCount := xmlNode.ReadAttributeinteger('ProgRepeat');
+  fRepeatCount := xmlNode.ReadAttributeInteger('ProgRepeat');
   // StartTrig := ReadTrig(xmlNode, 'StartTrig', self);
   // StopTrig := ReadTrig(xmlNode, 'StopTrig', self);
 
@@ -3406,16 +3468,16 @@ end;
 
 procedure cProgramObj.SetActiveMode(m: cModeObj);
 var
-  i:integer;
-  t:ctask;
+  i: integer;
+  t: cTask;
 begin
   if factivemode <> nil then
   begin
     factivemode.active := false;
-    for I := 0 to factivemode.TaskCount - 1 do
+    for i := 0 to factivemode.TaskCount - 1 do
     begin
-      t:=factivemode.gettask(i);
-      t.control.f_manualMode:=false;
+      t := factivemode.GetTask(i);
+      t.control.f_manualMode := false;
     end;
   end;
   if m <> nil then
@@ -3457,9 +3519,9 @@ begin
     if not enabled then
       exit;
   end;
-  if s=c_pause then
+  if s = c_Pause then
   begin
-    if (fstate=c_stop) or (fstate=c_end) then
+    if (fstate = c_Stop) or (fstate = c_End) then
     begin
       // пауза не должна выводить из стопа
       exit;
@@ -3630,7 +3692,7 @@ var
   dx: double;
 begin
   QueryPerformanceCounter(i64);
-  di64:=decI64(fModeT1,i64);
+  di64 := decI64(fModeT1, i64);
   dx := di64 / g_conmng.m_Freq;
   fProgT := fProgT + dx;
   // предусмотреть защиту от переполнения таймера
@@ -3640,11 +3702,11 @@ end;
 
 procedure cProgramObj.UpdateModePauseT;
 var
-  di64,i64: int64;
+  di64, i64: int64;
   dx: double;
 begin
   QueryPerformanceCounter(i64);
-  di64:=decI64(fModePauseTi, i64);
+  di64 := decI64(fModePauseTi, i64);
   dx := di64 / g_conmng.m_Freq;
   // предусмотреть защиту от переполнения таймера
   fModePauseT := fModePauseT + dx;
@@ -3716,7 +3778,7 @@ begin
   end
   else
   begin
-    result := gettask(i);
+    result := GetTask(i);
     result.control := c;
     result.task := task;
   end;
@@ -3762,7 +3824,7 @@ end;
 procedure cModeObj.DestroyTags;
 var
   changestate: boolean;
-  refCount:integer;
+  refCount: integer;
 begin
   if m_stateTag <> nil then
   begin
@@ -3841,7 +3903,7 @@ begin
   unLincTags;
   for i := 0 to TaskList.Count - 1 do
   begin
-    t := gettask(i);
+    t := GetTask(i);
     t.destroy
   end;
   TaskList.destroy;
@@ -3867,7 +3929,7 @@ var
 begin
   for i := 0 to TaskList.Count - 1 do
   begin
-    c := gettask(i).control;
+    c := GetTask(i).control;
     if not resetCheck then
     begin
       if c.fCurMode = self then
@@ -3889,7 +3951,7 @@ var
 begin
   for i := 0 to TaskList.Count - 1 do
   begin
-    c := gettask(i).control;
+    c := GetTask(i).control;
     c.StarCheckMode(self);
   end;
   p := getProgram;
@@ -3903,12 +3965,12 @@ var
   c: cControlObj;
   p: cProgramObj;
   res: boolean;
-  di64,t64, freq: int64;
+  di64, t64, freq: int64;
 begin
   res := true;
   for i := 0 to TaskList.Count - 1 do
   begin
-    c := gettask(i).control;
+    c := GetTask(i).control;
     res := c.CheckMode;
     if not res then
     begin
@@ -3921,7 +3983,7 @@ begin
   if res then
   begin
     QueryPerformanceFrequency(freq);
-    di64:=decI64(p.fCheckStartTime_i,t64);
+    di64 := decI64(p.fCheckStartTime_i, t64);
     p.fCheckLength := di64 / freq;
   end
   else
@@ -3942,7 +4004,7 @@ var
 begin
   for i := 0 to TaskCount - 1 do
   begin
-    t := gettask(i);
+    t := GetTask(i);
     if t.control = c then
     begin
       TaskList.Delete(i);
@@ -3967,7 +4029,7 @@ procedure cModeObj.editTask(ControlName: string; task: double);
 var
   t: cTask;
 begin
-  t := gettask(ControlName);
+  t := GetTask(ControlName);
   if t <> nil then
   begin
     t.task := task;
@@ -3998,7 +4060,7 @@ begin
   p := getProgram;
   for i := 0 to TaskCount - 1 do
   begin
-    t := gettask(i);
+    t := GetTask(i);
     // программа может влиять только на те контролы которые заняты программой
     if t.control.OwnerProg <> p then
       continue;
@@ -4017,8 +4079,8 @@ begin
           if not c.f_manualMode then
           begin
             t.entercs;
-            c.SetTask(t.gettask);
-            t.applyed:=true;
+            c.SetTask(t.GetTask);
+            t.applyed := true;
             t.exitcs;
           end;
         end;
@@ -4031,7 +4093,8 @@ begin
         c.SetTask(v);
       end;
     end;
-    c.setparams(t.m_params);
+    if not m_applyed then
+      c.setparams(t.m_Params);
   end;
   m_applyed := true;
 end;
@@ -4088,7 +4151,7 @@ begin
   end;
 end;
 
-function cModeObj.gettask(i: integer): cTask;
+function cModeObj.GetTask(i: integer): cTask;
 begin
   result := cTask(TaskList.Objects[i]);
 end;
@@ -4230,7 +4293,7 @@ procedure cModeObj.DelTask(i: integer);
 var
   t: cTask;
 begin
-  t := gettask(i);
+  t := GetTask(i);
   t.destroy;
   TaskList.Delete(i);
 end;
@@ -4342,14 +4405,14 @@ begin
   p.state := s;
 end;
 
-function cModeObj.gettask(ControlName: string): cTask;
+function cModeObj.GetTask(ControlName: string): cTask;
 var
   i: integer;
   t: cTask;
 begin
   result := nil;
   if TaskList.Find(ControlName, i) then
-    result := gettask(i);
+    result := GetTask(i);
 end;
 
 function cModeObj.GetTaskValue(t: cTask; x: double): double;
@@ -4366,7 +4429,7 @@ begin
   begin
     if t.SplineInterp = ptNullPoly then
     begin
-      result := t.gettask;
+      result := t.GetTask;
       exit;
     end;
     u := (t.spline.p3.x - t.spline.p0.x) * x + t.spline.p0.x;
@@ -4389,7 +4452,7 @@ function cModeObj.GetTaskValue(c: cControlObj; x: double): double;
 var
   t: cTask;
 begin
-  t := gettask(c.name);
+  t := GetTask(c.name);
   result := GetTaskValue(t, x);
 end;
 
@@ -4486,7 +4549,7 @@ begin
   TaskNode := xmlNode.NodeByName('TaskList');
   if TaskNode <> nil then
   begin
-    lTaskCount := TaskNode.ReadAttributeinteger('NCount', 0);
+    lTaskCount := TaskNode.ReadAttributeInteger('NCount', 0);
     for i := 0 to lTaskCount - 1 do
     begin
       n := TaskNode.NodeByName('T' + inttostr(i));
@@ -4495,17 +4558,18 @@ begin
         tname := n.ReadAttributeString('TaskName', '');
         val := n.ReadAttributeFloat('TaskVal', 0);
         editTask(tname, val);
-        t := gettask(tname);
+        t := GetTask(tname);
         t.m_tolerance := n.ReadAttributeFloat('Tolerance', 0);
         t.m_useTolerance := n.ReadAttributeBool('UseTolerance', false);
         if t <> nil then
         begin
           t.task := val;
-          t.TaskType := IntToTPType(n.ReadAttributeinteger('TaskType', 0));
+          t.TaskType := IntToTPType(n.ReadAttributeInteger('TaskType', 0));
           t.leftTang.x := n.ReadAttributeFloat('LeftTangX', 0);
           t.leftTang.y := n.ReadAttributeFloat('LeftTangY', 0);
           t.rightTang.x := n.ReadAttributeFloat('RightTangX', 0);
           t.rightTang.y := n.ReadAttributeFloat('RightTangY', 0);
+          t.params := n.ReadAttributeString('Opts', t.getparams);
           // t.point.x:=n.ReadAttributeFloat('PointX', 0);
           // t.point.y:=n.ReadAttributeFloat('PointY', 0);
         end;
@@ -4515,7 +4579,7 @@ begin
   stepsNode := xmlNode.NodeByName('StepList');
   if stepsNode <> nil then
   begin
-    lTaskCount := stepsNode.ReadAttributeinteger('NCount', stepValCount);
+    lTaskCount := stepsNode.ReadAttributeInteger('NCount', stepValCount);
     for i := 0 to lTaskCount - 1 do
     begin
       n := TaskNode.NodeByName('Step' + inttostr(i));
@@ -4545,18 +4609,19 @@ begin
   TaskNode.WriteAttributeFloat('NCount', TaskCount);
   for i := 0 to TaskCount - 1 do
   begin
-    t := gettask(i);
+    t := GetTask(i);
     n := TaskNode.NodeNew('T' + inttostr(i));
     n.WriteAttributeString('TaskName', t.control.name);
-    n.WriteAttributeFloat('TaskVal', t.gettask);
+    n.WriteAttributeFloat('TaskVal', t.GetTask);
     n.WriteAttributeFloat('Tolerance', t.m_tolerance);
     n.WriteAttributeBool('UseTolerance', t.m_useTolerance);
 
-    n.WriteAttributeinteger('TaskType', TPTypeToInt(t.TaskType));
+    n.WriteAttributeInteger('TaskType', TPTypeToInt(t.TaskType));
     n.WriteAttributeFloat('LeftTangX', t.leftTang.x);
     n.WriteAttributeFloat('LeftTangY', t.leftTang.y);
     n.WriteAttributeFloat('RightTangX', t.rightTang.x);
     n.WriteAttributeFloat('RightTangY', t.rightTang.y);
+    n.WriteAttributeString('Opts', t.getparams);
   end;
   stepsNode := xmlNode.NodeNew('StepList');
   stepsNode.WriteAttributeFloat('NCount', stepValCount);
@@ -4605,7 +4670,7 @@ var
 begin
   for i := 0 to TaskList.Count - 1 do
   begin
-    t := gettask(i);
+    t := GetTask(i);
     c := t.control;
     c.m_TaskApplyed := false;
     c.SetTask(t.task);
@@ -4614,19 +4679,15 @@ begin
 end;
 
 { cDacControl }
+procedure cDacControl.ApplyTask(v: double);
+begin
+  inherited;
+  m_dac.PushValue(v, -1)
+end;
+
 function cDacControl.Exec: boolean;
 begin
   result := inherited;
-  if result then // в состоянии Play
-  begin
-    if not m_TaskApplyed then
-    begin
-      m_TaskApplyed := true;
-      m_dac.PushValue(task, -1);
-    end;
-    if m_feedback <> nil then
-      m_dfeedback := GetMean(m_feedback);
-  end;
 end;
 
 function cDacControl.getDAC: itag;
@@ -4741,7 +4802,6 @@ begin
   m_TaskApplyed := false;
   m_dtask := t;
 end;
-
 
 function cDacControl.TypeString: string;
 begin
@@ -5006,21 +5066,20 @@ end;
 constructor cTask.create;
 begin
   TaskType := ptNullPoly;
-  initcs;
-  m_Params:=TStringList.Create;
+  InitCS;
+  m_Params := tstringlist.create;
 end;
 
 destructor cTask.destroy;
 begin
   DeleteCS;
-  m_Params.Destroy;
-  m_Params:=nil;
+  m_Params.destroy;
+  m_Params := nil;
 end;
-
 
 function cTask.getApplyed: boolean;
 begin
-  result:=fapplyed;
+  result := fapplyed;
 end;
 
 function cTask.getNextTask: cTask;
@@ -5033,7 +5092,7 @@ begin
   m := mode.getNextMode;
   if m <> nil then
   begin
-    result := m.gettask(control.name);
+    result := m.GetTask(control.name);
   end
 end;
 
@@ -5048,7 +5107,7 @@ begin
   m := mode.getPrevMode;
   if m <> nil then
   begin
-    result := m.gettask(control.name);
+    result := m.GetTask(control.name);
   end
 end;
 
@@ -5075,7 +5134,7 @@ begin
   end;
   if prev <> nil then
   begin
-    result := prev.gettask(control.name).task;
+    result := prev.GetTask(control.name).task;
   end
   else
   begin
@@ -5083,7 +5142,7 @@ begin
   end;
 end;
 
-function cTask.gettask: double;
+function cTask.GetTask: double;
 begin
   if m_UsePrev then
     result := getPrevValue
@@ -5096,15 +5155,33 @@ begin
   fStopControlValue := b;
 end;
 
-procedure cTask.setparams(str:string);
+function cTask.getparams: string;
 begin
-  if m_Params.Count>0 then
+  result := ParsToStr(m_Params);
+end;
+
+function cTask.getParam(key: string): string;
+var
+  i: integer;
+  str: cString;
+begin
+  result := '';
+  FindInPars(m_Params, key, i);
+  if i > -1 then
+  begin
+    result := cString(m_Params.Objects[i]).str;
+  end;
+end;
+
+procedure cTask.setparams(str: string);
+begin
+  if m_Params.Count > 0 then
   begin
     // очистка парсера
     ClearParsResult(m_Params);
   end;
-  if str<>'' then
-    updateParams(m_params, str, ',');
+  if str <> '' then
+    updateParams(m_Params, str, ',');
 end;
 
 procedure cTask.SetTask(d: double);
@@ -5132,7 +5209,6 @@ begin
   result := TaskType = ptNullPoly;
 end;
 
-
 procedure cTask.InitCS;
 begin
   InitializeCriticalSection(cs);
@@ -5142,7 +5218,6 @@ procedure cTask.DeleteCS;
 begin
   DeleteCriticalSection(cs);
 end;
-
 
 procedure cTask.exitcs;
 begin
@@ -5154,10 +5229,9 @@ begin
   EnterCriticalSection(cs);
 end;
 
-
 procedure cTask.setApplyed(b: boolean);
 begin
-  fapplyed:=b;
+  fapplyed := b;
 end;
 
 function cTask.strUseTol: string;
@@ -5177,7 +5251,7 @@ end;
 constructor cControlList.create;
 begin
   inherited;
-  destroydata:=true;
+  destroydata := true;
   fHelper := true;
   // опасно ставить True кт.к. будет разрушен и не восстановлен при загрузке
   autocreate := true;
@@ -5216,51 +5290,68 @@ end;
 
 { cZone }
 
-procedure cZone.cleartags;
+procedure cZone.Apply;
+var
+  i: integer;
+  t: itag;
+  p: TZonePair;
 begin
-  while tags.Count<>0 do
+  for i := 0 to tags.Count - 1 do
   begin
-    delpair(0);
+    p := GetZonePair(i);
+    t := itag(p.tag);
+    t.PushValue(p.value, -1);
   end;
 end;
 
-procedure cZone.setTol(t:double);
+procedure cZone.cleartags;
+begin
+  while tags.Count <> 0 do
+  begin
+    delPair(0);
+  end;
+end;
+
+procedure cZone.setTol(t: double);
 begin
   if defaultZone then
     exit
   else
-    ftol:=t;
+    ftol := t;
 end;
 
-function cZone.propstr:string;
+function cZone.propstr: string;
 var
-  t:double;
+  t: double;
 begin
-  t:=tol;
-  if t>0 then
-    result:='+'+FloatToStr(tol)
+  t := tol;
+  if t > 0 then
+    result := '+' + floattostr(tol)
   else
   begin
-    if t<0 then
-      result:=FloatToStr(tol)
+    if t < 0 then
+      result := floattostr(tol)
     else
-      result:='0';
+      result := '0';
   end;
 end;
 
-constructor cZone.create(list:tlist; tol:double);
+constructor cZone.create(List: tlist; tol: double);
 begin
-  ftol:=tol;
-  tags:=tlist.create;
-  owner:=list;
-  csetlist(owner).AddObj(self);
-  if owner.count=1 then
+  ftol := tol;
+  tags := tlist.create;
+  if List <> nil then
   begin
-    defaultzone:=true;
-  end
-  else
-  begin
-    defaultzone:=false;
+    owner := List;
+    csetlist(owner).AddObj(self);
+    if owner.Count = 1 then
+    begin
+      defaultZone := true;
+    end
+    else
+    begin
+      defaultZone := false;
+    end;
   end;
 end;
 
@@ -5269,38 +5360,63 @@ begin
   owner.Remove(self);
   cleartags;
   tags.destroy;
-  tags:=nil;
+  tags := nil;
 end;
 
 procedure cZone.AddZonePair(z: TZonePair);
 var
-  p:pZonePair;
+  p: pZonePair;
 begin
-  getmem(p,sizeof(TZonePair));
-  p.tag:=z.tag;
-  p.value:=z.value;
-  tags.Add(p);
+  getmem(p, sizeof(TZonePair));
+  p.tag := z.tag;
+  p.value := z.value;
+  tags.add(p);
 end;
 
-
-function cZone.GetZonePair(i:integer): TZonePair;
+function cZone.GetZonePairPointer(i: integer): pZonePair;
 begin
-  result:=TZonePair(tags.items[i]^);
+  if i < tags.Count then
+    result := pZonePair(tags.Items[i])
+  else
+    result := nil;
 end;
 
-function cZone.GetZonePair(str:string):TZonePair;
+function cZone.GetZonePairPointer(str: string): pZonePair;
 var
-  i:integer;
-  zp:tZonePair;
+  i: integer;
+  zp: pZonePair;
 begin
-  result.tag:=nil;
-  result.value:=-1;
-  for I := 0 to tags.Count - 1 do
+  result.tag := nil;
+  result.value := -1;
+  for i := 0 to tags.Count - 1 do
   begin
-    zp:=GetZonePair(i);
-    if itag(zp.tag).GetName=str then
+    zp := GetZonePairPointer(i);
+    if itag(zp.tag).getname = str then
     begin
-      result:=zp;
+      result := zp;
+      exit;
+    end;
+  end;
+end;
+
+function cZone.GetZonePair(i: integer): TZonePair;
+begin
+  result := TZonePair(tags.Items[i]^);
+end;
+
+function cZone.GetZonePair(str: string): TZonePair;
+var
+  i: integer;
+  zp: TZonePair;
+begin
+  result.tag := nil;
+  result.value := -1;
+  for i := 0 to tags.Count - 1 do
+  begin
+    zp := GetZonePair(i);
+    if itag(zp.tag).getname = str then
+    begin
+      result := zp;
       exit;
     end;
   end;
@@ -5308,83 +5424,154 @@ end;
 
 procedure cZone.delPair(i: integer);
 var
-  p:pointer;
+  p: pointer;
 begin
-  p:=tags.items[i];
+  p := tags.Items[i];
   FreeMem(p, sizeof(TZonePair));
   tags.Delete(i);
 end;
 
-
 { cZoneList }
-function ZoneComparator(p1,p2:pointer):integer;
+function ZoneComparator(p1, p2: pointer): integer;
 begin
-  if cZone(p1^).tol>cZone(p2^).tol then
+  if cZone(p1).tol > cZone(p2).tol then
   begin
-    result:=1;
+    result := 1;
   end
   else
   begin
-    if cZone(p1^).tol<cZone(p2^).tol then
+    if cZone(p1).tol < cZone(p2).tol then
     begin
-      result:=-1;
+      result := -1;
     end
     else
 
     begin
-      result:=0;
+      result := 0;
     end;
   end;
 end;
 
+{ cZoneList }
+function ZoneKeyComparator(p1, p2: pointer): integer;
+begin
+  if cZone(p1).tol > double(p2^) then
+  begin
+    result := 1;
+  end
+  else
+  begin
+    if cZone(p1).tol < double(p2^) then
+    begin
+      result := -1;
+    end
+    else
+
+    begin
+      result := 0;
+    end;
+  end;
+end;
 
 constructor cZoneList.create;
 begin
   inherited;
-  comparator:=ZoneComparator;
-  destroydata:=true;
+  comparator := ZoneComparator;
+  keycomparator := ZoneKeyComparator;
+  destroydata := true;
 end;
 
 procedure cZoneList.deletechild(node: pointer);
 begin
   inherited;
-  czone(node).destroy;
+  cZone(node).destroy;
+end;
+
+function cZoneList.defaultZone: cZone;
+var
+  i: integer;
+  z: cZone;
+begin
+  result := nil;
+  for i := 0 to Count - 1 do
+  begin
+    z := GetZone(i);
+    if z.defaultZone then
+    begin
+      result := z;
+      exit;
+    end;
+  end;
+end;
+
+procedure cZoneList.ApplyZone(err: double);
+var
+  z1, z2, zkey: cZone;
+  i: integer;
+begin
+  zkey := cZone.create(nil, err);
+  if err > 0 then
+  begin
+    z1 := cZone(GetLow(zkey, i));
+  end
+  else
+  begin
+    z1 := cZone(GetHight(zkey, i));
+  end;
+  z1.Apply;
 end;
 
 procedure cZoneList.clearZones;
 var
-  z:czone;
+  z: cZone;
 begin
-  while count>1 do
+  while Count > 1 do
   begin
-    z:=GetZone(0);
+    z := GetZone(0);
     if not z.defaultZone then
       z.destroy
     else
     begin
-      z:=getzone(count-1);
+      z := GetZone(Count - 1);
       z.destroy;
     end;
   end;
 end;
 
-function cZoneList.NewZone(tol:double):cZone;
+function cZoneList.NewZone(tol: double): cZone;
 begin
   // добавление в список происходит внутри конструктора
-  result:=cZone.create(self, tol);
+  result := cZone.create(self, tol);
 end;
 
 procedure cZoneList.DelZone(i: integer);
 var
-  z:czone;
+  z: cZone;
 begin
-  z:=getzone(i);
+  z := GetZone(i);
   z.destroy;
 end;
 
 function cZoneList.GetZone(i: integer): cZone;
 begin
-  Result:=cZone(items[i]);
+  if i < Count then
+    result := cZone(Items[i])
+  else
+    result := nil;
+end;
+
+function cZoneList.GetZoneByTol(t: double): cZone;
+var
+  i: integer;
+  p: pointer;
+begin
+  i := FindobjWithKey(@t);
+  if i <> -1 then
+  begin
+    result := GetZone(i);
+  end
+  else
+    result := nil;
 end;
 
 end.

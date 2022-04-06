@@ -51,8 +51,8 @@ function GetSubString(src: string; tabs: string; p: integer; var index: integer)
   : string;
 // то же, что и предыдуща€, но не учитывает сепараторы, если они внутри кавычек "aaa;bbb"
 // при этом скобки считаютс€ закрытыми если после символа bracketchar идет разделительный символ или конец строки
-function GetSubStringExt(src: string; tabs: string; p: integer;
-  bracketChar: char; var index: integer): string;
+function GetSubStringExt(src: string; tabs: string; p: integer;  bracketChar: char; var index: integer): string;
+function getSubStrByIndex(src:string; tabs:char; p_start, index:integer):string;
 function deleteOuterBracket(str:string; bracket:char):string;
 // укорачиваем путь с конца на один уровень
 function TrimPath(path: string): string;
@@ -124,6 +124,7 @@ function GetObjectClass(APointer: Pointer): TClass;
 function CheckStr(str:string):boolean;
 function StrtoBoolExt(str:string):boolean;
 function decI64(i1,i2:int64):int64;
+function LowCase(str: string): string;
 
 
 const
@@ -157,6 +158,27 @@ const
 
 implementation
 
+function LowCase(str: string): string;
+var
+  ch:char;
+  I: Integer;
+begin
+  result:='';
+  for I := 1 to length(str) do
+  begin
+    ch:=str[i];
+    case ch of
+      'A'..'Z': ch := CHR(ORD(ch) + 32);
+      'ј'..'я': ch := CHR(ORD(ch) + 32);
+      else
+      begin
+
+      end;
+    end;
+    result:=result+ch;
+  end;
+end;
+
 function decI64(i1,i2:int64):int64;
 begin
   result:=i2-i1;
@@ -177,7 +199,22 @@ begin
     result:=false
   else
   begin
-    result:=StrToBool(str);
+    str:=LowCase(str);
+    if str='вкл' then
+    begin
+      result:=true;
+    end
+    else
+    begin
+      if str='выкл' then
+      begin
+        result:=false;
+      end
+      else
+      begin
+        result:=StrToBool(str);
+      end;
+    end;
   end;
 end;
 
@@ -1213,6 +1250,36 @@ begin
   result:=str;
 end;
 
+function getSubStrByIndex(src:string; tabs:char; p_start, index:integer):string;
+var
+  start, ind, i, c:integer;
+  b:boolean;
+begin
+  ind:=0; // номер подслова
+  start:=p_start;
+  result:='';
+  for I := p_start to length(src) do
+  begin
+    b:=i=length(src);
+    if (src[i]=tabs) or (b) then
+    begin
+      if ind=index then
+      begin
+        c:=i-start;
+        if b then
+          inc(c);
+        result:=Copy(src, start, c);
+        exit;
+      end
+      else
+      begin
+        start:=i+1;
+        inc(ind);
+      end;
+    end;
+  end;
+end;
+
 function GetSubStringExt(src: string; tabs: string; p: integer;
   bracketChar: char; var index: integer): string;
 var
@@ -1556,7 +1623,7 @@ end;
   begin
     for i := 1 to length(SubStr) do
     begin
-      for j := 1 to length(SubStr) do
+      for j := 1 to length(src) do
       begin
         if src[j] = SubStr[i] then
         begin

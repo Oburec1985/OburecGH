@@ -1,24 +1,27 @@
 object ModesTabFrame: TModesTabFrame
   Left = 0
   Top = 0
-  Width = 451
-  Height = 304
+  Width = 951
+  Height = 519
   Align = alClient
   TabOrder = 0
+  ExplicitWidth = 451
+  ExplicitHeight = 304
   object Splitter1: TSplitter
     Left = 0
-    Top = 143
-    Width = 451
+    Top = 358
+    Width = 951
     Height = 3
     Cursor = crVSplit
     Align = alBottom
     ExplicitLeft = 3
     ExplicitTop = 323
+    ExplicitWidth = 451
   end
   object ModesSG: TStringGrid
     Left = 0
-    Top = 146
-    Width = 451
+    Top = 361
+    Width = 951
     Height = 158
     Align = alBottom
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing]
@@ -29,19 +32,23 @@ object ModesTabFrame: TModesTabFrame
     OnKeyDown = ModesSGKeyDown
     OnSelectCell = ModesSGSelectCell
     OnSetEditText = ModesSGSetEditText
+    ExplicitTop = 146
+    ExplicitWidth = 451
   end
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 451
-    Height = 96
+    Width = 951
+    Height = 311
     Align = alClient
     TabOrder = 1
+    ExplicitWidth = 451
+    ExplicitHeight = 96
     object cChart1: cChart
       Left = 1
       Top = 1
-      Width = 449
-      Height = 94
+      Width = 949
+      Height = 309
       Align = alClient
       Caption = 'cChart1'
       TabOrder = 0
@@ -56,34 +63,41 @@ object ModesTabFrame: TModesTabFrame
       showTV = True
       showLegend = True
       selectSize = 5
+      ExplicitWidth = 449
+      ExplicitHeight = 94
     end
   end
   object Panel2: TPanel
     Left = 0
-    Top = 96
-    Width = 451
+    Top = 311
+    Width = 951
     Height = 47
     Align = alBottom
     TabOrder = 2
+    ExplicitTop = 96
+    ExplicitWidth = 451
+    DesignSize = (
+      951
+      47)
     object Label3: TLabel
       Left = 220
       Top = 11
-      Width = 22
-      Height = 13
+      Width = 27
+      Height = 16
       Caption = #1058#1080#1087':'
     end
     object Label1: TLabel
       Left = 115
       Top = 11
-      Width = 10
-      Height = 13
+      Width = 12
+      Height = 16
       Caption = 'Y:'
     end
     object Label2: TLabel
       Left = 10
       Top = 11
-      Width = 10
-      Height = 13
+      Width = 13
+      Height = 16
       Caption = 'X:'
     end
     object CursorPosY: TFloatSpinEdit
@@ -117,7 +131,7 @@ object ModesTabFrame: TModesTabFrame
       Left = 257
       Top = 7
       Width = 145
-      Height = 21
+      Height = 24
       ItemIndex = 0
       TabOrder = 3
       Text = '0 '#1080#1085#1090#1077#1088#1087#1086#1083#1103#1094#1080#1103
@@ -126,6 +140,14 @@ object ModesTabFrame: TModesTabFrame
         '0 '#1080#1085#1090#1077#1088#1087#1086#1083#1103#1094#1080#1103
         #1051#1080#1085#1077#1081#1085#1099#1081' '#1087#1077#1088#1077#1093#1086#1076
         #1057#1087#1083#1072#1081#1085)
+    end
+    object TaskParamsEdit: TEdit
+      Left = 568
+      Top = 5
+      Width = 361
+      Height = 24
+      Anchors = [akLeft, akTop, akRight]
+      TabOrder = 4
     end
   end
   object ImageList_32: TImageList

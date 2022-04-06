@@ -18,10 +18,6 @@ object ModeFrame: TModeFrame
     object ProgramPage: TTabSheet
       Caption = #1055#1088#1086#1075#1088#1072#1084#1084#1099
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object ProgramCounterLabel: TLabel
         Left = 3
         Top = 53
@@ -153,17 +149,17 @@ object ModeFrame: TModeFrame
         Left = 3
         Top = 72
         Width = 121
-        Height = 22
+        Height = 26
         MaxValue = 0
         MinValue = 1
         TabOrder = 0
-        Value = 1
+        Value = 0
       end
       object ProgramNameE: TEdit
         Left = 3
         Top = 26
         Width = 310
-        Height = 21
+        Height = 24
         TabOrder = 1
         Text = #1055#1088#1086#1075#1088#1072#1084#1084#1072
       end
@@ -190,14 +186,10 @@ object ModeFrame: TModeFrame
     end
     object ModesPage: TTabSheet
       Caption = #1056#1077#1078#1080#1084#1099
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Splitter1: TSplitter
         Left = 325
         Top = 0
-        Height = 300
+        Height = 297
         Align = alRight
         Color = clBlack
         ParentColor = False
@@ -209,15 +201,15 @@ object ModeFrame: TModeFrame
         Left = 328
         Top = 0
         Width = 220
-        Height = 300
+        Height = 297
         Align = alRight
         Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
         TabOrder = 0
         object ChannelsLV: TBtnListView
           Left = 2
-          Top = 15
+          Top = 18
           Width = 216
-          Height = 283
+          Height = 277
           Align = alClient
           Columns = <
             item
@@ -245,7 +237,7 @@ object ModeFrame: TModeFrame
         Left = 0
         Top = 0
         Width = 325
-        Height = 300
+        Height = 297
         Align = alClient
         Constraints.MinWidth = 325
         TabOrder = 1
@@ -277,14 +269,14 @@ object ModeFrame: TModeFrame
           Left = 3
           Top = 21
           Width = 310
-          Height = 21
+          Height = 24
           TabOrder = 0
         end
         object ModeTimeFE: TFloatEdit
           Left = 3
           Top = 64
           Width = 121
-          Height = 21
+          Height = 24
           TabOrder = 1
           Text = '0.0'
         end
@@ -308,7 +300,7 @@ object ModeFrame: TModeFrame
           Left = 3
           Top = 192
           Width = 121
-          Height = 21
+          Height = 24
           TabOrder = 4
           Text = '5'
         end

@@ -2,205 +2,153 @@ object ModesTabForm: TModesTabForm
   Left = 0
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1077#1078#1080#1084#1086#1074
-  ClientHeight = 692
-  ClientWidth = 752
+  ClientHeight = 905
+  ClientWidth = 983
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object Splitter1: TSplitter
     Left = 0
-    Top = 480
-    Width = 752
+    Top = 628
+    Width = 983
     Height = 2
     Cursor = crVSplit
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
     Align = alBottom
     Color = clBackground
     ParentColor = False
-    ExplicitTop = 341
   end
   object ActionPanel: TPanel
     Left = 0
-    Top = 482
-    Width = 752
-    Height = 210
+    Top = 630
+    Width = 983
+    Height = 275
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 343
     inline ModesStepFrame1: TModesStepFrame
       Left = 1
       Top = 1
-      Width = 750
-      Height = 208
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Width = 981
+      Height = 273
       Align = alClient
       TabOrder = 0
       ExplicitLeft = 1
       ExplicitTop = 1
-      ExplicitWidth = 750
-      ExplicitHeight = 208
+      ExplicitWidth = 981
+      ExplicitHeight = 273
       inherited ModesSG: TStringGrid
-        Width = 750
-        Height = 208
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        ExplicitWidth = 750
-        ExplicitHeight = 208
+        Width = 981
+        Height = 273
+        ExplicitWidth = 981
+        ExplicitHeight = 273
       end
     end
   end
   inline ModesTabFrame1: TModesTabFrame
     Left = 0
     Top = 0
-    Width = 752
-    Height = 480
+    Width = 983
+    Height = 628
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 752
-    ExplicitHeight = 341
+    ExplicitWidth = 983
+    ExplicitHeight = 628
     inherited Splitter1: TSplitter
-      Top = 230
-      Width = 752
+      Top = 301
+      Width = 983
       Height = 2
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
       ExplicitLeft = 0
-      ExplicitTop = 91
-      ExplicitWidth = 752
+      ExplicitTop = 301
+      ExplicitWidth = 983
       ExplicitHeight = 2
     end
     inherited ModesSG: TStringGrid
-      Top = 232
-      Width = 752
-      Height = 212
-      ExplicitTop = 93
-      ExplicitWidth = 752
-      ExplicitHeight = 212
+      Top = 303
+      Width = 983
+      Height = 278
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      ExplicitTop = 303
+      ExplicitWidth = 983
+      ExplicitHeight = 278
     end
     inherited Panel1: TPanel
-      Width = 752
-      Height = 230
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
-      ExplicitWidth = 752
-      ExplicitHeight = 91
+      Width = 983
+      Height = 301
+      ExplicitWidth = 983
+      ExplicitHeight = 301
       inherited cChart1: cChart
-        Width = 750
-        Height = 228
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        ExplicitWidth = 750
-        ExplicitHeight = 89
+        Width = 981
+        Height = 299
+        ExplicitWidth = 981
+        ExplicitHeight = 299
       end
     end
     inherited Panel2: TPanel
-      Top = 444
-      Width = 752
-      Height = 36
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
-      ExplicitTop = 305
-      ExplicitWidth = 752
-      ExplicitHeight = 36
+      Top = 581
+      Width = 983
+      ExplicitTop = 581
+      ExplicitWidth = 983
       inherited Label3: TLabel
-        Left = 168
-        Top = 8
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        ExplicitLeft = 168
-        ExplicitTop = 8
+        Top = 10
+        Width = 29
+        Height = 17
+        ExplicitTop = 10
+        ExplicitWidth = 29
+        ExplicitHeight = 17
       end
       inherited Label1: TLabel
-        Left = 88
-        Top = 8
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        ExplicitLeft = 88
-        ExplicitTop = 8
+        Top = 10
+        Width = 13
+        Height = 17
+        ExplicitTop = 10
+        ExplicitWidth = 13
+        ExplicitHeight = 17
       end
       inherited Label2: TLabel
-        Left = 8
-        Top = 8
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        ExplicitLeft = 8
-        ExplicitTop = 8
+        Top = 10
+        Height = 17
+        ExplicitTop = 10
+        ExplicitHeight = 17
       end
       inherited CursorPosY: TFloatSpinEdit
-        Left = 343
-        Top = 4
-        Width = 59
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        ExplicitLeft = 343
-        ExplicitTop = 4
-        ExplicitWidth = 59
+        Left = 449
+        Width = 77
+        Height = 27
+        ExplicitLeft = 449
+        ExplicitWidth = 77
+        ExplicitHeight = 27
       end
       inherited XFE: TFloatSpinEdit
-        Left = 21
-        Top = 5
-        Width = 59
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        ExplicitLeft = 21
-        ExplicitTop = 5
-        ExplicitWidth = 59
+        Height = 27
+        ExplicitHeight = 27
       end
       inherited YFE: TFloatSpinEdit
-        Left = 104
-        Top = 5
-        Width = 60
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        ExplicitLeft = 104
-        ExplicitTop = 5
-        ExplicitWidth = 60
+        Height = 27
+        ExplicitHeight = 27
       end
       inherited PointTypeCB: TComboBox
-        Left = 197
-        Top = 5
-        Width = 110
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        ExplicitLeft = 197
-        ExplicitTop = 5
-        ExplicitWidth = 110
+        Left = 258
+        Width = 143
+        Height = 25
+        ExplicitLeft = 258
+        ExplicitWidth = 143
+        ExplicitHeight = 25
       end
     end
   end
