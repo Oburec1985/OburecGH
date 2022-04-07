@@ -54,6 +54,8 @@ function GetSubString(src: string; tabs: string; p: integer; var index: integer)
 function GetSubStringExt(src: string; tabs: string; p: integer;  bracketChar: char; var index: integer): string;
 function getSubStrByIndex(src:string; tabs:char; p_start, index:integer):string;
 function deleteOuterBracket(str:string; bracket:char):string;
+// ”далить на конце строки символы не €вл€ющиес€ цифрами
+Function trimChars(str:string):string;
 // укорачиваем путь с конца на один уровень
 function TrimPath(path: string): string;
 // проверка что в строке только числа
@@ -1215,6 +1217,32 @@ asm
 end
 ;
 
+Function trimChars(str:string):string;
+var
+  i:integer;
+  b:boolean;
+begin
+  if str='' then
+  begin
+    result:='';
+    exit;
+  end;
+  b:=true;
+  while b do
+  begin
+    i:=Length(str);
+    if pos(str[i],'0123456789')=0 then
+    begin
+      setlength(str, i-1);
+    end
+    else
+    begin
+      result:=str;
+      exit;
+    end;
+  end;
+end;
+
 function TrimPath(path: string): string;
 var
   i: integer;
@@ -1445,6 +1473,16 @@ begin
   for i := 1 to length(Str) do
   begin
     result := true;
+    if i=1 then
+    begin
+      if str[1]='-' then
+      begin
+        if length(str)=1 then
+          result:=false
+        else
+          continue;
+      end;
+    end;
     if pos(Str[i], DigStr) < 1 then
     begin
       result := false;

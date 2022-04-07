@@ -1084,6 +1084,7 @@ var
   con:cControlObj;
   str:string;
 begin
+  if not isValue(val) then exit;
   p:=g_conmng.getProgram(0);
   if p=nil then exit;
   if c>0 then

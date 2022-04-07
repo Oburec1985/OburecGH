@@ -1284,7 +1284,7 @@ END
 /* forms\uCounterAlgFrame.dfm */
 /* forms\uAlgFrm.dfm */
 /* forms\uControlCyclogramEditFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uControlDeskFrm.dfm */
+/* C:\Distrib\OburecGH\recorder\plgControlCyclogram\forms\uControlDeskFrm.dfm */
 /* forms\uMBaseControl.dfm */
 /* ..\SharedRUnits\uFrmSync.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditChartObjFrame.dfm */
@@ -1297,6 +1297,6 @@ END
 /* forms\uComplexDiagram.dfm */
 /* forms\uIRDiagramEditFrm.dfm */
 /* forms\uEditCtrlZoneFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */
+/* C:\Distrib\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
+/* C:\Distrib\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
+/* C:\Distrib\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */

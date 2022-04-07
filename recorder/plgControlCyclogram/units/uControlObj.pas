@@ -214,6 +214,10 @@ type
   private
     // допуск в зоне
     ftol: double;
+    // гистерезис пока только для дефолтной зоны в процентах (10% в конструкторе)
+    fHist,
+    fHistVal:double;
+
   public
     defaultZone: boolean;
     // теги ZonePair
@@ -239,6 +243,8 @@ type
   end;
 
   cZoneList = class(csetlist)
+  protected
+    activeZone:cZone;
   protected
     procedure deletechild(node: pointer); override;
   public
@@ -2399,6 +2405,7 @@ begin
     while ind <> -1 do
     begin
       str1 := getSubStrByIndex(l_str, '_', 1, ind);
+      str1:=trimChars(str1);
       if str1 = '' then
         break;
       // парсим зоны
@@ -2428,9 +2435,12 @@ begin
       while tagind <> -1 do
       begin
         Vstr := getSubStrByIndex(str1, ';', J, tagind + 1);
+        Vstr:=trimChars(Vstr);
         if Vstr = '' then
           break;
         ppair := z.GetZonePairPointer(tagind);
+        if ppair=nil then
+          break;
         ppair.value := strtofloatext(Vstr);
         inc(tagind);
       end;
@@ -2651,6 +2661,7 @@ procedure cControlObj.Start;
 begin
   state := c_Play;
   StartPWM;
+  m_ZoneList.activeZone:=m_ZoneList.defaultZone;
 end;
 
 procedure cControlObj.stop;
@@ -5338,6 +5349,7 @@ end;
 
 constructor cZone.create(List: tlist; tol: double);
 begin
+  fHist:=10;
   ftol := tol;
   tags := tlist.create;
   if List <> nil then
@@ -5476,6 +5488,7 @@ end;
 constructor cZoneList.create;
 begin
   inherited;
+  activeZone:=nil;
   comparator := ZoneComparator;
   keycomparator := ZoneKeyComparator;
   destroydata := true;
@@ -5510,15 +5523,59 @@ var
   i: integer;
 begin
   zkey := cZone.create(nil, err);
-  if err > 0 then
+  if err=0 then
   begin
-    z1 := cZone(GetLow(zkey, i));
+    z1:=defaultZone;
   end
   else
   begin
-    z1 := cZone(GetHight(zkey, i));
+    if err > 0 then
+    begin
+      z1 := cZone(GetLow(zkey, i));
+      if z1.ftol<err then
+      begin
+        //if i<(Count-1) then
+        //  z1:=GetZone(i+1);
+      end;
+    end
+    else
+    begin
+      z1 := cZone(GetHight(zkey, i));
+      if z1.ftol>err then
+      begin
+        //if i>0 then
+        //  z1:=GetZone(i-1);
+      end;
+    end;
   end;
-  z1.Apply;
+  if z1=defaultZone then
+  begin
+    if activeZone<>z1 then
+    begin
+      z1.fHistVal:=z1.fHist*activeZone.ftol/100;
+    end;
+    if z1.fHistVal>0 then
+    begin
+      if z1.fHistVal>err then
+      begin
+        z1.Apply;
+        activeZone:=z1;
+      end;
+    end
+    else
+    begin
+      if z1.fHistVal<err then
+      begin
+        z1.Apply;
+        activeZone:=z1;
+      end;
+    end;
+  end
+  else
+  begin
+    z1.Apply;
+    activeZone:=z1;
+  end;
 end;
 
 procedure cZoneList.clearZones;
