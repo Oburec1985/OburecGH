@@ -774,6 +774,7 @@ const
   // программа закончилась
   c_TryEnd = 8;
   c_End = 9;
+  c_Stop_AndDropTask = 10;
   c_Cardmax = 4294967295;
 
   // значение для StateTag
@@ -1750,19 +1751,34 @@ begin
   for i := 0 to ControlsCount - 1 do
   begin
     c := getControlObj(i);
-    v := GetScalar(c.m_stateTag);
+    v := GetMean(c.m_stateTag);
     if c.state = c_Play then
     begin
+      // если 0 то Стоп
       if v < 0.5 then
       begin
         c.state := c_Stop;
+      end
+      else
+      begin
+        if v > 1.5 then
+        begin
+          c.state := c_Stop_AndDropTask;
+        end;
       end;
     end
     else
     begin
       if v > 0.5 then
       begin
-        c.state := c_Play;
+        // Если 1 то Play
+        if v<1.5 then
+          c.state := c_Play
+        else
+        begin
+        // Если 2 то Stop и сброс задания
+          c.state := c_Stop_AndDropTask;
+        end;
       end;
     end;
   end;
@@ -2232,7 +2248,7 @@ begin
   result := (state = c_Play);
   if m_stateTag <> nil then
   begin
-    v := GetScalar(m_stateTag);
+    v := GetMean(m_stateTag);
     if result then
     begin
       // if v < 1 then
@@ -2379,18 +2395,19 @@ var
   ppair: pZonePair;
   pair: TZonePair;
 begin
+  if params.count=0 then exit;
   l_str := GetParsValue(params, 'PWM_Thi');
-  if l_str <> '' then
+  if checkstr(l_str) then
   begin
     fPWM_Ton := strtofloat(l_str);
   end;
   l_str := GetParsValue(params, 'PWM_Tlo');
-  if l_str <> '' then
+  if checkstr(l_str) then
   begin
     fPWM_Toff := strtofloat(l_str);
   end;
   l_str := GetParsValue(params, 'PWM_state');
-  if l_str <> '' then
+  if checkstr(l_str) then
   begin
     fPWM := StrToBoolExt(l_str);
   end;
@@ -2399,7 +2416,7 @@ begin
   m_zones_enabled := StrToBoolExt(l_str);
   l_str := GetParsValue(params, 'Vals');
   defZone := m_ZoneList.defaultZone;
-  if l_str <> '' then
+  if checkstr(l_str) then
   begin
     ind := 0;
     while ind <> -1 do
@@ -2628,9 +2645,19 @@ begin
   fstate := s;
   LeaveCriticalSection(cs_state);
   if s = c_Play then
+  begin
     m_stateTag.PushValue(1, -1)
+  end
   else
-    m_stateTag.PushValue(0, -1);
+  begin
+    if s=c_Stop_AndDropTask then
+    begin
+      m_stateTag.PushValue(3, -1);
+      SetTask(0);
+    end
+    else
+      m_stateTag.PushValue(0, -1);
+  end;
 end;
 
 procedure cControlObj.StarCheckMode(m: cModeObj);
@@ -2660,7 +2687,6 @@ end;
 procedure cControlObj.Start;
 begin
   state := c_Play;
-  StartPWM;
   m_ZoneList.activeZone:=m_ZoneList.defaultZone;
 end;
 
