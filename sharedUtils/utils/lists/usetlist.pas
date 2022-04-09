@@ -70,6 +70,16 @@ type
     function DelInteger(i:integer):integer;
   end;
 
+  cDoubleList = class(cSetList)
+  protected
+    procedure deletechild(node:pointer);override;
+  public
+    constructor create;override;
+    procedure addObj(d:Double);
+    function GetDouble(i:integer):double;
+    function DelDouble(i:integer):double;
+  end;
+
   cIDObj = class
   protected
     m_name:string;
@@ -565,6 +575,62 @@ begin
   FreeMem(node,sizeof(integer));
 end;
 
+
+{ cDoubleList }
+
+function DoubleComparator(p1,p2:pointer):integer;
+begin
+  if Double(p1^)>Double(p2^) then
+  begin
+    result:=1;
+  end
+  else
+  begin
+    if Double(p1^)<Double(p2^) then
+    begin
+      result:=-1;
+    end
+    else
+    begin
+      result:=0;
+    end;
+  end;
+end;
+
+procedure cDoubleList.addObj(d: Double);
+var
+  p:pDouble;
+begin
+  if Findobj(@d)=-1 then
+  begin
+    getmem(p,sizeof(double));
+    p^:=d;
+    Add(p);
+  end;
+end;
+
+constructor cDoubleList.create;
+begin
+  inherited;
+  comparator:=DoubleComparator;
+  destroydata:=true;
+end;
+
+procedure cDoubleList.deletechild(node: pointer);
+begin
+  FreeMem(node,sizeof(double));
+end;
+
+function cDoubleList.DelDouble(i: integer): double;
+begin
+  RemoveObj(i);
+end;
+
+function cDoubleList.GetDouble(i: integer): double;
+begin
+  result:=Double(items[i]^);
+end;
+
 function IDSelectListComparator(p1,p2:pointer):integer;
 begin
   if cardinal(p1)>cardinal(p2) then
@@ -595,5 +661,6 @@ procedure cSelectList.deletechild(node:pointer);
 begin
   tobject(node).destroy;
 end;
+
 
 end.

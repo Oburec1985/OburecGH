@@ -13,6 +13,7 @@ uses
   uCyclogramreportFrm,
   uRTrig, uRCFunc,
   tags, ualarms,
+  uSetList,
   PluginClass, ImgList;
 
 type
@@ -42,7 +43,6 @@ type
     CheckLengthLabel: TLabel;
     PageControl1: TPageControl;
     TabSheet1: TTabSheet;
-    Splitter1: TSplitter;
     Splitter2: TSplitter;
     GroupBox1: TGroupBox;
     ModePanel: TPanel;
@@ -56,6 +56,9 @@ type
     TabSheet2: TTabSheet;
     TableModeGB: TGroupBox;
     TableModeSG: TStringGrid;
+    RightGB: TGroupBox;
+    Splitter3: TSplitter;
+    ControlPropSG: TStringGrid;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -81,8 +84,10 @@ type
     procedure TableModeSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure TableModeSGDblClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure ControlPropSGDblClick(Sender: TObject);
   private
-
+    m_CurControl:cControlObj;
     m_uiThread: integer;
     // форма посчитана фабрикой класса. Нужно для ограничения числа форм
     m_counted: boolean;
@@ -93,6 +98,7 @@ type
     m_val:string;
     m_row,m_col:integer;
     m_timerid, m_timerid_res: cardinal;
+    m_tolArray:cDoubleList;
   protected
     procedure ModeTabSGEditCell(r,c:integer; val:string);
     procedure ControlSGEditCell(ARow, ACol: Integer; const Value: string);
@@ -100,6 +106,7 @@ type
     function getprogram(row: integer): cProgramObj;
     function getmode(row: integer): cModeObj;
     function getTableModeSGByCol(col: integer): cModeObj;
+    function getControlFromTableModeSGByRow(Row: integer): cControlObj;
     procedure ClearSGButtons;
     procedure WndProc(var Message: TMessage); override;
     procedure CreateSGButtons;
@@ -108,6 +115,7 @@ type
     procedure ShowControls;
     // Показать Таблицу программ и режимов
     procedure ShowModes;
+    procedure ShowControlPropsModes;
     // Показать триггеры
     procedure ShowTrigs;
     procedure InitSG;
@@ -116,6 +124,8 @@ type
     procedure UpdateTimers;
     procedure UpdateProgramsSG;
     procedure UpdateControlsSG;
+    procedure UpdateControlsPropSG;
+    procedure SelectControl(c:cControlObj);
     procedure updateControlRow(c: ccontrolobj);
     function GetSelectMode: cModeObj;
     procedure ShowControlRow(c: ccontrolobj);
@@ -234,6 +244,7 @@ begin
   m_Guid := IID_ControlFactory;
   // GateSettingsFrm  := TGateSettingsFrm.Create(nil);
   // SelectChannelFrm := TSelectChannelFrm.Create(nil);
+
   AddEvents;
 end;
 
@@ -365,9 +376,7 @@ begin
       end;
       if g_conmng.configChanged then
       begin
-        ShowControls;
-        ShowModes;
-        ShowTrigs;
+        preview;
         g_conmng.configChanged := false;
       end;
       Stop;
@@ -417,7 +426,13 @@ end;
 procedure TControlDeskFrm.FormCreate(Sender: TObject);
 begin
   m_timerid := 2;
+  m_tolArray:=cDoubleList.create;
   InitSG;
+end;
+
+procedure TControlDeskFrm.FormDestroy(Sender: TObject);
+begin
+  m_tolArray.destroy;
 end;
 
 procedure TControlDeskFrm.FormShow(Sender: TObject);
@@ -457,6 +472,44 @@ begin
   TrigSG.Cells[c_Col_TrigState, 0] := 'Значение';
   TrigSG.Cells[c_Col_TrigEnabled, 0] := 'Включен';
   SGChange(TrigSG);
+
+  ControlPropSG.RowCount := 2;
+  ControlPropSG.ColCount := 7;
+
+  ControlPropSG.Cells[1, 0] := 'Шим';
+  ControlPropSG.Cells[2, 0] := 'Thi';
+  ControlPropSG.Cells[3, 0] := 'Tlo';
+  ControlPropSG.Cells[4, 0] := 'Зоны';
+  ControlPropSG.Cells[5, 0] := 'Мин.';
+  ControlPropSG.Cells[6, 0] := 'Макс.';
+
+end;
+
+procedure TControlDeskFrm.ShowControlPropsModes;
+var
+  I: Integer;
+  p:cprogramObj;
+  m:cmodeobj;
+begin
+  p:=g_conmng.getProgram(0);
+  if m_CurControl=nil then
+  begin
+    if p.ControlCount>0 then
+      m_CurControl:=p.getOwnControl(0);
+  end;
+  for I := 0 to p.ModeCount - 1 do
+  begin
+    m:=p.getMode(i);
+    ControlPropSG.Cells[0, 1+i] := m.name;
+  end;
+  SGChange(ControlPropSG);
+end;
+
+
+procedure TControlDeskFrm.SelectControl(c: cControlObj);
+begin
+  m_CurControl:=c;
+  UpdateControlsPropSG;
 end;
 
 procedure TControlDeskFrm.SetConFeedback(con: ccontrolobj; row: integer);
@@ -598,10 +651,18 @@ end;
 
 procedure TControlDeskFrm.Preview;
 begin
-  ShowControls;
-  ShowModes;
-  ShowTrigs;
-  ShowModeTable;
+  if PageControl1.TabIndex=0 then
+  begin
+    ShowControls;
+    ShowModes;
+    ShowTrigs;
+  end;
+  if PageControl1.TabIndex=1 then
+  begin
+    ShowControlPropsModes;
+    UpdateControlsPropSG;
+    ShowModeTable;
+  end;
 end;
 
 procedure TControlDeskFrm.ShowControls;
@@ -635,6 +696,7 @@ begin
   p:=g_conmng.getProgram(0);
   if p=nil then
     exit;
+
   TableModeSG.ColCount:=  c_ModeTable_headerCol +p.ModeCount;
   TableModeSG.Cells[0,1]:='Время работы';
   for I := 0 to p.ModeCount - 1 do
@@ -687,7 +749,40 @@ begin
   result := g_conmng.getprogram(str);
 end;
 
-{ TControlDeskFrm }
+procedure TControlDeskFrm.ControlPropSGDblClick(Sender: TObject);
+var
+  m: cModeObj;
+  t:ctask;
+  pPnt:       TPoint;  // Координаты курсора
+  xCol, xRow: integer; // Адрес ячейки таблицы
+  function getM(row:integer):cModeObj;
+  var
+    str:string;
+    p:cprogramobj;
+  begin
+    str:=TStringGrid(Sender).Cells[0, row];
+    p:=g_conmng.getProgram(0);
+    result:=p.getMode(str);
+  end;
+begin
+  GetCursorPos( pPnt );
+  pPnt:= TStringGrid(Sender).ScreenToClient( pPnt );
+  // Находим позицию нашей ячейки
+  xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
+  xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
+  case xCol of
+    1: // ШИМ
+    begin
+      m:=getM(xrow);
+      t.
+    end;
+    4: // Зоны
+    begin
+
+    end;
+  end;
+end;
+
 procedure TControlDeskFrm.ControlSGDblClick(Sender: TObject);
 var
   c: ccontrolobj;
@@ -1005,7 +1100,12 @@ begin
   // Находим позицию нашей ячейки
   xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
   xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
+  m_CurControl:=getControlFromTableModeSGByRow(xRow);
   if xrow=0 then exit;
+  if m_CurControl<>nil then
+  begin
+    SelectControl(m_CurControl);
+  end;
 
   if (g_conmng.state=c_Pause) or g_conmng.AllowUserModeSelect then
   begin
@@ -1233,6 +1333,24 @@ begin
   end;
 end;
 
+
+function TControlDeskFrm.getControlFromTableModeSGByRow(Row: integer): cControlObj;
+var
+  str:string;
+  p:cprogramobj;
+begin
+  result:=nil;
+  if Row>0 then
+  begin
+    str:=TableModeSG.Cells[0, Row];
+    p:=g_conmng.getprogram(0);
+    if p<>nil then
+    begin
+      result:=p.getOwnControl(str);
+    end;
+  end;
+end;
+
 procedure TControlDeskFrm.ShowControlRow(c: ccontrolobj);
 var
   txt: string;
@@ -1314,12 +1432,115 @@ end;
 procedure TControlDeskFrm.updateviews;
 begin
   UpdateTimers;
-  UpdateProgramsSG;
-  UpdateControlsSG;
-  UpdateTrigs;
-  TableModeSG.Invalidate;
+  if PageControl1.TabIndex=0 then
+  begin
+    UpdateProgramsSG;
+    UpdateControlsSG;
+    UpdateTrigs;
+  end
+  else
+  begin
+    TableModeSG.Invalidate;
+    //UpdateControlsPropSG;
+  end;
 end;
 
+procedure TControlDeskFrm.UpdateControlsPropSG;
+var
+  p:cProgramObj;
+  m:cmodeobj;
+  t:ctask;
+  I, j, k, posState,
+  // состояние парсинга значений зон
+  state: Integer;
+  d:double;
+  STR, str1:STRING;
+  z:cZone;
+begin
+  // обновляется по DblClick
+  if m_CurControl=nil then exit;
+  RightGB.Caption:='Настройка регулятора: '+ m_CurControl.caption;
+  p := g_conmng.getprogram(0);
+  ControlPropSG.RowCount:=1+p.ModeCount;
+
+  for I := 0 to p.ModeCount - 1 do
+  begin
+    m:=p.getMode(i);
+    t:=m.GetTask(m_CurControl.name);
+    //if T.m_Params.count=0 then exit;
+    str := t.getParam('PWM_state');
+    ControlPropSG.Cells[1, i+1] := str;
+    str := t.getParam('PWM_Thi');
+    ControlPropSG.Cells[2, i+1] := str;
+    str := t.getParam('PWM_Tlo');
+    ControlPropSG.Cells[3, i+1] := str;
+    str:=t.getParam('Zone_state');
+    ControlPropSG.Cells[4, i+1] := str;
+    str := T.getParam('Vals');
+    state:=0;
+    k:=1;
+    while k <=length(str) do
+    begin
+      case state of
+        // имя зоны не отпарсено до символа :
+        0:
+        begin
+          if str[k]=':' then
+          begin
+            posstate:=k;
+            state:=1;
+            continue;
+          end;
+        end;
+        // парсим толеранс до первой ;
+        1:
+        begin
+          if str[k]=';' then
+          for j := k-1 downto posState do
+          begin
+            if not isDigit(str[j]) then
+            begin
+              str1:=Copy(str, j+1, k-j-1);
+              d:=strtofloat(str1);
+              m_tolArray.addObj(d);
+              state:=2;
+              continue;
+            end;
+          end;
+        end;
+        // ищем новую зону
+        2:
+        begin
+          if str[k]='_' then
+          begin
+            state:=0;
+          end;
+        end;
+      end;
+      inc(k);
+    end;
+    t:=m.GetTask(m_CurControl.name);
+    if m_tolArray.Count>0 then
+    begin
+      d:=m_tolArray.GetDouble(0);
+      str:=formatstrnoe(t.task-d, 4);
+      ControlPropSG.Cells[5, i+1] := str;
+      d:=m_tolArray.GetDouble(m_tolArray.Count-1);
+      str:=formatstrnoe(t.task+d, 4);
+      ControlPropSG.Cells[6, i+1] := str;
+    end
+    else
+    begin
+
+    end;
+  end;
+end;
+
+//  ControlPropSG.Cells[5, 0] := 'Мин.';
+//  ControlPropSG.Cells[6, 0] := 'Макс.';
+
+
+{ TControlDeskFrm }
 procedure TControlDeskFrm.UpdateTrigs;
 var
   I, j, tcount, row: integer;

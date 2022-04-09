@@ -5199,14 +5199,57 @@ end;
 
 function cTask.getParam(key: string): string;
 var
+  str:string;
   i: integer;
-  str: cString;
+  cstr: cString;
+  z:cZone;
+  J: Integer;
+  pair:tZonePair;
 begin
   result := '';
   FindInPars(m_Params, key, i);
   if i > -1 then
   begin
     result := cString(m_Params.Objects[i]).str;
+  end;
+  if not CheckStr(result) then
+  begin
+    if key='PWM_state' then
+    begin
+      if control.fPWM then
+        result:='Вкл'
+      else
+        result:='Выкл'
+    end;
+    if key='PWM_Thi' then
+    begin
+      result:=floattostr(control.fPWM_Ton);
+    end;
+    if key='PWM_Tlo' then
+    begin
+      result:=floattostr(control.fPWM_Toff);
+    end;
+    if key='Zone_state' then
+    begin
+      if control.m_zones_enabled then
+        result:='Вкл'
+      else
+        result:='Выкл'
+    end;
+    if key='Vals' then
+    begin
+      for I := 0 to control.m_ZoneList.Count - 1 do
+      begin
+        z:=control.m_ZoneList.GetZone(i);
+        str:='z'+inttostr(i)+':'+floaTTOSTR(z.tol)+';';
+        for J := 0 to z.tags.Count - 1 do
+        begin
+          pair:=z.GetZonePair(j);
+          str:=str+floattostr(pair.value)+';';
+        end;
+      end;
+      result:=str;
+    end;
   end;
 end;
 
