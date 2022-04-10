@@ -31,6 +31,7 @@ type
     procedure AddZoneBtnClick(Sender: TObject);
     procedure TolEditChange(Sender: TObject);
     procedure ZonesLBClick(Sender: TObject);
+    procedure ZoneTypeCBClick(Sender: TObject);
   public
     m_CurCon:cControlObj;
     m_ZoneList:cZoneList;
@@ -146,6 +147,10 @@ var
 begin
   TolEdit.FloatNum:=z.tol;
   ZoneTypeCB.Checked:=(z.tol>0);
+  if ZoneTypeCB.Checked then
+    ZoneTypeCB.Caption:='Превышение уставки'
+  else
+    ZoneTypeCB.Caption:='Меньшен уставки';
   ChannelsLV.Clear;
   for I := 0 to z.tags.Count - 1 do
   begin
@@ -247,6 +252,15 @@ begin
   end;
 end;
 
+procedure TDACControlEditFrame.ZoneTypeCBClick(Sender: TObject);
+begin
+  inherited;
+  if ZoneTypeCB.Checked then
+    ZoneTypeCB.Caption:='Превышение уставки'
+  else
+    ZoneTypeCB.Caption:='Меньшен уставки';
+end;
+
 procedure TDACControlEditFrame.editcontrol(c:cControlObj);
 var
   t:itag;
@@ -279,7 +293,9 @@ end;
 
 procedure TDACControlEditFrame.AddZoneBtnClick(Sender: TObject);
 var
-  z:cZone;
+  z, defzone:cZone;
+  I: Integer;
+  p:tZonePair;
 begin
   if toledit.FloatNum<>0 then
   begin
@@ -287,6 +303,12 @@ begin
       z:=m_CurCon.m_ZoneList.NewZone(toledit.FloatNum)
     else
       z:=m_CurCon.m_ZoneList.NewZone(-toledit.FloatNum);
+    defzone:=m_CurCon.m_ZoneList.defaultZone;
+    for I := 0 to defZone.tags.Count - 1 do
+    begin
+      p:=defZone.GetZonePair(i);
+      z.AddZonePair(p);
+    end;
     ShowZones(m_CurCon);
   end
   else

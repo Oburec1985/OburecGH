@@ -86,8 +86,10 @@ type
     procedure TableModeSGDblClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure ControlPropSGDblClick(Sender: TObject);
+    procedure TableModeSGClick(Sender: TObject);
   private
     m_CurControl:cControlObj;
+    m_CurMode:cModeObj;
     m_uiThread: integer;
     // форма посчитана фабрикой класса. Нужно для ограничения числа форм
     m_counted: boolean;
@@ -125,6 +127,7 @@ type
     procedure UpdateProgramsSG;
     procedure UpdateControlsSG;
     procedure UpdateControlsPropSG;
+    procedure UpdateControlsPropSGmode(m:cModeObj);
     procedure SelectControl(c:cControlObj);
     procedure updateControlRow(c: ccontrolobj);
     function GetSelectMode: cModeObj;
@@ -755,9 +758,10 @@ var
   t:ctask;
   pPnt:       TPoint;  // Координаты курсора
   xCol, xRow: integer; // Адрес ячейки таблицы
+  str, key:string;
+  changebool:boolean;
   function getM(row:integer):cModeObj;
   var
-    str:string;
     p:cprogramobj;
   begin
     str:=TStringGrid(Sender).Cells[0, row];
@@ -770,16 +774,36 @@ begin
   // Находим позицию нашей ячейки
   xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
   xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
+  changebool:=false;
   case xCol of
     1: // ШИМ
     begin
       m:=getM(xrow);
-      t.
+      t:=m.GetTask(m_CurControl.name);
+      key:='PWM_state';
+      changebool:=true;
     end;
     4: // Зоны
     begin
-
+      m:=getM(xrow);
+      t:=m.GetTask(m_CurControl.name);
+      key:='Zone_state';
+      changebool:=true;
     end;
+  end;
+  if changebool then
+  begin
+    str:=t.getParam(key);
+    if str='Вкл' then
+    begin
+      str:='Выкл';
+    end
+    else
+    begin
+      str:='Вкл';
+    end;
+    t.setParam(key,str);
+    TStringGrid(Sender).Cells[xCol, xRow]:=str;
   end;
 end;
 
@@ -1089,6 +1113,22 @@ begin
   StopPanel.Color := clBtnFace;
 end;
 
+procedure TControlDeskFrm.TableModeSGClick(Sender: TObject);
+var
+  m: cModeObj;
+  pPnt:       TPoint;  // Координаты курсора
+  xCol, xRow: integer; // Адрес ячейки таблицы
+begin
+  GetCursorPos( pPnt );
+  pPnt:= TStringGrid(Sender).ScreenToClient( pPnt );
+  // Находим позицию нашей ячейки
+  xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
+  xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
+  m_CurMode:=getTableModeSGByCol(xcol);
+  if m_CurMode<>nil then
+    UpdateControlsPropSGmode(m_CurMode);
+end;
+
 procedure TControlDeskFrm.TableModeSGDblClick(Sender: TObject);
 var
   m: cModeObj;
@@ -1101,6 +1141,7 @@ begin
   xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
   xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
   m_CurControl:=getControlFromTableModeSGByRow(xRow);
+  m_CurMode:=getTableModeSGByCol(xcol);
   if xrow=0 then exit;
   if m_CurControl<>nil then
   begin
@@ -1111,7 +1152,7 @@ begin
   begin
     if g_conmng.state<>c_stop then
     begin
-      m := getTableModeSGByCol(xcol);
+      m := m_CurMode;
       if m=nil then
         exit;
       if g_conmng.state=c_play then
@@ -1445,17 +1486,94 @@ begin
   end;
 end;
 
+procedure TControlDeskFrm.UpdateControlsPropSGmode(m:cModeObj);
+var
+  i, j, k, posstate,state:integer;
+  t:ctask;
+  str, str1:string;
+  d:double;
+begin
+  i:=m.modeIndex;
+  t:=m.GetTask(m_CurControl.name);
+  //if T.m_Params.count=0 then exit;
+  str := t.getParam('PWM_state');
+  ControlPropSG.Cells[1, i+1] := str;
+  str := t.getParam('PWM_Thi');
+  ControlPropSG.Cells[2, i+1] := str;
+  str := t.getParam('PWM_Tlo');
+  ControlPropSG.Cells[3, i+1] := str;
+  str:=t.getParam('Zone_state');
+  ControlPropSG.Cells[4, i+1] := str;
+  str := T.getParam('Vals');
+  state:=0;
+  k:=1;
+  m_tolArray.Listclear;
+  while k <=length(str) do
+  begin
+    case state of
+      // имя зоны не отпарсено до символа :
+      0:
+      begin
+        if str[k]=':' then
+        begin
+          posstate:=k;
+          state:=1;
+          continue;
+        end;
+      end;
+      // парсим толеранс до первой ;
+      1:
+      begin
+        if str[k]=';' then
+        begin
+          for j := k-1 downto posState do
+          begin
+            if (not isDigit(str[j])) and (not (str[j]='-'))  then
+            begin
+              str1:=Copy(str, j+1, k-j-1);
+              d:=strtofloat(str1);
+              m_tolArray.addObj(d);
+              state:=2;
+              break;
+            end;
+          end;
+        end;
+      end;
+      // ищем новую зону
+      2:
+      begin
+        if (str[k]='_') or (str[k]=char(10)) then
+        begin
+          state:=0;
+        end;
+      end;
+    end;
+    inc(k);
+  end;
+  if m_tolArray.Count>0 then
+  begin
+    d:=m_tolArray.GetDouble(0);
+    str:=formatstrnoe(t.task+d, 4);
+    ControlPropSG.Cells[5, i+1] := str;
+    d:=m_tolArray.GetDouble(m_tolArray.Count-1);
+    str:=formatstrnoe(t.task+d, 4);
+    ControlPropSG.Cells[6, i+1] := str;
+  end
+  else
+  begin
+
+  end;
+end;
+
 procedure TControlDeskFrm.UpdateControlsPropSG;
 var
   p:cProgramObj;
   m:cmodeobj;
   t:ctask;
-  I, j, k, posState,
+  I, j
   // состояние парсинга значений зон
-  state: Integer;
-  d:double;
-  STR, str1:STRING;
-  z:cZone;
+  : Integer;
+  STR:STRING;
 begin
   // обновляется по DblClick
   if m_CurControl=nil then exit;
@@ -1466,78 +1584,9 @@ begin
   for I := 0 to p.ModeCount - 1 do
   begin
     m:=p.getMode(i);
-    t:=m.GetTask(m_CurControl.name);
-    //if T.m_Params.count=0 then exit;
-    str := t.getParam('PWM_state');
-    ControlPropSG.Cells[1, i+1] := str;
-    str := t.getParam('PWM_Thi');
-    ControlPropSG.Cells[2, i+1] := str;
-    str := t.getParam('PWM_Tlo');
-    ControlPropSG.Cells[3, i+1] := str;
-    str:=t.getParam('Zone_state');
-    ControlPropSG.Cells[4, i+1] := str;
-    str := T.getParam('Vals');
-    state:=0;
-    k:=1;
-    while k <=length(str) do
-    begin
-      case state of
-        // имя зоны не отпарсено до символа :
-        0:
-        begin
-          if str[k]=':' then
-          begin
-            posstate:=k;
-            state:=1;
-            continue;
-          end;
-        end;
-        // парсим толеранс до первой ;
-        1:
-        begin
-          if str[k]=';' then
-          for j := k-1 downto posState do
-          begin
-            if not isDigit(str[j]) then
-            begin
-              str1:=Copy(str, j+1, k-j-1);
-              d:=strtofloat(str1);
-              m_tolArray.addObj(d);
-              state:=2;
-              continue;
-            end;
-          end;
-        end;
-        // ищем новую зону
-        2:
-        begin
-          if str[k]='_' then
-          begin
-            state:=0;
-          end;
-        end;
-      end;
-      inc(k);
-    end;
-    t:=m.GetTask(m_CurControl.name);
-    if m_tolArray.Count>0 then
-    begin
-      d:=m_tolArray.GetDouble(0);
-      str:=formatstrnoe(t.task-d, 4);
-      ControlPropSG.Cells[5, i+1] := str;
-      d:=m_tolArray.GetDouble(m_tolArray.Count-1);
-      str:=formatstrnoe(t.task+d, 4);
-      ControlPropSG.Cells[6, i+1] := str;
-    end
-    else
-    begin
-
-    end;
+    UpdateControlsPropSGmode(m);
   end;
 end;
-
-//  ControlPropSG.Cells[5, 0] := 'Мин.';
-//  ControlPropSG.Cells[6, 0] := 'Макс.';
 
 
 { TControlDeskFrm }

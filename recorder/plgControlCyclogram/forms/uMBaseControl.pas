@@ -15,10 +15,6 @@ uses
 
 type
 
-  cString = Class
-  public
-    str: string;
-  End;
 
   TMBaseControl = class(TRecFrm)
     ObjGB: TGroupBox;

@@ -1005,6 +1005,7 @@ object ControlDeskFrm: TControlDeskFrm
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
           ParentFont = False
           TabOrder = 0
+          OnClick = TableModeSGClick
           OnDblClick = TableModeSGDblClick
           OnDrawCell = TableModeSGDrawCell
           OnSetEditText = TableModeSGSetEditText

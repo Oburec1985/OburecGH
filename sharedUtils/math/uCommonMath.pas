@@ -113,6 +113,8 @@ function addParamF(str:string; key:string;v:string):string;
 function GetParam(str:string; key:string):string;
 function GetParamExt(str:string; key:string; tab:char):string;
 // получить строку по номеру ключа
+function GetParsObj(pars:tstringlist;i:integer):cstring;overload;
+function GetParsObj(pars:tstringlist;key:string):cstring;overload;
 function GetParsValue(pars:tstringlist;i:integer):string;overload;
 function GetParsValue(pars:tstringlist;key:string):string;overload;
 // очистка парсера
@@ -619,6 +621,28 @@ begin
   end
   else
     result:='_';
+end;
+
+function GetParsObj(pars:tstringlist;i:integer):cstring;
+var
+  res:cString;
+begin
+  res:=cstring(pars.objects[i]);
+  result:=res;
+end;
+
+function GetParsObj(pars:tstringlist;key:string):cstring;
+var
+  i:integer;
+  cstr:cstring;
+begin
+  if findinpars(pars, key, i) then
+  begin
+    cstr:=cstring(cstring(pars.objects[i]));
+    result:=cstr;
+  end
+  else
+    result:=nil;
 end;
 
 procedure ClearParsResult(parsres:tstringlist);

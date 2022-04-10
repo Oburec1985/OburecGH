@@ -636,9 +636,11 @@ type
     property StopControlValue: boolean read fStopControlValue write
       SetStopControlValue;
   protected
+    // полностью меняет параметры (старые вычищает)
     procedure setparams(str: string);
     function getparams: string;
   public
+    procedure setParam(key, str:string);
     // зачитать свойство хранящееся в m_Params
     function getParam(key: string): string;
     property params: string read getparams write setparams;
@@ -5197,6 +5199,21 @@ begin
   result := ParsToStr(m_Params);
 end;
 
+procedure cTask.setParam(key, str:string);
+var
+  cstr: uCommonmath.cString;
+begin
+  cstr:=GetParsObj(m_params,key);
+  if cstr<>nil then
+    cstr.str:=str
+  else
+  begin
+    cstr:=uCommonmath.cString.Create;
+    cstr.str:=str;
+    m_params.AddObject(key, cstr);
+  end;
+end;
+
 function cTask.getParam(key: string): string;
 var
   str:string;
@@ -5238,10 +5255,13 @@ begin
     end;
     if key='Vals' then
     begin
+      str:='';
       for I := 0 to control.m_ZoneList.Count - 1 do
       begin
         z:=control.m_ZoneList.GetZone(i);
-        str:='z'+inttostr(i)+':'+floaTTOSTR(z.tol)+';';
+        if i>0 then
+        str:=str+char(10);
+        str:=str+'z'+inttostr(i)+':'+floaTTOSTR(z.tol)+';';
         for J := 0 to z.tags.Count - 1 do
         begin
           pair:=z.GetZonePair(j);

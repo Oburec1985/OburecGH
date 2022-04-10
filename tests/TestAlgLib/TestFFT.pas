@@ -25,6 +25,7 @@ type
     Label1: TLabel;
     AlgLib: TButton;
     SSEBtn: TButton;
+    ListBox1: TListBox;
     procedure Button1Click(Sender: TObject);
     procedure AlgLibClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -187,7 +188,23 @@ var
   s:tstringlist;
   p:tpair;
   l:setList;
+  dl:cDoubleList;
+  STR:STRING;
 begin
+  dl:=cDoubleList.create;
+  dl.addObj(10);
+  dl.addObj(0);
+  dl.addObj(-10);
+  dl.listclear;
+  dl.addObj(10);
+  dl.addObj(0);
+  dl.addObj(-10);
+  listbox1.AddItem(floattostr(dl.GetDouble(0)), nil);
+  listbox1.AddItem(floattostr(dl.GetDouble(1)), nil);
+  listbox1.AddItem(floattostr(dl.GetDouble(2)), nil);
+  dl.Listclear;
+  dl.destroy;
+
   l:=setList.create;
   l.addPair(p);
   l.addPair(p);

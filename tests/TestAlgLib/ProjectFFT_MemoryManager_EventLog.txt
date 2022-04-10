@@ -43,3 +43,285 @@ This application has leaked memory. The small block leaks are (excluding expecte
 5 - 20 bytes: Unknown x 1
 
 Note: Memory leak detail is logged to a text file in the same folder as this application. To disable this memory leak check, undefine "EnableMemoryLeakReporting".
+
+--------------------------------2022/4/11 0:34:42--------------------------------
+A memory block has been leaked. The size is: 20
+
+This block was allocated by thread 0x2568, and the stack trace (return addresses) at the time was:
+40445E [System.pas][System][@GetMem][2979]
+4CC54A [uSetList.pas][uSetList][cDoubleList.addObj][607]
+500C97 [TestFFT.pas][TestFFT][TForm1.FormCreate][195]
+4201C2 [SysUtils][TThreadLocalCounter.Open]
+4B4D17 [Forms.pas][Forms][TCustomForm.DoCreate][3319]
+4B4953 [Forms.pas][Forms][TCustomForm.AfterConstruction][3203]
+405BBC [System.pas][System][@AfterConstruction][10325]
+4B4928 [Forms.pas][Forms][TCustomForm.Create][3198]
+4BF149 [Forms.pas][Forms][TApplication.CreateForm][9879]
+50E212 
+7660FA29 [BaseThreadInitThunk]
+
+The block is currently used for an object of class: Unknown
+
+The allocation number is: 1033
+
+Current memory dump of 256 bytes starting at pointer address 7FE40650:
+00 00 00 00 00 00 24 40 95 71 43 8D 80 80 80 80 80 80 80 80 80 80 80 80 00 00 00 00 70 A5 E3 7F
+00 00 00 00 00 00 00 00 7C F9 40 00 00 00 00 00 0A 04 00 00 CD 44 40 00 55 A0 43 00 E0 9D 43 00
+D1 9B 43 00 A9 C2 4C 00 60 C5 4C 00 97 0C 50 00 C2 01 42 00 17 4D 4B 00 53 49 4B 00 BC 5B 40 00
+68 25 00 00 68 25 00 00 B4 44 40 00 55 A0 43 00 11 9C 43 00 AE 9B 43 00 1B 56 40 00 56 98 43 00
+75 99 43 00 5F 48 4B 00 49 F1 4B 00 12 E2 50 00 29 FA 60 76 10 00 00 00 00 00 00 00 C2 B0 4E FC
+30 08 E4 7F 90 07 E4 7F 50 06 E4 7F 80 80 80 80 3D 4F B1 03 80 80 80 80 00 00 00 00 70 A5 E3 7F
+00 00 00 00 00 00 00 00 7C F9 40 00 00 00 00 00 0B 04 00 00 5E 44 40 00 4A C5 4C 00 A2 0C 50 00
+C2 01 42 00 17 4D 4B 00 53 49 4B 00 BC 5B 40 00 28 49 4B 00 49 F1 4B 00 12 E2 50 00 29 FA 60 76
+.  .  .  .  .  .  $  @  •  q  C    €  €  €  €  €  €  €  €  €  €  €  €  .  .  .  .  p  ¥  ã  
+.  .  .  .  .  .  .  .  |  ù  @  .  .  .  .  .  .  .  .  .  Í  D  @  .  U     C  .  à    C  .
+Ñ  ›  C  .  ©  Â  L  .  `  Å  L  .  —  .  P  .  Â  .  B  .  .  M  K  .  S  I  K  .  ¼  [  @  .
+h  %  .  .  h  %  .  .  ´  D  @  .  U     C  .  .  œ  C  .  ®  ›  C  .  .  V  @  .  V  ˜  C  .
+u  ™  C  .  _  H  K  .  I  ñ  K  .  .  â  P  .  )  ú  `  v  .  .  .  .  .  .  .  .  Â  °  N  ü
+0  .  ä      .  ä    P  .  ä    €  €  €  €  =  O  ±  .  €  €  €  €  .  .  .  .  p  ¥  ã  
+.  .  .  .  .  .  .  .  |  ù  @  .  .  .  .  .  .  .  .  .  ^  D  @  .  J  Å  L  .  ¢  .  P  .
+Â  .  B  .  .  M  K  .  S  I  K  .  ¼  [  @  .  (  I  K  .  I  ñ  K  .  .  â  P  .  )  ú  `  v
+
+--------------------------------2022/4/11 0:34:42--------------------------------
+A memory block has been leaked. The size is: 20
+
+This block was allocated by thread 0x2568, and the stack trace (return addresses) at the time was:
+4044CD [System.pas][System][@ReallocMem][3121]
+43A055 [Classes.pas][Classes][TList.SetCapacity][3598]
+439DE0 [Classes.pas][Classes][TList.Grow][3436]
+439BD1 [Classes.pas][Classes][TList.Add][3344]
+4CC2A9 [uSetList.pas][uSetList][cSetList.AddObj][266]
+4CC560 [uSetList.pas][uSetList][cDoubleList.addObj][610]
+500C97 [TestFFT.pas][TestFFT][TForm1.FormCreate][195]
+4201C2 [SysUtils][TThreadLocalCounter.Open]
+4B4D17 [Forms.pas][Forms][TCustomForm.DoCreate][3319]
+4B4953 [Forms.pas][Forms][TCustomForm.AfterConstruction][3203]
+405BBC [System.pas][System][@AfterConstruction][10325]
+
+The block is currently used for an object of class: Unknown
+
+The allocation number is: 1034
+
+Current memory dump of 256 bytes starting at pointer address 7FE406F0:
+30 08 E4 7F 90 07 E4 7F 50 06 E4 7F 80 80 80 80 3D 4F B1 03 80 80 80 80 00 00 00 00 70 A5 E3 7F
+00 00 00 00 00 00 00 00 7C F9 40 00 00 00 00 00 0B 04 00 00 5E 44 40 00 4A C5 4C 00 A2 0C 50 00
+C2 01 42 00 17 4D 4B 00 53 49 4B 00 BC 5B 40 00 28 49 4B 00 49 F1 4B 00 12 E2 50 00 29 FA 60 76
+68 25 00 00 68 25 00 00 7A 44 40 00 D5 55 40 00 99 5B 40 00 B9 9B 43 00 1B 56 40 00 12 98 43 00
+75 99 43 00 5F 48 4B 00 49 F1 4B 00 12 E2 50 00 29 FA 60 76 08 00 00 00 00 F0 42 00 73 8F BC 72
+00 00 00 00 00 00 00 00 8C 70 43 8D 80 80 80 80 80 80 80 80 80 80 80 80 00 00 00 00 70 A5 E3 7F
+00 00 00 00 00 00 00 00 7C F9 40 00 00 00 00 00 0C 04 00 00 5E 44 40 00 4A C5 4C 00 B0 0C 50 00
+C2 01 42 00 17 4D 4B 00 53 49 4B 00 BC 5B 40 00 28 49 4B 00 49 F1 4B 00 12 E2 50 00 29 FA 60 76
+0  .  ä      .  ä    P  .  ä    €  €  €  €  =  O  ±  .  €  €  €  €  .  .  .  .  p  ¥  ã  
+.  .  .  .  .  .  .  .  |  ù  @  .  .  .  .  .  .  .  .  .  ^  D  @  .  J  Å  L  .  ¢  .  P  .
+Â  .  B  .  .  M  K  .  S  I  K  .  ¼  [  @  .  (  I  K  .  I  ñ  K  .  .  â  P  .  )  ú  `  v
+h  %  .  .  h  %  .  .  z  D  @  .  Õ  U  @  .  ™  [  @  .  ¹  ›  C  .  .  V  @  .  .  ˜  C  .
+u  ™  C  .  _  H  K  .  I  ñ  K  .  .  â  P  .  )  ú  `  v  .  .  .  .  .  ð  B  .  s    ¼  r
+.  .  .  .  .  .  .  .  Œ  p  C    €  €  €  €  €  €  €  €  €  €  €  €  .  .  .  .  p  ¥  ã  
+.  .  .  .  .  .  .  .  |  ù  @  .  .  .  .  .  .  .  .  .  ^  D  @  .  J  Å  L  .  °  .  P  .
+Â  .  B  .  .  M  K  .  S  I  K  .  ¼  [  @  .  (  I  K  .  I  ñ  K  .  .  â  P  .  )  ú  `  v
+
+--------------------------------2022/4/11 0:34:42--------------------------------
+A memory block has been leaked. The size is: 20
+
+This block was allocated by thread 0x2568, and the stack trace (return addresses) at the time was:
+40445E [System.pas][System][@GetMem][2979]
+4CC54A [uSetList.pas][uSetList][cDoubleList.addObj][607]
+500CA2 [TestFFT.pas][TestFFT][TForm1.FormCreate][196]
+4201C2 [SysUtils][TThreadLocalCounter.Open]
+4B4D17 [Forms.pas][Forms][TCustomForm.DoCreate][3319]
+4B4953 [Forms.pas][Forms][TCustomForm.AfterConstruction][3203]
+405BBC [System.pas][System][@AfterConstruction][10325]
+4B4928 [Forms.pas][Forms][TCustomForm.Create][3198]
+4BF149 [Forms.pas][Forms][TApplication.CreateForm][9879]
+50E212 
+7660FA29 [BaseThreadInitThunk]
+
+The block is currently used for an object of class: Unknown
+
+The allocation number is: 1035
+
+Current memory dump of 256 bytes starting at pointer address 7FE40790:
+00 00 00 00 00 00 00 00 8C 70 43 8D 80 80 80 80 80 80 80 80 80 80 80 80 00 00 00 00 70 A5 E3 7F
+00 00 00 00 00 00 00 00 7C F9 40 00 00 00 00 00 0C 04 00 00 5E 44 40 00 4A C5 4C 00 B0 0C 50 00
+C2 01 42 00 17 4D 4B 00 53 49 4B 00 BC 5B 40 00 28 49 4B 00 49 F1 4B 00 12 E2 50 00 29 FA 60 76
+68 25 00 00 68 25 00 00 7A 44 40 00 D5 55 40 00 99 5B 40 00 A6 8E 43 00 1B 56 40 00 87 0E 44 00
+EB D8 43 00 50 97 43 00 C0 98 43 00 4E 99 43 00 5F 48 4B 00 08 00 00 00 08 34 43 00 DC 78 8A FC
+00 00 00 00 00 00 24 C0 23 87 75 03 80 80 80 80 80 80 80 80 80 80 80 80 00 00 00 00 91 D2 E3 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 2C 04 00 00 5E 44 40 00 A3 9C 41 00 DE 9C 41 00
+49 74 49 00 F3 0D 49 00 46 09 CD 77 BB FC CC 77 90 FC CC 77 0D DF C3 77 36 3D C3 77 BD 56 49 00
+.  .  .  .  .  .  .  .  Œ  p  C    €  €  €  €  €  €  €  €  €  €  €  €  .  .  .  .  p  ¥  ã  
+.  .  .  .  .  .  .  .  |  ù  @  .  .  .  .  .  .  .  .  .  ^  D  @  .  J  Å  L  .  °  .  P  .
+Â  .  B  .  .  M  K  .  S  I  K  .  ¼  [  @  .  (  I  K  .  I  ñ  K  .  .  â  P  .  )  ú  `  v
+h  %  .  .  h  %  .  .  z  D  @  .  Õ  U  @  .  ™  [  @  .  ¦  Ž  C  .  .  V  @  .  ‡  .  D  .
+ë  Ø  C  .  P  —  C  .  À  ˜  C  .  N  ™  C  .  _  H  K  .  .  .  .  .  .  4  C  .  Ü  x  Š  ü
+.  .  .  .  .  .  $  À  #  ‡  u  .  €  €  €  €  €  €  €  €  €  €  €  €  .  .  .  .  ‘  Ò  ã  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ,  .  .  .  ^  D  @  .  £  œ  A  .  Þ  œ  A  .
+I  t  I  .  ó  .  I  .  F  .  Í  w  »  ü  Ì  w    ü  Ì  w  .  ß  Ã  w  6  =  Ã  w  ½  V  I  .
+
+--------------------------------2022/4/11 0:34:42--------------------------------
+A memory block has been leaked. The size is: 20
+
+This block was allocated by thread 0x2568, and the stack trace (return addresses) at the time was:
+40445E [System.pas][System][@GetMem][2979]
+4CC54A [uSetList.pas][uSetList][cDoubleList.addObj][607]
+500CB0 [TestFFT.pas][TestFFT][TForm1.FormCreate][197]
+4201C2 [SysUtils][TThreadLocalCounter.Open]
+4B4D17 [Forms.pas][Forms][TCustomForm.DoCreate][3319]
+4B4953 [Forms.pas][Forms][TCustomForm.AfterConstruction][3203]
+405BBC [System.pas][System][@AfterConstruction][10325]
+4B4928 [Forms.pas][Forms][TCustomForm.Create][3198]
+4BF149 [Forms.pas][Forms][TApplication.CreateForm][9879]
+50E212 
+7660FA29 [BaseThreadInitThunk]
+
+The block is currently used for an object of class: Unknown
+
+The allocation number is: 1036
+
+Current memory dump of 256 bytes starting at pointer address 7FE40830:
+00 00 00 00 00 00 24 C0 23 87 75 03 80 80 80 80 80 80 80 80 80 80 80 80 00 00 00 00 91 D2 E3 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 2C 04 00 00 5E 44 40 00 A3 9C 41 00 DE 9C 41 00
+49 74 49 00 F3 0D 49 00 46 09 CD 77 BB FC CC 77 90 FC CC 77 0D DF C3 77 36 3D C3 77 BD 56 49 00
+68 25 00 00 68 25 00 00 7A 44 40 00 FA 9C 41 00 59 E3 48 00 D5 55 40 00 99 5B 40 00 A5 AA 43 00
+49 2B 49 00 FC 18 47 00 F9 2A 49 00 B1 3E 4B 00 AA 4C 4B 00 06 00 00 00 06 00 00 00 7D E8 70 DB
+C4 B1 51 00 80 80 82 17 8F 24 80 80 80 80 80 80 80 80 80 80 80 80 80 80 00 00 00 00 11 16 E4 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 2D 04 00 00 5E 44 40 00 A3 9C 41 00 B1 9C 41 00
+59 74 49 00 F3 0D 49 00 46 09 CD 77 BB FC CC 77 90 FC CC 77 0D DF C3 77 36 3D C3 77 BD 56 49 00
+.  .  .  .  .  .  $  À  #  ‡  u  .  €  €  €  €  €  €  €  €  €  €  €  €  .  .  .  .  ‘  Ò  ã  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ,  .  .  .  ^  D  @  .  £  œ  A  .  Þ  œ  A  .
+I  t  I  .  ó  .  I  .  F  .  Í  w  »  ü  Ì  w    ü  Ì  w  .  ß  Ã  w  6  =  Ã  w  ½  V  I  .
+h  %  .  .  h  %  .  .  z  D  @  .  ú  œ  A  .  Y  ã  H  .  Õ  U  @  .  ™  [  @  .  ¥  ª  C  .
+I  +  I  .  ü  .  G  .  ù  *  I  .  ±  >  K  .  ª  L  K  .  .  .  .  .  .  .  .  .  }  è  p  Û
+Ä  ±  Q  .  €  €  ‚  .    $  €  €  €  €  €  €  €  €  €  €  €  €  €  €  .  .  .  .  .  .  ä  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  -  .  .  .  ^  D  @  .  £  œ  A  .  ±  œ  A  .
+Y  t  I  .  ó  .  I  .  F  .  Í  w  »  ü  Ì  w    ü  Ì  w  .  ß  Ã  w  6  =  Ã  w  ½  V  I  .
+
+--------------------------------2022/4/11 0:34:42--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x2568, and the stack trace (return addresses) at the time was:
+40445E [System.pas][System][@GetMem][2979]
+4055B7 [System.pas][System][TObject.NewInstance][9433]
+405B4E [System.pas][System][@ClassCreate][10277]
+4CC579 [uSetList.pas][uSetList][cDoubleList.create][614]
+500C87 [TestFFT.pas][TestFFT][TForm1.FormCreate][194]
+4201C2 [SysUtils][TThreadLocalCounter.Open]
+4B4D17 [Forms.pas][Forms][TCustomForm.DoCreate][3319]
+4B4953 [Forms.pas][Forms][TCustomForm.AfterConstruction][3203]
+405BBC [System.pas][System][@AfterConstruction][10325]
+4B4928 [Forms.pas][Forms][TCustomForm.Create][3198]
+4BF149 [Forms.pas][Forms][TApplication.CreateForm][9879]
+
+The block is currently used for an object of class: cDoubleList
+
+The allocation number is: 1032
+
+Current memory dump of 256 bytes starting at pointer address 7FE4E260:
+90 BE 4C 00 F0 06 E4 7F 03 00 00 00 04 00 00 00 01 00 00 00 08 C5 4C 00 00 00 00 00 01 00 00 00
+00 00 00 00 CE 82 D2 83 00 00 00 00 D1 EA E4 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+96 03 00 00 5E 44 40 00 D3 7B 40 00 10 73 40 00 AC 34 42 00 61 34 42 00 8E 11 44 00 30 FC 43 00
+A3 06 44 00 22 FF 43 00 61 FE 43 00 AA 72 44 00 68 25 00 00 68 25 00 00 7A 44 40 00 0D 69 40 00
+F5 7F 40 00 3D 7F 40 00 8B 56 40 00 CE 55 40 00 99 5B 40 00 B8 0D 47 00 F9 2A 49 00 B1 3E 4B 00
+AA 4C 4B 00 1A 00 00 00 B0 04 02 00 53 CF AE 85 C4 B1 51 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 AC 30 51 7A 80 80 80 80 80 80 80 80 80 80 00 00 00 00 71 E9 E4 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 39 02 00 00 66 FC 40 00 9B 44 40 00 55 A0 43 00
+  ¾  L  .  ð  .  ä    .  .  .  .  .  .  .  .  .  .  .  .  .  Å  L  .  .  .  .  .  .  .  .  .
+.  .  .  .  Î  ‚  Ò  ƒ  .  .  .  .  Ñ  ê  ä    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+–  .  .  .  ^  D  @  .  Ó  {  @  .  .  s  @  .  ¬  4  B  .  a  4  B  .  Ž  .  D  .  0  ü  C  .
+£  .  D  .  "  ÿ  C  .  a  þ  C  .  ª  r  D  .  h  %  .  .  h  %  .  .  z  D  @  .  .  i  @  .
+õ    @  .  =    @  .  ‹  V  @  .  Î  U  @  .  ™  [  @  .  ¸  .  G  .  ù  *  I  .  ±  >  K  .
+ª  L  K  .  .  .  .  .  °  .  .  .  S  Ï  ®  …  Ä  ±  Q  .  €  €  €  €  €  €  €  €  €  €  €  €
+€  €  €  €  €  €  €  €  €  €  ¬  0  Q  z  €  €  €  €  €  €  €  €  €  €  .  .  .  .  q  é  ä  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  9  .  .  .  f  ü  @  .  ›  D  @  .  U     C  .
+
+--------------------------------2022/4/11 0:34:42--------------------------------
+This application has leaked memory. The small block leaks are (excluding expected leaks registered by pointer):
+
+5 - 20 bytes: Unknown x 4
+21 - 36 bytes: cDoubleList x 1
+
+Note: Memory leak detail is logged to a text file in the same folder as this application. To disable this memory leak check, undefine "EnableMemoryLeakReporting".
+
+--------------------------------2022/4/11 0:35:27--------------------------------
+A memory block has been leaked. The size is: 20
+
+This block was allocated by thread 0x1474, and the stack trace (return addresses) at the time was:
+4044CD [System.pas][System][@ReallocMem][3121]
+43A055 [Classes.pas][Classes][TList.SetCapacity][3598]
+439DE0 [Classes.pas][Classes][TList.Grow][3436]
+439BD1 [Classes.pas][Classes][TList.Add][3344]
+4C6AF9 [uSetList.pas][uSetList][cSetList.AddObj][266]
+4C6DB0 [uSetList.pas][uSetList][cDoubleList.addObj][610]
+500C97 [TestFFT.pas][TestFFT][TForm1.FormCreate][195]
+4201C2 [SysUtils][TThreadLocalCounter.Open]
+4B4D17 [Forms.pas][Forms][TCustomForm.DoCreate][3319]
+4B4953 [Forms.pas][Forms][TCustomForm.AfterConstruction][3203]
+405BBC [System.pas][System][@AfterConstruction][10325]
+
+The block is currently used for an object of class: Unknown
+
+The allocation number is: 1034
+
+Current memory dump of 256 bytes starting at pointer address 7FE406F0:
+50 06 E4 7F 50 06 E4 7F 50 06 E4 7F 80 80 80 80 85 20 B2 03 80 80 80 80 00 00 00 00 D1 05 E4 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 19 04 00 00 CD 44 40 00 55 A0 43 00 E0 9D 43 00
+D1 9B 43 00 F9 12 50 00 C2 01 42 00 84 0D 50 00 C2 01 42 00 17 4D 4B 00 53 49 4B 00 BC 5B 40 00
+74 14 00 00 74 14 00 00 B4 44 40 00 55 A0 43 00 11 9C 43 00 AE 9B 43 00 8D 68 4C 00 A1 0D 50 00
+C2 01 42 00 17 4D 4B 00 53 49 4B 00 BC 5B 40 00 28 49 4B 00 10 00 00 00 50 06 E4 7F 71 3F DA 05
+C4 B1 51 00 80 80 80 80 80 80 80 80 80 80 80 80 8E C0 25 FA 80 80 80 80 00 00 00 00 01 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0F 04 00 00 5E 44 40 00 9A 6D 4C 00 DE 0C 50 00
+C2 01 42 00 17 4D 4B 00 53 49 4B 00 BC 5B 40 00 28 49 4B 00 49 F1 4B 00 12 E2 50 00 29 FA 60 76
+P  .  ä    P  .  ä    P  .  ä    €  €  €  €  …     ²  .  €  €  €  €  .  .  .  .  Ñ  .  ä  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Í  D  @  .  U     C  .  à    C  .
+Ñ  ›  C  .  ù  .  P  .  Â  .  B  .  „  .  P  .  Â  .  B  .  .  M  K  .  S  I  K  .  ¼  [  @  .
+t  .  .  .  t  .  .  .  ´  D  @  .  U     C  .  .  œ  C  .  ®  ›  C  .    h  L  .  ¡  .  P  .
+Â  .  B  .  .  M  K  .  S  I  K  .  ¼  [  @  .  (  I  K  .  .  .  .  .  P  .  ä    q  ?  Ú  .
+Ä  ±  Q  .  €  €  €  €  €  €  €  €  €  €  €  €  Ž  À  %  ú  €  €  €  €  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ^  D  @  .  š  m  L  .  Þ  .  P  .
+Â  .  B  .  .  M  K  .  S  I  K  .  ¼  [  @  .  (  I  K  .  I  ñ  K  .  .  â  P  .  )  ú  `  v
+
+--------------------------------2022/4/11 0:35:27--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x1474, and the stack trace (return addresses) at the time was:
+40445E [System.pas][System][@GetMem][2979]
+4055B7 [System.pas][System][TObject.NewInstance][9433]
+405B4E [System.pas][System][@ClassCreate][10277]
+4C6DC9 [uSetList.pas][uSetList][cDoubleList.create][614]
+500C87 [TestFFT.pas][TestFFT][TForm1.FormCreate][194]
+4201C2 [SysUtils][TThreadLocalCounter.Open]
+4B4D17 [Forms.pas][Forms][TCustomForm.DoCreate][3319]
+4B4953 [Forms.pas][Forms][TCustomForm.AfterConstruction][3203]
+405BBC [System.pas][System][@AfterConstruction][10325]
+4B4928 [Forms.pas][Forms][TCustomForm.Create][3198]
+4BF149 [Forms.pas][Forms][TApplication.CreateForm][9879]
+
+The block is currently used for an object of class: cDoubleList
+
+The allocation number is: 1032
+
+Current memory dump of 256 bytes starting at pointer address 7FE4E260:
+E0 66 4C 00 F0 06 E4 7F 00 00 00 00 04 00 00 00 01 00 00 00 58 6D 4C 00 00 00 00 00 01 00 00 00
+00 00 00 00 66 FC D2 83 00 00 00 00 D1 EA E4 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+96 03 00 00 5E 44 40 00 D3 7B 40 00 10 73 40 00 AC 34 42 00 61 34 42 00 8E 11 44 00 30 FC 43 00
+A3 06 44 00 22 FF 43 00 61 FE 43 00 AA 72 44 00 74 14 00 00 74 14 00 00 7A 44 40 00 0D 69 40 00
+F5 7F 40 00 3D 7F 40 00 8B 56 40 00 CE 55 40 00 99 5B 40 00 B8 0D 47 00 F9 2A 49 00 B1 3E 4B 00
+AA 4C 4B 00 1A 00 00 00 B0 04 02 00 6B AD AE 85 C4 B1 51 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 94 52 51 7A 80 80 80 80 80 80 80 80 80 80 00 00 00 00 71 E9 E4 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 39 02 00 00 66 FC 40 00 9B 44 40 00 55 A0 43 00
+à  f  L  .  ð  .  ä    .  .  .  .  .  .  .  .  .  .  .  .  X  m  L  .  .  .  .  .  .  .  .  .
+.  .  .  .  f  ü  Ò  ƒ  .  .  .  .  Ñ  ê  ä    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+–  .  .  .  ^  D  @  .  Ó  {  @  .  .  s  @  .  ¬  4  B  .  a  4  B  .  Ž  .  D  .  0  ü  C  .
+£  .  D  .  "  ÿ  C  .  a  þ  C  .  ª  r  D  .  t  .  .  .  t  .  .  .  z  D  @  .  .  i  @  .
+õ    @  .  =    @  .  ‹  V  @  .  Î  U  @  .  ™  [  @  .  ¸  .  G  .  ù  *  I  .  ±  >  K  .
+ª  L  K  .  .  .  .  .  °  .  .  .  k  ­  ®  …  Ä  ±  Q  .  €  €  €  €  €  €  €  €  €  €  €  €
+€  €  €  €  €  €  €  €  €  €  ”  R  Q  z  €  €  €  €  €  €  €  €  €  €  .  .  .  .  q  é  ä  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  9  .  .  .  f  ü  @  .  ›  D  @  .  U     C  .
+
+--------------------------------2022/4/11 0:35:27--------------------------------
+This application has leaked memory. The small block leaks are (excluding expected leaks registered by pointer):
+
+5 - 20 bytes: Unknown x 1
+21 - 36 bytes: cDoubleList x 1
+
+Note: Memory leak detail is logged to a text file in the same folder as this application. To disable this memory leak check, undefine "EnableMemoryLeakReporting".

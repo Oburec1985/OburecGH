@@ -2,7 +2,7 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 293
+  ClientHeight = 467
   ClientWidth = 633
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -65,5 +65,12 @@ object Form1: TForm1
     Caption = 'SSE'
     TabOrder = 4
     OnClick = SSEBtnClick
+  end
+  object ListBox1: TListBox
+    Left = 288
+    Top = 200
+    Width = 121
+    Height = 217
+    TabOrder = 5
   end
 end

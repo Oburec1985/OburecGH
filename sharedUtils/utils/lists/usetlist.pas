@@ -43,6 +43,7 @@ type
     function FindobjWithKey(key:pointer):integer;
     // найти индекс первого контейнера с таким ключом
     function FindFirstNode(key:pointer):integer;
+    // вычищаем данные если destroydata=true
     procedure Listclear;
     property sorted:boolean read getsorted write setsorted;
  public
@@ -605,8 +606,8 @@ begin
   begin
     getmem(p,sizeof(double));
     p^:=d;
-    Add(p);
   end;
+  inherited AddObj(p);
 end;
 
 constructor cDoubleList.create;
