@@ -24,6 +24,7 @@ type
     ZoneTypeCB: TCheckBox;
     ZonesCB: TCheckBox;
     UpdateBtn: TSpeedButton;
+    UsePrevValsCB: TCheckBox;
     procedure ChannelsLVDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure ChannelsLVDragDrop(Sender, Source: TObject; X, Y: Integer);
@@ -238,6 +239,10 @@ begin
         break;
       end;
     end;
+    if z.tol=0 then
+    begin
+      z.fUsePrevZoneVals:=UsePrevValsCB.Checked;
+    end;
   end;
 end;
 
@@ -249,6 +254,15 @@ begin
   begin
     z:=cZone(zoneslb.Items.objects[zoneslb.ItemIndex]);
     ShowZone(z);
+    if z.defaultZone then
+    begin
+      UsePrevValsCB.Visible:=true;
+    end
+    else
+    begin
+      UsePrevValsCB.Checked:=z.fUsePrevZoneVals;
+      UsePrevValsCB.Visible:=false;
+    end;
   end;
 end;
 

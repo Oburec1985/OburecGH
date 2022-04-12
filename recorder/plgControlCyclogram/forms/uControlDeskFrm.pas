@@ -56,9 +56,13 @@ type
     TabSheet2: TTabSheet;
     TableModeGB: TGroupBox;
     TableModeSG: TStringGrid;
-    RightGB: TGroupBox;
     Splitter3: TSplitter;
+    RightGB: TGroupBox;
     ControlPropSG: TStringGrid;
+    Panel1: TPanel;
+    ControlPropE: TEdit;
+    ModePropE: TEdit;
+    OpenDialog1: TOpenDialog;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -147,7 +151,7 @@ type
     procedure Preview;
   public
     procedure Start;
-    procedure continue;
+    procedure continuePlay;
     procedure pause;
     procedure Stop;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -779,14 +783,14 @@ begin
     1: // ШИМ
     begin
       m:=getM(xrow);
-      t:=m.GetTask(m_CurControl.name);
+      t:=m.GetTask(ControlPropE.Text);
       key:='PWM_state';
       changebool:=true;
     end;
     4: // Зоны
     begin
       m:=getM(xrow);
-      t:=m.GetTask(m_CurControl.name);
+      t:=m.GetTask(ControlPropE.Text);
       key:='Zone_state';
       changebool:=true;
     end;
@@ -1056,7 +1060,7 @@ begin
   StopPanel.Color := clBtnFace;
 end;
 
-procedure TControlDeskFrm.continue;
+procedure TControlDeskFrm.continuePlay;
 var
   ir: irecorder;
 begin
@@ -1118,13 +1122,23 @@ var
   m: cModeObj;
   pPnt:       TPoint;  // Координаты курсора
   xCol, xRow: integer; // Адрес ячейки таблицы
+  c:cControlObj;
 begin
   GetCursorPos( pPnt );
   pPnt:= TStringGrid(Sender).ScreenToClient( pPnt );
   // Находим позицию нашей ячейки
   xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
   xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
-  m_CurMode:=getTableModeSGByCol(xcol);
+  c:=getControlFromTableModeSGByRow(xRow);
+  if c<>nil then
+  begin
+    m_CurControl:=c;
+    ControlPropE.text:=c.Name;
+  end;
+  m:=getTableModeSGByCol(xcol);
+  if m<>nil then
+    m_CurMode:=m;
+  ModePropE.text:=m_CurMode.name;
   if m_CurMode<>nil then
     UpdateControlsPropSGmode(m_CurMode);
 end;
@@ -1141,7 +1155,7 @@ begin
   xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
   xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
   m_CurControl:=getControlFromTableModeSGByRow(xRow);
-  m_CurMode:=getTableModeSGByCol(xcol);
+  m:=getTableModeSGByCol(xcol);
   if xrow=0 then exit;
   if m_CurControl<>nil then
   begin
@@ -1152,7 +1166,6 @@ begin
   begin
     if g_conmng.state<>c_stop then
     begin
-      m := m_CurMode;
       if m=nil then
         exit;
       if g_conmng.state=c_play then
@@ -1243,13 +1256,16 @@ begin
       if con<>nil then
       begin
         m:=p.getMode(c-1);
-        t:=m.gettask(con.name);
-        if t<>nil then
+        if m<>nil then
         begin
-          t.entercs;
-          t.task:=strtoFloatExt(val);
-          t.applyed:=false;
-          t.exitcs;
+          t:=m.gettask(con.name);
+          if t<>nil then
+          begin
+            t.entercs;
+            t.task:=strtoFloatExt(val);
+            t.applyed:=false;
+            t.exitcs;
+          end;
         end;
       end;
     end;
@@ -1577,7 +1593,8 @@ var
 begin
   // обновляется по DblClick
   if m_CurControl=nil then exit;
-  RightGB.Caption:='Настройка регулятора: '+ m_CurControl.caption;
+  ControlPropE.text:= m_CurControl.caption;
+
   p := g_conmng.getprogram(0);
   ControlPropSG.RowCount:=1+p.ModeCount;
 

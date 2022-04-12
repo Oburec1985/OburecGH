@@ -1,6 +1,6 @@
 inherited DACControlEditFrame: TDACControlEditFrame
-  Width = 957
-  Height = 458
+  Width = 846
+  Height = 380
   Align = alClient
   ExplicitWidth = 451
   ExplicitHeight = 304
@@ -19,10 +19,10 @@ inherited DACControlEditFrame: TDACControlEditFrame
     TabOrder = 0
   end
   object RightGB: TGroupBox
-    Left = 328
+    Left = 217
     Top = 0
     Width = 629
-    Height = 458
+    Height = 380
     Align = alRight
     Caption = #1047#1086#1085#1099' '#1088#1077#1075#1091#1083#1080#1088#1086#1074#1072#1085#1080#1103
     TabOrder = 1
@@ -30,12 +30,13 @@ inherited DACControlEditFrame: TDACControlEditFrame
     ExplicitHeight = 304
     object LowPanel: TPanel
       Left = 2
-      Top = 403
+      Top = 325
       Width = 625
       Height = 53
       Align = alBottom
       TabOrder = 0
-      ExplicitTop = 249
+      ExplicitLeft = 3
+      ExplicitTop = 421
       object AddZoneBtn: TSpeedButton
         Left = 0
         Top = 2
@@ -278,7 +279,7 @@ inherited DACControlEditFrame: TDACControlEditFrame
       Left = 2
       Top = 18
       Width = 175
-      Height = 385
+      Height = 307
       Align = alLeft
       TabOrder = 1
       OnClick = ZonesLBClick
@@ -288,7 +289,7 @@ inherited DACControlEditFrame: TDACControlEditFrame
       Left = 177
       Top = 18
       Width = 450
-      Height = 385
+      Height = 307
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -320,7 +321,7 @@ inherited DACControlEditFrame: TDACControlEditFrame
   object ZonesCB: TCheckBox
     Left = 16
     Top = 72
-    Width = 209
+    Width = 194
     Height = 22
     Margins.Left = 4
     Margins.Top = 4
@@ -328,5 +329,22 @@ inherited DACControlEditFrame: TDACControlEditFrame
     Margins.Bottom = 4
     Caption = #1047#1086#1085#1099' '#1088#1077#1075#1091#1083#1080#1088#1086#1074#1072#1085#1080#1103
     TabOrder = 2
+  end
+  object UsePrevValsCB: TCheckBox
+    Left = 16
+    Top = 112
+    Width = 194
+    Height = 22
+    Hint = #1048#1089#1087#1086#1083#1100#1079#1086#1074#1072#1090#1100' '#1079#1085#1072#1095#1077#1085#1080#1103' '#1080#1079' '#1087#1088#1077#1076#1099#1076#1091#1097#1077#1081' '#1079#1086#1085#1099
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
+    Caption = #1043#1080#1089#1090#1077#1088#1077#1079#1080#1089#1085#1072#1103' '#1079#1086#1085#1072
+    Checked = True
+    ParentShowHint = False
+    ShowHint = True
+    State = cbChecked
+    TabOrder = 3
   end
 end

@@ -217,8 +217,9 @@ type
     // гистерезис пока только для дефолтной зоны в процентах (10% в конструкторе)
     fHist,
     fHistVal:double;
-
   public
+    // использует теги предыдущей зоны
+    fUsePrevZoneVals:boolean;
     defaultZone: boolean;
     // теги ZonePair
     tags: tlist;
@@ -2497,6 +2498,9 @@ begin
   xmlNode.WriteAttributeFloat('PWM_T_OFF', fPWM_Toff);
   xmlNode.WriteAttributeInteger('ZoneCount', m_ZoneList.Count);
   xmlNode.WriteAttributeBool('Zones_Enabled', m_zones_enabled);
+  z:=m_ZoneList.defaultZone;
+  if z<>nil then
+    xmlNode.WriteAttributeBool('Zones_UsePrevVal', z.fUsePrevZoneVals);
   begin
     pars := tstringlist.create;
     for i := 0 to m_ZoneList.Count - 1 do
@@ -2535,6 +2539,9 @@ begin
   fPWM_Toff := xmlNode.ReadAttributeFloat('PWM_T_OFF', 0);
   zCount := xmlNode.ReadAttributeInteger('ZoneCount', 1);
   m_zones_enabled := xmlNode.ReadAttributeBool('Zones_Enabled', false);
+  z:=m_ZoneList.defaultZone;
+  if z<>nil then
+    z.fUsePrevZoneVals:=xmlNode.ReadAttributeBool('Zones_UsePrevVal', true);
   i := 0;
   m_ZoneList.clearZones;
   while zCount > 0 do
@@ -5639,24 +5646,31 @@ begin
   end;
   if z1=defaultZone then
   begin
-    if activeZone<>z1 then
+    if z1.fUsePrevZoneVals then
     begin
-      z1.fHistVal:=z1.fHist*activeZone.ftol/100;
-    end;
-    if z1.fHistVal>0 then
-    begin
-      if z1.fHistVal>err then
-      begin
-        z1.Apply;
-        activeZone:=z1;
-      end;
+
     end
     else
     begin
-      if z1.fHistVal<err then
+      if activeZone<>z1 then
       begin
-        z1.Apply;
-        activeZone:=z1;
+        z1.fHistVal:=z1.fHist*activeZone.ftol/100;
+      end;
+      if z1.fHistVal>0 then
+      begin
+        if z1.fHistVal>err then
+        begin
+          z1.Apply;
+          activeZone:=z1;
+        end;
+      end
+      else
+      begin
+        if z1.fHistVal<err then
+        begin
+          z1.Apply;
+          activeZone:=z1;
+        end;
       end;
     end;
   end

@@ -952,7 +952,7 @@ object ControlDeskFrm: TControlDeskFrm
       Caption = #1058#1072#1073#1083#1080#1094#1072' '#1088#1077#1078#1080#1084#1086#1074
       ImageIndex = 1
       object Splitter3: TSplitter
-        Left = 557
+        Left = 1056
         Top = 0
         Height = 638
         Align = alRight
@@ -1012,18 +1012,19 @@ object ControlDeskFrm: TControlDeskFrm
         end
       end
       object RightGB: TGroupBox
-        Left = 560
+        Left = 557
         Top = 0
         Width = 499
         Height = 638
         Align = alRight
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1072
         TabOrder = 1
+        ExplicitLeft = 560
         object ControlPropSG: TStringGrid
           Left = 2
-          Top = 18
+          Top = 81
           Width = 495
-          Height = 618
+          Height = 555
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -1042,6 +1043,44 @@ object ControlDeskFrm: TControlDeskFrm
           TabOrder = 0
           OnDblClick = ControlPropSGDblClick
           OnSetEditText = TableModeSGSetEditText
+          ExplicitLeft = 0
+          ExplicitTop = 75
+        end
+        object Panel1: TPanel
+          Left = 2
+          Top = 18
+          Width = 495
+          Height = 63
+          Align = alTop
+          TabOrder = 1
+          ExplicitLeft = 3
+          ExplicitTop = 11
+          object ControlPropE: TEdit
+            Left = 14
+            Top = 18
+            Width = 154
+            Height = 32
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -20
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+            TabOrder = 0
+          end
+          object ModePropE: TEdit
+            Left = 222
+            Top = 17
+            Width = 154
+            Height = 32
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -20
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+            TabOrder = 1
+          end
         end
       end
     end
@@ -1594,5 +1633,9 @@ object ControlDeskFrm: TControlDeskFrm
       E019CF9FF803C01F8000000100000000E023C21FFC07E03FC000000300000000
       F0CFF03FFE0FF07FE00000070000000000000000000000000000000000000000
       000000000000}
+  end
+  object OpenDialog1: TOpenDialog
+    Left = 360
+    Top = 184
   end
 end
