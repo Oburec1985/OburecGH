@@ -80,7 +80,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
       object FilterEdit: TEdit
         Left = 5
         Top = 8
-        Width = 387
+        Width = 388
         Height = 25
         Margins.Left = 4
         Margins.Top = 4
@@ -93,7 +93,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
       object FrmTagPropValueEdit: TEdit
         Left = 145
         Top = 76
-        Width = 230
+        Width = 231
         Height = 25
         Margins.Left = 4
         Margins.Top = 4
@@ -565,8 +565,6 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
       Margins.Bottom = 4
       Align = alClient
       TabOrder = 1
-      ExplicitLeft = -4
-      ExplicitTop = 363
       object ModesGB: TGroupBox
         Left = 1
         Top = 1
@@ -790,7 +788,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             OnClick = UpdatePObjBtnClick
           end
           object LoadFromExcelBtn: TSpeedButton
-            Left = 157
+            Left = 156
             Top = 8
             Width = 54
             Height = 47
@@ -907,9 +905,9 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             OnClick = LoadFromExcelBtnClick
           end
           object SaveToExcelBtn: TSpeedButton
-            Left = 219
+            Left = 218
             Top = 8
-            Width = 54
+            Width = 55
             Height = 47
             Hint = #1057#1086#1093#1088#1072#1085#1080#1090#1100' '#1074' Excel'
             Margins.Left = 4
@@ -1157,6 +1155,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
+            ExplicitLeft = 4
             ExplicitTop = 28
             ExplicitWidth = 647
             ExplicitHeight = 397
@@ -1248,36 +1247,38 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            ExplicitTop = 28
-            ExplicitHeight = 296
+            ExplicitLeft = 4
+            ExplicitTop = 24
+            ExplicitWidth = 548
+            ExplicitHeight = 300
             inherited Splitter1: TSplitter
               Left = 252
               Width = 7
-              Height = 296
+              Height = 300
               Margins.Left = 4
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 347
+              ExplicitLeft = 421
               ExplicitTop = 0
               ExplicitWidth = 7
-              ExplicitHeight = 391
+              ExplicitHeight = 387
             end
             inherited ModeChannelsGB: TGroupBox
               Left = 259
               Width = 289
-              Height = 296
+              Height = 300
               Margins.Left = 4
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
               ExplicitLeft = 259
               ExplicitWidth = 289
-              ExplicitHeight = 296
+              ExplicitHeight = 300
               inherited ChannelsLV: TBtnListView
                 Top = 19
                 Width = 285
-                Height = 275
+                Height = 279
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1293,19 +1294,19 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
                   end>
                 ExplicitTop = 19
                 ExplicitWidth = 285
-                ExplicitHeight = 275
+                ExplicitHeight = 279
               end
             end
             inherited ModePanel: TPanel
               Width = 252
-              Height = 296
+              Height = 300
               Margins.Left = 4
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
               Constraints.MinWidth = 251
               ExplicitWidth = 252
-              ExplicitHeight = 296
+              ExplicitHeight = 300
               inherited ModeNameLabel: TLabel
                 Left = 4
                 Top = 3

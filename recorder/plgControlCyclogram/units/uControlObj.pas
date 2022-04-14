@@ -11,6 +11,7 @@ uses
   ucommontypes,
   pluginclass, plugin, u2dMath, uRCFunc, PathUtils,
   uPathMng,
+  IniFiles,
   uEventTypes,
   uAlarms,
   uSetList,
@@ -70,7 +71,6 @@ type
     // частота счетчика замера времени
     m_Freq: int64;
   private
-
     // происходит при останове работы цыклограммы режимво
     procedure UpdateLastState;
     // сохранение состояния циклограммы режимов и конфигураций
@@ -128,6 +128,9 @@ type
     // включено свойство EnableOnStart
     procedure EnableTrigs;
   public
+    // сохраняем момент останова
+    procedure SaveState;
+    procedure LoadState;
     // сбросить состояние всех триггеров
     procedure DropTrigs;
     function getTrig(i: integer): crtrig; overload;
@@ -502,7 +505,6 @@ type
     procedure DeleteCS;
     procedure entercs;
     procedure exitcs;
-    function CreateStateTag: itag;
     function getactive: boolean; override;
     // все режимы были не применены
     procedure DropModesApplyedState;
@@ -541,6 +543,8 @@ type
     // Если пришел один из триггерных сигналов переключиться на другой режим
     function SelectModeByTrig: cModeObj;
   public
+    // вызывается сейчас при загрузке из Эксель или XML , что не очень правильно, правильнее было б при смене имени программы
+    function CreateStateTag: itag;
     procedure ShowComponent(node: pointer; component: tcomponent); override;
     procedure DoLincParent; override;
   public
@@ -1244,6 +1248,7 @@ begin
         end;
       end;
     end;
+    SaveState;
   end;
   if state = c_Pause then
   begin
@@ -1991,6 +1996,94 @@ begin
   QueryPerformanceFrequency(m_Freq);
   // предусмотреть защиту от переполнения таймера
   ft := 0;
+end;
+
+procedure cControlMng.LoadState;
+var
+  ifile:tinifile;
+  p:cProgramObj;
+  m:cModeObj;
+  str:string;
+  I, c, j: Integer;
+  l:tlist;
+begin
+  ifile:=tinifile.create(extractfiledir(m_prevDir)+'\'+'CyclogramState.ini');
+  //ifile.WriteInteger('Main','State', g_conmng.state);
+  str:='';
+  c:=ifile.ReadInteger('Main','ActiveProgCount', 0);
+  for I := 0 to c - 1 do
+  begin
+    str:=ifile.ReadString('Prog_'+inttostr(i),'PName', '');
+    if str='' then
+    begin
+      break;
+    end;
+    p:=g_conmng.getProgram(str);
+    if p<>nil then
+    begin
+      p.active:=True;
+    end;
+    str:=ifile.ReadString('Prog_'+inttostr(i),'MName', '');
+    if str='' then
+    begin
+      continue;
+    end;
+    m:=p.getMode(str);
+    m.active:=true;
+    p.fModeT:=ifile.ReadFloat('Prog_'+inttostr(i),'MTime', 0);
+    if m<>nil then
+    begin
+      for j := 0 to p.modeCount - 1 do
+      begin
+        m:=p.getMode(j);
+        if m=p.ActiveMode then
+        begin
+          p.fProgT:=p.fProgT+p.fModeT;
+        end
+        else
+          p.fProgT:=p.fProgT+m.ModeLength;
+      end;
+    end;
+  end;
+  ifile.Destroy;
+end;
+
+procedure cControlMng.SaveState;
+var
+  ifile:tinifile;
+  p:cProgramObj;
+  m:cModeObj;
+  str:string;
+  I: Integer;
+  l:tlist;
+begin
+  ifile:=tinifile.create(extractfiledir(m_prevDir)+'\'+'CyclogramState.ini');
+  //ifile.WriteInteger('Main','State', g_conmng.state);
+  str:='';
+  l:=tlist.Create;
+  for I := 0 to g_conmng.ProgramCount - 1 do
+  begin
+    p:=g_conmng.getProgram(i);
+    if p.active then
+    begin
+      l.Add(p);
+    end;
+  end;
+  ifile.WriteInteger('Main','ActiveProgCount', l.Count);
+  for I := 0 to L.Count - 1 do
+  begin
+    p:=cProgramObj(l.Items[i]);
+    ifile.WriteString('Prog_'+inttostr(i),'PName', p.name);
+    m:=p.ActiveMode;
+    if m<>nil then
+    begin
+      ifile.WriteString('Prog_'+inttostr(i),'MName', m.name);
+      // время которое программа простояла на режиме
+      ifile.WriteFloat('Prog_'+inttostr(i),'MTime', p.fModeT);
+    end;
+  end;
+  l.Destroy;
+  ifile.Destroy;
 end;
 
 procedure cControlMng.StopControls;
@@ -5208,7 +5301,7 @@ end;
 
 procedure cTask.setParam(key, str:string);
 var
-  cstr: uCommonmath.cString;
+  cstr: cString;
 begin
   cstr:=GetParsObj(m_params,key);
   if cstr<>nil then

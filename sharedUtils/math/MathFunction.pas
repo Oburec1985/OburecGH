@@ -406,6 +406,22 @@ begin
   end;
   str := floattostr(val);
   len := length(str);
+
+  sep_pos:=0;
+  for i:=1 to len do
+  begin
+    if (str[i] = '.') or (str[i] = ',') then
+    begin
+      sep_pos:=i;
+      break;
+    end;
+  end;
+  if sep_pos=0 then
+  begin
+    result:=str;
+    exit;
+  end;
+
   if len <= sign then
   begin
     result := str;
@@ -443,17 +459,6 @@ begin
     end;
     exit;
   end;
-  sep_pos:=0;
-  for i:=1 to len do
-  begin
-    if (str[i] = '.') or (str[i] = ',') then
-    begin
-      sep_pos:=i;
-      break;
-    end;
-  end;
-  if sep_pos=0 then
-    result:=dest;
   // увеличиваем число значащих цифр если первый минус
   if str[1] = '-' then
   begin

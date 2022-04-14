@@ -143,6 +143,8 @@ var
 procedure ShowProgramsTV(tv: TVTree; mng: cControlMng; image: TImageList);
 
 implementation
+uses
+  uControlDeskFrm;
 
 {$R *.dfm}
 { TControlCyclogramEditFrm }
@@ -702,7 +704,20 @@ begin
     setCell(1, r, c, p.name);
     r:=1; c:=2;
     setCell(1, r, c, 'Режимы');
-    setCell(1, r+1, c, 'Длительность');
+    if ControlDeskFrm<>nil then
+    begin
+      ind:=ControlDeskFrm.TimeUnitsCB.ItemIndex;
+      case ControlDeskFrm.TimeUnitsCB.ItemIndex of
+        0: setCell(1, r+1, c, 'Длительность, сек');
+        1: setCell(1, r+1, c, 'Длительность, мин');
+        2: setCell(1, r+1, c, 'Длительность, час');
+      end;
+    end
+    else
+    begin
+      ind:=0;
+      setCell(1, r+1, c, 'Длительность, сек');
+    end;
     setCell(1, r+2, c, 'Регуляторы');
     setCell(1, r+2, c+1, 'Задание');
     setCell(1, r+2, c+2, 'ОС');
@@ -730,7 +745,8 @@ begin
     begin
       m:=p.getMode(i);
       setCell(1, r, c+i*6, m.name);
-      setCell(1, r+1, c+i*6, m.modelength);
+
+      setCell(1, r+1, c+i*6, SecToTime (m.modelength, ind));
       setCell(1, r+2, c+i*6, 'Задание');
       setCell(1, r+2, c+i*6+1, 'ШИМ');
       setCell(1, r+2, c+i*6+2, 'Thi_ШИМ');
@@ -781,9 +797,10 @@ end;
 
 procedure TControlCyclogramEditFrm.LoadFromExcelBtnClick(Sender: TObject);
 var
+  list:tlist;
   fname, str, str1, params:string;
   sh, rngObj: olevariant;
-  i,j, index, lastrow, lastcol, modeInd:integer;
+  i,j, index, lastrow, lastcol, modeInd, timeUnits:integer;
   b:boolean;
   con:cControlObj;
   p:cProgramObj;
@@ -812,8 +829,9 @@ begin
         p:=cProgramObj.create;
         p.name:='Prog_01';
         p.RepeatCount:=1;
-        p.m_StartOnPlay:=false;
+        p.m_StartOnPlay:=true;
         p.m_enableOnStart:=true;
+        p.CreateStateTag;
         g_conmng.Add(p);
       end
       else
@@ -821,16 +839,21 @@ begin
         p.removeOwnControls;
         p.ClearModes;
       end;
+      list:=tlist.create;
       // загружаем контролы
       for I := 4 to LastRow do
       begin
         str:=sh.Cells[i, 2];
         if str='' then
+        begin
           continue;
+          //list.Add(nil);
+        end;
         con:=g_conmng.getControlObj(str);
         if con=nil then
         begin
           con:=g_conmng.createControl(str, cDacControl.ClassName);
+          list.Add(con);
           // установка задания
           str:=sh.Cells[i, 3];
           cDacControl(con).dac:=getTagByName(str);
@@ -860,23 +883,50 @@ begin
       end;
       // проход по режимам
       modeInd:=0;
+
+      str:=sh.Cells[2,2];
+      if pos('сек', str)>0 then
+      begin
+        timeUnits:=0;
+      end
+      else
+      begin
+        if pos('мин', str)>0 then
+        begin
+          timeUnits:=1;
+        end
+        else
+        begin
+          if pos('час', str)>0 then
+          begin
+            timeUnits:=2;
+          end
+          else
+          begin
+            timeUnits:=0;
+          end;
+        end;
+      end;
+
       while 6+modeind*6<lastCol do
       begin
         // имя режима
         str:=sh.Cells[1,6+modeInd*6];
+        if str='' then break;
         m:=cModeObj.create;
         m.name:=str;
         p.addmode(m);
         // длительность режима
         str:=sh.Cells[2,6+modeInd*6];
         if str<>'' then
-          m.ModeLength:=StrToFloat(str);
+          m.ModeLength:=toSec(StrToFloat(str), timeUnits);
         m.Infinity:=false;
         m.CheckThreshold:=false;
         cmodeobj(m).CheckLength:=0;
         for j := 0 to p.ControlCount - 1 do
         begin
-          con:=p.getOwnControl(j);
+          //con:=p.getOwnControl(j);
+          con:=cControlObj(list.Items[j]);
           params:='';
           // задание контролу
           str:=sh.Cells[j+4,6+modeind*6];
@@ -925,6 +975,7 @@ begin
         end;
         inc(modeind);
       end;
+      list.destroy;
     end;
     g_conmng.configChanged := true;
     ShowProperties;

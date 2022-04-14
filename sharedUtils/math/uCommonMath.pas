@@ -130,6 +130,9 @@ function StrtoBoolExt(str:string):boolean;
 function decI64(i1,i2:int64):int64;
 function LowCase(str: string): string;
 
+function toSec(t: double; ind:integer): double;
+function SecToTime(t: double; ind:integer): double;
+
 
 const
 
@@ -161,6 +164,26 @@ const
     cl3DLight, clWindow, clWindowFrame, clWindowText);
 
 implementation
+
+
+function toSec(t: double; ind:integer): double;
+begin
+  case ind of
+    0: result:=t; //sec
+    1: result:=t*60; //min
+    2: result:=t*3600; //hour
+  end;
+end;
+
+function SecToTime(t: double; ind:integer): double;
+begin
+  case ind of
+    0: result:=t; //sec
+    1: result:=t/60;           //min
+    2: result:=t/3600;           //hour
+  end;
+end;
+
 
 function LowCase(str: string): string;
 var

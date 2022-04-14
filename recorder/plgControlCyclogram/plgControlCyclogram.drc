@@ -1283,8 +1283,8 @@ END
 /* forms\uPhaseFrame.dfm */
 /* forms\uCounterAlgFrame.dfm */
 /* forms\uAlgFrm.dfm */
-/* forms\uControlCyclogramEditFrm.dfm */
 /* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uControlDeskFrm.dfm */
+/* forms\uControlCyclogramEditFrm.dfm */
 /* forms\uMBaseControl.dfm */
 /* ..\SharedRUnits\uFrmSync.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditChartObjFrame.dfm */

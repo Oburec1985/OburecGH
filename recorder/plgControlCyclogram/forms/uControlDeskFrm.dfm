@@ -24,7 +24,7 @@ object ControlDeskFrm: TControlDeskFrm
     Left = 0
     Top = 0
     Width = 1067
-    Height = 167
+    Height = 188
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -44,40 +44,6 @@ object ControlDeskFrm: TControlDeskFrm
     ParentCtl3D = False
     ParentFont = False
     TabOrder = 0
-    object ModeTimeLabel: TLabel
-      Left = 441
-      Top = 20
-      Width = 82
-      Height = 24
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
-      Caption = #1056#1077#1078#1080#1084', c'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -20
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
-    end
-    object ComTimeLabel: TLabel
-      Left = 780
-      Top = 20
-      Width = 140
-      Height = 24
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
-      Caption = #1054#1073#1097#1077#1077' '#1074#1088#1077#1084#1103',c'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -20
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
-    end
     object InfoLabel: TLabel
       Left = 967
       Top = 20
@@ -96,26 +62,9 @@ object ControlDeskFrm: TControlDeskFrm
       ParentFont = False
       Visible = False
     end
-    object Label1: TLabel
-      Left = 207
-      Top = 20
-      Width = 207
-      Height = 24
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
-      Caption = #1042#1088#1077#1084#1103' '#1085#1072' '#1087#1088#1086#1075#1088#1072#1084#1084#1077',c'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -20
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
-    end
     object Label2: TLabel
-      Left = 632
-      Top = 19
+      Left = 555
+      Top = 39
       Width = 76
       Height = 24
       Margins.Left = 4
@@ -131,8 +80,8 @@ object ControlDeskFrm: TControlDeskFrm
       ParentFont = False
     end
     object CheckLengthLabel: TLabel
-      Left = 441
-      Top = 95
+      Left = 685
+      Top = 39
       Width = 89
       Height = 24
       Margins.Left = 4
@@ -147,53 +96,12 @@ object ControlDeskFrm: TControlDeskFrm
       Font.Style = []
       ParentFont = False
     end
-    object ModeTimeEdit: TEdit
-      Left = 441
-      Top = 52
-      Width = 146
-      Height = 33
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -22
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
-      ReadOnly = True
-      TabOrder = 0
-      Text = '0'
-    end
-    object ComTimeEdit: TEdit
-      Left = 780
-      Top = 51
-      Width = 131
-      Height = 33
-      Hint = #1042#1088#1077#1084#1103' '#1085#1072' '#1080#1089#1087#1099#1090#1072#1085#1080#1080
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -22
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
-      ParentShowHint = False
-      ReadOnly = True
-      ShowHint = False
-      TabOrder = 1
-      Text = '0'
-    end
     object PlayPanel: TPanel
       Left = 9
       Top = 39
       Width = 60
       Height = 58
-      TabOrder = 2
+      TabOrder = 0
       object PlayBtn: TSpeedButton
         Left = 7
         Top = 5
@@ -316,7 +224,7 @@ object ControlDeskFrm: TControlDeskFrm
       Top = 39
       Width = 62
       Height = 58
-      TabOrder = 3
+      TabOrder = 1
       object PauseBtn: TSpeedButton
         Left = 9
         Top = 5
@@ -439,7 +347,7 @@ object ControlDeskFrm: TControlDeskFrm
       Top = 39
       Width = 61
       Height = 58
-      TabOrder = 4
+      TabOrder = 2
       object StopBtn: TSpeedButton
         Left = 7
         Top = 5
@@ -557,28 +465,9 @@ object ControlDeskFrm: TControlDeskFrm
         OnClick = StopBtnClick
       end
     end
-    object ProgTimeEdit: TEdit
-      Left = 207
-      Top = 52
-      Width = 172
-      Height = 33
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -22
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
-      ReadOnly = True
-      TabOrder = 5
-      Text = '0'
-    end
     object ModePauseTimeEdit: TEdit
-      Left = 632
-      Top = 51
+      Left = 555
+      Top = 69
       Width = 107
       Height = 33
       Margins.Left = 4
@@ -592,7 +481,7 @@ object ControlDeskFrm: TControlDeskFrm
       Font.Style = []
       ParentFont = False
       ReadOnly = True
-      TabOrder = 6
+      TabOrder = 3
       Text = '0'
     end
     object CfgPanel: TPanel
@@ -600,7 +489,7 @@ object ControlDeskFrm: TControlDeskFrm
       Top = 39
       Width = 61
       Height = 58
-      TabOrder = 7
+      TabOrder = 4
       object CfgBtn: TSpeedButton
         Left = 7
         Top = 5
@@ -719,9 +608,9 @@ object ControlDeskFrm: TControlDeskFrm
       end
     end
     object CheckLength: TEdit
-      Left = 441
-      Top = 125
-      Width = 146
+      Left = 685
+      Top = 69
+      Width = 135
       Height = 33
       Margins.Left = 4
       Margins.Top = 4
@@ -734,25 +623,173 @@ object ControlDeskFrm: TControlDeskFrm
       Font.Style = []
       ParentFont = False
       ReadOnly = True
-      TabOrder = 8
+      TabOrder = 5
       Text = '0'
+    end
+    object GroupBox3: TGroupBox
+      Left = 219
+      Top = 20
+      Width = 329
+      Height = 155
+      Caption = #1042#1088#1077#1084#1103':'
+      TabOrder = 6
+      object ComTimeLabel: TLabel
+        Left = 169
+        Top = 94
+        Width = 55
+        Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Caption = #1054#1073#1097#1077#1077
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -18
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+      end
+      object ModeTimeLabel: TLabel
+        Left = 15
+        Top = 94
+        Width = 90
+        Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Caption = #1053#1072' '#1088#1077#1078#1080#1084#1077
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -18
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+      end
+      object Label1: TLabel
+        Left = 17
+        Top = 28
+        Width = 116
+        Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Caption = #1053#1072' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -18
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+      end
+      object ComTimeEdit: TEdit
+        Left = 169
+        Top = 117
+        Width = 140
+        Height = 33
+        Hint = #1042#1088#1077#1084#1103' '#1085#1072' '#1080#1089#1087#1099#1090#1072#1085#1080#1080
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -22
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        ParentShowHint = False
+        ReadOnly = True
+        ShowHint = False
+        TabOrder = 0
+        Text = '0'
+      end
+      object ModeTimeEdit: TEdit
+        Left = 15
+        Top = 117
+        Width = 146
+        Height = 33
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -22
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        ReadOnly = True
+        TabOrder = 1
+        Text = '0'
+      end
+      object ProgTimeEdit: TEdit
+        Left = 16
+        Top = 55
+        Width = 145
+        Height = 33
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -22
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        ReadOnly = True
+        TabOrder = 2
+        Text = '0'
+      end
+      object TimeUnitsCB: TComboBox
+        Left = 169
+        Top = 55
+        Width = 140
+        Height = 32
+        ItemIndex = 0
+        TabOrder = 3
+        Text = #1057#1077#1082#1091#1085#1076#1099
+        OnChange = TimeUnitsCBChange
+        OnDblClick = TimeUnitsCBDblClick
+        Items.Strings = (
+          #1057#1077#1082#1091#1085#1076#1099
+          #1052#1080#1085#1091#1090#1099
+          #1063#1072#1089#1099)
+      end
+    end
+    object ContinueCB: TCheckBox
+      Left = 16
+      Top = 119
+      Width = 176
+      Height = 17
+      Hint = #1055#1088#1086#1076#1086#1083#1078#1072#1090#1100' '#1088#1072#1073#1086#1090#1091' '#1089' '#1087#1086#1089#1083'. '#1089#1086#1089#1090#1086#1103#1085#1080#1103
+      Caption = #1055#1088#1086#1076#1086#1083#1078#1080#1090#1100
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 7
     end
   end
   object PageControl1: TPageControl
     Left = 0
-    Top = 167
+    Top = 188
     Width = 1067
-    Height = 669
+    Height = 648
     ActivePage = TabSheet2
     Align = alClient
     TabOrder = 1
+    ExplicitTop = 167
+    ExplicitHeight = 669
     object TabSheet1: TTabSheet
       Caption = #1054#1073#1097#1080#1081' '#1074#1080#1076
+      ExplicitHeight = 638
       object Splitter2: TSplitter
         Left = 732
         Top = 0
         Width = 4
-        Height = 638
+        Height = 617
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -760,14 +797,14 @@ object ControlDeskFrm: TControlDeskFrm
         Align = alRight
         Color = clBlack
         ParentColor = False
-        ExplicitLeft = 742
-        ExplicitTop = -4
+        ExplicitLeft = 729
+        ExplicitHeight = 628
       end
       object GroupBox1: TGroupBox
         Left = 411
         Top = 0
         Width = 321
-        Height = 638
+        Height = 617
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -786,6 +823,7 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 0
+        ExplicitHeight = 638
         object ModePanel: TPanel
           Left = 1
           Top = 25
@@ -827,7 +865,7 @@ object ControlDeskFrm: TControlDeskFrm
           Left = 1
           Top = 109
           Width = 319
-          Height = 528
+          Height = 507
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -844,6 +882,7 @@ object ControlDeskFrm: TControlDeskFrm
           TabOrder = 2
           OnDblClick = ProgramSGDblClick
           OnDrawCell = ProgramSGDrawCell
+          ExplicitHeight = 528
           RowHeights = (
             32
             32
@@ -856,7 +895,7 @@ object ControlDeskFrm: TControlDeskFrm
         Left = 0
         Top = 0
         Width = 411
-        Height = 638
+        Height = 617
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -875,11 +914,12 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 1
+        ExplicitHeight = 638
         object ControlSG: TStringGrid
           Left = 1
           Top = 25
           Width = 409
-          Height = 612
+          Height = 591
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -900,13 +940,14 @@ object ControlDeskFrm: TControlDeskFrm
           OnDrawCell = ControlSGDrawCell
           OnMouseDown = ControlSGMouseDown
           OnSetEditText = ControlSGSetEditText
+          ExplicitHeight = 612
         end
       end
       object GroupBox2: TGroupBox
         Left = 736
         Top = 0
         Width = 323
-        Height = 638
+        Height = 617
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -925,11 +966,12 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 2
+        ExplicitHeight = 638
         object TrigSG: TStringGrid
           Left = 1
           Top = 25
           Width = 321
-          Height = 612
+          Height = 591
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -945,27 +987,29 @@ object ControlDeskFrm: TControlDeskFrm
           ParentFont = False
           TabOrder = 0
           OnDrawCell = TrigSGDrawCell
+          ExplicitHeight = 612
         end
       end
     end
     object TabSheet2: TTabSheet
       Caption = #1058#1072#1073#1083#1080#1094#1072' '#1088#1077#1078#1080#1084#1086#1074
       ImageIndex = 1
+      ExplicitHeight = 638
       object Splitter3: TSplitter
         Left = 1056
         Top = 0
-        Height = 638
+        Height = 617
         Align = alRight
         Color = clBackground
         ParentColor = False
-        ExplicitLeft = 548
-        ExplicitTop = 3
+        ExplicitLeft = 1053
+        ExplicitHeight = 633
       end
       object TableModeGB: TGroupBox
         Left = 0
         Top = 0
-        Width = 557
-        Height = 638
+        Width = 558
+        Height = 617
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -984,11 +1028,12 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 0
+        ExplicitHeight = 638
         object TableModeSG: TStringGrid
           Left = 1
           Top = 25
-          Width = 555
-          Height = 612
+          Width = 556
+          Height = 591
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -1009,22 +1054,23 @@ object ControlDeskFrm: TControlDeskFrm
           OnDblClick = TableModeSGDblClick
           OnDrawCell = TableModeSGDrawCell
           OnSetEditText = TableModeSGSetEditText
+          ExplicitHeight = 612
         end
       end
       object RightGB: TGroupBox
-        Left = 557
+        Left = 558
         Top = 0
-        Width = 499
-        Height = 638
+        Width = 498
+        Height = 617
         Align = alRight
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1072
         TabOrder = 1
-        ExplicitLeft = 560
+        ExplicitHeight = 638
         object ControlPropSG: TStringGrid
           Left = 2
-          Top = 81
-          Width = 495
-          Height = 555
+          Top = 80
+          Width = 494
+          Height = 535
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -1043,22 +1089,19 @@ object ControlDeskFrm: TControlDeskFrm
           TabOrder = 0
           OnDblClick = ControlPropSGDblClick
           OnSetEditText = TableModeSGSetEditText
-          ExplicitLeft = 0
-          ExplicitTop = 75
+          ExplicitHeight = 556
         end
         object Panel1: TPanel
           Left = 2
           Top = 18
-          Width = 495
-          Height = 63
+          Width = 494
+          Height = 62
           Align = alTop
           TabOrder = 1
-          ExplicitLeft = 3
-          ExplicitTop = 11
           object ControlPropE: TEdit
-            Left = 14
-            Top = 18
-            Width = 154
+            Left = 15
+            Top = 19
+            Width = 153
             Height = 32
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
@@ -1069,9 +1112,9 @@ object ControlDeskFrm: TControlDeskFrm
             TabOrder = 0
           end
           object ModePropE: TEdit
-            Left = 222
+            Left = 223
             Top = 17
-            Width = 154
+            Width = 153
             Height = 32
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
@@ -1088,16 +1131,16 @@ object ControlDeskFrm: TControlDeskFrm
   object Timer1: TTimer
     Enabled = False
     OnTimer = Timer1Timer
-    Left = 952
-    Top = 104
+    Left = 896
+    Top = 56
   end
   object ImageListBtnStates: TImageList
     BlendColor = clBtnFace
     BkColor = 15790320
     Height = 32
     Width = 32
-    Left = 776
-    Top = 104
+    Left = 896
+    Top = 128
     Bitmap = {
       494C010103000500040020002000F0F0F000FF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000002000000001002000000000000040
@@ -1635,7 +1678,7 @@ object ControlDeskFrm: TControlDeskFrm
       000000000000}
   end
   object OpenDialog1: TOpenDialog
-    Left = 360
-    Top = 184
+    Left = 968
+    Top = 120
   end
 end
