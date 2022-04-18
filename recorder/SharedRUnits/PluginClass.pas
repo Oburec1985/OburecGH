@@ -178,7 +178,7 @@ procedure CallPlgEvents(etype: cardinal); overload;
 procedure CallPlgEvents(etype: cardinal; Sender: TObject); overload;
 function GetRCStateChange: TRCstateChange;
 procedure logMessage(str: string);
-procedure LogRecorderMessage(str: string);
+procedure LogRecorderMessage(str: string; log:boolean);
 
 
 var
@@ -198,6 +198,7 @@ var
 
 const
   c_TagProp_nullpoly = 'nullpoly';
+  c_Log_PlgClass = true;
 
 implementation
 
@@ -460,8 +461,9 @@ begin
   end;
 end;
 
-procedure LogRecorderMessage(str: string);
+procedure LogRecorderMessage(str: string; log:boolean);
 begin
+  if not log then exit;
   // m_journal.AddEvent(pwidechar(str[1]), 0, 1, 0);
   if g_logFile <> nil then
     g_logFile.addInfoMes(str+' Thread: '+IntToStr(GetCurrentThreadId));
@@ -502,9 +504,9 @@ var
   val: OleVariant;
   // f:icustomformFactory;
 begin
-  LogRecorderMessage('Создание пользовательского интерфейса плагина...TExtRecorderPack');
+  LogRecorderMessage('Создание пользовательского интерфейса плагина...TExtRecorderPack', c_Log_PlgClass);
   m_UIThreadID:=GetCurrentThreadId;
-  LogRecorderMessage('UIThreadID: '+inttostr(m_UIThreadID)+'; MainThreadID:' + inttostr(MainThreadID));
+  LogRecorderMessage('UIThreadID: '+inttostr(m_UIThreadID)+'; MainThreadID:' + inttostr(MainThreadID), c_Log_PlgClass);
 
   FIRecorder.GetProperty(RCPROP_CONFIGNAME, val);
   fConfigName := ExtractFileName(val);
@@ -557,7 +559,7 @@ begin
           begin
             if pMsgInfo.uID = m_BtnTagPropPageID then
               LogRecorderMessage(
-                'Не удалось получить изображение кнопки дополнительной панели рекордера.');
+                'Не удалось получить изображение кнопки дополнительной панели рекордера.', false);
 
           end;
         end;
@@ -748,6 +750,7 @@ function TExtRecorderPack.Notify(const dwCommand: dword;
 var
   tags: DynTagsArray;
 begin
+
   result := ProcessNotify(dwCommand, dwData);
   case dwCommand of
 
@@ -804,8 +807,10 @@ begin
       end;
     PN_UPDATEDATA:
       begin
+        LogRecorderMessage('PluginClass.Notify Enter PN_UPDATEDATA',false);
         // frmTestSettings.RecorderGotData;
         EList.CallAllEvents(c_RUpdateData);
+        LogRecorderMessage('PluginClass.Notify Exit PN_UPDATEDATA', false);
         result := true;
       end
     else

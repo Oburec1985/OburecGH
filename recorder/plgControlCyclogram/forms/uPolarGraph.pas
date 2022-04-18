@@ -435,7 +435,7 @@ end;
 
 destructor TPolarGraph.destroy;
 begin
-  LogRecorderMessage('TPolarGraph.destroy_enter');
+  LogRecorderMessage('TPolarGraph.destroy_enter', false);
   clearGraphList;
   m_graphlist.Destroy;
   m_graphlist:=nil;
@@ -443,7 +443,7 @@ begin
   chart.Destroy;
   chart:=nil;
   inherited;
-  LogRecorderMessage('TPolarGraph.destroy_exit');
+  LogRecorderMessage('TPolarGraph.destroy_exit', false);
 end;
 
 procedure TPolarGraph.createevents;

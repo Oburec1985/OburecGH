@@ -46,6 +46,7 @@ uses
   iplgmngr,
   recorder,
   plugin,
+  uConfirmDlg,
   uMBaseControl;
 
 type
@@ -241,6 +242,8 @@ begin
 
   show:=false;
 
+  ConfirmFmr:=TConfirmFmr.Create(nil);
+
   ControlCyclogramEditFrm := TControlCyclogramEditFrm.create(nil);
   ControlCyclogramEditFrm.HandleNeeded;
   if show then
@@ -334,13 +337,19 @@ procedure destroyFormsRecorderUIThread(compMng: cCompMng);
 begin
 {$IfDef DEBUG}
   if true then exit;
-  LogRecorderMessage('destroyFormsRecorderUIThread_enter');
+  LogRecorderMessage('destroyFormsRecorderUIThread_enter', false);
   // удаление форм в UIThread
   // ВАЖНО!!! Первое изменение свойств формы имеет право происходить только в UIThread
   // Если произойдет в MainThread (например менять форму при загрузке объектов программы),
   // то будет ошибка при удалении формы Code Error 5 (с HandleAllocated не связано!)
 
   TExtRecorderPack(GPluginInstance).EList.active := false;
+
+  if ConfirmFmr<>nil then
+  begin
+    ConfirmFmr.free;
+    ConfirmFmr := nil;
+  end;
 
   if ControlCyclogramEditFrm<>nil then
   begin
@@ -415,7 +424,7 @@ begin
   end;
 
   g_delFrms:=true;
-  LogRecorderMessage('destroyFormsRecorderUIThread_exit');
+  LogRecorderMessage('destroyFormsRecorderUIThread_exit', false);
 {$EndIf}
 end;
 
@@ -435,7 +444,7 @@ end;
 
 procedure destroyForms(compMng: cCompMng);
 begin
-  LogRecorderMessage('destroyForms_enter');
+  LogRecorderMessage('destroyForms_enter', false);
   if GetCurrentThreadId = MainThreadID then
   begin
     if TagInfoEditFrm<>nil then
@@ -444,7 +453,7 @@ begin
       TagInfoEditFrm:=nil;
     end;
   end;
-  LogRecorderMessage('destroyForms_exit');
+  LogRecorderMessage('destroyForms_exit', false);
 end;
 
 procedure createComponents(compMng: cCompMng);
@@ -503,7 +512,7 @@ var
 begin
 // обьявле в начале проекта
 {$IfDef DEBUG}
-  LogRecorderMessage('destroyEngine_enter');
+  LogRecorderMessage('destroyEngine_enter', false);
   if g_conmng <> nil then
   begin
     //logRCInfo('c:\RCInfo1.txt');
@@ -517,7 +526,7 @@ begin
     g_algMng.destroy;
     g_algMng:=nil;
   end;
-  LogRecorderMessage('destroyEngine_exit');
+  LogRecorderMessage('destroyEngine_exit', false);
 {$EndIf}
 end;
 

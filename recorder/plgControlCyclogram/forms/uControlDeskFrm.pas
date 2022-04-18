@@ -14,6 +14,7 @@ uses
   uRTrig, uRCFunc,
   tags, ualarms,
   uSetList,
+  uConfirmDlg,
   PluginClass, ImgList;
 
 type
@@ -66,6 +67,7 @@ type
     Label1: TLabel;
     TimeUnitsCB: TComboBox;
     ContinueCB: TCheckBox;
+    ConfirmModeCB: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -96,7 +98,10 @@ type
     procedure TableModeSGClick(Sender: TObject);
     procedure TimeUnitsCBDblClick(Sender: TObject);
     procedure TimeUnitsCBChange(Sender: TObject);
+    procedure ControlPropSGSetEditText(Sender: TObject; ACol, ARow: Integer;
+      const Value: string);
   private
+    // Режим подтверждения перехода
     m_CurControl:cControlObj;
     m_CurMode:cModeObj;
     m_uiThread: integer;
@@ -111,6 +116,7 @@ type
     m_timerid, m_timerid_res: cardinal;
     m_tolArray:cDoubleList;
   protected
+    procedure ConfirmManualSwitchMode(m:tobject);
     function toSec(t:double):double;
     function SecToTime(t:double):double;
     procedure ModeTabSGEditCell(r,c:integer; val:string);
@@ -208,6 +214,7 @@ const
   IID_ControlFactory: TGuid = (D1: $ACCBBA41; D2: $AD43; D3: $44D6;
     D4: ($8E, $74, $36, $A3, $24, $34, $A1, $F0));
 
+  c_Log_ControlDeskFrm = true;
   c_ModeTable_headerSize = 2;
   c_ModeTable_headerCol = 2;
   c_headerSize = 1;
@@ -314,6 +321,7 @@ VAR
   mThread: integer;
 begin
   inherited;
+  m_Confirm:=true;
   m_counted := false;
   m_uiThread := GetCurrentThreadId;
   mThread := MainThreadID;
@@ -332,8 +340,7 @@ procedure TControlDeskFrm.CreateEvents;
 begin
   addplgevent('TControlDeskFrm_doAddObj', E_OnAddObj, doAddObj);
   addplgevent('TControlDeskFrm_doLoad', E_OnLoadObjMng, doLoad);
-  addplgevent('TControlDeskFrm_doChangeRState', c_RC_DoChangeRCState,
-    doChangeRState);
+  addplgevent('TControlDeskFrm_doChangeRState', c_RC_DoChangeRCState,  doChangeRState);
   addplgevent('TControlDeskFrm_doLeaveCfg', c_RC_LeaveCfg, doLeaveCfg);
   g_conmng.Events.AddEvent('TControlDeskFrm_doStopControlMng', E_OnStopControlMng, doShowStop);
 end;
@@ -361,7 +368,6 @@ var
   c:cControlObj;
   I: Integer;
 begin
-  logrecordermessage('TControlDeskFrm.doChangeRState_enter');
   if self <> nil then
   begin
     Rstate := RStatePlay;
@@ -400,7 +406,6 @@ begin
       // KillTimer(MainThreadID,m_timerid);
     end;
   end;
-  logrecordermessage('TControlDeskFrm.doChangeRState_exit');
 end;
 
 procedure TControlDeskFrm.doLeaveCfg(Sender: TObject);
@@ -544,15 +549,19 @@ procedure TControlDeskFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 begin
   inherited;
   ContinueCB.Checked:=a_pIni.ReadBool(str, 'LoadState', false);
+  ConfirmModeCB.Checked:=a_pIni.ReadBool(str, 'ConfirmModeChange', true);
   TimeUnitsCB.ItemIndex:=a_pIni.ReadInteger(str, 'Units', 0);
 end;
+
 
 procedure TControlDeskFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 begin
   inherited;
   a_pIni.WriteBool(str, 'LoadState', ContinueCB.Checked);
+  a_pIni.WriteBool(str, 'ConfirmModeChange', ConfirmModeCB.Checked);
   a_pIni.WriteInteger(str, 'Units', TimeUnitsCB.ItemIndex);
 end;
+
 
 
 procedure TControlDeskFrm.PauseBtnClick(Sender: TObject);
@@ -823,6 +832,51 @@ begin
   end;
 end;
 
+procedure TControlDeskFrm.ControlPropSGSetEditText(Sender: TObject; ACol,
+  ARow: Integer; const Value: string);
+var
+  c, r:integer;
+  p:cprogramobj;
+  mode:cmodeobj;
+  con:ccontrolObj;
+  t:ctask;
+  str:string;
+begin
+  m_val:=value;
+  m_col:=acol;
+  m_row:=arow;
+  r:=arow;
+  c:=acol;
+  p:=g_conmng.getProgram(0);
+  if p=nil then exit;
+
+  if c>0 then
+  begin
+    if checkstr(Value) then
+    begin
+      // редактирование ШИМ
+      if (c=2) or (c=3) then
+      begin
+        mode:=p.getMode(r-1);
+        str:=ControlPropE.text;
+        con:=p.getOwnControl(str);
+        if con<>nil then
+        begin
+          t:=mode.gettask(con.name);
+          if c=2 then
+            t.setParam('PWM_Thi',Value)
+          else
+            t.setParam('PWM_Tlo',Value);
+        end;
+        if mode.active then
+        begin
+          mode.m_applyed:=false;
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure TControlDeskFrm.ControlSGDblClick(Sender: TObject);
 var
   c: ccontrolobj;
@@ -967,6 +1021,8 @@ begin
   end;
   SGbuttons.clear;
 end;
+
+
 
 procedure TControlDeskFrm.TimeUnitsCBChange(Sender: TObject);
 var
@@ -1219,6 +1275,28 @@ begin
     UpdateControlsPropSGmode(m_CurMode);
 end;
 
+procedure TControlDeskFrm.ConfirmManualSwitchMode(m: tobject);
+begin
+  if (g_conmng.state=c_Pause) or g_conmng.AllowUserModeSelect then
+  begin
+    if g_conmng.state<>c_stop then
+    begin
+      if m=nil then
+        exit;
+      if g_conmng.state=c_play then
+        cmodeobj(m).TryActive
+      else
+      begin
+        if g_conmng.state=c_pause then
+        begin
+          cmodeobj(m).active:=true;
+          cmodeobj(m).Exec;
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure TControlDeskFrm.TableModeSGDblClick(Sender: TObject);
 var
   m: cModeObj;
@@ -1239,25 +1317,14 @@ begin
   begin
     SelectControl(m_CurControl);
   end;
-
-  if (g_conmng.state=c_Pause) or g_conmng.AllowUserModeSelect then
+  if ConfirmModeCB.Checked then
   begin
-    if g_conmng.state<>c_stop then
-    begin
-      if m=nil then
-        exit;
-      if g_conmng.state=c_play then
-        m.TryActive
-      else
-      begin
-        if g_conmng.state=c_pause then
-        begin
-          m.active:=true;
-          m.Exec;
-        end;
-      end;
-    end;
-  end;
+    ConfirmFmr.SecCallBack(ConfirmManualSwitchMode, m);
+    ConfirmFmr.SetText('Установить режим '+m.name);
+    ConfirmFmr.Execute;
+  end
+  else // безусловный переход
+    ConfirmManualSwitchMode(m);
 end;
 
 procedure TControlDeskFrm.TableModeSGDrawCell(Sender: TObject; ACol,
@@ -1359,20 +1426,29 @@ begin
   // деления на случай необходимости вызова из разных потоков
   if tid = MainThreadID then
   begin
+    LogRecorderMessage('tid = MainThreadID========================================================', c_Log_ControlDeskFrm);
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExec', c_Log_ControlDeskFrm);
     g_conmng.Exec;
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecControls', c_Log_ControlDeskFrm);
     // пересчитываем реакцию регуляторов
     g_conmng.ExecControls;
     // отображаем
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecupdateviews',c_Log_ControlDeskFrm);
     updateviews;
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_exit==========================================', c_Log_ControlDeskFrm);
   end
   else
   begin
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExec====================================', c_Log_ControlDeskFrm);
     // перерасчитываем все режимы и регуляторы
     g_conmng.Exec;
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecControls',c_Log_ControlDeskFrm);
     // пересчитываем реакцию регуляторов
     g_conmng.ExecControls;
     // отображаем
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecupdateviews',c_Log_ControlDeskFrm);
     updateviews;
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_exit==========================================',c_Log_ControlDeskFrm);
   end;
   //LogRecorderMessage('TControlDeskFrm_Timer_exit');
 end;

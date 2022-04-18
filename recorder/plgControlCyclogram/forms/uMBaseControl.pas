@@ -244,7 +244,7 @@ begin
   if np <> nil then
   begin
     if result = nil then
-      LogRecorderMessage('Не удалось создать нотификации БДИ')
+      LogRecorderMessage('Не удалось создать нотификации БДИ', false)
     else
       np.init(TMBaseControl(result));
   end;
@@ -597,7 +597,7 @@ var
   newstate, statechange: dword;
   rcStateChange: TRCstateChange;
 begin
-  LogRecorderMessage('TMBaseControl.doChangeRCState_enter');
+  LogRecorderMessage('TMBaseControl.doChangeRCState_enter', false);
   newstate := RState;
   case m_rstate of
     RS_STOP:
@@ -667,7 +667,7 @@ begin
   end;
   rc_pan.Read;
   showRegistrators;
-  LogRecorderMessage('TMBaseControl.doChangeRCState_exit');
+  LogRecorderMessage('TMBaseControl.doChangeRCState_exit', false);
 end;
 
 procedure TMBaseControl.doCreateConnection(Sender: TObject);
@@ -680,7 +680,7 @@ var
   index: Integer;
   li: TListItem;
 begin
-  LogRecorderMessage('TMBaseControl.doOnRead_enter');
+  LogRecorderMessage('TMBaseControl.doOnRead_enter', false);
   index := rc_pan.getConnectionIndex(connection);
   li := RegistratorsLV.Items[index];
   if li = nil then
@@ -711,7 +711,7 @@ begin
         LVChange(RegistratorsLV);
       end;
   end;
-  LogRecorderMessage('TMBaseControl.doOnRead_exit');
+  LogRecorderMessage('TMBaseControl.doOnRead_exit', false);
 end;
 
 procedure TMBaseControl.doSaveCfg(Sender: TObject);
@@ -1418,7 +1418,7 @@ begin
   inherited;
   if fLoaded then
     exit;
-  LogRecorderMessage('TMBaseControl.LoadSettings_enter');
+  LogRecorderMessage('TMBaseControl.LoadSettings_enter', false);
 
   section := String(str);
   v_NotifyMBaseSetProperties := a_pIni.ReadInteger(section,
@@ -1477,7 +1477,7 @@ begin
   end;
   showRegistrators;
   fLoaded := true;
-  LogRecorderMessage('TMBaseControl.LoadSettings_exit');
+  LogRecorderMessage('TMBaseControl.LoadSettings_exit', false);
 end;
 
 procedure TMBaseControl.ShowObjProps(o: cXmlFolder);

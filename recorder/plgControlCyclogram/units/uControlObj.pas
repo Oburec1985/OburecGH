@@ -667,11 +667,11 @@ type
   public
     // тег индикатор что режим включен
     m_stateTag: itag;
+    // применен режим или нет хотя бы один раз
+    m_applyed: boolean;
   private
     findex: integer;
     m_tryActive: boolean;
-    // применен режим или нет хотя бы один раз
-    m_applyed: boolean;
     fCounter: Cardinal;
     factive: boolean;
     // Время на режиме, сек

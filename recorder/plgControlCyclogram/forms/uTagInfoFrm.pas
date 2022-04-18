@@ -175,10 +175,10 @@ end;
 
 destructor TTagInfoFrm.destroy;
 begin
-  LogRecorderMessage('TTagInfoFrm.destroy_enter');
+  LogRecorderMessage('TTagInfoFrm.destroy_enter', false);
   m_tag.destroy;
   inherited;
-  LogRecorderMessage('TTagInfoFrm.destroy_exit');
+  LogRecorderMessage('TTagInfoFrm.destroy_exit', false);
 end;
 
 procedure TTagInfoFrm.FormMouseUp(Sender: TObject; Button: TMouseButton;
@@ -356,11 +356,11 @@ begin
       if p.v = v then
         break;
     end;
-    LogRecorderMessage('TTagInfoFrm_UpdateData_enter');
+    LogRecorderMessage('TTagInfoFrm_UpdateData_enter', false);
     RichText.text := p.str;
     RichText.Font.color := p.color;
     RichText.color := p.bckgnd;
-    LogRecorderMessage('TTagInfoFrm_UpdateData_exit');
+    LogRecorderMessage('TTagInfoFrm_UpdateData_exit', false);
   end;
   lastval := v;
 end;

@@ -157,10 +157,10 @@ end;
 
 destructor TCursorFrm.destroy;
 begin
-  LogRecorderMessage('TCursorFrm.destroy_enter');
+  LogRecorderMessage('TCursorFrm.destroy_enter', false);
   destroyevents;
   inherited;
-  LogRecorderMessage('TCursorFrm.destroy_exit');
+  LogRecorderMessage('TCursorFrm.destroy_exit', false);
 end;
 
 function GetColor(li:tlistitem):integer;

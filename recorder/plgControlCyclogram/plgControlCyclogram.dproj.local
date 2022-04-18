@@ -44,6 +44,9 @@
     <File Path="..\..\3d\objects"/>
     <File Path="..\..\3d\objects\uNodeObject.pas"/>
     <File Path="..\..\sharedUtils"/>
+    <File Path="..\..\sharedUtils\forms"/>
+    <File Path="..\..\sharedUtils\forms\uConfirmDlg.pas"/>
+    <File Path="..\..\sharedUtils\forms\uConfirmDlg.dfm"/>
     <File Path="..\..\sharedUtils\math"/>
     <File Path="..\..\sharedUtils\math\uCommonMath.pas"/>
     <File Path="..\..\sharedUtils\math\uFFT.pas"/>
@@ -341,5 +344,7 @@
     <Transaction>2021/09/29 01:36:12.417.pas,G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\Unit2.pas=G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\forms\uAriphmAlgFrame.pas</Transaction>
     <Transaction>2021/09/29 01:36:12.417.dfm,G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\Unit2.dfm=G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\forms\uAriphmAlgFrame.dfm</Transaction>
     <Transaction>2022/02/17 23:16:36.418.pas,G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\Unit2.pas=G:\oburec\project2010\GH\OburecGH\recorder\plgControlCyclogram\units\uTimeIntervalAlg.pas</Transaction>
+    <Transaction>2022.04.18 09:30:58.670.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit3.pas=F:\Oburec\delphi\2011\OburecGH\sharedUtils\forms\uConfirmDlg.pas</Transaction>
+    <Transaction>2022.04.18 09:30:58.670.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=F:\Oburec\delphi\2011\OburecGH\sharedUtils\forms\uConfirmDlg.dfm</Transaction>
   </Transactions>
 </BorlandProject>

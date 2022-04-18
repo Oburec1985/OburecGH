@@ -45,7 +45,7 @@ begin
   UISrv := tagVARIANT(val);
   if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
   begin
-    LogRecorderMessage('Не удалось получить сервер пользовательского интерфейса.');
+    LogRecorderMessage('Не удалось получить сервер пользовательского интерфейса.', false);
   end;
   m_FormRegistrator := nil;
   rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,
@@ -53,7 +53,7 @@ begin
   m_FormRegistrator.GetFactoriesCount(@count);
   if FAILED(rep) or (m_FormRegistrator = niL) then
   begin
-    LogRecorderMessage('Не удалось получить интерфейс управления списком зарегистрированных фабрик.');
+    LogRecorderMessage('Не удалось получить интерфейс управления списком зарегистрированных фабрик.', false);
   end;
   // интерфейс управления доп. кнопками
   rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomButtonsControl,
@@ -76,7 +76,7 @@ var
   fact:cRecBasicFactory;
   str:string;
 begin
-  LogRecorderMessage('cCompMng.destroy_enter');
+  LogRecorderMessage('cCompMng.destroy_enter', false);
   for i := 0 to count - 1 do
   begin
     fact:=cRecBasicFactory(Objects[i]);
@@ -101,7 +101,7 @@ begin
   m_CustomButtonsCtrl:=nil;
   m_BtnMainFrame:=nil;
   m_BtnTagPropPage:=nil;
-  LogRecorderMessage('cCompMng.destroy_exit');
+  LogRecorderMessage('cCompMng.destroy_exit', false);
 end;
 
 procedure cCompMng.doAfterLoad;

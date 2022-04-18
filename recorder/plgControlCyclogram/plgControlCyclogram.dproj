@@ -422,6 +422,9 @@
 			<DCCReference Include="forms\uEditCtrlZoneFrm.pas">
 				<Form>EditCtrlZoneFrm</Form>
 			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\forms\uConfirmDlg.pas">
+				<Form>ConfirmFmr</Form>
+			</DCCReference>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
