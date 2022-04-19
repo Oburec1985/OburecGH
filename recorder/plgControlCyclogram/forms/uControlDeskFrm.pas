@@ -491,15 +491,13 @@ begin
   TrigSG.Cells[c_Col_TrigEnabled, 0] := 'Включен';
   SGChange(TrigSG);
 
-  ControlPropSG.RowCount := 2;
-  ControlPropSG.ColCount := 7;
+  ControlPropSG.RowCount := 5;
+  ControlPropSG.ColCount := 2;
 
-  ControlPropSG.Cells[1, 0] := 'Шим';
-  ControlPropSG.Cells[2, 0] := 'Thi';
-  ControlPropSG.Cells[3, 0] := 'Tlo';
-  ControlPropSG.Cells[4, 0] := 'Зоны';
-  ControlPropSG.Cells[5, 0] := 'Мин.';
-  ControlPropSG.Cells[6, 0] := 'Макс.';
+  ControlPropSG.Cells[0, 1] := 'Thi';
+  ControlPropSG.Cells[0, 2] := 'Tlo';
+  ControlPropSG.Cells[0, 3] := 'Мин.';
+  ControlPropSG.Cells[0, 4] := 'Макс.';
 
 end;
 
@@ -518,7 +516,7 @@ begin
   for I := 0 to p.ModeCount - 1 do
   begin
     m:=p.getMode(i);
-    ControlPropSG.Cells[0, 1+i] := m.name;
+    ControlPropSG.Cells[1+i, 0] := m.name;
   end;
   SGChange(ControlPropSG);
 end;
@@ -800,36 +798,36 @@ begin
   xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
   xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
   changebool:=false;
-  case xCol of
-    1: // ШИМ
-    begin
-      m:=getM(xrow);
-      t:=m.GetTask(ControlPropE.Text);
-      key:='PWM_state';
-      changebool:=true;
-    end;
-    4: // Зоны
-    begin
-      m:=getM(xrow);
-      t:=m.GetTask(ControlPropE.Text);
-      key:='Zone_state';
-      changebool:=true;
-    end;
-  end;
-  if changebool then
-  begin
-    str:=t.getParam(key);
-    if str='Вкл' then
-    begin
-      str:='Выкл';
-    end
-    else
-    begin
-      str:='Вкл';
-    end;
-    t.setParam(key,str);
-    TStringGrid(Sender).Cells[xCol, xRow]:=str;
-  end;
+  //case xCol of
+  //  1: // ШИМ
+  //  begin
+  //    m:=getM(xrow);
+  //    t:=m.GetTask(ControlPropE.Text);
+  //    key:='PWM_state';
+  //    changebool:=true;
+  //  end;
+  //  4: // Зоны
+  //  begin
+  //    m:=getM(xrow);
+  //    t:=m.GetTask(ControlPropE.Text);
+  //    key:='Zone_state';
+  //    changebool:=true;
+  //  end;
+  //end;
+  //if changebool then
+  //begin
+  //  str:=t.getParam(key);
+  //  if str='Вкл' then
+  //  begin
+  //    str:='Выкл';
+  //  end
+  //  else
+  //  begin
+  //    str:='Вкл';
+  //  end;
+  //  t.setParam(key,str);
+  //  TStringGrid(Sender).Cells[xCol, xRow]:=str;
+  //end;
 end;
 
 procedure TControlDeskFrm.ControlPropSGSetEditText(Sender: TObject; ACol,
@@ -850,12 +848,12 @@ begin
   p:=g_conmng.getProgram(0);
   if p=nil then exit;
 
-  if c>0 then
+  if r>0 then
   begin
     if checkstr(Value) then
     begin
       // редактирование ШИМ
-      if (c=2) or (c=3) then
+      if (r=2) or (r=3) then
       begin
         mode:=p.getMode(r-1);
         str:=ControlPropE.text;
@@ -864,9 +862,15 @@ begin
         begin
           t:=mode.gettask(con.name);
           if c=2 then
+          begin
             t.setParam('PWM_Thi',Value)
+          end
           else
+          begin
             t.setParam('PWM_Tlo',Value);
+
+
+          end;
         end;
         if mode.active then
         begin
@@ -1687,14 +1691,10 @@ begin
   end;
 
   //if T.m_Params.count=0 then exit;
-  str := t.getParam('PWM_state');
-  ControlPropSG.Cells[1, i+1] := str;
   str := t.getParam('PWM_Thi');
-  ControlPropSG.Cells[2, i+1] := str;
+  ControlPropSG.Cells[i+1, 1] := str;
   str := t.getParam('PWM_Tlo');
-  ControlPropSG.Cells[3, i+1] := str;
-  str:=t.getParam('Zone_state');
-  ControlPropSG.Cells[4, i+1] := str;
+  ControlPropSG.Cells[i+1, 2] := str;
   str := T.getParam('Vals');
   state:=0;
   k:=1;
@@ -1745,10 +1745,10 @@ begin
   begin
     d:=m_tolArray.GetDouble(0);
     str:=formatstrnoe(t.task+d, 4);
-    ControlPropSG.Cells[5, i+1] := str;
+    ControlPropSG.Cells[i+1, 3] := str;
     d:=m_tolArray.GetDouble(m_tolArray.Count-1);
     str:=formatstrnoe(t.task+d, 4);
-    ControlPropSG.Cells[6, i+1] := str;
+    ControlPropSG.Cells[i+1, 4] := str;
   end
   else
   begin
@@ -1771,7 +1771,7 @@ begin
   ControlPropE.text:= m_CurControl.caption;
 
   p := g_conmng.getprogram(0);
-  ControlPropSG.RowCount:=1+p.ModeCount;
+  ControlPropSG.ColCount:=1+p.ModeCount;
 
   for I := 0 to p.ModeCount - 1 do
   begin

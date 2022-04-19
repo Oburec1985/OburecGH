@@ -1105,6 +1105,8 @@ object ControlDeskFrm: TControlDeskFrm
           TabOrder = 0
           OnDblClick = ControlPropSGDblClick
           OnSetEditText = ControlPropSGSetEditText
+          ExplicitLeft = 7
+          ExplicitTop = 76
         end
         object Panel1: TPanel
           Left = 2
