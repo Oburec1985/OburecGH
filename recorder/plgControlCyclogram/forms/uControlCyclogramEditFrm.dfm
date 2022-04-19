@@ -1211,6 +1211,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
+              Value = 0
               ExplicitTop = 94
               ExplicitWidth = 158
               ExplicitHeight = 27
@@ -1248,13 +1249,13 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             Margins.Right = 4
             Margins.Bottom = 4
             ExplicitLeft = 4
-            ExplicitTop = 24
+            ExplicitTop = 28
             ExplicitWidth = 548
-            ExplicitHeight = 300
+            ExplicitHeight = 296
             inherited Splitter1: TSplitter
               Left = 252
               Width = 7
-              Height = 300
+              Height = 296
               Margins.Left = 4
               Margins.Top = 4
               Margins.Right = 4
@@ -1267,18 +1268,18 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             inherited ModeChannelsGB: TGroupBox
               Left = 259
               Width = 289
-              Height = 300
+              Height = 296
               Margins.Left = 4
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
               ExplicitLeft = 259
               ExplicitWidth = 289
-              ExplicitHeight = 300
+              ExplicitHeight = 296
               inherited ChannelsLV: TBtnListView
                 Top = 19
                 Width = 285
-                Height = 279
+                Height = 275
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1294,19 +1295,19 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
                   end>
                 ExplicitTop = 19
                 ExplicitWidth = 285
-                ExplicitHeight = 279
+                ExplicitHeight = 275
               end
             end
             inherited ModePanel: TPanel
               Width = 252
-              Height = 300
+              Height = 296
               Margins.Left = 4
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
               Constraints.MinWidth = 251
               ExplicitWidth = 252
-              ExplicitHeight = 300
+              ExplicitHeight = 296
               inherited ModeNameLabel: TLabel
                 Left = 4
                 Top = 3

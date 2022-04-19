@@ -146,8 +146,8 @@ var
   li:tlistitem;
   p:TZonePair;
 begin
-  TolEdit.FloatNum:=z.tol;
-  ZoneTypeCB.Checked:=(z.tol>0);
+  TolEdit.FloatNum:=z.tol.x;
+  ZoneTypeCB.Checked:=(z.tol.x>0);
   if ZoneTypeCB.Checked then
     ZoneTypeCB.Caption:='Превышение уставки'
   else
@@ -215,11 +215,11 @@ begin
   begin
     z:=cZone(ZonesLB.Items.Objects[ZonesLB.ItemIndex]);
     m_CurCon.m_zones_enabled:=ZonesCB.Checked;
-    t:=z.tol;
+    t:=z.tol.x;
     if zonetypecb.Checked then
-      z.tol:=abs(tolEdit.FloatNum)
+      z.ftol.x:=abs(tolEdit.FloatNum)
     else
-      z.tol:=-abs(tolEdit.FloatNum);
+      z.ftol.x:=-abs(tolEdit.FloatNum);
     z.cleartags;
     for I := 0 to channelsLV.items.Count - 1 do
     begin
@@ -239,7 +239,7 @@ begin
         break;
       end;
     end;
-    if z.tol=0 then
+    if z.tol.x=0 then
     begin
       z.fUsePrevZoneVals:=UsePrevValsCB.Checked;
     end;
@@ -314,9 +314,9 @@ begin
   if toledit.FloatNum<>0 then
   begin
     if zonetypecb.Checked then
-      z:=m_CurCon.m_ZoneList.NewZone(toledit.FloatNum)
+      z:=m_CurCon.m_ZoneList.NewZone(p2d(toledit.FloatNum,0))
     else
-      z:=m_CurCon.m_ZoneList.NewZone(-toledit.FloatNum);
+      z:=m_CurCon.m_ZoneList.NewZone(p2d(-toledit.FloatNum,0));
     defzone:=m_CurCon.m_ZoneList.defaultZone;
     for I := 0 to defZone.tags.Count - 1 do
     begin

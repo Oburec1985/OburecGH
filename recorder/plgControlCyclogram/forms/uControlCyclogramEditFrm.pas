@@ -136,6 +136,7 @@ type
 
 const
   c_ExcelPage = 'Экспорт конфигурации';
+  c_modeColCount = 4;
 
 var
   ControlCyclogramEditFrm: TControlCyclogramEditFrm;
@@ -744,15 +745,13 @@ begin
     for I := 0 to p.ModeCount - 1 do
     begin
       m:=p.getMode(i);
-      setCell(1, r, c+i*6, m.name);
+      setCell(1, r, c+i*c_modeColCount, m.name);
 
-      setCell(1, r+1, c+i*6, SecToTime (m.modelength, ind));
-      setCell(1, r+2, c+i*6, 'Задание');
-      setCell(1, r+2, c+i*6+1, 'ШИМ');
-      setCell(1, r+2, c+i*6+2, 'Thi_ШИМ');
-      setCell(1, r+2, c+i*6+3, 'Tlo_ШИМ');
-      setCell(1, r+2, c+i*6+4, 'Зоны');
-      setCell(1, r+2, c+i*6+5, 'Значения');
+      setCell(1, r+1, c+i*c_modeColCount, SecToTime (m.modelength, ind));
+      setCell(1, r+2, c+i*c_modeColCount, 'Задание');
+      setCell(1, r+2, c+i*c_modeColCount+1, 'Thi_ШИМ');
+      setCell(1, r+2, c+i*c_modeColCount+2, 'Tlo_ШИМ');
+      setCell(1, r+2, c+i*c_modeColCount+3, 'Значения');
       // проход по контролам
       for j := 0 to p.ControlCount - 1 do
       begin
@@ -760,28 +759,17 @@ begin
         t:=m.gettask(con.name);
         // задание
         str:=floattostr(t.task);
-        setCell(1, r+3+j, c+i*6, str);
-        // ШИМ
-        str:=t.getParam('PWM_state');
-        setCell(1, r+3+j, c+i*6+1, str);
+        setCell(1, r+3+j, c+i*c_modeColCount, str);
         // hi ШИМ
         str:=t.getParam('PWM_Thi');
-        setCell(1, r+3+j, c+i*6+2, str);
+        setCell(1, r+3+j, c+i*c_modeColCount+1, str);
         str:=t.getParam('PWM_Tlo');
-        setCell(1, r+3+j, c+i*6+3, str);
-        str:=t.getParam('Zone_state');
-        setCell(1, r+3+j, c+i*6+4, str);
+        setCell(1, r+3+j, c+i*c_modeColCount+2, str);
         str:=t.getParam('Vals');
         ind:=0;
         str:=replaceChar(str, '_', char(10));
         str:=replaceChar(str, ':', '=');
-        setCell(1, r+3+j, c+i*6+5, str);
-        //while ind<length(str) do
-        //begin
-        //  str1:=getSubStrByIndex(str,'_',ind, ind);
-        //  // выделяем подстроку z0
-        //  str2:=getSubStrByIndex(str1,':',1, ind1);
-        //end;
+        setCell(1, r+3+j, c+i*c_modeColCount+3, str);
       end;
     end;
     try

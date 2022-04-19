@@ -215,9 +215,11 @@ type
   end;
 
   cZone = class
+  public
+    // допуск в зоне. ≈сли используетс€ алгоритм относительных зон то используетс€ только X
+    // иначе используетс€ x,y
+    ftol: point2d;
   private
-    // допуск в зоне
-    ftol: double;
     // гистерезис пока только дл€ дефолтной зоны в процентах (10% в конструкторе)
     fHist,
     fHistVal:double;
@@ -239,15 +241,18 @@ type
     function GetZonePairPointer(i: integer): pZonePair; overload;
     function GetZonePairPointer(str: string): pZonePair; overload;
     function propstr: string;
-    constructor create(List: tlist; tol: double);
+    constructor create(List: tlist; tol: point2d);
     destructor destroy;
   protected
-    procedure setTol(t: double);
+    procedure setTol(t: point2d);
   public
-    property tol: double read ftol write setTol;
+    property tol: point2d read ftol write setTol;
   end;
 
   cZoneList = class(csetlist)
+  public
+    // false - абсолютные зоны true - относительные зоны (от задани€)
+    m_zones_Alg: boolean;
   protected
     activeZone:cZone;
   protected
@@ -255,12 +260,13 @@ type
   public
     procedure ApplyZone(err: double);
     function defaultZone: cZone;
-    function GetZoneByTol(t: double): cZone;
+    function GetZoneByTol(t: point2d): cZone;
     procedure clearZones;
-    function NewZone(tol: double): cZone;
+    function NewZone(tol: point2d): cZone;
     constructor create; override;
     function GetZone(i: integer): cZone;
     procedure DelZone(i: integer);
+    function toString:string;
   end;
 
   // регул€тор
@@ -2304,7 +2310,7 @@ begin
   fScalarTolerance := true;
   m_ZoneList := cZoneList.create;
   // дефолтна€ зона
-  m_ZoneList.NewZone(0);
+  m_ZoneList.NewZone(p2d(0,0));
 end;
 
 destructor cControlObj.destroy;
@@ -2515,7 +2521,8 @@ var
   l_str, str, str1, Vstr: string;
   b, b1: boolean;
   z, defZone: cZone;
-  d, tol: double;
+  d: double;
+  tol:point2d;
   i, J, ind, tagind: integer;
   ppair: pZonePair;
   pair: TZonePair;
@@ -2539,6 +2546,8 @@ begin
   // включение работы по зонам
   l_str := GetParsValue(params, 'Zone_state');
   m_zones_enabled := StrToBoolExt(l_str);
+  l_str := GetParsValue(params, 'Zone_Alg');
+  m_ZoneList.m_zones_Alg := StrToBoolExt(l_str);
   l_str := GetParsValue(params, 'Vals');
   defZone := m_ZoneList.defaultZone;
   if checkstr(l_str) then
@@ -2553,8 +2562,8 @@ begin
       // парсим зоны
       J := pos(':', str1);
       Vstr := getSubStrByIndex(str1, ';', J + 1, 0);
-      tol := strtofloatext(Vstr);
-      if tol = 0 then
+      tol.x := strtofloatext(Vstr);
+      if tol.x = 0 then
       begin
         z := defZone;
       end
@@ -2620,6 +2629,7 @@ begin
   xmlNode.WriteAttributeFloat('PWM_T_OFF', fPWM_Toff);
   xmlNode.WriteAttributeInteger('ZoneCount', m_ZoneList.Count);
   xmlNode.WriteAttributeBool('Zones_Enabled', m_zones_enabled);
+  xmlNode.WriteAttributeBool('Zones_Alg', m_ZoneList.m_zones_Alg);
   z:=m_ZoneList.defaultZone;
   if z<>nil then
     xmlNode.WriteAttributeBool('Zones_UsePrevVal', z.fUsePrevZoneVals);
@@ -2628,7 +2638,7 @@ begin
     for i := 0 to m_ZoneList.Count - 1 do
     begin
       z := m_ZoneList.GetZone(i);
-      addParam(pars, 'Tol', floattostr(z.tol));
+      addParam(pars, 'Tol', floattostr(z.tol.x));
       addParam(pars, 'tCount', inttostr(z.tags.Count));
       for J := 0 to z.tags.Count - 1 do
       begin
@@ -2652,6 +2662,7 @@ var
   i, J, c: integer;
   str: string;
   d: double;
+  p2:point2d;
 begin
   inherited;
   feedbackname := xmlNode.ReadAttributeString('FeedBackName', '');
@@ -2661,6 +2672,7 @@ begin
   fPWM_Toff := xmlNode.ReadAttributeFloat('PWM_T_OFF', 0);
   zCount := xmlNode.ReadAttributeInteger('ZoneCount', 1);
   m_zones_enabled := xmlNode.ReadAttributeBool('Zones_Enabled', false);
+  m_ZoneList.m_zones_Alg := xmlNode.ReadAttributeBool('Zones_Alg', false);
   z:=m_ZoneList.defaultZone;
   if z<>nil then
     z.fUsePrevZoneVals:=xmlNode.ReadAttributeBool('Zones_UsePrevVal', true);
@@ -2670,14 +2682,14 @@ begin
   begin
     str := xmlNode.ReadAttributeString('z' + inttostr(i), '');
     pars := ParsStrParam(str, ',');
-    d := strtofloat(GetParsValue(pars, 'Tol'));
-    if d = 0 then
+    p2.x := strtofloat(GetParsValue(pars, 'Tol'));
+    if p2.x = 0 then
     begin
       z := m_ZoneList.defaultZone;
     end
     else
     begin
-      z := m_ZoneList.NewZone(d);
+      z := m_ZoneList.NewZone(p2);
     end;
     c := strtoint(GetParsValue(pars, 'tCount'));
     for J := 0 to c - 1 do
@@ -5382,22 +5394,14 @@ begin
       else
         result:='¬ыкл'
     end;
+    if key='Zone_Alg' then
+    begin
+      result:=booltostr(control.m_ZoneList.m_zones_Alg);
+    end;
     if key='Vals' then
     begin
       str:='';
-      for I := 0 to control.m_ZoneList.Count - 1 do
-      begin
-        z:=control.m_ZoneList.GetZone(i);
-        if i>0 then
-        str:=str+char(10);
-        str:=str+'z'+inttostr(i)+':'+floaTTOSTR(z.tol)+';';
-        for J := 0 to z.tags.Count - 1 do
-        begin
-          pair:=z.GetZonePair(j);
-          str:=str+floattostr(pair.value)+';';
-        end;
-      end;
-      result:=str;
+      result:=control.m_ZoneList.toString;
     end;
   end;
 end;
@@ -5541,7 +5545,7 @@ begin
   end;
 end;
 
-procedure cZone.setTol(t: double);
+procedure cZone.setTol(t: point2d);
 begin
   if defaultZone then
     exit
@@ -5553,19 +5557,22 @@ function cZone.propstr: string;
 var
   t: double;
 begin
-  t := tol;
+  t := tol.x;
   if t > 0 then
-    result := '+' + floattostr(tol)
+    result := '+' + floattostr(tol.x)
   else
   begin
     if t < 0 then
-      result := floattostr(tol)
+      result := floattostr(tol.x)
     else
       result := '0';
   end;
 end;
 
-constructor cZone.create(List: tlist; tol: double);
+constructor cZone.create(List: tlist; tol: point2d);
+var
+  i:integer;
+  z:cZone;
 begin
   fHist:=10;
   ftol := tol;
@@ -5573,7 +5580,7 @@ begin
   if List <> nil then
   begin
     owner := List;
-    csetlist(owner).AddObj(self);
+    i:=csetlist(owner).AddObj(self);
     if owner.Count = 1 then
     begin
       defaultZone := true;
@@ -5581,6 +5588,21 @@ begin
     else
     begin
       defaultZone := false;
+    end;
+    // подкорачиваем границы существующих зон
+    if i<list.Count-1 then
+    begin
+      z:=cZonelist(list).GetZone(i+1);
+      if z.ftol.x<ftol.y then
+      begin
+        ftol.y:=z.ftol.x;
+      end;
+    end;
+    if i>0 then
+    begin
+      z:=cZonelist(list).GetZone(i-1);
+      if z.ftol.y>ftol.x then
+        z.ftol.y:=ftol.x;
     end;
   end;
 end;
@@ -5664,13 +5686,13 @@ end;
 { cZoneList }
 function ZoneComparator(p1, p2: pointer): integer;
 begin
-  if cZone(p1).tol > cZone(p2).tol then
+  if cZone(p1).tol.x > cZone(p2).tol.x then
   begin
     result := 1;
   end
   else
   begin
-    if cZone(p1).tol < cZone(p2).tol then
+    if cZone(p1).tol.x < cZone(p2).tol.x then
     begin
       result := -1;
     end
@@ -5685,13 +5707,13 @@ end;
 { cZoneList }
 function ZoneKeyComparator(p1, p2: pointer): integer;
 begin
-  if cZone(p1).tol > double(p2^) then
+  if cZone(p1).tol.x > point2d(p2^).x then
   begin
     result := 1;
   end
   else
   begin
-    if cZone(p1).tol < double(p2^) then
+    if cZone(p1).tol.x < point2d(p2^).x then
     begin
       result := -1;
     end
@@ -5739,8 +5761,9 @@ procedure cZoneList.ApplyZone(err: double);
 var
   z1, z2, zkey: cZone;
   i: integer;
+  p2:point2d;
 begin
-  zkey := cZone.create(nil, err);
+  p2.x:=err;
   if err=0 then
   begin
     z1:=defaultZone;
@@ -5749,8 +5772,10 @@ begin
   begin
     if err > 0 then
     begin
+      zkey := cZone.create(nil, p2);
       z1 := cZone(GetLow(zkey, i));
-      if z1.ftol<err then
+      zkey.destroy;
+      if z1.ftol.x<err then
       begin
         //if i<(Count-1) then
         //  z1:=GetZone(i+1);
@@ -5758,8 +5783,10 @@ begin
     end
     else
     begin
+      zkey := cZone.create(nil, p2);
       z1 := cZone(GetHight(zkey, i));
-      if z1.ftol>err then
+      zkey.destroy;
+      if z1.ftol.x>err then
       begin
         //if i>0 then
         //  z1:=GetZone(i-1);
@@ -5776,7 +5803,7 @@ begin
     begin
       if activeZone<>z1 then
       begin
-        z1.fHistVal:=z1.fHist*activeZone.ftol/100;
+        z1.fHistVal:=z1.fHist*activeZone.ftol.x/100;
       end;
       if z1.fHistVal>0 then
       begin
@@ -5820,10 +5847,33 @@ begin
   end;
 end;
 
-function cZoneList.NewZone(tol: double): cZone;
+function cZoneList.NewZone(tol: point2d): cZone;
 begin
   // добавление в список происходит внутри конструктора
   result := cZone.create(self, tol);
+end;
+
+function cZoneList.toString: string;
+var
+  i, j:integer;
+  z:cZone;
+  pair:TZonePair;
+  str:string;
+begin
+  result:='';
+  for I := 0 to Count - 1 do
+  begin
+    z:=GetZone(i);
+    if i>0 then
+    str:=str+char(10);
+    str:=str+'z'+inttostr(i)+':'+floaTTOSTR(z.tol.x)+';';
+    for J := 0 to z.tags.Count - 1 do
+    begin
+      pair:=z.GetZonePair(j);
+      str:=str+floattostr(pair.value)+';';
+    end;
+  end;
+  result:=str;
 end;
 
 procedure cZoneList.DelZone(i: integer);
@@ -5842,7 +5892,7 @@ begin
     result := nil;
 end;
 
-function cZoneList.GetZoneByTol(t: double): cZone;
+function cZoneList.GetZoneByTol(t: point2d): cZone;
 var
   i: integer;
   p: pointer;
