@@ -100,6 +100,7 @@ type
     procedure UpdateModeTolerance;
 
     procedure doStartStopTrig(Start: boolean);
+    procedure doStopCyclogramTrigs;
     procedure doUpdateTags(sender: tobject);
     procedure doChangeRState(sender: tobject);
     // Линкуем триггеры с объектами назначения
@@ -919,22 +920,21 @@ end;
 
 procedure cControlMng.doChangeRState(sender: tobject);
 begin
+  // прогрузка тегов всех контролов
+  pushControlsTags;
   case GetRCStateChange of
     RSt_Init:
       begin
-        pushControlsTags;
       end;
     RSt_StopToView:
       begin
         InitTriggers;
         doStartStopTrig(true);
-        pushControlsTags;
       end;
     RSt_StopToRec:
       begin
         InitTriggers;
         doStartStopTrig(true);
-        pushControlsTags;
       end;
     RSt_ViewToStop:
       begin
@@ -943,17 +943,14 @@ begin
     RSt_ViewToRec:
       begin
         doStartStopTrig(true);
-        pushControlsTags;
       end;
     RSt_initToRec:
       begin
         doStartStopTrig(true);
-        pushControlsTags;
       end;
     RSt_initToView:
       begin
         doStartStopTrig(true);
-        pushControlsTags;
       end;
     RSt_RecToStop:
       begin
@@ -962,7 +959,6 @@ begin
     RSt_RecToView:
       begin
         doStartStopTrig(true);
-        pushControlsTags;
       end;
   end;
 end;
@@ -1185,6 +1181,58 @@ begin
   end;
 end;
 
+
+procedure cControlMng.doStartStopTrig(Start: boolean);
+var
+  t: cBaseTrig;
+  i: integer;
+begin
+  for i := 0 to TrigCount - 1 do
+  begin
+    t := getTrig(i);
+    if t is crtrig then
+    begin
+      if t.Trigtype = trStart then
+      begin
+        if Start then
+        begin
+          t.state := true;
+          t.ApplyActions;
+        end;
+      end;
+      if t.Trigtype = trStop then
+      begin
+        if not Start then
+        begin
+          t.state := true;
+          t.ApplyActions;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure cControlMng.doStopCyclogramTrigs;
+var
+  t: cBaseTrig;
+  i: integer;
+begin
+  for i := 0 to TrigCount - 1 do
+  begin
+    t := getTrig(i);
+    if t is crtrig then
+    begin
+      if t.Trigtype = trStop_cyclogram then
+      begin
+        //if not Start then
+        t.state := true; // триггер сработал
+        t.ApplyActions;
+        //pushControlsTags;
+      end;
+    end;
+  end;
+end;
+
 procedure cControlMng.Exec;
 var
   i: integer;
@@ -1199,6 +1247,7 @@ begin
       state := c_Play;
     c_TryStop:
       begin
+        // стоп триг здесь проверяется
         state := c_Stop;
       end;
     c_TryPause:
@@ -1218,10 +1267,6 @@ begin
         c_TryPlay:
           begin
             bstop := false;
-            // if p.StartTrig <> nil then
-            // begin
-
-            // end;
             p.Exec;
           end;
         c_Play:
@@ -1248,6 +1293,7 @@ begin
         end;
       end;
     end;
+    // СОХРАНИТЬ АКТИВНЫЕ ПРОГРАММЫ ИХ режимы и времена на режимах
     SaveState;
   end;
   if state = c_Pause then
@@ -1269,6 +1315,7 @@ var
   i: integer;
   con: cControlObj;
 begin
+
   for i := 0 to ControlsCount - 1 do
   begin
     con := getControlObj(i);
@@ -1491,36 +1538,6 @@ end;
 procedure cControlMng.doSaveCfg(sender: tobject);
 begin
   m_prevDir := getRConfig;
-end;
-
-procedure cControlMng.doStartStopTrig(Start: boolean);
-var
-  t: cBaseTrig;
-  i: integer;
-begin
-  for i := 0 to TrigCount - 1 do
-  begin
-    t := getTrig(i);
-    if t is crtrig then
-    begin
-      if t.Trigtype = trStart then
-      begin
-        if Start then
-        begin
-          t.state := true;
-          t.ApplyActions;
-        end;
-      end;
-      if t.Trigtype = trStop then
-      begin
-        if not Start then
-        begin
-          t.state := true;
-          t.ApplyActions;
-        end;
-      end;
-    end;
-  end;
 end;
 
 procedure cControlMng.doStopRec(sender: tobject);
@@ -1958,11 +1975,11 @@ begin
   // в setstate сбрасывается время
   state := c_TryStop;
   // останов циклограммы
-  for i := 0 to ProgramCount - 1 do
-  begin
-    p := getProgram(i);
-    p.stop;
-  end;
+  //for i := 0 to ProgramCount - 1 do
+  //begin
+  //  p := getProgram(i);
+  //  p.stop;
+  //end;
 end;
 
 procedure cControlMng.pause;
@@ -2129,14 +2146,26 @@ begin
   case s of
     c_Stop:
       begin
-        // останов регуляторов
-        StopControls;
+        // выполнить триггер перехода циклограммы в стоп
+        doStopCyclogramTrigs;
         ResetT;
         for i := 0 to ProgramCount - 1 do
         begin
           p := getProgram(i);
+          if p.active then
+          begin
+            // залипушка на случай если режим поменялся по тригу
+            if p.ActiveMode<>nil then
+            begin
+              p.ActiveMode.exec;
+              execControls;
+            end;
+          end;
+          p.stop;
           p.state := c_Stop;
         end;
+        // останов регуляторов
+        StopControls;
         if StopTrigger <> nil then
           StopTrigger.enabled := false;
         Events.CallAllEvents(E_OnStopControlMng);
@@ -3685,7 +3714,7 @@ begin
         begin
           c := getOwnControl(i);
           if c.fOwnerProg = nil then
-            c.fOwnerProg := self;
+            c.setOwnerProg(self);
         end;
       end;
     c_Stop:
@@ -3713,7 +3742,7 @@ begin
       begin
         c := getOwnControl(i);
         if c.fOwnerProg = self then
-          c.fOwnerProg := nil;
+          c.setOwnerProg(nil);
       end;
     end;
   end;

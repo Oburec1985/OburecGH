@@ -517,6 +517,7 @@ begin
     c_Trig_Alarms: result:=cAlarmTrig;
     c_Trig_Start: result:=cRTrig;
     c_Trig_Stop: result:=cRTrig;
+    c_Trig_Stop_Cyclogram: result:=cRTrig;
   end;
 end;
 
@@ -957,21 +958,24 @@ begin
   lvisible:=not (
                   (inttotrigtype(TrigRG.ItemIndex)=TrPause) or
                   (inttotrigtype(TrigRG.ItemIndex)=trStart) or
-                  (inttotrigtype(TrigRG.ItemIndex)=trStop)
+                  (inttotrigtype(TrigRG.ItemIndex)=trStop) or
+                  (inttotrigtype(TrigRG.ItemIndex)=trStop_cyclogram)
                 );
   TrigChannelCB.Visible:=lvisible;
   TrigNameLabel.Visible:=lvisible;
   lvisible:=not (
                   (inttotrigtype(TrigRG.ItemIndex)=trStart) or
                   (inttotrigtype(TrigRG.ItemIndex)=trStop) or
-                  (inttotrigtype(TrigRG.ItemIndex)=trAlarms)
+                  (inttotrigtype(TrigRG.ItemIndex)=trAlarms) or
+                  (inttotrigtype(TrigRG.ItemIndex)=trStop_cyclogram)
                 );
   ThresholdLabel.Visible:=lvisible;
   ThresholdFE.Visible:=lvisible;
 
   lvisible:=not (
                   (inttotrigtype(TrigRG.ItemIndex)=trStart) or
-                  (inttotrigtype(TrigRG.ItemIndex)=trStop)
+                  (inttotrigtype(TrigRG.ItemIndex)=trStop) or
+                  (inttotrigtype(TrigRG.ItemIndex)=trStop_cyclogram)
                 );
   notCB.Visible:=lvisible;
   EnableOnStartCB.Visible:=lvisible;

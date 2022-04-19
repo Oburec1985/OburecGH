@@ -2,33 +2,33 @@ object TrigsFrm: TTrigsFrm
   Left = 0
   Top = 0
   Caption = #1057#1087#1080#1089#1086#1082' '#1090#1088#1080#1075#1075#1077#1088#1086#1074
-  ClientHeight = 661
-  ClientWidth = 1076
+  ClientHeight = 881
+  ClientWidth = 1435
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -10
+  Font.Height = -13
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 96
-  TextHeight = 12
+  PixelsPerInch = 120
+  TextHeight = 16
   object TrigsPanel: TPanel
     Left = 0
     Top = 0
-    Width = 175
-    Height = 661
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 233
+    Height = 881
     Align = alLeft
     TabOrder = 0
     object TrigTV: TVTree
       Left = 1
       Top = 1
-      Width = 173
-      Height = 615
+      Width = 231
+      Height = 820
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alClient
       DragMode = dmAutomatic
       DragType = dtVCL
@@ -49,25 +49,26 @@ object TrigsFrm: TTrigsFrm
       OnDragOver = TrigTVDragOver
       OnDragDrop = TrigTVDragDrop
       OnKeyDown = TrigTVKeyDown
+      ExplicitLeft = 0
       Columns = <>
     end
     object TrigsActionBtnPanel: TPanel
       Left = 1
-      Top = 616
-      Width = 173
-      Height = 44
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 821
+      Width = 231
+      Height = 59
       Align = alBottom
       TabOrder = 1
       object UpdateTrigBtn: TSpeedButton
-        Left = 48
-        Top = 6
-        Width = 48
-        Height = 35
+        Left = 64
+        Top = 8
+        Width = 64
+        Height = 47
         Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1087#1086#1083#1086#1089#1091
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         BiDiMode = bdLeftToRight
         Flat = True
         Glyph.Data = {
@@ -175,11 +176,15 @@ object TrigsFrm: TTrigsFrm
         OnClick = UpdateTrigBtnClick
       end
       object AddTrigBtn: TSpeedButton
-        Left = 2
-        Top = 6
-        Width = 40
-        Height = 36
+        Left = 3
+        Top = 8
+        Width = 53
+        Height = 48
         Hint = #1044#1086#1073#1072#1074#1080#1090#1100' '#1075#1080#1089#1090#1086#1075#1088#1072#1084#1084#1091
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         BiDiMode = bdLeftToRight
         Glyph.Data = {
           C2070000424DC207000000000000C20300002800000020000000200000000100
@@ -254,18 +259,14 @@ object TrigsFrm: TTrigsFrm
     end
   end
   object fv: TPanel
-    Left = 175
+    Left = 233
     Top = 0
-    Width = 649
-    Height = 661
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 866
+    Height = 881
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -15
+    Font.Height = -20
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
@@ -273,61 +274,41 @@ object TrigsFrm: TTrigsFrm
     object StartProgramGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 647
-      Height = 239
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Width = 864
+      Height = 319
       Align = alTop
       TabOrder = 0
       object ThresholdLabel: TLabel
-        Left = 8
-        Top = 128
-        Width = 40
-        Height = 18
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 11
+        Top = 171
+        Width = 55
+        Height = 24
         Caption = #1055#1086#1088#1086#1075
       end
       object TrigNameLabel: TLabel
-        Left = 8
-        Top = 71
-        Width = 80
-        Height = 18
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 11
+        Top = 95
+        Width = 108
+        Height = 24
         Caption = #1048#1084#1103' '#1082#1072#1085#1072#1083#1072
       end
       object Label1: TLabel
-        Left = 8
-        Top = 13
-        Width = 93
-        Height = 18
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 11
+        Top = 17
+        Width = 123
+        Height = 24
         Caption = #1048#1084#1103' '#1090#1088#1080#1075#1075#1077#1088#1072
       end
       object TrigRG: TRadioGroup
-        Left = 422
-        Top = 20
-        Width = 223
-        Height = 217
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 565
+        Top = 26
+        Width = 297
+        Height = 291
         Align = alRight
         Caption = #1058#1080#1087' '#1090#1088#1080#1075#1075#1077#1088#1072
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -20
         Font.Name = 'Tahoma'
         Font.Style = []
         ItemIndex = 0
@@ -340,80 +321,65 @@ object TrigsFrm: TTrigsFrm
           #1055#1072#1091#1079#1072
           #1059#1089#1090#1072#1074#1082#1080
           #1055#1077#1088#1077#1093#1086#1076' '#1074' '#1087#1088#1086#1089#1084#1086#1090#1088
-          #1054#1089#1090#1072#1085#1086#1074)
+          #1054#1089#1090#1072#1085#1086#1074' (Recorder)'
+          #1054#1089#1090#1072#1085#1086#1074' ('#1062#1080#1082#1083#1086#1075#1088#1072#1084#1084#1099')')
         ParentFont = False
         TabOrder = 0
         OnClick = TrigRGClick
       end
       object ThresholdFE: TFloatEdit
-        Left = 8
-        Top = 148
-        Width = 109
-        Height = 26
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 11
+        Top = 197
+        Width = 145
+        Height = 32
         TabOrder = 1
         Text = '0.0'
       end
       object TrigNameEdit: TEdit
-        Left = 9
-        Top = 36
-        Width = 109
-        Height = 26
+        Left = 12
+        Top = 48
+        Width = 145
+        Height = 32
         Hint = #1053#1077#1074#1086#1079#1084#1086#1078#1085#1086' '#1089#1086#1079#1076#1072#1090#1100' '#1090#1088#1080#1075#1075#1077#1088#1099' '#1089' '#1086#1076#1080#1085#1072#1082#1086#1074#1099#1084#1080' '#1080#1084#1077#1085#1072#1084#1080
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
         TabOrder = 2
         OnChange = TrigNameEditChange
       end
       object TrigChannelCB: TRcComboBox
-        Left = 9
-        Top = 94
-        Width = 109
-        Height = 26
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 12
+        Top = 125
+        Width = 145
+        Height = 32
         TabOrder = 3
       end
     end
     object NotCB: TCheckBox
-      Left = 4
-      Top = 244
-      Width = 141
-      Height = 13
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 5
+      Top = 325
+      Width = 188
+      Height = 18
       Caption = #1048#1085#1074#1077#1088#1090#1080#1088#1086#1074#1072#1090#1100
       TabOrder = 1
       OnClick = NotCBClick
     end
     object ActionsPanel: TPanel
       Left = 1
-      Top = 339
-      Width = 647
-      Height = 321
+      Top = 452
+      Width = 864
+      Height = 428
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alBottom
       TabOrder = 2
       object ActionsTypesLB: TListBox
-        Left = 385
+        Left = 515
         Top = 1
-        Width = 261
-        Height = 191
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Width = 348
+        Height = 255
         Align = alRight
         DragMode = dmAutomatic
-        ItemHeight = 18
+        ItemHeight = 24
         Items.Strings = (
           #1055#1088#1086#1075#1088#1072#1084#1084#1072'/ '#1088#1077#1078#1080#1084'/ '#1088#1077#1075#1091#1083#1103#1090#1086#1088': '#1089#1090#1072#1088#1090#1086#1074#1072#1090#1100
           #1055#1088#1086#1075#1088#1072#1084#1084#1072'/ '#1088#1077#1078#1080#1084'/ '#1088#1077#1075#1091#1083#1103#1090#1086#1088'/ '#1094#1080#1082#1083#1086#1075#1088#1072#1084#1084#1072': '#1086#1089#1090#1072#1085#1086#1074#1080#1090#1100
@@ -430,68 +396,52 @@ object TrigsFrm: TTrigsFrm
       end
       object ActionPropsPanel: TPanel
         Left = 1
-        Top = 192
-        Width = 645
-        Height = 128
+        Top = 256
+        Width = 862
+        Height = 171
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alBottom
         TabOrder = 1
         object ActionTargetLabel: TLabel
-          Left = 3
-          Top = 9
-          Width = 135
-          Height = 18
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 4
+          Top = 12
+          Width = 180
+          Height = 24
           Caption = #1054#1073#1098#1077#1082#1090' '#1085#1072#1079#1085#1072#1095#1077#1085#1080#1103
         end
         object Label2: TLabel
-          Left = 3
-          Top = 55
-          Width = 117
-          Height = 18
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 4
+          Top = 73
+          Width = 153
+          Height = 24
           Caption = #1058#1080#1087' '#1074#1086#1079#1076#1077#1081#1089#1090#1074#1080#1103
         end
         object ActionTarget: TComboBox
-          Left = 3
-          Top = 26
-          Width = 208
-          Height = 26
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 4
+          Top = 35
+          Width = 277
+          Height = 32
           TabOrder = 0
           OnChange = ActionTargetChange
           OnDragDrop = ActionTargetDragDrop
           OnDragOver = ActionTargetDragOver
         end
         object ActionText: TEdit
-          Left = 2
-          Top = 71
-          Width = 209
-          Height = 26
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 3
+          Top = 95
+          Width = 278
+          Height = 32
           Enabled = False
           TabOrder = 1
         end
         object ActionFrontCB: TCheckBox
-          Left = 3
-          Top = 101
-          Width = 184
-          Height = 13
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 4
+          Top = 135
+          Width = 245
+          Height = 17
           Caption = #1055#1080#1089#1072#1090#1100' '#1087#1086' '#1092#1088#1086#1085#1090#1091
           Checked = True
           State = cbChecked
@@ -499,60 +449,40 @@ object TrigsFrm: TTrigsFrm
           OnClick = ActionFrontCBClick
         end
         object mdbPropPanel: TPanel
-          Left = 518
+          Left = 693
           Top = 1
-          Width = 126
-          Height = 126
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Width = 168
+          Height = 169
           Align = alRight
           TabOrder = 3
           object PropNameLabel: TLabel
             Left = 0
             Top = -1
-            Width = 69
-            Height = 18
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Width = 90
+            Height = 24
             Caption = #1048#1084#1103' '#1089#1074'-'#1074#1072
           end
           object Label3: TLabel
             Left = 0
-            Top = 46
-            Width = 64
-            Height = 18
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Top = 61
+            Width = 88
+            Height = 24
             Caption = #1047#1085#1072#1095#1077#1085#1080#1077
           end
           object PropNameEdit: TEdit
             Left = 0
-            Top = 16
-            Width = 109
-            Height = 26
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Top = 21
+            Width = 145
+            Height = 32
             TabOrder = 0
             OnChange = PropNameEditChange
           end
           object MDBValueCB: TRcComboBox
             Left = 0
-            Top = 62
-            Width = 109
-            Height = 26
+            Top = 83
+            Width = 145
+            Height = 32
             Hint = #1057#1090#1088#1086#1082#1072' '#1080#1083#1080' '#1090#1077#1075' ('#1079#1085#1072#1095#1077#1085#1080#1077' '#1090#1077#1075#1072')'
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
             ParentShowHint = False
             ShowHint = True
             TabOrder = 1
@@ -564,35 +494,27 @@ object TrigsFrm: TTrigsFrm
       object ActionsGB: TGroupBox
         Left = 1
         Top = 1
-        Width = 384
-        Height = 191
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Width = 514
+        Height = 255
         Align = alClient
         Caption = #1044#1077#1081#1089#1090#1074#1080#1103
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -20
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
         TabOrder = 2
         object ActionsLV: TBtnListView
           Left = 2
-          Top = 20
-          Width = 380
-          Height = 169
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Top = 26
+          Width = 510
+          Height = 227
           Align = alClient
           Columns = <
             item
               Caption = #1044#1077#1081#1089#1090#1074#1080#1103
-              Width = 38
+              Width = 51
             end>
           RowSelect = True
           TabOrder = 0
@@ -614,48 +536,40 @@ object TrigsFrm: TTrigsFrm
       end
     end
     object EnableOnStartCB: TCheckBox
-      Left = 4
-      Top = 261
-      Width = 267
-      Height = 13
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 5
+      Top = 348
+      Width = 356
+      Height = 17
       Caption = #1042#1082#1083#1102#1095#1080#1090#1100' '#1087#1088#1080' '#1089#1090#1072#1088#1090#1077' '#1087#1088#1086#1075#1088#1072#1084#1084#1099
       TabOrder = 3
       OnClick = EnableOnStartCBClick
     end
     object DisableOnApplyCB: TCheckBox
-      Left = 4
-      Top = 279
-      Width = 249
-      Height = 12
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 5
+      Top = 372
+      Width = 332
+      Height = 16
       Caption = #1054#1090#1082#1083#1102#1095#1080#1090#1100' '#1087#1086#1089#1083#1077' '#1089#1088#1072#1073#1072#1090#1099#1074#1072#1085#1080#1103
       TabOrder = 4
       OnClick = DisableOnApplyCBClick
     end
   end
   object RightPanel: TPanel
-    Left = 824
+    Left = 1099
     Top = 0
-    Width = 252
-    Height = 661
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 336
+    Height = 881
     Align = alRight
     TabOrder = 2
     object ProgramTV: TVTree
       Left = 1
       Top = 1
-      Width = 250
-      Height = 376
+      Width = 334
+      Height = 502
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alClient
       DragMode = dmAutomatic
       DragType = dtVCL
@@ -674,133 +588,53 @@ object TrigsFrm: TTrigsFrm
     end
     inline TagsListFrame1: TTagsListFrame
       Left = 1
-      Top = 377
-      Width = 250
-      Height = 283
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 503
+      Width = 334
+      Height = 377
       Align = alBottom
       TabOrder = 1
       ExplicitLeft = 1
-      ExplicitTop = 377
-      ExplicitWidth = 250
-      ExplicitHeight = 283
+      ExplicitTop = 503
+      ExplicitWidth = 334
+      ExplicitHeight = 377
       inherited FormChannelsGB: TGroupBox
-        Width = 250
-        Height = 283
-        Margins.Left = 3
-        Margins.Top = 3
-        Margins.Right = 3
-        Margins.Bottom = 3
-        ExplicitWidth = 250
-        ExplicitHeight = 283
+        Width = 334
+        Height = 377
+        ExplicitWidth = 334
+        ExplicitHeight = 377
         inherited ChanNamesPanel: TPanel
-          Top = 14
-          Width = 246
-          Height = 81
-          Margins.Left = 3
-          Margins.Top = 3
-          Margins.Right = 3
-          Margins.Bottom = 3
-          ExplicitTop = 14
-          ExplicitWidth = 246
-          ExplicitHeight = 81
+          Width = 330
+          Height = 108
+          ExplicitWidth = 330
+          ExplicitHeight = 108
           DesignSize = (
-            246
-            81)
+            330
+            108)
           inherited FrmTagPropLabel: TLabel
-            Left = 4
-            Top = 44
-            Width = 46
-            Height = 12
-            Margins.Left = 3
-            Margins.Top = 3
-            Margins.Right = 3
-            Margins.Bottom = 3
-            ExplicitLeft = 4
-            ExplicitTop = 44
-            ExplicitWidth = 46
-            ExplicitHeight = 12
-          end
-          inherited FrmTagPropValue: TLabel
-            Left = 91
-            Top = 45
-            Width = 43
-            Height = 12
-            Margins.Left = 3
-            Margins.Top = 3
-            Margins.Right = 3
-            Margins.Bottom = 3
-            ExplicitLeft = 91
-            ExplicitTop = 45
-            ExplicitWidth = 43
-            ExplicitHeight = 12
+            Top = 59
+            ExplicitTop = 59
           end
           inherited FilterEdit: TEdit
-            Left = 4
-            Top = 6
-            Width = 221
-            Height = 20
-            Margins.Left = 3
-            Margins.Top = 3
-            Margins.Right = 3
-            Margins.Bottom = 3
-            ExplicitLeft = 4
-            ExplicitTop = 6
-            ExplicitWidth = 221
-            ExplicitHeight = 20
+            Width = 295
           end
           inherited FrmTagPropValueEdit: TEdit
-            Left = 91
-            Top = 62
-            Width = 134
-            Height = 20
-            Margins.Left = 3
-            Margins.Top = 3
-            Margins.Right = 3
-            Margins.Bottom = 3
-            ExplicitLeft = 91
-            ExplicitTop = 62
-            ExplicitWidth = 134
-            ExplicitHeight = 20
+            Top = 83
+            Width = 179
+            ExplicitTop = 83
+            ExplicitWidth = 179
           end
           inherited FrmTagPropNameCB: TComboBox
-            Left = 4
-            Top = 62
-            Width = 81
-            Height = 20
-            Margins.Left = 3
-            Margins.Top = 3
-            Margins.Right = 3
-            Margins.Bottom = 3
-            ExplicitLeft = 4
-            ExplicitTop = 62
-            ExplicitWidth = 81
-            ExplicitHeight = 20
+            Top = 83
+            ExplicitTop = 83
           end
         end
         inherited TagsLV: TBtnListView
-          Top = 95
-          Width = 246
-          Height = 186
-          Margins.Left = 3
-          Margins.Top = 3
-          Margins.Right = 3
-          Margins.Bottom = 3
-          Columns = <
-            item
-              Caption = #1048#1084#1103
-              Width = 49
-            end
-            item
-              Caption = #1058#1080#1087
-              Width = 49
-            end>
-          ExplicitTop = 95
-          ExplicitWidth = 246
-          ExplicitHeight = 186
+          Top = 126
+          Width = 330
+          Height = 249
+          ExplicitTop = 126
+          ExplicitWidth = 330
+          ExplicitHeight = 249
         end
       end
     end

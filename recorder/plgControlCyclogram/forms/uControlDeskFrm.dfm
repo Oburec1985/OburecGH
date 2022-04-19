@@ -782,6 +782,24 @@ object ControlDeskFrm: TControlDeskFrm
       ShowHint = True
       TabOrder = 8
     end
+    object ActiveModeE: TEdit
+      Left = 587
+      Top = 137
+      Width = 190
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -22
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 9
+    end
   end
   object PageControl1: TPageControl
     Left = 0
@@ -1054,7 +1072,6 @@ object ControlDeskFrm: TControlDeskFrm
           OnDblClick = TableModeSGDblClick
           OnDrawCell = TableModeSGDrawCell
           OnSetEditText = TableModeSGSetEditText
-          ExplicitLeft = -3
         end
       end
       object RightGB: TGroupBox
@@ -1088,8 +1105,6 @@ object ControlDeskFrm: TControlDeskFrm
           TabOrder = 0
           OnDblClick = ControlPropSGDblClick
           OnSetEditText = ControlPropSGSetEditText
-          ExplicitLeft = 4
-          ExplicitTop = 76
         end
         object Panel1: TPanel
           Left = 2

@@ -92,6 +92,7 @@ type
     // форма для организации очереди сообщений
     m_FrmSync: TFrmSync;
   protected
+    beforestop:boolean;
     m_rstate: dword;
     m_UIThreadID: integer;
 
@@ -402,7 +403,12 @@ procedure TExtRecorderPack.doChangeRCState(Sender: TObject);
 var
   newstate, statechange: dword;
 begin
-  newstate := RState;
+  if beforestop then
+  begin
+    newstate:=rs_stop; // костыль на предустановку для распознования что это равно стоп
+  end
+  else
+    newstate := RState;
   case m_rstate of
     RS_STOP:
       begin
@@ -790,13 +796,23 @@ begin
       end;
     PN_RCSTOP:
       begin
+        beforestop:=false;
         // frmTestSettings.Started := false;
         //EList.CallAllEvents(c_RC_ChangeState);
         doChangeRCState(self);
         result := true;
       end;
+    PN_BEFORE_RCSTOP:
+      begin
+        // frmTestSettings.Started := false;
+        //EList.CallAllEvents(c_RC_ChangeState);
+        beforestop:=true;
+        doChangeRCState(self);
+        result := true;
+      end;
     PN_RCSTART:
       begin
+        beforestop:=false;
         // frmTestSettings.Started := true;
         doChangeRCState(self);
         result := true;

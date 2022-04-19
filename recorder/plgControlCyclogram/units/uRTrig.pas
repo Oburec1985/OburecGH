@@ -10,7 +10,8 @@ uses
 type
   TBoolOper = (boAnd, boOr);
 
-  TTrigType = (trFront, trFall, trHiLvl, trLoLvl, trEqv, trPause, trAlarms, trStart, trStop);
+  TTrigType = (trFront, trFall, trHiLvl, trLoLvl, trEqv, trPause, trAlarms,
+               trStart, trStop, trStop_cyclogram);
 
   cbasetrig = class;
 
@@ -235,6 +236,7 @@ const
   c_Trig_Alarms = 6;
   c_Trig_Start = 7;
   c_Trig_Stop  = 8;
+  c_Trig_Stop_Cyclogram  = 9;
 
 
 
@@ -294,6 +296,8 @@ begin
     trAlarms:result :=c_Trig_Alarms;
     trStart: result :=c_Trig_Start;
     trStop:  result :=c_Trig_Stop;
+    trStop_cyclogram:
+             result :=c_Trig_Stop_Cyclogram;
   end;
 end;
 
@@ -309,6 +313,7 @@ begin
     c_Trig_Alarms: result:=trAlarms;
     c_Trig_Start: result:=trStart;
     c_Trig_Stop: result:=trStop;
+    c_Trig_Stop_cyclogram: result:=trStop_cyclogram;
   end;
 end;
 

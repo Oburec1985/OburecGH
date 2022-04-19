@@ -68,6 +68,7 @@ type
     TimeUnitsCB: TComboBox;
     ContinueCB: TCheckBox;
     ConfirmModeCB: TCheckBox;
+    ActiveModeE: TEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -321,7 +322,6 @@ VAR
   mThread: integer;
 begin
   inherited;
-  m_Confirm:=true;
   m_counted := false;
   m_uiThread := GetCurrentThreadId;
   mThread := MainThreadID;
@@ -733,7 +733,7 @@ begin
     col := i+1;
     m:=p.getMode(i);
     TableModeSG.Cells[col,0]:=m.caption;
-    TableModeSG.Cells[col,row]:=floattostr(SecToTime(m.ModeLength));
+    TableModeSG.Cells[col,row]:=formatstrnoe(SecToTime(m.ModeLength), 2);
   end;
   for I := 0 to p.ControlCount - 1 do
   begin
@@ -1304,27 +1304,30 @@ var
   pPnt:       TPoint;  // Координаты курсора
   xCol, xRow: integer; // Адрес ячейки таблицы
 begin
-  GetCursorPos( pPnt );
-  pPnt:= TStringGrid(Sender).ScreenToClient( pPnt );
-  // Находим позицию нашей ячейки
-  xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
-  xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
-  m_CurControl:=getControlFromTableModeSGByRow(xRow);
-  m:=getTableModeSGByCol(xcol);
-  if xrow=0 then exit;
-  c:=m_CurControl;
-  if c<>nil then
+  if g_conmng.state=c_play then
   begin
-    SelectControl(m_CurControl);
+    GetCursorPos( pPnt );
+    pPnt:= TStringGrid(Sender).ScreenToClient( pPnt );
+    // Находим позицию нашей ячейки
+    xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
+    xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
+    m_CurControl:=getControlFromTableModeSGByRow(xRow);
+    m:=getTableModeSGByCol(xcol);
+    if xrow=0 then exit;
+    c:=m_CurControl;
+    if c<>nil then
+    begin
+      SelectControl(m_CurControl);
+    end;
+    if ConfirmModeCB.Checked then
+    begin
+      ConfirmFmr.SecCallBack(ConfirmManualSwitchMode, m);
+      ConfirmFmr.SetText('Установить режим '+m.name);
+      ConfirmFmr.Execute;
+    end
+    else // безусловный переход
+      ConfirmManualSwitchMode(m);
   end;
-  if ConfirmModeCB.Checked then
-  begin
-    ConfirmFmr.SecCallBack(ConfirmManualSwitchMode, m);
-    ConfirmFmr.SetText('Установить режим '+m.name);
-    ConfirmFmr.Execute;
-  end
-  else // безусловный переход
-    ConfirmManualSwitchMode(m);
 end;
 
 procedure TControlDeskFrm.TableModeSGDrawCell(Sender: TObject; ACol,
@@ -1641,7 +1644,17 @@ begin
 end;
 
 procedure TControlDeskFrm.updateviews;
+var
+  p:cProgramObj;
 begin
+  p:=g_conmng.getProgram(0);
+  if p<>nil then
+  begin
+    if p.ActiveMode<>nil then
+      ActiveModeE.Text:=p.ActiveMode.name
+    else
+      ActiveModeE.Text:='';
+  end;
   UpdateTimers;
   if PageControl1.TabIndex=0 then
   begin
