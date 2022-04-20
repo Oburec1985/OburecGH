@@ -1,21 +1,19 @@
 object ControlEditFrame: TControlEditFrame
   Left = 0
   Top = 0
-  Width = 739
+  Width = 451
   Height = 304
   Align = alClient
   Constraints.MinWidth = 296
   TabOrder = 0
-  ExplicitWidth = 451
   object ControlPanel: TPanel
     Left = 0
     Top = 0
-    Width = 739
+    Width = 451
     Height = 304
     Align = alClient
     Constraints.MinWidth = 228
     TabOrder = 0
-    ExplicitWidth = 451
     object ControlNameLabel: TLabel
       Left = 3
       Top = 13
@@ -30,10 +28,26 @@ object ControlEditFrame: TControlEditFrame
       Height = 16
       Caption = #1054#1073#1088#1072#1090#1085#1072#1103' '#1089#1074#1103#1079#1100
     end
+    object Splitter1: TSplitter
+      Left = 1
+      Top = 107
+      Width = 449
+      Height = 3
+      Cursor = crVSplit
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Align = alBottom
+      Color = clBlack
+      Constraints.MaxHeight = 3
+      ParentColor = False
+      ExplicitTop = 105
+    end
     object ControlsPageControl: TPageControl
       Left = 1
       Top = 110
-      Width = 737
+      Width = 449
       Height = 193
       Margins.Left = 2
       Margins.Top = 2
@@ -41,7 +55,6 @@ object ControlEditFrame: TControlEditFrame
       Margins.Bottom = 2
       Align = alBottom
       TabOrder = 0
-      ExplicitWidth = 449
     end
     object ControlNameEdit: TEdit
       Left = 3

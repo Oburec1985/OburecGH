@@ -16,6 +16,7 @@ type
     FeedbackLabel: TLabel;
     ControlNameEdit: TEdit;
     FeedbackCB: TComboBox;
+    Splitter1: TSplitter;
     procedure FeedbackCBDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure FeedbackCBDragDrop(Sender, Source: TObject; X, Y: Integer);

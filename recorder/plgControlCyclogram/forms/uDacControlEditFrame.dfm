@@ -1,6 +1,6 @@
 inherited DACControlEditFrame: TDACControlEditFrame
-  Width = 451
-  Height = 304
+  Width = 823
+  Height = 298
   Align = alClient
   ExplicitWidth = 451
   ExplicitHeight = 304
@@ -19,25 +19,26 @@ inherited DACControlEditFrame: TDACControlEditFrame
     TabOrder = 0
   end
   object RightGB: TGroupBox
-    Left = -178
+    Left = 217
     Top = 0
-    Width = 629
-    Height = 304
+    Width = 606
+    Height = 298
     Align = alRight
     Caption = #1047#1086#1085#1099' '#1088#1077#1075#1091#1083#1080#1088#1086#1074#1072#1085#1080#1103
     TabOrder = 1
+    ExplicitHeight = 286
     object LowPanel: TPanel
       Left = 2
-      Top = 325
-      Width = 625
-      Height = 53
+      Top = 225
+      Width = 602
+      Height = 71
       Align = alBottom
       TabOrder = 0
       ExplicitLeft = 3
-      ExplicitTop = 421
+      ExplicitTop = 238
       object AddZoneBtn: TSpeedButton
-        Left = 0
-        Top = 2
+        Left = 4
+        Top = 10
         Width = 54
         Height = 47
         Hint = #1044#1086#1073#1072#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
@@ -119,18 +120,18 @@ inherited DACControlEditFrame: TDACControlEditFrame
       end
       object TolLabel: TLabel
         Left = 141
-        Top = 7
-        Width = 41
+        Top = 10
+        Width = 52
         Height = 16
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
         Margins.Bottom = 4
-        Caption = #1044#1086#1087#1091#1089#1082
+        Caption = #1044#1086#1087#1091#1089#1082' 1'
       end
       object UpdateBtn: TSpeedButton
-        Left = 60
-        Top = 2
+        Left = 64
+        Top = 10
         Width = 64
         Height = 47
         Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1079#1086#1085#1091' '#1088#1077#1075#1091#1083#1080#1088#1086#1074#1072#1085#1080#1103
@@ -244,8 +245,19 @@ inherited DACControlEditFrame: TDACControlEditFrame
         ShowHint = True
         OnClick = UpdateBtnClick
       end
+      object TolLabel2: TLabel
+        Left = 141
+        Top = 42
+        Width = 34
+        Height = 16
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Caption = #1052#1072#1082#1089':'
+      end
       object TolEdit: TFloatEdit
-        Left = 230
+        Left = 206
         Top = 7
         Width = 153
         Height = 24
@@ -272,21 +284,36 @@ inherited DACControlEditFrame: TDACControlEditFrame
         TabOrder = 1
         OnClick = ZoneTypeCBClick
       end
+      object TolEdit2: TFloatEdit
+        Left = 206
+        Top = 39
+        Width = 153
+        Height = 24
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        TabOrder = 2
+        Text = '0.0'
+        OnChange = TolEditChange
+      end
     end
     object ZonesLB: TListBox
       Left = 2
-      Top = 18
+      Top = 71
       Width = 175
-      Height = 307
+      Height = 154
       Align = alLeft
       TabOrder = 1
       OnClick = ZonesLBClick
+      ExplicitLeft = 44
+      ExplicitHeight = 160
     end
     object ChannelsLV: TBtnListView
       Left = 177
-      Top = 18
-      Width = 450
-      Height = 231
+      Top = 71
+      Width = 427
+      Height = 154
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -312,6 +339,34 @@ inherited DACControlEditFrame: TDACControlEditFrame
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
+      ExplicitWidth = 450
+      ExplicitHeight = 178
+    end
+    object Panel1: TPanel
+      Left = 2
+      Top = 18
+      Width = 602
+      Height = 53
+      Align = alTop
+      TabOrder = 3
+      ExplicitLeft = 3
+      ExplicitTop = 12
+      ExplicitWidth = 625
+      object RelZoneCB: TCheckBox
+        Left = 7
+        Top = 13
+        Width = 210
+        Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Caption = #1054#1090#1085#1086#1089#1080#1090#1077#1083#1100#1085#1099#1077' '#1079#1086#1085#1099
+        Checked = True
+        State = cbChecked
+        TabOrder = 0
+        OnClick = RelZoneCBClick
+      end
     end
   end
   object ZonesCB: TCheckBox

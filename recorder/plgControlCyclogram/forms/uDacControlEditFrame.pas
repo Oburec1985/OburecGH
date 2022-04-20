@@ -25,6 +25,10 @@ type
     ZonesCB: TCheckBox;
     UpdateBtn: TSpeedButton;
     UsePrevValsCB: TCheckBox;
+    Panel1: TPanel;
+    RelZoneCB: TCheckBox;
+    TolEdit2: TFloatEdit;
+    TolLabel2: TLabel;
     procedure ChannelsLVDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure ChannelsLVDragDrop(Sender, Source: TObject; X, Y: Integer);
@@ -33,6 +37,7 @@ type
     procedure TolEditChange(Sender: TObject);
     procedure ZonesLBClick(Sender: TObject);
     procedure ZoneTypeCBClick(Sender: TObject);
+    procedure RelZoneCBClick(Sender: TObject);
   public
     m_CurCon:cControlObj;
     m_ZoneList:cZoneList;
@@ -130,6 +135,26 @@ end;
 procedure TDACControlEditFrame.Load(f:tinifile; section:string);
 begin
   DACCB.text:=f.ReadString(section,'DACChannel','');
+end;
+
+procedure TDACControlEditFrame.RelZoneCBClick(Sender: TObject);
+begin
+  if RelZoneCB.Checked then
+  begin
+    m_ZoneList.m_zones_Alg:=true;
+    RelZoneCB.caption:='Относительные зоны';
+    TolLabel.caption:='Допуск';
+    TolLabel2.Visible:=false;
+    TolEdit2.Visible:=false;
+  end
+  else
+  begin
+    m_ZoneList.m_zones_Alg:=true;
+    RelZoneCB.caption:='Абсолютные значения зон';
+    TolLabel.caption:='Мин';
+    TolLabel2.Visible:=true;
+    TolEdit2.Visible:=true;
+  end;
 end;
 
 procedure TDACControlEditFrame.ShowControlProps(con:cControlObj; endMS:boolean);
@@ -311,22 +336,30 @@ var
   I: Integer;
   p:tZonePair;
 begin
-  if toledit.FloatNum<>0 then
+  if relZoneCB.Checked then
   begin
-    if zonetypecb.Checked then
-      z:=m_CurCon.m_ZoneList.NewZone(p2d(toledit.FloatNum,0))
-    else
-      z:=m_CurCon.m_ZoneList.NewZone(p2d(-toledit.FloatNum,0));
-    defzone:=m_CurCon.m_ZoneList.defaultZone;
-    for I := 0 to defZone.tags.Count - 1 do
+    if toledit.FloatNum<>0 then
     begin
-      p:=defZone.GetZonePair(i);
-      z.AddZonePair(p);
-    end;
-    ShowZones(m_CurCon);
+      if zonetypecb.Checked then
+        z:=m_CurCon.m_ZoneList.NewZone(p2d(toledit.FloatNum,0))
+      else
+        z:=m_CurCon.m_ZoneList.NewZone(p2d(-toledit.FloatNum,0));
+      defzone:=m_CurCon.m_ZoneList.defaultZone;
+      for I := 0 to defZone.tags.Count - 1 do
+      begin
+        p:=defZone.GetZonePair(i);
+        z.AddZonePair(p);
+      end;
+      ShowZones(m_CurCon);
+    end
+    else
+      toledit.Color:=clPink;
   end
   else
-    toledit.Color:=clPink;
+  begin
+    z:=m_CurCon.m_ZoneList.NewZone(p2d(toledit.FloatNum,toledit2.FloatNum));
+    ShowZones(m_CurCon);
+  end;
 end;
 
 procedure TDACControlEditFrame.ChannelsLVDragDrop(Sender, Source: TObject; X,

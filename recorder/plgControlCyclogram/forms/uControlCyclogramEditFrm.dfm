@@ -157,6 +157,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
     Margins.Bottom = 4
     Align = alClient
     TabOrder = 1
+    ExplicitWidth = 1862
     object OnTopSplitter: TSplitter
       Left = 1
       Top = 358
@@ -183,6 +184,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
       Align = alTop
       Constraints.MinHeight = 357
       TabOrder = 0
+      ExplicitWidth = 1860
       object ControlsGB: TGroupBox
         Left = 1
         Top = 1
@@ -508,6 +510,12 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             ExplicitTop = 17
             ExplicitWidth = 123
             ExplicitHeight = 21
+          end
+          inherited Splitter1: TSplitter
+            Top = 1
+            Width = 653
+            Height = 101
+            ExplicitHeight = 101
           end
           inherited ControlsPageControl: TPageControl
             Top = 102
@@ -1211,7 +1219,6 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              Value = 0
               ExplicitTop = 94
               ExplicitWidth = 158
               ExplicitHeight = 27

@@ -5557,15 +5557,22 @@ function cZone.propstr: string;
 var
   t: double;
 begin
-  t := tol.x;
-  if t > 0 then
-    result := '+' + floattostr(tol.x)
+  if cZoneList(owner).m_zones_Alg then
+  begin
+    result:=floattostr(tol.x)+'...'+floattostr(tol.y);
+  end
   else
   begin
-    if t < 0 then
-      result := floattostr(tol.x)
+    t := tol.x;
+    if t > 0 then
+      result := '+' + floattostr(tol.x)
     else
-      result := '0';
+    begin
+      if t < 0 then
+        result := floattostr(tol.x)
+      else
+        result := '0';
+    end;
   end;
 end;
 
