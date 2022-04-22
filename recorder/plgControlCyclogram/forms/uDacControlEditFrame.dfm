@@ -1,6 +1,6 @@
 inherited DACControlEditFrame: TDACControlEditFrame
-  Width = 823
-  Height = 298
+  Width = 980
+  Height = 416
   Align = alClient
   ExplicitWidth = 451
   ExplicitHeight = 304
@@ -19,23 +19,23 @@ inherited DACControlEditFrame: TDACControlEditFrame
     TabOrder = 0
   end
   object RightGB: TGroupBox
-    Left = 217
+    Left = 235
     Top = 0
-    Width = 606
-    Height = 298
+    Width = 745
+    Height = 416
     Align = alRight
     Caption = #1047#1086#1085#1099' '#1088#1077#1075#1091#1083#1080#1088#1086#1074#1072#1085#1080#1103
     TabOrder = 1
-    ExplicitHeight = 286
+    ExplicitLeft = -294
+    ExplicitHeight = 304
     object LowPanel: TPanel
       Left = 2
-      Top = 225
-      Width = 602
+      Top = 343
+      Width = 741
       Height = 71
       Align = alBottom
       TabOrder = 0
-      ExplicitLeft = 3
-      ExplicitTop = 238
+      ExplicitTop = 574
       object AddZoneBtn: TSpeedButton
         Left = 4
         Top = 10
@@ -302,18 +302,18 @@ inherited DACControlEditFrame: TDACControlEditFrame
       Left = 2
       Top = 71
       Width = 175
-      Height = 154
+      Height = 272
       Align = alLeft
       TabOrder = 1
       OnClick = ZonesLBClick
-      ExplicitLeft = 44
+      OnKeyDown = ZonesLBKeyDown
       ExplicitHeight = 160
     end
     object ChannelsLV: TBtnListView
       Left = 177
       Top = 71
-      Width = 427
-      Height = 154
+      Width = 566
+      Height = 272
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -339,19 +339,15 @@ inherited DACControlEditFrame: TDACControlEditFrame
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitWidth = 450
-      ExplicitHeight = 178
+      ExplicitHeight = 160
     end
     object Panel1: TPanel
       Left = 2
       Top = 18
-      Width = 602
+      Width = 741
       Height = 53
       Align = alTop
       TabOrder = 3
-      ExplicitLeft = 3
-      ExplicitTop = 12
-      ExplicitWidth = 625
       object RelZoneCB: TCheckBox
         Left = 7
         Top = 13
@@ -372,7 +368,7 @@ inherited DACControlEditFrame: TDACControlEditFrame
   object ZonesCB: TCheckBox
     Left = 16
     Top = 72
-    Width = 194
+    Width = 177
     Height = 22
     Margins.Left = 4
     Margins.Top = 4
@@ -384,7 +380,7 @@ inherited DACControlEditFrame: TDACControlEditFrame
   object UsePrevValsCB: TCheckBox
     Left = 16
     Top = 112
-    Width = 194
+    Width = 177
     Height = 22
     Hint = #1048#1089#1087#1086#1083#1100#1079#1086#1074#1072#1090#1100' '#1079#1085#1072#1095#1077#1085#1080#1103' '#1080#1079' '#1087#1088#1077#1076#1099#1076#1091#1097#1077#1081' '#1079#1086#1085#1099
     Margins.Left = 4

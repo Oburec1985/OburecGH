@@ -233,6 +233,7 @@ type
   private
   public
     procedure Apply;
+    function Paircount:integer;
     procedure AddZonePair(z: TZonePair);
     procedure cleartags;
     procedure delPair(i: integer);
@@ -240,7 +241,13 @@ type
     function GetZonePair(str: string): TZonePair; overload;
     function GetZonePairPointer(i: integer): pZonePair; overload;
     function GetZonePairPointer(str: string): pZonePair; overload;
-    function propstr: string;
+    function propstr: string;overload;
+    function propstr(b:boolean):string;overload;
+    function index:integer;
+    function isNeg:boolean;
+    function isPos:boolean;
+    function Next:cZone;
+    function Prev:cZone;
     constructor create(List: tlist; tol: point2d);
     destructor destroy;
   protected
@@ -251,6 +258,7 @@ type
 
   cZoneList = class(csetlist)
   public
+    z_inf_pos,z_inf_neg:cZone;
     // false - абсолютные зоны true - относительные зоны (от задания)
     m_zones_Alg: boolean;
   protected
@@ -258,6 +266,8 @@ type
   protected
     procedure deletechild(node: pointer); override;
   public
+    // создать пары для inf зон
+    procedure createPairInf;
     procedure ApplyZone(err: double);
     function defaultZone: cZone;
     function GetZoneByTol(t: point2d): cZone;
@@ -338,6 +348,7 @@ type
     function getfbname: string;
     procedure setunits(str: string); virtual;
     function getunits: string; virtual;
+    // cControlObj
     procedure LoadObjAttributes(xmlNode: txmlnode; mng: tobject); override;
     procedure SaveObjAttributes(xmlNode: txmlnode); override;
     // вычитать из тега обратную связь
@@ -2700,6 +2711,8 @@ begin
       pair.value := strtofloat(str);
       z.AddZonePair(pair);
     end;
+    if (m_ZoneList.z_inf_pos.paircount=0) and (m_ZoneList.z_inf_neg.paircount=0) then
+      m_ZoneList.createPairInf;
     dec(zCount);
     inc(i);
     delpars(pars);
@@ -5553,27 +5566,61 @@ begin
     ftol := t;
 end;
 
-function cZone.propstr: string;
+function cZone.propstr(b:boolean): string;
+begin
 var
   t: double;
+  z:cZone;
+  i:integer;
 begin
-  if cZoneList(owner).m_zones_Alg then
+  if b then
   begin
-    result:=floattostr(tol.x)+'...'+floattostr(tol.y);
-  end
-  else
-  begin
-    t := tol.x;
+    t := ftol.x;
     if t > 0 then
-      result := '+' + floattostr(tol.x)
+      result := '+' + floattostr(ftol.x)
     else
     begin
       if t < 0 then
-        result := floattostr(tol.x)
+        result := floattostr(ftol.x)
       else
         result := '0';
     end;
+  end
+  // алгоритм относительных зон
+  else
+  begin
+    if index<>-1 then
+    begin
+      result:=floattostr(ftol.x)+'...'+floattostr(ftol.y);
+    end
+    else
+    begin
+      if isNeg then
+      begin
+        z:=next;
+        result:='-'+widechar(8734)+'...'+floattostr(z.ftol.x)
+      end
+      else
+      begin
+        if isPos then
+        begin
+          z:=Prev;
+          result:=floattostr(z.ftol.y)+'...'+widechar(8734);
+        end
+        else
+          result:=floattostr(ftol.x)+'...'+floattostr(ftol.y);
+      end;
+    end;
   end;
+end;
+
+function cZone.propstr: string;
+var
+  t: double;
+  z:cZone;
+  i:integer;
+begin
+  result:=propstr(cZoneList(owner).m_zones_Alg);
 end;
 
 constructor cZone.create(List: tlist; tol: point2d);
@@ -5658,6 +5705,94 @@ begin
   end;
 end;
 
+function cZone.index: integer;
+var
+  i:integer;
+  z:czone;
+begin
+  result:=-1;
+  for I := 0 to cZoneList(owner).Count - 1 do
+  begin
+    z:=cZoneList(owner).GetZone(i);
+    if z=self then
+    begin
+      result:=i;
+      exit;
+    end;
+  end;
+end;
+
+function cZone.Next:cZone;
+var
+  i, c:integer;
+begin
+  c:=cZoneList(owner).Count;
+  result:=nil;
+  if c<0 then exit;
+
+  if isNeg then
+  begin
+    result:=cZoneList(owner).GetZone(0);
+    exit;
+  end;
+
+  if isPos then
+  begin
+    exit;
+  end;
+  i:=index;
+  if i<c then
+  begin
+    result:=cZoneList(owner).GetZone(i+1);
+  end
+  else
+  begin
+
+  end;
+end;
+
+function cZone.Paircount: integer;
+begin
+  result:=tags.Count;
+end;
+
+function cZone.Prev:cZone;
+var
+  i, c:integer;
+begin
+  c:=cZoneList(owner).Count;
+  result:=nil;
+  if c<0 then exit;
+
+  if isPos then
+  begin
+    result:=cZoneList(owner).GetZone(c-1);
+    exit;
+  end;
+
+  i:=index;
+  if i>0 then
+    result:=cZoneList(owner).GetZone(i-1)
+  else
+    result:=nil;
+end;
+
+function cZone.isNeg:boolean;
+begin
+  if cZoneList(owner).z_inf_neg=self then
+    result:=true
+  else
+    result:=false;
+end;
+
+function cZone.isPos:boolean;
+begin
+  if cZoneList(owner).z_inf_pos=self then
+    result:=true
+  else
+    result:=false;
+end;
+
 function cZone.GetZonePair(i: integer): TZonePair;
 begin
   result := TZonePair(tags.Items[i]^);
@@ -5739,12 +5874,37 @@ begin
   comparator := ZoneComparator;
   keycomparator := ZoneKeyComparator;
   destroydata := true;
+
+  z_inf_pos:=cZone.create(nil, p2d(0,0));
+  z_inf_pos.owner:=self;
+
+  z_inf_neg:=cZone.create(nil, p2d(0,0));
+  z_inf_neg.owner:=self;
+end;
+
+procedure cZoneList.createPairInf;
+var
+  I: Integer;
+  defzone:czone;
+  p:tZonePair;
+begin
+  z_inf_pos.cleartags;
+  z_inf_neg.cleartags;
+  defzone:=defaultZone;
+  for I := 0 to defzone.tags.Count - 1 do
+  begin
+    p:=defZone.GetZonePair(i);
+    z_inf_pos.AddZonePair(p);
+    z_inf_neg.AddZonePair(p);
+  end;
 end;
 
 procedure cZoneList.deletechild(node: pointer);
 begin
   inherited;
   cZone(node).destroy;
+  z_inf_pos.destroy;
+  z_inf_neg.destroy;
 end;
 
 function cZoneList.defaultZone: cZone;

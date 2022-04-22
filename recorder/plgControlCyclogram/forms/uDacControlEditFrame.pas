@@ -38,12 +38,16 @@ type
     procedure ZonesLBClick(Sender: TObject);
     procedure ZoneTypeCBClick(Sender: TObject);
     procedure RelZoneCBClick(Sender: TObject);
+    procedure ZonesLBKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   public
     m_CurCon:cControlObj;
     m_ZoneList:cZoneList;
   public
+    procedure ShowZoneElements;
     procedure ShowZone(z:cZone);
     procedure ShowZones(c:cControlObj);
+    procedure ShowZonesLB;
     procedure EndMS;override;
     function GetDsc:string;override;
     procedure doUpdateChannelList;override;
@@ -137,24 +141,32 @@ begin
   DACCB.text:=f.ReadString(section,'DACChannel','');
 end;
 
-procedure TDACControlEditFrame.RelZoneCBClick(Sender: TObject);
+procedure TDACControlEditFrame.ShowZoneElements;
 begin
   if RelZoneCB.Checked then
   begin
-    m_ZoneList.m_zones_Alg:=true;
     RelZoneCB.caption:='Относительные зоны';
     TolLabel.caption:='Допуск';
     TolLabel2.Visible:=false;
     TolEdit2.Visible:=false;
+    ZoneTypeCB.Visible:=true;
   end
   else
   begin
-    m_ZoneList.m_zones_Alg:=true;
     RelZoneCB.caption:='Абсолютные значения зон';
     TolLabel.caption:='Мин';
     TolLabel2.Visible:=true;
     TolEdit2.Visible:=true;
+    ZoneTypeCB.Visible:=false;
   end;
+end;
+
+procedure TDACControlEditFrame.RelZoneCBClick(Sender: TObject);
+begin
+  if m_zonelist=nil then
+    exit;
+  ShowZoneElements;
+  ShowZonesLB();
 end;
 
 procedure TDACControlEditFrame.ShowControlProps(con:cControlObj; endMS:boolean);
@@ -172,11 +184,16 @@ var
   p:TZonePair;
 begin
   TolEdit.FloatNum:=z.tol.x;
+  TolEdit2.FloatNum:=z.tol.y;
   ZoneTypeCB.Checked:=(z.tol.x>0);
-  if ZoneTypeCB.Checked then
-    ZoneTypeCB.Caption:='Превышение уставки'
-  else
-    ZoneTypeCB.Caption:='Меньшен уставки';
+  // только для относительных зон
+  if m_ZoneList.m_zones_Alg then
+  begin
+    if ZoneTypeCB.Checked then
+      ZoneTypeCB.Caption:='Превышение уставки'
+    else
+      ZoneTypeCB.Caption:='Меньшен уставки';
+  end;
   ChannelsLV.Clear;
   for I := 0 to z.tags.Count - 1 do
   begin
@@ -188,6 +205,51 @@ begin
   end;
 end;
 
+procedure TDACControlEditFrame.ShowZonesLB;
+var
+  z:czone;
+  I: Integer;
+  srt:string;
+begin
+  z:=nil;
+  if m_Zonelist.Count=0 then
+  begin
+    ZonesLB.Clear;
+    exit;
+  end;
+  if ZonesLB.ItemIndex>-1 then
+  begin
+    z:=cZone(ZonesLB.Items.Objects[ZonesLB.ItemIndex]);
+  end;
+  ZonesLB.Clear;
+  if (m_ZoneList.Count=1) and (relZoneCB.Checked) then
+  begin
+    ZonesLB.AddItem(m_ZoneList.z_inf_neg.propstr(relZoneCB.Checked),m_ZoneList.z_inf_neg);
+    z:=m_ZoneList.GetZone(0);
+    ZonesLB.AddItem(z.propstr(relZoneCB.Checked),z);
+    ZonesLB.AddItem(m_ZoneList.z_inf_pos.propstr(relZoneCB.Checked),m_ZoneList.z_inf_pos);
+  end
+  else
+  begin
+    for I := 0 to m_ZoneList.Count - 1 do
+    begin
+      z:=m_ZoneList.GetZone(i);
+      ZonesLB.AddItem(z.propstr(relZoneCB.Checked),z);
+    end;
+    for I := 0 to ZonesLB.items.count - 1 do
+    begin
+      if z=cZone(ZonesLB.Items.Objects[i]) then
+      begin
+        ZonesLB.ItemIndex:=i;
+        ShowZone(z);
+        exit;
+      end;
+    end;
+  end;
+  z:=cZone(m_ZoneList.GetZone(0));
+  ShowZone(z);
+end;
+
 procedure TDACControlEditFrame.ShowZones(c:cControlObj);
 var
   I: Integer;
@@ -195,28 +257,9 @@ var
   srt:string;
 begin
   m_Zonelist:=c.m_ZoneList;
-  z:=nil;
-  if ZonesLB.ItemIndex>-1 then
-  begin
-    z:=cZone(ZonesLB.Items.Objects[ZonesLB.ItemIndex]);
-  end;
-  ZonesLB.Clear;
-  for I := 0 to c.m_ZoneList.Count - 1 do
-  begin
-    z:=c.m_ZoneList.GetZone(i);
-    ZonesLB.AddItem(z.propstr,z);
-  end;
-  for I := 0 to ZonesLB.items.count - 1 do
-  begin
-    if z=cZone(ZonesLB.Items.Objects[i]) then
-    begin
-      ZonesLB.ItemIndex:=i;
-      ShowZone(z);
-      exit;
-    end;
-  end;
-  z:=cZone(c.m_ZoneList.GetZone(0));
-  ShowZone(z);
+  RelZoneCB.Checked:=m_Zonelist.m_zones_Alg;
+  ShowZoneElements;
+  ShowZonesLB;
 end;
 
 procedure TDACControlEditFrame.TolEditChange(Sender: TObject);
@@ -238,13 +281,20 @@ var
 begin
   if ZonesLB.ItemIndex>=0 then
   begin
+    m_ZoneList.m_zones_Alg:=RelZoneCB.Checked;
     z:=cZone(ZonesLB.Items.Objects[ZonesLB.ItemIndex]);
     m_CurCon.m_zones_enabled:=ZonesCB.Checked;
     t:=z.tol.x;
-    if zonetypecb.Checked then
-      z.ftol.x:=abs(tolEdit.FloatNum)
+    if RelZoneCB.checked then
+    begin
+      if zonetypecb.Checked then
+        z.ftol.x:=abs(tolEdit.FloatNum)
+      else
+        z.ftol.x:=-abs(tolEdit.FloatNum);
+    end
     else
-      z.ftol.x:=-abs(tolEdit.FloatNum);
+      z.ftol.x:=tolEdit.FloatNum;
+    z.ftol.y:=tolEdit2.FloatNum;
     z.cleartags;
     for I := 0 to channelsLV.items.Count - 1 do
     begin
@@ -255,7 +305,9 @@ begin
       z.AddZonePair(pair);
     end;
     //if z.tol<>t then
-      ShowZones(m_CurCon);
+    cZonelist(z.owner).Delete(z.index);
+    cZonelist(z.owner).AddObj(z);
+    ShowZones(m_CurCon);
     for I := 0 to ZonesLB.Count - 1 do
     begin
       if ZonesLB.Items.Objects[i]=z then
@@ -289,6 +341,21 @@ begin
       UsePrevValsCB.Visible:=false;
     end;
   end;
+end;
+
+procedure TDACControlEditFrame.ZonesLBKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  z:cZone;
+begin
+  if key=VK_DELETE then
+  begin
+    z:=cZone(ZonesLB.Items.Objects[ZonesLB.ItemIndex]);
+    if z.isneg then exit;
+    if z.ispos then exit;
+    z.destroy;
+  end;
+  ShowZones(m_CurCon);
 end;
 
 procedure TDACControlEditFrame.ZoneTypeCBClick(Sender: TObject);
