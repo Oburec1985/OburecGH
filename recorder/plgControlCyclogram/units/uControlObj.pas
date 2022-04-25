@@ -274,6 +274,7 @@ type
     procedure clearZones;
     function NewZone(tol: point2d): cZone;
     constructor create; override;
+    destructor destroy; override;
     function GetZone(i: integer): cZone;
     procedure DelZone(i: integer);
     function toString:string;
@@ -5567,7 +5568,6 @@ begin
 end;
 
 function cZone.propstr(b:boolean): string;
-begin
 var
   t: double;
   z:cZone;
@@ -5903,8 +5903,6 @@ procedure cZoneList.deletechild(node: pointer);
 begin
   inherited;
   cZone(node).destroy;
-  z_inf_pos.destroy;
-  z_inf_neg.destroy;
 end;
 
 function cZoneList.defaultZone: cZone;
@@ -6020,27 +6018,70 @@ begin
   result := cZone.create(self, tol);
 end;
 
-function cZoneList.toString: string;
+function cZoneList.toString:string;
 var
+  z,z2:cZone;
   i, j:integer;
-  z:cZone;
   pair:TZonePair;
   str:string;
+  zname:string;
 begin
-  result:='';
-  for I := 0 to Count - 1 do
+  if not m_zones_Alg then
   begin
-    z:=GetZone(i);
-    if i>0 then
-    str:=str+char(10);
-    str:=str+'z'+inttostr(i)+':'+floaTTOSTR(z.tol.x)+';';
-    for J := 0 to z.tags.Count - 1 do
+    if Count=1 then
     begin
-      pair:=z.GetZonePair(j);
-      str:=str+floattostr(pair.value)+';';
+      // зона будет гистерезисной, значения прописываются для
+      z:=GetZone(0);
+      // далее формат N значит значения указываются для негативной зоны, P для позитивной
+      if z.fUsePrevZoneVals then
+      begin
+        z2:=z_inf_neg;
+        if z2.tags.Count>0 then
+        begin
+          str:='N';
+          for i := 0 to z2.tags.Count-1 do
+          begin
+            pair:=z2.GetZonePair(i);
+            str:=str+floattostr(pair.value)+';'
+          end;
+        end;
+        z2:=z_inf_pos;
+        if z2.tags.Count>0 then
+        begin
+          str:='P';
+          for i := 0 to z2.tags.Count-1 do
+          begin
+            pair:=z2.GetZonePair(i);
+            str:=str+floattostr(pair.value)+';'
+          end;
+        end;
+      end;
+      str:=floattostr(z.ftol.x)+'...'+floattostr(z.ftol.y)+';'+str;
+      result:=str;
     end;
+  end
+  else
+  begin
+    result:='';
+    if m_zones_Alg then
+      zname:='zr' // относительные зоны
+    else
+      zname:='z'; // абсолютные значения
+    for I := 0 to Count - 1 do
+    begin
+      z:=GetZone(i);
+      if i>0 then
+      str:=str+char(10);
+
+      str:=str+zname+inttostr(i)+':'+floatToStr(z.tol.x)+';'+floatToStr(z.tol.y);
+      for J := 0 to z.tags.Count - 1 do
+      begin
+        pair:=z.GetZonePair(j);
+        str:=str+floattostr(pair.value)+';';
+      end;
+    end;
+    result:=str;
   end;
-  result:=str;
 end;
 
 procedure cZoneList.DelZone(i: integer);
@@ -6049,6 +6090,13 @@ var
 begin
   z := GetZone(i);
   z.destroy;
+end;
+
+destructor cZoneList.destroy;
+begin
+  z_inf_pos.destroy;
+  z_inf_neg.destroy;
+  inherited;
 end;
 
 function cZoneList.GetZone(i: integer): cZone;

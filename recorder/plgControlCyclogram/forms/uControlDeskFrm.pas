@@ -410,6 +410,8 @@ end;
 
 procedure TControlDeskFrm.doLeaveCfg(Sender: TObject);
 begin
+  m_CurControl:=nil;
+  ControlPropE.text:='';
   preview;
 end;
 
@@ -1673,32 +1675,15 @@ begin
   end;
 end;
 
-procedure TControlDeskFrm.UpdateControlsPropSGmode(m:cModeObj);
+procedure UpdateTols(tols:cDoubleList; str:string);
 var
-  i, j, k, posstate,state:integer;
-  t:ctask;
-  str, str1:string;
+  state, k, posstate, j:integer;
+  str1:string;
   d:double;
 begin
-  i:=m.modeIndex;
-  if m_CurControl<>nil then
-    t:=m.GetTask(m_CurControl.name)
-  else
-  begin
-    t:=m.GetTask(ControlPropE.text);
-    if t<>nil then
-      m_CurControl:=t.control;
-  end;
-
-  //if T.m_Params.count=0 then exit;
-  str := t.getParam('PWM_Thi');
-  ControlPropSG.Cells[i+1, 1] := str;
-  str := t.getParam('PWM_Tlo');
-  ControlPropSG.Cells[i+1, 2] := str;
-  str := T.getParam('Vals');
   state:=0;
   k:=1;
-  m_tolArray.Listclear;
+
   while k <=length(str) do
   begin
     case state of
@@ -1723,7 +1708,7 @@ begin
             begin
               str1:=Copy(str, j+1, k-j-1);
               d:=strtofloat(str1);
-              m_tolArray.addObj(d);
+              tols.addObj(d);
               state:=2;
               break;
             end;
@@ -1741,18 +1726,60 @@ begin
     end;
     inc(k);
   end;
-  if m_tolArray.Count>0 then
+end;
+
+procedure TControlDeskFrm.UpdateControlsPropSGmode(m:cModeObj);
+var
+  i, j, k:integer;
+  t:ctask;
+  str, str1:string;
+  d:double;
+begin
+  i:=m.modeIndex;
+  if m_CurControl<>nil then
+    t:=m.GetTask(m_CurControl.name)
+  else
   begin
-    d:=m_tolArray.GetDouble(0);
-    str:=formatstrnoe(t.task+d, 4);
-    ControlPropSG.Cells[i+1, 3] := str;
-    d:=m_tolArray.GetDouble(m_tolArray.Count-1);
-    str:=formatstrnoe(t.task+d, 4);
-    ControlPropSG.Cells[i+1, 4] := str;
+    t:=m.GetTask(ControlPropE.text);
+    if t<>nil then
+      m_CurControl:=t.control;
+  end;
+
+  //if T.m_Params.count=0 then exit;
+  str := t.getParam('PWM_Thi');
+  ControlPropSG.Cells[i+1, 1] := str;
+  str := t.getParam('PWM_Tlo');
+  ControlPropSG.Cells[i+1, 2] := str;
+  str := T.getParam('Vals');
+  // алгоритм абсолютных зон
+  k:=pos('...', str);
+  if k>0 then
+  begin
+    str1:=GetSubString(str, ';', 1, j);
+    str1:=Copy(str1,1,k-1);
+    // мин
+    ControlPropSG.Cells[i+1, 3] := str1;
+    // макс
+    str1:=Copy(str,k+3,j-k-3);
+    ControlPropSG.Cells[i+1, 4] := str1;
   end
   else
   begin
+    m_tolArray.Listclear;
+    UpdateTols(m_tolArray, str);
+    if m_tolArray.Count>0 then
+    begin
+      d:=m_tolArray.GetDouble(0);
+      str:=formatstrnoe(t.task+d, 4);
+      ControlPropSG.Cells[i+1, 3] := str;
+      d:=m_tolArray.GetDouble(m_tolArray.Count-1);
+      str:=formatstrnoe(t.task+d, 4);
+      ControlPropSG.Cells[i+1, 4] := str;
+    end
+    else
+    begin
 
+    end;
   end;
 end;
 

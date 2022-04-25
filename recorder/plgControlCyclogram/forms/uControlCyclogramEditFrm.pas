@@ -667,7 +667,7 @@ var
   t:ctask;
   z:cZone;
   pair:tZonePair;
-  ind, ind1, r, c, I, j: Integer;
+  ind, ind1, r, c, I, j,k: Integer;
 begin
   p:=g_conmng.getProgram(0);
   if p=nil then exit;
@@ -765,7 +765,9 @@ begin
         setCell(1, r+3+j, c+i*c_modeColCount+1, str);
         str:=t.getParam('PWM_Tlo');
         setCell(1, r+3+j, c+i*c_modeColCount+2, str);
+        // спец обработка специально для НПО Лавочкина :(
         str:=t.getParam('Vals');
+
         ind:=0;
         str:=replaceChar(str, '_', char(10));
         str:=replaceChar(str, ':', '=');
@@ -896,16 +898,16 @@ begin
         end;
       end;
 
-      while 6+modeind*6<lastCol do
+      while c_modeColCount+modeind*c_modeColCount<lastCol do
       begin
         // имя режима
-        str:=sh.Cells[1,6+modeInd*6];
+        str:=sh.Cells[1,6+modeInd*c_modeColCount];
         if str='' then break;
         m:=cModeObj.create;
         m.name:=str;
         p.addmode(m);
         // длительность режима
-        str:=sh.Cells[2,6+modeInd*6];
+        str:=sh.Cells[2,6+modeInd*c_modeColCount];
         if str<>'' then
           m.ModeLength:=toSec(StrToFloat(str), timeUnits);
         m.Infinity:=false;
@@ -917,39 +919,23 @@ begin
           con:=cControlObj(list.Items[j]);
           params:='';
           // задание контролу
-          str:=sh.Cells[j+4,6+modeind*6];
+          str:=sh.Cells[j+4,6+modeind*c_modeColCount];
           if str<>'' then
-            t:=m.createTask(con, strtofloat(str));
-          // ШИМ
-          str:=sh.Cells[j+4,7+modeind*6];
-          if str<>'' then
-          begin
-            params:=params+'PWM_state='+str+',';
-          end;
+            t:=m.createTask(con, strtofloatext(str));
           // Thi_ШИМ
-          str:=sh.Cells[j+4,8+modeind*6];
+          str:=sh.Cells[j+4,6+1+modeind*6];
           if str<>'' then
           begin
             params:=params+'PWM_Thi='+str+',';
           end;
           // Tlo_ШИМ
-          str:=sh.Cells[j+4,9+modeind*6];
+          str:=sh.Cells[j+4,6+2+modeind*6];
           if str<>'' then
           begin
             params:=params+'PWM_Tlo='+str+',';
           end;
-          // Зоны
-          str:=sh.Cells[j+4,10+modeind*6];
-          if str<>'' then
-          begin
-            params:=params+'Zone_state='+str+',';
-            if StrtoBoolExt(str) then
-              con.m_zones_enabled:=true
-            else
-              con.m_zones_enabled:=false;
-          end;
           // Значения
-          str:=sh.Cells[j+4,11+modeind*6];
+          str:=sh.Cells[j+4,6+3+modeind*6];
           if str<>'' then
           begin
             index:=0;

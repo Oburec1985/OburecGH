@@ -98,6 +98,7 @@ const
 
 var
   // флаг для запрета удаления frmSync пока не удалим все формы в потоке формы FrmSync
+  g_CreateFrms,
   g_delFrms:boolean;
 
 implementation
@@ -331,6 +332,7 @@ begin
     addAlgFrm.close;
 
   end;
+  g_CreateFrms:=true;
 end;
 
 procedure destroyFormsRecorderUIThread(compMng: cCompMng);

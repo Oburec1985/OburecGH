@@ -222,7 +222,7 @@ begin
     z:=cZone(ZonesLB.Items.Objects[ZonesLB.ItemIndex]);
   end;
   ZonesLB.Clear;
-  if (m_ZoneList.Count=1) and (relZoneCB.Checked) then
+  if (m_ZoneList.Count=1) and (not relZoneCB.Checked) then
   begin
     ZonesLB.AddItem(m_ZoneList.z_inf_neg.propstr(relZoneCB.Checked),m_ZoneList.z_inf_neg);
     z:=m_ZoneList.GetZone(0);
@@ -305,19 +305,19 @@ begin
       z.AddZonePair(pair);
     end;
     //if z.tol<>t then
-    cZonelist(z.owner).Delete(z.index);
-    cZonelist(z.owner).AddObj(z);
-    ShowZones(m_CurCon);
-    for I := 0 to ZonesLB.Count - 1 do
+    if z.index<>-1 then
     begin
-      if ZonesLB.Items.Objects[i]=z then
+      cZonelist(z.owner).Delete(z.index);
+      cZonelist(z.owner).AddObj(z);
+      ShowZones(m_CurCon);
+      for I := 0 to ZonesLB.Count - 1 do
       begin
-        ZonesLB.ItemIndex:=i;
-        break;
+        if ZonesLB.Items.Objects[i]=z then
+        begin
+          ZonesLB.ItemIndex:=i;
+          break;
+        end;
       end;
-    end;
-    if z.tol.x=0 then
-    begin
       z.fUsePrevZoneVals:=UsePrevValsCB.Checked;
     end;
   end;
@@ -334,6 +334,7 @@ begin
     if z.defaultZone then
     begin
       UsePrevValsCB.Visible:=true;
+      UsePrevValsCB.Checked:=z.fUsePrevZoneVals;
     end
     else
     begin

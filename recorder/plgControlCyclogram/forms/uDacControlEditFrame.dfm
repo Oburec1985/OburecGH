@@ -1,6 +1,6 @@
 inherited DACControlEditFrame: TDACControlEditFrame
-  Width = 980
-  Height = 416
+  Width = 1014
+  Height = 340
   Align = alClient
   ExplicitWidth = 451
   ExplicitHeight = 304
@@ -19,10 +19,10 @@ inherited DACControlEditFrame: TDACControlEditFrame
     TabOrder = 0
   end
   object RightGB: TGroupBox
-    Left = 235
+    Left = 269
     Top = 0
     Width = 745
-    Height = 416
+    Height = 340
     Align = alRight
     Caption = #1047#1086#1085#1099' '#1088#1077#1075#1091#1083#1080#1088#1086#1074#1072#1085#1080#1103
     TabOrder = 1
@@ -30,12 +30,12 @@ inherited DACControlEditFrame: TDACControlEditFrame
     ExplicitHeight = 304
     object LowPanel: TPanel
       Left = 2
-      Top = 343
+      Top = 267
       Width = 741
       Height = 71
       Align = alBottom
       TabOrder = 0
-      ExplicitTop = 574
+      ExplicitTop = 330
       object AddZoneBtn: TSpeedButton
         Left = 4
         Top = 10
@@ -302,7 +302,7 @@ inherited DACControlEditFrame: TDACControlEditFrame
       Left = 2
       Top = 71
       Width = 175
-      Height = 272
+      Height = 196
       Align = alLeft
       TabOrder = 1
       OnClick = ZonesLBClick
@@ -313,7 +313,7 @@ inherited DACControlEditFrame: TDACControlEditFrame
       Left = 177
       Top = 71
       Width = 566
-      Height = 272
+      Height = 196
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4

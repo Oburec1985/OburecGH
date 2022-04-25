@@ -55,10 +55,11 @@ end;
 procedure cControlsNP.doLoad(path: string);
 var
   dir, name, newpath:string;
+  b:boolean;
 begin
   inherited;
   if not RStateConfig then
-    ecm;
+    ecm(b);
   if RStateConfig then
   begin
     dir:=extractfiledir(path);

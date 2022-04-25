@@ -801,7 +801,7 @@ begin
   end;
   if m_outTag.tag = nil then
   begin
-    changeCfgMode := ecm;
+    changeCfgMode := ecm(b);
     lstr := genTagName;
     b := true;
     while b do

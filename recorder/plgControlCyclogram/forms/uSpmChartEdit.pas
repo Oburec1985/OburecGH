@@ -85,7 +85,7 @@ var
 
 implementation
 uses
-  uCursorFrm;
+  uCursorFrm, uCreateComponents;
 
 {$R *.dfm}
 { TSpmChartEditFrm }
@@ -116,7 +116,8 @@ end;
 
 procedure TSpmChartEditFrm.doLeaveCfg(Sender: TObject);
 begin
-  ShowSpmTags;
+  if g_CreateFrms then
+    ShowSpmTags;
 end;
 
 function TSpmChartEditFrm.CheckSpmOnAdd(alg: cBaseAlgContainer): Boolean;
