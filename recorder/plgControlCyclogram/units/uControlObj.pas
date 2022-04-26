@@ -2650,7 +2650,7 @@ begin
     for i := 0 to m_ZoneList.Count - 1 do
     begin
       z := m_ZoneList.GetZone(i);
-      addParam(pars, 'Tol', floattostr(z.tol.x));
+      addParam(pars, 'Tol', floattostr(z.tol.x)+'/'+floattostr(z.tol.y));
       addParam(pars, 'tCount', inttostr(z.tags.Count));
       for J := 0 to z.tags.Count - 1 do
       begin
@@ -2694,14 +2694,25 @@ begin
   begin
     str := xmlNode.ReadAttributeString('z' + inttostr(i), '');
     pars := ParsStrParam(str, ',');
-    p2.x := strtofloat(GetParsValue(pars, 'Tol'));
+    str := (GetParsValue(pars, 'Tol'));
+    p2.x:=strtofloatext(GetSubString(str,'/',1, j));
+    p2.y:=strtofloatext(GetSubString(str,'/',j+1, j));
     if p2.x = 0 then
     begin
       z := m_ZoneList.defaultZone;
     end
     else
     begin
-      z := m_ZoneList.NewZone(p2);
+      if not m_ZoneList.m_zones_Alg then
+      begin
+        if m_ZoneList.Count=1 then
+        begin
+          z:=m_ZoneList.GetZone(0);
+          z.ftol:=p2;
+        end;
+      end
+      else
+        z := m_ZoneList.NewZone(p2);
     end;
     c := strtoint(GetParsValue(pars, 'tCount'));
     for J := 0 to c - 1 do
@@ -5911,13 +5922,23 @@ var
   z: cZone;
 begin
   result := nil;
-  for i := 0 to Count - 1 do
-  begin
-    z := GetZone(i);
-    if z.defaultZone then
+  if m_zones_Alg then
+  BEGIN
+    for i := 0 to Count - 1 do
     begin
-      result := z;
-      exit;
+      z := GetZone(i);
+      if z.defaultZone then
+      begin
+        result := z;
+        exit;
+      end;
+    end;
+  END
+  else
+  begin
+    if count>0 then
+    begin
+      result := GetZone(0);
     end;
   end;
 end;

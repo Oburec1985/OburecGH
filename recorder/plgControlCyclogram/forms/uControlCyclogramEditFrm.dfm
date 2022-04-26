@@ -146,6 +146,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
+      ExplicitTop = 128
     end
   end
   object CommonPanel: TPanel
@@ -1221,7 +1222,6 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              Value = 0
               ExplicitTop = 94
               ExplicitWidth = 158
               ExplicitHeight = 27
@@ -1303,7 +1303,6 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
                     Caption = #1047#1085#1072#1095#1077#1085#1080#1077
                     Width = 65
                   end>
-                ExplicitLeft = 1
                 ExplicitTop = 19
                 ExplicitWidth = 285
                 ExplicitHeight = 275

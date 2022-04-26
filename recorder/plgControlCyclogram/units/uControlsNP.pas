@@ -76,7 +76,8 @@ begin
       //  end;
       //end;
     end;
-    lcm;
+    if b then
+      lcm;
   end;
 end;
 

@@ -510,6 +510,8 @@ var
   m:cmodeobj;
 begin
   p:=g_conmng.getProgram(0);
+  if p=nil then
+    exit;
   if m_CurControl=nil then
   begin
     if p.ControlCount>0 then

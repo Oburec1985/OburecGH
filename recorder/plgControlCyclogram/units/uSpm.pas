@@ -704,11 +704,12 @@ end;
 procedure cSpm.SetResName(s: string);
 var
   pstr: pansichar;
+  b:boolean;
 begin
   m_outTag.tagname := s;
   if m_outTag.tag <> nil then
   begin
-    ecm;
+    ecm(b);
     pstr := lpcstr(StrToAnsi(s));
     m_outTag.tag.setname(pstr);
     lcm;
