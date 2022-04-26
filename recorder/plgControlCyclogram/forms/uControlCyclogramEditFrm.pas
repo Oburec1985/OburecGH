@@ -923,19 +923,19 @@ begin
           if str<>'' then
             t:=m.createTask(con, strtofloatext(str));
           // Thi_ÿ»Ã
-          str:=sh.Cells[j+4,6+1+modeind*6];
+          str:=sh.Cells[j+4,6+1+modeind*c_modeColCount];
           if str<>'' then
           begin
             params:=params+'PWM_Thi='+str+',';
           end;
           // Tlo_ÿ»Ã
-          str:=sh.Cells[j+4,6+2+modeind*6];
+          str:=sh.Cells[j+4,6+2+modeind*c_modeColCount];
           if str<>'' then
           begin
             params:=params+'PWM_Tlo='+str+',';
           end;
           // «Ì‡˜ÂÌËˇ
-          str:=sh.Cells[j+4,6+3+modeind*6];
+          str:=sh.Cells[j+4,6+3+modeind*c_modeColCount];
           if str<>'' then
           begin
             index:=0;
@@ -954,6 +954,7 @@ begin
     g_conmng.configChanged := true;
     ShowProperties;
   end;
+  CloseWorkBook;
   CloseExcel;
 end;
 

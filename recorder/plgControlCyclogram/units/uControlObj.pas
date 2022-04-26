@@ -630,6 +630,8 @@ type
     m_useTolerance: boolean;
     // тип скомпилированного сплайна
     SplineInterp: TPType;
+    // настройка зоны
+    //ZoneTags:TStringList;
   protected
 
   protected

@@ -811,6 +811,10 @@ object ControlDeskFrm: TControlDeskFrm
     TabOrder = 1
     object TabSheet1: TTabSheet
       Caption = #1054#1073#1097#1080#1081' '#1074#1080#1076
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Splitter2: TSplitter
         Left = 732
         Top = 0

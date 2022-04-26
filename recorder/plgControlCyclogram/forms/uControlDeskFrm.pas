@@ -493,14 +493,15 @@ begin
   TrigSG.Cells[c_Col_TrigEnabled, 0] := 'Включен';
   SGChange(TrigSG);
 
-  ControlPropSG.RowCount := 5;
+  ControlPropSG.RowCount := 6;
   ControlPropSG.ColCount := 2;
 
   ControlPropSG.Cells[0, 1] := 'Thi';
   ControlPropSG.Cells[0, 2] := 'Tlo';
   ControlPropSG.Cells[0, 3] := 'Мин.';
   ControlPropSG.Cells[0, 4] := 'Макс.';
-
+  ControlPropSG.Cells[0, 5] := 'Доп. пар-ы';
+  SGChange(ControlPropSG);
 end;
 
 procedure TControlDeskFrm.ShowControlPropsModes;
@@ -1732,10 +1733,12 @@ end;
 
 procedure TControlDeskFrm.UpdateControlsPropSGmode(m:cModeObj);
 var
-  i, j, k:integer;
+  i, j, k, ind:integer;
   t:ctask;
-  str, str1:string;
+  str, str1, str2, str3:string;
   d:double;
+  z:cZone;
+  pair:TZonePair;
 begin
   i:=m.modeIndex;
   if m_CurControl<>nil then
@@ -1762,8 +1765,37 @@ begin
     // мин
     ControlPropSG.Cells[i+1, 3] := str1;
     // макс
-    str1:=Copy(str,k+3,j-k-3);
+    k:=k+3;
+    str1:=Copy(str,k,j-k);
     ControlPropSG.Cells[i+1, 4] := str1;
+    str1:=GetSubString(str, ';', j+1, j);
+    if j=-1 then exit;
+
+    ind:=0; // индекс тега
+    str3:='';
+    if (str1[1]='N') and  (length(str1)>1) then
+    begin
+      str2:=Copy(str1,2,length(str1)-1);
+      pair:=m_CurControl.m_ZoneList.defaultZone.GetZonePair(ind);
+      str3:=itag(pair.tag).GetName+'='+str2;
+      while str1<>'' do
+      begin
+        inc(ind);
+        if ind>(m_CurControl.m_ZoneList.defaultZone.tags.count-1) then
+          break;
+        pair:=m_CurControl.m_ZoneList.defaultZone.GetZonePair(ind);
+        str2:=GetSubString(str, ';', j+1, j);
+        if str3='' then
+          str3:=str3+itag(pair.tag).GetName+'='+str2
+        else
+          str3:=str3+';'+itag(pair.tag).GetName+'='+str2;
+      end;
+      ControlPropSG.Cells[i+1, 5] := str3;
+    end;
+    if str1[1]='P' then
+    begin
+
+    end;
   end
   else
   begin
