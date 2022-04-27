@@ -811,10 +811,6 @@ object ControlDeskFrm: TControlDeskFrm
     TabOrder = 1
     object TabSheet1: TTabSheet
       Caption = #1054#1073#1097#1080#1081' '#1074#1080#1076
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Splitter2: TSplitter
         Left = 732
         Top = 0
@@ -1019,14 +1015,13 @@ object ControlDeskFrm: TControlDeskFrm
       Caption = #1058#1072#1073#1083#1080#1094#1072' '#1088#1077#1078#1080#1084#1086#1074
       ImageIndex = 1
       object Splitter3: TSplitter
-        Left = 1056
+        Left = 558
         Top = 0
         Height = 617
         Align = alRight
         Color = clBackground
         ParentColor = False
-        ExplicitLeft = 1053
-        ExplicitHeight = 633
+        ExplicitLeft = 1032
       end
       object TableModeGB: TGroupBox
         Left = 0
@@ -1079,13 +1074,15 @@ object ControlDeskFrm: TControlDeskFrm
         end
       end
       object RightGB: TGroupBox
-        Left = 558
+        Left = 561
         Top = 0
         Width = 498
         Height = 617
         Align = alRight
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1072
         TabOrder = 1
+        ExplicitLeft = 304
+        ExplicitTop = -3
         object ControlPropSG: TStringGrid
           Left = 2
           Top = 80

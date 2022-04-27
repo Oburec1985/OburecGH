@@ -412,7 +412,8 @@ procedure TControlDeskFrm.doLeaveCfg(Sender: TObject);
 begin
   m_CurControl:=nil;
   ControlPropE.text:='';
-  preview;
+  if g_createGUI then
+    preview;
 end;
 
 procedure TControlDeskFrm.doLoad(Sender: TObject);
@@ -526,7 +527,6 @@ begin
   SGChange(ControlPropSG);
 end;
 
-
 procedure TControlDeskFrm.SelectControl(c: cControlObj);
 begin
   m_CurControl:=c;
@@ -564,8 +564,6 @@ begin
   a_pIni.WriteBool(str, 'ConfirmModeChange', ConfirmModeCB.Checked);
   a_pIni.WriteInteger(str, 'Units', TimeUnitsCB.ItemIndex);
 end;
-
-
 
 procedure TControlDeskFrm.PauseBtnClick(Sender: TObject);
 VAR
@@ -1733,12 +1731,13 @@ end;
 
 procedure TControlDeskFrm.UpdateControlsPropSGmode(m:cModeObj);
 var
-  i, j, k, ind:integer;
+  i, j, k, n,ind:integer;
   t:ctask;
   str, str1, str2, str3:string;
   d:double;
   z:cZone;
   pair:TZonePair;
+  ppair:PZonePair;
 begin
   i:=m.modeIndex;
   if m_CurControl<>nil then
@@ -1758,14 +1757,28 @@ begin
   str := T.getParam('Vals');
   // алгоритм абсолютных зон
   k:=pos('...', str);
+  if k<1 then
+    k:=pos('Е', str);
   if k>0 then
   begin
-    str1:=GetSubString(str, ';', 1, j);
-    str1:=Copy(str1,1,k-1);
+    n:=pos(':', str);
+    if n<1 then
+    begin
+      str1:=GetSubString(str, ';', 1, j);
+      n:=1;
+    end
+    else
+    begin
+      str1:=GetSubString(str, ';', n+1, j);
+    end;
+    str1:=Copy(str,n+1,k-n-1);
     // мин
     ControlPropSG.Cells[i+1, 3] := str1;
     // макс
-    k:=k+3;
+
+    k:=k+1;
+    if str[k]='.' then
+      k:=k+2;
     str1:=Copy(str,k,j-k);
     ControlPropSG.Cells[i+1, 4] := str1;
     str1:=GetSubString(str, ';', j+1, j);
@@ -1773,17 +1786,18 @@ begin
 
     ind:=0; // индекс тега
     str3:='';
-    if (str1[1]='N') and  (length(str1)>1) then
+    z:=m_CurControl.m_ZoneList.defaultZone;
+    //if (str1[1]='N') and  (length(str1)>1) then
     begin
       str2:=Copy(str1,2,length(str1)-1);
-      pair:=m_CurControl.m_ZoneList.defaultZone.GetZonePair(ind);
+      pair:=z.GetZonePair(ind);
       str3:=itag(pair.tag).GetName+'='+str2;
       while str1<>'' do
       begin
         inc(ind);
-        if ind>(m_CurControl.m_ZoneList.defaultZone.tags.count-1) then
+        if ind>(z.tags.count-1) then
           break;
-        pair:=m_CurControl.m_ZoneList.defaultZone.GetZonePair(ind);
+        pair:=z.GetZonePair(ind);
         str2:=GetSubString(str, ';', j+1, j);
         if str3='' then
           str3:=str3+itag(pair.tag).GetName+'='+str2
@@ -1791,10 +1805,6 @@ begin
           str3:=str3+';'+itag(pair.tag).GetName+'='+str2;
       end;
       ControlPropSG.Cells[i+1, 5] := str3;
-    end;
-    if str1[1]='P' then
-    begin
-
     end;
   end
   else

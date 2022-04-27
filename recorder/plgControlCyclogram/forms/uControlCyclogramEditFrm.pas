@@ -767,7 +767,6 @@ begin
         setCell(1, r+3+j, c+i*c_modeColCount+2, str);
         // спец обработка специально для НПО Лавочкина :(
         str:=t.getParam('Vals');
-
         ind:=0;
         str:=replaceChar(str, '_', char(10));
         str:=replaceChar(str, ':', '=');
