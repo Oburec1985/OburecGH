@@ -722,6 +722,7 @@ type
     procedure setModeLen(d: double);
     function getModeLen: double;
     function getmainparent: cbaseobj; override;
+    // cModeObj
     procedure LoadObjAttributes(xmlNode: txmlnode; mng: tobject); override;
     procedure SaveObjAttributes(xmlNode: txmlnode); override;
     procedure CreateTasks;
@@ -2687,9 +2688,6 @@ begin
   zCount := xmlNode.ReadAttributeInteger('ZoneCount', 1);
   m_zones_enabled := xmlNode.ReadAttributeBool('Zones_Enabled', false);
   m_ZoneList.m_zones_Alg := xmlNode.ReadAttributeBool('Zones_Alg', false);
-  z:=m_ZoneList.defaultZone;
-  if z<>nil then
-    z.fUsePrevZoneVals:=xmlNode.ReadAttributeBool('Zones_UsePrevVal', true);
   i := 0;
   m_ZoneList.clearZones;
   while zCount > 0 do
@@ -2699,23 +2697,22 @@ begin
     str := (GetParsValue(pars, 'Tol'));
     p2.x:=strtofloatext(GetSubString(str,'/',1, j));
     p2.y:=strtofloatext(GetSubString(str,'/',j+1, j));
-    if p2.x = 0 then
+    if not m_ZoneList.m_zones_Alg then
     begin
-      z := m_ZoneList.defaultZone;
+      z := m_ZoneList.NewZone(p2);
     end
     else
     begin
-      if not m_ZoneList.m_zones_Alg then
+      if p2.x = 0 then
       begin
-        if m_ZoneList.Count=1 then
-        begin
-          z:=m_ZoneList.GetZone(0);
-          z.ftol:=p2;
-        end;
+        z := m_ZoneList.defaultZone;
       end
       else
+      begin
         z := m_ZoneList.NewZone(p2);
+      end;
     end;
+
     c := strtoint(GetParsValue(pars, 'tCount'));
     for J := 0 to c - 1 do
     begin
@@ -2731,6 +2728,9 @@ begin
     inc(i);
     delpars(pars);
   end;
+  z:=m_ZoneList.defaultZone;
+  if z<>nil then
+    z.fUsePrevZoneVals:=xmlNode.ReadAttributeBool('Zones_UsePrevVal', true);
 end;
 
 function cControlObj.getProperties: string;
@@ -6021,16 +6021,30 @@ end;
 procedure cZoneList.clearZones;
 var
   z: cZone;
+  c:integer;
 begin
-  while Count > 1 do
+  if m_zones_Alg then
+    c:=1
+  else
+    c:=0;
+  while Count > c do
   begin
     z := GetZone(0);
-    if not z.defaultZone then
-      z.destroy
+    if not m_zones_Alg then
+    begin
+      z.destroy;
+    end
     else
     begin
-      z := GetZone(Count - 1);
-      z.destroy;
+      if not z.defaultZone then
+      begin
+        z.destroy
+      end
+      else
+      begin
+        z := GetZone(Count - 1);
+        z.destroy;
+      end;
     end;
   end;
 end;
@@ -6081,6 +6095,10 @@ begin
       end;
       str:=floattostr(z.ftol.x)+'...'+floattostr(z.ftol.y)+';'+str;
       result:=str;
+    end
+    else
+    begin
+      //for I := 0 to Count - 1 do
     end;
   end
   else

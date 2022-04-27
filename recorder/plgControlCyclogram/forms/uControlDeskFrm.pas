@@ -1765,7 +1765,6 @@ begin
     if n<1 then
     begin
       str1:=GetSubString(str, ';', 1, j);
-      n:=1;
     end
     else
     begin

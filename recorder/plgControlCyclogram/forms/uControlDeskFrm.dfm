@@ -1081,8 +1081,6 @@ object ControlDeskFrm: TControlDeskFrm
         Align = alRight
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1072
         TabOrder = 1
-        ExplicitLeft = 304
-        ExplicitTop = -3
         object ControlPropSG: TStringGrid
           Left = 2
           Top = 80
