@@ -87,11 +87,11 @@ type
     procedure TrigSGDrawCell(Sender: TObject; ACol, ARow: integer; Rect: TRect;
       State: TGridDrawState);
     procedure CfgBtnClick(Sender: TObject);
-    procedure ControlSGSetEditText(Sender: TObject; ACol, ARow: Integer;
+    procedure ControlSGSetEditText(Sender: TObject; ACol, ARow: integer;
       const Value: string);
-    procedure TableModeSGSetEditText(Sender: TObject; ACol, ARow: Integer;
+    procedure TableModeSGSetEditText(Sender: TObject; ACol, ARow: integer;
       const Value: string);
-    procedure TableModeSGDrawCell(Sender: TObject; ACol, ARow: Integer;
+    procedure TableModeSGDrawCell(Sender: TObject; ACol, ARow: integer;
       Rect: TRect; State: TGridDrawState);
     procedure TableModeSGDblClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -99,14 +99,14 @@ type
     procedure TableModeSGClick(Sender: TObject);
     procedure TimeUnitsCBDblClick(Sender: TObject);
     procedure TimeUnitsCBChange(Sender: TObject);
-    procedure ControlPropSGSetEditText(Sender: TObject; ACol, ARow: Integer;
+    procedure ControlPropSGSetEditText(Sender: TObject; ACol, ARow: integer;
       const Value: string);
     procedure ControlPropSGKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
   private
     // Режим подтверждения перехода
-    m_CurControl:cControlObj;
-    m_CurMode:cModeObj;
+    m_CurControl: ccontrolobj;
+    m_CurMode: cModeObj;
     m_uiThread: integer;
     // форма посчитана фабрикой класса. Нужно для ограничения числа форм
     m_counted: boolean;
@@ -114,22 +114,22 @@ type
     finit: boolean;
     SGbuttons: tlist;
 
-    m_val:string;
-    m_row,m_col:integer;
+    m_val: string;
+    m_row, m_col: integer;
     m_timerid, m_timerid_res: cardinal;
-    m_tolArray:cDoubleList;
+    m_tolArray: cDoubleList;
   protected
-    function ZoneListToParams(str:string; zl:cZoneList):string;
-    procedure ConfirmManualSwitchMode(m:tobject);
-    function toSec(t:double):double;
-    function SecToTime(t:double):double;
-    procedure ModeTabSGEditCell(r,c:integer; val:string);
-    procedure ControlSGEditCell(ARow, ACol: Integer; const Value: string);
+    function ZoneListToParams(str: string; zl: cZoneList): string;
+    procedure ConfirmManualSwitchMode(m: TObject);
+    function toSec(t: double): double;
+    function SecToTime(t: double): double;
+    procedure ModeTabSGEditCell(r, c: integer; val: string);
+    procedure ControlSGEditCell(ARow, ACol: integer; const Value: string);
     procedure FormCfgClose(Sender: TObject; var Action: TCloseAction);
     function getprogram(row: integer): cProgramObj;
     function getmode(row: integer): cModeObj;
     function getTableModeSGByCol(col: integer): cModeObj;
-    function getControlFromTableModeSGByRow(Row: integer): cControlObj;
+    function getControlFromTableModeSGByRow(row: integer): ccontrolobj;
     procedure ClearSGButtons;
     procedure WndProc(var Message: TMessage); override;
     procedure CreateSGButtons;
@@ -148,8 +148,8 @@ type
     procedure UpdateProgramsSG;
     procedure UpdateControlsSG;
     procedure UpdateControlsPropSG;
-    procedure UpdateControlsPropSGmode(m:cModeObj);
-    procedure SelectControl(c:cControlObj);
+    procedure UpdateControlsPropSGmode(m: cModeObj);
+    procedure SelectControl(c: ccontrolobj);
     procedure updateControlRow(c: ccontrolobj);
     function GetSelectMode: cModeObj;
     procedure ShowControlRow(c: ccontrolobj);
@@ -343,7 +343,7 @@ procedure TControlDeskFrm.CreateEvents;
 begin
   addplgevent('TControlDeskFrm_doAddObj', E_OnAddObj, doAddObj);
   addplgevent('TControlDeskFrm_doLoad', E_OnLoadObjMng, doLoad);
-  addplgevent('TControlDeskFrm_doChangeRState', c_RC_DoChangeRCState,  doChangeRState);
+  addplgevent('TControlDeskFrm_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
   addplgevent('TControlDeskFrm_doLeaveCfg', c_RC_LeaveCfg, doLeaveCfg);
   g_conmng.Events.AddEvent('TControlDeskFrm_doStopControlMng', E_OnStopControlMng, doShowStop);
 end;
@@ -367,13 +367,14 @@ end;
 procedure TControlDeskFrm.doChangeRState(Sender: TObject);
 var
   Rstate: boolean;
-  p:cprogramobj;
-  c:cControlObj;
-  I: Integer;
+  p: cProgramObj;
+  c: ccontrolobj;
+  I: integer;
 begin
   if self <> nil then
   begin
     Rstate := RStatePlay;
+
     EnablePult(Rstate);
     Timer1.Interval := round(GetREFRESHPERIOD * 1000);
     if Rstate then
@@ -386,19 +387,19 @@ begin
     else
     begin
       // последняя итерация для срабатывания действий заложенных в стоптриг
-      p:=g_conmng.getProgram(0);
-      if p<>nil then
+      p := g_conmng.getprogram(0);
+      if p <> nil then
       begin
         p.exec;
         for I := 0 to p.ControlCount - 1 do
         begin
-          c:=p.getOwnControl(i);
+          c := p.getOwnControl(I);
           c.exec;
         end;
       end;
       if g_conmng.configChanged then
       begin
-        preview;
+        Preview;
         g_conmng.configChanged := false;
       end;
       Stop;
@@ -413,15 +414,15 @@ end;
 
 procedure TControlDeskFrm.doLeaveCfg(Sender: TObject);
 begin
-  m_CurControl:=nil;
-  ControlPropE.text:='';
+  m_CurControl := nil;
+  ControlPropE.text := '';
   if g_createGUI then
-    preview;
+    Preview;
 end;
 
 procedure TControlDeskFrm.doLoad(Sender: TObject);
 begin
-  preview;
+  Preview;
 end;
 
 procedure TControlDeskFrm.doAddObj(Sender: TObject);
@@ -444,13 +445,10 @@ begin
   inherited;
 end;
 
-
-
-
 procedure TControlDeskFrm.FormCreate(Sender: TObject);
 begin
   m_timerid := 2;
-  m_tolArray:=cDoubleList.create;
+  m_tolArray := cDoubleList.Create;
   InitSG;
 end;
 
@@ -467,7 +465,7 @@ begin
   // m.m_StateTag.PushValue(1,-1);
   if g_conmng.configChanged then
   begin
-    preview;
+    Preview;
     g_conmng.configChanged := false;
   end;
 end;
@@ -510,29 +508,29 @@ end;
 
 procedure TControlDeskFrm.ShowControlPropsModes;
 var
-  I: Integer;
-  p:cprogramObj;
-  m:cmodeobj;
+  I: integer;
+  p: cProgramObj;
+  m: cModeObj;
 begin
-  p:=g_conmng.getProgram(0);
-  if p=nil then
+  p := g_conmng.getprogram(0);
+  if p = nil then
     exit;
-  if m_CurControl=nil then
+  if m_CurControl = nil then
   begin
-    if p.ControlCount>0 then
-      m_CurControl:=p.getOwnControl(0);
+    if p.ControlCount > 0 then
+      m_CurControl := p.getOwnControl(0);
   end;
   for I := 0 to p.ModeCount - 1 do
   begin
-    m:=p.getMode(i);
-    ControlPropSG.Cells[1+i, 0] := m.name;
+    m := p.getmode(I);
+    ControlPropSG.Cells[1 + I, 0] := m.name;
   end;
   SGChange(ControlPropSG);
 end;
 
-procedure TControlDeskFrm.SelectControl(c: cControlObj);
+procedure TControlDeskFrm.SelectControl(c: ccontrolobj);
 begin
-  m_CurControl:=c;
+  m_CurControl := c;
   UpdateControlsPropSG;
 end;
 
@@ -554,11 +552,10 @@ end;
 procedure TControlDeskFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 begin
   inherited;
-  ContinueCB.Checked:=a_pIni.ReadBool(str, 'LoadState', false);
-  ConfirmModeCB.Checked:=a_pIni.ReadBool(str, 'ConfirmModeChange', true);
-  TimeUnitsCB.ItemIndex:=a_pIni.ReadInteger(str, 'Units', 0);
+  ContinueCB.Checked := a_pIni.ReadBool(str, 'LoadState', false);
+  ConfirmModeCB.Checked := a_pIni.ReadBool(str, 'ConfirmModeChange', true);
+  TimeUnitsCB.ItemIndex := a_pIni.ReadInteger(str, 'Units', 0);
 end;
-
 
 procedure TControlDeskFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 begin
@@ -572,7 +569,7 @@ procedure TControlDeskFrm.PauseBtnClick(Sender: TObject);
 VAR
   b: boolean;
 begin
-  //LogRecorderMessage('TControlDeskFrm_PauseBtnClick_enter');
+  // LogRecorderMessage('TControlDeskFrm_PauseBtnClick_enter');
   b := PausePanel.Color = CLgREEN;
   if b then
     b := false
@@ -582,16 +579,16 @@ begin
     pause
   else
   begin
-    //Start;
+    // Start;
   end;
-  //LogRecorderMessage('TControlDeskFrm_PauseBtnClick_exit');
+  // LogRecorderMessage('TControlDeskFrm_PauseBtnClick_exit');
 end;
 
 procedure TControlDeskFrm.PlayBtnClick(Sender: TObject);
 VAR
   b: boolean;
 begin
-  //LogRecorderMessage('TControlDeskFrm_PlayBtnClick_enter');
+  // LogRecorderMessage('TControlDeskFrm_PlayBtnClick_enter');
   b := PlayPanel.Color = CLgREEN;
   if b then
     b := false
@@ -603,39 +600,40 @@ begin
   end
   else
   begin
-    //pause;
+    // pause;
   end;
-  //LogRecorderMessage('TControlDeskFrm_PlayBtnClick_exit');
+  // LogRecorderMessage('TControlDeskFrm_PlayBtnClick_exit');
 end;
 
 procedure TControlDeskFrm.ProgramSGDblClick(Sender: TObject);
 var
   m: cModeObj;
-  pPnt:       TPoint;  // Координаты курсора
+  pPnt: TPoint; // Координаты курсора
   xCol, xRow: integer; // Адрес ячейки таблицы
 begin
-  GetCursorPos( pPnt );
-  pPnt:= TStringGrid(Sender).ScreenToClient( pPnt );
+  GetCursorPos(pPnt);
+  pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
   // Находим позицию нашей ячейки
-  xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
-  xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
-  if xrow=0 then exit;
-  
-  if (g_conmng.state=c_Pause) or g_conmng.AllowUserModeSelect then
+  xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
+  xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
+  if xRow = 0 then
+    exit;
+
+  if (g_conmng.State = c_Pause) or g_conmng.AllowUserModeSelect then
   begin
-    if g_conmng.state<>c_stop then
+    if g_conmng.State <> c_stop then
     begin
       m := getmode(xRow);
-      if m=nil then
+      if m = nil then
         exit;
-      if g_conmng.state=c_play then
+      if g_conmng.State = c_play then
         m.TryActive
       else
       begin
-        if g_conmng.state=c_pause then
+        if g_conmng.State = c_Pause then
         begin
-          m.active:=true;
-          m.Exec;
+          m.active := true;
+          m.exec;
         end;
       end;
     end;
@@ -652,7 +650,7 @@ var
   str: string;
   I: integer;
 begin
-  if (g_conmng.state=c_Play) or (g_conmng.state=c_Pause) then
+  if (g_conmng.State = c_play) or (g_conmng.State = c_Pause) then
   begin
     for I := 0 to g_conmng.ProgramCount - 1 do
     begin
@@ -668,7 +666,7 @@ begin
           case p.State of
             c_play:
               sg.Canvas.Brush.Color := CLgREEN;
-            c_pause:
+            c_Pause:
               sg.Canvas.Brush.Color := clYellow;
           end;
           sg.Canvas.FillRect(Rect);
@@ -680,16 +678,15 @@ begin
   end;
 end;
 
-
 procedure TControlDeskFrm.Preview;
 begin
-  if PageControl1.TabIndex=0 then
+  if PageControl1.TabIndex = 0 then
   begin
     ShowControls;
     ShowModes;
     ShowTrigs;
   end;
-  if PageControl1.TabIndex=1 then
+  if PageControl1.TabIndex = 1 then
   begin
     ShowControlPropsModes;
     UpdateControlsPropSG;
@@ -718,37 +715,39 @@ procedure TControlDeskFrm.ShowModeTable;
 var
   I, col, row: integer;
   con: ccontrolobj;
-  p:cProgramObj;
-  m:cmodeobj;
-  j: Integer;
-  t:ctask;
+  p: cProgramObj;
+  m: cModeObj;
+  j: integer;
+  t: ctask;
 begin
   // 2 - кол-во строк сверху имена режимов
   TableModeSG.RowCount := c_ModeTable_headerSize + g_conmng.ControlsCount;
-  p:=g_conmng.getProgram(0);
-  if p=nil then
+  p := g_conmng.getprogram(0);
+  if p = nil then
     exit;
 
-  TableModeSG.ColCount:=  c_ModeTable_headerCol +p.ModeCount;
-  TableModeSG.Cells[0,1]:='Время работы';
+  TableModeSG.ColCount := c_ModeTable_headerCol + p.ModeCount;
+  TableModeSG.Cells[0, 1] := 'Время работы';
   for I := 0 to p.ModeCount - 1 do
   begin
-    row := c_ModeTable_headerSize-1;
-    col := i+1;
-    m:=p.getMode(i);
-    TableModeSG.Cells[col,0]:=m.caption;
-    TableModeSG.Cells[col,row]:=formatstrnoe(SecToTime(m.ModeLength), 2);
+    row := c_ModeTable_headerSize - 1;
+    col := I + 1;
+    m := p.getmode(I);
+    TableModeSG.Cells[col, 0] := m.Caption;
+    TableModeSG.Cells[col, row] := formatstrnoe(SecToTime(m.ModeLength), 2);
   end;
   for I := 0 to p.ControlCount - 1 do
   begin
-    con:=p.getOwnControl(i);
-    TableModeSG.Cells[0,c_ModeTable_headerSize+i]:=con.caption;
+    con := p.getOwnControl(I);
+    TableModeSG.Cells[0, c_ModeTable_headerSize + I] := con.Caption;
     for j := 0 to p.ModeCount - 1 do
     begin
-      m:=p.getMode(j);
-      t:=m.gettask(con.name);
-      if t<>nil then
-        TableModeSG.Cells[c_ModeTable_headerCol-1+j,c_ModeTable_headerSize+i]:=formatstrnoe(t.task,2);
+      m := p.getmode(j);
+      t := m.gettask(con.name);
+      if t <> nil then
+        TableModeSG.Cells[c_ModeTable_headerCol - 1 + j,
+          c_ModeTable_headerSize + I] := formatstrnoe
+          (t.task, 2);
     end;
   end;
   SGChange(TableModeSG);
@@ -784,107 +783,111 @@ end;
 procedure TControlDeskFrm.ControlPropSGDblClick(Sender: TObject);
 var
   m: cModeObj;
-  t:ctask;
-  pPnt:       TPoint;  // Координаты курсора
+  t: ctask;
+  pPnt: TPoint; // Координаты курсора
   xCol, xRow: integer; // Адрес ячейки таблицы
-  str, key:string;
-  changebool:boolean;
-  function getM(row:integer):cModeObj;
+  str, Key: string;
+  changebool: boolean;
+  function getM(row: integer): cModeObj;
   var
-    p:cprogramobj;
+    p: cProgramObj;
   begin
-    str:=TStringGrid(Sender).Cells[0, row];
-    p:=g_conmng.getProgram(0);
-    result:=p.getMode(str);
+    str := TStringGrid(Sender).Cells[0, row];
+    p := g_conmng.getprogram(0);
+    result := p.getmode(str);
   end;
+
 begin
-  GetCursorPos( pPnt );
-  pPnt:= TStringGrid(Sender).ScreenToClient( pPnt );
+  GetCursorPos(pPnt);
+  pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
   // Находим позицию нашей ячейки
-  xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
-  xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
-  changebool:=false;
+  xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
+  xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
+  changebool := false;
 end;
 
 procedure TControlDeskFrm.ControlPropSGKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
-  i, j, c, r:integer;
-  p:cprogramobj;
-  mode:cmodeobj;
-  con:ccontrolObj;
-  t:ctask;
-  value, str, str1, str2:string;
+  I, j, c, r: integer;
+  p: cProgramObj;
+  mode: cModeObj;
+  con: ccontrolobj;
+  t: ctask;
+  Value, str, str1, str2: string;
 begin
-  if key=VK_RETURN then
+  if Key = VK_RETURN then
   begin
-    value:=ControlPropSG.Cells[m_col,m_row];
-    r:=m_row;
-    c:=m_col;
-    p:=g_conmng.getProgram(0);
-    con:=p.getOwnControl(ControlPropE.text);
-    if p=nil then exit;
-    if r>0 then
+    Value := ControlPropSG.Cells[m_col, m_row];
+    r := m_row;
+    c := m_col;
+    p := g_conmng.getprogram(0);
+    con := p.getOwnControl(ControlPropE.text);
+    if p = nil then
+      exit;
+    if r > 0 then
     begin
       if checkstr(Value) then
       begin
-        mode:=p.getMode(c-1);
-        if (r=5) then
+        mode := p.getmode(c - 1);
+        if (r = 5) then
         begin
-          t:=mode.gettask(con.name);
-          str := T.getParam('Vals');
-          i:=pos('N',str);
-          if i<1 then
+          t := mode.gettask(con.name);
+          str := t.getParam('Vals');
+          I := pos('N', str);
+          if I < 1 then
           begin
-            i:=pos('P',str);
-            if i<1 then
-              i:=pos(';',str);
+            I := pos('P', str);
+            if I < 1 then
+              I := pos(';', str);
           end;
           // Изменяем значение
-          str1:=copy(str, 1, i);
-          str1:=str1+Value;
-          for j := i to length(str) do
+          str1 := copy(str, 1, I);
+          str1 := str1 + Value;
+          for j := I to length(str) do
           begin
-            if str[j]=';' then
+            if str[j] = ';' then
               break;
           end;
-          str2:=copy(str, j, length(str)-j+1);
-          str1:=str1+str2;
-          ControlPropSG.Cells[c,r]:=ZoneListToParams(str1, m_CurControl.m_ZoneList);
-          T.setParam('Vals', str1);
+          str2 := copy(str, j, length(str) - j + 1);
+          str1 := str1 + str2;
+          ControlPropSG.Cells[c, r] := ZoneListToParams(str1,
+            m_CurControl.m_ZoneList);
+          t.setParam('Vals', str1);
         end;
         // редактирование ШИМ
-        if (r=2) or (r=3) then
+        if (r = 2) or (r = 3) then
         begin
-          if con<>nil then
+          if con <> nil then
           begin
-            t:=mode.gettask(con.name);
-            if c=2 then
+            t := mode.gettask(con.name);
+            if c = 2 then
             begin
-              t.setParam('PWM_Thi',Value)
+              t.setParam('PWM_Thi', Value)
             end
             else
             begin
-              t.setParam('PWM_Tlo',Value);
+              t.setParam('PWM_Tlo', Value);
             end;
           end;
         end;
         if mode.active then
         begin
-          mode.m_applyed:=false;
+          mode.m_applyed := false;
         end;
       end;
     end;
   end;
 end;
 
-procedure TControlDeskFrm.ControlPropSGSetEditText(Sender: TObject; ACol,
-  ARow: Integer; const Value: string);
+procedure TControlDeskFrm.ControlPropSGSetEditText(Sender: TObject;
+  ACol, ARow: integer; const Value: string);
 begin
-  if not isvalue(Value) then exit;
-  m_val:=value;
-  m_col:=acol;
-  m_row:=arow;
+  if not isvalue(Value) then
+    exit;
+  m_val := Value;
+  m_col := ACol;
+  m_row := ARow;
 end;
 
 procedure TControlDeskFrm.ControlSGDblClick(Sender: TObject);
@@ -898,11 +901,11 @@ begin
       exit;
     if c.PlayState then
     begin
-      c.State := c_Stop;
+      c.State := c_stop;
     end
     else
     begin
-      if (g_conmng.State = c_play) or (g_conmng.State = c_pause) then
+      if (g_conmng.State = c_play) or (g_conmng.State = c_Pause) then
       begin
         c.State := c_play;
       end;
@@ -928,14 +931,14 @@ begin
     btn.Height := ImageListBtnStates.Height;
     btn.Width := ImageListBtnStates.Width;
     c := getControlFromSG(ARow);
-    if c<>nil then
+    if c <> nil then
     begin
       case c.State of
         c_play:
           imageind := c_Play_State;
-        c_Stop:
+        c_stop:
           imageind := c_Stop_State;
-        c_pause:
+        c_Pause:
           imageind := c_Pause_State;
       else
         begin
@@ -953,23 +956,26 @@ begin
   end;
 end;
 
-procedure TControlDeskFrm.ControlSGEditCell(ARow, ACol: Integer; const Value: string);
+procedure TControlDeskFrm.ControlSGEditCell(ARow, ACol: integer;
+  const Value: string);
 var
-  t:ctask;
+  t: ctask;
   c: ccontrolobj;
-  step:cstepval;
-  stepname:string;
+  step: cstepval;
+  stepname: string;
 begin
-  if g_conmng.state<>c_Pause then exit;
+  if g_conmng.State <> c_Pause then
+    exit;
 
-  if ACol<>c_Col_Task then exit;
+  if ACol <> c_Col_Task then
+    exit;
 
   c := getControlFromSG(ARow);
-  if c<>nil then
+  if c <> nil then
   begin
-    if isValue(value) then
+    if isvalue(Value) then
     begin
-      c.SetManualTask(strtofloatext(value));
+      c.SetManualTask(strtofloatext(Value));
     end;
   end;
 end;
@@ -988,12 +994,12 @@ begin
   end;
 end;
 
-procedure TControlDeskFrm.ControlSGSetEditText(Sender: TObject; ACol,
-  ARow: Integer; const Value: string);
+procedure TControlDeskFrm.ControlSGSetEditText(Sender: TObject;
+  ACol, ARow: integer; const Value: string);
 begin
-  m_val:=value;
-  m_col:=acol;
-  m_row:=arow;
+  m_val := Value;
+  m_col := ACol;
+  m_row := ARow;
   ControlSGEditCell(m_row, m_col, m_val);
 end;
 
@@ -1032,26 +1038,24 @@ begin
   SGbuttons.clear;
 end;
 
-
-
 procedure TControlDeskFrm.TimeUnitsCBChange(Sender: TObject);
 var
-  r, c, i, j:integer;
-  p:cprogramObj;
-  m:cmodeobj;
+  r, c, I, j: integer;
+  p: cProgramObj;
+  m: cModeObj;
 begin
-  if TimeUnitsCB.itemindex<>-1 then
+  if TimeUnitsCB.ItemIndex <> -1 then
   begin
-    p:=g_conmng.getprogram(0);
-    if p<>nil then
+    p := g_conmng.getprogram(0);
+    if p <> nil then
     begin
       // обновляем отображение времени
       for j := 0 to p.ModeCount - 1 do
       begin
-        m:=p.getMode(j);
-        r := c_ModeTable_headerSize-1;
-        c := j+1;
-        TableModeSG.Cells[c,r]:=formatstrNoE(SecToTime(m.ModeLength), 2);
+        m := p.getmode(j);
+        r := c_ModeTable_headerSize - 1;
+        c := j + 1;
+        TableModeSG.Cells[c, r] := formatstrnoe(SecToTime(m.ModeLength), 2);
       end;
       SGChange(TableModeSG);
     end;
@@ -1060,37 +1064,42 @@ end;
 
 procedure TControlDeskFrm.TimeUnitsCBDblClick(Sender: TObject);
 var
-  r, c, i, j:integer;
-  p:cprogramObj;
-  m:cmodeobj;
+  r, c, I, j: integer;
+  p: cProgramObj;
+  m: cModeObj;
 begin
-  i:=TimeUnitsCB.itemindex;
-  inc(i);
-  if i<TimeUnitsCB.Items.Count then
+  I := TimeUnitsCB.ItemIndex;
+  inc(I);
+  if I < TimeUnitsCB.Items.Count then
   begin
-    TimeUnitsCB.itemindex:=i;
+    TimeUnitsCB.ItemIndex := I;
   end
   else
-    TimeUnitsCB.itemindex:=0;
+    TimeUnitsCB.ItemIndex := 0;
   TimeUnitsCBChange(self);
 end;
 
 function TControlDeskFrm.toSec(t: double): double;
 begin
   case TimeUnitsCB.ItemIndex of
-    0: result:=t; //sec
-    1: result:=t*60; //min
-    2: result:=t*3600; //hour
+    0:
+      result := t; // sec
+    1:
+      result := t * 60; // min
+    2:
+      result := t * 3600; // hour
   end;
 end;
-
 
 function TControlDeskFrm.SecToTime(t: double): double;
 begin
   case TimeUnitsCB.ItemIndex of
-    0: result:=t; //sec
-    1: result:=t/60;           //min
-    2: result:=t/3600;           //hour
+    0:
+      result := t; // sec
+    1:
+      result := t / 60; // min
+    2:
+      result := t / 3600; // hour
   end;
 end;
 
@@ -1181,7 +1190,7 @@ var
   ir: irecorder;
 begin
   ir := getIRecorder;
-  if g_conmng.State = c_Stop then
+  if g_conmng.State = c_stop then
   begin
     g_conmng.Start;
     if ContinueCB.Checked then
@@ -1191,7 +1200,7 @@ begin
   end
   else
   begin
-    if g_conmng.State = c_pause then
+    if g_conmng.State = c_Pause then
     begin
       g_conmng.continuePlay;
     end;
@@ -1228,13 +1237,13 @@ end;
 
 procedure TControlDeskFrm.EnablePult(b_state: boolean);
 begin
-  ControlSG.Enabled:=b_state;
+  ControlSG.Enabled := b_state;
 
-  ProgTimeEdit.Enabled:=b_state;
-  ModeTimeEdit.Enabled:=b_state;
-  ModePauseTimeEdit.Enabled:=b_state;
-  CheckLength.Enabled:=b_state;
-  ComTimeEdit.Enabled:=b_state;
+  ProgTimeEdit.Enabled := b_state;
+  ModeTimeEdit.Enabled := b_state;
+  ModePauseTimeEdit.Enabled := b_state;
+  CheckLength.Enabled := b_state;
+  ComTimeEdit.Enabled := b_state;
 
   PlayBtn.Enabled := b_state;
   PauseBtn.Enabled := b_state;
@@ -1262,45 +1271,45 @@ end;
 procedure TControlDeskFrm.TableModeSGClick(Sender: TObject);
 var
   m: cModeObj;
-  pPnt:       TPoint;  // Координаты курсора
+  pPnt: TPoint; // Координаты курсора
   xCol, xRow: integer; // Адрес ячейки таблицы
-  c:cControlObj;
+  c: ccontrolobj;
 begin
-  GetCursorPos( pPnt );
-  pPnt:= TStringGrid(Sender).ScreenToClient( pPnt );
+  GetCursorPos(pPnt);
+  pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
   // Находим позицию нашей ячейки
-  xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
-  xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
-  c:=getControlFromTableModeSGByRow(xRow);
-  if c<>nil then
+  xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
+  xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
+  c := getControlFromTableModeSGByRow(xRow);
+  if c <> nil then
   begin
-    m_CurControl:=c;
-    ControlPropE.text:=c.Name;
+    m_CurControl := c;
+    ControlPropE.text := c.Name;
   end;
-  m:=getTableModeSGByCol(xcol);
-  if m<>nil then
-    m_CurMode:=m;
-  ModePropE.text:=m_CurMode.name;
-  if m_CurMode<>nil then
+  m := getTableModeSGByCol(xCol);
+  if m <> nil then
+    m_CurMode := m;
+  ModePropE.text := m_CurMode.name;
+  if m_CurMode <> nil then
     UpdateControlsPropSGmode(m_CurMode);
 end;
 
-procedure TControlDeskFrm.ConfirmManualSwitchMode(m: tobject);
+procedure TControlDeskFrm.ConfirmManualSwitchMode(m: TObject);
 begin
-  if (g_conmng.state=c_Pause) or g_conmng.AllowUserModeSelect then
+  if (g_conmng.State = c_Pause) or g_conmng.AllowUserModeSelect then
   begin
-    if g_conmng.state<>c_stop then
+    if g_conmng.State <> c_stop then
     begin
-      if m=nil then
+      if m = nil then
         exit;
-      if g_conmng.state=c_play then
-        cmodeobj(m).TryActive
+      if g_conmng.State = c_play then
+        cModeObj(m).TryActive
       else
       begin
-        if g_conmng.state=c_pause then
+        if g_conmng.State = c_Pause then
         begin
-          cmodeobj(m).active:=true;
-          cmodeobj(m).Exec;
+          cModeObj(m).active := true;
+          cModeObj(m).exec;
         end;
       end;
     end;
@@ -1310,29 +1319,30 @@ end;
 procedure TControlDeskFrm.TableModeSGDblClick(Sender: TObject);
 var
   m: cModeObj;
-  c:cControlObj;
-  pPnt:       TPoint;  // Координаты курсора
+  c: ccontrolobj;
+  pPnt: TPoint; // Координаты курсора
   xCol, xRow: integer; // Адрес ячейки таблицы
 begin
-  if g_conmng.state=c_play then
+  if g_conmng.State = c_play then
   begin
-    GetCursorPos( pPnt );
-    pPnt:= TStringGrid(Sender).ScreenToClient( pPnt );
+    GetCursorPos(pPnt);
+    pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
     // Находим позицию нашей ячейки
-    xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
-    xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
-    m_CurControl:=getControlFromTableModeSGByRow(xRow);
-    m:=getTableModeSGByCol(xcol);
-    if xrow=0 then exit;
-    c:=m_CurControl;
-    if c<>nil then
+    xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
+    xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
+    m_CurControl := getControlFromTableModeSGByRow(xRow);
+    m := getTableModeSGByCol(xCol);
+    if xRow = 0 then
+      exit;
+    c := m_CurControl;
+    if c <> nil then
     begin
       SelectControl(m_CurControl);
     end;
     if ConfirmModeCB.Checked then
     begin
       ConfirmFmr.SecCallBack(ConfirmManualSwitchMode, m);
-      ConfirmFmr.SetText('Установить режим '+m.name);
+      ConfirmFmr.SetText('Установить режим ' + m.name);
       ConfirmFmr.Execute;
     end
     else // безусловный переход
@@ -1340,8 +1350,8 @@ begin
   end;
 end;
 
-procedure TControlDeskFrm.TableModeSGDrawCell(Sender: TObject; ACol,
-  ARow: Integer; Rect: TRect; State: TGridDrawState);
+procedure TControlDeskFrm.TableModeSGDrawCell(Sender: TObject;
+  ACol, ARow: integer; Rect: TRect; State: TGridDrawState);
 var
   sg: TStringGrid;
   Color: integer;
@@ -1350,7 +1360,7 @@ var
   str: string;
   I: integer;
 begin
-  if (g_conmng.state=c_Play) or (g_conmng.state=c_Pause) then
+  if (g_conmng.State = c_play) or (g_conmng.State = c_Pause) then
   begin
     for I := 0 to g_conmng.ProgramCount - 1 do
     begin
@@ -1367,7 +1377,7 @@ begin
           case p.State of
             c_play:
               sg.Canvas.Brush.Color := CLgREEN;
-            c_pause:
+            c_Pause:
               sg.Canvas.Brush.Color := clYellow;
           end;
           sg.Canvas.FillRect(Rect);
@@ -1379,49 +1389,51 @@ begin
   end;
 end;
 
-procedure TControlDeskFrm.TableModeSGSetEditText(Sender: TObject; ACol,
-  ARow: Integer; const Value: string);
+procedure TControlDeskFrm.TableModeSGSetEditText(Sender: TObject;
+  ACol, ARow: integer; const Value: string);
 begin
-  m_val:=value;
-  m_col:=acol;
-  m_row:=arow;
+  m_val := Value;
+  m_col := ACol;
+  m_row := ARow;
   ModeTabSGEditCell(m_row, m_col, m_val);
 end;
 
-procedure TControlDeskFrm.ModeTabSGEditCell(r,c:integer; val:string);
+procedure TControlDeskFrm.ModeTabSGEditCell(r, c: integer; val: string);
 var
-  p:cProgramObj;
-  m:cmodeobj;
-  t:ctask;
-  con:cControlObj;
-  str:string;
+  p: cProgramObj;
+  m: cModeObj;
+  t: ctask;
+  con: ccontrolobj;
+  str: string;
 begin
-  if not isValue(val) then exit;
-  p:=g_conmng.getProgram(0);
-  if p=nil then exit;
-  if c>0 then
+  if not isvalue(val) then
+    exit;
+  p := g_conmng.getprogram(0);
+  if p = nil then
+    exit;
+  if c > 0 then
   begin
     // редактируем длительность
-    if r=1 then
+    if r = 1 then
     begin
-      m:=p.getMode(c-1);
-      m.ModeLength:=ToSec(strtoFloatExt(val));
+      m := p.getmode(c - 1);
+      m.ModeLength := toSec(strtofloatext(val));
     end;
-    if r>1 then
+    if r > 1 then
     begin
-      str:=TableModeSG.Cells[0,r];
-      con:=p.getOwnControl(str);
-      if con<>nil then
+      str := TableModeSG.Cells[0, r];
+      con := p.getOwnControl(str);
+      if con <> nil then
       begin
-        m:=p.getMode(c-1);
-        if m<>nil then
+        m := p.getmode(c - 1);
+        if m <> nil then
         begin
-          t:=m.gettask(con.name);
-          if t<>nil then
+          t := m.gettask(con.name);
+          if t <> nil then
           begin
             t.entercs;
-            t.task:=strtoFloatExt(val);
-            t.applyed:=false;
+            t.task := strtofloatext(val);
+            t.applyed := false;
             t.exitcs;
           end;
         end;
@@ -1434,36 +1446,49 @@ procedure TControlDeskFrm.Timer1Timer(Sender: TObject);
 var
   tid: integer;
 begin
-  //LogRecorderMessage('TControlDeskFrm_Timer_enter');
+  // LogRecorderMessage('TControlDeskFrm_Timer_enter');
   tid := GetCurrentThreadId;
   // деления на случай необходимости вызова из разных потоков
   if tid = MainThreadID then
   begin
-    LogRecorderMessage('tid = MainThreadID========================================================', c_Log_ControlDeskFrm);
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExec', c_Log_ControlDeskFrm);
-    g_conmng.Exec;
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecControls', c_Log_ControlDeskFrm);
+    LogRecorderMessage(
+      'tid = MainThreadID========================================================'
+        , c_Log_ControlDeskFrm);
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExec',
+      c_Log_ControlDeskFrm);
+    g_conmng.exec;
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecControls',
+      c_Log_ControlDeskFrm);
     // пересчитываем реакцию регуляторов
     g_conmng.ExecControls;
     // отображаем
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecupdateviews',c_Log_ControlDeskFrm);
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecupdateviews',
+      c_Log_ControlDeskFrm);
     updateviews;
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_exit==========================================', c_Log_ControlDeskFrm);
+    LogRecorderMessage(
+      'TControlDeskFrm_Timer1Timer_exit=========================================='
+        , c_Log_ControlDeskFrm);
   end
   else
   begin
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExec====================================', c_Log_ControlDeskFrm);
+    LogRecorderMessage(
+      'TControlDeskFrm_Timer1Timer_BeforeExec===================================='
+        , c_Log_ControlDeskFrm);
     // перерасчитываем все режимы и регуляторы
-    g_conmng.Exec;
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecControls',c_Log_ControlDeskFrm);
+    g_conmng.exec;
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecControls',
+      c_Log_ControlDeskFrm);
     // пересчитываем реакцию регуляторов
     g_conmng.ExecControls;
     // отображаем
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecupdateviews',c_Log_ControlDeskFrm);
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecupdateviews',
+      c_Log_ControlDeskFrm);
     updateviews;
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_exit==========================================',c_Log_ControlDeskFrm);
+    LogRecorderMessage(
+      'TControlDeskFrm_Timer1Timer_exit=========================================='
+        , c_Log_ControlDeskFrm);
   end;
-  //LogRecorderMessage('TControlDeskFrm_Timer_exit');
+  // LogRecorderMessage('TControlDeskFrm_Timer_exit');
 end;
 
 procedure TControlDeskFrm.TrigSGDrawCell(Sender: TObject; ACol, ARow: integer;
@@ -1505,7 +1530,7 @@ end;
 procedure TControlDeskFrm.updateControlRow(c: ccontrolobj);
 var
   I: integer;
-  txt:string;
+  txt: string;
 begin
   for I := 1 to ControlSG.RowCount - 1 do
   begin
@@ -1513,7 +1538,7 @@ begin
     if txt = c.name then
     begin
       ControlSG.Cells[c_Col_Feedback, I] := c.getFBstr;
-      if (g_conmng.state<>c_Stop) and (g_conmng.state<>c_pause) then
+      if (g_conmng.State <> c_stop) and (g_conmng.State <> c_Pause) then
       begin
         ControlSG.Cells[c_Col_Task, I] := floattostr(c.task);
       end;
@@ -1542,35 +1567,35 @@ end;
 
 function TControlDeskFrm.getTableModeSGByCol(col: integer): cModeObj;
 var
-  str:string;
-  p:cprogramobj;
+  str: string;
+  p: cProgramObj;
 begin
-  result:=nil;
-  if col>0 then
+  result := nil;
+  if col > 0 then
   begin
-    str:=TableModeSG.Cells[col, 0];
-    p:=g_conmng.getprogram(0);
-    if p<>nil then
+    str := TableModeSG.Cells[col, 0];
+    p := g_conmng.getprogram(0);
+    if p <> nil then
     begin
-      result:=p.getMode(str);
+      result := p.getmode(str);
     end;
   end;
 end;
 
-
-function TControlDeskFrm.getControlFromTableModeSGByRow(Row: integer): cControlObj;
+function TControlDeskFrm.getControlFromTableModeSGByRow(row: integer)
+  : ccontrolobj;
 var
-  str:string;
-  p:cprogramobj;
+  str: string;
+  p: cProgramObj;
 begin
-  result:=nil;
-  if Row>0 then
+  result := nil;
+  if row > 0 then
   begin
-    str:=TableModeSG.Cells[0, Row];
-    p:=g_conmng.getprogram(0);
-    if p<>nil then
+    str := TableModeSG.Cells[0, row];
+    p := g_conmng.getprogram(0);
+    if p <> nil then
     begin
-      result:=p.getOwnControl(str);
+      result := p.getOwnControl(str);
     end;
   end;
 end;
@@ -1629,44 +1654,44 @@ procedure TControlDeskFrm.UpdateTimers;
 var
   p: cProgramObj;
 begin
-  p:=nil;
+  p := nil;
   // ComTimeEdit.Text:=Format( '%.2f', [g_conmng.getComTime]);
 
   // ComTimeEdit.Text := format('%.2g', [g_conmng.getComTime]);
-  ComTimeEdit.Text := formatstrnoe(SecToTime(g_conmng.getComTime), 2);
+  ComTimeEdit.text := formatstrnoe(SecToTime(g_conmng.getComTime), 2);
   if g_conmng.ProgramCount > 0 then
   begin
     p := g_conmng.getprogram(0);
   end;
-  if p=nil then
+  if p = nil then
     exit;
 
   // ModeTimeEdit.Text := format('%.2g', [g_conmng.getModeTime(p)]);
-  ModeTimeEdit.Text := formatstrnoe(SecToTime(g_conmng.getModeTime(p)), 2);
+  ModeTimeEdit.text := formatstrnoe(SecToTime(g_conmng.getModeTime(p)), 2);
 
   // ProgTimeEdit.Text := format('%.2g', [g_conmng.getProgTime(p)]);
-  ProgTimeEdit.Text := formatstrnoe(SecToTime(g_conmng.getProgTime(p)), 2);
+  ProgTimeEdit.text := formatstrnoe(SecToTime(g_conmng.getProgTime(p)), 2);
 
   // ModePauseTimeEdit.Text := format('%.2g', [g_conmng.getModePauseTime(p)]);
-  ModePauseTimeEdit.Text := formatstrnoe(g_conmng.getModePauseTime(p), 2);
+  ModePauseTimeEdit.text := formatstrnoe(g_conmng.getModePauseTime(p), 2);
 
-  CheckLength.Text := formatstrnoe(g_conmng.getModeCheckLength(p), 2);
+  CheckLength.text := formatstrnoe(g_conmng.getModeCheckLength(p), 2);
 end;
 
 procedure TControlDeskFrm.updateviews;
 var
-  p:cProgramObj;
+  p: cProgramObj;
 begin
-  p:=g_conmng.getProgram(0);
-  if p<>nil then
+  p := g_conmng.getprogram(0);
+  if p <> nil then
   begin
-    if p.ActiveMode<>nil then
-      ActiveModeE.Text:=p.ActiveMode.name
+    if p.ActiveMode <> nil then
+      ActiveModeE.text := p.ActiveMode.name
     else
-      ActiveModeE.Text:='';
+      ActiveModeE.text := '';
   end;
   UpdateTimers;
-  if PageControl1.TabIndex=0 then
+  if PageControl1.TabIndex = 0 then
   begin
     UpdateProgramsSG;
     UpdateControlsSG;
@@ -1675,187 +1700,192 @@ begin
   else
   begin
     TableModeSG.Invalidate;
-    //UpdateControlsPropSG;
+    // UpdateControlsPropSG;
   end;
 end;
 
-procedure UpdateTols(tols:cDoubleList; str:string);
+procedure UpdateTols(tols: cDoubleList; str: string);
 var
-  state, k, posstate, j:integer;
-  str1:string;
-  d:double;
+  State, k, posstate, j: integer;
+  str1: string;
+  d: double;
 begin
-  state:=0;
-  k:=1;
+  State := 0;
+  k := 1;
 
-  while k <=length(str) do
+  while k <= length(str) do
   begin
-    case state of
+    case State of
       // имя зоны не отпарсено до символа :
       0:
-      begin
-        if str[k]=':' then
         begin
-          posstate:=k;
-          state:=1;
-          continue;
+          if str[k] = ':' then
+          begin
+            posstate := k;
+            State := 1;
+            continue;
+          end;
         end;
-      end;
       // парсим толеранс до первой ;
       1:
-      begin
-        if str[k]=';' then
         begin
-          for j := k-1 downto posState do
+          if str[k] = ';' then
           begin
-            if (not isDigit(str[j])) and (not (str[j]='-'))  then
+            for j := k - 1 downto posstate do
             begin
-              str1:=Copy(str, j+1, k-j-1);
-              d:=strtofloat(str1);
-              tols.addObj(d);
-              state:=2;
-              break;
+              if (not isDigit(str[j])) and (not(str[j] = '-')) then
+              begin
+                str1 := copy(str, j + 1, k - j - 1);
+                d := strtofloat(str1);
+                tols.addObj(d);
+                State := 2;
+                break;
+              end;
             end;
           end;
         end;
-      end;
       // ищем новую зону
       2:
-      begin
-        if (str[k]='_') or (str[k]=char(10)) then
         begin
-          state:=0;
+          if (str[k] = '_') or (str[k] = char(10)) then
+          begin
+            State := 0;
+          end;
         end;
-      end;
     end;
     inc(k);
   end;
 end;
-// ZoneVals
-function TControlDeskFrm.ZoneListToParams(str:string; zl:cZoneList):string;
-var
-  i,k, j, ind:integer;
-  str1, str2, str3:string;
-  pair:TZonePair;
-  z:czone;
-begin
-  result:='';
-  k:=pos(':', str)+1;
-  j:=pos(';',str);
-  str1:=Copy(str,j+1,length(str)-j);
-  k:=pos('...', str)+1;
-  if k<1 then
-    k:=pos('…', str);
-  if str[k]='.' then
-    k:=k+2;
 
-  ind:=0; // индекс тега
-  str3:='';
-  k:=1;
-  if (str1[1]='N') or (str1[1]='P') then
+// ZoneVals
+function TControlDeskFrm.ZoneListToParams(str: string; zl: cZoneList): string;
+var
+  I, k, j, ind: integer;
+  str1, str2, str3: string;
+  ppair: PZonePair;
+  z: czone;
+begin
+  result := '';
+  k := pos(':', str) + 1;
+  j := pos(';', str);
+  str1 := copy(str, j + 1, length(str) - j);
+  k := pos('...', str) + 1;
+  if k < 1 then
+    k := pos('…', str);
+  if str[k] = '.' then
+    k := k + 2;
+
+  ind := 0; // индекс тега
+  str3 := '';
+  k := 1;
+  if (str1[1] = 'N') or (str1[1] = 'P') then
   begin
-    if str1[1]='N' then
-      z:=zl.z_inf_neg
+    if str1[1] = 'N' then
+      z := zl.z_inf_neg
     else
-      z:=zl.z_inf_pos;
-    k:=2
+      z := zl.z_inf_pos;
+    k := 2
   end
   else
   begin
-    z:=zl.defaultZone;
+    z := zl.defaultZone;
     if z.fUsePrevZoneVals then
-      z:=zl.z_inf_neg;
-    k:=1;
+      z := zl.z_inf_neg;
+    k := 1;
   end;
-  //if (str1[1]='N') and  (length(str1)>1) then
+  // if (str1[1]='N') and  (length(str1)>1) then
   begin
-    str2:=Copy(str1,k,length(str1)-k+1);
-    pair:=z.GetZonePair(ind);
-    str1:=GetSubString(str2, ';', 1, j);
-    str3:=itag(pair.tag).GetName+'='+str1;
-    while str1<>'' do
+    str2 := copy(str1, k, length(str1) - k + 1);
+    ppair := z.GetZonePairPointer(ind);
+    if ppair <> nil then
     begin
-      inc(ind);
-      if ind>(z.tags.count-1) then
-        break;
-      pair:=z.GetZonePair(ind);
-      str1:=GetSubString(str2, ';', j+1, j);
-      if str3='' then
-        str3:=str3+itag(pair.tag).GetName+'='+str1
-      else
-        str3:=str3+';'+itag(pair.tag).GetName+'='+str1;
+      str1 := GetSubString(str2, ';', 1, j);
+      str3 := itag(ppair.tag).GetName + '=' + str1;
+      while str1 <> '' do
+      begin
+        inc(ind);
+        if ind > (z.tags.Count - 1) then
+          break;
+        ppair := z.GetZonePairPointer(ind);
+        str1 := GetSubString(str2, ';', j + 1, j);
+        if str3 = '' then
+          str3 := str3 + itag(ppair.tag).GetName + '=' + str1
+        else
+          str3 := str3 + ';' + itag(ppair.tag).GetName + '=' + str1;
+      end;
+      result := str3;
     end;
-    result := str3;
   end;
 end;
 
-procedure TControlDeskFrm.UpdateControlsPropSGmode(m:cModeObj);
+procedure TControlDeskFrm.UpdateControlsPropSGmode(m: cModeObj);
 var
-  i, j, k, n,ind:integer;
-  t:ctask;
-  str, str1:string;
-  d:double;
-  pair:TZonePair;
-  ppair:PZonePair;
+  I, j, k, n, ind: integer;
+  t: ctask;
+  str, str1: string;
+  d: double;
+  pair: TZonePair;
+  ppair: PZonePair;
 begin
-  i:=m.modeIndex;
-  if m_CurControl<>nil then
-    t:=m.GetTask(m_CurControl.name)
+  I := m.modeIndex;
+  if m_CurControl <> nil then
+    t := m.gettask(m_CurControl.name)
   else
   begin
-    t:=m.GetTask(ControlPropE.text);
-    if t<>nil then
-      m_CurControl:=t.control;
+    t := m.gettask(ControlPropE.text);
+    if t <> nil then
+      m_CurControl := t.control;
   end;
 
-  //if T.m_Params.count=0 then exit;
+  // if T.m_Params.count=0 then exit;
   str := t.getParam('PWM_Thi');
-  ControlPropSG.Cells[i+1, 1] := str;
+  ControlPropSG.Cells[I + 1, 1] := str;
   str := t.getParam('PWM_Tlo');
-  ControlPropSG.Cells[i+1, 2] := str;
-  str := T.getParam('Vals');
+  ControlPropSG.Cells[I + 1, 2] := str;
+  str := t.getParam('Vals');
 
   // алгоритм абсолютных зон
-  k:=pos('...', str);
-  if k<1 then
-    k:=pos('…', str);
-  if k>0 then
+  k := pos('...', str);
+  if k < 1 then
+    k := pos('…', str);
+  if k > 0 then
   begin
-    n:=pos(':', str);
-    if n<1 then
+    n := pos(':', str);
+    if n < 1 then
     begin
-      str1:=GetSubString(str, ';', 1, j);
+      str1 := GetSubString(str, ';', 1, j);
     end
     else
     begin
-      str1:=GetSubString(str, ';', n+1, j);
+      str1 := GetSubString(str, ';', n + 1, j);
     end;
-    str1:=Copy(str,n+1,k-n-1);
+    str1 := copy(str, n + 1, k - n - 1);
     // мин
-    ControlPropSG.Cells[i+1, 3] := str1;
+    ControlPropSG.Cells[I + 1, 3] := str1;
     // макс
-    k:=k+1;
-    if str[k]='.' then
-      k:=k+2;
-    str1:=Copy(str,k,j-k);
-    ControlPropSG.Cells[i+1, 4] := str1;
-    str1:=GetSubString(str, ';', j+1, j);
-    if j=-1 then exit;
-    ControlPropSG.Cells[i+1, 5] := ZoneListToParams(str, m_CurControl.m_ZoneList);
-
+    k := k + 1;
+    if str[k] = '.' then
+      k := k + 2;
+    str1 := copy(str, k, j - k);
+    ControlPropSG.Cells[I + 1, 4] := str1;
+    str1 := GetSubString(str, ';', j + 1, j);
+    if j = -1 then
+      exit;
+    ControlPropSG.Cells[I + 1, 5] := ZoneListToParams(str,
+      m_CurControl.m_ZoneList);
   end
   else
   begin
     m_tolArray.Listclear;
     UpdateTols(m_tolArray, str);
-    if m_tolArray.Count>0 then
+    if m_tolArray.Count > 0 then
     begin
-      d:=m_tolArray.GetDouble(0);
-      str:=formatstrnoe(t.task+d, 4);
-      ControlPropSG.Cells[i+1, 3] := str;
-      d:=m_tolArray.GetDouble(m_tolArray.Count-1);
-      str:=formatstrnoe(t.task+d, 4);
-      ControlPropSG.Cells[i+1, 4] := str;
+      d := m_tolArray.GetDouble(0);
+      str := formatstrnoe(t.task + d, 4);
+      ControlPropSG.Cells[I + 1, 3] := str;
+      d := m_tolArray.GetDouble(m_tolArray.Count - 1);
+      str := formatstrnoe(t.task + d, 4);
+      ControlPropSG.Cells[I + 1, 4] := str;
 
     end
     else
@@ -1867,28 +1897,28 @@ end;
 
 procedure TControlDeskFrm.UpdateControlsPropSG;
 var
-  p:cProgramObj;
-  m:cmodeobj;
-  t:ctask;
+  p: cProgramObj;
+  m: cModeObj;
+  t: ctask;
   I, j
   // состояние парсинга значений зон
-  : Integer;
-  STR:STRING;
+    : integer;
+  str: STRING;
 begin
   // обновляется по DblClick
-  if m_CurControl=nil then exit;
-  ControlPropE.text:= m_CurControl.caption;
+  if m_CurControl = nil then
+    exit;
+  ControlPropE.text := m_CurControl.Caption;
 
   p := g_conmng.getprogram(0);
-  ControlPropSG.ColCount:=1+p.ModeCount;
+  ControlPropSG.ColCount := 1 + p.ModeCount;
 
   for I := 0 to p.ModeCount - 1 do
   begin
-    m:=p.getMode(i);
+    m := p.getmode(I);
     UpdateControlsPropSGmode(m);
   end;
 end;
-
 
 { TControlDeskFrm }
 procedure TControlDeskFrm.UpdateTrigs;
@@ -1984,6 +2014,5 @@ function IControlFrm.doGetName: LPCSTR;
 begin
   result := 'ControlCyclogram';
 end;
-
 
 end.

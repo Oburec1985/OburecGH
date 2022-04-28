@@ -1071,7 +1071,6 @@ object ControlDeskFrm: TControlDeskFrm
           OnDblClick = TableModeSGDblClick
           OnDrawCell = TableModeSGDrawCell
           OnSetEditText = TableModeSGSetEditText
-          ExplicitLeft = 0
         end
       end
       object RightGB: TGroupBox

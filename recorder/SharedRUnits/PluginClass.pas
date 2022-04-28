@@ -91,8 +91,8 @@ type
     m_CompMng: cCompMng;
     // форма для организации очереди сообщений
     m_FrmSync: TFrmSync;
-  protected
     beforestop:boolean;
+  protected
     m_rstate: dword;
     m_UIThreadID: integer;
 
@@ -200,6 +200,7 @@ var
 const
   c_TagProp_nullpoly = 'nullpoly';
   c_Log_PlgClass = true;
+  RS_Before_STOP = RS_STOP+RS_VIEW;
 
 implementation
 
@@ -406,6 +407,7 @@ begin
   if beforestop then
   begin
     newstate:=rs_stop; // костыль на предустановку для распознования что это равно стоп
+    //newstate := c_RS_Before_STOP;
   end
   else
     newstate := RState;

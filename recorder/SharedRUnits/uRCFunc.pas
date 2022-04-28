@@ -276,8 +276,8 @@ const
 
 implementation
 
-//uses
-//   pluginclass;
+uses
+  pluginclass;
 
 // uMBaseControl;
 
@@ -761,6 +761,8 @@ function RStatePlay: boolean;
 begin
   // result:=TExtRecorderPack(GPluginInstance).FIRecorder.CheckState(RS_VIEW or RS_REC);
   result := not g_IR.CheckState(RS_stop);
+  if TExtRecorderPack(GPluginInstance).beforestop then
+    result:=FALSE;
 end;
 
 function RStateStop: boolean;

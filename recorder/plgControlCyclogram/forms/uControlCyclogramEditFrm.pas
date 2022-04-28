@@ -867,6 +867,7 @@ begin
               if index=-1 then
                 break;
             end;
+            con.m_ZoneList.createPairInf;
           end;
         end;
       end;
@@ -952,9 +953,9 @@ begin
     end;
     g_conmng.configChanged := true;
     ShowProperties;
+    CloseWorkBook;
+    CloseExcel;
   end;
-  CloseWorkBook;
-  CloseExcel;
 end;
 
 procedure TControlCyclogramEditFrm.LoadUI;

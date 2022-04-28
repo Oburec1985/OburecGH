@@ -952,7 +952,7 @@ begin
         InitTriggers;
         doStartStopTrig(true);
       end;
-    RSt_StopToRec:
+    Rst_StopToRec:
       begin
         InitTriggers;
         doStartStopTrig(true);
@@ -1067,8 +1067,7 @@ end;
 procedure cControlMng.createEvents;
 begin
   AddPlgEvent('cControlMng_doUpdateTags', c_RUpdateData, doUpdateTags);
-  AddPlgEvent('cControlMng_doChangeRState', c_RC_DoChangeRCState,
-    doChangeRState);
+  AddPlgEvent('cControlMng_doChangeRState', c_RC_DoChangeRCState,  doChangeRState);
   AddPlgEvent('cControlMng_doMDBCreate', E_MDBCreate, doinitMDBEvents);
 
   Events.AddEvent('cControlMng_doDestroyObjForTrig', E_OnDestroyObject,
@@ -1360,7 +1359,6 @@ begin
     add(fprograms);
   end;
   result := fprograms;
-
 end;
 
 function cControlMng.getControlObj(id: integer): cControlObj;
@@ -2538,6 +2536,24 @@ begin
   SetTask(t);
 end;
 
+// вытаскивает из записи x...y = x,y
+function GetZonefromTask(vals:string):point2d;
+var
+  p:integer;
+  str:string;
+begin
+  vals:=GetSubString(vals,';',1,p);
+  p:=pos('...', vals);
+  if p<1 then
+    p:=pos('…', str);
+  str:=copy(vals, 1, p-1);
+  result.x:=strToFloatExt(str);
+  if vals[p]='.' then
+    p:=p+2;
+  str:=copy(vals, p+1, length(vals)-p);
+  result.y:=strToFloatExt(str);
+end;
+
 procedure cControlObj.setparams(params: tstringlist);
 var
   l_str, str, str1, Vstr: string;
@@ -2570,7 +2586,8 @@ begin
   if checkstr(l_str) then
     m_zones_enabled := StrToBoolExt(l_str);
   l_str := GetParsValue(params, 'Zone_Alg');
-  m_ZoneList.m_zones_Alg := StrToBoolExt(l_str);
+  if checkstr(l_str) then
+    m_ZoneList.m_zones_Alg := StrToBoolExt(l_str);
   l_str := GetParsValue(params, 'Vals');
   defZone := m_ZoneList.defaultZone;
   if checkstr(l_str) then
@@ -2629,6 +2646,7 @@ begin
       if i>0 then
       begin
         z:=m_ZoneList.defaultZone;
+        z.ftol:=GetZonefromTask(l_str);
         z:=m_ZoneList.z_inf_neg;
         for j := 0 to z.tags.Count - 1 do
         begin
@@ -5409,13 +5427,6 @@ begin
   end;
 end;
 
-// вытаскивает из записи x...y = x,y
-function GetZonefromTask(vals:string):point2d;
-var
-  p:integer;
-begin
-
-end;
 
 function cTask.getParam(key: string): string;
 var
@@ -5711,7 +5722,8 @@ end;
 
 destructor cZone.destroy;
 begin
-  owner.Remove(self);
+  if owner<>nil then
+    owner.Remove(self);
   cleartags;
   tags.destroy;
   tags := nil;
@@ -6002,8 +6014,9 @@ begin
   begin
     zkey := cZone.create(nil, p2);
     z1:=cZone(GetLow(zkey, i));
-    exit;
     zkey.destroy;
+    if z1=nil then
+      z1:=GetZone(0);
     if inrange(z1.ftol,err) then
     begin
       if z1.fUsePrevZoneVals then
@@ -6023,11 +6036,19 @@ begin
       end;
     end
     else
-    begin
+    begin  // вышли за пределы зон
       if err<z1.ftol.x then
-        z2:=z1.Prev
+      begin
+        z2:=z1.Prev;
+        if z2=nil then
+          z2:=z_inf_neg;
+      end
       else
+      begin
         z2:=z1.Next;
+        if z2=nil then
+          z2:=z_inf_pos;
+      end;
       if z2<>nil then
       begin
         activeZone:=z2;
