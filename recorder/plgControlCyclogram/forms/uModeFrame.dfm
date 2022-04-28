@@ -10,7 +10,7 @@ object ModeFrame: TModeFrame
     Top = 0
     Width = 556
     Height = 328
-    ActivePage = ProgramPage
+    ActivePage = ModesPage
     Align = alClient
     Constraints.MinHeight = 328
     Constraints.MinWidth = 556
@@ -153,7 +153,7 @@ object ModeFrame: TModeFrame
         MaxValue = 0
         MinValue = 1
         TabOrder = 0
-        Value = 0
+        Value = 1
       end
       object ProgramNameE: TEdit
         Left = 3

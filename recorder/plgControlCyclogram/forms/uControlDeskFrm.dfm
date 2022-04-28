@@ -1071,6 +1071,7 @@ object ControlDeskFrm: TControlDeskFrm
           OnDblClick = TableModeSGDblClick
           OnDrawCell = TableModeSGDrawCell
           OnSetEditText = TableModeSGSetEditText
+          ExplicitLeft = 0
         end
       end
       object RightGB: TGroupBox
@@ -1103,7 +1104,14 @@ object ControlDeskFrm: TControlDeskFrm
           ParentFont = False
           TabOrder = 0
           OnDblClick = ControlPropSGDblClick
+          OnKeyDown = ControlPropSGKeyDown
           OnSetEditText = ControlPropSGSetEditText
+          RowHeights = (
+            32
+            32
+            32
+            32
+            32)
         end
         object Panel1: TPanel
           Left = 2

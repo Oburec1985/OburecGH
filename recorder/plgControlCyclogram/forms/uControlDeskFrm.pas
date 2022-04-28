@@ -101,6 +101,8 @@ type
     procedure TimeUnitsCBChange(Sender: TObject);
     procedure ControlPropSGSetEditText(Sender: TObject; ACol, ARow: Integer;
       const Value: string);
+    procedure ControlPropSGKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     // Режим подтверждения перехода
     m_CurControl:cControlObj;
@@ -117,6 +119,7 @@ type
     m_timerid, m_timerid_res: cardinal;
     m_tolArray:cDoubleList;
   protected
+    function ZoneListToParams(str:string; zl:cZoneList):string;
     procedure ConfirmManualSwitchMode(m:tobject);
     function toSec(t:double):double;
     function SecToTime(t:double):double;
@@ -801,78 +804,69 @@ begin
   xCol:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).X;
   xRow:= TStringGrid(Sender).MouseCoord( pPnt.X, pPnt.Y ).Y;
   changebool:=false;
-  //case xCol of
-  //  1: // ШИМ
-  //  begin
-  //    m:=getM(xrow);
-  //    t:=m.GetTask(ControlPropE.Text);
-  //    key:='PWM_state';
-  //    changebool:=true;
-  //  end;
-  //  4: // Зоны
-  //  begin
-  //    m:=getM(xrow);
-  //    t:=m.GetTask(ControlPropE.Text);
-  //    key:='Zone_state';
-  //    changebool:=true;
-  //  end;
-  //end;
-  //if changebool then
-  //begin
-  //  str:=t.getParam(key);
-  //  if str='Вкл' then
-  //  begin
-  //    str:='Выкл';
-  //  end
-  //  else
-  //  begin
-  //    str:='Вкл';
-  //  end;
-  //  t.setParam(key,str);
-  //  TStringGrid(Sender).Cells[xCol, xRow]:=str;
-  //end;
 end;
 
-procedure TControlDeskFrm.ControlPropSGSetEditText(Sender: TObject; ACol,
-  ARow: Integer; const Value: string);
+procedure TControlDeskFrm.ControlPropSGKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
 var
-  c, r:integer;
+  i, j, c, r:integer;
   p:cprogramobj;
   mode:cmodeobj;
   con:ccontrolObj;
   t:ctask;
-  str:string;
+  value, str, str1, str2:string;
 begin
-  m_val:=value;
-  m_col:=acol;
-  m_row:=arow;
-  r:=arow;
-  c:=acol;
-  p:=g_conmng.getProgram(0);
-  if p=nil then exit;
-
-  if r>0 then
+  if key=VK_RETURN then
   begin
-    if checkstr(Value) then
+    value:=ControlPropSG.Cells[m_col,m_row];
+    r:=m_row;
+    c:=m_col;
+    p:=g_conmng.getProgram(0);
+    con:=p.getOwnControl(ControlPropE.text);
+    if p=nil then exit;
+    if r>0 then
     begin
-      // редактирование ШИМ
-      if (r=2) or (r=3) then
+      if checkstr(Value) then
       begin
-        mode:=p.getMode(r-1);
-        str:=ControlPropE.text;
-        con:=p.getOwnControl(str);
-        if con<>nil then
+        mode:=p.getMode(c-1);
+        if (r=5) then
         begin
           t:=mode.gettask(con.name);
-          if c=2 then
+          str := T.getParam('Vals');
+          i:=pos('N',str);
+          if i<1 then
           begin
-            t.setParam('PWM_Thi',Value)
-          end
-          else
+            i:=pos('P',str);
+            if i<1 then
+              i:=pos(';',str);
+          end;
+          // Изменяем значение
+          str1:=copy(str, 1, i);
+          str1:=str1+Value;
+          for j := i to length(str) do
           begin
-            t.setParam('PWM_Tlo',Value);
-
-
+            if str[j]=';' then
+              break;
+          end;
+          str2:=copy(str, j, length(str)-j+1);
+          str1:=str1+str2;
+          ControlPropSG.Cells[c,r]:=ZoneListToParams(str1, m_CurControl.m_ZoneList);
+          T.setParam('Vals', str1);
+        end;
+        // редактирование ШИМ
+        if (r=2) or (r=3) then
+        begin
+          if con<>nil then
+          begin
+            t:=mode.gettask(con.name);
+            if c=2 then
+            begin
+              t.setParam('PWM_Thi',Value)
+            end
+            else
+            begin
+              t.setParam('PWM_Tlo',Value);
+            end;
           end;
         end;
         if mode.active then
@@ -882,6 +876,15 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TControlDeskFrm.ControlPropSGSetEditText(Sender: TObject; ACol,
+  ARow: Integer; const Value: string);
+begin
+  if not isvalue(Value) then exit;
+  m_val:=value;
+  m_col:=acol;
+  m_row:=arow;
 end;
 
 procedure TControlDeskFrm.ControlSGDblClick(Sender: TObject);
@@ -1502,7 +1505,7 @@ end;
 procedure TControlDeskFrm.updateControlRow(c: ccontrolobj);
 var
   I: integer;
-  txt: string;
+  txt:string;
 begin
   for I := 1 to ControlSG.RowCount - 1 do
   begin
@@ -1728,14 +1731,70 @@ begin
     inc(k);
   end;
 end;
+// ZoneVals
+function TControlDeskFrm.ZoneListToParams(str:string; zl:cZoneList):string;
+var
+  i,k, j, ind:integer;
+  str1, str2, str3:string;
+  pair:TZonePair;
+  z:czone;
+begin
+  result:='';
+  k:=pos(':', str)+1;
+  j:=pos(';',str);
+  str1:=Copy(str,j+1,length(str)-j);
+  k:=pos('...', str)+1;
+  if k<1 then
+    k:=pos('…', str);
+  if str[k]='.' then
+    k:=k+2;
+
+  ind:=0; // индекс тега
+  str3:='';
+  k:=1;
+  if (str1[1]='N') or (str1[1]='P') then
+  begin
+    if str1[1]='N' then
+      z:=zl.z_inf_neg
+    else
+      z:=zl.z_inf_pos;
+    k:=2
+  end
+  else
+  begin
+    z:=zl.defaultZone;
+    if z.fUsePrevZoneVals then
+      z:=zl.z_inf_neg;
+    k:=1;
+  end;
+  //if (str1[1]='N') and  (length(str1)>1) then
+  begin
+    str2:=Copy(str1,k,length(str1)-k+1);
+    pair:=z.GetZonePair(ind);
+    str1:=GetSubString(str2, ';', 1, j);
+    str3:=itag(pair.tag).GetName+'='+str1;
+    while str1<>'' do
+    begin
+      inc(ind);
+      if ind>(z.tags.count-1) then
+        break;
+      pair:=z.GetZonePair(ind);
+      str1:=GetSubString(str2, ';', j+1, j);
+      if str3='' then
+        str3:=str3+itag(pair.tag).GetName+'='+str1
+      else
+        str3:=str3+';'+itag(pair.tag).GetName+'='+str1;
+    end;
+    result := str3;
+  end;
+end;
 
 procedure TControlDeskFrm.UpdateControlsPropSGmode(m:cModeObj);
 var
   i, j, k, n,ind:integer;
   t:ctask;
-  str, str1, str2, str3:string;
+  str, str1:string;
   d:double;
-  z:cZone;
   pair:TZonePair;
   ppair:PZonePair;
 begin
@@ -1755,6 +1814,7 @@ begin
   str := t.getParam('PWM_Tlo');
   ControlPropSG.Cells[i+1, 2] := str;
   str := T.getParam('Vals');
+
   // алгоритм абсолютных зон
   k:=pos('...', str);
   if k<1 then
@@ -1774,7 +1834,6 @@ begin
     // мин
     ControlPropSG.Cells[i+1, 3] := str1;
     // макс
-
     k:=k+1;
     if str[k]='.' then
       k:=k+2;
@@ -1782,29 +1841,8 @@ begin
     ControlPropSG.Cells[i+1, 4] := str1;
     str1:=GetSubString(str, ';', j+1, j);
     if j=-1 then exit;
+    ControlPropSG.Cells[i+1, 5] := ZoneListToParams(str, m_CurControl.m_ZoneList);
 
-    ind:=0; // индекс тега
-    str3:='';
-    z:=m_CurControl.m_ZoneList.defaultZone;
-    //if (str1[1]='N') and  (length(str1)>1) then
-    begin
-      str2:=Copy(str1,2,length(str1)-1);
-      pair:=z.GetZonePair(ind);
-      str3:=itag(pair.tag).GetName+'='+str2;
-      while str1<>'' do
-      begin
-        inc(ind);
-        if ind>(z.tags.count-1) then
-          break;
-        pair:=z.GetZonePair(ind);
-        str2:=GetSubString(str, ';', j+1, j);
-        if str3='' then
-          str3:=str3+itag(pair.tag).GetName+'='+str2
-        else
-          str3:=str3+';'+itag(pair.tag).GetName+'='+str2;
-      end;
-      ControlPropSG.Cells[i+1, 5] := str3;
-    end;
   end
   else
   begin
@@ -1818,6 +1856,7 @@ begin
       d:=m_tolArray.GetDouble(m_tolArray.Count-1);
       str:=formatstrnoe(t.task+d, 4);
       ControlPropSG.Cells[i+1, 4] := str;
+
     end
     else
     begin

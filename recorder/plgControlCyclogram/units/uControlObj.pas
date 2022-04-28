@@ -2436,8 +2436,15 @@ begin
       m_dfeedback := GetMean(m_feedback);
     if m_zones_enabled then
     begin
-      err := m_dfeedback - task;
-      m_ZoneList.ApplyZone(err);
+      if m_ZoneList.m_zones_Alg then
+      begin
+        err := m_dfeedback - task;
+        m_ZoneList.ApplyZone(err);
+      end
+      else
+      begin
+        m_ZoneList.ApplyZone(m_dfeedback);
+      end;
     end;
   end;
 end;
@@ -2538,7 +2545,7 @@ var
   z, defZone: cZone;
   d: double;
   tol:point2d;
-  i, J, ind, tagind: integer;
+  i, J, k,ind, tagind: integer;
   ppair: pZonePair;
   pair: TZonePair;
 begin
@@ -2560,57 +2567,77 @@ begin
   end;
   // включение работы по зонам
   l_str := GetParsValue(params, 'Zone_state');
-  m_zones_enabled := StrToBoolExt(l_str);
+  if checkstr(l_str) then
+    m_zones_enabled := StrToBoolExt(l_str);
   l_str := GetParsValue(params, 'Zone_Alg');
   m_ZoneList.m_zones_Alg := StrToBoolExt(l_str);
   l_str := GetParsValue(params, 'Vals');
   defZone := m_ZoneList.defaultZone;
   if checkstr(l_str) then
   begin
-    ind := 0;
-    while ind <> -1 do
+    if m_ZoneList.m_zones_Alg then
     begin
-      str1 := getSubStrByIndex(l_str, '_', 1, ind);
-      str1:=trimChars(str1);
-      if str1 = '' then
-        break;
-      // парсим зоны
-      J := pos(':', str1);
-      Vstr := getSubStrByIndex(str1, ';', J + 1, 0);
-      tol.x := strtofloatext(Vstr);
-      if tol.x = 0 then
+      ind := 0;
+      while ind <> -1 do
       begin
-        z := defZone;
-      end
-      else
-      begin
-        z := m_ZoneList.GetZoneByTol(tol);
-        if z = nil then
+        str1 := getSubStrByIndex(l_str, '_', 1, ind);
+        str1:=trimChars(str1);
+        if str1 = '' then
+          break;
+        // парсим зоны
+        J := pos(':', str1);
+        Vstr := getSubStrByIndex(str1, ';', J + 1, 0);
+        tol.x := strtofloatext(Vstr);
+        if tol.x = 0 then
         begin
-          z := m_ZoneList.NewZone(tol);
-          for i := 0 to defZone.tags.Count - 1 do
+          z := defZone;
+        end
+        else
+        begin
+          z := m_ZoneList.GetZoneByTol(tol);
+          if z = nil then
           begin
-            ppair := defZone.GetZonePairPointer(i);
-            pair.tag := ppair.tag;
-            pair.value := ppair.value;
-            z.AddZonePair(pair);
+            z := m_ZoneList.NewZone(tol);
+            for i := 0 to defZone.tags.Count - 1 do
+            begin
+              ppair := defZone.GetZonePairPointer(i);
+              pair.tag := ppair.tag;
+              pair.value := ppair.value;
+              z.AddZonePair(pair);
+            end;
           end;
         end;
+        tagind := 0;
+        while tagind <> -1 do
+        begin
+          Vstr := getSubStrByIndex(str1, ';', J, tagind + 1);
+          Vstr:=trimChars(Vstr);
+          if Vstr = '' then
+            break;
+          ppair := z.GetZonePairPointer(tagind);
+          if ppair=nil then
+            break;
+          ppair.value := strtofloatext(Vstr);
+          inc(tagind);
+        end;
+        inc(ind);
       end;
-      tagind := 0;
-      while tagind <> -1 do
+    end
+    else // относительные зоны
+    begin
+      i:=pos('N',l_str);
+      if i>0 then
       begin
-        Vstr := getSubStrByIndex(str1, ';', J, tagind + 1);
-        Vstr:=trimChars(Vstr);
-        if Vstr = '' then
-          break;
-        ppair := z.GetZonePairPointer(tagind);
-        if ppair=nil then
-          break;
-        ppair.value := strtofloatext(Vstr);
-        inc(tagind);
+        z:=m_ZoneList.defaultZone;
+        z:=m_ZoneList.z_inf_neg;
+        for j := 0 to z.tags.Count - 1 do
+        begin
+          ppair := z.GetZonePairPointer(j);
+          str :=GetSubString(l_str, ';', i+1, k);
+          ppair.value:=strtofloatext(str);
+          i:=k;
+        end;
       end;
-      inc(ind);
     end;
   end;
 end;
@@ -5382,6 +5409,14 @@ begin
   end;
 end;
 
+// вытаскивает из записи x...y = x,y
+function GetZonefromTask(vals:string):point2d;
+var
+  p:integer;
+begin
+
+end;
+
 function cTask.getParam(key: string): string;
 var
   str:string;
@@ -5945,13 +5980,63 @@ begin
   end;
 end;
 
+function inrange(r:point2d; x:double):boolean;
+begin
+  result:=false;
+  if x<=r.y then
+  begin
+    if x>r.x then
+      result:=true;
+  end;
+end;
+
 procedure cZoneList.ApplyZone(err: double);
 var
   z1, z2, zkey: cZone;
   i: integer;
   p2:point2d;
+
 begin
   p2.x:=err;
+  if not m_zones_Alg then
+  begin
+    zkey := cZone.create(nil, p2);
+    z1:=cZone(GetLow(zkey, i));
+    exit;
+    zkey.destroy;
+    if inrange(z1.ftol,err) then
+    begin
+      if z1.fUsePrevZoneVals then
+      begin
+        if activeZone=nil then
+        begin
+
+        end
+        else
+        begin
+          activeZone.Apply;
+        end;
+      end
+      else
+      begin
+        z1.Apply;
+      end;
+    end
+    else
+    begin
+      if err<z1.ftol.x then
+        z2:=z1.Prev
+      else
+        z2:=z1.Next;
+      if z2<>nil then
+      begin
+        activeZone:=z2;
+        z2.Apply;
+      end;
+    end;
+    exit;
+  end;
+
   if err=0 then
   begin
     z1:=defaultZone;
