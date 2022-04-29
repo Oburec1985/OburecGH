@@ -49,7 +49,6 @@ object TrigsFrm: TTrigsFrm
       OnDragOver = TrigTVDragOver
       OnDragDrop = TrigTVDragDrop
       OnKeyDown = TrigTVKeyDown
-      ExplicitLeft = 0
       Columns = <>
     end
     object TrigsActionBtnPanel: TPanel
@@ -373,16 +372,21 @@ object TrigsFrm: TTrigsFrm
       Align = alBottom
       TabOrder = 2
       object ActionsTypesLB: TListBox
-        Left = 515
+        Left = 424
         Top = 1
-        Width = 348
+        Width = 439
         Height = 255
         Align = alRight
         DragMode = dmAutomatic
-        ItemHeight = 24
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -18
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ItemHeight = 22
         Items.Strings = (
-          #1055#1088#1086#1075#1088#1072#1084#1084#1072'/ '#1088#1077#1078#1080#1084'/ '#1088#1077#1075#1091#1083#1103#1090#1086#1088': '#1089#1090#1072#1088#1090#1086#1074#1072#1090#1100
-          #1055#1088#1086#1075#1088#1072#1084#1084#1072'/ '#1088#1077#1078#1080#1084'/ '#1088#1077#1075#1091#1083#1103#1090#1086#1088'/ '#1094#1080#1082#1083#1086#1075#1088#1072#1084#1084#1072': '#1086#1089#1090#1072#1085#1086#1074#1080#1090#1100
+          #1055#1088#1086#1075#1088'./ '#1088#1077#1078'./ '#1088#1077#1075'-'#1088': '#1089#1090#1072#1088#1090#1086#1074#1072#1090#1100
+          #1055#1088#1086#1075#1088'./ '#1088#1077#1078'./ '#1088#1077#1075'-'#1088'/ '#1094#1080#1082#1083'-'#1084#1072': '#1086#1089#1090#1072#1085#1086#1074#1080#1090#1100
           #1055#1088#1086#1075#1088#1072#1084#1084#1072': '#1089#1083#1077#1076'. '#1088#1077#1078'.'
           #1055#1088#1086#1075#1088#1072#1084#1084#1072': '#1087#1088#1077#1076'. '#1088#1077#1078'.'
           #1055#1088#1086#1075#1088#1072#1084#1084#1072': '#1087'a'#1091#1079#1072
@@ -391,6 +395,9 @@ object TrigsFrm: TTrigsFrm
           #1041#1044#1048': '#1055#1088#1080#1073#1072#1074#1080#1090#1100' '#1089#1074#1086#1081#1089#1090#1074#1086
           #1041#1044#1048': '#1059#1089#1090#1072#1085#1086#1074#1080#1090#1100' '#1089#1074#1086#1081#1089#1090#1074#1086
           #1041#1044#1048': '#1042#1099#1095#1077#1089#1090#1100' '#1089#1074#1086#1081#1089#1090#1074#1086)
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 0
         OnClick = ActionsTypesLBClick
       end
@@ -494,7 +501,7 @@ object TrigsFrm: TTrigsFrm
       object ActionsGB: TGroupBox
         Left = 1
         Top = 1
-        Width = 514
+        Width = 423
         Height = 255
         Align = alClient
         Caption = #1044#1077#1081#1089#1090#1074#1080#1103
@@ -505,10 +512,11 @@ object TrigsFrm: TTrigsFrm
         Font.Style = []
         ParentFont = False
         TabOrder = 2
+        ExplicitWidth = 407
         object ActionsLV: TBtnListView
           Left = 2
           Top = 26
-          Width = 510
+          Width = 419
           Height = 227
           Align = alClient
           Columns = <
@@ -532,6 +540,7 @@ object TrigsFrm: TTrigsFrm
           DrawColorBox = False
           ChangeTextColor = False
           Editable = False
+          ExplicitWidth = 510
         end
       end
     end

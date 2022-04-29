@@ -10,7 +10,7 @@ uses
   pluginClass, ImgList, VirtualTrees, uVTServices, Menus, inifiles, uFilemng,
   uBaseObj, uRCFunc, uRvclService,
   tags, recorder, uBaseObjService, uModesTabsForm, activex, uRTrig,
-  DCL_MYOWN, uRcCtrls, uTrigsFrm, uEventTypes,
+  DCL_MYOWN, uRcCtrls, uTrigsFrm, uEventTypes, uCommonMath,
   uExcel
   //, uBaseAlg
   ;
@@ -136,6 +136,7 @@ type
 
 const
   c_ExcelPage = 'Экспорт конфигурации';
+  c_modeColCount = 5;
 
 var
   ControlCyclogramEditFrm: TControlCyclogramEditFrm;
@@ -143,6 +144,8 @@ var
 procedure ShowProgramsTV(tv: TVTree; mng: cControlMng; image: TImageList);
 
 implementation
+uses
+  uControlDeskFrm;
 
 {$R *.dfm}
 { TControlCyclogramEditFrm }
@@ -614,87 +617,6 @@ begin
   end;
 end;
 
-procedure TControlCyclogramEditFrm.SaveToExcelBtnClick(Sender: TObject);
-var
-  fname:string;
-  rng:string;
-  rngObj, sheet: olevariant;
-
-  r, c:integer;
-  p:cprogramObj;
-  m:cmodeobj;
-  con: cControlObj;
-  t:ctask;
-
-  I: Integer;
-  j: Integer;
-begin
-  p:=g_conmng.getProgram(0);
-  if p=nil then exit;
-
-  if SaveDialog2.Execute then
-  begin
-    fname:=SaveDialog2.FileName;
-    if not CheckExcelInstall then
-    begin
-      showmessage('Необходима установка Excel');
-      exit;
-    end;
-    CreateExcel;
-    VisibleExcel(false);
-
-    if fileexists(fname) then
-    begin
-      OpenWorkBook(fname);
-      E.ActiveWorkbook.Sheets.Item[1].cells.clear;
-    end
-    else
-    begin
-      AddWorkBook;
-      AddSheet(c_ExcelPage);
-      DeleteSheet(2);
-    end;
-    // Установить значение ячейке 3-о листа A1
-    // SetRange(1,'A1',234.45);
-    rng := GetRange(1, 'A1');
-    // Создаем шапку отчета
-    r:=1; c:=1;
-    setCell(1, r, c, 'Программа');
-    r:=r+1;
-
-    setCell(1, r, c, p.name);
-    r:=1; c:=2;
-    setCell(1, r, c, 'Режимы');
-    setCell(1, r+1, c, 'Длительность');
-    setCell(1, r+2, c, 'Регуляторы');
-    for I := 0 to p.ControlCount - 1 do
-    begin
-      con:=p.getOwnControl(i);
-      setCell(1, r+3+i, c, con.name);
-    end;
-    c:=c+1;
-    for I := 0 to p.ModeCount - 1 do
-    begin
-      m:=p.getMode(i);
-      setCell(1, r, c+i, m.name);
-      setCell(1, r+1, c+i, m.modelength);
-      for j := 0 to p.ControlCount - 1 do
-      begin
-        con:=p.getOwnControl(j);
-        t:=m.gettask(con.name);
-        setCell(1, r+3+j, c+i, t.task);
-      end;
-    end;
-    try
-      SaveWorkBookAs(fname);
-    except
-      showmessage(
-        'Не удалось сохранить отчет. Несущесвующий каталог или файл защищен от записи');
-    end;
-    CloseWorkBook;
-    CloseExcel;
-  end;
-end;
 
 procedure TControlCyclogramEditFrm.OpenMenuClick(Sender: TObject);
 begin
@@ -734,16 +656,152 @@ begin
   createEvents;
 end;
 
+
+procedure TControlCyclogramEditFrm.SaveToExcelBtnClick(Sender: TObject);
+var
+  rng, fname, str, str1, str2:string;
+  rngObj, sheet: olevariant;
+  p:cprogramObj;
+  m:cmodeobj;
+  con: cControlObj;
+  t:ctask;
+  z:cZone;
+  pair:TTagPair;
+  ind, ind1, r, c, I, j,k: Integer;
+begin
+  p:=g_conmng.getProgram(0);
+  if p=nil then exit;
+
+  if SaveDialog2.Execute then
+  begin
+    fname:=SaveDialog2.FileName;
+    if not CheckExcelInstall then
+    begin
+      showmessage('Необходима установка Excel');
+      exit;
+    end;
+    CreateExcel;
+    VisibleExcel(false);
+
+    if fileexists(fname) then
+    begin
+      OpenWorkBook(fname);
+      E.ActiveWorkbook.Sheets.Item[1].cells.clear;
+    end
+    else
+    begin
+      AddWorkBook;
+      AddSheet(c_ExcelPage);
+      DeleteSheet(2);
+    end;
+    // Установить значение ячейке 3-о листа A1
+    // SetRange(1,'A1',234.45);
+    rng := GetRange(1, 'A1');
+    // Создаем шапку отчета
+    r:=1; c:=1;
+    setCell(1, r, c, 'Программа');
+    r:=r+1;
+
+    setCell(1, r, c, p.name);
+    r:=1; c:=2;
+    setCell(1, r, c, 'Режимы');
+    if ControlDeskFrm<>nil then
+    begin
+      ind:=ControlDeskFrm.TimeUnitsCB.ItemIndex;
+      case ControlDeskFrm.TimeUnitsCB.ItemIndex of
+        0: setCell(1, r+1, c, 'Длительность, сек');
+        1: setCell(1, r+1, c, 'Длительность, мин');
+        2: setCell(1, r+1, c, 'Длительность, час');
+      end;
+    end
+    else
+    begin
+      ind:=0;
+      setCell(1, r+1, c, 'Длительность, сек');
+    end;
+    setCell(1, r+2, c, 'Регуляторы');
+    setCell(1, r+2, c+1, 'Задание');
+    setCell(1, r+2, c+2, 'ОС');
+    setCell(1, r+2, c+3, 'Теги');
+    for I := 0 to p.ControlCount - 1 do
+    begin
+      con:=p.getOwnControl(i);
+      setCell(1, r+3+i, c, con.name);
+      setCell(1, r+3+i, c+1, cDacControl(con).dacname);
+      setCell(1, r+3+i, c+2, con.feedbackname);
+      z:=con.m_ZoneList.DefaultZone;
+      str:='';
+      for j := 0 to z.tags.Count - 1 do
+      begin
+        pair:=z.GetZonePair(j);
+        str:=str+itag(pair.tag).GetName;
+        if j<>z.tags.Count - 1 then
+          str:=str+char(10);
+      end;
+      setCell(1, r+3+i, c+3, str);
+    end;
+    c:=6;
+    // проход по режимам
+    for I := 0 to p.ModeCount - 1 do
+    begin
+      m:=p.getMode(i);
+      setCell(1, r, c+i*c_modeColCount, m.name);
+
+      setCell(1, r+1, c+i*c_modeColCount, SecToTime (m.modelength, ind));
+      setCell(1, r+2, c+i*c_modeColCount, 'Задание');
+      setCell(1, r+2, c+i*c_modeColCount+1, 'Thi_ШИМ');
+      setCell(1, r+2, c+i*c_modeColCount+2, 'Tlo_ШИМ');
+      setCell(1, r+2, c+i*c_modeColCount+3, 'Зоны');
+      setCell(1, r+2, c+i*c_modeColCount+4, 'Значения');
+      // проход по контролам
+      for j := 0 to p.ControlCount - 1 do
+      begin
+        con:=p.getOwnControl(j);
+        t:=m.gettask(con.name);
+        // задание
+        str:=floattostr(t.task);
+        setCell(1, r+3+j, c+i*c_modeColCount, str);
+        // hi ШИМ
+        str:=t.getParam('PWM_Thi');
+        setCell(1, r+3+j, c+i*c_modeColCount+1, str);
+        str:=t.getParam('PWM_Tlo');
+        setCell(1, r+3+j, c+i*c_modeColCount+2, str);
+        // вкл зоны
+        str:=t.getParam('Zone_state');
+        setCell(1, r+3+j, c+i*c_modeColCount+3, str);
+        // спец обработка специально для НПО Лавочкина :(
+        str:=t.getParam('Vals');
+        ind:=0;
+        str:=replaceChar(str, '_', char(10));
+        str:=replaceChar(str, ':', '=');
+        setCell(1, r+3+j, c+i*c_modeColCount+4, str);
+      end;
+    end;
+    try
+      SaveWorkBookAs(fname);
+    except
+      showmessage(
+        'Не удалось сохранить отчет. Несущесвующий каталог или файл защищен от записи');
+    end;
+    CloseWorkBook;
+    CloseExcel;
+  end;
+end;
+
 procedure TControlCyclogramEditFrm.LoadFromExcelBtnClick(Sender: TObject);
 var
-  fname, str:string;
+  list:tlist;
+  fname, str, str1, params:string;
   sh, rngObj: olevariant;
-  i,j, lastrow, lastcol:integer;
-
+  i,j, index, lastrow, lastcol, modeInd, timeUnits:integer;
+  b:boolean;
   con:cControlObj;
   p:cProgramObj;
   m:cmodeobj;
   T:ctask;
+  pars:tstringlist; parsRecord:cstring;
+  z:cZone;
+  pair:TTagPair;
 begin
   if OpenDialog2.Execute then
   begin
@@ -764,8 +822,9 @@ begin
         p:=cProgramObj.create;
         p.name:='Prog_01';
         p.RepeatCount:=1;
-        p.m_StartOnPlay:=false;
+        p.m_StartOnPlay:=true;
         p.m_enableOnStart:=true;
+        p.CreateStateTag;
         g_conmng.Add(p);
       end
       else
@@ -773,13 +832,21 @@ begin
         p.removeOwnControls;
         p.ClearModes;
       end;
+      list:=tlist.create;
+      // загружаем контролы
       for I := 4 to LastRow do
       begin
         str:=sh.Cells[i, 2];
+        if str='' then
+        begin
+          continue;
+          //list.Add(nil);
+        end;
         con:=g_conmng.getControlObj(str);
         if con=nil then
         begin
           con:=g_conmng.createControl(str, cDacControl.ClassName);
+          list.Add(con);
           // установка задания
           str:=sh.Cells[i, 3];
           cDacControl(con).dac:=getTagByName(str);
@@ -787,30 +854,117 @@ begin
           str:=sh.Cells[i, 4];
           cDacControl(con).config(getTagByName(str), nil);
           p.AddControl(con);
+          // загружаем список тегов для работы по зонам регулирования
+          str:=sh.Cells[i, 5];
+          str:=ReplaceChar(str, char(10), ',');
+          if str<>'' then
+          begin
+            index:=0;
+            z:=con.m_ZoneList.GetZone(0);
+            z.cleartags;
+            while index<length(str) do
+            begin
+              str1:=GetSubString(str,',',index+1, index);
+              pair.tag:=pointer(getTagByName(str1));
+              pair.value:=0;
+              z.AddZonePair(pair);
+              if index=-1 then
+                break;
+            end;
+            con.m_ZoneList.createPairInf;
+          end;
         end;
       end;
       // проход по режимам
-      for I := 5 to lastCol do
+      modeInd:=0;
+
+      str:=sh.Cells[2,2];
+      if pos('сек', str)>0 then
       begin
-        str:=sh.Cells[1,i];
+        timeUnits:=0;
+      end
+      else
+      begin
+        if pos('мин', str)>0 then
+        begin
+          timeUnits:=1;
+        end
+        else
+        begin
+          if pos('час', str)>0 then
+          begin
+            timeUnits:=2;
+          end
+          else
+          begin
+            timeUnits:=0;
+          end;
+        end;
+      end;
+
+      while c_modeColCount+modeind*c_modeColCount<lastCol do
+      begin
+        // имя режима
+        str:=sh.Cells[1,6+modeInd*c_modeColCount];
+        if str='' then break;
         m:=cModeObj.create;
         m.name:=str;
         p.addmode(m);
-        str:=sh.Cells[2,i];
-        m.ModeLength:=StrToFloat(str);
+        // длительность режима
+        str:=sh.Cells[2,6+modeInd*c_modeColCount];
+        if str<>'' then
+          m.ModeLength:=toSec(StrToFloat(str), timeUnits);
         m.Infinity:=false;
         m.CheckThreshold:=false;
         cmodeobj(m).CheckLength:=0;
         for j := 0 to p.ControlCount - 1 do
         begin
-          con:=p.getOwnControl(j);
-          str:=sh.Cells[j+4,i];
-          m.createTask(con, strtofloat(str));
+          //con:=p.getOwnControl(j);
+          con:=cControlObj(list.Items[j]);
+          params:='';
+          // задание контролу
+          str:=sh.Cells[j+4,6+modeind*c_modeColCount];
+          if str<>'' then
+            t:=m.createTask(con, strtofloatext(str));
+          // Thi_ШИМ
+          str:=sh.Cells[j+4,6+1+modeind*c_modeColCount];
+          if str<>'' then
+          begin
+            params:=params+'PWM_Thi='+str+',';
+          end;
+          // Tlo_ШИМ
+          str:=sh.Cells[j+4,6+2+modeind*c_modeColCount];
+          if str<>'' then
+          begin
+            params:=params+'PWM_Tlo='+str+',';
+          end;
+          // Зоны
+          str:=sh.Cells[j+4,6+3+modeind*c_modeColCount];
+          if str<>'' then
+          begin
+            params:=params+'Zone_state='+str+',';
+          end;
+          // Значения
+          str:=sh.Cells[j+4,6+4+modeind*c_modeColCount];
+          if str<>'' then
+          begin
+            index:=0;
+            fname:=ReplaseChars(str, ',', ';');
+            fname:=ReplaseChars(fname, char(10), '_');
+            fname:=ReplaseChars(fname, '=', ':');
+            params:=params+'Vals='+fname+',';
+          end;
+          updateParams(t.m_params, params, ',');
+          t.params:=params;
         end;
+        inc(modeind);
       end;
+      list.destroy;
     end;
     g_conmng.configChanged := true;
     ShowProperties;
+    CloseWorkBook;
+    CloseExcel;
   end;
 end;
 

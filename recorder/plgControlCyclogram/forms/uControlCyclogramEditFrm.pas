@@ -136,7 +136,7 @@ type
 
 const
   c_ExcelPage = 'Экспорт конфигурации';
-  c_modeColCount = 4;
+  c_modeColCount = 5;
 
 var
   ControlCyclogramEditFrm: TControlCyclogramEditFrm;
@@ -666,7 +666,7 @@ var
   con: cControlObj;
   t:ctask;
   z:cZone;
-  pair:tZonePair;
+  pair:TTagPair;
   ind, ind1, r, c, I, j,k: Integer;
 begin
   p:=g_conmng.getProgram(0);
@@ -751,7 +751,8 @@ begin
       setCell(1, r+2, c+i*c_modeColCount, 'Задание');
       setCell(1, r+2, c+i*c_modeColCount+1, 'Thi_ШИМ');
       setCell(1, r+2, c+i*c_modeColCount+2, 'Tlo_ШИМ');
-      setCell(1, r+2, c+i*c_modeColCount+3, 'Значения');
+      setCell(1, r+2, c+i*c_modeColCount+3, 'Зоны');
+      setCell(1, r+2, c+i*c_modeColCount+4, 'Значения');
       // проход по контролам
       for j := 0 to p.ControlCount - 1 do
       begin
@@ -765,12 +766,15 @@ begin
         setCell(1, r+3+j, c+i*c_modeColCount+1, str);
         str:=t.getParam('PWM_Tlo');
         setCell(1, r+3+j, c+i*c_modeColCount+2, str);
+        // вкл зоны
+        str:=t.getParam('Zone_state');
+        setCell(1, r+3+j, c+i*c_modeColCount+3, str);
         // спец обработка специально для НПО Лавочкина :(
         str:=t.getParam('Vals');
         ind:=0;
         str:=replaceChar(str, '_', char(10));
         str:=replaceChar(str, ':', '=');
-        setCell(1, r+3+j, c+i*c_modeColCount+3, str);
+        setCell(1, r+3+j, c+i*c_modeColCount+4, str);
       end;
     end;
     try
@@ -781,6 +785,66 @@ begin
     end;
     CloseWorkBook;
     CloseExcel;
+  end;
+end;
+// возвращает число тегов
+Function LoadTags(str:string; c:cControlObj):integer;
+var
+  p:integer;
+  str1:string;
+  t:itag;
+begin
+  result:=0;
+  p:=0;
+  while p<>-1 do
+  begin
+    str1:=GetSubString(str, char(10), p+1, p);
+    if result=0 then
+    begin
+      t:=getTagByName(str1);
+      if t<>nil then
+        cDacControl(c).dac:=t;
+    end
+    else
+    begin
+      c.addTag(str1, 0);
+    end;
+    inc(result);
+  end;
+end;
+
+Function LoadTask(str:string; m:cModeObj; c:cControlObj):ctask;
+var
+  i,p:integer;
+  str1, vals:string;
+  t:ctask;
+  tag:cTagPair;
+begin
+  vals:='';
+  i:=0;
+  p:=0;
+  while p<>-1 do
+  begin
+    str1:=GetSubString(str, char(10), p+1, p);
+    if i=0 then
+    begin
+      t:=m.createTask(c, strtofloatext(str1));
+      result:=t;
+    end
+    else
+    begin
+      tag:=c.getTag(i-1);
+      if tag=nil then
+        break;
+      if (i-1)>0 then
+        vals:=vals+';';
+      vals:=vals+tag.name+'='+str1;
+    end;
+    inc(i);
+  end;
+  if vals<>'' then
+  begin
+    t.setParam('TagsVals', vals);
   end;
 end;
 
@@ -797,7 +861,7 @@ var
   T:ctask;
   pars:tstringlist; parsRecord:cstring;
   z:cZone;
-  pair:TZonePair;
+  pair:TTagPair;
 begin
   if OpenDialog2.Execute then
   begin
@@ -845,7 +909,7 @@ begin
           list.Add(con);
           // установка задания
           str:=sh.Cells[i, 3];
-          cDacControl(con).dac:=getTagByName(str);
+          LoadTags(str, con);
           // установка feedback
           str:=sh.Cells[i, 4];
           cDacControl(con).config(getTagByName(str), nil);
@@ -863,7 +927,8 @@ begin
               str1:=GetSubString(str,',',index+1, index);
               pair.tag:=pointer(getTagByName(str1));
               pair.value:=0;
-              z.AddZonePair(pair);
+              if pair.tag<>nil then
+                z.AddZonePair(pair);
               if index=-1 then
                 break;
             end;
@@ -921,7 +986,11 @@ begin
           // задание контролу
           str:=sh.Cells[j+4,6+modeind*c_modeColCount];
           if str<>'' then
-            t:=m.createTask(con, strtofloatext(str));
+          begin
+            t:=loadtask(str, m, con);
+          end
+          else
+            continue;
           // Thi_ШИМ
           str:=sh.Cells[j+4,6+1+modeind*c_modeColCount];
           if str<>'' then
@@ -934,8 +1003,14 @@ begin
           begin
             params:=params+'PWM_Tlo='+str+',';
           end;
-          // Значения
+          // Зоны
           str:=sh.Cells[j+4,6+3+modeind*c_modeColCount];
+          if str<>'' then
+          begin
+            params:=params+'Zone_state='+str+',';
+          end;
+          // Значения
+          str:=sh.Cells[j+4,6+4+modeind*c_modeColCount];
           if str<>'' then
           begin
             index:=0;
@@ -945,7 +1020,7 @@ begin
             params:=params+'Vals='+fname+',';
           end;
           updateParams(t.m_params, params, ',');
-          t.params:=params;
+          //t.params:=params;
         end;
         inc(modeind);
       end;

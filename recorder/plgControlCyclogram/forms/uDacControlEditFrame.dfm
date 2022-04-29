@@ -1,39 +1,26 @@
 inherited DACControlEditFrame: TDACControlEditFrame
-  Width = 951
-  Height = 304
+  Width = 805
+  Height = 301
   Align = alClient
   ExplicitWidth = 451
   ExplicitHeight = 304
-  object FeedbackLabel: TLabel
-    Left = 16
-    Top = 8
-    Width = 87
-    Height = 16
-    Caption = #1050#1072#1085#1072#1083' '#1079#1072#1076#1072#1085#1080#1077
-  end
-  object DACCB: TComboBox
-    Left = 16
-    Top = 30
-    Width = 145
-    Height = 24
-    TabOrder = 0
-  end
   object RightGB: TGroupBox
-    Left = 206
+    Left = 216
     Top = 0
-    Width = 745
-    Height = 304
+    Width = 589
+    Height = 301
     Align = alRight
     Caption = #1047#1086#1085#1099' '#1088#1077#1075#1091#1083#1080#1088#1086#1074#1072#1085#1080#1103
-    TabOrder = 1
-    ExplicitLeft = -294
+    TabOrder = 0
     object LowPanel: TPanel
       Left = 2
-      Top = 231
-      Width = 741
+      Top = 228
+      Width = 585
       Height = 71
       Align = alBottom
       TabOrder = 0
+      ExplicitTop = 231
+      ExplicitWidth = 772
       object AddZoneBtn: TSpeedButton
         Left = 4
         Top = 10
@@ -298,19 +285,20 @@ inherited DACControlEditFrame: TDACControlEditFrame
     end
     object ZonesLB: TListBox
       Left = 2
-      Top = 71
+      Top = 73
       Width = 175
-      Height = 160
+      Height = 155
       Align = alLeft
       TabOrder = 1
       OnClick = ZonesLBClick
       OnKeyDown = ZonesLBKeyDown
+      ExplicitHeight = 158
     end
     object ChannelsLV: TBtnListView
       Left = 177
-      Top = 71
-      Width = 566
-      Height = 160
+      Top = 73
+      Width = 410
+      Height = 155
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -336,14 +324,17 @@ inherited DACControlEditFrame: TDACControlEditFrame
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
+      ExplicitWidth = 597
+      ExplicitHeight = 158
     end
     object Panel1: TPanel
       Left = 2
       Top = 18
-      Width = 741
-      Height = 53
+      Width = 585
+      Height = 55
       Align = alTop
       TabOrder = 3
+      ExplicitWidth = 772
       object RelZoneCB: TCheckBox
         Left = 7
         Top = 13
@@ -361,33 +352,98 @@ inherited DACControlEditFrame: TDACControlEditFrame
       end
     end
   end
-  object ZonesCB: TCheckBox
-    Left = 16
-    Top = 72
-    Width = 177
-    Height = 22
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
-    Caption = #1047#1086#1085#1099' '#1088#1077#1075#1091#1083#1080#1088#1086#1074#1072#1085#1080#1103
-    TabOrder = 2
-  end
-  object UsePrevValsCB: TCheckBox
-    Left = 16
-    Top = 112
-    Width = 177
-    Height = 22
-    Hint = #1048#1089#1087#1086#1083#1100#1079#1086#1074#1072#1090#1100' '#1079#1085#1072#1095#1077#1085#1080#1103' '#1080#1079' '#1087#1088#1077#1076#1099#1076#1091#1097#1077#1081' '#1079#1086#1085#1099
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
-    Caption = #1043#1080#1089#1090#1077#1088#1077#1079#1080#1089#1085#1072#1103' '#1079#1086#1085#1072
-    Checked = True
-    ParentShowHint = False
-    ShowHint = True
-    State = cbChecked
-    TabOrder = 3
+  object Panel2: TPanel
+    Left = 0
+    Top = 0
+    Width = 216
+    Height = 301
+    Align = alClient
+    TabOrder = 1
+    ExplicitWidth = 240
+    ExplicitHeight = 304
+    object FeedbackLabel: TLabel
+      Left = 16
+      Top = 8
+      Width = 87
+      Height = 16
+      Caption = #1050#1072#1085#1072#1083' '#1079#1072#1076#1072#1085#1080#1077
+    end
+    object DACCB: TComboBox
+      Left = 16
+      Top = 30
+      Width = 145
+      Height = 24
+      TabOrder = 0
+    end
+    object ZonesCB: TCheckBox
+      Left = 16
+      Top = 72
+      Width = 195
+      Height = 22
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = #1047#1086#1085#1099' '#1088#1077#1075#1091#1083#1080#1088#1086#1074#1072#1085#1080#1103
+      TabOrder = 1
+    end
+    object UsePrevValsCB: TCheckBox
+      Left = 16
+      Top = 112
+      Width = 195
+      Height = 22
+      Hint = #1048#1089#1087#1086#1083#1100#1079#1086#1074#1072#1090#1100' '#1079#1085#1072#1095#1077#1085#1080#1103' '#1080#1079' '#1087#1088#1077#1076#1099#1076#1091#1097#1077#1081' '#1079#1086#1085#1099
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = #1043#1080#1089#1090#1077#1088#1077#1079#1080#1089#1085#1072#1103' '#1079#1086#1085#1072
+      Checked = True
+      ParentShowHint = False
+      ShowHint = True
+      State = cbChecked
+      TabOrder = 2
+    end
+    object ChannelsGB: TGroupBox
+      Left = 1
+      Top = 156
+      Width = 214
+      Height = 144
+      Align = alBottom
+      Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
+      TabOrder = 3
+      ExplicitTop = 360
+      ExplicitWidth = 238
+      object TPairLV: TBtnListView
+        Left = 2
+        Top = 18
+        Width = 210
+        Height = 124
+        Align = alClient
+        Columns = <
+          item
+            Caption = #1048#1084#1103
+          end
+          item
+            Caption = #1047#1085#1072#1095#1077#1085#1080#1077
+          end>
+        MultiSelect = True
+        RowSelect = True
+        TabOrder = 0
+        ViewStyle = vsReport
+        OnDragDrop = ChannelsLVDragDrop
+        OnDragOver = ChannelsLVDragOver
+        BtnCol = 0
+        QuoteColumnBtnClick = False
+        QuoteColumnDblClick = False
+        DrawColorBox = False
+        ChangeTextColor = False
+        Editable = True
+        ExplicitLeft = 4
+        ExplicitTop = 17
+        ExplicitWidth = 234
+        ExplicitHeight = 334
+      end
+    end
   end
 end

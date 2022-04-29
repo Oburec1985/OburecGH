@@ -1,4 +1,4 @@
-unit uControlDeskFrm;
+п»їunit uControlDeskFrm;
 
 interface
 
@@ -101,14 +101,14 @@ type
     procedure TimeUnitsCBChange(Sender: TObject);
     procedure ControlPropSGSetEditText(Sender: TObject; ACol, ARow: integer;
       const Value: string);
-    procedure ControlPropSGKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
+    function ChangeZonesVals(vals:string;v1,v2:string):string;
+    procedure ControlPropSGKeyDown(Sender: TObject; var Key: Word;      Shift: TShiftState);
   private
-    // Режим подтверждения перехода
+    // Р РµР¶РёРј РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ РїРµСЂРµС…РѕРґР°
     m_CurControl: ccontrolobj;
     m_CurMode: cModeObj;
     m_uiThread: integer;
-    // форма посчитана фабрикой класса. Нужно для ограничения числа форм
+    // С„РѕСЂРјР° РїРѕСЃС‡РёС‚Р°РЅР° С„Р°Р±СЂРёРєРѕР№ РєР»Р°СЃСЃР°. РќСѓР¶РЅРѕ РґР»СЏ РѕРіСЂР°РЅРёС‡РµРЅРёСЏ С‡РёСЃР»Р° С„РѕСЂРј
     m_counted: boolean;
     m_curCol, m_curRow: integer;
     finit: boolean;
@@ -127,19 +127,19 @@ type
     procedure ControlSGEditCell(ARow, ACol: integer; const Value: string);
     procedure FormCfgClose(Sender: TObject; var Action: TCloseAction);
     function getprogram(row: integer): cProgramObj;
-    function getmode(row: integer): cModeObj;
+    function getmode(col: integer): cModeObj;
     function getTableModeSGByCol(col: integer): cModeObj;
     function getControlFromTableModeSGByRow(row: integer): ccontrolobj;
     procedure ClearSGButtons;
     procedure WndProc(var Message: TMessage); override;
     procedure CreateSGButtons;
     procedure ShowModeTable;
-    // Показать регулояторы
+    // РџРѕРєР°Р·Р°С‚СЊ СЂРµРіСѓР»РѕСЏС‚РѕСЂС‹
     procedure ShowControls;
-    // Показать Таблицу программ и режимов
+    // РџРѕРєР°Р·Р°С‚СЊ РўР°Р±Р»РёС†Сѓ РїСЂРѕРіСЂР°РјРј Рё СЂРµР¶РёРјРѕРІ
     procedure ShowModes;
     procedure ShowControlPropsModes;
-    // Показать триггеры
+    // РџРѕРєР°Р·Р°С‚СЊ С‚СЂРёРіРіРµСЂС‹
     procedure ShowTrigs;
     procedure InitSG;
     procedure updateviews;
@@ -164,7 +164,7 @@ type
     procedure doLoad(Sender: TObject);
     procedure doAddObj(Sender: TObject);
     procedure doShowStop(Sender: TObject);
-    // вызывается при смене конфигурации циклограммы
+    // РІС‹Р·С‹РІР°РµС‚СЃСЏ РїСЂРё СЃРјРµРЅРµ РєРѕРЅС„РёРіСѓСЂР°С†РёРё С†РёРєР»РѕРіСЂР°РјРјС‹
     procedure Preview;
   public
     procedure Start;
@@ -208,7 +208,7 @@ var
 
 const
   c_Pic = 'CONTROLPULT';
-  c_Name = 'Пульт управления';
+  c_Name = 'РџСѓР»СЊС‚ СѓРїСЂР°РІР»РµРЅРёСЏ';
 
 const
   c_Control_defXSize = 770;
@@ -250,9 +250,9 @@ implementation
 function TrigBoolToStr(b: boolean): string;
 begin
   if b then
-    result := 'Вкл.'
+    result := 'Р’РєР».'
   else
-    result := 'Выкл.'
+    result := 'Р’С‹РєР».'
 end;
 
 procedure cControlFactory.AddEvents;
@@ -386,7 +386,7 @@ begin
     end
     else
     begin
-      // последняя итерация для срабатывания действий заложенных в стоптриг
+      // РїРѕСЃР»РµРґРЅСЏСЏ РёС‚РµСЂР°С†РёСЏ РґР»СЏ СЃСЂР°Р±Р°С‚С‹РІР°РЅРёСЏ РґРµР№СЃС‚РІРёР№ Р·Р°Р»РѕР¶РµРЅРЅС‹С… РІ СЃС‚РѕРїС‚СЂРёРі
       p := g_conmng.getprogram(0);
       if p <> nil then
       begin
@@ -403,7 +403,7 @@ begin
         g_conmng.configChanged := false;
       end;
       Stop;
-      // if g_conmng.state<>c_stop then showmessage('Остановили Timer в состоянии c_TryStop');
+      // if g_conmng.state<>c_stop then showmessage('РћСЃС‚Р°РЅРѕРІРёР»Рё Timer РІ СЃРѕСЃС‚РѕСЏРЅРёРё c_TryStop');
       Timer1.Enabled := false;
       ProgramSG.Invalidate;
       // KillTimer(handle,m_timerid);
@@ -475,34 +475,35 @@ begin
   ControlSG.RowCount := 2;
   ControlSG.ColCount := 4;
 
-  ControlSG.Cells[c_Col_Control, 0] := 'Регулятор';
-  ControlSG.Cells[c_Col_Task, 0] := 'Задание';
-  ControlSG.Cells[c_Col_Feedback, 0] := 'Измерено';
-  ControlSG.Cells[c_Col_State, 0] := 'Состояние';
+  ControlSG.Cells[c_Col_Control, 0] := 'Р РµРіСѓР»СЏС‚РѕСЂ';
+  ControlSG.Cells[c_Col_Task, 0] := 'Р—Р°РґР°РЅРёРµ';
+  ControlSG.Cells[c_Col_Feedback, 0] := 'РР·РјРµСЂРµРЅРѕ';
+  ControlSG.Cells[c_Col_State, 0] := 'РЎРѕСЃС‚РѕСЏРЅРёРµ';
   SGChange(ControlSG);
 
   ProgramSG.RowCount := 2;
   ProgramSG.ColCount := 3;
-  ProgramSG.Cells[c_Col_mode, 0] := 'Режим';
-  ProgramSG.Cells[c_Col_Length, 0] := 'Длит.';
-  ProgramSG.Cells[c_Col_Prog, 0] := 'Программа';
+  ProgramSG.Cells[c_Col_mode, 0] := 'Р РµР¶РёРј';
+  ProgramSG.Cells[c_Col_Length, 0] := 'Р”Р»РёС‚.';
+  ProgramSG.Cells[c_Col_Prog, 0] := 'РџСЂРѕРіСЂР°РјРјР°';
   SGChange(ProgramSG);
 
   TrigSG.RowCount := 2;
   TrigSG.ColCount := 3;
-  TrigSG.Cells[c_Col_TrigName, 0] := 'Триггер';
-  TrigSG.Cells[c_Col_TrigState, 0] := 'Значение';
-  TrigSG.Cells[c_Col_TrigEnabled, 0] := 'Включен';
+  TrigSG.Cells[c_Col_TrigName, 0] := 'РўСЂРёРіРіРµСЂ';
+  TrigSG.Cells[c_Col_TrigState, 0] := 'Р—РЅР°С‡РµРЅРёРµ';
+  TrigSG.Cells[c_Col_TrigEnabled, 0] := 'Р’РєР»СЋС‡РµРЅ';
   SGChange(TrigSG);
 
-  ControlPropSG.RowCount := 6;
+  ControlPropSG.RowCount := 7;
   ControlPropSG.ColCount := 2;
 
   ControlPropSG.Cells[0, 1] := 'Thi';
   ControlPropSG.Cells[0, 2] := 'Tlo';
-  ControlPropSG.Cells[0, 3] := 'Мин.';
-  ControlPropSG.Cells[0, 4] := 'Макс.';
-  ControlPropSG.Cells[0, 5] := 'Доп. пар-ы';
+  ControlPropSG.Cells[0, 3] := 'РњРёРЅ.';
+  ControlPropSG.Cells[0, 4] := 'РњР°РєСЃ.';
+  ControlPropSG.Cells[0, 5] := 'Р—РѕРЅС‹';
+  ControlPropSG.Cells[0, 6] := 'Р”РѕРї. РїР°СЂ-С‹';
   SGChange(ControlPropSG);
 end;
 
@@ -608,12 +609,12 @@ end;
 procedure TControlDeskFrm.ProgramSGDblClick(Sender: TObject);
 var
   m: cModeObj;
-  pPnt: TPoint; // Координаты курсора
-  xCol, xRow: integer; // Адрес ячейки таблицы
+  pPnt: TPoint; // РљРѕРѕСЂРґРёРЅР°С‚С‹ РєСѓСЂСЃРѕСЂР°
+  xCol, xRow: integer; // РђРґСЂРµСЃ СЏС‡РµР№РєРё С‚Р°Р±Р»РёС†С‹
 begin
   GetCursorPos(pPnt);
   pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
-  // Находим позицию нашей ячейки
+  // РќР°С…РѕРґРёРј РїРѕР·РёС†РёСЋ РЅР°С€РµР№ СЏС‡РµР№РєРё
   xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
   xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
   if xRow = 0 then
@@ -720,14 +721,14 @@ var
   j: integer;
   t: ctask;
 begin
-  // 2 - кол-во строк сверху имена режимов
+  // 2 - РєРѕР»-РІРѕ СЃС‚СЂРѕРє СЃРІРµСЂС…Сѓ РёРјРµРЅР° СЂРµР¶РёРјРѕРІ
   TableModeSG.RowCount := c_ModeTable_headerSize + g_conmng.ControlsCount;
   p := g_conmng.getprogram(0);
   if p = nil then
     exit;
 
   TableModeSG.ColCount := c_ModeTable_headerCol + p.ModeCount;
-  TableModeSG.Cells[0, 1] := 'Время работы';
+  TableModeSG.Cells[0, 1] := 'Р’СЂРµРјСЏ СЂР°Р±РѕС‚С‹';
   for I := 0 to p.ModeCount - 1 do
   begin
     row := c_ModeTable_headerSize - 1;
@@ -762,13 +763,13 @@ begin
   result := g_conmng.getControlObj(cname);
 end;
 
-function TControlDeskFrm.getmode(row: integer): cModeObj;
+function TControlDeskFrm.getmode(col: integer): cModeObj;
 var
   p: cProgramObj;
   str: string;
 begin
-  p := getprogram(row);
-  str := ProgramSG.Cells[c_Col_mode, row];
+  p := getprogram(0);
+  str := ProgramSG.Cells[0, col];
   result := p.getmode(str);
 end;
 
@@ -784,26 +785,61 @@ procedure TControlDeskFrm.ControlPropSGDblClick(Sender: TObject);
 var
   m: cModeObj;
   t: ctask;
-  pPnt: TPoint; // Координаты курсора
-  xCol, xRow: integer; // Адрес ячейки таблицы
+  pPnt: TPoint; // РљРѕРѕСЂРґРёРЅР°С‚С‹ РєСѓСЂСЃРѕСЂР°
+  xCol, xRow: integer; // РђРґСЂРµСЃ СЏС‡РµР№РєРё С‚Р°Р±Р»РёС†С‹
   str, Key: string;
   changebool: boolean;
-  function getM(row: integer): cModeObj;
-  var
-    p: cProgramObj;
-  begin
-    str := TStringGrid(Sender).Cells[0, row];
-    p := g_conmng.getprogram(0);
-    result := p.getmode(str);
-  end;
-
+  p:cprogramObj;
 begin
   GetCursorPos(pPnt);
   pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
-  // Находим позицию нашей ячейки
+  // РќР°С…РѕРґРёРј РїРѕР·РёС†РёСЋ РЅР°С€РµР№ СЏС‡РµР№РєРё
   xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
   xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
-  changebool := false;
+  // Р’РєР»СЋС‡РµРЅРёРµ Р·РѕРЅ
+  if xRow=5 then
+  begin
+    p:=g_conmng.getProgram(0);
+    m:=p.getMode(xCol-1);
+    t:=m.GetTask(ControlPropE.Text);
+    key:='Zone_state';
+    changebool:=true;
+    if changebool then
+    begin
+      str:=t.getParam(key);
+      if str='Р’РєР»' then
+      begin
+        str:='Р’С‹РєР»';
+      end
+      else
+      begin
+        str:='Р’РєР»';
+      end;
+      t.setParam(key,str);
+      TStringGrid(Sender).Cells[xCol, xRow]:=str;
+    end;
+    changebool := false;
+  end;
+end;
+
+function TControlDeskFrm.ChangeZonesVals(vals:string;v1,v2:string):string;
+var
+  p, start:integer;
+  str:string;
+begin
+  start:=pos(':',vals);
+  if start<1 then
+  begin
+    start:=1
+  end
+  else
+  begin
+    result:=Copy(vals,1, start);
+  end;
+  result:=result+v1+'вЂ¦'+v2;
+  p := pos(';', vals);
+  str:=Copy(vals, p, length(vals)-p+1);
+  result:=result+str;
 end;
 
 procedure TControlDeskFrm.ControlPropSGKeyDown(Sender: TObject; var Key: Word;
@@ -819,6 +855,7 @@ begin
   if Key = VK_RETURN then
   begin
     Value := ControlPropSG.Cells[m_col, m_row];
+    if not isvalue(value) then exit;
     r := m_row;
     c := m_col;
     p := g_conmng.getprogram(0);
@@ -830,7 +867,15 @@ begin
       if checkstr(Value) then
       begin
         mode := p.getmode(c - 1);
-        if (r = 5) then
+        if (r = 3) or (r = 4) then
+        begin
+          t := mode.gettask(con.name);
+          str := t.getParam('Vals');
+          str:=ChangeZonesVals(str, ControlPropSG.Cells[c, 3], ControlPropSG.Cells[c, 4]);
+          t.setParam('Vals', str);
+        end;
+        // РёР·РјРµРЅСЏРµРј РґРѕРї РїР°СЂР°РјРµС‚СЂС‹ Р·РѕРЅС‹
+        if (r = 6)  then
         begin
           t := mode.gettask(con.name);
           str := t.getParam('Vals');
@@ -841,7 +886,7 @@ begin
             if I < 1 then
               I := pos(';', str);
           end;
-          // Изменяем значение
+          // РР·РјРµРЅСЏРµРј Р·РЅР°С‡РµРЅРёРµ
           str1 := copy(str, 1, I);
           str1 := str1 + Value;
           for j := I to length(str) do
@@ -851,11 +896,10 @@ begin
           end;
           str2 := copy(str, j, length(str) - j + 1);
           str1 := str1 + str2;
-          ControlPropSG.Cells[c, r] := ZoneListToParams(str1,
-            m_CurControl.m_ZoneList);
+          ControlPropSG.Cells[c, r]:=ZoneListToParams(str1, m_CurControl.m_ZoneList);
           t.setParam('Vals', str1);
         end;
-        // редактирование ШИМ
+        // СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ РЁРРњ
         if (r = 2) or (r = 3) then
         begin
           if con <> nil then
@@ -923,7 +967,7 @@ begin
   if ARow < c_headerSize then
     exit;
   if ACol = c_Col_State then
-  begin // Простое рисование
+  begin // РџСЂРѕСЃС‚РѕРµ СЂРёСЃРѕРІР°РЅРёРµ
     ControlSG.Canvas.FillRect(Rect);
     btn := Tbitmap(ControlSG.Objects[ACol, ARow]);
     if btn = nil then
@@ -1049,7 +1093,7 @@ begin
     p := g_conmng.getprogram(0);
     if p <> nil then
     begin
-      // обновляем отображение времени
+      // РѕР±РЅРѕРІР»СЏРµРј РѕС‚РѕР±СЂР°Р¶РµРЅРёРµ РІСЂРµРјРµРЅРё
       for j := 0 to p.ModeCount - 1 do
       begin
         m := p.getmode(j);
@@ -1205,7 +1249,7 @@ begin
       g_conmng.continuePlay;
     end;
   end;
-  // подсветка панелек
+  // РїРѕРґСЃРІРµС‚РєР° РїР°РЅРµР»РµРє
   PlayPanel.Color := CLgREEN;
   PausePanel.Color := clBtnFace;
   StopPanel.Color := clBtnFace;
@@ -1217,7 +1261,7 @@ var
 begin
   ir := getIRecorder;
   g_conmng.continuePlay;
-  // подсветка панелек
+  // РїРѕРґСЃРІРµС‚РєР° РїР°РЅРµР»РµРє
   PlayPanel.Color := CLgREEN;
   PausePanel.Color := clBtnFace;
   StopPanel.Color := clBtnFace;
@@ -1271,13 +1315,13 @@ end;
 procedure TControlDeskFrm.TableModeSGClick(Sender: TObject);
 var
   m: cModeObj;
-  pPnt: TPoint; // Координаты курсора
-  xCol, xRow: integer; // Адрес ячейки таблицы
+  pPnt: TPoint; // РљРѕРѕСЂРґРёРЅР°С‚С‹ РєСѓСЂСЃРѕСЂР°
+  xCol, xRow: integer; // РђРґСЂРµСЃ СЏС‡РµР№РєРё С‚Р°Р±Р»РёС†С‹
   c: ccontrolobj;
 begin
   GetCursorPos(pPnt);
   pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
-  // Находим позицию нашей ячейки
+  // РќР°С…РѕРґРёРј РїРѕР·РёС†РёСЋ РЅР°С€РµР№ СЏС‡РµР№РєРё
   xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
   xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
   c := getControlFromTableModeSGByRow(xRow);
@@ -1320,14 +1364,14 @@ procedure TControlDeskFrm.TableModeSGDblClick(Sender: TObject);
 var
   m: cModeObj;
   c: ccontrolobj;
-  pPnt: TPoint; // Координаты курсора
-  xCol, xRow: integer; // Адрес ячейки таблицы
+  pPnt: TPoint; // РљРѕРѕСЂРґРёРЅР°С‚С‹ РєСѓСЂСЃРѕСЂР°
+  xCol, xRow: integer; // РђРґСЂРµСЃ СЏС‡РµР№РєРё С‚Р°Р±Р»РёС†С‹
 begin
   if g_conmng.State = c_play then
   begin
     GetCursorPos(pPnt);
     pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
-    // Находим позицию нашей ячейки
+    // РќР°С…РѕРґРёРј РїРѕР·РёС†РёСЋ РЅР°С€РµР№ СЏС‡РµР№РєРё
     xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
     xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
     m_CurControl := getControlFromTableModeSGByRow(xRow);
@@ -1342,10 +1386,10 @@ begin
     if ConfirmModeCB.Checked then
     begin
       ConfirmFmr.SecCallBack(ConfirmManualSwitchMode, m);
-      ConfirmFmr.SetText('Установить режим ' + m.name);
+      ConfirmFmr.SetText('РЈСЃС‚Р°РЅРѕРІРёС‚СЊ СЂРµР¶РёРј ' + m.name);
       ConfirmFmr.Execute;
     end
-    else // безусловный переход
+    else // Р±РµР·СѓСЃР»РѕРІРЅС‹Р№ РїРµСЂРµС…РѕРґ
       ConfirmManualSwitchMode(m);
   end;
 end;
@@ -1369,7 +1413,7 @@ begin
       if m <> nil then
       begin
         sg := TStringGrid(Sender);
-        // имя режима
+        // РёРјСЏ СЂРµР¶РёРјР°
         str := sg.Cells[ACol, 0];
         if str = m.name then
         begin
@@ -1413,7 +1457,7 @@ begin
     exit;
   if c > 0 then
   begin
-    // редактируем длительность
+    // СЂРµРґР°РєС‚РёСЂСѓРµРј РґР»РёС‚РµР»СЊРЅРѕСЃС‚СЊ
     if r = 1 then
     begin
       m := p.getmode(c - 1);
@@ -1448,7 +1492,7 @@ var
 begin
   // LogRecorderMessage('TControlDeskFrm_Timer_enter');
   tid := GetCurrentThreadId;
-  // деления на случай необходимости вызова из разных потоков
+  // РґРµР»РµРЅРёСЏ РЅР° СЃР»СѓС‡Р°Р№ РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РІС‹Р·РѕРІР° РёР· СЂР°Р·РЅС‹С… РїРѕС‚РѕРєРѕРІ
   if tid = MainThreadID then
   begin
     LogRecorderMessage(
@@ -1459,9 +1503,9 @@ begin
     g_conmng.exec;
     LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecControls',
       c_Log_ControlDeskFrm);
-    // пересчитываем реакцию регуляторов
+    // РїРµСЂРµСЃС‡РёС‚С‹РІР°РµРј СЂРµР°РєС†РёСЋ СЂРµРіСѓР»СЏС‚РѕСЂРѕРІ
     g_conmng.ExecControls;
-    // отображаем
+    // РѕС‚РѕР±СЂР°Р¶Р°РµРј
     LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecupdateviews',
       c_Log_ControlDeskFrm);
     updateviews;
@@ -1474,13 +1518,13 @@ begin
     LogRecorderMessage(
       'TControlDeskFrm_Timer1Timer_BeforeExec===================================='
         , c_Log_ControlDeskFrm);
-    // перерасчитываем все режимы и регуляторы
+    // РїРµСЂРµСЂР°СЃС‡РёС‚С‹РІР°РµРј РІСЃРµ СЂРµР¶РёРјС‹ Рё СЂРµРіСѓР»СЏС‚РѕСЂС‹
     g_conmng.exec;
     LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecControls',
       c_Log_ControlDeskFrm);
-    // пересчитываем реакцию регуляторов
+    // РїРµСЂРµСЃС‡РёС‚С‹РІР°РµРј СЂРµР°РєС†РёСЋ СЂРµРіСѓР»СЏС‚РѕСЂРѕРІ
     g_conmng.ExecControls;
-    // отображаем
+    // РѕС‚РѕР±СЂР°Р¶Р°РµРј
     LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecupdateviews',
       c_Log_ControlDeskFrm);
     updateviews;
@@ -1544,7 +1588,7 @@ begin
       end;
     end;
   end;
-  // вызов перерисовки статуса регуляторов
+  // РІС‹Р·РѕРІ РїРµСЂРµСЂРёСЃРѕРІРєРё СЃС‚Р°С‚СѓСЃР° СЂРµРіСѓР»СЏС‚РѕСЂРѕРІ
   ControlSG.Invalidate();
 end;
 
@@ -1716,7 +1760,7 @@ begin
   while k <= length(str) do
   begin
     case State of
-      // имя зоны не отпарсено до символа :
+      // РёРјСЏ Р·РѕРЅС‹ РЅРµ РѕС‚РїР°СЂСЃРµРЅРѕ РґРѕ СЃРёРјРІРѕР»Р° :
       0:
         begin
           if str[k] = ':' then
@@ -1726,7 +1770,7 @@ begin
             continue;
           end;
         end;
-      // парсим толеранс до первой ;
+      // РїР°СЂСЃРёРј С‚РѕР»РµСЂР°РЅСЃ РґРѕ РїРµСЂРІРѕР№ ;
       1:
         begin
           if str[k] = ';' then
@@ -1744,7 +1788,7 @@ begin
             end;
           end;
         end;
-      // ищем новую зону
+      // РёС‰РµРј РЅРѕРІСѓСЋ Р·РѕРЅСѓ
       2:
         begin
           if (str[k] = '_') or (str[k] = char(10)) then
@@ -1762,7 +1806,7 @@ function TControlDeskFrm.ZoneListToParams(str: string; zl: cZoneList): string;
 var
   I, k, j, ind: integer;
   str1, str2, str3: string;
-  ppair: PZonePair;
+  ppair: pTagPair;
   z: czone;
 begin
   result := '';
@@ -1771,11 +1815,11 @@ begin
   str1 := copy(str, j + 1, length(str) - j);
   k := pos('...', str) + 1;
   if k < 1 then
-    k := pos('…', str);
+    k := pos('вЂ¦', str);
   if str[k] = '.' then
     k := k + 2;
 
-  ind := 0; // индекс тега
+  ind := 0; // РёРЅРґРµРєСЃ С‚РµРіР°
   str3 := '';
   k := 1;
   if (str1[1] = 'N') or (str1[1] = 'P') then
@@ -1824,8 +1868,8 @@ var
   t: ctask;
   str, str1: string;
   d: double;
-  pair: TZonePair;
-  ppair: PZonePair;
+  pair: TTagPair;
+  ppair: pTagPair;
 begin
   I := m.modeIndex;
   if m_CurControl <> nil then
@@ -1844,10 +1888,10 @@ begin
   ControlPropSG.Cells[I + 1, 2] := str;
   str := t.getParam('Vals');
 
-  // алгоритм абсолютных зон
+  // Р°Р»РіРѕСЂРёС‚Рј Р°Р±СЃРѕР»СЋС‚РЅС‹С… Р·РѕРЅ
   k := pos('...', str);
   if k < 1 then
-    k := pos('…', str);
+    k := pos('вЂ¦', str);
   if k > 0 then
   begin
     n := pos(':', str);
@@ -1860,22 +1904,25 @@ begin
       str1 := GetSubString(str, ';', n + 1, j);
     end;
     str1 := copy(str, n + 1, k - n - 1);
-    // мин
+    // РјРёРЅ
     ControlPropSG.Cells[I + 1, 3] := str1;
-    // макс
+    // РјР°РєСЃ
     k := k + 1;
     if str[k] = '.' then
       k := k + 2;
     str1 := copy(str, k, j - k);
     ControlPropSG.Cells[I + 1, 4] := str1;
     str1 := GetSubString(str, ';', j + 1, j);
+    // Р’РєР» Р·РѕРЅС‹
+    str1 := t.getParam('Zone_state');
+    ControlPropSG.Cells[I + 1, 5] := str1;
     if j = -1 then
       exit;
-    ControlPropSG.Cells[I + 1, 5] := ZoneListToParams(str,
-      m_CurControl.m_ZoneList);
+    // РґРѕРї РїР°СЂР°РјРµС‚СЂС‹ РІ Р·РѕРЅР°С…
+    ControlPropSG.Cells[I + 1, 6] := ZoneListToParams(str, m_CurControl.m_ZoneList);
   end
   else
-  begin
+  begin // РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅС‹Рµ Р·РѕРЅС‹
     m_tolArray.Listclear;
     UpdateTols(m_tolArray, str);
     if m_tolArray.Count > 0 then
@@ -1886,7 +1933,6 @@ begin
       d := m_tolArray.GetDouble(m_tolArray.Count - 1);
       str := formatstrnoe(t.task + d, 4);
       ControlPropSG.Cells[I + 1, 4] := str;
-
     end
     else
     begin
@@ -1901,11 +1947,11 @@ var
   m: cModeObj;
   t: ctask;
   I, j
-  // состояние парсинга значений зон
+  // СЃРѕСЃС‚РѕСЏРЅРёРµ РїР°СЂСЃРёРЅРіР° Р·РЅР°С‡РµРЅРёР№ Р·РѕРЅ
     : integer;
   str: STRING;
 begin
-  // обновляется по DblClick
+  // РѕР±РЅРѕРІР»СЏРµС‚СЃСЏ РїРѕ DblClick
   if m_CurControl = nil then
     exit;
   ControlPropE.text := m_CurControl.Caption;

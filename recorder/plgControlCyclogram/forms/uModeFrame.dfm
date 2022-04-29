@@ -153,7 +153,7 @@ object ModeFrame: TModeFrame
         MaxValue = 0
         MinValue = 1
         TabOrder = 0
-        Value = 1
+        Value = 0
       end
       object ProgramNameE: TEdit
         Left = 3
@@ -205,6 +205,8 @@ object ModeFrame: TModeFrame
         Align = alRight
         Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
         TabOrder = 0
+        ExplicitLeft = 331
+        ExplicitTop = 2
         object ChannelsLV: TBtnListView
           Left = 2
           Top = 18

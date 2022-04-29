@@ -1105,6 +1105,8 @@ object ControlDeskFrm: TControlDeskFrm
           OnDblClick = ControlPropSGDblClick
           OnKeyDown = ControlPropSGKeyDown
           OnSetEditText = ControlPropSGSetEditText
+          ExplicitLeft = 4
+          ExplicitTop = 76
           RowHeights = (
             32
             32

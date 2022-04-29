@@ -489,8 +489,8 @@ var
   :cstring;
   key:string;
 begin
-  clearParsResult(pars);
-  newpars:=ParsStrParamNoSort(opts,separator);
+  // clearParsResult(pars);
+  newpars:=ParsStrParamNoSort(opts, separator);
   for I := 0 to newpars.Count - 1 do
   begin
     key:=newpars.Strings[i];

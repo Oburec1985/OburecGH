@@ -12,8 +12,6 @@ uses
 
 type
   TDACControlEditFrame = class(TCustomControlEditFrame)
-    FeedbackLabel: TLabel;
-    DACCB: TComboBox;
     RightGB: TGroupBox;
     LowPanel: TPanel;
     AddZoneBtn: TSpeedButton;
@@ -22,13 +20,18 @@ type
     TolEdit: TFloatEdit;
     TolLabel: TLabel;
     ZoneTypeCB: TCheckBox;
-    ZonesCB: TCheckBox;
     UpdateBtn: TSpeedButton;
-    UsePrevValsCB: TCheckBox;
     Panel1: TPanel;
     RelZoneCB: TCheckBox;
     TolEdit2: TFloatEdit;
     TolLabel2: TLabel;
+    Panel2: TPanel;
+    FeedbackLabel: TLabel;
+    DACCB: TComboBox;
+    ZonesCB: TCheckBox;
+    UsePrevValsCB: TCheckBox;
+    ChannelsGB: TGroupBox;
+    TPairLV: TBtnListView;
     procedure ChannelsLVDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure ChannelsLVDragDrop(Sender, Source: TObject; X, Y: Integer);
@@ -181,7 +184,7 @@ procedure TDACControlEditFrame.ShowZone(z:cZone);
 var
   I: Integer;
   li:tlistitem;
-  p:TZonePair;
+  p:TTagPair;
 begin
   TolEdit.FloatNum:=z.tol.x;
   TolEdit2.FloatNum:=z.tol.y;
@@ -274,7 +277,7 @@ procedure TDACControlEditFrame.UpdateBtnClick(Sender: TObject);
 var
   z:cZone;
   I: Integer;
-  pair:TZonePair;
+  pair:TTagPair;
   li:tlistitem;
   str:string;
   t:double;
@@ -373,6 +376,8 @@ var
   t:itag;
   I: Integer;
   z:cZone;
+  tp:cTagPair;
+  li:tlistitem;
 begin
   m_CurCon:=c;
   m_CurCon.m_zones_enabled:=ZonesCB.Checked;
@@ -390,6 +395,14 @@ begin
       cDacControl(c).dac:=nil;
     end;
   end;
+  for I := 0 to c.TagsCount - 1 do
+  begin
+    tp:=c.getTag(i);
+    li:=TPairLV.Items.Add;
+    li.data:=tp;
+    li.Caption:=tp.name;
+    TPairLV.SetSubItemByColumnName('Значение', floattostr(tp.value), li);
+  end;
 end;
 
 procedure TDACControlEditFrame.EndMS;
@@ -402,7 +415,7 @@ procedure TDACControlEditFrame.AddZoneBtnClick(Sender: TObject);
 var
   z, defzone:cZone;
   I: Integer;
-  p:tZonePair;
+  p:TTagPair;
 begin
   if relZoneCB.Checked then
   begin
@@ -437,7 +450,7 @@ var
   s:string;
   li, next, newli:tlistitem;
   b:boolean;
-  p:tZonePair;
+  p:TTagPair;
 begin
   li:=tbtnlistview(source).selected;//tbtnlistview(source).GetItemAt(x,y);
   while li<>nil do
