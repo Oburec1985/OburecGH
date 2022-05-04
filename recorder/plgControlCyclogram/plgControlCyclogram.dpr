@@ -191,8 +191,8 @@ uses
   uAriphmAlgFrame in 'forms\uAriphmAlgFrame.pas' {AriphmAlgFrame: TFrame},
   uTimeIntervalAlg in 'units\uTimeIntervalAlg.pas',
   uExcel in '..\..\sharedUtils\utils\reports\excel\uExcel.pas',
-  uEditCtrlZoneFrm in 'forms\uEditCtrlZoneFrm.pas' {EditCtrlZoneFrm},
-  uConfirmDlg in '..\..\sharedUtils\forms\uConfirmDlg.pas' {ConfirmFmr};
+  uConfirmDlg in '..\..\sharedUtils\forms\uConfirmDlg.pas' {ConfirmFmr},
+  uEditPropertiesFrm in 'forms\uEditPropertiesFrm.pas' {EditPropertiesFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

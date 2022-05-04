@@ -854,7 +854,7 @@ begin
     begin
       tag:=c.getTag(i-1);
       if tag=nil then
-        break;
+        continue;
       if (i-1)>0 then
         vals:=vals+';';
       vals:=vals+tag.name+'='+str1;

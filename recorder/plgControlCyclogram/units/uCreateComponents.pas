@@ -47,6 +47,7 @@ uses
   recorder,
   plugin,
   uConfirmDlg,
+  uEditPropertiesFrm,
   uMBaseControl;
 
 type
@@ -243,6 +244,7 @@ begin
 
   show:=false;
 
+  EditPropertiesFrm:=TEditPropertiesFrm.Create(nil);
   ConfirmFmr:=TConfirmFmr.Create(nil);
 
   ControlCyclogramEditFrm := TControlCyclogramEditFrm.create(nil);
@@ -353,6 +355,12 @@ begin
     ConfirmFmr := nil;
   end;
 
+  if EditPropertiesFrm<>nil then
+  begin
+    EditPropertiesFrm.free;
+    EditPropertiesFrm := nil;
+  end;
+
   if ControlCyclogramEditFrm<>nil then
   begin
     ControlCyclogramEditFrm.UnLinkPlg;
@@ -446,6 +454,7 @@ end;
 
 procedure destroyForms(compMng: cCompMng);
 begin
+  if true then exit;
   LogRecorderMessage('destroyForms_enter', false);
   if GetCurrentThreadId = MainThreadID then
   begin
@@ -512,6 +521,7 @@ procedure destroyEngine;
 var
   b:boolean;
 begin
+if true then exit;
 // обьявле в начале проекта
 {$IfDef DEBUG}
   LogRecorderMessage('destroyEngine_enter', false);

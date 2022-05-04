@@ -2391,7 +2391,12 @@ end;
 
 function cControlObj.getTag(i: integer): cTagPair;
 begin
-  result := cTagPair(fTags.Objects[i]);
+  if i<fTags.count then
+  begin
+    result := cTagPair(fTags.Objects[i]);
+  end
+  else
+    result:=nil;
 end;
 
 function cControlObj.getTag(s: string): cTagPair;
@@ -2595,6 +2600,7 @@ begin
     end;
     if m_feedback <> nil then
       m_dfeedback := GetMean(m_feedback);
+    entercs;
     if m_zones_enabled then
     begin
       if m_ZoneList.m_zones_Alg then
@@ -2607,6 +2613,7 @@ begin
         m_ZoneList.ApplyZone(m_dfeedback);
       end;
     end;
+    exitcs;
   end;
 end;
 
@@ -2731,6 +2738,7 @@ var
   ppair: pTagPair;
   pair: TTagPair;
 begin
+  entercs;
   if params.Count = 0 then
     exit;
   l_str := GetParsValue(params, 'PWM_Thi');
@@ -2822,6 +2830,7 @@ begin
       end;
     end;
   end;
+  exitcs;
 end;
 
 function cControlObj.PWM: boolean;
@@ -4574,10 +4583,10 @@ begin
       begin
         if (not m_applyed) or (not t.applyed) then
         begin
-          if not c.f_manualMode then
+          if not t.control.f_manualMode then
           begin
             t.entercs;
-            c.SetTask(t.task);
+            t.control.SetTask(t.task);
             t.applyed := true;
             t.exitcs;
           end;
@@ -5086,7 +5095,7 @@ begin
           t.rightTang.x := n.ReadAttributeFloat('RightTangX', 0);
           t.rightTang.y := n.ReadAttributeFloat('RightTangY', 0);
           t.params := n.ReadAttributeString('Opts', t.getparams);
-          str:=t.getParam('TagsVals');
+          str:=n.ReadAttributeString('TagsVals', '');
           //p:=getProgram;
           //c:=p.getOwnControl(tname);
           UpdateTaskTags(str, t);
@@ -5141,6 +5150,7 @@ begin
     n.WriteAttributeFloat('RightTangX', t.rightTang.x);
     n.WriteAttributeFloat('RightTangY', t.rightTang.y);
     n.WriteAttributeString('Opts', t.getparams);
+    n.WriteAttributeString('TagsVals', t.TagsToString);
   end;
   stepsNode := xmlNode.NodeNew('StepList');
   stepsNode.WriteAttributeFloat('NCount', stepValCount);
@@ -5200,9 +5210,26 @@ end;
 
 { cDacControl }
 procedure cDacControl.ApplyTaskVal(v: double);
+var
+  zpair:PTagPair;
+  b:boolean;
+  z:czone;
 begin
   inherited;
-  m_dac.PushValue(v, -1)
+  b:=true;
+  if m_zones_enabled then
+  begin
+    z:=m_ZoneList.defaultZone;
+    if z<>nil then
+    begin
+      zpair:=z.GetZonePairPointer(m_dac.GetName);
+      // если канал управля\ется по зонам и по заданию, то приоритет на зоны
+      if zpair<>nil then
+        b:=false;
+    end;
+  end;
+  if b then
+    m_dac.PushValue(v, -1)
 end;
 
 function cDacControl.Exec: boolean;
@@ -6054,8 +6081,7 @@ var
   i: integer;
   zp: pTagPair;
 begin
-  result.tag := nil;
-  result.value := -1;
+  result:= nil;
   for i := 0 to tags.Count - 1 do
   begin
     zp := GetZonePairPointer(i);

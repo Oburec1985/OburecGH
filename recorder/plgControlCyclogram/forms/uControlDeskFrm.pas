@@ -15,6 +15,7 @@ uses
   tags, ualarms,
   uSetList,
   uConfirmDlg,
+  uEditPropertiesFrm,
   PluginClass, ImgList;
 
 type
@@ -69,6 +70,7 @@ type
     ContinueCB: TCheckBox;
     ConfirmModeCB: TCheckBox;
     ActiveModeE: TEdit;
+    Label3: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -122,6 +124,8 @@ type
   protected
     function ZoneListToParams(str: string; zl: cZoneList): string;
     procedure ConfirmManualSwitchMode(m: TObject);
+    procedure EditZoneTags(m: TObject);
+    procedure EditTags(o: TObject);
     function toSec(t: double): double;
     function SecToTime(t: double): double;
     procedure ModeTabSGEditCell(r, c: integer; val: string);
@@ -788,6 +792,59 @@ begin
   result := g_conmng.getprogram(str);
 end;
 
+procedure TControlDeskFrm.EditZoneTags(m: TObject);
+var
+  I, p: Integer;
+  t:ctask;
+  c:cControlObj;
+  zl:cZonelist;
+  tag:ctagpair;
+  str, str1:string;
+begin
+  t:=ctask(TEditPropertiesFrm(EditPropertiesFrm).data);
+  c:=t.control;
+  zl:=c.m_ZoneList;
+
+  str:=t.getParam('Vals');
+  p := pos('N', str);
+  if p < 1 then
+  begin
+    p := pos('P', str);
+    if p < 1 then
+      p := pos(';', str);
+  end;
+  str1:=Copy(str, 1, length(str) - p + 1);
+
+  for I := 0 to TEditPropertiesFrm(EditPropertiesFrm).SG.RowCount-2 do
+  begin
+    str1:=str1+TEditPropertiesFrm(EditPropertiesFrm).SG.Cells[1, i+1]+';';
+  end;
+  ControlPropSG.Cells[1, 6]:=ZoneListToParams(str1, zl);
+  ControlPropSG.Invalidate;
+end;
+
+procedure TControlDeskFrm.EditTags(o: TObject);
+var
+  I: Integer;
+  t:ctask;
+  tag:ctagpair;
+  str:string;
+begin
+  t:=ctask(TEditPropertiesFrm(EditPropertiesFrm).data);
+  str := t.getParam('Vals');
+  for I := 0 to TEditPropertiesFrm(EditPropertiesFrm).SG.RowCount-2 do
+  begin
+    str:=TEditPropertiesFrm(EditPropertiesFrm).SG.Cells[1,1+i];
+    if i<t.m_tags.Count-1 then
+    begin
+      tag:=ctagpair(t.m_tags.Objects[i]);
+      cTagPair(tag).value:=strtofloat(str);
+    end
+    else
+      exit;
+  end;
+end;
+
 procedure TControlDeskFrm.ControlPropSGDblClick(Sender: TObject);
 var
   m: cModeObj;
@@ -803,6 +860,38 @@ begin
   // Находим позицию нашей ячейки
   xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
   xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
+  // Редактор свойтсв Зон и Доп тегов
+  if xRow = 6 then
+  begin
+    if EditPropertiesFrm<>nil then
+    begin
+      p := g_conmng.getprogram(0);
+      m := p.getmode(xCol - 1);
+      t := m.gettask(ControlPropE.text);
+
+      str:=TStringGrid(Sender).Cells[xCol, xRow];
+      EditPropertiesFrm.SetTextToTags(str);
+      EditPropertiesFrm.SecCallBack(EditZoneTags, t);
+      EditPropertiesFrm.Execute;
+    end;
+  end;
+  if xRow = 7 then
+  begin
+    if EditPropertiesFrm<>nil then
+    begin
+      p := g_conmng.getprogram(0);
+      m := p.getmode(xCol - 1);
+      t := m.gettask(ControlPropE.text);
+
+      str:=TStringGrid(Sender).Cells[xCol, xRow];
+      EditPropertiesFrm.SetTextToTags(str);
+      EditPropertiesFrm.SecCallBack(EditTags, t);
+      if EditPropertiesFrm.Execute then
+      begin
+        TStringGrid(Sender).Cells[xCol, xRow]:=t.TagsToString;
+      end;
+    end;
+  end;
   // Включение зон
   if xRow = 5 then
   begin
@@ -917,17 +1006,16 @@ begin
           end;
           str2 := Copy(str, j, length(str) - j + 1);
           str1 := str1 + str2;
-          ControlPropSG.Cells[c, r] := ZoneListToParams(str1,
-            m_CurControl.m_ZoneList);
+          ControlPropSG.Cells[c, r] := ZoneListToParams(str1, m_CurControl.m_ZoneList);
           t.setParam('Vals', str1);
         end;
         // редактирование ШИМ
-        if (r = 2) or (r = 3) then
+        if (r = 1) or (r = 2) then
         begin
           if con <> nil then
           begin
             t := mode.gettask(con.name);
-            if c = 2 then
+            if r = 1 then
             begin
               t.setParam('PWM_Thi', Value)
             end
@@ -1932,13 +2020,14 @@ begin
       k := k + 2;
     str1 := Copy(str, k, j - k);
     ControlPropSG.Cells[I + 1, 4] := str1;
-    str1 := GetSubString(str, ';', j + 1, j);
+    //str1 := GetSubString(str, ';', j + 1, j);
     // Вкл зоны
     str1 := t.getParam('Zone_state');
     ControlPropSG.Cells[I + 1, 5] := str1;
-    if j = -1 then
-      exit;
+    //if j = -1 then
+    //  exit;
     // доп параметры в зонах
+
     ControlPropSG.Cells[I + 1, 6] := ZoneListToParams(str,
       m_CurControl.m_ZoneList);
     // доп теги
