@@ -1165,7 +1165,9 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
+            ExplicitLeft = 4
             ExplicitTop = 28
+            ExplicitWidth = 548
             ExplicitHeight = 296
             inherited ProgramCounterLabel: TLabel
               Left = 4
@@ -1256,6 +1258,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
+            ExplicitLeft = 4
             ExplicitTop = 28
             ExplicitWidth = 646
             ExplicitHeight = 396
@@ -1281,6 +1284,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
               Margins.Right = 4
               Margins.Bottom = 4
               ExplicitLeft = 357
+              ExplicitTop = 0
               ExplicitWidth = 289
               ExplicitHeight = 396
               inherited ChannelsLV: TBtnListView

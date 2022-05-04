@@ -668,6 +668,7 @@ var
   z:cZone;
   pair:TTagPair;
   ind, ind1, r, c, I, j,k: Integer;
+  pars:tstringlist;
 begin
   p:=g_conmng.getProgram(0);
   if p=nil then exit;
@@ -701,7 +702,6 @@ begin
     r:=1; c:=1;
     setCell(1, r, c, 'Программа');
     r:=r+1;
-
     setCell(1, r, c, p.name);
     r:=1; c:=2;
     setCell(1, r, c, 'Режимы');
@@ -727,7 +727,18 @@ begin
     begin
       con:=p.getOwnControl(i);
       setCell(1, r+3+i, c, con.name);
-      setCell(1, r+3+i, c+1, cDacControl(con).dacname);
+      // Канал Задание
+      str:=cDacControl(con).dacname;
+      str1:=con.TagsToString;
+      pars:=ParsStrParam(str1,',');
+      for k := 0 to pars.Count - 1 do
+      begin
+        str:=str+char(10)+pars.Strings[k];
+        cstring(pars.Objects[k]).Destroy;
+      end;
+      pars.Destroy;
+      setCell(1, r+3+i, c+1, str);
+      // Канал ОС
       setCell(1, r+3+i, c+2, con.feedbackname);
       z:=con.m_ZoneList.DefaultZone;
       str:='';
@@ -746,7 +757,6 @@ begin
     begin
       m:=p.getMode(i);
       setCell(1, r, c+i*c_modeColCount, m.name);
-
       setCell(1, r+1, c+i*c_modeColCount, SecToTime (m.modelength, ind));
       setCell(1, r+2, c+i*c_modeColCount, 'Задание');
       setCell(1, r+2, c+i*c_modeColCount+1, 'Thi_ШИМ');
@@ -760,6 +770,15 @@ begin
         t:=m.gettask(con.name);
         // задание
         str:=floattostr(t.task);
+        str1:=t.getParam('TagsVals');
+        str1:=DeleteChars(str1, '"');
+        pars:=ParsStrParam(str1, ',');
+        for k := 0 to pars.Count - 1 do
+        begin
+          str:=str+char(10)+cstring(pars.Objects[k]).str;
+          cstring(pars.Objects[k]).destroy;
+        end;
+        pars.Destroy;
         setCell(1, r+3+j, c+i*c_modeColCount, str);
         // hi ШИМ
         str:=t.getParam('PWM_Thi');
@@ -818,7 +837,7 @@ var
   i,p:integer;
   str1, vals:string;
   t:ctask;
-  tag:cTagPair;
+  tag, TaskTag:cTagPair;
 begin
   vals:='';
   i:=0;
@@ -839,12 +858,16 @@ begin
       if (i-1)>0 then
         vals:=vals+';';
       vals:=vals+tag.name+'='+str1;
+      TaskTag:=cTagPair.create;
+      TaskTag.name:=tag.name;
+      TaskTag.value:=strtofloat(str1);
+      t.m_tags.AddObject(tag.name, TaskTag);
     end;
     inc(i);
   end;
   if vals<>'' then
   begin
-    t.setParam('TagsVals', vals);
+    t.setParam('TagsVals', '"'+vals+'"');
   end;
 end;
 

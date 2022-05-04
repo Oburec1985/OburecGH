@@ -4,7 +4,7 @@ object ControlDeskFrm: TControlDeskFrm
   BorderStyle = bsNone
   BorderWidth = 2
   Caption = #1055#1091#1083#1100#1090' '#1091#1087#1088#1072#1074#1083#1077#1085#1080#1103' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1086#1074
-  ClientHeight = 836
+  ClientHeight = 703
   ClientWidth = 1067
   Color = clCream
   Constraints.MinHeight = 331
@@ -805,7 +805,7 @@ object ControlDeskFrm: TControlDeskFrm
     Left = 0
     Top = 188
     Width = 1067
-    Height = 648
+    Height = 515
     ActivePage = TabSheet2
     Align = alClient
     TabOrder = 1
@@ -815,7 +815,7 @@ object ControlDeskFrm: TControlDeskFrm
         Left = 732
         Top = 0
         Width = 4
-        Height = 617
+        Height = 484
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -830,7 +830,7 @@ object ControlDeskFrm: TControlDeskFrm
         Left = 411
         Top = 0
         Width = 321
-        Height = 617
+        Height = 484
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -890,7 +890,7 @@ object ControlDeskFrm: TControlDeskFrm
           Left = 1
           Top = 109
           Width = 319
-          Height = 507
+          Height = 374
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -919,7 +919,7 @@ object ControlDeskFrm: TControlDeskFrm
         Left = 0
         Top = 0
         Width = 411
-        Height = 617
+        Height = 484
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -942,7 +942,7 @@ object ControlDeskFrm: TControlDeskFrm
           Left = 1
           Top = 25
           Width = 409
-          Height = 591
+          Height = 458
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -969,7 +969,7 @@ object ControlDeskFrm: TControlDeskFrm
         Left = 736
         Top = 0
         Width = 323
-        Height = 617
+        Height = 484
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -992,7 +992,7 @@ object ControlDeskFrm: TControlDeskFrm
           Left = 1
           Top = 25
           Width = 321
-          Height = 591
+          Height = 458
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -1015,19 +1015,20 @@ object ControlDeskFrm: TControlDeskFrm
       Caption = #1058#1072#1073#1083#1080#1094#1072' '#1088#1077#1078#1080#1084#1086#1074
       ImageIndex = 1
       object Splitter3: TSplitter
-        Left = 558
+        Left = 561
         Top = 0
-        Height = 617
+        Height = 484
         Align = alRight
         Color = clBackground
         ParentColor = False
         ExplicitLeft = 1032
+        ExplicitHeight = 617
       end
       object TableModeGB: TGroupBox
         Left = 0
         Top = 0
-        Width = 558
-        Height = 617
+        Width = 561
+        Height = 484
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -1046,11 +1047,12 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 0
+        ExplicitWidth = 558
         object TableModeSG: TStringGrid
           Left = 1
           Top = 25
-          Width = 556
-          Height = 591
+          Width = 559
+          Height = 458
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -1071,21 +1073,22 @@ object ControlDeskFrm: TControlDeskFrm
           OnDblClick = TableModeSGDblClick
           OnDrawCell = TableModeSGDrawCell
           OnSetEditText = TableModeSGSetEditText
+          ExplicitWidth = 556
         end
       end
       object RightGB: TGroupBox
-        Left = 561
+        Left = 564
         Top = 0
-        Width = 498
-        Height = 617
+        Width = 495
+        Height = 484
         Align = alRight
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1072
         TabOrder = 1
         object ControlPropSG: TStringGrid
           Left = 2
           Top = 80
-          Width = 494
-          Height = 535
+          Width = 491
+          Height = 402
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -1105,8 +1108,7 @@ object ControlDeskFrm: TControlDeskFrm
           OnDblClick = ControlPropSGDblClick
           OnKeyDown = ControlPropSGKeyDown
           OnSetEditText = ControlPropSGSetEditText
-          ExplicitLeft = 4
-          ExplicitTop = 76
+          ExplicitWidth = 494
           RowHeights = (
             32
             32
@@ -1117,10 +1119,11 @@ object ControlDeskFrm: TControlDeskFrm
         object Panel1: TPanel
           Left = 2
           Top = 18
-          Width = 494
+          Width = 491
           Height = 62
           Align = alTop
           TabOrder = 1
+          ExplicitWidth = 494
           object ControlPropE: TEdit
             Left = 15
             Top = 19

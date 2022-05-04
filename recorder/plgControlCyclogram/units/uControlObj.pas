@@ -210,8 +210,14 @@ type
   public
     tag: cTag;
     value: double;
+    // применять ШИМ к параметру
+    PWM:boolean;
+  protected
+    function getname: string;
+    procedure setname(s:string);
   public
-    function name: string;
+
+    property name:string read getname write setname;
     constructor create;
     destructor destroy;
   end;
@@ -298,6 +304,7 @@ type
   public
     // доп параметры отправляемые в контрол
     m_Params: tstringlist;
+    m_tags:tStringlist;
   public
     TaskType: TPType;
     // компоненты касательных векторов
@@ -397,6 +404,7 @@ type
     fScalarTolerance: boolean;
     // проверяемый на допуск режим
     fCurMode: cModeObj;
+    fCurTask:cTask;
     // в допуске
     fInTolerance: boolean;
     fCheckOnMode: boolean;
@@ -411,7 +419,14 @@ type
     Procedure StopPWM;
     Procedure UpdatePWM;
     Procedure SetPWMVal(v: double); virtual;
-    procedure ApplyTask(v: double); virtual;
+    // применить новую задачу
+    procedure ApplyTask(t:cTask);
+    // применить новое значение к контролу (напрмиер при ручном упроравлдении)
+    procedure ApplyTaskVal(v: double); virtual;
+    // применить теги их задачи cTask
+    procedure ApplyTags(t:ctask);
+    procedure ApplyTagsPWM(t:ctask; v:double);overload;
+    procedure ApplyTagsPWM(t:ctask);overload;
 
     procedure InitCS;
     procedure DeleteCS;
@@ -501,7 +516,7 @@ type
     m_dac_id: tagid;
     m_dac_name: string;
   protected
-    procedure ApplyTask(v: double); override;
+    procedure ApplyTaskVal(v: double); override;
     function getstate: integer; override;
     function getDAC: itag;
     procedure setDAC(dac: itag);
@@ -515,6 +530,7 @@ type
   public
     function TypeString: string; override;
     function Exec: boolean; override;
+    // положить задание на исполнение (не вызывается сразу PushVal)
     procedure SetTask(t: double); override;
   public
     property dac: itag read getDAC write setDAC;
@@ -640,6 +656,7 @@ type
     function getProgTime: double;
     procedure setname(str: string); override;
     function getimageindex: integer; override;
+    // cProgramObj
     procedure LoadObjAttributes(xmlNode: txmlnode; mng: tobject); override;
     procedure SaveObjAttributes(xmlNode: txmlnode); override;
     // вызывается при переключении состояниия программы
@@ -1359,7 +1376,6 @@ var
   i: integer;
   con: cControlObj;
 begin
-
   for i := 0 to ControlsCount - 1 do
   begin
     con := getControlObj(i);
@@ -2365,7 +2381,7 @@ var
   t: cTagPair;
 begin
   pars := ParsStrParam(s, ';');
-  for i := 0 to TagsCount - 1 do
+  for i := 0 to pars.count - 1 do
   begin
     tname := pars.Strings[i];
     cstr := cstring(pars.Objects[i]);
@@ -2551,21 +2567,22 @@ begin
 
     end;
   end;
-  if state = c_Play then
-  begin
-    if PWM then
-      UpdatePWM;
-  end;
-
   if result then // в состоянии Play
   begin
     // работа по ШИМ
     if PWM then
     begin
+      UpdatePWM;
       if fcurPWMState then
-        ApplyTask(task)
+      begin
+        ApplyTaskVal(task);
+        ApplyTagsPWM(fCurTask);
+      end
       else
-        ApplyTask(0)
+      begin
+        ApplyTaskVal(0);
+        ApplyTagsPWM(fCurTask, 0);
+      end;
     end
     // работа без ШИМ
     else
@@ -2573,7 +2590,7 @@ begin
       if not m_TaskApplyed then
       begin
         m_TaskApplyed := true;
-        ApplyTask(task)
+        ApplyTaskVal(task);
       end;
     end;
     if m_feedback <> nil then
@@ -3052,7 +3069,64 @@ begin
   fCurMode := nil;
 end;
 
-procedure cControlObj.ApplyTask(v: double);
+procedure cControlObj.ApplyTagsPWM(t:ctask; v:double);
+var
+  I: Integer;
+  tag:cTagPair;
+begin
+  for I := 0 to t.m_tags.Count - 1 do
+  begin
+    tag:=cTagPair(t.m_tags.Objects[i]);
+    if tag.PWM then
+    begin
+      if tag.tag<>nil then
+        tag.tag.tag.PushValue(v, -1);
+    end;
+  end;
+end;
+
+procedure cControlObj.ApplyTagsPWM(t:ctask);
+var
+  I: Integer;
+  tag:cTagPair;
+begin
+  for I := 0 to t.m_tags.Count - 1 do
+  begin
+    tag:=cTagPair(t.m_tags.Objects[i]);
+    if tag.PWM then
+    begin
+      if tag.tag<>nil then
+      begin
+        tag.tag.tag.PushValue(tag.value, -1);
+      end;
+    end;
+  end;
+end;
+
+
+procedure cControlObj.ApplyTags(t:ctask);
+var
+  I: Integer;
+  tag:cTagPair;
+begin
+  for I := 0 to t.m_tags.Count - 1 do
+  begin
+    tag:=cTagPair(t.m_tags.Objects[i]);
+    if tag.tag<>nil then
+      tag.tag.tag.PushValue(tag.value, -1);
+  end;
+end;
+
+procedure cControlObj.ApplyTask(t: cTask);
+var
+  I: Integer;
+begin
+  fCurTask:=t;
+  if t<>nil then
+    ApplyTags(t);
+end;
+
+procedure cControlObj.ApplyTaskVal(v: double);
 begin
 
 end;
@@ -4479,9 +4553,16 @@ begin
   for i := 0 to TaskCount - 1 do
   begin
     t := GetTask(i);
+    if not m_applyed then
+    begin
+      c := t.control;
+      c.ApplyTask(t);
+      c.setparams(t.m_Params);
+    end;
     // программа может влиять только на те контролы которые заняты программой
     if t.control.OwnerProg <> p then
       continue;
+    // если дано задание нре управлять в автомате
     if t.StopControlValue then
     begin
       t.control.state := c_Stop;
@@ -4493,11 +4574,10 @@ begin
       begin
         if (not m_applyed) or (not t.applyed) then
         begin
-          c := t.control;
           if not c.f_manualMode then
           begin
             t.entercs;
-            c.SetTask(t.GetTask);
+            c.SetTask(t.task);
             t.applyed := true;
             t.exitcs;
           end;
@@ -4511,8 +4591,6 @@ begin
         c.SetTask(v);
       end;
     end;
-    if not m_applyed then
-      c.setparams(t.m_Params);
   end;
   m_applyed := true;
 end;
@@ -4946,6 +5024,27 @@ begin
   end;
 end;
 
+procedure UpdateTaskTags(str:string; t:ctask);
+var
+  i,p:integer;
+  cstr:cstring;
+  pars:tstringlist;
+  str1, vals:string;
+  tag, TaskTag:cTagPair;
+begin
+  pars:=ParsStrParam(str, ';');
+  for I := 0 to pars.Count - 1 do
+  begin
+    cstr:=cstring(pars.Objects[i]);
+    tag:=cTagPair.create;
+    tag.name:=pars.Strings[i];
+    tag.value:=strtofloat(cstr.str);
+    t.m_tags.AddObject(tag.name, tag);
+  end;
+  delPars(pars);
+  pars.Destroy;
+end;
+
 procedure cModeObj.LoadObjAttributes(xmlNode: txmlnode; mng: tobject);
 var
   TaskNode, stepsNode, n: txmlnode;
@@ -4954,15 +5053,14 @@ var
   str, tname: string;
   val: double;
   s: cStepVal;
+  c:cControlObj;
+  p:cProgramObj;
 begin
   inherited;
   ModeLength := xmlNode.ReadAttributeFloat('Length', 0);
   CheckLength := xmlNode.ReadAttributeFloat('CheckLength', 0);
   CheckThreshold := xmlNode.ReadAttributeBool('CheckThreshold', false);
   Infinity := xmlNode.ReadAttributeBool('Infinity', false);
-
-  // StopTrig := ReadTrig(xmlNode, 'NextModeTrig', self);
-  // StartTrig := ReadTrig(xmlNode, 'StartModeTrig', self);
 
   TaskNode := xmlNode.NodeByName('TaskList');
   if TaskNode <> nil then
@@ -4988,10 +5086,10 @@ begin
           t.rightTang.x := n.ReadAttributeFloat('RightTangX', 0);
           t.rightTang.y := n.ReadAttributeFloat('RightTangY', 0);
           t.params := n.ReadAttributeString('Opts', t.getparams);
-          str := n.ReadAttributeString('TagsVals', ''); ;
-          t.setParam('TagsVals', str);
-          // t.point.x:=n.ReadAttributeFloat('PointX', 0);
-          // t.point.y:=n.ReadAttributeFloat('PointY', 0);
+          str:=t.getParam('TagsVals');
+          //p:=getProgram;
+          //c:=p.getOwnControl(tname);
+          UpdateTaskTags(str, t);
         end;
       end;
     end;
@@ -5043,8 +5141,6 @@ begin
     n.WriteAttributeFloat('RightTangX', t.rightTang.x);
     n.WriteAttributeFloat('RightTangY', t.rightTang.y);
     n.WriteAttributeString('Opts', t.getparams);
-    str := t.getParam('TagsVals');
-    n.WriteAttributeString('TagsVals', str);
   end;
   stepsNode := xmlNode.NodeNew('StepList');
   stepsNode.WriteAttributeFloat('NCount', stepValCount);
@@ -5082,7 +5178,9 @@ begin
   if parent <> nil then
   begin
     result := parent.parent;
-  end;
+  end
+  ELSE
+    result:=nil;
 end;
 
 procedure cModeObj.doUpdateData;
@@ -5095,14 +5193,13 @@ begin
   begin
     t := GetTask(i);
     c := t.control;
-    c.m_TaskApplyed := false;
     c.SetTask(t.task);
   end;
   incCounter(fCounter);
 end;
 
 { cDacControl }
-procedure cDacControl.ApplyTask(v: double);
+procedure cDacControl.ApplyTaskVal(v: double);
 begin
   inherited;
   m_dac.PushValue(v, -1)
@@ -5491,13 +5588,24 @@ begin
   TaskType := ptNullPoly;
   InitCS;
   m_Params := tstringlist.create;
+  m_tags := tstringlist.create;
 end;
 
 destructor cTask.destroy;
+var
+  I: Integer;
+  tag:ctagpair;
 begin
   DeleteCS;
   m_Params.destroy;
   m_Params := nil;
+  for I := 0 to m_tags.Count - 1 do
+  begin
+    tag:=ctagpair(m_tags.Objects[i]);
+    tag.destroy;
+  end;
+  m_tags.Destroy;
+  m_tags:=nil;
 end;
 
 function cTask.getApplyed: boolean;
@@ -5717,8 +5825,19 @@ begin
 end;
 
 function cTask.TagsToString: string;
+var
+  I: Integer;
+  t:cTagPair;
 begin
-
+  result:='';
+  for I := 0 to m_tags.count - 1 do
+  begin
+    t:=cTagPair(m_tags.Objects[i]);
+    if i=0 then
+      result:=result+t.name+'='+floattostr(t.value)
+    else
+      result:=';'+result+t.name+'='+floattostr(t.value);
+  end;
 end;
 
 function cControlObj.TagsToString: string;
@@ -6466,9 +6585,14 @@ begin
   tag.destroy;
 end;
 
-function cTagPair.name: string;
+function cTagPair.getname: string;
 begin
   result := tag.tagname;
+end;
+
+procedure cTagPair.setname(s:string);
+begin
+  tag.tagname:=s;
 end;
 
 end.

@@ -101,8 +101,9 @@ type
     procedure TimeUnitsCBChange(Sender: TObject);
     procedure ControlPropSGSetEditText(Sender: TObject; ACol, ARow: integer;
       const Value: string);
-    function ChangeZonesVals(vals:string;v1,v2:string):string;
-    procedure ControlPropSGKeyDown(Sender: TObject; var Key: Word;      Shift: TShiftState);
+    function ChangeZonesVals(vals: string; v1, v2: string): string;
+    procedure ControlPropSGKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     // Режим подтверждения перехода
     m_CurControl: ccontrolobj;
@@ -343,9 +344,11 @@ procedure TControlDeskFrm.CreateEvents;
 begin
   addplgevent('TControlDeskFrm_doAddObj', E_OnAddObj, doAddObj);
   addplgevent('TControlDeskFrm_doLoad', E_OnLoadObjMng, doLoad);
-  addplgevent('TControlDeskFrm_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
+  addplgevent('TControlDeskFrm_doChangeRState', c_RC_DoChangeRCState,
+    doChangeRState);
   addplgevent('TControlDeskFrm_doLeaveCfg', c_RC_LeaveCfg, doLeaveCfg);
-  g_conmng.Events.AddEvent('TControlDeskFrm_doStopControlMng', E_OnStopControlMng, doShowStop);
+  g_conmng.Events.AddEvent('TControlDeskFrm_doStopControlMng',
+    E_OnStopControlMng, doShowStop);
 end;
 
 procedure TControlDeskFrm.DestroyEvents;
@@ -495,7 +498,7 @@ begin
   TrigSG.Cells[c_Col_TrigEnabled, 0] := 'Включен';
   SGChange(TrigSG);
 
-  ControlPropSG.RowCount := 7;
+  ControlPropSG.RowCount := 8;
   ControlPropSG.ColCount := 2;
 
   ControlPropSG.Cells[0, 1] := 'Thi';
@@ -503,7 +506,8 @@ begin
   ControlPropSG.Cells[0, 3] := 'Мин.';
   ControlPropSG.Cells[0, 4] := 'Макс.';
   ControlPropSG.Cells[0, 5] := 'Зоны';
-  ControlPropSG.Cells[0, 6] := 'Доп. пар-ы';
+  ControlPropSG.Cells[0, 6] := 'Теги зон';
+  ControlPropSG.Cells[0, 7] := 'Доп. теги';
   SGChange(ControlPropSG);
 end;
 
@@ -556,6 +560,8 @@ begin
   ContinueCB.Checked := a_pIni.ReadBool(str, 'LoadState', false);
   ConfirmModeCB.Checked := a_pIni.ReadBool(str, 'ConfirmModeChange', true);
   TimeUnitsCB.ItemIndex := a_pIni.ReadInteger(str, 'Units', 0);
+  RightGB.Width := a_pIni.ReadInteger(str, 'Table_Controls_Splitter_Pos',
+    RightGB.Width);
 end;
 
 procedure TControlDeskFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -564,6 +570,7 @@ begin
   a_pIni.WriteBool(str, 'LoadState', ContinueCB.Checked);
   a_pIni.WriteBool(str, 'ConfirmModeChange', ConfirmModeCB.Checked);
   a_pIni.WriteInteger(str, 'Units', TimeUnitsCB.ItemIndex);
+  a_pIni.WriteInteger(str, 'Table_Controls_Splitter_Pos', RightGB.Width);
 end;
 
 procedure TControlDeskFrm.PauseBtnClick(Sender: TObject);
@@ -789,7 +796,7 @@ var
   xCol, xRow: integer; // Адрес ячейки таблицы
   str, Key: string;
   changebool: boolean;
-  p:cprogramObj;
+  p: cProgramObj;
 begin
   GetCursorPos(pPnt);
   pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
@@ -797,49 +804,49 @@ begin
   xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
   xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
   // Включение зон
-  if xRow=5 then
+  if xRow = 5 then
   begin
-    p:=g_conmng.getProgram(0);
-    m:=p.getMode(xCol-1);
-    t:=m.GetTask(ControlPropE.Text);
-    key:='Zone_state';
-    changebool:=true;
+    p := g_conmng.getprogram(0);
+    m := p.getmode(xCol - 1);
+    t := m.gettask(ControlPropE.text);
+    Key := 'Zone_state';
+    changebool := true;
     if changebool then
     begin
-      str:=t.getParam(key);
-      if str='Вкл' then
+      str := t.getParam(Key);
+      if str = 'Вкл' then
       begin
-        str:='Выкл';
+        str := 'Выкл';
       end
       else
       begin
-        str:='Вкл';
+        str := 'Вкл';
       end;
-      t.setParam(key,str);
-      TStringGrid(Sender).Cells[xCol, xRow]:=str;
+      t.setParam(Key, str);
+      TStringGrid(Sender).Cells[xCol, xRow] := str;
     end;
     changebool := false;
   end;
 end;
 
-function TControlDeskFrm.ChangeZonesVals(vals:string;v1,v2:string):string;
+function TControlDeskFrm.ChangeZonesVals(vals: string; v1, v2: string): string;
 var
-  p, start:integer;
-  str:string;
+  p, Start: integer;
+  str: string;
 begin
-  start:=pos(':',vals);
-  if start<1 then
+  Start := pos(':', vals);
+  if Start < 1 then
   begin
-    start:=1
+    Start := 1
   end
   else
   begin
-    result:=Copy(vals,1, start);
+    result := Copy(vals, 1, Start);
   end;
-  result:=result+v1+'…'+v2;
+  result := result + v1 + '…' + v2;
   p := pos(';', vals);
-  str:=Copy(vals, p, length(vals)-p+1);
-  result:=result+str;
+  str := Copy(vals, p, length(vals) - p + 1);
+  result := result + str;
 end;
 
 procedure TControlDeskFrm.ControlPropSGKeyDown(Sender: TObject; var Key: Word;
@@ -850,12 +857,14 @@ var
   mode: cModeObj;
   con: ccontrolobj;
   t: ctask;
+  tp:ctagpair;
   Value, str, str1, str2: string;
 begin
   if Key = VK_RETURN then
   begin
     Value := ControlPropSG.Cells[m_col, m_row];
-    if not isvalue(value) then exit;
+    if not isvalue(Value) then
+      exit;
     r := m_row;
     c := m_col;
     p := g_conmng.getprogram(0);
@@ -871,11 +880,23 @@ begin
         begin
           t := mode.gettask(con.name);
           str := t.getParam('Vals');
-          str:=ChangeZonesVals(str, ControlPropSG.Cells[c, 3], ControlPropSG.Cells[c, 4]);
+          str := ChangeZonesVals(str, ControlPropSG.Cells[c, 3],
+            ControlPropSG.Cells[c, 4]);
           t.setParam('Vals', str);
         end;
+        // доп. теги
+        if (r = 7) then
+        begin
+          t := mode.gettask(con.name);
+          if t.m_tags.Count>0 then
+          begin
+            tp:=cTagPair(t.m_tags.Objects[0]);
+            tp.value:=StrToFloatDef(value, tp.value);
+          end;
+          ControlPropSG.Cells[c, 7]:=t.tagstoString;
+        end;
         // изменяем доп параметры зоны
-        if (r = 6)  then
+        if (r = 6) then
         begin
           t := mode.gettask(con.name);
           str := t.getParam('Vals');
@@ -887,16 +908,17 @@ begin
               I := pos(';', str);
           end;
           // Изменяем значение
-          str1 := copy(str, 1, I);
+          str1 := Copy(str, 1, I);
           str1 := str1 + Value;
           for j := I to length(str) do
           begin
             if str[j] = ';' then
               break;
           end;
-          str2 := copy(str, j, length(str) - j + 1);
+          str2 := Copy(str, j, length(str) - j + 1);
           str1 := str1 + str2;
-          ControlPropSG.Cells[c, r]:=ZoneListToParams(str1, m_CurControl.m_ZoneList);
+          ControlPropSG.Cells[c, r] := ZoneListToParams(str1,
+            m_CurControl.m_ZoneList);
           t.setParam('Vals', str1);
         end;
         // редактирование ШИМ
@@ -1779,7 +1801,7 @@ begin
             begin
               if (not isDigit(str[j])) and (not(str[j] = '-')) then
               begin
-                str1 := copy(str, j + 1, k - j - 1);
+                str1 := Copy(str, j + 1, k - j - 1);
                 d := strtofloat(str1);
                 tols.addObj(d);
                 State := 2;
@@ -1812,7 +1834,7 @@ begin
   result := '';
   k := pos(':', str) + 1;
   j := pos(';', str);
-  str1 := copy(str, j + 1, length(str) - j);
+  str1 := Copy(str, j + 1, length(str) - j);
   k := pos('...', str) + 1;
   if k < 1 then
     k := pos('…', str);
@@ -1839,7 +1861,7 @@ begin
   end;
   // if (str1[1]='N') and  (length(str1)>1) then
   begin
-    str2 := copy(str1, k, length(str1) - k + 1);
+    str2 := Copy(str1, k, length(str1) - k + 1);
     ppair := z.GetZonePairPointer(ind);
     if ppair <> nil then
     begin
@@ -1880,8 +1902,6 @@ begin
     if t <> nil then
       m_CurControl := t.control;
   end;
-
-  // if T.m_Params.count=0 then exit;
   str := t.getParam('PWM_Thi');
   ControlPropSG.Cells[I + 1, 1] := str;
   str := t.getParam('PWM_Tlo');
@@ -1903,14 +1923,14 @@ begin
     begin
       str1 := GetSubString(str, ';', n + 1, j);
     end;
-    str1 := copy(str, n + 1, k - n - 1);
+    str1 := Copy(str, n + 1, k - n - 1);
     // мин
     ControlPropSG.Cells[I + 1, 3] := str1;
     // макс
     k := k + 1;
     if str[k] = '.' then
       k := k + 2;
-    str1 := copy(str, k, j - k);
+    str1 := Copy(str, k, j - k);
     ControlPropSG.Cells[I + 1, 4] := str1;
     str1 := GetSubString(str, ';', j + 1, j);
     // Вкл зоны
@@ -1919,7 +1939,10 @@ begin
     if j = -1 then
       exit;
     // доп параметры в зонах
-    ControlPropSG.Cells[I + 1, 6] := ZoneListToParams(str, m_CurControl.m_ZoneList);
+    ControlPropSG.Cells[I + 1, 6] := ZoneListToParams(str,
+      m_CurControl.m_ZoneList);
+    // доп теги
+    ControlPropSG.Cells[I + 1, 7] := t.TagsToString;
   end
   else
   begin // относительные зоны
@@ -1964,6 +1987,7 @@ begin
     m := p.getmode(I);
     UpdateControlsPropSGmode(m);
   end;
+  SGChange(ControlPropSG);
 end;
 
 { TControlDeskFrm }

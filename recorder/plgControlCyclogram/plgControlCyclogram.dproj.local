@@ -247,12 +247,12 @@
     <File Path="forms\uModeFrame.dfm"/>
     <File Path="forms\uModesStepFrame.pas"/>
     <File Path="forms\uModesStepFrame.dfm"/>
-    <File Path="forms\uModesTabsForm.pas"/>
-    <File Path="forms\uModesTabsForm.dfm"/>
     <File Path="forms\uModesTabsFrame.pas"/>
     <File Path="forms\uModesTabsFrame.dfm"/>
     <File Path="forms\uPeakFactorFrame.pas"/>
     <File Path="forms\uPeakFactorFrame.dfm"/>
+    <File Path="forms\uModesTabsForm.pas"/>
+    <File Path="forms\uModesTabsForm.dfm"/>
     <File Path="forms\uPhaseCrossSpmFrame.pas"/>
     <File Path="forms\uPhaseCrossSpmFrame.dfm"/>
     <File Path="forms\uPhaseFrame.pas"/>
