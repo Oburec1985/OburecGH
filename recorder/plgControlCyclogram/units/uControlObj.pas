@@ -2580,13 +2580,13 @@ begin
       UpdatePWM;
       if fcurPWMState then
       begin
-        ApplyTaskVal(task);
         ApplyTagsPWM(fCurTask);
+        ApplyTaskVal(task);
       end
       else
       begin
-        ApplyTaskVal(0);
         ApplyTagsPWM(fCurTask, 0);
+        ApplyTaskVal(0);
       end;
     end
     // работа без ШИМ
@@ -4565,8 +4565,9 @@ begin
     if not m_applyed then
     begin
       c := t.control;
-      c.ApplyTask(t);
       c.setparams(t.m_Params);
+      c.ApplyTask(t);
+      t.applyed := true;
     end;
     // программа может влиять только на те контролы которые заняты программой
     if t.control.OwnerProg <> p then

@@ -63,6 +63,7 @@ type
     ComTimeEdit: TEdit;
     ModeTimeEdit: TEdit;
     ProgTimeEdit: TEdit;
+    ModeStopTime: TEdit;
     ComTimeLabel: TLabel;
     ModeTimeLabel: TLabel;
     Label1: TLabel;
@@ -106,6 +107,8 @@ type
     function ChangeZonesVals(vals: string; v1, v2: string): string;
     procedure ControlPropSGKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure ControlPropSGExit(Sender: TObject);
+    procedure ControlPropSGClick(Sender: TObject);
   private
     // Режим подтверждения перехода
     m_CurControl: ccontrolobj;
@@ -119,15 +122,20 @@ type
 
     m_val: string;
     m_row, m_col: integer;
+    m_apply:boolean;
     m_timerid, m_timerid_res: cardinal;
     m_tolArray: cDoubleList;
   protected
+    function ToTime(sec:double; b_format:boolean):string;
     function ZoneListToParams(str: string; zl: cZoneList): string;
     procedure ConfirmManualSwitchMode(m: TObject);
     procedure EditZoneTags(m: TObject);
     procedure EditTags(o: TObject);
-    function toSec(t: double): double;
-    function SecToTime(t: double): double;
+    function toSec(t: double): double;overload;
+    function toSec(t: double; units:integer): double;overload;
+    // 0 - sec; 1 - min; 2 - hour
+    function SecToTime(t: double; units:integer): double;overload;
+    function SecToTime(t: double): double;overload;
     procedure ModeTabSGEditCell(r, c: integer; val: string);
     procedure ControlSGEditCell(ARow, ACol: integer; const Value: string);
     procedure FormCfgClose(Sender: TObject; var Action: TCloseAction);
@@ -505,8 +513,8 @@ begin
   ControlPropSG.RowCount := 8;
   ControlPropSG.ColCount := 2;
 
-  ControlPropSG.Cells[0, 1] := 'Thi';
-  ControlPropSG.Cells[0, 2] := 'Tlo';
+  ControlPropSG.Cells[0, 1] := 'Thi, мин';
+  ControlPropSG.Cells[0, 2] := 'Tlo, мин';
   ControlPropSG.Cells[0, 3] := 'Мин.';
   ControlPropSG.Cells[0, 4] := 'Макс.';
   ControlPropSG.Cells[0, 5] := 'Зоны';
@@ -612,7 +620,7 @@ begin
   end
   else
   begin
-    // pause;
+    //pause;
   end;
   // LogRecorderMessage('TControlDeskFrm_PlayBtnClick_exit');
 end;
@@ -746,7 +754,7 @@ begin
     col := I + 1;
     m := p.getmode(I);
     TableModeSG.Cells[col, 0] := m.Caption;
-    TableModeSG.Cells[col, row] := formatstrnoe(SecToTime(m.ModeLength), 2);
+    TableModeSG.Cells[col, row] :=ToTime(m.ModeLength, false);
   end;
   for I := 0 to p.ControlCount - 1 do
   begin
@@ -845,6 +853,17 @@ begin
   end;
 end;
 
+procedure TControlDeskFrm.ControlPropSGClick(Sender: TObject);
+var
+  k:word;
+begin
+  if (m_row<>-1) and (m_col<>-1) and (not m_apply) then
+  begin
+    k:=VK_Return;
+    ControlPropSGKeyDown( ControlPropSG, k, [ssShift]);
+  end;
+end;
+
 procedure TControlDeskFrm.ControlPropSGDblClick(Sender: TObject);
 var
   m: cModeObj;
@@ -873,6 +892,10 @@ begin
       EditPropertiesFrm.SetTextToTags(str);
       EditPropertiesFrm.SecCallBack(EditZoneTags, t);
       EditPropertiesFrm.Execute;
+      if m.active then
+      begin
+        m.m_applyed := false;
+      end;
     end;
   end;
   if xRow = 7 then
@@ -889,6 +912,10 @@ begin
       if EditPropertiesFrm.Execute then
       begin
         TStringGrid(Sender).Cells[xCol, xRow]:=t.TagsToString;
+      end;
+      if m.active then
+      begin
+        m.m_applyed := false;
       end;
     end;
   end;
@@ -915,7 +942,18 @@ begin
       TStringGrid(Sender).Cells[xCol, xRow] := str;
     end;
     changebool := false;
+    if m.active then
+    begin
+      m.m_applyed := false;
+    end;
   end;
+end;
+
+procedure TControlDeskFrm.ControlPropSGExit(Sender: TObject);
+begin
+  m_col := -1;
+  m_row := -1;
+  m_apply:=true;
 end;
 
 function TControlDeskFrm.ChangeZonesVals(vals: string; v1, v2: string): string;
@@ -941,6 +979,7 @@ end;
 procedure TControlDeskFrm.ControlPropSGKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
+  k:word;
   I, j, c, r: integer;
   p: cProgramObj;
   mode: cModeObj;
@@ -951,6 +990,7 @@ var
 begin
   if Key = VK_RETURN then
   begin
+    m_apply:=true;
     Value := ControlPropSG.Cells[m_col, m_row];
     if not isvalue(Value) then
       exit;
@@ -1017,11 +1057,13 @@ begin
             t := mode.gettask(con.name);
             if r = 1 then
             begin
-              t.setParam('PWM_Thi', Value)
+              // минуты в секунды
+              t.setParam('PWM_Thi', floattostr(tosec(strtofloatext(Value), 1)));
             end
             else
             begin
-              t.setParam('PWM_Tlo', Value);
+              // минуты в секунды
+              t.setParam('PWM_Tlo', floattostr(tosec(strtofloatext(Value), 1)));
             end;
           end;
         end;
@@ -1029,6 +1071,17 @@ begin
         begin
           mode.m_applyed := false;
         end;
+      end;
+    end;
+  end
+  else
+  begin
+    if (key=VK_LEFT) or (key=VK_right) or (key=VK_up) or (key=VK_down) then
+    begin
+      if (m_row<>-1) and (m_col<>-1) and (not m_apply) then
+      begin
+        k:=VK_Return;
+        ControlPropSGKeyDown( ControlPropSG, k, [ssShift]);
       end;
     end;
   end;
@@ -1042,6 +1095,7 @@ begin
   m_val := Value;
   m_col := ACol;
   m_row := ARow;
+  m_apply:=false;
 end;
 
 procedure TControlDeskFrm.ControlSGDblClick(Sender: TObject);
@@ -1209,7 +1263,7 @@ begin
         m := p.getmode(j);
         r := c_ModeTable_headerSize - 1;
         c := j + 1;
-        TableModeSG.Cells[c, r] := formatstrnoe(SecToTime(m.ModeLength), 2);
+        TableModeSG.Cells[c, r] := totime(m.ModeLength, false);
       end;
       SGChange(TableModeSG);
     end;
@@ -1235,7 +1289,12 @@ end;
 
 function TControlDeskFrm.toSec(t: double): double;
 begin
-  case TimeUnitsCB.ItemIndex of
+  result := tosec(t, TimeUnitsCB.ItemIndex)
+end;
+
+function TControlDeskFrm.toSec(t: double; units:integer): double;
+begin
+  case units of
     0:
       result := t; // sec
     1:
@@ -1245,9 +1304,27 @@ begin
   end;
 end;
 
-function TControlDeskFrm.SecToTime(t: double): double;
+function TControlDeskFrm.ToTime(sec:double; b_format:boolean):string;
+var
+  H, M, S, ATime: Integer;
 begin
-  case TimeUnitsCB.ItemIndex of
+  if b_format then
+  begin
+    H := trunc(sec) div 3600;
+    M := trunc((sec - H * 3600)) div 60;
+    S := trunc(sec - H * 3600 - M * 60);
+    //result:= Format('%d ч %d м %d с', [H, M, S]);
+    result:= Format('%d:%d:%d', [H, M, S]);
+  end
+  else
+  begin
+    result:=formatstrnoe(secToTime(sec),2);
+  end;
+end;
+
+function TControlDeskFrm.SecToTime(t: double; units:integer): double;
+begin
+  case units of
     0:
       result := t; // sec
     1:
@@ -1255,6 +1332,11 @@ begin
     2:
       result := t / 3600; // hour
   end;
+end;
+
+function TControlDeskFrm.SecToTime(t: double): double;
+begin
+  result:=SecToTime(t, TimeUnitsCB.ItemIndex);
 end;
 
 procedure TControlDeskFrm.CreateSGButtons;
@@ -1319,7 +1401,7 @@ begin
     begin
       m := p.getmode(j);
       ProgramSG.Cells[c_Col_mode, row] := m.name;
-      ProgramSG.Cells[c_Col_Length, row] := floattostr(SecToTime(m.ModeLength));
+      ProgramSG.Cells[c_Col_Length, row] :=toTime(m.ModeLength, false);
       ProgramSG.Cells[c_Col_Prog, row] := p.name;
       inc(row);
     end;
@@ -1812,7 +1894,7 @@ begin
   // ComTimeEdit.Text:=Format( '%.2f', [g_conmng.getComTime]);
 
   // ComTimeEdit.Text := format('%.2g', [g_conmng.getComTime]);
-  ComTimeEdit.text := formatstrnoe(SecToTime(g_conmng.getComTime), 2);
+  ComTimeEdit.text :=totime(g_conmng.getComTime, true);
   if g_conmng.ProgramCount > 0 then
   begin
     p := g_conmng.getprogram(0);
@@ -1821,14 +1903,15 @@ begin
     exit;
 
   // ModeTimeEdit.Text := format('%.2g', [g_conmng.getModeTime(p)]);
-  ModeTimeEdit.text := formatstrnoe(SecToTime(g_conmng.getModeTime(p)), 2);
+  ModeTimeEdit.text := toTime(g_conmng.getModeTime(p), true);
 
   // ProgTimeEdit.Text := format('%.2g', [g_conmng.getProgTime(p)]);
-  ProgTimeEdit.text := formatstrnoe(SecToTime(g_conmng.getProgTime(p)), 2);
-
-  // ModePauseTimeEdit.Text := format('%.2g', [g_conmng.getModePauseTime(p)]);
-  ModePauseTimeEdit.text := formatstrnoe(g_conmng.getModePauseTime(p), 2);
-
+  ProgTimeEdit.text := toTime(g_conmng.getProgTime(p), true);
+  if p.ActiveMode <>nil then
+  begin
+    ModeStopTime.text:= toTime( p.ActiveMode.ModeLength-g_conmng.getModeTime(p), true);;
+  end;
+  ModePauseTimeEdit.text := formatstrnoe(g_conmng.getModePauseTime(p),2);
   CheckLength.text := formatstrnoe(g_conmng.getModeCheckLength(p), 2);
 end;
 
@@ -1991,9 +2074,9 @@ begin
       m_CurControl := t.control;
   end;
   str := t.getParam('PWM_Thi');
-  ControlPropSG.Cells[I + 1, 1] := str;
+  ControlPropSG.Cells[I + 1, 1]:=floattostr(Sectotime(StrToFloatDef(str, 0),1));
   str := t.getParam('PWM_Tlo');
-  ControlPropSG.Cells[I + 1, 2] := str;
+  ControlPropSG.Cells[I + 1, 2]:=floattostr(Sectotime(StrToFloatDef(str, 0),1));
   str := t.getParam('Vals');
 
   // алгоритм абсолютных зон
