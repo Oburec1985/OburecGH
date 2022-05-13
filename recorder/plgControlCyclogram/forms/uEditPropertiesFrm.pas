@@ -41,8 +41,10 @@ var
   I: Integer;
   cs:cstring;
 begin
+  if SG.RowCount>1 then
+    SG.Rows[1].Clear;
   SG.cells[0,0]:='Канал';
-  SG.cells[1,1]:='Значение';
+  SG.cells[1,0]:='Значение';
 
   pars:=ParsStrParamNoSort(str, ';');
   SG.RowCount:=pars.Count+2;

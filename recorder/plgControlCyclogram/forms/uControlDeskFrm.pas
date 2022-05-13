@@ -109,6 +109,9 @@ type
       Shift: TShiftState);
     procedure ControlPropSGExit(Sender: TObject);
     procedure ControlPropSGClick(Sender: TObject);
+    procedure ControlPropSGDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+    procedure PageControl1Change(Sender: TObject);
   private
     // Режим подтверждения перехода
     m_CurControl: ccontrolobj;
@@ -946,7 +949,63 @@ begin
     begin
       m.m_applyed := false;
     end;
+    TStringGrid(sender).Refresh;
   end;
+end;
+
+procedure TControlDeskFrm.ControlPropSGDrawCell(Sender: TObject; ACol,
+  ARow: Integer; Rect: TRect; State: TGridDrawState);
+var
+  sg: TStringGrid;
+  Color: integer;
+  p: cProgramObj;
+  m: cModeObj;
+  t:ctask;
+  d1,d2:double;
+  c:cControlObj;
+  str: string;
+  I: integer;
+  bPWM, bZone:boolean;
+begin
+  sg := TStringGrid(Sender);
+  p := g_conmng.getprogram(0);
+  if p=nil then exit;
+  m := p.getmode(aCol - 1);
+  if m=nil then exit;
+  
+  t := m.gettask(ControlPropE.text);
+  if t=nil then exit;
+
+  c:=t.control;
+  str:= t.getParam('PWM_Thi');
+  d1:=strtoFloatExt(str);
+  str:= t.getParam('PWM_Tlo');
+  d2:=strtoFloatExt(str);
+  bPWM:=(d1>0) and (d2>0) and (t.task<>0);
+  str:= t.getParam('Zone_state');
+  bZone:=StrtoBoolExt(str);
+
+  if bPWM then
+  begin
+    if (arow=1) or (arow=2) then
+    begin
+      sg.Canvas.Brush.Color := CLgREEN;
+    end;
+  end
+  else
+  begin
+    if bZone then
+    begin
+      if (arow=3) or (arow=4) then
+      begin
+        sg.Canvas.Brush.Color := CLgREEN;
+      end;
+    end;
+  end;
+  Color := sg.Canvas.Brush.Color;
+  sg.Canvas.FillRect(Rect);
+  sg.Canvas.TextOut(Rect.Left, Rect.Top, sg.Cells[ACol, ARow]);
+  sg.Canvas.Brush.Color := Color;
 end;
 
 procedure TControlDeskFrm.ControlPropSGExit(Sender: TObject);
@@ -1065,6 +1124,7 @@ begin
               // минуты в секунды
               t.setParam('PWM_Tlo', floattostr(tosec(strtofloatext(Value), 1)));
             end;
+            TStringGrid(sender).Refresh;
           end;
         end;
         if mode.active then
@@ -1678,6 +1738,11 @@ begin
   end;
 end;
 
+procedure TControlDeskFrm.PageControl1Change(Sender: TObject);
+begin
+  Preview;
+end;
+
 procedure TControlDeskFrm.Timer1Timer(Sender: TObject);
 var
   tid: integer;
@@ -2006,6 +2071,11 @@ begin
   k := pos(':', str) + 1;
   j := pos(';', str);
   str1 := Copy(str, j + 1, length(str) - j);
+  if str1='' then
+  begin
+    result:='';
+    exit;
+  end;
   k := pos('...', str) + 1;
   if k < 1 then
     k := pos('…', str);

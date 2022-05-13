@@ -865,6 +865,7 @@ object ControlDeskFrm: TControlDeskFrm
     ActivePage = TabSheet2
     Align = alClient
     TabOrder = 1
+    OnChange = PageControl1Change
     object TabSheet1: TTabSheet
       Caption = #1054#1073#1097#1080#1081' '#1074#1080#1076
       object Splitter2: TSplitter
@@ -1163,6 +1164,7 @@ object ControlDeskFrm: TControlDeskFrm
           TabOrder = 0
           OnClick = ControlPropSGClick
           OnDblClick = ControlPropSGDblClick
+          OnDrawCell = ControlPropSGDrawCell
           OnKeyDown = ControlPropSGKeyDown
           OnSetEditText = ControlPropSGSetEditText
           RowHeights = (
