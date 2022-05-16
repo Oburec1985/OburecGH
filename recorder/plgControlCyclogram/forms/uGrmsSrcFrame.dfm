@@ -1,6 +1,6 @@
 inherited GrmsSrcFrame: TGrmsSrcFrame
-  Width = 638
-  Height = 517
+  Width = 567
+  Height = 496
   Constraints.MinHeight = 359
   Constraints.MinWidth = 342
   ExplicitHeight = 359
@@ -26,8 +26,8 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
     Caption = #1050#1072#1085#1072#1083
   end
   object FsLabel: TLabel [5]
-    Left = 427
-    Top = 157
+    Left = 181
+    Top = 165
     Width = 137
     Height = 16
     Caption = #1063#1072#1089#1090#1086#1090#1072' '#1086#1087#1088#1086#1089#1072' '#1082#1072#1085#1072#1083#1072
@@ -40,17 +40,17 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
     Caption = #1040#1083#1075#1086#1088#1080#1090#1084
   end
   inherited AlgNameEdit: TEdit
-    Width = 616
+    Width = 545
   end
   inherited OptsEdit: TEdit
     Top = 69
-    Width = 616
+    Width = 545
     ExplicitTop = 69
   end
   object OutChannelName: TEdit
     Left = 10
     Top = 248
-    Width = 615
+    Width = 544
     Height = 24
     Anchors = [akLeft, akTop, akRight]
     Enabled = False
@@ -67,8 +67,8 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
   end
   object SpmPan: TPanel
     Left = 0
-    Top = 311
-    Width = 638
+    Top = 290
+    Width = 567
     Height = 206
     Align = alBottom
     TabOrder = 4
@@ -83,14 +83,14 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
     end
     object Label1: TLabel
       Left = 8
-      Top = 87
+      Top = 95
       Width = 15
       Height = 16
       Caption = 'dX'
     end
     object Label4: TLabel
       Left = 161
-      Top = 87
+      Top = 95
       Width = 47
       Height = 16
       Caption = #1055#1086#1083#1086#1089#1072':'
@@ -104,7 +104,7 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
     end
     object AlgDTFE: TFloatEdit
       Left = 8
-      Top = 104
+      Top = 112
       Width = 121
       Height = 24
       TabOrder = 0
@@ -113,7 +113,7 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
     end
     object BandF1Edit: TFloatEdit
       Left = 161
-      Top = 104
+      Top = 112
       Width = 82
       Height = 24
       TabOrder = 1
@@ -122,7 +122,7 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
     end
     object BandF2Edit: TFloatEdit
       Left = 249
-      Top = 104
+      Top = 112
       Width = 82
       Height = 24
       TabOrder = 2
@@ -173,7 +173,12 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
       Top = 60
       Width = 45
       Height = 17
+      Hint = 
+        #1054#1087#1088#1077#1076#1077#1083#1103#1077#1090' '#1077#1076#1080#1085#1080#1094#1099' '#1074' '#1082#1086#1090#1086#1088#1099#1093' '#1080#1089#1095#1080#1089#1083#1103#1077#1090#1089#1103' '#1086#1090#1089#1090#1091#1087' '#1086#1090' '#1094#1077#1085#1090#1088#1072#1083#1100#1085#1086#1081' '#1095 +
+        #1072#1089#1090#1086#1090#1099
       Caption = '%'
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 5
       OnClick = PercentCBClick
     end
@@ -194,7 +199,7 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
       TabOrder = 7
     end
     object ResTypeRG: TRadioGroup
-      Left = 429
+      Left = 358
       Top = 1
       Width = 208
       Height = 204
@@ -202,6 +207,20 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
       Caption = #1058#1080#1087' '#1089#1087#1077#1082#1090#1088#1072
       TabOrder = 8
       ExplicitLeft = 242
+    end
+    object TrackingCB: TCheckBox
+      Left = 162
+      Top = 11
+      Width = 171
+      Height = 17
+      Hint = 
+        #1054#1087#1088#1077#1076#1077#1083#1103#1077#1090' '#1077#1076#1080#1085#1080#1094#1099' '#1074' '#1082#1086#1090#1086#1088#1099#1093' '#1080#1089#1095#1080#1089#1083#1103#1077#1090#1089#1103' '#1086#1090#1089#1090#1091#1087' '#1086#1090' '#1094#1077#1085#1090#1088#1072#1083#1100#1085#1086#1081' '#1095 +
+        #1072#1089#1090#1086#1090#1099
+      Caption = #1057#1083#1077#1078#1077#1085#1080#1077' '#1079#1072' '#1095#1072#1089#1090#1086#1090#1086#1081
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 9
+      OnClick = PercentCBClick
     end
   end
   object TahoCB: TRcComboBox
@@ -216,30 +235,20 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
     OnChange = TahoCBChange
   end
   object FsEdit: TFloatEdit
-    Left = 427
-    Top = 179
-    Width = 197
+    Left = 181
+    Top = 187
+    Width = 137
     Height = 24
-    Anchors = [akLeft, akTop, akRight]
     Enabled = False
     TabOrder = 6
     Text = '0.0'
-    ExplicitWidth = 291
-  end
-  object TahoTypeCB: TCheckBox
-    Left = 184
-    Top = 187
-    Width = 97
-    Height = 25
-    Caption = 'TahoTypeCB'
-    TabOrder = 7
   end
   object AlgCB: TComboBox
     Left = 181
     Top = 128
     Width = 145
     Height = 24
-    TabOrder = 8
+    TabOrder = 7
     OnChange = AlgCBChange
   end
 end

@@ -133,11 +133,11 @@ begin
     if not err then
     begin
       addParam(m_pars, 'Channel', str);
-      lstr := str + '_Spm';
       b := true;
+      lstr := str + '_Spm';
       while b do
       begin
-        t := getTagByName(str);
+        t := getTagByName(lstr);
         if (t = nil) or (lstr = m_lastOutTag) then
           b := false
         else

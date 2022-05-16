@@ -27,6 +27,8 @@ type
     // (т.е. значению m_TagData соответствует значение в m_outTagX)
     m_outTagX: array of double;
   protected
+    // отступы от центральной частоты в процентах или в абс единицах
+    m_RateBand:boolean;
     m_lastname: string;
     // номер значения при заполнении блока выходных данных
     // например число точек 13 000. Блок данных 4800. Тогда нужно заполнить 3 блока (m_blockind - номер блока)
@@ -42,6 +44,7 @@ type
     // расчет в UpdateBandWidth (doeval)
     m_curTahoValue: double;
   protected
+    function getBandI(x:double):Tpoint;
     procedure setSpmAlg(spm:cspm);
     function genTagName: string; override;
     function Getdx: double; override;
@@ -95,8 +98,30 @@ begin
   Properties := C_GrmsSrcOpts;
 end;
 
+function cGrmsSrcAlg.getBandI(x:double):Tpoint;
+var
+  l:integer;
+begin
+  if m_RateBand then
+  begin
+    result.x := round(x * m_band.x / m_spm.SpmDx);
+    result.y:= round(x * m_band.y / m_spm.SpmDx);
+  end
+  else
+  begin
+    result.x := round(x - m_band.x / m_spm.SpmDx);
+    if result.x<0 then
+      result.x:=0;
+    result.y:= round(x + m_band.y / m_spm.SpmDx);
+    l:=length(tdoublearray(m_spm.m_rms.p));
+    if result.y>l-1 then
+      result.y:=l-1;
+  end;
+end;
+
 procedure cGrmsSrcAlg.doUpdateSrcData(sender: tobject);
 var
+  p:tpoint;
   // индекс в тестируемом спектре главной частоты по тахо
   I: integer;
   res: double;
@@ -105,36 +130,51 @@ var
   t1, t2, x, v: double;
   bandwidthint, startind, endind, spmInd: integer;
   dTime,tahotime:double;
+  bSelfBand:boolean;
 begin
   //if sender = m_tahoSpm then
   begin
+    bSelfBand:=false;
     // по хорошему общую частоту нужно искать по кроссспектру на синхронных блоках
     // пересчитываем полосу по текущему значению тахо
-     if m_numGarm <> 0 then
+    if m_numGarm <> 0 then
     begin
       if m_tahoSpm<>nil then
       begin
+        // частота  глапвной гармоники
         x := m_tahoSpm.max.x;
       end
       else
       begin
         /// Возможно лучше использовать Scalar (последнее значение)
         if m_Taho.tag<>nil then
-          x:=m_Taho.GetMeanEst;
+          x:=m_Taho.GetMeanEst
+        else
+        begin
+          bSelfBand:=true;
+        end;
       end;
-      x := x * m_numGarm;
-      m_curTahoValue := x;
-      // количество отсчетов в спектре по которым усредняем
-      startind := round(x * m_band.x / m_spm.SpmDx);
-      endind := round(x * m_band.y / m_spm.SpmDx);
+      // если нет тахо канала
+      if bSelfBand then
+      begin
+        x:=m_spm.max.x;
+      end
+      else
+      begin
+        x := x * m_numGarm;
+        m_curTahoValue := x;
+      end;
+      p:=getBandI(x);
+      startind := p.x;
+      endind := p.y;
     end
-    else
+    else // для абсолютной полосы
     begin
       startind := round(m_band.x / m_spm.dX);
       endind := round(m_band.x / m_spm.dX);
     end;
-    if startind < 0 then
-      startind := 0;
+    if startind<0 then
+      startind:=0;
     if endind = startind then
       endind := startind + 1;
     if endind>=(AlignBlockLength(m_spm.m_rms)) then
@@ -505,6 +545,14 @@ begin
     m_addNull := strtoboolext(lstr);
     if spmstr <> '' then
       spmstr := ChangeParamF(spmstr, 'Addnull', lstr);
+  end;
+
+  lstr := GetParam(str, 'Percent');
+  if checkstr(lstr) then
+  begin
+    m_RateBand := strtoboolext(lstr);
+    if spmstr <> '' then
+      spmstr := ChangeParamF(spmstr, 'Percent', lstr);
   end;
 
   lstr := GetParam(str, 'FFTCount');

@@ -27,7 +27,6 @@ object GenSignalsFrm: TGenSignalsFrm
     ParentFont = False
     PopupMenu = PopupMenu1
     TabOrder = 0
-    ExplicitHeight = 233
     object AmpLabel: TLabel
       Left = 128
       Top = 0
@@ -136,7 +135,6 @@ object GenSignalsFrm: TGenSignalsFrm
     PopupMenu = PopupMenu1
     TabOrder = 1
     OnClick = SignalsLBClick
-    ExplicitHeight = 233
   end
   object PopupMenu1: TPopupMenu
     Top = 192

@@ -32,9 +32,9 @@ type
     dFLabel: TLabel;
     AddNullCB: TCheckBox;
     ResTypeRG: TRadioGroup;
-    TahoTypeCB: TCheckBox;
     AlgLabel: TLabel;
     AlgCB: TComboBox;
+    TrackingCB: TCheckBox;
     procedure FFTCountSpinBtnDownClick(Sender: TObject);
     procedure FFTCountSpinBtnUpClick(Sender: TObject);
     procedure FFTCountEditChange(Sender: TObject);
@@ -168,10 +168,14 @@ begin
   end;
   if TahoCB.text<>'' then
   begin
+    TrackingCB.Checked:=false;
+    TrackingCB.Enabled:=false;
     addParam(m_pars, 'Taho', TahoCB.text);
   end
   else
   begin
+    TrackingCB.Checked:=true;
+    TrackingCB.Enabled:=true;
     addParam(m_pars, 'Taho', '');
   end;
   result:=ParsToStr(m_pars);
@@ -192,7 +196,6 @@ var
 begin
   inherited;
   // m_pars обновлен в inherited
-
   p:=FFTCountEdit.OnChange;
   FFTCountEdit.OnChange:=nil;
   FFTCountEdit.Text := GetParsValue(m_pars, 'FFTCount');

@@ -512,6 +512,15 @@ begin
     s:=cgensig(signals[i]);
     signalslb.AddItem(s.m_name,s);
   end;
+  if signals.Count>0 then
+  begin
+    s:=cgensig(signals[0]);
+    signalslb.ItemIndex:=0;
+    AmpSE.Value:=s.Amp;
+    FreqSE.Value:=s.Freq;
+    PhaseSE.Value:=s.Phase0;
+    STypeRG.ItemIndex:=s.m_type;
+  end;
 end;
 
 procedure TGenSignalsFrm.SignalsLBClick(Sender: TObject);

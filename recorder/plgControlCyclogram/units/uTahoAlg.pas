@@ -431,6 +431,7 @@ begin
     begin
       fintag.tag:=getTagByName(fintag.tagname);
       updateOutChan;
+      setSpmArray;
     end;
   end;
 end;
