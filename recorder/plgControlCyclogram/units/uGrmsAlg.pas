@@ -20,7 +20,6 @@ type
     fdX:double;
     // число точек FFT
     fFFTCount:integer;
-
     fTahoTag: cTag;
     fOutTag: cTag;
     // полоса в которой идет расчет grms

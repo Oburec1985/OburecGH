@@ -645,7 +645,7 @@ object ControlDeskFrm: TControlDeskFrm
     end
     object GroupBox3: TGroupBox
       Left = 247
-      Top = 20
+      Top = 27
       Width = 461
       Height = 155
       Caption = #1042#1088#1077#1084#1103':'

@@ -796,8 +796,31 @@ begin
 end;
 
 procedure cAlgMng.doChangeCfg(sender: tobject);
+var
+  a: cbaseobj;
+  i: integer;
 begin
+  // предрасчет
+  for i := 0 to Count - 1 do
+  begin
+    a := getobj(i);
+    if a is cSrcAlg then
+    begin
+      // в методе ready зашита инициализация спектров
+      if not cSrcAlg(a).ready then
+      begin
 
+      end;
+    end;
+    if a is cGrmsSrcAlg then
+    begin
+      // в методе ready зашита инициализация спектров
+      if not cGrmsSrcAlg(a).ready then
+      begin
+
+      end;
+    end;
+  end;
 end;
 
 procedure cAlgMng.doChangeRState(sender: tobject);

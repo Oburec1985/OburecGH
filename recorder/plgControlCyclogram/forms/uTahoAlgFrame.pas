@@ -227,6 +227,7 @@ var
   p:tnotifyevent;
   str:string;
   t:itag;
+  ne:tnotifyevent;
 begin
   inherited;
   // m_pars обновлен в inherited
@@ -251,6 +252,7 @@ begin
   if checkstr(str) then
     WndCB.itemindex:=strtoint(str);
 
+  setcomboboxitem(GetParsValue(m_pars, 'Channel'), ChannelCB);
   if str='Level' then
   begin
     SetTahoType(true);
@@ -263,11 +265,17 @@ begin
     FFTCountEdit.Text:=GetParsValue(m_pars, 'FFTCount');
 
     UseBandCB.checked:=strtoboolext(GetParsValue(m_pars, 'FFTUseBand'));
+    ne:=BandF1Edit.OnChange;
+    BandF1Edit.OnChange:=nil;
     BandF1Edit.text:=GetParsValue(m_pars, 'FFTBand1');
+    BandF1Edit.OnChange:=ne;
+
+    ne:=BandF2Edit.OnChange;
+    BandF2Edit.OnChange:=nil;
     BandF2Edit.text:=GetParsValue(m_pars, 'FFTBand2');
+    BandF2Edit.OnChange:=ne;
   end;
 
-  setcomboboxitem(GetParsValue(m_pars, 'Channel'), ChannelCB);
   if channelcb.ItemIndex>-1 then
   begin
     t := ChannelCB.gettag(ChannelCB.ItemIndex);

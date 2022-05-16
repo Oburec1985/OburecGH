@@ -1,5 +1,6 @@
 inherited TahoAlgFrame: TTahoAlgFrame
-  Height = 440
+  Width = 936
+  Height = 644
   Constraints.MinHeight = 440
   ExplicitHeight = 440
   object ChannelLabel: TLabel [2]
@@ -30,6 +31,12 @@ inherited TahoAlgFrame: TTahoAlgFrame
     Height = 16
     Caption = #1063#1072#1089#1090#1086#1090#1072' '#1086#1087#1088#1086#1089#1072' '#1082#1072#1085#1072#1083#1072
   end
+  inherited AlgNameEdit: TEdit
+    Width = 914
+  end
+  inherited OptsEdit: TEdit
+    Width = 914
+  end
   object TahoTypeCB: TCheckBox
     Left = 8
     Top = 99
@@ -41,11 +48,13 @@ inherited TahoAlgFrame: TTahoAlgFrame
   end
   object LvlPan: TPanel
     Left = 0
-    Top = 136
-    Width = 451
+    Top = 340
+    Width = 936
     Height = 120
     Align = alBottom
     TabOrder = 3
+    ExplicitTop = 136
+    ExplicitWidth = 451
     object L1Label: TLabel
       Left = 8
       Top = 10
@@ -81,11 +90,13 @@ inherited TahoAlgFrame: TTahoAlgFrame
   end
   object SpmPan: TPanel
     Left = 0
-    Top = 256
-    Width = 451
+    Top = 460
+    Width = 936
     Height = 184
     Align = alBottom
     TabOrder = 4
+    ExplicitTop = 256
+    ExplicitWidth = 451
     object FFTCountLabel: TLabel
       Left = 8
       Top = 26
@@ -233,21 +244,23 @@ inherited TahoAlgFrame: TTahoAlgFrame
   object OutChannelName: TEdit
     Left = 159
     Top = 160
-    Width = 185
+    Width = 670
     Height = 24
     Anchors = [akLeft, akTop, akRight]
     Enabled = False
     TabOrder = 6
+    ExplicitWidth = 185
   end
   object MinValFE: TFloatEdit
     Left = 161
     Top = 117
-    Width = 183
+    Width = 668
     Height = 24
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 7
     Text = '70'
     OnChange = L1EditChange
+    ExplicitWidth = 183
   end
   object FsEdit: TFloatEdit
     Left = 8

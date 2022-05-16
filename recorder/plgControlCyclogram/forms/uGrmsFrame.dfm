@@ -1,41 +1,34 @@
 inherited GRmsFrame: TGRmsFrame
-  Width = 387
+  Height = 426
   object Label2: TLabel [2]
     Left = 170
     Top = 106
-    Width = 33
-    Height = 13
+    Width = 36
+    Height = 16
     Caption = #1042#1099#1093#1086#1076
   end
   object TahoLabel: TLabel [3]
     Left = 10
     Top = 155
-    Width = 28
-    Height = 13
+    Width = 33
+    Height = 16
     Caption = #1058#1072#1093#1086':'
   end
   object ChannelLabel: TLabel [4]
     Left = 10
     Top = 106
-    Width = 31
-    Height = 13
+    Width = 35
+    Height = 16
     Caption = #1050#1072#1085#1072#1083
-  end
-  inherited AlgNameEdit: TEdit
-    Width = 365
-  end
-  inherited OptsEdit: TEdit
-    Width = 365
   end
   object OutChannelName: TEdit
     Left = 161
     Top = 128
-    Width = 150
-    Height = 21
+    Width = 214
+    Height = 24
     Anchors = [akLeft, akTop, akRight]
     Enabled = False
     TabOrder = 2
-    ExplicitWidth = 214
   end
   object UseTahoCB: TCheckBox
     Left = 161
@@ -48,38 +41,38 @@ inherited GRmsFrame: TGRmsFrame
   end
   object SpmPan: TPanel
     Left = 0
-    Top = 169
-    Width = 387
+    Top = 291
+    Width = 451
     Height = 135
     Align = alBottom
     TabOrder = 4
-    ExplicitWidth = 451
+    ExplicitTop = 169
     object FFTCountLabel: TLabel
       Left = 8
       Top = 18
-      Width = 87
-      Height = 13
+      Width = 102
+      Height = 16
       Caption = #1063#1080#1089#1083#1086' '#1090#1086#1095#1077#1082' '#1041#1055#1060
     end
     object Label1: TLabel
       Left = 8
       Top = 67
-      Width = 12
-      Height = 13
+      Width = 15
+      Height = 16
       Caption = 'dX'
     end
     object Label4: TLabel
       Left = 161
       Top = 71
-      Width = 40
-      Height = 13
+      Width = 47
+      Height = 16
       Caption = #1055#1086#1083#1086#1089#1072':'
     end
     object FFTdX: TFloatEdit
       Left = 8
       Top = 88
       Width = 121
-      Height = 21
+      Height = 24
       TabOrder = 0
       Text = '0.1'
       OnChange = FFTCountEditChange
@@ -88,7 +81,7 @@ inherited GRmsFrame: TGRmsFrame
       Left = 161
       Top = 88
       Width = 82
-      Height = 21
+      Height = 24
       TabOrder = 1
       Text = '10'
       OnChange = FFTCountEditChange
@@ -97,7 +90,7 @@ inherited GRmsFrame: TGRmsFrame
       Left = 249
       Top = 88
       Width = 82
-      Height = 21
+      Height = 24
       TabOrder = 2
       Text = '20000'
       OnChange = FFTCountEditChange
@@ -106,7 +99,7 @@ inherited GRmsFrame: TGRmsFrame
       Left = 8
       Top = 40
       Width = 121
-      Height = 21
+      Height = 24
       Enabled = False
       TabOrder = 3
       Text = '16384'
@@ -155,7 +148,7 @@ inherited GRmsFrame: TGRmsFrame
     Left = 10
     Top = 128
     Width = 145
-    Height = 21
+    Height = 24
     TabOrder = 5
     OnChange = FFTCountEditChange
   end
@@ -163,7 +156,7 @@ inherited GRmsFrame: TGRmsFrame
     Left = 10
     Top = 179
     Width = 145
-    Height = 21
+    Height = 24
     TabOrder = 6
     OnChange = FFTCountEditChange
   end

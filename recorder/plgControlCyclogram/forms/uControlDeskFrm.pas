@@ -258,6 +258,9 @@ const
   c_Pause_State = 1;
   c_Play_State = 0;
 
+  clGrass = TColor($00A7FED0);
+
+
 implementation
 
 {$R *.dfm}
@@ -985,11 +988,11 @@ begin
   str:= t.getParam('Zone_state');
   bZone:=StrtoBoolExt(str);
 
-  if bPWM then
+  if bPWM and (not bZone) then
   begin
     if (arow=1) or (arow=2) then
     begin
-      sg.Canvas.Brush.Color := CLgREEN;
+      sg.Canvas.Brush.Color := clGrass;
     end;
   end
   else
@@ -998,7 +1001,7 @@ begin
     begin
       if (arow=3) or (arow=4) then
       begin
-        sg.Canvas.Brush.Color := CLgREEN;
+        sg.Canvas.Brush.Color := clGrass;
       end;
     end;
   end;

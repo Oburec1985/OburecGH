@@ -1,6 +1,6 @@
 inherited GrmsSrcFrame: TGrmsSrcFrame
-  Width = 608
-  Height = 565
+  Width = 638
+  Height = 517
   Constraints.MinHeight = 359
   Constraints.MinWidth = 342
   ExplicitHeight = 359
@@ -40,17 +40,17 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
     Caption = #1040#1083#1075#1086#1088#1080#1090#1084
   end
   inherited AlgNameEdit: TEdit
-    Width = 586
+    Width = 616
   end
   inherited OptsEdit: TEdit
     Top = 69
-    Width = 586
+    Width = 616
     ExplicitTop = 69
   end
   object OutChannelName: TEdit
     Left = 10
     Top = 248
-    Width = 585
+    Width = 615
     Height = 24
     Anchors = [akLeft, akTop, akRight]
     Enabled = False
@@ -67,8 +67,8 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
   end
   object SpmPan: TPanel
     Left = 0
-    Top = 359
-    Width = 608
+    Top = 311
+    Width = 638
     Height = 206
     Align = alBottom
     TabOrder = 4
@@ -194,7 +194,7 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
       TabOrder = 7
     end
     object ResTypeRG: TRadioGroup
-      Left = 399
+      Left = 429
       Top = 1
       Width = 208
       Height = 204
@@ -218,13 +218,13 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
   object FsEdit: TFloatEdit
     Left = 427
     Top = 179
-    Width = 168
+    Width = 197
     Height = 24
     Anchors = [akLeft, akTop, akRight]
     Enabled = False
     TabOrder = 6
     Text = '0.0'
-    ExplicitWidth = 11
+    ExplicitWidth = 291
   end
   object TahoTypeCB: TCheckBox
     Left = 184

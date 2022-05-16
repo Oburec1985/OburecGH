@@ -234,8 +234,17 @@ begin
     if a.lg then
     begin
       // такой треш с переносом координат т.к. видовая матрица от линейной оси
-      rate:=(log10(GetP2(i).y)-lgmin)*lgrange; // перевод в относительные единицы от диапаона lg 0..1
-      y:=range*rate+a.min.y;
+      if GetP2(i).y=0 then
+      begin
+        rate:=0;
+        y:=-200;
+      end
+      else
+      begin
+        rate:=(log10(GetP2(i).y)-lgmin)*lgrange; // перевод в относительные единицы от диапаона lg 0..1
+        y:=range*rate+a.min.y;
+      end;
+
       if y<-200 then
         y:=-200;
       if i>length(logpointsY)-1 then

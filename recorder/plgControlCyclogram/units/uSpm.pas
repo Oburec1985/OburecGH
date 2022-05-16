@@ -440,6 +440,9 @@ begin
   if m_tag <> nil then
   begin
     m_tag.doOnStart;
+  end
+  else
+  begin
   end;
 
   if m_outTag <> nil then
@@ -669,6 +672,15 @@ begin
   if m_Tag.tag <> nil then
   begin
     result := true;
+  end
+  else
+  begin
+    m_tag.tag:=getTagByName(m_tag.tagname);
+    if m_tag.tag<>nil then
+    begin
+      updateOutChan;
+      result:=true;
+    end;
   end;
 end;
 
@@ -796,9 +808,12 @@ begin
   end;
   if m_tag.tag = nil then
   begin
-    m_errors.add('cSpm.updateOutChan Отсутствует входной тег: ' +
-        m_tag.tagname);
-    exit;
+    m_tag.tag:=getTagByName(m_tag.tagname);
+    if m_tag.tag = nil then
+    begin
+      m_errors.add('cSpm.updateOutChan Отсутствует входной тег: ' + m_tag.tagname);
+      exit;
+    end;
   end;
   if m_outTag.tag = nil then
   begin

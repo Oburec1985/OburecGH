@@ -108,6 +108,7 @@ type
     procedure DblClick(Sender: TObject);
     procedure doCursorMove(sender:tobject);
     procedure doOnZoom(sender:tobject);
+    procedure doChangeCfg(sender:tobject);
     procedure doKeyDown(sender:tobject; var Key: Word;  Shift: TShiftState);
     procedure FormClick(Sender: TObject);
     function  DblCursor: cDoubleCursor;
@@ -626,6 +627,25 @@ begin
   a_pIni.WriteBool(str, 'ShowAlarms', ShowAlarms);
 end;
 
+procedure TSpmChart.doChangeCfg(sender:tobject);
+var
+  i: integer;
+  ti: TSpmTagInfo;
+  p: cpage;
+  d: cDoubleCursor;
+  ax:cdrawobj;
+begin
+  for i := 0 to m_tagslist.Count - 1 do
+  begin
+    ti := TagInfo(i);
+    if not ti.m_initGraph then
+    begin
+      InitGraphs(ti);
+    end;
+  end;
+end;
+
+
 procedure TSpmChart.SpmChartInit(Sender: TObject);
 var
   i: integer;
@@ -999,6 +1019,7 @@ begin
   UpdateBands;
 end;
 
+
 procedure TSpmChart.UpdateBands;
 var
   I: Integer;
@@ -1279,14 +1300,19 @@ begin
     for i := 0 to p.Count - 1 do
     begin
       tr := m_profile;
+      tr.fHelper:=true;
       addPointsToProfile(p.x, p.m_data, 0, tr);
       tr := m_hihi;
+      tr.fHelper:=true;
       addPointsToProfile(p.x, p.m_data, 1, tr);
       tr := m_hi;
+      tr.fHelper:=true;
       addPointsToProfile(p.x, p.m_data, 2, tr);
       tr := m_lo;
+      tr.fHelper:=true;
       addPointsToProfile(p.x, p.m_data, 3, tr);
       tr := m_lolo;
+      tr.fHelper:=true;
       addPointsToProfile(p.x, p.m_data, 4, tr);
     end;
   end;
@@ -1310,6 +1336,7 @@ end;
 procedure TSpmChart.createEvents;
 begin
   spmChart.OBJmNG.Events.AddEvent('SpmChart_OnZoom', E_OnZoom, doOnZoom);
+  spmChart.OBJmNG.Events.AddEvent('SpmChart_OnLeaveCfg', E_OnChangeCfg, doChangeCfg);
 end;
 
 

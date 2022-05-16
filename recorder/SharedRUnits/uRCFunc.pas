@@ -103,6 +103,7 @@ type
 
     function ConvertIndInLoopBuff(i:integer):integer;
   public
+    function GetIsScalar:boolean;
     function readyBlockCount:cardinal;
     // t время
     procedure PutOutValue(v, t: double);
@@ -214,6 +215,7 @@ function GetMean(t: itag): double;
 function GetAmp(t: itag): double;
 // получить посл значение
 function GetScalar(t: itag): double;
+function isVector(t: itag): boolean;
 function isScalar(t: itag): boolean;
 function IsAlive(t: itag): boolean;
 function CloseTag(t: itag): boolean;
@@ -652,6 +654,15 @@ begin
     TVarData(var_type).VType := varDouble;
     // TVarData(var_type).VLongWord := varDouble;
     result.SetProperty(TAGPROP_DATATYPE, var_type); }
+end;
+
+function isVector(t: itag): boolean;
+var
+  var_type: Variant;
+  v: OleVariant;
+begin
+  t.getProperty(TAGPROP_TYPE, v);
+  result:=TTAG_SCALAR and v;
 end;
 
 function isScalar(t: itag): boolean;
@@ -1101,6 +1112,14 @@ begin
   SetLength(m_WriteDataX, Size);
 end;
 
+function cTag.GetIsScalar: boolean;
+begin
+  if ftag<>nil then
+    result:=not isVector(ftag)
+  else
+    result:=false;
+end;
+
 procedure cTag.PutOutValue(v, t: double);
 begin
   m_WriteData[m_lastIndWriteData] := v;
@@ -1258,7 +1277,8 @@ begin
   end
   else
   begin
-    ftagname:='';
+    if ftag<>nil then
+      ftagname:='';
   end;
 end;
 

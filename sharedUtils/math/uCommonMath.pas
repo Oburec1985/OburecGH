@@ -489,7 +489,7 @@ var
   :cstring;
   key:string;
 begin
-  // clearParsResult(pars);
+  clearParsResult(pars);
   newpars:=ParsStrParamNoSort(opts, separator);
   for I := 0 to newpars.Count - 1 do
   begin

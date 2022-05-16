@@ -137,7 +137,7 @@ begin
       b := true;
       while b do
       begin
-        t := getTagByName(lstr);
+        t := getTagByName(str);
         if (t = nil) or (lstr = m_lastOutTag) then
           b := false
         else

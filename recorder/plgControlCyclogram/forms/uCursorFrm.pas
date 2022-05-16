@@ -124,8 +124,13 @@ begin
   end;
   if li=nil then
   begin
-    li:=lv.Items.add;
-    li.data:=tr;
+    if not tr.fHelper then
+    begin
+      li:=lv.Items.add;
+      li.data:=tr;
+    end
+    else
+      exit;
   end;
   v:=tr.GetY(x);
   LV.SetSubItemByColumnName(c_col_No,inttostr(li.index),li);

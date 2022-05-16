@@ -49,7 +49,7 @@ type
   protected
     procedure updateAlgCB;
     function getProperties: string; override;
-    procedure setProperties(s: string); override;
+    procedure setProperties(p_str: string); override;
     function algClass:string;override;
     procedure clearframeparams; override;
     procedure updateOptsStr;
@@ -70,6 +70,8 @@ var
   GrmsFrame: TGrmsSrcFrame;
 
 implementation
+
+uses uRCFunc;
 
 {$R *.dfm}
 
@@ -115,9 +117,16 @@ begin
     o:=g_algMng.getObj(i);
     if o is cspm then
     begin
-      if cspm(o).m_tag.tag=ChannelCB.gettag(ChannelCB.ItemIndex) then
+      if ChannelCB.ItemIndex<>-1 then
       begin
-        AlgCB.AddItem(cspm(o).name,o);
+        if cspm(o).m_tag.tag=nil then
+        begin
+          cspm(o).m_tag.tag:=uRCFunc.getTagByName(cspm(o).m_tag.tagname);
+        end;
+        if cspm(o).m_tag.tag=ChannelCB.gettag(ChannelCB.ItemIndex) then
+        begin
+          AlgCB.AddItem(cspm(o).name,o);
+        end;
       end;
     end;
   end;
@@ -130,6 +139,7 @@ var
   str:string;
 begin
   //inherited;
+  ClearParsResult(m_pars);
   if AlgDTFE.text<>'' then
     addParam(m_pars, 'dX', replaceChar(floattostr(AlgDTfe.FloatNum), ',','.'));
   if BandF1Edit.text<>'' then
@@ -172,7 +182,7 @@ begin
   updateOptsStr;
 end;
 
-procedure TGrmsSrcFrame.setProperties(s: string);
+procedure TGrmsSrcFrame.setProperties(p_str: string);
 var
   p:tnotifyevent;
   str:string;
@@ -182,6 +192,7 @@ var
 begin
   inherited;
   // m_pars обновлен в inherited
+
   p:=FFTCountEdit.OnChange;
   FFTCountEdit.OnChange:=nil;
   FFTCountEdit.Text := GetParsValue(m_pars, 'FFTCount');

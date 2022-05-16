@@ -104,14 +104,24 @@ var
   // updatetaho
   t1, t2, x, v: double;
   bandwidthint, startind, endind, spmInd: integer;
+  dTime,tahotime:double;
 begin
   //if sender = m_tahoSpm then
   begin
     // по хорошему общую частоту нужно искать по кроссспектру на синхронных блоках
     // пересчитываем полосу по текущему значению тахо
-    if m_numGarm <> 0 then
+     if m_numGarm <> 0 then
     begin
-      x := m_tahoSpm.max.x;
+      if m_tahoSpm<>nil then
+      begin
+        x := m_tahoSpm.max.x;
+      end
+      else
+      begin
+        /// Возможно лучше использовать Scalar (последнее значение)
+        if m_Taho.tag<>nil then
+          x:=m_Taho.GetMeanEst;
+      end;
       x := x * m_numGarm;
       m_curTahoValue := x;
       // количество отсчетов в спектре по которым усредняем
@@ -134,7 +144,17 @@ begin
     m_bandwidthint.y := endind;
   end;
   //if (sender = m_spm) then
-  if (m_spm.LastBlockTime-m_tahoSpm.LastBlockTime)<m_tahoSpm.dX then
+  if m_tahoSpm<>nil then
+  begin
+    tahotime:=m_tahoSpm.LastBlockTime;
+    dTime:=m_tahoSpm.dX;
+  end
+  else
+  begin
+    tahotime:=m_spm.LastBlockTime;
+    dTime:=m_spm.dx;
+  end;
+  if (m_spm.LastBlockTime-tahotime)<dTime then
   begin
     // пересчитываем полосу по текущему значению тахо
     s := m_spm;
@@ -239,7 +259,7 @@ begin
   if tnode <> nil then
   begin
     t := loadTag(tnode, t);
-    setinptag(m_InTag);
+    setinptag(t);
   end;
 
   tnode := node.FindNode('InTaho');
@@ -272,6 +292,20 @@ begin
       if m_InTag.tag <> nil then
         result := true;
     end;
+  end;
+  if m_InTag.tag <> nil then
+  begin
+
+  end
+  else
+  begin
+    m_InTag.tag:=getTagByName(m_InTag.tagname);
+    if m_InTag.tag<>nil then
+    begin
+      setinptag(m_InTag.tag);
+    end
+    else
+      result:=false;
   end;
 end;
 
@@ -407,15 +441,18 @@ begin
     begin
       if m_tahoSpm <> nil then
         m_tahoSpm.unsubscribe(self);
-      m_tahoSpm := cspm(g_algMng.getSpmByTagName(m_Taho.tagname));
-      if m_tahoSpm = nil then
+      if not m_Taho.GetIsScalar then
       begin
-        m_tahoSpm := cspm.create;
-        m_tahoSpm.setinptag(m_Taho.tag);
-        m_tahoSpm.Properties := Properties;
-        g_algMng.Add(m_tahoSpm, nil);
+        m_tahoSpm := cspm(g_algMng.getSpmByTagName(m_Taho.tagname));
+        if m_tahoSpm = nil then
+        begin
+          m_tahoSpm := cspm.create;
+          m_tahoSpm.setinptag(m_Taho.tag);
+          m_tahoSpm.Properties := Properties;
+          g_algMng.Add(m_tahoSpm, nil);
+        end;
+        m_tahoSpm.subscribe(self);
       end;
-      m_tahoSpm.subscribe(self);
     end;
   end;
 
@@ -434,8 +471,10 @@ var
   lstr, spmstr: string;
   fftcount: integer;
   t: itag;
+  a:cbaseobj;
   spm:cspm;
   change: boolean;
+  I: Integer;
 begin
   if str = '' then
     exit;
@@ -493,10 +532,6 @@ begin
     m_numGarm := strtoint(lstr);
   end;
 
-  lstr := GetParam(str, 'AlgName');
-  spm:=cSpm(g_algMng.getObj(lstr));
-  setSpmAlg(spm);
-
   lstr := GetParam(str, 'Channel');
   if lstr <> '' then
   begin
@@ -507,11 +542,42 @@ begin
       setinptag(t);
       // сбрасываем обновл5ение вых канала т.к. только что обновили
       change := false;
+    end
+    else
+    begin
+      t := getTagByName(lstr);
+      setinptag(t);
+      // сбрасываем обновл5ение вых канала т.к. только что обновили
+      change := false;
     end;
     ChangeCTag(m_InTag, lstr);
   end;
 
-
+  lstr := GetParam(str, 'AlgName');
+  if lstr='' then
+  begin
+    if m_InTag<>nil then
+    begin
+      // ищем источник
+      for I := 0 to g_algMng.Count - 1 do
+      begin
+        a:=cbaseobj(g_algMng.getobj(i));
+        if a is cspm then
+        begin
+          if cspm(a).m_tag.tagname=m_intag.tagname then
+          begin
+            spm:=cspm(a);
+            break;
+          end;
+        end;
+      end;
+    end;
+  end
+  else
+  begin
+    spm:=cSpm(g_algMng.getObj(lstr));
+  end;
+  setSpmAlg(spm);
 
   lstr := GetParam(str, 'Taho');
   if lstr <> '' then

@@ -426,6 +426,11 @@ begin
     if fintag.tag<>nil then
     begin
       result:=true;
+    end
+    else
+    begin
+      fintag.tag:=getTagByName(fintag.tagname);
+      updateOutChan;
     end;
   end;
 end;
