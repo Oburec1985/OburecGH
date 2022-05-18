@@ -15,6 +15,7 @@ type
     m_addNull: boolean;
     m_lastblockind: integer;
   public
+    m_TahoTracking:boolean;
     m_Taho: cTag;
     m_InTag: cTag;
     // спектры входных тегов
@@ -73,6 +74,7 @@ type
     function ready: boolean; override;
     function getlasttime: double;
   public
+    function TahoTracking: boolean;
     function readyBlockCount: integer;
     property lastTime: double read getlasttime;
     constructor create; override;
@@ -102,21 +104,29 @@ function cGrmsSrcAlg.getBandI(x:double):Tpoint;
 var
   l:integer;
 begin
-  if m_RateBand then
+  if TahoTracking then
   begin
-    result.x := round(x * m_band.x / m_spm.SpmDx);
-    result.y:= round(x * m_band.y / m_spm.SpmDx);
+    if m_RateBand then
+    begin
+      result.x := round(x * m_band.x / m_spm.SpmDx);
+      result.y:= round(x * m_band.y / m_spm.SpmDx);
+    end
+    else
+    begin
+      result.x := round((x - m_band.x) / m_spm.SpmDx);
+      result.y:= round((x + m_band.y) / m_spm.SpmDx);
+    end;
   end
   else
   begin
-    result.x := round(x - m_band.x / m_spm.SpmDx);
-    if result.x<0 then
-      result.x:=0;
-    result.y:= round(x + m_band.y / m_spm.SpmDx);
-    l:=length(tdoublearray(m_spm.m_rms.p));
-    if result.y>l-1 then
-      result.y:=l-1;
+    result.x := round(m_band.x / m_spm.SpmDx);
+    result.y := round(m_band.y / m_spm.SpmDx);
   end;
+  if result.x<0 then
+    result.x:=0;
+  l:=length(tdoublearray(m_spm.m_rms.p));
+  if result.y>l-1 then
+    result.y:=l-1;
 end;
 
 procedure cGrmsSrcAlg.doUpdateSrcData(sender: tobject);
@@ -137,7 +147,7 @@ begin
     bSelfBand:=false;
     // по хорошему общую частоту нужно искать по кроссспектру на синхронных блоках
     // пересчитываем полосу по текущему значению тахо
-    if m_numGarm <> 0 then
+    if TahoTracking then
     begin
       if m_tahoSpm<>nil then
       begin
@@ -170,8 +180,9 @@ begin
     end
     else // для абсолютной полосы
     begin
-      startind := round(m_band.x / m_spm.dX);
-      endind := round(m_band.x / m_spm.dX);
+      p:=getBandI(x);
+      startind := p.x;
+      endind := p.y;
     end;
     if startind<0 then
       startind:=0;
@@ -221,6 +232,14 @@ begin
     if m_blockind = length(m_outTag.m_TagData) then
       doEndEvalBlock(nil);
   end;
+end;
+
+function cGrmsSrcAlg.TahoTracking: boolean;
+begin
+  if m_Taho.tag=nil then
+    result:=false
+  else
+    result:=m_TahoTracking;
 end;
 
 procedure cGrmsSrcAlg.doEndEvalBlock(sender: tobject);
@@ -469,8 +488,6 @@ procedure cGrmsSrcAlg.setTahoTag(t: itag);
 var
   bl: IBlockAccess;
 begin
-  if t = nil then
-    exit;
 
   if m_Taho = nil then
     m_Taho := cTag.create;
@@ -483,15 +500,19 @@ begin
         m_tahoSpm.unsubscribe(self);
       if not m_Taho.GetIsScalar then
       begin
-        m_tahoSpm := cspm(g_algMng.getSpmByTagName(m_Taho.tagname));
-        if m_tahoSpm = nil then
+        if m_Taho.tagname<>'' then
         begin
-          m_tahoSpm := cspm.create;
-          m_tahoSpm.setinptag(m_Taho.tag);
-          m_tahoSpm.Properties := Properties;
-          g_algMng.Add(m_tahoSpm, nil);
+          m_tahoSpm := cspm(g_algMng.getSpmByTagName(m_Taho.tagname));
+          if m_tahoSpm = nil then
+          begin
+            m_tahoSpm := cspm.create;
+            m_tahoSpm.setinptag(m_Taho.tag);
+            m_tahoSpm.Properties := Properties;
+            g_algMng.Add(m_tahoSpm, nil);
+          end
+          else
+            m_tahoSpm.subscribe(self);
         end;
-        m_tahoSpm.subscribe(self);
       end;
     end;
   end;
@@ -580,6 +601,12 @@ begin
     m_numGarm := strtoint(lstr);
   end;
 
+  lstr := GetParam(str, 'TahoTracking');
+  if lstr <> '' then
+  begin
+    m_TahoTracking := StrToBool(lstr);
+  end;
+
   lstr := GetParam(str, 'Channel');
   if lstr <> '' then
   begin
@@ -628,14 +655,21 @@ begin
   setSpmAlg(spm);
 
   lstr := GetParam(str, 'Taho');
-  if lstr <> '' then
   begin
     if m_Taho = nil then
     begin
       m_Taho := cTag.create;
     end;
-    t := getTagByName(lstr);
-    setTahoTag(t);
+    if lstr<>'' then
+    begin
+      t := getTagByName(lstr);
+      setTahoTag(t);
+    end
+    else
+    begin
+      t := nil;
+      setTahoTag(t);
+    end;
     change := false;
   end;
   if change then

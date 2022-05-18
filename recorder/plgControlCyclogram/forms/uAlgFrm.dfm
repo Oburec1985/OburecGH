@@ -48,6 +48,7 @@ object AlgFrm: TAlgFrm
       RowSelect = True
       TabOrder = 0
       ViewStyle = vsReport
+      OnCustomDrawItem = AlgLVCustomDrawItem
       OnKeyDown = AlgLVKeyDown
       OnSelectItem = AlgLVSelectItem
       BtnCol = 0
@@ -56,6 +57,7 @@ object AlgFrm: TAlgFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
+      ExplicitLeft = 0
     end
     object Panel1: TPanel
       Left = 1

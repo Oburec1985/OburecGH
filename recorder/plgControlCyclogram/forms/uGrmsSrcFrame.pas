@@ -161,6 +161,8 @@ begin
   str := inttostr(ResTypeRG.ItemIndex);
   addParam(m_pars, 'FFTrestype', str);
 
+  addParam(m_pars, 'TahoTracking', booltostr(TrackingCB.Checked));
+
   if ChannelCB.text<>'' then
   begin
     addParam(m_pars, 'Channel', ChannelCB.text);
@@ -168,14 +170,10 @@ begin
   end;
   if TahoCB.text<>'' then
   begin
-    TrackingCB.Checked:=false;
-    TrackingCB.Enabled:=false;
     addParam(m_pars, 'Taho', TahoCB.text);
   end
   else
   begin
-    TrackingCB.Checked:=true;
-    TrackingCB.Enabled:=true;
     addParam(m_pars, 'Taho', '');
   end;
   result:=ParsToStr(m_pars);
@@ -183,6 +181,14 @@ end;
 
 procedure TGrmsSrcFrame.PercentCBClick(Sender: TObject);
 begin
+  if PercentCB.Checked then
+  begin
+    PercentCB.Caption:='Полоса b1*F1...b2*F1';
+  end
+  else
+  begin
+    PercentCB.Caption:='Полоса (F1-b1)...(F1+b2)';
+  end;
   updateOptsStr;
 end;
 
@@ -250,6 +256,7 @@ begin
   end;
 
   setcomboboxitem(GetParsValue(m_pars, 'Taho'), TahoCB);
+  TrackingCB.Checked:=StrToBoolDef(GetParsValue(m_pars, 'TahoTracking'), true);
 
   updateAlgCB;
   str:=GetParsValue(m_pars, 'AlgName');

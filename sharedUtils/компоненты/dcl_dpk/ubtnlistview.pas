@@ -427,7 +427,7 @@ begin
         showmessage('необходимо компоеннту назначить Getcolor');
     end;
   end;
-  //if (not (cdsSelected in State)) and (not (cdsFocused in State)) and (not (cdsHot in state)) then
+  if (not (cdsSelected in State)) and (not (cdsFocused in State)) and (not (cdsHot in state)) then
   begin
     for I := 0 to ColorList.Count - 1 do
     begin

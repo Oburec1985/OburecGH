@@ -219,10 +219,10 @@
     <File Path="forms\uDacControlEditFrame.dfm"/>
     <File Path="forms\uEditControlWrnFrm.pas"/>
     <File Path="forms\uEditControlWrnFrm.dfm"/>
-    <File Path="forms\uEditPolarFrm.pas"/>
-    <File Path="forms\uEditPolarFrm.dfm"/>
     <File Path="forms\uEditProfileFrm.pas"/>
     <File Path="forms\uEditProfileFrm.dfm"/>
+    <File Path="forms\uEditPolarFrm.pas"/>
+    <File Path="forms\uEditPolarFrm.dfm"/>
     <File Path="forms\uFillFctFrame.pas"/>
     <File Path="forms\uFillFctFrame.dfm"/>
     <File Path="forms\uGenSignalsEditFrm.pas"/>
@@ -285,10 +285,10 @@
     <File Path="units\uBaseAlg.pas"/>
     <File Path="units\uIntegralAlg.pas"/>
     <File Path="units\uBaseAlgNP.pas"/>
-    <File Path="units\uTahoAlg.pas"/>
     <File Path="units\uGrmsAlg.pas"/>
-    <File Path="units\uSynchroPhaseAlg.pas"/>
     <File Path="units\uGrmsSrcAlg.pas"/>
+    <File Path="units\uTahoAlg.pas"/>
+    <File Path="units\uSynchroPhaseAlg.pas"/>
     <File Path="units\uFillingFactorAlg.pas"/>
     <File Path="units\uPhaseAlg.pas"/>
     <File Path="units\uSpm.pas"/>

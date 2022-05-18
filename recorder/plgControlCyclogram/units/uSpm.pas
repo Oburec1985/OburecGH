@@ -669,6 +669,8 @@ end;
 function cSpm.ready: boolean;
 begin
   result := false;
+  if m_tag=nil then exit;
+
   if m_Tag.tag <> nil then
   begin
     result := true;

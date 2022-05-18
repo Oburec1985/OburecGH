@@ -26,7 +26,7 @@
 			<DCC_UnitSearchPath>..\VirtualTreeView;..\VirtualTreeView\VirtualTreeViewV5.1.1\Source;C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\source\ToolsAPI;$(BDS)\source\ToolsAPI;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_WriteableConstants>true</DCC_WriteableConstants>
-			<DCC_DependencyCheckOutputName>S:\Users\Public\Documents\RAD Studio\7.0\Bpl\dcl_own.bpl</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>C:\Users\Public\Documents\RAD Studio\7.0\Bpl\dcl_own.bpl</DCC_DependencyCheckOutputName>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
 			<GenDll>true</GenDll>

@@ -2,70 +2,91 @@ object FxForm: TFxForm
   Left = 0
   Top = 0
   Caption = #1055#1083#1072#1075#1080#1085' '#1087#1072#1082#1077#1090#1085#1086#1081' '#1086#1073#1088#1072#1073#1086#1090#1082#1080
-  ClientHeight = 705
-  ClientWidth = 994
+  ClientHeight = 922
+  ClientWidth = 1300
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   Menu = MainMenu1
   OldCreateOrder = False
   OnResize = FormResize
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object Splitter2: TSplitter
     Left = 0
-    Top = 385
-    Width = 994
-    Height = 3
+    Top = 503
+    Width = 1300
+    Height = 4
     Cursor = crVSplit
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alTop
     Color = clNone
     ParentColor = False
-    ExplicitTop = 520
-    ExplicitWidth = 962
   end
   object ProcSignalsGB: TGroupBox
     Left = 0
-    Top = 388
-    Width = 994
-    Height = 236
+    Top = 507
+    Width = 1300
+    Height = 309
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 854
     object Splitter3: TSplitter
-      Left = 486
-      Top = 15
+      Left = 635
+      Top = 19
       Width = 1
-      Height = 219
-      ExplicitHeight = 100
+      Height = 288
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      ExplicitLeft = 636
+      ExplicitTop = 20
+      ExplicitHeight = 286
     end
     object GroupBox2: TGroupBox
-      Left = 487
-      Top = 15
-      Width = 505
-      Height = 219
+      Left = 636
+      Top = 19
+      Width = 662
+      Height = 288
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alClient
       Caption = #1048#1089#1090#1086#1095#1085#1080#1082#1080' '#1086#1087#1077#1088#1072#1090#1086#1088#1086#1074
       TabOrder = 0
-      ExplicitWidth = 365
       object OpersSrc: TBtnListView
         Left = 2
-        Top = 15
-        Width = 501
-        Height = 202
+        Top = 19
+        Width = 658
+        Height = 267
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alClient
         Columns = <
           item
             Caption = #8470
+            Width = 65
           end
           item
             Caption = #1055#1091#1090#1100
+            Width = 65
           end
           item
             Caption = 'ID'
+            Width = 65
           end>
         HideSelection = False
         MultiSelect = True
@@ -78,38 +99,50 @@ object FxForm: TFxForm
         DrawColorBox = False
         ChangeTextColor = False
         Editable = False
-        ExplicitWidth = 361
       end
     end
     object GroupBox3: TGroupBox
       Left = 2
-      Top = 15
-      Width = 484
-      Height = 219
+      Top = 19
+      Width = 633
+      Height = 288
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alLeft
       Caption = #1054#1073#1088#1072#1073#1072#1090#1099#1074#1072#1077#1084#1099#1077' '#1089#1080#1075#1085#1072#1083#1099
       TabOrder = 1
       object SrcLV: TBtnListView
         Left = 2
-        Top = 15
-        Width = 480
-        Height = 202
+        Top = 19
+        Width = 629
+        Height = 267
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alClient
         Columns = <
           item
             Caption = #8470
+            Width = 65
           end
           item
             Caption = #1055#1091#1090#1100
+            Width = 65
           end
           item
             Caption = #1043#1088#1072#1085#1080#1094#1099
+            Width = 65
           end
           item
             Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1075#1088#1072#1085#1080#1094
+            Width = 65
           end
           item
             Caption = 'ID'
+            Width = 65
           end>
         HideSelection = False
         MultiSelect = True
@@ -124,50 +157,66 @@ object FxForm: TFxForm
         DrawColorBox = False
         ChangeTextColor = False
         Editable = False
+        ExplicitLeft = 4
+        ExplicitTop = 15
       end
     end
   end
   object SignalsGB: TGroupBox
     Left = 0
-    Top = 624
-    Width = 994
-    Height = 81
+    Top = 816
+    Width = 1300
+    Height = 106
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alBottom
     TabOrder = 1
-    ExplicitWidth = 854
     DesignSize = (
-      994
-      81)
+      1300
+      106)
     object DelBtn: TButton
-      Left = 3
-      Top = 8
-      Width = 75
-      Height = 25
+      Left = 4
+      Top = 10
+      Width = 98
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1059#1076#1072#1083#1080#1090#1100
       TabOrder = 0
       OnClick = DelBtnClick
     end
     object AddBtn: TButton
-      Left = 916
-      Top = 8
-      Width = 75
-      Height = 25
+      Left = 1198
+      Top = 10
+      Width = 98
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Anchors = [akTop, akRight]
       Caption = #1044#1086#1073#1072#1074#1080#1090#1100
       TabOrder = 1
-      ExplicitLeft = 776
     end
     object StatusBar1: TStatusBar
       AlignWithMargins = True
-      Left = 5
-      Top = 40
-      Width = 984
-      Height = 19
+      Left = 6
+      Top = 53
+      Width = 1288
+      Height = 25
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       BorderWidth = 2
       DoubleBuffered = False
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -11
+      Font.Height = -15
       Font.Name = 'Tahoma'
       Font.Style = []
       Panels = <
@@ -183,97 +232,120 @@ object FxForm: TFxForm
         end>
       ParentDoubleBuffered = False
       UseSystemFont = False
-      ExplicitWidth = 844
     end
     object ProgressBar1: TProgressBar
       Left = 2
-      Top = 62
-      Width = 990
-      Height = 17
+      Top = 82
+      Width = 1296
+      Height = 22
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alBottom
       SmoothReverse = True
       TabOrder = 3
-      ExplicitWidth = 850
     end
   end
   object LoadScriptGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 994
-    Height = 169
+    Width = 1300
+    Height = 221
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alTop
     TabOrder = 2
-    ExplicitWidth = 854
     DesignSize = (
-      994
-      169)
+      1300
+      221)
     object SaveBtn: TButton
-      Left = 916
-      Top = 75
-      Width = 75
-      Height = 25
+      Left = 1198
+      Top = 98
+      Width = 98
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Anchors = [akTop, akRight]
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
       TabOrder = 0
       OnClick = SaveBtnClick
-      ExplicitLeft = 776
     end
     object SavePath: TEdit
-      Left = 4
-      Top = 79
-      Width = 825
-      Height = 21
+      Left = 5
+      Top = 103
+      Width = 1079
+      Height = 25
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 1
-      ExplicitWidth = 685
     end
     object LoadPath: TEdit
-      Left = 3
-      Top = 106
-      Width = 825
-      Height = 21
+      Left = 4
+      Top = 139
+      Width = 1079
+      Height = 25
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 2
       OnChange = LoadPathChange
-      ExplicitWidth = 685
     end
     object LoadBtn: TButton
-      Left = 916
-      Top = 106
-      Width = 75
-      Height = 25
+      Left = 1198
+      Top = 139
+      Width = 98
+      Height = 32
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Anchors = [akTop, akRight]
       Caption = #1047#1072#1075#1088#1091#1079#1080#1090#1100
       TabOrder = 3
       OnClick = LoadBtnClick
-      ExplicitLeft = 776
     end
     object SelectSavePathBtn: TButton
-      Left = 834
-      Top = 75
-      Width = 75
-      Height = 25
+      Left = 1091
+      Top = 98
+      Width = 98
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Anchors = [akTop, akRight]
       Caption = '...'
       TabOrder = 4
       OnClick = SelectSavePathBtnClick
-      ExplicitLeft = 694
     end
     object SelectLoadPathBtn: TButton
-      Left = 835
-      Top = 106
-      Width = 75
-      Height = 25
+      Left = 1092
+      Top = 139
+      Width = 98
+      Height = 32
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Anchors = [akTop, akRight]
       Caption = '...'
       TabOrder = 5
       OnClick = SelectLoadPathBtnClick
-      ExplicitLeft = 695
     end
     object ToolBar1: TToolBar
       Left = 2
-      Top = 15
-      Width = 990
+      Top = 19
+      Width = 1296
       Height = 41
       ButtonHeight = 41
       ButtonWidth = 39
@@ -282,7 +354,6 @@ object FxForm: TFxForm
       ParentShowHint = False
       ShowHint = True
       TabOrder = 6
-      ExplicitWidth = 850
       object ReadGraph: TToolButton
         Left = 0
         Top = 0
@@ -312,35 +383,51 @@ object FxForm: TFxForm
   end
   object OperatorsGB: TGroupBox
     Left = 0
-    Top = 169
-    Width = 994
-    Height = 216
+    Top = 221
+    Width = 1300
+    Height = 282
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alTop
     Caption = #1057#1087#1080#1089#1086#1082' '#1086#1073#1088#1072#1073#1086#1090#1086#1082
     TabOrder = 3
-    ExplicitWidth = 854
     object Splitter1: TSplitter
-      Left = 282
-      Top = 15
-      Height = 199
-      ExplicitLeft = 288
-      ExplicitHeight = 334
+      Left = 368
+      Top = 19
+      Width = 4
+      Height = 261
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      ExplicitLeft = 369
+      ExplicitTop = 20
+      ExplicitHeight = 260
     end
     object OperatorsLV: TBtnListView
       Left = 2
-      Top = 15
-      Width = 280
-      Height = 199
+      Top = 19
+      Width = 366
+      Height = 261
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alLeft
       Columns = <
         item
           Caption = #8470
+          Width = 65
         end
         item
           Caption = #1054#1087#1077#1088#1072#1090#1086#1088
+          Width = 65
         end
         item
           Caption = #1055#1072#1088#1072#1084#1077#1090#1088#1099
+          Width = 65
         end>
       HideSelection = False
       MultiSelect = True
@@ -357,21 +444,30 @@ object FxForm: TFxForm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
+      ExplicitLeft = 4
+      ExplicitTop = 17
     end
     object GroupBox1: TGroupBox
-      Left = 285
-      Top = 15
-      Width = 707
-      Height = 199
+      Left = 372
+      Top = 19
+      Width = 926
+      Height = 261
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alClient
       Caption = #1048#1089#1090#1086#1095#1085#1080#1082#1080' '#1089#1080#1075#1085#1072#1083#1086#1074
       TabOrder = 1
-      ExplicitWidth = 567
       object VTree1: TVTree
         Left = 2
-        Top = 15
-        Width = 703
-        Height = 182
+        Top = 19
+        Width = 922
+        Height = 240
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alClient
         DragMode = dmAutomatic
         DrawSelectionMode = smBlendedRectangle
@@ -390,11 +486,10 @@ object FxForm: TFxForm
         OnChange = VTree1Change
         OnKeyDown = VTree1KeyDown
         OnNodeDblClick = VTree1NodeDblClick
-        ExplicitWidth = 563
         Columns = <
           item
             Position = 0
-            Width = 649
+            Width = 868
             WideText = #1054#1087#1077#1088#1072#1090#1086#1088
           end
           item

@@ -38,6 +38,8 @@ type
       Selected: Boolean);
     procedure UpdateAlgBtnClick(Sender: TObject);
     procedure BandsMenuClick(Sender: TObject);
+    procedure AlgLVCustomDrawItem(Sender: TCustomListView; Item: TListItem;
+      State: TCustomDrawState; var DefaultDraw: Boolean);
   private
     m_frameList:tstringlist;
     m_init:boolean;
@@ -114,6 +116,29 @@ begin
   page.Caption:=fr.GetDsc;
   page.PageControl:=AlgsPageControl;
   fr.Parent:=page;
+end;
+
+procedure TAlgFrm.AlgLVCustomDrawItem(Sender: TCustomListView; Item: TListItem;
+  State: TCustomDrawState; var DefaultDraw: Boolean);
+var
+  r:trect;
+begin
+ if Item.Selected and not (cdsFocused in State) then
+ begin
+   DefaultDraw:=false;
+   r:=Item.DisplayRect(drBounds);
+   with TListView(sender).Canvas do
+   begin
+    Brush.Color:=clHighlight;
+    FillRect(r);
+    Brush.Color:=clHighlightText;
+    TextOut(r.Left,R.Top,item.Caption);
+   end;
+ end
+ else
+ begin
+   DefaultDraw:=true;
+ end;
 end;
 
 procedure TAlgFrm.AlgLVKeyDown(Sender: TObject; var Key: Word;

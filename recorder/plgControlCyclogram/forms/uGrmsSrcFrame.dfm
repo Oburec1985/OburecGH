@@ -1,6 +1,6 @@
 inherited GrmsSrcFrame: TGrmsSrcFrame
-  Width = 567
-  Height = 496
+  Width = 856
+  Height = 498
   Constraints.MinHeight = 359
   Constraints.MinWidth = 342
   ExplicitHeight = 359
@@ -40,17 +40,17 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
     Caption = #1040#1083#1075#1086#1088#1080#1090#1084
   end
   inherited AlgNameEdit: TEdit
-    Width = 545
+    Width = 834
   end
   inherited OptsEdit: TEdit
     Top = 69
-    Width = 545
+    Width = 834
     ExplicitTop = 69
   end
   object OutChannelName: TEdit
     Left = 10
     Top = 248
-    Width = 544
+    Width = 833
     Height = 24
     Anchors = [akLeft, akTop, akRight]
     Enabled = False
@@ -67,8 +67,8 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
   end
   object SpmPan: TPanel
     Left = 0
-    Top = 290
-    Width = 567
+    Top = 292
+    Width = 856
     Height = 206
     Align = alBottom
     TabOrder = 4
@@ -90,14 +90,14 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
     end
     object Label4: TLabel
       Left = 161
-      Top = 95
+      Top = 119
       Width = 47
       Height = 16
       Caption = #1055#1086#1083#1086#1089#1072':'
     end
     object dFLabel: TLabel
-      Left = 212
-      Top = 43
+      Left = 161
+      Top = 40
       Width = 114
       Height = 16
       Caption = #1064#1072#1075' '#1087#1086' '#1095#1072#1089#1090#1086#1090#1077', '#1043#1094
@@ -113,7 +113,7 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
     end
     object BandF1Edit: TFloatEdit
       Left = 161
-      Top = 112
+      Top = 144
       Width = 82
       Height = 24
       TabOrder = 1
@@ -122,7 +122,7 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
     end
     object BandF2Edit: TFloatEdit
       Left = 249
-      Top = 112
+      Top = 144
       Width = 82
       Height = 24
       TabOrder = 2
@@ -170,21 +170,21 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
     end
     object PercentCB: TCheckBox
       Left = 161
-      Top = 60
-      Width = 45
+      Top = 95
+      Width = 224
       Height = 17
       Hint = 
         #1054#1087#1088#1077#1076#1077#1083#1103#1077#1090' '#1077#1076#1080#1085#1080#1094#1099' '#1074' '#1082#1086#1090#1086#1088#1099#1093' '#1080#1089#1095#1080#1089#1083#1103#1077#1090#1089#1103' '#1086#1090#1089#1090#1091#1087' '#1086#1090' '#1094#1077#1085#1090#1088#1072#1083#1100#1085#1086#1081' '#1095 +
         #1072#1089#1090#1086#1090#1099
-      Caption = '%'
+      Caption = #1055#1086#1083#1086#1089#1072' b1*F1...b2*F1'
       ParentShowHint = False
       ShowHint = True
       TabOrder = 5
       OnClick = PercentCBClick
     end
     object FFTdx: TFloatEdit
-      Left = 212
-      Top = 60
+      Left = 161
+      Top = 57
       Width = 121
       Height = 24
       TabOrder = 6
@@ -199,7 +199,7 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
       TabOrder = 7
     end
     object ResTypeRG: TRadioGroup
-      Left = 358
+      Left = 647
       Top = 1
       Width = 208
       Height = 204
