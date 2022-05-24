@@ -328,15 +328,18 @@ begin
   // расчет по спектру
   begin
     i:=0;
-    periodCount:=trunc(tag.lastindex/m_portionsize);
-    while i<periodCount do
+    if (tag<>nil) and (m_portionsize<>0) then
     begin
-      ffreq := EvalTahoFFT(tag, i*m_portionsize, time+i*(fdx));
-      fOutTag.tag.PushValue(ffreq, time+i*(fdx));
-      //fOutTag.tag.PushValue(ffreq, -1);
-      inc(i);
+      periodCount:=trunc(tag.lastindex/m_portionsize);
+      while i<periodCount do
+      begin
+        ffreq := EvalTahoFFT(tag, i*m_portionsize, time+i*(fdx));
+        fOutTag.tag.PushValue(ffreq, time+i*(fdx));
+        //fOutTag.tag.PushValue(ffreq, -1);
+        inc(i);
+      end;
+      fOutTag.m_ReadyVals:=fOutTag.m_ReadyVals+periodCount;
     end;
-    fOutTag.m_ReadyVals:=fOutTag.m_ReadyVals+periodCount;
   end;
   fInTag.ResetTagData(m_portionsize);
 end;

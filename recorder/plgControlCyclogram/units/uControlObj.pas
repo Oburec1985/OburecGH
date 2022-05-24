@@ -7,6 +7,7 @@ uses
   dialogs, activeX,
   sysutils, windows, uRecorderEvents, VirtualTrees, uVTServices,
   tags,
+  MathFunction,
   uCommonMath,
   ucommontypes,
   pluginclass, plugin, u2dMath, uRCFunc, PathUtils,
@@ -884,6 +885,8 @@ const
 
   c_feedback_str = 'ќбр.св.:';
   c_DAC_str = 'DAC:';
+
+  c_LogControlCyclogram = true;
 
 var
   g_conmng: cControlMng;
@@ -2317,7 +2320,7 @@ function cControlObj.getFBstr: string;
 begin
   if m_feedback <> nil then
   begin
-    result := floattostr(GetMean(m_feedback));
+    result := formatstrnoe(GetMean(m_feedback), 4);
   end
   else
   begin
@@ -3881,6 +3884,7 @@ var
   i: integer;
   t: cBaseTrig;
 begin
+  LogRecorderMessage('cControlMng.XMLlOADMngAttr_Enter', c_LogControlCyclogram);
   inherited;
   AllowUserModeSelect := node.ReadAttributeBool('AlowUserModeSelect', true);
   StopTrigger := ReadTrig(node, 'CommonStopTrig', self);
@@ -3897,6 +3901,7 @@ begin
       end;
     end;
   end;
+  LogRecorderMessage('cControlMng.XMLlOADMngAttr_Exit', c_LogControlCyclogram);
 end;
 
 procedure cControlMng.XMLSaveMngAttributes(node: txmlnode);
@@ -3934,6 +3939,7 @@ var
   c: cControlObj;
   t: cBaseTrig;
 begin
+  LogRecorderMessage('cProgramObj.LoadObj_Enter', c_LogControlCyclogram);
   inherited;
   fRepeatCount := xmlNode.ReadAttributeInteger('ProgRepeat', 1);
   m_StartOnPlay := xmlNode.ReadAttributeBool('ProgStartOnPlay', true);
@@ -3965,6 +3971,7 @@ begin
       t := ReadTrig(TrigsNode, 'ActionTrig_' + inttostr(i), nil);
     end;
   end;
+  LogRecorderMessage('cProgramObj.LoadObj_Exit', c_LogControlCyclogram);
 end;
 
 procedure cProgramObj.SetActiveMode(m: cModeObj);
@@ -5066,6 +5073,7 @@ var
   c:cControlObj;
   p:cProgramObj;
 begin
+  LogRecorderMessage('cModeObj.LoadObj_Enter', c_LogControlCyclogram);
   inherited;
   ModeLength := xmlNode.ReadAttributeFloat('Length', 0);
   CheckLength := xmlNode.ReadAttributeFloat('CheckLength', 0);
@@ -5119,6 +5127,7 @@ begin
       end;
     end;
   end;
+  LogRecorderMessage('cModeObj.LoadObj_Exit', c_LogControlCyclogram);
 end;
 
 procedure cModeObj.SaveObjAttributes(xmlNode: txmlnode);
@@ -5271,10 +5280,12 @@ procedure cDacControl.LoadObjAttributes(xmlNode: txmlnode; mng: tobject);
 var
   int: tagid;
 begin
+  LogRecorderMessage('cDacControl.LoadObj_Enter', c_LogControlCyclogram);
   inherited;
   dacname := xmlNode.ReadAttributeString('DACName', '');
   int := xmlNode.ReadAttributeint64('DACID', 0);
   DACID := int;
+  LogRecorderMessage('cDacControl.LoadObj_Exit', c_LogControlCyclogram);
 end;
 
 procedure cDacControl.SaveObjAttributes(xmlNode: txmlnode);

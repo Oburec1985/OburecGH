@@ -1037,7 +1037,7 @@ begin
           if str<>'' then
           begin
             index:=0;
-            fname:=ReplaseChars(str, ',', ';');
+            fname:=ReplaseChars(str, ',', '.');
             fname:=ReplaseChars(fname, char(10), '_');
             fname:=ReplaseChars(fname, '=', ':');
             params:=params+'Vals='+fname+',';

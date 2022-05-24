@@ -5,7 +5,7 @@ object ControlDeskFrm: TControlDeskFrm
   BorderWidth = 2
   Caption = #1055#1091#1083#1100#1090' '#1091#1087#1088#1072#1074#1083#1077#1085#1080#1103' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1086#1074
   ClientHeight = 703
-  ClientWidth = 1165
+  ClientWidth = 1117
   Color = clCream
   Constraints.MinHeight = 331
   Constraints.MinWidth = 973
@@ -23,7 +23,7 @@ object ControlDeskFrm: TControlDeskFrm
   object DeskGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 1165
+    Width = 1117
     Height = 188
     Margins.Left = 4
     Margins.Top = 4
@@ -44,6 +44,9 @@ object ControlDeskFrm: TControlDeskFrm
     ParentCtl3D = False
     ParentFont = False
     TabOrder = 0
+    DesignSize = (
+      1117
+      188)
     object InfoLabel: TLabel
       Left = 1007
       Top = 20
@@ -98,7 +101,7 @@ object ControlDeskFrm: TControlDeskFrm
     end
     object Label3: TLabel
       Left = 723
-      Top = 110
+      Top = 111
       Width = 174
       Height = 24
       Margins.Left = 4
@@ -647,7 +650,7 @@ object ControlDeskFrm: TControlDeskFrm
       Left = 247
       Top = 27
       Width = 461
-      Height = 155
+      Height = 156
       Caption = #1042#1088#1077#1084#1103':'
       TabOrder = 6
       object ComTimeLabel: TLabel
@@ -668,7 +671,7 @@ object ControlDeskFrm: TControlDeskFrm
         ParentFont = False
       end
       object ModeTimeLabel: TLabel
-        Left = 10
+        Left = 11
         Top = 91
         Width = 103
         Height = 24
@@ -741,9 +744,9 @@ object ControlDeskFrm: TControlDeskFrm
         Text = '0'
       end
       object ModeTimeEdit: TEdit
-        Left = 10
+        Left = 11
         Top = 117
-        Width = 134
+        Width = 133
         Height = 33
         Margins.Left = 4
         Margins.Top = 4
@@ -841,12 +844,13 @@ object ControlDeskFrm: TControlDeskFrm
     object ActiveModeE: TEdit
       Left = 723
       Top = 137
-      Width = 190
+      Width = 386
       Height = 33
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
+      Anchors = [akLeft, akTop, akRight]
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -22
@@ -860,7 +864,7 @@ object ControlDeskFrm: TControlDeskFrm
   object PageControl1: TPageControl
     Left = 0
     Top = 188
-    Width = 1165
+    Width = 1117
     Height = 515
     ActivePage = TabSheet2
     Align = alClient
@@ -869,7 +873,7 @@ object ControlDeskFrm: TControlDeskFrm
     object TabSheet1: TTabSheet
       Caption = #1054#1073#1097#1080#1081' '#1074#1080#1076
       object Splitter2: TSplitter
-        Left = 830
+        Left = 782
         Top = 0
         Width = 4
         Height = 484
@@ -880,11 +884,11 @@ object ControlDeskFrm: TControlDeskFrm
         Align = alRight
         Color = clBlack
         ParentColor = False
-        ExplicitLeft = 729
+        ExplicitLeft = 780
         ExplicitHeight = 473
       end
       object GroupBox1: TGroupBox
-        Left = 509
+        Left = 461
         Top = 0
         Width = 321
         Height = 484
@@ -975,7 +979,7 @@ object ControlDeskFrm: TControlDeskFrm
       object ModesListPanel: TGroupBox
         Left = 0
         Top = 0
-        Width = 509
+        Width = 461
         Height = 484
         Margins.Left = 4
         Margins.Top = 4
@@ -998,7 +1002,7 @@ object ControlDeskFrm: TControlDeskFrm
         object ControlSG: TStringGrid
           Left = 1
           Top = 25
-          Width = 507
+          Width = 459
           Height = 458
           Margins.Left = 4
           Margins.Top = 4
@@ -1023,7 +1027,7 @@ object ControlDeskFrm: TControlDeskFrm
         end
       end
       object GroupBox2: TGroupBox
-        Left = 834
+        Left = 786
         Top = 0
         Width = 323
         Height = 484
@@ -1072,20 +1076,19 @@ object ControlDeskFrm: TControlDeskFrm
       Caption = #1058#1072#1073#1083#1080#1094#1072' '#1088#1077#1078#1080#1084#1086#1074
       ImageIndex = 1
       object Splitter3: TSplitter
-        Left = 660
+        Left = 611
         Top = 0
-        Width = 2
         Height = 484
         Align = alRight
         Color = clBackground
         ParentColor = False
-        ExplicitLeft = 559
+        ExplicitLeft = 609
         ExplicitHeight = 479
       end
       object TableModeGB: TGroupBox
         Left = 0
         Top = 0
-        Width = 660
+        Width = 611
         Height = 484
         Margins.Left = 4
         Margins.Top = 4
@@ -1108,7 +1111,7 @@ object ControlDeskFrm: TControlDeskFrm
         object TableModeSG: TStringGrid
           Left = 1
           Top = 25
-          Width = 658
+          Width = 609
           Height = 458
           Margins.Left = 4
           Margins.Top = 4
@@ -1130,10 +1133,12 @@ object ControlDeskFrm: TControlDeskFrm
           OnDblClick = TableModeSGDblClick
           OnDrawCell = TableModeSGDrawCell
           OnSetEditText = TableModeSGSetEditText
+          ExplicitLeft = 0
+          ExplicitTop = 18
         end
       end
       object RightGB: TGroupBox
-        Left = 662
+        Left = 614
         Top = 0
         Width = 495
         Height = 484
@@ -1142,9 +1147,9 @@ object ControlDeskFrm: TControlDeskFrm
         TabOrder = 1
         object ControlPropSG: TStringGrid
           Left = 2
-          Top = 79
+          Top = 78
           Width = 491
-          Height = 403
+          Height = 404
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -1178,7 +1183,7 @@ object ControlDeskFrm: TControlDeskFrm
           Left = 2
           Top = 18
           Width = 491
-          Height = 61
+          Height = 60
           Align = alTop
           TabOrder = 1
           object ControlPropE: TEdit

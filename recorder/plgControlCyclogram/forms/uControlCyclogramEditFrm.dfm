@@ -106,8 +106,6 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitLeft = 3
-      ExplicitTop = 100
     end
   end
   object CommonPanel: TPanel
@@ -1003,9 +1001,9 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
           ExplicitHeight = 326
           inherited ProgramPage: TTabSheet
             ExplicitLeft = 4
-            ExplicitTop = 28
+            ExplicitTop = 24
             ExplicitWidth = 548
-            ExplicitHeight = 296
+            ExplicitHeight = 300
             inherited ShowModesTabBtn: TSpeedButton
               Left = 319
               Hint = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1085#1080#1077' '#1087#1088#1086#1075#1088#1072#1084#1084#1099
@@ -1015,6 +1013,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             inherited ProgramCountSE: TSpinEdit
               Left = 2
               Height = 22
+              Value = 0
               ExplicitLeft = 2
               ExplicitHeight = 22
             end

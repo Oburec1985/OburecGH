@@ -48,22 +48,19 @@ var
   dir, name, newpath:string;
 begin
   inherited;
-  if not RStateConfig then
-    ecm;
-  if RStateConfig then
+  dir:=extractfiledir(path);
+  name:=trimext(extractfilename(path));
+  newpath:=dir+'\'+name+'.xml';
+  if fileexists(newpath) then
   begin
-    dir:=extractfiledir(path);
-    name:=trimext(extractfilename(path));
-    newpath:=dir+'\'+name+'.xml';
-    if fileexists(newpath) then
+    //'C:\Mera Files\Recorder\configs\Controls_02\cfg.xml'
+    if g_algMng<>nil then
     begin
-      //'C:\Mera Files\Recorder\configs\Controls_02\cfg.xml'
-      if g_algMng<>nil then
-      begin
-        g_algMng.LoadFromXML(newpath, 'Algorithm');
-      end;
+      if not RStateConfig then
+        ecm;
+      g_algMng.LoadFromXML(newpath, 'Algorithm');
+      lcm;
     end;
-    lcm;
   end;
 end;
 

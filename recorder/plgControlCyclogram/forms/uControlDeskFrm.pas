@@ -143,7 +143,7 @@ type
     procedure ControlSGEditCell(ARow, ACol: integer; const Value: string);
     procedure FormCfgClose(Sender: TObject; var Action: TCloseAction);
     function getprogram(row: integer): cProgramObj;
-    function getmode(col: integer): cModeObj;
+    function getmode(row: integer): cModeObj;
     function getTableModeSGByCol(col: integer): cModeObj;
     function getControlFromTableModeSGByRow(row: integer): ccontrolobj;
     procedure ClearSGButtons;
@@ -642,7 +642,7 @@ begin
   // Находим позицию нашей ячейки
   xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
   xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
-  if xRow = 0 then
+  if (xRow = 0) or (xRow=-1) then
     exit;
 
   if (g_conmng.State = c_Pause) or g_conmng.AllowUserModeSelect then
@@ -734,7 +734,12 @@ begin
     SetConTask(con, row);
     ShowControlRow(con);
   end;
+  if g_conmng.ControlsCount>0 then
+  begin
+    SgChange(ControlSG);
+  end;
   CreateSGButtons;
+
 end;
 
 procedure TControlDeskFrm.ShowModeTable;
@@ -788,14 +793,17 @@ begin
   result := g_conmng.getControlObj(cname);
 end;
 
-function TControlDeskFrm.getmode(col: integer): cModeObj;
+function TControlDeskFrm.getmode(row: integer): cModeObj;
 var
   p: cProgramObj;
   str: string;
 begin
-  p := getprogram(0);
-  str := ProgramSG.Cells[0, col];
-  result := p.getmode(str);
+  p := getprogram(row);
+  str := ProgramSG.Cells[0, row];
+  if p<>nil then
+    result := p.getmode(str)
+  else
+    result := nil;
 end;
 
 function TControlDeskFrm.getprogram(row: integer): cProgramObj;
@@ -1588,9 +1596,9 @@ begin
   m := getTableModeSGByCol(xCol);
   if m <> nil then
     m_CurMode := m;
-  ModePropE.text := m_CurMode.name;
+  ModePropE.text :=  m_CurMode.name;
   if m_CurMode <> nil then
-    UpdateControlsPropSGmode(m_CurMode);
+    UpdateControlsPropSG;
 end;
 
 procedure TControlDeskFrm.ConfirmManualSwitchMode(m: TObject);
@@ -1844,7 +1852,7 @@ begin
       ControlSG.Cells[c_Col_Feedback, I] := c.getFBstr;
       if (g_conmng.State <> c_stop) and (g_conmng.State <> c_Pause) then
       begin
-        ControlSG.Cells[c_Col_Task, I] := floattostr(c.task);
+        ControlSG.Cells[c_Col_Task, I] := formatstrnoe(c.task, 4);
       end;
     end;
   end;
@@ -1947,6 +1955,8 @@ begin
     c := g_conmng.getControlObj(I);
     updateControlRow(c);
   end;
+  //if g_conmng.ControlsCount>0 then
+  //  SgChange(ControlSG);
 end;
 
 procedure TControlDeskFrm.UpdateProgramsSG;

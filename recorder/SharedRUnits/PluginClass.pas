@@ -82,7 +82,6 @@ type
   TExtRecorderPack = class(TInterfacedObject, IRecorderPlugin)
   public
     delplg: boolean;
-    rcStateChange: TRCstateChange;
     // Загружен конфиг при стартовой загрузке рекордера
     // сделано для анализа произошло событие SwitchOnUI до загрузки или после
     m_loadDefCfg: boolean;
@@ -196,6 +195,8 @@ var
   // взводится если произошло событие загрузки при  запуске рекордера.
   // по идее интерфейс можно инициализировать только после завершения загрузки движка
   g_LoadEngine: boolean = false;
+  rcStateChange: TRCstateChange;
+
 
 const
   c_TagProp_nullpoly = 'nullpoly';
@@ -221,7 +222,7 @@ end;
 
 function GetRCStateChange: TRCstateChange;
 begin
-  result := TExtRecorderPack(GPluginInstance).rcStateChange;
+  result := rcStateChange;
 end;
 
 procedure AddPlgEvent(ename: string; etype: cardinal; e: tNotifyEvent);
@@ -535,11 +536,13 @@ begin
   case a_dwCommand of
     PN_RCLOADCONFIG:
       begin
+        LogRecorderMessage('PlgClass_PN_RCLOADCONFIG_Enter', c_Log_PlgClass);
         for I := 0 to m_CompMng.Count - 1 do
         begin
           m_CompMng.doafterload;
         end;
         CallPlgEvents(c_RC_LoadCfg);
+        LogRecorderMessage('PlgClass_PN_RCLOADCONFIG_Exit', c_Log_PlgClass);
       end;
     PN_RCSAVECONFIG:
       begin
@@ -566,9 +569,7 @@ begin
           else
           begin
             if pMsgInfo.uID = m_BtnTagPropPageID then
-              LogRecorderMessage(
-                'Не удалось получить изображение кнопки дополнительной панели рекордера.', false);
-
+              LogRecorderMessage('Не удалось получить изображение кнопки дополнительной панели рекордера.', c_Log_PlgClass);
           end;
         end;
       end;
@@ -758,7 +759,6 @@ function TExtRecorderPack.Notify(const dwCommand: dword;
 var
   tags: DynTagsArray;
 begin
-
   result := ProcessNotify(dwCommand, dwData);
   case dwCommand of
 
@@ -769,10 +769,12 @@ begin
       end;
     PN_ON_SWITCH_TO_UI_THREAD:
       begin
+        LogRecorderMessage('PlgClass_PN_ON_SWITCH_TO_UI_THREAD_Enter', c_Log_PlgClass);
         result := (CreateGUI = 0);
 
         createFormsRecorderUIThread(m_CompMng);
         g_createGUI := true;
+        LogRecorderMessage('PlgClass_PN_ON_SWITCH_TO_UI_THREAD_Exit', c_Log_PlgClass);
       end;
     PN_ON_DESTROY_UI_SRV:
       begin
@@ -790,11 +792,13 @@ begin
       end;
     PN_LEAVERCCONFIG:
       begin
+        LogRecorderMessage('PlgClass_PN_LEAVERCCONFIG_Enter', c_Log_PlgClass);
         // Оповестить форму о завершении изменения конфигурации и
         // передать ей новый список ссылок на интерфейсы тегов
         // frmTestSettings.EndConfigure(Tags);
         result := true;
         CallPlgEvents(c_RC_LeaveCfg);
+        LogRecorderMessage('PlgClass_PN_LEAVERCCONFIG_Exit', c_Log_PlgClass);
       end;
     PN_RCSTOP:
       begin
@@ -825,10 +829,10 @@ begin
       end;
     PN_UPDATEDATA:
       begin
-        LogRecorderMessage('PluginClass.Notify Enter PN_UPDATEDATA',false);
+        LogRecorderMessage('PluginClass.PN_UPDATEDATA Enter',c_Log_PlgClass);
         // frmTestSettings.RecorderGotData;
         EList.CallAllEvents(c_RUpdateData);
-        LogRecorderMessage('PluginClass.Notify Exit PN_UPDATEDATA', false);
+        LogRecorderMessage('PluginClass.PN_UPDATEDATA Exit', c_Log_PlgClass);
         result := true;
       end
     else

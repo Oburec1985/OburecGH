@@ -539,10 +539,8 @@ end;
 procedure TMBaseControl.CreateEvents;
 begin
   AddPlgEvent('MDBSaveXmlDscFiles', c_RC_SaveCfg, doSaveCfg);
-  AddPlgEvent('TMBaseControl_doChangeRState', c_RC_DoChangeRCState,
-    doChangeRCState);
-  m_base.Events.AddEvent('TMBaseControl_AddPropertieEvent',
-    E_AddNotifyPropertieEvent + E_ChangePropertieEvent, doAddPropertie);
+  AddPlgEvent('TMBaseControl_doChangeRState', c_RC_DoChangeRCState, doChangeRCState);
+  m_base.Events.AddEvent('TMBaseControl_AddPropertieEvent', E_AddNotifyPropertieEvent + E_ChangePropertieEvent, doAddPropertie);
 end;
 
 procedure TMBaseControl.DestroyEvents;
@@ -593,56 +591,9 @@ begin
 end;
 
 procedure TMBaseControl.doChangeRCState(Sender: TObject);
-var
-  newstate, statechange: dword;
-  rcStateChange: TRCstateChange;
 begin
-  LogRecorderMessage('TMBaseControl.doChangeRCState_enter', false);
-  newstate := RState;
-  case m_rstate of
-    RS_STOP:
-      begin
-        case newstate of
-          RS_VIEW:
-            rcStateChange := RSt_StopToView;
-          RS_REC:
-            rcStateChange := RSt_StopToRec;
-        end;
-      end;
-    RS_VIEW:
-      begin
-        case newstate of
-          RS_VIEW:
-            rcStateChange := RSt_ViewToStop;
-          RS_REC:
-            rcStateChange := RSt_ViewToRec;
-        end;
-      end;
-    RS_REC:
-      begin
-        case newstate of
-          RS_VIEW:
-            rcStateChange := RSt_RecToView;
-          RS_STOP:
-            rcStateChange := RSt_RecToStop;
-        end;
-      end;
-    0:
-      begin
-        case newstate of
-          RS_VIEW:
-            rcStateChange := RSt_initToView;
-          RS_STOP:
-            rcStateChange := RSt_initToStop;
-          RS_REC:
-            rcStateChange := RSt_initToRec;
-        end;
-      end;
-  end;
-  m_rstate := newstate;
   case rcStateChange of
-    RSt_Init:
-      ;
+    RSt_Init: ;
     RSt_StopToView:
       ;
     RSt_StopToRec:
