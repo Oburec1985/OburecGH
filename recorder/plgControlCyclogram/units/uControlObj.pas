@@ -700,6 +700,7 @@ type
 
     function getMode(i: integer): cModeObj; overload;
     function getMode(name: string): cModeObj; overload;
+    function getMode(t: cTask): cModeObj; overload;
     // выполнить шаг программы
     procedure Exec;
     function ModeCount: integer;
@@ -2970,7 +2971,10 @@ begin
   end;
   z := m_ZoneList.defaultZone;
   if z <> nil then
+  begin
     z.fUsePrevZoneVals := xmlNode.ReadAttributeBool('Zones_UsePrevVal', true);
+   // z.fUsePrevZoneVals := true;
+  end;
 end;
 
 function cControlObj.getProperties: string;
@@ -3125,7 +3129,10 @@ begin
   begin
     tag:=cTagPair(t.m_tags.Objects[i]);
     if tag.tag<>nil then
-      tag.tag.tag.PushValue(tag.value, -1);
+    begin
+      if isAlive(tag.tag.tag) then
+        tag.tag.tag.PushValue(tag.value, -1);
+    end;
   end;
 end;
 
@@ -3561,6 +3568,29 @@ end;
 function cProgramObj.getMode(name: string): cModeObj;
 begin
   result := cModeObj(fmodes.getChildrenByCaption(name));
+end;
+
+function cProgramObj.getMode(t: cTask): cModeObj;
+var
+  I: Integer;
+  m:cmodeobj;
+  j: Integer;
+  lt:ctask;
+begin
+  result:=nil;
+  for I := 0 to ModeCount - 1 do
+  begin
+    m:=getMode(i);
+    for j := 0 to m.TaskCount - 1 do
+    BEGIN
+      lt:=m.GetTask(j);
+      if lt=t then
+      begin
+        result:=m;
+        exit;
+      end;
+    END;
+  end;
 end;
 
 function cProgramObj.getModeTime: double;
@@ -4594,6 +4624,7 @@ begin
           if not t.control.f_manualMode then
           begin
             t.entercs;
+
             t.control.SetTask(t.task);
             t.applyed := true;
             t.exitcs;
@@ -5239,7 +5270,12 @@ begin
     end;
   end;
   if b then
-    m_dac.PushValue(v, -1)
+  begin
+    if IsAlive(m_dac) then
+      m_dac.PushValue(v, -1)
+    else
+      m_dac:=nil;
+  end;
 end;
 
 function cDacControl.Exec: boolean;
@@ -5947,7 +5983,8 @@ begin
   begin
     p := GetZonePair(i);
     t := itag(p.tag);
-    t.PushValue(p.value, -1);
+    if isalive(t) then
+      t.PushValue(p.value, -1);
   end;
 end;
 
@@ -6030,6 +6067,7 @@ var
 begin
   fHist := 10;
   ftol := tol;
+  fUsePrevZoneVals:=true;
   tags := tlist.create;
   if List <> nil then
   begin

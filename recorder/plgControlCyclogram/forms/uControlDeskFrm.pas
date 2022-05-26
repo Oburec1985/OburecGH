@@ -143,7 +143,7 @@ type
     procedure ControlSGEditCell(ARow, ACol: integer; const Value: string);
     procedure FormCfgClose(Sender: TObject; var Action: TCloseAction);
     function getprogram(row: integer): cProgramObj;
-    function getmode(row: integer): cModeObj;
+    function getmode(row: integer): cModeObj;overload;
     function getTableModeSGByCol(col: integer): cModeObj;
     function getControlFromTableModeSGByRow(row: integer): ccontrolobj;
     procedure ClearSGButtons;
@@ -851,19 +851,29 @@ var
   t:ctask;
   tag:ctagpair;
   str:string;
+  p:cProgramObj;
+  m:cModeObj;
 begin
   t:=ctask(TEditPropertiesFrm(EditPropertiesFrm).data);
-  str := t.getParam('Vals');
   for I := 0 to TEditPropertiesFrm(EditPropertiesFrm).SG.RowCount-2 do
   begin
     str:=TEditPropertiesFrm(EditPropertiesFrm).SG.Cells[1,1+i];
-    if i<t.m_tags.Count-1 then
+    if i<=t.m_tags.Count-1 then
     begin
       tag:=ctagpair(t.m_tags.Objects[i]);
       cTagPair(tag).value:=strtofloat(str);
     end
     else
-      exit;
+      break;
+  end;
+  p:=g_conmng.getProgram(0);
+  if p<>nil then
+  begin
+    m:=p.getmode(t);
+    if m<>nil then
+    begin
+      UpdateControlsPropSGmode(m);
+    end;
   end;
 end;
 
@@ -923,10 +933,7 @@ begin
       str:=TStringGrid(Sender).Cells[xCol, xRow];
       EditPropertiesFrm.SetTextToTags(str);
       EditPropertiesFrm.SecCallBack(EditTags, t);
-      if EditPropertiesFrm.Execute then
-      begin
-        TStringGrid(Sender).Cells[xCol, xRow]:=t.TagsToString;
-      end;
+      EditPropertiesFrm.Execute;
       if m.active then
       begin
         m.m_applyed := false;
@@ -1598,7 +1605,11 @@ begin
     m_CurMode := m;
   ModePropE.text :=  m_CurMode.name;
   if m_CurMode <> nil then
+  begin
     UpdateControlsPropSG;
+    if g_conmng.state<>c_play then
+      TStringGrid(Sender).Invalidate;
+  end;
 end;
 
 procedure TControlDeskFrm.ConfirmManualSwitchMode(m: TObject);
@@ -1664,9 +1675,28 @@ var
   Color: integer;
   p: cProgramObj;
   m: cModeObj;
+  c:cControlObj;
   str: string;
   I: integer;
 begin
+  sg := TStringGrid(Sender);
+  if aRow>1 then
+  begin
+    str:=sg.Cells[0, ARow];
+    if g_conmng<>nil then
+    begin
+      c:=g_conmng.getControlObj(str);
+      // окрас строки с выбраным контролом
+      if c=m_CurControl then
+      begin
+        Color := sg.Canvas.Brush.Color;
+        sg.Canvas.Brush.Color := clGrass;
+        sg.Canvas.FillRect(Rect);
+        sg.Canvas.TextOut(Rect.Left, Rect.Top, sg.Cells[ACol, ARow]);
+        sg.Canvas.Brush.Color := Color;
+      end;
+    end;
+  end;
   if (g_conmng.State = c_play) or (g_conmng.State = c_Pause) then
   begin
     for I := 0 to g_conmng.ProgramCount - 1 do
@@ -1675,9 +1705,9 @@ begin
       m := p.ActiveMode;
       if m <> nil then
       begin
-        sg := TStringGrid(Sender);
         // имя режима
         str := sg.Cells[ACol, 0];
+        // окраска столбца
         if str = m.name then
         begin
           Color := sg.Canvas.Brush.Color;
@@ -1763,19 +1793,15 @@ begin
   // деления на случай необходимости вызова из разных потоков
   if tid = MainThreadID then
   begin
-    LogRecorderMessage(
-      'tid = MainThreadID========================================================'
+    LogRecorderMessage( 'tid = MainThreadID========================================================'
         , c_Log_ControlDeskFrm);
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExec',
-      c_Log_ControlDeskFrm);
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExec',  c_Log_ControlDeskFrm);
     g_conmng.exec;
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecControls',
-      c_Log_ControlDeskFrm);
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecControls',  c_Log_ControlDeskFrm);
     // пересчитываем реакцию регуляторов
     g_conmng.ExecControls;
     // отображаем
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecupdateviews',
-      c_Log_ControlDeskFrm);
+    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecupdateviews', c_Log_ControlDeskFrm);
     updateviews;
     LogRecorderMessage(
       'TControlDeskFrm_Timer1Timer_exit=========================================='

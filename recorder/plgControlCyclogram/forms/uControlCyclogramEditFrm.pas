@@ -98,6 +98,8 @@ type
     procedure ProgramTVDblClick(Sender: TObject);
     procedure SaveToExcelBtnClick(Sender: TObject);
     procedure LoadFromExcelBtnClick(Sender: TObject);
+    procedure ControlsLVCustomDrawItem(Sender: TCustomListView; Item: TListItem;
+      State: TCustomDrawState; var DefaultDraw: Boolean);
   private
     m_conmng: cControlMng;
     m_fileMng: cfilemng;
@@ -257,6 +259,42 @@ end;
 function TControlCyclogramEditFrm.CheckControlParams: Boolean;
 begin
   result := ControlEditFrame1.CheckControlName;
+end;
+
+procedure TControlCyclogramEditFrm.ControlsLVCustomDrawItem(
+  Sender: TCustomListView; Item: TListItem; State: TCustomDrawState;
+  var DefaultDraw: Boolean);
+var
+  r:trect;
+  str:string;
+  i:integer;
+begin
+  if Item.Selected and not (cdsFocused in State) then
+  begin
+    DefaultDraw:=false;
+    r:=Item.DisplayRect(drBounds);
+    with TListView(sender).Canvas do
+    begin
+      Brush.Color:=clHighlight;
+      FillRect(r);
+      Brush.Color:=clHighlightText;
+      Color:=TListView(sender).Canvas.Font.Color;
+      TListView(sender).Canvas.Font.Color:=clWhite;
+
+      str:=item.Caption;
+      for I := 0 to item.SubItems.Count - 1 do
+      begin
+        str:=str+ ' ' +item.SubItems[i];
+      end;
+
+      TextOut(r.Left,R.Top,str);
+      TListView(sender).Canvas.Font.Color:=Color;
+    end;
+  end
+  else
+  begin
+    DefaultDraw:=true;
+  end;
 end;
 
 procedure TControlCyclogramEditFrm.ControlsLVEndDrag(Sender, Target: TObject;

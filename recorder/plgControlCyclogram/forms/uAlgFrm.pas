@@ -122,6 +122,8 @@ procedure TAlgFrm.AlgLVCustomDrawItem(Sender: TCustomListView; Item: TListItem;
   State: TCustomDrawState; var DefaultDraw: Boolean);
 var
   r:trect;
+  str:string;
+  I: integer;
 begin
  if Item.Selected and not (cdsFocused in State) then
  begin
@@ -129,10 +131,15 @@ begin
    r:=Item.DisplayRect(drBounds);
    with TListView(sender).Canvas do
    begin
-    Brush.Color:=clHighlight;
-    FillRect(r);
-    Brush.Color:=clHighlightText;
-    TextOut(r.Left,R.Top,item.Caption);
+     Brush.Color:=clHighlight;
+     FillRect(r);
+     Brush.Color:=clHighlightText;
+     str:=item.Caption;
+     for I := 0 to item.SubItems.Count - 1 do
+     begin
+       str:=str+ ' ' +item.SubItems[i];
+     end;
+     TextOut(r.Left,R.Top,str);
    end;
  end
  else

@@ -167,6 +167,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
           SmallImages = ImageList_16
           TabOrder = 0
           ViewStyle = vsReport
+          OnCustomDrawItem = ControlsLVCustomDrawItem
           OnEndDrag = ControlsLVEndDrag
           OnKeyDown = ControlsLVKeyDown
           OnSelectItem = ControlsLVSelectItem
