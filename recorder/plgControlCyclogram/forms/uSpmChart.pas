@@ -1065,6 +1065,15 @@ begin
   end;
 end;
 
+function getSpmMax(spm:cspm):point2d;
+begin
+  case spm.m_I of
+    0:result:=spm.max;
+    1:result:=p2d(spm.max.x,spm.m_magI1[spm.minmax_i.y]);
+    2:result:=p2d(spm.max.x,spm.m_magI2[spm.minmax_i.y]);
+  end;
+end;
+
 procedure TSpmChart.UpdateLabels;
 var
   i, j, ind: integer;
@@ -1074,7 +1083,7 @@ var
   p: cpage;
   a: caxis;
   x, y, max, maxX: double;
-  pos: point2d;
+  spmMax,pos: point2d;
   // смещение положения метки для непересечения
   percentSize: point2;
   r: frect;
@@ -1095,16 +1104,17 @@ begin
       if l.data=nil then
       begin
         l_main:=l;
-        pos := correctPos(a, p, spm.max);
-        maxx:=spm.max.x;
-        max:=spm.max.y;
+        spmMax:=getSpmMax(spm);
+        pos := correctPos(a, p, spmMax);
+        maxx:=spmmax.x;
+        max:=spmmax.y;
       end
       else
       begin
         l.visible:=true;
-        if spm.max.x>tspmband(l.data).m_b.m_resultBand.x then
+        if spmmax.x>tspmband(l.data).m_b.m_resultBand.x then
         begin
-          if spm.max.x<tspmband(l.data).m_b.m_resultBand.y then
+          if spmmax.x<tspmband(l.data).m_b.m_resultBand.y then
           begin
             l.visible:=false;
           end;

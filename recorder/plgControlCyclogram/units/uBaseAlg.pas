@@ -233,19 +233,39 @@ type
 
   cSrcAlg = class(cBaseAlgContainer);
 
+  cAlgCfg  = class
+  private
+    fcfgStr:string;
+    fname:string;
+    fpars:tstringlist;
+    // список алгоритмов подписаных на конфиг
+    algs:tlist;
+  protected
+    procedure setCfg(s:string);
+    function getCfg:string;
+    procedure setName(s:string);
+    function getName:string;
+  public
+    constructor create;
+    destructor destroy;
+    property Cfg:string read getCfg write setCfg;
+    property name:string read getName write setName;
+  end;
+
 
   cAlgMng = class(cBaseObjMng)
   public
     // привязки тегов к ГХ. ключ - имя тега, объект - ГХ
     m_AHNames: tstringlist;
-    // список ГХ
+    // список ГХ для корректировки АЧХ
     m_AHList: tlist;
-
     m_srcList: cSrcList;
     m_bands: tstringlist;
     m_places: TPlaces;
     // список TTagBandPair
     m_TagBandPairList: TTagBandPairList;
+    // список настроек алгоритмов
+    m_cfgList:TStringlist;
   protected
     function getplace(str: string): TPlace;
     // происходит при переходе в просмотр/запись
@@ -1912,6 +1932,42 @@ end;
 procedure cAHgrad.setsize(s: integer);
 begin
   setlength(m_points, s);
+end;
+
+{ cAlgCfg }
+
+constructor cAlgCfg.create;
+begin
+  fpars:=TStringList.Create;
+  algs:=tlist.Create;
+end;
+
+destructor cAlgCfg.destroy;
+begin
+  algs.Destroy;
+
+  ClearParsResult(fpars);
+  fpars.Destroy;
+end;
+
+function cAlgCfg.getCfg: string;
+begin
+  result:=fcfgStr;
+end;
+
+procedure cAlgCfg.setCfg(s: string);
+begin
+  fcfgStr:=s;
+end;
+
+function cAlgCfg.getName: string;
+begin
+  result:=fname;
+end;
+
+procedure cAlgCfg.setName(s: string);
+begin
+  fname:=s;
 end;
 
 end.
