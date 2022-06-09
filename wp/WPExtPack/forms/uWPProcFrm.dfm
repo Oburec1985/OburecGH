@@ -157,8 +157,6 @@ object FxForm: TFxForm
         DrawColorBox = False
         ChangeTextColor = False
         Editable = False
-        ExplicitLeft = 4
-        ExplicitTop = 15
       end
     end
   end
@@ -444,8 +442,6 @@ object FxForm: TFxForm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitLeft = 4
-      ExplicitTop = 17
     end
     object GroupBox1: TGroupBox
       Left = 372

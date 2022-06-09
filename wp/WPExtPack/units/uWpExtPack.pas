@@ -147,13 +147,12 @@ begin
   if HLib > HINSTANCE_ERROR then
   begin
     logMessage('TExtPack_CreateWndHook');
-    //showmessage('HINSTANCE_ERROR_hook');
     // регестрируем свой тип сообщения в системе
     WM_KeyHOOK := RegisterWindowMessage('WM_OburecKeyHook');
-    logmessage('WM_OburecKeyHook='+inttostr(WM_KeyHOOK));
     // получаем указатель на необходимую процедуру
     StartHookProc := GetProcAddress(HLib, 'SetHook');
     res := StartHookProc(true, mainwnd);
+    logmessage('TExtPack_MainWnd=' + inttostr(mainwnd));
     tagproc := GetProcAddress(HLib, 'SetTag');
     res := tagproc(-1);
     if res <> 0 then
@@ -329,7 +328,6 @@ begin
   // удаляем клавиатурный хук
   if HLib > HINSTANCE_ERROR then
   begin
-    StartHookProc := GetProcAddress(HLib, 'SetHook');
     // освобождаем библиотеку
     StartHookProc(false, mainwnd);
     FreeLibrary(HLib);
@@ -714,13 +712,12 @@ begin
   ltag:=0;
   if Msg.Msg = WM_KeyHOOK then
   begin
-    logMessage('TExtPack_WndProc_enter');
+    //logMessage('TExtPack_WndProc_enter');
     ltag := tagproc(c_wpextpack_tag);
     if ltag=-1 then
     begin
-      logMessage('TExtPack_WndProc_ltag=-1');
       t:=gettimeinsec;
-      if abs(t-hooktime)>1.5 then
+      if abs(t-hooktime)>0.1 then
       begin
         logMessage(floattostr(t-hooktime));
         if (mainwnd = hwnd(Msg.lParam)) then
@@ -736,13 +733,14 @@ begin
           // добавить замер
           if GetKeyState(VK_Menu) < 0 then
           begin
+            logMessage('TExtPack_Alt');
             if Msg.wParam = Ord('T') then
             begin
+              logMessage('TExtPack_VK_Menu+T');
               mng.AddHelpTrig;
             end;
           end;
         end;
-        tagproc(-1);
         hooktime:=t;
       end;
     end
@@ -752,10 +750,10 @@ begin
       if ltag<>c_wpextpack_tag then
       begin
         logMessage('TExtPack_tagproc(ltag)');
-        tagproc(ltag);
       end
     end;
-    logMessage('TExtPack_WndProc_exit');
+    tagproc(-1);
+    //logMessage('TExtPack_WndProc_exit');
   end;
   Msg.Result := CallWindowProc(oldWndProc, mainwnd, Msg.Msg, Msg.wParam,  Msg.lParam);
 end;

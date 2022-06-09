@@ -1,7 +1,7 @@
 unit uWpServicePlg;
 {$WARN SYMBOL_PLATFORM OFF}
-  // в свойствах проекта для дебуга включить опции Delphi Compiler/linking/
-  // Debug info ,include remote debug , map files,
+// в свойствах проекта для дебуга включить опции Delphi Compiler/linking/
+// Debug info ,include remote debug , map files,
 
 interface
 
@@ -22,23 +22,23 @@ uses
   PerformanceTime,
   inifiles;
 
-
 type
   TServicePlg = class(TAutoObject, IWPPlugin)
   protected
-    hooktime:double;
+    hooktime: double;
     // хендл главного окна
     mainwnd: cardinal;
     // сслыка на sniffDll. Грузиться динамически
     HLib: thandle;
     WM_KeyHOOK: cardinal;
-    m_firstHook:boolean;
-    tagproc:function (p_tag: integer):integer; stdcall;
+    m_firstHook: boolean;
+    tagproc: function(p_tag: integer): integer;
+    stdcall;
     oldWndProc, newWndProc: pointer;
   public
     init: boolean;
     // используется для клавиатурного хука
-    m_showlegend:boolean;
+    m_showlegend: boolean;
   private
     procedure CreateSubSignals;
     procedure createWndProc;
@@ -47,9 +47,10 @@ type
     // надо бы создавать в интерфейсном потоке
     procedure CreateFrm;
     Procedure WndProc(var Msg: TMessage);
-    function Connect(const app: IDispatch): Integer; safecall;
-    function Disconnect: Integer; safecall;
-    function NotifyPlugin(what: Integer; var param: OleVariant): Integer;safecall;
+    function Connect(const app: IDispatch): integer; safecall;
+    function Disconnect: integer; safecall;
+    function NotifyPlugin(what: integer; var param: OleVariant): integer;
+      safecall;
   end;
 
 var
@@ -64,7 +65,7 @@ implementation
 uses ComServ;
 
 const
-  c_wpservicepack_tag=100002;
+  c_wpservicepack_tag = 100002;
   vbEmpty = 0;
   vbNull = 1;
   vbInteger = 2;
@@ -87,7 +88,7 @@ const
   GROPT_SHOWLEGEND = $0200;
 
 var
-  c_vers :string = 'Скомпилирован 06.09.17';
+  c_vers: string = 'Скомпилирован 06.09.17';
 
 var
   // Событие загрузки файла ((5 shl 16) or 1)
@@ -97,19 +98,18 @@ var
   // происходит по событию выполнения алгbitmоритма
   ID_NotifyEvent: cardinal;
 
-
 procedure TServicePlg.createWndProc;
 begin
   mainwnd := WINPOS.mainwnd;
   newWndProc := MakeObjectInstance(WndProc);
-  oldWndProc := pointer(SetWindowLong(mainwnd, gwl_wndProc, cardinal(newWndProc)));
+  oldWndProc := pointer(SetWindowLong(mainwnd, gwl_wndProc,
+      cardinal(newWndProc)));
 end;
-
 
 procedure TServicePlg.CreateWndHook;
 var
-  StartHookProc: function(switch: boolean; hMainProg: hwnd): Integer stdcall;
-  res: Integer;
+  StartHookProc: function(switch: boolean; hMainProg: hwnd): integer stdcall;
+  res: integer;
   str: string;
 begin
   str := startDir + '\' + DllName;
@@ -118,48 +118,47 @@ begin
   begin
     // регестрируем свой тип сообщения в системе
     WM_KeyHOOK := RegisterWindowMessage('WM_OburecKeyHook');
-    logmessage('TServicePlg_WM_OburecKeyHook='+inttostr(WM_KeyHOOK));
     // получаем указатель на необходимую процедуру
     StartHookProc := GetProcAddress(HLib, 'SetHook');
-    tagproc:=GetProcAddress(HLib, 'SetTag');
+    tagproc := GetProcAddress(HLib, 'SetTag');
     res := StartHookProc(true, mainwnd);
-    res:=tagproc(-1);
+    logmessage('TServicePlg_MainWnd=' + inttostr(mainwnd));
+    res := tagproc(-1);
     if res <> 0 then
     begin
-      m_firstHook:=false;
+      m_firstHook := false;
       // oldwndproc:=pointer(res);
     end
     else
     begin
-      m_firstHook:=true;
+      m_firstHook := true;
     end;
 
   end;
 end;
 
-function TServicePlg.Connect(const app: IDispatch): Integer;
+function TServicePlg.Connect(const app: IDispatch): integer;
 var
   hbmp, hbmp2: cardinal;
   date: tdatetime;
   str: string;
 begin
   startDir := extractfiledir(Application.ExeName) + '\plugins\WPExtPack\';
-  g_logFile:=clogfile.create(startDir+'log.txt', ';');
+  g_logFile := clogfile.create(startDir + 'log.txt', ';');
   init := false;
   WINPOS := app as IWinPOS;
   g_ServicePlg := self;
-  // создаем оконную процедуру
-  createWndProc;
+
   // создаем клавиатурный хук
 {$IFDEF DEBUG}
-{$else}
-  //g_logFile.addInfoMes('TServicePlg.WndProc_'+' Mess:'+'Release');
+{$ELSE}
+  // g_logFile.addInfoMes('TServicePlg.WndProc_'+' Mess:'+'Release');
+  createWndProc;
   CreateWndHook;
 {$ENDIF}
-
   ID_NotifyEvent := 9 shl 16 + 1;
   date := now;
-  c_vers:='Скомпилирован ' + datetostr(now);
+  c_vers := 'Скомпилирован ' + datetostr(now);
   str := c_vers;
   Result := 0;
 end;
@@ -170,101 +169,100 @@ begin
 
 end;
 
-function TServicePlg.Disconnect: Integer;
+function TServicePlg.Disconnect: integer;
 var
-  StartHookProc: function(switch: boolean; hMainProg: hwnd): Integer stdcall;
+  StartHookProc: function(switch: boolean; hMainProg: hwnd): integer stdcall;
 begin
 
   Result := 0;
-  SetWindowLong(mainwnd, gwl_wndProc, Integer(oldWndProc));
+  SetWindowLong(mainwnd, gwl_wndProc, integer(oldWndProc));
   // удаляем клавиатурный хук
   if HLib > HINSTANCE_ERROR then
   begin
-    StartHookProc := GetProcAddress(HLib, 'SetHook');
     // освобождаем библиотеку
     StartHookProc(false, mainwnd);
     FreeLibrary(HLib);
   end;
-  if g_logFile<>nil then
+  if g_logFile <> nil then
   begin
     g_logFile.destroy;
-    g_logFile:=nil;
+    g_logFile := nil;
   end;
 end;
 
-procedure SigCloud(s:iwpsignal; line:integer);
+procedure SigCloud(s: iwpsignal; line: integer);
 var
-  prop:string;
+  prop: string;
 begin
-  prop:=s.GetProperty('.cloud');
-  if prop='1' then
+  prop := s.GetProperty('.cloud');
+  if prop = '1' then
   begin
     setLineCloud(line);
   end;
 end;
 
-procedure SigNullPoly(s:iwpsignal; line:integer);
+procedure SigNullPoly(s: iwpsignal; line: integer);
 var
-  prop:string;
+  prop: string;
 begin
-  prop:=s.GetProperty('.nullpoly');
-  if prop='1' then
+  prop := s.GetProperty('.nullpoly');
+  if prop = '1' then
   begin
     setLineNullPoly(line);
   end;
 end;
 
-procedure SigHist(s:iwpsignal; line:integer);
+procedure SigHist(s: iwpsignal; line: integer);
 var
-  prop:string;
+  prop: string;
 begin
-  prop:=s.GetProperty('.gist');
-  if prop='1' then
+  prop := s.GetProperty('.gist');
+  if prop = '1' then
   begin
     setLineHist(line);
   end;
 end;
 
-procedure SigFlags(s:iwpsignal; line:integer);
+procedure SigFlags(s: iwpsignal; line: integer);
 var
-  prop, path:string;
-  flags:iwpsignal;
-  n:iwpnode;
-  i:integer;
-  p2:point2d;
+  prop, path: string;
+  flags: iwpsignal;
+  n: iwpnode;
+  i: integer;
+  p2: point2d;
 begin
-  prop:=s.GetProperty('Flags');
-  if prop<>'' then
+  prop := s.GetProperty('Flags');
+  if prop <> '' then
   begin
-    n:=findNode(s);
-    path:=iwpnode(n.Parent).AbsolutePath+'/Flags/'+prop;
-    flags:=getISignalByPath(path);
-    for I := 0 to flags.size-1 do
+    n := findNode(s);
+    path := iwpnode(n.Parent).AbsolutePath + '/Flags/' + prop;
+    flags := getISignalByPath(path);
+    for i := 0 to flags.size - 1 do
     begin
-      p2.x:=flags.GetX(i);
-      p2.y:=flags.GetY(i);
+      p2.x := flags.GetX(i);
+      p2.y := flags.GetY(i);
       // устанавливаем флаг
-      IWPGraphs(winpos.GraphApi).AddLabel(line,0, p2.x,
-                            ((p2.x-s.MinX)/(s.MaxX-s.MinX)),
-                            5,' ');
+      IWPGraphs(WINPOS.GraphApi).AddLabel(line, 0, p2.x,
+        ((p2.x - s.MinX) / (s.MaxX - s.MinX)), 5, ' ');
     end;
   end;
 end;
 
-function TServicePlg.NotifyPlugin(what: Integer; var param: OleVariant): Integer;
+function TServicePlg.NotifyPlugin(what: integer;
+  var param: OleVariant): integer;
 var
   alg, src: string;
   str1, str2: string;
   strList: tstringlist;
-  i, axtype: Integer;
+  i, axtype: integer;
   // в алгоритм передается несколько сигналов
   double: boolean;
 
   pvar: array of variant;
-  hgraph, haxis, hline: Integer;
+  hgraph, haxis, hline: integer;
 
   isig, linesig: iwpsignal;
-  hword:cardinal;
+  hword: cardinal;
 begin
   Result := 0;
   if not InPlugunCode then
@@ -274,7 +272,7 @@ begin
       try
         if (what <> 131071) and (what <> 196607) then
         begin
-          hword:=HIWORD(what);
+          hword := HIWORD(what);
           // what = $1006 then  ADD_LINE нотификация о добавлении линии на график
           if what = 268828673 then
           // if (what = 270073857) or (what=268828673) or (what=269352961) then
@@ -287,13 +285,13 @@ begin
               // pvar[1].lVal;
               hgraph := pvar[1];
               haxis := pvar[2];
-              isig:=FindSignal(str1);
+              isig := FindSignal(str1);
               // ищем hline по сигналу
               for i := 0 to IWPGraphs(WP.GraphApi).GetLineCount(hgraph) - 1 do
               begin
                 hline := IWPGraphs(WP.GraphApi).GetLine(hgraph, i);
                 linesig := iwpsignal(IWPGraphs(WP.GraphApi).GetSignal(hline));
-                if isig.Instance=linesig.Instance then
+                if isig.Instance = linesig.Instance then
                 begin
                   break
                 end
@@ -304,7 +302,7 @@ begin
               SigNullPoly(isig, hline);
               SigHist(isig, hline);
               SigFlags(isig, hline);
-              //Events.CallAllEvents(E_OnAddLine);
+              // Events.CallAllEvents(E_OnAddLine);
             end;
           end;
         end;
@@ -324,7 +322,7 @@ begin
         // DEL_GRAPH удаление графика
         if hword = $1004 then
         begin
-          //cwpGraph(obj).hgraph = param then
+          // cwpGraph(obj).hgraph = param then
           // удалить если динамически читается графика
         end;
         // NODE_RENAMING = 0x101f0001
@@ -336,18 +334,18 @@ begin
         if what = $00070001 then
         begin
           init := true;
-          //mng.doAddNode(param);
+          // mng.doAddNode(param);
         end;
         // NODE_RENAMED = 0x10200001
         if what = $10200001 then
         begin
-          //mng.doRenamedNode(param);
+          // mng.doRenamedNode(param);
         end;
         // del_node
         // if what = 270401537 then
         if what = $101E0001 then
         begin
-          //mng.doDestroyNode(param);
+          // mng.doDestroyNode(param);
         end;
 
         // Событие загрузки файла ((5 shl 16) or 1) или восстановления сеанса
@@ -361,7 +359,7 @@ begin
         end
         else
         // строка описания вызова алгоритма и список сигналов
-        if what = $000F0001 then
+          if what = $000F0001 then
         begin
           str1 := param;
 
@@ -377,12 +375,11 @@ begin
   end;
 end;
 
-
 procedure TServicePlg.CreateSubSignals;
 var
   p2: point2d;
   str, path, savepath: string;
-  i, j, start, endind: Integer;
+  i, j, start, endind: integer;
   sig, parentsig: iwpsignal;
   d: IDispatch;
   // залипуха пока не работает saveusml
@@ -390,10 +387,10 @@ var
   b: boolean;
   n, src: iwpnode;
   f: tinifile;
-  datasize, readed: Integer;
+  datasize, readed: integer;
   fbin1: file;
   data: array of double;
-  m:iwpusml;
+  m: iwpusml;
   parentList: tstringlist;
 begin
   p2 := GetActiveCursorX;
@@ -403,28 +400,28 @@ begin
     if src <> nil then
     begin
       str := src.AbsolutePath;
-      fname:=TrimExt(src.name);
-      path := str + '/'+fname+'_sub_001';
-      d := wp.GetNodeStr(path);
+      fname := TrimExt(src.name);
+      path := str + '/' + fname + '_sub_001';
+      d := WP.GetNodeStr(path);
       while Supports(d, DIID_IWPNode) do
       begin
         path := modname(path, false);
-        d := wp.GetNodeStr(path);
+        d := WP.GetNodeStr(path);
       end;
       for i := 0 to getChildCount(src) - 1 do
       begin
-        sig:=GetChildSignal(src,i);
+        sig := GetChildSignal(src, i);
         start := sig.IndexOf(p2.x);
         endind := sig.IndexOf(p2.y);
         sig := sig.Clone(start, endind - start) as iwpsignal;
-        wp.Link(path, sig.sname, sig);
+        WP.Link(path, sig.sname, sig);
       end;
-      wp.Refresh;
+      WP.Refresh;
 
       sig := nil;
       if isusml(src) then
       begin
-        m:=TypeCastToIWPUSML(src);
+        m := TypeCastToIWPUSML(src);
         dir := extractfiledir(m.FileName) + '\';
         savepath := dir;
         for j := length(path) downto 1 do
@@ -436,7 +433,7 @@ begin
             break;
           end;
         end;
-        wp.SaveUSML(path, savepath);
+        WP.SaveUSML(path, savepath);
       end;
     end;
   end;
@@ -445,90 +442,92 @@ end;
 Procedure TServicePlg.WndProc(var Msg: TMessage);
 
 var
-  opt, g, p, v, ltag:integer;
-  t:double;
+  opt, g, p, v, ltag: integer;
+  t: double;
 begin
   if Msg.Msg = WM_KeyHOOK then
   begin
-    logMessage('TServicePlg_enter');
-    ltag:=tagproc(c_WpServicePack_tag);
-    if ltag=-1 then
+    ltag := tagproc(c_wpservicepack_tag);
+    logmessage('TServicePlg_ltag='+inttostr(ltag));
+    if ltag = -1 then
     begin
-      t:=gettimeinsec;
-      logMessage(floattostr(t-hooktime));
-      if abs(t-hooktime)>0.7 then
+      t := gettimeinsec;
+      logmessage(floattostr(t - hooktime));
+      if abs(t - hooktime) > 0.1 then
       begin
         if (mainwnd = hwnd(Msg.lParam)) then
         begin
-          // добавить замер
+          // добавить замер Alt
           if GetKeyState(VK_Menu) < 0 then
           begin
+            logmessage('TServicePlg_Alt');
             if Msg.wParam = Ord('D') then
             begin
               CreateSubSignals;
             end;
             if Msg.wParam = Ord('T') then
             begin
-
+              logmessage('TServicePlg_T');
             end;
             // перебор типов курсоров
             if Msg.wParam = Ord('3') then
             begin
-              p:=IWPGraphs(wp.GraphApi).ActiveGraphPage;
-              g:=IWPGraphs(wp.GraphApi).ActiveGraph(p);
-              v:=IWPGraphs(WP.GraphAPI).GetCursorType(p);
-              if v<4 then
+              logmessage('TServicePlg_3');
+              p := IWPGraphs(WP.GraphApi).ActiveGraphPage;
+              g := IWPGraphs(WP.GraphApi).ActiveGraph(p);
+              v := IWPGraphs(WP.GraphApi).GetCursorType(p);
+              if v < 4 then
                 inc(v)
               else
-                v:=1;
-              IWPGraphs(WP.GraphAPI).ShowCursor(p, v);
-              IWPGraphs(WP.GraphAPI).invalidate(g);
+                v := 1;
+              IWPGraphs(WP.GraphApi).ShowCursor(p, v);
+              IWPGraphs(WP.GraphApi).invalidate(g);
             end;
             if Msg.wParam = Ord('L') then
             begin
+              logmessage('TServicePlg_L');
               if not m_showlegend then
               begin
-                m_showlegend:=true;
-                p:=IWPGraphs(wp.GraphApi).ActiveGraphPage;
-                g:=IWPGraphs(wp.GraphApi).ActiveGraph(p);
-                IWPGraphs(WP.GraphAPI).SetGraphOpt(g, GROPT_SHOWLEGEND, GROPT_SHOWLEGEND);
+                m_showlegend := true;
+                p := IWPGraphs(WP.GraphApi).ActiveGraphPage;
+                g := IWPGraphs(WP.GraphApi).ActiveGraph(p);
+                IWPGraphs(WP.GraphApi).SetGraphOpt(g, GROPT_SHOWLEGEND, GROPT_SHOWLEGEND);
               end
               else
               begin
-                m_showlegend:=false;
-                p:=IWPGraphs(wp.GraphApi).ActiveGraphPage;
-                g:=IWPGraphs(wp.GraphApi).ActiveGraph(p);
-                IWPGraphs(WP.GraphAPI).SetGraphOpt(g, 0,GROPT_SHOWLEGEND);
+                m_showlegend := false;
+                p := IWPGraphs(WP.GraphApi).ActiveGraphPage;
+                g := IWPGraphs(WP.GraphApi).ActiveGraph(p);
+                IWPGraphs(WP.GraphApi).SetGraphOpt(g, 0, GROPT_SHOWLEGEND);
               end;
             end;
           end;
         end;
-        hooktime:=t;
+        hooktime := t;
       end;
-      logMessage('TServicePlg_exit');
-      tagproc(-1);
+      logmessage('TServicePlg_exit');
     end
     else
     begin
-      if ltag<>c_WpServicePack_tag then
+      if ltag <> c_wpservicepack_tag then
       begin
-        logMessage('TServicePlg_tagproc(-1)');
-        tagproc(-1);
+        logmessage('TServicePlg_tagproc(-1)');
       end;
     end;
+    tagproc(-1);
   end;
   case Msg.Msg of
     WM_KeyDown:
-    begin
+      begin
 
-    end;
+      end;
   end;
   Msg.Result := CallWindowProc(oldWndProc, mainwnd, Msg.Msg, Msg.wParam, Msg.lParam);
 end;
 
 initialization
 
-TAutoObjectFactory.create(ComServer, TServicePlg, CLASS_WPServicePlg, ciMultiInstance,
-  tmApartment);
+TAutoObjectFactory.create(ComServer, TServicePlg, CLASS_WPServicePlg,
+  ciMultiInstance, tmApartment);
 
 end.

@@ -7,7 +7,10 @@ AppMutex=plgControlCyclogramMutex
 DefaultDirName={pf}\Mera\Recorder\plugins
 DefaultGroupName=Mera
 UninstallDisplayIcon={app}\plgControlCyclogram.dll
-OutputDir=output
+
+
+;OutputDir=output
+OutputDir=\\Fserv\e\MERA\WORKS\дях\со\Skripnik\soft\recorder\ControlCyclogram\
 OutputBaseFilename=plgControlCyclogram-installer
 
 [Types]

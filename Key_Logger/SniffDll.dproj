@@ -2,7 +2,7 @@
 		<PropertyGroup>
 			<ProjectGuid>{318BB9E7-228C-4D49-AA68-360F37DEF2B1}</ProjectGuid>
 			<MainSource>SniffDll.dpr</MainSource>
-			<Config Condition="'$(Config)'==''">Release</Config>
+			<Config Condition="'$(Config)'==''">Debug</Config>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<ProjectVersion>12.0</ProjectVersion>
 		</PropertyGroup>
