@@ -1,6 +1,6 @@
 inherited GrmsSrcFrame: TGrmsSrcFrame
-  Width = 856
-  Height = 498
+  Width = 1301
+  Height = 588
   Constraints.MinHeight = 359
   Constraints.MinWidth = 342
   ExplicitHeight = 359
@@ -40,17 +40,17 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
     Caption = #1040#1083#1075#1086#1088#1080#1090#1084
   end
   inherited AlgNameEdit: TEdit
-    Width = 834
+    Width = 1279
   end
   inherited OptsEdit: TEdit
     Top = 69
-    Width = 834
+    Width = 1279
     ExplicitTop = 69
   end
   object OutChannelName: TEdit
     Left = 10
     Top = 248
-    Width = 833
+    Width = 1278
     Height = 24
     Anchors = [akLeft, akTop, akRight]
     Enabled = False
@@ -67,8 +67,8 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
   end
   object SpmPan: TPanel
     Left = 0
-    Top = 292
-    Width = 856
+    Top = 382
+    Width = 1301
     Height = 206
     Align = alBottom
     TabOrder = 4
@@ -199,7 +199,7 @@ inherited GrmsSrcFrame: TGrmsSrcFrame
       TabOrder = 7
     end
     object ResTypeRG: TRadioGroup
-      Left = 647
+      Left = 1092
       Top = 1
       Width = 208
       Height = 204

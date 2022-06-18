@@ -181,13 +181,20 @@ end;
 
 procedure TGrmsSrcFrame.PercentCBClick(Sender: TObject);
 begin
-  if PercentCB.Checked then
+  if trackingCB.Checked then
   begin
-    PercentCB.Caption:='Полоса b1*F1...b2*F1';
+    if PercentCB.Checked then
+    begin
+      PercentCB.Caption:='Полоса b1*F1...b2*F1';
+    end
+    else
+    begin
+      PercentCB.Caption:='Полоса (F1-b1)...(F1+b2)';
+    end;
   end
   else
   begin
-    PercentCB.Caption:='Полоса (F1-b1)...(F1+b2)';
+    PercentCB.Caption:='Полоса b1...b2';
   end;
   updateOptsStr;
 end;

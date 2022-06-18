@@ -40,6 +40,7 @@ type
     procedure BandsMenuClick(Sender: TObject);
     procedure AlgLVCustomDrawItem(Sender: TCustomListView; Item: TListItem;
       State: TCustomDrawState; var DefaultDraw: Boolean);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     m_frameList:tstringlist;
     m_init:boolean;
@@ -286,6 +287,12 @@ destructor TAlgFrm.destroy;
 begin
   m_frameList.Destroy;
   inherited;
+end;
+
+procedure TAlgFrm.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  if g_algMng<>nil then
+    g_algMng.Events.CallAllEvents(E_OnChangeAlgCfg);
 end;
 
 procedure TAlgFrm.FormShow(Sender: TObject);

@@ -27,7 +27,7 @@
 			<BRCC_IncludePath>..\..\..\sharedUtils\utils\lists;$(BRCC_IncludePath)</BRCC_IncludePath>
 			<DesignOnlyPackage>true</DesignOnlyPackage>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
-			<DCC_DependencyCheckOutputName>S:\Users\Public\Documents\RAD Studio\7.0\Bpl\GlPackage.bpl</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>C:\Users\Public\Documents\RAD Studio\7.0\Bpl\GlPackage.bpl</DCC_DependencyCheckOutputName>
 			<GenDll>true</GenDll>
 			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
 			<GenPackage>true</GenPackage>

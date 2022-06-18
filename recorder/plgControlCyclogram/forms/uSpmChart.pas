@@ -108,7 +108,6 @@ type
     procedure DblClick(Sender: TObject);
     procedure doCursorMove(sender:tobject);
     procedure doOnZoom(sender:tobject);
-    procedure doChangeCfg(sender:tobject);
     procedure doKeyDown(sender:tobject; var Key: Word;  Shift: TShiftState);
     procedure FormClick(Sender: TObject);
     function  DblCursor: cDoubleCursor;
@@ -119,7 +118,9 @@ type
     // применить все настройки
     procedure UpdateOpts;
     procedure clearTagsInfo;
+
     function TagInfo(i: integer): TSpmTagInfo;
+
     function addAlg(a: cbasealgcontainer):TSpmTagInfo; overload;
     function addAlg(str: string):TSpmTagInfo; overload;
 
@@ -166,6 +167,7 @@ type
     procedure doDestroyForms; override;
     procedure CreateEvents;
     procedure DestroyEvents;
+    procedure doChangeCfg(sender:tobject);
     procedure doChangeRState(Sender: TObject);
     procedure doChangeAlgProps(Sender: TObject);
     procedure doStart;
@@ -627,24 +629,6 @@ begin
   a_pIni.WriteBool(str, 'ShowAlarms', ShowAlarms);
 end;
 
-procedure TSpmChart.doChangeCfg(sender:tobject);
-var
-  i: integer;
-  ti: TSpmTagInfo;
-  p: cpage;
-  d: cDoubleCursor;
-  ax:cdrawobj;
-begin
-  for i := 0 to m_tagslist.Count - 1 do
-  begin
-    ti := TagInfo(i);
-    if not ti.m_initGraph then
-    begin
-      InitGraphs(ti);
-    end;
-  end;
-end;
-
 
 procedure TSpmChart.SpmChartInit(Sender: TObject);
 var
@@ -1096,6 +1080,7 @@ begin
   begin
     ti := TagInfo(i);
     spm := ti.m_spm;
+    if spm=nil then continue;
     for j := 0 to ti.flags.Count - 1 do
     begin
       l := cTextLabel(ti.flags.Items[j]);
@@ -1346,7 +1331,6 @@ end;
 procedure TSpmChart.createEvents;
 begin
   spmChart.OBJmNG.Events.AddEvent('SpmChart_OnZoom', E_OnZoom, doOnZoom);
-  spmChart.OBJmNG.Events.AddEvent('SpmChart_OnLeaveCfg', E_OnChangeCfg, doChangeCfg);
 end;
 
 
@@ -1364,6 +1348,7 @@ begin
       initevents:=true;
       addplgevent('cSpmFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
       g_algMng.Events.AddEvent('SpmChart_SpmSetProps',e_OnSetAlgProperties,doChangeAlgProps);
+      g_algMng.Events.AddEvent('SpmChart_OnLeaveCfg', E_OnChangeAlgCfg, doChangeCfg);
     end;
   end;
 end;
@@ -1372,7 +1357,10 @@ procedure cSpmFactory.DestroyEvents;
 begin
   removeplgEvent(doChangeRState, c_RC_DoChangeRCState);
   if g_algMng<>nil then
+  begin
     g_algMng.Events.removeEvent(doChangeRState, e_OnSetAlgProperties);
+    g_algMng.Events.removeEvent(doChangeCfg, E_OnChangeCfg);
+  end;
 end;
 
 destructor cSpmFactory.destroy;
@@ -1404,6 +1392,62 @@ begin
       if ti.m_spm=sender then
       begin
         ti.DoUpdateSpm;
+      end;
+    end;
+  end;
+end;
+
+
+procedure cSpmFactory.doChangeCfg(sender:tobject);
+var
+  i, k: integer;
+  ti: TSpmTagInfo;
+  p: cpage;
+  d: cDoubleCursor;
+  ax:cdrawobj;
+  a:cbaseobj;
+  j: Integer;
+  b:boolean;
+
+  sChart:TSpmChart;
+begin
+  for I := 0 to Count - 1 do
+  begin
+    sChart:=TSpmChart(getfrm(i));
+    for k := 0 to sChart.m_tagslist.Count - 1 do
+    begin
+      ti := sChart.TagInfo(k);
+      b:=false;
+      for j := 0 to g_algMng.Count - 1 do
+      begin
+        a:=g_algMng.getobj(j);
+        if ti.m_spm=a then
+        begin
+          b:=true;
+          break;
+        end;
+      end;
+      if not b then
+      begin
+        // отписываемся от алгоритма
+        ti.m_spm:=nil;
+      end;
+    end;
+    for k := 0 to sChart.m_tagslist.Count - 1 do
+    begin
+      ti := sChart.TagInfo(k);
+      if not ti.m_initGraph then
+      begin
+        sChart.InitGraphs(ti);
+      end;
+    end;
+    for k := sChart.m_tagslist.Count - 1 downto 0 do
+    begin
+      ti := sChart.TagInfo(k);
+      if ti.m_spm=nil then
+      begin
+        ti.destroy;
+        sChart.m_tagslist.Delete(k);
       end;
     end;
   end;

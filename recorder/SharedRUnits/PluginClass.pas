@@ -170,6 +170,7 @@ type
   protected
   end;
 
+function RStatePlay: boolean;
   // получить ссылку на транслятор сообщений notifyProcessor
 function GetNP(name: string): cNonifyProcessor;
 procedure AddPlgEvent(ename: string; etype: cardinal; e: tNotifyEvent);
@@ -207,6 +208,16 @@ implementation
 
 uses
   uCreateComponents;
+
+function RStatePlay: boolean;
+begin
+  // result:=TExtRecorderPack(GPluginInstance).FIRecorder.CheckState(RS_VIEW or RS_REC);
+  result := not g_IR.CheckState(RS_stop);
+  if TExtRecorderPack(GPluginInstance).beforestop then
+    result := false;
+end;
+
+
 
 procedure logMessage(str: string);
 begin
@@ -291,7 +302,7 @@ begin
     PN_SHOWINFO:
       begin
         pMsgInfo := pointer(a_dwData);
-        ProcessShowVersionInfo(pMsgInfo);
+        //ProcessShowVersionInfo(pMsgInfo);
       end;
     PN_RCLOADCONFIG:
       begin
@@ -551,7 +562,7 @@ begin
     PN_SHOWINFO:
       begin
         pMsgInfo := pointer(a_dwData);
-        ProcessShowVersionInfo(pMsgInfo);
+        //ProcessShowVersionInfo(pMsgInfo);
       end;
     PN_CUSTOM_BUTTON_CLICK:
       begin
@@ -701,8 +712,8 @@ begin
   m_FrmSync.Show;
   m_FrmSync.Close;
   m_FrmSync.HandleNeeded;
-  createComponents(m_CompMng);
 
+  createComponents(m_CompMng);
   // LoadConfName;
   result := true; // завершено успешно
 

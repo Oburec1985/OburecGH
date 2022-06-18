@@ -193,8 +193,6 @@ function Check_outputTag(t: itag): boolean;
 function getRConfig: string;
 // рекордер в настройке
 function RStateConfig: boolean;
-// рекордер в состоянии измерения
-function RStatePlay: boolean;
 function RStateStop: boolean;
 // рекордер в состоянии записи
 function RStateRec: boolean;
@@ -277,8 +275,6 @@ const
 
 implementation
 
-uses
-  pluginclass;
 
 // uMBaseControl;
 
@@ -435,7 +431,7 @@ var
   id: tagid;
   refcount: integer;
 begin
-  if t = nil then
+  if p_t = nil then
   begin
     result := cTag.create;
   end
@@ -764,14 +760,6 @@ begin
     result := res
   else
     result := '';
-end;
-
-function RStatePlay: boolean;
-begin
-  // result:=TExtRecorderPack(GPluginInstance).FIRecorder.CheckState(RS_VIEW or RS_REC);
-  result := not g_IR.CheckState(RS_stop);
-  if TExtRecorderPack(GPluginInstance).beforestop then
-    result := false;
 end;
 
 function RStateStop: boolean;

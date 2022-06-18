@@ -199,10 +199,24 @@ type
     destructor destroy; override;
   end;
 
+  cAlgConfig = class
+  public
+    clType:tClass;
+  private
+    m_str:string;
+    // список подписанных алгоритмов
+    m_childs: tlist;
+  public
+    property str:string read m_str write m_str;
+    constructor create(cl:TClass);
+    destructor destroy;
+  end;
+
   cBaseAlg = class(cBaseAlgContainer)
   protected
     m_inpTags: tstringlist;
     m_outTags: tstringlist;
+    m_config:cAlgConfig;
   protected
     procedure doOnStart; override;
     procedure destroyTagsList;
@@ -233,26 +247,6 @@ type
 
   cSrcAlg = class(cBaseAlgContainer);
 
-  cAlgCfg  = class
-  private
-    fcfgStr:string;
-    fname:string;
-    fpars:tstringlist;
-    // список алгоритмов подписаных на конфиг
-    algs:tlist;
-  protected
-    procedure setCfg(s:string);
-    function getCfg:string;
-    procedure setName(s:string);
-    function getName:string;
-  public
-    constructor create;
-    destructor destroy;
-    property Cfg:string read getCfg write setCfg;
-    property name:string read getName write setName;
-  end;
-
-
   cAlgMng = class(cBaseObjMng)
   public
     // привязки тегов к ГХ. ключ - имя тега, объект - ГХ
@@ -265,7 +259,7 @@ type
     // список TTagBandPair
     m_TagBandPairList: TTagBandPairList;
     // список настроек алгоритмов
-    m_cfgList:TStringlist;
+    m_cfgList:Tlist;
   protected
     function getplace(str: string): TPlace;
     // происходит при переходе в просмотр/запись
@@ -294,7 +288,11 @@ type
     function getAH(i: integer): cAHgrad; overload;
     function getAH(p_name: string): cAHgrad; overload;
     function newAH(name: string): cAHgrad;
-    procedure clearahlist;
+    procedure clearAHlist;
+
+    function getCfg(i: integer): cAlgConfig;
+    function newCfg(name: string): cAlgConfig;
+    procedure clearCfgList;
 
     procedure AddAHName(tagname: string; AHGrad: cAHgrad);
     procedure DelAHNames(AHGrad: cAHgrad);
@@ -318,10 +316,9 @@ const
   c_rate = 1;
   e_OnSetAlgProperties = $00002000;
   e_OnUpdateSrcData = $00004000;
+  // событие когда вручную через форму поменяли алгоритмы
+  E_OnChangeAlgCfg = $00008000;
   c_debugAlg = false;
-
-
-
 
 var
   g_algMng: cAlgMng;
@@ -745,6 +742,8 @@ begin
   m_bands := tstringlist.create;
   m_places := TPlaces.create;
   m_TagBandPairList := TTagBandPairList.create;
+
+  m_cfgList:=TList.Create;
 end;
 
 destructor cAlgMng.destroy;
@@ -1934,40 +1933,16 @@ begin
   setlength(m_points, s);
 end;
 
-{ cAlgCfg }
-
-constructor cAlgCfg.create;
+{ cAlgConfig }
+constructor cAlgConfig.create(cl:TClass);
 begin
-  fpars:=TStringList.Create;
-  algs:=tlist.Create;
+  clType:=cl;
+  m_childs:=TList.Create;
 end;
 
-destructor cAlgCfg.destroy;
+destructor cAlgConfig.destroy;
 begin
-  algs.Destroy;
-
-  ClearParsResult(fpars);
-  fpars.Destroy;
-end;
-
-function cAlgCfg.getCfg: string;
-begin
-  result:=fcfgStr;
-end;
-
-procedure cAlgCfg.setCfg(s: string);
-begin
-  fcfgStr:=s;
-end;
-
-function cAlgCfg.getName: string;
-begin
-  result:=fname;
-end;
-
-procedure cAlgCfg.setName(s: string);
-begin
-  fname:=s;
+  m_childs.destroy;
 end;
 
 end.

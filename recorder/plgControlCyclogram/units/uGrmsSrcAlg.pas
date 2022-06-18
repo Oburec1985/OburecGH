@@ -236,10 +236,10 @@ end;
 
 function cGrmsSrcAlg.TahoTracking: boolean;
 begin
-  if m_Taho.tag=nil then
-    result:=false
-  else
-    result:=m_TahoTracking;
+  //if m_Taho.tag=nil then
+  //  result:=false
+  //else
+  result:=m_TahoTracking;
 end;
 
 procedure cGrmsSrcAlg.doEndEvalBlock(sender: tobject);
@@ -305,6 +305,7 @@ end;
 
 procedure cGrmsSrcAlg.LoadObjAttributes(xmlNode: txmlNode; mng: tobject);
 begin
+  //LoadTags(xmlNode);
   inherited;
 end;
 
@@ -317,7 +318,7 @@ begin
   tnode := node.FindNode('InTag');
   if tnode <> nil then
   begin
-    t := loadTag(tnode, t);
+    t := loadTag(tnode, m_inTag);
     setinptag(t);
   end;
 
@@ -326,6 +327,13 @@ begin
   begin
     t := loadTag(tnode, m_Taho);
     setTahoTag(t);
+  end;
+
+  tnode := node.FindNode('OutTag');
+  if tnode <> nil then
+  begin
+    m_outTag := loadTag(tnode, m_outTag);
+    updateOutChan;
   end;
 end;
 
@@ -339,6 +347,9 @@ begin
 
   tnode := node.NodeNew('InTaho');
   saveTag(m_Taho, tnode);
+
+  tnode := node.NodeNew('OutTag');
+  saveTag(m_outTag, tnode);
 end;
 
 function cGrmsSrcAlg.ready: boolean;
@@ -516,8 +527,7 @@ begin
       end;
     end;
   end;
-
-  updateOutChan;
+  //updateOutChan;
 end;
 
 function cGrmsSrcAlg.GetProperties: string;
@@ -716,20 +726,25 @@ begin
   begin
     if inTag.tag <> nil then
     begin
-      ecm;
-      m_outTag := cTag.create;
-      updatedx;
-      outfreq := 1 / fdX;
-      m_outTag.tag := createVectorTagR8(genTagName, outfreq, false, false, false);
-      // m_outTag.tag := createScalar(genTagName, false);
-      if not FAILED(m_outTag.tag.QueryInterface(IBlockAccess, bl)) then
+      if m_outTag = nil then
       begin
-        m_outTag.block := bl;
-        bl := nil;
+        ecm;
+        m_outTag := cTag.create;
+        updatedx;
+        outfreq := 1 / fdX;
+        //                                                     cfgWriteble
+        m_outTag.tag := createVectorTagR8(genTagName, outfreq, true,
+                                          false, false);
+        // m_outTag.tag := createScalar(genTagName, false);
+        if not FAILED(m_outTag.tag.QueryInterface(IBlockAccess, bl)) then
+        begin
+          m_outTag.block := bl;
+          bl := nil;
+        end;
+        addOutTag(m_outTag);
+        updateBuff;
+        lcm;
       end;
-      addOutTag(m_outTag);
-      updateBuff;
-      lcm;
     end;
   end;
 end;
@@ -746,9 +761,9 @@ begin
   if m_outTag <> nil then
   begin
     ecm;
-    str := lpcstr(StrToAnsi(genTagName));
-    m_outTag := OutputTag[0];
-    m_outTag.tag.SetName(str);
+    // str := lpcstr(StrToAnsi(genTagName));
+    // m_outTag := OutputTag[0];
+    // m_outTag.tag.SetName(str);
     // updatedx;
     m_outTag.tag.SetFreq(1 / fdX);
     m_outTag.block := nil;
