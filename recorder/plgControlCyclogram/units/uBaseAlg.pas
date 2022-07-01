@@ -203,10 +203,13 @@ type
   public
     clType:tClass;
   private
-    m_str:string;
+    m_cfgList:TList;
+    m_str,
+    m_name:string;
     // список подписанных алгоритмов
     m_childs: tlist;
   public
+    property name:string read m_name write m_name;
     property str:string read m_str write m_str;
     constructor create(cl:TClass);
     destructor destroy;
@@ -258,6 +261,7 @@ type
     m_places: TPlaces;
     // список TTagBandPair
     m_TagBandPairList: TTagBandPairList;
+
     // список настроек алгоритмов
     m_cfgList:Tlist;
   protected
@@ -291,7 +295,7 @@ type
     procedure clearAHlist;
 
     function getCfg(i: integer): cAlgConfig;
-    function newCfg(name: string): cAlgConfig;
+    function newCfg(name: string; cltype:TClass): cAlgConfig;
     procedure clearCfgList;
 
     procedure AddAHName(tagname: string; AHGrad: cAHgrad);
@@ -726,6 +730,7 @@ begin
   Clear;
 end;
 
+
 constructor cAlgMng.create;
 begin
   inherited;
@@ -1032,6 +1037,31 @@ function cAlgMng.newAH(name: string): cAHgrad;
 begin
   result := cAHgrad.create(name);
   m_AHList.add(result);
+end;
+
+function cAlgMng.getCfg(i: integer): cAlgConfig;
+begin
+  result:=cAlgConfig(m_cfgList.Items[i]);
+end;
+
+function cAlgMng.newCfg(name: string; cltype:TClass): cAlgConfig;
+begin
+  result:=cAlgConfig.create(cltype);
+  result.name:=name;
+  result.m_cfgList:=m_cfgList;
+  m_cfgList.Add(result);
+end;
+
+procedure cAlgMng.clearCfgList;
+var
+  c:cAlgConfig;
+  I: Integer;
+begin
+  for I := m_cfgList.Count - 1 downto 0 do
+  begin
+    c:=getCfg(i);
+    c.destroy;
+  end;
 end;
 
 procedure cAlgMng.clearahlist;
@@ -1941,7 +1971,22 @@ begin
 end;
 
 destructor cAlgConfig.destroy;
+var
+  I: Integer;
+  c:cAlgConfig;
 begin
+  if m_cfgList<>nil then
+  begin
+    for I := 0 to m_cfgList.Count - 1 do
+    begin
+      c:=cAlgConfig(m_cfgList.Items[i]);
+      if c=self then
+      begin
+        m_cfgList.Delete(i);
+        break;
+      end;
+    end;
+  end;
   m_childs.destroy;
 end;
 
