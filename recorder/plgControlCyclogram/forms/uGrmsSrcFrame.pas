@@ -166,7 +166,6 @@ begin
   if ChannelCB.text<>'' then
   begin
     addParam(m_pars, 'Channel', ChannelCB.text);
-    OutChannelName.text:=ChannelCB.text+'_Grms';
   end;
   if TahoCB.text<>'' then
   begin
@@ -238,7 +237,7 @@ begin
   p:=PercentCB.OnClick;
   PercentCB.OnClick:=nil;
   str:=GetParsValue(m_pars, 'Percent');
-  if str<>'' then
+  if checkstr(str) then
     PercentCB.checked := strtobool(str);
   PercentCB.OnClick:=p;
 
@@ -256,11 +255,15 @@ begin
   setcomboboxitem(GetParsValue(m_pars, 'Channel'), ChannelCB);
   if ChannelCB.ItemIndex > 0 then
   begin
-    str := GetParsValue(m_pars, 'OutChannel');
     t := ChannelCB.gettag(ChannelCB.ItemIndex);
     FsEdit.FloatNum := t.GetFreq;
     OutChannelName.text:=ChannelCB.text+'_Grms';
   end;
+
+  str := GetParsValue(m_pars, 'OutChannel');
+  if checkstr(str) then
+    OutChannelName.text:=str;
+
 
   setcomboboxitem(GetParsValue(m_pars, 'Taho'), TahoCB);
   TrackingCB.Checked:=StrToBoolDef(GetParsValue(m_pars, 'TahoTracking'), true);

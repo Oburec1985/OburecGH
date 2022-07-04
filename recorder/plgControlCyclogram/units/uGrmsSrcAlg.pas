@@ -68,7 +68,6 @@ type
     procedure setTahoTag(t: cTag); overload;
     procedure setinptag(t: itag); overload;
     procedure setinptag(t: cTag); overload;
-    procedure LoadObjAttributes(xmlNode: txmlNode; mng: tobject); override;
     procedure saveTags(node: txmlNode); override;
     procedure LoadTags(node: txmlNode); override;
     function ready: boolean; override;
@@ -303,11 +302,6 @@ begin
 
 end;
 
-procedure cGrmsSrcAlg.LoadObjAttributes(xmlNode: txmlNode; mng: tobject);
-begin
-  //LoadTags(xmlNode);
-  inherited;
-end;
 
 procedure cGrmsSrcAlg.LoadTags(node: txmlNode);
 var
@@ -333,6 +327,7 @@ begin
   if tnode <> nil then
   begin
     m_outTag := loadTag(tnode, m_outTag);
+    m_properties:=addParamF (m_properties, 'OutChannel', m_outTag.tagname);
     updateOutChan;
   end;
 end;
@@ -534,7 +529,8 @@ function cGrmsSrcAlg.GetProperties: string;
 begin
   if m_properties = '' then
     m_properties := C_GrmsSrcOpts;
-  result := m_properties;
+  m_properties:=addParamF (m_properties, 'OutChannel', m_outTag.tagname);
+  result:=m_properties;
 end;
 
 procedure cGrmsSrcAlg.SetProperties(str: string);
@@ -687,6 +683,8 @@ begin
 
   if m_spm <> nil then
     m_spm.Properties := spmstr;
+
+  m_properties:=str;
 end;
 
 function cGrmsSrcAlg.genTagName: string;

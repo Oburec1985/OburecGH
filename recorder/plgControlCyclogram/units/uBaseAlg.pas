@@ -726,6 +726,11 @@ begin
   Clear;
 end;
 
+procedure cAlgMng.clearCfgList;
+begin
+
+end;
+
 constructor cAlgMng.create;
 begin
   inherited;
@@ -1034,6 +1039,11 @@ begin
   m_AHList.add(result);
 end;
 
+function cAlgMng.newCfg(name: string): cAlgConfig;
+begin
+
+end;
+
 procedure cAlgMng.clearahlist;
 var
   i: integer;
@@ -1088,6 +1098,11 @@ begin
   end;
 end;
 
+
+function cAlgMng.getCfg(i: integer): cAlgConfig;
+begin
+
+end;
 
 function cAlgMng.getplace(str: string): TPlace;
 begin
