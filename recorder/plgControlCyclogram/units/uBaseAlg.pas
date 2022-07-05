@@ -730,13 +730,11 @@ begin
   Clear;
 end;
 
-<<<<<<< HEAD
+
 procedure cAlgMng.clearCfgList;
 begin
 
 end;
-=======
->>>>>>> 1c36bdd2e162f8db724ff0124ecc11647d7a81bd
 
 constructor cAlgMng.create;
 begin
@@ -1046,11 +1044,8 @@ begin
   m_AHList.add(result);
 end;
 
-<<<<<<< HEAD
-function cAlgMng.newCfg(name: string): cAlgConfig;
-begin
 
-=======
+
 function cAlgMng.getCfg(i: integer): cAlgConfig;
 begin
   result:=cAlgConfig(m_cfgList.Items[i]);
@@ -1062,19 +1057,6 @@ begin
   result.name:=name;
   result.m_cfgList:=m_cfgList;
   m_cfgList.Add(result);
-end;
-
-procedure cAlgMng.clearCfgList;
-var
-  c:cAlgConfig;
-  I: Integer;
-begin
-  for I := m_cfgList.Count - 1 downto 0 do
-  begin
-    c:=getCfg(i);
-    c.destroy;
-  end;
->>>>>>> 1c36bdd2e162f8db724ff0124ecc11647d7a81bd
 end;
 
 procedure cAlgMng.clearahlist;
@@ -1129,12 +1111,6 @@ begin
       exit;
     end;
   end;
-end;
-
-
-function cAlgMng.getCfg(i: integer): cAlgConfig;
-begin
-
 end;
 
 function cAlgMng.getplace(str: string): TPlace;
