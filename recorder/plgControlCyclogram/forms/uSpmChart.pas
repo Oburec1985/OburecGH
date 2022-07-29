@@ -13,6 +13,7 @@ uses
   PluginClass, ImgList, uChart, uGrmsSrcAlg, uPhaseAlg, usetlist, ufreqband,
   uHardwareMath,
   tags,
+  uBaseAlgBands,
   uSpm;
 
 type

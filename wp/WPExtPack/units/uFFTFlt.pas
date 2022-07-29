@@ -180,7 +180,7 @@ end;
 
 procedure TExtFFTflt.EvalCurve(s:iwpsignal; df:double);
 var
-  I,j, ind,
+  I,j, ind, irange,
   i1, i2: Integer;
   b:point3d;
   str:string;
@@ -202,6 +202,11 @@ begin
     // расчет индексов границ полос и установка К в curvescales
     i1:=Ceil(b.x/df);
     i2:=trunc(b.y/df);
+    irange:=m_fftCount shr 1;
+    if i2>irange-1 then
+    begin
+      i2:=irange-1;
+    end;
     //d:=frac(i1);
     for j := i1 to i2 do
     begin
@@ -265,11 +270,11 @@ begin
     end;
     fft_al_d_sse(m_data, TCmxArray_d(cmplx_al.p), fftPlan);
     // расчет зафильтрованого спектра
-    MultArrays(m_curveScales,TCmxArray_d(cmplx_al.p),TCmxArray_d(fltcmplx_al.p));
+    MultArrays(m_curveScales, TCmxArray_d(cmplx_al.p), TCmxArray_d(fltcmplx_al.p));
     // расчет нормированного исходного спектра (до фильтрации)
-    //k:=1/(fftPlan.PCount shr 1);
-    //MULT_SSE_al_cmpx_d(tCmxArray_d(cmplx_al.p), k);
-    //EvalSpmMag(TCmxArray_d(cmplx_al.p), TDoubleArray(MagFFTarray.p));
+    // k:=1/(fftPlan.PCount shr 1);
+    // MULT_SSE_al_cmpx_d(tCmxArray_d(cmplx_al.p), k);
+    // EvalSpmMag(TCmxArray_d(cmplx_al.p), TDoubleArray(MagFFTarray.p));
     // сохраняем комплексный спектр
     // SaveSignalXY('/Signals/results',s1.sname+'_'+'SpmR',s1.sname+'_'+'SpmIm', tCmxArray_d(cmplx_al.p),(1/(s1.deltaX))/m_fftCount, 0);
     // сохраняем амплитудный спектр

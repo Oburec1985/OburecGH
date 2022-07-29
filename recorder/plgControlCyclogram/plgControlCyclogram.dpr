@@ -192,7 +192,8 @@ uses
   uTimeIntervalAlg in 'units\uTimeIntervalAlg.pas',
   uExcel in '..\..\sharedUtils\utils\reports\excel\uExcel.pas',
   uConfirmDlg in '..\..\sharedUtils\forms\uConfirmDlg.pas' {ConfirmFmr},
-  uEditPropertiesFrm in 'forms\uEditPropertiesFrm.pas' {EditPropertiesFrm};
+  uEditPropertiesFrm in 'forms\uEditPropertiesFrm.pas' {EditPropertiesFrm},
+  uBaseAlgBands in 'uBaseAlgBands.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

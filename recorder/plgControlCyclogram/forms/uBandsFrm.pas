@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, uTagsListFrame, ComCtrls, uBtnListView, StdCtrls, ExtCtrls, Buttons, uBaseAlg,
   uRCFunc, uCommontypes, DCL_MYOWN, uCommonMath, uRcCtrls, Grids, tags, uComponentServises,
-  uStringGridExt, VirtualTrees, uVTServices, ImgList, activex, ulogfile;
+  uStringGridExt, VirtualTrees, uVTServices, ImgList, activex, ulogfile,
+  uBaseAlgBands;
 
 type
 
@@ -41,6 +42,7 @@ type
     ChannelsGB: TGroupBox;
     PairTV: TVTree;
     Splitter1: TSplitter;
+    TrayIcon1: TTrayIcon;
     procedure AddBandBtnClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure PropSGKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);

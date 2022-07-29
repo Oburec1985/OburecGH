@@ -17,55 +17,28 @@ object AlgFrm: TAlgFrm
   PixelsPerInch = 120
   TextHeight = 16
   object Splitter1: TSplitter
-    Left = 273
+    Left = 593
     Top = 0
     Height = 840
     Color = clBackground
     ParentColor = False
+    ExplicitLeft = 273
   end
   object TagsListPanel: TPanel
     Left = 0
     Top = 0
-    Width = 273
+    Width = 593
     Height = 840
     Align = alLeft
     TabOrder = 0
-    object AlgLV: TBtnListView
-      Left = 1
-      Top = 1
-      Width = 271
-      Height = 783
-      Align = alClient
-      Columns = <
-        item
-          Caption = #1048#1084#1103
-          Width = 51
-        end
-        item
-          Caption = #1058#1080#1087
-          Width = 51
-        end>
-      MultiSelect = True
-      RowSelect = True
-      TabOrder = 0
-      ViewStyle = vsReport
-      OnCustomDrawItem = AlgLVCustomDrawItem
-      OnKeyDown = AlgLVKeyDown
-      OnSelectItem = AlgLVSelectItem
-      BtnCol = 0
-      QuoteColumnBtnClick = False
-      QuoteColumnDblClick = False
-      DrawColorBox = False
-      ChangeTextColor = False
-      Editable = False
-    end
     object Panel1: TPanel
       Left = 1
       Top = 784
-      Width = 271
+      Width = 591
       Height = 55
       Align = alBottom
-      TabOrder = 1
+      TabOrder = 0
+      ExplicitWidth = 271
       object AddAlgBtn: TSpeedButton
         Left = 4
         Top = 7
@@ -266,29 +239,91 @@ object AlgFrm: TAlgFrm
         OnClick = UpdateAlgBtnClick
       end
     end
+    object AlgsTV: TVTree
+      Left = 1
+      Top = 1
+      Width = 271
+      Height = 783
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Align = alLeft
+      Header.AutoSizeIndex = 0
+      Header.Font.Charset = DEFAULT_CHARSET
+      Header.Font.Color = clWindowText
+      Header.Font.Height = -11
+      Header.Font.Name = 'Tahoma'
+      Header.Font.Style = []
+      Header.MainColumn = -1
+      NodeDataSize = 32
+      ScrollBarOptions.AlwaysVisible = True
+      TabOrder = 1
+      TreeOptions.SelectionOptions = [toMultiSelect]
+      ExplicitLeft = 5
+      ExplicitTop = 0
+      Columns = <>
+    end
+    object AlgLV: TBtnListView
+      Left = 272
+      Top = 1
+      Width = 320
+      Height = 783
+      Align = alClient
+      Columns = <
+        item
+          Caption = #1048#1084#1103
+          Width = 51
+        end
+        item
+          Caption = #1058#1080#1087
+          Width = 51
+        end>
+      MultiSelect = True
+      RowSelect = True
+      TabOrder = 2
+      ViewStyle = vsReport
+      OnCustomDrawItem = AlgLVCustomDrawItem
+      OnKeyDown = AlgLVKeyDown
+      OnSelectItem = AlgLVSelectItem
+      BtnCol = 0
+      QuoteColumnBtnClick = False
+      QuoteColumnDblClick = False
+      DrawColorBox = False
+      ChangeTextColor = False
+      Editable = False
+      ExplicitLeft = 592
+      ExplicitWidth = 0
+    end
   end
   object AlgPropPanel: TPanel
-    Left = 276
+    Left = 596
     Top = 0
-    Width = 760
+    Width = 440
     Height = 840
     Align = alClient
     TabOrder = 1
+    ExplicitLeft = 276
+    ExplicitWidth = 760
     object Splitter2: TSplitter
-      Left = 756
+      Left = 436
       Top = 1
       Height = 838
       Align = alRight
       Color = clBackground
       ParentColor = False
+      ExplicitLeft = 756
     end
     object AlgsPageControl: TPageControl
       Left = 1
       Top = 1
-      Width = 755
+      Width = 435
       Height = 838
       Align = alClient
       TabOrder = 0
+      ExplicitLeft = 6
+      ExplicitTop = 2
+      ExplicitWidth = 755
     end
   end
   object BottomPanel: TPanel
@@ -342,8 +377,7 @@ object AlgFrm: TAlgFrm
         Top = 126
         Width = 249
         Height = 712
-        ExplicitLeft = 7
-        ExplicitTop = 133
+        ExplicitTop = 126
         ExplicitWidth = 249
         ExplicitHeight = 712
       end

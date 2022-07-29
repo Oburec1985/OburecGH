@@ -14,7 +14,7 @@ uses
   uFillFctFrame,
   uPeakFactorFrame,
   uIntegralAlgFrame,
-  uRCFunc, Menus, uBandsFrm;
+  uRCFunc, Menus, uBandsFrm, VirtualTrees, uVTServices;
 
 type
   TAlgFrm = class(TForm)
@@ -22,7 +22,6 @@ type
     AlgPropPanel: TPanel;
     BottomPanel: TPanel;
     Splitter1: TSplitter;
-    AlgLV: TBtnListView;
     Panel1: TPanel;
     AddAlgBtn: TSpeedButton;
     UpdateAlgBtn: TSpeedButton;
@@ -31,6 +30,8 @@ type
     TagsListFrame1: TTagsListFrame;
     MainMenu1: TMainMenu;
     BandsMenu: TMenuItem;
+    AlgsTV: TVTree;
+    AlgLV: TBtnListView;
     procedure AddAlgBtnClick(Sender: TObject);
     procedure AlgLVKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormShow(Sender: TObject);
@@ -61,8 +62,29 @@ implementation
 
 {$R *.dfm}
 
-{ TAlgFrm }
+function getSelectAlgCfg(tv: TVTree): cAlgConfig;
+var
+  n, parentnode: pvirtualnode;
+  d: pnodedata;
+begin
+  result := nil;
+  n := GetSelectNode(tv);
+  if n = nil then
+  begin
+    n:=tv.GetFirst(true);
+  end;
+  if n=nil then exit;
+  d := tv.getnodedata(n);
+  result := cBaseObj(d.data);
+  if result is cBaseAlg then
+  begin
+    parentnode := n.Parent;
+    d := tv.getnodedata(parentnode);
+    result := cBaseObj(d.data);
+  end;
+end;
 
+{TAlgFrm}
 procedure TAlgFrm.AddAlgBtnClick(Sender: TObject);
 var
   a:cbasealgcontainer;
@@ -70,7 +92,11 @@ var
   li:tlistitem;
   t:itag;
   showalg:boolean;
+
+  cfg:cAlgConfig;
 begin
+  cfg:=getSelectAlgCfg(AlgsTV);
+
   for I := 0 to TagsListFrame1.TagsLV.SelCount - 1 do
   begin
     if i=0 then
@@ -85,6 +111,10 @@ begin
     end;
     t:=itag(li.Data);
     a:=addAlgFrm.CreateAlg(showalg);
+    if cfg=nil then
+    begin
+      g_algMng.newCfg(a.ClassName,a.ClassType);
+    end;
     if a<>nil then
     begin
       a.setfirstchannel(t);
@@ -98,6 +128,7 @@ begin
         a.name:=modname(a.name, false);
       end;
       g_algMng.Add(a, nil);
+
     end
     else
     begin
