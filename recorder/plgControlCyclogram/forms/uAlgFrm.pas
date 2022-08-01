@@ -128,7 +128,6 @@ begin
         a.name:=modname(a.name, false);
       end;
       g_algMng.Add(a, nil);
-
     end
     else
     begin

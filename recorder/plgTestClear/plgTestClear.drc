@@ -8,15 +8,12 @@
   resources were bound to the produced executable.
 */
 
-#define NativeXml_sSignificantDigitsOutOfRange 65216
-#define NativeXml_sMissingDataInBinaryStream 65217
-#define NativeXml_sErrorCalcStreamLength 65218
-#define NativeXml_sXmlOwnerNotAssigned 65219
-#define NativeXml_sXmlParentNotAssigned 65220
-#define NativeXml_sCopyFromOnlyWithXmlNode 65221
-#define JConsts_sChangeJPGSize 65222
-#define JConsts_sJPEGError 65223
-#define JConsts_sJPEGImageFile 65224
+#define NativeXml_sMissingDataInBinaryStream 65216
+#define NativeXml_sErrorCalcStreamLength 65217
+#define NativeXml_sXmlOwnerNotAssigned 65218
+#define JConsts_sChangeJPGSize 65219
+#define JConsts_sJPEGError 65220
+#define JConsts_sJPEGImageFile 65221
 #define NativeXml_sUnknownEncoding 65232
 #define NativeXml_sUnsupportedEncoding 65233
 #define NativeXml_sDefaultCharUsed 65234
@@ -25,14 +22,14 @@
 #define NativeXml_sIllegalEndTag 65237
 #define NativeXml_sQuoteCharExpected 65238
 #define NativeXml_sCannotAddNode 65239
-#define NativeXml_sCannotAddAttribute 65240
-#define NativeXml_sCannotSetName 65241
-#define NativeXml_sCannotSetValue 65242
-#define NativeXml_sCannotManipulate 65243
-#define NativeXml_sBeginEndMismatch 65244
-#define NativeXml_sLevelMismatch 65245
-#define NativeXml_sRootElementNotDefined 65246
-#define NativeXml_sNonDefaultChardata 65247
+#define NativeXml_sCannotSetName 65240
+#define NativeXml_sCannotSetValue 65241
+#define NativeXml_sCannotManipulate 65242
+#define NativeXml_sBeginEndMismatch 65243
+#define NativeXml_sLevelMismatch 65244
+#define NativeXml_sRootElementNotDefined 65245
+#define NativeXml_sNonDefaultChardata 65246
+#define NativeXml_sSignificantDigitsOutOfRange 65247
 #define Consts_SDockZoneNotFound 65248
 #define Consts_SDockZoneHasNoCtl 65249
 #define Consts_SDockZoneVersionConflict 65250
@@ -323,12 +320,9 @@
 #define SysConst_SOverflow 65535
 STRINGTABLE
 BEGIN
-	NativeXml_sSignificantDigitsOutOfRange,	"significant digits out of range"
 	NativeXml_sMissingDataInBinaryStream,	"missing data in binary stream"
 	NativeXml_sErrorCalcStreamLength,	"error while calculating streamlength"
 	NativeXml_sXmlOwnerNotAssigned,	"XML owner is not assigned"
-	NativeXml_sXmlParentNotAssigned,	"XML parent is not assigned"
-	NativeXml_sCopyFromOnlyWithXmlNode,	"CopyFrom can only be used with TXmlNode descendants"
 	JConsts_sChangeJPGSize,	"Cannot change the size of a JPEG image"
 	JConsts_sJPEGError,	"JPEG error #%d"
 	JConsts_sJPEGImageFile,	"JPEG Image File"
@@ -340,7 +334,6 @@ BEGIN
 	NativeXml_sIllegalEndTag,	"illegal end tag (\"%s\") at line %d (streampos %d)"
 	NativeXml_sQuoteCharExpected,	"quote char expected at pos %d"
 	NativeXml_sCannotAddNode,	"cannot add node to this type of element"
-	NativeXml_sCannotAddAttribute,	"cannot add attribute"
 	NativeXml_sCannotSetName,	"cannot set name on this type of element"
 	NativeXml_sCannotSetValue,	"cannot set value on this type of element"
 	NativeXml_sCannotManipulate,	"cannot manipulate nodes in this type of element"
@@ -348,6 +341,7 @@ BEGIN
 	NativeXml_sLevelMismatch,	"level mismatch between subnode \"%s\" and endnode \"%s\" at line %d (pos %d)"
 	NativeXml_sRootElementNotDefined,	"XML root element not defined."
 	NativeXml_sNonDefaultChardata,	"non-default chardata at line %d (pos %d)"
+	NativeXml_sSignificantDigitsOutOfRange,	"significant digits out of range"
 	Consts_SDockZoneNotFound,	" - Dock zone not found"
 	Consts_SDockZoneHasNoCtl,	" - Dock zone has no control"
 	Consts_SDockZoneVersionConflict,	"Error loading dock zone from the stream. Expecting version %d, but found %d."
@@ -640,20 +634,21 @@ END
 
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\Character.res */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\controls.res */
-/* ..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
-/* ..\..\sharedUtils\forms\uGetMngObjForm.dfm */
-/* ..\..\3d\forms\uSelectLoadedObjects.dfm */
-/* ..\..\sharedUtils\utils\./files/res/CURSORS.res */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\buttons.res */
-/* ..\..\3d\forms\uObjCtrFrame.dfm */
-/* ..\..\3d\forms\AnimationControlFrame.dfm */
-/* ..\..\3d\forms\uEditListForm.dfm */
-/* ..\..\3d\forms\SelectObjectsFrame.dfm */
-/* ..\..\3d\forms\uTransformButtons.dfm */
-/* ..\..\3d\forms\uTrfrmToolsFrame.dfm */
-/* forms\uGLFrmEdit.dfm */
-/* forms\uGlFrm.dfm */
-/* ..\SharedRUnits\uFrmSync.dfm */
-/* forms\uExtFrm.dfm */
-/* F:\Oburec\delphi\2011\recorder\plgTestClear\toolbarExtPack.res */
-/* F:\Oburec\delphi\2011\recorder\plgTestClear\plgTestClear.drf */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\dcl_dpk\spin.res */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\forms\uGetMngObjForm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uExtFrm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uSelectLoadedObjects.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\utils\./files/res/CURSORS.res */
+/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uObjCtrFrame.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uEditListForm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\3d\forms\SelectObjectsFrame.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\3d\forms\AnimationControlFrame.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uTransformButtons.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uTrfrmToolsFrame.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uGlFrm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uGLFrmEdit.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\uFrmSync.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\toolbarExtPack.res */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\plgTestClear.drf */

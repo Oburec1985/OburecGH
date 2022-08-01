@@ -348,6 +348,20 @@ begin
     strint := inttostr(i);
     srcKey := 's1' + '_' + strint;
     v := GetParsValue(slist, srcKey);
+    if (v = '') or (v = '_') then
+    begin
+      if length(strint)=1 then
+      begin
+        strint:='_00' + strint;
+        srcKey := 's1' + strint;
+      end
+      else
+      begin
+        strint:='_0' + strint;
+        srcKey := 's1' +strint;
+      end;
+      v := GetParsValue(slist, srcKey);
+    end;
     if (v <> '') and (v <> '_') then
     begin
       S := mng.GetWPSignal(v);
@@ -356,7 +370,7 @@ begin
       if S.tube <> nil then
       begin
         tube := S.tube;
-        srcKey := 'd1' + '_' + strint;
+        srcKey := 'd1'+ strint;
         v := GetParsValue(slist, srcKey);
         if (v <> '') and (v <> '_') then
         begin
