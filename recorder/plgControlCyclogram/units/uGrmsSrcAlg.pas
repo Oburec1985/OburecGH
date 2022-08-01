@@ -529,7 +529,8 @@ function cGrmsSrcAlg.GetProperties: string;
 begin
   if m_properties = '' then
     m_properties := C_GrmsSrcOpts;
-  m_properties:=addParamF (m_properties, 'OutChannel', m_outTag.tagname);
+  if m_outTag<>nil then
+    m_properties:=addParamF (m_properties, 'OutChannel', m_outTag.tagname);
   result:=m_properties;
 end;
 
