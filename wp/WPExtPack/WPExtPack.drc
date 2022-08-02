@@ -8,74 +8,74 @@
   resources were bound to the produced executable.
 */
 
-#define GIFConsts_sProgressConverting 64800
-#define GIFConsts_sProgressRendering 64801
-#define GIFConsts_sProgressCopying 64802
-#define GIFConsts_sProgressOptimizing 64803
-#define GIFConsts_sScreenSizeExceeded 64816
-#define GIFConsts_sNoColorTable 64817
-#define GIFConsts_sBadPixelCoordinates 64818
-#define GIFConsts_sInvalidPixelFormat 64819
-#define GIFConsts_sBadDimension 64820
-#define GIFConsts_sNoDIB 64821
-#define GIFConsts_sInvalidStream 64822
-#define GIFConsts_sInvalidColor 64823
-#define GIFConsts_sInvalidBitSize 64824
-#define GIFConsts_sEmptyColorMap 64825
-#define GIFConsts_sEmptyImage 64826
-#define GIFConsts_sMultipleGCE 64827
-#define GIFConsts_sNoPalette 64828
-#define GIFConsts_sGIFImageFile 64829
-#define GIFConsts_sProgressLoading 64830
-#define GIFConsts_sProgressSaving 64831
-#define GIFConsts_sGIFErrorSaveEmpty 64832
-#define GIFConsts_sBadSignature 64833
-#define GIFConsts_sScreenBadColorSize 64834
-#define GIFConsts_sImageBadColorSize 64835
-#define GIFConsts_sUnknownExtension 64836
-#define GIFConsts_sBadExtensionLabel 64837
-#define GIFConsts_sOutOfMemDIB 64838
-#define GIFConsts_sDecodeTooFewBits 64839
-#define GIFConsts_sDecodeCircular 64840
-#define GIFConsts_sBadTrailer 64841
-#define GIFConsts_sBadExtensionInstance 64842
-#define GIFConsts_sBadBlockSize 64843
-#define GIFConsts_sBadBlock 64844
-#define GIFConsts_sUnsupportedClass 64845
-#define GIFConsts_sInvalidData 64846
-#define GIFConsts_sBadSize 64847
-#define pnglang_EPNGUnknownInterlaceText 64848
-#define pnglang_EPNGCannotAssignChunkText 64849
-#define pnglang_EPNGUnexpectedEndText 64850
-#define pnglang_EPNGNoImageDataText 64851
-#define pnglang_EPNGCannotAddChunkText 64852
-#define pnglang_EPNGCannotAddInvalidImageText 64853
-#define pnglang_EPNGCouldNotLoadResourceText 64854
-#define pnglang_EPNGOutMemoryText 64855
-#define pnglang_EPNGCannotChangeTransparentText 64856
-#define pnglang_EPNGHeaderNotPresentText 64857
-#define pnglang_EInvalidNewSize 64858
-#define pnglang_EInvalidSpec 64859
-#define GIFConsts_sOutOfData 64860
-#define GIFConsts_sTooManyColors 64861
-#define GIFConsts_sBadColorIndex 64862
-#define GIFConsts_sBadColorIndexFixed 64863
+#define GIFConsts_sProgressRendering 64800
+#define GIFConsts_sProgressCopying 64801
+#define GIFConsts_sProgressOptimizing 64802
+#define GDIPicture_GDIPERRMSG 64803
+#define GIFConsts_sNoColorTable 64816
+#define GIFConsts_sBadPixelCoordinates 64817
+#define GIFConsts_sInvalidPixelFormat 64818
+#define GIFConsts_sBadDimension 64819
+#define GIFConsts_sNoDIB 64820
+#define GIFConsts_sInvalidStream 64821
+#define GIFConsts_sInvalidColor 64822
+#define GIFConsts_sInvalidBitSize 64823
+#define GIFConsts_sEmptyColorMap 64824
+#define GIFConsts_sEmptyImage 64825
+#define GIFConsts_sMultipleGCE 64826
+#define GIFConsts_sNoPalette 64827
+#define GIFConsts_sGIFImageFile 64828
+#define GIFConsts_sProgressLoading 64829
+#define GIFConsts_sProgressSaving 64830
+#define GIFConsts_sProgressConverting 64831
+#define GIFConsts_sBadSignature 64832
+#define GIFConsts_sScreenBadColorSize 64833
+#define GIFConsts_sImageBadColorSize 64834
+#define GIFConsts_sUnknownExtension 64835
+#define GIFConsts_sBadExtensionLabel 64836
+#define GIFConsts_sOutOfMemDIB 64837
+#define GIFConsts_sDecodeTooFewBits 64838
+#define GIFConsts_sDecodeCircular 64839
+#define GIFConsts_sBadTrailer 64840
+#define GIFConsts_sBadExtensionInstance 64841
+#define GIFConsts_sBadBlockSize 64842
+#define GIFConsts_sBadBlock 64843
+#define GIFConsts_sUnsupportedClass 64844
+#define GIFConsts_sInvalidData 64845
+#define GIFConsts_sBadSize 64846
+#define GIFConsts_sScreenSizeExceeded 64847
+#define pnglang_EPNGCannotAddChunkText 64848
+#define pnglang_EPNGCannotAddInvalidImageText 64849
+#define pnglang_EPNGCouldNotLoadResourceText 64850
+#define pnglang_EPNGOutMemoryText 64851
+#define pnglang_EPNGCannotChangeTransparentText 64852
+#define pnglang_EPNGHeaderNotPresentText 64853
+#define pnglang_EInvalidNewSize 64854
+#define pnglang_EInvalidSpec 64855
+#define JConsts_sChangeJPGSize 64856
+#define JConsts_sJPEGError 64857
+#define JConsts_sJPEGImageFile 64858
+#define GIFConsts_sOutOfData 64859
+#define GIFConsts_sTooManyColors 64860
+#define GIFConsts_sBadColorIndex 64861
+#define GIFConsts_sBadColorIndexFixed 64862
+#define GIFConsts_sGIFErrorSaveEmpty 64863
 #define JclResources_RsEFunctionNotFound 64864
-#define JConsts_sChangeJPGSize 64865
-#define JConsts_sJPEGError 64866
-#define JConsts_sJPEGImageFile 64867
-#define GDIPicture_GDIPERRMSG 64868
-#define pnglang_EPngInvalidCRCText 64869
-#define pnglang_EPNGInvalidIHDRText 64870
-#define pnglang_EPNGMissingMultipleIDATText 64871
-#define pnglang_EPNGZLIBErrorText 64872
-#define pnglang_EPNGInvalidPaletteText 64873
-#define pnglang_EPNGInvalidFileHeaderText 64874
-#define pnglang_EPNGIHDRNotFirstText 64875
-#define pnglang_EPNGSizeExceedsText 64876
-#define pnglang_EPNGUnknownPalEntryText 64877
-#define pnglang_EPNGUnknownCriticalChunkText 64878
-#define pnglang_EPNGUnknownCompressionText 64879
+#define pnglang_EPngInvalidCRCText 64865
+#define pnglang_EPNGInvalidIHDRText 64866
+#define pnglang_EPNGMissingMultipleIDATText 64867
+#define pnglang_EPNGZLIBErrorText 64868
+#define pnglang_EPNGInvalidPaletteText 64869
+#define pnglang_EPNGInvalidFileHeaderText 64870
+#define pnglang_EPNGIHDRNotFirstText 64871
+#define pnglang_EPNGSizeExceedsText 64872
+#define pnglang_EPNGUnknownPalEntryText 64873
+#define pnglang_EPNGUnknownCriticalChunkText 64874
+#define pnglang_EPNGUnknownCompressionText 64875
+#define pnglang_EPNGUnknownInterlaceText 64876
+#define pnglang_EPNGCannotAssignChunkText 64877
+#define pnglang_EPNGUnexpectedEndText 64878
+#define pnglang_EPNGNoImageDataText 64879
 #define JclResources_RsIntelCacheDescrE2 64880
 #define JclResources_RsIntelCacheDescrE3 64881
 #define JclResources_RsIntelCacheDescrE4 64882
@@ -284,8 +284,8 @@
 #define JclResources_RsPeImg_05 65085
 #define JclResources_RsPeImg_06 65086
 #define JclResources_RsPeImg_07 65087
-#define VirtualTrees_SClipboardFailed 65088
-#define VirtualTrees_SCannotSetUserData 65089
+#define NativeXml_sErrorCalcStreamLength 65088
+#define NativeXml_sXmlOwnerNotAssigned 65089
 #define JclResources_RsEReplacementChar 65090
 #define JclResources_RsDateConversion 65091
 #define JclResources_RsUnknownFunctionAt 65092
@@ -300,38 +300,38 @@
 #define JclResources_RsFileUtilsValueNotFound 65101
 #define JclResources_RsCreateFileMapping 65102
 #define JclResources_RsCreateFileMappingView 65103
-#define NativeXml_sCannotSetValue 65104
-#define NativeXml_sCannotManipulate 65105
-#define NativeXml_sBeginEndMismatch 65106
-#define NativeXml_sLevelMismatch 65107
-#define NativeXml_sRootElementNotDefined 65108
-#define NativeXml_sNonDefaultChardata 65109
-#define NativeXml_sSignificantDigitsOutOfRange 65110
-#define NativeXml_sMissingDataInBinaryStream 65111
-#define NativeXml_sErrorCalcStreamLength 65112
-#define NativeXml_sXmlOwnerNotAssigned 65113
-#define VirtualTrees_SWrongMoveError 65114
-#define VirtualTrees_SWrongStreamFormat 65115
-#define VirtualTrees_SWrongStreamVersion 65116
-#define VirtualTrees_SStreamTooSmall 65117
-#define VirtualTrees_SCorruptStream1 65118
-#define VirtualTrees_SCorruptStream2 65119
+#define NativeXml_sUnsupportedEncoding 65104
+#define NativeXml_sDefaultCharUsed 65105
+#define NativeXml_sIllegalTag 65106
+#define NativeXml_sUnsupportedTag 65107
+#define NativeXml_sIllegalEndTag 65108
+#define NativeXml_sQuoteCharExpected 65109
+#define NativeXml_sCannotAddNode 65110
+#define NativeXml_sCannotSetName 65111
+#define NativeXml_sCannotSetValue 65112
+#define NativeXml_sCannotManipulate 65113
+#define NativeXml_sBeginEndMismatch 65114
+#define NativeXml_sLevelMismatch 65115
+#define NativeXml_sRootElementNotDefined 65116
+#define NativeXml_sNonDefaultChardata 65117
+#define NativeXml_sSignificantDigitsOutOfRange 65118
+#define NativeXml_sMissingDataInBinaryStream 65119
 #define OleConst_SInvalidLinkSource 65120
 #define OleConst_SCannotBreakLink 65121
 #define OleConst_SPropDlgCaption 65122
 #define OleConst_SInvalidLicense 65123
 #define OleConst_SNotLicensed 65124
 #define OleConst_sNoRunningObject 65125
-#define NativeXml_sPrematureEnd 65126
-#define NativeXml_sUnknownEncoding 65127
-#define NativeXml_sUnsupportedEncoding 65128
-#define NativeXml_sDefaultCharUsed 65129
-#define NativeXml_sIllegalTag 65130
-#define NativeXml_sUnsupportedTag 65131
-#define NativeXml_sIllegalEndTag 65132
-#define NativeXml_sQuoteCharExpected 65133
-#define NativeXml_sCannotAddNode 65134
-#define NativeXml_sCannotSetName 65135
+#define VirtualTrees_SWrongMoveError 65126
+#define VirtualTrees_SWrongStreamFormat 65127
+#define VirtualTrees_SWrongStreamVersion 65128
+#define VirtualTrees_SStreamTooSmall 65129
+#define VirtualTrees_SCorruptStream1 65130
+#define VirtualTrees_SCorruptStream2 65131
+#define VirtualTrees_SClipboardFailed 65132
+#define VirtualTrees_SCannotSetUserData 65133
+#define NativeXml_sPrematureEnd 65134
+#define NativeXml_sUnknownEncoding 65135
 #define ComStrs_sRichEditLoadFail 65136
 #define ComStrs_sRichEditSaveFail 65137
 #define ComStrs_sUDAssociated 65138
@@ -734,11 +734,10 @@
 #define SysConst_SZeroDivide 65535
 STRINGTABLE
 BEGIN
-	GIFConsts_sProgressConverting,	"Converting"
 	GIFConsts_sProgressRendering,	"Rendering"
 	GIFConsts_sProgressCopying,	"Copying"
 	GIFConsts_sProgressOptimizing,	"Optimizing"
-	GIFConsts_sScreenSizeExceeded,	"Image exceeds Logical Screen size"
+	GDIPicture_GDIPERRMSG,	"Could not allocate memory for image"
 	GIFConsts_sNoColorTable,	"No global or local color table defined"
 	GIFConsts_sBadPixelCoordinates,	"Invalid pixel coordinates"
 	GIFConsts_sInvalidPixelFormat,	"Unsupported PixelFormat"
@@ -754,7 +753,7 @@ BEGIN
 	GIFConsts_sGIFImageFile,	"GIF Image"
 	GIFConsts_sProgressLoading,	"Loading"
 	GIFConsts_sProgressSaving,	"Saving"
-	GIFConsts_sGIFErrorSaveEmpty,	"Cannot save empty GIF"
+	GIFConsts_sProgressConverting,	"Converting"
 	GIFConsts_sBadSignature,	"Invalid GIF signature"
 	GIFConsts_sScreenBadColorSize,	"Invalid number of colors specified in Screen Descriptor"
 	GIFConsts_sImageBadColorSize,	"Invalid number of colors specified in Image Descriptor"
@@ -770,10 +769,7 @@ BEGIN
 	GIFConsts_sUnsupportedClass,	"Object type not supported for operation"
 	GIFConsts_sInvalidData,	"Invalid GIF data"
 	GIFConsts_sBadSize,	"Invalid image size"
-	pnglang_EPNGUnknownInterlaceText,	"This \"Portable Network Graphics\" image uses an unknown interlace scheme which could not be decoded."
-	pnglang_EPNGCannotAssignChunkText,	"The chunks must be compatible to be assigned."
-	pnglang_EPNGUnexpectedEndText,	"This \"Portable Network Graphics\" image is invalid because the decoder found an unexpected end of the file."
-	pnglang_EPNGNoImageDataText,	"This \"Portable Network Graphics\" image contains no data."
+	GIFConsts_sScreenSizeExceeded,	"Image exceeds Logical Screen size"
 	pnglang_EPNGCannotAddChunkText,	"The program tried to add a existent critical chunk to the current image which is not allowed."
 	pnglang_EPNGCannotAddInvalidImageText,	"It's not allowed to add a new chunk because the current image is invalid."
 	pnglang_EPNGCouldNotLoadResourceText,	"The png image could not be loaded from the resource ID."
@@ -782,15 +778,15 @@ BEGIN
 	pnglang_EPNGHeaderNotPresentText,	"This operation is not valid because the current image contains no valid header."
 	pnglang_EInvalidNewSize,	"The new size provided for image resizing is invalid."
 	pnglang_EInvalidSpec,	"The \"Portable Network Graphics\" could not be created because invalid image type parameters have being provided."
+	JConsts_sChangeJPGSize,	"Cannot change the size of a JPEG image"
+	JConsts_sJPEGError,	"JPEG error #%d"
+	JConsts_sJPEGImageFile,	"JPEG Image File"
 	GIFConsts_sOutOfData,	"Premature end of data"
 	GIFConsts_sTooManyColors,	"Color table overflow"
 	GIFConsts_sBadColorIndex,	"Invalid color index"
 	GIFConsts_sBadColorIndexFixed,	"Invalid color index - color map expanded"
+	GIFConsts_sGIFErrorSaveEmpty,	"Cannot save empty GIF"
 	JclResources_RsEFunctionNotFound,	"Function not found: %s.%s"
-	JConsts_sChangeJPGSize,	"Cannot change the size of a JPEG image"
-	JConsts_sJPEGError,	"JPEG error #%d"
-	JConsts_sJPEGImageFile,	"JPEG Image File"
-	GDIPicture_GDIPERRMSG,	"Could not allocate memory for image"
 	pnglang_EPngInvalidCRCText,	"This \"Portable Network Graphics\" image is not valid because it contains invalid pieces of data (crc error)"
 	pnglang_EPNGInvalidIHDRText,	"The \"Portable Network Graphics\" image could not be loaded because one of its main piece of data (ihdr) might be corrupted"
 	pnglang_EPNGMissingMultipleIDATText,	"This \"Portable Network Graphics\" image is invalid because it has missing image parts."
@@ -802,6 +798,10 @@ BEGIN
 	pnglang_EPNGUnknownPalEntryText,	"There is no such palette entry."
 	pnglang_EPNGUnknownCriticalChunkText,	"This \"Portable Network Graphics\" image contains an unknown critical part which could not be decoded."
 	pnglang_EPNGUnknownCompressionText,	"This \"Portable Network Graphics\" image is encoded with an unknown compression scheme which could not be decoded."
+	pnglang_EPNGUnknownInterlaceText,	"This \"Portable Network Graphics\" image uses an unknown interlace scheme which could not be decoded."
+	pnglang_EPNGCannotAssignChunkText,	"The chunks must be compatible to be assigned."
+	pnglang_EPNGUnexpectedEndText,	"This \"Portable Network Graphics\" image is invalid because the decoder found an unexpected end of the file."
+	pnglang_EPNGNoImageDataText,	"This \"Portable Network Graphics\" image contains no data."
 	JclResources_RsIntelCacheDescrE2,	"3rd-level cache: 2 MByte, 16-way set associative, 64 byte line size"
 	JclResources_RsIntelCacheDescrE3,	"3rd-level cache: 4 MByte, 16-way set associative, 64 byte line size"
 	JclResources_RsIntelCacheDescrE4,	"3rd-level cache: 8 MByte, 16-way set associative, 64 byte line size"
@@ -1010,8 +1010,8 @@ BEGIN
 	JclResources_RsPeImg_05,	"Base Relocations"
 	JclResources_RsPeImg_06,	"Debug"
 	JclResources_RsPeImg_07,	"Description"
-	VirtualTrees_SClipboardFailed,	"Clipboard operation failed."
-	VirtualTrees_SCannotSetUserData,	"Cannot set initial user data because there is not enough user data space allocated."
+	NativeXml_sErrorCalcStreamLength,	"error while calculating streamlength"
+	NativeXml_sXmlOwnerNotAssigned,	"XML owner is not assigned"
 	JclResources_RsEReplacementChar,	"Failed to get ANSI replacement character"
 	JclResources_RsDateConversion,	"Error illegal date or time format"
 	JclResources_RsUnknownFunctionAt,	"Unknown function at %s"
@@ -1026,30 +1026,6 @@ BEGIN
 	JclResources_RsFileUtilsValueNotFound,	"The value %s was not found."
 	JclResources_RsCreateFileMapping,	"Failed to create FileMapping"
 	JclResources_RsCreateFileMappingView,	"Failed to create FileMappingView"
-	NativeXml_sCannotSetValue,	"cannot set value on this type of element"
-	NativeXml_sCannotManipulate,	"cannot manipulate nodes in this type of element"
-	NativeXml_sBeginEndMismatch,	"begin and end tag mismatch: \"%s\" and \"%s\" at line %d (pos %d)"
-	NativeXml_sLevelMismatch,	"level mismatch between subnode \"%s\" and endnode \"%s\" at line %d (pos %d)"
-	NativeXml_sRootElementNotDefined,	"XML root element not defined."
-	NativeXml_sNonDefaultChardata,	"non-default chardata at line %d (pos %d)"
-	NativeXml_sSignificantDigitsOutOfRange,	"significant digits out of range"
-	NativeXml_sMissingDataInBinaryStream,	"missing data in binary stream"
-	NativeXml_sErrorCalcStreamLength,	"error while calculating streamlength"
-	NativeXml_sXmlOwnerNotAssigned,	"XML owner is not assigned"
-	VirtualTrees_SWrongMoveError,	"Target node cannot be a child node of the node to be moved."
-	VirtualTrees_SWrongStreamFormat,	"Unable to load tree structure, the format is wrong."
-	VirtualTrees_SWrongStreamVersion,	"Unable to load tree structure, the version is unknown."
-	VirtualTrees_SStreamTooSmall,	"Unable to load tree structure, not enough data available."
-	VirtualTrees_SCorruptStream1,	"Stream data corrupt. A node's anchor chunk is missing."
-	VirtualTrees_SCorruptStream2,	"Stream data corrupt. Unexpected data after node's end position."
-	OleConst_SInvalidLinkSource,	"Cannot link to an invalid source."
-	OleConst_SCannotBreakLink,	"Break link operation is not supported."
-	OleConst_SPropDlgCaption,	"%s Properties"
-	OleConst_SInvalidLicense,	"License information for %s is invalid"
-	OleConst_SNotLicensed,	"License information for %s not found. You cannot use this control in design mode"
-	OleConst_sNoRunningObject,	"Unable to retrieve a pointer to a running object registered with OLE for %s/%s"
-	NativeXml_sPrematureEnd,	"stream terminated prematurely at pos %d"
-	NativeXml_sUnknownEncoding,	"unknown encoding"
 	NativeXml_sUnsupportedEncoding,	"unsupported encoding (%s)"
 	NativeXml_sDefaultCharUsed,	"default char used for codepage substitution"
 	NativeXml_sIllegalTag,	"illegal tag (\"%s\") at pos %d"
@@ -1058,6 +1034,30 @@ BEGIN
 	NativeXml_sQuoteCharExpected,	"quote char expected at pos %d"
 	NativeXml_sCannotAddNode,	"cannot add node to this type of element"
 	NativeXml_sCannotSetName,	"cannot set name on this type of element"
+	NativeXml_sCannotSetValue,	"cannot set value on this type of element"
+	NativeXml_sCannotManipulate,	"cannot manipulate nodes in this type of element"
+	NativeXml_sBeginEndMismatch,	"begin and end tag mismatch: \"%s\" and \"%s\" at line %d (pos %d)"
+	NativeXml_sLevelMismatch,	"level mismatch between subnode \"%s\" and endnode \"%s\" at line %d (pos %d)"
+	NativeXml_sRootElementNotDefined,	"XML root element not defined."
+	NativeXml_sNonDefaultChardata,	"non-default chardata at line %d (pos %d)"
+	NativeXml_sSignificantDigitsOutOfRange,	"significant digits out of range"
+	NativeXml_sMissingDataInBinaryStream,	"missing data in binary stream"
+	OleConst_SInvalidLinkSource,	"Cannot link to an invalid source."
+	OleConst_SCannotBreakLink,	"Break link operation is not supported."
+	OleConst_SPropDlgCaption,	"%s Properties"
+	OleConst_SInvalidLicense,	"License information for %s is invalid"
+	OleConst_SNotLicensed,	"License information for %s not found. You cannot use this control in design mode"
+	OleConst_sNoRunningObject,	"Unable to retrieve a pointer to a running object registered with OLE for %s/%s"
+	VirtualTrees_SWrongMoveError,	"Target node cannot be a child node of the node to be moved."
+	VirtualTrees_SWrongStreamFormat,	"Unable to load tree structure, the format is wrong."
+	VirtualTrees_SWrongStreamVersion,	"Unable to load tree structure, the version is unknown."
+	VirtualTrees_SStreamTooSmall,	"Unable to load tree structure, not enough data available."
+	VirtualTrees_SCorruptStream1,	"Stream data corrupt. A node's anchor chunk is missing."
+	VirtualTrees_SCorruptStream2,	"Stream data corrupt. Unexpected data after node's end position."
+	VirtualTrees_SClipboardFailed,	"Clipboard operation failed."
+	VirtualTrees_SCannotSetUserData,	"Cannot set initial user data because there is not enough user data space allocated."
+	NativeXml_sPrematureEnd,	"stream terminated prematurely at pos %d"
+	NativeXml_sUnknownEncoding,	"unknown encoding"
 	ComStrs_sRichEditLoadFail,	"Failed to Load Stream"
 	ComStrs_sRichEditSaveFail,	"Failed to Save Stream"
 	ComStrs_sUDAssociated,	"%s is already associated with %s"
@@ -1475,12 +1475,12 @@ END
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCursorForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uPageForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjEditForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistForm.dfm */
-/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uGistFrame.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uGistForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendFrame.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
 /* forms\uSaveSimpleMeraFrm.dfm */
 /* ..\..\sharedUtils\forms\uFrmSync.dfm */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\filectrl.res */
@@ -1489,26 +1489,6 @@ END
 /* forms\uEditSignalsRepPropFrn.dfm */
 /* forms\frames\uWPSpmFrame.dfm */
 /* forms\uSpmFrm.dfm */
-/* ..\..\sharedUtils\forms\ulogFrame.dfm */
-/* ..\..\sharedUtils\forms\uJournalForm.dfm */
-/* forms\frames\uIntervalFrame.dfm */
-/* forms\uIntervalFrm.dfm */
-/* forms\uAddScriptItemFrm.dfm */
-/* forms\uEditTubeFrm.dfm */
-/* forms\uTrigsFrm.dfm */
-/* forms\EditSignalPathFrm.dfm */
-/* forms\uGraphMngFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\forms\uSelectIntervalFrm.dfm */
-/* forms\uGenForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\forms\uSelectPathForm.dfm */
-/* .\forms\uTrigFrm.dfm */
-/* ..\..\sharedUtils\utils\TmsPack\advcolorpickerdropdown.res */
-/* ..\..\sharedUtils\utils\TmsPack\asgspin.res */
-/* ..\..\sharedUtils\utils\TmsPack\advgrid.res */
-/* ..\..\sharedUtils\utils\TmsPack\asgres.res */
-/* ..\..\sharedUtils\utils\TmsPack\advmetro.res */
-/* ..\..\sharedUtils\utils\TmsPack\asgfltr.res */
-/* forms\uEditSelsinFrm.dfm */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxInheritError.dfm */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxCtrls.res */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPrintDialog.dfm */
@@ -1533,21 +1513,41 @@ END
 /* forms\frames\uRZDTareFrame.dfm */
 /* forms\uAddRZDDatafrm.dfm */
 /* forms\uRzdFrm.dfm */
-/* forms\uSelsinFrm.dfm */
-/* forms\uKBHMFrm.dfm */
-/* forms\uTrigLvlEditFrm.dfm */
-/* forms\uCyclogramRepFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\forms\uNIIPMTenzopluginForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\forms\uWPProcFrm.dfm */
+/* ..\..\sharedUtils\forms\ulogFrame.dfm */
+/* ..\..\sharedUtils\forms\uJournalForm.dfm */
+/* forms\uAddScriptItemFrm.dfm */
+/* forms\uEditSelsinFrm.dfm */
+/* ..\..\sharedUtils\utils\TmsPack\advcolorpickerdropdown.res */
+/* ..\..\sharedUtils\utils\TmsPack\asgspin.res */
+/* ..\..\sharedUtils\utils\TmsPack\advgrid.res */
+/* ..\..\sharedUtils\utils\TmsPack\asgres.res */
+/* ..\..\sharedUtils\utils\TmsPack\advmetro.res */
+/* ..\..\sharedUtils\utils\TmsPack\asgfltr.res */
+/* forms\uTrigsFrm.dfm */
+/* .\forms\uTrigFrm.dfm */
+/* forms\EditSignalPathFrm.dfm */
+/* forms\uGraphMngFrm.dfm */
+/* forms\uSelectPathForm.dfm */
+/* forms\uGenForm.dfm */
+/* forms\uSelectIntervalFrm.dfm */
+/* forms\frames\uIntervalFrame.dfm */
+/* forms\uIntervalFrm.dfm */
+/* forms\uEditTubeFrm.dfm */
+/* forms\uWPProcFrm.dfm */
+/* forms\uNIIPMTenzopluginForm.dfm */
 /* forms\uCorrectUTS.dfm */
 /* forms\uAddSignalFrm.dfm */
+/* forms\uTrigLvlEditFrm.dfm */
+/* forms\uCyclogramRepFrm.dfm */
+/* forms\uKBHMFrm.dfm */
+/* forms\uSelsinFrm.dfm */
 /* forms\uScriptFrm.dfm */
 /* forms\uRptFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\forms\uExtBalanceSignalsFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\forms\uFFTInverseFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\forms\uFrmHibFltFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\forms\uFFTfltFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\forms\uFindMaxForm.dfm */
+/* forms\uFrmHibFltFrm.dfm */
+/* forms\uFFTInverseFrm.dfm */
+/* forms\uExtBalanceSignalsFrm.dfm */
+/* forms\uFindMaxForm.dfm */
+/* forms\uFFTfltFrm.dfm */
 /* forms\frames\uWPNameFilterFrame.dfm */
 /* forms\uBDIFrm.dfm */
 /* forms\uMNKFrm.dfm */

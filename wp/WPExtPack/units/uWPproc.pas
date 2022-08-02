@@ -4306,7 +4306,9 @@ begin
   if StopTrig <> nil then
     xmlNode.WriteAttributeString('StopTrig', StopTrig.id)
   else
+  begin
     xmlNode.WriteAttributeString('StopTrig', '');
+  end;
 
   xmlNode.WriteAttributeFloat('Length', signalLength);
 end;

@@ -23,6 +23,7 @@ type
 
 
 var
+  g_path:string;
   GlobalData: PGlobalDLLData;
   // ссылка на файл отображения
   MMFHandle: THandle;
@@ -59,18 +60,16 @@ end;
 procedure logstr(str:lpcstr);
 var
   f:TextFile;
-const
-  c_path = 'c:\Program Files (x86)\Mera\WinPOS\PlugIns\WPExtPack\logSniff.txt';
 begin
-  if FileExists(c_path) then
+  if FileExists(g_path) then
   begin
-    Assign(f, c_path);
+    Assign(f, g_path);
     // открываем для записи
     append(f);
   end
   else
   begin
-    AssignFile(f, c_path);
+    AssignFile(f, g_path);
     ReWrite(f);
   end;
   // запись строки во второй файл
@@ -223,6 +222,8 @@ exports
 
 begin
   GlobalData:=nil;
+  //g_path = 'c:\Program Files (x86)\Mera\WinPOS\PlugIns\WPExtPack\logSniff.txt';
+  g_path = getCurrentDir+'logSniff.txt';
   //MessageBox(0, PChar(Application.ExeName), 'Message from keyhook.dll', 0);
   {назначим поцедуру переменной DLLProc}
   // закоментил чтоб не конфликтовало с xnet

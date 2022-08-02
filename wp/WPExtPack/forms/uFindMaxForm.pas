@@ -63,11 +63,15 @@ type
     AddPoint: TSpeedButton;
     DelPoint: TSpeedButton;
     Уровень: TTabSheet;
-    Label1: TLabel;
-    UnitsCB: TComboBox;
     PositiveCB: TCheckBox;
     LvlLabel: TLabel;
     LvlFE: TFloatEdit;
+    AlgTypeCB: TComboBox;
+    Label3: TLabel;
+    UnitsLabel: TLabel;
+    UnitsCB: TComboBox;
+    ThresholdLabel: TLabel;
+    ThresholdE: TFloatEdit;
     procedure SavePathBtnClick(Sender: TObject);
     procedure ExpBtnClick(Sender: TObject);
     procedure NameEditChange(Sender: TObject);
@@ -94,6 +98,7 @@ type
     procedure PositiveCBClick(Sender: TObject);
     procedure DelCurvClick(Sender: TObject);
     procedure cChart1InsertPoint(data, subdata: TObject);
+    procedure AlgTypeCBChange(Sender: TObject);
   public
     eo: TObject;
     mng: cWPObjMng;
@@ -313,6 +318,7 @@ var
   b: tband;
   I: Integer;
 begin
+  props := 'Type=' + AlgTypeCB.ItemIndex;
   props := 'BandCount=' + inttostr(CurvsLB.Items.count) + ';';
   for I := 0 to CurvsLB.Items.count - 1 do
   begin
@@ -340,6 +346,20 @@ begin
   begin
     tband(curband).AddPoint(Xedit.FloatNum, Yedit.FloatNum);
     ShowBandProperties(curband);
+  end;
+end;
+
+procedure TFindMaxForm.AlgTypeCBChange(Sender: TObject);
+begin
+  case AlgTypeCB.ItemIndex of
+    0:
+    begin
+      EditBandGB.Visible:=false;
+    end;
+    1:
+    begin
+      EditBandGB.Visible:=true;
+    end;
   end;
 end;
 
@@ -599,16 +619,26 @@ begin
     exit;
   tab := ';';
   f := tStringList.create;
-  // пишем заголовок
-  s := 'bType;Units;PosRes;pCount;Data';
-  f.Add(s);
-  for I := 0 to CurvsLB.Items.count - 1 do
-  begin
-    s := '';
-    b := tband(CurvsLB.Items.Objects[I]);
-    str:=GetStrFromBand(b);
-    str := str + s+'"';
-    f.Add(str);
+  case AlgTypeCB.ItemIndex of
+    0:
+    begin
+      s := 'Units='+inttostr(UnitsCB.ItemIndex)+';'+'Level='+floattostr(ThresholdE.FloatNum);
+      f.Add(str);
+    end;
+    1:
+    begin
+      // пишем заголовок
+      s := 'bType;Units;PosRes;pCount;Data';
+      f.Add(s);
+      for I := 0 to CurvsLB.Items.count - 1 do
+      begin
+        s := '';
+        b := tband(CurvsLB.Items.Objects[I]);
+        str:=GetStrFromBand(b);
+        str := str + s+'"';
+        f.Add(str);
+      end;
+    end;
   end;
   if not DirectoryExists(extractfiledir(NameEdit.Text)) then
   begin
@@ -684,12 +714,24 @@ begin
   begin
     f := tStringList.create;
     f.LoadFromFile(NameEdit.Text);
-    for I := 1 to f.count - 1 do
+    if pos('Units', f.Strings[0])=1 then
     begin
-      b := GetTBandFromStr(f.Strings[I]);
+      AlgTypeCb.ItemIndex:=0;
+      str:=GetParam(f.Strings[0], 'Units');
+      UnitsCB.ItemIndex:=strtoint(str);
+      str:=GetParam(f.Strings[0], 'Threshold');
+      ThresholdE.FloatNum:=strtofloat(str);
+    end
+    else
+    begin
+      AlgTypeCb.ItemIndex:=1;
+      for I := 1 to f.count - 1 do
+      begin
+        b := GetTBandFromStr(f.Strings[I]);
+      end;
+      CurvsLB.AddItem('Band_' + inttostr(CurvsLB.Items.count), b);
     end;
     f.destroy;
-    CurvsLB.AddItem('Band_' + inttostr(CurvsLB.Items.count), b);
   end;
 end;
 

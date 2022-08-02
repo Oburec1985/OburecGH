@@ -95,6 +95,7 @@ type
     Label6: TLabel;
     Label7: TLabel;
     SyncCursorsCB: TCheckBox;
+    ShowLegendCB: TCheckBox;
     procedure GraphTVGetImageIndexEx(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
       var Ghosted: Boolean; var ImageIndex: Integer;
@@ -697,6 +698,8 @@ begin
       g.LogX:=LogXCB.Checked;
     if ScaleXCB.state<>cbGrayed then
       g.autoscale:=ScaleXCB.Checked;
+    if ShowLegendCB.state<>cbGrayed then
+      g.ShowLegend:=ShowLegendCB.Checked;
 
     // ¬ключение поиска границ отображени€
     if FindIntervalCB.state<>cbGrayed then
@@ -1095,6 +1098,17 @@ begin
     begin
       ScaleXCB.State:=cbUnchecked;
     end;
+
+    ShowLegendCB.Checked:=g.ShowLegend;
+    if ShowLegendCB.Checked then
+    begin
+      ShowLegendCB.State:=cbChecked;
+    end
+    else
+    begin
+      ShowLegendCB.State:=cbUnchecked;
+    end;
+
     // расположение осей
     if g.AXROW then
     begin
@@ -1203,6 +1217,11 @@ begin
       begin
         ScaleXCB.State:= cbGrayed;
       end;
+      if (ShowLegendCB.Checked<>g.ShowLegend) and (ShowLegendCB.State<>cbGrayed) then
+      begin
+        ScaleXCB.State:= cbGrayed;
+      end;
+
       // расположение осей
       if AxisStyleRG.ItemIndex<>-1 then
       begin

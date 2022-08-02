@@ -2,335 +2,502 @@
   Left = 0
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1075#1088#1072#1092#1080#1082#1080
-  ClientHeight = 667
-  ClientWidth = 1264
+  ClientHeight = 900
+  ClientWidth = 1027
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object Splitter1: TSplitter
-    Left = 257
+    Left = 169
     Top = 0
-    Width = 5
-    Height = 600
+    Width = 7
+    Height = 813
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
+    ExplicitLeft = 336
+    ExplicitHeight = 785
   end
   object ActionGB: TGroupBox
     Left = 0
-    Top = 600
-    Width = 1264
-    Height = 67
+    Top = 813
+    Width = 1027
+    Height = 87
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alBottom
     TabOrder = 0
+    ExplicitTop = 785
+    ExplicitWidth = 1653
     DesignSize = (
-      1264
-      67)
+      1027
+      87)
     object OkBtn: TButton
-      Left = 1186
-      Top = 34
-      Width = 75
-      Height = 25
+      Left = 925
+      Top = 44
+      Width = 98
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Anchors = [akTop, akRight]
       Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
       TabOrder = 0
       OnClick = OkBtnClick
+      ExplicitLeft = 1551
     end
   end
   object TabControl: TPageControl
-    Left = 262
+    Left = 176
     Top = 0
-    Width = 614
-    Height = 600
+    Width = 512
+    Height = 813
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     ActivePage = TabSheet1
     Align = alClient
     TabOrder = 1
     OnChange = TabControlChange
     OnEnter = TabControlEnter
+    ExplicitLeft = 343
+    ExplicitWidth = 803
+    ExplicitHeight = 785
     object TabSheet1: TTabSheet
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1043#1088#1072#1092#1080#1082#1080
+      ExplicitLeft = 8
+      ExplicitTop = 24
       DesignSize = (
-        606
-        572)
+        504
+        781)
       object XAxisLabel: TLabel
-        Left = 16
-        Top = 16
-        Width = 32
-        Height = 13
+        Left = 21
+        Top = 21
+        Width = 41
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1054#1089#1100' X:'
       end
       object XminLabel: TLabel
-        Left = 16
-        Top = 40
-        Width = 44
-        Height = 13
+        Left = 21
+        Top = 52
+        Width = 60
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1052#1080#1085#1080#1084#1091#1084
       end
       object XmaxLabel: TLabel
-        Left = 162
-        Top = 40
-        Width = 49
-        Height = 13
+        Left = 212
+        Top = 52
+        Width = 65
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1052#1072#1082#1089#1080#1084#1091#1084
       end
       object UnitsXLabel: TLabel
-        Left = 313
-        Top = 40
-        Width = 45
-        Height = 13
+        Left = 409
+        Top = 52
+        Width = 58
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1045#1076#1080#1085#1080#1094#1099
       end
       object XFEmin: TFloatEdit
-        Left = 16
-        Top = 59
-        Width = 121
-        Height = 21
+        Left = 21
+        Top = 77
+        Width = 158
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 0
         Text = '0.0'
         OnEnter = XFEminEnter
       end
       object XFEmax: TFloatEdit
-        Left = 162
-        Top = 59
-        Width = 121
-        Height = 21
+        Left = 212
+        Top = 77
+        Width = 158
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 1
         Text = '0.0'
         OnEnter = XFEmaxEnter
       end
       object UnitsXEdit: TEdit
-        Left = 313
-        Top = 59
-        Width = 121
-        Height = 21
+        Left = 409
+        Top = 77
+        Width = 159
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 2
         OnEnter = UnitsXEditEnter
       end
       object LogXCB: TCheckBox
-        Left = 16
-        Top = 473
-        Width = 97
-        Height = 17
+        Left = 21
+        Top = 619
+        Width = 127
+        Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1051#1086#1075#1072#1088#1080#1092#1084
         TabOrder = 3
         OnEnter = LogXCBEnter
       end
       object ScaleXCB: TCheckBox
-        Left = 16
-        Top = 496
-        Width = 120
-        Height = 17
+        Left = 21
+        Top = 649
+        Width = 157
+        Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1055#1086#1083#1085#1099#1081' '#1084#1072#1089#1096#1090#1072#1073
         TabOrder = 4
         OnEnter = ScaleXCBEnter
       end
       object ProfileCB: TCheckBox
-        Left = 16
-        Top = 521
-        Width = 145
-        Height = 17
+        Left = 21
+        Top = 681
+        Width = 190
+        Height = 23
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1054#1090#1086#1073#1088#1072#1078#1072#1090#1100' '#1076#1086#1087#1091#1089#1082#1080
         TabOrder = 5
         OnEnter = LogXCBEnter
       end
       object GroupBox1: TGroupBox
-        Left = 16
-        Top = 87
-        Width = 588
-        Height = 362
+        Left = 21
+        Top = 114
+        Width = 478
+        Height = 473
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Anchors = [akLeft, akTop, akRight]
         Caption = #1055#1086#1080#1089#1082' '#1075#1088#1072#1085#1080#1094' '#1086#1090#1086#1073#1088#1072#1078#1077#1085#1080#1103
         TabOrder = 6
+        ExplicitWidth = 769
         object StartTrigLabel: TLabel
-          Left = 16
-          Top = 46
-          Width = 93
-          Height = 13
+          Left = 21
+          Top = 60
+          Width = 121
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1058#1088#1080#1075#1075#1077#1088' '#1087#1086' '#1089#1090#1072#1088#1090#1091
         end
         object StopTrigLabel: TLabel
-          Left = 162
-          Top = 46
-          Width = 87
-          Height = 13
+          Left = 212
+          Top = 60
+          Width = 114
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1058#1088#1080#1075#1075#1077#1088' '#1087#1086' '#1089#1090#1086#1087#1091
         end
         object Label1: TLabel
-          Left = 16
-          Top = 146
-          Width = 102
-          Height = 13
+          Left = 21
+          Top = 191
+          Width = 132
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1054#1090#1089#1090#1091#1087' '#1085#1072' '#1089#1090#1072#1088#1090#1077', '#1089
         end
         object Label2: TLabel
-          Left = 162
-          Top = 146
-          Width = 96
-          Height = 13
+          Left = 212
+          Top = 191
+          Width = 125
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1054#1090#1089#1090#1091#1087' '#1085#1072' '#1089#1090#1086#1087#1077', '#1089
         end
         object Label3: TLabel
-          Left = 16
-          Top = 254
-          Width = 75
-          Height = 13
+          Left = 21
+          Top = 332
+          Width = 96
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1044#1083#1080#1085#1072' '#1089#1080#1075#1085#1072#1083#1072
         end
         object StartThresholdLabel: TLabel
-          Left = 16
-          Top = 99
-          Width = 121
-          Height = 13
+          Left = 21
+          Top = 129
+          Width = 157
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1055#1086#1088#1086#1075' '#1090#1088#1080#1075#1075#1077#1088#1072' "'#1057#1090#1072#1088#1090'"'
         end
         object StopThresholdLabel: TLabel
-          Left = 162
-          Top = 99
-          Width = 115
-          Height = 13
+          Left = 212
+          Top = 129
+          Width = 150
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1055#1086#1088#1086#1075' '#1090#1088#1080#1075#1075#1077#1088#1072' "'#1057#1090#1086#1087'"'
         end
         object StartNumberLabel: TLabel
-          Left = 16
-          Top = 199
-          Width = 107
-          Height = 13
+          Left = 21
+          Top = 260
+          Width = 137
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1053#1086#1084#1077#1088' '#1089#1088#1072#1073#1072#1090#1099#1074#1072#1085#1080#1103
         end
         object StopNumberLabel: TLabel
-          Left = 160
-          Top = 199
-          Width = 107
-          Height = 13
+          Left = 209
+          Top = 260
+          Width = 137
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1053#1086#1084#1077#1088' '#1089#1088#1072#1073#1072#1090#1099#1074#1072#1085#1080#1103
         end
         object Label6: TLabel
-          Left = 16
-          Top = 300
-          Width = 16
-          Height = 13
+          Left = 21
+          Top = 392
+          Width = 21
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = 'X1:'
         end
         object Label7: TLabel
-          Left = 162
-          Top = 300
-          Width = 16
-          Height = 13
+          Left = 212
+          Top = 392
+          Width = 21
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = 'X2:'
         end
         object StopTrigCB: TComboBox
-          Left = 160
-          Top = 67
-          Width = 121
-          Height = 21
+          Left = 209
+          Top = 88
+          Width = 158
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Enabled = False
           TabOrder = 0
           OnChange = StopTrigCBChange
         end
         object StartTrigCB: TComboBox
-          Left = 16
-          Top = 67
-          Width = 121
-          Height = 21
+          Left = 21
+          Top = 88
+          Width = 158
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Enabled = False
           TabOrder = 1
           OnChange = StartTrigCBChange
         end
         object StartXFE: TFloatEdit
-          Left = 16
-          Top = 165
-          Width = 121
-          Height = 21
+          Left = 21
+          Top = 216
+          Width = 158
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Enabled = False
           TabOrder = 2
           Text = '0.0'
           OnEnter = XFEminEnter
         end
         object StopXFE: TFloatEdit
-          Left = 160
-          Top = 166
-          Width = 121
-          Height = 21
+          Left = 209
+          Top = 217
+          Width = 158
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Enabled = False
           TabOrder = 3
           Text = '0.0'
           OnEnter = XFEmaxEnter
         end
         object FindIntervalCB: TCheckBox
-          Left = 16
-          Top = 22
-          Width = 121
-          Height = 17
+          Left = 21
+          Top = 29
+          Width = 158
+          Height = 22
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1048#1089#1082#1072#1090#1100' '#1080#1085#1090#1077#1088#1074#1072#1083
           TabOrder = 4
           OnClick = FindIntervalCBClick
         end
         object SignalLengthFE: TFloatEdit
-          Left = 16
-          Top = 274
-          Width = 121
-          Height = 21
+          Left = 21
+          Top = 358
+          Width = 158
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Enabled = False
           TabOrder = 5
           Text = '0.0'
           OnEnter = XFEminEnter
         end
         object StartThresholdFE: TFloatEdit
-          Left = 16
-          Top = 119
-          Width = 121
-          Height = 21
+          Left = 21
+          Top = 156
+          Width = 158
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Enabled = False
           TabOrder = 6
           Text = '0.0'
           OnEnter = XFEminEnter
         end
         object StopThresholdFE: TFloatEdit
-          Left = 160
-          Top = 119
-          Width = 121
-          Height = 21
+          Left = 209
+          Top = 156
+          Width = 158
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Enabled = False
           TabOrder = 7
           Text = '0.0'
           OnEnter = XFEmaxEnter
         end
         object StartTrigNumber: TIntEdit
-          Left = 16
-          Top = 218
-          Width = 121
-          Height = 21
+          Left = 21
+          Top = 285
+          Width = 158
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Enabled = False
           TabOrder = 8
           Text = '000'
         end
         object StoptTrigNumber: TIntEdit
-          Left = 160
-          Top = 218
-          Width = 121
-          Height = 21
+          Left = 209
+          Top = 285
+          Width = 158
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Enabled = False
           TabOrder = 9
           Text = '000'
         end
         object TrigX1FE: TFloatEdit
-          Left = 16
-          Top = 319
-          Width = 121
-          Height = 21
+          Left = 21
+          Top = 417
+          Width = 158
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Enabled = False
           TabOrder = 10
           Text = '0.0'
           OnEnter = XFEminEnter
         end
         object TrigX2FE: TFloatEdit
-          Left = 160
-          Top = 319
-          Width = 121
-          Height = 21
+          Left = 209
+          Top = 417
+          Width = 158
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Enabled = False
           TabOrder = 11
           Text = '0.0'
@@ -338,10 +505,14 @@
         end
       end
       object AxisStyleRG: TRadioGroup
-        Left = 178
-        Top = 455
-        Width = 151
-        Height = 105
+        Left = 233
+        Top = 595
+        Width = 197
+        Height = 137
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1056#1072#1089#1087#1086#1083#1086#1078#1077#1085#1080#1077' '#1086#1089#1077#1081
         Items.Strings = (
           #1053#1072' '#1086#1076#1085#1086#1081' '#1086#1089#1080
@@ -349,191 +520,310 @@
         TabOrder = 7
         OnEnter = AxisStyleRGEnter
       end
+      object ShowLegendCB: TCheckBox
+        Left = 21
+        Top = 712
+        Width = 142
+        Height = 23
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Caption = #1051#1077#1075#1077#1085#1076#1072
+        TabOrder = 8
+        OnEnter = LogXCBEnter
+      end
     end
     object TabSheet2: TTabSheet
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1054#1089#1080
       ImageIndex = 1
+      ExplicitWidth = 795
+      ExplicitHeight = 753
       object YAxisLabel: TLabel
-        Left = 8
-        Top = 8
-        Width = 32
-        Height = 13
+        Left = 10
+        Top = 10
+        Width = 41
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1054#1089#1100' Y:'
       end
       object YminLabel: TLabel
-        Left = 8
-        Top = 32
-        Width = 44
-        Height = 13
+        Left = 10
+        Top = 42
+        Width = 60
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1052#1080#1085#1080#1084#1091#1084
       end
       object YmaxLabel: TLabel
-        Left = 154
-        Top = 32
-        Width = 49
-        Height = 13
+        Left = 201
+        Top = 42
+        Width = 65
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1052#1072#1082#1089#1080#1084#1091#1084
       end
       object UnitsYLabel: TLabel
-        Left = 305
-        Top = 32
-        Width = 45
-        Height = 13
+        Left = 399
+        Top = 42
+        Width = 58
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1045#1076#1080#1085#1080#1094#1099
       end
       object AxisColor: TLabel
-        Left = 10
-        Top = 149
-        Width = 50
-        Height = 13
+        Left = 13
+        Top = 195
+        Width = 64
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1062#1074#1077#1090' '#1086#1089#1080':'
       end
       object YmaxFE: TFloatEdit
-        Left = 154
-        Top = 51
-        Width = 121
-        Height = 21
+        Left = 201
+        Top = 67
+        Width = 159
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 0
         Text = '0.0'
         OnEnter = YmaxFEEnter
       end
       object YminFE: TFloatEdit
-        Left = 8
-        Top = 51
-        Width = 121
-        Height = 21
+        Left = 10
+        Top = 67
+        Width = 159
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 1
         Text = '0.0'
         OnEnter = YminFEEnter
       end
       object LogYCB: TCheckBox
-        Left = 8
-        Top = 94
-        Width = 97
-        Height = 17
+        Left = 10
+        Top = 123
+        Width = 127
+        Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1051#1086#1075#1072#1088#1080#1092#1084
         TabOrder = 2
         OnEnter = LogYCBEnter
       end
       object ScaleYCB: TCheckBox
-        Left = 8
-        Top = 117
-        Width = 120
-        Height = 17
+        Left = 10
+        Top = 153
+        Width = 157
+        Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1055#1086#1083#1085#1099#1081' '#1084#1072#1089#1096#1090#1072#1073
         TabOrder = 3
         OnEnter = ScaleYCBEnter
       end
       object UnitsYEdit: TEdit
-        Left = 305
-        Top = 51
-        Width = 121
-        Height = 21
+        Left = 392
+        Top = 67
+        Width = 89
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 4
         Text = 'Edit1'
         OnEnter = UnitsYEditEnter
       end
       object AxisColorBox: TColorBox
-        Left = 8
-        Top = 168
-        Width = 121
+        Left = 10
+        Top = 220
+        Width = 159
         Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 5
       end
     end
     object TabSheet3: TTabSheet
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1051#1080#1085#1080#1080
       ImageIndex = 2
+      ExplicitLeft = 1
+      ExplicitTop = 24
+      ExplicitWidth = 464
+      ExplicitHeight = 591
       object LineNameLabel: TLabel
-        Left = 25
-        Top = 16
-        Width = 52
-        Height = 13
+        Left = 33
+        Top = 21
+        Width = 69
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1048#1084#1103' '#1083#1080#1085#1080#1080
       end
       object LineColorLabel: TLabel
-        Left = 25
-        Top = 125
-        Width = 30
-        Height = 13
+        Left = 33
+        Top = 163
+        Width = 37
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1062#1074#1077#1090':'
       end
       object LineSrcLabel: TLabel
-        Left = 25
-        Top = 326
-        Width = 48
-        Height = 13
+        Left = 33
+        Top = 426
+        Width = 63
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1048#1089#1090#1086#1095#1085#1080#1082
       end
       object LineWidthLabel: TLabel
-        Left = 25
-        Top = 196
-        Width = 45
-        Height = 13
+        Left = 33
+        Top = 256
+        Width = 58
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1058#1086#1083#1097#1080#1085#1072
       end
       object LineTypeLabel: TLabel
-        Left = 25
-        Top = 262
-        Width = 51
-        Height = 13
+        Left = 33
+        Top = 343
+        Width = 68
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1058#1080#1087' '#1083#1080#1085#1080#1080
       end
       object LineNameEdit: TEdit
-        Left = 25
-        Top = 32
-        Width = 246
-        Height = 21
+        Left = 33
+        Top = 42
+        Width = 321
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Enabled = False
         TabOrder = 0
         OnEnter = UnitsXEditEnter
       end
       object DrawLineCB: TCheckBox
-        Left = 25
-        Top = 70
-        Width = 104
-        Height = 17
+        Left = 33
+        Top = 92
+        Width = 136
+        Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1056#1080#1089#1086#1074#1072#1090#1100' '#1083#1080#1085#1080#1102
         TabOrder = 1
       end
       object DrawPointsCB: TCheckBox
-        Left = 25
-        Top = 93
-        Width = 152
-        Height = 17
+        Left = 33
+        Top = 122
+        Width = 198
+        Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1056#1080#1089#1086#1074#1072#1090#1100' '#1090#1086#1095#1082#1080' '#1085#1072' '#1083#1080#1085#1080#1080
         TabOrder = 2
         OnEnter = ScaleYCBEnter
       end
       object LineColorCB: TColorBox
-        Left = 25
-        Top = 146
-        Width = 145
+        Left = 33
+        Top = 191
+        Width = 189
         Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 3
       end
       object LineSrcCB: TComboBox
-        Left = 25
-        Top = 347
-        Width = 246
-        Height = 21
+        Left = 33
+        Top = 454
+        Width = 321
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 4
         Text = 'LineSrcCB'
       end
       object LineBaseCB: TCheckBox
-        Left = 193
-        Top = 70
-        Width = 152
-        Height = 17
+        Left = 252
+        Top = 92
+        Width = 199
+        Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1042#1077#1088#1090#1080#1082#1072#1083#1100#1085#1099#1077' '#1083#1080#1085#1080#1080
         TabOrder = 5
         OnEnter = ScaleYCBEnter
       end
       object LineTypeCB: TComboBox
-        Left = 25
-        Top = 283
-        Width = 246
-        Height = 21
+        Left = 33
+        Top = 370
+        Width = 321
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         ItemIndex = 0
         TabOrder = 6
         Text = #1057#1087#1083#1086#1096#1085#1072#1103
@@ -542,56 +832,86 @@
           #1055#1091#1085#1082#1090#1080#1088)
       end
       object LineWidthEdit: TIntEdit
-        Left = 25
-        Top = 224
-        Width = 121
-        Height = 21
+        Left = 33
+        Top = 293
+        Width = 158
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 7
         Text = '000'
       end
     end
     object Страницы: TTabSheet
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1057#1090#1088#1072#1085#1080#1094#1099
       ImageIndex = 3
+      ExplicitWidth = 795
+      ExplicitHeight = 753
       object Label5: TLabel
-        Left = 161
-        Top = 73
-        Width = 31
-        Height = 13
+        Left = 211
+        Top = 95
+        Width = 40
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1057#1090#1088#1086#1082
       end
       object Label4: TLabel
-        Left = 161
-        Top = 20
-        Width = 49
-        Height = 13
+        Left = 211
+        Top = 26
+        Width = 64
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1057#1090#1086#1083#1073#1094#1086#1074
       end
       object ColSE: TSpinEdit
-        Left = 161
-        Top = 45
-        Width = 66
-        Height = 22
+        Left = 211
+        Top = 59
+        Width = 86
+        Height = 27
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         MaxValue = 0
         MinValue = 0
         TabOrder = 0
         Value = 0
       end
       object RowSE: TSpinEdit
-        Left = 161
-        Top = 92
-        Width = 66
-        Height = 22
+        Left = 211
+        Top = 120
+        Width = 86
+        Height = 27
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         MaxValue = 0
         MinValue = 0
         TabOrder = 1
         Value = 0
       end
       object PageStyleRG: TRadioGroup
-        Left = 4
-        Top = 20
-        Width = 151
-        Height = 105
+        Left = 5
+        Top = 26
+        Width = 198
+        Height = 137
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1056#1072#1089#1087#1086#1083#1086#1078#1077#1085#1080#1077' '#1075#1088#1072#1092#1080#1082#1086#1074
         Items.Strings = (
           #1055#1086' '#1075#1086#1088#1080#1079#1086#1085#1090#1072#1083#1080
@@ -601,10 +921,14 @@
         OnClick = PageStyleRGClick
       end
       object SyncCursorsCB: TCheckBox
-        Left = 4
-        Top = 145
-        Width = 223
-        Height = 17
+        Left = 5
+        Top = 190
+        Width = 292
+        Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1057#1080#1085#1093#1088#1086#1085#1080#1079#1072#1094#1080#1103' '#1082#1091#1088#1089#1086#1088#1086#1074' '#1087#1086' X'
         TabOrder = 3
         OnClick = FindIntervalCBClick
@@ -612,17 +936,23 @@
     end
   end
   object SrcLV: TBtnListView
-    Left = 1044
+    Left = 856
     Top = 0
-    Width = 220
-    Height = 600
+    Width = 171
+    Height = 813
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alRight
     Columns = <
       item
         Caption = #8470
+        Width = 65
       end
       item
         Caption = #1055#1091#1090#1100
+        Width = 65
       end>
     HideSelection = False
     MultiSelect = True
@@ -636,12 +966,17 @@
     DrawColorBox = False
     ChangeTextColor = False
     Editable = False
+    ExplicitHeight = 623
   end
   object GraphTV: TVTree
     Left = 0
     Top = 0
-    Width = 257
-    Height = 600
+    Width = 169
+    Height = 813
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alLeft
     Alignment = taRightJustify
     CustomCheckImages = ImageList_16
@@ -662,19 +997,24 @@
     OnDragAllowed = GraphTVDragAllowed
     OnDragOver = GraphTVDragOver
     OnDragDrop = GraphTVDragDrop
+    ExplicitHeight = 417
     Columns = <
       item
         Position = 0
-        Width = 253
+        Width = 165
         WideText = #1054#1073#1098#1077#1082#1090
       end>
   end
   object SelObjLB: TListBox
-    Left = 876
+    Left = 688
     Top = 0
     Width = 168
-    Height = 600
+    Height = 813
     Hint = #1043#1088#1072#1092#1080#1095#1077#1089#1082#1080#1081' '#1086#1073#1098#1077#1082#1090' '#1085#1077' '#1089#1086#1079#1076#1072#1085
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Style = lbOwnerDrawFixed
     Align = alRight
     ItemHeight = 13
@@ -683,6 +1023,8 @@
     TabOrder = 4
     OnDrawItem = SelObjLBDrawItem
     OnMouseMove = SelObjLBMouseMove
+    ExplicitLeft = 648
+    ExplicitHeight = 623
   end
   object ImageList_32: TImageList
     Height = 32

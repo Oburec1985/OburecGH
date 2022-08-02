@@ -2,45 +2,59 @@
   Left = 0
   Top = 0
   Caption = #1055#1086#1080#1089#1082' '#1101#1082#1089#1090#1088#1077#1084#1091#1084#1086#1074
-  ClientHeight = 673
-  ClientWidth = 1018
+  ClientHeight = 880
+  ClientWidth = 1091
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   ShowHint = True
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object MainSplitter: TSplitter
-    Left = 829
+    Left = 844
     Top = 0
-    Width = 4
-    Height = 572
+    Width = 5
+    Height = 748
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alRight
     Color = clBlack
     ParentColor = False
+    ExplicitLeft = 1084
   end
   object ActionGB: TGroupBox
     Left = 0
-    Top = 572
-    Width = 1018
-    Height = 101
+    Top = 748
+    Width = 1091
+    Height = 132
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alBottom
     Caption = #1042#1099#1073#1077#1088#1080#1090#1077' '#1076#1077#1081#1089#1090#1074#1080#1077
     TabOrder = 0
+    ExplicitWidth = 1331
     DesignSize = (
-      1018
-      101)
+      1091
+      132)
     object ApplyBtn: TSpeedButton
-      Left = 973
-      Top = 56
-      Width = 32
-      Height = 32
+      Left = 1032
+      Top = 73
+      Width = 42
+      Height = 42
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Anchors = [akTop, akRight]
       BiDiMode = bdRightToLeft
       Flat = True
@@ -177,12 +191,17 @@
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
       ParentBiDiMode = False
       OnClick = ApplyBtnClick
+      ExplicitLeft = 1272
     end
     object CancelBtn: TButton
-      Left = 9
-      Top = 67
-      Width = 123
-      Height = 25
+      Left = 12
+      Top = 88
+      Width = 161
+      Height = 32
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Anchors = [akLeft, akBottom]
       Caption = #1054#1090#1084#1077#1085#1072
       TabOrder = 0
@@ -191,119 +210,249 @@
   object BandTS: TPageControl
     Left = 0
     Top = 0
-    Width = 829
-    Height = 572
-    ActivePage = SavePage
+    Width = 844
+    Height = 748
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
+    ActivePage = AlgOptsTabSheet
     Align = alClient
     TabOrder = 1
+    ExplicitWidth = 1084
     object AlgOptsTabSheet: TTabSheet
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1072#1083#1075#1086#1088#1080#1090#1084#1072
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 1076
       object AlgOptsGB: TGroupBox
         Left = 0
         Top = 0
-        Width = 821
-        Height = 544
+        Width = 836
+        Height = 716
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 823
-        ExplicitHeight = 551
+        ExplicitWidth = 1076
         object SaveBandGB: TGroupBox
           Left = 2
-          Top = 15
-          Width = 817
-          Height = 98
+          Top = 19
+          Width = 832
+          Height = 128
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Align = alTop
           TabOrder = 0
+          ExplicitLeft = 5
           ExplicitTop = 11
-          ExplicitWidth = 819
           DesignSize = (
-            817
-            98)
+            832
+            128)
           object NameLabel: TLabel
-            Left = 3
-            Top = 9
-            Width = 73
-            Height = 13
+            Left = 4
+            Top = 12
+            Width = 93
+            Height = 17
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077
           end
+          object Label3: TLabel
+            Left = 4
+            Top = 70
+            Width = 73
+            Height = 17
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            Caption = #1058#1080#1087' '#1087#1086#1080#1089#1082#1072
+          end
+          object UnitsLabel: TLabel
+            Left = 306
+            Top = 66
+            Width = 58
+            Height = 17
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            Caption = #1045#1076#1080#1085#1080#1094#1099
+          end
+          object ThresholdLabel: TLabel
+            Left = 514
+            Top = 70
+            Width = 39
+            Height = 17
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            Caption = #1055#1086#1088#1086#1075
+          end
           object NameEdit: TEdit
-            Left = 3
-            Top = 28
-            Width = 571
+            Left = 4
+            Top = 37
+            Width = 277
             Height = 25
             Hint = #1055#1091#1090#1100' '#1082' '#1092#1072#1081#1083#1091' '#1076#1083#1103' '#1101#1082#1089#1087#1086#1088#1090#1072' '#1080#1084#1087#1086#1088#1090#1072' '#1085#1072#1089#1090#1088#1086#1077#1082' '#1087#1086#1083#1086#1089
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Anchors = [akLeft, akTop, akRight]
             TabOrder = 0
             OnChange = NameEditChange
+            ExplicitWidth = 517
           end
           object ExpBtn: TButton
-            Left = 633
-            Top = 26
-            Width = 76
-            Height = 25
+            Left = 372
+            Top = 33
+            Width = 99
+            Height = 33
             Hint = #1069#1082#1089#1087#1086#1088#1090' '#1085#1072#1089#1090#1088#1086#1077#1082' '#1087#1086#1083#1086#1089' '#1074' '#1092#1072#1081#1083
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Anchors = [akTop, akRight]
             Caption = #1069#1082#1089#1087#1086#1088#1090
             TabOrder = 1
             OnClick = ExpBtnClick
+            ExplicitLeft = 612
           end
           object ImportBtn: TButton
-            Left = 715
-            Top = 26
-            Width = 76
-            Height = 25
+            Left = 479
+            Top = 33
+            Width = 99
+            Height = 33
             Hint = #1048#1084#1087#1086#1088#1090' '#1085#1072#1089#1090#1088#1086#1077#1082' '#1087#1086#1083#1086#1089' '#1074' '#1092#1072#1081#1083
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Anchors = [akTop, akRight]
             Caption = #1048#1084#1087#1086#1088#1090
             TabOrder = 2
             OnClick = ImportBtnClick
+            ExplicitLeft = 719
           end
           object PathBtn: TButton
-            Left = 580
-            Top = 26
-            Width = 47
-            Height = 25
+            Left = 302
+            Top = 33
+            Width = 62
+            Height = 33
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Anchors = [akTop, akRight]
             Caption = '...'
             TabOrder = 3
             OnClick = PathBtnClick
+            ExplicitLeft = 542
+          end
+          object AlgTypeCB: TComboBox
+            Left = 4
+            Top = 91
+            Width = 189
+            Height = 25
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            TabOrder = 4
+            Text = #1055#1086' '#1075#1080#1089#1090#1077#1088#1077#1079#1080#1089#1091
+            OnChange = AlgTypeCBChange
+            Items.Strings = (
+              #1055#1086' '#1075#1080#1089#1090#1077#1088#1077#1079#1080#1089#1091
+              #1042#1089#1077' '#1095#1090#1086' '#1074#1099#1096#1077' '#1082#1088#1080#1074#1086#1081)
+          end
+          object UnitsCB: TComboBox
+            Left = 302
+            Top = 91
+            Width = 189
+            Height = 25
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            ItemIndex = 0
+            TabOrder = 5
+            Text = #1040#1073#1089'.'
+            Items.Strings = (
+              #1040#1073#1089'.'
+              '%'
+              'Sin '#1044#1073'(20 Lg)'
+              #1064#1057#1042' '#1044#1073'(10 Lg)')
+          end
+          object ThresholdE: TFloatEdit
+            Left = 514
+            Top = 91
+            Width = 158
+            Height = 25
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            TabOrder = 6
+            Text = '0.0'
           end
         end
         object EditBandGB: TGroupBox
           Left = 2
-          Top = 113
-          Width = 817
-          Height = 429
+          Top = 147
+          Width = 832
+          Height = 567
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Align = alClient
           Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1087#1086#1083#1086#1089
           TabOrder = 1
-          ExplicitTop = 109
-          ExplicitWidth = 819
-          ExplicitHeight = 440
+          Visible = False
+          ExplicitWidth = 1072
           object Splitter2: TSplitter
-            Left = 161
-            Top = 15
+            Left = 210
+            Top = 19
             Width = 2
-            Height = 412
-            ExplicitTop = 11
-            ExplicitHeight = 427
+            Height = 546
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            ExplicitLeft = 211
+            ExplicitTop = 25
+            ExplicitHeight = 523
           end
           object PointsLV: TBtnListView
             Left = 2
-            Top = 15
-            Width = 159
-            Height = 412
+            Top = 19
+            Width = 208
+            Height = 546
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Align = alLeft
             Columns = <
               item
                 Caption = 'X'
+                Width = 65
               end
               item
                 Caption = 'Y'
+                Width = 65
               end>
             RowSelect = True
             TabOrder = 0
@@ -314,49 +463,61 @@
             DrawColorBox = False
             ChangeTextColor = False
             Editable = False
-            ExplicitTop = 11
-            ExplicitHeight = 427
           end
           object Panel1: TPanel
-            Left = 163
-            Top = 15
-            Width = 652
-            Height = 412
+            Left = 212
+            Top = 19
+            Width = 618
+            Height = 546
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Align = alClient
             TabOrder = 1
-            ExplicitTop = 11
-            ExplicitWidth = 655
-            ExplicitHeight = 427
+            ExplicitWidth = 858
             object CurvsLB: TListBox
               Left = 1
               Top = 1
-              Width = 650
-              Height = 208
+              Width = 616
+              Height = 272
               Hint = #1055#1086#1076#1076#1088#1077#1078#1080#1074#1072#1077#1090' '#1082#1086#1084#1073#1080#1085#1072#1094#1080#1102' Ctrl+C'
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
               Align = alTop
               ItemHeight = 17
               MultiSelect = True
               TabOrder = 0
               OnClick = CurvsLBClick
               OnKeyDown = ExtremumLBKeyDown
+              ExplicitWidth = 856
             end
             object CurvsPanel: TPanel
               Left = 1
-              Top = 209
-              Width = 650
-              Height = 202
+              Top = 273
+              Width = 616
+              Height = 272
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
               Align = alClient
               Color = clSilver
               ParentBackground = False
               TabOrder = 1
-              ExplicitWidth = 654
-              ExplicitHeight = 217
+              ExplicitWidth = 856
               object DelCurv: TSpeedButton
-                Left = 557
-                Top = 6
-                Width = 37
-                Height = 36
+                Left = 360
+                Top = 72
+                Width = 49
+                Height = 47
                 Hint = #1059#1076#1072#1083#1080#1090#1100' '#1087#1086#1083#1086#1089#1091
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
                 AllowAllUp = True
                 BiDiMode = bdLeftToRight
                 Glyph.Data = {
@@ -429,11 +590,15 @@
                 OnClick = DelCurvClick
               end
               object AddCurv: TSpeedButton
-                Left = 600
-                Top = 6
-                Width = 41
-                Height = 36
+                Left = 417
+                Top = 72
+                Width = 53
+                Height = 47
                 Hint = #1044#1086#1073#1072#1074#1080#1090#1100' '#1087#1086#1083#1086#1089#1091
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
                 AllowAllUp = True
                 BiDiMode = bdLeftToRight
                 Glyph.Data = {
@@ -506,48 +671,58 @@
                 Transparent = False
                 OnClick = AddCurvClick
               end
-              object Label1: TLabel
-                Left = 281
-                Top = 19
-                Width = 45
-                Height = 13
-                Caption = #1045#1076#1080#1085#1080#1094#1099
-              end
               object CurveTypePC: TPageControl
                 Left = 1
                 Top = 1
-                Width = 264
-                Height = 200
-                ActivePage = Кривая
+                Width = 346
+                Height = 270
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ActivePage = Уровень
                 Align = alLeft
                 TabOrder = 0
-                ExplicitHeight = 215
+                ExplicitLeft = 5
+                ExplicitTop = 3
                 object Кривая: TTabSheet
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
                   Caption = #1050#1088#1080#1074#1072#1103
-                  ExplicitLeft = 0
-                  ExplicitTop = 0
-                  ExplicitWidth = 0
-                  ExplicitHeight = 0
                   object Xlabel: TLabel
-                    Left = 5
-                    Top = 50
-                    Width = 10
-                    Height = 13
+                    Left = 7
+                    Top = 65
+                    Width = 13
+                    Height = 17
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
                     Caption = 'X:'
                   end
                   object YLabel: TLabel
-                    Left = 5
-                    Top = 98
-                    Width = 10
-                    Height = 13
+                    Left = 7
+                    Top = 128
+                    Width = 13
+                    Height = 17
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
                     Caption = 'Y:'
                   end
                   object AddPoint: TSpeedButton
-                    Left = 48
-                    Top = 6
-                    Width = 41
-                    Height = 36
+                    Left = 63
+                    Top = 8
+                    Width = 53
+                    Height = 47
                     Hint = #1044#1086#1073#1072#1074#1080#1090#1100' '#1090#1086#1095#1082#1091
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
                     AllowAllUp = True
                     BiDiMode = bdLeftToRight
                     Glyph.Data = {
@@ -621,11 +796,15 @@
                     OnClick = AddPointClick
                   end
                   object DelPoint: TSpeedButton
-                    Left = 5
-                    Top = 6
-                    Width = 37
-                    Height = 36
+                    Left = 7
+                    Top = 8
+                    Width = 48
+                    Height = 47
                     Hint = #1059#1076#1072#1083#1080#1090#1100' '#1090#1086#1095#1082#1091
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
                     AllowAllUp = True
                     BiDiMode = bdLeftToRight
                     Glyph.Data = {
@@ -697,67 +876,73 @@
                     ShowHint = True
                   end
                   object Yedit: TFloatEdit
-                    Left = 5
-                    Top = 117
-                    Width = 121
+                    Left = 7
+                    Top = 153
+                    Width = 158
                     Height = 25
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
                     TabOrder = 0
                     Text = '0.0'
                   end
                   object Xedit: TFloatEdit
-                    Left = 5
-                    Top = 69
-                    Width = 121
+                    Left = 7
+                    Top = 90
+                    Width = 158
                     Height = 25
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
                     TabOrder = 1
                     Text = '0.0'
                   end
                 end
                 object Уровень: TTabSheet
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
                   Caption = #1059#1088#1086#1074#1077#1085#1100
                   ImageIndex = 1
-                  ExplicitLeft = 0
-                  ExplicitTop = 0
-                  ExplicitWidth = 0
-                  ExplicitHeight = 0
                   object LvlLabel: TLabel
-                    Left = 3
-                    Top = 18
-                    Width = 43
-                    Height = 13
+                    Left = 4
+                    Top = 24
+                    Width = 53
+                    Height = 17
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
                     Caption = #1059#1088#1086#1074#1077#1085#1100
                   end
                   object LvlFE: TFloatEdit
-                    Left = 3
-                    Top = 37
-                    Width = 121
+                    Left = 4
+                    Top = 48
+                    Width = 158
                     Height = 25
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
                     TabOrder = 0
                     Text = '0.0'
                   end
                 end
               end
-              object UnitsCB: TComboBox
-                Left = 279
-                Top = 38
-                Width = 145
-                Height = 21
-                ItemIndex = 0
-                TabOrder = 1
-                Text = #1040#1073#1089'.'
-                Items.Strings = (
-                  #1040#1073#1089'.'
-                  '%'
-                  'Sin '#1044#1073'(20 Lg)'
-                  #1064#1057#1042' '#1044#1073'(10 Lg)')
-              end
               object PositiveCB: TCheckBox
-                Left = 279
-                Top = 65
-                Width = 174
-                Height = 17
+                Left = 365
+                Top = 29
+                Width = 227
+                Height = 22
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
                 Caption = #1055#1086#1083#1086#1078#1080#1090#1077#1083#1100#1085#1099#1077' '#1101#1082#1089#1090#1088#1077#1084#1091#1084#1099
-                TabOrder = 2
+                TabOrder = 1
                 OnClick = PositiveCBClick
               end
             end
@@ -766,32 +951,50 @@
       end
     end
     object SavePage: TTabSheet
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1057#1086#1093#1088#1072#1085#1077#1085#1080#1077' '#1080' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1099
       ImageIndex = 2
+      ExplicitWidth = 1076
       object Splitter1: TSplitter
         Left = 0
-        Top = 104
-        Width = 821
-        Height = 5
+        Top = 136
+        Width = 836
+        Height = 7
         Cursor = crVSplit
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alTop
         Color = clBlack
         ParentColor = False
-        ExplicitWidth = 823
+        ExplicitWidth = 1074
       end
       object GroupBox1: TGroupBox
         Left = 0
-        Top = 109
-        Width = 821
-        Height = 435
+        Top = 143
+        Width = 836
+        Height = 573
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alClient
         Caption = #1043#1088#1072#1092#1080#1082#1072
         TabOrder = 0
+        ExplicitWidth = 1076
         object cChart1: cChart
           Left = 2
-          Top = 15
-          Width = 817
-          Height = 418
+          Top = 19
+          Width = 832
+          Height = 552
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Align = alClient
           Caption = 'cChart1'
           TabOrder = 0
@@ -802,42 +1005,64 @@
           showTV = True
           showLegend = True
           selectSize = 5
+          ExplicitWidth = 1072
         end
       end
       object GroupBox2: TGroupBox
         Left = 0
         Top = 0
-        Width = 821
-        Height = 104
+        Width = 836
+        Height = 136
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alTop
         TabOrder = 1
+        ExplicitWidth = 1076
         object SavePathLabel: TLabel
-          Left = 9
-          Top = 14
-          Width = 123
-          Height = 13
+          Left = 12
+          Top = 18
+          Width = 156
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1057#1086#1093#1088#1072#1085#1077#1085#1080#1077' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1072
           Visible = False
         end
         object Label2: TLabel
-          Left = 223
-          Top = 60
-          Width = 168
-          Height = 13
+          Left = 292
+          Top = 78
+          Width = 219
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1063#1091#1074#1089#1090#1074#1080#1090#1077#1083#1100#1085#1086#1089#1090#1100' '#1082#1101#1082#1089#1090#1088#1077#1084#1091#1084#1072#1084
         end
         object SavePathEdit: TEdit
-          Left = 9
-          Top = 33
-          Width = 382
-          Height = 21
+          Left = 12
+          Top = 43
+          Width = 499
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           TabOrder = 0
         end
         object LgY: TCheckBox
-          Left = 9
-          Top = 60
-          Width = 38
-          Height = 17
+          Left = 12
+          Top = 78
+          Width = 49
+          Height = 23
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = 'LgY'
           Checked = True
           State = cbChecked
@@ -845,20 +1070,28 @@
           OnClick = LgYClick
         end
         object SavePathBtn: TButton
-          Left = 397
-          Top = 31
-          Width = 59
-          Height = 25
+          Left = 519
+          Top = 41
+          Width = 77
+          Height = 32
           Hint = #1042#1099#1073#1086#1088' '#1087#1091#1090#1080' '#1076#1083#1103' '#1089#1086#1093#1088#1072#1085#1077#1085#1080#1103' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074' '#1101#1082#1089#1087#1088#1077#1089' '#1072#1085#1072#1083#1080#1079#1072' '#1074' '#1092#1072#1081#1083
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = '...'
           TabOrder = 2
           OnClick = SavePathBtnClick
         end
         object CheckBox1: TCheckBox
-          Left = 94
-          Top = 60
-          Width = 38
-          Height = 17
+          Left = 123
+          Top = 78
+          Width = 50
+          Height = 23
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = 'LgX'
           Checked = True
           State = cbChecked
@@ -866,21 +1099,29 @@
           OnClick = LgYClick
         end
         object SpinEdit1: TSpinEdit
-          Left = 397
-          Top = 62
-          Width = 148
-          Height = 22
+          Left = 519
+          Top = 81
+          Width = 194
+          Height = 27
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           MaxValue = 0
           MinValue = 0
           TabOrder = 4
           Value = 0
         end
         object SaveBtn: TButton
-          Left = 462
-          Top = 31
-          Width = 83
-          Height = 25
+          Left = 604
+          Top = 41
+          Width = 109
+          Height = 32
           Hint = #1057#1086#1093#1088#1072#1085#1077#1085#1080#1077' '#1074' csv '#1092#1072#1081#1083
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100' '
           TabOrder = 5
         end
@@ -888,25 +1129,38 @@
     end
   end
   object SignalsGB: TGroupBox
-    Left = 833
+    Left = 849
     Top = 0
-    Width = 185
-    Height = 572
+    Width = 242
+    Height = 748
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alRight
     TabOrder = 2
+    ExplicitLeft = 1089
     object SignalsListGB: TGroupBox
       Left = 2
-      Top = 15
-      Width = 181
-      Height = 234
+      Top = 19
+      Width = 238
+      Height = 306
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alTop
       Caption = #1057#1087#1080#1089#1086#1082' '#1089#1080#1075#1085#1072#1083#1086#1074
       TabOrder = 0
       object SignalsLB: TListBox
         Left = 2
-        Top = 15
-        Width = 177
-        Height = 217
+        Top = 19
+        Width = 234
+        Height = 285
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Style = lbOwnerDrawFixed
         Align = alClient
         ItemHeight = 13
@@ -918,24 +1172,28 @@
     end
     object ExtremumLB: TListBox
       Left = 2
-      Top = 249
-      Width = 181
-      Height = 321
+      Top = 325
+      Width = 238
+      Height = 421
       Hint = #1055#1086#1076#1076#1088#1077#1078#1080#1074#1072#1077#1090' '#1082#1086#1084#1073#1080#1085#1072#1094#1080#1102' Ctrl+C'
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alClient
-      ItemHeight = 13
+      ItemHeight = 17
       MultiSelect = True
       TabOrder = 1
       OnKeyDown = ExtremumLBKeyDown
     end
   end
   object SaveDialog1: TSaveDialog
-    Left = 536
-    Top = 88
+    Left = 352
+    Top = 312
   end
   object ImageList_16: TImageList
-    Left = 864
-    Top = 136
+    Left = 520
+    Top = 312
     Bitmap = {
       494C010116001900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000006000000001002000000000000060
@@ -1739,8 +1997,8 @@
   object ImageList_32: TImageList
     Height = 32
     Width = 32
-    Left = 864
-    Top = 88
+    Left = 440
+    Top = 312
     Bitmap = {
       494C010116001900040020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       000000000000360000002800000080000000C000000001002000000000000080
