@@ -145,6 +145,7 @@ var
   I: Integer;
   x,y:array [0..999] of double;
 begin
+
   polar:=cPolarGraphPage.create;
   cChart1.activeTab.AddChild(polar);
   bound:=cChart1.activepage.bound;
@@ -183,11 +184,11 @@ var
 begin
   unitscb.ItemIndex:=0;
 
-  userAddPoint:=true;
   page:=cpage(cchart1.activePage);
-  page.caption:='Многострочный'+char(10)+'текст';
-  page.PageLabel.Transparent:=false;
-  page.PageLabel.flocked:=false;
+  //userAddPoint:=true;
+  //page.caption:='Многострочный'+char(10)+'текст';
+  //page.PageLabel.Transparent:=false;
+  //page.PageLabel.flocked:=false;
 
   ax:=page.activeAxis;
   ax.Lg:=true;
@@ -230,7 +231,7 @@ begin
   frame.parent:=MouseGB;
   frame.lincchart(cChart1);
   // отладка поларного графика
-  testPolarGraph;
+  //testPolarGraph;
 
   // блок отладки таблицы
   {bound:=cChart1.activepage.bound;

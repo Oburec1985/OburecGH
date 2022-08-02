@@ -91,6 +91,7 @@ type
       DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
       Pt: TPoint; var Effect: Integer; Mode: TDropMode);
     procedure EvalBtnClick(Sender: TObject);
+    procedure DelBtnClick(Sender: TObject);
   private
     mng:cwpobjmng;
     selSrc:csrc;
@@ -349,6 +350,56 @@ begin
   begin
     tr.EnumGroupMembers(DropStatus, tr);
   end;
+end;
+
+procedure TTrigsFrm.DelBtnClick(Sender: TObject);
+var
+  I: Integer;
+  li:tlistitem;
+  tr, ch:ctrig;
+  s:cwpsignal;
+  node, next:PVirtualNode;
+  data:PNodeData;
+begin
+  Node := VTree1.GetFirstSelected(true);
+  while Node <> nil do
+  begin
+    Data := VTree1.GetNodeData(Node);
+    tr := cTrig(Data.Data);
+    if tr<>nil then
+    begin
+      if tr is cTrig then
+      begin
+        mng.delTrig(tr);
+        Data.Data:=nil;
+      end;
+    end;
+    next := VTree1.GetNextSelected(Node, false);
+    if next = nil then
+    begin
+
+    end
+    else
+    begin
+      // переходим на след. ветку
+      //while isChildNode(node, next) do
+      //begin
+      //  next:=ProgramTV.GetNextSelected(next, false);
+      //end;
+    end;
+    Node := next;
+    inc(I);
+  end;
+  VTree1.DeleteSelectedNodes;
+  //TrigTypeRGClick(nil);
+  //for I := 0 to mng.TrigList.Count - 1 do
+  //begin
+  //  tr:=ctrig(mng.TrigList.Objects[i]);
+  //  if tr.isHeader then
+  //    addchildTrigs(tr, nil);
+  //end;
+  //VTree1.Header.AutoFitColumns(false,smaAllColumns,0,VTree1.Header.Columns.Count);
+
 end;
 
 function TTrigsFrm.StatusBar(Sender: TObject; process:integer):integer;

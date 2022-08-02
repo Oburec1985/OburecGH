@@ -4,39 +4,53 @@ object EditProfileForm: TEditProfileForm
   Top = 0
   Align = alClient
   Caption = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1085#1080#1077' '#1087#1088#1086#1092#1080#1083#1103' '#1080#1089#1087#1099#1090#1072#1085#1080#1103
-  ClientHeight = 760
-  ClientWidth = 852
+  ClientHeight = 994
+  ClientWidth = 1114
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   Menu = MainMenu1
   OldCreateOrder = False
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object GroupBox1: TGroupBox
     Left = 0
     Top = 0
-    Width = 852
-    Height = 608
+    Width = 1114
+    Height = 795
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alClient
     TabOrder = 0
     object Splitter1: TSplitter
-      Left = 557
-      Top = 101
-      Width = 5
-      Height = 505
+      Left = 728
+      Top = 131
+      Width = 7
+      Height = 662
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alRight
       OnMoved = Splitter1Moved
+      ExplicitTop = 132
+      ExplicitHeight = 660
     end
     object cChart1: cChart
       Left = 2
-      Top = 101
-      Width = 555
-      Height = 505
+      Top = 131
+      Width = 726
+      Height = 662
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alClient
       Caption = 'cChart1'
       TabOrder = 0
@@ -46,54 +60,75 @@ object EditProfileForm: TEditProfileForm
       OnInit = cChart1Init
       allowEditPages = False
       imagelist = ImageList_16
-      showTV = True
+      showTV = False
       showLegend = True
       selectSize = 5
+      ExplicitLeft = 3
+      ExplicitTop = 125
     end
     object MouseGB: TGroupBox
       Left = 2
-      Top = 15
-      Width = 848
-      Height = 86
+      Top = 19
+      Width = 1110
+      Height = 112
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alTop
       Caption = #1052#1099#1096#1100
       TabOrder = 1
     end
     object GroupBox4: TGroupBox
-      Left = 562
-      Top = 101
-      Width = 288
-      Height = 505
+      Left = 735
+      Top = 131
+      Width = 377
+      Height = 662
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alRight
       Caption = #1047#1085#1072#1095#1077#1085#1080#1103' '#1090#1088#1091#1073#1086#1082' '#1076#1086#1087#1091#1089#1082#1072
       TabOrder = 2
       object ToleranceLV: TBtnListView
         Left = 2
-        Top = 15
-        Width = 284
-        Height = 428
+        Top = 19
+        Width = 373
+        Height = 562
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alClient
         Columns = <
           item
             Caption = #8470
+            Width = 65
           end
           item
             Caption = #1047#1085#1072#1095#1077#1085#1080#1077
+            Width = 65
           end
           item
             Caption = #1063#1072#1089#1090#1086#1090#1072
+            Width = 65
           end
           item
             Caption = 'LoLo'
+            Width = 65
           end
           item
             Caption = 'Lo'
+            Width = 65
           end
           item
             Caption = 'Hi'
+            Width = 65
           end
           item
             Caption = 'HiHi'
+            Width = 65
           end>
         MultiSelect = True
         RowSelect = True
@@ -109,29 +144,41 @@ object EditProfileForm: TEditProfileForm
       end
       object GroupBox5: TGroupBox
         Left = 2
-        Top = 443
-        Width = 284
-        Height = 60
+        Top = 581
+        Width = 373
+        Height = 79
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alBottom
         Caption = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1090#1100' '#1087#1088#1086#1092#1080#1083#1100
         TabOrder = 1
         DesignSize = (
-          284
-          60)
+          373
+          79)
         object DelPointBtn: TButton
-          Left = 4
-          Top = 33
-          Width = 113
-          Height = 25
+          Left = 5
+          Top = 43
+          Width = 148
+          Height = 33
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1059#1076#1072#1083#1080#1090#1100' '#1090#1086#1095#1082#1091
           TabOrder = 0
           OnClick = DelPointBtnClick
         end
         object AddPointBtn: TButton
-          Left = 168
-          Top = 33
-          Width = 112
-          Height = 25
+          Left = 222
+          Top = 43
+          Width = 146
+          Height = 33
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Anchors = [akTop, akRight]
           Caption = #1044#1086#1073#1072#1074#1080#1090#1100' '#1090#1086#1095#1082#1091
           TabOrder = 1
@@ -142,53 +189,81 @@ object EditProfileForm: TEditProfileForm
   end
   object GroupBox2: TGroupBox
     Left = 0
-    Top = 608
-    Width = 852
-    Height = 152
+    Top = 795
+    Width = 1114
+    Height = 199
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alBottom
     Caption = #1056#1072#1076#1072#1082#1090#1080#1088#1086#1074#1072#1085#1080#1077' '#1087#1088#1086#1092#1080#1083#1103
     TabOrder = 1
     object Label3: TLabel
-      Left = 183
-      Top = 13
-      Width = 33
-      Height = 13
+      Left = 239
+      Top = 17
+      Width = 43
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'LoLo, -'
     end
     object Label4: TLabel
-      Left = 183
-      Top = 57
-      Width = 22
-      Height = 13
+      Left = 239
+      Top = 75
+      Width = 28
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Lo, -'
     end
     object Label5: TLabel
-      Left = 278
-      Top = 13
-      Width = 30
-      Height = 13
+      Left = 364
+      Top = 17
+      Width = 36
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'HiHi,+'
     end
     object Label6: TLabel
-      Left = 278
-      Top = 57
-      Width = 21
-      Height = 13
+      Left = 364
+      Top = 75
+      Width = 25
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Hi,+'
     end
     object Label7: TLabel
-      Left = 392
-      Top = 13
-      Width = 45
-      Height = 13
+      Left = 513
+      Top = 17
+      Width = 58
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1045#1076#1080#1085#1080#1094#1099
     end
     object ImportBtn: TButton
-      Left = 561
-      Top = 32
-      Width = 73
-      Height = 25
+      Left = 734
+      Top = 42
+      Width = 95
+      Height = 33
       Hint = #1047#1072#1075#1088#1091#1079#1080#1090#1100' '#1087#1088#1086#1092#1080#1083#1100
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1048#1084#1087#1086#1088#1090
       ParentShowHint = False
       ShowHint = True
@@ -196,11 +271,15 @@ object EditProfileForm: TEditProfileForm
       OnClick = ImportBtnClick
     end
     object ExportBtn: TButton
-      Left = 640
-      Top = 31
-      Width = 80
-      Height = 25
+      Left = 837
+      Top = 41
+      Width = 105
+      Height = 32
       Hint = #1057#1086#1093#1088#1072#1085#1080#1090#1100' '#1087#1086#1076' '#1085#1086#1074#1099#1084' '#1080#1084#1077#1085#1077#1084
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1069#1082#1089#1087#1086#1088#1090
       ParentShowHint = False
       ShowHint = True
@@ -209,50 +288,74 @@ object EditProfileForm: TEditProfileForm
     end
     object GroupBox3: TGroupBox
       Left = 2
-      Top = 15
-      Width = 174
-      Height = 135
+      Top = 19
+      Width = 227
+      Height = 178
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alLeft
       Caption = #1050#1086#1086#1088#1076#1080#1085#1072#1090#1099' '#1074#1077#1088#1096#1080#1085#1099
       TabOrder = 2
       object Label1: TLabel
-        Left = 8
-        Top = 24
-        Width = 10
-        Height = 13
+        Left = 10
+        Top = 31
+        Width = 13
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'X:'
       end
       object Label2: TLabel
-        Left = 8
-        Top = 56
-        Width = 10
-        Height = 13
+        Left = 10
+        Top = 73
+        Width = 13
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'Y:'
       end
       object YFE: TFloatEdit
-        Left = 24
-        Top = 51
-        Width = 121
-        Height = 21
+        Left = 31
+        Top = 67
+        Width = 159
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 0
         Text = '0.0'
         OnKeyDown = XFEKeyDown
       end
       object XFE: TFloatEdit
-        Left = 24
-        Top = 24
-        Width = 121
-        Height = 21
+        Left = 31
+        Top = 31
+        Width = 159
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 1
         Text = '0.0'
         OnKeyDown = XFEKeyDown
       end
     end
     object UnitsCB: TComboBox
-      Left = 391
-      Top = 32
-      Width = 164
-      Height = 21
+      Left = 511
+      Top = 42
+      Width = 215
+      Height = 25
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       TabOrder = 3
       Text = '%'
       Items.Strings = (
@@ -261,58 +364,82 @@ object EditProfileForm: TEditProfileForm
         #1044#1073', SweepSinus 10Log(...)')
     end
     object EvalBtn: TButton
-      Left = 391
-      Top = 74
-      Width = 65
-      Height = 25
+      Left = 511
+      Top = 97
+      Width = 85
+      Height = 32
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1056#1072#1089#1095#1077#1090
       TabOrder = 4
       OnClick = EvalBtnClick
     end
     object HiHiSE: TFloatSpinEdit
-      Left = 278
-      Top = 32
-      Width = 75
-      Height = 22
+      Left = 364
+      Top = 42
+      Width = 98
+      Height = 27
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Increment = 0.100000001490116100
       TabOrder = 5
       Value = 20.000000000000000000
     end
     object HiSE: TFloatSpinEdit
-      Left = 278
-      Top = 76
-      Width = 75
-      Height = 22
+      Left = 364
+      Top = 99
+      Width = 98
+      Height = 27
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Increment = 0.100000001490116100
       TabOrder = 6
       Value = 10.000000000000000000
     end
     object LoSE: TFloatSpinEdit
-      Left = 183
-      Top = 76
-      Width = 75
-      Height = 22
+      Left = 239
+      Top = 99
+      Width = 98
+      Height = 27
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Increment = 0.100000001490116100
       TabOrder = 7
       Value = 10.000000000000000000
     end
     object LoLoSE: TFloatSpinEdit
-      Left = 183
-      Top = 32
-      Width = 75
-      Height = 22
+      Left = 239
+      Top = 42
+      Width = 98
+      Height = 27
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Increment = 0.100000001490116100
       TabOrder = 8
       Value = 20.000000000000000000
     end
     object Button1: TButton
-      Left = 640
-      Top = 62
-      Width = 80
-      Height = 25
+      Left = 837
+      Top = 81
+      Width = 105
+      Height = 33
       Hint = 
         #1057#1086#1093#1088#1072#1085#1080#1090#1100' '#1087#1086#1076' '#1090#1077#1082#1091#1097#1080#1084' '#1080#1084#1077#1085#1077#1084' ('#1087#1077#1088#1077#1087#1080#1089#1072#1090#1100' '#1087#1086#1089#1083#1077#1076#1085#1080#1081' '#1079#1072#1075#1088#1091#1078#1077#1085#1085#1099#1081' '#1092 +
         #1072#1081#1083')'
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
       ParentShowHint = False
       ShowHint = True
@@ -320,10 +447,14 @@ object EditProfileForm: TEditProfileForm
       OnClick = SaveCurrent
     end
     object ApplySelectBtn: TButton
-      Left = 183
-      Top = 104
-      Width = 170
-      Height = 25
+      Left = 239
+      Top = 136
+      Width = 223
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1053#1072#1079#1085#1072#1095#1080#1090#1100' '#1074#1099#1073#1088#1072#1085#1099#1084
       TabOrder = 10
       OnClick = ApplySelectBtnClick

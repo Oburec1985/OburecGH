@@ -282,6 +282,7 @@ type
     // список нестандартных операторов
     algList: tstringlist;
   public
+    procedure delTrig(tr:ctrig);
     // добавляем вспомогательный триггерный канал (x берется из положения курсора)
     function AddHelpTrig: cWPSignal;
     function GetWPSignal(name: string; src: cSrc): cWPSignal; overload;
@@ -862,6 +863,7 @@ begin
   src := mng.getsrcid(srcid);
   result:=GetTime(src);
 end;
+
 
 function EvalGropTrigStatus(obj: cBaseObj; data: pointer): boolean;
 var
@@ -2764,6 +2766,22 @@ begin
   root := GetWPRoot;
 
   LastCfg := LoadString(startDir + 'Services.ini', 'LastCfg');
+end;
+
+
+procedure cWPObjMng.delTrig(tr: ctrig);
+var
+  I: Integer;
+begin
+  for I := 0 to TrigList.Count - 1 do
+  begin
+    if triglist.Objects[i]=tr then
+    begin
+      triglist.Delete(i);
+      tr.destroy;
+      exit;
+    end;
+  end;
 end;
 
 destructor cWPObjMng.destroy;
@@ -5067,7 +5085,16 @@ begin
   begin
     EvalStartStop(nil);
   end;
-  result := ft1;
+  result:=ft1;
+  case IntervalOpts of
+    c_IntervalTrigs:
+    begin
+      if fTrigStart<>nil then
+      begin
+        result:=fTrigStart.GetTime;
+      end;
+    end;
+  end;
 end;
 
 function cSrc.gett2: double;
@@ -5077,6 +5104,15 @@ begin
     EvalStartStop(nil);
   end;
   result := ft2;
+  case IntervalOpts of
+    c_IntervalTrigs:
+    begin
+      if fTrigStop<>nil then
+      begin
+        result:=fTrigStop.GetTime(self);
+      end;
+    end;
+  end;
 end;
 
 procedure cSrc.setT1(v: double);

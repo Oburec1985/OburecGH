@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Root>
+	<WinПОС ResFolder="">
+		<cWPPage ObjType="cWPPage" Node="cWPPage" SyncCurs="false" Rows="1" Col="1" AutoCreate="false">
+			<cWPGraph ObjType="cWPGraph" Node="cWPGraph" AutoCreate="false" Min.X="0" Max.X="10" ZoomMin.X="0" ZoomMax.X="10" XAxisName="X" szftempl="" AxisRow="true" AxisCol="false" XLog="false" XAutoScale="false" Tubes="true" ShowLegend="true" FindInterval="false" StartTrig="" StopTrig="" Length="0">
+				<cWPAxis ObjType="cWPAxis" Node="cWPAxis" AutoCreate="false" MinY="0" MaxY="10" ZoomMinY="0" ZoomMaxY="10" AxisName="Y" szftempl="" Color="0" LogScale="false" AutoScale="false"/>
+			</cWPGraph>
+		</cWPPage>
+		<001_cWPPage ObjType="cWPPage" Node="001_cWPPage" SyncCurs="false" Rows="1" Col="1" AutoCreate="false">
+			<001_cWPGraph ObjType="cWPGraph" Node="001_cWPGraph" AutoCreate="false" Min.X=".1" Max.X="265.5" ZoomMin.X=".1" ZoomMax.X="265.5" XAxisName="время" szftempl="" AxisRow="true" AxisCol="false" XLog="false" XAutoScale="false" Tubes="true" ShowLegend="true" FindInterval="false" StartTrig="" StopTrig="" Length="0">
+				<001_cWPAxis ObjType="cWPAxis" Node="001_cWPAxis" AutoCreate="false" MinY="-290.451" MaxY="3244.4" ZoomMinY="-290.451" ZoomMaxY="3244.4" AxisName="частота вращения" szftempl="" Color="16711680" LogScale="false" AutoScale="false">
+					<18-_1_taho_f ObjType="cWPLine" Node="18- 1_taho_f" srcID="1" SrcName="/Signals/Результаты/signal0210" SrcSignal="18- 1_taho_f" Color="16711680" Width="0" LINE2BASE="false" ONLYPOINTS="false" VISIBLE="true" HIST="false" HISTTRANSP="true" PARAM="false" AutoCreate="false"/>
+				</001_cWPAxis>
+			</001_cWPGraph>
+			<002_cWPGraph ObjType="cWPGraph" Node="002_cWPGraph" AutoCreate="false" Min.X="5" Max.X="2950" ZoomMin.X="5" ZoomMax.X="2950" XAxisName="частота вращения" szftempl="" AxisRow="true" AxisCol="false" XLog="false" XAutoScale="false" Tubes="true" ShowLegend="true" FindInterval="false" StartTrig="" StopTrig="" Length="0">
+				<002_cWPAxis ObjType="cWPAxis" Node="002_cWPAxis" AutoCreate="false" MinY="-.0915883" MaxY="1.00747" ZoomMinY="-.0915883" ZoomMaxY="1.00747" AxisName="Y" szftempl="" Color="16711680" LogScale="false" AutoScale="false">
+					<3-_1_Ae(f) ObjType="cWPLine" Node="3- 1_Ae(f)" srcID="1" SrcName="/Signals/Результаты/signal0210" SrcSignal="3- 1_Ae(f)" Color="16711680" Width="0" LINE2BASE="false" ONLYPOINTS="false" VISIBLE="true" HIST="false" HISTTRANSP="true" PARAM="false" AutoCreate="false"/>
+				</002_cWPAxis>
+			</002_cWPGraph>
+		</001_cWPPage>
+		<002_cWPPage ObjType="cWPPage" Node="002_cWPPage" SyncCurs="false" Rows="1" Col="1" AutoCreate="false">
+			<003_cWPGraph ObjType="cWPGraph" Node="003_cWPGraph" AutoCreate="false" Min.X="5" Max.X="2950" ZoomMin.X="5" ZoomMax.X="2950" XAxisName="частота вращения" szftempl="" AxisRow="true" AxisCol="false" XLog="false" XAutoScale="false" Tubes="true" ShowLegend="true" FindInterval="false" StartTrig="" StopTrig="" Length="0">
+				<003_cWPAxis ObjType="cWPAxis" Node="003_cWPAxis" AutoCreate="false" MinY="-.0915883" MaxY="1.00747" ZoomMinY="-.0915883" ZoomMaxY="1.00747" AxisName="Y" szftempl="" Color="16711680" LogScale="false" AutoScale="false">
+					<3-_1_Ae(f)_001 ObjType="cWPLine" Node="3- 1_Ae(f)_001" srcID="1" SrcName="/Signals/Результаты/signal0210" SrcSignal="3- 1_Ae(f)" Color="16711680" Width="0" LINE2BASE="false" ONLYPOINTS="false" VISIBLE="true" HIST="false" HISTTRANSP="true" PARAM="false" AutoCreate="false"/>
+				</003_cWPAxis>
+			</003_cWPGraph>
+		</002_cWPPage>
+		<Triggers>
+			<Trig_Trig_Start NodeName="Trig_Start" NodeType="Trig" TrigType="0" Shift="0" SearchType="0" SearchIntervalX1="0" SearchIntervalX2="265.5" Signal="18- 4_start" Number="0" Threshold=".5" FltResample="0" FltTrend="false" FltTrendNPoints="0" FltHPF="false" FltHPFOrder="0" FltLPF="false" FltLPFOrder="0" FltH2="false" FltH2NPoints="0" Front="true" SRCID="0" Units="Abs"/>
+			<Trig_Старт замера NodeName="Старт замера" NodeType="Trig" TrigType="1" Shift="0" SearchType="0" SearchIntervalX1="0" SearchIntervalX2="0" Signal="Старт замера" Number="0" Threshold="0" FltResample="0" FltTrend="false" FltTrendNPoints="0" FltHPF="false" FltHPFOrder="0" FltLPF="false" FltLPFOrder="0" FltH2="false" FltH2NPoints="0" Front="false" SRCID="0" Units="Abs"/>
+			<Trig_Стоп замера NodeName="Стоп замера" NodeType="Trig" TrigType="2" Shift="0" SearchType="0" SearchIntervalX1="0" SearchIntervalX2="0" Signal="Стоп замера" Number="0" Threshold="0" FltResample="0" FltTrend="false" FltTrendNPoints="0" FltHPF="false" FltHPFOrder="0" FltLPF="false" FltLPFOrder="0" FltH2="false" FltH2NPoints="0" Front="false" SRCID="0" Units="Abs"/>
+		</Triggers>
+		<SRC SRC_0="/Signals/signal0210.MERA" SRCid_0="0" SRCopts_0="3" SRClevel_0=".5" SRCstart="18- 4_start/lvl=0,5/Shift=0/№=0/Front/Абс."/>
+		<Operators>
+			<Operator_0 OperName="/VibroOpers/расчет АФЧХ" OperParams="typeRez=24, typeRezultMag=0, typeAxesX=1, rGarm=1, deltaF=5, stepF=2.5, flagStepF=0, freqLo=1, freqHi=5000, typeWin=1, typeTransf=0, bFreqStep=1, bFreqRange=0, flagSortRez=1, LevelLo=30, LevelHi=70, level_dF=1, faseOfs=360, dPNTwide=0.5, coefTaho=1, flagFront=0, flagAbsOtn=1, flagFiltrTaho=1, flagFiltrTahoSrc=0, flagMonotonFase=1, flagMethodOb=1, bTahoFFT=1, nPointsFFT=32768, freqLoSp=0, freqHiSp=-1, freqLoSpR=0.8, freqHiSpR=1.2, rGarm_nd=1, deltaF_nd=0, stepF_nd=1, bXLog=1, bYLog=1, typeBlkSett=0, nPeriods=0, freqTab=, " OperIntervalType="1" OperIntervalT1="0" OperIntervalT2="0" DstID="1" SrcID="0">
+				<s_0 DSC_Count="1" DSC_0="/Signals/Результаты/_Src_/18- 1_taho_f" SRC_Count="1" SRC_Name_0="/Signals/signal0210.MERA/18- 1_taho" SRC_Start_0="0" SRC_Count_0="14337000"/>
+			</Operator_0>
+			<Operator_1 OperName="/VibroOpers/расчет АФЧХ" OperParams="typeRez=29, typeRezultMag=0, typeAxesX=1, rGarm=1, deltaF=5, stepF=2.5, flagStepF=0, freqLo=1, freqHi=5000, typeWin=1, typeTransf=0, bFreqStep=1, bFreqRange=0, flagSortRez=1, LevelLo=30, LevelHi=70, level_dF=1, faseOfs=360, dPNTwide=0.5, coefTaho=1, flagFront=0, flagAbsOtn=1, flagFiltrTaho=1, flagFiltrTahoSrc=0, flagMonotonFase=1, flagMethodOb=1, bTahoFFT=1, nPointsFFT=32768, freqLoSp=0, freqHiSp=-1, freqLoSpR=0.8, freqHiSpR=1.2, rGarm_nd=1, deltaF_nd=0, stepF_nd=1, bXLog=1, bYLog=1, typeBlkSett=0, nPeriods=0, freqTab=, " OperIntervalType="1" OperIntervalT1="0" OperIntervalT2="0" DstID="1" SrcID="0">
+				<s_0 DSC_Count="1" DSC_0="/Signals/Результаты/_Src_/3- 1_Ae(f)" SRC_Count="1" SRC_Name_0="/Signals/signal0210.MERA/3- 1" SRC_Start_0="0" SRC_Count_0="14337000"/>
+			</Operator_1>
+		</Operators>
+	</WinПОС>
+</Root>

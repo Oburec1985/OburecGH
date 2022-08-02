@@ -397,7 +397,7 @@ var
   strList: tstringlist;
   o: coperobj;
   signalopts: csignalsopt;
-  i, axtype: integer;
+  i, axtype, charType: integer;
   S: csrc;
   // в алгоритм передается несколько сигналов
   double: boolean;
@@ -450,13 +450,15 @@ begin
                 begin
                   if sig.tube.XAxis = c_AxX_Hz then
                   begin
+                    // 1 - время, 2 спектр и т.д.
+                    charType:=sig.Signal.GetSType(0, 0);
                     // первый параметр nTypeType - что хотим вернуть
                     // 1 -задаем  тип оси; 2 - тип единиц измерения
                     // второй параметр - номер оси. 0 - ось X
                     axtype := sig.Signal.GetSType(1, 0);
                     // если частотная ось
-                    // 5 - временная
-                    if axtype = 10 then
+                    // 5 - временная 10 - частота. 11 - тип характеристики время, но тип оси частота WTF???
+                    if (axtype = 10) or (axtype = 11) then
                     begin
                       sig.tube.CreateLines(hgraph, haxis);
                     end;
