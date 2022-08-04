@@ -75,12 +75,12 @@ begin
   end;
   if n=nil then exit;
   d := tv.getnodedata(n);
-  result := cBaseObj(d.data);
-  if result is cBaseAlg then
+  result := cAlgConfig(d.data);
+  if result is cAlgConfig then
   begin
     parentnode := n.Parent;
     d := tv.getnodedata(parentnode);
-    result := cBaseObj(d.data);
+    result := cAlgConfig(d.data);
   end;
 end;
 

@@ -243,16 +243,6 @@ begin
   minvalfe.OnChange := p;
 
   str:=GetParsValue(m_pars, 'TahoType');
-  dxEdit.Text:=GetParsValue(m_pars, 'Period');
-
-  str:=GetParsValue(m_pars, 'Addnull');
-  AddNullCB.Checked:=strtoboolext(str);
-
-  str:=GetParsValue(m_pars, 'WndType');
-  if checkstr(str) then
-    WndCB.itemindex:=strtoint(str);
-
-  setcomboboxitem(GetParsValue(m_pars, 'Channel'), ChannelCB);
   if str='Level' then
   begin
     SetTahoType(true);
@@ -275,6 +265,17 @@ begin
     BandF2Edit.text:=GetParsValue(m_pars, 'FFTBand2');
     BandF2Edit.OnChange:=ne;
   end;
+
+  dxEdit.Text:=GetParsValue(m_pars, 'Period');
+
+  str:=GetParsValue(m_pars, 'Addnull');
+  AddNullCB.Checked:=strtoboolext(str);
+
+  str:=GetParsValue(m_pars, 'WndType');
+  if checkstr(str) then
+    WndCB.itemindex:=strtoint(str);
+
+  setcomboboxitem(GetParsValue(m_pars, 'Channel'), ChannelCB);
 
   if channelcb.ItemIndex>-1 then
   begin
