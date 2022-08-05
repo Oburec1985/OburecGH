@@ -87,6 +87,7 @@ type
     procedure LoadObjAttributes(xmlNode: txmlNode; mng: tobject); override;
     procedure SaveObjAttributes(xmlNode: txmlNode); override;
     function ready:boolean;override;
+    function GetResName: string; override;
   public
     property InTag:ctag read fintag write fintag;
     constructor create; override;
@@ -497,6 +498,18 @@ begin
 end;
 
 
+function cTahoAlg.GetResName: string;
+begin
+  result:=inherited GetResName;
+  if fOutTag<>nil then
+  begin
+    if fOutTag.tag<>nil then
+    begin
+      result:=fOutTag.tagname;
+    end;
+  end;
+end;
+
 procedure cTahoAlg.SetProperties(str: string);
 var
   lstr: string;
@@ -586,6 +599,10 @@ begin
         begin
           createOutChan;
         end;
+      end
+      else
+      begin
+        fOutTag.tagname:=resname;
       end;
       fOutTag.InitWriteData(fOutTag.blockCount)
     end;
@@ -614,8 +631,13 @@ function cTahoAlg.genTagName: string;
 var
   tagname: string;
 begin
-  tagname := InTag.tagname;
-  result := tagname + '_Taho';
+  if InTag<>nil then
+  begin
+    tagname := InTag.tagname;
+    result := tagname + '_Taho';
+  end
+  else
+    result:='';
 end;
 
 procedure cTahoAlg.createOutChan;

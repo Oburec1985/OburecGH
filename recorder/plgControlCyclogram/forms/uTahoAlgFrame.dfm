@@ -1,17 +1,17 @@
 inherited TahoAlgFrame: TTahoAlgFrame
-  Height = 579
+  Height = 572
   Constraints.MinHeight = 440
   ExplicitHeight = 440
   object ChannelLabel: TLabel [2]
     Left = 8
-    Top = 138
+    Top = 154
     Width = 35
     Height = 16
     Caption = #1050#1072#1085#1072#1083
   end
   object Label2: TLabel [3]
     Left = 168
-    Top = 138
+    Top = 154
     Width = 36
     Height = 16
     Caption = #1042#1099#1093#1086#1076
@@ -25,7 +25,7 @@ inherited TahoAlgFrame: TTahoAlgFrame
   end
   object FsLabel: TLabel [5]
     Left = 8
-    Top = 190
+    Top = 206
     Width = 137
     Height = 16
     Caption = #1063#1072#1089#1090#1086#1090#1072' '#1086#1087#1088#1086#1089#1072' '#1082#1072#1085#1072#1083#1072
@@ -41,7 +41,7 @@ inherited TahoAlgFrame: TTahoAlgFrame
   end
   object LvlPan: TPanel
     Left = 0
-    Top = 275
+    Top = 268
     Width = 451
     Height = 120
     Align = alBottom
@@ -82,7 +82,7 @@ inherited TahoAlgFrame: TTahoAlgFrame
   end
   object SpmPan: TPanel
     Left = 0
-    Top = 395
+    Top = 388
     Width = 451
     Height = 184
     Align = alBottom
@@ -225,7 +225,7 @@ inherited TahoAlgFrame: TTahoAlgFrame
   end
   object ChannelCB: TRcComboBox
     Left = 8
-    Top = 160
+    Top = 176
     Width = 145
     Height = 24
     TabOrder = 5
@@ -234,7 +234,7 @@ inherited TahoAlgFrame: TTahoAlgFrame
   end
   object OutChannelName: TEdit
     Left = 159
-    Top = 160
+    Top = 176
     Width = 185
     Height = 24
     Anchors = [akLeft, akTop, akRight]
@@ -243,7 +243,7 @@ inherited TahoAlgFrame: TTahoAlgFrame
   end
   object MinValFE: TFloatEdit
     Left = 161
-    Top = 117
+    Top = 129
     Width = 183
     Height = 24
     Anchors = [akLeft, akTop, akRight]
@@ -253,7 +253,7 @@ inherited TahoAlgFrame: TTahoAlgFrame
   end
   object FsEdit: TFloatEdit
     Left = 8
-    Top = 212
+    Top = 228
     Width = 121
     Height = 24
     Enabled = False

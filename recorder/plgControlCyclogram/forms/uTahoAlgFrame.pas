@@ -49,7 +49,9 @@ type
       State: TDragState; var Accept: Boolean);
   protected
     finit:boolean;
+    curAlg:cbasealgcontainer;
   protected
+    function ShowAlg(a:cbaseAlgContainer):boolean;override;
     procedure init;
     function getProperties: string; override;
     procedure setProperties(s: string); override;
@@ -172,6 +174,7 @@ begin
   if ChannelCB.text<>'' then
   begin
     addParam(m_pars, 'Channel', ChannelCB.text);
+
     OutChannelName.text:=ChannelCB.text+'_Taho';
   end;
   result:=ParsToStr(m_pars);
@@ -292,6 +295,12 @@ begin
   TahoTypeCB.Checked:=levels;
   lvlPan.Visible:=levels;
   SpmPan.Visible:=not levels;
+end;
+
+function TTahoAlgFrame.ShowAlg(a: cbaseAlgContainer): boolean;
+begin
+  result:=inherited;
+  OutChannelName.text:=m_a.resname;
 end;
 
 procedure TTahoAlgFrame.FFTCountSpinBtnDownClick(Sender: TObject);

@@ -38,7 +38,6 @@ object AlgFrm: TAlgFrm
       Height = 55
       Align = alBottom
       TabOrder = 0
-      ExplicitWidth = 271
       object AddAlgBtn: TSpeedButton
         Left = 4
         Top = 7
@@ -260,8 +259,6 @@ object AlgFrm: TAlgFrm
       ScrollBarOptions.AlwaysVisible = True
       TabOrder = 1
       TreeOptions.SelectionOptions = [toMultiSelect]
-      ExplicitLeft = 5
-      ExplicitTop = 0
       Columns = <>
     end
     object AlgLV: TBtnListView
@@ -292,8 +289,6 @@ object AlgFrm: TAlgFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitLeft = 592
-      ExplicitWidth = 0
     end
   end
   object AlgPropPanel: TPanel
@@ -303,8 +298,6 @@ object AlgFrm: TAlgFrm
     Height = 840
     Align = alClient
     TabOrder = 1
-    ExplicitLeft = 276
-    ExplicitWidth = 760
     object Splitter2: TSplitter
       Left = 436
       Top = 1
@@ -321,9 +314,6 @@ object AlgFrm: TAlgFrm
       Height = 838
       Align = alClient
       TabOrder = 0
-      ExplicitLeft = 6
-      ExplicitTop = 2
-      ExplicitWidth = 755
     end
   end
   object BottomPanel: TPanel
