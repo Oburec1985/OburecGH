@@ -270,7 +270,7 @@ begin
   ifile.WriteString('Main', 'LoadPath', LoadCfgCB.Text);
   ifile.WriteString('Main', 'SavePath', SaveCfgCB.Text);
   ifile.WriteInteger('Main', 'FFTPoint', pCountIE.IntNum);
-  ifile.WriteInteger('Main', 'FFTPoint', OffsetSE.Value);
+  ifile.WriteInteger('Main', 'Offset', OffsetSE.Value);
   i:=0;
   for j := 0 to SignalsLV.items.Count - 1 do
   begin
@@ -300,7 +300,7 @@ begin
     LoadBtnClick(nil);
   SaveCfgCB.Text:=ifile.ReadString('Main', 'SavePath', '');
   pCountIE.IntNum:=ifile.readInteger('Main', 'FFTPoint', 8192);
-  OffsetSE.Value:=ifile.readInteger('Main', 'FFTPoint', 8192);
+  OffsetSE.Value:=ifile.readInteger('Main', 'Offset', 8192);
   selcount:=ifile.readInteger('Main', 'SCount', 0);
   for I := 0 to selcount - 1 do
   begin

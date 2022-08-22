@@ -318,7 +318,7 @@ var
   b: tband;
   I: Integer;
 begin
-  props := 'Type=' + AlgTypeCB.ItemIndex;
+  props := 'Type=' + inttostr(AlgTypeCB.ItemIndex);
   props := 'BandCount=' + inttostr(CurvsLB.Items.count) + ';';
   for I := 0 to CurvsLB.Items.count - 1 do
   begin

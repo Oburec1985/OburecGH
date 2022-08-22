@@ -42,7 +42,6 @@
     Align = alBottom
     Caption = #1042#1099#1073#1077#1088#1080#1090#1077' '#1076#1077#1081#1089#1090#1074#1080#1077
     TabOrder = 0
-    ExplicitWidth = 1331
     DesignSize = (
       1091
       132)
@@ -219,14 +218,12 @@
     ActivePage = AlgOptsTabSheet
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 1084
     object AlgOptsTabSheet: TTabSheet
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1072#1083#1075#1086#1088#1080#1090#1084#1072
-      ExplicitWidth = 1076
       object AlgOptsGB: TGroupBox
         Left = 0
         Top = 0
@@ -238,7 +235,6 @@
         Margins.Bottom = 4
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 1076
         object SaveBandGB: TGroupBox
           Left = 2
           Top = 19
@@ -250,8 +246,6 @@
           Margins.Bottom = 4
           Align = alTop
           TabOrder = 0
-          ExplicitLeft = 5
-          ExplicitTop = 11
           DesignSize = (
             832
             128)
@@ -312,7 +306,6 @@
             Anchors = [akLeft, akTop, akRight]
             TabOrder = 0
             OnChange = NameEditChange
-            ExplicitWidth = 517
           end
           object ExpBtn: TButton
             Left = 372
@@ -328,7 +321,6 @@
             Caption = #1069#1082#1089#1087#1086#1088#1090
             TabOrder = 1
             OnClick = ExpBtnClick
-            ExplicitLeft = 612
           end
           object ImportBtn: TButton
             Left = 479
@@ -344,7 +336,6 @@
             Caption = #1048#1084#1087#1086#1088#1090
             TabOrder = 2
             OnClick = ImportBtnClick
-            ExplicitLeft = 719
           end
           object PathBtn: TButton
             Left = 302
@@ -359,7 +350,6 @@
             Caption = '...'
             TabOrder = 3
             OnClick = PathBtnClick
-            ExplicitLeft = 542
           end
           object AlgTypeCB: TComboBox
             Left = 4
@@ -421,7 +411,6 @@
           Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1087#1086#1083#1086#1089
           TabOrder = 1
           Visible = False
-          ExplicitWidth = 1072
           object Splitter2: TSplitter
             Left = 210
             Top = 19
@@ -475,7 +464,6 @@
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 1
-            ExplicitWidth = 858
             object CurvsLB: TListBox
               Left = 1
               Top = 1
@@ -492,7 +480,6 @@
               TabOrder = 0
               OnClick = CurvsLBClick
               OnKeyDown = ExtremumLBKeyDown
-              ExplicitWidth = 856
             end
             object CurvsPanel: TPanel
               Left = 1
@@ -507,7 +494,6 @@
               Color = clSilver
               ParentBackground = False
               TabOrder = 1
-              ExplicitWidth = 856
               object DelCurv: TSpeedButton
                 Left = 360
                 Top = 72
@@ -683,14 +669,16 @@
                 ActivePage = Уровень
                 Align = alLeft
                 TabOrder = 0
-                ExplicitLeft = 5
-                ExplicitTop = 3
                 object Кривая: TTabSheet
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
                   Caption = #1050#1088#1080#1074#1072#1103
+                  ExplicitLeft = 0
+                  ExplicitTop = 0
+                  ExplicitWidth = 0
+                  ExplicitHeight = 0
                   object Xlabel: TLabel
                     Left = 7
                     Top = 65
@@ -957,7 +945,10 @@
       Margins.Bottom = 4
       Caption = #1057#1086#1093#1088#1072#1085#1077#1085#1080#1077' '#1080' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1099
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
       ExplicitWidth = 1076
+      ExplicitHeight = 0
       object Splitter1: TSplitter
         Left = 0
         Top = 136
@@ -1139,7 +1130,6 @@
     Margins.Bottom = 4
     Align = alRight
     TabOrder = 2
-    ExplicitLeft = 1089
     object SignalsListGB: TGroupBox
       Left = 2
       Top = 19
