@@ -16,6 +16,7 @@ uses
   u2dmath;
 
 type
+  cAlgConfig = class;
 
   tAHUnit = (AHmult, // множитель на который надо домножить значение
     AH10db, // units=10lg(Ares/A)
@@ -45,6 +46,7 @@ type
 
   cBaseAlgContainer = class(cBaseObj)
   public
+    m_parentCfg:cAlgConfig;
     // список алгоритмов кот передают данные по подписке сюда
     m_refList: tlist;
   protected
@@ -53,11 +55,13 @@ type
     // список алгоритмов кот подписаны на обновлеение данных
     m_SubscribeList: tlist;
   protected
+    procedure SetParentCfg(c:cAlgConfig);
     procedure doStopRecord;virtual;
     procedure doAfterload; virtual;
     procedure UpdatePropStr; virtual;
     procedure SetProperties(str: string); virtual;
     function GetProperties: string; virtual; abstract;
+    function getExtProp: string; virtual;
     procedure Setdx(d: double); virtual; abstract;
     function Getdx: double; virtual; abstract;
     procedure LoadObjAttributes(xmlNode: txmlNode; mng: tobject); override;
@@ -96,6 +100,7 @@ type
     class function getdsc: string; virtual;
     property Properties: string read GetProperties write SetProperties;
     property resname: string read GetResName write SetResName;
+    property parentCgf: cAlgConfig read m_parentCfg write setParentCfg;
     constructor create; override;
     destructor destroy; override;
   end;
@@ -109,11 +114,17 @@ type
     m_name:string;
     // список подписанных алгоритмов
     m_childs: tlist;
+  protected
+    function getprops(algNum:integer):string;overload;
+    function getprops:string;overload;
   public
+    function ChildCount:integer;
+    function getAlg(i:integer):cBaseAlgContainer;
     property name:string read m_name write m_name;
-    property str:string read m_str write m_str;
+    property str:string read getprops write m_str;
     constructor create(cl:TClass);
     destructor destroy;
+    procedure AddChild(a:cBaseAlgContainer);
   end;
 
   cBaseAlg = class(cBaseAlgContainer)
@@ -196,6 +207,7 @@ type
     procedure clearAHlist;
 
     function getCfg(i: integer): cAlgConfig;
+    function CfgCount:integer;
     function newCfg(name: string; cltype:TClass): cAlgConfig;
     procedure clearCfgList;
 
@@ -362,6 +374,11 @@ begin
 
 end;
 
+function cBaseAlgContainer.getExtProp: string;
+begin
+
+end;
+
 function cBaseAlgContainer.GetResName: string;
 begin
   result := genTagName;
@@ -425,6 +442,11 @@ end;
 procedure cBaseAlgContainer.setfirstchannel(t: itag);
 begin
 
+end;
+
+procedure cBaseAlgContainer.setParentCfg(c: cAlgConfig);
+begin
+  m_ParentCfg:=c;
 end;
 
 procedure cBaseAlgContainer.LoadObjAttributes(xmlNode: txmlNode; mng: tobject);
@@ -631,11 +653,6 @@ begin
   Clear;
 end;
 
-
-procedure cAlgMng.clearCfgList;
-begin
-
-end;
 
 constructor cAlgMng.create;
 begin
@@ -945,7 +962,22 @@ begin
   m_AHList.add(result);
 end;
 
+function cAlgMng.CfgCount:integer;
+begin
+  result:=m_cfgList.Count;
+end;
 
+procedure cAlgMng.clearCfgList;
+var
+  I: Integer;
+  cfg:cAlgConfig;
+begin
+  while CfgCount<>0 do
+  begin
+    cfg:=getCfg(0);
+    cfg.destroy;
+  end;
+end;
 
 function cAlgMng.getCfg(i: integer): cAlgConfig;
 begin
@@ -1521,6 +1553,59 @@ begin
     end;
   end;
   m_childs.destroy;
+end;
+
+procedure cAlgConfig.AddChild(a: cBaseAlgContainer);
+var
+  I: Integer;
+  b:boolean;
+begin
+  if a.ClassType=clType then
+  begin
+    b:=false;
+    for I := 0 to ChildCount - 1 do
+    begin
+      if getAlg(i)=a then
+      begin
+        b:=true;
+        break;
+      end;
+    end;
+    if not b then
+    begin
+      a.parentCgf:=self;
+      m_childs.Add(a);
+    end;
+  end;
+end;
+
+function cAlgConfig.ChildCount:integer;
+begin
+  result:=m_childs.Count;
+end;
+
+function cAlgConfig.getAlg(i:integer):cBaseAlgContainer;
+begin
+  result:=cBaseAlgContainer(m_childs.Items[i]);
+end;
+
+function cAlgConfig.getprops(algNum:integer): string;
+var
+  extstr:string;
+  a:cbasealgcontainer;
+begin
+  extstr:='';
+  if algNum<(ChildCount-1) then
+  begin
+    a:=getAlg(algNum);
+    extstr:=a.getExtProp;
+  end;
+  result:=updateParams(m_str,extstr);
+end;
+
+function cAlgConfig.getprops:string;
+begin
+  result:=getprops(0);
 end;
 
 end.

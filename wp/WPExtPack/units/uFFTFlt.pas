@@ -224,12 +224,16 @@ var
   r1, err: olevariant;
   s,s1, interval,
   res:iwpsignal;
-  I, size, startind, resstart, resend, axtype:integer;
+  I, size,
+  startind, // текущая позиция начала очередной порции
+  resStart, resend, // обработанная порция без перекрытий
+  axtype, startOffset:integer;
   k, v:double;
   str:string;
   wstr:widestring;
-  EndSignal:boolean;
+  bOverlap, EndSignal:boolean;
   df:double;
+
 begin
   s1 := psrc1 as iwpsignal;
 
@@ -258,7 +262,7 @@ begin
   res.SetSType(2, 1, s1.GetSType(2, 1));
 
   startind:=0;
-  resstart:=0;
+  resStart:=0;
   resend:=m_fftCount - 1;
   EndSignal:=false;
   while not EndSignal do
@@ -280,24 +284,25 @@ begin
     // сохраняем амплитудный спектр
     // SaveSignal('/Signals/results',s1.sname+'_'+'MagSpm',TDoubleArray(MagFFTarray.p),(1/(s1.deltaX))/m_fftCount, 0);
     ifft_al_d_sse(TCmxArray_d(fltcmplx_al.p), TCmxArray_d(cmplx_al.p), ifftPlan);
-    for I := resstart to resEnd do
+    //startOffset:=resEnd-foverlap;
+    for I := startind to resEnd do
     begin
-      if foverlap>0 then
+      if (resStart>0) and ((i>=startind) and (i<resStart)) and (foverlap>0) then
       begin
-        k := (I)/(foverlap - 1);
-        v:=(1-k)*res.getY(i) + k*TCmxArray_d(cmplx_al.p)[i-resstart].Re;
+        k := (I-startind)/foverlap;
+        v:=(1-k)*res.getY(i) + k*TCmxArray_d(cmplx_al.p)[i-startind].Re;
         res.SetY(i,v);
       end
       else
       begin
-         v:=TCmxArray_d(cmplx_al.p)[i-resstart].Re;
+         v:=TCmxArray_d(cmplx_al.p)[i-startind].Re;
          //IsSignal(res)
          res.SetY(i,v);
       end;
     end;
-    startind:=startind+m_offset-foverlap;
-    resstart:=resstart+m_offset-foverlap;
-    resend:=resend+m_offset;
+    resStart:=startind+m_fftCount;
+    startind:=startind+m_offset;
+    resend:=startind+m_fftCount;
     if resend>=s1.size then
       EndSignal:=true;
   end;

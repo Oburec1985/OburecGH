@@ -8,13 +8,14 @@ uses
   uCounterAlgFrame, uBaseAlg, uAlgAddFrm, uComponentServises, uBaseObj, uPhaseFrame,
   uPhaseCrossSpmFrame,  uTagsListFrame, uTahoAlgFrame, uGrmsFrame, tags,
   ucommonmath,
+  ActiveX,
   uGrmsSrcFrame,
   uSpmFrame,
   uAriphmAlgFrame,
   uFillFctFrame,
   uPeakFactorFrame,
   uIntegralAlgFrame,
-  uRCFunc, Menus, uBandsFrm, VirtualTrees, uVTServices;
+  uRCFunc, Menus, uBandsFrm, VirtualTrees, uVTServices, ImgList;
 
 type
   TAlgFrm = class(TForm)
@@ -31,25 +32,31 @@ type
     MainMenu1: TMainMenu;
     BandsMenu: TMenuItem;
     AlgsTV: TVTree;
-    AlgLV: TBtnListView;
+    ImageList1: TImageList;
     procedure AddAlgBtnClick(Sender: TObject);
-    procedure AlgLVKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormShow(Sender: TObject);
-    procedure AlgLVSelectItem(Sender: TObject; Item: TListItem;
-      Selected: Boolean);
     procedure UpdateAlgBtnClick(Sender: TObject);
     procedure BandsMenuClick(Sender: TObject);
     procedure AlgLVCustomDrawItem(Sender: TCustomListView; Item: TListItem;
       State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure AlgsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
+      Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
+      var Effect: Integer; var Accept: Boolean);
+    procedure AlgsTVDragDrop(Sender: TBaseVirtualTree; Source: TObject;
+      DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
+      Pt: TPoint; var Effect: Integer; Mode: TDropMode);
+    procedure AlgsTVChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure AlgsTVKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     m_frameList:tstringlist;
     m_init:boolean;
   private
     function selectalg:cbasealgcontainer;
     procedure delalg(a: cbaseobj);
-    procedure showAlgsInLV;
+    procedure showAlgsInTV;
     procedure addframe(fr:TBaseAlgFrame);
+    procedure AddAlgToNode(n:PVirtualNode);
   public
     constructor create(aowner:tcomponent);override;
     destructor destroy;override;
@@ -71,70 +78,87 @@ begin
   n := GetSelectNode(tv);
   if n = nil then
   begin
-    n:=tv.GetFirst(true);
+    result:=nil;
+    exit;
+    //n:=tv.GetFirst(true);
   end;
   if n=nil then exit;
   d := tv.getnodedata(n);
-  result := cAlgConfig(d.data);
-  if result is cAlgConfig then
+  if tobject(d.data) is cAlgConfig then
   begin
-    parentnode := n.Parent;
-    d := tv.getnodedata(parentnode);
     result := cAlgConfig(d.data);
+    if result is cAlgConfig then
+    begin
+      exit;
+    end;
+  end
+  else
+  begin
+    n:=n.Parent;
+    d := tv.getnodedata(n);
+    if tobject(d.data) is cAlgConfig then
+    begin
+      result := cAlgConfig(d.data);
+    end;
+  end;
+end;
+
+procedure TAlgFrm.showAlgsInTV;
+var
+  I, j: Integer;
+  cfg:cAlgConfig;
+  a:cBaseAlgContainer;
+  o:cbaseobj;
+  n, parnode: pvirtualnode;
+  d: pnodedata;
+begin
+  AlgsTV.Clear;
+  for I := 0 to g_algMng.CfgCount - 1 do
+  begin
+    cfg:=g_algMng.getCfg(i);
+    parnode:=AlgsTV.AddChild(nil, nil);
+    d:=AlgsTV.getNodeData(parnode);
+    d.data:=cfg;
+    d.color:=AlgsTV.normalcolor;
+    d.Caption:=cfg.name;
+    d.ImageIndex:=0;
+    for j := 0 to cfg.ChildCount - 1 do
+    begin
+      a:=cfg.getAlg(j);
+      n:=AlgsTV.AddChild(parnode, cfg);
+      d:=AlgsTV.getNodeData(n);
+      d.Caption:=a.name;
+      d.ImageIndex:=1;
+      d.data:=a;
+      d.color:=AlgsTV.normalcolor;
+    end;
+  end;
+  for I := 0 to g_algMng.count - 1 do
+  begin
+    o:=g_algMng.getobj(i);
+    if o is cbasealgcontainer then
+      a:=cbasealgcontainer(o)
+    else
+      continue;
+    if a.parentCgf=nil then
+    begin
+      parnode:=AlgsTV.AddChild(nil, nil);
+      d:=AlgsTV.getNodeData(parnode);
+      d.data:=a;
+      d.color:=AlgsTV.normalcolor;
+      d.Caption:=a.resname;
+      d.ImageIndex:=1;
+    end;
   end;
 end;
 
 {TAlgFrm}
 procedure TAlgFrm.AddAlgBtnClick(Sender: TObject);
 var
-  a:cbasealgcontainer;
-  I: Integer;
-  li:tlistitem;
-  t:itag;
-  showalg:boolean;
-
-  cfg:cAlgConfig;
+  n:pVirtualNode;
 begin
-  cfg:=getSelectAlgCfg(AlgsTV);
-
-  for I := 0 to TagsListFrame1.TagsLV.SelCount - 1 do
-  begin
-    if i=0 then
-    begin
-      li:=TagsListFrame1.TagsLV.Selected;
-      showalg:=true;
-    end
-    else
-    begin
-      li:=TagsListFrame1.TagsLV.GetNextItem(li,sdAll, [isSelected]);
-      showalg:=false;
-    end;
-    t:=itag(li.Data);
-    a:=addAlgFrm.CreateAlg(showalg);
-    if cfg=nil then
-    begin
-      g_algMng.newCfg(a.ClassName,a.ClassType);
-    end;
-    if a<>nil then
-    begin
-      a.setfirstchannel(t);
-      if t<>nil then
-      begin
-        //a.createOutChan;
-        a.updateoutchan;
-      end;
-      while g_algMng.getAlg(a.name)<>nil do
-      begin
-        a.name:=modname(a.name, false);
-      end;
-      g_algMng.Add(a, nil);
-    end
-    else
-    begin
-      exit;
-    end;
-  end;
-  showAlgsInLV;
+  n:=GetSelectNode(AlgsTV);
+  AddAlgToNode(n);
 end;
 
 procedure TAlgFrm.addframe(fr: TBaseAlgFrame);
@@ -179,72 +203,238 @@ begin
  end;
 end;
 
-procedure TAlgFrm.AlgLVKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+procedure TAlgFrm.AddAlgToNode(n: PVirtualNode);
 var
   I: Integer;
-  li, next: TListItem;
-  obj: cbaseobj;
+  li: TListItem;
+  cfg:cAlgConfig;
+  t:itag;
+  a:cBaseAlgContainer;
+  controlsNode, child: PVirtualNode;
+  d: PNodeData;
+  showAlg, newCfg:boolean;
 begin
-  if Key = VK_DELETE then
+  // перетаскиваем vcl компонент
+  I := 0;
+  newCfg:=false;
+  li:=TagsListFrame1.TagsLV.Selected;
+  showalg:=true;
+  cfg:=nil;
+  while li<>nil do
   begin
-    li:=AlgLV.Selected;
-    while li<>nil do
+    if (cfg=nil) then // на втором кругу закидываем в уже созданную конфигу
     begin
-      obj:=cbaseobj(li.data);
-      next:=AlgLV.GetNextItem(li,sdAll,[isSelected]);
-      delalg(obj);
-      li:=next;
+      if n=nil then
+      begin
+        cfg:=nil
+      end
+      else
+      begin
+        // поднимаемся на корневой узел (программа)
+        while (n.Parent <> AlgsTV.RootNode) do
+        begin
+          d:=algstv.GetNodeData(n);
+          if (tobject(d.data) is cAlgConfig) then
+          begin
+            break;
+          end;
+          n:=n.Parent;
+        end;
+        if n<>nil then
+        begin
+          d:=algstv.GetNodeData(n);
+          if (tobject(d.data) is cAlgConfig) then
+          begin
+            cfg:=cAlgConfig(d.data);
+          end;
+        end;
+      end;
     end;
-  end;
+    t:=itag(li.Data);
+    a:=addAlgFrm.CreateAlg(showalg);
+    if cfg=nil then
+    begin
+      cfg:=g_algMng.newCfg(a.ClassName,a.ClassType);
+      cfg.str:=a.Properties;
+      newCfg:=true;
+    end;
+    cfg.AddChild(a);
+    if a<>nil then
+    begin
+      a.setfirstchannel(t);
+      if t<>nil then
+      begin
+        //a.createOutChan;
+        a.updateoutchan;
+      end;
+      while g_algMng.getAlg(a.name)<>nil do
+      begin
+        a.name:=modname(a.name, false);
+      end;
+      g_algMng.Add(a, nil);
+    end;
+    li:=TagsListFrame1.TagsLV.GetNextItem(li, sdAll, [isSelected]);
+    showalg:=false;
+    inc(i);
+  end; // while
+  showAlgsInTV;
 end;
 
-procedure TAlgFrm.AlgLVSelectItem(Sender: TObject; Item: TListItem;
-  Selected: Boolean);
+procedure TAlgFrm.AlgsTVChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 var
   I: Integer;
+  n, pn, fn:pVirtualNode;
+  d:pNodedata;
+  cfg:cAlgConfig;
+
   fr,firstalgFrame:TBaseAlgFrame;
-  firstalg,a:cbasealgcontainer;
+  firstalg, a:cbasealgcontainer;
   j: Integer;
   li:tlistitem;
 begin
   firstalgFrame:=nil;
-  for j := 0 to algLV.SelCount - 1 do
+  if n=nil then exit;
+  n:=GetSelectNode(AlgsTV);
+  fn:=n;
+  d:=AlgsTV.GetNodeData(n);
+  if tobject(d.data) is cAlgConfig then
   begin
-    if j=0 then
-      li:=algLV.Selected
-    else
-      li:=algLV.GetNextItem(li,sdAll,[isselected]);
-    a:=cbasealgcontainer(li.data);
-    if j=0 then
+    cfg:=cAlgConfig(d.data);
+  end
+  else
+  begin
+    pn:=n.Parent;
+    if pn = AlgsTV.rootNode then
     begin
-      firstalg:=a;
-      for I := 0 to m_frameList.Count - 1 do
+      j:=0;
+      while n<>nil do
       begin
-        fr:=TBaseAlgFrame(m_frameList.Objects[i]);
-        fr.m_a:=a;
-        if not fr.ShowAlg(a) then
+        if j=0 then
         begin
-          AlgsPageControl.Pages[i].Visible:=false;
-          AlgsPageControl.Pages[i].TabVisible:=false;
+          d:=AlgsTV.GetNodeData(n);
+          a:=cbasealgcontainer(d.data);
+          firstalg:=a;
+          for I := 0 to m_frameList.Count - 1 do
+          begin
+            fr:=TBaseAlgFrame(m_frameList.Objects[i]);
+            fr.m_a:=a;
+            if not fr.ShowAlg(a) then
+            begin
+              AlgsPageControl.Pages[i].Visible:=false;
+              AlgsPageControl.Pages[i].TabVisible:=false;
+            end
+            else
+            begin
+              AlgsPageControl.ActivePageIndex:=i;
+              AlgsPageControl.Pages[i].Visible:=true;
+              AlgsPageControl.Pages[i].TabVisible:=true;
+              firstalgFrame:=fr;
+            end;
+          end;
         end
         else
         begin
-          AlgsPageControl.ActivePageIndex:=i;
-          AlgsPageControl.Pages[i].Visible:=true;
-          AlgsPageControl.Pages[i].TabVisible:=true;
-          firstalgFrame:=fr;
+          if a.ClassType=firstalg.ClassType then
+            firstalgFrame.ShowAlg(a);
         end;
+        inc(j);
+        n:=AlgsTV.GetNext(n, false);
       end;
     end
     else
     begin
-      if a.ClassType=firstalg.ClassType then
-        firstalgFrame.ShowAlg(a);
+      d:=AlgsTV.GetNodeData(n);
+      if tobject(d.data) is cAlgConfig then
+      begin
+        cfg:=cAlgConfig(d.data);
+      end
+    end;
+  end;
+  n:=fn;
+  j:=0;
+  if n.childcount>0 then
+  begin
+    for j := 0 to n.ChildCount - 1 do
+    begin
+      if I <> 0 then
+        n:= AlgsTV.GetNext(n)
+      else
+        n:= AlgsTV.GetFirst;
+      d:=AlgsTV.GetNodeData(n);
+      a:=cBaseAlgContainer(d.data);
+      if j=0 then
+      begin
+        firstalg:=a;
+        for I := 0 to m_frameList.Count - 1 do
+        begin
+          fr:=TBaseAlgFrame(m_frameList.Objects[i]);
+          fr.m_a:=a;
+          if not fr.ShowAlg(a) then
+          begin
+            AlgsPageControl.Pages[i].Visible:=false;
+            AlgsPageControl.Pages[i].TabVisible:=false;
+          end
+          else
+          begin
+            AlgsPageControl.ActivePageIndex:=i;
+            AlgsPageControl.Pages[i].Visible:=true;
+            AlgsPageControl.Pages[i].TabVisible:=true;
+            firstalgFrame:=fr;
+          end;
+        end;
+      end
+      else
+      begin
+        if a.ClassType=firstalg.ClassType then
+          firstalgFrame.ShowAlg(a);
+      end;
     end;
   end;
   if firstalgFrame<>nil then
     firstalgFrame.EndMsel;
+end;
+
+procedure TAlgFrm.AlgsTVDragDrop(Sender: TBaseVirtualTree; Source: TObject;
+  DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
+  Pt: TPoint; var Effect: Integer; Mode: TDropMode);
+var
+  I: Integer;
+  n: PVirtualNode;
+begin
+  // перетаскиваем vcl компонент
+  if DataObject = nil then
+  begin
+    n := Sender.DropTargetNode;
+    AddAlgToNode(n);
+  end;
+  //if Sender.DropTargetNode<>nil then
+  //  Sender.DropTargetNode.States := Sender.DropTargetNode.States + [vsExpanded];
+end;
+
+procedure TAlgFrm.AlgsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
+  Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
+  var Effect: Integer; var Accept: Boolean);
+begin
+  Accept := false;
+  if Source = TagsListFrame1.TagsLV then
+    Accept := true;
+end;
+
+procedure TAlgFrm.AlgsTVKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  n:pVirtualNode;
+  d:pNodedata;
+  o:cBaseObj;
+begin
+  if key=VK_DELETE then
+  begin
+    n:=AlgsTV.GetFirstSelected(false);
+    d:=AlgsTV.GetNodeData(n);
+    o:=cbaseobj(d.data);
+    o.destroy;
+
+  end;
 end;
 
 procedure TAlgFrm.BandsMenuClick(Sender: TObject);
@@ -258,7 +448,7 @@ var
   li:tlistitem;
 begin
   // удаление из таблицы контролов
-  for I := 0 to AlgLV.items.Count - 1 do
+  {for I := 0 to AlgLV.items.Count - 1 do
   begin
     li:=AlgLV.items[i];
     if li.data=a then
@@ -267,7 +457,7 @@ begin
       break;
     end;
   end;
-  a.destroy;
+  a.destroy;}
 end;
 
 constructor TAlgFrm.create(aowner: tcomponent);
@@ -331,44 +521,43 @@ var
   fr:TBaseAlgFrame;
 begin
   //FullDebugModeScanMemoryPoolBeforeEveryOperation:=true;
-  showAlgsInLV;
   TagsListFrame1.ShowChannels;
   for I := 0 to m_frameList.Count - 1 do
   begin
     fr:=TBaseAlgFrame(m_frameList.Objects[i]);
     fr.doShow;
   end;
+  showAlgsInTV;
   //FullDebugModeScanMemoryPoolBeforeEveryOperation:=false;
 end;
 
 function TAlgFrm.selectalg: cbasealgcontainer;
-begin
-  result:=nil;
-  if AlgLV.Selected<>nil then
-  begin
-    result:=cbasealgcontainer(AlgLV.Selected.Data);
-  end;
-end;
-
-procedure TAlgFrm.showAlgsInLV;
 var
-  I: Integer;
-  a:cbaseobj;
-  li:tlistitem;
+  n:pVirtualNode;
+  d:PNodeData;
 begin
-  AlgLV.clear;
-  for I := 0 to g_AlgMng.Count - 1 do
+  result:=nil;AlgsTV.GetFirstSelected(false);
+  n:=AlgsTV.GetFirstSelected(false);
+  if n<>nil then
   begin
-    a:=cbasealgcontainer(g_AlgMng.getObj(i));
-    if a is cbasealgcontainer then
+    d:=AlgsTV.GetNodeData(n);
+    if tobject(d.data) is cbasealgcontainer then
     begin
-      li:=AlgLV.items.Add;
-      li.data:=a;
-      AlgLV.SetSubItemByColumnName('Имя',a.name,li);
-      AlgLV.SetSubItemByColumnName('Тип',cbasealgcontainer(a).getdsc,li);
+      result:=cbasealgcontainer(d.data);
+    end
+    else
+    begin
+      if tobject(d.data) is cAlgConfig then
+      begin
+        n:=n.FirstChild;
+        d:=AlgsTV.GetNodeData(n);
+        if tobject(d.data) is cbasealgcontainer then
+        begin
+          result:=cbasealgcontainer(d.data);
+        end
+      end;
     end;
   end;
-  LVChange(AlgLV);
 end;
 
 procedure TAlgFrm.UpdateAlgBtnClick(Sender: TObject);
@@ -377,22 +566,29 @@ var
   fr:TBaseAlgFrame;
   firsAlg:TClass;
   I: Integer;
-  li:tlistitem;
+
+  n:pVirtualNode;
+  d:pNodeData;
   str:string;
 begin
   fr:=TBaseAlgFrame(m_frameList.Objects[AlgsPageControl.ActivePageIndex]);
   str:=fr.properties;
-  for I := 0 to AlgLV.SelCount - 1 do
+  for I := 0 to AlgsTV.SelectedCount - 1 do
   begin
     if i=0 then
     begin
-      li:=AlgLV.Selected;
+      n:=AlgsTV.GetFirstSelected;
+      d:=AlgsTV.GetNodeData(n);
     end
     else
     begin
-      li:=AlgLV.GetNextItem(li,sdAll, [isSelected]);
+      n:=AlgsTV.GetNext(n, true);
+      d:=AlgsTV.GetNodeData(n);
     end;
-    a:=cbasealgcontainer(li.Data);
+    if tobject(d.data) is cbasealgcontainer then
+      a:=cbasealgcontainer(d.Data)
+    else
+      continue;
     if i=0 then
       firsAlg:=a.ClassType;
     if a<>nil then
@@ -410,7 +606,6 @@ begin
       end;
     end;
   end;
-  showAlgsInLV;
 end;
 
 end.

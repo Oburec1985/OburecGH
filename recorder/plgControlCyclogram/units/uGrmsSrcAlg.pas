@@ -52,6 +52,7 @@ type
     procedure doAfterload; override;
     procedure SetProperties(str: string); override;
     function GetProperties: string; override;
+    function getExtProp: string;override;
     procedure doOnStart; override;
     procedure doEval(tag: cTag; time: double); override;
     procedure doGetData; override;
@@ -525,13 +526,27 @@ begin
   //updateOutChan;
 end;
 
+function cGrmsSrcAlg.getExtProp: string;
+begin
+  result:='Channel='+m_InTag.tagname;
+  if m_Taho<>nil then
+  begin
+    result:=result+',Taho='+m_Taho.tagname;
+  end;
+  if m_outTag<>nil then
+  begin
+    result:=result+',OutChannel='+m_outTag.tagname;
+  end;
+end;
+
 function cGrmsSrcAlg.GetProperties: string;
 begin
   if m_properties = '' then
     m_properties := C_GrmsSrcOpts;
-  if m_outTag<>nil then
-    m_properties:=addParamF (m_properties, 'OutChannel', m_outTag.tagname);
-  result:=m_properties;
+  if parentCgf=nil then
+    Result:=updateParams(m_properties, getExtProp)
+  else // просто экономия ресурсов чтобы дважды не вызывать updateParams
+    Result:=m_properties;
 end;
 
 procedure cGrmsSrcAlg.SetProperties(str: string);

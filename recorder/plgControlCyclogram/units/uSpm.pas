@@ -26,7 +26,6 @@ type
 
     // интеграл первой и второй степени (только амплитуды)
     m_magI1, m_magI2: array of double;
-
     // включить первое и второе интегрирование 0 - без интеграла, 1 - 1 однократное, 2 - двукратное
     m_I:integer;
     // интеграл первой и второй степени (только амплитуды)
@@ -91,6 +90,7 @@ type
     procedure doGetData; override;
     procedure doEval(intag: cTag; time: double);
     function GetProperties: string; override;
+    function getExtProp: string;override;
     procedure SetProperties(str: string); override;
     function genTagName: string; override;
     function Getdx: double; override;
@@ -443,8 +443,8 @@ begin
   end
   else
   begin
-  end;
 
+  end;
   if m_outTag <> nil then
   begin
     m_outTag.doOnStart;
@@ -623,6 +623,13 @@ begin
   if m_properties = '' then
     m_properties := C_SpmOpts;
   result := m_properties;
+end;
+
+function cSpm.getExtProp: string;
+begin
+  result:='';
+  if m_tag<>nil then
+    result:='Channel='+m_tag.tagname;
 end;
 
 function cSpm.LastBlockTime: double;

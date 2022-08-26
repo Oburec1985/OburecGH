@@ -27,7 +27,8 @@ type
     property properties:string read getProperties write setProperties;
     // возвращает true если фрейм предназначен для работы с алгоритмом a
     // multiselect - для последнего элемента должно быть false
-    function ShowAlg(a:cbaseAlgContainer):boolean;virtual;
+    function ShowAlg(a:cbaseAlgContainer):boolean;overload;virtual;
+    function ShowAlg(cfg:cAlgConfig):boolean;overload;virtual;
     procedure EndMsel;virtual;
 
     procedure doShow;virtual;abstract;
@@ -76,6 +77,23 @@ procedure TBaseAlgFrame.setProperties(s: string);
 begin
   OptsEdit.text:=s;
   updateParams(m_pars, s, ',');
+end;
+
+function TBaseAlgFrame.ShowAlg(cfg:cAlgConfig):boolean;
+begin
+  result:=false;
+  if cfg<>nil then
+  begin
+    if cfg.clType.ClassName=algClass then
+    begin
+      result:=true;
+      setProperties(cfg.str);
+    end;
+  end
+  else
+  begin
+    clearframeparams;
+  end;
 end;
 
 function TBaseAlgFrame.ShowAlg(a: cbaseAlgContainer):boolean;
