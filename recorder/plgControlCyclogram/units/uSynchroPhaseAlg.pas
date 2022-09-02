@@ -71,6 +71,7 @@ type
     procedure doAfterload; override;
     procedure SetProperties(str: string); override;
     function GetProperties: string; override;
+    function getExtProp: string;override;
     procedure doOnStart; override;
     function genTagName: string; override;
     procedure doEval(tag: cTag; time: double); override;
@@ -89,6 +90,8 @@ type
     procedure LoadTags(node: txmlNode); override;
     function ready: boolean; override;
     function getresname: string; override;
+  public
+    procedure setfirstchannel(t:itag);override;
   public
     function lasttime: double;
     constructor create; override;
@@ -316,13 +319,13 @@ begin
   begin
     if m_Taho.tag=nil then
     begin
-      m_Taho.tag:=getTagByName(m_Taho.tagname);;
+      m_Taho.tag:=getTagByName(m_Taho.tagname);
     end;
     if m_Taho.tag <> nil then
     begin
       if m_InTag.tag=nil then
       begin
-        m_InTag.tag:=getTagByName(m_InTag.tagname);;
+        m_InTag.tag:=getTagByName(m_InTag.tagname);
       end;
       if m_InTag.tag <> nil then
       begin
@@ -344,6 +347,22 @@ begin
   tnode := xmlNode.NodeNew('OutputTag');
   tagnode := tnode.NodeNew('OutChan');
   saveTag(m_outTag, tagnode);
+end;
+
+procedure cSyncPhaseAlg.setfirstchannel(t: itag);
+var
+  lstr:string;
+begin
+  setinptag(t);
+  lstr := GetParam(m_Properties, 'Channel');
+  if m_InTag<>nil then
+  begin
+    m_Properties:=AddParamF(m_Properties,'Channel',m_InTag.tagname);
+    if lstr='' then
+    begin
+      name:=genTagName;
+    end;
+  end;
 end;
 
 procedure cSyncPhaseAlg.setinptag(t: cTag);
@@ -452,15 +471,32 @@ function cSyncPhaseAlg.GetProperties: string;
 begin
   if m_properties = '' then
     m_properties := C_PhaseOpts;
-  result := m_properties;
+  if parentCfg=nil then
+    Result:=updateParams(m_properties, getExtProp)
+  else // просто экономия ресурсов чтобы дважды не вызывать updateParams
+    Result:=m_properties;
+end;
+
+function cSyncPhaseAlg.getExtProp: string;
+begin
+  if m_InTag<>nil then
+    result:='Channel='+m_InTag.tagname;
+  if m_outTag<>nil then
+  begin
+    result:=result+',OutChannel='+m_outTag.tagname;
+  end;
 end;
 
 function cSyncPhaseAlg.getresname: string;
 begin
-  if m_outTag.tag <> nil then
-    result := m_outTag.tag.GetName
-  else
-    result := m_outTag.tagname;
+  result:='';
+  if m_outTag<>nil then
+  begin
+    if m_outTag.tag <> nil then
+      result := m_outTag.tag.GetName
+    else
+      result := m_outTag.tagname;
+  end;
 end;
 
 function cSyncPhaseAlg.lasttime: double;

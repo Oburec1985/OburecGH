@@ -13,6 +13,7 @@ uses
   uHardwareMath,
   complex,
   uBaseAlgBands,
+  uRegClassesList,
   u2dmath;
 
 type
@@ -98,9 +99,10 @@ type
     // получаем несколько отсчетов)
     property dX: double read Getdx write Setdx;
     class function getdsc: string; virtual;
+    function GetFullProperties: string;virtual;
     property Properties: string read GetProperties write SetProperties;
     property resname: string read GetResName write SetResName;
-    property parentCgf: cAlgConfig read m_parentCfg write setParentCfg;
+    property parentCfg: cAlgConfig read m_parentCfg write setParentCfg;
     constructor create; override;
     destructor destroy; override;
   end;
@@ -117,11 +119,12 @@ type
   protected
     function getprops(algNum:integer):string;overload;
     function getprops:string;overload;
+    procedure setprops(s:string);
   public
     function ChildCount:integer;
     function getAlg(i:integer):cBaseAlgContainer;
     property name:string read m_name write m_name;
-    property str:string read getprops write m_str;
+    property str:string read getprops write setprops;
     constructor create(cl:TClass);
     destructor destroy;
     procedure AddChild(a:cBaseAlgContainer);
@@ -188,6 +191,7 @@ type
     procedure doUpdateTags(sender: tobject);
     procedure doGetData;
     procedure regObjClasses; override;
+    function getAlgClass(str:string): tclass;
     procedure AddBaseObjInstance(obj: cBaseObj); override;
     procedure removeObj(obj: cBaseObj); override;
     procedure doRenameObj(sender: tobject); override;
@@ -195,6 +199,7 @@ type
     procedure doAfterLoadXML; override;
     procedure XMLSaveMngAttributes(node: txmlNode); override;
     procedure XMLlOADMngAttributes(node: txmlNode); override;
+    procedure XMLlOADMngAttributesAfterObjects(node:txmlnode);override;
 
     function getBand(i: integer): tBand; overload;
     function getBand(str: string): tBand; overload;
@@ -377,6 +382,11 @@ end;
 function cBaseAlgContainer.getExtProp: string;
 begin
 
+end;
+
+function cBaseAlgContainer.GetFullProperties: string;
+begin
+  result:=updateParams(Properties, getExtProp);
 end;
 
 function cBaseAlgContainer.GetResName: string;
@@ -1107,6 +1117,21 @@ begin
   regclass(cAriphmAlg);
 end;
 
+function cAlgMng.getAlgClass(str:string): tclass;
+var
+  I: Integer;
+begin
+  result:=nil;
+  for I := 0 to regclasses.Count - 1 do
+  begin
+    if regclasses.strings[i]=str then
+    begin
+      result:=tclass(cObjCreator(regclasses.Objects[i]).createfunc);
+      exit;
+    end;
+  end;
+end;
+
 procedure cAlgMng.removeObj(obj: cBaseObj);
 begin
   inherited;
@@ -1137,7 +1162,7 @@ var
   p: TPlace;
   pair: TTagBandPair;
   t: BandTag;
-  nodetype, str, substr: string;
+  nodetype, str, str1, substr: string;
   a:cahgrad;
 begin
   inherited;
@@ -1283,6 +1308,44 @@ begin
   end;
 end;
 
+procedure cAlgMng.XMLlOADMngAttributesAfterObjects(node: txmlNode);
+var
+  child, n: txmlNode;
+  i, j, tcount: integer;
+  b: tBand;
+  nodetype, str, str1: string;
+  alg:cBaseAlgContainer;
+  cfg:cAlgConfig;
+begin
+  child := node.FindNode('CfgList');
+  if child<>nil then
+  begin
+    for i := 0 to child.NodeCount - 1 do
+    begin
+      n:=child.Nodes[i];
+      nodetype := n.ReadAttributeString('NodeType', '');
+      if nodetype='AlgCfgNode' then
+      begin
+        str:=n.ReadAttributeString('NodeName',  '');
+        str1:=n.ReadAttributeString('AlgClass',  '');
+        if str1<>'' then
+        begin
+          cfg:=g_algMng.newCfg(str,g_algMng.getAlgClass(str1));
+          cfg.str := n.ReadAttributeString('Cfg', '');
+          tcount:=n.ReadAttributeInteger('AlgCount', 0);
+          for j := 0 to tcount - 1 do
+          begin
+            str:=n.ReadAttributeString('A_'+inttostr(j), '');
+            alg:=cbasealgcontainer(g_algMng.getObj(str));
+            if alg<>nil then
+              cfg.AddChild(alg);
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure cAlgMng.XMLSaveMngAttributes(node: txmlNode);
 var
   child, n, bnode, pnode, tnode: txmlNode;
@@ -1293,6 +1356,8 @@ var
   t: BandTag;
   j: integer;
   a: cAHgrad;
+  alg:cbasealgcontainer;
+  cfg:cAlgConfig;
   str:string;
 begin
   inherited;
@@ -1376,6 +1441,25 @@ begin
     n.WriteAttributeString('NodeType', 'AHNameNode', '');
     n.WriteAttributeString('NodeName', str, '');
     n.WriteAttributeString('AHgrad', cAHGrad(m_AHNames.Objects[i]).m_name, '');
+  end;
+
+  child := node.NodeNew('CfgList');
+  for i := 0 to m_cfgList.Count - 1 do
+  begin
+    cfg:=getCfg(i);
+    str := cfg.name;
+    n := child.NodeNew('AlgCfgNode_' + inttostr(i));
+    n.WriteAttributeString('NodeType', 'AlgCfgNode', '');
+    n.WriteAttributeString('NodeName', str, '');
+    n.WriteAttributeString('AlgClass', cfg.clType.ClassName, '');
+    str := cfg.m_str;
+    n.WriteAttributeString('Cfg', str, '');
+    n.WriteAttributeInteger('AlgCount', cfg.ChildCount, 0);
+    for j := 0 to cfg.ChildCount - 1 do
+    begin
+      alg:=cfg.getAlg(j);
+      n.WriteAttributeString('A_'+inttostr(j), alg.name, '');
+    end;
   end;
 end;
 
@@ -1573,7 +1657,8 @@ begin
     end;
     if not b then
     begin
-      a.parentCgf:=self;
+      a.parentCfg:=self;
+      a.Properties:=m_str;
       m_childs.Add(a);
     end;
   end;
@@ -1606,6 +1691,28 @@ end;
 function cAlgConfig.getprops:string;
 begin
   result:=getprops(0);
+end;
+
+procedure cAlgConfig.setprops(s: string);
+var
+  a:cbasealgcontainer;
+  I: Integer;
+begin
+  if ChildCount>0 then
+  begin
+    if ChildCount=1 then
+      m_str:=updateParams(m_str, s)
+    else
+    begin
+      a:=getAlg(0);
+      m_str:=DelParams(s,a.getExtProp, ',');
+    end;
+    for I := 0 to ChildCount - 1 do
+    begin
+      a:=getAlg(i);
+      a.Properties:=m_str;
+    end;
+  end;
 end;
 
 end.

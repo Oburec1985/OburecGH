@@ -69,6 +69,7 @@ type
   protected
     procedure SetProperties(str: string); override;
     function GetProperties: string; override;
+    function getExtProp: string;override;
     procedure doOnStart; override;
     procedure doEval(tag: cTag; time: double); override;
     // index - номер отсчета tag.m_outData с которого начинается время time и соответственно расчет
@@ -89,6 +90,8 @@ type
     function ready:boolean;override;
     function GetResName: string; override;
   public
+    procedure setfirstchannel(t:itag);override;
+  public
     property InTag:ctag read fintag write fintag;
     constructor create; override;
     destructor destroy; override;
@@ -101,7 +104,22 @@ const
 
 implementation
 
-{ cCounterAlg }
+procedure cTahoAlg.setfirstchannel(t: itag);
+var
+  lstr:string;
+begin
+  setinptag(t);
+  lstr := GetParam(m_Properties, 'Channel');
+  if fInTag<>nil then
+  begin
+    m_Properties:=AddParamF(m_Properties,'Channel',fInTag.tagname);
+    if lstr='' then
+    begin
+      name:=genTagName;
+    end;
+  end;
+end;
+
 
 constructor cTahoAlg.create;
 begin
@@ -427,9 +445,13 @@ begin
   result:=false;
   if fintag<>nil then
   begin
+    result:=true;
     if fintag.tag<>nil then
     begin
-      result:=true;
+      if not finitbuff then
+      begin
+        setSpmArray;
+      end;
     end
     else
     begin
@@ -497,6 +519,14 @@ begin
   result := m_properties;
 end;
 
+function cTahoAlg.getExtProp: string;
+begin
+  result:='';
+  if fInTag<>nil then
+    result:='Channel='+fInTag.tagname;
+  //if m_outTag<>nil then
+  //  result:=result+',OutChannel='+m_outTag.tagname;
+end;
 
 function cTahoAlg.GetResName: string;
 begin

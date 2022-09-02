@@ -1476,9 +1476,14 @@ begin
     end;
     // a.AddChild(m_tr);
     m_tr.color := ColorArray[index];
+    m_tr.drawpoint:=fDrawPoints;
+    m_tr.drawLines:=fDrawLine;
     m_tr.pointcolor := ColorArray[index];
     if fload then
+    begin
       m_tr.pointcolor := fPointsColor;
+      m_tr.color:=fPointsColor;
+    end;
     m_tr.name := name;
   end;
 end;

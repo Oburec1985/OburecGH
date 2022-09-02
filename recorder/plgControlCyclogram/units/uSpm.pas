@@ -89,10 +89,6 @@ type
     // получение данных в цикле менеджера doUpdateTags
     procedure doGetData; override;
     procedure doEval(intag: cTag; time: double);
-    function GetProperties: string; override;
-    function getExtProp: string;override;
-    procedure SetProperties(str: string); override;
-    function genTagName: string; override;
     function Getdx: double; override;
     // расчет fdx, foutsize, fnullpoints, fshift, fftcount
     // если p_dx =-1 то происходит расчет dx на основании переданных жанных без дополнения нулями
@@ -104,6 +100,12 @@ type
     function getCreateOutTag: boolean;
     procedure setCreateOutTag(b: boolean);
   public
+    function GetProperties: string; override;
+    function getExtProp: string;override;
+    procedure SetProperties(str: string); override;
+    function genTagName: string; override;
+    procedure setfirstchannel(t:itag);override;
+  public
     procedure updateOutChan;override;
     // вызывается при загрузке или при установке входного тега
     procedure createOutChan;override;
@@ -111,7 +113,6 @@ type
     property restype:integer read getrestype write setrestype;
     procedure doStopRecord;
     property CreateOutTag:boolean read getCreateOutTag write setCreateOutTag;
-    procedure setfirstchannel(t:itag);override;
     function getIndByX(x: double): integer;
     function LastBlockTime: double;
     function GetPeriod: double;
@@ -404,6 +405,8 @@ begin
     CallUpdateDataEvent;
     inc(procBlock);
   end;
+  if procBlock>0 then
+
   CallEndEvalBlock;
 end;
 
@@ -630,6 +633,8 @@ begin
   result:='';
   if m_tag<>nil then
     result:='Channel='+m_tag.tagname;
+  if m_outTag<>nil then
+    result:=result+',OutChannel='+m_outTag.tagname;
 end;
 
 function cSpm.LastBlockTime: double;

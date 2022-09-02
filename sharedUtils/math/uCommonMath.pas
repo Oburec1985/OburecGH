@@ -102,10 +102,12 @@ function ParsStrParam(src:string):tstringlist;overload;
 function ParsStrParam(src:string; separator:string):tstringlist;overload;
 function ParsStrParamExt(src:string; separator:string; bracketChar:char):tstringlist;overload;
 function ParsToStr(pars:tstringlist):string;
+function delParams(str, delparams:string; separator:string):string;
 // удалить старые параметры, пропарсить строку и записать результат в pars
 function  updateParams(src:string; newparams:string):string;overload;
 function updateParams(src:string; newparams:string; ignorekey, ignoreVals:string):string;overload;
 procedure updateParams(pars:tstringlist; opts:string; separator:string);overload;
+
 procedure ChangeParam(pars:tstringlist; key:string; v:string);
 function ChangeParamF(str:string; key:string; v:string):string;
 procedure addParam(pars:tstringlist; key:string;v:string);
@@ -403,6 +405,41 @@ begin
   end;
 end;
 
+function delParams(str, delparams:string; separator:string):string;
+var
+  p, p1:tstringlist;
+  I, j: Integer;
+  k, k1:string;
+  cstr, cstr1:cstring;
+  b:boolean;
+begin
+  p:=ParsStrParamNoSort(str, separator);
+  p1:=ParsStrParamNoSort(delparams, separator);
+  for i := 0 to p1.Count - 1 do
+  begin
+    k1:=p1.strings[i];
+    b:=false;
+    j:=p.Count-1;
+    for j := p.Count - 1 downto 0 do
+    begin
+      k:=p.strings[j];
+      if k1=k then
+      begin
+        b:=true;
+        break;
+      end;
+    end;
+    if b then
+    begin
+      p.Delete(j);
+    end;
+  end;
+  result:=ParsToStr(p);
+  ClearParsResult(p);
+  ClearParsResult(p1);
+  p.Destroy;
+  p1.Destroy;
+end;
 
 function  updateParams(src:string; newparams:string):string;
 var

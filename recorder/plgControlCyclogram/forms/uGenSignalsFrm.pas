@@ -60,7 +60,7 @@ type
     property Phase0:double read getPhase0 write setPhase0;
     // p_freq - частота дикретизации
     constructor create(sname:string; p_Fs:double);
-    destructor destroy;
+    destructor destroy(inCfg:boolean);
   end;
 
   TGenSignalsFrm = class(TRecFrm)
@@ -119,10 +119,12 @@ type
     Timer1: TTimer;
     time:double;
   private
+    m_init:boolean;
     m_counter: integer;
   protected
     procedure doUpdateData(Sender: TObject);
     procedure doChangeRState(Sender: TObject);
+    procedure doLeaveCfg(Sender: TObject);
     procedure doStart;
     procedure doStop;
     procedure CreateEvents;
@@ -174,6 +176,7 @@ begin
   Timer1.Enabled:=false;
   Timer1.OnTimer:=doUpdateData;
   CreateEvents;
+  m_init:=false;
 end;
 
 destructor cGenSignalsFactory.destroy;
@@ -188,6 +191,7 @@ procedure cGenSignalsFactory.CreateEvents;
 begin
   //addplgevent('cPolarFactory_doUpdateData', c_RUpdateData, doUpdateData);
   addplgevent('cGenSignalsFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
+  addplgevent('cGenSignalsFactory_doLeaveCfg', c_RC_LeaveCfg, doLeaveCfg);
 end;
 
 
@@ -242,6 +246,34 @@ end;
 function cGenSignalsFactory.doCreateForm: cRecBasicIFrm;
 begin
   result := IGenSignalsFrm.create();
+end;
+
+procedure cGenSignalsFactory.doLeaveCfg(Sender: TObject);
+var
+  i, j: Integer;
+  f:TGenSignalsFrm;
+  s:cGenSig;
+  t:itag;
+begin
+  if m_init then
+  begin
+    for I := 0 to count - 1 do
+    begin
+      f:=TGenSignalsFrm(GetFrm(i));
+      for j := f.SignalsLB.Items.Count - 1 downto 0 do
+      begin
+        //s:=cGenSig(f.SignalsLB.Items.Objects[j]);
+        s:=cGenSig(f.signals.Items[j]);
+        t:=GetTagByName(s.m_name);
+        if (t=nil) then
+        begin
+          s.destroy(true);
+          f.SignalsLB.Items.Delete(j);
+          f.signals.Delete(j);
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure cGenSignalsFactory.doSetDefSize(var pSize: SIZE);
@@ -357,7 +389,7 @@ begin
   for I := 0 to signals.Count - 1 do
   begin
     s:=cGenSig(signals.items[i]);
-    s.destroy;
+    s.destroy(false);
   end;
   signals.clear;
 end;
@@ -469,6 +501,7 @@ begin
     signals.Add(s);
   end;
   showsignals;
+  g_GenSignalsFactory.m_init:=true;
 end;
 
 
@@ -640,9 +673,9 @@ begin
   lcm;
 end;
 
-destructor cGenSig.destroy;
+destructor cGenSig.destroy(inCfg:boolean);
 begin
-  m_t.destroy;
+  m_t.destroy(true);
   DeleteCS;
 end;
 

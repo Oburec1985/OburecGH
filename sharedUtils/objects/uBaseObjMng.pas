@@ -46,6 +46,7 @@ type
     // в качестве узла получает корневой узел к которому добавляется инфа
     procedure XMLSaveMngAttributes(node:txmlnode);virtual;
     procedure XMLlOADMngAttributes(node:txmlnode);virtual;
+    procedure XMLlOADMngAttributesAfterObjects(node:txmlnode);virtual;
     // происходит перед загрузкой из xml после clear; нерфит ошибку связанную с
     // автосоздаваемыми объектами в корне движка
     procedure doBeforeLoadXML;virtual;
@@ -383,6 +384,7 @@ var
 begin
   XMLlOADMngAttributes(node);
   XMLLoadObjects(node.Document, self, node);
+  XMLlOADMngAttributesAfterObjects(node);
   node.Document.destroy;
   result:=true;
   events.CallAllEvents(E_OnLoadObjMng);
@@ -431,6 +433,11 @@ begin
 end;
 
 procedure cBaseObjMng.XMLLoadMngAttributes(NODE:TXMLNODE);
+begin
+
+end;
+
+procedure cBaseObjMng.XMLlOADMngAttributesAfterObjects(node:txmlnode);
 begin
 
 end;

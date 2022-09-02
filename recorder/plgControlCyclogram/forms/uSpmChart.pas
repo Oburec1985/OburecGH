@@ -330,14 +330,17 @@ begin
     ti.m_spmtrend.datatype := c_real;
     ti.m_spmtrend.dx := ti.m_spm.SpmDx;
     ti.m_spmtrend.name := ti.m_spm.name;
-    cpage(spmChart.activePage).activeAxis.AddChild(ti.m_spmtrend);
-    l := cTextLabel.create;
-    ti.flags.Add(l);
-    ti.m_spmtrend.AddChild(l);
-    l.color := blue;
-    l.name := 'Lmax_' + ti.m_spm.resname;
-    l.drawline := true;
-    ti.m_initGraph := true;
+    if cpage(spmChart.activePage)<>nil then
+    begin
+      cpage(spmChart.activePage).activeAxis.AddChild(ti.m_spmtrend);
+      l := cTextLabel.create;
+      ti.flags.Add(l);
+      ti.m_spmtrend.AddChild(l);
+      l.color := blue;
+      l.name := 'Lmax_' + ti.m_spm.resname;
+      l.drawline := true;
+      ti.m_initGraph := true;
+    end;
   end;
 end;
 

@@ -9,6 +9,7 @@ uses
   uComponentServises,
   ImgList,
   uRCFunc, uRvclService,
+  MathFunction,
   tags, recorder, uBaseObjService,
   DCL_MYOWN, uRcCtrls, Controls;
 
@@ -59,6 +60,7 @@ begin
       li := TagsLV.Items.Add;
       li.Data := pointer(t);
       TagsLV.SetSubItemByColumnName('Èìÿ', tname, li);
+      TagsLV.SetSubItemByColumnName('Fs', formatstrNoE(t.GetFreq,3), li);
     end;
   end;
   LVChange(TagsLV);

@@ -2,8 +2,8 @@ object AlgFrm: TAlgFrm
   Left = 0
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1072#1089#1095#1077#1090#1085#1099#1093' '#1082#1072#1085#1072#1083#1086#1074
-  ClientHeight = 909
-  ClientWidth = 1289
+  ClientHeight = 675
+  ClientWidth = 1096
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,21 +19,22 @@ object AlgFrm: TAlgFrm
   object Splitter1: TSplitter
     Left = 345
     Top = 0
-    Height = 840
+    Height = 606
     Color = clBackground
     ParentColor = False
     ExplicitLeft = 273
+    ExplicitHeight = 840
   end
   object TagsListPanel: TPanel
     Left = 0
     Top = 0
     Width = 345
-    Height = 840
+    Height = 606
     Align = alLeft
     TabOrder = 0
     object Panel1: TPanel
       Left = 1
-      Top = 784
+      Top = 550
       Width = 343
       Height = 55
       Align = alBottom
@@ -122,7 +123,7 @@ object AlgFrm: TAlgFrm
       end
       object UpdateAlgBtn: TSpeedButton
         Left = 67
-        Top = 5
+        Top = 2
         Width = 64
         Height = 47
         Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
@@ -242,12 +243,14 @@ object AlgFrm: TAlgFrm
       Left = 1
       Top = 1
       Width = 343
-      Height = 783
+      Height = 549
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
       Align = alClient
+      DragMode = dmAutomatic
+      DragType = dtVCL
       Header.AutoSizeIndex = 0
       Header.Font.Charset = DEFAULT_CHARSET
       Header.Font.Color = clWindowText
@@ -264,76 +267,78 @@ object AlgFrm: TAlgFrm
       OnDragOver = AlgsTVDragOver
       OnDragDrop = AlgsTVDragDrop
       OnKeyDown = AlgsTVKeyDown
-      ExplicitLeft = -1
       Columns = <>
     end
   end
   object AlgPropPanel: TPanel
     Left = 348
     Top = 0
-    Width = 688
-    Height = 840
+    Width = 379
+    Height = 606
     Align = alClient
     TabOrder = 1
     object Splitter2: TSplitter
-      Left = 684
+      Left = 375
       Top = 1
-      Height = 838
+      Height = 604
       Align = alRight
       Color = clBackground
       ParentColor = False
       ExplicitLeft = 756
+      ExplicitHeight = 838
     end
     object AlgsPageControl: TPageControl
       Left = 1
       Top = 1
-      Width = 683
-      Height = 838
+      Width = 374
+      Height = 604
       Align = alClient
       TabOrder = 0
     end
   end
   object BottomPanel: TPanel
     Left = 0
-    Top = 840
-    Width = 1289
+    Top = 606
+    Width = 1096
     Height = 69
     Align = alBottom
     TabOrder = 2
   end
   inline TagsListFrame1: TTagsListFrame
-    Left = 1036
+    Left = 727
     Top = 0
-    Width = 253
-    Height = 840
+    Width = 369
+    Height = 606
     Align = alRight
     TabOrder = 3
-    ExplicitLeft = 1036
-    ExplicitWidth = 253
-    ExplicitHeight = 840
+    ExplicitLeft = 727
+    ExplicitWidth = 369
+    ExplicitHeight = 606
     inherited FormChannelsGB: TGroupBox
-      Width = 253
-      Height = 840
-      ExplicitWidth = 253
-      ExplicitHeight = 840
+      Width = 369
+      Height = 606
+      ExplicitLeft = 3
+      ExplicitTop = -7
+      ExplicitWidth = 369
+      ExplicitHeight = 606
       inherited ChanNamesPanel: TPanel
-        Width = 249
+        Width = 365
         Height = 108
-        ExplicitWidth = 249
+        ExplicitWidth = 365
         ExplicitHeight = 108
         inherited FrmTagPropLabel: TLabel
           Top = 59
           ExplicitTop = 59
         end
         inherited FilterEdit: TEdit
-          Width = 238
-          ExplicitWidth = 238
+          Width = 354
+          ExplicitWidth = 354
         end
         inherited FrmTagPropValueEdit: TEdit
           Top = 83
-          Width = 122
+          Width = 238
           ExplicitTop = 83
-          ExplicitWidth = 122
+          ExplicitWidth = 238
         end
         inherited FrmTagPropNameCB: TComboBox
           Top = 83
@@ -342,11 +347,23 @@ object AlgFrm: TAlgFrm
       end
       inherited TagsLV: TBtnListView
         Top = 126
-        Width = 249
-        Height = 712
+        Width = 365
+        Height = 478
+        Columns = <
+          item
+            Caption = #1048#1084#1103
+            Width = 65
+          end
+          item
+            Caption = #1058#1080#1087
+            Width = 65
+          end
+          item
+            Caption = 'Fs'
+          end>
         ExplicitTop = 126
-        ExplicitWidth = 249
-        ExplicitHeight = 712
+        ExplicitWidth = 365
+        ExplicitHeight = 478
       end
     end
   end

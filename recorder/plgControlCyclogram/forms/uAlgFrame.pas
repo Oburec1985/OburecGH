@@ -104,7 +104,7 @@ begin
     if a.classname=algClass then
     begin
       result:=true;
-      setProperties(a.Properties);
+      setProperties(a.getFullProperties);
     end;
   end
   else

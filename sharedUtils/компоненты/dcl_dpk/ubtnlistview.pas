@@ -27,6 +27,8 @@ uses
     getcolor:TGetColor;
     colorlist:tlist;
   protected
+    colClickIndex:integer;
+    SortUp:boolean;
     // элемент для редактирования ячейки ListView
     Edit1:TEdit;
     Item_edit:tlistitem;
@@ -584,21 +586,38 @@ end;
 function SortTListView(Item1, Item2: TListItem; Data: integer):integer; stdcall;
   function SortColumn(Item1, Item2: TListItem; Data: integer):integer;
   var
+    lv:tbtnlistview;
     i:integer;
     s1,s2:string;
   begin
     result:=0;
-    if data=0 then
+    lv:=tbtnlistview(Data);
+    if lv.colClickIndex=0 then
     begin
       s1:=Item1.caption;
       s2:=Item2.caption;
+      i:=AnsiCompareStr(s1,s2);
+      if i > 0 then
+        Result := 1
+      else if i < 0 then
+        Result := -1
+      else
+        Result := 0;
     end
     else
     begin
-      if Data<Item1.SubItems.Count then
+      if lv.colClickIndex<=Item1.SubItems.Count then
       begin
-        s1:=Item1.SubItems[Data-1];
-        s2:=Item2.SubItems[Data-1];
+        if lv.SortUp then
+        begin
+          s1:=Item1.SubItems[lv.colClickIndex-1];
+          s2:=Item2.SubItems[lv.colClickIndex-1];
+        end
+        else
+        begin
+          s2:=Item1.SubItems[lv.colClickIndex-1];
+          s1:=Item2.SubItems[lv.colClickIndex-1];
+        end;
         i:=AnsiCompareStr(s1,s2);
         if i > 0 then
           Result := 1
@@ -615,7 +634,9 @@ end;
 
 procedure TBtnListView.ColClick(Column: TListColumn);
 begin
-  CustomSort(@SortTListView, Column.Index);
+  colClickIndex:=column.Index;
+  SortUp:=Not SortUp;
+  CustomSort(@SortTListView, integer(self));
   inherited ColClick(Column);
 end;
 

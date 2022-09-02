@@ -3,7 +3,7 @@ object GenSignalsFrm: TGenSignalsFrm
   Top = 0
   Caption = 'TGenSignalsFrm'
   ClientHeight = 379
-  ClientWidth = 744
+  ClientWidth = 576
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,7 +16,7 @@ object GenSignalsFrm: TGenSignalsFrm
   object PropertyPanel: TPanel
     Left = 0
     Top = 0
-    Width = 491
+    Width = 323
     Height = 379
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
@@ -27,6 +27,8 @@ object GenSignalsFrm: TGenSignalsFrm
     ParentFont = False
     PopupMenu = PopupMenu1
     TabOrder = 0
+    ExplicitLeft = -6
+    ExplicitWidth = 501
     object AmpLabel: TLabel
       Left = 128
       Top = 0
@@ -65,8 +67,8 @@ object GenSignalsFrm: TGenSignalsFrm
       Visible = False
     end
     object Label1: TLabel
-      Left = 309
-      Top = 0
+      Left = 128
+      Top = 200
       Width = 84
       Height = 22
       Caption = #1057#1084#1077#1097#1077#1085#1080#1077
@@ -116,8 +118,8 @@ object GenSignalsFrm: TGenSignalsFrm
       OnChange = PhaseSEChange
     end
     object OffsetFE: TFloatSpinEdit
-      Left = 309
-      Top = 27
+      Left = 128
+      Top = 227
       Width = 122
       Height = 33
       Increment = 0.100000000000000000
@@ -127,7 +129,7 @@ object GenSignalsFrm: TGenSignalsFrm
     end
   end
   object SignalsLB: TListBox
-    Left = 491
+    Left = 323
     Top = 0
     Width = 253
     Height = 379
@@ -135,9 +137,11 @@ object GenSignalsFrm: TGenSignalsFrm
     PopupMenu = PopupMenu1
     TabOrder = 1
     OnClick = SignalsLBClick
+    ExplicitLeft = 491
   end
   object PopupMenu1: TPopupMenu
-    Top = 192
+    Left = 88
+    Top = 296
     object N1: TMenuItem
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072
       OnClick = N1Click

@@ -309,14 +309,6 @@ begin
     SetMultiSelectComponentBool(AddNullCB, StrToBool(str));
   end;
 
-  str := GetParsValue(m_pars, 'dX');
-  if checkstr(str) then
-  begin
-    p := AlgDTFE.OnChange;
-    AlgDTFE.OnChange := nil;
-    SetMultiSelectComponentString(AlgDTFE, str);
-    AlgDTFE.OnChange := p;
-  end;
   str := GetParsValue(m_pars, 'BCount');
   if checkstr(str) then
   begin
@@ -324,6 +316,28 @@ begin
     FFTBCount.OnChange := nil;
     SetMultiSelectComponentString(FFTBCount, str);
     FFTBCount.OnChange := p;
+  end;
+
+  str := GetParsValue(m_pars, 'dX');
+  //if checkstr(str) then
+  //begin
+  //  p := AlgDTFE.OnChange;
+  //  AlgDTFE.OnChange := nil;
+  //  SetMultiSelectComponentString(AlgDTFE, str);
+  //  AlgDTFE.OnChange := p;
+  //end
+  //else
+  begin
+    str := GetParsValue(m_pars, 'Channel');
+    t := getTagByName(str);
+    if t<>nil then
+    begin
+      p := AlgDTFE.OnChange;
+      AlgDTFE.OnChange := nil;
+      str:=floattostr(fftbcount.IntNum*FFTCountEdit.IntNum/t.GetFreq);
+      SetMultiSelectComponentString(AlgDTFE, str);
+      AlgDTFE.OnChange := p;
+    end;
   end;
   str := GetParsValue(m_pars, 'Channel');
   SetMultiSelectComponentString(ChannelCB, str);

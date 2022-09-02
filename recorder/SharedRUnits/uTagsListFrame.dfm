@@ -64,7 +64,6 @@ object TagsListFrame: TTagsListFrame
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
         OnChange = FilterEditChange
-        ExplicitWidth = 295
       end
       object FrmTagPropValueEdit: TEdit
         Left = 121
@@ -108,6 +107,9 @@ object TagsListFrame: TTagsListFrame
         item
           Caption = #1058#1080#1087
           Width = 65
+        end
+        item
+          Caption = 'Fs'
         end>
       DragMode = dmAutomatic
       MultiSelect = True
@@ -120,8 +122,6 @@ object TagsListFrame: TTagsListFrame
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitWidth = 306
-      ExplicitHeight = 663
     end
   end
 end

@@ -1,5 +1,6 @@
 inherited SpmFrame: TSpmFrame
-  Height = 556
+  Width = 491
+  Height = 526
   ParentBackground = False
   ParentColor = False
   object ChannelLabel: TLabel [2]
@@ -32,21 +33,22 @@ inherited SpmFrame: TSpmFrame
     Visible = False
   end
   inherited AlgNameEdit: TEdit
-    Width = 553
+    Width = 593
     ExplicitWidth = 553
   end
   inherited OptsEdit: TEdit
-    Width = 553
+    Width = 593
     ExplicitWidth = 553
   end
   object SpmPan: TPanel
     Left = 0
-    Top = 403
-    Width = 451
+    Top = 373
+    Width = 491
     Height = 153
     Align = alBottom
     TabOrder = 2
     ExplicitTop = 151
+    ExplicitWidth = 451
     object FFTCountLabel: TLabel
       Left = 8
       Top = 18
@@ -123,8 +125,8 @@ inherited SpmFrame: TSpmFrame
       TabOrder = 2
     end
     object FFTBCount: TIntEdit
-      Left = 161
-      Top = 112
+      Left = 170
+      Top = 113
       Width = 121
       Height = 24
       TabOrder = 3
@@ -170,11 +172,12 @@ inherited SpmFrame: TSpmFrame
   object OutChannelName: TEdit
     Left = 161
     Top = 128
-    Width = 400
+    Width = 440
     Height = 24
     Anchors = [akLeft, akTop, akRight]
     Enabled = False
     TabOrder = 4
+    ExplicitWidth = 400
   end
   object FsEdit: TFloatEdit
     Left = 218

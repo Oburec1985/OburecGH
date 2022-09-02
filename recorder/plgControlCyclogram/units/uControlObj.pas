@@ -419,6 +419,7 @@ type
     Procedure StartPWM;
     Procedure StopPWM;
     Procedure UpdatePWM;
+    Procedure ResetPWMTOnModeChange;
     Procedure SetPWMVal(v: double); virtual;
     // применить новую задачу
     procedure ApplyTask(t:cTask);
@@ -2663,6 +2664,13 @@ begin
   fPWMTi := i64;
 end;
 
+Procedure cControlObj.ResetPWMTOnModeChange;
+begin
+  fPWMT:=0;
+  QueryPerformanceCounter(fPWMTi);
+  fcurPWMState:=true;
+end;
+
 procedure cControlObj.InitCS;
 begin
   InitializeCriticalSection(cs_state);
@@ -4602,6 +4610,7 @@ begin
     if not m_applyed then
     begin
       c := t.control;
+      c.ResetPWMTOnModeChange;
       c.setparams(t.m_Params);
       c.ApplyTask(t);
       t.applyed := true;

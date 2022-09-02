@@ -25,7 +25,7 @@ type
     Panel1: TPanel;
     UpdateBtn: TSpeedButton;
     TagsGB: TGroupBox;
-    GroupBox1: TGroupBox;
+    BottomGB: TGroupBox;
     Pcount: TLabel;
     XChannelGB: TGroupBox;
     ChannelXCB: TRcComboBox;
@@ -71,6 +71,7 @@ type
     NameAxisLabel: TLabel;
     MaxXgraph: TFloatEdit;
     Label2: TLabel;
+    Splitter1: TSplitter;
     procedure UpdateBtnClick(Sender: TObject);
     procedure GraphTypeRGClick(Sender: TObject);
     procedure AddlineBtnClick(Sender: TObject);

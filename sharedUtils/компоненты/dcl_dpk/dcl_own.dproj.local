@@ -15,4 +15,22 @@
     <Transaction>2012.11.21 23:42:02.640.pas,D:\oburec\project2010\2011\sharedUtils\компоненты\dcl_dpk\x-net\XuNetUtil.pas=</Transaction>
     <Transaction>2018.01.09 22:50:56.433.pas,G:\oburec\project2010\2011\sharedUtils\компоненты\dcl_dpk\Unit1.pas=G:\oburec\project2010\2011\sharedUtils\компоненты\dcl_dpk\uStringGridExt.pas</Transaction>
   </Transactions>
+	<ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path="..\..\..\sharedUtils"/>
+    <File Path="..\..\utils"/>
+    <File Path="..\..\utils\uVTServices.pas"/>
+    <File Path="DCL_MYOWN.dcr"/>
+    <File Path="DCL_MYOWN.pas"/>
+    <File Path="uAlignEdit.pas"/>
+    <File Path="ubtnlistview.pas"/>
+    <File Path="uSpin.pas"/>
+    <File Path="uStringGridExt.pas"/>
+    <File Path="bdertl.dcp"/>
+    <File Path="dbrtl.dcp"/>
+    <File Path="inet.dcp"/>
+    <File Path="rtl.dcp"/>
+    <File Path="vcl.dcp"/>
+    <File Path="vcldb.dcp"/>
+    <File Path="vclx.dcp"/>
+  </ProjectSortOrder>
 </BorlandProject>

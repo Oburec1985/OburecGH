@@ -74,6 +74,8 @@ type
     function ready: boolean; override;
     function getlasttime: double;
   public
+    procedure setfirstchannel(t:itag);override;
+  public
     function TahoTracking: boolean;
     function readyBlockCount: integer;
     property lastTime: double read getlasttime;
@@ -98,6 +100,22 @@ constructor cGrmsSrcAlg.create;
 begin
   inherited;
   Properties := C_GrmsSrcOpts;
+end;
+
+procedure cGrmsSrcAlg.setfirstchannel(t: itag);
+var
+  lstr:string;
+begin
+  setinptag(t);
+  lstr := GetParam(m_Properties, 'Channel');
+  if m_InTag<>nil then
+  begin
+    m_Properties:=AddParamF(m_Properties,'Channel',m_InTag.tagname);
+    if lstr='' then
+    begin
+      name:=genTagName;
+    end;
+  end;
 end;
 
 function cGrmsSrcAlg.getBandI(x:double):Tpoint;
@@ -227,7 +245,7 @@ begin
     end;
 
     //m_outTag.m_TagData[m_blockind] := m_spm.m_rmsValue;
-    m_outTagX[m_blockind] := m_spm.LastBlockTime;
+    m_outTagX[m_blockind] := m_spm.LastBlockTime+m_blockind*dX;
     inc(m_blockind);
     if m_blockind = length(m_outTag.m_TagData) then
       doEndEvalBlock(nil);
@@ -264,6 +282,7 @@ begin
       v := m_outTag.m_TagData[I];
       m_outTag.tag.PushValue(v, m_outTagX[I]);
     end;
+    ZeroMemory(@m_outTag.m_TagData[0], pCount * sizeof(double));
     pCount := 0;
   end;
 end;
@@ -329,7 +348,19 @@ begin
   begin
     m_outTag := loadTag(tnode, m_outTag);
     m_properties:=addParamF (m_properties, 'OutChannel', m_outTag.tagname);
+    if m_outTag.tag=nil then
+    begin
+      updatedx;
+      m_outTag.tag := createVectorTagR8(genTagName, (1/fdX), true, false, false);
+    end;
     updateOutChan;
+  end;
+  if m_outTag = nil then
+    createOutChan
+  else
+  begin
+    if m_outTag.tag=nil then
+       createOutChan;
   end;
 end;
 
@@ -467,10 +498,10 @@ begin
     m_InTag.block := bl;
     bl := nil;
   end;
-  if m_outTag = nil then
-    createOutChan
-  else
-    updateOutChan;
+  //if m_outTag = nil then
+  //  createOutChan
+  //else
+  //  updateOutChan;
 end;
 
 procedure cGrmsSrcAlg.setTahoTag(t: cTag);
@@ -528,11 +559,8 @@ end;
 
 function cGrmsSrcAlg.getExtProp: string;
 begin
-  result:='Channel='+m_InTag.tagname;
-  if m_Taho<>nil then
-  begin
-    result:=result+',Taho='+m_Taho.tagname;
-  end;
+  if m_InTag<>nil then
+    result:='Channel='+m_InTag.tagname;
   if m_outTag<>nil then
   begin
     result:=result+',OutChannel='+m_outTag.tagname;
@@ -543,7 +571,7 @@ function cGrmsSrcAlg.GetProperties: string;
 begin
   if m_properties = '' then
     m_properties := C_GrmsSrcOpts;
-  if parentCgf=nil then
+  if parentCfg=nil then
     Result:=updateParams(m_properties, getExtProp)
   else // просто экономия ресурсов чтобы дважды не вызывать updateParams
     Result:=m_properties;
@@ -692,7 +720,6 @@ begin
       t := nil;
       setTahoTag(t);
     end;
-    change := false;
   end;
   if change then
     updateOutChan;
@@ -774,19 +801,22 @@ var
 begin
   if m_outTag <> nil then
   begin
-    ecm;
     // str := lpcstr(StrToAnsi(genTagName));
     // m_outTag := OutputTag[0];
     // m_outTag.tag.SetName(str);
     // updatedx;
-    m_outTag.tag.SetFreq(1 / fdX);
-    m_outTag.block := nil;
-    if not FAILED(m_outTag.tag.QueryInterface(IBlockAccess, bl)) then
+    if m_outTag.tag<>nil then
     begin
-      m_outTag.block := bl;
+      ecm;
+      m_outTag.tag.SetFreq(1 / fdX);
+      m_outTag.block := nil;
+      if not FAILED(m_outTag.tag.QueryInterface(IBlockAccess, bl)) then
+      begin
+        m_outTag.block := bl;
+      end;
+      updateBuff;
+      lcm;
     end;
-    updateBuff;
-    lcm;
   end;
 end;
 
