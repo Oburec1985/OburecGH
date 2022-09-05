@@ -50,6 +50,7 @@ type
     procedure ShowZoneElements;
     procedure ShowZone(z:cZone);
     procedure ShowZones(c:cControlObj);
+    procedure ShowTagPairs(c:cControlObj);
     procedure ShowZonesLB;
     procedure EndMS;override;
     function GetDsc:string;override;
@@ -178,6 +179,21 @@ begin
   ZonesCB.Checked:=con.m_zones_enabled;
   SetMultiSelectComponentString(DACCB, cDacControl(con).m_dac_name);
   showZones(con);
+  showTagPairs(con);
+end;
+
+procedure TDACControlEditFrame.ShowTagPairs(c: cControlObj);
+var
+  I: Integer;
+  p:ctagpair;
+  li:tlistitem;
+begin
+  TPairLV.Clear;
+  for I := 0 to c.TagsCount - 1 do
+  begin
+    p:=c.getTag(i);
+    li:=TPairLV.items.Add;
+  end;
 end;
 
 procedure TDACControlEditFrame.ShowZone(z:cZone);
@@ -374,10 +390,11 @@ end;
 procedure TDACControlEditFrame.editcontrol(c:cControlObj);
 var
   t:itag;
-  I: Integer;
+  I, j: Integer;
   z:cZone;
   tp:cTagPair;
   li:tlistitem;
+  str:string;
 begin
   m_CurCon:=c;
   m_CurCon.m_zones_enabled:=ZonesCB.Checked;
@@ -398,10 +415,16 @@ begin
   for I := 0 to c.TagsCount - 1 do
   begin
     tp:=c.getTag(i);
-    li:=TPairLV.Items.Add;
-    li.data:=tp;
-    li.Caption:=tp.name;
-    TPairLV.SetSubItemByColumnName('Значение', floattostr(tp.value), li);
+    for j := 0 to TPairLV.Items.Count - 1 do
+    begin
+      li:=TPairLV.Items[j];
+      if li.data=tp then
+      begin
+        TPairLV.GetSubItemByColumnName('Значение', li, str);
+        tp.value:=strtofloatext(str);
+        break;
+      end;
+    end;
   end;
 end;
 
