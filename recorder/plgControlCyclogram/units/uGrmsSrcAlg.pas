@@ -376,7 +376,8 @@ begin
   saveTag(m_Taho, tnode);
 
   tnode := node.NodeNew('OutTag');
-  saveTag(m_outTag, tnode);
+  if m_outTag<>nil then
+    saveTag(m_outTag, tnode);
 end;
 
 function cGrmsSrcAlg.ready: boolean;
@@ -573,8 +574,10 @@ begin
     m_properties := C_GrmsSrcOpts;
   if parentCfg=nil then
     Result:=updateParams(m_properties, getExtProp)
-  else // просто экономия ресурсов чтобы дважды не вызывать updateParams
-    Result:=m_properties;
+  else
+  begin
+    Result:=inherited;
+  end;
 end;
 
 procedure cGrmsSrcAlg.SetProperties(str: string);
@@ -672,8 +675,6 @@ begin
     begin
       t := getTagByName(lstr);
       setinptag(t);
-      // сбрасываем обновл5ение вых канала т.к. только что обновили
-      change := false;
     end;
     ChangeCTag(m_InTag, lstr);
   end;

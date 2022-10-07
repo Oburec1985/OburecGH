@@ -53,7 +53,9 @@ begin
     Result:=StartCount/Freq; //–езультат в секундах
   end
   else
+  begin
     Result:=GetTickCount/1000; //1000, т.к GetTickCount вернет мили—екунды
+  end;
 end;
 
 // TPerformanceTime

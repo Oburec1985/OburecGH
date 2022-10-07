@@ -535,7 +535,6 @@ end;
 
 destructor TSpmChart.destroy;
 begin
-  LogRecorderMessage('TSpmChart.destroy_enter', false);
   destroyEvents;
   clearTagsInfo;
   m_tagslist.destroy;
@@ -547,7 +546,6 @@ begin
   // SpmChart.Destroy;
   // SpmChart:=nil;
   inherited;
-  LogRecorderMessage('TSpmChart.destroy_exit', false);
 end;
 
 

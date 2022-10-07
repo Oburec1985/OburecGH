@@ -60,7 +60,7 @@ type
     m_EvalBlock1, m_EvalBlock2: TAlignDarray;
     s1, s2, res: TAlignDCmpx;
     s1_, s2_, res_: TComplex1DArray;
-    fftPlan:TFFTProp;
+    fftPlan: TFFTProp;
 
     // ширина полосы в относительных единицах от частоты гармоники/ абсолютная полоса
     m_band: point2d;
@@ -71,7 +71,7 @@ type
     procedure doAfterload; override;
     procedure SetProperties(str: string); override;
     function GetProperties: string; override;
-    function getExtProp: string;override;
+    function getExtProp: string; override;
     procedure doOnStart; override;
     function genTagName: string; override;
     procedure doEval(tag: cTag; time: double); override;
@@ -91,7 +91,7 @@ type
     function ready: boolean; override;
     function getresname: string; override;
   public
-    procedure setfirstchannel(t:itag);override;
+    procedure setfirstchannel(t: itag); override;
   public
     function lasttime: double;
     constructor create; override;
@@ -140,8 +140,8 @@ var
   i, maxind, bCount, startind1, startind2: integer;
   j, N: integer;
 
-  timer:TPerformanceTime;
-  t1, t2:double;
+  timer: TPerformanceTime;
+  t1, t2: double;
 begin
   // Получение данных
   if m_InTag.UpdateTagData(false) then
@@ -154,94 +154,102 @@ begin
   interval2 := m_Taho.getPortionTime;
   // Расчет
   interval1 := getCommonInterval(interval1, interval2);
-  if (interval1.y - interval1.x) < fdx then
+  if (interval1.y - interval1.x) < fdX then
   begin
-    {$ifdef DEBUG}
-    //logMessage('cSyncPhaseAlg_noCommonInterval');
-    {$endif}
+{$IFDEF DEBUG}
+    // logMessage('cSyncPhaseAlg_noCommonInterval');
+{$ENDIF}
     exit;
   end;
-  bCount := trunc((interval1.y - interval1.x) / fdx);
+  bCount := trunc((interval1.y - interval1.x) / fdX);
   for j := 0 to bCount - 1 do
   begin
-    interval2.x:=interval1.x+fdx*(j);
-    interval2.y:=interval2.x+fdx;
+    interval2.x := interval1.x + fdX * (j);
+    interval2.y := interval2.x + fdX;
     interval_i1 := m_InTag.getIntervalInd(interval2);
     interval_i2 := m_Taho.getIntervalInd(interval2);
     // копируем входные данные в выходной буфер
     startind1 := interval_i1.x;
     startind2 := interval_i2.x;
-    if (startind1<0) or (startind2<0) then
+    if (startind1 < 0) or (startind2 < 0) then
     begin
-      {$ifdef DEBUG}
-      //logMessage('cSyncPhaseAlg.doGetData: if (startind1<0) or (startind2<0) then...');
-      //logMessage('Interval1'+'x:'+floattostr(interval1.x)+' y:'+floattostr(interval1.y));
-      //logMessage('Interval2'+'x:'+floattostr(interval2.x)+' y:'+floattostr(interval2.y));
-      //logMessage('m_InTag.m_readDataTime'+floattostr(m_InTag.m_readDataTime));
-      //logMessage('m_TahoTag.m_readDataTime'+floattostr(m_InTag.m_readDataTime));
-      //logMessage('startind1='+inttostr(startind1));
-      //logMessage('startind2='+inttostr(startind2));
-      {$endif}
+{$IFDEF DEBUG}
+      // logMessage('cSyncPhaseAlg.doGetData: if (startind1<0) or (startind2<0) then...');
+      // logMessage('Interval1'+'x:'+floattostr(interval1.x)+' y:'+floattostr(interval1.y));
+      // logMessage('Interval2'+'x:'+floattostr(interval2.x)+' y:'+floattostr(interval2.y));
+      // logMessage('m_InTag.m_readDataTime'+floattostr(m_InTag.m_readDataTime));
+      // logMessage('m_TahoTag.m_readDataTime'+floattostr(m_InTag.m_readDataTime));
+      // logMessage('startind1='+inttostr(startind1));
+      // logMessage('startind2='+inttostr(startind2));
+{$ENDIF}
       break;
     end;
 
-    if (startind1+m_portionsize)>=length(m_InTag.m_ReadData) then
+    if (startind1 + m_portionsize) >= length(m_InTag.m_ReadData) then
     begin
-      {$ifdef DEBUG}
-      //logMessage('cSyncPhaseAlg.doGetData (startind1+m_portionsize)>=length(m_InTag.m_ReadData)');
-      //logMessage('ind: ' + inttostr(startind1));
-      //logMessage('m_portionsize: ' + inttostr(m_portionsize));
-      //logMessage('length: ' + inttostr(length(m_InTag.m_ReadData)));
-      {$endif}
+{$IFDEF DEBUG}
+      // logMessage('cSyncPhaseAlg.doGetData (startind1+m_portionsize)>=length(m_InTag.m_ReadData)');
+      // logMessage('ind: ' + inttostr(startind1));
+      // logMessage('m_portionsize: ' + inttostr(m_portionsize));
+      // logMessage('length: ' + inttostr(length(m_InTag.m_ReadData)));
+{$ENDIF}
       break;
     end;
-    move(m_InTag.m_ReadData[startind1], m_EvalBlock1.p^,(m_portionsize) * sizeof(double));
+    move(m_InTag.m_ReadData[startind1], m_EvalBlock1.p^,
+      (m_portionsize) * sizeof(double));
 
-    if (startind2+m_portionsize)>=length(m_Taho.m_ReadData) then
+    if (startind2 + m_portionsize) >= length(m_Taho.m_ReadData) then
     begin
-      {$ifdef DEBUG}
-      //logMessage('cSyncPhaseAlg.doGetData (startind2+m_portionsize)>=length(m_Taho.m_ReadData');
-      //logMessage('ind: ' + inttostr(startind2));
-      //logMessage('m_portionsize: ' + inttostr(m_portionsize));
-      //logMessage('length: ' + inttostr(length(m_Taho.m_ReadData)));
-      {$endif}
+{$IFDEF DEBUG}
+      // logMessage('cSyncPhaseAlg.doGetData (startind2+m_portionsize)>=length(m_Taho.m_ReadData');
+      // logMessage('ind: ' + inttostr(startind2));
+      // logMessage('m_portionsize: ' + inttostr(m_portionsize));
+      // logMessage('length: ' + inttostr(length(m_Taho.m_ReadData)));
+{$ENDIF}
       break;
     end;
-    ////////// ALARMA@@@@@@@@
-    if startind2<0 then
+    /// /////// ALARMA@@@@@@@@
+    if startind2 < 0 then
       continue;
-    //// ---------------------------------
-    //// Вероятно следует копировать данные не по размеру порции а по длине общего интервала!!!!
-    move(m_Taho.m_ReadData[startind2], m_EvalBlock2.p^,(m_portionsize) * sizeof(double));
+    /// / ---------------------------------
+    /// / Вероятно следует копировать данные не по размеру порции а по длине общего интервала!!!!
+    move(m_Taho.m_ReadData[startind2], m_EvalBlock2.p^,
+      (m_portionsize) * sizeof(double));
     // расчет первого спектра
     k := 2 / m_fftcount;
-    //FFTR1D(treal1darray(m_EvalBlock1.p), m_fftcount, TComplex1Darray(s1_));
-    //FFTR1D(treal1darray(m_EvalBlock2.p), m_fftcount, TComplex1Darray(s2_));
-    fft_al_d_sse(TDoubleArray(m_EvalBlock1.p), tCmxArray_d(s1.p), FFTPlan);
-    fft_al_d_sse(TDoubleArray(m_EvalBlock2.p), tCmxArray_d(s2.p), FFTPlan);
+    // FFTR1D(treal1darray(m_EvalBlock1.p), m_fftcount, TComplex1Darray(s1_));
+    // FFTR1D(treal1darray(m_EvalBlock2.p), m_fftcount, TComplex1Darray(s2_));
+    fft_al_d_sse(TDoubleArray(m_EvalBlock1.p), tCmxArray_d(s1.p), fftPlan);
+    fft_al_d_sse(TDoubleArray(m_EvalBlock2.p), tCmxArray_d(s2.p), fftPlan);
 
     maxind := 0;
     resMag := 0;
-    k:=k*k; // т.к. перемножаем 2 числа которые нужно нормировать с одинаковым "K"
-    //timer:=TPerformanceTime.create;
+    k := k * k; // т.к. перемножаем 2 числа которые нужно нормировать с одинаковым "K"
+    // timer:=TPerformanceTime.create;
     for i := 1 to AlignBlockLength(res) - 1 do
     begin
       // для совпадения с WinPos k*s1[i].x, где k=(2/fftcount) (ниже блок совпадает с WinPos)
-      //res[i].x := k*s1[i].x * k*s2[i].x + k*s1[i].y * k*s2[i].y;
-      //res[i].y := k*s1[i].y * k*s2[i].x - k*s1[i].x * k*s2[i].y;
+      // res[i].x := k*s1[i].x * k*s2[i].x + k*s1[i].y * k*s2[i].y;
+      // res[i].y := k*s1[i].y * k*s2[i].x - k*s1[i].x * k*s2[i].y;
       // комплексно сопряжонное умножение!!!!
-      TComplex1Darray(res.p)[i].x := k*(TComplex1Darray(s1.p)[i].x * TComplex1Darray(s2.p)[i].x + TComplex1Darray(s1.p)[i].y * TComplex1Darray(s2.p)[i].y);
-      TComplex1Darray(res.p)[i].y := k*(TComplex1Darray(s1.p)[i].y * TComplex1Darray(s2.p)[i].x - TComplex1Darray(s1.p)[i].x*TComplex1Darray(s2.p)[i].y);
-      mag := sqrt(TComplex1Darray(res.p)[i].y * TComplex1Darray(res.p)[i].y + TComplex1Darray(res.p)[i].x * TComplex1Darray(res.p)[i].x);
+      TComplex1DArray(res.p)[i].x := k *
+        (TComplex1DArray(s1.p)[i].x * TComplex1DArray(s2.p)
+          [i].x + TComplex1DArray(s1.p)[i].y * TComplex1DArray(s2.p)[i].y);
+      TComplex1DArray(res.p)[i].y := k *
+        (TComplex1DArray(s1.p)[i].y * TComplex1DArray(s2.p)
+          [i].x - TComplex1DArray(s1.p)[i].x * TComplex1DArray(s2.p)[i].y);
+      mag := sqrt(TComplex1DArray(res.p)[i].y * TComplex1DArray(res.p)
+          [i].y + TComplex1DArray(res.p)[i].x * TComplex1DArray(res.p)[i].x);
       if mag > resMag then
       begin
-        resMag:=mag;
+        resMag := mag;
         maxind := i
       end;
     end;
-    //timer.Free;
-    phase := arctan(TComplex1Darray(res.p)[maxind].y / TComplex1Darray(res.p)[maxind].x) * c_radtodeg;
-    if j<length(m_outTagX) then
+    // timer.Free;
+    phase := arctan(TComplex1DArray(res.p)[maxind].y / TComplex1DArray(res.p)
+        [maxind].x) * c_radtodeg;
+    if j < length(m_outTagX) then
     begin
       m_outTagX[j] := m_InTag.getReadTime(startind1);
       m_outTag.tag.PushValue(phase, m_outTagX[j]);
@@ -260,15 +268,15 @@ begin
   pCount := 0;
   fStartPortion := -1;
 
-  if m_InTag<>nil then
+  if m_InTag <> nil then
   begin
     m_InTag.doOnStart;
   end;
-  if m_Taho<>nil then
+  if m_Taho <> nil then
   begin
     m_Taho.doOnStart;
   end;
-  if m_outTag<>nil then
+  if m_outTag <> nil then
   begin
     m_outTag.doOnStart;
   end;
@@ -301,7 +309,7 @@ begin
     tagnode := tnode.FindNode('OutChan');
     if tagnode <> nil then
     begin
-      m_outTag := LoadTag(tagnode,m_outTag);
+      m_outTag := LoadTag(tagnode, m_outTag);
     end;
   end;
   inherited;
@@ -317,15 +325,15 @@ begin
   result := false;
   if m_Taho <> nil then
   begin
-    if m_Taho.tag=nil then
+    if m_Taho.tag = nil then
     begin
-      m_Taho.tag:=getTagByName(m_Taho.tagname);
+      m_Taho.tag := getTagByName(m_Taho.tagname);
     end;
     if m_Taho.tag <> nil then
     begin
-      if m_InTag.tag=nil then
+      if m_InTag.tag = nil then
       begin
-        m_InTag.tag:=getTagByName(m_InTag.tagname);
+        m_InTag.tag := getTagByName(m_InTag.tagname);
       end;
       if m_InTag.tag <> nil then
       begin
@@ -351,16 +359,16 @@ end;
 
 procedure cSyncPhaseAlg.setfirstchannel(t: itag);
 var
-  lstr:string;
+  lstr: string;
 begin
   setinptag(t);
   lstr := GetParam(m_Properties, 'Channel');
-  if m_InTag<>nil then
+  if m_InTag <> nil then
   begin
-    m_Properties:=AddParamF(m_Properties,'Channel',m_InTag.tagname);
-    if lstr='' then
+    m_Properties := AddParamF(m_Properties, 'Channel', m_InTag.tagname);
+    if lstr = '' then
     begin
-      name:=genTagName;
+      name := genTagName;
     end;
   end;
 end;
@@ -421,10 +429,10 @@ begin
     m_Taho.destroy;
     m_Taho := nil;
   end;
-  if m_outtag<>nil then
+  if m_outTag <> nil then
   begin
-    m_outtag.destroy;
-    m_outtag:=nil;
+    m_outTag.destroy;
+    m_outTag := nil;
   end;
 
   FreeMemAligned(m_EvalBlock1);
@@ -433,12 +441,11 @@ begin
   FreeMemAligned(s2);
   FreeMemAligned(res);
 
-  m_EvalBlock2.p:=nil;
-  m_EvalBlock1.p:=nil;
-  s1.p:=nil;
-  s2.p:=nil;
-  res.p:=nil;
-
+  m_EvalBlock2.p := nil;
+  m_EvalBlock1.p := nil;
+  s1.p := nil;
+  s2.p := nil;
+  res.p := nil;
 
   inherited;
 end;
@@ -469,28 +476,28 @@ end;
 
 function cSyncPhaseAlg.GetProperties: string;
 begin
-  if m_properties = '' then
-    m_properties := C_PhaseOpts;
-  if parentCfg=nil then
-    Result:=updateParams(m_properties, getExtProp)
+  if m_Properties = '' then
+    m_Properties := C_PhaseOpts;
+  if parentCfg = nil then
+    result := updateParams(m_Properties, getExtProp)
   else // просто экономия ресурсов чтобы дважды не вызывать updateParams
-    Result:=m_properties;
+    result := m_Properties;
 end;
 
 function cSyncPhaseAlg.getExtProp: string;
 begin
-  if m_InTag<>nil then
-    result:='Channel='+m_InTag.tagname;
-  if m_outTag<>nil then
+  if m_InTag <> nil then
+    result := 'Channel=' + m_InTag.tagname;
+  if m_outTag <> nil then
   begin
-    result:=result+',OutChannel='+m_outTag.tagname;
+    result := result + ',OutChannel=' + m_outTag.tagname;
   end;
 end;
 
 function cSyncPhaseAlg.getresname: string;
 begin
-  result:='';
-  if m_outTag<>nil then
+  result := '';
+  if m_outTag <> nil then
   begin
     if m_outTag.tag <> nil then
       result := m_outTag.tag.GetName
@@ -629,12 +636,15 @@ begin
         m_outTag.tag := createVectorTagR8(genTagName, outfreq, true, false,
           false);
         // m_outTag.tag := createScalar(genTagName, false);
-        if not FAILED(m_outTag.tag.QueryInterface(IBlockAccess, bl)) then
+        if m_outTag.tag <> nil then
         begin
-          m_outTag.block := bl;
-          bl := nil;
+          if not FAILED(m_outTag.tag.QueryInterface(IBlockAccess, bl)) then
+          begin
+            m_outTag.block := bl;
+            bl := nil;
+          end;
+          updateBuff;
         end;
-        updateBuff;
       end;
       lcm;
     end;
@@ -693,10 +703,10 @@ begin
   GetMemAlignedArray_cmpx_d(m_fftcount, s1);
   GetMemAlignedArray_cmpx_d(m_fftcount, s2);
   GetMemAlignedArray_cmpx_d(m_fftcount, res);
-  FFTPlan:=getFFTPlan(m_fftcount);
+  fftPlan := getFFTPlan(m_fftcount);
 
   setlength(m_outTag.m_TagData, len);
-  setlength(m_outTagX, len*c_blockCount);
+  setlength(m_outTagX, len * c_blockCount);
 end;
 
 end.

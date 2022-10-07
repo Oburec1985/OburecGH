@@ -2,7 +2,7 @@ object AlgFrm: TAlgFrm
   Left = 0
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1072#1089#1095#1077#1090#1085#1099#1093' '#1082#1072#1085#1072#1083#1086#1074
-  ClientHeight = 675
+  ClientHeight = 545
   ClientWidth = 1096
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,7 +19,7 @@ object AlgFrm: TAlgFrm
   object Splitter1: TSplitter
     Left = 345
     Top = 0
-    Height = 606
+    Height = 476
     Color = clBackground
     ParentColor = False
     ExplicitLeft = 273
@@ -29,12 +29,12 @@ object AlgFrm: TAlgFrm
     Left = 0
     Top = 0
     Width = 345
-    Height = 606
+    Height = 476
     Align = alLeft
     TabOrder = 0
     object Panel1: TPanel
       Left = 1
-      Top = 550
+      Top = 420
       Width = 343
       Height = 55
       Align = alBottom
@@ -243,7 +243,7 @@ object AlgFrm: TAlgFrm
       Left = 1
       Top = 1
       Width = 343
-      Height = 549
+      Height = 419
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -274,13 +274,13 @@ object AlgFrm: TAlgFrm
     Left = 348
     Top = 0
     Width = 379
-    Height = 606
+    Height = 476
     Align = alClient
     TabOrder = 1
     object Splitter2: TSplitter
       Left = 375
       Top = 1
-      Height = 604
+      Height = 474
       Align = alRight
       Color = clBackground
       ParentColor = False
@@ -291,14 +291,14 @@ object AlgFrm: TAlgFrm
       Left = 1
       Top = 1
       Width = 374
-      Height = 604
+      Height = 474
       Align = alClient
       TabOrder = 0
     end
   end
   object BottomPanel: TPanel
     Left = 0
-    Top = 606
+    Top = 476
     Width = 1096
     Height = 69
     Align = alBottom
@@ -308,19 +308,17 @@ object AlgFrm: TAlgFrm
     Left = 727
     Top = 0
     Width = 369
-    Height = 606
+    Height = 476
     Align = alRight
     TabOrder = 3
     ExplicitLeft = 727
     ExplicitWidth = 369
-    ExplicitHeight = 606
+    ExplicitHeight = 476
     inherited FormChannelsGB: TGroupBox
       Width = 369
-      Height = 606
-      ExplicitLeft = 3
-      ExplicitTop = -7
+      Height = 476
       ExplicitWidth = 369
-      ExplicitHeight = 606
+      ExplicitHeight = 476
       inherited ChanNamesPanel: TPanel
         Width = 365
         Height = 108
@@ -348,22 +346,10 @@ object AlgFrm: TAlgFrm
       inherited TagsLV: TBtnListView
         Top = 126
         Width = 365
-        Height = 478
-        Columns = <
-          item
-            Caption = #1048#1084#1103
-            Width = 65
-          end
-          item
-            Caption = #1058#1080#1087
-            Width = 65
-          end
-          item
-            Caption = 'Fs'
-          end>
+        Height = 348
         ExplicitTop = 126
         ExplicitWidth = 365
-        ExplicitHeight = 478
+        ExplicitHeight = 348
       end
     end
   end

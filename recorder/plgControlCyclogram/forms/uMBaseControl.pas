@@ -244,7 +244,8 @@ begin
   if np <> nil then
   begin
     if result = nil then
-      LogRecorderMessage('Не удалось создать нотификации БДИ', false)
+    begin
+    end
     else
       np.init(TMBaseControl(result));
   end;
@@ -618,7 +619,6 @@ begin
   end;
   rc_pan.Read;
   showRegistrators;
-  LogRecorderMessage('TMBaseControl.doChangeRCState_exit', false);
 end;
 
 procedure TMBaseControl.doCreateConnection(Sender: TObject);
@@ -631,7 +631,6 @@ var
   index: Integer;
   li: TListItem;
 begin
-  LogRecorderMessage('TMBaseControl.doOnRead_enter', false);
   index := rc_pan.getConnectionIndex(connection);
   li := RegistratorsLV.Items[index];
   if li = nil then
@@ -662,7 +661,6 @@ begin
         LVChange(RegistratorsLV);
       end;
   end;
-  LogRecorderMessage('TMBaseControl.doOnRead_exit', false);
 end;
 
 procedure TMBaseControl.doSaveCfg(Sender: TObject);
@@ -1369,7 +1367,6 @@ begin
   inherited;
   if fLoaded then
     exit;
-  LogRecorderMessage('TMBaseControl.LoadSettings_enter', false);
 
   section := String(str);
   v_NotifyMBaseSetProperties := a_pIni.ReadInteger(section,
@@ -1428,7 +1425,6 @@ begin
   end;
   showRegistrators;
   fLoaded := true;
-  LogRecorderMessage('TMBaseControl.LoadSettings_exit', false);
 end;
 
 procedure TMBaseControl.ShowObjProps(o: cXmlFolder);
@@ -1661,20 +1657,16 @@ end;
 
 procedure TMBaseControl.Timer1Timer(Sender: TObject);
 begin
-  // LogRecorderMessage('TMBaseControl.Timer1Timer_enter');
   if rc_pan <> nil then
   begin
     rc_pan.connect;
     rc_pan.Read;
   end;
-  // LogRecorderMessage('TMBaseControl.Timer1Timer_exit');
 end;
 
 procedure TMBaseControl.ViewBtnClick(Sender: TObject);
 begin
-  // logmessage(' TMBaseControl.ViewBtnClick_enter');
   rc_pan.start;
-  // logmessage(' TMBaseControl.ViewBtnClick_exit');
 end;
 
 procedure TMBaseControl.RecordBtnClick(Sender: TObject);

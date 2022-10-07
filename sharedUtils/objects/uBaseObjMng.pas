@@ -89,7 +89,9 @@ type
 
 implementation
 uses
-  uObjXML, uGetMngObjForm;
+  uObjXML, uGetMngObjForm
+  //,uRcFunc
+  ;
 
 procedure cBaseObjMng.regObjClasses;
 begin
@@ -158,8 +160,10 @@ procedure cBaseObjMng.clear;
 var
   i:integer;
   obj:cbaseobj;
+  //b:boolean;
 begin
   i:=0;
+  //b:=false;
   while i<objects.count do
   begin
     obj:=objects.getobj(i);

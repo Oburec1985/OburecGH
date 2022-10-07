@@ -138,7 +138,6 @@ function TGrmsSrcFrame.getProperties: string;
 var
   str:string;
 begin
-  //inherited;
   ClearParsResult(m_pars);
   if AlgDTFE.text<>'' then
     addParam(m_pars, 'dX', replaceChar(floattostr(AlgDTfe.FloatNum), ',','.'));

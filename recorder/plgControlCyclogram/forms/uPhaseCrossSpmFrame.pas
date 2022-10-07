@@ -181,14 +181,13 @@ end;
 
 procedure TSynchroPhasePhrame.AlgDTFEChange(Sender: TObject);
 begin
-  updateOptsStr;
+  //updateOptsStr;
   SetFFTCount(FFTCountEdit.IntNum, true, false);
 end;
 
 procedure TSynchroPhasePhrame.clearframeparams;
 begin
   inherited;
-
 end;
 
 constructor TSynchroPhasePhrame.create(aOwner: tcomponent);

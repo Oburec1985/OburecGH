@@ -7,6 +7,7 @@ uses
   Dialogs, StdCtrls, recorder, tags, uCommonMath, inifiles, uControlObj, uRCFunc,
   uComponentServises, uCustomEditControlFrame, ubtnlistview, ComCtrls, Buttons,
   ExtCtrls,
+  MathFunction,
   uCommonTypes,
   DCL_MYOWN;
 
@@ -193,7 +194,11 @@ begin
   begin
     p:=c.getTag(i);
     li:=TPairLV.items.Add;
+    li.data:=p;
+    TPairLV.SetSubItemByColumnName('Имя',p.name,li);
+    TPairLV.SetSubItemByColumnName('Значение',formatstrNoE(p.value, 3),li);
   end;
+  LVChange(TPairLV);
 end;
 
 procedure TDACControlEditFrame.ShowZone(z:cZone);

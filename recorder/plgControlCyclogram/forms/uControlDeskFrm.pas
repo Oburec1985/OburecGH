@@ -595,7 +595,6 @@ procedure TControlDeskFrm.PauseBtnClick(Sender: TObject);
 VAR
   b: boolean;
 begin
-  // LogRecorderMessage('TControlDeskFrm_PauseBtnClick_enter');
   b := PausePanel.Color = CLgREEN;
   if b then
     b := false
@@ -607,14 +606,12 @@ begin
   begin
     // Start;
   end;
-  // LogRecorderMessage('TControlDeskFrm_PauseBtnClick_exit');
 end;
 
 procedure TControlDeskFrm.PlayBtnClick(Sender: TObject);
 VAR
   b: boolean;
 begin
-  // LogRecorderMessage('TControlDeskFrm_PlayBtnClick_enter');
   b := PlayPanel.Color = CLgREEN;
   if b then
     b := false
@@ -628,7 +625,6 @@ begin
   begin
     //pause;
   end;
-  // LogRecorderMessage('TControlDeskFrm_PlayBtnClick_exit');
 end;
 
 procedure TControlDeskFrm.ProgramSGDblClick(Sender: TObject);
@@ -1653,18 +1649,22 @@ begin
     if xRow = 0 then
       exit;
     c := m_CurControl;
+
     if c <> nil then
     begin
       SelectControl(m_CurControl);
     end;
-    if ConfirmModeCB.Checked then
+    if m<>nil then
     begin
-      ConfirmFmr.SecCallBack(ConfirmManualSwitchMode, m);
-      ConfirmFmr.SetText('Установить режим ' + m.name);
-      ConfirmFmr.Execute;
-    end
-    else // безусловный переход
-      ConfirmManualSwitchMode(m);
+      if ConfirmModeCB.Checked then
+      begin
+        ConfirmFmr.SecCallBack(ConfirmManualSwitchMode, m);
+        ConfirmFmr.SetText('Установить режим ' + m.name);
+        ConfirmFmr.Execute;
+      end
+      else // безусловный переход
+        ConfirmManualSwitchMode(m);
+    end;
   end;
 end;
 
@@ -1788,45 +1788,25 @@ procedure TControlDeskFrm.Timer1Timer(Sender: TObject);
 var
   tid: integer;
 begin
-  // LogRecorderMessage('TControlDeskFrm_Timer_enter');
   tid := GetCurrentThreadId;
   // деления на случай необходимости вызова из разных потоков
   if tid = MainThreadID then
   begin
-    LogRecorderMessage( 'tid = MainThreadID========================================================'
-        , c_Log_ControlDeskFrm);
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExec',  c_Log_ControlDeskFrm);
     g_conmng.exec;
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecControls',  c_Log_ControlDeskFrm);
     // пересчитываем реакцию регуляторов
     g_conmng.ExecControls;
     // отображаем
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecupdateviews', c_Log_ControlDeskFrm);
     updateviews;
-    LogRecorderMessage(
-      'TControlDeskFrm_Timer1Timer_exit=========================================='
-        , c_Log_ControlDeskFrm);
   end
   else
   begin
-    LogRecorderMessage(
-      'TControlDeskFrm_Timer1Timer_BeforeExec===================================='
-        , c_Log_ControlDeskFrm);
     // перерасчитываем все режимы и регуляторы
     g_conmng.exec;
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecControls',
-      c_Log_ControlDeskFrm);
     // пересчитываем реакцию регуляторов
     g_conmng.ExecControls;
     // отображаем
-    LogRecorderMessage('TControlDeskFrm_Timer1Timer_BeforeExecupdateviews',
-      c_Log_ControlDeskFrm);
     updateviews;
-    LogRecorderMessage(
-      'TControlDeskFrm_Timer1Timer_exit=========================================='
-        , c_Log_ControlDeskFrm);
   end;
-  // LogRecorderMessage('TControlDeskFrm_Timer_exit');
 end;
 
 procedure TControlDeskFrm.TrigSGDrawCell(Sender: TObject; ACol, ARow: integer;
@@ -2327,11 +2307,9 @@ begin
     end;
   end;
   str := inttostr(message.msg);
-  // TExtRecorderPack(GPluginInstance).LogRecorderMessage(str);
   case message.msg of
     WM_PARENTNOTIFY:
       begin
-        // TExtRecorderPack(GPluginInstance).LogRecorderMessage(str+' WM_PARENTNOTIFY');
         case message.WParam of
           WM_RBUTTONUP:
             begin

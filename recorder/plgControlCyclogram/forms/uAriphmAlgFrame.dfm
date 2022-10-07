@@ -1,4 +1,5 @@
 inherited AriphmAlgFrame: TAriphmAlgFrame
+  Height = 287
   object ChannelLabel: TLabel [2]
     Left = 8
     Top = 106
@@ -68,7 +69,7 @@ inherited AriphmAlgFrame: TAriphmAlgFrame
   object ChanB: TRcComboBox
     Left = 159
     Top = 176
-    Width = 145
+    Width = 185
     Height = 24
     TabOrder = 6
   end

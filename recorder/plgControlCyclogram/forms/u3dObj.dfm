@@ -2,22 +2,26 @@ object ObjFrm3d: TObjFrm3d
   Left = 0
   Top = 0
   Caption = '3DFrm'
-  ClientHeight = 300
-  ClientWidth = 635
+  ClientHeight = 392
+  ClientWidth = 830
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object GL: cBaseGlComponent
     Left = 0
     Top = 0
-    Width = 635
-    Height = 169
+    Width = 830
+    Height = 221
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alClient
     DockSite = True
     TabOrder = 0
@@ -30,9 +34,13 @@ object ObjFrm3d: TObjFrm3d
   end
   object ToolsGB: TGroupBox
     Left = 0
-    Top = 169
-    Width = 635
-    Height = 131
+    Top = 221
+    Width = 830
+    Height = 171
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alBottom
     Caption = 'ToolsGB'
     TabOrder = 1

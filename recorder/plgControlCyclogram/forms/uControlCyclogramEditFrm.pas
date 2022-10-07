@@ -808,7 +808,7 @@ begin
         t:=m.gettask(con.name);
         // задание
         str:=floattostr(t.task);
-        str1:=t.getParam('TagsVals');
+        str1:=t.TagsToString;
         str1:=DeleteChars(str1, '"');
         pars:=ParsStrParam(str1, ',');
         for k := 0 to pars.Count - 1 do

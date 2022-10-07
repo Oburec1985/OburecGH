@@ -17,6 +17,7 @@ type
     m_BtnMainFrame,
     // тулбар на странице тегов
     m_BtnTagPropPage: ICustomButtonsToolBar;
+    m_btnID:cardinal;
   public
     procedure doAfterLoad;
     constructor create(r:irecorder);
@@ -31,7 +32,7 @@ type
 implementation
 
 uses
-  pluginclass, uRecBasicFactory;
+  uRecBasicFactory, pluginclass;
 
 constructor cCompMng.create(r: irecorder);
 var
@@ -45,7 +46,6 @@ begin
   UISrv := tagVARIANT(val);
   if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
   begin
-    LogRecorderMessage('Не удалось получить сервер пользовательского интерфейса.', false);
   end;
   m_FormRegistrator := nil;
   rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,
@@ -53,7 +53,6 @@ begin
   m_FormRegistrator.GetFactoriesCount(@count);
   if FAILED(rep) or (m_FormRegistrator = niL) then
   begin
-    LogRecorderMessage('Не удалось получить интерфейс управления списком зарегистрированных фабрик.', false);
   end;
   // интерфейс управления доп. кнопками
   rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomButtonsControl,
@@ -67,6 +66,7 @@ begin
   str := 'tags_property_page';
   rep := m_CustomButtonsCtrl.GetToolBarByName(@str[1], m_BtnTagPropPage);
 
+  //m_CompMng.m_BtnMainFrame.EnableButton(m_btnMainFrameID, TRUE);
 end;
 
 destructor cCompMng.destroy;
@@ -76,7 +76,6 @@ var
   fact:cRecBasicFactory;
   str:string;
 begin
-  LogRecorderMessage('cCompMng.destroy_enter', false);
   for i := 0 to count - 1 do
   begin
     fact:=cRecBasicFactory(Objects[i]);
@@ -101,7 +100,6 @@ begin
   m_CustomButtonsCtrl:=nil;
   m_BtnMainFrame:=nil;
   m_BtnTagPropPage:=nil;
-  LogRecorderMessage('cCompMng.destroy_exit', false);
 end;
 
 procedure cCompMng.doAfterLoad;

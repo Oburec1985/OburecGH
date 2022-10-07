@@ -1,27 +1,25 @@
 inherited DACControlEditFrame: TDACControlEditFrame
-  Width = 854
-  Height = 542
+  Width = 891
+  Height = 304
   Align = alClient
   ExplicitWidth = 451
   ExplicitHeight = 304
   object RightGB: TGroupBox
-    Left = 265
+    Left = 302
     Top = 0
     Width = 589
-    Height = 542
+    Height = 304
     Align = alRight
     Caption = #1047#1086#1085#1099' '#1088#1077#1075#1091#1083#1080#1088#1086#1074#1072#1085#1080#1103
     TabOrder = 0
     ExplicitLeft = -138
-    ExplicitHeight = 304
     object LowPanel: TPanel
       Left = 2
-      Top = 469
+      Top = 231
       Width = 585
       Height = 71
       Align = alBottom
       TabOrder = 0
-      ExplicitTop = 231
       object AddZoneBtn: TSpeedButton
         Left = 4
         Top = 10
@@ -288,18 +286,17 @@ inherited DACControlEditFrame: TDACControlEditFrame
       Left = 2
       Top = 73
       Width = 175
-      Height = 396
+      Height = 158
       Align = alLeft
       TabOrder = 1
       OnClick = ZonesLBClick
       OnKeyDown = ZonesLBKeyDown
-      ExplicitHeight = 158
     end
     object ChannelsLV: TBtnListView
       Left = 177
       Top = 73
       Width = 410
-      Height = 396
+      Height = 158
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -325,7 +322,6 @@ inherited DACControlEditFrame: TDACControlEditFrame
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitHeight = 158
     end
     object Panel1: TPanel
       Left = 2
@@ -354,12 +350,11 @@ inherited DACControlEditFrame: TDACControlEditFrame
   object Panel2: TPanel
     Left = 0
     Top = 0
-    Width = 265
-    Height = 542
+    Width = 302
+    Height = 304
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 216
-    ExplicitHeight = 304
+    ExplicitWidth = 265
     object FeedbackLabel: TLabel
       Left = 16
       Top = 8
@@ -405,8 +400,8 @@ inherited DACControlEditFrame: TDACControlEditFrame
     end
     object ChannelsGB: TGroupBox
       Left = 1
-      Top = 397
-      Width = 263
+      Top = 159
+      Width = 300
       Height = 144
       Hint = 
         #1044#1086#1087#1086#1083#1083#1085#1080#1090#1077#1083#1100#1085#1099#1077' '#1082#1072#1085#1072#1083#1099' '#1082#1086#1090#1086#1088#1099#1077' '#1084#1086#1075#1091#1090' '#1087#1086#1083#1091#1095#1072#1090#1100' '#1079#1072#1076#1072#1085#1080#1103' '#1087#1088#1080' '#1089#1084#1077#1085#1077' ' +
@@ -414,12 +409,11 @@ inherited DACControlEditFrame: TDACControlEditFrame
       Align = alBottom
       Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
       TabOrder = 3
-      ExplicitTop = 159
-      ExplicitWidth = 214
+      ExplicitWidth = 263
       object TPairLV: TBtnListView
         Left = 2
         Top = 18
-        Width = 259
+        Width = 296
         Height = 124
         Align = alClient
         Columns = <
@@ -441,7 +435,7 @@ inherited DACControlEditFrame: TDACControlEditFrame
         DrawColorBox = False
         ChangeTextColor = False
         Editable = True
-        ExplicitWidth = 210
+        ExplicitWidth = 259
       end
     end
   end

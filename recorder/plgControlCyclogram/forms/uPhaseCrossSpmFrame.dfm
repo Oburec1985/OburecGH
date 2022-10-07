@@ -1,5 +1,5 @@
 inherited SynchroPhasePhrame: TSynchroPhasePhrame
-  Height = 476
+  Height = 445
   object ChannelLabel: TLabel [2]
     Left = 10
     Top = 106
@@ -62,7 +62,7 @@ inherited SynchroPhasePhrame: TSynchroPhasePhrame
   end
   object SpmPan: TPanel
     Left = 0
-    Top = 323
+    Top = 292
     Width = 451
     Height = 153
     Align = alBottom
@@ -154,7 +154,7 @@ inherited SynchroPhasePhrame: TSynchroPhasePhrame
     end
     object FFTdX: TFloatEdit
       Left = 161
-      Top = 42
+      Top = 47
       Width = 121
       Height = 24
       TabOrder = 4
@@ -162,7 +162,7 @@ inherited SynchroPhasePhrame: TSynchroPhasePhrame
     end
     object AlgDTFE: TFloatEdit
       Left = 8
-      Top = 112
+      Top = 113
       Width = 121
       Height = 24
       TabOrder = 5

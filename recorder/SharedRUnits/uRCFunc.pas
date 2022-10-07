@@ -258,6 +258,7 @@ procedure FreeFFTPlanList;
 procedure FreeInverseFFTPlanList;
 function GetFFTPlan(fftCount: integer): TFFTProp;
 function GetInverseFFTPlan(fftCount: integer): TFFTProp;
+function TranslateNotifyToStr(n:integer):string;
 
 var
   g_IR: irecorder = nil;
@@ -958,6 +959,7 @@ begin
     ir := getIR;
     // говорим рекордеру, чтобы обновил все списки тегов
     param := SCF_TAGSLIST or SCF_TAGSCONTENT;
+
     ir.SetProperty(RCPROP_CHANGEDSETTINGS, param);
     ir.LeaveConfigMode(G_Plg, 0);
     g_configmode := false;
@@ -1009,10 +1011,10 @@ var
   changeState: boolean;
 begin
   ftagname := 'freedTag';
-  ecm(changeState);
+  //ecm(changeState);
   ftag := nil;
-  if changeState then
-    lcm;
+  //if changeState then
+  //  lcm;
 end;
 
 destructor cTag.destroy(InCfgMode:boolean);
@@ -1027,10 +1029,10 @@ begin
   else
   begin
     ftagname := 'freedTag';
-    ecm(changeState);
+    //ecm(changeState);
     ftag := nil;
-    if changeState then
-      lcm;
+    //if changeState then
+    //  lcm;
   end;
 end;
 
@@ -1571,6 +1573,60 @@ begin
   GetFFTExpTable(fftCount, true, tcmxArray_d(r.TableExp.p));
   g_inverseFFTPlanList[j] := r;
   result := g_inverseFFTPlanList[j];
+end;
+
+function TranslateNotifyToStr(n:integer):string;
+begin
+  case n of
+    PN_ENTERRCCONFIG:             result:='PN_ENTERRCCONFIG';
+    PN_LEAVERCCONFIG:             result:='PN_LEAVERCCONFIG';
+    PN_CHANGECURTAG:              result:='PN_CHANGECURTAG';
+    PN_RCSTART:                   result:='PN_RCSTART';
+    PN_RCPLAY:                    result:='PN_RCPLAY';
+    PN_RCSTOP:                    result:='PN_RCSTOP';
+    PN_UPDATEDATA:                result:='PN_UPDATEDATA';
+    PN_SHOWINFO:                  result:='PN_SHOWINFO';
+    PN_RCSAVECONFIG:              result:='PN_RCSAVECONFIG';
+    PN_RCLOADCONFIG:              result:='PN_RCLOADCONFIG';
+    PN_SYNCHRO_READ_DATA_BLOCK:   result:='PN_SYNCHRO_READ_DATA_BLOCK';
+    PN_EDIT_VIRTUAL_TAG_PROPS:    result:='PN_EDIT_VIRTUAL_TAG_PROPS';
+    PN_IMPORTSETTINGS:            result:='PN_IMPORTSETTINGS';
+    PN_EXPORTSETTINGS:            result:='PN_EXPORTSETTINGS';
+    PN_BEFORE_RCSTART:            result:='PN_BEFORE_RCSTART';
+    PN_BEFORE_RCSTOP:             result:='PN_BEFORE_RCSTOP';
+    PN_ABORT_RCSTART:             result:='PN_ABORT_RCSTART';
+    PN_BROADCAST:                 result:='PN_BROADCAST';
+    PN_CUSTOM_BUTTON_CLICK:       result:='PN_CUSTOM_BUTTON_CLICK';
+    PN_CUSTOM_BUTTON_QUERY_STATE: result:='PN_CUSTOM_BUTTON_QUERY_STATE';
+    PN_ENABLE_VTAG_SETUP_DLG:     result:='PN_ENABLE_VTAG_SETUP_DLG';
+    PN_EDIT_MULTI_VTAG_PROPS:     result:='PN_EDIT_MULTI_VTAG_PROPS';
+    PN_QUERY_VTAG_INFO:           result:='PN_QUERY_VTAG_INFO';
+    PN_REMOVE_VTAGS:              result:='PN_REMOVE_VTAGS';
+    PN_RCINITIALIZED:             result:='PN_RCINITIALIZED';
+    PN_ON_CHANGE_DATAPLACEMENT:   result:='PN_ON_CHANGE_DATAPLACEMENT';
+    PN_ON_BEFORE_FRAME_REMOVING:  result:='PN_ON_BEFORE_FRAME_REMOVING';
+    PN_ON_AFTER_FRAME_REMOVING:   result:='PN_ON_AFTER_FRAME_REMOVING';
+    PN_FILE_PROCESSING_COMPLETED: result:='PN_FILE_PROCESSING_COMPLETED';
+    PN_ON_DESTROY_UI_SRV:         result:='PN_ON_DESTROY_UI_SRV';
+    PN_ON_SWITCH_TO_UI_THREAD:    result:='PN_ON_SWITCH_TO_UI_THREAD';
+    PN_ON_CONFIG_MODE_COMPLETED:  result:='PN_ON_CONFIG_MODE_COMPLETED';
+    PN_ON_SWITCH_CALIBR_MODE:     result:='PN_ON_SWITCH_CALIBR_MODE';
+    PN_ON_RC_PROGRAMMING:         result:='PN_ON_RC_PROGRAMMING';
+    PN_ABORT_RC_PROGRAMMING:      result:='PN_ABORT_RC_PROGRAMMING';
+    PN_ON_UPDATE_SECURITY_STATE:  result:='PN_ON_UPDATE_SECURITY_STATE';
+    PN_ON_UPDATE_MF_TITLE:        result:='PN_ON_UPDATE_MF_TITLE';
+    PN_ON_REC_MODE:               result:='PN_ON_REC_MODE';
+    PN_ON_PLAY_MODE:              result:='PN_ON_PLAY_MODE';
+    PN_ON_POPUP_SETUP_DIALOG:     result:='PN_ON_POPUP_SETUP_DIALOG';
+  	PN_ON_POPUP_SEL_FRAME_DIALOG: result:='PN_ON_POPUP_SEL_FRAME_DIALOG';
+  	PN_ON_ACTION_SAVE_CFG:        result:='PN_ON_ACTION_SAVE_CFG';
+	  PN_ON_ACTION_SAVE_CFG_AS:     result:='PN_ON_ACTION_SAVE_CFG_AS';
+  	PN_ON_ACTION_LOAD_CFG:        result:='PN_ON_ACTION_LOAD_CFG';
+	  PN_ON_CHANGE_FORMS:           result:='PN_ON_CHANGE_FORMS';
+  	PN_ABORT_RCSTOP:              result:='PN_ABORT_RCSTOP';
+	  PN_ON_ACTION_CLOSE_APP:       result:='PN_ON_ACTION_CLOSE_APP';
+  	PN_ON_ZBALANCE_VTAG:          result:='PN_ON_ZBALANCE_VTAG';
+  end;
 end;
 
 end.

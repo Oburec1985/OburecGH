@@ -299,6 +299,7 @@ begin
   firstalgFrame:=nil;
   if n=nil then exit;
   n:=GetSelectNode(AlgsTV);
+  pn:=n;
   fn:=n;
   d:=AlgsTV.GetNodeData(n);
   nodeIsAlg:=false;
@@ -313,10 +314,10 @@ begin
     j:=0;
     while n<>nil do
     begin
+      d:=AlgsTV.GetNodeData(n);
+      a:=cbasealgcontainer(d.data);
       if j=0 then
       begin
-        d:=AlgsTV.GetNodeData(n);
-        a:=cbasealgcontainer(d.data);
         firstalg:=a;
         for I := 0 to m_frameList.Count - 1 do
         begin
@@ -342,7 +343,7 @@ begin
           firstalgFrame.ShowAlg(a);
       end;
       inc(j);
-      n:=AlgsTV.GetNext(n, false);
+      n:=AlgsTV.GetNextSelected(n, false);
     end;
   end;
   n:=fn;
@@ -375,10 +376,10 @@ begin
     begin
       for j := 0 to n.ChildCount - 1 do
       begin
-        if I <> 0 then
+        if j <> 0 then
           n:= AlgsTV.GetNext(n)
         else
-          n:= AlgsTV.GetFirst;
+          n:= AlgsTV.GetFirstChild(pn);
         d:=AlgsTV.GetNodeData(n);
         a:=cBaseAlgContainer(d.data);
         if j=0 then
@@ -523,9 +524,10 @@ end;
 procedure TAlgFrm.AlgsTVKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
-  n:pVirtualNode;
+  n, pn:pVirtualNode;
   d:pNodedata;
-  o:cBaseObj;
+  a:cBaseAlgContainer;
+  c:cAlgConfig;
 begin
   if key=VK_DELETE then
   begin
@@ -533,8 +535,20 @@ begin
     while n<>nil do
     begin
       d:=AlgsTV.GetNodeData(n);
-      o:=cbaseobj(d.data);
-      o.destroy;
+      if tobject(d.data) is cAlgConfig then
+      begin
+        c:=cAlgConfig(d.data);
+        c.destroy;
+      end
+      else
+      begin
+        pn:=n.Parent;
+        a:=cBaseAlgContainer(d.data);
+        d:=AlgsTV.GetNodeData(pn);
+        c:=cAlgConfig(d.data);
+        c.delAlg(a);
+        a.destroy;
+      end;
       n:=AlgsTV.GetNextSelected(n, false);
     end;
     AlgsTV.DeleteSelectedNodes;
@@ -695,8 +709,8 @@ begin
       pd:=AlgsTV.GetNodeData(pn);
       if tobject(pd.Data) is cAlgConfig then
       begin
-        n:=pn;
-        d:=pd;
+        //n:=pn;
+        //d:=pd;
       end;
     end;
     // גûבנאם אכדמנטעל

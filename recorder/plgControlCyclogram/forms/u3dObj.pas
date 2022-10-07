@@ -219,7 +219,6 @@ begin
   case message.msg of
     WM_PARENTNOTIFY:
     begin
-      //TExtRecorderPack(GPluginInstance).LogRecorderMessage(str+' WM_PARENTNOTIFY');
       case message.WParam of
         WM_RBUTTONUP:
         begin

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Root>
+	<WinПОС ResFolder="">
+		<cWPPage ObjType="cWPPage" Node="cWPPage" SyncCurs="false" Rows="1" Col="1" AutoCreate="false">
+			<cWPGraph ObjType="cWPGraph" Node="cWPGraph" AutoCreate="false" Min.X="0" Max.X="27.65" ZoomMin.X="0" ZoomMax.X="27.65" XAxisName="время" szftempl="" AxisRow="true" AxisCol="false" XLog="false" XAutoScale="false" Tubes="true" ShowLegend="true" FindInterval="false" StartTrig="" StopTrig="" Length="0">
+				<cWPAxis ObjType="cWPAxis" Node="cWPAxis" AutoCreate="false" MinY="-114.157" MaxY="89.8223" ZoomMinY="-114.157" ZoomMaxY="89.8223" AxisName="Y" szftempl="" Color="16711680" LogScale="false" AutoScale="false">
+					<ГКВ11_wz ObjType="cWPLine" Node="ГКВ11_wz" srcID="0" SrcName="F:\signals\clietns\Старт\Мера Отчет\Сбросы для МЕРЫ с разными частотами\сброс поз. 1 ОК 10240 Гц\сброс поз. 1 ОК 10240 Гц.mera" SrcSignal="ГКВ11_wz" Color="16711680" Width="0" LINE2BASE="false" ONLYPOINTS="false" VISIBLE="true" HIST="false" HISTTRANSP="true" PARAM="false" AutoCreate="false"/>
+				</cWPAxis>
+			</cWPGraph>
+			<001_cWPGraph ObjType="cWPGraph" Node="001_cWPGraph" AutoCreate="false" Min.X="0" Max.X="27.649" ZoomMin.X="0" ZoomMax.X="27.649" XAxisName="время" szftempl="" AxisRow="true" AxisCol="false" XLog="false" XAutoScale="false" Tubes="true" ShowLegend="true" FindInterval="false" StartTrig="" StopTrig="" Length="0">
+				<001_cWPAxis ObjType="cWPAxis" Node="001_cWPAxis" AutoCreate="false" MinY="-114.157" MaxY="89.8223" ZoomMinY="-114.157" ZoomMaxY="89.8223" AxisName="Y" szftempl="" Color="16711680" LogScale="false" AutoScale="false">
+					<ГКВ11_wz_resmpl ObjType="cWPLine" Node="ГКВ11_wz_resmpl" srcID="2" SrcName="/Signals/Результаты" SrcSignal="ГКВ11_wz_resmpl" Color="16711680" Width="0" LINE2BASE="false" ONLYPOINTS="false" VISIBLE="true" HIST="false" HISTTRANSP="true" PARAM="false" AutoCreate="false"/>
+				</001_cWPAxis>
+			</001_cWPGraph>
+		</cWPPage>
+		<Triggers>
+			<Trig_Старт замера NodeName="Старт замера" NodeType="Trig" TrigType="1" Shift="0" SearchType="0" SearchIntervalX1="0" SearchIntervalX2="0" Signal="Старт замера" Number="0" Threshold="0" FltResample="0" FltTrend="false" FltTrendNPoints="0" FltHPF="false" FltHPFOrder="0" FltLPF="false" FltLPFOrder="0" FltH2="false" FltH2NPoints="0" Front="false" SRCID="0" Units="Abs"/>
+			<Trig_Стоп замера NodeName="Стоп замера" NodeType="Trig" TrigType="2" Shift="0" SearchType="0" SearchIntervalX1="0" SearchIntervalX2="0" Signal="Стоп замера" Number="0" Threshold="0" FltResample="0" FltTrend="false" FltTrendNPoints="0" FltHPF="false" FltHPFOrder="0" FltLPF="false" FltLPFOrder="0" FltH2="false" FltH2NPoints="0" Front="false" SRCID="0" Units="Abs"/>
+		</Triggers>
+		<SRC SRC_0="/Signals/results" SRCid_0="1" SRCopts_0="1" SRClevel_0=".5" SRC_1="/Signals/Результаты" SRCid_1="2" SRCopts_1="1" SRClevel_1=".5" SRC_2="/Signals/сброс поз. 1 ОК 10240 Гц.mera" SRCid_2="0" SRCopts_2="1" SRClevel_2=".5"/>
+		<Operators>
+			<Operator_0 OperName="/Operators/Передискретизация" OperParams="kind=1, type=0, freq=1000, start=0, fchst=0, srcdt=0" OperIntervalType="1" OperIntervalT1="3.01169E-3" OperIntervalT2="27.5961" DstID="2" SrcID="0">
+				<s_0 DSC_Count="1" DSC_0="/Signals/Результаты/ГКВ11_wx_" SRC_Count="1" SRC_Name_0="/Signals/сброс поз. 1 ОК 10240 Гц.mera/ГКВ11_wx" SRC_Start_0="2" SRC_Count_0="18484"/>
+				<s_1 DSC_Count="1" DSC_0="/Signals/Результаты/ГКВ11_wy_" SRC_Count="1" SRC_Name_0="/Signals/сброс поз. 1 ОК 10240 Гц.mera/ГКВ11_wy" SRC_Start_0="2" SRC_Count_0="18484"/>
+				<s_2 DSC_Count="1" DSC_0="/Signals/Результаты/ГКВ11_wz_resmpl" SRC_Count="1" SRC_Name_0="/Signals/сброс поз. 1 ОК 10240 Гц.mera/ГКВ11_wz" SRC_Start_0="0" SRC_Count_0="18523"/>
+			</Operator_0>
+		</Operators>
+	</WinПОС>
+</Root>

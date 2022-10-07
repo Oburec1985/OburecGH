@@ -3,7 +3,7 @@ unit uLogFile;
 interface
 uses
   sysutils, classes, Grids, uSetList, types, graphics, uComponentServises,
-  windows;
+  windows, uBinFile, dialogs;
 
 type
 
@@ -35,7 +35,12 @@ type
     cs: TRTLCriticalSection;
     f:textfile;
     separator:char;
+    strNum:integer;
+
+    achars:array [0..500] of ansichar;
   public
+    // писать всегда только одну строку и вечно переписывать
+    m_Rewrite:boolean;
     fOnAddRecord:tNotifyEvent;
   protected
     // «аписать строку в конец файла
@@ -47,6 +52,7 @@ type
     procedure InitCS;
     procedure DeleteCS;
   public
+    function  TryEnterCS:boolean;
     procedure EnterCS;
     procedure ExitCS;
     // -1 секци€ не зан€та. 1 - секци€ зан€та другим потоком; 0 - зан€та текущим потоком
@@ -55,7 +61,7 @@ type
     procedure addErrorMes(Mes:string);
     // «аписать строку с информацией в лог
     procedure addInfoMes(Mes:string);
-    constructor create(name:string; separator:char);
+    constructor create(name:string; p_separator:char);
     // добавить строчку в конец журнала
     destructor destroy;
   end;
@@ -79,7 +85,22 @@ type
   var
     g_logFile:cLogFile;
 
+function StrToAnsi(s: string): ansistring;
+
 implementation
+
+
+function StrToAnsi(s: string): ansistring;
+var
+  astr: ansistring;
+  i: integer;
+begin
+  for i := 1 to length(s) do
+  begin
+    astr := astr + s[i];
+  end;
+  result := lpcstr(astr);
+end;
 
 
 procedure logMessage(str: string);
@@ -136,8 +157,9 @@ begin
   result:=cLogRecord(GetHight(rec,index));
 end;
 
-constructor cLogFile.create(name:string; separator:char);
+constructor cLogFile.create(name:string; p_separator:char);
 begin
+  separator:=p_separator;
   InitCS;
   records:=cLogRecords.create;
   filename:=name;
@@ -177,19 +199,70 @@ var
   date:tdatetime;
   datestr:string;
   str:string;
-  t:cardinal;
+  astr:ansistring;
+  ch:char;
+  lf:file;
+  fSize, pos:longint;
+  readed, t:integer;
+  p:pointer;
+  I: Integer;
 begin
   date:=now;
-  datestr:=DateToStr(date)+' '+TimeToStr(date)+ 'tid: '+inttostr(GetCurrentThreadId);
+  t:=GetCurrentThreadId;
+  datestr:=DateToStr(date)+' '+TimeToStr(date)+ 'tid: '+inttostr(t);
   str:=datestr+separator+mes+separator+mesType;
-  EnterCS;
-  Assign(f, filename);
-  // открываем дл€ записи
-  append(f);
-  // запись строки во второй файл
-  writeln(f, str);
-  CloseFile(f);
-  exitcs;
+  if TryEnterCS then
+  begin
+    //if t<>cs.OwningThread then
+    //begin
+      //showmessage('hex');
+    //end;
+    if m_Rewrite then
+    begin
+      pos:=0;
+      Assign(lf, filename);
+      Reset(lf, 1);
+      fsize:=FileSize(lf);
+      pos:=fsize;
+      if fsize=0 then
+      begin
+        astr:=StrtoAnsi(str);
+        BlockWrite(lf, astr[1], length(astr));
+      end
+      else
+      begin
+        while pos>0 do
+        begin
+          dec(pos);
+          Seek(lf, pos);
+          BlockRead(lf, ch, 1, readed);
+          if (ch=char(13)) or (ch=char(10)) or (pos=0) then
+          begin
+            Seek(lf, pos);
+            Truncate(lf);
+            for I := 1 to length(str) do
+            begin
+              achars[i-1]:=ansichar(str[i]);
+            end;
+            //astr:=StrtoAnsi(str);
+            // запись строки во второй файл
+            BlockWrite(lf, achars[0], length(str));
+          end;
+        end;
+      end;
+      CloseFile(lf);
+    end
+    else
+    begin
+      AssignFile(f, filename);
+      // открываем дл€ записи
+      append(f);
+      // запись строки во второй файл
+      writeln(f, str);
+      CloseFile(f);
+    end;
+    exitcs;
+  end;
   if mesType=c_ErrorMes then
     t:=c_RecType_ErrorMes;
   if mesType=c_InfoMes then
@@ -236,6 +309,11 @@ end;
 procedure cLogFile.DeleteCS;
 begin
   DeleteCriticalSection(cs);
+end;
+
+function  cLogFile.TryEnterCS:boolean;
+begin
+  result:=TryEnterCriticalSection(cs);
 end;
 
 procedure cLogFile.EnterCS;

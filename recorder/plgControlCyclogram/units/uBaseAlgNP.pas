@@ -4,7 +4,12 @@ interface
 uses
   types, ActiveX, forms, sysutils, windows, Classes, IniFiles, Dialogs,
   uCompMng, cfreg, uRecorderEvents, PluginClass, tags, Recorder, uRCFunc, uAlgFrm, uAlgAddFrm,uBaseAlg,
-  Generics.Collections, Controls, uControlObj, uCommonMath, uControlCyclogramEditFrm, uMBaseControl;
+  Generics.Collections, Controls, uControlObj,
+  uCommonMath,
+  uAlgsSaveFrm,
+  uControlCyclogramEditFrm,
+  shellApi,
+  uMBaseControl;
 
 type
 
@@ -13,6 +18,10 @@ type
   public
     m_toolBarIcon:IPicture;
     m_btnID:cardinal;
+    // сохранялка
+    m_toolBarIcon2:IPicture;
+    m_btnID2:cardinal;
+
   protected
     procedure doAddParentList;override;
     procedure doSave(path: string);override;
@@ -25,6 +34,8 @@ type
 implementation
 
 { cMBaseNP }
+uses
+  uControlWarnFrm;
 
 procedure cMBaseAlgNP.doAddParentList;
 var
@@ -36,11 +47,20 @@ begin
   str  := 'Расчетные каналы';
   str1 := 'Расчетные каналы';
   m_toolBarIcon:= LoadPicFromRes('FX48');
-  TExtRecorderPack(GPluginInstance).m_CompMng.m_BtnTagPropPage.AddButton(m_toolBarIcon,
+  cCompMng(TExtRecorderPack(GPluginInstance).m_CompMng).m_BtnTagPropPage.AddButton(m_toolBarIcon,
                                 m_toolBarIcon,
                                 m_toolBarIcon,
                                 m_toolBarIcon,
                                 pAnsiChar(@str1[1]), @str[1], GPluginInstance, m_btnID);
+  // добавляем кнопку
+  str  := 'Сохранить обработку';
+  str1 := 'Сохранить обработку';
+  m_toolBarIcon2:= LoadPicFromRes('SAVE');
+  cCompMng(TExtRecorderPack(GPluginInstance).m_CompMng).m_BtnMainFrame.AddButton(m_toolBarIcon2,
+                                m_toolBarIcon2,
+                                m_toolBarIcon2,
+                                m_toolBarIcon2,
+                                pAnsiChar(@str1[1]), @str[1], GPluginInstance, m_btnID2);
 end;
 
 procedure cMBaseAlgNP.doLoad(path: string);
@@ -79,6 +99,11 @@ begin
   if pMsgInfo.uID=m_btnID then
   begin
     AlgFrm.Show;   // показываем форму настроек
+  end;
+  if pMsgInfo.uID=m_btnID2 then
+  begin
+    if fileexists(g_Path) then
+      ShellExecute(0,nil,pwidechar(g_Path),nil,nil, SW_HIDE);
   end;
 end;
 

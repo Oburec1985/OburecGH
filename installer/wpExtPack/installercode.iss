@@ -1,18 +1,18 @@
 [Setup]
 AppName=WPExtPack
 
-AppVersion=1.096
-AppVerName=1.096
+AppVersion=1.097
+AppVerName=1.097
 ; защита от переустановки запущенной версии
 AppMutex=WPExtPack
 
 DefaultDirName={pf}\MERA\WinPOS\Plugins\
 
-;OutputDir=output
-OutputDir=\\Fserv\e\MERA\PRODUCTS\WinPos\Utils\CorrectUTS_WpExtPack\versions\
+OutputDir=output
+;OutputDir=\\Fserv\e\MERA\PRODUCTS\WinPos\Utils\CorrectUTS_WpExtPack\versions\
 
 ;OutputBaseFilename=WPExtPack-installer_1.01_tryrzd
-OutputBaseFilename=WPExtPack-installer_1.096
+OutputBaseFilename=WPExtPack-installer_1.097
 
 [Types]
 Name: "full"; Description: "Полная установка"

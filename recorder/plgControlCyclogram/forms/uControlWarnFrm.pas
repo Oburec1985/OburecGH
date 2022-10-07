@@ -225,8 +225,10 @@ type
     procedure doLoad(Sender: TObject);
     procedure doSave(Sender: TObject);
     procedure doUpdateData(Sender: TObject);
-    procedure SaveMera;
+    procedure doOnStart(Sender: TObject);
   public
+    procedure SaveMera;overload;
+    procedure SaveMera(f:string);overload;
     constructor create;
     destructor destroy; override;
     function doCreateForm: cRecBasicIFrm; override;
@@ -256,6 +258,7 @@ const
 
 var
   g_CtrlWrnFactory: cCtrlWrnFactory;
+  g_Path: string;
 
 implementation
 
@@ -914,6 +917,7 @@ begin
   addplgevent('cCtrlWrnFactory_doLoad', c_RC_LoadCfg, doLoad);
   addplgevent('cCtrlWrnFactory_doSave', c_RC_SaveCfg, doSave);
   addplgevent('cCtrlWrnFactory_doUpdateData', c_RUpdateData, doUpdateData);
+  addplgevent('cCtrlWrnFactory_doOnStart', c_RC_DoChangeRCState, doOnStart);
 end;
 
 procedure cCtrlWrnFactory.DestroyEvents;
@@ -973,16 +977,19 @@ begin
   end;
 end;
 
-procedure cCtrlWrnFactory.SaveMera;
+procedure cCtrlWrnFactory.SaveMera(f:string);
 var
   i, j: integer;
   Frm: TCntrlWrnChart;
   wp: TWrkPoint;
   ifile: TIniFile;
+  dir:string;
 begin
-  if not fileexists(g_merafile) then
-    exit;
-  ifile := TIniFile.create(g_merafile);
+  dir:=extractfiledir(f)+'\APhh\';
+  f:=dir+trimext(extractfileName(f))+'_APhh.mera';
+  g_Path:=f;
+  ForceDirectories(dir);
+  ifile := TIniFile.create(f);
   for i := 0 to m_CompList.count - 1 do
   begin
     Frm := TCntrlWrnChart(GetFrm(i));
@@ -993,9 +1000,10 @@ begin
       begin
         if wp.fready > 0 then
         begin
-          if wp.m_regularX then
+          if wp.m_regularX then // пока запись АЧХ один хрен x,y
           begin
-            ifile.WriteFloat(wp.name, 'Freq', (1 / wp.m_dx))
+            ifile.WriteFloat(wp.name, 'Freq', (1 / wp.m_dx));
+            ifile.WriteString(wp.name, 'XFormat', 'R8');
           end
           else
           begin
@@ -1017,12 +1025,17 @@ begin
           // begin
           // f.WriteString(wp.name, 'UTS_Channel', fUTS.getname);
           // end;
-          wp.saveData(g_merafile);
+          wp.saveData(f);
         end;
       end;
     end;
   end;
   ifile.destroy;
+end;
+
+procedure cCtrlWrnFactory.SaveMera;
+begin
+  SaveMera(g_merafile);
 end;
 
 function cCtrlWrnFactory.doCreateForm: cRecBasicIFrm;
@@ -1051,6 +1064,31 @@ begin
     loadxml(str);
     if EditProfileFrm <> nil then
       EditProfileFrm.loadini(extractfiledir(str));
+  end;
+end;
+
+procedure cCtrlWrnFactory.doOnStart(Sender: TObject);
+var
+  f:TCntrlWrnChart;
+  I, j: Integer;
+  line:TWrkPoint;
+begin
+  if (rcStateChange=RSt_StopToView) or
+     (rcStateChange=RSt_StopToRec) or
+     (rcStateChange=RSt_initToView) or
+     (rcStateChange=RSt_initToRec) or
+     (rcStateChange=RSt_ViewToRec) or
+     (rcStateChange=RSt_RecToView) then
+  begin
+    for I := 0 to Count - 1 do
+    begin
+      f:=TCntrlWrnChart(getFrm(i));
+      for j:=0 to f.m_GraphList.Count - 1 do
+      begin
+        line:=f.getWP(j);
+        ZeroMemory(@line.fdxPCount[0], length(line.fdxPCount) * sizeof(double));
+      end;
+    end;
   end;
 end;
 
@@ -1172,6 +1210,8 @@ begin
   end;
   doc.destroy;
 end;
+
+
 
 procedure cCtrlWrnFactory.loadini(f: TIniFile);
 var

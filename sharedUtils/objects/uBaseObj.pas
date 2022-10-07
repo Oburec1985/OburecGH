@@ -206,7 +206,7 @@ const
 
 implementation
 uses
-  uBaseObjMng;
+  uBaseObjMng  ;
 
 type
   sList = class(tstringlist)
@@ -330,13 +330,12 @@ begin
 end;
 
 destructor cBaseObj.destroy;
-var events:ceventlist;
+var
+  events:ceventlist;
 begin
   metadata.destroy;
   metadata:=nil;
-
   unlinc;
-
   if not childrens.destroydata then
     unlincChildrens;
   if (fBaseObjMng<>nil) then
@@ -979,14 +978,29 @@ end;
 procedure cBaseObjList.deletechild(i:integer);
 var
   obj:cbaseobj;
+  b:boolean;
 begin
+  //b:=false;
   obj:=cbaseobj(getobj(i));
   removeobj(i);
+  //if obj.name='C_01' then
+  //begin
+  //  b:=true;
+  //end;
   if not obj.blocked then
   begin
     if destroydata then
     begin
+      //if b then
+      //begin
+      //  logRCInfo('c:\RCInfo5_.txt');
+      //end;
       obj.destroy;
+      //if b then
+      //begin
+      //  logRCInfo('c:\RCInfo5.txt');
+      //  b:=false;
+      //end;
     end;
   end
   else

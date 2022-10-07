@@ -302,7 +302,6 @@ begin
     PN_SHOWINFO:
       begin
         pMsgInfo := pointer(a_dwData);
-        //ProcessShowVersionInfo(pMsgInfo);
       end;
     PN_RCLOADCONFIG:
       begin
@@ -486,7 +485,7 @@ begin
   if not log then exit;
   // m_journal.AddEvent(pwidechar(str[1]), 0, 1, 0);
   if g_logFile <> nil then
-    g_logFile.addInfoMes(str+' Thread: '+IntToStr(GetCurrentThreadId));
+    g_logFile.addInfoMes(str);
 end;
 
 // system32 путь
@@ -524,9 +523,7 @@ var
   val: OleVariant;
   // f:icustomformFactory;
 begin
-  LogRecorderMessage('Создание пользовательского интерфейса плагина...TExtRecorderPack', c_Log_PlgClass);
   m_UIThreadID:=GetCurrentThreadId;
-  LogRecorderMessage('UIThreadID: '+inttostr(m_UIThreadID)+'; MainThreadID:' + inttostr(MainThreadID), c_Log_PlgClass);
 
   FIRecorder.GetProperty(RCPROP_CONFIGNAME, val);
   fConfigName := ExtractFileName(val);
@@ -543,48 +540,45 @@ var
 begin
   result := false;
   m_nplist.CallAllProcessNotify(a_dwCommand, a_dwData);
-
+  LogRecorderMessage('Enter_'+TranslateNotifyToStr(a_dwCommand), c_Log_PlgClass);
   case a_dwCommand of
     PN_RCLOADCONFIG:
+    begin
+      for I := 0 to m_CompMng.Count - 1 do
       begin
-        LogRecorderMessage('PlgClass_PN_RCLOADCONFIG_Enter', c_Log_PlgClass);
-        for I := 0 to m_CompMng.Count - 1 do
-        begin
-          m_CompMng.doafterload;
-        end;
-        CallPlgEvents(c_RC_LoadCfg);
-        LogRecorderMessage('PlgClass_PN_RCLOADCONFIG_Exit', c_Log_PlgClass);
+        m_CompMng.doafterload;
       end;
+      CallPlgEvents(c_RC_LoadCfg);
+    end;
     PN_RCSAVECONFIG:
-      begin
-        CallPlgEvents(c_RC_SaveCfg);
-      end;
+    begin
+      CallPlgEvents(c_RC_SaveCfg);
+    end;
     PN_SHOWINFO:
+    begin
+      pMsgInfo := pointer(a_dwData);
+    end;
+    PN_CUSTOM_BUTTON_CLICK:
+    begin
+      if a_dwData = 0 then
+      begin
+
+      end
+      else
       begin
         pMsgInfo := pointer(a_dwData);
-        //ProcessShowVersionInfo(pMsgInfo);
-      end;
-    PN_CUSTOM_BUTTON_CLICK:
-      begin
-        if a_dwData = 0 then
+        if pMsgInfo.uID = m_btnMainFrameID then
         begin
 
         end
         else
         begin
-          pMsgInfo := pointer(a_dwData);
-          if pMsgInfo.uID = m_btnMainFrameID then
-          begin
-
-          end
-          else
-          begin
-            if pMsgInfo.uID = m_BtnTagPropPageID then
-              LogRecorderMessage('Не удалось получить изображение кнопки дополнительной панели рекордера.', c_Log_PlgClass);
-          end;
+          //if pMsgInfo.uID = m_BtnTagPropPageID then
         end;
       end;
+    end;
   end;
+  LogRecorderMessage('Exit_'+TranslateNotifyToStr(a_dwCommand), c_Log_PlgClass);
 end;
 
 procedure TExtRecorderPack.destroyForms;
@@ -603,8 +597,7 @@ begin
     end
     else
     begin
-      g_logFile.addErrorMes(
-        'FrmSync пытается удалиться в другом потоке нежели был создан');
+      g_logFile.addErrorMes('FrmSync пытается удалиться в другом потоке нежели был создан');
     end;
   end;
 {$endif}
@@ -780,12 +773,10 @@ begin
       end;
     PN_ON_SWITCH_TO_UI_THREAD:
       begin
-        LogRecorderMessage('PlgClass_PN_ON_SWITCH_TO_UI_THREAD_Enter', c_Log_PlgClass);
         result := (CreateGUI = 0);
 
         createFormsRecorderUIThread(m_CompMng);
         g_createGUI := true;
-        LogRecorderMessage('PlgClass_PN_ON_SWITCH_TO_UI_THREAD_Exit', c_Log_PlgClass);
       end;
     PN_ON_DESTROY_UI_SRV:
       begin
@@ -803,13 +794,11 @@ begin
       end;
     PN_LEAVERCCONFIG:
       begin
-        LogRecorderMessage('PlgClass_PN_LEAVERCCONFIG_Enter', c_Log_PlgClass);
         // Оповестить форму о завершении изменения конфигурации и
         // передать ей новый список ссылок на интерфейсы тегов
         // frmTestSettings.EndConfigure(Tags);
         result := true;
         CallPlgEvents(c_RC_LeaveCfg);
-        LogRecorderMessage('PlgClass_PN_LEAVERCCONFIG_Exit', c_Log_PlgClass);
       end;
     PN_RCSTOP:
       begin
@@ -840,10 +829,8 @@ begin
       end;
     PN_UPDATEDATA:
       begin
-        LogRecorderMessage('PluginClass.PN_UPDATEDATA Enter',c_Log_PlgClass);
         // frmTestSettings.RecorderGotData;
         EList.CallAllEvents(c_RUpdateData);
-        LogRecorderMessage('PluginClass.PN_UPDATEDATA Exit', c_Log_PlgClass);
         result := true;
       end
     else

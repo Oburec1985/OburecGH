@@ -48,6 +48,7 @@ uses
   plugin,
   uConfirmDlg,
   uEditPropertiesFrm,
+  uAlgsSaveFrm,
   uMBaseControl;
 
 type
@@ -129,12 +130,10 @@ begin
   UISrv := tagVARIANT(val);
   if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
   begin
-    //LogRecorderMessage('Не удалось получить сервер пользовательского интерфейса.');
   end;
   rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator, FormRegistrator);
   if FAILED(rep) or (FormRegistrator = niL) then
   begin
-    //LogRecorderMessage('Не удалось получить интерфейс управления списком зарегистрированных фабрик.');
   end;
   FormRegistrator.GetFactoriesCount(@count);
   for I := 0 to count - 1 do
@@ -178,12 +177,10 @@ begin
   UISrv := tagVARIANT(val);
   if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
   begin
-    //LogRecorderMessage('Не удалось получить сервер пользовательского интерфейса.');
   end;
   rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator, FormRegistrator);
   if FAILED(rep) or (FormRegistrator = niL) then
   begin
-    //LogRecorderMessage('Не удалось получить интерфейс управления списком зарегистрированных фабрик.');
   end;
   FormRegistrator.GetFactoriesCount(@count);
   for I := 0 to count - 1 do
@@ -239,11 +236,8 @@ var
 begin
   g_delFrms:=false;
   //FullDebugModeScanMemoryPoolBeforeEveryOperation:=true;
-
   // GetCurrentThreadId;
-
   show:=false;
-
   EditPropertiesFrm:=TEditPropertiesFrm.Create(nil);
   ConfirmFmr:=TConfirmFmr.Create(nil);
 
@@ -333,15 +327,15 @@ begin
       addAlgFrm.Show;
     addAlgFrm.close;
 
+    g_SaveAlgsFrm:=TSaveAlgsFrm.Create(nil);
   end;
   g_CreateFrms:=true;
 end;
 
 procedure destroyFormsRecorderUIThread(compMng: cCompMng);
 begin
+  exit;
 {$IfDef DEBUG}
-  if true then exit;
-  LogRecorderMessage('destroyFormsRecorderUIThread_enter', false);
   // удаление форм в UIThread
   // ВАЖНО!!! Первое изменение свойств формы имеет право происходить только в UIThread
   // Если произойдет в MainThread (например менять форму при загрузке объектов программы),
@@ -403,6 +397,8 @@ begin
     AlgFrm:=nil;
     addAlgFrm.Destroy;
     addAlgFrm:=nil;
+    g_SaveAlgsFrm.Destroy;
+    g_SaveAlgsFrm:=nil;
   end;
   if SpmChartEditFrm<>nil then
   begin
@@ -434,7 +430,6 @@ begin
   end;
 
   g_delFrms:=true;
-  LogRecorderMessage('destroyFormsRecorderUIThread_exit', false);
 {$EndIf}
 end;
 
@@ -454,8 +449,7 @@ end;
 
 procedure destroyForms(compMng: cCompMng);
 begin
-  if true then exit;
-  LogRecorderMessage('destroyForms_enter', false);
+  exit;
   if GetCurrentThreadId = MainThreadID then
   begin
     if TagInfoEditFrm<>nil then
@@ -464,16 +458,16 @@ begin
       TagInfoEditFrm:=nil;
     end;
   end;
-  LogRecorderMessage('destroyForms_exit', false);
 end;
 
 procedure createComponents(compMng: cCompMng);
 var
   fact: cControlFactory;
   Basefact: cMBaseFactory;
-  cfg:string;
-
+  cfg, dir, fname:string;
+  astr:AnsiString;
   np:cNonifyProcessor;
+  i:integer;
 begin
   fact := cControlFactory.create;
   compMng.Add(fact);
@@ -506,8 +500,23 @@ begin
   compMng.Add(g_ObjFrm3dFactory);
 
   cfg := extractfiledir(getRConfig);
+  i:=0;
   if DirectoryExists(cfg) then
-    g_logFile := cLogFile.Create(cfg+'\' +'ControlCyclogramLog'+ '.log', ';');
+  begin
+    dir:=cfg+'\logs\';
+    if not DirectoryExists(dir) then
+    begin
+      ForceDirectories(dir);
+    end;
+    fname:=dir+'ControlCyclogramLog_'+inttostr(i)+'.log';
+    while FileExists(fname) do
+    begin
+      inc(i);
+      fname:=dir+'ControlCyclogramLog_'+inttostr(i)+'.log';
+    end;
+    g_logFile := cLogFile.Create(fname, ';');
+    g_logFile.m_Rewrite:=false;
+  end;
 
   // создание объектов движка
   g_conmng := cControlMng.create;
@@ -518,18 +527,13 @@ begin
 end;
 
 procedure destroyEngine;
-var
-  b:boolean;
 begin
-if true then exit;
-// обьявле в начале проекта
-{$IfDef DEBUG}
-  LogRecorderMessage('destroyEngine_enter', false);
+ if true then exit;
+ // обьявле в начале проекта
+ {$IfDef DEBUG}
   if g_conmng <> nil then
   begin
-    //logRCInfo('c:\RCInfo1.txt');
     g_conmng.clear;
-    //logRCInfo('c:\RCInfo3.txt');
     g_conmng.destroy;
     g_conmng := nil;
   end;
@@ -538,7 +542,6 @@ if true then exit;
     g_algMng.destroy;
     g_algMng:=nil;
   end;
-  LogRecorderMessage('destroyEngine_exit', false);
 {$EndIf}
 end;
 

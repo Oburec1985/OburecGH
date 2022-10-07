@@ -426,6 +426,9 @@
 				<Form>EditPropertiesFrm</Form>
 			</DCCReference>
 			<DCCReference Include="uBaseAlgBands.pas"/>
+			<DCCReference Include="forms\uAlgsSaveFrm.pas">
+				<Form>SaveAlgsFrm</Form>
+			</DCCReference>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

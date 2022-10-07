@@ -61,7 +61,7 @@ type
     procedure doAfterload; virtual;
     procedure UpdatePropStr; virtual;
     procedure SetProperties(str: string); virtual;
-    function GetProperties: string; virtual; abstract;
+    function GetProperties: string; virtual;
     function getExtProp: string; virtual;
     procedure Setdx(d: double); virtual; abstract;
     function Getdx: double; virtual; abstract;
@@ -111,6 +111,7 @@ type
   public
     clType:tClass;
   private
+    // родительский список конфигов
     m_cfgList:TList;
     m_str,
     m_name:string;
@@ -123,6 +124,7 @@ type
   public
     function ChildCount:integer;
     function getAlg(i:integer):cBaseAlgContainer;
+    procedure delAlg(a:cBaseAlgContainer);
     property name:string read m_name write m_name;
     property str:string read getprops write setprops;
     constructor create(cl:TClass);
@@ -242,6 +244,7 @@ const
   E_OnChangeAlgCfg = $00008000;
   c_debugAlg = false;
 
+
 var
   g_algMng: cAlgMng;
 
@@ -325,16 +328,30 @@ end;
 
 destructor cBaseAlgContainer.destroy;
 var
-  i: integer;
+  i, j: integer;
   a: cBaseAlgContainer;
 begin
+  // чистим тех кто подписан на нас
+  for i:=0 to m_SubscribeList.Count-1 do
+  begin
+    a := cBaseAlgContainer(m_SubscribeList.items[i]);
+    a.unsubscribe(self);
+  end;
   m_SubscribeList.destroy;
   m_SubscribeList := nil;
-
+  // исключаем себя из списка получателей у источника
   for i := 0 to m_refList.Count - 1 do
   begin
     a := cBaseAlgContainer(m_refList.items[i]);
-    a.unsubscribe(self);
+    // отписываем получателя у владельца
+    for j:=0 to a.m_SubscribeList.Count - 1 do
+    begin
+      if a.m_SubscribeList.Items[j]=self then
+      begin
+        a.m_SubscribeList.Delete(j);
+        break;
+      end;
+    end;
   end;
   m_refList.destroy;
   m_refList := nil;
@@ -389,6 +406,18 @@ begin
   result:=updateParams(Properties, getExtProp);
 end;
 
+function cBaseAlgContainer.GetProperties: string;
+begin
+  if m_parentCfg<>nil then
+  begin
+    result:=updateParams(m_parentCfg.str, getExtProp);
+  end
+  else
+  begin
+    result:=m_properties;
+  end;
+end;
+
 function cBaseAlgContainer.GetResName: string;
 begin
   result := genTagName;
@@ -408,9 +437,31 @@ end;
 procedure cBaseAlgContainer.subscribe(dst: cBaseObj);
 var
   prevsrc: cBaseAlgContainer;
+  I: Integer;
+  b:boolean;
 begin
-  cBaseAlgContainer(dst).m_refList.add(self);
-  m_SubscribeList.add(dst);
+  b:=true;
+  for I := 0 to cBaseAlgContainer(dst).m_refList.Count - 1 do
+  begin
+    if cBaseAlgContainer(dst).m_refList.items[i]=self then
+    begin
+      b:=false;
+      break;
+    end;
+  end;
+  if b then
+    cBaseAlgContainer(dst).m_refList.Add(self);
+  b:=true;
+  for I := 0 to m_SubscribeList.Count - 1 do
+  begin
+    if m_SubscribeList.Items[i]=dst then
+    begin
+      b:=false;
+      break;
+    end;
+  end;
+  if b then
+    m_SubscribeList.add(dst);
 end;
 
 procedure cBaseAlgContainer.unsubscribe(src: cBaseObj);
@@ -1623,6 +1674,7 @@ destructor cAlgConfig.destroy;
 var
   I: Integer;
   c:cAlgConfig;
+  a:cbasealgcontainer;
 begin
   if m_cfgList<>nil then
   begin
@@ -1635,6 +1687,11 @@ begin
         break;
       end;
     end;
+  end;
+  for I := m_childs.Count - 1 downto 0 do
+  begin
+    a:=getAlg(i);
+    a.destroy;
   end;
   m_childs.destroy;
 end;
@@ -1674,6 +1731,20 @@ begin
   result:=cBaseAlgContainer(m_childs.Items[i]);
 end;
 
+procedure cAlgConfig.delAlg(a:cBaseAlgContainer);
+var
+  I: Integer;
+begin
+  for I := 0 to ChildCount-1 do
+  begin
+    if a=getAlg(i) then
+    begin
+      m_childs.Delete(i);
+      exit;
+    end;
+  end;
+end;
+
 function cAlgConfig.getprops(algNum:integer): string;
 var
   extstr:string;
@@ -1698,6 +1769,7 @@ var
   a:cbasealgcontainer;
   I: Integer;
 begin
+  m_str:=s;
   if ChildCount>0 then
   begin
     if ChildCount=1 then

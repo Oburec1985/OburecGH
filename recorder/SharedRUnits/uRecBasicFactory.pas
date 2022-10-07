@@ -573,7 +573,6 @@ begin
   if dwCommand <> Wm_paint then
   begin
     // str := inttostr(dwCommand);
-    // TExtRecorderPack(GPluginInstance).LogRecorderMessage
     // (str + ' WM_PARENTNOTIFY');
   end;
   case dwCommand of
@@ -592,14 +591,12 @@ begin
             m_pMasterWnd.BoundsRect := pRect;
             m_pMasterWnd.m_bounds := pRect;
             m_pMasterWnd.InitSize(pRect);
-            //LogRecorderMessage(str);
             result := true;
           end;
         end;
       end;
     VSN_EditIFrm:
       begin
-        // TExtRecorderPack(GPluginInstance).LogRecorderMessage('Edit');
       end;
   end;
 end;
@@ -659,11 +656,9 @@ begin
     Result := 0
     else
     Result := E_NOINTERFACE; }
-  logmessage('typecast...');
   if IsEqualIID(IID, IID_IVForm) then
   begin
     //showmessage(g_logFile.filename);
-    logmessage('typecast to IID_IVForm');
     IVForm(Obj) := IVForm(self); // self as IVForm;
     // _AddRef();
     result := S_OK;

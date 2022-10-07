@@ -175,10 +175,8 @@ end;
 
 destructor TTagInfoFrm.destroy;
 begin
-  LogRecorderMessage('TTagInfoFrm.destroy_enter', false);
   m_tag.destroy;
   inherited;
-  LogRecorderMessage('TTagInfoFrm.destroy_exit', false);
 end;
 
 procedure TTagInfoFrm.FormMouseUp(Sender: TObject; Button: TMouseButton;
@@ -289,14 +287,10 @@ var
 begin
   inherited;
   t := LoadTagIni(a_pIni, str, 'Tag');
+  LoadExTagIni(a_pIni, m_tag, str, 'Tag');
   TopPanel.Caption := a_pIni.ReadString(str, 'TInfo_LabelText', '');
   LoadFontIni(a_pIni, Font, 'Font', str);
   LoadFontIni(a_pIni, LabelFont, 'LabelFont', str);
-  if t <> nil then
-  begin
-    m_tag.destroy;
-    m_tag := t;
-  end;
   c := a_pIni.ReadInteger(str, 'StrCount', 0);
   count:=c;
   for i := 0 to c - 1 do
@@ -356,11 +350,9 @@ begin
       if p.v = v then
         break;
     end;
-    LogRecorderMessage('TTagInfoFrm_UpdateData_enter', false);
     RichText.text := p.str;
     RichText.Font.color := p.color;
     RichText.color := p.bckgnd;
-    LogRecorderMessage('TTagInfoFrm_UpdateData_exit', false);
   end;
   lastval := v;
 end;

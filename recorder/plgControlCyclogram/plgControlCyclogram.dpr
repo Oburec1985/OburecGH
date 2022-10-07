@@ -193,7 +193,8 @@ uses
   uExcel in '..\..\sharedUtils\utils\reports\excel\uExcel.pas',
   uConfirmDlg in '..\..\sharedUtils\forms\uConfirmDlg.pas' {ConfirmFmr},
   uEditPropertiesFrm in 'forms\uEditPropertiesFrm.pas' {EditPropertiesFrm},
-  uBaseAlgBands in 'uBaseAlgBands.pas';
+  uBaseAlgBands in 'uBaseAlgBands.pas',
+  uAlgsSaveFrm in 'forms\uAlgsSaveFrm.pas' {SaveAlgsFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

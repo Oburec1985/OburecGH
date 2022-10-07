@@ -419,7 +419,8 @@ type
     Procedure StartPWM;
     Procedure StopPWM;
     Procedure UpdatePWM;
-    Procedure ResetPWMTOnModeChange;
+    // параметр - сбрасывать время которое простояли на текущем режиме
+    Procedure ResetPWMTOnModeChange(resetWPMCurTime:boolean);
     Procedure SetPWMVal(v: double); virtual;
     // применить новую задачу
     procedure ApplyTask(t:cTask);
@@ -1084,7 +1085,6 @@ end;
 
 procedure cControlMng.doUpdateTags(sender: tobject);
 begin
-  // LogRecorderMessage('cControlMng.doUpdateTags_enter');
   // потенциально опасно в многопоточности (state)
   if fUseUpdateTagsEvent then
   begin
@@ -1095,7 +1095,6 @@ begin
     UpdateProgramState;
     UpdateModeTolerance;
   end;
-  // LogRecorderMessage('cControlMng.doUpdateTags_exit');
 end;
 
 procedure cControlMng.DropTrigs;
@@ -2088,8 +2087,7 @@ var
   i, c, J: integer;
   l: tlist;
 begin
-  ifile := tinifile.create(extractfiledir(m_prevDir)
-      + '\' + 'CyclogramState.ini');
+  ifile := tinifile.create(extractfiledir(m_prevDir) + '\' + 'CyclogramState.ini');
   // ifile.WriteInteger('Main','State', g_conmng.state);
   str := '';
   c := ifile.ReadInteger('Main', 'ActiveProgCount', 0);
@@ -2104,6 +2102,12 @@ begin
     if p <> nil then
     begin
       p.active := true;
+    end
+    else
+    begin
+      p:=g_conmng.getProgram(0);
+      if p=nil then
+        exit;
     end;
     str := ifile.ReadString('Prog_' + inttostr(i), 'MName', '');
     if str = '' then
@@ -2111,10 +2115,10 @@ begin
       continue;
     end;
     m := p.getMode(str);
-    m.active := true;
-    p.fModeT := ifile.ReadFloat('Prog_' + inttostr(i), 'MTime', 0);
     if m <> nil then
     begin
+      m.active := true;
+      p.fModeT := ifile.ReadFloat('Prog_' + inttostr(i), 'MTime', 0);
       for J := 0 to p.ModeCount - 1 do
       begin
         m := p.getMode(J);
@@ -2500,10 +2504,10 @@ var
   ir: irecorder;
   i: integer;
   p: cProgramObj;
+  b:boolean;
 begin
   cleartags;
   fTags.destroy;
-
   if m_stateTag <> nil then
   begin
     CloseTag(m_stateTag);
@@ -2664,9 +2668,10 @@ begin
   fPWMTi := i64;
 end;
 
-Procedure cControlObj.ResetPWMTOnModeChange;
+Procedure cControlObj.ResetPWMTOnModeChange(resetWPMCurTime:boolean);
 begin
-  fPWMT:=0;
+  if resetWPMCurTime then
+    fPWMT:=0;
   QueryPerformanceCounter(fPWMTi);
   fcurPWMState:=true;
 end;
@@ -3922,7 +3927,6 @@ var
   i: integer;
   t: cBaseTrig;
 begin
-  LogRecorderMessage('cControlMng.XMLlOADMngAttr_Enter', c_LogControlCyclogram);
   inherited;
   AllowUserModeSelect := node.ReadAttributeBool('AlowUserModeSelect', true);
   StopTrigger := ReadTrig(node, 'CommonStopTrig', self);
@@ -3939,7 +3943,6 @@ begin
       end;
     end;
   end;
-  LogRecorderMessage('cControlMng.XMLlOADMngAttr_Exit', c_LogControlCyclogram);
 end;
 
 procedure cControlMng.XMLSaveMngAttributes(node: txmlnode);
@@ -3977,7 +3980,6 @@ var
   c: cControlObj;
   t: cBaseTrig;
 begin
-  LogRecorderMessage('cProgramObj.LoadObj_Enter', c_LogControlCyclogram);
   inherited;
   fRepeatCount := xmlNode.ReadAttributeInteger('ProgRepeat', 1);
   m_StartOnPlay := xmlNode.ReadAttributeBool('ProgStartOnPlay', true);
@@ -4009,7 +4011,6 @@ begin
       t := ReadTrig(TrigsNode, 'ActionTrig_' + inttostr(i), nil);
     end;
   end;
-  LogRecorderMessage('cProgramObj.LoadObj_Exit', c_LogControlCyclogram);
 end;
 
 procedure cProgramObj.SetActiveMode(m: cModeObj);
@@ -4610,7 +4611,7 @@ begin
     if not m_applyed then
     begin
       c := t.control;
-      c.ResetPWMTOnModeChange;
+      c.ResetPWMTOnModeChange(false);
       c.setparams(t.m_Params);
       c.ApplyTask(t);
       t.applyed := true;
@@ -5113,7 +5114,6 @@ var
   c:cControlObj;
   p:cProgramObj;
 begin
-  LogRecorderMessage('cModeObj.LoadObj_Enter', c_LogControlCyclogram);
   inherited;
   ModeLength := xmlNode.ReadAttributeFloat('Length', 0);
   CheckLength := xmlNode.ReadAttributeFloat('CheckLength', 0);
@@ -5167,7 +5167,6 @@ begin
       end;
     end;
   end;
-  LogRecorderMessage('cModeObj.LoadObj_Exit', c_LogControlCyclogram);
 end;
 
 procedure cModeObj.SaveObjAttributes(xmlNode: txmlnode);
@@ -5325,12 +5324,10 @@ procedure cDacControl.LoadObjAttributes(xmlNode: txmlnode; mng: tobject);
 var
   int: tagid;
 begin
-  LogRecorderMessage('cDacControl.LoadObj_Enter', c_LogControlCyclogram);
   inherited;
   dacname := xmlNode.ReadAttributeString('DACName', '');
   int := xmlNode.ReadAttributeint64('DACID', 0);
   DACID := int;
-  LogRecorderMessage('cDacControl.LoadObj_Exit', c_LogControlCyclogram);
 end;
 
 procedure cDacControl.SaveObjAttributes(xmlNode: txmlnode);
