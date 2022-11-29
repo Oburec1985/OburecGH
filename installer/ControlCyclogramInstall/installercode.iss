@@ -11,7 +11,7 @@ UninstallDisplayIcon={app}\plgControlCyclogram.dll
 
 ;OutputDir=output
 OutputDir=\\Fserv\e\MERA\WORKS\ДСИ\УП\Skripnik\soft\recorder\ControlCyclogram\
-OutputBaseFilename=plgControlCyclogram-installer
+;OutputBaseFilename=plgControlCyclogram-installer
 
 [Types]
 Name: "full"; Description: "Полная установка"

@@ -43,7 +43,6 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
     Align = alRight
     Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
     TabOrder = 0
-    ExplicitLeft = 1066
     object ChanNamesPanel: TPanel
       Left = 2
       Top = 19
@@ -160,7 +159,6 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
     Margins.Bottom = 4
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 1066
     object OnTopSplitter: TSplitter
       Left = 1
       Top = 358
@@ -187,7 +185,6 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
       Align = alTop
       Constraints.MinHeight = 357
       TabOrder = 0
-      ExplicitWidth = 1064
       object ControlsGB: TGroupBox
         Left = 1
         Top = 1
@@ -471,7 +468,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
         TabOrder = 1
         ExplicitLeft = 409
         ExplicitTop = 1
-        ExplicitWidth = 654
+        ExplicitWidth = 653
         ExplicitHeight = 355
         inherited ControlPanel: TPanel
           Width = 653
@@ -481,7 +478,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
           Margins.Right = 4
           Margins.Bottom = 4
           Constraints.MinWidth = 327
-          ExplicitWidth = 654
+          ExplicitWidth = 653
           ExplicitHeight = 355
           inherited ControlNameLabel: TLabel
             Left = 7
@@ -532,7 +529,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             Font.Height = -17
             ParentFont = False
             ExplicitTop = 81
-            ExplicitWidth = 652
+            ExplicitWidth = 651
             ExplicitHeight = 273
           end
           inherited ControlNameEdit: TEdit
@@ -577,7 +574,6 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
       Margins.Bottom = 4
       Align = alClient
       TabOrder = 1
-      ExplicitWidth = 1064
       object ModesGB: TGroupBox
         Left = 1
         Top = 1
@@ -1150,7 +1146,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
         TabOrder = 1
         ExplicitLeft = 409
         ExplicitTop = 1
-        ExplicitWidth = 654
+        ExplicitWidth = 653
         ExplicitHeight = 428
         inherited PageControl1: TPageControl
           Width = 653
@@ -1161,7 +1157,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
           Margins.Bottom = 4
           Constraints.MinHeight = 426
           Constraints.MinWidth = 653
-          ExplicitWidth = 654
+          ExplicitWidth = 653
           ExplicitHeight = 428
           inherited ProgramPage: TTabSheet
             Margins.Left = 4
@@ -1169,9 +1165,9 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             Margins.Right = 4
             Margins.Bottom = 4
             ExplicitLeft = 4
-            ExplicitTop = 24
+            ExplicitTop = 28
             ExplicitWidth = 548
-            ExplicitHeight = 300
+            ExplicitHeight = 296
             inherited ProgramCounterLabel: TLabel
               Left = 4
               Top = 69
@@ -1224,6 +1220,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
+              Value = 0
               ExplicitTop = 94
               ExplicitWidth = 158
               ExplicitHeight = 27
@@ -1262,7 +1259,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             Margins.Bottom = 4
             ExplicitLeft = 4
             ExplicitTop = 28
-            ExplicitWidth = 646
+            ExplicitWidth = 645
             ExplicitHeight = 396
             inherited Splitter1: TSplitter
               Left = 350
@@ -1285,7 +1282,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 357
+              ExplicitLeft = 356
               ExplicitTop = 0
               ExplicitWidth = 289
               ExplicitHeight = 396
@@ -1319,7 +1316,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
               Margins.Right = 4
               Margins.Bottom = 4
               Constraints.MinWidth = 251
-              ExplicitWidth = 351
+              ExplicitWidth = 350
               ExplicitHeight = 396
               inherited ModeNameLabel: TLabel
                 Left = 4
@@ -1450,7 +1447,6 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
     Margins.Bottom = 4
     Align = alBottom
     TabOrder = 2
-    ExplicitWidth = 1469
     object StatusBar1: TStatusBar
       AlignWithMargins = True
       Left = 5
@@ -1478,7 +1474,6 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
         end>
       ParentDoubleBuffered = False
       UseSystemFont = False
-      ExplicitWidth = 1459
     end
   end
   object Panel2: TPanel
@@ -1492,7 +1487,6 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
     Margins.Bottom = 4
     Align = alTop
     TabOrder = 3
-    ExplicitWidth = 1469
     object StopTrigGB: TGroupBox
       Left = 3
       Top = -3

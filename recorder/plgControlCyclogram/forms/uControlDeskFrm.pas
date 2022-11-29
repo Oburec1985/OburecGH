@@ -888,6 +888,7 @@ procedure TControlDeskFrm.ControlPropSGDblClick(Sender: TObject);
 var
   m: cModeObj;
   t: ctask;
+  c:cControlObj;
   pPnt: TPoint; // Координаты курсора
   xCol, xRow: integer; // Адрес ячейки таблицы
   str, Key: string;
@@ -914,7 +915,8 @@ begin
       EditPropertiesFrm.Execute;
       if m.active then
       begin
-        m.m_applyed := false;
+        //m.m_applyed := false;
+        t.applyed := false;
       end;
     end;
   end;
@@ -932,7 +934,8 @@ begin
       EditPropertiesFrm.Execute;
       if m.active then
       begin
-        m.m_applyed := false;
+        //m.m_applyed := false;
+        t.applyed := false;
       end;
     end;
   end;
@@ -961,7 +964,10 @@ begin
     changebool := false;
     if m.active then
     begin
-      m.m_applyed := false;
+      //m.m_applyed := false;
+      c := t.control;
+      c.ResetPWMTOnModeChange(true);
+      c.setparams(t.m_Params);
     end;
     TStringGrid(sender).Refresh;
   end;
@@ -986,7 +992,7 @@ begin
   if p=nil then exit;
   m := p.getmode(aCol - 1);
   if m=nil then exit;
-  
+
   t := m.gettask(ControlPropE.text);
   if t=nil then exit;
 
@@ -1143,7 +1149,14 @@ begin
         end;
         if mode.active then
         begin
-          mode.m_applyed := false;
+          //t.applyed:=false;
+          con := t.control;
+          //con.ResetPWMTOnModeChange(false);
+          con.setparams(t.m_Params);
+          // может быть небезопасным в случае многопоточного использщвания!!!
+          con.task:=t.task;
+          con.ApplyTags(t);
+          //mode.m_applyed := false;
         end;
       end;
     end;
@@ -1792,20 +1805,23 @@ begin
   // деления на случай необходимости вызова из разных потоков
   if tid = MainThreadID then
   begin
-    g_conmng.exec;
-    // пересчитываем реакцию регуляторов
-    g_conmng.ExecControls;
-    // отображаем
-    updateviews;
+    if g_conmng.exec then
+    begin
+      // пересчитываем реакцию регуляторов
+      g_conmng.ExecControls;
+      // отображаем
+      updateviews;
+    end;
   end
   else
   begin
-    // перерасчитываем все режимы и регуляторы
-    g_conmng.exec;
-    // пересчитываем реакцию регуляторов
-    g_conmng.ExecControls;
-    // отображаем
-    updateviews;
+    if g_conmng.exec then
+    begin
+      // пересчитываем реакцию регуляторов
+      g_conmng.ExecControls;
+      // отображаем
+      updateviews;
+    end;
   end;
 end;
 

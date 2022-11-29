@@ -201,7 +201,7 @@ var
 
 const
   c_TagProp_nullpoly = 'nullpoly';
-  c_Log_PlgClass = true;
+  c_Log_PlgClass = false;
   RS_Before_STOP = RS_STOP+RS_VIEW;
 
 implementation

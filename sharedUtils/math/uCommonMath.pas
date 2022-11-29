@@ -213,7 +213,7 @@ begin
   result:=i2-i1;
   if result<0 then
   begin
-    result:=c_max_i64-result;
+    result:=c_max_i64+result;
   end;
 end;
 

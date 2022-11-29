@@ -97,6 +97,7 @@ type
     procedure InitTriggers;
     procedure UpdateControlState;
     procedure UpdateProgramState;
+    procedure UpdateModeState;
     procedure UpdateModeTolerance;
 
     procedure doStartStopTrig(Start: boolean);
@@ -160,7 +161,7 @@ type
     // переводит циклогамму в активный режим без сброса времени
     procedure continuePlay;
     // выполнить очередной шаг циклограммы режимов
-    procedure Exec;
+    function Exec:boolean; // возвращает Стоп только при полном останове
     // выполнить шаг регуляторов
     procedure ExecControls;
     function createControl(name: string; classname: string): cControlObj;
@@ -419,15 +420,9 @@ type
     Procedure StartPWM;
     Procedure StopPWM;
     Procedure UpdatePWM;
-    // параметр - сбрасывать время которое простояли на текущем режиме
-    Procedure ResetPWMTOnModeChange(resetWPMCurTime:boolean);
     Procedure SetPWMVal(v: double); virtual;
-    // применить новую задачу
-    procedure ApplyTask(t:cTask);
     // применить новое значение к контролу (напрмиер при ручном упроравлдении)
     procedure ApplyTaskVal(v: double); virtual;
-    // применить теги их задачи cTask
-    procedure ApplyTags(t:ctask);
     procedure ApplyTagsPWM(t:ctask; v:double);overload;
     procedure ApplyTagsPWM(t:ctask);overload;
 
@@ -460,6 +455,13 @@ type
     function getInTol: boolean;
     procedure setInTol(b: boolean);
   public
+    // применить теги их задачи cTask
+    procedure ApplyTags(t:ctask);
+    // применить новую задачу
+    procedure ApplyTask(t:cTask);
+    // параметр - сбрасывать время которое простояли на текущем режиме
+    Procedure ResetPWMTOnModeChange(resetWPMCurTime:boolean);
+
     function TagsToString: string;
     // работа с доп тегами
     procedure cleartags;
@@ -1093,6 +1095,7 @@ begin
     UpdateControlState;
     // если поменялось значение тега отвечающее за состояние программы
     UpdateProgramState;
+    UpdateModeState;
     UpdateModeTolerance;
   end;
 end;
@@ -1298,12 +1301,13 @@ begin
   end;
 end;
 
-procedure cControlMng.Exec;
+function cControlMng.Exec:boolean;
 var
   i: integer;
   p: cProgramObj;
   bstop: boolean;
 begin
+  result:=true;
   bstop := true;
   // проверяем триггеры
   ApplyActionTrigs;
@@ -1311,14 +1315,18 @@ begin
     c_TryPlay:
       state := c_Play;
     c_TryStop:
-      begin
-        // стоп триг здесь проверяется
-        state := c_Stop;
-      end;
+    begin
+      // стоп триг здесь проверяется
+      state := c_Stop;
+    end;
     c_TryPause:
       state := c_Pause;
   end;
-
+  if state=c_Stop then
+  begin
+    result:=false;
+    exit;
+  end;
   if (state = c_Play) or (state = c_Pause) then
   begin
     CheckCommonStop;
@@ -1330,28 +1338,28 @@ begin
       // проверка нужно ли программу запустить или остановить
       case p.state of
         c_TryPlay:
-          begin
-            bstop := false;
-            p.Exec;
-          end;
+        begin
+          bstop := false;
+          p.Exec;
+        end;
         c_Play:
-          begin
-            bstop := false;
-            p.Exec;
-          end;
+        begin
+          bstop := false;
+          p.Exec;
+        end;
         c_Pause:
-          begin
-            p.Exec;
-            bstop := false;
-          end;
+        begin
+          p.Exec;
+          bstop := false;
+        end;
         c_Stop:
-          begin
+        begin
 
-          end;
+        end;
         c_End:
-          begin
+        begin
 
-          end
+        end
         else
         begin
           // bstop := true;
@@ -1964,6 +1972,48 @@ begin
   end;
 end;
 
+procedure cControlMng.UpdateModeState;
+var
+  I: Integer;
+  p:cProgramObj;
+  v:double;
+  newmode:cmodeobj;
+begin
+  for I := 0 to ProgramCount - 1 do
+  begin
+    p:=getProgram(i);
+    if p.active then
+    begin
+      v:=GetMean(p.m_ModeIndTag);
+      if v<>p.ActiveMode.modeIndex then
+      begin
+        if (g_conmng.State = c_Pause) or g_conmng.AllowUserModeSelect then
+        begin
+          newmode:=p.getMode(trunc(v));
+          if newmode<>nil then
+          begin
+            if g_conmng.State <> c_stop then
+            begin
+              if newmode = nil then
+                exit;
+              if g_conmng.State = c_play then
+                cModeObj(newmode).TryActive
+              else
+              begin
+                if g_conmng.State = c_Pause then
+                begin
+                  cModeObj(newmode).active := true;
+                  cModeObj(newmode).exec;
+                end;
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure cControlMng.UpdateProgramState;
 var
   i: integer;
@@ -2227,6 +2277,8 @@ begin
             // залипушка на случай если режим поменялся по тригу
             if p.ActiveMode <> nil then
             begin
+              /// переписать бы на сокращенный exec с применением только заданий контролов
+              /// (все равно стоп, никакие интерполяции не подразумеваются)
               p.ActiveMode.Exec;
               ExecControls;
             end;
@@ -2755,9 +2807,10 @@ var
   ppair: pTagPair;
   pair: TTagPair;
 begin
-  entercs;
+
   if params.Count = 0 then
     exit;
+  entercs;
   l_str := GetParsValue(params, 'PWM_Thi');
   if checkstr(l_str) then
   begin
@@ -3144,7 +3197,9 @@ begin
     if tag.tag<>nil then
     begin
       if isAlive(tag.tag.tag) then
+      begin
         tag.tag.tag.PushValue(tag.value, -1);
+      end;
     end;
   end;
 end;
@@ -4611,10 +4666,21 @@ begin
     if not m_applyed then
     begin
       c := t.control;
-      c.ResetPWMTOnModeChange(false);
+      c.ResetPWMTOnModeChange(true);
       c.setparams(t.m_Params);
       c.ApplyTask(t);
-      t.applyed := true;
+      // t.applyed := true; // см ниже 19.10.22
+    end
+    else
+    begin
+      //if not t.applyed then
+      //begin
+      //  c := t.control;
+      //  c.ResetPWMTOnModeChange(true);
+      //  c.setparams(t.m_Params);
+      //  c.ApplyTask(t);
+      //  t.applyed := true;
+      //end;
     end;
     // программа может влиять только на те контролы которые заняты программой
     if t.control.OwnerProg <> p then
@@ -4626,7 +4692,6 @@ begin
     end
     else
     begin
-      nextT := t.getNextTask;
       if t.SplineInterp = ptNullPoly then
       begin
         if (not m_applyed) or (not t.applyed) then

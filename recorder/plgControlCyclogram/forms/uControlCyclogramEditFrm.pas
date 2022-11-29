@@ -714,6 +714,19 @@ begin
   if SaveDialog2.Execute then
   begin
     fname:=SaveDialog2.FileName;
+    str:='';
+    for I := length(fname) downto 1 do
+    begin
+      if fname[i]='.' then
+      begin
+        str:=Copy(fname, i, length(fname)-i);
+        break;
+      end;
+    end;
+    if str='' then
+    begin
+      fname:=fname+'.xlsx';
+    end;
     if not CheckExcelInstall then
     begin
       showmessage('Необходима установка Excel');
@@ -923,6 +936,9 @@ var
   pars:tstringlist; parsRecord:cstring;
   z:cZone;
   pair:TTagPair;
+
+  trig:cRtrig;
+  action:TTrigAction;
 begin
   if OpenDialog2.Execute then
   begin
@@ -1032,6 +1048,23 @@ begin
         m:=cModeObj.create;
         m.name:=str;
         p.addmode(m);
+        // создание триггера
+        if m.name='Стоп' then
+        begin
+          trig:=g_conmng.getTrig('Стоп');
+          if trig=nil then
+          begin
+            trig:=cRTrig.create(nil);
+            trig.name:='Стоп';
+            trig.m_actions := TList.Create;
+            trig.Trigtype:=trStop_cyclogram;
+            g_conmng.addtrig(trig);
+            action:=TTrigAction.Create(trig);
+            action.opertype := c_action_Start;
+            action.m_target:=m;
+            trig.addAction(action);
+          end;
+        end;
         // длительность режима
         str:=sh.Cells[2,6+modeInd*c_modeColCount];
         if str<>'' then
