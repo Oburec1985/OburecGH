@@ -2,6 +2,9 @@
 <BorlandProject>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
+    <File Path="..\plgTestClear"/>
+    <File Path="..\plgTestClear\units"/>
+    <File Path="..\plgTestClear\units\uCompMng.pas"/>
     <File Path="..\SharedRUnits"/>
     <File Path="..\SharedRUnits\interfaces"/>
     <File Path="..\SharedRUnits\interfaces\blaccess.pas"/>
@@ -26,7 +29,6 @@
     <File Path="..\SharedRUnits\RC_lib"/>
     <File Path="..\SharedRUnits\RC_lib\uRcCtrls.pas"/>
     <File Path="..\SharedRUnits\PluginClass.pas"/>
-    <File Path="..\SharedRUnits\uCompMng.pas"/>
     <File Path="..\SharedRUnits\uFrmSync.pas"/>
     <File Path="..\SharedRUnits\uFrmSync.dfm"/>
     <File Path="..\SharedRUnits\uRcClient.pas"/>
@@ -48,6 +50,8 @@
     <File Path="..\..\sharedUtils\forms\uConfirmDlg.pas"/>
     <File Path="..\..\sharedUtils\forms\uConfirmDlg.dfm"/>
     <File Path="..\..\sharedUtils\math"/>
+    <File Path="..\..\sharedUtils\math\FFT_койнов"/>
+    <File Path="..\..\sharedUtils\math\FFT_койнов\Iterative_FFT_sse.pas"/>
     <File Path="..\..\sharedUtils\math\uCommonMath.pas"/>
     <File Path="..\..\sharedUtils\math\uFFT.pas"/>
     <File Path="..\..\sharedUtils\math\uHardwareMath.pas"/>
@@ -356,5 +360,6 @@
     <Transaction>2022.07.29 14:48:26.617.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit2.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\uBaseAlgBands.pas</Transaction>
     <Transaction>2022.09.14 14:59:15.141.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit3.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAlgsSaveFrm.pas</Transaction>
     <Transaction>2022.09.14 14:59:15.141.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAlgsSaveFrm.dfm</Transaction>
+    <Transaction>2022.12.29 19:31:03.725.pas,F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\uCompMng.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\units\uCompMng.pas</Transaction>
   </Transactions>
 </BorlandProject>

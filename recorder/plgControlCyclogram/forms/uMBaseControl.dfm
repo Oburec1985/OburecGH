@@ -74,27 +74,43 @@ object MBaseControl: TMBaseControl
       TabOrder = 0
       object ObjNameLabel: TLabel
         Left = 15
-        Top = 8
+        Top = 0
         Width = 143
         Height = 24
         Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077':'
       end
+      object Label4: TLabel
+        Left = 18
+        Top = 76
+        Width = 41
+        Height = 24
+        Caption = #1058#1080#1087':'
+      end
       object ObjRenameBtn: TButton
         Left = 245
-        Top = 39
+        Top = 23
         Width = 157
         Height = 34
         Caption = #1055#1077#1088#1077#1080#1084#1077#1085#1086#1074#1072#1090#1100
         TabOrder = 0
+        Visible = False
         OnClick = ObjRenameBtnClick
       end
       object ObjNameCB: TComboBox
         Left = 15
-        Top = 39
+        Top = 26
         Width = 212
         Height = 32
         TabOrder = 1
         OnChange = ObjNameCBChange
+      end
+      object ObjTypeCB: TComboBox
+        Left = 65
+        Top = 71
+        Width = 162
+        Height = 32
+        TabOrder = 2
+        OnChange = TestTypeCBChange
       end
     end
     object ObjPropSG: TStringGridExt

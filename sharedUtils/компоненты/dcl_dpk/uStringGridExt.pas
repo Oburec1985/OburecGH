@@ -9,6 +9,7 @@ uses
 type
   TStringGridExt = class(tstringgrid)
   public
+    m_row, m_col:integer;
     CanDelFirstRow:boolean;
   protected
     //TSelectCellEvent = procedure (Sender: TObject; ACol, ARow: Longint;

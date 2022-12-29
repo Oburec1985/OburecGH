@@ -97,7 +97,7 @@ type
     function getchildbypath(str:string):cdbobject;
     constructor create;override;
     destructor destroy;override;
-    procedure InitBaseFolder(str:string);
+    procedure InitBaseFolder(str:string);virtual;
   end;
 
   const

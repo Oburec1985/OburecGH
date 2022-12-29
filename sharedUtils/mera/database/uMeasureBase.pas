@@ -55,8 +55,10 @@ type
     function getProperty(pname:string; var success:boolean):string;overload;
     function getProperty(i:integer):string;overload;
     procedure addpropertie(pname:string; val:string);
+    procedure Setpropertie(pname:string; val:string);
     procedure delpropertie(i:integer);overload;
     procedure delpropertie(pname:string);overload;
+    procedure clearPropertie;
     procedure RenameProp(newname:string;index:integer);
     // путь к xml дескриптору
     function XMLDescPath:string;
@@ -76,17 +78,24 @@ type
   cBaseMeaFolder = class(cXmlFolder)
   public
     m_TestTypes:tstringlist;
+    m_ObjTypes:tstringlist;
   protected
     // вызывается внутри CreateXMLDesc, получает главный узел на вход
     procedure doCreateFiles(node:txmlnode);override;
     procedure doLoadDesc(node:txmlnode);override;
   public
+    function LoadObjProperties(objType:string):tstringlist;
     constructor create;override;
     destructor destroy;override;
   end;
   // испытываемый объект
   cObjFolder = class(cXmlFolder)
-
+  public
+    m_ObjType:string;
+  protected
+    // вызывается внутри CreateXMLDesc, получает главный узел на вход
+    procedure doCreateFiles(node:txmlnode);override;
+    procedure doLoadDesc(node:txmlnode);override;
   end;
   // испытания
   cTestFolder = class(cXmlFolder)
@@ -147,6 +156,7 @@ type
     // вызывается в конструкторе cDB класса
     function createBaseFolder:cDBFolder;override;
   public
+    procedure InitBaseFolder(str:string);override;
     function getRegByMeraFile(merafile:string):cRegFolder;
     // пересохраняет все xml описатели всех объектов
     procedure UpdateXMLDescriptors;
@@ -177,6 +187,7 @@ var
   list:tstringlist;
 begin
   inherited;
+  g_mbase:=self;
   m_zip:=TZipMaster.Create(nil);
 
   // папка с dll
@@ -224,6 +235,23 @@ begin
   result:=cRegFolder(getchildbypath(lpath));
 end;
 
+procedure cMBase.InitBaseFolder(str: string);
+var
+  xml:tnativexml;
+  lstr, prop, val:string;
+  node, child, propnode:txmlnode;
+  count:integer;
+  I: Integer;
+begin
+  inherited;
+  lstr:=str+'.xml';
+  xml:=TNativeXml.Create(nil);
+  xml.LoadFromFile(lstr);
+  node:=xml.Root;
+  cBaseMeaFolder(m_BaseFolder).doloadDesc(node);
+  xml.Destroy;
+end;
+
 procedure cMBase.UpdateXMLDescriptors;
 var
   I: Integer;
@@ -267,6 +295,35 @@ begin
     begin
       prop.value:=floattostr(strtofloat(val)+strtofloat(prop.value));
     end;
+  end;
+  if getmng<>nil then
+  begin
+    cMBase(getmng).Events.CallAllEventsWithSender(E_ChangePropertieEvent,self);
+  end;
+end;
+
+procedure cXmlFolder.Setpropertie(pname:string; val:string);
+var
+  prop:TProp;
+  I: Integer;
+begin
+  prop:=nil;
+  for I := 0 to m_Properties.Count - 1 do
+  begin
+    if m_Properties.Strings[i]=pname then
+    begin
+      prop:=Tprop(m_Properties.Objects[i]);
+      break;
+    end;
+  end;
+  if prop=nil then
+  begin
+    prop:=TProp.Create;
+    m_Properties.AddObject(pname, prop);
+  end;
+  if isvalue(val) then
+  begin
+    prop.value:=val;
   end;
   if getmng<>nil then
   begin
@@ -332,6 +389,16 @@ begin
       delpropertie(i);
       exit;
     end;
+  end;
+end;
+
+procedure cXmlFolder.clearPropertie;
+var
+  I: Integer;
+begin
+  for I := m_Properties.Count - 1 downto 0 do
+  begin
+    delpropertie(i);
   end;
 end;
 
@@ -975,11 +1042,16 @@ begin
   m_TestTypes:=TStringList.Create;
   m_TestTypes.Sorted:=true;
   m_TestTypes.Duplicates:=dupIgnore;
+
+  m_ObjTypes:=TStringList.Create;
+  m_ObjTypes.Sorted:=true;
+  m_ObjTypes.Duplicates:=dupIgnore;
 end;
 
 destructor cBaseMeaFolder.destroy;
 begin
   m_testTypes.destroy;
+  m_ObjTypes.Destroy;
   inherited;
 end;
 
@@ -987,7 +1059,12 @@ procedure cBaseMeaFolder.doCreateFiles(node: txmlnode);
 var
   I: Integer;
   s:string;
+  o:cbaseobj;
   types,child:txmlnode;
+  propList:tstringlist;
+  j,k: Integer;
+  propname:string;
+  prop:TProp;
 begin
   if m_TestTypes.Count>0 then
   begin
@@ -1000,12 +1077,51 @@ begin
       child.WriteAttributeString('Class','TestTypeStr','');
     end;
   end;
+  if m_ObjTypes.Count>0 then
+  begin
+    // список возможных типов испытаний
+    types:=node.NodeNew('ObjTypes');
+    for I := 0 to m_ObjTypes.Count - 1 do
+    begin
+      s:=m_ObjTypes.Strings[i];
+      proplist:=LoadObjProperties(s);
+      if proplist=nil then
+      begin
+        proplist:=TStringList.Create;
+        proplist.Duplicates:=dupIgnore;
+      end;
+      child:=types.NodeNew(s);
+      child.WriteAttributeString('Properties','ObjTypeStr','');
+      for j := 0 to g_mbase.objects.Count - 1 do
+      begin
+        o:=g_mbase.getobj(j);
+        if o is cObjFolder then
+        begin
+          if cObjFolder(o).m_ObjType=s then
+          begin
+            for k := 0 to cObjFolder(o).PropCount - 1 do
+            begin
+              propname:=cObjFolder(o).m_Properties.Strings[k];
+              prop:=tprop(cObjFolder(o).m_Properties.Objects[k]);
+              proplist.AddObject(propname,prop);
+            end;
+          end;
+        end;
+      end;
+      for j := 0 to proplist.Count - 1 do
+      begin
+        child.WriteAttributeString('Prop_'+inttostr(j),proplist.Strings[j],'');
+        child.WriteAttributeString('Prop_v_'+inttostr(j),'0','0');
+      end;
+      propList.Destroy;
+    end;
+  end;
 end;
 
 procedure cBaseMeaFolder.doLoadDesc(node: txmlnode);
 var
   s, lclass:string;
-  i:integer;
+  i, j:integer;
   tests,child:txmlnode;
 begin
   inherited;
@@ -1020,6 +1136,63 @@ begin
       begin
         s:=child.name;
         m_TestTypes.Add(s);
+      end;
+    end;
+  end;
+  tests:=node.FindNode('ObjTypes');
+  if tests<>nil then
+  begin
+    for I := 0 to tests.NodeCount - 1 do
+    begin
+      child:=tests.Nodes[i];
+      lClass:=child.ReadAttributeString('Properties','');
+      if lClass='ObjTypeStr' then
+      begin
+        s:=child.name;
+        m_ObjTypes.Add(s);
+      end;
+    end;
+  end;
+end;
+
+function cBaseMeaFolder.LoadObjProperties(objType: string): tstringlist;
+var
+  xml:tnativexml;
+  node, n, child:txmlNode;
+  i, j:integer;
+  s, lpath:string;
+begin
+  result:=nil;
+  lpath:=getpath+'.xml';
+  if fileexists(lpath) then
+  begin
+    xml:=TNativeXml.Create(nil);
+    xml.LoadFromFile(lpath);
+    node:=xml.Root;
+    n:=node.FindNode('objTypes');
+    if n<>nil then
+    begin
+      for I := 0 to n.NodeCount - 1 do
+      begin
+        child:=n.Nodes[i];
+        s:=child.ReadAttributeString('Properties','');
+        if s='ObjTypeStr' then
+        begin
+          if objType=child.name then
+          begin
+            result:=TStringList.Create;
+            result.Duplicates:=dupIgnore;
+            j:=0;
+            s:=child.ReadAttributeString('Prop_'+inttostr(j),'');
+            while s <> '' do
+            begin
+              result.add(s);
+              inc(j);
+              s:=child.ReadAttributeString('Prop_'+inttostr(j),'');
+            end;
+            Exit;
+          end;
+        end;
       end;
     end;
   end;
@@ -1054,5 +1227,19 @@ begin
     fldname:=ExtractFileDir(lpath);
   end;
 end;
+
+{ cObjFolder }
+procedure cObjFolder.doCreateFiles(node: txmlnode);
+begin
+  inherited;
+  node.WriteAttributeString('ObjType',m_ObjType,'');
+end;
+
+procedure cObjFolder.doLoadDesc(node: txmlnode);
+begin
+  inherited;
+  m_ObjType:=node.ReadAttributeString('ObjType','');
+end;
+
 
 end.

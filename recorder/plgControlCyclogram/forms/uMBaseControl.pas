@@ -70,6 +70,8 @@ type
     CfgSB: TSpeedButton;
     PathLabel: TLabel;
     TestPathLabel: TLabel;
+    Label4: TLabel;
+    ObjTypeCB: TComboBox;
     procedure Button1Click(Sender: TObject);
     procedure mdbBtnClick(Sender: TObject);
     procedure ObjPropSGEndEdititng(Sender: TObject; ACol, ARow: Integer;
@@ -343,10 +345,12 @@ begin
 
 end;
 
-{ TMBaseControl }
+{ TMBaseControl } // применить
 procedure TMBaseControl.Button1Click(Sender: TObject);
 var
   objFolder, testFolder, regFolder: cXmlFolder;
+  proplist:tstringlist;
+  I: Integer;
 begin
   //showmessage(getMDBRegPath);
 
@@ -373,6 +377,27 @@ begin
       setComboBoxItem(objFolder.name, ObjNameCB);
     end;
   end;
+  if ObjTypeCB.text<>'' then
+  begin
+    // присваиваем свойства
+    if cObjFolder(objFolder).m_ObjType<>ObjTypeCB.text then
+    begin
+      proplist:=cbasemeafolder(m_base.m_BaseFolder).LoadObjProperties(ObjTypeCB.text);
+      cObjFolder(objFolder).clearPropertie;
+      g_mbase.Events.active:=false;
+      for I := 0 to proplist.Count - 1 do
+      begin
+        if i=proplist.Count-1 then
+        begin
+          g_mbase.Events.active:=true;
+        end;
+        cObjFolder(objFolder).addpropertie(proplist.Strings[i],'0');
+      end;
+      proplist.Destroy;
+    end;
+    cObjFolder(objFolder).m_ObjType:=ObjTypeCB.text;
+    cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes.Add(cobjFolder(objFolder).m_ObjType);
+  end;
   if objFolder = nil then
     exit;
   testFolder := GetSelectTest;
@@ -381,7 +406,7 @@ begin
     if TestNameCB.text <> '' then
     begin
       testFolder := cTestFolder.Create;
-      cTestFolder(testFolder).m_testType := TestTypeCB.text;
+      cTestFolder(testFolder).m_testType:=TestTypeCB.text;
       testFolder.name := TestNameCB.text;
       // для вновь создаваемых нет смысла что то искать внутри
       testFolder.fscanFolders := false;
@@ -403,8 +428,7 @@ begin
     exit;
   // добавляем новый тип испытания
   if cTestFolder(testFolder).m_testType <> '' then
-    cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes.Add
-      (cTestFolder(testFolder).m_testType);
+    cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes.Add(cTestFolder(testFolder).m_testType);
   cregFolder(regFolder) := GetSelectReg;
   // для вновь создаваемых нет смысла что то искать внутри
   UpdateXmlDescr;
@@ -759,6 +783,11 @@ begin
     end;
   end;
   ObjNameCB.OnChange := p;
+  // заполняем типы объектов
+  for I := 0 to cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes.Count - 1 do
+  begin
+    ObjTypeCB.AddItem(cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes.Strings[i],nil);
+  end;
 end;
 
 procedure TMBaseControl.FillRegCB(t: cTestFolder);
@@ -802,9 +831,11 @@ begin
   TestNameCB.Items.Clear;
   if o = nil then
   begin
+
   end
   else
   begin
+    setComboBoxItem(o.m_ObjType, ObjTypeCB);
     for I := 0 to o.ChildCount - 1 do
     begin
       t := cTestFolder(o.getChild(I));
@@ -1119,7 +1150,7 @@ begin
     end;
     if (prop <> '') and (val <> '') then
     begin
-      obj.addpropertie(prop, val);
+      //obj.addpropertie(prop, val);
     end;
     if (prop = '') and (val = '') then
     begin
@@ -1187,6 +1218,8 @@ procedure TMBaseControl.ObjPropSGKeyDown(Sender: TObject; var Key: Word;
 var
   sg: TStringGridExt;
   obj: cXmlFolder;
+  prop, val: string;
+  ARow, ACol, ind:integer;
 begin
 
   obj := nil;
@@ -1215,6 +1248,52 @@ begin
     end;
     if sg.rowcount = 1 then
       sg.rowcount := 2;
+  end;
+  if Key = VK_RETURN then
+  begin
+    if Sender = ObjPropSG then
+    begin
+      obj := GetSelectObj;
+    end;
+    if Sender = TestPropSG then
+    begin
+      obj := GetSelectTest;
+    end;
+    if Sender = RegPropSG then
+    begin
+      obj := GetSelectReg;
+    end;
+    prop := '';
+    val := '';
+    if obj <> nil then
+    begin
+      prop := sg.Cells[c_col_propName, sg.Row];
+      val := sg.Cells[c_col_propVal, sg.Row];
+      if sg.Col = c_col_propName then
+      begin
+        ind := sg.row-1;
+        // модифицируем имя только в том случае если вписано свойство с повторившимся именем в новую ячейку
+        if ind <> -1 then
+        begin
+          if ind <> sg.RowCount - 2 then
+          begin
+            obj.RenameProp(prop, ind);
+            sg.Cells[c_col_propName, sg.Row] := prop;
+          end
+          else
+          begin
+            obj.Setpropertie(prop, val);
+          end;
+        end;
+      end
+      else
+      begin
+        if (prop <> '') and (val <> '') then
+        begin
+          obj.Setpropertie(prop, val);
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -1450,7 +1529,6 @@ begin
   end;
   if sg <> nil then
   begin
-    sg.rowcount := 2;
     sg.rowcount := o.PropCount + 2;
     for I := 0 to o.PropCount - 1 do
     begin

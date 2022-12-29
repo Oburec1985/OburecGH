@@ -7,10 +7,9 @@ uses
   SysUtils,
   Classes,
   PluginClass in '..\SharedRUnits\PluginClass.pas',
-  uCompMng in '..\SharedRUnits\uCompMng.pas',
+  uCompMng in '..\plgTestClear\units\uCompMng.pas',
   uRecBasicFactory in '..\SharedRUnits\uRecBasicFactory.pas',
   uRecorderEvents in '..\SharedRUnits\uRecorderEvents.pas',
-  uFrmSync in '..\SharedRUnits\uFrmSync.pas' { FrmSync },
   uCreateComponents in 'units\uCreateComponents.pas',
   blaccess in '..\SharedRUnits\interfaces\blaccess.pas',
   CFREG in '..\SharedRUnits\interfaces\CFREG.PAS',
@@ -194,7 +193,9 @@ uses
   uConfirmDlg in '..\..\sharedUtils\forms\uConfirmDlg.pas' {ConfirmFmr},
   uEditPropertiesFrm in 'forms\uEditPropertiesFrm.pas' {EditPropertiesFrm},
   uBaseAlgBands in 'uBaseAlgBands.pas',
-  uAlgsSaveFrm in 'forms\uAlgsSaveFrm.pas' {SaveAlgsFrm};
+  uAlgsSaveFrm in 'forms\uAlgsSaveFrm.pas' {SaveAlgsFrm},
+  Iterative_FFT_sse in '..\..\sharedUtils\math\FFT_койнов\Iterative_FFT_sse.pas',
+  uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}
