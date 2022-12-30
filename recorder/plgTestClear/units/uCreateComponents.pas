@@ -5,8 +5,10 @@ interface
 
 uses
   uEvalStepCfgFrm,
-  windows,
-  uCompMng;
+  types, ActiveX, forms, sysutils, windows, Classes, IniFiles, Dialogs,
+  uCompMng, cfreg, uRecorderEvents, PluginClass, tags, Recorder, uRCFunc,
+  uEvalStepAlg, uCommonMath, nativeXml,
+  Generics.Collections, Controls;
 
 type
   {“ип дл€ хранени€ информации о plug-in`е}
@@ -19,6 +21,25 @@ type
     SubVertion: integer; // под-верси€
   end;
 
+  // трансл€тор сообщений из Recorder в базу TMBaseControl
+  cEvalStepValNP = class(cNonifyProcessor)
+  public
+    m_toolBarIcon:IPicture;
+    m_btnID:cardinal;
+    // сохран€лка
+    m_toolBarIcon2:IPicture;
+    m_btnID2:cardinal;
+  protected
+    procedure doAddParentList;override;
+    procedure doSave(path: string);override;
+    procedure doLoad(path: string);override;
+  public
+    function ProcessBtnClick(pMsgInfo:PCB_MESSAGE): boolean;override;
+  end;
+
+var
+  g_EvalStepValNP:cEvalStepValNP;
+  g_cfgpath:string;
 
 const
   // √лобальна€ переменна€ дл€ храени€ описани€ plug-in`а.
@@ -38,9 +59,9 @@ const
   // MainThead
   procedure destroyForms(compMng: cCompMng);
 
+
+
 implementation
-uses
-  PluginClass;
 
 procedure destroyEngine;
 begin
@@ -62,6 +83,11 @@ begin
     EvalStepCfgFrm:=TEvalStepCfgFrm.Create(nil);
     EvalStepCfgFrm.Show;
     EvalStepCfgFrm.close;
+
+    g_EvalStepValNP:=cEvalStepValNP.Create;
+    TExtRecorderPack(GPluginInstance).m_nplist.AddNP(g_EvalStepValNP);
+
+    g_AlgList:=cAlgList.Create;
   end;
 end;
 
@@ -75,11 +101,17 @@ begin
       EvalStepCfgFrm.destroy;
       EvalStepCfgFrm:=nil;
     end;
+    g_EvalStepValNP.Destroy;
+    g_AlgList.Destroy;
   end;
 end;
 
 
 procedure createComponents(compMng:cCompMng);
+var
+  str, str1:string;
+  m_toolBarIcon:IPicture;
+  m_btnID:cardinal;
 begin
   //CompMng.Add(cGLFact.Create);
 end;
@@ -101,6 +133,52 @@ begin
   begin
     EvalStepCfgFrm.free;
     EvalStepCfgFrm := nil;
+  end;
+end;
+
+{ cMBaseAlgNP }
+procedure cEvalStepValNP.doAddParentList;
+var
+  str, str1:string;
+begin
+  inherited;
+  // добавл€ем кнопку в редакторе формул€ров
+  str  := '–асчетные каналы';
+  str1 := '–асчетные каналы';
+  m_toolBarIcon:= LoadPicFromRes('FX48');
+  cCompMng(TExtRecorderPack(GPluginInstance).m_CompMng).m_BtnTagPropPage.AddButton(m_toolBarIcon,
+                                m_toolBarIcon, m_toolBarIcon,
+                                m_toolBarIcon,
+                                pAnsiChar(@str1[1]), @str[1], GPluginInstance, m_btnID);
+end;
+
+
+procedure cEvalStepValNP.doLoad(path: string);
+var
+  doc:TNativeXml;
+  node:txmlnode;
+begin
+  g_cfgpath:=path;
+  ecm;
+  g_algList.doLoad(nil);
+  lcm;
+end;
+
+procedure cEvalStepValNP.doSave(path: string);
+var
+  dir, name:string;
+begin
+  g_cfgpath:=path;
+  dir:=extractfiledir(path);
+  name:=trimext(extractfilename(path));
+  g_algList.doSave(nil);
+end;
+
+function cEvalStepValNP.ProcessBtnClick(pMsgInfo: PCB_MESSAGE): boolean;
+begin
+  if pMsgInfo.uID=m_btnID then
+  begin
+    EvalStepCfgFrm.Show;   // показываем форму настроек
   end;
 end;
 

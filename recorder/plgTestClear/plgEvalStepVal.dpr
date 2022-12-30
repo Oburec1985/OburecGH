@@ -43,7 +43,8 @@ uses
   recursive_sse2_sse3_d_al_fft in '..\..\sharedUtils\math\FFT_койнов\recursive_sse2_sse3_d_al_fft.pas',
   uRcCtrls in '..\SharedRUnits\RC_lib\uRcCtrls.pas',
   uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
-  scales in '..\SharedRUnits\interfaces\scales.pas';
+  scales in '..\SharedRUnits\interfaces\scales.pas',
+  uEvalStepAlg in 'units\uEvalStepAlg.pas';
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 
@@ -113,7 +114,7 @@ function GetPluginDescription: LPCSTR; cdecl;
 begin
    //Описание извлекается из глобальной описательной структуры}
    //Result := LPCSTR(GPluginInfo.Dsc);
-   Result := LPCSTR('Модуль для теста (пустой)');
+   Result := LPCSTR('Модуль для теста (пустой)'+char(0));
 end;
 {Функция получения полного описания plug-in`а}
 procedure GetPluginInfo(var lpPluginInfo: PLUGININFO); cdecl;

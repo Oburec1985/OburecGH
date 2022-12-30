@@ -48,8 +48,7 @@ begin
   str1 := 'Расчетные каналы';
   m_toolBarIcon:= LoadPicFromRes('FX48');
   cCompMng(TExtRecorderPack(GPluginInstance).m_CompMng).m_BtnTagPropPage.AddButton(m_toolBarIcon,
-                                m_toolBarIcon,
-                                m_toolBarIcon,
+                                m_toolBarIcon, m_toolBarIcon,
                                 m_toolBarIcon,
                                 pAnsiChar(@str1[1]), @str[1], GPluginInstance, m_btnID);
   // добавляем кнопку

@@ -57,8 +57,8 @@ type
     name:       array [0..100] of AnsiChar;  //наименование
     describe:   array [0..200] of AnsiChar;  //описание
     vendor:     array [0..200] of AnsiChar;  //наименование фирмы разработчика
-    version:    word;                    //номер версии
-    subversion: word;                    //номер подверсии
+    version:    word; //номер версии
+    subversion: word; //номер подверсии
  end;
  PLUGININFO = tagPLUGININFO;
  LPPLUGININFO = ^PLUGININFO;

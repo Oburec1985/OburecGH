@@ -281,11 +281,12 @@ begin
   // Копирование строк производится именно функциями StrCopy()
   // из-за того, что структура описания plug-in`а описана
   // в языке C++}
-  //StrCopy(@lpPluginInfo.name, LPCSTR(GPluginInfo.Name));
-  //StrCopy(@lpPluginInfo.describe, LPCSTR(GPluginInfo.Dsc));
-  //StrCopy(@lpPluginInfo.vendor, LPCSTR(GPluginInfo.vendor));
-  //lpPluginInfo.version := GPluginInfo.version;
-  //lpPluginInfo.subversion := GPluginInfo.SubVertion;
+  //ZeroMemory(lpPluginInfo,sizeof(lpPluginInfo));
+  StrCopy(@lpPluginInfo.name, LPCSTR(GPluginInfo.Name));
+  StrCopy(@lpPluginInfo.describe, LPCSTR(GPluginInfo.Dsc));
+  StrCopy(@lpPluginInfo.vendor, LPCSTR(GPluginInfo.vendor));
+  lpPluginInfo.version := GPluginInfo.version;
+  lpPluginInfo.subversion := GPluginInfo.SubVertion;
 end;
 
 { ---------------------Объявление экспортируемых процедур---------------------- }

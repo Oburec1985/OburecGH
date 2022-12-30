@@ -12,7 +12,6 @@ uses
 
 type
 
-
   cSpm = class(cSrcAlg)
   public
     min: point2d;

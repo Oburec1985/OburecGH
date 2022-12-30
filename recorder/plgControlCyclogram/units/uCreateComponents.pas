@@ -549,11 +549,14 @@ function ProcessShowVersionInfo(pMsgInfo: PCB_MESSAGE): boolean;
 var
   str: string;
 begin
-  str := GPluginInfo.Name + #13#10 + #13#10 + GPluginInfo.Dsc + #13#10 +
+  //str := GPluginInfo.Name + #13#10 + #13#10 + GPluginInfo.Dsc + #13#10 +
+  //  'Версия ' + IntToStr(GPluginInfo.Version) + '.' + IntToStr
+  //  (GPluginInfo.SubVertion) + #13#10 + #13#10 + GPluginInfo.Vendor + ', 2017';
+  str := GPluginInfo.Name +char(0) +char(0) + char(0) + GPluginInfo.Dsc + char(0) +
     'Версия ' + IntToStr(GPluginInfo.Version) + '.' + IntToStr
-    (GPluginInfo.SubVertion) + #13#10 + #13#10 + GPluginInfo.Vendor + ', 2017';
-  MessageBox(0, PChar(str), 'Информация о модуле',
-    MB_OK + MB_ICONINFORMATION + MB_APPLMODAL + MB_TOPMOST);
+    (GPluginInfo.SubVertion) + char(0) + char(0) + GPluginInfo.Vendor + ', 2017';
+  MessageBox(0, PChar(str), 'Информация о модуле', MB_OK + MB_ICONINFORMATION + MB_APPLMODAL + MB_TOPMOST);
+
 
   result := true;
 end;

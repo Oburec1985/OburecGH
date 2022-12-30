@@ -123,7 +123,7 @@ object AlgFrm: TAlgFrm
       end
       object UpdateAlgBtn: TSpeedButton
         Left = 67
-        Top = 2
+        Top = 8
         Width = 64
         Height = 47
         Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088

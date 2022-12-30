@@ -104,6 +104,7 @@
 				<Form>FrmSync</Form>
 			</DCCReference>
 			<DCCReference Include="..\SharedRUnits\interfaces\scales.pas"/>
+			<DCCReference Include="units\uEvalStepAlg.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
