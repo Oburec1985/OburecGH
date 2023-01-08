@@ -2,7 +2,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
   Left = 0
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1072#1089#1095#1077#1090#1072' '#1079#1085#1072#1095#1077#1085#1080#1103' '#1085#1072' '#1087#1077#1088#1077#1093#1086#1076#1085#1086' '#1087#1088#1086#1094#1077#1089#1089#1077
-  ClientHeight = 500
+  ClientHeight = 600
   ClientWidth = 1118
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -16,37 +16,35 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
   TextHeight = 16
   object BottomPanel: TPanel
     Left = 0
-    Top = 431
+    Top = 531
     Width = 1118
     Height = 69
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 379
   end
   object RightPanel: TPanel
     Left = 770
     Top = 0
     Width = 348
-    Height = 431
+    Height = 531
     Align = alRight
     TabOrder = 1
-    ExplicitHeight = 379
     inline TagsListFrame1: TTagsListFrame
       Left = 1
       Top = 1
       Width = 346
-      Height = 429
+      Height = 529
       Align = alClient
       TabOrder = 0
       ExplicitLeft = 1
       ExplicitTop = 1
       ExplicitWidth = 346
-      ExplicitHeight = 377
+      ExplicitHeight = 529
       inherited FormChannelsGB: TGroupBox
         Width = 346
-        Height = 429
+        Height = 529
         ExplicitWidth = 346
-        ExplicitHeight = 377
+        ExplicitHeight = 529
         inherited ChanNamesPanel: TPanel
           Width = 342
           ExplicitWidth = 342
@@ -61,36 +59,23 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
         end
         inherited TagsLV: TBtnListView
           Width = 342
-          Height = 298
+          Height = 398
           ExplicitWidth = 342
-          ExplicitHeight = 246
+          ExplicitHeight = 398
         end
       end
     end
   end
-  object AlgsLB: TListBox
-    Left = 0
-    Top = 0
-    Width = 249
-    Height = 431
-    Align = alLeft
-    TabOrder = 2
-    OnDragDrop = AlgsLBDragDrop
-    OnDragOver = AlgsLBDragOver
-    OnKeyDown = AlgsLBKeyDown
-    ExplicitHeight = 379
-  end
   object MainPanel: TPanel
-    Left = 249
+    Left = 185
     Top = 0
-    Width = 521
-    Height = 431
+    Width = 585
+    Height = 531
     Align = alClient
-    TabOrder = 3
-    ExplicitHeight = 379
+    TabOrder = 2
     DesignSize = (
-      521
-      431)
+      585
+      531)
     object InChanLabel: TLabel
       Left = 8
       Top = 108
@@ -141,8 +126,8 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       Caption = 'FFTdX'
     end
     object UpdateAlgBtn: TSpeedButton
-      Left = 7
-      Top = 368
+      Left = 423
+      Top = 351
       Width = 64
       Height = 47
       Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
@@ -255,6 +240,14 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       ParentShowHint = False
       ParentBiDiMode = False
       ShowHint = True
+      OnClick = UpdateAlgBtnClick
+    end
+    object BlockSizeFLabel: TLabel
+      Left = 6
+      Top = 346
+      Width = 111
+      Height = 16
+      Caption = #1056#1072#1079#1084#1077#1088' '#1073#1083#1086#1082#1072', '#1089#1077#1082'.'
     end
     object OutChanE: TEdit
       Left = 8
@@ -348,7 +341,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     object TrigGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 514
+      Width = 578
       Height = 88
       Anchors = [akLeft, akTop, akRight]
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1090#1088#1080#1075#1075#1077#1088#1072
@@ -420,6 +413,72 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       Enabled = False
       TabOrder = 10
       Text = '0.0'
+    end
+    object BlockSizeFE: TFloatEdit
+      Left = 6
+      Top = 366
+      Width = 146
+      Height = 24
+      TabOrder = 11
+      Text = '0.0'
+    end
+  end
+  object LeftPanel: TPanel
+    Left = 0
+    Top = 0
+    Width = 185
+    Height = 531
+    Align = alLeft
+    TabOrder = 3
+    object AlgsLB: TListBox
+      Left = 1
+      Top = 1
+      Width = 183
+      Height = 312
+      Align = alTop
+      MultiSelect = True
+      TabOrder = 0
+      OnClick = AlgsLBClick
+      OnDragDrop = AlgsLBDragDrop
+      OnDragOver = AlgsLBDragOver
+      OnKeyDown = AlgsLBKeyDown
+      OnMouseUp = AlgsLBMouseUp
+    end
+    object ScalesLV: TBtnListView
+      Left = 1
+      Top = 313
+      Width = 203
+      Height = 217
+      Align = alLeft
+      Columns = <
+        item
+          Caption = #1048#1085#1076'.'
+          Width = 51
+        end
+        item
+          Caption = 'F'
+          Width = 67
+        end
+        item
+          Caption = 'Scale'
+          Width = 67
+        end>
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -15
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      MultiSelect = True
+      RowSelect = True
+      ParentFont = False
+      TabOrder = 1
+      ViewStyle = vsReport
+      BtnCol = 0
+      QuoteColumnBtnClick = False
+      QuoteColumnDblClick = False
+      DrawColorBox = False
+      ChangeTextColor = False
+      Editable = True
     end
   end
 end

@@ -306,7 +306,7 @@ type
 		  function GetScalarEstimateInfo(var dwEstimator: Integer; var dwInfoCode: Integer): LPCSTR; stdcall;
 
 		  // Положить данные в тег (для плагинов) и положить время блока СЕВ и внутреннее
-		  function PushDataEx(var pData; nCount: Integer = -1;
+		  function PushDataEx(const pData:pointer; nCount: Integer = -1;
 				dblTimeUTS: double = 0;	dblTimeInternal: double = 0): HRESULT; stdcall;
 
 		  // Установить расширенное свойство тега

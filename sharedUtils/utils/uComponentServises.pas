@@ -2,9 +2,10 @@ unit uComponentServises;
 
 interface
 uses
-  ueventlist, ubtnlistview, classes, stdctrls, controls, spin, uPathMng,
+  ueventlist, ubtnlistview, classes, stdctrls, controls, spin, uspin, uPathMng,
   comctrls, sysutils, extctrls, Graphics, grids, dialogs, windows, ShlObj,
   VirtualTrees, uVTServices, forms, uBaseObj, DCL_MYOWN, uCommonMath;
+
 // возвращает -1 если объект не найден
 function setComboBoxItem(str:string; c:tcombobox):integer;
 function GetComboBoxItem(c:tcombobox):tobject;
@@ -462,6 +463,14 @@ begin
       tSpinEdit(c).text:='';
     end;
   end;
+  if c is tfloatSpinEdit then
+  begin
+    tfloatSpinEdit(c).Tag:=0;
+    if tfloatSpinEdit(c).text='_' then
+    begin
+      tfloatSpinEdit(c).text:='';
+    end;
+  end;
   if c is tcheckbox then
   begin
     tcheckbox(c).Tag:=0;
@@ -655,6 +664,27 @@ begin
             tSpinEdit(c).Tag:=-1;
             result:=false;
             tSpinEdit(c).Text:='_';
+          end;
+        end;
+      end;
+    end;
+    if c is tFloatSpinEdit then
+    begin
+      if tFloatSpinEdit(c).text<>'_' then
+      begin
+        if tFloatSpinEdit(c).Tag=0 then
+        begin
+          tFloatSpinEdit(c).Tag:=1;
+          tFloatSpinEdit(c).Text:=text;
+          result:=true;
+        end
+        else
+        begin
+          if text<>tFloatSpinEdit(c).text then
+          begin
+            tFloatSpinEdit(c).Tag:=-1;
+            result:=false;
+            tFloatSpinEdit(c).Text:='_';
           end;
         end;
       end;

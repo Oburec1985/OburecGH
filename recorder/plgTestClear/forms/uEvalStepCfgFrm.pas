@@ -5,15 +5,14 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, uTagsListFrame, ExtCtrls, DCL_MYOWN, Spin, uSpin,
-  ubtnlistview, ComCtrls, tags,
-  uRcCtrls, Buttons;
+  ubtnlistview, ComCtrls, tags, uComponentservises, uRCFunc,
+  uRcCtrls, Buttons, Grids;
 
 type
   TEvalStepCfgFrm = class(TForm)
     BottomPanel: TPanel;
     RightPanel: TPanel;
     TagsListFrame1: TTagsListFrame;
-    AlgsLB: TListBox;
     MainPanel: TPanel;
     InChanLabel: TLabel;
     OutChanE: TEdit;
@@ -38,6 +37,11 @@ type
     FFTdxFE: TFloatEdit;
     FFTdxLabel: TLabel;
     UpdateAlgBtn: TSpeedButton;
+    BlockSizeFE: TFloatEdit;
+    BlockSizeFLabel: TLabel;
+    LeftPanel: TPanel;
+    AlgsLB: TListBox;
+    ScalesLV: TBtnListView;
     procedure FormShow(Sender: TObject);
     procedure AlgsLBDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
@@ -45,8 +49,16 @@ type
     procedure FFTSizeSBDownClick(Sender: TObject);
     procedure FFTSizeSBUpClick(Sender: TObject);
     procedure AlgsLBKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure AlgsLBMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure AlgsLBClick(Sender: TObject);
+    procedure UpdateAlgBtnClick(Sender: TObject);
   private
-    { Private declarations }
+    procedure UpdateSel;
+    procedure EndMsel;
+    procedure ShowAlg(a: TObject);
+    procedure UpdateAlg(a: TObject);
+    function GenOutTag(str: string): itag;
   public
     { Public declarations }
   end;
@@ -55,44 +67,142 @@ var
   EvalStepCfgFrm: TEvalStepCfgFrm;
 
 implementation
+
 uses
   uEvalStepAlg;
-
 {$R *.dfm}
 
-procedure TEvalStepCfgFrm.AlgsLBDragDrop(Sender, Source: TObject; X, Y: Integer);
+procedure TEvalStepCfgFrm.EndMsel;
+begin
+  // m_pars обновлен в inherited
+  endMultiSelect(FFTShiftIE);
+  endMultiSelect(FFTBlockSizeIE);
+  endMultiSelect(ThresholdSE);
+  endMultiSelect(OffsetSE);
+  endMultiSelect(FFTCb);
+  endMultiSelect(InFsFE);
+  endMultiSelect(InChanCB);
+  endMultiSelect(BlockSizeFE);
+  endMultiSelect(OutChanE);
+  endMultiSelect(FsSE);
+  endMultiSelect(FFTdxFE);
+end;
+
+procedure TEvalStepCfgFrm.ShowAlg(a: TObject);
+var
+  t: ctag;
+begin
+  SetMultiSelectComponentString(FFTShiftIE,
+    inttostr(cEvalStepAlg(a).m_fftShift));
+  SetMultiSelectComponentString(FFTBlockSizeIE,
+    inttostr(cEvalStepAlg(a).m_fftCount));
+  SetMultiSelectComponentString(ThresholdSE,
+    floattostr(cEvalStepAlg(a).m_Threshold));
+  SetMultiSelectComponentString(OffsetSE,
+    floattostr(cEvalStepAlg(a).m_TrigOffset));
+  SetMultiSelectComponentBool(FFTCb, cEvalStepAlg(a).m_fftFlt);
+  t := cEvalStepAlg(a).m_tag;
+  if t.tag <> nil then
+  begin
+    SetMultiSelectComponentString(InFsFE, floattostr(t.tag.GetFreq));
+    SetMultiSelectComponentString(InChanCB, t.tag.GetName);
+    SetMultiSelectComponentString(BlockSizeFE, floattostr(1 / t.tag.GetFreq * cEvalStepAlg(a).m_fftCount));
+    SetMultiSelectComponentString(OutChanE, cEvalStepAlg(a).m_outTag.tagname);
+    SetMultiSelectComponentString(FsSE, floattostr(cEvalStepAlg(a).m_outTag.tag.GetFreq));
+    SetMultiSelectComponentString(FFTdxFE, floattostr(t.tag.GetFreq/cEvalStepAlg(a).m_fftCount));
+  end;
+end;
+
+procedure TEvalStepCfgFrm.UpdateAlg(a: TObject);
+var
+  t: itag;
+begin
+  cEvalStepAlg(a).m_fftCount := FFTBlockSizeIE.IntNum;
+  cEvalStepAlg(a).m_fftShift := FFTShiftIE.IntNum;
+  cEvalStepAlg(a).m_Threshold := ThresholdSE.Value;
+  cEvalStepAlg(a).m_TrigOffset := OffsetSE.Value;
+  cEvalStepAlg(a).m_fftFlt := FFTCb.Checked;
+  if InChanCB.Text <> '' then
+  begin
+    t := InChanCB.gettag(InChanCB.ItemIndex);
+    if t <> nil then
+    begin
+      cEvalStepAlg(a).m_tag.tag := InChanCB.gettag(InChanCB.ItemIndex);
+      if cEvalStepAlg(a).m_outTag.tag = nil then
+      begin
+        cEvalStepAlg(a).m_outTag.tag := GenOutTag
+          (cEvalStepAlg(a).m_tag.tagname);
+      end;
+    end;
+    cEvalStepAlg(a).UpdateFFTSize;
+  end;
+end;
+
+procedure TEvalStepCfgFrm.AlgsLBClick(Sender: TObject);
+begin
+  UpdateSel;
+end;
+
+procedure TEvalStepCfgFrm.AlgsLBDragDrop(Sender, Source: TObject;
+  X, Y: Integer);
 var
   li: tlistitem;
-  t:itag;
-  a:cEvalStepAlg;
+  t: itag;
+  a: cEvalStepAlg;
   I: Integer;
 begin
   if Source = TagsListFrame1.TagsLV then
   begin
-    if source is  tlistview then
+    if Source is tlistview then
     begin
-      li:=tbtnlistview(source).SelectFirst;
-      if li<>nil then
+      li := tbtnlistview(Source).Selected;
+      if li <> nil then
       begin
-        t:=itag(li.data);
-        for I := 1 to tbtnlistview(source).SelCount - 1 do
+        for I := 0 to tbtnlistview(Source).SelCount - 1 do
         begin
-          li:=tbtnlistview(source).GetNextItem(li, sdAll, isSelected);
-          t:=itag(li.data);
+          if I = 0 then
+            li := tbtnlistview(Source).Selected
+          else
+            li := tbtnlistview(Source).GetNextItem(li, sdAll, [isSelected]);
+          t := itag(li.data);
+          if t = nil then
+            exit;
+          a := g_AlgList.addAlg(t.GetName);
+          a.m_tag.tag := t;
+          AlgsLB.AddItem(a.name, a);
+          if t <> nil then
+          begin
+            if cEvalStepAlg(a).m_outTag.tag = nil then
+            begin
+              cEvalStepAlg(a).m_outTag.tag := GenOutTag(t.GetName);
+            end;
+          end;
         end;
       end;
     end;
-    if t = nil then
-      exit;
-    a:=g_AlgList.addAlg(t.GetName);
-    a.m_tag.tag:=t;
-    InFsFE.FloatNum:=t.GetFreq;
-    AlgsLB.AddItem(a.name,a);
   end;
 end;
 
-procedure TEvalStepCfgFrm.AlgsLBDragOver(Sender, Source: TObject; X, Y: Integer;
-  State: TDragState; var Accept: Boolean);
+function TEvalStepCfgFrm.GenOutTag(str: string): itag;
+var
+  t: itag;
+begin
+  t := getTagByName(str + '_flt');
+  if t = nil then
+  begin
+    ecm;
+    t := createVectorTagR8(str + '_flt', t.GetFreq, true, // cfgWrite
+      true, // irregular
+      false);
+    lcm;
+    result := t;
+  end
+  else
+    result := t;
+end;
+
+procedure TEvalStepCfgFrm.AlgsLBDragOver(Sender, Source: TObject;
+  X, Y: Integer; State: TDragState; var Accept: Boolean);
 var
   li: tlistitem;
   obj: TObject;
@@ -107,15 +217,15 @@ procedure TEvalStepCfgFrm.AlgsLBKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
   I: Integer;
-  a:cEvalStepAlg;
+  a: cEvalStepAlg;
 begin
-  if key=VK_DELETE then
+  if Key = VK_DELETE then
   begin
-    for I := 0 to AlgsLB.Count-1 do
+    for I := 0 to AlgsLB.Count - 1 do
     begin
-      if AlgsLB.Selected[i] then
+      if AlgsLB.Selected[I] then
       begin
-        a:=cEvalStepAlg(AlgsLB.Items.Objects[i]);
+        a := cEvalStepAlg(AlgsLB.Items.Objects[I]);
         g_AlgList.delAlg(a);
       end;
       AlgsLB.DeleteSelected;
@@ -123,39 +233,98 @@ begin
   end;
 end;
 
-procedure TEvalStepCfgFrm.FFTSizeSBDownClick(Sender: TObject);
+procedure TEvalStepCfgFrm.UpdateAlgBtnClick(Sender: TObject);
+var
+  I: Integer;
+  a: cEvalStepAlg;
 begin
-  if sender = FFTSizeSB then
+  for I := 0 to AlgsLB.Count - 1 do
   begin
-    if FFTBlockSizeIE.IntNum>2 then
-      FFTBlockSizeIE.IntNum := round(FFTBlockSizeIE.IntNum/2);
+    if AlgsLB.Selected[I] then
+    begin
+      a := cEvalStepAlg(AlgsLB.Items.Objects[I]);
+      UpdateAlg(a);
+    end;
   end;
-  if sender = FFTShiftSB then
-  begin
-    if FFTShiftIE.IntNum>2 then
-      FFTShiftIE.IntNum := round(FFTShiftIE.IntNum/2);
-  end;
-
 end;
 
+procedure TEvalStepCfgFrm.UpdateSel;
+var
+  I: Integer;
+  a: cEvalStepAlg;
+begin
+  for I := 0 to AlgsLB.Count - 1 do
+  begin
+    if AlgsLB.Selected[I] then
+    begin
+      a := cEvalStepAlg(AlgsLB.Items.Objects[I]);
+      ShowAlg(a);
+    end;
+  end;
+  EndMsel;
+end;
+
+procedure TEvalStepCfgFrm.AlgsLBMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  UpdateSel;
+end;
+
+procedure TEvalStepCfgFrm.FFTSizeSBDownClick(Sender: TObject);
+begin
+  if Sender = FFTSizeSB then
+  begin
+    if FFTBlockSizeIE.IntNum >= 2 then
+      FFTBlockSizeIE.IntNum := round(FFTBlockSizeIE.IntNum / 2)
+    else
+    begin
+      FFTBlockSizeIE.IntNum := 2;
+    end;
+  end;
+  if Sender = FFTShiftSB then
+  begin
+    if FFTShiftIE.IntNum >= 2 then
+      FFTShiftIE.IntNum := round(FFTShiftIE.IntNum / 2)
+    else
+    begin
+      FFTShiftIE.IntNum := 2;
+    end;
+  end;
+end;
 
 procedure TEvalStepCfgFrm.FFTSizeSBUpClick(Sender: TObject);
 begin
-  if sender = FFTSizeSB then
+  if Sender = FFTSizeSB then
   begin
-    if FFTBlockSizeIE.IntNum>2 then
-      FFTBlockSizeIE.IntNum:=FFTBlockSizeIE.IntNum*2;
+    if FFTBlockSizeIE.IntNum >= 2 then
+      FFTBlockSizeIE.IntNum := FFTBlockSizeIE.IntNum * 2
+    else
+      FFTBlockSizeIE.IntNum := 2;
   end;
-  if sender = FFTShiftSB then
+  if Sender = FFTShiftSB then
   begin
-    if FFTShiftIE.IntNum>2 then
-      FFTShiftIE.IntNum:=FFTShiftIE.IntNum*2;
+    if FFTShiftIE.IntNum >= 2 then
+      FFTShiftIE.IntNum := FFTShiftIE.IntNum * 2
+    else
+      FFTShiftIE.IntNum := 2;
   end;
 end;
 
 procedure TEvalStepCfgFrm.FormShow(Sender: TObject);
+var
+  I: Integer;
+  a:cEvalStepAlg;
 begin
   TagsListFrame1.ShowChannels;
+  InChanCB.updateTagsList;
+  if g_AlgList<>nil then
+  begin
+    for I := 0 to g_AlgList.Count - 1 do
+    begin
+      a:=g_AlgList.getobj(i);
+      AlgsLB.AddItem(a.name, a);
+    end;
+  end;
 end;
 
 end.

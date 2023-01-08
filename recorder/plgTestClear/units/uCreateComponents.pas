@@ -44,7 +44,7 @@ var
 const
   // Глобальная переменная для храения описания plug-in`а.
   GPluginInfo: TInternalPluginInfo = (
-    Name: '';
+    Name: 'EvalStepAlg';
     Dsc: 'Модуль расчета значения на переходном процессе';
     Vendor: 'НПП Мера';
     Version: 1;

@@ -43,6 +43,7 @@ type
     // смещение для след блока (можно считать с перекрытием)
     m_FFTShift: integer;
     m_inData: TAlignDCmpx;
+    // восстановленные входные данных через iFFT
     m_inData1: TAlignDCmpx;
     // настройки спектра
     m_FFTPlan: TFFTProp;
