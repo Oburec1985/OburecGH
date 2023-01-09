@@ -12,6 +12,7 @@ uses
   math,
   uHardwareMath,
   complex,
+  dialogs,
   uRegClassesList, u2dmath;
 
 type
@@ -50,6 +51,8 @@ type
     ///flastindex,
     // перекрытие блоков
     fOverlap: integer;
+    // размер в секундах для порции выходного тега UpdateTime*freq
+    fdt,
     // разрешение спектра
     fspmdx: double;
     // буфер в котором лежит очередной расчет FFT (выравнивание под SSE) (размер m_fftCount)
@@ -138,29 +141,20 @@ end;
 
 function cEvalStepAlg.doEval(intag: cTag; time: double):boolean;
 var
-  // количество готовых блоков
+  // количество готовых блоков входного буфера
   bCount: integer;
   b: boolean;
   i1, i2: integer;
   i, ind: integer;
   //dt,
-  k: double;
+  lt,k: double;
 begin
   result:=false;
   bCount := trunc(m_tag.lastindex / m_fftCount);
+  fportionsize:=0;
   if bCount < 1 then
     exit;
-
-  i1 := 0;
-  ///if flastindex > 0 then
-  ///begin
-  ///  i1 := flastindex - foverflow;
-  ///  if i1 < 0 then
-  ///    i1 := 0;
-  ///end
-  ///else
-  ///  i1 := flastindex;
-
+  i1:=0;
   if m_tag.lastindex > (i1 + m_fftCount) then
     b := true
   else
@@ -181,9 +175,17 @@ begin
       // перекрытые данные
       if (i < (fOverlap - 1)) and (not fFirstBlock) then
       begin
+        if abs(TCmxArray_d(m_inData1.p)[i].re-m_OverlapBlock[i])>0.0001 then
+        begin
+          //showmessage('1');
+        end;
+      end;
+      // перекрытые данные
+      if (i < (fOverlap - 1)) and (not fFirstBlock) then
+      begin
         ind:=fOverlap-i;
         k := (ind) / (fOverlap);
-        m_outData[i] := (k-1) * TCmxArray_d(m_inData1.p)[i].re + (k) * m_OverlapBlock[i];
+        m_outData[i] := (1-k) * TCmxArray_d(m_inData1.p)[i].re + (k) * m_OverlapBlock[i];
       end
       // неперекрытые данные
       else
@@ -217,14 +219,28 @@ begin
     if (m_outTag.lastindex)>=fblSize then
     begin
       // сколько блоков можно забыть
-      ind:=trunc((m_outTag.lastindex-fOverlap)/fblSize);
-      m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[0], fblSize, 0, m_outTag.m_ReadDataTime);
+      //ind:=trunc((m_outTag.lastindex-fOverlap)/fblSize);
+      ind:=trunc((m_outTag.lastindex)/fblSize);
+      lt:=0;
+      for I := 0 to ind - 1 do
+      begin
+        m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[i*fblSize], fblSize, 0, m_outTag.m_ReadDataTime+lt);
+        // размер блока данных в секундах
+        lt:=lt+fdt;
+      end;
       m_outTag.ResetTagDataTimeInd(fblSize*ind);
       result:=true;
     end;
   end;
   if bCount>0 then
-    fportionsize:=(bCount-1)*m_fftcount+m_fftShift;
+  begin
+    // нельзя отбрасывать m_fftcount-fftShift т.к. эти данные участвуют в расчетах двух перекрытых спектров
+    //fportionsize:=(bCount-1)*m_fftcount+m_fftShift;
+    fportionsize:=m_fftShift*bCount;
+    // вычисляется в doEval
+    if fportionsize>0 then
+      m_tag.ResetTagDataTimeInd(fportionsize);
+  end;
 end;
 
 procedure cEvalStepAlg.doGetData;
@@ -242,9 +258,6 @@ begin
     if m_tag.UpdateTagData(true) then
     begin
       doEval(m_tag, m_tag.m_ReadDataTime);
-      // вычисляется в doEval
-      if fportionsize>0 then
-        m_tag.ResetTagDataTimeInd(fportionsize);
     end;
   end;
 end;
@@ -299,6 +312,7 @@ begin
   FFTProp := GetFFTPlan(m_fftCount);
   m_iFFTPlan := GetInverseFFTPlan(m_fftCount);
   fblSize:=m_outTag.BlockSize;
+  fdt:=fblSize*(1/m_outTag.freq);
   setlength(m_func, m_fftCount);
   evalFltCurve(fspmdx);
 end;
