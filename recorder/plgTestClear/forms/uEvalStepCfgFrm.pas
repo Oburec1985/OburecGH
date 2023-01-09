@@ -58,7 +58,7 @@ type
     procedure EndMsel;
     procedure ShowAlg(a: TObject);
     procedure UpdateAlg(a: TObject);
-    function GenOutTag(str: string): itag;
+    function  GenOutTag(str: string; freq:double): itag;
   public
     { Public declarations }
   end;
@@ -92,14 +92,10 @@ procedure TEvalStepCfgFrm.ShowAlg(a: TObject);
 var
   t: ctag;
 begin
-  SetMultiSelectComponentString(FFTShiftIE,
-    inttostr(cEvalStepAlg(a).m_fftShift));
-  SetMultiSelectComponentString(FFTBlockSizeIE,
-    inttostr(cEvalStepAlg(a).m_fftCount));
-  SetMultiSelectComponentString(ThresholdSE,
-    floattostr(cEvalStepAlg(a).m_Threshold));
-  SetMultiSelectComponentString(OffsetSE,
-    floattostr(cEvalStepAlg(a).m_TrigOffset));
+  SetMultiSelectComponentString(FFTShiftIE, inttostr(cEvalStepAlg(a).m_fftShift));
+  SetMultiSelectComponentString(FFTBlockSizeIE, inttostr(cEvalStepAlg(a).m_fftCount));
+  SetMultiSelectComponentString(ThresholdSE, floattostr(cEvalStepAlg(a).m_Threshold));
+  SetMultiSelectComponentString(OffsetSE, floattostr(cEvalStepAlg(a).m_TrigOffset));
   SetMultiSelectComponentBool(FFTCb, cEvalStepAlg(a).m_fftFlt);
   t := cEvalStepAlg(a).m_tag;
   if t.tag <> nil then
@@ -109,7 +105,14 @@ begin
     SetMultiSelectComponentString(BlockSizeFE, floattostr(1 / t.tag.GetFreq * cEvalStepAlg(a).m_fftCount));
     SetMultiSelectComponentString(OutChanE, cEvalStepAlg(a).m_outTag.tagname);
     SetMultiSelectComponentString(FsSE, floattostr(cEvalStepAlg(a).m_outTag.tag.GetFreq));
-    SetMultiSelectComponentString(FFTdxFE, floattostr(t.tag.GetFreq/cEvalStepAlg(a).m_fftCount));
+    if cEvalStepAlg(a).m_fftCount<>0 then
+    begin
+      SetMultiSelectComponentString(FFTdxFE, floattostr(t.tag.GetFreq/cEvalStepAlg(a).m_fftCount));
+    end
+    else
+    begin
+      SetMultiSelectComponentString(FFTdxFE, '0');
+    end;
   end;
 end;
 
@@ -130,8 +133,7 @@ begin
       cEvalStepAlg(a).m_tag.tag := InChanCB.gettag(InChanCB.ItemIndex);
       if cEvalStepAlg(a).m_outTag.tag = nil then
       begin
-        cEvalStepAlg(a).m_outTag.tag := GenOutTag
-          (cEvalStepAlg(a).m_tag.tagname);
+        cEvalStepAlg(a).m_outTag.tag := GenOutTag(cEvalStepAlg(a).m_tag.tagname, cEvalStepAlg(a).m_tag.tag.GetFreq);
       end;
     end;
     cEvalStepAlg(a).UpdateFFTSize;
@@ -174,7 +176,7 @@ begin
           begin
             if cEvalStepAlg(a).m_outTag.tag = nil then
             begin
-              cEvalStepAlg(a).m_outTag.tag := GenOutTag(t.GetName);
+              cEvalStepAlg(a).m_outTag.tag := GenOutTag(t.GetName, t.GetFreq);
             end;
           end;
         end;
@@ -183,7 +185,7 @@ begin
   end;
 end;
 
-function TEvalStepCfgFrm.GenOutTag(str: string): itag;
+function TEvalStepCfgFrm.GenOutTag(str: string; freq:double): itag;
 var
   t: itag;
 begin
@@ -191,7 +193,8 @@ begin
   if t = nil then
   begin
     ecm;
-    t := createVectorTagR8(str + '_flt', t.GetFreq, true, // cfgWrite
+    t := createVectorTagR8(str + '_flt', Freq,
+      true, // cfgWrite
       true, // irregular
       false);
     lcm;

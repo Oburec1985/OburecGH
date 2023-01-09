@@ -117,6 +117,7 @@ type
     // удаление в режиме конфига, чтобы не вызывать лишних событий ecm/ lcm
     destructor destroy(InCfgMode:boolean);overload;
     procedure doOnStart;
+    function BlockSize: integer;
     // установить массив m_TagData
     // BlCount определяет количество буферов m_TagData которое может вместить m_ReadData
     procedure initTagData(blCount: integer);
@@ -986,6 +987,11 @@ end;
 
 { cTag }
 
+function cTag.BlockSize: integer;
+begin
+  result:=Block.GetBlocksSize;
+end;
+
 function cTag.ConvertIndInLoopBuff(i: integer): integer;
 begin
   if m_ReadyVals < m_WriteDataSize then
@@ -1191,15 +1197,14 @@ begin
     if m_ReadSize - datacount <> 0 then
       move(m_ReadData[endTimeInd], m_ReadData[0], datacount * sizeof(double));
     m_lastindex := datacount;
-    m_ReadDataTime := m_ReadDataTime + (1 / getfreq) * endTimeInd;
+    m_ReadDataTime := m_ReadDataTime + (1 / getfreq) * (endTimeInd);
     if lastindex >= 0 then
     begin
-      // ZeroMemory(@m_ReadData[lastindex], (m_ReadSize-m_lastindex)*sizeof(double))
+      ZeroMemory(@m_ReadData[lastindex], (m_ReadSize-m_lastindex)*sizeof(double))
     end
     else
     begin
-      showmessage(
-        'lastindex<0: cTag.ResetTagDataTimeInd(endTimeInd:integer) - ZeroMemory(@m_ReadData[lastindex], (m_ReadSize-m_lastindex)*sizeof(double))')
+      showmessage('lastindex<0: cTag.ResetTagDataTimeInd(endTimeInd:integer) - ZeroMemory(@m_ReadData[lastindex], (m_ReadSize-m_lastindex)*sizeof(double))')
     end;
   end;
 end;
@@ -1386,8 +1391,7 @@ begin
           else
           begin
             // ERROR
-            move(m_TagData[0], m_ReadData[m_lastindex],
-              blSize * (sizeof(double)));
+            move(m_TagData[0], m_ReadData[m_lastindex], blSize * (sizeof(double)));
             m_lastindex := m_lastindex + blSize;
           end;
         end
