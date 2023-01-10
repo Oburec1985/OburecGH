@@ -35,25 +35,33 @@ type
   public
     name: string;
   public
+    m_tag: cTag;
+    m_outTag: cTag;
+    // тип FFT фильтра
+    m_fftType,
     // размер блока FFT
     m_fftCount,
     // смещение блока FFT
     m_fftShift: integer;
     // »спользовать FFT фильтр
     m_fftFlt: boolean;
+    // крива€ фильтрации по спектру
+    m_band: array of point2d;
+    // 0 - AC; 1 - 1/2 LPF; 2 - 10Hz Lpf, 3 - Custom
+    m_fltType:integer;
+
+    // использовать скал€рный тег
+    m_useScalar:boolean;
+    // 0 - мгновенное; 1 - среднее
+    m_TrigType:integer;
+    // длина порции дл€ усреднени€ в точках
+    m_TrigMeanLenI:integer;
     // порог триггерного перепада
     m_Threshold,
     // врем€ сброса триггера
     m_FallTime: double;
     // смещение в секундах от начала срабатывани€ триггера
     m_TrigOffset: double;
-    m_tag: cTag;
-    m_outTag: cTag;
-    // использовать скал€рный тег
-    m_useScalar:boolean;
-    m_outScTag: cScalarTag;
-    // крива€ фильтрации по спектру
-    m_band: array of point2d;
   protected
     m_iFFTPlan, FFTProp: TFFTProp;
     // кратность блока записи в тег. »меем право писать только такими блоками
@@ -181,7 +189,7 @@ function cEvalStepAlg.doEval(intag: cTag; time: double):boolean;
 var
   // количество готовых блоков входного буфера
   bCount: integer;
-  b: boolean;
+  b, checkTrig: boolean;
   i1, i2: integer;
   i, ind: integer;
   //dt,
@@ -250,7 +258,6 @@ begin
     if (m_outTag.lastindex)>=fblSize then
     begin
       // сколько блоков можно забыть
-      //ind:=trunc((m_outTag.lastindex-fOverlap)/fblSize);
       ind:=trunc((m_outTag.lastindex)/fblSize);
       lt:=0;
       for I := 0 to ind - 1 do
@@ -287,11 +294,23 @@ begin
           for j := i2 to m_outTag.lastindex - 1 do
           begin
             v:=m_outTag.m_ReadData[j];
+            // отклонение по мат ожиданию
             if abs(v-m)>m_Threshold then
             begin
               trigTime:=m_outTag.m_ReadDataTime+j*fPeriod;
               ftrig:=true;
-              if (trigTime+m_TrigOffset)<m_outTag.getReadTime(m_outTag.lastindex) then
+              // провер€ем что нужное значение не ушло в след порцию
+              case m_TrigType of
+                0:
+                begin
+                  checkTrig:=(trigTime+m_TrigOffset)<m_outTag.getReadTime(m_outTag.lastindex);
+                end;
+                1:
+                begin
+                  checkTrig:=(trigTime+m_TrigOffset+m_TrigMeanLenI*fPeriod)<m_outTag.getReadTime(m_outTag.lastindex);
+                end;
+              end;
+              if checkTrig then
               begin
                 //  смещение реигстрируемого значени€
                 ind:=trunc(m_TrigOffset/fPeriod);
@@ -660,8 +679,12 @@ begin
       if tagnode <> nil then
         urcfunc.LoadTag(tagnode, a.m_outTag);
       a.UpdateFFTSize;
+      a.m_fltType:=child.ReadAttributeInteger('FltType', 0);
 
       a.m_Threshold := child.ReadAttributeFloat('TrigThreshold', 0);
+      a.m_TrigOffset := child.ReadAttributeFloat('TrigOffset', 0);
+      a.m_TrigType := child.readAttributeInteger('TrigValType', 0);
+      a.m_TrigMeanLenI := child.readAttributeInteger('TrigMeanLen', 10);
       a.m_useScalar := child.ReaDAttributeBool('UseScalarTag', true);
       tagnode := child.FindNode('TrigTag');
       if tagnode <> nil then
@@ -718,9 +741,14 @@ begin
     child.WriteAttributeInteger('numFFT', a.m_fftCount, 32);
     child.WriteAttributeInteger('OffsetFFT', a.m_fftShift, 32);
     child.WriteAttributeBool('UseFFTflt', a.m_fftFlt, false);
-    child.WriteAttributeFloat('TrigThreshold', a.m_Threshold, 0);
-    child.WriteAttributeFloat('TrigThreshold', a.m_TrigOffset, 0);
     child.WriteAttributeString('Band', a.getCurveStr, '');
+    child.WriteAttributeInteger('FltType', a.m_fltType, 0);
+
+    child.WriteAttributeFloat('TrigThreshold', a.m_Threshold, 0);
+    child.WriteAttributeFloat('TrigOffset', a.m_TrigOffset, 0);
+    child.WriteAttributeInteger('TrigValType', a.m_TrigType, 0);
+    child.WriteAttributeInteger('TrigMeanLen', a.m_TrigMeanLenI, 10);
+
     tagnode := child.NodeNew('inTag');
     uRcFunc.saveTag(a.m_tag, tagnode);
     tagnode := child.NodeNew('OutTag');
@@ -740,6 +768,7 @@ begin
         a.m_outScTag.CreateTag;
       end;
     end;
+
   end;
   doc.XmlFormat := xfReadable;
   doc.SaveToFile(newpath);

@@ -44,7 +44,12 @@ type
     ScalesLV: TBtnListView;
     FltRG: TRadioGroup;
     ScalarTagCB: TCheckBox;
-    TrigTypeValCB: TCheckBox;
+    ValTypeRG: TRadioGroup;
+    MeanGB: TGroupBox;
+    TrigMeanLenFE: TFloatSpinEdit;
+    TrigMeanLenLabel: TLabel;
+    Label1: TLabel;
+    TrigMeanLenIE: TIntEdit;
     procedure FormShow(Sender: TObject);
     procedure AlgsLBDragOver(Sender, Source: TObject; X, Y: Integer; State: TDragState; var Accept: Boolean);
     procedure AlgsLBDragDrop(Sender, Source: TObject; X, Y: Integer);
@@ -58,6 +63,9 @@ type
     procedure FFTBlockSizeIEChange(Sender: TObject);
     procedure FltRGClick(Sender: TObject);
     procedure TrigTypeValCBClick(Sender: TObject);
+    procedure ValTypeRGClick(Sender: TObject);
+    procedure TrigMeanLenFEChange(Sender: TObject);
+    procedure TrigMeanLenIEChange(Sender: TObject);
   private
     fSel:tobject;
     ffltCurve:array of point2d;
@@ -141,12 +149,31 @@ begin
   end;
 end;
 
+procedure TEvalStepCfgFrm.TrigMeanLenFEChange(Sender: TObject);
+begin
+  if fsel<>nil then
+  begin
+    if cEvalStepAlg(fSel).m_outTag.freq<>0 then
+      TrigMeanLenIE.IntNum:=round(TrigMeanLenFE.Value*cEvalStepAlg(fSel).m_outTag.freq);
+  end;
+end;
+
+procedure TEvalStepCfgFrm.TrigMeanLenIEChange(Sender: TObject);
+begin
+  if fsel<>nil then
+  begin
+    if cEvalStepAlg(fSel).m_outTag.freq<>0 then
+      TrigMeanLenFE.Value:=TrigMeanLenIE.IntNum/cEvalStepAlg(fSel).m_outTag.freq;
+  end;
+end;
+
 procedure TEvalStepCfgFrm.TrigTypeValCBClick(Sender: TObject);
 begin
-  if TrigtypeValCB.Checked then
-    TrigtypeValCB.Caption:='Мат. ожидание'
-  else
-    TrigtypeValCB.Caption:='Мгновенное значение';
+  MeanGB.Visible:=false;
+  case ValTypeRG.ItemIndex of
+    0: ValTypeRG.Caption:='Мгновенное значение';
+    1: MeanGB.Visible:=true;
+  end;
 end;
 
 procedure TEvalStepCfgFrm.UpdateAlg(a: TObject);
@@ -166,10 +193,12 @@ begin
     FFTShiftIE.IntNum:=FFTBlockSizeIE.IntNum;
   cEvalStepAlg(a).m_fftCount := FFTBlockSizeIE.IntNum;
   cEvalStepAlg(a).m_fftShift := FFTShiftIE.IntNum;
-  cEvalStepAlg(a).m_Threshold := ThresholdSE.Value;
-  cEvalStepAlg(a).m_TrigOffset := OffsetSE.Value;
   cEvalStepAlg(a).m_fftFlt := FFTCb.Checked;
   //cEvalStepAlg(a).m_outScTag
+  cEvalStepAlg(a).m_Threshold := ThresholdSE.Value;
+  cEvalStepAlg(a).m_TrigOffset := OffsetSE.Value;
+  cEvalStepAlg(a).m_TrigType:=ValTypeRG.ItemIndex;
+  cEvalStepAlg(a).m_TrigMeanLenI := TrigMeanLenIE.IntNum;
   if InChanCB.Text <> '' then
   begin
     t := InChanCB.gettag(InChanCB.ItemIndex);
@@ -278,14 +307,18 @@ var
 begin
   if Key = VK_DELETE then
   begin
-    for I := 0 to AlgsLB.Count - 1 do
+    while AlgsLB.SelCount<>0 do
     begin
-      if AlgsLB.Selected[I] then
+      for I := 0 to AlgsLB.Count - 1 do
       begin
-        a := cEvalStepAlg(AlgsLB.Items.Objects[I]);
-        g_AlgList.delAlg(a);
+        if AlgsLB.Selected[I] then
+        begin
+          a := cEvalStepAlg(AlgsLB.Items.Objects[I]);
+          g_AlgList.delAlg(a);
+        end;
+        AlgsLB.DeleteSelected;
+        break;
       end;
-      AlgsLB.DeleteSelected;
     end;
   end;
 end;
@@ -322,6 +355,15 @@ begin
     end;
   end;
   EndMsel;
+end;
+
+procedure TEvalStepCfgFrm.ValTypeRGClick(Sender: TObject);
+begin
+  MeanGB.Visible:=false;
+  case ValTypeRG.ItemIndex of
+    0: ;
+    1: MeanGB.Visible:=true;
+  end;
 end;
 
 procedure TEvalStepCfgFrm.AlgsLBMouseUp(Sender: TObject; Button: TMouseButton;
@@ -430,6 +472,14 @@ begin
           i:=trunc(10/df);
           fFltCurve[1]:=p2d(i*df,1);
           fFltCurve[2]:=p2d(t.GetFreq/2,0);
+        end;
+      end;
+      3: // User
+      begin
+        if fSel<>nil then
+        begin
+          setlength(fFltCurve,length(cEvalStepAlg(fSel).m_band));
+          move(cEvalStepAlg(fSel).m_band[0],fFltCurve[0], length(cEvalStepAlg(fSel).m_band)*sizeof(point2d));
         end;
       end;
     end

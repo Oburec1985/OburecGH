@@ -3,7 +3,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1072#1089#1095#1077#1090#1072' '#1079#1085#1072#1095#1077#1085#1080#1103' '#1085#1072' '#1087#1077#1088#1077#1093#1086#1076#1085#1086' '#1087#1088#1086#1094#1077#1089#1089#1077
   ClientHeight = 680
-  ClientWidth = 1118
+  ClientWidth = 1076
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,24 +16,26 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
   TextHeight = 16
   object BottomPanel: TPanel
     Left = 0
-    Top = 611
-    Width = 1118
-    Height = 69
+    Top = 624
+    Width = 1076
+    Height = 56
     Align = alBottom
     TabOrder = 0
   end
   object RightPanel: TPanel
-    Left = 770
+    Left = 728
     Top = 0
     Width = 348
-    Height = 611
+    Height = 624
     Align = alRight
     TabOrder = 1
+    ExplicitLeft = 770
+    ExplicitHeight = 611
     inline TagsListFrame1: TTagsListFrame
       Left = 1
       Top = 1
       Width = 346
-      Height = 609
+      Height = 622
       Align = alClient
       TabOrder = 0
       ExplicitLeft = 1
@@ -42,7 +44,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       ExplicitHeight = 609
       inherited FormChannelsGB: TGroupBox
         Width = 346
-        Height = 609
+        Height = 622
         ExplicitWidth = 346
         ExplicitHeight = 609
         inherited ChanNamesPanel: TPanel
@@ -59,7 +61,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
         end
         inherited TagsLV: TBtnListView
           Width = 342
-          Height = 478
+          Height = 491
           ExplicitWidth = 342
           ExplicitHeight = 478
         end
@@ -69,65 +71,68 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
   object MainPanel: TPanel
     Left = 233
     Top = 0
-    Width = 537
-    Height = 611
+    Width = 495
+    Height = 624
     Align = alClient
     TabOrder = 2
+    ExplicitLeft = 234
+    ExplicitWidth = 537
+    ExplicitHeight = 611
     DesignSize = (
-      537
-      611)
+      495
+      624)
     object InChanLabel: TLabel
       Left = 8
-      Top = 172
+      Top = 196
       Width = 91
       Height = 16
       Caption = #1042#1093#1086#1076#1085#1086#1081' '#1082#1072#1085#1072#1083':'
     end
     object OutChanLabel: TLabel
       Left = 8
-      Top = 250
+      Top = 274
       Width = 95
       Height = 16
       Caption = #1042#1099#1093#1086#1076#1085#1086#1081' '#1082#1072#1085#1072#1083
     end
     object FFTBlockSizeLabel: TLabel
       Left = 6
-      Top = 362
+      Top = 386
       Width = 80
       Height = 16
       Caption = #1056#1072#1079#1084#1077#1088' '#1073#1083#1086#1082#1072
     end
     object FFTShiftLabel: TLabel
       Left = 198
-      Top = 362
+      Top = 386
       Width = 100
       Height = 16
       Caption = #1057#1084#1077#1097#1077#1085#1080#1077' '#1073#1083#1086#1082#1072
     end
     object FsLabel: TLabel
       Left = 198
-      Top = 250
+      Top = 274
       Width = 95
       Height = 16
       Caption = #1042#1099#1093#1086#1076#1085#1086#1081' '#1082#1072#1085#1072#1083
     end
     object InFsLabel: TLabel
       Left = 198
-      Top = 172
+      Top = 196
       Width = 13
       Height = 16
       Caption = 'Fs'
     end
     object FFTdxLabel: TLabel
       Left = 390
-      Top = 361
+      Top = 385
       Width = 37
       Height = 16
       Caption = 'FFTdX'
     end
     object UpdateAlgBtn: TSpeedButton
       Left = 423
-      Top = 415
+      Top = 439
       Width = 64
       Height = 47
       Hint = #1054#1073#1085#1086#1074#1080#1090#1100
@@ -244,21 +249,21 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     end
     object BlockSizeFLabel: TLabel
       Left = 6
-      Top = 410
+      Top = 434
       Width = 111
       Height = 16
       Caption = #1056#1072#1079#1084#1077#1088' '#1073#1083#1086#1082#1072', '#1089#1077#1082'.'
     end
     object OutChanE: TEdit
       Left = 8
-      Top = 272
+      Top = 296
       Width = 170
       Height = 24
       TabOrder = 0
     end
     object FFTCb: TCheckBox
       Left = 6
-      Top = 328
+      Top = 352
       Width = 97
       Height = 17
       Caption = 'FFT '#1092#1080#1083#1100#1090#1088
@@ -269,7 +274,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     end
     object FFTSizeSB: TSpinButton
       Left = 158
-      Top = 383
+      Top = 407
       Width = 20
       Height = 25
       DownGlyph.Data = {
@@ -298,7 +303,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     end
     object FFTBlockSizeIE: TIntEdit
       Left = 6
-      Top = 384
+      Top = 408
       Width = 146
       Height = 24
       TabOrder = 3
@@ -307,7 +312,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     end
     object FFTShiftSB: TSpinButton
       Left = 350
-      Top = 383
+      Top = 407
       Width = 20
       Height = 25
       DownGlyph.Data = {
@@ -336,7 +341,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     end
     object FFTShiftIE: TIntEdit
       Left = 198
-      Top = 384
+      Top = 408
       Width = 146
       Height = 24
       TabOrder = 5
@@ -345,11 +350,12 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     object TrigGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 530
-      Height = 129
+      Width = 488
+      Height = 189
       Anchors = [akLeft, akTop, akRight]
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1090#1088#1080#1075#1075#1077#1088#1072
       TabOrder = 6
+      ExplicitWidth = 530
       object ThresholdLabel: TLabel
         Left = 4
         Top = 25
@@ -358,7 +364,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
         Caption = #1055#1086#1088#1086#1075
       end
       object OffsetLabel: TLabel
-        Left = 180
+        Left = 191
         Top = 25
         Width = 62
         Height = 16
@@ -373,9 +379,9 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
         TabOrder = 0
       end
       object OffsetSE: TFloatSpinEdit
-        Left = 180
+        Left = 191
         Top = 47
-        Width = 170
+        Width = 159
         Height = 26
         Increment = 0.100000000000000000
         TabOrder = 1
@@ -388,20 +394,23 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
         Caption = #1057#1082#1072#1083#1103#1088#1085#1099#1081' '#1090#1077#1075
         TabOrder = 2
       end
-      object TrigTypeValCB: TCheckBox
-        Left = 4
-        Top = 86
-        Width = 170
-        Height = 17
-        Caption = #1052#1075#1085#1086#1074#1077#1085#1085#1086#1077' '#1079#1085#1072#1095#1077#1085#1080#1077
+      object ValTypeRG: TRadioGroup
+        Left = 5
+        Top = 79
+        Width = 180
+        Height = 81
+        Caption = #1055#1088#1077#1076#1085#1072#1089#1090#1088#1086#1081#1082#1072' '#1092#1080#1083#1100#1090#1088#1072
+        ItemIndex = 0
+        Items.Strings = (
+          '- '#1052#1075#1085#1086#1074#1077#1085#1085#1086#1077' '#1079#1085#1072#1095#1077#1085#1080#1077
+          '- '#1057#1088#1077#1076#1085#1077#1077)
         TabOrder = 3
-        Visible = False
-        OnClick = TrigTypeValCBClick
+        OnClick = ValTypeRGClick
       end
     end
     object FsSE: TFloatSpinEdit
       Left = 198
-      Top = 272
+      Top = 296
       Width = 172
       Height = 26
       Increment = 0.100000000000000000
@@ -409,7 +418,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     end
     object InChanCB: TRcComboBox
       Left = 7
-      Top = 195
+      Top = 219
       Width = 171
       Height = 24
       Margins.Left = 4
@@ -420,7 +429,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     end
     object InFsFE: TFloatEdit
       Left = 198
-      Top = 195
+      Top = 219
       Width = 99
       Height = 24
       Enabled = False
@@ -429,7 +438,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     end
     object FFTdxFE: TFloatEdit
       Left = 390
-      Top = 384
+      Top = 408
       Width = 99
       Height = 24
       Enabled = False
@@ -438,7 +447,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     end
     object BlockSizeFE: TFloatEdit
       Left = 6
-      Top = 430
+      Top = 454
       Width = 146
       Height = 24
       TabOrder = 11
@@ -446,14 +455,15 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     end
     object FltRG: TRadioGroup
       Left = 6
-      Top = 472
+      Top = 484
       Width = 219
-      Height = 105
+      Height = 134
       Caption = #1055#1088#1077#1076#1085#1072#1089#1090#1088#1086#1081#1082#1072' '#1092#1080#1083#1100#1090#1088#1072
       Items.Strings = (
         '- AC ('#1091#1076#1072#1083#1080#1090#1100' DC)'
         '- '#1060#1053#1063' 1/2 ('#1055#1086#1083#1086#1074#1080#1085#1072' '#1087#1086#1083#1086#1089#1099')'
-        '- '#1060#1053#1063' 10 Hz')
+        '- '#1060#1053#1063' 10 Hz'
+        '- '#1055#1086#1083#1100#1079#1086#1074#1072#1090#1077#1083#1100#1089#1082#1080#1081)
       TabOrder = 12
       OnClick = FltRGClick
     end
@@ -462,9 +472,10 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     Left = 0
     Top = 0
     Width = 233
-    Height = 611
+    Height = 624
     Align = alLeft
     TabOrder = 3
+    ExplicitHeight = 611
     object AlgsLB: TListBox
       Left = 1
       Top = 1
@@ -483,7 +494,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       Left = 1
       Top = 313
       Width = 231
-      Height = 297
+      Height = 310
       Align = alClient
       Columns = <
         item
@@ -514,6 +525,48 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = True
+      ExplicitHeight = 297
+    end
+  end
+  object MeanGB: TGroupBox
+    Left = 425
+    Top = 80
+    Width = 216
+    Height = 81
+    Caption = #1059#1089#1088#1077#1076#1085#1077#1085#1080#1077
+    TabOrder = 4
+    Visible = False
+    object TrigMeanLenLabel: TLabel
+      Left = 15
+      Top = 25
+      Width = 64
+      Height = 16
+      Caption = #1044#1083#1080#1085#1072', '#1089#1077#1082
+    end
+    object Label1: TLabel
+      Left = 15
+      Top = 56
+      Width = 68
+      Height = 16
+      Caption = #1044#1083#1080#1085#1072', '#1090#1095#1082'.'
+    end
+    object TrigMeanLenFE: TFloatSpinEdit
+      Left = 94
+      Top = 21
+      Width = 105
+      Height = 26
+      Increment = 0.100000000000000000
+      TabOrder = 0
+      OnChange = TrigMeanLenFEChange
+    end
+    object TrigMeanLenIE: TIntEdit
+      Left = 94
+      Top = 50
+      Width = 105
+      Height = 22
+      TabOrder = 1
+      Text = '000'
+      OnChange = TrigMeanLenIEChange
     end
   end
 end
