@@ -13,9 +13,24 @@ uses
   uHardwareMath,
   complex,
   dialogs,
+  recorder,
   uRegClassesList, u2dmath;
 
 type
+  cScalarTag = class
+  public
+    t:itag;
+    id:int64;
+  private
+    fname:string;
+  protected
+    function getname:string;
+    procedure setname(s:string);
+  public
+    function CreateTag:itag;
+    property name:string read getname write setname;
+  end;
+
   cEvalStepAlg = class
   public
     name: string;
@@ -27,11 +42,16 @@ type
     // Использовать FFT фильтр
     m_fftFlt: boolean;
     // порог триггерного перепада
-    m_Threshold: double;
+    m_Threshold,
+    // время сброса триггера
+    m_FallTime: double;
     // смещение в секундах от начала срабатывания триггера
     m_TrigOffset: double;
     m_tag: cTag;
     m_outTag: cTag;
+    // использовать скалярный тег
+    m_useScalar:boolean;
+    m_outScTag: cScalarTag;
     // кривая фильтрации по спектру
     m_band: array of point2d;
   protected
@@ -39,19 +59,21 @@ type
     // кратность блока записи в тег. Имеем право писать только такими блоками
     fblSize:integer;
     // количество обработанных данных которые можно "забыть" после очередного расчета
-    fportionsize,
-    // индекс последнего элемента в m_BlockTime
-    m_BlockTimeInd: integer;
+    fPortionSize:integer;
     // набор множителей для фильтрации спектра (длина = FFTCount)
     m_func: TDoubleArray;
     // первый блок не проверяется на пересечение данных
     fFirstBlock:boolean;
   private
+    // время последнего найденного триггера
+    fTrigTime:double;
+    ftrig:boolean; // триггер сработал
     // индекс последнего отсчета в выходном буфере
     ///flastindex,
     // перекрытие блоков
     fOverlap: integer;
     // размер в секундах для порции выходного тега UpdateTime*freq
+    fPeriod,
     fdt,
     // разрешение спектра
     fspmdx: double;
@@ -64,6 +86,10 @@ type
     // кусочек данных из предыдущего блока с учетом которого надо делать перекрытие
     m_OverlapBlock: TDoubleArray;
   protected
+    procedure UpdateBlSize;
+    procedure SetCurveStr(s:string);
+    function GetCurveStr:string;
+    procedure doOnLeaveCfg;
     procedure doOnStart;
     function doEval(intag: cTag; time: double):boolean;
     procedure doGetData;
@@ -80,6 +106,7 @@ type
   cAlgList = class(tstringlist)
   private
   public
+    procedure doLeaveCfg;
     procedure doSave(sender: tobject);
     procedure doLoad(sender: tobject);
     function getobj(i: integer): cEvalStepAlg; overload;
@@ -98,6 +125,9 @@ type
     destructor destroy;
   end;
 
+function LoadTag(node: txmlnode; p_t: cScalarTag):cScalarTag;
+procedure saveTag(t: cScalarTag; node: txmlnode);
+
 var
   g_AlgList: cAlgList;
 
@@ -111,6 +141,8 @@ constructor cEvalStepAlg.create;
 begin
   m_tag := cTag.create;
   m_outTag := cTag.create;
+  m_useScalar:=true;
+  m_FallTime:=1;
 end;
 
 destructor cEvalStepAlg.destroy;
@@ -120,6 +152,12 @@ begin
 
   m_outTag.destroy;
   m_outTag := nil;
+
+  if m_outScTag<>nil then
+  begin
+    m_outScTag.Destroy;
+    m_outScTag:=nil;
+  end;
 
   FreeMemAligned(cmplx_resArray);
   cmplx_resArray.p := nil;
@@ -147,7 +185,8 @@ var
   i1, i2: integer;
   i, ind: integer;
   //dt,
-  lt,k: double;
+  lt, k, v, m, trigTime: double;
+  j: Integer;
 begin
   result:=false;
   bCount := trunc(m_tag.lastindex / m_fftCount);
@@ -159,6 +198,7 @@ begin
     b := true
   else
     b := false;
+  bCount:=0;
   while b do
   begin
     FFTProp.StartInd := i1;
@@ -172,14 +212,6 @@ begin
     // если не первый блок
     for i := 0 to m_fftCount - 1 do
     begin
-      // перекрытые данные
-      if (i < (fOverlap - 1)) and (not fFirstBlock) then
-      begin
-        if abs(TCmxArray_d(m_inData1.p)[i].re-m_OverlapBlock[i])>0.0001 then
-        begin
-          //showmessage('1');
-        end;
-      end;
       // перекрытые данные
       if (i < (fOverlap - 1)) and (not fFirstBlock) then
       begin
@@ -201,7 +233,6 @@ begin
     begin
       i1 := i1 + m_fftShift;
     end;
-    //if flastindex - foverflow > 0 then
     begin
       if m_outTag.lastindex=0 then
         m_outTag.m_ReadDataTime:=m_tag.m_ReadDataTime;
@@ -228,16 +259,60 @@ begin
         // размер блока данных в секундах
         lt:=lt+fdt;
       end;
+      // ------------------------------------------------------------------------
+      // поиск триггера
+      if m_useScalar then
+      begin
+        m:=tempSUM(m_outTag.m_ReadData,0,m_outTag.lastindex)/(m_outTag.lastindex+1);
+        // проверяем сбросится ли триггер на данной порции
+        i2:=0;
+        if ftrig then
+        begin
+          trigTime:=fTrigTime+m_FallTime;
+          if trigTime<m_outTag.m_ReadDataTime then
+          begin
+            ftrig:=false;
+          end
+          else
+          begin
+            if trigTime<m_outTag.getReadTime(m_outTag.lastindex) then
+            begin
+              i2:=trunc((trigTime-m_outTag.m_ReadDataTime)/fperiod);
+              ftrig:=false;
+            end;
+          end;
+        end
+        else
+        begin
+          for j := i2 to m_outTag.lastindex - 1 do
+          begin
+            v:=m_outTag.m_ReadData[j];
+            if abs(v-m)>m_Threshold then
+            begin
+              trigTime:=m_outTag.m_ReadDataTime+j*fPeriod;
+              ftrig:=true;
+              if (trigTime+m_TrigOffset)<m_outTag.getReadTime(m_outTag.lastindex) then
+              begin
+                //  смещение реигстрируемого значения
+                ind:=trunc(m_TrigOffset/fPeriod);
+                fTrigTime:=trigTime+m_TrigOffset;
+                m_outScTag.t.PushValue(m_outTag.m_ReadData[j+ind], trigTime+m_TrigOffset);
+              end;
+              break;
+            end;
+          end;
+        end;
+      end;
       m_outTag.ResetTagDataTimeInd(fblSize*ind);
       result:=true;
     end;
+    inc(bCount);
   end;
   if bCount>0 then
   begin
     // нельзя отбрасывать m_fftcount-fftShift т.к. эти данные участвуют в расчетах двух перекрытых спектров
     //fportionsize:=(bCount-1)*m_fftcount+m_fftShift;
     fportionsize:=m_fftShift*bCount;
-    // вычисляется в doEval
     if fportionsize>0 then
       m_tag.ResetTagDataTimeInd(fportionsize);
   end;
@@ -262,11 +337,18 @@ begin
   end;
 end;
 
+procedure cEvalStepAlg.doOnLeaveCfg;
+begin
+  UpdateBlSize;
+end;
+
 procedure cEvalStepAlg.doOnStart;
 var
   i: integer;
   t: cTag;
 begin
+  fTrigTime:=0;
+  ftrig:=false;
   fFirstBlock:=true;
   if m_tag <> nil then
   begin
@@ -282,17 +364,16 @@ begin
   end;
   ///flastindex := 0;
   // ZeroMemory(m_EvalBlock.p, fOutSize * sizeof(double));
-  m_BlockTimeInd := 0;
 end;
 
 function cEvalStepAlg.ready: boolean;
 begin
   result := false;
-  if m_tag <> nil then
-  begin
-    if m_outTag <> nil then
-      result := true;
-  end;
+  if m_fftCount=0 then exit;
+
+  if m_tag = nil then exit;
+  if m_outTag = nil then exit;
+  result:=true;
 end;
 
 procedure cEvalStepAlg.UpdateFFTSize;
@@ -300,21 +381,31 @@ var
   i, bCount: integer;
   f: double;
 begin
-  fspmdx := m_tag.tag.GetFreq / m_fftCount;
+  if m_fftCount<>0 then
+    fspmdx := m_tag.tag.GetFreq / m_fftCount;
   // размер перекрытия блоков
   fOverlap := m_fftCount - m_fftShift;
   f := m_tag.freq;
-  setlength(m_outData, m_fftCount);
-  // кусочек перекрытых данных
-  setlength(m_OverlapBlock, fOverlap);
-  GetMemAlignedArray_cmpx_d(m_fftCount, cmplx_resArray);
-  GetMemAlignedArray_cmpx_d(m_fftCount, m_inData1);
-  FFTProp := GetFFTPlan(m_fftCount);
-  m_iFFTPlan := GetInverseFFTPlan(m_fftCount);
+  fPeriod:=1/m_tag.tag.GetFreq;
+  if m_fftCount>0 then
+  begin
+    setlength(m_outData, m_fftCount);
+    // кусочек перекрытых данных
+    setlength(m_OverlapBlock, fOverlap);
+    GetMemAlignedArray_cmpx_d(m_fftCount, cmplx_resArray);
+    GetMemAlignedArray_cmpx_d(m_fftCount, m_inData1);
+    FFTProp := GetFFTPlan(m_fftCount);
+    m_iFFTPlan := GetInverseFFTPlan(m_fftCount);
+    setlength(m_func, m_fftCount);
+    evalFltCurve(fspmdx);
+  end;
+  UpdateBlSize;
+end;
+
+procedure cEvalStepAlg.UpdateBlSize;
+begin
   fblSize:=m_outTag.BlockSize;
-  fdt:=fblSize*(1/m_outTag.freq);
-  setlength(m_func, m_fftCount);
-  evalFltCurve(fspmdx);
+  fdt:=fblSize*fPeriod;
 end;
 
 procedure cEvalStepAlg.evalFltCurve(p_spmdx: double);
@@ -352,8 +443,66 @@ begin
       // ЗЕРКАЛИРОВАННЫЙ СПЕКТР
       m_func[m_fftCount - j - 1] := m_func[j];
     end;
+    p1:=p2;
   end;
   pars.destroy;
+end;
+
+function cEvalStepAlg.GetCurveStr: string;
+var
+  I: Integer;
+begin
+  result:='';
+  for I := 0 to length(m_band) - 1 do
+  begin
+    result:=result+floattostr(m_band[i].x)+';'+floattostr(m_band[i].y)+';'
+  end;
+end;
+
+procedure cEvalStepAlg.SetCurveStr(s:string);
+var
+  sub:string;
+  b, first:boolean;
+  p:point2d;
+  i, pCount:integer;
+begin
+  if s='' then exit;
+  
+  b:=true;
+  sub:='';
+  i:=1;
+  pCount:=0;
+  first:=true;
+  setlength(m_band, 100);
+  ZeroMemory(@m_band[0],Length(m_band)*sizeof(point2d));
+  while b do
+  begin
+    if i>Length(s) then
+      break;
+    if s[i]=';' then
+    begin
+      if first then
+      begin
+        p.x:=strtofloatext(sub);
+        first:=false;
+        sub:='';
+      end
+      else
+      begin
+        p.y:=strtofloatext(sub);
+        first:=true;
+        m_band[pCount]:=p;
+        inc(pCount);
+        sub:='';
+      end;
+    end
+    else
+    begin
+      sub:=sub+s[i];
+    end;
+    inc(i);
+  end;
+  SetLength(m_band, pCount);
 end;
 
 { cAlgList }
@@ -459,6 +608,18 @@ begin
   end;
 end;
 
+procedure cAlgList.doLeaveCfg;
+var
+  I: Integer;
+  a:cEvalStepAlg;
+begin
+  for I := 0 to Count - 1 do
+  begin
+    a:=getobj(i);
+    a.doOnLeaveCfg;
+  end;
+end;
+
 procedure cAlgList.doLoad(sender: tobject);
 var
   dir, name, newpath: string;
@@ -491,15 +652,42 @@ begin
       a.m_fftCount := child.readAttributeInteger('numFFT', 32);
       a.m_fftShift := child.readAttributeInteger('OffsetFFT', 32);
       a.m_fftFlt := child.ReaDAttributeBool('UseFFTflt', false);
-      a.m_Threshold := child.ReadAttributeFloat('TrigThreshold', 0);
-      a.m_TrigOffset := child.ReadAttributeFloat('TrigThreshold', 0);
+      a.SetCurveStr(child.ReadAttributeString('Band', ''));
       tagnode := child.FindNode('inTag');
       if tagnode <> nil then
-        LoadTag(tagnode, a.m_tag);
+        urcfunc.LoadTag(tagnode, a.m_tag);
       tagnode := child.FindNode('OutTag');
       if tagnode <> nil then
-        LoadTag(tagnode, a.m_outTag);
+        urcfunc.LoadTag(tagnode, a.m_outTag);
       a.UpdateFFTSize;
+
+      a.m_Threshold := child.ReadAttributeFloat('TrigThreshold', 0);
+      a.m_useScalar := child.ReaDAttributeBool('UseScalarTag', true);
+      tagnode := child.FindNode('TrigTag');
+      if tagnode <> nil then
+      begin
+        LoadTag(tagnode, a.m_outScTag);
+        if a.m_outScTag.name='' then
+        begin
+          a.m_outScTag.name:=a.m_tag.tagname+'_trig';
+          a.m_outScTag.CreateTag;
+        end;
+      end
+      else
+      begin
+        if a.m_useScalar then
+        begin
+          if a.m_outScTag=nil then
+          begin
+            a.m_outScTag:=cScalarTag.Create;
+            a.m_outScTag.fname:=a.m_tag.tagname+'_trig';
+            if a.m_outScTag.t=nil then
+            begin
+              a.m_outScTag.CreateTag;
+            end;
+          end;
+        end;
+      end;
     end;
   end;
   doc.destroy;
@@ -532,10 +720,26 @@ begin
     child.WriteAttributeBool('UseFFTflt', a.m_fftFlt, false);
     child.WriteAttributeFloat('TrigThreshold', a.m_Threshold, 0);
     child.WriteAttributeFloat('TrigThreshold', a.m_TrigOffset, 0);
+    child.WriteAttributeString('Band', a.getCurveStr, '');
     tagnode := child.NodeNew('inTag');
-    saveTag(a.m_tag, tagnode);
+    uRcFunc.saveTag(a.m_tag, tagnode);
     tagnode := child.NodeNew('OutTag');
-    saveTag(a.m_outTag, tagnode);
+    uRcFunc.saveTag(a.m_outTag, tagnode);
+    child.WriteAttributeBool('UseScalarTag', a.m_useScalar);
+    if a.m_useScalar then
+    begin
+      tagnode := child.NodeNew('TrigTag');
+      saveTag(a.m_outScTag, tagnode);
+    end;
+    if tagnode <> nil then
+    begin
+      LoadTag(tagnode, a.m_outScTag);
+      if a.m_outScTag.name='' then
+      begin
+        a.m_outScTag.name:=a.m_tag.tagname+'_trig';
+        a.m_outScTag.CreateTag;
+      end;
+    end;
   end;
   doc.XmlFormat := xfReadable;
   doc.SaveToFile(newpath);
@@ -596,6 +800,97 @@ begin
       result := o;
       exit;
     end;
+  end;
+end;
+
+{ cScalarTag }
+
+procedure saveTag(t: cScalarTag; node: txmlnode);
+begin
+  node.WriteAttributeString('TagName', t.name);
+  node.WriteAttributeInt64('TagID', t.id);
+end;
+
+function LoadTag(node: txmlnode; p_t: cScalarTag):cScalarTag;
+var
+  t: itag;
+  ir: irecorder;
+  id: tagid;
+  refcount: integer;
+begin
+  if p_t = nil then
+  begin
+    result := cScalarTag.create;
+  end
+  else
+  begin
+    result := p_t;
+  end;
+  result.name := node.ReadAttributeString('TagName', '');
+  result.id := node.ReadAttributeInt64('TagID', -1);
+  if result.name <> '' then
+  begin
+    t := getTagByName(result.name);
+    if t <> nil then
+    begin
+      // t.GetTagId(result.tagid)
+      t.GetTagId(result.id);
+    end
+    else
+    begin
+      ir := getIR;
+      t := getTagById(result.id);
+      if t <> nil then
+      begin
+        result.t := t;
+      end;
+    end;
+  end;
+end;
+
+function cScalarTag.CreateTag: itag;
+begin
+  if t=nil then
+  begin
+    t:=createScalar(fname,true);
+  end
+  else
+    result:=t;
+end;
+
+function cScalarTag.Getname: string;
+begin
+  if t <> nil then
+    result := t.GetName
+  else
+    result := fname;
+end;
+
+procedure cScalarTag.setname(s: string);
+var
+  b: boolean;
+  astr: ansistring;
+begin
+  b := false;
+  if Getname <> s then
+  begin
+    if not RStateConfig then
+    begin
+      b := true;
+      ecm;
+    end;
+    astr := s;
+    if t <> nil then
+    begin
+      t.SetName(pansichar(lpcstr(StrToAnsi(s))));
+    end
+    else
+    begin
+      t := getTagByName(s);
+    end;
+    fname := s;
+    if b then
+      lcm;
   end;
 end;
 

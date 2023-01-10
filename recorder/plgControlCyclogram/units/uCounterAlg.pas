@@ -93,7 +93,7 @@ begin
     end;
     fOutTag.m_TagData[I] := fCounter;
   end;
-  fOutTag.tag.PushDataEx(pointer(fOutTag.m_TagData)^, len, 0, time);
+  fOutTag.tag.PushDataEx(@fOutTag.m_TagData[0], len, 0, time);
 end;
 
 procedure cCounterAlg.doGetData;

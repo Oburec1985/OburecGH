@@ -53,6 +53,7 @@ type
     procedure doAddParentList; virtual;
     procedure doSave(path: string); virtual;
     procedure doLoad(path: string); virtual;
+    procedure doLeaveCfg; virtual;
   public
     function ProcessNotify(a_dwCommand: dword; a_dwData: dword): boolean;
       virtual;
@@ -277,6 +278,11 @@ begin
 
 end;
 
+procedure cNonifyProcessor.doLeaveCfg;
+begin
+
+end;
+
 procedure cNonifyProcessor.doLoad(path: string);
 begin
 
@@ -300,9 +306,13 @@ var
 begin
   case a_dwCommand of
     PN_SHOWINFO:
-      begin
-        pMsgInfo := pointer(a_dwData);
-      end;
+    begin
+      pMsgInfo := pointer(a_dwData);
+    end;
+    PN_LEAVERCCONFIG:
+    begin
+      doLeaveCfg;
+    end;
     PN_RCLOADCONFIG:
       begin
         path := getRConfig;

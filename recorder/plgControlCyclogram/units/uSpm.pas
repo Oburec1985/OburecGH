@@ -398,7 +398,7 @@ begin
     m_BlockTimeInd := procBlock;
     if m_outTag.tag<>nil then
     begin
-      m_outTag.tag.PushDataEx(m_rms.p^, AlignBlockLength(m_rms), 0,m_BlockTime[procBlock]);
+      m_outTag.tag.PushDataEx(m_rms.p, AlignBlockLength(m_rms), 0,m_BlockTime[procBlock]);
     end;
     inc(m_ReadyBlockCount);
     CallUpdateDataEvent;

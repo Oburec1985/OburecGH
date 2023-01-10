@@ -198,7 +198,7 @@ begin
   while i<=len-m_InTag.block.GetBlocksSize do
   begin
     p:=@m_OutTag.m_ReadData[i];
-    m_OutTag.tag.PushDataEx(p^, m_InTag.block.GetBlocksSize, 0, m_InTag.m_ReadDataTime+dt);
+    m_OutTag.tag.PushDataEx(p, m_InTag.block.GetBlocksSize, 0, m_InTag.m_ReadDataTime+dt);
     i:=i+m_InTag.block.GetBlocksSize;
     dt:=dt+dt_block;
   end;

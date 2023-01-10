@@ -160,7 +160,7 @@ begin
           if j = length(m_Out.m_TagData) - 1 then
           begin
             j := 0;
-            m_Out.tag.PushDataEx(pointer(m_Out.m_TagData)^, length
+            m_Out.tag.PushDataEx(pointer(m_Out.m_TagData), length
                 (m_Out.m_TagData), 0, m_A.m_ReadDataTime + dt);
             dt := dt + length(m_Out.m_TagData) / m_Out.freq;
             // m_Out.tag.PushData(pointer(m_Out.m_TagData)^, length(m_Out.m_TagData));

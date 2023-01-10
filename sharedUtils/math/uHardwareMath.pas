@@ -10,7 +10,7 @@ interface
 //  обьявлена в FastMM4Options.inc. Если выравнивание по 16 байт делает FastMM то надо включить
 
 uses
-  ucommontypes, complex, Iterative_FFT_sse, recursive_sse2_sse3_d_al_fft;
+  types, math,ucommontypes, complex, Iterative_FFT_sse, recursive_sse2_sse3_d_al_fft;
 
 type
   TDoubleArray = array of double;
@@ -44,12 +44,13 @@ type
     PCount: integer; // Число точек FFT
     inverse:boolean;
   end;
-
   pFFTProp = ^TFFTProp;
 
 function OSEnabledXmmYmm: boolean;
 function IsAVX2supported: boolean;
 
+function tempSUM(const Data: array of Double; first, stop:integer): Extended;
+function fSUM(const Data: array of Double; first, stop:integer): Extended;
 function SUM_SSE_d(const Data: array of double): Extended;overload;
 function SUM_SSE_d(const Data: array of Double; first, stop:integer): Extended;overload;
 // перемножить все числа массива на Scale
@@ -159,6 +160,50 @@ const
   shl4TComplex_d = 4; // {2^shl4TComplex = SizeOf(TComplex)}
 
 implementation
+
+function fSUM(const Data: array of Double; first, stop:integer): Extended;
+asm  // IN: EAX = ptr to Data, EDX = High(Data) = Count - 1
+     // Uses 4 accumulators to minimize read-after-write delays and loop overhead
+     // 5 clocks per loop, 4 items per loop = 1.2 clocks per item
+       FLDZ
+       MOV      ECX, EDX
+       FLD      ST(0)
+       AND      EDX, not 3
+       FLD      ST(0)
+       AND      ECX, 3
+       FLD      ST(0)
+       SHL      EDX, 3      // count * sizeof(Double) = count * 8
+       JMP      @Vector.Pointer[ECX*4]
+@Vector:
+       DD @@1
+       DD @@2
+       DD @@3
+       DD @@4
+@@4:   FADD     qword ptr [EAX+EDX+24]    // 1
+       FXCH     ST(3)                     // 0
+@@3:   FADD     qword ptr [EAX+EDX+16]    // 1
+       FXCH     ST(2)                     // 0
+@@2:   FADD     qword ptr [EAX+EDX+8]     // 1
+       FXCH     ST(1)                     // 0
+@@1:   FADD     qword ptr [EAX+EDX]       // 1
+       FXCH     ST(2)                     // 0
+       SUB      EDX, 32
+       JNS      @@4
+       FADDP    ST(3),ST                  // ST(3) := ST + ST(3); Pop ST
+       FADD                               // ST(1) := ST + ST(1); Pop ST
+       FADD                               // ST(1) := ST + ST(1); Pop ST
+       FWAIT
+end;
+
+function tempSUM(const Data: array of Double; first, stop:integer): Extended;
+var
+  I: Integer;
+  p:array[0..1] of integer;
+begin
+  p[0]:=(stop-first+1)*sizeof(double);
+  p[1]:=integer(@data[first]);
+  result:=sum(TdoubleArray(pointer(p[1])));
+end;
 
 
 procedure GetFFTExpTable(CountFFTPoints:Integer; InverseFFT:Boolean; var res:TCmxArray_d);

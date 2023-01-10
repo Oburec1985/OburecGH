@@ -33,6 +33,7 @@ type
     procedure doAddParentList;override;
     procedure doSave(path: string);override;
     procedure doLoad(path: string);override;
+    procedure doLeaveCfg;override;
   public
     function ProcessBtnClick(pMsgInfo:PCB_MESSAGE): boolean;override;
   end;
@@ -162,6 +163,11 @@ begin
   ecm;
   g_algList.doLoad(nil);
   lcm;
+end;
+
+procedure cEvalStepValNP.doLeaveCfg;
+begin
+  g_algList.doLeaveCfg;
 end;
 
 procedure cEvalStepValNP.doSave(path: string);

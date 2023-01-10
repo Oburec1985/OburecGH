@@ -176,6 +176,7 @@ type
   // путь к текущему замеру
 function GetMeraFile: string;
 procedure saveTag(t: cTag; node: txmlnode);
+// сама по себе функция не создает тег!
 function LoadTag(node: txmlnode; p_t: cTag): cTag;
 procedure saveTagToIni(ifile: tinifile; t: cTag; sect, ident: string);
 function LoadTagIni(ifile: tinifile; sect, ident: string): cTag;
@@ -1085,14 +1086,6 @@ begin
   result := tag.GetEstimate(ESTIMATOR_PEAK);
 end;
 
-function cTag.Gettagname: string;
-begin
-  if ftag <> nil then
-    result := ftag.GetName
-  else
-    result := ftagname;
-end;
-
 function cTag.GetValByTime(time: double; interp: boolean;
   var error: boolean): point2d;
 begin
@@ -1304,6 +1297,14 @@ begin
   begin
     tag := it;
   end;
+end;
+
+function cTag.Gettagname: string;
+begin
+  if ftag <> nil then
+    result := ftag.GetName
+  else
+    result := ftagname;
 end;
 
 procedure cTag.settagname(s: string);

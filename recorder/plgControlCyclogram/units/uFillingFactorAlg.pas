@@ -161,7 +161,7 @@ begin
   end;
   if num <> 0 then
   begin
-    fOutTag.tag.PushDataEx(pointer(fOutTag.m_TagData)^, num, 0, time);
+    fOutTag.tag.PushDataEx(@fOutTag.m_TagData[0], num, 0, time);
     num := 0;
   end;
 end;

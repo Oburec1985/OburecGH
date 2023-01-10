@@ -193,7 +193,7 @@ begin
       inc(blocknum);
     end;
   end;
-  fOutTag.tag.PushDataEx(pointer(fOutDataBuff)^, blocknum, 0, time);
+  fOutTag.tag.PushDataEx(@fOutDataBuff[0], blocknum, 0, time);
 end;
 
 procedure cGrmsAlg.doGetData;

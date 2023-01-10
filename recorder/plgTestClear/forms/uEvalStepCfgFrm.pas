@@ -5,8 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, uTagsListFrame, ExtCtrls, DCL_MYOWN, Spin, uSpin,
-  ubtnlistview, ComCtrls, tags, uComponentservises, uRCFunc,
-  uRcCtrls, Buttons, Grids;
+  ubtnlistview, ComCtrls, tags, uComponentservises, uRCFunc, uCommonTypes,
+  uRcCtrls, Buttons, Grids, math;
 
 type
   TEvalStepCfgFrm = class(TForm)
@@ -42,9 +42,11 @@ type
     LeftPanel: TPanel;
     AlgsLB: TListBox;
     ScalesLV: TBtnListView;
+    FltRG: TRadioGroup;
+    ScalarTagCB: TCheckBox;
+    TrigTypeValCB: TCheckBox;
     procedure FormShow(Sender: TObject);
-    procedure AlgsLBDragOver(Sender, Source: TObject; X, Y: Integer;
-      State: TDragState; var Accept: Boolean);
+    procedure AlgsLBDragOver(Sender, Source: TObject; X, Y: Integer; State: TDragState; var Accept: Boolean);
     procedure AlgsLBDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure FFTSizeSBDownClick(Sender: TObject);
     procedure FFTSizeSBUpClick(Sender: TObject);
@@ -53,7 +55,15 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure AlgsLBClick(Sender: TObject);
     procedure UpdateAlgBtnClick(Sender: TObject);
+    procedure FFTBlockSizeIEChange(Sender: TObject);
+    procedure FltRGClick(Sender: TObject);
+    procedure TrigTypeValCBClick(Sender: TObject);
   private
+    fSel:tobject;
+    ffltCurve:array of point2d;
+  private
+    // отобразить размер блока в норм формате
+    procedure ShowBlockSize(t:double);
     procedure UpdateSel;
     procedure EndMsel;
     procedure ShowAlg(a: TObject);
@@ -114,17 +124,52 @@ begin
       SetMultiSelectComponentString(FFTdxFE, '0');
     end;
   end;
+  FltRGClick(nil);
+end;
+
+procedure TEvalStepCfgFrm.ShowBlockSize(t: double);
+begin
+  if t<0.1 then
+  begin
+    BlockSizeFe.FloatNum:=t*1000;
+    BlockSizeFLabel.Caption:='Размер блока, мс';
+  end
+  else
+  begin
+    BlockSizeFe.FloatNum:=t;
+    BlockSizeFLabel.Caption:='Размер блока, сек';
+  end;
+end;
+
+procedure TEvalStepCfgFrm.TrigTypeValCBClick(Sender: TObject);
+begin
+  if TrigtypeValCB.Checked then
+    TrigtypeValCB.Caption:='Мат. ожидание'
+  else
+    TrigtypeValCB.Caption:='Мгновенное значение';
 end;
 
 procedure TEvalStepCfgFrm.UpdateAlg(a: TObject);
 var
   t: itag;
+  l,j:integer;
 begin
+  l:=Length(ffltCurve);
+
+  if l<>0 then
+  begin
+    setlength(cEvalStepAlg(a).m_band, l);
+    move(ffltCurve[0], cEvalStepAlg(a).m_band[0], l*SizeOf(point2d));
+  end;
+
+  if FFTShiftIE.IntNum>FFTBlockSizeIE.IntNum then
+    FFTShiftIE.IntNum:=FFTBlockSizeIE.IntNum;
   cEvalStepAlg(a).m_fftCount := FFTBlockSizeIE.IntNum;
   cEvalStepAlg(a).m_fftShift := FFTShiftIE.IntNum;
   cEvalStepAlg(a).m_Threshold := ThresholdSE.Value;
   cEvalStepAlg(a).m_TrigOffset := OffsetSE.Value;
   cEvalStepAlg(a).m_fftFlt := FFTCb.Checked;
+  //cEvalStepAlg(a).m_outScTag
   if InChanCB.Text <> '' then
   begin
     t := InChanCB.gettag(InChanCB.ItemIndex);
@@ -134,6 +179,15 @@ begin
       if cEvalStepAlg(a).m_outTag.tag = nil then
       begin
         cEvalStepAlg(a).m_outTag.tag := GenOutTag(cEvalStepAlg(a).m_tag.tagname, cEvalStepAlg(a).m_tag.tag.GetFreq);
+      end;
+      cEvalStepAlg(a).m_useScalar:=ScalarTagCB.Checked;
+      if ScalarTagCB.Checked then
+      begin
+        if cEvalStepAlg(a).m_outScTag.t = nil then
+        begin
+          cEvalStepAlg(a).m_outScTag.name:=cEvalStepAlg(a).m_tag.tagname+'_trig';
+          cEvalStepAlg(a).m_outScTag.CreateTag;
+        end;
       end;
     end;
     cEvalStepAlg(a).UpdateFFTSize;
@@ -256,11 +310,14 @@ var
   I: Integer;
   a: cEvalStepAlg;
 begin
+  fSel:=nil;
   for I := 0 to AlgsLB.Count - 1 do
   begin
     if AlgsLB.Selected[I] then
     begin
       a := cEvalStepAlg(AlgsLB.Items.Objects[I]);
+      if fSel=nil then
+        fSel:=a;
       ShowAlg(a);
     end;
   end;
@@ -271,6 +328,22 @@ procedure TEvalStepCfgFrm.AlgsLBMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   UpdateSel;
+end;
+
+procedure TEvalStepCfgFrm.FFTBlockSizeIEChange(Sender: TObject);
+var
+  t:itag;
+begin
+  if InChanCB.ItemIndex>-1 then
+  begin
+    t := InChanCB.gettag(InChanCB.ItemIndex);
+    if FFTBlockSizeIE.IntNum<>0 then
+      FFTdxFE.FloatNum:=t.GetFreq/FFTBlockSizeIE.IntNum;
+    if FFTBlockSizeIE.IntNum<FFTShiftIE.IntNum then
+      FFTShiftIE.IntNum:=FFTBlockSizeIE.IntNum;
+    ShowBlockSize(FFTBlockSizeIE.IntNum/t.GetFreq);
+    FltRGClick(nil);
+  end;
 end;
 
 procedure TEvalStepCfgFrm.FFTSizeSBDownClick(Sender: TObject);
@@ -310,6 +383,91 @@ begin
       FFTShiftIE.IntNum := FFTShiftIE.IntNum * 2
     else
       FFTShiftIE.IntNum := 2;
+  end;
+end;
+
+procedure TEvalStepCfgFrm.FltRGClick(Sender: TObject);
+var
+  fr, df:double;
+  t:itag;
+  i, ind:integer;
+  li:tlistitem;
+begin
+  fr:=1;
+  if InChanCB.ItemIndex>-1 then
+  begin
+    t := InChanCB.gettag(InChanCB.ItemIndex);
+    fr:=t.GetFreq;
+    df:=t.GetFreq/FFTBlockSizeIE.IntNum;
+  end;
+  SetLength(fFltCurve,3);
+  if FltRG.ItemIndex>-1 then
+  begin
+    case FltRG.ItemIndex of
+      0: // ФВЧ
+      if t=nil then
+      begin
+        fFltCurve[0]:=p2d(0,0);fFltCurve[1]:=p2d(1,1);fFltCurve[2]:=p2d(25000,1);
+      end
+      else
+      begin
+        fFltCurve[0]:=p2d(0,0);fFltCurve[1]:=p2d(dF,1);fFltCurve[2]:=p2d(t.GetFreq/2,1);
+      end;
+      1: // ФНЧ 1/2
+      begin
+        if t<>nil then
+        begin
+          fFltCurve[0]:=p2d(0,1);
+          fFltCurve[1]:=p2d(t.GetFreq/4,1);
+          fFltCurve[2]:=p2d(t.GetFreq/2,0);
+        end;
+      end;
+      2:
+      begin
+        if t<>nil then
+        begin
+          fFltCurve[0]:=p2d(0,1);
+          i:=trunc(10/df);
+          fFltCurve[1]:=p2d(i*df,1);
+          fFltCurve[2]:=p2d(t.GetFreq/2,0);
+        end;
+      end;
+    end
+  end
+  else
+  begin
+    if fSel<>nil then
+    begin
+      setlength(fFltCurve,length(cEvalStepAlg(fSel).m_band));
+      move(cEvalStepAlg(fSel).m_band[0],fFltCurve[0], length(cEvalStepAlg(fSel).m_band)*sizeof(point2d));
+    end;
+  end;
+  // отображаем кривулину
+  if ScalesLV.items.Count<Length(fFltCurve) then
+  begin
+    while ScalesLV.items.Count<Length(fFltCurve) do
+    begin
+      ScalesLV.Items.Add;
+    end;
+  end
+  else
+  begin
+    while ScalesLV.items.Count>Length(fFltCurve) do
+    begin
+      ScalesLV.Items.Delete(0);
+    end;
+  end;
+  for I := 0 to ScalesLV.items.Count - 1 do
+  begin
+    ind:=round((fFltCurve[i].x)/df);
+    li:=ScalesLV.Items[i];
+    ScalesLV.Items[i].Caption:=inttostr(ind);
+    ScalesLV.SetSubItemByColumnName('F',floattostr(fFltCurve[i].x),li);
+    ScalesLV.SetSubItemByColumnName('Scale',floattostr(fFltCurve[i].y),li);
+    if i=ScalesLV.items.Count - 1 then
+    begin
+      LVChange(ScalesLV);
+    end;
   end;
 end;
 
