@@ -130,6 +130,8 @@ end;
 
 procedure destroyFormsRecorderUIThread(compMng: cCompMng);
 begin
+  if true then exit;
+  
   if EvalStepCfgFrm<>nil then
   begin
     EvalStepCfgFrm.free;

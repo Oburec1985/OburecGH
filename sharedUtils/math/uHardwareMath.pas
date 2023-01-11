@@ -198,11 +198,17 @@ end;
 function tempSUM(const Data: array of Double; first, stop:integer): Extended;
 var
   I: Integer;
-  p:array[0..1] of integer;
+  p0,p:pinteger;
+
 begin
-  p[0]:=(stop-first+1)*sizeof(double);
-  p[1]:=integer(@data[first]);
-  result:=sum(TdoubleArray(pointer(p[1])));
+  p:=@data[first];
+  p0:=pinteger(integer(p)-4);
+  i:=p0^; // запоминаем старое значение
+  //p0^:=(stop-first+1)*sizeof(double);
+  p0^:=(stop-first+1);
+  //p[0]:=integer(@p[2]);
+  result:=sum(TdoubleArray(p));
+  p0^:=i; // восстанавливаем старое значение
 end;
 
 

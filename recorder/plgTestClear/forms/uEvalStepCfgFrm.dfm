@@ -3,7 +3,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1072#1089#1095#1077#1090#1072' '#1079#1085#1072#1095#1077#1085#1080#1103' '#1085#1072' '#1087#1077#1088#1077#1093#1086#1076#1085#1086' '#1087#1088#1086#1094#1077#1089#1089#1077
   ClientHeight = 680
-  ClientWidth = 1076
+  ClientWidth = 1108
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,20 +17,18 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
   object BottomPanel: TPanel
     Left = 0
     Top = 624
-    Width = 1076
+    Width = 1108
     Height = 56
     Align = alBottom
     TabOrder = 0
   end
   object RightPanel: TPanel
-    Left = 728
+    Left = 760
     Top = 0
     Width = 348
     Height = 624
     Align = alRight
     TabOrder = 1
-    ExplicitLeft = 770
-    ExplicitHeight = 611
     inline TagsListFrame1: TTagsListFrame
       Left = 1
       Top = 1
@@ -41,12 +39,12 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       ExplicitLeft = 1
       ExplicitTop = 1
       ExplicitWidth = 346
-      ExplicitHeight = 609
+      ExplicitHeight = 622
       inherited FormChannelsGB: TGroupBox
         Width = 346
         Height = 622
         ExplicitWidth = 346
-        ExplicitHeight = 609
+        ExplicitHeight = 622
         inherited ChanNamesPanel: TPanel
           Width = 342
           ExplicitWidth = 342
@@ -63,7 +61,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
           Width = 342
           Height = 491
           ExplicitWidth = 342
-          ExplicitHeight = 478
+          ExplicitHeight = 491
         end
       end
     end
@@ -71,15 +69,12 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
   object MainPanel: TPanel
     Left = 233
     Top = 0
-    Width = 495
+    Width = 527
     Height = 624
     Align = alClient
     TabOrder = 2
-    ExplicitLeft = 234
-    ExplicitWidth = 537
-    ExplicitHeight = 611
     DesignSize = (
-      495
+      527
       624)
     object InChanLabel: TLabel
       Left = 8
@@ -350,12 +345,11 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     object TrigGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 488
+      Width = 520
       Height = 189
       Anchors = [akLeft, akTop, akRight]
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1090#1088#1080#1075#1075#1077#1088#1072
       TabOrder = 6
-      ExplicitWidth = 530
       object ThresholdLabel: TLabel
         Left = 4
         Top = 25
@@ -475,7 +469,6 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     Height = 624
     Align = alLeft
     TabOrder = 3
-    ExplicitHeight = 611
     object AlgsLB: TListBox
       Left = 1
       Top = 1
@@ -525,7 +518,6 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = True
-      ExplicitHeight = 297
     end
   end
   object MeanGB: TGroupBox
@@ -563,7 +555,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       Left = 94
       Top = 50
       Width = 105
-      Height = 22
+      Height = 24
       TabOrder = 1
       Text = '000'
       OnChange = TrigMeanLenIEChange

@@ -52,6 +52,7 @@ type
 
     // использовать скалярный тег
     m_useScalar:boolean;
+    m_outScTag:cScalarTag;
     // 0 - мгновенное; 1 - среднее
     m_TrigType:integer;
     // длина порции для усреднения в точках
@@ -73,6 +74,8 @@ type
     // первый блок не проверяется на пересечение данных
     fFirstBlock:boolean;
   private
+    // сред. ур для расчета триггера
+    fMean,
     // время последнего найденного триггера
     fTrigTime:double;
     ftrig:boolean; // триггер сработал
@@ -99,6 +102,8 @@ type
     function GetCurveStr:string;
     procedure doOnLeaveCfg;
     procedure doOnStart;
+    // попытка найти триггер
+    function FindTrig(var res:boolean):point2d;
     function doEval(intag: cTag; time: double):boolean;
     procedure doGetData;
     function ready: boolean;
@@ -135,6 +140,10 @@ type
 
 function LoadTag(node: txmlnode; p_t: cScalarTag):cScalarTag;
 procedure saveTag(t: cScalarTag; node: txmlnode);
+
+const
+  c_instance = 0;
+  c_Mean = 1;
 
 var
   g_AlgList: cAlgList;
@@ -185,16 +194,84 @@ begin
   end;
 end;
 
+function cEvalStepAlg.FindTrig(var res:boolean):point2d;
+var
+  j,i2, ind, t1i, t2i:integer;
+  v, trigTime, lastTime: double;
+  checkTrig:boolean;
+begin
+  lastTime:=m_outTag.getReadTime(m_outTag.lastindex);
+  //fMean:=tempSUM(m_outTag.m_ReadData,0,m_outTag.lastindex)/(m_outTag.lastindex+1);
+  fMean:=m_outTag.m_ReadData[0];
+  // проверяем сбросится ли триггер на данной порции
+  i2:=0;
+  if ftrig then
+  begin
+    trigTime:=fTrigTime+m_FallTime;
+    if trigTime<m_outTag.m_ReadDataTime then
+    begin
+      ftrig:=false;
+    end
+    else
+    begin
+      if trigTime<m_outTag.getReadTime(m_outTag.lastindex) then
+      begin
+        i2:=trunc((trigTime-m_outTag.m_ReadDataTime)/fperiod);
+        ftrig:=false;
+      end;
+    end;
+  end
+  else
+  begin
+    for j := i2 to m_outTag.lastindex - 1 do
+    begin
+      v:=m_outTag.m_ReadData[j];
+      //  смещение реигстрируемого значения
+      ind:=trunc(m_TrigOffset/fPeriod);
+      t1i:=ind+j;
+      // отклонение по мат. ожиданию
+      if abs(v-fMean)>m_Threshold then
+      begin
+        trigTime:=m_outTag.m_ReadDataTime+j*fPeriod;
+        ftrig:=true;
+        case m_TrigType of
+          c_instance: // мгновенное значение
+          begin
+            // проверяем что нужное значение не ушло в след порцию
+            checkTrig:= (trigTime+m_TrigOffset)<lastTime;
+            fTrigTime:= trigTime+m_TrigOffset;
+            Result.y:= m_outTag.m_ReadData[t1i];
+          end;
+          c_Mean:
+          begin
+            checkTrig:= (trigTime+m_TrigOffset+m_TrigMeanLenI*fPeriod)<lastTime;
+            fTrigTime:= trigTime+m_TrigOffset+(m_TrigMeanLenI*fPeriod/2);
+            Result.y:= tempSUM(m_outTag.m_ReadData, t1i, t1i+m_TrigMeanLenI)/(m_TrigMeanLenI+1);
+          end;
+        end;
+        if checkTrig then
+        begin
+          Result.x:= fTrigTime;
+          res:=true;
+          m_outScTag.t.PushValue(Result.y, Result.x);
+          break; // for j := i2 to m_outTag.lastindex - 1 do
+        end;
+      end;
+    end;
+  end;
+end;
+
 function cEvalStepAlg.doEval(intag: cTag; time: double):boolean;
 var
   // количество готовых блоков входного буфера
   bCount: integer;
-  b, checkTrig: boolean;
-  i1, i2: integer;
+  b, bRes: boolean;
+  i1: integer;
   i, ind: integer;
   //dt,
-  lt, k, v, m, trigTime: double;
+  lt, k, v: double;
   j: Integer;
+  trigPoint:point2d;
 begin
   result:=false;
   bCount := trunc(m_tag.lastindex / m_fftCount);
@@ -270,57 +347,7 @@ begin
       // поиск триггера
       if m_useScalar then
       begin
-        m:=tempSUM(m_outTag.m_ReadData,0,m_outTag.lastindex)/(m_outTag.lastindex+1);
-        // проверяем сбросится ли триггер на данной порции
-        i2:=0;
-        if ftrig then
-        begin
-          trigTime:=fTrigTime+m_FallTime;
-          if trigTime<m_outTag.m_ReadDataTime then
-          begin
-            ftrig:=false;
-          end
-          else
-          begin
-            if trigTime<m_outTag.getReadTime(m_outTag.lastindex) then
-            begin
-              i2:=trunc((trigTime-m_outTag.m_ReadDataTime)/fperiod);
-              ftrig:=false;
-            end;
-          end;
-        end
-        else
-        begin
-          for j := i2 to m_outTag.lastindex - 1 do
-          begin
-            v:=m_outTag.m_ReadData[j];
-            // отклонение по мат ожиданию
-            if abs(v-m)>m_Threshold then
-            begin
-              trigTime:=m_outTag.m_ReadDataTime+j*fPeriod;
-              ftrig:=true;
-              // проверяем что нужное значение не ушло в след порцию
-              case m_TrigType of
-                0:
-                begin
-                  checkTrig:=(trigTime+m_TrigOffset)<m_outTag.getReadTime(m_outTag.lastindex);
-                end;
-                1:
-                begin
-                  checkTrig:=(trigTime+m_TrigOffset+m_TrigMeanLenI*fPeriod)<m_outTag.getReadTime(m_outTag.lastindex);
-                end;
-              end;
-              if checkTrig then
-              begin
-                //  смещение реигстрируемого значения
-                ind:=trunc(m_TrigOffset/fPeriod);
-                fTrigTime:=trigTime+m_TrigOffset;
-                m_outScTag.t.PushValue(m_outTag.m_ReadData[j+ind], trigTime+m_TrigOffset);
-              end;
-              break;
-            end;
-          end;
-        end;
+        trigPoint:=FindTrig(bRes);
       end;
       m_outTag.ResetTagDataTimeInd(fblSize*ind);
       result:=true;
@@ -400,11 +427,18 @@ var
   i, bCount: integer;
   f: double;
 begin
-  if m_fftCount<>0 then
-    fspmdx := m_tag.tag.GetFreq / m_fftCount;
+  if m_tag.tag<>nil then
+  begin
+    f := m_tag.freq;
+    if m_fftCount<>0 then
+    begin
+      fspmdx := m_tag.tag.GetFreq / m_fftCount;
+    end;
+  end
+  else
+    exit;
   // размер перекрытия блоков
   fOverlap := m_fftCount - m_fftShift;
-  f := m_tag.freq;
   fPeriod:=1/m_tag.tag.GetFreq;
   if m_fftCount>0 then
   begin
@@ -486,7 +520,6 @@ var
   i, pCount:integer;
 begin
   if s='' then exit;
-  
   b:=true;
   sub:='';
   i:=1;
@@ -690,10 +723,17 @@ begin
       if tagnode <> nil then
       begin
         LoadTag(tagnode, a.m_outScTag);
-        if a.m_outScTag.name='' then
+        if a.m_useScalar then
         begin
-          a.m_outScTag.name:=a.m_tag.tagname+'_trig';
-          a.m_outScTag.CreateTag;
+          if a.m_outScTag=nil then
+          begin
+            a.m_outScTag:=cScalarTag.Create;
+            a.m_outScTag.name:=a.m_tag.tagname+'_trig';
+            if a.m_outScTag.t=nil then
+            begin
+              a.m_outScTag.CreateTag;
+            end;
+          end;
         end;
       end
       else
@@ -759,16 +799,6 @@ begin
       tagnode := child.NodeNew('TrigTag');
       saveTag(a.m_outScTag, tagnode);
     end;
-    if tagnode <> nil then
-    begin
-      LoadTag(tagnode, a.m_outScTag);
-      if a.m_outScTag.name='' then
-      begin
-        a.m_outScTag.name:=a.m_tag.tagname+'_trig';
-        a.m_outScTag.CreateTag;
-      end;
-    end;
-
   end;
   doc.XmlFormat := xfReadable;
   doc.SaveToFile(newpath);

@@ -103,7 +103,11 @@ begin
   endMultiSelect(BlockSizeFE);
   endMultiSelect(OutChanE);
   endMultiSelect(FsSE);
+  endMultiSelect(FltRG);
   endMultiSelect(FFTdxFE);
+  endMultiSelect(ValTypeRG);
+  endMultiSelect(TrigMeanLenIE);
+  endMultiSelect(ScalarTagCB);
 end;
 
 procedure TEvalStepCfgFrm.ShowAlg(a: TObject);
@@ -115,6 +119,10 @@ begin
   SetMultiSelectComponentString(ThresholdSE, floattostr(cEvalStepAlg(a).m_Threshold));
   SetMultiSelectComponentString(OffsetSE, floattostr(cEvalStepAlg(a).m_TrigOffset));
   SetMultiSelectComponentBool(FFTCb, cEvalStepAlg(a).m_fftFlt);
+  SetMultiSelectItemInd(FltRG, cEvalStepAlg(a).m_fltType);
+  SetMultiSelectComponentBool(ScalarTagCB, cEvalStepAlg(a).m_useScalar);
+  SetMultiSelectItemInd(ValTypeRG, cEvalStepAlg(a).m_TrigType);
+  SetMultiSelectComponentString(TrigMeanLenIE, inttostr(cEvalStepAlg(a).m_TrigMeanLenI));
   t := cEvalStepAlg(a).m_tag;
   if t.tag <> nil then
   begin
@@ -162,8 +170,11 @@ procedure TEvalStepCfgFrm.TrigMeanLenIEChange(Sender: TObject);
 begin
   if fsel<>nil then
   begin
-    if cEvalStepAlg(fSel).m_outTag.freq<>0 then
-      TrigMeanLenFE.Value:=TrigMeanLenIE.IntNum/cEvalStepAlg(fSel).m_outTag.freq;
+    if TrigMeanLenIE.Text<>'' then
+    begin
+      if cEvalStepAlg(fSel).m_outTag.freq<>0 then
+        TrigMeanLenFE.Value:=TrigMeanLenIE.IntNum/cEvalStepAlg(fSel).m_outTag.freq;
+    end;
   end;
 end;
 
@@ -194,33 +205,30 @@ begin
   cEvalStepAlg(a).m_fftCount := FFTBlockSizeIE.IntNum;
   cEvalStepAlg(a).m_fftShift := FFTShiftIE.IntNum;
   cEvalStepAlg(a).m_fftFlt := FFTCb.Checked;
-  //cEvalStepAlg(a).m_outScTag
   cEvalStepAlg(a).m_Threshold := ThresholdSE.Value;
   cEvalStepAlg(a).m_TrigOffset := OffsetSE.Value;
   cEvalStepAlg(a).m_TrigType:=ValTypeRG.ItemIndex;
   cEvalStepAlg(a).m_TrigMeanLenI := TrigMeanLenIE.IntNum;
-  if InChanCB.Text <> '' then
+
+  if AlgsLB.SelCount<2 then
+    cEvalStepAlg(a).m_tag.tag := InChanCB.gettag(InChanCB.ItemIndex);
+  t := cEvalStepAlg(a).m_tag.tag;
+  if t<>nil then
   begin
-    t := InChanCB.gettag(InChanCB.ItemIndex);
-    if t <> nil then
+    if cEvalStepAlg(a).m_outTag.tag = nil then
     begin
-      cEvalStepAlg(a).m_tag.tag := InChanCB.gettag(InChanCB.ItemIndex);
-      if cEvalStepAlg(a).m_outTag.tag = nil then
-      begin
-        cEvalStepAlg(a).m_outTag.tag := GenOutTag(cEvalStepAlg(a).m_tag.tagname, cEvalStepAlg(a).m_tag.tag.GetFreq);
-      end;
-      cEvalStepAlg(a).m_useScalar:=ScalarTagCB.Checked;
-      if ScalarTagCB.Checked then
-      begin
-        if cEvalStepAlg(a).m_outScTag.t = nil then
-        begin
-          cEvalStepAlg(a).m_outScTag.name:=cEvalStepAlg(a).m_tag.tagname+'_trig';
-          cEvalStepAlg(a).m_outScTag.CreateTag;
-        end;
-      end;
+      cEvalStepAlg(a).m_outTag.tag := GenOutTag(cEvalStepAlg(a).m_tag.tagname, cEvalStepAlg(a).m_tag.tag.GetFreq);
     end;
-    cEvalStepAlg(a).UpdateFFTSize;
+    cEvalStepAlg(a).m_useScalar:=ScalarTagCB.Checked;
+    if ScalarTagCB.Checked then
+    begin
+      if cEvalStepAlg(a).m_outScTag=nil then
+        cEvalStepAlg(a).m_outScTag:=cScalarTag.Create;
+      cEvalStepAlg(a).m_outScTag.name:=cEvalStepAlg(a).m_tag.tagname+'_trig';
+      cEvalStepAlg(a).m_outScTag.CreateTag;
+    end;
   end;
+  cEvalStepAlg(a).UpdateFFTSize;
 end;
 
 procedure TEvalStepCfgFrm.AlgsLBClick(Sender: TObject);
@@ -526,6 +534,7 @@ var
   I: Integer;
   a:cEvalStepAlg;
 begin
+  AlgsLB.Clear;
   TagsListFrame1.ShowChannels;
   InChanCB.updateTagsList;
   if g_AlgList<>nil then

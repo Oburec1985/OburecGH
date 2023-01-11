@@ -689,7 +689,7 @@ begin
         end;
       end;
     end;
-    if c is tCombobox then
+    if c is TCombobox then
     begin
       // перв. вхожд в проц
       if tCombobox(c).Tag=0 then
