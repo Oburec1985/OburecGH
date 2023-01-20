@@ -209,6 +209,8 @@
     <File Path="forms\uControlDeskFrm.dfm"/>
     <File Path="forms\uControlEditFrame.pas"/>
     <File Path="forms\uControlEditFrame.dfm"/>
+    <File Path="forms\uEditControlWrnFrm.pas"/>
+    <File Path="forms\uEditControlWrnFrm.dfm"/>
     <File Path="forms\uControlWarnFrm.pas"/>
     <File Path="forms\uControlWarnFrm.dfm"/>
     <File Path="forms\uCounterAlgFrame.pas"/>
@@ -221,8 +223,6 @@
     <File Path="forms\uCyclogramReportFrm.dfm"/>
     <File Path="forms\uDacControlEditFrame.pas"/>
     <File Path="forms\uDacControlEditFrame.dfm"/>
-    <File Path="forms\uEditControlWrnFrm.pas"/>
-    <File Path="forms\uEditControlWrnFrm.dfm"/>
     <File Path="forms\uEditPolarFrm.pas"/>
     <File Path="forms\uEditPolarFrm.dfm"/>
     <File Path="forms\uEditProfileFrm.pas"/>
@@ -283,6 +283,10 @@
     <File Path="forms\uTrigsFrm.dfm"/>
     <File Path="forms\uAlgsSaveFrm.pas"/>
     <File Path="forms\uAlgsSaveFrm.dfm"/>
+    <File Path="forms\uSyncOscillogram.pas"/>
+    <File Path="forms\uSyncOscillogram.dfm"/>
+    <File Path="forms\uSyncScillogramEditFrm.pas"/>
+    <File Path="forms\uSyncScillogramEditFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\uAriphmAlg.pas"/>
     <File Path="units\uBaseAlg.pas"/>
@@ -361,5 +365,9 @@
     <Transaction>2022.09.14 14:59:15.141.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit3.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAlgsSaveFrm.pas</Transaction>
     <Transaction>2022.09.14 14:59:15.141.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAlgsSaveFrm.dfm</Transaction>
     <Transaction>2022.12.29 19:31:03.725.pas,F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\uCompMng.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\units\uCompMng.pas</Transaction>
+    <Transaction>2023.01.19 17:18:17.609.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit3.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSyncOscillogram.pas</Transaction>
+    <Transaction>2023.01.19 17:18:17.609.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSyncOscillogram.dfm</Transaction>
+    <Transaction>2023.01.20 17:30:06.463.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit3.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSyncScillogramEditFrm.pas</Transaction>
+    <Transaction>2023.01.20 17:30:06.463.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSyncScillogramEditFrm.dfm</Transaction>
   </Transactions>
 </BorlandProject>

@@ -2,8 +2,8 @@ object FFTFltFrm: TFFTFltFrm
   Left = 0
   Top = 0
   Caption = 'FFT '#1092#1080#1083#1100#1090#1088
-  ClientHeight = 979
-  ClientWidth = 1681
+  ClientHeight = 694
+  ClientWidth = 1314
   Color = clBtnFace
   Constraints.MinHeight = 316
   Constraints.MinWidth = 791
@@ -17,10 +17,10 @@ object FFTFltFrm: TFFTFltFrm
   PixelsPerInch = 120
   TextHeight = 16
   object Splitter1: TSplitter
-    Left = 1092
+    Left = 489
     Top = 0
-    Width = 7
-    Height = 853
+    Width = 243
+    Height = 568
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -28,16 +28,20 @@ object FFTFltFrm: TFFTFltFrm
     Align = alRight
     Color = clHighlight
     ParentColor = False
+    ExplicitLeft = 856
+    ExplicitHeight = 853
   end
   object ActionPanel: TPanel
     Left = 0
-    Top = 853
-    Width = 1681
+    Top = 568
+    Width = 1314
     Height = 126
     Align = alBottom
     TabOrder = 0
+    ExplicitTop = 853
+    ExplicitWidth = 1681
     DesignSize = (
-      1681
+      1314
       126)
     object ApplyBtn: TButton
       Left = 25
@@ -61,29 +65,32 @@ object FFTFltFrm: TFFTFltFrm
     end
   end
   object RightPanel: TPanel
-    Left = 1099
+    Left = 732
     Top = 0
     Width = 582
-    Height = 853
+    Height = 568
     Align = alRight
     TabOrder = 1
+    ExplicitLeft = 1099
+    ExplicitHeight = 853
     object Splitter2: TSplitter
       Left = 204
       Top = 1
       Width = 7
-      Height = 851
+      Height = 566
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
       Color = clHighlight
       ParentColor = False
+      ExplicitHeight = 851
     end
     object ScalesLV: TBtnListView
       Left = 1
       Top = 1
       Width = 203
-      Height = 851
+      Height = 566
       Align = alLeft
       Columns = <
         item
@@ -108,6 +115,7 @@ object FFTFltFrm: TFFTFltFrm
       ParentFont = False
       TabOrder = 0
       ViewStyle = vsReport
+      OnClick = ScalesLVClick
       OnKeyDown = ScalesLVKeyDown
       BtnCol = 0
       QuoteColumnBtnClick = False
@@ -115,12 +123,13 @@ object FFTFltFrm: TFFTFltFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
+      ExplicitHeight = 851
     end
     object SignalsLV: TBtnListView
       Left = 211
       Top = 1
       Width = 370
-      Height = 851
+      Height = 566
       Align = alClient
       Checkboxes = True
       Columns = <
@@ -153,20 +162,22 @@ object FFTFltFrm: TFFTFltFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
+      ExplicitHeight = 851
     end
   end
   object EditCurvePanel: TPanel
     Left = 0
     Top = 0
     Width = 417
-    Height = 853
+    Height = 568
     Align = alLeft
     Color = clActiveCaption
     ParentBackground = False
     TabOrder = 2
+    ExplicitHeight = 853
     DesignSize = (
       417
-      853)
+      568)
     object F1Label: TLabel
       Left = 3
       Top = 11
@@ -489,8 +500,8 @@ object FFTFltFrm: TFFTFltFrm
   object ScaleCurveChart: cChart
     Left = 417
     Top = 0
-    Width = 675
-    Height = 853
+    Width = 72
+    Height = 568
     Align = alClient
     Caption = 'ScaleCurveChart'
     TabOrder = 3

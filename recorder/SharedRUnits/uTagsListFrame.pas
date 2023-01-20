@@ -47,6 +47,7 @@ var
   li: TListItem;
 begin
   ir := getIR;
+  if ir=nil then exit;
   // обновляем список каналов
   tCount := ir.GetTagsCount;
   TagsLV.Clear;

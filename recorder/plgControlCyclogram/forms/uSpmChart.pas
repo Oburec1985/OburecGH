@@ -197,10 +197,8 @@ const
 const
   c_Pic = 'SPMFRM';
   c_Name = 'Отображение спектра';
-
   c_SpmChart_defXSize = 400;
   c_SpmChart_defYSize = 400;
-
   c_graphtype_spm = 0;
 
   // ctrl+shift+G

@@ -430,6 +430,12 @@
 			<DCCReference Include="..\SharedRUnits\uFrmSync.pas">
 				<Form>FrmSync</Form>
 			</DCCReference>
+			<DCCReference Include="forms\uSyncOscillogram.pas">
+				<Form>SyncOscFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uSyncScillogramEditFrm.pas">
+				<Form>EditSyncOscFrm</Form>
+			</DCCReference>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

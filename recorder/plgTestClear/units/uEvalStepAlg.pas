@@ -688,6 +688,7 @@ begin
   doc := TNativeXml.create(nil);
   doc.XmlFormat := xfReadable;
   doc.LoadFromFile(newpath);
+  if not FileExists(newpath) then exit;
   node := doc.Root;
   node := node.FindNode('EvalStepAlg');
   if node = nil then

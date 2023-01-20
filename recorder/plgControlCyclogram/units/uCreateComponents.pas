@@ -42,6 +42,7 @@ uses
   uGenSignalsFrm,
   uRCFunc,
   uRecBasicFactory,
+  uSyncOscillogram,
   u3dObj,
   iplgmngr,
   recorder,
@@ -469,6 +470,9 @@ var
   np:cNonifyProcessor;
   i:integer;
 begin
+  g_OscFactory := TOscilFact.create;
+  compMng.Add(g_OscFactory);
+
   fact := cControlFactory.create;
   compMng.Add(fact);
   // ”правление базой данных

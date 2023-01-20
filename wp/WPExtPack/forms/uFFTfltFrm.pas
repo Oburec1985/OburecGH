@@ -61,6 +61,7 @@ type
     procedure LoadCfgCBChange(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
     procedure LoadBtnClick(Sender: TObject);
+    procedure ScalesLVClick(Sender: TObject);
   private
     m_oper:TExtFFTflt;
     curv:ctrend;
@@ -405,6 +406,25 @@ begin
     writeln(f, savestr);
   end;
   CloseFile(f);
+end;
+
+procedure TFFTFltFrm.ScalesLVClick(Sender: TObject);
+var
+  // ссылка на данные компанента
+  li,  next :TListItem;
+  str:string;
+  I, ind: Integer;
+begin
+  li:=ScalesLV.Selected;
+  if li<>nil then
+  begin
+    ScalesLV.GetSubItemByColumnName('F', li, str);
+    ind:=pos('..',str);
+    f1se.Value:=StrtoFloatExt(copy(str,1,ind-1));
+    f2se.Value:=StrtoFloatExt(copy(str,ind+2,length(str)-ind-1));
+    ScalesLV.GetSubItemByColumnName('Scale', li, str);
+    ScaleSE.Value:=StrtoFloatExt(str);
+  end;
 end;
 
 procedure TFFTFltFrm.ScalesLVKeyDown(Sender: TObject; var Key: Word;

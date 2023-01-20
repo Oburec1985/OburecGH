@@ -195,7 +195,9 @@ uses
   uBaseAlgBands in 'uBaseAlgBands.pas',
   uAlgsSaveFrm in 'forms\uAlgsSaveFrm.pas' {SaveAlgsFrm},
   Iterative_FFT_sse in '..\..\sharedUtils\math\FFT_койнов\Iterative_FFT_sse.pas',
-  uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync};
+  uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
+  uSyncOscillogram in 'forms\uSyncOscillogram.pas' {SyncOscFrm},
+  uSyncScillogramEditFrm in 'forms\uSyncScillogramEditFrm.pas' {EditSyncOscFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}
@@ -230,7 +232,6 @@ end;
 // ----------------------------Экспортируемые функции}
 // {Ниже описаны и реализованы пять функций, которые должна экспортировать}
 // библиотека plug-in`а для Recorder`а}
-
 // Получение типа объекта, реализованного в библиотеке}
 function GetPluginType: integer; cdecl;
 begin
@@ -249,7 +250,7 @@ begin
   GPluginInstance._AddRef;
 end;
 
-{ Функция удаления plug-in`а. }
+// Функция удаления plug-in`а
 function DestroyPluginClass(piPlg: IRecorderPlugin): integer; cdecl;
 begin
   // Так как объект один и глобальный, то он здесь не удаляется.
@@ -290,15 +291,11 @@ begin
 end;
 
 { ---------------------Объявление экспортируемых процедур---------------------- }
-{ Объявление строковых имен экспортируемых функций }
+// Оъявление строковых имен экспортируемых функций
 exports GetPluginType name 'GetPluginType';
-
 exports CreatePluginClass name 'CreatePluginClass';
-
 exports DestroyPluginClass name 'DestroyPluginClass';
-
 exports GetPluginDescription name 'GetPluginDescription';
-
 exports GetPluginInfo name 'GetPluginInfo';
 
 begin
