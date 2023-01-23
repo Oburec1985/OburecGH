@@ -63,8 +63,6 @@ object EditProfileForm: TEditProfileForm
       showTV = False
       showLegend = True
       selectSize = 5
-      ExplicitLeft = 3
-      ExplicitTop = 125
     end
     object MouseGB: TGroupBox
       Left = 2

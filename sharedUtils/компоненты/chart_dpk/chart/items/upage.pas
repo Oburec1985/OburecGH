@@ -1252,6 +1252,8 @@ procedure cPage.SetTabSpace(rect: TRect);
 var
   p: GLUInt;
 begin
+  if not cchart(chart).initGl then exit;
+
   m_pixelTabSpace := rect;
   m_TabSpace := OffsetRectTofRect(rect);
   glGetIntegerv(gl_Matrix_Mode, @p);

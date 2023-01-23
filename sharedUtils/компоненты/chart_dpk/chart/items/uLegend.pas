@@ -389,10 +389,13 @@ begin
   begin
     if visible then
     begin
-      if cchart(parent).activetab <> nil then
+      if cchart(parent).initGl then
       begin
-        clear;
-        cchart(parent).activetab.EnumGroupMembers(EnumCfgAddObj, self);
+        if cchart(parent).activetab <> nil then
+        begin
+          clear;
+          cchart(parent).activetab.EnumGroupMembers(EnumCfgAddObj, self);
+        end;
       end;
     end;
   end;

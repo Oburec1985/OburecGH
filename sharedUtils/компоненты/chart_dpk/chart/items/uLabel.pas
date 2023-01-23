@@ -560,9 +560,12 @@ begin
   // לאסרעאב רנטפעא
   p := cbasepage(getpage);
   font := GetFont(fontIndex);
-  scale := font.EvalScale(GetFWidth, GetFHeigth, p.getwidth, p.getheight);
-  scale.x := m_addscalex * scale.x;
-  scale.y := m_addscaley * scale.y;
+  if font<>nil then
+  begin
+    scale := font.EvalScale(GetFWidth, GetFHeigth, p.getwidth, p.getheight);
+    scale.x := m_addscalex * scale.x;
+    scale.y := m_addscaley * scale.y;
+  end;
 end;
 
 function cLabel.GetCharIndexByPos(p: point2): tpoint;

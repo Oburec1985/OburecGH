@@ -535,11 +535,11 @@ begin
   BeginPaint(Handle, ps);
   glClearColor(0.9, 0.9, 0.3, 1);
   glClear(GL_COLOR_BUFFER_BIT); // очистка буфера цвета
-  ///if activeTab <> nil then
-  ///begin
-  ///  activeTab.draw;
-  ///end;
-  ///OBJmNG.events.CallAllEvents(e_onDraw);
+  if activeTab <> nil then
+  begin
+    activeTab.draw;
+  end;
+  OBJmNG.events.CallAllEvents(e_onDraw);
   SwapBuffers(dc);
   EndPaint(Handle, ps);
   needPostMessage := true;

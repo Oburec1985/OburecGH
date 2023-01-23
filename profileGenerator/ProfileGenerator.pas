@@ -182,6 +182,7 @@ var
 
   frame:TChartInputFrame;
 begin
+  exit;
   unitscb.ItemIndex:=0;
 
   page:=cpage(cchart1.activePage);
