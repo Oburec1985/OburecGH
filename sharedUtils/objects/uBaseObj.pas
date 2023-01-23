@@ -206,7 +206,7 @@ const
 
 implementation
 uses
-  uBaseObjMng  ;
+  uBaseObjMng;
 
 type
   sList = class(tstringlist)

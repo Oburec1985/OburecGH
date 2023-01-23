@@ -93,6 +93,7 @@ type
   protected
     procedure ExcludeComp(comp: TObject);
   public
+    procedure doUpdateData;virtual;
     constructor create;
     procedure doInit;
     destructor destroy; override;
@@ -182,8 +183,7 @@ type
     // Вызов окна редактирования
     function Edit: boolean; stdcall;
     // События, уведомления, команды
-    function Notify(const dwCommand: DWORD; const dwData: DWORD): boolean;
-      stdcall;
+    function Notify(const dwCommand: DWORD; const dwData: DWORD): boolean; stdcall;
   public
     // ISettingsINI
     // Сохранить настройки
@@ -319,6 +319,11 @@ begin
 end;
 
 procedure cRecBasicFactory.doSetDefSize(var pSize: SIZE);
+begin
+
+end;
+
+procedure cRecBasicFactory.doUpdateData;
 begin
 
 end;

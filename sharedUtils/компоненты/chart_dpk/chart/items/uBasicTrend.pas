@@ -83,6 +83,7 @@ type
     procedure addpoints(p:array of point2; p_count:integer);overload;virtual;
     procedure AddPoints(const a:array of single);overload;virtual;
     procedure AddPoints(const a:array of double);overload;virtual;
+    procedure AddPoints(const a: array of double; p_count:integer);overload;virtual;
     function AddPoint(p:point2):tobject;virtual;
     property drawpoint:boolean read getdrawpoint write setdrawpoint;
     property drawLines:boolean read getDrawLine write setDrawLine;
@@ -565,5 +566,10 @@ begin
   needrecompile:=true;
 end;
 
+
+procedure cBasicTrend.addpoints(const a: array of double; p_count: integer);
+begin
+
+end;
 
 end.

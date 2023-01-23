@@ -30,6 +30,7 @@ uses
   dialogs,
   variants,
   uRCFunc,
+  uRecBasicFactory,
   cfreg;
 
 type
@@ -771,7 +772,9 @@ end;
 function TExtRecorderPack.Notify(const dwCommand: dword;
   const dwData: dword): boolean; stdcall;
 var
+  fact: cRecBasicFactory;
   tags: DynTagsArray;
+  I: Integer;
 begin
   result := ProcessNotify(dwCommand, dwData);
   case dwCommand of
@@ -839,6 +842,11 @@ begin
       end;
     PN_UPDATEDATA:
       begin
+        for I := 0 to m_CompMng.Count - 1 do
+        begin
+          fact:=cRecBasicFactory(m_CompMng.Objects[i]);
+          fact.doUpdateData;
+        end;
         // frmTestSettings.RecorderGotData;
         EList.CallAllEvents(c_RUpdateData);
         result := true;

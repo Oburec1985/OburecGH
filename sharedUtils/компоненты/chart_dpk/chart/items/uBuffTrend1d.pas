@@ -48,6 +48,7 @@ type
     // фактически не добавление точек а замена!!!
     procedure AddPoints(const a: array of single); override;
     procedure AddPoints(const a: array of double); override;
+    procedure AddPoints(const a: array of double; p_count:integer); override;
     property Count: integer read GetCount write SetCount;
     property x0: single read fx0 write setx0;
     property dx: double read fdx write setdx;
@@ -229,6 +230,27 @@ begin
           Setlength(data_r, flength);
         end;
         move(a[0], data_r[0], flength * sizeof(double));
+      end;
+  end;
+  // оновляем границы тренда
+  inherited;
+  needRecompile := true;
+end;
+
+procedure cBuffTrend1d.AddPoints(const a: array of double; p_count:integer);
+var
+  l: integer;
+  i: integer;
+begin
+  case datatype of
+    c_real:
+      begin
+        if flength < p_count then
+        begin
+          flength := p_count;
+          Setlength(data_r, p_count);
+        end;
+        move(a[0], data_r[0], p_count * sizeof(double));
       end;
   end;
   // оновляем границы тренда

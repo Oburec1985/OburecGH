@@ -20,6 +20,7 @@ uses
   uHardwareMath,
   tags,
   uBaseAlgBands,
+  uSyncOscillogramEditFrm,
   uSpm;
 
 type
@@ -29,6 +30,12 @@ type
     t: cTag;
     // ось на которой лежит сигнал
     ax: caxis;
+    axname:string;
+    // линия
+    line:cBuffTrend1d;
+  public
+    constructor create;
+    destructor destroy;
   end;
 
   TSyncOscFrm = class(TRecFrm)
@@ -47,6 +54,8 @@ type
     m_TrigTag: cTag;
     // список сигналов в осциллограмме
     m_signals: tlist;
+  PRIVATE
+    m_time:double;
   protected
     procedure UpdateView;
     procedure FormClick(Sender: TObject);
@@ -55,9 +64,15 @@ type
     procedure DblClick(Sender: TObject);
     procedure doCursorMove(sender:tobject);
     procedure ChartInit(Sender: TObject);
+    procedure UpdateData;
   protected
     procedure WndProc(var Message: TMessage); override;
   public
+    function sCount:integer;
+    function CreateSignal(a:cAxis; t:itag):TOscSignal;overload;
+    function CreateSignal(a:cAxis; tname:string):TOscSignal;overload;
+    function GetSignal(i:integer):TOscSignal;overload;
+    function GetSignal(name:string):TOscSignal;overload;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
     constructor create(Aowner: tcomponent); override;
@@ -91,6 +106,7 @@ type
     procedure SetActiveChart(c: TSyncOscFrm);
     function GetActiveChart: TSyncOscFrm;
   public
+    procedure doUpdateData;override;
     procedure doAfterLoad; override;
     procedure doCursorMove(Sender: TObject);
   public
@@ -102,7 +118,7 @@ type
   end;
 
   function TOscTypeToInt(t:TOscType):integer;
-  function IntToTOscType(i:integer):integer;
+  function IntToTOscType(i:integer):TOscType;
 
 const
   E_CURSMOVE = $00000001;
@@ -159,13 +175,70 @@ begin
   end;
 end;
 
+function TSyncOscFrm.GetSignal(name: string): TOscSignal;
+var
+  I: Integer;
+  s:TOscSignal;
+begin
+  result:=nil;
+  for I := 0 to m_signals.Count - 1 do
+  begin
+    s:=GetSignal(i);
+    if s.t.tagname=name then
+    begin
+      result:=s;
+      exit;
+    end;
+  end;
+end;
+
+function TSyncOscFrm.CreateSignal(a:cAxis; t:itag):TOscSignal;
+var
+  i:integer;
+begin
+  result:=nil;
+  for I := 0 to m_signals.Count - 1 do
+  begin
+    if TOscSignal(m_signals.Items[i]).t.tag=t then
+    begin
+      result:=toscsignal(m_signals.Items[i]);
+      break;
+    end;
+  end;
+  if result=nil then
+  begin
+    result:=TOscSignal.create;
+    Result.t.tag:=t;
+    Result.ax:=a;
+    Result.line:=cBuffTrend1d.create;
+    Result.ax.AddChild(Result.line);
+    m_signals.Add(result);
+  end;
+end;
+
+function TSyncOscFrm.CreateSignal(a:cAxis; tname:string):TOscSignal;
+begin
+  result:=TOscSignal.create;
+  Result.t.tagname:=tname;
+  Result.ax:=a;
+  Result.line:=cBuffTrend1d.create;
+  Result.ax.AddChild(Result.line);
+  m_signals.Add(result);
+end;
+
+
+function TSyncOscFrm.GetSignal(i: integer): TOscSignal;
+begin
+  result:=TOscSignal(m_signals.Items[i]);
+end;
+
 procedure TSyncOscFrm.ChartRBtnClick(Sender: TObject);
 begin
-  // if OscilEditFrm <> nil then
-  // begin
-  // OscilEditFrm.updateTagsList;
-  // OscilEditFrm.EditChart(self);
-  // end;
+  if g_EditSyncOscFrm <> nil then
+  begin
+    g_EditSyncOscFrm.updateTagsList;
+    g_EditSyncOscFrm.SetEditObj(self);
+  end;
 end;
 
 procedure TSyncOscFrm.DblClick(Sender: TObject);
@@ -194,10 +267,13 @@ var
   ax:cdrawobj;
 begin
   p := cpage(m_Chart.activePage);
+  if p=nil then exit;
+
   p.Caption:='Спектр';
   // для рисования после текстовых меток полос
   ax:=cdrawobj(p.getChild('Axises'));
   ax.layer:=1;
+  //p.SetView(p2(0,1),p2(0,1));
   d := p.cursor;
   d.visible := false;
 end;
@@ -207,6 +283,7 @@ begin
   inherited;
   m_signals := tlist.create;
   m_Chart := cchart.create(self);
+  m_Chart.Name:='TSyncOscChart';
   m_Chart.Align := alClient;
   m_Chart.showTV := false;
   m_Chart.showLegend := false;
@@ -216,25 +293,125 @@ begin
   m_Chart.OnInit := ChartInit;
   //m_Chart.OnKeyDown := doKeyDown;
   m_Chart.OnCursorMove := doCursorMove;
+  m_Length:=1;
+  m_type:=tOscil;
+  m_TrigTag:=cTag.create;
 end;
 
 destructor TSyncOscFrm.destroy;
 begin
+  m_TrigTag.destroy;
   FreeAndNil(m_signals);
   FreeAndNil(m_Chart);
   inherited;
 end;
 
 procedure TSyncOscFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  i,c: integer;
+  s: TOscSignal;
+  tname,axname:string;
+  t:itag;
+  a:caxis;
+  p:cpage;
 begin
-  inherited;
-
+  exit;
+  m_Length:=a_pIni.ReadFloat(str, 'Length', 1);
+  m_type:=IntToTOscType(a_pIni.ReadInteger(str, 'type_' + inttostr(i), 0));
+  c:=a_pIni.ReadInteger(str, 'SCount', 0);
+  for i := 0 to c - 1 do
+  begin
+    tname:=a_pIni.ReadString(str, 'sig_' + inttostr(i), '');
+    t:=getTagByName(tname);
+    axname:=a_pIni.ReadString(str, 'axis_' + inttostr(i), '');
+    if m_chart.activePage=nil then
+    begin
+      m_chart.tabs.activeTab.addPage(true);
+    end;
+    a:=caxis(m_chart.activePage.getChild(axname));
+    if a=nil then
+    begin
+      a:=cpage(m_chart.activePage).Newaxis;
+      a.name:=axname;
+    end;
+    if t<>nil then
+    begin
+      s:=CreateSignal(a, t);
+    end
+    else
+    begin
+      s:=CreateSignal(a, tname);
+    end;
+  end;
 end;
 
 procedure TSyncOscFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  i: integer;
+  s: TOscSignal;
 begin
   inherited;
+  a_pIni.WriteFloat(str, 'Length', m_Length);
+  a_pIni.WriteInteger(str, 'type_' + inttostr(i), TOscTypeToInt(m_type));
+  a_pIni.WriteInteger(str, 'SCount', m_signals.Count);
+  for i := 0 to m_signals.Count - 1 do
+  begin
+    s := GetSignal(i);
+    a_pIni.WriteString(str, 'sig_' + inttostr(i), s.t.tagname);
+    a_pIni.WriteString(str, 'axis_' + inttostr(i), s.ax.name);
+  end;
+  if m_TrigTag.tagname<>'' then
+  begin
+    a_pIni.WriteString(str, 'Trig_' + inttostr(i), m_TrigTag.tagname);
+  end;
+end;
 
+function TSyncOscFrm.sCount: integer;
+begin
+  result:=m_signals.count;
+end;
+
+procedure TSyncOscFrm.UpdateData;
+var
+  s:TOscSignal;
+  I: Integer;
+  t:point2d;
+  b:boolean;
+begin
+  b:=false;
+  for I := 0 to m_signals.Count - 1 do
+  begin
+    s:=GetSignal(i);
+    if s.t.UpdateTagData(true) then
+    begin
+      t:=s.t.getPortionTime;
+      if (t.y-t.x)>m_length then
+      begin
+        if t.x>=m_time then
+        begin
+          b:=true;
+        end
+        else
+          b:=false;
+      end
+      else
+      begin
+        b:=false;
+      end;
+      if not b then
+        break;
+    end;
+  end;
+  if b then
+  begin
+    m_time:=m_time+m_length;
+    for I := 0 to m_signals.Count - 1 do
+    begin
+      s:=GetSignal(i);
+      s.line.AddPoints(s.t.m_ReadData);
+      s.t.ResetTagDataTimeInd(s.t.getIndex(m_time));
+    end;
+  end;
 end;
 
 procedure TSyncOscFrm.UpdateView;
@@ -243,7 +420,7 @@ var
 begin
   if RStatePlay then
   begin
-
+    //m_time:=
   end;
   m_Chart.redraw;
 end;
@@ -294,12 +471,9 @@ begin
   removeplgEvent(doChangeRState, c_RC_DoChangeRCState);
   if g_algMng<>nil then
   begin
-    //g_algMng.Events.removeEvent(doChangeRState, e_OnSetAlgProperties);
-    //g_algMng.Events.removeEvent(doChangeCfg, E_OnChangeCfg);
+
   end;
 end;
-
-
 
 procedure TOscilFact.doAfterLoad;
 begin
@@ -315,7 +489,6 @@ begin
   for I := 0 to Count - 1 do
   begin
     sChart:=TSyncOscFrm(getfrm(i));
-
   end;
 end;
 
@@ -326,7 +499,6 @@ var
   d: cDoubleCursor;
   ax:cdrawobj;
   a:cbaseobj;
-
   sChart:TSyncOscFrm;
 begin
   for I := 0 to Count - 1 do
@@ -337,6 +509,7 @@ end;
 
 procedure TOscilFact.doChangeRState(Sender: TObject);
 begin
+  exit;
   case GetRCStateChange of
     RSt_Init:
     begin
@@ -394,7 +567,6 @@ end;
 procedure TOscilFact.doDestroyForms;
 begin
   inherited;
-
 end;
 
 procedure TOscilFact.doSetDefSize(var pSize: SIZE);
@@ -405,8 +577,36 @@ begin
 end;
 
 procedure TOscilFact.doStart;
+var
+  I: Integer;
+  frm:TSyncOscFrm;
+  j: Integer;
+  s:TOscSignal;
 begin
+  for I := 0 to count - 1 do
+  begin
+    frm:=TSyncOscFrm(GetFrm(i));
+    for j := 0 to frm.m_signals.Count - 1 do
+    begin
+      s:=frm.GetSignal(j);
+      s.t.doOnStart;
+    end;
+    if frm.m_TrigTag.tag<>nil then
+      frm.m_TrigTag.doOnStart;
+  end;
+end;
 
+procedure TOscilFact.doUpdateData;
+var
+  s:TOscSignal;
+  j:integer;
+  frm:TSyncOscFrm;
+begin
+  for j := 0 to count - 1 do
+  begin
+    frm:=TSyncOscFrm(GetFrm(j));
+    frm.UpdateData;
+  end;
 end;
 
 function TOscilFact.GetActiveChart: TSyncOscFrm;
@@ -420,7 +620,6 @@ begin
 end;
 
 { ISpmFrm }
-
 procedure IOscilFrm.doClose;
 begin
   inherited;
@@ -440,6 +639,18 @@ end;
 function IOscilFrm.doRepaint: boolean;
 begin
   TSyncOscFrm(m_pMasterWnd).UpdateView;
+end;
+
+{ TOscSignal }
+constructor TOscSignal.create;
+begin
+  t:=cTag.create;
+end;
+
+destructor TOscSignal.destroy;
+begin
+  t.destroy;
+  t:=nil;
 end;
 
 end.

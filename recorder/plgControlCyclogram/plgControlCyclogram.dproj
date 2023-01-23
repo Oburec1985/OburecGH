@@ -433,7 +433,7 @@
 			<DCCReference Include="forms\uSyncOscillogram.pas">
 				<Form>SyncOscFrm</Form>
 			</DCCReference>
-			<DCCReference Include="forms\uSyncScillogramEditFrm.pas">
+			<DCCReference Include="forms\uSyncOscillogramEditFrm.pas">
 				<Form>EditSyncOscFrm</Form>
 			</DCCReference>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>

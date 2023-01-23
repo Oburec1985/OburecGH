@@ -252,6 +252,7 @@ procedure cBasePage.SetTabSpace(rect:trect);
 var
   p:GLUInt;
 begin
+  exit;
   m_pixelTabSpace:=rect;
   //m_TabSpace:=OffsetRectTofRect(rect);
   glGetIntegerv(gl_Matrix_Mode,@p);

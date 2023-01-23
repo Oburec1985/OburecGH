@@ -25,7 +25,7 @@ uses classes, stdctrls, controls, messages, windows, types, ExtCtrls, ComCtrls,
   uComponentServises,
   uDrawObjMng,
   uEventTypes,
-  //uShader,
+  // uShader,
   uConfigFile3d,
   uBasePage,
   jcldebug;
@@ -64,16 +64,16 @@ type
     // путь к папке с ресурсами
     path: string;
     configfile: cCfgFile;
-    //m_ShaderMng: cShaderManager;
+    // m_ShaderMng: cShaderManager;
     initGl: boolean;
     // используется framlistener-ами например при двойном клике по метке текста.
     // после взвода отключается при выходе из wndProc
-    fDisableInheritedWndProc:boolean;
-    fDisabledMsg:integer;
+    fDisableInheritedWndProc: boolean;
+    fDisabledMsg: integer;
   protected
     fselectObj: cdrawobj;
     // разрешать таскать границы страниц
-    fAllowEditPages:boolean;
+    fAllowEditPages: boolean;
     // размер выделяющей области при клике
     // (в координатах чарта(пересчитывается из пиксельного размера))
     fselectSize: integer;
@@ -92,7 +92,7 @@ type
   protected
     fOnMovePoint: TDoubleDataEvent;
     fOnDesroyObj: tNotifyEvent;
-    fOnObjEndDrag:tnotifyevent;
+    fOnObjEndDrag: tNotifyEvent;
     fOnMouseMove: tNotifyEvent;
     // подменяет fOnEdit
     fOnRightBtnClick: tNotifyEvent;
@@ -114,7 +114,7 @@ type
     // вызывается при редактировании объекта
     fOnEdit: tNotifyEvent;
     fOnCursorMove: tNotifyEvent;
-    fOnSelectObj:tNotifyEvent;
+    fOnSelectObj: tNotifyEvent;
   protected
     procedure doOnCursorMove(sender: tobject);
     // событие происходит
@@ -145,7 +145,7 @@ type
     procedure updateTV;
     procedure doOnDeleteObj(sender: tobject);
   public
-    procedure doOnInsertPoint(data:tobject; subdata:tobject);
+    procedure doOnInsertPoint(data: tobject; subdata: tobject);
   protected
     procedure setpath(p_path: string);
     procedure setselectObj(obj: cdrawobj);
@@ -194,20 +194,23 @@ type
     // перерисовывает окно послыая сообщение wm_paint
     procedure redraw;
     function getcolor(i: integer): point3;
-    procedure doSelectObj(sender:tobject);
+    procedure doSelectObj(sender: tobject);
   published
     // события
-    property OnRightMBtnClick: tNotifyEvent read fOnMouseMove write fOnMouseMove;
+    property OnRightMBtnClick
+      : tNotifyEvent read fOnMouseMove write fOnMouseMove;
     property OnKeyDown;
     property OnObjEndDrag: tNotifyEvent read fOnObjEndDrag write fOnObjEndDrag;
     property OnMouseMove: tNotifyEvent read fOnMouseMove write fOnMouseMove;
     property OnDestroyObj: tNotifyEvent read fOnDesroyObj write fOnDesroyObj;
-    property OnRBtnClick: tNotifyEvent read fOnRightBtnClick write fOnRightBtnClick;
+    property OnRBtnClick: tNotifyEvent read fOnRightBtnClick write
+      fOnRightBtnClick;
     property OnMovePoint: TDoubleDataEvent read fOnMovePoint write fOnMovePoint;
     // происходит при добавлении точки к тренду. первый параметр - тренд (cTrend),
     // второй - точка cBeziePoint
     property OnAddPoint: TDoubleDataEvent read fOnAddPoint write fOnAddPoint;
-    property OnInsertPoint: TDoubleDataEvent read fOnInsertPoint write fOnInsertPoint;
+    property OnInsertPoint
+      : TDoubleDataEvent read fOnInsertPoint write fOnInsertPoint;
     // происходит при выделении точки
     property OnSelectPoint
       : tNotifyEvent read fOnSelectPoint write fOnSelectPoint;
@@ -222,7 +225,8 @@ type
     property onbeforeedit: tNotifyEvent read fbeforeedit write fbeforeedit;
     property onafteredit: tNotifyEvent read fafteredit write fafteredit;
 
-    property allowEditPages: boolean read getAllowEditPages write setAllowEditPages;
+    property allowEditPages: boolean read getAllowEditPages write
+      setAllowEditPages;
     property imagelist: timagelist read getimagelist write setimagelist;
     property Resources: string read path write setpath;
     property showTV: boolean read getShowTV write setShowTV;
@@ -230,6 +234,8 @@ type
     property selectSize: integer read fselectSize write fselectSize;
   end;
 
+var
+  g_initGL:boolean = false;
 const
   // рисовать селектирующий прямойгольник
   c_drawSelRect = $000001;
@@ -242,65 +248,26 @@ implementation
 uses
   uEditMenuChartForm, dglopengl, Forms;
 
-{
-  function SysMsgProc(code : integer; wParam : word; lParam : longint) : longint; //stdcall;
-  var
-  wnd:cardinal;
-  begin
-  //Передаем сообщение другим ловушкам в системе
-  CallNextHookEx(sysHook, Code, wParam, lParam);
-  //Проверяем сообщение
-  if code = HC_ACTION then
-  begin
-  //Получаем идентификатор окна, сгенерировавшего сообщение
-  Wnd := TMsg(Pointer(lParam)^).hwnd;
-  //if wnd=Handle then
-  //begin
-  showmessage('Hook');
-  //end;
-  end;
-  end;
-
-  //Процедура запуска
-  procedure cchart.RunStopHook(State:Boolean);
-  begin
-  //Если State = true, то...
-  if State=true then
-  begin
-  // 1- тип сообщений; callback, идентификатор приложения; идентификатор потока
-  hook := SetWindowsHookEx(WH_GETMESSAGE,@SysMsgProc, HInstance, 0);
-  sysHook:=hook;
-  end
-  else
-  begin
-  //Отключить ловушку
-  UnhookWindowsHookEx(hook) ;
-  hook := 0;
-  end;
-  end; }
-
 // ==========================Получение Gl контекста======================
 procedure cChart.GetGlContext(H: Hwnd);
 var
   nPixelFormat: integer;
   pfd: TPixelFormatDescriptor;
+  p: cpage;
 begin
-  InitOpenGL('opengl32.dll', 'glu32.dll');
+  if not g_initGL then
+    g_initGL:=InitOpenGL('opengl32.dll', 'glu32.dll');
   dc := GetDC(Handle);
 
   hrc := CreateRenderingContext(dc, [opDoubleBuffered], 32, 24, 8, 0, 0, 0);
   ActivateRenderingContext(dc, hrc, true);
 
-  // ---------Установка формата пикселя
-  { FillChar(pfd, SizeOf(pfd), 0);
-    pfd.dwFlags := PFD_DRAW_TO_WINDOW or PFD_SUPPORT_OPENGL or
-    PFD_DOUBLEBUFFER or PFD_GENERIC_ACCELERATED;
-    nPixelFormat := ChoosePixelFormat(DC, @pfd);
-    SetPixelFormat(DC, nPixelFormat, @pfd);
-    //--------GetGlContext-----------------------------------
-    hrc := wglCreateContext(DC); }
-
   wglMakeCurrent(dc, hrc);
+
+  p := cpage(activePage);
+  if p <> nil then
+    p.SetPointSize(5);
+
   initGl := true;
 end;
 
@@ -321,7 +288,7 @@ end;
 // Войти в настройку движка
 procedure cChart.CfgTVChange(sender: tobject; Node: TTreeNode);
 begin
-  selected := cdrawobj(Node.Data);
+  selected := cdrawobj(Node.data);
 end;
 
 Constructor cChart.Create(AOwner: TComponent);
@@ -344,7 +311,7 @@ begin
   tv.Parent := self;
   tv.Align := alleft;
   tv.Width := 200;
-  tv.OnClick:=doTVClick;
+  tv.OnClick := doTVClick;
   tv.OnChange := CfgTVChange;
   tv.OnMouseUp := TVMouseUp;
   // создание легенды
@@ -355,7 +322,6 @@ begin
   initGl := FALSE;
 
   Parent := TWinControl(AOwner);
-
   Width := 400;
   Height := 400;
   top := 10;
@@ -364,6 +330,16 @@ begin
   EditMenuChartForm := tEditMenuChartForm.Create(nil);
   tEditMenuChartForm(EditMenuChartForm).linc(self);
   selected := nil;
+
+  // Перенесено из CreateStructs 23.01.23
+  tabs := cPageMngList.Create;
+  OBJmNG.Add(tabs);
+  tabs.chart := self;
+
+  tabs.activeTab:=tabs.addTab;
+  tabs.activetab.lincchart(self);
+
+  cpage(tabs.activetab.addpage(true)); ///
 
   debugMode := FALSE;
 end;
@@ -376,19 +352,19 @@ begin
     deletecontext;
   end;
   initGl := FALSE;
-  //if m_ShaderMng <> nil then
-  //begin
-  //  m_ShaderMng.destroy;
-    if configfile <> nil then
-    begin
-      configfile.destroy;
-    end;
-  //end;
+  // if m_ShaderMng <> nil then
+  // begin
+  // m_ShaderMng.destroy;
+  if configfile <> nil then
+  begin
+    configfile.destroy;
+  end;
+  // end;
   tv.destroy;
   tv := nil;
 
-  //if Owner = nil then
-  if legend<>nil then
+  // if Owner = nil then
+  if legend <> nil then
     legend.destroy;
   legend := nil;
 
@@ -396,13 +372,11 @@ begin
   OBJmNG.destroy;
   OBJmNG := nil;
 
-
-
   EditMenuChartForm.destroy;
   EditMenuChartForm := nil;
 
   DeleteCriticalSection(cs);
-  //showmessage('delChart');
+  // showmessage('delChart');
   inherited;
 end;
 
@@ -426,10 +400,8 @@ end;
 procedure cChart.CreateEngStructs;
 begin
   OBJmNG.initfonts;
-  tabs := cPageMngList.Create;
-  OBJmNG.Add(tabs);
-  tabs.chart := self;
-  tabs.LincChart(self);
+  // нельзя переносить до инициации контекста! в Create
+  //tabs.LincChart(self);
   // создаем список оконных процедур
   frList := cFrameList.Create(self);
   CreateFrameListeners;
@@ -503,9 +475,10 @@ begin
               mouse.strafe := p2(p.X - mouse.pos.X, p.Y - mouse.pos.Y);
               mouse.pos := p2(p.X, p.Y);
 
-              p_ := cpage(page).Point2ToTrend
-                (mouse.pos, cpage(page).activeAxis);
-              mouse.activeAxisstrafe := p2d(p_.X - mouse.activeAxisPos.X, p_.Y - mouse.activeAxisPos.Y);
+              p_ := cpage(page).Point2ToTrend(mouse.pos,
+                cpage(page).activeAxis);
+              mouse.activeAxisstrafe := p2d(p_.X - mouse.activeAxisPos.X,
+                p_.Y - mouse.activeAxisPos.Y);
               mouse.activeAxisPos := p_;
             end;
           end;
@@ -529,8 +502,6 @@ begin
     wm_lbuttonup:
       begin
         mouse.mousedown := FALSE;
-        // mouse.DragBegginPos.x:=-1;
-        // mouse.DragBegginPos.y:=-1;
       end;
   end;
 end;
@@ -562,17 +533,16 @@ begin
   if wglGetCurrentContext <> hrc then
     wglMakeCurrent(dc, hrc);
   BeginPaint(Handle, ps);
-  glClearColor(0.5, 0.5, 0.5, 1);
+  glClearColor(0.9, 0.9, 0.3, 1);
   glClear(GL_COLOR_BUFFER_BIT); // очистка буфера цвета
-  if activeTab <> nil then
-  begin
-    activeTab.draw;
-  end;
-  OBJmNG.events.CallAllEvents(e_onDraw);
+  ///if activeTab <> nil then
+  ///begin
+  ///  activeTab.draw;
+  ///end;
+  ///OBJmNG.events.CallAllEvents(e_onDraw);
   SwapBuffers(dc);
   EndPaint(Handle, ps);
   needPostMessage := true;
-
   // вероятно не коректно так делать (скорее надо вызывать в wm_size)
   // wglMakeCurrent(0,0);
 end;
@@ -601,23 +571,23 @@ begin
   // отрисовка окна
   case message.Msg of
     CM_EXIT:
-      begin
+    begin
 
-      end;
+    end;
     WM_KEYDown:
-      begin
-        //cpage(activePage).caption:='k_down';
-      end;
+    begin
+      // cpage(activePage).caption:='k_down';
+    end;
     WM_KEYup:
-      begin
-        // cpage(activePage).caption:='k_Up';
-      end;
+    begin
+      // cpage(activePage).caption:='k_Up';
+    end;
     WM_PAINT:
-      begin
-        renderscene;
-        if Assigned(fOnDraw) then
-          fOnDraw(self);
-      end;
+    begin
+      renderscene;
+      if Assigned(fOnDraw) then
+        fOnDraw(self);
+    end;
     wm_size:
       begin
         initscene;
@@ -655,14 +625,14 @@ begin
     end
     else
     begin
-      if fDisabledMsg<>Message.Msg then
+      if fDisabledMsg <> Message.Msg then
       begin
         inherited;
       end
       else
       begin
-        fDisableInheritedWndProc:=false;
-        fDisabledMsg:=0;
+        fDisableInheritedWndProc := FALSE;
+        fDisabledMsg := 0;
       end;
     end;
   end;
@@ -701,7 +671,8 @@ end;
 
 procedure cChart.lincEvents;
 begin
-  OBJmNG.events.AddEvent('ChartOnCursorMove', e_OnMoveCursor+e_OnMoveCursor2, doOnCursorMove);
+  OBJmNG.events.AddEvent('ChartOnCursorMove', e_OnMoveCursor + e_OnMoveCursor2,
+    doOnCursorMove);
   OBJmNG.events.AddEvent('OnMouseMove', E_OnMouseMove, doOnMouseMove);
   // происходит при обновлении структуры компонента
   OBJmNG.events.AddEvent('OnCfgUpdate', e_onLincParent + E_OnEngUpdateList,
@@ -730,12 +701,12 @@ end;
 
 procedure cChart.setAllowEditPages(b: boolean);
 begin
-  fAllowEditPages:=b;
+  fAllowEditPages := b;
 end;
 
 function cChart.getAllowEditPages: boolean;
 begin
-  result:=fAllowEditPages;
+  result := fAllowEditPages;
 end;
 
 function cChart.getActivePageMng: cPageMng;
@@ -881,9 +852,9 @@ end;
 
 procedure cChart.doTVClick(sender: tobject);
 begin
-  if tv.Selected<>nil then
+  if tv.selected <> nil then
   begin
-    selected := cdrawobj(tv.Selected.data);
+    selected := cdrawobj(tv.selected.data);
   end;
 end;
 
@@ -951,8 +922,8 @@ begin
   bmp.Canvas.FillRect(BoundsRect);
   canva.lock;
   bmp.Canvas.lock;
-  bmp.Canvas.CopyRect(Rect(0, 0, Width, Height), canva, Rect
-      (0, 0, Width, Height));
+  bmp.Canvas.CopyRect(Rect(0, 0, Width, Height), canva,
+    Rect(0, 0, Width, Height));
   canva.unlock;
   bmp.Canvas.unlock;
   bmp.SaveToFile(filename);
@@ -997,7 +968,7 @@ begin
   DeleteDC(hDestDC);
 end;
 
-procedure cChart.doOnInsertPoint(data:tobject; subdata:tobject);
+procedure cChart.doOnInsertPoint(data: tobject; subdata: tobject);
 begin
   if Assigned(fOnInsertPoint) then
   begin
@@ -1052,8 +1023,8 @@ begin
       activePage := cpage(obj)
     else
     begin
-      //activePage := cpage(obj.GetParentByClassName('cPage'));
-      activePage := cbasePage(obj.getCarrierPage);
+      // activePage := cpage(obj.GetParentByClassName('cPage'));
+      activePage := cbasepage(obj.getCarrierPage);
     end;
   end;
   doSelectObj(obj);
@@ -1076,31 +1047,31 @@ end;
 
 procedure cChart.setpath(p_path: string);
 var
-  //shader: cshader;
+  // shader: cshader;
   lpath, shadername: string;
 
 begin
   path := p_path;
   if initGl then
   begin
-    {if m_ShaderMng = nil then
-    begin
+    { if m_ShaderMng = nil then
+      begin
       if fileexists(path) then
       begin
-        configfile := cCfgFile.Create(path);
-        m_ShaderMng := cShaderManager.Create;
-        shadername := configfile.findShaderFile('1dLine');
-        if shadername <> '' then
-        begin
-          lpath := extractfiledir(shadername);
-          shadername := extractfilename(shadername);
-          if shadername[length(shadername)] = '*' then
-            setlength(shadername, length(shadername) - 2);
-          shader := cshader.Create(lpath, shadername);
-          m_ShaderMng.Add(shader);
-        end;
+      configfile := cCfgFile.Create(path);
+      m_ShaderMng := cShaderManager.Create;
+      shadername := configfile.findShaderFile('1dLine');
+      if shadername <> '' then
+      begin
+      lpath := extractfiledir(shadername);
+      shadername := extractfilename(shadername);
+      if shadername[length(shadername)] = '*' then
+      setlength(shadername, length(shadername) - 2);
+      shader := cshader.Create(lpath, shadername);
+      m_ShaderMng.Add(shader);
       end;
-    end;}
+      end;
+      end; }
   end;
 end;
 

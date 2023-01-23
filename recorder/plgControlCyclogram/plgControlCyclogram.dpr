@@ -1,4 +1,4 @@
- library plgControlCyclogram;
+library plgControlCyclogram;
 
 uses
   u2dMath,
@@ -197,7 +197,7 @@ uses
   Iterative_FFT_sse in '..\..\sharedUtils\math\FFT_койнов\Iterative_FFT_sse.pas',
   uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
   uSyncOscillogram in 'forms\uSyncOscillogram.pas' {SyncOscFrm},
-  uSyncScillogramEditFrm in 'forms\uSyncScillogramEditFrm.pas' {EditSyncOscFrm};
+  uSyncOscillogramEditFrm in 'forms\uSyncOscillogramEditFrm.pas' {EditSyncOscFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

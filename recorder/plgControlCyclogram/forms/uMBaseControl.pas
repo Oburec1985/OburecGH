@@ -1452,7 +1452,8 @@ begin
     'MBaseSetPropertiesNotify', 101);
   BaseFolderEdit.text := a_pIni.ReadString(section, 'BaseFolder', '');
 
-  m_base.InitBaseFolder(BaseFolderEdit.text);
+  if  BaseFolderEdit.text<>'' then
+    m_base.InitBaseFolder(BaseFolderEdit.text);
 
   FillObjectsCB;
   lstr := a_pIni.ReadString(section, 'ObjName', '');

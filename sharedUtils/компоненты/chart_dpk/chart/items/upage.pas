@@ -1170,6 +1170,7 @@ procedure cPage.ChangeSize;
 var
   ps: PaintStruct;
 begin
+
   if parent <> nil then
   begin
     bound := getClientBound;
@@ -1210,7 +1211,6 @@ begin
   BorderColor := p3(0.8, 0.8, 0.8);
 
   cfg.GridColor := gray;
-  SetPointSize(5);
 
   imageindex := c_page_img;
 

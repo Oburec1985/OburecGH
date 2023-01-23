@@ -50,6 +50,7 @@ uses
   uConfirmDlg,
   uEditPropertiesFrm,
   uAlgsSaveFrm,
+  uSyncOscillogramEditFrm,
   uMBaseControl;
 
 type
@@ -88,6 +89,7 @@ procedure destroyEngine;
 //     Если удаляем то через разделитель ";" идут имена свойств
 //    Operation: string;
 //  end;
+
 procedure sendMDBNotifyMessage(notify: TMBaseNotify);
 // получить путь к текущему испытанию
 function getMDBTestPath:lpcstr;
@@ -307,13 +309,20 @@ begin
     GenSignalsEditFrm.Show;
   GenSignalsEditFrm.close;
 
-
   BandsFrm:=TBandsFrm.Create(nil);
   if show then
     BandsFrm.Show;
   BandsFrm.close;
   if g_algMng<>nil then
     BandsFrm.LinkBands(g_algMng.m_bands, g_algMng.m_places, g_algMng.m_TagBandPairList);
+
+  if g_algMng<>nil then
+  begin
+    g_EditSyncOscFrm:=TEditSyncOscFrm.Create(nil);
+    if show then
+      g_EditSyncOscFrm.Show;
+    g_EditSyncOscFrm.close;
+  end;
 
   if g_algMng<>NIL then
   begin
@@ -327,7 +336,6 @@ begin
     if show then
       addAlgFrm.Show;
     addAlgFrm.close;
-
     g_SaveAlgsFrm:=TSaveAlgsFrm.Create(nil);
   end;
   g_CreateFrms:=true;
@@ -392,6 +400,7 @@ begin
     RcClientFrm.destroy;
     RcClientFrm:=nil;
   end;
+
   if AlgFrm<>nil then
   begin
     AlgFrm.Destroy;

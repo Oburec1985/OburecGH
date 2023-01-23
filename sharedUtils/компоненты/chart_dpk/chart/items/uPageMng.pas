@@ -286,13 +286,18 @@ begin
 end;
 
 procedure cPageMngList.LincChart(p_chart:tcomponent);
+var
+  p:cpage;
 begin
   chart:=p_chart;
   if childcount=0 then
   begin
     factivetab:=addTab;
-    factivetab.lincchart(chart);
-    factivetab.activePage:=factivetab.addpage(true);
+    factivetab.lincchart(p_chart);
+    p:=cpage(factivetab.addpage(true));
+  end;
+  begin
+    p:=cpage(factivetab.addpage(true));
     factivetab.events:=events;
   end;
 end;
