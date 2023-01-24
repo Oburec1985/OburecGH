@@ -86,6 +86,7 @@
     <File Path="..\..\sharedUtils\utils\lists\uEventTypes.pas"/>
     <File Path="..\..\sharedUtils\utils\lists\uQueue.pas"/>
     <File Path="..\..\sharedUtils\utils\lists\usetlist.pas"/>
+    <File Path="..\..\sharedUtils\utils\lists\uQueue2.pas"/>
     <File Path="..\..\sharedUtils\utils\PathUtils"/>
     <File Path="..\..\sharedUtils\utils\PathUtils\PathUtils.pas"/>
     <File Path="..\..\sharedUtils\utils\reports"/>
@@ -195,6 +196,8 @@
     <File Path="forms\uAlgFrame.dfm"/>
     <File Path="forms\uAlgFrm.pas"/>
     <File Path="forms\uAlgFrm.dfm"/>
+    <File Path="forms\uAlgsSaveFrm.pas"/>
+    <File Path="forms\uAlgsSaveFrm.dfm"/>
     <File Path="forms\uAriphmAlgFrame.pas"/>
     <File Path="forms\uAriphmAlgFrame.dfm"/>
     <File Path="forms\uAutoPropsFrm.pas"/>
@@ -209,8 +212,6 @@
     <File Path="forms\uControlDeskFrm.dfm"/>
     <File Path="forms\uControlEditFrame.pas"/>
     <File Path="forms\uControlEditFrame.dfm"/>
-    <File Path="forms\uEditControlWrnFrm.pas"/>
-    <File Path="forms\uEditControlWrnFrm.dfm"/>
     <File Path="forms\uControlWarnFrm.pas"/>
     <File Path="forms\uControlWarnFrm.dfm"/>
     <File Path="forms\uCounterAlgFrame.pas"/>
@@ -223,6 +224,8 @@
     <File Path="forms\uCyclogramReportFrm.dfm"/>
     <File Path="forms\uDacControlEditFrame.pas"/>
     <File Path="forms\uDacControlEditFrame.dfm"/>
+    <File Path="forms\uEditControlWrnFrm.pas"/>
+    <File Path="forms\uEditControlWrnFrm.dfm"/>
     <File Path="forms\uEditPolarFrm.pas"/>
     <File Path="forms\uEditPolarFrm.dfm"/>
     <File Path="forms\uEditProfileFrm.pas"/>
@@ -271,6 +274,10 @@
     <File Path="forms\uSpmChartEdit.dfm"/>
     <File Path="forms\uSpmFrame.pas"/>
     <File Path="forms\uSpmFrame.dfm"/>
+    <File Path="forms\uSyncOscillogram.pas"/>
+    <File Path="forms\uSyncOscillogram.dfm"/>
+    <File Path="forms\uSyncOscillogramEditFrm.pas"/>
+    <File Path="forms\uSyncOscillogramEditFrm.dfm"/>
     <File Path="forms\uTagInfoEditFrm.pas"/>
     <File Path="forms\uTagInfoEditFrm.dfm"/>
     <File Path="forms\uTagInfoFrm.pas"/>
@@ -281,12 +288,6 @@
     <File Path="forms\uTrigFrame.dfm"/>
     <File Path="forms\uTrigsFrm.pas"/>
     <File Path="forms\uTrigsFrm.dfm"/>
-    <File Path="forms\uAlgsSaveFrm.pas"/>
-    <File Path="forms\uAlgsSaveFrm.dfm"/>
-    <File Path="forms\uSyncOscillogram.pas"/>
-    <File Path="forms\uSyncOscillogram.dfm"/>
-    <File Path="forms\uSyncOscillogramEditFrm.pas"/>
-    <File Path="forms\uSyncOscillogramEditFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\uAriphmAlg.pas"/>
     <File Path="units\uBaseAlg.pas"/>

@@ -197,7 +197,8 @@ uses
   Iterative_FFT_sse in '..\..\sharedUtils\math\FFT_койнов\Iterative_FFT_sse.pas',
   uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
   uSyncOscillogram in 'forms\uSyncOscillogram.pas' {SyncOscFrm},
-  uSyncOscillogramEditFrm in 'forms\uSyncOscillogramEditFrm.pas' {EditSyncOscFrm};
+  uSyncOscillogramEditFrm in 'forms\uSyncOscillogramEditFrm.pas' {EditSyncOscFrm},
+  uQueue2 in '..\..\sharedUtils\utils\lists\uQueue2.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

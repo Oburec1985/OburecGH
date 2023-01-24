@@ -1086,30 +1086,30 @@ BEGIN
 	SysConst_SZeroDivide,	"Floating point division by zero"
 END
 
-/* s:\program files (x86)\embarcadero\rad studio\7.0\lib\Character.res */
-/* s:\program files (x86)\embarcadero\rad studio\7.0\lib\controls.res */
-/* ..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
-/* s:\program files (x86)\embarcadero\rad studio\7.0\lib\buttons.res */
-/* ..\sharedUtils\компоненты\dcl_dpk\spin.res */
-/* ..\sharedUtils\forms\uGetMngObjForm.dfm */
-/* ..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common\JclUnicode.res */
-/* ..\sharedUtils\utils\./files/res/CURSORS.res */
-/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
-/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.dfm */
-/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendFrame.dfm */
-/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.dfm */
-/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistFrame.dfm */
-/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistForm.dfm */
-/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjEditForm.dfm */
-/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uPageForm.dfm */
-/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCursorForm.dfm */
-/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDoubleCursorForm.dfm */
-/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTextLabelForm.dfm */
-/* ..\sharedUtils\компоненты\chart_dpk\chart\forms\uAxisForm.dfm */
-/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
-/* uEditTubeFrm.dfm */
-/* G:\oburec\project2010\GH\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\frames\uChartInputFrame.dfm */
-/* uEditForm.dfm */
-/* ProfileGenerator.dfm */
-/* G:\oburec\project2010\GH\OburecGH\profileGenerator\Proilegenerator.res */
-/* G:\oburec\project2010\GH\OburecGH\profileGenerator\Proilegenerator.drf */
+/* c:\program files (x86)\embarcadero\rad studio\7.0\lib\Character.res */
+/* c:\program files (x86)\embarcadero\rad studio\7.0\lib\controls.res */
+/* c:\program files (x86)\embarcadero\rad studio\7.0\lib\buttons.res */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\dcl_dpk\spin.res */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\forms\uGetMngObjForm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common\JclUnicode.res */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\utils\./files/res/CURSORS.res */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendFrame.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistFrame.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistForm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjEditForm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uPageForm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCursorForm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDoubleCursorForm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTextLabelForm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uAxisForm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\profileGenerator\uEditForm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\frames\uChartInputFrame.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\profileGenerator\uEditTubeFrm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\profileGenerator\ProfileGenerator.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\profileGenerator\Proilegenerator.res */
+/* F:\Oburec\delphi\2011\OburecGH\profileGenerator\Proilegenerator.drf */

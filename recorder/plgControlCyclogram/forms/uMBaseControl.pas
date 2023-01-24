@@ -383,6 +383,11 @@ begin
     if cObjFolder(objFolder).m_ObjType<>ObjTypeCB.text then
     begin
       proplist:=cbasemeafolder(m_base.m_BaseFolder).LoadObjProperties(ObjTypeCB.text);
+      if proplist=nil then
+      begin
+        proplist:=TStringList.Create;
+        proplist.Duplicates:=dupIgnore;
+      end;
       cObjFolder(objFolder).clearPropertie;
       g_mbase.Events.active:=false;
       for I := 0 to proplist.Count - 1 do
@@ -1448,12 +1453,18 @@ begin
     exit;
 
   section := String(str);
-  v_NotifyMBaseSetProperties := a_pIni.ReadInteger(section,
-    'MBaseSetPropertiesNotify', 101);
-  BaseFolderEdit.text := a_pIni.ReadString(section, 'BaseFolder', '');
-
-  if  BaseFolderEdit.text<>'' then
+  v_NotifyMBaseSetProperties := a_pIni.ReadInteger(section, 'MBaseSetPropertiesNotify', 101);
+  folder := a_pIni.ReadString(section, 'BaseFolder', '');
+  if folder<>'' then
+  begin
+    i:=length(folder);
+    if folder[i]='\' then
+    begin
+      setlength(folder,i-1);
+    end;
+    BaseFolderEdit.text:=folder;
     m_base.InitBaseFolder(BaseFolderEdit.text);
+  end;
 
   FillObjectsCB;
   lstr := a_pIni.ReadString(section, 'ObjName', '');

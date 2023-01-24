@@ -146,7 +146,7 @@ begin
       d:=AlgsTV.getNodeData(parnode);
       d.data:=a;
       d.color:=AlgsTV.normalcolor;
-      d.Caption:=a.resname;
+      d.Caption:=a.name;
       d.ImageIndex:=1;
     end;
   end;
@@ -545,9 +545,16 @@ begin
         pn:=n.Parent;
         a:=cBaseAlgContainer(d.data);
         d:=AlgsTV.GetNodeData(pn);
-        c:=cAlgConfig(d.data);
-        c.delAlg(a);
-        a.destroy;
+        if d=nil then
+        begin
+          a.destroy;
+        end
+        else
+        begin
+          c:=cAlgConfig(d.data);
+          c.delAlg(a);
+          a.destroy;
+        end;
       end;
       n:=AlgsTV.GetNextSelected(n, false);
     end;

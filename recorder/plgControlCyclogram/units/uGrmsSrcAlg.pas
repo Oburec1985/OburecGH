@@ -471,6 +471,13 @@ begin
     exit;
   if m_spm <> nil then
     unsubscribe(m_spm);
+  if spm<>m_spm then
+  begin
+    if m_spm<>nil then
+    begin
+      unsubscribe(m_spm);
+    end;
+  end;
   m_spm:= spm;
   spm.subscribe(self);
 end;

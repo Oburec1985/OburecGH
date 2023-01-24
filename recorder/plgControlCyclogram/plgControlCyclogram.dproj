@@ -436,6 +436,7 @@
 			<DCCReference Include="forms\uSyncOscillogramEditFrm.pas">
 				<Form>EditSyncOscFrm</Form>
 			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\lists\uQueue2.pas"/>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

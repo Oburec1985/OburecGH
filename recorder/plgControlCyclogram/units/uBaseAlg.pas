@@ -82,6 +82,8 @@ type
     // ¬ызываетс€ при завершении расчета блока данных. «а одно обновление Recorder может быть расчитано несколько блоков данных.
     // здесь сбрасываем счетчик номера блоков или другие действи€ завершени€ расчета блока
     procedure CallEndEvalBlock; virtual;
+    // отлинковать алгоритм назначени€
+    procedure delDstLink(dst: cBaseObj);
   public
     procedure updateOutChan;virtual;
     procedure createOutChan;overload;virtual;
@@ -467,11 +469,28 @@ end;
 procedure cBaseAlgContainer.unsubscribe(src: cBaseObj);
 begin
   delRef(src);
+  cbasealgcontainer(src).delDstLink(self);
 end;
 
 procedure cBaseAlgContainer.updateOutChan;
 begin
 
+end;
+
+procedure cBaseAlgContainer.delDstLink(dst: cBaseObj);
+var
+  I: Integer;
+  a:cBaseObj;
+begin
+  for I := 0 to m_SubscribeList.Count - 1 do
+  begin
+    a:=cBaseAlgContainer(m_SubscribeList.items[i]);
+    if a=dst then
+    begin
+      m_SubscribeList.Delete(i);
+      break;
+    end;
+  end;
 end;
 
 procedure cBaseAlgContainer.delRef(a: cBaseObj);

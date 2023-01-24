@@ -34,7 +34,6 @@ type
   TSpmTagInfo = class
   public
     m_spm: cSpm;
-
     m_algname: string;
 
     // для Spm
@@ -1229,6 +1228,8 @@ var
   aX: caxis;
 begin
   p:=cpage(spmChart.activePage);
+  if p=nil then exit;
+  
   aX := p.activeAxis;
 
   if m_profile = nil then

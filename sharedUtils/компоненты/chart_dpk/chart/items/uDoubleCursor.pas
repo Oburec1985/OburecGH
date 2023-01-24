@@ -751,7 +751,10 @@ begin
         m_lgx2:=ValToLogScale(fx2, p2d(page.activeAxis.min.x,page.activeAxis.max.x));
       end;
     end;
-    cChart(chart).legend.NeedUpdate:=true;
+    if cChart(chart).legend<>nil then
+    begin
+      cChart(chart).legend.NeedUpdate:=true;
+    end;
     cChart(chart).needRedraw:=true;
   end;
   exitcs;
@@ -780,7 +783,10 @@ begin
       if a<>nil then
         fx2:=page.p2iToTrend(point(v,0),a).x;
     end;
-    cChart(chart).legend.NeedUpdate:=true;
+    if cChart(chart).legend<>nil then
+    begin
+      cChart(chart).legend.NeedUpdate:=true;
+    end;
     cChart(chart).needRedraw:=true;
   end;
   exitcs;  

@@ -1052,10 +1052,13 @@ begin
   if cchart1.initGl then
   begin
     cpage(cchart1.activePage).clear;
-    for I := 0 to m_p.ControlCount - 1 do
+    if m_p<>nil then
     begin
-      con:=m_p.getOwnControl(i);
-      showControlInChart(con);
+      for I := 0 to m_p.ControlCount - 1 do
+      begin
+        con:=m_p.getOwnControl(i);
+        showControlInChart(con);
+      end;
     end;
   end;
 end;

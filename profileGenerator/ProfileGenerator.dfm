@@ -57,7 +57,6 @@ object EditProfileForm: TEditProfileForm
       OnMovePoint = cChart1MovePoint
       OnAddPoint = cChart1AddPoint
       OnSelectPoint = cChart1SelectPoint
-      OnInit = cChart1Init
       allowEditPages = False
       imagelist = ImageList_16
       showTV = False

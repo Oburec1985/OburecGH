@@ -3001,6 +3001,8 @@ begin
     str := xmlNode.ReadAttributeString('z' + inttostr(i), '');
     pars := ParsStrParam(str, ',');
     str := (GetParsValue(pars, 'Tol'));
+    if not checkstr(str) then
+      exit;
     p2.x := strToFloatExt(GetSubString(str, '/', 1, J));
     p2.y := strToFloatExt(GetSubString(str, '/', J + 1, J));
     if not m_ZoneList.m_zones_Alg then

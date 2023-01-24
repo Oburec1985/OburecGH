@@ -1,27 +1,24 @@
 object ModesTabFrame: TModesTabFrame
   Left = 0
   Top = 0
-  Width = 951
-  Height = 519
+  Width = 451
+  Height = 304
   Align = alClient
   TabOrder = 0
-  ExplicitWidth = 451
-  ExplicitHeight = 304
   object Splitter1: TSplitter
     Left = 0
-    Top = 358
-    Width = 951
+    Top = 143
+    Width = 451
     Height = 3
     Cursor = crVSplit
     Align = alBottom
     ExplicitLeft = 3
     ExplicitTop = 323
-    ExplicitWidth = 451
   end
   object ModesSG: TStringGrid
     Left = 0
-    Top = 361
-    Width = 951
+    Top = 146
+    Width = 451
     Height = 158
     Align = alBottom
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing]
@@ -32,23 +29,19 @@ object ModesTabFrame: TModesTabFrame
     OnKeyDown = ModesSGKeyDown
     OnSelectCell = ModesSGSelectCell
     OnSetEditText = ModesSGSetEditText
-    ExplicitTop = 146
-    ExplicitWidth = 451
   end
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 951
-    Height = 311
+    Width = 451
+    Height = 96
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 451
-    ExplicitHeight = 96
     object cChart1: cChart
       Left = 1
       Top = 1
-      Width = 949
-      Height = 309
+      Width = 449
+      Height = 94
       Align = alClient
       Caption = 'cChart1'
       TabOrder = 0
@@ -63,21 +56,17 @@ object ModesTabFrame: TModesTabFrame
       showTV = True
       showLegend = True
       selectSize = 5
-      ExplicitWidth = 449
-      ExplicitHeight = 94
     end
   end
   object Panel2: TPanel
     Left = 0
-    Top = 311
-    Width = 951
+    Top = 96
+    Width = 451
     Height = 47
     Align = alBottom
     TabOrder = 2
-    ExplicitTop = 96
-    ExplicitWidth = 451
     DesignSize = (
-      951
+      451
       47)
     object Label3: TLabel
       Left = 220

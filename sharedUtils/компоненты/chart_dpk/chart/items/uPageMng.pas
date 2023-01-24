@@ -124,9 +124,12 @@ begin
   r.right:=cchart(self.Chart).width+cchart(self.Chart).left-3;
   r.bottom:=0;
   r.top:=cchart(self.Chart).height-1;
-  if cchart(Chart).legend.visible then
+  if cchart(Chart).legend<>nil then
   begin
-    r.Bottom:=cchart(self.Chart).legend.Height+legendsplitterwidth;
+    if cchart(Chart).legend.visible then
+    begin
+      r.Bottom:=cchart(self.Chart).legend.Height+legendsplitterwidth;
+    end;
   end;
   result:=r;
 end;

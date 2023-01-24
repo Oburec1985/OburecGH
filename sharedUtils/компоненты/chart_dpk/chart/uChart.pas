@@ -306,8 +306,9 @@ begin
   OBJmNG.chart := self;
   // создание менеджера дерева
   tv := ttreeview.Create(self);
+  tv.visible:=false;
   tv.name := 'ChartTV';
-  // tv.Visible:=false;
+  tv.Visible:=false;
   tv.Parent := self;
   tv.Align := alleft;
   tv.Width := 200;
@@ -317,6 +318,7 @@ begin
   // создание легенды
   legend := clegend.Create(self);
   legend.name := 'ChartLegend';
+  legend.visible:=false;
   // Создание событий
   lincEvents;
   initGl := FALSE;
@@ -533,7 +535,7 @@ begin
   if wglGetCurrentContext <> hrc then
     wglMakeCurrent(dc, hrc);
   BeginPaint(Handle, ps);
-  glClearColor(0.9, 0.9, 0.3, 1);
+  glClearColor(0.9, 0.9, 0.9, 1);
   glClear(GL_COLOR_BUFFER_BIT); // очистка буфера цвета
   if activeTab <> nil then
   begin
@@ -797,6 +799,8 @@ procedure cChart.setShowTV(v: boolean);
 var
   page: cpage;
 begin
+  if v=tv.Visible then exit;
+
   tv.Visible := v;
   page := cpage(activePage);
   if page <> nil then
@@ -1054,24 +1058,7 @@ begin
   path := p_path;
   if initGl then
   begin
-    { if m_ShaderMng = nil then
-      begin
-      if fileexists(path) then
-      begin
-      configfile := cCfgFile.Create(path);
-      m_ShaderMng := cShaderManager.Create;
-      shadername := configfile.findShaderFile('1dLine');
-      if shadername <> '' then
-      begin
-      lpath := extractfiledir(shadername);
-      shadername := extractfilename(shadername);
-      if shadername[length(shadername)] = '*' then
-      setlength(shadername, length(shadername) - 2);
-      shader := cshader.Create(lpath, shadername);
-      m_ShaderMng.Add(shader);
-      end;
-      end;
-      end; }
+
   end;
 end;
 
@@ -1087,7 +1074,8 @@ procedure cChart.setShowLegend(v: boolean);
 begin
   if legend <> nil then
   begin
-    legend.Visible := v;
+    if v<>legend.Visible then
+      legend.Visible := v;
   end;
 end;
 

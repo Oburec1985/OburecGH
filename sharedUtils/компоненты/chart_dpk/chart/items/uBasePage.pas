@@ -235,7 +235,7 @@ begin
   ibound:=rect;
   GetNormalViewport(m_NormalViewport);
   SetTabSpace(m_pixelTabSpace);
-  EvalRelativeBound(ibound);
+  //EvalRelativeBound(ibound);
 
   CallEventsWithSender(e_onresize, self);
 end;

@@ -21,6 +21,7 @@ uses
   tags,
   uBaseAlgBands,
   uSyncOscillogramEditFrm,
+  uQueue,
   uSpm;
 
 type
@@ -54,6 +55,7 @@ type
     m_TrigTag: cTag;
     // список сигналов в осциллограмме
     m_signals: tlist;
+    m_ax
   PRIVATE
     m_time:double;
   protected
@@ -68,6 +70,7 @@ type
   protected
     procedure WndProc(var Message: TMessage); override;
   public
+    procedure UpdateProps;
     function sCount:integer;
     function CreateSignal(a:cAxis; t:itag):TOscSignal;overload;
     function CreateSignal(a:cAxis; tname:string):TOscSignal;overload;
@@ -269,7 +272,7 @@ begin
   p := cpage(m_Chart.activePage);
   if p=nil then exit;
 
-  p.Caption:='Спектр';
+  p.Caption:='Синхронная осциллограмма';
   // для рисования после текстовых меток полос
   ax:=cdrawobj(p.getChild('Axises'));
   ax.layer:=1;
@@ -283,6 +286,7 @@ begin
   inherited;
   m_signals := tlist.create;
   m_Chart := cchart.create(self);
+
   m_Chart.Name:='TSyncOscChart';
   m_Chart.Align := alClient;
   m_Chart.showTV := false;
@@ -315,7 +319,6 @@ var
   a:caxis;
   p:cpage;
 begin
-  exit;
   m_Length:=a_pIni.ReadFloat(str, 'Length', 1);
   m_type:=IntToTOscType(a_pIni.ReadInteger(str, 'type_' + inttostr(i), 0));
   c:=a_pIni.ReadInteger(str, 'SCount', 0);
@@ -328,7 +331,7 @@ begin
     begin
       m_chart.tabs.activeTab.addPage(true);
     end;
-    a:=caxis(m_chart.activePage.getChild(axname));
+    a:=caxis(cpage(m_chart.activePage).getaxis(axname));
     if a=nil then
     begin
       a:=cpage(m_chart.activePage).Newaxis;
@@ -412,6 +415,19 @@ begin
       s.t.ResetTagDataTimeInd(s.t.getIndex(m_time));
     end;
   end;
+end;
+
+procedure TSyncOscFrm.UpdateProps;
+var
+  p:cpage;
+  a:caxis;
+  r: frect;
+begin
+  p:=cpage(m_chart.activePage);
+  p.SetView();
+  r.BottomLeft := p2(0, m_Length);
+  r.TopRight := p2(aX.y, aY.y);
+  p.ZoomfRect(r);
 end;
 
 procedure TSyncOscFrm.UpdateView;
