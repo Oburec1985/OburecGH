@@ -27,6 +27,14 @@ uses
 type
   TOscType = (tOscil, tHarmOscil, TtrigOscil);
 
+
+  TAxis = record
+    name:string;
+    ymin, ymax:double;
+  end;
+
+  PAxis = ^TAxis;
+
   TOscSignal = class
     t: cTag;
     // ось на которой лежит сигнал
@@ -55,7 +63,8 @@ type
     m_TrigTag: cTag;
     // список сигналов в осциллограмме
     m_signals: tlist;
-    m_ax
+    // настройки осей
+    m_ax:cQueue<TAxis>;
   PRIVATE
     m_time:double;
   protected
@@ -70,6 +79,7 @@ type
   protected
     procedure WndProc(var Message: TMessage); override;
   public
+    Function GetAxCfg(name:string):TAxis;
     procedure UpdateProps;
     function sCount:integer;
     function CreateSignal(a:cAxis; t:itag):TOscSignal;overload;
@@ -216,6 +226,7 @@ begin
     Result.line:=cBuffTrend1d.create;
     Result.ax.AddChild(Result.line);
     m_signals.Add(result);
+    Result.line.color := ColorArray[a.ChildCount-1];
   end;
 end;
 
@@ -249,17 +260,36 @@ var
   r: frect;
   a: caxis;
   p: cpage;
+  axCfg:TAxis;
 begin
-  //p := cpage(spmChart.activePage);
-  //a := p.activeAxis;
-  //r.BottomLeft := p2(aX.x, aY.x);
-  //r.TopRight := p2(aX.y, aY.y);
-  //p.ZoomfRect(r);
+  p := cpage(m_chart.activePage);
+  a := p.activeAxis;
+  axCfg:=GetAxCfg(a.name);
+  r.BottomLeft := p2(0, axCfg.ymin);
+  r.TopRight := p2(m_Length, axCfg.ymax);
+  p.ZoomfRect(r);
 end;
 
 procedure TSyncOscFrm.doCursorMove(sender:tobject);
 begin
   //g_SpmFactory.doCursorMove(self);
+end;
+
+function TSyncOscFrm.GetAxCfg(name: string): TAxis;
+var
+  I: Integer;
+  a:TAxis;
+begin
+  result.name:='';
+  for I := 0 to m_ax.size - 1 do
+  begin
+    a:=m_ax.GetByInd(i);
+    if a.name=name then
+    begin
+      result:=a;
+      exit;
+    end;
+  end;
 end;
 
 procedure TSyncOscFrm.ChartInit(Sender: TObject);
@@ -300,10 +330,12 @@ begin
   m_Length:=1;
   m_type:=tOscil;
   m_TrigTag:=cTag.create;
+  m_ax := cqueue<TAxis>.create;
 end;
 
 destructor TSyncOscFrm.destroy;
 begin
+  m_ax.Destroy;
   m_TrigTag.destroy;
   FreeAndNil(m_signals);
   FreeAndNil(m_Chart);
@@ -317,10 +349,25 @@ var
   tname,axname:string;
   t:itag;
   a:caxis;
+  axCfg:taxis;
+  pAxCfg:PAxis;
   p:cpage;
+  j: Integer;
 begin
+  if m_ax.size>0 then
+    m_ax.clear;
+
   m_Length:=a_pIni.ReadFloat(str, 'Length', 1);
   m_type:=IntToTOscType(a_pIni.ReadInteger(str, 'type_' + inttostr(i), 0));
+  c:=a_pIni.ReadInteger(str, 'AxCount', 1);
+  for i := 0 to c - 1 do
+  begin
+    axCfg := m_ax.GetByInd(i);
+    axCfg.name:=a_pIni.ReadString(str, 'axCfg_name_' + inttostr(i), '');
+    axCfg.ymin:=a_pIni.ReadFloat(str, 'axCfg_y1_' + inttostr(i), 0);
+    axCfg.ymax:=a_pIni.ReadFloat(str, 'axCfg_y2_' + inttostr(i), 10);
+    m_ax.push_back(axCfg);
+  end;
   c:=a_pIni.ReadInteger(str, 'SCount', 0);
   for i := 0 to c - 1 do
   begin
@@ -337,6 +384,15 @@ begin
       a:=cpage(m_chart.activePage).Newaxis;
       a.name:=axname;
     end;
+    for j := 0 to m_ax.size - 1 do
+    begin
+      pAxCfg:=PAxis(m_ax.GetPByInd(j));
+      if pAxCfg.name=axname then
+      begin
+        a.minY:=pAxCfg.ymin;
+        a.maxY:=pAxCfg.ymax;
+      end;
+    end;
     if t<>nil then
     begin
       s:=CreateSignal(a, t);
@@ -345,6 +401,10 @@ begin
     begin
       s:=CreateSignal(a, tname);
     end;
+    if s.line<>nil then
+    begin
+      s.line.dx:=1/s.t.freq;
+    end;
   end;
 end;
 
@@ -352,10 +412,19 @@ procedure TSyncOscFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 var
   i: integer;
   s: TOscSignal;
+  axCfg:TAxis;
 begin
   inherited;
   a_pIni.WriteFloat(str, 'Length', m_Length);
   a_pIni.WriteInteger(str, 'type_' + inttostr(i), TOscTypeToInt(m_type));
+  a_pIni.WriteInteger(str, 'AxCount', m_ax.size);
+  for i := 0 to m_ax.size - 1 do
+  begin
+    axCfg := m_ax.GetByInd(i);
+    a_pIni.WriteString(str, 'axCfg_name_' + inttostr(i), axCfg.name);
+    a_pIni.WriteFloat(str, 'axCfg_y1_' + inttostr(i), axCfg.ymin);
+    a_pIni.WriteFloat(str, 'axCfg_y2_' + inttostr(i), axCfg.ymax);
+  end;
   a_pIni.WriteInteger(str, 'SCount', m_signals.Count);
   for i := 0 to m_signals.Count - 1 do
   begin
@@ -421,12 +490,14 @@ procedure TSyncOscFrm.UpdateProps;
 var
   p:cpage;
   a:caxis;
+  axCfg:TAxis;
   r: frect;
 begin
   p:=cpage(m_chart.activePage);
-  p.SetView();
+  a:=p.activeAxis;
+  axCfg:=GetAxCfg(a.name);
   r.BottomLeft := p2(0, m_Length);
-  r.TopRight := p2(aX.y, aY.y);
+  r.TopRight := p2(aXCfg.ymin, aXCfg.ymax);
   p.ZoomfRect(r);
 end;
 

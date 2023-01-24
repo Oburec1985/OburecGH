@@ -22,24 +22,29 @@ object EditSyncOscFrm: TEditSyncOscFrm
     TabOrder = 0
     ExplicitLeft = 632
     ExplicitWidth = 363
-    ExplicitHeight = 454
+    ExplicitHeight = 372
     inherited FormChannelsGB: TGroupBox
       Width = 363
       Height = 372
-      ExplicitHeight = 454
+      ExplicitWidth = 363
+      ExplicitHeight = 372
       inherited ChanNamesPanel: TPanel
         Width = 359
+        ExplicitWidth = 359
         inherited FilterEdit: TEdit
           Width = 348
+          ExplicitWidth = 348
         end
         inherited FrmTagPropValueEdit: TEdit
           Width = 232
+          ExplicitWidth = 232
         end
       end
       inherited TagsLV: TBtnListView
         Width = 359
         Height = 241
-        ExplicitHeight = 384
+        ExplicitWidth = 359
+        ExplicitHeight = 241
       end
     end
   end
@@ -50,8 +55,6 @@ object EditSyncOscFrm: TEditSyncOscFrm
     Height = 66
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 515
-    ExplicitWidth = 714
     object UpdateBtn: TSpeedButton
       Left = 18
       Top = 7
@@ -178,7 +181,6 @@ object EditSyncOscFrm: TEditSyncOscFrm
     Align = alLeft
     Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
     TabOrder = 2
-    ExplicitHeight = 454
     object TagsTV: TVTree
       Left = 2
       Top = 18
@@ -198,9 +200,6 @@ object EditSyncOscFrm: TEditSyncOscFrm
       TabOrder = 0
       OnDragOver = TagsTVDragOver
       OnDragDrop = TagsTVDragDrop
-      ExplicitLeft = 1
-      ExplicitTop = 20
-      ExplicitHeight = 485
       Columns = <>
     end
   end
@@ -212,9 +211,6 @@ object EditSyncOscFrm: TEditSyncOscFrm
     Align = alClient
     Constraints.MinWidth = 364
     TabOrder = 3
-    ExplicitLeft = 207
-    ExplicitWidth = 586
-    ExplicitHeight = 420
     object LengthLabel: TLabel
       Left = 7
       Top = 4
@@ -240,8 +236,6 @@ object EditSyncOscFrm: TEditSyncOscFrm
       ParentBackground = False
       ParentColor = False
       TabOrder = 0
-      ExplicitTop = 347
-      ExplicitWidth = 303
       object MinYLabel: TLabel
         Left = 17
         Top = 25

@@ -246,10 +246,32 @@ var
   I: Integer;
   n:PVirtualNode;
   d:PNodeData;
+  p:cpage;
+  ca:caxis;
+  pAx:paxis;
+  Ax:TAxis;
 begin
   TSyncOscFrm(m_curObj).m_Length:=LengthFE.FloatNum;
   //TSyncOscFrm(m_curObj).m_TrigTag.tag:=ChannelXCB.gettag[ChannelXCB.ItemIndex];
   TSyncOscFrm(m_curObj).m_type:=IntToTOscType(TrigRG.ItemIndex);
+  p:=cpage(TSyncOscFrm(m_curObj).m_Chart.activePage);
+  for I := 0 to p.getAxisCount - 1 do
+  begin
+    ca:=p.getaxis(i);
+    if i<TSyncOscFrm(m_curObj).m_ax.size then
+    begin
+      pAx:=paxis(TSyncOscFrm(m_curObj).m_ax.GetPByInd(i));
+      pAx.ymin:=MinYfe.FloatNum;
+      pAx.ymax:=MaxYfe.FloatNum;
+    end
+    else
+    begin
+      Ax.name:=ca.name;
+      Ax.ymin:=MinYfe.FloatNum;
+      Ax.ymax:=MaxYfe.FloatNum;
+      TSyncOscFrm(m_curObj).m_ax.push_back(Ax);
+    end;
+  end;
 end;
 
 procedure TEditSyncOscFrm.updateTagsList;

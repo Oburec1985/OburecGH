@@ -6,11 +6,13 @@ uses
 
 type
   cQueue<T> = class
+  type
+    PT = ^T;
   public
     // если false то новые вершины выталкивают старые
     m_resizeMode:boolean;
   protected
-    // число элементов в деке
+    // число элементов
     fCount:integer;
     // первый элемент в очереди (выйдет первым)
     fFirst,
@@ -22,13 +24,15 @@ type
     // вытащить в порядке очереди 0 - первый в очереди на выход
     function Peak(i:integer):T;
     function GetByInd(i:integer):T;
+    // возвращаем по указателю если нужно модифимцировать элемент в списке
+    function GetPByInd(i:integer):PT;
     // Добавить (положить) в начало очереди (выйдет первым)
     procedure push_front(p:T);
     // Добавить (положить) в конец очереди (выйдет последним)
     procedure push_back(p:T);
-    // Извлечь из дека первый элемент
+    // Извлечь из первый элемент
     function pop_front:T;
-    // Извлечь из дека последний элемент
+    // Извлечь из последний элемент
     function pop_back:T;
     // Узнать значение первого элемента (не удаляя его)
     function front:T;
@@ -36,7 +40,7 @@ type
     function back:T;
     // Узнать количество элементов в деке
     function size:integer;
-    // Очистить дек (удалить из него все элементы)
+    // Очистить (удалить из него все элементы)
     procedure clear;
     // отбросить i элементов
     procedure drop_front(i:integer);
@@ -50,7 +54,7 @@ type
   end;
 
 const
-  c_capacity_step = 1;
+  c_capacity_step = 256;
 
 implementation
 
@@ -100,6 +104,11 @@ end;
 function cQueue<T>.GetByInd(i: integer): T;
 begin
   result:=data[i];
+end;
+
+function cQueue<T>.GetPByInd(i:integer):PT;
+begin
+  result:=@data[i];
 end;
 
 function cQueue<T>.Peak(i: integer): T;
