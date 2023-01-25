@@ -102,6 +102,7 @@ type
     function doCreateForm: cRecBasicIFrm; virtual; abstract;
     procedure doSetDefSize(var pSize: SIZE); virtual;
     procedure doAfterLoad;virtual;
+    procedure doStart;virtual;
     function count: integer;
   public
     function GetFrm(i: integer): TRecFrm;
@@ -319,6 +320,11 @@ begin
 end;
 
 procedure cRecBasicFactory.doSetDefSize(var pSize: SIZE);
+begin
+
+end;
+
+procedure cRecBasicFactory.doStart;
 begin
 
 end;

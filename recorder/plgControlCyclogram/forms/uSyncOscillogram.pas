@@ -13,14 +13,13 @@ uses
   PluginClass,
   ImgList,
   uChart,
-  uGrmsSrcAlg,
-  uPhaseAlg,
   usetlist,
   ufreqband,
   uHardwareMath,
   tags,
-  uBaseAlgBands,
   uSyncOscillogramEditFrm,
+  ufloatlabel,
+  MathFunction,
   uQueue,
   uSpm;
 
@@ -42,6 +41,7 @@ type
     axname:string;
     // линия
     line:cBuffTrend1d;
+    m_portion:integer;
   public
     constructor create;
     destructor destroy;
@@ -65,9 +65,11 @@ type
     m_signals: tlist;
     // настройки осей
     m_ax:cQueue<TAxis>;
-  PRIVATE
-    m_time:double;
   protected
+    m_init:boolean;
+    m_TimeLabel:cfloatlabel;
+  protected
+    procedure setTimeLabelPos(Sender: tobject);
     procedure UpdateView;
     procedure FormClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -80,6 +82,7 @@ type
     procedure WndProc(var Message: TMessage); override;
   public
     Function GetAxCfg(name:string):TAxis;
+    Function GetPAxCfg(name:string):PAxis;
     procedure UpdateProps;
     function sCount:integer;
     function CreateSignal(a:cAxis; t:itag):TOscSignal;overload;
@@ -115,7 +118,7 @@ type
     procedure doChangeCfg(Sender: TObject);
     procedure doChangeRState(Sender: TObject);
     procedure doChangeAlgProps(Sender: TObject);
-    procedure doStart;
+    procedure doStart;override;
     procedure SetActiveChart(c: TSyncOscFrm);
     function GetActiveChart: TSyncOscFrm;
   public
@@ -226,9 +229,10 @@ begin
     Result.line:=cBuffTrend1d.create;
     Result.ax.AddChild(Result.line);
     m_signals.Add(result);
-    Result.line.color := ColorArray[a.ChildCount-1];
+    Result.line.color := ColorArray[m_signals.Count-1];
   end;
 end;
+
 
 function TSyncOscFrm.CreateSignal(a:cAxis; tname:string):TOscSignal;
 begin
@@ -255,24 +259,75 @@ begin
   end;
 end;
 
+procedure TSyncOscFrm.setTimeLabelPos(Sender: tobject);
+var
+  pos: point2;
+  h: single;
+  w:integer;
+  p:cpage;
+begin
+  if m_TimeLabel <> nil then
+  begin
+    p:=cpage(m_Chart.activePage);
+    w:=p.getwidth;
+    if w<>0 then
+    begin
+      if p.getheight<>0 then
+      begin
+        h := m_TimeLabel.GetTextHeigth;
+        pos.y := 1 - 2 * h;
+        pos.x := 0.8;
+        m_TimeLabel.position := pos;
+        m_TimeLabel.Text:='Time:';
+      end;
+    end;
+  end;
+end;
+
 procedure TSyncOscFrm.DblClick(Sender: TObject);
 var
   r: frect;
   a: caxis;
   p: cpage;
   axCfg:TAxis;
+  I: Integer;
 begin
   p := cpage(m_chart.activePage);
-  a := p.activeAxis;
-  axCfg:=GetAxCfg(a.name);
-  r.BottomLeft := p2(0, axCfg.ymin);
-  r.TopRight := p2(m_Length, axCfg.ymax);
-  p.ZoomfRect(r);
+  for I := 0 to m_ax.size - 1 do
+  begin
+    axCfg:=m_ax.GetByInd(i);
+    a:=p.getaxis(axCfg.name);
+    if a<>nil then
+    begin
+      a.minY:=axCfg.ymax;
+      a.maxY:=axCfg.ymax;
+    end;
+    //r.BottomLeft := p2(0, axCfg.ymin);
+    //r.TopRight := p2(m_Length, axCfg.ymax);
+    //p.ZoomfRect(r);
+  end;
 end;
 
 procedure TSyncOscFrm.doCursorMove(sender:tobject);
 begin
   //g_SpmFactory.doCursorMove(self);
+end;
+
+Function TSyncOscFrm.GetPAxCfg(name:string):PAxis;
+var
+  I: Integer;
+  a:pAxis;
+begin
+  result:=nil;
+  for I := 0 to m_ax.size - 1 do
+  begin
+    a:=paxis(m_ax.GetPByInd(i));
+    if a.name=name then
+    begin
+      result:=a;
+      exit;
+    end;
+  end;
 end;
 
 function TSyncOscFrm.GetAxCfg(name: string): TAxis;
@@ -312,6 +367,8 @@ begin
 end;
 
 constructor TSyncOscFrm.create(Aowner: tcomponent);
+var
+  p:cpage;
 begin
   inherited;
   m_signals := tlist.create;
@@ -325,6 +382,18 @@ begin
   m_Chart.OnRBtnClick := ChartRBtnClick;
   m_Chart.OnDblClick := DblClick;
   m_Chart.OnInit := ChartInit;
+
+  m_TimeLabel:=cFloatLabel.create;
+  m_TimeLabel.autocreate:=true;
+  m_TimeLabel.textcolor := blue;
+  m_TimeLabel.align := c_right;
+  m_TimeLabel.Name := modname('Time:',false);
+  m_TimeLabel.Transparent:=true;
+  p:=cpage(m_Chart.activePage);
+  p.AddChild(m_TimeLabel);
+  p.Events.AddEvent('ChartOnCursorMove', e_onResize, setTimeLabelPos);
+  setTimeLabelPos(nil);
+
   //m_Chart.OnKeyDown := doKeyDown;
   m_Chart.OnCursorMove := doCursorMove;
   m_Length:=1;
@@ -360,14 +429,31 @@ begin
   m_Length:=a_pIni.ReadFloat(str, 'Length', 1);
   m_type:=IntToTOscType(a_pIni.ReadInteger(str, 'type_' + inttostr(i), 0));
   c:=a_pIni.ReadInteger(str, 'AxCount', 1);
-  for i := 0 to c - 1 do
+
+  p:=cpage(m_chart.activePage);
+  for i := 0 to c-1 do
   begin
     axCfg := m_ax.GetByInd(i);
     axCfg.name:=a_pIni.ReadString(str, 'axCfg_name_' + inttostr(i), '');
     axCfg.ymin:=a_pIni.ReadFloat(str, 'axCfg_y1_' + inttostr(i), 0);
     axCfg.ymax:=a_pIni.ReadFloat(str, 'axCfg_y2_' + inttostr(i), 10);
+    a:=p.activeAxis;
+    if i>0 then
+    begin
+      a:=caxis.create;
+      a.name:=axCfg.name;
+      p.addaxis(a);
+    end
+    else
+    begin
+      if axCfg.name<>'' then
+        a.name:=axCfg.name
+      else
+        axCfg.name:=a.name;
+    end;
     m_ax.push_back(axCfg);
   end;
+
   c:=a_pIni.ReadInteger(str, 'SCount', 0);
   for i := 0 to c - 1 do
   begin
@@ -446,42 +532,77 @@ end;
 procedure TSyncOscFrm.UpdateData;
 var
   s:TOscSignal;
-  I: Integer;
+  I, ind: Integer;
   t:point2d;
   b:boolean;
+  interval:point2d;
+  interval_i:tpoint;
+  j: Integer;
+  t1t2:array [0..1] of point2d;
 begin
   b:=false;
   for I := 0 to m_signals.Count - 1 do
   begin
     s:=GetSignal(i);
-    if s.t.UpdateTagData(true) then
+    if s.t.UpdateTagData(true) or b then
     begin
-      t:=s.t.getPortionTime;
-      if (t.y-t.x)>m_length then
+      if not m_init then
       begin
-        if t.x>=m_time then
-        begin
-          b:=true;
-        end
-        else
-          b:=false;
-      end
-      else
-      begin
-        b:=false;
+        m_init:=true;
       end;
+      t:=s.t.getPortionTime;
+      t1t2[i]:=t;
+
+      if (t.y-t.x)>m_length then
+        b:=true
+      else
+        b:=false;
       if not b then
         break;
+      if i=0 then
+        interval:=t
+      else
+        interval:=getCommonInterval(interval, t);
+      if (interval.y-interval.x<m_length) then
+      begin
+        b:=false;
+        break;
+      end
+    end
+    else
+    begin
     end;
   end;
+
   if b then
   begin
-    m_time:=m_time+m_length;
+    // рисуем только последние синхронные данные, а не весь объем
+    interval.x:=interval.y-m_length;
+
+    m_TimeLabel.text:='Time: '+formatstr(interval.x,3);
     for I := 0 to m_signals.Count - 1 do
     begin
       s:=GetSignal(i);
-      s.line.AddPoints(s.t.m_ReadData);
-      s.t.ResetTagDataTimeInd(s.t.getIndex(m_time));
+      interval_i:=s.t.getIntervalInd(interval);
+      s.line.AddPoints(s.t.m_ReadData, interval_i.x, (interval_i.Y-interval_i.x));
+      if s.t.lastindex>=interval_i.Y then
+        s.t.ResetTagDataTimeInd(interval_i.Y);
+      {else
+      begin
+        for j := 0 to m_signals.Count - 1 do
+        begin
+          s:=GetSignal(j);
+          if j=0 then
+            interval:=s.t.getPortionTime
+          else
+          begin
+            t:=s.t.getPortionTime;
+            interval:=getCommonInterval(interval, t);
+          end;
+          interval_i:=s.t.getIntervalInd(interval);
+          s.t.ResetTagDataTimeInd(interval_i.Y);
+        end;
+      end;}
     end;
   end;
 end;
@@ -677,9 +798,11 @@ begin
     begin
       s:=frm.GetSignal(j);
       s.t.doOnStart;
+      s.m_portion:=trunc(frm.m_Length*s.t.freq);
     end;
     if frm.m_TrigTag.tag<>nil then
       frm.m_TrigTag.doOnStart;
+    frm.m_init:=false;
   end;
 end;
 

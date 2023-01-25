@@ -124,14 +124,6 @@ begin
 
 end;
 
-function getCommonInterval(i1, i2: point2d): point2d;
-var
-  b: boolean;
-begin
-  result.x := max(i1.x, i2.x, b);
-  result.y := min(i1.y, i2.y, b);
-end;
-
 procedure cSyncPhaseAlg.doGetData;
 var
   interval1, interval2: point2d;

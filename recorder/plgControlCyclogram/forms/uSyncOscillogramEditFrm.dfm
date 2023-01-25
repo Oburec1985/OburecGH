@@ -2,8 +2,8 @@ object EditSyncOscFrm: TEditSyncOscFrm
   Left = 0
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1086#1089#1094#1080#1083#1083#1086#1075#1088#1072#1084#1084#1099
-  ClientHeight = 438
-  ClientWidth = 995
+  ClientHeight = 629
+  ClientWidth = 1124
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,10 +14,10 @@ object EditSyncOscFrm: TEditSyncOscFrm
   PixelsPerInch = 120
   TextHeight = 16
   inline TagsListFrame1: TTagsListFrame
-    Left = 632
+    Left = 761
     Top = 0
     Width = 363
-    Height = 372
+    Height = 563
     Align = alRight
     TabOrder = 0
     ExplicitLeft = 632
@@ -25,7 +25,7 @@ object EditSyncOscFrm: TEditSyncOscFrm
     ExplicitHeight = 372
     inherited FormChannelsGB: TGroupBox
       Width = 363
-      Height = 372
+      Height = 563
       ExplicitWidth = 363
       ExplicitHeight = 372
       inherited ChanNamesPanel: TPanel
@@ -42,7 +42,7 @@ object EditSyncOscFrm: TEditSyncOscFrm
       end
       inherited TagsLV: TBtnListView
         Width = 359
-        Height = 241
+        Height = 432
         ExplicitWidth = 359
         ExplicitHeight = 241
       end
@@ -50,11 +50,13 @@ object EditSyncOscFrm: TEditSyncOscFrm
   end
   object BottomPanel: TPanel
     Left = 0
-    Top = 372
-    Width = 995
+    Top = 563
+    Width = 1124
     Height = 66
     Align = alBottom
     TabOrder = 1
+    ExplicitTop = 372
+    ExplicitWidth = 995
     object UpdateBtn: TSpeedButton
       Left = 18
       Top = 7
@@ -177,15 +179,16 @@ object EditSyncOscFrm: TEditSyncOscFrm
     Left = 0
     Top = 0
     Width = 249
-    Height = 372
+    Height = 563
     Align = alLeft
     Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
     TabOrder = 2
+    ExplicitHeight = 372
     object TagsTV: TVTree
       Left = 2
       Top = 18
       Width = 245
-      Height = 352
+      Height = 543
       Align = alClient
       DragMode = dmAutomatic
       Header.AutoSizeIndex = 0
@@ -198,19 +201,23 @@ object EditSyncOscFrm: TEditSyncOscFrm
       Images = ImageList_16
       NodeDataSize = 32
       TabOrder = 0
+      OnChange = TagsTVChange
       OnDragOver = TagsTVDragOver
       OnDragDrop = TagsTVDragDrop
+      ExplicitHeight = 352
       Columns = <>
     end
   end
   object MainPanel: TPanel
     Left = 249
     Top = 0
-    Width = 383
-    Height = 372
+    Width = 512
+    Height = 563
     Align = alClient
     Constraints.MinWidth = 364
     TabOrder = 3
+    ExplicitWidth = 383
+    ExplicitHeight = 372
     object LengthLabel: TLabel
       Left = 7
       Top = 4
@@ -227,15 +234,16 @@ object EditSyncOscFrm: TEditSyncOscFrm
     end
     object YAxisGB: TGroupBox
       Left = 1
-      Top = 204
-      Width = 381
-      Height = 167
+      Top = 416
+      Width = 510
+      Height = 146
       Align = alBottom
       Caption = #1054#1089#1100' Y'
       Color = 11783677
       ParentBackground = False
       ParentColor = False
       TabOrder = 0
+      ExplicitWidth = 381
       object MinYLabel: TLabel
         Left = 17
         Top = 25
@@ -330,10 +338,11 @@ object EditSyncOscFrm: TEditSyncOscFrm
         ParentBiDiMode = False
         ShowHint = True
         Transparent = False
+        OnClick = AddAxisBtnClick
       end
       object NameAxisLabel: TLabel
         Left = 20
-        Top = 110
+        Top = 86
         Width = 56
         Height = 16
         Caption = #1053#1072#1079#1074#1072#1085#1080#1077
@@ -354,24 +363,17 @@ object EditSyncOscFrm: TEditSyncOscFrm
         TabOrder = 1
         Text = '10'
       end
-      object LgYcb: TCheckBox
-        Left = 17
-        Top = 82
-        Width = 119
-        Height = 17
-        Caption = #1051#1086#1075#1072#1088#1080#1092#1084' Y'
-        TabOrder = 2
-      end
       object NameAxisEdit: TEdit
         Left = 17
-        Top = 132
+        Top = 108
         Width = 286
         Height = 24
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
         Margins.Bottom = 4
-        TabOrder = 3
+        TabOrder = 2
+        Text = 'Axis'
       end
     end
     object LengthFE: TFloatEdit
@@ -404,6 +406,61 @@ object EditSyncOscFrm: TEditSyncOscFrm
       Margins.Right = 4
       Margins.Bottom = 4
       TabOrder = 3
+    end
+    object LegendCB: TCheckBox
+      Left = 6
+      Top = 194
+      Width = 119
+      Height = 17
+      Caption = #1051#1077#1075#1077#1085#1076#1072
+      TabOrder = 4
+    end
+    object LineGB: TGroupBox
+      Left = 1
+      Top = 341
+      Width = 510
+      Height = 75
+      Align = alBottom
+      Caption = #1051#1080#1085#1080#1103
+      Color = clSkyBlue
+      ParentBackground = False
+      ParentColor = False
+      TabOrder = 5
+      ExplicitTop = 320
+      ExplicitWidth = 381
+      object Label3: TLabel
+        Left = 20
+        Top = 15
+        Width = 56
+        Height = 16
+        Caption = #1053#1072#1079#1074#1072#1085#1080#1077
+      end
+      object LineNameEdit: TEdit
+        Left = 17
+        Top = 37
+        Width = 286
+        Height = 24
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Enabled = False
+        TabOrder = 0
+        Text = 'Axis'
+      end
+      object LineColor: TPanel
+        Left = 311
+        Top = 35
+        Width = 34
+        Height = 33
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Color = clCaptionText
+        ParentBackground = False
+        TabOrder = 1
+      end
     end
   end
   object ImageList_32: TImageList

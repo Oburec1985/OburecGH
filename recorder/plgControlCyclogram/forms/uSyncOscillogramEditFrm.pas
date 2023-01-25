@@ -30,7 +30,6 @@ type
     NameAxisLabel: TLabel;
     MinYfe: TFloatEdit;
     MaxYfe: TFloatEdit;
-    LgYcb: TCheckBox;
     NameAxisEdit: TEdit;
     LengthLabel: TLabel;
     LengthFE: TFloatEdit;
@@ -40,6 +39,11 @@ type
     TrigLabel: TLabel;
     ImageList_32: TImageList;
     ImageList_16: TImageList;
+    LegendCB: TCheckBox;
+    LineGB: TGroupBox;
+    Label3: TLabel;
+    LineNameEdit: TEdit;
+    LineColor: TPanel;
     procedure TagsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
@@ -47,6 +51,8 @@ type
       DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
       Pt: TPoint; var Effect: Integer; Mode: TDropMode);
     procedure UpdateBtnClick(Sender: TObject);
+    procedure AddAxisBtnClick(Sender: TObject);
+    procedure TagsTVChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
   private
     m_curObj:tobject;
   private
@@ -69,6 +75,20 @@ uses
 {$R *.dfm}
 
 { TEditSyncOscFrm }
+
+procedure TEditSyncOscFrm.AddAxisBtnClick(Sender: TObject);
+var
+  p:cpage;
+  a:caxis;
+begin
+  p:=cpage(TSyncOscFrm(m_curObj).m_Chart.activePage);
+  a:=cAxis.create;
+  a.name:=NameAxisEdit.Text;
+  p.addaxis(a);
+  a.min:=p2d(0,MinYfe.FloatNum);
+  a.max:=p2d(TSyncOscFrm(m_curObj).m_length, MaxYfe.FloatNum);
+  ShowTV;
+end;
 
 function TEditSyncOscFrm.getSignalAxisNode(s: Tobject): pvirtualnode;
 var
@@ -165,6 +185,122 @@ begin
   end;
 end;
 
+procedure TEditSyncOscFrm.TagsTVChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+var
+  i,j:integer;
+  a:caxis;
+  s:toscsignal;
+  next, n: PVirtualNode;
+  D, parentdata: PNodeData;
+begin
+  i:=0;
+  j:=0;
+  n := tagsTV.GetFirstSelected(true);
+  while Node <> nil do
+  begin
+    D := tagsTV.GetNodeData(n);
+    if tobject(D.Data) is caxis then
+    begin
+      a:=caxis(D.Data);
+      SetMultiSelectComponentString(NameAxisEdit, a.name);
+      SetMultiSelectComponentString(MinYfe, floattostr(a.minY));
+      SetMultiSelectComponentString(MaxYfe, floattostr(a.maxY));
+    end;
+    if tobject(D.Data) is TOscSignal then
+    begin
+      s:=TOscSignal(D.Data);
+      SetMultiSelectComponentString(LineNameEdit, s.t.tagname);
+      linecolor.Color:=rgbtoint(s.line.color);
+    end;
+    next := tagsTV.GetNextSelected(Node, true);
+    Node := next;
+    inc(I);
+  end;
+  endMultiSelect(NameAxisEdit);
+  endMultiSelect(MinYfe);
+  endMultiSelect(MaxYfe);
+  endMultiSelect(LineNameEdit);
+end;
+
+
+procedure TEditSyncOscFrm.UpdateBtnClick(Sender: TObject);
+var
+  I: Integer;
+  n, next:PVirtualNode;
+  d:PNodeData;
+  p:cpage;
+  ca:caxis;
+  pAx:paxis;
+  Ax:TAxis;
+  b:boolean;
+  str:string;
+begin
+  n := tagsTV.GetFirstSelected(true);
+  while n <> nil do
+  begin
+    D := tagsTV.GetNodeData(n);
+    if tobject(D.Data) is caxis then
+    begin
+      ca:=caxis(D.Data);
+      pAx:=TSyncOscFrm(m_curObj).GetPAxCfg(ca.name);
+      // Мин оси
+      str:=GetMultiSelectComponentString(MinYfe, b);
+      if checkstr(str) then
+      begin
+        ca.minY:=strtoFloatExt(str);
+        if pax<>nil then
+          pax.ymin:=ca.minY;
+      end;
+      // Макс оси
+      str:=GetMultiSelectComponentString(MaxYfe, b);
+      if checkstr(str) then
+      begin
+        ca.maxY:=strtoFloatExt(str);
+        if pax<>nil then
+          pax.ymax:=ca.maxY;
+      end;
+      // имя оси
+      str:=GetMultiSelectComponentString(NameAxisEdit, b);
+      if checkstr(str) then
+      begin
+        ca.name:=str;
+        if pax<>nil then
+          pAx.name:=str;
+      end;
+    end;
+    if tobject(D.Data) is TOscSignal then
+    begin
+
+    end;
+    next := tagsTV.GetNextSelected(N, true);
+    N := next;
+    inc(I);
+  end;
+
+  TSyncOscFrm(m_curObj).m_Length:=LengthFE.FloatNum;
+  //TSyncOscFrm(m_curObj).m_TrigTag.tag:=ChannelXCB.gettag[ChannelXCB.ItemIndex];
+  TSyncOscFrm(m_curObj).m_type:=IntToTOscType(TrigRG.ItemIndex);
+  p:=cpage(TSyncOscFrm(m_curObj).m_Chart.activePage);
+  for I := 0 to p.getAxisCount - 1 do
+  begin
+    ca:=p.getaxis(i);
+    if i<TSyncOscFrm(m_curObj).m_ax.size then
+    begin
+      pAx:=paxis(TSyncOscFrm(m_curObj).m_ax.GetPByInd(i));
+      pAx.name:=ca.name;
+      pAx.ymin:=MinYfe.FloatNum;
+      pAx.ymax:=MaxYfe.FloatNum;
+    end
+    else
+    begin
+      Ax.name:=ca.name;
+      Ax.ymin:=MinYfe.FloatNum;
+      Ax.ymax:=MaxYfe.FloatNum;
+      TSyncOscFrm(m_curObj).m_ax.push_back(Ax);
+    end;
+  end;
+end;
+
 procedure TEditSyncOscFrm.TagsTVDragDrop(Sender: TBaseVirtualTree;
   Source: TObject; DataObject: IDataObject; Formats: TFormatArray;
   Shift: TShiftState; Pt: TPoint; var Effect: Integer; Mode: TDropMode);
@@ -241,38 +377,6 @@ begin
   end;
 end;
 
-procedure TEditSyncOscFrm.UpdateBtnClick(Sender: TObject);
-var
-  I: Integer;
-  n:PVirtualNode;
-  d:PNodeData;
-  p:cpage;
-  ca:caxis;
-  pAx:paxis;
-  Ax:TAxis;
-begin
-  TSyncOscFrm(m_curObj).m_Length:=LengthFE.FloatNum;
-  //TSyncOscFrm(m_curObj).m_TrigTag.tag:=ChannelXCB.gettag[ChannelXCB.ItemIndex];
-  TSyncOscFrm(m_curObj).m_type:=IntToTOscType(TrigRG.ItemIndex);
-  p:=cpage(TSyncOscFrm(m_curObj).m_Chart.activePage);
-  for I := 0 to p.getAxisCount - 1 do
-  begin
-    ca:=p.getaxis(i);
-    if i<TSyncOscFrm(m_curObj).m_ax.size then
-    begin
-      pAx:=paxis(TSyncOscFrm(m_curObj).m_ax.GetPByInd(i));
-      pAx.ymin:=MinYfe.FloatNum;
-      pAx.ymax:=MaxYfe.FloatNum;
-    end
-    else
-    begin
-      Ax.name:=ca.name;
-      Ax.ymin:=MinYfe.FloatNum;
-      Ax.ymax:=MaxYfe.FloatNum;
-      TSyncOscFrm(m_curObj).m_ax.push_back(Ax);
-    end;
-  end;
-end;
 
 procedure TEditSyncOscFrm.updateTagsList;
 begin

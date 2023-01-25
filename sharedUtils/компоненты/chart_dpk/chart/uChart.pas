@@ -251,9 +251,12 @@ uses
 // ==========================ѕолучение Gl контекста======================
 procedure cChart.GetGlContext(H: Hwnd);
 var
-  nPixelFormat: integer;
+  index, nPixelFormat: integer;
+  rect: TRect;
+
   pfd: TPixelFormatDescriptor;
   p: cpage;
+
 begin
   if not g_initGL then
     g_initGL:=InitOpenGL('opengl32.dll', 'glu32.dll');
@@ -264,11 +267,20 @@ begin
 
   wglMakeCurrent(dc, hrc);
 
+  initGl := true;
   p := cpage(activePage);
   if p <> nil then
+  begin
     p.SetPointSize(5);
-
-  initGl := true;
+    index := p.getaxiscount;
+    // увеличиваем отступ дл€ оси
+    if index > 1 then
+    begin
+      rect := p.GetPixelTabSpace;
+      rect.Left := rect.Left + c_axisTab;
+      p.settabspace(rect);
+    end;
+  end;
 end;
 
 procedure cChart.deletecontext;

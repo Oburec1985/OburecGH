@@ -135,6 +135,12 @@ function RectToLogScale(var rect: fRect; minLinear, maxLinear: Point2d;
 function ValToLogScale(v: double; minmax: Point2d): double;
 function LogValToLinearScale(v: double; minmax: Point2d): double;
 
+
+const
+  // место под надписи для оси
+  c_axisTab = 45;
+
+
 implementation
 
 uses
@@ -145,8 +151,6 @@ const
   textSelOffset = 5;
   textWidth = 4;
   textheight = 8;
-  // место под надписи для оси
-  c_axisTab = 45;
   GLF_START_LIST = 1000;
   pi = 3.14159265;
   c_FloatMin = 0.00001;

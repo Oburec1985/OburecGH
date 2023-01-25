@@ -125,6 +125,7 @@ type
     function _AddRef: integer; stdcall;
     function _release: integer; stdcall;
     procedure GetJournal;
+    procedure doStart;
     // destructor Destroy; override;
   public // IRecorderPlugin
     procedure destroyForms;
@@ -438,11 +439,15 @@ begin
       begin
         case newstate of
           RS_VIEW:
+          begin
             rcStateChange := RSt_StopToView;
+            doStart;
+          end;
           RS_REC:
           begin
             g_merafile:=GetMeraFile;
             rcStateChange := RSt_StopToRec;
+            doStart;
           end;
         end;
       end;
@@ -454,6 +459,7 @@ begin
           RS_REC:
           begin
             rcStateChange := RSt_ViewToRec;
+            doStart;
             g_merafile:=GetMeraFile;
           end;
           RS_STOP:
@@ -464,7 +470,10 @@ begin
       begin
         case newstate of
           RS_VIEW:
+          begin
             rcStateChange := RSt_RecToView;
+            doStart;
+          end;
           RS_STOP:
             rcStateChange := RSt_RecToStop;
         end;
@@ -473,13 +482,17 @@ begin
       begin
         case newstate of
           RS_VIEW:
+          begin
             rcStateChange := RSt_initToView;
+            doStart;
+          end;
           RS_STOP:
             rcStateChange := RSt_initToStop;
           RS_REC:
           begin
             g_merafile:=GetMeraFile;
             rcStateChange := RSt_initToRec;
+            doStart;
           end;
         end;
       end;
@@ -488,6 +501,18 @@ begin
   begin
     m_rstate := newstate;
     EList.CallAllEvents(c_RC_DoChangeRCState);
+  end;
+end;
+
+procedure TExtRecorderPack.doStart;
+var
+  i:integer;
+  f:cRecBasicFactory;
+begin
+  for I := 0 to m_CompMng.Count - 1 do
+  begin
+    f:=cRecBasicFactory(m_CompMng.Objects[i]);
+    f.doStart;
   end;
 end;
 

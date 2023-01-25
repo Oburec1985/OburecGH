@@ -152,8 +152,49 @@ function InsertOn : boolean;
 function NumLock : boolean;
 
 function ScrollLock : boolean;
+function getCommonInterval(i1, i2: point2d): point2d;
 
 implementation
+
+function max(x, y: double; var b: boolean): double;
+begin
+  if x > y then
+  begin
+    result := x;
+    b := true;
+  end
+  else
+  begin
+    result := y;
+    b := false;
+  end;
+end;
+
+function min(x, y: double; var b: boolean): double;
+begin
+  if x < y then
+  begin
+    result := x;
+    b := true;
+  end
+  else
+  begin
+    result := y;
+    b := false;
+  end;
+end;
+
+
+function getCommonInterval(i1, i2: point2d): point2d;
+var
+  b: boolean;
+begin
+  result.x := max(i1.x, i2.x, b);
+  result.y := min(i1.y, i2.y, b);
+  if result.y<result.x then
+    result.y:=result.x;
+end;
+
 
 function AltKeyDown : boolean;
 begin

@@ -142,6 +142,7 @@ type
     function getPortionTime: point2d;
     // индексы начала и конца интервала
     function getIntervalInd(interval: point2d): tpoint;
+    // TimeInd
     function getIndex(t: double): integer;
   public
     function GetDefaultEst: double;
