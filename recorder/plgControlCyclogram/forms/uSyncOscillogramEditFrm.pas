@@ -126,6 +126,7 @@ var
   osc:TSyncOscFrm;
   p:cpage;
   a:caxis;
+  pAx:PAxis;
 begin
   m_curObj:=p_osc;
   osc:=TSyncOscFrm(m_curObj);
@@ -135,10 +136,19 @@ begin
   TrigRG.ItemIndex:=TOscTypeToInt(osc.m_type);
   p:=cpage(osc.m_Chart.activePage);
   a:=p.activeAxis;
-  MinYfe.FloatNum:=a.min.y;
-  MaxYfe.FloatNum:=a.max.y;
-  NameAxisEdit.text:=a.name;
-
+  pAx:=TSyncOscFrm(m_curObj).GetPAxCfg(a.name);
+  if pAx=nil then
+  begin
+    MinYfe.FloatNum:=a.min.y;
+    MaxYfe.FloatNum:=a.max.y;
+    NameAxisEdit.text:=a.name;
+  end
+  else
+  begin
+    MinYfe.FloatNum:=pax.ymin;
+    MaxYfe.FloatNum:=pax.ymax;
+    NameAxisEdit.text:=a.name;
+  end;
   showModal;
 end;
 
@@ -189,6 +199,7 @@ procedure TEditSyncOscFrm.TagsTVChange(Sender: TBaseVirtualTree; Node: PVirtualN
 var
   i,j:integer;
   a:caxis;
+  pa:PAxis;
   s:toscsignal;
   next, n: PVirtualNode;
   D, parentdata: PNodeData;
@@ -202,9 +213,19 @@ begin
     if tobject(D.Data) is caxis then
     begin
       a:=caxis(D.Data);
-      SetMultiSelectComponentString(NameAxisEdit, a.name);
-      SetMultiSelectComponentString(MinYfe, floattostr(a.minY));
-      SetMultiSelectComponentString(MaxYfe, floattostr(a.maxY));
+      pa:=TSyncOscFrm(m_curObj).GetPAxCfg(a.name);
+      if pa=nil then
+      begin
+        SetMultiSelectComponentString(NameAxisEdit, a.name);
+        SetMultiSelectComponentString(MinYfe, floattostr(a.minY));
+        SetMultiSelectComponentString(MaxYfe, floattostr(a.maxY));
+      end
+      else
+      begin
+        SetMultiSelectComponentString(NameAxisEdit, a.name);
+        SetMultiSelectComponentString(MinYfe, floattostr(pa.ymin));
+        SetMultiSelectComponentString(MaxYfe, floattostr(pa.ymax));
+      end;
     end;
     if tobject(D.Data) is TOscSignal then
     begin
@@ -280,25 +301,6 @@ begin
   TSyncOscFrm(m_curObj).m_Length:=LengthFE.FloatNum;
   //TSyncOscFrm(m_curObj).m_TrigTag.tag:=ChannelXCB.gettag[ChannelXCB.ItemIndex];
   TSyncOscFrm(m_curObj).m_type:=IntToTOscType(TrigRG.ItemIndex);
-  p:=cpage(TSyncOscFrm(m_curObj).m_Chart.activePage);
-  for I := 0 to p.getAxisCount - 1 do
-  begin
-    ca:=p.getaxis(i);
-    if i<TSyncOscFrm(m_curObj).m_ax.size then
-    begin
-      pAx:=paxis(TSyncOscFrm(m_curObj).m_ax.GetPByInd(i));
-      pAx.name:=ca.name;
-      pAx.ymin:=MinYfe.FloatNum;
-      pAx.ymax:=MaxYfe.FloatNum;
-    end
-    else
-    begin
-      Ax.name:=ca.name;
-      Ax.ymin:=MinYfe.FloatNum;
-      Ax.ymax:=MaxYfe.FloatNum;
-      TSyncOscFrm(m_curObj).m_ax.push_back(Ax);
-    end;
-  end;
 end;
 
 procedure TEditSyncOscFrm.TagsTVDragDrop(Sender: TBaseVirtualTree;

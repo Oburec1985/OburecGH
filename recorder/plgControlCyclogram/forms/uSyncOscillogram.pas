@@ -297,14 +297,15 @@ begin
   begin
     axCfg:=m_ax.GetByInd(i);
     a:=p.getaxis(axCfg.name);
-    if a<>nil then
-    begin
-      a.minY:=axCfg.ymax;
-      a.maxY:=axCfg.ymax;
-    end;
-    //r.BottomLeft := p2(0, axCfg.ymin);
-    //r.TopRight := p2(m_Length, axCfg.ymax);
-    //p.ZoomfRect(r);
+    //if a<>nil then
+    //begin
+    //  a.minY:=axCfg.ymin;
+    //  a.maxY:=axCfg.ymax;
+    //end;
+    p.activeAxis:=a;
+    r.BottomLeft := p2(p.MinX, axCfg.ymin);
+    r.TopRight := p2(p.MaxX, axCfg.ymax);
+    p.ZoomfRect(r);
   end;
 end;
 
