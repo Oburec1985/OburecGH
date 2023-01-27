@@ -44,6 +44,8 @@ type
     Label3: TLabel;
     LineNameEdit: TEdit;
     LineColor: TPanel;
+    Label1: TLabel;
+    PhaseE: TFloatEdit;
     procedure TagsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
@@ -133,6 +135,8 @@ begin
   ShowTV;
   // отображаемый интервал
   LengthFE.FloatNum:=osc.m_Length;
+  setComboBoxItem(osc.m_TrigTag.tagname,ChannelXCB);
+  PhaseE.FloatNum:=osc.m_Phase0;
   TrigRG.ItemIndex:=TOscTypeToInt(osc.m_type);
   p:=cpage(osc.m_Chart.activePage);
   a:=p.activeAxis;
@@ -301,6 +305,8 @@ begin
   TSyncOscFrm(m_curObj).m_Length:=LengthFE.FloatNum;
   //TSyncOscFrm(m_curObj).m_TrigTag.tag:=ChannelXCB.gettag[ChannelXCB.ItemIndex];
   TSyncOscFrm(m_curObj).m_type:=IntToTOscType(TrigRG.ItemIndex);
+  TSyncOscFrm(m_curObj).m_Phase0:=PhaseE.FloatNum;
+  TSyncOscFrm(m_curObj).m_TrigTag.tag:=ChannelXCB.gettag(ChannelXCB.ItemIndex);
 end;
 
 procedure TEditSyncOscFrm.TagsTVDragDrop(Sender: TBaseVirtualTree;

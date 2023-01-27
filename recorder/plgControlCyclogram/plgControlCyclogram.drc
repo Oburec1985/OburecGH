@@ -1222,9 +1222,6 @@ END
 /* ..\..\sharedUtils\mera\database\uMDBFrm.dfm */
 /* ..\SharedRUnits\uRcClientFrm.dfm */
 /* ..\..\sharedUtils\mera\database\uDownloadRegsFrm.dfm */
-/* forms\uCustomEditControlFrame.dfm */
-/* forms\uDacControlEditFrame.dfm */
-/* forms\uControlEditFrame.dfm */
 /* ..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common\JclUnicode.res */
 /* ..\..\sharedUtils\utils\./files/res/CURSORS.res */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.dfm */
@@ -1240,10 +1237,13 @@ END
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
+/* ..\SharedRUnits\uTagsListFrame.dfm */
 /* forms\uModesStepFrame.dfm */
 /* forms\uModesTabsFrame.dfm */
 /* forms\uModesTabsForm.dfm */
-/* ..\SharedRUnits\uTagsListFrame.dfm */
+/* forms\uCustomEditControlFrame.dfm */
+/* forms\uDacControlEditFrame.dfm */
+/* forms\uControlEditFrame.dfm */
 /* forms\uEditProfileFrm.dfm */
 /* forms\uTrigsFrm.dfm */
 /* forms\uTrigFrame.dfm */
@@ -1291,7 +1291,7 @@ END
 /* forms\uSpmChart.dfm */
 /* forms\uControlWarnFrm.dfm */
 /* forms\uSyncOscillogram.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSyncOscillogramEditFrm.dfm */
+/* forms\uSyncOscillogramEditFrm.dfm */
 /* forms\uMBaseControl.dfm */
 /* ..\SharedRUnits\uFrmSync.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditChartObjFrame.dfm */

@@ -123,7 +123,9 @@ type
     procedure initTagData(blCount: integer);
     // вызывается в событии doGetData для вычитки данных из тега в m_TagData
     // возвращает true если пришли новые данные
-    function UpdateTagData(tare: boolean): boolean;
+    // сбрасывается в 0 если сброс данных не произошел
+    function UpdateTagData(tare: boolean; var AutoResetData:integer): boolean; overload;
+    function UpdateTagData(tare: boolean): boolean; overload;
     // необходимо вызывать каждый раз когда расчет по накопленным данным m_ReadData завершен
     // в результате копируются неиспользованные данные в начало буфера и происходит перевод
     // m_lastindex в начало буфера
@@ -134,8 +136,7 @@ type
     // резетим буфер по индексу первого нужного элемента в m_readData (забываем все до endTimeInd)
     procedure ResetTagDataTimeInd(endTimeInd: integer);
     procedure InitWriteData(Size: integer);
-    function GetValByTime(time: double; interp: boolean;
-      var error: boolean): point2d;
+    function GetValByTime(time: double; interp: boolean;  var error: boolean): point2d;
     // получить индекс последнего элемента в массиве m_ReadData
     function getlastindex: integer;
     // начало и конец в секундах данных в m_readdata
@@ -1188,8 +1189,11 @@ begin
   if m_lastindex <> 0 then
   begin
     datacount := m_lastindex - endTimeInd;
-    if m_ReadSize - datacount <> 0 then
-      move(m_ReadData[endTimeInd], m_ReadData[0], datacount * sizeof(double));
+    if datacount>0 then
+    begin
+      if m_ReadSize - datacount <> 0 then
+        move(m_ReadData[endTimeInd], m_ReadData[0], datacount * sizeof(double));
+    end;
     m_lastindex := datacount;
     m_ReadDataTime := m_ReadDataTime + (1 / getfreq) * (endTimeInd);
     if lastindex >= 0 then
@@ -1339,6 +1343,13 @@ end;
 
 function cTag.UpdateTagData(tare: boolean): boolean;
 var
+  i:integer;
+begin
+  UpdateTagData(tare, i);
+end;
+
+function cTag.UpdateTagData(tare: boolean; var AutoResetData:integer): boolean;
+var
   i, BufCount, // кол-о блоков которое кладется в m_ReadData. Похорошему равно newBlockCount
   // но из за лагов может превысить размер буфера и тогда равно кол-ву блоков выходного буфера
   newBlockCount, // кол-о новых (не обработанных) блоков в кольцевом буфере
@@ -1346,6 +1357,7 @@ var
   blSize, // размер блока
   readyBlockCount, // кол-о готовых к считыванию блоков
   blInd, writeBlockSize: integer;
+  looseData:boolean;
 begin
   result := false;
   if tag = nil then
@@ -1353,6 +1365,7 @@ begin
   block.LockVector;
   blCount := block.GetBlocksCount;
   blSize := block.GetBlocksSize;
+  looseData:=false;
   if blCount > 0 then
   begin
     // сколько всего
@@ -1365,23 +1378,35 @@ begin
       // если готовых блоков больше чем размер буфера (blCount), = потери,
       // но с этим уже ничего не поделать
       if newBlockCount > blCount then
-        BufCount := newBlockCount;
+      begin
+        ///BufCount := newBlockCount;
+        BufCount:=blCount;
+        newBlockCount:=blCount;
+        looseData:=true;
+      end;
+      m_readyBlock := readyBlockCount;
       // m_lastindex := 0; // сбрасывается в resetdata
       for i := 0 to BufCount - 1 do
       begin
-        m_readyBlock := readyBlockCount;
         tare := true;
         // например новых блоков 2. Последний блок в буфере всегда имеет последний тайм штамп.
         // Тогда, в цикле получаем блоки с последнего необработанного
         blInd := i + blCount - newBlockCount;
-        if SUCCEEDED(block.GetVectorR8(pointer(m_TagData)^, blInd, blSize,
-            tare)) then
+        if SUCCEEDED(block.GetVectorR8(pointer(m_TagData)^, blInd, blSize, tare)) then
         begin
           // block.GetVectorPairR8(pointer(m_TagData2d)^, blInd, blSize, tare);
-          if m_lastindex = 0 then
+          if loosedata then
           begin
             fdevicetime := block.GetBlockDeviceTime(blInd);
             m_ReadDataTime := fdevicetime;
+          end
+          else
+          begin
+            if m_lastindex = 0 then
+            begin
+              fdevicetime := block.GetBlockDeviceTime(blInd);
+              m_ReadDataTime := fdevicetime;
+            end;
           end;
         end;
         if m_ReadSize >= m_lastindex + blSize then
@@ -1396,12 +1421,19 @@ begin
             move(m_TagData[0], m_ReadData[m_lastindex], blSize * (sizeof(double)));
             m_lastindex := m_lastindex + blSize;
           end;
+          AutoResetData:=0;
         end
         else
         begin
           // m_ReadSize не вмещает новые данные!!!
-          break;
-        end;
+          //break;
+          AutoResetData:=m_lastindex;
+          ResetTagDataTimeInd(m_lastindex);
+          move(m_TagData[0], m_ReadData[m_lastindex], blSize * (sizeof(double)));
+          fdevicetime := block.GetBlockDeviceTime(blInd);
+          m_ReadDataTime := fdevicetime;
+          m_lastindex := m_lastindex + blSize;
+        end
       end;
       result := true;
     end;

@@ -1519,10 +1519,12 @@ end;
 procedure cControlMng.pushControlsTags;
 var
   i: integer;
+  b:boolean;
   c: cControlObj;
   p: cProgramObj;
   v: double;
 begin
+  c:=nil;
   for i := 0 to ControlsCount - 1 do
   begin
     c := getControlObj(i);
@@ -1538,17 +1540,18 @@ begin
   for i := 0 to ProgramCount - 1 do
   begin
     p := getProgram(i);
-    if (p.state = c_Play) or (c.state = c_TryPlay) then
+    if c=nil then
+      b:=(p.state = c_Play)
+    else
+      b:=(p.state = c_Play) or (c.state = c_TryPlay);
+    if b then
     begin
       p.changeStateTag(c_Prog_PlayTag);
+      p.m_ModeIndTag.PushValue(-1, -1);
     end
     else
     begin
       p.changeStateTag(c_Prog_StopTag);
-    end;
-    if (p.state = c_Play) or (c.state = c_TryPlay) then
-    begin
-      p.m_ModeIndTag.PushValue(-1, -1);
     end;
     if (p.enabled) then
     begin

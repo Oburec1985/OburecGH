@@ -226,6 +226,13 @@ object EditSyncOscFrm: TEditSyncOscFrm
       Height = 16
       Caption = #1058#1088#1080#1075#1075#1077#1088
     end
+    object Label1: TLabel
+      Left = 175
+      Top = 51
+      Width = 65
+      Height = 16
+      Caption = #1057#1076#1074#1080#1075', '#1089#1077#1082'.'
+    end
     object YAxisGB: TGroupBox
       Left = 1
       Top = 416
@@ -378,8 +385,8 @@ object EditSyncOscFrm: TEditSyncOscFrm
       Text = '1'
     end
     object TrigRG: TRadioGroup
-      Left = 6
-      Top = 76
+      Left = 4
+      Top = 140
       Width = 216
       Height = 105
       Caption = #1042#1099#1073#1086#1088#1082#1072' '#1076#1072#1085#1085#1099#1093
@@ -401,8 +408,8 @@ object EditSyncOscFrm: TEditSyncOscFrm
       TabOrder = 3
     end
     object LegendCB: TCheckBox
-      Left = 6
-      Top = 194
+      Left = 4
+      Top = 258
       Width = 119
       Height = 17
       Caption = #1051#1077#1075#1077#1085#1076#1072
@@ -452,6 +459,14 @@ object EditSyncOscFrm: TEditSyncOscFrm
         ParentBackground = False
         TabOrder = 1
       end
+    end
+    object PhaseE: TFloatEdit
+      Left = 175
+      Top = 73
+      Width = 147
+      Height = 24
+      TabOrder = 6
+      Text = '0.0'
     end
   end
   object ImageList_32: TImageList

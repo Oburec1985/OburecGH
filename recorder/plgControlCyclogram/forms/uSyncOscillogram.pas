@@ -35,13 +35,33 @@ type
   PAxis = ^TAxis;
 
   TOscSignal = class
+  public
     t: cTag;
+    // отображать предысторию
+    m_bHist:boolean;
+    // данные для отображения предистории
+    m_histdata:array of double;
+    m_outdata:array of double;
+    m_histLen, // длина предыстории
+    m_histUsed, // используется
+    // длина осциллографирования в int
+    m_Resetsize:integer;
+
     // ось на которой лежит сигнал
     ax: caxis;
     axname:string;
     // линия
     line:cBuffTrend1d;
+    // размер отображаемых данных
     m_portion:integer;
+  protected
+    procedure resetData(lastind:integer);
+    // получить данные с учетом истории (склейка буферов)
+    function GetOscTrigData(var data:array of double; time:point2d;var lastind:integer):integer;
+    procedure doStart(oscLen:double; Phase0:double; oscType:TOscType);
+    function GetInterval:point2d;
+    // длительность предистории
+    function HistLength:double;
   public
     constructor create;
     destructor destroy;
@@ -53,10 +73,12 @@ type
     m_type: TOscType;
     // порог для поиска триггера
     m_Threshold: double;
-    // сдвиг фазы
+    // сдвиг фазы/ сдвиг относительно триггерного события
     m_Phase0: double;
     // длительность сигнала осциллограммы
     m_Length: double;
+    // интервал времени
+    m_TrigInterval:point2d;
   public
     m_Chart: cchart;
     // триггер/ тахо
@@ -66,6 +88,10 @@ type
     // настройки осей
     m_ax:cQueue<TAxis>;
   protected
+    // момент срабатывания триггера
+    m_TrigTime:double;
+    m_TrigTimeInd:integer;
+    m_TrigRes:boolean;
     m_init:boolean;
     m_TimeLabel:cfloatlabel;
   protected
@@ -116,7 +142,7 @@ type
     procedure CreateEvents;
     procedure DestroyEvents;
     procedure doChangeCfg(Sender: TObject);
-    procedure doChangeRState(Sender: TObject);
+    //procedure doChangeRState(Sender: TObject);
     procedure doChangeAlgProps(Sender: TObject);
     procedure doStart;override;
     procedure SetActiveChart(c: TSyncOscFrm);
@@ -426,10 +452,14 @@ var
 begin
   if m_ax.size>0 then
     m_ax.clear;
-
   m_Length:=a_pIni.ReadFloat(str, 'Length', 1);
-  m_type:=IntToTOscType(a_pIni.ReadInteger(str, 'type_' + inttostr(i), 0));
+  m_Threshold:=a_pIni.ReadFloat(str, 'Threshold', 0.5);
+  m_Phase0:=a_pIni.ReadFloat(str, 'Shift', 0);
+  m_type:=IntToTOscType(a_pIni.ReadInteger(str, 'OscType', 0));
   c:=a_pIni.ReadInteger(str, 'AxCount', 1);
+  tname:=a_pIni.ReadString(str, 'Trig', '');
+  if tname<>'' then
+    m_TrigTag.tagname:=tname;
 
   p:=cpage(m_chart.activePage);
   for i := 0 to c-1 do
@@ -503,8 +533,14 @@ var
 begin
   inherited;
   a_pIni.WriteFloat(str, 'Length', m_Length);
-  a_pIni.WriteInteger(str, 'type_' + inttostr(i), TOscTypeToInt(m_type));
+  a_pIni.WriteFloat(str, 'Threshold', m_Threshold);
+  a_pIni.WriteFloat(str, 'Shift', m_Phase0);
+  a_pIni.WriteInteger(str, 'OscType', TOscTypeToInt(m_type));
   a_pIni.WriteInteger(str, 'AxCount', m_ax.size);
+  if m_TrigTag.tagname<>'' then
+  begin
+    a_pIni.WriteString(str, 'Trig', m_TrigTag.tagname);
+  end;
   for i := 0 to m_ax.size - 1 do
   begin
     axCfg := m_ax.GetByInd(i);
@@ -519,10 +555,6 @@ begin
     a_pIni.WriteString(str, 'sig_' + inttostr(i), s.t.tagname);
     a_pIni.WriteString(str, 'axis_' + inttostr(i), s.ax.name);
   end;
-  if m_TrigTag.tagname<>'' then
-  begin
-    a_pIni.WriteString(str, 'Trig_' + inttostr(i), m_TrigTag.tagname);
-  end;
 end;
 
 function TSyncOscFrm.sCount: integer;
@@ -533,15 +565,102 @@ end;
 procedure TSyncOscFrm.UpdateData;
 var
   s:TOscSignal;
-  I, ind: Integer;
-  t:point2d;
+  I, ind, j, imin, imax, lreset: Integer;
   b:boolean;
+  // отображаемый интервал
+  t:point2d;
   interval:point2d;
   interval_i:tpoint;
-  j: Integer;
-  t1t2:array [0..1] of point2d;
+  v_min, v_max, v:double;
 begin
   b:=false;
+  if m_type=TtrigOscil then
+  begin
+    if m_TrigTag.UpdateTagData(true) then
+    begin
+      v_min:=m_TrigTag.m_ReadData[0];
+      v_max:=m_TrigTag.m_ReadData[0];
+      for I := 1 to m_TrigTag.lastindex - 1 do
+      begin
+        v:=m_TrigTag.m_ReadData[i];
+        if v>v_max then
+        begin
+          v_max:=v;
+          imin:=i;
+          if (v_max-v_min)>m_Threshold then
+          begin
+            m_TrigTime:=m_TrigTag.getReadTime(i);
+            m_TrigInterval.x:=m_trigTime+m_Phase0;
+            m_TrigInterval.y:=m_TrigInterval.x+m_Length;
+            m_TrigRes:=true;
+            break;
+          end;
+        end
+        else
+        begin
+          if v<v_min then
+          begin
+            v_min:=v;
+            imin:=i;
+            if (v_max-v_min)>m_Threshold then
+            begin
+              m_TrigTime:=m_TrigTag.getReadTime(i);
+              m_TrigInterval.x:=m_trigTime+m_Phase0;
+              m_TrigInterval.y:=m_TrigInterval.x+m_Length;
+              m_TrigRes:=true;
+              break;
+            end;
+          end;
+        end;
+      end;
+      m_TrigTag.ResetTagData();
+    end;
+    b:=false;
+    for I := 0 to m_signals.Count - 1 do
+    begin
+      s:=GetSignal(i);
+      if s.t.UpdateTagData(true, s.m_Resetsize) or b then
+      begin
+        t:=s.GetInterval;
+        if (t.y>m_TrigInterval.y) and m_TrigRes then
+        begin
+          if i=0 then
+            interval:=getCommonInterval(m_TrigInterval,t)
+          else
+            interval:=getCommonInterval(interval,t);
+          m_TrigRes:=false;
+          b:=true;
+        end;
+      end;
+    end;
+    // отображение триггерных данных
+    if b then
+    begin
+      m_TimeLabel.text:='Time: '+formatstr(interval.x,3);
+      for I := 0 to m_signals.Count - 1 do
+      begin
+        s:=GetSignal(i);
+        if interval.x>0 then
+        begin
+          v:=interval.x;
+        end
+        else
+        begin
+
+        end;
+        // возвращает количество элементов в m_outData, ind - посл элемент в m_readData
+        j:=s.GetOscTrigData(s.m_outdata, interval, ind);
+        if j>0 then
+        begin
+          s.line.AddPoints(s.m_outdata, j);
+          s.resetData(ind);
+        end;
+      end;
+    end;
+    exit;
+  end;
+
+  // сбор данных
   for I := 0 to m_signals.Count - 1 do
   begin
     s:=GetSignal(i);
@@ -552,7 +671,6 @@ begin
         m_init:=true;
       end;
       t:=s.t.getPortionTime;
-      t1t2[i]:=t;
 
       if (t.y-t.x)>m_length then
         b:=true
@@ -572,14 +690,13 @@ begin
     end
     else
     begin
+
     end;
   end;
-
   if b then
   begin
     // рисуем только последние синхронные данные, а не весь объем
     interval.x:=interval.y-m_length;
-
     m_TimeLabel.text:='Time: '+formatstr(interval.x,3);
     for I := 0 to m_signals.Count - 1 do
     begin
@@ -587,26 +704,13 @@ begin
       interval_i:=s.t.getIntervalInd(interval);
       s.line.AddPoints(s.t.m_ReadData, interval_i.x, (interval_i.Y-interval_i.x));
       if s.t.lastindex>=interval_i.Y then
-        s.t.ResetTagDataTimeInd(interval_i.Y);
-      {else
       begin
-        for j := 0 to m_signals.Count - 1 do
-        begin
-          s:=GetSignal(j);
-          if j=0 then
-            interval:=s.t.getPortionTime
-          else
-          begin
-            t:=s.t.getPortionTime;
-            interval:=getCommonInterval(interval, t);
-          end;
-          interval_i:=s.t.getIntervalInd(interval);
-          s.t.ResetTagDataTimeInd(interval_i.Y);
-        end;
-      end;}
+        s.t.ResetTagDataTimeInd(interval_i.Y);
+      end;
     end;
   end;
 end;
+
 
 procedure TSyncOscFrm.UpdateProps;
 var
@@ -668,7 +772,7 @@ begin
     if g_algMng<>nil then
     begin
       initevents:=true;
-      addplgevent('OscFact_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
+      //addplgevent('OscFact_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
       //g_algMng.Events.AddEvent('OscFact_SpmSetProps',e_OnSetAlgProperties,doChangeAlgProps);
       //g_algMng.Events.AddEvent('OscFact_OnLeaveCfg', E_OnChangeAlgCfg, doChangeCfg);
     end;
@@ -677,7 +781,7 @@ end;
 
 procedure TOscilFact.DestroyEvents;
 begin
-  removeplgEvent(doChangeRState, c_RC_DoChangeRCState);
+  //removeplgEvent(doChangeRState, c_RC_DoChangeRCState);
   if g_algMng<>nil then
   begin
 
@@ -716,48 +820,6 @@ begin
   end;
 end;
 
-procedure TOscilFact.doChangeRState(Sender: TObject);
-begin
-  exit;
-  case GetRCStateChange of
-    RSt_Init:
-    begin
-      doStart;
-    end;
-    RSt_StopToView:
-    begin
-      doStart;
-    end;
-    RSt_StopToRec:
-    begin
-      doStart;
-    end;
-    RSt_ViewToStop:
-    begin
-
-    end;
-    RSt_ViewToRec:
-    begin
-
-    end;
-    RSt_initToRec:
-    begin
-      doStart;
-    end;
-    RSt_initToView:
-    begin
-      doStart;
-    end;
-    RSt_RecToStop:
-    begin
-
-    end;
-    RSt_RecToView:
-    begin
-      doStart;
-    end;
-  end;
-end;
 
 function TOscilFact.doCreateForm: cRecBasicIFrm;
 begin
@@ -795,14 +857,15 @@ begin
   for I := 0 to count - 1 do
   begin
     frm:=TSyncOscFrm(GetFrm(i));
+    if frm.m_TrigTag.tag<>nil then
+    begin
+      frm.m_TrigTag.doOnStart;
+    end;
     for j := 0 to frm.m_signals.Count - 1 do
     begin
       s:=frm.GetSignal(j);
-      s.t.doOnStart;
-      s.m_portion:=trunc(frm.m_Length*s.t.freq);
+      s.doStart(frm.m_Length, frm.m_Phase0, frm.m_type);
     end;
-    if frm.m_TrigTag.tag<>nil then
-      frm.m_TrigTag.doOnStart;
     frm.m_init:=false;
   end;
 end;
@@ -862,6 +925,78 @@ destructor TOscSignal.destroy;
 begin
   t.destroy;
   t:=nil;
+end;
+
+procedure TOscSignal.doStart(oscLen, Phase0: double; oscType: TOscType);
+begin
+  t.doOnStart;
+  m_portion:=trunc(oscLen*t.freq);
+  case osctype of
+    tOscil:;
+    tHarmOscil:;
+    TTrigOscil:
+    begin
+      setlength(m_outdata, trunc(oscLen*t.freq));
+      if Phase0<0 then
+      begin
+        setlength(m_histdata, round(abs(Phase0)*t.freq));
+        m_histLen:=round(abs(Phase0)*t.freq);
+        m_Resetsize:=round(oscLen*t.freq);
+      end;
+    end;
+  end;
+end;
+
+function TOscSignal.GetInterval: point2d;
+begin
+  result:=t.getPortionTime;
+  result.x:=result.x-HistLength;
+end;
+
+function TOscSignal.HistLength: double;
+begin
+  Result:=t.freq*m_histLen;
+end;
+
+function TOscSignal.GetOscTrigData(var data:array of double; time:point2d;var lastind:integer):integer;
+var
+  t1:point2d;
+  l:double;
+  intervali:tpoint;
+  i1, i2:integer;
+begin
+  t1:=t.getPortionTime;
+  if t1.x>time.x then
+  begin
+    l:=(t1.x-time.x);
+    i1:=round(l*t.freq);
+    move(m_histdata[m_histLen-i1], data[0], i1*sizeof(double));
+    i2:=round((time.y-l)*t.freq);
+    move(t.m_ReadData[0], data[i1], i2*sizeof(double));
+    result:=i1+i2;
+    lastind:=i2;
+  end
+  else
+  begin
+    intervali:=t.getIntervalInd(time);
+    lastind:=intervali.Y;
+    move(t.m_ReadData[intervali.x], data[0], (intervali.Y-intervali.x)*sizeof(double));
+    result:=intervali.Y-intervali.x;
+  end;
+end;
+// сдвигаем данные до lastind+histlen
+procedure TOscSignal.resetData(lastind:integer);
+var
+  i:integer;
+begin
+  i:=t.m_ReadSize-lastind;
+  if i>=m_histlen then
+  begin
+    i:=m_histlen;
+  end;
+  m_histUsed:=i;
+  move(t.m_ReadData[lastind], m_histdata[0], i*sizeof(double));
+  t.ResetTagDataTimeInd(lastind+i);
 end;
 
 end.
