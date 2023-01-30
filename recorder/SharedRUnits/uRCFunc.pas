@@ -255,7 +255,7 @@ function FuncGetValByTime(t: cTag; time: double; interp: boolean;
 // узнать число ссылок на первый тег в списке рекордера (отладочная функция для поиска места в котором меняются число ссылок по всем тегам рекордера)
 function CheckRefCountT0: integer;
 function TagRefCount(t: itag): integer;
-
+procedure WriteFloatToIniMera(f:tinifile; sect, key:string; v:double);
 procedure logRCInfo(fpath: string);
 
 procedure FreeFFTPlanList;
@@ -1451,6 +1451,15 @@ begin
   // result:=folder+fname;
   result := fname;
   g_merafile := fname;
+end;
+
+procedure WriteFloatToIniMera(f:tinifile; sect, key:string; v:double);
+var
+  str:string;
+begin
+  str:=floattostr(v);
+  str:=ReplaseChars(str,',', '.');
+  f.WriteString(sect, key, str);
 end;
 
 procedure logRCInfo(fpath: string);

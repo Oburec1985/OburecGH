@@ -9,6 +9,7 @@ uses
   uAlgsSaveFrm,
   uControlCyclogramEditFrm,
   shellApi,
+  uSyncOscillogram,
   uMBaseControl;
 
 type
@@ -94,6 +95,8 @@ begin
 end;
 
 function cMBaseAlgNP.ProcessBtnClick(pMsgInfo: PCB_MESSAGE): boolean;
+var
+  dir:string;
 begin
   if pMsgInfo.uID=m_btnID then
   begin
@@ -101,6 +104,12 @@ begin
   end;
   if pMsgInfo.uID=m_btnID2 then
   begin
+    if g_OscFactory<>nil then
+    begin
+      //dir:=extractfiledi(g_merafile);
+      g_merafile:=GetMeraFile;
+      g_OscFactory.SaveMera(g_merafile);
+    end;
     if fileexists(g_Path) then
       ShellExecute(0,nil,pwidechar(g_Path),nil,nil, SW_HIDE);
   end;
