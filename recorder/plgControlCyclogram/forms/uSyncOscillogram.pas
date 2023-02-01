@@ -544,7 +544,6 @@ begin
     end;
     m_ax.push_back(axCfg);
   end;
-
   c := a_pIni.ReadInteger(str, 'SCount', 0);
   for i := 0 to c - 1 do
   begin
@@ -555,12 +554,20 @@ begin
     begin
       m_Chart.tabs.activeTab.addPage(true);
     end;
+    // если у чарта оси нет то создаем
     a := caxis(cpage(m_Chart.activePage).getaxis(axname));
     if a = nil then
     begin
       a := cpage(m_Chart.activePage).Newaxis;
       a.name := axname;
     end;
+    pAxCfg:=GetPAxCfg(axname);
+    if pAxCfg=nil then
+    begin
+      axCfg.name:=axname;
+      m_ax.push_back(axCfg);
+    end;
+
     for j := 0 to m_ax.SIZE - 1 do
     begin
       pAxCfg := PAxis(m_ax.GetPByInd(j));
@@ -634,6 +641,10 @@ var
   v_min, v_max, v: double;
 begin
   b := false;
+  if m_type = tHarmOscil then
+  begin
+
+  end;
   if m_type = TtrigOscil then
   begin
     if m_TrigTag.UpdateTagData(true) then
@@ -722,7 +733,6 @@ begin
     end;
     exit;
   end;
-
   // сбор данных
   for i := 0 to m_signals.count - 1 do
   begin

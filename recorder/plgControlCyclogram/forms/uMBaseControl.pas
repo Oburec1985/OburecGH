@@ -402,6 +402,10 @@ begin
     end;
     cObjFolder(objFolder).m_ObjType:=ObjTypeCB.text;
     cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes.Add(cobjFolder(objFolder).m_ObjType);
+  end
+  else
+  begin
+    cObjFolder(objFolder).m_ObjType:='';
   end;
   if objFolder = nil then
     exit;

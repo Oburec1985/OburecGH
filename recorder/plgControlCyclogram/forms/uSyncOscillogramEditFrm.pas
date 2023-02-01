@@ -82,6 +82,7 @@ procedure TEditSyncOscFrm.AddAxisBtnClick(Sender: TObject);
 var
   p:cpage;
   a:caxis;
+  axcfg:TAxis;
 begin
   p:=cpage(TSyncOscFrm(m_curObj).m_Chart.activePage);
   a:=cAxis.create;
@@ -89,6 +90,11 @@ begin
   p.addaxis(a);
   a.min:=p2d(0,MinYfe.FloatNum);
   a.max:=p2d(TSyncOscFrm(m_curObj).m_length, MaxYfe.FloatNum);
+
+  axCfg.name:=NameAxisEdit.Text;
+  axCfg.ymin:=MinYfe.FloatNum;
+  axCfg.ymax:=MaxYfe.FloatNum;
+  TSyncOscFrm(m_curObj).m_ax.push_back(axcfg);
   ShowTV;
 end;
 
@@ -306,7 +312,10 @@ begin
   //TSyncOscFrm(m_curObj).m_TrigTag.tag:=ChannelXCB.gettag[ChannelXCB.ItemIndex];
   TSyncOscFrm(m_curObj).m_type:=IntToTOscType(TrigRG.ItemIndex);
   TSyncOscFrm(m_curObj).m_Phase0:=PhaseE.FloatNum;
-  TSyncOscFrm(m_curObj).m_TrigTag.tag:=ChannelXCB.gettag(ChannelXCB.ItemIndex);
+  if ChannelXCB.ItemIndex<>-1 then
+  begin
+    TSyncOscFrm(m_curObj).m_TrigTag.tag:=ChannelXCB.gettag(ChannelXCB.ItemIndex);
+  end;
 end;
 
 procedure TEditSyncOscFrm.TagsTVDragDrop(Sender: TBaseVirtualTree;

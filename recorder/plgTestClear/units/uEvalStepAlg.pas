@@ -771,6 +771,10 @@ begin
 
   newpath := dir + '\' + name + '.xml';
   doc := TNativeXml.create(nil);
+  doc.XmlFormat := xfReadable;
+  if FileExists(newpath) then
+    doc.LoadFromFile(newpath);
+
   node := doc.Root;
   node := node.NodeNew('EvalStepAlg');
   node.WriteAttributeInteger('AlgCount', g_AlgList.Count, 0);
@@ -801,7 +805,6 @@ begin
       saveTag(a.m_outScTag, tagnode);
     end;
   end;
-  doc.XmlFormat := xfReadable;
   doc.SaveToFile(newpath);
   doc.destroy;
 end;

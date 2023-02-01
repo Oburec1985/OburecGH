@@ -321,7 +321,7 @@ begin
     prop:=TProp.Create;
     m_Properties.AddObject(pname, prop);
   end;
-  if isvalue(val) then
+  //if isvalue(val) then
   begin
     prop.value:=val;
   end;
