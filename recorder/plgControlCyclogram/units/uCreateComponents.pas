@@ -241,6 +241,7 @@ begin
   //FullDebugModeScanMemoryPoolBeforeEveryOperation:=true;
   // GetCurrentThreadId;
   show:=false;
+  sleep(1000);
   EditPropertiesFrm:=TEditPropertiesFrm.Create(nil);
   ConfirmFmr:=TConfirmFmr.Create(nil);
 

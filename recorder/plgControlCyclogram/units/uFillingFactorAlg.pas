@@ -4,7 +4,7 @@ interface
 
 uses
   classes, windows, activex, ubasealg, uCommonMath, uRCFunc, tags, recorder,
-  blaccess, nativexml,
+  blaccess, nativexml, ubaseobj,
   pluginclass, sysutils;
 
 type
@@ -266,8 +266,8 @@ var
   I: integer;
 begin
   inherited;
-  tnode := xmlNode.NodeNew('OutputTag');
-  tagnode := tnode.NodeNew('OutChan');
+  tnode := getNode(xmlNode,'OutputTag');
+  tagnode := getNode(tnode,'OutChan');
   saveTag(fOutTag, tagnode);
 end;
 

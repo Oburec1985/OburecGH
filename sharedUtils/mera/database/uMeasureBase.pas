@@ -554,11 +554,11 @@ begin
   node.WriteAttributeString('Class',classname,'');
   if m_Properties.Count>0 then
   begin
-    props:=node.NodeNew('Properies');
+    props:=getNode(node,'Properies');
     for I := 0 to m_Properties.Count - 1 do
     begin
       propname:=m_Properties.Strings[i];
-      child:=props.NodeNew(propname);
+      child:=getNode(props,propname);
       child.WriteAttributeString('Value',getProperty(i),'');
     end;
   end;
@@ -733,12 +733,12 @@ var
 begin
   if m_signals.Count>0 then
   begin
-    signals:=node.NodeNew('Signals');
+    signals:=getNode(node,'Signals');
     //node.WriteAttributeInteger('SignalsCount',m_signals.Count,0);
     for I := 0 to m_signals.Count - 1 do
     begin
       s:=getSignal(i);
-      child:=signals.NodeNew(s.m_RCname);
+      child:=getNode(signals,s.m_RCname);
       child.WriteAttributeString('Class','TBaseSignal','');
       child.WriteAttributeString('RCname',s.m_RCname,'');
       child.WriteAttributeString('RCPath',s.m_path,'');
@@ -751,7 +751,7 @@ begin
       end;
     end;
   end;
-  regprops:=node.NodeNew('RegProps');
+  regprops:=getNode(node,'RegProps');
   regprops.WriteAttributeBool('Alarm',m_alarm,false);
   regprops.WriteAttributeString('AlarmType',m_alarmType,'');
   regprops.WriteAttributeString('AlarmDsc',m_alarmDsc,'');
@@ -1069,18 +1069,18 @@ begin
   if m_TestTypes.Count>0 then
   begin
     // список возможных типов испытаний
-    types:=node.NodeNew('TestTypes');
+    types:=getNode(node,'TestTypes');
     for I := 0 to m_TestTypes.Count - 1 do
     begin
       s:=m_TestTypes.Strings[i];
-      child:=types.NodeNew(s);
+      child:=getNode(types,s);
       child.WriteAttributeString('Class','TestTypeStr','');
     end;
   end;
   if m_ObjTypes.Count>0 then
   begin
     // список возможных типов испытаний
-    types:=node.NodeNew('ObjTypes');
+    types:=getNode(node,'ObjTypes');
     for I := 0 to m_ObjTypes.Count - 1 do
     begin
       s:=m_ObjTypes.Strings[i];
@@ -1090,7 +1090,7 @@ begin
         proplist:=TStringList.Create;
         proplist.Duplicates:=dupIgnore;
       end;
-      child:=types.NodeNew(s);
+      child:=getNode(types,s);
       child.WriteAttributeString('Properties','ObjTypeStr','');
       for j := 0 to g_mbase.objects.Count - 1 do
       begin

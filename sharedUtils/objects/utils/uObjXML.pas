@@ -155,7 +155,9 @@ begin
       str[i]:='_';
     end;
   end;
-  ChildXmlNode:=xmlRoot.NodeNew(str);
+  ChildXmlNode:=xmlRoot.FindNode(str);
+  if ChildXmlNode=nil then
+    ChildXmlNode:=xmlRoot.NodeNew(str);
   if obj.metadata.Count>0 then
   begin
     PropertieNode:=ChildXmlNode.NodeNew('Properties');
@@ -176,7 +178,11 @@ var
   I: Integer;
   obj:cbaseobj;
 begin
-  xmlNode:=doc.Root.NodeNew(section);
+  xmlNode:=doc.Root.FindNode(section);
+  if (xmlNode=nil) then
+  begin
+    xmlNode:=doc.Root.NodeNew(section);
+  end;
   for I := 0 to eng.Count - 1 do
   begin
     obj:=eng.getobj(i);

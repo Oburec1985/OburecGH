@@ -1160,12 +1160,13 @@ begin
   // doc:=TNativeXml.Create;
   doc.LoadFromFile(f);
   node := doc.Root;
-  node := node.NodeNew('GraphProfiles');
+  node := getNode(node,'GraphProfiles');
   node.WriteAttributeInteger('PCount', m_pList.count, 0);
   for i := 0 to m_pList.count - 1 do
   begin
     p := m_pList.getprof(i);
-    ch := node.NodeNew('Profile_' + inttostr(i));
+    ch := getNode(node,'Profile_' + inttostr(i));
+
     str := p.settings;
     ch.WriteAttributeString('Opts', str, '');
   end;

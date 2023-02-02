@@ -6,6 +6,7 @@ uses
   classes, windows, activex, ubasealg, uCommonMath, uRCFunc, tags, recorder,
   blaccess, nativexml, uCommonTypes,
   uHardwareMath,
+  uBaseObj,
   complex,
   pluginclass, sysutils,
   uFFT;
@@ -432,8 +433,8 @@ begin
   inherited;
   if fOutTag<>nil then
   begin
-    tnode := xmlNode.NodeNew('OutputTag');
-    tagnode := tnode.NodeNew('OutChan');
+    tnode := getNode(xmlNode,'OutputTag');
+    tagnode := getNode(tnode,'OutChan');
     saveTag(fOutTag, tagnode);
   end;
 

@@ -9,6 +9,7 @@ uses
   uSpm,
   complex,
   pluginclass,
+  uBaseObj,
   performanceTime,
   sysutils;
 
@@ -277,8 +278,8 @@ var
   I: integer;
 begin
   inherited;
-  tnode := xmlNode.NodeNew('OutputTag');
-  tagnode := tnode.NodeNew('OutChan');
+  tnode := getNode(xmlNode,'OutputTag');
+  tagnode := getNode(tnode,'OutChan');
   saveTag(m_Out, tagnode);
 end;
 

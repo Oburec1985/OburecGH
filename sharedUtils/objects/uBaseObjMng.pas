@@ -365,8 +365,13 @@ var
   obj:cbaseobj;
   dir:string;
 begin
-  doc:=TNativeXml.CreateName('Root');
+  doc:=TNativeXml.Create(nil);
+  if fileexists(fname) then
+  begin
+    doc.LoadFromFile(fname);
+  end;
   node:=doc.Root;
+  node.name:='Root';
   XMLSaveObjects(doc, self, sectionName);
   node:=node.FindNode(sectionname);
   XMLSaveMngAttributes(node);

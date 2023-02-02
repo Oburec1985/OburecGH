@@ -659,18 +659,18 @@ var
   i: integer;
   t: cTag;
 begin
-  tnode := node.NodeNew('InputTags');
+  tnode := getNode(node,'InputTags');
   for i := 0 to m_inpTags.Count - 1 do
   begin
     t := InputTag[i];
-    tagnode := tnode.NodeNew('Tag_' + inttostr(i));
+    tagnode := getNode(tnode,'Tag_' + inttostr(i));
     saveTag(t, tagnode);
   end;
-  tnode := node.NodeNew('OutputTags');
+  tnode := getNode(node,'OutputTags');
   for i := 0 to m_outTags.Count - 1 do
   begin
     t := OutputTag[i];
-    tagnode := tnode.NodeNew('Tag_' + inttostr(i));
+    tagnode := getNode(tnode,'Tag_' + inttostr(i));
     saveTag(t, tagnode);
   end;
 end;
@@ -692,12 +692,12 @@ begin
         addInputTag(t);
     end;
   end;
-  tnode := node.NodeNew('OutputTags');
+  tnode := getNode(node,'OutputTags');
   if tnode <> nil then
   begin
     for i := 0 to tnode.NodeCount - 1 do
     begin
-      tagnode := tnode.FindNode('Tag_' + inttostr(i));
+      tagnode := getNode(tnode,'Tag_' + inttostr(i));
       t := loadTag(tagnode, nil);
       if t <> nil then
         addOutTag(t);
@@ -1431,11 +1431,11 @@ var
   str:string;
 begin
   inherited;
-  child := node.NodeNew('BandsNode');
+  child := getNode(node,'BandsNode');
   for i := 0 to m_bands.Count - 1 do
   begin
     b := tBand(m_bands.Objects[i]);
-    bnode := child.NodeNew('Band_' + inttostr(i));
+    bnode := getNode(child,'Band_' + inttostr(i));
     bnode.WriteAttributeString('NodeName', b.name, '');
     bnode.WriteAttributeString('NodeType', 'BNode', '');
     bnode.WriteAttributeFloat('F1', b.m_f1f2.x, 0);
@@ -1444,7 +1444,7 @@ begin
     bnode.WriteAttributeInteger('TagCount', b.tagCount, 0);
     for j := 0 to b.tagCount - 1 do
     begin
-      tnode := bnode.NodeNew(b.name);
+      tnode := getNode(bnode,b.name);
       tnode.WriteAttributeString('NodeType', 'TNode', '');
       t := b.getbandtag(j);
       tnode.WriteAttributeString('TagName', t.tagname, '');
@@ -1452,44 +1452,44 @@ begin
     end;
   end;
 
-  child := node.NodeNew('PlacesNode');
+  child := getNode(node,'PlacesNode');
   for i := 0 to m_places.Count - 1 do
   begin
     p := m_places.getplace(i);
-    pnode := child.NodeNew('Place_' + inttostr(i));
+    pnode := getNode(child,'Place_' + inttostr(i));
     pnode.WriteAttributeString('NodeName', p.name, '');
     pnode.WriteAttributeString('NodeType', 'PlaceNode', '');
     for j := 0 to p.Bandcount - 1 do
     begin
       b := p.getBand(j);
-      bnode := pnode.NodeNew('Band_' + inttostr(j));
+      bnode := getNode(pnode,'Band_' + inttostr(j));
       bnode.WriteAttributeString('NodeType', 'BNode', '');
       bnode.WriteAttributeString('NodeName', b.name, '');
     end;
   end;
 
-  child := node.NodeNew('TagsBandPairNode');
+  child := getNode(node,'TagsBandPairNode');
   for i := 0 to m_TagBandPairList.Count - 1 do
   begin
     pair := m_TagBandPairList.getPair(i);
-    pnode := child.NodeNew('BandPair_' + inttostr(i));
+    pnode := getNode(child,'BandPair_' + inttostr(i));
     pnode.WriteAttributeString('NodeType', 'TagBandNode', '');
     pnode.WriteAttributeString('NodeName', pair.name, '');
     pnode.WriteAttributeInt64('TagID', pair.m_id, -1);
     for j := 0 to pair.placeCount - 1 do
     begin
       p := pair.getplace(j);
-      bnode := pnode.NodeNew('TagPlace_' + inttostr(j));
+      bnode := getNode(pnode,'TagPlace_' + inttostr(j));
       bnode.WriteAttributeString('NodeType', 'TagPlace', '');
       bnode.WriteAttributeString('NodeName', p.name, '');
     end;
   end;
   // корректировка АЧХ
-  child := node.NodeNew('AHGradList');
+  child := getNode(node,'AHGradList');
   for i := 0 to m_AHList.Count - 1 do
   begin
     a := getAH(i);
-    n := child.NodeNew('AHNode_' + inttostr(i));
+    n := getNode(child,'AHNode_' + inttostr(i));
     n.WriteAttributeString('NodeType', 'AHNode', '');
     n.WriteAttributeString('NodeName', a.m_name, '');
     n.WriteAttributeInteger('AHUnits', TAHUnToInt(a.m_units), 0);
@@ -1503,22 +1503,22 @@ begin
     end;
     n.WriteAttributeString('AHpoints', str, '');
   end;
-  child := node.NodeNew('AHNameList');
+  child := getNode(node,'AHNameList');
   for i := 0 to m_AHNames.Count - 1 do
   begin
     str := m_AHNames.Strings[i];
-    n := child.NodeNew('AHNode_' + inttostr(i));
+    n := getNode(child,'AHNode_' + inttostr(i));
     n.WriteAttributeString('NodeType', 'AHNameNode', '');
     n.WriteAttributeString('NodeName', str, '');
     n.WriteAttributeString('AHgrad', cAHGrad(m_AHNames.Objects[i]).m_name, '');
   end;
 
-  child := node.NodeNew('CfgList');
+  child := getNode(node,'CfgList');
   for i := 0 to m_cfgList.Count - 1 do
   begin
     cfg:=getCfg(i);
     str := cfg.name;
-    n := child.NodeNew('AlgCfgNode_' + inttostr(i));
+    n := getNode(child,'AlgCfgNode_' + inttostr(i));
     n.WriteAttributeString('NodeType', 'AlgCfgNode', '');
     n.WriteAttributeString('NodeName', str, '');
     n.WriteAttributeString('AlgClass', cfg.clType.ClassName, '');

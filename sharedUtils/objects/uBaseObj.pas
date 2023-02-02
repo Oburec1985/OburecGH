@@ -193,6 +193,8 @@ type
     property comparetype:integer read fcomparetype write setcomparetype;
   end;
 
+  function GetNode(node: txmlnode; key: string):txmlnode;
+
 const
   c_BaseObj_Img = 5;
   c_StrCompare = 1;
@@ -213,6 +215,13 @@ type
   protected
     slisttext:string;
   end;
+
+function GetNode(node: txmlnode; key: string):txmlnode;
+begin
+  result:=node.FindNode(key);
+  if Result=nil then
+    result:=node.NodeNew(key);
+end;
 
 function IsClass(obj:tobject;name:string):boolean;
 var

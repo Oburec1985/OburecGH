@@ -34,8 +34,10 @@ type
   PAxis = ^TAxis;
 
   TOscSignal = class
+  private
   public
     t: cTag;
+    m_dt:double;
     // отображать предысторию
     m_bHist: boolean;
     //
@@ -309,6 +311,7 @@ begin
     if TOscSignal(m_signals.Items[i]).t.tag = t then
     begin
       Result := TOscSignal(m_signals.Items[i]);
+      Result.m_dt:=1/Result.t.freq;
       break;
     end;
   end;
@@ -316,6 +319,7 @@ begin
   begin
     Result := TOscSignal.create;
     Result.t.tag := t;
+    Result.m_dt:=1/Result.t.freq;
     Result.ax := a;
     Result.line := cBuffTrend1d.create;
     Result.ax.AddChild(Result.line);
@@ -328,6 +332,7 @@ function TSyncOscFrm.CreateSignal(a: caxis; tname: string): TOscSignal;
 begin
   Result := TOscSignal.create;
   Result.t.tagname := tname;
+  Result.m_dt:=1/Result.t.freq;
   Result.ax := a;
   Result.line := cBuffTrend1d.create;
   Result.ax.AddChild(Result.line);
@@ -701,14 +706,20 @@ begin
             interval := getCommonInterval(m_TrigInterval, t)
           else
             interval := getCommonInterval(interval, t);
-          m_TrigRes := false;
-          b := true;
+          if b or (i=0) then
+            b := true;
+        end
+        else
+        begin
+          // данные триггера накопились не по всем каналам
+          b:=false;
         end;
       end;
     end;
     // отображение триггерных данных
     if b then
     begin
+      m_TrigRes := false;
       m_TimeLabel.Text := 'Time: ' + formatstr(interval.x, 3);
       for i := 0 to m_signals.count - 1 do
       begin
@@ -716,7 +727,7 @@ begin
         if interval.x > 0 then
         begin
           v := interval.x;
-          s.m_histX0 := v;
+          s.m_histX0:= v;
         end
         else
         begin
@@ -1041,7 +1052,7 @@ end;
 
 function TOscSignal.HistLength: double;
 begin
-  Result := t.freq * m_histLen;
+  Result := m_dt * m_histLen;
 end;
 
 function TOscSignal.GetOscTrigData(var data: array of double; time: point2d;

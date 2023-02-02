@@ -369,13 +369,13 @@ var
   tnode: txmlNode;
   I: integer;
 begin
-  tnode := node.NodeNew('InTag');
+  tnode := getNode(node,'InTag');
   saveTag(m_InTag, tnode);
 
-  tnode := node.NodeNew('InTaho');
+  tnode := getNode(node,'InTaho');
   saveTag(m_Taho, tnode);
 
-  tnode := node.NodeNew('OutTag');
+  tnode := getNode(node,'OutTag');
   if m_outTag<>nil then
     saveTag(m_outTag, tnode);
 end;

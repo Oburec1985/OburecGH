@@ -3755,13 +3755,13 @@ var
   act: TTrigAction;
   ct: cTag;
 begin
-  child := node.NodeNew(key);
+  child := GetNode(node,key);
   if t.m_actions <> nil then
   begin
-    actions := child.NodeNew('Actions');
+    actions := GetNode(child,'Actions');
     for i := 0 to t.m_actions.Count - 1 do
     begin
-      ActNode := actions.NodeNew('Act_' + inttostr(i));
+      ActNode := GetNode(actions,'Act_' + inttostr(i));
       act := TTrigAction(t.m_actions.Items[i]);
       if act.m_target <> nil then
         ActNode.WriteAttributeString('TargetName', cbaseobj(act.m_target).name)
@@ -4015,7 +4015,8 @@ begin
   node.WriteAttributeBool('AlowUserModeSelect', AllowUserModeSelect, true);
   if StopTrigger <> nil then
     writeTrig(node, 'CommonStopTrig', StopTrigger);
-  TrigsNode := node.NodeNew('TrigsNode');
+
+  TrigsNode := GetNode(node,'TrigsNode');
   // пишем триггеры с списком действий
   actTrigCount := 0;
   for i := 0 to TrigCount - 1 do
@@ -5252,12 +5253,12 @@ begin
   xmlNode.WriteAttributeFloat('CheckLength', CheckLength);
   xmlNode.WriteAttributeBool('CheckThreshold', CheckThreshold);
   xmlNode.WriteAttributeBool('Infinity', Infinity);
-  TaskNode := xmlNode.NodeNew('TaskList');
+  TaskNode := GetNode(xmlNode,'TaskList');
   TaskNode.WriteAttributeFloat('NCount', TaskCount);
   for i := 0 to TaskCount - 1 do
   begin
     t := GetTask(i);
-    n := TaskNode.NodeNew('T' + inttostr(i));
+    n := GetNode(TaskNode,'T' + inttostr(i));
     n.WriteAttributeString('TaskName', t.control.name);
     n.WriteAttributeFloat('TaskVal', t.GetTask);
     n.WriteAttributeFloat('Tolerance', t.m_tolerance);
@@ -5271,12 +5272,12 @@ begin
     n.WriteAttributeString('Opts', t.getparams);
     n.WriteAttributeString('TagsVals', t.TagsToString);
   end;
-  stepsNode := xmlNode.NodeNew('StepList');
+  stepsNode := GetNode(xmlNode,'StepList');
   stepsNode.WriteAttributeFloat('NCount', stepValCount);
   for i := 0 to stepValCount - 1 do
   begin
     s := getstepval(i);
-    n := TaskNode.NodeNew('Step' + inttostr(i));
+    n := getNode(TaskNode,'Step' + inttostr(i));
     n.WriteAttributeString('StepChannel', s.name);
     n.WriteAttributeFloat('StepVal', s.m_val);
   end;

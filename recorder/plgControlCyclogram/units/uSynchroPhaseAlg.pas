@@ -10,6 +10,7 @@ uses
   complex,
   pluginclass,
   performanceTime,
+  uBaseObj,
   sysutils;
 
 type
@@ -344,8 +345,8 @@ var
   i: integer;
 begin
   inherited;
-  tnode := xmlNode.NodeNew('OutputTag');
-  tagnode := tnode.NodeNew('OutChan');
+  tnode := getNode(xmlNode,'OutputTag');
+  tagnode := getNode(tnode,'OutChan');
   saveTag(m_outTag, tagnode);
 end;
 

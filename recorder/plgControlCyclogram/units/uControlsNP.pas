@@ -68,13 +68,6 @@ begin
     if fileexists(newpath) then
     begin
       g_conmng.LoadFromXML(newpath, 'ControlCyclogram');
-      //if fileexists(newpath) then
-      //begin
-      //  if ControlCyclogramEditFrm<>nil then
-      //  begin
-      //    ControlCyclogramEditFrm.load(newpath);
-      //  end;
-      //end;
     end;
     if b then
       lcm;

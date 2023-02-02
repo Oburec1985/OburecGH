@@ -113,9 +113,9 @@ type
 
     procedure settag(t: itag);
     constructor create;
-    destructor destroy;overload;
+    destructor destroy; overload;
     // удаление в режиме конфига, чтобы не вызывать лишних событий ecm/ lcm
-    destructor destroy(InCfgMode:boolean);overload;
+    destructor destroy(InCfgMode: boolean); overload;
     procedure doOnStart;
     function BlockSize: integer;
     // установить массив m_TagData
@@ -124,7 +124,8 @@ type
     // вызывается в событии doGetData для вычитки данных из тега в m_TagData
     // возвращает true если пришли новые данные
     // сбрасывается в 0 если сброс данных не произошел
-    function UpdateTagData(tare: boolean; var AutoResetData:integer): boolean; overload;
+    function UpdateTagData(tare: boolean; var AutoResetData: integer): boolean;
+      overload;
     function UpdateTagData(tare: boolean): boolean; overload;
     // необходимо вызывать каждый раз когда расчет по накопленным данным m_ReadData завершен
     // в результате копируются неиспользованные данные в начало буфера и происходит перевод
@@ -136,7 +137,8 @@ type
     // резетим буфер по индексу первого нужного элемента в m_readData (забываем все до endTimeInd)
     procedure ResetTagDataTimeInd(endTimeInd: integer);
     procedure InitWriteData(Size: integer);
-    function GetValByTime(time: double; interp: boolean;  var error: boolean): point2d;
+    function GetValByTime(time: double; interp: boolean;
+      var error: boolean): point2d;
     // получить индекс последнего элемента в массиве m_ReadData
     function getlastindex: integer;
     // начало и конец в секундах данных в m_readdata
@@ -255,14 +257,14 @@ function FuncGetValByTime(t: cTag; time: double; interp: boolean;
 // узнать число ссылок на первый тег в списке рекордера (отладочная функция для поиска места в котором меняются число ссылок по всем тегам рекордера)
 function CheckRefCountT0: integer;
 function TagRefCount(t: itag): integer;
-procedure WriteFloatToIniMera(f:tinifile; sect, key:string; v:double);
+procedure WriteFloatToIniMera(f: tinifile; sect, key: string; v: double);
 procedure logRCInfo(fpath: string);
 
 procedure FreeFFTPlanList;
 procedure FreeInverseFFTPlanList;
 function GetFFTPlan(fftCount: integer): TFFTProp;
 function GetInverseFFTPlan(fftCount: integer): TFFTProp;
-function TranslateNotifyToStr(n:integer):string;
+function TranslateNotifyToStr(n: integer): string;
 
 var
   g_IR: irecorder = nil;
@@ -281,7 +283,6 @@ const
   c_MBaseName = 'Циклограмма работы регуляторов';
 
 implementation
-
 
 // uMBaseControl;
 
@@ -680,8 +681,8 @@ var
   var_type: Variant;
   v: OleVariant;
 begin
-  result:=false;
-  if t<>nil then
+  result := false;
+  if t <> nil then
   begin
     t.GetProperty(TAGPROP_DESTROYED_FLAG, v);
     result := not v;
@@ -992,7 +993,7 @@ end;
 
 function cTag.BlockSize: integer;
 begin
-  result:=Block.GetBlocksSize;
+  result := block.GetBlocksSize;
 end;
 
 function cTag.ConvertIndInLoopBuff(i: integer): integer;
@@ -1006,674 +1007,728 @@ begin
     end;
   end;
 
-constructor cTag.create;
-begin
-  m_createOutTag := true;
-  ftag := nil;
-  ftagid := -1;
-  ftagname := '';
-  fBlCount := c_blockCount;
-end;
+  constructor cTag.create;
+  begin
+    m_createOutTag := true;
+    ftag := nil;
+    ftagid := -1;
+    ftagname := '';
+    fBlCount := c_blockCount;
+  end;
 
-destructor cTag.destroy;
-var
-  changeState: boolean;
-begin
-  ftagname := 'freedTag';
-  //ecm(changeState);
-  ftag := nil;
-  //if changeState then
-  //  lcm;
-end;
-
-destructor cTag.destroy(InCfgMode:boolean);
-var
-  changeState: boolean;
-begin
-  if InCfgMode then
+  destructor cTag.destroy;
+  var
+    changeState: boolean;
   begin
     ftagname := 'freedTag';
+    // ecm(changeState);
     ftag := nil;
-  end
-  else
-  begin
-    ftagname := 'freedTag';
-    //ecm(changeState);
-    ftag := nil;
-    //if changeState then
-    //  lcm;
+    // if changeState then
+    // lcm;
   end;
-end;
 
-procedure cTag.doOnStart;
-var
-  l: integer;
-begin
-  m_ReadDataTime := 0;
-  m_readyBlock := 0;
-  m_lastindex := 0;
-  m_lastIndWriteData := 0;
-  m_ReadyVals := 0;
-
-  m_timeShtamp := 0;
-  m_timeShtamp_i := 0;
-  // добавлено 07.02.2020
-  l := length(m_ReadData);
-  if l > 0 then
-    ZeroMemory(@m_ReadData[0], l * sizeof(double));
-end;
-
-function cTag.GetDefaultEst: double;
-begin
-  result := tag.GetEstimate(ESTIMATOR_DEFAULT);
-end;
-
-function cTag.GetMeanEst: double;
-begin
-  result := tag.GetEstimate(ESTIMATOR_MEAN);
-end;
-
-function cTag.GetOutValue(i: integer): double;
-begin
-
-end;
-
-function cTag.GetRMSEst: double;
-begin
-  result := tag.GetEstimate(ESTIMATOR_RMSD);
-end;
-
-function cTag.GetPeakEst: double;
-begin
-  result := tag.GetEstimate(ESTIMATOR_PEAK);
-end;
-
-function cTag.GetValByTime(time: double; interp: boolean;
-  var error: boolean): point2d;
-begin
-  result := FuncGetValByTime(self, time, interp, error);
-end;
-
-procedure cTag.initTagData(blCount: integer);
-var
-  v: OleVariant;
-  Size: integer;
-begin
-  ftag.GetProperty(TAGPROP_BUFFSIZE, v);
-  Size := round(GetREFRESHPERIOD * ftag.getfreq);
-  if (v = 1) and (Size > 1) then
+  destructor cTag.destroy(InCfgMode: boolean);
+  var
+    changeState: boolean;
   begin
-    v := Size shl 2;
-  end;
-  // iBlock.GetBlocksSize - дает тот же результат???
-  SetLength(m_TagData, integer(v));
-  SetLength(m_TagData2d, integer(v));
-  m_ReadSize := integer(v) * blCount;
-  SetLength(m_ReadData, m_ReadSize);
-end;
-
-procedure cTag.InitWriteData(Size: integer);
-begin
-  m_WriteDataSize := Size;
-  SetLength(m_WriteData, Size);
-  SetLength(m_WriteDataX, Size);
-end;
-
-function cTag.GetIsScalar: boolean;
-begin
-  if ftag <> nil then
-    result := not isVector(ftag)
-  else
-    result := false;
-end;
-
-procedure cTag.PutOutValue(v, t: double);
-begin
-  m_WriteData[m_lastIndWriteData] := v;
-  m_WriteDataX[m_lastIndWriteData] := t;
-  inc(m_lastIndWriteData);
-  if m_lastIndWriteData >= m_WriteDataSize then
-    m_lastIndWriteData := 0;
-end;
-
-function cTag.readyBlockCount: cardinal;
-begin
-  result := 0;
-  if block <> nil then
-    result := block.GetReadyBlocksCount;
-end;
-
-procedure cTag.ResetTagData;
-var
-  datacount, blCount, portionSize: integer;
-begin
-  if m_lastindex <> 0 then
-  begin
-    portionSize := block.GetBlocksSize;
-    blCount := trunc(m_lastindex / portionSize);
-    datacount := blCount * portionSize;
-    if m_ReadSize - datacount <> 0 then
+    if InCfgMode then
     begin
-      move(m_ReadData[datacount], m_ReadData[0], m_lastindex - datacount);
-    end;
-    m_lastindex := m_lastindex - datacount;
-    m_ReadDataTime := m_ReadDataTime + (1 / getfreq) * datacount;
-  end;
-end;
-
-procedure cTag.ResetTagData(portionSize: integer);
-var
-  datacount, blCount: integer;
-  dt: double;
-begin
-  if portionSize = 0 then
-    exit;
-  if m_lastindex <> 0 then
-  begin
-    blCount := trunc(m_lastindex / portionSize);
-    datacount := blCount * portionSize;
-    if m_ReadSize - datacount <> 0 then
-      move(m_ReadData[datacount], m_ReadData[0],
-        (m_lastindex - datacount) * sizeof(double));
-    m_lastindex := m_lastindex - datacount;
-    m_ReadDataTime := m_ReadDataTime + (1 / getfreq) * datacount;
-    // ZeroMemory(@m_ReadData[lastindex], (m_ReadSize-m_lastindex)*sizeof(double));
-  end;
-end;
-
-procedure cTag.ResetTagDataTimeInd(endTimeInd: integer);
-var
-  datacount: integer;
-  dt: double;
-begin
-  if m_lastindex <> 0 then
-  begin
-    datacount := m_lastindex - endTimeInd;
-    if datacount>0 then
-    begin
-      if m_ReadSize - datacount <> 0 then
-        move(m_ReadData[endTimeInd], m_ReadData[0], datacount * sizeof(double));
-    end;
-    m_lastindex := datacount;
-    m_ReadDataTime := m_ReadDataTime + (1 / getfreq) * (endTimeInd);
-    if lastindex >= 0 then
-    begin
-      ZeroMemory(@m_ReadData[lastindex], (m_ReadSize-m_lastindex)*sizeof(double))
+      ftagname := 'freedTag';
+      ftag := nil;
     end
     else
     begin
-      //showmessage('lastindex<0: cTag.ResetTagDataTimeInd(endTimeInd:integer) - ZeroMemory(@m_ReadData[lastindex], (m_ReadSize-m_lastindex)*sizeof(double))')
+      ftagname := 'freedTag';
+      // ecm(changeState);
+      ftag := nil;
+      // if changeState then
+      // lcm;
     end;
   end;
-end;
 
-procedure cTag.setBlock(b: IBlockAccess);
-begin
-  fBlock := b;
-  initTagData(fBlCount);
-end;
-
-procedure cTag.setfreq(f: double);
-begin
-  ftag.setfreq(f);
-end;
-
-procedure cTag.setReadyVals(f: cardinal);
-begin
-  m_ReadyVals := f;
-end;
-
-function cTag.getPortionTime: point2d;
-begin
-  result.x := m_ReadDataTime;
-  result.y := m_ReadDataTime + m_lastindex * (1 / getfreq);
-end;
-
-function cTag.getIntervalInd(interval: point2d): tpoint;
-begin
-  result.x := trunc((interval.x - m_ReadDataTime) * freq);
-  result.y := trunc((interval.y - m_ReadDataTime) * freq) - 1;
-end;
-
-function cTag.getIndex(t: double): integer;
-begin
-  result := trunc((t - m_ReadDataTime) * freq);
-end;
-
-function cTag.getReadTime(i: integer): double;
-begin
-  if not isScalar(tag) then
+  procedure cTag.doOnStart;
+  var
+    l: integer;
   begin
-    result := m_ReadDataTime + i * (1 / getfreq);
+    m_ReadDataTime := 0;
+    m_readyBlock := 0;
+    m_lastindex := 0;
+    m_lastIndWriteData := 0;
+    m_ReadyVals := 0;
+
+    m_timeShtamp := 0;
+    m_timeShtamp_i := 0;
+    // добавлено 07.02.2020
+    l := length(m_ReadData);
+    if l > 0 then
+      ZeroMemory(@m_ReadData[0], l * sizeof(double));
   end;
-end;
 
-function cTag.getReadyVals: cardinal;
-begin
-  result := m_ReadyVals;
-end;
-
-function cTag.getfreq: double;
-begin
-  if ftag <> nil then
-    result := ftag.getfreq
-  else
+  function cTag.GetDefaultEst: double;
   begin
-    result := 0;
+    result := tag.GetEstimate(ESTIMATOR_DEFAULT);
   end;
-end;
 
-function cTag.getlastindex: integer;
-begin
-  result := m_lastindex;
-end;
-
-procedure cTag.settag(t: itag);
-var
-  bl: IBlockAccess;
-begin
-  ftag := t;
-  if (t <> nil) then
+  function cTag.GetMeanEst: double;
   begin
-    t.GetTagId(ftagid);
-    ftagname := t.GetName;
-    if not isScalar(t) then
+    result := tag.GetEstimate(ESTIMATOR_MEAN);
+  end;
+
+  function cTag.GetOutValue(i: integer): double;
+  begin
+
+  end;
+
+  function cTag.GetRMSEst: double;
+  begin
+    result := tag.GetEstimate(ESTIMATOR_RMSD);
+  end;
+
+  function cTag.GetPeakEst: double;
+  begin
+    result := tag.GetEstimate(ESTIMATOR_PEAK);
+  end;
+
+  function cTag.GetValByTime(time: double; interp: boolean;
+    var error: boolean): point2d;
+  begin
+    result := FuncGetValByTime(self, time, interp, error);
+  end;
+
+  procedure cTag.initTagData(blCount: integer);
+  var
+    v: OleVariant;
+    Size: integer;
+  begin
+    ftag.GetProperty(TAGPROP_BUFFSIZE, v);
+    Size := round(GetREFRESHPERIOD * ftag.getfreq);
+    if (v = 1) and (Size > 1) then
     begin
-      if not FAILED(t.QueryInterface(IBlockAccess, bl)) then
-      begin
-        block := bl;
-        bl := nil;
-      end;
+      v := Size shl 2;
     end;
-  end
-  else
+    // iBlock.GetBlocksSize - дает тот же результат???
+    SetLength(m_TagData, integer(v));
+    SetLength(m_TagData2d, integer(v));
+    m_ReadSize := integer(v) * blCount;
+    SetLength(m_ReadData, m_ReadSize);
+  end;
+
+  procedure cTag.InitWriteData(Size: integer);
+  begin
+    m_WriteDataSize := Size;
+    SetLength(m_WriteData, Size);
+    SetLength(m_WriteDataX, Size);
+  end;
+
+  function cTag.GetIsScalar: boolean;
   begin
     if ftag <> nil then
-      ftagname := '';
+      result := not isVector(ftag)
+    else
+      result := false;
   end;
-end;
 
-procedure cTag.settagid(t: tagid);
-var
-  it: itag;
-begin
-  it := getTagById(t);
-  if it <> nil then
+  procedure cTag.PutOutValue(v, t: double);
   begin
-    tag := it;
+    m_WriteData[m_lastIndWriteData] := v;
+    m_WriteDataX[m_lastIndWriteData] := t;
+    inc(m_lastIndWriteData);
+    if m_lastIndWriteData >= m_WriteDataSize then
+      m_lastIndWriteData := 0;
   end;
-end;
 
-function cTag.Gettagname: string;
-begin
-  if ftag <> nil then
-    result := ftag.GetName
-  else
-    result := ftagname;
-end;
-
-procedure cTag.settagname(s: string);
-var
-  b: boolean;
-  astr: ansistring;
-begin
-  b := false;
-  if Gettagname <> s then
+  function cTag.readyBlockCount: cardinal;
   begin
-    if not RStateConfig then
+    result := 0;
+    if block <> nil then
+      result := block.GetReadyBlocksCount;
+  end;
+
+  procedure cTag.ResetTagData;
+  var
+    datacount, blCount, portionSize: integer;
+  begin
+    if m_lastindex <> 0 then
     begin
-      b := true;
-      ecm;
+      portionSize := block.GetBlocksSize;
+      blCount := trunc(m_lastindex / portionSize);
+      datacount := blCount * portionSize;
+      if m_ReadSize - datacount <> 0 then
+      begin
+        move(m_ReadData[datacount], m_ReadData[0], m_lastindex - datacount);
+      end;
+      m_lastindex := m_lastindex - datacount;
+      m_ReadDataTime := m_ReadDataTime + (1 / getfreq) * datacount;
     end;
-    astr := s;
-    if tag <> nil then
+  end;
+
+  procedure cTag.ResetTagData(portionSize: integer);
+  var
+    datacount, blCount: integer;
+    dt: double;
+  begin
+    if portionSize = 0 then
+      exit;
+    if m_lastindex <> 0 then
     begin
-      tag.SetName(pansichar(lpcstr(StrToAnsi(s))));
-      // tag.SetName(pansichar(astr));
+      blCount := trunc(m_lastindex / portionSize);
+      datacount := blCount * portionSize;
+      if m_ReadSize - datacount <> 0 then
+        move(m_ReadData[datacount], m_ReadData[0],
+          (m_lastindex - datacount) * sizeof(double));
+      m_lastindex := m_lastindex - datacount;
+      m_ReadDataTime := m_ReadDataTime + (1 / getfreq) * datacount;
+      // ZeroMemory(@m_ReadData[lastindex], (m_ReadSize-m_lastindex)*sizeof(double));
+    end;
+  end;
+
+  procedure cTag.ResetTagDataTimeInd(endTimeInd: integer);
+  var
+    datacount: integer;
+    dt: double;
+  begin
+    if m_lastindex <> 0 then
+    begin
+      datacount := m_lastindex - endTimeInd;
+      if datacount > 0 then
+      begin
+        if m_ReadSize - datacount <> 0 then
+          move(m_ReadData[endTimeInd], m_ReadData[0],
+            datacount * sizeof(double));
+      end;
+      m_lastindex := datacount;
+      m_ReadDataTime := m_ReadDataTime + (1 / getfreq) * (endTimeInd);
+      if lastindex >= 0 then
+      begin
+        ZeroMemory(@m_ReadData[lastindex],
+          (m_ReadSize - m_lastindex) * sizeof(double))
+      end
+      else
+      begin
+        // showmessage('lastindex<0: cTag.ResetTagDataTimeInd(endTimeInd:integer) - ZeroMemory(@m_ReadData[lastindex], (m_ReadSize-m_lastindex)*sizeof(double))')
+      end;
+    end;
+  end;
+
+  procedure cTag.setBlock(b: IBlockAccess);
+  begin
+    fBlock := b;
+    initTagData(fBlCount);
+  end;
+
+  procedure cTag.setfreq(f: double);
+  begin
+    ftag.setfreq(f);
+  end;
+
+  procedure cTag.setReadyVals(f: cardinal);
+  begin
+    m_ReadyVals := f;
+  end;
+
+  function cTag.getPortionTime: point2d;
+  begin
+    result.x := m_ReadDataTime;
+    result.y := m_ReadDataTime + m_lastindex * (1 / getfreq);
+  end;
+
+  function cTag.getIntervalInd(interval: point2d): tpoint;
+  begin
+    result.x := trunc((interval.x - m_ReadDataTime) * freq);
+    result.y := trunc((interval.y - m_ReadDataTime) * freq) - 1;
+  end;
+
+  function cTag.getIndex(t: double): integer;
+  begin
+    result := trunc((t - m_ReadDataTime) * freq);
+  end;
+
+  function cTag.getReadTime(i: integer): double;
+  begin
+    if not isScalar(tag) then
+    begin
+      result := m_ReadDataTime + i * (1 / getfreq);
+    end;
+  end;
+
+  function cTag.getReadyVals: cardinal;
+  begin
+    result := m_ReadyVals;
+  end;
+
+  function cTag.getfreq: double;
+  begin
+    if ftag <> nil then
+      result := ftag.getfreq
+    else
+    begin
+      result := 0;
+    end;
+  end;
+
+  function cTag.getlastindex: integer;
+  begin
+    result := m_lastindex;
+  end;
+
+  procedure cTag.settag(t: itag);
+  var
+    bl: IBlockAccess;
+  begin
+    ftag := t;
+    if (t <> nil) then
+    begin
+      t.GetTagId(ftagid);
+      ftagname := t.GetName;
+      if not isScalar(t) then
+      begin
+        if not FAILED(t.QueryInterface(IBlockAccess, bl)) then
+        begin
+          block := bl;
+          bl := nil;
+        end;
+      end;
     end
     else
     begin
-      tag := getTagByName(s);
+      if ftag <> nil then
+        ftagname := '';
     end;
-    ftagname := s;
-    if b then
-      lcm;
   end;
-end;
 
-function cTag.UpdateTagData(tare: boolean): boolean;
-var
-  i:integer;
-begin
-  UpdateTagData(tare, i);
-end;
-
-function cTag.UpdateTagData(tare: boolean; var AutoResetData:integer): boolean;
-var
-  i, BufCount, // кол-о блоков которое кладется в m_ReadData. Похорошему равно newBlockCount
-  // но из за лагов может превысить размер буфера и тогда равно кол-ву блоков выходного буфера
-  newBlockCount, // кол-о новых (не обработанных) блоков в кольцевом буфере
-  blCount, // кол-о блоков в кольцевом буфере
-  blSize, // размер блока
-  readyBlockCount, // кол-о готовых к считыванию блоков
-  blInd, writeBlockSize: integer;
-  looseData:boolean;
-begin
-  result := false;
-  if tag = nil then
-    exit;
-  block.LockVector;
-  blCount := block.GetBlocksCount;
-  blSize := block.GetBlocksSize;
-  looseData:=false;
-  if blCount > 0 then
+  procedure cTag.settagid(t: tagid);
+  var
+    it: itag;
   begin
-    // сколько всего
-    readyBlockCount := block.GetReadyBlocksCount;
-    // если количество блоков больше чем кол-во обработанных блоков (т.е. есть новые данные)
-    if readyBlockCount > m_readyBlock then
+    it := getTagById(t);
+    if it <> nil then
     begin
-      newBlockCount := readyBlockCount - m_readyBlock;
-      BufCount := newBlockCount;
-      // если готовых блоков больше чем размер буфера (blCount), = потери,
-      // но с этим уже ничего не поделать
-      if newBlockCount > blCount then
+      tag := it;
+    end;
+  end;
+
+  function cTag.Gettagname: string;
+  begin
+    if ftag <> nil then
+      result := ftag.GetName
+    else
+      result := ftagname;
+  end;
+
+  procedure cTag.settagname(s: string);
+  var
+    b: boolean;
+    astr: ansistring;
+  begin
+    b := false;
+    if Gettagname <> s then
+    begin
+      if not RStateConfig then
       begin
-        ///BufCount := newBlockCount;
-        BufCount:=blCount;
-        newBlockCount:=blCount;
-        looseData:=true;
+        b := true;
+        ecm;
       end;
-      m_readyBlock := readyBlockCount;
-      // m_lastindex := 0; // сбрасывается в resetdata
-      for i := 0 to BufCount - 1 do
+      astr := s;
+      if tag <> nil then
       begin
-        tare := true;
-        // например новых блоков 2. Последний блок в буфере всегда имеет последний тайм штамп.
-        // Тогда, в цикле получаем блоки с последнего необработанного
-        blInd := i + blCount - newBlockCount;
-        if SUCCEEDED(block.GetVectorR8(pointer(m_TagData)^, blInd, blSize, tare)) then
+        tag.SetName(pansichar(lpcstr(StrToAnsi(s))));
+        // tag.SetName(pansichar(astr));
+      end
+      else
+      begin
+        tag := getTagByName(s);
+      end;
+      ftagname := s;
+      if b then
+        lcm;
+    end;
+  end;
+
+  function cTag.UpdateTagData(tare: boolean): boolean;
+  var
+    i: integer;
+  begin
+    UpdateTagData(tare, i);
+  end;
+
+  function cTag.UpdateTagData(tare: boolean; var AutoResetData: integer)
+    : boolean;
+  var
+    i, BufCount, // кол-о блоков которое кладется в m_ReadData. Похорошему равно newBlockCount
+    // но из за лагов может превысить размер буфера и тогда равно кол-ву блоков выходного буфера
+    newBlockCount, // кол-о новых (не обработанных) блоков в кольцевом буфере
+    blCount, // кол-о блоков в кольцевом буфере
+    blSize, // размер блока
+    readyBlockCount, // кол-о готовых к считыванию блоков
+    blInd, writeBlockSize: integer;
+    looseData: boolean;
+  begin
+    result := false;
+    if tag = nil then
+      exit;
+    block.LockVector;
+    blCount := block.GetBlocksCount;
+    blSize := block.GetBlocksSize;
+    looseData := false;
+    if blCount > 0 then
+    begin
+      // сколько всего
+      readyBlockCount := block.GetReadyBlocksCount;
+      // если количество блоков больше чем кол-во обработанных блоков (т.е. есть новые данные)
+      if readyBlockCount > m_readyBlock then
+      begin
+        newBlockCount := readyBlockCount - m_readyBlock;
+        BufCount := newBlockCount;
+        // если готовых блоков больше чем размер буфера (blCount), = потери,
+        // но с этим уже ничего не поделать
+        if newBlockCount > blCount then
         begin
-          // block.GetVectorPairR8(pointer(m_TagData2d)^, blInd, blSize, tare);
-          if loosedata then
+          /// BufCount := newBlockCount;
+          BufCount := blCount;
+          newBlockCount := blCount;
+          looseData := true;
+        end;
+        m_readyBlock := readyBlockCount;
+        // m_lastindex := 0; // сбрасывается в resetdata
+        for i := 0 to BufCount - 1 do
+        begin
+          tare := true;
+          // например новых блоков 2. Последний блок в буфере всегда имеет последний тайм штамп.
+          // Тогда, в цикле получаем блоки с последнего необработанного
+          blInd := i + blCount - newBlockCount;
+          if SUCCEEDED(block.GetVectorR8(pointer(m_TagData)^, blInd, blSize,
+              tare)) then
           begin
-            fdevicetime := block.GetBlockDeviceTime(blInd);
-            m_ReadDataTime := fdevicetime;
-          end
-          else
-          begin
-            if m_lastindex = 0 then
+            // block.GetVectorPairR8(pointer(m_TagData2d)^, blInd, blSize, tare);
+            if looseData then
             begin
               fdevicetime := block.GetBlockDeviceTime(blInd);
               m_ReadDataTime := fdevicetime;
+            end
+            else
+            begin
+              if m_lastindex = 0 then
+              begin
+                fdevicetime := block.GetBlockDeviceTime(blInd);
+                m_ReadDataTime := fdevicetime;
+              end;
             end;
           end;
-        end;
-        if m_ReadSize >= m_lastindex + blSize then
-        begin
-          if m_lastindex < 0 then
+          if m_ReadSize >= m_lastindex + blSize then
           begin
-            // showmessage('uRCFunc cTag.UpdateTagData 1297:m_lastindex<0');
+            if m_lastindex < 0 then
+            begin
+              // showmessage('uRCFunc cTag.UpdateTagData 1297:m_lastindex<0');
+            end
+            else
+            begin
+              // ERROR
+              move(m_TagData[0], m_ReadData[m_lastindex],
+                blSize * (sizeof(double)));
+              m_lastindex := m_lastindex + blSize;
+            end;
+            AutoResetData := 0;
           end
           else
           begin
-            // ERROR
-            move(m_TagData[0], m_ReadData[m_lastindex], blSize * (sizeof(double)));
+            // m_ReadSize не вмещает новые данные!!!
+            // break;
+            AutoResetData := m_lastindex;
+            ResetTagDataTimeInd(m_lastindex);
+            move(m_TagData[0], m_ReadData[m_lastindex],
+              blSize * (sizeof(double)));
+            fdevicetime := block.GetBlockDeviceTime(blInd);
+            m_ReadDataTime := fdevicetime;
             m_lastindex := m_lastindex + blSize;
+          end
+        end;
+        result := true;
+      end;
+    end;
+    block.unLockVector;
+  end;
+
+  function GetMeraFile: string;
+  var
+    fname, folder: string;
+  begin
+    // folder:=g_ir.GetSignalFolderName;
+    folder := g_IR.GetSignalFrameName;
+    fname := FindFile('*.mera', folder, 1);
+    // result:=folder+fname;
+    result := fname;
+    g_merafile := fname;
+  end;
+
+  procedure WriteFloatToIniMera(f: tinifile; sect, key: string; v: double);
+  var
+    str: string;
+  begin
+    str := floattostr(v);
+    str := ReplaseChars(str, ',', '.');
+    f.WriteString(sect, key, str);
+  end;
+
+  procedure logRCInfo(fpath: string);
+  var
+    t: itag;
+    i, refcount: integer;
+    f: tstringlist;
+    str: string;
+  begin
+    f := tstringlist.create;
+    // проверка тегов
+    for i := 0 to g_IR.GetTagsCount - 1 do
+    begin
+      t := GetTagByIndex(i);
+      str := t.GetName;
+      refcount := t._AddRef;
+      refcount := t._Release;
+      // t:=nil; // не влияет на refcount
+      f.Add(str + ' isAlive: ' + booltostr(IsAlive(t))
+          + ' RefCount: ' + inttostr(refcount));
+    end;
+    // проверка фабрик
+    // проверка компонент
+    // проверка плагинов
+    f.SaveToFile(fpath);
+    f.destroy;
+  end;
+
+  function CheckRefCountT0: integer;
+  var
+    t: itag;
+  begin
+    t := GetTagByIndex(0);
+    result := t._AddRef;
+    result := t._Release;
+  end;
+
+  function TagRefCount(t: itag): integer;
+  begin
+    result := t._AddRef;
+    result := t._Release;
+  end;
+
+  procedure FreeFFTPlanList;
+  var
+    i: integer;
+  begin
+    for i := 0 to length(g_FFTPlanList) - 1 do
+    begin
+      if g_FFTPlanList[i].PCount <> 0 then
+      begin
+        FreeMemAligned(g_FFTPlanList[i].TableExp);
+        g_FFTPlanList[i].TableExp.p := nil;
+        SetLength(g_FFTPlanList[i].TableInd, 0);
+        g_FFTPlanList[i].TableInd := nil;
+      end;
+    end;
+    SetLength(g_FFTPlanList, 0);
+  end;
+
+  procedure FreeInverseFFTPlanList;
+  var
+    i: integer;
+  begin
+    for i := 0 to length(g_inverseFFTPlanList) - 1 do
+    begin
+      if g_inverseFFTPlanList[i].PCount <> 0 then
+      begin
+        FreeMemAligned(g_inverseFFTPlanList[i].TableExp);
+        g_inverseFFTPlanList[i].TableExp.p := nil;
+        SetLength(g_inverseFFTPlanList[i].TableInd, 0);
+        g_inverseFFTPlanList[i].TableInd := nil;
+      end;
+    end;
+    SetLength(g_inverseFFTPlanList, 0);
+  end;
+
+  function GetFFTPlan(fftCount: integer): TFFTProp;
+  var
+    i, j, l: integer;
+    r: TFFTProp;
+  begin
+    j := -1;
+    r.PCount := 0;
+    for i := 0 to length(g_FFTPlanList) - 1 do
+    begin
+      r := g_FFTPlanList[i];
+      if r.PCount = fftCount then
+      begin
+        result := g_FFTPlanList[i];
+        exit;
+      end
+      else
+      begin
+        if j = -1 then
+        begin
+          if r.PCount = 0 then
+          begin
+            j := i;
           end;
-          AutoResetData:=0;
-        end
-        else
-        begin
-          // m_ReadSize не вмещает новые данные!!!
-          //break;
-          AutoResetData:=m_lastindex;
-          ResetTagDataTimeInd(m_lastindex);
-          move(m_TagData[0], m_ReadData[m_lastindex], blSize * (sizeof(double)));
-          fdevicetime := block.GetBlockDeviceTime(blInd);
-          m_ReadDataTime := fdevicetime;
-          m_lastindex := m_lastindex + blSize;
-        end
-      end;
-      result := true;
-    end;
-  end;
-  block.unLockVector;
-end;
-
-function GetMeraFile: string;
-var
-  fname, folder: string;
-begin
-  // folder:=g_ir.GetSignalFolderName;
-  folder := g_IR.GetSignalFrameName;
-  fname := FindFile('*.mera', folder, 1);
-  // result:=folder+fname;
-  result := fname;
-  g_merafile := fname;
-end;
-
-procedure WriteFloatToIniMera(f:tinifile; sect, key:string; v:double);
-var
-  str:string;
-begin
-  str:=floattostr(v);
-  str:=ReplaseChars(str,',', '.');
-  f.WriteString(sect, key, str);
-end;
-
-procedure logRCInfo(fpath: string);
-var
-  t: itag;
-  i, refcount: integer;
-  f: tstringlist;
-  str: string;
-begin
-  f := tstringlist.create;
-  // проверка тегов
-  for i := 0 to g_IR.GetTagsCount - 1 do
-  begin
-    t := GetTagByIndex(i);
-    str := t.GetName;
-    refcount := t._AddRef;
-    refcount := t._Release;
-    // t:=nil; // не влияет на refcount
-    f.Add(str + ' isAlive: ' + booltostr(IsAlive(t))
-        + ' RefCount: ' + inttostr(refcount));
-  end;
-  // проверка фабрик
-  // проверка компонент
-  // проверка плагинов
-  f.SaveToFile(fpath);
-  f.destroy;
-end;
-
-function CheckRefCountT0: integer;
-var
-  t: itag;
-begin
-  t := GetTagByIndex(0);
-  result := t._AddRef;
-  result := t._Release;
-end;
-
-function TagRefCount(t: itag): integer;
-begin
-  result := t._AddRef;
-  result := t._Release;
-end;
-
-procedure FreeFFTPlanList;
-var
-  i: integer;
-begin
-  for i := 0 to length(g_FFTPlanList) - 1 do
-  begin
-    if g_FFTPlanList[i].PCount <> 0 then
-    begin
-      FreeMemAligned(g_FFTPlanList[i].TableExp);
-      g_FFTPlanList[i].TableExp.p := nil;
-      SetLength(g_FFTPlanList[i].TableInd, 0);
-      g_FFTPlanList[i].TableInd := nil;
-    end;
-  end;
-  SetLength(g_FFTPlanList, 0);
-end;
-
-procedure FreeInverseFFTPlanList;
-var
-  i: integer;
-begin
-  for i := 0 to length(g_inverseFFTPlanList) - 1 do
-  begin
-    if g_inverseFFTPlanList[i].PCount <> 0 then
-    begin
-      FreeMemAligned(g_inverseFFTPlanList[i].TableExp);
-      g_inverseFFTPlanList[i].TableExp.p := nil;
-      SetLength(g_inverseFFTPlanList[i].TableInd, 0);
-      g_inverseFFTPlanList[i].TableInd := nil;
-    end;
-  end;
-  SetLength(g_inverseFFTPlanList, 0);
-end;
-
-function GetFFTPlan(fftCount: integer): TFFTProp;
-var
-  i, j, l: integer;
-  r: TFFTProp;
-begin
-  j := -1;
-  r.PCount := 0;
-  for i := 0 to length(g_FFTPlanList) - 1 do
-  begin
-    r := g_FFTPlanList[i];
-    if r.PCount = fftCount then
-    begin
-      result := g_FFTPlanList[i];
-      exit;
-    end
-    else
-    begin
-      if j = -1 then
-      begin
-        if r.PCount = 0 then
-        begin
-          j := i;
         end;
       end;
     end;
+    if (j = -1) then
+    begin
+      // длина массива
+      j := length(g_FFTPlanList);
+      SetLength(g_FFTPlanList, j + c_fftPlan_blockLength);
+    end;
+    r := g_FFTPlanList[j];
+    r.StartInd := 0;
+    r.PCount := fftCount;
+    GetMemAlignedArray_cmpx_d(fftCount, r.TableExp);
+    r.TableInd := GetArrayIndex(fftCount, 2);
+    GetFFTExpTable(fftCount, false, tcmxArray_d(r.TableExp.p));
+    g_FFTPlanList[j] := r;
+    result := g_FFTPlanList[j];
   end;
-  if (j = -1) then
-  begin
-    // длина массива
-    j := length(g_FFTPlanList);
-    SetLength(g_FFTPlanList, j + c_fftPlan_blockLength);
-  end;
-  r := g_FFTPlanList[j];
-  r.StartInd := 0;
-  r.PCount := fftCount;
-  GetMemAlignedArray_cmpx_d(fftCount, r.TableExp);
-  r.TableInd := GetArrayIndex(fftCount, 2);
-  GetFFTExpTable(fftCount, false, tcmxArray_d(r.TableExp.p));
-  g_FFTPlanList[j] := r;
-  result := g_FFTPlanList[j];
-end;
 
-function GetInverseFFTPlan(fftCount: integer): TFFTProp;
-var
-  i, j, l: integer;
-  r: TFFTProp;
-begin
-  j := -1;
-  r.PCount := 0;
-  for i := 0 to length(g_inverseFFTPlanList) - 1 do
+  function GetInverseFFTPlan(fftCount: integer): TFFTProp;
+  var
+    i, j, l: integer;
+    r: TFFTProp;
   begin
-    r := g_inverseFFTPlanList[i];
-    if r.PCount = fftCount then
+    j := -1;
+    r.PCount := 0;
+    for i := 0 to length(g_inverseFFTPlanList) - 1 do
     begin
-      result := g_inverseFFTPlanList[i];
-      exit;
-    end
-    else
-    begin
-      if j = -1 then
+      r := g_inverseFFTPlanList[i];
+      if r.PCount = fftCount then
       begin
-        if r.PCount = 0 then
+        result := g_inverseFFTPlanList[i];
+        exit;
+      end
+      else
+      begin
+        if j = -1 then
         begin
-          j := i;
+          if r.PCount = 0 then
+          begin
+            j := i;
+          end;
         end;
       end;
     end;
+    if (j = -1) then
+    begin
+      // длина массива
+      j := length(g_inverseFFTPlanList);
+      SetLength(g_inverseFFTPlanList, j + c_fftPlan_blockLength);
+    end;
+    r := g_inverseFFTPlanList[j];
+    r.inverse := true;
+    r.StartInd := 0;
+    r.PCount := fftCount;
+    GetMemAlignedArray_cmpx_d(fftCount, r.TableExp);
+    r.TableInd := GetArrayIndex(fftCount, 2);
+    GetFFTExpTable(fftCount, true, tcmxArray_d(r.TableExp.p));
+    g_inverseFFTPlanList[j] := r;
+    result := g_inverseFFTPlanList[j];
   end;
-  if (j = -1) then
-  begin
-    // длина массива
-    j := length(g_inverseFFTPlanList);
-    SetLength(g_inverseFFTPlanList, j + c_fftPlan_blockLength);
-  end;
-  r := g_inverseFFTPlanList[j];
-  r.inverse := true;
-  r.StartInd := 0;
-  r.PCount := fftCount;
-  GetMemAlignedArray_cmpx_d(fftCount, r.TableExp);
-  r.TableInd := GetArrayIndex(fftCount, 2);
-  GetFFTExpTable(fftCount, true, tcmxArray_d(r.TableExp.p));
-  g_inverseFFTPlanList[j] := r;
-  result := g_inverseFFTPlanList[j];
-end;
 
-function TranslateNotifyToStr(n:integer):string;
-begin
-  case n of
-    PN_ENTERRCCONFIG:             result:='PN_ENTERRCCONFIG';
-    PN_LEAVERCCONFIG:             result:='PN_LEAVERCCONFIG';
-    PN_CHANGECURTAG:              result:='PN_CHANGECURTAG';
-    PN_RCSTART:                   result:='PN_RCSTART';
-    PN_RCPLAY:                    result:='PN_RCPLAY';
-    PN_RCSTOP:                    result:='PN_RCSTOP';
-    PN_UPDATEDATA:                result:='PN_UPDATEDATA';
-    PN_SHOWINFO:                  result:='PN_SHOWINFO';
-    PN_RCSAVECONFIG:              result:='PN_RCSAVECONFIG';
-    PN_RCLOADCONFIG:              result:='PN_RCLOADCONFIG';
-    PN_SYNCHRO_READ_DATA_BLOCK:   result:='PN_SYNCHRO_READ_DATA_BLOCK';
-    PN_EDIT_VIRTUAL_TAG_PROPS:    result:='PN_EDIT_VIRTUAL_TAG_PROPS';
-    PN_IMPORTSETTINGS:            result:='PN_IMPORTSETTINGS';
-    PN_EXPORTSETTINGS:            result:='PN_EXPORTSETTINGS';
-    PN_BEFORE_RCSTART:            result:='PN_BEFORE_RCSTART';
-    PN_BEFORE_RCSTOP:             result:='PN_BEFORE_RCSTOP';
-    PN_ABORT_RCSTART:             result:='PN_ABORT_RCSTART';
-    PN_BROADCAST:                 result:='PN_BROADCAST';
-    PN_CUSTOM_BUTTON_CLICK:       result:='PN_CUSTOM_BUTTON_CLICK';
-    PN_CUSTOM_BUTTON_QUERY_STATE: result:='PN_CUSTOM_BUTTON_QUERY_STATE';
-    PN_ENABLE_VTAG_SETUP_DLG:     result:='PN_ENABLE_VTAG_SETUP_DLG';
-    PN_EDIT_MULTI_VTAG_PROPS:     result:='PN_EDIT_MULTI_VTAG_PROPS';
-    PN_QUERY_VTAG_INFO:           result:='PN_QUERY_VTAG_INFO';
-    PN_REMOVE_VTAGS:              result:='PN_REMOVE_VTAGS';
-    PN_RCINITIALIZED:             result:='PN_RCINITIALIZED';
-    PN_ON_CHANGE_DATAPLACEMENT:   result:='PN_ON_CHANGE_DATAPLACEMENT';
-    PN_ON_BEFORE_FRAME_REMOVING:  result:='PN_ON_BEFORE_FRAME_REMOVING';
-    PN_ON_AFTER_FRAME_REMOVING:   result:='PN_ON_AFTER_FRAME_REMOVING';
-    PN_FILE_PROCESSING_COMPLETED: result:='PN_FILE_PROCESSING_COMPLETED';
-    PN_ON_DESTROY_UI_SRV:         result:='PN_ON_DESTROY_UI_SRV';
-    PN_ON_SWITCH_TO_UI_THREAD:    result:='PN_ON_SWITCH_TO_UI_THREAD';
-    PN_ON_CONFIG_MODE_COMPLETED:  result:='PN_ON_CONFIG_MODE_COMPLETED';
-    PN_ON_SWITCH_CALIBR_MODE:     result:='PN_ON_SWITCH_CALIBR_MODE';
-    PN_ON_RC_PROGRAMMING:         result:='PN_ON_RC_PROGRAMMING';
-    PN_ABORT_RC_PROGRAMMING:      result:='PN_ABORT_RC_PROGRAMMING';
-    PN_ON_UPDATE_SECURITY_STATE:  result:='PN_ON_UPDATE_SECURITY_STATE';
-    PN_ON_UPDATE_MF_TITLE:        result:='PN_ON_UPDATE_MF_TITLE';
-    PN_ON_REC_MODE:               result:='PN_ON_REC_MODE';
-    PN_ON_PLAY_MODE:              result:='PN_ON_PLAY_MODE';
-    PN_ON_POPUP_SETUP_DIALOG:     result:='PN_ON_POPUP_SETUP_DIALOG';
-  	PN_ON_POPUP_SEL_FRAME_DIALOG: result:='PN_ON_POPUP_SEL_FRAME_DIALOG';
-  	PN_ON_ACTION_SAVE_CFG:        result:='PN_ON_ACTION_SAVE_CFG';
-	  PN_ON_ACTION_SAVE_CFG_AS:     result:='PN_ON_ACTION_SAVE_CFG_AS';
-  	PN_ON_ACTION_LOAD_CFG:        result:='PN_ON_ACTION_LOAD_CFG';
-	  PN_ON_CHANGE_FORMS:           result:='PN_ON_CHANGE_FORMS';
-  	PN_ABORT_RCSTOP:              result:='PN_ABORT_RCSTOP';
-	  PN_ON_ACTION_CLOSE_APP:       result:='PN_ON_ACTION_CLOSE_APP';
-  	PN_ON_ZBALANCE_VTAG:          result:='PN_ON_ZBALANCE_VTAG';
+  function TranslateNotifyToStr(n: integer): string;
+  begin
+    case n of
+      PN_ENTERRCCONFIG:
+        result := 'PN_ENTERRCCONFIG';
+      PN_LEAVERCCONFIG:
+        result := 'PN_LEAVERCCONFIG';
+      PN_CHANGECURTAG:
+        result := 'PN_CHANGECURTAG';
+      PN_RCSTART:
+        result := 'PN_RCSTART';
+      PN_RCPLAY:
+        result := 'PN_RCPLAY';
+      PN_RCSTOP:
+        result := 'PN_RCSTOP';
+      PN_UPDATEDATA:
+        result := 'PN_UPDATEDATA';
+      PN_SHOWINFO:
+        result := 'PN_SHOWINFO';
+      PN_RCSAVECONFIG:
+        result := 'PN_RCSAVECONFIG';
+      PN_RCLOADCONFIG:
+        result := 'PN_RCLOADCONFIG';
+      PN_SYNCHRO_READ_DATA_BLOCK:
+        result := 'PN_SYNCHRO_READ_DATA_BLOCK';
+      PN_EDIT_VIRTUAL_TAG_PROPS:
+        result := 'PN_EDIT_VIRTUAL_TAG_PROPS';
+      PN_IMPORTSETTINGS:
+        result := 'PN_IMPORTSETTINGS';
+      PN_EXPORTSETTINGS:
+        result := 'PN_EXPORTSETTINGS';
+      PN_BEFORE_RCSTART:
+        result := 'PN_BEFORE_RCSTART';
+      PN_BEFORE_RCSTOP:
+        result := 'PN_BEFORE_RCSTOP';
+      PN_ABORT_RCSTART:
+        result := 'PN_ABORT_RCSTART';
+      PN_BROADCAST:
+        result := 'PN_BROADCAST';
+      PN_CUSTOM_BUTTON_CLICK:
+        result := 'PN_CUSTOM_BUTTON_CLICK';
+      PN_CUSTOM_BUTTON_QUERY_STATE:
+        result := 'PN_CUSTOM_BUTTON_QUERY_STATE';
+      PN_ENABLE_VTAG_SETUP_DLG:
+        result := 'PN_ENABLE_VTAG_SETUP_DLG';
+      PN_EDIT_MULTI_VTAG_PROPS:
+        result := 'PN_EDIT_MULTI_VTAG_PROPS';
+      PN_QUERY_VTAG_INFO:
+        result := 'PN_QUERY_VTAG_INFO';
+      PN_REMOVE_VTAGS:
+        result := 'PN_REMOVE_VTAGS';
+      PN_RCINITIALIZED:
+        result := 'PN_RCINITIALIZED';
+      PN_ON_CHANGE_DATAPLACEMENT:
+        result := 'PN_ON_CHANGE_DATAPLACEMENT';
+      PN_ON_BEFORE_FRAME_REMOVING:
+        result := 'PN_ON_BEFORE_FRAME_REMOVING';
+      PN_ON_AFTER_FRAME_REMOVING:
+        result := 'PN_ON_AFTER_FRAME_REMOVING';
+      PN_FILE_PROCESSING_COMPLETED:
+        result := 'PN_FILE_PROCESSING_COMPLETED';
+      PN_ON_DESTROY_UI_SRV:
+        result := 'PN_ON_DESTROY_UI_SRV';
+      PN_ON_SWITCH_TO_UI_THREAD:
+        result := 'PN_ON_SWITCH_TO_UI_THREAD';
+      PN_ON_CONFIG_MODE_COMPLETED:
+        result := 'PN_ON_CONFIG_MODE_COMPLETED';
+      PN_ON_SWITCH_CALIBR_MODE:
+        result := 'PN_ON_SWITCH_CALIBR_MODE';
+      PN_ON_RC_PROGRAMMING:
+        result := 'PN_ON_RC_PROGRAMMING';
+      PN_ABORT_RC_PROGRAMMING:
+        result := 'PN_ABORT_RC_PROGRAMMING';
+      PN_ON_UPDATE_SECURITY_STATE:
+        result := 'PN_ON_UPDATE_SECURITY_STATE';
+      PN_ON_UPDATE_MF_TITLE:
+        result := 'PN_ON_UPDATE_MF_TITLE';
+      PN_ON_REC_MODE:
+        result := 'PN_ON_REC_MODE';
+      PN_ON_PLAY_MODE:
+        result := 'PN_ON_PLAY_MODE';
+      PN_ON_POPUP_SETUP_DIALOG:
+        result := 'PN_ON_POPUP_SETUP_DIALOG';
+      PN_ON_POPUP_SEL_FRAME_DIALOG:
+        result := 'PN_ON_POPUP_SEL_FRAME_DIALOG';
+      PN_ON_ACTION_SAVE_CFG:
+        result := 'PN_ON_ACTION_SAVE_CFG';
+      PN_ON_ACTION_SAVE_CFG_AS:
+        result := 'PN_ON_ACTION_SAVE_CFG_AS';
+      PN_ON_ACTION_LOAD_CFG:
+        result := 'PN_ON_ACTION_LOAD_CFG';
+      PN_ON_CHANGE_FORMS:
+        result := 'PN_ON_CHANGE_FORMS';
+      PN_ABORT_RCSTOP:
+        result := 'PN_ABORT_RCSTOP';
+      PN_ON_ACTION_CLOSE_APP:
+        result := 'PN_ON_ACTION_CLOSE_APP';
+      PN_ON_ZBALANCE_VTAG:
+        result := 'PN_ON_ZBALANCE_VTAG';
+    end;
   end;
-end;
 
 end.

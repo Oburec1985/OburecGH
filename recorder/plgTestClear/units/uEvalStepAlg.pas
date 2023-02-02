@@ -776,12 +776,12 @@ begin
     doc.LoadFromFile(newpath);
 
   node := doc.Root;
-  node := node.NodeNew('EvalStepAlg');
+  node := getNode(node,'EvalStepAlg');
   node.WriteAttributeInteger('AlgCount', g_AlgList.Count, 0);
   for i := 0 to g_AlgList.Count - 1 do
   begin
     a := getobj(i);
-    child := node.NodeNew('Alg_' + inttostr(i));
+    child := getNode(node,'Alg_' + inttostr(i));
     child.WriteAttributeString('AlgName', a.name, '');
     child.WriteAttributeInteger('numFFT', a.m_fftCount, 32);
     child.WriteAttributeInteger('OffsetFFT', a.m_fftShift, 32);
@@ -794,14 +794,14 @@ begin
     child.WriteAttributeInteger('TrigValType', a.m_TrigType, 0);
     child.WriteAttributeInteger('TrigMeanLen', a.m_TrigMeanLenI, 10);
 
-    tagnode := child.NodeNew('inTag');
+    tagnode := getNode(child,'inTag');
     uRcFunc.saveTag(a.m_tag, tagnode);
-    tagnode := child.NodeNew('OutTag');
+    tagnode := getNode(child,'OutTag');
     uRcFunc.saveTag(a.m_outTag, tagnode);
     child.WriteAttributeBool('UseScalarTag', a.m_useScalar);
     if a.m_useScalar then
     begin
-      tagnode := child.NodeNew('TrigTag');
+      tagnode := getNode(child,'TrigTag');
       saveTag(a.m_outScTag, tagnode);
     end;
   end;

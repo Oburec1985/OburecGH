@@ -749,7 +749,8 @@ begin
   t := m_tag;
   if t <> nil then
   begin
-    tnode := node.NodeNew('InputTag');
+    tnode := getNode(node,'InputTag');
+
     saveTag(t, tnode);
   end;
 end;
