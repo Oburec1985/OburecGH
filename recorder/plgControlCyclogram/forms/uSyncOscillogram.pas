@@ -93,6 +93,11 @@ type
     // настройки осей
     m_ax: cQueue<TAxis>;
   protected
+    m_TahoStart:boolean; // старт поиска периода
+    m_iTahoStart:integer; // индекс начала триггера
+    m_iTahoStop:integer; // индекс завершения триггера
+    m_iTahoN:integer; // Число отсчитанных оборотов
+
     // момент срабатывания триггера
     m_TrigTime: double;
     m_TrigTimeInd: integer;
@@ -638,18 +643,45 @@ procedure TSyncOscFrm.UpdateData;
 var
   s: TOscSignal;
   i, ind, j, imin, imax, lreset: integer;
-  b: boolean;
+  b, lb: boolean;
   // отображаемый интервал
   t: point2d;
   interval: point2d;
   interval_i: tpoint;
-  v_min, v_max, v: double;
+  v_min, v_max, v, prev: double;
 begin
   b := false;
   if m_type = tHarmOscil then
   begin
-
+    if m_TrigTag.UpdateTagData(true) then
+    begin
+      v_min := m_TrigTag.m_ReadData[0];
+      v_max := m_TrigTag.m_ReadData[0];
+      for i := 1 to m_TrigTag.lastindex - 1 do
+      begin
+        v := m_TrigTag.m_ReadData[i];
+        if v > m_Threshold then
+        begin
+          v_max:=max(v_max, v, lb);
+          if lb then
+          begin
+            if m_TahoStart then
+            begin
+              m_iTahoStart:=i;
+            end
+            else
+            begin
+              m_iTahoStop:=i;
+              inc(m_iTahoN);
+            end;
+          end
+        end;
+        prev:=v;
+      end;
+      m_TrigTag.ResetTagData();
+    end;
   end;
+  // триггерный старт
   if m_type = TtrigOscil then
   begin
     if m_TrigTag.UpdateTagData(true) then
