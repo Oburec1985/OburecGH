@@ -6,6 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, uTagsListFrame, ExtCtrls, DCL_MYOWN, Spin, uSpin,
   ubtnlistview, ComCtrls, tags, uComponentservises, uRCFunc, uCommonTypes,
+  uCommonMath, MathFunction,
   uRcCtrls, Buttons, Grids, math;
 
 type
@@ -68,7 +69,6 @@ type
     procedure TrigMeanLenIEChange(Sender: TObject);
   private
     fSel:tobject;
-    ffltCurve:array of point2d;
   private
     // отобразить размер блока в норм формате
     procedure ShowBlockSize(t:double);
@@ -190,14 +190,26 @@ end;
 procedure TEvalStepCfgFrm.UpdateAlg(a: TObject);
 var
   t: itag;
-  l,j:integer;
+  i,l,j:integer;
+  p2:point2d;
+  str:string;
+  li:tlistitem;
 begin
-  l:=Length(ffltCurve);
-
-  if l<>0 then
+  if FltRG.ItemIndex=3 then
   begin
-    setlength(cEvalStepAlg(a).m_band, l);
-    move(ffltCurve[0], cEvalStepAlg(a).m_band[0], l*SizeOf(point2d));
+    if l<>0 then
+    begin
+      setlength(cEvalStepAlg(a).m_band, ScalesLV.Items.Count);
+      for I := 0 to ScalesLV.Items.Count - 1 do
+      begin
+        li:=ScalesLV.Items[i];
+        ScalesLV.GetSubItemByColumnName('F',li,str);
+        p2.x:=StrToFloatDef(str, 0);
+        ScalesLV.GetSubItemByColumnName('Scale',li,str);
+        p2.y:=StrToFloatDef(str, 0);
+        cEvalStepAlg(a).m_band[i]:=p2;
+      end;
+    end;
   end;
 
   if FFTShiftIE.IntNum>FFTBlockSizeIE.IntNum then
@@ -205,6 +217,7 @@ begin
   cEvalStepAlg(a).m_fftCount := FFTBlockSizeIE.IntNum;
   cEvalStepAlg(a).m_fftShift := FFTShiftIE.IntNum;
   cEvalStepAlg(a).m_fftFlt := FFTCb.Checked;
+  cEvalStepAlg(a).m_fltType := FltRG.ItemIndex;
   cEvalStepAlg(a).m_Threshold := ThresholdSE.Value;
   cEvalStepAlg(a).m_TrigOffset := OffsetSE.Value;
   cEvalStepAlg(a).m_TrigType:=ValTypeRG.ItemIndex;
@@ -450,44 +463,92 @@ begin
     fr:=t.GetFreq;
     df:=t.GetFreq/FFTBlockSizeIE.IntNum;
   end;
-  SetLength(fFltCurve,3);
   if FltRG.ItemIndex>-1 then
   begin
+    ScalesLV.items.clear;
+    for I := 0 to 2 do
+    begin
+      ScalesLV.Items.add;
+    end;
     case FltRG.ItemIndex of
       0: // ФВЧ
-      if t=nil then
+      if t<>nil then
       begin
-        fFltCurve[0]:=p2d(0,0);fFltCurve[1]:=p2d(1,1);fFltCurve[2]:=p2d(25000,1);
+        li:=ScalesLV.items[0];
+        ScalesLV.SetSubItemByColumnName('Scale','0',li);
+        ScalesLV.SetSubItemByColumnName('Инд.', inttostr(li.Index), li);
+        ScalesLV.SetSubItemByColumnName('F','0',li);
+        for I := 1 to ScalesLV.items.Count - 1 do
+        begin
+          li:=ScalesLV.items[i];
+          ScalesLV.SetSubItemByColumnName('Инд.', inttostr(li.Index), li);
+          if i=1 then
+          begin
+            if FFTdxFE.FloatNum<>0 then
+            begin
+              ScalesLV.SetSubItemByColumnName('F',formatstr(FFTdxFE.FloatNum, 4),li)
+            end
+            else
+              ScalesLV.SetSubItemByColumnName('F','1',li)
+          end
+          else
+            ScalesLV.SetSubItemByColumnName('F',floattostr(t.GetFreq/2),li);
+          ScalesLV.SetSubItemByColumnName('Scale','1',li);
+        end;
       end
       else
       begin
-        fFltCurve[0]:=p2d(0,0);fFltCurve[1]:=p2d(dF,1);fFltCurve[2]:=p2d(t.GetFreq/2,1);
+        //fFltCurve[0]:=p2d(0,0);fFltCurve[1]:=p2d(dF,1);fFltCurve[2]:=p2d(t.GetFreq/2,1);
       end;
       1: // ФНЧ 1/2
       begin
         if t<>nil then
         begin
-          fFltCurve[0]:=p2d(0,1);
-          fFltCurve[1]:=p2d(t.GetFreq/4,1);
-          fFltCurve[2]:=p2d(t.GetFreq/2,0);
+          li:=ScalesLV.items[0];
+          ScalesLV.SetSubItemByColumnName('Инд.', inttostr(li.Index), li);
+          ScalesLV.SetSubItemByColumnName('F','0',li);
+          ScalesLV.SetSubItemByColumnName('Scale','1',li);
+          li:=ScalesLV.items[1];
+          ScalesLV.SetSubItemByColumnName('Инд.', inttostr(li.Index), li);
+          ScalesLV.SetSubItemByColumnName('F',floattostr(t.GetFreq/4),li);
+          ScalesLV.SetSubItemByColumnName('Scale','1',li);
+          li:=ScalesLV.items[2];
+          ScalesLV.SetSubItemByColumnName('Инд.', inttostr(li.Index), li);
+          ScalesLV.SetSubItemByColumnName('F',floattostr(t.GetFreq/2),li);
+          ScalesLV.SetSubItemByColumnName('Scale','0',li);
         end;
       end;
       2:
       begin
         if t<>nil then
         begin
-          fFltCurve[0]:=p2d(0,1);
-          i:=trunc(10/df);
-          fFltCurve[1]:=p2d(i*df,1);
-          fFltCurve[2]:=p2d(t.GetFreq/2,0);
+          li:=ScalesLV.items[0];
+          ScalesLV.SetSubItemByColumnName('Инд.', inttostr(li.Index), li);
+          ScalesLV.SetSubItemByColumnName('F','0',li);
+          ScalesLV.SetSubItemByColumnName('Scale','1',li);
+          li:=ScalesLV.items[1];
+          ScalesLV.SetSubItemByColumnName('Инд.', inttostr(li.Index), li);
+          // фильтр 10 Hz
+          ScalesLV.SetSubItemByColumnName('F',floattostr(10),li);
+          ScalesLV.SetSubItemByColumnName('Scale','1',li);
+          li:=ScalesLV.items[2];
+          ScalesLV.SetSubItemByColumnName('Инд.', inttostr(li.Index), li);
+          ScalesLV.SetSubItemByColumnName('F',floattostr(t.GetFreq/2),li);
+          ScalesLV.SetSubItemByColumnName('Scale','0',li);
         end;
       end;
       3: // User
       begin
         if fSel<>nil then
         begin
-          setlength(fFltCurve,length(cEvalStepAlg(fSel).m_band));
-          move(cEvalStepAlg(fSel).m_band[0],fFltCurve[0], length(cEvalStepAlg(fSel).m_band)*sizeof(point2d));
+          ScalesLV.items.Clear;
+          for I := 0 to length(cEvalStepAlg(fSel).m_band) - 1 do
+          begin
+            li:=ScalesLV.Items.add;
+            ScalesLV.SetSubItemByColumnName('Инд.', inttostr(li.Index), li);
+            ScalesLV.SetSubItemByColumnName('F', floattostr(cEvalStepAlg(fSel).m_band[i].x), li);
+            ScalesLV.SetSubItemByColumnName('Scale', floattostr(cEvalStepAlg(fSel).m_band[i].y), li);
+          end;
         end;
       end;
     end
@@ -496,37 +557,11 @@ begin
   begin
     if fSel<>nil then
     begin
-      setlength(fFltCurve,length(cEvalStepAlg(fSel).m_band));
-      move(cEvalStepAlg(fSel).m_band[0],fFltCurve[0], length(cEvalStepAlg(fSel).m_band)*sizeof(point2d));
+      //setlength(fFltCurve,length(cEvalStepAlg(fSel).m_band));
+      //move(cEvalStepAlg(fSel).m_band[0],fFltCurve[0], length(cEvalStepAlg(fSel).m_band)*sizeof(point2d));
     end;
   end;
-  // отображаем кривулину
-  if ScalesLV.items.Count<Length(fFltCurve) then
-  begin
-    while ScalesLV.items.Count<Length(fFltCurve) do
-    begin
-      ScalesLV.Items.Add;
-    end;
-  end
-  else
-  begin
-    while ScalesLV.items.Count>Length(fFltCurve) do
-    begin
-      ScalesLV.Items.Delete(0);
-    end;
-  end;
-  for I := 0 to ScalesLV.items.Count - 1 do
-  begin
-    ind:=round((fFltCurve[i].x)/df);
-    li:=ScalesLV.Items[i];
-    ScalesLV.Items[i].Caption:=inttostr(ind);
-    ScalesLV.SetSubItemByColumnName('F',floattostr(fFltCurve[i].x),li);
-    ScalesLV.SetSubItemByColumnName('Scale',floattostr(fFltCurve[i].y),li);
-    if i=ScalesLV.items.Count - 1 then
-    begin
-      LVChange(ScalesLV);
-    end;
-  end;
+  LVChange(ScalesLV);
 end;
 
 procedure TEvalStepCfgFrm.FormShow(Sender: TObject);

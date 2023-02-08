@@ -160,6 +160,8 @@ begin
   m_outTag := cTag.create;
   m_useScalar:=true;
   m_FallTime:=1;
+  m_fftCount:=16;
+  m_fftShift:=16;
 end;
 
 destructor cEvalStepAlg.destroy;
