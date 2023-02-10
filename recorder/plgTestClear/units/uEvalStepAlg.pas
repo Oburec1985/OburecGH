@@ -469,38 +469,68 @@ var
   p1, p2: point2d;
   str: string;
   pars: tstringlist;
-  d: double;
+  d, spmdx: double;
 begin
-  pars := tstringlist.create;
-  pars.Delimiter := ';';
-  for i := 0 to length(m_func) - 1 do
-    m_func[i] := 1;
-  m_func[0] := 1;
-
-  if length(m_band) = 0 then
-    exit;
-  p1 := m_band[0];
-  for i := 1 to length(m_band) - 1 do
-  begin
-    p2 := m_band[i];
-    // расчет индексов границ полос и установка К в curvescales
-    i1 := Ceil(p1.x / p_spmdx); // ceil - округлить вверх
-    i2 := trunc(p2.x / p_spmdx);
-    irange := m_fftCount shr 1;
-    if i2 > irange - 1 then
+  case m_fltType of
+    // ac
+    0:
     begin
-      i2 := irange - 1;
+      m_func[0] := 1;
+      for i := 0 to length(m_func) - 1 do
+      begin
+        m_func[i] := 1;
+      end;
     end;
-    // d:=frac(i1);
-    for j := i1 to i2 do
+    // lpf1/2
+    1:
     begin
-      m_func[j] := EvalLineYd(j * fspmdx, p1, p2);
-      // ЗЕРКАЛИРОВАННЫЙ СПЕКТР
-      m_func[m_fftCount - j - 1] := m_func[j];
+      irange:=length(m_func) shr 1;
+      ZeroMemory(@m_func[0], length(m_func)*sizeof(double));
+      for i := 0 to irange do
+      begin
+        m_func[i] := 1;
+        m_func[m_fftCount - i - 1] := m_func[i];
+      end;
     end;
-    p1:=p2;
+    // lpf10
+    2:
+    begin
+      spmdx:=m_tag.freq/m_fftCount;
+      irange:=round(10/spmdx);
+      ZeroMemory(@m_func[0], length(m_func)*sizeof(double));
+      for i := 0 to irange do
+      begin
+        m_func[i] := 1;
+        m_func[m_fftCount - i - 1] := m_func[i];
+      end;
+    end;
+    // user
+    3:
+    begin
+      if length(m_band) = 0 then
+        exit;
+      p1 := m_band[0];
+      for i := 1 to length(m_band) - 1 do
+      begin
+        p2 := m_band[i];
+        // расчет индексов границ полос и установка К в curvescales
+        i1 := Ceil(p1.x / p_spmdx); // ceil - округлить вверх
+        i2 := trunc(p2.x / p_spmdx);
+        irange := m_fftCount shr 1;
+        if i2 > irange - 1 then
+        begin
+          i2 := irange - 1;
+        end;
+        for j := i1 to i2 do
+        begin
+          m_func[j] := EvalLineYd(j * fspmdx, p1, p2);
+          // ЗЕРКАЛИРОВАННЫЙ СПЕКТР
+          m_func[m_fftCount - j - 1] := m_func[j];
+        end;
+        p1:=p2;
+      end;
+    end;
   end;
-  pars.destroy;
 end;
 
 function cEvalStepAlg.GetCurveStr: string;
@@ -714,8 +744,8 @@ begin
       tagnode := child.FindNode('OutTag');
       if tagnode <> nil then
         urcfunc.LoadTag(tagnode, a.m_outTag);
-      a.UpdateFFTSize;
       a.m_fltType:=child.ReadAttributeInteger('FltType', 0);
+      a.UpdateFFTSize;
 
       a.m_Threshold := child.ReadAttributeFloat('TrigThreshold', 0);
       a.m_TrigOffset := child.ReadAttributeFloat('TrigOffset', 0);
