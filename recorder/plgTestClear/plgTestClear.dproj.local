@@ -39,20 +39,6 @@
     <Transaction>2017.01.23 18:28:20.233.pas,F:\Oburec\delphi\2011\recorder\plgTestClear\Unit2.pas=F:\Oburec\delphi\2011\wp\WPExtPack\units\uSyncThread.pas</Transaction>
     <Transaction>2017.01.23 19:02:41.325.pas,F:\Oburec\delphi\2011\recorder\SharedRUnits\uFrmSync.pas=F:\Oburec\delphi\2011\sharedUtils\forms\uFrmSync.pas</Transaction>
     <Transaction>2017.01.23 19:02:41.325.dfm,F:\Oburec\delphi\2011\recorder\SharedRUnits\uFrmSync.dfm=F:\Oburec\delphi\2011\sharedUtils\forms\uFrmSync.dfm</Transaction>
-    <Transaction>2022.12.29 17:18:09.803.dproj,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\plgTestClear.dproj=F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\plgEvalStepVal.dproj</Transaction>
-    <Transaction>2022.12.29 17:18:36.346.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\units\uRecFactory.pas=</Transaction>
-    <Transaction>2022.12.29 17:19:00.948.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uGlFrm.pas=</Transaction>
-    <Transaction>2022.12.29 17:19:00.948.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uGlFrm.dfm=</Transaction>
-    <Transaction>2022.12.29 17:19:04.212.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uGLFrmEdit.pas=</Transaction>
-    <Transaction>2022.12.29 17:19:04.212.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uGLFrmEdit.dfm=</Transaction>
-    <Transaction>2022.12.29 17:19:10.189.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uExtFrm.pas=</Transaction>
-    <Transaction>2022.12.29 17:19:10.189.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uExtFrm.dfm=</Transaction>
-    <Transaction>2022.12.29 18:46:22.448.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\Unit3.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uEvalStepCfgFrm.pas</Transaction>
-    <Transaction>2022.12.29 18:46:22.448.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\Unit3.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uEvalStepCfgFrm.dfm</Transaction>
-    <Transaction>2022.12.29 19:31:03.737.pas,F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\uCompMng.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\units\uCompMng.pas</Transaction>
-    <Transaction>2022.12.29 19:42:38.711.pas,F:\Oburec\delphi\2011\OburecGH\sharedUtils\forms\uFrmSync.pas=</Transaction>
-    <Transaction>2022.12.29 19:42:38.711.dfm,F:\Oburec\delphi\2011\OburecGH\sharedUtils\forms\uFrmSync.dfm=</Transaction>
-    <Transaction>2022.12.30 12:20:20.402.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\Unit2.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\units\uEvalStepAlg.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
@@ -62,29 +48,20 @@
     <File Path="..\SharedRUnits\interfaces\CFREG.PAS"/>
     <File Path="..\SharedRUnits\interfaces\DevAPI.pas"/>
     <File Path="..\SharedRUnits\interfaces\device.pas"/>
-    <File Path="..\SharedRUnits\interfaces\iplgmngr.pas"/>
     <File Path="..\SharedRUnits\interfaces\journal.pas"/>
     <File Path="..\SharedRUnits\interfaces\modules.pas"/>
     <File Path="..\SharedRUnits\interfaces\plugin.pas"/>
     <File Path="..\SharedRUnits\interfaces\rcPlugin.pas"/>
     <File Path="..\SharedRUnits\interfaces\recorder.pas"/>
-    <File Path="..\SharedRUnits\interfaces\scales.pas"/>
     <File Path="..\SharedRUnits\interfaces\signal.pas"/>
     <File Path="..\SharedRUnits\interfaces\tags.pas"/>
     <File Path="..\SharedRUnits\interfaces\transf.pas"/>
     <File Path="..\SharedRUnits\interfaces\transformers.pas"/>
     <File Path="..\SharedRUnits\interfaces\waitwnd.pas"/>
-    <File Path="..\SharedRUnits\RC_lib"/>
-    <File Path="..\SharedRUnits\RC_lib\uRcCtrls.pas"/>
     <File Path="..\SharedRUnits\PluginClass.pas"/>
-    <File Path="..\SharedRUnits\uFrmSync.pas"/>
-    <File Path="..\SharedRUnits\uFrmSync.dfm"/>
-    <File Path="..\SharedRUnits\uRCFunc.pas"/>
+    <File Path="..\SharedRUnits\uCompMng.pas"/>
     <File Path="..\SharedRUnits\uRecBasicFactory.pas"/>
     <File Path="..\SharedRUnits\uRecorderEvents.pas"/>
-    <File Path="..\SharedRUnits\uRvclService.pas"/>
-    <File Path="..\SharedRUnits\uTagsListFrame.pas"/>
-    <File Path="..\SharedRUnits\uTagsListFrame.dfm"/>
     <File Path="..\..\..\OburecGH"/>
     <File Path="..\..\3d"/>
     <File Path="..\..\3d\3dComponents"/>
@@ -97,11 +74,10 @@
     <File Path="..\..\3d\forms\uTrfrmToolsFrame.pas"/>
     <File Path="..\..\3d\forms\uTrfrmToolsFrame.dfm"/>
     <File Path="..\..\sharedUtils"/>
+    <File Path="..\..\sharedUtils\forms"/>
+    <File Path="..\..\sharedUtils\forms\uFrmSync.pas"/>
+    <File Path="..\..\sharedUtils\forms\uFrmSync.dfm"/>
     <File Path="..\..\sharedUtils\math"/>
-    <File Path="..\..\sharedUtils\math\FFT_койнов"/>
-    <File Path="..\..\sharedUtils\math\FFT_койнов\complex.pas"/>
-    <File Path="..\..\sharedUtils\math\FFT_койнов\Iterative_FFT_sse.pas"/>
-    <File Path="..\..\sharedUtils\math\FFT_койнов\recursive_sse2_sse3_d_al_fft.pas"/>
     <File Path="..\..\sharedUtils\math\uListMath.pas"/>
     <File Path="..\..\sharedUtils\math\uMatrix.pas"/>
     <File Path="..\..\sharedUtils\utils"/>
@@ -111,11 +87,14 @@
     <File Path="..\..\sharedUtils\utils\uLogFile.pas"/>
     <File Path="..\..\sharedUtils\uCommonTypes.pas"/>
     <File Path="forms"/>
-    <File Path="forms\uEvalStepCfgFrm.pas"/>
-    <File Path="forms\uEvalStepCfgFrm.dfm"/>
+    <File Path="forms\uExtFrm.pas"/>
+    <File Path="forms\uExtFrm.dfm"/>
+    <File Path="forms\uGlFrm.pas"/>
+    <File Path="forms\uGlFrm.dfm"/>
+    <File Path="forms\uGLFrmEdit.pas"/>
+    <File Path="forms\uGLFrmEdit.dfm"/>
     <File Path="units"/>
-    <File Path="units\uCompMng.pas"/>
     <File Path="units\uCreateComponents.pas"/>
-    <File Path="units\uEvalStepAlg.pas"/>
+    <File Path="units\uRecFactory.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

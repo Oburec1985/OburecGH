@@ -250,6 +250,7 @@ const
 var
   g_algMng: cAlgMng;
 
+
 implementation
 
 uses

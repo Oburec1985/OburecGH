@@ -81,9 +81,12 @@ begin
     // —ќ«ƒјЌџ≈ «ƒ≈—№ ‘ќ–ћџ Ќ≈Ћ№«я ƒ≈Ћј“№ SHOWMODAL ¬ UITHREAD
     // необходимо быть осторожным, т.к. создание формы и создание хендлоа разные событи€
     // если форма первый раз показана не в том же потоке где создана то будут проблеммыс удалением формы
-    EvalStepCfgFrm:=TEvalStepCfgFrm.Create(nil);
-    EvalStepCfgFrm.Show;
-    EvalStepCfgFrm.close;
+    if EvalStepCfgFrm=nil then
+    begin
+      EvalStepCfgFrm:=TEvalStepCfgFrm.Create(nil);
+      EvalStepCfgFrm.Show;
+      EvalStepCfgFrm.close;
+    end;
 
     g_EvalStepValNP:=cEvalStepValNP.Create;
     TExtRecorderPack(GPluginInstance).m_nplist.AddNP(g_EvalStepValNP);
@@ -123,9 +126,12 @@ var
   str, str1:string;
   show:boolean;
 begin
-  EvalStepCfgFrm:=TEvalStepCfgFrm.Create(nil);
-  EvalStepCfgFrm.show;
-  EvalStepCfgFrm.close;
+  if EvalStepCfgFrm=nil then
+  begin
+    EvalStepCfgFrm:=TEvalStepCfgFrm.Create(nil);
+    EvalStepCfgFrm.show;
+    EvalStepCfgFrm.close;
+  end;
 end;
 
 procedure destroyFormsRecorderUIThread(compMng: cCompMng);

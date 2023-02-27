@@ -168,7 +168,8 @@ begin
   begin
    uSimpleObjects.drawBorder(boundrect, m_borderColor);
   end;
-  font.OutText(ftext, Position, falign);
+  if font<>nil then
+    font.OutText(ftext, Position, falign);
   //glCallList(DisplayListName);
 end;
 

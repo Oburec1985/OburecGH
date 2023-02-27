@@ -512,7 +512,7 @@ procedure TSyncOscFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 var
   i, c: integer;
   s: TOscSignal;
-  tname, axname: string;
+  tname, axname, ls: string;
   t: itag;
   a: caxis;
   axCfg: TAxis;
@@ -523,8 +523,10 @@ begin
   if m_ax.SIZE > 0 then
     m_ax.clear;
   m_Length := a_pIni.ReadFloat(str, 'Length', 1);
-  m_Threshold := a_pIni.ReadFloat(str, 'Threshold', 0.5);
-  m_Phase0 := a_pIni.ReadFloat(str, 'Shift', 0);
+  ls:=a_pIni.ReadString(str, 'Threshold', '0.5');
+  m_Threshold :=strtoFloatExt(ls);
+  ls:=a_pIni.ReadString(str, 'Shift', '0');
+  m_Phase0 :=strtoFloatExt(ls);
   m_type := IntToTOscType(a_pIni.ReadInteger(str, 'OscType', 0));
   c := a_pIni.ReadInteger(str, 'AxCount', 1);
   tname := a_pIni.ReadString(str, 'Trig', '');
@@ -536,8 +538,10 @@ begin
   begin
     axCfg := m_ax.GetByInd(i);
     axCfg.name := a_pIni.ReadString(str, 'axCfg_name_' + inttostr(i), '');
-    axCfg.ymin := a_pIni.ReadFloat(str, 'axCfg_y1_' + inttostr(i), 0);
-    axCfg.ymax := a_pIni.ReadFloat(str, 'axCfg_y2_' + inttostr(i), 10);
+    ls:=a_pIni.ReadString(str, 'axCfg_y1_' + inttostr(i),'0');
+    axCfg.ymin :=strtoFloatExt(ls);
+    ls:=a_pIni.ReadString(str, 'axCfg_y2_' + inttostr(i), '10');
+    axCfg.ymax :=strtoFloatExt(ls);
     a := p.activeAxis;
     if i > 0 then
     begin
@@ -610,8 +614,9 @@ var
 begin
   inherited;
   a_pIni.WriteFloat(str, 'Length', m_Length);
-  a_pIni.WriteFloat(str, 'Threshold', m_Threshold);
-  a_pIni.WriteFloat(str, 'Shift', m_Phase0);
+  WriteFloatToIniMera(a_pIni, str, 'Threshold',m_Threshold);
+  //a_pIni.WriteFloat(str, 'Threshold', m_Threshold);
+  WriteFloatToIniMera(a_pIni, str, 'Shift', m_Phase0);
   a_pIni.WriteInteger(str, 'OscType', TOscTypeToInt(m_type));
   a_pIni.WriteInteger(str, 'AxCount', m_ax.SIZE);
   if m_TrigTag.tagname <> '' then
@@ -622,8 +627,8 @@ begin
   begin
     axCfg := m_ax.GetByInd(i);
     a_pIni.WriteString(str, 'axCfg_name_' + inttostr(i), axCfg.name);
-    a_pIni.WriteFloat(str, 'axCfg_y1_' + inttostr(i), axCfg.ymin);
-    a_pIni.WriteFloat(str, 'axCfg_y2_' + inttostr(i), axCfg.ymax);
+    WriteFloatToIniMera(a_pIni,str, 'axCfg_y1_' + inttostr(i), axCfg.ymin);
+    WriteFloatToIniMera(a_pIni,str, 'axCfg_y2_' + inttostr(i), axCfg.ymax);
   end;
   a_pIni.WriteInteger(str, 'SCount', m_signals.count);
   for i := 0 to m_signals.count - 1 do

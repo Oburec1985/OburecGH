@@ -140,8 +140,9 @@ type
     procedure FillRegCB(t: cTestFolder);
     procedure UpdateXmlDescr;
     procedure doChangePathNotify(objtype:DWORD);
+    procedure SaveProperties(o:cXmlFolder; t:cXmlFolder; r:cXmlFolder);
   public
-    procedure ShowObjProps(o: cXmlFolder);
+    procedure ShowObjProps(o:cXmlFolder);
 
     function GetSelectObj: cObjFolder;
     function GetSelectTest: cTestFolder;
@@ -353,6 +354,7 @@ var
   I: Integer;
 begin
   //showmessage(getMDBRegPath);
+  SaveProperties(curObj, curTest, curReg);
 
   if BaseFolderEdit.text <> m_base.m_BaseFolder.Absolutepath then
   begin
@@ -1527,7 +1529,6 @@ var
   sg: TStringGridExt;
   I: Integer;
 begin
-
   sg := nil;
   if o = nil then
     exit;
@@ -1554,6 +1555,39 @@ begin
     sg.Cells[c_col_propName, sg.rowcount - 1] := '';
     sg.Cells[c_col_propVal, sg.rowcount - 1] := '';
   end;
+end;
+
+procedure setObjProps(o:cxmlFolder; sg:tstringgrid);
+var
+  i:integer;
+  pname, v:string;
+begin
+  if sg <> nil then
+  begin
+    for I := 1 to sg.RowCount - 1 do
+    begin
+      pname:=sg.Cells[c_col_propName,i];
+      v:=sg.Cells[c_col_propVal,i];
+      o.Setpropertie(pname,v);
+    end;
+  end;
+end;
+
+procedure TMBaseControl.SaveProperties(o:cXmlFolder; t:cXmlFolder; r:cXmlFolder);
+var
+  sg:TStringGridExt;
+  i:integer;
+  pname, v:string;
+  obj:cxmlfolder;
+begin
+  cMBase(m_base).Events.active:=false;
+  if o<>nil then
+    setObjProps(o, ObjPropSG);
+  if t<>nil then
+    setObjProps(t, TestPropSG);
+  if r<>nil then
+    setObjProps(r, RegPropSG);
+  cMBase(m_base).Events.active:=false;
 end;
 
 procedure TMBaseControl.doDeleteRConnection(Sender: TObject);

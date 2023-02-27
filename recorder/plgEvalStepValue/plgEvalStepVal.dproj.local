@@ -62,30 +62,30 @@
     <File Path="..\SharedRUnits\interfaces\CFREG.PAS"/>
     <File Path="..\SharedRUnits\interfaces\DevAPI.pas"/>
     <File Path="..\SharedRUnits\interfaces\device.pas"/>
-    <File Path="..\SharedRUnits\interfaces\iplgmngr.pas"/>
     <File Path="..\SharedRUnits\interfaces\journal.pas"/>
     <File Path="..\SharedRUnits\interfaces\modules.pas"/>
     <File Path="..\SharedRUnits\interfaces\plugin.pas"/>
     <File Path="..\SharedRUnits\interfaces\rcPlugin.pas"/>
     <File Path="..\SharedRUnits\interfaces\recorder.pas"/>
-    <File Path="..\SharedRUnits\interfaces\scales.pas"/>
     <File Path="..\SharedRUnits\interfaces\signal.pas"/>
     <File Path="..\SharedRUnits\interfaces\tags.pas"/>
     <File Path="..\SharedRUnits\interfaces\transf.pas"/>
     <File Path="..\SharedRUnits\interfaces\transformers.pas"/>
     <File Path="..\SharedRUnits\interfaces\waitwnd.pas"/>
+    <File Path="..\SharedRUnits\interfaces\iplgmngr.pas"/>
+    <File Path="..\SharedRUnits\interfaces\scales.pas"/>
     <File Path="..\SharedRUnits\RC_lib"/>
     <File Path="..\SharedRUnits\RC_lib\uRcCtrls.pas"/>
     <File Path="..\SharedRUnits\PluginClass.pas"/>
-    <File Path="..\SharedRUnits\uFrmSync.pas"/>
-    <File Path="..\SharedRUnits\uFrmSync.dfm"/>
-    <File Path="..\SharedRUnits\uRCFunc.pas"/>
     <File Path="..\SharedRUnits\uRecBasicFactory.pas"/>
     <File Path="..\SharedRUnits\uRecorderEvents.pas"/>
-    <File Path="..\SharedRUnits\uRvclService.pas"/>
     <File Path="..\SharedRUnits\uTagsListFrame.pas"/>
     <File Path="..\SharedRUnits\uTagsListFrame.dfm"/>
-    <File Path="..\..\..\OburecGH"/>
+    <File Path="..\SharedRUnits\uRCFunc.pas"/>
+    <File Path="..\SharedRUnits\uRvclService.pas"/>
+    <File Path="..\SharedRUnits\uFrmSync.pas"/>
+    <File Path="..\SharedRUnits\uFrmSync.dfm"/>
+    <File Path="..\..\..\source"/>
     <File Path="..\..\3d"/>
     <File Path="..\..\3d\3dComponents"/>
     <File Path="..\..\3d\3dComponents\components"/>
@@ -114,8 +114,8 @@
     <File Path="forms\uEvalStepCfgFrm.pas"/>
     <File Path="forms\uEvalStepCfgFrm.dfm"/>
     <File Path="units"/>
-    <File Path="units\uCompMng.pas"/>
     <File Path="units\uCreateComponents.pas"/>
+    <File Path="units\uCompMng.pas"/>
     <File Path="units\uEvalStepAlg.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

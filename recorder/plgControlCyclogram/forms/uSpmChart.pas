@@ -89,6 +89,7 @@ type
     procedure UpdateLabels;
     // использовать в том же потоке, что и обновление полос!!! (UpdateTagData!!!)
     // данные полос не защищено крит секциями
+    // обновляет только положение в координатах окна, не надписи
     procedure UpdateBands;
 
     procedure doStart;
@@ -461,7 +462,7 @@ begin
           findband:=false;
           for n := 0 to ti.flags.count - 1 do
           begin
-            if cTextLabel(ti.flags[i]).data=b then
+            if cTextLabel(ti.flags[n]).data=b then
             begin
               findband:=true;
               break;
@@ -1332,6 +1333,7 @@ end;
 procedure TSpmChart.createEvents;
 begin
   spmChart.OBJmNG.Events.AddEvent('SpmChart_OnZoom', E_OnZoom, doOnZoom);
+  g_SpmFactory.CreateEvents;
 end;
 
 
@@ -1349,7 +1351,7 @@ begin
       initevents:=true;
       addplgevent('cSpmFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
       g_algMng.Events.AddEvent('SpmChart_SpmSetProps',e_OnSetAlgProperties,doChangeAlgProps);
-      g_algMng.Events.AddEvent('SpmChart_OnLeaveCfg', E_OnChangeAlgCfg, doChangeCfg);
+      addplgevent('SpmChart_OnLeaveCfg', c_RC_LeaveCfg, doChangeCfg);
     end;
   end;
 end;
@@ -1360,7 +1362,7 @@ begin
   if g_algMng<>nil then
   begin
     g_algMng.Events.removeEvent(doChangeRState, e_OnSetAlgProperties);
-    g_algMng.Events.removeEvent(doChangeCfg, E_OnChangeCfg);
+    removeplgEvent(doChangeCfg, c_RC_LeaveCfg);
   end;
 end;
 
@@ -1451,6 +1453,7 @@ begin
         sChart.m_tagslist.Delete(k);
       end;
     end;
+    sChart.ApplyBands;
   end;
 end;
 

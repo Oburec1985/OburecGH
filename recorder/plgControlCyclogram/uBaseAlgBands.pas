@@ -1,6 +1,7 @@
 unit uBaseAlgBands;
 
 interface
+
 uses
   classes, Windows, tags, uBaseObj, uBaseObjMng, nativexml, uRCFunc,
   pluginclass, blaccess, sysutils, uCommonTypes, uFFT, ap, fft,
@@ -18,8 +19,6 @@ type
   // 1) TAlgFrm.create() зарегить фрейм
   // 2) cAlgMng.regObjClasses зарегить алгоритм;
   // * связывание алгоритма и фрейма происходит по сравнению classname и algClass фрейма
-  // компонент расчета частотной полосы k1*f1+kn*fn
-
   // компонент расчета частотной полосы k1*f1+kn*fn
   BandTag = class
   protected
@@ -50,7 +49,7 @@ type
     valtype: integer;
     name: string;
   public
-    function tagCount:integer;
+    function tagCount: integer;
     procedure eval;
     procedure clearTags;
     procedure addBandTag(bt: BandTag);
@@ -58,6 +57,7 @@ type
     constructor create(owner: tstringlist);
     destructor destroy;
   end;
+
   // список мест установки датчиков
   // каждое место установки датчиков знает список полос частотных tBand
   TPlace = class
@@ -198,7 +198,7 @@ begin
   end
   else
   begin
-    m_MainFreq:=m_f1f2.x+(m_f1f2.y-m_f1f2.x)/2;
+    m_MainFreq := m_f1f2.x + (m_f1f2.y - m_f1f2.x) / 2;
     m_resultBand.x := m_f1f2.x;
     m_resultBand.y := m_f1f2.y;
   end;
@@ -211,7 +211,7 @@ end;
 
 function tBand.tagCount: integer;
 begin
-  result:=m_TagsList.Count;
+  result := m_TagsList.Count;
 end;
 
 { TPlace }
@@ -317,15 +317,15 @@ end;
 { TTagBandPair }
 procedure TTagBandPair.addplace(p: TPlace);
 var
-  I: Integer;
-  b:boolean;
+  i: integer;
+  b: boolean;
 begin
-  b:=false;
-  for I := 0 to m_places.Count - 1 do
+  b := false;
+  for i := 0 to m_places.Count - 1 do
   begin
-    if (getplace(i)=p) then
+    if (getplace(i) = p) then
     begin
-      b:=true;
+      b := true;
       break;
     end;
   end;
@@ -467,13 +467,13 @@ end;
 { BandTag }
 constructor BandTag.create;
 begin
-  m_t:='';
-  m_id:=0;
+  m_t := '';
+  m_id := 0;
 end;
 
 destructor BandTag.destroy;
 begin
-  m_t:='';
+  m_t := '';
 end;
 
 procedure BandTag.settagname(s: string);
@@ -485,6 +485,5 @@ begin
     m_it.GetTagId(m_id);
   end;
 end;
-
 
 end.
