@@ -21,8 +21,6 @@ type
     SpmPan: TPanel;
     FFTCountLabel: TLabel;
     AddNullCB: TCheckBox;
-    dXEdit: TFloatEdit;
-    dXLabel: TLabel;
     ChannelLabel: TLabel;
     Label2: TLabel;
     ChannelCB: TRcComboBox;
@@ -41,6 +39,8 @@ type
     FsEdit: TFloatEdit;
     WndLabel: TLabel;
     WndCB: TComboBox;
+    dXLabel: TLabel;
+    dXEdit: TFloatEdit;
     procedure L1EditChange(Sender: TObject);
     procedure TahoTypeCBClick(Sender: TObject);
     procedure FFTCountSpinBtnDownClick(Sender: TObject);
@@ -300,7 +300,8 @@ end;
 function TTahoAlgFrame.ShowAlg(a: cbaseAlgContainer): boolean;
 begin
   result:=inherited;
-  OutChannelName.text:=m_a.resname;
+  if result then
+    OutChannelName.text:=m_a.resname;
 end;
 
 procedure TTahoAlgFrame.FFTCountSpinBtnDownClick(Sender: TObject);

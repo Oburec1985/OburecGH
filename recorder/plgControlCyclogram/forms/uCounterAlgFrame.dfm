@@ -1,6 +1,5 @@
 inherited CounterAlgFrame: TCounterAlgFrame
-  Width = 326
-  Height = 226
+  Width = 439
   Constraints.MinHeight = 226
   Constraints.MinWidth = 302
   object ThresholdLabel1: TLabel [1]
@@ -11,7 +10,7 @@ inherited CounterAlgFrame: TCounterAlgFrame
     Caption = #1053#1080#1078#1085#1080#1081' '#1087#1086#1088#1086#1075
   end
   object ThresholdLabel2: TLabel [2]
-    Left = 160
+    Left = 144
     Top = 98
     Width = 85
     Height = 16
@@ -31,14 +30,19 @@ inherited CounterAlgFrame: TCounterAlgFrame
     Height = 16
     Caption = #1042#1099#1093#1086#1076
   end
+  object LabelMinThreshold: TLabel [6]
+    Left = 279
+    Top = 98
+    Width = 120
+    Height = 16
+    Caption = #1052#1080#1085#1080#1084#1072#1083#1100#1085#1099#1081' '#1087#1086#1088#1086#1075
+  end
   inherited AlgNameEdit: TEdit
-    Width = 304
-    ExplicitWidth = 429
+    Width = 417
   end
   inherited OptsEdit: TEdit
-    Width = 304
+    Width = 417
     TabOrder = 3
-    ExplicitWidth = 429
   end
   object LoThresholdSE: TFloatSpinEdit
     Left = 9
@@ -50,7 +54,7 @@ inherited CounterAlgFrame: TCounterAlgFrame
     OnChange = LoThresholdSEChange
   end
   object HiThresholdSE: TFloatSpinEdit
-    Left = 160
+    Left = 144
     Top = 120
     Width = 121
     Height = 26
@@ -69,11 +73,20 @@ inherited CounterAlgFrame: TCounterAlgFrame
   object OutChannelName: TEdit
     Left = 160
     Top = 192
-    Width = 152
+    Width = 265
     Height = 24
     Anchors = [akLeft, akTop, akRight]
     Enabled = False
     TabOrder = 5
     ExplicitWidth = 277
+  end
+  object MinThresholdSE: TFloatSpinEdit
+    Left = 279
+    Top = 120
+    Width = 121
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 6
+    OnChange = HiThresholdSEChange
   end
 end

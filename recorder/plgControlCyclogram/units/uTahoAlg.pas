@@ -621,7 +621,10 @@ begin
   if fOutTag <>nil then
   begin
     if fTahoType then // расчет по порогам
-      fOutTag.InitWriteData(fintag.m_ReadSize shr 2)
+    begin
+      fOutTag.InitWriteData(fintag.m_ReadSize shr 2);
+      updateOutChan;
+    end
     else // расчет по спектру
     begin
       if fOutTag.tag=nil then
@@ -721,10 +724,7 @@ begin
   begin
     fOutTag.tag.SetName(str);
   end;
-  if fTahoType then
-    fOutTag.tag.SetFreq(InTag.tag.GetFreq)
-  else
-    fOutTag.tag.SetFreq(1/fdx);
+  fOutTag.tag.SetFreq(1/fdx);
   fOutTag.block := nil;
   if not FAILED(fOutTag.tag.QueryInterface(IBlockAccess, bl)) then
   begin

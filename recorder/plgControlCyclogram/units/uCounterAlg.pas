@@ -10,8 +10,12 @@ uses
 type
   cCounterAlg = class(cbasealg)
   protected
+    // относительные или абсолютные значения
+    fRelative:boolean;
     fLo: double;
     fHi: double;
+    // минимальный порог срабатывания
+    fMinThreshold:double;
     fOutTag: cTag;
     fCounter: cardinal;
   protected
@@ -20,6 +24,7 @@ type
     procedure LoadTags(node: txmlNode);override;
     procedure SetProperties(str: string); override;
     function GetProperties: string; override;
+    function getExtProp: string;override;
     procedure doOnStart; override;
     procedure doEval(tag: cTag; time: double); override;
     procedure doGetData; override;
@@ -33,13 +38,18 @@ type
     function genTagName: string;override;
     procedure LoadObjAttributes(xmlNode: txmlNode; mng: tobject); override;
     function ready: boolean;override;
+    function getHi:double;
+    function getLo:double;
+  public
+    procedure setfirstchannel(t:itag);override;
   public
     constructor create; override;
     destructor destroy; override;
     class function getdsc: string; override;
     // property inpTag:itag read getInptag write setInpTag;
-    property lo: double read fLo write fLo;
-    property hi: double read fHi write fHi;
+    property lo: double read getLo write fLo;
+    property hi: double read getHi write fHi;
+    property Relative: boolean read fRelative write fRelative;
   end;
 
 const
@@ -53,6 +63,7 @@ constructor cCounterAlg.create;
 begin
   inherited;
   Properties := C_CounterOpts;
+  fRelative:=true;
 end;
 
 destructor cCounterAlg.destroy;
@@ -63,32 +74,43 @@ end;
 procedure cCounterAlg.doEval(tag: cTag; time: double);
 var
   I, len: Integer;
-  v, prev: double;
+  v, prev, h,l, lmin, lmax: double;
   // уровень выше hi, начинаем искать спад
-  startTrig: boolean;
+  startTrig, b: boolean;
 begin
   len := length(tag.m_TagData);
   prev := tag.m_TagData[0];
-  startTrig := prev > hi;
-
+  h:=hi;
+  l:=lo;
+  startTrig := prev > h;
   fOutTag.m_TagData[0] := fCounter;
+  lmin:= tag.m_TagData[1];
+  lmax:= tag.m_TagData[1];
   for I := 1 to len - 1 do
   begin
     v := tag.m_TagData[I];
+    lmin:=min(lmin,v,b);
+    lmax:=max(lmax,v, b);
     if prev <> v then
     begin
       prev := v;
       if startTrig then
       begin
-        if v < fLo then
+        if v < L then
         begin
           startTrig := false;
-          inc(fCounter);
+          if (lmax-lmin)>fMinThreshold then
+          begin
+            inc(fCounter);
+          end;
+          // сброс значений для поиса след периода
+          lmin:=lmax;
+          lmax:=lmin;
         end;
       end
       else
       begin
-        startTrig := v > hi;
+        startTrig := v > h;
       end;
     end;
     fOutTag.m_TagData[I] := fCounter;
@@ -163,6 +185,48 @@ begin
   result := 'Счетчик';
 end;
 
+function cCounterAlg.getExtProp: string;
+begin
+  result:='';
+  if intag<>nil then
+    result:='Channel='+intag.tagname;
+  if fOutTag<>nil then
+    result:=result+',OutChannel='+foutTag.tagname;
+end;
+
+function cCounterAlg.getHi: double;
+var
+  m,a:double;
+begin
+  if fRelative then
+  begin
+    m:=GetMean(InTag.tag);
+    a:=GetAmp(InTag.tag);
+    // m-a+(2/100)*a*0.7
+    result:=m+a*(0.02*fhi-1);
+  end
+  else
+  begin
+    result:=fHi;
+  end;
+end;
+
+function cCounterAlg.getLo: double;
+var
+  m,a:double;
+begin
+  if fRelative then
+  begin
+    m:=GetMean(InTag.tag);
+    a:=GetAmp(InTag.tag);
+    result:=m+a*(0.02*flo-1);
+  end
+  else
+  begin
+    result:=fLo;
+  end;
+end;
+
 function cCounterAlg.getinptag: itag;
 begin
 
@@ -190,6 +254,22 @@ begin
     if intag.tag<>nil then
     begin
       result:=true;
+    end;
+  end;
+end;
+
+procedure cCounterAlg.setfirstchannel(t: itag);
+var
+  lstr:string;
+begin
+  setinptag(t);
+  lstr := GetParam(m_Properties, 'Channel');
+  if InTag<>nil then
+  begin
+    m_Properties:=AddParamF(m_Properties,'Channel',InTag.tagname);
+    if lstr='' then
+    begin
+      name:=genTagName;
     end;
   end;
 end;
@@ -257,7 +337,7 @@ var
 begin
   if str = '' then
     exit;
-  inherited;
+  m_properties:=updateParams(m_properties, str, '', ' ');
   lstr := GetParam(str, 'Lo');
   if lstr <> '' then
   begin
@@ -267,6 +347,11 @@ begin
   if lstr <> '' then
   begin
     fHi := strtoFloatExt(lstr);
+  end;
+  lstr := GetParam(str, 'MinThreshold');
+  if checkstr(lstr) then
+  begin
+    fMinThreshold := strtoFloatExt(lstr);
   end;
   lstr := GetParam(str, 'Channel');
   if lstr <> '' then

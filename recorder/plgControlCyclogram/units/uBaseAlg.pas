@@ -62,6 +62,7 @@ type
     procedure UpdatePropStr; virtual;
     procedure SetProperties(str: string); virtual;
     function GetProperties: string; virtual;
+    // с учетом входных каналов
     function getExtProp: string; virtual;
     procedure Setdx(d: double); virtual; abstract;
     function Getdx: double; virtual; abstract;

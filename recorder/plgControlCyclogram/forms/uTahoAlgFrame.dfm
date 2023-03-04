@@ -1,5 +1,5 @@
 inherited TahoAlgFrame: TTahoAlgFrame
-  Height = 572
+  Height = 597
   Constraints.MinHeight = 440
   ExplicitHeight = 440
   object ChannelLabel: TLabel [2]
@@ -30,6 +30,13 @@ inherited TahoAlgFrame: TTahoAlgFrame
     Height = 16
     Caption = #1063#1072#1089#1090#1086#1090#1072' '#1086#1087#1088#1086#1089#1072' '#1082#1072#1085#1072#1083#1072
   end
+  object dXLabel: TLabel [6]
+    Left = 161
+    Top = 206
+    Width = 15
+    Height = 16
+    Caption = 'dX'
+  end
   object TahoTypeCB: TCheckBox
     Left = 8
     Top = 99
@@ -41,7 +48,7 @@ inherited TahoAlgFrame: TTahoAlgFrame
   end
   object LvlPan: TPanel
     Left = 0
-    Top = 268
+    Top = 293
     Width = 451
     Height = 120
     Align = alBottom
@@ -82,7 +89,7 @@ inherited TahoAlgFrame: TTahoAlgFrame
   end
   object SpmPan: TPanel
     Left = 0
-    Top = 388
+    Top = 413
     Width = 451
     Height = 184
     Align = alBottom
@@ -94,13 +101,6 @@ inherited TahoAlgFrame: TTahoAlgFrame
       Width = 102
       Height = 16
       Caption = #1063#1080#1089#1083#1086' '#1090#1086#1095#1077#1082' '#1041#1055#1060
-    end
-    object dXLabel: TLabel
-      Left = 8
-      Top = 75
-      Width = 15
-      Height = 16
-      Caption = 'dX'
     end
     object Label3: TLabel
       Left = 168
@@ -131,22 +131,13 @@ inherited TahoAlgFrame: TTahoAlgFrame
       Caption = #1044#1086#1087#1086#1083#1085#1103#1090#1100' '#1085#1091#1083#1103#1084#1080
       TabOrder = 0
     end
-    object dXEdit: TFloatEdit
-      Left = 8
-      Top = 96
-      Width = 121
-      Height = 24
-      TabOrder = 1
-      Text = '0.1'
-      OnChange = L1EditChange
-    end
     object FFTDx: TFloatEdit
       Left = 166
       Top = 48
       Width = 121
       Height = 24
       Enabled = False
-      TabOrder = 2
+      TabOrder = 1
       Text = '0.1'
       OnChange = L1EditChange
     end
@@ -155,7 +146,7 @@ inherited TahoAlgFrame: TTahoAlgFrame
       Top = 144
       Width = 82
       Height = 24
-      TabOrder = 3
+      TabOrder = 2
       Text = '10'
       OnChange = L1EditChange
     end
@@ -164,7 +155,7 @@ inherited TahoAlgFrame: TTahoAlgFrame
       Top = 144
       Width = 82
       Height = 24
-      TabOrder = 4
+      TabOrder = 3
       Text = '20000'
       OnChange = L1EditChange
     end
@@ -174,7 +165,7 @@ inherited TahoAlgFrame: TTahoAlgFrame
       Width = 146
       Height = 17
       Caption = #1048#1089#1082#1072#1090#1100' '#1074' '#1087#1086#1083#1086#1089#1077':'
-      TabOrder = 5
+      TabOrder = 4
       OnClick = L1EditChange
     end
     object FFTCountEdit: TIntEdit
@@ -183,7 +174,7 @@ inherited TahoAlgFrame: TTahoAlgFrame
       Width = 121
       Height = 24
       Enabled = False
-      TabOrder = 6
+      TabOrder = 5
       Text = '16384'
     end
     object FFTCountSpinBtn: TSpinButton
@@ -201,7 +192,7 @@ inherited TahoAlgFrame: TTahoAlgFrame
         0000008080000080800000808000000000000000000000000000000000000000
         0000000000000000000000808000008080000080800000808000008080000080
         800000808000008080000080800000808000}
-      TabOrder = 7
+      TabOrder = 6
       UpGlyph.Data = {
         0E010000424D0E01000000000000360000002800000009000000060000000100
         200000000000D800000000000000000000000000000000000000008080000080
@@ -220,7 +211,7 @@ inherited TahoAlgFrame: TTahoAlgFrame
       Top = 144
       Width = 121
       Height = 24
-      TabOrder = 8
+      TabOrder = 7
     end
   end
   object ChannelCB: TRcComboBox
@@ -259,5 +250,14 @@ inherited TahoAlgFrame: TTahoAlgFrame
     Enabled = False
     TabOrder = 8
     Text = '0.0'
+  end
+  object dXEdit: TFloatEdit
+    Left = 161
+    Top = 228
+    Width = 121
+    Height = 24
+    TabOrder = 9
+    Text = '0.1'
+    OnChange = L1EditChange
   end
 end

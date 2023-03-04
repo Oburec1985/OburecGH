@@ -18,6 +18,8 @@ type
     ChannelLabel: TLabel;
     Label1: TLabel;
     OutChannelName: TEdit;
+    MinThresholdSE: TFloatSpinEdit;
+    LabelMinThreshold: TLabel;
     procedure LoThresholdSEChange(Sender: TObject);
     procedure HiThresholdSEChange(Sender: TObject);
     procedure ChannelCBChange(Sender: TObject);
@@ -91,6 +93,10 @@ begin
     addParam(m_pars, 'Hi', replaceChar(HiThresholdSE.text,',','.'));
   if LoThresholdSE.text<>'' then
     addParam(m_pars, 'Lo', replaceChar(LoThresholdSE.text,',','.'));
+
+  if MinThresholdSE.text<>'' then
+    addParam(m_pars, 'MinThreshold', replaceChar(MinThresholdSE.text,',','.'));
+
   if ChannelCB.text<>'' then
   begin
     addParam(m_pars, 'Channel', ChannelCB.text);
@@ -110,10 +116,15 @@ begin
   LoThresholdSE.Text := GetParsValue(m_pars, 'Lo');
   LoThresholdSE.OnChange:=p;
 
-  p:=LoThresholdSE.OnChange;
+  p:=HiThresholdSE.OnChange;
   HiThresholdSE.OnChange:=nil;
   HiThresholdSE.Text := GetParsValue(m_pars, 'Hi');
   HiThresholdSE.OnChange:=p;
+
+  p:=MinThresholdSE.OnChange;
+  MinThresholdSE.OnChange:=nil;
+  MinThresholdSE.Text := GetParsValue(m_pars, 'MinThreshold');
+  MinThresholdSE.OnChange:=p;
 
   setcomboboxitem(GetParsValue(m_pars, 'Channel'), ChannelCB);
   if channelcb.ItemIndex>0 then
