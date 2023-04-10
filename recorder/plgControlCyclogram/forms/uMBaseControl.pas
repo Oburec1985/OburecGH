@@ -355,7 +355,6 @@ var
 begin
   //showmessage(getMDBRegPath);
   SaveProperties(curObj, curTest, curReg);
-
   if BaseFolderEdit.text <> m_base.m_BaseFolder.Absolutepath then
   begin
     m_base.InitBaseFolder(BaseFolderEdit.text);
@@ -407,7 +406,8 @@ begin
   end
   else
   begin
-    cObjFolder(objFolder).m_ObjType:='';
+    if objFolder<>nil then
+      cObjFolder(objFolder).m_ObjType:='';
   end;
   if objFolder = nil then
     exit;
@@ -422,7 +422,7 @@ begin
       // для вновь создаваемых нет смысла что то искать внутри
       testFolder.fscanFolders := false;
       testFolder.fscanFiles := false;
-      objFolder.AddChild(testFolder);
+      ObjFolder.AddChild(testFolder);
       testFolder.Path := TestNameCB.text;
       testFolder.caption := TestNameCB.text;
       testFolder.CreateFiles;
@@ -434,6 +434,39 @@ begin
   else
   begin
     settestsettings(cTestFolder(testFolder));
+    cTestFolder(testFolder).CreateXMLDesc;
+  end;
+  // присваиваем новому объекту стандартный набор свойств
+  if TestTypeCB.text<>'' then
+  begin
+    // присваиваем свойства
+    //if cTestFolder(testFolder).m_testType<>TestTypeCB.text then
+    begin
+      proplist:=cbasemeafolder(m_base.m_BaseFolder).LoadTestsProperties(TestTypeCB.text);
+      if proplist=nil then
+      begin
+        proplist:=TStringList.Create;
+        proplist.Duplicates:=dupIgnore;
+      end;
+      cTestFolder(testFolder).clearPropertie;
+      g_mbase.Events.active:=false;
+      for I := 0 to proplist.Count - 1 do
+      begin
+        if i=proplist.Count-1 then
+        begin
+          g_mbase.Events.active:=true;
+        end;
+        cTestFolder(testFolder).addpropertie(proplist.Strings[i],'0');
+      end;
+      proplist.Destroy;
+    end;
+    cTestFolder(testFolder).m_testType:=testTypeCB.text;
+    cBaseMeaFolder(m_base.m_BaseFolder).m_testTypes.Add(cTestFolder(testFolder).m_TestType);
+  end
+  else
+  begin
+    if testFolder<>nil then
+      ctestFolder(testFolder).m_TestType:='';
   end;
   if testFolder = nil then
     exit;
@@ -457,6 +490,8 @@ begin
       setComboBoxItem(regFolder.caption, RegNameEdit);
     end;
   end;
+  // сохраняем свойства типов объектов
+  cBaseMeaFolder(m_base.m_BaseFolder).CreateXMLDesc;
 end;
 
 procedure TMBaseControl.UpdateXmlDescr;
@@ -855,6 +890,13 @@ begin
   end;
   TestNameCB.OnChange := p;
   setComboBoxItem(TestNameCB.text, TestNameCB);
+
+  // заполняем типы объектов
+  TestTypeCB.Clear;
+  for I := 0 to cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes.Count - 1 do
+  begin
+    TestTypeCB.AddItem(cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes.Strings[i],nil);
+  end;
 end;
 
 procedure TMBaseControl.FormPaint(Sender: TObject);
@@ -1421,6 +1463,7 @@ begin
     exit;
 
   ShowObjProps(t);
+  setComboBoxItem(t.m_testType,TestTypeCB);
 
   FillRegCB(cTestFolder(t));
 
@@ -1478,12 +1521,15 @@ begin
   obj := cXmlFolder(m_base.m_BaseFolder.getChild(lstr));
   setcurObj(cObjFolder(obj));
 
+  FillTestsCB(cObjFolder(obj));
   lstr := a_pIni.ReadString(section, 'TestName', '');
   setComboBoxItem(lstr, TestNameCB);
   TestTypeCB.text := a_pIni.ReadString(section, 'TestType', '');
   t := GetSelectTest;
   if t <> nil then
+  begin
     setcurTest(cTestFolder(t));
+  end;
 
   RegNameEdit.text := a_pIni.ReadString(section, 'RegName', '');
   obj := GetSelectTest;

@@ -84,6 +84,7 @@ type
     procedure doCreateFiles(node:txmlnode);override;
     procedure doLoadDesc(node:txmlnode);override;
   public
+    function LoadTestsProperties(objType: string): tstringlist;
     function LoadObjProperties(objType:string):tstringlist;
     constructor create;override;
     destructor destroy;override;
@@ -246,7 +247,10 @@ begin
   inherited;
   lstr:=str+'.xml';
   xml:=TNativeXml.Create(nil);
-  xml.LoadFromFile(lstr);
+  if fileexists(lstr) then
+    xml.LoadFromFile(lstr)
+  else
+    cXmlFolder(m_BaseFolder).CreateXMLDesc;
   node:=xml.Root;
   cBaseMeaFolder(m_BaseFolder).doloadDesc(node);
   xml.Destroy;
@@ -562,6 +566,7 @@ begin
       child.WriteAttributeString('Value',getProperty(i),'');
     end;
   end;
+  // сохраняем свойства объектов
   doCreateFiles(node);
   xml.XmlFormat:=xfReadable;
   xml.SaveToFile(newpath);
@@ -1055,6 +1060,21 @@ begin
   inherited;
 end;
 
+function CheckSListDup(sList:tstringlist; str:string):boolean;
+var
+  I: Integer;
+begin
+  result:=true;
+  for I := 0 to sList.Count - 1 do
+  begin
+    if slist.Strings[i]=str then
+    begin
+      result:=false;
+      exit;
+    end;
+  end;
+end;
+
 procedure cBaseMeaFolder.doCreateFiles(node: txmlnode);
 var
   I: Integer;
@@ -1075,6 +1095,33 @@ begin
       s:=m_TestTypes.Strings[i];
       child:=getNode(types,s);
       child.WriteAttributeString('Class','TestTypeStr','');
+      propList:=TStringList.Create;
+      for j := 0 to g_mbase.objects.Count - 1 do
+      begin
+        o:=g_mbase.getobj(j);
+        if o is cTestFolder then
+        begin
+          if cTestFolder(o).m_testType=s then
+          begin
+            for k := 0 to cTestFolder(o).PropCount - 1 do
+            begin
+              propname:=cTestFolder(o).m_Properties.Strings[k];
+              if propname<>'' then
+              begin
+                prop:=tprop(cTestFolder(o).m_Properties.Objects[k]);
+                if CheckSListDup(proplist, propname) then
+                  proplist.AddObject(propname,prop);
+              end;
+            end;
+          end;
+        end;
+      end;
+      for j := 0 to proplist.Count - 1 do
+      begin
+        child.WriteAttributeString('Prop_'+inttostr(j),proplist.Strings[j],'');
+        child.WriteAttributeString('Prop_v_'+inttostr(j),'0','0');
+      end;
+      propList.Destroy;
     end;
   end;
   if m_ObjTypes.Count>0 then
@@ -1091,6 +1138,7 @@ begin
         proplist.Duplicates:=dupIgnore;
       end;
       child:=getNode(types,s);
+      // сохраняем возможные свойства объекта
       child.WriteAttributeString('Properties','ObjTypeStr','');
       for j := 0 to g_mbase.objects.Count - 1 do
       begin
@@ -1102,8 +1150,12 @@ begin
             for k := 0 to cObjFolder(o).PropCount - 1 do
             begin
               propname:=cObjFolder(o).m_Properties.Strings[k];
-              prop:=tprop(cObjFolder(o).m_Properties.Objects[k]);
-              proplist.AddObject(propname,prop);
+              if propname<>'' then
+              begin
+                prop:=tprop(cObjFolder(o).m_Properties.Objects[k]);
+                if CheckSListDup(proplist, propname) then
+                  proplist.AddObject(propname,prop);
+              end;
             end;
           end;
         end;
@@ -1150,6 +1202,49 @@ begin
       begin
         s:=child.name;
         m_ObjTypes.Add(s);
+      end;
+    end;
+  end;
+end;
+
+function cBaseMeaFolder.LoadTestsProperties(objType: string): tstringlist;
+var
+  xml:tnativexml;
+  node, n, child:txmlNode;
+  i, j:integer;
+  s, lpath:string;
+begin
+  result:=nil;
+  lpath:=getpath+'.xml';
+  if fileexists(lpath) then
+  begin
+    xml:=TNativeXml.Create(nil);
+    xml.LoadFromFile(lpath);
+    node:=xml.Root;
+    n:=node.FindNode('TestTypes');
+    if n<>nil then
+    begin
+      for I := 0 to n.NodeCount - 1 do
+      begin
+        child:=n.Nodes[i];
+        s:=child.ReadAttributeString('Class','');
+        if s='TestTypeStr' then
+        begin
+          if objType=child.name then
+          begin
+            result:=TStringList.Create;
+            result.Duplicates:=dupIgnore;
+            j:=0;
+            s:=child.ReadAttributeString('Prop_'+inttostr(j),'');
+            while s <> '' do
+            begin
+              result.add(s);
+              inc(j);
+              s:=child.ReadAttributeString('Prop_'+inttostr(j),'');
+            end;
+            Exit;
+          end;
+        end;
       end;
     end;
   end;
