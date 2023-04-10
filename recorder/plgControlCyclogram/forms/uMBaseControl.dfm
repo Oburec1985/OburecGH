@@ -2,8 +2,8 @@ object MBaseControl: TMBaseControl
   Left = 0
   Top = 0
   Caption = #1059#1087#1088#1072#1074#1083#1077#1085#1080#1077' '#1073#1072#1079#1086#1081' '#1076#1072#1085#1085#1099#1093
-  ClientHeight = 843
-  ClientWidth = 1004
+  ClientHeight = 841
+  ClientWidth = 899
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,360 +17,51 @@ object MBaseControl: TMBaseControl
   TextHeight = 24
   object Splitter1: TSplitter
     Left = 0
-    Top = 662
-    Width = 1004
+    Top = 660
+    Width = 899
     Height = 4
     Cursor = crVSplit
     Align = alBottom
     Color = clBackground
     ParentColor = False
+    ExplicitTop = 662
+    ExplicitWidth = 1004
   end
   object Splitter2: TSplitter
     Left = 0
-    Top = 138
-    Width = 1004
+    Top = 0
+    Width = 899
     Height = 2
     Cursor = crVSplit
     Align = alTop
     Color = clBackground
     ParentColor = False
+    ExplicitTop = 138
+    ExplicitWidth = 1004
   end
   object Splitter3: TSplitter
     Left = 0
-    Top = 339
-    Width = 1004
+    Top = 2
+    Width = 899
     Height = 2
     Cursor = crVSplit
     Align = alTop
     Color = clBackground
     ParentColor = False
-  end
-  object ObjGB: TGroupBox
-    Left = 0
-    Top = 0
-    Width = 1004
-    Height = 138
-    Align = alTop
-    Caption = #1054#1073#1098#1077#1082#1090
-    TabOrder = 0
-    object Splitter6: TSplitter
-      Left = 452
-      Top = 26
-      Width = 6
-      Height = 110
-      Color = clBackground
-      ParentColor = False
-      OnMoved = Splitter4Moved
-      ExplicitLeft = 453
-      ExplicitTop = 27
-      ExplicitHeight = 108
-    end
-    object ObjPanel: TPanel
-      Left = 2
-      Top = 26
-      Width = 450
-      Height = 110
-      Align = alLeft
-      TabOrder = 0
-      object ObjNameLabel: TLabel
-        Left = 15
-        Top = 0
-        Width = 143
-        Height = 24
-        Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077':'
-      end
-      object Label4: TLabel
-        Left = 18
-        Top = 76
-        Width = 41
-        Height = 24
-        Caption = #1058#1080#1087':'
-      end
-      object ObjRenameBtn: TButton
-        Left = 245
-        Top = 23
-        Width = 157
-        Height = 34
-        Caption = #1055#1077#1088#1077#1080#1084#1077#1085#1086#1074#1072#1090#1100
-        TabOrder = 0
-        Visible = False
-        OnClick = ObjRenameBtnClick
-      end
-      object ObjNameCB: TComboBox
-        Left = 15
-        Top = 26
-        Width = 212
-        Height = 32
-        TabOrder = 1
-        OnChange = ObjNameCBChange
-      end
-      object ObjTypeCB: TComboBox
-        Left = 65
-        Top = 71
-        Width = 162
-        Height = 32
-        TabOrder = 2
-        OnChange = TestTypeCBChange
-      end
-    end
-    object ObjPropSG: TStringGridExt
-      Left = 458
-      Top = 26
-      Width = 544
-      Height = 110
-      Align = alClient
-      TabOrder = 1
-      OnExit = ObjPropSGExit
-      OnKeyDown = ObjPropSGKeyDown
-      OnEndEdititng = ObjPropSGEndEdititng
-    end
-  end
-  object TestGB: TGroupBox
-    Left = 0
-    Top = 140
-    Width = 1004
-    Height = 199
-    Align = alTop
-    Caption = #1048#1089#1087#1099#1090#1072#1085#1080#1077
-    TabOrder = 1
-    object Splitter5: TSplitter
-      Left = 450
-      Top = 26
-      Width = 4
-      Height = 171
-      Color = clBackground
-      ParentColor = False
-      OnMoved = Splitter4Moved
-      ExplicitLeft = 451
-      ExplicitTop = 27
-      ExplicitHeight = 169
-    end
-    object TestPanel: TPanel
-      Left = 2
-      Top = 26
-      Width = 448
-      Height = 171
-      Align = alLeft
-      TabOrder = 0
-      object TestTypeLabel: TLabel
-        Left = 16
-        Top = 80
-        Width = 41
-        Height = 24
-        Caption = #1058#1080#1087':'
-      end
-      object Label2: TLabel
-        Left = 16
-        Top = 6
-        Width = 143
-        Height = 24
-        Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077':'
-      end
-      object TestTypeCB: TComboBox
-        Left = 16
-        Top = 101
-        Width = 211
-        Height = 32
-        TabOrder = 0
-        OnChange = TestTypeCBChange
-      end
-      object TestDateNameCB: TCheckBox
-        Left = 245
-        Top = 30
-        Width = 91
-        Height = 17
-        Hint = #1042#1089#1090#1072#1074#1080#1090#1100' '#1076#1072#1090#1091' '#1074#1084#1077#1089#1090#1086' '#1080#1084#1077#1085#1080
-        Caption = #1044#1072#1090#1072
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 1
-      end
-      object TestNameCB: TComboBox
-        Left = 16
-        Top = 33
-        Width = 211
-        Height = 32
-        TabOrder = 2
-        OnChange = TestNameCBChange
-      end
-    end
-    object TestPropSG: TStringGridExt
-      Left = 454
-      Top = 26
-      Width = 548
-      Height = 171
-      Align = alClient
-      TabOrder = 1
-      OnExit = ObjPropSGExit
-      OnKeyDown = ObjPropSGKeyDown
-      OnEndEdititng = ObjPropSGEndEdititng
-    end
-  end
-  object RegGB: TGroupBox
-    Left = 0
-    Top = 341
-    Width = 1004
-    Height = 321
-    Align = alClient
-    Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1094#1080#1103
-    TabOrder = 2
-    object Splitter4: TSplitter
-      Left = 450
-      Top = 26
-      Width = 5
-      Height = 293
-      Color = clBackground
-      ParentColor = False
-      OnMoved = Splitter4Moved
-      ExplicitLeft = 451
-      ExplicitTop = 27
-      ExplicitHeight = 291
-    end
-    object RegPanel: TPanel
-      Left = 2
-      Top = 26
-      Width = 448
-      Height = 293
-      Align = alLeft
-      Constraints.MinHeight = 226
-      TabOrder = 0
-      object Label1: TLabel
-        Left = 15
-        Top = 23
-        Width = 143
-        Height = 24
-        Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077':'
-      end
-      object Splitter7: TSplitter
-        Left = 1
-        Top = 97
-        Width = 446
-        Height = 4
-        Cursor = crVSplit
-        Align = alBottom
-        Color = clBackground
-        ParentColor = False
-        ExplicitTop = 96
-      end
-      object RegistratorsLV: TBtnListView
-        Left = 1
-        Top = 208
-        Width = 446
-        Height = 84
-        Align = alBottom
-        Columns = <
-          item
-            Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1090#1086#1088
-            Width = 48
-          end
-          item
-            Caption = #1055#1086#1076#1082#1072#1090#1072#1083#1086#1075
-            Width = 48
-          end
-          item
-            Caption = #1055#1091#1090#1100
-            Width = 48
-          end>
-        RowSelect = True
-        SmallImages = ImageList1
-        TabOrder = 0
-        ViewStyle = vsReport
-        OnDblClickProcess = RegistratorsLVDblClickProcess
-        BtnCol = 0
-        QuoteColumnBtnClick = False
-        QuoteColumnDblClick = False
-        DrawColorBox = False
-        ChangeTextColor = False
-        Editable = False
-      end
-      object AlarmCB: TCheckBox
-        Left = 249
-        Top = 49
-        Width = 92
-        Height = 23
-        Caption = #1040#1074#1072#1088#1080#1103
-        TabOrder = 1
-        OnClick = AlarmCBClick
-      end
-      object AlarmPanel: TPanel
-        Left = 1
-        Top = 101
-        Width = 446
-        Height = 107
-        Align = alBottom
-        TabOrder = 2
-        Visible = False
-        object AlarmDscLabel: TLabel
-          Left = 5
-          Top = 6
-          Width = 96
-          Height = 24
-          Caption = #1054#1087#1080#1089#1072#1085#1080#1077':'
-        end
-        object AlarmTypeLabel: TLabel
-          Left = 248
-          Top = 6
-          Width = 96
-          Height = 24
-          Caption = #1054#1087#1080#1089#1072#1085#1080#1077':'
-        end
-        object AlarmDsc: TEdit
-          Left = 5
-          Top = 34
-          Width = 222
-          Height = 32
-          TabOrder = 0
-        end
-        object AlarmType: TComboBox
-          Left = 248
-          Top = 34
-          Width = 137
-          Height = 32
-          ItemIndex = 0
-          TabOrder = 1
-          Text = #1055#1088#1077#1076#1091#1087#1088#1077#1078#1076#1077#1085#1080#1077
-          Items.Strings = (
-            #1055#1088#1077#1076#1091#1087#1088#1077#1078#1076#1077#1085#1080#1077
-            #1040#1074#1072#1088#1080#1103
-            #1056#1072#1079#1088#1091#1096#1077#1085#1080#1077)
-        end
-      end
-      object RegNameEdit: TComboBox
-        Left = 15
-        Top = 49
-        Width = 214
-        Height = 32
-        TabOrder = 3
-        OnChange = RegNameEditChange
-      end
-    end
-    object RegPropSG: TStringGridExt
-      Left = 455
-      Top = 26
-      Width = 547
-      Height = 293
-      Align = alClient
-      TabOrder = 1
-      OnExit = ObjPropSGExit
-      OnKeyDown = ObjPropSGKeyDown
-      OnEndEdititng = ObjPropSGEndEdititng
-      RowHeights = (
-        24
-        24
-        24
-        24
-        24)
-    end
+    ExplicitTop = 339
+    ExplicitWidth = 1004
   end
   object ActionPanel: TPanel
     Left = 0
-    Top = 666
-    Width = 1004
+    Top = 664
+    Width = 899
     Height = 177
     Align = alBottom
-    TabOrder = 3
+    TabOrder = 0
+    ExplicitTop = 666
+    ExplicitWidth = 1004
     DesignSize = (
-      1004
+      899
       177)
     object Label3: TLabel
       Left = 4
@@ -1755,10 +1446,11 @@ object MBaseControl: TMBaseControl
     object BaseFolderEdit: TEdit
       Left = 61
       Top = 9
-      Width = 711
+      Width = 606
       Height = 32
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
+      ExplicitWidth = 711
     end
     object Button1: TButton
       Left = 561
@@ -1788,13 +1480,358 @@ object MBaseControl: TMBaseControl
       OnClick = MdbPathBtnClick
     end
   end
+  object Panel1: TPanel
+    Left = 0
+    Top = 4
+    Width = 498
+    Height = 656
+    Align = alClient
+    TabOrder = 1
+    ExplicitLeft = 643
+    ExplicitTop = 345
+    ExplicitWidth = 185
+    ExplicitHeight = 321
+    object ObjGB: TGroupBox
+      Left = 1
+      Top = 1
+      Width = 496
+      Height = 138
+      Align = alTop
+      Caption = #1054#1073#1098#1077#1082#1090
+      TabOrder = 0
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 1004
+      object ObjPanel: TPanel
+        Left = 2
+        Top = 26
+        Width = 492
+        Height = 110
+        Align = alClient
+        TabOrder = 0
+        ExplicitWidth = 450
+        object ObjNameLabel: TLabel
+          Left = 15
+          Top = 0
+          Width = 143
+          Height = 24
+          Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077':'
+        end
+        object Label4: TLabel
+          Left = 18
+          Top = 76
+          Width = 41
+          Height = 24
+          Caption = #1058#1080#1087':'
+        end
+        object ObjRenameBtn: TButton
+          Left = 245
+          Top = 23
+          Width = 157
+          Height = 34
+          Caption = #1055#1077#1088#1077#1080#1084#1077#1085#1086#1074#1072#1090#1100
+          TabOrder = 0
+          Visible = False
+          OnClick = ObjRenameBtnClick
+        end
+        object ObjNameCB: TComboBox
+          Left = 15
+          Top = 26
+          Width = 212
+          Height = 32
+          TabOrder = 1
+          OnChange = ObjNameCBChange
+        end
+        object ObjTypeCB: TComboBox
+          Left = 65
+          Top = 71
+          Width = 162
+          Height = 32
+          TabOrder = 2
+          OnChange = TestTypeCBChange
+        end
+      end
+    end
+    object TestGB: TGroupBox
+      Left = 1
+      Top = 139
+      Width = 496
+      Height = 199
+      Align = alTop
+      Caption = #1048#1089#1087#1099#1090#1072#1085#1080#1077
+      TabOrder = 1
+      ExplicitLeft = 0
+      ExplicitTop = 140
+      ExplicitWidth = 1004
+      object TestPanel: TPanel
+        Left = 2
+        Top = 26
+        Width = 492
+        Height = 171
+        Align = alClient
+        TabOrder = 0
+        ExplicitWidth = 448
+        object TestTypeLabel: TLabel
+          Left = 16
+          Top = 80
+          Width = 41
+          Height = 24
+          Caption = #1058#1080#1087':'
+        end
+        object Label2: TLabel
+          Left = 16
+          Top = 6
+          Width = 143
+          Height = 24
+          Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077':'
+        end
+        object TestTypeCB: TComboBox
+          Left = 16
+          Top = 101
+          Width = 211
+          Height = 32
+          TabOrder = 0
+          OnChange = TestTypeCBChange
+        end
+        object TestDateNameCB: TCheckBox
+          Left = 245
+          Top = 30
+          Width = 91
+          Height = 17
+          Hint = #1042#1089#1090#1072#1074#1080#1090#1100' '#1076#1072#1090#1091' '#1074#1084#1077#1089#1090#1086' '#1080#1084#1077#1085#1080
+          Caption = #1044#1072#1090#1072
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 1
+        end
+        object TestNameCB: TComboBox
+          Left = 16
+          Top = 33
+          Width = 211
+          Height = 32
+          TabOrder = 2
+          OnChange = TestNameCBChange
+        end
+      end
+    end
+    object RegGB: TGroupBox
+      Left = 1
+      Top = 338
+      Width = 496
+      Height = 317
+      Align = alClient
+      Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1094#1080#1103
+      TabOrder = 2
+      ExplicitLeft = 0
+      ExplicitTop = 341
+      ExplicitWidth = 1004
+      ExplicitHeight = 321
+      object RegPanel: TPanel
+        Left = 2
+        Top = 26
+        Width = 492
+        Height = 289
+        Align = alClient
+        Constraints.MinHeight = 226
+        TabOrder = 0
+        ExplicitWidth = 448
+        ExplicitHeight = 293
+        object Label1: TLabel
+          Left = 15
+          Top = 15
+          Width = 143
+          Height = 24
+          Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077':'
+        end
+        object Splitter7: TSplitter
+          Left = 1
+          Top = 93
+          Width = 490
+          Height = 4
+          Cursor = crVSplit
+          Align = alBottom
+          Color = clBackground
+          ParentColor = False
+          ExplicitTop = 96
+          ExplicitWidth = 446
+        end
+        object RegistratorsLV: TBtnListView
+          Left = 1
+          Top = 204
+          Width = 490
+          Height = 84
+          Align = alBottom
+          Columns = <
+            item
+              Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1090#1086#1088
+              Width = 48
+            end
+            item
+              Caption = #1055#1086#1076#1082#1072#1090#1072#1083#1086#1075
+              Width = 48
+            end
+            item
+              Caption = #1055#1091#1090#1100
+              Width = 48
+            end>
+          RowSelect = True
+          SmallImages = ImageList1
+          TabOrder = 0
+          ViewStyle = vsReport
+          OnDblClickProcess = RegistratorsLVDblClickProcess
+          BtnCol = 0
+          QuoteColumnBtnClick = False
+          QuoteColumnDblClick = False
+          DrawColorBox = False
+          ChangeTextColor = False
+          Editable = False
+          ExplicitTop = 206
+          ExplicitWidth = 446
+        end
+        object AlarmCB: TCheckBox
+          Left = 249
+          Top = 41
+          Width = 92
+          Height = 23
+          Caption = #1040#1074#1072#1088#1080#1103
+          TabOrder = 1
+          OnClick = AlarmCBClick
+        end
+        object AlarmPanel: TPanel
+          Left = 1
+          Top = 97
+          Width = 490
+          Height = 107
+          Align = alBottom
+          TabOrder = 2
+          Visible = False
+          ExplicitTop = 101
+          ExplicitWidth = 446
+          object AlarmDscLabel: TLabel
+            Left = 5
+            Top = 6
+            Width = 96
+            Height = 24
+            Caption = #1054#1087#1080#1089#1072#1085#1080#1077':'
+          end
+          object AlarmTypeLabel: TLabel
+            Left = 248
+            Top = 6
+            Width = 96
+            Height = 24
+            Caption = #1054#1087#1080#1089#1072#1085#1080#1077':'
+          end
+          object AlarmDsc: TEdit
+            Left = 5
+            Top = 34
+            Width = 222
+            Height = 32
+            TabOrder = 0
+          end
+          object AlarmType: TComboBox
+            Left = 233
+            Top = 34
+            Width = 188
+            Height = 32
+            ItemIndex = 0
+            TabOrder = 1
+            Text = #1055#1088#1077#1076#1091#1087#1088#1077#1078#1076#1077#1085#1080#1077
+            Items.Strings = (
+              #1055#1088#1077#1076#1091#1087#1088#1077#1078#1076#1077#1085#1080#1077
+              #1040#1074#1072#1088#1080#1103
+              #1056#1072#1079#1088#1091#1096#1077#1085#1080#1077)
+          end
+        end
+        object RegNameEdit: TComboBox
+          Left = 15
+          Top = 41
+          Width = 214
+          Height = 32
+          TabOrder = 3
+          OnChange = RegNameEditChange
+        end
+      end
+    end
+  end
+  object Panel2: TPanel
+    Left = 498
+    Top = 4
+    Width = 401
+    Height = 656
+    Align = alRight
+    TabOrder = 2
+    ExplicitLeft = 624
+    ExplicitHeight = 658
+    object ObjPropSG: TStringGridExt
+      Left = 1
+      Top = 1
+      Width = 399
+      Height = 429
+      Align = alClient
+      TabOrder = 0
+      OnExit = ObjPropSGExit
+      OnKeyDown = ObjPropSGKeyDown
+      OnEndEdititng = ObjPropSGEndEdititng
+      ExplicitLeft = 458
+      ExplicitTop = 26
+      ExplicitWidth = 518
+      ExplicitHeight = 110
+    end
+    object Panel3: TPanel
+      Left = 1
+      Top = 430
+      Width = 399
+      Height = 225
+      Align = alBottom
+      TabOrder = 1
+      ExplicitTop = 432
+      object PropNameLabel: TLabel
+        Left = 23
+        Top = 16
+        Width = 229
+        Height = 24
+        Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077' '#1089#1074#1086#1081#1089#1090#1074#1072':'
+      end
+      object PropValLabel: TLabel
+        Left = 23
+        Top = 92
+        Width = 95
+        Height = 24
+        Caption = #1047#1085#1072#1095#1077#1085#1080#1077':'
+      end
+      object PropNameEdit: TEdit
+        Left = 21
+        Top = 46
+        Width = 316
+        Height = 32
+        TabOrder = 0
+      end
+      object PropValEdit: TEdit
+        Left = 21
+        Top = 126
+        Width = 316
+        Height = 32
+        TabOrder = 1
+      end
+      object ApplyBtn: TButton
+        Left = 21
+        Top = 178
+        Width = 157
+        Height = 34
+        Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
+        TabOrder = 2
+        Visible = False
+        OnClick = ObjRenameBtnClick
+      end
+    end
+  end
   object TcpClient1: TTcpClient
-    Left = 560
-    Top = 136
+    Left = 88
+    Top = 608
   end
   object ImageList1: TImageList
-    Left = 544
-    Top = 280
+    Left = 280
+    Top = 616
     Bitmap = {
       494C010105000900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
@@ -2070,25 +2107,25 @@ object MBaseControl: TMBaseControl
   object Timer1: TTimer
     Interval = 300
     OnTimer = Timer1Timer
-    Left = 480
-    Top = 40
+    Left = 360
+    Top = 608
   end
   object MainMenu1: TMainMenu
-    Left = 560
-    Top = 48
+    Left = 16
+    Top = 608
     object PropertiesMenu: TMenuItem
       Caption = #1057#1074#1086#1081#1089#1090#1074#1072
     end
   end
   object OpenDialog1: TOpenDialog
-    Left = 792
-    Top = 520
+    Left = 216
+    Top = 616
   end
   object OpenDialog1vista: TFileOpenDialog
     FavoriteLinks = <>
     FileTypes = <>
     Options = [fdoPickFolders, fdoForceFileSystem]
-    Left = 568
-    Top = 184
+    Left = 152
+    Top = 608
   end
 end
