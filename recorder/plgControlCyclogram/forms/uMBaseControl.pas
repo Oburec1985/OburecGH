@@ -99,6 +99,9 @@ type
     procedure CfgSBClick(Sender: TObject);
     procedure ObjPropSGExit(Sender: TObject);
     procedure FormPaint(Sender: TObject);
+    procedure ObjNameCBClick(Sender: TObject);
+    procedure TestNameCBClick(Sender: TObject);
+    procedure RegNameEditClick(Sender: TObject);
   private
 
     m_rstate: dword;
@@ -110,7 +113,7 @@ type
     // текущая регистрация
     m_reg: cregFolder;
     rc_pan: cRegController;
-    curObj, curTest, curReg: cXmlFolder;
+    selectObj, curObj, curTest, curReg: cXmlFolder;
   public
     fOnStopRec, fSaveCfg: tnotifyevent;
   protected
@@ -1249,6 +1252,11 @@ begin
   TestNameCBChange(nil);
 end;
 
+procedure TMBaseControl.ObjNameCBClick(Sender: TObject);
+begin
+  selectObj:=GetSelectObj;
+end;
+
 procedure TMBaseControl.RegNameEditChange(Sender: TObject);
 var
   r: cregFolder;
@@ -1265,6 +1273,11 @@ begin
     r := nil;
     setcurReg(r);
   end;
+end;
+
+procedure TMBaseControl.RegNameEditClick(Sender: TObject);
+begin
+  selectObj:=GetSelectReg;
 end;
 
 procedure TMBaseControl.ObjPropSGKeyDown(Sender: TObject; var Key: Word;
@@ -1821,6 +1834,11 @@ begin
     FillRegCB(t);
   end;
   CheckCBItemInd(TestNameCB);
+end;
+
+procedure TMBaseControl.TestNameCBClick(Sender: TObject);
+begin
+  selectObj:=GetSelectTest;
 end;
 
 procedure TMBaseControl.TestTypeCBChange(Sender: TObject);

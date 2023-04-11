@@ -58,8 +58,6 @@ object MBaseControl: TMBaseControl
     Height = 177
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 666
-    ExplicitWidth = 1004
     DesignSize = (
       899
       177)
@@ -1450,7 +1448,6 @@ object MBaseControl: TMBaseControl
       Height = 32
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
-      ExplicitWidth = 711
     end
     object Button1: TButton
       Left = 561
@@ -1487,10 +1484,6 @@ object MBaseControl: TMBaseControl
     Height = 656
     Align = alClient
     TabOrder = 1
-    ExplicitLeft = 643
-    ExplicitTop = 345
-    ExplicitWidth = 185
-    ExplicitHeight = 321
     object ObjGB: TGroupBox
       Left = 1
       Top = 1
@@ -1499,9 +1492,6 @@ object MBaseControl: TMBaseControl
       Align = alTop
       Caption = #1054#1073#1098#1077#1082#1090
       TabOrder = 0
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 1004
       object ObjPanel: TPanel
         Left = 2
         Top = 26
@@ -1509,7 +1499,6 @@ object MBaseControl: TMBaseControl
         Height = 110
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 450
         object ObjNameLabel: TLabel
           Left = 15
           Top = 0
@@ -1541,6 +1530,7 @@ object MBaseControl: TMBaseControl
           Height = 32
           TabOrder = 1
           OnChange = ObjNameCBChange
+          OnClick = ObjNameCBClick
         end
         object ObjTypeCB: TComboBox
           Left = 65
@@ -1560,9 +1550,6 @@ object MBaseControl: TMBaseControl
       Align = alTop
       Caption = #1048#1089#1087#1099#1090#1072#1085#1080#1077
       TabOrder = 1
-      ExplicitLeft = 0
-      ExplicitTop = 140
-      ExplicitWidth = 1004
       object TestPanel: TPanel
         Left = 2
         Top = 26
@@ -1570,7 +1557,6 @@ object MBaseControl: TMBaseControl
         Height = 171
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 448
         object TestTypeLabel: TLabel
           Left = 16
           Top = 80
@@ -1611,6 +1597,7 @@ object MBaseControl: TMBaseControl
           Height = 32
           TabOrder = 2
           OnChange = TestNameCBChange
+          OnClick = TestNameCBClick
         end
       end
     end
@@ -1622,10 +1609,6 @@ object MBaseControl: TMBaseControl
       Align = alClient
       Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1094#1080#1103
       TabOrder = 2
-      ExplicitLeft = 0
-      ExplicitTop = 341
-      ExplicitWidth = 1004
-      ExplicitHeight = 321
       object RegPanel: TPanel
         Left = 2
         Top = 26
@@ -1634,8 +1617,6 @@ object MBaseControl: TMBaseControl
         Align = alClient
         Constraints.MinHeight = 226
         TabOrder = 0
-        ExplicitWidth = 448
-        ExplicitHeight = 293
         object Label1: TLabel
           Left = 15
           Top = 15
@@ -1685,8 +1666,6 @@ object MBaseControl: TMBaseControl
           DrawColorBox = False
           ChangeTextColor = False
           Editable = False
-          ExplicitTop = 206
-          ExplicitWidth = 446
         end
         object AlarmCB: TCheckBox
           Left = 249
@@ -1705,8 +1684,6 @@ object MBaseControl: TMBaseControl
           Align = alBottom
           TabOrder = 2
           Visible = False
-          ExplicitTop = 101
-          ExplicitWidth = 446
           object AlarmDscLabel: TLabel
             Left = 5
             Top = 6
@@ -1749,6 +1726,7 @@ object MBaseControl: TMBaseControl
           Height = 32
           TabOrder = 3
           OnChange = RegNameEditChange
+          OnClick = RegNameEditClick
         end
       end
     end
@@ -1760,8 +1738,6 @@ object MBaseControl: TMBaseControl
     Height = 656
     Align = alRight
     TabOrder = 2
-    ExplicitLeft = 624
-    ExplicitHeight = 658
     object ObjPropSG: TStringGridExt
       Left = 1
       Top = 1
@@ -1772,10 +1748,6 @@ object MBaseControl: TMBaseControl
       OnExit = ObjPropSGExit
       OnKeyDown = ObjPropSGKeyDown
       OnEndEdititng = ObjPropSGEndEdititng
-      ExplicitLeft = 458
-      ExplicitTop = 26
-      ExplicitWidth = 518
-      ExplicitHeight = 110
     end
     object Panel3: TPanel
       Left = 1
@@ -1784,7 +1756,6 @@ object MBaseControl: TMBaseControl
       Height = 225
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 432
       object PropNameLabel: TLabel
         Left = 23
         Top = 16
