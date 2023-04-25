@@ -27,30 +27,6 @@ object MBaseControl: TMBaseControl
     ExplicitTop = 662
     ExplicitWidth = 1004
   end
-  object Splitter2: TSplitter
-    Left = 0
-    Top = 0
-    Width = 899
-    Height = 2
-    Cursor = crVSplit
-    Align = alTop
-    Color = clBackground
-    ParentColor = False
-    ExplicitTop = 138
-    ExplicitWidth = 1004
-  end
-  object Splitter3: TSplitter
-    Left = 0
-    Top = 2
-    Width = 899
-    Height = 2
-    Cursor = crVSplit
-    Align = alTop
-    Color = clBackground
-    ParentColor = False
-    ExplicitTop = 339
-    ExplicitWidth = 1004
-  end
   object ActionPanel: TPanel
     Left = 0
     Top = 664
@@ -1479,11 +1455,13 @@ object MBaseControl: TMBaseControl
   end
   object Panel1: TPanel
     Left = 0
-    Top = 4
+    Top = 0
     Width = 498
-    Height = 656
+    Height = 660
     Align = alClient
     TabOrder = 1
+    ExplicitTop = 4
+    ExplicitHeight = 656
     object ObjGB: TGroupBox
       Left = 1
       Top = 1
@@ -1605,18 +1583,20 @@ object MBaseControl: TMBaseControl
       Left = 1
       Top = 338
       Width = 496
-      Height = 317
+      Height = 321
       Align = alClient
       Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1094#1080#1103
       TabOrder = 2
+      ExplicitHeight = 317
       object RegPanel: TPanel
         Left = 2
         Top = 26
         Width = 492
-        Height = 289
+        Height = 293
         Align = alClient
         Constraints.MinHeight = 226
         TabOrder = 0
+        ExplicitHeight = 289
         object Label1: TLabel
           Left = 15
           Top = 15
@@ -1626,7 +1606,7 @@ object MBaseControl: TMBaseControl
         end
         object Splitter7: TSplitter
           Left = 1
-          Top = 93
+          Top = 97
           Width = 490
           Height = 4
           Cursor = crVSplit
@@ -1638,7 +1618,7 @@ object MBaseControl: TMBaseControl
         end
         object RegistratorsLV: TBtnListView
           Left = 1
-          Top = 204
+          Top = 208
           Width = 490
           Height = 84
           Align = alBottom
@@ -1666,6 +1646,7 @@ object MBaseControl: TMBaseControl
           DrawColorBox = False
           ChangeTextColor = False
           Editable = False
+          ExplicitTop = 204
         end
         object AlarmCB: TCheckBox
           Left = 249
@@ -1678,12 +1659,13 @@ object MBaseControl: TMBaseControl
         end
         object AlarmPanel: TPanel
           Left = 1
-          Top = 97
+          Top = 101
           Width = 490
           Height = 107
           Align = alBottom
           TabOrder = 2
           Visible = False
+          ExplicitTop = 97
           object AlarmDscLabel: TLabel
             Left = 5
             Top = 6
@@ -1733,29 +1715,33 @@ object MBaseControl: TMBaseControl
   end
   object Panel2: TPanel
     Left = 498
-    Top = 4
+    Top = 0
     Width = 401
-    Height = 656
+    Height = 660
     Align = alRight
     TabOrder = 2
+    ExplicitTop = 4
+    ExplicitHeight = 656
     object ObjPropSG: TStringGridExt
       Left = 1
       Top = 1
       Width = 399
-      Height = 429
+      Height = 433
       Align = alClient
       TabOrder = 0
       OnExit = ObjPropSGExit
       OnKeyDown = ObjPropSGKeyDown
       OnEndEdititng = ObjPropSGEndEdititng
+      ExplicitHeight = 429
     end
     object Panel3: TPanel
       Left = 1
-      Top = 430
+      Top = 434
       Width = 399
       Height = 225
       Align = alBottom
       TabOrder = 1
+      ExplicitTop = 430
       object PropNameLabel: TLabel
         Left = 23
         Top = 16

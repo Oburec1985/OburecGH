@@ -13,7 +13,6 @@ type
     AllClientPanel: TPanel;
     TextInfoLV: TBtnListView;
     ColorDialog1: TColorDialog;
-    TagsListFrame1: TTagsListFrame;
     FontDialog1: TFontDialog;
     Panel1: TPanel;
     TagLabel: TLabel;
@@ -32,9 +31,9 @@ type
     BckGndColorPan: TPanel;
     ShowLabelCB: TCheckBox;
     TagCB: TRcComboBox;
-    ApplyTagBtn: TButton;
     LabelEdit: TEdit;
     Splitter1: TSplitter;
+    TagsListFrame1: TTagsListFrame;
     procedure FormCreate(Sender: TObject);
     procedure FontBtnClick(Sender: TObject);
     procedure LabFontBtnClick(Sender: TObject);
@@ -44,8 +43,8 @@ type
     procedure TextInfoLVSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
     procedure UpdateRowBtnClick(Sender: TObject);
-    procedure ApplyTagBtnClick(Sender: TObject);
     procedure BckGndColorPanClick(Sender: TObject);
+    procedure TagCBChange(Sender: TObject);
   private
     m_init:boolean;
     cur:tobject;
@@ -93,6 +92,11 @@ begin
   end;
 end;
 
+
+procedure TTagInfoEditFrm.TagCBChange(Sender: TObject);
+begin
+  obj.m_tag.tag:=tagcb.gettag(tagcb.ItemIndex);
+end;
 
 procedure TTagInfoEditFrm.TextInfoLVKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
@@ -173,11 +177,6 @@ begin
   TextInfoLV.SetSubItemByColumnName('Значение',inttostr(p.v),li);
 end;
 
-procedure TTagInfoEditFrm.ApplyTagBtnClick(Sender: TObject);
-begin
-  obj.m_tag.tag:=tagcb.gettag(tagcb.ItemIndex);
-  obj.TextLabel:=LabelEdit.Text;
-end;
 
 procedure TTagInfoEditFrm.BckGndColorPanClick(Sender: TObject);
 begin
@@ -211,6 +210,7 @@ begin
   begin
     obj.font:=fontdialog1.font;
   end;
+  obj.TextLabel:=LabelEdit.Text;
 end;
 
 procedure TTagInfoEditFrm.LabFontBtnClick(Sender: TObject);

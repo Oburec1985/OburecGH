@@ -19,8 +19,6 @@ type
   TMBaseControl = class(TRecFrm)
     ActionPanel: TPanel;
     Splitter1: TSplitter;
-    Splitter2: TSplitter;
-    Splitter3: TSplitter;
     BaseFolderEdit: TEdit;
     Label3: TLabel;
     Button1: TButton;
@@ -1175,14 +1173,7 @@ begin
   begin
     obj := GetSelectObj;
   end;
-  if Sender = TestPropSG then
-  begin
-    obj := GetSelectTest;
-  end;
-  if Sender = RegPropSG then
-  begin
-    obj := GetSelectReg;
-  end;
+
   prop := '';
   val := '';
   if obj <> nil then
@@ -1255,6 +1246,7 @@ end;
 procedure TMBaseControl.ObjNameCBClick(Sender: TObject);
 begin
   selectObj:=GetSelectObj;
+  ShowObjProps(selectObj);
 end;
 
 procedure TMBaseControl.RegNameEditChange(Sender: TObject);
@@ -1278,6 +1270,7 @@ end;
 procedure TMBaseControl.RegNameEditClick(Sender: TObject);
 begin
   selectObj:=GetSelectReg;
+  ShowObjProps(selectObj);
 end;
 
 procedure TMBaseControl.ObjPropSGKeyDown(Sender: TObject; var Key: Word;
@@ -1300,14 +1293,6 @@ begin
     begin
       obj := GetSelectObj;
     end;
-    if Sender = TestPropSG then
-    begin
-      obj := GetSelectTest;
-    end;
-    if Sender = RegPropSG then
-    begin
-      obj := GetSelectReg;
-    end;
     if obj <> Nil then
     begin
       if not sg.EditorMode then
@@ -1321,14 +1306,6 @@ begin
     if Sender = ObjPropSG then
     begin
       obj := GetSelectObj;
-    end;
-    if Sender = TestPropSG then
-    begin
-      obj := GetSelectTest;
-    end;
-    if Sender = RegPropSG then
-    begin
-      obj := GetSelectReg;
     end;
     prop := '';
     val := '';
@@ -1592,18 +1569,7 @@ begin
   sg := nil;
   if o = nil then
     exit;
-  if o is cObjFolder then
-  begin
-    sg := ObjPropSG;
-  end;
-  if o is cTestFolder then
-  begin
-    sg := TestPropSG;
-  end;
-  if o is cregFolder then
-  begin
-    sg := RegPropSG;
-  end;
+  sg := ObjPropSG;
   if sg <> nil then
   begin
     sg.rowcount := o.PropCount + 2;
@@ -1644,9 +1610,9 @@ begin
   if o<>nil then
     setObjProps(o, ObjPropSG);
   if t<>nil then
-    setObjProps(t, TestPropSG);
+    //setObjProps(t, ObjPropSG);
   if r<>nil then
-    setObjProps(r, RegPropSG);
+    //setObjProps(r, RegPropSG);
   cMBase(m_base).Events.active:=false;
 end;
 
@@ -1797,15 +1763,15 @@ procedure TMBaseControl.synchroniseSplitters(Sender: TObject);
 var
   w: Integer;
 begin
-  if Sender = Splitter6 then
+  //if Sender = Splitter6 then
   begin
     w := ObjPanel.Width;
   end;
-  if Sender = Splitter5 then
+  //if Sender = Splitter5 then
   begin
     w := TestPanel.Width;
   end;
-  if Sender = Splitter4 then
+  //if Sender = Splitter4 then
   begin
     w := RegPanel.Width;
   end;
@@ -1839,6 +1805,7 @@ end;
 procedure TMBaseControl.TestNameCBClick(Sender: TObject);
 begin
   selectObj:=GetSelectTest;
+  ShowObjProps(selectObj);
 end;
 
 procedure TMBaseControl.TestTypeCBChange(Sender: TObject);
