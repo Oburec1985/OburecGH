@@ -73,6 +73,8 @@ type
     PropNameEdit: TEdit;
     PropValEdit: TEdit;
     ApplyBtn: TButton;
+    SelObjName: TEdit;
+    Label5: TLabel;
     procedure Button1Click(Sender: TObject);
     procedure mdbBtnClick(Sender: TObject);
     procedure ObjPropSGEndEdititng(Sender: TObject; ACol, ARow: Integer;
@@ -97,9 +99,7 @@ type
     procedure CfgSBClick(Sender: TObject);
     procedure ObjPropSGExit(Sender: TObject);
     procedure FormPaint(Sender: TObject);
-    procedure ObjNameCBClick(Sender: TObject);
-    procedure TestNameCBClick(Sender: TObject);
-    procedure RegNameEditClick(Sender: TObject);
+    procedure ObjNameCBDblClick(Sender: TObject);
   private
 
     m_rstate: dword;
@@ -1240,13 +1240,23 @@ begin
     FillTestsCB(o);
   end;
   CheckCBItemInd(TestNameCB);
-  TestNameCBChange(nil);
+  ObjNameCBDblClick(sender);
 end;
 
-procedure TMBaseControl.ObjNameCBClick(Sender: TObject);
+procedure TMBaseControl.ObjNameCBDblClick(Sender: TObject);
 begin
-  selectObj:=GetSelectObj;
-  ShowObjProps(selectObj);
+  if sender = ObjNameCB then
+    selectObj:=GetSelectObj;
+  if sender = TestNameCB then
+    selectObj:=GetSelectTest;
+  if sender = RegNameEdit then
+    selectObj:=GetSelectReg;
+
+  if selectObj<>nil then
+  begin
+    ShowObjProps(selectObj);
+    SelObjName.text:=selectObj.name;
+  end;
 end;
 
 procedure TMBaseControl.RegNameEditChange(Sender: TObject);
@@ -1265,12 +1275,7 @@ begin
     r := nil;
     setcurReg(r);
   end;
-end;
-
-procedure TMBaseControl.RegNameEditClick(Sender: TObject);
-begin
-  selectObj:=GetSelectReg;
-  ShowObjProps(selectObj);
+  ObjNameCBDblClick(sender);
 end;
 
 procedure TMBaseControl.ObjPropSGKeyDown(Sender: TObject; var Key: Word;
@@ -1387,7 +1392,6 @@ end;
 procedure TMBaseControl.setcurObj(o: cObjFolder);
 begin
   curObj := o;
-  ShowObjProps(o);
   FillTestsCB(cObjFolder(o));
   doChangePathNotify(c_changeObj);
 end;
@@ -1412,7 +1416,6 @@ begin
   end;
   RegNameEdit.text := r.caption;
   setComboBoxItem(r.caption, RegNameEdit);
-  ShowObjProps(r);
   AlarmCB.Checked := r.m_alarm;
   AlarmCBClick(nil);
   if r.m_alarm then
@@ -1453,7 +1456,6 @@ begin
   if t = nil then
     exit;
 
-  ShowObjProps(t);
   setComboBoxItem(t.m_testType,TestTypeCB);
 
   FillRegCB(cTestFolder(t));
@@ -1511,6 +1513,11 @@ begin
   setComboBoxItem(lstr, ObjNameCB);
   obj := cXmlFolder(m_base.m_BaseFolder.getChild(lstr));
   setcurObj(cObjFolder(obj));
+  if obj <> nil then
+  begin
+    ObjNameCBDblClick(ObjNameCB);
+    ShowObjProps(obj);
+  end;
 
   FillTestsCB(cObjFolder(obj));
   lstr := a_pIni.ReadString(section, 'TestName', '');
@@ -1524,10 +1531,7 @@ begin
 
   RegNameEdit.text := a_pIni.ReadString(section, 'RegName', '');
   obj := GetSelectTest;
-  if obj <> nil then
-  begin
-    ShowObjProps(obj);
-  end;
+
   FillRegCB(cTestFolder(obj));
 
   ccount := a_pIni.ReadInteger(section, 'ConnectionCount', 0);
@@ -1800,12 +1804,7 @@ begin
     FillRegCB(t);
   end;
   CheckCBItemInd(TestNameCB);
-end;
-
-procedure TMBaseControl.TestNameCBClick(Sender: TObject);
-begin
-  selectObj:=GetSelectTest;
-  ShowObjProps(selectObj);
+  ObjNameCBDblClick(Sender);
 end;
 
 procedure TMBaseControl.TestTypeCBChange(Sender: TObject);

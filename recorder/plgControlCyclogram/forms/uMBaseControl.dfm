@@ -1460,8 +1460,6 @@ object MBaseControl: TMBaseControl
     Height = 660
     Align = alClient
     TabOrder = 1
-    ExplicitTop = 4
-    ExplicitHeight = 656
     object ObjGB: TGroupBox
       Left = 1
       Top = 1
@@ -1508,7 +1506,7 @@ object MBaseControl: TMBaseControl
           Height = 32
           TabOrder = 1
           OnChange = ObjNameCBChange
-          OnClick = ObjNameCBClick
+          OnDblClick = ObjNameCBDblClick
         end
         object ObjTypeCB: TComboBox
           Left = 65
@@ -1575,7 +1573,7 @@ object MBaseControl: TMBaseControl
           Height = 32
           TabOrder = 2
           OnChange = TestNameCBChange
-          OnClick = TestNameCBClick
+          OnDblClick = ObjNameCBDblClick
         end
       end
     end
@@ -1587,7 +1585,6 @@ object MBaseControl: TMBaseControl
       Align = alClient
       Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1094#1080#1103
       TabOrder = 2
-      ExplicitHeight = 317
       object RegPanel: TPanel
         Left = 2
         Top = 26
@@ -1596,7 +1593,6 @@ object MBaseControl: TMBaseControl
         Align = alClient
         Constraints.MinHeight = 226
         TabOrder = 0
-        ExplicitHeight = 289
         object Label1: TLabel
           Left = 15
           Top = 15
@@ -1646,7 +1642,6 @@ object MBaseControl: TMBaseControl
           DrawColorBox = False
           ChangeTextColor = False
           Editable = False
-          ExplicitTop = 204
         end
         object AlarmCB: TCheckBox
           Left = 249
@@ -1665,7 +1660,6 @@ object MBaseControl: TMBaseControl
           Align = alBottom
           TabOrder = 2
           Visible = False
-          ExplicitTop = 97
           object AlarmDscLabel: TLabel
             Left = 5
             Top = 6
@@ -1708,7 +1702,7 @@ object MBaseControl: TMBaseControl
           Height = 32
           TabOrder = 3
           OnChange = RegNameEditChange
-          OnClick = RegNameEditClick
+          OnDblClick = ObjNameCBDblClick
         end
       end
     end
@@ -1720,65 +1714,76 @@ object MBaseControl: TMBaseControl
     Height = 660
     Align = alRight
     TabOrder = 2
-    ExplicitTop = 4
-    ExplicitHeight = 656
     object ObjPropSG: TStringGridExt
       Left = 1
       Top = 1
       Width = 399
-      Height = 433
+      Height = 363
       Align = alClient
       TabOrder = 0
       OnExit = ObjPropSGExit
       OnKeyDown = ObjPropSGKeyDown
       OnEndEdititng = ObjPropSGEndEdititng
-      ExplicitHeight = 429
+      ExplicitHeight = 357
     end
     object Panel3: TPanel
       Left = 1
-      Top = 434
+      Top = 364
       Width = 399
-      Height = 225
+      Height = 295
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 430
       object PropNameLabel: TLabel
         Left = 23
-        Top = 16
+        Top = 80
         Width = 229
         Height = 24
         Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077' '#1089#1074#1086#1081#1089#1090#1074#1072':'
       end
       object PropValLabel: TLabel
         Left = 23
-        Top = 92
+        Top = 156
         Width = 95
         Height = 24
         Caption = #1047#1085#1072#1095#1077#1085#1080#1077':'
       end
+      object Label5: TLabel
+        Left = 23
+        Top = 12
+        Width = 73
+        Height = 24
+        Caption = #1054#1073#1098#1077#1082#1090':'
+      end
       object PropNameEdit: TEdit
         Left = 21
-        Top = 46
+        Top = 110
         Width = 316
         Height = 32
         TabOrder = 0
       end
       object PropValEdit: TEdit
         Left = 21
-        Top = 126
+        Top = 190
         Width = 316
         Height = 32
         TabOrder = 1
       end
       object ApplyBtn: TButton
         Left = 21
-        Top = 178
+        Top = 242
         Width = 157
         Height = 34
         Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
         TabOrder = 2
         Visible = False
         OnClick = ObjRenameBtnClick
+      end
+      object SelObjName: TEdit
+        Left = 21
+        Top = 42
+        Width = 316
+        Height = 32
+        TabOrder = 3
       end
     end
   end
