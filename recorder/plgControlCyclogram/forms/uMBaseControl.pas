@@ -72,9 +72,11 @@ type
     PropValLabel: TLabel;
     PropNameEdit: TEdit;
     PropValEdit: TEdit;
-    ApplyBtn: TButton;
     SelObjName: TEdit;
     Label5: TLabel;
+    ApplyBtn: TButton;
+    SpeedButton1: TSpeedButton;
+    SpeedButton2: TSpeedButton;
     procedure Button1Click(Sender: TObject);
     procedure mdbBtnClick(Sender: TObject);
     procedure ObjPropSGEndEdititng(Sender: TObject; ACol, ARow: Integer;
@@ -100,6 +102,8 @@ type
     procedure ObjPropSGExit(Sender: TObject);
     procedure FormPaint(Sender: TObject);
     procedure ObjNameCBDblClick(Sender: TObject);
+    procedure ObjPropSGSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
   private
 
     m_rstate: dword;
@@ -111,7 +115,10 @@ type
     // текущая регистрация
     m_reg: cregFolder;
     rc_pan: cRegController;
+
     selectObj, curObj, curTest, curReg: cXmlFolder;
+    selectPropRow, selectPropCol:integer;
+    selectProp:string;
   public
     fOnStopRec, fSaveCfg: tnotifyevent;
   protected
@@ -144,7 +151,8 @@ type
     procedure FillRegCB(t: cTestFolder);
     procedure UpdateXmlDescr;
     procedure doChangePathNotify(objtype:DWORD);
-    procedure SaveProperties(o:cXmlFolder; t:cXmlFolder; r:cXmlFolder);
+    // кеопируем свойства из SG в O
+    procedure SaveProperties(o:cXmlFolder);
   public
     procedure ShowObjProps(o:cXmlFolder);
 
@@ -357,8 +365,8 @@ var
   proplist:tstringlist;
   I: Integer;
 begin
-  //showmessage(getMDBRegPath);
-  SaveProperties(curObj, curTest, curReg);
+  // сохраняем свойтсва SG в O
+  SaveProperties(selectObj);
   if BaseFolderEdit.text <> m_base.m_BaseFolder.Absolutepath then
   begin
     m_base.InitBaseFolder(BaseFolderEdit.text);
@@ -496,6 +504,7 @@ begin
   end;
   // сохраняем свойства типов объектов
   cBaseMeaFolder(m_base.m_BaseFolder).CreateXMLDesc;
+  ObjNameCBDblClick(ObjNameCb);
 end;
 
 procedure TMBaseControl.UpdateXmlDescr;
@@ -1244,6 +1253,8 @@ begin
 end;
 
 procedure TMBaseControl.ObjNameCBDblClick(Sender: TObject);
+var
+  b:boolean;
 begin
   if sender = ObjNameCB then
     selectObj:=GetSelectObj;
@@ -1256,7 +1267,14 @@ begin
   begin
     ShowObjProps(selectObj);
     SelObjName.text:=selectObj.name;
+  end
+  else
+  begin
+    selectObj:=nil;
+    SelObjName.Text:='';
   end;
+  b:=false;
+  ObjPropSGSelectCell(ObjPropSG, -1,-1, b);
 end;
 
 procedure TMBaseControl.RegNameEditChange(Sender: TObject);
@@ -1346,16 +1364,44 @@ begin
   end;
 end;
 
+procedure TMBaseControl.ObjPropSGSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+begin
+  //pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
+  // Находим позицию нашей ячейки
+  selectPropCol := ACol;
+  selectPropRow := ARow;
+  if (selectPropCol>=0) and (selectPropRow>=0) then
+  begin
+    selectProp:=TStringGrid(Sender).Cells[0,selectPropRow];
+    PropNameEdit.Text:=selectProp;
+    PropValEdit.Text:=TStringGrid(Sender).Cells[1,selectPropRow];
+  end
+  else
+  begin
+    selectPropCol := -1;
+    selectPropRow := -1;
+    PropNameEdit.Text:='';
+    PropValEdit.Text:='';
+  end;
+end;
+
 procedure TMBaseControl.ObjRenameBtnClick(Sender: TObject);
 var
   I: Integer;
-  o: TObject;
 begin
-  if curObj <> nil then
+  if selectObj <> nil then
   begin
-    curObj.name := ObjNameCB.text;
-    curObj.renameDirAndDsc(ObjNameCB.text);
-    RenameComboBoxItem(ObjNameCB.text, curObj, ObjNameCB);
+    if selectProp<>'' then
+    begin
+      selectObj.Setpropertie(selectProp, PropValEdit.text);
+      if selectProp<>PropNameEdit.text then
+      begin
+        selectObj.RenameProp(selectProp, PropNameEdit.text);
+        ObjPropSG.Cells[0,selectPropRow]:=PropNameEdit.text;
+        selectProp:=PropNameEdit.text;
+      end;
+    end;
   end;
 end;
 
@@ -1597,27 +1643,27 @@ begin
     for I := 1 to sg.RowCount - 1 do
     begin
       pname:=sg.Cells[c_col_propName,i];
+      if pname='' then
+        exit;
       v:=sg.Cells[c_col_propVal,i];
       o.Setpropertie(pname,v);
     end;
   end;
 end;
 
-procedure TMBaseControl.SaveProperties(o:cXmlFolder; t:cXmlFolder; r:cXmlFolder);
+procedure TMBaseControl.SaveProperties(o:cXmlFolder);
 var
   sg:TStringGridExt;
   i:integer;
   pname, v:string;
   obj:cxmlfolder;
 begin
-  cMBase(m_base).Events.active:=false;
   if o<>nil then
+  begin
+    cMBase(m_base).Events.active:=false;
     setObjProps(o, ObjPropSG);
-  if t<>nil then
-    //setObjProps(t, ObjPropSG);
-  if r<>nil then
-    //setObjProps(r, RegPropSG);
-  cMBase(m_base).Events.active:=false;
+    cMBase(m_base).Events.active:=false;
+  end;
 end;
 
 procedure TMBaseControl.doDeleteRConnection(Sender: TObject);

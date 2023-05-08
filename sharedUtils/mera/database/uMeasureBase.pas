@@ -59,7 +59,8 @@ type
     procedure delpropertie(i:integer);overload;
     procedure delpropertie(pname:string);overload;
     procedure clearPropertie;
-    procedure RenameProp(newname:string;index:integer);
+    procedure RenameProp(newname:string;index:integer);overload;
+    procedure RenameProp(oldname, newname:string);overload;
     // путь к xml дескриптору
     function XMLDescPath:string;
     // создание файла xml и каталога если отсутствует запись/ перезапись файла описателя
@@ -299,6 +300,10 @@ begin
     begin
       prop.value:=floattostr(strtofloat(val)+strtofloat(prop.value));
     end;
+  end
+  else
+  begin
+    prop.value:=val;
   end;
   if getmng<>nil then
   begin
@@ -438,6 +443,19 @@ begin
       renameDir(dir, newdir);
     if FileExists(dscfile) then
       RenameFile(dscfile,newdscfile);
+  end;
+end;
+
+procedure cXmlFolder.RenameProp(oldname, newname:string);
+var
+  I: Integer;
+begin
+  for I := 0 to m_Properties.Count - 1 do
+  begin
+    if m_Properties.Strings[i]=oldname then
+    begin
+      m_Properties.Strings[i]:=newname;
+    end;
   end;
 end;
 
