@@ -38,8 +38,6 @@ object FFTFltFrm: TFFTFltFrm
     Height = 126
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 853
-    ExplicitWidth = 1681
     DesignSize = (
       1314
       126)
@@ -71,8 +69,6 @@ object FFTFltFrm: TFFTFltFrm
     Height = 568
     Align = alRight
     TabOrder = 1
-    ExplicitLeft = 1099
-    ExplicitHeight = 853
     object Splitter2: TSplitter
       Left = 204
       Top = 1
@@ -123,7 +119,6 @@ object FFTFltFrm: TFFTFltFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitHeight = 851
     end
     object SignalsLV: TBtnListView
       Left = 211
@@ -162,7 +157,6 @@ object FFTFltFrm: TFFTFltFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitHeight = 851
     end
   end
   object EditCurvePanel: TPanel
@@ -174,7 +168,6 @@ object FFTFltFrm: TFFTFltFrm
     Color = clActiveCaption
     ParentBackground = False
     TabOrder = 2
-    ExplicitHeight = 853
     DesignSize = (
       417
       568)
@@ -502,6 +495,7 @@ object FFTFltFrm: TFFTFltFrm
     Top = 0
     Width = 72
     Height = 568
+    Cursor = crSizeAll
     Align = alClient
     Caption = 'ScaleCurveChart'
     TabOrder = 3

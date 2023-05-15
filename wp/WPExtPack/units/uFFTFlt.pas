@@ -23,6 +23,7 @@ uses
   Pathutils,
   Variants,
   fft,
+  u2DMath,
   uHardwareMath,
   complex,
   ap
@@ -181,7 +182,9 @@ end;
 procedure TExtFFTflt.EvalCurve(s:iwpsignal; df:double);
 var
   I,j, ind, irange,
+  i0, // ïğåäûäóùàÿ ïîëîñà
   i1, i2: Integer;
+  p0:point2d;
   b:point3d;
   str:string;
   pars:tstringlist;
@@ -191,8 +194,14 @@ begin
   pars.Delimiter:=';';
   for I := 0 to length(m_curveScales) - 1 do
     m_curveScales[i]:=1;
+  i0:=-1;
   for I := 0 to m_band.Count - 1 do
   begin
+    if i0>-1 then
+    begin
+      p0.x:=b.y;
+      p0.y:=b.z;
+    end;
     str := m_Band.Strings[i];
     pars.DelimitedText:=str;
     ind:=pos('..',pars.Strings[0]);
@@ -207,13 +216,25 @@ begin
     begin
       i2:=irange-1;
     end;
-    //d:=frac(i1);
+    if i0>0 then
+    begin
+      if i0<i1 then
+      begin
+        for j := i0 to i1 do
+        begin
+          m_curvescales[j]:=EvalLineYd(j, i0, p0.y, i1, b.z);
+          m_curvescales[m_fftCount-j-1]:=m_curvescales[j];
+        end;
+      end;
+    end;
     for j := i1 to i2 do
     begin
       m_curvescales[j]:=b.z;
       // ÇÅĞÊÀËÈĞÎÂÀÍÍÛÉ ÑÏÅÊÒĞ
       m_curvescales[m_fftCount-j-1]:=b.z;
     end;
+    i0:=i2;
+
   end;
   pars.Destroy;
 end;

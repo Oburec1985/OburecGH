@@ -347,37 +347,6 @@ begin
 end;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 procedure TFFTFltFrm.SaveBtnClick(Sender: TObject);
 var
   I: Integer;

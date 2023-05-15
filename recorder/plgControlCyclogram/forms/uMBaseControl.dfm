@@ -2,7 +2,7 @@ object MBaseControl: TMBaseControl
   Left = 0
   Top = 0
   Caption = #1059#1087#1088#1072#1074#1083#1077#1085#1080#1077' '#1073#1072#1079#1086#1081' '#1076#1072#1085#1085#1099#1093
-  ClientHeight = 841
+  ClientHeight = 844
   ClientWidth = 899
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,7 +17,7 @@ object MBaseControl: TMBaseControl
   TextHeight = 24
   object Splitter1: TSplitter
     Left = 0
-    Top = 660
+    Top = 663
     Width = 899
     Height = 4
     Cursor = crVSplit
@@ -29,13 +29,11 @@ object MBaseControl: TMBaseControl
   end
   object ActionPanel: TPanel
     Left = 0
-    Top = 664
+    Top = 667
     Width = 899
     Height = 177
     Align = alBottom
     TabOrder = 0
-    ExplicitLeft = 21
-    ExplicitTop = 670
     DesignSize = (
       899
       177)
@@ -1107,7 +1105,7 @@ object MBaseControl: TMBaseControl
       Top = 61
       Width = 45
       Height = 39
-      Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1087#1086#1083#1086#1089#1091
+      Hint = #1050#1086#1087#1080#1088#1086#1074#1072#1090#1100' '#1076#1072#1085#1085#1099#1077
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -1286,7 +1284,7 @@ object MBaseControl: TMBaseControl
       Top = 53
       Width = 44
       Height = 39
-      Hint = #1050#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103' '#1080#1089#1087#1099#1090#1072#1085#1080#1103
+      Hint = #1055#1086#1089#1083#1077#1076#1085#1103#1103' '#1082#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -1521,6 +1519,7 @@ object MBaseControl: TMBaseControl
       ParentShowHint = False
       ParentBiDiMode = False
       ShowHint = True
+      Visible = False
       OnClick = CfgSBClick
     end
     object SpeedButton2: TSpeedButton
@@ -1637,6 +1636,7 @@ object MBaseControl: TMBaseControl
       ParentShowHint = False
       ParentBiDiMode = False
       ShowHint = True
+      Visible = False
       OnClick = CfgSBClick
     end
     object BaseFolderEdit: TEdit
@@ -1679,7 +1679,7 @@ object MBaseControl: TMBaseControl
     Left = 0
     Top = 0
     Width = 498
-    Height = 660
+    Height = 663
     Align = alClient
     TabOrder = 1
     object ObjGB: TGroupBox
@@ -1803,7 +1803,7 @@ object MBaseControl: TMBaseControl
       Left = 1
       Top = 338
       Width = 496
-      Height = 321
+      Height = 324
       Align = alClient
       Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1094#1080#1103
       TabOrder = 2
@@ -1811,7 +1811,7 @@ object MBaseControl: TMBaseControl
         Left = 2
         Top = 26
         Width = 492
-        Height = 293
+        Height = 296
         Align = alClient
         Constraints.MinHeight = 226
         TabOrder = 0
@@ -1824,7 +1824,7 @@ object MBaseControl: TMBaseControl
         end
         object Splitter7: TSplitter
           Left = 1
-          Top = 97
+          Top = 100
           Width = 490
           Height = 4
           Cursor = crVSplit
@@ -1836,7 +1836,7 @@ object MBaseControl: TMBaseControl
         end
         object RegistratorsLV: TBtnListView
           Left = 1
-          Top = 208
+          Top = 211
           Width = 490
           Height = 84
           Align = alBottom
@@ -1876,7 +1876,7 @@ object MBaseControl: TMBaseControl
         end
         object AlarmPanel: TPanel
           Left = 1
-          Top = 101
+          Top = 104
           Width = 490
           Height = 107
           Align = alBottom
@@ -1918,8 +1918,8 @@ object MBaseControl: TMBaseControl
           end
         end
         object RegNameEdit: TComboBox
-          Left = 15
-          Top = 41
+          Left = 16
+          Top = 45
           Width = 214
           Height = 32
           TabOrder = 3
@@ -1933,14 +1933,14 @@ object MBaseControl: TMBaseControl
     Left = 498
     Top = 0
     Width = 401
-    Height = 660
+    Height = 663
     Align = alRight
     TabOrder = 2
     object ObjPropSG: TStringGridExt
       Left = 1
       Top = 1
       Width = 399
-      Height = 363
+      Height = 366
       Align = alClient
       TabOrder = 0
       OnExit = ObjPropSGExit
@@ -1950,7 +1950,7 @@ object MBaseControl: TMBaseControl
     end
     object Panel3: TPanel
       Left = 1
-      Top = 364
+      Top = 367
       Width = 399
       Height = 295
       Align = alBottom

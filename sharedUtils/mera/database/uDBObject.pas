@@ -155,8 +155,11 @@ begin
   if pos(classname, name)>0 then
   begin
     str:=extractObjNamefromPath(str);
-    caption:=str;
-    name:=caption;
+    if name<>str then
+    begin
+      caption:=str;
+      name:=caption;
+    end;
   end;
 end;
 // удаляет все несуществующие подобъекты

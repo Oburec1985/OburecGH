@@ -460,7 +460,7 @@ begin
         proplist:=TStringList.Create;
         proplist.Duplicates:=dupIgnore;
       end;
-      cTestFolder(testFolder).clearPropertie;
+      //cTestFolder(testFolder).clearPropertie;
       g_mbase.Events.active:=false;
       for I := 0 to proplist.Count - 1 do
       begin
@@ -1326,10 +1326,7 @@ begin
   end;
   if Key = VK_RETURN then
   begin
-    if Sender = ObjPropSG then
-    begin
-      obj := GetSelectObj;
-    end;
+    obj := selectObj;
     prop := '';
     val := '';
     if obj <> nil then
@@ -1522,8 +1519,7 @@ end;
 
 procedure TMBaseControl.settestsettings(t: cTestFolder);
 begin
-  t.name := TestNameCB.text;
-  t.m_testType := TestTypeCB.text;
+
 end;
 
 procedure TMBaseControl.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
