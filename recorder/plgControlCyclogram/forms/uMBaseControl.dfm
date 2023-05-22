@@ -1776,6 +1776,7 @@ object MBaseControl: TMBaseControl
           Height = 32
           TabOrder = 0
           OnChange = TestTypeCBChange
+          OnCloseUp = TestTypeCBCloseUp
         end
         object TestDateNameCB: TCheckBox
           Left = 245
@@ -1940,7 +1941,7 @@ object MBaseControl: TMBaseControl
       Left = 1
       Top = 1
       Width = 399
-      Height = 366
+      Height = 580
       Align = alClient
       TabOrder = 0
       OnExit = ObjPropSGExit
@@ -1950,9 +1951,9 @@ object MBaseControl: TMBaseControl
     end
     object Panel3: TPanel
       Left = 1
-      Top = 367
+      Top = 581
       Width = 399
-      Height = 295
+      Height = 81
       Align = alBottom
       TabOrder = 1
       object PropNameLabel: TLabel
@@ -1961,6 +1962,7 @@ object MBaseControl: TMBaseControl
         Width = 229
         Height = 24
         Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077' '#1089#1074#1086#1081#1089#1090#1074#1072':'
+        Visible = False
       end
       object PropValLabel: TLabel
         Left = 23
@@ -1968,6 +1970,7 @@ object MBaseControl: TMBaseControl
         Width = 95
         Height = 24
         Caption = #1047#1085#1072#1095#1077#1085#1080#1077':'
+        Visible = False
       end
       object Label5: TLabel
         Left = 23
@@ -1982,6 +1985,7 @@ object MBaseControl: TMBaseControl
         Width = 316
         Height = 32
         TabOrder = 0
+        Visible = False
       end
       object PropValEdit: TEdit
         Left = 21
@@ -1989,6 +1993,7 @@ object MBaseControl: TMBaseControl
         Width = 316
         Height = 32
         TabOrder = 1
+        Visible = False
       end
       object SelObjName: TEdit
         Left = 21
@@ -2004,6 +2009,7 @@ object MBaseControl: TMBaseControl
         Height = 34
         Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
         TabOrder = 3
+        Visible = False
         OnClick = ObjRenameBtnClick
       end
     end

@@ -104,6 +104,7 @@ type
     procedure ObjNameCBDblClick(Sender: TObject);
     procedure ObjPropSGSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
+    procedure TestTypeCBCloseUp(Sender: TObject);
   private
 
     m_rstate: dword;
@@ -361,10 +362,12 @@ end;
 { TMBaseControl } // применить
 procedure TMBaseControl.Button1Click(Sender: TObject);
 var
-  objFolder, testFolder, regFolder: cXmlFolder;
+  curObj, objFolder, testFolder, regFolder: cXmlFolder;
+  objtype:cObjType;
   proplist:tstringlist;
   I: Integer;
 begin
+  curObj:=selectObj;
   // сохраняем свойтсва SG в O
   SaveProperties(selectObj);
   if BaseFolderEdit.text <> m_base.m_BaseFolder.Absolutepath then
@@ -393,33 +396,17 @@ begin
   if ObjTypeCB.text<>'' then
   begin
     // присваиваем свойства
-    if cObjFolder(objFolder).m_ObjType<>ObjTypeCB.text then
-    begin
-      proplist:=cbasemeafolder(m_base.m_BaseFolder).LoadObjProperties(ObjTypeCB.text);
-      if proplist=nil then
-      begin
-        proplist:=TStringList.Create;
-        proplist.Duplicates:=dupIgnore;
-      end;
-      cObjFolder(objFolder).clearPropertie;
-      g_mbase.Events.active:=false;
-      for I := 0 to proplist.Count - 1 do
-      begin
-        if i=proplist.Count-1 then
-        begin
-          g_mbase.Events.active:=true;
-        end;
-        cObjFolder(objFolder).addpropertie(proplist.Strings[i],'0');
-      end;
-      proplist.Destroy;
-    end;
-    cObjFolder(objFolder).m_ObjType:=ObjTypeCB.text;
-    cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes.Add(cobjFolder(objFolder).m_ObjType);
+    objtype:=cbasemeafolder(m_base.m_BaseFolder).getObjType(ObjTypeCB.text);
+    cObjFolder(objFolder).setObjType(ObjTypeCB.text, true, objtype.proplist);
+    cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes.Add(cobjFolder(objFolder).ObjType);
+    ObjTypeCB.Items.Add(cobjFolder(objFolder).ObjType);
   end
   else
   begin
     if objFolder<>nil then
-      cObjFolder(objFolder).m_ObjType:='';
+    begin
+      cObjFolder(objFolder).setObjType(ObjTypeCB.text, true, nil);
+    end;
   end;
   if objFolder = nil then
     exit;
@@ -452,28 +439,10 @@ begin
   if TestTypeCB.text<>'' then
   begin
     // присваиваем свойства
-    //if cTestFolder(testFolder).m_testType<>TestTypeCB.text then
-    begin
-      proplist:=cbasemeafolder(m_base.m_BaseFolder).LoadTestsProperties(TestTypeCB.text);
-      if proplist=nil then
-      begin
-        proplist:=TStringList.Create;
-        proplist.Duplicates:=dupIgnore;
-      end;
-      //cTestFolder(testFolder).clearPropertie;
-      g_mbase.Events.active:=false;
-      for I := 0 to proplist.Count - 1 do
-      begin
-        if i=proplist.Count-1 then
-        begin
-          g_mbase.Events.active:=true;
-        end;
-        cTestFolder(testFolder).addpropertie(proplist.Strings[i],'0');
-      end;
-      proplist.Destroy;
-    end;
-    cTestFolder(testFolder).m_testType:=testTypeCB.text;
+    objtype:=cbasemeafolder(m_base.m_BaseFolder).getTestType(TestTypeCB.text);
+    cTestFolder(testFolder).setObjType(TestTypeCB.text, true, objtype.proplist);
     cBaseMeaFolder(m_base.m_BaseFolder).m_testTypes.Add(cTestFolder(testFolder).m_TestType);
+    TestTypeCB.Items.Add(cTestFolder(testFolder).m_TestType);
   end
   else
   begin
@@ -504,7 +473,19 @@ begin
   end;
   // сохраняем свойства типов объектов
   cBaseMeaFolder(m_base.m_BaseFolder).CreateXMLDesc;
-  ObjNameCBDblClick(ObjNameCb);
+  if curObj is cObjFolder then
+    ObjNameCBDblClick(ObjNameCb)
+  else
+  begin
+    if curObj is cTestFolder then
+    begin
+      ObjNameCBDblClick(testFolder)
+    end
+    else
+    begin
+      ObjNameCBDblClick(regFolder)
+    end;
+  end;
 end;
 
 procedure TMBaseControl.UpdateXmlDescr;
@@ -892,7 +873,8 @@ begin
   end
   else
   begin
-    setComboBoxItem(o.m_ObjType, ObjTypeCB);
+    //setComboBoxItem(o.m_ObjType, ObjTypeCB);
+    TestNameCB.text:=TestNameCB.text;
     for I := 0 to o.ChildCount - 1 do
     begin
       t := cTestFolder(o.getChild(I));
@@ -900,7 +882,8 @@ begin
     end;
   end;
   TestNameCB.OnChange := p;
-  setComboBoxItem(TestNameCB.text, TestNameCB);
+  TestNameCB.text:=TestNameCB.text;
+  //setComboBoxItem(TestNameCB.text, TestNameCB);
 
   // заполняем типы объектов
   TestTypeCB.Clear;
@@ -1314,7 +1297,7 @@ begin
   begin
     if Sender = ObjPropSG then
     begin
-      obj := GetSelectObj;
+      obj := selectObj;
     end;
     if obj <> Nil then
     begin
@@ -1498,8 +1481,7 @@ begin
   curTest := t;
   if t = nil then
     exit;
-
-  setComboBoxItem(t.m_testType,TestTypeCB);
+  TestTypeCB.text:=t.m_testType;
 
   FillRegCB(cTestFolder(t));
 
@@ -1854,6 +1836,12 @@ var
   t: cTestFolder;
 begin
   FillRegCB(t);
+
+end;
+
+procedure TMBaseControl.TestTypeCBCloseUp(Sender: TObject);
+begin
+  ObjNameCBDblClick(TestNameCB);
 end;
 
 procedure TMBaseControl.Timer1Timer(Sender: TObject);

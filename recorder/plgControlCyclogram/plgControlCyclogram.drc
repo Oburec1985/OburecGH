@@ -1216,12 +1216,12 @@ END
 /* ..\..\sharedUtils\forms\uGetMngObjForm.dfm */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\filectrl.res */
 /* ..\..\sharedUtils\ZipMaster\ZipMstr.res */
-/* ..\..\sharedUtils\mera\database\uDownloadRegsFrm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\mera\database\uDownloadRegsFrm.dfm */
 /* ..\SharedRUnits\uRcClientFrm.dfm */
 /* ..\..\sharedUtils\mera\database\uMDBBaseObjFrame.dfm */
 /* ..\..\sharedUtils\mera\database\uMDBRegObjFrame.dfm */
-/* ..\..\sharedUtils\mera\database\uMDBTestObjFrame.dfm */
-/* ..\..\sharedUtils\mera\database\uMDBFrm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\mera\database\uMDBTestObjFrame.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\mera\database\uMDBFrm.dfm */
 /* ..\SharedRUnits\uTagsListFrame.dfm */
 /* forms\uTrigsFrm.dfm */
 /* forms\uModesStepFrame.dfm */
@@ -1250,7 +1250,7 @@ END
 /* forms\uEditPropertiesFrm.dfm */
 /* ..\..\sharedUtils\forms\uConfirmDlg.dfm */
 /* forms\uCyclogramReportFrm.dfm */
-/* forms\uControlDeskFrm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uControlDeskFrm.dfm */
 /* forms\uControlCyclogramEditFrm.dfm */
 /* forms\uEditProfileFrm.dfm */
 /* forms\uAlgsSaveFrm.dfm */

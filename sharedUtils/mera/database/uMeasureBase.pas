@@ -76,6 +76,25 @@ type
     property dsc:string read getdsc;
   end;
 
+  cObjType = class
+  private
+    fname:string;
+  public
+    proplist:tstringlist;
+    owner:tstringlist;
+  public
+    constructor create;  
+    destructor destroy;
+    procedure clear;
+    procedure addProp(t:string; defv:string);
+    procedure setPropVal(t:string; defv:string);
+    function getval(t:string):string;
+  protected
+    procedure setname(s:string);
+  public
+    property name:string read fname write setname;
+  end;
+
   cBaseMeaFolder = class(cXmlFolder)
   public
     m_TestTypes:tstringlist;
@@ -85,19 +104,25 @@ type
     procedure doCreateFiles(node:txmlnode);override;
     procedure doLoadDesc(node:txmlnode);override;
   public
-    function LoadTestsProperties(objType: string): tstringlist;
-    function LoadObjProperties(objType:string):tstringlist;
+    function getTestType(s:string):cObjType;
+    function getObjType(s:string):cObjType;    
     constructor create;override;
     destructor destroy;override;
   end;
   // испытываемый объект
   cObjFolder = class(cXmlFolder)
-  public
+  private
     m_ObjType:string;
   protected
     // вызывается внутри CreateXMLDesc, получает главный узел на вход
     procedure doCreateFiles(node:txmlnode);override;
     procedure doLoadDesc(node:txmlnode);override;
+  public
+    // установить тип объекта
+    procedure setObjType(s:string; delProp:boolean; proplist:tstringlist); overload;
+    procedure setObjType(s:string; proplist:tstringlist); overload;
+  public
+    property ObjType: string read m_ObjType;
   end;
   // испытания
   cTestFolder = class(cXmlFolder)
@@ -111,6 +136,8 @@ type
     procedure doCreateFiles(node:txmlnode);override;
     procedure doLoadDesc(node:txmlnode);override;
   public
+    // установить тип объекта
+    procedure setObjType(s:string; delProp:boolean; proplist:tstringlist);
     function DateTime:tdatetime;
   end;
   // каталог содержит регистрации
@@ -1057,6 +1084,46 @@ begin
   end
 end;
 
+procedure cTestFolder.setObjType(s: string; delProp: boolean; proplist: tstringlist);
+var
+  I,j,k: Integer;
+  pr, objpr:string;
+  vPr, vObj:cString;
+  find, del:boolean;
+begin
+  m_testType:=s;
+  if proplist=nil then
+  begin
+    clearProps;
+    exit;
+  end;
+  for I := 0 to m_Properties.Count do
+  begin
+    objpr:=m_Properties.Strings[i];
+    vObj:=cString(m_Properties.Objects[i]);
+    for j:=0 to proplist.Count-1 do
+    begin
+      pr:=(proplist.Strings[j]);
+      if pr=objpr then
+      begin
+        vPr:=cString(proplist.Objects[j]);
+        if vPr=nil then
+        begin
+          vPr:=cString.Create;
+        end;
+        vPr.str:=vObj.str;
+      end;
+    end;
+  end;
+  clearProps;
+  for I := 0 to proplist.Count - 1 do
+  begin
+    objpr:=proplist.Strings[i];
+    pr:=cString(proplist.Objects[j]).str;
+    addpropertie(objpr, pr);
+  end;
+end;
+
 { сBaseMeaFolder }
 
 constructor cBaseMeaFolder.create;
@@ -1096,8 +1163,8 @@ end;
 procedure cBaseMeaFolder.doCreateFiles(node: txmlnode);
 var
   I: Integer;
-  s:string;
   o:cbaseobj;
+  objType:cObjType;
   types,child:txmlnode;
   propList:tstringlist;
   j,k: Integer;
@@ -1110,8 +1177,8 @@ begin
     types:=getNode(node,'TestTypes');
     for I := 0 to m_TestTypes.Count - 1 do
     begin
-      s:=m_TestTypes.Strings[i];
-      child:=getNode(types,s);
+      objType:=cObjType(m_TestTypes.Objects[i]);
+      child:=getNode(types,objType.name);
       child.WriteAttributeString('Class','TestTypeStr','');
       propList:=TStringList.Create;
       for j := 0 to g_mbase.objects.Count - 1 do
@@ -1119,7 +1186,7 @@ begin
         o:=g_mbase.getobj(j);
         if o is cTestFolder then
         begin
-          if cTestFolder(o).m_testType=s then
+          if cTestFolder(o).m_testType=objtype.name then
           begin
             for k := 0 to cTestFolder(o).PropCount - 1 do
             begin
@@ -1148,14 +1215,13 @@ begin
     types:=getNode(node,'ObjTypes');
     for I := 0 to m_ObjTypes.Count - 1 do
     begin
-      s:=m_ObjTypes.Strings[i];
-      proplist:=LoadObjProperties(s);
+      objtype:=cobjType(m_ObjTypes.Objects[i]);
       if proplist=nil then
       begin
         proplist:=TStringList.Create;
         proplist.Duplicates:=dupIgnore;
       end;
-      child:=getNode(types,s);
+      child:=getNode(types,objtype.name);
       // сохраняем возможные свойства объекта
       child.WriteAttributeString('Properties','ObjTypeStr','');
       for j := 0 to g_mbase.objects.Count - 1 do
@@ -1163,7 +1229,7 @@ begin
         o:=g_mbase.getobj(j);
         if o is cObjFolder then
         begin
-          if cObjFolder(o).m_ObjType=s then
+          if cObjFolder(o).m_ObjType=objtype.name then
           begin
             for k := 0 to cObjFolder(o).PropCount - 1 do
             begin
@@ -1191,6 +1257,7 @@ end;
 procedure cBaseMeaFolder.doLoadDesc(node: txmlnode);
 var
   s, lclass:string;
+  objType:cObjType;
   i, j:integer;
   tests,child:txmlnode;
 begin
@@ -1204,8 +1271,18 @@ begin
       lClass:=child.ReadAttributeString('Class','');
       if lClass='TestTypeStr' then
       begin
-        s:=child.name;
-        m_TestTypes.Add(s);
+        objType:=cObjType.create;
+        objType.name:=child.name;
+        objType.owner:=m_TestTypes;
+        m_TestTypes.AddObject(objType.name, objType);
+        j:=0;
+        s:=child.ReadAttributeString('Prop_'+inttostr(j),'');
+        while s <> '' do
+        begin
+          objType.addProp(s, '0');
+          inc(j);
+          s:=child.ReadAttributeString('Prop_'+inttostr(j),'');
+        end;
       end;
     end;
   end;
@@ -1218,95 +1295,53 @@ begin
       lClass:=child.ReadAttributeString('Properties','');
       if lClass='ObjTypeStr' then
       begin
-        s:=child.name;
-        m_ObjTypes.Add(s);
+        objType:=cObjType.create;
+        objType.name:=child.name;
+        objType.owner:=m_ObjTypes;
+        m_ObjTypes.AddObject(objType.name, objType);
+        j:=0;
+        s:=child.ReadAttributeString('Prop_'+inttostr(j),'');
+        while s <> '' do
+        begin
+          objType.addProp(s, '0');
+          inc(j);
+          s:=child.ReadAttributeString('Prop_'+inttostr(j),'');
+        end;        
       end;
     end;
   end;
 end;
 
-function cBaseMeaFolder.LoadTestsProperties(objType: string): tstringlist;
+function cBaseMeaFolder.getObjType(s: string): cObjType;
 var
-  xml:tnativexml;
-  node, n, child:txmlNode;
-  i, j:integer;
-  s, lpath:string;
+  I: Integer;
+  o:cObjType;
 begin
   result:=nil;
-  lpath:=getpath+'.xml';
-  if fileexists(lpath) then
+  for I := 0 to m_ObjTypes.Count - 1 do
   begin
-    xml:=TNativeXml.Create(nil);
-    xml.LoadFromFile(lpath);
-    node:=xml.Root;
-    n:=node.FindNode('TestTypes');
-    if n<>nil then
+    o:=cObjType(m_ObjTypes.Objects[i]);
+    if o.name=s then
     begin
-      for I := 0 to n.NodeCount - 1 do
-      begin
-        child:=n.Nodes[i];
-        s:=child.ReadAttributeString('Class','');
-        if s='TestTypeStr' then
-        begin
-          if objType=child.name then
-          begin
-            result:=TStringList.Create;
-            result.Duplicates:=dupIgnore;
-            j:=0;
-            s:=child.ReadAttributeString('Prop_'+inttostr(j),'');
-            while s <> '' do
-            begin
-              result.add(s);
-              inc(j);
-              s:=child.ReadAttributeString('Prop_'+inttostr(j),'');
-            end;
-            Exit;
-          end;
-        end;
-      end;
+      result:=o;
+      exit;
     end;
   end;
 end;
 
-function cBaseMeaFolder.LoadObjProperties(objType: string): tstringlist;
+function cBaseMeaFolder.getTestType(s: string): cObjType;
 var
-  xml:tnativexml;
-  node, n, child:txmlNode;
-  i, j:integer;
-  s, lpath:string;
+  I: Integer;
+  o:cObjType;
 begin
   result:=nil;
-  lpath:=getpath+'.xml';
-  if fileexists(lpath) then
+  for I := 0 to m_TestTypes.Count - 1 do
   begin
-    xml:=TNativeXml.Create(nil);
-    xml.LoadFromFile(lpath);
-    node:=xml.Root;
-    n:=node.FindNode('objTypes');
-    if n<>nil then
+    o:=cObjType(m_TestTypes.Objects[i]);
+    if o.name=s then
     begin
-      for I := 0 to n.NodeCount - 1 do
-      begin
-        child:=n.Nodes[i];
-        s:=child.ReadAttributeString('Properties','');
-        if s='ObjTypeStr' then
-        begin
-          if objType=child.name then
-          begin
-            result:=TStringList.Create;
-            result.Duplicates:=dupIgnore;
-            j:=0;
-            s:=child.ReadAttributeString('Prop_'+inttostr(j),'');
-            while s <> '' do
-            begin
-              result.add(s);
-              inc(j);
-              s:=child.ReadAttributeString('Prop_'+inttostr(j),'');
-            end;
-            Exit;
-          end;
-        end;
-      end;
+      result:=o;
+      exit;
     end;
   end;
 end;
@@ -1347,12 +1382,151 @@ begin
   inherited;
   node.WriteAttributeString('ObjType',m_ObjType,'');
 end;
-
+   
 procedure cObjFolder.doLoadDesc(node: txmlnode);
 begin
   inherited;
   m_ObjType:=node.ReadAttributeString('ObjType','');
 end;
+
+
+procedure cObjFolder.setObjType(s: string; delProp: boolean; proplist:tstringlist);
+var
+  I,j,k: Integer;
+  pr, objpr:string;
+  vPr, vObj:cString;
+  find, del:boolean;
+begin
+  m_ObjType:=s;
+  if proplist=nil then
+  begin
+    clearProps;
+    exit;
+  end;
+  for I := 0 to m_Properties.Count do
+  begin
+    objpr:=m_Properties.Strings[i];
+    vObj:=cString(m_Properties.Objects[i]);
+    for j:=0 to proplist.Count-1 do
+    begin
+      pr:=(proplist.Strings[j]);
+      if pr=objpr then
+      begin
+        vPr:=cString(proplist.Objects[j]);
+        if vPr=nil then
+        begin
+          vPr:=cString.Create;
+        end;
+        vPr.str:=vObj.str;
+      end;
+    end;
+  end;
+  clearProps;
+  for I := 0 to proplist.Count - 1 do
+  begin
+    objpr:=proplist.Strings[i];
+    pr:=cString(proplist.Objects[j]).str;
+    addpropertie(objpr, pr);
+  end;
+end;
+
+procedure cObjFolder.setObjType(s: string; proplist:tstringlist);
+begin
+  setObjType(s, true, proplist);
+end;
+
+{ cObjType }
+
+procedure cObjType.addProp(t, defv: string);
+var
+  v:cstring;
+  ind:integer;
+begin
+  if proplist.Find(t, ind) then
+  begin
+    v:=cstring(proplist.Objects[ind]);
+    v.str:=defv;
+  end
+  else
+  begin
+    v:=cString.Create;
+    v.str:=defv;
+    proplist.AddObject(t, v);
+  end;
+end;
+
+function cObjType.getval(t: string): string;
+var
+  v:cstring;
+  ind:integer;
+begin
+  if proplist.Find(t, ind) then
+  begin
+    v:=cstring(proplist.Objects[ind]);
+    result:=v.str;
+  end
+  else
+  begin
+    result:='';
+  end;
+end;
+
+procedure cObjType.setPropVal(t, defv: string);
+var
+  v:cstring;
+  ind:integer;
+begin
+  if proplist.Find(t, ind) then
+  begin
+    v:=cstring(proplist.Objects[ind]);
+    v.str:=defv;
+  end;
+end;
+
+procedure cObjType.clear;
+var
+  I: Integer;
+  v:cString;
+begin
+  for I := 0 to proplist.Count - 1 do
+  begin
+    v:=cString(proplist.Objects[i]);
+    v.Destroy;
+  end;
+  proplist.Clear;
+end;
+
+constructor cObjType.create;
+begin
+  proplist:=TStringList.Create;
+  proplist.Duplicates:=dupIgnore;
+  proplist.Sorted:=true;
+end;
+
+destructor cObjType.destroy;
+begin
+  proplist.Destroy;
+end;
+
+procedure cObjType.setname(s: string);
+var
+  I: Integer;
+begin
+  if owner<>nil then
+  begin
+    for I := 0 to owner.Count - 1 do
+    begin
+      if owner.Objects[I]=self then
+      begin
+        owner.Delete(i);
+        break;
+      end;
+    end;
+    owner.AddObject(s,self);
+  end;
+  fname:=s;
+end;
+
 
 
 end.
