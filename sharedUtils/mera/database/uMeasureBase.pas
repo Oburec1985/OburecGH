@@ -83,7 +83,8 @@ type
     proplist:tstringlist;
     owner:tstringlist;
   public
-    constructor create;  
+    constructor create(o:cXmlFolder);overload;
+    constructor create;overload;
     destructor destroy;
     procedure clear;
     procedure addProp(t:string; defv:string);
@@ -119,10 +120,11 @@ type
     procedure doLoadDesc(node:txmlnode);override;
   public
     // установить тип объекта
+    procedure setObjType(s:string); overload;
     procedure setObjType(s:string; delProp:boolean; proplist:tstringlist); overload;
     procedure setObjType(s:string; proplist:tstringlist); overload;
   public
-    property ObjType: string read m_ObjType;
+    property ObjType: string read m_ObjType write setobjtype;
   end;
   // испытания
   cTestFolder = class(cXmlFolder)
@@ -1166,7 +1168,6 @@ var
   o:cbaseobj;
   objType:cObjType;
   types,child:txmlnode;
-  propList:tstringlist;
   j,k: Integer;
   propname:string;
   prop:TProp;
@@ -1178,35 +1179,11 @@ begin
     for I := 0 to m_TestTypes.Count - 1 do
     begin
       objType:=cObjType(m_TestTypes.Objects[i]);
-      child:=getNode(types,objType.name);
-      child.WriteAttributeString('Class','TestTypeStr','');
-      propList:=TStringList.Create;
-      for j := 0 to g_mbase.objects.Count - 1 do
+      for j := 0 to objtype.proplist.Count - 1 do
       begin
-        o:=g_mbase.getobj(j);
-        if o is cTestFolder then
-        begin
-          if cTestFolder(o).m_testType=objtype.name then
-          begin
-            for k := 0 to cTestFolder(o).PropCount - 1 do
-            begin
-              propname:=cTestFolder(o).m_Properties.Strings[k];
-              if propname<>'' then
-              begin
-                prop:=tprop(cTestFolder(o).m_Properties.Objects[k]);
-                if CheckSListDup(proplist, propname) then
-                  proplist.AddObject(propname,prop);
-              end;
-            end;
-          end;
-        end;
+        child.WriteAttributeString('Prop_'+inttostr(j), objtype.proplist.Strings[j],'');
+        child.WriteAttributeString('Prop_v_'+inttostr(j), tprop(objtype.proplist.Objects[j]).value,'0');
       end;
-      for j := 0 to proplist.Count - 1 do
-      begin
-        child.WriteAttributeString('Prop_'+inttostr(j),proplist.Strings[j],'');
-        child.WriteAttributeString('Prop_v_'+inttostr(j),'0','0');
-      end;
-      propList.Destroy;
     end;
   end;
   if m_ObjTypes.Count>0 then
@@ -1216,40 +1193,14 @@ begin
     for I := 0 to m_ObjTypes.Count - 1 do
     begin
       objtype:=cobjType(m_ObjTypes.Objects[i]);
-      if proplist=nil then
-      begin
-        proplist:=TStringList.Create;
-        proplist.Duplicates:=dupIgnore;
-      end;
       child:=getNode(types,objtype.name);
       // сохраняем возможные свойства объекта
       child.WriteAttributeString('Properties','ObjTypeStr','');
-      for j := 0 to g_mbase.objects.Count - 1 do
+      for j := 0 to objtype.proplist.Count - 1 do
       begin
-        o:=g_mbase.getobj(j);
-        if o is cObjFolder then
-        begin
-          if cObjFolder(o).m_ObjType=objtype.name then
-          begin
-            for k := 0 to cObjFolder(o).PropCount - 1 do
-            begin
-              propname:=cObjFolder(o).m_Properties.Strings[k];
-              if propname<>'' then
-              begin
-                prop:=tprop(cObjFolder(o).m_Properties.Objects[k]);
-                if CheckSListDup(proplist, propname) then
-                  proplist.AddObject(propname,prop);
-              end;
-            end;
-          end;
-        end;
+        child.WriteAttributeString('Prop_'+inttostr(j),objtype.proplist.Strings[j],'');
+        child.WriteAttributeString('Prop_v_'+inttostr(j),tprop(objtype.proplist.Objects[j]).value,'0');
       end;
-      for j := 0 to proplist.Count - 1 do
-      begin
-        child.WriteAttributeString('Prop_'+inttostr(j),proplist.Strings[j],'');
-        child.WriteAttributeString('Prop_v_'+inttostr(j),'0','0');
-      end;
-      propList.Destroy;
     end;
   end;
 end;
@@ -1389,7 +1340,6 @@ begin
   m_ObjType:=node.ReadAttributeString('ObjType','');
 end;
 
-
 procedure cObjFolder.setObjType(s: string; delProp: boolean; proplist:tstringlist);
 var
   I,j,k: Integer;
@@ -1400,10 +1350,12 @@ begin
   m_ObjType:=s;
   if proplist=nil then
   begin
-    clearProps;
+    // для пустого типа не требуется чистить свойства объекта
+    if s<>'' then
+      clearProps;
     exit;
   end;
-  for I := 0 to m_Properties.Count do
+  for I := 0 to m_Properties.Count-1 do
   begin
     objpr:=m_Properties.Strings[i];
     vObj:=cString(m_Properties.Objects[i]);
@@ -1418,6 +1370,7 @@ begin
           vPr:=cString.Create;
         end;
         vPr.str:=vObj.str;
+        break;
       end;
     end;
   end;
@@ -1433,6 +1386,11 @@ end;
 procedure cObjFolder.setObjType(s: string; proplist:tstringlist);
 begin
   setObjType(s, true, proplist);
+end;
+
+procedure cObjFolder.setObjType(s:string);
+begin
+  m_ObjType:=s;
 end;
 
 { cObjType }
@@ -1494,6 +1452,20 @@ begin
     v.Destroy;
   end;
   proplist.Clear;
+end;
+
+constructor cObjType.create(o: cXmlFolder);
+var
+  I: Integer;
+  p:tprop;
+begin
+  proplist:=TStringList.Create;
+  proplist.Duplicates:=dupIgnore;
+  proplist.Sorted:=true;
+  for I := 0 to o.m_Properties.Count - 1 do
+  begin
+    addProp(o.m_Properties.Strings[i],'0');
+  end;
 end;
 
 constructor cObjType.create;

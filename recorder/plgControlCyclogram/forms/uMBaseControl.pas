@@ -397,9 +397,19 @@ begin
   begin
     // присваиваем свойства
     objtype:=cbasemeafolder(m_base.m_BaseFolder).getObjType(ObjTypeCB.text);
-    cObjFolder(objFolder).setObjType(ObjTypeCB.text, true, objtype.proplist);
-    cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes.Add(cobjFolder(objFolder).ObjType);
-    ObjTypeCB.Items.Add(cobjFolder(objFolder).ObjType);
+    if objtype=nil then
+    begin
+      objtype:=cobjtype.create(objFolder);
+      objtype.name:=ObjTypeCB.text;
+      objtype.owner:=cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes;
+      cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes.AddObject(objtype.name, objtype);
+      ObjTypeCB.Items.AddObject(objtype.name, objtype);
+      cObjFolder(objFolder).ObjType:=objtype.name;
+    end
+    else
+    begin
+      cObjFolder(objFolder).setObjType(ObjTypeCB.text, true, objtype.proplist);
+    end;
   end
   else
   begin
@@ -1418,6 +1428,10 @@ end;
 procedure TMBaseControl.setcurObj(o: cObjFolder);
 begin
   curObj := o;
+  if o is cObjFolder then
+  begin
+    setComboBoxItem(o.ObjType,ObjTypeCB);
+  end;
   FillTestsCB(cObjFolder(o));
   doChangePathNotify(c_changeObj);
 end;
