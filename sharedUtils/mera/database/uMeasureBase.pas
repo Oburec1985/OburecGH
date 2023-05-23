@@ -33,6 +33,7 @@ type
   cXmlFolder = class(cDbFolder)
   protected
     m_dsc:string;
+    m_ObjType:string;
     m_Properties:tstringlist;
   private
     procedure clearProps;
@@ -48,6 +49,10 @@ type
     function getdsc:string;
     //procedure DoLincParent;override;
   public
+      // установить тип объекта
+    procedure setObjType(s:string); overload;
+    procedure setObjType(s:string; delProp:boolean; proplist:tstringlist); overload;
+    procedure setObjType(s:string; proplist:tstringlist); overload;
     procedure CreateXMLDesc;
     function PropCount:integer;
     function FindPropertie(pname:string):integer;
@@ -73,6 +78,7 @@ type
     constructor create;override;
     destructor destroy;override;
   public
+    property ObjType: string read m_ObjType write setobjtype;
     property dsc:string read getdsc;
   end;
 
@@ -106,30 +112,24 @@ type
     procedure doLoadDesc(node:txmlnode);override;
   public
     function getTestType(s:string):cObjType;
-    function getObjType(s:string):cObjType;    
+    function getObjType(s:string):cObjType;
     constructor create;override;
     destructor destroy;override;
   end;
   // испытываемый объект
   cObjFolder = class(cXmlFolder)
   private
-    m_ObjType:string;
+
   protected
     // вызывается внутри CreateXMLDesc, получает главный узел на вход
     procedure doCreateFiles(node:txmlnode);override;
     procedure doLoadDesc(node:txmlnode);override;
   public
-    // установить тип объекта
-    procedure setObjType(s:string); overload;
-    procedure setObjType(s:string; delProp:boolean; proplist:tstringlist); overload;
-    procedure setObjType(s:string; proplist:tstringlist); overload;
-  public
-    property ObjType: string read m_ObjType write setobjtype;
+
   end;
   // испытания
   cTestFolder = class(cXmlFolder)
   public
-    m_testType:string;
     m_date:tdatetime;
   protected
     // Установка имени
@@ -138,8 +138,6 @@ type
     procedure doCreateFiles(node:txmlnode);override;
     procedure doLoadDesc(node:txmlnode);override;
   public
-    // установить тип объекта
-    procedure setObjType(s:string; delProp:boolean; proplist:tstringlist);
     function DateTime:tdatetime;
   end;
   // каталог содержит регистрации
@@ -1065,13 +1063,13 @@ end;
 procedure cTestFolder.doCreateFiles(node: txmlnode);
 begin
   inherited;
-  node.WriteAttributeString('TestType',m_testType,'');
+  node.WriteAttributeString('TestType',m_ObjType,'');
 end;
 
 procedure cTestFolder.doLoadDesc(node: txmlnode);
 begin
   inherited;
-  m_testType:=node.ReadAttributeString('TestType','');
+  m_ObjType:=node.ReadAttributeString('TestType','');
 end;
 
 procedure cTestFolder.setname(str: string);
@@ -1084,46 +1082,6 @@ begin
   begin
     f_caption:=path;
   end
-end;
-
-procedure cTestFolder.setObjType(s: string; delProp: boolean; proplist: tstringlist);
-var
-  I,j,k: Integer;
-  pr, objpr:string;
-  vPr, vObj:cString;
-  find, del:boolean;
-begin
-  m_testType:=s;
-  if proplist=nil then
-  begin
-    clearProps;
-    exit;
-  end;
-  for I := 0 to m_Properties.Count do
-  begin
-    objpr:=m_Properties.Strings[i];
-    vObj:=cString(m_Properties.Objects[i]);
-    for j:=0 to proplist.Count-1 do
-    begin
-      pr:=(proplist.Strings[j]);
-      if pr=objpr then
-      begin
-        vPr:=cString(proplist.Objects[j]);
-        if vPr=nil then
-        begin
-          vPr:=cString.Create;
-        end;
-        vPr.str:=vObj.str;
-      end;
-    end;
-  end;
-  clearProps;
-  for I := 0 to proplist.Count - 1 do
-  begin
-    objpr:=proplist.Strings[i];
-    pr:=cString(proplist.Objects[j]).str;
-    addpropertie(objpr, pr);
-  end;
 end;
 
 { сBaseMeaFolder }
@@ -1179,6 +1137,9 @@ begin
     for I := 0 to m_TestTypes.Count - 1 do
     begin
       objType:=cObjType(m_TestTypes.Objects[i]);
+      child:=getNode(types,objtype.name);
+      // сохраняем возможные свойства объекта
+      child.WriteAttributeString('Properties','TestTypeStr','');
       for j := 0 to objtype.proplist.Count - 1 do
       begin
         child.WriteAttributeString('Prop_'+inttostr(j), objtype.proplist.Strings[j],'');
@@ -1340,7 +1301,7 @@ begin
   m_ObjType:=node.ReadAttributeString('ObjType','');
 end;
 
-procedure cObjFolder.setObjType(s: string; delProp: boolean; proplist:tstringlist);
+procedure cxmlFolder.setObjType(s: string; delProp: boolean; proplist:tstringlist);
 var
   I,j,k: Integer;
   pr, objpr:string;
@@ -1383,12 +1344,12 @@ begin
   end;
 end;
 
-procedure cObjFolder.setObjType(s: string; proplist:tstringlist);
+procedure cxmlFolder.setObjType(s: string; proplist:tstringlist);
 begin
   setObjType(s, true, proplist);
 end;
 
-procedure cObjFolder.setObjType(s:string);
+procedure cxmlFolder.setObjType(s:string);
 begin
   m_ObjType:=s;
 end;

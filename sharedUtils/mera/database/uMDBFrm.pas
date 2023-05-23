@@ -204,7 +204,7 @@ begin
     begin
       if FindTestTypeCB.Text<>'' then
       begin
-        if cTestFolder(obj).m_testType<>FindTestTypeCB.Text then
+        if cTestFolder(obj).ObjType<>FindTestTypeCB.Text then
         begin
           result:=false;
           exit;

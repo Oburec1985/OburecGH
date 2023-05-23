@@ -68,10 +68,6 @@ type
     Panel2: TPanel;
     ObjPropSG: TStringGridExt;
     Panel3: TPanel;
-    PropNameLabel: TLabel;
-    PropValLabel: TLabel;
-    PropNameEdit: TEdit;
-    PropValEdit: TEdit;
     SelObjName: TEdit;
     Label5: TLabel;
     ApplyBtn: TButton;
@@ -426,7 +422,7 @@ begin
     if TestNameCB.text <> '' then
     begin
       testFolder := cTestFolder.Create;
-      cTestFolder(testFolder).m_testType:=TestTypeCB.text;
+      cTestFolder(testFolder).ObjType:=TestTypeCB.text;
       testFolder.name := TestNameCB.text;
       // для вновь создаваемых нет смысла что то искать внутри
       testFolder.fscanFolders := false;
@@ -450,20 +446,30 @@ begin
   begin
     // присваиваем свойства
     objtype:=cbasemeafolder(m_base.m_BaseFolder).getTestType(TestTypeCB.text);
-    cTestFolder(testFolder).setObjType(TestTypeCB.text, true, objtype.proplist);
-    cBaseMeaFolder(m_base.m_BaseFolder).m_testTypes.Add(cTestFolder(testFolder).m_TestType);
-    TestTypeCB.Items.Add(cTestFolder(testFolder).m_TestType);
+    if objtype=nil then
+    begin
+      objtype:=cobjtype.create(testFolder);
+      objtype.name:=TestTypeCB.text;
+      objtype.owner:=cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes;
+      cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes.AddObject(objtype.name, objtype);
+      ObjTypeCB.Items.AddObject(objtype.name, objtype);
+      (testFolder).ObjType:=objtype.name;
+    end
+    else
+    begin
+      (testFolder).setObjType(TestTypeCB.text, true, objtype.proplist);
+    end;
   end
   else
   begin
     if testFolder<>nil then
-      ctestFolder(testFolder).m_TestType:='';
+      ctestFolder(testFolder).ObjType:='';
   end;
   if testFolder = nil then
     exit;
   // добавляем новый тип испытания
-  if cTestFolder(testFolder).m_testType <> '' then
-    cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes.Add(cTestFolder(testFolder).m_testType);
+  if cTestFolder(testFolder).ObjType <> '' then
+    cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes.Add(cTestFolder(testFolder).ObjType);
   cregFolder(regFolder) := GetSelectReg;
   // для вновь создаваемых нет смысла что то искать внутри
   UpdateXmlDescr;
@@ -892,8 +898,7 @@ begin
     end;
   end;
   TestNameCB.OnChange := p;
-  TestNameCB.text:=TestNameCB.text;
-  //setComboBoxItem(TestNameCB.text, TestNameCB);
+  setComboBoxItem(TestNameCB.text, TestNameCB);
 
   // заполняем типы объектов
   TestTypeCB.Clear;
@@ -920,7 +925,7 @@ begin
   if test = nil then
   BEGIN
     test := cTestFolder.Create;
-    test.m_testType := TestTypeCB.text;
+    test.ObjType := TestTypeCB.text;
     test.name := TestNameCB.text;
     // для вновь создаваемых нет смысла что то искать внутри
     test.fscanFolders := false;
@@ -1259,7 +1264,7 @@ begin
   if selectObj<>nil then
   begin
     ShowObjProps(selectObj);
-    SelObjName.text:=selectObj.name;
+    SelObjName.text:=selectObj.caption;
   end
   else
   begin
@@ -1364,34 +1369,65 @@ begin
   if (selectPropCol>=0) and (selectPropRow>=0) then
   begin
     selectProp:=TStringGrid(Sender).Cells[0,selectPropRow];
-    PropNameEdit.Text:=selectProp;
-    PropValEdit.Text:=TStringGrid(Sender).Cells[1,selectPropRow];
   end
   else
   begin
     selectPropCol := -1;
     selectPropRow := -1;
-    PropNameEdit.Text:='';
-    PropValEdit.Text:='';
   end;
 end;
 
 procedure TMBaseControl.ObjRenameBtnClick(Sender: TObject);
 var
   I: Integer;
+  objtype:cobjtype;
+  objFolder:cxmlFolder;
+  str:string;
 begin
   if selectObj <> nil then
   begin
-    if selectProp<>'' then
+    // сохраняем свойтсва SG в O
+    SaveProperties(selectObj);
+    objFolder:= cxmlfolder(selectObj);
+    // присваиваем свойства
+    if objfolder is cObjFolder then
     begin
-      selectObj.Setpropertie(selectProp, PropValEdit.text);
-      if selectProp<>PropNameEdit.text then
-      begin
-        selectObj.RenameProp(selectProp, PropNameEdit.text);
-        ObjPropSG.Cells[0,selectPropRow]:=PropNameEdit.text;
-        selectProp:=PropNameEdit.text;
-      end;
+      str:=ObjTypeCB.text;
+      objtype:=cbasemeafolder(m_base.m_BaseFolder).getObjType(ObjTypeCB.text)
+    end
+    else
+    begin
+      str:=TestTypeCB.text;
+      objtype:=cbasemeafolder(m_base.m_BaseFolder).getTestType(TestTypeCB.text);
     end;
+    if str='' then exit;
+    if objtype=nil then
+    begin
+      objtype:=cobjtype.create(objFolder);
+      objtype.name:=str;
+      if objfolder is cObjFolder then
+      begin
+        objtype.owner:=cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes;
+        ObjTypeCB.Items.AddObject(objtype.name, objtype);
+      end
+      else
+      begin
+        objtype.owner:=cBaseMeaFolder(m_base.m_BaseFolder).m_testTypes;
+        TestTypeCB.Items.AddObject(objtype.name, objtype);
+      end;
+      objtype.owner.AddObject(objtype.name, objtype);
+      (objFolder).ObjType:=objtype.name;
+    end
+    else
+    begin
+      objtype.clear;
+      for I := 0 to objFolder.PropCount - 1 do
+      begin
+        objtype.addProp(objFolder.getPropertyName(i),'0');
+      end;
+      (objFolder).setObjType(ObjType.name, true, objtype.proplist);
+    end;
+    cBaseMeaFolder(m_base.m_BaseFolder).CreateXMLDesc;
   end;
 end;
 
@@ -1495,7 +1531,7 @@ begin
   curTest := t;
   if t = nil then
     exit;
-  TestTypeCB.text:=t.m_testType;
+  TestTypeCB.text:=t.ObjType;
 
   FillRegCB(cTestFolder(t));
 
@@ -1627,11 +1663,28 @@ end;
 
 procedure setObjProps(o:cxmlFolder; sg:tstringgrid);
 var
-  i:integer;
+  i,j:integer;
   pname, v:string;
+  b:boolean;
 begin
   if sg <> nil then
   begin
+    for I := o.propCount - 1 downto 0 do
+    begin
+      pname:=o.getPropertyName(i);
+      b:=false;
+      for j := 1 to sg.RowCount - 1 do
+      begin
+        v:=sg.Cells[c_col_propName,j];
+        if pname=v then
+        begin
+          b:=true;
+          break;
+        end;
+      end;
+      if not b then
+        o.delpropertie(i);
+    end;
     for I := 1 to sg.RowCount - 1 do
     begin
       pname:=sg.Cells[c_col_propName,i];

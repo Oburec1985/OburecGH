@@ -81,6 +81,10 @@ object MDBFrm: TMDBFrm
         Margins.Right = 2
         Margins.Bottom = 2
         Caption = #1054#1073#1098#1077#1082#1090
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object FindNameLabel: TLabel
           Left = 3
           Top = 6
@@ -112,6 +116,10 @@ object MDBFrm: TMDBFrm
         Margins.Bottom = 2
         Caption = #1058#1077#1089#1090
         ImageIndex = 1
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object FindTestTypeLabel: TLabel
           Left = 2
           Top = 11
@@ -142,6 +150,10 @@ object MDBFrm: TMDBFrm
         Margins.Bottom = 2
         Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1094#1080#1103
         ImageIndex = 2
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object FindTestDateLabel: TLabel
           Left = 9
           Top = 11

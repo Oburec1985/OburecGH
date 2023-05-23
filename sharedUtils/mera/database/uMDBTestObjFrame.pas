@@ -48,7 +48,7 @@ end;
 procedure TMDBTestObjFrame.showObjProps(obj: cXmlFolder);
 begin
   inherited;
-  setComboBoxItem(ctestFolder(obj).m_testType, TestTypeCB);
+  setComboBoxItem(ctestFolder(obj).ObjType, TestTypeCB);
   TestDate.DateTime:=ctestFolder(obj).DateTime;
 end;
 

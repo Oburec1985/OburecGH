@@ -19,15 +19,15 @@ inherited MDBTestObjFrame: TMDBTestObjFrame
     object TestTypeLabel: TLabel
       Left = 19
       Top = 10
-      Width = 94
-      Height = 16
+      Width = 80
+      Height = 13
       Caption = #1058#1080#1087' '#1080#1089#1087#1099#1090#1072#1085#1080#1103':'
     end
     object TestDateLabel: TLabel
       Left = 19
       Top = 62
-      Width = 96
-      Height = 16
+      Width = 84
+      Height = 13
       Caption = #1044#1072#1090#1072' '#1080#1089#1087#1099#1090#1072#1085#1080#1103
     end
     object TestTypeCB: TComboBox

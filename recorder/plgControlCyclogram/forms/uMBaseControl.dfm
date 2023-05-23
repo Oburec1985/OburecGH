@@ -1836,8 +1836,8 @@ object MBaseControl: TMBaseControl
           TabOrder = 1
         end
         object TestNameCB: TComboBox
-          Left = 13
-          Top = 26
+          Left = 12
+          Top = 28
           Width = 167
           Height = 27
           Margins.Left = 2
@@ -2043,7 +2043,7 @@ object MBaseControl: TMBaseControl
       Left = 1
       Top = 1
       Width = 316
-      Height = 459
+      Height = 300
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -2054,42 +2054,21 @@ object MBaseControl: TMBaseControl
       OnKeyDown = ObjPropSGKeyDown
       OnSelectCell = ObjPropSGSelectCell
       OnEndEdititng = ObjPropSGEndEdititng
+      ExplicitTop = 7
+      ExplicitHeight = 459
     end
     object Panel3: TPanel
       Left = 1
-      Top = 460
+      Top = 301
       Width = 316
-      Height = 64
+      Height = 223
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
       Margins.Bottom = 2
       Align = alBottom
       TabOrder = 1
-      object PropNameLabel: TLabel
-        Left = 18
-        Top = 63
-        Width = 181
-        Height = 19
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077' '#1089#1074#1086#1081#1089#1090#1074#1072':'
-        Visible = False
-      end
-      object PropValLabel: TLabel
-        Left = 18
-        Top = 124
-        Width = 75
-        Height = 19
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        Caption = #1047#1085#1072#1095#1077#1085#1080#1077':'
-        Visible = False
-      end
+      ExplicitLeft = 0
       object Label5: TLabel
         Left = 18
         Top = 10
@@ -2101,30 +2080,6 @@ object MBaseControl: TMBaseControl
         Margins.Bottom = 2
         Caption = #1054#1073#1098#1077#1082#1090':'
       end
-      object PropNameEdit: TEdit
-        Left = 17
-        Top = 87
-        Width = 250
-        Height = 27
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        TabOrder = 0
-        Visible = False
-      end
-      object PropValEdit: TEdit
-        Left = 17
-        Top = 150
-        Width = 250
-        Height = 27
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        TabOrder = 1
-        Visible = False
-      end
       object SelObjName: TEdit
         Left = 17
         Top = 33
@@ -2134,20 +2089,19 @@ object MBaseControl: TMBaseControl
         Margins.Top = 2
         Margins.Right = 2
         Margins.Bottom = 2
-        TabOrder = 2
+        TabOrder = 0
       end
       object ApplyBtn: TButton
-        Left = 17
-        Top = 181
-        Width = 85
+        Left = 18
+        Top = 64
+        Width = 127
         Height = 26
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
         Margins.Bottom = 2
-        Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
-        TabOrder = 3
-        Visible = False
+        Caption = #1054#1073#1085#1086#1074#1080#1090#1100' '#1090#1080#1087
+        TabOrder = 1
         OnClick = ObjRenameBtnClick
       end
     end
