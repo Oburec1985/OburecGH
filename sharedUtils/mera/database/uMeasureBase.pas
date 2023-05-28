@@ -96,6 +96,7 @@ type
     procedure addProp(t:string; defv:string);
     procedure setPropVal(t:string; defv:string);
     function getval(t:string):string;
+    function getProp(t:string):tprop;
   protected
     procedure setname(s:string);
   public
@@ -1180,7 +1181,7 @@ begin
     for I := 0 to tests.NodeCount - 1 do
     begin
       child:=tests.Nodes[i];
-      lClass:=child.ReadAttributeString('Class','');
+      lClass:=child.ReadAttributeString('Properties','');
       if lClass='TestTypeStr' then
       begin
         objType:=cObjType.create;
@@ -1339,7 +1340,7 @@ begin
   for I := 0 to proplist.Count - 1 do
   begin
     objpr:=proplist.Strings[i];
-    pr:=cString(proplist.Objects[j]).str;
+    pr:=cString(proplist.Objects[i]).str;
     addpropertie(objpr, pr);
   end;
 end;
@@ -1371,6 +1372,20 @@ begin
     v:=cString.Create;
     v.str:=defv;
     proplist.AddObject(t, v);
+  end;
+end;
+
+function cObjType.getProp(t: string): tprop;
+var
+  ind:integer;
+begin
+  if proplist.Find(t, ind) then
+  begin
+    result:=tprop(proplist.Objects[ind]);
+  end
+  else
+  begin
+    result:=nil;
   end;
 end;
 

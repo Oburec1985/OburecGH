@@ -101,6 +101,8 @@ type
     procedure ObjPropSGSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure TestTypeCBCloseUp(Sender: TObject);
+    procedure ObjPropSGDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
   private
 
     m_rstate: dword;
@@ -840,7 +842,7 @@ begin
   // заполн€ем типы объектов
   for I := 0 to cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes.Count - 1 do
   begin
-    ObjTypeCB.AddItem(cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes.Strings[i],nil);
+    ObjTypeCB.AddItem(cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes.Strings[i],cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes.Objects[i]);
   end;
 end;
 
@@ -904,7 +906,7 @@ begin
   TestTypeCB.Clear;
   for I := 0 to cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes.Count - 1 do
   begin
-    TestTypeCB.AddItem(cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes.Strings[i],nil);
+    TestTypeCB.AddItem(cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes.Strings[i],cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes.Objects[i]);
   end;
 end;
 
@@ -1145,6 +1147,57 @@ begin
   end;
 end;
 
+procedure TMBaseControl.ObjPropSGDrawCell(Sender: TObject; ACol, ARow: Integer;
+  Rect: TRect; State: TGridDrawState);
+var
+  sg: TStringGrid;
+  cb:tcombobox;
+  Color, normcolor: integer;
+  I: integer;
+  str:string;
+  t:cObjType;
+  p:tprop;
+begin
+  sg := TStringGrid(Sender);
+  if selectObj is cObjFolder then
+  begin
+    cb:=objtypecb;
+    if objtypecb.ItemIndex=-1 then
+      t:=nil
+    else
+      t:=cObjType(cb.Items.Objects[cb.ItemIndex]);
+  end
+  else
+  begin
+    cb:=testtypecb;
+    if testtypecb.ItemIndex=-1 then
+      t:=nil
+    else
+      t:=cObjType(cb.Items.Objects[cb.ItemIndex]);
+  end;
+  // им€ свойства
+  str := sg.Cells[0, ARow];
+  normcolor := sg.Canvas.Brush.Color;
+  color:=normcolor;
+  if arow>0 then
+  begin
+    if t<>nil then
+    begin
+      if str<>'' then
+      begin
+        p:=t.getprop(str);
+        // у типа нет свойства как в €чейке. к типу надо добавить это свойство
+        if p=nil then
+          Color := CLgreen;
+      end;
+    end;
+  end;
+  sg.Canvas.Brush.Color := Color;
+  sg.Canvas.FillRect(Rect);
+  sg.Canvas.TextOut(Rect.Left, Rect.Top, sg.Cells[ACol, ARow]);
+  sg.Canvas.Brush.Color := Color;
+end;
+
 procedure TMBaseControl.ObjPropSGEndEdititng(Sender: TObject;
   ACol, ARow: Integer; var CanSelect: Boolean);
 var
@@ -1265,11 +1318,50 @@ begin
   begin
     ShowObjProps(selectObj);
     SelObjName.text:=selectObj.caption;
+    if selectObj is cObjFolder then
+    begin
+      ObjNameCB.Color:=clLime;
+      if TestNameCB.Color=clLime then
+      begin
+        TestNameCB.Color:=clWindow;
+      end;
+      if RegNameEdit.Color=clLime then
+      begin
+        RegNameEdit.Color:=clWindow;
+      end;
+    end;
+    if selectObj is cTestFolder then
+    begin
+      TestNameCB.Color:=clLime;
+      if ObjNameCB.Color=clLime then
+      begin
+        ObjNameCB.Color:=clWindow;
+      end;
+      if RegNameEdit.Color=clLime then
+      begin
+        RegNameEdit.Color:=clWindow;
+      end;
+    end;
+    if selectObj is cRegFolder then
+    begin
+      RegNameEdit.Color:=clLime;
+      if ObjNameCB.Color=clLime then
+      begin
+        ObjNameCB.Color:=clWindow;
+      end;
+      if TestNameCb.Color=clLime then
+      begin
+        TestNameCb.Color:=clWindow;
+      end;
+    end;
   end
   else
   begin
     selectObj:=nil;
     SelObjName.Text:='';
+    TestNameCb.Color:=clWindow;
+    ObjNameCb.Color:=clWindow;
+    RegNameEdit.Color:=clWindow;
   end;
   b:=false;
   ObjPropSGSelectCell(ObjPropSG, -1,-1, b);
@@ -1426,6 +1518,7 @@ begin
         objtype.addProp(objFolder.getPropertyName(i),'0');
       end;
       (objFolder).setObjType(ObjType.name, true, objtype.proplist);
+      objFolder.CreateXMLDesc;
     end;
     cBaseMeaFolder(m_base.m_BaseFolder).CreateXMLDesc;
   end;
@@ -1902,8 +1995,9 @@ procedure TMBaseControl.TestTypeCBChange(Sender: TObject);
 var
   t: cTestFolder;
 begin
+  t:=GetSelectTest;
   FillRegCB(t);
-
+  ObjPropSG.Invalidate;
 end;
 
 procedure TMBaseControl.TestTypeCBCloseUp(Sender: TObject);

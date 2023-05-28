@@ -1736,7 +1736,7 @@ object MBaseControl: TMBaseControl
           OnClick = ObjRenameBtnClick
         end
         object ObjNameCB: TComboBox
-          Left = 12
+          Left = 11
           Top = 23
           Width = 168
           Height = 27
@@ -1808,7 +1808,7 @@ object MBaseControl: TMBaseControl
           Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077':'
         end
         object TestTypeCB: TComboBox
-          Left = 13
+          Left = 14
           Top = 80
           Width = 167
           Height = 27
@@ -2013,8 +2013,8 @@ object MBaseControl: TMBaseControl
           end
         end
         object RegNameEdit: TComboBox
-          Left = 13
-          Top = 36
+          Left = 11
+          Top = 35
           Width = 169
           Height = 27
           Margins.Left = 2
@@ -2049,13 +2049,19 @@ object MBaseControl: TMBaseControl
       Margins.Right = 2
       Margins.Bottom = 2
       Align = alClient
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
       TabOrder = 0
+      OnDrawCell = ObjPropSGDrawCell
       OnExit = ObjPropSGExit
       OnKeyDown = ObjPropSGKeyDown
       OnSelectCell = ObjPropSGSelectCell
       OnEndEdititng = ObjPropSGEndEdititng
       ExplicitTop = 7
-      ExplicitHeight = 459
     end
     object Panel3: TPanel
       Left = 1
@@ -2068,7 +2074,6 @@ object MBaseControl: TMBaseControl
       Margins.Bottom = 2
       Align = alBottom
       TabOrder = 1
-      ExplicitLeft = 0
       object Label5: TLabel
         Left = 18
         Top = 10
