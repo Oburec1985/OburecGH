@@ -1,35 +1,34 @@
 object IRDiagrEditFrm: TIRDiagrEditFrm
   Left = 0
   Top = 0
-  Caption = 'IRDiagrEditFrm'
-  ClientHeight = 497
-  ClientWidth = 922
+  ClientHeight = 373
+  ClientWidth = 692
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -10
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 120
-  TextHeight = 16
+  PixelsPerInch = 96
+  TextHeight = 12
   object Panel1: TPanel
     Left = 0
-    Top = 436
-    Width = 922
-    Height = 61
+    Top = 327
+    Width = 692
+    Height = 46
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alBottom
     TabOrder = 0
     object UpdateBtn: TSpeedButton
-      Left = 3
-      Top = 4
-      Width = 62
-      Height = 47
+      Left = 2
+      Top = 3
+      Width = 47
+      Height = 35
       Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
       AllowAllUp = True
       BiDiMode = bdLeftToRight
       Flat = True
@@ -138,89 +137,193 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
     end
   end
   object PropPanel: TPanel
-    Left = 207
+    Left = 155
     Top = 0
-    Width = 715
-    Height = 436
+    Width = 537
+    Height = 327
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alClient
-    Constraints.MinWidth = 365
+    Constraints.MinWidth = 274
     TabOrder = 1
     inline TagsListFrame1: TTagsListFrame
-      Left = 429
+      Left = 322
       Top = 1
-      Width = 285
-      Height = 434
+      Width = 214
+      Height = 325
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alRight
       TabOrder = 0
-      ExplicitLeft = 429
+      ExplicitLeft = 322
       ExplicitTop = 1
-      ExplicitWidth = 285
-      ExplicitHeight = 434
+      ExplicitWidth = 214
+      ExplicitHeight = 325
       inherited FormChannelsGB: TGroupBox
-        Width = 285
-        Height = 434
-        ExplicitWidth = 285
-        ExplicitHeight = 434
+        Width = 214
+        Height = 325
+        Margins.Left = 3
+        Margins.Top = 3
+        Margins.Right = 3
+        Margins.Bottom = 3
+        ExplicitWidth = 214
+        ExplicitHeight = 325
         inherited ChanNamesPanel: TPanel
-          Width = 281
-          Height = 106
-          ExplicitWidth = 281
-          ExplicitHeight = 106
+          Top = 14
+          Width = 210
+          Height = 79
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          ExplicitTop = 14
+          ExplicitWidth = 210
+          ExplicitHeight = 79
+          inherited FrmTagPropLabel: TLabel
+            Left = 4
+            Top = 44
+            Width = 46
+            Height = 12
+            Margins.Left = 3
+            Margins.Top = 3
+            Margins.Right = 3
+            Margins.Bottom = 3
+            ExplicitLeft = 4
+            ExplicitTop = 44
+            ExplicitWidth = 46
+            ExplicitHeight = 12
+          end
           inherited FrmTagPropValue: TLabel
-            Left = 122
-            ExplicitLeft = 122
+            Left = 92
+            Top = 45
+            Width = 43
+            Height = 12
+            Margins.Left = 3
+            Margins.Top = 3
+            Margins.Right = 3
+            Margins.Bottom = 3
+            ExplicitLeft = 92
+            ExplicitTop = 45
+            ExplicitWidth = 43
+            ExplicitHeight = 12
           end
           inherited FilterEdit: TEdit
-            Width = 270
-            ExplicitWidth = 270
+            Left = 4
+            Top = 6
+            Width = 202
+            Height = 20
+            Margins.Left = 3
+            Margins.Top = 3
+            Margins.Right = 3
+            Margins.Bottom = 3
+            ExplicitLeft = 4
+            ExplicitTop = 6
+            ExplicitWidth = 202
+            ExplicitHeight = 20
           end
           inherited FrmTagPropValueEdit: TEdit
-            Left = 122
-            Width = 154
-            ExplicitLeft = 122
-            ExplicitWidth = 154
+            Left = 92
+            Top = 62
+            Width = 115
+            Height = 20
+            Margins.Left = 3
+            Margins.Top = 3
+            Margins.Right = 3
+            Margins.Bottom = 3
+            ExplicitLeft = 92
+            ExplicitTop = 62
+            ExplicitWidth = 115
+            ExplicitHeight = 20
           end
           inherited FrmTagPropNameCB: TComboBox
-            Width = 107
-            ExplicitWidth = 107
+            Left = 4
+            Top = 62
+            Width = 80
+            Height = 20
+            Margins.Left = 3
+            Margins.Top = 3
+            Margins.Right = 3
+            Margins.Bottom = 3
+            ExplicitLeft = 4
+            ExplicitTop = 62
+            ExplicitWidth = 80
+            ExplicitHeight = 20
           end
         end
         inherited TagsLV: TBtnListView
-          Top = 124
-          Width = 281
-          Height = 308
-          ExplicitTop = 124
-          ExplicitWidth = 281
-          ExplicitHeight = 308
+          Top = 93
+          Width = 210
+          Height = 230
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          Columns = <
+            item
+              Caption = #1048#1084#1103
+              Width = 49
+            end
+            item
+              Caption = #1058#1080#1087
+              Width = 49
+            end
+            item
+              Caption = 'Fs'
+              Width = 38
+            end>
+          ExplicitLeft = 4
+          ExplicitTop = 91
+          ExplicitWidth = 210
+          ExplicitHeight = 230
         end
       end
     end
     object AL_Panel: TPanel
       Left = 1
       Top = 1
-      Width = 428
-      Height = 434
+      Width = 321
+      Height = 325
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alClient
       TabOrder = 1
       object NameLabel: TLabel
-        Left = 5
+        Left = 4
         Top = 1
-        Width = 56
-        Height = 16
+        Width = 44
+        Height = 12
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Caption = #1053#1072#1079#1074#1072#1085#1080#1077
       end
       object PSizeLabel: TLabel
-        Left = 299
+        Left = 224
         Top = 1
-        Width = 79
-        Height = 16
+        Width = 64
+        Height = 12
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Caption = #1056#1072#1079#1084#1077#1088' '#1090#1086#1095#1077#1082
       end
       object Draw_GB: TGroupBox
         Left = 1
-        Top = 217
-        Width = 426
-        Height = 216
+        Top = 162
+        Width = 319
+        Height = 162
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Align = alBottom
         Caption = #1055#1072#1088#1072#1084#1077#1090#1088#1099' '#1075#1088#1072#1092#1080#1082#1072
         Color = 11783677
@@ -228,22 +331,22 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
         ParentColor = False
         TabOrder = 0
         object pCountLabel: TLabel
-          Left = 12
-          Top = 64
-          Width = 72
-          Height = 16
+          Left = 9
+          Top = 48
+          Width = 60
+          Height = 12
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           Caption = #1063#1080#1089#1083#1086' '#1090#1086#1095#1077#1082
         end
         object AddBtn: TSpeedButton
-          Left = 341
-          Top = 151
-          Width = 53
-          Height = 47
+          Left = 256
+          Top = 113
+          Width = 40
+          Height = 36
           Hint = #1044#1086#1073#1072#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
           AllowAllUp = True
           BiDiMode = bdLeftToRight
           Glyph.Data = {
@@ -316,147 +419,159 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
           Transparent = False
         end
         object GroupBox5: TGroupBox
-          Left = 10
-          Top = 133
-          Width = 163
-          Height = 65
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 8
+          Top = 100
+          Width = 122
+          Height = 49
           Caption = #1050#1072#1085#1072#1083' X'
           TabOrder = 0
           object XChan_CB: TRcComboBox
-            Left = 4
-            Top = 29
-            Width = 149
-            Height = 24
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
+            Left = 3
+            Top = 22
+            Width = 112
+            Height = 20
             TabOrder = 0
           end
         end
         object PCountSE: TSpinEdit
-          Left = 12
-          Top = 88
-          Width = 120
-          Height = 26
+          Left = 9
+          Top = 66
+          Width = 90
+          Height = 21
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           MaxValue = 10000000
           MinValue = 1
           TabOrder = 1
           Value = 100
         end
         object GroupBox6: TGroupBox
-          Left = 180
-          Top = 133
-          Width = 153
-          Height = 65
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
-          Caption = #1050#1072#1085#1072#1083' Y'
+          Left = 135
+          Top = 97
+          Width = 115
+          Height = 49
+          Caption = #1050#1072#1085#1072#1083' '#1058#1072#1093#1086
           TabOrder = 2
           object YChan_CB: TRcComboBox
             Left = 0
-            Top = 29
-            Width = 141
-            Height = 24
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
+            Top = 22
+            Width = 106
+            Height = 20
             TabOrder = 0
           end
         end
         object GraphNameEdit: TEdit
-          Left = 12
-          Top = 31
-          Width = 281
-          Height = 24
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 9
+          Top = 23
+          Width = 211
+          Height = 20
           TabOrder = 3
           Text = 'WrkPointLine'
         end
         object DrawPointsCB: TCheckBox
-          Left = 162
-          Top = 78
-          Width = 166
-          Height = 17
+          Left = 122
+          Top = 59
+          Width = 124
+          Height = 12
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           Caption = #1054#1090#1088#1080#1089#1086#1074#1082#1072' '#1090#1086#1095#1077#1082
           TabOrder = 4
         end
         object ColorPanel: TPanel
-          Left = 301
-          Top = 24
-          Width = 34
-          Height = 32
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 226
+          Top = 18
+          Width = 25
+          Height = 24
           Color = clCaptionText
           ParentBackground = False
           TabOrder = 5
         end
         object DrawLineCB: TCheckBox
-          Left = 162
-          Top = 106
-          Width = 166
-          Height = 17
+          Left = 122
+          Top = 80
+          Width = 124
+          Height = 12
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           Caption = #1054#1090#1088#1080#1089#1086#1074#1082#1072' '#1083#1080#1085#1080#1081
           TabOrder = 6
         end
       end
       object X_GB: TGroupBox
         Left = 1
-        Top = 65
-        Width = 426
-        Height = 72
+        Top = 48
+        Width = 319
+        Height = 54
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Align = alBottom
         Caption = #1054#1089#1100' X'
         TabOrder = 1
         object MaxXLabel: TLabel
-          Left = 163
-          Top = 18
-          Width = 75
-          Height = 16
+          Left = 122
+          Top = 14
+          Width = 61
+          Height = 12
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           Caption = #1052#1072#1082#1089#1080#1084#1091#1084' X:'
         end
         object MinXLabel: TLabel
-          Left = 18
-          Top = 18
-          Width = 70
-          Height = 16
+          Left = 14
+          Top = 14
+          Width = 57
+          Height = 12
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           Caption = #1052#1080#1085#1080#1084#1091#1084' X:'
         end
         object MaxXfe: TFloatEdit
-          Left = 162
-          Top = 41
-          Width = 119
-          Height = 24
+          Left = 122
+          Top = 31
+          Width = 89
+          Height = 20
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           TabOrder = 0
           Text = '10'
         end
         object MinXfe: TFloatEdit
-          Left = 17
-          Top = 41
-          Width = 119
-          Height = 24
+          Left = 13
+          Top = 31
+          Width = 89
+          Height = 20
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           TabOrder = 1
           Text = '0.0'
         end
       end
       object Y_GB: TGroupBox
         Left = 1
-        Top = 137
-        Width = 426
-        Height = 80
+        Top = 102
+        Width = 319
+        Height = 60
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Align = alBottom
         Caption = #1054#1089#1100' Y'
         Color = 11783677
@@ -464,54 +579,70 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
         ParentColor = False
         TabOrder = 2
         object MinYLabel: TLabel
-          Left = 17
-          Top = 25
-          Width = 69
-          Height = 16
+          Left = 13
+          Top = 19
+          Width = 57
+          Height = 12
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           Caption = #1052#1080#1085#1080#1084#1091#1084' Y:'
         end
         object MaxYLabel: TLabel
-          Left = 163
-          Top = 25
-          Width = 74
-          Height = 16
+          Left = 122
+          Top = 19
+          Width = 61
+          Height = 12
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           Caption = #1052#1072#1082#1089#1080#1084#1091#1084' Y:'
         end
         object MinYfe: TFloatEdit
-          Left = 17
-          Top = 47
-          Width = 119
-          Height = 24
+          Left = 13
+          Top = 35
+          Width = 89
+          Height = 20
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           TabOrder = 0
           Text = '0.0'
         end
         object MaxYfe: TFloatEdit
-          Left = 162
-          Top = 47
-          Width = 119
-          Height = 24
+          Left = 122
+          Top = 35
+          Width = 89
+          Height = 20
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           TabOrder = 1
           Text = '10'
         end
       end
       object PSizeEdit: TFloatEdit
-        Left = 296
-        Top = 24
-        Width = 115
-        Height = 24
+        Left = 222
+        Top = 18
+        Width = 86
+        Height = 20
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         TabOrder = 3
         Text = '0.0'
       end
       object NameEdit: TEdit
-        Left = 3
-        Top = 24
-        Width = 286
-        Height = 24
+        Left = 2
+        Top = 18
+        Width = 215
+        Height = 20
         Hint = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077' '#1075#1088#1072#1092#1080#1082#1072
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         ParentShowHint = False
         ShowHint = True
         TabOrder = 4
@@ -521,29 +652,27 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
   object TagsGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 207
-    Height = 436
+    Width = 155
+    Height = 327
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alLeft
     Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
     TabOrder = 2
-    object TagsTV: TVTree
+    object SignalsLB: TListBox
       Left = 2
-      Top = 18
-      Width = 197
-      Height = 416
-      Align = alLeft
-      DragMode = dmAutomatic
-      Header.AutoSizeIndex = 0
-      Header.Font.Charset = DEFAULT_CHARSET
-      Header.Font.Color = clWindowText
-      Header.Font.Height = -13
-      Header.Font.Name = 'Tahoma'
-      Header.Font.Style = []
-      Header.MainColumn = -1
-      Images = ImageList_16
-      NodeDataSize = 32
+      Top = 14
+      Width = 151
+      Height = 311
+      Align = alClient
+      ItemHeight = 12
       TabOrder = 0
-      Columns = <>
+      ExplicitLeft = 29
+      ExplicitTop = 94
+      ExplicitWidth = 121
+      ExplicitHeight = 97
     end
   end
   object BackGroundColorDialog: TColorDialog

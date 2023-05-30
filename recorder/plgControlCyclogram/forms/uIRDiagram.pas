@@ -55,7 +55,7 @@ type
     fband: point2d;
     fband_i: point2d;
     fTahoValue: double;
-
+    // отрисовываемый график
     fOut: cqueue<point2d>;
     // число расчитанных точек/ счет внутри fOut
     pCount: integer;
@@ -161,14 +161,12 @@ type
     procedure PrepareZoom;
     procedure setzoom;
 
-    procedure setYAx(p:point2d);
     function GetYAxis:point2d;
 
-    procedure SetXAx(p:point2d);
     function GetXAxis:point2d;
   protected
-    property YAxis:point2d read GetYAxis write setYAx;
-    property XAxis:point2d read GetXAxis write SetXAx;
+    property YAxis:point2d read GetYAxis write setYAxis;
+    property XAxis:point2d read GetXAxis write SetXAxis;
     // обязательный признак!!! показывает что в страницу встроены другие компоненты
     function isCarrier: boolean; override;
     // прилинковаться к компоненту в котором будет происходить отрисовка
@@ -193,7 +191,6 @@ type
 
     fGraphName: string;
     fGraphMax: double;
-    fpsize: double;
   protected
     procedure ChartInit(sender: tobject);
     procedure RBtnClick(sender: tobject);
@@ -270,7 +267,7 @@ const
 
 implementation
 
-uses uEditPolarFrm;
+uses uIRDiagramEditFrm;
 {$R *.dfm}
 { cIRDiagramFactory }
 
@@ -444,15 +441,15 @@ begin
     p2.y := i * i;
     g.push(p2);
   end;
-  g.ConfigTag('3- 1', '18- 1_taho');
+  //g.ConfigTag('3- 1', '18- 1_taho');
   g.fneedrecompile := true;
 end;
 
 procedure TIRDiagramFrm.RBtnClick(sender: tobject);
 begin
-  if TIRDiagramFrm <> nil then
+  if IRDiagrEditFrm <> nil then
   begin
-
+    IRDiagrEditFrm.EditChart(self);
   end;
 end;
 
@@ -646,12 +643,11 @@ end;
 
 function TIRDiagramFrm.getPSize: double;
 begin
-  // result:=fpsize;
+  result:=cIRPage(fpage).fDrawPointSize;;
 end;
 
 procedure TIRDiagramFrm.setPSize(v: double);
 begin
-  // fpsize:=v;
   // if page<>nil then
   // begin
   // page.psize:=v;
@@ -1228,19 +1224,9 @@ begin
   compile;
 end;
 
-procedure cIRPage.SetXAx(p: point2d);
-begin
-
-end;
-
 procedure cIRPage.setXAxis(p2: point2d);
 begin
   fXAxis := p2;
-end;
-
-procedure cIRPage.setYAx(p: point2d);
-begin
-
 end;
 
 procedure cIRPage.setYAxis(p2: point2d);

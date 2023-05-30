@@ -51,6 +51,7 @@ uses
   uEditPropertiesFrm,
   uAlgsSaveFrm,
   uSyncOscillogramEditFrm,
+  uIRDiagramEditFrm,
   uMBaseControl;
 
 type
@@ -310,6 +311,11 @@ begin
     GenSignalsEditFrm.Show;
   GenSignalsEditFrm.close;
 
+  IRDiagrEditFrm:=TIRDiagrEditFrm.Create(nil);
+  if show then
+    IRDiagrEditFrm.Show;
+  IRDiagrEditFrm.close;
+
   BandsFrm:=TBandsFrm.Create(nil);
   if show then
     BandsFrm.Show;
@@ -363,6 +369,12 @@ begin
   begin
     EditPropertiesFrm.free;
     EditPropertiesFrm := nil;
+  end;
+
+  if IRDiagrEditFrm<>nil then
+  begin
+    IRDiagrEditFrm.free;
+    IRDiagrEditFrm := nil;
   end;
 
   if ControlCyclogramEditFrm<>nil then
