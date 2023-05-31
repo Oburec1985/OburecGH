@@ -25,7 +25,7 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
     TabOrder = 0
     object UpdateBtn: TSpeedButton
       Left = 2
-      Top = 3
+      Top = 4
       Width = 47
       Height = 35
       Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
@@ -134,6 +134,7 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
       ParentShowHint = False
       ParentBiDiMode = False
       ShowHint = True
+      OnClick = UpdateBtnClick
     end
   end
   object PropPanel: TPanel
@@ -275,8 +276,7 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
               Caption = 'Fs'
               Width = 38
             end>
-          ExplicitLeft = 4
-          ExplicitTop = 91
+          ExplicitTop = 93
           ExplicitWidth = 210
           ExplicitHeight = 230
         end
@@ -426,8 +426,8 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
           Caption = #1050#1072#1085#1072#1083' X'
           TabOrder = 0
           object XChan_CB: TRcComboBox
-            Left = 3
-            Top = 22
+            Left = 7
+            Top = 26
             Width = 112
             Height = 20
             TabOrder = 0
@@ -449,14 +449,14 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
         end
         object GroupBox6: TGroupBox
           Left = 135
-          Top = 97
+          Top = 100
           Width = 115
           Height = 49
           Caption = #1050#1072#1085#1072#1083' '#1058#1072#1093#1086
           TabOrder = 2
           object YChan_CB: TRcComboBox
             Left = 0
-            Top = 22
+            Top = 26
             Width = 106
             Height = 20
             TabOrder = 0
@@ -668,11 +668,8 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
       Height = 311
       Align = alClient
       ItemHeight = 12
+      MultiSelect = True
       TabOrder = 0
-      ExplicitLeft = 29
-      ExplicitTop = 94
-      ExplicitWidth = 121
-      ExplicitHeight = 97
     end
   end
   object BackGroundColorDialog: TColorDialog

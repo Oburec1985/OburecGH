@@ -216,7 +216,8 @@ type
     function newAH(name: string): cAHgrad;
     procedure clearAHlist;
 
-    function getCfg(i: integer): cAlgConfig;
+    function getCfg(i: integer): cAlgConfig;overload;
+    function getCfg(cfgname: string): cAlgConfig;overload;
     function CfgCount:integer;
     function newCfg(name: string; cltype:TClass): cAlgConfig;
     procedure clearCfgList;
@@ -1064,6 +1065,21 @@ end;
 function cAlgMng.getCfg(i: integer): cAlgConfig;
 begin
   result:=cAlgConfig(m_cfgList.Items[i]);
+end;
+
+function cAlgMng.getCfg(cfgname: string): cAlgConfig;
+var
+  I: Integer;
+begin
+  result:=nil;
+  for I := 0 to m_cfgList.Count - 1 do
+  begin
+    if cAlgConfig(m_cfgList.Items[i]).name=cfgname then
+    begin
+      result:=cAlgConfig(m_cfgList.Items[i]);
+      exit;
+    end;
+  end;
 end;
 
 function cAlgMng.newCfg(name: string; cltype:TClass): cAlgConfig;

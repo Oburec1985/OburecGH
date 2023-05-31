@@ -92,7 +92,6 @@ type
     xTime, yTime: double;
   public
     m_irAlg: cIRAlg;
-    // fxpoints, fypoints:array of double;
   protected
   protected
     procedure doLincParent; override;
@@ -102,11 +101,13 @@ type
     // число точек
     function getCount: integer; override;
     procedure setCount(i: integer); override;
+    function getSpmByTag(t:itag):cspm;
   public
     procedure push(p2: point2d);
     // пересчитать данные из fspm, ftahospm в отрисовываемые вершины
     procedure updateData;
     //
+    Procedure ConfigTag(tag, taho: itag); overload;
     Procedure ConfigTag(spm, taho: cspm); overload;
     Procedure ConfigTag(spm, taho: string); overload;
     property DrawLines: boolean read fDrawLines write fDrawLines;
@@ -738,6 +739,58 @@ end;
 procedure IRDiagramTag.ConfigTag(spm, taho: string);
 begin
   m_irAlg.UpdateChannels(spm, taho);
+end;
+
+procedure IRDiagramTag.ConfigTag(tag, taho: itag);
+var
+  spm, tSpm:cspm;
+begin
+  spm:=getSpmByTag(tag);
+  tSpm:=getSpmByTag(taho);
+  ConfigTag(spm, tspm);
+end;
+
+function IRDiagramTag.getSpmByTag(t:itag):cspm;
+var
+  ldt:double;
+  numPoints:integer;
+  opt:string;
+  I: Integer;
+  cfg:cAlgConfig;
+begin
+  result:=cspm(g_algMng.getSpmByTagName(t.getname));
+  if result=nil then
+  begin
+    result:=cspm.create;
+    result.name:=t.getname+'_IRspm';
+    result.setinptag(t);
+    opt:=result.GetProperties;
+    // период обновления рекордер
+    ldt:=GetREFRESHPERIOD;
+    numPoints:=NearestOrd2(t.getfreq*ldt/2);
+    ldt:= numPoints / t.getfreq;
+    opt:=updateParams(opt, 'FFTCount='+inttostr(numPoints)+',Addnull=0,dX='+FloatToStrEx(ldt,'.'));
+    cfg:=g_algMng.getCfg('IRDiagramSPM');
+    if cfg=nil then
+    begin
+      for I := 0 to g_algMng.CfgCount - 1 do
+      begin
+        if g_algMng.getCfg(i).clType=cspm then
+        begin
+          cfg:=g_algMng.getCfg(i);
+          break;
+        end;
+      end;
+    end;
+    if cfg=nil then
+    begin
+      cfg:=g_algMng.newCfg('IRDiagramSPM',cspm);
+      cAlgConfig.create(cspm);
+      cfg.str:=opt;
+    end;
+    cfg.AddChild(result);
+    g_algMng.Add(result, nil);
+  end;
 end;
 
 constructor IRDiagramTag.create;

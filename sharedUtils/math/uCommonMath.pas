@@ -123,7 +123,8 @@ function GetParsValue(pars:tstringlist;key:string):string;overload;
 procedure ClearParsResult(parsres:tstringlist);
 // очистка и удаление парсера
 procedure delPars(slist:tstringlist);
-
+// ближайшее число к v полученноен возведением 2 в степень
+Function NearestOrd2(v:double):integer;
 Function IniReadFloatEx(ifile:tinifile;section, key:string;default:double):double;
 
 function GetObjectClass(APointer: Pointer): TClass;
@@ -810,6 +811,18 @@ var
 begin
   str:=ifile.readstring(section, key, floattostr(default));
   result:=strtoFloatExt(str);
+end;
+
+Function NearestOrd2(v:double):integer;
+var
+  nump:integer;
+begin
+  numP:=4;
+  while numP<v do
+  begin
+    numP:=numP shl 1;
+  end;
+  result:=nump shr 1;
 end;
 
 function CheckPosSubstr(substr, str:string):boolean;

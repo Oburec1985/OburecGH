@@ -1,47 +1,51 @@
 inherited SpmFrame: TSpmFrame
-  Height = 445
+  Height = 444
   ParentBackground = False
   ParentColor = False
   object ChannelLabel: TLabel [2]
     Left = 10
     Top = 106
-    Width = 35
-    Height = 16
+    Width = 31
+    Height = 13
     Caption = #1050#1072#1085#1072#1083
   end
   object Label2: TLabel [3]
     Left = 170
     Top = 106
-    Width = 36
-    Height = 16
+    Width = 33
+    Height = 13
     Caption = #1042#1099#1093#1086#1076
   end
   object FsLabel: TLabel [4]
     Left = 218
     Top = 185
-    Width = 137
-    Height = 16
+    Width = 119
+    Height = 13
     Caption = #1063#1072#1089#1090#1086#1090#1072' '#1086#1087#1088#1086#1089#1072' '#1082#1072#1085#1072#1083#1072
   end
   object AHLabel: TLabel [5]
     Left = 10
     Top = 192
-    Width = 90
-    Height = 16
+    Width = 78
+    Height = 13
     Caption = #1050#1086#1088#1088#1077#1082#1094#1080#1103' '#1040#1063#1061
     Visible = False
   end
   inherited AlgNameEdit: TEdit
     Width = 553
+    Height = 21
     ExplicitWidth = 553
+    ExplicitHeight = 21
   end
   inherited OptsEdit: TEdit
     Width = 553
+    Height = 21
     ExplicitWidth = 553
+    ExplicitHeight = 21
   end
   object SpmPan: TPanel
     Left = 0
-    Top = 292
+    Top = 291
     Width = 451
     Height = 153
     Align = alBottom
@@ -50,36 +54,36 @@ inherited SpmFrame: TSpmFrame
     object FFTCountLabel: TLabel
       Left = 8
       Top = 18
-      Width = 102
-      Height = 16
+      Width = 87
+      Height = 13
       Caption = #1063#1080#1089#1083#1086' '#1090#1086#1095#1077#1082' '#1041#1055#1060
     end
     object BlockCountLabel: TLabel
       Left = 161
       Top = 91
-      Width = 90
-      Height = 16
+      Width = 78
+      Height = 13
       Caption = #1050#1086#1083'-'#1074#1086' '#1073#1083#1086#1082#1086#1074':'
     end
     object dFLabel: TLabel
       Left = 161
       Top = 25
-      Width = 114
-      Height = 16
+      Width = 99
+      Height = 13
       Caption = #1064#1072#1075' '#1087#1086' '#1095#1072#1089#1090#1086#1090#1077', '#1043#1094
     end
     object AlgDTLabel: TLabel
       Left = 8
       Top = 91
-      Width = 94
-      Height = 16
+      Width = 82
+      Height = 13
       Caption = #1055#1077#1088#1080#1086#1076' '#1088#1072#1089#1095#1077#1090#1072
     end
     object FFTCountEdit: TIntEdit
       Left = 8
       Top = 40
       Width = 121
-      Height = 24
+      Height = 21
       Enabled = False
       TabOrder = 0
       Text = '16384'
@@ -126,7 +130,7 @@ inherited SpmFrame: TSpmFrame
       Left = 170
       Top = 113
       Width = 121
-      Height = 24
+      Height = 21
       TabOrder = 3
       Text = '1'
       OnChange = FFTBCountChange
@@ -135,7 +139,7 @@ inherited SpmFrame: TSpmFrame
       Left = 161
       Top = 42
       Width = 121
-      Height = 24
+      Height = 21
       TabOrder = 4
       Text = '0.1'
     end
@@ -143,7 +147,7 @@ inherited SpmFrame: TSpmFrame
       Left = 8
       Top = 112
       Width = 121
-      Height = 24
+      Height = 21
       TabOrder = 5
       Text = '0.1'
       OnChange = AlgDTFEChange
@@ -161,7 +165,7 @@ inherited SpmFrame: TSpmFrame
     Left = 10
     Top = 128
     Width = 145
-    Height = 24
+    Height = 21
     TabOrder = 3
     OnChange = FFTCountEditChange
     OnDragDrop = ChannelCBDragDrop
@@ -171,7 +175,7 @@ inherited SpmFrame: TSpmFrame
     Left = 161
     Top = 128
     Width = 400
-    Height = 24
+    Height = 21
     Anchors = [akLeft, akTop, akRight]
     Enabled = False
     TabOrder = 4
@@ -180,7 +184,7 @@ inherited SpmFrame: TSpmFrame
     Left = 218
     Top = 207
     Width = 121
-    Height = 24
+    Height = 21
     Enabled = False
     TabOrder = 5
     Text = '0.0'
@@ -189,7 +193,7 @@ inherited SpmFrame: TSpmFrame
     Left = 10
     Top = 211
     Width = 145
-    Height = 24
+    Height = 21
     TabOrder = 6
     Visible = False
   end

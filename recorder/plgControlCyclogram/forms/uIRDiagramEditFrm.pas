@@ -51,6 +51,7 @@ type
     PSizeLabel: TLabel;
     NameEdit: TEdit;
     SignalsLB: TListBox;
+    procedure UpdateBtnClick(Sender: TObject);
   protected
     curChart:TIRDiagramFrm;
     fcurGraph:IRDiagramTag;
@@ -117,6 +118,8 @@ begin
       PSizeEdit.FloatNum:=curchart.PSize;
     showChartTags;
     TagsListFrame1.ShowChannels;
+    XChan_CB.updateTagsList;
+    YChan_CB.updateTagsList;
     showmodal;
   end;
 end;
@@ -132,7 +135,6 @@ begin
   fcurGraph:=g;
 end;
 
-
 procedure TIRDiagrEditFrm.showChartTags;
 var
   i:integer;
@@ -147,5 +149,26 @@ begin
 end;
 
 
+
+procedure TIRDiagrEditFrm.UpdateBtnClick(Sender: TObject);
+var
+  I: Integer;
+  g:IRDiagramTag;
+  t1,t2:itag;
+begin
+  if signalsLB.SelCount>0 then
+  begin
+    for I := 0 to SignalsLB.Count - 1 do
+    begin
+      if signalsLB.Selected[i] then
+      begin
+        g:=IRDiagramTag(signalsLB.Items.Objects[i]);
+        t1:=Xchan_cb.gettag(Xchan_cb.ItemIndex);
+        t2:=Ychan_cb.gettag(Ychan_cb.ItemIndex);
+        g.ConfigTag(t1, t2);
+      end;
+    end
+  end;
+end;
 
 end.
