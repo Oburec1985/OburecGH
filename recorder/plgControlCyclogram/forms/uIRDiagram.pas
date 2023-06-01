@@ -42,9 +42,16 @@ type
     function getcount: integer;
   public
      t1, taho:ctag;
+     // частота тегов t1 и taho
      m_freq:double;
+     // число точек fft для спектров
+     m_t1Numpoints, m_tahoNumpoints:integer;
     // блок данных по которому идет расчет.
     m_T1data, m_TahoData: TAlignDarray;
+    // спектр re_im
+    m_T1ClxData, m_TahoClxData:TAlignDCmpx;
+    // fftPlan
+    FFTProp:TFFTProp;
   protected
   protected
     procedure compile; virtual;
