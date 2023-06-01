@@ -26,6 +26,56 @@ uses
   uSpm;
 
 type
+  spmPoint = record
+    spm: array of point2d;
+    t: double;
+    ind: integer;
+    len: integer;
+  end;
+
+  // алгоритм который собирает данные спектров канала и тахо в единий канал
+  cIRAlg = class(cbasealg)
+  public
+    ftaho, fspm: cspm;
+  private
+    fowner: tobject;
+    fnewData: boolean;
+    // размер буфера в секундах (буфер нужен для соединения данных тахо и основного тега в
+    // единый массив без ошибок по времени)
+    fBuffLength: double;
+    fTaxodx: double; // шаг между посчитанными спектрами по времени
+    // значение комплексного спектра на главной гармонике
+    // x y= re im; z = t; u = Fmax
+    fTahoBuff: cqueue<point4d>;
+    fSpmdx: double; // шаг между посчитанными спектрами по времени
+    // значение комплексного спектра на главной гармонике
+    // queue
+    fSpmBuff: cqueue<spmPoint>;
+    // полоса анализа вокруг главной частоты тахо в долях
+    fband: point2d;
+    fband_i: point2d;
+    fTahoValue: double;
+    // отрисовываемый график
+    fOut: cqueue<point2d>;
+    // число расчитанных точек/ счет внутри fOut
+    pCount: integer;
+  protected
+    procedure SetProperties(str: string); override;
+    function GetProperties: string; override;
+    procedure doEndEvalBlock(sender: tobject); override;
+    procedure doUpdateSrcData(sender: tobject); override;
+    procedure doOnStart; override;
+    function ready: boolean; override;
+    // пересчитать по входным тегам размеры буферов данных, dx по времени для каналов
+    procedure UpdateChannels(spm, taho: string); overload;
+    procedure UpdateChannels(spm, taho: cspm); overload;
+  public
+    procedure resetdata;
+    function newData: boolean;
+    constructor create; override;
+    destructor destroy; override;
+    class function getdsc: string; override;
+  end;
 
   IRDiagramTag = class(cGraphObj)
   private
@@ -38,31 +88,33 @@ type
     fDrawPoints: boolean;
     // цвет вершин
     fPointColor: point3;
+
     xTime, yTime: double;
-    function getcount: integer;
   public
-     t1, taho:ctag;
-     m_freq:double;
-    // блок данных по которому идет расчет.
-    m_T1data, m_TahoData: TAlignDarray;
+    m_irAlg: cIRAlg;
   protected
   protected
+    procedure doLincParent; override;
     procedure compile; virtual;
     procedure DrawData; override;
     procedure setmainParent(p: cbaseObj); override;
+    // число точек
+    function getCount: integer; override;
     procedure setCount(i: integer); override;
+    function getSpmByTag(t:itag):cspm;
   public
     procedure push(p2: point2d);
     // пересчитать данные из fspm, ftahospm в отрисовываемые вершины
     procedure updateData;
     //
-    Procedure ConfigTag(tag, p_taho: itag); overload;
+    Procedure ConfigTag(tag, taho: itag); overload;
+    Procedure ConfigTag(spm, taho: cspm); overload;
+    Procedure ConfigTag(spm, taho: string); overload;
     property DrawLines: boolean read fDrawLines write fDrawLines;
     property DrawPoints: boolean read fDrawPoints write fDrawPoints;
     property PointColor: point3 read fPointColor write fPointColor;
     property Capacity:integer read getcount write setcount;
     constructor create; override;
-    destructor destroy;
   end;
 
   cIRPage = class(cBasePage)
@@ -128,13 +180,12 @@ type
     constructor create; override;
     destructor destroy; override;
   public
-    function graphCount:integer;
     function mainParentClassName: string; override;
   end;
 
   TIRDiagramFrm = class(TRecFrm)
   private
-
+    // m_graphlist: tlist;
   public
     chart: cchart;
     fpage: cIRPage;
@@ -466,6 +517,7 @@ begin
   for i := 0 to GraphCount - 1 do
   begin
     g := getGraph(i);
+    g.m_irAlg.doOnStart;
     // g.init;
   end;
 end;
@@ -503,9 +555,9 @@ begin
   inherited;
   a_pIni.WriteFloat(str, 'GridMax', GraphMax);
   a_pIni.WriteFloat(str, 'PSize', PSize);
-  a_pIni.WriteInteger(str, 'GraphCount', fpage.graphCount);
+  a_pIni.WriteInteger(str, 'GraphCount', m_graphlist.Count);
   a_pIni.WriteString(str, 'ComponentName', GraphName);
-  for i := 0 to fpage.graphCount - 1 do
+  for i := 0 to m_graphlist.Count - 1 do
   begin
     gr := getGraph(i);
     a_pIni.WriteString(str, 'GraphName_' + inttostr(i), gr.name);
@@ -524,6 +576,7 @@ begin
   begin
     g := getGraph(i);
     g.updateData;
+    g.m_irAlg.resetdata;
   end;
 end;
 
@@ -535,6 +588,10 @@ begin
   for i := 0 to GraphCount - 1 do
   begin
     g := getGraph(i);
+    if g.m_irAlg.newData then
+    begin
+      g.fneedrecompile := true;
+    end;
   end;
   chart.redraw;
 end;
@@ -649,7 +706,7 @@ begin
       glBegin(GL_LINE_STRIP);
       for i := 0 to Count - 1 do
       begin
-        //p2 := m_irAlg.fOut.peak(i);
+        p2 := m_irAlg.fOut.peak(i);
         lp.x := p2.x;
         lp.y := p2.y;
         glVertex2fv(@lp);
@@ -663,7 +720,7 @@ begin
       glBegin(GL_Points);
       for i := 0 to Count - 1 do
       begin
-        //p2 := m_irAlg.fOut.peak(i);
+        p2 := m_irAlg.fOut.peak(i);
         lp.x := p2.x;
         lp.y := p2.y;
         glVertex2fv(@lp);
@@ -674,29 +731,86 @@ begin
   end;
 end;
 
-
-procedure IRDiagramTag.ConfigTag(tag, p_taho: itag);
+procedure IRDiagramTag.ConfigTag(spm, taho: cspm);
 begin
-  t1.tag:=tag;
-  taho.tag:=taho;
+  m_irAlg.UpdateChannels(spm, taho);
+end;
+
+procedure IRDiagramTag.ConfigTag(spm, taho: string);
+begin
+  m_irAlg.UpdateChannels(spm, taho);
+end;
+
+procedure IRDiagramTag.ConfigTag(tag, taho: itag);
+var
+  spm, tSpm:cspm;
+begin
+  spm:=getSpmByTag(tag);
+  tSpm:=getSpmByTag(taho);
+  ConfigTag(spm, tspm);
+end;
+
+function IRDiagramTag.getSpmByTag(t:itag):cspm;
+var
+  ldt:double;
+  numPoints:integer;
+  opt:string;
+  I: Integer;
+  cfg:cAlgConfig;
+begin
+  result:=cspm(g_algMng.getSpmByTagName(t.getname));
+  if result=nil then
+  begin
+    result:=cspm.create;
+    result.name:=t.getname+'_IRspm';
+    result.setinptag(t);
+    opt:=result.GetProperties;
+    // период обновления рекордер
+    ldt:=GetREFRESHPERIOD;
+    numPoints:=NearestOrd2(t.getfreq*ldt/2);
+    ldt:= numPoints / t.getfreq;
+    opt:=updateParams(opt, 'FFTCount='+inttostr(numPoints)+',Addnull=0,dX='+FloatToStrEx(ldt,'.'));
+    cfg:=g_algMng.getCfg('IRDiagramSPM');
+    if cfg=nil then
+    begin
+      for I := 0 to g_algMng.CfgCount - 1 do
+      begin
+        if g_algMng.getCfg(i).clType=cspm then
+        begin
+          cfg:=g_algMng.getCfg(i);
+          break;
+        end;
+      end;
+    end;
+    if cfg=nil then
+    begin
+      cfg:=g_algMng.newCfg('IRDiagramSPM',cspm);
+      cAlgConfig.create(cspm);
+      cfg.str:=opt;
+    end;
+    cfg.AddChild(result);
+    g_algMng.Add(result, nil);
+  end;
 end;
 
 constructor IRDiagramTag.create;
 begin
   inherited;
-  t1:=cTag.create;
-  taho:=cTag.create;
-
+  m_irAlg := cIRAlg.create;
+  m_irAlg.fowner := self;
+  if g_algmng <> nil then
+  begin
+    g_algmng.Add(m_irAlg);
+  end;
   DrawPoints := true;
   fPointColor := red;
   DrawLines := true;
   fcolor := blue;
 end;
 
-destructor IRDiagramTag.destroy;
+procedure IRDiagramTag.doLincParent;
 begin
-  t1.destroy;
-  taho.destroy;
+  inherited;
 end;
 
 procedure IRDiagramTag.DrawData;
@@ -710,20 +824,20 @@ begin
   glPopMatrix;
 end;
 
-function IRDiagramTag.getcount: integer;
+function IRDiagramTag.getCount: integer;
 begin
-
+  result := m_irAlg.fOut.SIZE;
 end;
 
 procedure IRDiagramTag.push(p2: point2d);
 begin
-
+  m_irAlg.fOut.push_back(p2);
 end;
 
 procedure IRDiagramTag.setCount(i: integer);
 begin
   inherited;
-
+  m_irAlg.fOut.capacity := i;
 end;
 
 procedure IRDiagramTag.setmainParent(p: cbaseObj);
@@ -992,11 +1106,6 @@ begin
   Result:=fYAxis;
 end;
 
-function cIRPage.graphCount: integer;
-begin
-  result:=m_graphList.Count;
-end;
-
 function cIRPage.ModComponentName(p_name: string): string;
 var
   obj: tcomponent;
@@ -1198,6 +1307,124 @@ begin
   glloadmatrixf(@stateM);
 end;
 
+{ cIRAlg }
+
+constructor cIRAlg.create;
+begin
+  inherited;
+  fOut := cqueue<point2d>.create;
+  fOut.capacity := 10;
+  fOut.m_resizeMode := false;
+
+  fSpmBuff := cqueue<spmPoint>.create;
+  fTahoBuff := cqueue<point4d>.create;
+
+  fband.x := 0.8;
+  fband.y := 1.2;
+
+  fBuffLength := 3;
+  autocreate := true;
+  Properties := '';
+end;
+
+destructor cIRAlg.destroy;
+begin
+  inherited;
+  fSpmBuff.destroy;
+  fTahoBuff.destroy;
+end;
+
+procedure cIRAlg.doOnStart;
+begin
+  inherited;
+  fSpmBuff.clear;
+  fTahoBuff.clear;
+
+  pCount := 0;
+end;
+
+procedure cIRAlg.doUpdateSrcData(sender: tobject);
+var
+  // индекс в тестируемом спектре главной частоты по тахо
+  i, ind: integer;
+  res: double;
+  // updatetaho
+  t1, t2, x: double;
+  c: TComplex_d;
+  p2: point2d;
+  sp: spmPoint;
+  p4: point4d;
+  bandwidthint, startind, endind, startind1, endind1, spmInd: integer;
+begin
+  x := ftaho.max.x;
+  fTahoValue := x;
+
+  if sender = ftaho then
+  begin
+    // количество отсчетов в спектре по которым усредняем
+    startind := round(x * fband.x / ftaho.spmdX);
+    endind := round(x * fband.y / ftaho.spmdX);
+    if startind < 0 then
+      startind := 0;
+    if endind = startind then
+      endind := startind + 1;
+    if endind >= (AlignBlockLength(fspm.m_rms)) then
+      endind := AlignBlockLength(fspm.m_rms) - 1;
+    fband_i.x := startind;
+    fband_i.y := endind;
+    p2 := point2d(tCmxArray_d(ftaho.cmplx_resArray.p)[ftaho.minmax_i.y]);
+    p4.x := p2.x;
+    p4.y := p2.y;
+    p4.z := ftaho.LastBlockTime;
+    p4.u := x;
+
+    fTahoBuff.push_back(p4);
+  end;
+  if sender = fspm then
+  begin
+    // пересчитываем полосу по текущему значению тахо
+    res := TDoubleArray(fspm.m_rms.p)[0];
+    // количество отсчетов в спектре по которым усредняем
+    startind := round(x * fband.x / fspm.spmdX);
+    endind := round(x * fband.y / fspm.spmdX);
+    if endind >= AlignBlockLength(fspm.m_rms) then
+      endind := AlignBlockLength(fspm.m_rms) - 1;
+    ind := 0;
+    for i := startind to endind do
+    begin
+      if TDoubleArray(fspm.m_rms.p)[i] > res then
+      begin
+        c := tCmxArray_d(fspm.cmplx_resArray.p)[i];
+        res := TDoubleArray(fspm.m_rms.p)[i];
+        ind := i;
+      end;
+    end;
+    sp.len := 1;
+    sp.ind := ind;
+    sp.t := fspm.LastBlockTime;
+    startind1 := ind - sp.len;
+    endind1 := ind + sp.len;
+    if startind1 < startind then
+      startind1 := startind;
+    if endind1 > endind then
+      endind1 := endind;
+    if endind1>startind1 + 1 then
+    begin
+      setlength(sp.spm, endind1 - startind1 + 1);
+      for i := startind1 to endind1 do
+      begin
+        c := tCmxArray_d(fspm.cmplx_resArray.p)[i];
+        sp.spm[i - startind1].x := c.re;
+        sp.spm[i - startind1].y := c.im;
+      end;
+      fSpmBuff.push_back(sp);
+    end
+    else
+    begin
+      //showmessage('error');
+    end;
+  end;
+end;
 
 function Cmplx_mult_sopr_p2d(c1,c2:point2d):point2d;
 begin
@@ -1218,5 +1445,155 @@ begin
 end;
 
 
+procedure cIRAlg.doEndEvalBlock(sender: tobject);
+var
+  i, j, k,maxind, dropspm, droptaho: integer;
+
+  temp, a1a2, a1, a2, alfa1, halfstepspm, halfstepTaho: double;
+
+  c1, c2: TComplex_d;
+  res,p2, maxp2: point2d;
+  spm3: spmPoint;
+  taho4: point4d;
+  str: string;
+begin
+  if fTahoBuff.SIZE = 0 then
+    exit;
+  if fSpmBuff.SIZE = 0 then
+    exit;
+
+  halfstepspm := fSpmdx / 2;
+  halfstepTaho := fTaxodx / 2;
+  temp := 0;
+  str := '';
+  for i := 0 to fSpmBuff.SIZE - 1 do
+  begin
+    spm3 := fSpmBuff.peak(i);
+    for j := 0 to fTahoBuff.SIZE - 1 do
+    begin
+      taho4 := point4d(fTahoBuff.peak(i));
+      if (spm3.t - taho4.z) < halfstepspm then
+      begin
+        str := str + 'spm_t=' + formatstrNoE(spm3.t, 4)
+          + ' Taho_t=' + formatstrNoE(taho4.z, 4) + '; ';
+        maxp2:=p2d(0,0);
+        temp:=0;
+        for k := 0 to length(spm3.spm)-1 do
+        begin
+          dropspm := i;
+          droptaho := j;
+          p2 := spm3.spm[k];
+          c1.re := p2.x;
+          c1.im := p2.y;
+          c2.re := taho4.x;
+          c2.im := taho4.y;
+          res:=Cmplx_mult_sopr_cmx(c1,c2);
+          a1a2:=sqrt(sqr(res.x)+sqr(res.y));
+          alfa1:=arctan(res.y / res.x) * c_radtodeg;
+          str := str + 'A=' + formatstrNoE(a1a2, 4)+ ' Phase=' + formatstrNoE(alfa1, 4) + '; ';
+          a1 := abs(c1);
+          a2 := abs(c2);
+          str := str + 'spm_ri=' + formatstrNoE(c1.re, 4) + ';' + formatstrNoE
+            (c1.im, 4);
+          str := str + 'taho_ri=' + formatstrNoE(c2.re, 4) + ';' + formatstrNoE
+            (c2.im, 4);
+
+          alfa1 := phase_rad(c1.re, c1.im, c2.re, c2.im);
+          str := str + 'alfa=' + formatstrNoE(alfa1, 4)
+            + '; spm_A=' + formatstrNoE(a1, 4) + '; taho_A=' + formatstrNoE
+            (a2, 4);
+          a1a2 := a1 * a2;
+          str := str + 'A1A2=' + formatstrNoE(a1a2, 4);
+          if a1a2 > temp then
+          begin
+            temp:=a1a2;
+            p2.x := a1 * cos(alfa1);
+            p2.y := a1 * sin(alfa1);
+            maxp2:=p2;
+            str := str + 'k=' + inttostr(k) + 'p2=' + formatstrNoE(p2.x, 4)
+              + ';' + formatstrNoE(p2.y, 4);
+            maxind:=k;
+            fOut.push_back(p2);
+          end;
+          logMessage(str);
+        end;
+        fnewData := true;
+        fOut.push_back(maxp2);
+        break;
+      end;
+    end;
+  end;
+  fSpmBuff.drop_front(dropspm);
+  fTahoBuff.drop_front(droptaho);
+end;
+
+procedure cIRAlg.resetdata;
+begin
+  fSpmBuff.clear;
+  fTahoBuff.clear;
+  // счет внутри fOut
+  pCount := 0;
+end;
+
+class function cIRAlg.getdsc: string;
+begin
+  result := 'Комплексный спектр';
+end;
+
+function cIRAlg.GetProperties: string;
+begin
+  result := 'cIRAlgProps';
+end;
+
+function cIRAlg.newData: boolean;
+begin
+  result := fnewData;
+  fnewData := false;
+end;
+
+function cIRAlg.ready: boolean;
+begin
+  // алгоритм вспомогательный, поэтому не требует вызовов
+  result := false;
+end;
+
+procedure cIRAlg.SetProperties(str: string);
+begin
+  inherited;
+end;
+
+procedure cIRAlg.UpdateChannels(spm, taho: string);
+begin
+  fspm := cspm(g_algmng.getSpmByTagName(spm));
+  ftaho := cspm(g_algmng.getSpmByTagName(taho));
+  UpdateChannels(fspm, ftaho);
+end;
+
+procedure cIRAlg.UpdateChannels(spm, taho: cspm);
+var
+  i, j: integer;
+begin
+  if (fspm <> nil) and (fspm <> spm) then
+    unsubscribe(fspm);
+  fspm := spm;
+  if (ftaho <> nil) and (ftaho <> taho) then
+    unsubscribe(ftaho);
+  ftaho := taho;
+
+  if ftaho <> nil then
+  begin
+    ftaho.subscribe(self);
+    fTaxodx := ftaho.dX;
+  end;
+  if fspm <> nil then
+  begin
+    fspm.subscribe(self);
+    fSpmdx := fspm.dX;
+  end;
+  i := round(fBuffLength / fSpmdx);
+  j := round(fBuffLength / fTaxodx);
+  if i < j then
+    i := j;
+end;
 
 end.
