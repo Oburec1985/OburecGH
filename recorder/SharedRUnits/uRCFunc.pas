@@ -148,6 +148,7 @@ type
     // TimeInd
     function getIndex(t: double): integer;
   public
+    procedure initTag;
     function GetDefaultEst: double;
     function GetMeanEst: double;
     function GetRMSEst: double;
@@ -1095,7 +1096,29 @@ begin
     result := FuncGetValByTime(self, time, interp, error);
   end;
 
-  procedure cTag.initTagData(blCount: integer);
+procedure cTag.initTag;
+var
+  bl:IBlockAccess;
+begin
+  if ftag=nil then
+  begin
+    ftag:=getTagByName(ftagname);
+    if ftag=nil then
+    begin
+      ftag:=getTagById(ftagid);
+    end;
+    if ftag<>nil then
+    begin
+      if not FAILED(ftag.QueryInterface(IBlockAccess, bl)) then
+      begin
+        block := bl;
+        bl := nil;
+      end;
+    end;
+  end;
+end;
+
+procedure cTag.initTagData(blCount: integer);
   var
     v: OleVariant;
     Size: integer;

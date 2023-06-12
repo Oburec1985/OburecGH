@@ -23,6 +23,7 @@ object IRDiagrEditFrm: TIRDiagrEditFrm
     Margins.Bottom = 2
     Align = alBottom
     TabOrder = 0
+    ExplicitTop = 329
     object UpdateBtn: TSpeedButton
       Left = 2
       Top = 4

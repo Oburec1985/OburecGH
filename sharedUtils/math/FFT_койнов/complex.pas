@@ -96,8 +96,8 @@ Type
 
    // Функции чисто  комплексного типа
   function Sopr(const X:TComplex_d):TComplex_d;  //Возвращает сопряженныую величину комплексного числа
-  function Multiply_i(const X:TComplex_d):TComplex_d;//умнажение на мнимую единицу
-  function MultiplyCmpx(c1, c2:TComplex_d):TComplex_d;//умнажение на мнимую единицу
+  function Multiply_i(const X:TComplex_d):TComplex_d;//умножение на мнимую единицу
+  function MultiplyCmpx(c1, c2:TComplex_d):TComplex_d;//умножение на мнимую единицу
   function Flip(const X:TComplex_d):TComplex_d;      // поменять местами Re Im
   // function Arg (const X:TComplex_d):double;    // аргумент комлексного числа
   // Математические функции от комплексного типа

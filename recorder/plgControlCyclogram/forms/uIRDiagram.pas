@@ -39,13 +39,17 @@ type
     // цвет вершин
     fPointColor: point3;
     xTime, yTime: double;
-    function getcount: integer;
+
+    // отрисовываемый график
+    fOut: cqueue<point2d>;
   public
-     t1, taho:ctag;
-     // частота тегов t1 и taho
-     m_freq:double;
-     // число точек fft для спектров
-     m_t1Numpoints, m_tahoNumpoints:integer;
+    t1, taho:ctag;
+    // частота тегов t1 и taho
+    m_freq,
+    // размер блока для расчета спектра = freq*Numpoints
+    blSize:double;
+    // число точек fft для спектров
+    m_Numpoints:integer;
     // блок данных по которому идет расчет.
     m_T1data, m_TahoData: TAlignDarray;
     // спектр re_im
@@ -58,12 +62,16 @@ type
     procedure DrawData; override;
     procedure setmainParent(p: cbaseObj); override;
     procedure setCount(i: integer); override;
+    function getCount: integer; override;
   public
     procedure push(p2: point2d);
     // пересчитать данные из fspm, ftahospm в отрисовываемые вершины
     procedure updateData;
     //
+    procedure DoStart;
     Procedure ConfigTag(tag, p_taho: itag); overload;
+    // пересчет по частотам опроса и дискретности fft
+    procedure UpdateBlocks;
     property DrawLines: boolean read fDrawLines write fDrawLines;
     property DrawPoints: boolean read fDrawPoints write fDrawPoints;
     property PointColor: point3 read fPointColor write fPointColor;
@@ -376,7 +384,6 @@ var
   g: IRDiagramTag;
   p2: point2d;
 begin
-  fpage := cIRPage.create;
   chart.name := 'IRDiagram';
   chart.activeTab.AddChild(fpage);
   chart.activePage.destroy;
@@ -389,9 +396,11 @@ begin
     // page.Max := GraphMax;
   end;
   PSize := PSize;
-
-  g := addGraph('test_001');
-  // g.Count:= 10;
+  if GraphCount=0 then
+    g := addGraph('test_001')
+  else
+    g:=getGraph(0);
+  g.Count:= 10;
   for i := 0 to 9 do
   begin
     p2.x := i;
@@ -420,25 +429,24 @@ var
   i: integer;
   gr: IRDiagramTag;
 begin
-  // for I := 0 to m_graphlist.Count - 1 do
-  // begin
-  // gr:=getGraph(i);
-  // gr.Destroy;
-  // end;
-  // m_graphlist.Clear;
+  for I := 0 to GraphCount - 1 do
+  begin
+    gr:=getGraph(i);
+    gr.Destroy;
+  end;
+  fpage.m_graphList.Clear;
 end;
 
 constructor TIRDiagramFrm.create(Aowner: tcomponent);
 begin
   inherited;
-  // fGraphName:='Гистограмма биений';
-  // m_graphlist := tlist.create;
   chart := cchart.create(self);
   chart.align := alClient;
   chart.showTV := false;
   chart.showLegend := false;
   chart.OnInit := ChartInit;
   chart.OnRBtnClick := RBtnClick;
+  fpage := cIRPage.create;
 end;
 
 destructor TIRDiagramFrm.destroy;
@@ -473,14 +481,14 @@ begin
   for i := 0 to GraphCount - 1 do
   begin
     g := getGraph(i);
-    // g.init;
+    g.DoStart;
   end;
 end;
 
 procedure TIRDiagramFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 var
   i, Count: integer;
-  lstr: string;
+  lstr, sect: string;
   gr: IRDiagramTag;
 begin
   inherited;
@@ -488,16 +496,14 @@ begin
   PSize := readFloatFromIni(a_pIni, str, 'PSize');
   GraphName := a_pIni.ReadString(str, 'ComponentName', 'Гистограмма биений');
   Count := a_pIni.ReadInteger(str, 'GraphCount', 1);
+  clearGraphList;
   for i := 0 to Count - 1 do
   begin
-    lstr := a_pIni.ReadString(str, 'GraphName_' + inttostr(i), '');
-    if lstr <> '' then
-    begin
-      gr := addGraph(lstr);
-      // gr.fload :=true;
-      // gr.DrawPoints:=a_pIni.Readbool(str, 'GraphDrawPoints_' + inttostr(i), true);
-      // gr.DrawLine:=a_pIni.Readbool(str, 'GraphDrawLine_' + inttostr(i), true);
-    end;
+    sect:='GraphName_' + inttostr(i);
+    gr := addGraph( a_pIni.readString(str, sect+'_Name', ''));
+    LoadexTagIni(a_pIni,gr.t1, str, sect+'_Tag');
+    LoadexTagIni(a_pIni,gr.taho,str, sect+'_Taho');
+    gr.DrawPoints:=a_pIni.readBool(str, sect+'_DrawP', true);
   end;
 end;
 
@@ -506,6 +512,7 @@ var
   i: integer;
   gr: IRDiagramTag;
   ax: taxis;
+  sect,ident:string;
 begin
   inherited;
   a_pIni.WriteFloat(str, 'GridMax', GraphMax);
@@ -515,8 +522,11 @@ begin
   for i := 0 to fpage.graphCount - 1 do
   begin
     gr := getGraph(i);
-    a_pIni.WriteString(str, 'GraphName_' + inttostr(i), gr.name);
-    a_pIni.WriteBool(str, 'GraphDrawPoints_' + inttostr(i), gr.DrawPoints);
+    sect:='GraphName_' + inttostr(i);
+    saveTagToIni(a_pIni,gr.t1,str,sect+'_Tag');
+    saveTagToIni(a_pIni,gr.t1,str,sect+'_Taho');
+    a_pIni.WriteString(str, sect+'_Name', gr.name);
+    a_pIni.WriteBool(str, sect+'_DrawP', gr.DrawPoints);
   end;
 end;
 
@@ -525,9 +535,7 @@ var
   i: integer;
   g: IRDiagramTag;
 begin
-  // logMessage('TCntrlWrnChart.UpdateData tid: '+inttostr(GetCurrentThreadId));
-  // spmChart.activePage.caption := modname(spmChart.activePage.caption, false);
-  for i := 0 to GraphCount - 1 do
+ for i := 0 to GraphCount - 1 do
   begin
     g := getGraph(i);
     g.updateData;
@@ -656,7 +664,7 @@ begin
       glBegin(GL_LINE_STRIP);
       for i := 0 to Count - 1 do
       begin
-        //p2 := m_irAlg.fOut.peak(i);
+        p2 := fOut.peak(i);
         lp.x := p2.x;
         lp.y := p2.y;
         glVertex2fv(@lp);
@@ -670,7 +678,7 @@ begin
       glBegin(GL_Points);
       for i := 0 to Count - 1 do
       begin
-        //p2 := m_irAlg.fOut.peak(i);
+        p2 := fOut.peak(i);
         lp.x := p2.x;
         lp.y := p2.y;
         glVertex2fv(@lp);
@@ -685,7 +693,9 @@ end;
 procedure IRDiagramTag.ConfigTag(tag, p_taho: itag);
 begin
   t1.tag:=tag;
-  taho.tag:=taho;
+  taho.tag:=p_taho;
+  m_freq:=t1.freq;
+  UpdateBlocks;
 end;
 
 constructor IRDiagramTag.create;
@@ -693,6 +703,7 @@ begin
   inherited;
   t1:=cTag.create;
   taho:=cTag.create;
+  fOut := cqueue<point2d>.create;
 
   DrawPoints := true;
   fPointColor := red;
@@ -704,6 +715,17 @@ destructor IRDiagramTag.destroy;
 begin
   t1.destroy;
   taho.destroy;
+  fOut.Destroy;
+end;
+
+procedure IRDiagramTag.DoStart;
+begin
+  taho.initTag;
+  t1.initTag;
+
+  taho.doOnStart;
+  t1.doOnStart;
+  fOut.clear;
 end;
 
 procedure IRDiagramTag.DrawData;
@@ -717,20 +739,20 @@ begin
   glPopMatrix;
 end;
 
-function IRDiagramTag.getcount: integer;
-begin
-
-end;
-
 procedure IRDiagramTag.push(p2: point2d);
 begin
-
+  fOut.push_back(p2);
 end;
 
 procedure IRDiagramTag.setCount(i: integer);
 begin
   inherited;
+  fOut.capacity:=i;
+end;
 
+function IRDiagramTag.getCount: integer;
+begin
+ result := fOut.size;
 end;
 
 procedure IRDiagramTag.setmainParent(p: cbaseObj);
@@ -739,15 +761,90 @@ begin
 
 end;
 
+procedure IRDiagramTag.UpdateBlocks;
+var
+  refresh:double;
+begin
+  refresh:=GetREFRESHPERIOD;
+  m_Numpoints:=NearestOrd2(m_freq*refresh);
+  blSize:= m_Numpoints / m_freq;
+  // fOutSize := m_fftCount * m_blockcount;
+  GetMemAlignedArray_d(m_Numpoints, m_T1data);
+  GetMemAlignedArray_d(m_Numpoints, m_Tahodata);
+  GetMemAlignedArray_cmpx_d(m_Numpoints, m_T1ClxData);
+  GetMemAlignedArray_cmpx_d(m_Numpoints, m_TahoClxData);
+  FFTProp:=GetFFTPlan(m_Numpoints);
+  FFTProp.StartInd:=0;
+end;
+
 procedure IRDiagramTag.updateData;
 var
-  i: integer;
+  i, lastInd, maxind: integer;
+  interval1,interval2, common:point2d;
+  common_i1, common_i2:tpoint;
+  resMag, mag,k:double;
+  newdata:boolean;
+  cmplx, c1,c2, res:TComplex_d;
+  p2:point2d;
 begin
-  // if m_irAlg.newData then
-  // begin
-  // m_irAlg.newData := false;
-  // fneedrecompile := true;
-  // end;
+  newdata:=false;
+  if t1.UpdateTagData(true, lastInd) then
+  begin
+    interval1:=t1.getPortionTime;
+  end;
+  if taho.UpdateTagData(true, lastind) then
+  begin
+    interval2:=taho.getPortionTime;
+  end;
+  common:=getCommonInterval(interval1,interval2);
+  resMag:=0;
+  if (common.y-common.x)>blSize then
+  begin
+    newdata:=true;
+    common_i1:=t1.getIntervalInd(common);
+    common_i2:=taho.getIntervalInd(common);
+    while (common_i1.x>common_i1.x) and (common_i2.y>common_i2.y) do
+    begin
+      move(t1.m_ReadData[common_i1.X], m_T1data.p^, m_Numpoints*sizeof(double));
+      move(taho.m_ReadData[common_i2.X], m_Tahodata.p^, m_Numpoints*sizeof(double));
+      fft_al_d_sse(TDoubleArray(m_T1data.p), tCmxArray_d(m_T1ClxData.p), FFTProp);
+      fft_al_d_sse(TDoubleArray(m_Tahodata.p), tCmxArray_d(m_TahoClxData.p), FFTProp);
+      // расчет первого спектра
+      k := 2 / m_Numpoints;
+      maxind := 0;
+      resMag := 0;
+      k := k * k; // т.к. перемножаем 2 числа которые нужно нормировать с одинаковым "K"
+      // timer:=TPerformanceTime.create;
+      for i := 1 to m_Numpoints - 1 do
+      begin
+        // для совпадения с WinPos k*s1[i].x, где k=(2/fftcount) (ниже блок совпадает с WinPos)
+        // res[i].x := k*s1[i].x * k*s2[i].x + k*s1[i].y * k*s2[i].y;
+        // res[i].y := k*s1[i].y * k*s2[i].x - k*s1[i].x * k*s2[i].y;
+        // комплексно сопряжонное умножение!!!!
+        c1:=tCmxArray_d(m_T1ClxData.p)[i];
+        c2:=tCmxArray_d(m_TahoClxData.p)[i];
+        cmplx.re := k *(c1.Re * c2.re + c1.im * c2.im);
+        cmplx.im := k *(c1.im * c2.re - c1.re * c2.im);
+
+        mag := abs(cmplx);
+        if mag > resMag then
+        begin
+          resMag := mag;
+          maxind := i;
+          res:=cmplx;
+        end;
+      end;
+      p2.x:=res.Re;
+      p2.y:=res.im;
+      fOut.push_back(p2);
+      common_i1.x:=common_i1.x+m_Numpoints;
+      common_i2.x:=common_i2.x+m_Numpoints;
+    end;
+    if newData then
+    begin
+      fneedrecompile := true;
+    end;
+  end;
 end;
 
 { cIRPage }
