@@ -2,98 +2,79 @@ object RZDFrm: TRZDFrm
   Left = 0
   Top = 0
   Caption = #1054#1087#1088#1077#1076#1077#1083#1077#1085#1080#1077' '#1085#1072#1075#1088#1091#1078#1077#1085#1085#1086#1089#1090#1080' '#1091#1095#1072#1089#1090#1082#1072' '#1078#1077#1083#1077#1079#1085#1086#1076#1086#1088#1086#1078#1085#1086#1075#1086' '#1087#1091#1090#1080
-  ClientHeight = 808
-  ClientWidth = 1108
+  ClientHeight = 1057
+  ClientWidth = 1452
   Color = clBtnFace
-  Constraints.MinHeight = 627
-  Constraints.MinWidth = 1124
+  Constraints.MinHeight = 820
+  Constraints.MinWidth = 1470
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   OnClose = FormClose
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object Splitter1: TSplitter
     Left = 0
-    Top = 408
-    Width = 1108
+    Top = 534
+    Width = 1452
     Height = 2
     Cursor = crVSplit
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
     Align = alTop
+    ExplicitWidth = 1449
   end
   object Splitter5: TSplitter
     Left = 0
-    Top = 410
-    Width = 1108
-    Height = 4
+    Top = 536
+    Width = 1452
+    Height = 5
     Cursor = crVSplit
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
     Align = alTop
+    ExplicitWidth = 1449
   end
   object PathPanel: TPanel
     Left = 0
     Top = 0
-    Width = 1108
-    Height = 408
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 1452
+    Height = 534
     Align = alTop
     TabOrder = 0
     object Splitter2: TSplitter
-      Left = 247
-      Top = 47
-      Width = 2
-      Height = 360
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
-      ExplicitHeight = 361
+      Left = 323
+      Top = 61
+      Height = 472
+      ExplicitHeight = 471
     end
     object BaseFolderPanel: TPanel
       Left = 1
       Top = 1
-      Width = 1106
-      Height = 46
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Width = 1450
+      Height = 60
       Align = alTop
       TabOrder = 0
       DesignSize = (
-        1106
-        46)
+        1450
+        60)
       object BaseFolderLabel: TLabel
-        Left = 4
-        Top = 9
-        Width = 87
-        Height = 13
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 5
+        Top = 12
+        Width = 109
+        Height = 17
         Caption = #1041#1072#1079#1086#1074#1099#1081' '#1082#1072#1090#1072#1083#1086#1075
       end
       object UpdatePathBtn: TSpeedButton
-        Left = 1055
-        Top = 5
-        Width = 37
-        Height = 36
+        Left = 1383
+        Top = 7
+        Width = 48
+        Height = 47
         Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1087#1091#1090#1080' '#1074' '#1073#1072#1079#1077
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Anchors = [akRight, akBottom]
         BiDiMode = bdLeftToRight
         Glyph.Data = {
@@ -231,29 +212,22 @@ object RZDFrm: TRZDFrm
         ParentBiDiMode = False
         ShowHint = True
         OnClick = UpdatePathBtnClick
+        ExplicitLeft = 1380
       end
       object BaseFolderEdit: TEdit
-        Left = 95
-        Top = 6
-        Width = 896
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 124
+        Top = 8
+        Width = 1175
+        Height = 25
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
         OnChange = BaseFolderEditChange
       end
       object BaseFolderBtn: TButton
-        Left = 1005
-        Top = 6
-        Width = 45
-        Height = 36
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 1317
+        Top = 8
+        Width = 59
+        Height = 47
         Anchors = [akTop, akRight]
         Caption = '...'
         TabOrder = 1
@@ -261,59 +235,48 @@ object RZDFrm: TRZDFrm
       end
     end
     object VertPanel: TPanel
-      Left = 249
-      Top = 47
-      Width = 858
-      Height = 360
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 326
+      Top = 61
+      Width = 1125
+      Height = 472
       Align = alClient
       TabOrder = 1
       DesignSize = (
-        858
-        360)
+        1125
+        472)
       object RegionLabel: TLabel
-        Left = 5
-        Top = 3
-        Width = 42
-        Height = 13
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 7
+        Top = 4
+        Width = 53
+        Height = 17
         Caption = #1059#1095#1072#1089#1090#1086#1082
       end
       object sectionLabel: TLabel
-        Left = 5
-        Top = 26
-        Width = 43
-        Height = 13
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 7
+        Top = 34
+        Width = 54
+        Height = 17
         Caption = #1057#1077#1095#1077#1085#1080#1077
       end
       object Hout_DLabel: TLabel
-        Left = 748
-        Top = 13
-        Width = 15
-        Height = 13
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 981
+        Top = 17
+        Width = 20
+        Height = 17
         Anchors = [akTop, akRight]
         Caption = 'D='
+        ExplicitLeft = 978
       end
       object DrawGraphBtn: TSpeedButton
-        Left = 572
-        Top = 58
-        Width = 38
-        Height = 36
+        Left = 751
+        Top = 76
+        Width = 50
+        Height = 47
         Hint = #1054#1090#1088#1080#1089#1086#1074#1072#1090#1100' '#1075#1088#1072#1092#1080#1082#1080
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Anchors = [akRight, akBottom]
         BiDiMode = bdLeftToRight
         Glyph.Data = {
@@ -419,13 +382,18 @@ object RZDFrm: TRZDFrm
         ParentBiDiMode = False
         ShowHint = True
         OnClick = DrawGraphBtnClick
+        ExplicitLeft = 748
       end
       object StayOnTopBtn: TSpeedButton
-        Left = 526
-        Top = 58
-        Width = 41
-        Height = 36
+        Left = 691
+        Top = 76
+        Width = 53
+        Height = 47
         Hint = #1055#1086#1074#1077#1088#1093' '#1086#1082#1086#1085
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         AllowAllUp = True
         Anchors = [akRight, akBottom]
         BiDiMode = bdLeftToRight
@@ -823,404 +791,1370 @@ object RZDFrm: TRZDFrm
         ShowHint = True
         Transparent = False
         OnClick = StayOnTopBtnClick
+        ExplicitLeft = 688
       end
       object FmaxLabel: TLabel
-        Left = 674
-        Top = 57
-        Width = 39
-        Height = 13
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 884
+        Top = 75
+        Width = 49
+        Height = 17
         Anchors = [akTop, akRight]
         Caption = 'Vt Trel='
+        ExplicitLeft = 881
       end
       object GtmaxLabel: TLabel
-        Left = 674
-        Top = 80
-        Width = 40
-        Height = 13
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 884
+        Top = 105
+        Width = 50
+        Height = 17
         Anchors = [akTop, akRight]
         Caption = 'Gt Trel='
+        ExplicitLeft = 881
       end
       object PAlfaLabel: TLabel
-        Left = 748
-        Top = 30
-        Width = 14
-        Height = 13
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 981
+        Top = 39
+        Width = 18
+        Height = 17
         Anchors = [akTop, akRight]
         Caption = 'P='
+        ExplicitLeft = 978
       end
       object FmaxAbsLabel: TLabel
-        Left = 761
-        Top = 57
-        Width = 31
-        Height = 13
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 998
+        Top = 75
+        Width = 39
+        Height = 17
         Anchors = [akTop, akRight]
         Caption = 'Tabs='
+        ExplicitLeft = 995
       end
       object GtmaxAbsLabel: TLabel
-        Left = 761
-        Top = 80
-        Width = 31
-        Height = 13
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 998
+        Top = 105
+        Width = 39
+        Height = 17
         Anchors = [akTop, akRight]
         Caption = 'Tabs='
+        ExplicitLeft = 995
       end
       object sectionCB: TComboBox
-        Left = 51
-        Top = 23
-        Width = 436
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 67
+        Top = 30
+        Width = 573
+        Height = 25
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
         OnChange = sectionCBChange
       end
       object RegionCB: TComboBox
-        Left = 51
+        Left = 67
         Top = 1
-        Width = 436
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Width = 573
+        Height = 25
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 1
         OnChange = RegionCBChange
       end
       object TareNamePanel: TPanel
         Left = 1
-        Top = 97
-        Width = 856
-        Height = 262
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Top = 129
+        Width = 1123
+        Height = 342
         Align = alBottom
         TabOrder = 2
         object LabelsPanel: TPanel
           Left = 1
           Top = 1
-          Width = 88
-          Height = 260
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Width = 115
+          Height = 340
           Align = alLeft
           TabOrder = 0
           object VFLabel: TLabel
-            Left = 7
-            Top = 56
-            Width = 58
-            Height = 13
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Left = 9
+            Top = 73
+            Width = 72
+            Height = 17
             Caption = #1042#1077#1088#1090'. '#1090#1103#1075#1072':'
           end
           object HFLabel: TLabel
-            Left = 7
-            Top = 82
-            Width = 52
-            Height = 13
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Left = 9
+            Top = 107
+            Width = 64
+            Height = 17
             Caption = #1043#1086#1088'. '#1090#1103#1075#1072':'
           end
           object S1Label: TLabel
-            Left = 7
-            Top = 108
-            Width = 64
-            Height = 13
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Left = 9
+            Top = 141
+            Width = 81
+            Height = 17
             Caption = #1044#1072#1090#1095#1080#1082' '#8470'1:'
           end
           object VCPathLabel: TLabel
-            Left = 7
-            Top = 32
-            Width = 73
-            Height = 13
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Left = 9
+            Top = 42
+            Width = 93
+            Height = 17
             Caption = #1055#1091#1090#1100' '#1082' '#1092#1072#1081#1083#1091':'
           end
           object S2Label: TLabel
-            Left = 7
-            Top = 133
-            Width = 64
-            Height = 13
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Left = 9
+            Top = 174
+            Width = 81
+            Height = 17
             Caption = #1044#1072#1090#1095#1080#1082' '#8470'2:'
           end
           object S3Label: TLabel
-            Left = 7
-            Top = 157
-            Width = 64
-            Height = 13
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Left = 9
+            Top = 205
+            Width = 81
+            Height = 17
             Caption = #1044#1072#1090#1095#1080#1082' '#8470'3:'
           end
           object S4Label: TLabel
-            Left = 7
-            Top = 178
-            Width = 64
-            Height = 13
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Left = 9
+            Top = 233
+            Width = 81
+            Height = 17
             Caption = #1044#1072#1090#1095#1080#1082' '#8470'4:'
           end
         end
         object TareFramePageControl: TPageControl
-          Left = 89
+          Left = 116
           Top = 1
-          Width = 766
-          Height = 260
+          Width = 1006
+          Height = 340
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           ActivePage = VC_Page
           Align = alClient
           TabOrder = 1
           object VC_Page: TTabSheet
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Caption = #1042#1077#1088#1090'. '#1094#1077#1085#1090#1088'. '#1085#1072#1075#1088'.'
             inline VC_Frame: TRZDTareFrame
               Left = 0
               Top = 0
-              Width = 758
-              Height = 232
+              Width = 998
+              Height = 308
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
               Align = alClient
-              Constraints.MinHeight = 232
-              Constraints.MinWidth = 698
+              Constraints.MinHeight = 303
+              Constraints.MinWidth = 913
               TabOrder = 0
-              ExplicitWidth = 758
+              ExplicitWidth = 998
+              ExplicitHeight = 308
+              inherited T1Label: TLabel
+                Left = 5
+                Top = 271
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 5
+                ExplicitTop = 271
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
+              inherited T2Label: TLabel
+                Left = 131
+                Top = 269
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 131
+                ExplicitTop = 269
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
+              inherited Label1: TLabel
+                Left = 463
+                Top = 272
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 463
+                ExplicitTop = 272
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
+              inherited Label2: TLabel
+                Left = 592
+                Top = 271
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 592
+                ExplicitTop = 271
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
+              inherited Label3: TLabel
+                Left = 44
+                Top = 238
+                Width = 141
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 44
+                ExplicitTop = 238
+                ExplicitWidth = 141
+                ExplicitHeight = 17
+              end
+              inherited Label4: TLabel
+                Left = 489
+                Top = 239
+                Width = 196
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 489
+                ExplicitTop = 239
+                ExplicitWidth = 196
+                ExplicitHeight = 17
+              end
               inherited HFCbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 71
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 71
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited Path: TComboBox
-                Width = 723
-                ExplicitWidth = 723
+                Top = 7
+                Width = 949
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 7
+                ExplicitWidth = 949
+                ExplicitHeight = 25
               end
               inherited S1Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 103
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 103
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited S2Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 135
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 135
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited S3Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 167
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 167
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited S4Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 200
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 200
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited VFCbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 38
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 38
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited PathBtn: TButton
-                Left = 724
-                ExplicitLeft = 724
+                Left = 950
+                Top = 9
+                Width = 31
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitLeft = 950
+                ExplicitTop = 9
+                ExplicitWidth = 31
+                ExplicitHeight = 25
+              end
+              inherited SelectIntervalCursorBtn: TButton
+                Left = 269
+                Top = 238
+                Width = 168
+                Height = 31
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 269
+                ExplicitTop = 238
+                ExplicitWidth = 168
+                ExplicitHeight = 31
+              end
+              inherited T1FE: TFloatEdit
+                Left = 44
+                Top = 268
+                Width = 89
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 44
+                ExplicitTop = 268
+                ExplicitWidth = 89
+                ExplicitHeight = 25
+              end
+              inherited T2FE: TFloatEdit
+                Left = 163
+                Top = 267
+                Width = 100
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 163
+                ExplicitTop = 267
+                ExplicitWidth = 100
+                ExplicitHeight = 25
+              end
+              inherited NullFE1: TFloatEdit
+                Left = 502
+                Top = 268
+                Width = 89
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 502
+                ExplicitTop = 268
+                ExplicitWidth = 89
+                ExplicitHeight = 25
+              end
+              inherited NullFE2: TFloatEdit
+                Left = 621
+                Top = 268
+                Width = 100
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 621
+                ExplicitTop = 268
+                ExplicitWidth = 100
+                ExplicitHeight = 25
+              end
+              inherited NullBtn: TButton
+                Left = 726
+                Top = 269
+                Width = 178
+                Height = 32
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 726
+                ExplicitTop = 269
+                ExplicitWidth = 178
+                ExplicitHeight = 32
+              end
+              inherited SelectIntervalGraphBtn: TButton
+                Left = 269
+                Top = 269
+                Width = 166
+                Height = 33
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 269
+                ExplicitTop = 269
+                ExplicitWidth = 166
+                ExplicitHeight = 33
               end
             end
           end
           object H_Page: TTabSheet
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Caption = #1043#1086#1088'. '#1085#1072#1075#1088'.'
             ImageIndex = 1
             inline H_Frame: TRZDTareFrame
               Left = 0
               Top = 0
-              Width = 758
-              Height = 232
+              Width = 998
+              Height = 308
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
               Align = alClient
-              Constraints.MinHeight = 232
-              Constraints.MinWidth = 698
+              Constraints.MinHeight = 303
+              Constraints.MinWidth = 913
               TabOrder = 0
-              ExplicitWidth = 758
+              ExplicitWidth = 998
+              ExplicitHeight = 308
+              inherited T1Label: TLabel
+                Left = 5
+                Top = 271
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 5
+                ExplicitTop = 271
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
+              inherited T2Label: TLabel
+                Left = 131
+                Top = 269
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 131
+                ExplicitTop = 269
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
+              inherited Label1: TLabel
+                Left = 463
+                Top = 272
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 463
+                ExplicitTop = 272
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
+              inherited Label2: TLabel
+                Left = 592
+                Top = 271
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 592
+                ExplicitTop = 271
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
+              inherited Label3: TLabel
+                Left = 44
+                Top = 238
+                Width = 141
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 44
+                ExplicitTop = 238
+                ExplicitWidth = 141
+                ExplicitHeight = 17
+              end
+              inherited Label4: TLabel
+                Left = 489
+                Top = 239
+                Width = 196
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 489
+                ExplicitTop = 239
+                ExplicitWidth = 196
+                ExplicitHeight = 17
+              end
               inherited HFCbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 71
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 71
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited Path: TComboBox
-                Width = 723
-                ExplicitWidth = 723
+                Top = 7
+                Width = 949
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 7
+                ExplicitWidth = 949
+                ExplicitHeight = 25
               end
               inherited S1Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 103
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 103
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited S2Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 135
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 135
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited S3Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 167
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 167
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited S4Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 200
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 200
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited VFCbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 38
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 38
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited PathBtn: TButton
-                Left = 724
-                ExplicitLeft = 724
+                Left = 950
+                Top = 9
+                Width = 31
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitLeft = 950
+                ExplicitTop = 9
+                ExplicitWidth = 31
+                ExplicitHeight = 25
+              end
+              inherited SelectIntervalCursorBtn: TButton
+                Left = 269
+                Top = 238
+                Width = 168
+                Height = 31
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 269
+                ExplicitTop = 238
+                ExplicitWidth = 168
+                ExplicitHeight = 31
+              end
+              inherited T1FE: TFloatEdit
+                Left = 44
+                Top = 268
+                Width = 89
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 44
+                ExplicitTop = 268
+                ExplicitWidth = 89
+                ExplicitHeight = 25
+              end
+              inherited T2FE: TFloatEdit
+                Left = 163
+                Top = 267
+                Width = 100
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 163
+                ExplicitTop = 267
+                ExplicitWidth = 100
+                ExplicitHeight = 25
+              end
+              inherited NullFE1: TFloatEdit
+                Left = 502
+                Top = 268
+                Width = 89
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 502
+                ExplicitTop = 268
+                ExplicitWidth = 89
+                ExplicitHeight = 25
+              end
+              inherited NullFE2: TFloatEdit
+                Left = 621
+                Top = 268
+                Width = 100
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 621
+                ExplicitTop = 268
+                ExplicitWidth = 100
+                ExplicitHeight = 25
+              end
+              inherited NullBtn: TButton
+                Left = 726
+                Top = 269
+                Width = 178
+                Height = 32
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 726
+                ExplicitTop = 269
+                ExplicitWidth = 178
+                ExplicitHeight = 32
+              end
+              inherited SelectIntervalGraphBtn: TButton
+                Left = 269
+                Top = 269
+                Width = 166
+                Height = 33
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 269
+                ExplicitTop = 269
+                ExplicitWidth = 166
+                ExplicitHeight = 33
               end
             end
           end
           object Hout_Page: TTabSheet
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Caption = #1043#1086#1088'. '#1089#1084#1077#1097'. '#1085#1072#1088#1091#1078#1091
             ImageIndex = 2
             inline Hout_Frame: TRZDTareFrame
               Left = 0
               Top = 0
-              Width = 758
-              Height = 232
+              Width = 998
+              Height = 308
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
               Align = alClient
-              Constraints.MinHeight = 232
-              Constraints.MinWidth = 698
+              Constraints.MinHeight = 303
+              Constraints.MinWidth = 913
               TabOrder = 0
-              ExplicitWidth = 758
+              ExplicitWidth = 998
+              ExplicitHeight = 308
+              inherited T1Label: TLabel
+                Left = 5
+                Top = 271
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 5
+                ExplicitTop = 271
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
+              inherited T2Label: TLabel
+                Left = 131
+                Top = 269
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 131
+                ExplicitTop = 269
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
+              inherited Label1: TLabel
+                Left = 463
+                Top = 272
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 463
+                ExplicitTop = 272
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
+              inherited Label2: TLabel
+                Left = 592
+                Top = 271
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 592
+                ExplicitTop = 271
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
+              inherited Label3: TLabel
+                Left = 44
+                Top = 238
+                Width = 141
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 44
+                ExplicitTop = 238
+                ExplicitWidth = 141
+                ExplicitHeight = 17
+              end
+              inherited Label4: TLabel
+                Left = 489
+                Top = 239
+                Width = 196
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 489
+                ExplicitTop = 239
+                ExplicitWidth = 196
+                ExplicitHeight = 17
+              end
               inherited HFCbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 71
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 71
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited Path: TComboBox
-                Width = 723
-                ExplicitWidth = 723
+                Top = 7
+                Width = 949
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 7
+                ExplicitWidth = 949
+                ExplicitHeight = 25
               end
               inherited S1Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 103
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 103
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited S2Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 135
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 135
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited S3Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 167
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 167
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited S4Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 200
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 200
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited VFCbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 38
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 38
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited PathBtn: TButton
-                Left = 724
-                ExplicitLeft = 724
+                Left = 950
+                Top = 9
+                Width = 31
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitLeft = 950
+                ExplicitTop = 9
+                ExplicitWidth = 31
+                ExplicitHeight = 25
+              end
+              inherited SelectIntervalCursorBtn: TButton
+                Left = 269
+                Top = 238
+                Width = 168
+                Height = 31
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 269
+                ExplicitTop = 238
+                ExplicitWidth = 168
+                ExplicitHeight = 31
+              end
+              inherited T1FE: TFloatEdit
+                Left = 44
+                Top = 268
+                Width = 89
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 44
+                ExplicitTop = 268
+                ExplicitWidth = 89
+                ExplicitHeight = 25
+              end
+              inherited T2FE: TFloatEdit
+                Left = 163
+                Top = 267
+                Width = 100
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 163
+                ExplicitTop = 267
+                ExplicitWidth = 100
+                ExplicitHeight = 25
+              end
+              inherited NullFE1: TFloatEdit
+                Left = 502
+                Top = 268
+                Width = 89
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 502
+                ExplicitTop = 268
+                ExplicitWidth = 89
+                ExplicitHeight = 25
+              end
+              inherited NullFE2: TFloatEdit
+                Left = 621
+                Top = 268
+                Width = 100
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 621
+                ExplicitTop = 268
+                ExplicitWidth = 100
+                ExplicitHeight = 25
+              end
+              inherited NullBtn: TButton
+                Left = 726
+                Top = 269
+                Width = 178
+                Height = 32
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 726
+                ExplicitTop = 269
+                ExplicitWidth = 178
+                ExplicitHeight = 32
+              end
+              inherited SelectIntervalGraphBtn: TButton
+                Left = 269
+                Top = 269
+                Width = 166
+                Height = 33
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 269
+                ExplicitTop = 269
+                ExplicitWidth = 166
+                ExplicitHeight = 33
               end
             end
           end
           object Hin_Page: TTabSheet
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Caption = #1043#1086#1088'. '#1089#1084#1077#1097'. '#1074#1085#1091#1090#1088#1100
             ImageIndex = 3
             inline Hin_Frame: TRZDTareFrame
               Left = 0
               Top = 0
-              Width = 758
-              Height = 232
+              Width = 998
+              Height = 308
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
               Align = alClient
-              Constraints.MinHeight = 232
-              Constraints.MinWidth = 698
+              Constraints.MinHeight = 303
+              Constraints.MinWidth = 913
               TabOrder = 0
-              ExplicitWidth = 758
+              ExplicitWidth = 998
+              ExplicitHeight = 308
+              inherited T1Label: TLabel
+                Left = 5
+                Top = 271
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 5
+                ExplicitTop = 271
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
+              inherited T2Label: TLabel
+                Left = 131
+                Top = 269
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 131
+                ExplicitTop = 269
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
+              inherited Label1: TLabel
+                Left = 463
+                Top = 272
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 463
+                ExplicitTop = 272
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
+              inherited Label2: TLabel
+                Left = 592
+                Top = 271
+                Width = 26
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 592
+                ExplicitTop = 271
+                ExplicitWidth = 26
+                ExplicitHeight = 17
+              end
               inherited Label3: TLabel
-                Top = 179
-                ExplicitTop = 179
+                Left = 44
+                Top = 234
+                Width = 141
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 44
+                ExplicitTop = 234
+                ExplicitWidth = 141
+                ExplicitHeight = 17
+              end
+              inherited Label4: TLabel
+                Left = 489
+                Top = 239
+                Width = 196
+                Height = 17
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 489
+                ExplicitTop = 239
+                ExplicitWidth = 196
+                ExplicitHeight = 17
               end
               inherited HFCbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 71
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 71
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited Path: TComboBox
-                Width = 723
-                ExplicitWidth = 723
+                Top = 7
+                Width = 949
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 7
+                ExplicitWidth = 949
+                ExplicitHeight = 25
               end
               inherited S1Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 103
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 103
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited S2Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 135
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 135
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited S3Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 167
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 167
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited S4Cbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 200
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 200
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited VFCbox: TComboBox
-                Width = 747
-                ExplicitWidth = 747
+                Top = 38
+                Width = 980
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitTop = 38
+                ExplicitWidth = 980
+                ExplicitHeight = 25
               end
               inherited PathBtn: TButton
-                Left = 724
-                ExplicitLeft = 724
+                Left = 950
+                Top = 9
+                Width = 31
+                Height = 25
+                Margins.Left = 3
+                Margins.Top = 3
+                Margins.Right = 3
+                Margins.Bottom = 3
+                ExplicitLeft = 950
+                ExplicitTop = 9
+                ExplicitWidth = 31
+                ExplicitHeight = 25
+              end
+              inherited SelectIntervalCursorBtn: TButton
+                Left = 269
+                Top = 238
+                Width = 168
+                Height = 31
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 269
+                ExplicitTop = 238
+                ExplicitWidth = 168
+                ExplicitHeight = 31
+              end
+              inherited T1FE: TFloatEdit
+                Left = 44
+                Top = 268
+                Width = 89
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 44
+                ExplicitTop = 268
+                ExplicitWidth = 89
+                ExplicitHeight = 25
+              end
+              inherited T2FE: TFloatEdit
+                Left = 163
+                Top = 267
+                Width = 100
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 163
+                ExplicitTop = 267
+                ExplicitWidth = 100
+                ExplicitHeight = 25
+              end
+              inherited NullFE1: TFloatEdit
+                Left = 502
+                Top = 268
+                Width = 89
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 502
+                ExplicitTop = 268
+                ExplicitWidth = 89
+                ExplicitHeight = 25
+              end
+              inherited NullFE2: TFloatEdit
+                Left = 621
+                Top = 268
+                Width = 100
+                Height = 25
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 621
+                ExplicitTop = 268
+                ExplicitWidth = 100
+                ExplicitHeight = 25
+              end
+              inherited NullBtn: TButton
+                Left = 726
+                Top = 269
+                Width = 178
+                Height = 32
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 726
+                ExplicitTop = 269
+                ExplicitWidth = 178
+                ExplicitHeight = 32
+              end
+              inherited SelectIntervalGraphBtn: TButton
+                Left = 269
+                Top = 269
+                Width = 166
+                Height = 33
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 269
+                ExplicitTop = 269
+                ExplicitWidth = 166
+                ExplicitHeight = 33
               end
             end
           end
         end
       end
       object Hout_D: TFloatEdit
-        Left = 767
-        Top = 10
-        Width = 82
-        Height = 21
+        Left = 1006
+        Top = 13
+        Width = 107
+        Height = 25
         Hint = #1055#1072#1088#1072#1084#1077#1090#1088' '#1076#1083#1103' '#1088#1072#1089#1095#1077#1090#1072' '#1084#1072#1090#1088#1080#1094#1099
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
         Anchors = [akTop, akRight]
         ParentShowHint = False
         ShowHint = True
@@ -1228,27 +2162,19 @@ object RZDFrm: TRZDFrm
         Text = '20'
       end
       object useSignalPrefix: TCheckBox
-        Left = 5
-        Top = 49
-        Width = 256
-        Height = 13
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 7
+        Top = 64
+        Width = 334
+        Height = 17
         Caption = #1048#1089#1087#1086#1083#1100#1079#1086#1074#1072#1090#1100' '#1087#1088#1077#1092#1080#1082#1089#1099' '#1076#1083#1103' '#1087#1086#1080#1089#1082#1072' '#1089#1080#1075#1085#1072#1083#1086#1074
         TabOrder = 4
         OnClick = useSignalPrefixClick
       end
       object CutSE: TSpinEdit
-        Left = 491
-        Top = 26
-        Width = 52
-        Height = 22
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 645
+        Top = 34
+        Width = 68
+        Height = 27
         Anchors = [akTop, akRight]
         MaxValue = 0
         MinValue = 0
@@ -1257,14 +2183,10 @@ object RZDFrm: TRZDFrm
         OnChange = CutSEChange
       end
       object RegionSE: TSpinEdit
-        Left = 491
+        Left = 645
         Top = 1
-        Width = 52
-        Height = 22
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Width = 68
+        Height = 27
         Anchors = [akTop, akRight]
         MaxValue = 0
         MinValue = 0
@@ -1273,14 +2195,10 @@ object RZDFrm: TRZDFrm
         OnChange = RegionSEChange
       end
       object ChangeTestByCutCB: TCheckBox
-        Left = 546
-        Top = 26
-        Width = 88
-        Height = 13
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 717
+        Top = 34
+        Width = 115
+        Height = 17
         Anchors = [akTop, akRight]
         Caption = #1052#1077#1085#1103#1090#1100' '#1079#1072#1084#1077#1088
         Checked = True
@@ -1289,15 +2207,11 @@ object RZDFrm: TRZDFrm
         OnClick = useSignalPrefixClick
       end
       object SelectIntervalCursorBtn: TButton
-        Left = 410
-        Top = 52
-        Width = 111
-        Height = 19
+        Left = 536
+        Top = 68
+        Width = 145
+        Height = 25
         Hint = #1042#1099#1073#1088#1072#1090#1100' '#1080#1085#1090#1077#1088#1074#1072#1083#1099' '#1086#1073#1088#1072#1073#1086#1090#1082#1080' '#1076#1083#1103' '#1074#1089#1077#1093' '#1079#1072#1084#1077#1088#1086#1074' '#1087#1086' '#1082#1091#1088#1089#1086#1088#1091
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
         Anchors = [akLeft, akBottom]
         Caption = #1042#1099#1073#1088#1072#1090#1100' '#1087#1086' '#1082#1091#1088#1089#1086#1088#1091
         ParentShowHint = False
@@ -1306,17 +2220,13 @@ object RZDFrm: TRZDFrm
         OnClick = SelectIntervalCursorBtnClick
       end
       object SelectIntervalGraphBtn: TButton
-        Left = 410
-        Top = 75
-        Width = 111
-        Height = 19
+        Left = 536
+        Top = 98
+        Width = 145
+        Height = 25
         Hint = 
           #1042#1099#1073#1088#1072#1090#1100' '#1080#1085#1090#1077#1088#1074#1072#1083#1099' '#1086#1073#1088#1072#1073#1086#1090#1082#1080' '#1076#1083#1103' '#1074#1089#1077#1093' '#1079#1072#1084#1077#1088#1086#1074' '#1087#1086' '#1076#1080#1072#1087#1072#1079#1086#1085#1091' '#1075#1088#1072#1092#1080#1082 +
           #1072
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
         Anchors = [akLeft, akBottom]
         Caption = #1044#1080#1072#1087#1072#1079#1086#1085' '#1075#1088#1072#1092#1080#1082#1072
         ParentShowHint = False
@@ -1325,15 +2235,11 @@ object RZDFrm: TRZDFrm
         OnClick = SelectIntervalGraphBtnClick
       end
       object FmaxEdit: TFloatEdit
-        Left = 715
-        Top = 54
-        Width = 41
-        Height = 21
+        Left = 938
+        Top = 71
+        Width = 54
+        Height = 25
         Hint = #1044#1086#1087#1091#1089#1090#1080#1084#1086#1077' '#1086#1090#1082#1083#1086#1085#1077#1085#1080#1077' '#1074' '#1076#1086#1083#1103#1093
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
         Anchors = [akTop, akRight]
         ParentShowHint = False
         ShowHint = True
@@ -1341,11 +2247,15 @@ object RZDFrm: TRZDFrm
         Text = '0,1'
       end
       object NullBtn: TButton
-        Left = 268
-        Top = 75
-        Width = 136
-        Height = 19
+        Left = 350
+        Top = 98
+        Width = 178
+        Height = 25
         Hint = #1042#1099#1073#1088#1072#1090#1100' '#1080#1085#1090#1077#1088#1074#1072#1083' '#1076#1083#1103' '#1074#1099#1095#1080#1089#1083#1077#1085#1080#1103' '#1089#1084#1077#1097#1077#1085#1080#1103' '#1085#1091#1083#1103
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Anchors = [akLeft, akBottom]
         Caption = #1056#1072#1089#1095#1077#1090' '#1085#1091#1083#1103
         ParentShowHint = False
@@ -1354,29 +2264,21 @@ object RZDFrm: TRZDFrm
         OnClick = NullBtnClick
       end
       object NullCb: TCheckBox
-        Left = 271
-        Top = 51
-        Width = 134
-        Height = 13
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 354
+        Top = 67
+        Width = 176
+        Height = 17
         Caption = #1041#1072#1083#1072#1085#1089#1080#1088#1086#1074#1072#1090#1100' '#1085#1086#1083#1100
         TabOrder = 12
       end
       object GtmaxEdit: TFloatEdit
-        Left = 715
-        Top = 77
-        Width = 41
-        Height = 21
+        Left = 938
+        Top = 101
+        Width = 54
+        Height = 25
         Hint = 
           #1059#1095#1080#1090#1099#1074#1072#1077#1090#1089#1103' '#1087#1088#1080' '#1088#1072#1089#1095#1077#1090#1077' '#1087#1088#1080#1074#1077#1076#1077#1085#1085#1086#1081' '#1087#1086#1075#1088#1077#1096#1085#1086#1089#1090#1080' '#1082#1072#1083#1080#1073#1088#1086#1074#1082#1080',  '#1076#1083#1103 +
           ' '#1088#1072#1089#1095#1077#1090#1072' '#1076#1080#1072#1087#1072#1079#1086#1085#1072
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
         Anchors = [akTop, akRight]
         ParentShowHint = False
         ShowHint = True
@@ -1384,15 +2286,11 @@ object RZDFrm: TRZDFrm
         Text = '0,1'
       end
       object PAlfaEdit: TFloatEdit
-        Left = 767
-        Top = 30
-        Width = 82
-        Height = 21
+        Left = 1006
+        Top = 39
+        Width = 107
+        Height = 25
         Hint = #1055#1072#1088#1072#1084#1077#1090#1088' '#1076#1083#1103' '#1088#1072#1089#1095#1077#1090#1072' '#1084#1072#1090#1088#1080#1094#1099
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
         Anchors = [akTop, akRight]
         ParentShowHint = False
         ShowHint = True
@@ -1400,18 +2298,14 @@ object RZDFrm: TRZDFrm
         Text = '0.994'
       end
       object FmaxAbsFE: TFloatEdit
-        Left = 793
-        Top = 54
-        Width = 53
-        Height = 21
+        Left = 1040
+        Top = 71
+        Width = 69
+        Height = 25
         Hint = 
           #1059#1095#1080#1090#1099#1074#1072#1077#1090#1089#1103' '#1087#1088#1080' '#1088#1072#1089#1095#1077#1090#1077' '#1087#1088#1080#1074#1077#1076#1077#1085#1085#1086#1081' '#1087#1086#1075#1088#1077#1096#1085#1086#1089#1090#1080' '#1082#1072#1083#1080#1073#1088#1086#1074#1082#1080',  '#1076#1083#1103 +
           ' '#1088#1072#1089#1095#1077#1090#1072' '#1076#1080#1072#1087#1072#1079#1086#1085#1072'. '#1044#1080#1072#1087#1072#1079#1086#1085' '#1088#1072#1074#1077#1085' '#1084#1072#1082#1089#1080#1084#1072#1083#1100#1085#1086#1081' '#1089#1080#1083#1077' '#1074' '#1079#1072#1077#1079#1076#1077' '#1080#1083 +
           #1080' '#1091#1082#1072#1079#1072#1085#1085#1086#1084#1091' '#1087#1072#1088#1072#1084#1077#1090#1088#1091
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
         Anchors = [akTop, akRight]
         ParentShowHint = False
         ShowHint = True
@@ -1419,18 +2313,14 @@ object RZDFrm: TRZDFrm
         Text = '10'
       end
       object GtmaxAbsFE: TFloatEdit
-        Left = 793
-        Top = 77
-        Width = 53
-        Height = 21
+        Left = 1040
+        Top = 101
+        Width = 69
+        Height = 25
         Hint = 
           #1059#1095#1080#1090#1099#1074#1072#1077#1090#1089#1103' '#1087#1088#1080' '#1088#1072#1089#1095#1077#1090#1077' '#1087#1088#1080#1074#1077#1076#1077#1085#1085#1086#1081' '#1087#1086#1075#1088#1077#1096#1085#1086#1089#1090#1080' '#1082#1072#1083#1080#1073#1088#1086#1074#1082#1080',  '#1076#1083#1103 +
           ' '#1088#1072#1089#1095#1077#1090#1072' '#1076#1080#1072#1087#1072#1079#1086#1085#1072'. '#1044#1080#1072#1087#1072#1079#1086#1085' '#1088#1072#1074#1077#1085' '#1084#1072#1082#1089#1080#1084#1072#1083#1100#1085#1086#1081' '#1089#1080#1083#1077' '#1074' '#1079#1072#1077#1079#1076#1077' '#1080#1083 +
           #1080' '#1091#1082#1072#1079#1072#1085#1085#1086#1084#1091' '#1087#1072#1088#1072#1084#1077#1090#1088#1091
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
         Anchors = [akTop, akRight]
         ParentShowHint = False
         ShowHint = True
@@ -1440,9 +2330,13 @@ object RZDFrm: TRZDFrm
     end
     object VTree1: TVTree
       Left = 1
-      Top = 47
-      Width = 246
-      Height = 360
+      Top = 61
+      Width = 322
+      Height = 472
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alLeft
       DragMode = dmAutomatic
       DrawSelectionMode = smBlendedRectangle
@@ -1467,210 +2361,142 @@ object RZDFrm: TRZDFrm
   end
   object MatrixPanel: TPanel
     Left = 0
-    Top = 414
-    Width = 1108
-    Height = 83
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Top = 541
+    Width = 1452
+    Height = 109
     Align = alTop
     TabOrder = 1
     DesignSize = (
-      1108
-      83)
+      1452
+      109)
     object MatrixGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 277
-      Height = 81
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Width = 363
+      Height = 107
       Align = alLeft
       Caption = #1052#1072#1090#1088#1080#1094#1072' '#1074#1083#1080#1103#1085#1080#1103' '#1056#1046#1044
       TabOrder = 0
       object G11: TFloatEdit
-        Left = 6
-        Top = 18
-        Width = 67
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 8
+        Top = 24
+        Width = 87
+        Height = 25
         TabOrder = 0
         Text = '0.0'
       end
       object G21: TFloatEdit
-        Left = 73
-        Top = 18
-        Width = 67
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 95
+        Top = 24
+        Width = 88
+        Height = 25
         TabOrder = 1
         Text = '0.0'
       end
       object G31: TFloatEdit
-        Left = 140
-        Top = 18
-        Width = 66
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 183
+        Top = 24
+        Width = 86
+        Height = 25
         TabOrder = 2
         Text = '0.0'
       end
       object G41: TFloatEdit
-        Left = 207
-        Top = 18
-        Width = 67
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 271
+        Top = 24
+        Width = 87
+        Height = 25
         TabOrder = 3
         Text = '0.0'
       end
       object G42: TFloatEdit
-        Left = 207
-        Top = 38
-        Width = 67
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 271
+        Top = 50
+        Width = 87
+        Height = 25
         TabOrder = 4
         Text = '0.0'
       end
       object G32: TFloatEdit
-        Left = 140
-        Top = 38
-        Width = 66
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 183
+        Top = 50
+        Width = 86
+        Height = 25
         TabOrder = 5
         Text = '0.0'
       end
       object G22: TFloatEdit
-        Left = 73
-        Top = 38
-        Width = 67
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 95
+        Top = 50
+        Width = 88
+        Height = 25
         TabOrder = 6
         Text = '0.0'
       end
       object G12: TFloatEdit
-        Left = 6
-        Top = 38
-        Width = 67
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 8
+        Top = 50
+        Width = 87
+        Height = 25
         TabOrder = 7
         Text = '0.0'
       end
       object G43: TFloatEdit
-        Left = 207
-        Top = 56
-        Width = 67
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 271
+        Top = 73
+        Width = 87
+        Height = 25
         TabOrder = 8
         Text = '0.0'
       end
       object G33: TFloatEdit
-        Left = 140
-        Top = 56
-        Width = 66
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 183
+        Top = 73
+        Width = 86
+        Height = 25
         TabOrder = 9
         Text = '0.0'
       end
       object G23: TFloatEdit
-        Left = 73
-        Top = 56
-        Width = 67
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 95
+        Top = 73
+        Width = 88
+        Height = 25
         TabOrder = 10
         Text = '0.0'
       end
       object G13: TFloatEdit
-        Left = 6
-        Top = 56
-        Width = 67
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 8
+        Top = 73
+        Width = 87
+        Height = 25
         TabOrder = 11
         Text = '0.0'
       end
     end
     object ExpMatrixBtn: TButton
-      Left = 283
-      Top = 39
-      Width = 86
-      Height = 19
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 370
+      Top = 51
+      Width = 113
+      Height = 25
       Caption = #1069#1082#1089#1087#1086#1088#1090
       TabOrder = 1
       OnClick = ExpMatrixBtnClick
     end
     object ImpMatrixBtn: TButton
-      Left = 283
-      Top = 58
-      Width = 86
-      Height = 18
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 370
+      Top = 76
+      Width = 113
+      Height = 23
       Caption = #1048#1084#1087#1086#1088#1090
       TabOrder = 2
       OnClick = ImpMatrixBtnClick
     end
     object ExportMatrixPath: TEdit
-      Left = 373
-      Top = 37
-      Width = 438
-      Height = 21
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 488
+      Top = 48
+      Width = 576
+      Height = 25
       Anchors = [akLeft, akTop, akRight]
       ParentShowHint = False
       ShowHint = True
@@ -1679,14 +2505,10 @@ object RZDFrm: TRZDFrm
       OnChange = ExportMatrixPathChange
     end
     object ImportMatrixPath: TComboBox
-      Left = 373
-      Top = 58
-      Width = 438
-      Height = 21
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 488
+      Top = 76
+      Width = 576
+      Height = 25
       Anchors = [akLeft, akTop, akRight]
       ParentShowHint = False
       ShowHint = True
@@ -1695,79 +2517,55 @@ object RZDFrm: TRZDFrm
       OnChange = ImportMatrixPathChange
     end
     object ExportMatrixBtn: TButton
-      Left = 816
-      Top = 36
-      Width = 43
-      Height = 19
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 1070
+      Top = 47
+      Width = 56
+      Height = 25
       Anchors = [akTop, akRight]
       Caption = '...'
       TabOrder = 5
       OnClick = ExportMatrixBtnClick
     end
     object ImportMatrixBtn: TButton
-      Left = 816
-      Top = 57
-      Width = 43
-      Height = 19
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 1070
+      Top = 75
+      Width = 56
+      Height = 24
       Anchors = [akTop, akRight]
       Caption = '...'
       TabOrder = 6
     end
     object UseMFmatrix: TCheckBox
-      Left = 373
-      Top = 20
-      Width = 193
-      Height = 13
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 488
+      Top = 26
+      Width = 252
+      Height = 17
       Caption = #1080#1089#1087#1086#1083#1100#1079#1086#1074#1072#1090#1100' '#1084#1072#1090#1088#1080#1094#1091' '#1079#1072#1084#1077#1088#1072
       TabOrder = 7
       OnClick = UseMFmatrixClick
     end
     object LinkEvalWP: TCheckBox
-      Left = 283
-      Top = 2
-      Width = 330
-      Height = 13
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 370
+      Top = 3
+      Width = 432
+      Height = 17
       Caption = #1051#1080#1085#1082#1086#1074#1072#1090#1100' '#1087#1088#1086#1084#1077#1078#1091#1090#1086#1095#1085#1099#1077' '#1074#1099#1095#1080#1089#1083#1077#1085#1080#1103' '#1074' '#1076#1077#1088#1077#1074#1086' '#1089#1080#1075#1085#1072#1083#1086#1074
       Checked = True
       State = cbChecked
       TabOrder = 8
     end
     object LoadBtnPanel: TPanel
-      Left = 283
-      Top = 15
-      Width = 86
-      Height = 23
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 370
+      Top = 20
+      Width = 113
+      Height = 30
       TabOrder = 9
       object CreateMatrixBtn: TButton
-        Left = 7
-        Top = 2
-        Width = 68
-        Height = 19
+        Left = 9
+        Top = 3
+        Width = 89
+        Height = 24
         Hint = #1047#1072#1075#1088#1091#1079#1080#1090#1100' '#1076#1072#1085#1085#1099#1077' '#1080' '#1088#1072#1089#1095#1080#1090#1072#1090#1100' '#1084#1072#1090#1088#1080#1094#1091
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
         Caption = #1047#1072#1075#1088#1091#1079#1080#1090#1100
         ParentShowHint = False
         ShowHint = True
@@ -1776,14 +2574,10 @@ object RZDFrm: TRZDFrm
       end
     end
     object DelMatrixOnExpCB: TCheckBox
-      Left = 884
-      Top = 38
-      Width = 101
-      Height = 13
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 1159
+      Top = 50
+      Width = 132
+      Height = 17
       Anchors = [akTop, akRight]
       Caption = #1047#1072#1084#1077#1089#1090#1080#1090#1100' '#1092#1072#1081#1083
       TabOrder = 10
@@ -1792,190 +2586,149 @@ object RZDFrm: TRZDFrm
   end
   object ApplyGB: TGroupBox
     Left = 0
-    Top = 772
-    Width = 1108
-    Height = 36
+    Top = 1010
+    Width = 1452
+    Height = 47
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alBottom
     TabOrder = 2
   end
   object ScrollBox1: TScrollBox
     Left = 0
-    Top = 497
-    Width = 1108
-    Height = 275
-    VertScrollBar.Range = 350
+    Top = 650
+    Width = 1452
+    Height = 360
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
+    VertScrollBar.Position = 102
+    VertScrollBar.Range = 458
     Align = alClient
     AutoScroll = False
-    Constraints.MinHeight = 259
+    Constraints.MinHeight = 339
     TabOrder = 3
     object EvalGB: TGroupBox
       Left = 0
-      Top = 0
-      Width = 1087
-      Height = 350
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = -102
+      Width = 1427
+      Height = 458
       Align = alClient
       Caption = #1055#1072#1088#1072#1084#1077#1090#1088#1099' '#1088#1072#1089#1095#1077#1090#1072
       TabOrder = 0
       object Splitter3: TSplitter
-        Left = 573
-        Top = 15
-        Width = 5
-        Height = 333
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 755
+        Top = 19
+        Width = 7
+        Height = 437
         Align = alRight
-        ExplicitLeft = 591
-        ExplicitTop = 11
-        ExplicitHeight = 259
+        ExplicitLeft = 744
+        ExplicitTop = 20
+        ExplicitHeight = 435
       end
       object JournalPageControl: TPageControl
-        Left = 578
-        Top = 15
-        Width = 507
-        Height = 333
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 762
+        Top = 19
+        Width = 663
+        Height = 437
         ActivePage = JournalTS
         Align = alRight
         TabOrder = 0
         object JournalTS: TTabSheet
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
           Caption = #1046#1091#1088#1085#1072#1083
           object JournalLB: TListBox
             Left = 0
             Top = 0
-            Width = 499
-            Height = 305
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Width = 655
+            Height = 405
             Align = alClient
-            ItemHeight = 13
+            ItemHeight = 17
             TabOrder = 0
           end
         end
         object MatrixTS: TTabSheet
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
           Caption = #1052#1072#1090#1088#1080#1094#1099
           ImageIndex = 1
           object Splitter4: TSplitter
-            Left = 350
+            Left = 460
             Top = 0
             Width = 1
-            Height = 305
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Height = 405
             Align = alRight
+            ExplicitLeft = 458
+            ExplicitHeight = 399
           end
           object Panel1: TPanel
-            Left = 351
+            Left = 461
             Top = 0
-            Width = 148
-            Height = 305
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Width = 194
+            Height = 405
             Align = alRight
             TabOrder = 0
             DesignSize = (
-              148
-              305)
+              194
+              405)
             object RegLabel: TLabel
-              Left = 103
-              Top = 9
-              Width = 42
-              Height = 13
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 135
+              Top = 12
+              Width = 53
+              Height = 17
               Anchors = [akTop, akRight]
               Caption = #1059#1095#1072#1089#1090#1086#1082
             end
             object CutLabel: TLabel
-              Left = 103
-              Top = 31
-              Width = 43
-              Height = 13
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 135
+              Top = 41
+              Width = 54
+              Height = 17
               Anchors = [akTop, akRight]
               Caption = #1057#1077#1095#1077#1085#1080#1077
             end
             object Mat_S1label: TLabel
               Left = 1
-              Top = 75
-              Width = 10
-              Height = 13
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Top = 98
+              Width = 13
+              Height = 17
               Anchors = [akTop, akRight]
               Caption = '1:'
             end
             object mat_S2label: TLabel
-              Left = 67
-              Top = 75
-              Width = 10
-              Height = 13
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 88
+              Top = 98
+              Width = 13
+              Height = 17
               Anchors = [akTop, akRight]
               Caption = '2:'
             end
             object mat_s4label: TLabel
-              Left = 67
-              Top = 98
-              Width = 10
-              Height = 13
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 88
+              Top = 128
+              Width = 13
+              Height = 17
               Anchors = [akTop, akRight]
               Caption = '4:'
             end
             object mat_s3Label: TLabel
               Left = 1
-              Top = 98
-              Width = 10
-              Height = 13
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Top = 128
+              Width = 13
+              Height = 17
               Anchors = [akTop, akRight]
               Caption = '3:'
             end
             object DelMatrixBtn: TSpeedButton
-              Left = 13
-              Top = 138
-              Width = 37
-              Height = 36
+              Left = 17
+              Top = 180
+              Width = 48
+              Height = 48
               Hint = #1059#1076#1072#1083#1080#1090#1100' '#1084#1072#1090#1088#1080#1094#1091
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
               BiDiMode = bdLeftToRight
               Glyph.Data = {
                 C2070000424DC207000000000000C20300002800000020000000200000000100
@@ -2047,14 +2800,10 @@ object RZDFrm: TRZDFrm
               OnClick = DelMatrixBtnClick
             end
             object Matrix_CutSE: TSpinEdit
-              Left = 12
-              Top = 29
-              Width = 90
-              Height = 22
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 16
+              Top = 38
+              Width = 117
+              Height = 27
               Anchors = [akTop, akRight]
               MaxValue = 0
               MinValue = 0
@@ -2063,27 +2812,19 @@ object RZDFrm: TRZDFrm
               OnChange = CutSEChange
             end
             object mat_UseNamesCB: TCheckBox
-              Left = 12
-              Top = 54
-              Width = 87
-              Height = 13
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 16
+              Top = 71
+              Width = 113
+              Height = 17
               Anchors = [akTop, akRight]
               Caption = #1048#1089#1087'. '#1080#1084#1077#1085#1072
               TabOrder = 1
             end
             object MatrixRegSE: TEdit
-              Left = 12
-              Top = 8
-              Width = 90
-              Height = 21
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 16
+              Top = 10
+              Width = 117
+              Height = 25
               Anchors = [akTop, akRight]
               ParentShowHint = False
               ShowHint = True
@@ -2091,62 +2832,50 @@ object RZDFrm: TRZDFrm
               OnChange = ExportMatrixPathChange
             end
             object Mat_S1CB: TComboBox
-              Left = 12
-              Top = 72
-              Width = 53
-              Height = 21
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 16
+              Top = 94
+              Width = 69
+              Height = 25
               Anchors = [akTop, akRight]
               TabOrder = 3
               OnChange = sectionCBChange
             end
             object Mat_S2CB: TComboBox
-              Left = 79
-              Top = 72
-              Width = 53
-              Height = 21
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 103
+              Top = 94
+              Width = 70
+              Height = 25
               Anchors = [akTop, akRight]
               TabOrder = 4
               OnChange = sectionCBChange
             end
             object Mat_S3CB: TComboBox
-              Left = 11
-              Top = 96
-              Width = 53
-              Height = 21
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 14
+              Top = 126
+              Width = 70
+              Height = 25
               Anchors = [akTop, akRight]
               TabOrder = 5
               OnChange = sectionCBChange
             end
             object Mat_S4CB: TComboBox
-              Left = 79
-              Top = 96
-              Width = 53
-              Height = 21
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 103
+              Top = 126
+              Width = 70
+              Height = 25
               Anchors = [akTop, akRight]
               TabOrder = 6
               OnChange = sectionCBChange
             end
             object ApplyBtn: TButton
-              Left = 56
-              Top = 142
-              Width = 72
-              Height = 25
+              Left = 73
+              Top = 186
+              Width = 94
+              Height = 32
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
               Anchors = [akTop, akRight]
               Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
               ModalResult = 1
@@ -2157,45 +2886,35 @@ object RZDFrm: TRZDFrm
           object MatrixLV: TBtnListView
             Left = 0
             Top = 0
-            Width = 350
-            Height = 305
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Width = 460
+            Height = 405
             Align = alClient
             Checkboxes = True
             Columns = <
               item
                 Caption = #1052#1072#1090#1088#1080#1094#1072
-                Width = 38
               end
               item
                 Caption = #1056#1077#1075'.'
-                Width = 38
               end
               item
                 Caption = #1057#1077#1095'.'
-                Width = 38
               end
               item
                 Caption = 'S1'
-                Width = 38
               end
               item
                 Caption = 'S2'
-                Width = 38
               end
               item
                 Caption = 'S3'
-                Width = 38
               end
               item
                 Caption = 'S4'
-                Width = 38
               end
               item
                 Caption = 'Poly'
+                Width = 65
               end>
             MultiSelect = True
             ReadOnly = True
@@ -2212,35 +2931,34 @@ object RZDFrm: TRZDFrm
           end
         end
         object TabSheet1: TTabSheet
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1055#1086#1089#1090#1088#1086#1077#1085#1080#1077' '#1075#1080#1089#1090#1086#1075#1088#1072#1084#1084
           ImageIndex = 2
           object Splitter6: TSplitter
-            Left = 302
+            Left = 397
             Top = 0
-            Width = 2
-            Height = 305
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Height = 405
             Align = alRight
+            ExplicitLeft = 395
+            ExplicitHeight = 399
           end
           object GistLV: TBtnListView
             Left = 0
             Top = 0
-            Width = 302
-            Height = 305
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Width = 397
+            Height = 405
             Align = alClient
             Columns = <
               item
                 Caption = #1055#1077#1088#1074#1099#1081' '#1080#1084#1087#1091#1083#1100#1089
+                Width = 65
               end
               item
                 Caption = #1055#1088#1086#1087#1091#1089#1082
+                Width = 65
               end>
             MultiSelect = True
             ReadOnly = True
@@ -2256,40 +2974,40 @@ object RZDFrm: TRZDFrm
             Editable = False
           end
           object Panel2: TPanel
-            Left = 304
+            Left = 400
             Top = 0
-            Width = 195
-            Height = 305
+            Width = 255
+            Height = 405
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Align = alRight
             TabOrder = 1
             object GistStartLabel: TLabel
-              Left = 13
-              Top = 8
-              Width = 31
-              Height = 13
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 17
+              Top = 10
+              Width = 40
+              Height = 17
               Caption = #1057#1090#1072#1088#1090
             end
             object GistShiftLabel: TLabel
-              Left = 13
-              Top = 50
-              Width = 42
-              Height = 13
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 17
+              Top = 65
+              Width = 55
+              Height = 17
               Caption = #1055#1088#1086#1087#1091#1089#1082
             end
             object AddGist: TSpeedButton
-              Left = 56
-              Top = 178
-              Width = 41
-              Height = 36
+              Left = 73
+              Top = 233
+              Width = 54
+              Height = 47
               Hint = #1044#1086#1073#1072#1074#1080#1090#1100' '#1075#1080#1089#1090#1086#1075#1088#1072#1084#1084#1091
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
               BiDiMode = bdLeftToRight
               GroupIndex = 1
               Glyph.Data = {
@@ -2363,11 +3081,15 @@ object RZDFrm: TRZDFrm
               OnClick = AddGistClick
             end
             object DelGist: TSpeedButton
-              Left = 13
-              Top = 178
-              Width = 37
-              Height = 36
+              Left = 17
+              Top = 233
+              Width = 48
+              Height = 47
               Hint = #1059#1076#1072#1083#1080#1090#1100' '#1075#1080#1089#1090#1086#1075#1088#1072#1084#1084#1091
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
               BiDiMode = bdLeftToRight
               Glyph.Data = {
                 C2070000424DC207000000000000C20300002800000020000000200000000100
@@ -2439,36 +3161,24 @@ object RZDFrm: TRZDFrm
               OnClick = DelGistClick
             end
             object Label2: TLabel
-              Left = 108
-              Top = 10
-              Width = 40
-              Height = 13
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 141
+              Top = 13
+              Width = 51
+              Height = 17
               Caption = #1058#1088#1080#1075#1075#1077#1088
             end
             object Label3: TLabel
-              Left = 108
-              Top = 54
-              Width = 22
-              Height = 13
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 141
+              Top = 71
+              Width = 29
+              Height = 17
               Caption = #1064#1091#1084
             end
             object GistStart: TSpinEdit
-              Left = 14
-              Top = 27
-              Width = 77
-              Height = 22
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 18
+              Top = 35
+              Width = 101
+              Height = 27
               MaxValue = 0
               MinValue = 0
               TabOrder = 0
@@ -2476,14 +3186,10 @@ object RZDFrm: TRZDFrm
               OnChange = RegionSEChange
             end
             object GistShiftSE: TSpinEdit
-              Left = 15
-              Top = 71
-              Width = 76
-              Height = 22
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 20
+              Top = 93
+              Width = 99
+              Height = 27
               MaxValue = 0
               MinValue = 0
               TabOrder = 1
@@ -2491,61 +3197,49 @@ object RZDFrm: TRZDFrm
               OnChange = CutSEChange
             end
             object GistDxFE: TFloatEdit
-              Left = 15
-              Top = 114
-              Width = 74
-              Height = 21
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 20
+              Top = 149
+              Width = 96
+              Height = 25
               TabOrder = 2
               Text = '0.2'
             end
             object GistTrigFE: TFloatEdit
-              Left = 108
-              Top = 27
-              Width = 74
-              Height = 21
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 141
+              Top = 35
+              Width = 97
+              Height = 25
               TabOrder = 3
               Text = '0.5'
             end
             object GistNoiseFE: TFloatEdit
-              Left = 108
-              Top = 71
-              Width = 74
-              Height = 21
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
+              Left = 141
+              Top = 93
+              Width = 97
+              Height = 25
               TabOrder = 4
               Text = '0.1'
             end
             object GistProcCB: TCheckBox
-              Left = 108
-              Top = 114
-              Width = 97
-              Height = 17
+              Left = 141
+              Top = 149
+              Width = 127
+              Height = 22
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
               Caption = #1044#1086#1083#1080
               Checked = True
               State = cbChecked
               TabOrder = 5
             end
             object dXCB: TCheckBox
-              Left = 15
-              Top = 97
-              Width = 138
-              Height = 13
+              Left = 20
+              Top = 127
+              Width = 180
+              Height = 17
               Hint = 'dX '#1080#1083#1080' N ('#1095#1080#1089#1083#1086' '#1090#1086#1095#1077#1082' '#1088#1072#1079#1073#1080#1077#1085#1080#1103' '#1096#1082#1072#1083#1099')'
-              Margins.Left = 2
-              Margins.Top = 2
-              Margins.Right = 2
-              Margins.Bottom = 2
               Caption = 'dX'
               Checked = True
               ParentShowHint = False
@@ -2555,10 +3249,14 @@ object RZDFrm: TRZDFrm
               OnClick = dXCBClick
             end
             object GistNIE: TIntEdit
-              Left = 15
-              Top = 114
-              Width = 74
-              Height = 21
+              Left = 20
+              Top = 149
+              Width = 96
+              Height = 25
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
               TabOrder = 7
               Text = '100'
             end
@@ -2567,42 +3265,42 @@ object RZDFrm: TRZDFrm
       end
       object Panel3: TPanel
         Left = 2
-        Top = 15
-        Width = 571
-        Height = 333
+        Top = 19
+        Width = 753
+        Height = 437
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alClient
         TabOrder = 1
         DesignSize = (
-          571
-          333)
+          753
+          437)
         object TestLabel: TLabel
-          Left = 5
-          Top = 50
-          Width = 30
-          Height = 13
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 7
+          Top = 65
+          Width = 35
+          Height = 17
           Caption = #1047#1072#1077#1079#1076
         end
         object PolyLabel: TLabel
-          Left = 5
-          Top = 76
-          Width = 43
-          Height = 13
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 7
+          Top = 99
+          Width = 58
+          Height = 17
           Caption = #1055#1086#1083#1080#1085#1086#1084
         end
         object Hin_EvalBtn: TSpeedButton
-          Left = 375
-          Top = 117
-          Width = 39
-          Height = 38
+          Left = 490
+          Top = 153
+          Width = 51
+          Height = 50
           Hint = #1056#1072#1089#1095#1080#1090#1072#1090#1100' '#1074#1086#1079#1076#1077#1081#1089#1090#1074#1080#1077' '#1085#1072' '#1088#1077#1083#1100#1089
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           BiDiMode = bdRightToLeft
           Flat = True
           Glyph.Data = {
@@ -2710,81 +3408,69 @@ object RZDFrm: TRZDFrm
           OnClick = Hin_EvalBtnClick
         end
         object Label1: TLabel
-          Left = 317
-          Top = 74
-          Width = 63
-          Height = 13
+          Left = 415
+          Top = 97
+          Width = 82
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1063#1080#1089#1083#1086' '#1090#1086#1095#1077#1082
         end
         object TestsFolderLabel: TLabel
-          Left = 7
-          Top = 18
-          Width = 42
-          Height = 13
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 9
+          Top = 24
+          Width = 52
+          Height = 17
           Caption = #1050#1072#1090#1072#1083#1086#1075
         end
         object TestPath: TComboBox
-          Left = 84
-          Top = 48
-          Width = 439
-          Height = 21
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 110
+          Top = 63
+          Width = 577
+          Height = 25
           Anchors = [akLeft, akTop, akRight]
           TabOrder = 0
           OnChange = TestPathChange
         end
         object PolySE: TSpinEdit
-          Left = 84
-          Top = 72
-          Width = 83
-          Height = 22
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 110
+          Top = 94
+          Width = 108
+          Height = 27
           MaxValue = 1000
           MinValue = 0
           TabOrder = 1
           Value = 1
         end
         object TestPathBtn: TButton
-          Left = 524
-          Top = 47
-          Width = 44
-          Height = 19
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 688
+          Top = 61
+          Width = 58
+          Height = 25
           Anchors = [akTop, akRight]
           Caption = '...'
           TabOrder = 2
           OnClick = TestPathBtnClick
         end
         object PolyCount: TIntEdit
-          Left = 180
-          Top = 72
-          Width = 121
-          Height = 21
+          Left = 235
+          Top = 94
+          Width = 159
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           TabOrder = 3
           Text = '100'
         end
         object TestsFolderE: TEdit
-          Left = 84
-          Top = 16
-          Width = 439
-          Height = 21
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 110
+          Top = 21
+          Width = 577
+          Height = 25
           Anchors = [akLeft, akTop, akRight]
           ParentShowHint = False
           ShowHint = True
@@ -2793,15 +3479,11 @@ object RZDFrm: TRZDFrm
           OnChange = TestsFolderEChange
         end
         object ReportCB: TCheckBox
-          Left = 421
-          Top = 76
-          Width = 75
-          Height = 13
+          Left = 551
+          Top = 99
+          Width = 98
+          Height = 17
           Hint = #1057#1086#1079#1076#1072#1090#1100' '#1086#1090#1095#1077#1090' ('#1074' '#1082#1072#1090#1072#1083#1086#1075#1077' '#1089' '#1080#1089#1087#1099#1090#1072#1085#1080#1077#1084')'
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
           Caption = #1054#1090#1095#1077#1090
           ParentShowHint = False
           ShowHint = True
@@ -2809,29 +3491,21 @@ object RZDFrm: TRZDFrm
           OnClick = ReportCBClick
         end
         object OpenReportCB: TCheckBox
-          Left = 421
-          Top = 89
-          Width = 99
-          Height = 13
+          Left = 551
+          Top = 116
+          Width = 129
+          Height = 17
           Hint = #1054#1090#1082#1088#1099#1090#1100' '#1086#1090#1095#1077#1090' '#1087#1086#1089#1083#1077' '#1089#1086#1079#1076#1072#1085#1080#1103
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
           Caption = #1054#1090#1082#1088#1099#1090#1100' '#1086#1090#1095#1077#1090
           ParentShowHint = False
           ShowHint = True
           TabOrder = 6
         end
         object Reptype: TRadioGroup
-          Left = 421
-          Top = 116
-          Width = 121
-          Height = 79
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 551
+          Top = 152
+          Width = 158
+          Height = 103
           Caption = #1058#1080#1087' '#1086#1090#1095#1077#1090#1072
           Items.Strings = (
             'Rtf '#1086#1090#1095#1077#1090
@@ -2841,15 +3515,11 @@ object RZDFrm: TRZDFrm
           TabOrder = 7
         end
         object ExtImagesCB: TCheckBox
-          Left = 421
-          Top = 104
-          Width = 124
-          Height = 13
+          Left = 551
+          Top = 136
+          Width = 162
+          Height = 17
           Hint = #1054#1090#1082#1088#1099#1090#1100' '#1086#1090#1095#1077#1090' '#1087#1086#1089#1083#1077' '#1089#1086#1079#1076#1072#1085#1080#1103
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
           Caption = #1050#1072#1088#1090#1080#1085#1082#1080' '#1086#1090#1076#1077#1083#1100#1085#1086
           ParentShowHint = False
           ShowHint = True
@@ -2857,95 +3527,123 @@ object RZDFrm: TRZDFrm
         end
       end
       object FltPanel: TPanel
-        Left = 5
-        Top = 126
-        Width = 370
-        Height = 83
+        Left = 7
+        Top = 165
+        Width = 483
+        Height = 108
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 2
         Visible = False
         object TrendPortionILabel: TLabel
-          Left = 2
-          Top = 23
-          Width = 61
-          Height = 13
+          Left = 3
+          Top = 30
+          Width = 77
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1058#1095#1082' '#1091#1089#1088#1077#1076#1085'.'
         end
         object TrendPortionFLabel: TLabel
-          Left = 2
-          Top = 58
-          Width = 61
-          Height = 13
+          Left = 3
+          Top = 76
+          Width = 77
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1055#1086#1088#1094#1080#1103', '#1089#1077#1082
         end
         object LPFOrderLabel: TLabel
-          Left = 177
-          Top = 24
-          Width = 95
-          Height = 13
+          Left = 231
+          Top = 31
+          Width = 120
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1055#1086#1088#1103#1076#1086#1082' '#1092#1080#1083#1100#1090#1088#1072':'
         end
         object LPFfreqLabel: TLabel
-          Left = 178
-          Top = 58
-          Width = 73
-          Height = 13
+          Left = 233
+          Top = 76
+          Width = 93
+          Height = 17
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = #1063#1072#1089#1090#1086#1090#1072' '#1089#1088#1077#1079#1072
         end
         object LPFCB: TCheckBox
-          Left = 177
+          Left = 231
           Top = 0
-          Width = 176
-          Height = 13
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Width = 231
+          Height = 17
           Caption = #1053#1077#1088#1077#1082#1091#1088#1089#1080#1074#1085#1099#1081' '#1092#1080#1083#1100#1090#1088' '#1060#1053#1063
           TabOrder = 0
         end
         object TrendPortionIE: TIntEdit
-          Left = 81
-          Top = 23
-          Width = 72
-          Height = 21
+          Left = 106
+          Top = 30
+          Width = 94
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           TabOrder = 1
           Text = '000'
           OnChange = TrendPortionIEChange
         end
         object TrendPortionFE: TFloatEdit
-          Left = 81
-          Top = 50
-          Width = 72
-          Height = 21
+          Left = 106
+          Top = 65
+          Width = 94
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           TabOrder = 2
           Text = '0.1'
           OnChange = TrendPortionFEChange
         end
         object TrendCB: TCheckBox
-          Left = 2
+          Left = 3
           Top = -1
-          Width = 116
-          Height = 14
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Width = 151
+          Height = 18
           Caption = #1059#1089#1088#1077#1076#1085#1103#1090#1100' '#1089#1080#1075#1085#1072#1083
           TabOrder = 3
         end
         object LPFOrder: TIntEdit
-          Left = 265
-          Top = 23
-          Width = 101
-          Height = 21
+          Left = 347
+          Top = 30
+          Width = 132
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           TabOrder = 4
           Text = '50'
         end
         object LPFfreq: TFloatEdit
-          Left = 265
-          Top = 50
-          Width = 101
-          Height = 21
+          Left = 347
+          Top = 65
+          Width = 132
+          Height = 25
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           TabOrder = 5
           Text = '30'
         end
@@ -2961,7 +3659,7 @@ object RZDFrm: TRZDFrm
     Left = 56
     Top = 208
     Bitmap = {
-      494C010122002500080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010122002500040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000009000000001002000000000000090
       000000000000000000000000000000000000004D00FF004D00FF004D00FF004D
       00FFFFFFFFFFFFFFFFFF004D00FF004D00FF004D00FF004D00FFFFFFFFFFFFFF
@@ -4162,7 +4860,7 @@ object RZDFrm: TRZDFrm
     Left = 136
     Top = 208
     Bitmap = {
-      494C010121002500080020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010121002500040020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000002001000001002000000000000040
       0200000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
