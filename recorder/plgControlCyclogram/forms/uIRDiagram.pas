@@ -524,7 +524,7 @@ begin
     gr := getGraph(i);
     sect:='GraphName_' + inttostr(i);
     saveTagToIni(a_pIni,gr.t1,str,sect+'_Tag');
-    saveTagToIni(a_pIni,gr.t1,str,sect+'_Taho');
+    saveTagToIni(a_pIni,gr.taho,str,sect+'_Taho');
     a_pIni.WriteString(str, sect+'_Name', gr.name);
     a_pIni.WriteBool(str, sect+'_DrawP', gr.DrawPoints);
   end;
@@ -1194,7 +1194,6 @@ end;
 procedure cIRPage.setCaption(s: string);
 begin
   inherited;
-
 end;
 
 procedure cIRPage.setEditPos(sender: tobject);
@@ -1307,18 +1306,12 @@ function Cmplx_mult_sopr_p2d(c1,c2:point2d):point2d;
 begin
   result.x := c1.x * c2.x + c1.y * c2.y;
   result.y := c1.y * c2.x - c1.x*c2.y;
-  //mag := sqrt(TComplex1Darray(res.p)[i].y * TComplex1Darray(res.p)[i].y + TComplex1Darray(res.p)[i].x * TComplex1Darray(res.p)[i].x);
-  //timer.Free;
-  //phase := arctan(TComplex1Darray(res.p)[maxind].y / TComplex1Darray(res.p)[maxind].x) * c_radtodeg;
 end;
 
 function Cmplx_mult_sopr_cmx(c1,c2:TComplex_d):point2d;
 begin
   result.x := c1.re * c2.re + c1.im * c2.im;
   result.y := c1.im * c2.re - c1.re*c2.im;
-  //mag := sqrt(TComplex1Darray(res.p)[i].y * TComplex1Darray(res.p)[i].y + TComplex1Darray(res.p)[i].x * TComplex1Darray(res.p)[i].x);
-  //timer.Free;
-  //phase := arctan(TComplex1Darray(res.p)[maxind].y / TComplex1Darray(res.p)[maxind].x) * c_radtodeg;
 end;
 
 

@@ -36,8 +36,6 @@
     Margins.Bottom = 4
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 785
-    ExplicitWidth = 1653
     DesignSize = (
       1027
       87)
@@ -54,7 +52,6 @@
       Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
       TabOrder = 0
       OnClick = OkBtnClick
-      ExplicitLeft = 1551
     end
   end
   object TabControl: TPageControl
@@ -71,17 +68,12 @@
     TabOrder = 1
     OnChange = TabControlChange
     OnEnter = TabControlEnter
-    ExplicitLeft = 343
-    ExplicitWidth = 803
-    ExplicitHeight = 785
     object TabSheet1: TTabSheet
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = #1043#1088#1072#1092#1080#1082#1080
-      ExplicitLeft = 8
-      ExplicitTop = 24
       DesignSize = (
         504
         781)
@@ -218,7 +210,6 @@
         Anchors = [akLeft, akTop, akRight]
         Caption = #1055#1086#1080#1089#1082' '#1075#1088#1072#1085#1080#1094' '#1086#1090#1086#1073#1088#1072#1078#1077#1085#1080#1103
         TabOrder = 6
-        ExplicitWidth = 769
         object StartTrigLabel: TLabel
           Left = 21
           Top = 60
@@ -541,8 +532,6 @@
       Margins.Bottom = 4
       Caption = #1054#1089#1080
       ImageIndex = 1
-      ExplicitWidth = 795
-      ExplicitHeight = 753
       object YAxisLabel: TLabel
         Left = 10
         Top = 10
@@ -682,10 +671,6 @@
       Margins.Bottom = 4
       Caption = #1051#1080#1085#1080#1080
       ImageIndex = 2
-      ExplicitLeft = 1
-      ExplicitTop = 24
-      ExplicitWidth = 464
-      ExplicitHeight = 591
       object LineNameLabel: TLabel
         Left = 33
         Top = 21
@@ -851,8 +836,6 @@
       Margins.Bottom = 4
       Caption = #1057#1090#1088#1072#1085#1080#1094#1099
       ImageIndex = 3
-      ExplicitWidth = 795
-      ExplicitHeight = 753
       object Label5: TLabel
         Left = 211
         Top = 95
@@ -966,7 +949,6 @@
     DrawColorBox = False
     ChangeTextColor = False
     Editable = False
-    ExplicitHeight = 623
   end
   object GraphTV: TVTree
     Left = 0
@@ -997,7 +979,6 @@
     OnDragAllowed = GraphTVDragAllowed
     OnDragOver = GraphTVDragOver
     OnDragDrop = GraphTVDragDrop
-    ExplicitHeight = 417
     Columns = <
       item
         Position = 0
@@ -1023,8 +1004,6 @@
     TabOrder = 4
     OnDrawItem = SelObjLBDrawItem
     OnMouseMove = SelObjLBMouseMove
-    ExplicitLeft = 648
-    ExplicitHeight = 623
   end
   object ImageList_32: TImageList
     Height = 32

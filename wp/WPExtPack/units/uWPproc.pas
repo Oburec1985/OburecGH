@@ -2495,6 +2495,9 @@ begin
   for i := 0 to GraphApi.GetPageCount - 1 do
   begin
     hpage := GraphApi.GetPage(i);
+    // такое бывает для 3д страниц
+    if hpage=0 then
+      continue;
     page := cWPPage.create;
     page.setMng(self);
     page.hpage := hpage;

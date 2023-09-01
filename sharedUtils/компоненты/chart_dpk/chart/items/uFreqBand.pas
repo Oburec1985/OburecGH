@@ -53,6 +53,7 @@ type
     procedure setdrawline(v:boolean);
     // вызывается с пмоощью механизма event-ов при обновлении страницы
     procedure doUpdatePageSize(sender:tobject);
+    procedure doUpdateTextLabels(sender:tobject);
     procedure DeleteEvents;Override;
     procedure CreateEvents;override;
     procedure setname(s:string);override;
@@ -203,16 +204,33 @@ end;
 procedure cFreqBand.drawdata;
 var
   page: cpage;
+  a:caxis;
+  x1x2:point2;
+  b:boolean;
 begin
   inherited;
   page := cpage(getpage);
   page.setDrawObjVP;
-  drawrect(boundrect, color);
-  if drawline then
+  {a:=page.activeAxis;
+  // границы полосы
+  x1x2:=page.realXToX1(p2(m_x1, m_x2));
+  b:=true;
+  if x1x2.y<a.min.x then
+    b:=false
+  else
   begin
-    glColor3fv(@m_LineColor);
-    //uSimpleObjects.DrawLine(p2(m_x,boundrect.BottomLeft.y), p2(m_x,boundrect.TopRight.y));
-    uSimpleObjects.DrawLine(p2(m_x,-1), p2(m_x,1));
+    if x1x2.x>a.max.x then
+      b:=false;
+  end;}
+  if true then
+  begin
+    drawrect(boundrect, color);
+    if drawline then
+    begin
+      glColor3fv(@m_LineColor);
+      //uSimpleObjects.DrawLine(p2(m_x,boundrect.BottomLeft.y), p2(m_x,boundrect.TopRight.y));
+      uSimpleObjects.DrawLine(p2(m_x,-1), p2(m_x,1));
+    end;
   end;
 end;
 
@@ -291,12 +309,6 @@ begin
     lp2.x:=lp2.x+1;
     lp2.y:=lp2.y+1;
   end;
-  //m_LineLabel.Position:=p2(m_x+lp2.x,m_LineLabel.Position.y+lp2.y);
-  //if pos('001_cLabel',m_LineLabel.name)>0 then
-  //begin
-  //  logMessage('useroffset: x: '+floattostr(lp2.x)+' y: '+floattostr(lp2.y));
-  //  logMessage('position: x: '+floattostr(m_x+lp2.x)+' y: '+floattostr(m_Linedefpos.y+lp2.y));
-  //end;
   m_LineLabel.Position:=p2(m_x+lp2.x,m_Linedefpos.y+lp2.y);
   m_Linedefpos.x:=m_x;
   //m_LineLabel.Position:=p2(m_x,m_LineLabel.Position.y);
@@ -337,10 +349,22 @@ begin
   boundrect.TopRight.y:=1;
 end;
 
+procedure cFreqBand.doUpdateTextLabels(sender: tobject);
+var
+  a:caxis;
+  p:cpage;
+begin
+  p := cpage(getpage);
+  a:=p.activeAxis;
+  if True then
+
+end;
+
 procedure cFreqBand.CreateEvents;
 begin
   //events.AddEvent('trendAddpoint', e_onAddpoint, doaddpoint);
   events.AddEvent(name+'_OnPageSizeFreqBand', e_onResize, doUpdatePageSize);
+  events.AddEvent(name+'_OnChangeAxisScale', e_OnChangeAxisScale, doUpdateTextLabels);
 end;
 
 procedure cFreqBand.DeleteEvents;

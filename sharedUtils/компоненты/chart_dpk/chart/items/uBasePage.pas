@@ -76,6 +76,8 @@ type
     function p2iTop2(p:tpoint; const view:array of double; localViewport:boolean):point2;overload;
     //скармливаются нормализованные координаты чарта
     function p2ToP2i(p:point2):tpoint;
+    // координаты мира в координаты -1..+1
+    function realXToX1(x1x2: point2): point2;
     // Установить вьюпорт отрисовки трендов
     procedure setDrawObjVP;
     procedure setCommonVP;
@@ -98,7 +100,7 @@ type
     identMatrix4d: array [0..15] of double = (1,0,0,0 ,0,1,0,0, 0,0,1,0, 0,0,0,1);
 
 implementation
-uses uChart, uCommonMath, uPageMng;
+uses uChart, uCommonMath, uPageMng, upage;
 
 procedure cBasePage.GetNormalViewport(var v:array of glint);
 begin
@@ -313,6 +315,18 @@ begin
   end;
   result.x:=x;
   result.y:=y;
+end;
+
+function cBasePage.realXToX1(x1x2: point2): point2;
+var
+  a:caxis;
+begin
+  a:=cpage(self).activeAxis;
+  if a<>nil then
+  begin
+    result.x:=-1+(x1x2.x-a.min.x)/a.getdx;
+    result.x:=-1+(x1x2.y-a.min.x)/a.getdx;
+  end;
 end;
 
 procedure cBasePage.SetView(min,max:point2);

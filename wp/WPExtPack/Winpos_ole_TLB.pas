@@ -12,7 +12,7 @@ unit Winpos_ole_TLB;
 // ************************************************************************ //
 
 // $Rev: 17244 $
-// File generated on 23.01.2015 20:27:21 from Type Library described below.
+// File generated on 23.06.2023 9:33:26 from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\Program Files (x86)\MERA\WinPOS\WinPos.tlb (1)
@@ -24,25 +24,16 @@ unit Winpos_ole_TLB;
 //   (1) v2.0 stdole, (C:\Windows\SysWOW64\stdole2.tlb)
 // Errors:
 //   Hint: Parameter 'type' of IWinPOS.SaveSignal changed to 'type_'
-//   Hint: Parameter 'Object' of IWinPOS.Link changed to 'Object_'
-//   Hint: Parameter 'type' of IWinPOS.CreateSignal changed to 'type_'
 //   Hint: Parameter 'type' of IWinPOS.LoadSignal changed to 'type_'
-//   Hint: Parameter 'Object' of IWinPOS.GetNode changed to 'Object_'
 //   Hint: Parameter 'Object' of IWinPOS.Unlink changed to 'Object_'
+//   Hint: Parameter 'type' of IWinPOS.CreateSignal changed to 'type_'
+//   Hint: Parameter 'Object' of IWinPOS.Link changed to 'Object_'
+//   Hint: Parameter 'Object' of IWinPOS.GetNode changed to 'Object_'
 //   Hint: Parameter 'begin' of IWPSignal.Clone changed to 'begin_'
 //   Hint: Symbol 'type' renamed to 'type_'
 //   Hint: Parameter 'Object' of IWPNode.Link changed to 'Object_'
+//   Hint: Parameter 'type' of IWPGraphs.CreatePage2 changed to 'type_'
 // ************************************************************************ //
-// *************************************************************************//
-// NOTE:                                                                      
-// Items guarded by $IFDEF_LIVE_SERVER_AT_DESIGN_TIME are used by properties  
-// which return objects that may need to be explicitly created via a function 
-// call prior to any access via the property. These items have been disabled  
-// in order to prevent accidental use from within the object inspector. You   
-// may enable them by defining LIVE_SERVER_AT_DESIGN_TIME or by selectively   
-// removing them from the $IFDEF blocks. However, such items must still be    
-// programmatically created via a method of the appropriate CoClass before    
-// they can be used.                                                          
 {$TYPEDADDRESS OFF} // Unit must be compiled without type-checked pointers. 
 {$WARN SYMBOL_PLATFORM OFF}
 {$WRITEABLECONST ON}
@@ -93,6 +84,91 @@ const
   CLASS_COleWPFileDialog: TGUID = '{967AD1B9-4561-4F5D-B3FC-120876EE6870}';
   DIID_IWPDlgChSignal: TGUID = '{B3948801-B7AD-11D7-84B0-00C0262B9C1C}';
   CLASS_WPDlgChSignal: TGUID = '{B3948803-B7AD-11D7-84B0-00C0262B9C1C}';
+  DIID_IWPUnits: TGUID = '{08EEC529-A39A-4A6D-B2C3-F753AFE2C647}';
+  CLASS_WPUnits: TGUID = '{747ED8D6-0440-4722-B1E5-956BFE024226}';
+
+// *********************************************************************//
+// Declaration of Enumerations defined in Type Library                    
+// *********************************************************************//
+// Constants for enum OBJECT_TYPE
+type
+  OBJECT_TYPE = TOleEnum;
+const
+  OBJTYPE_EMPTY = $00000000;
+  OBJTYPE_UNKNOWN = $00000001;
+  OBJTYPE_NODE = $00000002;
+  OBJTYPE_SIGNAL = $00000003;
+  OBJTYPE_OPER = $00000004;
+
+// Constants for enum PAGE_OPTIONS2
+type
+  PAGE_OPTIONS2 = TOleEnum;
+const
+  PGOPT2_NAME = $00000001;
+  PGOPT2_SHOWNAME = $00000002;
+  PGOPT2_RECT = $00000003;
+  PGOPT2_MAXIMIZED = $00000004;
+  PGOPT2_SINGLEX = $00000005;
+  PGOPT2_SINGLEY = $00000006;
+  PGOPT2_SINCCURS = $00000007;
+
+// Constants for enum GRAPH_OPTIONS2
+type
+  GRAPH_OPTIONS2 = TOleEnum;
+const
+  GROPT2_NAME = $00000001;
+  GROPT2_SHOWNAME = $00000002;
+  GROPT2_BORDER = $00000003;
+  GROPT2_SHOWLEGEND = $00000004;
+  GROPT2_YINDENT = $00000005;
+  GROPT2_SUBGRID = $00000006;
+  GROPT2_GRIDLABS = $00000007;
+  GROPT2_LINENUMS = $00000008;
+  GROPT2_AUTONORM = $00000009;
+  GROPT2_AXCOLUMN = $0000000A;
+  GROPT2_AXROW = $0000000B;
+  GROPT2_POLAR = $0000000C;
+
+// Constants for enum LINE_OPTIONS2
+type
+  LINE_OPTIONS2 = TOleEnum;
+const
+  LNOPT2_NAME = $00000001;
+  LNOPT2_VISIBLE = $00000002;
+  LNOPT2_COLOR = $00000003;
+  LNOPT2_WIDTH = $00000004;
+  LNOPT2_LINETYPE = $00000005;
+  LNOPT2_POINTTYPE = $00000006;
+  LNOPT2_LINE2BASE = $00000007;
+  LNOPT2_ONLYPOINTS = $00000008;
+  LNOPT2_HIST = $00000009;
+  LNOPT2_HISTTRANSP = $0000000A;
+  LNOPT2_PARAM = $0000000B;
+  LNOPT2_INTERP = $0000000C;
+  LNOPT2_SYSTEM = $0000000D;
+
+// Constants for enum AXIS_OPTIONS2
+type
+  AXIS_OPTIONS2 = TOleEnum;
+const
+  AXOPT2_NAME = $00000001;
+  AXOPT2_UNITSNAME = $00000002;
+  AXOPT2_COLOR = $00000003;
+  AXOPT2_FORMAT = $00000004;
+  AXOPT2_FZERO = $00000005;
+  AXOPT2_LOG = $00000006;
+  AXOPT2_TIME = $00000007;
+  AXOPT2_DATE = $00000008;
+
+// Constants for enum LEGEND_OPTIONS2
+type
+  LEGEND_OPTIONS2 = TOleEnum;
+const
+  LGNOPT2_VISIBLE = $00000001;
+  LGNOPT2_MODE = $00000002;
+  LGNOPT2_ALIGN = $00000003;
+  LGNOPT2_SIZE = $00000004;
+
 type
 
 // *********************************************************************//
@@ -117,6 +193,7 @@ type
   IWPObject = dispinterface;
   IWPFileDialog = dispinterface;
   IWPDlgChSignal = dispinterface;
+  IWPUnits = dispinterface;
 
 // *********************************************************************//
 // Declaration of CoClasses defined in Type Library
@@ -133,13 +210,14 @@ type
   WPObject = IWPObject;
   COleWPFileDialog = IWPFileDialog;
   WPDlgChSignal = IWPDlgChSignal;
+  WPUnits = IWPUnits;
 
 
 // *********************************************************************//
 // Declaration of structures, unions and aliases.                         
 // *********************************************************************//
-  PDouble1 = ^Double; {*}
   POleVariant1 = ^OleVariant; {*}
+  PDouble1 = ^Double; {*}
   PInteger1 = ^Integer; {*}
   PWideString1 = ^WideString; {*}
   PSYSINT1 = ^SYSINT; {*}
@@ -154,23 +232,24 @@ type
     ['{69E69FFF-3501-404B-A1FF-536226245C1B}']
     procedure SaveSignal(const Name: WideString; const FileName: WideString; type_: Integer); dispid 6;
     function LoadUSML(const path: WideString): IDispatch; dispid 3;
-    procedure DebugPrintLn(arg: OleVariant); dispid 16;
-    procedure SaveUSML(const Name: WideString; const FileName: WideString); dispid 5;
-    function Link(const path: WideString; const Name: WideString; const Object_: IDispatch): IDispatch; dispid 10;
-    function CreateSignal(type_: SYSINT): IDispatch; dispid 7;
-    function LoadSignal(const path: WideString; type_: Integer): IDispatch; dispid 4;
-    procedure Refresh; dispid 9;
-    procedure DebugPrint(arg: OleVariant); dispid 15;
-    function GraphAPI: IDispatch; dispid 13;
-    function GetNode(const Object_: IDispatch): IDispatch; dispid 14;
-    procedure AddTextInLog(const text: WideString; const exttext: WideString; show: WordBool); dispid 61;
-    procedure PrintPreview(const comment: WideString); dispid 36;
-    procedure DoEvents; dispid 17;
     function VBSEditor: IDispatch; dispid 18;
+    procedure SaveUSML(const Name: WideString; const FileName: WideString); dispid 5;
+    function LoadSignal(const path: WideString; type_: Integer): IDispatch; dispid 4;
     procedure Unlink(const Object_: IDispatch); dispid 11;
-    function GetObject(const path: WideString): IDispatch; dispid 12;
     function CreateSignalXY(xtype: SYSINT; ytype: SYSINT): IDispatch; dispid 8;
+    function CreateSignal(type_: SYSINT): IDispatch; dispid 7;
+    function Link(const path: WideString; const Name: WideString; const Object_: IDispatch): IDispatch; dispid 10;
+    procedure DebugPrint(arg: OleVariant); dispid 15;
+    function GetObject(const path: WideString): IDispatch; dispid 12;
+    procedure ProgressStart(const comment: WideString; max: Integer); dispid 65;
+    function GetNode(const Object_: IDispatch): IDispatch; dispid 14;
+    function GraphAPI: IDispatch; dispid 13;
     function OpenFile(const path: WideString; flags: Integer): Integer; dispid 20;
+    procedure DoEvents; dispid 17;
+    procedure DebugPrintLn(arg: OleVariant); dispid 16;
+    function FileOpen(isOPen: Integer; const ext: WideString; const fname: WideString; 
+                      flags: Integer; const filter: WideString): WideString; dispid 19;
+    procedure Refresh; dispid 9;
     function ReadByte(hFile: Integer): OleVariant; dispid 21;
     function ReadWord(hFile: Integer): OleVariant; dispid 22;
     function ReadLong(hFile: Integer): OleVariant; dispid 23;
@@ -178,56 +257,60 @@ type
     function ReadDouble(hFile: Integer): OleVariant; dispid 25;
     procedure CloseFile(hFile: Integer); dispid 26;
     function SeekFile(hFile: Integer; Pos: Integer; flags: Integer): Integer; dispid 27;
+    function WriteByte(hFile: Integer; Value: Smallint): WordBool; dispid 28;
+    function WriteWord(hFile: Integer; Value: Integer): WordBool; dispid 29;
+    function WriteLong(hFile: Integer; Value: Integer): WordBool; dispid 30;
+    function WriteFloat(hFile: Integer; Value: Single): WordBool; dispid 31;
+    function WriteDouble(hFile: Integer; Value: Double): WordBool; dispid 32;
     function addmenuitem(const Name: WideString; id: Integer): Integer; dispid 33;
-    procedure WriteFloat(hFile: Integer; Value: Single); dispid 31;
-    procedure WriteByte(hFile: Integer; Value: Smallint); dispid 28;
-    function FileOpen(isOPen: Integer; const ext: WideString; const fname: WideString; 
-                      flags: Integer; const filter: WideString): WideString; dispid 19;
-    procedure WriteLong(hFile: Integer; Value: Integer); dispid 30;
-    function MainWnd: Integer; dispid 35;
-    procedure WriteDouble(hFile: Integer; Value: Double); dispid 32;
-    procedure WriteWord(hFile: Integer; Value: Integer); dispid 29;
     function treeInterface: IDispatch; dispid 34;
+    function MainWnd: Integer; dispid 35;
+    procedure PrintPreview(const comment: WideString); dispid 36;
     procedure Print(const comment: WideString); dispid 37;
     function SaveImage(const fname: WideString; const comment: WideString): WordBool; dispid 38;
-    procedure execVBS(const code: WideString); dispid 39;
-    procedure ShowToolbar(bar: Integer; visible: Integer); dispid 40;
-    function CreateToolbar: Integer; dispid 45;
+    function RegisterImpExp(const imp: IDispatch; const exp: IDispatch; 
+                            desc: {??PWideChar}OleVariant; ext: {??PWideChar}OleVariant): WordBool; dispid 64;
     function GetSelectedNode: IDispatch; dispid 42;
+    procedure execVBS(const code: WideString); dispid 39;
+    function USMLDialog: WideString; dispid 48;
     function GetSelectedObject: IDispatch; dispid 41;
+    procedure ShowToolbar(bar: Integer; visible: Integer); dispid 40;
+    function FileDlg: IDispatch; dispid 47;
     function CreatemenuItem(Command: Integer; reserved: Integer; const text: WideString; 
                             style: Integer; picture: Integer): Integer; dispid 44;
-    function Get(const path: WideString): IDispatch; dispid 52;
+    function RegisterCommand: Integer; dispid 43;
     function CreatetoolbarButton(bar: Integer; Command: Integer; picture: Integer; 
                                  const hint: WideString): Integer; dispid 46;
-    function FileDlg: IDispatch; dispid 47;
-    function USMLDialog: WideString; dispid 48;
     procedure Test; dispid 49;
-    procedure UnlinkStr(const path: WideString); dispid 54;
-    function GetNodeStr(const path: WideString): IDispatch; dispid 51;
     procedure PrintPage(page: Integer; const comment: WideString; flags: Integer); dispid 50;
+    function GetNodeStr(const path: WideString): IDispatch; dispid 51;
+    function Get(const path: WideString): IDispatch; dispid 52;
     function GetObjectStr(const path: WideString): IDispatch; dispid 53;
-    function RegisterCommand: Integer; dispid 43;
+    procedure UnlinkStr(const path: WideString); dispid 54;
     function GetSelectedItem: IDispatch; dispid 55;
     function GetChSignalDlg: IDispatch; dispid 56;
     function LinkISignal(const path: WideString; const Name: WideString; signal: Integer): IDispatch; dispid 57;
-    function GetISignal(const Name: WideString): Integer; dispid 58;
-    function GetOversampled(const src: IDispatch; freq: Double): IDispatch; dispid 63;
-    procedure DeleteNode(const path: WideString); dispid 60;
-    function IsNodeExist(const path: WideString): WordBool; dispid 59;
+    function CreateToolbar: Integer; dispid 45;
+    procedure AddTextInLog(const text: WideString; const exttext: WideString; show: WordBool); dispid 61;
     function GetInterval(const src: IDispatch; start: Integer; count: Integer): IDispatch; dispid 62;
-    procedure SetWorkDir(const path: WideString); dispid 70;
-    function RegisterImpExp(const imp: IDispatch; const exp: IDispatch; 
-                            desc: {??PWideChar}OleVariant; ext: {??PWideChar}OleVariant): WordBool; dispid 64;
-    procedure ProgressStart(const comment: WideString; max: Integer); dispid 65;
+    function CreateSignal2(stype: SYSINT; ytype: SYSINT; xtype: SYSINT; ztype: SYSINT): IDispatch; dispid 76;
+    function CreateToolbarN(const Name: WideString): Integer; dispid 68;
+    function IsNodeExist(const path: WideString): WordBool; dispid 59;
     procedure ProgressStep(Pos: Integer); dispid 66;
     procedure ProgressFinish; dispid 67;
+    procedure DeleteNode(const path: WideString); dispid 60;
+    function GetOversampled(const src: IDispatch; freq: Double): IDispatch; dispid 63;
     procedure Notify(what: Integer; param: OleVariant); dispid 73;
     procedure ToolbarSetButtonStyle(bar: Integer; Command: Integer; nStyle: Integer); dispid 69;
-    function CreateToolbarN(const Name: WideString): Integer; dispid 68;
+    function GetISignal(const Name: WideString): Integer; dispid 58;
     function RegisterExtOper(const oper: IDispatch; nsrc: Integer; ndst: Integer; 
                              Name: {??PWideChar}OleVariant; shortname: {??PWideChar}OleVariant; 
                              bauto: WordBool): WordBool; dispid 72;
+    procedure SetWorkDir(const path: WideString); dispid 70;
+    function GetUnits: IDispatch; dispid 78;
+    function ShowSignal(const sig: IDispatch): Integer; dispid 75;
+    procedure Select(const node: IDispatch); dispid 74;
+    function GetObjectType(const obj: IDispatch): Integer; dispid 77;
     property TimeSync: WordBool dispid 71;
     property SelectedSignal: WideString dispid 2;
     property SelectedGraph: WideString dispid 1;
@@ -352,56 +435,69 @@ type
 // *********************************************************************//
   IWPSignal = dispinterface
     ['{CA7B31AE-CD01-4EB8-9C40-F48F61297292}']
-    procedure SetY(index: Integer; Value: Double); dispid 19;
-    function GetTransformerType: Integer; dispid 20;
-    procedure SetOriginalY(index: Integer; Value: Double); dispid 52;
-    function GetX(index: Integer): Double; dispid 16;
-    function GetType: Integer; dispid 21;
     function IndexOf(x: Double): Integer; dispid 22;
-    procedure AddPart(x: Double; xReal: Double; nInd: SYSINT); dispid 48;
+    function GetTransformerType: Integer; dispid 20;
+    function GetType: Integer; dispid 21;
+    function GetZ(index: SYSINT): Double; dispid 24;
+    function Instance: Integer; dispid 15;
+    function GetX(index: Integer): Double; dispid 16;
+    function GetYX(x: Double; pow: SYSINT): Double; dispid 23;
+    function ConvertTime(dblSrcTime: Double; out pdblDstTime: Double; nConvType: SYSINT): WordBool; dispid 56;
+    function GetStartTime: Double; dispid 55;
+    function Clone(begin_: {??Int64}OleVariant; count: {??Int64}OleVariant): IDispatch; dispid 62;
+    function GetSizeX(indexZ: SYSINT): SYSINT; dispid 36;
+    function GetSType(nTypeType: Integer; nTypeAx: Integer): {??Largeuint}OleVariant; dispid 59;
+    procedure SetX_iZ(indexX: SYSINT; indexZ: SYSINT; d: Double); dispid 27;
+    function IndexOf_Z(x: Double; indexZ: SYSINT): SYSINT; dispid 34;
+    function IsXChangesWithZ: Integer; dispid 35;
+    function GetX_iZ(indexX: SYSINT; indexZ: SYSINT): Double; dispid 26;
+    procedure SetY_iZ(indexX: SYSINT; indexZ: SYSINT; d: Double; viaTransformer: WordBool); dispid 29;
+    function GetYX_iZ(x: Double; indexZ: SYSINT; pow: SYSINT): Double; dispid 30;
+    function GetY_iZ(indexX: SYSINT; indexZ: SYSINT; viaTransformer: WordBool): Double; dispid 28;
+    procedure SetX(index: Integer; Value: Double); dispid 18;
+    procedure SetY(index: Integer; Value: Double); dispid 19;
+    function GetY(index: Integer): Double; dispid 17;
+    procedure SetZ(index: SYSINT; d: Double); dispid 25;
+    function ZIndexOf(z: Double): SYSINT; dispid 33;
+    function GetYZ(z: Double; indexX: SYSINT; pow: SYSINT): Double; dispid 31;
+    function GetYXZ(x: Double; z: Double; pow: SYSINT): Double; dispid 32;
+    procedure SetSType(nTypeType: Integer; nTypeAx: Integer; nTypeVal: {??Largeuint}OleVariant); dispid 58;
+    function GetIntervalSignalX(indexX: SYSINT; ibeg: SYSINT; iend: SYSINT): IDispatch; dispid 39;
+    procedure SetStartZ(startZ: Double); dispid 45;
+    function GetOriginalY(index: Integer): Double; dispid 51;
+    function GetIntervalSignalZ(indexZ: SYSINT; ibeg: SYSINT; iend: SYSINT): IDispatch; dispid 40;
+    procedure SetDeltaZ(deltaZ: Double); dispid 43;
+    procedure ResizeXZ(xsize: SYSINT; zsize: SYSINT; bXsz_EQU_Ysz: WordBool); dispid 38;
+//    procedure SetSProperty(const Name: WideString; const Value: WideString); dispid 60;
+    procedure SetProperty(const Name: WideString; const Value: WideString); dispid 60;
+//    function GetSProperty(const Name: WideString): WideString; dispid 61;
+    function GetProperty(const Name: WideString): WideString; dispid 61;
+    function GetSizeZ: SYSINT; dispid 37;
+    function GetNameZ: WideString; dispid 46;
     procedure SetStartTime(time: Double); dispid 49;
+    procedure AddPart(x: Double; xReal: Double; nInd: SYSINT); dispid 48;
+    procedure SetNameZ(newNameZ: {??PWideChar}OleVariant); dispid 47;
     function GetParent: IDispatch; dispid 50;
     function GetArray(index: Integer; out pnCount: Integer; var varYValues: OleVariant; 
                       var varXValues: OleVariant; bUseScale: WordBool): WordBool; dispid 53;
+    procedure SetOriginalY(index: Integer; Value: Double); dispid 52;
+    function ConvertTime_V(dblSrcTime: Double; out varDstTime: OleVariant; nConvType: SYSINT): WordBool; dispid 71;
+    function SetArray_V(index: Integer; out pnCount: OleVariant; var varYValues: OleVariant; 
+                        var varXValues: OleVariant; bUseScale: WordBool): WordBool; dispid 70;
+    function GetSEVSignal: IDispatch; dispid 65;
+    function GetDeltaX_Orig: Double; dispid 68;
+    procedure GetRangeZ_V(var minZ: OleVariant; var maxZ: OleVariant); dispid 57;
+    procedure Shift(nAx: SYSINT; dA: Double; dB: Double); dispid 63;
+    function GetArray_V(index: Integer; out pnCount: OleVariant; var varYValues: OleVariant; 
+                        var varXValues: OleVariant; bUseScale: WordBool): WordBool; dispid 69;
+    function GetDeltaZ: Double; dispid 42;
+    procedure GetRangeZ(var minZ: Double; var maxZ: Double); dispid 41;
+    function GetStartZ: Double; dispid 44;
     function SetArray(index: Integer; out pnCount: Integer; var varYValues: OleVariant; 
                       var varXValues: OleVariant; bUseScale: WordBool): WordBool; dispid 54;
-    function GetOriginalY(index: Integer): Double; dispid 51;
-    procedure SetZ(index: SYSINT; d: Double); dispid 25;
-    function GetYX_iZ(x: Double; indexZ: SYSINT; pow: SYSINT): Double; dispid 30;
-    function GetYZ(z: Double; indexX: SYSINT; pow: SYSINT): Double; dispid 31;
-    function GetX_iZ(indexX: SYSINT; indexZ: SYSINT): Double; dispid 26;
-    procedure SetX_iZ(indexX: SYSINT; indexZ: SYSINT; d: Double); dispid 27;
-    function GetZ(index: SYSINT): Double; dispid 24;
-    function GetY(index: Integer): Double; dispid 17;
-    procedure SetX(index: Integer; Value: Double); dispid 18;
-    function Instance: Integer; dispid 15;
-    function GetY_iZ(indexX: SYSINT; indexZ: SYSINT; viaTransformer: WordBool): Double; dispid 28;
-    procedure SetY_iZ(indexX: SYSINT; indexZ: SYSINT; d: Double; viaTransformer: WordBool); dispid 29;
-    function GetYX(x: Double; pow: SYSINT): Double; dispid 23;
-    function IndexOf_Z(x: Double; indexZ: SYSINT): SYSINT; dispid 34;
-    function GetIntervalSignalX(indexX: SYSINT; ibeg: SYSINT; iend: SYSINT): IDispatch; dispid 39;
-    function GetStartZ: Double; dispid 44;
-    function IsXChangesWithZ: Integer; dispid 35;
-    function GetYXZ(x: Double; z: Double; pow: SYSINT): Double; dispid 32;
-    function ZIndexOf(z: Double): SYSINT; dispid 33;
-    function GetIntervalSignalZ(indexZ: SYSINT; ibeg: SYSINT; iend: SYSINT): IDispatch; dispid 40;
-    procedure GetRangeZ(var minZ: Double; var maxZ: Double); dispid 41;
-    function GetDeltaZ: Double; dispid 42;
-    procedure SetStartZ(startZ: Double); dispid 45;
-    function GetNameZ: WideString; dispid 46;
-    procedure SetDeltaZ(deltaZ: Double); dispid 43;
-    function Clone(begin_: {??Int64}OleVariant; count: {??Int64}OleVariant): IDispatch; dispid 62;
-    function GetSType(nTypeType: Integer; nTypeAx: Integer): {??Largeuint}OleVariant; dispid 59;
-    function ConvertTime(dblSrcTime: Double; out pdblDstTime: Double; nConvType: SYSINT): WordBool; dispid 56;
-    function GetStartTime: Double; dispid 55;
-    procedure SetProperty(const Name: WideString; const Value: WideString); dispid 60;
-    function GetProperty(const Name: WideString): WideString; dispid 61;
-    function GetSizeX(indexZ: SYSINT): SYSINT; dispid 36;
-    function GetSizeZ: SYSINT; dispid 37;
-    procedure ResizeXZ(xsize: SYSINT; zsize: SYSINT; bXsz_EQU_Ysz: WordBool); dispid 38;
-    procedure GetRangeZ_V(var minZ: OleVariant; var maxZ: OleVariant); dispid 57;
-    procedure SetSType(nTypeType: Integer; nTypeAx: Integer; nTypeVal: {??Largeuint}OleVariant); dispid 58;
-    procedure SetNameZ(newNameZ: {??PWideChar}OleVariant); dispid 47;
+    function IsSEVExists: Integer; dispid 64;
+    function GetStartX_Orig: Double; dispid 67;
+    procedure SetSEVSignal(const nameSEV: WideString); dispid 66;
     property k1: Double dispid 14;
     property k0: Double dispid 13;
     property MaxY: Double dispid 12;
@@ -448,23 +544,25 @@ type
 // *********************************************************************//
   IWPNode = dispinterface
     ['{E5E07BCC-5AD9-4D0D-BA7C-2B1934E43CAB}']
-    function Reference: IDispatch; dispid 4;
-    function Instance: Integer; dispid 3;
-    function Root: IDispatch; dispid 10;
-    function Link(const Object_: IDispatch; const Name: WideString; flag: Integer): IDispatch; dispid 5;
-    function Child(const testNode: IDispatch): Integer; dispid 8;
-    function IsChild(const testNode: IDispatch): Integer; dispid 7;
     procedure Unlink(const objname: WideString); dispid 6;
-    function Current: IDispatch; dispid 9;
-    function At(index: Integer): IDispatch; dispid 17;
+    function Instance: Integer; dispid 3;
     function IsValidNode: Integer; dispid 11;
-    function AbsolutePath: WideString; dispid 12;
-    function RelativePath(const baseNode: IDispatch): WideString; dispid 13;
-    function IsDirectory: Integer; dispid 14;
-    function Parent: IDispatch; dispid 19;
-    function GetObject(const path: WideString): IDispatch; dispid 16;
-    function GetNode(const path: WideString): IDispatch; dispid 15;
+    function Link(const Object_: IDispatch; const Name: WideString; flag: Integer): IDispatch; dispid 5;
+    function Reference: IDispatch; dispid 4;
+    function IsChild(const testNode: IDispatch): Integer; dispid 7;
+    function Child(const testNode: IDispatch): Integer; dispid 8;
+    function Current: IDispatch; dispid 9;
+    function Root: IDispatch; dispid 10;
     function GetReferenceType: Integer; dispid 18;
+    function IsDirectory: Integer; dispid 14;
+    function AbsolutePath: WideString; dispid 12;
+    function GetNode(const path: WideString): IDispatch; dispid 15;
+    function GetObject(const path: WideString): IDispatch; dispid 16;
+    function RelativePath(const baseNode: IDispatch): WideString; dispid 13;
+    function Parent: IDispatch; dispid 19;
+    function At(index: Integer): IDispatch; dispid 17;
+    procedure SetNodeProperty(const Name: WideString; const Value: WideString); dispid 20;
+    function GetNodeProperty(const Name: WideString): WideString; dispid 21;
     property ChildCount: Integer dispid 2;
     property Name: WideString dispid 1;
   end;
@@ -547,6 +645,35 @@ type
     function GetLineInfo(hGR: Integer; hLine: Integer; ntype: Integer; out pbShow: WordBool): WideString; dispid 59;
     function GetCursorType(hPage: Integer): SYSINT; dispid 60;
     function GetYAxisNum(hLine: Integer): SYSINT; dispid 61;
+    function LoadPage(const path: WideString): Integer; dispid 62;
+    function SavePage(const path: WideString; hPage: Integer): Integer; dispid 63;
+    procedure SetLegendOpt(hGR: Integer; nAlign: Integer; nMode: Integer; nSzX: Integer;
+                           nSzY: Integer); dispid 64;
+    procedure GetLegendOpt(hGR: Integer; out pnAlign: Integer; out pnMode: Integer;
+                           out pnSzX: Integer; out pnSzY: Integer); dispid 65;
+    procedure GetLegendOpt_V(hGR: Integer; out pnAlign: OleVariant; out pnMode: OleVariant;
+                             out pnSzX: OleVariant; out pnSzY: OleVariant); dispid 66;
+    function GetYX(hLn: Integer; x: Double): Double; dispid 67;
+    procedure GetZMinMax(hGR: Integer; out pmin: Double; out pmax: Double); dispid 68;
+    procedure GetZMinMax_V(hGR: Integer; out pmin: OleVariant; out pmax: OleVariant); dispid 69;
+    procedure AddLabel3D(hLine: Integer; mode: Integer; x: Double; z: Double; offsX: Double;
+                         offsZ: Double; const text: WideString); dispid 70;
+    function CreatePage2(type_: Integer): Integer; dispid 71;
+    function GetLabelCount(hLine: Integer): Integer; dispid 72;
+    procedure GetLabelPos(hLine: Integer; iLab: Integer; out x: Double; out z: Double); dispid 73;
+    procedure GetLabelPos_V(hLine: Integer; iLab: Integer; out x: OleVariant; out z: OleVariant); dispid 74;
+    function GetLineInfo_V(hGR: Integer; hLine: Integer; ntype: Integer; out pbShow: OleVariant): WideString; dispid 75;
+    procedure SetZMinMax(hGR: Integer; min: Double; max: Double); dispid 76;
+    function GetPageOpt2(hPage: Integer; opt: Integer; out pval: OleVariant): Integer; dispid 77;
+    function SetPageOpt2(hPage: Integer; opt: Integer; val: OleVariant): Integer; dispid 78;
+    function GetGraphOpt2(hGraph: Integer; opt: Integer; out pval: OleVariant): Integer; dispid 79;
+    function SetGraphOpt2(hGraph: Integer; opt: Integer; val: OleVariant): Integer; dispid 80;
+    function GetLineOpt2(hLine: Integer; opt: Integer; out pval: OleVariant): Integer; dispid 81;
+    function SetLineOpt2(hLine: Integer; opt: Integer; val: OleVariant): Integer; dispid 82;
+    function GetAxisOpt2(hGraph: Integer; hAxis: Integer; opt: Integer; out pval: OleVariant): Integer; dispid 83;
+    function SetAxisOpt2(hGraph: Integer; hAxis: Integer; opt: Integer; val: OleVariant): Integer; dispid 84;
+    function GetLegendOpt2(hGraph: Integer; opt: Integer; out pval: OleVariant): Integer; dispid 85;
+    function SetLegendOpt2(hGraph: Integer; opt: Integer; val: OleVariant): Integer; dispid 86;
   end;
 
 // *********************************************************************//
@@ -558,22 +685,24 @@ type
     ['{5819D3E4-58AC-4A0F-A24D-A6BCEFC41B56}']
     function Error: Integer; dispid 7;
     function Instance: Integer; dispid 6;
-    function RS_GetResults(dst1: OleVariant; dst2: OleVariant): Integer; dispid 18;
-    procedure SetProperty(const Name: WideString; Value: OleVariant); dispid 11;
-    function valid(src1: OleVariant; src2: OleVariant; dst1: OleVariant; dst2: OleVariant): Integer; dispid 9;
-    function MsgError: WideString; dispid 8;
+    function RS_GetProgress(var percents: Double; var nErr: SYSINT; var nLenPreview: SYSINT): Integer; dispid 20;
+    function GetProperty(const Name: WideString): OleVariant; dispid 12;
     function Info(kind: Integer): WideString; dispid 5;
     function Exec(src1: OleVariant; src2: OleVariant; dst1: OleVariant; dst2: OleVariant): Integer; dispid 10;
+    function valid(src1: OleVariant; src2: OleVariant; dst1: OleVariant; dst2: OleVariant): Integer; dispid 9;
+    function MsgError: WideString; dispid 8;
+    procedure SetProperty(const Name: WideString; Value: OleVariant); dispid 11;
+    procedure RS_SetPreviewFile(fnpreview: {??PWideChar}OleVariant); dispid 19;
+    function SetupDlg: Integer; dispid 15;
+    function getProperySet: WideString; dispid 13;
+    function getPropertyValues: WideString; dispid 16;
     function RS_Exec(src1: OleVariant; src2: OleVariant): Integer; dispid 17;
     procedure loadProperties(const values: WideString); dispid 14;
-    function GetProperty(const Name: WideString): OleVariant; dispid 12;
-    function SetupDlg: Integer; dispid 15;
-    function getPropertyValues: WideString; dispid 16;
+    function Clone: IDispatch; dispid 23;
     function RS_SendCommand(nCommand: SYSINT): Integer; dispid 21;
-    procedure RS_SetPreviewFile(fnpreview: {??PWideChar}OleVariant); dispid 19;
-    function getProperySet: WideString; dispid 13;
-    function RS_GetProgress(var percents: Double; var nErr: SYSINT; var nLenPreview: SYSINT): Integer; dispid 20;
-    property ndst: Integer dispid 4;
+    function RS_GetResults(dst1: OleVariant; dst2: OleVariant): Integer; dispid 18;
+    function SetExecOpt(nOpt: SYSINT): SYSINT; dispid 22;
+   property ndst: Integer dispid 4;
     property nsrc: Integer dispid 3;
     property Fullname: WideString dispid 2;
     property Name: WideString dispid 1;
@@ -639,6 +768,31 @@ type
 // *********************************************************************//
   IWPDlgChSignal = dispinterface
     ['{B3948801-B7AD-11D7-84B0-00C0262B9C1C}']
+  end;
+
+// *********************************************************************//
+// DispIntf:  IWPUnits
+// Flags:     (4096) Dispatchable
+// GUID:      {08EEC529-A39A-4A6D-B2C3-F753AFE2C647}
+// *********************************************************************//
+  IWPUnits = dispinterface
+    ['{08EEC529-A39A-4A6D-B2C3-F753AFE2C647}']
+    function GetFuncCount: LongWord; dispid 1;
+    function GetFunc(n: LongWord): LongWord; dispid 2;
+    function GetFuncName(nFn: LongWord): WideString; dispid 3;
+    function GetTypeCount(nFn: LongWord; nAx: LongWord): LongWord; dispid 4;
+    function GetType(n: LongWord; nFn: LongWord; nAx: LongWord): LongWord; dispid 5;
+    function GetTypeName(nTp: LongWord): WideString; dispid 6;
+    function GetUnitsCount(nTp: LongWord): LongWord; dispid 7;
+    function GetUnits(n: LongWord; nTp: LongWord): {??Largeuint}OleVariant; dispid 8;
+    function GetUnitsByMark(const mark: WideString): {??Largeuint}OleVariant; dispid 9;
+    function GetBaseUnits(nTp: LongWord): {??Largeuint}OleVariant; dispid 10;
+    function GetUnitsName(nUn: {??Largeuint}OleVariant): WideString; dispid 11;
+    function GetUnitsMark(nUn: {??Largeuint}OleVariant): WideString; dispid 12;
+    function ConvertValue(nUnSrc: {??Largeuint}OleVariant; nUnDst: {??Largeuint}OleVariant; 
+                          Value: Double): Double; dispid 20;
+    procedure GetCoefs(nUnSrc: {??Largeuint}OleVariant; nUnDst: {??Largeuint}OleVariant; 
+                       var pK1: Double; var pK0: Double); dispid 21;
   end;
 
 // *********************************************************************//
@@ -1798,6 +1952,17 @@ type
     class function CreateRemote(const MachineName: string): IWPDlgChSignal;
   end;
 
+// *********************************************************************//
+// The Class CoWPUnits provides a Create and CreateRemote method to          
+// create instances of the default interface IWPUnits exposed by              
+// the CoClass WPUnits. The functions are intended to be used by             
+// clients wishing to automate the CoClass objects exposed by the         
+// server of this typelibrary.                                            
+// *********************************************************************//
+  CoWPUnits = class
+    class function Create: IWPUnits;
+    class function CreateRemote(const MachineName: string): IWPUnits;
+  end;
 
 // *********************************************************************//
 // OLE Server Proxy class declaration
@@ -4673,6 +4838,16 @@ end;
 class function CoWPDlgChSignal.CreateRemote(const MachineName: string): IWPDlgChSignal;
 begin
   Result := CreateRemoteComObject(MachineName, CLASS_WPDlgChSignal) as IWPDlgChSignal;
+end;
+
+class function CoWPUnits.Create: IWPUnits;
+begin
+  Result := CreateComObject(CLASS_WPUnits) as IWPUnits;
+end;
+
+class function CoWPUnits.CreateRemote(const MachineName: string): IWPUnits;
+begin
+  Result := CreateRemoteComObject(MachineName, CLASS_WPUnits) as IWPUnits;
 end;
 
 procedure TWPDlgChSignal.InitServerData;

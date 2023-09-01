@@ -1040,7 +1040,18 @@ begin
         if (lx>-1) and (lx<1) then
         begin
           b.m_freqband.m_LineLabel.visible:=true;
+          b.m_freqband.visible:=true;
+        end
+        else
+        begin
+          b.m_freqband.m_LineLabel.visible:=false;
+          b.m_freqband.visible:=false;
         end;
+      end
+      else
+      begin
+        b.m_freqband.m_LineLabel.visible:=false;
+        b.m_freqband.visible:=false;
       end;
     end;
     // влияет только на подпись

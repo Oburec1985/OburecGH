@@ -104,6 +104,7 @@ var
   i:integer;
   p:tprofile;
   page:cIRPage;
+  gr:IRDiagramTag;
 begin
   curChart:=chart;
   if chart<>nil then
@@ -120,6 +121,12 @@ begin
     TagsListFrame1.ShowChannels;
     XChan_CB.updateTagsList;
     YChan_CB.updateTagsList;
+    gr:=chart.getGraph(0);
+    if gr<>nil then
+    begin
+      setComboBoxItem(gr.taho.tagname,XChan_CB);
+      setComboBoxItem(gr.t1.tagname,YChan_CB);
+    end;
     showmodal;
   end;
 end;
@@ -148,8 +155,6 @@ begin
   end;
 end;
 
-
-
 procedure TIRDiagrEditFrm.UpdateBtnClick(Sender: TObject);
 var
   I: Integer;
@@ -165,7 +170,7 @@ begin
         g:=IRDiagramTag(signalsLB.Items.Objects[i]);
         t1:=Xchan_cb.gettag(Xchan_cb.ItemIndex);
         t2:=Ychan_cb.gettag(Ychan_cb.ItemIndex);
-        g.ConfigTag(t1, t2);
+        g.ConfigTag(t2, t1);
       end;
     end
   end;
