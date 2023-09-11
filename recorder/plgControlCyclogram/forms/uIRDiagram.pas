@@ -44,6 +44,7 @@ type
     fOut: cqueue<point2d>;
   public
     t1, taho:ctag;
+    //m_spmdx := m_tag.tag.GetFreq / m_fftCount;
     // частота тегов t1 и taho
     m_freq,
     // размер блока для расчета спектра = freq*Numpoints
@@ -70,6 +71,7 @@ type
     //
     procedure DoStart;
     Procedure ConfigTag(tag, p_taho: itag); overload;
+    Procedure ConfigTag; overload;
     // пересчет по частотам опроса и дискретности fft
     procedure UpdateBlocks;
     property DrawLines: boolean read fDrawLines write fDrawLines;
@@ -503,6 +505,7 @@ begin
     gr := addGraph( a_pIni.readString(str, sect+'_Name', ''));
     LoadexTagIni(a_pIni,gr.t1, str, sect+'_Tag');
     LoadexTagIni(a_pIni,gr.taho,str, sect+'_Taho');
+    gr.ConfigTag();
     gr.DrawPoints:=a_pIni.readBool(str, sect+'_DrawP', true);
   end;
 end;
@@ -692,10 +695,16 @@ end;
 
 procedure IRDiagramTag.ConfigTag(tag, p_taho: itag);
 begin
+  if (tag=nil) or (p_taho=nil) then exit;
   t1.tag:=tag;
   taho.tag:=p_taho;
   m_freq:=t1.freq;
   UpdateBlocks;
+end;
+
+procedure IRDiagramTag.ConfigTag;
+begin
+  ConfigTag(t1.tag, taho.tag);
 end;
 
 constructor IRDiagramTag.create;
@@ -720,8 +729,12 @@ end;
 
 procedure IRDiagramTag.DoStart;
 begin
-  taho.initTag;
-  t1.initTag;
+  if blSize=0 then
+  begin
+    taho.initTag;
+    t1.initTag;
+    ConfigTag();
+  end;
 
   taho.doOnStart;
   t1.doOnStart;
@@ -779,12 +792,12 @@ end;
 
 procedure IRDiagramTag.updateData;
 var
-  i, lastInd, maxind: integer;
+  i, lastInd, maxind, halfNP: integer;
   interval1,interval2, common:point2d;
   common_i1, common_i2:tpoint;
-  resMag, mag,k:double;
+  resMag, mag,k,kn, lspmdx:double;
   newdata:boolean;
-  cmplx, c1,c2, res:TComplex_d;
+  cmplx, c1,c2, c1n, c2n, res:TComplex_d;
   p2:point2d;
 begin
   newdata:=false;
@@ -803,7 +816,7 @@ begin
     newdata:=true;
     common_i1:=t1.getIntervalInd(common);
     common_i2:=taho.getIntervalInd(common);
-    while (common_i1.x>common_i1.x) and (common_i2.y>common_i2.y) do
+    //while (common_i1.x>common_i1.x) and (common_i2.y>common_i2.y) do
     begin
       move(t1.m_ReadData[common_i1.X], m_T1data.p^, m_Numpoints*sizeof(double));
       move(taho.m_ReadData[common_i2.X], m_Tahodata.p^, m_Numpoints*sizeof(double));
@@ -815,7 +828,8 @@ begin
       resMag := 0;
       k := k * k; // т.к. перемножаем 2 числа которые нужно нормировать с одинаковым "K"
       // timer:=TPerformanceTime.create;
-      for i := 1 to m_Numpoints - 1 do
+      halfNP:=m_Numpoints shr 1;
+      for i := 1 to halfNP - 1 do
       begin
         // для совпадения с WinPos k*s1[i].x, где k=(2/fftcount) (ниже блок совпадает с WinPos)
         // res[i].x := k*s1[i].x * k*s2[i].x + k*s1[i].y * k*s2[i].y;
@@ -823,17 +837,23 @@ begin
         // комплексно сопряжонное умножение!!!!
         c1:=tCmxArray_d(m_T1ClxData.p)[i];
         c2:=tCmxArray_d(m_TahoClxData.p)[i];
+        kn := 2 / m_Numpoints;
+        c1n:=kn*c1;
+        c2n:=kn*c2;
         cmplx.re := k *(c1.Re * c2.re + c1.im * c2.im);
         cmplx.im := k *(c1.im * c2.re - c1.re * c2.im);
-
+        cmplx.re := (c1n.Re * c2n.re + c1n.im * c2n.im);
+        cmplx.im := (c1n.im * c2n.re - c1n.re * c2n.im);
         mag := abs(cmplx);
         if mag > resMag then
         begin
           resMag := mag;
           maxind := i;
+          lspmdx:=m_freq/m_Numpoints;
           res:=cmplx;
         end;
       end;
+      //showmessage(floattostr(lspmdx*maxind));
       p2.x:=res.Re;
       p2.y:=res.im;
       fOut.push_back(p2);
@@ -1127,6 +1147,7 @@ var
   clientrect: trect;
   w, h: integer;
 begin
+  inherited;
   clientrect := getClientBound;
   if rect.Left < clientrect.Left then
     rect.Left := clientrect.Left;
