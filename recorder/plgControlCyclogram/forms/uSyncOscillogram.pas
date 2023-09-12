@@ -785,6 +785,7 @@ begin
   for i := 0 to m_signals.count - 1 do
   begin
     s := GetSignal(i);
+    b:=true;
     if s.t.UpdateTagData(true) or b then
     begin
       if not m_init then
@@ -793,20 +794,21 @@ begin
       end;
       t := s.t.getPortionTime;
 
-      if (t.y - t.x) > m_Length then
-        b := true
-      else
-        b := false;
-      if not b then
-        break;
+      //if (t.y - t.x) > m_Length then
+      //  b := true
+      //else
+      //  b := false;
+      //if not b then
+      //  break;
       if i = 0 then
         interval := t
       else
         interval := getCommonInterval(interval, t);
-      if (interval.y - interval.x < m_Length) then
+      //if (interval.y - interval.x < m_Length) then
+      if (interval.y - interval.x <= 0) then
       begin
-        b := false;
-        break;
+        //b := false;
+        //break;
       end
     end
     else
@@ -823,11 +825,16 @@ begin
     begin
       s := GetSignal(i);
       interval_i := s.t.getIntervalInd(interval);
-      s.line.AddPoints(s.t.m_ReadData, interval_i.x,
-        (interval_i.y - interval_i.x));
-      if s.t.lastindex >= interval_i.y then
+      if interval_i.x>0 then
       begin
-        s.t.ResetTagDataTimeInd(interval_i.y);
+        if (interval_i.x+interval_i.y - interval_i.x)<s.t.lastindex then
+        begin
+          s.line.AddPoints(s.t.m_ReadData, interval_i.x,  (interval_i.y - interval_i.x));
+          if s.t.lastindex >= interval_i.y then
+          begin
+            s.t.ResetTagDataTimeInd(interval_i.y);
+          end;
+        end;
       end;
     end;
   end;

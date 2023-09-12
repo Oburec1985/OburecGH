@@ -246,12 +246,15 @@ begin
   case datatype of
     c_real:
       begin
-        if flength < p_count then
+        if p_count>0 then
         begin
-          flength := p_count;
-          Setlength(data_r, p_count);
+          if flength < p_count then
+          begin
+            flength := p_count;
+            Setlength(data_r, p_count);
+          end;
+          move(a[start], data_r[0], p_count * sizeof(double));
         end;
-        move(a[start], data_r[0], p_count * sizeof(double));
       end;
   end;
   // оновляем границы тренда
