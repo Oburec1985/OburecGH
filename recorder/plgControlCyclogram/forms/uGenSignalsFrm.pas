@@ -20,9 +20,12 @@ type
   private
     m_phase0:double;
   public
+    m_debug:integer;
     m_name:string;
     m_type:integer;
+    // частота процесса
     m_freq:double;
+    // частота опроса
     m_fs:double;
     m_t:ctag;
     m_dPhase:double;
@@ -86,6 +89,7 @@ type
     procedure FreqSEChange(Sender: TObject);
     procedure OffsetFEChange(Sender: TObject);
   private
+    m_prevTime:double;
     signals:tlist;
   public
   private
@@ -573,27 +577,40 @@ procedure TGenSignalsFrm.UpdateData(sender:tobject);
 var
   I: Integer;
   s:cGenSig;
-  j, blsize: Integer;
+  j, k,blsize: Integer;
   p:pointer;
+  dtstart, dt, curT, TimeLength:double;
 begin
-  FormTimerLabel.Caption:='Tформ: '+floattostr(g_GenSignalsFactory.time);
+  curT:=g_GenSignalsFactory.time;
+  dtstart:=curT-m_prevTime;
+  FormTimerLabel.Caption:='Tформ: '+floattostr(curT);
   //SysTimerLabel.Caption:='Trec: '+floattostr(RecorderSysTime);
   for I := 0 to signals.Count - 1 do
   begin
     s:=cGenSig(signals.items[i]);
-    blsize:=length(s.m_t.m_TagData);
-    s.m_t.m_TagData[0]:=genVal(s.phase+s.m_phase0,s);
-    for j := 1 to blsize - 1 do
+    dt:=dtstart;
+    blsize:=s.m_t.BlockSize;
+    TimeLength:=blsize/s.m_fs; // размер блока данных тега в секундах
+    k:=0; // номер блока сгенеренных данных. для выявления пропусков. Если пропусков нет то k = 1
+    while dt>=TimeLength do
     begin
-      s.phase:=s.phase+s.m_dphase;
-      if s.phase>c_2pi then
-        s.phase:=s.phase-c_2pi;
-      s.m_t.m_TagData[j]:=genVal(s.phase+s.m_phase0,s);
+      inc(k);
+      s.m_debug:=k;
+      s.m_t.m_TagData[0]:=genVal(s.phase+s.m_phase0,s);
+      for j := 1 to blsize - 1 do
+      begin
+        s.phase:=s.phase+s.m_dphase;
+        if s.phase>c_2pi then
+          s.phase:=s.phase-c_2pi;
+        s.m_t.m_TagData[j]:=genVal(s.phase+s.m_phase0,s);
+      end;
+      dt:=dt-TimeLength;
+      p:=@s.m_t.m_TagData[0];
+      //s.m_t.tag.PushDataEx(p^, BlSize, 0, -1);
+      s.m_t.tag.PushData(p^, BlSize);
     end;
-    p:=@s.m_t.m_TagData[0];
-    //s.m_t.tag.PushDataEx(p^, BlSize, 0, -1);
-    s.m_t.tag.PushData(p^, BlSize);
   end;
+  m_prevTime:=curT;
 end;
 
 { cGenSig }

@@ -794,21 +794,21 @@ begin
       end;
       t := s.t.getPortionTime;
 
-      //if (t.y - t.x) > m_Length then
-      //  b := true
-      //else
-      //  b := false;
-      //if not b then
-      //  break;
+      if (t.y - t.x) > m_Length then
+        b := true
+      else
+        b := false;
+      if not b then
+        break;
       if i = 0 then
         interval := t
       else
         interval := getCommonInterval(interval, t);
-      //if (interval.y - interval.x < m_Length) then
-      if (interval.y - interval.x <= 0) then
+      if (interval.y - interval.x < m_Length) then
+      //if (interval.y - interval.x <= 0) then
       begin
-        //b := false;
-        //break;
+        b := false;
+        break;
       end
     end
     else
