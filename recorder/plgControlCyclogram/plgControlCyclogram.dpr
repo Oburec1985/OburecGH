@@ -198,7 +198,9 @@ uses
   uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
   uSyncOscillogram in 'forms\uSyncOscillogram.pas' {SyncOscFrm},
   uSyncOscillogramEditFrm in 'forms\uSyncOscillogramEditFrm.pas' {EditSyncOscFrm},
-  uQueue2 in '..\..\sharedUtils\utils\lists\uQueue2.pas';
+  uQueue2 in '..\..\sharedUtils\utils\lists\uQueue2.pas',
+  uSRSFrm in 'forms\uSRSFrm.pas' {SRSFrm},
+  uEditSrsFrm in 'forms\uEditSrsFrm.pas' {EditSrsFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

@@ -2,139 +2,272 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
   Left = 0
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1072#1089#1095#1077#1090#1072' '#1079#1085#1072#1095#1077#1085#1080#1103' '#1085#1072' '#1087#1077#1088#1077#1093#1086#1076#1085#1086' '#1087#1088#1086#1094#1077#1089#1089#1077
-  ClientHeight = 680
-  ClientWidth = 1108
+  ClientHeight = 510
+  ClientWidth = 831
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -10
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   OnShow = FormShow
-  PixelsPerInch = 120
-  TextHeight = 16
+  PixelsPerInch = 96
+  TextHeight = 12
   object BottomPanel: TPanel
     Left = 0
-    Top = 624
-    Width = 1108
-    Height = 56
+    Top = 468
+    Width = 831
+    Height = 42
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alBottom
     TabOrder = 0
   end
   object RightPanel: TPanel
-    Left = 760
+    Left = 570
     Top = 0
-    Width = 348
-    Height = 624
+    Width = 261
+    Height = 468
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alRight
     TabOrder = 1
     inline TagsListFrame1: TTagsListFrame
       Left = 1
       Top = 1
-      Width = 346
-      Height = 622
+      Width = 259
+      Height = 466
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alClient
       TabOrder = 0
       ExplicitLeft = 1
       ExplicitTop = 1
-      ExplicitWidth = 346
-      ExplicitHeight = 622
+      ExplicitWidth = 259
+      ExplicitHeight = 466
       inherited FormChannelsGB: TGroupBox
-        Width = 346
-        Height = 622
-        ExplicitWidth = 346
-        ExplicitHeight = 622
+        Width = 259
+        Height = 466
+        Margins.Left = 3
+        Margins.Top = 3
+        Margins.Right = 3
+        Margins.Bottom = 3
+        ExplicitWidth = 259
+        ExplicitHeight = 466
         inherited ChanNamesPanel: TPanel
-          Width = 342
-          ExplicitWidth = 342
+          Top = 14
+          Width = 255
+          Height = 83
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          ExplicitTop = 14
+          ExplicitWidth = 255
+          ExplicitHeight = 83
+          inherited FrmTagPropLabel: TLabel
+            Left = 4
+            Top = 44
+            Width = 46
+            Height = 12
+            Margins.Left = 3
+            Margins.Top = 3
+            Margins.Right = 3
+            Margins.Bottom = 3
+            ExplicitLeft = 4
+            ExplicitTop = 44
+            ExplicitWidth = 46
+            ExplicitHeight = 12
+          end
+          inherited FrmTagPropValue: TLabel
+            Left = 91
+            Top = 45
+            Width = 43
+            Height = 12
+            Margins.Left = 3
+            Margins.Top = 3
+            Margins.Right = 3
+            Margins.Bottom = 3
+            ExplicitLeft = 91
+            ExplicitTop = 45
+            ExplicitWidth = 43
+            ExplicitHeight = 12
+          end
           inherited FilterEdit: TEdit
-            Width = 331
-            ExplicitWidth = 331
+            Left = 4
+            Top = 6
+            Width = 248
+            Height = 20
+            Margins.Left = 3
+            Margins.Top = 3
+            Margins.Right = 3
+            Margins.Bottom = 3
+            ExplicitLeft = 4
+            ExplicitTop = 6
+            ExplicitWidth = 248
+            ExplicitHeight = 20
           end
           inherited FrmTagPropValueEdit: TEdit
-            Width = 215
-            ExplicitWidth = 215
+            Left = 91
+            Top = 62
+            Width = 161
+            Height = 20
+            Margins.Left = 3
+            Margins.Top = 3
+            Margins.Right = 3
+            Margins.Bottom = 3
+            ExplicitLeft = 91
+            ExplicitTop = 62
+            ExplicitWidth = 161
+            ExplicitHeight = 20
+          end
+          inherited FrmTagPropNameCB: TComboBox
+            Left = 4
+            Top = 62
+            Width = 81
+            Height = 20
+            Margins.Left = 3
+            Margins.Top = 3
+            Margins.Right = 3
+            Margins.Bottom = 3
+            ExplicitLeft = 4
+            ExplicitTop = 62
+            ExplicitWidth = 81
+            ExplicitHeight = 20
           end
         end
         inherited TagsLV: TBtnListView
-          Width = 342
-          Height = 491
-          ExplicitWidth = 342
-          ExplicitHeight = 491
+          Top = 97
+          Width = 255
+          Height = 367
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          Columns = <
+            item
+              Caption = #1048#1084#1103
+              Width = 49
+            end
+            item
+              Caption = #1058#1080#1087
+              Width = 49
+            end
+            item
+              Caption = 'Fs'
+              Width = 38
+            end>
+          ExplicitTop = 97
+          ExplicitWidth = 255
+          ExplicitHeight = 367
         end
       end
     end
   end
   object MainPanel: TPanel
-    Left = 233
+    Left = 175
     Top = 0
-    Width = 527
-    Height = 624
+    Width = 395
+    Height = 468
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alClient
     TabOrder = 2
     DesignSize = (
-      527
-      624)
+      395
+      468)
     object InChanLabel: TLabel
-      Left = 8
-      Top = 196
-      Width = 91
-      Height = 16
+      Left = 6
+      Top = 147
+      Width = 76
+      Height = 12
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1042#1093#1086#1076#1085#1086#1081' '#1082#1072#1085#1072#1083':'
     end
     object OutChanLabel: TLabel
-      Left = 8
-      Top = 274
-      Width = 95
-      Height = 16
+      Left = 6
+      Top = 206
+      Width = 79
+      Height = 12
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1042#1099#1093#1086#1076#1085#1086#1081' '#1082#1072#1085#1072#1083
     end
     object FFTBlockSizeLabel: TLabel
-      Left = 6
-      Top = 386
-      Width = 80
-      Height = 16
+      Left = 5
+      Top = 290
+      Width = 65
+      Height = 12
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1056#1072#1079#1084#1077#1088' '#1073#1083#1086#1082#1072
     end
     object FFTShiftLabel: TLabel
-      Left = 198
-      Top = 386
-      Width = 100
-      Height = 16
+      Left = 149
+      Top = 290
+      Width = 81
+      Height = 12
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1057#1084#1077#1097#1077#1085#1080#1077' '#1073#1083#1086#1082#1072
     end
     object FsLabel: TLabel
-      Left = 198
-      Top = 274
-      Width = 95
-      Height = 16
+      Left = 149
+      Top = 206
+      Width = 79
+      Height = 12
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1042#1099#1093#1086#1076#1085#1086#1081' '#1082#1072#1085#1072#1083
     end
     object InFsLabel: TLabel
-      Left = 198
-      Top = 196
-      Width = 13
-      Height = 16
+      Left = 149
+      Top = 147
+      Width = 10
+      Height = 12
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = 'Fs'
     end
     object FFTdxLabel: TLabel
-      Left = 390
-      Top = 385
-      Width = 37
-      Height = 16
+      Left = 293
+      Top = 289
+      Width = 30
+      Height = 12
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = 'FFTdX'
     end
     object UpdateAlgBtn: TSpeedButton
-      Left = 423
-      Top = 439
-      Width = 64
-      Height = 47
+      Left = 317
+      Top = 329
+      Width = 48
+      Height = 36
       Hint = #1054#1073#1085#1086#1074#1080#1090#1100
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
       AllowAllUp = True
       BiDiMode = bdLeftToRight
       Flat = True
@@ -243,24 +376,36 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       OnClick = UpdateAlgBtnClick
     end
     object BlockSizeFLabel: TLabel
-      Left = 6
-      Top = 434
-      Width = 111
-      Height = 16
+      Left = 5
+      Top = 326
+      Width = 90
+      Height = 12
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1056#1072#1079#1084#1077#1088' '#1073#1083#1086#1082#1072', '#1089#1077#1082'.'
     end
     object OutChanE: TEdit
-      Left = 8
-      Top = 296
-      Width = 170
-      Height = 24
+      Left = 6
+      Top = 222
+      Width = 128
+      Height = 20
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       TabOrder = 0
     end
     object FFTCb: TCheckBox
-      Left = 6
-      Top = 352
-      Width = 97
-      Height = 17
+      Left = 5
+      Top = 264
+      Width = 72
+      Height = 13
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = 'FFT '#1092#1080#1083#1100#1090#1088
       Checked = True
       State = cbChecked
@@ -268,10 +413,14 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       Visible = False
     end
     object FFTSizeSB: TSpinButton
-      Left = 158
-      Top = 407
-      Width = 20
-      Height = 25
+      Left = 119
+      Top = 305
+      Width = 15
+      Height = 19
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       DownGlyph.Data = {
         0E010000424D0E01000000000000360000002800000009000000060000000100
         200000000000D800000000000000000000000000000000000000008080000080
@@ -297,19 +446,27 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       OnUpClick = FFTSizeSBUpClick
     end
     object FFTBlockSizeIE: TIntEdit
-      Left = 6
-      Top = 408
-      Width = 146
-      Height = 24
+      Left = 5
+      Top = 306
+      Width = 109
+      Height = 20
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       TabOrder = 3
       Text = '32'
       OnChange = FFTBlockSizeIEChange
     end
     object FFTShiftSB: TSpinButton
-      Left = 350
-      Top = 407
-      Width = 20
-      Height = 25
+      Left = 263
+      Top = 305
+      Width = 15
+      Height = 19
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       DownGlyph.Data = {
         0E010000424D0E01000000000000360000002800000009000000060000000100
         200000000000D800000000000000000000000000000000000000008080000080
@@ -335,64 +492,96 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       OnUpClick = FFTSizeSBUpClick
     end
     object FFTShiftIE: TIntEdit
-      Left = 198
-      Top = 408
-      Width = 146
-      Height = 24
+      Left = 149
+      Top = 306
+      Width = 109
+      Height = 20
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       TabOrder = 5
       Text = '32'
     end
     object TrigGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 520
-      Height = 189
+      Width = 390
+      Height = 142
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Anchors = [akLeft, akTop, akRight]
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1090#1088#1080#1075#1075#1077#1088#1072
       TabOrder = 6
       object ThresholdLabel: TLabel
-        Left = 4
-        Top = 25
-        Width = 34
-        Height = 16
+        Left = 3
+        Top = 19
+        Width = 29
+        Height = 12
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Caption = #1055#1086#1088#1086#1075
       end
       object OffsetLabel: TLabel
-        Left = 191
-        Top = 25
-        Width = 62
-        Height = 16
+        Left = 143
+        Top = 19
+        Width = 49
+        Height = 12
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Caption = #1057#1084#1077#1097#1077#1085#1080#1077
       end
       object ThresholdSE: TFloatSpinEdit
-        Left = 4
-        Top = 47
-        Width = 170
-        Height = 26
+        Left = 3
+        Top = 35
+        Width = 128
+        Height = 21
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Increment = 0.100000000000000000
         TabOrder = 0
       end
       object OffsetSE: TFloatSpinEdit
-        Left = 191
-        Top = 47
-        Width = 159
-        Height = 26
+        Left = 143
+        Top = 35
+        Width = 120
+        Height = 21
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Increment = 0.100000000000000000
         TabOrder = 1
       end
       object ScalarTagCB: TCheckBox
-        Left = 356
-        Top = 51
-        Width = 109
-        Height = 17
+        Left = 267
+        Top = 38
+        Width = 82
+        Height = 13
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Caption = #1057#1082#1072#1083#1103#1088#1085#1099#1081' '#1090#1077#1075
         TabOrder = 2
       end
       object ValTypeRG: TRadioGroup
-        Left = 5
-        Top = 79
-        Width = 180
-        Height = 81
+        Left = 4
+        Top = 59
+        Width = 135
+        Height = 61
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Caption = #1055#1088#1077#1076#1085#1072#1089#1090#1088#1086#1081#1082#1072' '#1092#1080#1083#1100#1090#1088#1072
         ItemIndex = 0
         Items.Strings = (
@@ -403,55 +592,71 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       end
     end
     object FsSE: TFloatSpinEdit
-      Left = 198
-      Top = 296
-      Width = 172
-      Height = 26
+      Left = 149
+      Top = 222
+      Width = 129
+      Height = 21
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Increment = 0.100000000000000000
       TabOrder = 7
     end
     object InChanCB: TRcComboBox
-      Left = 7
-      Top = 219
-      Width = 171
-      Height = 24
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 5
+      Top = 164
+      Width = 129
+      Height = 20
       TabOrder = 8
     end
     object InFsFE: TFloatEdit
-      Left = 198
-      Top = 219
-      Width = 99
-      Height = 24
+      Left = 149
+      Top = 164
+      Width = 74
+      Height = 20
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Enabled = False
       TabOrder = 9
       Text = '0.0'
     end
     object FFTdxFE: TFloatEdit
-      Left = 390
-      Top = 408
-      Width = 99
-      Height = 24
+      Left = 293
+      Top = 306
+      Width = 74
+      Height = 20
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Enabled = False
       TabOrder = 10
       Text = '0.0'
     end
     object BlockSizeFE: TFloatEdit
-      Left = 6
-      Top = 454
-      Width = 146
-      Height = 24
+      Left = 5
+      Top = 341
+      Width = 109
+      Height = 20
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       TabOrder = 11
       Text = '0.0'
     end
     object FltRG: TRadioGroup
-      Left = 6
-      Top = 484
-      Width = 219
-      Height = 134
+      Left = 4
+      Top = 363
+      Width = 164
+      Height = 101
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1055#1088#1077#1076#1085#1072#1089#1090#1088#1086#1081#1082#1072' '#1092#1080#1083#1100#1090#1088#1072
       Items.Strings = (
         '- AC ('#1091#1076#1072#1083#1080#1090#1100' DC)'
@@ -465,16 +670,25 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
   object LeftPanel: TPanel
     Left = 0
     Top = 0
-    Width = 233
-    Height = 624
+    Width = 175
+    Height = 468
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alLeft
     TabOrder = 3
     object AlgsLB: TListBox
       Left = 1
       Top = 1
-      Width = 231
-      Height = 312
+      Width = 173
+      Height = 234
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alTop
+      ItemHeight = 12
       MultiSelect = True
       TabOrder = 0
       OnClick = AlgsLBClick
@@ -485,26 +699,28 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     end
     object ScalesLV: TBtnListView
       Left = 1
-      Top = 313
-      Width = 231
-      Height = 310
+      Top = 235
+      Width = 173
+      Height = 232
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alClient
       Columns = <
         item
           Caption = #1048#1085#1076'.'
-          Width = 51
+          Width = 38
         end
         item
           Caption = 'F'
-          Width = 67
         end
         item
           Caption = 'Scale'
-          Width = 67
         end>
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -15
+      Font.Height = -11
       Font.Name = 'Tahoma'
       Font.Style = []
       MultiSelect = True
@@ -521,41 +737,61 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     end
   end
   object MeanGB: TGroupBox
-    Left = 425
-    Top = 80
-    Width = 216
-    Height = 81
+    Left = 319
+    Top = 60
+    Width = 162
+    Height = 61
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Caption = #1059#1089#1088#1077#1076#1085#1077#1085#1080#1077
     TabOrder = 4
     Visible = False
     object TrigMeanLenLabel: TLabel
-      Left = 15
-      Top = 25
-      Width = 64
-      Height = 16
+      Left = 11
+      Top = 19
+      Width = 52
+      Height = 12
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1044#1083#1080#1085#1072', '#1089#1077#1082
     end
     object Label1: TLabel
-      Left = 15
-      Top = 56
-      Width = 68
-      Height = 16
+      Left = 11
+      Top = 42
+      Width = 56
+      Height = 12
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1044#1083#1080#1085#1072', '#1090#1095#1082'.'
     end
     object TrigMeanLenFE: TFloatSpinEdit
-      Left = 94
-      Top = 21
-      Width = 105
-      Height = 26
+      Left = 71
+      Top = 16
+      Width = 78
+      Height = 21
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Increment = 0.100000000000000000
       TabOrder = 0
       OnChange = TrigMeanLenFEChange
     end
     object TrigMeanLenIE: TIntEdit
-      Left = 94
-      Top = 50
-      Width = 105
-      Height = 24
+      Left = 71
+      Top = 38
+      Width = 78
+      Height = 20
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       TabOrder = 1
       Text = '000'
       OnChange = TrigMeanLenIEChange

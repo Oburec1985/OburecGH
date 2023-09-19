@@ -437,6 +437,12 @@
 				<Form>EditSyncOscFrm</Form>
 			</DCCReference>
 			<DCCReference Include="..\..\sharedUtils\utils\lists\uQueue2.pas"/>
+			<DCCReference Include="forms\uSRSFrm.pas">
+				<Form>SRSFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uEditSrsFrm.pas">
+				<Form>EditSrsFrm</Form>
+			</DCCReference>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

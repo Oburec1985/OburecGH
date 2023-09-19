@@ -1,12 +1,11 @@
 object TrigFrame: TTrigFrame
   Left = 0
   Top = 0
-  Width = 720
+  Width = 451
   Height = 304
   Align = alClient
   Constraints.MinWidth = 451
   TabOrder = 0
-  ExplicitWidth = 451
   object TrigTV: TVTree
     Left = 0
     Top = 0
@@ -37,22 +36,22 @@ object TrigFrame: TTrigFrame
   object Panel1: TPanel
     Left = 193
     Top = 0
-    Width = 527
+    Width = 258
     Height = 304
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 258
     object StartProgramGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 525
+      Width = 256
       Height = 192
       Align = alTop
       TabOrder = 0
-      ExplicitWidth = 256
+      ExplicitLeft = 7
+      ExplicitTop = 0
       object Label4: TLabel
         Left = 11
-        Top = 106
+        Top = 104
         Width = 30
         Height = 13
         Caption = #1055#1086#1088#1086#1075
@@ -81,7 +80,7 @@ object TrigFrame: TTrigFrame
         OnDragOver = TrigChannelCBDragOver
       end
       object TrigRG: TRadioGroup
-        Left = 396
+        Left = 127
         Top = 15
         Width = 127
         Height = 175
@@ -97,7 +96,6 @@ object TrigFrame: TTrigFrame
           #1055#1072#1091#1079#1072)
         TabOrder = 1
         OnClick = TrigRGClick
-        ExplicitLeft = 127
       end
       object ThresholdFE: TFloatEdit
         Left = 11
