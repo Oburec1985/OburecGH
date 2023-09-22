@@ -15,7 +15,6 @@ type
     ImageList_32: TImageList;
     ImageList_16: TImageList;
     Panel1: TPanel;
-    cChart1: cChart;
     SGPic: TImageList;
     CursorPosY: TFloatSpinEdit;
     XFE: TFloatSpinEdit;
@@ -57,6 +56,7 @@ type
     m_curTrend:ctrend;
     m_cMng:cControlMng;
     SGbuttons: tlist;
+    cchart1:cchart;
   private
     procedure UpdateModesIntervalSG;
     procedure UpdateModesSG(con:cControlObj;bp:cbeziepoint; pointInd:integer);
@@ -184,11 +184,14 @@ var
   p:cpage;
   a:caxis;
 begin
+
   p:=cpage(cchart1.activePage);
   p.Caption:='Циклограмма режимов';
   a:=p.activeAxis;
-  a.destroy;
+  //a.destroy;
+  //p.XMinEdit.visible:=false;
   ShowChart;
+  cchart1.showTV:=true;
 end;
 
 procedure TModesTabFrame.cChart1InsertPoint(data, subdata: TObject);
@@ -405,6 +408,19 @@ end;
 constructor TModesTabFrame.create(aOwner: tcomponent);
 begin
   inherited;
+  cchart1:=cchart.Create(nil);
+  cchart1.Caption:='cchart1_ModesTab';
+  cchart1.Parent:=Panel1;
+  cchart1.Align:=alClient;
+  cchart1.showTV:=false;
+  cchart1.imagelist:=ImageList_16;
+  cchart1.OnInit:=cChart1Init;
+  cchart1.OnCursorMove:=cChart1CursorMove;
+  cchart1.OnInsertPoint:=cChart1InsertPoint;
+  cchart1.OnMovePoint:=cChart1MovePoint;
+  cchart1.OnSelectPoint:=cChart1SelectPoint;
+  cchart1.OnSelectObj:=cChart1SelectObj;
+
   InitSG;
   SGbuttons := tlist.Create;
 end;
@@ -1018,7 +1034,7 @@ begin
             ax:=page.Newaxis;
             ax.name:=con.units;
             ax.m_YUnits:=ax.name;
-            //page.addaxis(ax);
+            page.addaxis(ax);
           end;
           tr:=ax.AddTrend;
           // свойство означает возможность выбрать объект по клику мышкой

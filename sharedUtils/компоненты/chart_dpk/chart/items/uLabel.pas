@@ -142,11 +142,6 @@ var
   p2: point2;
   rh, MaxRowWidth: double;
 begin
-  // boundrect.TopRight.y := boundrect.TopRight.Y+fBorderOffset.y;
-  // boundrect.TopRight.x := boundrect.TopRight.x-fBorderOffset.x;
-  // boundrect.BottomLeft.y := boundrect.BottomLeft.Y-fBorderOffset.y;
-  // boundrect.BottomLeft.x := boundrect.BottomLeft.x-fBorderOffset.x;
-
   // габариты метки в координатах Ogl
   // при этом первая строка начало соответствует 0.0
   p2 := GetSize(point(fWidth, fHeigth));

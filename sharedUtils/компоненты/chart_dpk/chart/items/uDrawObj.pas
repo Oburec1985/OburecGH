@@ -8,6 +8,7 @@ uses
   umatrix, uNode, uMNode, uFontMng, uCommonMath,
   MathFunction, uText,
   uLogFile,
+  dialogs,
   jclDebug;
 
 type
@@ -295,8 +296,15 @@ var
   p: cbasepage;
 begin
   p := cbasepage(getpage);
-  result.x := round(p.getwidth * Size.x / GetFWidth);
-  result.y := round(p.getheight * Size.y / GetFHeigth);
+  //if p<>nil then
+  begin
+    result.x := round(p.getwidth * Size.x / GetFWidth);
+    result.y := round(p.getheight * Size.y / GetFHeigth);
+  end
+  //else
+  //begin
+  //  showmessage('p=nil');
+  //end;
 end;
 
 constructor cDrawObj.create;

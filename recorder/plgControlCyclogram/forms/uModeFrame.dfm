@@ -10,7 +10,7 @@ object ModeFrame: TModeFrame
     Top = 0
     Width = 556
     Height = 328
-    ActivePage = ModesPage
+    ActivePage = ProgramPage
     Align = alClient
     Constraints.MinHeight = 328
     Constraints.MinWidth = 556
@@ -205,8 +205,6 @@ object ModeFrame: TModeFrame
         Align = alRight
         Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
         TabOrder = 0
-        ExplicitLeft = 331
-        ExplicitTop = 2
         object ChannelsLV: TBtnListView
           Left = 2
           Top = 18

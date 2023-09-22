@@ -1,24 +1,27 @@
 object ModesTabFrame: TModesTabFrame
   Left = 0
   Top = 0
-  Width = 451
-  Height = 304
+  Width = 647
+  Height = 643
   Align = alClient
   TabOrder = 0
+  ExplicitWidth = 451
+  ExplicitHeight = 304
   object Splitter1: TSplitter
     Left = 0
-    Top = 143
-    Width = 451
+    Top = 482
+    Width = 647
     Height = 3
     Cursor = crVSplit
     Align = alBottom
     ExplicitLeft = 3
     ExplicitTop = 323
+    ExplicitWidth = 451
   end
   object ModesSG: TStringGrid
     Left = 0
-    Top = 146
-    Width = 451
+    Top = 485
+    Width = 647
     Height = 158
     Align = alBottom
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing]
@@ -29,44 +32,30 @@ object ModesTabFrame: TModesTabFrame
     OnKeyDown = ModesSGKeyDown
     OnSelectCell = ModesSGSelectCell
     OnSetEditText = ModesSGSetEditText
+    ExplicitTop = 146
+    ExplicitWidth = 451
   end
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 451
-    Height = 96
+    Width = 647
+    Height = 435
     Align = alClient
     TabOrder = 1
-    object cChart1: cChart
-      Left = 1
-      Top = 1
-      Width = 449
-      Height = 94
-      Align = alClient
-      Caption = 'cChart1'
-      TabOrder = 0
-      OnMovePoint = cChart1MovePoint
-      OnInsertPoint = cChart1InsertPoint
-      OnSelectPoint = cChart1SelectPoint
-      OnInit = cChart1Init
-      OnCursorMove = cChart1CursorMove
-      OnSelectObj = cChart1SelectObj
-      allowEditPages = False
-      imagelist = ImageList_16
-      showTV = True
-      showLegend = True
-      selectSize = 5
-    end
+    ExplicitWidth = 451
+    ExplicitHeight = 96
   end
   object Panel2: TPanel
     Left = 0
-    Top = 96
-    Width = 451
+    Top = 435
+    Width = 647
     Height = 47
     Align = alBottom
     TabOrder = 2
+    ExplicitTop = 96
+    ExplicitWidth = 451
     DesignSize = (
-      451
+      647
       47)
     object Label3: TLabel
       Left = 220
@@ -133,10 +122,11 @@ object ModesTabFrame: TModesTabFrame
     object TaskParamsEdit: TEdit
       Left = 568
       Top = 5
-      Width = 361
+      Width = 1421
       Height = 24
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 4
+      ExplicitWidth = 1225
     end
   end
   object ImageList_32: TImageList

@@ -53,16 +53,17 @@ type
     MinX, MaxX: double;
 
     PageLabel: clabel;
-  protected
-    prevgridcountY, prevgridcountX: integer;
-    // логарифм по оси X
-    fLg: boolean;
-    TextCS: TRTLCriticalSection;
+  public
     // текстовые метки отвечающие за масштаб оси
     YMaxEdit: cfloatlabel;
     YMinEdit: cfloatlabel;
     XMaxEdit: cfloatlabel;
     XMinEdit: cfloatlabel;
+  protected
+    prevgridcountY, prevgridcountX: integer;
+    // логарифм по оси X
+    fLg: boolean;
+    TextCS: TRTLCriticalSection;
     // настройки страницы
     cfg: PageCfg;
     // число осей

@@ -256,7 +256,7 @@ var
 
   pfd: TPixelFormatDescriptor;
   p: cpage;
-
+  res:boolean;
 begin
   if not g_initGL then
     g_initGL:=InitOpenGL('opengl32.dll', 'glu32.dll');
@@ -265,7 +265,7 @@ begin
   hrc := CreateRenderingContext(dc, [opDoubleBuffered], 32, 24, 8, 0, 0, 0);
   ActivateRenderingContext(dc, hrc, true);
 
-  wglMakeCurrent(dc, hrc);
+  res:=wglMakeCurrent(dc, hrc);
 
   initGl := true;
   p := cpage(activePage);
@@ -539,13 +539,17 @@ end;
 procedure cChart.renderscene;
 var
   ps: PaintStruct;
+  res:boolean;
 begin
   if not initGl then
     exit;
   updateTV;
   // если не коментировать wglMakeCurrent происходит утечка памяти
   if wglGetCurrentContext <> hrc then
+  begin
     wglMakeCurrent(dc, hrc);
+    if not res then showmessage('wglCurrent false');
+  end;
   BeginPaint(Handle, ps);
   glClearColor(0.9, 0.9, 0.9, 1);
   glClear(GL_COLOR_BUFFER_BIT); // очистка буфера цвета

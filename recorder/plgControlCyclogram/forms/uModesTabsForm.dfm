@@ -92,12 +92,6 @@ object ModesTabForm: TModesTabForm
       Height = 301
       ExplicitWidth = 983
       ExplicitHeight = 301
-      inherited cChart1: cChart
-        Width = 981
-        Height = 299
-        ExplicitWidth = 981
-        ExplicitHeight = 299
-      end
     end
     inherited Panel2: TPanel
       Top = 581
@@ -150,6 +144,13 @@ object ModesTabForm: TModesTabForm
         ExplicitWidth = 143
         ExplicitHeight = 25
       end
+      inherited TaskParamsEdit: TEdit
+        Height = 25
+        ExplicitHeight = 25
+      end
+    end
+    inherited ImageList_16: TImageList
+      Top = 96
     end
   end
 end
