@@ -166,7 +166,6 @@ uses
   uScktComp in '..\..\sharedUtils\utils\socket\uScktComp.pas',
   uEditPolarFrm in 'forms\uEditPolarFrm.pas' {EditPolarFrm},
   uCyclogramReportFrm in 'forms\uCyclogramReportFrm.pas' {CyclogramReportFrm},
-  uAlarms in '..\SharedRUnits\interfaces\uAlarms.pas',
   uSpm in 'units\uSpm.pas',
   uTagInfoFrm in 'forms\uTagInfoFrm.pas' {TagInfoFrm},
   uTagInfoEditFrm in 'forms\uTagInfoEditFrm.pas' {TagInfoEditFrm},
@@ -200,7 +199,8 @@ uses
   uSyncOscillogramEditFrm in 'forms\uSyncOscillogramEditFrm.pas' {EditSyncOscFrm},
   uQueue2 in '..\..\sharedUtils\utils\lists\uQueue2.pas',
   uSRSFrm in 'forms\uSRSFrm.pas' {SRSFrm},
-  uEditSrsFrm in 'forms\uEditSrsFrm.pas' {EditSrsFrm};
+  uEditSrsFrm in 'forms\uEditSrsFrm.pas' {EditSrsFrm},
+  uAlarms in '..\SharedRUnits\interfaces\uAlarms.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

@@ -2,15 +2,41 @@ object SRSFrm: TSRSFrm
   Left = 0
   Top = 0
   Caption = 'SRSFrm'
-  ClientHeight = 405
-  ClientWidth = 488
+  ClientHeight = 690
+  ClientWidth = 810
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
+  object cChart1: cChart
+    Left = 0
+    Top = 0
+    Width = 810
+    Height = 297
+    Align = alTop
+    Caption = 'cChart1'
+    TabOrder = 0
+    allowEditPages = False
+    showTV = False
+    showLegend = False
+    selectSize = 5
+  end
+  object cChart2: cChart
+    Left = 0
+    Top = 297
+    Width = 810
+    Height = 393
+    Align = alClient
+    Caption = 'cChart1'
+    TabOrder = 1
+    allowEditPages = False
+    showTV = False
+    showLegend = False
+    selectSize = 5
+  end
 end

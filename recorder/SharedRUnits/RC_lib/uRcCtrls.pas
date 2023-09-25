@@ -16,7 +16,8 @@ type
     procedure DragDrop(Source: TObject; X, Y: Integer);override;
     //procedure WndProc(var Message: TMessage); override;
   public
-    function gettag(i:integer):itag;
+    function gettag(i:integer):itag; overload;
+    function gettag:itag; overload;
     procedure updateTagsList;
 
   end;
@@ -66,6 +67,16 @@ begin
 end;
 
 
+
+function TRcComboBox.gettag: itag;
+begin
+  if ItemIndex>-1 then
+  begin
+    result:=itag(pointer(items.Objects[ItemIndex]));
+  end
+  else
+    result:=nil;
+end;
 
 function TRcComboBox.gettag(i: integer): itag;
 begin

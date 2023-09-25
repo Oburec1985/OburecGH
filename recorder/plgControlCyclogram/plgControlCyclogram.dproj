@@ -365,7 +365,6 @@
 			<DCCReference Include="forms\uCyclogramReportFrm.pas">
 				<Form>CyclogramReportFrm</Form>
 			</DCCReference>
-			<DCCReference Include="..\SharedRUnits\interfaces\uAlarms.pas"/>
 			<DCCReference Include="units\uSpm.pas"/>
 			<DCCReference Include="forms\uTagInfoFrm.pas">
 				<Form>TagInfoFrm</Form>
@@ -443,6 +442,7 @@
 			<DCCReference Include="forms\uEditSrsFrm.pas">
 				<Form>EditSrsFrm</Form>
 			</DCCReference>
+			<DCCReference Include="..\SharedRUnits\interfaces\uAlarms.pas"/>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
