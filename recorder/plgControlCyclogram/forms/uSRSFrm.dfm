@@ -2,22 +2,26 @@ object SRSFrm: TSRSFrm
   Left = 0
   Top = 0
   Caption = 'SRSFrm'
-  ClientHeight = 690
-  ClientWidth = 810
+  ClientHeight = 528
+  ClientWidth = 619
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -14
+  Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 120
-  TextHeight = 17
+  PixelsPerInch = 96
+  TextHeight = 13
   object cChart1: cChart
     Left = 0
     Top = 0
-    Width = 810
-    Height = 297
+    Width = 619
+    Height = 227
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alTop
     Caption = 'cChart1'
     TabOrder = 0
@@ -28,9 +32,13 @@ object SRSFrm: TSRSFrm
   end
   object cChart2: cChart
     Left = 0
-    Top = 297
-    Width = 810
-    Height = 393
+    Top = 227
+    Width = 619
+    Height = 301
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 1

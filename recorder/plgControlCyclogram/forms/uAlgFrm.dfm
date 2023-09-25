@@ -2,53 +2,60 @@ object AlgFrm: TAlgFrm
   Left = 0
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1072#1089#1095#1077#1090#1085#1099#1093' '#1082#1072#1085#1072#1083#1086#1074
-  ClientHeight = 545
-  ClientWidth = 1096
+  ClientHeight = 409
+  ClientWidth = 822
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -10
   Font.Name = 'Tahoma'
   Font.Style = []
   Menu = MainMenu1
   OldCreateOrder = False
   OnClose = FormClose
   OnShow = FormShow
-  PixelsPerInch = 120
-  TextHeight = 16
+  PixelsPerInch = 96
+  TextHeight = 12
   object Splitter1: TSplitter
-    Left = 345
+    Left = 259
     Top = 0
-    Height = 476
+    Width = 2
+    Height = 357
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Color = clBackground
     ParentColor = False
-    ExplicitLeft = 273
-    ExplicitHeight = 840
   end
   object TagsListPanel: TPanel
     Left = 0
     Top = 0
-    Width = 345
-    Height = 476
+    Width = 259
+    Height = 357
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alLeft
     TabOrder = 0
     object Panel1: TPanel
       Left = 1
-      Top = 420
-      Width = 343
-      Height = 55
+      Top = 315
+      Width = 257
+      Height = 41
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alBottom
       TabOrder = 0
       object AddAlgBtn: TSpeedButton
-        Left = 4
-        Top = 8
-        Width = 55
-        Height = 48
+        Left = 3
+        Top = 6
+        Width = 41
+        Height = 36
         Hint = #1044#1086#1073#1072#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         AllowAllUp = True
         BiDiMode = bdLeftToRight
         Glyph.Data = {
@@ -122,15 +129,11 @@ object AlgFrm: TAlgFrm
         OnClick = AddAlgBtnClick
       end
       object UpdateAlgBtn: TSpeedButton
-        Left = 67
-        Top = 8
-        Width = 64
-        Height = 47
+        Left = 50
+        Top = 6
+        Width = 48
+        Height = 35
         Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         AllowAllUp = True
         BiDiMode = bdLeftToRight
         Flat = True
@@ -242,12 +245,8 @@ object AlgFrm: TAlgFrm
     object AlgsTV: TVTree
       Left = 1
       Top = 1
-      Width = 343
-      Height = 419
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Width = 257
+      Height = 314
       Align = alClient
       DragMode = dmAutomatic
       DragType = dtVCL
@@ -267,89 +266,188 @@ object AlgFrm: TAlgFrm
       OnDragOver = AlgsTVDragOver
       OnDragDrop = AlgsTVDragDrop
       OnKeyDown = AlgsTVKeyDown
+      ExplicitLeft = 0
       Columns = <>
     end
   end
   object AlgPropPanel: TPanel
-    Left = 348
+    Left = 261
     Top = 0
-    Width = 379
-    Height = 476
+    Width = 284
+    Height = 357
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alClient
     TabOrder = 1
     object Splitter2: TSplitter
-      Left = 375
+      Left = 280
       Top = 1
-      Height = 474
+      Height = 355
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alRight
       Color = clBackground
       ParentColor = False
-      ExplicitLeft = 756
-      ExplicitHeight = 838
+      ExplicitLeft = 281
     end
     object AlgsPageControl: TPageControl
       Left = 1
       Top = 1
-      Width = 374
-      Height = 474
+      Width = 279
+      Height = 355
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alClient
       TabOrder = 0
     end
   end
   object BottomPanel: TPanel
     Left = 0
-    Top = 476
-    Width = 1096
-    Height = 69
+    Top = 357
+    Width = 822
+    Height = 52
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alBottom
     TabOrder = 2
   end
   inline TagsListFrame1: TTagsListFrame
-    Left = 727
+    Left = 545
     Top = 0
-    Width = 369
-    Height = 476
+    Width = 277
+    Height = 357
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alRight
     TabOrder = 3
-    ExplicitLeft = 727
-    ExplicitWidth = 369
-    ExplicitHeight = 476
+    ExplicitLeft = 545
+    ExplicitWidth = 277
+    ExplicitHeight = 357
     inherited FormChannelsGB: TGroupBox
-      Width = 369
-      Height = 476
-      ExplicitWidth = 369
-      ExplicitHeight = 476
+      Width = 277
+      Height = 357
+      Margins.Left = 3
+      Margins.Top = 3
+      Margins.Right = 3
+      Margins.Bottom = 3
+      ExplicitWidth = 277
+      ExplicitHeight = 357
       inherited ChanNamesPanel: TPanel
-        Width = 365
-        Height = 108
-        ExplicitWidth = 365
-        ExplicitHeight = 108
+        Top = 14
+        Width = 273
+        Height = 81
+        Margins.Left = 3
+        Margins.Top = 3
+        Margins.Right = 3
+        Margins.Bottom = 3
+        ExplicitTop = 14
+        ExplicitWidth = 273
+        ExplicitHeight = 81
         inherited FrmTagPropLabel: TLabel
-          Top = 59
-          ExplicitTop = 59
+          Left = 4
+          Top = 44
+          Width = 46
+          Height = 12
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          ExplicitLeft = 4
+          ExplicitTop = 44
+          ExplicitWidth = 46
+          ExplicitHeight = 12
+        end
+        inherited FrmTagPropValue: TLabel
+          Left = 91
+          Top = 45
+          Width = 43
+          Height = 12
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          ExplicitLeft = 91
+          ExplicitTop = 45
+          ExplicitWidth = 43
+          ExplicitHeight = 12
         end
         inherited FilterEdit: TEdit
-          Width = 354
-          ExplicitWidth = 354
+          Left = 4
+          Top = 6
+          Width = 265
+          Height = 20
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          ExplicitLeft = 4
+          ExplicitTop = 6
+          ExplicitWidth = 265
+          ExplicitHeight = 20
         end
         inherited FrmTagPropValueEdit: TEdit
-          Top = 83
-          Width = 238
-          ExplicitTop = 83
-          ExplicitWidth = 238
+          Left = 91
+          Top = 62
+          Width = 178
+          Height = 20
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          ExplicitLeft = 91
+          ExplicitTop = 62
+          ExplicitWidth = 178
+          ExplicitHeight = 20
         end
         inherited FrmTagPropNameCB: TComboBox
-          Top = 83
-          ExplicitTop = 83
+          Left = 4
+          Top = 62
+          Width = 81
+          Height = 20
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          ExplicitLeft = 4
+          ExplicitTop = 62
+          ExplicitWidth = 81
+          ExplicitHeight = 20
         end
       end
       inherited TagsLV: TBtnListView
-        Top = 126
-        Width = 365
-        Height = 348
-        ExplicitTop = 126
-        ExplicitWidth = 365
-        ExplicitHeight = 348
+        Top = 95
+        Width = 273
+        Height = 260
+        Margins.Left = 3
+        Margins.Top = 3
+        Margins.Right = 3
+        Margins.Bottom = 3
+        Columns = <
+          item
+            Caption = #1048#1084#1103
+            Width = 49
+          end
+          item
+            Caption = #1058#1080#1087
+            Width = 49
+          end
+          item
+            Caption = 'Fs'
+            Width = 38
+          end>
+        ExplicitTop = 95
+        ExplicitWidth = 273
+        ExplicitHeight = 260
       end
     end
   end

@@ -5,8 +5,11 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, VirtualTrees, uVTServices, uTagsListFrame, StdCtrls, ExtCtrls,
-  ActiveX,
+  ActiveX, ComCtrls,
   uRCFunc,
+  uHardwareMath,
+  uComponentServises,
+  tags,
   uRcCtrls, DCL_MYOWN, Spin, ImgList, Buttons, uSrsFrm;
 
 type
@@ -60,6 +63,7 @@ type
     // обновить списки тегов в элементах
     Procedure UpdateTags;
     procedure ShowSrsCfg;
+    function GetSelectTaho:cSRSTaho;
   public
     procedure Edit(p_srs:tsrsfrm);
   end;
@@ -74,34 +78,68 @@ implementation
 procedure TEditSrsFrm.AddAlgBtnClick(Sender: TObject);
 var
   lt:cSRSTaho;
-  t:ctag;
+  t:itag;
+  cfg:cSpmCfg;
 begin
-  t:=TrigNameCB.gettag;
-  if t<>nil then
+  lt:=GetSelectTaho;
+  if lt=nil then
   begin
-    lt:=cSRSTaho.Create;
-    lt.m_tag.tag:=t.tag;
-    lt.m_treshold:=ThresholdFE.FloatNum;
-    lt.m_ShiftLeft:=LeftShiftEdit.FloatNum;
-    lt.m_Length:=LengthFE.FloatNum;
-    m_SRS.addTaho(lt);
+    t:=TrigNameCB.gettag;
+    if t<>nil then
+    begin
+      lt:=cSRSTaho.Create;
+      lt.m_tag.tag:=t;
+      lt.m_treshold:=ThresholdFE.FloatNum;
+      lt.m_ShiftLeft:=LeftShiftEdit.FloatNum;
+      lt.m_Length:=LengthFE.FloatNum;
+      m_SRS.addTaho(lt);
+      cfg:=cSpmCfg.Create;
+      cfg.m_fftCount:=FFTBlockSizeIE.IntNum;
+      cfg.m_addNulls:=NullCB.Checked;
+      cfg.m_blockcount:=ShCountIE.IntNum;
+      lt.Cfg:=cfg;
+    end;
   end;
+  ShowSrsCfg;
 end;
 
 procedure TEditSrsFrm.Edit(p_srs: tsrsfrm);
 begin
-
+  m_SRS:=p_srs;
+  ShowModal;
 end;
 
 procedure TEditSrsFrm.FormShow(Sender: TObject);
 begin
   UpdateTags;
+  ShowSrsCfg;
+end;
+
+function TEditSrsFrm.GetSelectTaho: cSRSTaho;
+var
+  n, parentnode: pvirtualnode;
+  d: pnodedata;
+begin
+  result := nil;
+  n := GetSelectNode(SignalsTV);
+  if n=nil then
+  begin
+    n:=SignalsTV.RootNode;
+    if n=nil then exit;
+  end;
+  if n.Parent<>nil then
+    n:=n.Parent;
+  if n.Data  is cSRSTaho then
+  begin
+    result:=csrstaho(n.data);
+  end;
 end;
 
 procedure TEditSrsFrm.ShowSrsCfg;
 var
   i:integer;
   t:cSRSTaho;
+  cfg:cSpmCfg;
   n, parnode: pvirtualnode;
   d: pnodedata;
 begin
@@ -112,21 +150,7 @@ begin
   d.data:=t;
   d.color:=SignalsTV.normalcolor;
   d.Caption:=t.name;
-  d.ImageIndex:=0;
-  for I := 0 to t..Count - 1 do
-  begin
-
-  end;
-    for j := 0 to cfg.ChildCount - 1 do
-    begin
-      a:=cfg.getAlg(j);
-      n:=AlgsTV.AddChild(parnode, cfg);
-      d:=AlgsTV.getNodeData(n);
-      d.Caption:=a.name;
-      d.ImageIndex:=1;
-      d.data:=a;
-      d.color:=AlgsTV.normalcolor;
-    end;
+  d.ImageIndex:=1;
 end;
 
 procedure TEditSrsFrm.SignalsTVDragDrop(Sender: TBaseVirtualTree;
@@ -136,6 +160,9 @@ var
   I: Integer;
   n, sn, new, prev: PVirtualNode;
   d, sd, nd:pnodedata;
+  li:TListItem;
+  t:cSRSTaho;
+  cfg:cSpmCfg;
 begin
   // перетаскиваем vcl компонент
   n := Sender.DropTargetNode;
@@ -145,45 +172,16 @@ begin
   end;
   if source=TagsListFrame1.TagsLV then
   begin
-    if DataObject = nil then
+    t:=GetSelectTaho;
+    li:=TagsListFrame1.TagsLV.Selected;
+    for I := 0 to TagsListFrame1.TagsLV.SelCount - 1 do
     begin
-      AddAlgToNode(n);
+
     end;
   end
   else
   begin
-    if source=AlgsTV then // если источник само дерево алгоритмов
-    begin
-      sn:=AlgsTV.GetFirstSelected(false);
-      while sn<>nil do
-      begin
-        sd:=AlgsTV.GetNodeData(sn);
-        if tobject(d.data) is cBaseAlgContainer then
-        begin
-          n:=n.Parent;
-          d:=AlgsTV.GetNodeData(n);
-        end;
-        if tobject(d.data) is cAlgConfig then // если дропаем в конфиг
-        begin
-          if tobject(sd.data) is cbasealgcontainer then
-          begin
-            if cbasealgcontainer(sd.data).ClassType=cAlgConfig(d.data).clType then
-            begin
-              new:=AlgsTV.AddChild(n, nil);
-              nd:=AlgsTV.GetNodeData(new);
-              nd.data:=sd.data;
-              nd.ImageIndex:=sd.ImageIndex;
-              nd.color:=sd.color;
-              nd.Caption:=sd.Caption;
-              cAlgConfig(d.data).AddChild(cbasealgcontainer(sd.data));
-              prev:=sn;
-              sn:=AlgsTV.GetNextSelected(sn, false);
-              AlgsTV.DeleteNode(prev,true);
-            end;
-          end;
-        end;
-      end;
-    end;
+
   end;
 end;
 
