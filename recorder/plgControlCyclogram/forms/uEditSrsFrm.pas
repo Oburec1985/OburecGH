@@ -129,9 +129,10 @@ begin
   end;
   if n.Parent<>nil then
     n:=n.Parent;
-  if n.Data  is cSRSTaho then
+  d:=SignalsTV.getNodeData(n);
+  if tobject(d.Data) is cSRSTaho then
   begin
-    result:=csrstaho(n.data);
+    result:=csrstaho(d.Data);
   end;
 end;
 

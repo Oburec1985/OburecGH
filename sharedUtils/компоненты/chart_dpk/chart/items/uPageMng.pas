@@ -167,7 +167,10 @@ var
   i,row,col,rows,w,h:integer;
   size:tpoint;
   page:cpage;
+
+  fsize:point2;
   rect:trect;
+  relbound:frect;
 begin
   if childcount mod cols<>0 then
   begin
@@ -182,40 +185,65 @@ begin
   h:=clBound.top-clBound.bottom;
   size.x:=trunc(w/cols);
   size.y:=trunc(h/rows);
+
   i:=0;
   col:=0;
-  while i<childcount do
+  if (w>0) and (h>0) then
   begin
-    for row := 0 to cols - 1 do
+    while i<childcount do
     begin
-      if (col=rows-1) and (row=0) then
+      for row := 0 to cols - 1 do
       begin
-        cols:=ChildCount mod cols;
-        if cols<>0 then
-          size.x:=trunc(w/cols);
+        if (col=rows-1) and (row=0) then
+        begin
+          cols:=ChildCount mod cols;
+          if cols<>0 then
+            size.x:=trunc(w/cols);
+        end;
+        rect.left:=clBound.Left+row*size.x;
+        rect.top:=clBound.top-col*size.y;;
+        rect.Right:=rect.left+size.x;
+        rect.Bottom:=rect.top-size.y;
+        page:=GetPage(i);
+        page.bound:=rect;
+        inc(i);
+        if i>=childcount then
+          break;
       end;
-      rect.left:=clBound.Left+row*size.x;
-      rect.top:=clBound.top-col*size.y;;
-      rect.Right:=rect.left+size.x;
-      rect.Bottom:=rect.top-size.y;
-      page:=GetPage(i);
-      page.bound:=rect;
-      inc(i);
-      if i>=childcount then
-        exit;
+      inc(col);
     end;
-    inc(col);
+  end;
+  // установка габаритов по относительным координатам. Возможно все что выше надо похерить...2023
+  // т.к. код выше не работает для случая когда чарт появился с нулевыми габаритами
+  if (w<=0) or (h<=0) then
+  begin
+    for I := 0 to ChildCount - 1 do
+    begin
+      page:=GetPage(i);
+      row:= i div cols;
+      col:=I MOD cols;
+      fsize.y:=1/rows;
+      fsize.x:=1/cols;
+      relbound.BottomLeft.x:=fsize.x*col;
+      relbound.TopRight.x:=fsize.x*col+fsize.x;
+      relbound.TopRight.y:=1-fsize.y*row;
+      relbound.BottomLeft.y:=1-(fsize.y*row+fsize.y);
+      page.Relativebound:=relbound;
+    end;
   end;
 end;
 
 procedure cPageMng.doalign(sender:tobject);
 var
-  rowcount:integer;
+  colcount:integer;
 begin
   if childcount>1 then
   begin
-    rowcount:=round(sqrt(childcount));
-    Alignpages(rowcount);
+    //if childcount=2 then
+    //  colcount:=2
+    //Else
+    colcount:=round(sqrt(childcount));
+    Alignpages(colcount);
   end
   else
   begin

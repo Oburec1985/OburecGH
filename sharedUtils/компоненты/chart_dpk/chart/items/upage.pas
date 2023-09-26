@@ -617,6 +617,7 @@ end;
 procedure cPage.drawGrid;
 var
   color: point3;
+  c:integer;
 begin
   // шаг в координатах нормированного вьюпорта
   color := GridColor;
@@ -627,10 +628,12 @@ begin
   glpushmatrix;
   glloadidentity;
   glcolor3fv(@color);
-  if gridlinecount_X=(length(xGridData) shr 1) then
-    DrawLinesData(gridlinecount_X, xGridData);
-  if gridlinecount_Y=(length(yGridData) shr 1) then
-    DrawLinesData(gridlinecount_Y, yGridData);
+  c:=length(xGridData) shr 1;
+  //if gridlinecount_X=c then
+    DrawLinesData(c, xGridData);
+  c:=length(yGridData) shr 1;
+  //if gridlinecount_Y=c then
+    DrawLinesData(c, yGridData);
   glDisable(GL_LINE_STIPPLE);
   glpopmatrix;
 end;
@@ -728,19 +731,21 @@ var
 begin
   if YMaxEdit <> nil then
   begin
-    bounds := bound;
-    tabs := GetPixelTabSpace;
-    tabtext := getpixeltabtext;
-    topoffset := twincontrol(chart).Height - bounds.Top;
-    // по хорошему нужно выравнивать текст по краницам page.tabspace
-    YMaxEdit.position := p2(m_TabSpace.BottomLeft.x, m_TabSpace.TopRight.y);
-    YMinEdit.position := m_TabSpace.BottomLeft;
-    XMaxEdit.position := p2(m_TabSpace.TopRight.x,
-      m_TabSpace.BottomLeft.y - XMaxEdit.GetTextHeigth);
-    XMinEdit.position := p2(m_TabSpace.BottomLeft.x,
-      m_TabSpace.BottomLeft.y - XMaxEdit.GetTextHeigth);
-    // положение метки страницы
-    SetLabelPos;
+    if (getheight>0) and (getwidth>0) then
+    begin
+      bounds := bound;
+      tabs := GetPixelTabSpace;
+      tabtext := getpixeltabtext;
+      topoffset := twincontrol(chart).Height - bounds.Top;
+      // по хорошему нужно выравнивать текст по краницам page.tabspace
+      YMaxEdit.position := p2(m_TabSpace.BottomLeft.x, m_TabSpace.TopRight.y);
+      YMinEdit.position := m_TabSpace.BottomLeft;
+      XMaxEdit.position := p2(m_TabSpace.TopRight.x, m_TabSpace.BottomLeft.y - XMaxEdit.GetTextHeigth);
+      XMinEdit.position := p2(m_TabSpace.BottomLeft.x,
+        m_TabSpace.BottomLeft.y - XMaxEdit.GetTextHeigth);
+      // положение метки страницы
+      SetLabelPos;
+    end;
   end;
 end;
 
@@ -939,6 +944,8 @@ begin
 
   // создание меток для подписи осей
   YMaxEdit := cfloatlabel.create;
+  YMaxEdit.setMng(cchart(p_chart).OBJmNG);
+  YMaxEdit.chart:=p_chart;
   YMaxEdit.autocreate := true;
   YMaxEdit.textcolor := blue;
   YMaxEdit.align := c_right;
@@ -947,6 +954,7 @@ begin
   initTEdit(YMaxEdit);
 
   YMinEdit := cfloatlabel.create;
+  YMinEdit.chart:=p_chart;
   YMinEdit.autocreate := true;
   YMinEdit.textcolor := blue;
   YMinEdit.align := c_right;
@@ -954,12 +962,15 @@ begin
   initTEdit(YMinEdit);
 
   XMaxEdit := cfloatlabel.create;
+  XMaxEdit.setMng(cchart(p_chart).OBJmNG);
+  XMaxEdit.chart:=p_chart;
   XMaxEdit.autocreate := true;
   XMaxEdit.Name := ModComponentName('XMaxEdit');
   XMaxEdit.align := c_right;
   initTEdit(XMaxEdit);
 
   XMinEdit := cfloatlabel.create;
+  XMinEdit.chart:=p_chart;
   XMinEdit.autocreate := true;
   XMinEdit.Name := ModComponentName('XMinEdit');
   initTEdit(XMinEdit);

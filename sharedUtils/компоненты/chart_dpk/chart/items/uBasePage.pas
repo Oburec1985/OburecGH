@@ -24,6 +24,7 @@ type
     m_NormalViewport:array[0..3] of glint;
     // матрица вида
     m_view:array[0..15] of double;
+    // в координатах 0...1
     fRelativeBound:frect;
     ibound:trect;
     // оконные свойства
@@ -87,6 +88,7 @@ type
     function getwidth:integer;
     function getheight:integer;
   public
+    // в координатах 0...1 где 0;0 - левый нижний угол 1;1; - правый верхний
     property Relativebound:frect read getRelBound write setRelBound;
     // поля с учетом компонент
     property bound:trect read getIbound write setbound;

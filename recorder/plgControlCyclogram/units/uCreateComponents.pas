@@ -52,6 +52,8 @@ uses
   uAlgsSaveFrm,
   uSyncOscillogramEditFrm,
   uIRDiagramEditFrm,
+  uEditSRSFrm,
+  uSRSFrm,
   uMBaseControl;
 
 type
@@ -316,6 +318,11 @@ begin
     IRDiagrEditFrm.Show;
   IRDiagrEditFrm.close;
 
+  EditSRSFrm:=TEditSRSFrm.Create(nil);
+  if show then
+    EditSRSFrm.Show;
+  EditSRSFrm.close;
+
   BandsFrm:=TBandsFrm.Create(nil);
   if show then
     BandsFrm.Show;
@@ -518,6 +525,10 @@ begin
 
   g_IRDiagramFactory:=cIRDiagramFactory.create;
   compMng.Add(g_IRDiagramFactory);
+
+  g_SRSFactory:=cSRSFactory.create;
+  compMng.Add(g_SRSFactory);
+
 
   g_GenSignalsFactory:=cGenSignalsFactory.create;
   compMng.Add(g_GenSignalsFactory);

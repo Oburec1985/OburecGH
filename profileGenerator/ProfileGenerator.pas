@@ -230,6 +230,8 @@ begin
   frame.Visible:=true;
   frame.parent:=MouseGB;
   frame.lincchart(cChart1);
+
+  page:=cpage(cchart1.activeTab.addPage(true));
   // отладка поларного графика
   //testPolarGraph;
 
