@@ -12,6 +12,7 @@ uses
   uChart,
   inifiles,
   upage,
+  tags,
   uCommonTypes,
   pluginClass,
   Dialogs, ExtCtrls;
@@ -49,6 +50,8 @@ type
     procedure createTahoTag;
     function SRSCount:integer;
     function name:string;
+    constructor create;
+    destructor destroy;
   end;
 
   cSRSres = class
@@ -198,12 +201,14 @@ begin
   r.TopRight.x:=10;
   r.TopRight.y:=10;
   p.ZoomfRect(r);
+  p.Caption:='Oscillogram';
   p:=SpmChart.tabs.activeTab.GetPage(1);
   r.BottomLeft.x:=0;
   r.BottomLeft.y:=0;
   r.TopRight.x:=10;
   r.TopRight.y:=10;
   p.ZoomfRect(r);
+  p.Caption:='Freq Dom.';
 end;
 
 procedure TSRSFrm.UpdateBlocks;
@@ -291,9 +296,12 @@ begin
   a_pIni.WriteInteger('Cfg', 'FFtnum', c.m_fftCount);
   a_pIni.WriteInteger('Cfg', 'BlockCount', c.m_blockcount);
   a_pIni.WriteBool('Cfg', 'AddNulls', c.m_addNulls);
-  for I := 0 to c.SRSCount - 1 do
+  if c<>nil then
   begin
+    for I := 0 to c.SRSCount - 1 do
+    begin
 
+    end;
   end;
 end;
 
@@ -331,11 +339,13 @@ end;
 constructor cSRSTaho.create;
 begin
   inherited;
+  m_tag:=cTag.create;
   fSpmCfgList:=TList.Create;
 end;
 
 destructor cSRSTaho.destroy;
 begin
+  m_tag.destroy;
   fSpmCfgList.Destroy;
   inherited;
 end;
@@ -350,14 +360,40 @@ procedure cSpmCfg.addSRS(s: tobject);
 var
   I: Integer;
   ls:cSRSres;
+  t:itag;
 begin
-  for I := 0 to m_SRSList.Count - 1 do
+  if s is cSRSres then
   begin
-    ls:=cSRSres(m_SRSList.Items[i]);
-    if s=ls then
-      exit;
+    for I := 0 to m_SRSList.Count - 1 do
+    begin
+      ls:=cSRSres(m_SRSList.Items[i]);
+      if s=ls then
+        exit;
+    end;
+  end;
+  if Supports(s,IID_ITAG) then
+  begin
+    t:=itag(s);
+    for I := 0 to m_SRSList.Count - 1 do
+    begin
+      ls:=cSRSres(m_SRSList.Items[i]);
+      if t=ls.m_tag.tag then
+        exit;
+    end;
+    ls:=cSRSres.create;
+    ls.m_tag.tag:=ls;
   end;
   m_SRSList.Add(s);
+end;
+
+constructor cSpmCfg.create;
+begin
+  m_SRSList:=TList.Create;
+end;
+
+destructor cSpmCfg.destroy;
+begin
+  m_SRSList.Destroy;
 end;
 
 procedure cSpmCfg.createTahoTag;

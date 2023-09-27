@@ -146,12 +146,15 @@ var
 begin
   t:=m_SRS.getTaho;
   SignalsTV.clear;
-  parnode:=SignalsTV.AddChild(nil, nil);
-  d:=SignalsTV.getNodeData(parnode);
-  d.data:=t;
-  d.color:=SignalsTV.normalcolor;
-  d.Caption:=t.name;
-  d.ImageIndex:=1;
+  if t<>nil then
+  begin
+    parnode:=SignalsTV.AddChild(nil, nil);
+    d:=SignalsTV.getNodeData(parnode);
+    d.data:=t;
+    d.color:=SignalsTV.normalcolor;
+    d.Caption:=t.name;
+    d.ImageIndex:=1;
+  end;
 end;
 
 procedure TEditSrsFrm.SignalsTVDragDrop(Sender: TBaseVirtualTree;
@@ -163,6 +166,7 @@ var
   d, sd, nd:pnodedata;
   li:TListItem;
   t:cSRSTaho;
+  it:itag;
   cfg:cSpmCfg;
 begin
   // перетаскиваем vcl компонент
@@ -174,17 +178,32 @@ begin
   if source=TagsListFrame1.TagsLV then
   begin
     t:=GetSelectTaho;
-    li:=TagsListFrame1.TagsLV.Selected;
-    for I := 0 to TagsListFrame1.TagsLV.SelCount - 1 do
+    if t=nil then
     begin
-
+      li:=TagsListFrame1.TagsLV.Selected;
+      t:=cSRSTaho.create;
+      cfg:=cSpmCfg.Create;
+      t.Cfg:=cfg;
+      t.m_tag.tag:=itag(li.Data);
+      m_SRS.addTaho(t);
+    end
+    else
+    begin
+      li:=TagsListFrame1.TagsLV.Selected;
+      cfg:=t.cfg;
+      for I := 0 to TagsListFrame1.TagsLV.SelCount - 1 do
+      begin
+        cfg.addSRS(li.data);
+        li:=TagsListFrame1.TagsLV.GetNextItem(li,sdAll,[isSelected]);
+      end;
     end;
   end
   else
   begin
 
   end;
-end;
+
+  end;
 
 procedure TEditSrsFrm.SignalsTVDragOver(Sender: TBaseVirtualTree;
   Source: TObject; Shift: TShiftState; State: TDragState; Pt: TPoint;
