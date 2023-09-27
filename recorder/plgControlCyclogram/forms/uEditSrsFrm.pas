@@ -8,6 +8,7 @@ uses
   ActiveX, ComCtrls,
   uRCFunc,
   uHardwareMath,
+  uCommonMath,
   uComponentServises,
   tags,
   uRcCtrls, DCL_MYOWN, Spin, ImgList, Buttons, uSrsFrm;
@@ -47,7 +48,7 @@ type
     TrigNameCB: TRcComboBox;
     ShCountIE: TIntEdit;
     Label1: TLabel;
-    TahoNameRG: TRcComboBox;
+    TahoNameCB: TRcComboBox;
     CheckBox1: TCheckBox;
     AddAlgBtn: TSpeedButton;
     procedure SignalsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
@@ -57,9 +58,11 @@ type
       Pt: TPoint; var Effect: Integer; Mode: TDropMode);
     procedure FormShow(Sender: TObject);
     procedure AddAlgBtnClick(Sender: TObject);
+    procedure SignalsTVChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
   public
     m_SRS:TSRSFrm;
   private
+    procedure ShowTaho(t:cSrsTaho);
     // обновить списки тегов в элементах
     Procedure UpdateTags;
     procedure ShowSrsCfg;
@@ -127,8 +130,23 @@ begin
     n:=SignalsTV.RootNode;
     if n=nil then exit;
   end;
-  if n.Parent<>nil then
-    n:=n.Parent;
+  if n<>SignalsTV.RootNode then
+  begin
+    if n.Parent<>SignalsTV.RootNode then
+      n:=n.Parent;
+  end
+  else
+  begin
+    if n.ChildCount>0 then
+    begin
+      n:=n.FirstChild;
+    end
+    else
+    begin
+      result:=nil;
+      exit;
+    end;
+  end;
   d:=SignalsTV.getNodeData(n);
   if tobject(d.Data) is cSRSTaho then
   begin
@@ -141,6 +159,7 @@ var
   i:integer;
   t:cSRSTaho;
   cfg:cSpmCfg;
+  srs:cSRSres;
   n, parnode: pvirtualnode;
   d: pnodedata;
 begin
@@ -154,6 +173,51 @@ begin
     d.color:=SignalsTV.normalcolor;
     d.Caption:=t.name;
     d.ImageIndex:=1;
+    for I := 0 to t.cfg.SRSCount - 1 do
+    begin
+      n:=SignalsTV.AddChild(parnode, nil);
+      d:=SignalsTV.getNodeData(n);
+      srs:=t.Cfg.GetSrs(i);
+      d.data:=srs;
+      d.color:=SignalsTV.normalcolor;
+      d.Caption:=srs.name;
+      d.ImageIndex:=2;
+    end;
+  end;
+end;
+
+procedure TEditSrsFrm.ShowTaho(t: cSrsTaho);
+var
+  c:cSpmCfg;
+begin
+  setComboBoxItem(t.name,TahoNameCB);
+  setComboBoxItem(t.name,TrigNameCB);
+  ThresholdFE.FloatNum:=t.m_treshold;
+  LeftShiftEdit.FloatNum:=t.m_ShiftLeft;
+  LengthFE.FloatNum:=t.m_Length;
+  c:=t.Cfg;
+  FFTBlockSizeIE.IntNum:=c.m_fftCount;
+  FFTShiftIE.IntNum:=c.m_fftCount;
+  FFTdxFE.FloatNum:=csrstaho(c.taho).m_tag.freq/c.m_fftCount;
+  BlockSizeFE.FloatNum:=FFTBlockSizeIE.IntNum/csrstaho(c.taho).m_tag.freq;
+  ShCountIE.IntNum:=1;
+  NullCB.Checked:=false;
+end;
+
+procedure TEditSrsFrm.SignalsTVChange(Sender: TBaseVirtualTree;
+  Node: PVirtualNode);
+var
+  n: PVirtualNode;
+  D: PNodeData;
+begin
+  n := GetSelectNode(SignalsTV);
+  d := SignalsTV.GetNodeData(n);
+  if d <> nil then
+  begin
+    if TObject(d.data) is cSRSTaho then
+    begin
+      ShowTaho(cSRSTaho(TObject(d.data)));
+    end;
   end;
 end;
 
@@ -182,9 +246,9 @@ begin
     begin
       li:=TagsListFrame1.TagsLV.Selected;
       t:=cSRSTaho.create;
+      t.m_tag.tag:=itag(li.Data);
       cfg:=cSpmCfg.Create;
       t.Cfg:=cfg;
-      t.m_tag.tag:=itag(li.Data);
       m_SRS.addTaho(t);
     end
     else
@@ -202,8 +266,8 @@ begin
   begin
 
   end;
-
-  end;
+  ShowSrsCfg;
+end;
 
 procedure TEditSrsFrm.SignalsTVDragOver(Sender: TBaseVirtualTree;
   Source: TObject; Shift: TShiftState; State: TDragState; Pt: TPoint;
@@ -223,6 +287,7 @@ end;
 
 procedure TEditSrsFrm.UpdateTags;
 begin
+  TahoNameCB.updateTagsList;
   TrigNameCB.updateTagsList;
   TagsListFrame1.ShowChannels;
 end;

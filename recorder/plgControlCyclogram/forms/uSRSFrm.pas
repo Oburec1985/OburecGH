@@ -13,11 +13,13 @@ uses
   inifiles,
   upage,
   tags,
+  uCommonMath,
   uCommonTypes,
   pluginClass,
   Dialogs, ExtCtrls;
 
 type
+  cSRSres = class;
  // конфигуратор расчета спектра
   cSpmCfg = class
   public
@@ -47,7 +49,7 @@ type
     m_SRSList:Tlist;
   public
     procedure addSRS(s:tobject);
-    procedure createTahoTag;
+    function GetSrs(i:integer):cSRSres;
     function SRSCount:integer;
     function name:string;
     constructor create;
@@ -68,16 +70,18 @@ type
     // спектр re_im
     m_T1ClxData, m_TahoClxData:TAlignDCmpx;
   public
+    function name:string;
     constructor create;
     destructor destroy;
   end;
 
-  cSRSTaho = class(cSRSres)
+  cSRSTaho = class
   public
     // Амплдитуда для обнаружения события
     m_treshold:double;
     // отступ слева и длительность
     m_ShiftLeft, m_Length:double;
+    m_tag:ctag;
   private
     fSpmCfgList:TList;
   protected
@@ -288,19 +292,22 @@ var
 begin
   inherited;
   t:=getTaho;
-  saveTagToIni(a_pIni,t.m_tag,'Taho','Taho_Tag');
-  WriteFloatToIniMera(a_pIni, 'Taho', 'ShiftLeft', t.m_ShiftLeft);
-  WriteFloatToIniMera(a_pIni, 'Taho', 'Threshold', t.m_treshold);
-  WriteFloatToIniMera(a_pIni, 'Taho', 'Length', t.m_Length);
-  c:=t.Cfg;
-  a_pIni.WriteInteger('Cfg', 'FFtnum', c.m_fftCount);
-  a_pIni.WriteInteger('Cfg', 'BlockCount', c.m_blockcount);
-  a_pIni.WriteBool('Cfg', 'AddNulls', c.m_addNulls);
-  if c<>nil then
+  if t<>nil then
   begin
-    for I := 0 to c.SRSCount - 1 do
+    saveTagToIni(a_pIni,t.m_tag,'Taho','Taho_Tag');
+    WriteFloatToIniMera(a_pIni, 'Taho', 'ShiftLeft', t.m_ShiftLeft);
+    WriteFloatToIniMera(a_pIni, 'Taho', 'Threshold', t.m_treshold);
+    WriteFloatToIniMera(a_pIni, 'Taho', 'Length', t.m_Length);
+    c:=t.Cfg;
+    a_pIni.WriteInteger('Cfg', 'FFtnum', c.m_fftCount);
+    a_pIni.WriteInteger('Cfg', 'BlockCount', c.m_blockcount);
+    a_pIni.WriteBool('Cfg', 'AddNulls', c.m_addNulls);
+    if c<>nil then
     begin
+      for I := 0 to c.SRSCount - 1 do
+      begin
 
+      end;
     end;
   end;
 end;
@@ -318,7 +325,6 @@ begin
  end;
  c.taho:=self;
  fSpmCfgList.Add(c);
- c.createTahoTag;
 end;
 
 function cSRSTaho.GetCfg: cSpmCfg;
@@ -339,6 +345,10 @@ end;
 constructor cSRSTaho.create;
 begin
   inherited;
+  m_treshold:=1;
+  // отступ слева и длительность
+  m_ShiftLeft:=0.05;
+  m_Length:=1;
   m_tag:=cTag.create;
   fSpmCfgList:=TList.Create;
 end;
@@ -362,33 +372,43 @@ var
   ls:cSRSres;
   t:itag;
 begin
-  if s is cSRSres then
+  if GetObjectClass(s) = nil then
   begin
-    for I := 0 to m_SRSList.Count - 1 do
+    if Supports(itag(pointer(s)),IID_ITAG) then
     begin
-      ls:=cSRSres(m_SRSList.Items[i]);
-      if s=ls then
-        exit;
-    end;
-  end;
-  if Supports(s,IID_ITAG) then
+      t:=itag(pointer(s));
+      for I := 0 to m_SRSList.Count - 1 do
+      begin
+        ls:=cSRSres(m_SRSList.Items[i]);
+        if t=ls.m_tag.tag then
+          exit;
+      end;
+      ls:=cSRSres.create;
+      ls.m_tag.tag:=t;
+      m_SRSList.Add(ls);
+    end
+  end
+  else
   begin
-    t:=itag(s);
-    for I := 0 to m_SRSList.Count - 1 do
+    if s is cSRSres then
     begin
-      ls:=cSRSres(m_SRSList.Items[i]);
-      if t=ls.m_tag.tag then
-        exit;
+      for I := 0 to m_SRSList.Count - 1 do
+      begin
+        ls:=cSRSres(m_SRSList.Items[i]);
+        if s=ls then
+          exit;
+      end;
     end;
-    ls:=cSRSres.create;
-    ls.m_tag.tag:=ls;
+    m_SRSList.Add(s);
   end;
-  m_SRSList.Add(s);
 end;
 
 constructor cSpmCfg.create;
 begin
   m_SRSList:=TList.Create;
+  m_fftCount:=32;
+  m_blockcount:=1;
+  m_addNulls:=false;
 end;
 
 destructor cSpmCfg.destroy;
@@ -396,13 +416,9 @@ begin
   m_SRSList.Destroy;
 end;
 
-procedure cSpmCfg.createTahoTag;
-var
-  t:cSRSres;
+function cSpmCfg.GetSrs(i: integer): cSRSres;
 begin
-  t:=cSRSres.Create;
-  t.cfg:=self;
-  addSRS(t);
+  result:=cSRSres(m_SRSList.Items[i]);
 end;
 
 function cSpmCfg.name: string;
@@ -412,7 +428,7 @@ end;
 
 function cSpmCfg.SRSCount: integer;
 begin
-
+  result:=m_SRSList.Count;
 end;
 
 { cSRSres }
@@ -424,6 +440,11 @@ end;
 destructor cSRSres.destroy;
 begin
   m_tag.destroy;
+end;
+
+function cSRSres.name: string;
+begin
+  result:=m_tag.tagname;
 end;
 
 { cSRSFactory }
