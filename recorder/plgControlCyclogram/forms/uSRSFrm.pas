@@ -75,6 +75,8 @@ type
     constructor create;
     destructor destroy;
   end;
+  // выключен/ найден/ завершен
+  TtrigStates = (TrOff, TrOn, TrEnd);
 
   cSRSTaho = class
   public
@@ -88,6 +90,14 @@ type
     // спектр re_im
     m_T1ClxData:TAlignDCmpx;
     line, lineSpm:cBuffTrend1d;
+  private // переменные для обсчета в алгоритме обработки
+    v_min, v_max:double;
+    f_imin, f_imax:integer; // индексы отсчетов содержащих максимум и минимум в текущем ударе
+    fTrigState:TtrigStates;
+    // номер удара в серии
+    fShockInd:integer;
+    // начало и конец найденного для обработки удара
+    TrigInterval:point2d;
   private
     fSpmCfgList:TList;
   protected
@@ -295,70 +305,47 @@ begin
 end;
 
 procedure TSRSFrm.updatedata;
+var
+  t:csrstaho;
+  c:cSpmCfg;
+  s:cSRSres;
+  i, lreset:integer;
+  sig_interval, common_interval:point2d;
+  v:double;
 begin
-    if m_TrigTag.UpdateTagData(true) then
+  if t.m_tag.UpdateTagData(true) then
+  begin
+    t.v_min := t.m_tag.m_ReadData[0];
+    t.v_max := t.m_tag.m_ReadData[0];
+    for i := 1 to t.m_tag.lastindex - 1 do
     begin
-      v_min := m_TrigTag.m_ReadData[0];
-      v_max := m_TrigTag.m_ReadData[0];
-      for i := 1 to m_TrigTag.lastindex - 1 do
+      v := t.m_tag.m_ReadData[i];
+      if v > t.m_treshold then
       begin
-        v := m_TrigTag.m_ReadData[i];
-        if v > v_max then
+        t.fTrigState:=TrOn;
+        t.v_max := v;
+        t.f_imax := i;
+      end
+      else
+      begin
+        if t.fTrigState=TrOn then
         begin
-          v_max := v;
-          imin := i;
-          // rise
-          if (v_max - v_min) > m_Threshold then
-          begin
-            m_TrigTime := m_TrigTag.getReadTime(i);
-            m_TrigInterval.x := m_TrigTime + m_Phase0;
-            m_TrigInterval.y := m_TrigInterval.x + m_Length;
-            m_TrigRes := true;
-            break;
-          end;
-        end
-        else
-        begin
-          if v < v_min then
-          begin
-            v_min := v;
-            imin := i;
-            // fall
-            if (v_max - v_min) > m_Threshold then
-            begin
-              m_TrigTime := m_TrigTag.getReadTime(i);
-              m_TrigInterval.x := m_TrigTime + m_Phase0;
-              m_TrigInterval.y := m_TrigInterval.x + m_Length;
-              m_TrigRes := true;
-              break;
-            end;
-          end;
+          t.fTrigState=TrEnd;
+          inc(t.fShockInd);
+          t.TrigInterval.x:=t.m_tag.getReadTime(t.f_imax)-t.m_ShiftLeft;
+          t.TrigInterval.y:=t.TrigInterval.x+t.m_Length;
         end;
       end;
-      m_TrigTag.ResetTagData();
     end;
-    b := false;
-    for i := 0 to m_signals.count - 1 do
+    c:=t.Cfg;
+    for i := 0 to c.SRSCount - 1 do
     begin
-      s := GetSignal(i);
-      if s.t.UpdateTagData(true, s.m_Resetsize) or b then
+      s := c.GetSrs(i);
+      if s.m_tag.UpdateTagData(true, lreset) then
       begin
-        t := s.GetInterval;
-        if (t.y > m_TrigInterval.y) and m_TrigRes then
-        begin
-          if i = 0 then
-            interval := getCommonInterval(m_TrigInterval, t)
-          else
-            interval := getCommonInterval(interval, t);
-          if b or (i=0) then
-            b := true;
-        end
-        else
-        begin
-          // данные триггера накопились не по всем каналам
-          b:=false;
-        end;
+        sig_interval := s.m_tag.getPortionTime;
       end;
+      common_interval:=getCommonInterval(sig_interval, t.TrigInterval);
     end;
     // отображение триггерных данных
     if b then
