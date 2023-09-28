@@ -185,6 +185,7 @@ procedure saveTag(t: cTag; node: txmlnode);
 function LoadTag(node: txmlnode; p_t: cTag): cTag;
 procedure saveTagToIni(ifile: tinifile; t: cTag; sect, ident: string);
 function LoadTagIni(ifile: tinifile; sect, ident: string): cTag;
+function LoadITagIni(ifile: tinifile; sect, ident: string): iTag;
 procedure LoadExTagIni(ifile: tinifile; t: cTag; sect, ident: string);
 
 procedure GlobDetach;
@@ -492,6 +493,25 @@ begin
     begin
       val := GetSubString(str, ';', index + 1, index);
       t.ftagid := StrToInt64(val);
+    end;
+  end;
+end;
+
+function LoadITagIni(ifile: tinifile; sect, ident: string): iTag;
+var
+  val, str: string;
+  index: integer;
+begin
+  result := nil;
+  str := ifile.ReadString(sect, ident, '');
+  if str <> '' then
+  begin
+    val := GetSubString(str, ';', 0, index);
+    result:=getTagByName(val);
+    if result = nil then
+    begin
+      val := GetSubString(str, ';', index + 1, index);
+      result:=getTagById(StrToInt64(val));
     end;
   end;
 end;

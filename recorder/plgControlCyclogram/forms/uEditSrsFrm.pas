@@ -50,15 +50,18 @@ type
     Label1: TLabel;
     TahoNameCB: TRcComboBox;
     CheckBox1: TCheckBox;
-    AddAlgBtn: TSpeedButton;
+    UpdateBtn: TSpeedButton;
     procedure SignalsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
     procedure SignalsTVDragDrop(Sender: TBaseVirtualTree; Source: TObject; DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
       Pt: TPoint; var Effect: Integer; Mode: TDropMode);
     procedure FormShow(Sender: TObject);
-    procedure AddAlgBtnClick(Sender: TObject);
+    procedure ApplyBtnClick(Sender: TObject);
     procedure SignalsTVChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure FFTSizeSBDownClick(Sender: TObject);
+    procedure FFTSizeSBUpClick(Sender: TObject);
+    procedure UpdateBtnClick(Sender: TObject);
   public
     m_SRS:TSRSFrm;
   private
@@ -78,7 +81,7 @@ implementation
 
 {$R *.dfm}
 
-procedure TEditSrsFrm.AddAlgBtnClick(Sender: TObject);
+procedure TEditSrsFrm.ApplyBtnClick(Sender: TObject);
 var
   lt:cSRSTaho;
   t:itag;
@@ -110,6 +113,74 @@ procedure TEditSrsFrm.Edit(p_srs: tsrsfrm);
 begin
   m_SRS:=p_srs;
   ShowModal;
+end;
+
+procedure TEditSrsFrm.FFTSizeSBDownClick(Sender: TObject);
+var
+  t:csrstaho;
+begin
+  if Sender = FFTSizeSB then
+  begin
+    if FFTBlockSizeIE.IntNum >= 2 then
+    begin
+      FFTBlockSizeIE.IntNum := round(FFTBlockSizeIE.IntNum / 2);
+      FFTShiftIE.IntNum:=FFTBlockSizeIE.IntNum;
+    end
+    else
+    begin
+      FFTBlockSizeIE.IntNum := 2;
+    end;
+  end;
+  if Sender = FFTShiftSB then
+  begin
+    if FFTShiftIE.IntNum >= 2 then
+    begin
+      FFTShiftIE.IntNum := round(FFTShiftIE.IntNum / 2);
+      FFTBlockSizeIE.IntNum := FFTShiftIE.IntNum;
+    end
+    else
+    begin
+      FFTShiftIE.IntNum := 2;
+    end;
+  end;
+  t:=GetSelectTaho;
+  if t<>nil then
+  begin
+    FFTdxFE.FloatNum:=csrstaho(t).m_tag.freq/FFTBlockSizeIE.IntNum;
+    BlockSizeFE.FloatNum:=FFTBlockSizeIE.IntNum/csrstaho(t).m_tag.freq;
+  end;
+end;
+
+procedure TEditSrsFrm.FFTSizeSBUpClick(Sender: TObject);
+var
+  t:csrstaho;
+begin
+  if Sender = FFTSizeSB then
+  begin
+    if FFTBlockSizeIE.IntNum >= 2 then
+    begin
+      FFTBlockSizeIE.IntNum := FFTBlockSizeIE.IntNum * 2;
+      FFTShiftIE.IntNum:=FFTBlockSizeIE.IntNum;
+    end
+    else
+      FFTBlockSizeIE.IntNum := 2;
+  end;
+  if Sender = FFTShiftSB then
+  begin
+    if FFTShiftIE.IntNum >= 2 then
+    begin
+      FFTShiftIE.IntNum := FFTShiftIE.IntNum * 2;
+      FFTBlockSizeIE.IntNum:=FFTShiftIE.IntNum;
+    end
+    else
+      FFTShiftIE.IntNum := 2;
+  end;
+  t:=GetSelectTaho;
+  if t<>nil then
+  begin
+    FFTdxFE.FloatNum:=csrstaho(t).m_tag.freq/FFTBlockSizeIE.IntNum;
+    BlockSizeFE.FloatNum:=FFTBlockSizeIE.IntNum/csrstaho(t).m_tag.freq;
+  end;
 end;
 
 procedure TEditSrsFrm.FormShow(Sender: TObject);
@@ -283,6 +354,23 @@ begin
   begin
 
   end;
+end;
+
+procedure TEditSrsFrm.UpdateBtnClick(Sender: TObject);
+var
+  t:cSRSTaho;
+  c:cSpmCfg;
+begin
+  t:=GetSelectTaho;
+  if t=nil then exit;
+  t.m_treshold:=ThresholdFE.FloatNum;
+  t.m_ShiftLeft:=LeftShiftEdit.FloatNum;
+  t.m_Length:=LengthFE.FloatNum;
+  c:=t.Cfg;
+  c.m_fftCount:=FFTBlockSizeIE.IntNum;
+  c.m_blockcount:=ShCountIE.IntNum;
+  c.m_addNulls:=NullCB.Checked;
+  m_SRS.UpdateChart;
 end;
 
 procedure TEditSrsFrm.UpdateTags;
