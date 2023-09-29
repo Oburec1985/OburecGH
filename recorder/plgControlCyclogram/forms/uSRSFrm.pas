@@ -70,6 +70,11 @@ type
     // спектр re_im
     m_T1ClxData:TAlignDCmpx;
     line, lineSpm:cBuffTrend1d;
+  private
+    fComInt:point2d;
+    // найден общий интервал с взведенным тригом
+    fComInterval:boolean;
+    fComIntervalLen:double;
   public
     function name:string;
     constructor create;
@@ -85,7 +90,7 @@ type
     // отступ слева и длительность
     m_ShiftLeft, m_Length:double;
     m_tag:ctag;
-    // блок данных по которому идет расчет.
+    // блок данных по которому идет расчет. –азмер fportionsizei = length*ShockCount
     m_T1data: TAlignDarray;
     // спектр re_im
     m_T1ClxData:TAlignDCmpx;
@@ -117,6 +122,7 @@ type
     SpmChart: cChart;
     procedure FormCreate(Sender: TObject);
   public
+    ready:boolean;
     pageT, pageSpm:cpage;
     // список настроек “ахо
     m_TahoList:TList;
@@ -163,6 +169,8 @@ type
     function doCreateForm: cRecBasicIFrm; override;
     procedure doSetDefSize(var PSize: SIZE); override;
   end;
+  // копируем данные из тега по интервалу времени time в buf. ¬озвращает число элементов
+  function copyData(t:ctag; time:point2d; buf:TAlignDarray):integer;
 
 
 var
@@ -187,6 +195,15 @@ uses
 
 {$R *.dfm}
 
+function copyData(t:ctag; time:point2d; buf:TAlignDarray):integer;
+var
+  int:tpoint;
+begin
+  int:=t.getIntervalInd(time);
+  result:=int.Y-int.x;
+  move(t.m_ReadData[int.x], buf.p^, result*sizeof(double));
+end;
+
 { TSRSFrm }
 
 procedure TSRSFrm.addTaho(t: csrstaho);
@@ -206,8 +223,34 @@ begin
 end;
 
 procedure TSRSFrm.doStart;
+var
+  t:cSRSTaho;
+  I: Integer;
+  s:cSRSres;
 begin
-
+  ready:=false;
+  t:=getTaho;
+  if t.m_tag <> nil then
+  begin
+    t.m_tag.doOnStart;
+    ZeroMemory(t.m_T1data.p,  t.cfg.fportionsizei* sizeof(double));
+    if t.cfg<>nil then
+    begin
+      for I := 0 to t.Cfg.SRSCount - 1 do
+      begin
+        s:=t.Cfg.GetSrs(i);
+        s.m_tag.doOnStart;
+        ZeroMemory(s.m_T1data.p,  t.cfg.fportionsizei* sizeof(double));
+      end;
+    end
+    else
+      exit;
+  end
+  else
+  begin
+    exit;
+  end;
+  ready:=true;
 end;
 
 procedure TSRSFrm.FormCreate(Sender: TObject);
@@ -281,11 +324,13 @@ begin
     pageT.activeAxis.AddChild(l);
     l.color := ColorArray[0];
     t.line:=l;
+    l.dx:=1/t.m_tag.freq;
 
     l:= cBuffTrend1d.create;
     l.color := ColorArray[0];
     pageSpm.activeAxis.AddChild(l);
     t.lineSpm:=l;
+    l.dx:=t.Cfg.fspmdx;
 
     c:=t.Cfg;
     for I := 0 to c.SRSCount - 1 do
@@ -295,11 +340,13 @@ begin
       pageT.activeAxis.AddChild(l);
       l.color := ColorArray[i+1];
       s.line:=l;
+      l.dx:=1/t.m_tag.freq;
 
       l:= cBuffTrend1d.create;
       l.color := ColorArray[i+1];
       pageSpm.activeAxis.AddChild(l);
       s.lineSpm:=l;
+      l.dx:=t.Cfg.fspmdx;
     end;
   end;
 end;
@@ -309,12 +356,19 @@ var
   t:csrstaho;
   c:cSpmCfg;
   s:cSRSres;
-  i, lreset:integer;
+  i, pcount ,dropCount:integer;
   sig_interval, common_interval:point2d;
-  v:double;
+  v, comIntervalLen:double;
 begin
+  if not ready then exit;
+  t:=getTaho;
+  dropCount:=round(t.m_Length*t.m_tag.freq);
   if t.m_tag.UpdateTagData(true) then
   begin
+    if t.m_tag.getPortionLen>2*t.m_Length then
+    begin
+      t.m_tag.ResetTagDataTimeInd(dropCount);
+    end;
     t.v_min := t.m_tag.m_ReadData[0];
     t.v_max := t.m_tag.m_ReadData[0];
     for i := 1 to t.m_tag.lastindex - 1 do
@@ -330,10 +384,12 @@ begin
       begin
         if t.fTrigState=TrOn then
         begin
-          t.fTrigState=TrEnd;
+          t.fTrigState:=TrEnd;
           inc(t.fShockInd);
           t.TrigInterval.x:=t.m_tag.getReadTime(t.f_imax)-t.m_ShiftLeft;
           t.TrigInterval.y:=t.TrigInterval.x+t.m_Length;
+          pcount:=copyData(t.m_tag, t.TrigInterval, t.m_T1data);
+          t.line.AddPoints(TDoubleArray(t.m_T1data.p), pcount);
         end;
       end;
     end;
@@ -341,45 +397,40 @@ begin
     for i := 0 to c.SRSCount - 1 do
     begin
       s := c.GetSrs(i);
-      if s.m_tag.UpdateTagData(true, lreset) then
+      if s.m_tag.UpdateTagData(true) then
       begin
         sig_interval := s.m_tag.getPortionTime;
+        if s.m_tag.getPortionLen>2*t.m_Length then
+        begin
+          s.m_tag.ResetTagDataTimeInd(dropCount);
+        end;
       end;
       common_interval:=getCommonInterval(sig_interval, t.TrigInterval);
-    end;
-    // отображение триггерных данных
-    if b then
-    begin
-      m_TrigRes := false;
-      m_TimeLabel.Text := 'Time: ' + formatstr(interval.x, 3);
-      for i := 0 to m_signals.count - 1 do
+      ComIntervalLen:=common_interval.y-common_interval.x;
+      if ComIntervalLen>0 then
       begin
-        s := GetSignal(i);
-        if interval.x > 0 then
+        s.fComInterval:=true;
+        if ComIntervalLen>s.fComIntervalLen then
         begin
-          v := interval.x;
-          s.m_histX0:= v;
-        end
-        else
-        begin
-
-        end;
-        // возвращает количество элементов в m_outData, ind - посл элемент в m_readData
-        j := s.GetOscTrigData(s.m_outdata, interval, ind);
-        if j > 0 then
-        begin
-          s.line.AddPoints(s.m_outdata, j);
-          s.resetData(ind);
+          s.fComIntervalLen:=ComIntervalLen;
+          s.fComInt:=common_interval;
+          pcount:=copyData(s.m_tag, common_interval, s.m_T1data);
+          s.line.AddPoints(TDoubleArray(s.m_T1data.p), pcount);
         end;
       end;
     end;
-    exit;
   end;
 end;
 
 procedure TSRSFrm.UpdateView;
+var
+  i: integer;
 begin
+  if RStatePlay then
+  begin
 
+  end;
+  SpmChart.redraw;
 end;
 
 function TSRSFrm.getTaho: csrstaho;

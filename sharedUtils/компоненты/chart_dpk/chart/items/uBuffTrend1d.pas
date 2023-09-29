@@ -48,6 +48,7 @@ type
     // фактически не добавление точек а замена!!!
     procedure AddPoints(const a: array of single); override;
     procedure AddPoints(const a: array of double); override;
+    // замещает данные в линии
     procedure AddPoints(const a: array of double; p_count:integer); override;
     procedure AddPoints(const a: array of double; start, p_count:integer);override;
     property Count: integer read GetCount write SetCount;

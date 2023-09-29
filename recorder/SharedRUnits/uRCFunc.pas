@@ -144,6 +144,8 @@ type
     function getlastindex: integer;
     // начало и конец в секундах данных в m_readdata
     function getPortionTime: point2d;
+    // длительность накопленных данных
+    function getPortionLen: double;
     // индексы начала и конца интервала
     function getIntervalInd(interval: point2d): tpoint;
     // TimeInd
@@ -1275,6 +1277,15 @@ begin
   result.x := m_ReadDataTime;
   result.y := m_ReadDataTime + m_lastindex * (1 / getfreq);
 end;
+
+function cTag.getPortionLen: double;
+var
+  p2:point2d;
+begin
+  p2:=getPortionTime;
+  result:=p2.y-p2.x;
+end;
+
 
 function cTag.getIntervalInd(interval: point2d): tpoint;
 begin
