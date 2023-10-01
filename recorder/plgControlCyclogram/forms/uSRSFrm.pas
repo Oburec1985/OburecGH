@@ -13,6 +13,7 @@ uses
   inifiles,
   upage,
   tags,
+  complex,
   uBuffTrend1d,
   uCommonMath,
   uCommonTypes,
@@ -27,8 +28,9 @@ type
     // FFTplan
     FFTProp:TFFTProp;
     // число точек fft, число блоков по которым идет расчет спектров,
-    m_fftCount,
+    m_fftCount,fHalfFft,
     m_blockcount:integer;
+
     // добавлять нули
     m_addNulls: boolean;
   private
@@ -67,13 +69,16 @@ type
     blSize:double;
     // блок данных по которому идет расчет.
     m_T1data: TAlignDarray;
+    fDataCount:integer; // количество данных в m_T1data
     // спектр re_im
     m_T1ClxData:TAlignDCmpx;
+    // спектр амплитуд
+    m_rms: TAlignDarray;
     line, lineSpm:cBuffTrend1d;
   private
     fComInt:point2d;
     // найден общий интервал с взведенным тригом
-    fComInterval:boolean;
+    //fComInterval:boolean;
     fComIntervalLen:double;
   public
     function name:string;
@@ -92,8 +97,11 @@ type
     m_tag:ctag;
     // блок данных по которому идет расчет. Размер fportionsizei = length*ShockCount
     m_T1data: TAlignDarray;
+    fDataCount:integer; // количество данных в m_T1data
     // спектр re_im
     m_T1ClxData:TAlignDCmpx;
+    // тот же спектр, но амплитуда
+    m_rms: TAlignDarray;
     line, lineSpm:cBuffTrend1d;
   private // переменные для обсчета в алгоритме обработки
     v_min, v_max:double;
@@ -109,6 +117,9 @@ type
     procedure setCfg(c:cSpmCfg);
     function getCfg(i:integer):cSpmCfg;overload;
     function GetCfg:cSpmCfg;overload;
+    // когда найден новый триггер, старый пора сбросить:
+    // например обнулить общий интевал
+    procedure resetTrig;
   public
     property Cfg:cSpmCfg read getcfg write setcfg;
     function CfgCount:integer;
@@ -127,6 +138,7 @@ type
     // список настроек Тахо
     m_TahoList:TList;
   public
+    procedure BuildSpm(s:tobject);
     procedure UpdateView;
     procedure updatedata;
     // выделение памяти. происходит при загрузке или смене конфига
@@ -200,6 +212,10 @@ var
   int:tpoint;
 begin
   int:=t.getIntervalInd(time);
+  if int.x<0 then // если предыстория не успела накопиться
+  begin
+    int.x:=0;
+  end;
   result:=int.Y-int.x;
   move(t.m_ReadData[int.x], buf.p^, result*sizeof(double));
 end;
@@ -209,6 +225,39 @@ end;
 procedure TSRSFrm.addTaho(t: csrstaho);
 begin
   m_tahoList.Add(t);
+end;
+
+procedure TSRSFrm.BuildSpm(s: tobject);
+var
+  k:double;
+  c:cSpmCfg;
+  i, halfNP:integer;
+begin
+  if s is cSRSTaho then
+  begin
+    c:=cSRSTaho(s).Cfg;
+    fft_al_d_sse(TDoubleArray(cSRSTaho(s).m_T1data.p),
+                tCmxArray_d(cSRSTaho(s).m_T1ClxData.p),
+                cSpmCfg(c).FFTProp);
+    // расчет первого спектра
+    k := 2 / c.m_fftCount;
+    halfNP:=c.m_fftCount shr 1;
+    MULT_SSE_al_cmpx_d(tCmxArray_d(cSRSTaho(s).m_T1ClxData.p), k);
+    EvalSpmMag(tCmxArray_d(cSRSTaho(s).m_T1ClxData.p),
+               TDoubleArray(cSRSTaho(s).m_rms.p));
+  end;
+  if s is cSRSres then
+  begin
+    fft_al_d_sse(TDoubleArray(cSRSres(s).m_T1data.p),
+                tCmxArray_d(cSRSres(s).m_T1ClxData.p),
+                cSpmCfg(c).FFTProp);
+    // расчет первого спектра
+    k := 2 / c.m_fftCount;
+    halfNP:=c.m_fftCount shr 1;
+    MULT_SSE_al_cmpx_d(tCmxArray_d(cSRSres(s).m_T1ClxData.p), k);
+    EvalSpmMag(tCmxArray_d(cSRSres(s).m_T1ClxData.p),
+               TDoubleArray(cSRSres(s).m_rms.p));
+  end;
 end;
 
 constructor TSRSFrm.create(Aowner: tcomponent);
@@ -290,19 +339,26 @@ begin
   refresh:=GetREFRESHPERIOD;
   lt:=getTaho;
   c:=lt.cfg;
+  c.fHalfFft:= c.m_fftCount shr 1;
   // размер блока для расчета в секундах
   c.fportionsize:= lt.m_Length*c.m_blockcount;
   c.fportionsizei:=round(c.fportionsize*lt.m_tag.freq);
   c.fOutSize := c.m_fftCount * c.m_blockcount;
+  c.fspmdx:=lt.m_tag.freq/c.m_fftCount;
   c.FFTProp:=GetFFTPlan(c.m_fftCount);
   c.FFTProp.StartInd:=0;
   GetMemAlignedArray_d(c.fportionsizei, lt.m_T1data);
   GetMemAlignedArray_cmpx_d(c.m_fftCount, lt.m_T1ClxData);
+  GetMemAlignedArray_d(c.m_fftCount, lt.m_rms);
+  lt.lineSpm.dx:=c.fspmdx;
+
   for I := 0 to c.SRSCount - 1 do
   begin
     s:=c.GetSrs(i);
     GetMemAlignedArray_d(c.fportionsizei, s.m_T1data);
     GetMemAlignedArray_cmpx_d(c.m_fftCount, s.m_T1ClxData);
+    GetMemAlignedArray_d(c.m_fftCount, s.m_rms);
+    s.lineSpm.dx:=c.fspmdx;
   end;
 end;
 
@@ -314,6 +370,7 @@ var
   c:cSpmCfg;
   s:cSRSres;
   I: Integer;
+  fr:frect;
 begin
   pageT.activeAxis.clear;
   pageSpm.activeAxis.clear;
@@ -324,13 +381,14 @@ begin
     pageT.activeAxis.AddChild(l);
     l.color := ColorArray[0];
     t.line:=l;
+    t.line.name:=t.name;
     l.dx:=1/t.m_tag.freq;
 
     l:= cBuffTrend1d.create;
     l.color := ColorArray[0];
     pageSpm.activeAxis.AddChild(l);
     t.lineSpm:=l;
-    l.dx:=t.Cfg.fspmdx;
+    t.lineSpm.name:=t.name+'_spm';
 
     c:=t.Cfg;
     for I := 0 to c.SRSCount - 1 do
@@ -340,14 +398,22 @@ begin
       pageT.activeAxis.AddChild(l);
       l.color := ColorArray[i+1];
       s.line:=l;
+      s.line.name:=s.name;
       l.dx:=1/t.m_tag.freq;
 
       l:= cBuffTrend1d.create;
       l.color := ColorArray[i+1];
       pageSpm.activeAxis.AddChild(l);
       s.lineSpm:=l;
-      l.dx:=t.Cfg.fspmdx;
+      s.lineSpm.name:=s.name+'_spm';
     end;
+    fr.BottomLeft:=p2(0,-2*t.m_treshold);
+    fr.TopRight:=p2(t.m_Length,t.m_treshold*2);
+    pageT.ZoomfRect(fr);
+
+    fr.BottomLeft:=p2(0,0);
+    fr.TopRight:=p2(t.m_tag.freq/2,t.m_treshold*2);
+    pageSpm.ZoomfRect(fr);
   end;
 end;
 
@@ -358,14 +424,19 @@ var
   s:cSRSres;
   i, pcount ,dropCount:integer;
   sig_interval, common_interval:point2d;
-  v, comIntervalLen:double;
+  v, comIntervalLen, blocklen, refresh:double;
 begin
   if not ready then exit;
   t:=getTaho;
+  c:=t.cfg;
   dropCount:=round(t.m_Length*t.m_tag.freq);
+  blocklen:=t.m_Length;
+  refresh:=t.m_tag.BlockSize/t.m_tag.freq;
+  if blocklen<refresh then
+    blocklen:=refresh;
   if t.m_tag.UpdateTagData(true) then
   begin
-    if t.m_tag.getPortionLen>2*t.m_Length then
+    if t.m_tag.getPortionLen>2*blocklen then
     begin
       t.m_tag.ResetTagDataTimeInd(dropCount);
     end;
@@ -376,31 +447,38 @@ begin
       v := t.m_tag.m_ReadData[i];
       if v > t.m_treshold then
       begin
-        t.fTrigState:=TrOn;
-        t.v_max := v;
-        t.f_imax := i;
+        if v>t.v_max then
+        begin
+          t.fTrigState:=TrOn;
+          t.v_max := v;
+          t.f_imax := i;
+        end;
       end
       else
       begin
         if t.fTrigState=TrOn then
         begin
           t.fTrigState:=TrEnd;
+          t.ResetTrig;
           inc(t.fShockInd);
           t.TrigInterval.x:=t.m_tag.getReadTime(t.f_imax)-t.m_ShiftLeft;
           t.TrigInterval.y:=t.TrigInterval.x+t.m_Length;
           pcount:=copyData(t.m_tag, t.TrigInterval, t.m_T1data);
+          t.fDataCount:=pcount;
           t.line.AddPoints(TDoubleArray(t.m_T1data.p), pcount);
+          BuildSpm(t);
+          t.lineSpm.AddPoints(TDoubleArray(t.m_rms.p), c.fHalfFft);
+          break; // на оставшиеся данные в порции (цикле) пока забиваем
         end;
       end;
     end;
-    c:=t.Cfg;
     for i := 0 to c.SRSCount - 1 do
     begin
       s := c.GetSrs(i);
       if s.m_tag.UpdateTagData(true) then
       begin
         sig_interval := s.m_tag.getPortionTime;
-        if s.m_tag.getPortionLen>2*t.m_Length then
+        if s.m_tag.getPortionLen>2*blocklen then
         begin
           s.m_tag.ResetTagDataTimeInd(dropCount);
         end;
@@ -409,13 +487,16 @@ begin
       ComIntervalLen:=common_interval.y-common_interval.x;
       if ComIntervalLen>0 then
       begin
-        s.fComInterval:=true;
+        //s.fComInterval:=true;
         if ComIntervalLen>s.fComIntervalLen then
         begin
           s.fComIntervalLen:=ComIntervalLen;
           s.fComInt:=common_interval;
           pcount:=copyData(s.m_tag, common_interval, s.m_T1data);
+          s.fDataCount:=pcount;
           s.line.AddPoints(TDoubleArray(s.m_T1data.p), pcount);
+          BuildSpm(s);
+          s.lineSpm.AddPoints(TDoubleArray(s.m_rms.p), c.fHalfFft);
         end;
       end;
     end;
@@ -572,6 +653,22 @@ begin
   m_tag.destroy;
   fSpmCfgList.Destroy;
   inherited;
+end;
+
+procedure cSRSTaho.ResetTrig;
+var
+  c:cSpmCfg;
+  I: Integer;
+  s:cSRSres;
+begin
+  c:=Cfg;
+  ZeroMemory(m_T1data.p,  c.m_fftCount* sizeof(double));
+  for I := 0 to c.SRSCount - 1 do
+  begin
+    s:=c.GetSrs(i);
+    s.fComIntervalLen:=0;
+    ZeroMemory(s.m_T1data.p,  c.m_fftCount* sizeof(double));
+  end;
 end;
 
 function cSRSTaho.name: string;
