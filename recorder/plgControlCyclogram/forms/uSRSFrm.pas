@@ -105,7 +105,8 @@ type
     line, lineSpm:cBuffTrend1d;
   private // переменные для обсчета в алгоритме обработки
     v_min, v_max:double;
-    f_imin, f_imax:integer; // индексы отсчетов содержащих максимум и минимум в текущем ударе
+    f_imin, f_imax, // индексы отсчетов содержащих максимум и минимум в текущем ударе
+    f_iEnd:integer; // индекс последнего отсчета в текущем ударе
     fTrigState:TtrigStates;
     // номер удара в серии
     fShockInd:integer;
@@ -137,6 +138,10 @@ type
     pageT, pageSpm:cpage;
     // список настроек Тахо
     m_TahoList:TList;
+    // spm
+    m_lgX, m_lgY:boolean;
+    m_minX, m_maxX:double;
+    m_minY, m_maxY:double;
   public
     procedure BuildSpm(s:tobject);
     procedure UpdateView;
@@ -248,6 +253,7 @@ begin
   end;
   if s is cSRSres then
   begin
+    c:=cSRSres(s).cfg;
     fft_al_d_sse(TDoubleArray(cSRSres(s).m_T1data.p),
                 tCmxArray_d(cSRSres(s).m_T1ClxData.p),
                 cSpmCfg(c).FFTProp);
@@ -282,6 +288,7 @@ begin
   if t.m_tag <> nil then
   begin
     t.m_tag.doOnStart;
+    t.f_iEnd:=0;
     ZeroMemory(t.m_T1data.p,  t.cfg.fportionsizei* sizeof(double));
     if t.cfg<>nil then
     begin
@@ -347,6 +354,11 @@ begin
   c.fspmdx:=lt.m_tag.freq/c.m_fftCount;
   c.FFTProp:=GetFFTPlan(c.m_fftCount);
   c.FFTProp.StartInd:=0;
+
+  //lt.m_tag.m_bHistData:=true;
+  //lt.m_tag.m_ihistData:=round(lt.m_ShiftLeft*lt.m_tag.freq);
+  //setlength(lt.m_histData, lt.m_ihistData);
+
   GetMemAlignedArray_d(c.fportionsizei, lt.m_T1data);
   GetMemAlignedArray_cmpx_d(c.m_fftCount, lt.m_T1ClxData);
   GetMemAlignedArray_d(c.m_fftCount, lt.m_rms);
@@ -411,8 +423,10 @@ begin
     fr.TopRight:=p2(t.m_Length,t.m_treshold*2);
     pageT.ZoomfRect(fr);
 
-    fr.BottomLeft:=p2(0,0);
-    fr.TopRight:=p2(t.m_tag.freq/2,t.m_treshold*2);
+    fr.BottomLeft:=p2(m_minX,m_minY);
+    fr.TopRight:=p2(m_maxX,m_maxY);
+    pageSpm.LgX:=m_lgX;
+    pageSpm.activeAxis.Lg:=m_lgY;
     pageSpm.ZoomfRect(fr);
   end;
 end;
@@ -424,25 +438,29 @@ var
   s:cSRSres;
   i, pcount ,dropCount:integer;
   sig_interval, common_interval:point2d;
-  v, comIntervalLen, blocklen, refresh:double;
+  v, comIntervalLen, blocklen, refresh, dropLen:double;
 begin
   if not ready then exit;
   t:=getTaho;
   c:=t.cfg;
-  dropCount:=round(t.m_Length*t.m_tag.freq);
   blocklen:=t.m_Length;
   refresh:=t.m_tag.BlockSize/t.m_tag.freq;
   if blocklen<refresh then
     blocklen:=refresh;
   if t.m_tag.UpdateTagData(true) then
   begin
-    if t.m_tag.getPortionLen>2*blocklen then
+    dropLen:=t.m_tag.getPortionLen-2*blocklen;
+    if dropLen>0 then
     begin
+      dropCount:=trunc(dropLen*t.m_tag.freq);
       t.m_tag.ResetTagDataTimeInd(dropCount);
+      if t.fTrigState<>TrOff then
+        t.f_iEnd:=t.f_iEnd-dropCount;
     end;
     t.v_min := t.m_tag.m_ReadData[0];
     t.v_max := t.m_tag.m_ReadData[0];
-    for i := 1 to t.m_tag.lastindex - 1 do
+
+    for i := t.f_iEnd to t.m_tag.lastindex - 1 do
     begin
       v := t.m_tag.m_ReadData[i];
       if v > t.m_treshold then
@@ -463,12 +481,27 @@ begin
           inc(t.fShockInd);
           t.TrigInterval.x:=t.m_tag.getReadTime(t.f_imax)-t.m_ShiftLeft;
           t.TrigInterval.y:=t.TrigInterval.x+t.m_Length;
-          pcount:=copyData(t.m_tag, t.TrigInterval, t.m_T1data);
-          t.fDataCount:=pcount;
-          t.line.AddPoints(TDoubleArray(t.m_T1data.p), pcount);
-          BuildSpm(t);
-          t.lineSpm.AddPoints(TDoubleArray(t.m_rms.p), c.fHalfFft);
-          break; // на оставшиеся данные в порции (цикле) пока забиваем
+          // если данных накопилось на целиковый удар
+          if t.f_iEnd<=t.m_tag.lastindex then
+          begin
+            t.fTrigState:=TrOff;
+            pcount:=copyData(t.m_tag, t.TrigInterval, t.m_T1data);
+            //if t.m_tag.m_ReadData[t.f_iEnd]=0 then
+            //  showmessage(inttostr(pcount));
+            t.fDataCount:=pcount;
+            t.line.AddPoints(TDoubleArray(t.m_T1data.p), pcount);
+            t.line.flength:=pcount;
+            if pcount>c.m_fftCount then
+            begin
+              BuildSpm(t);
+              t.lineSpm.AddPoints(TDoubleArray(t.m_rms.p), c.fHalfFft);
+              break; // на оставшиеся данные в порции (цикле) пока забиваем
+            end
+            else
+            begin
+              showmessage('!');
+            end;
+          end;
         end;
       end;
     end;
@@ -495,6 +528,7 @@ begin
           pcount:=copyData(s.m_tag, common_interval, s.m_T1data);
           s.fDataCount:=pcount;
           s.line.AddPoints(TDoubleArray(s.m_T1data.p), pcount);
+          s.line.flength:=pcount;
           BuildSpm(s);
           s.lineSpm.AddPoints(TDoubleArray(s.m_rms.p), c.fHalfFft);
         end;
@@ -557,6 +591,14 @@ begin
   t.m_ShiftLeft:=strtoFloatExt(a_pIni.ReadString(str, 'ShiftLeft', '0.05'));
   t.m_treshold:=strtoFloatExt(a_pIni.ReadString(str, 'Threshold', '0.05'));
   t.m_Length:=strtoFloatExt(a_pIni.ReadString(str, 'Length', '0.05'));
+
+  m_minX:=strtoFloatExt(a_pIni.ReadString(str, 'Spm_minX', '0'));
+  m_maxX:=strtoFloatExt(a_pIni.ReadString(str, 'Spm_maxX', '1000'));
+  m_minY:=strtoFloatExt(a_pIni.ReadString(str, 'Spm_minY', '0.0001'));
+  m_maxY:=strtoFloatExt(a_pIni.ReadString(str, 'Spm_maxY', '10'));
+  m_lgX:=a_pIni.ReadBool(str, 'Spm_Lg_x', false);
+  m_lgY:=a_pIni.ReadBool(str, 'Spm_Lg_y', false);
+
   if c<>nil then
   begin
     c.m_fftCount:=a_pIni.ReadInteger(str, 'FFtnum', 32);
@@ -591,6 +633,14 @@ begin
     WriteFloatToIniMera(a_pIni, str, 'ShiftLeft', t.m_ShiftLeft);
     WriteFloatToIniMera(a_pIni, str, 'Threshold', t.m_treshold);
     WriteFloatToIniMera(a_pIni, str, 'Length', t.m_Length);
+
+    WriteFloatToIniMera(a_pIni, str, 'Spm_minX', m_minX);
+    WriteFloatToIniMera(a_pIni, str, 'Spm_maxX', m_maxX);
+    WriteFloatToIniMera(a_pIni, str, 'Spm_minY', m_minY);
+    WriteFloatToIniMera(a_pIni, str, 'Spm_maxY', m_maxY);
+    a_pIni.WriteBool(str, 'Spm_Lg_x', m_lgX);
+    a_pIni.WriteBool(str, 'Spm_Lg_y', m_lgY);
+
     c:=t.Cfg;
     if c<>nil then
     begin
@@ -696,6 +746,7 @@ begin
       end;
       ls:=cSRSres.create;
       ls.m_tag.tag:=t;
+      ls.cfg:=self;
       m_SRSList.Add(ls);
     end
   end

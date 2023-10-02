@@ -71,6 +71,12 @@ type
     m_ReadData: array of double;
     // время первого отсчета в m_ReadData
     m_ReadDataTime: double;
+    // сохранять предысторию. Длину предыстории настраивать руками из вне!!! см. пример uSrsFrm
+    // на уровне тега отрабатывается только drop значений
+    // поддержано в ResetTagDataTimeInd
+    //m_bHistData:boolean;
+    //m_histData:array of double;
+    //m_ihistData:integer;
 
     // массив значений который пишется в itag (по идее здесь результаты расчетов алгоритмов)
     // кольцевой буфер
@@ -1230,7 +1236,8 @@ end;
 
 procedure cTag.ResetTagDataTimeInd(endTimeInd: integer);
 var
-  datacount: integer;
+  //ihist,
+  datacount: integer; // количество сдвигаемых данных
   dt: double;
 begin
   if m_lastindex <> 0 then
@@ -1239,8 +1246,18 @@ begin
     if datacount > 0 then
     begin
       if m_ReadSize - datacount <> 0 then
-        move(m_ReadData[endTimeInd], m_ReadData[0],
-          datacount * sizeof(double));
+      begin
+        // если храним предысторию
+        //if m_bHistData then
+        //begin
+        //  if m_ihistData<endTimeInd then
+        //    ihist:=m_ihistData
+        //  else
+        //    ihist:=endTimeInd;
+        //  move(m_ReadData[endTimeInd-ihist], m_histData[0], ihist * sizeof(double));
+        //end;
+        move(m_ReadData[endTimeInd], m_ReadData[0], datacount * sizeof(double));
+      end;
     end;
     m_lastindex := datacount;
     m_ReadDataTime := m_ReadDataTime + (1 / getfreq) * (endTimeInd);

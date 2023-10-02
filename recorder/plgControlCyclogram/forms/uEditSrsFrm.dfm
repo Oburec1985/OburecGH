@@ -2,7 +2,7 @@ object EditSrsFrm: TEditSrsFrm
   Left = 0
   Top = 0
   Caption = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1090#1100' '#1085#1072#1089#1090#1088#1086#1082#1080' '#1086#1073#1088#1072#1073#1086#1090#1082#1080' '#1091#1076#1072#1088#1086#1074
-  ClientHeight = 513
+  ClientHeight = 581
   ClientWidth = 1085
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,7 +18,7 @@ object EditSrsFrm: TEditSrsFrm
     Left = 0
     Top = 0
     Width = 211
-    Height = 513
+    Height = 581
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -37,13 +37,14 @@ object EditSrsFrm: TEditSrsFrm
     OnChange = SignalsTVChange
     OnDragOver = SignalsTVDragOver
     OnDragDrop = SignalsTVDragDrop
+    ExplicitHeight = 513
     Columns = <>
   end
   inline TagsListFrame1: TTagsListFrame
     Left = 821
     Top = 0
     Width = 264
-    Height = 513
+    Height = 581
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -55,7 +56,7 @@ object EditSrsFrm: TEditSrsFrm
     ExplicitHeight = 513
     inherited FormChannelsGB: TGroupBox
       Width = 264
-      Height = 513
+      Height = 581
       Margins.Left = 5
       Margins.Top = 5
       Margins.Right = 5
@@ -147,7 +148,7 @@ object EditSrsFrm: TEditSrsFrm
       inherited TagsLV: TBtnListView
         Top = 161
         Width = 260
-        Height = 350
+        Height = 418
         Margins.Left = 5
         Margins.Top = 5
         Margins.Right = 5
@@ -175,13 +176,14 @@ object EditSrsFrm: TEditSrsFrm
     Left = 211
     Top = 0
     Width = 610
-    Height = 513
+    Height = 581
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
     Margins.Bottom = 4
     Align = alClient
     TabOrder = 2
+    ExplicitHeight = 513
     object Splitter1: TSplitter
       Left = 1
       Top = 156
@@ -208,6 +210,8 @@ object EditSrsFrm: TEditSrsFrm
       Align = alTop
       Caption = #1058#1088#1080#1075#1075#1077#1088
       TabOrder = 0
+      ExplicitLeft = 2
+      ExplicitTop = -2
       object TrigNameLabel: TLabel
         Left = 208
         Top = 22
@@ -501,7 +505,7 @@ object EditSrsFrm: TEditSrsFrm
       Left = 1
       Top = 388
       Width = 608
-      Height = 124
+      Height = 192
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -509,8 +513,7 @@ object EditSrsFrm: TEditSrsFrm
       Align = alClient
       Caption = 'ChartGB'
       TabOrder = 2
-      ExplicitLeft = 8
-      ExplicitTop = 396
+      ExplicitHeight = 124
       object UpdateBtn: TSpeedButton
         Left = 536
         Top = 72
@@ -628,10 +631,38 @@ object EditSrsFrm: TEditSrsFrm
         ShowHint = True
         OnClick = UpdateBtnClick
       end
+      object MinXLabel: TLabel
+        Left = 8
+        Top = 59
+        Width = 77
+        Height = 17
+        Caption = #1052#1080#1085#1080#1084#1091#1084' X:'
+      end
+      object MaxXLabel: TLabel
+        Left = 8
+        Top = 109
+        Width = 82
+        Height = 17
+        Caption = #1052#1072#1082#1089#1080#1084#1091#1084' X:'
+      end
+      object MinYLabel: TLabel
+        Left = 176
+        Top = 59
+        Width = 77
+        Height = 17
+        Caption = #1052#1080#1085#1080#1084#1091#1084' Y:'
+      end
+      object MaxYLabel: TLabel
+        Left = 176
+        Top = 109
+        Width = 82
+        Height = 17
+        Caption = #1052#1072#1082#1089#1080#1084#1091#1084' Y:'
+      end
       object LgXcb: TCheckBox
         Left = 10
         Top = 29
-        Width = 70
+        Width = 57
         Height = 22
         Margins.Left = 4
         Margins.Top = 4
@@ -643,7 +674,7 @@ object EditSrsFrm: TEditSrsFrm
       object LgYcb: TCheckBox
         Left = 75
         Top = 29
-        Width = 69
+        Width = 54
         Height = 22
         Margins.Left = 4
         Margins.Top = 4
@@ -655,7 +686,7 @@ object EditSrsFrm: TEditSrsFrm
       object CheckBox1: TCheckBox
         Left = 137
         Top = 29
-        Width = 251
+        Width = 233
         Height = 25
         Margins.Left = 4
         Margins.Top = 4
@@ -663,6 +694,38 @@ object EditSrsFrm: TEditSrsFrm
         Margins.Bottom = 4
         Caption = #1056#1080#1089#1086#1074#1072#1090#1100' '#1086#1089#1094#1080#1083#1083#1086#1075#1088#1072#1084#1084#1091' '#1091#1076#1072#1088#1072
         TabOrder = 2
+      end
+      object MinXfe: TFloatEdit
+        Left = 8
+        Top = 80
+        Width = 121
+        Height = 24
+        TabOrder = 3
+        Text = '0.0'
+      end
+      object MaxXfe: TFloatEdit
+        Left = 8
+        Top = 128
+        Width = 121
+        Height = 24
+        TabOrder = 4
+        Text = '10'
+      end
+      object MinYfe: TFloatEdit
+        Left = 176
+        Top = 80
+        Width = 121
+        Height = 24
+        TabOrder = 5
+        Text = '0.0'
+      end
+      object MaxYfe: TFloatEdit
+        Left = 176
+        Top = 128
+        Width = 121
+        Height = 24
+        TabOrder = 6
+        Text = '10'
       end
     end
   end

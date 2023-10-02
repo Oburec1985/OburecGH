@@ -51,6 +51,14 @@ type
     TahoNameCB: TRcComboBox;
     CheckBox1: TCheckBox;
     UpdateBtn: TSpeedButton;
+    MinXLabel: TLabel;
+    MinXfe: TFloatEdit;
+    MaxXLabel: TLabel;
+    MaxXfe: TFloatEdit;
+    MinYLabel: TLabel;
+    MinYfe: TFloatEdit;
+    MaxYLabel: TLabel;
+    MaxYfe: TFloatEdit;
     procedure SignalsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
@@ -234,7 +242,16 @@ var
   n, parnode: pvirtualnode;
   d: pnodedata;
 begin
+  MinXfe.FloatNum:=m_SRS.m_minX;
+  MaxXfe.FloatNum:=m_SRS.m_maxX;
+  MinYfe.FloatNum:=m_SRS.m_minY;
+  MaxYfe.FloatNum:=m_SRS.m_maxY;
+  LgXcb.Checked:=m_SRS.m_lgX;
+  LgYcb.Checked:=m_SRS.m_lgY;
+
   t:=m_SRS.getTaho;
+  if t<>nil then
+    ShowTaho(t);
   SignalsTV.clear;
   if t<>nil then
   begin
@@ -370,6 +387,12 @@ begin
   c.m_fftCount:=FFTBlockSizeIE.IntNum;
   c.m_blockcount:=ShCountIE.IntNum;
   c.m_addNulls:=NullCB.Checked;
+  m_SRS.m_lgX:=lgXcb.Checked;
+  m_SRS.m_lgY:=lgYcb.Checked;
+  m_SRS.m_minX:=MinXfe.FloatNum;
+  m_SRS.m_maxX:=MaxXfe.FloatNum;
+  m_SRS.m_minY:=MinYfe.FloatNum;
+  m_SRS.m_maxY:=MaxYfe.FloatNum;
   m_SRS.UpdateChart;
 end;
 
