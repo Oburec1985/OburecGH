@@ -284,6 +284,7 @@ begin
   LeftShiftEdit.FloatNum:=t.m_ShiftLeft;
   LengthFE.FloatNum:=t.m_Length;
   c:=t.Cfg;
+  ResTypeRG.ItemIndex:=C.m_typeRes;
   FFTBlockSizeIE.IntNum:=c.m_fftCount;
   FFTShiftIE.IntNum:=c.m_fftCount;
   FFTdxFE.FloatNum:=csrstaho(c.taho).m_tag.freq/c.m_fftCount;
@@ -387,6 +388,7 @@ begin
   c.m_fftCount:=FFTBlockSizeIE.IntNum;
   c.m_blockcount:=ShCountIE.IntNum;
   c.m_addNulls:=NullCB.Checked;
+  C.m_typeRes:=ResTypeRg.ItemIndex;
   m_SRS.m_lgX:=lgXcb.Checked;
   m_SRS.m_lgY:=lgYcb.Checked;
   m_SRS.m_minX:=MinXfe.FloatNum;

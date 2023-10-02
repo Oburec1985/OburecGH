@@ -18,6 +18,7 @@ uses
   uCommonMath,
   uCommonTypes,
   pluginClass,
+  math,
   Dialogs, ExtCtrls;
 
 type
@@ -25,12 +26,12 @@ type
  // конфигуратор расчета спектра
   cSpmCfg = class
   public
+    m_typeRes:integer;
     // FFTplan
     FFTProp:TFFTProp;
     // число точек fft, число блоков по которым идет расчет спектров,
     m_fftCount,fHalfFft,
     m_blockcount:integer;
-
     // добавлять нули
     m_addNulls: boolean;
   private
@@ -85,8 +86,8 @@ type
     constructor create;
     destructor destroy;
   end;
-  // выключен/ найден/ завершен
-  TtrigStates = (TrOff, TrOn, TrEnd);
+  // выключен/ найден/ завершен TrEnd - накоплены данные для удара на тахо канале
+  TtrigStates = (TrOff, TrRise, TrFall,  TrEnd);
 
   cSRSTaho = class
   public
@@ -199,6 +200,7 @@ const
   c_Name = 'Анализ ударов';
   c_defXSize = 400;
   c_defYSize = 400;
+  c_FRF = 1;
 
   // ctrl+shift+G
   // ['{54C462CD-E137-4BA6-9FB5-EFD92D159DE5}']
@@ -234,8 +236,10 @@ end;
 
 procedure TSRSFrm.BuildSpm(s: tobject);
 var
-  k:double;
+  k,v:double;
   c:cSpmCfg;
+  t:cSRSTaho;
+  maxT, maxS:double;
   i, halfNP:integer;
 begin
   if s is cSRSTaho then
@@ -263,6 +267,24 @@ begin
     MULT_SSE_al_cmpx_d(tCmxArray_d(cSRSres(s).m_T1ClxData.p), k);
     EvalSpmMag(tCmxArray_d(cSRSres(s).m_T1ClxData.p),
                TDoubleArray(cSRSres(s).m_rms.p));
+    if c.m_typeRes=c_FRF then
+    begin
+      t:=getTaho;
+      //maxT:=MaxValue(TDoubleArray(t.m_rms.p));
+      for I := 0 to c.fHalfFft - 1 do
+      begin
+        v:=TDoubleArray(cSRSres(s).m_rms.p)[i];
+        k:=TDoubleArray(t.m_rms.p)[i];
+        //if (k/maxT)<0.1 then
+        //begin
+        //  TDoubleArray(cSRSres(s).m_rms.p)[i]:=0.00001;
+        //end
+        //else
+        //begin
+        TDoubleArray(cSRSres(s).m_rms.p)[i]:=v/k;
+        //end;
+      end;
+    end;
   end;
 end;
 
@@ -285,6 +307,7 @@ var
 begin
   ready:=false;
   t:=getTaho;
+  t.fTrigState:=TrOff;
   if t.m_tag <> nil then
   begin
     t.m_tag.doOnStart;
@@ -453,55 +476,65 @@ begin
     if dropLen>0 then
     begin
       dropCount:=trunc(dropLen*t.m_tag.freq);
+      // возможно следует ограничить размер отбрасываемых данных
+      // по f_iEnd
+      if dropCount>t.f_iEnd then
+        dropCount:=t.f_iEnd;
       t.m_tag.ResetTagDataTimeInd(dropCount);
-      if t.fTrigState<>TrOff then
-        t.f_iEnd:=t.f_iEnd-dropCount;
+      t.f_iEnd:=t.f_iEnd-dropCount;
+      if t.f_iEnd<0 then
+        t.f_iEnd:=0;
     end;
     t.v_min := t.m_tag.m_ReadData[0];
     t.v_max := t.m_tag.m_ReadData[0];
-
-    for i := t.f_iEnd to t.m_tag.lastindex - 1 do
+    // поиск триггера
+    if t.fTrigState=TrOff then
     begin
-      v := t.m_tag.m_ReadData[i];
-      if v > t.m_treshold then
+      for i := t.f_iEnd to t.m_tag.lastindex - 1 do
       begin
-        if v>t.v_max then
+        v := t.m_tag.m_ReadData[i];
+        if v > t.m_treshold then
         begin
-          t.fTrigState:=TrOn;
-          t.v_max := v;
-          t.f_imax := i;
-        end;
-      end
-      else
-      begin
-        if t.fTrigState=TrOn then
-        begin
-          t.fTrigState:=TrEnd;
-          t.ResetTrig;
-          inc(t.fShockInd);
-          t.TrigInterval.x:=t.m_tag.getReadTime(t.f_imax)-t.m_ShiftLeft;
-          t.TrigInterval.y:=t.TrigInterval.x+t.m_Length;
-          // если данных накопилось на целиковый удар
-          if t.f_iEnd<=t.m_tag.lastindex then
+          if v>t.v_max then
           begin
-            t.fTrigState:=TrOff;
-            pcount:=copyData(t.m_tag, t.TrigInterval, t.m_T1data);
-            //if t.m_tag.m_ReadData[t.f_iEnd]=0 then
-            //  showmessage(inttostr(pcount));
-            t.fDataCount:=pcount;
-            t.line.AddPoints(TDoubleArray(t.m_T1data.p), pcount);
-            t.line.flength:=pcount;
-            if pcount>c.m_fftCount then
-            begin
-              BuildSpm(t);
-              t.lineSpm.AddPoints(TDoubleArray(t.m_rms.p), c.fHalfFft);
-              break; // на оставшиеся данные в порции (цикле) пока забиваем
-            end
-            else
-            begin
-              showmessage('!');
-            end;
+            t.fTrigState:=TrRise;
+            t.v_max := v;
+            t.f_imax := i;
           end;
+        end
+        else
+        begin
+          if t.fTrigState=TrRise then
+            t.fTrigState:=TrFall;
+        end;
+      end;
+    end;
+    // если триггер найден
+    if t.fTrigState=TrFall then
+    begin
+      inc(t.fShockInd);
+      t.TrigInterval.x:=t.m_tag.getReadTime(t.f_imax)-t.m_ShiftLeft;
+      t.TrigInterval.y:=t.TrigInterval.x+t.m_Length;
+      t.f_iEnd:=t.m_tag.getIndex(t.TrigInterval.y);
+      // если данных накопилось на целиковый удар
+      if t.f_iEnd<=t.m_tag.lastindex then
+      begin
+        t.fTrigState:=trOff;
+        t.ResetTrig;
+        pcount:=copyData(t.m_tag, t.TrigInterval, t.m_T1data);
+        //if t.m_tag.m_ReadData[t.f_iEnd]=0 then
+        //  showmessage(inttostr(pcount));
+        t.fDataCount:=pcount;
+        t.line.AddPoints(TDoubleArray(t.m_T1data.p), pcount);
+        t.line.flength:=pcount;
+        if pcount>c.m_fftCount then
+        begin
+          BuildSpm(t);
+          t.lineSpm.AddPoints(TDoubleArray(t.m_rms.p), c.fHalfFft);
+        end
+        else
+        begin
+          showmessage('!');
         end;
       end;
     end;
@@ -604,6 +637,7 @@ begin
     c.m_fftCount:=a_pIni.ReadInteger(str, 'FFtnum', 32);
     c.m_blockcount:=a_pIni.ReadInteger(str, 'BlockCount', 1);
     c.m_addNulls:=a_pIni.ReadBool(str, 'AddNulls', false);
+    c.m_typeRes:=a_pIni.ReadInteger(str, 'ResType', 0);
     count:=a_pIni.ReadInteger(str, 'SigCount', 0);
     for I := 0 to count - 1 do
     begin
@@ -648,6 +682,7 @@ begin
       a_pIni.WriteInteger(str, 'BlockCount', c.m_blockcount);
       a_pIni.WriteBool(str, 'AddNulls', c.m_addNulls);
       a_pIni.WriteInteger(str, 'SigCount', c.SRSCount);
+      a_pIni.WriteInteger(str, 'ResType', C.m_typeRes);
       for I := 0 to c.SRSCount - 1 do
       begin
         s:=c.GetSrs(i);

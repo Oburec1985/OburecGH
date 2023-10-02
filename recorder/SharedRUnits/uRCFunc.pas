@@ -1420,7 +1420,7 @@ function cTag.UpdateTagData(tare: boolean): boolean;
 var
   i: integer;
 begin
-  UpdateTagData(tare, i);
+  result:=UpdateTagData(tare, i);
 end;
 
 function cTag.UpdateTagData(tare: boolean; var AutoResetData: integer)
