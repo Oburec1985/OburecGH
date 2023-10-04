@@ -472,18 +472,26 @@ begin
     blocklen:=refresh;
   if t.m_tag.UpdateTagData(true) then
   begin
-    dropLen:=t.m_tag.getPortionLen-2*blocklen;
-    if dropLen>0 then
+    // не отбрасываем данные если находимся в состоянии когда триг найден но
+    // еще не накопился целиком
+    if t.fTrigState<>TrFall then
     begin
-      dropCount:=trunc(dropLen*t.m_tag.freq);
-      // возможно следует ограничить размер отбрасываемых данных
-      // по f_iEnd
-      if dropCount>t.f_iEnd then
-        dropCount:=t.f_iEnd;
-      t.m_tag.ResetTagDataTimeInd(dropCount);
-      t.f_iEnd:=t.f_iEnd-dropCount;
-      if t.f_iEnd<0 then
-        t.f_iEnd:=0;
+      dropLen:=t.m_tag.getPortionLen-2*blocklen;
+      if dropLen>0 then // при этом условии гарантированно остается 2*blocklen
+      begin
+        dropCount:=trunc(dropLen*t.m_tag.freq);
+        // возможно следует ограничить размер отбрасываемых данных
+        // по f_iEnd
+        if t.f_iEnd>0 then
+        begin
+          if dropCount>t.f_iEnd then
+            dropCount:=t.f_iEnd;
+        end;
+        t.m_tag.ResetTagDataTimeInd(dropCount);
+        t.f_iEnd:=t.f_iEnd-dropCount;
+        if t.f_iEnd<0 then
+          t.f_iEnd:=0;
+      end;
     end;
     t.v_min := t.m_tag.m_ReadData[0];
     t.v_max := t.m_tag.m_ReadData[0];
@@ -508,6 +516,10 @@ begin
             t.fTrigState:=TrFall;
         end;
       end;
+      // сдвигаем индекс проанализированных данных т.к. отбрасываемые данные ограничены iEnd
+      // в противном случае можно отбросить не проанализированные данные
+      if t.fTrigState=TrOff then
+        t.f_iEnd:=t.m_tag.lastindex;
     end;
     // если триггер найден
     if t.fTrigState=TrFall then
@@ -534,7 +546,7 @@ begin
         end
         else
         begin
-          showmessage('!');
+
         end;
       end;
     end;
@@ -546,7 +558,12 @@ begin
         sig_interval := s.m_tag.getPortionTime;
         if s.m_tag.getPortionLen>2*blocklen then
         begin
-          s.m_tag.ResetTagDataTimeInd(dropCount);
+          dropCount:=s.m_tag.getIndex(t.TrigInterval.x);
+          // отбрасываем все что слева по времени от найденного удара
+          if dropCount>0 then
+          begin
+            s.m_tag.ResetTagDataTimeInd(dropCount-1);
+          end;
         end;
       end;
       common_interval:=getCommonInterval(sig_interval, t.TrigInterval);
