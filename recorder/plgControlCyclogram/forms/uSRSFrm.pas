@@ -22,6 +22,36 @@ uses
   Dialogs, ExtCtrls;
 
 type
+  // структура для хранения удара
+  TDataBlock = class
+  public
+    m_size:integer;
+    m_spm:TCmxArray_d;
+    m_mod:TDoubleArray;
+  protected
+    // вычислить амплитуду^2
+    procedure evalmod2;
+    procedure setsize(s:integer);
+    function getsize:integer;
+  public
+    property size:integer read getsize write setsize;
+  end;
+
+  TDataBlockList = class(tlist)
+  public
+    // когеренция по списку ударов
+    m_coh:TDoubleArray;
+    // кроссспектр ударов
+    m_Cxy: TCmxArray_d;
+  public
+    procedure evalCoh(TahoShockList:TDataBlockList);
+    procedure clearData;
+    // добавить спектр удара data - TCmxArray_d
+    procedure addBlock(data:pointer; dsize:integer);
+    constructor create;override;
+    destructor destroy;override;
+  end;
+
   cSRSres = class;
  // конфигуратор расчета спектра
   cSpmCfg = class
@@ -76,6 +106,9 @@ type
     // спектр амплитуд
     m_rms: TAlignDarray;
     line, lineSpm:cBuffTrend1d;
+
+    // список ударов (TDataBlock)
+    m_shockList:TDataBlockList;
   private
     fComInt:point2d;
     // найден общий интервал с взведенным тригом
@@ -104,6 +137,9 @@ type
     // тот же спектр, но амплитуда
     m_rms: TAlignDarray;
     line, lineSpm:cBuffTrend1d;
+
+    // список ударов (TDataBlock)
+    m_shockList:TDataBlockList;
   private // переменные для обсчета в алгоритме обработки
     v_min, v_max:double;
     f_imin, f_imax, // индексы отсчетов содержащих максимум и минимум в текущем ударе
@@ -748,12 +784,15 @@ begin
   m_Length:=1;
   m_tag:=cTag.create;
   fSpmCfgList:=TList.Create;
+
+  m_shockList:=TDataBlockList.Create;
 end;
 
 destructor cSRSTaho.destroy;
 begin
   m_tag.destroy;
   fSpmCfgList.Destroy;
+  m_shockList.Destroy;
   inherited;
 end;
 
@@ -849,11 +888,13 @@ end;
 constructor cSRSres.create;
 begin
   m_tag:=cTag.create;
+  m_shockList:=TDataBlockList.Create;
 end;
 
 destructor cSRSres.destroy;
 begin
   m_tag.destroy;
+  m_shockList.Destroy;
 end;
 
 function cSRSres.name: string;
@@ -862,7 +903,6 @@ begin
 end;
 
 { cSRSFactory }
-
 procedure cSRSFactory.createevents;
 begin
   addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
@@ -1003,6 +1043,75 @@ function ISRSFrm.doRepaint: boolean;
 begin
   inherited;
   TSRSFrm(m_pMasterWnd).UpdateView;
+end;
+
+{ TDataBlock }
+
+procedure TDataBlock.evalmod2;
+var
+  I: Integer;
+  c:TComplex_d;
+begin
+  for I := 0 to m_size - 1 do
+  begin
+    c:=sopr(m_spm[i]);
+    c:=m_spm[i]*c;
+    m_mod[i]:=c.re;
+  end;
+end;
+
+function TDataBlock.getsize: integer;
+begin
+  result:=m_size;
+end;
+
+procedure TDataBlock.setsize(s: integer);
+begin
+  m_size:=s;
+  SetLength(m_spm, s);
+end;
+
+{ TDataBlockList }
+procedure TDataBlockList.addBlock(data: pointer; dsize: integer);
+var
+  db:TDataBlock;
+begin
+  db:=TDataBlock.Create;
+  SetLength(db.m_spm, dsize);
+  SetLength(db.m_mod, dsize);
+  system.move(data, db.m_spm[0], dsize*sizeof(double));
+  db.evalmod2;
+  Add(db);
+end;
+
+procedure TDataBlockList.clearData;
+var
+  d:TDataBlock;
+  I: Integer;
+begin
+  for I := 0 to Count - 1 do
+  begin
+    d:=TDataBlock(items[i]);
+    d.Destroy;
+  end;
+end;
+
+constructor TDataBlockList.create;
+begin
+  inherited;
+end;
+
+destructor TDataBlockList.destroy;
+begin
+  ClearData;
+  inherited;
+end;
+
+procedure TDataBlockList.evalCoh(TahoShockList: TDataBlockList);
+var
+  i:integer;
+begin
+
 end;
 
 end.
