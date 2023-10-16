@@ -108,7 +108,6 @@ type
     // спектр амплитуд
     m_rms: TAlignDarray;
     line, lineSpm:cBuffTrend1d;
-
     // список ударов (TDataBlock)
     m_shockList:TDataBlockList;
   private
@@ -163,7 +162,7 @@ type
   public
     property Cfg:cSpmCfg read getcfg write setcfg;
     function CfgCount:integer;
-
+    procedure evalCoh;
     function name:string;
     constructor create;
     destructor destroy;
@@ -581,6 +580,7 @@ begin
         if pcount>c.m_fftCount then
         begin
           BuildSpm(t);
+          t.m_shockList.addBlock(t.m_T1ClxData.p, c.fHalfFft);
           t.lineSpm.AddPoints(TDoubleArray(t.m_rms.p), c.fHalfFft);
         end
         else
@@ -618,7 +618,9 @@ begin
           s.fDataCount:=pcount;
           s.line.AddPoints(TDoubleArray(s.m_T1data.p), pcount);
           s.line.flength:=pcount;
+
           BuildSpm(s);
+          s.m_shockList.addBlock(cSRSres(s).m_T1ClxData.p, c.fHalfFft);
           s.lineSpm.AddPoints(TDoubleArray(s.m_rms.p), c.fHalfFft);
         end;
       end;
@@ -704,10 +706,9 @@ begin
       end;
     end;
   end;
-  TestCoh;
+  //TestCoh;
   UpdateChart;
   UpdateBlocks;
-
 end;
 
 procedure TSRSFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -781,7 +782,7 @@ begin
   setlength(s.m_shockList.m_sxx, 1);
   setlength(s.m_shockList.m_syy, 1);
   setlength(s.m_shockList.m_coh, 1);
-  s.m_shockList.evalCoh(t.m_shockList);
+  s.m_shockList.evalCoh(t);
 end;
 
 { cSRSTaho }
@@ -833,6 +834,24 @@ begin
   fSpmCfgList.Destroy;
   m_shockList.Destroy;
   inherited;
+end;
+
+procedure cSRSTaho.evalCoh;
+var
+  I: Integer;
+  c:cSpmCfg;
+  s:cSRSres;
+begin
+  c:=cfg;
+  for I := 0 to c.SRSCount - 1 do
+  begin
+    s:=c.GetSrs(i);
+    setlength(s.m_shockList.m_Cxy, s.m_shockList.Count);
+    setlength(s.m_shockList.m_sxx, s.m_shockList.Count);
+    setlength(s.m_shockList.m_syy, s.m_shockList.Count);
+    setlength(s.m_shockList.m_coh, s.m_shockList.Count);
+    s.m_shockList.evalCoh(m_shockList);
+  end;
 end;
 
 procedure cSRSTaho.ResetTrig;
@@ -1154,7 +1173,7 @@ begin
   inherited;
 end;
 
-procedure TDataBlockList.evalCoh(TahoShockList: TDataBlockList);
+procedure TDataBlockList.evalCoh(t: TDataBlockList);
 var
   i, j:integer;
   s, t:TDataBlock;
@@ -1169,8 +1188,10 @@ begin
       p1:=s.m_spm[j];
       p2:=Sopr(t.m_spm[j]);
       m_Cxy[j]:=p1*p2+m_Cxy[j];
-      m_sxx[j]:=mod2(p1)+m_sxx[j];
-      m_syy[j]:=mod2(p2)+m_syy[j];
+      //m_sxx[j]:=mod2(p1)+m_sxx[j];
+      //m_syy[j]:=mod2(p2)+m_syy[j];
+      m_sxx[j]:=s.m_mod[j]+m_sxx[j];
+      m_syy[j]:=t.m_mod[j]+m_syy[j];
     end;
   end;
   for j := 0 to s.m_size - 1 do
