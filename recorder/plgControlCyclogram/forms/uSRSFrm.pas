@@ -42,14 +42,16 @@ type
     // когеренция по списку ударов
     m_coh:TDoubleArray;
     // кроссспектр ударов
-    m_Cxy: TCmxArray_d;
+    m_Cxy: TCmxArray_d; // Sxy
+    m_Sxx, m_Syy: TDoubleArray;
   public
     procedure evalCoh(TahoShockList:TDataBlockList);
     procedure clearData;
+    function getBlock(i:integer):TDataBlock;
     // добавить спектр удара data - TCmxArray_d
     procedure addBlock(data:pointer; dsize:integer);
-    constructor create;override;
-    destructor destroy;override;
+    constructor create;
+    destructor destroy;
   end;
 
   cSRSres = class;
@@ -190,6 +192,7 @@ type
     procedure addTaho(t:csrstaho);
     function getTaho:csrstaho;
     procedure RBtnClick(sender: tobject);
+    procedure TestCoh;
   public
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -701,8 +704,10 @@ begin
       end;
     end;
   end;
+  TestCoh;
   UpdateChart;
   UpdateBlocks;
+
 end;
 
 procedure TSRSFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -743,6 +748,40 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TSRSFrm.TestCoh;
+var
+  c:cSpmCfg;
+  t:cSRSTaho;
+  s:cSRSres;
+  d1:TCmxArray_d;
+  cmx:TComplex_d;
+begin
+  t:=getTaho;
+  c:=t.Cfg;
+  s:=c.GetSrs(0);
+
+  setlength(d1, 1);
+  cmx.Re:=-30.25475291;cmx.im:=-82.46784439;
+  d1[0]:=cmx;
+  t.m_shockList.addBlock(@d1[0],1);
+  cmx.Re:=14.69077253;cmx.im:=-86.75400644;
+  d1[0]:=cmx;
+  t.m_shockList.addBlock(@d1[0],1);
+
+  cmx.Re:=-30.25475291;cmx.im:=-82.46784439;
+  d1[0]:=cmx;
+  s.m_shockList.addBlock(d1,1);
+  cmx.Re:=-74.66651386;cmx.im:=45.57920805;
+  d1[0]:=cmx;
+  s.m_shockList.addBlock(d1,1);
+
+  setlength(s.m_shockList.m_Cxy, 1);
+  setlength(s.m_shockList.m_sxx, 1);
+  setlength(s.m_shockList.m_syy, 1);
+  setlength(s.m_shockList.m_coh, 1);
+  s.m_shockList.evalCoh(t.m_shockList);
 end;
 
 { cSRSTaho }
@@ -1079,7 +1118,8 @@ begin
   db:=TDataBlock.Create;
   SetLength(db.m_spm, dsize);
   SetLength(db.m_mod, dsize);
-  system.move(data, db.m_spm[0], dsize*sizeof(double));
+  system.move(TCmxArray_d(data)[0], db.m_spm[0], dsize*sizeof(TComplex_d));
+  db.m_size:=dsize;
   db.evalmod2;
   Add(db);
 end;
@@ -1087,8 +1127,15 @@ end;
 procedure TDataBlockList.clearData;
 var
   d:TDataBlock;
-  I: Integer;
+  I, l: Integer;
 begin
+  l:=length(m_Cxy);
+  if l>0 then
+  begin
+    ZeroMemory(m_Cxy, l*(sizeof(TComplex_d)));
+    ZeroMemory(m_sxx, l*(sizeof(TComplex_d)));
+    ZeroMemory(m_syy, l*(sizeof(TComplex_d)));
+  end;
   for I := 0 to Count - 1 do
   begin
     d:=TDataBlock(items[i]);
@@ -1109,9 +1156,32 @@ end;
 
 procedure TDataBlockList.evalCoh(TahoShockList: TDataBlockList);
 var
-  i:integer;
+  i, j:integer;
+  s, t:TDataBlock;
+  p1, p2:TComplex_d;
 begin
+  for I := 0 to Count-1 do
+  begin
+    s:=getBlock(i);
+    t:=TahoShockList.getBlock(i);
+    for j := 0 to s.m_size - 1 do
+    begin
+      p1:=s.m_spm[j];
+      p2:=Sopr(t.m_spm[j]);
+      m_Cxy[j]:=p1*p2+m_Cxy[j];
+      m_sxx[j]:=mod2(p1)+m_sxx[j];
+      m_syy[j]:=mod2(p2)+m_syy[j];
+    end;
+  end;
+  for j := 0 to s.m_size - 1 do
+  begin
+    m_coh[j]:=mod2(m_Cxy[j])/(m_sxx[j]*m_syy[j]);
+  end;
+end;
 
+function TDataBlockList.getBlock(i: integer): TDataBlock;
+begin
+  result:=TDataBlock(items[i]);
 end;
 
 end.
