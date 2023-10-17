@@ -18,8 +18,8 @@ uses
   uCommonMath,
   uCommonTypes,
   pluginClass,
-  math,
-  Dialogs, ExtCtrls;
+  math, uAxis,
+  Dialogs, ExtCtrls, StdCtrls;
 
 type
   // структура дл€ хранени€ удара
@@ -107,7 +107,7 @@ type
     m_T1ClxData:TAlignDCmpx;
     // спектр амплитуд
     m_rms: TAlignDarray;
-    line, lineSpm:cBuffTrend1d;
+    line, lineSpm, lineCoh:cBuffTrend1d;
     // список ударов (TDataBlock)
     m_shockList:TDataBlockList;
   private
@@ -163,6 +163,7 @@ type
     property Cfg:cSpmCfg read getcfg write setcfg;
     function CfgCount:integer;
     procedure evalCoh;
+    procedure evalFRF;
     function name:string;
     constructor create;
     destructor destroy;
@@ -170,10 +171,15 @@ type
 
   TSRSFrm = class(TRecFrm)
     SpmChart: cChart;
+    RightGB: TGroupBox;
+    ShockCountLabel: TLabel;
+    ShockCountE: TEdit;
+    EvalFRF: TButton;
     procedure FormCreate(Sender: TObject);
   public
     ready:boolean;
     pageT, pageSpm:cpage;
+    axSpm, axCoh:cAxis;
     // список настроек “ахо
     m_TahoList:TList;
     // spm
@@ -266,7 +272,6 @@ begin
 end;
 
 { TSRSFrm }
-
 procedure TSRSFrm.addTaho(t: csrstaho);
 begin
   m_tahoList.Add(t);
@@ -305,7 +310,8 @@ begin
     MULT_SSE_al_cmpx_d(tCmxArray_d(cSRSres(s).m_T1ClxData.p), k);
     EvalSpmMag(tCmxArray_d(cSRSres(s).m_T1ClxData.p),
                TDoubleArray(cSRSres(s).m_rms.p));
-    if c.m_typeRes=c_FRF then
+    //if c.m_typeRes=c_FRF then
+    if false then // блок отключен т.к. считаем только усредненную FRF
     begin
       t:=getTaho;
       //maxT:=MaxValue(TDoubleArray(t.m_rms.p));
@@ -394,6 +400,13 @@ begin
   p.ZoomfRect(r);
   p.Caption:='Freq Dom.';
   pageSpm:=p;
+  axSpm:=p.activeAxis;
+
+  axCoh:=cAxis.create;
+  axCoh.name:='CoherenceAx';
+  p.addaxis(axCoh);
+  axCoh.min:=p2d(0,0);
+  axCoh.max:=p2d(10, 2);
 end;
 
 procedure TSRSFrm.UpdateBlocks;
@@ -432,6 +445,7 @@ begin
     GetMemAlignedArray_cmpx_d(c.m_fftCount, s.m_T1ClxData);
     GetMemAlignedArray_d(c.m_fftCount, s.m_rms);
     s.lineSpm.dx:=c.fspmdx;
+    s.lineCoh.dx:=c.fspmdx;
   end;
 end;
 
@@ -479,6 +493,14 @@ begin
       pageSpm.activeAxis.AddChild(l);
       s.lineSpm:=l;
       s.lineSpm.name:=s.name+'_spm';
+
+      l:= cBuffTrend1d.create;
+      //l.color := ColorArray[i+10];
+      l.color := yellow;
+      l.dx:=1/t.m_tag.freq;
+      axCoh.AddChild(l);
+      s.lineCoh:=l;
+      s.lineCoh.name:=s.name+'_coh';
     end;
     fr.BottomLeft:=p2(0,-2*t.m_treshold);
     fr.TopRight:=p2(t.m_Length,t.m_treshold*2);
@@ -623,6 +645,7 @@ begin
           s.m_shockList.addBlock(cSRSres(s).m_T1ClxData.p, c.fHalfFft);
           s.lineSpm.AddPoints(TDoubleArray(s.m_rms.p), c.fHalfFft);
         end;
+        t.evalCoh;
       end;
     end;
   end;
@@ -631,10 +654,17 @@ end;
 procedure TSRSFrm.UpdateView;
 var
   i: integer;
+  c:cSpmCfg;
+  t:cSRSTaho;
+  s:cSRSres;
 begin
   if RStatePlay then
   begin
-
+    t:=getTaho;
+    if t<>nil then
+    begin
+      ShockCountE.Text:=inttostr(t.m_shockList.Count);
+    end;
   end;
   SpmChart.redraw;
 end;
@@ -706,7 +736,7 @@ begin
       end;
     end;
   end;
-  //TestCoh;
+  // TestCoh;
   UpdateChart;
   UpdateBlocks;
 end;
@@ -782,7 +812,7 @@ begin
   setlength(s.m_shockList.m_sxx, 1);
   setlength(s.m_shockList.m_syy, 1);
   setlength(s.m_shockList.m_coh, 1);
-  s.m_shockList.evalCoh(t);
+  s.m_shockList.evalCoh(t.m_shockList);
 end;
 
 { cSRSTaho }
@@ -838,19 +868,48 @@ end;
 
 procedure cSRSTaho.evalCoh;
 var
-  I: Integer;
+  I, shockCount: Integer;
   c:cSpmCfg;
   s:cSRSres;
 begin
   c:=cfg;
+  shockCount:=m_shockList.Count;
   for I := 0 to c.SRSCount - 1 do
   begin
     s:=c.GetSrs(i);
-    setlength(s.m_shockList.m_Cxy, s.m_shockList.Count);
-    setlength(s.m_shockList.m_sxx, s.m_shockList.Count);
-    setlength(s.m_shockList.m_syy, s.m_shockList.Count);
-    setlength(s.m_shockList.m_coh, s.m_shockList.Count);
-    s.m_shockList.evalCoh(m_shockList);
+    if shockCount=s.m_shockList.Count then
+    begin
+      setlength(s.m_shockList.m_Cxy, c.fHalfFft);
+      setlength(s.m_shockList.m_sxx, c.fHalfFft);
+      setlength(s.m_shockList.m_syy, c.fHalfFft);
+      setlength(s.m_shockList.m_coh, c.fHalfFft);
+      s.m_shockList.evalCoh(m_shockList);
+      s.lineCoh.AddPoints(s.m_shockList.m_coh, c.fHalfFft);
+    end;
+  end;
+end;
+
+procedure cSRSTaho.evalFRF;
+begin
+var
+  I, shockCount: Integer;
+  c:cSpmCfg;
+  s:cSRSres;
+begin
+  c:=cfg;
+  shockCount:=m_shockList.Count;
+  for I := 0 to c.SRSCount - 1 do
+  begin
+    s:=c.GetSrs(i);
+    if shockCount=s.m_shockList.Count then
+    begin
+      setlength(s.m_shockList.m_Cxy, c.fHalfFft);
+      setlength(s.m_shockList.m_sxx, c.fHalfFft);
+      setlength(s.m_shockList.m_syy, c.fHalfFft);
+      setlength(s.m_shockList.m_coh, c.fHalfFft);
+      s.m_shockList.evalCoh(m_shockList);
+      s.lineCoh.AddPoints(s.m_shockList.m_coh, c.fHalfFft);
+    end;
   end;
 end;
 
@@ -1173,7 +1232,7 @@ begin
   inherited;
 end;
 
-procedure TDataBlockList.evalCoh(t: TDataBlockList);
+procedure TDataBlockList.evalCoh(TahoShockList:TDataBlockList);
 var
   i, j:integer;
   s, t:TDataBlock;
@@ -1183,7 +1242,7 @@ begin
   begin
     s:=getBlock(i);
     t:=TahoShockList.getBlock(i);
-    for j := 0 to s.m_size - 1 do
+    for j := 0 to s.m_size - 1 do // проход по спектру
     begin
       p1:=s.m_spm[j];
       p2:=Sopr(t.m_spm[j]);
