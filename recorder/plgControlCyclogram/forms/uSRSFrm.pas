@@ -27,9 +27,13 @@ type
   // структура для хранения удара
   TDataBlock = class
   public
+    m_timeStamp:double;
+    m_timeInd:integer; // для синхронизации.блок srs хранит индекс блока тахо
     m_size:integer;
     m_spm:TCmxArray_d;
     m_mod:TDoubleArray;
+  protected
+    find:integer; // индекс в tlist;
   protected
     // вычислить амплитуду^2
     procedure evalmod2;
@@ -47,14 +51,17 @@ type
     m_Cxy: TCmxArray_d; // Sxy
     m_Sxx, m_Syy: TDoubleArray;
     m_LastBlock:integer;
+    m_shockCount:integer;// общее число ударов за все время
     m_cfg:cspmcfg;
   public
     procedure evalCoh(TahoShockList:TDataBlockList);
     procedure clearData;
     function getBlock(i:integer):TDataBlock;
     function getLastBlock:TDataBlock;
+    function getPrevBlock(d:TDataBlock):TDataBlock;
     // добавить спектр удара data - TCmxArray_d
-    procedure addBlock(data:pointer; dsize:integer);
+    function addBlock(data:pointer; dsize:integer):TDataBlock;overload;
+    function addBlock(data:pointer; dsize:integer; time:double):TDataBlock;overload;
     constructor create;
     destructor destroy;
   end;
@@ -65,8 +72,6 @@ type
   public
     // ограничение по количеству ударов
     m_capacity:integer;
-
-    m_typeRes:integer;
     // FFTplan
     FFTProp:TFFTProp;
     // число точек fft, число блоков по которым идет расчет спектров,
@@ -75,6 +80,7 @@ type
     // добавлять нули
     m_addNulls: boolean;
   private
+    ftypeRes:integer;
     // разрешение спектра
     fspmdx: double;
     // размер порции по которой идет расчет (length*fs*blockCount) в сек.
@@ -90,11 +96,14 @@ type
     taho:tobject;
     // список сигналов к обработке
     m_SRSList:Tlist;
+  protected
+    procedure settyperes(t:integer);
   public
     procedure addSRS(s:pointer);
     function GetSrs(i:integer):cSRSres;
     function SRSCount:integer;
     function name:string;
+    property typeres:integer read ftyperes write settyperes;
     constructor create;
     destructor destroy;
   end;
@@ -116,7 +125,7 @@ type
     m_rms:TAlignDarray;
     // синтезированная передаточная характеристика
     m_frf: TDoubleArray;
-    line, lineSpm, lineCoh:cBuffTrend1d;
+    line, lineSpm, lineCoh, lineFrf:cBuffTrend1d;
     // список ударов (TDataBlock)
     m_shockList:TDataBlockList;
     // обработан последний удар
@@ -191,7 +200,9 @@ type
     ShockCountLabel: TLabel;
     ShockCountE: TEdit;
     EvalFRF: TButton;
+    SaveBtn: TButton;
     procedure FormCreate(Sender: TObject);
+    procedure SaveBtnClick(Sender: TObject);
   public
     ready:boolean;
     pageT, pageSpm:cpage;
@@ -454,7 +465,6 @@ begin
   GetMemAlignedArray_cmpx_d(c.m_fftCount, lt.m_T1ClxData);
   GetMemAlignedArray_d(c.m_fftCount, lt.m_rms);
   lt.lineSpm.dx:=c.fspmdx;
-
   for I := 0 to c.SRSCount - 1 do
   begin
     s:=c.GetSrs(i);
@@ -471,6 +481,7 @@ begin
 
     s.lineSpm.dx:=c.fspmdx;
     s.lineCoh.dx:=c.fspmdx;
+    s.lineFrf.dx:=c.fspmdx;
   end;
 end;
 
@@ -520,6 +531,12 @@ begin
       s.lineSpm.name:=s.name+'_spm';
 
       l:= cBuffTrend1d.create;
+      l.color := ColorArray[i+1];
+      pageSpm.activeAxis.AddChild(l);
+      s.linefrf:=l;
+      s.linefrf.name:=s.name+'_frf';
+
+      l:= cBuffTrend1d.create;
       //l.color := ColorArray[i+10];
       l.color := yellow;
       l.dx:=1/t.m_tag.freq;
@@ -527,6 +544,8 @@ begin
       s.lineCoh:=l;
       s.lineCoh.name:=s.name+'_coh';
     end;
+    c.typeres:=c.typeres;
+
     fr.BottomLeft:=p2(0,-2*t.m_treshold);
     fr.TopRight:=p2(t.m_Length,t.m_treshold*2);
     pageT.ZoomfRect(fr);
@@ -631,7 +650,7 @@ begin
         if pcount>c.m_fftCount then
         begin
           BuildSpm(t);
-          t.m_shockList.addBlock(t.m_T1ClxData.p, c.fHalfFft);
+          t.m_shockList.addBlock(t.m_T1ClxData.p, c.fHalfFft, t.m_tag.getReadTime(t.f_imax-pcount));
           t.lineSpm.AddPoints(TDoubleArray(t.m_rms.p), c.fHalfFft);
         end
         else
@@ -694,7 +713,7 @@ begin
             s.line.flength:=pcount;
 
             BuildSpm(s);
-            s.m_shockList.addBlock(cSRSres(s).m_T1ClxData.p, c.fHalfFft);
+            s.m_shockList.addBlock(cSRSres(s).m_T1ClxData.p, c.fHalfFft, t.m_shockList.getLastBlock.m_timeStamp);
             s.lineSpm.AddPoints(TDoubleArray(s.m_rms.p), c.fHalfFft);
 
             s.m_shockProcessed:=true;
@@ -780,7 +799,6 @@ begin
     c.m_fftCount:=a_pIni.ReadInteger(str, 'FFtnum', 32);
     c.m_blockcount:=a_pIni.ReadInteger(str, 'BlockCount', 1);
     c.m_addNulls:=a_pIni.ReadBool(str, 'AddNulls', false);
-    c.m_typeRes:=a_pIni.ReadInteger(str, 'ResType', 0);
     count:=a_pIni.ReadInteger(str, 'SigCount', 0);
     for I := 0 to count - 1 do
     begin
@@ -790,10 +808,76 @@ begin
         c.addSRS(pointer(tag));
       end;
     end;
+    c.typeRes:=a_pIni.ReadInteger(str, 'ResType', 0);
   end;
   // TestCoh;
   UpdateChart;
   UpdateBlocks;
+end;
+
+procedure savedata(fname: string;sname:string;db:tdatablock);
+var
+  lname: string;
+  f: file;
+  i: integer;
+  data:TDoubleArray;
+begin
+  lname := extractfiledir(fname) + '\' + sname+'.dat';
+  AssignFile(f, lname);
+  Rewrite(f, 1);
+  setlength(data,db.m_size);
+  for I := 0 to db.m_size - 1 do
+  begin
+    data[i]:=Sqrt(db.m_mod[i]);
+  end;
+  BlockWrite(f, data[0], sizeof(double) * db.m_size);
+  closefile(f);
+end;
+
+procedure TSRSFrm.SaveBtnClick(Sender: TObject);
+var
+  i, j, num: integer;
+  ifile: TIniFile;
+  f,dir: string;
+  c:cSpmCfg;
+  t:cSRSTaho;
+  s: cSRSres;
+  db:tdatablock;
+begin
+  g_merafile:=GetMeraFile;
+  dir := extractfiledir(g_merafile) + '\Shock\';
+  f := dir + trimext(extractfileName(g_merafile)) + '_Shocks.mera';
+  ForceDirectories(dir);
+  ifile := TIniFile.create(f);
+  c:=getTaho.Cfg;
+  t:=getTaho;
+  for i := 0 to c.SRSCount - 1 do
+  begin
+    s := c.GetSrs(i);
+    for j := 0 to s.m_shockList.Count - 1 do
+    begin
+      if j=0 then
+        db:=s.m_shockList.getLastBlock
+      else
+        db:=s.m_shockList.getPrevBlock(db);
+      num:=s.m_shockList.Count-j;
+      WriteFloatToIniMera(ifile, s.m_tag.tagname+'_'+inttostr(num), 'Freq', 1/c.fspmdx);
+      ifile.WriteString(s.m_tag.tagname+'_'+inttostr(num), 'XFormat', 'R8');
+      ifile.WriteString(s.m_tag.tagname+'_'+inttostr(num), 'YFormat', 'R8');
+      // Подпись оси x
+      ifile.WriteString(s.m_tag.tagname+'_'+inttostr(num), 'XUnits', 'Гц');
+      // Подпись оси Y
+      // ifile.WriteString(s.tagname, 'YUnits', TagUnits(wp.m_YParam.tag));
+      WriteFloatToIniMera(ifile, s.m_tag.tagname+'_'+inttostr(num),'Start',0);
+      // k0
+      ifile.WriteFloat(s.m_tag.tagname+'_'+inttostr(num), 'k0', 0);
+      // k1
+      ifile.WriteFloat(s.m_tag.tagname+'_'+inttostr(num), 'k1', 1);
+
+      saveData(f, s.m_tag.tagname+'_'+inttostr(num),db);
+    end;
+  end;
+  ifile.destroy;
 end;
 
 procedure TSRSFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -826,7 +910,7 @@ begin
       a_pIni.WriteInteger(str, 'BlockCount', c.m_blockcount);
       a_pIni.WriteBool(str, 'AddNulls', c.m_addNulls);
       a_pIni.WriteInteger(str, 'SigCount', c.SRSCount);
-      a_pIni.WriteInteger(str, 'ResType', C.m_typeRes);
+      a_pIni.WriteInteger(str, 'ResType', C.typeRes);
       for I := 0 to c.SRSCount - 1 do
       begin
         s:=c.GetSrs(i);
@@ -974,7 +1058,7 @@ begin
           s.m_frf[j]:=v1/v2;
         end;
       end;
-      s.lineCoh.AddPoints(s.m_frf, c.fHalfFft);
+      s.linefrf.AddPoints(s.m_frf, c.fHalfFft);
     end;
   end;
 end;
@@ -1067,6 +1151,24 @@ end;
 function cSpmCfg.name: string;
 begin
   result:= cSRSTaho(taho).name+'_FFTp='+inttostr(FFTProp.PCount);
+end;
+
+procedure cSpmCfg.settyperes(t: integer);
+var
+  I: Integer;
+  s:cSRSres;
+  b:boolean;
+begin
+  ftypeRes:=t;
+  for I := 0 to srsCount - 1 do
+  begin
+    s:=GetSrs(i);
+    b:=t=c_FRF;
+    if s.lineSpm<>nil then
+      s.lineSpm.visible:=not b;
+    if s.linefrf<>nil then
+      s.linefrf.visible:=b;
+  end;
 end;
 
 function cSpmCfg.SRSCount: integer;
@@ -1268,10 +1370,11 @@ begin
 end;
 
 { TDataBlockList }
-procedure TDataBlockList.addBlock(data: pointer; dsize: integer);
+function TDataBlockList.addBlock(data: pointer; dsize: integer):TDataBlock;
 var
   db:TDataBlock;
 begin
+  inc(m_shockCount);
   if (Count=m_cfg.m_capacity) and (m_cfg.m_capacity>0) then
   begin
     m_LastBlock:=m_LastBlock+1;
@@ -1285,10 +1388,17 @@ begin
     SetLength(db.m_spm, dsize);
     SetLength(db.m_mod, dsize);
     db.m_size:=dsize;
-    Add(db);
+    db.find:=Add(db);
   end;
   system.move(TCmxArray_d(data)[0], db.m_spm[0], dsize*sizeof(TComplex_d));
   db.evalmod2;
+  result:=db;
+end;
+
+function TDataBlockList.addBlock(data: pointer; dsize: integer; time: double):TDataBlock;
+begin
+  result:=addBlock(data, dsize);
+  result.m_timeStamp:=time;
 end;
 
 procedure TDataBlockList.clearData;
@@ -1361,6 +1471,18 @@ begin
   end
   else
     result:=getBlock(m_LastBlock);
+end;
+
+function TDataBlockList.getPrevBlock(d:TDataBlock): TDataBlock;
+var
+  i:integer;
+begin
+  i:=d.find-1;
+  if i<0 then
+  begin
+    i:=Count-1;
+  end;
+  result:=getBlock(i);
 end;
 
 end.
