@@ -17,9 +17,9 @@ object FFTFltFrm: TFFTFltFrm
   PixelsPerInch = 120
   TextHeight = 16
   object Splitter1: TSplitter
-    Left = 489
+    Left = 726
     Top = 0
-    Width = 243
+    Width = 6
     Height = 568
     Margins.Left = 4
     Margins.Top = 4
@@ -28,8 +28,7 @@ object FFTFltFrm: TFFTFltFrm
     Align = alRight
     Color = clHighlight
     ParentColor = False
-    ExplicitLeft = 856
-    ExplicitHeight = 853
+    ExplicitLeft = 725
   end
   object ActionPanel: TPanel
     Left = 0
@@ -493,9 +492,8 @@ object FFTFltFrm: TFFTFltFrm
   object ScaleCurveChart: cChart
     Left = 417
     Top = 0
-    Width = 72
+    Width = 309
     Height = 568
-    Cursor = crSizeAll
     Align = alClient
     Caption = 'ScaleCurveChart'
     TabOrder = 3
@@ -503,6 +501,7 @@ object FFTFltFrm: TFFTFltFrm
     showTV = False
     showLegend = True
     selectSize = 5
+    ExplicitWidth = 72
   end
   object OpenDialog1: TOpenDialog
     Left = 261
