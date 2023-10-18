@@ -18,8 +18,8 @@ uses
   uCommonMath,
   uCommonTypes,
   pluginClass,
-  math,
-  Dialogs, ExtCtrls;
+  math, uAxis,
+  Dialogs, ExtCtrls, StdCtrls;
 
 type
   // структура для хранения удара
@@ -42,14 +42,16 @@ type
     // когеренция по списку ударов
     m_coh:TDoubleArray;
     // кроссспектр ударов
-    m_Cxy: TCmxArray_d;
+    m_Cxy: TCmxArray_d; // Sxy
+    m_Sxx, m_Syy: TDoubleArray;
   public
     procedure evalCoh(TahoShockList:TDataBlockList);
     procedure clearData;
+    function getBlock(i:integer):TDataBlock;
     // добавить спектр удара data - TCmxArray_d
     procedure addBlock(data:pointer; dsize:integer);
-    constructor create;override;
-    destructor destroy;override;
+    constructor create;
+    destructor destroy;
   end;
 
   cSRSres = class;
@@ -105,8 +107,7 @@ type
     m_T1ClxData:TAlignDCmpx;
     // спектр амплитуд
     m_rms: TAlignDarray;
-    line, lineSpm:cBuffTrend1d;
-
+    line, lineSpm, lineCoh:cBuffTrend1d;
     // список ударов (TDataBlock)
     m_shockList:TDataBlockList;
   private
@@ -161,7 +162,8 @@ type
   public
     property Cfg:cSpmCfg read getcfg write setcfg;
     function CfgCount:integer;
-
+    procedure evalCoh;
+    procedure evalFRF;
     function name:string;
     constructor create;
     destructor destroy;
@@ -169,10 +171,15 @@ type
 
   TSRSFrm = class(TRecFrm)
     SpmChart: cChart;
+    RightGB: TGroupBox;
+    ShockCountLabel: TLabel;
+    ShockCountE: TEdit;
+    EvalFRF: TButton;
     procedure FormCreate(Sender: TObject);
   public
     ready:boolean;
     pageT, pageSpm:cpage;
+    axSpm, axCoh:cAxis;
     // список настроек Тахо
     m_TahoList:TList;
     // spm
@@ -190,6 +197,7 @@ type
     procedure addTaho(t:csrstaho);
     function getTaho:csrstaho;
     procedure RBtnClick(sender: tobject);
+    procedure TestCoh;
   public
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -264,7 +272,6 @@ begin
 end;
 
 { TSRSFrm }
-
 procedure TSRSFrm.addTaho(t: csrstaho);
 begin
   m_tahoList.Add(t);
@@ -303,7 +310,8 @@ begin
     MULT_SSE_al_cmpx_d(tCmxArray_d(cSRSres(s).m_T1ClxData.p), k);
     EvalSpmMag(tCmxArray_d(cSRSres(s).m_T1ClxData.p),
                TDoubleArray(cSRSres(s).m_rms.p));
-    if c.m_typeRes=c_FRF then
+    //if c.m_typeRes=c_FRF then
+    if false then // блок отключен т.к. считаем только усредненную FRF
     begin
       t:=getTaho;
       //maxT:=MaxValue(TDoubleArray(t.m_rms.p));
@@ -392,6 +400,13 @@ begin
   p.ZoomfRect(r);
   p.Caption:='Freq Dom.';
   pageSpm:=p;
+  axSpm:=p.activeAxis;
+
+  axCoh:=cAxis.create;
+  axCoh.name:='CoherenceAx';
+  p.addaxis(axCoh);
+  axCoh.min:=p2d(0,0);
+  axCoh.max:=p2d(10, 2);
 end;
 
 procedure TSRSFrm.UpdateBlocks;
@@ -430,6 +445,7 @@ begin
     GetMemAlignedArray_cmpx_d(c.m_fftCount, s.m_T1ClxData);
     GetMemAlignedArray_d(c.m_fftCount, s.m_rms);
     s.lineSpm.dx:=c.fspmdx;
+    s.lineCoh.dx:=c.fspmdx;
   end;
 end;
 
@@ -477,6 +493,14 @@ begin
       pageSpm.activeAxis.AddChild(l);
       s.lineSpm:=l;
       s.lineSpm.name:=s.name+'_spm';
+
+      l:= cBuffTrend1d.create;
+      //l.color := ColorArray[i+10];
+      l.color := yellow;
+      l.dx:=1/t.m_tag.freq;
+      axCoh.AddChild(l);
+      s.lineCoh:=l;
+      s.lineCoh.name:=s.name+'_coh';
     end;
     fr.BottomLeft:=p2(0,-2*t.m_treshold);
     fr.TopRight:=p2(t.m_Length,t.m_treshold*2);
@@ -578,6 +602,7 @@ begin
         if pcount>c.m_fftCount then
         begin
           BuildSpm(t);
+          t.m_shockList.addBlock(t.m_T1ClxData.p, c.fHalfFft);
           t.lineSpm.AddPoints(TDoubleArray(t.m_rms.p), c.fHalfFft);
         end
         else
@@ -615,9 +640,12 @@ begin
           s.fDataCount:=pcount;
           s.line.AddPoints(TDoubleArray(s.m_T1data.p), pcount);
           s.line.flength:=pcount;
+
           BuildSpm(s);
+          s.m_shockList.addBlock(cSRSres(s).m_T1ClxData.p, c.fHalfFft);
           s.lineSpm.AddPoints(TDoubleArray(s.m_rms.p), c.fHalfFft);
         end;
+        t.evalCoh;
       end;
     end;
   end;
@@ -626,10 +654,17 @@ end;
 procedure TSRSFrm.UpdateView;
 var
   i: integer;
+  c:cSpmCfg;
+  t:cSRSTaho;
+  s:cSRSres;
 begin
   if RStatePlay then
   begin
-
+    t:=getTaho;
+    if t<>nil then
+    begin
+      ShockCountE.Text:=inttostr(t.m_shockList.Count);
+    end;
   end;
   SpmChart.redraw;
 end;
@@ -701,6 +736,7 @@ begin
       end;
     end;
   end;
+  // TestCoh;
   UpdateChart;
   UpdateBlocks;
 end;
@@ -743,6 +779,40 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TSRSFrm.TestCoh;
+var
+  c:cSpmCfg;
+  t:cSRSTaho;
+  s:cSRSres;
+  d1:TCmxArray_d;
+  cmx:TComplex_d;
+begin
+  t:=getTaho;
+  c:=t.Cfg;
+  s:=c.GetSrs(0);
+
+  setlength(d1, 1);
+  cmx.Re:=-30.25475291;cmx.im:=-82.46784439;
+  d1[0]:=cmx;
+  t.m_shockList.addBlock(@d1[0],1);
+  cmx.Re:=14.69077253;cmx.im:=-86.75400644;
+  d1[0]:=cmx;
+  t.m_shockList.addBlock(@d1[0],1);
+
+  cmx.Re:=-30.25475291;cmx.im:=-82.46784439;
+  d1[0]:=cmx;
+  s.m_shockList.addBlock(d1,1);
+  cmx.Re:=-74.66651386;cmx.im:=45.57920805;
+  d1[0]:=cmx;
+  s.m_shockList.addBlock(d1,1);
+
+  setlength(s.m_shockList.m_Cxy, 1);
+  setlength(s.m_shockList.m_sxx, 1);
+  setlength(s.m_shockList.m_syy, 1);
+  setlength(s.m_shockList.m_coh, 1);
+  s.m_shockList.evalCoh(t.m_shockList);
 end;
 
 { cSRSTaho }
@@ -794,6 +864,53 @@ begin
   fSpmCfgList.Destroy;
   m_shockList.Destroy;
   inherited;
+end;
+
+procedure cSRSTaho.evalCoh;
+var
+  I, shockCount: Integer;
+  c:cSpmCfg;
+  s:cSRSres;
+begin
+  c:=cfg;
+  shockCount:=m_shockList.Count;
+  for I := 0 to c.SRSCount - 1 do
+  begin
+    s:=c.GetSrs(i);
+    if shockCount=s.m_shockList.Count then
+    begin
+      setlength(s.m_shockList.m_Cxy, c.fHalfFft);
+      setlength(s.m_shockList.m_sxx, c.fHalfFft);
+      setlength(s.m_shockList.m_syy, c.fHalfFft);
+      setlength(s.m_shockList.m_coh, c.fHalfFft);
+      s.m_shockList.evalCoh(m_shockList);
+      s.lineCoh.AddPoints(s.m_shockList.m_coh, c.fHalfFft);
+    end;
+  end;
+end;
+
+procedure cSRSTaho.evalFRF;
+begin
+var
+  I, shockCount: Integer;
+  c:cSpmCfg;
+  s:cSRSres;
+begin
+  c:=cfg;
+  shockCount:=m_shockList.Count;
+  for I := 0 to c.SRSCount - 1 do
+  begin
+    s:=c.GetSrs(i);
+    if shockCount=s.m_shockList.Count then
+    begin
+      setlength(s.m_shockList.m_Cxy, c.fHalfFft);
+      setlength(s.m_shockList.m_sxx, c.fHalfFft);
+      setlength(s.m_shockList.m_syy, c.fHalfFft);
+      setlength(s.m_shockList.m_coh, c.fHalfFft);
+      s.m_shockList.evalCoh(m_shockList);
+      s.lineCoh.AddPoints(s.m_shockList.m_coh, c.fHalfFft);
+    end;
+  end;
 end;
 
 procedure cSRSTaho.ResetTrig;
@@ -1079,7 +1196,8 @@ begin
   db:=TDataBlock.Create;
   SetLength(db.m_spm, dsize);
   SetLength(db.m_mod, dsize);
-  system.move(data, db.m_spm[0], dsize*sizeof(double));
+  system.move(TCmxArray_d(data)[0], db.m_spm[0], dsize*sizeof(TComplex_d));
+  db.m_size:=dsize;
   db.evalmod2;
   Add(db);
 end;
@@ -1087,8 +1205,15 @@ end;
 procedure TDataBlockList.clearData;
 var
   d:TDataBlock;
-  I: Integer;
+  I, l: Integer;
 begin
+  l:=length(m_Cxy);
+  if l>0 then
+  begin
+    ZeroMemory(m_Cxy, l*(sizeof(TComplex_d)));
+    ZeroMemory(m_sxx, l*(sizeof(TComplex_d)));
+    ZeroMemory(m_syy, l*(sizeof(TComplex_d)));
+  end;
   for I := 0 to Count - 1 do
   begin
     d:=TDataBlock(items[i]);
@@ -1107,11 +1232,36 @@ begin
   inherited;
 end;
 
-procedure TDataBlockList.evalCoh(TahoShockList: TDataBlockList);
+procedure TDataBlockList.evalCoh(TahoShockList:TDataBlockList);
 var
-  i:integer;
+  i, j:integer;
+  s, t:TDataBlock;
+  p1, p2:TComplex_d;
 begin
+  for I := 0 to Count-1 do
+  begin
+    s:=getBlock(i);
+    t:=TahoShockList.getBlock(i);
+    for j := 0 to s.m_size - 1 do // проход по спектру
+    begin
+      p1:=s.m_spm[j];
+      p2:=Sopr(t.m_spm[j]);
+      m_Cxy[j]:=p1*p2+m_Cxy[j];
+      //m_sxx[j]:=mod2(p1)+m_sxx[j];
+      //m_syy[j]:=mod2(p2)+m_syy[j];
+      m_sxx[j]:=s.m_mod[j]+m_sxx[j];
+      m_syy[j]:=t.m_mod[j]+m_syy[j];
+    end;
+  end;
+  for j := 0 to s.m_size - 1 do
+  begin
+    m_coh[j]:=mod2(m_Cxy[j])/(m_sxx[j]*m_syy[j]);
+  end;
+end;
 
+function TDataBlockList.getBlock(i: integer): TDataBlock;
+begin
+  result:=TDataBlock(items[i]);
 end;
 
 end.
