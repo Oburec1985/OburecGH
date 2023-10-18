@@ -1267,6 +1267,7 @@ begin
     end
     else
     begin
+      m_lastindex:=0;
       // showmessage('lastindex<0: cTag.ResetTagDataTimeInd(endTimeInd:integer) - ZeroMemory(@m_ReadData[lastindex], (m_ReadSize-m_lastindex)*sizeof(double))')
     end;
   end;

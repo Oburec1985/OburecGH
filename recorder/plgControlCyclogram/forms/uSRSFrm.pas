@@ -22,6 +22,8 @@ uses
   Dialogs, ExtCtrls, StdCtrls;
 
 type
+  cSpmCfg = class;
+
   // структура для хранения удара
   TDataBlock = class
   public
@@ -44,10 +46,13 @@ type
     // кроссспектр ударов
     m_Cxy: TCmxArray_d; // Sxy
     m_Sxx, m_Syy: TDoubleArray;
+    m_LastBlock:integer;
+    m_cfg:cspmcfg;
   public
     procedure evalCoh(TahoShockList:TDataBlockList);
     procedure clearData;
     function getBlock(i:integer):TDataBlock;
+    function getLastBlock:TDataBlock;
     // добавить спектр удара data - TCmxArray_d
     procedure addBlock(data:pointer; dsize:integer);
     constructor create;
@@ -58,6 +63,9 @@ type
  // конфигуратор расчета спектра
   cSpmCfg = class
   public
+    // ограничение по количеству ударов
+    m_capacity:integer;
+
     m_typeRes:integer;
     // FFTplan
     FFTProp:TFFTProp;
@@ -95,7 +103,6 @@ type
   public
     m_tag:ctag;
   public
-    cfg:cSpmCfg;
     m_SpmDx:double;
     m_freq:double;
     // размер блока для расчета спектра = freq*Numpoints
@@ -106,16 +113,24 @@ type
     // спектр re_im
     m_T1ClxData:TAlignDCmpx;
     // спектр амплитуд
-    m_rms: TAlignDarray;
+    m_rms:TAlignDarray;
+    // синтезированная передаточная характеристика
+    m_frf: TDoubleArray;
     line, lineSpm, lineCoh:cBuffTrend1d;
     // список ударов (TDataBlock)
     m_shockList:TDataBlockList;
+    // обработан последний удар
+    m_shockProcessed:boolean;
   private
+    fcfg:cSpmCfg;
     fComInt:point2d;
     // найден общий интервал с взведенным тригом
     //fComInterval:boolean;
     fComIntervalLen:double;
+  protected
+    procedure setcfg(c:cSpmCfg);
   public
+    property cfg:cSpmCfg read fcfg write setcfg;
     function name:string;
     constructor create;
     destructor destroy;
@@ -125,6 +140,7 @@ type
 
   cSRSTaho = class
   public
+    m_CohTreshold,
     // Амплдитуда для обнаружения события
     m_treshold:double;
     // отступ слева и длительность
@@ -364,6 +380,7 @@ begin
         s:=t.Cfg.GetSrs(i);
         s.m_tag.doOnStart;
         ZeroMemory(s.m_T1data.p,  t.cfg.fportionsizei* sizeof(double));
+        ZeroMemory(s.m_frf, t.Cfg.fHalfFft* sizeof(double));
       end;
     end
     else
@@ -442,8 +459,16 @@ begin
   begin
     s:=c.GetSrs(i);
     GetMemAlignedArray_d(c.fportionsizei, s.m_T1data);
+    // tCmxArray_d(cSRSres(s).m_T1ClxData.p)
     GetMemAlignedArray_cmpx_d(c.m_fftCount, s.m_T1ClxData);
-    GetMemAlignedArray_d(c.m_fftCount, s.m_rms);
+    GetMemAlignedArray_d(c.fHalfFft, s.m_rms);
+    SetLength(s.m_frf, c.fHalfFft);
+    // блок расчета когеренции
+    setlength(s.m_shockList.m_Cxy, c.fHalfFft);
+    setlength(s.m_shockList.m_sxx, c.fHalfFft);
+    setlength(s.m_shockList.m_syy, c.fHalfFft);
+    setlength(s.m_shockList.m_coh, c.fHalfFft);
+
     s.lineSpm.dx:=c.fspmdx;
     s.lineCoh.dx:=c.fspmdx;
   end;
@@ -521,6 +546,7 @@ var
   s:cSRSres;
   i, pcount ,dropCount:integer;
   sig_interval, common_interval:point2d;
+  b:boolean;
   v, comIntervalLen, blocklen, refresh, dropLen:double;
 begin
   if not ready then exit;
@@ -550,7 +576,11 @@ begin
         t.m_tag.ResetTagDataTimeInd(dropCount);
         t.f_iEnd:=t.f_iEnd-dropCount;
         if t.f_iEnd<0 then
+        begin
           t.f_iEnd:=0;
+          // если просохатили удар (отбросили данные в посл. ударе, забываем про него)
+          t.ResetTrig;
+        end;
       end;
     end;
     t.v_min := t.m_tag.m_ReadData[0];
@@ -591,8 +621,7 @@ begin
       // если данных накопилось на целиковый удар
       if t.f_iEnd<=t.m_tag.lastindex then
       begin
-        t.fTrigState:=trOff;
-        t.ResetTrig;
+        t.fTrigState:=TrEnd;
         pcount:=copyData(t.m_tag, t.TrigInterval, t.m_T1data);
         //if t.m_tag.m_ReadData[t.f_iEnd]=0 then
         //  showmessage(inttostr(pcount));
@@ -609,6 +638,26 @@ begin
         begin
 
         end;
+      end;
+    end;
+    if t.fTrigState=TrEnd then
+    begin
+      b:=true;
+      for i := 0 to c.SRSCount - 1 do
+      begin
+        s := c.GetSrs(i);
+        if s.m_shockProcessed=false then
+        begin
+          b:=false;
+          break;
+        end;
+      end;
+      if b then // стоит еще добавить проверку на отвалившийся датчик. В случае если
+      // какой то канал не накопил удар, игнорируем его по таймауту
+      begin
+        t.evalFRF;
+        // внутри вызывается t.fTrigState:=TrOff;
+        t.ResetTrig;
       end;
     end;
     for i := 0 to c.SRSCount - 1 do
@@ -632,20 +681,26 @@ begin
       if ComIntervalLen>0 then
       begin
         //s.fComInterval:=true;
-        if ComIntervalLen>s.fComIntervalLen then
+        // если данные накопились и тахо тоже накопился
+        if (ComIntervalLen>s.fComIntervalLen) and (t.fTrigState=TrEnd)  then
         begin
           s.fComIntervalLen:=ComIntervalLen;
           s.fComInt:=common_interval;
           pcount:=copyData(s.m_tag, common_interval, s.m_T1data);
-          s.fDataCount:=pcount;
-          s.line.AddPoints(TDoubleArray(s.m_T1data.p), pcount);
-          s.line.flength:=pcount;
+          if pCount>c.m_fftCount then
+          begin
+            s.fDataCount:=pcount;
+            s.line.AddPoints(TDoubleArray(s.m_T1data.p), pcount);
+            s.line.flength:=pcount;
 
-          BuildSpm(s);
-          s.m_shockList.addBlock(cSRSres(s).m_T1ClxData.p, c.fHalfFft);
-          s.lineSpm.AddPoints(TDoubleArray(s.m_rms.p), c.fHalfFft);
+            BuildSpm(s);
+            s.m_shockList.addBlock(cSRSres(s).m_T1ClxData.p, c.fHalfFft);
+            s.lineSpm.AddPoints(TDoubleArray(s.m_rms.p), c.fHalfFft);
+
+            s.m_shockProcessed:=true;
+          end;
+          t.evalCoh;
         end;
-        t.evalCoh;
       end;
     end;
   end;
@@ -827,6 +882,7 @@ begin
    fSpmCfgList.Clear;
  end;
  c.taho:=self;
+ m_shockList.m_cfg:=c;
  fSpmCfgList.Add(c);
 end;
 
@@ -849,6 +905,7 @@ constructor cSRSTaho.create;
 begin
   inherited;
   m_treshold:=1;
+  m_CohTreshold:=0.5;
   // отступ слева и длительность
   m_ShiftLeft:=0.05;
   m_Length:=1;
@@ -877,12 +934,8 @@ begin
   for I := 0 to c.SRSCount - 1 do
   begin
     s:=c.GetSrs(i);
-    if shockCount=s.m_shockList.Count then
+    if (shockCount=s.m_shockList.Count) and (m_shockList.m_LastBlock=s.m_shockList.m_LastBlock) then
     begin
-      setlength(s.m_shockList.m_Cxy, c.fHalfFft);
-      setlength(s.m_shockList.m_sxx, c.fHalfFft);
-      setlength(s.m_shockList.m_syy, c.fHalfFft);
-      setlength(s.m_shockList.m_coh, c.fHalfFft);
       s.m_shockList.evalCoh(m_shockList);
       s.lineCoh.AddPoints(s.m_shockList.m_coh, c.fHalfFft);
     end;
@@ -890,11 +943,13 @@ begin
 end;
 
 procedure cSRSTaho.evalFRF;
-begin
 var
-  I, shockCount: Integer;
+  I, k, shockCount: Integer;
   c:cSpmCfg;
   s:cSRSres;
+  //td, sd:TDataBlock;
+  j: Integer;
+  v1,v2:double;
 begin
   c:=cfg;
   shockCount:=m_shockList.Count;
@@ -903,12 +958,23 @@ begin
     s:=c.GetSrs(i);
     if shockCount=s.m_shockList.Count then
     begin
-      setlength(s.m_shockList.m_Cxy, c.fHalfFft);
-      setlength(s.m_shockList.m_sxx, c.fHalfFft);
-      setlength(s.m_shockList.m_syy, c.fHalfFft);
-      setlength(s.m_shockList.m_coh, c.fHalfFft);
-      s.m_shockList.evalCoh(m_shockList);
-      s.lineCoh.AddPoints(s.m_shockList.m_coh, c.fHalfFft);
+      k:=s.m_shockList.Count - 1;
+      //td:=m_shockList.getLastBlock;
+      //sd:=s.m_shockList.getLastBlock;
+      for j := 0 to Cfg.fHalfFft - 1 do
+      begin
+        v1:=tdoubleArray(s.m_rms.p)[j];
+        v2:=tdoubleArray(m_rms.p)[j];
+        if s.m_shockList.m_coh[j]<m_CohTreshold then
+        begin
+          s.m_frf[j]:=0;
+        end
+        else
+        begin
+          s.m_frf[j]:=v1/v2;
+        end;
+      end;
+      s.lineCoh.AddPoints(s.m_frf, c.fHalfFft);
     end;
   end;
 end;
@@ -920,13 +986,19 @@ var
   s:cSRSres;
 begin
   c:=Cfg;
-  ZeroMemory(m_T1data.p,  c.m_fftCount* sizeof(double));
+  //ZeroMemory(m_T1data.p,  c.m_fftCount* sizeof(double));
   for I := 0 to c.SRSCount - 1 do
   begin
     s:=c.GetSrs(i);
     s.fComIntervalLen:=0;
-    ZeroMemory(s.m_T1data.p,  c.m_fftCount* sizeof(double));
+    //ZeroMemory(s.m_T1data.p,  c.m_fftCount* sizeof(double));
   end;
+  for i := 0 to c.SRSCount - 1 do
+  begin
+    s := c.GetSrs(i);
+    s.m_shockProcessed:=false;
+  end;
+  fTrigState:=TrOff;
 end;
 
 function cSRSTaho.name: string;
@@ -979,6 +1051,7 @@ begin
   m_fftCount:=32;
   m_blockcount:=1;
   m_addNulls:=false;
+  m_capacity:=5;
 end;
 
 destructor cSpmCfg.destroy;
@@ -1017,6 +1090,12 @@ end;
 function cSRSres.name: string;
 begin
   result:=m_tag.tagname;
+end;
+
+procedure cSRSres.setcfg(c: cSpmCfg);
+begin
+  fcfg:=c;
+  m_shockList.m_cfg:=c;
 end;
 
 { cSRSFactory }
@@ -1193,13 +1272,23 @@ procedure TDataBlockList.addBlock(data: pointer; dsize: integer);
 var
   db:TDataBlock;
 begin
-  db:=TDataBlock.Create;
-  SetLength(db.m_spm, dsize);
-  SetLength(db.m_mod, dsize);
+  if (Count=m_cfg.m_capacity) and (m_cfg.m_capacity>0) then
+  begin
+    m_LastBlock:=m_LastBlock+1;
+    if m_LastBlock=m_cfg.m_capacity then
+      m_LastBlock:=0;
+    db:=getBlock(m_LastBlock);
+  end
+  else
+  begin
+    db:=TDataBlock.Create;
+    SetLength(db.m_spm, dsize);
+    SetLength(db.m_mod, dsize);
+    db.m_size:=dsize;
+    Add(db);
+  end;
   system.move(TCmxArray_d(data)[0], db.m_spm[0], dsize*sizeof(TComplex_d));
-  db.m_size:=dsize;
   db.evalmod2;
-  Add(db);
 end;
 
 procedure TDataBlockList.clearData;
@@ -1262,6 +1351,16 @@ end;
 function TDataBlockList.getBlock(i: integer): TDataBlock;
 begin
   result:=TDataBlock(items[i]);
+end;
+
+function TDataBlockList.getLastBlock: TDataBlock;
+begin
+  if Count<m_cfg.m_capacity then
+  begin
+    result:=getBlock( Count-1);
+  end
+  else
+    result:=getBlock(m_LastBlock);
 end;
 
 end.
