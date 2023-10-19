@@ -19,7 +19,6 @@ type
     TagsListFrame1: TTagsListFrame;
     MainPanel: TPanel;
     TahoGB: TGroupBox;
-    TrigNameLabel: TLabel;
     RightShiftLabel: TLabel;
     LeftShiftEdit: TFloatEdit;
     LeftShiftLabel: TLabel;
@@ -45,7 +44,6 @@ type
     LgXcb: TCheckBox;
     LgYcb: TCheckBox;
     ImageList1: TImageList;
-    TrigNameCB: TRcComboBox;
     ShCountIE: TIntEdit;
     Label1: TLabel;
     TahoNameCB: TRcComboBox;
@@ -59,6 +57,10 @@ type
     MinYfe: TFloatEdit;
     MaxYLabel: TLabel;
     MaxYfe: TFloatEdit;
+    ShockCountIE: TIntEdit;
+    Label2: TLabel;
+    CohThresholdFE: TFloatEdit;
+    Label3: TLabel;
     procedure SignalsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
@@ -98,7 +100,7 @@ begin
   lt:=GetSelectTaho;
   if lt=nil then
   begin
-    t:=TrigNameCB.gettag;
+    t:=TahoNameCB.gettag;
     if t<>nil then
     begin
       lt:=cSRSTaho.Create;
@@ -279,7 +281,6 @@ var
   c:cSpmCfg;
 begin
   setComboBoxItem(t.name,TahoNameCB);
-  setComboBoxItem(t.name,TrigNameCB);
   ThresholdFE.FloatNum:=t.m_treshold;
   LeftShiftEdit.FloatNum:=t.m_ShiftLeft;
   LengthFE.FloatNum:=t.m_Length;
@@ -291,6 +292,8 @@ begin
   BlockSizeFE.FloatNum:=FFTBlockSizeIE.IntNum/csrstaho(c.taho).m_tag.freq;
   ShCountIE.IntNum:=1;
   NullCB.Checked:=false;
+  ShCountIE.IntNum:=c.m_capacity;
+  CohThresholdFE.FloatNum:=t.m_CohTreshold;
 end;
 
 procedure TEditSrsFrm.SignalsTVChange(Sender: TBaseVirtualTree;
@@ -396,12 +399,13 @@ begin
   m_SRS.m_minY:=MinYfe.FloatNum;
   m_SRS.m_maxY:=MaxYfe.FloatNum;
   m_SRS.UpdateChart;
+  c.m_capacity:=ShCountIE.IntNum;
+  t.m_CohTreshold:=CohThresholdFE.FloatNum;
 end;
 
 procedure TEditSrsFrm.UpdateTags;
 begin
   TahoNameCB.updateTagsList;
-  TrigNameCB.updateTagsList;
   TagsListFrame1.ShowChannels;
 end;
 

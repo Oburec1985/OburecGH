@@ -29,9 +29,11 @@ type
   public
     m_timeStamp:double;
     m_timeInd:integer; // для синхронизации.блок srs хранит индекс блока тахо
+    m_TimeArrSize:integer;
     m_size:integer;
     m_spm:TCmxArray_d;
     m_mod:TDoubleArray;
+    m_TimeBlock:TDoubleArray;
   protected
     find:integer; // индекс в tlist;
   protected
@@ -61,7 +63,7 @@ type
     function getPrevBlock(d:TDataBlock):TDataBlock;
     // добавить спектр удара data - TCmxArray_d
     function addBlock(data:pointer; dsize:integer):TDataBlock;overload;
-    function addBlock(data:pointer; dsize:integer; time:double):TDataBlock;overload;
+    function addBlock(data:pointer; dsize:integer; time:double; tb:TDoubleArray; psize:integer):TDataBlock;overload;
     constructor create;
     destructor destroy;
   end;
@@ -642,15 +644,16 @@ begin
       begin
         t.fTrigState:=TrEnd;
         pcount:=copyData(t.m_tag, t.TrigInterval, t.m_T1data);
-        //if t.m_tag.m_ReadData[t.f_iEnd]=0 then
-        //  showmessage(inttostr(pcount));
         t.fDataCount:=pcount;
         t.line.AddPoints(TDoubleArray(t.m_T1data.p), pcount);
         t.line.flength:=pcount;
         if pcount>c.m_fftCount then
         begin
           BuildSpm(t);
-          t.m_shockList.addBlock(t.m_T1ClxData.p, c.fHalfFft, t.m_tag.getReadTime(t.f_imax-pcount));
+          t.m_shockList.addBlock(t.m_T1ClxData.p,
+                                 c.fHalfFft,
+                                 t.TrigInterval.x,
+                                 TDoubleArray(t.m_T1data.p), pcount);
           t.lineSpm.AddPoints(TDoubleArray(t.m_rms.p), c.fHalfFft);
         end
         else
@@ -695,8 +698,16 @@ begin
           end;
         end;
       end;
-      common_interval:=getCommonInterval(sig_interval, t.TrigInterval);
-      ComIntervalLen:=common_interval.y-common_interval.x;
+      common_interval:=p2d(0,0);
+      ComIntervalLen:=0;
+      if sig_interval.y>t.TrigInterval.x then
+      begin
+        if t.TrigInterval.y>sig_interval.x then
+        begin
+          common_interval:=getCommonInterval(sig_interval, t.TrigInterval);
+          ComIntervalLen:=common_interval.y-common_interval.x;
+        end;
+      end;
       if ComIntervalLen>0 then
       begin
         //s.fComInterval:=true;
@@ -713,7 +724,7 @@ begin
             s.line.flength:=pcount;
 
             BuildSpm(s);
-            s.m_shockList.addBlock(cSRSres(s).m_T1ClxData.p, c.fHalfFft, t.m_shockList.getLastBlock.m_timeStamp);
+            s.m_shockList.addBlock(cSRSres(s).m_T1ClxData.p, c.fHalfFft, common_interval.x, TDoubleArray(s.m_T1data.p), pcount);
             s.lineSpm.AddPoints(TDoubleArray(s.m_rms.p), c.fHalfFft);
 
             s.m_shockProcessed:=true;
@@ -815,22 +826,31 @@ begin
   UpdateBlocks;
 end;
 
-procedure savedata(fname: string;sname:string;db:tdatablock);
+procedure savedata(fname: string;sname:string;db:tdatablock; taho:boolean);
 var
   lname: string;
   f: file;
   i: integer;
   data:TDoubleArray;
 begin
+  lname := extractfiledir(fname) + '\'+'spm_'+sname+'.dat';
+  if not taho then
+  begin
+    AssignFile(f, lname);
+    Rewrite(f, 1);
+    setlength(data,db.m_size);
+    for I := 0 to db.m_size - 1 do
+    begin
+      data[i]:=Sqrt(db.m_mod[i]);
+    end;
+    BlockWrite(f, data[0], sizeof(double) * db.m_size);
+    closefile(f);
+  end;
+  // временной блок
   lname := extractfiledir(fname) + '\' + sname+'.dat';
   AssignFile(f, lname);
   Rewrite(f, 1);
-  setlength(data,db.m_size);
-  for I := 0 to db.m_size - 1 do
-  begin
-    data[i]:=Sqrt(db.m_mod[i]);
-  end;
-  BlockWrite(f, data[0], sizeof(double) * db.m_size);
+  BlockWrite(f, db.m_TimeBlock[0], sizeof(double) * db.m_TimeArrSize);
   closefile(f);
 end;
 
@@ -838,11 +858,11 @@ procedure TSRSFrm.SaveBtnClick(Sender: TObject);
 var
   i, j, num: integer;
   ifile: TIniFile;
-  f,dir: string;
+  f,ident,dir: string;
   c:cSpmCfg;
   t:cSRSTaho;
   s: cSRSres;
-  db:tdatablock;
+  db, tb:tdatablock;
 begin
   g_merafile:=GetMeraFile;
   dir := extractfiledir(g_merafile) + '\Shock\';
@@ -857,24 +877,52 @@ begin
     for j := 0 to s.m_shockList.Count - 1 do
     begin
       if j=0 then
-        db:=s.m_shockList.getLastBlock
+      begin
+        db:=s.m_shockList.getLastBlock;
+        tb:=t.m_shockList.getLastBlock;
+      end
       else
+      begin
         db:=s.m_shockList.getPrevBlock(db);
+        tb:=t.m_shockList.getPrevBlock(tb);
+      end;
       num:=s.m_shockList.Count-j;
-      WriteFloatToIniMera(ifile, s.m_tag.tagname+'_'+inttostr(num), 'Freq', 1/c.fspmdx);
-      ifile.WriteString(s.m_tag.tagname+'_'+inttostr(num), 'XFormat', 'R8');
-      ifile.WriteString(s.m_tag.tagname+'_'+inttostr(num), 'YFormat', 'R8');
+
+      ident:='spm_'+ s.m_tag.tagname+'_'+inttostr(num);
+      WriteFloatToIniMera(ifile, ident, 'Freq', 1/c.fspmdx);
+      ifile.WriteString(ident, 'XFormat', 'R8');
+      ifile.WriteString(ident, 'YFormat', 'R8');
       // Подпись оси x
-      ifile.WriteString(s.m_tag.tagname+'_'+inttostr(num), 'XUnits', 'Гц');
+      ifile.WriteString(ident, 'XUnits', 'Гц');
       // Подпись оси Y
       // ifile.WriteString(s.tagname, 'YUnits', TagUnits(wp.m_YParam.tag));
-      WriteFloatToIniMera(ifile, s.m_tag.tagname+'_'+inttostr(num),'Start',0);
+      WriteFloatToIniMera(ifile, ident,'Start',0);
       // k0
-      ifile.WriteFloat(s.m_tag.tagname+'_'+inttostr(num), 'k0', 0);
+      ifile.WriteFloat(ident, 'k0', 0);
       // k1
-      ifile.WriteFloat(s.m_tag.tagname+'_'+inttostr(num), 'k1', 1);
+      ifile.WriteFloat(ident, 'k1', 1);
 
-      saveData(f, s.m_tag.tagname+'_'+inttostr(num),db);
+      ident:=s.m_tag.tagname+'_'+inttostr(num);
+      WriteFloatToIniMera(ifile, ident, 'Freq', s.m_tag.freq);
+      ifile.WriteString(ident, 'XFormat', 'R8');
+      ifile.WriteString(ident, 'YFormat', 'R8');
+      ifile.WriteString(ident, 'XUnits', 'сек.');
+      WriteFloatToIniMera(ifile, ident,'Start',db.m_timeStamp);
+      ifile.WriteFloat(ident, 'k0', 0);
+      ifile.WriteFloat(ident, 'k1', 1);
+      saveData(f, s.m_tag.tagname+'_'+inttostr(num),db, false);
+      if i=0 then
+      begin
+        ident:=t.m_tag.tagname+'_'+inttostr(num);
+        WriteFloatToIniMera(ifile, ident, 'Freq', t.m_tag.freq);
+        ifile.WriteString(ident, 'XFormat', 'R8');
+        ifile.WriteString(ident, 'YFormat', 'R8');
+        ifile.WriteString(ident, 'XUnits', 'сек.');
+        WriteFloatToIniMera(ifile, ident,'Start',tb.m_timeStamp);
+        ifile.WriteFloat(ident, 'k0', 0);
+        ifile.WriteFloat(ident, 'k1', 1);
+        saveData(f, ident,tb, true);
+      end;
     end;
   end;
   ifile.destroy;
@@ -895,6 +943,7 @@ begin
     WriteFloatToIniMera(a_pIni, str, 'ShiftLeft', t.m_ShiftLeft);
     WriteFloatToIniMera(a_pIni, str, 'Threshold', t.m_treshold);
     WriteFloatToIniMera(a_pIni, str, 'Length', t.m_Length);
+    WriteFloatToIniMera(a_pIni, str, 'CohThreshold', t.m_CohTreshold);
 
     WriteFloatToIniMera(a_pIni, str, 'Spm_minX', m_minX);
     WriteFloatToIniMera(a_pIni, str, 'Spm_maxX', m_maxX);
@@ -1395,10 +1444,14 @@ begin
   result:=db;
 end;
 
-function TDataBlockList.addBlock(data: pointer; dsize: integer; time: double):TDataBlock;
+function TDataBlockList.addBlock(data: pointer; dsize: integer; time: double; tb:TDoubleArray; psize:integer):TDataBlock;
 begin
   result:=addBlock(data, dsize);
   result.m_timeStamp:=time;
+  if psize>result.m_TimeArrSize then
+    setlength(result.m_TimeBlock,psize);
+  system.move(tb[0], result.m_TimeBlock[0], psize*sizeof(double));
+  result.m_TimeArrSize:=psize;
 end;
 
 procedure TDataBlockList.clearData;

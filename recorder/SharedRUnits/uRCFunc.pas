@@ -1306,13 +1306,13 @@ end;
 
 function cTag.getIntervalInd(interval: point2d): tpoint;
 begin
-  result.x := trunc((interval.x - m_ReadDataTime) * freq);
-  result.y := trunc((interval.y - m_ReadDataTime) * freq) - 1;
+  result.x := round((interval.x - m_ReadDataTime) * freq);
+  result.y := round((interval.y - m_ReadDataTime) * freq) - 1;
 end;
 
 function cTag.getIndex(t: double): integer;
 begin
-  result := trunc((t - m_ReadDataTime) * freq);
+  result := round((t - m_ReadDataTime) * freq);
 end;
 
 function cTag.getReadTime(i: integer): double;
