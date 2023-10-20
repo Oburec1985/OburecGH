@@ -32,6 +32,8 @@ type
     m_TimeArrSize:integer;
     m_size:integer;
     m_spm:TCmxArray_d;
+    m_frf,
+    m_mod2,
     m_mod:TDoubleArray;
     m_TimeBlock:TDoubleArray;
   protected
@@ -63,7 +65,7 @@ type
     function getPrevBlock(d:TDataBlock):TDataBlock;
     // добавить спектр удара data - TCmxArray_d
     function addBlock(data:pointer; dsize:integer):TDataBlock;overload;
-    function addBlock(data:pointer; dsize:integer; time:double; tb:TDoubleArray; psize:integer):TDataBlock;overload;
+    function addBlock(data:pointer; spmMag:tdoublearray; dsize:integer; time:double; tb:TDoubleArray; psize:integer):TDataBlock;overload;
     constructor create;
     destructor destroy;
   end;
@@ -243,6 +245,9 @@ type
   end;
 
   cSRSFactory = class(cRecBasicFactory)
+  public
+    // merafile
+    m_meraFile:string;
   private
     m_counter: integer;
   protected
@@ -651,6 +656,7 @@ begin
         begin
           BuildSpm(t);
           t.m_shockList.addBlock(t.m_T1ClxData.p,
+                                 tdoublearray(t.m_rms.p),
                                  c.fHalfFft,
                                  t.TrigInterval.x,
                                  TDoubleArray(t.m_T1data.p), pcount);
@@ -724,7 +730,12 @@ begin
             s.line.flength:=pcount;
 
             BuildSpm(s);
-            s.m_shockList.addBlock(cSRSres(s).m_T1ClxData.p, c.fHalfFft, common_interval.x, TDoubleArray(s.m_T1data.p), pcount);
+            s.m_shockList.addBlock(cSRSres(s).m_T1ClxData.p, // Spm Cmplx
+                                   tdoublearray(s.m_rms.p), // SpmMag
+                                   c.fHalfFft, // SpmSize
+                                   common_interval.x, // timeStamp
+                                   TDoubleArray(s.m_T1data.p), // timeData
+                                   pcount); // timeData size
             s.lineSpm.AddPoints(TDoubleArray(s.m_rms.p), c.fHalfFft);
 
             s.m_shockProcessed:=true;
@@ -831,19 +842,18 @@ var
   lname: string;
   f: file;
   i: integer;
-  data:TDoubleArray;
 begin
   lname := extractfiledir(fname) + '\'+'spm_'+sname+'.dat';
   if not taho then
   begin
     AssignFile(f, lname);
     Rewrite(f, 1);
-    setlength(data,db.m_size);
-    for I := 0 to db.m_size - 1 do
-    begin
-      data[i]:=Sqrt(db.m_mod[i]);
-    end;
-    BlockWrite(f, data[0], sizeof(double) * db.m_size);
+    //setlength(data,db.m_size);
+    //for I := 0 to db.m_size - 1 do
+    //begin
+    //  data[i]:=Sqrt(db.m_mod[i]);
+    //end;
+    BlockWrite(f, db.m_mod[0], sizeof(double) * db.m_size);
     closefile(f);
   end;
   // временной блок
@@ -864,8 +874,7 @@ var
   s: cSRSres;
   db, tb:tdatablock;
 begin
-  g_merafile:=GetMeraFile;
-  dir := extractfiledir(g_merafile) + '\Shock\';
+  dir := extractfiledir(g_SRSFactory.m_merafile) + '\Shock\';
   f := dir + trimext(extractfileName(g_merafile)) + '_Shocks.mera';
   ForceDirectories(dir);
   ifile := TIniFile.create(f);
@@ -1080,7 +1089,7 @@ var
   I, k, shockCount: Integer;
   c:cSpmCfg;
   s:cSRSres;
-  //td, sd:TDataBlock;
+  td, sd:TDataBlock;
   j: Integer;
   v1,v2:double;
 begin
@@ -1089,22 +1098,22 @@ begin
   for I := 0 to c.SRSCount - 1 do
   begin
     s:=c.GetSrs(i);
-    if shockCount=s.m_shockList.Count then
+    for k := 0 to s.m_shockList.Count - 1 do
     begin
-      k:=s.m_shockList.Count - 1;
-      //td:=m_shockList.getLastBlock;
-      //sd:=s.m_shockList.getLastBlock;
+      td:=m_shockList.getLastBlock;
+      sd:=s.m_shockList.getLastBlock;
       for j := 0 to Cfg.fHalfFft - 1 do
       begin
-        v1:=tdoubleArray(s.m_rms.p)[j];
-        v2:=tdoubleArray(m_rms.p)[j];
+        v1:=sd.m_mod[j];
+        v2:=td.m_mod[j];
+        sd.m_frf[j]:=v1/v2;
         if s.m_shockList.m_coh[j]<m_CohTreshold then
         begin
           s.m_frf[j]:=0;
         end
         else
         begin
-          s.m_frf[j]:=v1/v2;
+          s.m_frf[j]:=sd.m_frf[j];
         end;
       end;
       s.linefrf.AddPoints(s.m_frf, c.fHalfFft);
@@ -1288,40 +1297,44 @@ procedure cSRSFactory.doChangeRState(sender: tobject);
 begin
   case GetRCStateChange of
     RSt_Init:
-      begin
-        doStart;
-      end;
+    begin
+      doStart;
+    end;
     RSt_StopToView:
-      begin
-        doStart;
-      end;
+    begin
+      g_SRSFactory.m_meraFile:=GetMeraFile;
+      doStart;
+    end;
     RSt_StopToRec:
-      begin
-        doStart;
-      end;
+    begin
+      g_SRSFactory.m_meraFile:=GetMeraFile;
+      doStart;
+    end;
     RSt_ViewToStop:
-      begin
+    begin
 
-      end;
+    end;
     RSt_ViewToRec:
-      begin
-
-      end;
+    begin
+      g_SRSFactory.m_meraFile:=GetMeraFile;
+    end;
     RSt_initToRec:
-      begin
-        doStart;
-      end;
+    begin
+      doStart;
+    end;
     RSt_initToView:
-      begin
-        doStart;
-      end;
+    begin
+      g_SRSFactory.m_meraFile:=GetMeraFile;
+      doStart;
+    end;
     RSt_RecToStop:
-      begin
-      end;
+    begin
+
+    end;
     RSt_RecToView:
-      begin
-        doStart;
-      end;
+    begin
+      doStart;
+    end;
   end;
 end;
 
@@ -1403,7 +1416,7 @@ begin
   begin
     c:=sopr(m_spm[i]);
     c:=m_spm[i]*c;
-    m_mod[i]:=c.re;
+    m_mod2[i]:=c.re;
   end;
 end;
 
@@ -1435,7 +1448,7 @@ begin
   begin
     db:=TDataBlock.Create;
     SetLength(db.m_spm, dsize);
-    SetLength(db.m_mod, dsize);
+    SetLength(db.m_mod2, dsize);
     db.m_size:=dsize;
     db.find:=Add(db);
   end;
@@ -1444,9 +1457,15 @@ begin
   result:=db;
 end;
 
-function TDataBlockList.addBlock(data: pointer; dsize: integer; time: double; tb:TDoubleArray; psize:integer):TDataBlock;
+function TDataBlockList.addBlock(data: pointer; spmMag:tdoublearray; dsize: integer; time: double;
+                                 // timeblock
+                                 tb:TDoubleArray; psize:integer):TDataBlock;
 begin
   result:=addBlock(data, dsize);
+  SetLength(result.m_frf, dsize);
+  SetLength(result.m_mod, dsize);
+  system.move(spmMag[0], result.m_mod[0], dsize*sizeof(double));
+
   result.m_timeStamp:=time;
   if psize>result.m_TimeArrSize then
     setlength(result.m_TimeBlock,psize);
@@ -1501,8 +1520,8 @@ begin
       m_Cxy[j]:=p1*p2+m_Cxy[j];
       //m_sxx[j]:=mod2(p1)+m_sxx[j];
       //m_syy[j]:=mod2(p2)+m_syy[j];
-      m_sxx[j]:=s.m_mod[j]+m_sxx[j];
-      m_syy[j]:=t.m_mod[j]+m_syy[j];
+      m_sxx[j]:=s.m_mod2[j]+m_sxx[j];
+      m_syy[j]:=t.m_mod2[j]+m_syy[j];
     end;
   end;
   for j := 0 to s.m_size - 1 do

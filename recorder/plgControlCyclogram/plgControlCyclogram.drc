@@ -1238,7 +1238,7 @@ END
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
 /* ..\SharedRUnits\uTagsListFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uEditSrsFrm.dfm */
+/* forms\uEditSrsFrm.dfm */
 /* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSRSFrm.dfm */
 /* forms\uModesStepFrame.dfm */
 /* forms\uModesTabsFrame.dfm */
