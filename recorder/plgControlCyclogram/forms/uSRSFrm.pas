@@ -18,8 +18,9 @@ uses
   uCommonMath,
   uCommonTypes,
   pluginClass,
+  shellapi,
   math, uAxis,
-  Dialogs, ExtCtrls, StdCtrls;
+  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons;
 
 type
   cSpmCfg = class;
@@ -205,8 +206,16 @@ type
     ShockCountE: TEdit;
     EvalFRF: TButton;
     SaveBtn: TButton;
+    ShockSB: TSpinButton;
+    ShockIE: TIntEdit;
+    ShockLabel: TLabel;
+    WinPosBtn: TSpeedButton;
+    Point_No: TLabel;
+    PointIE: TIntEdit;
+    PointSE: TSpinButton;
     procedure FormCreate(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
+    procedure WinPosBtnClick(Sender: TObject);
   public
     ready:boolean;
     pageT, pageSpm:cpage;
@@ -248,6 +257,7 @@ type
   public
     // merafile
     m_meraFile:string;
+    m_ShockFile:string;
   private
     m_counter: integer;
   protected
@@ -389,6 +399,7 @@ begin
   if t.m_tag <> nil then
   begin
     t.m_tag.doOnStart;
+    t.m_shockList.clearData;
     t.f_iEnd:=0;
     ZeroMemory(t.m_T1data.p,  t.cfg.fportionsizei* sizeof(double));
     if t.cfg<>nil then
@@ -397,6 +408,7 @@ begin
       begin
         s:=t.Cfg.GetSrs(i);
         s.m_tag.doOnStart;
+        s.m_shockList.clearData;
         ZeroMemory(s.m_T1data.p,  t.cfg.fportionsizei* sizeof(double));
         ZeroMemory(s.m_frf, t.Cfg.fHalfFft* sizeof(double));
       end;
@@ -765,6 +777,12 @@ begin
   SpmChart.redraw;
 end;
 
+procedure TSRSFrm.WinPosBtnClick(Sender: TObject);
+begin
+  if fileexists(g_SRSFactory.m_meraFile) then
+    ShellExecute(0,nil,pwidechar(g_SRSFactory.m_ShockFile),nil,nil, SW_HIDE);
+end;
+
 function TSRSFrm.getTaho: csrstaho;
 begin
   if m_taholist.count>0 then
@@ -843,17 +861,18 @@ var
   f: file;
   i: integer;
 begin
-  lname := extractfiledir(fname) + '\'+'spm_'+sname+'.dat';
   if not taho then
   begin
+    lname := extractfiledir(fname) + '\'+'spm_'+sname+'.dat';
     AssignFile(f, lname);
     Rewrite(f, 1);
-    //setlength(data,db.m_size);
-    //for I := 0 to db.m_size - 1 do
-    //begin
-    //  data[i]:=Sqrt(db.m_mod[i]);
-    //end;
     BlockWrite(f, db.m_mod[0], sizeof(double) * db.m_size);
+    closefile(f);
+
+    lname := extractfiledir(fname) + '\'+'frf_'+sname+'.dat';
+    AssignFile(f, lname);
+    Rewrite(f, 1);
+    BlockWrite(f, db.m_frf[0], sizeof(double) * db.m_size);
     closefile(f);
   end;
   // временной блок
@@ -862,6 +881,22 @@ begin
   Rewrite(f, 1);
   BlockWrite(f, db.m_TimeBlock[0], sizeof(double) * db.m_TimeArrSize);
   closefile(f);
+end;
+
+procedure saveHeader( ifile:tinifile; freq:double; start:double; ident:string);
+begin
+  WriteFloatToIniMera(ifile, ident, 'Freq', freq);
+  ifile.WriteString(ident, 'XFormat', 'R8');
+  ifile.WriteString(ident, 'YFormat', 'R8');
+  // Подпись оси x
+  ifile.WriteString(ident, 'XUnits', 'Гц');
+  // Подпись оси Y
+  // ifile.WriteString(s.tagname, 'YUnits', TagUnits(wp.m_YParam.tag));
+  WriteFloatToIniMera(ifile, ident,'Start',0);
+  // k0
+  ifile.WriteFloat(ident, 'k0', 0);
+  // k1
+  ifile.WriteFloat(ident, 'k1', 1);
 end;
 
 procedure TSRSFrm.SaveBtnClick(Sender: TObject);
@@ -876,6 +911,7 @@ var
 begin
   dir := extractfiledir(g_SRSFactory.m_merafile) + '\Shock\';
   f := dir + trimext(extractfileName(g_merafile)) + '_Shocks.mera';
+  g_SRSFactory.m_ShockFile:=f;
   ForceDirectories(dir);
   ifile := TIniFile.create(f);
   c:=getTaho.Cfg;
@@ -898,38 +934,17 @@ begin
       num:=s.m_shockList.Count-j;
 
       ident:='spm_'+ s.m_tag.tagname+'_'+inttostr(num);
-      WriteFloatToIniMera(ifile, ident, 'Freq', 1/c.fspmdx);
-      ifile.WriteString(ident, 'XFormat', 'R8');
-      ifile.WriteString(ident, 'YFormat', 'R8');
-      // Подпись оси x
-      ifile.WriteString(ident, 'XUnits', 'Гц');
-      // Подпись оси Y
-      // ifile.WriteString(s.tagname, 'YUnits', TagUnits(wp.m_YParam.tag));
-      WriteFloatToIniMera(ifile, ident,'Start',0);
-      // k0
-      ifile.WriteFloat(ident, 'k0', 0);
-      // k1
-      ifile.WriteFloat(ident, 'k1', 1);
-
+      saveHeader(ifile,1/c.fspmdx, 0, ident);
+      ident:='frf_'+ s.m_tag.tagname+'_'+inttostr(num);
+      saveHeader(ifile,1/c.fspmdx, 0,ident);
       ident:=s.m_tag.tagname+'_'+inttostr(num);
-      WriteFloatToIniMera(ifile, ident, 'Freq', s.m_tag.freq);
-      ifile.WriteString(ident, 'XFormat', 'R8');
-      ifile.WriteString(ident, 'YFormat', 'R8');
-      ifile.WriteString(ident, 'XUnits', 'сек.');
-      WriteFloatToIniMera(ifile, ident,'Start',db.m_timeStamp);
-      ifile.WriteFloat(ident, 'k0', 0);
-      ifile.WriteFloat(ident, 'k1', 1);
+      saveHeader(ifile,s.m_tag.freq, db.m_timeStamp, ident);
       saveData(f, s.m_tag.tagname+'_'+inttostr(num),db, false);
+
       if i=0 then
       begin
         ident:=t.m_tag.tagname+'_'+inttostr(num);
-        WriteFloatToIniMera(ifile, ident, 'Freq', t.m_tag.freq);
-        ifile.WriteString(ident, 'XFormat', 'R8');
-        ifile.WriteString(ident, 'YFormat', 'R8');
-        ifile.WriteString(ident, 'XUnits', 'сек.');
-        WriteFloatToIniMera(ifile, ident,'Start',tb.m_timeStamp);
-        ifile.WriteFloat(ident, 'k0', 0);
-        ifile.WriteFloat(ident, 'k1', 1);
+        saveHeader(ifile,t.m_tag.freq, tb.m_timeStamp, ident);
         saveData(f, ident,tb, true);
       end;
     end;
@@ -1107,17 +1122,21 @@ begin
         v1:=sd.m_mod[j];
         v2:=td.m_mod[j];
         sd.m_frf[j]:=v1/v2;
-        if s.m_shockList.m_coh[j]<m_CohTreshold then
-        begin
-          s.m_frf[j]:=0;
-        end
-        else
-        begin
-          s.m_frf[j]:=sd.m_frf[j];
-        end;
+        s.m_frf[j]:=sd.m_frf[j]+s.m_frf[j];
       end;
-      s.linefrf.AddPoints(s.m_frf, c.fHalfFft);
     end;
+    for j := 0 to Cfg.fHalfFft - 1 do
+    begin
+      if s.m_shockList.m_coh[j]<m_CohTreshold then
+      begin
+        s.m_frf[j]:=0;
+      end
+      else
+      begin
+        s.m_frf[j]:=sd.m_frf[j];
+      end;
+    end;
+    s.linefrf.AddPoints(s.m_frf, c.fHalfFft);
   end;
 end;
 
@@ -1482,8 +1501,8 @@ begin
   if l>0 then
   begin
     ZeroMemory(m_Cxy, l*(sizeof(TComplex_d)));
-    ZeroMemory(m_sxx, l*(sizeof(TComplex_d)));
-    ZeroMemory(m_syy, l*(sizeof(TComplex_d)));
+    ZeroMemory(m_sxx, l*(sizeof(double)));
+    ZeroMemory(m_syy, l*(sizeof(double)));
   end;
   for I := 0 to Count - 1 do
   begin
@@ -1505,9 +1524,10 @@ end;
 
 procedure TDataBlockList.evalCoh(TahoShockList:TDataBlockList);
 var
-  i, j:integer;
+  i, j,n:integer;
   s, t:TDataBlock;
   p1, p2:TComplex_d;
+  k:double;
 begin
   for I := 0 to Count-1 do
   begin
@@ -1524,9 +1544,13 @@ begin
       m_syy[j]:=t.m_mod2[j]+m_syy[j];
     end;
   end;
+  n:=Count;
+  k:=1/(n*n);
   for j := 0 to s.m_size - 1 do
   begin
     m_coh[j]:=mod2(m_Cxy[j])/(m_sxx[j]*m_syy[j]);
+    // делаемсреднюю комплексную передаточную характеристику
+    m_cXY[j]:=m_Cxy[j]*k/m_syy[j];
   end;
 end;
 
