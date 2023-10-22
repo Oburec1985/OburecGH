@@ -63,6 +63,9 @@ type
     NumFrontIE: TIntEdit;
     NumFrontLabel: TLabel;
     UseDateTimeCB: TCheckBox;
+    TestTimeEdit: TEdit;
+    TestTimeLabel: TLabel;
+    TestTimeBtn: TButton;
     procedure SignalsLBClick(Sender: TObject);
     procedure DelBtnClick(Sender: TObject);
     procedure UTSLVClick(Sender: TObject);
@@ -74,6 +77,7 @@ type
       Rect: TRect; State: TOwnerDrawState);
     procedure SignalsLBMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
+    procedure TestTimeBtnClick(Sender: TObject);
   private
     m:cwpObjMng;
     // результирующее имя
@@ -148,8 +152,12 @@ end;
 procedure TCorrectUTSFrm.SignalsLBClick(Sender: TObject);
 var
   str: string;
-  I, j: integer;
+  I, j, k: integer;
   s:selectSrc;
+  f:tinifile;
+  d:tdatetime;
+  slist:tstringlist;
+  ch:char;
 begin
   if (SignalsLB.SelCount>0) or (SignalsLB.Count=1) then
   begin
@@ -158,8 +166,38 @@ begin
       if SignalsLB.Selected[I] then
       begin
         s := selectSrc(SignalsLB.Items.Objects[I]);
+
+        f:=tinifile.Create(s.s.merafile.FileName);
+        slist:=tstringlist.Create;
+        f.ReadSections(slist);
+        for j := 0 to slist.Count - 1 do
+        begin
+          str :=f.ReadString(slist.Strings[j],'DateTime','');
+          if str<>'' then
+          begin
+            if DecimalSeparator=',' then
+            begin
+              ch:='.';
+            end
+            else
+            begin
+              ch:=','
+            end;
+            k:=pos(ch,str);
+            if k>0 then
+            begin
+              str[k]:=DecimalSeparator;
+            end;
+
+            TestTimeEdit.Text:= str;
+            break;
+          end;
+        end;
+        slist.Destroy;
+
         ShowUTS(s);
         fillCB;
+
         exit;
       end;
     end;
@@ -214,6 +252,49 @@ begin
     end;
   end;
   SignalsLB.ShowHint:=h;
+end;
+
+procedure TCorrectUTSFrm.TestTimeBtnClick(Sender: TObject);
+var
+  I, j: Integer;
+  s:selectsrc;
+  t:tdatetime;
+  f:tinifile;
+  str, ident, fname:string;
+  slist:tstringlist;
+  b:boolean;
+begin
+  for I := 0 to SignalsLB.Count - 1 do
+  begin
+    s:=selectsrc(SignalsLB.Items.Objects[i]);
+    if s=nil then break;
+
+    str:=s.s.merafile.FileName;
+    fname:=extractfilename(str);
+    fname:=trimext(fname);
+    str:=extractfiledir(s.s.merafile.FileName)+'\'+fname+'_Tcor';
+    while fileexists(str+'.mera') do
+    begin
+      str:=modname(str, false);
+    end;
+    str:=str+'.mera';
+    correctlist.Add(str);
+
+    fname:=s.s.merafile.FileName;
+    CopyFile(@fname[1], @str[1], b);
+    // меняем ключи в дублированом файле
+    f:=tinifile.Create(str);
+    slist:=tstringlist.Create;
+    f.ReadSections(slist);
+    f.DeleteKey('MERA', 'Date');
+    f.DeleteKey('MERA', 'Time');
+    for j := 0 to slist.Count - 1 do
+    begin
+      f.DeleteKey(slist.Strings[j], 'DateTime');
+    end;
+    f.UpdateFile;
+    ModalResult:=mrOk;
+  end;
 end;
 
 procedure TCorrectUTSFrm.UTSLVChange(Sender: TObject; Item: TListItem;

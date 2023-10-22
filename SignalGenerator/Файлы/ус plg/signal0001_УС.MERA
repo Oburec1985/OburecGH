@@ -1,6 +1,7 @@
 [MERA]
 Date=21.03.2011
 Time=17:40:28
+
 [shock_HI]
 Comment=Испытание: Дата: 21.03.2011
 DateTime=40623.736550925925
@@ -37,6 +38,7 @@ k0=0
 k1=1.000000000000
 XFormat=R8
 YFormat=R8
+
 [shock_src_1]
 Comment=Испытание: Дата: 21.03.2011
 XUnits=с

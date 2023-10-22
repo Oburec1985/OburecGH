@@ -30,7 +30,6 @@ object CorrectUTSFrm: TCorrectUTSFrm
     ParentColor = False
     ParentFont = False
     TabOrder = 0
-    ExplicitHeight = 594
     DesignSize = (
       1033
       604)
@@ -65,6 +64,13 @@ object CorrectUTSFrm: TCorrectUTSFrm
       Anchors = [akLeft, akBottom]
       Caption = #1053#1086#1084#1077#1088' '#1089#1088#1072#1073#1072#1090#1099#1074#1072#1085#1080#1103
       ExplicitTop = 431
+    end
+    object TestTimeLabel: TLabel
+      Left = 324
+      Top = 236
+      Width = 155
+      Height = 23
+      Caption = #1042#1088#1077#1084#1103' '#1080#1089#1087#1099#1090#1072#1085#1080#1103
     end
     object AddBtn: TButton
       Left = 640
@@ -142,7 +148,6 @@ object CorrectUTSFrm: TCorrectUTSFrm
       Align = alRight
       Caption = #1055#1077#1088#1077#1095#1077#1085#1100' '#1079#1072#1084#1077#1088#1086#1074
       TabOrder = 5
-      ExplicitHeight = 567
       object Splitter1: TSplitter
         Left = 2
         Top = 183
@@ -185,6 +190,8 @@ object CorrectUTSFrm: TCorrectUTSFrm
         OnClick = SignalsLBClick
         OnDrawItem = SignalsLBDrawItem
         OnMouseMove = SignalsLBMouseMove
+        ExplicitLeft = 3
+        ExplicitTop = 23
       end
       object UTSLV: TBtnListView
         Left = 2
@@ -214,8 +221,8 @@ object CorrectUTSFrm: TCorrectUTSFrm
         QuoteColumnBtnClick = False
         QuoteColumnDblClick = False
         DrawColorBox = False
+        ChangeTextColor = False
         Editable = False
-        ExplicitHeight = 333
       end
     end
     object ThresheldSE: TFloatSpinEdit
@@ -235,11 +242,10 @@ object CorrectUTSFrm: TCorrectUTSFrm
       Anchors = [akLeft, akBottom]
       Caption = #1054#1090#1084#1077#1085#1072
       TabOrder = 7
-      ExplicitTop = 554
     end
     object ApplyBtn: TButton
-      Left = 640
-      Top = 564
+      Left = 644
+      Top = 572
       Width = 102
       Height = 29
       Anchors = [akRight, akBottom]
@@ -247,7 +253,6 @@ object CorrectUTSFrm: TCorrectUTSFrm
       ModalResult = 1
       TabOrder = 8
       OnClick = ApplyBtnClick
-      ExplicitTop = 554
     end
     object ResSE: TFloatSpinEdit
       Left = 11
@@ -259,18 +264,16 @@ object CorrectUTSFrm: TCorrectUTSFrm
       Increment = 0.100000000000000000
       TabOrder = 9
       Value = 0.500000000000000000
-      ExplicitTop = 453
     end
     object EvalBtn: TButton
-      Left = 640
-      Top = 441
+      Left = 642
+      Top = 439
       Width = 102
       Height = 29
       Anchors = [akRight, akBottom]
       Caption = #1042#1099#1095#1080#1089#1083#1080#1090#1100
       TabOrder = 10
       OnClick = EvalBtnClick
-      ExplicitTop = 431
     end
     object NotUTSShiftCB: TCheckBox
       Left = 11
@@ -317,7 +320,6 @@ object CorrectUTSFrm: TCorrectUTSFrm
       Anchors = [akLeft, akBottom]
       TabOrder = 14
       Text = '000'
-      ExplicitTop = 453
     end
     object UseDateTimeCB: TCheckBox
       Left = 11
@@ -330,7 +332,22 @@ object CorrectUTSFrm: TCorrectUTSFrm
       Checked = True
       State = cbChecked
       TabOrder = 15
-      ExplicitTop = 512
+    end
+    object TestTimeEdit: TEdit
+      Left = 324
+      Top = 265
+      Width = 158
+      Height = 31
+      TabOrder = 16
+    end
+    object TestTimeBtn: TButton
+      Left = 488
+      Top = 266
+      Width = 102
+      Height = 29
+      Caption = #1054#1073#1085#1091#1083#1080#1090#1100
+      TabOrder = 17
+      OnClick = TestTimeBtnClick
     end
   end
 end
