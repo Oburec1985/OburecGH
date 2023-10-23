@@ -872,12 +872,8 @@ object ControlDeskFrm: TControlDeskFrm
     OnChange = PageControl1Change
     object TabSheet1: TTabSheet
       Caption = #1054#1073#1097#1080#1081' '#1074#1080#1076
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Splitter2: TSplitter
-        Left = 782
+        Left = 326
         Top = 0
         Width = 4
         Height = 484
@@ -892,7 +888,7 @@ object ControlDeskFrm: TControlDeskFrm
         ExplicitHeight = 473
       end
       object GroupBox1: TGroupBox
-        Left = 461
+        Left = 5
         Top = 0
         Width = 321
         Height = 484
@@ -914,6 +910,7 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 0
+        ExplicitLeft = 461
         object ModePanel: TPanel
           Left = 1
           Top = 25
@@ -983,7 +980,7 @@ object ControlDeskFrm: TControlDeskFrm
       object ModesListPanel: TGroupBox
         Left = 0
         Top = 0
-        Width = 461
+        Width = 5
         Height = 484
         Margins.Left = 4
         Margins.Top = 4
@@ -1003,10 +1000,11 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 1
+        ExplicitWidth = 461
         object ControlSG: TStringGrid
           Left = 1
           Top = 25
-          Width = 459
+          Width = 3
           Height = 458
           Margins.Left = 4
           Margins.Top = 4
@@ -1028,10 +1026,12 @@ object ControlDeskFrm: TControlDeskFrm
           OnDrawCell = ControlSGDrawCell
           OnMouseDown = ControlSGMouseDown
           OnSetEditText = ControlSGSetEditText
+          ExplicitLeft = 2
+          ExplicitWidth = 385
         end
       end
       object GroupBox2: TGroupBox
-        Left = 786
+        Left = 330
         Top = 0
         Width = 323
         Height = 484
@@ -1053,6 +1053,7 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 2
+        ExplicitLeft = 786
         object TrigSG: TStringGrid
           Left = 1
           Top = 25
@@ -1080,7 +1081,7 @@ object ControlDeskFrm: TControlDeskFrm
       Caption = #1058#1072#1073#1083#1080#1094#1072' '#1088#1077#1078#1080#1084#1086#1074
       ImageIndex = 1
       object Splitter3: TSplitter
-        Left = 610
+        Left = 212
         Top = 0
         Width = 4
         Height = 484
@@ -1093,7 +1094,7 @@ object ControlDeskFrm: TControlDeskFrm
       object TableModeGB: TGroupBox
         Left = 0
         Top = 0
-        Width = 610
+        Width = 212
         Height = 484
         Margins.Left = 4
         Margins.Top = 4
@@ -1113,10 +1114,11 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 0
+        ExplicitWidth = 610
         object TableModeSG: TStringGrid
           Left = 1
           Top = 25
-          Width = 608
+          Width = 210
           Height = 458
           Margins.Left = 4
           Margins.Top = 4
@@ -1138,12 +1140,13 @@ object ControlDeskFrm: TControlDeskFrm
           OnDblClick = TableModeSGDblClick
           OnDrawCell = TableModeSGDrawCell
           OnSetEditText = TableModeSGSetEditText
+          ExplicitWidth = 608
         end
       end
       object RightGB: TGroupBox
-        Left = 614
+        Left = 216
         Top = 0
-        Width = 495
+        Width = 893
         Height = 484
         Align = alRight
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1072
@@ -1151,7 +1154,7 @@ object ControlDeskFrm: TControlDeskFrm
         object ControlPropSG: TStringGrid
           Left = 2
           Top = 78
-          Width = 491
+          Width = 889
           Height = 404
           Margins.Left = 4
           Margins.Top = 4
@@ -1175,6 +1178,7 @@ object ControlDeskFrm: TControlDeskFrm
           OnDrawCell = ControlPropSGDrawCell
           OnKeyDown = ControlPropSGKeyDown
           OnSetEditText = ControlPropSGSetEditText
+          ExplicitWidth = 491
           RowHeights = (
             32
             32
@@ -1185,10 +1189,11 @@ object ControlDeskFrm: TControlDeskFrm
         object Panel1: TPanel
           Left = 2
           Top = 18
-          Width = 491
+          Width = 889
           Height = 60
           Align = alTop
           TabOrder = 1
+          ExplicitWidth = 491
           object ControlPropE: TEdit
             Left = 15
             Top = 19

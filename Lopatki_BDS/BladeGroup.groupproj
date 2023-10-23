@@ -27,10 +27,10 @@
 			<Projects Include="..\примеры\CheckSSE\CheckSSE.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\wp\WPServicePlg\WpServicePlg.dproj">
+			<Projects Include="..\wp\SubdiveFilePlg\SubdivFilePlg.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\wp\SubdiveFilePlg\SubdivFilePlg.dproj">
+			<Projects Include="..\wp\WPServicePlg\WpServicePlg.dproj">
 				<Dependencies/>
 			</Projects>
 			<Projects Include="..\wp\WPExtPack\WPExtPack.dproj">
@@ -127,15 +127,6 @@
 		<Target Name="CheckSSE:Make">
 			<MSBuild Targets="Make" Projects="..\примеры\CheckSSE\CheckSSE.dproj"/>
 		</Target>
-		<Target Name="WpServicePlg">
-			<MSBuild Projects="..\wp\WPServicePlg\WpServicePlg.dproj"/>
-		</Target>
-		<Target Name="WpServicePlg:Clean">
-			<MSBuild Targets="Clean" Projects="..\wp\WPServicePlg\WpServicePlg.dproj"/>
-		</Target>
-		<Target Name="WpServicePlg:Make">
-			<MSBuild Targets="Make" Projects="..\wp\WPServicePlg\WpServicePlg.dproj"/>
-		</Target>
 		<Target Name="SubdivFilePlg">
 			<MSBuild Projects="..\wp\SubdiveFilePlg\SubdivFilePlg.dproj"/>
 		</Target>
@@ -144,6 +135,15 @@
 		</Target>
 		<Target Name="SubdivFilePlg:Make">
 			<MSBuild Targets="Make" Projects="..\wp\SubdiveFilePlg\SubdivFilePlg.dproj"/>
+		</Target>
+		<Target Name="WpServicePlg">
+			<MSBuild Projects="..\wp\WPServicePlg\WpServicePlg.dproj"/>
+		</Target>
+		<Target Name="WpServicePlg:Clean">
+			<MSBuild Targets="Clean" Projects="..\wp\WPServicePlg\WpServicePlg.dproj"/>
+		</Target>
+		<Target Name="WpServicePlg:Make">
+			<MSBuild Targets="Make" Projects="..\wp\WPServicePlg\WpServicePlg.dproj"/>
 		</Target>
 		<Target Name="WPExtPack">
 			<MSBuild Projects="..\wp\WPExtPack\WPExtPack.dproj"/>
@@ -182,13 +182,13 @@
 			<MSBuild Targets="Make" Projects="..\recorder\plgTestClear\plgEvalStepVal.dproj"/>
 		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;Proilegenerator;RC_lib;plgControlCyclogram;GlScene;CheckSSE;WpServicePlg;SubdivFilePlg;WPExtPack;ProjectFFT;SniffDll;plgEvalStepVal"/>
+			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;Proilegenerator;RC_lib;plgControlCyclogram;GlScene;CheckSSE;SubdivFilePlg;WpServicePlg;WPExtPack;ProjectFFT;SniffDll;plgEvalStepVal"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;Proilegenerator:Clean;RC_lib:Clean;plgControlCyclogram:Clean;GlScene:Clean;CheckSSE:Clean;WpServicePlg:Clean;SubdivFilePlg:Clean;WPExtPack:Clean;ProjectFFT:Clean;SniffDll:Clean;plgEvalStepVal:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;Proilegenerator:Clean;RC_lib:Clean;plgControlCyclogram:Clean;GlScene:Clean;CheckSSE:Clean;SubdivFilePlg:Clean;WpServicePlg:Clean;WPExtPack:Clean;ProjectFFT:Clean;SniffDll:Clean;plgEvalStepVal:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;Proilegenerator:Make;RC_lib:Make;plgControlCyclogram:Make;GlScene:Make;CheckSSE:Make;WpServicePlg:Make;SubdivFilePlg:Make;WPExtPack:Make;ProjectFFT:Make;SniffDll:Make;plgEvalStepVal:Make"/>
+			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;Proilegenerator:Make;RC_lib:Make;plgControlCyclogram:Make;GlScene:Make;CheckSSE:Make;SubdivFilePlg:Make;WpServicePlg:Make;WPExtPack:Make;ProjectFFT:Make;SniffDll:Make;plgEvalStepVal:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

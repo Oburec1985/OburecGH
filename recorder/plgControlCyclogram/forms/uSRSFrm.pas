@@ -216,6 +216,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
     procedure WinPosBtnClick(Sender: TObject);
+    procedure ShockSBDownClick(Sender: TObject);
   public
     ready:boolean;
     pageT, pageSpm:cpage;
@@ -989,6 +990,26 @@ begin
         s:=c.GetSrs(i);
         saveTagToIni(a_pIni,s.m_tag,str,'Tag_'+inttostr(i));
       end;
+    end;
+  end;
+end;
+
+procedure TSRSFrm.ShockSBDownClick(Sender: TObject);
+var
+  t:cSRSTaho;
+  c:cSpmCfg;
+  s:cSRSres;
+  I, j: Integer;
+begin
+  t:=getTaho;
+  if t=nil then exit;
+  c:=t.Cfg;
+  for I := 0 to c.m_SRSList.Count - 1 do
+  begin
+    s:=c.GetSrs(i);
+    for j := 0 to s.m_shockList.Count - 1 do
+    begin
+
     end;
   end;
 end;

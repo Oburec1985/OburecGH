@@ -2,27 +2,23 @@ object SRSFrm: TSRSFrm
   Left = 0
   Top = 0
   Caption = 'SRSFrm'
-  ClientHeight = 421
-  ClientWidth = 719
+  ClientHeight = 551
+  ClientWidth = 940
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   OnCreate = FormCreate
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object SpmChart: cChart
     Left = 0
     Top = 0
-    Width = 567
-    Height = 421
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 741
+    Height = 551
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 0
@@ -30,41 +26,47 @@ object SRSFrm: TSRSFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitWidth = 568
   end
   object RightGB: TGroupBox
-    Left = 567
+    Left = 741
     Top = 0
-    Width = 152
-    Height = 421
+    Width = 199
+    Height = 551
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
-    ExplicitLeft = 573
     object ShockCountLabel: TLabel
-      Left = 8
-      Top = 21
-      Width = 84
-      Height = 13
+      Left = 10
+      Top = 27
+      Width = 105
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1053#1072#1081#1076#1077#1085#1086' '#1091#1076#1072#1088#1086#1074
     end
     object ShockLabel: TLabel
-      Left = 4
-      Top = 150
-      Width = 39
-      Height = 13
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 5
+      Top = 196
+      Width = 47
+      Height = 17
       Caption = #1059#1076#1072#1088#8470
     end
     object WinPosBtn: TSpeedButton
-      Left = 86
-      Top = 97
-      Width = 34
-      Height = 35
+      Left = 112
+      Top = 127
+      Width = 45
+      Height = 46
       Hint = #1054#1090#1082#1088#1099#1090#1100' '#1074' WinPos'
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       AllowAllUp = True
       BiDiMode = bdLeftToRight
       Glyph.Data = {
@@ -240,49 +242,53 @@ object SRSFrm: TSRSFrm
       OnClick = WinPosBtnClick
     end
     object Point_No: TLabel
-      Left = 4
-      Top = 262
-      Width = 43
-      Height = 13
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 5
+      Top = 343
+      Width = 54
+      Height = 17
       Caption = #1058#1086#1095#1082#1072#8470
     end
     object ShockCountE: TEdit
-      Left = 5
-      Top = 40
-      Width = 121
-      Height = 21
+      Left = 7
+      Top = 52
+      Width = 158
+      Height = 25
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       TabOrder = 0
     end
     object EvalFRF: TButton
-      Left = 5
-      Top = 67
-      Width = 75
-      Height = 25
+      Left = 7
+      Top = 88
+      Width = 98
+      Height = 32
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1056#1072#1089#1095#1077#1090
       TabOrder = 1
     end
     object SaveBtn: TButton
-      Left = 5
-      Top = 107
-      Width = 75
-      Height = 25
+      Left = 7
+      Top = 140
+      Width = 98
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
       TabOrder = 2
       OnClick = SaveBtnClick
     end
     object ShockSB: TSpinButton
-      Left = 114
-      Top = 167
-      Width = 15
-      Height = 19
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 149
+      Top = 218
+      Width = 20
+      Height = 25
       DownGlyph.Data = {
         0E010000424D0E01000000000000360000002800000009000000060000000100
         200000000000D800000000000000000000000000000000000000008080000080
@@ -304,40 +310,29 @@ object SRSFrm: TSRSFrm
         8000008080000080800000808000008080000080800000808000000000000080
         8000008080000080800000808000008080000080800000808000008080000080
         800000808000008080000080800000808000}
+      OnDownClick = ShockSBDownClick
     end
     object ShockIE: TIntEdit
-      Left = 4
-      Top = 167
-      Width = 109
-      Height = 21
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 5
+      Top = 218
+      Width = 143
+      Height = 25
       TabOrder = 4
       Text = '0'
     end
     object PointIE: TIntEdit
-      Left = 4
-      Top = 279
-      Width = 109
-      Height = 21
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 5
+      Top = 365
+      Width = 143
+      Height = 25
       TabOrder = 5
       Text = '0'
     end
     object PointSE: TSpinButton
-      Left = 117
-      Top = 279
-      Width = 15
-      Height = 19
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 153
+      Top = 365
+      Width = 20
+      Height = 25
       DownGlyph.Data = {
         0E010000424D0E01000000000000360000002800000009000000060000000100
         200000000000D800000000000000000000000000000000000000008080000080

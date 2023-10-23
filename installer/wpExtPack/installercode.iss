@@ -12,7 +12,7 @@ OutputDir=output
 ;OutputDir=\\Fserv\e\MERA\PRODUCTS\WinPos\Utils\CorrectUTS_WpExtPack\versions\
 
 ;OutputBaseFilename=WPExtPack-installer_1.01_tryrzd
-OutputBaseFilename=WPExtPack-installer_1.099
+OutputBaseFilename=WPExtPack-installer_1.100
 
 [Types]
 Name: "full"; Description: "Полная установка"
