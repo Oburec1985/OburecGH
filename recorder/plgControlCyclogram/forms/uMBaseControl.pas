@@ -168,6 +168,7 @@ type
 
   IMBaseControl = class(cRecBasicIFrm)
   protected
+    // путь к испытанию 0; путь к регистрации 1
     function doGetProperty(tag: Integer): LPCSTR; override;
   public
     function doGetName: LPCSTR; override;
@@ -200,6 +201,9 @@ var
   // Загрузка и запуск плагина
   g_MBaseControl: TMBaseControl;
 function mBaseControl: TMBaseControl;
+// uCreateCompoment
+//function getMDBTestPath:lpcstr;
+//function getMDBRegPath:lpcstr;
 
 const
   c_Pic = 'MBASECONTROL';

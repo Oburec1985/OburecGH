@@ -18,6 +18,7 @@ uses
   uCommonMath,
   uCommonTypes,
   pluginClass,
+  uMBaseControl,
   shellapi,
   math, uAxis,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons;
@@ -30,6 +31,8 @@ type
   public
     m_timeStamp:double;
     m_timeInd:integer; // для синхронизации.блок srs хранит индекс блока тахо
+    m_timecapacity:integer;
+    // размер для m_TimeBlock
     m_TimeArrSize:integer;
     m_size:integer;
     m_spm:TCmxArray_d;
@@ -130,7 +133,9 @@ type
     m_rms:TAlignDarray;
     // синтезированная передаточная характеристика
     m_frf: TDoubleArray;
-    line, lineSpm, lineCoh, lineFrf:cBuffTrend1d;
+    line, lineSpm, lineCoh, lineFrf,
+    // усредненная Frf
+    lineAvFRF:cBuffTrend1d;
     // список ударов (TDataBlock)
     m_shockList:TDataBlockList;
     // обработан последний удар
@@ -213,10 +218,14 @@ type
     Point_No: TLabel;
     PointIE: TIntEdit;
     PointSE: TSpinButton;
+    SaveMdbPan: TPanel;
+    SaveMdbBtn: TButton;
     procedure FormCreate(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
     procedure WinPosBtnClick(Sender: TObject);
     procedure ShockSBDownClick(Sender: TObject);
+    procedure ShockSBUpClick(Sender: TObject);
+    procedure SpmChartDblClick(Sender: TObject);
   public
     ready:boolean;
     pageT, pageSpm:cpage;
@@ -228,6 +237,7 @@ type
     m_minX, m_maxX:double;
     m_minY, m_maxY:double;
   public
+    PROCEDURE ShowShock(shock: integer);
     procedure BuildSpm(s:tobject);
     procedure UpdateView;
     procedure updatedata;
@@ -270,6 +280,7 @@ type
     procedure doUpdateData(sender: tobject);
     procedure doChangeRState(sender: tobject);
     procedure doStart;
+    procedure doStop;
   public
     constructor create;
     destructor destroy; override;
@@ -299,7 +310,7 @@ const
 
 implementation
 uses
-  uEditSrsFrm;
+  uEditSrsFrm, uCreateComponents;
 
 {$R *.dfm}
 
@@ -477,10 +488,6 @@ begin
   c.FFTProp:=GetFFTPlan(c.m_fftCount);
   c.FFTProp.StartInd:=0;
 
-  //lt.m_tag.m_bHistData:=true;
-  //lt.m_tag.m_ihistData:=round(lt.m_ShiftLeft*lt.m_tag.freq);
-  //setlength(lt.m_histData, lt.m_ihistData);
-
   GetMemAlignedArray_d(c.fportionsizei, lt.m_T1data);
   GetMemAlignedArray_cmpx_d(c.m_fftCount, lt.m_T1ClxData);
   GetMemAlignedArray_d(c.m_fftCount, lt.m_rms);
@@ -502,6 +509,7 @@ begin
     s.lineSpm.dx:=c.fspmdx;
     s.lineCoh.dx:=c.fspmdx;
     s.lineFrf.dx:=c.fspmdx;
+    s.lineAvFrf.dx:=c.fspmdx;
   end;
 end;
 
@@ -555,6 +563,14 @@ begin
       pageSpm.activeAxis.AddChild(l);
       s.linefrf:=l;
       s.linefrf.name:=s.name+'_frf';
+
+      l:= cBuffTrend1d.create;
+      l.color := ColorArray[i+2];
+      pageSpm.activeAxis.AddChild(l);
+      s.lineavfrf:=l;
+      s.lineavfrf.name:=s.name+'_AvFrf';
+      s.lineAvFRF.weight:=5;
+      s.lineAvFRF.visible:=false;
 
       l:= cBuffTrend1d.create;
       //l.color := ColorArray[i+10];
@@ -994,12 +1010,13 @@ begin
   end;
 end;
 
-procedure TSRSFrm.ShockSBDownClick(Sender: TObject);
+procedure TSRSFrm.ShowShock(shock: integer);
 var
   t:cSRSTaho;
   c:cSpmCfg;
   s:cSRSres;
   I, j: Integer;
+  block, tahobl:TDataBlock;
 begin
   t:=getTaho;
   if t=nil then exit;
@@ -1007,10 +1024,70 @@ begin
   for I := 0 to c.m_SRSList.Count - 1 do
   begin
     s:=c.GetSrs(i);
-    for j := 0 to s.m_shockList.Count - 1 do
+    s.lineAvFRF.visible:=true;
+    //for j := 0 to s.m_shockList.Count - 1 do
+    if (shock<s.m_shockList.Count) and (shock>-1) then
     begin
-
+      block:=s.m_shockList.getBlock(shock);
+      tahobl:=t.m_shockList.getBlock(shock);
+      s.lineFrf.AddPoints(block.m_frf, c.fHalfFft);
+      s.line.flength:=block.m_TimeArrSize;
+      s.line.AddPoints(block.m_TimeBlock, block.m_TimeArrSize);
+      t.line.flength:=tahobl.m_TimeArrSize;
+      t.line.AddPoints(tahobl.m_TimeBlock, tahobl.m_TimeArrSize);
+      SpmChartDblClick(nil);
+      SpmChart.redraw;
     end;
+  end;
+end;
+
+
+procedure TSRSFrm.SpmChartDblClick(Sender: TObject);
+var
+  r:frect;
+begin
+  r.BottomLeft.x:=m_minX;
+  r.BottomLeft.y:=m_minY;
+  r.TopRight.x:=m_maxX;
+  r.TopRight.y:=m_maxY;
+  pageSpm.activeAxis:=axSpm;
+  pageSpm.ZoomfRect(r);
+end;
+
+procedure TSRSFrm.ShockSBDownClick(Sender: TObject);
+var
+  t:cSRSTaho;
+  c:cSpmCfg;
+  s:cSRSres;
+  I, j: Integer;
+  block, tahobl:TDataBlock;
+begin
+  t:=getTaho;
+  if t=nil then exit;
+  c:=t.Cfg;
+  if ShockIE.IntNum>0 then
+  begin
+    ShockIE.IntNum:=ShockIE.IntNum-1;
+    ShowShock(ShockIE.IntNum);
+  end;
+end;
+
+
+procedure TSRSFrm.ShockSBUpClick(Sender: TObject);
+var
+  t:cSRSTaho;
+  c:cSpmCfg;
+  s:cSRSres;
+  I, j: Integer;
+  block, tahobl:TDataBlock;
+begin
+  t:=getTaho;
+  if t=nil then exit;
+  c:=t.Cfg;
+  if ShockIE.IntNum<t.m_shockList.Count-1 then
+  begin
+    ShockIE.IntNum:=ShockIE.IntNum+1;
+    ShowShock(ShockIE.IntNum);
   end;
 end;
 
@@ -1157,6 +1234,7 @@ begin
         s.m_frf[j]:=sd.m_frf[j];
       end;
     end;
+    s.lineavfrf.AddPoints(s.m_frf, c.fHalfFft);
     s.linefrf.AddPoints(s.m_frf, c.fHalfFft);
   end;
 end;
@@ -1339,6 +1417,7 @@ begin
     RSt_Init:
     begin
       doStart;
+      doStop;
     end;
     RSt_StopToView:
     begin
@@ -1352,7 +1431,7 @@ begin
     end;
     RSt_ViewToStop:
     begin
-
+      doStop;
     end;
     RSt_ViewToRec:
     begin
@@ -1369,7 +1448,7 @@ begin
     end;
     RSt_RecToStop:
     begin
-
+      doStop;
     end;
     RSt_RecToView:
     begin
@@ -1407,6 +1486,36 @@ begin
   begin
     Frm := GetFrm(i);
     TSRSFrm(Frm).doStart;
+  end;
+end;
+
+procedure cSRSFactory.doStop;
+var
+  mdb:boolean;
+  path:string;
+  I: Integer;
+  f:TSRSFrm;
+begin
+  mdb:=false;
+  if g_MBaseControl<>nil then
+  begin
+    path:=getMDBTestPath;
+    if directoryexists(path) then
+    begin
+      mdb:=true;
+    end;
+  end;
+  for I := 0 to count - 1 do
+  begin
+    f:=TSRSFrm(GetFrm(i));
+    if mdb then
+    begin
+     f.SaveMdbPan.Color:=clGreen;
+    end
+    else
+    begin
+     f.SaveMdbPan.Color:=clBtnFace;
+    end
   end;
 end;
 
@@ -1491,6 +1600,7 @@ begin
     SetLength(db.m_mod2, dsize);
     db.m_size:=dsize;
     db.find:=Add(db);
+    m_LastBlock:=db.find;
   end;
   system.move(TCmxArray_d(data)[0], db.m_spm[0], dsize*sizeof(TComplex_d));
   db.evalmod2;
@@ -1507,8 +1617,11 @@ begin
   system.move(spmMag[0], result.m_mod[0], dsize*sizeof(double));
 
   result.m_timeStamp:=time;
-  if psize>result.m_TimeArrSize then
+  if psize>result.m_timecapacity then
+  begin
     setlength(result.m_TimeBlock,psize);
+    result.m_timecapacity:=psize;
+  end;
   system.move(tb[0], result.m_TimeBlock[0], psize*sizeof(double));
   result.m_TimeArrSize:=psize;
 end;
@@ -1582,12 +1695,7 @@ end;
 
 function TDataBlockList.getLastBlock: TDataBlock;
 begin
-  if Count<m_cfg.m_capacity then
-  begin
-    result:=getBlock( Count-1);
-  end
-  else
-    result:=getBlock(m_LastBlock);
+  result:=getBlock(m_LastBlock);
 end;
 
 function TDataBlockList.getPrevBlock(d:TDataBlock): TDataBlock;

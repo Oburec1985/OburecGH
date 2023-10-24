@@ -73,7 +73,6 @@ begin
   newpath:=dir+'\'+name+'.xml';
   if fileexists(newpath) then
   begin
-    //'C:\Mera Files\Recorder\configs\Controls_02\cfg.xml'
     if g_algMng<>nil then
     begin
       if not RStateConfig then

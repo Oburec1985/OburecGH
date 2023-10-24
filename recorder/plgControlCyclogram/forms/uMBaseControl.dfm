@@ -1668,7 +1668,7 @@ object MBaseControl: TMBaseControl
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 394
+    Width = 456
     Height = 525
     Margins.Left = 2
     Margins.Top = 2
@@ -1679,7 +1679,7 @@ object MBaseControl: TMBaseControl
     object ObjGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 392
+      Width = 454
       Height = 109
       Margins.Left = 2
       Margins.Top = 2
@@ -1691,7 +1691,7 @@ object MBaseControl: TMBaseControl
       object ObjPanel: TPanel
         Left = 2
         Top = 21
-        Width = 388
+        Width = 450
         Height = 86
         Margins.Left = 2
         Margins.Top = 2
@@ -1765,7 +1765,7 @@ object MBaseControl: TMBaseControl
     object TestGB: TGroupBox
       Left = 1
       Top = 110
-      Width = 392
+      Width = 454
       Height = 158
       Margins.Left = 2
       Margins.Top = 2
@@ -1777,7 +1777,7 @@ object MBaseControl: TMBaseControl
       object TestPanel: TPanel
         Left = 2
         Top = 21
-        Width = 388
+        Width = 450
         Height = 135
         Margins.Left = 2
         Margins.Top = 2
@@ -1853,7 +1853,7 @@ object MBaseControl: TMBaseControl
     object RegGB: TGroupBox
       Left = 1
       Top = 268
-      Width = 392
+      Width = 454
       Height = 256
       Margins.Left = 2
       Margins.Top = 2
@@ -1865,14 +1865,13 @@ object MBaseControl: TMBaseControl
       object RegPanel: TPanel
         Left = 2
         Top = 21
-        Width = 388
+        Width = 450
         Height = 233
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
         Margins.Bottom = 2
         Align = alClient
-        Constraints.MinHeight = 179
         TabOrder = 0
         object Label1: TLabel
           Left = 12
@@ -1888,7 +1887,7 @@ object MBaseControl: TMBaseControl
         object Splitter7: TSplitter
           Left = 1
           Top = 77
-          Width = 386
+          Width = 448
           Height = 3
           Cursor = crVSplit
           Margins.Left = 2
@@ -1904,7 +1903,7 @@ object MBaseControl: TMBaseControl
         object RegistratorsLV: TBtnListView
           Left = 1
           Top = 165
-          Width = 386
+          Width = 448
           Height = 67
           Margins.Left = 2
           Margins.Top = 2
@@ -1952,7 +1951,7 @@ object MBaseControl: TMBaseControl
         object AlarmPanel: TPanel
           Left = 1
           Top = 80
-          Width = 386
+          Width = 448
           Height = 85
           Margins.Left = 2
           Margins.Top = 2
@@ -2029,9 +2028,9 @@ object MBaseControl: TMBaseControl
     end
   end
   object Panel2: TPanel
-    Left = 394
+    Left = 456
     Top = 0
-    Width = 318
+    Width = 256
     Height = 525
     Margins.Left = 2
     Margins.Top = 2
@@ -2042,8 +2041,8 @@ object MBaseControl: TMBaseControl
     object ObjPropSG: TStringGridExt
       Left = 1
       Top = 1
-      Width = 316
-      Height = 300
+      Width = 254
+      Height = 423
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -2061,13 +2060,12 @@ object MBaseControl: TMBaseControl
       OnKeyDown = ObjPropSGKeyDown
       OnSelectCell = ObjPropSGSelectCell
       OnEndEdititng = ObjPropSGEndEdititng
-      ExplicitTop = 7
     end
     object Panel3: TPanel
       Left = 1
-      Top = 301
-      Width = 316
-      Height = 223
+      Top = 424
+      Width = 254
+      Height = 100
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2

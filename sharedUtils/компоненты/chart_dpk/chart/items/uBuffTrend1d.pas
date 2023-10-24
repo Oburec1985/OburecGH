@@ -9,8 +9,6 @@ uses uPoint, uvectorlist, uCommonTypes, classes, opengl,
 type
   cBuffTrend1d = class(cBasicTrend)
   public
-    // толщина линии
-    weight: double;
     datatype: integer;
     // данные
     data_s: array of single;
@@ -19,6 +17,7 @@ type
     fx0: single;
     // емкость
     flength: integer;
+    fcapacity:integer;
   protected
     // шаг по оси x между индексированными точками
     fdx: double;
@@ -26,6 +25,7 @@ type
     // получить установить число вершин
     function GetCount: integer; override;
     procedure SetCount(i: integer); override;
+    procedure setcapacity(c:integer);
     // получить вершину по индексу
     function GetP2(i: integer): point2; override;
     procedure setx0(v: single);
@@ -37,6 +37,7 @@ type
     // пересчитать границы
     procedure EvalBound; override;
     procedure clear; override;
+    procedure setvisible(b:boolean);override;
   public
     function GetYByInd(i:integer):double;override;
     function GetXByInd(i:integer):double;override;
@@ -107,13 +108,19 @@ end;
 
 procedure cBuffTrend1d.SetCount(i: integer);
 begin
+  setcapacity(i);
+  flength:=i;
+end;
+
+procedure cBuffTrend1d.setcapacity(c: integer);
+begin
   case datatype of
     c_single:
-      Setlength(data_s, i);
+      Setlength(data_s, c);
     c_real:
-      Setlength(data_r, i);
+      Setlength(data_r, c);
   end;
-  flength := i;
+  fcapacity := c;
 end;
 
 function cBuffTrend1d.GetP2(i: integer): point2;
@@ -166,6 +173,7 @@ begin
       // подготовка к компил€ции списка
       DisplayListName := glGenLists(1);
       glNewList(DisplayListName, GL_COMPILE);
+      glLineWidth(weight);
       // drawrect;
       glBegin(GL_LINE_STRIP);
       case datatype of
@@ -226,10 +234,11 @@ begin
   case datatype of
     c_real:
       begin
-        if length(a) > flength then
+        if length(a) > fcapacity then
         begin
-          flength := length(a);
-          Setlength(data_r, flength);
+          fcapacity := length(a);
+          Setlength(data_r, fcapacity);
+          flength:=fcapacity;
         end;
         move(a[0], data_r[0], flength * sizeof(double));
       end;
@@ -249,10 +258,11 @@ begin
       begin
         if p_count>0 then
         begin
-          if flength < p_count then
+          if fcapacity < p_count then
           begin
-            flength := p_count;
-            Setlength(data_r, p_count);
+            fcapacity := p_count;
+            flength:=p_count;
+            Setlength(data_r, fcapacity);
           end;
           move(a[start], data_r[0], p_count * sizeof(double));
         end;
@@ -272,7 +282,7 @@ begin
   case datatype of
     c_real:
       begin
-        if flength < p_count then
+        if length(data_r) < p_count then
         begin
           flength := p_count;
           Setlength(data_r, p_count);
@@ -367,6 +377,13 @@ procedure cBuffTrend1d.setdx(v: double);
 begin
   needRecompile := true;
   fdx := v;
+end;
+
+procedure cBuffTrend1d.setvisible(b: boolean);
+begin
+  inherited;
+  if b then
+    compile;
 end;
 
 constructor cBuffTrend1d.create;

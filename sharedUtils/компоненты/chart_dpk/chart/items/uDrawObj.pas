@@ -37,7 +37,7 @@ type
     m_stackStrings: tstringlist;
   public
     events: ceventlist;
-    visible: boolean;
+    fvisible: boolean;
   protected
     // определяет порядок отрисовки
     m_layer:integer;
@@ -79,6 +79,7 @@ type
     procedure SetParentMatrixView; virtual;
     procedure SetSelected(b: boolean);
     function GetSelected: boolean;
+    procedure SetVisible(b:boolean);virtual;
   public
     function getCarrierPage:cdrawobj;
     procedure OnAxisChangeLg; virtual;
@@ -110,6 +111,7 @@ type
     property color: point3 read fcolor write setcolor;
     destructor destroy; override;
   public
+    property visible: boolean read fvisible write setvisible;
     property chart: tcomponent read fChart write linc;
     property drawobjmng: cdrawobjmng read getDrawObjMng;
     // позиция объекта в отрисовываемых координатах
@@ -659,6 +661,11 @@ end;
 procedure cDrawObj.SetSelected(b: boolean);
 begin
 
+end;
+
+procedure cDrawObj.SetVisible(b: boolean);
+begin
+  fvisible:=b;
 end;
 
 function cDrawObj.GetSelected: boolean;

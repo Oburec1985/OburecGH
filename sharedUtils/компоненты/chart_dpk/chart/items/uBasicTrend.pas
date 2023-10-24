@@ -18,7 +18,6 @@ type
   cBasicTrend = class(cGraphObj)
   public
     // толщина линии
-    weight,
     oldweight:double;
     // цвет вершины
     pointcolor:point3;
@@ -31,6 +30,7 @@ type
     // массив разрывов тренда
     prt:array of TPrt;
   protected
+    fweight:double;
     logpointsY:array of single;
     logpointsX:array of single;
     // идентификатор списка отображения для логарифмированной линии
@@ -66,6 +66,7 @@ type
     procedure LoadObjAttributes(xmlNode:txmlNode; mng:tobject);override;
     procedure SaveObjAttributes(xmlNode:txmlNode);override;
     procedure OnAxisChangeLg;override;
+    procedure setweight(w:double);
   public
     function GetXByInd(i:integer):double;virtual;abstract;
     function GetYByInd(i:integer):double;virtual;abstract;
@@ -89,6 +90,7 @@ type
     property drawpoint:boolean read getdrawpoint write setdrawpoint;
     property drawLines:boolean read getDrawLine write setDrawLine;
     constructor create;override;
+    property weight: double read fweight write setweight;
   end;
 
   const
@@ -396,6 +398,11 @@ end;
 procedure cBasicTrend.setflag(flag:cardinal);
 begin
   uCommonMath.setflag(settings,flag);
+end;
+
+procedure cBasicTrend.setweight(w: double);
+begin
+  fweight:=w;
 end;
 
 procedure cBasicTrend.dropflag(flag:cardinal);
