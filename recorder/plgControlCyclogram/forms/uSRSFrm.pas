@@ -1663,6 +1663,9 @@ var
   p1, p2:TComplex_d;
   k:double;
 begin
+  n:=Count;
+  if n=0 then exit;
+
   for I := 0 to Count-1 do
   begin
     s:=getBlock(i);
@@ -1678,7 +1681,6 @@ begin
       m_syy[j]:=t.m_mod2[j]+m_syy[j];
     end;
   end;
-  n:=Count;
   k:=1/(n*n);
   for j := 0 to s.m_size - 1 do
   begin

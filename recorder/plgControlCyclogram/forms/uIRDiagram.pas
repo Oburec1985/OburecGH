@@ -725,6 +725,7 @@ begin
   t1.destroy;
   taho.destroy;
   fOut.Destroy;
+  inherited;
 end;
 
 procedure IRDiagramTag.DoStart;
