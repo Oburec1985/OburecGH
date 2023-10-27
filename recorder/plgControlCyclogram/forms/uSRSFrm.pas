@@ -18,6 +18,7 @@ uses
   uCommonMath,
   uCommonTypes,
   pluginClass,
+  uMeasureBase,
   uMBaseControl,
   shellapi,
   math, uAxis,
@@ -65,7 +66,8 @@ type
     procedure evalCoh(TahoShockList:TDataBlockList);
     procedure clearData;
     function getBlock(i:integer):TDataBlock;
-    function getLastBlock:TDataBlock;
+    function getLastBlock:TDataBlock;overload;
+    function getLastBlock(d:TDataBlock):TDataBlock;overload;
     function getPrevBlock(d:TDataBlock):TDataBlock;
     // добавить спектр удара data - TCmxArray_d
     function addBlock(data:pointer; dsize:integer):TDataBlock;overload;
@@ -132,7 +134,8 @@ type
     // спектр амплитуд
     m_rms:TAlignDarray;
     // синтезированная передаточная характеристика
-    m_frf: TDoubleArray;
+    m_frf,
+    m_phase: TDoubleArray;
     line, lineSpm, lineCoh, lineFrf,
     // усредненная Frf
     lineAvFRF:cBuffTrend1d;
@@ -220,12 +223,16 @@ type
     PointSE: TSpinButton;
     SaveMdbPan: TPanel;
     SaveMdbBtn: TButton;
+    Button1: TButton;
+    CompareBtn: TSpeedButton;
     procedure FormCreate(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
     procedure WinPosBtnClick(Sender: TObject);
     procedure ShockSBDownClick(Sender: TObject);
     procedure ShockSBUpClick(Sender: TObject);
     procedure SpmChartDblClick(Sender: TObject);
+    procedure SaveMdbBtnClick(Sender: TObject);
+    procedure CompareBtnClick(Sender: TObject);
   public
     ready:boolean;
     pageT, pageSpm:cpage;
@@ -388,6 +395,32 @@ begin
   end;
 end;
 
+procedure TSRSFrm.CompareBtnClick(Sender: TObject);
+var
+  o:cObjFolder;
+  t:cTestFolder;
+  path:string;
+  ifile: TIniFile;
+  f, sname: string;
+begin
+  if g_MBaseControl<>nil then
+  begin
+    o:=g_MBaseControl.GetSelectObj;
+    t:=g_MBaseControl.GetSelectTest;
+    if o<>nil then
+    begin
+      path:=g_mbase.m_BaseFolder.Absolutepath;
+      if o.ObjType<>'' then
+      begin
+        path:= path+'\FrfTypes'+'\'+o.ObjType;
+        f:=path+'\frf.mera';
+        if fileexists(f) then
+          ShellExecute(0,nil,pwidechar(f),nil,nil, SW_HIDE);
+      end;
+    end;
+  end;
+end;
+
 constructor TSRSFrm.create(Aowner: tcomponent);
 begin
   m_TahoList:=TList.Create;
@@ -500,6 +533,7 @@ begin
     GetMemAlignedArray_cmpx_d(c.m_fftCount, s.m_T1ClxData);
     GetMemAlignedArray_d(c.fHalfFft, s.m_rms);
     SetLength(s.m_frf, c.fHalfFft);
+    SetLength(s.m_phase, c.fHalfFft);
     // блок расчета когеренции
     setlength(s.m_shockList.m_Cxy, c.fHalfFft);
     setlength(s.m_shockList.m_sxx, c.fHalfFft);
@@ -872,7 +906,21 @@ begin
   UpdateBlocks;
 end;
 
-procedure savedata(fname: string;sname:string;db:tdatablock; taho:boolean);
+
+procedure savedata(dir: string;sname:string;db:tDoubleArray); overload;
+var
+  lname: string;
+  f: file;
+begin
+  // временной блок
+  lname := dir + '\' + sname+'.dat';
+  AssignFile(f, lname);
+  Rewrite(f, 1);
+  BlockWrite(f, db[0], sizeof(double) * length(db));
+  closefile(f);
+end;
+
+procedure savedata(fname: string;sname:string;db:tdatablock; taho:boolean); overload;
 var
   lname: string;
   f: file;
@@ -968,6 +1016,7 @@ begin
   end;
   ifile.destroy;
 end;
+
 
 procedure TSRSFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 var
@@ -1211,10 +1260,13 @@ begin
   for I := 0 to c.SRSCount - 1 do
   begin
     s:=c.GetSrs(i);
+    ZeroMemory(s.m_frf,length(s.m_frf)*sizeof(double));
+    td:=nil;
+    sd:=nil;
     for k := 0 to s.m_shockList.Count - 1 do
     begin
-      td:=m_shockList.getLastBlock;
-      sd:=s.m_shockList.getLastBlock;
+      td:=m_shockList.getLastBlock(td);
+      sd:=s.m_shockList.getLastBlock(sd);
       for j := 0 to Cfg.fHalfFft - 1 do
       begin
         v1:=sd.m_mod[j];
@@ -1225,13 +1277,14 @@ begin
     end;
     for j := 0 to Cfg.fHalfFft - 1 do
     begin
+      s.m_phase[j]:=(180/pi)*s.m_shockList.m_Cxy[j].Im/s.m_shockList.m_Cxy[j].re;
       if s.m_shockList.m_coh[j]<m_CohTreshold then
       begin
         s.m_frf[j]:=0;
       end
       else
       begin
-        s.m_frf[j]:=sd.m_frf[j];
+        s.m_frf[j]:=s.m_frf[j]/s.m_shockList.Count;
       end;
     end;
     s.lineavfrf.AddPoints(s.m_frf, c.fHalfFft);
@@ -1489,6 +1542,55 @@ begin
   end;
 end;
 
+procedure TSRSFrm.SaveMdbBtnClick(Sender: TObject);
+var
+  o:cObjFolder;
+  t:cTestFolder;
+  path:string;
+
+  i, j, num: integer;
+  ifile: TIniFile;
+  f,ident,dir, sname: string;
+  c:cSpmCfg;
+  taho:cSRSTaho;
+  s: cSRSres;
+begin
+  if g_MBaseControl<>nil then
+  begin
+    o:=g_MBaseControl.GetSelectObj;
+    t:=g_MBaseControl.GetSelectTest;
+    if o<>nil then
+    begin
+      path:=g_mbase.m_BaseFolder.Absolutepath;;
+      ForceDirectories(path+'\FrfTypes');
+      if o.ObjType<>'' then
+      begin
+        path:= path+'\FrfTypes'+'\'+o.ObjType;
+        ForceDirectories(path);
+        ifile := TIniFile.create(path+'\frf.mera');
+        taho:=getTaho;
+        c:=taho.Cfg;
+        for i := 0 to c.SRSCount - 1 do
+        begin
+          s := c.GetSrs(i);
+          sname:=s.m_tag.tagname+'_p№'+inttostr(PointIE.IntNum)+'_frf';
+          ident:=sname;
+          saveHeader(ifile,1/c.fspmdx, 0, ident);
+          saveData(path, sname, s.m_frf);
+
+          sname:=s.m_tag.tagname+'_p№'+inttostr(PointIE.IntNum)+'_phase';
+          ident:=sname;
+          saveHeader(ifile,1/c.fspmdx, 0, ident);
+          saveData(path, sname, s.m_phase);
+
+          ifile.destroy;
+        end;
+      end;
+    end;
+  end;
+end;
+
+
 procedure cSRSFactory.doStop;
 var
   mdb:boolean;
@@ -1698,6 +1800,14 @@ end;
 function TDataBlockList.getLastBlock: TDataBlock;
 begin
   result:=getBlock(m_LastBlock);
+end;
+
+function TDataBlockList.getLastBlock(d:TDataBlock):TDataBlock;
+begin
+  if d=nil then
+    result:=getLastBlock
+  else
+    result:=getPrevBlock(d);
 end;
 
 function TDataBlockList.getPrevBlock(d:TDataBlock): TDataBlock;
