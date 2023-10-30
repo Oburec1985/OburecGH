@@ -36,7 +36,7 @@ type
     // размер для m_TimeBlock
     m_TimeArrSize:integer;
     m_size:integer;
-    m_spm:TCmxArray_d;
+    m_spm, m_Cxy:TCmxArray_d;
     m_frf,
     m_mod2,
     m_mod:TDoubleArray;
@@ -136,6 +136,7 @@ type
     // синтезированная передаточная характеристика
     m_frf,
     m_phase: TDoubleArray;
+    m_fltFrf:array of integer; // счетчик отбракованных точек
     line, lineSpm, lineCoh, lineFrf,
     // усредненная Frf
     lineAvFRF:cBuffTrend1d;
@@ -534,6 +535,7 @@ begin
     GetMemAlignedArray_cmpx_d(c.m_fftCount, s.m_T1ClxData);
     GetMemAlignedArray_d(c.fHalfFft, s.m_rms);
     SetLength(s.m_frf, c.fHalfFft);
+    SetLength(s.m_fltFrf, c.fHalfFft);
     SetLength(s.m_phase, c.fHalfFft);
     // блок расчета когеренции
     setlength(s.m_shockList.m_Cxy, c.fHalfFft);
@@ -1255,9 +1257,10 @@ var
   c:cSpmCfg;
   s:cSRSres;
   td, sd:TDataBlock;
-  j: Integer;
+  j, evaltype: Integer;
   v1,v2:double;
 begin
+  evaltype:=0;
   c:=cfg;
   shockCount:=m_shockList.Count;
   for I := 0 to c.SRSCount - 1 do
@@ -1270,26 +1273,36 @@ begin
     begin
       td:=m_shockList.getLastBlock(td);
       sd:=s.m_shockList.getLastBlock(sd);
-      for j := 0 to Cfg.fHalfFft - 1 do
-      begin
-        v1:=sd.m_mod[j];
-        v2:=td.m_mod[j];
-        sd.m_frf[j]:=v1/v2;
-        s.m_frf[j]:=sd.m_frf[j]+s.m_frf[j];
+      case evaltype of
+        0: // без использования фазы
+        begin
+          for j := 0 to Cfg.fHalfFft - 1 do
+          begin
+            v1:=sd.m_mod[j];
+            v2:=td.m_mod[j];
+            sd.m_frf[j]:=v1/v2;
+            s.m_frf[j]:=sd.m_frf[j]+s.m_frf[j];
+          end;
+          for j := 0 to Cfg.fHalfFft - 1 do
+          begin
+            s.m_phase[j]:=(180/pi)*s.m_shockList.m_Cxy[j].Im/s.m_shockList.m_Cxy[j].re;
+            if s.m_shockList.m_coh[j]<m_CohTreshold then
+            begin
+              s.m_frf[j]:=0;
+            end
+            else
+            begin
+              s.m_frf[j]:=s.m_frf[j]/s.m_shockList.Count;
+            end;
+          end;
+        end;
+        1:
+        begin
+
+        end;
       end;
     end;
-    for j := 0 to Cfg.fHalfFft - 1 do
-    begin
-      s.m_phase[j]:=(180/pi)*s.m_shockList.m_Cxy[j].Im/s.m_shockList.m_Cxy[j].re;
-      if s.m_shockList.m_coh[j]<m_CohTreshold then
-      begin
-        s.m_frf[j]:=0;
-      end
-      else
-      begin
-        s.m_frf[j]:=s.m_frf[j]/s.m_shockList.Count;
-      end;
-    end;
+
     s.lineavfrf.AddPoints(s.m_frf, c.fHalfFft);
     s.linefrf.AddPoints(s.m_frf, c.fHalfFft);
   end;
@@ -1684,6 +1697,8 @@ procedure TDataBlock.setsize(s: integer);
 begin
   m_size:=s;
   SetLength(m_spm, s);
+  SetLength(m_Cxy, s);
+  SetLength(m_mod2, s);
 end;
 
 { TDataBlockList }
@@ -1702,9 +1717,7 @@ begin
   else
   begin
     db:=TDataBlock.Create;
-    SetLength(db.m_spm, dsize);
-    SetLength(db.m_mod2, dsize);
-    db.m_size:=dsize;
+    db.size:=dsize;
     db.find:=Add(db);
     m_LastBlock:=db.find;
   end;
@@ -1782,19 +1795,19 @@ begin
     begin
       p1:=s.m_spm[j];
       p2:=Sopr(t.m_spm[j]);
-      m_Cxy[j]:=p1*p2+m_Cxy[j];
-      //m_sxx[j]:=mod2(p1)+m_sxx[j];
-      //m_syy[j]:=mod2(p2)+m_syy[j];
+      // для H1 Cxy
+      s.m_Cxy[j]:=p1*p2;
+      m_Cxy[j]:=s.m_Cxy[j]+m_Cxy[j];
       m_sxx[j]:=s.m_mod2[j]+m_sxx[j];
       m_syy[j]:=t.m_mod2[j]+m_syy[j];
     end;
   end;
-  k:=1/(n*n);
+  k:=1/(n);
   for j := 0 to s.m_size - 1 do
   begin
     m_coh[j]:=mod2(m_Cxy[j])/(m_sxx[j]*m_syy[j]);
     // делаемсреднюю комплексную передаточную характеристику
-    m_cXY[j]:=m_Cxy[j]*k/m_syy[j];
+    m_cXY[j]:=m_Cxy[j]*k;
   end;
 end;
 
