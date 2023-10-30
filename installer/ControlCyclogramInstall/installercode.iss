@@ -1,7 +1,7 @@
 
 [Setup]
-AppName=plgControlCyclogram_v1.2
-AppVerName=plgControlCyclogram_v1.2
+AppName=plgControlCyclogram_v1.21
+AppVerName=plgControlCyclogram_v1.21
 ; защита от переустановки запущенной версии
 AppMutex=plgControlCyclogramMutex
 DefaultDirName={pf}\Mera\Recorder\plugins
@@ -9,9 +9,9 @@ DefaultGroupName=Mera
 UninstallDisplayIcon={app}\plgControlCyclogram.dll
 
 
-;OutputDir=output
-OutputDir=\\Fserv\e\MERA\WORKS\ДСИ\УП\Skripnik\soft\recorder\ControlCyclogram\
-OutputBaseFilename=plgControlCyclogram_installer_v1.2
+OutputDir=output
+;OutputDir=\\Fserv\e\MERA\WORKS\ДСИ\УП\Skripnik\soft\recorder\ControlCyclogram\
+OutputBaseFilename=plgControlCyclogram_installer_v1.2 1
 
 [Types]
 Name: "full"; Description: "Полная установка"

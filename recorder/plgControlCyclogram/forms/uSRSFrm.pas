@@ -295,7 +295,7 @@ type
     procedure doSetDefSize(var PSize: SIZE); override;
   end;
   // копируем данные из тега по интервалу времени time в buf. Возвращает число элементов
-  function copyData(t:ctag; time:point2d; buf:TAlignDarray):integer;
+  function copyData(t:ctag; var time:point2d; buf:TAlignDarray):integer;
 
 
 var
@@ -321,13 +321,14 @@ uses
 
 {$R *.dfm}
 
-function copyData(t:ctag; time:point2d; buf:TAlignDarray):integer;
+function copyData(t:ctag;var time:point2d; buf:TAlignDarray):integer;
 var
   int:tpoint;
 begin
   int:=t.getIntervalInd(time);
   if int.x<0 then // если предыстория не успела накопиться
   begin
+    time.x:=time.x-int.x/t.freq;
     int.x:=0;
   end;
   result:=int.Y-int.x;
@@ -957,7 +958,7 @@ begin
   ifile.WriteString(ident, 'XUnits', 'Гц');
   // Подпись оси Y
   // ifile.WriteString(s.tagname, 'YUnits', TagUnits(wp.m_YParam.tag));
-  WriteFloatToIniMera(ifile, ident,'Start',0);
+  WriteFloatToIniMera(ifile, ident,'Start', start);
   // k0
   ifile.WriteFloat(ident, 'k0', 0);
   // k1
@@ -975,7 +976,7 @@ var
   db, tb:tdatablock;
 begin
   dir := extractfiledir(g_SRSFactory.m_merafile) + '\Shock\';
-  f := dir + trimext(extractfileName(g_merafile)) + '_Shocks.mera';
+  f := dir + trimext(extractfilename(g_SRSFactory.m_merafile)) + '_Shocks.mera';
   g_SRSFactory.m_ShockFile:=f;
   ForceDirectories(dir);
   ifile := TIniFile.create(f);
@@ -997,13 +998,15 @@ begin
         tb:=t.m_shockList.getPrevBlock(tb);
       end;
       num:=s.m_shockList.Count-j;
-
+      // spm
       ident:='spm_'+ s.m_tag.tagname+'_'+inttostr(num);
       saveHeader(ifile,1/c.fspmdx, 0, ident);
+      // frf
       ident:='frf_'+ s.m_tag.tagname+'_'+inttostr(num);
       saveHeader(ifile,1/c.fspmdx, 0,ident);
+      // временной блок
       ident:=s.m_tag.tagname+'_'+inttostr(num);
-      saveHeader(ifile,s.m_tag.freq, db.m_timeStamp, ident);
+      saveHeader(ifile, s.m_tag.freq, db.m_timeStamp, ident);
       saveData(f, s.m_tag.tagname+'_'+inttostr(num),db, false);
 
       if i=0 then
@@ -1492,6 +1495,7 @@ begin
     end;
     RSt_initToRec:
     begin
+      g_SRSFactory.m_meraFile:=GetMeraFile;
       doStart;
     end;
     RSt_initToView:
@@ -1733,6 +1737,7 @@ var
   d:TDataBlock;
   I, l: Integer;
 begin
+  m_shockCount:=0;
   l:=length(m_Cxy);
   if l>0 then
   begin
@@ -1745,6 +1750,7 @@ begin
     d:=TDataBlock(items[i]);
     d.Destroy;
   end;
+  Clear;
 end;
 
 constructor TDataBlockList.create;
