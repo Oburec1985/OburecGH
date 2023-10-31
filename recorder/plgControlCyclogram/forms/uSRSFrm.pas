@@ -241,6 +241,8 @@ type
     procedure CompareBtnClick(Sender: TObject);
   public
     ready:boolean;
+    // h0, h1, h2
+    m_estimator:integer;
     pageT, pageSpm:cpage;
     axSpm, axCoh:cAxis;
     // список настроек Тахо
@@ -249,6 +251,7 @@ type
     m_lgX, m_lgY:boolean;
     m_minX, m_maxX:double;
     m_minY, m_maxY:double;
+    m_saveT0:boolean;
     // последний полученный блок тахо
     m_lastTahoBlock:TDataBlock;
   public
@@ -908,6 +911,8 @@ begin
   m_maxY:=strtoFloatExt(a_pIni.ReadString(str, 'Spm_maxY', '10'));
   m_lgX:=a_pIni.ReadBool(str, 'Spm_Lg_x', false);
   m_lgY:=a_pIni.ReadBool(str, 'Spm_Lg_y', false);
+  m_saveT0:=a_pIni.ReadBool(str, 'SaveT0', false);
+  m_estimator:=a_pIni.ReadInteger(str, 'Estimator', 1);
 
   if c<>nil then
   begin
@@ -1029,13 +1034,19 @@ begin
       saveHeader(ifile,1/c.fspmdx, 0,ident);
       // временной блок
       ident:=s.m_tag.tagname+'_'+inttostr(num);
-      saveHeader(ifile, s.m_tag.freq, db.m_timeStamp.x, ident);
+      if m_saveT0 then
+        saveHeader(ifile, s.m_tag.freq, db.m_timeStamp.x, ident)
+      else
+        saveHeader(ifile, s.m_tag.freq, 0, ident);
       saveData(f, s.m_tag.tagname+'_'+inttostr(num),db, false);
 
       if i=0 then
       begin
         ident:=t.m_tag.tagname+'_'+inttostr(num);
-        saveHeader(ifile,t.m_tag.freq, tb.m_timeStamp.x, ident);
+        if m_saveT0 then
+          saveHeader(ifile,t.m_tag.freq, tb.m_timeStamp.x, ident)
+        else
+          saveHeader(ifile,t.m_tag.freq, 0, ident);
         saveData(f, ident,tb, true);
       end;
     end;
@@ -1067,7 +1078,8 @@ begin
     WriteFloatToIniMera(a_pIni, str, 'Spm_maxY', m_maxY);
     a_pIni.WriteBool(str, 'Spm_Lg_x', m_lgX);
     a_pIni.WriteBool(str, 'Spm_Lg_y', m_lgY);
-
+    a_pIni.WriteBool(str, 'SaveT0', m_saveT0);
+    a_pIni.WriteInteger(str, 'Estimator', m_estimator);
     c:=t.Cfg;
     if c<>nil then
     begin
@@ -1280,7 +1292,7 @@ begin
     end;
   end;
 end;
-
+// taho - знаменатель
 procedure cSRSTaho.evalFRF;
 var
   I, k, shockCount: Integer;
@@ -1289,6 +1301,7 @@ var
   td, sd:TDataBlock;
   j, evaltype: Integer;
   v1,v2:double;
+  cross, px, py:TComplex_d;
 begin
   evaltype:=0;
   c:=cfg;
@@ -1313,18 +1326,6 @@ begin
             sd.m_frf[j]:=v1/v2;
             s.m_frf[j]:=sd.m_frf[j]+s.m_frf[j];
           end;
-          for j := 0 to Cfg.fHalfFft - 1 do
-          begin
-            s.m_phase[j]:=(180/pi)*s.m_shockList.m_Cxy[j].Im/s.m_shockList.m_Cxy[j].re;
-            if s.m_shockList.m_coh[j]<m_CohTreshold then
-            begin
-              s.m_frf[j]:=0;
-            end
-            else
-            begin
-              s.m_frf[j]:=s.m_frf[j]/s.m_shockList.Count;
-            end;
-          end;
         end;
         1:
         begin
@@ -1332,7 +1333,69 @@ begin
         end;
       end;
     end;
-
+    // усредняем
+    case evaltype of
+      0: // без использования фазы
+      begin
+        for j := 0 to Cfg.fHalfFft - 1 do
+        begin
+          s.m_phase[j]:=(180/pi)*s.m_shockList.m_Cxy[j].Im/s.m_shockList.m_Cxy[j].re;
+          if s.m_shockList.m_coh[j]<m_CohTreshold then
+          begin
+            s.m_frf[j]:=0;
+          end
+          else
+          begin
+            s.m_frf[j]:=s.m_frf[j]/s.m_shockList.Count;
+          end;
+        end;
+      end;
+      1: // H1 Syx/Sxx
+      begin
+        td:=nil;
+        sd:=nil;
+        for j := 0 to Cfg.fHalfFft - 1 do
+        begin
+          cross:=0;
+          v2:=0;
+          v1:=1/s.m_shockList.Count; // v1 - нормировка по числу ударов
+          for k := 0 to s.m_shockList.Count - 1 do
+          begin
+            td:=m_shockList.getBlock(k);
+            sd:=s.m_shockList.getBlock(k);
+            px:=td.m_spm[j];
+            py:=sd.m_spm[j];
+            cross:=py*sopr(px)+cross;
+            v2:=td.m_mod2[j]+v2;
+          end;
+          s.m_frf[j]:=cross.re*cross.re+cross.im*cross.im;
+          s.m_frf[j]:=sqrt(s.m_frf[j]/v2)*v1;
+        end;
+      end;
+      2: // H2 Syy/Sxy
+      begin
+        td:=nil;
+        sd:=nil;
+        for j := 0 to Cfg.fHalfFft - 1 do
+        begin
+          cross:=0;
+          v2:=0;
+          v1:=1/s.m_shockList.Count; // v1 - нормировка по числу ударов
+          for k := 0 to s.m_shockList.Count - 1 do
+          begin
+            td:=m_shockList.getBlock(k);
+            sd:=s.m_shockList.getBlock(k);
+            px:=td.m_spm[j];
+            py:=sd.m_spm[j];
+            cross:=px*sopr(py)+cross;
+            v2:=sd.m_mod2[j]+v2;
+          end;
+          s.m_frf[j]:=cross.re*cross.re+cross.im*cross.im;
+          s.m_frf[j]:=sqrt(v2/s.m_frf[j])*v1;
+        end;
+      end;
+    end;
+    // рисуем
     s.lineavfrf.AddPoints(s.m_frf, c.fHalfFft);
     s.linefrf.AddPoints(sd.m_frf, c.fHalfFft);
   end;

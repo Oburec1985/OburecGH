@@ -61,6 +61,8 @@ type
     Label2: TLabel;
     CohThresholdFE: TFloatEdit;
     Label3: TLabel;
+    SaveT0CB: TCheckBox;
+    EstimatorRG: TRadioGroup;
     procedure SignalsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
@@ -250,7 +252,8 @@ begin
   MaxYfe.FloatNum:=m_SRS.m_maxY;
   LgXcb.Checked:=m_SRS.m_lgX;
   LgYcb.Checked:=m_SRS.m_lgY;
-
+  EstimatorRG.ItemIndex:=m_SRS.m_estimator;
+  SaveT0CB.Checked:=m_srs.m_saveT0;
   t:=m_SRS.getTaho;
   if t<>nil then
     ShowTaho(t);
@@ -398,7 +401,9 @@ begin
   m_SRS.m_maxX:=MaxXfe.FloatNum;
   m_SRS.m_minY:=MinYfe.FloatNum;
   m_SRS.m_maxY:=MaxYfe.FloatNum;
+  m_SRS.m_estimator:=EstimatorRG.ItemIndex;
   m_SRS.UpdateChart;
+  m_SRS.m_saveT0:=SaveT0CB.Checked;
   c.m_capacity:=ShCountIE.IntNum;
   t.m_CohTreshold:=CohThresholdFE.FloatNum;
 end;

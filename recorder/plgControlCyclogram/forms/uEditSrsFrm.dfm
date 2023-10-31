@@ -161,6 +161,8 @@ object EditSrsFrm: TEditSrsFrm
       Align = alTop
       Caption = 'SPMGB'
       TabOrder = 1
+      ExplicitLeft = 2
+      ExplicitTop = 125
       object FFTBlockSizeLabel: TLabel
         Left = 8
         Top = 22
@@ -361,6 +363,23 @@ object EditSrsFrm: TEditSrsFrm
         TabOrder = 8
         Text = '000'
       end
+      object EstimatorRG: TRadioGroup
+        Left = 381
+        Top = 66
+        Width = 60
+        Height = 80
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
+        Caption = #1054#1094#1077#1085#1082#1072
+        ItemIndex = 0
+        Items.Strings = (
+          'h0'
+          'h1'
+          'h2')
+        TabOrder = 9
+      end
     end
     object ChartGB: TGroupBox
       Left = 1
@@ -371,7 +390,7 @@ object EditSrsFrm: TEditSrsFrm
       Caption = 'ChartGB'
       TabOrder = 2
       object UpdateBtn: TSpeedButton
-        Left = 411
+        Left = 412
         Top = 55
         Width = 49
         Height = 37
@@ -644,6 +663,14 @@ object EditSrsFrm: TEditSrsFrm
         Margins.Bottom = 2
         TabOrder = 8
         Text = '0.7'
+      end
+      object SaveT0CB: TCheckBox
+        Left = 135
+        Top = 124
+        Width = 179
+        Height = 19
+        Caption = #1057#1086#1093#1088#1072#1085#1103#1090#1100' T0 '#1076#1083#1103' '#1091#1076#1072#1088#1086#1074
+        TabOrder = 9
       end
     end
   end
