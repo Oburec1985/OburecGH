@@ -39,9 +39,9 @@ type
     // индекс последнего актуального значения в массиве m_ReadData/ Точнее адрес
     // в который придет новый буфер данных.
     m_lastindex: integer;
-
-    // отладочная переменная
+    // отладочная переменная (время последнего вычитанного блока)
     fdevicetime: double;
+    fdT:double;
   public
     m_createOutTag: boolean;
     // кол-во обработанных блоков исходного тега
@@ -152,6 +152,7 @@ type
     function getPortionTime: point2d;
     // длительность накопленных данных
     function getPortionLen: double;
+    function getPortionEndTime: double;
     // индексы начала и конца интервала
     function getIntervalInd(interval: point2d): tpoint;
     // TimeInd
@@ -1088,6 +1089,8 @@ begin
 
   m_timeShtamp := 0;
   m_timeShtamp_i := 0;
+
+  fdT:=1/freq;
   // добавлено 07.02.2020
   l := length(m_ReadData);
   if l > 0 then
@@ -1303,6 +1306,10 @@ begin
   result:=p2.y-p2.x;
 end;
 
+function cTag.getPortionEndTime: double;
+begin
+  result := m_ReadDataTime + m_lastindex * fdT;
+end;
 
 function cTag.getIntervalInd(interval: point2d): tpoint;
 begin
@@ -1434,6 +1441,7 @@ var
   readyBlockCount, // кол-о готовых к считыванию блоков
   blInd, writeBlockSize: integer;
   looseData: boolean;
+  endTime:double; // время lastindex
 begin
   result := false;
   if tag = nil then
@@ -1475,10 +1483,16 @@ begin
           if looseData then
           begin
             fdevicetime := block.GetBlockDeviceTime(blInd);
-            m_ReadDataTime := fdevicetime;
+            // Были потери данных!!!
+            if fdevicetime-getPortionEndTime>fdT then
+            begin
+              m_ReadDataTime := fdevicetime;
+              m_lastindex:=0; // сбрасываем все что накопили непосильным трудом
+            end;
           end
           else
           begin
+            // первый полученный блок
             if m_lastindex = 0 then
             begin
               fdevicetime := block.GetBlockDeviceTime(blInd);
@@ -1495,8 +1509,7 @@ begin
           else
           begin
             // ERROR
-            move(m_TagData[0], m_ReadData[m_lastindex],
-              blSize * (sizeof(double)));
+            move(m_TagData[0], m_ReadData[m_lastindex], blSize * (sizeof(double)));
             m_lastindex := m_lastindex + blSize;
           end;
           AutoResetData := 0;
@@ -1507,8 +1520,7 @@ begin
           // break;
           AutoResetData := m_lastindex;
           ResetTagDataTimeInd(m_lastindex);
-          move(m_TagData[0], m_ReadData[m_lastindex],
-            blSize * (sizeof(double)));
+          move(m_TagData[0], m_ReadData[m_lastindex], blSize * (sizeof(double)));
           fdevicetime := block.GetBlockDeviceTime(blInd);
           m_ReadDataTime := fdevicetime;
           m_lastindex := m_lastindex + blSize;

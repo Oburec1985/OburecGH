@@ -30,7 +30,11 @@ type
   // структура для хранения удара
   TDataBlock = class
   public
-    m_timeStamp:double;
+    m_owner:tlist;
+    // используется для тахо. Найден блок данных хотя бы по одному датчику
+    m_connectedInd:integer;
+
+    m_timeStamp:point2d;
     m_timeInd:integer; // для синхронизации.блок srs хранит индекс блока тахо
     m_timecapacity:integer;
     // размер для m_TimeBlock
@@ -42,13 +46,13 @@ type
     m_mod:TDoubleArray;
     m_TimeBlock:TDoubleArray;
   protected
-    find:integer; // индекс в tlist;
   protected
     // вычислить амплитуду^2
     procedure evalmod2;
     procedure setsize(s:integer);
     function getsize:integer;
   public
+    function index:integer;
     property size:integer read getsize write setsize;
   end;
 
@@ -65,13 +69,14 @@ type
   public
     procedure evalCoh(TahoShockList:TDataBlockList);
     procedure clearData;
+    procedure delBlock(db:TDataBlock);
     function getBlock(i:integer):TDataBlock;
     function getLastBlock:TDataBlock;overload;
     function getLastBlock(d:TDataBlock):TDataBlock;overload;
     function getPrevBlock(d:TDataBlock):TDataBlock;
     // добавить спектр удара data - TCmxArray_d
     function addBlock(data:pointer; dsize:integer):TDataBlock;overload;
-    function addBlock(data:pointer; spmMag:tdoublearray; dsize:integer; time:double; tb:TDoubleArray; psize:integer):TDataBlock;overload;
+    function addBlock(data:pointer; spmMag:tdoublearray; dsize:integer; time:point2d; tb:TDoubleArray; psize:integer):TDataBlock;overload;
     constructor create;
     destructor destroy;
   end;
@@ -244,6 +249,8 @@ type
     m_lgX, m_lgY:boolean;
     m_minX, m_maxX:double;
     m_minY, m_maxY:double;
+    // последний полученный блок тахо
+    m_lastTahoBlock:TDataBlock;
   public
     PROCEDURE ShowShock(shock: integer);
     procedure BuildSpm(s:tobject);
@@ -440,6 +447,7 @@ var
   I: Integer;
   s:cSRSres;
 begin
+  m_lastTahoBlock:=nil;
   ready:=false;
   t:=getTaho;
   t.fTrigState:=TrOff;
@@ -461,7 +469,9 @@ begin
       end;
     end
     else
+    begin
       exit;
+    end;
   end
   else
   begin
@@ -604,6 +614,7 @@ begin
       l:= cBuffTrend1d.create;
       l.color := ColorArray[i+2];
       pageSpm.activeAxis.AddChild(l);
+
       s.lineavfrf:=l;
       s.lineavfrf.name:=s.name+'_AvFrf';
       s.lineAvFRF.weight:=5;
@@ -639,6 +650,7 @@ var
   i, pcount ,dropCount:integer;
   sig_interval, common_interval:point2d;
   b:boolean;
+  block:TDataBlock;
   v, comIntervalLen, blocklen, refresh, dropLen:double;
 begin
   if not ready then exit;
@@ -721,16 +733,24 @@ begin
         if pcount>c.m_fftCount then
         begin
           BuildSpm(t);
+          if m_lastTahoBlock<>nil then
+          begin
+            if m_lastTahoBlock.m_connectedInd=-1 then
+            begin
+              t.m_shockList.delBlock(m_lastTahoBlock);
+            end;
+          end;
+          m_lastTahoBlock:=
           t.m_shockList.addBlock(t.m_T1ClxData.p,
                                  tdoublearray(t.m_rms.p),
                                  c.fHalfFft,
-                                 t.TrigInterval.x,
+                                 p2d(t.TrigInterval.x,t.TrigInterval.x+pcount/t.m_tag.freq),
                                  TDoubleArray(t.m_T1data.p), pcount);
           t.lineSpm.AddPoints(TDoubleArray(t.m_rms.p), c.fHalfFft);
         end
         else
         begin
-
+          showmessage('FFT порция больше длительности удара!');
         end;
       end;
     end;
@@ -789,21 +809,22 @@ begin
           s.fComIntervalLen:=ComIntervalLen;
           s.fComInt:=common_interval;
           pcount:=copyData(s.m_tag, common_interval, s.m_T1data);
-          if pCount>c.m_fftCount then
+          if pCount>=c.m_fftCount then
           begin
             s.fDataCount:=pcount;
             s.line.AddPoints(TDoubleArray(s.m_T1data.p), pcount);
             s.line.flength:=pcount;
 
             BuildSpm(s);
+            block:=
             s.m_shockList.addBlock(cSRSres(s).m_T1ClxData.p, // Spm Cmplx
                                    tdoublearray(s.m_rms.p), // SpmMag
                                    c.fHalfFft, // SpmSize
-                                   common_interval.x, // timeStamp
+                                   p2d(common_interval.x,common_interval.x+pcount/s.m_tag.freq),// timeStamp
                                    TDoubleArray(s.m_T1data.p), // timeData
                                    pcount); // timeData size
+            m_lastTahoBlock.m_connectedInd:=s.m_shockList.m_LastBlock;
             s.lineSpm.AddPoints(TDoubleArray(s.m_rms.p), c.fHalfFft);
-
             s.m_shockProcessed:=true;
           end;
           t.evalCoh;
@@ -1008,13 +1029,13 @@ begin
       saveHeader(ifile,1/c.fspmdx, 0,ident);
       // временной блок
       ident:=s.m_tag.tagname+'_'+inttostr(num);
-      saveHeader(ifile, s.m_tag.freq, db.m_timeStamp, ident);
+      saveHeader(ifile, s.m_tag.freq, db.m_timeStamp.x, ident);
       saveData(f, s.m_tag.tagname+'_'+inttostr(num),db, false);
 
       if i=0 then
       begin
         ident:=t.m_tag.tagname+'_'+inttostr(num);
-        saveHeader(ifile,t.m_tag.freq, tb.m_timeStamp, ident);
+        saveHeader(ifile,t.m_tag.freq, tb.m_timeStamp.x, ident);
         saveData(f, ident,tb, true);
       end;
     end;
@@ -1085,8 +1106,10 @@ begin
       block:=s.m_shockList.getBlock(shock);
       tahobl:=t.m_shockList.getBlock(shock);
       s.lineFrf.AddPoints(block.m_frf, c.fHalfFft);
+
       s.line.flength:=block.m_TimeArrSize;
       s.line.AddPoints(block.m_TimeBlock, block.m_TimeArrSize);
+
       t.line.flength:=tahobl.m_TimeArrSize;
       t.line.AddPoints(tahobl.m_TimeBlock, tahobl.m_TimeArrSize);
       SpmChartDblClick(nil);
@@ -1237,16 +1260,23 @@ var
   I, shockCount: Integer;
   c:cSpmCfg;
   s:cSRSres;
+  len:double;
 begin
   c:=cfg;
   shockCount:=m_shockList.Count;
   for I := 0 to c.SRSCount - 1 do
   begin
     s:=c.GetSrs(i);
+    //getCommonInterval(s., t.TrigInterval);
+    //ComIntervalLen:=common_interval.y-common_interval.x;
     if (shockCount=s.m_shockList.Count) and (m_shockList.m_LastBlock=s.m_shockList.m_LastBlock) then
     begin
       s.m_shockList.evalCoh(m_shockList);
       s.lineCoh.AddPoints(s.m_shockList.m_coh, c.fHalfFft);
+    end
+    else // число блоков в T и S разбежалось
+    begin
+      showmessage('taho:'+ inttostr(shockCount)+' s:'+inttostr(s.m_shockList.Count));
     end;
   end;
 end;
@@ -1271,8 +1301,8 @@ begin
     sd:=nil;
     for k := 0 to s.m_shockList.Count - 1 do
     begin
-      td:=m_shockList.getLastBlock(td);
-      sd:=s.m_shockList.getLastBlock(sd);
+      td:=m_shockList.getPrevBlock(td);
+      sd:=s.m_shockList.getPrevBlock(sd);
       case evaltype of
         0: // без использования фазы
         begin
@@ -1304,7 +1334,7 @@ begin
     end;
 
     s.lineavfrf.AddPoints(s.m_frf, c.fHalfFft);
-    s.linefrf.AddPoints(s.m_frf, c.fHalfFft);
+    s.linefrf.AddPoints(sd.m_frf, c.fHalfFft);
   end;
 end;
 
@@ -1477,7 +1507,6 @@ end;
 procedure cSRSFactory.doAfterLoad;
 begin
   inherited;
-
 end;
 
 procedure cSRSFactory.doChangeRState(sender: tobject);
@@ -1693,6 +1722,21 @@ begin
   result:=m_size;
 end;
 
+function TDataBlock.index: integer;
+var
+  I: Integer;
+begin
+  result:=-1;
+  for I := 0 to m_owner.Count - 1 do
+  begin
+    if TDataBlockList(m_owner).getBlock(i)=self then
+    begin
+      result:=i;
+      exit;
+    end;
+  end;
+end;
+
 procedure TDataBlock.setsize(s: integer);
 begin
   m_size:=s;
@@ -1713,20 +1757,22 @@ begin
     if m_LastBlock=m_cfg.m_capacity then
       m_LastBlock:=0;
     db:=getBlock(m_LastBlock);
+    // как будто добавили блок, соотв. сбрасываем показатель готовности
+    db.m_connectedInd:=-1;
   end
   else
   begin
     db:=TDataBlock.Create;
     db.size:=dsize;
-    db.find:=Add(db);
-    m_LastBlock:=db.find;
+    m_LastBlock:=Add(db);
   end;
   system.move(TCmxArray_d(data)[0], db.m_spm[0], dsize*sizeof(TComplex_d));
   db.evalmod2;
+  db.m_owner:=Self;
   result:=db;
 end;
 
-function TDataBlockList.addBlock(data: pointer; spmMag:tdoublearray; dsize: integer; time: double;
+function TDataBlockList.addBlock(data: pointer; spmMag:tdoublearray; dsize: integer; time: point2d;
                                  // timeblock
                                  tb:TDoubleArray; psize:integer):TDataBlock;
 begin
@@ -1771,6 +1817,30 @@ begin
   inherited;
 end;
 
+procedure TDataBlockList.delBlock(db: TDataBlock);
+var
+  I: Integer;
+  bl:TDataBlock;
+begin
+  for I := 0 to Count - 1 do
+  begin
+    bl:=getBlock(i);
+    if bl=db then
+    begin
+      if m_LastBlock>=i then
+      begin
+        dec(m_LastBlock);
+        Delete(i);
+        db.Destroy;
+      end
+      else
+      begin
+
+      end;
+    end;
+  end;
+end;
+
 destructor TDataBlockList.destroy;
 begin
   ClearData;
@@ -1779,13 +1849,21 @@ end;
 
 procedure TDataBlockList.evalCoh(TahoShockList:TDataBlockList);
 var
-  i, j,n:integer;
+  i, j, n, len:integer;
   s, t:TDataBlock;
   p1, p2:TComplex_d;
   k:double;
 begin
   n:=Count;
   if n=0 then exit;
+
+  len:=length(m_coh);
+  if len>0 then
+  begin
+    ZeroMemory(m_Cxy, len*(sizeof(TComplex_d)));
+    ZeroMemory(m_sxx, len*(sizeof(double)));
+    ZeroMemory(m_syy, len*(sizeof(double)));
+  end;
 
   for I := 0 to Count-1 do
   begin
@@ -1833,12 +1911,19 @@ function TDataBlockList.getPrevBlock(d:TDataBlock): TDataBlock;
 var
   i:integer;
 begin
-  i:=d.find-1;
-  if i<0 then
+  if d=nil then
   begin
-    i:=Count-1;
+    result:=getLastBlock;
+  end
+  else
+  begin
+    i:=d.index-1;
+    if i<0 then
+    begin
+      i:=Count-1;
+    end;
+    result:=getBlock(i);
   end;
-  result:=getBlock(i);
 end;
 
 end.
