@@ -19,7 +19,6 @@ object SRSFrm: TSRSFrm
     Top = 0
     Width = 567
     Height = 421
-    Cursor = crSizeAll
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -32,8 +31,6 @@ object SRSFrm: TSRSFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitLeft = -152
-    ExplicitTop = -2
   end
   object RightGB: TGroupBox
     Left = 567
@@ -43,6 +40,7 @@ object SRSFrm: TSRSFrm
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
+    ExplicitLeft = 572
     object ShockCountLabel: TLabel
       Left = 8
       Top = 21
@@ -63,7 +61,7 @@ object SRSFrm: TSRSFrm
     end
     object WinPosBtn: TSpeedButton
       Left = 86
-      Top = 98
+      Top = 108
       Width = 34
       Height = 35
       Hint = #1054#1090#1082#1088#1099#1090#1100' '#1074' WinPos'
@@ -243,7 +241,7 @@ object SRSFrm: TSRSFrm
     end
     object Point_No: TLabel
       Left = 4
-      Top = 262
+      Top = 286
       Width = 43
       Height = 13
       Margins.Left = 2
@@ -439,21 +437,13 @@ object SRSFrm: TSRSFrm
       Height = 21
       TabOrder = 0
     end
-    object EvalFRF: TButton
-      Left = 5
-      Top = 67
-      Width = 75
-      Height = 25
-      Caption = #1056#1072#1089#1095#1077#1090
-      TabOrder = 1
-    end
     object SaveBtn: TButton
       Left = 5
-      Top = 107
+      Top = 108
       Width = 75
       Height = 25
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
-      TabOrder = 2
+      TabOrder = 1
       OnClick = SaveBtnClick
     end
     object ShockSB: TSpinButton
@@ -475,7 +465,7 @@ object SRSFrm: TSRSFrm
         0000008080000080800000808000000000000000000000000000000000000000
         0000000000000000000000808000008080000080800000808000008080000080
         800000808000008080000080800000808000}
-      TabOrder = 3
+      TabOrder = 2
       UpGlyph.Data = {
         0E010000424D0E01000000000000360000002800000009000000060000000100
         200000000000D800000000000000000000000000000000000000008080000080
@@ -498,24 +488,24 @@ object SRSFrm: TSRSFrm
       Margins.Top = 2
       Margins.Right = 2
       Margins.Bottom = 2
-      TabOrder = 4
+      TabOrder = 3
       Text = '0'
     end
     object PointIE: TIntEdit
       Left = 4
-      Top = 279
+      Top = 303
       Width = 109
       Height = 21
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
       Margins.Bottom = 2
-      TabOrder = 5
+      TabOrder = 4
       Text = '0'
     end
     object PointSE: TSpinButton
       Left = 117
-      Top = 279
+      Top = 303
       Width = 15
       Height = 19
       Margins.Left = 2
@@ -532,7 +522,7 @@ object SRSFrm: TSRSFrm
         0000008080000080800000808000000000000000000000000000000000000000
         0000000000000000000000808000008080000080800000808000008080000080
         800000808000008080000080800000808000}
-      TabOrder = 6
+      TabOrder = 5
       UpGlyph.Data = {
         0E010000424D0E01000000000000360000002800000009000000060000000100
         200000000000D800000000000000000000000000000000000000008080000080
@@ -549,7 +539,7 @@ object SRSFrm: TSRSFrm
       Top = 193
       Width = 116
       Height = 33
-      TabOrder = 7
+      TabOrder = 6
       object SaveMdbBtn: TButton
         Left = 5
         Top = 4
@@ -566,8 +556,26 @@ object SRSFrm: TSRSFrm
       Width = 107
       Height = 25
       Caption = #1057#1088#1072#1074#1085#1080#1090#1100' '#1089' '#1041#1044
-      TabOrder = 8
+      TabOrder = 7
       Visible = False
+    end
+    object DelBtn: TButton
+      Left = 5
+      Top = 77
+      Width = 75
+      Height = 25
+      Caption = #1059#1076#1072#1083#1080#1090#1100
+      TabOrder = 8
+      OnClick = DelBtnClick
+    end
+    object hideCB: TCheckBox
+      Left = 86
+      Top = 85
+      Width = 59
+      Height = 17
+      Caption = #1057#1082#1088#1099#1090#1100
+      TabOrder = 9
+      OnClick = hideCBClick
     end
   end
 end

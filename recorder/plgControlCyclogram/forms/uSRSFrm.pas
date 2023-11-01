@@ -67,7 +67,8 @@ type
     m_shockCount:integer;// общее число ударов за все время
     m_cfg:cspmcfg;
   public
-    procedure evalCoh(TahoShockList:TDataBlockList);
+    // hideind - номер удара который не учитывается
+    procedure evalCoh(TahoShockList:TDataBlockList; hideind:integer);
     procedure clearData;
     procedure delBlock(db:TDataBlock);
     function getBlock(i:integer):TDataBlock;
@@ -206,8 +207,8 @@ type
   public
     property Cfg:cSpmCfg read getcfg write setcfg;
     function CfgCount:integer;
-    procedure evalCoh;
-    procedure evalFRF;
+    procedure evalCoh(hideInd:integer);
+    procedure evalFRF(hideInd:integer; estimator:integer);
     function name:string;
     constructor create;
     destructor destroy;
@@ -218,7 +219,6 @@ type
     RightGB: TGroupBox;
     ShockCountLabel: TLabel;
     ShockCountE: TEdit;
-    EvalFRF: TButton;
     SaveBtn: TButton;
     ShockSB: TSpinButton;
     ShockIE: TIntEdit;
@@ -231,6 +231,8 @@ type
     SaveMdbBtn: TButton;
     Button1: TButton;
     CompareBtn: TSpeedButton;
+    DelBtn: TButton;
+    hideCB: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
     procedure WinPosBtnClick(Sender: TObject);
@@ -239,6 +241,8 @@ type
     procedure SpmChartDblClick(Sender: TObject);
     procedure SaveMdbBtnClick(Sender: TObject);
     procedure CompareBtnClick(Sender: TObject);
+    procedure DelBtnClick(Sender: TObject);
+    procedure hideCBClick(Sender: TObject);
   public
     ready:boolean;
     // h0, h1, h2
@@ -254,7 +258,11 @@ type
     m_saveT0:boolean;
     // последний полученный блок тахо
     m_lastTahoBlock:TDataBlock;
+  protected
+    fdelBtn:boolean; // нажали кнопку удалить удар
   public
+    function hideInd:integer;
+    procedure delCurrentShock;
     PROCEDURE ShowShock(shock: integer);
     procedure BuildSpm(s:tobject);
     procedure UpdateView;
@@ -437,6 +445,37 @@ constructor TSRSFrm.create(Aowner: tcomponent);
 begin
   m_TahoList:=TList.Create;
   inherited;
+end;
+
+procedure TSRSFrm.DelBtnClick(Sender: TObject);
+begin
+  fdelBtn:=true;
+  if RStateStop then
+    UpdateView;
+end;
+
+procedure TSRSFrm.delCurrentShock;
+var
+  td,sd:TDataBlock;
+  s:cSRSres;
+  t:cSRSTaho;
+  c:cSpmCfg;
+  i:integer;
+begin
+  t:=getTaho;
+  for I := 0 to t.Cfg.SRSCount - 1 do
+  begin
+    hideCB.Checked:=false;
+    s:=t.Cfg.GetSrs(i);
+    sd:=s.m_shockList.getBlock(shockie.intnum);
+    td:=t.m_shockList.getBlock(shockie.intnum);
+    s.m_shockList.delBlock(sd);
+    t.m_shockList.delBlock(td);
+    t.evalCoh(hideInd);
+    t.evalFRF(hideInd, m_estimator);
+  end;
+  ShockCountE.Text:=inttostr(t.m_shockList.Count);
+  fdelBtn:=false;
 end;
 
 destructor TSRSFrm.destroy;
@@ -772,7 +811,7 @@ begin
       if b then // стоит еще добавить проверку на отвалившийся датчик. В случае если
       // какой то канал не накопил удар, игнорируем его по таймауту
       begin
-        t.evalFRF;
+        t.evalFRF(hideInd, m_estimator);
         // внутри вызывается t.fTrigState:=TrOff;
         t.ResetTrig;
       end;
@@ -830,10 +869,37 @@ begin
             s.lineSpm.AddPoints(TDoubleArray(s.m_rms.p), c.fHalfFft);
             s.m_shockProcessed:=true;
           end;
-          t.evalCoh;
+          t.evalCoh(hideInd);
         end;
       end;
     end;
+  end;
+end;
+
+procedure TSRSFrm.hideCBClick(Sender: TObject);
+var
+  i: integer;
+  c:cSpmCfg;
+  t:cSRSTaho;
+  s:cSRSres;
+begin
+  t:=getTaho;
+  t.evalCoh(hideInd);
+  t.evalFRF(hideInd, m_estimator);
+  if not hideCB.Checked then
+    ShowShock(ShockIE.IntNum);
+  UpdateView;
+end;
+
+function TSRSFrm.hideInd: integer;
+begin
+  if hideCB.Checked then
+  begin
+    result:=ShockIE.IntNum;
+  end
+  else
+  begin
+    result:=-1;
   end;
 end;
 
@@ -844,6 +910,10 @@ var
   t:cSRSTaho;
   s:cSRSres;
 begin
+  if fdelBtn then
+  begin
+    delCurrentShock;
+  end;
   if RStatePlay then
   begin
     t:=getTaho;
@@ -868,7 +938,6 @@ begin
   else
     result:=nil;
 end;
-
 
 procedure TSRSFrm.RBtnClick(sender: tobject);
 begin
@@ -1211,7 +1280,7 @@ begin
   setlength(s.m_shockList.m_sxx, 1);
   setlength(s.m_shockList.m_syy, 1);
   setlength(s.m_shockList.m_coh, 1);
-  s.m_shockList.evalCoh(t.m_shockList);
+  s.m_shockList.evalCoh(t.m_shockList, hideInd);
 end;
 
 { cSRSTaho }
@@ -1267,7 +1336,7 @@ begin
   inherited;
 end;
 
-procedure cSRSTaho.evalCoh;
+procedure cSRSTaho.evalCoh(hideInd:integer);
 var
   I, shockCount: Integer;
   c:cSpmCfg;
@@ -1283,7 +1352,7 @@ begin
     //ComIntervalLen:=common_interval.y-common_interval.x;
     if (shockCount=s.m_shockList.Count) and (m_shockList.m_LastBlock=s.m_shockList.m_LastBlock) then
     begin
-      s.m_shockList.evalCoh(m_shockList);
+      s.m_shockList.evalCoh(m_shockList, hideInd);
       s.lineCoh.AddPoints(s.m_shockList.m_coh, c.fHalfFft);
     end
     else // число блоков в T и S разбежалось
@@ -1293,17 +1362,16 @@ begin
   end;
 end;
 // taho - знаменатель
-procedure cSRSTaho.evalFRF;
+procedure cSRSTaho.evalFRF(hideInd:integer; estimator:integer);
 var
   I, k, shockCount: Integer;
   c:cSpmCfg;
   s:cSRSres;
   td, sd:TDataBlock;
-  j, evaltype: Integer;
+  j: Integer;
   v1,v2:double;
   cross, px, py:TComplex_d;
 begin
-  evaltype:=0;
   c:=cfg;
   shockCount:=m_shockList.Count;
   for I := 0 to c.SRSCount - 1 do
@@ -1314,9 +1382,14 @@ begin
     sd:=nil;
     for k := 0 to s.m_shockList.Count - 1 do
     begin
-      td:=m_shockList.getPrevBlock(td);
-      sd:=s.m_shockList.getPrevBlock(sd);
-      case evaltype of
+      if k=hideInd then
+      begin
+        dec(shockCount);
+        continue;
+      end;
+      td:=m_shockList.getBlock(k);
+      sd:=s.m_shockList.getBlock(k);
+      case estimator of
         0: // без использования фазы
         begin
           for j := 0 to Cfg.fHalfFft - 1 do
@@ -1327,14 +1400,22 @@ begin
             s.m_frf[j]:=sd.m_frf[j]+s.m_frf[j];
           end;
         end;
-        1:
+        1: // H1 Syx/Sxx
         begin
-
+          for j := 0 to Cfg.fHalfFft - 1 do
+          begin ////
+              px:=td.m_spm[j];
+              py:=sd.m_spm[j];
+              cross:=py*sopr(px);
+              v2:=td.m_mod2[j]+v2;
+            s.m_frf[j]:=cross.re*cross.re+cross.im*cross.im;
+            s.m_frf[j]:=sqrt(s.m_frf[j]/v2)*v1;
+          end;
         end;
       end;
     end;
     // усредняем
-    case evaltype of
+    case estimator of
       0: // без использования фазы
       begin
         for j := 0 to Cfg.fHalfFft - 1 do
@@ -1346,7 +1427,7 @@ begin
           end
           else
           begin
-            s.m_frf[j]:=s.m_frf[j]/s.m_shockList.Count;
+            s.m_frf[j]:=s.m_frf[j]/ShockCount;
           end;
         end;
       end;
@@ -1358,9 +1439,11 @@ begin
         begin
           cross:=0;
           v2:=0;
-          v1:=1/s.m_shockList.Count; // v1 - нормировка по числу ударов
+          v1:=1/ShockCount; // v1 - нормировка по числу ударов
           for k := 0 to s.m_shockList.Count - 1 do
           begin
+            if k=hideInd then
+              continue;
             td:=m_shockList.getBlock(k);
             sd:=s.m_shockList.getBlock(k);
             px:=td.m_spm[j];
@@ -1380,9 +1463,11 @@ begin
         begin
           cross:=0;
           v2:=0;
-          v1:=1/s.m_shockList.Count; // v1 - нормировка по числу ударов
+          v1:=1/ShockCount; // v1 - нормировка по числу ударов
           for k := 0 to s.m_shockList.Count - 1 do
           begin
+            if k=hideInd then
+              continue;
             td:=m_shockList.getBlock(k);
             sd:=s.m_shockList.getBlock(k);
             px:=td.m_spm[j];
@@ -1890,11 +1975,11 @@ begin
     bl:=getBlock(i);
     if bl=db then
     begin
+      Delete(i);
+      db.Destroy;
       if m_LastBlock>=i then
       begin
         dec(m_LastBlock);
-        Delete(i);
-        db.Destroy;
       end
       else
       begin
@@ -1910,7 +1995,7 @@ begin
   inherited;
 end;
 
-procedure TDataBlockList.evalCoh(TahoShockList:TDataBlockList);
+procedure TDataBlockList.evalCoh(TahoShockList:TDataBlockList; hideind:integer);
 var
   i, j, n, len:integer;
   s, t:TDataBlock;
@@ -1927,9 +2012,13 @@ begin
     ZeroMemory(m_sxx, len*(sizeof(double)));
     ZeroMemory(m_syy, len*(sizeof(double)));
   end;
-
   for I := 0 to Count-1 do
   begin
+    if i=hideind then
+    begin
+      continue;
+      dec(n);
+    end;
     s:=getBlock(i);
     t:=TahoShockList.getBlock(i);
     for j := 0 to s.m_size - 1 do // проход по спектру
