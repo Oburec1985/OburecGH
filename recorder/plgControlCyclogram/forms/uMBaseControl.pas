@@ -73,6 +73,8 @@ type
     ApplyBtn: TButton;
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
+    Label6: TLabel;
+    Label7: TLabel;
     procedure Button1Click(Sender: TObject);
     procedure mdbBtnClick(Sender: TObject);
     procedure ObjPropSGEndEdititng(Sender: TObject; ACol, ARow: Integer;
@@ -458,7 +460,7 @@ begin
       objtype.name:=TestTypeCB.text;
       objtype.owner:=cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes;
       cBaseMeaFolder(m_base.m_BaseFolder).m_TestTypes.AddObject(objtype.name, objtype);
-      ObjTypeCB.Items.AddObject(objtype.name, objtype);
+      TestTypeCB.Items.AddObject(objtype.name, objtype);
       (testFolder).ObjType:=objtype.name;
     end
     else
@@ -1161,6 +1163,7 @@ var
   str:string;
   t:cObjType;
   p:tprop;
+  b:boolean;
 begin
   sg := TStringGrid(Sender);
   if selectObj is cObjFolder then
@@ -1192,7 +1195,14 @@ begin
         p:=t.getprop(str);
         // у типа нет свойства как в €чейке. к типу надо добавить это свойство
         if p=nil then
-          Color := CLgreen;
+          Color := CLgreen
+        else
+        begin
+          selectObj.getProperty(str, b);
+          // у типа есть а у объекта нету
+          if not b then
+            Color := clYellow;
+        end;
       end;
     end;
   end;
@@ -1735,11 +1745,35 @@ begin
   showRegistrators;
   fLoaded := true;
 end;
+// сколько свойств есть у типа которых нет у объекта
+function GetNewPropFromType(obj:cXmlFolder; t:cObjType; strList:TStringList):integer;
+var
+  I: Integer;
+  b:boolean;
+  pr:string;
+begin
+  result:=0;
+  for I := 0 to t.proplist.Count - 1 do
+  begin
+    pr:=t.proplist.Strings[i];
+    obj.getProperty(pr, b);
+    if not b then
+    begin
+      inc(result);
+      strList.Add(pr);
+    end;
+  end;
+end;
+
 
 procedure TMBaseControl.ShowObjProps(o: cXmlFolder);
 var
   sg: TStringGridExt;
-  I: Integer;
+  I, new: Integer;
+  t:cObjType;
+  j: Integer;
+  prList:tstringlist;
+  str:string;
 begin
   sg := nil;
   if o = nil then
@@ -1747,12 +1781,30 @@ begin
   sg := ObjPropSG;
   if sg <> nil then
   begin
-    sg.rowcount := o.PropCount + 2;
+    prList:=TStringList.Create;
+    if o is cObjFolder then
+      t:= cbasemeafolder(m_base.m_BaseFolder).getObjType(ObjTypeCB.text)
+    else
+    begin
+      if o is cTestFolder then
+        t:= cbasemeafolder(m_base.m_BaseFolder).getTestType(TestTypeCB.text);
+    end;
+    new:=0;
+    if t<>nil then
+      new:=GetNewPropFromType(o, t, prList);
+    sg.rowcount := o.PropCount + 2+new;
     for I := 0 to o.PropCount - 1 do
     begin
       sg.Cells[c_col_propName, I + 1] := o.getPropertyName(I);
       sg.Cells[c_col_propVal, I + 1] := o.getProperty(I);
     end;
+    for i := 0 to prList.Count - 1 do
+    begin
+      str:=prList.Strings[i];
+      sg.Cells[c_col_propName, o.PropCount+i] := str;
+      sg.Cells[c_col_propVal, o.PropCount+i] := t.getval(str);
+    end;
+    prList.Destroy;
     sg.Cells[c_col_propName, sg.rowcount - 1] := '';
     sg.Cells[c_col_propVal, sg.rowcount - 1] := '';
   end;

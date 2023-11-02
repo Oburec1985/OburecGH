@@ -25,6 +25,7 @@ object DownloadRegsFrm: TDownloadRegsFrm
     Margins.Bottom = 2
     Align = alBottom
     TabOrder = 0
+    ExplicitTop = 324
     DesignSize = (
       617
       94)
@@ -82,6 +83,23 @@ object DownloadRegsFrm: TDownloadRegsFrm
       ParentFont = False
       State = cbChecked
       TabOrder = 2
+    end
+    object UncheckAll: TCheckBox
+      Left = 6
+      Top = 36
+      Width = 169
+      Height = 17
+      Caption = #1057#1085#1103#1090#1100' '#1074#1099#1076#1077#1083#1077#1085#1085#1099#1077
+      Checked = True
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -12
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      State = cbChecked
+      TabOrder = 3
+      OnClick = UncheckAllClick
     end
   end
   object RegsLV: TBtnListView

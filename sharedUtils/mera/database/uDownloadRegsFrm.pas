@@ -15,8 +15,10 @@ type
     ImageList_16: TImageList;
     DelBatRegsBtn: TButton;
     RenameCB: TCheckBox;
+    UncheckAll: TCheckBox;
     procedure DownloadBtnClick(Sender: TObject);
     procedure DelBatRegsBtnClick(Sender: TObject);
+    procedure UncheckAllClick(Sender: TObject);
   private
     m_db:cMBase;
   public
@@ -221,6 +223,22 @@ begin
   end;
   LVChange(regsLV);
   Show;
+end;
+
+procedure TDownloadRegsFrm.UncheckAllClick(Sender: TObject);
+var
+  I: Integer;
+  li:TListItem;
+begin
+  if not UncheckAll.Checked then
+  begin
+    for I := 0 to regsLV.items.Count - 1 do
+    begin
+      li:=RegsLV.Items[i];
+      li.Checked:=false;
+    end;
+  end;
+
 end;
 
 end.
