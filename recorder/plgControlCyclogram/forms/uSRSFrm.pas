@@ -233,6 +233,7 @@ type
     CompareBtn: TSpeedButton;
     DelBtn: TButton;
     hideCB: TCheckBox;
+    EstimatorRG: TRadioGroup;
     procedure FormCreate(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
     procedure WinPosBtnClick(Sender: TObject);
@@ -243,6 +244,7 @@ type
     procedure CompareBtnClick(Sender: TObject);
     procedure DelBtnClick(Sender: TObject);
     procedure hideCBClick(Sender: TObject);
+    procedure EstimatorRGClick(Sender: TObject);
   public
     ready:boolean;
     // h0, h1, h2
@@ -522,6 +524,21 @@ begin
   ready:=true;
 end;
 
+procedure TSRSFrm.EstimatorRGClick(Sender: TObject);
+var
+  i: integer;
+  c:cSpmCfg;
+  t:cSRSTaho;
+  s:cSRSres;
+begin
+  m_estimator:=EstimatorRG.ItemIndex;
+  t:=getTaho;
+  //t.evalCoh(hideInd);
+  t.evalFRF(hideInd, m_estimator);
+  ShowShock(ShockIE.IntNum);
+  UpdateView;
+end;
+
 procedure TSRSFrm.FormCreate(Sender: TObject);
 var
   p:cpage;
@@ -615,6 +632,7 @@ begin
   pageT.activeAxis.clear;
   pageSpm.activeAxis.clear;
   t:=getTaho;
+  c:=t.getCfg;
   if t<>nil then
   begin
     l:= cBuffTrend1d.create;
@@ -628,6 +646,7 @@ begin
     l.color := ColorArray[0];
     pageSpm.activeAxis.AddChild(l);
     t.lineSpm:=l;
+    t.lineSpm.dx:=c.fspmdx;
     t.lineSpm.name:=t.name+'_spm';
 
     c:=t.Cfg;
@@ -645,16 +664,19 @@ begin
       l.color := ColorArray[i+1];
       pageSpm.activeAxis.AddChild(l);
       s.lineSpm:=l;
+      s.lineSpm.dx:=c.fspmdx;
       s.lineSpm.name:=s.name+'_spm';
 
       l:= cBuffTrend1d.create;
       l.color := ColorArray[i+1];
+      l.dx:=c.fspmdx;
       pageSpm.activeAxis.AddChild(l);
       s.linefrf:=l;
       s.linefrf.name:=s.name+'_frf';
 
       l:= cBuffTrend1d.create;
       l.color := ColorArray[i+2];
+      l.dx:=c.fspmdx;
       pageSpm.activeAxis.AddChild(l);
 
       s.lineavfrf:=l;
@@ -665,7 +687,7 @@ begin
       l:= cBuffTrend1d.create;
       //l.color := ColorArray[i+10];
       l.color := yellow;
-      l.dx:=1/t.m_tag.freq;
+      l.dx:=c.fspmdx;
       axCoh.AddChild(l);
       s.lineCoh:=l;
       s.lineCoh.name:=s.name+'_coh';
@@ -1378,6 +1400,7 @@ begin
   begin
     s:=c.GetSrs(i);
     ZeroMemory(s.m_frf,length(s.m_frf)*sizeof(double));
+    ZeroMemory(s.m_shockList.m_Cxy,  length(s.m_shockList.m_Cxy)* sizeof(TComplex_d));
     td:=nil;
     sd:=nil;
     for k := 0 to s.m_shockList.Count - 1 do
@@ -1390,7 +1413,7 @@ begin
       td:=m_shockList.getBlock(k);
       sd:=s.m_shockList.getBlock(k);
       case estimator of
-        0: // без использования фазы
+        0: // без использования фазы   y/x. x - тахо
         begin
           for j := 0 to Cfg.fHalfFft - 1 do
           begin
@@ -1398,18 +1421,6 @@ begin
             v2:=td.m_mod[j];
             sd.m_frf[j]:=v1/v2;
             s.m_frf[j]:=sd.m_frf[j]+s.m_frf[j];
-          end;
-        end;
-        1: // H1 Syx/Sxx
-        begin
-          for j := 0 to Cfg.fHalfFft - 1 do
-          begin ////
-              px:=td.m_spm[j];
-              py:=sd.m_spm[j];
-              cross:=py*sopr(px);
-              v2:=td.m_mod2[j]+v2;
-            s.m_frf[j]:=cross.re*cross.re+cross.im*cross.im;
-            s.m_frf[j]:=sqrt(s.m_frf[j]/v2)*v1;
           end;
         end;
       end;
@@ -1431,19 +1442,18 @@ begin
           end;
         end;
       end;
-      1: // H1 Syx/Sxx
+      1: // H1 Syx/Sxx  x - тахо
       begin
-        td:=nil;
-        sd:=nil;
-        for j := 0 to Cfg.fHalfFft - 1 do
+       for j := 0 to Cfg.fHalfFft - 1 do
         begin
           cross:=0;
           v2:=0;
-          v1:=1/ShockCount; // v1 - нормировка по числу ударов
           for k := 0 to s.m_shockList.Count - 1 do
           begin
             if k=hideInd then
+            begin
               continue;
+            end;
             td:=m_shockList.getBlock(k);
             sd:=s.m_shockList.getBlock(k);
             px:=td.m_spm[j];
@@ -1451,32 +1461,29 @@ begin
             cross:=py*sopr(px)+cross;
             v2:=td.m_mod2[j]+v2;
           end;
-          s.m_frf[j]:=cross.re*cross.re+cross.im*cross.im;
-          s.m_frf[j]:=sqrt(s.m_frf[j]/v2)*v1;
+          s.m_frf[j]:=abs(cross)/v2;
         end;
       end;
-      2: // H2 Syy/Sxy
+      2: // H1 Syy/Sxy  x - тахо
       begin
-        td:=nil;
-        sd:=nil;
-        for j := 0 to Cfg.fHalfFft - 1 do
+       for j := 0 to Cfg.fHalfFft - 1 do
         begin
           cross:=0;
-          v2:=0;
-          v1:=1/ShockCount; // v1 - нормировка по числу ударов
+          v1:=0;
           for k := 0 to s.m_shockList.Count - 1 do
           begin
             if k=hideInd then
+            begin
               continue;
+            end;
             td:=m_shockList.getBlock(k);
             sd:=s.m_shockList.getBlock(k);
             px:=td.m_spm[j];
             py:=sd.m_spm[j];
             cross:=px*sopr(py)+cross;
-            v2:=sd.m_mod2[j]+v2;
+            v1:=sd.m_mod2[j]+v1;
           end;
-          s.m_frf[j]:=cross.re*cross.re+cross.im*cross.im;
-          s.m_frf[j]:=sqrt(v2/s.m_frf[j])*v1;
+          s.m_frf[j]:=v1/abs(cross);
         end;
       end;
     end;

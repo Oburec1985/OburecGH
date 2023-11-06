@@ -32,7 +32,7 @@ type
   protected
     fOnRBtn:Tnotifyevent;
   protected
-    res: string;
+    fres: string;
     scene: string;
     // декорации на сцене. Объекты созданы без помощи idesigner
     mObjects: array of ceditobj;
@@ -392,11 +392,11 @@ begin
     begin
       if HandleAllocated then
       begin
-        if fileexists(res) then
+        if fileexists(fres) then
         begin
           if mUI = nil then
           begin
-            mUI := cUI.Create(handle, res);
+            mUI := cUI.Create(handle, fres);
             init;
             createEvents;
             // вызов событий подписанных компонентов
@@ -438,7 +438,7 @@ begin
   curdir:=GetCurrentDir;
   if val<>'' then
     val:=RelativePathToAbsolute(curdir, val);
-  res := val;
+  fres := val;
   if not(csLoading in componentstate) then
   begin
     InitScene;
@@ -447,7 +447,7 @@ end;
 
 function cBaseGlComponent.GetResources: string;
 begin
-  result := res;
+  result := fres;
 end;
 
 Constructor cBaseGlComponent.Create(AOwner: TComponent);

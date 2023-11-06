@@ -54,6 +54,7 @@ uses
   uIRDiagramEditFrm,
   uEditSRSFrm,
   uSRSFrm,
+  uGLFrmEdit,
   uMBaseControl;
 
 type
@@ -286,7 +287,6 @@ begin
   if show then
     RcClientFrm.Show;
   RcClientFrm.close;
-
 
   SpmChartEditFrm:=TSpmChartEditFrm.Create(nil);
   if show then
@@ -535,6 +535,8 @@ begin
 
   g_ObjFrm3dFactory:=cObjFrm3dFactory.create;
   compMng.Add(g_ObjFrm3dFactory);
+  g_ObjFrm3dEdit:=TObjFrm3dEdit.Create(nil);
+
 
   cfg := extractfiledir(getRConfig);
   i:=0;

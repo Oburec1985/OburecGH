@@ -2,47 +2,38 @@ object ObjFrm3d: TObjFrm3d
   Left = 0
   Top = 0
   Caption = '3DFrm'
-  ClientHeight = 392
-  ClientWidth = 830
+  ClientHeight = 300
+  ClientWidth = 635
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -14
+  Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 120
-  TextHeight = 17
+  PixelsPerInch = 96
+  TextHeight = 13
   object GL: cBaseGlComponent
     Left = 0
     Top = 0
-    Width = 830
-    Height = 221
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Width = 635
+    Height = 169
     Align = alClient
     DockSite = True
     TabOrder = 0
     scenename = '.\files\scenes'
-    resources = 
-      'd:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\file' +
-      's\3d\resources.ini '
     ShowTrasforms = True
     OnInitScene = GLInitScene
+    ExplicitTop = -6
   end
   object ToolsGB: TGroupBox
     Left = 0
-    Top = 221
-    Width = 830
-    Height = 171
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Top = 169
+    Width = 635
+    Height = 131
     Align = alBottom
     Caption = 'ToolsGB'
     TabOrder = 1
+    ExplicitTop = 175
   end
 end

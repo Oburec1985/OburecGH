@@ -548,7 +548,10 @@ begin
   if wglGetCurrentContext <> hrc then
   begin
     wglMakeCurrent(dc, hrc);
-    if not res then showmessage('wglCurrent false');
+    if not res then
+    begin
+      //showmessage('wglCurrent false');
+    end;
   end;
   BeginPaint(Handle, ps);
   glClearColor(0.9, 0.9, 0.9, 1);
