@@ -31,7 +31,6 @@ object GlFrm: TGlFrm
     Height = 515
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 831
   end
   object MainMenu1: TMainMenu
     Left = 152

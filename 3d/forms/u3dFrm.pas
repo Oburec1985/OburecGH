@@ -103,11 +103,6 @@ begin
   selectObjectsFrame.GetUI(g_UI);
   SelectObjectsFrame.ObjectsLV.Enabled:=true;
 
-
-  //MatFrame := TMaterialCfgFrame.Create(self);
-  //MatFrame.Parent:=self;
-  //MatFrame.Visible:=false;
-
   modifyframe:=tmodifyframe.Create(self);
   modifyframe.Parent:=self;
   modifyframe.Visible:=false;
@@ -216,10 +211,14 @@ begin
   // ѕри передаче хендла в класс cUInterface он подв€зываетс€ дл€ прорисовки окна
   // и дл€ отлавливани€ wm_message.
   g_UI:=cUI.Create(Handle,extractfiledir(application.ExeName)+'\files\resources.ini');
-  m_fileMng:=cFileMng.Create(ExtractFileDir(Application.ExeName)+'\files\Main.ini',MainMenu1,
-                             FileMngName,TestRecentFiles);
-  m_HelpMng:=cFileMng.Create(ExtractFileDir(Application.ExeName)+'\files\HelpFiles.ini',MainMenu1,
-                             HelpFiles,TestRecentFiles);
+  m_fileMng:=cFileMng.Create(ExtractFileDir(Application.ExeName)+'\files\Main.ini',
+                             MainMenu1,
+                             FileMngName,
+                             TestRecentFiles);
+  m_HelpMng:=cFileMng.Create(ExtractFileDir(Application.ExeName)+'\files\HelpFiles.ini',
+                             MainMenu1,
+                             HelpFiles,
+                             TestRecentFiles);
   //CreateFrames;
   //SceneTreeViewFrame1.GetUI(g_UI);
   //TransformToolsFrame1.Lincscene(g_UI);

@@ -431,16 +431,21 @@ begin
   p8:=b.hi;
 
   pos:=position;
-  // вектор в обратную сторону от взгляда
-  view:=getSight;
-  NormalizeVectorP3(view);
+
   // середина диагонали
   c.x:=0.5*(b.hi.x+b.lo.x);
   c.y:=0.5*(b.hi.y+b.lo.y);
   c.z:=0.5*(b.hi.z+b.lo.z);
-  // отступ из центра вдоль вектора взгляда камеры
+  // вектор сдвига из камеры в мишень
+  sc:=subVector(c, pos);
+  dist:=VectorLength(sc);
+  // вектор в обратную сторону от взгляда
+  view:=scalevectorp3(-dist,getSight);
+  // Координаты камеры
+  // точка куда надо перенести камеру, чтобы сохранить ее ориентацию,
+  // но смотреть в центр объема
   sc:=SummVectorP3(c, view);
-  insidebox:=insideBox3d(pos, b.lo,b.hi);
+  insidebox:=insideBox3d(sc, b.lo,b.hi);
   if insidebox then
   begin
 
@@ -449,7 +454,7 @@ begin
   begin
 
   end;
-  cross:=lineCrossBound(b.lo, b.hi, c, sc, poly);
+  cross:=lineCrossBound(b.lo, b.hi, pos, c, poly);
   dist:=0;
   // определяем угол между отрезками L1 = (cross, boundPoint) и L2 = (newPos, cross) (при этом newpos сонаправлен с вектором взгляда)
   c:=p1;

@@ -63,6 +63,7 @@ type
     procedure FrameMouseEnter(Sender: TObject);
     procedure GroupBox1MouseEnter(Sender: TObject);
     procedure MoovXSpinEditChange(Sender: TObject);
+    procedure CtrlViewFrame1SpeedZoomClick(Sender: TObject);
   private
     updatePos:boolean;
     procedure GetObjPos;
@@ -261,6 +262,12 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TTransformToolsFrame.CtrlViewFrame1SpeedZoomClick(Sender: TObject);
+begin
+  CtrlViewFrame1.SpeedZoomClick(Sender);
+
 end;
 
 procedure TTransformToolsFrame.DecTimeClick(Sender: TObject);

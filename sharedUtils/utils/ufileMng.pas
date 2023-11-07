@@ -30,7 +30,8 @@ uses Windows,  SysUtils, Forms, Classes,Menus,shellapi, dialogs, inifiles;
     procedure OnOpenClick(sender:tobject);
     // проверяет все подменю item-а на наличие меню с названием menuname
     // в параметр menu возвращается найденное подменю
-    function CheckMenuItem(item:TMenuItem;var menu:tmenuitem):boolean;
+    function CheckMenuItem(item:TMenuItem;
+                           var menu:tmenuitem):boolean;
     // Ищет в подменю переданое в качестве параметра сабитем с именем 'Recently opened files'
     // и добавляет в него сабитемы с названиями файла
     // у каждого добавленного сабитема процедура onClick делает кликнуты итем первым в списке
@@ -39,7 +40,11 @@ uses Windows,  SysUtils, Forms, Classes,Menus,shellapi, dialogs, inifiles;
     // Узнать имя кликнутого итема
     function GetClickItem:string;
     // Добавить имя файла в список строк
-    constructor Create(Filename:string;var menu:TMainMenu;name:string; testProc:testFunction);
+    constructor Create(Filename:string;
+                      var menu:TMainMenu;
+                      // подменю куда цепляем
+                      name:string;
+                      testProc:testFunction);
     // Добавить имя файла в список строк
     destructor Destroy;
     // Добавить имя файла в список строк
@@ -133,7 +138,7 @@ begin
     if item.Items[i].Caption=menuname then
     begin
       result:=true;
-      menu:=item;
+      menu:=item.Items[i];
       exit;
     end;
     subitem:=item.Items[i];
@@ -152,7 +157,10 @@ begin
   m_RecentFiles.Destroy;
 end;
 
-constructor cFileMng.Create(filename:string;var menu:TMainMenu;name:string;testproc:testFunction);
+constructor cFileMng.Create(filename:string;
+                            var menu:TMainMenu;
+                            name:string;
+                            testproc:testFunction);
 var
   i, num:integer;
   f:tinifile;
@@ -187,11 +195,12 @@ begin
   begin
     f:=TIniFile.Create(filename);
     num:=0;
-    str:=f.ReadString(menu.name,'Path'+inttostr(num),'');
+    str:=f.ReadString(menuitem.name,'Path'+inttostr(num),'');
     while str<>'' do
     begin
       m_RecentFiles.Add(str);
       inc(num);
+      str:=f.ReadString(menuitem.name,'Path'+inttostr(num),'');
     end;
     f.Destroy;
   end;

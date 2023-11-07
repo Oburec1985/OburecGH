@@ -1,7 +1,7 @@
 object TransformToolsFrame: TTransformToolsFrame
   Left = 0
   Top = 0
-  Width = 925
+  Width = 609
   Height = 129
   Align = alBottom
   Color = clMoneyGreen
@@ -196,7 +196,10 @@ object TransformToolsFrame: TTransformToolsFrame
           ExplicitTop = 0
         end
         inherited SpeedZoom: TSpeedButton
+          Left = 88
           Top = 0
+          OnClick = CtrlViewFrame1SpeedZoomClick
+          ExplicitLeft = 88
           ExplicitTop = 0
         end
       end
