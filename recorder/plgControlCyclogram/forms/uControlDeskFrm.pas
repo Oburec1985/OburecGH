@@ -112,6 +112,8 @@ type
     procedure ControlPropSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure PageControl1Change(Sender: TObject);
+    procedure TableModeSGKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     // Режим подтверждения перехода
     m_CurControl: ccontrolobj;
@@ -1739,13 +1741,20 @@ begin
   end;
 end;
 
+procedure TControlDeskFrm.TableModeSGKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if key=VK_RETURN then
+    ModeTabSGEditCell(m_row, m_col, m_val);
+end;
+
 procedure TControlDeskFrm.TableModeSGSetEditText(Sender: TObject;
   ACol, ARow: integer; const Value: string);
 begin
   m_val := Value;
   m_col := ACol;
   m_row := ARow;
-  ModeTabSGEditCell(m_row, m_col, m_val);
+  //ModeTabSGEditCell(m_row, m_col, m_val);
 end;
 
 procedure TControlDeskFrm.ModeTabSGEditCell(r, c: integer; val: string);

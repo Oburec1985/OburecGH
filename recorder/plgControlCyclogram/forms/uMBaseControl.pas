@@ -397,29 +397,32 @@ begin
       setComboBoxItem(objFolder.name, ObjNameCB);
     end;
   end;
-  if ObjTypeCB.text<>'' then
+  if objFolder<>nil then
   begin
-    // присваиваем свойства
-    objtype:=cbasemeafolder(m_base.m_BaseFolder).getObjType(ObjTypeCB.text);
-    if objtype=nil then
+    if ObjTypeCB.text<>'' then
     begin
-      objtype:=cobjtype.create(objFolder);
-      objtype.name:=ObjTypeCB.text;
-      objtype.owner:=cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes;
-      cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes.AddObject(objtype.name, objtype);
-      ObjTypeCB.Items.AddObject(objtype.name, objtype);
-      cObjFolder(objFolder).ObjType:=objtype.name;
+      // присваиваем свойства
+      objtype:=cbasemeafolder(m_base.m_BaseFolder).getObjType(ObjTypeCB.text);
+      if objtype=nil then
+      begin
+        objtype:=cobjtype.create(objFolder);
+        objtype.name:=ObjTypeCB.text;
+        objtype.owner:=cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes;
+        cBaseMeaFolder(m_base.m_BaseFolder).m_ObjTypes.AddObject(objtype.name, objtype);
+        ObjTypeCB.Items.AddObject(objtype.name, objtype);
+        cObjFolder(objFolder).ObjType:=objtype.name;
+      end
+      else
+      begin
+        cObjFolder(objFolder).setObjType(ObjTypeCB.text, true, objtype.proplist);
+      end;
     end
     else
     begin
-      cObjFolder(objFolder).setObjType(ObjTypeCB.text, true, objtype.proplist);
-    end;
-  end
-  else
-  begin
-    if objFolder<>nil then
-    begin
-      cObjFolder(objFolder).setObjType(ObjTypeCB.text, true, nil);
+      if objFolder<>nil then
+      begin
+        cObjFolder(objFolder).setObjType(ObjTypeCB.text, true, nil);
+      end;
     end;
   end;
   if objFolder = nil then
@@ -1801,8 +1804,8 @@ begin
     for i := 0 to prList.Count - 1 do
     begin
       str:=prList.Strings[i];
-      sg.Cells[c_col_propName, o.PropCount+i] := str;
-      sg.Cells[c_col_propVal, o.PropCount+i] := t.getval(str);
+      sg.Cells[c_col_propName, o.PropCount+i+1] := str;
+      sg.Cells[c_col_propVal, o.PropCount+i+1] := t.getval(str);
     end;
     prList.Destroy;
     sg.Cells[c_col_propName, sg.rowcount - 1] := '';
