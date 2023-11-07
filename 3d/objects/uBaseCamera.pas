@@ -289,7 +289,7 @@ begin
  end;
 end;
 
-
+// вариант ниже более здравый но не дописан. этот - работает криво
 {procedure cBaseCamera.ZoomBound(b:tbound);
 var
   // центр баундбокса
@@ -434,6 +434,7 @@ begin
   // вектор в обратную сторону от взгляда
   view:=getSight;
   NormalizeVectorP3(view);
+  // середина диагонали
   c.x:=0.5*(b.hi.x+b.lo.x);
   c.y:=0.5*(b.hi.y+b.lo.y);
   c.z:=0.5*(b.hi.z+b.lo.z);

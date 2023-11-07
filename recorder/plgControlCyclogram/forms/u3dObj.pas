@@ -2,7 +2,6 @@ unit u3dObj;
 
 interface
 
-
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, Grids, ExtCtrls, uRecBasicFactory, inifiles,
@@ -15,6 +14,7 @@ uses
   ImgList, usetlist, upage,
   uCommonTypes,
   OpenGL,
+  uShape,
   math,
   uObject, uNodeObject,
   uHardwareMath,
@@ -25,6 +25,8 @@ uses
   ComObj,
   uBaseGlComponent,
   uBasecamera,
+  uMeasureBase,
+  uMBaseControl,
   uSceneMng;
 
 type
@@ -33,9 +35,10 @@ type
     ToolsGB: TGroupBox;
     procedure GLInitScene(Sender: TObject);
   private
-    m_TransformToolsFrame:TTrfrmToolsFrame;
-    fshowtools:boolean;
+    m_TransformToolsFrame: TTrfrmToolsFrame;
+    fshowtools: boolean;
   public
+    m_ScenePath, m_SceneName: string;
     airplane: cnodeobject;
   private
     // инициация сцены
@@ -48,16 +51,18 @@ type
     procedure updateData;
     procedure doStart;
   protected
-    procedure SetShowTools(b:boolean);
+    procedure SetShowTools(b: boolean);
     procedure WndProc(var Message: TMessage); override;
   public
+    function MBasePath:string;
+    function BuildPath: string;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
     constructor create(Aowner: tcomponent); override;
     destructor destroy; override;
     procedure linkFrames;
   public
-    property ShowTools:boolean read fShowTools write SetShowTools;
+    property ShowTools: boolean read fshowtools write SetShowTools;
   end;
 
   IObjFrm3d = class(cRecBasicIFrm)
@@ -77,8 +82,8 @@ type
     procedure destroyevents;
   public
     procedure doAfterLoad; override;
-    procedure doUpdateData(sender: tobject);
-    procedure doChangeRState(sender: tobject);
+    procedure doUpdateData(Sender: TObject);
+    procedure doChangeRState(Sender: TObject);
     procedure doStart;
   public
     constructor create;
@@ -86,7 +91,6 @@ type
     function doCreateForm: cRecBasicIFrm; override;
     procedure doSetDefSize(var PSize: SIZE); override;
   end;
-
 
 var
   ObjFrm3d: TObjFrm3d;
@@ -100,29 +104,50 @@ const
 
   // ctrl+shift+G
   // ['{C7E9BC06-C4A6-4466-A2F0-C1FCDF4EEBB6}']
-  IID_3DFRM: TGuid = (D1: $C7E9BC06; D2: $C4A6; D3: $4466; D4: ($A2, $F0, $C1, $FC, $DF, $4E, $EB, $B6));
-
+  IID_3DFRM: TGuid = (D1: $C7E9BC06; D2: $C4A6; D3: $4466;
+    D4: ($A2, $F0, $C1, $FC, $DF, $4E, $EB, $B6));
 
 implementation
 
 {$R *.dfm}
 
 { TObjFrm3d }
-procedure TObjFrm3d.LinkFrames;
+procedure TObjFrm3d.linkFrames;
 begin
   // линкуем фрейм
-  m_TransformToolsFrame:=TTrfrmToolsFrame.Create(ToolsGB);
-  m_TransformToolsFrame.Align:=alClient;
-  m_TransformToolsFrame.Parent :=ToolsGB;
-  m_TransformToolsFrame.lincScene(gl.mUI);
+  m_TransformToolsFrame := TTrfrmToolsFrame.create(ToolsGB);
+  m_TransformToolsFrame.Align := alClient;
+  m_TransformToolsFrame.Parent := ToolsGB;
+  m_TransformToolsFrame.lincScene(GL.mUI);
 end;
 
-
+function TObjFrm3d.BuildPath: string;
+var
+  o: cObjFolder;
+  t: cTestFolder;
+  f, path: string;
+begin
+  if g_MBaseControl <> nil then
+  begin
+    o := g_MBaseControl.GetSelectObj;
+    t := g_MBaseControl.GetSelectTest;
+    if o <> nil then
+    begin
+      path := MBasePath;
+      if o.ObjType <> '' then
+      begin
+        path := path + '\3dTypes' + '\' + o.ObjType + '\';
+        f := path + o.ObjType + '.obr';
+        result := f;
+      end;
+    end;
+  end;
+end;
 
 constructor TObjFrm3d.create(Aowner: tcomponent);
 begin
   inherited;
-  GL.OnRBtn:=RBtnClick;
+  GL.OnRBtn := RBtnClick;
 end;
 
 procedure TObjFrm3d.createevents;
@@ -132,7 +157,6 @@ end;
 
 destructor TObjFrm3d.destroy;
 begin
-
   inherited;
 end;
 
@@ -148,56 +172,79 @@ end;
 
 procedure TObjFrm3d.initComponents;
 var
-  l:clight;
-  c:cbasecamera;
+  l: clight;
+  c: cbasecamera;
 begin
-  if GL.mUI<>nil then
+  if GL.mUI <> nil then
   begin
-    gl.mUI.scene.LoadFile_Obr('airplane.OBR');
-    airplane:=cnodeobject(gl.mUI.scene.getobj('line001'));
-    airplane.name:='Airplane';
-    //t:=cglturbine.create(GL);
-    //t.Name:='glTurbine';
-    //t.node.RotateNodeGlobal(0,-45,0);
-    l:=GL.mUI.scene.lights.getlight(0);
-    if l<>nil then
-      l.position:=p3(1.2,1.5,-2.5);
-    c:=gl.mUI.m_RenderScene.Getactivecamera;
-    //c.target:=t.node.Node;
+    GL.mUI.scene.LoadFile_Obr(m_SceneName);
+    airplane := cnodeobject(GL.mUI.scene.getobj('line001'));
+    airplane.name := 'Airplane';
+    // t:=cglturbine.create(GL);
+    // t.Name:='glTurbine';
+    // t.node.RotateNodeGlobal(0,-45,0);
+    l := GL.mUI.scene.lights.getlight(0);
+    if l <> nil then
+      l.position := p3(1.2, 1.5, -2.5);
+    c := GL.mUI.m_RenderScene.Getactivecamera;
+    c.target:=airplane.Node;
+    if airplane is cshapeobj then
+    begin
+      c.ZoomBound(cshapeobj(airplane).bound);
+      c.MoveNodeLocal(0, 0, -50);
+    end;
     //c.rotateAroundTarget(c.target,p3(1,0,0),-45);
     //t.getstage(0).bladecount:=45;
-    c.target:=nil;
+    c.target := nil;
   end;
 end;
-
 
 procedure TObjFrm3d.GLInitScene(Sender: TObject);
 begin
   initComponents;
-  LinkFrames;
+  linkFrames;
 end;
 
 procedure TObjFrm3d.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  basepath:string;
 begin
   inherited;
+  m_ScenePath := a_pIni.ReadString(str, 'ScenePath', '');
+  m_SceneName := a_pIni.ReadString(str, 'SceneName', '');
+  basepath:=MBasePath+'\3dTypes\'+'resources.ini';
+  if fileexists(basepath) then
+  begin
+    GL.resources:=basepath;
+  end;
+end;
+
+function TObjFrm3d.MBasePath: string;
+begin
+  result:='';
+  if g_mbase<>nil then
+  begin
+    result:=g_mbase.m_BaseFolder.Absolutepath
+  end;
 end;
 
 procedure TObjFrm3d.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 begin
   inherited;
-
+  a_pIni.WriteString(str, 'ScenePath', m_ScenePath);
+  a_pIni.WriteString(str, 'SceneName', m_SceneName);
 end;
 
 procedure TObjFrm3d.SetShowTools(b: boolean);
 begin
-  fshowtools:=b;
+  fshowtools := b;
 end;
 
 procedure TObjFrm3d.RBtnClick(Sender: TObject);
 begin
-  if ObjFrm3dEdit <> nil then
+  if g_ObjFrm3dEdit <> nil then
   begin
-    ObjFrm3dEdit.Edit(self);
+    g_ObjFrm3dEdit.Edit(self);
   end;
 end;
 
@@ -213,22 +260,22 @@ end;
 
 procedure TObjFrm3d.WndProc(var Message: TMessage);
 var
-  str:string;
+  str: string;
 begin
-  str:=inttostr(message.msg);
+  str := inttostr(message.msg);
   case message.msg of
     WM_PARENTNOTIFY:
-    begin
-      case message.WParam of
-        WM_RBUTTONUP:
-        begin
-          //CPoint pnt(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-          //::ClientToScreen(m_pForm->getHWND(),&pnt);
-          //ScreenToClient(&pnt);
-          //return SendMessage(wParam,MK_RBUTTON,MAKELPARAM(pnt.x,pnt.y));
+      begin
+        case message.WParam of
+          WM_RBUTTONUP:
+            begin
+              // CPoint pnt(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+              // ::ClientToScreen(m_pForm->getHWND(),&pnt);
+              // ScreenToClient(&pnt);
+              // return SendMessage(wParam,MK_RBUTTON,MAKELPARAM(pnt.x,pnt.y));
+            end;
         end;
       end;
-    end;
   end;
   inherited;
 end;
@@ -257,7 +304,6 @@ begin
 end;
 
 { cObjFrm3dFactory }
-
 constructor cObjFrm3dFactory.create;
 begin
   m_lRefCount := 1;
@@ -277,7 +323,8 @@ end;
 procedure cObjFrm3dFactory.createevents;
 begin
   addplgevent('c3DFrm_doUpdateData', c_RUpdateData, doUpdateData);
-  addplgevent('c3DFrmFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
+  addplgevent('c3DFrmFactory_doChangeRState', c_RC_DoChangeRCState,
+    doChangeRState);
 end;
 
 procedure cObjFrm3dFactory.destroyevents;
@@ -289,10 +336,9 @@ end;
 procedure cObjFrm3dFactory.doAfterLoad;
 begin
   inherited;
-
 end;
 
-procedure cObjFrm3dFactory.doChangeRState(sender: tobject);
+procedure cObjFrm3dFactory.doChangeRState(Sender: TObject);
 begin
   case GetRCStateChange of
     RSt_Init:
@@ -364,7 +410,7 @@ begin
   end;
 end;
 
-procedure cObjFrm3dFactory.doUpdateData(sender: tobject);
+procedure cObjFrm3dFactory.doUpdateData(Sender: TObject);
 var
   i: integer;
   Frm: TRecFrm;

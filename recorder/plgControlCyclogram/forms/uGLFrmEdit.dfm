@@ -16,6 +16,20 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     324)
   PixelsPerInch = 96
   TextHeight = 13
+  object Label1: TLabel
+    Left = 8
+    Top = 37
+    Width = 66
+    Height = 13
+    Caption = #1055#1091#1090#1100' '#1082' '#1089#1094#1077#1085#1077
+  end
+  object Label2: TLabel
+    Left = 8
+    Top = 85
+    Width = 53
+    Height = 13
+    Caption = #1048#1084#1103' '#1089#1094#1077#1085#1099
+  end
   object ShowTrfrmToolsCB: TCheckBox
     Left = 8
     Top = 8
@@ -43,5 +57,31 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
     ModalResult = 1
     TabOrder = 2
+  end
+  object SceneFolderEdit: TEdit
+    Left = 8
+    Top = 56
+    Width = 297
+    Height = 21
+    TabOrder = 3
+  end
+  object SceneNameEdit: TEdit
+    Left = 8
+    Top = 104
+    Width = 297
+    Height = 21
+    TabOrder = 4
+  end
+  object PathBtn: TButton
+    Left = 328
+    Top = 102
+    Width = 75
+    Height = 25
+    Caption = #1042#1099#1073#1088#1072#1090#1100
+    TabOrder = 5
+  end
+  object OpenDialog1: TOpenDialog
+    Left = 352
+    Top = 48
   end
 end

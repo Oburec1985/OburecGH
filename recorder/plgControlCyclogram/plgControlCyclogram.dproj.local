@@ -186,8 +186,6 @@
     <File Path="..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas"/>
     <File Path="..\..\sharedUtils\uCommonTypes.pas"/>
     <File Path="forms"/>
-    <File Path="forms\u3dObj.pas"/>
-    <File Path="forms\u3dObj.dfm"/>
     <File Path="forms\uAHCorrectionFrm.pas"/>
     <File Path="forms\uAHCorrectionFrm.dfm"/>
     <File Path="forms\uAlgAddFrm.pas"/>
@@ -238,10 +236,6 @@
     <File Path="forms\uGenSignalsEditFrm.dfm"/>
     <File Path="forms\uGenSignalsFrm.pas"/>
     <File Path="forms\uGenSignalsFrm.dfm"/>
-    <File Path="forms\uGLFrmEdit.pas"/>
-    <File Path="forms\uGLFrmEdit.dfm"/>
-    <File Path="forms\uGrmsFrame.pas"/>
-    <File Path="forms\uGrmsFrame.dfm"/>
     <File Path="forms\uGrmsSrcFrame.pas"/>
     <File Path="forms\uGrmsSrcFrame.dfm"/>
     <File Path="forms\uIntegralAlgFrame.pas"/>
@@ -268,6 +262,8 @@
     <File Path="forms\uPhaseFrame.dfm"/>
     <File Path="forms\uPolarGraph.pas"/>
     <File Path="forms\uPolarGraph.dfm"/>
+    <File Path="forms\uGrmsFrame.pas"/>
+    <File Path="forms\uGrmsFrame.dfm"/>
     <File Path="forms\uSpmChart.pas"/>
     <File Path="forms\uSpmChart.dfm"/>
     <File Path="forms\uSpmChartEdit.pas"/>
@@ -288,6 +284,10 @@
     <File Path="forms\uTrigFrame.dfm"/>
     <File Path="forms\uTrigsFrm.pas"/>
     <File Path="forms\uTrigsFrm.dfm"/>
+    <File Path="forms\u3dObj.pas"/>
+    <File Path="forms\u3dObj.dfm"/>
+    <File Path="forms\uGLFrmEdit.pas"/>
+    <File Path="forms\uGLFrmEdit.dfm"/>
     <File Path="forms\uSRSFrm.pas"/>
     <File Path="forms\uSRSFrm.dfm"/>
     <File Path="forms\uEditSrsFrm.pas"/>

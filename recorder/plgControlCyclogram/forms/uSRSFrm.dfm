@@ -241,7 +241,7 @@ object SRSFrm: TSRSFrm
     end
     object Point_No: TLabel
       Left = 4
-      Top = 286
+      Top = 370
       Width = 43
       Height = 13
       Margins.Left = 2
@@ -493,7 +493,7 @@ object SRSFrm: TSRSFrm
     end
     object PointIE: TIntEdit
       Left = 4
-      Top = 303
+      Top = 387
       Width = 109
       Height = 21
       Margins.Left = 2
@@ -505,7 +505,7 @@ object SRSFrm: TSRSFrm
     end
     object PointSE: TSpinButton
       Left = 117
-      Top = 303
+      Top = 387
       Width = 15
       Height = 19
       Margins.Left = 2
@@ -576,6 +576,24 @@ object SRSFrm: TSRSFrm
       Caption = #1057#1082#1088#1099#1090#1100
       TabOrder = 9
       OnClick = hideCBClick
+    end
+    object EstimatorRG: TRadioGroup
+      Left = 4
+      Top = 262
+      Width = 60
+      Height = 75
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
+      Caption = #1054#1094#1077#1085#1082#1072
+      ItemIndex = 0
+      Items.Strings = (
+        'h0'
+        'h1'
+        'h2')
+      TabOrder = 10
+      OnClick = EstimatorRGClick
     end
   end
 end

@@ -507,8 +507,8 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
       OnClick = ZoomBtnClick
     end
     object SpeedZoom: TSpeedButton
-      Left = 81
-      Top = 8
+      Left = 88
+      Top = 10
       Width = 26
       Height = 26
       AllowAllUp = True
