@@ -2,47 +2,38 @@ object DownloadRegsFrm: TDownloadRegsFrm
   Left = 0
   Top = 0
   Caption = #1047#1072#1087#1080#1089#1100' '#1088#1077#1075#1080#1089#1090#1088#1072#1094#1080#1081' '#1074' '#1073#1072#1079#1091
-  ClientHeight = 414
-  ClientWidth = 617
+  ClientHeight = 552
+  ClientWidth = 823
   Color = clBtnFace
-  Constraints.MinWidth = 317
+  Constraints.MinWidth = 423
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -10
+  Font.Height = -13
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 96
-  TextHeight = 12
+  PixelsPerInch = 120
+  TextHeight = 16
   object ActionPanel: TPanel
     Left = 0
-    Top = 320
-    Width = 617
-    Height = 94
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Top = 427
+    Width = 823
+    Height = 125
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 324
     DesignSize = (
-      617
-      94)
+      823
+      125)
     object DownloadBtn: TButton
-      Left = 440
-      Top = 4
-      Width = 112
-      Height = 26
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 587
+      Top = 5
+      Width = 149
+      Height = 35
       Anchors = [akTop, akRight]
       Caption = #1055#1077#1088#1077#1087#1080#1089#1072#1090#1100
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -12
+      Font.Height = -15
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
@@ -50,18 +41,14 @@ object DownloadRegsFrm: TDownloadRegsFrm
       OnClick = DownloadBtnClick
     end
     object DelBatRegsBtn: TButton
-      Left = 6
-      Top = 5
-      Width = 187
-      Height = 26
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 8
+      Top = 7
+      Width = 249
+      Height = 34
       Caption = #1059#1076#1072#1083#1080#1090#1100' '#1085#1077#1089#1091#1097#1077#1089#1090#1074#1091#1102#1097#1080#1077
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -12
+      Font.Height = -15
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
@@ -69,15 +56,19 @@ object DownloadRegsFrm: TDownloadRegsFrm
       OnClick = DelBatRegsBtnClick
     end
     object RenameCB: TCheckBox
-      Left = 440
-      Top = 48
-      Width = 169
-      Height = 17
+      Left = 587
+      Top = 64
+      Width = 225
+      Height = 23
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1055#1077#1088#1077#1080#1084#1077#1085#1086#1074#1072#1090#1100' '#1079#1072#1084#1077#1088#1099
       Checked = True
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -12
+      Font.Height = -15
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
@@ -85,15 +76,19 @@ object DownloadRegsFrm: TDownloadRegsFrm
       TabOrder = 2
     end
     object UncheckAll: TCheckBox
-      Left = 6
-      Top = 36
-      Width = 169
-      Height = 17
+      Left = 8
+      Top = 48
+      Width = 177
+      Height = 23
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1057#1085#1103#1090#1100' '#1074#1099#1076#1077#1083#1077#1085#1085#1099#1077
       Checked = True
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -12
+      Font.Height = -15
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
@@ -105,31 +100,27 @@ object DownloadRegsFrm: TDownloadRegsFrm
   object RegsLV: TBtnListView
     Left = 0
     Top = 0
-    Width = 617
-    Height = 320
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 823
+    Height = 427
     Align = alClient
     Checkboxes = True
     Columns = <
       item
         Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1094#1080#1103
-        Width = 38
+        Width = 51
       end
       item
         Caption = #1055#1091#1090#1100
         MinWidth = 400
-        Width = 400
+        Width = 533
       end
       item
         Caption = #1054#1073#1098#1077#1082#1090
-        Width = 38
+        Width = 51
       end
       item
         Caption = #1048#1089#1087#1099#1090#1072#1085#1080#1077
-        Width = 38
+        Width = 51
       end>
     RowSelect = True
     ParentShowHint = False

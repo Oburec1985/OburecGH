@@ -230,15 +230,11 @@ var
   I: Integer;
   li:TListItem;
 begin
-  if not UncheckAll.Checked then
+  for I := 0 to regsLV.items.Count - 1 do
   begin
-    for I := 0 to regsLV.items.Count - 1 do
-    begin
-      li:=RegsLV.Items[i];
-      li.Checked:=false;
-    end;
+    li:=RegsLV.Items[i];
+    li.Checked:=UncheckAll.Checked;
   end;
-
 end;
 
 end.
