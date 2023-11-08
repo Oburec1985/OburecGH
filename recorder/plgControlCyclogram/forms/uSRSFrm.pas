@@ -470,11 +470,16 @@ begin
     hideCB.Checked:=false;
     s:=t.Cfg.GetSrs(i);
     sd:=s.m_shockList.getBlock(shockie.intnum);
+    if sd=nil then
+      exit;
     td:=t.m_shockList.getBlock(shockie.intnum);
     s.m_shockList.delBlock(sd);
     t.m_shockList.delBlock(td);
-    t.evalCoh(hideInd);
-    t.evalFRF(hideInd, m_estimator);
+    if t.m_shockList.Count>0 then
+    begin
+      t.evalCoh(hideInd);
+      t.evalFRF(hideInd, m_estimator);
+    end;
   end;
   ShockCountE.Text:=inttostr(t.m_shockList.Count);
   fdelBtn:=false;
@@ -628,6 +633,7 @@ var
   s:cSRSres;
   I: Integer;
   fr:frect;
+  bfrf:boolean;
 begin
   pageT.activeAxis.clear;
   pageSpm.activeAxis.clear;
@@ -648,6 +654,8 @@ begin
     t.lineSpm:=l;
     t.lineSpm.dx:=c.fspmdx;
     t.lineSpm.name:=t.name+'_spm';
+    bfrf:=c.typeres=c_FRF;
+    l.visible:=not bfrf;
 
     c:=t.Cfg;
     for I := 0 to c.SRSCount - 1 do
@@ -666,6 +674,7 @@ begin
       s.lineSpm:=l;
       s.lineSpm.dx:=c.fspmdx;
       s.lineSpm.name:=s.name+'_spm';
+      l.visible:=not bfrf;
 
       l:= cBuffTrend1d.create;
       l.color := ColorArray[i+1];
@@ -673,6 +682,7 @@ begin
       pageSpm.activeAxis.AddChild(l);
       s.linefrf:=l;
       s.linefrf.name:=s.name+'_frf';
+      l.visible:=bfrf;
 
       l:= cBuffTrend1d.create;
       l.color := ColorArray[i+2];
@@ -1412,17 +1422,14 @@ begin
       end;
       td:=m_shockList.getBlock(k);
       sd:=s.m_shockList.getBlock(k);
-      case estimator of
-        0: // без использования фазы   y/x. x - тахо
-        begin
-          for j := 0 to Cfg.fHalfFft - 1 do
-          begin
-            v1:=sd.m_mod[j];
-            v2:=td.m_mod[j];
-            sd.m_frf[j]:=v1/v2;
-            s.m_frf[j]:=sd.m_frf[j]+s.m_frf[j];
-          end;
-        end;
+      // без использования фазы   y/x. x - тахо
+      for j := 0 to Cfg.fHalfFft - 1 do
+      begin
+        v1:=sd.m_mod[j];
+        v2:=td.m_mod[j];
+        sd.m_frf[j]:=v1/v2;
+        if estimator=0 then
+          s.m_frf[j]:=sd.m_frf[j]+s.m_frf[j];
       end;
     end;
     // усредняем
@@ -1588,6 +1595,7 @@ var
   I: Integer;
   s:cSRSres;
   b:boolean;
+  ltaho:cSRSTaho;
 begin
   ftypeRes:=t;
   for I := 0 to srsCount - 1 do
@@ -1598,6 +1606,14 @@ begin
       s.lineSpm.visible:=not b;
     if s.linefrf<>nil then
       s.linefrf.visible:=b;
+  end;
+  if taho<>nil then
+  begin
+    ltaho:= cSRSTaho(taho);
+    if ltaho.lineSpm<>nil then
+    begin
+      ltaho.lineSpm.visible:= not b;
+    end;
   end;
 end;
 
@@ -1984,9 +2000,10 @@ begin
     begin
       Delete(i);
       db.Destroy;
-      if m_LastBlock>=i then
+      if m_LastBlock>i then
       begin
         dec(m_LastBlock);
+        exit;
       end
       else
       begin
@@ -2050,7 +2067,9 @@ end;
 
 function TDataBlockList.getBlock(i: integer): TDataBlock;
 begin
-  result:=TDataBlock(items[i]);
+  result:=nil;
+  if i<Count then
+    result:=TDataBlock(items[i]);
 end;
 
 function TDataBlockList.getLastBlock: TDataBlock;

@@ -40,7 +40,6 @@ object SRSFrm: TSRSFrm
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
-    ExplicitLeft = 572
     object ShockCountLabel: TLabel
       Left = 8
       Top = 21

@@ -772,6 +772,8 @@ begin
     fOnStopRec(Sender);
   end;
   t := TMBaseControl(Sender).GetSelectTest;
+  if t=nil then exit;
+
   lastcfg := cXmlFolder(t.getChildrenByCaption('Lastcfg'));
   if lastcfg = nil then
   begin
@@ -1616,6 +1618,8 @@ begin
     if lemptyreg = nil then
     begin
       t := GetSelectTest;
+      if t=nil then exit;
+
       emtyname := extractfilename(createRegName(t.Absolutepath, t));
     end
     else
