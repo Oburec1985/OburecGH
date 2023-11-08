@@ -1,7 +1,7 @@
 object TransformToolsFrame: TTransformToolsFrame
   Left = 0
   Top = 0
-  Width = 609
+  Width = 614
   Height = 129
   Align = alBottom
   Color = clMoneyGreen

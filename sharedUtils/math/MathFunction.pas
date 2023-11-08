@@ -43,6 +43,7 @@ function GetAngel(x1, y1, x2, y2: integer): single; overload;
 function GetCos(x1, y1, x2, y2: integer): single;
 // --------------- Сравнение массивов -------------------------------------------
 Procedure DrawAxis;
+// косинус угла
 function VectorCos(const v1, v2: Vector3f): GLFloat; overload;
 function VectorCos(const v1, v2: point3): GLFloat; overload;
 function CompareArray(const v1, v2: array of single): boolean;
