@@ -190,7 +190,7 @@ begin
     c.target:=airplane.Node;
     if airplane is cshapeobj then
     begin
-      c.ZoomBound(cshapeobj(airplane).bound);
+      //c.ZoomBound(cshapeobj(airplane).bound);
       c.MoveNodeLocal(0, 0, -50);
     end;
     //c.rotateAroundTarget(c.target,p3(1,0,0),-45);
@@ -213,6 +213,7 @@ begin
   m_ScenePath := a_pIni.ReadString(str, 'ScenePath', '');
   m_SceneName := a_pIni.ReadString(str, 'SceneName', '');
   basepath:=MBasePath+'\3dTypes\'+'resources.ini';
+
   if fileexists(basepath) then
   begin
     GL.resources:=basepath;

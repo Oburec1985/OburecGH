@@ -21,6 +21,7 @@ uses
   uMeasureBase,
   uMBaseControl,
   shellapi,
+  uPathMng,
   math, uAxis,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons;
 
@@ -260,6 +261,7 @@ type
     m_saveT0:boolean;
     // последний полученный блок тахо
     m_lastTahoBlock:TDataBlock;
+    m_lastMDBfile:string;
   protected
     fdelBtn:boolean; // нажали кнопку удалить удар
   public
@@ -436,6 +438,10 @@ begin
       begin
         path:= path+'\FrfTypes'+'\'+o.ObjType;
         f:=path+'\frf.mera';
+        if m_lastMDBfile<>'' then
+        begin
+          f:=m_lastMDBfile;
+        end;
         if fileexists(f) then
           ShellExecute(0,nil,pwidechar(f),nil,nil, SW_HIDE);
       end;
@@ -496,6 +502,7 @@ var
   I: Integer;
   s:cSRSres;
 begin
+  m_lastMDBfile:='';
   m_lastTahoBlock:=nil;
   ready:=false;
   t:=getTaho;
@@ -804,6 +811,7 @@ begin
         t.fDataCount:=pcount;
         t.line.AddPoints(TDoubleArray(t.m_T1data.p), pcount);
         t.line.flength:=pcount;
+        /// дополнять нулями
         if pcount>c.m_fftCount then
         begin
           BuildSpm(t);
@@ -1078,6 +1086,32 @@ begin
   closefile(f);
 end;
 
+procedure savedata(fname: string; sname:string; s:cSRSres); overload;
+var
+  lname: string;
+  f: file;
+  i: integer;
+begin
+  lname := extractfiledir(fname) + '\'+'AvFRF_'+sname+'.dat';
+  AssignFile(f, lname);
+  Rewrite(f, 1);
+  BlockWrite(f, s.m_frf[0], sizeof(double) * length(s.m_frf));
+  closefile(f);
+end;
+
+procedure savedataCoh(fld: string; sname:string; s:cSRSres); overload;
+var
+  lname: string;
+  f: file;
+  i: integer;
+begin
+  lname := fld + sname+'.dat';
+  AssignFile(f, lname);
+  Rewrite(f, 1);
+  BlockWrite(f, s.m_shockList.m_coh[0], sizeof(double) * length(s.m_shockList.m_coh));
+  closefile(f);
+end;
+
 procedure saveHeader( ifile:tinifile; freq:double; start:double; ident:string);
 begin
   WriteFloatToIniMera(ifile, ident, 'Freq', freq);
@@ -1151,6 +1185,16 @@ begin
         saveData(f, ident,tb, true);
       end;
     end;
+
+    ident:='AvFRF_'+s.m_tag.tagname;
+    //ident := extractfiledir(ident) + '\'+'AvFRF_'+s.m_tag.tagname+'.dat';
+    saveHeader(ifile,1/c.fspmdx, 0,ident);
+    saveData(f, s.m_tag.tagname, s);
+
+    ident:='Coh_'+s.m_tag.tagname;
+    saveHeader(ifile,1/c.fspmdx, 0,ident);
+    dir := extractfiledir(g_SRSFactory.m_merafile) + '\Shock\';
+    savedataCoh(dir, ident, s);
   end;
   ifile.destroy;
 end;
@@ -1389,7 +1433,7 @@ begin
     end
     else // число блоков в T и S разбежалось
     begin
-      showmessage('taho:'+ inttostr(shockCount)+' s:'+inttostr(s.m_shockList.Count));
+      //showmessage('taho:'+ inttostr(shockCount)+' s:'+inttostr(s.m_shockList.Count));
     end;
   end;
 end;
@@ -1759,6 +1803,31 @@ begin
   end;
 end;
 
+function getSubNameFromFolder(fld:string):string;
+var
+  I, l: Integer;
+  str:string;
+begin
+  result:='';
+  l:=length(fld);
+  for I := length(fld) downto 1 do
+  begin
+    if fld[i]='\' then
+    begin
+      str:=Copy(fld, i+1, l-i-1);
+      if isValue(str) then
+      begin
+        l:=i;
+      end
+      else
+      begin
+        result:=str;
+        exit;
+      end;
+    end;
+  end;
+end;
+
 procedure TSRSFrm.SaveMdbBtnClick(Sender: TObject);
 var
   o:cObjFolder;
@@ -1767,10 +1836,11 @@ var
 
   i, j, num: integer;
   ifile: TIniFile;
-  f,ident,dir, sname: string;
+  f,ident,dir, sname, last, subname: string;
   c:cSpmCfg;
   taho:cSRSTaho;
   s: cSRSres;
+  b:boolean;
 begin
   if g_MBaseControl<>nil then
   begin
@@ -1784,9 +1854,41 @@ begin
       begin
         path:= path+'\FrfTypes'+'\'+o.ObjType;
         ForceDirectories(path);
-        ifile := TIniFile.create(path+'\frf.mera');
+
+
         taho:=getTaho;
         c:=taho.Cfg;
+        s := c.GetSrs(0);
+        if s=nil then exit;
+        sname:=s.m_tag.tagname+'_p№'+'0'+'_frf.dat';
+        f:=path+'\'+sname;
+        b:=false;
+        while isOpen(f) do
+        begin
+          subname:=getSubNameFromFolder(path);
+          if not b then
+          begin
+            if subname<>'Sub' then
+            begin
+              path:=path+'\Sub';
+              b:=true;
+            end;
+          end
+          else
+          begin
+            path:=modname(path, false, last);
+          end;
+          f:=path+'\'+sname;
+        end;
+        if b then
+        begin
+          ForceDirectories(path);
+        end;
+        sname:='frf.mera';
+        f:=path+'\'+sname;
+        m_lastMDBfile:=f;
+
+        ifile := TIniFile.create(f);
         for i := 0 to c.SRSCount - 1 do
         begin
           s := c.GetSrs(i);

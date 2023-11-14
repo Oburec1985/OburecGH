@@ -42,7 +42,8 @@ function SummP2(p0, p1: point2): point2;
 function DecP2(p0, p1: point2): point2;
 function DecP2d(p0, p1: point2d): point2d;
 // модифицирует имя. (приделывает на конце или вначале приставку _xxx с номером объекта)
-function ModName(name: string; incrementStart:boolean): string;
+function ModName(name: string; incrementStart:boolean): string;overload;
+function ModName(name: string; incrementStart:boolean; var numstr:string): string;overload;
 // поиск подстроки начная с позиции fromPos
 function TailPos(const S, SubStr: AnsiString; fromPos: integer): integer;
 // выделить подстроку. Просматривает строчку начиная с позиции p пока не наткнется
@@ -1202,10 +1203,18 @@ end;
 
 function ModName(name: string; incrementStart:boolean): string;
 var
+  numstr: string;
+begin
+  result:=ModName(name, incrementStart, numstr);
+end;
+
+function ModName(name: string; incrementStart:boolean; var numstr:string): string;overload;
+var
   i, num, numlen: integer;
   S, base, last: string;
   j: Integer;
 begin
+  numstr:='';
   if not incrementStart then
   begin
     i := findCharPosFromEnd('_', name);
@@ -1227,17 +1236,20 @@ begin
           s:=s+'0';
         end;
         result := name +s+ last;
+        numstr:=s+last;
       end
       else
       // если на конце строки НЕ номер
       begin
         result := name + '_001';
+        numstr:='_001';
       end;
     end
     else
     // если имя не содержит "_"
     begin
       result := name + '_001';
+      numstr:='_001';
     end;
   end
   else
@@ -1246,6 +1258,7 @@ begin
     if base='' then
     begin
       result := '001_'+name;
+      numstr:='_001';
     end
     else
     begin
@@ -1261,6 +1274,7 @@ begin
         end;
       end;
       result:=s+last;
+      numstr:=s+last;
     end;
   end;
 end;
