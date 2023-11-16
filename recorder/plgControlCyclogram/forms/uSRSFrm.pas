@@ -22,7 +22,7 @@ uses
   uMBaseControl,
   shellapi,
   uPathMng,
-  math, uAxis,
+  math, uAxis, uDrawObj,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons;
 
 type
@@ -1138,8 +1138,13 @@ var
   s: cSRSres;
   db, tb:tdatablock;
 begin
-  dir := extractfiledir(g_SRSFactory.m_merafile) + '\Shock\';
-  f := dir + trimext(extractfilename(g_SRSFactory.m_merafile)) + '_Shocks.mera';
+  dir := extractfiledir(g_SRSFactory.m_merafile) + '\Shock';
+  f := dir +'\' + trimext(extractfilename(g_SRSFactory.m_merafile)) + '_Shocks.mera';
+  while fileexists(f) do
+  begin
+    dir:=ModName(dir, false);
+    f := dir +'\' + trimext(extractfilename(g_SRSFactory.m_merafile)) + '_Shocks.mera';
+  end;
   g_SRSFactory.m_ShockFile:=f;
   ForceDirectories(dir);
   ifile := TIniFile.create(f);

@@ -3,7 +3,7 @@ object EditSrsFrm: TEditSrsFrm
   Top = 0
   Caption = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1090#1100' '#1085#1072#1089#1090#1088#1086#1082#1080' '#1086#1073#1088#1072#1073#1086#1090#1082#1080' '#1091#1076#1072#1088#1086#1074
   ClientHeight = 444
-  ClientWidth = 830
+  ClientWidth = 836
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -36,7 +36,7 @@ object EditSrsFrm: TEditSrsFrm
     Columns = <>
   end
   inline TagsListFrame1: TTagsListFrame
-    Left = 628
+    Left = 634
     Top = 0
     Width = 202
     Height = 444
@@ -48,19 +48,23 @@ object EditSrsFrm: TEditSrsFrm
       Height = 444
       ExplicitHeight = 444
       inherited ChanNamesPanel: TPanel
+        Width = 158
         Height = 107
         ExplicitHeight = 107
         inherited FilterEdit: TEdit
+          Width = 147
           Height = 21
           ExplicitHeight = 21
         end
         inherited FrmTagPropValueEdit: TEdit
+          Width = 31
           Height = 21
           ExplicitHeight = 21
         end
       end
       inherited TagsLV: TBtnListView
         Top = 122
+        Width = 158
         Height = 320
         ExplicitTop = 122
         ExplicitHeight = 320
@@ -70,28 +74,31 @@ object EditSrsFrm: TEditSrsFrm
   object MainPanel: TPanel
     Left = 161
     Top = 0
-    Width = 467
+    Width = 473
     Height = 444
     Align = alClient
     TabOrder = 2
+    ExplicitWidth = 467
     object Splitter1: TSplitter
       Left = 1
       Top = 119
-      Width = 465
+      Width = 471
       Height = 4
       Cursor = crVSplit
       Align = alTop
       Color = clBackground
       ParentColor = False
+      ExplicitWidth = 465
     end
     object TahoGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 465
+      Width = 471
       Height = 118
       Align = alTop
       Caption = #1058#1088#1080#1075#1075#1077#1088
       TabOrder = 0
+      ExplicitWidth = 465
       object RightShiftLabel: TLabel
         Left = 159
         Top = 65
@@ -156,7 +163,7 @@ object EditSrsFrm: TEditSrsFrm
     object SPMGB: TGroupBox
       Left = 1
       Top = 123
-      Width = 465
+      Width = 471
       Height = 174
       Align = alTop
       Caption = 'SPMGB'
@@ -332,9 +339,9 @@ object EditSrsFrm: TEditSrsFrm
         Text = '0.0'
       end
       object ResTypeRG: TRadioGroup
-        Left = 144
-        Top = 66
-        Width = 233
+        Left = 412
+        Top = 22
+        Width = 48
         Height = 80
         Margins.Left = 2
         Margins.Top = 2
@@ -346,10 +353,11 @@ object EditSrsFrm: TEditSrsFrm
           '- Mag/Phase ('#1040#1084#1087#1083#1080#1090#1091#1076#1072' '#1080' '#1092#1072#1079#1072')'
           '- FRF ('#1055#1077#1088#1077#1076#1072#1090#1086#1095#1085#1072#1103' '#1093#1072#1088#1072#1082#1090#1077#1088#1080#1089#1090#1080#1082#1072')')
         TabOrder = 6
+        Visible = False
       end
       object NullCB: TCheckBox
         Left = 144
-        Top = 151
+        Top = 150
         Width = 128
         Height = 16
         Caption = #1044#1086#1087#1086#1083#1085#1103#1090#1100' '#1085#1091#1083#1103#1084#1080
@@ -364,8 +372,8 @@ object EditSrsFrm: TEditSrsFrm
         Text = '000'
       end
       object EstimatorRG: TRadioGroup
-        Left = 381
-        Top = 66
+        Left = 144
+        Top = 65
         Width = 60
         Height = 80
         Margins.Left = 2
@@ -380,15 +388,34 @@ object EditSrsFrm: TEditSrsFrm
           'h2')
         TabOrder = 9
       end
+      object CorrTahoCB: TCheckBox
+        Left = 209
+        Top = 74
+        Width = 152
+        Height = 16
+        Caption = #1050#1086#1088#1088#1077#1082#1094#1080#1103' '#1074#1086#1079#1076#1077#1081#1089#1090#1074#1080#1103
+        Checked = True
+        State = cbChecked
+        TabOrder = 10
+      end
+      object CorrSCB: TCheckBox
+        Left = 209
+        Top = 96
+        Width = 152
+        Height = 16
+        Caption = #1050#1086#1088#1088#1077#1082#1094#1080#1103' '#1086#1090#1082#1083#1080#1082#1072
+        TabOrder = 11
+      end
     end
     object ChartGB: TGroupBox
       Left = 1
       Top = 297
-      Width = 465
+      Width = 471
       Height = 146
       Align = alClient
       Caption = 'ChartGB'
       TabOrder = 2
+      ExplicitWidth = 465
       object UpdateBtn: TSpeedButton
         Left = 412
         Top = 55

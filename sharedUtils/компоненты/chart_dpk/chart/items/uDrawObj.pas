@@ -159,6 +159,14 @@ type
     property enabled: boolean read fEnabled write SetEnabled;
   end;
 
+ cBoundObj = class(cMoveObj)
+  public
+  protected
+
+  public
+ 
+ end;
+
 const
   c_Page_Img = 1;
   c_Trend_Img = 2;

@@ -63,6 +63,8 @@ type
     Label3: TLabel;
     SaveT0CB: TCheckBox;
     EstimatorRG: TRadioGroup;
+    CorrTahoCB: TCheckBox;
+    CorrSCB: TCheckBox;
     procedure SignalsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
