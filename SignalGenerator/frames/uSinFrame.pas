@@ -197,7 +197,7 @@ begin
   m_s.dsc:=s.dsc+createDsc;
   // удвоенное число pi
   pi2:=2*pi;
-  dt:=1/m_s.ffreqX;
+  dt:=1/m_s.freqx;
   dt2:=dt*dt/2;
   phase:=0;
   w1:=getF(0)*pi2;

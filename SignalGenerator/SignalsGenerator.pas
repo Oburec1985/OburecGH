@@ -7,6 +7,8 @@ uses
   Dialogs, ExtCtrls, StdCtrls, ComCtrls, uBtnListView, DCL_MYOWN, uChart,
   ImgList, uSinFrame, umerasignal, upage, uDrawObj, utrend, uaxis, Menus, uEventList,
   ueventtypes, uLoadSignalForm, uFileMng, uShockFrame, uMeraFile, ubuffsignal,
+  FreeFrmSignal,
+  upoint, uCommonTypes,
   uSignalsUtils;
 
 type
@@ -45,11 +47,14 @@ type
     procedure SaveMenuClick(Sender: TObject);
     procedure TypeCBChange(Sender: TObject);
     procedure SignalsLVClick(Sender: TObject);
+    procedure cChart1SelectPoint(Sender: TObject);
+    procedure cChart1MovePoint(data, subdata: TObject);
   private
     FileMng:cFileMng;
     signals:cMeraFile;
     SinFrame:tsinframe;
     ShockFrame:tShockFrame;
+    FreeFrmSignal:TFreeFrmSignalFrame;
     curSignal:csignal;
     events:cEventList;
   private
@@ -74,7 +79,8 @@ const
 
 implementation
 uses
-  uSrs, uSaveSignalForm;
+  //uSrs,
+  uSaveSignalForm;
 {$R *.dfm}
 
 procedure TGeneratorForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -142,6 +148,36 @@ begin
   end;
 end;
 
+procedure TGeneratorForm.cChart1MovePoint(data, subdata: TObject);
+var
+  index:integer;
+  p1, p2:cbeziepoint;
+  diff:point2;
+begin
+  ctrend(data).FindPoint(cbeziepoint(subdata).point.x,index);
+  if index=0 then
+  begin
+    p1:=cbeziepoint(subdata);
+    p2:=ctrend(data).getPoint(ctrend(data).count-1);
+    p2.y:=p1.y;
+
+    diff.x:=p1.right.x-p1.x;
+    diff.y:=p1.right.y-p1.y;
+
+    p2.left.x:=p2.x-diff.x;
+    p2.left.y:=p2.y-diff.y;
+  end;
+end;
+
+procedure TGeneratorForm.cChart1SelectPoint(Sender: TObject);
+var
+  p:cbeziepoint;
+begin
+  p:=cbeziepoint(sender);
+  FreeFrmSignal.xfe.FloatNum:=p.point.x;
+  FreeFrmSignal.yfe.FloatNum:=p.point.y;
+end;
+
 procedure TGeneratorForm.CreateEvents;
 begin
   events.AddEvent('OnChangeSignalsList',
@@ -158,6 +194,10 @@ begin
   ShockFrame:=tShockFrame.create(self);
   ShockFrame.Parent:=SignalOptSgb;
   ShockFrame.Visible:=false;
+
+  FreeFrmSignal:=tFreeFrmSignalFrame.create(self);
+  FreeFrmSignal.Parent:=SignalOptSgb;
+  FreeFrmSignal.Visible:=false;
 end;
 
 
@@ -180,12 +220,35 @@ begin
 end;
 
 procedure TGeneratorForm.TypeCBChange(Sender: TObject);
+var
+  tr:ctrend;
+  page:cpage;
+  ax:caxis;
 begin
   SinFrame.visible:=false;
   ShockFrame.visible:=false;
+  FreeFrmSignal.visible:=false;
   case typecb.ItemIndex of
     c_sinType:SinFrame.visible:=true;
     c_ShockType:ShockFrame.visible:=true;
+    4:
+    begin
+      FreeFrmSignal.visible:=true;
+      tr:=cChart1.activetrend;
+      if tr=nil then
+      begin
+        tr:=cTrend.create;
+        tr.name:='FreeFrmLine';
+        tr.color:=p3(0,0,1);
+        page:=cpage(cchart1.activePage);
+
+        ax:=page.activeAxis;
+        ax.AddChild(tr);
+        tr.AddPoint(0,0);
+        tr.AddPoint(FreeFrmSignal.LengthFE.FloatNum,1);
+        page.Normalise;
+      end;
+    end;
   end;
 end;
 
@@ -195,12 +258,12 @@ var
   obj:ctrend;
 begin
   result:=cbuffsignal.create;
-  result.ffreqX:=FreqIE.IntNum;
+  result.freqX:=FreqIE.IntNum;
   case typecb.ItemIndex of
     c_sinType:
     begin
       NameEdit.Text:='sinus';
-      result.ffreqX:=freqie.IntNum;
+      result.freqX:=freqie.IntNum;
       SinFrame.CreateSignal(cbuffsignal(result));
     end;
     c_ShockType:
@@ -256,7 +319,7 @@ var
 begin
   if cursignal<>nil then
   begin
-    signal:=EvalSrs(curSignal);
+    //signal:=EvalSrs(curSignal);
     signal.name:=curSignal.name+'_SRS';
     if signal<>nil then
     begin

@@ -110,7 +110,7 @@ begin
     AssignFile(f,dir+s.name+'.dat');
     Rewrite(f,1);
     // если нужна передискретизация
-    if s.ffreqX<>ResFreqIE.IntNum then
+    if s.freqX<>ResFreqIE.IntNum then
     begin
       t:=0;
       while t<s.count do

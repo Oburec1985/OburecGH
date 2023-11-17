@@ -3,82 +3,110 @@ object GeneratorForm: TGeneratorForm
   Top = 0
   Align = alClient
   Caption = #1043#1077#1085#1077#1088#1072#1090#1086#1088' '#1089#1080#1075#1085#1072#1083#1086#1074
-  ClientHeight = 660
-  ClientWidth = 1040
+  ClientHeight = 863
+  ClientWidth = 1360
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   Menu = MainMenu1
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object Splitter1: TSplitter
     Left = 0
-    Top = 81
-    Width = 1040
-    Height = 3
+    Top = 106
+    Width = 1360
+    Height = 4
     Cursor = crVSplit
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alTop
-    ExplicitLeft = 2
-    ExplicitTop = 15
-    ExplicitWidth = 271
   end
   object CommonGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 1040
-    Height = 81
+    Width = 1360
+    Height = 106
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alTop
     Caption = #1054#1089#1085#1086#1074#1085#1099#1077' '#1089#1074#1086#1081#1089#1090#1074#1072
     TabOrder = 0
-    ExplicitWidth = 737
     object NameLabel: TLabel
-      Left = 16
-      Top = 21
-      Width = 62
-      Height = 13
+      Left = 21
+      Top = 27
+      Width = 80
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1048#1084#1103' '#1089#1080#1075#1085#1072#1083#1072
     end
     object FreqLabel: TLabel
-      Left = 192
-      Top = 21
-      Width = 141
-      Height = 13
+      Left = 251
+      Top = 27
+      Width = 179
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1063#1072#1089#1090#1086#1090#1072' '#1076#1080#1089#1082#1088#1077#1090#1080#1079#1072#1094#1080#1080', '#1043#1094
     end
     object TypeLabel: TLabel
-      Left = 367
-      Top = 21
-      Width = 61
-      Height = 13
+      Left = 480
+      Top = 27
+      Width = 79
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1058#1080#1087' '#1089#1080#1075#1085#1072#1083#1072
     end
     object NameEdit: TEdit
-      Left = 16
-      Top = 40
-      Width = 153
-      Height = 21
+      Left = 21
+      Top = 52
+      Width = 200
+      Height = 25
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       TabOrder = 0
       Text = 'NameEdit'
     end
     object FreqIE: TIntEdit
-      Left = 192
-      Top = 40
-      Width = 141
-      Height = 21
+      Left = 251
+      Top = 52
+      Width = 184
+      Height = 25
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       TabOrder = 1
       Text = '2000'
     end
     object TypeCB: TComboBox
-      Left = 367
-      Top = 40
-      Width = 145
-      Height = 21
+      Left = 480
+      Top = 52
+      Width = 190
+      Height = 25
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       TabOrder = 2
       Text = #1057#1080#1085#1091#1089
       OnChange = TypeCBChange
@@ -86,13 +114,18 @@ object GeneratorForm: TGeneratorForm
         #1057#1080#1085#1091#1089
         #1059#1088#1086#1074#1077#1085#1100
         #1064#1091#1084
-        #1059#1076#1072#1088)
+        #1059#1076#1072#1088
+        #1055#1088#1086#1080#1079#1074#1086#1083#1100#1085#1072#1103' '#1092#1086#1088#1084#1072)
     end
     object GenBtn: TButton
-      Left = 682
-      Top = 38
-      Width = 118
-      Height = 25
+      Left = 892
+      Top = 50
+      Width = 154
+      Height = 32
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1057#1075#1077#1085#1077#1088#1080#1090#1100
       TabOrder = 3
       OnClick = GenBtnClick
@@ -100,83 +133,116 @@ object GeneratorForm: TGeneratorForm
   end
   object SignalSpecOptsGB: TGroupBox
     Left = 0
-    Top = 84
-    Width = 1040
-    Height = 576
+    Top = 110
+    Width = 1360
+    Height = 753
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alClient
     Caption = #1044#1086#1087#1086#1083#1085#1080#1090#1077#1083#1100#1085#1099#1077' '#1089#1074#1086#1081#1089#1090#1074#1072
     TabOrder = 1
-    ExplicitWidth = 737
     object Splitter2: TSplitter
       Left = 2
-      Top = 249
-      Width = 1036
-      Height = 4
+      Top = 325
+      Width = 1356
+      Height = 5
       Cursor = crVSplit
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alTop
       ExplicitLeft = 3
-      ExplicitTop = 428
-      ExplicitWidth = 744
+      ExplicitTop = 326
+      ExplicitWidth = 1354
     end
     object PreviewGB: TGroupBox
       Left = 2
-      Top = 253
-      Width = 1036
-      Height = 321
+      Top = 330
+      Width = 1356
+      Height = 421
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alClient
       Caption = 'PreviewGB'
       TabOrder = 0
-      ExplicitWidth = 733
       object cChart1: cChart
         Left = 2
-        Top = 15
-        Width = 1032
-        Height = 304
+        Top = 19
+        Width = 1352
+        Height = 400
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alClient
         Caption = 'cChart1'
         TabOrder = 0
+        OnMovePoint = cChart1MovePoint
+        OnSelectPoint = cChart1SelectPoint
+        allowEditPages = False
         imagelist = ImageList_16
         showTV = True
         showLegend = True
         selectSize = 5
-        ExplicitWidth = 729
       end
     end
     object SignalOptsGB: TGroupBox
       Left = 2
-      Top = 15
-      Width = 1036
-      Height = 234
+      Top = 19
+      Width = 1356
+      Height = 306
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alTop
       Caption = #1058#1080#1087' '#1089#1080#1075#1085#1072#1083#1072
       TabOrder = 1
-      ExplicitWidth = 733
       object Splitter3: TSplitter
-        Left = 754
-        Top = 15
-        Height = 217
+        Left = 988
+        Top = 19
+        Width = 4
+        Height = 285
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alRight
-        ExplicitLeft = 2
-        ExplicitHeight = 409
+        ExplicitLeft = 986
+        ExplicitTop = 20
+        ExplicitHeight = 283
       end
       object SignalsLV: TBtnListView
-        Left = 757
-        Top = 15
-        Width = 277
-        Height = 217
+        Left = 992
+        Top = 19
+        Width = 362
+        Height = 285
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alRight
         Columns = <
           item
             Caption = #8470
+            Width = 65
           end
           item
             Caption = #1048#1084#1103' '#1089#1080#1075#1085#1072#1083#1072
+            Width = 65
           end
           item
             Caption = #1063#1080#1089#1083#1086' '#1090#1086#1095#1077#1082
+            Width = 65
           end
           item
             Caption = #1054#1087#1080#1089#1072#1085#1080#1077
+            Width = 65
           end>
         RowSelect = True
         TabOrder = 0
@@ -187,7 +253,8 @@ object GeneratorForm: TGeneratorForm
         QuoteColumnBtnClick = False
         QuoteColumnDblClick = False
         DrawColorBox = False
-        ExplicitLeft = 454
+        ChangeTextColor = False
+        Editable = False
       end
     end
   end
@@ -195,7 +262,7 @@ object GeneratorForm: TGeneratorForm
     Left = 32
     Top = 248
     Bitmap = {
-      494C010114001800040010001000FFFFFFFFFF00FFFFFFFFFFFFFFFF424D3600
+      494C010114001900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000006000000001002000000000000060
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -991,7 +1058,8 @@ object GeneratorForm: TGeneratorForm
       FFF8C003BFE080018038CFF37FE18001000DC0037FC380010003CFF3FF838001
       801FC003FF078001C03FCFF3FE0F8001C03FC003FE1F8001C03FCFF37C3F8001
       C03FC003783F8001C03FCFF3F85F8001C03FC003B8DF8001C03FC003D3FF8001
-      C07FC003E7BF8001FFFFC003F07F8001}
+      C07FC003E7BF8001FFFFC003F07F800100000000000000000000000000000000
+      000000000000}
   end
   object MainMenu1: TMainMenu
     Left = 32

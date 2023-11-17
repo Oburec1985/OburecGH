@@ -153,7 +153,7 @@ begin
       shock.ind:=shocklist.Count;
       shock.iAmax:=iMax;
       shock.Amax:=aMax;
-      dx:=1/cbuffsignal(cursignal).ffreqX;
+      dx:=1/cbuffsignal(cursignal).freqX;
       if cbuffsignal(s).m_1d then
       begin
         shock.tmax:=shock.iAmax*dx;
@@ -235,7 +235,7 @@ begin
   Shock:=GetShock(ShockIndex);
   SpectrumLength:=trunc((f2-f1)/df);
   result:=cbuffsignal.create;
-  result.ffreqX:=df;
+  result.freqX:=df;
   result.x0:=f1;
   result.capacity:=SpectrumLength;
 
@@ -245,7 +245,7 @@ begin
   ldx:=trunc(df);
   result.x0:=f1;
   // ???
-  dt:=1/signal.ffreqX;
+  dt:=1/signal.freqX;
 
   i1:=Shock.i1;
   i2:=Shock.i2;
@@ -326,13 +326,13 @@ begin
   Shock:=GetShock(ShockIndex);
   wn:=f*2*pi;
 
-  dt:=1/cbuffsignal(signal).ffreqx;
+  dt:=1/cbuffsignal(signal).freqx;
   i1:=Shock.i1;
   i2:=Shock.i2;
 
   result:=cbuffsignal.create;
   cbuffsignal(result).capacity:=i2-i1;
-  cbuffsignal(result).ffreqX:=dt;
+  cbuffsignal(result).freqX:=dt;
 
   e2:=e*e;
   Ai_2:=0;

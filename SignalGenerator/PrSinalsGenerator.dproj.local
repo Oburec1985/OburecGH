@@ -31,5 +31,17 @@
     <Transaction>2012.02.08 17:59:38.281.pas,H:\Oburec\delphi\2011\SignalGenerator\Unit1.pas=H:\Oburec\delphi\2011\sharedUtils\mera\uBuffSignal2d.pas</Transaction>
     <Transaction>2012.02.09 10:59:49.937.pas,H:\Oburec\delphi\2011\sharedUtils\mera\uBuffSignal1d.pas=H:\Oburec\delphi\2011\sharedUtils\mera\uBuffSignal.pas</Transaction>
     <Transaction>2012.02.09 10:59:55.500.pas,H:\Oburec\delphi\2011\sharedUtils\mera\uBuffSignal2d.pas=</Transaction>
+    <Transaction>2023.11.17 18:00:37.462.pas,F:\Oburec\delphi\2011\OburecGH\SignalGenerator\algs\uKoltSRS.pas=</Transaction>
+    <Transaction>2023.11.17 18:00:40.676.pas,F:\Oburec\delphi\2011\OburecGH\SignalGenerator\algs\uPageSRS.pas=</Transaction>
+    <Transaction>2023.11.17 18:00:42.972.pas,F:\Oburec\delphi\2011\OburecGH\SignalGenerator\algs\uSRS.pas=</Transaction>
+    <Transaction>2023.11.17 18:00:51.364.pas,F:\Oburec\delphi\2011\OburecGH\sharedUtils\uBinFile.pas=</Transaction>
+    <Transaction>2023.11.17 18:01:00.560.pas,F:\Oburec\delphi\2011\OburecGH\sharedUtils\utils\uPathMng.pas=</Transaction>
+    <Transaction>2023.11.17 18:01:03.363.pas,F:\Oburec\delphi\2011\OburecGH\sharedUtils\utils\uLogFile.pas=</Transaction>
+    <Transaction>2023.11.17 18:01:06.220.pas,F:\Oburec\delphi\2011\OburecGH\sharedUtils\utils\uCursors.pas=</Transaction>
+    <Transaction>2023.11.17 18:01:08.777.pas,F:\Oburec\delphi\2011\OburecGH\sharedUtils\utils\uComponentServises.pas=</Transaction>
+    <Transaction>2023.11.17 18:04:05.973.pas,F:\Oburec\delphi\2011\OburecGH\sharedUtils\utils\xml\NativeXml.pas=</Transaction>
+    <Transaction>2023.11.17 18:04:07.889.pas,F:\Oburec\delphi\2011\OburecGH\sharedUtils\utils\xml\NativeXmlObjectStorage.pas=</Transaction>
+    <Transaction>2023.11.17 18:14:16.164.pas,F:\Oburec\delphi\2011\OburecGH\SignalGenerator\Unit2.pas=F:\Oburec\delphi\2011\OburecGH\SignalGenerator\frames\FreeFrmSignal.pas</Transaction>
+    <Transaction>2023.11.17 18:14:16.164.dfm,F:\Oburec\delphi\2011\OburecGH\SignalGenerator\Unit2.dfm=F:\Oburec\delphi\2011\OburecGH\SignalGenerator\frames\FreeFrmSignal.dfm</Transaction>
   </Transactions>
 </BorlandProject>

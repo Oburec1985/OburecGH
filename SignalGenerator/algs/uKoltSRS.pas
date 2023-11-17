@@ -31,7 +31,7 @@ begin
   //result.dx:=trunc(df);
   result.x0:=f1;
 
-  dt:=1/signal.ffreqX;
+  dt:=1/signal.freqX;
   i1:=Shock.i1;
   i2:=Shock.i2;
 

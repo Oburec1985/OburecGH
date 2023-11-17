@@ -101,6 +101,7 @@ type
     function getPoint(index: integer): cBeziePoint;
     // добавить точку
     function AddPoint(p: cBeziePoint): tobject; overload;
+    function AddPoint(x,y:single): tobject; overload;
     function AddPoint(p: point2): tobject; overload; override;
     procedure addpoints(p: array of point2; p_count: integer); override;
     procedure addpoints(p: array of point2d; p_count: integer); overload;
@@ -413,6 +414,11 @@ begin
   bp.point := p;
   AddPoint(bp);
   result := bp;
+end;
+
+function cTrend.AddPoint(x,y:single): tobject;
+begin
+  result:=AddPoint(p2(x,y));
 end;
 
 function cTrend.AddPoint(p: cBeziePoint): tobject;

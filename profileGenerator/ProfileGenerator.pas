@@ -288,18 +288,17 @@ end;
 procedure TEditProfileForm.cChart1MovePoint(data, subdata: TObject);
 var
   index:integer;
-  li:tlistitem;
+  p1, p2:cbeziepoint;
 begin
-  if tolerancelv.items.count<>0 then
+  ctrend(data).FindPoint(cbeziepoint(subdata).point.x,index);
+  if index=0 then
   begin
-    ctrend(data).FindPoint(cbeziepoint(subdata).point.x,index);
-    li:=tolerancelv.Items[index];
-    tolerancelv.SetSubItemByColumnName('Частота',
-                floattostr(cbeziepoint(subdata).point.x),li);
-    tolerancelv.SetSubItemByColumnName('Значение',
-                floattostr(cbeziepoint(subdata).point.y),li);
+    p1:=cbeziepoint(subdata);
+    p2:=ctrend(data).getPoint(ctrend(data).count-1);
+    p2.y:=p1.y;
   end;
-  eval;
+  //              floattostr(cbeziepoint(subdata).point.x),li);
+  //              floattostr(cbeziepoint(subdata).point.y),li);
 end;
 
 procedure TEditProfileForm.cChart1SelectPoint(Sender: TObject);

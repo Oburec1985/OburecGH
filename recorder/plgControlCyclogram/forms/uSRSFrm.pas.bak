@@ -1025,7 +1025,6 @@ begin
 
   if c<>nil then
   begin
-    c.m_capacity:=a_pIni.ReadInteger(str, 'ShockCount', 5);
     c.m_fftCount:=a_pIni.ReadInteger(str, 'FFtnum', 32);
     c.m_blockcount:=a_pIni.ReadInteger(str, 'BlockCount', 1);
     c.m_addNulls:=a_pIni.ReadBool(str, 'AddNulls', false);
@@ -1239,7 +1238,6 @@ begin
       a_pIni.WriteBool(str, 'AddNulls', c.m_addNulls);
       a_pIni.WriteInteger(str, 'SigCount', c.SRSCount);
       a_pIni.WriteInteger(str, 'ResType', C.typeRes);
-      a_pIni.WriteInteger(str, 'ShockCount', C.m_capacity);
       for I := 0 to c.SRSCount - 1 do
       begin
         s:=c.GetSrs(i);

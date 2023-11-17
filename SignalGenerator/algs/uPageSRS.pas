@@ -27,7 +27,7 @@ begin
   Shock:=GetShock(ShockIndex);
   i1:=Shock.i1;
   i2:=Shock.i2;
-  dt:=1/signal.ffreqX;
+  dt:=1/signal.freqX;
 
   result:=csignal.create;
   result.capacity:=i2-i1-1;

@@ -31,7 +31,7 @@ implementation
 {$R *.dfm}
 function TShockFrame.createDsc:string;
 begin
-  result:='F='+formatstr(m_s.ffreqX,3)+'/ Длительность=' +formatstr(LengthFE.FloatNum,3)
+  result:='F='+formatstr(m_s.freqx,3)+'/ Длительность=' +formatstr(LengthFE.FloatNum,3)
   +'/ A='+formatstr(AFE.FloatNum,3)+'/ T0='+formatstr(BeforeShockFE.FloatNum,3)+
   '/ T1='+formatstr(AfterShockFE.FloatNum,3);
   dscEdit.text:=result;
@@ -53,9 +53,9 @@ var
   SinFreq:single;
 begin
   m_s:=s;
-  s.capacity:=trunc(s.ffreqX*(lengthfe.FloatNum+BeforeShockFE.FloatNum+AfterShockFE.FloatNum));
+  s.capacity:=trunc(s.freqX*(lengthfe.FloatNum+BeforeShockFE.FloatNum+AfterShockFE.FloatNum));
   s.dsc:=s.dsc+createDsc;
-  dt:=1/s.ffreqX;
+  dt:=1/s.freqX;
   // удвоенное число pi
   pi2:=2*pi;
   t:=0;
