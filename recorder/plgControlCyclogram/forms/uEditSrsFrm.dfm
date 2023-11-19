@@ -42,29 +42,29 @@ object EditSrsFrm: TEditSrsFrm
     Height = 444
     Align = alRight
     TabOrder = 1
-    ExplicitLeft = 628
+    ExplicitLeft = 634
     ExplicitHeight = 444
     inherited FormChannelsGB: TGroupBox
       Height = 444
       ExplicitHeight = 444
       inherited ChanNamesPanel: TPanel
-        Width = 158
         Height = 107
         ExplicitHeight = 107
         inherited FilterEdit: TEdit
           Width = 147
           Height = 21
+          ExplicitWidth = 147
           ExplicitHeight = 21
         end
         inherited FrmTagPropValueEdit: TEdit
           Width = 31
           Height = 21
+          ExplicitWidth = 31
           ExplicitHeight = 21
         end
       end
       inherited TagsLV: TBtnListView
         Top = 122
-        Width = 158
         Height = 320
         ExplicitTop = 122
         ExplicitHeight = 320
@@ -78,7 +78,6 @@ object EditSrsFrm: TEditSrsFrm
     Height = 444
     Align = alClient
     TabOrder = 2
-    ExplicitWidth = 467
     object Splitter1: TSplitter
       Left = 1
       Top = 119
@@ -98,7 +97,6 @@ object EditSrsFrm: TEditSrsFrm
       Align = alTop
       Caption = #1058#1088#1080#1075#1075#1077#1088
       TabOrder = 0
-      ExplicitWidth = 465
       object RightShiftLabel: TLabel
         Left = 159
         Top = 65
@@ -168,8 +166,6 @@ object EditSrsFrm: TEditSrsFrm
       Align = alTop
       Caption = 'SPMGB'
       TabOrder = 1
-      ExplicitLeft = 2
-      ExplicitTop = 125
       object FFTBlockSizeLabel: TLabel
         Left = 8
         Top = 22
@@ -339,9 +335,9 @@ object EditSrsFrm: TEditSrsFrm
         Text = '0.0'
       end
       object ResTypeRG: TRadioGroup
-        Left = 412
+        Left = 408
         Top = 22
-        Width = 48
+        Width = 58
         Height = 80
         Margins.Left = 2
         Margins.Top = 2
@@ -415,9 +411,8 @@ object EditSrsFrm: TEditSrsFrm
       Align = alClient
       Caption = 'ChartGB'
       TabOrder = 2
-      ExplicitWidth = 465
       object UpdateBtn: TSpeedButton
-        Left = 412
+        Left = 417
         Top = 55
         Width = 49
         Height = 37

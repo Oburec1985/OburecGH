@@ -64,6 +64,7 @@ type
     procedure CreateEvents;
     procedure OnChangeCfg(sender:tobject);
     function CreateSignal:csignal;
+    procedure CreateFreeFrmSignal(s:csignal);
   public
 
   end;
@@ -82,6 +83,35 @@ uses
   //uSrs,
   uSaveSignalForm;
 {$R *.dfm}
+
+
+
+
+procedure TGeneratorForm.CreateFreeFrmSignal(s:csignal);
+var
+  i:integer;
+  // текущее время
+  l,t,
+  // приращение времени при данной частоте дискретизации
+  dt:single;
+  tr:cTrend;
+begin
+  tr:=cChart1.activetrend;
+  l:=(tr.boundrect.TopRight.x-tr.boundrect.BottomLeft.x);
+  s.datatype:='r4';
+  s.capacity:=trunc(s.freqX*l);
+  //s.dsc:=s.dsc+createDsc;
+  dt:=1/s.freqX;
+  t:=0;
+  i:=0;
+  // генерим 0 перед ударом
+  while (t<l) and (i<s.capacity) do
+  begin
+    cBuffSignal(s).points1d[i]:=tr.GetY(t);
+    t:=t+dt;
+    inc(i);
+  end;
+end;
 
 procedure TGeneratorForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
@@ -158,6 +188,7 @@ begin
   if index=0 then
   begin
     p1:=cbeziepoint(subdata);
+    p1.x:=0;
     p2:=ctrend(data).getPoint(ctrend(data).count-1);
     p2.y:=p1.y;
 
@@ -166,6 +197,10 @@ begin
 
     p2.left.x:=p2.x-diff.x;
     p2.left.y:=p2.y-diff.y;
+  end;
+  if index=ctrend(data).count-1 then
+  begin
+    FreeFrmSignal.LengthFE.FloatNum:=cbeziepoint(subdata).x;
   end;
 end;
 
@@ -198,6 +233,7 @@ begin
   FreeFrmSignal:=tFreeFrmSignalFrame.create(self);
   FreeFrmSignal.Parent:=SignalOptSgb;
   FreeFrmSignal.Visible:=false;
+  FreeFrmSignal.linc(cChart1);
 end;
 
 
@@ -238,6 +274,7 @@ begin
       if tr=nil then
       begin
         tr:=cTrend.create;
+        tr.enabled:=true; // возможность селектнуть тренд
         tr.name:='FreeFrmLine';
         tr.color:=p3(0,0,1);
         page:=cpage(cchart1.activePage);
@@ -259,6 +296,7 @@ var
 begin
   result:=cbuffsignal.create;
   result.freqX:=FreqIE.IntNum;
+  result.name:=NameEdit.Text;
   case typecb.ItemIndex of
     c_sinType:
     begin
@@ -271,10 +309,15 @@ begin
       NameEdit.Text:='shock';
       ShockFrame.CreateSignal(result);
     end;
+    4:
+    begin
+      NameEdit.Text:='FreeFrmSign';
+      CreateFreeFrmSignal(result);
+    end;
   end;
-  result.name:=NameEdit.Text;
   obj:=GetaActiveTrend;
-  CopyToTrend(obj, result);
+  if typecb.ItemIndex<>4 then
+   CopyToTrend(obj, result);
 end;
 
 procedure TGeneratorForm.showSignalsInLV;

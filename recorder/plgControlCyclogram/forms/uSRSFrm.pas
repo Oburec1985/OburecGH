@@ -22,10 +22,17 @@ uses
   uMBaseControl,
   shellapi,
   uPathMng,
-  math, uAxis, uDrawObj,
+  math, uAxis, uDrawObj, uDoubleCursor,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons;
 
 type
+  TSpmWndFunc = (wnd_no, wnd_rect, wnd_exp, wnd_han);
+
+  TSpmWnd = record
+    wndfunc:TSpmWndFunc;
+    x1,x2:double;
+  end;
+
   cSpmCfg = class;
 
   // структура для хранения удара
@@ -37,24 +44,35 @@ type
 
     m_timeStamp:point2d;
     m_timeInd:integer; // для синхронизации.блок srs хранит индекс блока тахо
-    m_timecapacity:integer;
+    m_timecapacity:integer; // вместимость для осцилограммы
     // размер для m_TimeBlock
     m_TimeArrSize:integer;
-    m_size:integer;
+    m_spmsize:integer;
     m_spm, m_Cxy:TCmxArray_d;
     m_frf,
-    m_mod2,
-    m_mod:TDoubleArray;
+    m_mod2 // спектр амплитуд квадрат
+    :TDoubleArray; // спектр амплитуд
+    // исходный массив данных для расчета удара
     m_TimeBlock:TDoubleArray;
+    // спектр амплитуд.
+    m_mod,
+    // блок данных по которому идет расчет спектра.
+    m_TimeBlockFlt: TAlignDarray;
+    // спектр re_im
+    m_ClxData:TAlignDCmpx;
   protected
   protected
+    procedure prepareData;
     // вычислить амплитуду^2
     procedure evalmod2;
     procedure setsize(s:integer);
     function getsize:integer;
+    function TahoFreq:double;
   public
+    // построить спектр
+    procedure BuildSpm;
     function index:integer;
-    property size:integer read getsize write setsize;
+    property spmsize:integer read getsize write setsize;
   end;
 
   TDataBlockList = class(tlist)
@@ -77,8 +95,8 @@ type
     function getLastBlock(d:TDataBlock):TDataBlock;overload;
     function getPrevBlock(d:TDataBlock):TDataBlock;
     // добавить спектр удара data - TCmxArray_d
-    function addBlock(data:pointer; dsize:integer):TDataBlock;overload;
-    function addBlock(data:pointer; spmMag:tdoublearray; dsize:integer; time:point2d; tb:TDoubleArray; psize:integer):TDataBlock;overload;
+    function addBlock(p_spmsize:integer):TDataBlock;overload;
+    function addBlock(p_spmsize:integer; time:point2d; tb:TDoubleArray; p_timesize:integer):TDataBlock;overload;
     constructor create;
     destructor destroy;
   end;
@@ -87,6 +105,7 @@ type
  // конфигуратор расчета спектра
   cSpmCfg = class
   public
+    m_wnd:TSpmWnd;
     // ограничение по количеству ударов
     m_capacity:integer;
     // FFTplan
@@ -119,6 +138,8 @@ type
     procedure addSRS(s:pointer);
     function GetSrs(i:integer):cSRSres;
     function SRSCount:integer;
+    // частота дискретизации сигнала
+    function Freq:double;
     function name:string;
     property typeres:integer read ftyperes write settyperes;
     constructor create;
@@ -180,13 +201,16 @@ type
     m_T1data: TAlignDarray;
     fDataCount:integer; // количество данных в m_T1data
     // спектр re_im
-    m_T1ClxData:TAlignDCmpx;
+    // m_T1ClxData:TAlignDCmpx;
     // тот же спектр, но амплитуда
-    m_rms: TAlignDarray;
+    // m_rms: TAlignDarray;
     line, lineSpm:cBuffTrend1d;
 
     // список ударов (TDataBlock)
     m_shockList:TDataBlockList;
+    // окно на удар
+    m_corrTaho:boolean;
+    m_corrLen:double;
   private // переменные для обсчета в алгоритме обработки
     v_min, v_max:double;
     f_imin, f_imax, // индексы отсчетов содержащих максимум и минимум в текущем ударе
@@ -268,7 +292,6 @@ type
     function hideInd:integer;
     procedure delCurrentShock;
     PROCEDURE ShowShock(shock: integer);
-    procedure BuildSpm(s:tobject);
     procedure UpdateView;
     procedure updatedata;
     // выделение памяти. происходит при загрузке или смене конфига
@@ -363,7 +386,7 @@ procedure TSRSFrm.addTaho(t: csrstaho);
 begin
   m_tahoList.Add(t);
 end;
-
+{
 procedure TSRSFrm.BuildSpm(s: tobject);
 var
   k,v:double;
@@ -376,7 +399,7 @@ begin
   begin
     c:=cSRSTaho(s).Cfg;
     fft_al_d_sse(TDoubleArray(cSRSTaho(s).m_T1data.p),
-                tCmxArray_d(cSRSTaho(s).m_T1ClxData.p),
+                tCmxArray_d(cSRSTaho(s).m_ClxData.p),
                 cSpmCfg(c).FFTProp);
     // расчет первого спектра
     k := 2 / c.m_fftCount;
@@ -417,7 +440,7 @@ begin
       end;
     end;
   end;
-end;
+end; }
 
 procedure TSRSFrm.CompareBtnClick(Sender: TObject);
 var
@@ -605,8 +628,8 @@ begin
   c.FFTProp.StartInd:=0;
 
   GetMemAlignedArray_d(c.fportionsizei, lt.m_T1data);
-  GetMemAlignedArray_cmpx_d(c.m_fftCount, lt.m_T1ClxData);
-  GetMemAlignedArray_d(c.m_fftCount, lt.m_rms);
+  //GetMemAlignedArray_cmpx_d(c.m_fftCount, lt.m_T1ClxData);
+  //GetMemAlignedArray_d(c.m_fftCount, lt.m_rms);
   lt.lineSpm.dx:=c.fspmdx;
   for I := 0 to c.SRSCount - 1 do
   begin
@@ -648,6 +671,23 @@ begin
   c:=t.getCfg;
   if t<>nil then
   begin
+    if t.m_corrTaho then
+    begin
+      pageT.cursor.visible:=true;
+      pageT.cursor.cursortype:=c_DoubleCursor;
+      pageT.cursor.setx1(0);
+      pageT.cursor.setx2(t.m_corrLen);
+      c.m_wnd.x1:=0;
+      c.m_wnd.x2:=t.m_corrLen;
+    end
+    else
+    begin
+      pageT.cursor.visible:=false;
+      pageT.cursor.cursortype:=c_DoubleCursor;
+      pageT.cursor.setx1(0);
+      pageT.cursor.setx2(t.m_corrLen);
+    end;
+
     l:= cBuffTrend1d.create;
     pageT.activeAxis.AddChild(l);
     l.color := ColorArray[0];
@@ -814,7 +854,6 @@ begin
         /// дополнять нулями
         if pcount>c.m_fftCount then
         begin
-          BuildSpm(t);
           if m_lastTahoBlock<>nil then
           begin
             if m_lastTahoBlock.m_connectedInd=-1 then
@@ -823,12 +862,11 @@ begin
             end;
           end;
           m_lastTahoBlock:=
-          t.m_shockList.addBlock(t.m_T1ClxData.p,
-                                 tdoublearray(t.m_rms.p),
-                                 c.fHalfFft,
+          t.m_shockList.addBlock(c.fHalfFft,
                                  p2d(t.TrigInterval.x,t.TrigInterval.x+pcount/t.m_tag.freq),
                                  TDoubleArray(t.m_T1data.p), pcount);
-          t.lineSpm.AddPoints(TDoubleArray(t.m_rms.p), c.fHalfFft);
+          m_lastTahoBlock.BuildSpm;
+          t.lineSpm.AddPoints(TDoubleArray(m_lastTahoBlock.m_mod), c.fHalfFft);
         end
         else
         begin
@@ -897,16 +935,14 @@ begin
             s.line.AddPoints(TDoubleArray(s.m_T1data.p), pcount);
             s.line.flength:=pcount;
 
-            BuildSpm(s);
             block:=
-            s.m_shockList.addBlock(cSRSres(s).m_T1ClxData.p, // Spm Cmplx
-                                   tdoublearray(s.m_rms.p), // SpmMag
-                                   c.fHalfFft, // SpmSize
+            s.m_shockList.addBlock(c.fHalfFft, // SpmSize
                                    p2d(common_interval.x,common_interval.x+pcount/s.m_tag.freq),// timeStamp
                                    TDoubleArray(s.m_T1data.p), // timeData
                                    pcount); // timeData size
+            block.BuildSpm;
             m_lastTahoBlock.m_connectedInd:=s.m_shockList.m_LastBlock;
-            s.lineSpm.AddPoints(TDoubleArray(s.m_rms.p), c.fHalfFft);
+            s.lineSpm.AddPoints(TDoubleArray(block.m_mod), c.fHalfFft);
             s.m_shockProcessed:=true;
           end;
           t.evalCoh(hideInd);
@@ -1070,13 +1106,13 @@ begin
     lname := extractfiledir(fname) + '\'+'spm_'+sname+'.dat';
     AssignFile(f, lname);
     Rewrite(f, 1);
-    BlockWrite(f, db.m_mod[0], sizeof(double) * db.m_size);
+    BlockWrite(f, db.m_mod[0], sizeof(double) * db.m_spmsize);
     closefile(f);
 
     lname := extractfiledir(fname) + '\'+'frf_'+sname+'.dat';
     AssignFile(f, lname);
     Rewrite(f, 1);
-    BlockWrite(f, db.m_frf[0], sizeof(double) * db.m_size);
+    BlockWrite(f, db.m_frf[0], sizeof(double) * db.m_spmsize);
     closefile(f);
   end;
   // временной блок
@@ -1347,17 +1383,17 @@ begin
   setlength(d1, 1);
   cmx.Re:=-30.25475291;cmx.im:=-82.46784439;
   d1[0]:=cmx;
-  t.m_shockList.addBlock(@d1[0],1);
+  //t.m_shockList.addBlock(@d1[0],1);
   cmx.Re:=14.69077253;cmx.im:=-86.75400644;
   d1[0]:=cmx;
-  t.m_shockList.addBlock(@d1[0],1);
+  //t.m_shockList.addBlock(@d1[0],1);
 
   cmx.Re:=-30.25475291;cmx.im:=-82.46784439;
   d1[0]:=cmx;
-  s.m_shockList.addBlock(d1,1);
+  //s.m_shockList.addBlock(d1,1);
   cmx.Re:=-74.66651386;cmx.im:=45.57920805;
   d1[0]:=cmx;
-  s.m_shockList.addBlock(d1,1);
+  //s.m_shockList.addBlock(d1,1);
 
   setlength(s.m_shockList.m_Cxy, 1);
   setlength(s.m_shockList.m_sxx, 1);
@@ -1624,11 +1660,17 @@ begin
   m_blockcount:=1;
   m_addNulls:=false;
   m_capacity:=5;
+  m_wnd.wndfunc:=wnd_no;
 end;
 
 destructor cSpmCfg.destroy;
 begin
   m_SRSList.Destroy;
+end;
+
+function cSpmCfg.Freq: double;
+begin
+  Result:=cSRSTaho(taho).m_tag.freq;
 end;
 
 function cSpmCfg.GetSrs(i: integer): cSRSres;
@@ -1984,12 +2026,32 @@ end;
 
 { TDataBlock }
 
+procedure TDataBlock.BuildSpm;
+var
+  k,v:double;
+  c:cSpmCfg;
+  t:cSRSTaho;
+  maxT, maxS:double;
+  i, halfNP:integer;
+begin
+  fft_al_d_sse(TDoubleArray(m_TimeBlockFlt.p),
+              tCmxArray_d(m_ClxData.p),
+              cSpmCfg(c).FFTProp);
+  // расчет первого спектра
+  k := 2 / c.m_fftCount;
+  halfNP:=c.m_fftCount shr 1;
+  MULT_SSE_al_cmpx_d(tCmxArray_d(m_ClxData.p), k);
+  evalmod2;
+  EvalSpmMag(tCmxArray_d(m_ClxData.p),
+             TDoubleArray(m_mod.p));
+end;
+
 procedure TDataBlock.evalmod2;
 var
   I: Integer;
   c:TComplex_d;
 begin
-  for I := 0 to m_size - 1 do
+  for I := 0 to m_spmsize - 1 do
   begin
     c:=sopr(m_spm[i]);
     c:=m_spm[i]*c;
@@ -1999,7 +2061,7 @@ end;
 
 function TDataBlock.getsize: integer;
 begin
-  result:=m_size;
+  result:=m_spmsize;
 end;
 
 function TDataBlock.index: integer;
@@ -2019,14 +2081,19 @@ end;
 
 procedure TDataBlock.setsize(s: integer);
 begin
-  m_size:=s;
+  m_spmsize:=s;
   SetLength(m_spm, s);
   SetLength(m_Cxy, s);
   SetLength(m_mod2, s);
 end;
 
+function TDataBlock.TahoFreq: double;
+begin
+  result:=TDataBlockList(m_owner).m_cfg.Freq;
+end;
+
 { TDataBlockList }
-function TDataBlockList.addBlock(data: pointer; dsize: integer):TDataBlock;
+function TDataBlockList.addBlock(p_spmsize: integer):TDataBlock;
 var
   db:TDataBlock;
 begin
@@ -2043,32 +2110,52 @@ begin
   else
   begin
     db:=TDataBlock.Create;
-    db.size:=dsize;
+    db.spmsize:=p_spmsize;
     m_LastBlock:=Add(db);
   end;
-  system.move(TCmxArray_d(data)[0], db.m_spm[0], dsize*sizeof(TComplex_d));
-  db.evalmod2;
+  //system.move(TCmxArray_d(cpx_spm_data)[0], db.m_spm[0], dsize*sizeof(TComplex_d));
+  //db.evalmod2;
   db.m_owner:=Self;
   result:=db;
 end;
 
-function TDataBlockList.addBlock(data: pointer; spmMag:tdoublearray; dsize: integer; time: point2d;
+function TDataBlockList.addBlock(p_spmsize: integer;
+                                 time: point2d; // timestamp
                                  // timeblock
-                                 tb:TDoubleArray; psize:integer):TDataBlock;
+                                 tb:TDoubleArray;
+                                 // размер очередного блока
+                                 p_timesize:integer):TDataBlock;
 begin
-  result:=addBlock(data, dsize);
-  SetLength(result.m_frf, dsize);
-  SetLength(result.m_mod, dsize);
-  system.move(spmMag[0], result.m_mod[0], dsize*sizeof(double));
-
+  result:=addBlock(p_spmsize);
   result.m_timeStamp:=time;
-  if psize>result.m_timecapacity then
+  if p_timesize>result.m_timecapacity then
   begin
-    setlength(result.m_TimeBlock,psize);
-    result.m_timecapacity:=psize;
+    setlength(result.m_TimeBlock,p_timesize);
+    result.m_timecapacity:=p_timesize;
+    GetMemAlignedArray_d(p_timesize, Result.m_TimeBlockFlt);
   end;
-  system.move(tb[0], result.m_TimeBlock[0], psize*sizeof(double));
-  result.m_TimeArrSize:=psize;
+  GetMemAlignedArray_cmpx_d(p_spmsize, Result.m_ClxData);
+  GetMemAlignedArray_d(p_spmsize, Result.m_mod);
+
+  system.move(tb[0], result.m_TimeBlock[0], p_timesize*sizeof(double));
+  result.m_TimeArrSize:=p_timesize;
+  result.prepareData;
+end;
+
+procedure TDataBlock.prepareData;
+var
+  i, n:integer;
+begin
+  system.move(m_TimeBlock[0], m_TimeBlockFlt.p,
+              m_TimeArrSize*sizeof(double));
+  case TDataBlockList(m_owner).m_cfg.m_wnd.wndfunc of
+    wnd_rect:
+    begin
+      i:=round(TDataBlockList(m_owner).m_cfg.m_wnd.x1*TahoFreq);
+      n:=m_TimeArrSize-i;
+      ZeroMemory(TDoubleArray(m_TimeBlockFlt.p), n);
+    end;
+  end;
 end;
 
 procedure TDataBlockList.clearData;
@@ -2154,7 +2241,7 @@ begin
     end;
     s:=getBlock(i);
     t:=TahoShockList.getBlock(i);
-    for j := 0 to s.m_size - 1 do // проход по спектру
+    for j := 0 to s.m_spmsize - 1 do // проход по спектру
     begin
       p1:=s.m_spm[j];
       p2:=Sopr(t.m_spm[j]);
@@ -2166,7 +2253,7 @@ begin
     end;
   end;
   k:=1/(n);
-  for j := 0 to s.m_size - 1 do
+  for j := 0 to s.m_spmsize - 1 do
   begin
     m_coh[j]:=mod2(m_Cxy[j])/(m_sxx[j]*m_syy[j]);
     // делаемсреднюю комплексную передаточную характеристику

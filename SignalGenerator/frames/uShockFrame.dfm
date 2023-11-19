@@ -12,36 +12,36 @@ object ShockFrame: TShockFrame
   object LengthLabel: TLabel
     Left = 8
     Top = 13
-    Width = 135
-    Height = 16
+    Width = 119
+    Height = 13
     Caption = #1044#1083#1080#1090#1077#1083#1100#1085#1086#1089#1090#1100' '#1091#1076#1072#1088#1072', '#1089
   end
   object ALabel: TLabel
     Left = 8
     Top = 59
-    Width = 101
-    Height = 16
+    Width = 90
+    Height = 13
     Caption = #1040#1084#1087#1083#1080#1090#1091#1076#1072' '#1091#1076#1072#1088#1072
   end
   object BeforeShockLabel: TLabel
     Left = 168
     Top = 13
-    Width = 153
-    Height = 16
+    Width = 135
+    Height = 13
     Caption = #1044#1083#1080#1090#1077#1083#1100#1085#1086#1089#1090#1100' '#1076#1086' '#1091#1076#1072#1088#1072', '#1089
   end
   object AfterShockLabel: TLabel
     Left = 168
     Top = 61
-    Width = 173
-    Height = 16
+    Width = 151
+    Height = 13
     Caption = #1044#1083#1080#1090#1077#1083#1100#1085#1086#1089#1090#1100' '#1087#1086#1089#1083#1077' '#1091#1076#1072#1088#1072', '#1089
   end
   object DscLabel: TLabel
     Left = 8
     Top = 161
-    Width = 57
-    Height = 16
+    Width = 49
+    Height = 13
     Anchors = [akLeft, akBottom]
     Caption = #1054#1087#1080#1089#1072#1085#1080#1077
   end

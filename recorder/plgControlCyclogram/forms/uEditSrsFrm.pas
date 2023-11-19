@@ -388,6 +388,8 @@ var
   c:cSpmCfg;
 begin
   t:=GetSelectTaho;
+  t.m_corrTaho:=CorrTahoCB.Checked;
+  t.m_corrLen:=LengthFE.FloatNum*0.7;
   if t=nil then exit;
   t.m_treshold:=ThresholdFE.FloatNum;
   t.m_ShiftLeft:=LeftShiftEdit.FloatNum;
