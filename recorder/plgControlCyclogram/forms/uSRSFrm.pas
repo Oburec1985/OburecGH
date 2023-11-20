@@ -881,7 +881,7 @@ begin
             s.line.flength:=pcount;
 
             block:=
-            s.m_shockList.addBlock(c.fHalfFft, // SpmSize
+            s.m_shockList.addBlock(c.m_fftCount, // SpmSize
                                    p2d(common_interval.x,common_interval.x+pcount/s.m_tag.freq),// timeStamp
                                    TDoubleArray(s.m_T1data.p), // timeData
                                    pcount); // timeData size
@@ -1455,11 +1455,14 @@ begin
       td:=m_shockList.getBlock(k);
       sd:=s.m_shockList.getBlock(k);
       // без использования фазы   y/x. x - тахо
-      for j := 0 to Cfg.fHalfFft - 1 do
+      for j := 0 to c.fHalfFft - 1 do
       begin
         v1:=tdoublearray(sd.m_mod.p)[j];
         v2:=tdoublearray(td.m_mod.p)[j];
-        sd.m_frf[j]:=v1/v2;
+        if v2<>0 then
+          sd.m_frf[j]:=v1/v2
+        else
+          sd.m_frf[j]:=1000000;
         if estimator=0 then
           s.m_frf[j]:=sd.m_frf[j]+s.m_frf[j];
       end;
@@ -1495,8 +1498,8 @@ begin
             end;
             td:=m_shockList.getBlock(k);
             sd:=s.m_shockList.getBlock(k);
-            px:=tCompe(td.m_ClxData.p)[j];
-            py:=sd.m_ClxData.p[j];
+            px:=TCmxArray_d(td.m_ClxData.p)[j];
+            py:=TCmxArray_d(sd.m_ClxData.p)[j];
             cross:=py*sopr(px)+cross;
             v2:=td.m_mod2[j]+v2;
           end;
@@ -1517,8 +1520,9 @@ begin
             end;
             td:=m_shockList.getBlock(k);
             sd:=s.m_shockList.getBlock(k);
-            px:=td.m_spm[j];
-            py:=sd.m_spm[j];
+
+            px:=TCmxArray_d(td.m_ClxData.p)[j];
+            py:=TCmxArray_d(sd.m_ClxData.p)[j];
             cross:=px*sopr(py)+cross;
             v1:=sd.m_mod2[j]+v1;
           end;
@@ -1999,8 +2003,8 @@ var
 begin
   for I := 0 to m_spmsize - 1 do
   begin
-    c:=sopr(m_spm[i]);
-    c:=m_spm[i]*c;
+    c:=sopr(TCmxArray_d(m_ClxData.p)[i]);
+    c:=TCmxArray_d(m_ClxData.p)[i]*c;
     m_mod2[i]:=c.re;
   end;
 end;
@@ -2028,7 +2032,7 @@ end;
 procedure TDataBlock.setsize(s: integer);
 begin
   m_spmsize:=s shr 1;
-  SetLength(m_spm, m_spmsize);
+  SetLength(m_frf, m_spmsize);
   SetLength(m_Cxy, m_spmsize);
   SetLength(m_mod2, m_spmsize);
 end;
@@ -2189,8 +2193,8 @@ begin
     t:=TahoShockList.getBlock(i);
     for j := 0 to s.m_spmsize - 1 do // проход по спектру
     begin
-      p1:=s.m_spm[j];
-      p2:=Sopr(t.m_spm[j]);
+      p1:=TCmxArray_d(s.m_ClxData.p)[j];
+      p2:=Sopr(TCmxArray_d(t.m_ClxData.p)[j]);
       // для H1 Cxy
       s.m_Cxy[j]:=p1*p2;
       m_Cxy[j]:=s.m_Cxy[j]+m_Cxy[j];

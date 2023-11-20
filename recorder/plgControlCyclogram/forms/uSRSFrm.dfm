@@ -2,7 +2,7 @@ object SRSFrm: TSRSFrm
   Left = 0
   Top = 0
   Caption = 'SRSFrm'
-  ClientHeight = 551
+  ClientHeight = 558
   ClientWidth = 940
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,7 +18,7 @@ object SRSFrm: TSRSFrm
     Left = 0
     Top = 0
     Width = 741
-    Height = 551
+    Height = 558
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 0
@@ -27,12 +27,13 @@ object SRSFrm: TSRSFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitHeight = 551
   end
   object RightGB: TGroupBox
     Left = 741
     Top = 0
     Width = 199
-    Height = 551
+    Height = 558
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -40,6 +41,7 @@ object SRSFrm: TSRSFrm
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
+    ExplicitHeight = 551
     object ShockCountLabel: TLabel
       Left = 10
       Top = 27
