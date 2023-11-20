@@ -48,7 +48,7 @@ type
     // размер для m_TimeBlock
     m_TimeArrSize:integer;
     m_spmsize:integer;
-    m_spm, m_Cxy:TCmxArray_d;
+    m_Cxy:TCmxArray_d;
     m_frf,
     m_mod2 // спектр амплитуд квадрат
     :TDoubleArray; // спектр амплитуд
@@ -386,61 +386,6 @@ procedure TSRSFrm.addTaho(t: csrstaho);
 begin
   m_tahoList.Add(t);
 end;
-{
-procedure TSRSFrm.BuildSpm(s: tobject);
-var
-  k,v:double;
-  c:cSpmCfg;
-  t:cSRSTaho;
-  maxT, maxS:double;
-  i, halfNP:integer;
-begin
-  if s is cSRSTaho then
-  begin
-    c:=cSRSTaho(s).Cfg;
-    fft_al_d_sse(TDoubleArray(cSRSTaho(s).m_T1data.p),
-                tCmxArray_d(cSRSTaho(s).m_ClxData.p),
-                cSpmCfg(c).FFTProp);
-    // расчет первого спектра
-    k := 2 / c.m_fftCount;
-    halfNP:=c.m_fftCount shr 1;
-    MULT_SSE_al_cmpx_d(tCmxArray_d(cSRSTaho(s).m_T1ClxData.p), k);
-    EvalSpmMag(tCmxArray_d(cSRSTaho(s).m_T1ClxData.p),
-               TDoubleArray(cSRSTaho(s).m_rms.p));
-  end;
-  if s is cSRSres then
-  begin
-    c:=cSRSres(s).cfg;
-    fft_al_d_sse(TDoubleArray(cSRSres(s).m_T1data.p),
-                tCmxArray_d(cSRSres(s).m_T1ClxData.p),
-                cSpmCfg(c).FFTProp);
-    // расчет первого спектра
-    k := 2 / c.m_fftCount;
-    halfNP:=c.m_fftCount shr 1;
-    MULT_SSE_al_cmpx_d(tCmxArray_d(cSRSres(s).m_T1ClxData.p), k);
-    EvalSpmMag(tCmxArray_d(cSRSres(s).m_T1ClxData.p),
-               TDoubleArray(cSRSres(s).m_rms.p));
-    //if c.m_typeRes=c_FRF then
-    if false then // блок отключен т.к. считаем только усредненную FRF
-    begin
-      t:=getTaho;
-      //maxT:=MaxValue(TDoubleArray(t.m_rms.p));
-      for I := 0 to c.fHalfFft - 1 do
-      begin
-        v:=TDoubleArray(cSRSres(s).m_rms.p)[i];
-        k:=TDoubleArray(t.m_rms.p)[i];
-        //if (k/maxT)<0.1 then
-        //begin
-        //  TDoubleArray(cSRSres(s).m_rms.p)[i]:=0.00001;
-        //end
-        //else
-        //begin
-        TDoubleArray(cSRSres(s).m_rms.p)[i]:=v/k;
-        //end;
-      end;
-    end;
-  end;
-end; }
 
 procedure TSRSFrm.CompareBtnClick(Sender: TObject);
 var
@@ -862,11 +807,11 @@ begin
             end;
           end;
           m_lastTahoBlock:=
-          t.m_shockList.addBlock(c.fHalfFft,
+          t.m_shockList.addBlock(c.m_fftCount,
                                  p2d(t.TrigInterval.x,t.TrigInterval.x+pcount/t.m_tag.freq),
                                  TDoubleArray(t.m_T1data.p), pcount);
           m_lastTahoBlock.BuildSpm;
-          t.lineSpm.AddPoints(TDoubleArray(m_lastTahoBlock.m_mod), c.fHalfFft);
+          t.lineSpm.AddPoints(TDoubleArray(m_lastTahoBlock.m_mod.p), c.fHalfFft);
         end
         else
         begin
@@ -942,7 +887,7 @@ begin
                                    pcount); // timeData size
             block.BuildSpm;
             m_lastTahoBlock.m_connectedInd:=s.m_shockList.m_LastBlock;
-            s.lineSpm.AddPoints(TDoubleArray(block.m_mod), c.fHalfFft);
+            s.lineSpm.AddPoints(TDoubleArray(block.m_mod.p), c.fHalfFft);
             s.m_shockProcessed:=true;
           end;
           t.evalCoh(hideInd);
@@ -1106,7 +1051,7 @@ begin
     lname := extractfiledir(fname) + '\'+'spm_'+sname+'.dat';
     AssignFile(f, lname);
     Rewrite(f, 1);
-    BlockWrite(f, db.m_mod[0], sizeof(double) * db.m_spmsize);
+    BlockWrite(f, db.m_mod.p, sizeof(double) * db.m_spmsize);
     closefile(f);
 
     lname := extractfiledir(fname) + '\'+'frf_'+sname+'.dat';
@@ -1512,8 +1457,8 @@ begin
       // без использования фазы   y/x. x - тахо
       for j := 0 to Cfg.fHalfFft - 1 do
       begin
-        v1:=sd.m_mod[j];
-        v2:=td.m_mod[j];
+        v1:=tdoublearray(sd.m_mod.p)[j];
+        v2:=tdoublearray(td.m_mod.p)[j];
         sd.m_frf[j]:=v1/v2;
         if estimator=0 then
           s.m_frf[j]:=sd.m_frf[j]+s.m_frf[j];
@@ -1550,8 +1495,8 @@ begin
             end;
             td:=m_shockList.getBlock(k);
             sd:=s.m_shockList.getBlock(k);
-            px:=td.m_spm[j];
-            py:=sd.m_spm[j];
+            px:=tCompe(td.m_ClxData.p)[j];
+            py:=sd.m_ClxData.p[j];
             cross:=py*sopr(px)+cross;
             v2:=td.m_mod2[j]+v2;
           end;
@@ -2034,6 +1979,7 @@ var
   maxT, maxS:double;
   i, halfNP:integer;
 begin
+  c:=TDataBlockList(m_owner).m_cfg;
   fft_al_d_sse(TDoubleArray(m_TimeBlockFlt.p),
               tCmxArray_d(m_ClxData.p),
               cSpmCfg(c).FFTProp);
@@ -2081,10 +2027,10 @@ end;
 
 procedure TDataBlock.setsize(s: integer);
 begin
-  m_spmsize:=s;
-  SetLength(m_spm, s);
-  SetLength(m_Cxy, s);
-  SetLength(m_mod2, s);
+  m_spmsize:=s shr 1;
+  SetLength(m_spm, m_spmsize);
+  SetLength(m_Cxy, m_spmsize);
+  SetLength(m_mod2, m_spmsize);
 end;
 
 function TDataBlock.TahoFreq: double;
@@ -2146,7 +2092,7 @@ procedure TDataBlock.prepareData;
 var
   i, n:integer;
 begin
-  system.move(m_TimeBlock[0], m_TimeBlockFlt.p,
+  system.move(m_TimeBlock[0], tdoublearray(m_TimeBlockFlt.p)[0],
               m_TimeArrSize*sizeof(double));
   case TDataBlockList(m_owner).m_cfg.m_wnd.wndfunc of
     wnd_rect:
