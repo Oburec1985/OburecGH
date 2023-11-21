@@ -99,7 +99,7 @@ type
     function GetiSize(Size: point2): tpoint;
     function GetSizeNormalVP(pixSize: tpoint): point2;
     // пересчитать границы
-    procedure EvalBound; virtual; abstract;
+    procedure EvalBound; virtual;
     // получить границу которая охватит весь тренд
     // при этом включает границы вложенных объектов
     function GetBound: frect; // virtual;
@@ -618,6 +618,11 @@ begin
     end;
   end;
   EnterCriticalSection(cs);
+end;
+
+procedure cDrawObj.EvalBound;
+begin
+
 end;
 
 procedure cDrawObj.ExitCS;

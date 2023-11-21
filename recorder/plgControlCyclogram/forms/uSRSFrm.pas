@@ -22,7 +22,8 @@ uses
   uMBaseControl,
   shellapi,
   uPathMng,
-  math, uAxis, uDrawObj, uDoubleCursor,
+  opengl, uSimpleObjects,
+  math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons;
 
 type
@@ -44,6 +45,25 @@ type
     // x1 - точка в которой нормируется значение экспоненты
     // y1 - значение экспоненты для x1
     m_x0, m_x1, m_y1:double;
+  protected
+    // константа для градуировки точки x1 y1
+    // exp(-fA*x1)=y1
+    fA:double;
+  public
+    m_DisplayListName:Cardinal;
+    m_needRecompile:boolean;
+    m_weight:single;
+    m_count:integer;
+  protected
+    // пересчитать границы
+    procedure EvalBound; override;
+    procedure EvalA;
+    procedure compile;
+    procedure drawdata;override;
+    // происходит когда обновился масштаб оси объекта
+    procedure doUpdateWorldSize(sender: tobject); override;
+  public
+    constructor create;override;
   end;
 
 
@@ -292,6 +312,7 @@ type
     m_estimator:integer;
     pageT, pageSpm:cpage;
     axSpm, axCoh:cAxis;
+    m_expWndline:cExpFuncObj;
     // список настроек Тахо
     m_TahoList:TList;
     // spm
@@ -551,6 +572,7 @@ begin
   p.ZoomfRect(r);
   p.Caption:='Oscillogram';
   pageT:=p;
+
   p:=SpmChart.tabs.activeTab.GetPage(1);
   r.BottomLeft.x:=0;
   r.BottomLeft.y:=0;
@@ -665,6 +687,11 @@ begin
     t.lineSpm.name:=t.name+'_spm';
     bfrf:=c.typeres=c_FRF;
     l.visible:=not bfrf;
+
+    m_expWndline:=cExpFuncObj.create;
+    m_expWndline.name:='ExpWndLine';
+    m_expWndline.visible:=true;
+    paget.activeAxis.AddChild(m_expWndline);
 
     c:=t.Cfg;
     for I := 0 to c.SRSCount - 1 do
@@ -2333,6 +2360,126 @@ begin
     end;
     result:=getBlock(i);
   end;
+end;
+
+{ cExpFuncObj }
+procedure cExpFuncObj.compile;
+var
+  a:caxis;
+  p:cpage;
+  i:integer;
+  isize:tpoint;
+  bsize:point2;
+  x, dx, xmax:single;
+begin
+  if m_NeedRecompile then
+  begin
+    a:=caxis(parent);
+    p:=cpage(getpage);
+    if a.lg or p.lgx then
+    begin
+      //CompileLineLg;
+    end
+    else
+    begin
+      a := caxis(parent);
+      p := cpage(getpage);
+      if a.Lg or p.LgX then
+      begin
+        inherited;
+      end
+      else
+      begin
+        // подготовка к компиляции списка
+        m_DisplayListName := glGenLists(1);
+        glNewList(m_DisplayListName, GL_COMPILE);
+        glLineWidth(m_weight);
+        glBegin(GL_LINE_STRIP);
+        xmax:=a.max.x;
+        dx:=(xmax-m_x0)/m_Count;
+        i:=0;
+        x:=i * dx + m_x0;
+        glVertex2f(fA*x, system.Exp(-x));
+        for i := 1 to m_Count - 1 do
+        begin
+          x:=x + dx;
+          glVertex2f(x, system.exp(-x*fa));
+        end;
+        glEnd;
+        // отрисовка ползунка
+        isize.x:=15;
+        isize.y:=15;
+        bsize:=p.PixelSizeToTrend(isize,a);
+        bsize.x:=bsize.x*0.5;
+        bsize.y:=bsize.y*0.5;
+        glBegin(GL_LINE_STRIP);
+        xmax:=a.max.x;
+        glbegin(GL_LINE_STRIP);
+          glvertex2f(m_x1-bsize.x,m_y1-bsize.y);
+          glvertex2f(m_x1-bsize.x,m_y1+bsize.y);
+          glvertex2f(m_x1+bsize.x,m_y1+bsize.y);
+          glvertex2f(m_x1+bsize.x,m_y1-bsize.y);
+          glvertex2f(m_x1-bsize.x,m_y1-bsize.y);
+        glend;
+        glEndList;
+      end;
+    end;
+    m_NeedRecompile:=false;
+  end;
+end;
+
+constructor cExpFuncObj.create;
+begin
+  inherited;
+  color:=Yellow;
+  m_count:=200;
+  fA:=1;
+  m_x0:=0;
+  m_x1:=1;
+  m_weight:=1;
+  m_NeedRecompile:=true;
+  m_DisplayListName:=0;
+  EvalA;
+  EvalBound;
+end;
+
+procedure cExpFuncObj.doUpdateWorldSize(sender: tobject);
+begin
+  inherited;
+  m_NeedRecompile:=true;
+end;
+
+procedure cExpFuncObj.drawdata;
+var
+  oldweight:single;
+begin
+  inherited;
+  if m_NeedRecompile then
+    compile;
+  // GL_LINE_WIDTH_RANGE GL_LINE_WIDTH_GRANULARITY
+  //glGetDoubleV(GL_LINE_WIDTH,@oldweight);
+  glLineWidth(m_weight);
+  glCallList(m_DisplayListName);
+  //glLineWidth(oldweight);
+end;
+
+procedure cExpFuncObj.EvalA;
+var
+  lnx:double;
+begin
+  if m_y1<0.000001 then
+    lnx:=10
+  else
+    lnx:=ln(m_y1);
+  fA:=lnx/m_x1;
+end;
+
+procedure cExpFuncObj.EvalBound;
+begin
+  boundrect.BottomLeft.x:=m_x0;
+  boundrect.TopRight.x:=m_x1;
+  boundrect.BottomLeft.y:=m_y1;
+  boundrect.TopRight.y:=1;
 end;
 
 end.
