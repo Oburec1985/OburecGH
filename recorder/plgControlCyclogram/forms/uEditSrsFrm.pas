@@ -388,13 +388,14 @@ var
   c:cSpmCfg;
 begin
   t:=GetSelectTaho;
+  c:=t.Cfg;
+
   t.m_corrTaho:=CorrTahoCB.Checked;
-  t.m_corrLen:=LengthFE.FloatNum*0.7;
+  c.m_wnd.x2:=LengthFE.FloatNum*0.7;
   if t=nil then exit;
   t.m_treshold:=ThresholdFE.FloatNum;
   t.m_ShiftLeft:=LeftShiftEdit.FloatNum;
   t.m_Length:=LengthFE.FloatNum;
-  c:=t.Cfg;
   c.m_fftCount:=FFTBlockSizeIE.IntNum;
   c.m_blockcount:=ShCountIE.IntNum;
   c.m_addNulls:=NullCB.Checked;

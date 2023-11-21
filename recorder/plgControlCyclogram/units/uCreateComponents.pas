@@ -4,7 +4,7 @@ unit uCreateComponents;
 interface
 
 uses
-  //fastmm4,
+  //stmm4,
   Windows,
   SysUtils,
   activex,

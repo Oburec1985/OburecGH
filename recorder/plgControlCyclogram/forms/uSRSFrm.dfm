@@ -2,7 +2,7 @@ object SRSFrm: TSRSFrm
   Left = 0
   Top = 0
   Caption = 'SRSFrm'
-  ClientHeight = 558
+  ClientHeight = 650
   ClientWidth = 940
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,22 +18,23 @@ object SRSFrm: TSRSFrm
     Left = 0
     Top = 0
     Width = 741
-    Height = 558
+    Height = 650
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 0
     OnDblClick = SpmChartDblClick
+    OnCursorMove = SpmChartCursorMove
     allowEditPages = False
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitHeight = 551
+    ExplicitHeight = 558
   end
   object RightGB: TGroupBox
     Left = 741
     Top = 0
     Width = 199
-    Height = 558
+    Height = 650
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -41,7 +42,7 @@ object SRSFrm: TSRSFrm
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
-    ExplicitHeight = 551
+    ExplicitHeight = 558
     object ShockCountLabel: TLabel
       Left = 10
       Top = 27
@@ -607,6 +608,19 @@ object SRSFrm: TSRSFrm
         'h2')
       TabOrder = 10
       OnClick = EstimatorRGClick
+    end
+    object UseWndFcb: TCheckBox
+      Left = 91
+      Top = 359
+      Width = 62
+      Height = 22
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = #1054#1082#1085#1086
+      TabOrder = 11
+      OnClick = UseWndFcbClick
     end
   end
 end

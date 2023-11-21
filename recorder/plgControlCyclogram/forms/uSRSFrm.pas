@@ -26,7 +26,10 @@ uses
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons;
 
 type
-  TSpmWndFunc = (wnd_no, wnd_rect, wnd_exp, wnd_han);
+  TSpmWndFunc = (wnd_no,
+                 wnd_rect,
+                 wnd_exp, // окно с формулой *e^(-x), где x 0...1 (1 при времени)
+                 wnd_han);
 
   TSpmWnd = record
     wndfunc:TSpmWndFunc;
@@ -34,6 +37,15 @@ type
   end;
 
   cSpmCfg = class;
+
+  cExpFuncObj = class(cMoveObj)
+  public
+    // 0 - точка в которой экс. ф-я=1,
+    // x1 - точка в которой нормируется значение экспоненты
+    // y1 - значение экспоненты для x1
+    m_x0, m_x1, m_y1:double;
+  end;
+
 
   // структура для хранения удара
   TDataBlock = class
@@ -210,7 +222,6 @@ type
     m_shockList:TDataBlockList;
     // окно на удар
     m_corrTaho:boolean;
-    m_corrLen:double;
   private // переменные для обсчета в алгоритме обработки
     v_min, v_max:double;
     f_imin, f_imax, // индексы отсчетов содержащих максимум и минимум в текущем ударе
@@ -232,6 +243,8 @@ type
   public
     property Cfg:cSpmCfg read getcfg write setcfg;
     function CfgCount:integer;
+    // длина корректируемых окном данных
+    function corrLen:double;
     procedure evalCoh(hideInd:integer);
     procedure evalFRF(hideInd:integer; estimator:integer);
     function name:string;
@@ -259,6 +272,7 @@ type
     DelBtn: TButton;
     hideCB: TCheckBox;
     EstimatorRG: TRadioGroup;
+    UseWndFcb: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
     procedure WinPosBtnClick(Sender: TObject);
@@ -270,6 +284,8 @@ type
     procedure DelBtnClick(Sender: TObject);
     procedure hideCBClick(Sender: TObject);
     procedure EstimatorRGClick(Sender: TObject);
+    procedure UseWndFcbClick(Sender: TObject);
+    procedure SpmChartCursorMove(Sender: TObject);
   public
     ready:boolean;
     // h0, h1, h2
@@ -614,6 +630,7 @@ begin
   pageSpm.activeAxis.clear;
   t:=getTaho;
   c:=t.getCfg;
+  UseWndFcb.Checked:=c.m_wnd.wndfunc <> wnd_no;
   if t<>nil then
   begin
     if t.m_corrTaho then
@@ -621,16 +638,16 @@ begin
       pageT.cursor.visible:=true;
       pageT.cursor.cursortype:=c_DoubleCursor;
       pageT.cursor.setx1(0);
-      pageT.cursor.setx2(t.m_corrLen);
+      pageT.cursor.setx2(t.corrLen);
       c.m_wnd.x1:=0;
-      c.m_wnd.x2:=t.m_corrLen;
+      c.m_wnd.x2:=t.corrLen;
     end
     else
     begin
       pageT.cursor.visible:=false;
       pageT.cursor.cursortype:=c_DoubleCursor;
       pageT.cursor.setx1(0);
-      pageT.cursor.setx2(t.m_corrLen);
+      pageT.cursor.setx2(t.corrLen);
     end;
 
     l:= cBuffTrend1d.create;
@@ -810,6 +827,7 @@ begin
           t.m_shockList.addBlock(c.m_fftCount,
                                  p2d(t.TrigInterval.x,t.TrigInterval.x+pcount/t.m_tag.freq),
                                  TDoubleArray(t.m_T1data.p), pcount);
+          m_lastTahoBlock.prepareData;
           m_lastTahoBlock.BuildSpm;
           t.lineSpm.AddPoints(TDoubleArray(m_lastTahoBlock.m_mod.p), c.fHalfFft);
         end
@@ -944,6 +962,46 @@ begin
     end;
   end;
   SpmChart.redraw;
+end;
+
+procedure TSRSFrm.UseWndFcbClick(Sender: TObject);
+var
+  t:cSRSTaho;
+  c:cSpmCfg;
+begin
+  t:=getTaho;
+  c:=t.Cfg;
+  t.m_corrTaho:=UseWndFcb.Checked;
+  if t.m_corrTaho then
+  begin
+    pageT.cursor.visible:=true;
+    pageT.cursor.cursortype:=c_DoubleCursor;
+    pageT.cursor.setx1(0);
+    if t.corrLen<=0 then
+    begin
+      c.m_wnd.x2:=t.m_Length*0.7;
+    end;
+    pageT.cursor.setx2(c.m_wnd.x2);
+    c.m_wnd.x1:=0;
+    c.m_wnd.x2:=c.m_wnd.x2;
+  end
+  else
+  begin
+    pageT.cursor.visible:=false;
+    pageT.cursor.cursortype:=c_DoubleCursor;
+    pageT.cursor.setx1(0);
+    pageT.cursor.setx2(c.m_wnd.x2);
+  end;
+
+
+  if UseWndFcb.Checked then
+  begin
+    c.m_wnd.wndfunc:=wnd_rect;
+  end
+  else
+  begin
+    c.m_wnd.wndfunc:=wnd_no;
+  end;
 end;
 
 procedure TSRSFrm.WinPosBtnClick(Sender: TObject);
@@ -1264,6 +1322,26 @@ begin
 end;
 
 
+procedure TSRSFrm.SpmChartCursorMove(Sender: TObject);
+var
+  t:cSRSTaho;
+  c:cSpmCfg;
+  tb:TDataBlock;
+begin
+  if UseWndFcb.Checked then
+  begin
+    if SpmChart.activePage=pageT then
+    begin
+      t:=getTaho;
+      c:=t.Cfg;
+      c.m_wnd.x2:=pageT.cursor.getx2;
+      tb:=t.m_shockList.getLastBlock;
+      tb.prepareData;
+      t.line.AddPoints(TDoubleArray(tb.m_TimeBlockFlt.p), tb.m_TimeArrSize);
+    end;
+  end;
+end;
+
 procedure TSRSFrm.SpmChartDblClick(Sender: TObject);
 var
   r:frect;
@@ -1376,6 +1454,14 @@ end;
 function cSRSTaho.CfgCount: integer;
 begin
   result:=fSpmCfgList.Count;
+end;
+
+function cSRSTaho.corrLen: double;
+var
+  c:cSpmCfg;
+begin
+  c:=getCfg;
+  result:=c.m_wnd.x2;
 end;
 
 constructor cSRSTaho.create;
@@ -2089,7 +2175,6 @@ begin
 
   system.move(tb[0], result.m_TimeBlock[0], p_timesize*sizeof(double));
   result.m_TimeArrSize:=p_timesize;
-  result.prepareData;
 end;
 
 procedure TDataBlock.prepareData;
@@ -2101,9 +2186,9 @@ begin
   case TDataBlockList(m_owner).m_cfg.m_wnd.wndfunc of
     wnd_rect:
     begin
-      i:=round(TDataBlockList(m_owner).m_cfg.m_wnd.x1*TahoFreq);
+      i:=round(TDataBlockList(m_owner).m_cfg.m_wnd.x2*TahoFreq);
       n:=m_TimeArrSize-i;
-      ZeroMemory(TDoubleArray(m_TimeBlockFlt.p), n);
+      ZeroMemory(@TDoubleArray(m_TimeBlockFlt.p)[i], n*sizeof(double));
     end;
   end;
 end;

@@ -74,8 +74,9 @@ type
     destructor destroy;
   end;
 
-  procedure MultArrays(scales:array of double; cmplx:array of TComplex_d;
-                       var outarray:array of TComplex_d);
+  //procedure MultArrays(const scales:array of double;const cmplx:array of TComplex_d;
+  //                     var outarray:array of TComplex_d);
+  procedure MultArrays(scales:pointer; cmplx:pointer; outarray:pointer);
 
 implementation
 uses
@@ -541,15 +542,16 @@ begin
   result:=m_iFFTPlanList[j];
 end;
 
-procedure MultArrays(scales:array of double;cmplx:array of TComplex_d; var outarray:array of TComplex_d);
+//procedure MultArrays(scales:array of double;const cmplx:array of TComplex_d; var outarray:array of TComplex_d);
+procedure MultArrays(scales:pointer; cmplx:pointer; outarray:pointer);
 var
   i,l:integer;
 begin
-  l := length(scales);
+  l := length(tdoublearray(scales));
   for I := 0 to l - 1 do
   begin
-    outarray[I].re := cmplx[I].re * scales[I];
-    outarray[I].im := cmplx[I].im * scales[I];
+    TCmxArray_d(outarray)[I].re := TCmxArray_d(cmplx)[I].re * tdoublearray(scales)[I];
+    TCmxArray_d(outarray)[I].im := TCmxArray_d(cmplx)[I].im * tdoublearray(scales)[I];
   end;
 end;
 
