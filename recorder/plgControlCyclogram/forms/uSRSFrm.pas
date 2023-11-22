@@ -27,14 +27,12 @@ uses
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons;
 
 type
-  TSpmWndFunc = (wnd_no,
-                 wnd_rect,
-                 wnd_exp, // окно с формулой *e^(-x), где x 0...1 (1 при времени)
-                 wnd_han);
+  TSpmWndFunc = (wnd_no, wnd_rect, wnd_exp, // окно с формулой *e^(-x), где x 0...1 (1 при времени)
+    wnd_han);
 
   TSpmWnd = record
-    wndfunc:TSpmWndFunc;
-    x1,x2:double;
+    wndfunc: TSpmWndFunc;
+    x1, x2: double;
   end;
 
   cSpmCfg = class;
@@ -44,234 +42,234 @@ type
     // 0 - точка в которой экс. ф-я=1,
     // x1 - точка в которой нормируется значение экспоненты
     // y1 - значение экспоненты для x1
-    m_x0, m_x1, m_y1:double;
+    m_x0, m_x1, m_y1: double;
   protected
     // константа для градуировки точки x1 y1
     // exp(-fA*x1)=y1
-    fA:double;
+    fA: double;
     // 0 - не прошел тест 1- точка 0, 2 - точка 1
-    fTestObj:integer;
+    fTestObj: integer;
   public
-    m_DisplayListName:Cardinal;
-    m_needRecompile:boolean;
-    m_weight:single;
-    m_count:integer;
+    m_DisplayListName: Cardinal;
+    m_needRecompile: boolean;
+    m_weight: single;
+    m_count: integer;
   protected
-    function TestObj(p_p2:point2; dist:single):boolean;override;
+    function TestObj(p_p2: point2; dist: single): boolean; override;
     // пересчитать границы
     procedure EvalBound; override;
     procedure EvalA;
     procedure compile;
-    procedure drawdata;override;
+    procedure drawdata; override;
     // происходит когда обновился масштаб оси объекта
     procedure doUpdateWorldSize(sender: tobject); override;
     procedure SetPos(p: point2); override;
   public
-    constructor create;override;
+    function getScale(x:double):double;
+    constructor create; override;
   end;
-
 
   // структура для хранения удара
   TDataBlock = class
   public
-    m_owner:tlist;
+    m_owner: tlist;
     // используется для тахо. Найден блок данных хотя бы по одному датчику
-    m_connectedInd:integer;
+    m_connectedInd: integer;
 
-    m_timeStamp:point2d;
-    m_timeInd:integer; // для синхронизации.блок srs хранит индекс блока тахо
-    m_timecapacity:integer; // вместимость для осцилограммы
+    m_timeStamp: point2d;
+    m_timeInd: integer; // для синхронизации.блок srs хранит индекс блока тахо
+    m_timecapacity: integer; // вместимость для осцилограммы
     // размер для m_TimeBlock
-    m_TimeArrSize:integer;
-    m_spmsize:integer;
-    m_Cxy:TCmxArray_d;
-    m_frf,
-    m_mod2 // спектр амплитуд квадрат
-    :TDoubleArray; // спектр амплитуд
+    m_TimeArrSize: integer;
+    m_spmsize: integer;
+    m_Cxy: TCmxArray_d;
+    m_frf, m_mod2 // спектр амплитуд квадрат
+      : TDoubleArray; // спектр амплитуд
     // исходный массив данных для расчета удара
-    m_TimeBlock:TDoubleArray;
+    m_TimeBlock: TDoubleArray;
     // спектр амплитуд.
     m_mod,
     // блок данных по которому идет расчет спектра.
     m_TimeBlockFlt: TAlignDarray;
     // спектр re_im
-    m_ClxData:TAlignDCmpx;
+    m_ClxData: TAlignDCmpx;
   protected
   protected
     procedure prepareData;
     // вычислить амплитуду^2
     procedure evalmod2;
-    procedure setsize(s:integer);
-    function getsize:integer;
-    function TahoFreq:double;
+    procedure setsize(s: integer);
+    function getsize: integer;
+    function TahoFreq: double;
   public
     // построить спектр
     procedure BuildSpm;
-    function index:integer;
-    property spmsize:integer read getsize write setsize;
+    function index: integer;
+    property spmsize: integer read getsize write setsize;
   end;
 
   TDataBlockList = class(tlist)
   public
     // когеренция по списку ударов
-    m_coh:TDoubleArray;
+    m_coh: TDoubleArray;
     // кроссспектр ударов
     m_Cxy: TCmxArray_d; // Sxy
     m_Sxx, m_Syy: TDoubleArray;
-    m_LastBlock:integer;
-    m_shockCount:integer;// общее число ударов за все время
-    m_cfg:cspmcfg;
+    m_LastBlock: integer;
+    m_shockCount: integer; // общее число ударов за все время
+    m_cfg: cSpmCfg;
   public
     // hideind - номер удара который не учитывается
-    procedure evalCoh(TahoShockList:TDataBlockList; hideind:integer);
+    procedure evalCoh(TahoShockList: TDataBlockList; hideind: integer);
     procedure clearData;
-    procedure delBlock(db:TDataBlock);
-    function getBlock(i:integer):TDataBlock;
-    function getLastBlock:TDataBlock;overload;
-    function getLastBlock(d:TDataBlock):TDataBlock;overload;
-    function getPrevBlock(d:TDataBlock):TDataBlock;
+    procedure delBlock(db: TDataBlock);
+    function getBlock(i: integer): TDataBlock;
+    function getLastBlock: TDataBlock; overload;
+    function getLastBlock(d: TDataBlock): TDataBlock; overload;
+    function getPrevBlock(d: TDataBlock): TDataBlock;
     // добавить спектр удара data - TCmxArray_d
-    function addBlock(p_spmsize:integer):TDataBlock;overload;
-    function addBlock(p_spmsize:integer; time:point2d; tb:TDoubleArray; p_timesize:integer):TDataBlock;overload;
+    function addBlock(p_spmsize: integer): TDataBlock; overload;
+    function addBlock(p_spmsize: integer; time: point2d; tb: TDoubleArray;
+      p_timesize: integer): TDataBlock; overload;
     constructor create;
     destructor destroy;
   end;
 
   cSRSres = class;
- // конфигуратор расчета спектра
+
+  // конфигуратор расчета спектра
   cSpmCfg = class
   public
-    m_wnd:TSpmWnd;
+    m_wnd: TSpmWnd;
     // ограничение по количеству ударов
-    m_capacity:integer;
+    m_capacity: integer;
     // FFTplan
-    FFTProp:TFFTProp;
+    FFTProp: TFFTProp;
     // число точек fft, число блоков по которым идет расчет спектров,
-    m_fftCount,fHalfFft,
-    m_blockcount:integer;
+    m_fftCount, fHalfFft, m_blockcount: integer;
     // добавлять нули
     m_addNulls: boolean;
   private
-    ftypeRes:integer;
+    ftypeRes: integer;
     // разрешение спектра
     fspmdx: double;
     // размер порции по которой идет расчет (length*fs*blockCount) в сек.
     fportionsize: double;
     // размер порции по которой идет расчет в отсчетах
-    fportionsizei:integer;
+    fportionsizei: integer;
     // размер блока по которому идет расчет fft. Если не дополнять нулями то равен m_fftCount*m_blockcount
     // иначе полезных данных в блоке будет m_fftCount*m_blockcount-fNullsPoints
     fOutSize,
     // количество отсчетов дополняемых нулями
-    fNullsPoints:integer;
+    fNullsPoints: integer;
   public
-    taho:tobject;
+    taho: tobject;
     // список сигналов к обработке
-    m_SRSList:Tlist;
+    m_SRSList: tlist;
   protected
-    procedure settyperes(t:integer);
+    procedure settyperes(t: integer);
   public
-    procedure addSRS(s:pointer);
-    function GetSrs(i:integer):cSRSres;
-    function SRSCount:integer;
+    procedure addSRS(s: pointer);
+    function GetSrs(i: integer): cSRSres;
+    function SRSCount: integer;
     // частота дискретизации сигнала
-    function Freq:double;
-    function name:string;
-    property typeres:integer read ftyperes write settyperes;
+    function Freq: double;
+    function name: string;
+    property typeres: integer read ftypeRes write settyperes;
     constructor create;
     destructor destroy;
   end;
 
   cSRSres = class
   public
-    m_tag:ctag;
+    m_tag: ctag;
   public
-    m_SpmDx:double;
-    m_freq:double;
+    m_SpmDx: double;
+    m_freq: double;
     // размер блока для расчета спектра = freq*Numpoints
-    blSize:double;
+    blSize: double;
     // блок данных по которому идет расчет.
     m_T1data: TAlignDarray;
-    fDataCount:integer; // количество данных в m_T1data
+    fDataCount: integer; // количество данных в m_T1data
     // спектр re_im
-    m_T1ClxData:TAlignDCmpx;
+    m_T1ClxData: TAlignDCmpx;
     // спектр амплитуд
-    m_rms:TAlignDarray;
+    m_rms: TAlignDarray;
     // синтезированная передаточная характеристика
-    m_frf,
-    m_phase: TDoubleArray;
-    m_fltFrf:array of integer; // счетчик отбракованных точек
+    m_frf, m_phase: TDoubleArray;
+    m_fltFrf: array of integer; // счетчик отбракованных точек
     line, lineSpm, lineCoh, lineFrf,
     // усредненная Frf
-    lineAvFRF:cBuffTrend1d;
+    lineAvFRF: cBuffTrend1d;
     // список ударов (TDataBlock)
-    m_shockList:TDataBlockList;
+    m_shockList: TDataBlockList;
     // обработан последний удар
-    m_shockProcessed:boolean;
+    m_shockProcessed: boolean;
   private
-    fcfg:cSpmCfg;
-    fComInt:point2d;
+    fcfg: cSpmCfg;
+    fComInt: point2d;
     // найден общий интервал с взведенным тригом
-    //fComInterval:boolean;
-    fComIntervalLen:double;
+    // fComInterval:boolean;
+    fComIntervalLen: double;
   protected
-    procedure setcfg(c:cSpmCfg);
+    procedure setcfg(c: cSpmCfg);
   public
-    property cfg:cSpmCfg read fcfg write setcfg;
-    function name:string;
+    property cfg: cSpmCfg read fcfg write setcfg;
+    function name: string;
     constructor create;
     destructor destroy;
   end;
+
   // выключен/ найден/ завершен TrEnd - накоплены данные для удара на тахо канале
-  TtrigStates = (TrOff, TrRise, TrFall,  TrEnd);
+  TtrigStates = (TrOff, TrRise, TrFall, TrEnd);
 
   cSRSTaho = class
   public
     m_CohTreshold,
     // Амплдитуда для обнаружения события
-    m_treshold:double;
+    m_treshold: double;
     // отступ слева и длительность
-    m_ShiftLeft, m_Length:double;
-    m_tag:ctag;
+    m_ShiftLeft, m_Length: double;
+    m_tag: ctag;
     // блок данных по которому идет расчет. Размер fportionsizei = length*ShockCount
     m_T1data: TAlignDarray;
-    fDataCount:integer; // количество данных в m_T1data
+    fDataCount: integer; // количество данных в m_T1data
     // спектр re_im
     // m_T1ClxData:TAlignDCmpx;
     // тот же спектр, но амплитуда
     // m_rms: TAlignDarray;
-    line, lineSpm:cBuffTrend1d;
+    line, lineSpm: cBuffTrend1d;
 
     // список ударов (TDataBlock)
-    m_shockList:TDataBlockList;
+    m_shockList: TDataBlockList;
     // окно на удар
-    m_corrTaho:boolean;
+    m_corrTaho: boolean;
   private // переменные для обсчета в алгоритме обработки
-    v_min, v_max:double;
+    v_min, v_max: double;
     f_imin, f_imax, // индексы отсчетов содержащих максимум и минимум в текущем ударе
-    f_iEnd:integer; // индекс последнего отсчета в текущем ударе
-    fTrigState:TtrigStates;
+    f_iEnd: integer; // индекс последнего отсчета в текущем ударе
+    fTrigState: TtrigStates;
     // номер удара в серии
-    fShockInd:integer;
+    fShockInd: integer;
     // начало и конец найденного для обработки удара
-    TrigInterval:point2d;
+    TrigInterval: point2d;
   private
-    fSpmCfgList:TList;
+    fSpmCfgList: tlist;
   protected
-    procedure setCfg(c:cSpmCfg);
-    function getCfg(i:integer):cSpmCfg;overload;
-    function GetCfg:cSpmCfg;overload;
+    procedure setcfg(c: cSpmCfg);
+    function getCfg(i: integer): cSpmCfg; overload;
+    function getCfg: cSpmCfg; overload;
     // когда найден новый триггер, старый пора сбросить:
     // например обнулить общий интевал
     procedure resetTrig;
   public
-    property Cfg:cSpmCfg read getcfg write setcfg;
-    function CfgCount:integer;
+    property cfg: cSpmCfg read getCfg write setcfg;
+    function CfgCount: integer;
     // длина корректируемых окном данных
-    function corrLen:double;
-    procedure evalCoh(hideInd:integer);
-    procedure evalFRF(hideInd:integer; estimator:integer);
-    function name:string;
+    function corrLen: double;
+    procedure evalCoh(hideind: integer);
+    procedure evalFRF(hideind: integer; estimator: integer);
+    function name: string;
     constructor create;
     destructor destroy;
   end;
@@ -297,40 +295,40 @@ type
     hideCB: TCheckBox;
     EstimatorRG: TRadioGroup;
     UseWndFcb: TCheckBox;
-    procedure FormCreate(Sender: TObject);
-    procedure SaveBtnClick(Sender: TObject);
-    procedure WinPosBtnClick(Sender: TObject);
-    procedure ShockSBDownClick(Sender: TObject);
-    procedure ShockSBUpClick(Sender: TObject);
-    procedure SpmChartDblClick(Sender: TObject);
-    procedure SaveMdbBtnClick(Sender: TObject);
-    procedure CompareBtnClick(Sender: TObject);
-    procedure DelBtnClick(Sender: TObject);
-    procedure hideCBClick(Sender: TObject);
-    procedure EstimatorRGClick(Sender: TObject);
-    procedure UseWndFcbClick(Sender: TObject);
-    procedure SpmChartCursorMove(Sender: TObject);
+    procedure FormCreate(sender: tobject);
+    procedure SaveBtnClick(sender: tobject);
+    procedure WinPosBtnClick(sender: tobject);
+    procedure ShockSBDownClick(sender: tobject);
+    procedure ShockSBUpClick(sender: tobject);
+    procedure SpmChartDblClick(sender: tobject);
+    procedure SaveMdbBtnClick(sender: tobject);
+    procedure CompareBtnClick(sender: tobject);
+    procedure DelBtnClick(sender: tobject);
+    procedure hideCBClick(sender: tobject);
+    procedure EstimatorRGClick(sender: tobject);
+    procedure UseWndFcbClick(sender: tobject);
+    procedure SpmChartCursorMove(sender: tobject);
   public
-    ready:boolean;
+    ready: boolean;
     // h0, h1, h2
-    m_estimator:integer;
-    pageT, pageSpm:cpage;
-    axSpm, axCoh:cAxis;
-    m_expWndline:cExpFuncObj;
+    m_estimator: integer;
+    pageT, pageSpm: cpage;
+    axSpm, axCoh: cAxis;
+    m_expWndline: cExpFuncObj;
     // список настроек Тахо
-    m_TahoList:TList;
+    m_TahoList: tlist;
     // spm
-    m_lgX, m_lgY:boolean;
-    m_minX, m_maxX:double;
-    m_minY, m_maxY:double;
-    m_saveT0:boolean;
+    m_lgX, m_lgY: boolean;
+    m_minX, m_maxX: double;
+    m_minY, m_maxY: double;
+    m_saveT0: boolean;
     // последний полученный блок тахо
-    m_lastTahoBlock:TDataBlock;
-    m_lastMDBfile:string;
+    m_lastTahoBlock: TDataBlock;
+    m_lastMDBfile: string;
   protected
-    fdelBtn:boolean; // нажали кнопку удалить удар
+    fdelBtn: boolean; // нажали кнопку удалить удар
   public
-    function hideInd:integer;
+    function hideind: integer;
     procedure delCurrentShock;
     PROCEDURE ShowShock(shock: integer);
     procedure UpdateView;
@@ -339,18 +337,18 @@ type
     procedure UpdateBlocks;
     procedure UpdateChart;
     procedure doStart;
-    procedure addTaho(t:csrstaho);
-    function getTaho:csrstaho;
+    procedure addTaho(t: cSRSTaho);
+    function getTaho: cSRSTaho;
     procedure RBtnClick(sender: tobject);
     procedure TestCoh;
   public
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
-    constructor create(Aowner: tcomponent);override;
-    destructor destroy;override;
+    constructor create(Aowner: tcomponent); override;
+    destructor destroy; override;
   end;
 
- ISRSFrm = class(cRecBasicIFrm)
+  ISRSFrm = class(cRecBasicIFrm)
   public
     function doRepaint: boolean; override;
     function doGetName: LPCSTR; override;
@@ -361,8 +359,8 @@ type
   cSRSFactory = class(cRecBasicFactory)
   public
     // merafile
-    m_meraFile:string;
-    m_ShockFile:string;
+    m_meraFile: string;
+    m_ShockFile: string;
   private
     m_counter: integer;
   protected
@@ -381,9 +379,9 @@ type
     function doCreateForm: cRecBasicIFrm; override;
     procedure doSetDefSize(var PSize: SIZE); override;
   end;
-  // копируем данные из тега по интервалу времени time в buf. Возвращает число элементов
-  function copyData(t:ctag; var time:point2d; buf:TAlignDarray):integer;
 
+  // копируем данные из тега по интервалу времени time в buf. Возвращает число элементов
+function copyData(t: ctag; var time: point2d; buf: TAlignDarray): integer;
 
 var
   SRSFrm: TSRSFrm;
@@ -401,58 +399,57 @@ const
   IID_SRS: TGuid = (D1: $54C462CD; D2: $E137; D3: $4BA6;
     D4: ($9F, $B5, $EF, $D9, $2D, $15, $9D, $E5));
 
-
 implementation
+
 uses
   uEditSrsFrm, uCreateComponents;
-
 {$R *.dfm}
 
-function copyData(t:ctag;var time:point2d; buf:TAlignDarray):integer;
+function copyData(t: ctag; var time: point2d; buf: TAlignDarray): integer;
 var
-  int:tpoint;
+  int: tpoint;
 begin
-  int:=t.getIntervalInd(time);
-  if int.x<0 then // если предыстория не успела накопиться
+  int := t.getIntervalInd(time);
+  if int.x < 0 then // если предыстория не успела накопиться
   begin
-    time.x:=time.x-int.x/t.freq;
-    int.x:=0;
+    time.x := time.x - int.x / t.Freq;
+    int.x := 0;
   end;
-  result:=int.Y-int.x;
-  move(t.m_ReadData[int.x], buf.p^, result*sizeof(double));
+  result := int.Y - int.x;
+  move(t.m_ReadData[int.x], buf.p^, result * sizeof(double));
 end;
 
 { TSRSFrm }
-procedure TSRSFrm.addTaho(t: csrstaho);
+procedure TSRSFrm.addTaho(t: cSRSTaho);
 begin
-  m_tahoList.Add(t);
+  m_TahoList.Add(t);
 end;
 
-procedure TSRSFrm.CompareBtnClick(Sender: TObject);
+procedure TSRSFrm.CompareBtnClick(sender: tobject);
 var
-  o:cObjFolder;
-  t:cTestFolder;
-  path:string;
+  o: cObjFolder;
+  t: cTestFolder;
+  path: string;
   ifile: TIniFile;
   f, sname: string;
 begin
-  if g_MBaseControl<>nil then
+  if g_MBaseControl <> nil then
   begin
-    o:=g_MBaseControl.GetSelectObj;
-    t:=g_MBaseControl.GetSelectTest;
-    if o<>nil then
+    o := g_MBaseControl.GetSelectObj;
+    t := g_MBaseControl.GetSelectTest;
+    if o <> nil then
     begin
-      path:=g_mbase.m_BaseFolder.Absolutepath;
-      if o.ObjType<>'' then
+      path := g_mbase.m_BaseFolder.Absolutepath;
+      if o.ObjType <> '' then
       begin
-        path:= path+'\FrfTypes'+'\'+o.ObjType;
-        f:=path+'\frf.mera';
-        if m_lastMDBfile<>'' then
+        path := path + '\FrfTypes' + '\' + o.ObjType;
+        f := path + '\frf.mera';
+        if m_lastMDBfile <> '' then
         begin
-          f:=m_lastMDBfile;
+          f := m_lastMDBfile;
         end;
         if fileexists(f) then
-          ShellExecute(0,nil,pwidechar(f),nil,nil, SW_HIDE);
+          ShellExecute(0, nil, pwidechar(f), nil, nil, SW_HIDE);
       end;
     end;
   end;
@@ -460,77 +457,77 @@ end;
 
 constructor TSRSFrm.create(Aowner: tcomponent);
 begin
-  m_TahoList:=TList.Create;
+  m_TahoList := tlist.create;
   inherited;
 end;
 
-procedure TSRSFrm.DelBtnClick(Sender: TObject);
+procedure TSRSFrm.DelBtnClick(sender: tobject);
 begin
-  fdelBtn:=true;
+  fdelBtn := true;
   if RStateStop then
     UpdateView;
 end;
 
 procedure TSRSFrm.delCurrentShock;
 var
-  td,sd:TDataBlock;
-  s:cSRSres;
-  t:cSRSTaho;
-  c:cSpmCfg;
-  i:integer;
+  td, sd: TDataBlock;
+  s: cSRSres;
+  t: cSRSTaho;
+  c: cSpmCfg;
+  i: integer;
 begin
-  t:=getTaho;
-  for I := 0 to t.Cfg.SRSCount - 1 do
+  t := getTaho;
+  for i := 0 to t.cfg.SRSCount - 1 do
   begin
-    hideCB.Checked:=false;
-    s:=t.Cfg.GetSrs(i);
-    sd:=s.m_shockList.getBlock(shockie.intnum);
-    if sd=nil then
+    hideCB.Checked := false;
+    s := t.cfg.GetSrs(i);
+    sd := s.m_shockList.getBlock(ShockIE.intnum);
+    if sd = nil then
       exit;
-    td:=t.m_shockList.getBlock(shockie.intnum);
+    td := t.m_shockList.getBlock(ShockIE.intnum);
     s.m_shockList.delBlock(sd);
     t.m_shockList.delBlock(td);
-    if t.m_shockList.Count>0 then
+    if t.m_shockList.Count > 0 then
     begin
-      t.evalCoh(hideInd);
-      t.evalFRF(hideInd, m_estimator);
+      t.evalCoh(hideind);
+      t.evalFRF(hideind, m_estimator);
     end;
   end;
-  ShockCountE.Text:=inttostr(t.m_shockList.Count);
-  fdelBtn:=false;
+  ShockCountE.Text := inttostr(t.m_shockList.Count);
+  fdelBtn := false;
 end;
 
 destructor TSRSFrm.destroy;
 begin
-  m_TahoList.Destroy;
+  m_TahoList.destroy;
 end;
 
 procedure TSRSFrm.doStart;
 var
-  t:cSRSTaho;
-  I: Integer;
-  s:cSRSres;
+  t: cSRSTaho;
+  i: integer;
+  s: cSRSres;
 begin
-  m_lastMDBfile:='';
-  m_lastTahoBlock:=nil;
-  ready:=false;
-  t:=getTaho;
-  t.fTrigState:=TrOff;
+  m_lastMDBfile := '';
+  m_lastTahoBlock := nil;
+  ready := false;
+  t := getTaho;
+  t.fTrigState := TrOff;
   if t.m_tag <> nil then
   begin
     t.m_tag.doOnStart;
     t.m_shockList.clearData;
-    t.f_iEnd:=0;
-    ZeroMemory(t.m_T1data.p,  t.cfg.fportionsizei* sizeof(double));
-    if t.cfg<>nil then
+    t.f_iEnd := 0;
+    ZeroMemory(t.m_T1data.p, t.cfg.fportionsizei * sizeof(double));
+    if t.cfg <> nil then
     begin
-      for I := 0 to t.Cfg.SRSCount - 1 do
+      for i := 0 to t.cfg.SRSCount - 1 do
       begin
-        s:=t.Cfg.GetSrs(i);
+        s := t.cfg.GetSrs(i);
         s.m_tag.doOnStart;
         s.m_shockList.clearData;
-        ZeroMemory(s.m_T1data.p,  t.cfg.fportionsizei* sizeof(double));
-        ZeroMemory(s.m_frf, t.Cfg.fHalfFft* sizeof(double));
+        ZeroMemory(s.m_T1data.p, t.cfg.fportionsizei * sizeof(double));
+        ZeroMemory(s.m_frf, t.cfg.fHalfFft * sizeof(double));
       end;
     end
     else
@@ -542,85 +539,85 @@ begin
   begin
     exit;
   end;
-  ready:=true;
+  ready := true;
 end;
 
-procedure TSRSFrm.EstimatorRGClick(Sender: TObject);
+procedure TSRSFrm.EstimatorRGClick(sender: tobject);
 var
   i: integer;
-  c:cSpmCfg;
-  t:cSRSTaho;
-  s:cSRSres;
+  c: cSpmCfg;
+  t: cSRSTaho;
+  s: cSRSres;
 begin
-  m_estimator:=EstimatorRG.ItemIndex;
-  t:=getTaho;
-  //t.evalCoh(hideInd);
-  t.evalFRF(hideInd, m_estimator);
-  ShowShock(ShockIE.IntNum);
+  m_estimator := EstimatorRG.ItemIndex;
+  t := getTaho;
+  // t.evalCoh(hideInd);
+  t.evalFRF(hideind, m_estimator);
+  ShowShock(ShockIE.intnum);
   UpdateView;
 end;
 
-procedure TSRSFrm.FormCreate(Sender: TObject);
+procedure TSRSFrm.FormCreate(sender: tobject);
 var
-  p:cpage;
-  r:frect;
+  p: cpage;
+  r: frect;
 begin
-  spmchart.OnRBtnClick := RBtnClick;
-  spmchart.tabs.activeTab.addPage(true);
+  SpmChart.OnRBtnClick := RBtnClick;
+  SpmChart.tabs.activeTab.addPage(true);
 
-  p:=SpmChart.tabs.activeTab.GetPage(0);
-  r.BottomLeft.x:=0;
-  r.BottomLeft.y:=0;
-  r.TopRight.x:=10;
-  r.TopRight.y:=10;
+  p := SpmChart.tabs.activeTab.GetPage(0);
+  r.BottomLeft.x := 0;
+  r.BottomLeft.Y := 0;
+  r.TopRight.x := 10;
+  r.TopRight.Y := 10;
   p.ZoomfRect(r);
-  p.Caption:='Oscillogram';
-  pageT:=p;
+  p.Caption := 'Oscillogram';
+  pageT := p;
 
-  p:=SpmChart.tabs.activeTab.GetPage(1);
-  r.BottomLeft.x:=0;
-  r.BottomLeft.y:=0;
-  r.TopRight.x:=10;
-  r.TopRight.y:=10;
+  p := SpmChart.tabs.activeTab.GetPage(1);
+  r.BottomLeft.x := 0;
+  r.BottomLeft.Y := 0;
+  r.TopRight.x := 10;
+  r.TopRight.Y := 10;
   p.ZoomfRect(r);
-  p.Caption:='Freq Dom.';
-  pageSpm:=p;
-  axSpm:=p.activeAxis;
+  p.Caption := 'Freq Dom.';
+  pageSpm := p;
+  axSpm := p.activeAxis;
 
-  axCoh:=cAxis.create;
-  axCoh.name:='CoherenceAx';
+  axCoh := cAxis.create;
+  axCoh.name := 'CoherenceAx';
   p.addaxis(axCoh);
-  axCoh.min:=p2d(0,0);
-  axCoh.max:=p2d(10, 2);
+  axCoh.min := p2d(0, 0);
+  axCoh.max := p2d(10, 2);
 end;
 
 procedure TSRSFrm.UpdateBlocks;
 var
-  refresh:double;
-  lt:csrstaho;
-  c:cSpmCfg;
-  s:cSRSres;
-  I: Integer;
+  refresh: double;
+  lt: cSRSTaho;
+  c: cSpmCfg;
+  s: cSRSres;
+  i: integer;
 begin
-  refresh:=GetREFRESHPERIOD;
-  lt:=getTaho;
-  c:=lt.cfg;
-  c.fHalfFft:= c.m_fftCount shr 1;
+  refresh := GetREFRESHPERIOD;
+  lt := getTaho;
+  c := lt.cfg;
+  c.fHalfFft := c.m_fftCount shr 1;
   // размер блока для расчета в секундах
-  c.fportionsize:= lt.m_Length*c.m_blockcount;
-  c.fportionsizei:=round(c.fportionsize*lt.m_tag.freq);
+  c.fportionsize := lt.m_Length * c.m_blockcount;
+  c.fportionsizei := round(c.fportionsize * lt.m_tag.Freq);
   c.fOutSize := c.m_fftCount * c.m_blockcount;
-  c.fspmdx:=lt.m_tag.freq/c.m_fftCount;
-  c.FFTProp:=GetFFTPlan(c.m_fftCount);
-  c.FFTProp.StartInd:=0;
+  c.fspmdx := lt.m_tag.Freq / c.m_fftCount;
+  c.FFTProp := GetFFTPlan(c.m_fftCount);
+  c.FFTProp.StartInd := 0;
 
   GetMemAlignedArray_d(c.fportionsizei, lt.m_T1data);
-  //GetMemAlignedArray_cmpx_d(c.m_fftCount, lt.m_T1ClxData);
-  //GetMemAlignedArray_d(c.m_fftCount, lt.m_rms);
-  lt.lineSpm.dx:=c.fspmdx;
-  for I := 0 to c.SRSCount - 1 do
+  // GetMemAlignedArray_cmpx_d(c.m_fftCount, lt.m_T1ClxData);
+  // GetMemAlignedArray_d(c.m_fftCount, lt.m_rms);
+  lt.lineSpm.dx := c.fspmdx;
+  for i := 0 to c.SRSCount - 1 do
   begin
-    s:=c.GetSrs(i);
+    s := c.GetSrs(i);
     GetMemAlignedArray_d(c.fportionsizei, s.m_T1data);
     // tCmxArray_d(cSRSres(s).m_T1ClxData.p)
     GetMemAlignedArray_cmpx_d(c.m_fftCount, s.m_T1ClxData);
@@ -629,240 +626,240 @@ begin
     SetLength(s.m_fltFrf, c.fHalfFft);
     SetLength(s.m_phase, c.fHalfFft);
     // блок расчета когеренции
-    setlength(s.m_shockList.m_Cxy, c.fHalfFft);
-    setlength(s.m_shockList.m_sxx, c.fHalfFft);
-    setlength(s.m_shockList.m_syy, c.fHalfFft);
-    setlength(s.m_shockList.m_coh, c.fHalfFft);
+    SetLength(s.m_shockList.m_Cxy, c.fHalfFft);
+    SetLength(s.m_shockList.m_Sxx, c.fHalfFft);
+    SetLength(s.m_shockList.m_Syy, c.fHalfFft);
+    SetLength(s.m_shockList.m_coh, c.fHalfFft);
 
-    s.lineSpm.dx:=c.fspmdx;
-    s.lineCoh.dx:=c.fspmdx;
-    s.lineFrf.dx:=c.fspmdx;
-    s.lineAvFrf.dx:=c.fspmdx;
+    s.lineSpm.dx := c.fspmdx;
+    s.lineCoh.dx := c.fspmdx;
+    s.lineFrf.dx := c.fspmdx;
+    s.lineAvFRF.dx := c.fspmdx;
   end;
 end;
 
-
 procedure TSRSFrm.UpdateChart;
 var
-  l:cBuffTrend1d;
-  t:csrstaho;
-  c:cSpmCfg;
-  s:cSRSres;
-  I: Integer;
-  fr:frect;
-  bfrf:boolean;
+  l: cBuffTrend1d;
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s: cSRSres;
+  i: integer;
+  fr: frect;
+  bfrf: boolean;
 begin
   pageT.activeAxis.clear;
   pageSpm.activeAxis.clear;
-  t:=getTaho;
-  c:=t.getCfg;
-  UseWndFcb.Checked:=c.m_wnd.wndfunc <> wnd_no;
-  if t<>nil then
+  t := getTaho;
+  c := t.getCfg;
+  UseWndFcb.Checked := c.m_wnd.wndfunc <> wnd_no;
+  if t <> nil then
   begin
     if t.m_corrTaho then
     begin
-      pageT.cursor.visible:=true;
-      pageT.cursor.cursortype:=c_DoubleCursor;
+      pageT.cursor.visible := true;
+      pageT.cursor.cursortype := c_DoubleCursor;
       pageT.cursor.setx1(0);
       pageT.cursor.setx2(t.corrLen);
-      c.m_wnd.x1:=0;
-      c.m_wnd.x2:=t.corrLen;
+      c.m_wnd.x1 := 0;
+      c.m_wnd.x2 := t.corrLen;
     end
     else
     begin
-      pageT.cursor.visible:=false;
-      pageT.cursor.cursortype:=c_DoubleCursor;
+      pageT.cursor.visible := false;
+      pageT.cursor.cursortype := c_DoubleCursor;
       pageT.cursor.setx1(0);
       pageT.cursor.setx2(t.corrLen);
     end;
 
-    l:= cBuffTrend1d.create;
+    l := cBuffTrend1d.create;
     pageT.activeAxis.AddChild(l);
     l.color := ColorArray[0];
-    t.line:=l;
-    t.line.name:=t.name;
-    l.dx:=1/t.m_tag.freq;
+    t.line := l;
+    t.line.name := t.name;
+    l.dx := 1 / t.m_tag.Freq;
 
-    l:= cBuffTrend1d.create;
+    l := cBuffTrend1d.create;
     l.color := ColorArray[0];
     pageSpm.activeAxis.AddChild(l);
-    t.lineSpm:=l;
-    t.lineSpm.dx:=c.fspmdx;
-    t.lineSpm.name:=t.name+'_spm';
-    bfrf:=c.typeres=c_FRF;
-    l.visible:=not bfrf;
+    t.lineSpm := l;
+    t.lineSpm.dx := c.fspmdx;
+    t.lineSpm.name := t.name + '_spm';
+    bfrf := c.typeres = c_FRF;
+    l.visible := not bfrf;
 
-    m_expWndline:=cExpFuncObj.create;
-    m_expWndline.name:='ExpWndLine';
-    m_expWndline.visible:=true;
-    m_expWndline.enabled:=true;
-    m_expWndline.selectable:=true;
-    paget.activeAxis.AddChild(m_expWndline);
+    m_expWndline := cExpFuncObj.create;
+    m_expWndline.name := 'ExpWndLine';
+    m_expWndline.visible := true;
+    m_expWndline.enabled := true;
+    m_expWndline.selectable := true;
+    pageT.activeAxis.AddChild(m_expWndline);
 
-    c:=t.Cfg;
-    for I := 0 to c.SRSCount - 1 do
+    c := t.cfg;
+    for i := 0 to c.SRSCount - 1 do
     begin
-      s:=c.GetSrs(i);
-      l:= cBuffTrend1d.create;
+      s := c.GetSrs(i);
+      l := cBuffTrend1d.create;
       pageT.activeAxis.AddChild(l);
-      l.color := ColorArray[i+1];
-      s.line:=l;
-      s.line.name:=s.name;
-      l.dx:=1/t.m_tag.freq;
+      l.color := ColorArray[i + 1];
+      s.line := l;
+      s.line.name := s.name;
+      l.dx := 1 / t.m_tag.Freq;
 
-      l:= cBuffTrend1d.create;
-      l.color := ColorArray[i+1];
+      l := cBuffTrend1d.create;
+      l.color := ColorArray[i + 1];
       pageSpm.activeAxis.AddChild(l);
-      s.lineSpm:=l;
-      s.lineSpm.dx:=c.fspmdx;
-      s.lineSpm.name:=s.name+'_spm';
-      l.visible:=not bfrf;
+      s.lineSpm := l;
+      s.lineSpm.dx := c.fspmdx;
+      s.lineSpm.name := s.name + '_spm';
+      l.visible := not bfrf;
 
-      l:= cBuffTrend1d.create;
-      l.color := ColorArray[i+1];
-      l.dx:=c.fspmdx;
+      l := cBuffTrend1d.create;
+      l.color := ColorArray[i + 1];
+      l.dx := c.fspmdx;
       pageSpm.activeAxis.AddChild(l);
-      s.linefrf:=l;
-      s.linefrf.name:=s.name+'_frf';
-      l.visible:=bfrf;
+      s.lineFrf := l;
+      s.lineFrf.name := s.name + '_frf';
+      l.visible := bfrf;
 
-      l:= cBuffTrend1d.create;
-      l.color := ColorArray[i+2];
-      l.dx:=c.fspmdx;
+      l := cBuffTrend1d.create;
+      l.color := ColorArray[i + 2];
+      l.dx := c.fspmdx;
       pageSpm.activeAxis.AddChild(l);
 
-      s.lineavfrf:=l;
-      s.lineavfrf.name:=s.name+'_AvFrf';
-      s.lineAvFRF.weight:=5;
-      s.lineAvFRF.visible:=false;
+      s.lineAvFRF := l;
+      s.lineAvFRF.name := s.name + '_AvFrf';
+      s.lineAvFRF.weight := 5;
+      s.lineAvFRF.visible := false;
 
-      l:= cBuffTrend1d.create;
-      //l.color := ColorArray[i+10];
+      l := cBuffTrend1d.create;
+      // l.color := ColorArray[i+10];
       l.color := yellow;
-      l.dx:=c.fspmdx;
+      l.dx := c.fspmdx;
       axCoh.AddChild(l);
-      s.lineCoh:=l;
-      s.lineCoh.name:=s.name+'_coh';
+      s.lineCoh := l;
+      s.lineCoh.name := s.name + '_coh';
     end;
-    c.typeres:=c.typeres;
+    c.typeres := c.typeres;
 
-    fr.BottomLeft:=p2(0,-2*t.m_treshold);
-    fr.TopRight:=p2(t.m_Length,t.m_treshold*2);
+    fr.BottomLeft := p2(0, -2 * t.m_treshold);
+    fr.TopRight := p2(t.m_Length, t.m_treshold * 2);
     pageT.ZoomfRect(fr);
 
-    fr.BottomLeft:=p2(m_minX,m_minY);
-    fr.TopRight:=p2(m_maxX,m_maxY);
-    pageSpm.LgX:=m_lgX;
-    pageSpm.activeAxis.Lg:=m_lgY;
+    fr.BottomLeft := p2(m_minX, m_minY);
+    fr.TopRight := p2(m_maxX, m_maxY);
+    pageSpm.LgX := m_lgX;
+    pageSpm.activeAxis.Lg := m_lgY;
     pageSpm.ZoomfRect(fr);
   end;
 end;
 
 procedure TSRSFrm.updatedata;
 var
-  t:csrstaho;
-  c:cSpmCfg;
-  s:cSRSres;
-  i, pcount ,dropCount:integer;
-  sig_interval, common_interval:point2d;
-  b:boolean;
-  block:TDataBlock;
-  v, comIntervalLen, blocklen, refresh, dropLen:double;
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s: cSRSres;
+  i, pcount, dropCount: integer;
+  sig_interval, common_interval: point2d;
+  b: boolean;
+  block: TDataBlock;
+  v, comIntervalLen, blocklen, refresh, dropLen: double;
 begin
-  if not ready then exit;
-  t:=getTaho;
-  c:=t.cfg;
-  blocklen:=t.m_Length;
-  refresh:=t.m_tag.BlockSize/t.m_tag.freq;
-  if blocklen<refresh then
-    blocklen:=refresh;
+  if not ready then
+    exit;
+  t := getTaho;
+  c := t.cfg;
+  blocklen := t.m_Length;
+  refresh := t.m_tag.BlockSize / t.m_tag.Freq;
+  if blocklen < refresh then
+    blocklen := refresh;
   if t.m_tag.UpdateTagData(true) then
   begin
     // не отбрасываем данные если находимся в состоянии когда триг найден но
     // еще не накопился целиком
-    if t.fTrigState<>TrFall then
+    if t.fTrigState <> TrFall then
     begin
-      dropLen:=t.m_tag.getPortionLen-2*blocklen;
-      if dropLen>0 then // при этом условии гарантированно остается 2*blocklen
+      dropLen := t.m_tag.getPortionLen - 2 * blocklen;
+      if dropLen > 0 then // при этом условии гарантированно остается 2*blocklen
       begin
-        dropCount:=trunc(dropLen*t.m_tag.freq);
+        dropCount := trunc(dropLen * t.m_tag.Freq);
         // возможно следует ограничить размер отбрасываемых данных
         // по f_iEnd
-        if t.f_iEnd>0 then
+        if t.f_iEnd > 0 then
         begin
-          if dropCount>t.f_iEnd then
-            dropCount:=t.f_iEnd;
+          if dropCount > t.f_iEnd then
+            dropCount := t.f_iEnd;
         end;
         t.m_tag.ResetTagDataTimeInd(dropCount);
-        t.f_iEnd:=t.f_iEnd-dropCount;
-        if t.f_iEnd<0 then
+        t.f_iEnd := t.f_iEnd - dropCount;
+        if t.f_iEnd < 0 then
         begin
-          t.f_iEnd:=0;
+          t.f_iEnd := 0;
           // если просохатили удар (отбросили данные в посл. ударе, забываем про него)
-          t.ResetTrig;
+          t.resetTrig;
         end;
       end;
     end;
     t.v_min := t.m_tag.m_ReadData[0];
     t.v_max := t.m_tag.m_ReadData[0];
     // поиск триггера
-    if t.fTrigState=TrOff then
+    if t.fTrigState = TrOff then
     begin
       for i := t.f_iEnd to t.m_tag.lastindex - 1 do
       begin
         v := t.m_tag.m_ReadData[i];
         if v > t.m_treshold then
         begin
-          if v>t.v_max then
+          if v > t.v_max then
           begin
-            t.fTrigState:=TrRise;
+            t.fTrigState := TrRise;
             t.v_max := v;
             t.f_imax := i;
           end;
         end
         else
         begin
-          if t.fTrigState=TrRise then
-            t.fTrigState:=TrFall;
+          if t.fTrigState = TrRise then
+            t.fTrigState := TrFall;
         end;
       end;
       // сдвигаем индекс проанализированных данных т.к. отбрасываемые данные ограничены iEnd
       // в противном случае можно отбросить не проанализированные данные
-      if t.fTrigState=TrOff then
-        t.f_iEnd:=t.m_tag.lastindex;
+      if t.fTrigState = TrOff then
+        t.f_iEnd := t.m_tag.lastindex;
     end;
     // если триггер найден
-    if t.fTrigState=TrFall then
+    if t.fTrigState = TrFall then
     begin
       inc(t.fShockInd);
-      t.TrigInterval.x:=t.m_tag.getReadTime(t.f_imax)-t.m_ShiftLeft;
-      t.TrigInterval.y:=t.TrigInterval.x+t.m_Length;
-      t.f_iEnd:=t.m_tag.getIndex(t.TrigInterval.y);
+      t.TrigInterval.x := t.m_tag.getReadTime(t.f_imax) - t.m_ShiftLeft;
+      t.TrigInterval.Y := t.TrigInterval.x + t.m_Length;
+      t.f_iEnd := t.m_tag.getIndex(t.TrigInterval.Y);
       // если данных накопилось на целиковый удар
-      if t.f_iEnd<=t.m_tag.lastindex then
+      if t.f_iEnd <= t.m_tag.lastindex then
       begin
-        t.fTrigState:=TrEnd;
-        pcount:=copyData(t.m_tag, t.TrigInterval, t.m_T1data);
-        t.fDataCount:=pcount;
+        t.fTrigState := TrEnd;
+        pcount := copyData(t.m_tag, t.TrigInterval, t.m_T1data);
+        t.fDataCount := pcount;
         t.line.AddPoints(TDoubleArray(t.m_T1data.p), pcount);
-        t.line.flength:=pcount;
+        t.line.flength := pcount;
         /// дополнять нулями
-        if pcount>c.m_fftCount then
+        if pcount > c.m_fftCount then
         begin
-          if m_lastTahoBlock<>nil then
+          if m_lastTahoBlock <> nil then
           begin
-            if m_lastTahoBlock.m_connectedInd=-1 then
+            if m_lastTahoBlock.m_connectedInd = -1 then
             begin
               t.m_shockList.delBlock(m_lastTahoBlock);
             end;
           end;
-          m_lastTahoBlock:=
-          t.m_shockList.addBlock(c.m_fftCount,
-                                 p2d(t.TrigInterval.x,t.TrigInterval.x+pcount/t.m_tag.freq),
-                                 TDoubleArray(t.m_T1data.p), pcount);
+          m_lastTahoBlock := t.m_shockList.addBlock(c.m_fftCount,
+            p2d(t.TrigInterval.x, t.TrigInterval.x + pcount / t.m_tag.Freq),
+            TDoubleArray(t.m_T1data.p), pcount);
           m_lastTahoBlock.prepareData;
           m_lastTahoBlock.BuildSpm;
-          t.lineSpm.AddPoints(TDoubleArray(m_lastTahoBlock.m_mod.p), c.fHalfFft);
+          t.lineSpm.AddPoints(TDoubleArray(m_lastTahoBlock.m_mod.p),
+            c.fHalfFft);
         end
         else
         begin
@@ -870,24 +867,24 @@ begin
         end;
       end;
     end;
-    if t.fTrigState=TrEnd then
+    if t.fTrigState = TrEnd then
     begin
-      b:=true;
+      b := true;
       for i := 0 to c.SRSCount - 1 do
       begin
         s := c.GetSrs(i);
-        if s.m_shockProcessed=false then
+        if s.m_shockProcessed = false then
         begin
-          b:=false;
+          b := false;
           break;
         end;
       end;
       if b then // стоит еще добавить проверку на отвалившийся датчик. В случае если
       // какой то канал не накопил удар, игнорируем его по таймауту
       begin
-        t.evalFRF(hideInd, m_estimator);
+        t.evalFRF(hideind, m_estimator);
         // внутри вызывается t.fTrigState:=TrOff;
-        t.ResetTrig;
+        t.resetTrig;
       end;
     end;
     for i := 0 to c.SRSCount - 1 do
@@ -896,91 +893,91 @@ begin
       if s.m_tag.UpdateTagData(true) then
       begin
         sig_interval := s.m_tag.getPortionTime;
-        if s.m_tag.getPortionLen>2*blocklen then
+        if s.m_tag.getPortionLen > 2 * blocklen then
         begin
-          dropCount:=s.m_tag.getIndex(t.TrigInterval.x);
+          dropCount := s.m_tag.getIndex(t.TrigInterval.x);
           // отбрасываем все что слева по времени от найденного удара
-          if dropCount>0 then
+          if dropCount > 0 then
           begin
-            s.m_tag.ResetTagDataTimeInd(dropCount-1);
+            s.m_tag.ResetTagDataTimeInd(dropCount - 1);
           end;
         end;
       end;
-      common_interval:=p2d(0,0);
-      ComIntervalLen:=0;
-      if sig_interval.y>t.TrigInterval.x then
+      common_interval := p2d(0, 0);
+      comIntervalLen := 0;
+      if sig_interval.Y > t.TrigInterval.x then
       begin
-        if t.TrigInterval.y>sig_interval.x then
+        if t.TrigInterval.Y > sig_interval.x then
         begin
-          common_interval:=getCommonInterval(sig_interval, t.TrigInterval);
-          ComIntervalLen:=common_interval.y-common_interval.x;
+          common_interval := getCommonInterval(sig_interval, t.TrigInterval);
+          comIntervalLen := common_interval.Y - common_interval.x;
         end;
       end;
-      if ComIntervalLen>0 then
+      if comIntervalLen > 0 then
       begin
-        //s.fComInterval:=true;
+        // s.fComInterval:=true;
         // если данные накопились и тахо тоже накопился
-        if (ComIntervalLen>s.fComIntervalLen) and (t.fTrigState=TrEnd)  then
+        if (comIntervalLen > s.fComIntervalLen) and (t.fTrigState = TrEnd) then
         begin
-          s.fComIntervalLen:=ComIntervalLen;
-          s.fComInt:=common_interval;
-          pcount:=copyData(s.m_tag, common_interval, s.m_T1data);
-          if pCount>=c.m_fftCount then
+          s.fComIntervalLen := comIntervalLen;
+          s.fComInt := common_interval;
+          pcount := copyData(s.m_tag, common_interval, s.m_T1data);
+          if pcount >= c.m_fftCount then
           begin
-            s.fDataCount:=pcount;
+            s.fDataCount := pcount;
             s.line.AddPoints(TDoubleArray(s.m_T1data.p), pcount);
-            s.line.flength:=pcount;
+            s.line.flength := pcount;
 
-            block:=
-            s.m_shockList.addBlock(c.m_fftCount, // SpmSize
-                                   p2d(common_interval.x,common_interval.x+pcount/s.m_tag.freq),// timeStamp
-                                   TDoubleArray(s.m_T1data.p), // timeData
-                                   pcount); // timeData size
+            block := s.m_shockList.addBlock(c.m_fftCount, // SpmSize
+              p2d(common_interval.x,
+                common_interval.x + pcount / s.m_tag.Freq), // timeStamp
+              TDoubleArray(s.m_T1data.p), // timeData
+              pcount); // timeData size
             block.BuildSpm;
-            m_lastTahoBlock.m_connectedInd:=s.m_shockList.m_LastBlock;
+            m_lastTahoBlock.m_connectedInd := s.m_shockList.m_LastBlock;
             s.lineSpm.AddPoints(TDoubleArray(block.m_mod.p), c.fHalfFft);
-            s.m_shockProcessed:=true;
+            s.m_shockProcessed := true;
           end;
-          t.evalCoh(hideInd);
+          t.evalCoh(hideind);
         end;
       end;
     end;
   end;
 end;
 
-procedure TSRSFrm.hideCBClick(Sender: TObject);
+procedure TSRSFrm.hideCBClick(sender: tobject);
 var
   i: integer;
-  c:cSpmCfg;
-  t:cSRSTaho;
-  s:cSRSres;
+  c: cSpmCfg;
+  t: cSRSTaho;
+  s: cSRSres;
 begin
-  t:=getTaho;
-  t.evalCoh(hideInd);
-  t.evalFRF(hideInd, m_estimator);
+  t := getTaho;
+  t.evalCoh(hideind);
+  t.evalFRF(hideind, m_estimator);
   if not hideCB.Checked then
-    ShowShock(ShockIE.IntNum);
+    ShowShock(ShockIE.intnum);
   UpdateView;
 end;
 
-function TSRSFrm.hideInd: integer;
+function TSRSFrm.hideind: integer;
 begin
   if hideCB.Checked then
   begin
-    result:=ShockIE.IntNum;
+    result := ShockIE.intnum;
   end
   else
   begin
-    result:=-1;
+    result := -1;
   end;
 end;
 
 procedure TSRSFrm.UpdateView;
 var
   i: integer;
-  c:cSpmCfg;
-  t:cSRSTaho;
-  s:cSRSres;
+  c: cSpmCfg;
+  t: cSRSTaho;
+  s: cSRSres;
 begin
   if fdelBtn then
   begin
@@ -988,67 +985,67 @@ begin
   end;
   if RStatePlay then
   begin
-    t:=getTaho;
-    if t<>nil then
+    t := getTaho;
+    if t <> nil then
     begin
-      ShockCountE.Text:=inttostr(t.m_shockList.Count);
+      ShockCountE.Text := inttostr(t.m_shockList.Count);
     end;
   end;
   SpmChart.redraw;
 end;
 
-procedure TSRSFrm.UseWndFcbClick(Sender: TObject);
+procedure TSRSFrm.UseWndFcbClick(sender: tobject);
 var
-  t:cSRSTaho;
-  c:cSpmCfg;
+  t: cSRSTaho;
+  c: cSpmCfg;
 begin
-  t:=getTaho;
-  c:=t.Cfg;
-  t.m_corrTaho:=UseWndFcb.Checked;
+  t := getTaho;
+  c := t.cfg;
+  t.m_corrTaho := UseWndFcb.Checked;
   if t.m_corrTaho then
   begin
-    pageT.cursor.visible:=true;
-    pageT.cursor.cursortype:=c_DoubleCursor;
+    pageT.cursor.visible := true;
+    pageT.cursor.cursortype := c_DoubleCursor;
     pageT.cursor.setx1(0);
-    if t.corrLen<=0 then
+    if t.corrLen <= 0 then
     begin
-      c.m_wnd.x2:=t.m_Length*0.7;
+      c.m_wnd.x2 := t.m_Length * 0.7;
     end;
     pageT.cursor.setx2(c.m_wnd.x2);
-    c.m_wnd.x1:=0;
-    c.m_wnd.x2:=c.m_wnd.x2;
+    c.m_wnd.x1 := 0;
+    c.m_wnd.x2 := c.m_wnd.x2;
   end
   else
   begin
-    pageT.cursor.visible:=false;
-    pageT.cursor.cursortype:=c_DoubleCursor;
+    pageT.cursor.visible := false;
+    pageT.cursor.cursortype := c_DoubleCursor;
     pageT.cursor.setx1(0);
     pageT.cursor.setx2(c.m_wnd.x2);
   end;
-
 
   if UseWndFcb.Checked then
   begin
-    c.m_wnd.wndfunc:=wnd_rect;
+    c.m_wnd.wndfunc := wnd_rect;
   end
   else
   begin
-    c.m_wnd.wndfunc:=wnd_no;
+    c.m_wnd.wndfunc := wnd_no;
   end;
 end;
 
-procedure TSRSFrm.WinPosBtnClick(Sender: TObject);
+procedure TSRSFrm.WinPosBtnClick(sender: tobject);
 begin
   if fileexists(g_SRSFactory.m_meraFile) then
-    ShellExecute(0,nil,pwidechar(g_SRSFactory.m_ShockFile),nil,nil, SW_HIDE);
+    ShellExecute(0, nil, pwidechar(g_SRSFactory.m_ShockFile), nil, nil,
+      SW_HIDE);
 end;
 
-function TSRSFrm.getTaho: csrstaho;
+function TSRSFrm.getTaho: cSRSTaho;
 begin
-  if m_taholist.count>0 then
-    result:=csrstaho(m_tahoList.Items[0])
+  if m_TahoList.Count > 0 then
+    result := cSRSTaho(m_TahoList.Items[0])
   else
-    result:=nil;
+    result := nil;
 end;
 
 procedure TSRSFrm.RBtnClick(sender: tobject);
@@ -1059,79 +1056,78 @@ begin
   end;
 end;
 
-
 procedure TSRSFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 var
-  i, count: integer;
-  t:cSRSTaho;
-  c:cSpmCfg;
-  s:cSRSres;
-  tag:itag;
-  ltag:ctag;
+  i, Count: integer;
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s: cSRSres;
+  tag: itag;
+  ltag: ctag;
 begin
   inherited;
-  ltag:=LoadTagIni(a_pIni,str,'Taho_Tag');
-  if ltag<>nil then
+  ltag := LoadTagIni(a_pIni, str, 'Taho_Tag');
+  if ltag <> nil then
   begin
-    t:=cSRSTaho.create;
-    t.m_tag.tag:=ltag.tag;
+    t := cSRSTaho.create;
+    t.m_tag.tag := ltag.tag;
     ltag.destroy;
-    c:=cSpmCfg.Create;
-    t.Cfg:=c;
+    c := cSpmCfg.create;
+    t.cfg := c;
     addTaho(t);
   end
   else
     exit;
-  t.m_ShiftLeft:=strtoFloatExt(a_pIni.ReadString(str, 'ShiftLeft', '0.05'));
-  t.m_treshold:=strtoFloatExt(a_pIni.ReadString(str, 'Threshold', '0.05'));
-  t.m_Length:=strtoFloatExt(a_pIni.ReadString(str, 'Length', '0.05'));
+  t.m_ShiftLeft := strtoFloatExt(a_pIni.ReadString(str, 'ShiftLeft', '0.05'));
+  t.m_treshold := strtoFloatExt(a_pIni.ReadString(str, 'Threshold', '0.05'));
+  t.m_Length := strtoFloatExt(a_pIni.ReadString(str, 'Length', '0.05'));
 
-  m_minX:=strtoFloatExt(a_pIni.ReadString(str, 'Spm_minX', '0'));
-  m_maxX:=strtoFloatExt(a_pIni.ReadString(str, 'Spm_maxX', '1000'));
-  m_minY:=strtoFloatExt(a_pIni.ReadString(str, 'Spm_minY', '0.0001'));
-  m_maxY:=strtoFloatExt(a_pIni.ReadString(str, 'Spm_maxY', '10'));
-  m_lgX:=a_pIni.ReadBool(str, 'Spm_Lg_x', false);
-  m_lgY:=a_pIni.ReadBool(str, 'Spm_Lg_y', false);
-  m_saveT0:=a_pIni.ReadBool(str, 'SaveT0', false);
-  m_estimator:=a_pIni.ReadInteger(str, 'Estimator', 1);
+  m_minX := strtoFloatExt(a_pIni.ReadString(str, 'Spm_minX', '0'));
+  m_maxX := strtoFloatExt(a_pIni.ReadString(str, 'Spm_maxX', '1000'));
+  m_minY := strtoFloatExt(a_pIni.ReadString(str, 'Spm_minY', '0.0001'));
+  m_maxY := strtoFloatExt(a_pIni.ReadString(str, 'Spm_maxY', '10'));
+  m_lgX := a_pIni.ReadBool(str, 'Spm_Lg_x', false);
+  m_lgY := a_pIni.ReadBool(str, 'Spm_Lg_y', false);
+  m_saveT0 := a_pIni.ReadBool(str, 'SaveT0', false);
+  m_estimator := a_pIni.ReadInteger(str, 'Estimator', 1);
 
-  if c<>nil then
+  if c <> nil then
   begin
-    c.m_capacity:=a_pIni.ReadInteger(str, 'ShockCount', 5);
-    c.m_fftCount:=a_pIni.ReadInteger(str, 'FFtnum', 32);
-    c.m_blockcount:=a_pIni.ReadInteger(str, 'BlockCount', 1);
-    c.m_addNulls:=a_pIni.ReadBool(str, 'AddNulls', false);
-    count:=a_pIni.ReadInteger(str, 'SigCount', 0);
-    for I := 0 to count - 1 do
+    c.m_capacity := a_pIni.ReadInteger(str, 'ShockCount', 5);
+    c.m_fftCount := a_pIni.ReadInteger(str, 'FFtnum', 32);
+    c.m_blockcount := a_pIni.ReadInteger(str, 'BlockCount', 1);
+    c.m_addNulls := a_pIni.ReadBool(str, 'AddNulls', false);
+    Count := a_pIni.ReadInteger(str, 'SigCount', 0);
+    for i := 0 to Count - 1 do
     begin
-      tag:=LoadITagIni(a_pIni,str,'Tag_'+inttostr(i));
-      if tag<>nil then
+      tag := LoadITagIni(a_pIni, str, 'Tag_' + inttostr(i));
+      if tag <> nil then
       begin
         c.addSRS(pointer(tag));
       end;
     end;
-    c.typeRes:=a_pIni.ReadInteger(str, 'ResType', 0);
+    c.typeres := a_pIni.ReadInteger(str, 'ResType', 0);
   end;
   // TestCoh;
   UpdateChart;
   UpdateBlocks;
 end;
 
-
-procedure savedata(dir: string;sname:string;db:tDoubleArray); overload;
+procedure savedata(dir: string; sname: string; db: TDoubleArray); overload;
 var
   lname: string;
   f: file;
 begin
   // временной блок
-  lname := dir + '\' + sname+'.dat';
+  lname := dir + '\' + sname + '.dat';
   AssignFile(f, lname);
   Rewrite(f, 1);
   BlockWrite(f, db[0], sizeof(double) * length(db));
   closefile(f);
 end;
 
-procedure savedata(fname: string;sname:string;db:tdatablock; taho:boolean); overload;
+procedure savedata(fname: string; sname: string; db: TDataBlock;
+  taho: boolean); overload;
 var
   lname: string;
   f: file;
@@ -1139,157 +1135,160 @@ var
 begin
   if not taho then
   begin
-    lname := extractfiledir(fname) + '\'+'spm_'+sname+'.dat';
+    lname := extractfiledir(fname) + '\' + 'spm_' + sname + '.dat';
     AssignFile(f, lname);
     Rewrite(f, 1);
     BlockWrite(f, db.m_mod.p, sizeof(double) * db.m_spmsize);
     closefile(f);
 
-    lname := extractfiledir(fname) + '\'+'frf_'+sname+'.dat';
+    lname := extractfiledir(fname) + '\' + 'frf_' + sname + '.dat';
     AssignFile(f, lname);
     Rewrite(f, 1);
     BlockWrite(f, db.m_frf[0], sizeof(double) * db.m_spmsize);
     closefile(f);
   end;
   // временной блок
-  lname := extractfiledir(fname) + '\' + sname+'.dat';
+  lname := extractfiledir(fname) + '\' + sname + '.dat';
   AssignFile(f, lname);
   Rewrite(f, 1);
   BlockWrite(f, db.m_TimeBlock[0], sizeof(double) * db.m_TimeArrSize);
   closefile(f);
 end;
 
-procedure savedata(fname: string; sname:string; s:cSRSres); overload;
+procedure savedata(fname: string; sname: string; s: cSRSres); overload;
 var
   lname: string;
   f: file;
   i: integer;
 begin
-  lname := extractfiledir(fname) + '\'+'AvFRF_'+sname+'.dat';
+  lname := extractfiledir(fname) + '\' + 'AvFRF_' + sname + '.dat';
   AssignFile(f, lname);
   Rewrite(f, 1);
   BlockWrite(f, s.m_frf[0], sizeof(double) * length(s.m_frf));
   closefile(f);
 end;
 
-procedure savedataCoh(fld: string; sname:string; s:cSRSres); overload;
+procedure savedataCoh(fld: string; sname: string; s: cSRSres); overload;
 var
   lname: string;
   f: file;
   i: integer;
 begin
-  lname := fld + sname+'.dat';
+  lname := fld + sname + '.dat';
   AssignFile(f, lname);
   Rewrite(f, 1);
-  BlockWrite(f, s.m_shockList.m_coh[0], sizeof(double) * length(s.m_shockList.m_coh));
+  BlockWrite(f, s.m_shockList.m_coh[0],
+    sizeof(double) * length(s.m_shockList.m_coh));
   closefile(f);
 end;
 
-procedure saveHeader( ifile:tinifile; freq:double; start:double; ident:string);
+procedure saveHeader(ifile: TIniFile; Freq: double; start: double;
+  ident: string);
 begin
-  WriteFloatToIniMera(ifile, ident, 'Freq', freq);
+  WriteFloatToIniMera(ifile, ident, 'Freq', Freq);
   ifile.WriteString(ident, 'XFormat', 'R8');
   ifile.WriteString(ident, 'YFormat', 'R8');
   // Подпись оси x
   ifile.WriteString(ident, 'XUnits', 'Гц');
   // Подпись оси Y
   // ifile.WriteString(s.tagname, 'YUnits', TagUnits(wp.m_YParam.tag));
-  WriteFloatToIniMera(ifile, ident,'Start', start);
+  WriteFloatToIniMera(ifile, ident, 'Start', start);
   // k0
   ifile.WriteFloat(ident, 'k0', 0);
   // k1
   ifile.WriteFloat(ident, 'k1', 1);
 end;
 
-procedure TSRSFrm.SaveBtnClick(Sender: TObject);
+procedure TSRSFrm.SaveBtnClick(sender: tobject);
 var
   i, j, num: integer;
   ifile: TIniFile;
-  f,ident,dir: string;
-  c:cSpmCfg;
-  t:cSRSTaho;
+  f, ident, dir: string;
+  c: cSpmCfg;
+  t: cSRSTaho;
   s: cSRSres;
-  db, tb:tdatablock;
+  db, tb: TDataBlock;
 begin
-  dir := extractfiledir(g_SRSFactory.m_merafile) + '\Shock';
-  f := dir +'\' + trimext(extractfilename(g_SRSFactory.m_merafile)) + '_Shocks.mera';
+  dir := extractfiledir(g_SRSFactory.m_meraFile) + '\Shock';
+  f := dir + '\' + trimext(extractfilename(g_SRSFactory.m_meraFile))
+    + '_Shocks.mera';
   while fileexists(f) do
   begin
-    dir:=ModName(dir, false);
-    f := dir +'\' + trimext(extractfilename(g_SRSFactory.m_merafile)) + '_Shocks.mera';
+    dir := ModName(dir, false);
+    f := dir + '\' + trimext(extractfilename(g_SRSFactory.m_meraFile))
+      + '_Shocks.mera';
   end;
-  g_SRSFactory.m_ShockFile:=f;
+  g_SRSFactory.m_ShockFile := f;
   ForceDirectories(dir);
   ifile := TIniFile.create(f);
-  c:=getTaho.Cfg;
-  t:=getTaho;
+  c := getTaho.cfg;
+  t := getTaho;
   for i := 0 to c.SRSCount - 1 do
   begin
     s := c.GetSrs(i);
     for j := 0 to s.m_shockList.Count - 1 do
     begin
-      if j=0 then
+      if j = 0 then
       begin
-        db:=s.m_shockList.getLastBlock;
-        tb:=t.m_shockList.getLastBlock;
+        db := s.m_shockList.getLastBlock;
+        tb := t.m_shockList.getLastBlock;
       end
       else
       begin
-        db:=s.m_shockList.getPrevBlock(db);
-        tb:=t.m_shockList.getPrevBlock(tb);
+        db := s.m_shockList.getPrevBlock(db);
+        tb := t.m_shockList.getPrevBlock(tb);
       end;
-      num:=s.m_shockList.Count-j;
+      num := s.m_shockList.Count - j;
       // spm
-      ident:='spm_'+ s.m_tag.tagname+'_'+inttostr(num);
-      saveHeader(ifile,1/c.fspmdx, 0, ident);
+      ident := 'spm_' + s.m_tag.tagname + '_' + inttostr(num);
+      saveHeader(ifile, 1 / c.fspmdx, 0, ident);
       // frf
-      ident:='frf_'+ s.m_tag.tagname+'_'+inttostr(num);
-      saveHeader(ifile,1/c.fspmdx, 0,ident);
+      ident := 'frf_' + s.m_tag.tagname + '_' + inttostr(num);
+      saveHeader(ifile, 1 / c.fspmdx, 0, ident);
       // временной блок
-      ident:=s.m_tag.tagname+'_'+inttostr(num);
+      ident := s.m_tag.tagname + '_' + inttostr(num);
       if m_saveT0 then
-        saveHeader(ifile, s.m_tag.freq, db.m_timeStamp.x, ident)
+        saveHeader(ifile, s.m_tag.Freq, db.m_timeStamp.x, ident)
       else
-        saveHeader(ifile, s.m_tag.freq, 0, ident);
-      saveData(f, s.m_tag.tagname+'_'+inttostr(num),db, false);
+        saveHeader(ifile, s.m_tag.Freq, 0, ident);
+      savedata(f, s.m_tag.tagname + '_' + inttostr(num), db, false);
 
-      if i=0 then
+      if i = 0 then
       begin
-        ident:=t.m_tag.tagname+'_'+inttostr(num);
+        ident := t.m_tag.tagname + '_' + inttostr(num);
         if m_saveT0 then
-          saveHeader(ifile,t.m_tag.freq, tb.m_timeStamp.x, ident)
+          saveHeader(ifile, t.m_tag.Freq, tb.m_timeStamp.x, ident)
         else
-          saveHeader(ifile,t.m_tag.freq, 0, ident);
-        saveData(f, ident,tb, true);
+          saveHeader(ifile, t.m_tag.Freq, 0, ident);
+        savedata(f, ident, tb, true);
       end;
     end;
 
-    ident:='AvFRF_'+s.m_tag.tagname;
-    //ident := extractfiledir(ident) + '\'+'AvFRF_'+s.m_tag.tagname+'.dat';
-    saveHeader(ifile,1/c.fspmdx, 0,ident);
-    saveData(f, s.m_tag.tagname, s);
+    ident := 'AvFRF_' + s.m_tag.tagname;
+    // ident := extractfiledir(ident) + '\'+'AvFRF_'+s.m_tag.tagname+'.dat';
+    saveHeader(ifile, 1 / c.fspmdx, 0, ident);
+    savedata(f, s.m_tag.tagname, s);
 
-    ident:='Coh_'+s.m_tag.tagname;
-    saveHeader(ifile,1/c.fspmdx, 0,ident);
-    dir := extractfiledir(g_SRSFactory.m_merafile) + '\Shock\';
+    ident := 'Coh_' + s.m_tag.tagname;
+    saveHeader(ifile, 1 / c.fspmdx, 0, ident);
+    dir := extractfiledir(g_SRSFactory.m_meraFile) + '\Shock\';
     savedataCoh(dir, ident, s);
   end;
   ifile.destroy;
 end;
 
-
 procedure TSRSFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 var
   i: integer;
-  t:cSRSTaho;
-  c:cSpmCfg;
-  s:cSRSres;
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s: cSRSres;
 begin
   inherited;
-  t:=getTaho;
-  if t<>nil then
+  t := getTaho;
+  if t <> nil then
   begin
-    saveTagToIni(a_pIni,t.m_tag,str,'Taho_Tag');
+    saveTagToIni(a_pIni, t.m_tag, str, 'Taho_Tag');
     WriteFloatToIniMera(a_pIni, str, 'ShiftLeft', t.m_ShiftLeft);
     WriteFloatToIniMera(a_pIni, str, 'Threshold', t.m_treshold);
     WriteFloatToIniMera(a_pIni, str, 'Length', t.m_Length);
@@ -1303,19 +1302,19 @@ begin
     a_pIni.WriteBool(str, 'Spm_Lg_y', m_lgY);
     a_pIni.WriteBool(str, 'SaveT0', m_saveT0);
     a_pIni.WriteInteger(str, 'Estimator', m_estimator);
-    c:=t.Cfg;
-    if c<>nil then
+    c := t.cfg;
+    if c <> nil then
     begin
       a_pIni.WriteInteger(str, 'FFtnum', c.m_fftCount);
       a_pIni.WriteInteger(str, 'BlockCount', c.m_blockcount);
       a_pIni.WriteBool(str, 'AddNulls', c.m_addNulls);
       a_pIni.WriteInteger(str, 'SigCount', c.SRSCount);
-      a_pIni.WriteInteger(str, 'ResType', C.typeRes);
-      a_pIni.WriteInteger(str, 'ShockCount', C.m_capacity);
-      for I := 0 to c.SRSCount - 1 do
+      a_pIni.WriteInteger(str, 'ResType', c.typeres);
+      a_pIni.WriteInteger(str, 'ShockCount', c.m_capacity);
+      for i := 0 to c.SRSCount - 1 do
       begin
-        s:=c.GetSrs(i);
-        saveTagToIni(a_pIni,s.m_tag,str,'Tag_'+inttostr(i));
+        s := c.GetSrs(i);
+        saveTagToIni(a_pIni, s.m_tag, str, 'Tag_' + inttostr(i));
       end;
     end;
   end;
@@ -1323,30 +1322,31 @@ end;
 
 procedure TSRSFrm.ShowShock(shock: integer);
 var
-  t:cSRSTaho;
-  c:cSpmCfg;
-  s:cSRSres;
-  I, j: Integer;
-  block, tahobl:TDataBlock;
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s: cSRSres;
+  i, j: integer;
+  block, tahobl: TDataBlock;
 begin
-  t:=getTaho;
-  if t=nil then exit;
-  c:=t.Cfg;
-  for I := 0 to c.m_SRSList.Count - 1 do
+  t := getTaho;
+  if t = nil then
+    exit;
+  c := t.cfg;
+  for i := 0 to c.m_SRSList.Count - 1 do
   begin
-    s:=c.GetSrs(i);
-    s.lineAvFRF.visible:=true;
-    //for j := 0 to s.m_shockList.Count - 1 do
-    if (shock<s.m_shockList.Count) and (shock>-1) then
+    s := c.GetSrs(i);
+    s.lineAvFRF.visible := true;
+    // for j := 0 to s.m_shockList.Count - 1 do
+    if (shock < s.m_shockList.Count) and (shock > -1) then
     begin
-      block:=s.m_shockList.getBlock(shock);
-      tahobl:=t.m_shockList.getBlock(shock);
+      block := s.m_shockList.getBlock(shock);
+      tahobl := t.m_shockList.getBlock(shock);
       s.lineFrf.AddPoints(block.m_frf, c.fHalfFft);
 
-      s.line.flength:=block.m_TimeArrSize;
+      s.line.flength := block.m_TimeArrSize;
       s.line.AddPoints(block.m_TimeBlock, block.m_TimeArrSize);
 
-      t.line.flength:=tahobl.m_TimeArrSize;
+      t.line.flength := tahobl.m_TimeArrSize;
       t.line.AddPoints(tahobl.m_TimeBlock, tahobl.m_TimeArrSize);
       SpmChartDblClick(nil);
       SpmChart.redraw;
@@ -1354,355 +1354,363 @@ begin
   end;
 end;
 
-
-procedure TSRSFrm.SpmChartCursorMove(Sender: TObject);
+procedure TSRSFrm.SpmChartCursorMove(sender: tobject);
 var
-  t:cSRSTaho;
-  c:cSpmCfg;
-  tb:TDataBlock;
+  t: cSRSTaho;
+  c: cSpmCfg;
+  tb: TDataBlock;
 begin
   if UseWndFcb.Checked then
   begin
-    if SpmChart.activePage=pageT then
+    if SpmChart.activePage = pageT then
     begin
-      t:=getTaho;
-      c:=t.Cfg;
-      c.m_wnd.x2:=pageT.cursor.getx2;
-      tb:=t.m_shockList.getLastBlock;
+      t := getTaho;
+      c := t.cfg;
+      c.m_wnd.x2 := pageT.cursor.getx2;
+      tb := t.m_shockList.getLastBlock;
       tb.prepareData;
       t.line.AddPoints(TDoubleArray(tb.m_TimeBlockFlt.p), tb.m_TimeArrSize);
     end;
   end;
 end;
 
-procedure TSRSFrm.SpmChartDblClick(Sender: TObject);
+procedure TSRSFrm.SpmChartDblClick(sender: tobject);
 var
-  r:frect;
+  r: frect;
 begin
-  r.BottomLeft.x:=m_minX;
-  r.BottomLeft.y:=m_minY;
-  r.TopRight.x:=m_maxX;
-  r.TopRight.y:=m_maxY;
-  pageSpm.activeAxis:=axSpm;
+  r.BottomLeft.x := m_minX;
+  r.BottomLeft.Y := m_minY;
+  r.TopRight.x := m_maxX;
+  r.TopRight.Y := m_maxY;
+  pageSpm.activeAxis := axSpm;
   pageSpm.ZoomfRect(r);
 end;
 
-procedure TSRSFrm.ShockSBDownClick(Sender: TObject);
+procedure TSRSFrm.ShockSBDownClick(sender: tobject);
 var
-  t:cSRSTaho;
-  c:cSpmCfg;
-  s:cSRSres;
-  I, j: Integer;
-  block, tahobl:TDataBlock;
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s: cSRSres;
+  i, j: integer;
+  block, tahobl: TDataBlock;
 begin
-  t:=getTaho;
-  if t=nil then exit;
-  c:=t.Cfg;
-  if ShockIE.IntNum>0 then
+  t := getTaho;
+  if t = nil then
+    exit;
+  c := t.cfg;
+  if ShockIE.intnum > 0 then
   begin
-    ShockIE.IntNum:=ShockIE.IntNum-1;
-    ShowShock(ShockIE.IntNum);
+    ShockIE.intnum := ShockIE.intnum - 1;
+    ShowShock(ShockIE.intnum);
   end;
 end;
 
-
-procedure TSRSFrm.ShockSBUpClick(Sender: TObject);
+procedure TSRSFrm.ShockSBUpClick(sender: tobject);
 var
-  t:cSRSTaho;
-  c:cSpmCfg;
-  s:cSRSres;
-  I, j: Integer;
-  block, tahobl:TDataBlock;
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s: cSRSres;
+  i, j: integer;
+  block, tahobl: TDataBlock;
 begin
-  t:=getTaho;
-  if t=nil then exit;
-  c:=t.Cfg;
-  if ShockIE.IntNum<t.m_shockList.Count-1 then
+  t := getTaho;
+  if t = nil then
+    exit;
+  c := t.cfg;
+  if ShockIE.intnum < t.m_shockList.Count - 1 then
   begin
-    ShockIE.IntNum:=ShockIE.IntNum+1;
-    ShowShock(ShockIE.IntNum);
+    ShockIE.intnum := ShockIE.intnum + 1;
+    ShowShock(ShockIE.intnum);
   end;
 end;
 
 procedure TSRSFrm.TestCoh;
 var
-  c:cSpmCfg;
-  t:cSRSTaho;
-  s:cSRSres;
-  d1:TCmxArray_d;
-  cmx:TComplex_d;
+  c: cSpmCfg;
+  t: cSRSTaho;
+  s: cSRSres;
+  D1: TCmxArray_d;
+  cmx: TComplex_d;
 begin
-  t:=getTaho;
-  c:=t.Cfg;
-  s:=c.GetSrs(0);
+  t := getTaho;
+  c := t.cfg;
+  s := c.GetSrs(0);
 
-  setlength(d1, 1);
-  cmx.Re:=-30.25475291;cmx.im:=-82.46784439;
-  d1[0]:=cmx;
-  //t.m_shockList.addBlock(@d1[0],1);
-  cmx.Re:=14.69077253;cmx.im:=-86.75400644;
-  d1[0]:=cmx;
-  //t.m_shockList.addBlock(@d1[0],1);
+  SetLength(D1, 1);
+  cmx.Re := -30.25475291;
+  cmx.im := -82.46784439;
+  D1[0] := cmx;
+  // t.m_shockList.addBlock(@d1[0],1);
+  cmx.Re := 14.69077253;
+  cmx.im := -86.75400644;
+  D1[0] := cmx;
+  // t.m_shockList.addBlock(@d1[0],1);
 
-  cmx.Re:=-30.25475291;cmx.im:=-82.46784439;
-  d1[0]:=cmx;
-  //s.m_shockList.addBlock(d1,1);
-  cmx.Re:=-74.66651386;cmx.im:=45.57920805;
-  d1[0]:=cmx;
-  //s.m_shockList.addBlock(d1,1);
+  cmx.Re := -30.25475291;
+  cmx.im := -82.46784439;
+  D1[0] := cmx;
+  // s.m_shockList.addBlock(d1,1);
+  cmx.Re := -74.66651386;
+  cmx.im := 45.57920805;
+  D1[0] := cmx;
+  // s.m_shockList.addBlock(d1,1);
 
-  setlength(s.m_shockList.m_Cxy, 1);
-  setlength(s.m_shockList.m_sxx, 1);
-  setlength(s.m_shockList.m_syy, 1);
-  setlength(s.m_shockList.m_coh, 1);
-  s.m_shockList.evalCoh(t.m_shockList, hideInd);
+  SetLength(s.m_shockList.m_Cxy, 1);
+  SetLength(s.m_shockList.m_Sxx, 1);
+  SetLength(s.m_shockList.m_Syy, 1);
+  SetLength(s.m_shockList.m_coh, 1);
+  s.m_shockList.evalCoh(t.m_shockList, hideind);
 end;
 
 { cSRSTaho }
-procedure cSRSTaho.setCfg(c: cSpmCfg);
+procedure cSRSTaho.setcfg(c: cSpmCfg);
 var
-  lc:cSpmCfg;
+  lc: cSpmCfg;
 begin
- if fSpmCfgList.Count>0 then
- begin
-   lc:=cSpmCfg(fSpmCfgList.Items[0]);
-   lc.Destroy;
-   fSpmCfgList.Clear;
- end;
- c.taho:=self;
- m_shockList.m_cfg:=c;
- fSpmCfgList.Add(c);
+  if fSpmCfgList.Count > 0 then
+  begin
+    lc := cSpmCfg(fSpmCfgList.Items[0]);
+    lc.destroy;
+    fSpmCfgList.clear;
+  end;
+  c.taho := self;
+  m_shockList.m_cfg := c;
+  fSpmCfgList.Add(c);
 end;
 
-function cSRSTaho.GetCfg: cSpmCfg;
+function cSRSTaho.getCfg: cSpmCfg;
 begin
-  result:=cSpmCfg(fSpmCfgList.items[0]);
+  result := cSpmCfg(fSpmCfgList.Items[0]);
 end;
 
-function cSRSTaho.GetCfg(i: integer): cSpmCfg;
+function cSRSTaho.getCfg(i: integer): cSpmCfg;
 begin
-  result:=cSpmCfg(fSpmCfgList.items[i]);
+  result := cSpmCfg(fSpmCfgList.Items[i]);
 end;
 
 function cSRSTaho.CfgCount: integer;
 begin
-  result:=fSpmCfgList.Count;
+  result := fSpmCfgList.Count;
 end;
 
 function cSRSTaho.corrLen: double;
 var
-  c:cSpmCfg;
+  c: cSpmCfg;
 begin
-  c:=getCfg;
-  result:=c.m_wnd.x2;
+  c := getCfg;
+  result := c.m_wnd.x2;
 end;
 
 constructor cSRSTaho.create;
 begin
   inherited;
-  m_treshold:=1;
-  m_CohTreshold:=0.5;
+  m_treshold := 1;
+  m_CohTreshold := 0.5;
   // отступ слева и длительность
-  m_ShiftLeft:=0.05;
-  m_Length:=1;
-  m_tag:=cTag.create;
-  fSpmCfgList:=TList.Create;
+  m_ShiftLeft := 0.05;
+  m_Length := 1;
+  m_tag := ctag.create;
+  fSpmCfgList := tlist.create;
 
-  m_shockList:=TDataBlockList.Create;
+  m_shockList := TDataBlockList.create;
 end;
 
 destructor cSRSTaho.destroy;
 begin
   m_tag.destroy;
-  fSpmCfgList.Destroy;
-  m_shockList.Destroy;
+  fSpmCfgList.destroy;
+  m_shockList.destroy;
   inherited;
 end;
 
-procedure cSRSTaho.evalCoh(hideInd:integer);
+procedure cSRSTaho.evalCoh(hideind: integer);
 var
-  I, shockCount: Integer;
-  c:cSpmCfg;
-  s:cSRSres;
-  len:double;
+  i, shockCount: integer;
+  c: cSpmCfg;
+  s: cSRSres;
+  len: double;
 begin
-  c:=cfg;
-  shockCount:=m_shockList.Count;
-  for I := 0 to c.SRSCount - 1 do
+  c := cfg;
+  shockCount := m_shockList.Count;
+  for i := 0 to c.SRSCount - 1 do
   begin
-    s:=c.GetSrs(i);
-    //getCommonInterval(s., t.TrigInterval);
-    //ComIntervalLen:=common_interval.y-common_interval.x;
-    if (shockCount=s.m_shockList.Count) and (m_shockList.m_LastBlock=s.m_shockList.m_LastBlock) then
+    s := c.GetSrs(i);
+    // getCommonInterval(s., t.TrigInterval);
+    // ComIntervalLen:=common_interval.y-common_interval.x;
+    if (shockCount = s.m_shockList.Count) and
+      (m_shockList.m_LastBlock = s.m_shockList.m_LastBlock) then
     begin
-      s.m_shockList.evalCoh(m_shockList, hideInd);
+      s.m_shockList.evalCoh(m_shockList, hideind);
       s.lineCoh.AddPoints(s.m_shockList.m_coh, c.fHalfFft);
     end
     else // число блоков в T и S разбежалось
     begin
-      //showmessage('taho:'+ inttostr(shockCount)+' s:'+inttostr(s.m_shockList.Count));
+      // showmessage('taho:'+ inttostr(shockCount)+' s:'+inttostr(s.m_shockList.Count));
     end;
   end;
 end;
+
 // taho - знаменатель
-procedure cSRSTaho.evalFRF(hideInd:integer; estimator:integer);
+procedure cSRSTaho.evalFRF(hideind: integer; estimator: integer);
 var
-  I, k, shockCount: Integer;
-  c:cSpmCfg;
-  s:cSRSres;
-  td, sd:TDataBlock;
-  j: Integer;
-  v1,v2:double;
-  cross, px, py:TComplex_d;
+  i, k, shockCount: integer;
+  c: cSpmCfg;
+  s: cSRSres;
+  td, sd: TDataBlock;
+  j: integer;
+  v1, v2: double;
+  cross, px, py: TComplex_d;
 begin
-  c:=cfg;
-  shockCount:=m_shockList.Count;
-  for I := 0 to c.SRSCount - 1 do
+  c := cfg;
+  shockCount := m_shockList.Count;
+  for i := 0 to c.SRSCount - 1 do
   begin
-    s:=c.GetSrs(i);
-    ZeroMemory(s.m_frf,length(s.m_frf)*sizeof(double));
-    ZeroMemory(s.m_shockList.m_Cxy,  length(s.m_shockList.m_Cxy)* sizeof(TComplex_d));
-    td:=nil;
-    sd:=nil;
+    s := c.GetSrs(i);
+    ZeroMemory(s.m_frf, length(s.m_frf) * sizeof(double));
+    ZeroMemory(s.m_shockList.m_Cxy,
+      length(s.m_shockList.m_Cxy) * sizeof(TComplex_d));
+    td := nil;
+    sd := nil;
     for k := 0 to s.m_shockList.Count - 1 do
     begin
-      if k=hideInd then
+      if k = hideind then
       begin
         dec(shockCount);
         continue;
       end;
-      td:=m_shockList.getBlock(k);
-      sd:=s.m_shockList.getBlock(k);
+      td := m_shockList.getBlock(k);
+      sd := s.m_shockList.getBlock(k);
       // без использования фазы   y/x. x - тахо
       for j := 0 to c.fHalfFft - 1 do
       begin
-        v1:=tdoublearray(sd.m_mod.p)[j];
-        v2:=tdoublearray(td.m_mod.p)[j];
-        if v2<>0 then
-          sd.m_frf[j]:=v1/v2
+        v1 := TDoubleArray(sd.m_mod.p)[j];
+        v2 := TDoubleArray(td.m_mod.p)[j];
+        if v2 <> 0 then
+          sd.m_frf[j] := v1 / v2
         else
-          sd.m_frf[j]:=1000000;
-        if estimator=0 then
-          s.m_frf[j]:=sd.m_frf[j]+s.m_frf[j];
+          sd.m_frf[j] := 1000000;
+        if estimator = 0 then
+          s.m_frf[j] := sd.m_frf[j] + s.m_frf[j];
       end;
     end;
     // усредняем
     case estimator of
       0: // без использования фазы
-      begin
-        for j := 0 to Cfg.fHalfFft - 1 do
         begin
-          s.m_phase[j]:=(180/pi)*s.m_shockList.m_Cxy[j].Im/s.m_shockList.m_Cxy[j].re;
-          if s.m_shockList.m_coh[j]<m_CohTreshold then
+          for j := 0 to cfg.fHalfFft - 1 do
           begin
-            s.m_frf[j]:=0;
-          end
-          else
-          begin
-            s.m_frf[j]:=s.m_frf[j]/ShockCount;
+            s.m_phase[j] := (180 / pi) * s.m_shockList.m_Cxy[j]
+              .im / s.m_shockList.m_Cxy[j].Re;
+            if s.m_shockList.m_coh[j] < m_CohTreshold then
+            begin
+              s.m_frf[j] := 0;
+            end
+            else
+            begin
+              s.m_frf[j] := s.m_frf[j] / shockCount;
+            end;
           end;
         end;
-      end;
       1: // H1 Syx/Sxx  x - тахо
-      begin
-       for j := 0 to Cfg.fHalfFft - 1 do
         begin
-          cross:=0;
-          v2:=0;
-          for k := 0 to s.m_shockList.Count - 1 do
+          for j := 0 to cfg.fHalfFft - 1 do
           begin
-            if k=hideInd then
+            cross := 0;
+            v2 := 0;
+            for k := 0 to s.m_shockList.Count - 1 do
             begin
-              continue;
+              if k = hideind then
+              begin
+                continue;
+              end;
+              td := m_shockList.getBlock(k);
+              sd := s.m_shockList.getBlock(k);
+              px := TCmxArray_d(td.m_ClxData.p)[j];
+              py := TCmxArray_d(sd.m_ClxData.p)[j];
+              cross := py * sopr(px) + cross;
+              v2 := td.m_mod2[j] + v2;
             end;
-            td:=m_shockList.getBlock(k);
-            sd:=s.m_shockList.getBlock(k);
-            px:=TCmxArray_d(td.m_ClxData.p)[j];
-            py:=TCmxArray_d(sd.m_ClxData.p)[j];
-            cross:=py*sopr(px)+cross;
-            v2:=td.m_mod2[j]+v2;
+            s.m_frf[j] := abs(cross) / v2;
           end;
-          s.m_frf[j]:=abs(cross)/v2;
         end;
-      end;
       2: // H1 Syy/Sxy  x - тахо
-      begin
-       for j := 0 to Cfg.fHalfFft - 1 do
         begin
-          cross:=0;
-          v1:=0;
-          for k := 0 to s.m_shockList.Count - 1 do
+          for j := 0 to cfg.fHalfFft - 1 do
           begin
-            if k=hideInd then
+            cross := 0;
+            v1 := 0;
+            for k := 0 to s.m_shockList.Count - 1 do
             begin
-              continue;
-            end;
-            td:=m_shockList.getBlock(k);
-            sd:=s.m_shockList.getBlock(k);
+              if k = hideind then
+              begin
+                continue;
+              end;
+              td := m_shockList.getBlock(k);
+              sd := s.m_shockList.getBlock(k);
 
-            px:=TCmxArray_d(td.m_ClxData.p)[j];
-            py:=TCmxArray_d(sd.m_ClxData.p)[j];
-            cross:=px*sopr(py)+cross;
-            v1:=sd.m_mod2[j]+v1;
+              px := TCmxArray_d(td.m_ClxData.p)[j];
+              py := TCmxArray_d(sd.m_ClxData.p)[j];
+              cross := px * sopr(py) + cross;
+              v1 := sd.m_mod2[j] + v1;
+            end;
+            s.m_frf[j] := v1 / abs(cross);
           end;
-          s.m_frf[j]:=v1/abs(cross);
         end;
-      end;
     end;
     // рисуем
-    s.lineavfrf.AddPoints(s.m_frf, c.fHalfFft);
-    s.linefrf.AddPoints(sd.m_frf, c.fHalfFft);
+    s.lineAvFRF.AddPoints(s.m_frf, c.fHalfFft);
+    s.lineFrf.AddPoints(sd.m_frf, c.fHalfFft);
   end;
 end;
 
-procedure cSRSTaho.ResetTrig;
+procedure cSRSTaho.resetTrig;
 var
-  c:cSpmCfg;
-  I: Integer;
-  s:cSRSres;
+  c: cSpmCfg;
+  i: integer;
+  s: cSRSres;
 begin
-  c:=Cfg;
-  //ZeroMemory(m_T1data.p,  c.m_fftCount* sizeof(double));
-  for I := 0 to c.SRSCount - 1 do
+  c := cfg;
+  // ZeroMemory(m_T1data.p,  c.m_fftCount* sizeof(double));
+  for i := 0 to c.SRSCount - 1 do
   begin
-    s:=c.GetSrs(i);
-    s.fComIntervalLen:=0;
-    //ZeroMemory(s.m_T1data.p,  c.m_fftCount* sizeof(double));
+    s := c.GetSrs(i);
+    s.fComIntervalLen := 0;
+    // ZeroMemory(s.m_T1data.p,  c.m_fftCount* sizeof(double));
   end;
   for i := 0 to c.SRSCount - 1 do
   begin
     s := c.GetSrs(i);
-    s.m_shockProcessed:=false;
+    s.m_shockProcessed := false;
   end;
-  fTrigState:=TrOff;
+  fTrigState := TrOff;
 end;
 
 function cSRSTaho.name: string;
 begin
-  result:=m_tag.tagname;
+  result := m_tag.tagname;
 end;
 
 { сSpmCfg }
 procedure cSpmCfg.addSRS(s: pointer);
 var
-  I: Integer;
-  ls:cSRSres;
-  t:itag;
+  i: integer;
+  ls: cSRSres;
+  t: itag;
 begin
   if GetObjectClass(s) = nil then
   begin
-    if Supports(itag(pointer(s)),IID_ITAG) then
+    if Supports(itag(pointer(s)), IID_ITAG) then
     begin
-      t:=itag(pointer(s));
-      for I := 0 to m_SRSList.Count - 1 do
+      t := itag(pointer(s));
+      for i := 0 to m_SRSList.Count - 1 do
       begin
-        ls:=cSRSres(m_SRSList.Items[i]);
-        if t=ls.m_tag.tag then
+        ls := cSRSres(m_SRSList.Items[i]);
+        if t = ls.m_tag.tag then
           exit;
       end;
-      ls:=cSRSres.create;
-      ls.m_tag.tag:=t;
-      ls.cfg:=self;
+      ls := cSRSres.create;
+      ls.m_tag.tag := t;
+      ls.cfg := self;
       m_SRSList.Add(ls);
     end
   end
@@ -1710,10 +1718,10 @@ begin
   begin
     if tobject(s) is cSRSres then
     begin
-      for I := 0 to m_SRSList.Count - 1 do
+      for i := 0 to m_SRSList.Count - 1 do
       begin
-        ls:=cSRSres(m_SRSList.Items[i]);
-        if s=ls then
+        ls := cSRSres(m_SRSList.Items[i]);
+        if s = ls then
           exit;
       end;
     end;
@@ -1723,95 +1731,96 @@ end;
 
 constructor cSpmCfg.create;
 begin
-  m_SRSList:=TList.Create;
-  m_fftCount:=32;
-  m_blockcount:=1;
-  m_addNulls:=false;
-  m_capacity:=5;
-  m_wnd.wndfunc:=wnd_no;
+  m_SRSList := tlist.create;
+  m_fftCount := 32;
+  m_blockcount := 1;
+  m_addNulls := false;
+  m_capacity := 5;
+  m_wnd.wndfunc := wnd_no;
 end;
 
 destructor cSpmCfg.destroy;
 begin
-  m_SRSList.Destroy;
+  m_SRSList.destroy;
 end;
 
 function cSpmCfg.Freq: double;
 begin
-  Result:=cSRSTaho(taho).m_tag.freq;
+  result := cSRSTaho(taho).m_tag.Freq;
 end;
 
 function cSpmCfg.GetSrs(i: integer): cSRSres;
 begin
-  result:=cSRSres(m_SRSList.Items[i]);
+  result := cSRSres(m_SRSList.Items[i]);
 end;
 
 function cSpmCfg.name: string;
 begin
-  result:= cSRSTaho(taho).name+'_FFTp='+inttostr(FFTProp.PCount);
+  result := cSRSTaho(taho).name + '_FFTp=' + inttostr(FFTProp.pcount);
 end;
 
 procedure cSpmCfg.settyperes(t: integer);
 var
-  I: Integer;
-  s:cSRSres;
-  b:boolean;
-  ltaho:cSRSTaho;
+  i: integer;
+  s: cSRSres;
+  b: boolean;
+  ltaho: cSRSTaho;
 begin
-  ftypeRes:=t;
-  for I := 0 to srsCount - 1 do
+  ftypeRes := t;
+  for i := 0 to SRSCount - 1 do
   begin
-    s:=GetSrs(i);
-    b:=t=c_FRF;
-    if s.lineSpm<>nil then
-      s.lineSpm.visible:=not b;
-    if s.linefrf<>nil then
-      s.linefrf.visible:=b;
+    s := GetSrs(i);
+    b := t = c_FRF;
+    if s.lineSpm <> nil then
+      s.lineSpm.visible := not b;
+    if s.lineFrf <> nil then
+      s.lineFrf.visible := b;
   end;
-  if taho<>nil then
+  if taho <> nil then
   begin
-    ltaho:= cSRSTaho(taho);
-    if ltaho.lineSpm<>nil then
+    ltaho := cSRSTaho(taho);
+    if ltaho.lineSpm <> nil then
     begin
-      ltaho.lineSpm.visible:= not b;
+      ltaho.lineSpm.visible := not b;
     end;
   end;
 end;
 
 function cSpmCfg.SRSCount: integer;
 begin
-  result:=m_SRSList.Count;
+  result := m_SRSList.Count;
 end;
 
 { cSRSres }
 constructor cSRSres.create;
 begin
-  m_tag:=cTag.create;
-  m_shockList:=TDataBlockList.Create;
+  m_tag := ctag.create;
+  m_shockList := TDataBlockList.create;
 end;
 
 destructor cSRSres.destroy;
 begin
   m_tag.destroy;
-  m_shockList.Destroy;
+  m_shockList.destroy;
 end;
 
 function cSRSres.name: string;
 begin
-  result:=m_tag.tagname;
+  result := m_tag.tagname;
 end;
 
 procedure cSRSres.setcfg(c: cSpmCfg);
 begin
-  fcfg:=c;
-  m_shockList.m_cfg:=c;
+  fcfg := c;
+  m_shockList.m_cfg := c;
 end;
 
 { cSRSFactory }
 procedure cSRSFactory.createevents;
 begin
   addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
-  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
+  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState,
+    doChangeRState);
 end;
 
 constructor cSRSFactory.create;
@@ -1845,46 +1854,46 @@ procedure cSRSFactory.doChangeRState(sender: tobject);
 begin
   case GetRCStateChange of
     RSt_Init:
-    begin
-      doStart;
-      doStop;
-    end;
+      begin
+        doStart;
+        doStop;
+      end;
     RSt_StopToView:
-    begin
-      g_SRSFactory.m_meraFile:=GetMeraFile;
-      doStart;
-    end;
+      begin
+        g_SRSFactory.m_meraFile := GetMeraFile;
+        doStart;
+      end;
     RSt_StopToRec:
-    begin
-      g_SRSFactory.m_meraFile:=GetMeraFile;
-      doStart;
-    end;
+      begin
+        g_SRSFactory.m_meraFile := GetMeraFile;
+        doStart;
+      end;
     RSt_ViewToStop:
-    begin
-      doStop;
-    end;
+      begin
+        doStop;
+      end;
     RSt_ViewToRec:
-    begin
-      g_SRSFactory.m_meraFile:=GetMeraFile;
-    end;
+      begin
+        g_SRSFactory.m_meraFile := GetMeraFile;
+      end;
     RSt_initToRec:
-    begin
-      g_SRSFactory.m_meraFile:=GetMeraFile;
-      doStart;
-    end;
+      begin
+        g_SRSFactory.m_meraFile := GetMeraFile;
+        doStart;
+      end;
     RSt_initToView:
-    begin
-      g_SRSFactory.m_meraFile:=GetMeraFile;
-      doStart;
-    end;
+      begin
+        g_SRSFactory.m_meraFile := GetMeraFile;
+        doStart;
+      end;
     RSt_RecToStop:
-    begin
-      doStop;
-    end;
+      begin
+        doStop;
+      end;
     RSt_RecToView:
-    begin
-      doStart;
-    end;
+      begin
+        doStart;
+      end;
   end;
 end;
 
@@ -1920,104 +1929,105 @@ begin
   end;
 end;
 
-function getSubNameFromFolder(fld:string):string;
+function getSubNameFromFolder(fld: string): string;
 var
-  I, l: Integer;
-  str:string;
+  i, l: integer;
+  str: string;
 begin
-  result:='';
-  l:=length(fld);
-  for I := length(fld) downto 1 do
+  result := '';
+  l := length(fld);
+  for i := length(fld) downto 1 do
   begin
-    if fld[i]='\' then
+    if fld[i] = '\' then
     begin
-      str:=Copy(fld, i+1, l-i-1);
+      str := Copy(fld, i + 1, l - i - 1);
       if isValue(str) then
       begin
-        l:=i;
+        l := i;
       end
       else
       begin
-        result:=str;
+        result := str;
         exit;
       end;
     end;
   end;
 end;
 
-procedure TSRSFrm.SaveMdbBtnClick(Sender: TObject);
+procedure TSRSFrm.SaveMdbBtnClick(sender: tobject);
 var
-  o:cObjFolder;
-  t:cTestFolder;
-  path:string;
+  o: cObjFolder;
+  t: cTestFolder;
+  path: string;
 
   i, j, num: integer;
   ifile: TIniFile;
-  f,ident,dir, sname, last, subname: string;
-  c:cSpmCfg;
-  taho:cSRSTaho;
+  f, ident, dir, sname, last, subname: string;
+  c: cSpmCfg;
+  taho: cSRSTaho;
   s: cSRSres;
-  b:boolean;
+  b: boolean;
 begin
-  if g_MBaseControl<>nil then
+  if g_MBaseControl <> nil then
   begin
-    o:=g_MBaseControl.GetSelectObj;
-    t:=g_MBaseControl.GetSelectTest;
-    if o<>nil then
+    o := g_MBaseControl.GetSelectObj;
+    t := g_MBaseControl.GetSelectTest;
+    if o <> nil then
     begin
-      path:=g_mbase.m_BaseFolder.Absolutepath;;
-      ForceDirectories(path+'\FrfTypes');
-      if o.ObjType<>'' then
+      path := g_mbase.m_BaseFolder.Absolutepath; ;
+      ForceDirectories(path + '\FrfTypes');
+      if o.ObjType <> '' then
       begin
-        path:= path+'\FrfTypes'+'\'+o.ObjType;
+        path := path + '\FrfTypes' + '\' + o.ObjType;
         ForceDirectories(path);
 
-
-        taho:=getTaho;
-        c:=taho.Cfg;
+        taho := getTaho;
+        c := taho.cfg;
         s := c.GetSrs(0);
-        if s=nil then exit;
-        sname:=s.m_tag.tagname+'_p№'+'0'+'_frf.dat';
-        f:=path+'\'+sname;
-        b:=false;
+        if s = nil then
+          exit;
+        sname := s.m_tag.tagname + '_p№' + '0' + '_frf.dat';
+        f := path + '\' + sname;
+        b := false;
         while isOpen(f) do
         begin
-          subname:=getSubNameFromFolder(path);
+          subname := getSubNameFromFolder(path);
           if not b then
           begin
-            if subname<>'Sub' then
+            if subname <> 'Sub' then
             begin
-              path:=path+'\Sub';
-              b:=true;
+              path := path + '\Sub';
+              b := true;
             end;
           end
           else
           begin
-            path:=modname(path, false, last);
+            path := ModName(path, false, last);
           end;
-          f:=path+'\'+sname;
+          f := path + '\' + sname;
         end;
         if b then
         begin
           ForceDirectories(path);
         end;
-        sname:='frf.mera';
-        f:=path+'\'+sname;
-        m_lastMDBfile:=f;
+        sname := 'frf.mera';
+        f := path + '\' + sname;
+        m_lastMDBfile := f;
 
         ifile := TIniFile.create(f);
         for i := 0 to c.SRSCount - 1 do
         begin
           s := c.GetSrs(i);
-          sname:=s.m_tag.tagname+'_p№'+inttostr(PointIE.IntNum)+'_frf';
-          ident:=sname;
-          saveHeader(ifile,1/c.fspmdx, 0, ident);
-          saveData(path, sname, s.m_frf);
+          sname := s.m_tag.tagname + '_p№' + inttostr(PointIE.intnum) + '_frf';
+          ident := sname;
+          saveHeader(ifile, 1 / c.fspmdx, 0, ident);
+          savedata(path, sname, s.m_frf);
 
-          sname:=s.m_tag.tagname+'_p№'+inttostr(PointIE.IntNum)+'_phase';
-          ident:=sname;
-          saveHeader(ifile,1/c.fspmdx, 0, ident);
-          saveData(path, sname, s.m_phase);
+          sname := s.m_tag.tagname + '_p№' + inttostr(PointIE.intnum)
+            + '_phase';
+          ident := sname;
+          saveHeader(ifile, 1 / c.fspmdx, 0, ident);
+          savedata(path, sname, s.m_phase);
 
           ifile.destroy;
         end;
@@ -2026,33 +2036,32 @@ begin
   end;
 end;
 
-
 procedure cSRSFactory.doStop;
 var
-  mdb:boolean;
-  path:string;
-  I: Integer;
-  f:TSRSFrm;
+  mdb: boolean;
+  path: string;
+  i: integer;
+  f: TSRSFrm;
 begin
-  mdb:=false;
-  if g_MBaseControl<>nil then
+  mdb := false;
+  if g_MBaseControl <> nil then
   begin
-    path:=getMDBTestPath;
+    path := getMDBTestPath;
     if directoryexists(path) then
     begin
-      mdb:=true;
+      mdb := true;
     end;
   end;
-  for I := 0 to count - 1 do
+  for i := 0 to Count - 1 do
   begin
-    f:=TSRSFrm(GetFrm(i));
+    f := TSRSFrm(GetFrm(i));
     if mdb then
     begin
-     f.SaveMdbPan.Color:=clGreen;
+      f.SaveMdbPan.color := clGreen;
     end
     else
     begin
-     f.SaveMdbPan.Color:=clBtnFace;
+      f.SaveMdbPan.color := clBtnFace;
     end
   end;
 end;
@@ -2065,7 +2074,7 @@ begin
   for i := 0 to m_CompList.Count - 1 do
   begin
     Frm := GetFrm(i);
-    TSRSFrm(Frm).updateData;
+    TSRSFrm(Frm).updatedata;
   end;
 end;
 
@@ -2096,53 +2105,51 @@ end;
 
 procedure TDataBlock.BuildSpm;
 var
-  k,v:double;
-  c:cSpmCfg;
-  t:cSRSTaho;
-  maxT, maxS:double;
-  i, halfNP:integer;
+  k, v: double;
+  c: cSpmCfg;
+  t: cSRSTaho;
+  maxT, maxS: double;
+  i, halfNP: integer;
 begin
-  c:=TDataBlockList(m_owner).m_cfg;
-  fft_al_d_sse(TDoubleArray(m_TimeBlockFlt.p),
-              tCmxArray_d(m_ClxData.p),
-              cSpmCfg(c).FFTProp);
+  c := TDataBlockList(m_owner).m_cfg;
+  fft_al_d_sse(TDoubleArray(m_TimeBlockFlt.p), TCmxArray_d(m_ClxData.p),
+    cSpmCfg(c).FFTProp);
   // расчет первого спектра
   k := 2 / c.m_fftCount;
-  halfNP:=c.m_fftCount shr 1;
-  MULT_SSE_al_cmpx_d(tCmxArray_d(m_ClxData.p), k);
+  halfNP := c.m_fftCount shr 1;
+  MULT_SSE_al_cmpx_d(TCmxArray_d(m_ClxData.p), k);
   evalmod2;
-  EvalSpmMag(tCmxArray_d(m_ClxData.p),
-             TDoubleArray(m_mod.p));
+  EvalSpmMag(TCmxArray_d(m_ClxData.p), TDoubleArray(m_mod.p));
 end;
 
 procedure TDataBlock.evalmod2;
 var
-  I: Integer;
-  c:TComplex_d;
+  i: integer;
+  c: TComplex_d;
 begin
-  for I := 0 to m_spmsize - 1 do
+  for i := 0 to m_spmsize - 1 do
   begin
-    c:=sopr(TCmxArray_d(m_ClxData.p)[i]);
-    c:=TCmxArray_d(m_ClxData.p)[i]*c;
-    m_mod2[i]:=c.re;
+    c := sopr(TCmxArray_d(m_ClxData.p)[i]);
+    c := TCmxArray_d(m_ClxData.p)[i] * c;
+    m_mod2[i] := c.Re;
   end;
 end;
 
 function TDataBlock.getsize: integer;
 begin
-  result:=m_spmsize;
+  result := m_spmsize;
 end;
 
 function TDataBlock.index: integer;
 var
-  I: Integer;
+  i: integer;
 begin
-  result:=-1;
-  for I := 0 to m_owner.Count - 1 do
+  result := -1;
+  for i := 0 to m_owner.Count - 1 do
   begin
-    if TDataBlockList(m_owner).getBlock(i)=self then
+    if TDataBlockList(m_owner).getBlock(i) = self then
     begin
-      result:=i;
+      result := i;
       exit;
     end;
   end;
@@ -2150,7 +2157,7 @@ end;
 
 procedure TDataBlock.setsize(s: integer);
 begin
-  m_spmsize:=s shr 1;
+  m_spmsize := s shr 1;
   SetLength(m_frf, m_spmsize);
   SetLength(m_Cxy, m_spmsize);
   SetLength(m_mod2, m_spmsize);
@@ -2158,93 +2165,92 @@ end;
 
 function TDataBlock.TahoFreq: double;
 begin
-  result:=TDataBlockList(m_owner).m_cfg.Freq;
+  result := TDataBlockList(m_owner).m_cfg.Freq;
 end;
 
 { TDataBlockList }
-function TDataBlockList.addBlock(p_spmsize: integer):TDataBlock;
+function TDataBlockList.addBlock(p_spmsize: integer): TDataBlock;
 var
-  db:TDataBlock;
+  db: TDataBlock;
 begin
   inc(m_shockCount);
-  if (Count=m_cfg.m_capacity) and (m_cfg.m_capacity>0) then
+  if (Count = m_cfg.m_capacity) and (m_cfg.m_capacity > 0) then
   begin
-    m_LastBlock:=m_LastBlock+1;
-    if m_LastBlock=m_cfg.m_capacity then
-      m_LastBlock:=0;
-    db:=getBlock(m_LastBlock);
+    m_LastBlock := m_LastBlock + 1;
+    if m_LastBlock = m_cfg.m_capacity then
+      m_LastBlock := 0;
+    db := getBlock(m_LastBlock);
     // как будто добавили блок, соотв. сбрасываем показатель готовности
-    db.m_connectedInd:=-1;
+    db.m_connectedInd := -1;
   end
   else
   begin
-    db:=TDataBlock.Create;
-    db.spmsize:=p_spmsize;
-    m_LastBlock:=Add(db);
+    db := TDataBlock.create;
+    db.spmsize := p_spmsize;
+    m_LastBlock := Add(db);
   end;
-  //system.move(TCmxArray_d(cpx_spm_data)[0], db.m_spm[0], dsize*sizeof(TComplex_d));
-  //db.evalmod2;
-  db.m_owner:=Self;
-  result:=db;
+  // system.move(TCmxArray_d(cpx_spm_data)[0], db.m_spm[0], dsize*sizeof(TComplex_d));
+  // db.evalmod2;
+  db.m_owner := self;
+  result := db;
 end;
 
-function TDataBlockList.addBlock(p_spmsize: integer;
-                                 time: point2d; // timestamp
-                                 // timeblock
-                                 tb:TDoubleArray;
-                                 // размер очередного блока
-                                 p_timesize:integer):TDataBlock;
+function TDataBlockList.addBlock(p_spmsize: integer; time: point2d; // timestamp
+  // timeblock
+  tb: TDoubleArray;
+  // размер очередного блока
+  p_timesize: integer): TDataBlock;
 begin
-  result:=addBlock(p_spmsize);
-  result.m_timeStamp:=time;
-  if p_timesize>result.m_timecapacity then
+  result := addBlock(p_spmsize);
+  result.m_timeStamp := time;
+  if p_timesize > result.m_timecapacity then
   begin
-    setlength(result.m_TimeBlock,p_timesize);
-    result.m_timecapacity:=p_timesize;
-    GetMemAlignedArray_d(p_timesize, Result.m_TimeBlockFlt);
+    SetLength(result.m_TimeBlock, p_timesize);
+    result.m_timecapacity := p_timesize;
+    GetMemAlignedArray_d(p_timesize, result.m_TimeBlockFlt);
   end;
-  GetMemAlignedArray_cmpx_d(p_spmsize, Result.m_ClxData);
-  GetMemAlignedArray_d(p_spmsize, Result.m_mod);
+  GetMemAlignedArray_cmpx_d(p_spmsize, result.m_ClxData);
+  GetMemAlignedArray_d(p_spmsize, result.m_mod);
 
-  system.move(tb[0], result.m_TimeBlock[0], p_timesize*sizeof(double));
-  result.m_TimeArrSize:=p_timesize;
+  system.move(tb[0], result.m_TimeBlock[0], p_timesize * sizeof(double));
+  result.m_TimeArrSize := p_timesize;
 end;
 
 procedure TDataBlock.prepareData;
 var
-  i, n:integer;
+  i, n: integer;
 begin
-  system.move(m_TimeBlock[0], tdoublearray(m_TimeBlockFlt.p)[0],
-              m_TimeArrSize*sizeof(double));
+  system.move(m_TimeBlock[0], TDoubleArray(m_TimeBlockFlt.p)[0],
+    m_TimeArrSize * sizeof(double));
   case TDataBlockList(m_owner).m_cfg.m_wnd.wndfunc of
     wnd_rect:
-    begin
-      i:=round(TDataBlockList(m_owner).m_cfg.m_wnd.x2*TahoFreq);
-      n:=m_TimeArrSize-i;
-      ZeroMemory(@TDoubleArray(m_TimeBlockFlt.p)[i], n*sizeof(double));
-    end;
+      begin
+        i := round(TDataBlockList(m_owner).m_cfg.m_wnd.x2 * TahoFreq);
+        n := m_TimeArrSize - i;
+        ZeroMemory(@TDoubleArray(m_TimeBlockFlt.p)[i], n * sizeof(double));
+      end;
   end;
 end;
 
 procedure TDataBlockList.clearData;
 var
-  d:TDataBlock;
-  I, l: Integer;
+  d: TDataBlock;
+  i, l: integer;
 begin
-  m_shockCount:=0;
-  l:=length(m_Cxy);
-  if l>0 then
+  m_shockCount := 0;
+  l := length(m_Cxy);
+  if l > 0 then
   begin
-    ZeroMemory(m_Cxy, l*(sizeof(TComplex_d)));
-    ZeroMemory(m_sxx, l*(sizeof(double)));
-    ZeroMemory(m_syy, l*(sizeof(double)));
+    ZeroMemory(m_Cxy, l * (sizeof(TComplex_d)));
+    ZeroMemory(m_Sxx, l * (sizeof(double)));
+    ZeroMemory(m_Syy, l * (sizeof(double)));
   end;
-  for I := 0 to Count - 1 do
+  for i := 0 to Count - 1 do
   begin
-    d:=TDataBlock(items[i]);
-    d.Destroy;
+    d := TDataBlock(Items[i]);
+    d.destroy;
   end;
-  Clear;
+  clear;
 end;
 
 constructor TDataBlockList.create;
@@ -2254,17 +2260,17 @@ end;
 
 procedure TDataBlockList.delBlock(db: TDataBlock);
 var
-  I: Integer;
-  bl:TDataBlock;
+  i: integer;
+  bl: TDataBlock;
 begin
-  for I := 0 to Count - 1 do
+  for i := 0 to Count - 1 do
   begin
-    bl:=getBlock(i);
-    if bl=db then
+    bl := getBlock(i);
+    if bl = db then
     begin
       Delete(i);
-      db.Destroy;
-      if m_LastBlock>i then
+      db.destroy;
+      if m_LastBlock > i then
       begin
         dec(m_LastBlock);
         exit;
@@ -2279,262 +2285,293 @@ end;
 
 destructor TDataBlockList.destroy;
 begin
-  ClearData;
+  clearData;
   inherited;
 end;
 
-procedure TDataBlockList.evalCoh(TahoShockList:TDataBlockList; hideind:integer);
+procedure TDataBlockList.evalCoh(TahoShockList: TDataBlockList;
+  hideind: integer);
 var
-  i, j, n, len:integer;
-  s, t:TDataBlock;
-  p1, p2:TComplex_d;
-  k:double;
+  i, j, n, len: integer;
+  s, t: TDataBlock;
+  p1, p2: TComplex_d;
+  k: double;
 begin
-  n:=Count;
-  if n=0 then exit;
+  n := Count;
+  if n = 0 then
+    exit;
 
-  len:=length(m_coh);
-  if len>0 then
+  len := length(m_coh);
+  if len > 0 then
   begin
-    ZeroMemory(m_Cxy, len*(sizeof(TComplex_d)));
-    ZeroMemory(m_sxx, len*(sizeof(double)));
-    ZeroMemory(m_syy, len*(sizeof(double)));
+    ZeroMemory(m_Cxy, len * (sizeof(TComplex_d)));
+    ZeroMemory(m_Sxx, len * (sizeof(double)));
+    ZeroMemory(m_Syy, len * (sizeof(double)));
   end;
-  for I := 0 to Count-1 do
+  for i := 0 to Count - 1 do
   begin
-    if i=hideind then
+    if i = hideind then
     begin
       continue;
       dec(n);
     end;
-    s:=getBlock(i);
-    t:=TahoShockList.getBlock(i);
+    s := getBlock(i);
+    t := TahoShockList.getBlock(i);
     for j := 0 to s.m_spmsize - 1 do // проход по спектру
     begin
-      p1:=TCmxArray_d(s.m_ClxData.p)[j];
-      p2:=Sopr(TCmxArray_d(t.m_ClxData.p)[j]);
+      p1 := TCmxArray_d(s.m_ClxData.p)[j];
+      p2 := sopr(TCmxArray_d(t.m_ClxData.p)[j]);
       // для H1 Cxy
-      s.m_Cxy[j]:=p1*p2;
-      m_Cxy[j]:=s.m_Cxy[j]+m_Cxy[j];
-      m_sxx[j]:=s.m_mod2[j]+m_sxx[j];
-      m_syy[j]:=t.m_mod2[j]+m_syy[j];
+      s.m_Cxy[j] := p1 * p2;
+      m_Cxy[j] := s.m_Cxy[j] + m_Cxy[j];
+      m_Sxx[j] := s.m_mod2[j] + m_Sxx[j];
+      m_Syy[j] := t.m_mod2[j] + m_Syy[j];
     end;
   end;
-  k:=1/(n);
+  k := 1 / (n);
   for j := 0 to s.m_spmsize - 1 do
   begin
-    m_coh[j]:=mod2(m_Cxy[j])/(m_sxx[j]*m_syy[j]);
+    m_coh[j] := mod2(m_Cxy[j]) / (m_Sxx[j] * m_Syy[j]);
     // делаемсреднюю комплексную передаточную характеристику
-    m_cXY[j]:=m_Cxy[j]*k;
+    m_Cxy[j] := m_Cxy[j] * k;
   end;
 end;
 
 function TDataBlockList.getBlock(i: integer): TDataBlock;
 begin
-  result:=nil;
-  if i<Count then
-    result:=TDataBlock(items[i]);
+  result := nil;
+  if i < Count then
+    result := TDataBlock(Items[i]);
 end;
 
 function TDataBlockList.getLastBlock: TDataBlock;
 begin
-  result:=getBlock(m_LastBlock);
+  result := getBlock(m_LastBlock);
 end;
 
-function TDataBlockList.getLastBlock(d:TDataBlock):TDataBlock;
+function TDataBlockList.getLastBlock(d: TDataBlock): TDataBlock;
 begin
-  if d=nil then
-    result:=getLastBlock
+  if d = nil then
+    result := getLastBlock
   else
-    result:=getPrevBlock(d);
+    result := getPrevBlock(d);
 end;
 
-function TDataBlockList.getPrevBlock(d:TDataBlock): TDataBlock;
+function TDataBlockList.getPrevBlock(d: TDataBlock): TDataBlock;
 var
-  i:integer;
+  i: integer;
 begin
-  if d=nil then
+  if d = nil then
   begin
-    result:=getLastBlock;
+    result := getLastBlock;
   end
   else
   begin
-    i:=d.index-1;
-    if i<0 then
+    i := d.index - 1;
+    if i < 0 then
     begin
-      i:=Count-1;
+      i := Count - 1;
     end;
-    result:=getBlock(i);
+    result := getBlock(i);
   end;
 end;
 
 { cExpFuncObj }
 procedure cExpFuncObj.compile;
 var
-  a:caxis;
-  p:cpage;
-  i:integer;
-  isize:tpoint;
-  bsize:point2;
-  x, dx, xmax:single;
+  a: cAxis;
+  p: cpage;
+  i: integer;
+  isize: tpoint;
+  bsize: point2;
+  x, dx, xmax, ymax: single;
 begin
-  if m_NeedRecompile then
+  if m_needRecompile then
   begin
-    a:=caxis(parent);
-    p:=cpage(getpage);
-    if a.lg or p.lgx then
+    a := cAxis(parent);
+    p := cpage(GetPage);
+    if a.Lg or p.LgX then
     begin
-      //CompileLineLg;
+      // CompileLineLg;
     end
     else
     begin
-      a := caxis(parent);
-      p := cpage(getpage);
+      a := cAxis(parent);
+      p := cpage(GetPage);
       if a.Lg or p.LgX then
       begin
         inherited;
       end
       else
       begin
+        EvalBound;
+        EvalA;
         // подготовка к компиляции списка
         m_DisplayListName := glGenLists(1);
         glNewList(m_DisplayListName, GL_COMPILE);
         glLineWidth(m_weight);
+        xmax := a.max.x;
+        // марке на x0y0
+        ymax := a.max.y*0.95;
+        dx := (xmax - m_x0)/m_count;
+        i := 0;
+        //x := i * dx - m_x0;
+        x := i * dx;
         glBegin(GL_LINE_STRIP);
-        xmax:=a.max.x;
-        dx:=(xmax-m_x0)/m_Count;
-        i:=0;
-        x:=i * dx + m_x0;
-        glVertex2f(fA*x, system.Exp(-x));
-        for i := 1 to m_Count - 1 do
-        begin
-          x:=x + dx;
-          glVertex2f(x, system.exp(-x*fa));
-        end;
+          glVertex2f((x+m_x0), ymax*system.Exp(-x*fA));
+          for i := 1 to m_count - 1 do
+          begin
+            x := x + dx;
+            glVertex2f((x+m_x0), ymax*system.Exp(-x * fA));
+          end;
         glEnd;
         // отрисовка ползунка
-        isize.x:=15;
-        isize.y:=15;
-        bsize:=p.PixelSizeToTrend(isize,a);
-        bsize.x:=bsize.x*0.5;
-        bsize.y:=bsize.y*0.5;
+        isize.x := 15;
+        isize.Y := 15;
+        bsize := p.PixelSizeToTrend(isize, a);
+        bsize.x := bsize.x * 0.5;
+        bsize.Y := bsize.Y * 0.5;
         glBegin(GL_LINE_STRIP);
-        xmax:=a.max.x;
-        glbegin(GL_LINE_STRIP);
-          glvertex2f(m_x1-bsize.x,m_y1-bsize.y);
-          glvertex2f(m_x1-bsize.x,m_y1+bsize.y);
-          glvertex2f(m_x1+bsize.x,m_y1+bsize.y);
-          glvertex2f(m_x1+bsize.x,m_y1-bsize.y);
-          glvertex2f(m_x1-bsize.x,m_y1-bsize.y);
-        glend;
+          glVertex2f(m_x0 - bsize.x, ymax - bsize.Y);
+          glVertex2f(m_x0 - bsize.x, ymax + bsize.Y);
+          glVertex2f(m_x0 + bsize.x, ymax + bsize.Y);
+          glVertex2f(m_x0 + bsize.x, ymax - bsize.Y);
+          glVertex2f(m_x0 - bsize.x, ymax - bsize.Y);
+        glEnd;
+        // марке на x1y1
+        glBegin(GL_LINE_STRIP);
+        glVertex2f(m_x1 - bsize.x, m_y1 - bsize.Y);
+        glVertex2f(m_x1 - bsize.x, m_y1 + bsize.Y);
+        glVertex2f(m_x1 + bsize.x, m_y1 + bsize.Y);
+        glVertex2f(m_x1 + bsize.x, m_y1 - bsize.Y);
+        glVertex2f(m_x1 - bsize.x, m_y1 - bsize.Y);
+        glEnd;
         glEndList;
       end;
     end;
-    m_NeedRecompile:=false;
+    m_needRecompile := false;
   end;
 end;
 
 constructor cExpFuncObj.create;
 begin
   inherited;
-  color:=orange;
-  m_count:=200;
-  fA:=1;
-  m_x0:=0;
-  m_x1:=1;
-  m_weight:=1;
-  m_NeedRecompile:=true;
-  m_DisplayListName:=0;
+  color := orange;
+  m_count := 200;
+  fA := 1;
+  m_x0 := 0;
+  m_x1 := 1;
+  m_weight := 1;
+  m_needRecompile := true;
+  m_DisplayListName := 0;
   EvalA;
   EvalBound;
+  locked := false;
 end;
 
 procedure cExpFuncObj.doUpdateWorldSize(sender: tobject);
 begin
   inherited;
-  m_NeedRecompile:=true;
+  m_needRecompile := true;
 end;
 
 procedure cExpFuncObj.drawdata;
 var
-  oldweight:single;
+  oldweight: single;
 begin
   inherited;
-  if m_NeedRecompile then
+  if m_needRecompile then
     compile;
   // GL_LINE_WIDTH_RANGE GL_LINE_WIDTH_GRANULARITY
-  //glGetDoubleV(GL_LINE_WIDTH,@oldweight);
+  // glGetDoubleV(GL_LINE_WIDTH,@oldweight);
   glLineWidth(m_weight);
   glCallList(m_DisplayListName);
-  //glLineWidth(oldweight);
+  // glLineWidth(oldweight);
 end;
 
 procedure cExpFuncObj.EvalA;
 var
-  lnx:double;
+  lnx: double;
 begin
-  if m_y1<0.000001 then
-    lnx:=10
+  if m_y1 < 0.000001 then
+    lnx := -10
   else
-    lnx:=ln(m_y1);
-  fA:=lnx/m_x1;
+    lnx := ln(m_y1);
+  fA := -lnx / m_x1;
 end;
 
 procedure cExpFuncObj.EvalBound;
+var
+  a: cAxis;
+  p: cpage;
 begin
-  boundrect.BottomLeft.x:=m_x0;
-  boundrect.TopRight.x:=m_x1;
-  boundrect.BottomLeft.y:=m_y1;
-  boundrect.TopRight.y:=1;
+  a := cAxis(parent);
+  p := cpage(GetPage);
+
+  boundrect.BottomLeft.x := m_x0;
+  boundrect.TopRight.x := m_x1;
+  boundrect.BottomLeft.Y := m_y1;
+  if a<>nil then
+    boundrect.TopRight.Y := a.maxY*0.95
+  else
+    boundrect.TopRight.Y := 1;
+end;
+
+function cExpFuncObj.getScale(x: double): double;
+begin
+  // (x+m_x0), ymax*system.Exp(-x * fA)
+  result:=system.Exp(-(x-m_x0) * fA);
 end;
 
 procedure cExpFuncObj.SetPos(p: point2);
 begin
   case fTestObj of
-    0:;
+    0:
+      ;
     1:
-    begin
-      m_x0:=p.x;
-      //m_y1:=p.y;
-
-    end;
+      begin
+        m_x0 := p.x;
+        // m_y1:=p.y;
+      end;
     2:
-    begin
-      m_x1:=p.x;
-      m_y1:=p.y;
-    end;
+      begin
+        m_x1 := p.x;
+        m_y1 := p.Y;
+      end;
   end;
+  m_needRecompile := true;
 end;
 
-function cExpFuncObj.TestObj(p_p2:point2; dist:single):boolean;
+function cExpFuncObj.TestObj(p_p2: point2; dist: single): boolean;
 var
-  i:integer;
-  lDist:single;
-  lp2:point2;
-  a:caxis;
-  p:cpage;
+  i: integer;
+  lDist: single;
+  lp2: point2;
+  a: cAxis;
+  p: cpage;
 begin
-  fTestObj:=0;
-  a := caxis(parent);
-  p := cpage(getpage);
+  fTestObj := 0;
 
-  lp2.x:=p_p2.x-m_x1;
-  lp2.y:=p_p2.y-m_y1;
-  ldist:=sqrt(lp2.x*lp2.x+lp2.y*lp2.y);
-  if lDist<dist then
+  a := cAxis(parent);
+  p := cpage(GetPage);
+
+  lp2.x := p_p2.x - m_x1;
+  lp2.Y := p_p2.Y - m_y1;
+  lDist := sqrt(lp2.x * lp2.x + lp2.Y * lp2.Y);
+  if lDist < dist then
   begin
-    fTestObj:=2;
-    result:=true;
+    fTestObj := 2;
+    result := true;
     exit;
   end;
 
-  lp2.x:=p_p2.x-m_x0;
-  lp2.y:=p_p2.y-a.maxY;
-  ldist:=sqrt(lp2.x*lp2.x+lp2.y*lp2.y);
-  if lDist<dist then
+  lp2.x := p_p2.x - m_x0;
+  lp2.Y := p_p2.Y - a.maxY*0.95;
+  lDist := sqrt(lp2.x * lp2.x + lp2.Y * lp2.Y);
+  if lDist < dist then
   begin
-    fTestObj:=1;
-    result:=true;
+    fTestObj := 1;
+    result := true;
   end;
 end;
 

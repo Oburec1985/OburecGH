@@ -926,14 +926,14 @@ begin
   flocked := b;
   if not b then
   begin
-    fEnabled := b;
+    fEnabled := not b;
   end;
 end;
 
 procedure cMoveObj.SetEnabled(b: boolean);
 begin
   fEnabled := b;
-  if b then
+  if not b then
   begin
     flocked := true;
   end;

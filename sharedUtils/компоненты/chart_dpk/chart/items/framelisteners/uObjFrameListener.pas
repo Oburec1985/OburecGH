@@ -1,3 +1,4 @@
+
 unit uObjFrameListener;
 
 interface
@@ -93,7 +94,9 @@ begin
         end
         else
           fp:=cpage(page).p2itop2(mouse.iPos_inv);
-        curobj.Position:=p2(fp.x-delta.x, fp.y-delta.y);
+        // правка от 22.11.23 Ќе пон€л зачем вычитаетс€ delta, закоментил
+        /// curobj.Position:=p2(fp.x-delta.x, fp.y-delta.y);
+        curobj.Position:=p2(fp.x, fp.y);
         curobj.DoOnMove(mouse.iPos_inv);
       end
       else
