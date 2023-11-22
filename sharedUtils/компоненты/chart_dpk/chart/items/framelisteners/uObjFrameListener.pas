@@ -75,6 +75,7 @@ begin
     exit;
   if not (page is cbasepage) then
     exit;
+
   case msg.Msg of
     wm_mousemove:
     begin

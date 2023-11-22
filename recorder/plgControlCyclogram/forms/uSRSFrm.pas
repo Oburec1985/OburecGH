@@ -49,12 +49,15 @@ type
     // константа для градуировки точки x1 y1
     // exp(-fA*x1)=y1
     fA:double;
+    // 0 - не прошел тест 1- точка 0, 2 - точка 1
+    fTestObj:integer;
   public
     m_DisplayListName:Cardinal;
     m_needRecompile:boolean;
     m_weight:single;
     m_count:integer;
   protected
+    function TestObj(p_p2:point2; dist:single):boolean;override;
     // пересчитать границы
     procedure EvalBound; override;
     procedure EvalA;
@@ -62,6 +65,7 @@ type
     procedure drawdata;override;
     // происходит когда обновился масштаб оси объекта
     procedure doUpdateWorldSize(sender: tobject); override;
+    procedure SetPos(p: point2); override;
   public
     constructor create;override;
   end;
@@ -691,6 +695,8 @@ begin
     m_expWndline:=cExpFuncObj.create;
     m_expWndline.name:='ExpWndLine';
     m_expWndline.visible:=true;
+    m_expWndline.enabled:=true;
+    m_expWndline.selectable:=true;
     paget.activeAxis.AddChild(m_expWndline);
 
     c:=t.Cfg;
@@ -2431,7 +2437,7 @@ end;
 constructor cExpFuncObj.create;
 begin
   inherited;
-  color:=Yellow;
+  color:=orange;
   m_count:=200;
   fA:=1;
   m_x0:=0;
@@ -2480,6 +2486,56 @@ begin
   boundrect.TopRight.x:=m_x1;
   boundrect.BottomLeft.y:=m_y1;
   boundrect.TopRight.y:=1;
+end;
+
+procedure cExpFuncObj.SetPos(p: point2);
+begin
+  case fTestObj of
+    0:;
+    1:
+    begin
+      m_x0:=p.x;
+      //m_y1:=p.y;
+
+    end;
+    2:
+    begin
+      m_x1:=p.x;
+      m_y1:=p.y;
+    end;
+  end;
+end;
+
+function cExpFuncObj.TestObj(p_p2:point2; dist:single):boolean;
+var
+  i:integer;
+  lDist:single;
+  lp2:point2;
+  a:caxis;
+  p:cpage;
+begin
+  fTestObj:=0;
+  a := caxis(parent);
+  p := cpage(getpage);
+
+  lp2.x:=p_p2.x-m_x1;
+  lp2.y:=p_p2.y-m_y1;
+  ldist:=sqrt(lp2.x*lp2.x+lp2.y*lp2.y);
+  if lDist<dist then
+  begin
+    fTestObj:=2;
+    result:=true;
+    exit;
+  end;
+
+  lp2.x:=p_p2.x-m_x0;
+  lp2.y:=p_p2.y-a.maxY;
+  ldist:=sqrt(lp2.x*lp2.x+lp2.y*lp2.y);
+  if lDist<dist then
+  begin
+    fTestObj:=1;
+    result:=true;
+  end;
 end;
 
 end.
