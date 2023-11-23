@@ -596,7 +596,7 @@ object SRSFrm: TSRSFrm
       OnClick = EstimatorRGClick
     end
     object UseWndFcb: TCheckBox
-      Left = 70
+      Left = 69
       Top = 275
       Width = 47
       Height = 16
