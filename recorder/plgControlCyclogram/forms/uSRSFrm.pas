@@ -32,7 +32,8 @@ type
 
   TSpmWnd = record
     wndfunc: TSpmWndFunc;
-    x1, x2: double;
+    x1, x2, y: double;
+    // exp res = exp (ln(y)(x-x0)/(x1-x0))
   end;
 
   cSpmCfg = class;
@@ -116,6 +117,7 @@ type
 
   TDataBlockList = class(tlist)
   public
+    m_wnd:TSpmWnd;
     // когеренция по списку ударов
     m_coh: TDoubleArray;
     // кроссспектр ударов
@@ -146,7 +148,6 @@ type
   // конфигуратор расчета спектра
   cSpmCfg = class
   public
-    m_wnd: TSpmWnd;
     // ограничение по количеству ударов
     m_capacity: integer;
     // FFTplan
@@ -175,6 +176,8 @@ type
   protected
     procedure settyperes(t: integer);
   public
+    procedure setWnd(wf:TSpmWndFunc; x1,x2,y:double);overload;
+    procedure setWnd(wf:TSpmWndFunc);overload;
     procedure addSRS(s: pointer);
     function GetSrs(i: integer): cSRSres;
     function SRSCount: integer;
@@ -335,6 +338,8 @@ type
     m_corrS: boolean;
   protected
     fdelBtn: boolean; // нажали кнопку удалить удар
+  protected
+    procedure doUpdateParams(sender:tobject);
   public
     function hideind: integer;
     procedure delCurrentShock;
@@ -550,6 +555,32 @@ begin
   ready := true;
 end;
 
+procedure TSRSFrm.doUpdateParams(sender: tobject);
+var
+  t:cSRSTaho;
+  c:cSpmCfg;
+  s:cSRSres;
+  I: Integer;
+  db:TDataBlock;
+begin
+  t:=getTaho;
+  if t=nil then exit;
+
+  c:=t.getCfg;
+  for I := 0 to c.m_SRSList.Count - 1 do
+  begin
+    s:=c.GetSrs(i);
+    s.m_shockList.m_wnd.x1:=m_expWndline.m_x0;
+    s.m_shockList.m_wnd.x2:=m_expWndline.m_x1;
+    s.m_shockList.m_wnd.y:=m_expWndline.m_y1;
+    db:=s.m_shockList.getLastBlock;
+    if db=nil then
+      exit;
+    db.prepareData;
+    s.line.AddPoints(TDoubleArray(db.m_TimeBlockFlt.p), db.m_TimeArrSize);
+  end;
+end;
+
 procedure TSRSFrm.EstimatorRGClick(sender: tobject);
 var
   i: integer;
@@ -660,9 +691,12 @@ begin
   pageSpm.activeAxis.clear;
   t := getTaho;
   c := t.getCfg;
-  UseWndFcb.Checked := c.m_wnd.wndfunc <> wnd_no;
+  UseWndFcb.Checked := t.m_shockList.m_wnd.wndfunc <> wnd_no;
   if m_expWndline<>nil then
+  begin
+    m_expWndline.fUpdateParams:=doUpdateParams;
     m_expWndline.visible:=m_corrS;
+  end;
   if t <> nil then
   begin
     if t.m_corrTaho then
@@ -671,8 +705,8 @@ begin
       pageT.cursor.cursortype := c_DoubleCursor;
       pageT.cursor.setx1(0);
       pageT.cursor.setx2(t.corrLen);
-      c.m_wnd.x1 := 0;
-      c.m_wnd.x2 := t.corrLen;
+      t.m_shockList.m_wnd.x1 := 0;
+      t.m_shockList.m_wnd.x2 := t.corrLen;
     end
     else
     begin
@@ -703,9 +737,19 @@ begin
     m_expWndline.visible := true;
     m_expWndline.enabled := true;
     m_expWndline.selectable := true;
+    m_expWndline.fUpdateParams:=doUpdateParams;
+
     pageT.activeAxis.AddChild(m_expWndline);
 
     c := t.cfg;
+    if m_corrS then
+    begin
+      c.setWnd(wnd_exp,t.m_ShiftLeft,t.m_Length, 0.0001);
+    end
+    else
+    begin
+      c.setWnd(wnd_no);
+    end;
     for i := 0 to c.SRSCount - 1 do
     begin
       s := c.GetSrs(i);
@@ -940,8 +984,7 @@ begin
             s.line.flength := pcount;
 
             block := s.m_shockList.addBlock(c.m_fftCount, // SpmSize
-              p2d(common_interval.x,
-                common_interval.x + pcount / s.m_tag.Freq), // timeStamp
+              p2d(common_interval.x,common_interval.x + pcount / s.m_tag.Freq), // timeStamp
               TDoubleArray(s.m_T1data.p), // timeData
               pcount); // timeData size
             block.BuildSpm;
@@ -1009,6 +1052,8 @@ procedure TSRSFrm.UseWndFcbClick(sender: tobject);
 var
   t: cSRSTaho;
   c: cSpmCfg;
+  s:cSRSres;
+  i:integer;
 begin
   t := getTaho;
   c := t.cfg;
@@ -1020,27 +1065,29 @@ begin
     pageT.cursor.setx1(0);
     if t.corrLen <= 0 then
     begin
-      c.m_wnd.x2 := t.m_Length * 0.7;
+      t.m_shockList.m_wnd.x2 := t.m_Length * 0.7;
     end;
-    pageT.cursor.setx2(c.m_wnd.x2);
-    c.m_wnd.x1 := 0;
-    c.m_wnd.x2 := c.m_wnd.x2;
+    pageT.cursor.setx2(t.m_shockList.m_wnd.x2);
+    t.m_shockList.m_wnd.x1 := 0;
+    t.m_shockList.m_wnd.x2 := t.m_shockList.m_wnd.x2;
   end
   else
   begin
     pageT.cursor.visible := false;
     pageT.cursor.cursortype := c_DoubleCursor;
     pageT.cursor.setx1(0);
-    pageT.cursor.setx2(c.m_wnd.x2);
+    pageT.cursor.setx2(t.m_shockList.m_wnd.x2);
   end;
 
   if UseWndFcb.Checked then
   begin
-    c.m_wnd.wndfunc := wnd_rect;
+    t.m_shockList.m_wnd.wndfunc := wnd_rect;
+    c.setWnd(wnd_exp);
   end
   else
   begin
-    c.m_wnd.wndfunc := wnd_no;
+    t.m_shockList.m_wnd.wndfunc := wnd_no;
+    c.setWnd(wnd_no);
   end;
 end;
 
@@ -1377,7 +1424,7 @@ begin
     begin
       t := getTaho;
       c := t.cfg;
-      c.m_wnd.x2 := pageT.cursor.getx2;
+      t.m_shockList.m_wnd.x2 := pageT.cursor.getx2;
       tb := t.m_shockList.getLastBlock;
       tb.prepareData;
       t.line.AddPoints(TDoubleArray(tb.m_TimeBlockFlt.p), tb.m_TimeArrSize);
@@ -1509,7 +1556,7 @@ var
   c: cSpmCfg;
 begin
   c := getCfg;
-  result := c.m_wnd.x2;
+  result := m_shockList.m_wnd.x2;
 end;
 
 constructor cSRSTaho.create;
@@ -1702,6 +1749,37 @@ begin
 end;
 
 { сSpmCfg }
+procedure cSpmCfg.setWnd(wf:TSpmWndFunc; x1,x2,y:double);
+var
+  ls: cSRSres;
+  t: cSRSTaho;
+  i:integer;
+begin
+  t := csrstaho(taho);
+  for i := 0 to m_SRSList.Count - 1 do
+  begin
+    ls := cSRSres(m_SRSList.Items[i]);
+    ls.m_shockList.m_wnd.wndfunc:=wf;
+    ls.m_shockList.m_wnd.x1:=x1;
+    ls.m_shockList.m_wnd.x2:=x2;
+    ls.m_shockList.m_wnd.y:=y;
+  end;
+end;
+
+procedure cSpmCfg.setWnd(wf:TSpmWndFunc);
+var
+  ls: cSRSres;
+  t: cSRSTaho;
+  i:integer;
+begin
+  t := csrstaho(taho);
+  for i := 0 to m_SRSList.Count - 1 do
+  begin
+    ls := cSRSres(m_SRSList.Items[i]);
+    ls.m_shockList.m_wnd.wndfunc:=wf;
+  end;
+end;
+
 procedure cSpmCfg.addSRS(s: pointer);
 var
   i: integer;
@@ -1747,7 +1825,8 @@ begin
   m_blockcount := 1;
   m_addNulls := false;
   m_capacity := 5;
-  m_wnd.wndfunc := wnd_no;
+  if taho<>nil then
+    csrstaho(taho).m_shockList.m_wnd.wndfunc := wnd_no;
 end;
 
 destructor cSpmCfg.destroy;
@@ -1807,6 +1886,9 @@ constructor cSRSres.create;
 begin
   m_tag := ctag.create;
   m_shockList := TDataBlockList.create;
+  m_shockList.m_wnd.wndfunc:=wnd_no;
+  m_shockList.m_wnd.x1:=0;
+  m_shockList.m_wnd.x2:=1;
 end;
 
 destructor cSRSres.destroy;
@@ -2229,17 +2311,35 @@ end;
 
 procedure TDataBlock.prepareData;
 var
-  i, n: integer;
+  i, j, n: integer;
+  x,dx, m:double;
+  wnd:tSpmWnd;
 begin
   system.move(m_TimeBlock[0], TDoubleArray(m_TimeBlockFlt.p)[0],
     m_TimeArrSize * sizeof(double));
-  case TDataBlockList(m_owner).m_cfg.m_wnd.wndfunc of
+  wnd:=TDataBlockList(m_owner).m_wnd;
+  case wnd.wndfunc of
     wnd_rect:
+    begin
+      i := round(wnd.x2 * TahoFreq);
+      n := m_TimeArrSize - i;
+      ZeroMemory(@TDoubleArray(m_TimeBlockFlt.p)[i], n * sizeof(double));
+    end;
+    wnd_exp:
+    begin
+      j:=round(wnd.x1 * TahoFreq);
+      n := m_TimeArrSize - j;
+      dx:=1/TDataBlockList(m_owner).m_cfg.Freq;
+      x:=wnd.x1;
+      m:=mean(m_TimeBlock);
+      for I := 1 to n - 1 do
       begin
-        i := round(TDataBlockList(m_owner).m_cfg.m_wnd.x2 * TahoFreq);
-        n := m_TimeArrSize - i;
-        ZeroMemory(@TDoubleArray(m_TimeBlockFlt.p)[i], n * sizeof(double));
+        x:=x+dx;
+        if wnd.y=0 then
+          wnd.y:=0.000001;
+        TDoubleArray(m_TimeBlockFlt.p)[i+j]:= m+(m_TimeBlock[i+j]-m)*exp(ln(wnd.y)*(x-wnd.x1)/(wnd.x2-wnd.x1));
       end;
+    end;
   end;
 end;
 
@@ -2567,7 +2667,6 @@ begin
     1:
     begin
       m_x0 := p.x;
-      // m_y1:=p.y;
     end;
     2:
     begin
@@ -2576,6 +2675,7 @@ begin
       fy1:=fdy*m_y1+faxmin;
     end;
   end;
+  doOnUpdateParams;
   m_needRecompile := true;
 end;
 
