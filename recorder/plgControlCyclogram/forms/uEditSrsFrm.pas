@@ -391,6 +391,7 @@ begin
   c:=t.Cfg;
 
   t.m_corrTaho:=CorrTahoCB.Checked;
+
   c.m_wnd.x2:=LengthFE.FloatNum*0.7;
   if t=nil then exit;
   t.m_treshold:=ThresholdFE.FloatNum;
@@ -409,6 +410,8 @@ begin
   m_SRS.m_estimator:=EstimatorRG.ItemIndex;
   m_SRS.UpdateChart;
   m_SRS.m_saveT0:=SaveT0CB.Checked;
+  m_SRS.m_corrS:=CorrSCB.Checked;
+
   c.m_capacity:=ShCountIE.IntNum;
   t.m_CohTreshold:=CohThresholdFE.FloatNum;
 end;

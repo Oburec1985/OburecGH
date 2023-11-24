@@ -43,7 +43,11 @@ type
     // x1 - точка в которой нормируется значение экспоненты
     // y1 - значение экспоненты для x1
     m_x0, m_x1, m_y1: double;
+    // событие при обновлении координат
+    fUpdateParams:TNotifyEvent;
   protected
+    // координаты для отрисовки
+    fy0, fy1, fdy, fdy005, faxmin: double;
     // константа для градуировки точки x1 y1
     // exp(-fA*x1)=y1
     fA: double;
@@ -64,7 +68,9 @@ type
     // происходит когда обновился масштаб оси объекта
     procedure doUpdateWorldSize(sender: tobject); override;
     procedure SetPos(p: point2); override;
+    procedure doOnUpdateParams;
   public
+    procedure SetParams(x0, x1, y1:double);
     function getScale(x:double):double;
     constructor create; override;
   end;
@@ -325,6 +331,8 @@ type
     // последний полученный блок тахо
     m_lastTahoBlock: TDataBlock;
     m_lastMDBfile: string;
+    // редактировать отклик
+    m_corrS: boolean;
   protected
     fdelBtn: boolean; // нажали кнопку удалить удар
   public
@@ -653,6 +661,8 @@ begin
   t := getTaho;
   c := t.getCfg;
   UseWndFcb.Checked := c.m_wnd.wndfunc <> wnd_no;
+  if m_expWndline<>nil then
+    m_expWndline.visible:=m_corrS;
   if t <> nil then
   begin
     if t.m_corrTaho then
@@ -745,6 +755,7 @@ begin
     fr.BottomLeft := p2(0, -2 * t.m_treshold);
     fr.TopRight := p2(t.m_Length, t.m_treshold * 2);
     pageT.ZoomfRect(fr);
+    m_expWndline.SetParams(t.m_ShiftLeft, t.m_Length, 0.001);
 
     fr.BottomLeft := p2(m_minX, m_minY);
     fr.TopRight := p2(m_maxX, m_maxY);
@@ -2384,7 +2395,7 @@ var
   i: integer;
   isize: tpoint;
   bsize: point2;
-  x, dx, xmax, ymax: single;
+  x, dx, xmax, y: single;
 begin
   if m_needRecompile then
   begin
@@ -2412,17 +2423,16 @@ begin
         glLineWidth(m_weight);
         xmax := a.max.x;
         // марке на x0y0
-        ymax := a.max.y*0.95;
         dx := (xmax - m_x0)/m_count;
         i := 0;
         //x := i * dx - m_x0;
         x := i * dx;
         glBegin(GL_LINE_STRIP);
-          glVertex2f((x+m_x0), ymax*system.Exp(-x*fA));
+          glVertex2f((x+m_x0), fdy*system.Exp(-x*fA)+faxmin);
           for i := 1 to m_count - 1 do
           begin
             x := x + dx;
-            glVertex2f((x+m_x0), ymax*system.Exp(-x * fA));
+            glVertex2f((x+m_x0), fdy*system.Exp(-x * fA)+faxmin);
           end;
         glEnd;
         // отрисовка ползунка
@@ -2431,22 +2441,25 @@ begin
         bsize := p.PixelSizeToTrend(isize, a);
         bsize.x := bsize.x * 0.5;
         bsize.Y := bsize.Y * 0.5;
+        y:= fy0;// - fdy005;
         glBegin(GL_LINE_STRIP);
-          glVertex2f(m_x0 - bsize.x, ymax - bsize.Y);
-          glVertex2f(m_x0 - bsize.x, ymax + bsize.Y);
-          glVertex2f(m_x0 + bsize.x, ymax + bsize.Y);
-          glVertex2f(m_x0 + bsize.x, ymax - bsize.Y);
-          glVertex2f(m_x0 - bsize.x, ymax - bsize.Y);
+          glVertex2f(m_x0 - bsize.x, y - bsize.Y);
+          glVertex2f(m_x0 - bsize.x, y + bsize.Y);
+          glVertex2f(m_x0 + bsize.x, y + bsize.Y);
+          glVertex2f(m_x0 + bsize.x, y - bsize.Y);
+          glVertex2f(m_x0 - bsize.x, y - bsize.Y);
         glEnd;
         // марке на x1y1
+        y:= fy1; //+ fdy005;
         glBegin(GL_LINE_STRIP);
-        glVertex2f(m_x1 - bsize.x, m_y1 - bsize.Y);
-        glVertex2f(m_x1 - bsize.x, m_y1 + bsize.Y);
-        glVertex2f(m_x1 + bsize.x, m_y1 + bsize.Y);
-        glVertex2f(m_x1 + bsize.x, m_y1 - bsize.Y);
-        glVertex2f(m_x1 - bsize.x, m_y1 - bsize.Y);
+        glVertex2f(m_x1 - bsize.x, y - bsize.Y);
+        glVertex2f(m_x1 - bsize.x, y + bsize.Y);
+        glVertex2f(m_x1 + bsize.x, y + bsize.Y);
+        glVertex2f(m_x1 + bsize.x, y - bsize.Y);
+        glVertex2f(m_x1 - bsize.x, y - bsize.Y);
         glEnd;
         glEndList;
+        //p.Caption:=floattostr(fy1);
       end;
     end;
     m_needRecompile := false;
@@ -2469,9 +2482,26 @@ begin
   locked := false;
 end;
 
+procedure cExpFuncObj.doOnUpdateParams;
+begin
+  if assigned(fUpdateParams) then
+    fUpdateParams(self);
+end;
+
 procedure cExpFuncObj.doUpdateWorldSize(sender: tobject);
+var
+  p:cpage;
+  a:caxis;
 begin
   inherited;
+  p := cpage(GetPage);
+  a := cAxis(parent);
+  faxmin:=a.minY;
+  fdy:=a.maxY-a.minY;
+  fdy005:=0.05*fdy;
+  fy0:=a.maxY;
+  fy1:=fdy*m_y1+faxmin;
+
   m_needRecompile := true;
 end;
 
@@ -2497,7 +2527,7 @@ begin
     lnx := -10
   else
     lnx := ln(m_y1);
-  fA := -lnx / m_x1;
+  fA := -lnx/(m_x1-m_x0);
 end;
 
 procedure cExpFuncObj.EvalBound;
@@ -2510,11 +2540,8 @@ begin
 
   boundrect.BottomLeft.x := m_x0;
   boundrect.TopRight.x := m_x1;
-  boundrect.BottomLeft.Y := m_y1;
-  if a<>nil then
-    boundrect.TopRight.Y := a.maxY*0.95
-  else
-    boundrect.TopRight.Y := 1;
+  boundrect.BottomLeft.Y := fy1;
+  boundrect.TopRight.Y := fy0;
 end;
 
 function cExpFuncObj.getScale(x: double): double;
@@ -2523,21 +2550,31 @@ begin
   result:=system.Exp(-(x-m_x0) * fA);
 end;
 
+procedure cExpFuncObj.SetParams(x0, x1, y1:double);
+begin
+  m_x0 := x0;
+  m_x1 := x1;
+  m_y1 := m_y1;
+  EvalA;
+  EvalBound;
+  m_needRecompile:=true;
+end;
+
 procedure cExpFuncObj.SetPos(p: point2);
 begin
   case fTestObj of
-    0:
-      ;
+    0:;
     1:
-      begin
-        m_x0 := p.x;
-        // m_y1:=p.y;
-      end;
+    begin
+      m_x0 := p.x;
+      // m_y1:=p.y;
+    end;
     2:
-      begin
-        m_x1 := p.x;
-        m_y1 := p.Y;
-      end;
+    begin
+      m_x1 := p.x;
+      m_y1 := (p.Y-faxmin)/fdy;
+      fy1:=fdy*m_y1+faxmin;
+    end;
   end;
   m_needRecompile := true;
 end;
@@ -2547,17 +2584,13 @@ var
   i: integer;
   lDist: single;
   lp2: point2;
-  a: cAxis;
-  p: cpage;
 begin
   fTestObj := 0;
 
-  a := cAxis(parent);
-  p := cpage(GetPage);
-
   lp2.x := p_p2.x - m_x1;
-  lp2.Y := p_p2.Y - m_y1;
+  lp2.Y := p_p2.Y - fy1;
   lDist := sqrt(lp2.x * lp2.x + lp2.Y * lp2.Y);
+  dist:=dist*2;
   if lDist < dist then
   begin
     fTestObj := 2;
@@ -2566,7 +2599,7 @@ begin
   end;
 
   lp2.x := p_p2.x - m_x0;
-  lp2.Y := p_p2.Y - a.maxY*0.95;
+  lp2.Y := p_p2.Y - fy0;
   lDist := sqrt(lp2.x * lp2.x + lp2.Y * lp2.Y);
   if lDist < dist then
   begin
