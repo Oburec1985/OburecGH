@@ -2418,11 +2418,11 @@ begin
         //x := i * dx - m_x0;
         x := i * dx;
         glBegin(GL_LINE_STRIP);
-          glVertex2f((x+m_x0), ymax*system.Exp(-(x)*fA));
+          glVertex2f((x+m_x0), ymax*system.Exp(-x*fA));
           for i := 1 to m_count - 1 do
           begin
             x := x + dx;
-            glVertex2f((x+m_x0), ymax*system.Exp(-(x) * fA));
+            glVertex2f((x+m_x0), ymax*system.Exp(-x * fA));
           end;
         glEnd;
         // отрисовка ползунка
