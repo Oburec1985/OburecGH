@@ -141,6 +141,7 @@ var
   str:string;
 begin
   //inherited;
+  result:=ParsToStr(m_pars);
   str:=replaceChar(dXEdit.Text, ',', '.');
   addParam(m_pars, 'Period', str);
 
@@ -257,7 +258,11 @@ begin
     SetTahoType(false);
     FFTCountEdit.Text:=GetParsValue(m_pars, 'FFTCount');
 
+    p:=UseBandCB.OnClick;
+    UseBandCB.OnClick:=nil;
     UseBandCB.checked:=strtoboolext(GetParsValue(m_pars, 'FFTUseBand'));
+    UseBandCB.OnClick:=p;
+
     ne:=BandF1Edit.OnChange;
     BandF1Edit.OnChange:=nil;
     BandF1Edit.text:=GetParsValue(m_pars, 'FFTBand1');

@@ -331,6 +331,10 @@ type
     m_minX, m_maxX: double;
     m_minY, m_maxY: double;
     m_saveT0: boolean;
+
+    m_UseWelch:boolean;
+    m_WelchShiftIE,
+    m_WelchCount:integer;
     // последний полученный блок тахо
     m_lastTahoBlock: TDataBlock;
     m_lastMDBfile: string;
@@ -354,6 +358,7 @@ type
     function getTaho: cSRSTaho;
     procedure RBtnClick(sender: tobject);
     procedure TestCoh;
+    procedure updateFrf;
   public
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -561,7 +566,8 @@ var
   c:cSpmCfg;
   s:cSRSres;
   I: Integer;
-  db:TDataBlock;
+  db, lb:TDataBlock;
+  j: Integer;
 begin
   t:=getTaho;
   if t=nil then exit;
@@ -573,11 +579,39 @@ begin
     s.m_shockList.m_wnd.x1:=m_expWndline.m_x0;
     s.m_shockList.m_wnd.x2:=m_expWndline.m_x1;
     s.m_shockList.m_wnd.y:=m_expWndline.m_y1;
-    db:=s.m_shockList.getLastBlock;
+    lb:=s.m_shockList.getLastBlock;
+    if lb=nil then exit;
+
+    lb.prepareData;
+    lb.BuildSpm;
     if db=nil then
       exit;
-    db.prepareData;
-    s.line.AddPoints(TDoubleArray(db.m_TimeBlockFlt.p), db.m_TimeArrSize);
+    for j := 0 to s.m_shockList.Count - 1 do
+    begin
+      db:=s.m_shockList.getBlock(j);
+      if lb=db then continue;
+      db.prepareData;
+      db.BuildSpm;
+    end;
+    s.line.AddPoints(TDoubleArray(lb.m_TimeBlockFlt.p), lb.m_TimeArrSize);
+  end;
+  updateFrf;
+end;
+
+procedure TSRSFrm.updateFrf;
+var
+  t:cSRSTaho;
+  c:cSpmCfg;
+begin
+  t:=getTaho;
+  if t=nil then exit;
+  c:=t.getCfg;
+
+  if t.m_shockList.Count > 0 then
+  begin
+    t.evalCoh(hideind);
+    t.evalFRF(hideind, m_estimator);
+    UpdateView;
   end;
 end;
 
@@ -691,6 +725,7 @@ begin
   pageSpm.activeAxis.clear;
   t := getTaho;
   c := t.getCfg;
+
   UseWndFcb.Checked := t.m_shockList.m_wnd.wndfunc <> wnd_no;
   if m_expWndline<>nil then
   begin
@@ -734,9 +769,9 @@ begin
 
     m_expWndline := cExpFuncObj.create;
     m_expWndline.name := 'ExpWndLine';
-    m_expWndline.visible := true;
-    m_expWndline.enabled := true;
-    m_expWndline.selectable := true;
+    m_expWndline.visible := UseWndFcb.Checked;
+    m_expWndline.enabled := UseWndFcb.Checked;
+    m_expWndline.selectable := UseWndFcb.Checked;
     m_expWndline.fUpdateParams:=doUpdateParams;
 
     pageT.activeAxis.AddChild(m_expWndline);
@@ -896,8 +931,6 @@ begin
         t.fTrigState := TrEnd;
         pcount := copyData(t.m_tag, t.TrigInterval, t.m_T1data);
         t.fDataCount := pcount;
-        t.line.AddPoints(TDoubleArray(t.m_T1data.p), pcount);
-        t.line.flength := pcount;
         /// дополнять нулями
         if pcount > c.m_fftCount then
         begin
@@ -912,6 +945,8 @@ begin
             p2d(t.TrigInterval.x, t.TrigInterval.x + pcount / t.m_tag.Freq),
             TDoubleArray(t.m_T1data.p), pcount);
           m_lastTahoBlock.prepareData;
+          t.line.AddPoints(TDoubleArray(m_lastTahoBlock.m_TimeBlockFlt.p), pcount);
+          t.line.flength := pcount;
           m_lastTahoBlock.BuildSpm;
           t.lineSpm.AddPoints(TDoubleArray(m_lastTahoBlock.m_mod.p),
             c.fHalfFft);
@@ -980,14 +1015,16 @@ begin
           if pcount >= c.m_fftCount then
           begin
             s.fDataCount := pcount;
-            s.line.AddPoints(TDoubleArray(s.m_T1data.p), pcount);
-            s.line.flength := pcount;
 
             block := s.m_shockList.addBlock(c.m_fftCount, // SpmSize
               p2d(common_interval.x,common_interval.x + pcount / s.m_tag.Freq), // timeStamp
               TDoubleArray(s.m_T1data.p), // timeData
               pcount); // timeData size
+            block.prepareData;
             block.BuildSpm;
+            s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p), pcount);
+            s.line.flength := pcount;
+
             m_lastTahoBlock.m_connectedInd := s.m_shockList.m_LastBlock;
             s.lineSpm.AddPoints(TDoubleArray(block.m_mod.p), c.fHalfFft);
             s.m_shockProcessed := true;
@@ -1089,6 +1126,10 @@ begin
     t.m_shockList.m_wnd.wndfunc := wnd_no;
     c.setWnd(wnd_no);
   end;
+  m_expWndline.locked := not UseWndFcb.Checked;
+  m_expWndline.visible := UseWndFcb.Checked;
+  m_expWndline.enabled := UseWndFcb.Checked;
+  m_expWndline.selectable := UseWndFcb.Checked;
 end;
 
 procedure TSRSFrm.WinPosBtnClick(sender: tobject);
@@ -1166,6 +1207,9 @@ begin
     end;
     c.typeres := a_pIni.ReadInteger(str, 'ResType', 0);
   end;
+  m_WelchShiftIE:=a_pIni.WriteInteger(str, 'FFtnum', 32);
+  m_WelchCount:=a_pIni.WriteInteger(str, 'BlockCount', 4);
+  m_UseWelch:=a_pIni.WriteBool(str, 'useWelch', true);
   // TestCoh;
   UpdateChart;
   UpdateBlocks;
@@ -1375,6 +1419,9 @@ begin
         saveTagToIni(a_pIni, s.m_tag, str, 'Tag_' + inttostr(i));
       end;
     end;
+    a_pIni.WriteInteger(str, 'FFtnum', m_WelchShiftIE);
+    a_pIni.WriteInteger(str, 'BlockCount', m_WelchCount);
+    a_pIni.WriteBool(str, 'useWelch', m_UseWelch);
   end;
 end;
 
@@ -1402,10 +1449,10 @@ begin
       s.lineFrf.AddPoints(block.m_frf, c.fHalfFft);
 
       s.line.flength := block.m_TimeArrSize;
-      s.line.AddPoints(block.m_TimeBlock, block.m_TimeArrSize);
+      s.line.AddPoints(tdoublearray(block.m_TimeBlockFlt.p), block.m_TimeArrSize);
 
       t.line.flength := tahobl.m_TimeArrSize;
-      t.line.AddPoints(tahobl.m_TimeBlock, tahobl.m_TimeArrSize);
+      t.line.AddPoints(tdoublearray(tahobl.m_TimeBlockFlt.p), tahobl.m_TimeArrSize);
       SpmChartDblClick(nil);
       SpmChart.redraw;
     end;
@@ -1426,10 +1473,13 @@ begin
       c := t.cfg;
       t.m_shockList.m_wnd.x2 := pageT.cursor.getx2;
       tb := t.m_shockList.getLastBlock;
+      if tb=nil then exit;
+
       tb.prepareData;
       t.line.AddPoints(TDoubleArray(tb.m_TimeBlockFlt.p), tb.m_TimeArrSize);
     end;
   end;
+  updateFrf;
 end;
 
 procedure TSRSFrm.SpmChartDblClick(sender: tobject);
@@ -2323,11 +2373,14 @@ begin
     begin
       i := round(wnd.x2 * TahoFreq);
       n := m_TimeArrSize - i;
-      ZeroMemory(@TDoubleArray(m_TimeBlockFlt.p)[i], n * sizeof(double));
+      if n>0 then
+        ZeroMemory(@TDoubleArray(m_TimeBlockFlt.p)[i], n * sizeof(double));
     end;
     wnd_exp:
     begin
       j:=round(wnd.x1 * TahoFreq);
+      if j<0 then
+        j:=0;
       n := m_TimeArrSize - j;
       dx:=1/TDataBlockList(m_owner).m_cfg.Freq;
       x:=wnd.x1;

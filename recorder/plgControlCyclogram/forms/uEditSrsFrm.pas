@@ -65,6 +65,12 @@ type
     EstimatorRG: TRadioGroup;
     CorrTahoCB: TCheckBox;
     CorrSCB: TCheckBox;
+    WelchGB: TGroupBox;
+    WelchShiftIE: TIntEdit;
+    WelchBCountIE: TIntEdit;
+    WelchShiftLabel: TLabel;
+    WelchCountLabel: TLabel;
+    UseWelchCb: TCheckBox;
     procedure SignalsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
@@ -248,6 +254,10 @@ var
   n, parnode: pvirtualnode;
   d: pnodedata;
 begin
+  UseWelchCb.Checked:=m_SRS.m_UseWelch;
+  WelchShiftIE.IntNum:=m_SRS.m_WelchShiftIE;
+  WelchBCountIE.IntNum:=m_SRS.m_WelchCount;
+
   MinXfe.FloatNum:=m_SRS.m_minX;
   MaxXfe.FloatNum:=m_SRS.m_maxX;
   MinYfe.FloatNum:=m_SRS.m_minY;
@@ -411,6 +421,10 @@ begin
   m_SRS.UpdateChart;
   m_SRS.m_saveT0:=SaveT0CB.Checked;
   m_SRS.m_corrS:=CorrSCB.Checked;
+
+  m_SRS.m_UseWelch:=UseWelchCb.Checked;
+  m_SRS.m_WelchShiftIE:=WelchShiftIE.IntNum;
+  m_SRS.m_WelchCount:=WelchBCountIE.IntNum;
 
   c.m_capacity:=ShCountIE.IntNum;
   t.m_CohTreshold:=CohThresholdFE.FloatNum;

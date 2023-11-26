@@ -279,7 +279,7 @@ begin
         begin
           if cMoveObj(obj).selectable then
           begin
-            mindist:=min(dist.x, dist.y, b);
+            mindist:=max(dist.x, dist.y, b);
             //page.Point2ToTrend();
             if cMoveObj(obj).TestObj(fp, mindist) then
             begin
