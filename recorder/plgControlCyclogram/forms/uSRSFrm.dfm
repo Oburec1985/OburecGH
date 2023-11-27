@@ -2,7 +2,7 @@ object SRSFrm: TSRSFrm
   Left = 0
   Top = 0
   Caption = 'SRSFrm'
-  ClientHeight = 473
+  ClientHeight = 423
   ClientWidth = 651
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,7 +18,7 @@ object SRSFrm: TSRSFrm
     Left = 0
     Top = 0
     Width = 499
-    Height = 473
+    Height = 423
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -32,15 +32,17 @@ object SRSFrm: TSRSFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitTop = -3
   end
   object RightGB: TGroupBox
     Left = 499
     Top = 0
     Width = 152
-    Height = 473
+    Height = 423
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
+    ExplicitLeft = 504
     object ShockCountLabel: TLabel
       Left = 8
       Top = 21
@@ -603,6 +605,15 @@ object SRSFrm: TSRSFrm
       Caption = #1054#1082#1085#1086
       TabOrder = 11
       OnClick = UseWndFcbClick
+    end
+    object WelchCB: TCheckBox
+      Left = 70
+      Top = 297
+      Width = 59
+      Height = 17
+      Caption = 'Welch'
+      TabOrder = 12
+      OnClick = WelchCBClick
     end
   end
 end

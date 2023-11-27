@@ -33,7 +33,6 @@ object EditSrsFrm: TEditSrsFrm
     OnChange = SignalsTVChange
     OnDragOver = SignalsTVDragOver
     OnDragDrop = SignalsTVDragDrop
-    ExplicitHeight = 444
     Columns = <>
   end
   inline TagsListFrame1: TTagsListFrame
@@ -43,11 +42,11 @@ object EditSrsFrm: TEditSrsFrm
     Height = 442
     Align = alRight
     TabOrder = 1
-    ExplicitLeft = 634
-    ExplicitHeight = 444
+    ExplicitLeft = 632
+    ExplicitHeight = 442
     inherited FormChannelsGB: TGroupBox
       Height = 442
-      ExplicitHeight = 444
+      ExplicitHeight = 442
       inherited ChanNamesPanel: TPanel
         Height = 107
         ExplicitHeight = 107
@@ -68,7 +67,7 @@ object EditSrsFrm: TEditSrsFrm
         Top = 122
         Height = 318
         ExplicitTop = 122
-        ExplicitHeight = 320
+        ExplicitHeight = 318
       end
     end
   end
@@ -79,8 +78,6 @@ object EditSrsFrm: TEditSrsFrm
     Height = 442
     Align = alClient
     TabOrder = 2
-    ExplicitWidth = 473
-    ExplicitHeight = 444
     object Splitter1: TSplitter
       Left = 1
       Top = 119
@@ -100,7 +97,6 @@ object EditSrsFrm: TEditSrsFrm
       Align = alTop
       Caption = #1058#1088#1080#1075#1075#1077#1088
       TabOrder = 0
-      ExplicitWidth = 471
       object RightShiftLabel: TLabel
         Left = 159
         Top = 65
@@ -138,7 +134,7 @@ object EditSrsFrm: TEditSrsFrm
         Text = '0.0'
       end
       object LengthFE: TFloatEdit
-        Left = 295
+        Left = 289
         Top = 84
         Width = 127
         Height = 21
@@ -170,7 +166,8 @@ object EditSrsFrm: TEditSrsFrm
       Align = alTop
       Caption = 'SPMGB'
       TabOrder = 1
-      ExplicitWidth = 471
+      ExplicitLeft = 2
+      ExplicitTop = 125
       object FFTBlockSizeLabel: TLabel
         Left = 8
         Top = 22
@@ -270,6 +267,7 @@ object EditSrsFrm: TEditSrsFrm
         Margins.Bottom = 2
         TabOrder = 1
         Text = '32'
+        OnChange = FFTBlockSizeIEChange
       end
       object FFTShiftSB: TSpinButton
         Left = 257
@@ -313,6 +311,7 @@ object EditSrsFrm: TEditSrsFrm
         Margins.Bottom = 2
         TabOrder = 3
         Text = '32'
+        OnChange = FFTShiftIEChange
       end
       object FFTdxFE: TFloatEdit
         Left = 276
@@ -328,7 +327,7 @@ object EditSrsFrm: TEditSrsFrm
         Text = '0.0'
       end
       object BlockSizeFE: TFloatEdit
-        Left = 4
+        Left = 8
         Top = 86
         Width = 109
         Height = 21
@@ -365,7 +364,7 @@ object EditSrsFrm: TEditSrsFrm
         TabOrder = 7
       end
       object ShCountIE: TIntEdit
-        Left = 5
+        Left = 8
         Top = 141
         Width = 109
         Height = 21
@@ -416,9 +415,8 @@ object EditSrsFrm: TEditSrsFrm
       Align = alClient
       Caption = 'ChartGB'
       TabOrder = 2
-      ExplicitTop = 312
-      ExplicitWidth = 471
-      ExplicitHeight = 153
+      ExplicitLeft = -3
+      ExplicitTop = 316
       object UpdateBtn: TSpeedButton
         Left = 417
         Top = 55
@@ -710,51 +708,33 @@ object EditSrsFrm: TEditSrsFrm
       Height = 91
       Caption = 'Welch'
       TabOrder = 3
-      object WelchShiftLabel: TLabel
-        Left = 65
-        Top = 22
-        Width = 32
-        Height = 13
-        Caption = #1057#1084#1077#1097'.'
-      end
       object WelchCountLabel: TLabel
         Left = 65
-        Top = 41
+        Top = 25
         Width = 36
         Height = 13
         Caption = #1041#1083#1086#1082#1086#1074
       end
-      object WelchShiftIE: TIntEdit
+      object WelchBCountIE: TIntEdit
         Left = 5
-        Top = 15
+        Top = 21
         Width = 55
         Height = 21
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
         Margins.Bottom = 2
+        Enabled = False
         TabOrder = 0
         Text = '32'
       end
-      object WelchBCountIE: TIntEdit
-        Left = 5
-        Top = 40
-        Width = 55
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        TabOrder = 1
-        Text = '32'
-      end
       object UseWelchCb: TCheckBox
-        Left = 3
-        Top = 66
+        Left = 5
+        Top = 47
         Width = 100
         Height = 16
         Caption = #1048#1089#1087#1086#1083#1100#1079#1086#1074#1072#1090#1100
-        TabOrder = 2
+        TabOrder = 1
       end
     end
   end

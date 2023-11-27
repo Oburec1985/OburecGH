@@ -234,6 +234,7 @@ type
 
   cSRSTaho = class
   public
+    m_frm:tform;
     m_CohTreshold,
     // јмплдитуда дл€ обнаружени€ событи€
     m_treshold: double;
@@ -278,6 +279,7 @@ type
     function corrLen: double;
     procedure evalCoh(hideind: integer);
     procedure evalFRF(hideind: integer; estimator: integer);
+    procedure evalFRFWelch(tb, sb:TDataBlock; estimator: integer);
     function name: string;
     constructor create;
     destructor destroy;
@@ -304,6 +306,7 @@ type
     hideCB: TCheckBox;
     EstimatorRG: TRadioGroup;
     UseWndFcb: TCheckBox;
+    WelchCB: TCheckBox;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -317,6 +320,7 @@ type
     procedure EstimatorRGClick(sender: tobject);
     procedure UseWndFcbClick(sender: tobject);
     procedure SpmChartCursorMove(sender: tobject);
+    procedure WelchCBClick(Sender: TObject);
   public
     ready: boolean;
     // h0, h1, h2
@@ -333,7 +337,7 @@ type
     m_saveT0: boolean;
 
     m_UseWelch:boolean;
-    m_WelchShiftIE,
+    m_WelchShift,
     m_WelchCount:integer;
     // последний полученный блок тахо
     m_lastTahoBlock: TDataBlock;
@@ -344,6 +348,8 @@ type
     fdelBtn: boolean; // нажали кнопку удалить удар
   protected
     procedure doUpdateParams(sender:tobject);
+    // расчет числа боков дл€ усреднени€
+    procedure EvalWelchBCount;
   public
     function hideind: integer;
     procedure delCurrentShock;
@@ -440,6 +446,7 @@ end;
 { TSRSFrm }
 procedure TSRSFrm.addTaho(t: cSRSTaho);
 begin
+  t.m_frm:=self;
   m_TahoList.Add(t);
 end;
 
@@ -932,7 +939,10 @@ begin
         pcount := copyData(t.m_tag, t.TrigInterval, t.m_T1data);
         t.fDataCount := pcount;
         /// дополн€ть нул€ми
-        if pcount > c.m_fftCount then
+        if pcount < c.m_fftCount then
+        begin
+
+        end;
         begin
           if m_lastTahoBlock <> nil then
           begin
@@ -950,10 +960,6 @@ begin
           m_lastTahoBlock.BuildSpm;
           t.lineSpm.AddPoints(TDoubleArray(m_lastTahoBlock.m_mod.p),
             c.fHalfFft);
-        end
-        else
-        begin
-          showmessage('FFT порци€ больше длительности удара!');
         end;
       end;
     end;
@@ -1013,6 +1019,9 @@ begin
           s.fComInt := common_interval;
           pcount := copyData(s.m_tag, common_interval, s.m_T1data);
           if pcount >= c.m_fftCount then
+          begin
+
+          end;
           begin
             s.fDataCount := pcount;
 
@@ -1132,6 +1141,11 @@ begin
   m_expWndline.selectable := UseWndFcb.Checked;
 end;
 
+procedure TSRSFrm.WelchCBClick(Sender: TObject);
+begin
+  EvalWelchBCount;
+end;
+
 procedure TSRSFrm.WinPosBtnClick(sender: tobject);
 begin
   if fileexists(g_SRSFactory.m_meraFile) then
@@ -1207,9 +1221,9 @@ begin
     end;
     c.typeres := a_pIni.ReadInteger(str, 'ResType', 0);
   end;
-  m_WelchShiftIE:=a_pIni.WriteInteger(str, 'FFtnum', 32);
-  m_WelchCount:=a_pIni.WriteInteger(str, 'BlockCount', 4);
-  m_UseWelch:=a_pIni.WriteBool(str, 'useWelch', true);
+  m_WelchShift:=a_pIni.ReadInteger(str, 'FFtnum', 32);
+  m_WelchCount:=a_pIni.ReadInteger(str, 'BlockCount', 4);
+  m_UseWelch:=a_pIni.ReadBool(str, 'useWelch', true);
   // TestCoh;
   UpdateChart;
   UpdateBlocks;
@@ -1419,7 +1433,6 @@ begin
         saveTagToIni(a_pIni, s.m_tag, str, 'Tag_' + inttostr(i));
       end;
     end;
-    a_pIni.WriteInteger(str, 'FFtnum', m_WelchShiftIE);
     a_pIni.WriteInteger(str, 'BlockCount', m_WelchCount);
     a_pIni.WriteBool(str, 'useWelch', m_UseWelch);
   end;
@@ -1511,6 +1524,22 @@ begin
     ShockIE.intnum := ShockIE.intnum - 1;
     ShowShock(ShockIE.intnum);
   end;
+end;
+
+procedure TSRSFrm.EvalWelchBCount;
+var
+  t:cSRSTaho;
+  c:cSpmCfg;
+  lastpos:integer;
+begin
+  t:=getTaho;
+  c:=t.cfg;
+  if t=nil then exit;
+  lastpos:=trunc(t.m_Length*t.m_tag.freq)-c.m_fftCount;
+  if lastpos>0 then
+    m_WelchCount:=trunc(lastpos/m_WelchShift)+1
+  else
+    m_WelchCount:=1;
 end;
 
 procedure TSRSFrm.ShockSBUpClick(sender: tobject);
@@ -1658,6 +1687,32 @@ begin
   end;
 end;
 
+procedure cSRSTaho.evalFRFWelch(tb, sb:TDataBlock; estimator: integer);
+var
+  i, halfNP: Integer;
+  k:double;
+  plan:tfftprop;
+  c:cSpmCfg;
+begin
+  c:=getCfg;
+  plan:=cSpmCfg(c).FFTProp;
+  plan.StartInd:=0;
+  // расчет первого спектра
+  k := 2 / c.m_fftCount;
+  halfNP := c.m_fftCount shr 1;
+
+  for i := 0 to TSRSFrm(m_frm).m_WelchCount - 1 do
+  begin
+    fft_al_d_sse(TDoubleArray(tb.m_TimeBlockFlt.p), TCmxArray_d(tb.m_ClxData.p), plan);
+    MULT_SSE_al_cmpx_d(TCmxArray_d(tb.m_ClxData.p), k);
+    //evalmod2;
+    //EvalSpmMag(TCmxArray_d(m_ClxData.p), TDoubleArray(m_mod.p));
+    fft_al_d_sse(TDoubleArray(sb.m_TimeBlockFlt.p), TCmxArray_d(sb.m_ClxData.p), plan);
+    MULT_SSE_al_cmpx_d(TCmxArray_d(sb.m_ClxData.p), k);
+    plan.StartInd:=TSRSFrm(m_frm).m_WelchShift+plan.StartInd;
+  end;
+end;
+
 // taho - знаменатель
 procedure cSRSTaho.evalFRF(hideind: integer; estimator: integer);
 var
@@ -1675,8 +1730,7 @@ begin
   begin
     s := c.GetSrs(i);
     ZeroMemory(s.m_frf, length(s.m_frf) * sizeof(double));
-    ZeroMemory(s.m_shockList.m_Cxy,
-      length(s.m_shockList.m_Cxy) * sizeof(TComplex_d));
+    ZeroMemory(s.m_shockList.m_Cxy, length(s.m_shockList.m_Cxy) * sizeof(TComplex_d));
     td := nil;
     sd := nil;
     for k := 0 to s.m_shockList.Count - 1 do
@@ -2346,6 +2400,12 @@ function TDataBlockList.addBlock(p_spmsize: integer; time: point2d; // timestamp
 begin
   result := addBlock(p_spmsize);
   result.m_timeStamp := time;
+  // дополн€ем нул€ми
+  if p_timesize<p_spmsize then
+  begin
+    // zeromem???
+    p_timesize:=p_spmsize;
+  end;
   if p_timesize > result.m_timecapacity then
   begin
     SetLength(result.m_TimeBlock, p_timesize);

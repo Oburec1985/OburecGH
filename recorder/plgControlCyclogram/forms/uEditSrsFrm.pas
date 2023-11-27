@@ -66,9 +66,7 @@ type
     CorrTahoCB: TCheckBox;
     CorrSCB: TCheckBox;
     WelchGB: TGroupBox;
-    WelchShiftIE: TIntEdit;
     WelchBCountIE: TIntEdit;
-    WelchShiftLabel: TLabel;
     WelchCountLabel: TLabel;
     UseWelchCb: TCheckBox;
     procedure SignalsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
@@ -82,9 +80,13 @@ type
     procedure FFTSizeSBDownClick(Sender: TObject);
     procedure FFTSizeSBUpClick(Sender: TObject);
     procedure UpdateBtnClick(Sender: TObject);
+    procedure WelchShiftIEChange(Sender: TObject);
+    procedure FFTBlockSizeIEChange(Sender: TObject);
+    procedure FFTShiftIEChange(Sender: TObject);
   public
     m_SRS:TSRSFrm;
   private
+    procedure UpdateWelchBCount;
     procedure ShowTaho(t:cSrsTaho);
     // обновить списки тегов в элементах
     Procedure UpdateTags;
@@ -133,6 +135,16 @@ procedure TEditSrsFrm.Edit(p_srs: tsrsfrm);
 begin
   m_SRS:=p_srs;
   ShowModal;
+end;
+
+procedure TEditSrsFrm.FFTBlockSizeIEChange(Sender: TObject);
+begin
+  UpdateWelchBCount;
+end;
+
+procedure TEditSrsFrm.FFTShiftIEChange(Sender: TObject);
+begin
+  UpdateWelchBCount;
 end;
 
 procedure TEditSrsFrm.FFTSizeSBDownClick(Sender: TObject);
@@ -255,7 +267,6 @@ var
   d: pnodedata;
 begin
   UseWelchCb.Checked:=m_SRS.m_UseWelch;
-  WelchShiftIE.IntNum:=m_SRS.m_WelchShiftIE;
   WelchBCountIE.IntNum:=m_SRS.m_WelchCount;
 
   MinXfe.FloatNum:=m_SRS.m_minX;
@@ -309,6 +320,7 @@ begin
   NullCB.Checked:=false;
   ShCountIE.IntNum:=c.m_capacity;
   CohThresholdFE.FloatNum:=t.m_CohTreshold;
+  UpdateWelchBCount;
 end;
 
 procedure TEditSrsFrm.SignalsTVChange(Sender: TBaseVirtualTree;
@@ -423,7 +435,6 @@ begin
   m_SRS.m_corrS:=CorrSCB.Checked;
 
   m_SRS.m_UseWelch:=UseWelchCb.Checked;
-  m_SRS.m_WelchShiftIE:=WelchShiftIE.IntNum;
   m_SRS.m_WelchCount:=WelchBCountIE.IntNum;
 
   c.m_capacity:=ShCountIE.IntNum;
@@ -434,6 +445,26 @@ procedure TEditSrsFrm.UpdateTags;
 begin
   TahoNameCB.updateTagsList;
   TagsListFrame1.ShowChannels;
+end;
+
+procedure TEditSrsFrm.WelchShiftIEChange(Sender: TObject);
+begin
+  UpdateWelchBCount;
+end;
+
+procedure TEditSrsFrm.UpdateWelchBCount;
+var
+  t:cSRSTaho;
+  lastpos:integer;
+begin
+  t:=GetSelectTaho;
+  if t=nil then exit;
+
+  lastpos:=trunc(LengthFE.FloatNum*t.m_tag.freq)-FFTBlockSizeIE.IntNum;
+  if lastpos>0 then
+    WelchBCountIE.IntNum:=trunc(lastpos/FFTShiftIE.IntNum)+1
+  ELSE
+    WelchBCountIE.IntNum:=1;
 end;
 
 end.
