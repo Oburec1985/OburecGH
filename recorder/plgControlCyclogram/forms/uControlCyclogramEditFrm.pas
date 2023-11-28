@@ -1047,6 +1047,7 @@ begin
         if str='' then break;
         m:=cModeObj.create;
         m.name:=str;
+        b:=false;
         p.addmode(m);
         // создание триггера
         if m.name='Стоп' then
@@ -1101,17 +1102,42 @@ begin
           str:=sh.Cells[j+4,6+3+modeind*c_modeColCount];
           if str<>'' then
           begin
-            params:=params+'Zone_state='+str+',';
+            // проверка на Вкл/ Выкл
+            if pos('кл', str)<1 then
+            begin
+              str:='Выкл';
+              params:=params+'Zone_state='+str+',';
+              if not b then
+              begin
+                showmessage('неверный формат данных, колонка Зоны, режим: '+m.name);
+                b:=true;
+              end;
+            end
+            else
+              params:=params+'Zone_state='+str+',';
           end;
           // Значения
           str:=sh.Cells[j+4,6+4+modeind*c_modeColCount];
           if str<>'' then
           begin
-            index:=0;
-            fname:=ReplaseChars(str, ',', '.');
-            fname:=ReplaseChars(fname, char(10), '_');
-            fname:=ReplaseChars(fname, '=', ':');
-            params:=params+'Vals='+fname+',';
+            if pos('.', str)<1 then
+            begin
+              str:='0...0;';
+              params:=params+'Vals='+str+',';
+              if not b then
+              begin
+                showmessage('неверный формат данных, колонка Значение, режим: '+m.name);
+                b:=true;
+              end;
+            end
+            else
+            begin
+              index:=0;
+              fname:=ReplaseChars(str, ',', '.');
+              fname:=ReplaseChars(fname, char(10), '_');
+              fname:=ReplaseChars(fname, '=', ':');
+              params:=params+'Vals='+fname+',';
+            end;
           end;
           updateParams(t.m_params, params, ',');
           //t.params:=params;

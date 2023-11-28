@@ -2785,18 +2785,26 @@ var
   str: string;
 begin
   Start := pos(':', vals);
-  if Start < 0 then
+  if Start <= 0 then
     Start := 1;
   vals := GetSubString(vals, ';', Start + 1, p);
   p := pos('...', vals);
   if p < 1 then
     p := pos('…', vals);
-  str := copy(vals, 1, p - 1);
-  result.x := strToFloatExt(str);
-  if vals[p] = '.' then
-    p := p + 2;
-  str := copy(vals, p + 1, Length(vals) - p);
-  result.y := strToFloatExt(str);
+  if p>0 then
+  begin
+    str := copy(vals, 1, p - 1);
+    result.x := strToFloatExt(str);
+    if vals[p] = '.' then
+      p := p + 2;
+    str := copy(vals, p + 1, Length(vals) - p);
+    result.y := strToFloatExt(str);
+  end
+  else
+  begin
+    result.x:=0;
+    result.y:=0;
+  end;
 end;
 
 procedure cControlObj.setparams(params: tstringlist);

@@ -1164,8 +1164,10 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
+            ExplicitLeft = 4
             ExplicitTop = 28
-            ExplicitHeight = 296
+            ExplicitWidth = 645
+            ExplicitHeight = 396
             inherited ProgramCounterLabel: TLabel
               Left = 4
               Top = 69
@@ -1218,6 +1220,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
+              Value = 0
               ExplicitTop = 94
               ExplicitWidth = 158
               ExplicitHeight = 27
@@ -1254,13 +1257,14 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
+            ExplicitLeft = 4
             ExplicitTop = 28
-            ExplicitWidth = 645
-            ExplicitHeight = 396
+            ExplicitWidth = 548
+            ExplicitHeight = 296
             inherited Splitter1: TSplitter
-              Left = 350
+              Left = 253
               Width = 6
-              Height = 396
+              Height = 296
               Margins.Left = 4
               Margins.Top = 4
               Margins.Right = 4
@@ -1271,20 +1275,20 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
               ExplicitHeight = 390
             end
             inherited ModeChannelsGB: TGroupBox
-              Left = 356
+              Left = 259
               Width = 289
-              Height = 396
+              Height = 296
               Margins.Left = 4
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 356
+              ExplicitLeft = 259
               ExplicitWidth = 289
-              ExplicitHeight = 396
+              ExplicitHeight = 296
               inherited ChannelsLV: TBtnListView
                 Top = 19
                 Width = 285
-                Height = 375
+                Height = 275
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1300,19 +1304,19 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
                   end>
                 ExplicitTop = 19
                 ExplicitWidth = 285
-                ExplicitHeight = 375
+                ExplicitHeight = 275
               end
             end
             inherited ModePanel: TPanel
-              Width = 350
-              Height = 396
+              Width = 253
+              Height = 296
               Margins.Left = 4
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
               Constraints.MinWidth = 251
-              ExplicitWidth = 350
-              ExplicitHeight = 396
+              ExplicitWidth = 253
+              ExplicitHeight = 296
               inherited ModeNameLabel: TLabel
                 Left = 4
                 Top = 3
