@@ -32,7 +32,6 @@ object SRSFrm: TSRSFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitTop = -3
   end
   object RightGB: TGroupBox
     Left = 499
@@ -42,7 +41,6 @@ object SRSFrm: TSRSFrm
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
-    ExplicitLeft = 504
     object ShockCountLabel: TLabel
       Left = 8
       Top = 21
