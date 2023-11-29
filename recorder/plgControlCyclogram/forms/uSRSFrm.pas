@@ -124,7 +124,10 @@ type
     m_coh: TDoubleArray;
     // кроссспектр ударов
     m_Cxy: TCmxArray_d; // Sxy
-    m_Sxx, m_Syy: TDoubleArray;
+    // спектр S
+    m_Sxx,
+    // спектр Taho
+    m_Syy: TDoubleArray;
     m_LastBlock: integer;
     m_shockCount: integer; // общее число ударов за все время
     m_cfg: cSpmCfg;
@@ -349,6 +352,7 @@ type
     m_corrS: boolean;
   protected
     fdelBtn: boolean; // нажали кнопку удалить удар
+    fUpdateFrf: boolean; // обновился frf
   protected
     procedure doUpdateParams(sender: tobject);
     // расчет числа боков для усреднения
@@ -357,6 +361,8 @@ type
     function hideind: integer;
     procedure delCurrentShock;
     PROCEDURE ShowShock(shock: integer);
+    // отобразить последнюю передаточную характеристику блока в S и усредн. передаточную
+    procedure ShowFrf(s:cSRSres; c:cSpmCfg);
     procedure UpdateView;
     procedure updatedata;
     // выделение памяти. происходит при загрузке или смене конфига
@@ -496,6 +502,17 @@ begin
     UpdateView;
 end;
 
+procedure TSRSFrm.ShowFrf(s:cSRSres; c:cSpmCfg);
+var
+  sd:TDataBlock;
+begin
+  // рисуем
+  sd:=s.m_shockList.getLastBlock;
+  s.lineAvFRF.AddPoints(s.m_frf, c.fHalfFft);
+  s.lineFrf.AddPoints(sd.m_frf, c.fHalfFft);
+  fUpdateFrf:=false;
+end;
+
 procedure TSRSFrm.delCurrentShock;
 var
   td, sd: TDataBlock;
@@ -515,11 +532,13 @@ begin
     td := t.m_shockList.getBlock(ShockIE.intnum);
     s.m_shockList.delBlock(sd);
     t.m_shockList.delBlock(td);
-    if t.m_shockList.Count > 0 then
-    begin
-      t.evalCoh(hideind);
-      t.evalFRF(hideind, m_estimator);
-    end;
+    updateFrf;
+    //if t.m_shockList.Count > 0 then
+    //begin
+    //  t.evalCoh(hideind);
+    //  t.evalFRF(hideind, m_estimator);
+    //  fUpdateFrf:=true;
+    //end;
   end;
   ShockCountE.Text := inttostr(t.m_shockList.Count);
   fdelBtn := false;
@@ -625,7 +644,7 @@ begin
   begin
     t.evalCoh(hideind);
     t.evalFRF(hideind, m_estimator);
-    UpdateView;
+    fUpdateFrf:=true;
   end;
 end;
 
@@ -638,9 +657,7 @@ var
 begin
   m_estimator := EstimatorRG.ItemIndex;
   t := getTaho;
-  // t.evalCoh(hideInd);
-  t.evalFRF(hideind, m_estimator);
-  ShowShock(ShockIE.intnum);
+  updateFrf;
   UpdateView;
 end;
 
@@ -1062,10 +1079,11 @@ var
   s: cSRSres;
 begin
   t := getTaho;
-  t.evalCoh(hideind);
-  t.evalFRF(hideind, m_estimator);
-  if not hideCB.Checked then
-    ShowShock(ShockIE.intnum);
+  //t.evalCoh(hideind);
+  //t.evalFRF(hideind, m_estimator);
+  //if not hideCB.Checked then
+  //  ShowShock(ShockIE.intnum);
+  updateFrf;
   UpdateView;
 end;
 
@@ -1088,13 +1106,16 @@ var
   t: cSRSTaho;
   s: cSRSres;
 begin
+  t := getTaho;
+  c:=t.getCfg;
   if fdelBtn then
   begin
     delCurrentShock;
+    s:=c.GetSrs(0);
+    ShowFrf(s, c);
   end;
   if RStatePlay then
   begin
-    t := getTaho;
     if t <> nil then
     begin
       ShockCountE.Text := inttostr(t.m_shockList.Count);
@@ -1475,8 +1496,7 @@ begin
         block.m_TimeArrSize);
 
       t.line.flength := tahobl.m_TimeArrSize;
-      t.line.AddPoints(TDoubleArray(tahobl.m_TimeBlockFlt.p),
-        tahobl.m_TimeArrSize);
+      t.line.AddPoints(TDoubleArray(tahobl.m_TimeBlockFlt.p), tahobl.m_TimeArrSize);
       SpmChartDblClick(nil);
       SpmChart.redraw;
     end;
@@ -1758,6 +1778,8 @@ begin
     td := nil;
     sd := nil;
     ZeroMemory(s.m_shockList.m_Cxy, length(s.m_shockList.m_Cxy)*sizeof(TComplex_d));
+    ZeroMemory(s.m_shockList.m_Sxx, length(s.m_shockList.m_Cxy)*sizeof(double));
+    ZeroMemory(s.m_shockList.m_Syy, length(s.m_shockList.m_Cxy)*sizeof(double));
     for k := 0 to s.m_shockList.Count - 1 do
     begin
       td := m_shockList.getBlock(k);
@@ -1766,6 +1788,11 @@ begin
       for j := 0 to c.fHalfFft-1 do
       begin
         s.m_shockList.m_Cxy[j]:=s.m_shockList.m_Cxy[j]+sd.m_WechSpm[j]*sopr(td.m_WechSpm[j]);
+        cross:=td.m_WechSpm[j]*sopr(td.m_WechSpm[j]);
+        s.m_shockList.m_Sxx[j]:=s.m_shockList.m_Sxx[j]+cross;
+
+        cross:=sd.m_WechSpm[j]*sopr(sd.m_WechSpm[j]);
+        s.m_shockList.m_Syy[j]:=s.m_shockList.m_Syy[j]+cross;
       end;
     end;
    // усредняем
@@ -1774,53 +1801,23 @@ begin
       begin
         for j := 0 to cfg.fHalfFft - 1 do
         begin
-          s.m_phase[j] := (180 / pi) * s.m_shockList.m_Cxy[j]
-            .im / s.m_shockList.m_Cxy[j].Re;
+          s.m_phase[j]:=(180/pi)*s.m_shockList.m_Cxy[j].im / s.m_shockList.m_Cxy[j].Re;
+          // Sensor/Taho
+          s.m_frf[j]:=sqrt(s.m_shockList.m_Syy[j]/s.m_shockList.m_Sxx[j]);
         end;
       end;
       1: // H1 Syx/Sxx  x - тахо
       begin
         for j := 0 to cfg.fHalfFft - 1 do
         begin
-          cross := 0;
-          v2 := 0;
-          for k := 0 to s.m_shockList.Count - 1 do
-          begin
-            if k = hideind then
-            begin
-              continue;
-            end;
-            td := m_shockList.getBlock(k);
-            sd := s.m_shockList.getBlock(k);
-            px := TCmxArray_d(td.m_ClxData.p)[j];
-            py := TCmxArray_d(sd.m_ClxData.p)[j];
-            cross := py * sopr(px) + cross;
-            v2 := td.m_mod2[j] + v2;
-          end;
-          s.m_frf[j] := abs(cross) / v2;
+          s.m_frf[j] := s.m_shockList.m_Cxy[j]/s.m_shockList.m_Sxx[j];
         end;
       end;
       2: // H1 Syy/Sxy  x - тахо
       begin
         for j := 0 to cfg.fHalfFft - 1 do
         begin
-          cross := 0;
-          v1 := 0;
-          for k := 0 to s.m_shockList.Count - 1 do
-          begin
-            if k = hideind then
-            begin
-              continue;
-            end;
-            td := m_shockList.getBlock(k);
-            sd := s.m_shockList.getBlock(k);
-
-            px := TCmxArray_d(td.m_ClxData.p)[j];
-            py := TCmxArray_d(sd.m_ClxData.p)[j];
-            cross := px * sopr(py) + cross;
-            v1 := sd.m_mod2[j] + v1;
-          end;
-          s.m_frf[j] := v1 / abs(cross);
+          s.m_frf[j] := s.m_shockList.m_Syy[j]/s.m_shockList.m_Cxy[j];
         end;
       end;
     end;
@@ -1934,9 +1931,6 @@ begin
           end;
         end;
     end;
-    // рисуем
-    s.lineAvFRF.AddPoints(s.m_frf, c.fHalfFft);
-    s.lineFrf.AddPoints(sd.m_frf, c.fHalfFft);
   end;
 end;
 
