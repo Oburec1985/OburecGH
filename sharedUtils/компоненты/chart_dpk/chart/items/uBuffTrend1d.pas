@@ -287,6 +287,7 @@ begin
           flength := p_count;
           Setlength(data_r, p_count);
         end;
+        // sorce; dst; sizze
         move(a[0], data_r[0], p_count * sizeof(double));
       end;
   end;

@@ -268,6 +268,7 @@ var
 begin
   UseWelchCb.Checked:=m_SRS.m_UseWelch;
   WelchBCountIE.IntNum:=m_SRS.m_WelchCount;
+  FFTShiftIE.IntNum:=m_SRS.m_WelchShift;
 
   MinXfe.FloatNum:=m_SRS.m_minX;
   MaxXfe.FloatNum:=m_SRS.m_maxX;
@@ -313,7 +314,7 @@ begin
   c:=t.Cfg;
   ResTypeRG.ItemIndex:=C.typeRes;
   FFTBlockSizeIE.IntNum:=c.m_fftCount;
-  FFTShiftIE.IntNum:=c.m_fftCount;
+  //FFTShiftIE.IntNum:=c.m_fftCount;
   FFTdxFE.FloatNum:=csrstaho(c.taho).m_tag.freq/c.m_fftCount;
   BlockSizeFE.FloatNum:=FFTBlockSizeIE.IntNum/csrstaho(c.taho).m_tag.freq;
   ShCountIE.IntNum:=1;
@@ -430,15 +431,17 @@ begin
   m_SRS.m_minY:=MinYfe.FloatNum;
   m_SRS.m_maxY:=MaxYfe.FloatNum;
   m_SRS.m_estimator:=EstimatorRG.ItemIndex;
-  m_SRS.UpdateChart;
   m_SRS.m_saveT0:=SaveT0CB.Checked;
   m_SRS.m_corrS:=CorrSCB.Checked;
 
   m_SRS.m_UseWelch:=UseWelchCb.Checked;
   m_SRS.m_WelchCount:=WelchBCountIE.IntNum;
+  m_SRS.m_WelchShift:=FFTShiftIE.IntNum;
+  m_SRS.m_WelchCount:=WelchBCountIE.IntNum;
 
   c.m_capacity:=ShCountIE.IntNum;
   t.m_CohTreshold:=CohThresholdFE.FloatNum;
+  m_SRS.UpdateChart;
 end;
 
 procedure TEditSrsFrm.UpdateTags;
@@ -456,6 +459,7 @@ procedure TEditSrsFrm.UpdateWelchBCount;
 var
   t:cSRSTaho;
   lastpos:integer;
+  Len:double;
 begin
   t:=GetSelectTaho;
   if t=nil then exit;

@@ -397,6 +397,7 @@ object EditSrsFrm: TEditSrsFrm
         Checked = True
         State = cbChecked
         TabOrder = 10
+        Visible = False
       end
       object CorrSCB: TCheckBox
         Left = 209
@@ -405,6 +406,7 @@ object EditSrsFrm: TEditSrsFrm
         Height = 16
         Caption = #1050#1086#1088#1088#1077#1082#1094#1080#1103' '#1086#1090#1082#1083#1080#1082#1072
         TabOrder = 11
+        Visible = False
       end
     end
     object ChartGB: TGroupBox
@@ -415,8 +417,6 @@ object EditSrsFrm: TEditSrsFrm
       Align = alClient
       Caption = 'ChartGB'
       TabOrder = 2
-      ExplicitLeft = -3
-      ExplicitTop = 316
       object UpdateBtn: TSpeedButton
         Left = 417
         Top = 55
@@ -702,8 +702,8 @@ object EditSrsFrm: TEditSrsFrm
       end
     end
     object WelchGB: TGroupBox
-      Left = 335
-      Top = 219
+      Left = 277
+      Top = 186
       Width = 114
       Height = 91
       Caption = 'Welch'

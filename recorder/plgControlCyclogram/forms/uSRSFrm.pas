@@ -283,10 +283,10 @@ type
     // длина корректируемых окном данных
     function corrLen: double;
     procedure evalCoh(hideind: integer);
-    procedure evalFRF(hideind: integer; estimator: integer);
+    procedure evalFRF(hideind: integer; estimator: integer ; rebuildspm:boolean);
     // расчет сохраняется в m_Cxy блоков
     procedure evalWelchSpm(tb, sb: TDataBlock);
-    procedure evalWelchFrf(tb, sb: TDataBlock; estimator: integer);
+    procedure evalWelchFrf(estimator: integer);
     function name: string;
     constructor create;
     destructor destroy;
@@ -353,6 +353,7 @@ type
   protected
     fdelBtn: boolean; // нажали кнопку удалить удар
     fUpdateFrf: boolean; // обновился frf
+    fShowLast: boolean; // обновился frf  в потоке
   protected
     procedure doUpdateParams(sender: tobject);
     // расчет числа боков для усреднения
@@ -373,7 +374,8 @@ type
     function getTaho: cSRSTaho;
     procedure RBtnClick(sender: tobject);
     procedure TestCoh;
-    procedure updateFrf;
+    procedure updateFrf (rebuildspm:boolean);
+    procedure updateWelchFrf;
   public
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -507,7 +509,10 @@ var
   sd:TDataBlock;
 begin
   // рисуем
-  sd:=s.m_shockList.getBlock(shInd);
+  if shInd>-1 then
+    sd:=s.m_shockList.getBlock(shInd)
+  else
+    sd:=s.m_shockList.getLastBlock;
   s.lineAvFRF.AddPoints(s.m_frf, c.fHalfFft);
   s.lineFrf.AddPoints(sd.m_frf, c.fHalfFft);
   fUpdateFrf:=false;
@@ -532,13 +537,7 @@ begin
     td := t.m_shockList.getBlock(ShockIE.intnum);
     s.m_shockList.delBlock(sd);
     t.m_shockList.delBlock(td);
-    updateFrf;
-    //if t.m_shockList.Count > 0 then
-    //begin
-    //  t.evalCoh(hideind);
-    //  t.evalFRF(hideind, m_estimator);
-    //  fUpdateFrf:=true;
-    //end;
+    updateFrf(false);
   end;
   ShockCountE.Text := inttostr(t.m_shockList.Count);
   fdelBtn := false;
@@ -627,15 +626,36 @@ begin
     end;
     s.line.AddPoints(TDoubleArray(lb.m_TimeBlockFlt.p), lb.m_TimeArrSize);
   end;
-  updateFrf;
+  updateFrf(false);
   UpdateView;
 end;
 
-procedure TSRSFrm.updateFrf;
+procedure TSRSFrm.updateWelchFrf;
+var
+  t: cSRSTaho;
+begin
+  t := getTaho;
+  if t = nil then
+    exit;
+
+  if t.m_shockList.Count > 0 then
+  begin
+    t.evalCoh(hideind);
+    t.evalWelchFrf(m_estimator);
+    fUpdateFrf:=true;
+  end;
+end;
+
+procedure TSRSFrm.updateFrf( rebuildspm:boolean);
 var
   t: cSRSTaho;
   c: cSpmCfg;
 begin
+  if m_UseWelch then
+  begin
+    updateWelchFrf;
+    exit;
+  end;
   t := getTaho;
   if t = nil then
     exit;
@@ -644,7 +664,7 @@ begin
   if t.m_shockList.Count > 0 then
   begin
     t.evalCoh(hideind);
-    t.evalFRF(hideind, m_estimator);
+    t.evalFRF(hideind, m_estimator, rebuildspm);
     fUpdateFrf:=true;
   end;
 end;
@@ -658,7 +678,7 @@ var
 begin
   m_estimator := EstimatorRG.ItemIndex;
   t := getTaho;
-  updateFrf;
+  updateFrf(false);
   UpdateView;
 end;
 
@@ -874,6 +894,7 @@ begin
     pageSpm.activeAxis.Lg := m_lgY;
     pageSpm.ZoomfRect(fr);
   end;
+  UpdateBlocks;
 end;
 
 procedure TSRSFrm.updatedata;
@@ -1004,7 +1025,10 @@ begin
       if b then // стоит еще добавить проверку на отвалившийся датчик. В случае если
       // какой то канал не накопил удар, игнорируем его по таймауту
       begin
-        t.evalFRF(hideind, m_estimator);
+        t.evalFRF(hideind, m_estimator, false);
+        fUpdateFrf:=true;
+        // показывать последний удар при обновлении
+        fShowLast:=true;
         // внутри вызывается t.fTrigState:=TrOff;
         t.resetTrig;
       end;
@@ -1080,11 +1104,7 @@ var
   s: cSRSres;
 begin
   t := getTaho;
-  //t.evalCoh(hideind);
-  //t.evalFRF(hideind, m_estimator);
-  //if not hideCB.Checked then
-  //  ShowShock(ShockIE.intnum);
-  updateFrf;
+  updateFrf(false);
   UpdateView;
 end;
 
@@ -1124,10 +1144,16 @@ begin
   if fUpdateFrf then
   begin
     s:=c.GetSrs(0);
-    ShowFrf(s, c, ShockIE.IntNum);
+    if fShowLast then
+      ShowFrf(s, c, -1)
+    else
+      ShowFrf(s, c, ShockIE.IntNum);
+    fShowLast:=false;
   end;
   SpmChart.redraw;
 end;
+
+
 
 procedure TSRSFrm.UseWndFcbClick(sender: tobject);
 var
@@ -1177,8 +1203,17 @@ begin
 end;
 
 procedure TSRSFrm.WelchCBClick(sender: tobject);
+var
+  t: cSRSTaho;
 begin
-  EvalWelchBCount;
+  m_UseWelch:=WelchCB.Checked;
+  t := getTaho;
+  if not m_UseWelch then
+  begin
+
+  end;
+  updateFrf(not m_UseWelch);
+  UpdateView;
 end;
 
 procedure TSRSFrm.WinPosBtnClick(sender: tobject);
@@ -1256,12 +1291,11 @@ begin
     end;
     c.typeres := a_pIni.ReadInteger(str, 'ResType', 0);
   end;
-  m_WelchShift := a_pIni.ReadInteger(str, 'FFtnum', 32);
-  m_WelchCount := a_pIni.ReadInteger(str, 'BlockCount', 4);
+  m_WelchShift := a_pIni.ReadInteger(str, 'WelchShift', 32);
+  m_WelchCount := a_pIni.ReadInteger(str, 'WelchBlockCount', 4);
   m_UseWelch := a_pIni.ReadBool(str, 'useWelch', true);
-  // TestCoh;
+  WelchCB.Checked:=m_UseWelch;
   UpdateChart;
-  UpdateBlocks;
 end;
 
 procedure savedata(dir: string; sname: string; db: TDoubleArray); overload;
@@ -1468,7 +1502,8 @@ begin
         saveTagToIni(a_pIni, s.m_tag, str, 'Tag_' + inttostr(i));
       end;
     end;
-    a_pIni.WriteInteger(str, 'BlockCount', m_WelchCount);
+    a_pIni.WriteInteger(str, 'WelchBlockCount', m_WelchCount);
+    a_pIni.WriteInteger(str, 'WelchShift', m_WelchShift);
     a_pIni.WriteBool(str, 'useWelch', m_UseWelch);
   end;
 end;
@@ -1494,7 +1529,6 @@ begin
     begin
       block := s.m_shockList.getBlock(shock);
       tahobl := t.m_shockList.getBlock(shock);
-      s.lineFrf.AddPoints(block.m_frf, c.fHalfFft);
 
       s.line.flength := block.m_TimeArrSize;
       s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p),
@@ -1503,7 +1537,8 @@ begin
       t.line.flength := tahobl.m_TimeArrSize;
       t.line.AddPoints(TDoubleArray(tahobl.m_TimeBlockFlt.p), tahobl.m_TimeArrSize);
       SpmChartDblClick(nil);
-      SpmChart.redraw;
+      fUpdateFrf:=true;
+      UpdateView;
     end;
   end;
 end;
@@ -1534,7 +1569,7 @@ begin
       t.line.AddPoints(TDoubleArray(tb.m_TimeBlockFlt.p), tb.m_TimeArrSize);
     end;
   end;
-  updateFrf;
+  updateFrf(false);
   UpdateView;
 end;
 
@@ -1767,12 +1802,12 @@ begin
   // нормировка
   for i := 0 to halfNP - 1 do
   begin
-    sb.m_WechSpm[j] := sb.m_WechSpm[j] * k;
-    tb.m_WechSpm[j] := tb.m_WechSpm[j] * k;
+    sb.m_WechSpm[i] := sb.m_WechSpm[i] * k;
+    tb.m_WechSpm[i] := tb.m_WechSpm[i] * k;
   end;
 end;
 
-procedure cSRSTaho.evalWelchFrf(tb, sb: TDataBlock; estimator: integer);
+procedure cSRSTaho.evalWelchFrf(estimator: integer);
 var
   i, j, k, shockCount: integer;
   c: cSpmCfg;
@@ -1821,14 +1856,14 @@ begin
       begin
         for j := 0 to cfg.fHalfFft - 1 do
         begin
-          s.m_frf[j] := s.m_shockList.m_Cxy[j]/s.m_shockList.m_Sxx[j];
+          s.m_frf[j] := abs(s.m_shockList.m_Cxy[j])/s.m_shockList.m_Sxx[j];
         end;
       end;
       2: // H1 Syy/Sxy  x - тахо
       begin
         for j := 0 to cfg.fHalfFft - 1 do
         begin
-          s.m_frf[j] := s.m_shockList.m_Syy[j]/s.m_shockList.m_Cxy[j];
+          s.m_frf[j] := s.m_shockList.m_Syy[j]/abs(s.m_shockList.m_Cxy[j]);
         end;
       end;
     end;
@@ -1836,7 +1871,7 @@ begin
 end;
 
 // taho - знаменатель
-procedure cSRSTaho.evalFRF(hideind: integer; estimator: integer);
+procedure cSRSTaho.evalFRF(hideind: integer; estimator: integer; rebuildspm:boolean);
 var
   i, k, shockCount: integer;
   c: cSpmCfg;
@@ -1865,6 +1900,11 @@ begin
       end;
       td := m_shockList.getBlock(k);
       sd := s.m_shockList.getBlock(k);
+      if rebuildspm then
+      begin
+        td.BuildSpm;
+        sd.BuildSpm;
+      end;
       // без использования фазы   y/x. x - тахо
       for j := 0 to c.fHalfFft - 1 do
       begin
