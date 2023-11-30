@@ -362,7 +362,7 @@ type
     procedure delCurrentShock;
     PROCEDURE ShowShock(shock: integer);
     // отобразить последнюю передаточную характеристику блока в S и усредн. передаточную
-    procedure ShowFrf(s:cSRSres; c:cSpmCfg);
+    procedure ShowFrf(s:cSRSres; c:cSpmCfg; shInd:integer);
     procedure UpdateView;
     procedure updatedata;
     // выделение памяти. происходит при загрузке или смене конфига
@@ -502,12 +502,12 @@ begin
     UpdateView;
 end;
 
-procedure TSRSFrm.ShowFrf(s:cSRSres; c:cSpmCfg);
+procedure TSRSFrm.ShowFrf(s:cSRSres; c:cSpmCfg; shInd:integer);
 var
   sd:TDataBlock;
 begin
   // рисуем
-  sd:=s.m_shockList.getLastBlock;
+  sd:=s.m_shockList.getBlock(shInd);
   s.lineAvFRF.AddPoints(s.m_frf, c.fHalfFft);
   s.lineFrf.AddPoints(sd.m_frf, c.fHalfFft);
   fUpdateFrf:=false;
@@ -628,6 +628,7 @@ begin
     s.line.AddPoints(TDoubleArray(lb.m_TimeBlockFlt.p), lb.m_TimeArrSize);
   end;
   updateFrf;
+  UpdateView;
 end;
 
 procedure TSRSFrm.updateFrf;
@@ -850,7 +851,7 @@ begin
       s.lineAvFRF := l;
       s.lineAvFRF.name := s.name + '_AvFrf';
       s.lineAvFRF.weight := 5;
-      s.lineAvFRF.visible := false;
+      s.lineAvFRF.visible := true;
 
       l := cBuffTrend1d.create;
       // l.color := ColorArray[i+10];
@@ -1112,7 +1113,6 @@ begin
   begin
     delCurrentShock;
     s:=c.GetSrs(0);
-    ShowFrf(s, c);
   end;
   if RStatePlay then
   begin
@@ -1120,6 +1120,11 @@ begin
     begin
       ShockCountE.Text := inttostr(t.m_shockList.Count);
     end;
+  end;
+  if fUpdateFrf then
+  begin
+    s:=c.GetSrs(0);
+    ShowFrf(s, c, ShockIE.IntNum);
   end;
   SpmChart.redraw;
 end;
@@ -1508,6 +1513,7 @@ var
   t: cSRSTaho;
   c: cSpmCfg;
   tb: TDataBlock;
+  j:integer;
 begin
   if UseWndFcb.Checked then
   begin
@@ -1516,15 +1522,20 @@ begin
       t := getTaho;
       c := t.cfg;
       t.m_shockList.m_wnd.x2 := pageT.cursor.getx2;
-      tb := t.m_shockList.getLastBlock;
       if tb = nil then
         exit;
-
-      tb.prepareData;
+      for j := 0 to t.m_shockList.Count - 1 do
+      begin
+        tb := t.m_shockList.getBlock(j);
+        tb.prepareData;
+        tb.BuildSpm;
+      end;
+      tb:=t.m_shockList.getBlock(ShockIE.IntNum);
       t.line.AddPoints(TDoubleArray(tb.m_TimeBlockFlt.p), tb.m_TimeArrSize);
     end;
   end;
   updateFrf;
+  UpdateView;
 end;
 
 procedure TSRSFrm.SpmChartDblClick(sender: tobject);
@@ -1875,7 +1886,8 @@ begin
           begin
             s.m_phase[j] := (180 / pi) * s.m_shockList.m_Cxy[j]
               .im / s.m_shockList.m_Cxy[j].Re;
-            if s.m_shockList.m_coh[j] < m_CohTreshold then
+            //if s.m_shockList.m_coh[j] < m_CohTreshold then
+            if false then
             begin
               s.m_frf[j] := 0;
             end
