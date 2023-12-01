@@ -32,6 +32,7 @@ object SRSFrm: TSRSFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitLeft = 1
     ExplicitTop = -7
   end
   object RightGB: TGroupBox
@@ -613,6 +614,15 @@ object SRSFrm: TSRSFrm
       Caption = 'Welch'
       TabOrder = 12
       OnClick = WelchCBClick
+    end
+    object DisableCB: TCheckBox
+      Left = 5
+      Top = 465
+      Width = 83
+      Height = 17
+      Caption = #1054#1090#1082#1083#1102#1095#1080#1090#1100
+      TabOrder = 13
+      OnClick = DisableCBClick
     end
   end
 end

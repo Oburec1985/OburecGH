@@ -12,6 +12,7 @@ uses
   tags, recorder, uBaseObjService, uModesTabsForm, activex,
   uRcCtrls, uEventTypes, uSpin, Spin,
   uBtnListView,
+  uBuffTrend1d, udrawobj,
   ComCtrls,
   uTagsListFrame,
   uaxis;
@@ -214,15 +215,15 @@ var
   a:caxis;
   pa:PAxis;
   s:toscsignal;
-  next, n: PVirtualNode;
+  next: PVirtualNode;
   D, parentdata: PNodeData;
 begin
   i:=0;
   j:=0;
-  n := tagsTV.GetFirstSelected(true);
+  Node := tagsTV.GetFirstSelected(true);
   while Node <> nil do
   begin
-    D := tagsTV.GetNodeData(n);
+    D := tagsTV.GetNodeData(node);
     if tobject(D.Data) is caxis then
     begin
       a:=caxis(D.Data);
@@ -259,11 +260,13 @@ end;
 
 procedure TEditSyncOscFrm.UpdateBtnClick(Sender: TObject);
 var
-  I: Integer;
+  I,j: Integer;
   n, next:PVirtualNode;
   d:PNodeData;
   p:cpage;
-  ca:caxis;
+  a:caxis;
+  obj:cdrawobj;
+  line:cBuffTrend1d;
   pAx:paxis;
   Ax:TAxis;
   b:boolean;
@@ -275,33 +278,32 @@ begin
     D := tagsTV.GetNodeData(n);
     if tobject(D.Data) is caxis then
     begin
-      ca:=caxis(D.Data);
-      pAx:=TSyncOscFrm(m_curObj).GetPAxCfg(ca.name);
+      a:=caxis(D.Data);
+      pAx:=TSyncOscFrm(m_curObj).GetPAxCfg(a.name);
       // Мин оси
       str:=GetMultiSelectComponentString(MinYfe, b);
       if checkstr(str) then
       begin
-        ca.minY:=strtoFloatExt(str);
+        a.minY:=strtoFloatExt(str);
         if pax<>nil then
-          pax.ymin:=ca.minY;
+          pax.ymin:=a.minY;
       end;
       // Макс оси
       str:=GetMultiSelectComponentString(MaxYfe, b);
       if checkstr(str) then
       begin
-        ca.maxY:=strtoFloatExt(str);
+        a.maxY:=strtoFloatExt(str);
         if pax<>nil then
-          pax.ymax:=ca.maxY;
+          pax.ymax:=a.maxY;
       end;
       // имя оси
       str:=GetMultiSelectComponentString(NameAxisEdit, b);
       if checkstr(str) then
       begin
-        ca.name:=str;
+        a.name:=str;
         if pax<>nil then
           pAx.name:=str;
       end;
-      TSyncOscFrm(m_curObj).m_Chart.showLegend:=LegendCB.checked;
     end;
     if tobject(D.Data) is TOscSignal then
     begin
@@ -311,7 +313,21 @@ begin
     N := next;
     inc(I);
   end;
-
+  TSyncOscFrm(m_curObj).m_Chart.showLegend:=LegendCB.checked;
+  p:=cpage(TSyncOscFrm(m_curObj).m_Chart.activePage);
+  for I := 0 to p.getAxisCount-1 do
+  begin
+    a:=p.getaxis(i);
+    for j := 0 to a.ChildCount - 1 do
+    begin
+      obj:=cdrawobj(a.getChild(j));
+      if obj is cBuffTrend1d then
+      begin
+        TSyncOscFrm(m_curObj).m_Chart.legend.doAddObjects(obj);
+      end;
+    end;
+  end;
+  TSyncOscFrm(m_curObj).m_Chart.activeTab.Alignpages(1);
   TSyncOscFrm(m_curObj).m_Length:=LengthFE.FloatNum;
   //TSyncOscFrm(m_curObj).m_TrigTag.tag:=ChannelXCB.gettag[ChannelXCB.ItemIndex];
   TSyncOscFrm(m_curObj).m_type:=IntToTOscType(TrigRG.ItemIndex);
@@ -408,15 +424,18 @@ var
   I: Integer;
   p:cpage;
   a:caxis;
+  del:boolean;
 begin
   if Key = VK_DELETE then
   begin
     Node := TagsTV.GetFirstSelected(true);
     while Node <> nil do
     begin
+      del:=false;
       Data := TagsTV.GetNodeData(Node);
       if tobject(data.data) is TOscSignal then
       begin
+        del:=true;
         TOscSignal(data.data).Destroy;
       end;
       if tobject(data.data) is cAxis then
@@ -428,6 +447,7 @@ begin
         end
         else
         begin
+          del:=true;
           a.destroy;
         end;
       end;
@@ -439,10 +459,14 @@ begin
 
         end;
       end;
+      if del then
+      begin
+        TagsTV.CancelEditNode;
+        TagsTV.DeleteNode(node);
+      end;
       Node := next;
       inc(I);
     end;
-    TagsTV.DeleteSelectedNodes;
   end;
 end;
 

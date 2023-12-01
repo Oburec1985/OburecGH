@@ -36,8 +36,9 @@ type
   TOscSignal = class
   private
   public
+    m_owner: tlist;
     t: cTag;
-    m_dt:double;
+    m_dt: double;
     // отображать предысторию
     m_bHist: boolean;
     //
@@ -58,7 +59,7 @@ type
     // размер отображаемых данных
     m_portion: integer;
   protected
-    procedure saveData(fname: string; num:integer);
+    procedure saveData(fname: string; num: integer);
     procedure resetData(lastind: integer);
     // получить данные с учетом истории (склейка буферов)
     function GetOscTrigData(var data: array of double; time: point2d;
@@ -93,10 +94,10 @@ type
     // настройки осей
     m_ax: cQueue<TAxis>;
   protected
-    m_TahoStart:boolean; // старт поиска периода
-    m_iTahoStart:integer; // индекс начала триггера
-    m_iTahoStop:integer; // индекс завершения триггера
-    m_iTahoN:integer; // Число отсчитанных оборотов
+    m_TahoStart: boolean; // старт поиска периода
+    m_iTahoStart: integer; // индекс начала триггера
+    m_iTahoStop: integer; // индекс завершения триггера
+    m_iTahoN: integer; // Число отсчитанных оборотов
 
     // момент срабатывания триггера
     m_TrigTime: double;
@@ -118,7 +119,7 @@ type
     procedure WndProc(var Message: TMessage); override;
   public
     // NUM - номер осциллограммы
-    procedure SaveMera(f: string;num:integer);
+    procedure SaveMera(f: string; num: integer);
     Function GetAxCfg(name: string): TAxis;
     Function GetPAxCfg(name: string): PAxis;
     procedure UpdateProps;
@@ -220,7 +221,7 @@ begin
   end;
 end;
 
-procedure TSyncOscFrm.SaveMera(f: string; num:integer);
+procedure TSyncOscFrm.SaveMera(f: string; num: integer);
 var
   i, j: integer;
   s: TOscSignal;
@@ -235,30 +236,33 @@ begin
   for j := 0 to m_signals.count - 1 do
   begin
     s := GetSignal(j);
-    WriteFloatToIniMera(ifile, s.t.tagname+'_'+inttostr(num), 'Freq', s.t.freq);
-    ifile.WriteString(s.t.tagname+'_'+inttostr(num), 'XFormat', 'R8');
-    ifile.WriteString(s.t.tagname+'_'+inttostr(num), 'YFormat', 'R8');
+    WriteFloatToIniMera(ifile, s.t.tagname + '_' + inttostr(num), 'Freq',
+      s.t.freq);
+    ifile.WriteString(s.t.tagname + '_' + inttostr(num), 'XFormat', 'R8');
+    ifile.WriteString(s.t.tagname + '_' + inttostr(num), 'YFormat', 'R8');
     // Подпись оси x
-    ifile.WriteString(s.t.tagname+'_'+inttostr(num), 'XUnits', 'Гц');
+    ifile.WriteString(s.t.tagname + '_' + inttostr(num), 'XUnits', 'Гц');
     // Подпись оси Y
     // ifile.WriteString(s.tagname, 'YUnits', TagUnits(wp.m_YParam.tag));
-    WriteFloatToIniMera(ifile, s.t.tagname+'_'+inttostr(num),'Start', s.m_histX0);
+    WriteFloatToIniMera(ifile, s.t.tagname + '_' + inttostr(num), 'Start',
+      s.m_histX0);
     // k0
-    ifile.WriteFloat(s.t.tagname+'_'+inttostr(num), 'k0', 0);
+    ifile.WriteFloat(s.t.tagname + '_' + inttostr(num), 'k0', 0);
     // k1
-    ifile.WriteFloat(s.t.tagname+'_'+inttostr(num), 'k1', 1);
+    ifile.WriteFloat(s.t.tagname + '_' + inttostr(num), 'k1', 1);
     s.saveData(f, num);
   end;
   ifile.destroy;
 end;
 
-procedure TOscSignal.saveData(fname: string;num:integer);
+procedure TOscSignal.saveData(fname: string; num: integer);
 var
   lname: string;
   f: file;
   i: integer;
 begin
-  lname := extractfiledir(fname) + '\' + t.tagname +'_'+inttostr(num)+ '.dat';
+  lname := extractfiledir(fname) + '\' + t.tagname + '_' + inttostr(num)
+    + '.dat';
   AssignFile(f, lname);
   Rewrite(f, 1);
   BlockWrite(f, line.data_r[0], sizeof(double) * line.count);
@@ -316,7 +320,8 @@ begin
     if TOscSignal(m_signals.Items[i]).t.tag = t then
     begin
       Result := TOscSignal(m_signals.Items[i]);
-      Result.m_dt:=1/Result.t.freq;
+      Result.m_dt := 1 / Result.t.freq;
+      Result.line.dx:= Result.m_dt ;
       break;
     end;
   end;
@@ -324,11 +329,14 @@ begin
   begin
     Result := TOscSignal.create;
     Result.t.tag := t;
-    Result.m_dt:=1/Result.t.freq;
+    Result.m_dt := 1 / Result.t.freq;
     Result.ax := a;
     Result.line := cBuffTrend1d.create;
+    Result.line.name:=t.GetName;
+    Result.line.dx:= Result.m_dt ;
     Result.ax.AddChild(Result.line);
     m_signals.Add(Result);
+    Result.m_owner := m_signals;
     Result.line.color := ColorArray[m_signals.count - 1];
   end;
 end;
@@ -337,11 +345,12 @@ function TSyncOscFrm.CreateSignal(a: caxis; tname: string): TOscSignal;
 begin
   Result := TOscSignal.create;
   Result.t.tagname := tname;
-  Result.m_dt:=1/Result.t.freq;
+  Result.m_dt := 1 / Result.t.freq;
   Result.ax := a;
   Result.line := cBuffTrend1d.create;
   Result.ax.AddChild(Result.line);
   m_signals.Add(Result);
+  Result.m_owner := m_signals;
 end;
 
 function TSyncOscFrm.GetSignal(i: integer): TOscSignal;
@@ -399,7 +408,7 @@ begin
     p.activeAxis := a;
 
     r.BottomLeft := p2(p.MinX, axCfg.ymin);
-    r.TopRight := p2(p.MaxX, axCfg.ymax);
+    r.TopRight := p2(m_Length, axCfg.ymax);
     p.ZoomfRect(r);
   end;
 end;
@@ -501,15 +510,15 @@ end;
 
 destructor TSyncOscFrm.destroy;
 var
-  I: Integer;
-  s:TOscSignal;
+  i: integer;
+  s: TOscSignal;
 begin
   m_ax.destroy;
   m_TrigTag.destroy;
-  for I := 0 to sCount - 1 do
+  for i := 0 to sCount - 1 do
   begin
-    s:=GetSignal(i);
-    s.line:=nil;
+    s := GetSignal(i);
+    s.line := nil;
     s.destroy;
   end;
   FreeAndNil(m_signals);
@@ -532,10 +541,10 @@ begin
   if m_ax.SIZE > 0 then
     m_ax.clear;
   m_Length := a_pIni.ReadFloat(str, 'Length', 1);
-  ls:=a_pIni.ReadString(str, 'Threshold', '0.5');
-  m_Threshold :=strtoFloatExt(ls);
-  ls:=a_pIni.ReadString(str, 'Shift', '0');
-  m_Phase0 :=strtoFloatExt(ls);
+  ls := a_pIni.ReadString(str, 'Threshold', '0.5');
+  m_Threshold := strtoFloatExt(ls);
+  ls := a_pIni.ReadString(str, 'Shift', '0');
+  m_Phase0 := strtoFloatExt(ls);
   m_type := IntToTOscType(a_pIni.ReadInteger(str, 'OscType', 0));
   c := a_pIni.ReadInteger(str, 'AxCount', 1);
   tname := a_pIni.ReadString(str, 'Trig', '');
@@ -547,10 +556,10 @@ begin
   begin
     axCfg := m_ax.GetByInd(i);
     axCfg.name := a_pIni.ReadString(str, 'axCfg_name_' + inttostr(i), '');
-    ls:=a_pIni.ReadString(str, 'axCfg_y1_' + inttostr(i),'0');
-    axCfg.ymin :=strtoFloatExt(ls);
-    ls:=a_pIni.ReadString(str, 'axCfg_y2_' + inttostr(i), '10');
-    axCfg.ymax :=strtoFloatExt(ls);
+    ls := a_pIni.ReadString(str, 'axCfg_y1_' + inttostr(i), '0');
+    axCfg.ymin := strtoFloatExt(ls);
+    ls := a_pIni.ReadString(str, 'axCfg_y2_' + inttostr(i), '10');
+    axCfg.ymax := strtoFloatExt(ls);
     a := p.activeAxis;
     if i > 0 then
     begin
@@ -584,10 +593,10 @@ begin
       a := cpage(m_Chart.activePage).Newaxis;
       a.name := axname;
     end;
-    pAxCfg:=GetPAxCfg(axname);
-    if pAxCfg=nil then
+    pAxCfg := GetPAxCfg(axname);
+    if pAxCfg = nil then
     begin
-      axCfg.name:=axname;
+      axCfg.name := axname;
       m_ax.push_back(axCfg);
     end;
 
@@ -623,8 +632,8 @@ var
 begin
   inherited;
   a_pIni.WriteFloat(str, 'Length', m_Length);
-  WriteFloatToIniMera(a_pIni, str, 'Threshold',m_Threshold);
-  //a_pIni.WriteFloat(str, 'Threshold', m_Threshold);
+  WriteFloatToIniMera(a_pIni, str, 'Threshold', m_Threshold);
+  // a_pIni.WriteFloat(str, 'Threshold', m_Threshold);
   WriteFloatToIniMera(a_pIni, str, 'Shift', m_Phase0);
   a_pIni.WriteInteger(str, 'OscType', TOscTypeToInt(m_type));
   a_pIni.WriteInteger(str, 'AxCount', m_ax.SIZE);
@@ -636,8 +645,8 @@ begin
   begin
     axCfg := m_ax.GetByInd(i);
     a_pIni.WriteString(str, 'axCfg_name_' + inttostr(i), axCfg.name);
-    WriteFloatToIniMera(a_pIni,str, 'axCfg_y1_' + inttostr(i), axCfg.ymin);
-    WriteFloatToIniMera(a_pIni,str, 'axCfg_y2_' + inttostr(i), axCfg.ymax);
+    WriteFloatToIniMera(a_pIni, str, 'axCfg_y1_' + inttostr(i), axCfg.ymin);
+    WriteFloatToIniMera(a_pIni, str, 'axCfg_y2_' + inttostr(i), axCfg.ymax);
   end;
   a_pIni.WriteInteger(str, 'SCount', m_signals.count);
   for i := 0 to m_signals.count - 1 do
@@ -676,21 +685,21 @@ begin
         v := m_TrigTag.m_ReadData[i];
         if v > m_Threshold then
         begin
-          v_max:=max(v_max, v, lb);
+          v_max := max(v_max, v, lb);
           if lb then
           begin
             if m_TahoStart then
             begin
-              m_iTahoStart:=i;
+              m_iTahoStart := i;
             end
             else
             begin
-              m_iTahoStop:=i;
+              m_iTahoStop := i;
               inc(m_iTahoN);
             end;
           end
         end;
-        prev:=v;
+        prev := v;
       end;
       m_TrigTag.ResetTagData();
     end;
@@ -752,13 +761,13 @@ begin
             interval := getCommonInterval(m_TrigInterval, t)
           else
             interval := getCommonInterval(interval, t);
-          if b or (i=0) then
+          if b or (i = 0) then
             b := true;
         end
         else
         begin
           // данные триггера накопились не по всем каналам
-          b:=false;
+          b := false;
         end;
       end;
     end;
@@ -773,7 +782,7 @@ begin
         if interval.x > 0 then
         begin
           v := interval.x;
-          s.m_histX0:= v;
+          s.m_histX0 := v;
         end
         else
         begin
@@ -794,7 +803,7 @@ begin
   for i := 0 to m_signals.count - 1 do
   begin
     s := GetSignal(i);
-    b:=true;
+    b := true;
     if s.t.UpdateTagData(true) or b then
     begin
       if not m_init then
@@ -814,7 +823,7 @@ begin
       else
         interval := getCommonInterval(interval, t);
       if (interval.y - interval.x < m_Length) then
-      //if (interval.y - interval.x <= 0) then
+      // if (interval.y - interval.x <= 0) then
       begin
         b := false;
         break;
@@ -834,11 +843,12 @@ begin
     begin
       s := GetSignal(i);
       interval_i := s.t.getIntervalInd(interval);
-      if interval_i.x>0 then
+      if interval_i.x > 0 then
       begin
-        if (interval_i.x+interval_i.y - interval_i.x)<s.t.lastindex then
+        if interval_i.y < s.t.lastindex then
         begin
-          s.line.AddPoints(s.t.m_ReadData, interval_i.x,  (interval_i.y - interval_i.x));
+          s.line.AddPoints(s.t.m_ReadData, interval_i.x,
+            (interval_i.y - interval_i.x));
           if s.t.lastindex >= interval_i.y then
           begin
             s.t.ResetTagDataTimeInd(interval_i.y);
@@ -1070,12 +1080,25 @@ begin
 end;
 
 destructor TOscSignal.destroy;
+var
+  i: integer;
 begin
   t.destroy;
   t := nil;
-  if line<>nil then
+  if line <> nil then
   begin
     line.destroy;
+  end;
+  if m_owner <> nil then
+  begin
+    for i := 0 to m_owner.count - 1 do
+    begin
+      if m_owner.Items[i] = self then
+      begin
+        m_owner.Delete(i);
+        exit;
+      end;
+    end;
   end;
 end;
 

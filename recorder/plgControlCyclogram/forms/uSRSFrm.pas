@@ -314,6 +314,7 @@ type
     EstimatorRG: TRadioGroup;
     UseWndFcb: TCheckBox;
     WelchCB: TCheckBox;
+    DisableCB: TCheckBox;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -328,6 +329,7 @@ type
     procedure UseWndFcbClick(sender: tobject);
     procedure SpmChartCursorMove(sender: tobject);
     procedure WelchCBClick(sender: tobject);
+    procedure DisableCBClick(Sender: TObject);
   public
     ready: boolean;
     // h0, h1, h2
@@ -421,6 +423,7 @@ function copyData(t: ctag; var time: point2d; buf: TAlignDarray): integer;
 var
   SRSFrm: TSRSFrm;
   g_SRSFactory: cSRSFactory;
+  g_disableFRF:boolean;
 
 const
   c_Pic = 'SRSFRM';
@@ -546,6 +549,11 @@ end;
 destructor TSRSFrm.destroy;
 begin
   m_TahoList.destroy;
+end;
+
+procedure TSRSFrm.DisableCBClick(Sender: TObject);
+begin
+  g_disableFRF:=DisableCB.Checked;
 end;
 
 procedure TSRSFrm.doStart;
@@ -2429,6 +2437,8 @@ var
   i: integer;
   Frm: TRecFrm;
 begin
+  if g_disableFRF then
+    exit;
   for i := 0 to m_CompList.Count - 1 do
   begin
     Frm := GetFrm(i);

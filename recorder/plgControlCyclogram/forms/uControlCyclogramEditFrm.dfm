@@ -2,12 +2,12 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
   Left = 0
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1094#1080#1082#1083#1086#1075#1088#1072#1084#1084#1099' '#1088#1077#1078#1080#1084#1086#1074
-  ClientHeight = 998
-  ClientWidth = 1468
+  ClientHeight = 681
+  ClientWidth = 1123
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -14
+  Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
   Menu = MainMenu1
@@ -15,125 +15,86 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 120
-  TextHeight = 17
+  PixelsPerInch = 96
+  TextHeight = 13
   object Splitter2: TSplitter
-    Left = 1464
-    Top = 146
-    Width = 4
-    Height = 793
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Left = 1120
+    Top = 112
+    Height = 524
     Align = alRight
     Color = clBlack
     ParentColor = False
-    ExplicitLeft = 1465
+    ExplicitHeight = 606
   end
   object FormChannelsGB: TGroupBox
-    Left = 1065
-    Top = 146
-    Width = 399
-    Height = 793
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Left = 814
+    Top = 112
+    Width = 306
+    Height = 524
     Align = alRight
     Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
     TabOrder = 0
     object ChanNamesPanel: TPanel
       Left = 2
-      Top = 19
-      Width = 395
-      Height = 106
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Top = 15
+      Width = 302
+      Height = 81
       Align = alTop
       TabOrder = 0
       DesignSize = (
-        395
-        106)
+        302
+        81)
       object FrmTagPropLabel: TLabel
-        Left = 5
-        Top = 51
-        Width = 62
-        Height = 17
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 4
+        Top = 39
+        Width = 48
+        Height = 13
         Caption = #1057#1074#1086#1081#1089#1090#1074#1086
       end
       object FrmTagPropValue: TLabel
-        Left = 145
-        Top = 54
-        Width = 60
-        Height = 17
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 111
+        Top = 41
+        Width = 48
+        Height = 13
         Caption = #1047#1085#1072#1095#1077#1085#1080#1077
       end
       object FilterEdit: TEdit
-        Left = 5
-        Top = 8
-        Width = 389
-        Height = 25
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 4
+        Top = 6
+        Width = 297
+        Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
         OnChange = FilterEditChange
       end
       object FrmTagPropValueEdit: TEdit
-        Left = 145
-        Top = 76
-        Width = 232
-        Height = 25
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 111
+        Top = 58
+        Width = 177
+        Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 1
       end
       object FrmTagPropNameCB: TComboBox
-        Left = 5
-        Top = 76
-        Width = 132
-        Height = 25
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 4
+        Top = 58
+        Width = 101
+        Height = 21
         TabOrder = 2
       end
     end
     object TagsLV: TBtnListView
       Left = 2
-      Top = 125
-      Width = 395
-      Height = 666
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Top = 96
+      Width = 302
+      Height = 426
       Align = alClient
       Columns = <
         item
           Caption = #1048#1084#1103
-          Width = 65
         end
         item
           Caption = #1058#1080#1087
-          Width = 65
         end>
       DragMode = dmAutomatic
       MultiSelect = True
@@ -150,79 +111,56 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
   end
   object CommonPanel: TPanel
     Left = 0
-    Top = 146
-    Width = 1065
-    Height = 793
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Top = 112
+    Width = 814
+    Height = 524
     Align = alClient
     TabOrder = 1
     object OnTopSplitter: TSplitter
       Left = 1
-      Top = 358
-      Width = 1063
-      Height = 4
+      Top = 274
+      Width = 812
+      Height = 3
       Cursor = crVSplit
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
       Align = alTop
       Color = clBlack
       ParentColor = False
+      ExplicitWidth = 813
     end
     object ControlsListPanel: TPanel
       Left = 1
       Top = 1
-      Width = 1063
-      Height = 357
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Width = 812
+      Height = 273
       Align = alTop
-      Constraints.MinHeight = 357
+      Constraints.MinHeight = 273
       TabOrder = 0
       object ControlsGB: TGroupBox
         Left = 1
         Top = 1
-        Width = 408
-        Height = 355
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Width = 312
+        Height = 271
         Align = alLeft
         Caption = #1057#1087#1080#1089#1086#1082' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1086#1074
         TabOrder = 0
         object ControlsLV: TBtnListView
           Left = 2
-          Top = 19
-          Width = 404
-          Height = 275
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Top = 15
+          Width = 308
+          Height = 209
           Align = alClient
           Columns = <
             item
               Caption = #8470
-              Width = 65
             end
             item
               Caption = #1048#1084#1103
-              Width = 65
             end
             item
               Caption = #1058#1080#1087
-              Width = 65
             end
             item
               Caption = #1057#1074#1086#1081#1089#1090#1074#1072
-              Width = 65
             end>
           DragMode = dmAutomatic
           LargeImages = ImageList_32
@@ -245,25 +183,17 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
         end
         object EditcontrolsListPanel: TPanel
           Left = 2
-          Top = 294
-          Width = 404
-          Height = 59
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Top = 224
+          Width = 308
+          Height = 45
           Align = alBottom
           TabOrder = 1
           object AddControlBtn: TSpeedButton
-            Left = 4
-            Top = 8
-            Width = 54
-            Height = 47
+            Left = 3
+            Top = 6
+            Width = 41
+            Height = 36
             Hint = #1044#1086#1073#1072#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
             AllowAllUp = True
             BiDiMode = bdLeftToRight
             Glyph.Data = {
@@ -337,15 +267,11 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             OnClick = AddControlBtnClick
           end
           object UpdateBtn: TSpeedButton
-            Left = 65
-            Top = 7
-            Width = 64
-            Height = 47
+            Left = 50
+            Top = 5
+            Width = 49
+            Height = 36
             Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
             AllowAllUp = True
             BiDiMode = bdLeftToRight
             Glyph.Data = {
@@ -455,159 +381,100 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
         end
       end
       inline ControlEditFrame1: TControlEditFrame
-        Left = 409
+        Left = 313
         Top = 1
-        Width = 653
-        Height = 355
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Width = 498
+        Height = 271
         Align = alClient
-        Constraints.MinWidth = 387
+        Constraints.MinWidth = 296
         TabOrder = 1
-        ExplicitLeft = 409
+        ExplicitLeft = 313
         ExplicitTop = 1
-        ExplicitWidth = 653
-        ExplicitHeight = 355
+        ExplicitWidth = 498
+        ExplicitHeight = 271
         inherited ControlPanel: TPanel
-          Width = 653
-          Height = 355
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
-          Constraints.MinWidth = 327
-          ExplicitWidth = 653
-          ExplicitHeight = 355
+          Width = 498
+          Height = 271
+          Constraints.MinWidth = 250
+          ExplicitWidth = 498
+          ExplicitHeight = 271
           inherited ControlNameLabel: TLabel
-            Left = 7
-            Top = 17
-            Width = 122
-            Height = 21
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
-            Font.Height = -17
+            Left = 5
+            Width = 93
+            Height = 16
+            Font.Height = -13
             ParentFont = False
-            ExplicitLeft = 7
-            ExplicitTop = 17
-            ExplicitWidth = 122
-            ExplicitHeight = 21
+            ExplicitLeft = 5
+            ExplicitWidth = 93
+            ExplicitHeight = 16
           end
           inherited FeedbackLabel: TLabel
-            Left = 188
-            Top = 17
-            Width = 123
-            Height = 21
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
-            Font.Height = -17
+            Width = 94
+            Height = 16
+            Font.Height = -13
             ParentFont = False
-            ExplicitLeft = 188
-            ExplicitTop = 17
-            ExplicitWidth = 123
-            ExplicitHeight = 21
+            ExplicitWidth = 94
+            ExplicitHeight = 16
           end
           inherited Splitter1: TSplitter
-            Top = 78
-            Width = 651
-            ExplicitTop = 77
-            ExplicitWidth = 650
-          end
-          inherited ControlsPageControl: TPageControl
-            Top = 81
-            Width = 651
-            Height = 273
+            Top = 59
+            Width = 496
+            Height = 2
             Margins.Left = 3
             Margins.Top = 3
             Margins.Right = 3
             Margins.Bottom = 3
-            Font.Height = -17
+            Constraints.MaxHeight = 2
+            ExplicitTop = 60
+            ExplicitWidth = 498
+            ExplicitHeight = 2
+          end
+          inherited ControlsPageControl: TPageControl
+            Top = 61
+            Width = 496
+            Height = 209
+            Font.Height = -13
             ParentFont = False
-            ExplicitTop = 81
-            ExplicitWidth = 651
-            ExplicitHeight = 273
+            ExplicitTop = 61
+            ExplicitWidth = 496
+            ExplicitHeight = 209
           end
           inherited ControlNameEdit: TEdit
-            Left = 4
-            Top = 42
-            Width = 158
-            Height = 25
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
-            ExplicitLeft = 4
-            ExplicitTop = 42
-            ExplicitWidth = 158
-            ExplicitHeight = 25
-          end
-          inherited FeedbackCB: TComboBox
-            Left = 188
-            Top = 42
-            Width = 190
-            Height = 25
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
-            ExplicitLeft = 188
-            ExplicitTop = 42
-            ExplicitWidth = 190
-            ExplicitHeight = 25
+            Height = 21
+            ExplicitHeight = 21
           end
         end
       end
     end
     object ModesListPanel: TPanel
       Left = 1
-      Top = 362
-      Width = 1063
-      Height = 430
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Top = 277
+      Width = 812
+      Height = 246
       Align = alClient
       TabOrder = 1
       object ModesGB: TGroupBox
         Left = 1
         Top = 1
-        Width = 408
-        Height = 428
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Width = 312
+        Height = 244
         Align = alLeft
         Caption = #1057#1087#1080#1089#1086#1082' '#1088#1077#1078#1080#1084#1086#1074
-        Constraints.MinHeight = 417
+        Constraints.MinHeight = 244
         TabOrder = 0
         object Panel1: TPanel
           Left = 2
-          Top = 358
-          Width = 404
-          Height = 68
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Top = 190
+          Width = 308
+          Height = 52
           Align = alBottom
           TabOrder = 0
           object AddPObjBtn: TSpeedButton
-            Left = 5
-            Top = 8
-            Width = 54
-            Height = 47
+            Left = 4
+            Top = 6
+            Width = 41
+            Height = 36
             Hint = #1044#1086#1073#1072#1074#1080#1090#1100' '#1087#1088#1086#1075#1088#1072#1084#1084#1091'/'#1088#1077#1078#1080#1084
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
             AllowAllUp = True
             BiDiMode = bdLeftToRight
             Glyph.Data = {
@@ -681,15 +548,11 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             OnClick = AddPObjBtnClick
           end
           object UpdatePObjBtn: TSpeedButton
-            Left = 67
-            Top = 8
-            Width = 64
-            Height = 47
+            Left = 51
+            Top = 6
+            Width = 49
+            Height = 36
             Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1087#1088#1086#1075#1088#1072#1084#1084#1091'/'#1088#1077#1078#1080#1084
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
             AllowAllUp = True
             BiDiMode = bdLeftToRight
             Glyph.Data = {
@@ -797,15 +660,11 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             OnClick = UpdatePObjBtnClick
           end
           object LoadFromExcelBtn: TSpeedButton
-            Left = 156
-            Top = 8
-            Width = 55
-            Height = 47
+            Left = 119
+            Top = 6
+            Width = 42
+            Height = 36
             Hint = #1047#1072#1075#1088#1091#1079#1080#1090#1100' '#1080#1079' Excel'
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
             AllowAllUp = True
             BiDiMode = bdLeftToRight
             Glyph.Data = {
@@ -914,15 +773,11 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             OnClick = LoadFromExcelBtnClick
           end
           object SaveToExcelBtn: TSpeedButton
-            Left = 218
-            Top = 8
-            Width = 55
-            Height = 47
+            Left = 167
+            Top = 6
+            Width = 42
+            Height = 36
             Hint = #1057#1086#1093#1088#1072#1085#1080#1090#1100' '#1074' Excel'
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
             AllowAllUp = True
             BiDiMode = bdLeftToRight
             Glyph.Data = {
@@ -1105,13 +960,9 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
         end
         object ProgramTV: TVTree
           Left = 2
-          Top = 19
-          Width = 404
-          Height = 339
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Top = 15
+          Width = 308
+          Height = 175
           Align = alClient
           CustomCheckImages = ImageList_16
           Header.AutoSizeIndex = 0
@@ -1130,304 +981,137 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
           OnDragOver = ProgramTVDragOver
           OnDragDrop = ProgramTVDragDrop
           OnKeyDown = ProgramTVKeyDown
+          ExplicitLeft = 3
           Columns = <>
         end
       end
       inline ModeFrame1: TModeFrame
-        Left = 409
+        Left = 313
         Top = 1
-        Width = 653
-        Height = 428
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Width = 498
+        Height = 244
         Align = alClient
         TabOrder = 1
-        ExplicitLeft = 409
+        ExplicitLeft = 313
         ExplicitTop = 1
-        ExplicitWidth = 653
-        ExplicitHeight = 428
+        ExplicitWidth = 498
+        ExplicitHeight = 244
         inherited PageControl1: TPageControl
-          Width = 653
-          Height = 428
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
-          Constraints.MinHeight = 426
-          Constraints.MinWidth = 653
-          ExplicitWidth = 653
-          ExplicitHeight = 428
+          Width = 498
+          Height = 244
+          Constraints.MinHeight = 244
+          Constraints.MinWidth = 498
+          ExplicitWidth = 498
+          ExplicitHeight = 244
           inherited ProgramPage: TTabSheet
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
             ExplicitLeft = 4
-            ExplicitTop = 28
-            ExplicitWidth = 645
-            ExplicitHeight = 396
-            inherited ProgramCounterLabel: TLabel
-              Left = 4
-              Top = 69
-              Width = 122
-              Height = 17
-              Margins.Left = 4
-              Margins.Top = 4
-              Margins.Right = 4
-              Margins.Bottom = 4
-              ExplicitLeft = 4
-              ExplicitTop = 69
-              ExplicitWidth = 122
-              ExplicitHeight = 17
-            end
-            inherited ProgramNameLabel: TLabel
-              Left = 4
-              Top = 9
-              Width = 102
-              Height = 17
-              Margins.Left = 4
-              Margins.Top = 4
-              Margins.Right = 4
-              Margins.Bottom = 4
-              ExplicitLeft = 4
-              ExplicitTop = 9
-              ExplicitWidth = 102
-              ExplicitHeight = 17
-            end
+            ExplicitTop = 24
+            ExplicitWidth = 490
+            ExplicitHeight = 216
             inherited ShowModesTabBtn: TSpeedButton
-              Left = 417
-              Top = 34
-              Width = 54
-              Height = 47
+              Left = 319
               Hint = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1085#1080#1077' '#1087#1088#1086#1075#1088#1072#1084#1084#1099
-              Margins.Left = 4
-              Margins.Top = 4
-              Margins.Right = 4
-              Margins.Bottom = 4
               OnClick = ModeFrame1ShowModesTabBtnClick
-              ExplicitLeft = 417
-              ExplicitTop = 34
-              ExplicitWidth = 54
-              ExplicitHeight = 47
+              ExplicitLeft = 319
             end
             inherited ProgramCountSE: TSpinEdit
-              Top = 94
-              Width = 158
-              Height = 27
-              Margins.Left = 4
-              Margins.Top = 4
-              Margins.Right = 4
-              Margins.Bottom = 4
-              Value = 0
-              ExplicitTop = 94
-              ExplicitWidth = 158
-              ExplicitHeight = 27
+              Left = 2
+              Height = 22
+              ExplicitLeft = 2
+              ExplicitHeight = 22
             end
             inherited ProgramNameE: TEdit
-              Left = 4
-              Top = 34
-              Width = 405
-              Height = 25
-              Margins.Left = 4
-              Margins.Top = 4
-              Margins.Right = 4
-              Margins.Bottom = 4
-              ExplicitLeft = 4
-              ExplicitTop = 34
-              ExplicitWidth = 405
-              ExplicitHeight = 25
+              Height = 21
+              ExplicitHeight = 21
             end
             inherited StartProgramCB: TCheckBox
-              Left = 169
-              Width = 161
-              ExplicitLeft = 169
-              ExplicitWidth = 161
+              Left = 129
+              Top = 58
+              Width = 123
+              Height = 13
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 129
+              ExplicitTop = 58
+              ExplicitWidth = 123
+              ExplicitHeight = 13
             end
             inherited EnableProgramOnStartCB: TCheckBox
-              Left = 169
-              Width = 178
-              ExplicitLeft = 169
-              ExplicitWidth = 178
+              Left = 129
+              Top = 76
+              Width = 136
+              Height = 13
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 129
+              ExplicitTop = 76
+              ExplicitWidth = 136
+              ExplicitHeight = 13
             end
           end
           inherited ModesPage: TTabSheet
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
             ExplicitLeft = 4
             ExplicitTop = 28
             ExplicitWidth = 548
             ExplicitHeight = 296
             inherited Splitter1: TSplitter
-              Left = 253
-              Width = 6
+              Left = 322
+              Width = 5
               Height = 296
-              Margins.Left = 4
-              Margins.Top = 4
-              Margins.Right = 4
-              Margins.Bottom = 4
-              ExplicitLeft = 347
+              ExplicitLeft = 193
               ExplicitTop = 0
-              ExplicitWidth = 6
-              ExplicitHeight = 390
+              ExplicitWidth = 5
+              ExplicitHeight = 226
             end
             inherited ModeChannelsGB: TGroupBox
-              Left = 259
-              Width = 289
+              Left = 327
+              Width = 221
               Height = 296
-              Margins.Left = 4
-              Margins.Top = 4
-              Margins.Right = 4
-              Margins.Bottom = 4
-              ExplicitLeft = 259
-              ExplicitWidth = 289
+              ExplicitLeft = 327
+              ExplicitWidth = 221
               ExplicitHeight = 296
               inherited ChannelsLV: TBtnListView
-                Top = 19
-                Width = 285
-                Height = 275
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                Columns = <
-                  item
-                    Caption = #1048#1084#1103
-                    Width = 65
-                  end
-                  item
-                    Caption = #1047#1085#1072#1095#1077#1085#1080#1077
-                    Width = 65
-                  end>
-                ExplicitTop = 19
-                ExplicitWidth = 285
-                ExplicitHeight = 275
+                Top = 15
+                Width = 217
+                Height = 279
+                ExplicitTop = 15
+                ExplicitWidth = 217
+                ExplicitHeight = 279
               end
             end
             inherited ModePanel: TPanel
-              Width = 253
+              Width = 322
               Height = 296
-              Margins.Left = 4
-              Margins.Top = 4
-              Margins.Right = 4
-              Margins.Bottom = 4
-              Constraints.MinWidth = 251
-              ExplicitWidth = 253
+              Constraints.MinWidth = 192
+              ExplicitWidth = 322
               ExplicitHeight = 296
-              inherited ModeNameLabel: TLabel
-                Left = 4
-                Top = 3
-                Width = 78
-                Height = 17
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                ExplicitLeft = 4
-                ExplicitTop = 3
-                ExplicitWidth = 78
-                ExplicitHeight = 17
-              end
               inherited ModeTimeLabel: TLabel
-                Left = 4
-                Top = 67
-                Width = 111
-                Height = 17
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                ExplicitLeft = 4
-                ExplicitTop = 67
-                ExplicitWidth = 111
-                ExplicitHeight = 17
+                Top = 51
+                ExplicitTop = 51
               end
               inherited Label2: TLabel
-                Left = 4
-                Top = 289
-                Width = 189
-                Height = 17
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                ExplicitLeft = 4
-                ExplicitTop = 289
-                ExplicitWidth = 189
-                ExplicitHeight = 17
+                Top = 221
+                ExplicitTop = 221
               end
               inherited ModeNameEdit: TEdit
-                Left = 4
-                Top = 27
-                Width = 405
-                Height = 25
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                ExplicitLeft = 4
-                ExplicitTop = 27
-                ExplicitWidth = 405
-                ExplicitHeight = 25
+                Height = 21
+                ExplicitHeight = 21
               end
               inherited ModeTimeFE: TFloatEdit
-                Left = 4
-                Top = 92
-                Width = 158
-                Height = 25
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                ExplicitLeft = 4
-                ExplicitTop = 92
-                ExplicitWidth = 158
-                ExplicitHeight = 25
-              end
-              inherited InfinityModeCB: TCheckBox
-                Left = 4
-                Top = 136
-                Width = 217
-                Height = 22
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                ExplicitLeft = 4
-                ExplicitTop = 136
-                ExplicitWidth = 217
-                ExplicitHeight = 22
-              end
-              inherited CheckThresholdCB: TCheckBox
-                Left = 4
-                Top = 184
-                Width = 217
-                Height = 23
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                ExplicitLeft = 4
-                ExplicitTop = 184
-                ExplicitWidth = 217
-                ExplicitHeight = 23
+                Top = 70
+                Height = 21
+                ExplicitTop = 70
+                ExplicitHeight = 21
               end
               inherited CheckLengthFe: TFloatEdit
-                Left = 4
-                Top = 314
-                Width = 158
-                Height = 25
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                ExplicitLeft = 4
-                ExplicitTop = 314
-                ExplicitWidth = 158
-                ExplicitHeight = 25
+                Top = 240
+                Height = 21
+                ExplicitTop = 240
+                ExplicitHeight = 21
               end
             end
           end
@@ -1437,30 +1121,22 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
   end
   object ActionPanel: TPanel
     Left = 0
-    Top = 939
-    Width = 1468
-    Height = 59
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Top = 636
+    Width = 1123
+    Height = 45
     Align = alBottom
     TabOrder = 2
     object StatusBar1: TStatusBar
       AlignWithMargins = True
-      Left = 5
-      Top = 27
-      Width = 1458
-      Height = 27
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 4
+      Top = 21
+      Width = 1115
+      Height = 20
       BorderWidth = 2
       DoubleBuffered = False
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -15
+      Font.Height = -11
       Font.Name = 'Tahoma'
       Font.Style = []
       Panels = <
@@ -1478,80 +1154,56 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
   object Panel2: TPanel
     Left = 0
     Top = 0
-    Width = 1468
-    Height = 146
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Width = 1123
+    Height = 112
     Align = alTop
     TabOrder = 3
     object StopTrigGB: TGroupBox
-      Left = 3
-      Top = -3
-      Width = 786
-      Height = 142
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 2
+      Top = -2
+      Width = 601
+      Height = 108
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080' '#1094#1080#1082#1083#1086#1075#1088#1072#1084#1084#1099
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -17
+      Font.Height = -13
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
       TabOrder = 0
       object Label2: TLabel
-        Left = 14
-        Top = 92
-        Width = 45
-        Height = 21
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 11
+        Top = 70
+        Width = 34
+        Height = 16
         Caption = #1055#1086#1088#1086#1075
       end
       object Label1: TLabel
-        Left = 14
-        Top = 39
-        Width = 135
-        Height = 19
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 11
+        Top = 30
+        Width = 108
+        Height = 15
         Caption = #1057#1090#1086#1087' '#1094#1080#1082#1083#1086#1075#1088#1072#1084#1084#1099
         Font.Charset = RUSSIAN_CHARSET
         Font.Color = clWindowText
-        Font.Height = -17
+        Font.Height = -13
         Font.Name = 'Times New Roman'
         Font.Style = []
         ParentFont = False
       end
       object StopTrigLvl: TFloatEdit
-        Left = 14
-        Top = 112
-        Width = 190
-        Height = 29
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 11
+        Top = 86
+        Width = 145
+        Height = 24
         TabOrder = 0
         Text = '0.5'
       end
       object StopTrigRG: TRadioGroup
-        Left = 212
-        Top = 8
-        Width = 167
-        Height = 133
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 162
+        Top = 6
+        Width = 128
+        Height = 102
         Caption = #1058#1080#1087' '#1090#1088#1080#1075#1075#1077#1088#1072
         ItemIndex = 0
         Items.Strings = (
@@ -1562,22 +1214,22 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
         TabOrder = 1
       end
       object StopTrigCB: TRcComboBox
-        Left = 14
-        Top = 64
-        Width = 190
-        Height = 29
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 11
+        Top = 49
+        Width = 145
+        Height = 24
         TabOrder = 2
       end
       object ApplyTrigBtn: TButton
-        Left = 386
-        Top = 22
-        Width = 110
-        Height = 25
+        Left = 295
+        Top = 17
+        Width = 84
+        Height = 19
         Hint = #1057#1086#1079#1076#1072#1090#1100' '#1090#1088#1080#1075#1075#1077#1088' '#1086#1089#1090#1072#1085#1086#1074#1082#1080' '#1094#1080#1082#1083#1086#1075#1088#1072#1084#1084#1099
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
         ParentShowHint = False
         ShowHint = True
@@ -1585,14 +1237,10 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
         OnClick = ApplyTrigBtnClick
       end
       object AllowUserModeSelectCB: TCheckBox
-        Left = 387
-        Top = 54
-        Width = 351
-        Height = 22
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 296
+        Top = 41
+        Width = 268
+        Height = 17
         Caption = #1042#1089#1077#1075#1076#1072' '#1088#1072#1079#1088#1077#1096#1072#1090#1100' '#1074#1099#1073#1086#1088' '#1088#1077#1078#1080#1084#1072' '#1087#1086#1083#1100#1079#1086#1074#1072#1090#1077#1083#1102
         TabOrder = 4
       end
