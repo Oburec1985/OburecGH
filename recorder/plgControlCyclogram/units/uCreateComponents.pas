@@ -595,8 +595,6 @@ begin
     'Версия ' + IntToStr(GPluginInfo.Version) + '.' + IntToStr
     (GPluginInfo.SubVertion) + char(0) + char(0) + GPluginInfo.Vendor + ', 2017';
   MessageBox(0, PChar(str), 'Информация о модуле', MB_OK + MB_ICONINFORMATION + MB_APPLMODAL + MB_TOPMOST);
-
-
   result := true;
 end;
 

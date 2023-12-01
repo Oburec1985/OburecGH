@@ -56,6 +56,7 @@ type
     procedure UpdateBtnClick(Sender: TObject);
     procedure AddAxisBtnClick(Sender: TObject);
     procedure TagsTVChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure TagsTVKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     m_curObj:tobject;
   private
@@ -300,6 +301,7 @@ begin
         if pax<>nil then
           pAx.name:=str;
       end;
+      TSyncOscFrm(m_curObj).m_Chart.showLegend:=LegendCB.checked;
     end;
     if tobject(D.Data) is TOscSignal then
     begin
@@ -397,6 +399,52 @@ begin
   end;
 end;
 
+
+procedure TEditSyncOscFrm.TagsTVKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  next, Node: PVirtualNode;
+  Data, parentdata: PNodeData;
+  I: Integer;
+  p:cpage;
+  a:caxis;
+begin
+  if Key = VK_DELETE then
+  begin
+    Node := TagsTV.GetFirstSelected(true);
+    while Node <> nil do
+    begin
+      Data := TagsTV.GetNodeData(Node);
+      if tobject(data.data) is TOscSignal then
+      begin
+        TOscSignal(data.data).Destroy;
+      end;
+      if tobject(data.data) is cAxis then
+      begin
+        p:=cpage(TSyncOscFrm(m_curObj).m_Chart.activePage);
+        if p.getAxisCount=1 then
+        begin
+          a:=p.activeAxis;
+        end
+        else
+        begin
+          a.destroy;
+        end;
+      end;
+      next := TagsTV.GetNextSelected(Node, false);
+      if next = nil then
+      begin
+        if Data.Data<>nil then
+        begin
+
+        end;
+      end;
+      Node := next;
+      inc(I);
+    end;
+    TagsTV.DeleteSelectedNodes;
+  end;
+end;
 
 procedure TEditSyncOscFrm.updateTagsList;
 begin

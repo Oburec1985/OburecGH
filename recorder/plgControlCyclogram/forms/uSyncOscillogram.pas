@@ -500,9 +500,18 @@ begin
 end;
 
 destructor TSyncOscFrm.destroy;
+var
+  I: Integer;
+  s:TOscSignal;
 begin
   m_ax.destroy;
   m_TrigTag.destroy;
+  for I := 0 to sCount - 1 do
+  begin
+    s:=GetSignal(i);
+    s.line:=nil;
+    s.destroy;
+  end;
   FreeAndNil(m_signals);
   FreeAndNil(m_Chart);
   inherited;
@@ -1064,6 +1073,10 @@ destructor TOscSignal.destroy;
 begin
   t.destroy;
   t := nil;
+  if line<>nil then
+  begin
+    line.destroy;
+  end;
 end;
 
 procedure TOscSignal.doStart(oscLen, Phase0: double; oscType: TOscType);
