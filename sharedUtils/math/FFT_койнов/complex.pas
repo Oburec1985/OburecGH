@@ -436,17 +436,16 @@ end;
 
 {================= Математические функции от комплексного типа  begin =========}
 //----------------------------------------------------------------------------//
-//
 function abs(const X:TComplex_d):Real; // |z| = (Re^2 + Im^2)^0.5
 begin
  try
- Result:=sqrt(sqr(X.Re)+sqr(X.Im))
-  except
+  Result:=sqrt(sqr(X.Re)+sqr(X.Im))
+ except
    Result:=MaxComplex_d;
-    end;
+ end;
 end;
-//------------------------------------------------------------------//
 
+//------------------------------------------------------------------//
 function mod2(const X:TComplex_d): Real; // |z|^2
 var TempABS:Real;
 begin

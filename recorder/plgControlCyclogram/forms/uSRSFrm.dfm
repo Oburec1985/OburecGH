@@ -32,8 +32,6 @@ object SRSFrm: TSRSFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitLeft = 1
-    ExplicitTop = -7
   end
   object RightGB: TGroupBox
     Left = 535
@@ -623,6 +621,15 @@ object SRSFrm: TSRSFrm
       Caption = #1054#1090#1082#1083#1102#1095#1080#1090#1100
       TabOrder = 13
       OnClick = DisableCBClick
+    end
+    object SPMcb: TCheckBox
+      Left = 70
+      Top = 320
+      Width = 59
+      Height = 17
+      Caption = 'Spm'
+      TabOrder = 14
+      OnClick = SPMcbClick
     end
   end
 end

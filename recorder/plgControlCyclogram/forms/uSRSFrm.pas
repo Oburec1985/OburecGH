@@ -315,6 +315,7 @@ type
     UseWndFcb: TCheckBox;
     WelchCB: TCheckBox;
     DisableCB: TCheckBox;
+    SPMcb: TCheckBox;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -330,6 +331,7 @@ type
     procedure SpmChartCursorMove(sender: tobject);
     procedure WelchCBClick(sender: tobject);
     procedure DisableCBClick(Sender: TObject);
+    procedure SPMcbClick(Sender: TObject);
   public
     ready: boolean;
     // h0, h1, h2
@@ -366,6 +368,7 @@ type
     PROCEDURE ShowShock(shock: integer);
     // отобразить последнюю передаточную характеристику блока в S и усредн. передаточную
     procedure ShowFrf(s:cSRSres; c:cSpmCfg; shInd:integer);
+    procedure ShowSpm;
     procedure UpdateView;
     procedure updatedata;
     // выделение памяти. происходит при загрузке или смене конфига
@@ -1094,7 +1097,6 @@ begin
             s.line.flength := pcount;
 
             m_lastTahoBlock.m_connectedInd := s.m_shockList.m_LastBlock;
-            s.lineSpm.AddPoints(TDoubleArray(block.m_mod.p), c.fHalfFft);
             s.m_shockProcessed := true;
           end;
           t.evalCoh(hideind);
@@ -1149,14 +1151,21 @@ begin
       ShockCountE.Text := inttostr(t.m_shockList.Count);
     end;
   end;
-  if fUpdateFrf then
+  if not SPMcb.Checked then
   begin
-    s:=c.GetSrs(0);
-    if fShowLast then
-      ShowFrf(s, c, -1)
-    else
-      ShowFrf(s, c, ShockIE.IntNum);
-    fShowLast:=false;
+    if fUpdateFrf then
+    begin
+      s:=c.GetSrs(0);
+      if fShowLast then
+        ShowFrf(s, c, -1)
+      else
+        ShowFrf(s, c, ShockIE.IntNum);
+      fShowLast:=false;
+    end;
+  end
+  else
+  begin
+    ShowSpm;
   end;
   SpmChart.redraw;
 end;
@@ -1216,10 +1225,6 @@ var
 begin
   m_UseWelch:=WelchCB.Checked;
   t := getTaho;
-  if not m_UseWelch then
-  begin
-
-  end;
   updateFrf(not m_UseWelch);
   UpdateView;
 end;
@@ -1551,6 +1556,35 @@ begin
   end;
 end;
 
+procedure TSRSFrm.ShowSpm;
+var
+  t:cSRSTaho;
+  c:cSpmCfg;
+  s:cSRSres;
+  b:TDataBlock;
+begin
+  t:=getTaho;
+  c:=t.getCfg;
+  s:=c.GetSrs(PointIE.IntNum);
+  b:=s.m_shockList.getBlock(ShockIE.IntNum);
+  s.lineSpm.AddPoints(TDoubleArray(b.m_mod.p), c.fHalfFft);
+end;
+
+procedure TSRSFrm.SPMcbClick(Sender: TObject);
+var
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s:cSRSres;
+begin
+  t:=getTaho;
+  c:=t.getCfg;
+  s:=c.GetSrs(PointIE.IntNum);
+  s.lineFrf.visible:=not SPMcb.Checked;
+  s.lineAvFRF.visible:=not SPMcb.Checked;
+  s.lineSpm.visible:=SPMcb.Checked;
+  UpdateView;
+end;
+
 procedure TSRSFrm.SpmChartCursorMove(sender: tobject);
 var
   t: cSRSTaho;
@@ -1811,6 +1845,7 @@ begin
   for i := 0 to halfNP - 1 do
   begin
     sb.m_WechSpm[i] := sb.m_WechSpm[i] * k;
+    TDoubleArray(sb.m_mod.p)[i]:=abs(sb.m_WechSpm[i]);
     tb.m_WechSpm[i] := tb.m_WechSpm[i] * k;
   end;
 end;

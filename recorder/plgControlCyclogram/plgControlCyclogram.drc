@@ -1259,7 +1259,7 @@ END
 /* forms\uIRDiagram.dfm */
 /* forms\uIRDiagramEditFrm.dfm */
 /* forms\uSyncOscillogram.dfm */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uSyncOscillogramEditFrm.dfm */
+/* forms\uSyncOscillogramEditFrm.dfm */
 /* forms\uAlgsSaveFrm.dfm */
 /* forms\uEditPropertiesFrm.dfm */
 /* ..\..\sharedUtils\forms\uConfirmDlg.dfm */
@@ -1289,7 +1289,7 @@ END
 /* forms\uAlgFrm.dfm */
 /* forms\uControlDeskFrm.dfm */
 /* forms\uControlCyclogramEditFrm.dfm */
-/* forms\uSRSFrm.dfm */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uSRSFrm.dfm */
 /* forms\uSpmChartEdit.dfm */
 /* forms\uSpmChart.dfm */
 /* forms\uControlWarnFrm.dfm */
