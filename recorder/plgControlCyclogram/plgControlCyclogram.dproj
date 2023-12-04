@@ -443,6 +443,14 @@
 				<Form>EditSrsFrm</Form>
 			</DCCReference>
 			<DCCReference Include="..\SharedRUnits\interfaces\uAlarms.pas"/>
+			<DCCReference Include="..\..\3d\forms\uTrfrmToolsFrame.pas">
+				<Form>TrfrmToolsFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\3d\forms\uTransformButtons.pas">
+				<Form>TransformToolsFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

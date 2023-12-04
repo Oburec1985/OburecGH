@@ -200,7 +200,9 @@ uses
   uQueue2 in '..\..\sharedUtils\utils\lists\uQueue2.pas',
   uSRSFrm in 'forms\uSRSFrm.pas' {SRSFrm},
   uEditSrsFrm in 'forms\uEditSrsFrm.pas' {EditSrsFrm},
-  uAlarms in '..\SharedRUnits\interfaces\uAlarms.pas';
+  uAlarms in '..\SharedRUnits\interfaces\uAlarms.pas',
+  uTrfrmToolsFrame in '..\..\3d\forms\uTrfrmToolsFrame.pas' {TrfrmToolsFrame: TFrame},
+  uTransformButtons in '..\..\3d\forms\uTransformButtons.pas' {TransformToolsFrame: TFrame};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

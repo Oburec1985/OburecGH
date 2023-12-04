@@ -18,7 +18,7 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
     Height = 41
     TabOrder = 0
     object PanBtn: TSpeedButton
-      Left = 0
+      Left = 3
       Top = 8
       Width = 26
       Height = 26

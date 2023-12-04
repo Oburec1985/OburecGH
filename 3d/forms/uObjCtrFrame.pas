@@ -479,6 +479,11 @@ var up:point3;
 begin
   up:=axisy;
   l_aspect:=(w/h);
+
+  // GLdouble fovy,
+  // GLdouble aspect,
+  // GLdouble zNear,
+  // GLdouble zFar
   gluPerspective(0.5,l_aspect,0.5,2);
   // test:=multscalarp3(getSight,up);
   glulookat(pos.x,pos.y,pos.z,

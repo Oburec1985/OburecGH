@@ -43,6 +43,11 @@
     <File Path="..\SharedRUnits\uTagsListFrame.dfm"/>
     <File Path="..\..\..\OburecGH"/>
     <File Path="..\..\3d"/>
+    <File Path="..\..\3d\forms"/>
+    <File Path="..\..\3d\forms\uTrfrmToolsFrame.pas"/>
+    <File Path="..\..\3d\forms\uTrfrmToolsFrame.dfm"/>
+    <File Path="..\..\3d\forms\uTransformButtons.pas"/>
+    <File Path="..\..\3d\forms\uTransformButtons.dfm"/>
     <File Path="..\..\3d\objects"/>
     <File Path="..\..\3d\objects\uNodeObject.pas"/>
     <File Path="..\..\sharedUtils"/>

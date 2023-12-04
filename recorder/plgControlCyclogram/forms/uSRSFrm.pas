@@ -1016,8 +1016,8 @@ begin
             pcount);
           t.line.flength := pcount;
           m_lastTahoBlock.BuildSpm;
-          t.lineSpm.AddPoints(TDoubleArray(m_lastTahoBlock.m_mod.p),
-            c.fHalfFft);
+          //t.lineSpm.AddPoints(TDoubleArray(m_lastTahoBlock.m_mod.p),
+          //  c.fHalfFft);
         end;
       end;
     end;
@@ -1847,6 +1847,7 @@ begin
     sb.m_WechSpm[i] := sb.m_WechSpm[i] * k;
     TDoubleArray(sb.m_mod.p)[i]:=abs(sb.m_WechSpm[i]);
     tb.m_WechSpm[i] := tb.m_WechSpm[i] * k;
+    TDoubleArray(tb.m_mod.p)[i]:=abs(tb.m_WechSpm[i]);
   end;
 end;
 
@@ -1882,6 +1883,8 @@ begin
 
         cross:=sd.m_WechSpm[j]*sopr(sd.m_WechSpm[j]);
         s.m_shockList.m_Syy[j]:=s.m_shockList.m_Syy[j]+cross;
+
+        sd.m_frf[j]:=tdoublearray(sd.m_mod.p)[j]/ tdoublearray(td.m_mod.p)[j];
       end;
     end;
    // усредняем
