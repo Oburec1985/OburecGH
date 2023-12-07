@@ -33,6 +33,8 @@ type
   TObjFrm3d = class(TRecFrm)
     GL: cBaseGlComponent;
     ToolsGB: TGroupBox;
+    GroupBox1: TGroupBox;
+    RightSplitter: TSplitter;
     procedure GLInitScene(Sender: TObject);
   private
     m_TransformToolsFrame: TTrfrmToolsFrame;

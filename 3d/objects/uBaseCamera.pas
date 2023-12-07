@@ -436,14 +436,11 @@ begin
   c.x:=0.5*(b.hi.x+b.lo.x);
   c.y:=0.5*(b.hi.y+b.lo.y);
   c.z:=0.5*(b.hi.z+b.lo.z);
-  // вектор сдвига из камеры в мишень
-  sc:=subVector(c, pos);
-  dist:=VectorLength(sc);
   // косинус угла векторов мишень и взгляд
   view:=getSight;
   angel:=VectorCos(sc,view);
   // вектор в обратную сторону от взгляда
-  view:=scalevectorp3(-dist*angel*10,getSight);
+  view:=scalevectorp3(-1,getSight);
   // Координаты камеры
   // точка куда надо перенести камеру, чтобы сохранить ее ориентацию,
   // но смотреть в центр объема

@@ -1198,7 +1198,7 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
     end
     object TimeScrollBar: TScrollBar
       Left = 6
-      Top = 18
+      Top = 26
       Width = 590
       Height = 29
       Anchors = [akLeft, akTop, akRight]

@@ -2,44 +2,60 @@ object ObjFrm3d: TObjFrm3d
   Left = 0
   Top = 0
   Caption = '3DFrm'
-  ClientHeight = 392
-  ClientWidth = 830
+  ClientHeight = 348
+  ClientWidth = 635
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -14
+  Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 120
-  TextHeight = 17
+  PixelsPerInch = 96
+  TextHeight = 13
   object GL: cBaseGlComponent
     Left = 0
     Top = 0
-    Width = 830
-    Height = 221
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Width = 635
+    Height = 217
     Align = alClient
     DockSite = True
     TabOrder = 0
     scenename = '.\files\scenes'
     ShowTrasforms = True
     OnInitScene = GLInitScene
+    ExplicitHeight = 169
+    object RightSplitter: TSplitter
+      Left = 405
+      Top = 1
+      Height = 215
+      Align = alRight
+      Visible = False
+      ExplicitLeft = 352
+      ExplicitTop = 64
+      ExplicitHeight = 100
+    end
+    object GroupBox1: TGroupBox
+      Left = 408
+      Top = 1
+      Width = 226
+      Height = 215
+      Align = alRight
+      Caption = 'RightGB'
+      TabOrder = 0
+      Visible = False
+      ExplicitLeft = 409
+      ExplicitTop = -4
+    end
   end
   object ToolsGB: TGroupBox
     Left = 0
-    Top = 221
-    Width = 830
-    Height = 171
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Top = 217
+    Width = 635
+    Height = 131
     Align = alBottom
     Caption = 'ToolsGB'
     TabOrder = 1
+    ExplicitTop = 169
   end
 end

@@ -78,7 +78,8 @@ Function LineCrossLine(const L1begin, L1end, L2begin, L2end: Vector3f;
   out Cross: Vector3f): boolean;overload;
 Function LineCrossLine(const L1begin, L1end, L2begin, L2end: point3;
   out Cross: point3): boolean;overload;
-
+// растояние от точки до полигона. Возвращает True если есть растояние до плоскоксти внутри полигона
+Function PointToPlane(point,p1,p2,p3:point3; var cross:point3): boolean;
 // вычисление точки пересечения прямой l1,l2 и коробки определенной двумя противоположными вершинами
 // проверятся все пересечения с каждым из полигонов, затем определяется кратчайшее растояние и принадлежность точки пересечения прямой l1, l2
 // res = -1 если пересечения не было или возвращает номер полигона с которым было пересечение
@@ -1402,6 +1403,18 @@ begin
         result:=cross;
     end;
   end;
+end;
+
+Function PointToPlane(point,p1,p2,p3:point3; var cross:point3): boolean;
+var
+  v1, v2, n:point3;
+begin
+  // находим нормаль к полигону
+  v1:=subVector(p1,p2);
+  v2:=subVector(p1,p3);
+  // вектор нормаль к полигон
+  n:=MultVectorP3(v1,v2);
+  n:=
 end;
 
 Function LineCrossPoly(const L1, L2, p1, p2, p3, p4: point3; out Cross: point3)  : boolean;

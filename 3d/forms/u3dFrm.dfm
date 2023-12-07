@@ -2,8 +2,8 @@ object GlFrm: TGlFrm
   Left = 0
   Top = 0
   Caption = 'GlFrm'
-  ClientHeight = 515
-  ClientWidth = 1020
+  ClientHeight = 320
+  ClientWidth = 789
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,19 +18,22 @@ object GlFrm: TGlFrm
   PixelsPerInch = 96
   TextHeight = 13
   object Splitter1: TSplitter
-    Left = 734
+    Left = 503
     Top = 0
-    Height = 515
+    Height = 320
     Align = alRight
     ExplicitLeft = 646
+    ExplicitHeight = 515
   end
   object GroupBox1: TGroupBox
-    Left = 737
+    Left = 506
     Top = 0
     Width = 283
-    Height = 515
+    Height = 320
     Align = alRight
     TabOrder = 0
+    ExplicitLeft = 734
+    ExplicitHeight = 515
   end
   object MainMenu1: TMainMenu
     Left = 152
@@ -107,19 +110,19 @@ object GlFrm: TGlFrm
     end
   end
   object OpenDialog1: TOpenDialog
-    Left = 104
+    Left = 40
     Top = 8
   end
   object SaveDialog1: TSaveDialog
     Filter = 'Obr '#1092#1072#1081#1083'|*.Obr'
-    Left = 200
+    Left = 256
     Top = 8
   end
   object ImageList_32: TImageList
     Height = 32
     Width = 32
-    Left = 96
-    Top = 80
+    Left = 40
+    Top = 96
     Bitmap = {
       494C010119001D00040020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       000000000000360000002800000080000000E0000000010020000000000000C0
@@ -3825,8 +3828,8 @@ object GlFrm: TGlFrm
       000000000000}
   end
   object ImageList_16: TImageList
-    Left = 96
-    Top = 128
+    Left = 40
+    Top = 176
     Bitmap = {
       494C010119001D00040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000007000000001002000000000000070
