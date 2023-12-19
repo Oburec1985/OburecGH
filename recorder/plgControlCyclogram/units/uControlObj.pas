@@ -30,6 +30,13 @@ type
 
   cControlMng = class(cBaseObjMng)
   private
+    fcs: TRTLCriticalSection;
+    // состо€ние ошибки. -1 если сброшено, дальше номер в зависимости от
+    // места процедуры в которой упало
+    fErrorState:integer;
+    // число ошибок
+    fErrorCount:integer;
+
     m_configChanged: boolean;
     // место хранени€ предыдущей конфигурации
     m_prevDir: string;
@@ -70,7 +77,17 @@ type
     AllowUserModeSelect: boolean;
     // частота счетчика замера времени
     m_Freq: int64;
+  public
+    function ErrorCount:integer;
+    function ErrorStr:string;
   private
+    procedure PushErroCode(ec:integer);
+    procedure CheckError;
+
+    procedure InitCS;
+    procedure DeleteCS;
+    procedure exitcs;
+    procedure entercs;
     // происходит при останове работы цыклограммы режимво
     procedure UpdateLastState;
     // сохранение состо€ни€ циклограммы режимов и конфигураций
@@ -1090,13 +1107,20 @@ begin
   // потенциально опасно в многопоточности (state)
   if fUseUpdateTagsEvent then
   begin
+    CheckError;
+    PushErroCode(1);
     CheckTriggers;
+    PushErroCode(2);
     // если помен€лось значение тега отвечающее за состо€ние контрола то необходимо помен€ть состо€ние контрола
     UpdateControlState;
+    PushErroCode(3);
     // если помен€лось значение тега отвечающее за состо€ние программы
     UpdateProgramState;
+    PushErroCode(4);
     UpdateModeState;
+    PushErroCode(5);
     UpdateModeTolerance;
+    PushErroCode(0);
   end;
 end;
 
@@ -1137,6 +1161,11 @@ var
   gname: PAnsiChar;
 begin
   inherited;
+  // состо€ние дл€ поиска ошибок
+  fErrorState:=0;
+  fErrorCount:=0;
+  InitCS;
+
 
   AllowUserModeSelect := true;
 
@@ -1174,6 +1203,7 @@ end;
 
 destructor cControlMng.destroy;
 begin
+  DeleteCS;
   // m_TagGroup := nil;
 
   m_TrigAlarmHandler.Detach;
@@ -1564,6 +1594,11 @@ begin
   end;
 end;
 
+procedure cControlMng.PushErroCode(ec: integer);
+begin
+  fErrorState:=ec;
+end;
+
 procedure cControlMng.renametrig(oldname, newname: string);
 var
   i: integer;
@@ -1806,6 +1841,51 @@ begin
       StopTrigger.doOnTrigApply;
     end;
   end;
+end;
+
+procedure cControlMng.CheckError;
+begin
+  if fErrorState<>0 then
+  begin
+    entercs;
+    inc(fErrorCount);
+    exitcs;
+    logMessage('Er:'+inttostr(fErrorState)+' Count:'+ inttostr(fErrorCount));
+  end;
+end;
+
+function cControlMng.ErrorCount:integer;
+begin
+  entercs;
+  result:=fErrorCount;
+  exitcs;
+end;
+
+function cControlMng.ErrorStr:string;
+begin
+  entercs;
+  result:='Er:'+inttostr(fErrorState)+' Count:'+ inttostr(fErrorCount);
+  exitcs;
+end;
+
+procedure cControlMng.InitCS;
+begin
+  InitializeCriticalSection(fcs);
+end;
+
+procedure cControlMng.DeleteCS;
+begin
+  DeleteCriticalSection(fcs);
+end;
+
+procedure cControlMng.exitcs;
+begin
+  LeaveCriticalSection(fcs);
+end;
+
+procedure cControlMng.entercs;
+begin
+  EnterCriticalSection(fcs);
 end;
 
 procedure cControlMng.CheckTriggers;

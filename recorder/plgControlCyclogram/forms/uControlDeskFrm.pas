@@ -169,7 +169,7 @@ type
     procedure UpdateControlsPropSGmode(m: cModeObj);
     procedure SelectControl(c: ccontrolobj);
     procedure updateControlRow(c: ccontrolobj);
-    function GetSelectMode: cModeObj;
+    function  GetSelectMode: cModeObj;
     procedure ShowControlRow(c: ccontrolobj);
     procedure SetConName(con: ccontrolobj; row: integer);
     procedure SetConTask(con: ccontrolobj; row: integer);
@@ -2027,14 +2027,24 @@ end;
 procedure TControlDeskFrm.updateviews;
 var
   p: cProgramObj;
+  s:string;
+  ec:integer;
 begin
   p := g_conmng.getprogram(0);
+  s:='';
   if p <> nil then
   begin
     if p.ActiveMode <> nil then
-      ActiveModeE.text := p.ActiveMode.name
+      s:= p.ActiveMode.name
     else
-      ActiveModeE.text := '';
+      s:= '';
+    ec:=g_conmng.ErrorCount;
+    if ec<>0 then
+    begin
+      ActiveModeE.text :=s+' '+g_conmng.ErrorStr;
+    end
+    else
+      ActiveModeE.text:=s;
   end;
   UpdateTimers;
   if PageControl1.TabIndex = 0 then

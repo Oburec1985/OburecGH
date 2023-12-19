@@ -1414,7 +1414,7 @@ begin
   v2:=subVector(p1,p3);
   // вектор нормаль к полигон
   n:=MultVectorP3(v1,v2);
-  n:=
+  ///n:=
 end;
 
 Function LineCrossPoly(const L1, L2, p1, p2, p3, p4: point3; out Cross: point3)  : boolean;
