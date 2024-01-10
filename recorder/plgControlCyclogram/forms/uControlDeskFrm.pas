@@ -1619,6 +1619,7 @@ begin
   m := getTableModeSGByCol(xCol);
   if m <> nil then
     m_CurMode := m;
+  if m_CurMode=nil then exit;
   ModePropE.text :=  m_CurMode.name;
   if m_CurMode <> nil then
   begin
@@ -1778,15 +1779,20 @@ var
   pPnt:tpoint;
 
   p:cProgramObj;
-  m:cModeObj;
+  m, newm:cModeObj;
 begin
   if key=VK_RETURN then
   begin
     if m_insert>-1 then
     begin
       p := g_conmng.getprogram(0);
-      p.addmode();
+      m:=p.getMode(m_insert-1);
+      newm:=m.copyMode(true);
+      newm.name:=TStringGrid(Sender).Cells[m_insert, 0];
       m_insert:=-1;
+      ShowControlPropsModes;
+      UpdateControlsPropSG;
+      //ShowModeTable;
     end
     else
       ModeTabSGEditCell(m_row, m_col, m_val);
@@ -1810,7 +1816,10 @@ begin
     begin
       sg:=TStringGrid(sender);
       mname:=sg.Cells[col, 0];
-      GridAddColumn(sg, m_insert, sg.Colwidths[col]);
+      if col>0 then
+        GridAddColumn(sg, m_insert, sg.Colwidths[col])
+      else
+        GridAddColumn(sg, m_insert, sg.Colwidths[col+1]);
       sg.Cells[m_insert, 0]:=mname+'_';
     end;
   end;

@@ -225,6 +225,7 @@ type
     destructor destroy; override;
   end;
 
+  // доп теги для контрола
   cTagPair = class
   public
     tag: cTag;
@@ -235,7 +236,6 @@ type
     function getname: string;
     procedure setname(s:string);
   public
-
     property name:string read getname write setname;
     constructor create;
     destructor destroy;
@@ -323,6 +323,7 @@ type
   public
     // доп параметры отправляемые в контрол
     m_Params: tstringlist;
+    // хранит свой набор cTagPair который соответствует но не равен списку тегов контрола
     m_tags:tStringlist;
   public
     TaskType: TPType;
@@ -351,6 +352,7 @@ type
     function getApplyed: boolean;
     procedure setApplyed(b: boolean);
   public
+    procedure copytaskto(t:ctask);
     // доп задания контролу
     function TagsToString: string;
     procedure InitCS;
@@ -4835,18 +4837,21 @@ end;
 function cModeObj.CopyMode(before:boolean):cmodeObj;
 var
   I: Integer;
+  t:ctask;
 begin
   result:=cModeObj.create;
   if before then
-    result.MIndex:=MIndex-1
+    result.MIndex:=MIndex
   else
     result.MIndex:=MIndex+1;
-  getProgram.insertMode(result.MIndex);
+  getProgram.insertMode(result,result.MIndex);
   result.ModeLength:=ModeLength;
+  result.CreateTasks;
   for I := 0 to TaskCount - 1 do
   begin
-    asdfadf
-  end;
+    t:=GetTask(i);
+    t.copytaskto(result.GetTask(i));
+ end;
 end;
 
 function cModeObj.getNextMode: cModeObj;
@@ -5838,6 +5843,34 @@ begin
   else
   begin
     t1.SplineInterp := ptNullPoly;
+  end;
+end;
+
+procedure cTask.copytaskto(t: ctask);
+var
+  I: Integer;
+  tagpair, tp:cTagPair;
+begin
+  t.fStopControlValue:=fStopControlValue;
+  t.leftTang:=leftTang;
+  t.rightTang:=rightTang;
+  t.TaskType:=TaskType;
+  t.control:=control;
+  t.point:=point;
+  t.spline:=spline;
+  t.m_UsePrev:=m_UsePrev;
+  t.m_tolerance:=m_tolerance;
+  t.m_useTolerance:=m_useTolerance;
+  t.SplineInterp:=SplineInterp;
+  t.params:=params;
+  for I := 0 to m_tags.Count - 1 do
+  begin
+    tagpair:=ctagpair(m_tags.Objects[i]);
+    tp:=ctagpair.create;
+    tp.name:=tagpair.getname;
+    tp.value:=tagpair.value;
+    tp.PWM:=tagpair.PWM;
+    t.m_tags.AddObject(tp.name, tp);
   end;
 end;
 
