@@ -24,6 +24,7 @@ type
     DeskGB: TGroupBox;
     Timer1: TTimer;
     PlayPanel: TPanel;
+
     PlayBtn: TSpeedButton;
     PausePanel: TPanel;
     PauseBtn: TSpeedButton;
@@ -130,6 +131,9 @@ type
     m_apply:boolean;
     m_timerid, m_timerid_res: cardinal;
     m_tolArray: cDoubleList;
+
+    m_insert:integer; // режим вставки колонки
+    m_insertleft:boolean; // режим вставки колонки (слева или справа)
   protected
     function ToTime(sec:double; b_format:boolean):string;
     function ZoneListToParams(str: string; zl: cZoneList): string;
@@ -470,6 +474,7 @@ end;
 
 procedure TControlDeskFrm.FormCreate(Sender: TObject);
 begin
+  m_insert:=-1;
   m_timerid := 2;
   m_tolArray := cDoubleList.Create;
   InitSG;
@@ -1695,8 +1700,31 @@ var
   I: integer;
 begin
   sg := TStringGrid(Sender);
-  if aRow>1 then
+  if aRow=0 then
   begin
+    Rect.Left:=Rect.Left+1;
+    Rect.Right:=Rect.Right-1;
+    Rect.Top:=Rect.Top-1;
+    Rect.Bottom:=Rect.Bottom+1;
+
+    Color := sg.Canvas.Brush.Color;
+    sg.Canvas.Brush.Color := clGray;
+    sg.Canvas.FillRect(Rect);
+    sg.Canvas.TextOut(Rect.Left, Rect.Top, sg.Cells[ACol, ARow]);
+    sg.Canvas.Brush.Color := Color;
+    exit;
+  end;
+  if aRow>=1 then
+  begin
+    if ACol=m_insert then
+    begin
+      Color := sg.Canvas.Brush.Color;
+      sg.Canvas.Brush.Color := clYellow;
+      sg.Canvas.FillRect(Rect);
+      sg.Canvas.TextOut(Rect.Left, Rect.Top, sg.Cells[ACol, ARow]);
+      sg.Canvas.Brush.Color := Color;
+      exit;
+    end;
     str:=sg.Cells[0, ARow];
     if g_conmng<>nil then
     begin
@@ -1743,9 +1771,49 @@ end;
 
 procedure TControlDeskFrm.TableModeSGKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
+var
+  sg:tstringgrid;
+  mname:string;
+  col, row:integer;
+  pPnt:tpoint;
+
+  p:cProgramObj;
+  m:cModeObj;
 begin
   if key=VK_RETURN then
-    ModeTabSGEditCell(m_row, m_col, m_val);
+  begin
+    if m_insert>-1 then
+    begin
+      p := g_conmng.getprogram(0);
+      p.addmode();
+      m_insert:=-1;
+    end
+    else
+      ModeTabSGEditCell(m_row, m_col, m_val);
+  end;
+  if key=VK_INSERT then
+  begin
+    if m_insert>-1 then exit;
+    GetCursorPos(pPnt);
+    pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
+    // Находим позицию нашей ячейки
+    TStringGrid(Sender).MouseToCell(pPnt.X, pPnt.Y, col, row);
+    if m_insertleft then
+    begin
+      m_insert:=col;
+    end
+    else
+    begin
+      m_insert:=col+1;
+    end;
+    if col>-1 then
+    begin
+      sg:=TStringGrid(sender);
+      mname:=sg.Cells[col, 0];
+      GridAddColumn(sg, m_insert, sg.Colwidths[col]);
+      sg.Cells[m_insert, 0]:=mname+'_';
+    end;
+  end;
 end;
 
 procedure TControlDeskFrm.TableModeSGSetEditText(Sender: TObject;
@@ -1843,6 +1911,7 @@ var
   t: cBaseTrig;
   I: integer;
 begin
+
   sg := TStringGrid(Sender);
   str := sg.Cells[c_Col_TrigName, ARow];
   t := g_conmng.gettrig(str);

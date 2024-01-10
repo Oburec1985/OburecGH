@@ -4,7 +4,7 @@ object ControlDeskFrm: TControlDeskFrm
   BorderStyle = bsNone
   BorderWidth = 2
   Caption = #1055#1091#1083#1100#1090' '#1091#1087#1088#1072#1074#1083#1077#1085#1080#1103' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1086#1074
-  ClientHeight = 720
+  ClientHeight = 825
   ClientWidth = 1117
   Color = clCream
   Constraints.MinHeight = 331
@@ -845,7 +845,7 @@ object ControlDeskFrm: TControlDeskFrm
       Left = 723
       Top = 143
       Width = 334
-      Height = 38
+      Height = 33
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -865,19 +865,19 @@ object ControlDeskFrm: TControlDeskFrm
     Left = 0
     Top = 188
     Width = 1117
-    Height = 532
+    Height = 637
     ActivePage = TabSheet2
     Align = alClient
     TabOrder = 1
     OnChange = PageControl1Change
-    ExplicitHeight = 515
+    ExplicitHeight = 532
     object TabSheet1: TTabSheet
       Caption = #1054#1073#1097#1080#1081' '#1074#1080#1076
       object Splitter2: TSplitter
         Left = 782
         Top = 0
         Width = 4
-        Height = 501
+        Height = 606
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -892,7 +892,7 @@ object ControlDeskFrm: TControlDeskFrm
         Left = 461
         Top = 0
         Width = 321
-        Height = 501
+        Height = 606
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -952,7 +952,7 @@ object ControlDeskFrm: TControlDeskFrm
           Left = 1
           Top = 109
           Width = 319
-          Height = 391
+          Height = 496
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -981,7 +981,7 @@ object ControlDeskFrm: TControlDeskFrm
         Left = 0
         Top = 0
         Width = 461
-        Height = 501
+        Height = 606
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -1004,7 +1004,7 @@ object ControlDeskFrm: TControlDeskFrm
           Left = 1
           Top = 25
           Width = 459
-          Height = 475
+          Height = 580
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -1031,7 +1031,7 @@ object ControlDeskFrm: TControlDeskFrm
         Left = 786
         Top = 0
         Width = 323
-        Height = 501
+        Height = 606
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -1054,7 +1054,7 @@ object ControlDeskFrm: TControlDeskFrm
           Left = 1
           Top = 25
           Width = 321
-          Height = 475
+          Height = 580
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -1076,12 +1076,12 @@ object ControlDeskFrm: TControlDeskFrm
     object TabSheet2: TTabSheet
       Caption = #1058#1072#1073#1083#1080#1094#1072' '#1088#1077#1078#1080#1084#1086#1074
       ImageIndex = 1
-      ExplicitHeight = 484
+      ExplicitHeight = 501
       object Splitter3: TSplitter
         Left = 212
         Top = 0
         Width = 4
-        Height = 501
+        Height = 606
         Align = alRight
         Color = clBackground
         ParentColor = False
@@ -1092,7 +1092,7 @@ object ControlDeskFrm: TControlDeskFrm
         Left = 0
         Top = 0
         Width = 212
-        Height = 501
+        Height = 606
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -1111,12 +1111,12 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 0
-        ExplicitHeight = 484
+        ExplicitHeight = 501
         object TableModeSG: TStringGrid
           Left = 1
           Top = 25
           Width = 210
-          Height = 475
+          Height = 580
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -1125,6 +1125,7 @@ object ControlDeskFrm: TControlDeskFrm
           BevelInner = bvLowered
           BevelKind = bkFlat
           DefaultRowHeight = 32
+          FixedRows = 0
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -15
@@ -1138,23 +1139,29 @@ object ControlDeskFrm: TControlDeskFrm
           OnDrawCell = TableModeSGDrawCell
           OnKeyDown = TableModeSGKeyDown
           OnSetEditText = TableModeSGSetEditText
-          ExplicitHeight = 458
+          ExplicitHeight = 475
+          ColWidths = (
+            64
+            64
+            64
+            64
+            64)
         end
       end
       object RightGB: TGroupBox
         Left = 216
         Top = 0
         Width = 893
-        Height = 501
+        Height = 606
         Align = alRight
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1072
         TabOrder = 1
-        ExplicitHeight = 484
+        ExplicitHeight = 501
         object ControlPropSG: TStringGrid
           Left = 2
           Top = 78
           Width = 889
-          Height = 421
+          Height = 526
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -1177,7 +1184,7 @@ object ControlDeskFrm: TControlDeskFrm
           OnDrawCell = ControlPropSGDrawCell
           OnKeyDown = ControlPropSGKeyDown
           OnSetEditText = ControlPropSGSetEditText
-          ExplicitHeight = 404
+          ExplicitHeight = 421
           RowHeights = (
             32
             32

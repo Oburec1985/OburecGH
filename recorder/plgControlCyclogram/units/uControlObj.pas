@@ -804,6 +804,7 @@ type
   public
     function getNextMode: cModeObj;
     function getPrevMode: cModeObj;
+    function CopyMode(before:boolean):cmodeObj;
     // параметр u значение 0..1 задает точку получаемую при интерполяции между задачами
     function GetTaskValue(t: cTask; x: double): double; overload;
     function GetTaskValue(c: cControlObj; x: double): double; overload;
@@ -4828,6 +4829,23 @@ begin
       result := i;
       exit;
     end;
+  end;
+end;
+
+function cModeObj.CopyMode(before:boolean):cmodeObj;
+var
+  I: Integer;
+begin
+  result:=cModeObj.create;
+  if before then
+    result.MIndex:=MIndex-1
+  else
+    result.MIndex:=MIndex+1;
+  getProgram.insertMode(result.MIndex);
+  result.ModeLength:=ModeLength;
+  for I := 0 to TaskCount - 1 do
+  begin
+    asdfadf
   end;
 end;
 

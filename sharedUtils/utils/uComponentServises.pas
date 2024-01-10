@@ -53,6 +53,11 @@ function ParentSelected(n:pVirtualNode; tagsTV:TVTree):boolean;
 function getParentFontSize(c:tWinControl):integer;
 procedure CheckFolder(c:TWinControl);
 
+Procedure GridAddColumn(StrGrid: TStringGrid; NewColumn: Integer);overload;
+procedure GridAddColumn(SG : TStringGrid; AtColNumber : integer; ColWidth :integer); overload;
+procedure RemoveColumn(SG : TStringGrid; ColNumber : integer);
+
+
 const
   c_lightRed = $008080FF;
 
@@ -65,6 +70,62 @@ const
   c_ColAdr = 'Адрес';
   // добавок в пикселях при расчете ширины колонки в LV
   c_ColTabs = 15;
+
+procedure RemoveColumn(SG : TStringGrid; ColNumber : integer);
+var Column : integer;
+begin
+  ColNumber := abs(ColNumber);
+  if ColNumber <= SG.ColCount then
+  begin
+    for Column := ColNumber to SG.ColCount - 2 do
+    begin
+       SG.Cols[Column].Assign(SG.Cols[Column + 1]);
+       SG.Colwidths[Column] := SG.Colwidths[Column + 1];
+    end;
+    SG.ColCount := SG.ColCount - 1;
+  end;
+end;
+
+Procedure GridAddColumn(StrGrid: TStringGrid; NewColumn: Integer);
+Var
+  Column: Integer;
+begin
+  StrGrid.ColCount := StrGrid.ColCount+1;
+  For Column := StrGrid.ColCount-1 downto NewColumn do
+     StrGrid.Cols[Column].Assign(StrGrid.Cols[Column-1]);
+  StrGrid.Cols[NewColumn-1].Text := '';
+end;
+
+procedure GridAddColumn(SG:TStringGrid; AtColNumber:integer; ColWidth:integer);
+var
+  Column : integer;
+  Wdth : integer;
+begin
+  AtColNumber := abs(AtColNumber);
+  SG.ColCount := SG.ColCount + 1;
+  if abs(ColWidth) = 0 then
+    Wdth := SG.DefaultColWidth
+  else
+    Wdth := ColWidth;
+  if AtColNumber <= SG.ColCount then
+  begin
+     for Column := SG.ColCount - 1 downto AtColNumber + 1 do
+     begin
+       SG.Cols[Column].Assign(SG.Cols[Column - 1]);
+       SG.Colwidths[Column] := SG.Colwidths[Column - 1];
+     end;
+     //SG.Cols[AtColNumber].Text := '';
+     if AtColNumber=1 then
+     begin
+       SG.Cols[AtColNumber].Assign(SG.Cols[AtColNumber]);
+     end
+     else
+     begin
+       SG.Cols[AtColNumber].Assign(SG.Cols[AtColNumber - 1]);
+     end;
+     SG.Colwidths[AtColNumber] := Wdth;
+  end;
+end;
 
 procedure CheckFolder(c:TWinControl);
 var
