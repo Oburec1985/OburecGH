@@ -55,7 +55,7 @@ procedure CheckFolder(c:TWinControl);
 
 Procedure GridAddColumn(StrGrid: TStringGrid; NewColumn: Integer);overload;
 procedure GridAddColumn(SG : TStringGrid; AtColNumber : integer; ColWidth :integer); overload;
-procedure RemoveColumn(SG : TStringGrid; ColNumber : integer);
+procedure GridRemoveColumn(SG : TStringGrid; ColNumber : integer);
 
 
 const
@@ -71,7 +71,7 @@ const
   // добавок в пикселях при расчете ширины колонки в LV
   c_ColTabs = 15;
 
-procedure RemoveColumn(SG : TStringGrid; ColNumber : integer);
+procedure GridRemoveColumn(SG : TStringGrid; ColNumber : integer);
 var Column : integer;
 begin
   ColNumber := abs(ColNumber);

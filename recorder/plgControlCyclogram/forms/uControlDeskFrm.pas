@@ -1777,25 +1777,54 @@ var
   mname:string;
   col, row:integer;
   pPnt:tpoint;
-
+  r:trect;
   p:cProgramObj;
   m, newm:cModeObj;
 begin
+  p := g_conmng.getprogram(0);
   if key=VK_RETURN then
+  begin
+    // вставка режима
+    if m_insert>-1 then
+    begin
+      if m_insert=1 then
+        inc(m_insert);
+      m:=p.getMode(m_insert-2);
+      if m<>nil then
+      begin
+        if m_insert=(m.modeIndex+1) then
+        begin
+          newm:=m.copyMode(true);
+        end
+        else
+        begin
+          newm:=m.copyMode(false);
+        end;
+        newm.name:=TStringGrid(Sender).Cells[m_insert, 0];
+        m_insert:=-1;
+        ShowControlPropsModes;
+        UpdateControlsPropSG;
+      end;
+    end
+    else
+    begin
+      ModeTabSGEditCell(m_row, m_col, m_val);
+      // если редактировали имя режима
+      if m_row=0 then
+      begin
+        ShowControlPropsModes;
+        UpdateControlsPropSG;
+      end;
+    end;
+  end;
+  // отменяем вставку
+  if key=VK_DELETE then
   begin
     if m_insert>-1 then
     begin
-      p := g_conmng.getprogram(0);
-      m:=p.getMode(m_insert-1);
-      newm:=m.copyMode(true);
-      newm.name:=TStringGrid(Sender).Cells[m_insert, 0];
+      GridRemoveColumn(TStringGrid(Sender), m_insert);
       m_insert:=-1;
-      ShowControlPropsModes;
-      UpdateControlsPropSG;
-      //ShowModeTable;
-    end
-    else
-      ModeTabSGEditCell(m_row, m_col, m_val);
+    end;
   end;
   if key=VK_INSERT then
   begin
@@ -1804,14 +1833,10 @@ begin
     pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
     // Находим позицию нашей ячейки
     TStringGrid(Sender).MouseToCell(pPnt.X, pPnt.Y, col, row);
-    if m_insertleft then
-    begin
-      m_insert:=col;
-    end
-    else
-    begin
-      m_insert:=col+1;
-    end;
+    if col=-1 then exit;
+    if col>p.ModeCount then
+      col:=p.ModeCount;
+    m_insert:=col+1;
     if col>-1 then
     begin
       sg:=TStringGrid(sender);
@@ -1842,35 +1867,53 @@ var
   con: ccontrolobj;
   str: string;
 begin
-  if not isvalue(val) then
-    exit;
+  if r<>0 then
+  begin
+    if not isvalue(val) then
+      exit;
+  end;
   p := g_conmng.getprogram(0);
   if p = nil then
     exit;
   if c > 0 then
   begin
+    m := p.getmode(c - 1);
     // редактируем длительность
     if r = 1 then
     begin
-      m := p.getmode(c - 1);
       m.ModeLength := toSec(strtofloatext(val));
     end;
+    // в случае если поменяли имя режима
+    if r=0 then
+    begin
+      if m <> nil then
+      begin
+        // переименование режима
+        if m.name<>TableModeSg.Cells[c, 0] then
+        begin
+          m.name:=TableModeSg.Cells[c, 0];
+        end;
+      end;
+    end;
+    // в случае если поменяли значение задания
     if r > 1 then
     begin
       str := TableModeSG.Cells[0, r];
       con := p.getOwnControl(str);
       if con <> nil then
       begin
-        m := p.getmode(c - 1);
         if m <> nil then
         begin
-          t := m.gettask(con.name);
-          if t <> nil then
+          if r>1 then
           begin
-            t.entercs;
-            t.task := strtofloatext(val);
-            t.applyed := false;
-            t.exitcs;
+            t := m.gettask(con.name);
+            if t <> nil then
+            begin
+              t.entercs;
+              t.task := strtofloatext(val);
+              t.applyed := false;
+              t.exitcs;
+            end;
           end;
         end;
       end;
