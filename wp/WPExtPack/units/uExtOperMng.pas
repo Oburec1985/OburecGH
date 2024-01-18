@@ -31,7 +31,7 @@ type
     eoFFTFlt: TExtFFTflt;
     m_mng:cWPObjMng;
   public
-    procedure NotifyPlugin(what:integer);
+    procedure NotifyPlugin(what:integer; var param: OleVariant);
     constructor create(p_mng:cWPObjMng);
     destructor destroy;
   end;
@@ -125,7 +125,7 @@ begin
     'Отчет Excel'#10'Добавить полосу');
 end;
 
-procedure TExtOperMng.NotifyPlugin(what:integer);
+procedure TExtOperMng.NotifyPlugin(what:integer; var param: OleVariant);
 begin
   // запуск плагина
   if HIWORD(what) = ID_ExcelReport then

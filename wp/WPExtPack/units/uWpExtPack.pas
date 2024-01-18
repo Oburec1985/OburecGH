@@ -419,7 +419,7 @@ begin
         if (what <> 131071) and (what <> 196607) then
         begin
           hword := HIWORD(what);
-          m_ExtOperMng.NotifyPlugin(what);
+          m_ExtOperMng.NotifyPlugin(what, param);
           // what = $1006 then  ADD_LINE нотификация о добавлении линии на график
           if what = 268828673 then
           // if (what = 270073857) or (what=268828673) or (what=269352961) then
@@ -435,15 +435,7 @@ begin
 
               isig := FindSignal(str1);
               sig := mng.GetWPSignal(isig);
-              // for i := 0 to mng.SrcCount - 1 do
-              // begin
-              // S := mng.GetSrc(i);
-              // sig := S.getSignalObj(TrimName(str1));
-              // if sig <> nil then
-              // begin
-              // break;
-              // end;
-              // end;
+
               if sig <> nil then
               begin
                 if sig.tube <> nil then
