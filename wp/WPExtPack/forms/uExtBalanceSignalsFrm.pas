@@ -154,6 +154,8 @@ var
   str:string;
   li:tlistitem;
 begin
+  str := GetNotifyStr(m_oper.GetPropStrF(wstr));
+  param := str;
   // Вызов обработки
   for i := 0 to ChannelsLV.items.count - 1 do
   begin
@@ -167,8 +169,6 @@ begin
   BringToFront;
   // Сообщение в журнал что вызывали
   // 'o="/Operators/АвтоСпектр";p="kindFunc=5, numPoints=16384, nBlocks=1, nLines=0, typeWindow=1, ofsNextBlock=16384, typeMagnitude=1, type=0, method=0, isMO=1, isCorrectFunc=0, isMonFase=0, isFill0=1, fMaxVal=0, fLog=0, fPrSpec=0, f3D=0, fSwapXZ=0, iStandart=1, fFlt=0, fQual=6, log_kind=0, log_OpZn=2e-005, log_fOpZn=0, prs_kind=1, prs_loFreq=1, prs_s2n=100, prs_fCorr=0, prs_strCorr=, prs_typeCorr=0";s1_000="/Signals/6363.mera/NI6363-{PXI1Slot18-18- 1}";i1_000=0;c1_000=1000;d1_000="/Signals/Результаты/NI6363-{PXI1Slot18-18- 1}_Real#2";d2_000="/Signals/Результаты/NI6363-{PXI1Slot18-18- 1}_Image#2";dp1_000=3f8f260d;dp2_000=3f8fa48d;'
-  str := GetNotifyStr(m_oper.GetPropStrF(wstr));
-  param := str;
   // вызов уведомления
   TExtPack(extPack).NotifyPlugin($000F0001, param);
 end;

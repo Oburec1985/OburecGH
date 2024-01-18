@@ -136,7 +136,6 @@ object BalanceZeroFrm: TBalanceZeroFrm
       Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
       ModalResult = 1
       TabOrder = 5
-      OnClick = ApplyBtnClick
     end
   end
 end

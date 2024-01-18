@@ -757,6 +757,7 @@ type
     // применен режим или нет хотя бы один раз
     m_applyed: boolean;
   private
+    fCreateStateTag:boolean;
     findex: integer;
     m_tryActive: boolean;
     fCounter: Cardinal;
@@ -4507,6 +4508,7 @@ var
   tagname, tname: lpcstr;
   var_type: Variant;
 begin
+  if fCreateStateTag = false then exit;
   ir := getIR;
   str := GetModeDsc + '_State';
   if RStateConfig then
@@ -4746,7 +4748,8 @@ var
 begin
   if not m_applyed then
   begin
-    m_stateTag.PushValue(1, -1);
+    if m_stateTag<>nil then
+      m_stateTag.PushValue(1, -1);
     for i := 0 to stepValCount - 1 do
     begin
       s := getstepval(i);
@@ -5059,7 +5062,8 @@ begin
     exit;
   if not b then
   begin
-    m_stateTag.PushValue(0, -1);
+    if m_stateTag<>nil then
+      m_stateTag.PushValue(0, -1);
   end;
   p := cProgramObj(getmainparent);
   m_applyed := false;
@@ -5071,7 +5075,8 @@ begin
       if m.active then
       begin
         m.factive := false;
-        m.m_stateTag.PushValue(0, -1);
+        if m_stateTag<>nil then
+          m.m_stateTag.PushValue(0, -1);
         break;
       end;
     end;

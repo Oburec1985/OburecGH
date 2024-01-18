@@ -8,11 +8,11 @@ AppMutex=WPExtPack
 
 DefaultDirName={pf}\MERA\WinPOS\Plugins\
 
-OutputDir=output
-;OutputDir=\\Fserv\e\MERA\PRODUCTS\WinPos\Utils\CorrectUTS_WpExtPack\versions\
+;OutputDir=output
+OutputDir=\\Fserv\e\MERA\PRODUCTS\WinPos\Utils\CorrectUTS_WpExtPack\versions\
 
 ;OutputBaseFilename=WPExtPack-installer_1.01_tryrzd
-OutputBaseFilename=WPExtPack-installer_1.100
+OutputBaseFilename=WPExtPack-installer_1.102
 
 [Types]
 Name: "full"; Description: "Полная установка"
