@@ -26,7 +26,7 @@ function SelectNodeInTV(obj:tobject; tv:ttreeview):ttreenode;
 
 // найти колонку в sg по имени
 function getColumn(SG:tStringGrid; name:string):integer;
-// найти cnhjre в sg по имени
+// найти cnhjre в sg по имени. col - номер колонки в которой ищем имя
 function getRow(SG:tStringGrid; name:string; col:integer):integer;
 procedure SGChange(sg:tStringGrid);
 // выровнять колонки по максимальной ширине строки в таблице

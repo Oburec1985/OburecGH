@@ -21,8 +21,11 @@ type
     TrigTV: TVTree;
     ImageList16: TImageList;
     TrigsImages16: TImageList;
-    cChart1: cChart;
     ImageList_16: TImageList;
+    alPanel: TPanel;
+    GroupBox1: TGroupBox;
+    cChart1: cChart;
+    ControlsLV: TBtnListView;
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
@@ -37,6 +40,7 @@ type
     procedure addpoint(tr:ctrend;t:ctask);
   private
     procedure ShowTrigs;
+    procedure ShowControls(p:cprogramobj);
   public
     procedure ShowConfig;
   end;
@@ -99,7 +103,7 @@ end;
 
 function TCyclogramReportFrm.showControlInChart(con:ccontrolobj; p:cprogramObj):ctrend;
 var
-  I: Integer;
+  I, ind: Integer;
   m:cmodeobj;
   t:ctask;
   tr:ctrend;
@@ -121,6 +125,8 @@ begin
   end;
   for I := 0 to p.ModeCount - 1 do
   begin
+    if i>32 then
+      break;
     m:=p.getMode(i);
     t:=m.gettask(con.name);
     if t<>nil then
@@ -141,7 +147,12 @@ begin
           tr:=ax.AddTrend;
           // свойство означает возможность выбрать объект по клику мышкой
           tr.enabled:=true;
-          tr.color:= ColorArray[ax.childcount-1];
+          ind:=ax.childcount;
+          if ind>length(ColorArray)-1 then
+          begin
+            ind:=length(ColorArray)-1;
+          end;
+          tr.color:= ColorArray[ind];
           tr.name:=con.name;
           tr.m_userdata:=con;
           tr.locked:=true;
@@ -172,6 +183,24 @@ begin
       con:=p.getOwnControl(i);
       showControlInChart(con, p);
     end;
+    ShowControls(p);
+  end;
+end;
+
+procedure TCyclogramReportFrm.ShowControls(p:cprogramobj);
+var
+  I: Integer;
+  con:ccontrolobj;
+  li:tlistitem;
+begin
+  ControlsLV.Clear;
+  for I := 0 to p.ControlCount - 1 do
+  begin
+    con:=p.getOwnControl(i);
+    li:=ControlsLV.Items.Add;
+    li.Data:=con;
+    ControlsLV.SetSubItemByColumnName('№', inttostr(i), li);
+    ControlsLV.SetSubItemByColumnName('Регулятор', con.name, li);
   end;
 end;
 
@@ -246,5 +275,6 @@ begin
   end;
   CfgChanged:=false;
 end;
+
 
 end.

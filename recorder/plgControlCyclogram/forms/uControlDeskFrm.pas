@@ -73,6 +73,7 @@ type
     ConfirmModeCB: TCheckBox;
     ActiveModeE: TEdit;
     Label3: TLabel;
+    EditCyclogram: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -115,6 +116,8 @@ type
     procedure PageControl1Change(Sender: TObject);
     procedure TableModeSGKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure TableModeSGSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
   private
     // Режим подтверждения перехода
     m_CurControl: ccontrolobj;
@@ -151,6 +154,8 @@ type
     function getprogram(row: integer): cProgramObj;
     function getmode(row: integer): cModeObj;overload;
     function getTableModeSGByCol(col: integer): cModeObj;
+    // отмена редактирования режима(перенос настроек режима обратно в таблицу)
+    procedure CancelEditMode;
     function getControlFromTableModeSGByRow(row: integer): ccontrolobj;
     procedure ClearSGButtons;
     procedure WndProc(var Message: TMessage); override;
@@ -1602,21 +1607,22 @@ procedure TControlDeskFrm.TableModeSGClick(Sender: TObject);
 var
   m: cModeObj;
   pPnt: TPoint; // Координаты курсора
-  xCol, xRow: integer; // Адрес ячейки таблицы
+  //xCol, xRow: integer; // Адрес ячейки таблицы
   c: ccontrolobj;
 begin
+  exit;
   GetCursorPos(pPnt);
   pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
   // Находим позицию нашей ячейки
-  xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
-  xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
-  c := getControlFromTableModeSGByRow(xRow);
+  m_curCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
+  m_curRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
+  c := getControlFromTableModeSGByRow(m_curRow);
   if c <> nil then
   begin
     m_CurControl := c;
     ControlPropE.text := c.Name;
   end;
-  m := getTableModeSGByCol(xCol);
+  m := getTableModeSGByCol(m_curCol);
   if m <> nil then
     m_CurMode := m;
   if m_CurMode=nil then exit;
@@ -1770,6 +1776,27 @@ begin
   end;
 end;
 
+procedure TControlDeskFrm.CancelEditMode;
+var
+  I, col, row: integer;
+  j: integer;
+  t: ctask;
+begin
+  //TableModeSG.Cells[col, 0] := m.Caption;
+  if m_CurMode=nil then exit;
+  m_curCol:= getColumn(TableModeSG, m_CurMode.name);
+  m_curRow:= getRow(TableModeSG, m_CurControl.name, 0);
+  TableModeSG.Cells[m_curCol, 1] :=ToTime(m_CurMode.ModeLength, false);
+  TableModeSG.Cells[0, m_curRow] := m_CurControl.Caption;
+  t := m_CurMode.gettask(m_CurControl.name);
+  if t <> nil then
+  begin
+    TableModeSG.Cells[m_curCol, m_curRow] := formatstrnoe(t.task, 2);
+  end;
+  SGChange(TableModeSG);
+end;
+
+
 procedure TControlDeskFrm.TableModeSGKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
@@ -1782,6 +1809,10 @@ var
   m, newm:cModeObj;
 begin
   p := g_conmng.getprogram(0);
+  if (key=VK_UP) or (key=VK_Down) then
+  begin
+
+  end;
   if key=VK_RETURN then
   begin
     // вставка режима
@@ -1826,6 +1857,7 @@ begin
       m_insert:=-1;
     end;
   end;
+  // вставка режима
   if key=VK_INSERT then
   begin
     if m_insert>-1 then exit;
@@ -1836,6 +1868,7 @@ begin
     if col=-1 then exit;
     if col>p.ModeCount then
       col:=p.ModeCount;
+    // переменная хранит добавляемый режим (удаляет по esc. прим. по enter)
     m_insert:=col+1;
     if col>-1 then
     begin
@@ -1847,6 +1880,35 @@ begin
         GridAddColumn(sg, m_insert, sg.Colwidths[col+1]);
       sg.Cells[m_insert, 0]:=mname+'_';
     end;
+  end;
+end;
+
+procedure TControlDeskFrm.TableModeSGSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+var
+  c:cControlObj;
+  m:cModeObj;
+begin
+  //showmessage('str: ' + inttostr(arow)+ '; col: '+inttostr(aCol));
+  CancelEditMode;
+  m_curRow:=arow;
+  m_curCol:=ACol;
+  c := getControlFromTableModeSGByRow(m_curRow);
+  if c <> nil then
+  begin
+    m_CurControl := c;
+    ControlPropE.text := c.Name;
+  end;
+  m := getTableModeSGByCol(m_curCol);
+  if m <> nil then
+    m_CurMode := m;
+  if m_CurMode=nil then exit;
+  ModePropE.text :=  m_CurMode.name;
+  if m_CurMode <> nil then
+  begin
+    UpdateControlsPropSG;
+    if g_conmng.state<>c_play then
+      TStringGrid(Sender).Invalidate;
   end;
 end;
 

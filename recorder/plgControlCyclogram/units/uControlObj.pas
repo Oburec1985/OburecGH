@@ -625,7 +625,7 @@ type
     // объект пустышка для хранения режимов
     fmodes: cbaseobj;
     // объект пустышка для хранения используемых регуляторов
-    fcontrols: tstringlist;
+    fcontrols: csetlist;
     // время работы программы
     fProgT: double;
     // время на режиме
@@ -3400,6 +3400,8 @@ begin
   end;
 end;
 
+ControlComparator = function (p1,p2:pointer):integer;
+
 constructor cProgramObj.create;
 begin
   inherited;
@@ -3414,7 +3416,8 @@ begin
   fmodes.childrens.comparator := ModeCompare;
   fmodes.childrens.Sorted := true;
 
-  fcontrols := tstringlist.create;
+  fcontrols := cSetList.create;
+  fcontrols.comparator:=
   fcontrols.Sorted := true;
 
   AddChild(fmodes);

@@ -2,48 +2,44 @@ object CyclogramReportFrm: TCyclogramReportFrm
   Left = 0
   Top = 0
   Caption = #1050#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103' '#1094#1080#1082#1083#1086#1075#1088#1072#1084#1084#1099
-  ClientHeight = 544
-  ClientWidth = 776
+  ClientHeight = 597
+  ClientWidth = 1034
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -10
+  Font.Height = -13
   Font.Name = 'Tahoma'
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   OnCreate = FormCreate
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 12
+  PixelsPerInch = 120
+  TextHeight = 16
   object LeftPan: TPanel
-    Left = 569
+    Left = 758
     Top = 0
-    Width = 207
-    Height = 544
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 276
+    Height = 597
     Align = alRight
     TabOrder = 0
     object CyclogramGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 206
-      Height = 258
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Width = 274
+      Height = 344
       Align = alTop
       Caption = #1050#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103' '#1094#1080#1082#1083#1086#1075#1088#1072#1084#1084#1099
       TabOrder = 0
       object ProgramTV: TVTree
         Left = 2
-        Top = 14
-        Width = 203
-        Height = 243
+        Top = 18
+        Width = 270
+        Height = 324
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alClient
         DragMode = dmAutomatic
         DragType = dtVCL
@@ -63,21 +59,21 @@ object CyclogramReportFrm: TCyclogramReportFrm
     end
     object TrigsGB: TGroupBox
       Left = 1
-      Top = 259
-      Width = 206
-      Height = 284
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 345
+      Width = 274
+      Height = 251
       Align = alClient
       Caption = #1058#1088#1080#1075#1075#1077#1088#1099
       TabOrder = 1
       object TrigTV: TVTree
         Left = 2
-        Top = 14
-        Width = 203
-        Height = 269
+        Top = 18
+        Width = 270
+        Height = 231
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alClient
         DragMode = dmAutomatic
         DragType = dtVCL
@@ -96,23 +92,60 @@ object CyclogramReportFrm: TCyclogramReportFrm
       end
     end
   end
-  object cChart1: cChart
+  object alPanel: TPanel
     Left = 0
     Top = 0
-    Width = 569
-    Height = 544
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 758
+    Height = 597
     Align = alClient
-    Caption = 'cChart1'
     TabOrder = 1
-    allowEditPages = False
-    imagelist = ImageList_16
-    showTV = True
-    showLegend = True
-    selectSize = 5
+    ExplicitLeft = -5
+    object GroupBox1: TGroupBox
+      Left = 1
+      Top = 1
+      Width = 756
+      Height = 296
+      Align = alTop
+      Caption = 'GroupBox1'
+      TabOrder = 0
+      object cChart1: cChart
+        Left = 2
+        Top = 18
+        Width = 752
+        Height = 276
+        Align = alClient
+        Caption = 'cChart1'
+        TabOrder = 0
+        allowEditPages = False
+        imagelist = ImageList_16
+        showTV = True
+        showLegend = False
+        selectSize = 5
+      end
+    end
+    object ControlsLV: TBtnListView
+      Left = 1
+      Top = 297
+      Width = 288
+      Height = 299
+      Align = alLeft
+      Columns = <
+        item
+          Caption = #8470
+        end
+        item
+          Caption = #1056#1077#1075#1091#1083#1103#1090#1086#1088
+        end>
+      RowSelect = True
+      TabOrder = 1
+      ViewStyle = vsReport
+      BtnCol = 0
+      QuoteColumnBtnClick = False
+      QuoteColumnDblClick = False
+      DrawColorBox = False
+      ChangeTextColor = False
+      Editable = False
+    end
   end
   object ImageList16: TImageList
     Left = 448
