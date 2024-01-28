@@ -224,6 +224,14 @@ type
     constructor create; override;
     destructor destroy; override;
   end;
+  // лист для программы. Не удаляет объекты, умеет сортировать по имени и по индексу
+  cProgControlList = class(cSetList)
+  public
+    // 0 - по имени; 1 - по индексу
+    sorttype:integer;
+  public
+    constructor create;override;
+  end;
 
   // доп теги для контрола
   cTagPair = class
@@ -432,6 +440,7 @@ type
     // доп теги для управления контролом cTagPair
     fTags: tstringlist;
   public
+    index:integer;
     m_zones_enabled: boolean;
     // зоны регулирования
     m_ZoneList: cZoneList;
@@ -625,7 +634,7 @@ type
     // объект пустышка для хранения режимов
     fmodes: cbaseobj;
     // объект пустышка для хранения используемых регуляторов
-    fcontrols: csetlist;
+    fcontrols: tstringlist;
     // время работы программы
     fProgT: double;
     // время на режиме
@@ -3400,7 +3409,30 @@ begin
   end;
 end;
 
-ControlComparator = function (p1,p2:pointer):integer;
+function ControlComparator(p1,p2:pointer):integer;
+var
+  c1, c2: cControlObj;
+begin
+  c1 := cControlObj(p1);
+  c2 := cControlObj(p2);
+  //if c1.OwnerProg.fcontrols.sorttype=1 then
+
+  if c1.Index > c2.Index then
+  begin
+    result := 1;
+  end
+  else
+  begin
+    if c1.Index < c2.Index then
+    begin
+      result := -1;
+    end
+    else
+    begin
+      result := 0;
+    end;
+  end;
+end;
 
 constructor cProgramObj.create;
 begin
@@ -3416,10 +3448,9 @@ begin
   fmodes.childrens.comparator := ModeCompare;
   fmodes.childrens.Sorted := true;
 
-  fcontrols := cSetList.create;
-  fcontrols.comparator:=
-  fcontrols.Sorted := true;
-
+  fcontrols := tstringlist.create;
+  //fcontrols.comparator:=ControlComparator;
+  fcontrols.Sorted := false;
   AddChild(fmodes);
 
   InitCS;
@@ -3491,10 +3522,16 @@ end;
 procedure cProgramObj.removeOwnControl(cname: string);
 var
   i: integer;
+  c:cControlObj;
 begin
-  if fcontrols.Find(cname, i) then
+  for I := 0 to fcontrols.Count - 1 do
   begin
-    fcontrols.Delete(i);
+    c:=cControlObj(fcontrols.Objects[i]);
+    if c.name=cname then
+    begin
+      fcontrols.Delete(i);
+      break;
+    end;
   end;
 end;
 
@@ -3511,10 +3548,23 @@ end;
 function cProgramObj.getOwnControl(name: string): cControlObj;
 var
   i: integer;
+  c:cControlObj;
+  b:boolean;
 begin
-  result := nil;
-  if fcontrols.Find(name, i) then
-    result := getOwnControl(i);
+  b:=false;
+  for I := 0 to fcontrols.Count - 1 do
+  begin
+    c:=cControlObj(fcontrols.Objects[i]);
+    if c.name=name then
+    begin
+      b:=true;
+      break;
+    end;
+  end;
+  if b then
+    result := c
+  else
+    result := nil;
 end;
 
 procedure cProgramObj.ClearModes;
@@ -6893,6 +6943,15 @@ end;
 procedure cTagPair.setname(s:string);
 begin
   tag.tagname:=s;
+end;
+
+{ cProgControlList }
+
+constructor cProgControlList.create;
+begin
+  inherited;
+  comparator:=ControlComparator;
+  destroydata:=false;
 end;
 
 end.

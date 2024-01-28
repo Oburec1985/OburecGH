@@ -28,6 +28,9 @@ type
     ControlsLV: TBtnListView;
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure ControlsLVDragOver(Sender, Source: TObject; X, Y: Integer;
+      State: TDragState; var Accept: Boolean);
+    procedure ControlsLVDragDrop(Sender, Source: TObject; X, Y: Integer);
   private
     eventsCreated:boolean;
     CfgChanged:boolean;
@@ -220,6 +223,40 @@ begin
         ShowBaseObjectInVTreeView(TrigTV, t, nil);
       end;
     end;
+  end;
+end;
+
+procedure TCyclogramReportFrm.ControlsLVDragDrop(Sender, Source: TObject; X,
+  Y: Integer);
+var
+  sli,li:tlistitem;
+  p:cProgramObj;
+  r:TRect;
+begin
+  li:=ControlsLV.GetItemAt(x,y);
+  sli:=ControlsLV.Selected;
+  if li<>sli then
+  begin
+    if li<>nil then
+      MoveListViewItem(ControlsLV,sli.Index, li.index)
+    else
+    begin
+      r:=ControlsLV.Items[ControlsLV.Items.Count - 1].DisplayRect(drBounds);
+      // внизу координата с максимальным значением, верхняя граница 0
+      if y>r.Bottom then
+        MoveListViewItem(ControlsLV,sli.Index, ControlsLV.Items.Count);
+    end;
+  end;
+  //p:=g_conmng.getProgram(0);
+  //ShowControls(p);
+end;
+
+procedure TCyclogramReportFrm.ControlsLVDragOver(Sender, Source: TObject; X,
+  Y: Integer; State: TDragState; var Accept: Boolean);
+begin
+  if source=ControlsLV then
+  begin
+     Accept:=true;
   end;
 end;
 

@@ -2,44 +2,48 @@ object CyclogramReportFrm: TCyclogramReportFrm
   Left = 0
   Top = 0
   Caption = #1050#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103' '#1094#1080#1082#1083#1086#1075#1088#1072#1084#1084#1099
-  ClientHeight = 597
-  ClientWidth = 1034
+  ClientHeight = 448
+  ClientWidth = 776
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -10
   Font.Name = 'Tahoma'
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   OnCreate = FormCreate
   OnShow = FormShow
-  PixelsPerInch = 120
-  TextHeight = 16
+  PixelsPerInch = 96
+  TextHeight = 12
   object LeftPan: TPanel
-    Left = 758
+    Left = 569
     Top = 0
-    Width = 276
-    Height = 597
+    Width = 207
+    Height = 448
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alRight
     TabOrder = 0
     object CyclogramGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 274
-      Height = 344
+      Width = 205
+      Height = 258
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alTop
       Caption = #1050#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103' '#1094#1080#1082#1083#1086#1075#1088#1072#1084#1084#1099
       TabOrder = 0
       object ProgramTV: TVTree
         Left = 2
-        Top = 18
-        Width = 270
-        Height = 324
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Top = 14
+        Width = 201
+        Height = 242
         Align = alClient
         DragMode = dmAutomatic
         DragType = dtVCL
@@ -59,21 +63,21 @@ object CyclogramReportFrm: TCyclogramReportFrm
     end
     object TrigsGB: TGroupBox
       Left = 1
-      Top = 345
-      Width = 274
-      Height = 251
+      Top = 259
+      Width = 205
+      Height = 188
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alClient
       Caption = #1058#1088#1080#1075#1075#1077#1088#1099
       TabOrder = 1
       object TrigTV: TVTree
         Left = 2
-        Top = 18
-        Width = 270
-        Height = 231
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Top = 14
+        Width = 201
+        Height = 172
         Align = alClient
         DragMode = dmAutomatic
         DragType = dtVCL
@@ -95,24 +99,35 @@ object CyclogramReportFrm: TCyclogramReportFrm
   object alPanel: TPanel
     Left = 0
     Top = 0
-    Width = 758
-    Height = 597
+    Width = 569
+    Height = 448
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alClient
     TabOrder = 1
-    ExplicitLeft = -5
     object GroupBox1: TGroupBox
       Left = 1
       Top = 1
-      Width = 756
-      Height = 296
+      Width = 567
+      Height = 222
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alTop
       Caption = 'GroupBox1'
       TabOrder = 0
       object cChart1: cChart
         Left = 2
-        Top = 18
-        Width = 752
-        Height = 276
+        Top = 14
+        Width = 563
+        Height = 206
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Align = alClient
         Caption = 'cChart1'
         TabOrder = 0
@@ -125,20 +140,30 @@ object CyclogramReportFrm: TCyclogramReportFrm
     end
     object ControlsLV: TBtnListView
       Left = 1
-      Top = 297
-      Width = 288
-      Height = 299
+      Top = 223
+      Width = 216
+      Height = 224
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alLeft
       Columns = <
         item
           Caption = #8470
+          Width = 38
         end
         item
           Caption = #1056#1077#1075#1091#1083#1103#1090#1086#1088
+          Width = 38
         end>
+      DragMode = dmAutomatic
+      MultiSelect = True
       RowSelect = True
       TabOrder = 1
       ViewStyle = vsReport
+      OnDragDrop = ControlsLVDragDrop
+      OnDragOver = ControlsLVDragOver
       BtnCol = 0
       QuoteColumnBtnClick = False
       QuoteColumnDblClick = False

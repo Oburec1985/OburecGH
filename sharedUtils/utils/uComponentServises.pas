@@ -57,6 +57,8 @@ Procedure GridAddColumn(StrGrid: TStringGrid; NewColumn: Integer);overload;
 procedure GridAddColumn(SG : TStringGrid; AtColNumber : integer; ColWidth :integer); overload;
 procedure GridRemoveColumn(SG : TStringGrid; ColNumber : integer);
 
+function MoveListViewItem(listView: TListView; ItemFrom, ItemTo: Word): Boolean;
+
 
 const
   c_lightRed = $008080FF;
@@ -70,6 +72,23 @@ const
   c_ColAdr = 'Адрес';
   // добавок в пикселях при расчете ширины колонки в LV
   c_ColTabs = 15;
+
+function MoveListViewItem(listView: TListView; ItemFrom, ItemTo: Word): Boolean;
+var
+Source, Target: TListItem;
+begin
+  Result := False;
+  listview.Items.BeginUpdate;
+  try
+    Source := listview.Items[ItemFrom];
+    Target := listview.Items.Insert(ItemTo);
+    Target.Assign(Source);
+    Source.Free;
+    Result := True;
+  finally
+    listview.Items.EndUpdate;
+  end;
+end;
 
 procedure GridRemoveColumn(SG : TStringGrid; ColNumber : integer);
 var Column : integer;

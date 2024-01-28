@@ -73,7 +73,6 @@ type
     ConfirmModeCB: TCheckBox;
     ActiveModeE: TEdit;
     Label3: TLabel;
-    EditCyclogram: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
