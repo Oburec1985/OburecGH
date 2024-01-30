@@ -297,6 +297,8 @@
     <File Path="forms\uSRSFrm.dfm"/>
     <File Path="forms\uEditSrsFrm.pas"/>
     <File Path="forms\uEditSrsFrm.dfm"/>
+    <File Path="forms\uPressFrm.pas"/>
+    <File Path="forms\uPressFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\uAriphmAlg.pas"/>
     <File Path="units\uBaseAlg.pas"/>
@@ -385,5 +387,7 @@
     <Transaction>2023.09.18 22:18:33.375.dfm,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uSRSFrm.dfm</Transaction>
     <Transaction>2023.09.18 22:19:20.185.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.pas=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uEditSrsFrm.pas</Transaction>
     <Transaction>2023.09.18 22:19:20.185.dfm,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uEditSrsFrm.dfm</Transaction>
+    <Transaction>2024.01.30 23:18:51.306.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit2.pas=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uPressFrm.pas</Transaction>
+    <Transaction>2024.01.30 23:18:51.306.dfm,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit2.dfm=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uPressFrm.dfm</Transaction>
   </Transactions>
 </BorlandProject>

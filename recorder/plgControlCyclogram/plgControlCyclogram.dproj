@@ -451,6 +451,9 @@
 				<Form>TransformToolsFrame</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
+			<DCCReference Include="forms\uPressFrm.pas">
+				<Form>PressCamFrm</Form>
+			</DCCReference>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
