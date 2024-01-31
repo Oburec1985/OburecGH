@@ -203,7 +203,8 @@ uses
   uAlarms in '..\SharedRUnits\interfaces\uAlarms.pas',
   uTrfrmToolsFrame in '..\..\3d\forms\uTrfrmToolsFrame.pas' {TrfrmToolsFrame: TFrame},
   uTransformButtons in '..\..\3d\forms\uTransformButtons.pas' {TransformToolsFrame: TFrame},
-  uPressFrm in 'forms\uPressFrm.pas' {PressCamFrm};
+  uPressFrm in 'forms\uPressFrm.pas' {PressCamFrm},
+  uPressFrmFrame in 'forms\uPressFrmFrame.pas' {PressFrmFrame: TFrame};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

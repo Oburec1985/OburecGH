@@ -23,10 +23,10 @@ uses
   uMBaseControl,
   shellapi,
   uPathMng,
-  uSpm,
+  uSpm, uBaseAlg,
   opengl, uSimpleObjects,
   math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend,
-  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons;
+  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uPressFrmFrame;
 
 type
   TPresRec = record
@@ -39,10 +39,6 @@ type
   TPressCamFrm = class(TRecFrm)
     BarGraphGB: TGroupBox;
     BarPanel: TPanel;
-    Panel2: TPanel;
-    FreqEdit: TEdit;
-    BandLabel: TLabel;
-    ProgrBar: TProgressBar;
     Panel1: TPanel;
     MaxLabel: TLabel;
     MaxFreqLabel: TLabel;
@@ -56,12 +52,13 @@ type
     UnitMaxFLab: TLabel;
     UnitMaxAvrALab: TLabel;
     AvrCB: TCheckBox;
-    AmpE: TEdit;
+    PressFrmFrame1: TPressFrmFrame;
   private
     fSensorTag:string;
     fNumCam:integer;
     fSpm:cSpm;
     fBCount:integer;
+    BGraphFrames:tlist;
   private
     procedure setBCount(bc:integer);
   public
@@ -87,11 +84,14 @@ type
     // merafile
     m_meraFile: string;
   private
+    m_spmCfg:cAlgConfig;
     m_counter: integer;
   protected
     procedure doDestroyForms; override;
     procedure createevents;
     procedure destroyevents;
+    // конфигуратор спектра
+    procedure CreateAlgConfig;
   public
     procedure doAfterLoad; override;
     procedure doUpdateData(sender: tobject);
@@ -127,6 +127,17 @@ implementation
 
 { IPressCamFactory }
 
+procedure cPressCamFactory.CreateAlgConfig;
+begin
+  if g_algMng<>nil then
+  begin
+    if m_spmCfg=nil then
+    begin
+      m_spmCfg:=g_algMng.newCfg(cSpm.ClassName,cSpm);
+    end;
+  end;
+end;
+
 procedure cPressCamFactory.createevents;
 begin
   addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
@@ -159,6 +170,7 @@ end;
 procedure cPressCamFactory.doAfterLoad;
 begin
   inherited;
+  CreateAlgConfig;
 end;
 
 procedure cPressCamFactory.doChangeRState(sender: tobject);
@@ -244,12 +256,14 @@ end;
 constructor TPressCamFrm.create(Aowner: tcomponent);
 begin
   inherited;
+  BGraphFrames:=tlist.Create;
   setBCount(6);
 end;
 
 destructor TPressCamFrm.destroy;
 begin
   inherited;
+  BGraphFrames.Destroy;
 end;
 
 procedure TPressCamFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -269,7 +283,9 @@ end;
 procedure TPressCamFrm.setBCount(bc:integer);
 var
   I: Integer;
-  c:tComponent;
+  p:tpanel;
+  c:tcomponent;
+  fr:TPressFrmFrame;
   txt:string;
 begin
   for i:=fbCount-1 downto 1 do
@@ -277,13 +293,30 @@ begin
     c:=BarGraphGB.FindComponent(BarPanel.name+'_'+inttostr(i));
     c.Destroy;
   end;
+  BGraphFrames.Clear;
+  BGraphFrames.Add(PressFrmFrame1);
   for I := 0 to bc - 2 do
   begin
-    //WriteToClipBoard(txt,BarPanel);
-    c:=CloneComponent(BarPanel);
-    twincontrol(c).name:=BarPanel.name+'_'+inttostr(i);
-    twincontrol(c).Parent:=BarPanel.Parent;
-    //twincontrol(c).Owner:=BarPanel.owner;
+    txt:=BarPanel.name+'_'+inttostr(i);
+    p:=TPanel.Create(self);
+    p.parent:=BarGraphGB;
+    p.Align:=alTop;
+    p.Width:=BarPanel.Width;
+    p.Height:=BarPanel.Height;
+    fr:=TPressFrmFrame.Create(nil);
+    fr.name:=fr.classname+'_'+inttostr(i);
+    fr.Parent:=p;
+    BGraphFrames.Add(fr);
+    fr.FreqEdit.Text:='0';
+    fr.AmpE.Text:='0';
+  end;
+  BarPanel.top:=0;
+  for I := 0 to BGraphFrames.Count - 1 do
+  begin
+    fr:=BGraphFrames.Items[i];
+    fr.BandLabel.Caption:='Range_'+inttostr(i+1);
+    fr.FreqEdit.Text:='0';
+    fr.AmpE.Text:='0';
   end;
   fbCount:=bc;
 end;

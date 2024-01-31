@@ -533,9 +533,6 @@ begin
   g_GenSignalsFactory:=cGenSignalsFactory.create;
   compMng.Add(g_GenSignalsFactory);
 
-  g_PressCamFactory := cPressCamFactory.create;
-  compMng.Add(g_PressCamFactory);
-
   g_ObjFrm3dFactory:=cObjFrm3dFactory.create;
   compMng.Add(g_ObjFrm3dFactory);
   g_ObjFrm3dEdit:=TObjFrm3dEdit.Create(nil);
@@ -565,6 +562,10 @@ begin
   uControlsNP.createNP;
 
   np:=cMBaseAlgNP.create;
+
+  g_PressCamFactory := cPressCamFactory.create;
+  compMng.Add(g_PressCamFactory);
+
   TExtRecorderPack(GPluginInstance).m_nplist.AddNP(np);
 end;
 

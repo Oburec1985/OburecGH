@@ -58,7 +58,7 @@ procedure GridAddColumn(SG : TStringGrid; AtColNumber : integer; ColWidth :integ
 procedure GridRemoveColumn(SG : TStringGrid; ColNumber : integer);
 
 function MoveListViewItem(listView: TListView; ItemFrom, ItemTo: Word): Boolean;
-function CloneComponent(AAncestor: TComponent): TComponent;
+function CloneComponent(AAncestor: TComponent; parent:twincontrol; pname:string): TComponent;
 
 
 const
@@ -75,12 +75,12 @@ const
   c_ColTabs = 15;
 
 
-function CloneComponent(AAncestor: TComponent): TComponent;
+function CloneComponent(AAncestor: TComponent; parent:twincontrol; pname:string): TComponent;
 var
   XMemoryStream: TMemoryStream;
   XTempName: string;
   I: Integer;
-  child, newChild:tcomponent;
+  child, newChild, c:tcomponent;
 begin
   Result:=nil;
   if not Assigned(AAncestor) then
@@ -93,8 +93,29 @@ begin
     AAncestor.Name:=XTempName;
     XMemoryStream.Position:=0;
     Result:=TComponentClass(AAncestor.ClassType).Create(AAncestor.Owner);
-    if AAncestor is TControl then TControl(Result).Parent:=TControl(AAncestor).Parent;
+    if AAncestor is TControl then TControl(Result).Parent:=parent;
     XMemoryStream.ReadComponent(Result);
+    c:=parent.FindComponent(pname);
+    if c=nil then
+    begin
+      if parent.owner<>nil then
+      begin
+        c:=parent.owner.FindComponent(pname);
+      end;
+    end;
+    while c<>nil do
+    begin
+      pname:=modname(pname,false);
+      c:=parent.FindComponent(pname);
+      if c=nil then
+      begin
+        if parent.owner<>nil then
+        begin
+          c:=parent.owner.FindComponent(pname);
+        end;
+      end;
+    end;
+    Result.Name:=pname;
   finally
     XMemoryStream.Free;
   end;
@@ -103,7 +124,7 @@ begin
     for I := 0 to tWinControl(AAncestor).ControlCount - 1 do
     begin
       child:=tWinControl(AAncestor).Controls[i];
-      newChild:=CloneComponent(child);
+      newChild:=CloneComponent(child, twincontrol(result), child.Name);
       if newChild is tcontrol then
         tcontrol(newChild).parent:=tWinControl(Result);
     end;

@@ -515,9 +515,9 @@ var
 begin
   m_ax.destroy;
   m_TrigTag.destroy;
-  for i := 0 to sCount - 1 do
+  while sCount<>0 do
   begin
-    s := GetSignal(i);
+    s := GetSignal(0);
     s.line := nil;
     s.destroy;
   end;
