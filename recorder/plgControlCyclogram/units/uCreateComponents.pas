@@ -43,6 +43,7 @@ uses
   uRCFunc,
   uRecBasicFactory,
   uSyncOscillogram,
+  uPressFrm,
   u3dObj,
   iplgmngr,
   recorder,
@@ -529,9 +530,11 @@ begin
   g_SRSFactory:=cSRSFactory.create;
   compMng.Add(g_SRSFactory);
 
-
   g_GenSignalsFactory:=cGenSignalsFactory.create;
   compMng.Add(g_GenSignalsFactory);
+
+  g_PressCamFactory := cPressCamFactory.create;
+  compMng.Add(g_PressCamFactory);
 
   g_ObjFrm3dFactory:=cObjFrm3dFactory.create;
   compMng.Add(g_ObjFrm3dFactory);

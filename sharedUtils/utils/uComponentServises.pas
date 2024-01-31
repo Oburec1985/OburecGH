@@ -58,6 +58,7 @@ procedure GridAddColumn(SG : TStringGrid; AtColNumber : integer; ColWidth :integ
 procedure GridRemoveColumn(SG : TStringGrid; ColNumber : integer);
 
 function MoveListViewItem(listView: TListView; ItemFrom, ItemTo: Word): Boolean;
+function CloneComponent(AAncestor: TComponent): TComponent;
 
 
 const
@@ -72,6 +73,42 @@ const
   c_ColAdr = 'Адрес';
   // добавок в пикселях при расчете ширины колонки в LV
   c_ColTabs = 15;
+
+
+function CloneComponent(AAncestor: TComponent): TComponent;
+var
+  XMemoryStream: TMemoryStream;
+  XTempName: string;
+  I: Integer;
+  child, newChild:tcomponent;
+begin
+  Result:=nil;
+  if not Assigned(AAncestor) then
+    exit;
+  XMemoryStream:=TMemoryStream.Create;
+  try
+    XTempName:=AAncestor.Name;
+    AAncestor.Name:='clone_' + XTempName;
+    XMemoryStream.WriteComponent(AAncestor);
+    AAncestor.Name:=XTempName;
+    XMemoryStream.Position:=0;
+    Result:=TComponentClass(AAncestor.ClassType).Create(AAncestor.Owner);
+    if AAncestor is TControl then TControl(Result).Parent:=TControl(AAncestor).Parent;
+    XMemoryStream.ReadComponent(Result);
+  finally
+    XMemoryStream.Free;
+  end;
+  if AAncestor is tWinControl then
+  begin
+    for I := 0 to tWinControl(AAncestor).ControlCount - 1 do
+    begin
+      child:=tWinControl(AAncestor).Controls[i];
+      newChild:=CloneComponent(child);
+      if newChild is tcontrol then
+        tcontrol(newChild).parent:=tWinControl(Result);
+    end;
+  end;
+end;
 
 function MoveListViewItem(listView: TListView; ItemFrom, ItemTo: Word): Boolean;
 var

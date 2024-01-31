@@ -9,6 +9,7 @@ uses
   Forms, ComCtrls,
   uRecBasicFactory,
   uRecorderEvents,
+  uComponentServises,
   uChart,
   inifiles,
   upage,
@@ -55,12 +56,18 @@ type
     UnitMaxFLab: TLabel;
     UnitMaxAvrALab: TLabel;
     AvrCB: TCheckBox;
+    AmpE: TEdit;
   private
     fSensorTag:string;
     fNumCam:integer;
     fSpm:cSpm;
     fBCount:integer;
- public
+  private
+    procedure setBCount(bc:integer);
+  public
+    property SensorName:string read fSensorTag write fSensorTag;
+    property BandCount:integer read fBCount write setBCount;
+  public
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
     constructor create(Aowner: tcomponent); override;
@@ -75,7 +82,7 @@ type
     function doCreateFrm: TRecFrm; override;
   end;
 
-  IPressCamFactory = class(cRecBasicFactory)
+  cPressCamFactory = class(cRecBasicFactory)
   public
     // merafile
     m_meraFile: string;
@@ -100,6 +107,19 @@ type
 
 var
   PressCamFrm: TPressCamFrm;
+  g_PressCamFactory:cPressCamFactory;
+
+const
+  c_Pic = 'PRESSFRM';
+  c_Name = 'Анализ камер сгорания';
+  c_defXSize = 530;
+  c_defYSize = 530;
+
+
+  // ctrl+shift+G
+  // ['{54C462CD-E137-4BA6-9EB5-EFD92D159DE5}']
+  IID_PRESS: TGuid = (D1: $54C462CD; D2: $E137; D3: $4BA6;
+    D4: ($9E, $B5, $EF, $D9, $2D, $15, $9D, $E5));
 
 implementation
 
@@ -107,91 +127,116 @@ implementation
 
 { IPressCamFactory }
 
-constructor IPressCamFactory.create;
+procedure cPressCamFactory.createevents;
 begin
-
+  addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
+  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState,
+    doChangeRState);
 end;
 
-procedure IPressCamFactory.createevents;
+constructor cPressCamFactory.create;
 begin
-
+  inherited;
+  m_lRefCount := 1;
+  m_counter := 0;
+  m_name := c_Name;
+  m_picname := c_Pic;
+  m_Guid := IID_PRESS;
+  createevents;
 end;
 
-destructor IPressCamFactory.destroy;
+destructor cPressCamFactory.destroy;
 begin
-
+  destroyevents;
   inherited;
 end;
 
-procedure IPressCamFactory.destroyevents;
+procedure cPressCamFactory.destroyevents;
 begin
 
 end;
 
-procedure IPressCamFactory.doAfterLoad;
+procedure cPressCamFactory.doAfterLoad;
+begin
+  inherited;
+end;
+
+procedure cPressCamFactory.doChangeRState(sender: tobject);
+begin
+
+end;
+
+function cPressCamFactory.doCreateForm: cRecBasicIFrm;
+begin
+  result := nil;
+  result := IPressCamFrm.create();
+  inc(m_counter);
+end;
+
+procedure cPressCamFactory.doDestroyForms;
 begin
   inherited;
 
 end;
 
-procedure IPressCamFactory.doChangeRState(sender: tobject);
-begin
-
-end;
-
-function IPressCamFactory.doCreateForm: cRecBasicIFrm;
-begin
-
-end;
-
-procedure IPressCamFactory.doDestroyForms;
+procedure cPressCamFactory.doSetDefSize(var PSize: SIZE);
 begin
   inherited;
 
 end;
 
-procedure IPressCamFactory.doSetDefSize(var PSize: SIZE);
+procedure cPressCamFactory.doStart;
+var
+  i: integer;
+  Frm: TRecFrm;
 begin
-  inherited;
+  for i := 0 to m_CompList.Count - 1 do
+  begin
+    //Frm := GetFrm(i);
+    //TSRSFrm(Frm).doStart;
+  end;
+end;
+
+procedure cPressCamFactory.doStop;
+begin
 
 end;
 
-procedure IPressCamFactory.doStart;
+procedure cPressCamFactory.doUpdateData(sender: tobject);
+var
+  i: integer;
+  Frm: TRecFrm;
 begin
-
-end;
-
-procedure IPressCamFactory.doStop;
-begin
-
-end;
-
-procedure IPressCamFactory.doUpdateData(sender: tobject);
-begin
-
+  //if g_disableFRF then
+  //  exit;
+  for i := 0 to m_CompList.Count - 1 do
+  begin
+    Frm := GetFrm(i);
+    //TSRSFrm(Frm).updatedata;
+  end;
 end;
 
 { IPressCamFrm }
 
 procedure IPressCamFrm.doClose;
 begin
-  inherited;
-
+  m_lRefCount := 1;
 end;
 
 function IPressCamFrm.doCreateFrm: TRecFrm;
 begin
-
+  result := TPressCamFrm.create(nil);
 end;
 
 function IPressCamFrm.doGetName: LPCSTR;
 begin
-
+  result := c_Name;
 end;
 
 function IPressCamFrm.doRepaint: boolean;
 begin
-
+  inherited;
+  //TSRSFrm(m_pMasterWnd).UpdateView;
 end;
 
 { TPressCamFrm }
@@ -199,19 +244,18 @@ end;
 constructor TPressCamFrm.create(Aowner: tcomponent);
 begin
   inherited;
-
+  setBCount(6);
 end;
 
 destructor TPressCamFrm.destroy;
 begin
-
   inherited;
 end;
 
 procedure TPressCamFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 begin
   inherited;
-
+  SensorName:=a_pIni.ReadString(str, 'SensorName', '');
 end;
 
 procedure TPressCamFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -219,39 +263,29 @@ var
   i: integer;
 begin
   inherited;
-  a_pIni.WriteString();
-  saveTagToIni(a_pIni, t.m_tag, str, 'Taho_Tag');
-  WriteFloatToIniMera(a_pIni, str, 'ShiftLeft', t.m_ShiftLeft);
-  WriteFloatToIniMera(a_pIni, str, 'Threshold', t.m_treshold);
-  WriteFloatToIniMera(a_pIni, str, 'Length', t.m_Length);
-  WriteFloatToIniMera(a_pIni, str, 'CohThreshold', t.m_CohTreshold);
+  a_pIni.WriteString(str, 'SensorName', fSensorTag);
+end;
 
-  WriteFloatToIniMera(a_pIni, str, 'Spm_minX', m_minX);
-  WriteFloatToIniMera(a_pIni, str, 'Spm_maxX', m_maxX);
-  WriteFloatToIniMera(a_pIni, str, 'Spm_minY', m_minY);
-  WriteFloatToIniMera(a_pIni, str, 'Spm_maxY', m_maxY);
-  a_pIni.WriteBool(str, 'Spm_Lg_x', m_lgX);
-  a_pIni.WriteBool(str, 'Spm_Lg_y', m_lgY);
-  a_pIni.WriteBool(str, 'SaveT0', m_saveT0);
-  a_pIni.WriteInteger(str, 'Estimator', m_estimator);
-  c := t.cfg;
-  if c <> nil then
+procedure TPressCamFrm.setBCount(bc:integer);
+var
+  I: Integer;
+  c:tComponent;
+  txt:string;
+begin
+  for i:=fbCount-1 downto 1 do
   begin
-    a_pIni.WriteInteger(str, 'FFtnum', c.m_fftCount);
-    a_pIni.WriteInteger(str, 'BlockCount', c.m_blockcount);
-    a_pIni.WriteBool(str, 'AddNulls', c.m_addNulls);
-    a_pIni.WriteInteger(str, 'SigCount', c.SRSCount);
-    a_pIni.WriteInteger(str, 'ResType', c.typeres);
-    a_pIni.WriteInteger(str, 'ShockCount', c.m_capacity);
-    for i := 0 to c.SRSCount - 1 do
-    begin
-      s := c.GetSrs(i);
-      saveTagToIni(a_pIni, s.m_tag, str, 'Tag_' + inttostr(i));
-    end;
+    c:=BarGraphGB.FindComponent(BarPanel.name+'_'+inttostr(i));
+    c.Destroy;
   end;
-  a_pIni.WriteInteger(str, 'WelchBlockCount', m_WelchCount);
-  a_pIni.WriteInteger(str, 'WelchShift', m_WelchShift);
-  a_pIni.WriteBool(str, 'useWelch', m_UseWelch);
+  for I := 0 to bc - 2 do
+  begin
+    //WriteToClipBoard(txt,BarPanel);
+    c:=CloneComponent(BarPanel);
+    twincontrol(c).name:=BarPanel.name+'_'+inttostr(i);
+    twincontrol(c).Parent:=BarPanel.Parent;
+    //twincontrol(c).Owner:=BarPanel.owner;
+  end;
+  fbCount:=bc;
 end;
 
 end.
