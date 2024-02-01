@@ -43,7 +43,7 @@ uses
   uRCFunc,
   uRecBasicFactory,
   uSyncOscillogram,
-  uPressFrm,
+  uPressFrm, uPressFrmEdit,
   u3dObj,
   iplgmngr,
   recorder,
@@ -565,6 +565,7 @@ begin
 
   g_PressCamFactory := cPressCamFactory.create;
   compMng.Add(g_PressCamFactory);
+  PressFrmEdit:=TPressFrmEdit.Create(nil);
 
   TExtRecorderPack(GPluginInstance).m_nplist.AddNP(np);
 end;

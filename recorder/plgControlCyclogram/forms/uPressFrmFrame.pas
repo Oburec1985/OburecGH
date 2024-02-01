@@ -30,8 +30,15 @@ type
     FreqEdit: TEdit;
     AmpE: TEdit;
     ProgrBar: TProgressBar;
-  private
-    m_spm:cSpm;
+  public
+    m_s:cSpm; // спектр по которому идет расчет
+    // начало и конец полосы
+    m_f1, m_f2:double;
+    m_if1, m_if2:integer;
+    // главные амплитуда и частота в полосе
+    m_A, m_f:double;
+    // 100% шкалы
+    m_Max:double;
   public
     function CreateSpm(tagname:string):cSpm;
   end;

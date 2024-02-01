@@ -1,62 +1,217 @@
-object SpmChartEditFrm: TSpmChartEditFrm
+object PressFrmEdit: TPressFrmEdit
   Left = 0
   Top = 0
-  Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1086#1090#1086#1073#1088#1072#1078#1077#1085#1080#1103' '#1089#1087#1077#1082#1090#1088#1086#1074
-  ClientHeight = 761
-  ClientWidth = 1025
+  Caption = 'PressFrmEdit'
+  ClientHeight = 511
+  ClientWidth = 633
   Color = clBtnFace
-  Constraints.MinHeight = 604
-  Constraints.MinWidth = 400
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -13
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  OnClose = FormClose
   PixelsPerInch = 120
   TextHeight = 16
-  object PropPanel: TPanel
-    Left = 211
+  inline TagsListFrame1: TTagsListFrame
+    Left = 348
     Top = 0
-    Width = 814
-    Height = 675
-    Align = alClient
-    Constraints.MinWidth = 372
+    Width = 285
+    Height = 456
+    Align = alRight
     TabOrder = 0
-    object MinXLabel: TLabel
+    ExplicitLeft = 348
+    ExplicitWidth = 285
+    ExplicitHeight = 456
+    inherited FormChannelsGB: TGroupBox
+      Width = 285
+      Height = 456
+      ExplicitWidth = 285
+      ExplicitHeight = 456
+      inherited ChanNamesPanel: TPanel
+        Width = 281
+        Height = 132
+        ExplicitWidth = 281
+        ExplicitHeight = 132
+        inherited FrmTagPropValue: TLabel
+          Left = 122
+          ExplicitLeft = 122
+        end
+        inherited FilterEdit: TEdit
+          Width = 270
+          ExplicitWidth = 270
+        end
+        inherited FrmTagPropValueEdit: TEdit
+          Left = 122
+          Width = 154
+          ExplicitLeft = 122
+          ExplicitWidth = 154
+        end
+        inherited FrmTagPropNameCB: TComboBox
+          Width = 107
+          ExplicitWidth = 107
+        end
+      end
+      inherited TagsLV: TBtnListView
+        Top = 150
+        Width = 281
+        Height = 304
+        ExplicitTop = 150
+        ExplicitWidth = 281
+        ExplicitHeight = 304
+      end
+    end
+  end
+  object alClientGB: TGroupBox
+    Left = 0
+    Top = 0
+    Width = 348
+    Height = 456
+    Align = alClient
+    TabOrder = 1
+    object TagLabel: TLabel
+      Left = 9
+      Top = 17
+      Width = 52
+      Height = 16
+      Caption = 'TagLabel'
+    end
+    object FFTCountLabel: TLabel
+      Left = 9
+      Top = 79
+      Width = 102
+      Height = 16
+      Caption = #1063#1080#1089#1083#1086' '#1090#1086#1095#1077#1082' '#1041#1055#1060
+    end
+    object dFLabel: TLabel
+      Left = 162
+      Top = 84
+      Width = 114
+      Height = 16
+      Caption = #1064#1072#1075' '#1087#1086' '#1095#1072#1089#1090#1086#1090#1077', '#1043#1094
+    end
+    object BCountLabel: TLabel
+      Left = 9
+      Top = 141
+      Width = 73
+      Height = 16
+      Caption = #1063#1080#1089#1083#1086' '#1087#1086#1083#1086#1089
+    end
+    object TagnameCB: TRcComboBox
+      Left = 9
+      Top = 38
+      Width = 145
+      Height = 24
+      TabOrder = 0
+      Text = 'TagnameCB'
+    end
+    object FFTCountEdit: TIntEdit
+      Left = 9
+      Top = 101
+      Width = 121
+      Height = 24
+      Enabled = False
+      TabOrder = 1
+      Text = '16384'
+    end
+    object FFTCountSpinBtn: TSpinButton
+      Left = 136
+      Top = 101
+      Width = 20
+      Height = 25
+      DownGlyph.Data = {
+        0E010000424D0E01000000000000360000002800000009000000060000000100
+        200000000000D800000000000000000000000000000000000000008080000080
+        8000008080000080800000808000008080000080800000808000008080000080
+        8000008080000080800000808000000000000080800000808000008080000080
+        8000008080000080800000808000000000000000000000000000008080000080
+        8000008080000080800000808000000000000000000000000000000000000000
+        0000008080000080800000808000000000000000000000000000000000000000
+        0000000000000000000000808000008080000080800000808000008080000080
+        800000808000008080000080800000808000}
+      TabOrder = 2
+      UpGlyph.Data = {
+        0E010000424D0E01000000000000360000002800000009000000060000000100
+        200000000000D800000000000000000000000000000000000000008080000080
+        8000008080000080800000808000008080000080800000808000008080000080
+        8000000000000000000000000000000000000000000000000000000000000080
+        8000008080000080800000000000000000000000000000000000000000000080
+        8000008080000080800000808000008080000000000000000000000000000080
+        8000008080000080800000808000008080000080800000808000000000000080
+        8000008080000080800000808000008080000080800000808000008080000080
+        800000808000008080000080800000808000}
+      OnDownClick = FFTCountSpinBtnDownClick
+      OnUpClick = FFTCountSpinBtnUpClick
+    end
+    object FFTdX: TFloatEdit
+      Left = 162
+      Top = 101
+      Width = 121
+      Height = 24
+      TabOrder = 3
+      Text = '0.1'
+    end
+    object BCountSB: TSpinButton
+      Left = 136
+      Top = 163
+      Width = 20
+      Height = 25
+      DownGlyph.Data = {
+        0E010000424D0E01000000000000360000002800000009000000060000000100
+        200000000000D800000000000000000000000000000000000000008080000080
+        8000008080000080800000808000008080000080800000808000008080000080
+        8000008080000080800000808000000000000080800000808000008080000080
+        8000008080000080800000808000000000000000000000000000008080000080
+        8000008080000080800000808000000000000000000000000000000000000000
+        0000008080000080800000808000000000000000000000000000000000000000
+        0000000000000000000000808000008080000080800000808000008080000080
+        800000808000008080000080800000808000}
+      TabOrder = 4
+      UpGlyph.Data = {
+        0E010000424D0E01000000000000360000002800000009000000060000000100
+        200000000000D800000000000000000000000000000000000000008080000080
+        8000008080000080800000808000008080000080800000808000008080000080
+        8000000000000000000000000000000000000000000000000000000000000080
+        8000008080000080800000000000000000000000000000000000000000000080
+        8000008080000080800000808000008080000000000000000000000000000080
+        8000008080000080800000808000008080000080800000808000000000000080
+        8000008080000080800000808000008080000080800000808000008080000080
+        800000808000008080000080800000808000}
+      OnDownClick = BCountSBDownClick
+      OnUpClick = BCountSBUpClick
+    end
+    object BCountIE: TIntEdit
+      Left = 9
+      Top = 163
+      Width = 121
+      Height = 24
+      Enabled = False
+      TabOrder = 5
+      Text = '1'
+    end
+    object BandSG: TStringGridExt
+      Left = 2
+      Top = 237
+      Width = 344
+      Height = 217
+      Align = alBottom
+      FixedCols = 0
+      RowCount = 2
+      TabOrder = 6
+    end
+  end
+  object Panel1: TPanel
+    Left = 0
+    Top = 456
+    Width = 633
+    Height = 55
+    Align = alBottom
+    TabOrder = 2
+    object UpdateAlgBtn: TSpeedButton
       Left = 4
-      Top = 19
-      Width = 70
-      Height = 16
-      Caption = #1052#1080#1085#1080#1084#1091#1084' X:'
-    end
-    object MaxXLabel: TLabel
-      Left = 4
-      Top = 69
-      Width = 75
-      Height = 16
-      Caption = #1052#1072#1082#1089#1080#1084#1091#1084' X:'
-    end
-    object MinYLabel: TLabel
-      Left = 172
-      Top = 19
-      Width = 69
-      Height = 16
-      Caption = #1052#1080#1085#1080#1084#1091#1084' Y:'
-    end
-    object MaxYLabel: TLabel
-      Left = 172
-      Top = 69
-      Width = 74
-      Height = 16
-      Caption = #1052#1072#1082#1089#1080#1084#1091#1084' Y:'
-    end
-    object UpdateBtn: TSpeedButton
-      Left = 5
-      Top = 419
+      Top = 3
       Width = 64
-      Height = 48
+      Height = 47
       Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
       Margins.Left = 4
       Margins.Top = 4
@@ -167,277 +322,7 @@ object SpmChartEditFrm: TSpmChartEditFrm
       ParentShowHint = False
       ParentBiDiMode = False
       ShowHint = True
-      OnClick = UpdateBtnClick
-    end
-    object MinXfe: TFloatEdit
-      Left = 4
-      Top = 40
-      Width = 121
-      Height = 24
-      TabOrder = 0
-      Text = '0.0'
-    end
-    object MaxXfe: TFloatEdit
-      Left = 4
-      Top = 88
-      Width = 121
-      Height = 24
-      TabOrder = 1
-      Text = '10'
-    end
-    object MinYfe: TFloatEdit
-      Left = 172
-      Top = 40
-      Width = 121
-      Height = 24
-      TabOrder = 2
-      Text = '0.0'
-    end
-    object MaxYfe: TFloatEdit
-      Left = 172
-      Top = 88
-      Width = 121
-      Height = 24
-      TabOrder = 3
-      Text = '10'
-    end
-    object LgYcb: TCheckBox
-      Left = 172
-      Top = 132
-      Width = 97
-      Height = 17
-      Caption = #1051#1086#1075#1072#1088#1080#1092#1084' Y'
-      TabOrder = 4
-    end
-    object LgXcb: TCheckBox
-      Left = 4
-      Top = 132
-      Width = 97
-      Height = 17
-      Caption = #1051#1086#1075#1072#1088#1080#1092#1084' X'
-      TabOrder = 5
-    end
-    object TubesGB: TGroupBox
-      Left = 4
-      Top = 225
-      Width = 397
-      Height = 128
-      Caption = #1058#1088#1091#1073#1082#1080' '#1076#1086#1087#1091#1089#1082#1072
-      TabOrder = 6
-      object Label1: TLabel
-        Left = 163
-        Top = 13
-        Width = 53
-        Height = 16
-        Caption = #1055#1088#1086#1092#1080#1083#1100
-      end
-      object TubeWarningCB: TCheckBox
-        Left = 7
-        Top = 67
-        Width = 130
-        Height = 16
-        Caption = #1055#1088#1077#1076#1091#1087#1088#1077#1078#1076#1077#1085#1080#1077
-        TabOrder = 0
-      end
-      object TubeProfileCB: TCheckBox
-        Left = 7
-        Top = 99
-        Width = 130
-        Height = 16
-        Caption = #1055#1088#1086#1092#1080#1083#1100
-        TabOrder = 1
-      end
-      object TubeAlarmCB: TCheckBox
-        Left = 7
-        Top = 35
-        Width = 97
-        Height = 17
-        Caption = #1058#1088#1077#1074#1086#1075#1072
-        TabOrder = 2
-      end
-      object ProfileBtn: TButton
-        Left = 335
-        Top = 35
-        Width = 49
-        Height = 24
-        Caption = '...'
-        TabOrder = 3
-        OnClick = ProfileBtnClick
-      end
-      object ProfileCB: TComboBox
-        Left = 163
-        Top = 36
-        Width = 165
-        Height = 24
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
-        TabOrder = 4
-        Text = 'ProfileCB'
-      end
-    end
-    object FormChannelsGB: TGroupBox
-      Left = 504
-      Top = 1
-      Width = 309
-      Height = 673
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
-      Align = alRight
-      Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
-      TabOrder = 7
-      object ChanNamesPanel: TPanel
-        Left = 2
-        Top = 18
-        Width = 305
-        Height = 128
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
-        Align = alTop
-        TabOrder = 0
-        DesignSize = (
-          305
-          128)
-        object FrmTagPropLabel: TLabel
-          Left = 5
-          Top = 59
-          Width = 55
-          Height = 16
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
-          Caption = #1057#1074#1086#1081#1089#1090#1074#1086
-        end
-        object FrmTagPropValue: TLabel
-          Left = 145
-          Top = 60
-          Width = 56
-          Height = 16
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
-          Caption = #1047#1085#1072#1095#1077#1085#1080#1077
-        end
-        object FilterEdit: TEdit
-          Left = 5
-          Top = 8
-          Width = 299
-          Height = 24
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
-          Anchors = [akLeft, akTop, akRight]
-          TabOrder = 0
-        end
-        object FrmTagPropValueEdit: TEdit
-          Left = 145
-          Top = 83
-          Width = 141
-          Height = 24
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
-          Anchors = [akLeft, akTop, akRight]
-          TabOrder = 1
-        end
-        object FrmTagPropNameCB: TComboBox
-          Left = 5
-          Top = 83
-          Width = 132
-          Height = 24
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
-          TabOrder = 2
-        end
-      end
-      object TagsLV: TBtnListView
-        Left = 2
-        Top = 146
-        Width = 305
-        Height = 525
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
-        Align = alClient
-        Columns = <
-          item
-            Caption = #1048#1084#1103
-            Width = 65
-          end
-          item
-            Caption = #1050#1072#1085#1072#1083
-            Width = 65
-          end>
-        DragMode = dmAutomatic
-        MultiSelect = True
-        RowSelect = True
-        TabOrder = 1
-        ViewStyle = vsReport
-        BtnCol = 0
-        QuoteColumnBtnClick = False
-        QuoteColumnDblClick = False
-        DrawColorBox = False
-        ChangeTextColor = False
-        Editable = False
-      end
-    end
-    object AlgLibSpm: TCheckBox
-      Left = 5
-      Top = 359
-      Width = 98
-      Height = 28
-      Caption = 'AlgLib'
-      TabOrder = 8
-    end
-    object ShowLabels: TCheckBox
-      Left = 5
-      Top = 171
-      Width = 178
-      Height = 28
-      Caption = #1060#1083#1072#1078#1082#1080' '#1085#1072' '#1084#1072#1082#1089#1080#1084#1091#1084#1099
-      TabOrder = 9
-    end
-  end
-  object Panel1: TPanel
-    Left = 0
-    Top = 675
-    Width = 1025
-    Height = 86
-    Align = alBottom
-    TabOrder = 1
-  end
-  object TagsGB: TGroupBox
-    Left = 0
-    Top = 0
-    Width = 211
-    Height = 675
-    Align = alLeft
-    Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
-    TabOrder = 2
-    object TagsLB: TListBox
-      Left = 2
-      Top = 18
-      Width = 207
-      Height = 655
-      Align = alClient
-      DragMode = dmAutomatic
-      TabOrder = 0
-      OnDragDrop = TagsLBDragDrop
-      OnDragOver = TagsLBDragOver
-      OnDrawItem = TagsLBDrawItem
-      OnKeyDown = TagsLBKeyDown
+      OnClick = UpdateAlgBtnClick
     end
   end
 end

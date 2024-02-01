@@ -24,7 +24,11 @@ type
     FrmTagPropNameCB: TComboBox;
     TagsLV: TBtnListView;
     procedure FilterEditChange(Sender: TObject);
+  public
+    // отображать только вектора
+    ShowVectortags:boolean;
   private
+    function FltFunc(t:itag):boolean;
   public
     procedure ShowChannels;
   end;
@@ -38,12 +42,27 @@ begin
   ShowChannels;
 end;
 
+function TTagsListFrame.FltFunc(t:itag): boolean;
+var
+  tname: string;
+begin
+  tname := t.GetName;
+  result:=((pos(lowercase(FilterEdit.text), lowercase(tname)) > 0) or (FilterEdit.text = ''));
+  if result then
+  begin
+    if isScalar(t) then
+    begin
+      if ShowVectortags then
+        result:=false;
+    end;
+  end;
+end;
+
 procedure TTagsListFrame.ShowChannels;
 var
   I, ind, tCount: Integer;
   ir: IRecorder;
   t: iTag;
-  tname: string;
   li: TListItem;
 begin
   ir := getIR;
@@ -54,13 +73,11 @@ begin
   for I := 0 to tCount - 1 do
   begin
     t := GetTagByIndex(I);
-    tname := t.GetName;
-    if ((pos(lowercase(FilterEdit.text), lowercase(tname)) > 0) or
-        (FilterEdit.text = '')) then
+    if FltFunc(t) then
     begin
       li := TagsLV.Items.Add;
       li.Data := pointer(t);
-      TagsLV.SetSubItemByColumnName('Имя', tname, li);
+      TagsLV.SetSubItemByColumnName('Имя', t.GetName, li);
       TagsLV.SetSubItemByColumnName('Fs', formatstrNoE(t.GetFreq,3), li);
     end;
   end;

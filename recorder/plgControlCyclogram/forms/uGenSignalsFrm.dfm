@@ -137,7 +137,7 @@ object GenSignalsFrm: TGenSignalsFrm
     OnClick = SignalsLBClick
   end
   object PopupMenu1: TPopupMenu
-    Left = 88
+    Left = 48
     Top = 296
     object N1: TMenuItem
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072

@@ -184,7 +184,6 @@ begin
     p:=nil
   else
     p:=tprofile(profilecb.Items.Objects[profilecb.ItemIndex]);
-
   p:=EditProfileFrm.editProfile(p, g_CtrlWrnFactory.m_pList);
   ShowProfiles;
   for I := 0 to ProfileCB.items.Count - 1 do
@@ -210,6 +209,7 @@ begin
     curChart.aX.Y := MaxXfe.FloatNum;
     curChart.aY.X := MinYfe.FloatNum;
     curChart.aY.Y := MaxYfe.FloatNum;
+
     curChart.lgX := LgXcb.Checked;
     curChart.lgY := LgYcb.Checked;
     curChart.ShowProfile := TubeProfileCB.Checked;

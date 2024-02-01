@@ -86,6 +86,7 @@ type
     // отлинковать алгоритм назначения
     procedure delDstLink(dst: cBaseObj);
   public
+    function NotSaveToXml: boolean;override;
     procedure updateOutChan;virtual;
     procedure createOutChan;overload;virtual;
     procedure createOutChan(name:string);overload;virtual;
@@ -113,6 +114,8 @@ type
   cAlgConfig = class
   public
     clType:tClass;
+    // для автосоздаваемых не треубется сохранение
+    m_NotSaveCfg:boolean;
   private
     // родительский список конфигов
     m_cfgList:TList;
@@ -539,6 +542,19 @@ begin
   Properties := xmlNode.ReadAttributeString('Properties', '');
 end;
 
+function cBaseAlgContainer.NotSaveToXml: boolean;
+begin
+  if parentCfg=nil then
+    result:=m_NotSaveToXml
+  else
+  begin
+    if not m_NotSaveToXml then
+    begin
+      result:=parentCfg.m_NotSaveCfg;
+    end;
+  end;
+end;
+
 function cBaseAlgContainer.ready: boolean;
 begin
   result := true;
@@ -932,7 +948,7 @@ begin
   begin
     a := getAlg(i);
     if a=nil then continue;
-    
+
     if a is cSrcAlg then
     begin
       if not a.ready then
@@ -1437,12 +1453,11 @@ end;
 procedure cAlgMng.XMLSaveMngAttributes(node: txmlNode);
 var
   child, n, bnode, pnode, tnode: txmlNode;
-  i: integer;
+  i, j, k: integer;
   b: tBand;
   p: TPlace;
   pair: TTagBandPair;
   t: BandTag;
-  j: integer;
   a: cAHgrad;
   alg:cbasealgcontainer;
   cfg:cAlgConfig;
@@ -1535,6 +1550,8 @@ begin
   for i := 0 to m_cfgList.Count - 1 do
   begin
     cfg:=getCfg(i);
+    if cfg.m_NotSaveCfg then
+      continue;
     str := cfg.name;
     n := getNode(child,'AlgCfgNode_' + inttostr(i));
     n.WriteAttributeString('NodeType', 'AlgCfgNode', '');
@@ -1542,12 +1559,16 @@ begin
     n.WriteAttributeString('AlgClass', cfg.clType.ClassName, '');
     str := cfg.m_str;
     n.WriteAttributeString('Cfg', str, '');
-    n.WriteAttributeInteger('AlgCount', cfg.ChildCount, 0);
+    k:=0;
     for j := 0 to cfg.ChildCount - 1 do
     begin
       alg:=cfg.getAlg(j);
-      n.WriteAttributeString('A_'+inttostr(j), alg.name, '');
+      if alg.notSaveToXml then
+        continue;
+      n.WriteAttributeString('A_'+inttostr(k), alg.name, '');
+      inc(k);
     end;
+    n.WriteAttributeInteger('AlgCount', cfg.ChildCount, 0);
   end;
 end;
 

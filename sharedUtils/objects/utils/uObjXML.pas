@@ -147,7 +147,9 @@ var
   i:integer;
   str:string;
 begin
+  if obj.NotSaveToXml then exit;
   str:=obj.name;
+
   for I := 1 to length(obj.name) - 1 do
   begin
     if str[i]=' ' then

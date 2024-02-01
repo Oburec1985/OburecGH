@@ -26,7 +26,8 @@ uses
   uSpm, uBaseAlg,
   opengl, uSimpleObjects,
   math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend,
-  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uPressFrmFrame;
+  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uPressFrmFrame,
+  uRcCtrls, Menus;
 
 type
   TPresRec = record
@@ -53,16 +54,24 @@ type
     UnitMaxAvrALab: TLabel;
     AvrCB: TCheckBox;
     PressFrmFrame1: TPressFrmFrame;
+    RcComboBox1: TRcComboBox;
+    PopupMenu1: TPopupMenu;
+    N1: TMenuItem;
+    procedure N1Click(Sender: TObject);
+  public
+    m_tag:ctag;
+    m_Spm:cSpm;
   private
-    fSensorTag:string;
     fNumCam:integer;
-    fSpm:cSpm;
     fBCount:integer;
     BGraphFrames:tlist;
   private
+    procedure initFrm;
     procedure setBCount(bc:integer);
+    function getSName:string;
+    procedure setSName(str:string);
   public
-    property SensorName:string read fSensorTag write fSensorTag;
+    property SensorName:string read getSName write setSName;
     property BandCount:integer read fBCount write setBCount;
   public
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -83,8 +92,8 @@ type
   public
     // merafile
     m_meraFile: string;
-  private
     m_spmCfg:cAlgConfig;
+  private
     m_counter: integer;
   protected
     procedure doDestroyForms; override;
@@ -122,18 +131,29 @@ const
     D4: ($9E, $B5, $EF, $D9, $2D, $15, $9D, $E5));
 
 implementation
+uses
+ uPressFrmEdit;
 
 {$R *.dfm}
 
 { IPressCamFactory }
 
 procedure cPressCamFactory.CreateAlgConfig;
+var
+  I: Integer;
+  f:TPressCamFrm;
 begin
   if g_algMng<>nil then
   begin
     if m_spmCfg=nil then
     begin
       m_spmCfg:=g_algMng.newCfg(cSpm.ClassName,cSpm);
+      m_spmCfg.m_NotSaveCfg:=true;
+    end;
+    for I := 0 to count - 1 do
+    begin
+      f:=TpressCamFrm(getfrm(i));
+      f.initFrm;
     end;
   end;
 end;
@@ -141,8 +161,7 @@ end;
 procedure cPressCamFactory.createevents;
 begin
   addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
-  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState,
-    doChangeRState);
+  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
 end;
 
 constructor cPressCamFactory.create;
@@ -256,6 +275,7 @@ end;
 constructor TPressCamFrm.create(Aowner: tcomponent);
 begin
   inherited;
+  m_tag:=cTag.create;
   BGraphFrames:=tlist.Create;
   setBCount(6);
 end;
@@ -263,7 +283,25 @@ end;
 destructor TPressCamFrm.destroy;
 begin
   inherited;
+  m_tag.destroy;
   BGraphFrames.Destroy;
+end;
+
+function TPressCamFrm.getSName: string;
+begin
+  result:=m_tag.tagname;
+end;
+
+procedure TPressCamFrm.initFrm;
+begin
+  if m_spm=nil then
+  begin
+    m_spm:=cSpm(g_algMng.CreateObjByType('cSpm'));
+    //f.m_spm.name:=f.+'_spm_r'+inttostr(i);
+    g_PressCamFactory.m_spmCfg.str:=m_spm.Properties;
+    g_PressCamFactory.m_spmCfg.AddChild(m_spm);
+    g_algMng.Add(m_spm, nil);
+  end;
 end;
 
 procedure TPressCamFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -277,8 +315,15 @@ var
   i: integer;
 begin
   inherited;
-  a_pIni.WriteString(str, 'SensorName', fSensorTag);
+  a_pIni.WriteString(str, 'SensorName', getSName);
 end;
+
+procedure TPressCamFrm.N1Click(Sender: TObject);
+begin
+  PressFrmEdit.EditPressFrm(self);
+end;
+
+
 
 procedure TPressCamFrm.setBCount(bc:integer);
 var
@@ -318,7 +363,45 @@ begin
     fr.FreqEdit.Text:='0';
     fr.AmpE.Text:='0';
   end;
+  if m_spm=nil then
+  begin
+    m_spm:=cSpm(g_algMng.CreateObjByType('cSpm'));
+    m_spm.name:=name+'_spm_r'+inttostr(i);
+    g_PressCamFactory.m_spmCfg.str:=m_spm.Properties;
+    g_PressCamFactory.m_spmCfg.AddChild(m_spm);
+    g_algMng.Add(m_spm, nil);
+  end;
   fbCount:=bc;
+end;
+
+procedure TPressCamFrm.setSName(str: string);
+var
+  i:integer;
+  fr:TPressFrmFrame;
+  t:itag;
+begin
+  t:=getTagByName(str);
+  if t<>nil then
+  begin
+    if t<>m_tag.tag then
+    begin
+      m_tag.tag:=t;
+    end;
+  end
+  else
+  begin
+    // если тега нет, запоминаем имя
+    if m_tag.tag=nil then
+    begin
+      m_tag.tagname:=str;
+    end;
+  end;
+  if m_spm<>nil then
+  begin
+    m_spm.Properties:='Channel='+str;
+    // установка resname (к нему спектры цепляются (отображение))
+    m_spm.resname:=m_spm.genTagName;
+  end;
 end;
 
 end.

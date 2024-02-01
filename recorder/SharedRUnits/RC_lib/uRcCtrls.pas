@@ -19,7 +19,7 @@ type
     function gettag(i:integer):itag; overload;
     function gettag:itag; overload;
     procedure updateTagsList;
-
+    procedure SetTagName(s:string);
   end;
 
 procedure Register;
@@ -44,6 +44,11 @@ begin
     setComboBoxItem(s,tcombobox(self));
   end;
   inherited;
+end;
+
+procedure TRcComboBox.SetTagName(s:string);
+begin
+  setComboBoxItem(s,tcombobox(self));
 end;
 
 procedure TRcComboBox.DragOver(Source: TObject; X, Y: Integer;
