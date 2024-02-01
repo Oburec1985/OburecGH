@@ -5,8 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Grids, uStringGridExt, DCL_MYOWN, Spin, StdCtrls, uRcCtrls,
-  uTagsListFrame, Buttons, ExtCtrls,
-  Tags, uCommonMath, uRCFunc, uPressFrm;
+  uTagsListFrame, Buttons, ExtCtrls, uComponentservises,
+  Tags, uCommonMath, uRCFunc, uPressFrm, uPressFrmFrame;
 
 type
   TPressFrmEdit = class(TForm)
@@ -94,13 +94,17 @@ begin
   end;
   str := m_pf.SensorName;
   t:=getTagByName(str);
+  BCountIE.IntNum:=Pf.BandCount;
+  BandSG.RowCount:=Pf.BandCount+1;
   if t<>nil then
   begin
     TagnameCB.SetTagName(str);
     for I := 0 to Pf.BandCount - 1 do
     begin
-
+      BandSG.Cells[0,i+1]:=floattostr(TPressFrmFrame(pf.BGraphFrames[i]).m_f1);
+      BandSG.Cells[1,i+1]:=floattostr(TPressFrmFrame(pf.BGraphFrames[i]).m_f2);
     end;
+    sgchange(BandSG);
   end;
   if ShowModal=mrok then
   begin
@@ -129,8 +133,12 @@ begin
 end;
 
 procedure TPressFrmEdit.updateFFTnum;
+var
+  t:itag;
 begin
-  fftdx.FloatNum := FFTCountEdit.IntNum/TPressCamFrm(m_pf).m_tag.freq;
+  t:=TagnameCB.gettag;
+  if t<>nil then
+    fftdx.FloatNum := FFTCountEdit.IntNum/t.GetFreq;
 end;
 
 end.
