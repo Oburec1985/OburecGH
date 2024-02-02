@@ -30,11 +30,18 @@ type
     procedure UpdateAlgBtnClick(Sender: TObject);
     procedure BCountSBDownClick(Sender: TObject);
     procedure BCountSBUpClick(Sender: TObject);
+    procedure BandSGKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure BandSGSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
   private
-    m_init:boolean;
+    m_init,
+    m_manualB:boolean;
     m_pf:TPressCamFrm;
+    m_row, m_col:integer;
   private
+    procedure updateBands;
     procedure updateFFTnum;
+    function getframe(i:integer):TPressFrmFrame;
   public
     procedure EditPressFrm(Pf:TPressCamFrm);
     constructor create(c:tcomponent);override;
@@ -48,6 +55,40 @@ implementation
 {$R *.dfm}
 
 { TPressFrmEdit }
+procedure TPressFrmEdit.BandSGKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  str:string;
+  fr:TPressFrmFrame;
+begin
+  if key=VK_RETURN then
+  begin
+    // начали вносить ручные правки
+    m_manualB:=true;
+    str:=BandSG.Cells[m_col, m_row];
+    if not isValue(str) then
+    begin
+      fr:=getframe([m_row-1]);
+      if m_col=0 then
+        BandSG.Cells[m_col, m_row]:=floattostr(fr.m_f1)
+      else
+        BandSG.Cells[m_col, m_row]:=floattostr(fr.m_f2)
+    end;
+  end;
+end;
+
+function TPressFrmEdit.getframe(i: integer): TPressFrmFrame;
+begin
+  result:=TPressFrmFrame(m_pf.BGraphFrames[i]);
+end;
+
+procedure TPressFrmEdit.BandSGSelectCell(Sender: TObject; ACol, ARow: Integer;
+  var CanSelect: Boolean);
+begin
+  m_row:=arow;
+  m_col:=acol;
+end;
+
 procedure TPressFrmEdit.BCountSBDownClick(Sender: TObject);
 begin
   BCountIE.IntNum:=BCountIE.IntNum-1;
@@ -55,6 +96,7 @@ end;
 
 procedure TPressFrmEdit.BCountSBUpClick(Sender: TObject);
 begin
+
   BCountIE.IntNum:=BCountIE.IntNum+1;
 end;
 
@@ -76,6 +118,7 @@ var
   t: itag;
 begin
   m_pf:=pf;
+  m_manualB:=m_pf.m_manualBand;
   if not m_init then
   begin
     m_init:=true;
@@ -110,6 +153,7 @@ begin
   begin
     m_pf.SensorName:=TagnameCB.text;
     m_pf.m_Spm.Properties:='Channel='+TagnameCB.text+','+'FFTCount='+FFTCountEdit.text+',';
+    m_pf.BarGraphGB.Caption:=str;
   end;
 end;
 
@@ -130,6 +174,24 @@ end;
 procedure TPressFrmEdit.UpdateAlgBtnClick(Sender: TObject);
 begin
   ModalResult:=mrok;
+end;
+
+procedure TPressFrmEdit.updateBands;
+var
+  I: Integer;
+  fr:TPressFrmFrame;
+begin
+  if m_manualB then
+  begin
+    m_pf.m_manualBand:=true;
+    for I := 0 to BCountIE.IntNum - 1 do
+    begin
+      fr:=getframe(i);
+      fr.m_f1:=BandSG.Cells[0,1+i];
+      fr.m_f2:=BandSG.Cells[1,1+i];
+    end;
+    m_manualB:=false;
+  end;
 end;
 
 procedure TPressFrmEdit.updateFFTnum;

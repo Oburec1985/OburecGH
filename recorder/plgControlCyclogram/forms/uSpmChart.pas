@@ -359,6 +359,12 @@ begin
         if a <> nil then
         begin
           ti.alg:=a;
+        end
+        else
+        begin
+          ti.alg:=g_algMng.getSpm(ti.m_algname);
+          if ti.m_spm<>nil then
+            ti.m_spmtrend.dx := ti.m_spm.SpmDx;
         end;
       end;
     end;
@@ -731,9 +737,11 @@ end;
 
 procedure TSpmChart.doStart;
 var
-  i: integer;
+  i, j: integer;
   ti: TSpmTagInfo;
   t:itag;
+  l:ctextlabel;
+  spm:cspm;
 begin
   for i := 0 to m_tagslist.Count - 1 do
   begin
@@ -744,6 +752,25 @@ begin
     if t=nil then
     begin
       ti.m_spmtrend.visible:=false;
+    end
+    else
+    begin
+      if ti.m_spmtrend.dx=0 then
+      begin
+         ti.m_spmtrend.dx:= ti.m_spm.SpmDx;
+      end;
+    end;
+  end;
+  // инициируем шрифты
+  for i := 0 to m_tagslist.Count - 1 do
+  begin
+    ti := TagInfo(i);
+    spm := ti.m_spm;
+    if spm=nil then continue;
+    for j := 0 to ti.flags.Count - 1 do
+    begin
+      l := cTextLabel(ti.flags.Items[j]);
+      l.initfont;
     end;
   end;
 end;
@@ -1455,15 +1482,15 @@ begin
         sChart.InitGraphs(ti);
       end;
     end;
-    for k := sChart.m_tagslist.Count - 1 downto 0 do
-    begin
-      ti := sChart.TagInfo(k);
-      if ti.m_spm=nil then
-      begin
-        ti.destroy;
-        sChart.m_tagslist.Delete(k);
-      end;
-    end;
+    //for k := sChart.m_tagslist.Count - 1 downto 0 do
+    //begin
+      //ti := sChart.TagInfo(k);
+      //if ti.m_spm=nil then
+      //begin
+      //  ti.destroy;
+      //  sChart.m_tagslist.Delete(k);
+      //end;
+    //end;
     sChart.ApplyBands;
   end;
 end;

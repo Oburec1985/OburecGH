@@ -19,12 +19,12 @@ type
     // размер в пикселях рамки
     fPixSize:tpoint;
     //fontmng настройки шрифта
-    font:cFont;
     fdrawBorder:boolean;
     // точка в которую идет сноска от метки
     fline:point2;
     fdrawline:boolean;
   public
+    font:cFont;
     data:pointer;
     m_bckGndColor:point3;
     m_borderColor:point3;
@@ -52,6 +52,8 @@ type
     procedure doDrawLine;
   protected
     procedure doOnUpdateAxis(sender:tobject);
+  public
+    procedure initfont;
   public
     constructor create;
     destructor destroy;override;
@@ -116,12 +118,8 @@ end;
 
 
 procedure cTextLabel.doLincParent;
-var
-  page:cpage;
 begin
-  page:=cpage(getpage);
-  if page<>nil then
-    setfont(getfont(c_AxisFontInd));
+  initfont;
   inherited;
   UpdateWorldSize;
   if text='' then
@@ -176,6 +174,18 @@ end;
 function cTextLabel.GetTypeString:string;
 begin
   result:='Текст';
+end;
+
+procedure cTextLabel.initfont;
+var
+  page:cpage;
+begin
+  if font=nil then
+  begin
+    page:=cpage(getpage);
+    if page<>nil then
+      setfont(getfont(c_AxisFontInd));
+  end;
 end;
 
 procedure cTextLabel.fupdatebound;

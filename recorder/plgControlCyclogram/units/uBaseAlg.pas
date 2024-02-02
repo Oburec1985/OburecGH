@@ -1173,7 +1173,7 @@ begin
   result := nil;
   for i := 0 to Count - 1 do
   begin
-    a := getAlg(i);
+    a := cBaseAlgContainer(getobj(i));
     if a is cSpm then
     begin
       if cSpm(a).resname = str then
