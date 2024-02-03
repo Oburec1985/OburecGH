@@ -23,6 +23,7 @@ uses
   uMBaseControl,
   shellapi,
   uPathMng,
+  uExcel,
   uSpm, uBaseAlg,
   opengl, uSimpleObjects,
   math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend,
@@ -50,8 +51,13 @@ type
     PressFrmFrame1: TPressFrmFrame;
     PopupMenu1: TPopupMenu;
     N1: TMenuItem;
+    SaveBtn: TSpeedButton;
     procedure N1Click(Sender: TObject);
+    procedure SaveBtnClick(Sender: TObject);
   public
+    m_lastFile:string;
+    m_saveBlockNum:integer;
+
     m_tag:ctag;
     m_Spm:cSpm;
     BGraphFrames:tlist;
@@ -65,6 +71,7 @@ type
     m_ind:integer;
     m_AvrA:double;
   private
+    procedure InitExcel;
     procedure BGraphFramesClear;
     procedure initFrm;
     procedure setBCount(bc:integer);
@@ -99,11 +106,12 @@ type
   cPressCamFactory = class(cRecBasicFactory)
   public
     // merafile
-    m_meraFile: string;
+    m_RepFile: string;
     m_spmCfg:cAlgConfig;
   private
     m_counter: integer;
   protected
+    procedure GenRepFilePath;
     procedure doDestroyForms; override;
     procedure createevents;
     procedure destroyevents;
@@ -144,6 +152,10 @@ uses
 {$R *.dfm}
 
 { IPressCamFactory }
+function RepFile:string;
+begin
+  result:=g_PressCamFactory.m_RepFile;
+end;
 
 procedure cPressCamFactory.CreateAlgConfig;
 var
@@ -271,6 +283,7 @@ var
   i: integer;
   Frm: TPressCamFrm;
 begin
+  GenRepFilePath;
   for i := 0 to m_CompList.Count - 1 do
   begin
     Frm := TPressCamFrm(GetFrm(i));
@@ -302,6 +315,14 @@ begin
     Frm := GetFrm(i);
     TPressCamFrm(Frm).updatedata;
   end;
+end;
+
+procedure cPressCamFactory.GenRepFilePath;
+var
+  mf:string;
+begin
+  mf:=GetMeraFile;
+  m_RepFile:=ExtractFileDir(mf)+'\PressCamReport'+'.xlsx';
 end;
 
 { IPressCamFrm }
@@ -338,10 +359,11 @@ var
   I: Integer;
   fr:TPressFrmFrame;
 begin
+  result:='';
   for I := 0 to BGraphFrames.Count - 1 do
   begin
     fr:=BandFrame(i);
-    result:=floattostr(fr.m_f1)+','+floattostr(fr.m_f2)+';';
+    result:=result+floattostr(fr.m_f1)+','+floattostr(fr.m_f2)+';';
   end;
 end;
 
@@ -352,7 +374,7 @@ var
 begin
   for I := 1 to BGraphFrames.Count - 1 do
   begin
-    fr:=BandFrame([i]);
+    fr:=BandFrame(i);
     fr.Destroy;
   end;
   BGraphFrames.Clear;
@@ -432,6 +454,108 @@ begin
   end;
 end;
 
+procedure TPressCamFrm.InitExcel;
+begin
+  if not CheckExcelInstall then
+  begin
+    showmessage('Необходима установка Excel');
+    exit;
+  end;
+  CreateExcel;
+  VisibleExcel(true);
+end;
+// получить номер строки в которое встречена пустая ячейка
+// проверка идет по колонке col в листе sh начиная с sh
+function GetEmptyRow(sh, r0, col:integer):integer;
+var
+  ws:olevariant;
+  res:string;
+  r:integer;
+begin
+  ws:=E.ActiveWorkbook.Sheets.Item[sh];
+  r:=r0;
+  res:=ws.cells[r0,col];
+  while res<>'' do
+  begin
+    inc(r0);
+    res:=ws.cells[r0,col];
+  end;
+  result:=r0;
+end;
+
+procedure TPressCamFrm.SaveBtnClick(Sender: TObject);
+var
+  fname:string;
+  I,j,r,c, r0: Integer;
+  f:TPressCamFrm;
+  fr:tpressfrmframe;
+  rng:OleVariant;
+begin
+  fname:=RepFile;
+  if fname='' then exit;
+  if m_lastFile<>fname then
+  begin
+    m_saveBlockNum:=0;
+  end
+  else
+    inc(m_saveBlockNum);
+  m_lastFile:=fname;
+
+  InitExcel;
+  if fileexists(fname) then
+  begin
+    OpenWorkBook(fname);
+    if m_saveBlockNum=0 then
+      E.ActiveWorkbook.Sheets.Item[1].cells.clear;
+  end
+  else
+  begin
+    AddWorkBook;
+    AddSheet('Page_01');
+    DeleteSheet(2);
+  end;
+  r0:=GetEmptyRow(1,1,2);
+  // sheet, r, c, v
+  SetCell(1, r0, 2, 'MeraFile:');
+  SetCell(1, r0, 3, fname);
+  SetCell(1, r0, 4, 'Time:');
+  SetCell(1, r0, 5, DateToStr(date)+' '+TimeToStr(date));
+  r:=r0+2;
+  c:=2;
+  for I := 0 to g_PressCamFactory.count - 1 do
+  begin
+    f:=TPressCamFrm(g_PressCamFactory.GetFrm(i));
+    // имя сигнала
+    //SetCell(1, r-1, c, f.Name);
+    SetCell(1, r-1, c, f.SensorName);
+    SetCell(1, r, c, 'Band');
+    SetCell(1, r, c+1, 'A1');
+    SetCell(1, r, c+2, 'F1');
+    SetCell(1, r, c+3, 'Amp.av');
+    for j := 0 to f.bandcount - 1 do
+    begin
+      fr:=f.BandFrame(j);
+      SetCell(1, r+1+j, c, floattostr(fr.m_f1)+'...'+floattostr(fr.m_f2));
+      SetCell(1, r+1+j, c+1, fr.m_max);
+      SetCell(1, r+1+j, c+2, fr.m_f);
+      SetCell(1, r+1+j, c+3, fr.m_A);
+    end;
+    c:=c+4;
+  end;
+  // разметка заголовка
+  rng:=GetRangeObj(1, point(r, 2), point(r,c-1));
+  // c_Excel_GrayInd = 15;
+  rng.Interior.ColorIndex := 15;
+  rng.Font.Bold:=True;
+  // ставим сетку всего блока
+  rng:=GetRangeObj(1, point(r, 2), point(r+j, c-1));
+  SetRangeBorder(rng);
+
+  SaveWorkBookAs(fname);
+  CloseWorkBook;
+  CloseExcel;
+end;
+
 procedure TPressCamFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 var
   i: integer;
@@ -493,6 +617,7 @@ var
   fr:TPressFrmFrame;
   i:integer;
 begin
+  if m_manualBand then exit;
   if m_spm=nil then exit;
   if m_spm.m_tag=nil then exit;
   if m_spm.m_tag.tag<>nil then
@@ -557,11 +682,16 @@ begin
   ind:=1;
   for I := 0 to BandCount - 1 do
   begin
-    s1:=getSubStrByIndex(s,';',ind, ind);
-    f:=getSubStrByIndex(s1,',',1, ind);
+    s1:=getSubStrByIndex(s,';',1, i);
+    if s1='' then
+    begin
+      m_manualBand:=false;
+      break;
+    end;
+    f:=getSubStrByIndex(s1,',',1, 0);
     fr:=BandFrame(i);
     fr.m_f1:=strtofloatext(f);
-    f:=getSubStrByIndex(s1,',',ind, ind);
+    f:=getSubStrByIndex(s1,',',1, 1);
     fr.m_f2:=strtofloatext(f);
   end;
 end;

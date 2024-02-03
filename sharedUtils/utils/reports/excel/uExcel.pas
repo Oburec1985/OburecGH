@@ -271,6 +271,7 @@ const
   xlConeToPoint=4;
   xlConeToMax=5;
 
+
   function CheckExcelInstall:boolean;
   function CheckExcelRun: boolean;
   function RunExcel(DisableAlerts:boolean=true; Visible: boolean=false): boolean;

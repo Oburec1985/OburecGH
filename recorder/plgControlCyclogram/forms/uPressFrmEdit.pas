@@ -68,7 +68,7 @@ begin
     str:=BandSG.Cells[m_col, m_row];
     if not isValue(str) then
     begin
-      fr:=getframe([m_row-1]);
+      fr:=getframe(m_row-1);
       if m_col=0 then
         BandSG.Cells[m_col, m_row]:=floattostr(fr.m_f1)
       else
@@ -151,6 +151,7 @@ begin
   end;
   if ShowModal=mrok then
   begin
+    updateBands;
     m_pf.SensorName:=TagnameCB.text;
     m_pf.m_Spm.Properties:='Channel='+TagnameCB.text+','+'FFTCount='+FFTCountEdit.text+',';
     m_pf.BarGraphGB.Caption:=str;
@@ -187,8 +188,8 @@ begin
     for I := 0 to BCountIE.IntNum - 1 do
     begin
       fr:=getframe(i);
-      fr.m_f1:=BandSG.Cells[0,1+i];
-      fr.m_f2:=BandSG.Cells[1,1+i];
+      fr.m_f1:=strtofloatext(BandSG.Cells[0,1+i]);
+      fr.m_f2:=strtofloatext(BandSG.Cells[1,1+i]);
     end;
     m_manualB:=false;
   end;

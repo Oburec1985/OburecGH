@@ -53,6 +53,7 @@ function GetSubString(src: string; tabs: string; p: integer; var index: integer)
 // то же, что и предыдуща€, но не учитывает сепараторы, если они внутри кавычек "aaa;bbb"
 // при этом скобки считаютс€ закрытыми если после символа bracketchar идет разделительный символ или конец строки
 function GetSubStringExt(src: string; tabs: string; p: integer;  bracketChar: char; var index: integer): string;
+// index - номер подслова
 function getSubStrByIndex(src:string; tabs:char; p_start, index:integer):string;
 function deleteOuterBracket(str:string; bracket:char):string;
 // ”далить на конце строки символы не €вл€ющиес€ цифрами
@@ -1406,7 +1407,10 @@ begin
       begin
         c:=i-start;
         if b then
-          inc(c);
+        begin
+          if not (src[i]=tabs) then
+            inc(c);
+        end;
         result:=Copy(src, start, c);
         exit;
       end

@@ -1138,6 +1138,8 @@ var
   s: cSRSres;
 begin
   t := getTaho;
+  if t=nil then
+    exit;
   c:=t.getCfg;
   if fdelBtn then
   begin

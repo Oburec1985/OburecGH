@@ -364,7 +364,12 @@ begin
         begin
           ti.alg:=g_algMng.getSpm(ti.m_algname);
           if ti.m_spm<>nil then
-            ti.m_spmtrend.dx := ti.m_spm.SpmDx;
+          begin
+            if ti.m_spmtrend<>nil then
+            begin
+              ti.m_spmtrend.dx := ti.m_spm.SpmDx;
+            end;
+          end;
         end;
       end;
     end;
