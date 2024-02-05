@@ -571,6 +571,7 @@ begin
 
 
   PressFrmEdit := TPressFrmEdit.Create(nil);
+  PressFrmEdit2 := TPressFrmEdit2.Create(nil);
 
   TExtRecorderPack(GPluginInstance).m_nplist.AddNP(np);
 end;

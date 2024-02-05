@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Grids, uStringGridExt, DCL_MYOWN, Spin, StdCtrls, uRcCtrls,
   uTagsListFrame, Buttons, ExtCtrls, uComponentservises, ComCtrls,
-  Tags, uCommonMath, uRCFunc, uPressFrm, uPressFrmFrame;
+  Tags, uCommonMath, uRCFunc, uPressFrm2, uPressFrmFrame2, uspm;
 
 type
   TPressFrmEdit2 = class(TForm)
@@ -41,14 +41,13 @@ type
   private
     m_init,
     m_manualB:boolean;
-    m_pf:TPressCamFrm;
+    m_pf:TPressFrm2;
     m_row, m_col:integer;
   private
     procedure updateBands;
     procedure updateFFTnum;
-    function getframe(i:integer):TPressFrmFrame;
   public
-    procedure EditPressFrm(Pf:TPressCamFrm);
+    procedure EditPressFrm(Pf:TPressFrm2);
     constructor create(c:tcomponent);override;
   end;
 
@@ -64,7 +63,7 @@ procedure TPressFrmEdit2.BandSGKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
   str:string;
-  fr:TPressFrmFrame;
+  fr:TPressFrmFrame2;
 begin
   if key=VK_RETURN then
   begin
@@ -73,18 +72,13 @@ begin
     str:=BandSG.Cells[m_col, m_row];
     if not isValue(str) then
     begin
-      fr:=getframe(m_row-1);
-      if m_col=0 then
-        BandSG.Cells[m_col, m_row]:=floattostr(fr.m_f1)
-      else
-        BandSG.Cells[m_col, m_row]:=floattostr(fr.m_f2)
+      //fr:=getframe(m_row-1);
+      //if m_col=0 then
+      //  BandSG.Cells[m_col, m_row]:=floattostr(fr.m_f1)
+      //else
+      //  BandSG.Cells[m_col, m_row]:=floattostr(fr.m_f2)
     end;
   end;
-end;
-
-function TPressFrmEdit2.getframe(i: integer): TPressFrmFrame;
-begin
-  result:=TPressFrmFrame(m_pf.BGraphFrames[i]);
 end;
 
 procedure TPressFrmEdit2.TagsLBDragDrop(Sender, Source: TObject; X, Y: Integer);
@@ -101,7 +95,7 @@ begin
     end
     else
     begin
-      tagslistframe1.tagsLV.GetNextItem(li,sdAll,[isSelected]);
+      li:=tagslistframe1.tagsLV.GetNextItem(li,sdAll,[isSelected]);
     end;
     t:=itag(li.data);
     tagslb.AddItem(t.GetName, nil);
@@ -144,23 +138,24 @@ begin
   BandSG.Cells[1,0]:='F2';
 end;
 
-procedure TPressFrmEdit2.EditPressFrm(Pf: TPressCamFrm);
+procedure TPressFrmEdit2.EditPressFrm(Pf: TPressFrm2);
 var
   p: TNotifyEvent;
   props:string;
   str: string;
   i: Integer;
   t: itag;
+  s:cspm;
 begin
   m_pf:=pf;
-  m_manualB:=m_pf.m_manualBand;
+  // отображаем векторные теги
   if not m_init then
   begin
     m_init:=true;
     TagsListFrame1.ShowVectortags:=true;
     TagsListFrame1.ShowChannels;
   end;
-  props:=g_PressCamFactory.m_spmCfg.str;
+  props:=g_PressCamFactory2.m_spmCfg.str;
   str := GetParam(props, 'FFTCount');
   if CheckStr(str) then
   begin
@@ -169,23 +164,28 @@ begin
     FFTCountEdit.Text:=str;
     FFTCountEdit.OnChange := p;
   end;
-  str := m_pf.SensorName;
-  t:=getTagByName(str);
-  BCountIE.IntNum:=Pf.BandCount;
-  BandSG.RowCount:=Pf.BandCount+1;
+  TagsLB.Clear;
+  for I := 0 to g_PressCamFactory2.m_spmCfg.ChildCount - 1 do
+  begin
+    s:=cspm(g_PressCamFactory2.m_spmCfg.getAlg(i));
+    TagsLB.AddItem(s.m_tag.tagname, nil);
+  end;
+  BCountIE.IntNum:=g_PressCamFactory2.BandCount;
+  BandSG.RowCount:=BCountIE.IntNum+1;
   if t<>nil then
   begin
-    for I := 0 to Pf.BandCount - 1 do
+    for I := 0 to BCountIE.IntNum - 1 do
     begin
-      BandSG.Cells[0,i+1]:=floattostr(TPressFrmFrame(pf.BGraphFrames[i]).m_f1);
-      BandSG.Cells[1,i+1]:=floattostr(TPressFrmFrame(pf.BGraphFrames[i]).m_f2);
+      BandSG.Cells[0,i+1]:=floattostr(g_PressCamFactory2.m_bands[i].f1);
+      BandSG.Cells[1,i+1]:=floattostr(g_PressCamFactory2.m_bands[i].f2);
     end;
     sgchange(BandSG);
   end;
   if ShowModal=mrok then
   begin
     updateBands;
-    //m_pf.SensorName:=TagnameCB.text;
+    g_PressCamFactory2.CreateAlg(TagsLB.Items);
+    g_PressCamFactory2.CreateFrames;
     //m_pf.m_Spm.Properties:='Channel='+TagnameCB.text+','+'FFTCount='+FFTCountEdit.text+',';
     //m_pf.BarGraphGB.Caption:=str;
   end;
@@ -213,26 +213,17 @@ end;
 procedure TPressFrmEdit2.updateBands;
 var
   I: Integer;
-  fr:TPressFrmFrame;
+  fr:TPressFrmFrame2;
 begin
   if m_manualB then
   begin
-    m_pf.m_manualBand:=true;
     for I := 0 to BCountIE.IntNum - 1 do
     begin
-      fr:=getframe(i);
-      fr.m_f1:=strtofloatext(BandSG.Cells[0,1+i]);
-      fr.m_f2:=strtofloatext(BandSG.Cells[1,1+i]);
+      //fr:=getframe(i);
+      //fr.m_f1:=strtofloatext(BandSG.Cells[0,1+i]);
+      //fr.m_f2:=strtofloatext(BandSG.Cells[1,1+i]);
     end;
     m_manualB:=false;
-  end;
-  for I := 0 to BCountIE.IntNum - 1 do
-  begin
-    fr:=getframe(i);
-    fr.m_RefAmp:=m_pf.m_RefAmp;
-    fr.m_hh:=m_pf.m_HH;
-    fr.m_h:=m_pf.m_H;
-    fr.m_f2:=strtofloatext(BandSG.Cells[1,1+i]);
   end;
 end;
 
