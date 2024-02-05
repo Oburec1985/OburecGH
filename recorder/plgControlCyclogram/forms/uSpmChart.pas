@@ -1279,6 +1279,7 @@ begin
   if m_profile = nil then
   begin
     m_profile := ctrend.create;
+    m_profile.fHelper:=true;
     m_profile.layer:=1;
     aX.AddChild(m_profile);
     m_profile.enabled := false;
@@ -1288,6 +1289,7 @@ begin
   if m_lolo = nil then
   begin
     m_lolo := ctrend.create;
+    m_lolo.fHelper:=true;
     m_lolo.layer:=1;
     m_lolo.selectable := false;
     m_lolo.name := 'LoLo';
@@ -1297,6 +1299,7 @@ begin
   if m_lo = nil then
   begin
     m_lo := ctrend.create;
+    m_lo.fHelper:=true;
     m_lo.layer:=1;
     m_lo.selectable := false;
     m_lo.name := 'Lo';
@@ -1306,6 +1309,7 @@ begin
   if m_hi = nil then
   begin
     m_hi := ctrend.create;
+    m_hi.fHelper:=true;
     m_hi.layer:=1;
     m_hi.selectable := false;
     m_hi.name := 'Hi';

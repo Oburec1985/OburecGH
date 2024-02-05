@@ -30,6 +30,8 @@ type
   private
     function FltFunc(t:itag):boolean;
   public
+    function gettag:itag;overload;
+    function gettag(i:integer):itag;overload;
     procedure ShowChannels;
   end;
 
@@ -56,6 +58,19 @@ begin
         result:=false;
     end;
   end;
+end;
+
+function TTagsListFrame.gettag: itag;
+begin
+
+end;
+
+function TTagsListFrame.gettag(i: integer): itag;
+var
+  li:tlistitem;
+begin
+  li:=TagsLV.Selected;
+  result:=itag(li.data);
 end;
 
 procedure TTagsListFrame.ShowChannels;

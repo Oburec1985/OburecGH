@@ -44,10 +44,10 @@
     <File Path="..\..\..\OburecGH"/>
     <File Path="..\..\3d"/>
     <File Path="..\..\3d\forms"/>
-    <File Path="..\..\3d\forms\uTrfrmToolsFrame.pas"/>
-    <File Path="..\..\3d\forms\uTrfrmToolsFrame.dfm"/>
     <File Path="..\..\3d\forms\uTransformButtons.pas"/>
     <File Path="..\..\3d\forms\uTransformButtons.dfm"/>
+    <File Path="..\..\3d\forms\uTrfrmToolsFrame.pas"/>
+    <File Path="..\..\3d\forms\uTrfrmToolsFrame.dfm"/>
     <File Path="..\..\3d\objects"/>
     <File Path="..\..\3d\objects\uNodeObject.pas"/>
     <File Path="..\..\sharedUtils"/>
@@ -90,8 +90,8 @@
     <File Path="..\..\sharedUtils\utils\lists\ueventlist.pas"/>
     <File Path="..\..\sharedUtils\utils\lists\uEventTypes.pas"/>
     <File Path="..\..\sharedUtils\utils\lists\uQueue.pas"/>
-    <File Path="..\..\sharedUtils\utils\lists\usetlist.pas"/>
     <File Path="..\..\sharedUtils\utils\lists\uQueue2.pas"/>
+    <File Path="..\..\sharedUtils\utils\lists\usetlist.pas"/>
     <File Path="..\..\sharedUtils\utils\PathUtils"/>
     <File Path="..\..\sharedUtils\utils\PathUtils\PathUtils.pas"/>
     <File Path="..\..\sharedUtils\utils\reports"/>
@@ -297,12 +297,18 @@
     <File Path="forms\uSRSFrm.dfm"/>
     <File Path="forms\uEditSrsFrm.pas"/>
     <File Path="forms\uEditSrsFrm.dfm"/>
-    <File Path="forms\uPressFrm.pas"/>
-    <File Path="forms\uPressFrm.dfm"/>
-    <File Path="forms\uPressFrmFrame.pas"/>
-    <File Path="forms\uPressFrmFrame.dfm"/>
     <File Path="forms\uPressFrmEdit.pas"/>
     <File Path="forms\uPressFrmEdit.dfm"/>
+    <File Path="forms\uPressFrmFrame.pas"/>
+    <File Path="forms\uPressFrmFrame.dfm"/>
+    <File Path="forms\uPressFrm.pas"/>
+    <File Path="forms\uPressFrm.dfm"/>
+    <File Path="forms\uPressFrm2.pas"/>
+    <File Path="forms\uPressFrm2.dfm"/>
+    <File Path="forms\uPressFrmFrame2.pas"/>
+    <File Path="forms\uPressFrmFrame2.dfm"/>
+    <File Path="forms\uPressFrmEdit2.pas"/>
+    <File Path="forms\uPressFrmEdit2.dfm"/>
     <File Path="units"/>
     <File Path="units\uAriphmAlg.pas"/>
     <File Path="units\uBaseAlg.pas"/>
@@ -397,5 +403,13 @@
     <Transaction>2024.01.31 23:43:23.308.dfm,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit2.dfm=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmFrame.dfm</Transaction>
     <Transaction>2024.02.01 11:56:04.164.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit2.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmEdit.pas</Transaction>
     <Transaction>2024.02.01 11:56:04.165.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit2.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmEdit.dfm</Transaction>
+    <Transaction>2024.02.05 18:29:38.228.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrm.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrm2.pas</Transaction>
+    <Transaction>2024.02.05 18:29:38.228.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrm.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrm2.dfm</Transaction>
+    <Transaction>2024.02.05 18:30:28.642.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrm.pas=</Transaction>
+    <Transaction>2024.02.05 18:30:28.642.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrm.dfm=</Transaction>
+    <Transaction>2024.02.05 18:39:27.311.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmFrame.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmFrame2.pas</Transaction>
+    <Transaction>2024.02.05 18:39:27.311.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmFrame.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmFrame2.dfm</Transaction>
+    <Transaction>2024.02.05 18:54:44.804.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmEdit.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmEdit2.pas</Transaction>
+    <Transaction>2024.02.05 18:54:44.804.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmEdit.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmEdit2.dfm</Transaction>
   </Transactions>
 </BorlandProject>

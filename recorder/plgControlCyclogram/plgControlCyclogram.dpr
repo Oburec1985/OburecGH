@@ -203,6 +203,9 @@ uses
   uAlarms in '..\SharedRUnits\interfaces\uAlarms.pas',
   uTrfrmToolsFrame in '..\..\3d\forms\uTrfrmToolsFrame.pas' {TrfrmToolsFrame: TFrame},
   uTransformButtons in '..\..\3d\forms\uTransformButtons.pas' {TransformToolsFrame: TFrame},
+  uPressFrm2 in 'forms\uPressFrm2.pas' {PressFrm2},
+  uPressFrmFrame2 in 'forms\uPressFrmFrame2.pas' {PressFrmFrame2: TFrame},
+  uPressFrmEdit2 in 'forms\uPressFrmEdit2.pas' {PressFrmEdit2},
   uPressFrm in 'forms\uPressFrm.pas' {PressCamFrm},
   uPressFrmFrame in 'forms\uPressFrmFrame.pas' {PressFrmFrame: TFrame},
   uPressFrmEdit in 'forms\uPressFrmEdit.pas' {PressFrmEdit};

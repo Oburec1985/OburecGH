@@ -1,4 +1,4 @@
-object PressCamFrm: TPressCamFrm
+object PressFrm2: TPressFrm2
   Left = 0
   Top = 0
   Caption = #1054#1073#1088#1072#1073#1086#1090#1082#1072' '#1076#1072#1074#1083#1077#1085#1080#1103' '#1074' '#1082#1072#1084#1077#1088#1077' '#1089#1075#1086#1088#1072#1085#1080#1103
@@ -307,7 +307,7 @@ object PressCamFrm: TPressCamFrm
       Margins.Bottom = 4
       Align = alTop
       TabOrder = 0
-      inline PressFrmFrame1: TPressFrmFrame
+      inline PressFrmFrame21: TPressFrmFrame2
         Left = 1
         Top = 1
         Width = 350
@@ -316,12 +316,8 @@ object PressCamFrm: TPressCamFrm
         TabOrder = 0
         ExplicitLeft = 1
         ExplicitTop = 1
-        inherited BandLabel: TLabel
-          Width = 24
-          Height = 17
-          ExplicitWidth = 24
-          ExplicitHeight = 17
-        end
+        ExplicitWidth = 350
+        ExplicitHeight = 45
         inherited ALabel: TLabel
           Width = 21
           Height = 17
@@ -343,8 +339,8 @@ object PressCamFrm: TPressCamFrm
           ExplicitHeight = 25
         end
         inherited ProgrBar: TProgressBar
-          Width = 131
-          ExplicitWidth = 131
+          Width = 153
+          ExplicitWidth = 153
         end
       end
     end

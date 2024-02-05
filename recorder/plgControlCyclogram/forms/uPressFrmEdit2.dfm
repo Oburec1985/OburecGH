@@ -1,9 +1,9 @@
-object PressFrmEdit: TPressFrmEdit
+object PressFrmEdit2: TPressFrmEdit2
   Left = 0
   Top = 0
-  Caption = 'PressFrmEdit'
-  ClientHeight = 511
-  ClientWidth = 633
+  Caption = 'PressFrmEdit2'
+  ClientHeight = 538
+  ClientWidth = 895
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,20 +14,20 @@ object PressFrmEdit: TPressFrmEdit
   PixelsPerInch = 120
   TextHeight = 16
   inline TagsListFrame1: TTagsListFrame
-    Left = 348
+    Left = 610
     Top = 0
     Width = 285
-    Height = 456
+    Height = 483
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 348
+    ExplicitLeft = 610
     ExplicitWidth = 285
-    ExplicitHeight = 456
+    ExplicitHeight = 483
     inherited FormChannelsGB: TGroupBox
       Width = 285
-      Height = 456
+      Height = 483
       ExplicitWidth = 285
-      ExplicitHeight = 456
+      ExplicitHeight = 483
       inherited ChanNamesPanel: TPanel
         Width = 281
         Height = 132
@@ -63,7 +63,7 @@ object PressFrmEdit: TPressFrmEdit
       inherited TagsLV: TBtnListView
         Top = 150
         Width = 281
-        Height = 304
+        Height = 331
         Columns = <
           item
             Caption = #1048#1084#1103
@@ -79,86 +79,64 @@ object PressFrmEdit: TPressFrmEdit
           end>
         ExplicitTop = 150
         ExplicitWidth = 281
-        ExplicitHeight = 304
+        ExplicitHeight = 331
       end
     end
   end
   object alClientGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 348
-    Height = 456
+    Width = 610
+    Height = 483
     Align = alClient
     TabOrder = 1
-    object TagLabel: TLabel
-      Left = 9
-      Top = 10
-      Width = 52
-      Height = 16
-      Caption = #1048#1084#1103' '#1090#1077#1075#1072
-    end
     object FFTCountLabel: TLabel
-      Left = 9
-      Top = 58
+      Left = 243
+      Top = 22
       Width = 102
       Height = 16
       Caption = #1063#1080#1089#1083#1086' '#1090#1086#1095#1077#1082' '#1041#1055#1060
     end
     object dFLabel: TLabel
-      Left = 163
-      Top = 63
+      Left = 397
+      Top = 27
       Width = 114
       Height = 16
       Caption = #1064#1072#1075' '#1087#1086' '#1095#1072#1089#1090#1086#1090#1077', '#1043#1094
     end
     object BCountLabel: TLabel
-      Left = 9
-      Top = 109
+      Left = 243
+      Top = 74
       Width = 73
       Height = 16
       Caption = #1063#1080#1089#1083#1086' '#1087#1086#1083#1086#1089
     end
     object HHLabel: TLabel
-      Left = 162
-      Top = 146
+      Left = 243
+      Top = 126
       Width = 40
       Height = 16
       Caption = 'HH lev.'
     end
     object HLabel: TLabel
-      Left = 163
-      Top = 190
+      Left = 369
+      Top = 126
       Width = 35
       Height = 16
       Caption = 'H Lev.'
     end
-    object Label2: TLabel
-      Left = 9
-      Top = 161
-      Width = 27
-      Height = 16
-      Caption = 'Max.'
-    end
-    object TagnameCB: TRcComboBox
-      Left = 9
-      Top = 32
-      Width = 146
-      Height = 24
-      TabOrder = 0
-      Text = 'TagnameCB'
-    end
     object FFTCountEdit: TIntEdit
-      Left = 9
-      Top = 80
+      Left = 243
+      Top = 44
       Width = 122
       Height = 24
       Enabled = False
-      TabOrder = 1
+      TabOrder = 0
       Text = '16384'
     end
     object FFTCountSpinBtn: TSpinButton
-      Left = 136
-      Top = 82
+      Left = 370
+      Top = 46
       Width = 20
       Height = 25
       DownGlyph.Data = {
@@ -171,7 +149,7 @@ object PressFrmEdit: TPressFrmEdit
         0000008080000080800000808000000000000000000000000000000000000000
         0000000000000000000000808000008080000080800000808000008080000080
         800000808000008080000080800000808000}
-      TabOrder = 2
+      TabOrder = 1
       UpGlyph.Data = {
         0E010000424D0E01000000000000360000002800000009000000060000000100
         200000000000D800000000000000000000000000000000000000008080000080
@@ -186,16 +164,16 @@ object PressFrmEdit: TPressFrmEdit
       OnUpClick = FFTCountSpinBtnUpClick
     end
     object FFTdX: TFloatEdit
-      Left = 163
-      Top = 80
+      Left = 397
+      Top = 44
       Width = 120
       Height = 24
-      TabOrder = 3
+      TabOrder = 2
       Text = '0.1'
     end
     object BCountSB: TSpinButton
-      Left = 136
-      Top = 129
+      Left = 371
+      Top = 95
       Width = 20
       Height = 25
       DownGlyph.Data = {
@@ -208,7 +186,7 @@ object PressFrmEdit: TPressFrmEdit
         0000008080000080800000808000000000000000000000000000000000000000
         0000000000000000000000808000008080000080800000808000008080000080
         800000808000008080000080800000808000}
-      TabOrder = 4
+      TabOrder = 3
       UpGlyph.Data = {
         0E010000424D0E01000000000000360000002800000009000000060000000100
         200000000000D800000000000000000000000000000000000000008080000080
@@ -223,56 +201,58 @@ object PressFrmEdit: TPressFrmEdit
       OnUpClick = BCountSBUpClick
     end
     object BCountIE: TIntEdit
-      Left = 9
-      Top = 131
+      Left = 243
+      Top = 96
       Width = 122
       Height = 24
       Enabled = False
-      TabOrder = 5
+      TabOrder = 4
       Text = '1'
     end
     object BandSG: TStringGridExt
       Left = 2
-      Top = 237
-      Width = 344
+      Top = 264
+      Width = 606
       Height = 217
       Align = alBottom
       FixedCols = 0
       RowCount = 2
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goFixedRowClick]
-      TabOrder = 6
+      TabOrder = 5
       OnKeyDown = BandSGKeyDown
       OnSelectCell = BandSGSelectCell
     end
     object HHFE: TFloatEdit
-      Left = 162
-      Top = 163
+      Left = 243
+      Top = 143
       Width = 120
       Height = 24
-      TabOrder = 7
+      TabOrder = 6
       Text = '0.7'
     end
     object HFE: TFloatEdit
-      Left = 163
-      Top = 207
+      Left = 369
+      Top = 143
       Width = 120
       Height = 24
-      TabOrder = 8
+      TabOrder = 7
       Text = '0.5'
     end
-    object MaxFE: TFloatEdit
-      Left = 9
-      Top = 182
-      Width = 122
-      Height = 24
-      TabOrder = 9
-      Text = '10'
+    object TagsLB: TListBox
+      Left = 2
+      Top = 18
+      Width = 215
+      Height = 246
+      Align = alLeft
+      TabOrder = 8
+      OnDragDrop = TagsLBDragDrop
+      OnDragOver = TagsLBDragOver
     end
   end
   object Panel1: TPanel
     Left = 0
-    Top = 456
-    Width = 633
+    Top = 483
+    Width = 895
     Height = 55
     Align = alBottom
     TabOrder = 2

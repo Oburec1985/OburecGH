@@ -4,7 +4,7 @@ unit uCreateComponents;
 interface
 
 uses
-  //stmm4,
+  // stmm4,
   Windows,
   SysUtils,
   activex,
@@ -43,7 +43,6 @@ uses
   uRCFunc,
   uRecBasicFactory,
   uSyncOscillogram,
-  uPressFrm, uPressFrmEdit,
   u3dObj,
   iplgmngr,
   recorder,
@@ -56,6 +55,8 @@ uses
   uEditSRSFrm,
   uSRSFrm,
   uGLFrmEdit,
+  uPressFrm, uPressFrmEdit,
+  uPressFrm2, uPressFrmEdit2,
   uMBaseControl;
 
 type
@@ -84,21 +85,21 @@ function ProcessShowVersionInfo(pMsgInfo: PCB_MESSAGE): boolean;
 procedure destroyEngine;
 
 // отправить плагину MBaseControl нотификацию для редактирования свойств объекта
-//  TMBaseNotify = record
-//    идентификатор объекта которому надо добавит/ удалшить свойство
-//    ObjID: String;
-//    тип операции 0 - добавить/изменить свойство 1 - удалить
-//    OperType: integer;
-//     строка свойств и значение
-//     Если добавляем меняем свойство через разделитель ";" идут <имя свойства>,<значение свойства>
-//     Если удаляем то через разделитель ";" идут имена свойств
-//    Operation: string;
-//  end;
+// TMBaseNotify = record
+// идентификатор объекта которому надо добавит/ удалшить свойство
+// ObjID: String;
+// тип операции 0 - добавить/изменить свойство 1 - удалить
+// OperType: integer;
+// строка свойств и значение
+// Если добавляем меняем свойство через разделитель ";" идут <имя свойства>,<значение свойства>
+// Если удаляем то через разделитель ";" идут имена свойств
+// Operation: string;
+// end;
 
 procedure sendMDBNotifyMessage(notify: TMBaseNotify);
 // получить путь к текущему испытанию
-function getMDBTestPath:lpcstr;
-function getMDBRegPath:lpcstr;
+function getMDBTestPath: lpcstr;
+function getMDBRegPath: lpcstr;
 
 const
   // Глобальная переменная для храения описания plug-in`а.
@@ -108,108 +109,108 @@ const
 
 var
   // флаг для запрета удаления frmSync пока не удалим все формы в потоке формы FrmSync
-  g_CreateFrms,
-  g_delFrms:boolean;
+  g_CreateFrms, g_delFrms: boolean;
 
 implementation
 
 uses
   PluginClass;
 
-function getMDBTestPath:lpcstr;
+function getMDBTestPath: lpcstr;
 var
   rep: hresult;
   val: OleVariant;
   UISrv: tagVARIANT;
-  FormRegistrator:ICustomFormsRegistrator;
-  f:ICustomFormFactory;
-  cf:ICustomFactInterface;
+  FormRegistrator: ICustomFormsRegistrator;
+  f: ICustomFormFactory;
+  cf: ICustomFactInterface;
 
-  mdb:IVForm;
+  mdb: IVForm;
 
-  count:cardinal;
-  i:ULONG;
-  int:integer;
-  ws:widestring;
-  g:TGUID;
+  count: cardinal;
+  i: ULONG;
+  int: integer;
+  ws: widestring;
+  g: TGUID;
 begin
-  result:='';
+  result := '';
   rep := g_ir.GetProperty(RCPROP_UISERVERLINK, val);
   UISrv := tagVARIANT(val);
   if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
   begin
   end;
-  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator, FormRegistrator);
+  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,
+    FormRegistrator);
   if FAILED(rep) or (FormRegistrator = niL) then
   begin
   end;
   FormRegistrator.GetFactoriesCount(@count);
-  for I := 0 to count - 1 do
+  for i := 0 to count - 1 do
   begin
     FormRegistrator.GetFactoryByIndex(f, i);
     f.GetFormTypeName(ws);
-    //f._Release;
-    if ws=c_MDBFormName then
+    // f._Release;
+    if ws = c_MDBFormName then
     begin
-      cf:=f as ICustomFactInterface;
-      int:=0;
-      (cf as ICustomFactInterface).getChild(int, mdb);
-      //(cf as ICustomFactInterface).getChild(int, mdb);
-  		// вернуть произвольное свойство tag - id того что хотим получить
+      cf := f as ICustomFactInterface;
+      int := 0; (cf as ICustomFactInterface)
+      .getChild(int, mdb);
+      // (cf as ICustomFactInterface).getChild(int, mdb);
+      // вернуть произвольное свойство tag - id того что хотим получить
       // 0: путь к испытанию 1: путь к регистрации
-      result:=(mdb as ICustomVFormInterface).GetCustomProperty(0);
+      result := (mdb as ICustomVFormInterface).GetCustomProperty(0);
     end;
   end;
 end;
 
-function getMDBRegPath:lpcstr;
+function getMDBRegPath: lpcstr;
 var
   rep: hresult;
   val: OleVariant;
   UISrv: tagVARIANT;
-  FormRegistrator:ICustomFormsRegistrator;
-  f:ICustomFormFactory;
-  cf:ICustomFactInterface;
+  FormRegistrator: ICustomFormsRegistrator;
+  f: ICustomFormFactory;
+  cf: ICustomFactInterface;
 
-  mdb:IVForm;
-  lstr:lpcstr;
+  mdb: IVForm;
+  lstr: lpcstr;
 
-  count:cardinal;
-  i:ULONG;
-  int:integer;
-  ws:widestring;
-  g:TGUID;
+  count: cardinal;
+  i: ULONG;
+  int: integer;
+  ws: widestring;
+  g: TGUID;
 begin
-  result:='';
+  result := '';
   rep := g_ir.GetProperty(RCPROP_UISERVERLINK, val);
   UISrv := tagVARIANT(val);
   if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
   begin
   end;
-  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator, FormRegistrator);
+  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,
+    FormRegistrator);
   if FAILED(rep) or (FormRegistrator = niL) then
   begin
   end;
   FormRegistrator.GetFactoriesCount(@count);
-  for I := 0 to count - 1 do
+  for i := 0 to count - 1 do
   begin
     FormRegistrator.GetFactoryByIndex(f, i);
     f.GetFormTypeName(ws);
-    //f._Release;
-    if ws=c_MDBFormName then
+    // f._Release;
+    if ws = c_MDBFormName then
     begin
-      cf:=f as ICustomFactInterface;
-      int:=0;
-  		// вернуть произвольное свойство tag - id того что хотим получить
+      cf := f as ICustomFactInterface;
+      int := 0;
+      // вернуть произвольное свойство tag - id того что хотим получить
       // 0: путь к испытанию 1: путь к регистрации
-      //mdb:=(cf as ICustomFactInterface).getChild(int);
-      lstr:='привет';
-      (cf as ICustomFactInterface).getChild(int, mdb);
-      result:=(mdb as ICustomVFormInterface).GetCustomProperty(1);
+      // mdb:=(cf as ICustomFactInterface).getChild(int);
+      lstr := 'привет'; (cf as ICustomFactInterface)
+      .getChild(int, mdb);
+      result := (mdb as ICustomVFormInterface).GetCustomProperty(1);
     end;
   end;
 end;
-
 
 procedure sendMDBNotifyMessage(notify: TMBaseNotify);
 var
@@ -239,127 +240,128 @@ end;
 procedure createFormsRecorderUIThread(compMng: cCompMng);
 var
   h: thandle;
-  str, str1:string;
-  show:boolean;
+  str, str1: string;
+  show: boolean;
 begin
-  g_delFrms:=false;
-  //FullDebugModeScanMemoryPoolBeforeEveryOperation:=true;
+  g_delFrms := false;
+  // FullDebugModeScanMemoryPoolBeforeEveryOperation:=true;
   // GetCurrentThreadId;
-  show:=false;
+  show := false;
   sleep(1000);
-  EditPropertiesFrm:=TEditPropertiesFrm.Create(nil);
-  ConfirmFmr:=TConfirmFmr.Create(nil);
+  EditPropertiesFrm := TEditPropertiesFrm.Create(nil);
+  ConfirmFmr := TConfirmFmr.Create(nil);
 
-  ControlCyclogramEditFrm := TControlCyclogramEditFrm.create(nil);
+  ControlCyclogramEditFrm := TControlCyclogramEditFrm.Create(nil);
   ControlCyclogramEditFrm.HandleNeeded;
   if show then
     ControlCyclogramEditFrm.show;
   ControlCyclogramEditFrm.close;
   ControlCyclogramEditFrm.LinkPlg(g_conmng);
 
-  CyclogramReportFrm := TCyclogramReportFrm.create(nil);
+  CyclogramReportFrm := TCyclogramReportFrm.Create(nil);
   CyclogramReportFrm.HandleNeeded;
   if show then
     CyclogramReportFrm.show;
   CyclogramReportFrm.close;
 
-  TrigsFrm := TTrigsFrm.create(nil);
+  TrigsFrm := TTrigsFrm.Create(nil);
   TrigsFrm.HandleNeeded;
   if show then
     TrigsFrm.show;
   TrigsFrm.close;
   TrigsFrm.LinkPlg(g_conmng);
 
-  ModesTabForm := TModesTabForm.create(nil);
+  ModesTabForm := TModesTabForm.Create(nil);
   ModesTabForm.HandleNeeded;
   ModesTabForm.LinkMng(g_conmng);
 
-  DownloadRegsFrm := TDownloadRegsFrm.create(nil);
+  DownloadRegsFrm := TDownloadRegsFrm.Create(nil);
   if show then
-    DownloadRegsFrm.Show;
+    DownloadRegsFrm.show;
   DownloadRegsFrm.close;
 
-  MDBFrm := TMDBFrm.create(nil);
+  MDBFrm := TMDBFrm.Create(nil);
   if show then
-    MDBFrm.Show;
+    MDBFrm.show;
   MDBFrm.close;
 
-  RcClientFrm := TRcClientFrm.create(nil);
+  RcClientFrm := TRcClientFrm.Create(nil);
   if show then
-    RcClientFrm.Show;
+    RcClientFrm.show;
   RcClientFrm.close;
 
-  SpmChartEditFrm:=TSpmChartEditFrm.Create(nil);
+  SpmChartEditFrm := TSpmChartEditFrm.Create(nil);
   if show then
-    SpmChartEditFrm.Show;
+    SpmChartEditFrm.show;
   SpmChartEditFrm.close;
 
-  EditCntlWrnFrm:=TEditCntlWrnFrm.Create(nil);
+  EditCntlWrnFrm := TEditCntlWrnFrm.Create(nil);
   if show then
-    EditCntlWrnFrm.Show;
+    EditCntlWrnFrm.show;
   EditCntlWrnFrm.close;
 
-  EditProfileFrm:=TEditProfileFrm.Create(nil);
+  EditProfileFrm := TEditProfileFrm.Create(nil);
   if show then
-    EditProfileFrm.Show;
+    EditProfileFrm.show;
   EditProfileFrm.close;
 
-  EditPolarFrm:=TEditPolarFrm.Create(nil);
+  EditPolarFrm := TEditPolarFrm.Create(nil);
   if show then
-    EditPolarFrm.Show;
+    EditPolarFrm.show;
   EditPolarFrm.close;
 
-  GenSignalsEditFrm:=tGenSignalsEditFrm.create(nil);
+  GenSignalsEditFrm := tGenSignalsEditFrm.Create(nil);
   if show then
-    GenSignalsEditFrm.Show;
+    GenSignalsEditFrm.show;
   GenSignalsEditFrm.close;
 
-  IRDiagrEditFrm:=TIRDiagrEditFrm.Create(nil);
+  IRDiagrEditFrm := TIRDiagrEditFrm.Create(nil);
   if show then
-    IRDiagrEditFrm.Show;
+    IRDiagrEditFrm.show;
   IRDiagrEditFrm.close;
 
-  EditSRSFrm:=TEditSRSFrm.Create(nil);
+  EditSRSFrm := TEditSRSFrm.Create(nil);
   if show then
-    EditSRSFrm.Show;
+    EditSRSFrm.show;
   EditSRSFrm.close;
 
-  BandsFrm:=TBandsFrm.Create(nil);
+  BandsFrm := TBandsFrm.Create(nil);
   if show then
-    BandsFrm.Show;
+    BandsFrm.show;
   BandsFrm.close;
-  if g_algMng<>nil then
-    BandsFrm.LinkBands(g_algMng.m_bands, g_algMng.m_places, g_algMng.m_TagBandPairList);
+  if g_algMng <> nil then
+    BandsFrm.LinkBands(g_algMng.m_bands, g_algMng.m_places,
+      g_algMng.m_TagBandPairList);
 
-  if g_algMng<>nil then
+  if g_algMng <> nil then
   begin
-    g_EditSyncOscFrm:=TEditSyncOscFrm.Create(nil);
+    g_EditSyncOscFrm := TEditSyncOscFrm.Create(nil);
     if show then
-      g_EditSyncOscFrm.Show;
+      g_EditSyncOscFrm.show;
     g_EditSyncOscFrm.close;
   end;
 
-  if g_algMng<>NIL then
+  if g_algMng <> NIL then
   begin
-    AlgFrm:=TAlgFrm.Create(nil);
+    AlgFrm := TAlgFrm.Create(nil);
     if show then
-      AlgFrm.Show;
+      AlgFrm.show;
     AlgFrm.close;
 
-    addAlgFrm:=TAddAlgFrm.Create(nil);
+    addAlgFrm := TAddAlgFrm.Create(nil);
     addAlgFrm.init(g_algMng);
     if show then
-      addAlgFrm.Show;
+      addAlgFrm.show;
     addAlgFrm.close;
-    g_SaveAlgsFrm:=TSaveAlgsFrm.Create(nil);
+    g_SaveAlgsFrm := TSaveAlgsFrm.Create(nil);
   end;
-  g_CreateFrms:=true;
+  g_CreateFrms := true;
 end;
 
 procedure destroyFormsRecorderUIThread(compMng: cCompMng);
 begin
   exit;
-{$IfDef DEBUG}
+{$IFDEF DEBUG}
   // удаление форм в UIThread
   // ВАЖНО!!! Первое изменение свойств формы имеет право происходить только в UIThread
   // Если произойдет в MainThread (например менять форму при загрузке объектов программы),
@@ -367,101 +369,101 @@ begin
 
   TExtRecorderPack(GPluginInstance).EList.active := false;
 
-  if ConfirmFmr<>nil then
+  if ConfirmFmr <> nil then
   begin
     ConfirmFmr.free;
     ConfirmFmr := nil;
   end;
 
-  if EditPropertiesFrm<>nil then
+  if EditPropertiesFrm <> nil then
   begin
     EditPropertiesFrm.free;
     EditPropertiesFrm := nil;
   end;
 
-  if IRDiagrEditFrm<>nil then
+  if IRDiagrEditFrm <> nil then
   begin
     IRDiagrEditFrm.free;
     IRDiagrEditFrm := nil;
   end;
 
-  if ControlCyclogramEditFrm<>nil then
+  if ControlCyclogramEditFrm <> nil then
   begin
     ControlCyclogramEditFrm.UnLinkPlg;
     ControlCyclogramEditFrm.free;
     ControlCyclogramEditFrm := nil;
   end;
 
-  if CyclogramReportFrm<>nil then
+  if CyclogramReportFrm <> nil then
   begin
     CyclogramReportFrm.free;
     CyclogramReportFrm := nil;
   end;
 
-  if TrigsFrm<>nil then
+  if TrigsFrm <> nil then
   begin
     TrigsFrm.free;
     TrigsFrm := nil;
   end;
 
-  if ModesTabForm<>nil then
+  if ModesTabForm <> nil then
   begin
     ModesTabForm.free;
     ModesTabForm := nil;
   end;
 
-  if DownloadRegsFrm<>nil then
+  if DownloadRegsFrm <> nil then
   begin
     DownloadRegsFrm.destroy;
-    DownloadRegsFrm:=nil;
+    DownloadRegsFrm := nil;
 
     MDBFrm.destroy;
-    MDBFrm:=nil;
+    MDBFrm := nil;
 
     RcClientFrm.destroy;
-    RcClientFrm:=nil;
+    RcClientFrm := nil;
   end;
 
-  if AlgFrm<>nil then
+  if AlgFrm <> nil then
   begin
-    AlgFrm.Destroy;
-    AlgFrm:=nil;
-    addAlgFrm.Destroy;
-    addAlgFrm:=nil;
-    g_SaveAlgsFrm.Destroy;
-    g_SaveAlgsFrm:=nil;
+    AlgFrm.destroy;
+    AlgFrm := nil;
+    addAlgFrm.destroy;
+    addAlgFrm := nil;
+    g_SaveAlgsFrm.destroy;
+    g_SaveAlgsFrm := nil;
   end;
-  if SpmChartEditFrm<>nil then
+  if SpmChartEditFrm <> nil then
   begin
-    SpmChartEditFrm.Destroy;
-    SpmChartEditFrm:=nil;
+    SpmChartEditFrm.destroy;
+    SpmChartEditFrm := nil;
   end;
-  if EditCntlWrnFrm<>nil then
+  if EditCntlWrnFrm <> nil then
   begin
-    EditCntlWrnFrm.Destroy;
-    EditCntlWrnFrm:=nil;
-  end;
-
-  if EditProfileFrm<>nil then
-  begin
-    EditProfileFrm.Destroy;
-    EditProfileFrm:=nil;
+    EditCntlWrnFrm.destroy;
+    EditCntlWrnFrm := nil;
   end;
 
-  if EditPolarFrm<>nil then
+  if EditProfileFrm <> nil then
   begin
-    EditPolarFrm.Destroy;
-    EditPolarFrm:=nil;
+    EditProfileFrm.destroy;
+    EditProfileFrm := nil;
   end;
 
-  if BandsFrm<>nil then
+  if EditPolarFrm <> nil then
   begin
-    BandsFrm.Destroy;
-    BandsFrm:=nil;
+    EditPolarFrm.destroy;
+    EditPolarFrm := nil;
   end;
 
-  g_delFrms:=true;
-{$EndIf}
+  if BandsFrm <> nil then
+  begin
+    BandsFrm.destroy;
+    BandsFrm := nil;
+  end;
+
+  g_delFrms := true;
+{$ENDIF}
 end;
 
 procedure createForms(compMng: cCompMng);
@@ -472,8 +474,8 @@ begin
     // СОЗДАНЫЕ ЗДЕСЬ ФОРМЫ НЕЛЬЗЯ ДЕЛАТЬ SHOWMODAL В UITHREAD
     // необходимо быть осторожным, т.к. создание формы и создание хендлоа разные события
     // если форма первый раз показана не в том же потоке где создана то будут проблеммыс удалением формы
-    TagInfoEditFrm:=TTagInfoEditFrm.Create(nil);
-    TagInfoEditFrm.Show;
+    TagInfoEditFrm := TTagInfoEditFrm.Create(nil);
+    TagInfoEditFrm.show;
     TagInfoEditFrm.close;
   end;
 end;
@@ -483,10 +485,10 @@ begin
   exit;
   if GetCurrentThreadId = MainThreadID then
   begin
-    if TagInfoEditFrm<>nil then
+    if TagInfoEditFrm <> nil then
     begin
       TagInfoEditFrm.destroy;
-      TagInfoEditFrm:=nil;
+      TagInfoEditFrm := nil;
     end;
   end;
 end;
@@ -495,113 +497,118 @@ procedure createComponents(compMng: cCompMng);
 var
   fact: cControlFactory;
   Basefact: cMBaseFactory;
-  cfg, dir, fname:string;
-  astr:AnsiString;
-  np:cNonifyProcessor;
-  i:integer;
+  cfg, dir, fname: string;
+  astr: AnsiString;
+  np: cNonifyProcessor;
+  i: integer;
 begin
-  g_OscFactory := TOscilFact.create;
+  g_OscFactory := TOscilFact.Create;
   compMng.Add(g_OscFactory);
 
-  fact := cControlFactory.create;
+  fact := cControlFactory.Create;
   compMng.Add(fact);
   // Управление базой данных
-  Basefact := cMBaseFactory.create;
+  Basefact := cMBaseFactory.Create;
   compMng.Add(Basefact);
 
-  g_SpmFactory := cSpmFactory.create;
+  g_SpmFactory := cSpmFactory.Create;
   compMng.Add(g_SpmFactory);
 
-  g_CtrlWrnFactory := cCtrlWrnFactory.create;
+  g_CtrlWrnFactory := cCtrlWrnFactory.Create;
   compMng.Add(g_CtrlWrnFactory);
 
-  g_CursorFactory := cCursorFactory.create;
+  g_CursorFactory := cCursorFactory.Create;
   compMng.Add(g_CursorFactory);
 
-  g_PolarFactory:=cPolarFactory.create;
+  g_PolarFactory := cPolarFactory.Create;
   compMng.Add(g_PolarFactory);
 
-  g_TagInfoFactory:=cTagInfoFactory.create;
+  g_TagInfoFactory := cTagInfoFactory.Create;
   compMng.Add(g_TagInfoFactory);
 
-  g_IRDiagramFactory:=cIRDiagramFactory.create;
+  g_IRDiagramFactory := cIRDiagramFactory.Create;
   compMng.Add(g_IRDiagramFactory);
 
-  g_SRSFactory:=cSRSFactory.create;
+  g_SRSFactory := cSRSFactory.Create;
   compMng.Add(g_SRSFactory);
 
-  g_GenSignalsFactory:=cGenSignalsFactory.create;
+  g_GenSignalsFactory := cGenSignalsFactory.Create;
   compMng.Add(g_GenSignalsFactory);
 
-  g_ObjFrm3dFactory:=cObjFrm3dFactory.create;
+  g_ObjFrm3dFactory := cObjFrm3dFactory.Create;
   compMng.Add(g_ObjFrm3dFactory);
-  g_ObjFrm3dEdit:=TObjFrm3dEdit.Create(nil);
-
+  g_ObjFrm3dEdit := TObjFrm3dEdit.Create(nil);
 
   cfg := extractfiledir(getRConfig);
-  i:=0;
+  i := 0;
   if DirectoryExists(cfg) then
   begin
-    dir:=cfg+'\logs\';
+    dir := cfg + '\logs\';
     if not DirectoryExists(dir) then
     begin
       ForceDirectories(dir);
     end;
-    fname:=dir+'ControlCyclogramLog_'+inttostr(i)+'.log';
+    fname := dir + 'ControlCyclogramLog_' + inttostr(i) + '.log';
     while FileExists(fname) do
     begin
       inc(i);
-      fname:=dir+'ControlCyclogramLog_'+inttostr(i)+'.log';
+      fname := dir + 'ControlCyclogramLog_' + inttostr(i) + '.log';
     end;
     g_logFile := cLogFile.Create(fname, ';');
-    g_logFile.m_Rewrite:=false;
+    g_logFile.m_Rewrite := false;
   end;
 
   // создание объектов движка
-  g_conmng := cControlMng.create;
-  uControlsNP.createNP;
+  g_conmng := cControlMng.Create;
+  uControlsNp.createNP;
 
-  np:=cMBaseAlgNP.create;
+  np := cMBaseAlgNP.Create;
 
-  g_PressCamFactory := cPressCamFactory.create;
+  g_PressCamFactory := cPressCamFactory.Create;
   compMng.Add(g_PressCamFactory);
-  PressFrmEdit:=TPressFrmEdit.Create(nil);
+  g_PressCamFactory2 := cPressCamFactory2.Create;
+  compMng.Add(g_PressCamFactory2);
+
+
+  PressFrmEdit := TPressFrmEdit.Create(nil);
 
   TExtRecorderPack(GPluginInstance).m_nplist.AddNP(np);
 end;
 
 procedure destroyEngine;
 begin
- if true then exit;
- // обьявле в начале проекта
- {$IfDef DEBUG}
+  if true then
+    exit;
+  // обьявле в начале проекта
+{$IFDEF DEBUG}
   if g_conmng <> nil then
   begin
     g_conmng.clear;
     g_conmng.destroy;
     g_conmng := nil;
   end;
-  if g_algMng<>nil then
+  if g_algMng <> nil then
   begin
     g_algMng.destroy;
-    g_algMng:=nil;
+    g_algMng := nil;
   end;
-{$EndIf}
+{$ENDIF}
 end;
 
 function ProcessShowVersionInfo(pMsgInfo: PCB_MESSAGE): boolean;
 var
   str: string;
 begin
-  //str := GPluginInfo.Name + #13#10 + #13#10 + GPluginInfo.Dsc + #13#10 +
-  //  'Версия ' + IntToStr(GPluginInfo.Version) + '.' + IntToStr
-  //  (GPluginInfo.SubVertion) + #13#10 + #13#10 + GPluginInfo.Vendor + ', 2017';
-  str := GPluginInfo.Name +char(0) +char(0) + char(0) + GPluginInfo.Dsc + char(0) +
-    'Версия ' + IntToStr(GPluginInfo.Version) + '.' + IntToStr
-    (GPluginInfo.SubVertion) + char(0) + char(0) + GPluginInfo.Vendor + ', 2017';
-  MessageBox(0, PChar(str), 'Информация о модуле', MB_OK + MB_ICONINFORMATION + MB_APPLMODAL + MB_TOPMOST);
+  // str := GPluginInfo.Name + #13#10 + #13#10 + GPluginInfo.Dsc + #13#10 +
+  // 'Версия ' + IntToStr(GPluginInfo.Version) + '.' + IntToStr
+  // (GPluginInfo.SubVertion) + #13#10 + #13#10 + GPluginInfo.Vendor + ', 2017';
+  str := GPluginInfo.Name + char(0) + char(0) + char(0) + GPluginInfo.Dsc + char
+    (0) + 'Версия ' + inttostr(GPluginInfo.Version) + '.' + inttostr
+    (GPluginInfo.SubVertion) + char(0) + char(0)
+    + GPluginInfo.Vendor + ', 2017';
+  MessageBox(0, PChar(str), 'Информация о модуле',
+    MB_OK + MB_ICONINFORMATION + MB_APPLMODAL + MB_TOPMOST);
   result := true;
 end;
 
 end.
-

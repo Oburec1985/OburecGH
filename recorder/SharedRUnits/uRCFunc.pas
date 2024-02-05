@@ -163,6 +163,7 @@ type
     function GetMeanEst: double;
     function GetRMSEst: double;
     function GetPeakEst: double;
+    function GetMaxYValue: double;
     // возвращает время i-о отсчета в m_readData/ в зависимости от типа тега по разному
     // реализует расчет времени
     function getReadTime(i: integer): double;
@@ -1100,6 +1101,14 @@ end;
 function cTag.GetDefaultEst: double;
 begin
   result := tag.GetEstimate(ESTIMATOR_DEFAULT);
+end;
+
+function cTag.GetMaxYValue: double;
+var
+  v: OleVariant;
+begin
+  tag.GetProperty(TAGPROP_MAXVALUE,   v);
+  result := v;
 end;
 
 function cTag.GetMeanEst: double;

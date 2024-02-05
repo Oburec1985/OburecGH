@@ -1,4 +1,4 @@
-object PressFrmFrame: TPressFrmFrame
+object PressFrmFrame2: TPressFrmFrame2
   Left = 0
   Top = 0
   Width = 451
@@ -8,29 +8,22 @@ object PressFrmFrame: TPressFrmFrame
   DesignSize = (
     451
     304)
-  object BandLabel: TLabel
-    Left = 1
-    Top = 4
-    Width = 21
-    Height = 16
-    Caption = 'B_1'
-  end
   object ALabel: TLabel
-    Left = 37
+    Left = 5
     Top = 4
     Width = 20
     Height = 16
     Caption = 'A1:'
   end
   object FLabel: TLabel
-    Left = 126
+    Left = 94
     Top = 4
     Width = 19
     Height = 16
     Caption = 'F1:'
   end
   object FreqEdit: TEdit
-    Left = 62
+    Left = 30
     Top = 3
     Width = 60
     Height = 24
@@ -39,7 +32,7 @@ object PressFrmFrame: TPressFrmFrame
     Text = 'FreqEdit'
   end
   object AmpE: TEdit
-    Left = 148
+    Left = 116
     Top = 3
     Width = 62
     Height = 24
@@ -48,9 +41,9 @@ object PressFrmFrame: TPressFrmFrame
     Text = 'FreqEdit'
   end
   object ProgrBar: TProgressBar
-    Left = 212
+    Left = 184
     Top = 3
-    Width = 232
+    Width = 260
     Height = 25
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 2

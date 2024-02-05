@@ -451,6 +451,16 @@
 				<Form>TransformToolsFrame</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
+			<DCCReference Include="forms\uPressFrm2.pas">
+				<Form>PressFrm2</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uPressFrmFrame2.pas">
+				<Form>PressFrmFrame2</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="forms\uPressFrmEdit2.pas">
+				<Form>PressFrmEdit2</Form>
+			</DCCReference>
 			<DCCReference Include="forms\uPressFrm.pas">
 				<Form>PressCamFrm</Form>
 			</DCCReference>

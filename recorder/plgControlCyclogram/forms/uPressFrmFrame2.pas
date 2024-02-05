@@ -1,4 +1,4 @@
-unit uPressFrmFrame;
+unit uPressFrmFrame2;
 
 interface
 
@@ -29,23 +29,20 @@ uses
   uSpm;
 
 type
-  TPressFrmFrame = class(TFrame)
-    BandLabel: TLabel;
+  TPressFrmFrame2 = class(TFrame)
     FreqEdit: TEdit;
     AmpE: TEdit;
     ProgrBar: TProgressBar;
     ALabel: TLabel;
     FLabel: TLabel;
   private
-    // TPressfrm2
-    m_frm:tform;
+    m_frm:TForm;
     m_s:cSpm; // спектр по которому идет расчет
     finit:boolean;
     // цвет PBar
     defaultcolor:tcolor;
   public
     // начало и конец полосы
-    m_f1, m_f2:double;
     m_if1, m_if2:integer;
     // средн амп, главные амплитуда и частота в полосе
     m_A,m_Max, m_f:double;
@@ -53,6 +50,10 @@ type
     m_RefAmpManual:double;
   protected
     procedure setspm(s:cspm);
+    function f1:double;
+    function f2:double;
+    function hh:double;
+    function h:double;
   public
     procedure Prepare;
     procedure Stop;
@@ -67,18 +68,20 @@ type
     c_digs = 2;
 
 implementation
+uses
+  uPressFrm2;
 
 {$R *.dfm}
 
 { TPressFrmFrame }
 
-constructor TPressFrmFrame.create(aowner: tcomponent);
+constructor TPressFrmFrame2.create(aowner: tcomponent);
 begin
   inherited;
   defaultcolor:=ProgrBar.Brush.Color;
 end;
 
-procedure TPressFrmFrame.Eval;
+procedure TPressFrmFrame2.Eval;
 var
   I, imax: Integer;
   v, max, sum:double;
@@ -100,7 +103,27 @@ begin
   m_A:=sum/(m_if2-m_if1);
 end;
 
-procedure TPressFrmFrame.Prepare;
+function TPressFrmFrame2.f1: double;
+begin
+  result:=TPressFrm2(m_frm).m_f1;
+end;
+
+function TPressFrmFrame2.f2: double;
+begin
+  result:=TPressFrm2(m_frm).m_f2;
+end;
+
+function TPressFrmFrame2.h: double;
+begin
+  result:=TPressFrm2(m_frm).m_h;
+end;
+
+function TPressFrmFrame2.hh: double;
+begin
+  result:=TPressFrm2(m_frm).m_hh;
+end;
+
+procedure TPressFrmFrame2.Prepare;
 begin
   if m_s<>nil then
   begin
@@ -113,22 +136,22 @@ begin
     begin
       m_RefAmp:=m_RefAmpManual;
     end;
-    m_if1:=m_s.getIndByX(m_f1);
-    m_if2:=m_s.getIndByX(m_f2);
+    m_if1:=m_s.getIndByX(f1);
+    m_if2:=m_s.getIndByX(f2);
   end;
 end;
 
-procedure TPressFrmFrame.setspm(s: cspm);
+procedure TPressFrmFrame2.setspm(s: cspm);
 begin
   m_s:=s;
 end;
 
-procedure TPressFrmFrame.Stop;
+procedure TPressFrmFrame2.Stop;
 begin
   finit:=false;
 end;
 
-procedure TPressFrmFrame.updateView;
+procedure TPressFrmFrame2.updateView;
 begin
   if finit then
   begin

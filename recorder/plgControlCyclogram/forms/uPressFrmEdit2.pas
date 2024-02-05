@@ -1,19 +1,17 @@
-unit uPressFrmEdit;
+unit uPressFrmEdit2;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Grids, uStringGridExt, DCL_MYOWN, Spin, StdCtrls, uRcCtrls,
-  uTagsListFrame, Buttons, ExtCtrls, uComponentservises,
+  uTagsListFrame, Buttons, ExtCtrls, uComponentservises, ComCtrls,
   Tags, uCommonMath, uRCFunc, uPressFrm, uPressFrmFrame;
 
 type
-  TPressFrmEdit = class(TForm)
+  TPressFrmEdit2 = class(TForm)
     TagsListFrame1: TTagsListFrame;
     alClientGB: TGroupBox;
-    TagnameCB: TRcComboBox;
-    TagLabel: TLabel;
     FFTCountEdit: TIntEdit;
     FFTCountSpinBtn: TSpinButton;
     FFTCountLabel: TLabel;
@@ -28,8 +26,7 @@ type
     HHLabel: TLabel;
     HLabel: TLabel;
     HFE: TFloatEdit;
-    MaxFE: TFloatEdit;
-    Label2: TLabel;
+    TagsLB: TListBox;
     procedure FFTCountSpinBtnDownClick(Sender: TObject);
     procedure FFTCountSpinBtnUpClick(Sender: TObject);
     procedure UpdateAlgBtnClick(Sender: TObject);
@@ -38,6 +35,9 @@ type
     procedure BandSGKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure BandSGSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
+    procedure TagsLBDragOver(Sender, Source: TObject; X, Y: Integer;
+      State: TDragState; var Accept: Boolean);
+    procedure TagsLBDragDrop(Sender, Source: TObject; X, Y: Integer);
   private
     m_init,
     m_manualB:boolean;
@@ -53,14 +53,14 @@ type
   end;
 
 var
-  PressFrmEdit: TPressFrmEdit;
+  PressFrmEdit2: TPressFrmEdit2;
 
 implementation
 
 {$R *.dfm}
 
 { TPressFrmEdit }
-procedure TPressFrmEdit.BandSGKeyDown(Sender: TObject; var Key: Word;
+procedure TPressFrmEdit2.BandSGKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
   str:string;
@@ -82,30 +82,60 @@ begin
   end;
 end;
 
-function TPressFrmEdit.getframe(i: integer): TPressFrmFrame;
+function TPressFrmEdit2.getframe(i: integer): TPressFrmFrame;
 begin
   result:=TPressFrmFrame(m_pf.BGraphFrames[i]);
 end;
 
-procedure TPressFrmEdit.BandSGSelectCell(Sender: TObject; ACol, ARow: Integer;
+procedure TPressFrmEdit2.TagsLBDragDrop(Sender, Source: TObject; X, Y: Integer);
+var
+  I: Integer;
+  t:itag;
+  li:tlistitem;
+begin
+  for I := 0 to tagslistframe1.tagsLV.SelCount - 1 do
+  begin
+    if i=0 then
+    begin
+      li:=tagslistframe1.tagsLV.Selected;
+    end
+    else
+    begin
+      tagslistframe1.tagsLV.GetNextItem(li,sdAll,[isSelected]);
+    end;
+    t:=itag(li.data);
+    tagslb.AddItem(t.GetName, nil);
+  end;
+end;
+
+procedure TPressFrmEdit2.TagsLBDragOver(Sender, Source: TObject; X, Y: Integer;
+  State: TDragState; var Accept: Boolean);
+begin
+  if source=tagslistframe1.tagslv then
+  begin
+    Accept:=true;
+  end;
+end;
+
+procedure TPressFrmEdit2.BandSGSelectCell(Sender: TObject; ACol, ARow: Integer;
   var CanSelect: Boolean);
 begin
   m_row:=arow;
   m_col:=acol;
 end;
 
-procedure TPressFrmEdit.BCountSBDownClick(Sender: TObject);
+procedure TPressFrmEdit2.BCountSBDownClick(Sender: TObject);
 begin
   BCountIE.IntNum:=BCountIE.IntNum-1;
 end;
 
-procedure TPressFrmEdit.BCountSBUpClick(Sender: TObject);
+procedure TPressFrmEdit2.BCountSBUpClick(Sender: TObject);
 begin
 
   BCountIE.IntNum:=BCountIE.IntNum+1;
 end;
 
-constructor TPressFrmEdit.create(c: tcomponent);
+constructor TPressFrmEdit2.create(c: tcomponent);
 begin
   inherited;
   m_init:=false;
@@ -114,7 +144,7 @@ begin
   BandSG.Cells[1,0]:='F2';
 end;
 
-procedure TPressFrmEdit.EditPressFrm(Pf: TPressCamFrm);
+procedure TPressFrmEdit2.EditPressFrm(Pf: TPressCamFrm);
 var
   p: TNotifyEvent;
   props:string;
@@ -129,7 +159,6 @@ begin
     m_init:=true;
     TagsListFrame1.ShowVectortags:=true;
     TagsListFrame1.ShowChannels;
-    TagnameCB.updateTagsList;
   end;
   props:=g_PressCamFactory.m_spmCfg.str;
   str := GetParam(props, 'FFTCount');
@@ -146,52 +175,42 @@ begin
   BandSG.RowCount:=Pf.BandCount+1;
   if t<>nil then
   begin
-    TagnameCB.SetTagName(str);
     for I := 0 to Pf.BandCount - 1 do
     begin
       BandSG.Cells[0,i+1]:=floattostr(TPressFrmFrame(pf.BGraphFrames[i]).m_f1);
       BandSG.Cells[1,i+1]:=floattostr(TPressFrmFrame(pf.BGraphFrames[i]).m_f2);
     end;
     sgchange(BandSG);
-    // пороги
-    if pf.m_RefAmp<>0 then
-    begin
-      MaxFE.FloatNum:=m_pf.m_RefAmp
-    end
-    else
-    begin
-      MaxFE.FloatNum:=t.GetYRange;
-    end;
   end;
   if ShowModal=mrok then
   begin
     updateBands;
-    m_pf.SensorName:=TagnameCB.text;
-    m_pf.m_Spm.Properties:='Channel='+TagnameCB.text+','+'FFTCount='+FFTCountEdit.text+',';
-    m_pf.BarGraphGB.Caption:=str;
+    //m_pf.SensorName:=TagnameCB.text;
+    //m_pf.m_Spm.Properties:='Channel='+TagnameCB.text+','+'FFTCount='+FFTCountEdit.text+',';
+    //m_pf.BarGraphGB.Caption:=str;
   end;
 end;
 
-procedure TPressFrmEdit.FFTCountSpinBtnDownClick(Sender: TObject);
+procedure TPressFrmEdit2.FFTCountSpinBtnDownClick(Sender: TObject);
 begin
   if FFTCountEdit.IntNum > 2 then
     FFTCountEdit.IntNum := round(FFTCountEdit.IntNum / 2);
   updateFFTnum;
 end;
 
-procedure TPressFrmEdit.FFTCountSpinBtnUpClick(Sender: TObject);
+procedure TPressFrmEdit2.FFTCountSpinBtnUpClick(Sender: TObject);
 begin
   if FFTCountEdit.IntNum > 2 then
     FFTCountEdit.IntNum := FFTCountEdit.IntNum * 2;
   updateFFTnum;
 end;
 
-procedure TPressFrmEdit.UpdateAlgBtnClick(Sender: TObject);
+procedure TPressFrmEdit2.UpdateAlgBtnClick(Sender: TObject);
 begin
   ModalResult:=mrok;
 end;
 
-procedure TPressFrmEdit.updateBands;
+procedure TPressFrmEdit2.updateBands;
 var
   I: Integer;
   fr:TPressFrmFrame;
@@ -217,11 +236,11 @@ begin
   end;
 end;
 
-procedure TPressFrmEdit.updateFFTnum;
+procedure TPressFrmEdit2.updateFFTnum;
 var
   t:itag;
 begin
-  t:=TagnameCB.gettag;
+  t:=getTagByName(TagsLB.Items[0]);
   if t<>nil then
     fftdx.FloatNum := FFTCountEdit.IntNum/t.GetFreq;
 end;
