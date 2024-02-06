@@ -65,6 +65,7 @@ type
 
   const
     c_digs = 2;
+    sqrt2 = 1.4142135623730950488016887242097;
 
 implementation
 uses
@@ -161,15 +162,25 @@ end;
 
 procedure TPressFrmFrame2.updateView;
 var
-  r:double;
+  r, v:double;
 begin
   if finit then
   begin
-    FreqEdit.Text:=formatstrnoe(m_Max, c_digs);
-    AmpE.Text:=formatstrnoe(m_f, c_digs);
-    // используем реф первого датчика
-    r:=g_PressCamFactory2.GetRef(0);
-    ProgrBar.Position:=round(100*m_Max/r);
+    if g_PressCamFactory2.m_typeRes=0 then
+    begin
+      v:=m_Max;
+      // используем реф первого датчика
+      r:=g_PressCamFactory2.GetRef(0)/sqrt2;
+    end
+    else  // p-p
+    begin
+      v:=m_Max*sqrt2*2;
+      r:=g_PressCamFactory2.GetRef(0)*2;
+    end;
+    FreqEdit.Text:=formatstrnoe(m_f, c_digs);
+    AmpE.Text:=formatstrnoe(v, c_digs);
+
+    ProgrBar.Position:=round(100*v/r);
     if m_Max>r*hh then
     begin
       ProgrBar.Brush.Color := clred;

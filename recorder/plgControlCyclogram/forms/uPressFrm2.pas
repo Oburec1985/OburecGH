@@ -52,8 +52,8 @@ type
     PopupMenu1: TPopupMenu;
     N1: TMenuItem;
     SaveBtn: TSpeedButton;
-    PressFrmFrame21: TPressFrmFrame2;
     OpenBtn: TButton;
+    PressFrmFrame21: TPressFrmFrame2;
     procedure N1Click(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
     procedure OpenBtnClick(Sender: TObject);
@@ -116,6 +116,9 @@ type
     m_Manualref:boolean;
     // список ref для каждого датчика
     m_refArray:array of double;
+    //
+    m_createTags:boolean;
+    m_typeRes:integer;
   private
     // число дочерних компонентов
     m_counter: integer;
@@ -544,10 +547,13 @@ var
   I: Integer;
 begin
   M_InitBands:=true;
-  for I := 0 to Length(m_bands) - 1 do
+  if s<>nil then
   begin
-    m_bands[i].i1:=s.getIndByX(m_bands[i].f1);
-    m_bands[i].i2:=s.getIndByX(m_bands[i].f2);
+    for I := 0 to Length(m_bands) - 1 do
+    begin
+      m_bands[i].i1:=s.getIndByX(m_bands[i].f1);
+      m_bands[i].i2:=s.getIndByX(m_bands[i].f2);
+    end;
   end;
 end;
 
@@ -908,6 +914,9 @@ begin
     g_PressCamFactory2.m_spmCfg.str:='FFTCount='+inttostr(c);
     g_PressCamFactory2.BandCount:=a_pIni.ReadInteger('PressCamFactory2', 'BandCount', 0);
     g_PressCamFactory2.m_manualBand:=a_pIni.ReadBool('PressCamFactory2', 'ManualBand', false);
+    g_PressCamFactory2.m_typeRes:=a_pIni.ReadInteger('PressCamFactory2', 'TypeRes', 0);
+    g_PressCamFactory2.m_createTags:=a_pIni.ReadBool('PressCamFactory2', 'CreateTags', false);
+
     if g_PressCamFactory2.m_manualBand then
     begin
       s:=a_pIni.ReadString('PressCamFactory2', 'Bands', '');
@@ -953,6 +962,9 @@ begin
     a_pIni.WriteInteger('PressCamFactory2', 'FFTCount', strtoint(lstr));
     a_pIni.WriteInteger('PressCamFactory2', 'BandCount', g_PressCamFactory2.BandCount);
     a_pIni.WriteBool('PressCamFactory2', 'ManualBand', g_PressCamFactory2.m_manualBand);
+
+    a_pIni.WriteInteger('PressCamFactory2', 'TypeRes', g_PressCamFactory2.m_typeRes);
+    a_pIni.WriteBool('PressCamFactory2', 'CreateTags', g_PressCamFactory2.m_createTags);
     if g_PressCamFactory2.m_manualBand then
     begin
       a_pIni.WriteString('PressCamFactory2', 'Bands', g_PressCamFactory2.BandsToStr);

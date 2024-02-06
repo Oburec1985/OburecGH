@@ -33,6 +33,9 @@ type
     BNumSB: TSpinButton;
     Label1: TLabel;
     RefFE: TFloatEdit;
+    TypeResCB: TComboBox;
+    Label2: TLabel;
+    CreateTagsCB: TCheckBox;
     procedure FFTCountSpinBtnDownClick(Sender: TObject);
     procedure FFTCountSpinBtnUpClick(Sender: TObject);
     procedure UpdateAlgBtnClick(Sender: TObject);
@@ -275,6 +278,8 @@ begin
   if ShowModal=mrok then
   begin
     updateBands;
+    g_PressCamFactory2.m_createTags:=CreateTagsCB.Checked;
+    g_PressCamFactory2.m_typeRes:=TypeResCB.ItemIndex;
     g_PressCamFactory2.CreateAlg(TagsLB.Items);
     g_PressCamFactory2.CreateFrames;
     g_PressCamFactory2.m_spmCfg.str:='FFTCount='+FFTCountEdit.text;
