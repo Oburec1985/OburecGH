@@ -24,7 +24,8 @@ type
     BCountLabel: TLabel;
     BandSG: TStringGridExt;
     Panel1: TPanel;
-    UpdateAlgBtn: TSpeedButton;          HHFE: TFloatEdit;
+    UpdateAlgBtn: TSpeedButton;
+    HHFE: TFloatEdit;
     HHLabel: TLabel;
     HLabel: TLabel;
     HFE: TFloatEdit;

@@ -316,6 +316,8 @@ object PressCamFrm: TPressCamFrm
         TabOrder = 0
         ExplicitLeft = 1
         ExplicitTop = 1
+        ExplicitWidth = 350
+        ExplicitHeight = 45
         inherited BandLabel: TLabel
           Width = 24
           Height = 17

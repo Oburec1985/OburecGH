@@ -1107,8 +1107,13 @@ function cTag.GetMaxYValue: double;
 var
   v: OleVariant;
 begin
-  tag.GetProperty(TAGPROP_MAXVALUE,   v);
-  result := v;
+  if tag<>nil then
+  begin
+    tag.GetProperty(TAGPROP_MAXVALUE,   v);
+    result := v;
+  end
+  else
+    result:=0;
 end;
 
 function cTag.GetMeanEst: double;

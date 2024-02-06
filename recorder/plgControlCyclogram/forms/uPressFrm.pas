@@ -615,6 +615,7 @@ begin
     p.Align:=alTop;
     p.Width:=BarPanel.Width;
     p.Height:=BarPanel.Height;
+
     fr:=TPressFrmFrame.Create(nil);
     fr.name:=fr.classname+'_'+inttostr(i);
     fr.Parent:=p;
