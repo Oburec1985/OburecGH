@@ -328,6 +328,8 @@ procedure TPressFrmEdit2.updateFFTnum;
 var
   t:itag;
 begin
+  if TagsLB.Items.Count=0 then exit;
+
   t:=getTagByName(TagsLB.Items[0]);
   if t<>nil then
     fftdx.FloatNum := FFTCountEdit.IntNum/t.GetFreq;

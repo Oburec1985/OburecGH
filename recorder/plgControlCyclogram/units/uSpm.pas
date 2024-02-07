@@ -43,6 +43,7 @@ type
     // блок данных по которому идет расчет. Не работает по m_spmData, т.к. может содержать дополнения нулями
     // на сам деле не обязательно выранивать по 16 байтам тк не принимает участиев SSE расчетах
     m_EvalBlock: TAlignDarray;
+    // спектр амплитуд (по факту не СКО)
     m_rms: TAlignDarray;
   protected
     // timestamp текущего спектра/ кольцевой буфер
@@ -594,6 +595,7 @@ begin
       m_tag := cTag.create;
       t := getTagByName(lstr);
       setinptag(t);
+      changed := true;
     end;
     if ChangeCTag(m_tag, lstr) then
       changed := true;

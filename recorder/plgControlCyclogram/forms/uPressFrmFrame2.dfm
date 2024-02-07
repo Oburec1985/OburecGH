@@ -11,39 +11,39 @@ object PressFrmFrame2: TPressFrmFrame2
   object ALabel: TLabel
     Left = 5
     Top = 4
-    Width = 17
-    Height = 13
+    Width = 20
+    Height = 16
     Caption = 'A1:'
   end
   object FLabel: TLabel
-    Left = 94
+    Left = 75
     Top = 4
-    Width = 16
-    Height = 13
+    Width = 19
+    Height = 16
     Caption = 'F1:'
   end
   object FreqEdit: TEdit
-    Left = 30
+    Left = 27
     Top = 3
-    Width = 60
+    Width = 43
     Height = 24
     ReadOnly = True
     TabOrder = 0
     Text = '0'
   end
   object AmpE: TEdit
-    Left = 116
+    Left = 97
     Top = 3
-    Width = 62
+    Width = 45
     Height = 24
     ReadOnly = True
     TabOrder = 1
     Text = '0'
   end
   object ProgrBar: TProgressBar
-    Left = 184
+    Left = 148
     Top = 3
-    Width = 260
+    Width = 296
     Height = 25
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 2

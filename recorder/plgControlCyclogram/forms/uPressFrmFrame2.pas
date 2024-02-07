@@ -91,6 +91,7 @@ var
 begin
   max:=0;
   sum:=0;
+  imax:=-1;
   for I := g_PressCamFactory2.m_bands[bnum].i1 to g_PressCamFactory2.m_bands[bnum].i2 do
   begin
     v:=tdoubleArray(m_s.m_rms.p)[i];
@@ -104,6 +105,13 @@ begin
   m_Max:=max;
   m_f:=m_s.SpmDx*imax;
   m_A:=sum/(g_PressCamFactory2.m_bands[bnum].i2-g_PressCamFactory2.m_bands[bnum].i1);
+  if g_PressCamFactory2.m_createTags then
+  begin
+    if g_PressCamFactory2.m_tagsinit then
+    begin
+      g_PressCamFactory2.pushTag(m_s.m_tag.tagname ,bnum, m_max);
+    end;
+  end;
 end;
 
 function TPressFrmFrame2.f1: double;
@@ -166,15 +174,16 @@ var
 begin
   if finit then
   begin
+    // rms
     if g_PressCamFactory2.m_typeRes=0 then
     begin
-      v:=m_Max;
+      v:=m_Max/sqrt2;
       // используем реф первого датчика
       r:=g_PressCamFactory2.GetRef(0)/sqrt2;
     end
     else  // p-p
     begin
-      v:=m_Max*sqrt2*2;
+      v:=m_Max*2;
       r:=g_PressCamFactory2.GetRef(0)*2;
     end;
     FreqEdit.Text:=formatstrnoe(m_f, c_digs);
