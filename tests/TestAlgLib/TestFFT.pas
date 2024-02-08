@@ -10,7 +10,7 @@ uses
   uHardwareMath,
   uFFT,
   usetlist,
-  fft, fht, Ap;
+  fft, fht, Ap, DCL_MYOWN, ComCtrls;
 
 // AVal - массив анализируемых данных, Nvl - длина массива, должна быть кратна степени 2.
 // FTvl - массив полученных значений, Nft - длина массива, должна быть равна Nvl / 2 или меньше.
@@ -26,11 +26,16 @@ type
     AlgLib: TButton;
     SSEBtn: TButton;
     ListBox1: TListBox;
+    ProgrBar: TProgressBar;
+    IntEdit1: TIntEdit;
+    IntEdit2: TIntEdit;
     procedure Button1Click(Sender: TObject);
     procedure AlgLibClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure SSEBtnClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure IntEdit1Change(Sender: TObject);
+    procedure IntEdit2Change(Sender: TObject);
   private
     rezSignals:tstringlist;
     FFTProp:TFFTProp;
@@ -220,6 +225,16 @@ begin
   FFTProp.PCount:=fcount;
   GetFFTExpTable(FCount, false, tcmxArray_d(FFTProp.TableExp.p));
   FFTProp.TableInd := GetArrayIndex(FCount, 2);
+end;
+
+procedure TForm1.IntEdit1Change(Sender: TObject);
+begin
+  ProgrBar.Max:=IntEdit1.IntNum;
+end;
+
+procedure TForm1.IntEdit2Change(Sender: TObject);
+begin
+  ProgrBar.Position:=IntEdit2.IntNum;
 end;
 
 procedure TForm1.SSEBtnClick(Sender: TObject);

@@ -26,16 +26,16 @@ uses
   uBaseAlg,
   MathFunction,
   uHardwareMath,
-  uSpm;
+  uSpm, rkVistaProBar, Gauges;
 
 type
 
   TPressFrmFrame2 = class(TFrame)
     FreqEdit: TEdit;
     AmpE: TEdit;
-    ProgrBar: TProgressBar;
     ALabel: TLabel;
     FLabel: TLabel;
+    ProgrBar: TGauge;
   private
     m_s:cSpm; // спектр по которому идет расчет
     finit:boolean;
@@ -64,7 +64,7 @@ type
   end;
 
   const
-    c_digs = 2;
+    c_digs = 3;
     sqrt2 = 1.4142135623730950488016887242097;
 
 implementation
@@ -175,7 +175,7 @@ begin
   if finit then
   begin
     // rms
-    if g_PressCamFactory2.m_typeRes=0 then
+    if g_PressCamFactory2.m_typeRes=0 then // СКО
     begin
       v:=m_Max/sqrt2;
       // используем реф первого датчика
@@ -189,22 +189,25 @@ begin
     FreqEdit.Text:=formatstrnoe(m_f, c_digs);
     AmpE.Text:=formatstrnoe(v, c_digs);
 
-    ProgrBar.Position:=round(100*v/r);
+    ProgrBar.Progress:=round(ProgrBar.MaxValue*v/r);
+    ProgrBar.ShowHint:=true;
+    ProgrBar.Hint:='max='+floattostr(ProgrBar.MaxValue)+' v=' +floattostr(v)+' r='+floattostr(r);
     if m_Max>r*hh then
     begin
-      ProgrBar.Brush.Color := clred;
+      //ProgrBar.forBrush.Color := clred;
       // CommCtrl
-      SendMessage (ProgrBar.Handle, PBM_SETBARCOLOR, 0, clred);
+      ProgrBar.Color:=clred;
+      //SendMessage (ProgrBar.Handle, PBM_SETBARCOLOR, 0, clred);
     end
     else
     begin
       if m_Max>h*r then
       begin
-        SendMessage (ProgrBar.Handle, PBM_SETBARCOLOR, 0, clYellow);
+        ProgrBar.Color:=clYellow;
       end
       else
       begin
-        SendMessage (ProgrBar.Handle, PBM_SETBARCOLOR, 0, clBlue);
+        ProgrBar.Color:=clBlue;
       end;
     end;
   end;

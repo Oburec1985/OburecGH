@@ -514,9 +514,9 @@ Function OpenWorkBook(file_:string):boolean;
 begin
   OpenWorkBook:=true;
   try
-  E.Workbooks.Open(file_);
+    E.Workbooks.Open(file_);
   except
-  OpenWorkBook:=false;
+    OpenWorkBook:=false;
   end;
 End;
 
@@ -1567,62 +1567,6 @@ begin
   dst.PasteSpecial(xlColumnWidths);
 end;
 
-  // сливаем диапазоны
-  {x:=rng.rows.count;
-  y:=rng.columns.count;
-  ix:=1;
-  iy:=1;
-  copiedrng:=tstringlist.Create;
-  copiedrng.Sorted:=true;
-  for I := ix to x do
-  begin
-    for j := iy to y do
-    begin
-      rngcell:=GetRangeObj(ss, point(i,j),point(i,j));
-      mergedRng:=rngcell.MergeArea;
-      if (mergedRng.rows.count>1) or (mergedRng.columns.count>1) then
-      begin
-        if not copiedrng.Find(mergedRng.address, ind) then
-        begin
-          dst_mr:=GetRange(pageDst, mergedRng.address);
-          dst_mr.MergeCells:=true;
-        end
-        else
-        begin
-          copiedrng.Add(mergedRng.name);
-        end;
-      end;
-    end;
-  end;
-  copiedrng.Destroy;}
-  // сливаем диапазоны
-  {x:=rng.rows.count;
-  y:=rng.columns.count;
-  ix:=1;
-  iy:=1;
-  copiedrng:=tstringlist.Create;
-  copiedrng.Sorted:=true;
-  for I := ix to x do
-  begin
-    for j := iy to y do
-    begin
-      mergedRng:=ss.cells[i,j].MergeArea;
-      mergedRng.select;
-      if mergedRng.mergecells then
-      begin
-        if not copiedrng.Find(mergedRng.address, ind) then
-        begin
-          dst_mr:=GetRange(pageDst, mergedRng.address);
-          dst_mr.MergeCells:=true;
-        end
-        else
-        begin
-          copiedrng.Add(mergedRng.name);
-        end;
-      end;
-    end;
-  end;
-  copiedrng.Destroy;}
 
 procedure CopyPage(wbSrc,wbDst:oleVariant; pageIndSrc:integer; pageDst:olevariant);
 var

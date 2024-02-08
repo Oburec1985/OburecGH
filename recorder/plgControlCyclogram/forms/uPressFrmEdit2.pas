@@ -53,8 +53,10 @@ type
     procedure BNumSBDownClick(Sender: TObject);
     procedure BNumSBUpClick(Sender: TObject);
     procedure TagsLBClick(Sender: TObject);
+    procedure RefFEChange(Sender: TObject);
   private
     m_init,
+    m_manualRef:boolean;
     m_manualB:boolean;
     m_pf:TPressFrm2;
     m_row, m_col:integer;
@@ -101,6 +103,8 @@ begin
     // начали вносить ручные правки
     m_manualB:=true;
     str:=BandSG.Cells[m_col, m_row];
+    if m_row=0 then
+      m_row:=1;
     if not isValue(str) then
     begin
       if m_col=0 then
@@ -274,16 +278,30 @@ begin
     BandSG.Cells[2,i+1]:=floattostr(g_PressCamFactory2.GetRef(0));
   end;
   sgchange(BandSG);
-
+  TypeResCB.ItemIndex:=g_PressCamFactory2.m_typeRes;
   if ShowModal=mrok then
   begin
     updateBands;
+    if m_manualRef then
+    begin
+      g_PressCamFactory2.m_Manualref:=m_manualRef;
+      g_PressCamFactory2.SetRef(RefFE.FloatNum);
+      m_manualRef:=false;
+    end;
     g_PressCamFactory2.m_createTags:=CreateTagsCB.Checked;
     g_PressCamFactory2.m_typeRes:=TypeResCB.ItemIndex;
     g_PressCamFactory2.CreateAlg(TagsLB.Items);
     g_PressCamFactory2.CreateFrames;
     g_PressCamFactory2.m_spmCfg.str:='FFTCount='+FFTCountEdit.text;
     m_pf.m_bnum:=BNumIE.IntNum;
+    if TypeResCB.ItemIndex=0 then // СКО
+    begin
+      m_pf.UnitMaxALab.Caption:='psi, rms';
+    end
+    else
+    begin
+      m_pf.UnitMaxALab.Caption:='psi, pk-pk';
+    end;
     //showmessage(inttostr(length(TDoubleArray(m_pf.PressFrmFrame21.spm.m_rms.p))));
   end;
 end;
@@ -302,6 +320,11 @@ begin
   updateFFTnum;
 end;
 
+procedure TPressFrmEdit2.RefFEChange(Sender: TObject);
+begin
+  m_manualRef:=true;
+end;
+
 procedure TPressFrmEdit2.UpdateAlgBtnClick(Sender: TObject);
 begin
   ModalResult:=mrok;
@@ -312,6 +335,10 @@ var
   I: Integer;
   fr:TPressFrmFrame2;
 begin
+  if g_PressCamFactory2.BandCount<>BCountIE.IntNum then
+  begin
+    g_PressCamFactory2.BandCount:=BCountIE.IntNum;
+  end;
   if m_manualB then
   begin
     for I := 0 to BCountIE.IntNum - 1 do

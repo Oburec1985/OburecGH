@@ -208,7 +208,8 @@ uses
   uPressFrmEdit2 in 'forms\uPressFrmEdit2.pas' {PressFrmEdit2},
   uPressFrm in 'forms\uPressFrm.pas' {PressCamFrm},
   uPressFrmFrame in 'forms\uPressFrmFrame.pas' {PressFrmFrame: TFrame},
-  uPressFrmEdit in 'forms\uPressFrmEdit.pas' {PressFrmEdit};
+  uPressFrmEdit in 'forms\uPressFrmEdit.pas' {PressFrmEdit},
+  rkVistaProBar in '..\..\sharedUtils\компоненты\dcl_dpk\VistaProbar\rkVistaProBar.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

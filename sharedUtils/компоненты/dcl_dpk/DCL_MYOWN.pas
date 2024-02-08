@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls,extctrls,Math, uBtnListView, uSpin, uAlignEdit, uVTServices, uStringGridExt;
+  StdCtrls,extctrls,Math, uBtnListView, uSpin, uAlignEdit, uVTServices,
+  rkVistaProBar, uStringGridExt;
 
 type  //-----------------------------------------------//
   TFloatEdit = class(TEdit)
@@ -24,10 +25,6 @@ type  //-----------------------------------------------//
   published
     { Published declarations }
   end; //------------TFloatEdit------------------------//
-
-
-
-
 
 
 type //--------------------------------------------------//
@@ -465,6 +462,7 @@ begin
    RegisterComponents('Samples', [TAlignEdit]);
    RegisterComponents('Samples', [TVTree]);
    RegisterComponents('Samples', [TStringGridExt]);
+   RegisterComponents('Samples', [TVistaProBar]);
 end;
 
 end.

@@ -13,6 +13,9 @@ object Form1: TForm1
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
+  DesignSize = (
+    633
+    467)
   PixelsPerInch = 120
   TextHeight = 16
   object Label1: TLabel
@@ -72,5 +75,35 @@ object Form1: TForm1
     Width = 121
     Height = 217
     TabOrder = 5
+  end
+  object ProgrBar: TProgressBar
+    Left = 8
+    Top = 251
+    Width = 189
+    Height = 25
+    Anchors = [akLeft, akTop, akRight]
+    Max = 5
+    ParentShowHint = False
+    Step = 5
+    ShowHint = False
+    TabOrder = 6
+  end
+  object IntEdit1: TIntEdit
+    Left = 8
+    Top = 296
+    Width = 121
+    Height = 24
+    TabOrder = 7
+    Text = '000'
+    OnChange = IntEdit1Change
+  end
+  object IntEdit2: TIntEdit
+    Left = 8
+    Top = 344
+    Width = 121
+    Height = 24
+    TabOrder = 8
+    Text = '000'
+    OnChange = IntEdit2Change
   end
 end

@@ -22,8 +22,23 @@ object PressFrmFrame2: TPressFrmFrame2
     Height = 16
     Caption = 'F1:'
   end
+  object ProgrBar: TGauge
+    Left = 152
+    Top = 3
+    Width = 289
+    Height = 24
+    Anchors = [akLeft, akTop, akRight]
+    ForeColor = clActiveCaption
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    Progress = 0
+  end
   object FreqEdit: TEdit
-    Left = 27
+    Left = 95
     Top = 3
     Width = 43
     Height = 24
@@ -32,20 +47,12 @@ object PressFrmFrame2: TPressFrmFrame2
     Text = '0'
   end
   object AmpE: TEdit
-    Left = 97
+    Left = 27
     Top = 3
     Width = 45
     Height = 24
     ReadOnly = True
     TabOrder = 1
     Text = '0'
-  end
-  object ProgrBar: TProgressBar
-    Left = 148
-    Top = 3
-    Width = 296
-    Height = 25
-    Anchors = [akLeft, akTop, akRight]
-    TabOrder = 2
   end
 end

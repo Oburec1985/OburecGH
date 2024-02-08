@@ -189,6 +189,9 @@
     <File Path="..\..\sharedUtils\компоненты\chart_dpk\chart\utils\lists\uChartEvents.pas"/>
     <File Path="..\..\sharedUtils\компоненты\chart_dpk\chart\utils\uText.pas"/>
     <File Path="..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas"/>
+    <File Path="..\..\sharedUtils\компоненты\dcl_dpk"/>
+    <File Path="..\..\sharedUtils\компоненты\dcl_dpk\VistaProbar"/>
+    <File Path="..\..\sharedUtils\компоненты\dcl_dpk\VistaProbar\rkVistaProBar.pas"/>
     <File Path="..\..\sharedUtils\uCommonTypes.pas"/>
     <File Path="forms"/>
     <File Path="forms\uAHCorrectionFrm.pas"/>

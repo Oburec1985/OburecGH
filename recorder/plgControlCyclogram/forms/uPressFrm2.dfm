@@ -26,7 +26,6 @@ object PressFrm2: TPressFrm2
     Align = alClient
     Caption = #1055#1086#1083#1086#1089#1072' '#8470
     TabOrder = 0
-    ExplicitWidth = 356
     object Panel1: TPanel
       Left = 2
       Top = 295
@@ -38,7 +37,6 @@ object PressFrm2: TPressFrm2
       Margins.Bottom = 4
       Align = alBottom
       TabOrder = 1
-      ExplicitWidth = 352
       object MaxLabel: TLabel
         Left = 82
         Top = 10
@@ -95,8 +93,8 @@ object PressFrm2: TPressFrm2
         Caption = 'Hz'
       end
       object SaveBtn: TSpeedButton
-        Left = 10
-        Top = 105
+        Left = 9
+        Top = 106
         Width = 65
         Height = 45
         Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
@@ -271,6 +269,15 @@ object PressFrm2: TPressFrm2
         TabOrder = 4
         OnClick = OpenBtnClick
       end
+      object IntEdit1: TIntEdit
+        Left = 162
+        Top = 120
+        Width = 55
+        Height = 25
+        TabOrder = 5
+        Text = '000'
+        OnChange = IntEdit1Change
+      end
     end
     object BarPanel: TPanel
       Left = 2
@@ -283,7 +290,6 @@ object PressFrm2: TPressFrm2
       Margins.Bottom = 4
       Align = alTop
       TabOrder = 0
-      ExplicitWidth = 352
       inline PressFrmFrame21: TPressFrmFrame2
         Left = 1
         Top = 1
@@ -305,6 +311,9 @@ object PressFrm2: TPressFrm2
           ExplicitWidth = 20
           ExplicitHeight = 17
         end
+        inherited ProgrBar: TGauge
+          Width = 182
+        end
         inherited FreqEdit: TEdit
           Height = 25
           ExplicitHeight = 25
@@ -312,10 +321,6 @@ object PressFrm2: TPressFrm2
         inherited AmpE: TEdit
           Height = 25
           ExplicitHeight = 25
-        end
-        inherited ProgrBar: TProgressBar
-          Width = 189
-          ExplicitWidth = 189
         end
       end
     end

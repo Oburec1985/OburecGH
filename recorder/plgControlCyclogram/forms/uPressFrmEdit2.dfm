@@ -31,9 +31,7 @@ object PressFrmEdit2: TPressFrmEdit2
       inherited ChanNamesPanel: TPanel
         Width = 280
         Height = 132
-        ExplicitLeft = 3
-        ExplicitTop = 19
-        ExplicitWidth = 278
+        ExplicitWidth = 280
         ExplicitHeight = 132
         inherited FrmTagPropLabel: TLabel
           Top = 59
@@ -45,19 +43,15 @@ object PressFrmEdit2: TPressFrmEdit2
         end
         inherited FilterEdit: TEdit
           Width = 270
-          Height = 20
           ExplicitWidth = 270
-          ExplicitHeight = 20
         end
         inherited FrmTagPropValueEdit: TEdit
           Left = 123
           Top = 83
           Width = 153
-          Height = 20
           ExplicitLeft = 123
           ExplicitTop = 83
           ExplicitWidth = 153
-          ExplicitHeight = 20
         end
         inherited FrmTagPropNameCB: TComboBox
           Top = 83
@@ -83,10 +77,9 @@ object PressFrmEdit2: TPressFrmEdit2
             Caption = 'Fs'
             Width = 51
           end>
-        ExplicitLeft = 3
-        ExplicitTop = 151
-        ExplicitWidth = 278
-        ExplicitHeight = 329
+        ExplicitTop = 150
+        ExplicitWidth = 280
+        ExplicitHeight = 331
       end
     end
   end
@@ -107,9 +100,9 @@ object PressFrmEdit2: TPressFrmEdit2
     object dFLabel: TLabel
       Left = 353
       Top = 23
-      Width = 114
+      Width = 43
       Height = 16
-      Caption = #1064#1072#1075' '#1087#1086' '#1095#1072#1089#1090#1086#1090#1077', '#1043#1094
+      Caption = #1055#1086#1088#1094#1080#1103
     end
     object BCountLabel: TLabel
       Left = 227
@@ -157,7 +150,7 @@ object PressFrmEdit2: TPressFrmEdit2
       Left = 229
       Top = 43
       Width = 82
-      Height = 20
+      Height = 24
       Enabled = False
       TabOrder = 0
       Text = '16384'
@@ -195,7 +188,7 @@ object PressFrmEdit2: TPressFrmEdit2
       Left = 351
       Top = 43
       Width = 120
-      Height = 20
+      Height = 24
       TabOrder = 2
       Text = '0.1'
     end
@@ -232,7 +225,7 @@ object PressFrmEdit2: TPressFrmEdit2
       Left = 229
       Top = 231
       Width = 82
-      Height = 20
+      Height = 24
       Enabled = False
       TabOrder = 4
       Text = '1'
@@ -250,15 +243,12 @@ object PressFrmEdit2: TPressFrmEdit2
       OnDrawCell = BandSGDrawCell
       OnKeyDown = BandSGKeyDown
       OnSelectCell = BandSGSelectCell
-      ExplicitLeft = 3
-      ExplicitTop = 263
-      ExplicitWidth = 605
     end
     object HHFE: TFloatEdit
       Left = 229
       Top = 111
       Width = 82
-      Height = 20
+      Height = 24
       TabOrder = 6
       Text = '0.7'
     end
@@ -266,7 +256,7 @@ object PressFrmEdit2: TPressFrmEdit2
       Left = 327
       Top = 111
       Width = 74
-      Height = 20
+      Height = 24
       TabOrder = 7
       Text = '0.5'
     end
@@ -276,7 +266,6 @@ object PressFrmEdit2: TPressFrmEdit2
       Width = 213
       Height = 246
       Align = alLeft
-      ItemHeight = 12
       TabOrder = 8
       OnClick = TagsLBClick
       OnDragDrop = TagsLBDragDrop
@@ -287,7 +276,7 @@ object PressFrmEdit2: TPressFrmEdit2
       Left = 229
       Top = 183
       Width = 82
-      Height = 20
+      Height = 24
       TabOrder = 9
       Text = '0'
     end
@@ -324,9 +313,10 @@ object PressFrmEdit2: TPressFrmEdit2
       Left = 417
       Top = 111
       Width = 74
-      Height = 20
+      Height = 24
       TabOrder = 11
       Text = '0.5'
+      OnChange = RefFEChange
     end
     object TypeResCB: TComboBox
       Left = 351

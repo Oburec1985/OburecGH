@@ -14,11 +14,14 @@
     <Transaction>2012.11.21 23:42:00.312.pas,D:\oburec\project2010\2011\sharedUtils\компоненты\dcl_dpk\x-net\XuConnCheckThread.pas=</Transaction>
     <Transaction>2012.11.21 23:42:02.640.pas,D:\oburec\project2010\2011\sharedUtils\компоненты\dcl_dpk\x-net\XuNetUtil.pas=</Transaction>
     <Transaction>2018.01.09 22:50:56.433.pas,G:\oburec\project2010\2011\sharedUtils\компоненты\dcl_dpk\Unit1.pas=G:\oburec\project2010\2011\sharedUtils\компоненты\dcl_dpk\uStringGridExt.pas</Transaction>
+    <Transaction>2024.02.08 17:03:02.638.pas,F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\dcl_dpk\VistaProbar\VistaProbar\rkVistaProBar.pas=</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\..\sharedUtils"/>
     <File Path="..\..\utils"/>
     <File Path="..\..\utils\uVTServices.pas"/>
+    <File Path="VistaProbar"/>
+    <File Path="VistaProbar\rkVistaProBar.pas"/>
     <File Path="DCL_MYOWN.dcr"/>
     <File Path="DCL_MYOWN.pas"/>
     <File Path="uAlignEdit.pas"/>
