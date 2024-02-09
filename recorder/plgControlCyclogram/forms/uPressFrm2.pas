@@ -959,7 +959,7 @@ var
   rng: olevariant;
   spm: cspm;
   k: integer;
-
+  date:tdatetime;
   p_list:tstringlist;
 begin
   fname := RepFile;
@@ -996,6 +996,7 @@ begin
   SetCell(1, r0, 2, 'MeraFile:');
   SetCell(1, r0, 3, fname);
   SetCell(1, r0, 4, 'Time:');
+  date:=now;
   SetCell(1, r0, 5, DateToStr(date) + ' ' + TimeToStr(date));
   r := r0 + 2;
   c := 2;
