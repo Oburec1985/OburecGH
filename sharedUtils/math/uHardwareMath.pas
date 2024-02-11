@@ -2,15 +2,16 @@ unit uHardwareMath;
 
 interface
 
-//{$Include ..\..\..\..\sharedUtils\utils\FastMM\FastMM4Options.inc}
-//{$define fastmm}
+// {$Include ..\..\..\..\sharedUtils\utils\FastMM\FastMM4Options.inc}
+// {$define fastmm}
 
 
 
-//  обьявлена в FastMM4Options.inc. Если выравнивание по 16 байт делает FastMM то надо включить
+// обьявлена в FastMM4Options.inc. Если выравнивание по 16 байт делает FastMM то надо включить
 
 uses
-  types, math,ucommontypes, complex, Iterative_FFT_sse, recursive_sse2_sse3_d_al_fft;
+  types, math, ucommontypes, complex, Iterative_FFT_sse,
+  recursive_sse2_sse3_d_al_fft;
 
 type
   TDoubleArray = array of double;
@@ -21,19 +22,36 @@ type
   end;
 
   TAlignDarray = record
-    //d:TDoubleArray;
-    p:pointer;
-    nAlignedSampl:pointer;
-    nAlignedSize:integer; // в байтах
+    // d:TDoubleArray;
+    p: pointer;
+    nAlignedSampl: pointer;
+    nAlignedSize: integer; // в байтах
   end;
 
   TAlignDCmpx = record
-    //d:TCmxArray_d;
-    p:pointer;
-    nAlignedSampl:pointer;
-    nAlignedSize:integer; // в байтах
+    // d:TCmxArray_d;
+    p: pointer;
+    // вся память для выделенного массива
+    nAlignedSampl: pointer;
+    nAlignedSize: integer; // в байтах
   end;
 
+  // Прямоугольное окно
+  // Окно Ханна (Хеннинга)  Hann
+  // Окно Хэмминга Hammin
+  // Окно Блэкмана Blackman
+  // Окно Кайзера
+  // Flattop
+  TWndType = (wdRect, wdHann, wdHammin, wdBlackman, wdFlattop);
+  PWndType = ^TWndType;
+
+  TWndFunc = record
+    size: integer;
+    ar: TDoubleArray;
+    wndtype: TWndType;
+  end;
+
+  PWndFunc = ^TWndFunc;
 
   TFFTProp = record
     TableExp: TAlignDCmpx; // множители Wn
@@ -42,62 +60,66 @@ type
     // Например у нас 2048 точек, размер блока 1024 можно посчитать 2 блока FFT
     StartInd: integer;
     PCount: integer; // Число точек FFT
-    inverse:boolean;
+    inverse: boolean;
   end;
+
   pFFTProp = ^TFFTProp;
 
 function OSEnabledXmmYmm: boolean;
 function IsAVX2supported: boolean;
 
-function tempSUM(const Data: array of Double; first, stop:integer): Extended;
-function fSUM(const Data: array of Double; first, stop:integer): Extended;
-function SUM_SSE_d(const Data: array of double): Extended;overload;
-function SUM_SSE_d(const Data: array of Double; first, stop:integer): Extended;overload;
+function tempSUM(const Data: array of double; first, stop: integer): Extended;
+function fSUM(const Data: array of double; first, stop: integer): Extended;
+function SUM_SSE_d(const Data: array of double): Extended; overload;
+function SUM_SSE_d(const Data: array of double;
+  first, stop: integer): Extended; overload;
 // перемножить все числа массива на Scale
-procedure MULT_SSE_al_d(var ar: TDoubleArray; scale:double);
-procedure MULT_SSE_al_cmpx_d(var ar: TCmxArray_d; scale:double);
+procedure MULT_SSE_al_d(var ar: TDoubleArray; scale: double);
+procedure MULT_SSE_al_cmpx_d(var ar: TCmxArray_d; scale: double);
 // входной массив не промасштабированный на 1/FFTCount результат FFT
-procedure ifft_al_d_sse(inData: TCmxArray_d; var outData: TCmxArray_d;  FFTPlan: TFFTProp);
+procedure ifft_al_d_sse(inData: TCmxArray_d; var outData: TCmxArray_d;
+  FFTPlan: TFFTProp);
 // вызов FFT. На входе выровненные данные по 16 байтам даблы и комплексы. Результат в OutData
 // OutData в обязательном порядке должен иметь размер FFTSize!!! FFTPlan влияет лишь на
 // подготовку данных из inData в OutData
 // первый элемент - двойное среднее!!!
-procedure fft_al_d_sse(inData: TDoubleArray; var outData: TCmxArray_d; FFTPlan: TFFTProp);
+procedure fft_al_d_sse(inData: TDoubleArray; var outData: TCmxArray_d;
+  FFTPlan: TFFTProp); overload;
+procedure fft_al_d_sse(inData: TDoubleArray; var outData: TCmxArray_d;
+  FFTPlan: TFFTProp; wnd: PWndFunc); overload;
 // нормализация вида Abs(inData[i])*(1/FFTSize). размер OutData FFTSize/2
 // outData в 2 раза меньше чем inData, на множитель нормализации влияет только яисло точек FFT
 // т.е. Length(inData)
-procedure NormalizeAndScaleSpmMag(var inData:TCmxArray_d; var outData: TDoubleArray);
+procedure NormalizeAndScaleSpmMag(var inData: TCmxArray_d;
+  var outData: TDoubleArray);
 // то же что и строка выше но без нормализации
-procedure EvalSpmMag(var inData:TCmxArray_d; var outData: TDoubleArray);
+procedure EvalSpmMag(var inData: TCmxArray_d; var outData: TDoubleArray);
 
 // Выделение памяти
 // возвращает массив выровненный по 16 байтам
-procedure GetMemAlignedArray_d(const SrcSize: integer; out alData:TAlignDarray); overload;
+procedure GetMemAlignedArray_d(const SrcSize: integer;
+  out alData: TAlignDarray); overload;
 // ---------------------------------------------------------------------------
-procedure GetMemAlignedArray_d(const bits: integer; const src: Pointer;
-                               const SrcSize: integer;
-                               out DstAligned: pointer;
-                               out DstUnaligned: Pointer;
-                               out DstSize: integer);overload;
+procedure GetMemAlignedArray_d(const bits: integer; const src: pointer;
+  const SrcSize: integer; out DstAligned: pointer;
+  out DstUnaligned: pointer; out DstSize: integer); overload;
 
 // возвращает массив выровненный по 16 байтам
-procedure GetMemAlignedArray_cmpx_d(const SrcSize: integer; out alData:TAlignDCmpx);overload;
+procedure GetMemAlignedArray_cmpx_d(const SrcSize: integer;
+  out alData: TAlignDCmpx); overload;
 // ----------------------------------------------------------------------------
-procedure GetMemAlignedArray_cmpx_d(const bits: integer; const src: Pointer;
-                                    const SrcSize: integer;
-                                    out DstAligned: pointer;
-                                    out DstUnaligned: pointer;
-                                    out DstSize: integer);overload;
+procedure GetMemAlignedArray_cmpx_d(const bits: integer; const src: pointer;
+  const SrcSize: integer; out DstAligned: pointer; out DstUnaligned: pointer;
+  out DstSize: integer); overload;
 
-procedure FreeMemAligned(var aldata: TAlignDarray);overload;
-procedure FreeMemAligned(var aldata: TAlignDCmpx);overload;
+procedure FreeMemAligned(var alData: TAlignDarray); overload;
+procedure FreeMemAligned(var alData: TAlignDCmpx); overload;
 
-procedure FreeMemAligned(const src: Pointer;
-                         var DstUnaligned:Pointer;
-                         var DstSize: integer);overload;
+procedure FreeMemAligned(const src: pointer; var DstUnaligned: pointer;
+  var DstSize: integer); overload;
 
-procedure GetMemAligned(const bits: integer; const src: Pointer;
-  const SrcSize: integer; out DstAligned, DstUnaligned: Pointer;
+procedure GetMemAligned(const bits: integer; const src: pointer;
+  const SrcSize: integer; out DstAligned, DstUnaligned: pointer;
   out DstSize: integer);
 
 // служебные функции
@@ -108,16 +130,19 @@ procedure SortFFTArray(const inData: TDoubleArray; var outData: TCmxArray_d;
   PCount: integer); // Число точек FFT
 // таблица индексов для сортировки по нижней итерации FFT
 // FFTProp.TableInd := GetArrayIndex(FCount, 2);
-function GetArrayIndex(CountPoint: Integer; MinIteration: Integer): TIndexArray;
-procedure GetFFTExpTable(CountFFTPoints:Integer; InverseFFT:Boolean; var res:TCmxArray_d);
-function AlignBlockLength(b:TAlignDarray):integer;overload;
-function AlignBlockLength(b:TAlignDCmpx):integer;overload;
+function GetArrayIndex(CountPoint: integer; MinIteration: integer): TIndexArray;
+procedure GetFFTExpTable(CountFFTPoints: integer; InverseFFT: boolean;
+  var res: TCmxArray_d);
+function AlignBlockLength(b: TAlignDarray): integer; overload;
+function AlignBlockLength(b: TAlignDCmpx): integer; overload;
 
-
-
+procedure FillWndHann(var a: TDoubleArray);
+procedure FillWndHammin(var a: TDoubleArray);
+procedure FillWndBlackman(var a: TDoubleArray);
+procedure FillWndFlattop(var a: TDoubleArray);
 
 const
-  reg = $fa10 ;
+  reg = $FA10;
   PF_FLOATING_POINT_PRECISION_ERRATA = 0; // On a Pentium, a floating-point precision error can occur in rare circumstances.
   PF_FLOATING_POINT_EMULATED = 1; // Floating-point operations are emulated using a software emulator.
   // This function returns a nonzero value if floating-point operations are emulated; otherwise, it returns zero.
@@ -156,12 +181,17 @@ const
   PF_ARM_FMAC_INSTRUCTIONS_AVAILABLE = 27; // The floating-point multiply-accumulate instruction is available.
 
 const
+  c_pi = 3.1415926535897932384626433;
+  c_2pi = c_pi * 2;
+  c_4pi = c_pi * 4;
+  c_6pi = c_pi * 6;
+  c_8pi = c_pi * 8;
   shl4TComplex = 3; // {2^shl4TComplex = SizeOf(TComplex)}
   shl4TComplex_d = 4; // {2^shl4TComplex = SizeOf(TComplex)}
 
 implementation
 
-function fSUM(const Data: array of Double; first, stop:integer): Extended;
+function fSUM(const Data: array of double; first, stop: integer): Extended;
 asm  // IN: EAX = ptr to Data, EDX = High(Data) = Count - 1
      // Uses 4 accumulators to minimize read-after-write delays and loop overhead
      // 5 clocks per loop, 4 items per loop = 1.2 clocks per item
@@ -195,104 +225,102 @@ asm  // IN: EAX = ptr to Data, EDX = High(Data) = Count - 1
        FWAIT
 end;
 
-function tempSUM(const Data: array of Double; first, stop:integer): Extended;
+function tempSUM(const Data: array of double; first, stop: integer): Extended;
 var
-  I: Integer;
-  p0,p:pinteger;
+  I: integer;
+  p0, p: pinteger;
 
 begin
-  p:=@data[first];
-  p0:=pinteger(integer(p)-4);
-  i:=p0^; // запоминаем старое значение
-  //p0^:=(stop-first+1)*sizeof(double);
-  p0^:=(stop-first+1);
-  //p[0]:=integer(@p[2]);
-  result:=sum(TdoubleArray(p));
-  p0^:=i; // восстанавливаем старое значение
+  p := @Data[first];
+  p0 := pinteger(integer(p) - 4);
+  I := p0^; // запоминаем старое значение
+  // p0^:=(stop-first+1)*sizeof(double);
+  p0^ := (stop - first + 1);
+  // p[0]:=integer(@p[2]);
+  result := sum(TDoubleArray(p));
+  p0^ := I; // восстанавливаем старое значение
 end;
 
-
-procedure GetFFTExpTable(CountFFTPoints:Integer; InverseFFT:Boolean; var res:TCmxArray_d);
+procedure GetFFTExpTable(CountFFTPoints: integer; InverseFFT: boolean;
+  var res: TCmxArray_d);
 var
-  I,StartIndex,N,LenB:Integer;
-  w,wn:TComplex_d;
-  Mnogitel:Double;
+  I, StartIndex, N, LenB: integer;
+  w, wn: TComplex_d;
+  Mnogitel: double;
 begin
-  Mnogitel := -2*Pi;               //Прямое  БПФ
+  Mnogitel := -2 * Pi; // Прямое  БПФ
   if InverseFFT then
-     Mnogitel:= 2*Pi;              //Обратное  БПФ
-  LenB:=1;
+    Mnogitel := 2 * Pi; // Обратное  БПФ
+  LenB := 1;
 
-  while LenB <CountFFTPoints do //Пробегаем каждый блок.
+  while LenB < CountFFTPoints do // Пробегаем каждый блок.
   begin
-    N     := LenB;      //поучаем число элементов в блоке
-    LenB  := LenB shl 1;
-    //Готовим первый EXP множитель(корень) для БПФ.
+    N := LenB; // поучаем число элементов в блоке
+    LenB := LenB shl 1;
+    // Готовим первый EXP множитель(корень) для БПФ.
     wn.Re := 0;
-    wn.Im := Mnogitel/LenB;
-    wn    := exp(wn);
-    w     := 1;
+    wn.Im := Mnogitel / LenB;
+    wn := exp(wn);
+    w := 1;
 
-    StartIndex:=N;    //Стартовый индекс в массиве.
-    Dec(N);           //Т.к индексация с нуля
-    For I:=0 to N do  //заполняем блок exp множителями для БПФ, в массиве
+    StartIndex := N; // Стартовый индекс в массиве.
+    Dec(N); // Т.к индексация с нуля
+    For I := 0 to N do // заполняем блок exp множителями для БПФ, в массиве
     begin
-      res[StartIndex+I]:=w;
-      w:=w*wn;
+      res[StartIndex + I] := w;
+      w := w * wn;
     end;
   end;
 end;
 
-
-function GetArrayIndex(CountPoint: Integer; MinIteration: Integer): TIndexArray;
-Var I,LenBlock,HalfBlock,HalfBlock_1,
-    StartIndex,EndIndex,ChIndex,NChIndex :Integer;
-    TempArray:TIndexArray;
+function GetArrayIndex(CountPoint: integer;
+  MinIteration: integer): TIndexArray;
+Var
+  I, LenBlock, HalfBlock, HalfBlock_1, StartIndex, EndIndex, ChIndex,
+    NChIndex: integer;
+  TempArray: TIndexArray;
 begin
 
-  EndIndex:=CountPoint-1;
+  EndIndex := CountPoint - 1;
 
-  SetLength(Result,CountPoint);
-    For I:=0 to EndIndex do           //Располагаем индексы по порядку
-      Result[I]:=I;
+  SetLength(result, CountPoint);
+  For I := 0 to EndIndex do // Располагаем индексы по порядку
+    result[I] := I;
 
+  LenBlock := CountPoint;
+  HalfBlock := LenBlock shr 1;
+  HalfBlock_1 := HalfBlock - 1;
 
-  LenBlock   :=CountPoint;
-  HalfBlock  :=LenBlock shr 1;
-  HalfBlock_1:=HalfBlock -1;
+  while LenBlock > MinIteration do // переставляем индексы в блоках длинной  LenBlock
+  begin
+    StartIndex := 0; // начинаем с крайнего левого блока
+    TempArray := Copy(result, 0, CountPoint);
 
+    repeat // переставляем индексы в конкретном(начало блока =StartIndex) блоке длинной  LenBlock
+      ChIndex := StartIndex;
+      NChIndex := ChIndex + 1;
+      EndIndex := StartIndex + HalfBlock_1;
 
-  while LenBlock > MinIteration do    //переставляем индексы в блоках длинной  LenBlock
-    begin
-      StartIndex:=0;                  //начинаем с крайнего левого блока
-      TempArray :=Copy(Result,0,CountPoint);
+      // Выделяем четные и нечетные индексы и помещаем обратно в исходный массив
+      for I := StartIndex to EndIndex do
+      begin
+        result[I] := TempArray[ChIndex];
+        result[I + HalfBlock] := TempArray[NChIndex];
 
-      repeat //переставляем индексы в конкретном(начало блока =StartIndex) блоке длинной  LenBlock
-        ChIndex :=StartIndex;
-        NChIndex:=ChIndex+1;
-        EndIndex:=StartIndex+HalfBlock_1;
+        ChIndex := ChIndex + 2;
+        NChIndex := NChIndex + 2;
+      end;
 
-        //Выделяем четные и нечетные индексы и помещаем обратно в исходный массив
-        for I:=StartIndex to EndIndex do
-          begin
-            Result[I]          :=TempArray[ChIndex];
-            Result[I+HalfBlock]:=TempArray[NChIndex];
+      StartIndex := StartIndex + LenBlock; // переходим к другому блоку
+    Until StartIndex >= CountPoint; // если дошли до длины массива, значит блоков больше нет.
 
-            ChIndex :=ChIndex +2;
-            NChIndex:=NChIndex+2;
-          end;
-
-        StartIndex:=StartIndex+LenBlock;   //переходим к другому блоку
-      Until StartIndex >= CountPoint;      //если дошли до длины массива, значит блоков больше нет.
-
-      //уменьшаем длину блок, пока не дойдем до минимального размера (MinIteration)
-      LenBlock   :=LenBlock shr 1;
-      HalfBlock  :=LenBlock shr 1;
-      HalfBlock_1:=HalfBlock -  1;
-    end;
-  TempArray:=Nil;
+    // уменьшаем длину блок, пока не дойдем до минимального размера (MinIteration)
+    LenBlock := LenBlock shr 1;
+    HalfBlock := LenBlock shr 1;
+    HalfBlock_1 := HalfBlock - 1;
+  end;
+  TempArray := Nil;
 end;
-
 
 procedure SortFFTArray(const inData: TDoubleArray; // входные данные
   var outData: TCmxArray_d; // выходные данные
@@ -301,134 +329,147 @@ procedure SortFFTArray(const inData: TDoubleArray; // входные данные
   // Например у нас 2048 точек, размер блока 1024 можно посчитать 2 блока FFT
   PCount: integer); // Число точек FFT
 var
-  i: integer;
+  I: integer;
 begin
   // размещение согласно нижней итерации FFT
-  for i := StartInd to PCount - StartInd - 1 do
+  for I := StartInd to PCount - StartInd - 1 do
   begin
-    outData[i] := inData[TableInd[i] + StartInd];
+    outData[I] := inData[TableInd[I] + StartInd];
   end;
 end;
 
-procedure EvalSpmMag(var inData:TCmxArray_d; var outData: TDoubleArray);
+procedure EvalSpmMag(var inData: TCmxArray_d; var outData: TDoubleArray);
 var
-  n:integer;
+  N: integer;
 asm
   pushad
-    mov   EAX,[EAX]     //EAX := @D[0]
-    mov   EDX,[EDX]     //EAX := @D[0]
-    mov   ECX,[EAX-4]   //ECX := Length
+    mov   EAX,[EAX]     // EAX := @D[0]
+    mov   EDX,[EDX]     // EAX := @D[0]
+    mov   ECX,[EAX-4]   // ECX := Length
 
-    shr   ECX,1         //ECX = Length/2
-    dec   ECX           //Length-1
-    //####################  цикл нормализации       --------- begin ------------
-    mov  ebx, EDX     //EbX := @outD[0]
-    //lea  eax, p2
+    shr   ECX,1         // ECX = Length/2
+    dec   ECX           // Length-1
+    // ####################  цикл нормализации       --------- begin ------------
+    mov  ebx, EDX     // EbX := @outD[0]
+    // lea  eax, p2
   @Normalize:
-    MOVaPD    xmm0,  [EAX]      //xmm0 := D[Index]
-    MOVaPD    xmm1,  xmm0       //xmm1 := xmm0
-    MULPD     xmm0,  xmm1       //xmm0 := [Re^2,  Im^2]
-    MOVhlPS   xmm1,  xmm0       //xmm1 := [Im^2,  Temp]
-    ADDSD     xmm0,  xmm1       //xmm0 := [Re^2+Im^2, Temp]
-    SQRTSD    xmm1,  xmm0       //xmm1 := [(Re^2+Im^2)^0.5, Temp]
+    MOVaPD    xmm0,  [EAX]      // xmm0 := D[Index]
+    MOVaPD    xmm1,  xmm0       // xmm1 := xmm0
+    MULPD     xmm0,  xmm1       // xmm0 := [Re^2,  Im^2]
+    MOVhlPS   xmm1,  xmm0       // xmm1 := [Im^2,  Temp]
+    ADDSD     xmm0,  xmm1       // xmm0 := [Re^2+Im^2, Temp]
+    SQRTSD    xmm1,  xmm0       // xmm1 := [(Re^2+Im^2)^0.5, Temp]
 
-    MOVLPS    [ebx], xmm1       //D[Index] :=Abs(D[I])*Mnogitel
+    MOVLPS    [ebx], xmm1       // D[Index] :=Abs(D[I])*Mnogitel
     add       ebx,   8
     add       eax,   16
-    //add   EAX,SizeOf(TComplex)//Приращение индексa, для массивa D
-    dec   ecx                  //Приращение индексa, для массивa D
+    // add   EAX,SizeOf(TComplex)//Приращение индексa, для массивa D
+    dec   ecx                  // Приращение индексa, для массивa D
   jns @Normalize // переход если SF=1
-    //####################  цикл нормализации       ----------- END ------------
+    // ####################  цикл нормализации       ----------- END ------------
   popad
 end;
 
-
 // на вход принимает не нормированный комплексный спектр из fft_al_d_sse
-procedure NormalizeAndScaleSpmMag(var inData:TCmxArray_d; var outData: TDoubleArray);
+procedure NormalizeAndScaleSpmMag(var inData: TCmxArray_d;
+  var outData: TDoubleArray);
 var
-  //p2:point2d;
-  scale:double;
-  one, n:integer;
+  // p2:point2d;
+  scale: double;
+  one, N: integer;
 asm
   pushad
-    mov   EAX,[EAX]     //EAX := @D[0]
-    mov   EDX,[EDX]     //EAX := @D[0]
-    mov   ECX,[EAX-4]   //ECX := Length
+    mov   EAX,[EAX]     // EAX := @D[0]
+    mov   EDX,[EDX]     // EAX := @D[0]
+    mov   ECX,[EAX-4]   // ECX := Length
     // масштаб
     mov   n, ecx
     shr   n, 1
     mov   one, 1
     fild  one    // N
     fild  n  // Поместили в стек FPU 1
-    fdiv                //St(0) =  1/N
+    fdiv                // St(0) =  1/N
     fstp  double [scale]
     lea   ebx, [scale]
 
     MOVDDUP xmm2, [ebx] // xmm2= scale
-    shr   ECX,1         //ECX = Length/2
-    dec   ECX           //Length-1
-    //####################  цикл нормализации       --------- begin ------------
-    mov  ebx, EDX     //EbX := @outD[0]
-    //lea  eax, p2
+    shr   ECX,1         // ECX = Length/2
+    dec   ECX           // Length-1
+    // ####################  цикл нормализации       --------- begin ------------
+    mov  ebx, EDX     // EbX := @outD[0]
+    // lea  eax, p2
   @Normalize:
-    MOVaPD    xmm0,  [EAX]      //xmm0 := D[Index]
-    MOVaPD    xmm1,  xmm0       //xmm1 := xmm0
-    MULPD     xmm0,  xmm1       //xmm0 := [Re^2,  Im^2]
-    MOVhlPS   xmm1,  xmm0       //xmm1 := [Im^2,  Temp]
-    ADDSD     xmm0,  xmm1       //xmm0 := [Re^2+Im^2, Temp]
-    SQRTSD    xmm1,  xmm0       //xmm1 := [(Re^2+Im^2)^0.5, Temp]
-    MULSD     xmm1,  xmm2       //xmm1 := [((Re^2+Im^2)^0.5)*Mnogitel, Temp]
+    MOVaPD    xmm0,  [EAX]      // xmm0 := D[Index]
+    MOVaPD    xmm1,  xmm0       // xmm1 := xmm0
+    MULPD     xmm0,  xmm1       // xmm0 := [Re^2,  Im^2]
+    MOVhlPS   xmm1,  xmm0       // xmm1 := [Im^2,  Temp]
+    ADDSD     xmm0,  xmm1       // xmm0 := [Re^2+Im^2, Temp]
+    SQRTSD    xmm1,  xmm0       // xmm1 := [(Re^2+Im^2)^0.5, Temp]
+    MULSD     xmm1,  xmm2       // xmm1 := [((Re^2+Im^2)^0.5)*Mnogitel, Temp]
 
-    MOVLPS    [ebx], xmm1       //D[Index] :=Abs(D[I])*Mnogitel
-    //MOVuPD    [ebx], xmm1       //D[Index] :=Abs(D[I])*Mnogitel
+    MOVLPS    [ebx], xmm1       // D[Index] :=Abs(D[I])*Mnogitel
+    // MOVuPD    [ebx], xmm1       //D[Index] :=Abs(D[I])*Mnogitel
 
     add       ebx,   8
     add       eax,   16
-    //add   EAX,SizeOf(TComplex)//Приращение индексa, для массивa D
-    dec   ecx                  //Приращение индексa, для массивa D
+    // add   EAX,SizeOf(TComplex)//Приращение индексa, для массивa D
+    dec   ecx                  // Приращение индексa, для массивa D
   jns @Normalize // переход если SF=1
-    //####################  цикл нормализации       ----------- END ------------
+    // ####################  цикл нормализации       ----------- END ------------
   popad
 end;
 
 procedure ifft_al_d_sse(inData: TCmxArray_d; var outData: TCmxArray_d;
-                        FFTPlan: TFFTProp);
+  FFTPlan: TFFTProp);
 var
-  i, ind, adr: integer;
+  I, ind, adr: integer;
   J, Len, sof, DPointer, TableExpPointer: integer;
 begin
   // размещение согласно нижней итерации FFT
-  for i := 0 to FFTPlan.PCount - 1 do
+  for I := 0 to FFTPlan.PCount - 1 do
   begin
-    ind:=FFTPlan.TableInd[i]+FFTPlan.StartInd;
-    outData[i] := inData[ind];
+    ind := FFTPlan.TableInd[I] + FFTPlan.StartInd;
+    outData[I] := inData[ind];
   end;
-  iFFT(TCmxArray_d(outdata), FFTPlan.TableExp.p);
+  iFFT(TCmxArray_d(outData), FFTPlan.TableExp.p);
 end;
 
-
+procedure fft_al_d_sse(inData: TDoubleArray; var outData: TCmxArray_d;
+  FFTPlan: TFFTProp; wnd: PWndFunc);
+var
+  I: Integer;
+begin
+  if (wnd <> nil) or (wnd.wndtype <> wdRect) then
+  begin
+    for I := 0 to wnd.size - 1 do
+    begin
+      inData[i]:=inData[i]*wnd.ar[i];
+    end;
+  end;
+  fft_al_d_sse(inData, outData, FFTPlan);
+end;
 
 procedure fft_al_d_sse(inData: TDoubleArray; var outData: TCmxArray_d;
   FFTPlan: TFFTProp);
 var
-  i, adr, ind: integer;
+  I, adr, ind: integer;
   J, Len, sof, DPointer, TableExpPointer: integer;
 begin
   // размещение согласно нижней итерации FFT
-  for i := 0 to FFTPlan.PCount - 1 do
+  for I := 0 to FFTPlan.PCount - 1 do
   begin
-    ind:=FFTPlan.TableInd[i]+FFTPlan.StartInd;
-    outData[i] := inData[ind];
+    ind := FFTPlan.TableInd[I] + FFTPlan.StartInd;
+    outData[I] := inData[ind];
   end;
   adr := integer(@inData[0]) - 4;
-  //EvalFFT_al_d_sse(outData, FFTPlan.TableExp);
+  // EvalFFT_al_d_sse(outData, FFTPlan.TableExp);
   recursive_sse2_sse3_d_al_fft.fft(outData, FFTPlan.TableExp.p);
 end;
 
-procedure MULT_SSE_al_cmpx_d(var ar: TCmxArray_d; scale:double);
+procedure MULT_SSE_al_cmpx_d(var ar: TCmxArray_d; scale: double);
 var
-  shift:integer;
-  r:point2d;
+  shift: integer;
+  r: point2d;
 asm
   pushad
     mov eax, [eax] // @D[0]
@@ -509,10 +550,10 @@ asm
   popad
 end;
 
-procedure MULT_SSE_al_d(var ar: TDoubleArray; scale:double);
-var
-  shift:integer;
-  r:point2d;
+        procedure MULT_SSE_al_d(var ar: TDoubleArray; scale: double);
+        var
+          shift: integer;
+          r: point2d;
 asm
   pushad
     mov eax, [eax] // @D[0]
@@ -596,11 +637,11 @@ asm
   popad
 end;
 
-function SUM_SSE_d(const Data: array of double): Extended;
-// const
-// zero_d: array [0..1] of Double = (0,0);
-var
-  r2, r1: double;
+          function SUM_SSE_d(const Data: array of double): Extended;
+          // const
+          // zero_d: array [0..1] of Double = (0,0);
+          var
+            r2, r1: double;
 asm
   pushad
   // edx - длина массива (точнее номер hight элемента)
@@ -781,12 +822,13 @@ asm
   popad
 end;
 
-function SUM_SSE_d(const Data: array of Double; first, stop:integer): Extended;overload;
-//const
-//  zero_d: array [0..1] of Double = (0,0);
-var
-  r2,r1:double;
-  shift:integer;
+            function SUM_SSE_d(const Data: array of double;
+              first, stop: integer): Extended; overload;
+            // const
+            // zero_d: array [0..1] of Double = (0,0);
+            var
+              r2, r1: double;
+              shift: integer;
 asm
   pushad
   // edx - длина массива (точнее номер hight элемента)
@@ -864,7 +906,7 @@ asm
   xorps  xmm7, xmm7
 
   // суммируем некратный кусок
-  //inc ebx // увеличим на 1, т.к. если регистр не полный то все равно нужно класть в регистр
+  // inc ebx // увеличим на 1, т.к. если регистр не полный то все равно нужно класть в регистр
   shr ebx, 1 // определяем сколько даблов можно положить в регистры
              // (делим на 2 оставшиеся элеенты тк регистр sse вмещает по 2 элемента)
   JMP @Vec.Pointer[Ebx*4]
@@ -971,156 +1013,149 @@ asm
   fld r1
   fld r2
   faddp st(1), st
-  //fstp st(0)
+  // fstp st(0)
   FSTP result      // SumOfSquares := Sum1; Pop Sum1
-  //fwait
+  // fwait
   popad
 end;
 
-procedure FreeMemAligned(var aldata: TAlignDCmpx);
+procedure FreeMemAligned(var alData: TAlignDCmpx);
 var
-  pint:pinteger;
-begin
-
-// если включен FastMM с опцией
-{$ifdef fastmm}
-  setlength(aldata.d, 0);
-{$else}
-  //pint := pinteger(integer(aldata.p)-4);
-  //pint^:=0;
-  //pint := pinteger(integer(aldata.p) - 8);
-  //pint^:=0;
-  FreeMemAligned(aldata.p,
-                 aldata.nAlignedSampl,
-                 aldata.nAlignedSize);
-  aldata.p:=nil;
-{$endif}
-end;
-
-procedure FreeMemAligned(var aldata: TAlignDarray);
-var
-  pint:pinteger;
+  pint: pinteger;
 begin
 // если включен FastMM с опцией
-{$ifdef fastmm}
-  setlength(aldata.d, 0);
-{$else}
-  {pint := pinteger(integer(@aldata.d[0]) - 4);
-  pint^:=0;
-  pint := pinteger(integer(@aldata.d[0]) - 8);
-  pint^:=0;}
-  FreeMemAligned(aldata.p,
-                 aldata.nAlignedSampl,
-                 aldata.nAlignedSize);
-  aldata.p:=nil;
-{$endif}
+{$IFDEF fastmm}
+  SetLength(alData.d, 0);
+{$ELSE}
+  // pint := pinteger(integer(aldata.p)-4);
+  // pint^:=0;
+  // pint := pinteger(integer(aldata.p) - 8);
+  // pint^:=0;
+  FreeMemAligned(alData.p, alData.nAlignedSampl,
+    alData.nAlignedSize);
+  alData.p := nil;
+{$ENDIF}
 end;
 
-procedure FreeMemAligned(const src: Pointer; var DstUnaligned: Pointer;
-  var DstSize: integer);
+procedure FreeMemAligned(var alData: TAlignDarray);
+var
+  pint: pinteger;
 begin
-  //if src <> DstUnaligned then
-  //begin
-    if DstUnaligned <> nil then
-    begin
-      FreeMem(DstUnaligned, DstSize);
-    end;
-  //end;
+  // если включен FastMM с опцией
+{$IFDEF fastmm}
+  SetLength(alData.d, 0);
+{$ELSE}
+  { pint := pinteger(integer(@aldata.d[0]) - 4);
+    pint^:=0;
+    pint := pinteger(integer(@aldata.d[0]) - 8);
+    pint^:=0; }
+  FreeMemAligned(alData.p, alData.nAlignedSampl,
+    alData.nAlignedSize);
+  alData.p := nil;
+{$ENDIF}
+end;
+
+procedure FreeMemAligned(const src: pointer;
+  var DstUnaligned: pointer; var DstSize: integer);
+begin
+  // if src <> DstUnaligned then
+  // begin
+  if DstUnaligned <> nil then
+  begin
+    FreeMem(DstUnaligned, DstSize);
+  end;
+  // end;
   DstUnaligned := nil;
   DstSize := 0;
 end;
 
-procedure GetMemAligned(const bits: integer; const src: Pointer;
-  const SrcSize: integer; out DstAligned, DstUnaligned: Pointer;
+procedure GetMemAligned(const bits: integer; const src: pointer;
+  const SrcSize: integer; out DstAligned, DstUnaligned: pointer;
   out DstSize: integer);
 var
   Bytes: NativeInt;
-  i: NativeInt;
+  I: NativeInt;
 begin
   if src <> nil then
   begin
-    i := NativeInt(src);
-    i := i shr bits;
-    i := i shl bits;
-    if i = NativeInt(src) then
+    I := NativeInt(src);
+    I := I shr bits;
+    I := I shl bits;
+    if I = NativeInt(src) then
     begin
       // the source is already aligned, nothing to do
       DstAligned := src;
       DstUnaligned := src;
       DstSize := SrcSize;
-      Exit;
+      exit;
     end;
   end;
   Bytes := 1 shl bits;
   DstSize := SrcSize + Bytes;
   GetMem(DstUnaligned, DstSize);
   FillChar(DstUnaligned^, DstSize, 0);
-  i := NativeInt(DstUnaligned) + Bytes;
-  i := i shr bits;
-  i := i shl bits;
-  DstAligned := Pointer(i);
+  I := NativeInt(DstUnaligned) + Bytes;
+  I := I shr bits;
+  I := I shl bits;
+  DstAligned := pointer(I);
   if src <> nil then
     Move(src^, DstAligned^, SrcSize);
 end;
 
-procedure GetMemAlignedArray_cmpx_d(const SrcSize: integer; out alData:TAlignDCmpx);
+procedure GetMemAlignedArray_cmpx_d(const SrcSize: integer;
+  out alData: TAlignDCmpx);
 begin
-// если включен FastMM с опцией
-{$ifdef fastmm}
-  setlength(aldata.d, SrcSize);
-{$else}
-  if alData.p<>nil then
+  // если включен FastMM с опцией
+{$IFDEF fastmm}
+  SetLength(alData.d, SrcSize);
+{$ELSE}
+  if alData.p <> nil then
   begin
-    if srcSize>AlignBlockLength(alData) then
+    if SrcSize > AlignBlockLength(alData) then
     begin
-      FreeMemAligned(aldata);
+      FreeMemAligned(alData);
     end
     else
       exit;
   end;
-  GetMemAlignedArray_cmpx_d(4,
-                            alData.p,
-                            SrcSize*sizeof(TComplex_d),
-                            alData.p,
-                            aldata.nAlignedSampl,
-                            aldata.nAlignedSize);
-{$endif}
+  GetMemAlignedArray_cmpx_d(4, alData.p,
+    SrcSize * sizeof(TComplex_d), alData.p,
+    alData.nAlignedSampl, alData.nAlignedSize);
+{$ENDIF}
 end;
 
 procedure GetMemAlignedArray_cmpx_d(const bits: integer;
-                                    const src: Pointer;
-                                    const SrcSize: integer;
-                                    out DstAligned: Pointer;
-                                    out DstUnaligned: Pointer;
-                                    out DstSize: integer);
+  const src: pointer; const SrcSize: integer;
+  out DstAligned: pointer; out DstUnaligned: pointer;
+  out DstSize: integer);
 var
   Bytes: NativeInt;
-  i: NativeInt;
+  I: NativeInt;
   pint: pinteger;
-  p: Pointer;
+  p: pointer;
 begin
-{$ifdef fastmm}
-  setlength(DstAligned, SrcSize);
-{$else}
+{$IFDEF fastmm}
+  SetLength(DstAligned, SrcSize);
+{$ELSE}
   if src <> nil then
   begin
-    if SrcSize>DstSize then
+    if SrcSize > DstSize then
     begin
-      i := NativeInt(src);
-      i := i shr bits;
-      i := i shl bits;
-      if i = NativeInt(src) then
+      I := NativeInt(src);
+      I := I shr bits;
+      I := I shl bits;
+      if I = NativeInt(src) then
       begin
         // the source is already aligned, nothing to do
         DstAligned := src;
-        if DstUnaligned=nil then
+        if DstUnaligned = nil then
           DstUnaligned := DstAligned;
         DstSize := SrcSize;
         // по смещению 4 лежит длина массива
         // добавлено 20.06.2021
         pint := pinteger(integer(DstAligned) - 4);
         pint^ := round(SrcSize / sizeof(TComplex_d));
-        Exit;
+        exit;
       end;
     end;
   end;
@@ -1128,95 +1163,93 @@ begin
   DstSize := SrcSize + Bytes;
   GetMem(DstUnaligned, DstSize);
   FillChar(DstUnaligned^, DstSize, 0);
-  i := NativeInt(DstUnaligned) + Bytes;
-  i := i shr bits;
-  i := i shl bits;
-  DstAligned := Pointer(i);
+  I := NativeInt(DstUnaligned) + Bytes;
+  I := I shr bits;
+  I := I shl bits;
+  DstAligned := pointer(I);
   // по смещению 4 лежит длина массива
   pint := pinteger(integer(DstAligned) - 4);
   pint^ := round(SrcSize / sizeof(TComplex_d));
   // по смещению 8 лежит кол-во ссылок на интерфейс DynArray
   pint := pinteger(integer(DstAligned) - 8);
-  pint^:=1;
+  pint^ := 1;
   if src <> nil then
     Move(src^, DstAligned, SrcSize);
-{$endif}
+{$ENDIF}
 end;
 
-procedure GetMemAlignedArray_d(const SrcSize: integer; out alData:TAlignDarray); overload;
+procedure GetMemAlignedArray_d(const SrcSize: integer;
+  out alData: TAlignDarray); overload;
 begin
-// если включен FastMM с опцией
-{$ifdef fastmm}
-  setlength(aldata.d, SrcSize);
-{$else}
-  if alData.p<>nil then
+  // если включен FastMM с опцией
+{$IFDEF fastmm}
+  SetLength(alData.d, SrcSize);
+{$ELSE}
+  if alData.p <> nil then
   begin
-    if srcSize>AlignBlockLength(alData) then
+    if SrcSize > AlignBlockLength(alData) then
     begin
-      FreeMemAligned(aldata);
+      FreeMemAligned(alData);
     end
     else
       exit;
   end;
-  GetMemAlignedArray_d(4,
-                       alData.p,               // src
-                       SrcSize*sizeof(double), // srcSize
-                       alData.p,               // DstAligned
-                       aldata.nAlignedSampl,   // DstUnAligned
-                       aldata.nAlignedSize);   // DstUnSize
-
-{$endif}
+  GetMemAlignedArray_d(4, alData.p, // src
+    SrcSize * sizeof(double), // srcSize
+    alData.p, // DstAligned
+    alData.nAlignedSampl, // DstUnAligned
+    alData.nAlignedSize); // DstUnSize
+{$ENDIF}
 end;
 
 procedure GetMemAlignedArray_d(const bits: integer;
-                               const src: Pointer;
-                               const SrcSize: integer;  // количество отсчетов для которого выделяем память
-                               out DstAligned: pointer; // TDoubleArray
-                               out DstUnaligned: Pointer;
-                               out DstSize: integer);
+  const src: pointer; const SrcSize: integer;
+  // количество отсчетов для которого выделяем память
+  out DstAligned: pointer; // TDoubleArray
+  out DstUnaligned: pointer; out DstSize: integer);
 var
   Bytes: NativeInt;
-  i, l: NativeInt;
+  I, l: NativeInt;
   pint: pinteger;
-  p: Pointer;
+  p: pointer;
 begin
-{$ifdef fastmm}
-  l:=SrcSize shr 3;
-  setlength(DstAligned, l);
-{$else}
-  if src <> nil then
-  begin
-    //if srcsize>length(tdoublearray(DstAligned)) then
+{$IFDEF fastmm}
+  l := SrcSize shr 3;
+  SetLength(DstAligned, l);
+{$ELSE}
+    if src <> nil then
     begin
-      i := NativeInt(src);
-      i := i shr bits;
-      i := i shl bits;
-      if i = NativeInt(src) then
+      // if srcsize>length(tdoublearray(DstAligned)) then
       begin
-        // the source is already aligned, nothing to do
-        DstAligned := src;
-        DstUnaligned := src;
-        DstSize := SrcSize;
-        Exit;
+        I := NativeInt(src);
+        I := I shr bits;
+        I := I shl bits;
+        if I = NativeInt(src) then
+        begin
+          // the source is already aligned, nothing to do
+          DstAligned := src;
+          DstUnaligned := src;
+          DstSize := SrcSize;
+          exit;
+        end;
       end;
     end;
-  end;
-  Bytes := 1 shl bits;
-  DstSize := SrcSize + Bytes;
-  GetMem(DstUnaligned, DstSize);
-  FillChar(DstUnaligned^, DstSize, 0);
-  i := NativeInt(DstUnaligned) + Bytes;
-  i := i shr bits;
-  i := i shl bits;
-  DstAligned := Pointer(i);
-  i:=integer(DstAligned) - 4;
-  pint := pinteger(i);
-  pint^ := round(SrcSize / sizeof(double));
-  pint := pinteger(integer(DstAligned) - 8);
-  pint^ := 1;
-  if src <> nil then
-    Move(src^, tdoublearray(DstAligned)[0], SrcSize);
-{$endif}
+    Bytes := 1 shl bits;
+    DstSize := SrcSize + Bytes;
+    GetMem(DstUnaligned, DstSize);
+    FillChar(DstUnaligned^, DstSize, 0);
+    I := NativeInt(DstUnaligned) + Bytes;
+    I := I shr bits;
+    I := I shl bits;
+    DstAligned := pointer(I);
+    I := integer(DstAligned) - 4;
+    pint := pinteger(I);
+    pint^ := round(SrcSize / sizeof(double));
+    pint := pinteger(integer(DstAligned) - 8);
+    pint^ := 1;
+    if src <> nil then
+      Move(src^, TDoubleArray(DstAligned)[0], SrcSize);
+{$ENDIF}
 end;
 
 function IsAVX2supported: boolean;
@@ -1250,8 +1283,8 @@ asm
    {$ENDIF}
 end;
 
-    function OSEnabledXmmYmm: boolean;
-    // necessary to check before using AVX, FMA or AES instructions!
+function OSEnabledXmmYmm: boolean;
+// necessary to check before using AVX, FMA or AES instructions!
 asm
   {$IFDEF CPUx86}
   push ebx
@@ -1281,20 +1314,79 @@ asm
   {$ENDIF}
 end;
 
-function AlignBlockLength(b:TAlignDarray):integer;
+function AlignBlockLength(b: TAlignDarray): integer;
 var
-  pint:pinteger;
+  pint: pinteger;
 begin
-  pint:=pinteger(integer(b.p)-4);
-  result:=pint^;
+  pint := pinteger(integer(b.p) - 4);
+  result := pint^;
 end;
 
-function AlignBlockLength(b:TAlignDCmpx):integer;
+function AlignBlockLength(b: TAlignDCmpx): integer;
 var
-  pint:pinteger;
+  pint: pinteger;
 begin
-  pint:=pinteger(integer(b.p)-4);
-  result:=pint^;
+  pint := pinteger(integer(b.p) - 4);
+  result := pint^;
+end;
+
+procedure FillWndHann(var a: TDoubleArray);
+var
+  I, N, N2: integer;
+begin
+  N := length(a) - 1;
+  for I := 0 to N do
+  begin
+    a[I] := 0.5 * (1 - cos((c_2pi * I) / (N)));
+  end;
+end;
+
+procedure FillWndHammin(var a: TDoubleArray);
+var
+  I, N, N2: integer;
+begin
+  N := length(a) - 1;
+  for I := 0 to N do
+  begin
+    a[I] := 0.53836 - 0.46164 * cos((c_2pi * I) / (N));
+  end;
+END;
+
+procedure FillWndBlackman(var a: TDoubleArray);
+const
+  alfa = 0.16;
+  a0 = (1 - alfa) / 2;
+  a1 = 0.5;
+  a2 = alfa / 2;
+var
+  I, N, N2: integer;
+begin
+  N := length(a) - 1;
+
+  for I := 0 to N do
+  begin
+    a[I] := a0 - a1 * cos((c_2pi * I) / (N)) + a2 * cos
+      ((c_4pi * I) / (N));
+  end;
+end;
+
+procedure FillWndFlattop(var a: TDoubleArray);
+const
+  a0 = 0.21557895;
+  a1 = 0.41663158;
+  a2 = 0.277263158;
+  a3 = 0.083578947;
+  a4 = 0.006947368;
+var
+  I, N, N2: integer;
+begin
+  N := length(a) - 1;
+  for I := 0 to N do
+  begin
+    a[I] := a0 - a1 * cos((c_2pi * I) / (N)) + a2 * cos
+      ((c_4pi * I) / (N)) - a3 * cos((c_6pi * I) / (N))
+      + a4 * cos((c_8pi * I) / (N))
+  end;
 end;
 
 end.

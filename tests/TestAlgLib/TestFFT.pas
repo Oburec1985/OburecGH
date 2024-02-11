@@ -26,7 +26,6 @@ type
     AlgLib: TButton;
     SSEBtn: TButton;
     ListBox1: TListBox;
-    ProgrBar: TProgressBar;
     IntEdit1: TIntEdit;
     IntEdit2: TIntEdit;
     procedure Button1Click(Sender: TObject);
@@ -34,8 +33,6 @@ type
     procedure FormCreate(Sender: TObject);
     procedure SSEBtnClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure IntEdit1Change(Sender: TObject);
-    procedure IntEdit2Change(Sender: TObject);
   private
     rezSignals:tstringlist;
     FFTProp:TFFTProp;
@@ -227,15 +224,6 @@ begin
   FFTProp.TableInd := GetArrayIndex(FCount, 2);
 end;
 
-procedure TForm1.IntEdit1Change(Sender: TObject);
-begin
-  ProgrBar.Max:=IntEdit1.IntNum;
-end;
-
-procedure TForm1.IntEdit2Change(Sender: TObject);
-begin
-  ProgrBar.Position:=IntEdit2.IntNum;
-end;
 
 procedure TForm1.SSEBtnClick(Sender: TObject);
 var
@@ -251,7 +239,7 @@ begin
   meraopts.TestName:='Фаза';
   meraopts.TestDsc:='Фаза';
 
-  m:=cmerafile.create('g:\oburec\project2010\2011\tests\signals\Cos_100_500_1000_2000\Cos_100_500_1000_2000.MERA',
+  m:=cmerafile.create('c:\USML\Файлы\cos_221_fs13500\cosinus.MERA',
                       cBuffSignal);
   s:=cbuffsignal(m.GetSignal(0));
 
