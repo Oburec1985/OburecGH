@@ -581,7 +581,17 @@ var
   s: cspm;
 begin
   if m_Manualref then
-    result := m_refArray[i]
+  begin
+    result := m_refArray[i];
+    if result=0 then
+    begin
+      s := getSpm(i);
+      if s <> nil then
+      begin
+        result := s.m_tag.GetMaxYValue;
+      end;
+    end;
+  end
   else
   begin
     s := getSpm(i);

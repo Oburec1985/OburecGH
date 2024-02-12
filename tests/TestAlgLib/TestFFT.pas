@@ -61,7 +61,8 @@ type
   end;
 
 const
-  FCount=8;
+  //FCount=8192;
+  FCount=4096;
 
   TwoPi = 6.283185307179586;
 
@@ -235,24 +236,23 @@ var
   cmplx_resArray:TComplex1DArray;
   ar,outArray:TArrayValues;
   I: Integer;
+  w:pwndFunc;
 begin
   meraopts.TestName:='Фаза';
   meraopts.TestDsc:='Фаза';
 
-  m:=cmerafile.create('c:\USML\Файлы\cos_221_fs13500\cosinus.MERA',
-                      cBuffSignal);
+  m:=cmerafile.create('c:\USML\Файлы\cos_221_fs13500\cosinus.MERA',cBuffSignal);
   s:=cbuffsignal(m.GetSignal(0));
 
-  setlength(outarray,round(fcount/2));
+  setlength(outarray,round(fcount));
   setlength(cbuffsignal(s).d_points1d,fcount);
 
   ar:=tarrayvalues(cbuffsignal(s).d_points1d);
   setlength(outarray,round(fcount/2));
-  for I := 0 to fcount - 1 do
-  begin
-    ar[i]:=i;
-  end;
-  fft_al_d_sse(tdoublearray(ar),TCmxArray_d(CalcSampl.p),fftprop);
+  //w:=GetFFTWnd(FFTProp.PCount,wdRect);
+  w:=GetFFTWnd(FFTProp.PCount,wdHann);
+  fft_al_d_sse(tdoublearray(ar),TCmxArray_d(CalcSampl.p),fftprop, w);
+  // без учета оконной функции
   NormalizeAndScaleSpmMag(TCmxArray_d(CalcSampl.p), TDoubleArray(MagFFTarray.p));
 
   rezS:=cBuffSignal.create;
@@ -260,14 +260,16 @@ begin
 
   rezs.AddPoints(TDoubleArray(MagFFTarray.p));
 
-  rezS.name:='SSETest';
+  rezS.name:='res_rect';
   rezS.freqX:=(2*FCount)/(cbuffsignal(s).freqx*2);
-  rezs.x0:=1/rezs.freqx;
+  //rezs.x0:=1/rezs.freqx;
+  rezs.x0:=0;
 
   rezSignals:=TStringList.Create;
   rezSignals.AddObject(rezS.name,rezS);
-  resMera:=cMeraFile.create('g:\oburec\project2010\2011\tests\signals\sse\res_sse.mera','g:\oburec\project2010\2011\tests\signals\',
-                             rezSignals, meraopts,nil);
+  resMera:=cMeraFile.create('c:\USML\Файлы\cos_221_fs13500\hann\res_rect.mera','c:\USML\Файлы\cos_221_fs13500\hann\',
+                             rezSignals,
+                             meraopts,nil);
   resMera.Save;
   resMera.Destroy;
   rezSignals.Destroy;

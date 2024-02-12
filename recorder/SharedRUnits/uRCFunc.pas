@@ -275,7 +275,7 @@ procedure logRCInfo(fpath: string);
 
 procedure FreeFFTPlanList;
 procedure FreeInverseFFTPlanList;
-function GetFFTWnd(fftCount: integer; wnd:TWndType): PWndFunc;
+
 function GetFFTPlan(fftCount: integer): TFFTProp;
 function GetInverseFFTPlan(fftCount: integer): TFFTProp;
 function TranslateNotifyToStr(n: integer): string;
@@ -288,8 +288,6 @@ var
   g_configCS: TRTLCriticalSection;
   // настройки FFT прямого и обратного преобразования
   g_FFTPlanList: array of TFFTProp;
-  // настройки FFT прямого и обратного преобразования
-  g_FFTWndList: array of TWndFunc;
   g_inverseFFTPlanList: array of TFFTProp;
 
 const
@@ -1643,41 +1641,6 @@ begin
     end;
   end;
   SetLength(g_inverseFFTPlanList, 0);
-end;
-
-function GetFFTWnd(fftCount: integer; wnd:TWndType): PWndFunc;
-var
-  i, l: integer;
-  pr: PWndFunc;
-  r: TWndFunc;
-begin
-  r.size := 0;
-  for i := 0 to length(g_FFTWndList) - 1 do
-  begin
-    pr := @g_FFTWndList[i];
-    if pr.size=0 then
-      break;
-    if (pr.size = fftCount) and (pr.wndtype=wnd) then
-    begin
-      result := @g_FFTWndList[i];
-      exit;
-    end;
-  end;
-  l:=i+1;
-  // длина массива
-  l := length(g_FFTWndList);
-  SetLength(g_FFTWndList, l + c_fftPlan_blockLength);
-  r.size := fftCount;
-  r.wndtype:=wnd;
-  setlength(r.ar, fftCount);
-  case wnd of
-    wdHann: FillWndHann(r.ar);
-    wdHamming: FillWndHammin(r.ar);
-    wdBlackman: FillWndBlackman(r.ar);
-    wdFlattop: FillWndFlattop(r.ar);
-  end;
-  g_FFTWndList[l] := r;
-  result := @g_FFTWndList[l];
 end;
 
 function GetFFTPlan(fftCount: integer): TFFTProp;

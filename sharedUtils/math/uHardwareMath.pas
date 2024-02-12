@@ -37,16 +37,17 @@ type
   end;
 
   // Прямоугольное окно
-  // Окно Ханна (Хеннинга)  Hann
-  // Окно Хэмминга Hammin
-  // Окно Блэкмана Blackman
+  // Окно Ханна (Хеннинга)  Hann k=2/3 или 1/1.5 или 0.67   Hanning
+  // Окно Хэмминга Hamming 1/0.54 ~1.85
+  // Окно Блэкмана Blackman  1/0.375 (или примерно 2.67).
   // Окно Кайзера
-  // Flattop
+  // Flattop 1/0.215 (или примерно 4.65)
   TWndType = (wdRect, wdHann, wdHamming, wdBlackman, wdFlattop);
   PWndType = ^TWndType;
 
   TWndFunc = record
     size: integer;
+    acf:double; // зависит от типа окна
     ar: TDoubleArray;
     wndtype: TWndType;
   end;
@@ -54,6 +55,7 @@ type
   PWndFunc = ^TWndFunc;
 
   TFFTProp = record
+    scale:double;
     TableExp: TAlignDCmpx; // множители Wn
     TableInd: TIndexArray; // Индексы нижней итерации FFT
     // Номер блока (задает первый индекс обрабатываемой временной последовательности)
@@ -140,8 +142,14 @@ procedure FillWndHann(var a: TDoubleArray);
 procedure FillWndHammin(var a: TDoubleArray);
 procedure FillWndBlackman(var a: TDoubleArray);
 procedure FillWndFlattop(var a: TDoubleArray);
+function GetFFTWnd(fftCount: integer; wnd:TWndType): PWndFunc;
+
+var
+  // настройки FFT прямого и обратного преобразования
+  g_FFTWndList: array of TWndFunc;
 
 const
+  c_fftPlan_blockLength =10;
   reg = $FA10;
   PF_FLOATING_POINT_PRECISION_ERRATA = 0; // On a Pentium, a floating-point precision error can occur in rare circumstances.
   PF_FLOATING_POINT_EMULATED = 1; // Floating-point operations are emulated using a software emulator.
@@ -190,6 +198,63 @@ const
   shl4TComplex_d = 4; // {2^shl4TComplex = SizeOf(TComplex)}
 
 implementation
+
+
+function GetFFTWnd(fftCount: integer; wnd:TWndType): PWndFunc;
+var
+  i, l: integer;
+  pr: PWndFunc;
+  r: TWndFunc;
+begin
+  r.size := 0;
+  r.acf:=1;
+  for i := 0 to length(g_FFTWndList) - 1 do
+  begin
+    pr := @g_FFTWndList[i];
+    if pr.size=0 then
+      break;
+    if (pr.size = fftCount) and (pr.wndtype=wnd) then
+    begin
+      result := @g_FFTWndList[i];
+      exit;
+    end;
+  end;
+  l:=i+1;
+  // длина массива
+  l := length(g_FFTWndList);
+  SetLength(g_FFTWndList, l + c_fftPlan_blockLength);
+  r.size := fftCount;
+  r.wndtype:=wnd;
+  setlength(r.ar, fftCount);
+  case wnd of
+    wdHann:    // 0.22/0.14
+    begin
+      // acf 2 ecf 1.63
+      r.acf:=2;
+      FillWndHann(r.ar);
+    end;
+    wdHamming:
+    begin
+      // acf 1.85 ecf 1.59
+      r.acf:=1.8534;
+      FillWndHammin(r.ar);
+    end;
+    wdBlackman:
+    begin
+      // acf 2.8 ecf 1.97
+      r.acf:=2.8;
+      FillWndBlackman(r.ar);
+    end;
+    wdFlattop:
+    begin
+      // acf 4.18 ecf 2.26
+      r.acf:=4.18;
+      FillWndFlattop(r.ar);
+    end;
+  end;
+  g_FFTWndList[l] := r;
+  result := @g_FFTWndList[l];
+end;
 
 function fSUM(const Data: array of double; first, stop: integer): Extended;
 asm  // IN: EAX = ptr to Data, EDX = High(Data) = Count - 1
@@ -439,7 +504,7 @@ procedure fft_al_d_sse(inData: TDoubleArray; var outData: TCmxArray_d;
 var
   I: Integer;
 begin
-  if (wnd <> nil) or (wnd.wndtype <> wdRect) then
+  if (wnd <> nil) and (wnd.wndtype <> wdRect) then
   begin
     for I := 0 to wnd.size - 1 do
     begin
@@ -1333,11 +1398,13 @@ end;
 procedure FillWndHann(var a: TDoubleArray);
 var
   I, N, N2: integer;
+  d:double;
 begin
   N := length(a) - 1;
+  d:= c_2pi/N;
   for I := 0 to N do
   begin
-    a[I] := 0.5 * (1 - cos((c_2pi * I) / (N)));
+    a[I] := 0.5 * (1 - cos(d * I));
   end;
 end;
 

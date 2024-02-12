@@ -371,7 +371,11 @@ begin
       end;
 
       //NormalizeAndScaleSpmMag(TCmxArray_d(cmplx_resArray.p), TDoubleArray(m_rms.p));
-      k:=1/(FFTProp.PCount shr 1);
+      // wnd.scale зависит от типа окна
+      if fWnd=nil then
+        k:=1/(FFTProp.PCount shr 1)
+      else
+        k:=fWnd.acf/(FFTProp.PCount shr 1);
       if j>1 then
         k:=k/j; // усреднение спектра
       MULT_SSE_al_cmpx_d(tCmxArray_d(mid_cmplx_resArray.p), k);
