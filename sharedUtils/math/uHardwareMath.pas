@@ -42,7 +42,7 @@ type
   // Окно Блэкмана Blackman
   // Окно Кайзера
   // Flattop
-  TWndType = (wdRect, wdHann, wdHammin, wdBlackman, wdFlattop);
+  TWndType = (wdRect, wdHann, wdHamming, wdBlackman, wdFlattop);
   PWndType = ^TWndType;
 
   TWndFunc = record

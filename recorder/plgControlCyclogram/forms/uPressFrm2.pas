@@ -151,6 +151,8 @@ type
     // пересчитать полосы в индексы
     procedure ReevalBands(s: cspm);
   public
+    function GetWnd:string;
+    function GetWndInd:integer;
     function GetRef(i: integer): double;
     procedure SetRef(d: double);
     procedure doAfterLoad; override;
@@ -620,6 +622,61 @@ begin
   end;
 end;
 
+function cPressCamFactory2.GetWnd: string;
+var
+  s:string;
+begin
+  s:=getparam(m_spmCfg.str,'Wnd');
+  if CheckStr(s) then
+    result:=s
+  else
+    result:='Rect';
+end;
+
+//  c_Rect = 'Rect';
+//  c_Hann = 'Hann';
+//  c_Hamming = 'Hamming';
+//  c_Blackmann = 'Blackman';
+//  c_Flattop = 'Flattop';
+
+
+function cPressCamFactory2.GetWndInd:integer;
+var
+  s:string;
+  I: Integer;
+begin
+  s:=getWnd;
+  if s='Rect' then
+  begin
+    result:=0;
+  end
+  else
+  begin
+    if s='Hann' then
+    begin
+      result:=2;
+    end
+    else
+    begin
+      if s='Hamming' then
+      begin
+        result:=1;
+      end
+      else
+      begin
+        if s='Blackman' then
+        begin
+          result:=3;
+        end
+        else // Flattop
+        begin
+          result:=4;
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure cPressCamFactory2.pushTag(tag: string; bnum: integer; v: double);
 var
   i:integer;
@@ -1084,7 +1141,9 @@ begin
   if self = g_PressCamFactory2.GetFrm(0) then
   begin
     c := a_pIni.ReadInteger('PressCamFactory2', 'FFTCount', 256);
-    g_PressCamFactory2.m_spmCfg.str := 'FFTCount=' + inttostr(c);
+    s:='FFTCount=' + inttostr(c)+',';
+    s:=s+'Wnd='+a_pIni.ReadString(str, 'Wnd', 'Rect');
+    g_PressCamFactory2.m_spmCfg.str :=  s;
     g_PressCamFactory2.BandCount := a_pIni.ReadInteger('PressCamFactory2', 'BandCount', 0);
     g_PressCamFactory2.m_manualBand := a_pIni.ReadBool('PressCamFactory2', 'ManualBand', false);
     g_PressCamFactory2.m_typeRes := a_pIni.ReadInteger('PressCamFactory2', 'TypeRes', 0);
@@ -1129,12 +1188,16 @@ begin
     end;
     inc(c);
   end;
+  if s<>nil then
+    a_pIni.WriteString(str, 'Wnd', s.GetWndStr)
+  else
+    a_pIni.WriteString(str, 'Wnd', 'c_Rect');
   a_pIni.WriteInteger(str, 'BarGraphStepCount', m_BargraphStep);
   a_pIni.WriteInteger(str, 'sCount', c);
   a_pIni.WriteInteger(str, 'BNum', m_bnum);
   if self = g_PressCamFactory2.GetFrm(0) then
   begin
-    lstr := GetParam(g_PressCamFactory2.m_spmCfg.str, 'FFTCount');
+    lstr:=GetParam(s.GetProperties, 'FFTCount');
     a_pIni.WriteInteger('PressCamFactory2', 'FFTCount', strtoint(lstr));
     a_pIni.WriteInteger('PressCamFactory2', 'BandCount',
       g_PressCamFactory2.BandCount);

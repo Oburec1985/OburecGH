@@ -1827,7 +1827,8 @@ var
   a:cbasealgcontainer;
   I: Integer;
 begin
-  m_str:=s;
+  ///m_str:=s;
+  m_str:=updateParams(m_str, s);
   if ChildCount>0 then
   begin
     if ChildCount=1 then
@@ -1835,7 +1836,7 @@ begin
     else
     begin
       a:=getAlg(0);
-      m_str:=DelParams(s,a.getExtProp, ',');
+      m_str:=DelParams(m_str,a.getExtProp, ',');
     end;
     for I := 0 to ChildCount - 1 do
     begin

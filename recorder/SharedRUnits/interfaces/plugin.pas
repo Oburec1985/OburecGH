@@ -58,7 +58,7 @@ const
 	                                  // виртуальных каналов принадлежащих плагину
 	                                  //  RCNOTIFY rcn;
 	                                  //  rcn.punkParam=IEnumUnknown со списком каналов
-	PN_RCINITIALIZED =            24; // Инициализация рекордера завершена
+	PN_RCINITIALIZED =            24; // Инициализация рекордера завершена, все плагины загружены
 	PN_ON_CHANGE_DATAPLACEMENT =  25; // Уведомление о смене рабочего каталога и имени фрейма
 	                                  // передается ссылка на DATAPLACEMENT
 	PN_ON_BEFORE_FRAME_REMOVING = 26; // Уведомление перед удалнием пустого фрейма

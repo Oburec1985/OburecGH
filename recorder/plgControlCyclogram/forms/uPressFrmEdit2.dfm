@@ -146,6 +146,13 @@ object PressFrmEdit2: TPressFrmEdit2
       Height = 16
       Caption = #1058#1080#1087' '#1086#1094#1077#1085#1082#1080
     end
+    object Label3: TLabel
+      Left = 470
+      Top = 161
+      Width = 29
+      Height = 16
+      Caption = #1054#1082#1085#1086
+    end
     object FFTCountEdit: TIntEdit
       Left = 229
       Top = 43
@@ -346,6 +353,25 @@ object PressFrmEdit2: TPressFrmEdit2
       Caption = #1057#1086#1079#1076#1072#1090#1100' '#1090#1077#1075#1080
       TabOrder = 13
     end
+    object WndCB: TComboBox
+      Left = 470
+      Top = 180
+      Width = 125
+      Height = 24
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      ItemIndex = 0
+      TabOrder = 14
+      Text = 'Rectangular'
+      Items.Strings = (
+        'Rectangular'
+        'Hamming'
+        'Henning'
+        'Blackman'
+        'Flattop')
+    end
   end
   object Panel1: TPanel
     Left = 0
@@ -355,8 +381,8 @@ object PressFrmEdit2: TPressFrmEdit2
     Align = alBottom
     TabOrder = 2
     object UpdateAlgBtn: TSpeedButton
-      Left = 3
-      Top = 4
+      Left = 2
+      Top = 5
       Width = 64
       Height = 48
       Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088

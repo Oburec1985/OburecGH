@@ -36,6 +36,8 @@ type
     TypeResCB: TComboBox;
     Label2: TLabel;
     CreateTagsCB: TCheckBox;
+    WndCB: TComboBox;
+    Label3: TLabel;
     procedure FFTCountSpinBtnDownClick(Sender: TObject);
     procedure FFTCountSpinBtnUpClick(Sender: TObject);
     procedure UpdateAlgBtnClick(Sender: TObject);
@@ -279,6 +281,7 @@ begin
   end;
   sgchange(BandSG);
   TypeResCB.ItemIndex:=g_PressCamFactory2.m_typeRes;
+  wndCB.ItemIndex:=g_PressCamFactory2.GetWndInd;
   if ShowModal=mrok then
   begin
     updateBands;
@@ -293,6 +296,13 @@ begin
     g_PressCamFactory2.CreateAlg(TagsLB.Items);
     g_PressCamFactory2.CreateFrames;
     g_PressCamFactory2.m_spmCfg.str:='FFTCount='+FFTCountEdit.text;
+    case WndCb.ItemIndex of
+      0:g_PressCamFactory2.m_spmCfg.str:='Wnd=Rect';
+      1:g_PressCamFactory2.m_spmCfg.str:='Wnd=Hamming';
+      2:g_PressCamFactory2.m_spmCfg.str:='Wnd=Hann'; // Хеннинг
+      3:g_PressCamFactory2.m_spmCfg.str:='Wnd=Blackmann';
+      4:g_PressCamFactory2.m_spmCfg.str:='Wnd=Flattop';
+    end;
     m_pf.m_bnum:=BNumIE.IntNum;
     if TypeResCB.ItemIndex=0 then // СКО
     begin

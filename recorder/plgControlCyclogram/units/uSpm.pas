@@ -74,9 +74,12 @@ type
     fNullsPoints,
     // число точек на которое происходит смещение для того чтобы считать новый блок (не равно fOutSize если есть перекрытие)
     fShift: cardinal;
+    // окно
+    fWnd:PWndFunc;
   protected
     function getrestype:integer;
     procedure setrestype(i:integer);
+    procedure setWnd(s:string);
     // расчет минмаксов
     procedure evalMinMax;
     procedure doOnStart; override;
@@ -100,6 +103,7 @@ type
     function getCreateOutTag: boolean;
     procedure setCreateOutTag(b: boolean);
   public
+    function GetWndStr: string;
     function GetProperties: string; override;
     function getExtProp: string;override;
     procedure SetProperties(str: string); override;
@@ -135,6 +139,11 @@ uses
 
 const
   C_SpmOpts = 'FFTCount=256,Overflow=0,dX=-1,BCount=1,Addnull=0';
+  c_Rect = 'Rect';
+  c_Hann = 'Hann';
+  c_Hamming = 'Hamming';
+  c_Blackmann = 'Blackman';
+  c_Flattop = 'Flattop';
 
 
 { cSpm }
@@ -338,7 +347,14 @@ begin
       j:=0;
       while FFTProp.StartInd<copycount do
       begin
-        fft_al_d_sse(TDoubleArray(m_EvalBlock.p), tCmxArray_d(cmplx_resArray.p), FFTProp);
+        if fWnd<>nil then
+        begin
+          fft_al_d_sse(TDoubleArray(m_EvalBlock.p), tCmxArray_d(cmplx_resArray.p), FFTProp, fWnd);
+        end
+        else
+        begin
+          fft_al_d_sse(TDoubleArray(m_EvalBlock.p), tCmxArray_d(cmplx_resArray.p), FFTProp);
+        end;
         if FFTProp.StartInd=0 then
         begin
           move(cmplx_resArray.p^, mid_cmplx_resArray.p^, m_fftCount * sizeof(TComplex_d));
@@ -563,6 +579,15 @@ begin
       changed:=true;
     end;
   end;
+  lstr := GetParam(str, 'Wnd');
+  if CheckStr(lstr) then
+  begin
+    if lstr<> GetWndStr then
+    begin
+      SetWnd(lstr);
+      changed:=true;
+    end;
+  end;
   lstr := GetParam(str, 'Addnull');
   if CheckStr(lstr) then
   begin
@@ -719,6 +744,22 @@ begin
     0: result:=0;
     1: result:=1;
     2: result:=2;
+  end;
+end;
+
+function cSpm.GetWndStr: string;
+begin
+  if fWnd=nil then
+    result:=c_Rect
+  else
+  begin
+    case fWnd.wndtype of
+      wdRect: result:=c_Rect;
+      wdHann: result:=c_Hann;
+      wdHamming: result:=c_Hamming;
+      wdBlackman: result:=c_Blackmann;
+      wdFlattop: result:=c_Flattop;
+    end;
   end;
 end;
 
@@ -944,6 +985,30 @@ begin
   if t <> nil then
   begin
 
+  end;
+end;
+
+procedure cSpm.setWnd(s: string);
+begin
+  if s=c_Rect then
+  begin
+    fWnd:=GetFFTWnd(m_fftCount, wdRect);
+  end;
+  if s=c_Hann then
+  begin
+    fWnd:=GetFFTWnd(m_fftCount, wdHann);
+  end;
+  if s=c_Hamming then
+  begin
+    fWnd:=GetFFTWnd(m_fftCount, wdHamming);
+  end;
+  if s=c_Blackmann then
+  begin
+    fWnd:=GetFFTWnd(m_fftCount, wdBlackman);
+  end;
+  if s=c_Flattop then
+  begin
+    fWnd:=GetFFTWnd(m_fftCount, wdFlattop);
   end;
 end;
 
