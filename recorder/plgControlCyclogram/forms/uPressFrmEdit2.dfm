@@ -362,13 +362,12 @@ object PressFrmEdit2: TPressFrmEdit2
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
-      ItemIndex = 0
       TabOrder = 14
       Text = 'Rectangular'
       Items.Strings = (
         'Rectangular'
         'Hamming'
-        'Henning'
+        'Hanning'
         'Blackman'
         'Flattop')
     end

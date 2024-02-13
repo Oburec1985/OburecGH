@@ -228,6 +228,7 @@ var
   s:cspm;
 begin
   m_pf:=pf;
+  pf.bnumupdate:=true;
   BNumIE.IntNum:=pf.m_bnum;
   // отображаем векторные теги
   if not m_init then
@@ -303,7 +304,10 @@ begin
       3:g_PressCamFactory2.m_spmCfg.str:='Wnd=Blackmann';
       4:g_PressCamFactory2.m_spmCfg.str:='Wnd=Flattop';
     end;
+    // номер полосы
     m_pf.m_bnum:=BNumIE.IntNum;
+    m_pf.BNumIE.IntNum:=BNumIE.IntNum;
+    m_pf.updatecaption;
     if TypeResCB.ItemIndex=0 then // СКО
     begin
       m_pf.UnitMaxALab.Caption:='psi, rms';
@@ -312,6 +316,7 @@ begin
     begin
       m_pf.UnitMaxALab.Caption:='psi, pk-pk';
     end;
+
     //showmessage(inttostr(length(TDoubleArray(m_pf.PressFrmFrame21.spm.m_rms.p))));
   end;
 end;

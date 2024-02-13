@@ -47,7 +47,8 @@ type
 
   TWndFunc = record
     size: integer;
-    acf:double; // зависит от типа окна
+    ecf:double; // зависит от типа окна. норм-ия СКО
+    acf:double; // зависит от типа окна. норм-ия А
     ar: TDoubleArray;
     wndtype: TWndType;
   end;
@@ -208,6 +209,7 @@ var
 begin
   r.size := 0;
   r.acf:=1;
+  r.ecf:=1;
   for i := 0 to length(g_FFTWndList) - 1 do
   begin
     pr := @g_FFTWndList[i];
@@ -231,24 +233,28 @@ begin
     begin
       // acf 2 ecf 1.63
       r.acf:=2;
+      r.ecf:=1.63;
       FillWndHann(r.ar);
     end;
     wdHamming:
     begin
       // acf 1.85 ecf 1.59
       r.acf:=1.8534;
+      r.ecf:=1.59;
       FillWndHammin(r.ar);
     end;
     wdBlackman:
     begin
       // acf 2.8 ecf 1.97
       r.acf:=2.8;
+      r.ecf:=1.97;
       FillWndBlackman(r.ar);
     end;
     wdFlattop:
     begin
       // acf 4.18 ecf 2.26
       r.acf:=4.18;
+      r.ecf:=2.26;
       FillWndFlattop(r.ar);
     end;
   end;

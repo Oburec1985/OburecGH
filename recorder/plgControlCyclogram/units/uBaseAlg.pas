@@ -128,6 +128,7 @@ type
     function getprops:string;overload;
     procedure setprops(s:string);
   public
+    function getwnd:TWndType;
     function ChildCount:integer;
     function getAlg(i:integer):cBaseAlgContainer;
     procedure delAlg(a:cBaseAlgContainer);
@@ -1820,6 +1821,20 @@ end;
 function cAlgConfig.getprops:string;
 begin
   result:=getprops(0);
+end;
+
+function cAlgConfig.getwnd: TWndType;
+var
+  a:cbasealgcontainer;
+  s:cspm;
+begin
+  a:=getAlg(0);
+  result:=wdRect;
+  if a is cspm then
+  begin
+    s:=cspm(a);
+    Result:=s.GetWndType;
+  end;
 end;
 
 procedure cAlgConfig.setprops(s: string);

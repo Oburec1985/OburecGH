@@ -103,6 +103,8 @@ type
     function getCreateOutTag: boolean;
     procedure setCreateOutTag(b: boolean);
   public
+    function GetWndFunc: PWndFunc;
+    function GetWndType: TWndType;
     function GetWndStr: string;
     function GetProperties: string; override;
     function getExtProp: string;override;
@@ -751,6 +753,11 @@ begin
   end;
 end;
 
+function cSpm.GetWndFunc: PWndFunc;
+begin
+  result:=fWnd;
+end;
+
 function cSpm.GetWndStr: string;
 begin
   if fWnd=nil then
@@ -765,6 +772,14 @@ begin
       wdFlattop: result:=c_Flattop;
     end;
   end;
+end;
+
+function cSpm.GetWndType: TWndType;
+begin
+  if fWnd=nil then
+    result:=wdRect
+  else
+    result:=fwnd.wndtype;
 end;
 
 function cSpm.GetResName: string;

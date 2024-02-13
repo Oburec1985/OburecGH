@@ -24,11 +24,12 @@ uses
   shellapi,
   uPathMng,
   uExcel,
+  uListMath,
   uSpm, uBaseAlg,
   opengl, uSimpleObjects,
   math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uPressFrmFrame2,
-  //uPathMng,
+  // uPathMng,
   uRcCtrls, Menus;
 
 type
@@ -39,9 +40,9 @@ type
 
   TTagRec = record
     // rms // исходный тег по которому идет расчет
-    name:string;
+    name: string;
     // тег рекордера
-    m_bandTags:array of itag;
+    m_bandTags: array of itag;
   end;
 
   TPressFrm2 = class(TRecFrm)
@@ -61,19 +62,24 @@ type
     N1: TMenuItem;
     SaveBtn: TSpeedButton;
     OpenBtn: TButton;
-    IntEdit1: TIntEdit;
     PressFrmFrame21: TPressFrmFrame2;
+    BNumSB: TSpinButton;
+    BNumIE: TIntEdit;
+    BNumLabel: TLabel;
     procedure N1Click(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
     procedure OpenBtnClick(Sender: TObject);
     procedure PressFrmFrame21ProgrBarMouseMove(Sender: TObject;
-      Shift: TShiftState; X, Y: Integer);
-    procedure IntEdit1Change(Sender: TObject);
+      Shift: TShiftState; X, Y: integer);
+    procedure BNumSBDownClick(Sender: TObject);
+    procedure BNumSBUpClick(Sender: TObject);
   public
-    m_BargraphStep:integer;
+    m_BargraphStep: integer;
     m_lastFile: string;
     m_saveBlockNum: integer;
+
     m_bnum: integer;
+    bnumUpdate: boolean;
 
     m_frames: tlist;
     // максимум (по умолчанию из тега)
@@ -93,11 +99,11 @@ type
     procedure doStart;
     procedure doStop;
     function Ready: boolean;
-    procedure UpdateCaption;
   public
+    procedure UpdateCaption;
     function Frame(i: integer): TPressFrmFrame2; overload;
     function Frame(s: string): TPressFrmFrame2; overload;
-    function FrameCount:integer;
+    function FrameCount: integer;
     function f1: double;
     function f2: double;
     procedure CreateFrame(sname: string);
@@ -118,6 +124,9 @@ type
 
   cPressCamFactory2 = class(cRecBasicFactory)
   public
+    sortedFrames: tlist;
+    m_comparator: fcomparator;
+
     fLastBlock: double;
     // пересчитано в интдексы или нет
     M_InitBands: boolean;
@@ -134,8 +143,8 @@ type
     m_typeRes: integer;
     // теги
     m_createTags: boolean;
-    m_tagsinit:boolean;
-    m_tags:array of TTagRec;
+    m_tagsinit: boolean;
+    m_tags: array of TTagRec;
   private
     // число дочерних компонентов
     m_counter: integer;
@@ -151,8 +160,11 @@ type
     // пересчитать полосы в индексы
     procedure ReevalBands(s: cspm);
   public
-    function GetWnd:string;
-    function GetWndInd:integer;
+    procedure Sort;
+    function GetWnd: string;
+    function GetWndType: TWndType;
+    function GetWndFunc: PWndFunc;
+    function GetWndInd: integer;
     function GetRef(i: integer): double;
     procedure SetRef(d: double);
     procedure doAfterLoad; override;
@@ -173,7 +185,8 @@ type
     procedure StrToBands(s: string);
     procedure StrToRefs(s: string);
     // записать значение в тег
-    procedure pushTag(tag:string;bnum:integer; v:double);
+    procedure pushTag(tag: string; bnum: integer; v: double);
+    function getFrmByBNum(i: integer): TPressFrm2;
   public
     constructor create;
     destructor destroy; override;
@@ -235,13 +248,13 @@ var
   s1: string;
   i: integer;
 begin
-  setlength(m_refArray,m_spmCfg.ChildCount);
+  setlength(m_refArray, m_spmCfg.ChildCount);
   for i := 0 to m_spmCfg.ChildCount - 1 do
   begin
     s1 := getSubStrByIndex(s, ';', 1, i);
     if s1 = '' then
     begin
-      m_manualRef := false;
+      m_Manualref := false;
       break;
     end;
     m_refArray[i] := strtofloatext(s1);
@@ -253,9 +266,9 @@ var
   i: integer;
 begin
   result := '';
-  for i := 0 to Length(m_refArray)-1 do
+  for i := 0 to Length(m_refArray) - 1 do
   begin
-    result := result + floattostr(m_refArray[i])+';';
+    result := result + floattostr(m_refArray[i]) + ';';
   end;
 end;
 
@@ -281,7 +294,7 @@ var
   find: boolean;
 begin
   // удаляем лишние
-  for i := m_spmCfg.childCount - 1 downto 0 do
+  for i := m_spmCfg.ChildCount - 1 downto 0 do
   begin
     spm := cspm(m_spmCfg.getAlg(i));
     find := false;
@@ -333,7 +346,7 @@ begin
   Frm.BarPanel.ShowHint := true;
   Frm.BarPanel.Hint := s.m_tag.tagname;
 
-  for j := 1 to m_spmCfg.childCount - 1 do
+  for j := 1 to m_spmCfg.ChildCount - 1 do
   begin
     s := getSpm(j);
     Frm.CreateFrame(s.m_tag.tagname);
@@ -360,14 +373,14 @@ begin
     Frm.BarPanel.ShowHint := true;
     Frm.BarPanel.Hint := s.m_tag.tagname;
 
-    for j := 1 to m_spmCfg.childCount - 1 do
+    for j := 1 to m_spmCfg.ChildCount - 1 do
     begin
       s := getSpm(j);
       Frm.CreateFrame(s.m_tag.tagname);
     end;
-    frm.sortframes;
+    Frm.sortframes;
   end;
-  setlength(m_refArray, m_spmCfg.childCount);
+  setlength(m_refArray, m_spmCfg.ChildCount);
 end;
 
 procedure cPressCamFactory2.CreateAlgConfig;
@@ -389,24 +402,43 @@ end;
 procedure cPressCamFactory2.createevents;
 begin
   addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
-  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
+  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState,
+    doChangeRState);
   addplgevent('cSRSFactory_doChangeRState', c_RC_LeaveCfg, doChangeCfg);
+end;
+
+function TlistSortCompare(p1, p2: pointer): integer;
+begin
+  if TPressFrm2(p1).m_bnum > TPressFrm2(p2).m_bnum then
+    result := 1
+  else
+  begin
+    if TPressFrm2(p1).m_bnum < TPressFrm2(p2).m_bnum then
+      result := -1
+    else
+      result := 0;
+  end;
 end;
 
 constructor cPressCamFactory2.create;
 begin
   inherited;
+  sortedFrames := tlist.create;
+  m_comparator := TlistSortCompare;
+
   m_lRefCount := 1;
   m_counter := 0;
   m_name := c_Name;
   m_picname := c_Pic;
   m_Guid := IID_PRESS;
   createevents;
-  BandCount:=6;
+  BandCount := 6;
 end;
 
 destructor cPressCamFactory2.destroy;
 begin
+  sortedFrames.destroy;
+
   destroyevents;
   inherited;
 end;
@@ -419,37 +451,38 @@ end;
 procedure cPressCamFactory2.doAfterLoad;
 var
   s: cspm;
-  I: Integer;
-  f:TPressFrm2;
+  i: integer;
+  f: TPressFrm2;
 begin
   inherited;
   CreateAlgConfig;
-  for I := 0 to m_CompList.Count - 1 do
+  for i := 0 to m_CompList.Count - 1 do
   begin
-    f:=TPressFrm2(getfrm(i));
+    f := TPressFrm2(GetFrm(i));
     f.sortframes;
   end;
 end;
 
 procedure cPressCamFactory2.doChangeCfg(Sender: TObject);
 var
-  i, j:integer;
-  s:cspm;
+  i, j: integer;
+  s: cspm;
 begin
   if m_createTags then
   begin
     if not m_tagsinit then
     begin
       setlength(m_tags, m_spmCfg.ChildCount);
-      for I := 0 to m_spmCfg.ChildCount-1 do
+      for i := 0 to m_spmCfg.ChildCount - 1 do
       begin
-        m_tagsinit:=true;
-        s:=getspm(i);
-        m_tags[i].name:=s.m_tag.tagname;
+        m_tagsinit := true;
+        s := getSpm(i);
+        m_tags[i].name := s.m_tag.tagname;
         setlength(m_tags[i].m_bandTags, BandCount);
         for j := 0 to BandCount - 1 do
         begin
-          m_tags[i].m_bandTags[j]:=createScalar(s.m_tag.tagname+'b'+inttostr(j), false);
+          m_tags[i].m_bandTags[j] := createScalar
+            (s.m_tag.tagname + 'b' + inttostr(j), false);
         end;
       end;
     end;
@@ -535,6 +568,7 @@ begin
     Frm := TPressFrm2(GetFrm(i));
     Frm.doStart;
   end;
+  Sort;
 end;
 
 procedure cPressCamFactory2.doStop;
@@ -576,6 +610,11 @@ begin
   result := Length(m_bands);
 end;
 
+function cPressCamFactory2.getFrmByBNum(i: integer): TPressFrm2;
+begin
+  result := nil
+end;
+
 function cPressCamFactory2.GetRef(i: integer): double;
 var
   s: cspm;
@@ -583,7 +622,7 @@ begin
   if m_Manualref then
   begin
     result := m_refArray[i];
-    if result=0 then
+    if result = 0 then
     begin
       s := getSpm(i);
       if s <> nil then
@@ -604,11 +643,26 @@ end;
 
 procedure cPressCamFactory2.SetRef(d: double);
 var
-  I: Integer;
+  i: integer;
 begin
-  for I := 0 to length(m_refArray) - 1 do
+  for i := 0 to Length(m_refArray) - 1 do
   begin
-    m_refArray[i]:=d;
+    m_refArray[i] := d;
+  end;
+end;
+
+procedure cPressCamFactory2.Sort;
+var
+  i: integer;
+begin
+  sortedFrames.clear;
+  for i := 0 to m_CompList.Count - 1 do
+  begin
+    sortedFrames.Add(GetFrm(i));
+  end;
+  if Count > 0 then
+  begin
+    sortedFrames.Sort(m_comparator);
   end;
 end;
 
@@ -618,7 +672,7 @@ var
   spm: cspm;
 begin
   result := nil;
-  for i := 0 to m_spmCfg.childCount - 1 do
+  for i := 0 to m_spmCfg.ChildCount - 1 do
   begin
     spm := cspm(m_spmCfg.getAlg(i));
     if spm.m_tag <> nil then
@@ -634,68 +688,85 @@ end;
 
 function cPressCamFactory2.GetWnd: string;
 var
-  s:string;
+  s: string;
 begin
-  s:=getparam(m_spmCfg.str,'Wnd');
+  s := getparam(m_spmCfg.str, 'Wnd');
   if CheckStr(s) then
-    result:=s
+    result := s
   else
-    result:='Rect';
+    result := 'Rect';
 end;
 
-//  c_Rect = 'Rect';
-//  c_Hann = 'Hann';
-//  c_Hamming = 'Hamming';
-//  c_Blackmann = 'Blackman';
-//  c_Flattop = 'Flattop';
+// c_Rect = 'Rect';
+// c_Hann = 'Hann';
+// c_Hamming = 'Hamming';
+// c_Blackmann = 'Blackman';
+// c_Flattop = 'Flattop';
 
-
-function cPressCamFactory2.GetWndInd:integer;
+function cPressCamFactory2.GetWndInd: integer;
 var
-  s:string;
-  I: Integer;
+  s: string;
+  i: integer;
 begin
-  s:=getWnd;
-  if s='Rect' then
+  s := GetWnd;
+  if s = 'Rect' then
   begin
-    result:=0;
+    result := 0;
   end
   else
   begin
-    if s='Hann' then
+    if s = 'Hann' then
     begin
-      result:=2;
+      result := 2;
     end
     else
     begin
-      if s='Hamming' then
+      if s = 'Hamming' then
       begin
-        result:=1;
+        result := 1;
       end
       else
       begin
-        if s='Blackman' then
+        if s = 'Blackman' then
         begin
-          result:=3;
+          result := 3;
         end
         else // Flattop
         begin
-          result:=4;
+          result := 4;
         end;
       end;
     end;
   end;
 end;
 
+function cPressCamFactory2.GetWndFunc: PWndFunc;
+var
+  s: cspm;
+begin
+  s := getSpm(0);
+  result := s.GetWndFunc;
+end;
+
+function cPressCamFactory2.GetWndType: TWndType;
+var
+  s: cspm;
+begin
+  s := getSpm(0);
+  result := wdRect;
+  if s <> nil then
+    result := s.GetWndType;
+end;
+
 procedure cPressCamFactory2.pushTag(tag: string; bnum: integer; v: double);
 var
-  i:integer;
+  i: integer;
 begin
-  for I := 0 to m_spmCfg.childCount - 1 do
+  for i := 0 to m_spmCfg.ChildCount - 1 do
   begin
-    if m_tags[i].name=tag then
+    if m_tags[i].name = tag then
     begin
-      m_tags[i].m_bandTags[bnum].PushValue(v,-1);
+      m_tags[i].m_bandTags[bnum].PushValue(v, -1);
     end;
   end;
 end;
@@ -715,15 +786,14 @@ begin
   end;
 end;
 
-
 procedure cPressCamFactory2.SetBCount(c: integer);
 var
   s: cspm;
 begin
   setlength(m_bands, c);
-  if m_spmCfg=nil then
+  if m_spmCfg = nil then
     exit;
-  s:=getspm(0);
+  s := getSpm(0);
   if s = nil then
     exit;
   if s.m_tag = nil then
@@ -767,7 +837,7 @@ end;
 
 function cPressCamFactory2.getSpm(i: integer): cspm;
 begin
-  if m_spmCfg.childCount > 0 then
+  if m_spmCfg.ChildCount > 0 then
     result := cspm(m_spmCfg.getAlg(i))
   else
     result := nil;
@@ -802,9 +872,9 @@ begin
   result := TPressFrmFrame2(m_frames.Items[i]);
 end;
 
-function TPressFrm2.FrameCount:integer;
+function TPressFrm2.FrameCount: integer;
 begin
-  result:=m_frames.Count;
+  result := m_frames.Count;
 end;
 
 function TPressFrm2.Frame(s: string): TPressFrmFrame2;
@@ -820,6 +890,24 @@ begin
       result := fr;
       exit;
     end;
+  end;
+end;
+
+procedure TPressFrm2.BNumSBDownClick(Sender: TObject);
+begin
+  if BNumIE.IntNum > 0 then
+  begin
+    BNumIE.IntNum := BNumIE.IntNum - 1;
+    bnumUpdate := true;
+  end;
+end;
+
+procedure TPressFrm2.BNumSBUpClick(Sender: TObject);
+begin
+  if BNumIE.IntNum < g_PressCamFactory2.BandCount - 1 then
+  begin
+    BNumIE.IntNum := BNumIE.IntNum + 1;
+    bnumUpdate := true;
   end;
 end;
 
@@ -840,17 +928,19 @@ begin
     fr := Frame(i);
     fr.parent.destroy;
   end;
-  m_frames.Clear;
+  m_frames.clear;
 end;
 
 constructor TPressFrm2.create(Aowner: tcomponent);
 begin
   inherited;
-  m_BargraphStep:=100;
+  m_BargraphStep := 100;
   m_HH := 0.7;
   m_H := 0.5;
   m_frames := tlist.create;
   PressFrmFrame21.m_frm := self;
+
+  g_PressCamFactory2.sortedFrames.Add(self);
 end;
 
 procedure TPressFrm2.CreateFrame(sname: string);
@@ -875,23 +965,23 @@ begin
   fr := TPressFrmFrame2.create(nil);
   fr.name := fr.ClassName + '_' + inttostr(i);
   fr.parent := p;
-  fr.Align:=alClient;
-  fr.Width:=PressFrmFrame21.width;
+  fr.Align := alClient;
+  fr.Width := PressFrmFrame21.Width;
   fr.FreqEdit.Text := '0';
   fr.AmpE.Text := '0';
   fr.spm := g_PressCamFactory2.getSpm(sname);
   fr.m_frm := self;
 
-  fr.AmpE.Width:=PressFrmFrame21.AmpE.Width;
-  fr.AmpE.left:=PressFrmFrame21.AmpE.left;
-  fr.FreqEdit.Width:=PressFrmFrame21.FreqEdit.Width;
-  fr.FreqEdit.left:=PressFrmFrame21.FreqEdit.left;
-  fr.ALabel.Width:=PressFrmFrame21.ALabel.Width;
-  fr.ALabel.left:=PressFrmFrame21.ALabel.left;
-  fr.FLabel.Width:=PressFrmFrame21.FLabel.Width;
-  fr.FLabel.left:=PressFrmFrame21.FLabel.left;
-  fr.ProgrBar.Left:=PressFrmFrame21.ProgrBar.Left;
-  //fr.ProgrBar.width:=p.Width-fr.ProgrBar.Left-2;
+  fr.AmpE.Width := PressFrmFrame21.AmpE.Width;
+  fr.AmpE.left := PressFrmFrame21.AmpE.left;
+  fr.FreqEdit.Width := PressFrmFrame21.FreqEdit.Width;
+  fr.FreqEdit.left := PressFrmFrame21.FreqEdit.left;
+  fr.ALabel.Width := PressFrmFrame21.ALabel.Width;
+  fr.ALabel.left := PressFrmFrame21.ALabel.left;
+  fr.FLabel.Width := PressFrmFrame21.FLabel.Width;
+  fr.FLabel.left := PressFrmFrame21.FLabel.left;
+  fr.ProgrBar.left := PressFrmFrame21.ProgrBar.left;
+  // fr.ProgrBar.width:=p.Width-fr.ProgrBar.Left-2;
 
   m_frames.Add(fr);
 end;
@@ -966,18 +1056,6 @@ begin
   VisibleExcel(true);
 end;
 
-procedure TPressFrm2.IntEdit1Change(Sender: TObject);
-var
-  I: Integer;
-  f:TPressFrmFrame2;
-begin
-  for I := 0 to FrameCount - 1 do
-  begin
-    f:=Frame(i);
-    f.ProgrBar.Progress:=IntEdit1.IntNum;
-  end;
-end;
-
 // получить номер строки в которое встречена пустая ячейка
 // проверка идет по колонке col в листе sh начиная с sh
 function GetEmptyRow(sh, r0, col: integer): integer;
@@ -985,9 +1063,9 @@ var
   ws, rng: olevariant;
   res: string;
 
-  adr:string;
+  adr: string;
 begin
-  //ws := E.ActiveWorkbook.Sheets.Item[sh];
+  // ws := E.ActiveWorkbook.Sheets.Item[sh];
   ws := E.ActiveWorkbook.Sheets[sh];
   ws.activate;
   res := ws.cells[r0, col];
@@ -1000,22 +1078,22 @@ begin
 end;
 
 {
-function GetEmptyRow(sh, r0, col: integer): integer;
-var
+  function GetEmptyRow(sh, r0, col: integer): integer;
+  var
   ws: olevariant;
   res: string;
   r: integer;
-begin
+  begin
   ws := E.ActiveWorkbook.Sheets.Item[sh];
   r := r0;
   res := ws.cells[r0, col];
   while res <> '' do
   begin
-    inc(r0);
-    res := ws.cells[r0, col];
+  inc(r0);
+  res := ws.cells[r0, col];
   end;
   result := r0;
-end;}
+  end; }
 
 procedure TPressFrm2.SaveBtnClick(Sender: TObject);
 var
@@ -1026,8 +1104,8 @@ var
   rng: olevariant;
   spm: cspm;
   k: integer;
-  date:tdatetime;
-  p_list:tstringlist;
+  date: tdatetime;
+  p_list: tstringlist;
 begin
   fname := RepFile;
   if fname = '' then
@@ -1046,28 +1124,28 @@ begin
     OpenWorkBook(fname);
     if m_saveBlockNum = 0 then
     begin
-      E.ActiveWorkbook.Sheets.Item[1].cells.Clear;
+      E.ActiveWorkbook.Sheets.Item[1].cells.clear;
     end;
   end
   else
   begin
     AddWorkBook;
     AddSheet('Page_01');
-    //DeleteSheet(2);
+    // DeleteSheet(2);
   end;
   r0 := GetEmptyRow(1, 1, 2);
   begin
-    //showmessage(E.ActiveWorkbook.Sheets.Item[1].cells[r0, 2]);
+    // showmessage(E.ActiveWorkbook.Sheets.Item[1].cells[r0, 2]);
   end;
   // sheet, r, c, v
   SetCell(1, r0, 2, 'MeraFile:');
   SetCell(1, r0, 3, fname);
   SetCell(1, r0, 4, 'Time:');
-  date:=now;
+  date := now;
   SetCell(1, r0, 5, DateToStr(date) + ' ' + TimeToStr(date));
   r := r0 + 2;
   c := 2;
-  for i := 0 to g_PressCamFactory2.m_spmCfg.childCount - 1 do
+  for i := 0 to g_PressCamFactory2.m_spmCfg.ChildCount - 1 do
   begin
     // имя сигнала
     // SetCell(1, r-1, c, f.Name);
@@ -1077,16 +1155,17 @@ begin
     SetCell(1, r, c, 'Band');
     SetCell(1, r, c + 1, 'A1');
     SetCell(1, r, c + 2, 'F1');
-    SetCell(1, r, c + 3, 'Amp.av');
+    SetCell(1, r, c + 3, 'Pk-Pk');
     // проход по формам (полосам)
     for j := 0 to g_PressCamFactory2.Count - 1 do
     begin
-      f := TPressFrm2(g_PressCamFactory2.GetFrm(j));
+      // f := TPressFrm2(g_PressCamFactory2.GetFrm(j));
+      f := TPressFrm2(g_PressCamFactory2.sortedFrames.Items[j]);
       fr := f.Frame(str);
       SetCell(1, r + 1 + j, c, floattostr(f.f1) + '...' + floattostr(f.f2));
       SetCell(1, r + 1 + j, c + 1, fr.m_Max);
       SetCell(1, r + 1 + j, c + 2, fr.m_f);
-      SetCell(1, r + 1 + j, c + 3, fr.m_A);
+      SetCell(1, r + 1 + j, c + 3, fr.getA * 2);
     end;
     c := c + 4;
   end;
@@ -1099,19 +1178,19 @@ begin
   rng := GetRangeObj(1, point(r, 2), point(r + j, c - 1));
   SetRangeBorder(rng);
 
-  str:=extractfiledir(fname);
+  str := ExtractFileDir(fname);
   SaveWorkBookAs(fname);
 
-  fname:=ExtractFileName(fname);
-  p_list:=TStringList.Create;
-  fname:=FindFileExt(fname,str+'\', 1, p_list);
-  if fname='' then
+  fname := ExtractFileName(fname);
+  p_list := tstringlist.create;
+  fname := FindFileExt(fname, str + '\', 1, p_list);
+  if fname = '' then
   begin
-    if p_list.count>0 then
+    if p_list.Count > 0 then
     begin
-      fname:=p_list.strings[0];
-      g_PressCamFactory2.m_RepFile:=fname;
-      m_lastFile:=fname;
+      fname := p_list.Strings[0];
+      g_PressCamFactory2.m_RepFile := fname;
+      m_lastFile := fname;
     end;
   end;
   p_list.destroy;
@@ -1145,19 +1224,23 @@ begin
     end;
     Strings.destroy;
   end;
-  m_BargraphStep:=a_pIni.ReadInteger(str, 'BarGraphStepCount', 100);
-  m_BargraphStep:=100;
+  m_BargraphStep := a_pIni.ReadInteger(str, 'BarGraphStepCount', 100);
+  m_BargraphStep := 100;
   m_bnum := a_pIni.ReadInteger(str, 'BNum', 0);
   if self = g_PressCamFactory2.GetFrm(0) then
   begin
     c := a_pIni.ReadInteger('PressCamFactory2', 'FFTCount', 256);
-    s:='FFTCount=' + inttostr(c)+',';
-    s:=s+'Wnd='+a_pIni.ReadString(str, 'Wnd', 'Rect');
-    g_PressCamFactory2.m_spmCfg.str :=  s;
-    g_PressCamFactory2.BandCount := a_pIni.ReadInteger('PressCamFactory2', 'BandCount', 0);
-    g_PressCamFactory2.m_manualBand := a_pIni.ReadBool('PressCamFactory2', 'ManualBand', false);
-    g_PressCamFactory2.m_typeRes := a_pIni.ReadInteger('PressCamFactory2', 'TypeRes', 0);
-    g_PressCamFactory2.m_createTags := a_pIni.ReadBool('PressCamFactory2', 'CreateTags', false);
+    s := 'FFTCount=' + inttostr(c) + ',';
+    s := s + 'Wnd=' + a_pIni.ReadString(str, 'Wnd', 'Rect');
+    g_PressCamFactory2.m_spmCfg.str := s;
+    g_PressCamFactory2.BandCount := a_pIni.ReadInteger('PressCamFactory2',
+      'BandCount', 0);
+    g_PressCamFactory2.m_manualBand := a_pIni.ReadBool('PressCamFactory2',
+      'ManualBand', false);
+    g_PressCamFactory2.m_typeRes := a_pIni.ReadInteger('PressCamFactory2',
+      'TypeRes', 0);
+    g_PressCamFactory2.m_createTags := a_pIni.ReadBool('PressCamFactory2',
+      'CreateTags', false);
     if g_PressCamFactory2.m_manualBand then
     begin
       s := a_pIni.ReadString('PressCamFactory2', 'Bands', '');
@@ -1170,13 +1253,17 @@ begin
         g_PressCamFactory2.SetBCount(6);
       end;
     end;
-    g_PressCamFactory2.m_Manualref:=a_pIni.ReadBool('PressCamFactory2', 'ManualRef',false);
-    s:=a_pIni.readString('PressCamFactory2', 'Refs','');
+    g_PressCamFactory2.m_Manualref := a_pIni.ReadBool('PressCamFactory2',
+      'ManualRef', false);
+    s := a_pIni.ReadString('PressCamFactory2', 'Refs', '');
     g_PressCamFactory2.StrToRefs(s);
   end;
+  BNumIE.IntNum := m_bnum;
+  bnumUpdate := true;
   // рисуем название полосы
   UpdateCaption;
   sortframes;
+  g_PressCamFactory2.Sort;
 end;
 
 procedure TPressFrm2.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -1198,7 +1285,7 @@ begin
     end;
     inc(c);
   end;
-  if s<>nil then
+  if s <> nil then
     a_pIni.WriteString(str, 'Wnd', s.GetWndStr)
   else
     a_pIni.WriteString(str, 'Wnd', 'c_Rect');
@@ -1207,59 +1294,69 @@ begin
   a_pIni.WriteInteger(str, 'BNum', m_bnum);
   if self = g_PressCamFactory2.GetFrm(0) then
   begin
-    lstr:=GetParam(s.GetProperties, 'FFTCount');
+    lstr := getparam(s.GetProperties, 'FFTCount');
     a_pIni.WriteInteger('PressCamFactory2', 'FFTCount', strtoint(lstr));
     a_pIni.WriteInteger('PressCamFactory2', 'BandCount',
       g_PressCamFactory2.BandCount);
-    a_pIni.WriteInteger('PressCamFactory2', 'TypeRes',g_PressCamFactory2.m_typeRes);
-    a_pIni.WriteBool('PressCamFactory2', 'CreateTags',g_PressCamFactory2.m_createTags);
+    a_pIni.WriteInteger('PressCamFactory2', 'TypeRes',
+      g_PressCamFactory2.m_typeRes);
+    a_pIni.WriteBool('PressCamFactory2', 'CreateTags',
+      g_PressCamFactory2.m_createTags);
 
-    a_pIni.WriteBool('PressCamFactory2', 'ManualBand',g_PressCamFactory2.m_manualBand);
+    a_pIni.WriteBool('PressCamFactory2', 'ManualBand',
+      g_PressCamFactory2.m_manualBand);
     if g_PressCamFactory2.m_manualBand then
     begin
-      a_pIni.WriteString('PressCamFactory2', 'Bands', g_PressCamFactory2.BandsToStr);
+      a_pIni.WriteString('PressCamFactory2', 'Bands',
+        g_PressCamFactory2.BandsToStr);
     end;
-    a_pIni.WriteBool('PressCamFactory2', 'ManualRef',g_PressCamFactory2.m_Manualref);
+    a_pIni.WriteBool('PressCamFactory2', 'ManualRef',
+      g_PressCamFactory2.m_Manualref);
     if g_PressCamFactory2.m_Manualref then
     begin
-      a_pIni.WriteString('PressCamFactory2', 'Refs', g_PressCamFactory2.RefsToStr);
+      a_pIni.WriteString('PressCamFactory2', 'Refs',
+        g_PressCamFactory2.RefsToStr);
     end;
   end;
 end;
 
 procedure TPressFrm2.sortframes;
 var
-  s:cspm;
-  j:integer;
-  fr:TPressFrmFrame2;
+  s: cspm;
+  j: integer;
+  fr: TPressFrmFrame2;
 begin
 
   // сортировка по размещению
   if m_frames.Count > 1 then
   begin
-    for j := m_frames.Count-1 downto 0 do
+    for j := m_frames.Count - 1 downto 0 do
     begin
-      s:=g_PressCamFactory2.getSpm(j);
+      s := g_PressCamFactory2.getSpm(j);
       fr := Frame(s.m_tag.tagname);
       fr.parent.Top := 0;
-      fr.ProgrBar.width:=tpanel(fr.Parent).width-fr.ProgrBar.left-4;
+      fr.ProgrBar.Width := TPanel(fr.parent).Width - fr.ProgrBar.left - 4;
     end;
   end;
   for j := 0 to FrameCount - 1 do
   begin
-    Frame(j).ProgrBar.MaxValue:=m_BargraphStep;
+    Frame(j).ProgrBar.MaxValue := m_BargraphStep;
   end;
 end;
 
 procedure TPressFrm2.UpdateCaption;
 begin
-  if g_PressCamFactory2.BandCount > 0 then
+  if bnumUpdate then
   begin
-    if g_PressCamFactory2.m_bands[m_bnum].f2 <> 0 then
+    if g_PressCamFactory2.BandCount > 0 then
     begin
-      BarGraphGB.Caption := 'Band: ' + formatstr
-        (g_PressCamFactory2.m_bands[m_bnum].f1, c_digs) + '..' + formatstr
-        (g_PressCamFactory2.m_bands[m_bnum].f2, c_digs);
+      if g_PressCamFactory2.m_bands[m_bnum].f2 <> 0 then
+      begin
+        BarGraphGB.Caption := 'Band: ' + formatstr
+          (g_PressCamFactory2.m_bands[m_bnum].f1, c_digs) + '..' + formatstr
+          (g_PressCamFactory2.m_bands[m_bnum].f2, c_digs);
+        bnumUpdate := false;
+      end;
     end;
   end;
 end;
@@ -1271,15 +1368,15 @@ end;
 
 procedure TPressFrm2.OpenBtnClick(Sender: TObject);
 begin
-  //sortframes;
+  // sortframes;
   if fileexists(m_lastFile) then
     ShellExecute(0, nil, pwidechar(m_lastFile), nil, nil, SW_HIDE);
 end;
 
 procedure TPressFrm2.PressFrmFrame21ProgrBarMouseMove(Sender: TObject;
-  Shift: TShiftState; X, Y: Integer);
+  Shift: TShiftState; X, Y: integer);
 begin
-  PressFrmFrame21.ProgrBar.Hint:=inttostr(PressFrmFrame21.ProgrBar.Width);
+  PressFrmFrame21.ProgrBar.Hint := inttostr(PressFrmFrame21.ProgrBar.Width);
 end;
 
 procedure TPressFrm2.updatedata;
@@ -1291,7 +1388,7 @@ var
 begin
   sum := 0;
   b := false;
-  m_Max.y := 0;
+  m_Max.Y := 0;
   m_ind := -1;
   for i := 0 to m_frames.Count - 1 do
   begin
@@ -1308,10 +1405,10 @@ begin
     // if b then
     begin
       fr.Eval;
-      if m_Max.y < fr.m_Max then
+      if m_Max.Y < fr.m_Max then
       begin
-        m_Max.y := fr.m_Max;
-        m_Max.x := fr.m_f;
+        m_Max.Y := fr.m_Max;
+        m_Max.X := fr.m_f;
         m_ind := i;
       end;
     end;
@@ -1327,16 +1424,29 @@ begin
   begin
     fr := TPressFrmFrame2(m_frames[i]);
     fr.UpdateView;
-    if g_PressCamFactory2.m_typeRes=0 then
+    if bnumUpdate then
     begin
-      MaxAE.Text := formatstrnoe(m_Max.y/sqrt2, c_digs);
+      if BNumIE.IntNum > g_PressCamFactory2.BandCount then
+      begin
+        BNumIE.IntNum := g_PressCamFactory2.BandCount - 1
+      end
+      else
+      begin
+        m_bnum := BNumIE.IntNum;
+      end;
+      UpdateCaption;
+    end;
+
+    if g_PressCamFactory2.m_typeRes = 0 then
+    begin
+      MaxAE.Text := formatstrnoe(m_Max.Y / sqrt2, c_digs);
     end
     else
     begin
-      MaxAE.Text := formatstrnoe(m_Max.y*2, c_digs);
+      MaxAE.Text := formatstrnoe(m_Max.Y * 2, c_digs);
     end;
-    MaxFE.Text := formatstrnoe(m_Max.x, c_digs);
-    MaxCamE.Text := inttostr(m_ind+1);
+    MaxFE.Text := formatstrnoe(m_Max.X, c_digs);
+    MaxCamE.Text := inttostr(m_ind + 1);
   end;
 end;
 

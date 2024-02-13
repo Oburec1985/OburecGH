@@ -55,6 +55,7 @@ type
     function hh:double;
     function h:double;
   public
+    function getA:double; // возврат A с учетом окна
     procedure Prepare;
     procedure updateView;
     procedure Eval;
@@ -92,6 +93,8 @@ begin
   max:=0;
   sum:=0;
   imax:=-1;
+  if bnum>g_PressCamFactory2.count-1 then
+    exit;
   for I := g_PressCamFactory2.m_bands[bnum].i1 to g_PressCamFactory2.m_bands[bnum].i2 do
   begin
     v:=tdoubleArray(m_s.m_rms.p)[i];
@@ -168,8 +171,26 @@ begin
   m_s:=s;
 end;
 
+function TPressFrmFrame2.getA: double;
+//var
+  //w:PWndFunc;
+begin
+  //w:=g_PressCamFactory2.GetWndFunc;
+  result:=m_Max;
+  // коррекция с цчетом оконной функции для СКО (т.к. исходный спектр корректируется по acf для А)
+  //if w<>nil then
+  //begin
+  //  if w.wndtype<>wdRect then
+  //  begin
+  //    result:=result*w.ecf/w.acf;
+  //  end;
+  //end;
+end;
+
+
 procedure TPressFrmFrame2.updateView;
 var
+  w:PWndFunc;
   r, v:double;
 begin
   if finit then
@@ -178,6 +199,15 @@ begin
     if g_PressCamFactory2.m_typeRes=0 then // СКО
     begin
       v:=m_Max/sqrt2;
+      w:=g_PressCamFactory2.GetWndFunc;
+      // коррекция с цчетом оконной функции для СКО (т.к. исходный спектр корректируется по acf для А)
+      if w<>nil then
+      begin
+        if w.wndtype<>wdRect then
+        begin
+          v:=v*w.ecf/w.acf;
+        end;
+      end;
       // используем реф первого датчика
       r:=g_PressCamFactory2.GetRef(0)/sqrt2;
     end
@@ -194,10 +224,7 @@ begin
     ProgrBar.Hint:='max='+floattostr(ProgrBar.MaxValue)+' v=' +floattostr(v)+' r='+floattostr(r);
     if m_Max>r*hh then
     begin
-      //ProgrBar.forBrush.Color := clred;
-      // CommCtrl
       ProgrBar.Color:=clred;
-      //SendMessage (ProgrBar.Handle, PBM_SETBARCOLOR, 0, clred);
     end
     else
     begin
