@@ -66,6 +66,7 @@ type
     BNumSB: TSpinButton;
     BNumIE: TIntEdit;
     BNumLabel: TLabel;
+    WndCB: TComboBox;
     procedure N1Click(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
     procedure OpenBtnClick(Sender: TObject);
@@ -73,6 +74,7 @@ type
       Shift: TShiftState; X, Y: integer);
     procedure BNumSBDownClick(Sender: TObject);
     procedure BNumSBUpClick(Sender: TObject);
+    procedure WndCBChange(Sender: TObject);
   public
     m_BargraphStep: integer;
     m_lastFile: string;
@@ -80,6 +82,7 @@ type
 
     m_bnum: integer;
     bnumUpdate: boolean;
+    bWndUpdate: boolean;
 
     m_frames: tlist;
     // максимум (по умолчанию из тега)
@@ -1203,6 +1206,7 @@ var
   s: string;
   i, c: integer;
   Strings: tstringlist;
+  w:twndtype;
 begin
   inherited;
   c := a_pIni.ReadInteger(str, 'sCount', 0);
@@ -1262,6 +1266,11 @@ begin
   bnumUpdate := true;
   // рисуем название полосы
   UpdateCaption;
+  if g_PressCamFactory2.getSpm(0)<>nil  then
+  begin
+    w:=g_PressCamFactory2.GetWndType;
+    wndcb.ItemIndex:=integer(w);
+  end;
   sortframes;
   g_PressCamFactory2.Sort;
 end;
@@ -1420,6 +1429,17 @@ var
   i: integer;
   fr: TPressFrmFrame2;
 begin
+  if bWndUpdate then
+  begin
+    case WndCb.ItemIndex of
+      0:g_PressCamFactory2.m_spmCfg.str:='Wnd=Rect';
+      1:g_PressCamFactory2.m_spmCfg.str:='Wnd=Hamming';
+      2:g_PressCamFactory2.m_spmCfg.str:='Wnd=Hann'; // Хеннинг
+      3:g_PressCamFactory2.m_spmCfg.str:='Wnd=Blackmann';
+      4:g_PressCamFactory2.m_spmCfg.str:='Wnd=Flattop';
+    end;
+    bWndUpdate:=false;
+  end;
   for i := 0 to m_frames.Count - 1 do
   begin
     fr := TPressFrmFrame2(m_frames[i]);
@@ -1448,6 +1468,11 @@ begin
     MaxFE.Text := formatstrnoe(m_Max.X, c_digs);
     MaxCamE.Text := inttostr(m_ind + 1);
   end;
+end;
+
+procedure TPressFrm2.WndCBChange(Sender: TObject);
+begin
+  bWndUpdate:=true;
 end;
 
 end.
