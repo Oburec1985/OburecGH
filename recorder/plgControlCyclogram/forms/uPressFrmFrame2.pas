@@ -55,6 +55,7 @@ type
     function hh:double;
     function h:double;
   public
+    function getEst:double; // возврат отображаемой оценки
     function getA:double; // возврат A с учетом окна
     procedure Prepare;
     procedure updateView;
@@ -112,7 +113,9 @@ begin
   begin
     if g_PressCamFactory2.m_tagsinit then
     begin
+      v:=getEst;
       g_PressCamFactory2.pushTag(m_s.m_tag.tagname ,bnum, m_max);
+      //g_PressCamFactory2.pushTag(m_s.m_tag.tagname ,bnum, v);
     end;
   end;
 end;
@@ -185,6 +188,31 @@ begin
   //    result:=result*w.ecf/w.acf;
   //  end;
   //end;
+end;
+
+function TPressFrmFrame2.getEst:double; // возврат отображаемой оценки
+var
+  w:PWndFunc;
+  v:double;
+begin
+  if g_PressCamFactory2.m_typeRes=0 then // СКО
+  begin
+    v:=m_Max/sqrt2;
+    w:=g_PressCamFactory2.GetWndFunc;
+    // коррекция с цчетом оконной функции для СКО (т.к. исходный спектр корректируется по acf для А)
+    if w<>nil then
+    begin
+      if w.wndtype<>wdRect then
+      begin
+        v:=v*w.ecf/w.acf;
+      end;
+    end;
+  end
+  else  // p-p
+  begin
+    v:=m_Max*2;
+  end;
+  result:=v;
 end;
 
 

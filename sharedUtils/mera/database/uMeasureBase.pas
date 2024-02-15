@@ -749,7 +749,12 @@ begin
       if str='' then
         d:=0
       else
-        d:=StrToDate(str);
+      begin
+        //if str='00.00.0000' then
+        //  d:=0
+        //else
+        d:=StrToDateDef(str, 0);
+      end;
       if d>m_date then
         m_date:=d;
     end;

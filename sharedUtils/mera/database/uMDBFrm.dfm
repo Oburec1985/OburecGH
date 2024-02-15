@@ -2,178 +2,110 @@ object MDBFrm: TMDBFrm
   Left = 0
   Top = 0
   Caption = #1041#1044#1048
-  ClientHeight = 634
-  ClientWidth = 719
+  ClientHeight = 845
+  ClientWidth = 959
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -10
+  Font.Height = -13
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 96
-  TextHeight = 12
+  PixelsPerInch = 120
+  TextHeight = 16
   object TopPanel: TPanel
     Left = 0
     Top = 0
-    Width = 719
-    Height = 181
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 959
+    Height = 241
     Align = alTop
     TabOrder = 0
     DesignSize = (
-      719
-      181)
+      959
+      241)
     object BaseFolderLabel: TLabel
-      Left = 3
+      Left = 4
       Top = 1
-      Width = 81
-      Height = 12
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Width = 100
+      Height = 16
       Caption = #1041#1072#1079#1086#1074#1099#1081' '#1082#1072#1090#1072#1083#1086#1075
     end
     object BaseFolderEdit: TEdit
-      Left = 3
-      Top = 17
-      Width = 670
-      Height = 20
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 4
+      Top = 23
+      Width = 893
+      Height = 24
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
     end
     object BaseFolderBtn: TButton
-      Left = 677
-      Top = 17
-      Width = 34
-      Height = 19
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 903
+      Top = 23
+      Width = 45
+      Height = 25
       Anchors = [akTop, akRight]
       Caption = '...'
       TabOrder = 1
     end
     object FindPageControl: TPageControl
       Left = 1
-      Top = 60
-      Width = 717
-      Height = 120
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
-      ActivePage = RegPage
+      Top = 80
+      Width = 957
+      Height = 160
+      ActivePage = ObjPage
       Align = alBottom
       TabOrder = 2
       object ObjPage: TTabSheet
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
         Caption = #1054#1073#1098#1077#1082#1090
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object FindNameLabel: TLabel
-          Left = 3
-          Top = 6
-          Width = 77
-          Height = 12
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 4
+          Top = 8
+          Width = 92
+          Height = 16
           Caption = #1055#1086#1080#1089#1082' '#1087#1086' '#1080#1084#1077#1085#1080
         end
         object FindNameEdit: TEdit
-          Left = 3
-          Top = 21
-          Width = 190
-          Height = 20
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 4
+          Top = 28
+          Width = 253
+          Height = 24
           TabOrder = 0
           OnChange = FindNameEditChange
         end
       end
       object TestPage: TTabSheet
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
         Caption = #1058#1077#1089#1090
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object FindTestTypeLabel: TLabel
-          Left = 2
-          Top = 11
-          Width = 73
-          Height = 12
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 3
+          Top = 15
+          Width = 89
+          Height = 16
           Caption = #1058#1080#1087' '#1080#1089#1087#1099#1090#1072#1085#1080#1103
         end
         object FindTestTypeCB: TComboBox
-          Left = 2
-          Top = 27
-          Width = 109
-          Height = 20
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 3
+          Top = 36
+          Width = 145
+          Height = 24
           TabOrder = 0
         end
       end
       object RegPage: TTabSheet
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
         Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1094#1080#1103
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object FindTestDateLabel: TLabel
-          Left = 9
-          Top = 11
-          Width = 70
-          Height = 12
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 12
+          Top = 15
+          Width = 83
+          Height = 16
           Caption = #1055#1086#1080#1089#1082' '#1087#1086' '#1076#1072#1090#1077
         end
         object FindTestDateRG: TRadioGroup
-          Left = 116
-          Top = 11
-          Width = 102
-          Height = 78
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 155
+          Top = 15
+          Width = 136
+          Height = 104
           Caption = #1055#1086#1080#1089#1082' '#1087#1086' '#1076#1072#1090#1077
           ItemIndex = 0
           Items.Strings = (
@@ -185,28 +117,20 @@ object MDBFrm: TMDBFrm
           OnClick = FindNameEditChange
         end
         object FindTestDate1: TDateTimePicker
-          Left = 9
-          Top = 27
-          Width = 102
-          Height = 20
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 12
+          Top = 36
+          Width = 136
+          Height = 24
           Date = 43131.971938240740000000
           Time = 43131.971938240740000000
           TabOrder = 1
           OnChange = FindNameEditChange
         end
         object FindTestDate2: TDateTimePicker
-          Left = 9
-          Top = 50
-          Width = 102
-          Height = 20
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 12
+          Top = 67
+          Width = 136
+          Height = 24
           Date = 43131.971938240740000000
           Time = 43131.971938240740000000
           TabOrder = 2
@@ -215,14 +139,10 @@ object MDBFrm: TMDBFrm
       end
     end
     object ShowChildsCB: TCheckBox
-      Left = 7
-      Top = 43
-      Width = 168
-      Height = 13
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 9
+      Top = 57
+      Width = 224
+      Height = 18
       Caption = #1054#1090#1086#1073#1088#1072#1078#1072#1090#1100' '#1076#1086#1095#1077#1088#1085#1080#1077' '#1101#1083#1077#1084#1077#1085#1090#1099
       Checked = True
       State = cbChecked
@@ -232,24 +152,16 @@ object MDBFrm: TMDBFrm
   end
   object mdbPanel: TPanel
     Left = 0
-    Top = 181
-    Width = 275
-    Height = 453
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Top = 241
+    Width = 367
+    Height = 604
     Align = alLeft
     TabOrder = 1
     object mdbTV: TVTree
       Left = 1
       Top = 1
-      Width = 273
-      Height = 390
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Width = 365
+      Height = 520
       Align = alClient
       Header.AutoSizeIndex = 0
       Header.Font.Charset = DEFAULT_CHARSET
@@ -267,21 +179,21 @@ object MDBFrm: TMDBFrm
     end
     object BottonPanel: TPanel
       Left = 1
-      Top = 391
-      Width = 273
-      Height = 61
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 521
+      Width = 365
+      Height = 82
       Align = alBottom
       TabOrder = 1
       object ZipBtn: TSpeedButton
         Left = 0
-        Top = 5
-        Width = 35
-        Height = 35
+        Top = 7
+        Width = 47
+        Height = 46
         Hint = #1040#1088#1093#1080#1074#1080#1088#1086#1074#1072#1090#1100' '#1088#1077#1075#1080#1089#1090#1088#1072#1094#1080#1080
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         AllowAllUp = True
         BiDiMode = bdLeftToRight
         Glyph.Data = {
@@ -453,11 +365,15 @@ object MDBFrm: TMDBFrm
         OnClick = ZipBtnClick
       end
       object WinPosBtn: TSpeedButton
-        Left = 41
-        Top = 13
-        Width = 34
-        Height = 35
+        Left = 55
+        Top = 17
+        Width = 45
+        Height = 47
         Hint = #1054#1090#1082#1088#1099#1090#1100' '#1074' WinPos'
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         AllowAllUp = True
         BiDiMode = bdLeftToRight
         Glyph.Data = {
@@ -635,44 +551,38 @@ object MDBFrm: TMDBFrm
     end
   end
   object PropertiesPanel: TPanel
-    Left = 275
-    Top = 181
-    Width = 444
-    Height = 453
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Left = 367
+    Top = 241
+    Width = 592
+    Height = 604
     Align = alClient
     TabOrder = 2
     object Splitter1: TSplitter
       Left = 1
-      Top = 321
-      Width = 442
-      Height = 4
+      Top = 428
+      Width = 590
+      Height = 5
       Cursor = crVSplit
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alTop
-      ExplicitLeft = 5
-      ExplicitTop = 222
     end
     object PropertiesLV: TBtnListView
       Left = 1
-      Top = 325
-      Width = 442
-      Height = 127
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 433
+      Width = 590
+      Height = 170
       Align = alClient
       Columns = <
         item
           Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077
-          Width = 38
+          Width = 51
         end
         item
           Caption = #1047#1085#1072#1095#1077#1085#1080#1077
-          Width = 38
+          Width = 51
         end>
       RowSelect = True
       TabOrder = 0
@@ -687,23 +597,15 @@ object MDBFrm: TMDBFrm
     object PropertiesTopPanel: TPanel
       Left = 1
       Top = 1
-      Width = 442
-      Height = 320
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Width = 590
+      Height = 427
       Align = alTop
       TabOrder = 1
       object ObjPropsGB: TGroupBox
         Left = 1
         Top = 1
-        Width = 440
-        Height = 318
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Width = 588
+        Height = 425
         Align = alClient
         Caption = #1057#1074#1086#1081#1089#1090#1074#1072' '#1086#1073#1098#1077#1082#1090#1072
         TabOrder = 0
