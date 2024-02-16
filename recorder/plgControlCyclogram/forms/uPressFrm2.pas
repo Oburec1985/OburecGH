@@ -62,11 +62,11 @@ type
     N1: TMenuItem;
     SaveBtn: TSpeedButton;
     OpenBtn: TButton;
-    PressFrmFrame21: TPressFrmFrame2;
     BNumSB: TSpinButton;
     BNumIE: TIntEdit;
     BNumLabel: TLabel;
     WndCB: TComboBox;
+    PressFrmFrame21: TPressFrmFrame2;
     procedure N1Click(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
     procedure OpenBtnClick(Sender: TObject);

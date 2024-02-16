@@ -608,9 +608,12 @@ begin
       p:=@s.m_t.m_TagData[0];
       //s.m_t.tag.PushDataEx(p^, BlSize, 0, -1);
       s.m_t.tag.PushData(p^, BlSize);
+      if (i=0) and (k=0) then
+      begin
+        m_prevTime:=curT;
+      end;
     end;
   end;
-  m_prevTime:=curT;
 end;
 
 { cGenSig }
