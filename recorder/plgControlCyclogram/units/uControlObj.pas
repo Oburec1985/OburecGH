@@ -3450,7 +3450,7 @@ begin
 
   fcontrols := tstringlist.create;
   //fcontrols.comparator:=ControlComparator;
-  fcontrols.Sorted := false;
+  fcontrols.Sorted := true;
   AddChild(fmodes);
 
   InitCS;
@@ -3552,19 +3552,29 @@ var
   b:boolean;
 begin
   b:=false;
-  for I := 0 to fcontrols.Count - 1 do
+  if fcontrols.Sorted then
   begin
-    c:=cControlObj(fcontrols.Objects[i]);
-    if c.name=name then
+    if fcontrols.Find(name,i) then
     begin
-      b:=true;
-      break;
+      result:=cControlObj(fcontrols.Objects[i]);
+    end
+    else
+    begin
+      result:=nil;
+    end;
+  end
+  else
+  begin
+    for I := 0 to fcontrols.Count - 1 do
+    begin
+      c:=cControlObj(fcontrols.Objects[i]);
+      if c.name=name then
+      begin
+        b:=true;
+        break;
+      end;
     end;
   end;
-  if b then
-    result := c
-  else
-    result := nil;
 end;
 
 procedure cProgramObj.ClearModes;

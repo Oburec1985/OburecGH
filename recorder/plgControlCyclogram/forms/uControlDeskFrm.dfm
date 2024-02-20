@@ -40,6 +40,7 @@ object ControlDeskFrm: TControlDeskFrm
     ParentCtl3D = False
     ParentFont = False
     TabOrder = 0
+    ExplicitTop = -5
     DesignSize = (
       851
       157)
@@ -491,8 +492,8 @@ object ControlDeskFrm: TControlDeskFrm
       Margins.Bottom = 2
       TabOrder = 4
       object CfgBtn: TSpeedButton
-        Left = 0
-        Top = 5
+        Left = 6
+        Top = 4
         Width = 37
         Height = 37
         Hint = #1055#1088#1086#1089#1084#1086#1090#1088' '#1082#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1080
@@ -826,7 +827,6 @@ object ControlDeskFrm: TControlDeskFrm
     Align = alClient
     TabOrder = 1
     OnChange = PageControl1Change
-    ExplicitHeight = 342
     object TabSheet1: TTabSheet
       Margins.Left = 2
       Margins.Top = 2
@@ -999,7 +999,6 @@ object ControlDeskFrm: TControlDeskFrm
       Margins.Bottom = 2
       Caption = #1058#1072#1073#1083#1080#1094#1072' '#1088#1077#1078#1080#1084#1086#1074
       ImageIndex = 1
-      ExplicitHeight = 315
       object Splitter3: TSplitter
         Left = 169
         Top = 0
@@ -1033,7 +1032,6 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 0
-        ExplicitHeight = 315
         object TableModeSG: TStringGrid
           Left = 1
           Top = 19
@@ -1058,7 +1056,6 @@ object ControlDeskFrm: TControlDeskFrm
           OnKeyDown = TableModeSGKeyDown
           OnSelectCell = TableModeSGSelectCell
           OnSetEditText = TableModeSGSetEditText
-          ExplicitHeight = 295
           ColWidths = (
             64
             64
@@ -1085,7 +1082,6 @@ object ControlDeskFrm: TControlDeskFrm
         Align = alRight
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1072
         TabOrder = 1
-        ExplicitHeight = 315
         object ControlPropSG: TStringGrid
           Left = 2
           Top = 59
@@ -1109,7 +1105,6 @@ object ControlDeskFrm: TControlDeskFrm
           OnDrawCell = ControlPropSGDrawCell
           OnKeyDown = ControlPropSGKeyDown
           OnSetEditText = ControlPropSGSetEditText
-          ExplicitHeight = 254
           RowHeights = (
             32
             32

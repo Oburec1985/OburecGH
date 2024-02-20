@@ -3,7 +3,7 @@ object CyclogramReportFrm: TCyclogramReportFrm
   Top = 0
   Caption = #1050#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103' '#1094#1080#1082#1083#1086#1075#1088#1072#1084#1084#1099
   ClientHeight = 448
-  ClientWidth = 776
+  ClientWidth = 602
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,7 +17,7 @@ object CyclogramReportFrm: TCyclogramReportFrm
   PixelsPerInch = 96
   TextHeight = 12
   object LeftPan: TPanel
-    Left = 569
+    Left = 395
     Top = 0
     Width = 207
     Height = 448
@@ -27,6 +27,7 @@ object CyclogramReportFrm: TCyclogramReportFrm
     Margins.Bottom = 2
     Align = alRight
     TabOrder = 0
+    ExplicitLeft = 569
     object CyclogramGB: TGroupBox
       Left = 1
       Top = 1
@@ -99,7 +100,7 @@ object CyclogramReportFrm: TCyclogramReportFrm
   object alPanel: TPanel
     Left = 0
     Top = 0
-    Width = 569
+    Width = 395
     Height = 448
     Margins.Left = 2
     Margins.Top = 2
@@ -107,10 +108,11 @@ object CyclogramReportFrm: TCyclogramReportFrm
     Margins.Bottom = 2
     Align = alClient
     TabOrder = 1
+    ExplicitWidth = 569
     object GroupBox1: TGroupBox
       Left = 1
       Top = 1
-      Width = 567
+      Width = 393
       Height = 222
       Margins.Left = 2
       Margins.Top = 2
@@ -119,10 +121,11 @@ object CyclogramReportFrm: TCyclogramReportFrm
       Align = alTop
       Caption = 'GroupBox1'
       TabOrder = 0
+      ExplicitWidth = 567
       object cChart1: cChart
         Left = 2
         Top = 14
-        Width = 563
+        Width = 389
         Height = 206
         Margins.Left = 2
         Margins.Top = 2
@@ -136,6 +139,7 @@ object CyclogramReportFrm: TCyclogramReportFrm
         showTV = True
         showLegend = False
         selectSize = 5
+        ExplicitWidth = 563
       end
     end
     object ControlsLV: TBtnListView
@@ -170,6 +174,8 @@ object CyclogramReportFrm: TCyclogramReportFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
+      ExplicitLeft = 3
+      ExplicitTop = 225
     end
   end
   object ImageList16: TImageList

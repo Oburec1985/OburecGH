@@ -232,20 +232,34 @@ var
   sli,li:tlistitem;
   p:cProgramObj;
   r:TRect;
+  newpos:integer;
+  start:boolean;
 begin
   li:=ControlsLV.GetItemAt(x,y);
   sli:=ControlsLV.Selected;
-  if li<>sli then
+  start:=true;
+  while sli<>nil do
   begin
-    if li<>nil then
-      MoveListViewItem(ControlsLV,sli.Index, li.index)
-    else
+    if start then
     begin
-      r:=ControlsLV.Items[ControlsLV.Items.Count - 1].DisplayRect(drBounds);
-      // внизу координата с максимальным значением, верхняя граница 0
-      if y>r.Bottom then
-        MoveListViewItem(ControlsLV,sli.Index, ControlsLV.Items.Count);
+      if li<>sli then
+      begin
+        if li<>nil then
+          newpos:=li.index
+        else
+        begin
+          r:=ControlsLV.Items[ControlsLV.Items.Count - 1].DisplayRect(drBounds);
+          // внизу координата с максимальным значением, верхняя граница 0
+          if y>r.Bottom then
+            newpos:=ControlsLV.Items.Count
+          else
+            newpos:=0;
+        end;
+      end;
     end;
+    start:=false;
+    MoveListViewItem(ControlsLV,sli.Index, newpos) ;
+    sli:=ControlsLV.GetNextItem(sli, sdAll, [isSelected]);
   end;
   //p:=g_conmng.getProgram(0);
   //ShowControls(p);
