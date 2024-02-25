@@ -80,6 +80,7 @@ type
     procedure StopBtnClick(Sender: TObject);
     procedure PauseBtnClick(Sender: TObject);
     function getControlFromSG(row: integer): ccontrolobj;
+
     procedure ControlSGDrawCell(Sender: TObject; ACol, ARow: integer;
       Rect: TRect; State: TGridDrawState);
     procedure ProgramSGDrawCell(Sender: TObject; ACol, ARow: integer;
@@ -136,6 +137,10 @@ type
 
     m_insert:integer; // режим вставки колонки
     m_insertleft:boolean; // режим вставки колонки (слева или справа)
+ public
+    // собственная сортировка для контролов
+    m_CustSort:boolean;
+    m_ViewControls:tlist;
   protected
     function ToTime(sec:double; b_format:boolean):string;
     function ZoneListToParams(str: string; zl: cZoneList): string;
@@ -159,7 +164,6 @@ type
     procedure ClearSGButtons;
     procedure WndProc(var Message: TMessage); override;
     procedure CreateSGButtons;
-    procedure ShowModeTable;
     // Показать регулояторы
     procedure ShowControls;
     // Показать Таблицу программ и режимов
@@ -193,6 +197,9 @@ type
     // вызывается при смене конфигурации циклограммы
     procedure Preview;
   public
+    procedure ShowModeTable;
+    function getProgControl(p:cProgramObj; i:integer):cControlObj;overload;
+    function getProgControl( i:integer): cControlObj;overload;
     procedure Start;
     procedure continuePlay;
     procedure pause;
@@ -204,6 +211,8 @@ type
   end;
 
   IControlFrm = class(cRecBasicIFrm)
+  protected
+    function doSetProperty(tag:integer; str:lpcstr):integer;override;
   public
     function doGetName: LPCSTR; override;
     procedure doClose; override;
@@ -354,6 +363,8 @@ VAR
   mThread: integer;
 begin
   inherited;
+  m_ViewControls:=TList.Create;
+
   m_counted := false;
   m_uiThread := GetCurrentThreadId;
   mThread := MainThreadID;
@@ -467,6 +478,7 @@ end;
 
 destructor TControlDeskFrm.destroy;
 begin
+  m_ViewControls.Destroy;
 
   cControlFactory(m_f).decFrmCounter;
   DestroyEvents;
@@ -584,6 +596,12 @@ begin
 end;
 
 procedure TControlDeskFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  s, s1:string;
+  pars:tstringlist;
+  c:integer;
+  I: Integer;
+  con:ccontrolobj;
 begin
   inherited;
   ContinueCB.Checked := a_pIni.ReadBool(str, 'LoadState', false);
@@ -591,15 +609,37 @@ begin
   TimeUnitsCB.ItemIndex := a_pIni.ReadInteger(str, 'Units', 0);
   RightGB.Width := a_pIni.ReadInteger(str, 'Table_Controls_Splitter_Pos',
     RightGB.Width);
+  m_CustSort:=a_pIni.ReadBool(str, 'CustSort', false);
+  s:=a_pIni.ReadString(str,'CustSortList', '');
+  s1:=getSubStrByIndex(s,',',1,0);
+  c:=strtoIntExt(s1);
+  for I := 1 to c do
+  begin
+    s1:=getSubStrByIndex(s,',',1,i);
+    con:=g_conmng.getControlObj(s1);
+    m_ViewControls.Add(con);
+  end;
 end;
 
 procedure TControlDeskFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  I: Integer;
+  c:cControlObj;
+  s:string;
 begin
   inherited;
   a_pIni.WriteBool(str, 'LoadState', ContinueCB.Checked);
   a_pIni.WriteBool(str, 'ConfirmModeChange', ConfirmModeCB.Checked);
   a_pIni.WriteInteger(str, 'Units', TimeUnitsCB.ItemIndex);
   a_pIni.WriteInteger(str, 'Table_Controls_Splitter_Pos', RightGB.Width);
+  a_pIni.WriteBool(str,'CustSort', m_CustSort);
+  s:=inttostr(m_ViewControls.Count)+',';
+  for I := 0 to m_ViewControls.Count - 1 do
+  begin
+    c:=cControlObj(m_ViewControls.Items[i]);
+    s:=s+c.name+',';
+  end;
+  a_pIni.WriteString(str,'CustSortList', s);
 end;
 
 procedure TControlDeskFrm.PauseBtnClick(Sender: TObject);
@@ -776,7 +816,8 @@ begin
   end;
   for I := 0 to p.ControlCount - 1 do
   begin
-    con := p.getOwnControl(I);
+    //con := p.getOwnControl(I);
+    con := getProgControl(p, i);
     TableModeSG.Cells[0, c_ModeTable_headerSize + I] := con.Caption;
     for j := 0 to p.ModeCount - 1 do
     begin
@@ -811,6 +852,24 @@ begin
     result := p.getmode(str)
   else
     result := nil;
+end;
+
+function TControlDeskFrm.getProgControl(p: cProgramObj; i:integer): cControlObj;
+begin
+  if m_CustSort then
+  begin
+    result:=cControlObj(m_ViewControls.Items[i]);
+  end
+  else
+    result:=p.getOwnControl(i);
+end;
+
+function TControlDeskFrm.getProgControl( i:integer): cControlObj;
+var
+  p:cProgramObj;
+begin
+  p:=g_conmng.getProgram(0);
+  result:=getProgControl(p, i)
 end;
 
 function TControlDeskFrm.getprogram(row: integer): cProgramObj;
@@ -1311,6 +1370,7 @@ end;
 
 procedure TControlDeskFrm.CfgBtnClick(Sender: TObject);
 begin
+  CyclogramReportFrm.setfrm(self);
   if CfgPanel.Color = c_color_ON then
   begin
     CyclogramReportFrm.hide;
@@ -2559,6 +2619,20 @@ end;
 function IControlFrm.doGetName: LPCSTR;
 begin
   result := 'ControlCyclogram';
+end;
+
+function IControlFrm.doSetProperty(tag: integer; str: lpcstr): integer;
+var
+  s:string;
+  pars:TStringList;
+  c:cControlObj;
+begin
+  s:=str;
+  pars:=ParsStrParam(str);
+  // Con=C_01;Tag = T_01;
+
+  ClearParsResult(pars);
+  pars.Destroy;
 end;
 
 end.

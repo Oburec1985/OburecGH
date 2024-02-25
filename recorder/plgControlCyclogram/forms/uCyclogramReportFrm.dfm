@@ -27,7 +27,6 @@ object CyclogramReportFrm: TCyclogramReportFrm
     Margins.Bottom = 2
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 569
     object CyclogramGB: TGroupBox
       Left = 1
       Top = 1
@@ -108,7 +107,6 @@ object CyclogramReportFrm: TCyclogramReportFrm
     Margins.Bottom = 2
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 569
     object GroupBox1: TGroupBox
       Left = 1
       Top = 1
@@ -121,7 +119,6 @@ object CyclogramReportFrm: TCyclogramReportFrm
       Align = alTop
       Caption = 'GroupBox1'
       TabOrder = 0
-      ExplicitWidth = 567
       object cChart1: cChart
         Left = 2
         Top = 14
@@ -139,7 +136,6 @@ object CyclogramReportFrm: TCyclogramReportFrm
         showTV = True
         showLegend = False
         selectSize = 5
-        ExplicitWidth = 563
       end
     end
     object ControlsLV: TBtnListView
@@ -174,8 +170,23 @@ object CyclogramReportFrm: TCyclogramReportFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitLeft = 3
-      ExplicitTop = 225
+    end
+    object ApplyBtn: TButton
+      Left = 222
+      Top = 228
+      Width = 75
+      Height = 25
+      Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
+      TabOrder = 2
+      OnClick = ApplyBtnClick
+    end
+    object CustomViewCB: TCheckBox
+      Left = 222
+      Top = 259
+      Width = 97
+      Height = 17
+      Caption = #1057#1086#1088#1090#1080#1088#1086#1074#1082#1072
+      TabOrder = 3
     end
   end
   object ImageList16: TImageList

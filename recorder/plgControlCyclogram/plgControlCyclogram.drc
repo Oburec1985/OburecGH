@@ -1271,6 +1271,7 @@ END
 /* ..\..\sharedUtils\forms\uConfirmDlg.dfm */
 /* forms\uGenSignalsEditFrm.dfm */
 /* forms\uGenSignalsFrm.dfm */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uControlDeskFrm.dfm */
 /* forms\uCyclogramReportFrm.dfm */
 /* forms\uTagInfoFrm.dfm */
 /* forms\uTagInfoEditFrm.dfm */
@@ -1293,7 +1294,6 @@ END
 /* forms\uPhaseFrame.dfm */
 /* forms\uCounterAlgFrame.dfm */
 /* forms\uAlgFrm.dfm */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uControlDeskFrm.dfm */
 /* forms\uControlCyclogramEditFrm.dfm */
 /* forms\uSRSFrm.dfm */
 /* forms\uSpmChartEdit.dfm */

@@ -1617,7 +1617,7 @@ object MBaseControl: TMBaseControl
       Left = 48
       Top = 7
       Width = 471
-      Height = 32
+      Height = 27
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -1688,12 +1688,11 @@ object MBaseControl: TMBaseControl
       Align = alTop
       Caption = #1054#1073#1098#1077#1082#1090
       TabOrder = 0
-      ExplicitWidth = 446
       object ObjPanel: TPanel
         Left = 2
         Top = 21
-        Width = 442
-        Height = 87
+        Width = 441
+        Height = 86
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
@@ -1740,7 +1739,7 @@ object MBaseControl: TMBaseControl
           Left = 13
           Top = 23
           Width = 168
-          Height = 32
+          Height = 27
           Margins.Left = 2
           Margins.Top = 2
           Margins.Right = 2
@@ -1753,7 +1752,7 @@ object MBaseControl: TMBaseControl
           Left = 52
           Top = 57
           Width = 129
-          Height = 32
+          Height = 27
           Margins.Left = 2
           Margins.Top = 2
           Margins.Right = 2
@@ -1775,12 +1774,11 @@ object MBaseControl: TMBaseControl
       Align = alTop
       Caption = #1048#1089#1087#1099#1090#1072#1085#1080#1077
       TabOrder = 1
-      ExplicitWidth = 446
       object TestPanel: TPanel
         Left = 2
         Top = 21
-        Width = 442
-        Height = 136
+        Width = 441
+        Height = 135
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
@@ -1813,7 +1811,7 @@ object MBaseControl: TMBaseControl
           Left = 14
           Top = 80
           Width = 167
-          Height = 32
+          Height = 27
           Margins.Left = 2
           Margins.Top = 2
           Margins.Right = 2
@@ -1841,7 +1839,7 @@ object MBaseControl: TMBaseControl
           Left = 12
           Top = 28
           Width = 167
-          Height = 32
+          Height = 27
           Margins.Left = 2
           Margins.Top = 2
           Margins.Right = 2
@@ -1864,7 +1862,6 @@ object MBaseControl: TMBaseControl
       Align = alClient
       Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1094#1080#1103
       TabOrder = 2
-      ExplicitWidth = 446
       object RegPanel: TPanel
         Left = 2
         Top = 21
@@ -1876,7 +1873,6 @@ object MBaseControl: TMBaseControl
         Margins.Bottom = 2
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 442
         object Label1: TLabel
           Left = 12
           Top = 12
@@ -1938,8 +1934,6 @@ object MBaseControl: TMBaseControl
           DrawColorBox = False
           ChangeTextColor = False
           Editable = False
-          ExplicitTop = 165
-          ExplicitWidth = 441
         end
         object AlarmCB: TCheckBox
           Left = 197
@@ -1966,8 +1960,6 @@ object MBaseControl: TMBaseControl
           Align = alBottom
           TabOrder = 2
           Visible = False
-          ExplicitTop = 81
-          ExplicitWidth = 441
           object AlarmDscLabel: TLabel
             Left = 4
             Top = 5
@@ -1994,7 +1986,7 @@ object MBaseControl: TMBaseControl
             Left = 4
             Top = 27
             Width = 176
-            Height = 32
+            Height = 27
             Margins.Left = 2
             Margins.Top = 2
             Margins.Right = 2
@@ -2023,7 +2015,7 @@ object MBaseControl: TMBaseControl
           Left = 11
           Top = 35
           Width = 169
-          Height = 32
+          Height = 27
           Margins.Left = 2
           Margins.Top = 2
           Margins.Right = 2
@@ -2140,7 +2132,7 @@ object MBaseControl: TMBaseControl
         Left = 17
         Top = 33
         Width = 216
-        Height = 32
+        Height = 27
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2

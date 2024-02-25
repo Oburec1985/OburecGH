@@ -26,14 +26,19 @@ type
     GroupBox1: TGroupBox;
     cChart1: cChart;
     ControlsLV: TBtnListView;
+    ApplyBtn: TButton;
+    CustomViewCB: TCheckBox;
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ControlsLVDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure ControlsLVDragDrop(Sender, Source: TObject; X, Y: Integer);
+    procedure ApplyBtnClick(Sender: TObject);
   private
     eventsCreated:boolean;
     CfgChanged:boolean;
+    frm:tform;
+    m_p:cprogramobj;
   private
     procedure createEvents;
     procedure destroyEvents;
@@ -44,7 +49,9 @@ type
   private
     procedure ShowTrigs;
     procedure ShowControls(p:cprogramobj);
+    function getControl(i:integer):cControlObj;
   public
+    procedure setfrm(f:tform);
     procedure ShowConfig;
   end;
 
@@ -52,6 +59,8 @@ var
   CyclogramReportFrm: TCyclogramReportFrm;
 
 implementation
+uses
+  uControlDeskFrm;
 
 {$R *.dfm}
 
@@ -183,7 +192,7 @@ begin
     cpage(cchart1.activePage).clear;
     for I := 0 to p.ControlCount - 1 do
     begin
-      con:=p.getOwnControl(i);
+      con:=getControl(i);
       showControlInChart(con, p);
     end;
     ShowControls(p);
@@ -199,7 +208,7 @@ begin
   ControlsLV.Clear;
   for I := 0 to p.ControlCount - 1 do
   begin
-    con:=p.getOwnControl(i);
+    con:=getControl(i);
     li:=ControlsLV.Items.Add;
     li.Data:=con;
     ControlsLV.SetSubItemByColumnName('¹', inttostr(i), li);
@@ -224,6 +233,19 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TCyclogramReportFrm.ApplyBtnClick(Sender: TObject);
+var
+  I: Integer;
+begin
+  TControlDeskFrm(frm).m_CustSort:=CustomViewCB.Checked;
+  TControlDeskFrm(frm).m_ViewControls.clear;
+  for I := 0 to ControlsLV.Items.Count - 1 do
+  begin
+    TControlDeskFrm(frm).m_ViewControls.add(ControlsLV.Items[i].Data);
+  end;
+  TControlDeskFrm(frm).ShowModeTable;
 end;
 
 procedure TCyclogramReportFrm.ControlsLVDragDrop(Sender, Source: TObject; X,
@@ -313,6 +335,16 @@ begin
 
 end;
 
+procedure TCyclogramReportFrm.setfrm(f:tform);
+begin
+  frm:=f;
+end;
+
+function TCyclogramReportFrm.getControl(i:integer):cControlObj;
+begin
+  result:=TControlDeskFrm(frm).getProgControl(m_p, i);
+end;
+
 procedure TCyclogramReportFrm.ShowConfig;
 var
   p:cprogramobj;
@@ -320,12 +352,15 @@ begin
   showInVTreeView(ProgramTV, g_conmng.programs, ImageList16);
   ShowTrigs;
   p:=g_conmng.getProgram(0);
+  m_p:=p;
+  CustomViewCB.Checked:=TControlDeskFrm(frm).m_CustSort;
   if p<>nil then
   begin
     ShowProgram(p);
   end;
   CfgChanged:=false;
 end;
+
 
 
 end.
