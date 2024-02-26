@@ -71,6 +71,20 @@ type
     function DelInteger(i:integer):integer;
   end;
 
+  cKeyNode<T> = class
+  public
+    m_key:T;
+    data:pointer;
+  end;
+
+  cKeyList<T> = class(cSetList)
+  protected
+    procedure deletechild(node:pointer);override;
+  public
+    constructor create;override;
+    procedure addObj(key:T; data:pointer);
+  end;
+
   cDoubleList = class(cSetList)
   protected
     procedure deletechild(node:pointer);override;
@@ -663,5 +677,49 @@ begin
   tobject(node).destroy;
 end;
 
+
+{ cKeyList<T> }
+
+function T_Comparator(p1,p2:pointer):integer;
+begin
+  if cardinal(p1)>cardinal(p2) then
+  begin
+    result:=1;
+  end
+  else
+  begin
+    if cardinal(p1)<cardinal(p2) then
+    begin
+      result:=-1;
+    end
+    else
+    begin
+      result:=0;
+    end;
+  end;
+end;
+
+procedure cKeyList<T>.addObj(key: T; data: pointer);
+var
+  n:cKeyNode<T>;
+begin
+  n:=cKeyNode<T>.Create;
+  n.m_key:=key;
+  n.data:=data;
+  inherited AddObj(n);
+end;
+
+constructor cKeyList<T>.create;
+begin
+  inherited;
+  comparator:=T_Comparator;
+  destroydata:=true;
+end;
+
+procedure cKeyList<T>.deletechild(node: pointer);
+begin
+  inherited;
+  cKeyNode<T>(node).Destroy;
+end;
 
 end.

@@ -9,7 +9,7 @@ uses
   uCommonMath, ComCtrls, uBtnListView, uPage, uCommonTypes,
   uControlObj, uBaseObjService, uEventTypes,
   PluginClass, recorder, uRcCtrls, uRCFunc, uRvclService, tags,
-  uRTrig, uTagsListFrame, utrend, uaxis, uPoint,
+  uRTrig, uTagsListFrame, utrend, uaxis, uPoint, uListMath,
   uChart;
 
 type
@@ -259,32 +259,37 @@ var
 begin
   li:=ControlsLV.GetItemAt(x,y);
   sli:=ControlsLV.Selected;
-  start:=true;
-  while sli<>nil do
+  if ControlsLV.selCount=1 then
   begin
-    if start then
+    start:=true;
+    while sli<>nil do
     begin
-      if li<>sli then
+      if start then
       begin
-        if li<>nil then
-          newpos:=li.index
-        else
+        if li<>sli then
         begin
-          r:=ControlsLV.Items[ControlsLV.Items.Count - 1].DisplayRect(drBounds);
-          // внизу координата с максимальным значением, верхняя граница 0
-          if y>r.Bottom then
-            newpos:=ControlsLV.Items.Count
+          if li<>nil then
+            newpos:=li.index
           else
-            newpos:=0;
+          begin
+            r:=ControlsLV.Items[ControlsLV.Items.Count - 1].DisplayRect(drBounds);
+            // внизу координата с максимальным значением, верхняя граница 0
+            if y>r.Bottom then
+              newpos:=ControlsLV.Items.Count
+            else
+              newpos:=0;
+          end;
         end;
       end;
+      start:=false;
+      MoveListViewItem(ControlsLV,sli.Index, newpos) ;
+      sli:=ControlsLV.GetNextItem(sli, sdAll, [isSelected]);
     end;
-    start:=false;
-    MoveListViewItem(ControlsLV,sli.Index, newpos) ;
-    sli:=ControlsLV.GetNextItem(sli, sdAll, [isSelected]);
+  end
+  else
+  begin
+
   end;
-  //p:=g_conmng.getProgram(0);
-  //ShowControls(p);
 end;
 
 procedure TCyclogramReportFrm.ControlsLVDragOver(Sender, Source: TObject; X,

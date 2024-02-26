@@ -2,48 +2,44 @@ object CyclogramReportFrm: TCyclogramReportFrm
   Left = 0
   Top = 0
   Caption = #1050#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103' '#1094#1080#1082#1083#1086#1075#1088#1072#1084#1084#1099
-  ClientHeight = 448
-  ClientWidth = 602
+  ClientHeight = 597
+  ClientWidth = 803
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -10
+  Font.Height = -13
   Font.Name = 'Tahoma'
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   OnCreate = FormCreate
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 12
+  PixelsPerInch = 120
+  TextHeight = 16
   object LeftPan: TPanel
-    Left = 395
+    Left = 527
     Top = 0
-    Width = 207
-    Height = 448
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 276
+    Height = 597
     Align = alRight
     TabOrder = 0
     object CyclogramGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 205
-      Height = 258
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Width = 274
+      Height = 344
       Align = alTop
       Caption = #1050#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103' '#1094#1080#1082#1083#1086#1075#1088#1072#1084#1084#1099
       TabOrder = 0
       object ProgramTV: TVTree
         Left = 2
-        Top = 14
-        Width = 201
-        Height = 242
+        Top = 18
+        Width = 270
+        Height = 324
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alClient
         DragMode = dmAutomatic
         DragType = dtVCL
@@ -63,21 +59,21 @@ object CyclogramReportFrm: TCyclogramReportFrm
     end
     object TrigsGB: TGroupBox
       Left = 1
-      Top = 259
-      Width = 205
-      Height = 188
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 345
+      Width = 274
+      Height = 251
       Align = alClient
       Caption = #1058#1088#1080#1075#1075#1077#1088#1099
       TabOrder = 1
       object TrigTV: TVTree
         Left = 2
-        Top = 14
-        Width = 201
-        Height = 172
+        Top = 18
+        Width = 270
+        Height = 231
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alClient
         DragMode = dmAutomatic
         DragType = dtVCL
@@ -99,35 +95,23 @@ object CyclogramReportFrm: TCyclogramReportFrm
   object alPanel: TPanel
     Left = 0
     Top = 0
-    Width = 395
-    Height = 448
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 527
+    Height = 597
     Align = alClient
     TabOrder = 1
     object GroupBox1: TGroupBox
       Left = 1
       Top = 1
-      Width = 393
-      Height = 222
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Width = 525
+      Height = 296
       Align = alTop
       Caption = 'GroupBox1'
       TabOrder = 0
       object cChart1: cChart
         Left = 2
-        Top = 14
-        Width = 389
-        Height = 206
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Top = 18
+        Width = 521
+        Height = 276
         Align = alClient
         Caption = 'cChart1'
         TabOrder = 0
@@ -140,22 +124,18 @@ object CyclogramReportFrm: TCyclogramReportFrm
     end
     object ControlsLV: TBtnListView
       Left = 1
-      Top = 223
-      Width = 216
-      Height = 224
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 297
+      Width = 288
+      Height = 299
       Align = alLeft
       Columns = <
         item
           Caption = #8470
-          Width = 38
+          Width = 51
         end
         item
           Caption = #1056#1077#1075#1091#1083#1103#1090#1086#1088
-          Width = 38
+          Width = 51
         end>
       DragMode = dmAutomatic
       MultiSelect = True
@@ -172,19 +152,27 @@ object CyclogramReportFrm: TCyclogramReportFrm
       Editable = False
     end
     object ApplyBtn: TButton
-      Left = 222
-      Top = 228
-      Width = 75
-      Height = 25
+      Left = 296
+      Top = 304
+      Width = 100
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
       TabOrder = 2
       OnClick = ApplyBtnClick
     end
     object CustomViewCB: TCheckBox
-      Left = 222
-      Top = 259
-      Width = 97
-      Height = 17
+      Left = 296
+      Top = 345
+      Width = 129
+      Height = 23
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1057#1086#1088#1090#1080#1088#1086#1074#1082#1072
       TabOrder = 3
     end

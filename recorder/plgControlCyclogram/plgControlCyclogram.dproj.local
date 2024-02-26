@@ -216,6 +216,8 @@
     <File Path="forms\uControlCyclogramEditFrm.dfm"/>
     <File Path="forms\uControlDeskFrm.pas"/>
     <File Path="forms\uControlDeskFrm.dfm"/>
+    <File Path="forms\uCyclogramReportFrm.pas"/>
+    <File Path="forms\uCyclogramReportFrm.dfm"/>
     <File Path="forms\uControlEditFrame.pas"/>
     <File Path="forms\uControlEditFrame.dfm"/>
     <File Path="forms\uEditControlWrnFrm.pas"/>
@@ -228,8 +230,6 @@
     <File Path="forms\uCursorFrm.dfm"/>
     <File Path="forms\uCustomEditControlFrame.pas"/>
     <File Path="forms\uCustomEditControlFrame.dfm"/>
-    <File Path="forms\uCyclogramReportFrm.pas"/>
-    <File Path="forms\uCyclogramReportFrm.dfm"/>
     <File Path="forms\uDacControlEditFrame.pas"/>
     <File Path="forms\uDacControlEditFrame.dfm"/>
     <File Path="forms\uEditProfileFrm.pas"/>
