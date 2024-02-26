@@ -10,7 +10,7 @@ uses
   uControlObj, uBaseObjService, uEventTypes,
   PluginClass, recorder, uRcCtrls, uRCFunc, uRvclService, tags,
   uRTrig, uTagsListFrame, utrend, uaxis, uPoint, uListMath,
-  uChart;
+  uChart, usetlist;
 
 type
   TCyclogramReportFrm = class(TForm)
@@ -254,8 +254,11 @@ var
   sli,li:tlistitem;
   p:cProgramObj;
   r:TRect;
-  newpos:integer;
+  startI,newpos, shift:integer;
   start:boolean;
+
+  NodeList:cIntNodeList;
+  I: Integer;
 begin
   li:=ControlsLV.GetItemAt(x,y);
   sli:=ControlsLV.Selected;
@@ -288,7 +291,18 @@ begin
   end
   else
   begin
-
+    NodeList:=cIntNodeList.create;
+    startI:=sli.Index;
+    shift:=startI-newpos;
+    for I := 0 to startI+shift do
+    begin
+      NodeList.addObj(i, ControlsLV.Items[i].data);
+    end;
+    for I := startI to startI-1 do
+    begin
+      NodeList.addObj(i, ControlsLV.Items[i].data);
+    end;
+    NodeList.destroy;
   end;
 end;
 

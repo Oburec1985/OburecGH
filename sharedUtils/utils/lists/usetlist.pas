@@ -3,7 +3,7 @@ unit uSetList;
 
 interface
 
-uses classes, uListMath, dialogs, ucommonmath;
+uses classes, uListMath, dialogs, ucommonmath, uqueue;
 
 type
 
@@ -71,19 +71,6 @@ type
     function DelInteger(i:integer):integer;
   end;
 
-  cKeyNode<T> = class
-  public
-    m_key:T;
-    data:pointer;
-  end;
-
-  cKeyList<T> = class(cSetList)
-  protected
-    procedure deletechild(node:pointer);override;
-  public
-    constructor create;override;
-    procedure addObj(key:T; data:pointer);
-  end;
 
   cDoubleList = class(cSetList)
   protected
@@ -112,6 +99,20 @@ type
     function GetIDName(key:cardinal):string;
     procedure DestroyObj(key:cardinal);
   end;
+
+  cIntNode = class
+    i:integer;
+    d:pointer;
+  end;
+
+  cIntNodeList = class(cSetList)
+  protected
+    procedure deletechild(node:pointer);override;
+  public
+    constructor create;override;
+    function addObj(i:integer; d:pointer):integer;
+  end;
+
 
 
 implementation
@@ -678,17 +679,17 @@ begin
 end;
 
 
-{ cKeyList<T> }
+{ cIntNodeList }
 
-function T_Comparator(p1,p2:pointer):integer;
+function IntNodeComparator(p1,p2:pointer):integer;
 begin
-  if cardinal(p1)>cardinal(p2) then
+  if cIntNode(p1).i>cIntNode(p2).i then
   begin
     result:=1;
   end
   else
   begin
-    if cardinal(p1)<cardinal(p2) then
+    if cIntNode(p1).i<cIntNode(p2).i then
     begin
       result:=-1;
     end
@@ -699,27 +700,24 @@ begin
   end;
 end;
 
-procedure cKeyList<T>.addObj(key: T; data: pointer);
+function cIntNodeList.addObj(i: integer; d: pointer):integer;
 var
-  n:cKeyNode<T>;
+  n:cIntNode;
 begin
-  n:=cKeyNode<T>.Create;
-  n.m_key:=key;
-  n.data:=data;
-  inherited AddObj(n);
+  n:=cIntNode.Create;
+  result:=Add(n);
 end;
 
-constructor cKeyList<T>.create;
+constructor cIntNodeList.create;
 begin
   inherited;
-  comparator:=T_Comparator;
   destroydata:=true;
+  comparator:=IntNodeComparator;
 end;
 
-procedure cKeyList<T>.deletechild(node: pointer);
+procedure cIntNodeList.deletechild(node: pointer);
 begin
-  inherited;
-  cKeyNode<T>(node).Destroy;
+  cIntNode(node).destroy;
 end;
 
 end.
