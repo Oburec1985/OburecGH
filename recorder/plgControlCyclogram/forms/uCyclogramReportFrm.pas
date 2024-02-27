@@ -39,6 +39,8 @@ type
     CfgChanged:boolean;
     frm:tform;
     m_p:cprogramobj;
+
+    notSelItems, selitems:tlist;
   private
     procedure createEvents;
     procedure destroyEvents;
@@ -53,6 +55,8 @@ type
   public
     procedure setfrm(f:tform);
     procedure ShowConfig;
+    constructor create(aowner:tcomponent);override;
+    destructor destroy;override;
   end;
 
 var
@@ -253,15 +257,22 @@ procedure TCyclogramReportFrm.ControlsLVDragDrop(Sender, Source: TObject; X,
 var
   sli,li:tlistitem;
   p:cProgramObj;
+  con:cControlObj;
   r:TRect;
-  startI,newpos, shift:integer;
+  startI, start2,newpos, shift, j:integer;
   start:boolean;
 
-  NodeList:cIntNodeList;
+  NodeList:array of pointer;
   I: Integer;
 begin
   li:=ControlsLV.GetItemAt(x,y);
   sli:=ControlsLV.Selected;
+  r:=ControlsLV.Items[ControlsLV.Items.Count - 1].DisplayRect(drBounds);
+  // внизу координата с максимальным значением, верхняя граница 0
+  if y>r.Bottom then
+    newpos:=ControlsLV.Items.Count
+  else
+    newpos:=0;
   if ControlsLV.selCount=1 then
   begin
     start:=true;
@@ -275,12 +286,7 @@ begin
             newpos:=li.index
           else
           begin
-            r:=ControlsLV.Items[ControlsLV.Items.Count - 1].DisplayRect(drBounds);
-            // внизу координата с максимальным значением, верхняя граница 0
-            if y>r.Bottom then
-              newpos:=ControlsLV.Items.Count
-            else
-              newpos:=0;
+
           end;
         end;
       end;
@@ -291,18 +297,43 @@ begin
   end
   else
   begin
-    NodeList:=cIntNodeList.create;
+    setlength(NodeList, ControlsLV.items.count);
+    selitems.Clear;
+    notSelItems.Clear;
     startI:=sli.Index;
     shift:=startI-newpos;
-    for I := 0 to startI+shift do
+    start2:=startI+shift;
+    for I := 0 to ControlsLV.Items.Count-1 do
     begin
-      NodeList.addObj(i, ControlsLV.Items[i].data);
+      if i<start2 then
+        NodeList[i]:=ControlsLV.Items[i].data
+      else
+      begin
+        li:=ControlsLV.Items[i];
+        if li.Selected then
+          selitems.Add(li.Data)
+        else
+          notSelItems.Add(li.Data);
+      end;
     end;
-    for I := startI to startI-1 do
+    for I := 0 to selitems.Count-1 do
     begin
-      NodeList.addObj(i, ControlsLV.Items[i].data);
+      NodeList[i+start2]:=selitems.Items[i];
     end;
-    NodeList.destroy;
+    start2:=i;
+    for I := 0 to notselitems.Count-1 do
+    begin
+      NodeList[i+start2]:=notselitems.Items[i];
+    end;
+    ControlsLV.Clear;
+    for I := 0 to length(NodeList) - 1 do
+    begin
+      con:=ccontrolobj(NodeList[i]);
+      li:=ControlsLV.Items.Add;
+      li.Data:=con;
+      ControlsLV.SetSubItemByColumnName('№', inttostr(i), li);
+      ControlsLV.SetSubItemByColumnName('Регулятор', con.name, li);
+    end;
   end;
 end;
 
@@ -313,6 +344,20 @@ begin
   begin
      Accept:=true;
   end;
+end;
+
+constructor TCyclogramReportFrm.create(aowner: tcomponent);
+begin
+  inherited;
+  notSelItems:=tlist.Create;
+  SelItems:=tlist.Create;
+end;
+
+destructor TCyclogramReportFrm.destroy;
+begin
+  notSelItems.Destroy;
+  SelItems.Destroy;
+  inherited;
 end;
 
 procedure TCyclogramReportFrm.createEvents;
@@ -328,6 +373,8 @@ begin
     end;
   end;
 end;
+
+
 
 procedure TCyclogramReportFrm.destroyEvents;
 begin
