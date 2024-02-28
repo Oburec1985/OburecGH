@@ -256,84 +256,75 @@ procedure TCyclogramReportFrm.ControlsLVDragDrop(Sender, Source: TObject; X,
   Y: Integer);
 var
   sli,li:tlistitem;
-  p:cProgramObj;
   con:cControlObj;
   r:TRect;
-  startI, start2,newpos, shift, j:integer;
-  start:boolean;
+  newpos, shift, j:integer;
 
   NodeList:array of pointer;
   I: Integer;
 begin
-  li:=ControlsLV.GetItemAt(x,y);
-  sli:=ControlsLV.Selected;
+  // пересортировка группы item по drag drop-у
+  li:=ControlsLV.GetItemAt(x,y); // координаты куда дропаем
+  sli:=ControlsLV.Selected; // координаты откуда дропаем
+  // коррекци€ места куда дропаем, если вышли за границы компонента
   r:=ControlsLV.Items[ControlsLV.Items.Count - 1].DisplayRect(drBounds);
-  // внизу координата с максимальным значением, верхн€€ граница 0
-  if y>r.Bottom then
-    newpos:=ControlsLV.Items.Count
-  else
-    newpos:=0;
-  if ControlsLV.selCount=1 then
+  if li<>nil then
   begin
-    start:=true;
-    while sli<>nil do
-    begin
-      if start then
-      begin
-        if li<>sli then
-        begin
-          if li<>nil then
-            newpos:=li.index
-          else
-          begin
-
-          end;
-        end;
-      end;
-      start:=false;
-      MoveListViewItem(ControlsLV,sli.Index, newpos) ;
-      sli:=ControlsLV.GetNextItem(sli, sdAll, [isSelected]);
-    end;
+    newpos:=li.index;
   end
   else
   begin
-    setlength(NodeList, ControlsLV.items.count);
-    selitems.Clear;
-    notSelItems.Clear;
-    startI:=sli.Index;
-    shift:=startI-newpos;
-    start2:=startI+shift;
-    for I := 0 to ControlsLV.Items.Count-1 do
+    // внизу координата с максимальным значением, верхн€€ граница 0
+    if y>r.Bottom then
+      newpos:=ControlsLV.Items.Count
+    else
     begin
-      if i<start2 then
-        NodeList[i]:=ControlsLV.Items[i].data
+      newpos:=0;
+    end;
+  end;
+  if newpos=sli.index then
+    exit;
+  // NodeList - список дл€ новой сортировки
+  setlength(NodeList, ControlsLV.items.count);
+  selitems.Clear;
+  notSelItems.Clear;
+  j:=0;
+  for I := 0 to ControlsLV.Items.Count-1 do
+  begin
+    if (j<newpos) and (not ControlsLV.Items[i].Selected) then
+    begin
+      NodeList[j]:=ControlsLV.Items[i].data;
+      inc(j);
+    end
+    else
+    begin
+      li:=ControlsLV.Items[i];
+      if li.Selected then
+        selitems.Add(li.Data)
       else
-      begin
-        li:=ControlsLV.Items[i];
-        if li.Selected then
-          selitems.Add(li.Data)
-        else
-          notSelItems.Add(li.Data);
-      end;
+        notSelItems.Add(li.Data);
     end;
-    for I := 0 to selitems.Count-1 do
-    begin
-      NodeList[i+start2]:=selitems.Items[i];
-    end;
-    start2:=i;
-    for I := 0 to notselitems.Count-1 do
-    begin
-      NodeList[i+start2]:=notselitems.Items[i];
-    end;
-    ControlsLV.Clear;
-    for I := 0 to length(NodeList) - 1 do
-    begin
-      con:=ccontrolobj(NodeList[i]);
-      li:=ControlsLV.Items.Add;
-      li.Data:=con;
-      ControlsLV.SetSubItemByColumnName('є', inttostr(i), li);
-      ControlsLV.SetSubItemByColumnName('–егул€тор', con.name, li);
-    end;
+  end;
+
+  for I := 0 to selitems.Count-1 do
+  begin
+    j:=i+newpos;
+    NodeList[j]:=selitems.items[i];
+  end;
+  inc(j);
+  for I := 0 to notSelItems.Count-1 do
+  begin
+    NodeList[j+i]:=notSelItems.items[i];
+  end;
+  // ѕерезаполн€ем исходный LV
+  ControlsLV.Clear;
+  for I := 0 to length(NodeList) - 1 do
+  begin
+    con:=ccontrolobj(NodeList[i]);
+    li:=ControlsLV.Items.Add;
+    li.Data:=con;
+    ControlsLV.SetSubItemByColumnName('є', inttostr(i), li);
+    ControlsLV.SetSubItemByColumnName('–егул€тор', con.name, li);
   end;
 end;
 
