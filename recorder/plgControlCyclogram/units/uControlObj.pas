@@ -2500,9 +2500,9 @@ begin
   begin
     tag := cTagPair.create;
     tag.tag.tag := t;
+    fTags.AddObject(t.getname, tag);
   end;
   tag.value := value;
-  fTags.AddObject(t.getname, tag);
 end;
 
 procedure cControlObj.AddTag(t: string; value: double);

@@ -5,11 +5,12 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, Grids, ExtCtrls, uRecBasicFactory, inifiles,
-  uControlObj,
+  uControlObj, ActiveX,
   uComponentservises, uEventTypes, ComCtrls, uBtnListView, recorder,
   ucommonmath,
   mathfunction,
   uRecorderEvents,
+  cfreg,
   uCyclogramreportFrm,
   uRTrig, uRCFunc,
   tags, ualarms,
@@ -238,6 +239,9 @@ type
 
 procedure TimeProc(hwnd, uMsg, idEvent, dwTime: DWord); stdcall;
 
+// Con=C_1;Tag = T_1;
+procedure SetControlMngProp(s:lpcstr);
+
 var
   ControlDeskFrm: TControlDeskFrm;
 
@@ -283,6 +287,54 @@ const
 implementation
 
 {$R *.dfm}
+
+
+
+procedure SetControlMngProp(s:lpcstr);
+var
+  rep: hresult;
+  val: OleVariant;
+  UISrv: tagVARIANT;
+  FormRegistrator: ICustomFormsRegistrator;
+  f: ICustomFormFactory;
+  cf: ICustomFactInterface;
+
+  CFrm: IVForm;
+
+  count: cardinal;
+  i: ULONG;
+  int: integer;
+  ws: widestring;
+  g: TGUID;
+begin
+  rep := g_ir.GetProperty(RCPROP_UISERVERLINK, val);
+  UISrv := tagVARIANT(val);
+  if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
+  begin
+  end;
+  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,
+    FormRegistrator);
+  if FAILED(rep) or (FormRegistrator = niL) then
+  begin
+  end;
+  FormRegistrator.GetFactoriesCount(@count);
+  for i := 0 to count - 1 do
+  begin
+    FormRegistrator.GetFactoryByIndex(f, i);
+    f.GetFormTypeName(ws);
+    // f._Release;
+    if ws = c_Name then
+    begin
+      cf := f as ICustomFactInterface;
+      int := 0; (cf as ICustomFactInterface).getChild(int, CFrm);
+      // (cf as ICustomFactInterface).getChild(int, mdb);
+      // вернуть произвольное свойство tag - id того что хотим получить
+      // 0: путь к испытанию 1: путь к регистрации
+      (CFrm as ICustomVFormInterface).SetCustomProperty(0, s);
+    end;
+  end;
+end;
+
 { cControlFactory }
 
 function TrigBoolToStr(b: boolean): string;
@@ -1383,6 +1435,9 @@ begin
     CyclogramReportFrm.Show;
     CfgPanel.Color := c_color_ON;
   end;
+
+  SetControlMngProp('C_1=Ctrl_001;T_1=Ctrl_001_State;T_2=Ctrl_002_State');
+  UpdateControlsPropSG;
 end;
 
 procedure TControlDeskFrm.FormCfgClose(Sender: TObject;
@@ -2626,11 +2681,32 @@ var
   s:string;
   pars:TStringList;
   c:cControlObj;
+  I: Integer;
+  t:itag;
 begin
   s:=str;
   pars:=ParsStrParam(str);
-  // Con=C_01;Tag = T_01;
-
+  // Con=C_1;Tag = T_1;
+  s:=GetParsValue(pars, 'C_1');
+  c:=g_conmng.getControlObj(s);
+  if c<>nil then
+  begin
+    s:=GetParsValue(pars, 'T_1');
+    i:=1;
+    if checkstr(s) then
+    begin
+      t:=getTagByName(s);
+      if t<>nil then
+        cDacControl(c).config(t, nil);
+    end;
+    while checkstr(s) do
+    begin
+      if i>1 then
+        cDacControl(c).AddTag(s, 0);
+      s:=GetParsValue(pars, 'T_'+inttostr(i));
+      inc(i);
+    end;
+  end;
   ClearParsResult(pars);
   pars.Destroy;
 end;

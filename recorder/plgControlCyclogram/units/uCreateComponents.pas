@@ -125,7 +125,7 @@ var
   f: ICustomFormFactory;
   cf: ICustomFactInterface;
 
-  mdb: IVForm;
+  ifrm: IVForm;
 
   count: cardinal;
   i: ULONG;
@@ -153,12 +153,11 @@ begin
     if ws = c_MDBFormName then
     begin
       cf := f as ICustomFactInterface;
-      int := 0; (cf as ICustomFactInterface)
-      .getChild(int, mdb);
+      int := 0; (cf as ICustomFactInterface).getChild(int, ifrm);
       // (cf as ICustomFactInterface).getChild(int, mdb);
       // вернуть произвольное свойство tag - id того что хотим получить
       // 0: путь к испытанию 1: путь к регистрации
-      result := (mdb as ICustomVFormInterface).GetCustomProperty(0);
+      result := (ifrm as ICustomVFormInterface).GetCustomProperty(0);
     end;
   end;
 end;
