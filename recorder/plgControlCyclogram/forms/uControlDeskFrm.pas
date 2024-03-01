@@ -239,7 +239,7 @@ type
 
 procedure TimeProc(hwnd, uMsg, idEvent, dwTime: DWord); stdcall;
 
-// Con=C_1;Tag = T_1;
+// Con=C_1;new_1=1;FB_1=T_1;Tag = T_1;  // new_1 - создать новый канал
 procedure SetControlMngProp(s:lpcstr);
 
 var
@@ -288,8 +288,7 @@ implementation
 
 {$R *.dfm}
 
-
-
+// Con=C_1;new_1=1;FB_1=T_1;Tag = T_1;
 procedure SetControlMngProp(s:lpcstr);
 var
   rep: hresult;
@@ -323,10 +322,13 @@ begin
     FormRegistrator.GetFactoryByIndex(f, i);
     f.GetFormTypeName(ws);
     // f._Release;
-    if ws = c_Name then
+    // 'Пульт управления'
+    if ws = 'Пульт управления' then
     begin
       cf := f as ICustomFactInterface;
-      int := 0; (cf as ICustomFactInterface).getChild(int, CFrm);
+      int := 0;
+      rep:=(cf as ICustomFactInterface).getChild(int, CFrm);
+      if FAILED(rep) then exit;
       // (cf as ICustomFactInterface).getChild(int, mdb);
       // вернуть произвольное свойство tag - id того что хотим получить
       // 0: путь к испытанию 1: путь к регистрации
@@ -1435,9 +1437,7 @@ begin
     CyclogramReportFrm.Show;
     CfgPanel.Color := c_color_ON;
   end;
-
-  SetControlMngProp('C_1=Ctrl_001;T_1=Ctrl_001_State;T_2=Ctrl_002_State');
-  UpdateControlsPropSG;
+  // UpdateControlsPropSG;
 end;
 
 procedure TControlDeskFrm.FormCfgClose(Sender: TObject;
@@ -2680,32 +2680,69 @@ function IControlFrm.doSetProperty(tag: integer; str: lpcstr): integer;
 var
   s:string;
   pars:TStringList;
+  p:cprogramobj;
   c:cControlObj;
   I: Integer;
   t:itag;
+  createCon:boolean;
 begin
   s:=str;
   pars:=ParsStrParam(str);
-  // Con=C_1;Tag = T_1;
+  if pars.Count=0 then
+  begin
+    pars.Destroy;
+    exit;
+  end;
+  // Con=C_1;new_1=1;FB_1=T_1;Tag = T_1;
+  s:=GetParsValue(pars, 'new_1');
+  // new_1 - создать новый канал
+  if checkstr(s) then
+    createCon:=true
+  else
+    createCon:=false;
   s:=GetParsValue(pars, 'C_1');
   c:=g_conmng.getControlObj(s);
+  if c=nil then
+  begin
+    if createCon then
+    begin
+      c:=g_conmng.createControl(str, cDacControl.ClassName);
+      c.name:=s;
+      if p<>nil then
+      begin
+        p:=g_conmng.getProgram(0);
+        p.AddControl(c);
+      end;
+    end;
+  end;
   if c<>nil then
   begin
-    s:=GetParsValue(pars, 'T_1');
-    i:=1;
+    s:=GetParsValue(pars, 'FB_1');
+    c.cleartags;
     if checkstr(s) then
     begin
       t:=getTagByName(s);
       if t<>nil then
         cDacControl(c).config(t, nil);
     end;
+    s:=GetParsValue(pars, 'T_1');
+    i:=1;
+    if checkstr(s) then
+    begin
+      t:=getTagByName(s);
+      if t<>nil then
+        cDacControl(c).dac:=t;
+    end;
+
     while checkstr(s) do
     begin
       if i>1 then
         cDacControl(c).AddTag(s, 0);
-      s:=GetParsValue(pars, 'T_'+inttostr(i));
       inc(i);
+      s:=GetParsValue(pars, 'T_'+inttostr(i));
     end;
+    // пересоздаем задачи для контрола
+    c.UpdateTask;
   end;
   ClearParsResult(pars);
   pars.Destroy;

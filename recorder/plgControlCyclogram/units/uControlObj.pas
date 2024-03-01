@@ -360,6 +360,7 @@ type
     function getApplyed: boolean;
     procedure setApplyed(b: boolean);
   public
+    Procedure AddTagPair(t:cTagPair);
     procedure copytaskto(t:ctask);
     // доп задания контролу
     function TagsToString: string;
@@ -387,6 +388,7 @@ type
     procedure setparams(str: string);
     function getparams: string;
   public
+    procedure ClearTags;
     procedure setParam(key, str: string);
     // зачитать свойство хранящееся в m_Params
     function getParam(key: string): string;
@@ -521,6 +523,8 @@ type
     procedure SetTask(t: double); virtual; abstract;
     function GetTask: double;
     function PWM: boolean;
+    // при обновлении списка тегов обновить список задач
+    procedure UpdateTask;
   public
     property CheckOnMode: boolean read GetCheckOnMode write fCheckOnMode;
     property InTolerance: boolean read getInTol write setInTol;
@@ -842,6 +846,7 @@ type
     procedure clearTaskList;
     // обработка списка задач, где каждая задача это регулятор с заданием
     procedure doUpdateData; virtual;
+    function createTask(c: cControlObj): cTask; overload;
     function createTask(c: cControlObj; task: double): cTask; overload;
     function createTask(ControlName: string; task: double): cTask; overload;
     procedure editTask(c: cControlObj; task: double); overload;
@@ -2816,6 +2821,35 @@ begin
   fPWMTi := i64;
 end;
 
+procedure cControlObj.UpdateTask;
+var
+  I, j, k: Integer;
+  m:cmodeobj;
+  p:cProgramObj;
+  t:ctask;
+  tag, TaskTag:cTagPair;
+begin
+  for I := 0 to g_conmng.ProgramCount - 1 do
+  begin
+    p:=g_conmng.getProgram(i);
+    if p.getOwnControl(name)<>nil then
+    begin
+      for j := 0 to p.ModeCount - 1 do
+      begin
+        m:=p.getMode(j);
+        t:=m.createTask(self);
+        t.ClearTags;
+        for k := 0 to TagsCount - 1 do
+        begin
+          tag:=getTag(i);
+          // при необходимости создаем в задаче новы тег
+          t.AddTagPair(tag);
+        end;
+      end;
+    end;
+  end;
+end;
+
 Procedure cControlObj.ResetPWMTOnModeChange(resetWPMCurTime:boolean);
 begin
   if resetWPMCurTime then
@@ -4527,6 +4561,25 @@ begin
 end;
 
 { cModeObj }
+
+function cModeObj.createTask(c: cControlObj): cTask;
+var
+  i: integer;
+begin
+  if not TaskList.Find(c.name, i) then
+  begin
+    result := cTask.create;
+    result.control := c;
+    result.task := 0;
+    result.mode := self;
+    TaskList.AddObject(result.control.name, result);
+  end
+  else
+  begin
+    result:= GetTask(i);
+  end;
+end;
+
 function cModeObj.createTask(c: cControlObj; task: double): cTask;
 var
   i: integer;
@@ -4542,7 +4595,6 @@ begin
   else
   begin
     result := GetTask(i);
-    result.control := c;
     result.task := task;
   end;
 end;
@@ -5594,6 +5646,8 @@ procedure cDacControl.setDAC(dac: itag);
 var
   str: string;
 begin
+  if dac=m_dac then exit;
+  
   if m_dac <> nil then
   begin
     AddTagProp(m_dac, c_TagProp_nullpoly, '0');
@@ -5835,6 +5889,19 @@ begin
 end;
 
 { cTask }
+procedure cTask.ClearTags;
+var
+  i:integer;
+  tag:ctagpair;
+begin
+  for I := 0 to m_tags.Count - 1 do
+  begin
+    tag:=ctagpair(m_tags.Objects[i]);
+    tag.destroy;
+  end;
+  m_tags.Clear;
+end;
+
 procedure cTask.compilespline;
 var
   t0, t1, t2: cTask;
@@ -5912,6 +5979,32 @@ begin
   begin
     t1.SplineInterp := ptNullPoly;
   end;
+end;
+
+Procedure cTask.AddTagPair(t:cTagPair);
+var
+  i:integer;
+  tp, ltp:cTagPair;
+begin
+  tp:=nil;
+  for I := 0 to m_tags.Count - 1 do
+  begin
+    ltp:=ctagpair(m_tags.Objects[i]);
+    if ltp.name=t.name then
+    begin
+      tp:=ltp;
+      break;
+    end;
+  end;
+  // если не нашли такого тега
+  if tp=nil then
+  begin
+    tp:=cTagPair.create;
+    tp.name:=t.getname;
+    m_tags.AddObject(tp.name, tp);
+  end;
+  tp.value:=t.value;
+  tp.PWM:=t.PWM;
 end;
 
 procedure cTask.copytaskto(t: ctask);

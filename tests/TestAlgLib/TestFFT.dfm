@@ -2,128 +2,52 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 350
-  ClientWidth = 475
+  ClientHeight = 467
+  ClientWidth = 689
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -10
+  Font.Height = -13
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
-  PixelsPerInch = 96
-  TextHeight = 12
-  object Label1: TLabel
-    Left = 366
-    Top = 42
-    Width = 28
-    Height = 12
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
-    Caption = 'Label1'
-  end
+  PixelsPerInch = 120
+  TextHeight = 16
   object Button1: TButton
-    Left = 36
-    Top = 24
-    Width = 127
-    Height = 19
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Left = 48
+    Top = 32
+    Width = 169
+    Height = 25
     Caption = 'FFTAnalysis'
     TabOrder = 0
-    OnClick = Button1Click
   end
   object Memo1: TMemo
-    Left = 216
-    Top = 60
-    Width = 139
-    Height = 67
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Left = 264
+    Top = 32
+    Width = 409
+    Height = 201
     Lines.Strings = (
       'Memo1')
     TabOrder = 1
   end
-  object Edit1: TEdit
-    Left = 366
-    Top = 60
-    Width = 91
-    Height = 20
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
-    TabOrder = 2
-    Text = 'Edit1'
-  end
   object AlgLib: TButton
-    Left = 36
-    Top = 60
-    Width = 127
-    Height = 19
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Left = 48
+    Top = 80
+    Width = 169
+    Height = 25
     Caption = 'AlgLib'
-    TabOrder = 3
+    TabOrder = 2
     OnClick = AlgLibClick
   end
   object SSEBtn: TButton
-    Left = 36
-    Top = 96
-    Width = 127
-    Height = 19
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Left = 48
+    Top = 128
+    Width = 169
+    Height = 25
     Caption = 'SSE'
-    TabOrder = 4
+    TabOrder = 3
     OnClick = SSEBtnClick
-  end
-  object ListBox1: TListBox
-    Left = 216
-    Top = 150
-    Width = 91
-    Height = 163
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
-    ItemHeight = 12
-    TabOrder = 5
-  end
-  object IntEdit1: TIntEdit
-    Left = 6
-    Top = 222
-    Width = 91
-    Height = 20
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
-    TabOrder = 6
-    Text = '000'
-  end
-  object IntEdit2: TIntEdit
-    Left = 6
-    Top = 258
-    Width = 91
-    Height = 20
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
-    TabOrder = 7
-    Text = '000'
   end
 end

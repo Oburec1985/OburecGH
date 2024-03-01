@@ -626,7 +626,7 @@ var
   str, param:string;
   Value:cString;
 begin
-  i:=0;
+  i:=1;
   result:=tstringlist.Create;
   result.Sorted:=true;
   while i<=length(src) do
@@ -643,6 +643,8 @@ begin
     else
     begin
       str:=GetSubString(src,';',i, i);  // i ставится на место разделителя
+      if i=-1 then
+        i:=length(src)+1;
     end;
     if str<>'' then
     begin
