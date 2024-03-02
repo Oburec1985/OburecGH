@@ -621,13 +621,14 @@ asm
   popad
 end;
 
-        procedure MULT_SSE_al_d(var ar: TDoubleArray; scale: double);
-        var
-          shift: integer;
-          r: point2d;
+procedure MULT_SSE_al_d(var ar: TDoubleArray; scale: double);
+var
+  shift: integer;
+  r: point2d;
 asm
   pushad
     mov eax, [eax] // @D[0]
+    // в edx кладем длину массива. ќна лежит по смещению 4 от нулевого элемента
     mov edx, [eax-4]
     // xmm0..3 - загрузка данных дл€ умножени€
     // xmm4 - множитель
@@ -708,11 +709,11 @@ asm
   popad
 end;
 
-          function SUM_SSE_d(const Data: array of double): Extended;
-          // const
-          // zero_d: array [0..1] of Double = (0,0);
-          var
-            r2, r1: double;
+function SUM_SSE_d(const Data: array of double): Extended;
+// const
+// zero_d: array [0..1] of Double = (0,0);
+var
+  r2, r1: double;
 asm
   pushad
   // edx - длина массива (точнее номер hight элемента)
@@ -893,13 +894,13 @@ asm
   popad
 end;
 
-            function SUM_SSE_d(const Data: array of double;
-              first, stop: integer): Extended; overload;
-            // const
-            // zero_d: array [0..1] of Double = (0,0);
-            var
-              r2, r1: double;
-              shift: integer;
+function SUM_SSE_d(const Data: array of double;
+  first, stop: integer): Extended; overload;
+// const
+// zero_d: array [0..1] of Double = (0,0);
+var
+  r2, r1: double;
+  shift: integer;
 asm
   pushad
   // edx - длина массива (точнее номер hight элемента)

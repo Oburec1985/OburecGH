@@ -23,10 +23,12 @@ type
     Memo1: TMemo;
     AlgLib: TButton;
     SSEBtn: TButton;
+    MultArraySSE: TButton;
     procedure AlgLibClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure SSEBtnClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure MultArraySSEClick(Sender: TObject);
   private
     rezSignals:tstringlist;
     FFTProp:TFFTProp;
@@ -47,7 +49,7 @@ type
 
 const
   //FCount=8192;
-  FCount=4096;
+  FCount=8;
 
   TwoPi = 6.283185307179586;
 
@@ -128,7 +130,6 @@ var
   p:tpair;
   STR:STRING;
 begin
-
   GetMemAlignedArray_d(fcount, AlignedSampl);
   GetMemAlignedArray_d(fcount shr 1, MagFFTarray);
   GetMemAlignedArray_cmpx_d(fcount, CalcSampl);
@@ -140,6 +141,17 @@ begin
   FFTProp.TableInd := GetArrayIndex(FCount, 2);
 end;
 
+
+procedure TForm1.MultArraySSEClick(Sender: TObject);
+var
+  I: Integer;
+begin
+  for I := 0 to FCount - 1 do
+  begin
+    tdoublearray(AlignedSampl.p)[i]:=1;
+  end;
+  MULT_SSE_al_d(tdoublearray(AlignedSampl.p), 2);
+end;
 
 procedure TForm1.SSEBtnClick(Sender: TObject);
 var
@@ -188,6 +200,41 @@ begin
   resMera.Save;
   resMera.Destroy;
   rezSignals.Destroy;
+end;
+
+// перемножаем массив 1 на2 поэлементно. количество согласно d1
+// Параметры: первый в eax, второй в edx, третий в ecx, ост-ые - стек.
+function MulAr_sse(const D1: array of double;const D2: array of double; var dOut: array of double): Extended; overload;
+var
+  // размер блока при вычислении умножения
+  shift: integer;
+asm
+ // сохранить в стек регистры EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI.
+  pushad
+  // квадратные скобки - обратиться к значению по адресу в eax
+  mov eax, [eax] // @D1[0]
+  mov edx, [edx] // @D2[0]
+  mov ecx, [ecx] // @DOut[0]
+  mov ebx, [eax-4] // запоминаем длину массива
+
+  MOV ECX, ebx
+  // число кратных 4-м блоков в ECX. Два раза сдвиг влево и два вправо, чтоб похерить младшие биты
+  shr ECX, 2
+  shl ECX, 2
+  // высчитываем кол-во некратных элементов
+  //mov ebx, edx // ebx=Length
+  sub ebx, ecx // Length-NBlock
+  // ecx - в смещение до посл элемента (*sof(double) 2^3)
+  shl ECX, 3
+  mov shift, ecx
+  sub ecx, 16
+  @@Loop:
+    movapd xmm0, [eax+ecx] // загружаем по 2 числа
+    movapd xmm1, [eax+ecx-16] // загружаем по 2 числа
+    movapd xmm2, [eax+ecx] // загружаем по 2 числа
+    movapd xmm3, [eax+ecx-16] // загружаем по 2 числа
+
+  popad
 end;
 
 end.
