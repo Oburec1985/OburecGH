@@ -6171,3 +6171,951 @@ This application has leaked memory. The small block leaks are (excluding expecte
 181 - 212 bytes: UnicodeString x 1
 
 Note: Memory leak detail is logged to a text file in the same folder as this application. To disable this memory leak check, undefine "EnableMemoryLeakReporting".
+
+--------------------------------2024/3/4 22:37:28--------------------------------
+FastMM has detected an error during a GetMem operation. The block header has been corrupted. 
+
+The current thread ID is 0x5630, and the stack trace (return addresses) leading to this error is:
+40FB39 [fastmm4.pas][FastMM4][DebugGetMem][7897]
+40445E [System.pas][System][@GetMem][2979]
+407D3F [System.pas][System][@NewUnicodeString][18372]
+40747C [System.pas][System][@UStrFromPWCharLen][17088]
+40A881 [System.pas][System][LoadResString][22809]
+41E31B [SysUtils.pas][SysUtils][CreateAVObject][17923]
+7792101E [Unknown function at RtlNumberOfSetBitsUlongPtr]
+778E12E4 [Unknown function at RtlDosSearchPath_Ustr]
+778FCEB3 [Unknown function at RtlUnwind]
+778FCF31 [Unknown function at RtlUnwind]
+41E4F7 [SysUtils.pas][SysUtils][GetExceptionObject][17944]
+
+Current memory dump of 256 bytes starting at pointer address 7FDD7EB0:
+CF 81 22 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80
+œ  Å  "  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Ä
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Ä
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Ä
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Ä
+
+--------------------------------2024/3/4 22:37:36--------------------------------
+FastMM has detected an error during a GetMem operation. The block header has been corrupted. 
+
+The current thread ID is 0x298C, and the stack trace (return addresses) leading to this error is:
+40FB39 [fastmm4.pas][FastMM4][DebugGetMem][7897]
+40445E [System.pas][System][@GetMem][2979]
+407D3F [System.pas][System][@NewUnicodeString][18372]
+40747C [System.pas][System][@UStrFromPWCharLen][17088]
+40A881 [System.pas][System][LoadResString][22809]
+41E31B [SysUtils.pas][SysUtils][CreateAVObject][17923]
+7792101E [Unknown function at RtlNumberOfSetBitsUlongPtr]
+778E12E4 [Unknown function at RtlDosSearchPath_Ustr]
+778FCEB3 [Unknown function at RtlUnwind]
+778FCF31 [Unknown function at RtlUnwind]
+41E4F7 [SysUtils.pas][SysUtils][GetExceptionObject][17944]
+
+Current memory dump of 256 bytes starting at pointer address 7FDD7EB0:
+CF 81 22 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80
+œ  Å  "  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Ä
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Ä
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Ä
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Ä
+
+--------------------------------2024/3/5 0:43:29--------------------------------
+FastMM has detected an error during a FreeMem operation. The block header has been corrupted. 
+
+The current thread ID is 0x1378, and the stack trace (return addresses) leading to this error is:
+40447A [System.pas][System][@FreeMem][3030]
+4F1C1B [..\..\sharedUtils\math\uHardwareMath.pas][uHardwareMath][FreeMemAligned][1137]
+4F1BFB [..\..\sharedUtils\math\uHardwareMath.pas][uHardwareMath][FreeMemAligned][1124]
+4F7AE9 [TestFFT.pas][TestFFT][TForm1.FormClose][122]
+4AE991 [Forms.pas][Forms][TCustomForm.DoClose][3579]
+4B35B6 [Forms.pas][Forms][TCustomForm.Close][6369]
+4B25E5 [Forms.pas][Forms][TCustomForm.WMClose][5781]
+48A487 [Controls.pas][Controls][TControl.WndProc][7062]
+7594F6DF [Unknown function at GdiHandleBeingTracked]
+7594F6FC [Unknown function at GdiHandleBeingTracked]
+48ED51 [Controls.pas][Controls][TWinControl.WndProc][9819]
+
+Current memory dump of 256 bytes starting at pointer address 7FE63FE0:
+00 00 00 00 00 00 00 00 02 00 00 00 0A 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 40
+00 00 00 00 00 00 10 40 00 00 00 00 00 00 18 40 00 00 00 00 00 00 20 40 37 26 7E 04 80 80 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 40 32 E6 7F 00 00 00 00 00 00 00 00 D8 FA 40 00 00 00 00 00
+2B 04 00 00 5E 44 40 00 35 1E 4F 00 D3 1D 4F 00 4F 7B 4F 00 6F E1 4A 00 AB DD 4A 00 28 5D 40 00
+80 DD 4A 00 A1 85 4B 00 1A 52 50 00 A9 7B 79 75 78 13 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 38 00 00 00 00 00 00 00 BE 9B 8B F8 00 00 00 00 00 00 00 00 01 00 00 00 05 00 00 00
+00 00 00 00 00 00 F0 3F 00 00 00 00 00 00 00 40 00 00 00 00 00 00 08 40 00 00 00 00 00 00 10 40
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  @
+.  .  .  .  .  .  .  @  .  .  .  .  .  .  .  @  .  .  .  .  .  .     @  7  &  ~  .  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  @  2  Ê    .  .  .  .  .  .  .  .  ÿ  ˙  @  .  .  .  .  .
++  .  .  .  ^  D  @  .  5  .  O  .  ”  .  O  .  O  {  O  .  o  ·  J  .  ´  ›  J  .  (  ]  @  .
+Ä  ›  J  .  °  Ö  K  .  .  R  P  .  ©  {  y  u  x  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  8  .  .  .  .  .  .  .  æ  õ  ã  ¯  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .    ?  .  .  .  .  .  .  .  @  .  .  .  .  .  .  .  @  .  .  .  .  .  .  .  @
+
+--------------------------------2024/3/5 0:43:34--------------------------------
+FastMM has detected an error during a FreeMem operation. The block header has been corrupted. 
+
+The current thread ID is 0x1378, and the stack trace (return addresses) leading to this error is:
+40447A [System.pas][System][@FreeMem][3030]
+4F1C1B [..\..\sharedUtils\math\uHardwareMath.pas][uHardwareMath][FreeMemAligned][1137]
+4F1BFB [..\..\sharedUtils\math\uHardwareMath.pas][uHardwareMath][FreeMemAligned][1124]
+4F7AE9 [TestFFT.pas][TestFFT][TForm1.FormClose][122]
+4AE991 [Forms.pas][Forms][TCustomForm.DoClose][3579]
+4B35B6 [Forms.pas][Forms][TCustomForm.Close][6369]
+4B25E5 [Forms.pas][Forms][TCustomForm.WMClose][5781]
+48A487 [Controls.pas][Controls][TControl.WndProc][7062]
+77975F2A [Unknown function at RtlRegisterSecureMemoryCacheCallback]
+77975EFF [Unknown function at RtlRegisterSecureMemoryCacheCallback]
+778DF176 [Unknown function at RtlGetCurrentServiceSessionId]
+
+Current memory dump of 256 bytes starting at pointer address 7FE63FE0:
+00 00 00 00 00 00 00 00 02 00 00 00 0A 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 40
+00 00 00 00 00 00 10 40 00 00 00 00 00 00 18 40 00 00 00 00 00 00 20 40 37 26 7E 04 80 80 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 40 32 E6 7F 00 00 00 00 00 00 00 00 D8 FA 40 00 00 00 00 00
+2B 04 00 00 5E 44 40 00 35 1E 4F 00 D3 1D 4F 00 4F 7B 4F 00 6F E1 4A 00 AB DD 4A 00 28 5D 40 00
+80 DD 4A 00 A1 85 4B 00 1A 52 50 00 A9 7B 79 75 78 13 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 38 00 00 00 00 00 00 00 BE 9B 8B F8 00 00 00 00 00 00 00 00 01 00 00 00 05 00 00 00
+00 00 00 00 00 00 F0 3F 00 00 00 00 00 00 00 40 00 00 00 00 00 00 08 40 00 00 00 00 00 00 10 40
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  @
+.  .  .  .  .  .  .  @  .  .  .  .  .  .  .  @  .  .  .  .  .  .     @  7  &  ~  .  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  @  2  Ê    .  .  .  .  .  .  .  .  ÿ  ˙  @  .  .  .  .  .
++  .  .  .  ^  D  @  .  5  .  O  .  ”  .  O  .  O  {  O  .  o  ·  J  .  ´  ›  J  .  (  ]  @  .
+Ä  ›  J  .  °  Ö  K  .  .  R  P  .  ©  {  y  u  x  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  8  .  .  .  .  .  .  .  æ  õ  ã  ¯  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .    ?  .  .  .  .  .  .  .  @  .  .  .  .  .  .  .  @  .  .  .  .  .  .  .  @
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 108196
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+4044DD [System.pas][System][@ReallocMem][3121]
+408C10 [System.pas][System][DynArraySetLength][20708]
+75B0FAF0 [GetFileAttributesW]
+408CE6 [System.pas][System][@DynArraySetLength][20756]
+4F0865 [uBuffSignal][cBuffSignal.setcapacity]
+4F0D8D [uBuffSignal][cBuffSignal.loadSignal]
+40446E [System.pas][System][@GetMem][2979]
+407735 [System.pas][System][@UStrSetLength][17406]
+4077B3 [System.pas][System][@UStrCat][17472]
+4C0974 [uMeraFile][cMeraFile.LoadSignal]
+4C0D97 [uMeraFile][cMeraFile.Load]
+
+The block is currently used for an object of class: Unknown
+
+The allocation number is: 1222
+
+Current memory dump of 256 bytes starting at pointer address 7FDBC960:
+01 00 00 00 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 B3 2D 79 07 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ≥  -  y  .  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 20
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+407D4F [System.pas][System][@NewUnicodeString][18372]
+407714 [System.pas][System][@UStrSetLength][17387]
+417DB9 [SysUtils.pas][SysUtils][LowerCase][4333]
+4C00C7 [uMeraFile][cMeraFile.LoadSignalHeader]
+4C0D5D [uMeraFile][cMeraFile.Load]
+4BFA64 [uMeraFile][cMeraFile.create]
+4F7DE7 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][171]
+6F51557C [Unknown function at SetWindowSubclass]
+6F515DD1 [Unknown function at SetWindowSubclass]
+48AA15 [Controls.pas][Controls][TControl.Click][7178]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 1103
+
+Current memory dump of 256 bytes starting at pointer address 7FE53990:
+B0 04 02 00 01 00 00 00 02 00 00 00 72 00 38 00 00 00 29 48 48 26 80 80 00 00 00 00 71 42 E5 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 E5 04 00 00 6E 44 40 00 4F 7D 40 00 8C 74 40 00
+33 74 40 00 A6 74 40 00 C2 0B 45 00 25 EC 40 00 BB FB 40 00 E8 FB 40 00 6E 44 40 00 4F 7D 40 00
+80 50 00 00 80 50 00 00 8A 44 40 00 89 6A 40 00 6B 00 45 00 43 07 4C 00 2E FE 4B 00 74 7F 4F 00
+15 AA 48 00 E3 C3 46 00 49 CE 46 00 A7 A4 48 00 7C 6E 8D 77 10 00 00 00 B0 04 02 00 85 38 0C FD
+C4 21 51 00 80 80 80 80 80 80 80 80 80 80 80 80 7A C7 F3 02 80 80 80 80 00 00 00 00 F1 49 E5 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FB 04 00 00 6E 44 40 00 1F 9E 41 00 2D 9E 41 00
+0D 0B 49 00 A7 A4 48 00 2F 6C 97 77 2A 5F 97 77 FF 5E 97 77 76 F1 8D 77 71 ED 48 00 71 ED 48 00
+∞  .  .  .  .  .  .  .  .  .  .  .  r  .  8  .  .  .  )  H  H  &  Ä  Ä  .  .  .  .  q  B  Â  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Â  .  .  .  n  D  @  .  O  }  @  .  å  t  @  .
+3  t  @  .  ¶  t  @  .  ¬  .  E  .  %  Ï  @  .  ª  ˚  @  .  Ë  ˚  @  .  n  D  @  .  O  }  @  .
+Ä  P  .  .  Ä  P  .  .  ä  D  @  .  â  j  @  .  k  .  E  .  C  .  L  .  .  ˛  K  .  t    O  .
+.  ™  H  .  „  √  F  .  I  Œ  F  .  ß  §  H  .  |  n  ç  w  .  .  .  .  ∞  .  .  .  Ö  8  .  ˝
+ƒ  !  Q  .  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  z  «  Û  .  Ä  Ä  Ä  Ä  .  .  .  .  Ò  I  Â  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ˚  .  .  .  n  D  @  .  .  û  A  .  -  û  A  .
+.  .  I  .  ß  §  H  .  /  l  ó  w  *  _  ó  w  ˇ  ^  ó  w  v  Ò  ç  w  q  Ì  H  .  q  Ì  H  .
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 20
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+4044DD [System.pas][System][@ReallocMem][3121]
+408C10 [System.pas][System][DynArraySetLength][20708]
+40EC16 [fastmm4.pas][FastMM4][CalculateHeaderCheckSum][7379]
+40EC25 [fastmm4.pas][FastMM4][UpdateHeaderAndFooterCheckSums][7389]
+40FBBB [fastmm4.pas][FastMM4][DebugGetMem][7921]
+408CE6 [System.pas][System][@DynArraySetLength][20756]
+4F0865 [uBuffSignal][cBuffSignal.setcapacity]
+4F0063 [uBuffSignal][cBuffSignal.AddPoints]
+407D4F [System.pas][System][@NewUnicodeString][18372]
+4F7ED8 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][188]
+6F51557C [Unknown function at SetWindowSubclass]
+
+The block is currently used for an object of class: Unknown
+
+The allocation number is: 1229
+
+Current memory dump of 256 bytes starting at pointer address 7FE53CB0:
+01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 51 90 9B 9B 80 80 80 80 00 00 00 00 91 04 E5 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 DC 03 00 00 6E 44 40 00 33 57 40 00 CA 5C 40 00
+68 57 40 00 36 1E 49 00 CD C2 46 00 BC FB 43 00 ED FD 43 00 1F 08 44 00 9E 00 44 00 DD FF 43 00
+80 50 00 00 80 50 00 00 8A 44 40 00 51 57 40 00 15 5D 40 00 7C 2C 4A 00 97 57 40 00 C2 CC 46 00
+AD C1 48 00 29 D3 4A 00 22 E1 4A 00 F6 71 44 00 1E C1 4A 00 14 00 00 00 8C F3 49 00 36 FB 14 86
+C4 21 51 00 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 C9 04 EB 79 00 00 00 00 F1 EF E4 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 29 04 00 00 DD 44 40 00 D1 A1 43 00 5C 9F 43 00
+4D 9D 43 00 D3 71 48 00 A7 CD 45 00 1C CB 45 00 2F BD 45 00 2C E8 4A 00 ED E4 4A 00 7A 0F 44 00
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Q  ê  õ  õ  Ä  Ä  Ä  Ä  .  .  .  .  ë  .  Â  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ‹  .  .  .  n  D  @  .  3  W  @  .     \  @  .
+h  W  @  .  6  .  I  .  Õ  ¬  F  .  º  ˚  C  .  Ì  ˝  C  .  .  .  D  .  û  .  D  .  ›  ˇ  C  .
+Ä  P  .  .  Ä  P  .  .  ä  D  @  .  Q  W  @  .  .  ]  @  .  |  ,  J  .  ó  W  @  .  ¬  Ã  F  .
+≠  ¡  H  .  )  ”  J  .  "  ·  J  .  ˆ  q  D  .  .  ¡  J  .  .  .  .  .  å  Û  I  .  6  ˚  .  Ü
+ƒ  !  Q  .  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  …  .  Î  y  .  .  .  .  Ò  Ô  ‰  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  )  .  .  .  ›  D  @  .  —  °  C  .  \  ü  C  .
+M  ù  C  .  ”  q  H  .  ß  Õ  E  .  .  À  E  .  /  Ω  E  .  ,  Ë  J  .  Ì  ‰  J  .  z  .  D  .
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 20
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+407D4F [System.pas][System][@NewUnicodeString][18372]
+40748C [System.pas][System][@UStrFromPWCharLen][17088]
+450BC2 [IniFiles.pas][IniFiles][TIniFile.ReadString][909]
+40EC25 [fastmm4.pas][FastMM4][UpdateHeaderAndFooterCheckSums][7389]
+40FBBB [fastmm4.pas][FastMM4][DebugGetMem][7921]
+40FBE8 [fastmm4.pas][FastMM4][DebugGetMem][7941]
+40446E [System.pas][System][@GetMem][2979]
+407D4F [System.pas][System][@NewUnicodeString][18372]
+4074A6 [System.pas][System][@UStrFromPWCharLen][17104]
+450BC2 [IniFiles.pas][IniFiles][TIniFile.ReadString][909]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 1216
+
+Current memory dump of 256 bytes starting at pointer address 7FE54430:
+B0 04 02 00 01 00 00 00 02 00 00 00 3C 04 3C 04 00 00 18 AD CF 0A 80 80 00 00 00 00 F1 3F E5 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 47 02 00 00 E2 FD 40 00 16 EC 40 00 AB 44 40 00
+D1 A1 43 00 5C 9F 43 00 DF 9F 43 00 70 77 44 00 80 70 44 00 3A 71 44 00 04 6F 44 00 34 78 48 00
+80 50 00 00 80 50 00 00 D1 A1 43 00 8D 9D 43 00 2A 9D 43 00 97 57 40 00 E7 70 44 00 96 71 44 00
+52 6F 44 00 44 7A 48 00 51 57 40 00 15 5D 40 00 21 AC 43 00 14 00 00 00 70 D7 DF 7F E5 6F 92 05
+C4 21 51 00 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 1A 90 6D FA 00 00 00 00 51 44 E5 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 46 02 00 00 6E 44 40 00 33 57 40 00 CA 5C 40 00
+68 57 40 00 60 A2 40 00 4C 76 44 00 69 74 44 00 E9 2A 41 00 D3 ED 4A 00 D1 77 44 00 0E 8A 48 00
+∞  .  .  .  .  .  .  .  .  .  .  .  <  .  <  .  .  .  .  ≠  œ  .  Ä  Ä  .  .  .  .  Ò  ?  Â  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  G  .  .  .  ‚  ˝  @  .  .  Ï  @  .  ´  D  @  .
+—  °  C  .  \  ü  C  .  ﬂ  ü  C  .  p  w  D  .  Ä  p  D  .  :  q  D  .  .  o  D  .  4  x  H  .
+Ä  P  .  .  Ä  P  .  .  —  °  C  .  ç  ù  C  .  *  ù  C  .  ó  W  @  .  Á  p  D  .  ñ  q  D  .
+R  o  D  .  D  z  H  .  Q  W  @  .  .  ]  @  .  !  ¨  C  .  .  .  .  .  p  ◊  ﬂ    Â  o  í  .
+ƒ  !  Q  .  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  ê  m  ˙  .  .  .  .  Q  D  Â  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  F  .  .  .  n  D  @  .  3  W  @  .     \  @  .
+h  W  @  .  `  ¢  @  .  L  v  D  .  i  t  D  .  È  *  A  .  ”  Ì  J  .  —  w  D  .  .  ä  H  .
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 20
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+407D4F [System.pas][System][@NewUnicodeString][18372]
+407360 [System.pas][System][@UStrAsg][16911]
+4F7EC0 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][186]
+6F51557C [Unknown function at SetWindowSubclass]
+48AA15 [Controls.pas][Controls][TControl.Click][7178]
+46C3E3 [StdCtrls.pas][StdCtrls][TCustomButton.Click][4516]
+46CE49 [StdCtrls.pas][StdCtrls][TCustomButton.CNCommand][4953]
+48A4A7 [Controls.pas][Controls][TControl.WndProc][7062]
+778D6E7C [RtlDeactivateActivationContextUnsafeFast]
+778D6DB4 [RtlActivateActivationContextUnsafeFast]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 1228
+
+Current memory dump of 256 bytes starting at pointer address 7FE547F0:
+B0 04 02 00 01 00 00 00 02 00 00 00 72 00 38 00 00 00 01 25 0E 3E 80 80 00 00 00 00 51 49 E5 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 26 03 00 00 6E 44 40 00 33 57 40 00 CA 5C 40 00
+68 57 40 00 36 1E 49 00 CD C2 46 00 BC FB 43 00 ED FD 43 00 1F 08 44 00 9E 00 44 00 DD FF 43 00
+80 50 00 00 80 50 00 00 8A 44 40 00 51 57 40 00 15 5D 40 00 7C 2C 4A 00 97 57 40 00 C2 CC 46 00
+AD C1 48 00 29 D3 4A 00 22 E1 4A 00 F6 71 44 00 1E C1 4A 00 14 00 00 00 8C F3 49 00 C0 05 15 86
+C4 21 51 00 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 3F FA EA 79 00 00 00 00 51 3A E5 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 7C 03 00 00 DD 44 40 00 D1 A1 43 00 5C 9F 43 00
+4D 9D 43 00 12 97 49 00 61 B4 48 00 05 79 48 00 5D BF 48 00 16 EC 40 00 A3 BF 46 00 98 C2 46 00
+∞  .  .  .  .  .  .  .  .  .  .  .  r  .  8  .  .  .  .  %  .  >  Ä  Ä  .  .  .  .  Q  I  Â  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  &  .  .  .  n  D  @  .  3  W  @  .     \  @  .
+h  W  @  .  6  .  I  .  Õ  ¬  F  .  º  ˚  C  .  Ì  ˝  C  .  .  .  D  .  û  .  D  .  ›  ˇ  C  .
+Ä  P  .  .  Ä  P  .  .  ä  D  @  .  Q  W  @  .  .  ]  @  .  |  ,  J  .  ó  W  @  .  ¬  Ã  F  .
+≠  ¡  H  .  )  ”  J  .  "  ·  J  .  ˆ  q  D  .  .  ¡  J  .  .  .  .  .  å  Û  I  .  ¿  .  .  Ü
+ƒ  !  Q  .  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  ?  ˙  Í  y  .  .  .  .  Q  :  Â  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  |  .  .  .  ›  D  @  .  —  °  C  .  \  ü  C  .
+M  ù  C  .  .  ó  I  .  a  ¥  H  .  .  y  H  .  ]  ø  H  .  .  Ï  @  .  £  ø  F  .  ò  ¬  F  .
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 20
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+407D4F [System.pas][System][@NewUnicodeString][18372]
+40748C [System.pas][System][@UStrFromPWCharLen][17088]
+450BC2 [IniFiles.pas][IniFiles][TIniFile.ReadString][909]
+40EC25 [fastmm4.pas][FastMM4][UpdateHeaderAndFooterCheckSums][7389]
+40FBBB [fastmm4.pas][FastMM4][DebugGetMem][7921]
+40FBE8 [fastmm4.pas][FastMM4][DebugGetMem][7941]
+40446E [System.pas][System][@GetMem][2979]
+407D4F [System.pas][System][@NewUnicodeString][18372]
+4074A6 [System.pas][System][@UStrFromPWCharLen][17104]
+450BC2 [IniFiles.pas][IniFiles][TIniFile.ReadString][909]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 1215
+
+Current memory dump of 256 bytes starting at pointer address 7FE54B10:
+B0 04 02 00 01 00 00 00 01 00 00 00 41 04 00 00 BB B8 E4 0A 80 80 80 80 00 00 00 00 B0 D8 E4 7F
+00 00 00 00 00 00 00 00 F8 FA 40 00 00 00 00 00 42 04 00 00 6E 44 40 00 33 57 40 00 CA 5C 40 00
+3B FE 44 00 EB 0C 4C 00 65 92 41 00 64 FA 4B 00 E7 7D 4F 00 7C 55 51 6F D1 5D 51 6F 15 AA 48 00
+80 50 00 00 80 50 00 00 8A 44 40 00 51 57 40 00 15 5D 40 00 35 9D 43 00 97 57 40 00 29 21 49 00
+FF 1A 4B 00 C3 25 4B 00 A7 A4 48 00 A6 E3 51 75 93 65 74 70 0C 00 00 00 7C F1 42 00 1C 86 B7 49
+D0 FA 44 00 7C C3 E5 7F 00 00 00 00 E3 79 48 B6 80 80 80 80 80 80 80 80 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 36 73 00 00 30 6C 50 00 00 00 00 00 30 6C 50 00 30 6C 50 00
+00 4C E5 7F 04 00 00 00 00 00 00 00 E1 4C E5 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+∞  .  .  .  .  .  .  .  .  .  .  .  A  .  .  .  ª  ∏  ‰  .  Ä  Ä  Ä  Ä  .  .  .  .  ∞  ÿ  ‰  
+.  .  .  .  .  .  .  .  ¯  ˙  @  .  .  .  .  .  B  .  .  .  n  D  @  .  3  W  @  .     \  @  .
+;  ˛  D  .  Î  .  L  .  e  í  A  .  d  ˙  K  .  Á  }  O  .  |  U  Q  o  —  ]  Q  o  .  ™  H  .
+Ä  P  .  .  Ä  P  .  .  ä  D  @  .  Q  W  @  .  .  ]  @  .  5  ù  C  .  ó  W  @  .  )  !  I  .
+ˇ  .  K  .  √  %  K  .  ß  §  H  .  ¶  „  Q  u  ì  e  t  p  .  .  .  .  |  Ò  B  .  .  Ü  ∑  I
+–  ˙  D  .  |  √  Â    .  .  .  .  „  y  H  ∂  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  6  s  .  .  0  l  P  .  .  .  .  .  0  l  P  .  0  l  P  .
+.  L  Â    .  .  .  .  .  .  .  .  ·  L  Â    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 20
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+405733 [System.pas][System][TObject.NewInstance][9433]
+405CCA [System.pas][System][@ClassCreate][10277]
+44FE3B [IniFiles.pas][IniFiles][TCustomIniFile.Create][168]
+4C0CEB [uMeraFile][cMeraFile.Load]
+419265 [SysUtils.pas][SysUtils][FileExists][6716]
+4BFA64 [uMeraFile][cMeraFile.create]
+4F7DE7 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][171]
+6F51557C [Unknown function at SetWindowSubclass]
+6F515DD1 [Unknown function at SetWindowSubclass]
+48AA15 [Controls.pas][Controls][TControl.Click][7178]
+
+The block is currently used for an object of class: TIniFile
+
+The allocation number is: 1090
+
+Current memory dump of 256 bytes starting at pointer address 7FE54BB0:
+D0 FA 44 00 7C C3 E5 7F 00 00 00 00 E3 79 48 B6 80 80 80 80 80 80 80 80 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 36 73 00 00 30 6C 50 00 00 00 00 00 30 6C 50 00 30 6C 50 00
+00 4C E5 7F 04 00 00 00 00 00 00 00 E1 4C E5 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0B 00 00 00 6E 44 40 00 4F 7D 40 00 8C 74 40 00 91 A8 40 00 0C 68 90 77 DE A4 8E 77 E1 02 8E 77
+76 05 8E 77 DE A4 8E 77 EE EA 8D 77 6F EE 8D 77 80 50 00 00 80 50 00 00 89 6A 40 00 71 81 40 00
+B9 80 40 00 B9 81 40 00 FE 3F 42 00 38 65 40 00 F5 68 40 00 2B 52 50 00 A9 7B 79 75 2B BD 8F 77
+AF BC 8F 77 46 00 00 00 B0 04 02 00 9C A8 7D 2C C4 21 51 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+–  ˙  D  .  |  √  Â    .  .  .  .  „  y  H  ∂  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  6  s  .  .  0  l  P  .  .  .  .  .  0  l  P  .  0  l  P  .
+.  L  Â    .  .  .  .  .  .  .  .  ·  L  Â    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  n  D  @  .  O  }  @  .  å  t  @  .  ë  ®  @  .  .  h  ê  w  ﬁ  §  é  w  ·  .  é  w
+v  .  é  w  ﬁ  §  é  w  Ó  Í  ç  w  o  Ó  ç  w  Ä  P  .  .  Ä  P  .  .  â  j  @  .  q  Å  @  .
+π  Ä  @  .  π  Å  @  .  ˛  ?  B  .  8  e  @  .  ı  h  @  .  +  R  P  .  ©  {  y  u  +  Ω  è  w
+Ø  º  è  w  F  .  .  .  ∞  .  .  .  ú  ®  }  ,  ƒ  !  Q  .  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 84
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+405733 [System.pas][System][TObject.NewInstance][9433]
+405CCA [System.pas][System][@ClassCreate][10277]
+43D5E2 [Classes.pas][Classes][TStringList.Create][5788]
+40446E [System.pas][System][@GetMem][2979]
+40736E [System.pas][System][@UStrAsg][16917]
+4BFA31 [uMeraFile][cMeraFile.create]
+4F7DE7 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][171]
+6F51557C [Unknown function at SetWindowSubclass]
+6F515DD1 [Unknown function at SetWindowSubclass]
+48AA15 [Controls.pas][Controls][TControl.Click][7178]
+
+The block is currently used for an object of class: TStringList
+
+The allocation number is: 1084
+
+Current memory dump of 256 bytes starting at pointer address 7FE559A0:
+44 17 43 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 B0 CB E7 7F
+01 00 00 00 04 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 3C FB CC 9E 80 80 80 80 80 80 80 80 00 00 00 00 E0 4B E5 7F
+00 00 00 00 00 00 00 00 F8 FA 40 00 00 00 00 00 44 04 00 00 6E 44 40 00 4F 7D 40 00 8C 74 40 00
+C2 0B 45 00 78 97 C3 76 60 CB F9 76 D7 CA F9 76 15 65 F7 76 A5 BA 44 6F B6 8B 93 75 2B 5D 93 75
+80 50 00 00 80 50 00 00 8A 44 40 00 B2 6A 40 00 8C F9 4B 00 DC 0C 4C 00 65 92 41 00 64 FA 4B 00
+E7 7D 4F 00 7C 55 51 6F D1 5D 51 6F 15 AA 48 00 E3 C3 46 00 46 00 00 00 B0 04 02 00 20 59 71 98
+B0 04 02 00 01 00 00 00 1C 00 00 00 1F 04 30 04 3F 04 3A 04 30 04 20 00 41 04 3E 04 37 04 34 04
+D  .  C  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ∞  À  Á  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  <  ˚  Ã  û  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  ‡  K  Â  
+.  .  .  .  .  .  .  .  ¯  ˙  @  .  .  .  .  .  D  .  .  .  n  D  @  .  O  }  @  .  å  t  @  .
+¬  .  E  .  x  ó  √  v  `  À  ˘  v  ◊     ˘  v  .  e  ˜  v  •  ∫  D  o  ∂  ã  ì  u  +  ]  ì  u
+Ä  P  .  .  Ä  P  .  .  ä  D  @  .  ≤  j  @  .  å  ˘  K  .  ‹  .  L  .  e  í  A  .  d  ˙  K  .
+Á  }  O  .  |  U  Q  o  —  ]  Q  o  .  ™  H  .  „  √  F  .  F  .  .  .  ∞  .  .  .     Y  q  ò
+∞  .  .  .  .  .  .  .  .  .  .  .  .  .  0  .  ?  .  :  .  0  .     .  A  .  >  .  7  .  4  .
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 84
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+407D4F [System.pas][System][@NewUnicodeString][18372]
+40748C [System.pas][System][@UStrFromPWCharLen][17088]
+450BC2 [IniFiles.pas][IniFiles][TIniFile.ReadString][909]
+76C39778 [vsnprintf]
+76F9CB60 [Unknown function at DllUnregisterServer]
+76F9CAD7 [Unknown function at DllUnregisterServer]
+76F76515 [Unknown function at TF_InitSystem]
+6F44BAA5 [Unknown function at ShapingGetGlyphs]
+75938BB6 [Unknown function at ScriptStringAnalyse]
+75935D2B [GetFontRealizationInfo]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 1092
+
+Current memory dump of 256 bytes starting at pointer address 7FE55A80:
+B0 04 02 00 01 00 00 00 1C 00 00 00 1F 04 30 04 3F 04 3A 04 30 04 20 00 41 04 3E 04 37 04 34 04
+30 04 3D 04 30 04 20 00 3F 04 30 04 3A 04 35 04 42 04 3E 04 3C 04 20 00 57 00 69 00 6E 00 1F 04
+1E 04 21 04 00 00 DF A6 8E 67 80 80 80 80 80 80 80 80 80 80 80 80 80 80 00 00 00 00 E0 4B E5 7F
+00 00 00 00 00 00 00 00 F8 FA 40 00 00 00 00 00 40 04 00 00 6E 44 40 00 4F 7D 40 00 14 77 40 00
+A1 77 40 00 AA F8 4B 00 DC 0C 4C 00 65 92 41 00 64 FA 4B 00 E7 7D 4F 00 7C 55 51 6F D1 5D 51 6F
+80 50 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 4A 00 00 00 00 00 00 00 D7 1E 40 61
+B0 04 02 00 01 00 00 00 1E 00 00 00 63 00 3A 00 5C 00 75 00 73 00 6D 00 6C 00 5C 00 24 04 30 04
+∞  .  .  .  .  .  .  .  .  .  .  .  .  .  0  .  ?  .  :  .  0  .     .  A  .  >  .  7  .  4  .
+0  .  =  .  0  .     .  ?  .  0  .  :  .  5  .  B  .  >  .  <  .     .  W  .  i  .  n  .  .  .
+.  .  !  .  .  .  ﬂ  ¶  é  g  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  ‡  K  Â  
+.  .  .  .  .  .  .  .  ¯  ˙  @  .  .  .  .  .  @  .  .  .  n  D  @  .  O  }  @  .  .  w  @  .
+°  w  @  .  ™  ¯  K  .  ‹  .  L  .  e  í  A  .  d  ˙  K  .  Á  }  O  .  |  U  Q  o  —  ]  Q  o
+Ä  P  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  J  .  .  .  .  .  .  .  ◊  .  @  a
+∞  .  .  .  .  .  .  .  .  .  .  .  c  .  :  .  \  .  u  .  s  .  m  .  l  .  \  .  $  .  0  .
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 84
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+407D4F [System.pas][System][@NewUnicodeString][18372]
+407714 [System.pas][System][@UStrSetLength][17387]
+4077A1 [System.pas][System][@UStrCat][17463]
+4BF8AA [uMeraFile][cMeraFile.ModNames]
+4C0CDC [uMeraFile][cMeraFile.Load]
+419265 [SysUtils.pas][SysUtils][FileExists][6716]
+4BFA64 [uMeraFile][cMeraFile.create]
+4F7DE7 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][171]
+6F51557C [Unknown function at SetWindowSubclass]
+6F515DD1 [Unknown function at SetWindowSubclass]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 1088
+
+Current memory dump of 256 bytes starting at pointer address 7FE55B60:
+B0 04 02 00 01 00 00 00 1E 00 00 00 63 00 3A 00 5C 00 75 00 73 00 6D 00 6C 00 5C 00 24 04 30 04
+39 04 3B 04 4B 04 5C 00 63 00 6F 00 73 00 5F 00 32 00 32 00 31 00 5F 00 66 00 73 00 31 00 33 00
+35 00 30 00 30 00 5C 00 00 00 28 E1 BF 9E 80 80 80 80 80 80 80 80 80 80 00 00 00 00 81 5D E5 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 D8 04 00 00 6E 44 40 00 4F 7D 40 00 14 77 40 00
+A1 77 40 00 AA F8 4B 00 5A 84 40 00 2E FC 4B 00 6B 7F 4F 00 15 AA 48 00 E3 C3 46 00 49 CE 46 00
+80 50 00 00 80 50 00 00 8A 44 40 00 89 6A 40 00 71 81 40 00 B9 80 40 00 07 58 40 00 4A 57 40 00
+15 5D 40 00 2F 10 4C 00 7D 7F 4F 00 15 AA 48 00 E3 C3 46 00 54 00 00 00 B0 04 02 00 33 A7 D5 85
+C4 21 51 00 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+∞  .  .  .  .  .  .  .  .  .  .  .  c  .  :  .  \  .  u  .  s  .  m  .  l  .  \  .  $  .  0  .
+9  .  ;  .  K  .  \  .  c  .  o  .  s  .  _  .  2  .  2  .  1  .  _  .  f  .  s  .  1  .  3  .
+5  .  0  .  0  .  \  .  .  .  (  ·  ø  û  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  Å  ]  Â  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ÿ  .  .  .  n  D  @  .  O  }  @  .  .  w  @  .
+°  w  @  .  ™  ¯  K  .  Z  Ñ  @  .  .  ¸  K  .  k    O  .  .  ™  H  .  „  √  F  .  I  Œ  F  .
+Ä  P  .  .  Ä  P  .  .  ä  D  @  .  â  j  @  .  q  Å  @  .  π  Ä  @  .  .  X  @  .  J  W  @  .
+.  ]  @  .  /  .  L  .  }    O  .  .  ™  H  .  „  √  F  .  T  .  .  .  ∞  .  .  .  3  ß  ’  Ö
+ƒ  !  Q  .  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 84
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+405733 [System.pas][System][TObject.NewInstance][9433]
+405CCA [System.pas][System][@ClassCreate][10277]
+43D5E2 [Classes.pas][Classes][TStringList.Create][5788]
+4C0047 [uMeraFile][cMeraFile.LoadSignalHeader]
+44FE56 [IniFiles.pas][IniFiles][TCustomIniFile.Create][170]
+4C0D5D [uMeraFile][cMeraFile.Load]
+4BFA64 [uMeraFile][cMeraFile.create]
+4F7DE7 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][171]
+6F51557C [Unknown function at SetWindowSubclass]
+6F515DD1 [Unknown function at SetWindowSubclass]
+
+The block is currently used for an object of class: TStringList
+
+The allocation number is: 1095
+
+Current memory dump of 256 bytes starting at pointer address 7FE55D20:
+44 17 43 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 F0 D3 E7 7F
+02 00 00 00 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 75 4D B9 9E 80 80 80 80 80 80 80 80 00 00 00 00 01 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 D7 04 00 00 6E 44 40 00 4F 7D 40 00 8C 74 40 00
+02 7B 40 00 84 97 41 00 97 F8 4B 00 5A 84 40 00 2E FC 4B 00 6B 7F 4F 00 15 AA 48 00 E3 C3 46 00
+80 50 00 00 80 50 00 00 8A 44 40 00 B2 6A 40 00 8C F9 4B 00 5A 84 40 00 2E FC 4B 00 6B 7F 4F 00
+15 AA 48 00 E3 C3 46 00 49 CE 46 00 A7 A4 48 00 7C 6E 8D 77 52 00 00 00 B0 04 02 00 C9 AF 37 FD
+C4 21 51 00 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+D  .  C  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .    ”  Á  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  u  M  π  û  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ◊  .  .  .  n  D  @  .  O  }  @  .  å  t  @  .
+.  {  @  .  Ñ  ó  A  .  ó  ¯  K  .  Z  Ñ  @  .  .  ¸  K  .  k    O  .  .  ™  H  .  „  √  F  .
+Ä  P  .  .  Ä  P  .  .  ä  D  @  .  ≤  j  @  .  å  ˘  K  .  Z  Ñ  @  .  .  ¸  K  .  k    O  .
+.  ™  H  .  „  √  F  .  I  Œ  F  .  ß  §  H  .  |  n  ç  w  R  .  .  .  ∞  .  .  .  …  Ø  7  ˝
+ƒ  !  Q  .  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 100
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+407D4F [System.pas][System][@NewUnicodeString][18372]
+407360 [System.pas][System][@UStrAsg][16911]
+44FE4B [IniFiles.pas][IniFiles][TCustomIniFile.Create][169]
+4C0CEB [uMeraFile][cMeraFile.Load]
+419265 [SysUtils.pas][SysUtils][FileExists][6716]
+4BFA64 [uMeraFile][cMeraFile.create]
+4F7DE7 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][171]
+6F51557C [Unknown function at SetWindowSubclass]
+6F515DD1 [Unknown function at SetWindowSubclass]
+48AA15 [Controls.pas][Controls][TControl.Click][7178]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 1091
+
+Current memory dump of 256 bytes starting at pointer address 7FE5C370:
+B0 04 02 00 01 00 00 00 2A 00 00 00 63 00 3A 00 5C 00 55 00 53 00 4D 00 4C 00 5C 00 24 04 30 04
+39 04 3B 04 4B 04 5C 00 63 00 6F 00 73 00 5F 00 32 00 32 00 31 00 5F 00 66 00 73 00 31 00 33 00
+35 00 30 00 30 00 5C 00 63 00 6F 00 73 00 69 00 6E 00 75 00 73 00 2E 00 4D 00 45 00 52 00 41 00
+00 00 C4 0D 94 BD 80 80 00 00 00 00 D1 C4 E5 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+C3 04 00 00 6E 44 40 00 4F 7D 40 00 14 77 40 00 A1 77 40 00 69 09 4C 00 97 0D 4C 00 64 FA 4B 00
+E7 7D 4F 00 7C 55 51 6F D1 5D 51 6F 15 AA 48 00 80 50 00 00 80 50 00 00 8A 44 40 00 B2 6A 40 00
+8E 09 4C 00 97 0D 4C 00 64 FA 4B 00 E7 7D 4F 00 7C 55 51 6F D1 5D 51 6F 15 AA 48 00 E3 C3 46 00
+49 CE 46 00 58 00 00 00 B0 04 02 00 04 3A 36 42 C4 21 51 00 80 80 80 80 80 80 80 80 80 80 80 80
+∞  .  .  .  .  .  .  .  *  .  .  .  c  .  :  .  \  .  U  .  S  .  M  .  L  .  \  .  $  .  0  .
+9  .  ;  .  K  .  \  .  c  .  o  .  s  .  _  .  2  .  2  .  1  .  _  .  f  .  s  .  1  .  3  .
+5  .  0  .  0  .  \  .  c  .  o  .  s  .  i  .  n  .  u  .  s  .  .  .  M  .  E  .  R  .  A  .
+.  .  ƒ  .  î  Ω  Ä  Ä  .  .  .  .  —  ƒ  Â    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+√  .  .  .  n  D  @  .  O  }  @  .  .  w  @  .  °  w  @  .  i  .  L  .  ó  .  L  .  d  ˙  K  .
+Á  }  O  .  |  U  Q  o  —  ]  Q  o  .  ™  H  .  Ä  P  .  .  Ä  P  .  .  ä  D  @  .  ≤  j  @  .
+é  .  L  .  ó  .  L  .  d  ˙  K  .  Á  }  O  .  |  U  Q  o  —  ]  Q  o  .  ™  H  .  „  √  F  .
+I  Œ  F  .  X  .  .  .  ∞  .  .  .  .  :  6  B  ƒ  !  Q  .  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 52
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+405733 [System.pas][System][TObject.NewInstance][9433]
+405CCA [System.pas][System][@ClassCreate][10277]
+4BF9D8 [uMeraFile][cMeraFile.create]
+7551E3A6 [GetWindowLongW]
+4F7DE7 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][171]
+6F51557C [Unknown function at SetWindowSubclass]
+6F515DD1 [Unknown function at SetWindowSubclass]
+48AA15 [Controls.pas][Controls][TControl.Click][7178]
+46C3E3 [StdCtrls.pas][StdCtrls][TCustomButton.Click][4516]
+46CE49 [StdCtrls.pas][StdCtrls][TCustomButton.CNCommand][4953]
+
+The block is currently used for an object of class: cMeraFile
+
+The allocation number is: 1081
+
+Current memory dump of 256 bytes starting at pointer address 7FE6CD10:
+E0 F3 4B 00 A0 59 E5 7F 44 F9 4E 00 8C 5A E5 7F 00 00 00 00 00 00 00 00 6C 5B E5 7F DC CD E6 7F
+00 00 00 00 00 00 00 00 00 00 00 00 34 A0 B0 29 80 80 80 80 80 80 80 80 00 00 00 00 70 A5 E6 7F
+00 00 00 00 00 00 00 00 F8 FA 40 00 00 00 00 00 41 04 00 00 6E 44 40 00 4F 7D 40 00 8C 74 40 00
+02 7B 40 00 E1 97 41 00 B8 F8 4B 00 DC 0C 4C 00 65 92 41 00 64 FA 4B 00 E7 7D 4F 00 7C 55 51 6F
+80 50 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 26 00 00 00 00 00 00 00 1B CC 31 F2
+B0 04 02 00 01 00 00 00 0C 00 00 00 63 00 6F 00 73 00 69 00 6E 00 75 00 73 00 2E 00 6D 00 65 00
+72 00 61 00 00 00 E4 33 CE 0D 80 80 80 80 80 80 80 80 80 80 80 80 80 80 00 00 00 00 D1 CE E6 7F
+‡  Û  K  .  †  Y  Â    D  ˘  N  .  å  Z  Â    .  .  .  .  .  .  .  .  l  [  Â    ‹  Õ  Ê  
+.  .  .  .  .  .  .  .  .  .  .  .  4  †  ∞  )  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  p  •  Ê  
+.  .  .  .  .  .  .  .  ¯  ˙  @  .  .  .  .  .  A  .  .  .  n  D  @  .  O  }  @  .  å  t  @  .
+.  {  @  .  ·  ó  A  .  ∏  ¯  K  .  ‹  .  L  .  e  í  A  .  d  ˙  K  .  Á  }  O  .  |  U  Q  o
+Ä  P  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  &  .  .  .  .  .  .  .  .  Ã  1  Ú
+∞  .  .  .  .  .  .  .  .  .  .  .  c  .  o  .  s  .  i  .  n  .  u  .  s  .  .  .  m  .  e  .
+r  .  a  .  .  .  ‰  3  Œ  .  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  —  Œ  Ê  
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 52
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+407D4F [System.pas][System][@NewUnicodeString][18372]
+40748C [System.pas][System][@UStrFromPWCharLen][17088]
+407B02 [System.pas][System][@UStrCopy][18104]
+4197E1 [SysUtils.pas][SysUtils][ExtractFileName][7271]
+4BF8B8 [uMeraFile][cMeraFile.ModNames]
+4C0CDC [uMeraFile][cMeraFile.Load]
+419265 [SysUtils.pas][SysUtils][FileExists][6716]
+4BFA64 [uMeraFile][cMeraFile.create]
+4F7DE7 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][171]
+6F51557C [Unknown function at SetWindowSubclass]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 1089
+
+Current memory dump of 256 bytes starting at pointer address 7FE6CDD0:
+B0 04 02 00 01 00 00 00 0C 00 00 00 63 00 6F 00 73 00 69 00 6E 00 75 00 73 00 2E 00 6D 00 65 00
+72 00 61 00 00 00 E4 33 CE 0D 80 80 80 80 80 80 80 80 80 80 80 80 80 80 00 00 00 00 D1 CE E6 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 D1 04 00 00 6E 44 40 00 33 57 40 00 CA 5C 40 00
+A8 FB 4B 00 07 D5 43 00 85 D2 43 00 C9 CF 43 00 6B 7F 4F 00 15 AA 48 00 E3 C3 46 00 49 CE 46 00
+80 50 00 00 80 50 00 00 8A 44 40 00 51 57 40 00 15 5D 40 00 2F 10 4C 00 7D 7F 4F 00 15 AA 48 00
+E3 C3 46 00 49 CE 46 00 A7 A4 48 00 7C 6E 8D 77 B4 6D 8D 77 2C 00 00 00 E0 F3 4B 00 B5 D4 C7 74
+C4 21 51 00 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 4A 2B 38 8B 80 80 80 80 80 80 80 80 00 00 00 00 91 CF E6 7F
+∞  .  .  .  .  .  .  .  .  .  .  .  c  .  o  .  s  .  i  .  n  .  u  .  s  .  .  .  m  .  e  .
+r  .  a  .  .  .  ‰  3  Œ  .  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  —  Œ  Ê  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  —  .  .  .  n  D  @  .  3  W  @  .     \  @  .
+®  ˚  K  .  .  ’  C  .  Ö  “  C  .  …  œ  C  .  k    O  .  .  ™  H  .  „  √  F  .  I  Œ  F  .
+Ä  P  .  .  Ä  P  .  .  ä  D  @  .  Q  W  @  .  .  ]  @  .  /  .  L  .  }    O  .  .  ™  H  .
+„  √  F  .  I  Œ  F  .  ß  §  H  .  |  n  ç  w  ¥  m  ç  w  ,  .  .  .  ‡  Û  K  .  µ  ‘  «  t
+ƒ  !  Q  .  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  J  +  8  ã  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  ë  œ  Ê  
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 116
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+405733 [System.pas][System][TObject.NewInstance][9433]
+405CCA [System.pas][System][@ClassCreate][10277]
+4F0A02 [uBuffSignal][cBuffSignal.create]
+4C0084 [uMeraFile][cMeraFile.LoadSignalHeader]
+44FE56 [IniFiles.pas][IniFiles][TCustomIniFile.Create][170]
+4C0D5D [uMeraFile][cMeraFile.Load]
+4BFA64 [uMeraFile][cMeraFile.create]
+4F7DE7 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][171]
+6F51557C [Unknown function at SetWindowSubclass]
+6F515DD1 [Unknown function at SetWindowSubclass]
+
+The block is currently used for an object of class: cBuffSignal
+
+The allocation number is: 1100
+
+Current memory dump of 256 bytes starting at pointer address 7FE71C40:
+44 F9 4E 00 00 F0 52 46 00 00 00 00 00 00 00 00 00 00 80 3F 00 00 00 00 00 00 00 00 1C 4B E5 7F
+3C 44 E5 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 9C 39 E5 7F 00 00 00 00 00 00 00 00
+0C EC E7 7F 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 68 C9 DB 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 CB 59 AC 9E 00 00 00 00 A0 18 E7 7F
+00 00 00 00 00 00 00 00 F8 FA 40 00 00 00 00 00 CA 04 00 00 6E 44 40 00 33 57 40 00 CA 5C 40 00
+02 0A 4F 00 B1 7E 4F 00 7C 55 51 6F 15 AA 48 00 E3 C3 46 00 49 CE 46 00 A7 A4 48 00 7C 6E 8D 77
+80 50 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 74 00 00 00 00 00 00 00 74 93 85 69
+D  ˘  N  .  .    R  F  .  .  .  .  .  .  .  .  .  .  Ä  ?  .  .  .  .  .  .  .  .  .  K  Â  
+<  D  Â    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ú  9  Â    .  .  .  .  .  .  .  .
+.  Ï  Á    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  h  …  €  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  À  Y  ¨  û  .  .  .  .  †  .  Á  
+.  .  .  .  .  .  .  .  ¯  ˙  @  .  .  .  .  .     .  .  .  n  D  @  .  3  W  @  .     \  @  .
+.  .  O  .  ±  ~  O  .  |  U  Q  o  .  ™  H  .  „  √  F  .  I  Œ  F  .  ß  §  H  .  |  n  ç  w
+Ä  P  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  t  .  .  .  .  .  .  .  t  ì  Ö  i
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 116
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+405733 [System.pas][System][TObject.NewInstance][9433]
+405CCA [System.pas][System][@ClassCreate][10277]
+4F0A02 [uBuffSignal][cBuffSignal.create]
+4F7EB1 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][185]
+6F51557C [Unknown function at SetWindowSubclass]
+48AA15 [Controls.pas][Controls][TControl.Click][7178]
+46C3E3 [StdCtrls.pas][StdCtrls][TCustomButton.Click][4516]
+46CE49 [StdCtrls.pas][StdCtrls][TCustomButton.CNCommand][4953]
+48A4A7 [Controls.pas][Controls][TControl.WndProc][7062]
+778D6E7C [RtlDeactivateActivationContextUnsafeFast]
+
+The block is currently used for an object of class: cBuffSignal
+
+The allocation number is: 1226
+
+Current memory dump of 256 bytes starting at pointer address 7FE71D40:
+44 F9 4E 00 37 58 1B 39 00 00 00 00 00 00 00 00 00 00 80 3F 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FC 47 E5 7F 00 00 00 00 00 00 00 00
+BC EC E7 7F 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 B8 3C E5 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 8B 6C 7A 96 00 00 00 00 01 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 E6 04 00 00 6E 44 40 00 4F 7D 40 00 A0 79 40 00
+13 0A 4C 00 DD 04 92 77 DD 04 92 77 04 05 92 77 2F 6C 97 77 2A 5F 97 77 FF 5E 97 77 76 F1 8D 77
+80 50 00 00 80 50 00 00 8A 44 40 00 B2 6A 40 00 E0 0B 4C 00 DD 04 92 77 DD 04 92 77 04 05 92 77
+2F 6C 97 77 2A 5F 97 77 FF 5E 97 77 76 F1 8D 77 46 FE 4B 00 6C 00 00 00 B0 04 02 00 AC 1C 24 0C
+D  ˘  N  .  7  X  .  9  .  .  .  .  .  .  .  .  .  .  Ä  ?  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ¸  G  Â    .  .  .  .  .  .  .  .
+º  Ï  Á    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ∏  <  Â  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ã  l  z  ñ  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Ê  .  .  .  n  D  @  .  O  }  @  .  †  y  @  .
+.  .  L  .  ›  .  í  w  ›  .  í  w  .  .  í  w  /  l  ó  w  *  _  ó  w  ˇ  ^  ó  w  v  Ò  ç  w
+Ä  P  .  .  Ä  P  .  .  ä  D  @  .  ≤  j  @  .  ‡  .  L  .  ›  .  í  w  ›  .  í  w  .  .  í  w
+/  l  ó  w  *  _  ó  w  ˇ  ^  ó  w  v  Ò  ç  w  F  ˛  K  .  l  .  .  .  ∞  .  .  .  ¨  .  $  .
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+4044DD [System.pas][System][@ReallocMem][3121]
+43D507 [Classes.pas][Classes][TStringList.SetCapacity][5739]
+43D285 [Classes.pas][Classes][TStringList.Grow][5647]
+43D34D [Classes.pas][Classes][TStringList.InsertItem][5672]
+4C02F5 [uMeraFile][cMeraFile.LoadSignalHeader]
+4C0D5D [uMeraFile][cMeraFile.Load]
+4BFA64 [uMeraFile][cMeraFile.create]
+4F7DE7 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][171]
+6F51557C [Unknown function at SetWindowSubclass]
+6F515DD1 [Unknown function at SetWindowSubclass]
+48AA15 [Controls.pas][Controls][TControl.Click][7178]
+
+The block is currently used for an object of class: Unknown
+
+The allocation number is: 1218
+
+Current memory dump of 256 bytes starting at pointer address 7FE7CBB0:
+0C EC E7 7F 40 1C E7 7F 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+94 4C 6F BD 80 80 80 80 00 00 00 00 51 C4 E7 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+B0 01 00 00 6E 44 40 00 4F 7D 40 00 8C 74 40 00 28 36 42 00 DD 35 42 00 0A 13 44 00 8F 0E 44 00
+34 E7 43 00 67 DA 43 00 CC 98 43 00 3C 9A 43 00 80 50 00 00 80 50 00 00 8A 44 40 00 89 6A 40 00
+71 81 40 00 B9 80 40 00 07 58 40 00 4A 57 40 00 15 5D 40 00 51 E1 4A 00 F6 71 44 00 1E C1 4A 00
+FC 7B 41 00 18 00 00 00 B0 04 02 00 E6 79 A5 85 C4 21 51 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 19 86 5A 7A 80 80 80 80 80 80 80 80 80 80 80 80 00 00 00 00 B1 DB E7 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 1A 03 00 00 6E 44 40 00 4F 7D 40 00 8C 74 40 00
+.  Ï  Á    @  .  Á    Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+î  L  o  Ω  Ä  Ä  Ä  Ä  .  .  .  .  Q  ƒ  Á    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+∞  .  .  .  n  D  @  .  O  }  @  .  å  t  @  .  (  6  B  .  ›  5  B  .  .  .  D  .  è  .  D  .
+4  Á  C  .  g  ⁄  C  .  Ã  ò  C  .  <  ö  C  .  Ä  P  .  .  Ä  P  .  .  ä  D  @  .  â  j  @  .
+q  Å  @  .  π  Ä  @  .  .  X  @  .  J  W  @  .  .  ]  @  .  Q  ·  J  .  ˆ  q  D  .  .  ¡  J  .
+¸  {  A  .  .  .  .  .  ∞  .  .  .  Ê  y  •  Ö  ƒ  !  Q  .  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  Ü  Z  z  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  ±  €  Á  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  n  D  @  .  O  }  @  .  å  t  @  .
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+4044DD [System.pas][System][@ReallocMem][3121]
+43D507 [Classes.pas][Classes][TStringList.SetCapacity][5739]
+43D285 [Classes.pas][Classes][TStringList.Grow][5647]
+43D34D [Classes.pas][Classes][TStringList.InsertItem][5672]
+43CFC9 [Classes.pas][Classes][TStringList.AddObject][5512]
+43CF6D [Classes.pas][Classes][TStringList.Add][5499]
+450D3B [IniFiles.pas][IniFiles][TIniFile.ReadSections][960]
+4C0055 [uMeraFile][cMeraFile.LoadSignalHeader]
+44FE56 [IniFiles.pas][IniFiles][TCustomIniFile.Create][170]
+4C0D5D [uMeraFile][cMeraFile.Load]
+4BFA64 [uMeraFile][cMeraFile.create]
+
+The block is currently used for an object of class: Unknown
+
+The allocation number is: 1098
+
+Current memory dump of 256 bytes starting at pointer address 7FE7D3F0:
+5C EB E7 7F 00 00 00 00 0C EC E7 7F 00 00 00 00 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+CF D6 C8 79 80 80 80 80 00 00 00 00 81 E0 E7 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+74 03 00 00 6E 44 40 00 4F 7D 40 00 8C 74 40 00 28 36 42 00 DD 35 42 00 0A 13 44 00 AC FD 43 00
+1F 08 44 00 9E 00 44 00 DD FF 43 00 26 74 44 00 80 50 00 00 80 50 00 00 8A 44 40 00 89 6A 40 00
+71 81 40 00 B9 80 40 00 07 58 40 00 4A 57 40 00 15 5D 40 00 08 CD 46 00 AD C1 48 00 29 D3 4A 00
+22 E1 4A 00 1A 00 00 00 B0 04 02 00 C5 AD B0 85 C4 21 51 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 3A 52 4F 7A 80 80 80 80 80 80 80 80 80 80 00 00 00 00 31 D6 E7 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 8C 02 00 00 6E 44 40 00 4F 7D 40 00 8C 74 40 00
+\  Î  Á    .  .  .  .  .  Ï  Á    .  .  .  .  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+œ  ÷  »  y  Ä  Ä  Ä  Ä  .  .  .  .  Å  ‡  Á    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+t  .  .  .  n  D  @  .  O  }  @  .  å  t  @  .  (  6  B  .  ›  5  B  .  .  .  D  .  ¨  ˝  C  .
+.  .  D  .  û  .  D  .  ›  ˇ  C  .  &  t  D  .  Ä  P  .  .  Ä  P  .  .  ä  D  @  .  â  j  @  .
+q  Å  @  .  π  Ä  @  .  .  X  @  .  J  W  @  .  .  ]  @  .  .  Õ  F  .  ≠  ¡  H  .  )  ”  J  .
+"  ·  J  .  .  .  .  .  ∞  .  .  .  ≈  ≠  ∞  Ö  ƒ  !  Q  .  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  :  R  O  z  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  1  ÷  Á  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  å  .  .  .  n  D  @  .  O  }  @  .  å  t  @  .
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+407D4F [System.pas][System][@NewUnicodeString][18372]
+40748C [System.pas][System][@UStrFromPWCharLen][17088]
+450D30 [IniFiles.pas][IniFiles][TIniFile.ReadSections][960]
+4C0055 [uMeraFile][cMeraFile.LoadSignalHeader]
+44FE56 [IniFiles.pas][IniFiles][TCustomIniFile.Create][170]
+4C0D5D [uMeraFile][cMeraFile.Load]
+4BFA64 [uMeraFile][cMeraFile.create]
+4F7DE7 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][171]
+6F51557C [Unknown function at SetWindowSubclass]
+6F515DD1 [Unknown function at SetWindowSubclass]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 1097
+
+Current memory dump of 256 bytes starting at pointer address 7FE7EB50:
+B0 04 02 00 01 00 00 00 04 00 00 00 4D 00 45 00 52 00 41 00 00 00 A1 59 9B 36 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 D0 8B E7 7F 00 00 00 00 00 00 00 00 F8 FA 40 00 00 00 00 00
+4B 04 00 00 6E 44 40 00 4F 7D 40 00 8C 74 40 00 30 0D 45 00 55 00 4C 00 56 FE 44 00 5D 0D 4C 00
+64 FA 4B 00 E7 7D 4F 00 7C 55 51 6F D1 5D 51 6F 80 50 00 00 80 50 00 00 8A 44 40 00 89 6A 40 00
+CA D8 48 00 53 C1 46 00 DB CB 46 00 0C D9 48 00 58 72 74 70 50 1E 8E 77 6E CC 46 00 5C DE 48 00
+22 E1 48 00 1C 00 00 00 B0 04 02 00 53 16 C8 4B B0 04 02 00 03 00 00 00 07 00 00 00 63 00 6F 00
+73 00 69 00 6E 00 75 00 73 00 00 00 AC E9 37 B4 80 80 80 80 80 80 80 80 00 00 00 00 D0 8B E7 7F
+00 00 00 00 00 00 00 00 F8 FA 40 00 00 00 00 00 CE 04 00 00 6E 44 40 00 4F 7D 40 00 60 73 40 00
+∞  .  .  .  .  .  .  .  .  .  .  .  M  .  E  .  R  .  A  .  .  .  °  Y  õ  6  Ä  Ä  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  –  ã  Á    .  .  .  .  .  .  .  .  ¯  ˙  @  .  .  .  .  .
+K  .  .  .  n  D  @  .  O  }  @  .  å  t  @  .  0  .  E  .  U  .  L  .  V  ˛  D  .  ]  .  L  .
+d  ˙  K  .  Á  }  O  .  |  U  Q  o  —  ]  Q  o  Ä  P  .  .  Ä  P  .  .  ä  D  @  .  â  j  @  .
+   ÿ  H  .  S  ¡  F  .  €  À  F  .  .  Ÿ  H  .  X  r  t  p  P  .  é  w  n  Ã  F  .  \  ﬁ  H  .
+"  ·  H  .  .  .  .  .  ∞  .  .  .  S  .  »  K  ∞  .  .  .  .  .  .  .  .  .  .  .  c  .  o  .
+s  .  i  .  n  .  u  .  s  .  .  .  ¨  È  7  ¥  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  –  ã  Á  
+.  .  .  .  .  .  .  .  ¯  ˙  @  .  .  .  .  .  Œ  .  .  .  n  D  @  .  O  }  @  .  `  s  @  .
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+407D4F [System.pas][System][@NewUnicodeString][18372]
+40748C [System.pas][System][@UStrFromPWCharLen][17088]
+450D30 [IniFiles.pas][IniFiles][TIniFile.ReadSections][960]
+4C0055 [uMeraFile][cMeraFile.LoadSignalHeader]
+44FE56 [IniFiles.pas][IniFiles][TCustomIniFile.Create][170]
+4C0D5D [uMeraFile][cMeraFile.Load]
+4BFA64 [uMeraFile][cMeraFile.create]
+4F7DE7 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][171]
+6F51557C [Unknown function at SetWindowSubclass]
+6F515DD1 [Unknown function at SetWindowSubclass]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 1099
+
+Current memory dump of 256 bytes starting at pointer address 7FE7EC00:
+B0 04 02 00 03 00 00 00 07 00 00 00 63 00 6F 00 73 00 69 00 6E 00 75 00 73 00 00 00 AC E9 37 B4
+80 80 80 80 80 80 80 80 00 00 00 00 D0 8B E7 7F 00 00 00 00 00 00 00 00 F8 FA 40 00 00 00 00 00
+CE 04 00 00 6E 44 40 00 4F 7D 40 00 60 73 40 00 CC 09 4F 00 E4 7E 4F 00 7C 55 51 6F 15 AA 48 00
+E3 C3 46 00 49 CE 46 00 A7 A4 48 00 7C 6E 8D 77 80 50 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 1E 00 00 00 00 00 00 00 41 9F 86 69 B0 04 02 00 01 00 00 00 08 00 00 00 72 00 65 00
+73 00 5F 00 72 00 65 00 63 00 74 00 00 00 BE 60 79 96 80 80 80 80 80 80 00 00 00 00 41 EE E7 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 D4 04 00 00 4F 7D 40 00 60 73 40 00 BA 83 40 00
+∞  .  .  .  .  .  .  .  .  .  .  .  c  .  o  .  s  .  i  .  n  .  u  .  s  .  .  .  ¨  È  7  ¥
+Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  –  ã  Á    .  .  .  .  .  .  .  .  ¯  ˙  @  .  .  .  .  .
+Œ  .  .  .  n  D  @  .  O  }  @  .  `  s  @  .  Ã  .  O  .  ‰  ~  O  .  |  U  Q  o  .  ™  H  .
+„  √  F  .  I  Œ  F  .  ß  §  H  .  |  n  ç  w  Ä  P  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  A  ü  Ü  i  ∞  .  .  .  .  .  .  .  .  .  .  .  r  .  e  .
+s  .  _  .  r  .  e  .  c  .  t  .  .  .  æ  `  y  ñ  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  A  Ó  Á  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ‘  .  .  .  O  }  @  .  `  s  @  .  ∫  É  @  .
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x5080, and the stack trace (return addresses) at the time was:
+40446E [System.pas][System][@GetMem][2979]
+407D4F [System.pas][System][@NewUnicodeString][18372]
+407360 [System.pas][System][@UStrAsg][16911]
+4F09CC [uBuffSignal][cBuffSignal.setname]
+4F7EE4 [TestFFT.pas][TestFFT][TForm1.SSEBtnClick][190]
+6F51557C [Unknown function at SetWindowSubclass]
+48AA15 [Controls.pas][Controls][TControl.Click][7178]
+46C3E3 [StdCtrls.pas][StdCtrls][TCustomButton.Click][4516]
+46CE49 [StdCtrls.pas][StdCtrls][TCustomButton.CNCommand][4953]
+48A4A7 [Controls.pas][Controls][TControl.WndProc][7062]
+778D6E7C [RtlDeactivateActivationContextUnsafeFast]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 1230
+
+Current memory dump of 256 bytes starting at pointer address 7FE7ECB0:
+B0 04 02 00 01 00 00 00 08 00 00 00 72 00 65 00 73 00 5F 00 72 00 65 00 63 00 74 00 00 00 BE 60
+79 96 80 80 80 80 80 80 00 00 00 00 41 EE E7 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+D4 04 00 00 4F 7D 40 00 60 73 40 00 BA 83 40 00 26 FC 4B 00 6B 7F 4F 00 15 AA 48 00 E3 C3 46 00
+49 CE 46 00 A7 A4 48 00 7C 6E 8D 77 B4 6D 8D 77 80 50 00 00 80 50 00 00 89 6A 40 00 71 81 40 00
+B9 80 40 00 B9 81 40 00 B9 80 40 00 07 58 40 00 4A 57 40 00 15 5D 40 00 2F 10 4C 00 7D 7F 4F 00
+15 AA 48 00 16 00 00 00 B0 04 02 00 D8 F9 68 74 C4 21 51 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 27 06 97 8B 80 80 80 80 80 80 80 80 80 80 80 80 80 80 00 00 00 00 E1 EC E7 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 D5 04 00 00 4F 7D 40 00 60 73 40 00 BA 83 40 00
+∞  .  .  .  .  .  .  .  .  .  .  .  r  .  e  .  s  .  _  .  r  .  e  .  c  .  t  .  .  .  æ  `
+y  ñ  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  A  Ó  Á    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+‘  .  .  .  O  }  @  .  `  s  @  .  ∫  É  @  .  &  ¸  K  .  k    O  .  .  ™  H  .  „  √  F  .
+I  Œ  F  .  ß  §  H  .  |  n  ç  w  ¥  m  ç  w  Ä  P  .  .  Ä  P  .  .  â  j  @  .  q  Å  @  .
+π  Ä  @  .  π  Å  @  .  π  Ä  @  .  .  X  @  .  J  W  @  .  .  ]  @  .  /  .  L  .  }    O  .
+.  ™  H  .  .  .  .  .  ∞  .  .  .  ÿ  ˘  h  t  ƒ  !  Q  .  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä
+Ä  Ä  Ä  Ä  Ä  Ä  '  .  ó  ã  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  Ä  .  .  .  .  ·  Ï  Á  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ’  .  .  .  O  }  @  .  `  s  @  .  ∫  É  @  .
+
+--------------------------------2024/3/5 0:52:38--------------------------------
+This application has leaked memory. The small block leaks are (excluding expected leaks registered by pointer):
+
+5 - 20 bytes: TIniFile x 1, UnicodeString x 4, Unknown x 1
+21 - 36 bytes: UnicodeString x 3, Unknown x 2
+37 - 52 bytes: cMeraFile x 1, UnicodeString x 1
+69 - 84 bytes: TStringList x 2, UnicodeString x 2
+85 - 100 bytes: UnicodeString x 1
+101 - 116 bytes: cBuffSignal x 2
+
+The sizes of leaked medium and large blocks are (excluding expected leaks registered by pointer): 108196
+
+Note: Memory leak detail is logged to a text file in the same folder as this application. To disable this memory leak check, undefine "EnableMemoryLeakReporting".

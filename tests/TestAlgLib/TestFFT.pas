@@ -54,7 +54,7 @@ const
 
 var
   //FCount=8192;
-  FCount:integer = 10;
+  FCount:integer = 8192;
 
   Form1: TForm1;
 
@@ -147,9 +147,9 @@ begin
     i:=i shl 1;
   end;
   if fcount<i then
-    fcount:=i shr 1;
-  GetFFTExpTable(FCount, false, tcmxArray_d(FFTProp.TableExp.p));
-  FFTProp.TableInd := GetArrayIndex(FCount, 2);
+    i:=i shr 1;
+  GetFFTExpTable(i, false, tcmxArray_d(FFTProp.TableExp.p));
+  FFTProp.TableInd := GetArrayIndex(i, 2);
 end;
 
 
@@ -205,15 +205,35 @@ end;
 procedure TForm1.MultArraySSEClick(Sender: TObject);
 var
   I: Integer;
+  pf:TPerformanceTime;
+  t1,t2:double;
+  j, c: Integer;
 begin
+  c:=10;
   for I := 0 to FCount - 1 do
   begin
     tdoublearray(AlignedSampl.p)[i]:=i;
     tdoublearray(AlignedSampl2.p)[i]:=i+1;
     tdoublearray(CalcSampl.p)[i]:=i+2;
   end;
-  MulAr_sse(tdoublearray(AlignedSampl.p), tdoublearray(AlignedSampl2.p), tdoublearray(CalcSampl.p));
-  MULT_SSE_al_d(tdoublearray(AlignedSampl.p), 2);
+  pf:=TPerformanceTime.Create;
+  pf.Start;
+  for j := 0 to c do
+  begin
+    MulAr_sse(tdoublearray(AlignedSampl.p), tdoublearray(AlignedSampl2.p), tdoublearray(CalcSampl.p));
+  end;
+  t1:=pf.Stop;
+  pf.Start;
+  for j := 0 to c do
+  begin
+    for I := 0 to FCount - 1 do
+    begin
+      tdoublearray(CalcSampl.p)[i]:=tdoublearray(AlignedSampl.p)[i]*tdoublearray(AlignedSampl2.p)[i];
+    end;
+  end;
+  t2:=pf.Stop;
+  memo1.Text:=floattostr(t2/t1);
+  pf.Destroy;
 end;
 
 
@@ -228,60 +248,140 @@ asm
   pushad
   // квадратные скобки - обратиться к значению по адресу в eax
   //mov eax, d1 // @D1[0]
-  mov ecx, [eax-4] // запоминаем длину массива
-  mov ebx, ecx // запоминаем длину массива
-  // число кратных 4-м блоков в ECX. Два раза сдвиг влево и два вправо, чтоб похерить младшие биты
-  shr ECX, 2
-  shl ECX, 2
+  mov edx, [eax-4] // запоминаем длину массива
+  mov ebx, edx // запоминаем длину массива
+  mov edi, dOut
+  // число кратных 3-м блоков в ECX. Два раза сдвиг влево и два вправо, чтоб похерить младшие биты
+  shr edx, 3
+  push edx
+  shl edx, 3
   // высчитываем кол-во некратных элементов
-  //mov ebx, edx // ebx=Length
-  sub ebx, ecx // Length-NBlock
+  sub ebx, edx // например если всего 10 а кратно 8 то ebx = 2
+  pop edx
 
   // ecx - в смещение до посл элемента (*sof(double) 2^3)
-  shl ECX, 3
-  mov shift, ecx
-  sub ecx, 16
+  shl edx, 3// длина кратных блолков в байтах
+  mov esi, 0
+
+  cmp edx, 1 // установка флага сравнения
+  jl @@EndMul // jl - jump if less
   @@Loop:
-    //
-    movapd xmm0, [eax+ecx] // загружаем по 2 числа
-    movapd xmm1, [edx+ecx] // загружаем по 2 числа
-    movapd xmm2, [eax+ecx-16] // загружаем по 2 числа
-    movapd xmm3, [edx+ecx-16] // загружаем по 2 числа
-    movapd xmm4, [eax+ecx-32] // загружаем по 2 числа
-    movapd xmm5, [edx+ecx-32] // загружаем по 2 числа
-    movapd xmm6, [eax+ecx-48] // загружаем по 2 числа
-    movapd xmm7, [edx+ecx-48] // загружаем по 2 числа
+    movapd xmm0, [eax+esi] // загружаем по 2 числа
+    movapd xmm1, [ecx+esi] // загружаем по 2 числа
+    movapd xmm2, [eax+esi+16] // загружаем по 2 числа
+    movapd xmm3, [ecx+esi+16] // загружаем по 2 числа
+    movapd xmm4, [eax+esi+32] // загружаем по 2 числа
+    movapd xmm5, [ecx+esi+32] // загружаем по 2 числа
+    movapd xmm6, [eax+esi+48] // загружаем по 2 числа
+    movapd xmm7, [ecx+esi+48] // загружаем по 2 числа
 
     // перемножить 0 и 2 и сохранить в 0
     MULPD xmm0, xmm1
     MULPD xmm2, xmm3
     MULPD xmm4, xmm5
     MULPD xmm6, xmm7
-    movapd [ecx], xmm0
-    movapd [ecx+16], xmm0
-    movapd [ecx+32], xmm2
-    movapd [ecx+48], xmm4
-    movapd [ecx+64], xmm6
-    // dOut
-    sub ecx, 64
-  jns @@loop // переход если SF=1
-    shl edx, 3 // смещение к последнему элементу
+    movapd [edi+esi], xmm0
+    movapd [edi+esi+16], xmm2
+    movapd [edi+esi+32], xmm4
+    movapd [edi+esi+48], xmm6
+    add esi, 64
+    sub edx, 8 // вычитаем из edx 64 и устанавливаем sign flag
+  JNZ @@loop // переход если edi не ноль
+  //jns @@loop // переход если SF=1
+  @@EndMul:
     // домножаем остатки
-    JMP   @Vector.Pointer[ebx*4]
-  @Vector:
+    JMP   @V.Pointer[ebx*4]
+  @V:
        DD @@1
        DD @@2
        DD @@3
        DD @@4
-  popad
-  @@1:
+       DD @@5
+       DD @@6
+       DD @@7
+       DD @@8
+  @@1: // 0
     jmp @exit
   @@2: // 1
+    movlpd xmm0, [eax+esi] // загружаем по 1 числу
+    movlpd xmm1, [ecx+esi] // загружаем по 1 числу
+    MULPD  xmm0, xmm1
+    movlpd [edi+esi], xmm0
     jmp @exit
-  @@3: // 2
+  @@3: // остаток 2 числа
+    movapd xmm0, [eax+esi] // загружаем по 2 числа
+    movapd  xmm1, [ecx+esi]
+    MULPD  xmm0, xmm1
+    movapd [edi+esi], xmm0
     jmp @exit
-  @@4: // 0 чисел
+  @@4: // 3 чисел
+    movapd xmm0, [eax+esi] // загружаем по 2 числа
+    movapd xmm1, [ecx+esi]
+    movlpd xmm2, [eax+esi+16] // загружаем по 1 числа
+    movlpd xmm3, [ecx+esi+16]
+    MULPD  xmm0, xmm1
+    MULPD  xmm2, xmm3
+    movapd [edi+esi], xmm0
+    movlpd [edi+esi+16], xmm2
+    jmp @exit
+  @@5: // 4 чисел
+    movapd xmm0, [eax+esi] // загружаем по 2 числа
+    movapd xmm1, [ecx+esi]
+    movapd xmm2, [eax+esi+16] // загружаем по 2 числа
+    movapd xmm3, [ecx+esi+16]
+    MULPD  xmm0, xmm1
+    MULPD  xmm2, xmm3
+    movapd [edi+esi], xmm0
+    movapd [edi+esi+16], xmm2
+    jmp @exit
+  @@6: // 5 чисел
+    movapd xmm0, [eax+esi] // загружаем по 2 числа
+    movapd xmm1, [ecx+esi]
+    movapd xmm2, [eax+esi+16] // загружаем по 2 числа
+    movapd xmm3, [ecx+esi+16]
+    movlpd xmm4, [eax+esi+32] // загружаем по 1 числа
+    movlpd xmm5, [ecx+esi+32] // загружаем по 1 числа
+    MULPD  xmm0, xmm1
+    MULPD  xmm2, xmm3
+    MULPD  xmm4, xmm5
+    movapd [edi+esi], xmm0
+    movapd [edi+esi+16], xmm2
+    movlpd [edi+esi+32], xmm4
+    jmp @exit
+  @@7: // 6 чисел
+    movapd xmm0, [eax+esi] // загружаем по 2 числа
+    movapd xmm1, [ecx+esi]
+    movapd xmm2, [eax+esi+16] // загружаем по 2 числа
+    movapd xmm3, [ecx+esi+16]
+    movapd xmm4, [eax+esi+32] // загружаем по 1 числа
+    movapd xmm5, [ecx+esi+32] // загружаем по 1 числа
+    MULPD  xmm0, xmm1
+    MULPD  xmm2, xmm3
+    MULPD  xmm4, xmm5
+    movapd [edi+esi], xmm0
+    movapd [edi+esi+16], xmm2
+    movapd [edi+esi+32], xmm4
+    jmp @exit
+  @@8: // 7 чисел
+    movapd xmm0, [eax+esi] // загружаем по 2 числа
+    movapd xmm1, [ecx+esi]
+    movapd xmm2, [eax+esi+16] // загружаем по 2 числа
+    movapd xmm3, [ecx+esi+16]
+    movapd xmm4, [eax+esi+32] // загружаем по 1 числа
+    movapd xmm5, [ecx+esi+32] // загружаем по 1 числа
+    movapd xmm6, [eax+esi+48] // загружаем по 1 числа
+    movapd xmm7, [ecx+esi+48] // загружаем по 1 числа
+    MULPD  xmm0, xmm1
+    MULPD  xmm2, xmm3
+    MULPD  xmm4, xmm5
+    MULPD  xmm6, xmm7
+    movapd [edi+esi], xmm0
+    movapd [edi+esi+16], xmm2
+    movapd [edi+esi+32], xmm4
+    movlpd [edi+esi+48], xmm6
+    jmp @exit
   @Exit:
+  popad
 end;
 
 end.
