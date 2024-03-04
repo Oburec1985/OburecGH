@@ -32,7 +32,7 @@ type
   private
     rezSignals:tstringlist;
     FFTProp:TFFTProp;
-    AlignedSampl:TAlignDarray;
+    AlignedSampl,AlignedSampl2:TAlignDarray;
     CalcSampl: TAlignDCmpx;
     MagFFTarray:TAlignDarray;
   public
@@ -46,14 +46,15 @@ type
     b:double;
   end;
 
+function MulAr_sse(const D1: array of double;const D2: array of double; var dOut: array of double): Extended;
+
 
 const
-  //FCount=8192;
-  FCount=8;
-
   TwoPi = 6.283185307179586;
 
 var
+  //FCount=8192;
+  FCount:integer = 10;
 
   Form1: TForm1;
 
@@ -119,6 +120,7 @@ end;
 procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   FreeMemAligned(AlignedSampl);
+  FreeMemAligned(AlignedSampl2);
   FreeMemAligned(MagFFTarray);
   FreeMemAligned(CalcSampl);
   FreeMemAligned(FFTProp.TableExp);
@@ -129,14 +131,23 @@ var
   s:tstringlist;
   p:tpair;
   STR:STRING;
+  i:integer;
 begin
   GetMemAlignedArray_d(fcount, AlignedSampl);
+  GetMemAlignedArray_d(fcount, AlignedSampl2);
   GetMemAlignedArray_d(fcount shr 1, MagFFTarray);
   GetMemAlignedArray_cmpx_d(fcount, CalcSampl);
   GetMemAlignedArray_cmpx_d(fcount, FFTProp.TableExp);
 
   FFTProp.StartInd:=0;
   FFTProp.PCount:=fcount;
+  i:=2;
+  while fcount>=i do
+  begin
+    i:=i shl 1;
+  end;
+  if fcount<i then
+    fcount:=i shr 1;
   GetFFTExpTable(FCount, false, tcmxArray_d(FFTProp.TableExp.p));
   FFTProp.TableInd := GetArrayIndex(FCount, 2);
 end;
@@ -197,15 +208,18 @@ var
 begin
   for I := 0 to FCount - 1 do
   begin
-    tdoublearray(AlignedSampl.p)[i]:=1;
+    tdoublearray(AlignedSampl.p)[i]:=i;
+    tdoublearray(AlignedSampl2.p)[i]:=i+1;
+    tdoublearray(CalcSampl.p)[i]:=i+2;
   end;
+  MulAr_sse(tdoublearray(AlignedSampl.p), tdoublearray(AlignedSampl2.p), tdoublearray(CalcSampl.p));
   MULT_SSE_al_d(tdoublearray(AlignedSampl.p), 2);
 end;
 
 
 // перемножаем массив 1 на2 поэлементно. количество согласно d1
-// Параметры: первый в eax, второй в edx, третий в ecx, ост-ые - стек.
-function MulAr_sse(const D1: array of double;const D2: array of double; var dOut: array of double): Extended; overload;
+// Параметры: первый в eax, второй в ecx!!! (по описанию ebx по факту ecx), третий в ecx???, ост-ые - стек.
+function MulAr_sse(const D1: array of double;const D2: array of double; var dOut: array of double): Extended;
 var
   // размер блока при вычислении умножения
   shift: integer;
@@ -213,12 +227,9 @@ asm
  // сохранить в стек регистры EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI.
   pushad
   // квадратные скобки - обратиться к значению по адресу в eax
-  mov eax, [eax] // @D1[0]
-  mov edx, [edx] // @D2[0]
-  mov ecx, [ecx] // @DOut[0]
-  mov ebx, [eax-4] // запоминаем длину массива
-
-  MOV ECX, ebx
+  //mov eax, d1 // @D1[0]
+  mov ecx, [eax-4] // запоминаем длину массива
+  mov ebx, ecx // запоминаем длину массива
   // число кратных 4-м блоков в ECX. Два раза сдвиг влево и два вправо, чтоб похерить младшие биты
   shr ECX, 2
   shl ECX, 2
@@ -246,12 +257,12 @@ asm
     MULPD xmm2, xmm3
     MULPD xmm4, xmm5
     MULPD xmm6, xmm7
-    movapd [ecx],xmm0
-    movapd [ecx+16],xmm0
-    movapd [ecx+32],xmm2
-    movapd [ecx+48],xmm4
-    movapd [ecx+64],xmm6
-    dOut
+    movapd [ecx], xmm0
+    movapd [ecx+16], xmm0
+    movapd [ecx+32], xmm2
+    movapd [ecx+48], xmm4
+    movapd [ecx+64], xmm6
+    // dOut
     sub ecx, 64
   jns @@loop // переход если SF=1
     shl edx, 3 // смещение к последнему элементу
