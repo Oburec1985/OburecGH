@@ -2691,6 +2691,7 @@ begin
   if pars.Count=0 then
   begin
     pars.Destroy;
+
     exit;
   end;
   // Con=C_1;new_1=1;FB_1=T_1;Tag = T_1;

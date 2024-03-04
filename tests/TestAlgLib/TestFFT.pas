@@ -142,17 +142,6 @@ begin
 end;
 
 
-procedure TForm1.MultArraySSEClick(Sender: TObject);
-var
-  I: Integer;
-begin
-  for I := 0 to FCount - 1 do
-  begin
-    tdoublearray(AlignedSampl.p)[i]:=1;
-  end;
-  MULT_SSE_al_d(tdoublearray(AlignedSampl.p), 2);
-end;
-
 procedure TForm1.SSEBtnClick(Sender: TObject);
 var
   m:cmerafile;
@@ -202,6 +191,18 @@ begin
   rezSignals.Destroy;
 end;
 
+procedure TForm1.MultArraySSEClick(Sender: TObject);
+var
+  I: Integer;
+begin
+  for I := 0 to FCount - 1 do
+  begin
+    tdoublearray(AlignedSampl.p)[i]:=1;
+  end;
+  MULT_SSE_al_d(tdoublearray(AlignedSampl.p), 2);
+end;
+
+
 // перемножаем массив 1 на2 поэлементно. количество согласно d1
 // Параметры: первый в eax, второй в edx, третий в ecx, ост-ые - стек.
 function MulAr_sse(const D1: array of double;const D2: array of double; var dOut: array of double): Extended; overload;
@@ -224,17 +225,52 @@ asm
   // высчитываем кол-во некратных элементов
   //mov ebx, edx // ebx=Length
   sub ebx, ecx // Length-NBlock
+
   // ecx - в смещение до посл элемента (*sof(double) 2^3)
   shl ECX, 3
   mov shift, ecx
   sub ecx, 16
   @@Loop:
+    //
     movapd xmm0, [eax+ecx] // загружаем по 2 числа
-    movapd xmm1, [eax+ecx-16] // загружаем по 2 числа
-    movapd xmm2, [eax+ecx] // загружаем по 2 числа
-    movapd xmm3, [eax+ecx-16] // загружаем по 2 числа
+    movapd xmm1, [edx+ecx] // загружаем по 2 числа
+    movapd xmm2, [eax+ecx-16] // загружаем по 2 числа
+    movapd xmm3, [edx+ecx-16] // загружаем по 2 числа
+    movapd xmm4, [eax+ecx-32] // загружаем по 2 числа
+    movapd xmm5, [edx+ecx-32] // загружаем по 2 числа
+    movapd xmm6, [eax+ecx-48] // загружаем по 2 числа
+    movapd xmm7, [edx+ecx-48] // загружаем по 2 числа
 
+    // перемножить 0 и 2 и сохранить в 0
+    MULPD xmm0, xmm1
+    MULPD xmm2, xmm3
+    MULPD xmm4, xmm5
+    MULPD xmm6, xmm7
+    movapd [ecx],xmm0
+    movapd [ecx+16],xmm0
+    movapd [ecx+32],xmm2
+    movapd [ecx+48],xmm4
+    movapd [ecx+64],xmm6
+    dOut
+    sub ecx, 64
+  jns @@loop // переход если SF=1
+    shl edx, 3 // смещение к последнему элементу
+    // домножаем остатки
+    JMP   @Vector.Pointer[ebx*4]
+  @Vector:
+       DD @@1
+       DD @@2
+       DD @@3
+       DD @@4
   popad
+  @@1:
+    jmp @exit
+  @@2: // 1
+    jmp @exit
+  @@3: // 2
+    jmp @exit
+  @@4: // 0 чисел
+  @Exit:
 end;
 
 end.
