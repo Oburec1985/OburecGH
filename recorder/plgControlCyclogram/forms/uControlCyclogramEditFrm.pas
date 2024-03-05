@@ -928,7 +928,7 @@ var
   fname, str, str1, params:string;
   sh, rngObj: olevariant;
   i,j, index, lastrow, lastcol, modeInd, timeUnits:integer;
-  b:boolean;
+  l_b:boolean;
   con:cControlObj;
   p:cProgramObj;
   m:cmodeobj;
@@ -1047,7 +1047,7 @@ begin
         if str='' then break;
         m:=cModeObj.create;
         m.name:=str;
-        b:=false;
+        l_b:=false;
         p.addmode(m);
         // создание триггера
         if m.name='Стоп' then
@@ -1064,6 +1064,14 @@ begin
             action.opertype := c_action_Start;
             action.m_target:=m;
             trig.addAction(action);
+          end
+          else
+          begin
+            action:=trig.getaction(0);
+            if action<>nil then
+            begin
+              action.m_target:=m;
+            end;
           end;
         end;
         // длительность режима
@@ -1107,10 +1115,10 @@ begin
             begin
               str:='Выкл';
               params:=params+'Zone_state='+str+',';
-              if not b then
+              if not l_b then
               begin
                 showmessage('неверный формат данных, колонка Зоны, режим: '+m.name);
-                b:=true;
+                l_b:=true;
               end;
             end
             else
@@ -1120,15 +1128,22 @@ begin
           str:=sh.Cells[j+4,6+4+modeind*c_modeColCount];
           if str<>'' then
           begin
-            if pos('.', str)<1 then
+            // or (pos('…', str)=2)
+            if pos('.', str)<1  then
             begin
+              if pos('…', str)=2 then
+              begin
+              end
+              else
+              begin
+                if not l_b then
+                begin
+                  showmessage('неверный формат данных, колонка Значение, режим: '+m.name);
+                  l_b:=true;
+                end;
+              end;
               str:='0...0;';
               params:=params+'Vals='+str+',';
-              if not b then
-              begin
-                showmessage('неверный формат данных, колонка Значение, режим: '+m.name);
-                b:=true;
-              end;
             end
             else
             begin

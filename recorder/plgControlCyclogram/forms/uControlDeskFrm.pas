@@ -465,7 +465,8 @@ var
   Rstate: boolean;
   p: cProgramObj;
   c: ccontrolobj;
-  I: integer;
+  ec,I: integer;
+  str:string;
 begin
   if self <> nil then
   begin
@@ -502,6 +503,24 @@ begin
       // if g_conmng.state<>c_stop then showmessage('Остановили Timer в состоянии c_TryStop');
       Timer1.Enabled := false;
       ProgramSG.Invalidate;
+
+      if g_conmng.state<>c_stop then
+      begin
+        g_conmng.state:=c_stop;
+      end;
+      if p.ActiveMode <> nil then
+        str:= p.ActiveMode.name
+      else
+        str:= '';
+      ec:=g_conmng.ErrorCount;
+      if ec<>0 then
+      begin
+        ActiveModeE.text :=str+' '+g_conmng.ErrorStr;
+      end
+      else
+      begin
+        ActiveModeE.text :=str;
+      end;
       // KillTimer(handle,m_timerid);
       // KillTimer(MainThreadID,m_timerid);
     end;
@@ -1675,6 +1694,7 @@ end;
 procedure TControlDeskFrm.Stop;
 begin
   g_conmng.Stop;
+
 end;
 
 procedure TControlDeskFrm.doShowStop(Sender: TObject);
@@ -1899,15 +1919,18 @@ begin
   //TableModeSG.Cells[col, 0] := m.Caption;
   if m_CurMode=nil then exit;
   m_curCol:= getColumn(TableModeSG, m_CurMode.name);
-  m_curRow:= getRow(TableModeSG, m_CurControl.name, 0);
-  TableModeSG.Cells[m_curCol, 1] :=ToTime(m_CurMode.ModeLength, false);
-  TableModeSG.Cells[0, m_curRow] := m_CurControl.Caption;
-  t := m_CurMode.gettask(m_CurControl.name);
-  if t <> nil then
+  if m_CurControl<>nil then
   begin
-    TableModeSG.Cells[m_curCol, m_curRow] := formatstrnoe(t.task, 2);
+    m_curRow:= getRow(TableModeSG, m_CurControl.name, 0);
+    TableModeSG.Cells[m_curCol, 1] :=ToTime(m_CurMode.ModeLength, false);
+    TableModeSG.Cells[0, m_curRow] := m_CurControl.Caption;
+    t := m_CurMode.gettask(m_CurControl.name);
+    if t <> nil then
+    begin
+      TableModeSG.Cells[m_curCol, m_curRow] := formatstrnoe(t.task, 2);
+    end;
+    SGChange(TableModeSG);
   end;
-  SGChange(TableModeSG);
 end;
 
 
@@ -2687,11 +2710,11 @@ var
   createCon:boolean;
 begin
   s:=str;
+  //exit;
   pars:=ParsStrParam(str);
   if pars.Count=0 then
   begin
     pars.Destroy;
-
     exit;
   end;
   // Con=C_1;new_1=1;FB_1=T_1;Tag = T_1;

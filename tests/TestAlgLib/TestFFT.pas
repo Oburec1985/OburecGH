@@ -10,7 +10,7 @@ uses
   uHardwareMath,
   uFFT,
   performancetime,
-  fft, fht, Ap, DCL_MYOWN, ComCtrls;
+  fft, fht, Ap, DCL_MYOWN, ComCtrls, ExtCtrls, uChart, utrend, upage, uaxis, uBuffTrend1d;
 
 // AVal - массив анализируемых данных, Nvl - длина массива, должна быть кратна степени 2.
 // FTvl - массив полученных значений, Nft - длина массива, должна быть равна Nvl / 2 или меньше.
@@ -24,6 +24,8 @@ type
     AlgLib: TButton;
     SSEBtn: TButton;
     MultArraySSE: TButton;
+    cChart1: cChart;
+    IterCountIE: TIntEdit;
     procedure AlgLibClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure SSEBtnClick(Sender: TObject);
@@ -46,15 +48,12 @@ type
     b:double;
   end;
 
-function MulAr_sse(const D1: array of double;const D2: array of double; var dOut: array of double): Extended;
-
-
 const
   TwoPi = 6.283185307179586;
 
 var
   //FCount=8192;
-  FCount:integer = 8192;
+  FCount:integer = 16384;
 
   Form1: TForm1;
 
@@ -202,44 +201,7 @@ begin
   rezSignals.Destroy;
 end;
 
-procedure TForm1.MultArraySSEClick(Sender: TObject);
-var
-  I: Integer;
-  pf:TPerformanceTime;
-  t1,t2:double;
-  j, c: Integer;
-begin
-  c:=10;
-  for I := 0 to FCount - 1 do
-  begin
-    tdoublearray(AlignedSampl.p)[i]:=i;
-    tdoublearray(AlignedSampl2.p)[i]:=i+1;
-    tdoublearray(CalcSampl.p)[i]:=i+2;
-  end;
-  pf:=TPerformanceTime.Create;
-  pf.Start;
-  for j := 0 to c do
-  begin
-    MulAr_sse(tdoublearray(AlignedSampl.p), tdoublearray(AlignedSampl2.p), tdoublearray(CalcSampl.p));
-  end;
-  t1:=pf.Stop;
-  pf.Start;
-  for j := 0 to c do
-  begin
-    for I := 0 to FCount - 1 do
-    begin
-      tdoublearray(CalcSampl.p)[i]:=tdoublearray(AlignedSampl.p)[i]*tdoublearray(AlignedSampl2.p)[i];
-    end;
-  end;
-  t2:=pf.Stop;
-  memo1.Text:=floattostr(t2/t1);
-  pf.Destroy;
-end;
-
-
-// перемножаем массив 1 на2 поэлементно. количество согласно d1
-// Параметры: первый в eax, второй в ecx!!! (по описанию ebx по факту ecx), третий в ecx???, ост-ые - стек.
-function MulAr_sse(const D1: array of double;const D2: array of double; var dOut: array of double): Extended;
+function MulAr_sse_al_test(const D1: array of double;const D2: array of double; var dOut: array of double; count:integer): Extended;
 var
   // размер блока при вычислении умножения
   shift: integer;
@@ -248,7 +210,7 @@ asm
   pushad
   // квадратные скобки - обратиться к значению по адресу в eax
   //mov eax, d1 // @D1[0]
-  mov edx, [eax-4] // запоминаем длину массива
+  mov edx, count // запоминаем длину массива
   mov ebx, edx // запоминаем длину массива
   mov edi, dOut
   // число кратных 3-м блоков в ECX. Два раза сдвиг влево и два вправо, чтоб похерить младшие биты
@@ -268,6 +230,7 @@ asm
   @@Loop:
     movapd xmm0, [eax+esi] // загружаем по 2 числа
     movapd xmm1, [ecx+esi] // загружаем по 2 числа
+
     movapd xmm2, [eax+esi+16] // загружаем по 2 числа
     movapd xmm3, [ecx+esi+16] // загружаем по 2 числа
     movapd xmm4, [eax+esi+32] // загружаем по 2 числа
@@ -383,5 +346,72 @@ asm
   @Exit:
   popad
 end;
+
+procedure TForm1.MultArraySSEClick(Sender: TObject);
+var
+  I: Integer;
+  pf:TPerformanceTime;
+  t1,t2, v:double;
+  ar:array of double;
+  j, c: Integer;
+
+  p:cpage;
+  t:cBuffTrend1d;
+  a:cAxis;
+  k: Integer;
+begin
+  c:=5000;
+  for I := 0 to fcount-1 do
+  begin
+    tdoublearray(AlignedSampl.p)[i]:=i;
+    tdoublearray(AlignedSampl2.p)[i]:=i+1;
+    tdoublearray(CalcSampl.p)[i]:=i+2;
+  end;
+
+  p:=cpage(cchart1.activePage);
+  a:=p.activeAxis;
+  t:=cBuffTrend1d(a.getChild(0));
+  setlength(ar, fcount);
+  if t=nil then
+  begin
+    t:=cBuffTrend1d.create;
+    t.flength:=c;
+    t.dx:=1;
+    a.AddChild(t);
+  end
+  else
+  begin
+
+  end;
+  pf:=TPerformanceTime.Create;
+  //for I := 1 to c-1 do
+  for I := 1 to fcount-1 do
+  begin
+    pf.Start;
+    for k := 0 to IterCountIE.IntNum do
+    begin
+      //MulAr_sse_al(tdoublearray(AlignedSampl.p), tdoublearray(AlignedSampl2.p), tdoublearray(CalcSampl.p));
+      MulAr_sse_al(tdoublearray(AlignedSampl.p), tdoublearray(AlignedSampl2.p), tdoublearray(CalcSampl.p), i);
+    end;
+
+    t1:=pf.Stop;
+    pf.Start;
+    for k := 0 to IterCountIE.IntNum do
+    begin
+      for j := 0 to i-1 do
+      begin
+        tdoublearray(CalcSampl.p)[j]:=tdoublearray(AlignedSampl.p)[j]*tdoublearray(AlignedSampl2.p)[j];
+      end;
+      //MulAr_sse_al_test(tdoublearray(AlignedSampl.p), tdoublearray(AlignedSampl2.p), tdoublearray(CalcSampl.p), i);
+    end;
+    t2:=pf.Stop;
+    v:=t2/t1;
+    ar[i]:=v;
+  end;
+  t.AddPoints(ar);
+  cChart1.Invalidate;
+  pf.Destroy;
+end;
+
 
 end.

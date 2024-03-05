@@ -74,6 +74,7 @@ end;
 function TPerformanceTime.Stop;
 begin
   FDelay:=GetTimeInSec-StartTime;
+  result:=FDelay;
 end;
 
 end.
