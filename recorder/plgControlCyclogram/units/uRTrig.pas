@@ -823,6 +823,16 @@ begin
       begin
         a:=getaction(i);
         a.apply;
+        if Trigtype=trStop_cyclogram then
+        begin
+          if a.opertype=c_action_Start then
+          begin
+            if a.m_target is cmodeobj then
+            begin
+              cmodeobj(a.m_target).getProgram.stopmode:=cmodeobj(a.m_target);
+            end;
+          end;
+        end;
       end;
       doOnTrigApply;
     end;

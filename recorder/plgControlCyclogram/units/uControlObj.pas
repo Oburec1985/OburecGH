@@ -617,6 +617,8 @@ type
     // Стартовать программу при старте циклограммы режимов
     m_StartOnPlay: boolean;
     m_enableOnStart: boolean;
+    // режим который устанавливается при останове программы
+    StopMode:cmodeObj;
   private
     cs: TRTLCriticalSection;
     m_applyModeStateTag: boolean;
@@ -1303,6 +1305,8 @@ var
   t: cBaseTrig;
   i: integer;
 begin
+  if state<>c_play then
+    exit;
   for i := 0 to TrigCount - 1 do
   begin
     t := getTrig(i);
@@ -1316,7 +1320,7 @@ begin
           t.ApplyActions;
         end;
       end;
-      if t.Trigtype = trStop then
+      if t.Trigtype = trStop_cyclogram then
       begin
         if not Start then
         begin
@@ -1338,7 +1342,7 @@ begin
     t := getTrig(i);
     if t is crtrig then
     begin
-      if t.Trigtype = trStop_cyclogram then
+      if t.Trigtype = trStop then
       begin
         // if not Start then
         t.state := true; // триггер сработал
@@ -4330,6 +4334,7 @@ begin
   case s of
     c_Play:
       begin
+        StopMode:=nil;
         // если первый раз стартуем программу
         if ActiveMode = nil then
         begin
@@ -4348,7 +4353,7 @@ begin
       end;
     c_Stop:
       begin
-        ActiveMode := nil;
+        ActiveMode := StopMode;
         // сброс всех таймеров
         ResetProgT;
       end;

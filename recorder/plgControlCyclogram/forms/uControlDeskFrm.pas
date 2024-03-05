@@ -521,6 +521,7 @@ begin
       begin
         ActiveModeE.text :=str;
       end;
+      TableModeSG.Invalidate;
       // KillTimer(handle,m_timerid);
       // KillTimer(MainThreadID,m_timerid);
     end;
