@@ -171,7 +171,21 @@ uses
   umeraSignal in '..\..\sharedUtils\mera\umeraSignal.pas',
   uSignalsUtils in '..\..\sharedUtils\mera\uSignalsUtils.pas',
   PerformanceTime in 'PerformanceTime.pas',
-  uHardwareMath in '..\..\sharedUtils\math\uHardwareMath.pas';
+  uHardwareMath in '..\..\sharedUtils\math\uHardwareMath.pas',
+  uChart in '..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas',
+  uAxis in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uAxis.pas',
+  uBasePage in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uBasePage.pas',
+  uBasicTrend in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uBasicTrend.pas',
+  uBuffTrend in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uBuffTrend.pas',
+  uBuffTrend1d in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uBuffTrend1d.pas',
+  uDoubleCursor in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uDoubleCursor.pas',
+  uDrawObj in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uDrawObj.pas',
+  uDrawObjMng in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uDrawObjMng.pas',
+  uEdit in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uEdit.pas',
+  uFloatEdit in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uFloatEdit.pas',
+  uFloatLabel in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uFloatLabel.pas',
+  uLegend in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uLegend.pas',
+  upage in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\upage.pas';
 
 {$R *.res}
 

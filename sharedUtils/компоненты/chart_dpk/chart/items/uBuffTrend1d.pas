@@ -333,6 +333,8 @@ var
 begin
   if Count = 0 then
     exit;
+  if not needUpdateBound then exit;
+
   boundrect.BottomLeft.x := x0;
   l := Count;
   boundrect.TopRight.x := x0 + (l - 1) * dx;

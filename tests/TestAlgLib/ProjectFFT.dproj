@@ -217,6 +217,20 @@
 			<DCCReference Include="..\..\sharedUtils\mera\uSignalsUtils.pas"/>
 			<DCCReference Include="PerformanceTime.pas"/>
 			<DCCReference Include="..\..\sharedUtils\math\uHardwareMath.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uAxis.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uBasePage.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uBasicTrend.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uBuffTrend.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uBuffTrend1d.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uDoubleCursor.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uDrawObj.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uDrawObjMng.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uEdit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uFloatEdit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uFloatLabel.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uLegend.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\upage.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

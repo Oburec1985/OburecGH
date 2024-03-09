@@ -2,81 +2,106 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 651
-  ClientWidth = 964
+  ClientHeight = 488
+  ClientWidth = 736
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -10
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
-  PixelsPerInch = 120
-  TextHeight = 16
-  object Button1: TButton
-    Left = 9
-    Top = 32
-    Width = 170
-    Height = 25
-    Caption = 'FFTAnalysis'
-    TabOrder = 0
-  end
+  PixelsPerInch = 96
+  TextHeight = 12
   object Memo1: TMemo
-    Left = 184
-    Top = 31
-    Width = 409
-    Height = 91
+    Left = 138
+    Top = 23
+    Width = 307
+    Height = 69
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Lines.Strings = (
       'Memo1')
-    TabOrder = 1
+    TabOrder = 0
   end
   object AlgLib: TButton
-    Left = 9
-    Top = 80
-    Width = 170
-    Height = 25
+    Left = 7
+    Top = 60
+    Width = 127
+    Height = 19
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Caption = 'AlgLib'
-    TabOrder = 2
+    TabOrder = 1
     OnClick = AlgLibClick
   end
   object SSEBtn: TButton
-    Left = 9
-    Top = 128
-    Width = 170
-    Height = 25
+    Left = 7
+    Top = 96
+    Width = 127
+    Height = 19
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Caption = 'SSE'
-    TabOrder = 3
+    TabOrder = 2
     OnClick = SSEBtnClick
   end
   object MultArraySSE: TButton
-    Left = 9
-    Top = 237
-    Width = 170
-    Height = 26
+    Left = 463
+    Top = 24
+    Width = 127
+    Height = 19
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Caption = 'MulArray SSE'
-    TabOrder = 4
+    TabOrder = 3
     OnClick = MultArraySSEClick
   end
   object cChart1: cChart
-    Left = 185
-    Top = 128
-    Width = 688
-    Height = 400
+    Left = 138
+    Top = 96
+    Width = 575
+    Height = 377
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Caption = 'cChart1'
-    TabOrder = 5
+    TabOrder = 4
     allowEditPages = False
     showTV = False
     showLegend = False
     selectSize = 5
   end
   object IterCountIE: TIntEdit
-    Left = 8
-    Top = 304
-    Width = 121
-    Height = 24
-    TabOrder = 6
+    Left = 594
+    Top = 23
+    Width = 91
+    Height = 20
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    TabOrder = 5
     Text = '10'
+  end
+  object LgyCb: TCheckBox
+    Left = 463
+    Top = 48
+    Width = 66
+    Height = 17
+    Caption = 'LgyCb'
+    TabOrder = 6
+    OnClick = LgyCbClick
   end
 end

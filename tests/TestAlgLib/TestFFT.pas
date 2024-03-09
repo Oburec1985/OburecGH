@@ -19,18 +19,19 @@ type
 
 
   TForm1 = class(TForm)
-    Button1: TButton;
     Memo1: TMemo;
     AlgLib: TButton;
     SSEBtn: TButton;
     MultArraySSE: TButton;
     cChart1: cChart;
     IterCountIE: TIntEdit;
+    LgyCb: TCheckBox;
     procedure AlgLibClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure SSEBtnClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure MultArraySSEClick(Sender: TObject);
+    procedure LgyCbClick(Sender: TObject);
   private
     rezSignals:tstringlist;
     FFTProp:TFFTProp;
@@ -151,6 +152,11 @@ begin
   FFTProp.TableInd := GetArrayIndex(i, 2);
 end;
 
+
+procedure TForm1.LgyCbClick(Sender: TObject);
+begin
+  cpage(cchart1.activePage).activeAxis.Lg:=not cpage(cchart1.activePage).activeAxis.Lg;
+end;
 
 procedure TForm1.SSEBtnClick(Sender: TObject);
 var

@@ -23,13 +23,12 @@ type
     pointcolor:point3;
     // список отображения для точек
     drawPointsCallList:Cardinal;
-    // необходимо обновить список отображения
-    NeedRecompile:Boolean;
     // число вершин
     fcount:integer;
     // массив разрывов тренда
     prt:array of TPrt;
   protected
+    fNeedRecompile:boolean;
     fweight:double;
     logpointsY:array of single;
     logpointsX:array of single;
@@ -38,6 +37,7 @@ type
     // опции тренда
     settings:cardinal;
   protected
+    procedure setNeedRecompile(b:boolean);
     procedure setflag(flag:cardinal);
     procedure dropflag(flag:cardinal);
     function getdrawpoint:boolean;
@@ -91,6 +91,7 @@ type
     property drawLines:boolean read getDrawLine write setDrawLine;
     constructor create;override;
     property weight: double read fweight write setweight;
+    property NeedRecompile: boolean read fNeedRecompile write setNeedRecompile;
   end;
 
   const
@@ -108,6 +109,8 @@ var
 begin
   lcount:=Count;
   if lcount=0 then exit;
+  if not needUpdateBound then exit;
+
   B2:=FALSE;
   boundrect.BottomLeft:=GetP2(0);
   boundrect.TopRight:=boundrect.BottomLeft;
@@ -400,6 +403,12 @@ begin
   uCommonMath.setflag(settings,flag);
 end;
 
+procedure cBasicTrend.setNeedRecompile(b: boolean);
+begin
+  fNeedRecompile:=b;
+  needUpdateBound:=true;
+end;
+
 procedure cBasicTrend.setweight(w: double);
 begin
   fweight:=w;
@@ -418,6 +427,7 @@ end;
 constructor cBasicTrend.create;
 begin
   Inherited;
+
   DisplayListName:=0;
   imageindex:=c_trend_img;
   color:=blue;
@@ -532,8 +542,8 @@ procedure cBasicTrend.addpoints(p:array of point2; p_count:integer);
 begin
   if assigned(cchart(chart).onaddpoint) then
     cchart(chart).onaddpoint(self, tobject(@p[0]));
-  EvalBounds;
   NeedRecompile:=true;
+  EvalBounds;
   cchart(chart).objmng.events.CallAllEventsWithSender(e_onAddPoint+e_onUpdateBound,self);
 end;
 
@@ -541,8 +551,9 @@ procedure cBasicTrend.AddPoints(const a:array of single);
 begin
   if assigned(cchart(chart).onaddpoint) then
     cchart(chart).onaddpoint(self, tobject(@a[0]));
-  EvalBounds;
   NeedRecompile:=true;
+  EvalBounds;
+
   cchart(chart).objmng.events.CallAllEventsWithSender(e_onAddPoint+e_onUpdateBound,self);
 end;
 
@@ -550,8 +561,9 @@ procedure cBasicTrend.AddPoints(const a:array of double);
 begin
   if assigned(cchart(chart).onaddpoint) then
     cchart(chart).onaddpoint(self, tobject(@a[0]));
-  EvalBounds;
   NeedRecompile:=true;
+  EvalBounds;
+
   cchart(chart).objmng.events.CallAllEventsWithSender(e_onAddPoint+e_onUpdateBound,self);
 end;
 
@@ -572,6 +584,7 @@ end;
 procedure cBasicTrend.OnAxisChangeLg;
 begin
   needrecompile:=true;
+  needUpdateBound:=false;
 end;
 
 
