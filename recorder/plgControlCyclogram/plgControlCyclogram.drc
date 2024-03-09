@@ -1239,7 +1239,7 @@ END
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
 /* ..\SharedRUnits\uTagsListFrame.dfm */
 /* forms\uPressFrm2.dfm */
-/* forms\uPressFrmFrame2.dfm */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmFrame2.dfm */
 /* forms\uPressFrmEdit2.dfm */
 /* forms\uPressFrmFrame.dfm */
 /* forms\uPressFrm.dfm */
@@ -1271,7 +1271,7 @@ END
 /* ..\..\sharedUtils\forms\uConfirmDlg.dfm */
 /* forms\uGenSignalsEditFrm.dfm */
 /* forms\uGenSignalsFrm.dfm */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uControlDeskFrm.dfm */
+/* forms\uControlDeskFrm.dfm */
 /* forms\uCyclogramReportFrm.dfm */
 /* forms\uTagInfoFrm.dfm */
 /* forms\uTagInfoEditFrm.dfm */

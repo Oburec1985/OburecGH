@@ -49,7 +49,7 @@ type
     size: integer;
     ecf:double; // зависит от типа окна. норм-ия СКО
     acf:double; // зависит от типа окна. норм-ия А
-    ar: TDoubleArray;
+    ar: TAlignDarray;
     wndtype: TWndType;
   end;
 
@@ -508,6 +508,9 @@ begin
   r.size := 0;
   r.acf:=1;
   r.ecf:=1;
+  r.ar.p:=nil;
+  r.ar.nAlignedSampl:=nil;
+  r.ar.nAlignedSize:=0;
   for i := 0 to length(g_FFTWndList) - 1 do
   begin
     pr := @g_FFTWndList[i];
@@ -525,35 +528,36 @@ begin
   SetLength(g_FFTWndList, l + c_fftPlan_blockLength);
   r.size := fftCount;
   r.wndtype:=wnd;
-  setlength(r.ar, fftCount);
+  GetMemAlignedArray_d(fftCount,r.ar);
+  //setlength(r.ar, fftCount);
   case wnd of
     wdHann:    // 0.22/0.14
     begin
       // acf 2 ecf 1.63
       r.acf:=2;
       r.ecf:=1.63;
-      FillWndHann(r.ar);
+      FillWndHann(TDoubleArray(r.ar.p));
     end;
     wdHamming:
     begin
       // acf 1.85 ecf 1.59
       r.acf:=1.8534;
       r.ecf:=1.59;
-      FillWndHammin(r.ar);
+      FillWndHammin(TDoubleArray(r.ar.p));
     end;
     wdBlackman:
     begin
       // acf 2.8 ecf 1.97
       r.acf:=2.8;
       r.ecf:=1.97;
-      FillWndBlackman(r.ar);
+      FillWndBlackman(TDoubleArray(r.ar.p));
     end;
     wdFlattop:
     begin
       // acf 4.18 ecf 2.26
       r.acf:=4.18;
       r.ecf:=2.26;
-      FillWndFlattop(r.ar);
+      FillWndFlattop(TDoubleArray(r.ar.p));
     end;
   end;
   g_FFTWndList[l] := r;
@@ -810,10 +814,11 @@ var
 begin
   if (wnd <> nil) and (wnd.wndtype <> wdRect) then
   begin
-    for I := 0 to wnd.size - 1 do
-    begin
-      inData[i]:=inData[i]*wnd.ar[i];
-    end;
+    //for I := 0 to wnd.size - 1 do
+    //begin
+    //  inData[i]:=inData[i]*TDoubleArray(wnd.ar.p)[i];
+    //end;
+    MulAr_sse_al(inData, TDoubleArray(wnd.ar.p), inData, wnd.size);
   end;
   fft_al_d_sse(inData, outData, FFTPlan);
 end;

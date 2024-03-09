@@ -1104,6 +1104,7 @@ object ControlDeskFrm: TControlDeskFrm
           OnDrawCell = ControlPropSGDrawCell
           OnKeyDown = ControlPropSGKeyDown
           OnSetEditText = ControlPropSGSetEditText
+          ExplicitLeft = 3
           RowHeights = (
             32
             32
