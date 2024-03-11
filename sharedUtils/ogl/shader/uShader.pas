@@ -16,7 +16,6 @@ Type
  // 3) Использовать программу UseProgram.
  cShader = class
  private
-   initGl:boolean; // OpenGl инициализирован
    name:string; // имя шейдера. Определяет имя файла
    b_vShader, b_fShader:boolean;
    m_vShader, // вершинный
@@ -46,6 +45,9 @@ Type
 
  cShaderManager = class
  public
+    // макс число аттрибутов
+    m_MaxVertsAttr:integer;
+
     m_shaders:tStringList;
     ActiveShader:integer; // выделенный шейдер
     Active:boolean;       // признак, выключены ли шейдеры.
@@ -56,6 +58,7 @@ Type
     procedure add(shader:cshader);
     function getshader(name:string):cShader;
  public
+   procedure GetInfo;
    Procedure AddShader(folder:string;name:string);
  end;
 implementation
@@ -79,6 +82,14 @@ begin
     shader.useprogram(true);
     active:=true;
   end;
+end;
+
+procedure cShaderManager.GetInfo;
+var
+  Attr:GLint;
+begin
+  glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, @Attr);
+  m_MaxVertsAttr:=Attr;
 end;
 
 procedure cShaderManager.disableShaders;
@@ -125,7 +136,6 @@ end;
 
 Constructor cshader.Create(path,pname:string);
 begin
- InitGl:=false;
  b_fShader:=false;
  b_vShader:=false;
  name:=pname;

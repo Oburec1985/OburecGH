@@ -151,6 +151,9 @@
     <File Path="..\..\..\sharedUtils"/>
     <File Path="..\..\math"/>
     <File Path="..\..\math\u2DMath.pas"/>
+    <File Path="..\..\ogl"/>
+    <File Path="..\..\ogl\shader"/>
+    <File Path="..\..\ogl\shader\uShader.pas"/>
     <File Path="..\..\utils"/>
     <File Path="..\..\utils\jcl-2.3.1.4197"/>
     <File Path="..\..\utils\jcl-2.3.1.4197\jcl-2.3.1.4197"/>

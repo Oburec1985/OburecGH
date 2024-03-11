@@ -94,7 +94,8 @@ contains
   uChartEvents in 'chart\utils\lists\uChartEvents.pas',
   u2DMath in '..\..\math\u2DMath.pas',
   uFreqBand in 'chart\items\uFreqBand.pas',
-  uPolarGraphPage in 'chart\items\uPolarGraphPage.pas';
+  uPolarGraphPage in 'chart\items\uPolarGraphPage.pas',
+  uShader in '..\..\ogl\shader\uShader.pas';
 
 end.
 

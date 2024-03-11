@@ -25,7 +25,7 @@ uses classes, stdctrls, controls, messages, windows, types, ExtCtrls, ComCtrls,
   uComponentServises,
   uDrawObjMng,
   uEventTypes,
-  // uShader,
+  uShader,
   uConfigFile3d,
   uBasePage,
   jcldebug;
@@ -64,7 +64,7 @@ type
     // путь к папке с ресурсами
     path: string;
     configfile: cCfgFile;
-    // m_ShaderMng: cShaderManager;
+    m_ShaderMng: cShaderManager;
     initGl: boolean;
     // используется framlistener-ами например при двойном клике по метке текста.
     // после взвода отключается при выходе из wndProc
@@ -163,6 +163,7 @@ type
     procedure CfgTVChange(sender: tobject; Node: TTreeNode);
     procedure TVMouseUp(sender: tobject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
+    procedure LoadShaders;
   public
     Constructor Create(AOwner: TComponent); override;
     destructor destroy; override;
@@ -281,6 +282,11 @@ begin
       p.settabspace(rect);
     end;
   end;
+  if m_ShaderMng<>nil then
+  begin
+    m_ShaderMng.GetInfo;
+    LoadShaders;
+  end;
 end;
 
 procedure cChart.deletecontext;
@@ -356,7 +362,21 @@ begin
   cpage(tabs.activetab.addpage(true)); ///
 
   debugMode := FALSE;
+
+  configfile:=cCfgFile.create('resources.ini');
+  m_ShaderMng:=cShaderManager.Create;
 end;
+
+
+procedure cChart.LoadShaders;
+var
+  shadername:string;
+begin
+  shadername:=configfile.findShaderFile('toon');
+  if shadername<>'' then
+    m_shaderMng.addShader(extractFilePath(shadername),'toon');
+end;
+
 
 destructor cChart.destroy;
 begin

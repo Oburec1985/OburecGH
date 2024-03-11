@@ -159,6 +159,7 @@
 			<DCCReference Include="..\..\math\u2DMath.pas"/>
 			<DCCReference Include="chart\items\uFreqBand.pas"/>
 			<DCCReference Include="chart\items\uPolarGraphPage.pas"/>
+			<DCCReference Include="..\..\ogl\shader\uShader.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
