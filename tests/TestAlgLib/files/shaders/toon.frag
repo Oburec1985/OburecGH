@@ -1,4 +1,5 @@
 varying vec3 lightDir,normal;
+
 void main()
 {
 	float intensity;

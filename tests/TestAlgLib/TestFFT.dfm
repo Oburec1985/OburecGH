@@ -2,8 +2,8 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 484
-  ClientWidth = 736
+  ClientHeight = 494
+  ClientWidth = 706
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,15 +14,15 @@ object Form1: TForm1
   OnClose = FormClose
   OnCreate = FormCreate
   DesignSize = (
-    736
-    484)
+    706
+    494)
   PixelsPerInch = 96
   TextHeight = 12
   object Memo1: TMemo
     Left = 138
     Top = 7
     Width = 307
-    Height = 69
+    Height = 39
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -59,9 +59,9 @@ object Form1: TForm1
   end
   object MultArraySSE: TButton
     Left = 449
-    Top = 7
+    Top = 6
     Width = 127
-    Height = 19
+    Height = 20
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -73,8 +73,8 @@ object Form1: TForm1
   object cChart1: cChart
     Left = 7
     Top = 80
-    Width = 722
-    Height = 373
+    Width = 664
+    Height = 383
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -86,7 +86,6 @@ object Form1: TForm1
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitHeight = 377
   end
   object IterCountIE: TIntEdit
     Left = 580
@@ -98,10 +97,10 @@ object Form1: TForm1
     Margins.Right = 2
     Margins.Bottom = 2
     TabOrder = 5
-    Text = '10'
+    Text = '1'
   end
   object LgyCb: TCheckBox
-    Left = 449
+    Left = 450
     Top = 31
     Width = 66
     Height = 17

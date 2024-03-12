@@ -372,9 +372,9 @@ procedure cChart.LoadShaders;
 var
   shadername:string;
 begin
-  shadername:=configfile.findShaderFile('toon');
+  shadername:=configfile.findShaderFile('LineLg');
   if shadername<>'' then
-    m_shaderMng.addShader(extractFilePath(shadername),'toon');
+    m_shaderMng.addShader(extractFilePath(shadername),'LineLg');
 end;
 
 

@@ -5,6 +5,9 @@ interface
 uses uPoint, uvectorlist, uCommonTypes, classes, opengl, math, SYSutils,
      uOglExpFunc, uCommonMath, u2DMath, uBaseObj, uDrawObj, MathFunction,
      uEventList,  types, NativeXML, uChartEvents, uGraphObj, uMyMath,
+     dglOpenGl,
+     uShader,
+     windows,
      dialogs;
 
 type
@@ -37,6 +40,10 @@ type
     // опции тренда
     settings:cardinal;
   protected
+    // процедуры дл€ рисовани€ шейдера логарифмировани€
+    procedure bindLgData;
+    procedure SwitchLgProg(b:boolean);
+
     procedure setNeedRecompile(b:boolean);
     procedure setflag(flag:cardinal);
     procedure dropflag(flag:cardinal);
@@ -233,9 +240,11 @@ begin
   // подготовка к компил€ции списка
   DisplayListName:=glGenLists( 1 );
   glNewList(DisplayListName, GL_COMPILE);
+  /// шейдерный логарифм
+  SwitchLgProg(true);
+  bindLgData;
+
   glbegin(GL_LINE_STRIP);
-
-
   for I := 0 to Count - 1 do
   begin
     if a.lg then
@@ -281,9 +290,11 @@ begin
     begin
       x:=GetP2(i).x;
     end;
-    glVertex2f(x, y);
+    ///glVertex2f(x, y);
+    glVertex2f(GetP2(i).x, GetP2(i).y);
   end;
   glend;
+  SwitchLgProg(true);
   glEndList;
 end;
 
@@ -597,6 +608,38 @@ procedure cBasicTrend.addpoints(const a: array of double; start,
   p_count: integer);
 begin
 
+end;
+
+procedure cBasicTrend.bindLgData;
+var
+  sh:cshader;
+  aLocation:integer;
+  vertexData:array [0..3] of GlFloat;
+  a: caxis;
+  p:cpage;
+  astr:ansistring;
+  ls:lpcstr;
+begin
+  sh:=cchart(chart).m_ShaderMng.getshader('LineLg');
+  astr:='a_minmax';
+  ls:=lpcstr(astr);
+  aLocation := glGetAttribLocation(sh.m_program, ls);
+  a:=caxis(parent);
+  // работаем с шейдером LineLg.vert
+  vertexData[0]:=a.min.X;
+  vertexData[1]:=a.max.X;
+  vertexData[2]:=a.minY;
+  vertexData[3]:=a.maxY;
+  glVertexAttribPointer(aLocation, 4, GL_FLOAT, false, 0, @vertexData[0]);
+  glEnableVertexAttribArray(aLocation);
+end;
+
+procedure cBasicTrend.SwitchLgProg(b:boolean);
+var
+  sh:cshader;
+begin
+  sh:=cchart(chart).m_ShaderMng.getshader('LineLg');
+  sh.UseProgram(b);
 end;
 
 end.

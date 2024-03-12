@@ -15,12 +15,14 @@ Type
  // 2) Создание программы и прилинковка к программе CreateProgram.
  // 3) Использовать программу UseProgram.
  cShader = class
+ public
+   m_program:glHandleARB; // идентификаторы шейдеров и программы
  private
    name:string; // имя шейдера. Определяет имя файла
    b_vShader, b_fShader:boolean;
    m_vShader, // вершинный
-   m_fShader, // фрагментный
-   m_program:glHandleARB; // идентификаторы шейдеров и программы
+   m_fShader // фрагментный
+   :glHandleARB;
  private
    procedure LoadShader(const src: ansiString; var shader:GLhandleARB);
    procedure LoadShaderFromFile(const filename: AnsiString; stype:byte);
@@ -270,8 +272,10 @@ end;
 
 procedure cShader.UseProgram(use:boolean);
 begin
- if use then glUseProgramObjectARB(m_program)
- else glUseProgramObjectARB(0);
+ if use then
+   glUseProgramObjectARB(m_program)
+ else
+   glUseProgramObjectARB(0);
 end;
 
 // =========================================================================
