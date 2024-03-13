@@ -83,6 +83,9 @@
     <File Path="..\..\sharedUtils\objects\uBaseObjMng.pas"/>
     <File Path="..\..\sharedUtils\objects\uBaseObjService.pas"/>
     <File Path="..\..\sharedUtils\objects\uTreeNode.pas"/>
+    <File Path="..\..\sharedUtils\ogl"/>
+    <File Path="..\..\sharedUtils\ogl\shader"/>
+    <File Path="..\..\sharedUtils\ogl\shader\uShader.pas"/>
     <File Path="..\..\sharedUtils\utils"/>
     <File Path="..\..\sharedUtils\utils\FastMM"/>
     <File Path="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>

@@ -47,7 +47,6 @@ type
     ShCountIE: TIntEdit;
     Label1: TLabel;
     TahoNameCB: TRcComboBox;
-    CheckBox1: TCheckBox;
     UpdateBtn: TSpeedButton;
     MinXLabel: TLabel;
     MinXfe: TFloatEdit;
@@ -57,8 +56,6 @@ type
     MinYfe: TFloatEdit;
     MaxYLabel: TLabel;
     MaxYfe: TFloatEdit;
-    ShockCountIE: TIntEdit;
-    Label2: TLabel;
     CohThresholdFE: TFloatEdit;
     Label3: TLabel;
     SaveT0CB: TCheckBox;
@@ -268,7 +265,10 @@ var
 begin
   UseWelchCb.Checked:=m_SRS.m_UseWelch;
   WelchBCountIE.IntNum:=m_SRS.m_WelchCount;
-  FFTShiftIE.IntNum:=m_SRS.m_WelchShift;
+  if m_SRS.m_WelchShift<>0 then
+  begin
+    FFTShiftIE.IntNum:=m_SRS.m_WelchShift;
+  end;
 
   MinXfe.FloatNum:=m_SRS.m_minX;
   MaxXfe.FloatNum:=m_SRS.m_maxX;
@@ -466,7 +466,12 @@ begin
 
   lastpos:=trunc(LengthFE.FloatNum*t.m_tag.freq)-FFTBlockSizeIE.IntNum;
   if lastpos>0 then
-    WelchBCountIE.IntNum:=trunc(lastpos/FFTShiftIE.IntNum)+1
+  begin
+    if FFTShiftIE.IntNum>0 then
+    begin
+      WelchBCountIE.IntNum:=trunc(lastpos/FFTShiftIE.IntNum)+1
+    end;
+  end
   ELSE
     WelchBCountIE.IntNum:=1;
 end;

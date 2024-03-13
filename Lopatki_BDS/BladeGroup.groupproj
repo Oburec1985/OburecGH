@@ -21,12 +21,6 @@
 			<Projects Include="..\recorder\plgControlCyclogram\plgControlCyclogram.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\3d\GlScene.dproj">
-				<Dependencies/>
-			</Projects>
-			<Projects Include="..\примеры\CheckSSE\CheckSSE.dproj">
-				<Dependencies/>
-			</Projects>
 			<Projects Include="..\wp\SubdiveFilePlg\SubdivFilePlg.dproj">
 				<Dependencies/>
 			</Projects>
@@ -46,6 +40,9 @@
 				<Dependencies/>
 			</Projects>
 			<Projects Include="..\SignalGenerator\PrSinalsGenerator.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\3d\GlScene.dproj">
 				<Dependencies/>
 			</Projects>
 		</ItemGroup>
@@ -112,24 +109,6 @@
 		<Target Name="plgControlCyclogram:Make">
 			<MSBuild Targets="Make" Projects="..\recorder\plgControlCyclogram\plgControlCyclogram.dproj"/>
 		</Target>
-		<Target Name="GlScene">
-			<MSBuild Projects="..\3d\GlScene.dproj"/>
-		</Target>
-		<Target Name="GlScene:Clean">
-			<MSBuild Targets="Clean" Projects="..\3d\GlScene.dproj"/>
-		</Target>
-		<Target Name="GlScene:Make">
-			<MSBuild Targets="Make" Projects="..\3d\GlScene.dproj"/>
-		</Target>
-		<Target Name="CheckSSE">
-			<MSBuild Projects="..\примеры\CheckSSE\CheckSSE.dproj"/>
-		</Target>
-		<Target Name="CheckSSE:Clean">
-			<MSBuild Targets="Clean" Projects="..\примеры\CheckSSE\CheckSSE.dproj"/>
-		</Target>
-		<Target Name="CheckSSE:Make">
-			<MSBuild Targets="Make" Projects="..\примеры\CheckSSE\CheckSSE.dproj"/>
-		</Target>
 		<Target Name="SubdivFilePlg">
 			<MSBuild Projects="..\wp\SubdiveFilePlg\SubdivFilePlg.dproj"/>
 		</Target>
@@ -193,14 +172,23 @@
 		<Target Name="PrSinalsGenerator:Make">
 			<MSBuild Targets="Make" Projects="..\SignalGenerator\PrSinalsGenerator.dproj"/>
 		</Target>
+		<Target Name="GlScene">
+			<MSBuild Projects="..\3d\GlScene.dproj"/>
+		</Target>
+		<Target Name="GlScene:Clean">
+			<MSBuild Targets="Clean" Projects="..\3d\GlScene.dproj"/>
+		</Target>
+		<Target Name="GlScene:Make">
+			<MSBuild Targets="Make" Projects="..\3d\GlScene.dproj"/>
+		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="dcl_own;ComponentsLib;GlPackage;Proilegenerator;RC_lib;plgControlCyclogram;GlScene;CheckSSE;SubdivFilePlg;WpServicePlg;WPExtPack;ProjectFFT;SniffDll;plgEvalStepVal;PrSinalsGenerator"/>
+			<CallTarget Targets="dcl_own;ComponentsLib;GlPackage;Proilegenerator;RC_lib;plgControlCyclogram;SubdivFilePlg;WpServicePlg;WPExtPack;ProjectFFT;SniffDll;plgEvalStepVal;PrSinalsGenerator;GlScene"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="dcl_own:Clean;ComponentsLib:Clean;GlPackage:Clean;Proilegenerator:Clean;RC_lib:Clean;plgControlCyclogram:Clean;GlScene:Clean;CheckSSE:Clean;SubdivFilePlg:Clean;WpServicePlg:Clean;WPExtPack:Clean;ProjectFFT:Clean;SniffDll:Clean;plgEvalStepVal:Clean;PrSinalsGenerator:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;ComponentsLib:Clean;GlPackage:Clean;Proilegenerator:Clean;RC_lib:Clean;plgControlCyclogram:Clean;SubdivFilePlg:Clean;WpServicePlg:Clean;WPExtPack:Clean;ProjectFFT:Clean;SniffDll:Clean;plgEvalStepVal:Clean;PrSinalsGenerator:Clean;GlScene:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="dcl_own:Make;ComponentsLib:Make;GlPackage:Make;Proilegenerator:Make;RC_lib:Make;plgControlCyclogram:Make;GlScene:Make;CheckSSE:Make;SubdivFilePlg:Make;WpServicePlg:Make;WPExtPack:Make;ProjectFFT:Make;SniffDll:Make;plgEvalStepVal:Make;PrSinalsGenerator:Make"/>
+			<CallTarget Targets="dcl_own:Make;ComponentsLib:Make;GlPackage:Make;Proilegenerator:Make;RC_lib:Make;plgControlCyclogram:Make;SubdivFilePlg:Make;WpServicePlg:Make;WPExtPack:Make;ProjectFFT:Make;SniffDll:Make;plgEvalStepVal:Make;PrSinalsGenerator:Make;GlScene:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

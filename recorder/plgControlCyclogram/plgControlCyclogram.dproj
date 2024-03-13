@@ -472,6 +472,7 @@
 				<Form>PressFrmEdit</Form>
 			</DCCReference>
 			<DCCReference Include="..\..\sharedUtils\компоненты\dcl_dpk\VistaProbar\rkVistaProBar.pas"/>
+			<DCCReference Include="..\..\sharedUtils\ogl\shader\uShader.pas"/>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

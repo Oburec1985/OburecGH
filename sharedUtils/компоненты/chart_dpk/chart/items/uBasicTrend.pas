@@ -241,8 +241,8 @@ begin
   DisplayListName:=glGenLists( 1 );
   glNewList(DisplayListName, GL_COMPILE);
   /// רויהונםûי כמדאנטפל
-  SwitchLgProg(true);
-  bindLgData;
+  ///SwitchLgProg(true);
+  ///bindLgData;
 
   glbegin(GL_LINE_STRIP);
   for I := 0 to Count - 1 do
@@ -290,11 +290,11 @@ begin
     begin
       x:=GetP2(i).x;
     end;
-    ///glVertex2f(x, y);
-    glVertex2f(GetP2(i).x, GetP2(i).y);
+    glVertex2f(x, y);
+    ///glVertex2f(GetP2(i).x, GetP2(i).y);
   end;
   glend;
-  SwitchLgProg(true);
+  //SwitchLgProg(true);
   glEndList;
 end;
 

@@ -209,7 +209,8 @@ uses
   uPressFrm in 'forms\uPressFrm.pas' {PressCamFrm},
   uPressFrmFrame in 'forms\uPressFrmFrame.pas' {PressFrmFrame: TFrame},
   uPressFrmEdit in 'forms\uPressFrmEdit.pas' {PressFrmEdit},
-  rkVistaProBar in '..\..\sharedUtils\компоненты\dcl_dpk\VistaProbar\rkVistaProBar.pas';
+  rkVistaProBar in '..\..\sharedUtils\компоненты\dcl_dpk\VistaProbar\rkVistaProBar.pas',
+  uShader in '..\..\sharedUtils\ogl\shader\uShader.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

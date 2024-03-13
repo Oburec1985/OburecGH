@@ -664,6 +664,7 @@ var
   list: TStringList;
   i: integer;
 begin
+  list:=nil;
   if PathList.Find(listname, i) then
   begin
     list := GetList(i);
@@ -671,7 +672,8 @@ begin
   end
   else
   begin
-    result := findListFile(list, name);
+    //result := findListFile(list, name);
+    result := '';
   end;
 end;
 
