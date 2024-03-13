@@ -7599,3 +7599,993 @@ This application has leaked memory. The small block leaks are (excluding expecte
 69 - 84 bytes: TStringList x 1
 
 Note: Memory leak detail is logged to a text file in the same folder as this application. To disable this memory leak check, undefine "EnableMemoryLeakReporting".
+
+--------------------------------2024/3/13 21:55:44--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x5F8C, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+56EF22 [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.Create][110]
+57AB6B [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.Create][367]
+4419A8 [Classes.pas][Classes][CreateComponent][7273]
+441BD9 [Classes.pas][Classes][TReader.ReadComponent][7319]
+44260B [Classes.pas][Classes][TReader.ReadProperty][7604]
+441E8A [Classes.pas][Classes][TReader.ReadDataInner][7385]
+441DC9 [Classes.pas][Classes][TReader.ReadData][7364]
+44926A [Classes][TComponent.ReadState]
+
+The block is currently used for an object of class: cShaderManager
+
+The allocation number is: 8436
+
+Current memory dump of 256 bytes starting at pointer address 7FD2A340:
+78 EB 56 00 1D 00 00 00 E0 9D DF 7F 00 00 00 00 00 00 00 00 00 00 00 00 90 1B 44 B2 80 80 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 E1 A6 D2 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+74 21 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00 AF A5 4B 00 4A CC 45 00 8D AB 4B 00 6D F2 4B 00
+3D F7 40 00 07 20 47 00 5B 93 52 00 A8 19 44 00 8C 5F 00 00 8C 5F 00 00 C6 44 40 00 8D 58 40 00
+51 5E 40 00 11 C9 43 00 D3 58 40 00 02 AD 4B 00 8D 58 40 00 51 5E 40 00 11 C9 43 00 0D F5 4B 00
+BD F4 4B 00 24 00 00 00 14 EB 4A 00 D0 72 14 86 C4 E1 5B 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 2F 8D EB 79 00 00 00 00 81 A5 D2 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 6C 21 00 00 AA 44 40 00 1B 85 40 00 F0 7B 40 00
+x  л  V  .  .  .  .  .  а  Э  я    .  .  .  .  .  .  .  .  .  .  .  .  Р  .  D  ≤  А  А  А  А
+А  А  А  А  А  А  А  А  .  .  .  .  б  ¶  “    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+t  !  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .  ѓ  •  K  .  J  ћ  E  .  Н  Ђ  K  .  m  т  K  .
+=  ч  @  .  .     G  .  [  У  R  .  ®  .  D  .  М  _  .  .  М  _  .  .  ∆  D  @  .  Н  X  @  .
+Q  ^  @  .  .  …  C  .  ”  X  @  .  .  ≠  K  .  Н  X  @  .  Q  ^  @  .  .  …  C  .  .  х  K  .
+љ  ф  K  .  $  .  .  .  .  л  J  .  –  r  .  Ж  ƒ  б  [  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  /  Н  л  y  .  .  .  .  Б  •  “  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  l  !  .  .  ™  D  @  .  .  Е  @  .  р  {  @  .
+
+--------------------------------2024/3/13 21:55:44--------------------------------
+A memory block has been leaked. The size is: 84
+
+This block was allocated by thread 0x5F8C, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+43F3CE [Classes.pas][Classes][TStringList.Create][5788]
+405878 [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+56EF32 [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.Create][111]
+57AB6B [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.Create][367]
+4419A8 [Classes.pas][Classes][CreateComponent][7273]
+441BD9 [Classes.pas][Classes][TReader.ReadComponent][7319]
+44260B [Classes.pas][Classes][TReader.ReadProperty][7604]
+
+The block is currently used for an object of class: TStringList
+
+The allocation number is: 8437
+
+Current memory dump of 256 bytes starting at pointer address 7FDF9DE0:
+F0 33 43 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 60 E2 E1 7F
+01 00 00 00 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 ED 79 EB 8A 80 80 80 80 80 80 80 80 00 00 00 00 C1 69 DF 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 58 24 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00
+C6 E7 54 00 8C A8 57 00 B4 52 59 00 01 AE 57 00 C5 B6 57 00 73 B2 57 00 63 2E EF 76 1F 17 4C 00
+8C 5F 00 00 8C 5F 00 00 C6 44 40 00 8D 58 40 00 51 5E 40 00 46 E8 54 00 85 52 59 00 08 AD 57 00
+BD F4 4B 00 B1 16 4E 00 2A 27 4E 00 3A 90 44 00 86 04 4E 00 4C 00 00 00 98 E5 54 00 43 4D 80 FD
+C4 E1 5B 00 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+р  3  C  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  `  в  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  н  y  л  К  А  А  А  А  А  А  А  А  .  .  .  .  Ѕ  i  я  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  X  $  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .
+∆  з  T  .  М  ®  W  .  і  R  Y  .  .  Ѓ  W  .  ≈  ґ  W  .  s  ≤  W  .  c  .  п  v  .  .  L  .
+М  _  .  .  М  _  .  .  ∆  D  @  .  Н  X  @  .  Q  ^  @  .  F  и  T  .  Е  R  Y  .  .  ≠  W  .
+љ  ф  K  .  ±  .  N  .  *  '  N  .  :  Р  D  .  Ж  .  N  .  L  .  .  .  Ш  е  T  .  C  M  А  э
+ƒ  б  [  .  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А
+
+--------------------------------2024/3/13 21:55:44--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x5F8C, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40851B [System.pas][System][@NewUnicodeString][18372]
+407AC4 [System.pas][System][@UStrAsg][16911]
+56F07E [..\..\ogl\shader\uShader.pas][uShader][cShader.Create][143]
+56EE34 [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.AddShader][73]
+57AC47 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][377]
+57A88C [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][288]
+77486E7C [RtlDeactivateActivationContextUnsafeFast]
+4C4E1A [Controls.pas][Controls][TWinControl.GetHandle][11856]
+57B6BE [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.initscene][793]
+57B273 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.WndProc][634]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 9240
+
+Current memory dump of 256 bytes starting at pointer address 7FE1C9A0:
+B0 04 02 00 02 00 00 00 04 00 00 00 74 00 6F 00 6F 00 6E 00 00 00 21 38 1E 02 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 51 CF E1 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+A0 01 00 00 AA 44 40 00 6C BC 45 00 E7 BD 45 00 E7 D8 45 00 93 D9 45 00 48 41 4C 00 AE 4B 4E 00
+B7 D7 4B 00 11 0A EE 76 1F 0A EE 76 BF E6 ED 76 8C 5F 00 00 8C 5F 00 00 C6 44 40 00 A2 BD 45 00
+D8 D7 45 00 D3 58 40 00 DD F4 4B 00 B1 16 4E 00 2A 27 4E 00 3A 90 44 00 86 04 4E 00 00 90 41 00
+13 6A 40 00 20 00 00 00 00 00 00 00 59 50 F3 E9 C4 E1 5B 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 A6 AF 0C 16 80 80 80 80 00 00 00 00 F1 CD E1 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 AB 01 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00
+∞  .  .  .  .  .  .  .  .  .  .  .  t  .  o  .  o  .  n  .  .  .  !  8  .  .  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  .  .  .  .  Q  ѕ  б    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+†  .  .  .  ™  D  @  .  l  Љ  E  .  з  љ  E  .  з  Ў  E  .  У  ў  E  .  H  A  L  .  Ѓ  K  N  .
+Ј  „  K  .  .  .  о  v  .  .  о  v  њ  ж  н  v  М  _  .  .  М  _  .  .  ∆  D  @  .  Ґ  љ  E  .
+Ў  „  E  .  ”  X  @  .  Ё  ф  K  .  ±  .  N  .  *  '  N  .  :  Р  D  .  Ж  .  N  .  .  Р  A  .
+.  j  @  .     .  .  .  .  .  .  .  Y  P  у  й  ƒ  б  [  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  ¶  ѓ  .  .  А  А  А  А  .  .  .  .  с  Ќ  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Ђ  .  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .
+
+--------------------------------2024/3/13 21:55:44--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x5F8C, and the stack trace (return addresses) at the time was:
+404519 [System.pas][System][@ReallocMem][3121]
+43F2F3 [Classes.pas][Classes][TStringList.SetCapacity][5739]
+43F071 [Classes.pas][Classes][TStringList.Grow][5647]
+43F139 [Classes.pas][Classes][TStringList.InsertItem][5672]
+43EDB5 [Classes.pas][Classes][TStringList.AddObject][5512]
+56EFB9 [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.add][128]
+56EE3D [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.AddShader][74]
+57AC47 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][377]
+57A88C [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][288]
+77486E7C [RtlDeactivateActivationContextUnsafeFast]
+4C4E1A [Controls.pas][Controls][TWinControl.GetHandle][11856]
+
+The block is currently used for an object of class: Unknown
+
+The allocation number is: 9303
+
+Current memory dump of 256 bytes starting at pointer address 7FE1E260:
+AC C9 E1 7F 10 E3 E1 7F 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+FF 75 5E 02 80 80 80 80 00 00 00 00 D0 8B E1 7F 00 00 00 00 00 00 00 00 10 06 41 00 00 00 00 00
+17 24 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00 46 F0 56 00 D0 FA 0D 76 A0 A7 41 00 34 EE 56 00
+47 AC 57 00 8C A8 57 00 7C 6E 48 77 1A 4E 4C 00 8C 5F 00 00 8C 5F 00 00 C6 44 40 00 EE 6B 40 00
+2C 30 57 00 23 AC 57 00 8C A8 57 00 7C 6E 48 77 1A 4E 4C 00 BE B6 57 00 73 B2 57 00 63 2E EF 76
+1F 17 4C 00 1C 00 00 00 B0 04 02 00 E5 FE 2E 61 0C E8 56 00 03 00 00 00 AC C9 E1 7F 01 01 00 00
+02 00 00 00 01 00 00 00 00 00 00 00 1A 01 D1 9E 80 80 80 80 80 80 80 80 00 00 00 00 11 C7 E1 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A7 7E 00 00 AA 44 40 00 1B 85 40 00 88 7E 40 00
+ђ  …  б    .  г  б    А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А
+€  u  ^  .  А  А  А  А  .  .  .  .  –  Л  б    .  .  .  .  .  .  .  .  .  .  A  .  .  .  .  .
+.  $  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .  F  р  V  .  –  ъ  .  v  †  І  A  .  4  о  V  .
+G  ђ  W  .  М  ®  W  .  |  n  H  w  .  N  L  .  М  _  .  .  М  _  .  .  ∆  D  @  .  о  k  @  .
+,  0  W  .  #  ђ  W  .  М  ®  W  .  |  n  H  w  .  N  L  .  Њ  ґ  W  .  s  ≤  W  .  c  .  п  v
+.  .  L  .  .  .  .  .  ∞  .  .  .  е  ю  .  a  .  и  V  .  .  .  .  .  ђ  …  б    .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  —  Ю  А  А  А  А  А  А  А  А  .  .  .  .  .  «  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  І  ~  .  .  ™  D  @  .  .  Е  @  .  И  ~  @  .
+
+--------------------------------2024/3/13 21:55:44--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x5F8C, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+56F046 [..\..\ogl\shader\uShader.pas][uShader][cShader.Create][140]
+760DFAD0 [GetFileAttributesW]
+41A7A0 [SysUtils.pas][SysUtils][DirectoryExists][6749]
+56EE34 [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.AddShader][73]
+57AC47 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][377]
+57A88C [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][288]
+77486E7C [RtlDeactivateActivationContextUnsafeFast]
+4C4E1A [Controls.pas][Controls][TWinControl.GetHandle][11856]
+
+The block is currently used for an object of class: cShader
+
+The allocation number is: 9239
+
+Current memory dump of 256 bytes starting at pointer address 7FE1E310:
+0C E8 56 00 03 00 00 00 AC C9 E1 7F 01 01 00 00 02 00 00 00 01 00 00 00 00 00 00 00 1A 01 D1 9E
+80 80 80 80 80 80 80 80 00 00 00 00 11 C7 E1 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+A7 7E 00 00 AA 44 40 00 1B 85 40 00 88 7E 40 00 15 7F 40 00 60 4F 54 00 37 52 54 00 21 2E 57 00
+C0 52 54 00 C5 AC 57 00 BD F4 4B 00 B1 16 4E 00 8C 5F 00 00 8C 5F 00 00 C6 44 40 00 EE 6B 40 00
+8F 4F 54 00 37 52 54 00 21 2E 57 00 C0 52 54 00 C5 AC 57 00 BD F4 4B 00 B1 16 4E 00 2A 27 4E 00
+3A 90 44 00 1E 00 00 00 B0 04 02 00 CC 0A 86 86 C4 E1 5B 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 33 F5 79 79 80 80 80 80 80 80 00 00 00 00 01 E6 E1 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 DC 03 00 00 AA 44 40 00 1B 85 40 00 F0 7B 40 00
+.  и  V  .  .  .  .  .  ђ  …  б    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  —  Ю
+А  А  А  А  А  А  А  А  .  .  .  .  .  «  б    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+І  ~  .  .  ™  D  @  .  .  Е  @  .  И  ~  @  .  .    @  .  `  O  T  .  7  R  T  .  !  .  W  .
+ј  R  T  .  ≈  ђ  W  .  љ  ф  K  .  ±  .  N  .  М  _  .  .  М  _  .  .  ∆  D  @  .  о  k  @  .
+П  O  T  .  7  R  T  .  !  .  W  .  ј  R  T  .  ≈  ђ  W  .  љ  ф  K  .  ±  .  N  .  *  '  N  .
+:  Р  D  .  .  .  .  .  ∞  .  .  .  ћ  .  Ж  Ж  ƒ  б  [  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  3  х  y  y  А  А  А  А  А  А  .  .  .  .  .  ж  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  №  .  .  .  ™  D  @  .  .  Е  @  .  р  {  @  .
+
+--------------------------------2024/3/13 21:55:44--------------------------------
+This application has leaked memory. The small block leaks are (excluding expected leaks registered by pointer):
+
+21 - 36 bytes: cShader x 1, cShaderManager x 1, UnicodeString x 1, Unknown x 1
+69 - 84 bytes: TStringList x 1
+
+Note: Memory leak detail is logged to a text file in the same folder as this application. To disable this memory leak check, undefine "EnableMemoryLeakReporting".
+
+--------------------------------2024/3/13 21:56:23--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x5120, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+56EF22 [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.Create][110]
+57AB6B [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.Create][367]
+4419A8 [Classes.pas][Classes][CreateComponent][7273]
+441BD9 [Classes.pas][Classes][TReader.ReadComponent][7319]
+44260B [Classes.pas][Classes][TReader.ReadProperty][7604]
+441E8A [Classes.pas][Classes][TReader.ReadDataInner][7385]
+441DC9 [Classes.pas][Classes][TReader.ReadData][7364]
+44926A [Classes][TComponent.ReadState]
+
+The block is currently used for an object of class: cShaderManager
+
+The allocation number is: 8436
+
+Current memory dump of 256 bytes starting at pointer address 7FD2A340:
+78 EB 56 00 1D 00 00 00 E0 9D DF 7F 00 00 00 00 00 00 00 00 00 00 00 00 68 38 44 B2 80 80 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 E1 A6 D2 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+74 21 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00 AF A5 4B 00 4A CC 45 00 8D AB 4B 00 6D F2 4B 00
+3D F7 40 00 07 20 47 00 5B 93 52 00 A8 19 44 00 20 51 00 00 20 51 00 00 C6 44 40 00 8D 58 40 00
+51 5E 40 00 11 C9 43 00 D3 58 40 00 02 AD 4B 00 8D 58 40 00 51 5E 40 00 11 C9 43 00 0D F5 4B 00
+BD F4 4B 00 24 00 00 00 14 EB 4A 00 F8 55 14 86 C4 E1 5B 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 07 AA EB 79 00 00 00 00 81 A5 D2 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 6C 21 00 00 AA 44 40 00 1B 85 40 00 F0 7B 40 00
+x  л  V  .  .  .  .  .  а  Э  я    .  .  .  .  .  .  .  .  .  .  .  .  h  8  D  ≤  А  А  А  А
+А  А  А  А  А  А  А  А  .  .  .  .  б  ¶  “    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+t  !  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .  ѓ  •  K  .  J  ћ  E  .  Н  Ђ  K  .  m  т  K  .
+=  ч  @  .  .     G  .  [  У  R  .  ®  .  D  .     Q  .  .     Q  .  .  ∆  D  @  .  Н  X  @  .
+Q  ^  @  .  .  …  C  .  ”  X  @  .  .  ≠  K  .  Н  X  @  .  Q  ^  @  .  .  …  C  .  .  х  K  .
+љ  ф  K  .  $  .  .  .  .  л  J  .  ш  U  .  Ж  ƒ  б  [  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  .  ™  л  y  .  .  .  .  Б  •  “  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  l  !  .  .  ™  D  @  .  .  Е  @  .  р  {  @  .
+
+--------------------------------2024/3/13 21:56:23--------------------------------
+A memory block has been leaked. The size is: 84
+
+This block was allocated by thread 0x5120, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+43F3CE [Classes.pas][Classes][TStringList.Create][5788]
+405878 [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+56EF32 [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.Create][111]
+57AB6B [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.Create][367]
+4419A8 [Classes.pas][Classes][CreateComponent][7273]
+441BD9 [Classes.pas][Classes][TReader.ReadComponent][7319]
+44260B [Classes.pas][Classes][TReader.ReadProperty][7604]
+
+The block is currently used for an object of class: TStringList
+
+The allocation number is: 8437
+
+Current memory dump of 256 bytes starting at pointer address 7FDF9DE0:
+F0 33 43 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 60 E2 E1 7F
+01 00 00 00 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 C5 96 EB 8A 80 80 80 80 80 80 80 80 00 00 00 00 C1 69 DF 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 35 24 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00
+C6 E7 54 00 8C A8 57 00 B4 52 59 00 01 AE 57 00 C5 B6 57 00 73 B2 57 00 63 2E EF 76 1F 17 4C 00
+20 51 00 00 20 51 00 00 C6 44 40 00 8D 58 40 00 51 5E 40 00 46 E8 54 00 85 52 59 00 08 AD 57 00
+BD F4 4B 00 B1 16 4E 00 2A 27 4E 00 3A 90 44 00 86 04 4E 00 4C 00 00 00 98 E5 54 00 48 30 80 FD
+C4 E1 5B 00 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+р  3  C  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  `  в  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  ≈  Ц  л  К  А  А  А  А  А  А  А  А  .  .  .  .  Ѕ  i  я  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  5  $  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .
+∆  з  T  .  М  ®  W  .  і  R  Y  .  .  Ѓ  W  .  ≈  ґ  W  .  s  ≤  W  .  c  .  п  v  .  .  L  .
+   Q  .  .     Q  .  .  ∆  D  @  .  Н  X  @  .  Q  ^  @  .  F  и  T  .  Е  R  Y  .  .  ≠  W  .
+љ  ф  K  .  ±  .  N  .  *  '  N  .  :  Р  D  .  Ж  .  N  .  L  .  .  .  Ш  е  T  .  H  0  А  э
+ƒ  б  [  .  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А
+
+--------------------------------2024/3/13 21:56:23--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x5120, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40851B [System.pas][System][@NewUnicodeString][18372]
+407AC4 [System.pas][System][@UStrAsg][16911]
+56F07E [..\..\ogl\shader\uShader.pas][uShader][cShader.Create][143]
+56EE34 [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.AddShader][73]
+57AC47 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][377]
+57A88C [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][288]
+77486E7C [RtlDeactivateActivationContextUnsafeFast]
+4C4E1A [Controls.pas][Controls][TWinControl.GetHandle][11856]
+57B6BE [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.initscene][793]
+57B273 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.WndProc][634]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 9240
+
+Current memory dump of 256 bytes starting at pointer address 7FE1C9A0:
+B0 04 02 00 02 00 00 00 04 00 00 00 74 00 6F 00 6F 00 6E 00 00 00 F9 54 1E 02 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 51 CF E1 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+A0 01 00 00 AA 44 40 00 6C BC 45 00 E7 BD 45 00 E7 D8 45 00 93 D9 45 00 48 41 4C 00 AE 4B 4E 00
+B7 D7 4B 00 11 0A EE 76 1F 0A EE 76 BF E6 ED 76 20 51 00 00 20 51 00 00 C6 44 40 00 A2 BD 45 00
+D8 D7 45 00 D3 58 40 00 DD F4 4B 00 B1 16 4E 00 2A 27 4E 00 3A 90 44 00 86 04 4E 00 00 90 41 00
+13 6A 40 00 20 00 00 00 00 00 00 00 81 33 F3 E9 C4 E1 5B 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 7E CC 0C 16 80 80 80 80 00 00 00 00 F1 CD E1 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 AB 01 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00
+∞  .  .  .  .  .  .  .  .  .  .  .  t  .  o  .  o  .  n  .  .  .  щ  T  .  .  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  .  .  .  .  Q  ѕ  б    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+†  .  .  .  ™  D  @  .  l  Љ  E  .  з  љ  E  .  з  Ў  E  .  У  ў  E  .  H  A  L  .  Ѓ  K  N  .
+Ј  „  K  .  .  .  о  v  .  .  о  v  њ  ж  н  v     Q  .  .     Q  .  .  ∆  D  @  .  Ґ  љ  E  .
+Ў  „  E  .  ”  X  @  .  Ё  ф  K  .  ±  .  N  .  *  '  N  .  :  Р  D  .  Ж  .  N  .  .  Р  A  .
+.  j  @  .     .  .  .  .  .  .  .  Б  3  у  й  ƒ  б  [  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  ~  ћ  .  .  А  А  А  А  .  .  .  .  с  Ќ  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Ђ  .  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .
+
+--------------------------------2024/3/13 21:56:23--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x5120, and the stack trace (return addresses) at the time was:
+404519 [System.pas][System][@ReallocMem][3121]
+43F2F3 [Classes.pas][Classes][TStringList.SetCapacity][5739]
+43F071 [Classes.pas][Classes][TStringList.Grow][5647]
+43F139 [Classes.pas][Classes][TStringList.InsertItem][5672]
+43EDB5 [Classes.pas][Classes][TStringList.AddObject][5512]
+56EFB9 [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.add][128]
+56EE3D [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.AddShader][74]
+57AC47 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][377]
+57A88C [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][288]
+77486E7C [RtlDeactivateActivationContextUnsafeFast]
+4C4E1A [Controls.pas][Controls][TWinControl.GetHandle][11856]
+
+The block is currently used for an object of class: Unknown
+
+The allocation number is: 9268
+
+Current memory dump of 256 bytes starting at pointer address 7FE1E260:
+AC C9 E1 7F 10 E3 E1 7F 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+FA 92 5E 02 80 80 80 80 00 00 00 00 D0 8B E1 7F 00 00 00 00 00 00 00 00 10 06 41 00 00 00 00 00
+17 24 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00 46 F0 56 00 D0 FA 0D 76 A0 A7 41 00 34 EE 56 00
+47 AC 57 00 8C A8 57 00 7C 6E 48 77 1A 4E 4C 00 20 51 00 00 20 51 00 00 C6 44 40 00 EE 6B 40 00
+2C 30 57 00 23 AC 57 00 8C A8 57 00 7C 6E 48 77 1A 4E 4C 00 BE B6 57 00 73 B2 57 00 63 2E EF 76
+1F 17 4C 00 1C 00 00 00 B0 04 02 00 0D E2 2E 61 0C E8 56 00 02 00 00 00 AC C9 E1 7F 01 00 00 00
+01 00 00 00 00 00 00 00 00 00 00 00 F2 1D D1 9E 80 80 80 80 80 80 80 80 00 00 00 00 11 C7 E1 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 03 38 00 00 AA 44 40 00 1B 85 40 00 88 7E 40 00
+ђ  …  б    .  г  б    А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А
+ъ  Т  ^  .  А  А  А  А  .  .  .  .  –  Л  б    .  .  .  .  .  .  .  .  .  .  A  .  .  .  .  .
+.  $  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .  F  р  V  .  –  ъ  .  v  †  І  A  .  4  о  V  .
+G  ђ  W  .  М  ®  W  .  |  n  H  w  .  N  L  .     Q  .  .     Q  .  .  ∆  D  @  .  о  k  @  .
+,  0  W  .  #  ђ  W  .  М  ®  W  .  |  n  H  w  .  N  L  .  Њ  ґ  W  .  s  ≤  W  .  c  .  п  v
+.  .  L  .  .  .  .  .  ∞  .  .  .  .  в  .  a  .  и  V  .  .  .  .  .  ђ  …  б    .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  т  .  —  Ю  А  А  А  А  А  А  А  А  .  .  .  .  .  «  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  8  .  .  ™  D  @  .  .  Е  @  .  И  ~  @  .
+
+--------------------------------2024/3/13 21:56:23--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x5120, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+56F046 [..\..\ogl\shader\uShader.pas][uShader][cShader.Create][140]
+760DFAD0 [GetFileAttributesW]
+41A7A0 [SysUtils.pas][SysUtils][DirectoryExists][6749]
+56EE34 [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.AddShader][73]
+57AC47 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][377]
+57A88C [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][288]
+77486E7C [RtlDeactivateActivationContextUnsafeFast]
+4C4E1A [Controls.pas][Controls][TWinControl.GetHandle][11856]
+
+The block is currently used for an object of class: cShader
+
+The allocation number is: 9239
+
+Current memory dump of 256 bytes starting at pointer address 7FE1E310:
+0C E8 56 00 02 00 00 00 AC C9 E1 7F 01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 F2 1D D1 9E
+80 80 80 80 80 80 80 80 00 00 00 00 11 C7 E1 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+03 38 00 00 AA 44 40 00 1B 85 40 00 88 7E 40 00 15 7F 40 00 60 4F 54 00 37 52 54 00 21 2E 57 00
+C0 52 54 00 C5 AC 57 00 BD F4 4B 00 B1 16 4E 00 20 51 00 00 20 51 00 00 C6 44 40 00 EE 6B 40 00
+8F 4F 54 00 37 52 54 00 21 2E 57 00 C0 52 54 00 C5 AC 57 00 BD F4 4B 00 B1 16 4E 00 2A 27 4E 00
+3A 90 44 00 1E 00 00 00 B0 04 02 00 50 A7 85 86 C4 E1 5B 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 AF 58 7A 79 80 80 80 80 80 80 00 00 00 00 01 E6 E1 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 DC 03 00 00 AA 44 40 00 1B 85 40 00 F0 7B 40 00
+.  и  V  .  .  .  .  .  ђ  …  б    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  т  .  —  Ю
+А  А  А  А  А  А  А  А  .  .  .  .  .  «  б    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  8  .  .  ™  D  @  .  .  Е  @  .  И  ~  @  .  .    @  .  `  O  T  .  7  R  T  .  !  .  W  .
+ј  R  T  .  ≈  ђ  W  .  љ  ф  K  .  ±  .  N  .     Q  .  .     Q  .  .  ∆  D  @  .  о  k  @  .
+П  O  T  .  7  R  T  .  !  .  W  .  ј  R  T  .  ≈  ђ  W  .  љ  ф  K  .  ±  .  N  .  *  '  N  .
+:  Р  D  .  .  .  .  .  ∞  .  .  .  P  І  Е  Ж  ƒ  б  [  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  ѓ  X  z  y  А  А  А  А  А  А  .  .  .  .  .  ж  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  №  .  .  .  ™  D  @  .  .  Е  @  .  р  {  @  .
+
+--------------------------------2024/3/13 21:56:23--------------------------------
+This application has leaked memory. The small block leaks are (excluding expected leaks registered by pointer):
+
+21 - 36 bytes: cShader x 1, cShaderManager x 1, UnicodeString x 1, Unknown x 1
+69 - 84 bytes: TStringList x 1
+
+Note: Memory leak detail is logged to a text file in the same folder as this application. To disable this memory leak check, undefine "EnableMemoryLeakReporting".
+
+--------------------------------2024/3/13 21:57:54--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x2058, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+56EF22 [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.Create][110]
+57AB6B [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.Create][367]
+4419A8 [Classes.pas][Classes][CreateComponent][7273]
+441BD9 [Classes.pas][Classes][TReader.ReadComponent][7319]
+44260B [Classes.pas][Classes][TReader.ReadProperty][7604]
+441E8A [Classes.pas][Classes][TReader.ReadDataInner][7385]
+441DC9 [Classes.pas][Classes][TReader.ReadData][7364]
+44926A [Classes][TComponent.ReadState]
+
+The block is currently used for an object of class: cShaderManager
+
+The allocation number is: 8436
+
+Current memory dump of 256 bytes starting at pointer address 7FD2A340:
+78 EB 56 00 1D 00 00 00 E0 9D DF 7F 00 00 00 00 00 00 00 00 00 00 00 00 F8 99 44 B2 80 80 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 E1 A6 D2 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+74 21 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00 AF A5 4B 00 4A CC 45 00 8D AB 4B 00 6D F2 4B 00
+3D F7 40 00 07 20 47 00 5B 93 52 00 A8 19 44 00 58 20 00 00 58 20 00 00 C6 44 40 00 8D 58 40 00
+51 5E 40 00 11 C9 43 00 D3 58 40 00 02 AD 4B 00 8D 58 40 00 51 5E 40 00 11 C9 43 00 0D F5 4B 00
+BD F4 4B 00 24 00 00 00 14 EB 4A 00 68 F4 13 86 C4 E1 5B 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 97 0B EC 79 00 00 00 00 81 A5 D2 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 6C 21 00 00 AA 44 40 00 1B 85 40 00 F0 7B 40 00
+x  л  V  .  .  .  .  .  а  Э  я    .  .  .  .  .  .  .  .  .  .  .  .  ш  Щ  D  ≤  А  А  А  А
+А  А  А  А  А  А  А  А  .  .  .  .  б  ¶  “    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+t  !  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .  ѓ  •  K  .  J  ћ  E  .  Н  Ђ  K  .  m  т  K  .
+=  ч  @  .  .     G  .  [  У  R  .  ®  .  D  .  X     .  .  X     .  .  ∆  D  @  .  Н  X  @  .
+Q  ^  @  .  .  …  C  .  ”  X  @  .  .  ≠  K  .  Н  X  @  .  Q  ^  @  .  .  …  C  .  .  х  K  .
+љ  ф  K  .  $  .  .  .  .  л  J  .  h  ф  .  Ж  ƒ  б  [  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  Ч  .  м  y  .  .  .  .  Б  •  “  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  l  !  .  .  ™  D  @  .  .  Е  @  .  р  {  @  .
+
+--------------------------------2024/3/13 21:57:54--------------------------------
+A memory block has been leaked. The size is: 84
+
+This block was allocated by thread 0x2058, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+43F3CE [Classes.pas][Classes][TStringList.Create][5788]
+405878 [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+56EF32 [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.Create][111]
+57AB6B [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.Create][367]
+4419A8 [Classes.pas][Classes][CreateComponent][7273]
+441BD9 [Classes.pas][Classes][TReader.ReadComponent][7319]
+44260B [Classes.pas][Classes][TReader.ReadProperty][7604]
+
+The block is currently used for an object of class: TStringList
+
+The allocation number is: 8437
+
+Current memory dump of 256 bytes starting at pointer address 7FDF9DE0:
+F0 33 43 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 60 E2 E1 7F
+01 00 00 00 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 55 F8 EA 8A 80 80 80 80 80 80 80 80 00 00 00 00 C1 69 DF 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 32 24 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00
+C6 E7 54 00 8C A8 57 00 C4 52 59 00 11 AE 57 00 D5 B6 57 00 83 B2 57 00 63 2E EF 76 1F 17 4C 00
+58 20 00 00 58 20 00 00 C6 44 40 00 8D 58 40 00 51 5E 40 00 46 E8 54 00 95 52 59 00 18 AD 57 00
+BD F4 4B 00 B1 16 4E 00 2A 27 4E 00 3A 90 44 00 86 04 4E 00 4C 00 00 00 98 E5 54 00 15 CF 7F FD
+C4 E1 5B 00 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+р  3  C  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  `  в  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  U  ш  к  К  А  А  А  А  А  А  А  А  .  .  .  .  Ѕ  i  я  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  2  $  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .
+∆  з  T  .  М  ®  W  .  ƒ  R  Y  .  .  Ѓ  W  .  ’  ґ  W  .  Г  ≤  W  .  c  .  п  v  .  .  L  .
+X     .  .  X     .  .  ∆  D  @  .  Н  X  @  .  Q  ^  @  .  F  и  T  .  Х  R  Y  .  .  ≠  W  .
+љ  ф  K  .  ±  .  N  .  *  '  N  .  :  Р  D  .  Ж  .  N  .  L  .  .  .  Ш  е  T  .  .  ѕ    э
+ƒ  б  [  .  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А
+
+--------------------------------2024/3/13 21:57:54--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x2058, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40851B [System.pas][System][@NewUnicodeString][18372]
+407AC4 [System.pas][System][@UStrAsg][16911]
+56F07E [..\..\ogl\shader\uShader.pas][uShader][cShader.Create][143]
+56EE34 [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.AddShader][73]
+57AC52 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][378]
+57A88C [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][288]
+77486E7C [RtlDeactivateActivationContextUnsafeFast]
+4C4E1A [Controls.pas][Controls][TWinControl.GetHandle][11856]
+57B6CE [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.initscene][794]
+57B283 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.WndProc][635]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 9240
+
+Current memory dump of 256 bytes starting at pointer address 7FE1C9A0:
+B0 04 02 00 02 00 00 00 06 00 00 00 4C 00 69 00 6E 00 65 00 4C 00 67 00 00 00 4D B6 1E 02 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 51 CF E1 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+A0 01 00 00 AA 44 40 00 6C BC 45 00 E7 BD 45 00 E7 D8 45 00 93 D9 45 00 48 41 4C 00 AE 4B 4E 00
+B7 D7 4B 00 11 0A EE 76 1F 0A EE 76 BF E6 ED 76 58 20 00 00 58 20 00 00 C6 44 40 00 A2 BD 45 00
+D8 D7 45 00 D3 58 40 00 DD F4 4B 00 B1 16 4E 00 2A 27 4E 00 3A 90 44 00 86 04 4E 00 00 90 41 00
+13 6A 40 00 20 00 00 00 00 00 00 00 F1 D1 F2 E9 C4 E1 5B 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 0E 2E 0D 16 80 80 80 80 00 00 00 00 F1 CD E1 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 AB 01 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00
+∞  .  .  .  .  .  .  .  .  .  .  .  L  .  i  .  n  .  e  .  L  .  g  .  .  .  M  ґ  .  .  А  А
+А  А  А  А  А  А  А  А  .  .  .  .  Q  ѕ  б    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+†  .  .  .  ™  D  @  .  l  Љ  E  .  з  љ  E  .  з  Ў  E  .  У  ў  E  .  H  A  L  .  Ѓ  K  N  .
+Ј  „  K  .  .  .  о  v  .  .  о  v  њ  ж  н  v  X     .  .  X     .  .  ∆  D  @  .  Ґ  љ  E  .
+Ў  „  E  .  ”  X  @  .  Ё  ф  K  .  ±  .  N  .  *  '  N  .  :  Р  D  .  Ж  .  N  .  .  Р  A  .
+.  j  @  .     .  .  .  .  .  .  .  с  —  т  й  ƒ  б  [  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  .  .  .  .  А  А  А  А  .  .  .  .  с  Ќ  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Ђ  .  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .
+
+--------------------------------2024/3/13 21:57:54--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x2058, and the stack trace (return addresses) at the time was:
+404519 [System.pas][System][@ReallocMem][3121]
+43F2F3 [Classes.pas][Classes][TStringList.SetCapacity][5739]
+43F071 [Classes.pas][Classes][TStringList.Grow][5647]
+43F139 [Classes.pas][Classes][TStringList.InsertItem][5672]
+43EDB5 [Classes.pas][Classes][TStringList.AddObject][5512]
+56EFB9 [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.add][128]
+56EE3D [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.AddShader][74]
+57AC52 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][378]
+57A88C [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][288]
+77486E7C [RtlDeactivateActivationContextUnsafeFast]
+4C4E1A [Controls.pas][Controls][TWinControl.GetHandle][11856]
+
+The block is currently used for an object of class: Unknown
+
+The allocation number is: 9265
+
+Current memory dump of 256 bytes starting at pointer address 7FE1E260:
+AC C9 E1 7F 10 E3 E1 7F 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+77 F4 5E 02 80 80 80 80 00 00 00 00 D0 8B E1 7F 00 00 00 00 00 00 00 00 10 06 41 00 00 00 00 00
+17 24 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00 46 F0 56 00 0A 7C 40 00 D0 FA 0D 76 A0 A7 41 00
+34 EE 56 00 52 AC 57 00 8C A8 57 00 7C 6E 48 77 58 20 00 00 58 20 00 00 C6 44 40 00 EE 6B 40 00
+2C 30 57 00 30 AC 57 00 8C A8 57 00 7C 6E 48 77 1A 4E 4C 00 CE B6 57 00 83 B2 57 00 63 2E EF 76
+1F 17 4C 00 1C 00 00 00 B0 04 02 00 A5 AE 22 61 0C E8 56 00 02 00 00 00 AC C9 E1 7F 01 00 00 00
+01 00 00 00 00 00 00 00 00 00 00 00 5A 51 DD 9E 80 80 80 80 80 80 80 80 00 00 00 00 11 C7 E1 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 64 86 00 00 AA 44 40 00 1B 85 40 00 88 7E 40 00
+ђ  …  б    .  г  б    А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А
+w  ф  ^  .  А  А  А  А  .  .  .  .  –  Л  б    .  .  .  .  .  .  .  .  .  .  A  .  .  .  .  .
+.  $  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .  F  р  V  .  .  |  @  .  –  ъ  .  v  †  І  A  .
+4  о  V  .  R  ђ  W  .  М  ®  W  .  |  n  H  w  X     .  .  X     .  .  ∆  D  @  .  о  k  @  .
+,  0  W  .  0  ђ  W  .  М  ®  W  .  |  n  H  w  .  N  L  .  ќ  ґ  W  .  Г  ≤  W  .  c  .  п  v
+.  .  L  .  .  .  .  .  ∞  .  .  .  •  Ѓ  "  a  .  и  V  .  .  .  .  .  ђ  …  б    .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  Z  Q  Ё  Ю  А  А  А  А  А  А  А  А  .  .  .  .  .  «  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  d  Ж  .  .  ™  D  @  .  .  Е  @  .  И  ~  @  .
+
+--------------------------------2024/3/13 21:57:54--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x2058, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+56F046 [..\..\ogl\shader\uShader.pas][uShader][cShader.Create][140]
+407C0A [System.pas][System][@UStrFromPWCharLen][17104]
+760DFAD0 [GetFileAttributesW]
+41A7A0 [SysUtils.pas][SysUtils][DirectoryExists][6749]
+56EE34 [..\..\ogl\shader\uShader.pas][uShader][cShaderManager.AddShader][73]
+57AC52 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][378]
+57A88C [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][288]
+77486E7C [RtlDeactivateActivationContextUnsafeFast]
+
+The block is currently used for an object of class: cShader
+
+The allocation number is: 9239
+
+Current memory dump of 256 bytes starting at pointer address 7FE1E310:
+0C E8 56 00 02 00 00 00 AC C9 E1 7F 01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 5A 51 DD 9E
+80 80 80 80 80 80 80 80 00 00 00 00 11 C7 E1 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+64 86 00 00 AA 44 40 00 1B 85 40 00 88 7E 40 00 15 7F 40 00 60 4F 54 00 37 52 54 00 21 2E 57 00
+C0 52 54 00 D5 AC 57 00 BD F4 4B 00 B1 16 4E 00 58 20 00 00 58 20 00 00 C6 44 40 00 EE 6B 40 00
+8F 4F 54 00 37 52 54 00 21 2E 57 00 C0 52 54 00 D5 AC 57 00 BD F4 4B 00 B1 16 4E 00 2A 27 4E 00
+3A 90 44 00 1E 00 00 00 B0 04 02 00 41 94 85 86 C4 E1 5B 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 BE 6B 7A 79 80 80 80 80 80 80 00 00 00 00 01 E6 E1 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 DC 03 00 00 AA 44 40 00 1B 85 40 00 F0 7B 40 00
+.  и  V  .  .  .  .  .  ђ  …  б    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Z  Q  Ё  Ю
+А  А  А  А  А  А  А  А  .  .  .  .  .  «  б    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+d  Ж  .  .  ™  D  @  .  .  Е  @  .  И  ~  @  .  .    @  .  `  O  T  .  7  R  T  .  !  .  W  .
+ј  R  T  .  ’  ђ  W  .  љ  ф  K  .  ±  .  N  .  X     .  .  X     .  .  ∆  D  @  .  о  k  @  .
+П  O  T  .  7  R  T  .  !  .  W  .  ј  R  T  .  ’  ђ  W  .  љ  ф  K  .  ±  .  N  .  *  '  N  .
+:  Р  D  .  .  .  .  .  ∞  .  .  .  A  Ф  Е  Ж  ƒ  б  [  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  Њ  k  z  y  А  А  А  А  А  А  .  .  .  .  .  ж  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  №  .  .  .  ™  D  @  .  .  Е  @  .  р  {  @  .
+
+--------------------------------2024/3/13 21:57:54--------------------------------
+This application has leaked memory. The small block leaks are (excluding expected leaks registered by pointer):
+
+21 - 36 bytes: cShader x 1, cShaderManager x 1, UnicodeString x 1, Unknown x 1
+69 - 84 bytes: TStringList x 1
+
+Note: Memory leak detail is logged to a text file in the same folder as this application. To disable this memory leak check, undefine "EnableMemoryLeakReporting".
+
+--------------------------------2024/3/13 22:34:25--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x3EB0, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+56EF6D [uShader.pas][uShader][cShaderManager.Create][111]
+57ACC3 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.Create][367]
+4419A8 [Classes.pas][Classes][CreateComponent][7273]
+441BD9 [Classes.pas][Classes][TReader.ReadComponent][7319]
+44260B [Classes.pas][Classes][TReader.ReadProperty][7604]
+441E8A [Classes.pas][Classes][TReader.ReadDataInner][7385]
+441DC9 [Classes.pas][Classes][TReader.ReadData][7364]
+44926A [Classes][TComponent.ReadState]
+
+The block is currently used for an object of class: cShaderManager
+
+The allocation number is: 8436
+
+Current memory dump of 256 bytes starting at pointer address 7FD2A340:
+78 EB 56 00 1D 00 00 00 E0 9D DF 7F 00 00 00 00 00 00 00 00 00 00 00 00 A5 5B D2 B0 80 80 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 E1 A6 D2 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+74 21 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00 AF A5 4B 00 4A CC 45 00 8D AB 4B 00 6D F2 4B 00
+3D F7 40 00 07 20 47 00 5B 93 52 00 A8 19 44 00 B0 3E 00 00 B0 3E 00 00 C6 44 40 00 8D 58 40 00
+51 5E 40 00 11 C9 43 00 D3 58 40 00 02 AD 4B 00 8D 58 40 00 51 5E 40 00 11 C9 43 00 0D F5 4B 00
+BD F4 4B 00 24 00 00 00 14 EB 4A 00 18 31 14 86 C4 01 5C 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 E7 CE EB 79 00 00 00 00 81 A5 D2 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 6C 21 00 00 AA 44 40 00 1B 85 40 00 F0 7B 40 00
+x  л  V  .  .  .  .  .  а  Э  я    .  .  .  .  .  .  .  .  .  .  .  .  •  [  “  ∞  А  А  А  А
+А  А  А  А  А  А  А  А  .  .  .  .  б  ¶  “    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+t  !  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .  ѓ  •  K  .  J  ћ  E  .  Н  Ђ  K  .  m  т  K  .
+=  ч  @  .  .     G  .  [  У  R  .  ®  .  D  .  ∞  >  .  .  ∞  >  .  .  ∆  D  @  .  Н  X  @  .
+Q  ^  @  .  .  …  C  .  ”  X  @  .  .  ≠  K  .  Н  X  @  .  Q  ^  @  .  .  …  C  .  .  х  K  .
+љ  ф  K  .  $  .  .  .  .  л  J  .  .  1  .  Ж  ƒ  .  \  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  з  ќ  л  y  .  .  .  .  Б  •  “  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  l  !  .  .  ™  D  @  .  .  Е  @  .  р  {  @  .
+
+--------------------------------2024/3/13 22:34:25--------------------------------
+A memory block has been leaked. The size is: 84
+
+This block was allocated by thread 0x3EB0, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+43F3CE [Classes.pas][Classes][TStringList.Create][5788]
+405878 [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+56EF7D [uShader.pas][uShader][cShaderManager.Create][112]
+57ACC3 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.Create][367]
+4419A8 [Classes.pas][Classes][CreateComponent][7273]
+441BD9 [Classes.pas][Classes][TReader.ReadComponent][7319]
+44260B [Classes.pas][Classes][TReader.ReadProperty][7604]
+
+The block is currently used for an object of class: TStringList
+
+The allocation number is: 8437
+
+Current memory dump of 256 bytes starting at pointer address 7FDF9DE0:
+F0 33 43 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 60 E2 E1 7F
+01 00 00 00 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 02 BA 2E 8A 80 80 80 80 80 80 80 80 00 00 00 00 C1 69 DF 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 33 24 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00
+C6 E7 54 00 43 68 59 00 69 AF 57 00 2D B8 57 00 DB B3 57 00 63 2E DF 75 1F 17 4C 00 2E A3 44 00
+B0 3E 00 00 B0 3E 00 00 C6 44 40 00 8D 58 40 00 51 5E 40 00 46 E8 54 00 10 68 59 00 70 AE 57 00
+BD F4 4B 00 B1 16 4E 00 2A 27 4E 00 3A 90 44 00 86 04 4E 00 4C 00 00 00 98 E5 54 00 C2 36 5D FC
+C4 01 5C 00 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+р  3  C  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  `  в  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  Ї  .  К  А  А  А  А  А  А  А  А  .  .  .  .  Ѕ  i  я  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  3  $  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .
+∆  з  T  .  C  h  Y  .  i  ѓ  W  .  -  Є  W  .  џ  ≥  W  .  c  .  я  u  .  .  L  .  .  £  D  .
+∞  >  .  .  ∞  >  .  .  ∆  D  @  .  Н  X  @  .  Q  ^  @  .  F  и  T  .  .  h  Y  .  p  Ѓ  W  .
+љ  ф  K  .  ±  .  N  .  *  '  N  .  :  Р  D  .  Ж  .  N  .  L  .  .  .  Ш  е  T  .  ¬  6  ]  ь
+ƒ  .  \  .  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А
+
+--------------------------------2024/3/13 22:34:25--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x3EB0, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40851B [System.pas][System][@NewUnicodeString][18372]
+407AC4 [System.pas][System][@UStrAsg][16911]
+56F0FE [uShader.pas][uShader][cShader.Create][149]
+56EE70 [uShader.pas][uShader][cShaderManager.AddShader][74]
+57ADAA [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][378]
+57A9E4 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][288]
+77A76E7C [RtlDeactivateActivationContextUnsafeFast]
+4C4E1A [Controls.pas][Controls][TWinControl.GetHandle][11856]
+57B826 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.initscene][794]
+57B3DB [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.WndProc][635]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 9240
+
+Current memory dump of 256 bytes starting at pointer address 7FE1C9A0:
+B0 04 02 00 02 00 00 00 06 00 00 00 4C 00 69 00 6E 00 65 00 4C 00 67 00 00 00 BD 6F BF 01 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 51 CF E1 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+A0 01 00 00 AA 44 40 00 6C BC 45 00 E7 BD 45 00 E7 D8 45 00 93 D9 45 00 48 41 4C 00 AE 4B 4E 00
+B7 D7 4B 00 11 0A DE 75 1F 0A DE 75 BF E6 DD 75 B0 3E 00 00 B0 3E 00 00 C6 44 40 00 A2 BD 45 00
+D8 D7 45 00 D3 58 40 00 DD F4 4B 00 B1 16 4E 00 2A 27 4E 00 3A 90 44 00 86 04 4E 00 00 90 41 00
+13 6A 40 00 20 00 00 00 00 00 00 00 A1 0E C3 E6 C4 01 5C 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 5E F1 3C 19 80 80 80 80 00 00 00 00 F1 CD E1 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 AB 01 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00
+∞  .  .  .  .  .  .  .  .  .  .  .  L  .  i  .  n  .  e  .  L  .  g  .  .  .  љ  o  њ  .  А  А
+А  А  А  А  А  А  А  А  .  .  .  .  Q  ѕ  б    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+†  .  .  .  ™  D  @  .  l  Љ  E  .  з  љ  E  .  з  Ў  E  .  У  ў  E  .  H  A  L  .  Ѓ  K  N  .
+Ј  „  K  .  .  .  ё  u  .  .  ё  u  њ  ж  Ё  u  ∞  >  .  .  ∞  >  .  .  ∆  D  @  .  Ґ  љ  E  .
+Ў  „  E  .  ”  X  @  .  Ё  ф  K  .  ±  .  N  .  *  '  N  .  :  Р  D  .  Ж  .  N  .  .  Р  A  .
+.  j  @  .     .  .  .  .  .  .  .  °  .  √  ж  ƒ  .  \  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  ^  с  <  .  А  А  А  А  .  .  .  .  с  Ќ  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Ђ  .  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .
+
+--------------------------------2024/3/13 22:34:25--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x3EB0, and the stack trace (return addresses) at the time was:
+404519 [System.pas][System][@ReallocMem][3121]
+43F2F3 [Classes.pas][Classes][TStringList.SetCapacity][5739]
+43F071 [Classes.pas][Classes][TStringList.Grow][5647]
+43F139 [Classes.pas][Classes][TStringList.InsertItem][5672]
+43EDB5 [Classes.pas][Classes][TStringList.AddObject][5512]
+56F020 [uShader.pas][uShader][cShaderManager.add][129]
+56EE79 [uShader.pas][uShader][cShaderManager.AddShader][75]
+57ADAA [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][378]
+57A9E4 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][288]
+77A76E7C [RtlDeactivateActivationContextUnsafeFast]
+4C4E1A [Controls.pas][Controls][TWinControl.GetHandle][11856]
+
+The block is currently used for an object of class: Unknown
+
+The allocation number is: 9266
+
+Current memory dump of 256 bytes starting at pointer address 7FE1E260:
+AC C9 E1 7F 10 E3 E1 7F 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+45 B0 FF 01 80 80 80 80 00 00 00 00 D0 8B E1 7F 00 00 00 00 00 00 00 00 10 06 41 00 00 00 00 00
+17 24 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00 C5 F0 56 00 0A 7C 40 00 D0 FA 08 76 A0 A7 41 00
+70 EE 56 00 AA AD 57 00 E4 A9 57 00 7C 6E A7 77 B0 3E 00 00 B0 3E 00 00 C6 44 40 00 EE 6B 40 00
+40 31 57 00 88 AD 57 00 E4 A9 57 00 7C 6E A7 77 1A 4E 4C 00 26 B8 57 00 DB B3 57 00 63 2E DF 75
+1F 17 4C 00 1C 00 00 00 B0 04 02 00 34 F5 CB 60 0C E8 56 00 02 00 00 00 AC C9 E1 7F 01 00 00 00
+01 00 00 00 00 00 00 00 00 00 00 00 CB 0A 34 9F 80 80 80 80 80 80 80 80 00 00 00 00 11 C7 E1 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 04 FE 02 00 AA 44 40 00 1B 85 40 00 88 7E 40 00
+ђ  …  б    .  г  б    А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А
+E  ∞  €  .  А  А  А  А  .  .  .  .  –  Л  б    .  .  .  .  .  .  .  .  .  .  A  .  .  .  .  .
+.  $  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .  ≈  р  V  .  .  |  @  .  –  ъ  .  v  †  І  A  .
+p  о  V  .  ™  ≠  W  .  д  ©  W  .  |  n  І  w  ∞  >  .  .  ∞  >  .  .  ∆  D  @  .  о  k  @  .
+@  1  W  .  И  ≠  W  .  д  ©  W  .  |  n  І  w  .  N  L  .  &  Є  W  .  џ  ≥  W  .  c  .  я  u
+.  .  L  .  .  .  .  .  ∞  .  .  .  4  х  Ћ  `  .  и  V  .  .  .  .  .  ђ  …  б    .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  Ћ  .  4  Я  А  А  А  А  А  А  А  А  .  .  .  .  .  «  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ю  .  .  ™  D  @  .  .  Е  @  .  И  ~  @  .
+
+--------------------------------2024/3/13 22:34:25--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x3EB0, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+56F0C5 [uShader.pas][uShader][cShader.Create][146]
+407C0A [System.pas][System][@UStrFromPWCharLen][17104]
+7608FAD0 [GetFileAttributesW]
+41A7A0 [SysUtils.pas][SysUtils][DirectoryExists][6749]
+56EE70 [uShader.pas][uShader][cShaderManager.AddShader][74]
+57ADAA [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][378]
+57A9E4 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][288]
+77A76E7C [RtlDeactivateActivationContextUnsafeFast]
+
+The block is currently used for an object of class: cShader
+
+The allocation number is: 9239
+
+Current memory dump of 256 bytes starting at pointer address 7FE1E310:
+0C E8 56 00 02 00 00 00 AC C9 E1 7F 01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 CB 0A 34 9F
+80 80 80 80 80 80 80 80 00 00 00 00 11 C7 E1 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+04 FE 02 00 AA 44 40 00 1B 85 40 00 88 7E 40 00 15 7F 40 00 60 4F 54 00 37 52 54 00 35 2F 57 00
+C0 52 54 00 2D AE 57 00 BD F4 4B 00 B1 16 4E 00 B0 3E 00 00 B0 3E 00 00 C6 44 40 00 EE 6B 40 00
+8F 4F 54 00 37 52 54 00 35 2F 57 00 C0 52 54 00 2D AE 57 00 BD F4 4B 00 B1 16 4E 00 2A 27 4E 00
+3A 90 44 00 1E 00 00 00 B0 04 02 00 69 4D 88 86 C4 01 5C 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 96 B2 77 79 80 80 80 80 80 80 00 00 00 00 01 E6 E1 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 DC 03 00 00 AA 44 40 00 1B 85 40 00 F0 7B 40 00
+.  и  V  .  .  .  .  .  ђ  …  б    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Ћ  .  4  Я
+А  А  А  А  А  А  А  А  .  .  .  .  .  «  б    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  ю  .  .  ™  D  @  .  .  Е  @  .  И  ~  @  .  .    @  .  `  O  T  .  7  R  T  .  5  /  W  .
+ј  R  T  .  -  Ѓ  W  .  љ  ф  K  .  ±  .  N  .  ∞  >  .  .  ∞  >  .  .  ∆  D  @  .  о  k  @  .
+П  O  T  .  7  R  T  .  5  /  W  .  ј  R  T  .  -  Ѓ  W  .  љ  ф  K  .  ±  .  N  .  *  '  N  .
+:  Р  D  .  .  .  .  .  ∞  .  .  .  i  M  И  Ж  ƒ  .  \  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  Ц  ≤  w  y  А  А  А  А  А  А  .  .  .  .  .  ж  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  №  .  .  .  ™  D  @  .  .  Е  @  .  р  {  @  .
+
+--------------------------------2024/3/13 22:34:25--------------------------------
+This application has leaked memory. The small block leaks are (excluding expected leaks registered by pointer):
+
+21 - 36 bytes: cShader x 1, cShaderManager x 1, UnicodeString x 1, Unknown x 1
+69 - 84 bytes: TStringList x 1
+
+Note: Memory leak detail is logged to a text file in the same folder as this application. To disable this memory leak check, undefine "EnableMemoryLeakReporting".
+
+--------------------------------2024/3/13 22:37:41--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x415C, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+572339 [uShader.pas][uShader][cShaderManager.Create][111]
+5801F7 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.Create][367]
+4419A8 [Classes.pas][Classes][CreateComponent][7273]
+441BD9 [Classes.pas][Classes][TReader.ReadComponent][7319]
+44260B [Classes.pas][Classes][TReader.ReadProperty][7604]
+441E8A [Classes.pas][Classes][TReader.ReadDataInner][7385]
+441DC9 [Classes.pas][Classes][TReader.ReadData][7364]
+44926A [Classes][TComponent.ReadState]
+
+The block is currently used for an object of class: cShaderManager
+
+The allocation number is: 8436
+
+Current memory dump of 256 bytes starting at pointer address 7FD2A340:
+44 1F 57 00 1D 00 00 00 E0 9D DF 7F 00 00 00 00 00 00 00 00 00 00 00 00 4D CD D1 B0 80 80 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 E1 A6 D2 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+74 21 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00 AF A5 4B 00 4A CC 45 00 8D AB 4B 00 6D F2 4B 00
+3D F7 40 00 07 20 47 00 5B 93 52 00 A8 19 44 00 5C 41 00 00 5C 41 00 00 C6 44 40 00 8D 58 40 00
+51 5E 40 00 11 C9 43 00 D3 58 40 00 02 AD 4B 00 8D 58 40 00 51 5E 40 00 11 C9 43 00 0D F5 4B 00
+BD F4 4B 00 24 00 00 00 14 EB 4A 00 70 36 14 86 C4 01 5C 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 8F C9 EB 79 00 00 00 00 81 A5 D2 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 6C 21 00 00 AA 44 40 00 1B 85 40 00 F0 7B 40 00
+D  .  W  .  .  .  .  .  а  Э  я    .  .  .  .  .  .  .  .  .  .  .  .  M  Ќ  —  ∞  А  А  А  А
+А  А  А  А  А  А  А  А  .  .  .  .  б  ¶  “    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+t  !  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .  ѓ  •  K  .  J  ћ  E  .  Н  Ђ  K  .  m  т  K  .
+=  ч  @  .  .     G  .  [  У  R  .  ®  .  D  .  \  A  .  .  \  A  .  .  ∆  D  @  .  Н  X  @  .
+Q  ^  @  .  .  …  C  .  ”  X  @  .  .  ≠  K  .  Н  X  @  .  Q  ^  @  .  .  …  C  .  .  х  K  .
+љ  ф  K  .  $  .  .  .  .  л  J  .  p  6  .  Ж  ƒ  .  \  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  П  …  л  y  .  .  .  .  Б  •  “  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  l  !  .  .  ™  D  @  .  .  Е  @  .  р  {  @  .
+
+--------------------------------2024/3/13 22:37:41--------------------------------
+A memory block has been leaked. The size is: 84
+
+This block was allocated by thread 0x415C, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+43F3CE [Classes.pas][Classes][TStringList.Create][5788]
+405878 [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+572349 [uShader.pas][uShader][cShaderManager.Create][112]
+5801F7 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.Create][367]
+4419A8 [Classes.pas][Classes][CreateComponent][7273]
+441BD9 [Classes.pas][Classes][TReader.ReadComponent][7319]
+44260B [Classes.pas][Classes][TReader.ReadProperty][7604]
+
+The block is currently used for an object of class: TStringList
+
+The allocation number is: 8437
+
+Current memory dump of 256 bytes starting at pointer address 7FDF9DE0:
+F0 33 43 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 60 E2 E1 7F
+01 00 00 00 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 AA 2B 2C 8A 80 80 80 80 80 80 80 80 00 00 00 00 C1 69 DF 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 33 24 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00
+C6 E7 54 00 4B 68 59 00 9D 04 58 00 61 0D 58 00 0F 09 58 00 63 2E DF 75 1F 17 4C 00 2E A3 44 00
+5C 41 00 00 5C 41 00 00 C6 44 40 00 8D 58 40 00 51 5E 40 00 46 E8 54 00 18 68 59 00 A4 03 58 00
+BD F4 4B 00 B1 16 4E 00 2A 27 4E 00 3A 90 44 00 86 04 4E 00 4C 00 00 00 98 E5 54 00 FA 90 5E FC
+C4 01 5C 00 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+р  3  C  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  `  в  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  ™  +  ,  К  А  А  А  А  А  А  А  А  .  .  .  .  Ѕ  i  я  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  3  $  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .
+∆  з  T  .  K  h  Y  .  Э  .  X  .  a  .  X  .  .  .  X  .  c  .  я  u  .  .  L  .  .  £  D  .
+\  A  .  .  \  A  .  .  ∆  D  @  .  Н  X  @  .  Q  ^  @  .  F  и  T  .  .  h  Y  .  §  .  X  .
+љ  ф  K  .  ±  .  N  .  *  '  N  .  :  Р  D  .  Ж  .  N  .  L  .  .  .  Ш  е  T  .  ъ  Р  ^  ь
+ƒ  .  \  .  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А
+
+--------------------------------2024/3/13 22:37:41--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x415C, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40851B [System.pas][System][@NewUnicodeString][18372]
+407AC4 [System.pas][System][@UStrAsg][16911]
+5724CA [uShader.pas][uShader][cShader.Create][149]
+57223C [uShader.pas][uShader][cShaderManager.AddShader][74]
+5802DE [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][378]
+57FF18 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][288]
+77A76E7C [RtlDeactivateActivationContextUnsafeFast]
+4C4E1A [Controls.pas][Controls][TWinControl.GetHandle][11856]
+580D5A [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.initscene][794]
+58090F [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.WndProc][635]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 9240
+
+Current memory dump of 256 bytes starting at pointer address 7FE1C9A0:
+B0 04 02 00 02 00 00 00 06 00 00 00 4C 00 69 00 6E 00 65 00 4C 00 67 00 00 00 95 03 BD 01 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 51 CF E1 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+A0 01 00 00 AA 44 40 00 6C BC 45 00 E7 BD 45 00 E7 D8 45 00 93 D9 45 00 48 41 4C 00 AE 4B 4E 00
+B7 D7 4B 00 11 0A DE 75 1F 0A DE 75 BF E6 DD 75 5C 41 00 00 5C 41 00 00 C6 44 40 00 A2 BD 45 00
+D8 D7 45 00 D3 58 40 00 DD F4 4B 00 B1 16 4E 00 2A 27 4E 00 3A 90 44 00 86 04 4E 00 00 90 41 00
+13 6A 40 00 20 00 00 00 00 00 00 00 F9 13 C3 E6 C4 01 5C 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 06 EC 3C 19 80 80 80 80 00 00 00 00 F1 CD E1 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 AB 01 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00
+∞  .  .  .  .  .  .  .  .  .  .  .  L  .  i  .  n  .  e  .  L  .  g  .  .  .  Х  .  љ  .  А  А
+А  А  А  А  А  А  А  А  .  .  .  .  Q  ѕ  б    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+†  .  .  .  ™  D  @  .  l  Љ  E  .  з  љ  E  .  з  Ў  E  .  У  ў  E  .  H  A  L  .  Ѓ  K  N  .
+Ј  „  K  .  .  .  ё  u  .  .  ё  u  њ  ж  Ё  u  \  A  .  .  \  A  .  .  ∆  D  @  .  Ґ  љ  E  .
+Ў  „  E  .  ”  X  @  .  Ё  ф  K  .  ±  .  N  .  *  '  N  .  :  Р  D  .  Ж  .  N  .  .  Р  A  .
+.  j  @  .     .  .  .  .  .  .  .  щ  .  √  ж  ƒ  .  \  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  .  м  <  .  А  А  А  А  .  .  .  .  с  Ќ  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Ђ  .  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .
+
+--------------------------------2024/3/13 22:37:41--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x415C, and the stack trace (return addresses) at the time was:
+404519 [System.pas][System][@ReallocMem][3121]
+43F2F3 [Classes.pas][Classes][TStringList.SetCapacity][5739]
+43F071 [Classes.pas][Classes][TStringList.Grow][5647]
+43F139 [Classes.pas][Classes][TStringList.InsertItem][5672]
+43EDB5 [Classes.pas][Classes][TStringList.AddObject][5512]
+5723EC [uShader.pas][uShader][cShaderManager.add][129]
+572245 [uShader.pas][uShader][cShaderManager.AddShader][75]
+5802DE [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][378]
+57FF18 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][288]
+77A76E7C [RtlDeactivateActivationContextUnsafeFast]
+4C4E1A [Controls.pas][Controls][TWinControl.GetHandle][11856]
+
+The block is currently used for an object of class: Unknown
+
+The allocation number is: 9266
+
+Current memory dump of 256 bytes starting at pointer address 7FE1E260:
+AC C9 E1 7F 10 E3 E1 7F 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+89 74 FD 01 80 80 80 80 00 00 00 00 D0 8B E1 7F 00 00 00 00 00 00 00 00 10 06 41 00 00 00 00 00
+17 24 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00 91 24 57 00 0A 7C 40 00 D0 FA 08 76 A0 A7 41 00
+3C 22 57 00 DE 02 58 00 18 FF 57 00 7C 6E A7 77 5C 41 00 00 5C 41 00 00 C6 44 40 00 EE 6B 40 00
+40 31 57 00 BC 02 58 00 18 FF 57 00 7C 6E A7 77 1A 4E 4C 00 5A 0D 58 00 0F 09 58 00 63 2E DF 75
+1F 17 4C 00 1C 00 00 00 B0 04 02 00 5C 61 CE 60 D8 1B 57 00 02 00 00 00 AC C9 E1 7F 01 00 00 00
+01 00 00 00 00 00 00 00 00 00 00 00 A3 9E 31 9F 80 80 80 80 80 80 80 80 00 00 00 00 11 C7 E1 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 3E 42 87 00 AA 44 40 00 1B 85 40 00 88 7E 40 00
+ђ  …  б    .  г  б    А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А
+Й  t  э  .  А  А  А  А  .  .  .  .  –  Л  б    .  .  .  .  .  .  .  .  .  .  A  .  .  .  .  .
+.  $  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .  С  $  W  .  .  |  @  .  –  ъ  .  v  †  І  A  .
+<  "  W  .  ё  .  X  .  .  €  W  .  |  n  І  w  \  A  .  .  \  A  .  .  ∆  D  @  .  о  k  @  .
+@  1  W  .  Љ  .  X  .  .  €  W  .  |  n  І  w  .  N  L  .  Z  .  X  .  .  .  X  .  c  .  я  u
+.  .  L  .  .  .  .  .  ∞  .  .  .  \  a  ќ  `  Ў  .  W  .  .  .  .  .  ђ  …  б    .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  £  Ю  1  Я  А  А  А  А  А  А  А  А  .  .  .  .  .  «  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  >  B  З  .  ™  D  @  .  .  Е  @  .  И  ~  @  .
+
+--------------------------------2024/3/13 22:37:41--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x415C, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+572491 [uShader.pas][uShader][cShader.Create][146]
+407C0A [System.pas][System][@UStrFromPWCharLen][17104]
+7608FAD0 [GetFileAttributesW]
+41A7A0 [SysUtils.pas][SysUtils][DirectoryExists][6749]
+57223C [uShader.pas][uShader][cShaderManager.AddShader][74]
+5802DE [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][378]
+57FF18 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][288]
+77A76E7C [RtlDeactivateActivationContextUnsafeFast]
+
+The block is currently used for an object of class: cShader
+
+The allocation number is: 9239
+
+Current memory dump of 256 bytes starting at pointer address 7FE1E310:
+D8 1B 57 00 02 00 00 00 AC C9 E1 7F 01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 A3 9E 31 9F
+80 80 80 80 80 80 80 80 00 00 00 00 11 C7 E1 7F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+3E 42 87 00 AA 44 40 00 1B 85 40 00 88 7E 40 00 15 7F 40 00 60 4F 54 00 37 52 54 00 35 2F 57 00
+C0 52 54 00 61 03 58 00 BD F4 4B 00 B1 16 4E 00 5C 41 00 00 5C 41 00 00 C6 44 40 00 EE 6B 40 00
+8F 4F 54 00 37 52 54 00 35 2F 57 00 C0 52 54 00 61 03 58 00 BD F4 4B 00 B1 16 4E 00 2A 27 4E 00
+3A 90 44 00 1E 00 00 00 B0 04 02 00 63 41 0D 87 C4 01 5C 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 9C BE F2 78 80 80 80 80 80 80 00 00 00 00 01 E6 E1 7F
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 DC 03 00 00 AA 44 40 00 1B 85 40 00 F0 7B 40 00
+Ў  .  W  .  .  .  .  .  ђ  …  б    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  £  Ю  1  Я
+А  А  А  А  А  А  А  А  .  .  .  .  .  «  б    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+>  B  З  .  ™  D  @  .  .  Е  @  .  И  ~  @  .  .    @  .  `  O  T  .  7  R  T  .  5  /  W  .
+ј  R  T  .  a  .  X  .  љ  ф  K  .  ±  .  N  .  \  A  .  .  \  A  .  .  ∆  D  @  .  о  k  @  .
+П  O  T  .  7  R  T  .  5  /  W  .  ј  R  T  .  a  .  X  .  љ  ф  K  .  ±  .  N  .  *  '  N  .
+:  Р  D  .  .  .  .  .  ∞  .  .  .  c  A  .  З  ƒ  .  \  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  Ь  Њ  т  x  А  А  А  А  А  А  .  .  .  .  .  ж  б  
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  №  .  .  .  ™  D  @  .  .  Е  @  .  р  {  @  .
+
+--------------------------------2024/3/13 22:37:41--------------------------------
+This application has leaked memory. The small block leaks are (excluding expected leaks registered by pointer):
+
+21 - 36 bytes: cShader x 1, cShaderManager x 1, UnicodeString x 1, Unknown x 1
+69 - 84 bytes: TStringList x 1
+
+Note: Memory leak detail is logged to a text file in the same folder as this application. To disable this memory leak check, undefine "EnableMemoryLeakReporting".

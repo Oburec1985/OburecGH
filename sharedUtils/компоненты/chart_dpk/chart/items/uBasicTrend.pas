@@ -199,7 +199,7 @@ begin
     exit;
   end;
 
-  if a.Lg then
+  {if a.Lg then
   begin
     lgMax:=log10(a.max.y);
     if a.min.y<=0 then
@@ -214,7 +214,7 @@ begin
     range:=a.max.y-a.min.y;
     setlength(logpointsY, count);
     lgrange:=1/lgrange;
-  end;
+  end;}
   if p.LgX then
   begin
     l_xlgMax:=log10(a.max.x);
@@ -241,16 +241,18 @@ begin
   DisplayListName:=glGenLists( 1 );
   glNewList(DisplayListName, GL_COMPILE);
   /// шейдерный логарифм
-  ///SwitchLgProg(true);
-  ///bindLgData;
-
+  if a.lg then
+  begin
+    SwitchLgProg(true);
+    bindLgData;
+  end;
   glbegin(GL_LINE_STRIP);
   for I := 0 to Count - 1 do
   begin
     if a.lg then
     begin
       // такой треш с переносом координат т.к. видовая матрица от линейной оси
-      if GetP2(i).y=0 then
+      {if GetP2(i).y=0 then
       begin
         rate:=0;
         y:=-200;
@@ -271,6 +273,7 @@ begin
       begin
         logpointsY[i]:=y;
       end;
+      }
     end
     else
     begin
@@ -290,11 +293,16 @@ begin
     begin
       x:=GetP2(i).x;
     end;
-    glVertex2f(x, y);
-    ///glVertex2f(GetP2(i).x, GetP2(i).y);
+    if a.Lg then
+    begin
+      glVertex2f(x, GetP2(i).y);
+    end
+    else
+      glVertex2f(x, y);
   end;
   glend;
-  //SwitchLgProg(true);
+  if a.Lg then
+    SwitchLgProg(false);
   glEndList;
 end;
 
@@ -620,7 +628,7 @@ var
   astr:ansistring;
   ls:lpcstr;
 begin
-  sh:=cchart(chart).m_ShaderMng.getshader('LineLg');
+  sh:=cchart(chart).m_ShaderMng.getshader(0);
   astr:='a_minmax';
   ls:=lpcstr(astr);
   aLocation := glGetAttribLocation(sh.m_program, ls);
@@ -638,8 +646,9 @@ procedure cBasicTrend.SwitchLgProg(b:boolean);
 var
   sh:cshader;
 begin
-  sh:=cchart(chart).m_ShaderMng.getshader('LineLg');
-  sh.UseProgram(b);
+  sh:=cchart(chart).m_ShaderMng.getshader(0);
+  if sh<>nil then
+    sh.UseProgram(b);
 end;
 
 end.

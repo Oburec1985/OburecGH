@@ -58,7 +58,8 @@ Type
     procedure EnableShader(name:string);
     procedure disableShaders;
     procedure add(shader:cshader);
-    function getshader(name:string):cShader;
+    function getshader(name:string):cShader;overload;
+    function getshader(i:integer):cShader;overload;
  public
    procedure GetInfo;
    Procedure AddShader(folder:string;name:string);
@@ -136,6 +137,11 @@ begin
     result:=cshader(m_shaders.Objects[index]);
 end;
 
+function cShaderManager.getshader(i:integer):cshader;
+begin
+  result:=cshader(m_shaders.Objects[i]);
+end;
+
 Constructor cshader.Create(path,pname:string);
 begin
  b_fShader:=false;
@@ -158,7 +164,8 @@ end;
 function GetInfoLog(s: GLhandleARB): String;
 var
   blen, slen: Integer;
-  infolog: array of Char;
+  infolog: array of ansiChar;
+  I: Integer;
 begin
   glGetObjectParameterivARB(s, GL_OBJECT_INFO_LOG_LENGTH_ARB, @blen);
   if blen > 1 then
@@ -166,7 +173,11 @@ begin
     SetLength(infolog, blen);
 //  glGetInfoLogARB(s, blen, @slen, @infolog[0]); // GLext
     glGetInfoLogARB(s, blen, slen, @infolog[0]); // //dglOpenGl
-    Result := String(infolog);
+    setlength(Result,blen );
+    for I := 0 to blen - 1 do
+    begin
+      Result[i+1]:=char(infolog[i]);
+    end;
     Exit;
   end;
   Result := '';

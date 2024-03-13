@@ -370,11 +370,12 @@ end;
 
 procedure cChart.LoadShaders;
 var
-  shadername:string;
+  shadername,s:string;
 begin
-  shadername:=configfile.findShaderFile('LineLg');
+  s:='LineLg';
+  shadername:=configfile.findShaderFile(s);
   if shadername<>'' then
-    m_shaderMng.addShader(extractFilePath(shadername),'LineLg');
+    m_shaderMng.addShader(extractFilePath(shadername),s);
 end;
 
 
