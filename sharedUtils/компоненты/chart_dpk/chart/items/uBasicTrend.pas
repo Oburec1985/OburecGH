@@ -20,6 +20,9 @@ type
 
   cBasicTrend = class(cGraphObj)
   public
+    aLocation:integer;
+    vertexData:array [0..3] of GlFloat;
+
     // толщина линии
     oldweight:double;
     // цвет вершины
@@ -61,6 +64,7 @@ type
     // ћетод отрисовки линии дл€ логарифмического масштаба
     procedure drawLineLg;virtual;
     procedure CompileLineLg;virtual;
+    procedure CompileLineLgShader;virtual;
     procedure drawLine;virtual;
     // ћетод отрисовки
     procedure drawPoints;virtual;
@@ -163,7 +167,10 @@ begin
     p:=cpage(getpage);
     if a.lg or p.lgx then
     begin
-      CompileLineLg;
+      if cchart(chart).m_UseShaders then
+        CompileLineLgShader
+      else
+        CompileLineLg;
       if  drawPoint then
       begin
         evalDrawPointsList;
@@ -181,7 +188,7 @@ begin
   end;
 end;
 
-procedure cBasicTrend.CompileLineLg;
+procedure cBasicTrend.CompileLineLgShader;
 var
   I: Integer;
   range, lgRange, lgMax, lgMin, y,
@@ -198,23 +205,6 @@ begin
   begin
     exit;
   end;
-
-  {if a.Lg then
-  begin
-    lgMax:=log10(a.max.y);
-    if a.min.y<=0 then
-    begin
-      lgMin:=0.0000000001;
-    end
-    else
-    begin
-      lgMin:=log10(a.min.y);
-    end;
-    lgRange:=lgmax-lgmin;
-    range:=a.max.y-a.min.y;
-    setlength(logpointsY, count);
-    lgrange:=1/lgrange;
-  end;}
   if p.LgX then
   begin
     l_xlgMax:=log10(a.max.x);
@@ -243,7 +233,6 @@ begin
   /// шейдерный логарифм
   if a.lg then
   begin
-    SwitchLgProg(true);
     bindLgData;
   end;
   glbegin(GL_LINE_STRIP);
@@ -251,29 +240,7 @@ begin
   begin
     if a.lg then
     begin
-      // такой треш с переносом координат т.к. видова€ матрица от линейной оси
-      {if GetP2(i).y=0 then
-      begin
-        rate:=0;
-        y:=-200;
-      end
-      else
-      begin
-        rate:=(log10(GetP2(i).y)-lgmin)*lgrange; // перевод в относительные единицы от диапаона lg 0..1
-        y:=range*rate+a.min.y;
-      end;
 
-      if y<-200 then
-        y:=-200;
-      if i>length(logpointsY)-1 then
-      begin
-        showmessage(inttostr(length(logpointsY))+'<'+inttostr(i));
-      end
-      else
-      begin
-        logpointsY[i]:=y;
-      end;
-      }
     end
     else
     begin
@@ -302,7 +269,119 @@ begin
   end;
   glend;
   if a.Lg then
+  begin
     SwitchLgProg(false);
+  end;
+  glEndList;
+end;
+
+
+procedure cBasicTrend.CompileLineLg;
+var
+  I: Integer;
+  range, lgRange, lgMax, lgMin, y,
+  xrange, xlgRange, xlgMin, x,
+  rate
+  :double;
+  p:cpage;
+  a:caxis;
+  l_xlgMax:double;
+begin
+  a:=caxis(parent);
+  p:=cpage(getpage);
+  if a.max.y<=0 then
+  begin
+    exit;
+  end;
+
+  if a.Lg then
+  begin
+    lgMax:=log10(a.max.y);
+    if a.min.y<=0 then
+    begin
+      lgMin:=0.0000000001;
+    end
+    else
+    begin
+      lgMin:=log10(a.min.y);
+    end;
+    lgRange:=lgmax-lgmin;
+    range:=a.max.y-a.min.y;
+    setlength(logpointsY, count);
+    lgrange:=1/lgrange;
+  end;
+  if p.LgX then
+  begin
+    l_xlgMax:=log10(a.max.x);
+    if a.min.x<=0 then
+    begin
+      xlgMin:=0.0000000001;
+    end
+    else
+    begin
+      xlgMin:=log10(a.min.x);
+    end;
+    xlgRange:=l_xlgMax-xlgmin;
+    xrange:=a.max.x-a.min.x;
+    setlength(logpointsX, count);
+    xlgrange:=1/xlgrange;
+  end;
+
+  if DisplayListName<>-1 then
+  begin
+    glDeleteLists(DisplayListName, 1);
+    DisplayListName:=0;
+  end;
+  // подготовка к компил€ции списка
+  DisplayListName:=glGenLists( 1 );
+  glNewList(DisplayListName, GL_COMPILE);
+  glbegin(GL_LINE_STRIP);
+  for I := 0 to Count - 1 do
+  begin
+    if a.lg then
+    begin
+      // такой треш с переносом координат т.к. видова€ матрица от линейной оси
+      if GetP2(i).y=0 then
+      begin
+        rate:=0;
+        y:=-200;
+      end
+      else
+      begin
+        rate:=(log10(GetP2(i).y)-lgmin)*lgrange; // перевод в относительные единицы от диапаона lg 0..1
+        y:=range*rate+a.min.y;
+      end;
+
+      if y<-200 then
+        y:=-200;
+      if i>length(logpointsY)-1 then
+      begin
+        showmessage(inttostr(length(logpointsY))+'<'+inttostr(i));
+      end
+      else
+      begin
+        logpointsY[i]:=y;
+      end;
+    end
+    else
+    begin
+      y:=GetP2(i).y;
+    end;
+    if p.lgx then
+    begin
+      rate:=(log10(GetP2(i).x)-xlgmin)*xlgrange; // перевод в относительные единицы от диапаона 0..1
+      if rate<0 then
+        rate:=0;
+      x:=Xrange*rate+a.min.X;
+      logpointsX[i]:=x;
+    end
+    else
+    begin
+      x:=GetP2(i).x;
+    end;
+    glVertex2f(x, y);
+  end;
+  glend;
   glEndList;
 end;
 
@@ -621,8 +700,6 @@ end;
 procedure cBasicTrend.bindLgData;
 var
   sh:cshader;
-  aLocation:integer;
-  vertexData:array [0..3] of GlFloat;
   a: caxis;
   p:cpage;
   astr:ansistring;
@@ -631,15 +708,19 @@ begin
   sh:=cchart(chart).m_ShaderMng.getshader(0);
   astr:='a_minmax';
   ls:=lpcstr(astr);
-  aLocation := glGetAttribLocation(sh.m_program, ls);
   a:=caxis(parent);
   // работаем с шейдером LineLg.vert
   vertexData[0]:=a.min.X;
   vertexData[1]:=a.max.X;
   vertexData[2]:=a.minY;
   vertexData[3]:=a.maxY;
-  glVertexAttribPointer(aLocation, 4, GL_FLOAT, false, 0, @vertexData[0]);
-  glEnableVertexAttribArray(aLocation);
+  // атрибуты должны устанавливатьс€ дл€ каждой вершины
+  //aLocation := glGetAttribLocation(sh.m_program, ls);
+  //glVertexAttribPointer(aLocation, 4, GL_FLOAT, false, 0, @vertexData[0]);
+  //glEnableVertexAttribArray(aLocation);
+  SwitchLgProg(true);
+  aLocation:=glGetUniformLocation(sh.m_program,ls);
+  glUniform4f(aLocation, vertexData[0],vertexData[1],vertexData[2],vertexData[3]);
 end;
 
 procedure cBasicTrend.SwitchLgProg(b:boolean);

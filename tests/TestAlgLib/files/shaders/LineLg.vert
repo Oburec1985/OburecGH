@@ -1,4 +1,4 @@
-attribute vec4 a_minmax;
+uniform vec4 a_minmax;
 
 //Log.b(X) = Log.a(X)/Log.a(b) 
 float Log10(float x) {
@@ -8,8 +8,9 @@ float Log10(float x) {
 
 void main()
 {
-	float rate, y, lgMax, lgMin, lgRange, range;
+	float rate, y, lgMax, lgMin, lgRange, range, test;
     lgMax=log10(a_minmax[3]);
+	test = lgMax;
     if (a_minmax[2]<=0){
       lgMin=0.0000000001;
 	}
@@ -18,6 +19,9 @@ void main()
     }
     lgRange=lgMax-lgMin;
     range=a_minmax[3]-a_minmax[2];
+	lgRange=1/lgRange;
+	
+	//gl_Position	 = gl_ModelViewProjectionMatrix*gl_Vertex;
 	gl_Position	 = gl_Vertex;
 	if (gl_Position[1]==0) {
       rate=0;
@@ -25,5 +29,20 @@ void main()
 	} else{
         rate=(log10(gl_Position[1])-lgMin)*lgRange; // перевод в относительные единицы от диапаона lg 0..1
         gl_Position[1]=range*rate+a_minmax[2];	
-	}	
+	}
+	gl_Position	 = gl_ModelViewProjectionMatrix*gl_Position;	
+	gl_FrontColor = gl_Color;
+	int i=3;
+	if (gl_Position[1]>1) {
+		gl_FrontColor = vec4(0.0,0.0,0.0,1.0);
+	}
+	if (gl_Position[1]>1) {
+		gl_FrontColor = vec4(1.0,0.0,0.0,1.0);
+	}
+	if (gl_Position[1]>1) {
+		gl_FrontColor = vec4(0.0,1.0,0.0,1.0);
+	}
+	if (gl_Position[1]>1) {
+		gl_FrontColor = vec4(1.0,1.0,0.0,1.0);
+	}
 } 

@@ -64,7 +64,10 @@ type
     // путь к папке с ресурсами
     path: string;
     configfile: cCfgFile;
+
     m_ShaderMng: cShaderManager;
+    m_UseShaders:boolean;
+
     initGl: boolean;
     // используется framlistener-ами например при двойном клике по метке текста.
     // после взвода отключается при выходе из wndProc
@@ -386,6 +389,8 @@ begin
     destroyEngStructs;
     deletecontext;
   end;
+  m_ShaderMng.destroy;
+
   initGl := FALSE;
   // if m_ShaderMng <> nil then
   // begin

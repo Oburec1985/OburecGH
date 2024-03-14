@@ -18,6 +18,7 @@ Type
  public
    m_program:glHandleARB; // идентификаторы шейдеров и программы
  private
+   m_active:boolean;
    name:string; // имя шейдера. Определяет имя файла
    b_vShader, b_fShader:boolean;
    m_vShader, // вершинный
@@ -283,6 +284,7 @@ end;
 
 procedure cShader.UseProgram(use:boolean);
 begin
+  m_active:=use;
  if use then
    glUseProgramObjectARB(m_program)
  else

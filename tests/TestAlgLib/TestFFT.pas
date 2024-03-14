@@ -26,12 +26,14 @@ type
     cChart1: cChart;
     IterCountIE: TIntEdit;
     LgyCb: TCheckBox;
+    UseShaders: TCheckBox;
     procedure AlgLibClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure SSEBtnClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure MultArraySSEClick(Sender: TObject);
     procedure LgyCbClick(Sender: TObject);
+    procedure UseShadersClick(Sender: TObject);
   private
     rezSignals:tstringlist;
     FFTProp:TFFTProp;
@@ -205,6 +207,19 @@ begin
   resMera.Save;
   resMera.Destroy;
   rezSignals.Destroy;
+end;
+
+procedure TForm1.UseShadersClick(Sender: TObject);
+var
+  p:cpage;
+  a:caxis;
+  t:cBuffTrend1d;
+begin
+  cChart1.m_UseShaders:=UseShaders.Checked;
+  p:=cpage(cchart1.activePage);
+  a:=p.activeAxis;
+  t:=cBuffTrend1d(a.getChild(0));
+  cChart1.Invalidate;
 end;
 
 function MulAr_sse_al_test(const D1: array of double;const D2: array of double; var dOut: array of double; count:integer): Extended;
@@ -413,6 +428,7 @@ begin
     t2:=pf.Stop;
     v:=t2/t1;
     ar[i]:=v;
+    //ar[i]:=10;
   end;
   t.AddPoints(ar);
   cChart1.Invalidate;

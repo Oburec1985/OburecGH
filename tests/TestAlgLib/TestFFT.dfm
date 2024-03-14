@@ -66,7 +66,6 @@ object Form1: TForm1
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitWidth = 886
   end
   object IterCountIE: TIntEdit
     Left = 773
@@ -88,5 +87,18 @@ object Form1: TForm1
     Caption = 'LgyCb'
     TabOrder = 6
     OnClick = LgyCbClick
+  end
+  object UseShaders: TCheckBox
+    Left = 680
+    Top = 41
+    Width = 88
+    Height = 23
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
+    Caption = 'UseShaders'
+    TabOrder = 7
+    OnClick = UseShadersClick
   end
 end
