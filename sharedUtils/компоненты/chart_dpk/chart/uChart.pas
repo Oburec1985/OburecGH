@@ -28,6 +28,7 @@ uses classes, stdctrls, controls, messages, windows, types, ExtCtrls, ComCtrls,
   uShader,
   uConfigFile3d,
   uBasePage,
+  uLineLgShader,
   jcldebug;
 
 type
@@ -374,11 +375,17 @@ end;
 procedure cChart.LoadShaders;
 var
   shadername,s:string;
+  sh: cshader;
 begin
   s:='LineLg';
   shadername:=configfile.findShaderFile(s);
   if shadername<>'' then
-    m_shaderMng.addShader(extractFilePath(shadername),s);
+  begin
+    sh:=cLineLgShader.Create(extractFilePath(shadername),s);
+    m_shaderMng.add(sh);
+    cLineLgShader(sh).BindLgShaderData;
+    m_UseShaders:=true;
+  end;
 end;
 
 

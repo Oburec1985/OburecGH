@@ -1008,6 +1008,9 @@ begin
               t.m_shockList.delBlock(m_lastTahoBlock);
             end;
           end;
+
+          // AddBlock делать без перевыделения памяти!!!
+
           m_lastTahoBlock := t.m_shockList.addBlock(c.m_fftCount,
             p2d(t.TrigInterval.x, t.TrigInterval.x + pcount / t.m_tag.Freq),
             TDoubleArray(t.m_T1data.p), pcount);

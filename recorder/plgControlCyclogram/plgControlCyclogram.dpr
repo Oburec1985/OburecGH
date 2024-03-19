@@ -210,7 +210,8 @@ uses
   uPressFrmFrame in 'forms\uPressFrmFrame.pas' {PressFrmFrame: TFrame},
   uPressFrmEdit in 'forms\uPressFrmEdit.pas' {PressFrmEdit},
   rkVistaProBar in '..\..\sharedUtils\компоненты\dcl_dpk\VistaProbar\rkVistaProBar.pas',
-  uShader in '..\..\sharedUtils\ogl\shader\uShader.pas';
+  uShader in '..\..\sharedUtils\ogl\shader\uShader.pas',
+  uLineLgShader in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\shaders\uLineLgShader.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

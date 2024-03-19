@@ -1,9 +1,8 @@
 object GenSignalsFrm: TGenSignalsFrm
   Left = 0
   Top = 0
-  Caption = 'TGenSignalsFrm'
   ClientHeight = 379
-  ClientWidth = 576
+  ClientWidth = 499
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -13,10 +12,19 @@ object GenSignalsFrm: TGenSignalsFrm
   OldCreateOrder = False
   PixelsPerInch = 120
   TextHeight = 16
+  object Splitter1: TSplitter
+    Left = 312
+    Top = 0
+    Height = 379
+    Align = alRight
+    ExplicitLeft = 344
+    ExplicitTop = 96
+    ExplicitHeight = 100
+  end
   object PropertyPanel: TPanel
     Left = 0
     Top = 0
-    Width = 323
+    Width = 312
     Height = 379
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
@@ -125,11 +133,33 @@ object GenSignalsFrm: TGenSignalsFrm
       TabOrder = 4
       OnChange = OffsetFEChange
     end
+    object EnabledAlgMngCB: TCheckBox
+      Left = 127
+      Top = 312
+      Width = 138
+      Height = 17
+      Caption = #1054#1073#1088#1072#1073#1086#1090#1082#1072
+      Checked = True
+      State = cbChecked
+      TabOrder = 5
+      OnClick = EnabledAlgMngCBClick
+    end
+    object GenDataCb: TCheckBox
+      Left = 127
+      Top = 281
+      Width = 138
+      Height = 17
+      Caption = #1043#1077#1085#1077#1088#1072#1090#1086#1088
+      Checked = True
+      State = cbChecked
+      TabOrder = 6
+      OnClick = GenDataCbClick
+    end
   end
   object SignalsLB: TListBox
-    Left = 323
+    Left = 315
     Top = 0
-    Width = 253
+    Width = 184
     Height = 379
     Align = alRight
     PopupMenu = PopupMenu1

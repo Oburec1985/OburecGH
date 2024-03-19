@@ -82,12 +82,17 @@ type
     N1: TMenuItem;
     OffsetFE: TFloatSpinEdit;
     Label1: TLabel;
+    EnabledAlgMngCB: TCheckBox;
+    Splitter1: TSplitter;
+    GenDataCb: TCheckBox;
     procedure AmpSEChange(Sender: TObject);
     procedure PhaseSEChange(Sender: TObject);
     procedure SignalsLBClick(Sender: TObject);
     procedure N1Click(Sender: TObject);
     procedure FreqSEChange(Sender: TObject);
     procedure OffsetFEChange(Sender: TObject);
+    procedure EnabledAlgMngCBClick(Sender: TObject);
+    procedure GenDataCbClick(Sender: TObject);
   private
     m_prevTime:double;
     signals:tlist;
@@ -374,6 +379,16 @@ begin
     s.Amp:=ampse.Value;
 end;
 
+procedure TGenSignalsFrm.EnabledAlgMngCBClick(Sender: TObject);
+begin
+  g_algMng.m_enabled:=EnabledAlgMngCB.Checked;
+end;
+
+procedure TGenSignalsFrm.GenDataCbClick(Sender: TObject);
+begin
+  g_GenSignalsFactory.Timer1.enabled:=GenDataCb.Checked;
+end;
+
 procedure TGenSignalsFrm.PhaseSEChange(Sender: TObject);
 var
   s:cgensig;
@@ -458,6 +473,8 @@ begin
   if Freqse.text<>'' then
     s.Freq:=Freqse.Value;
 end;
+
+
 
 function TGenSignalsFrm.genVal(p: double; s: cGenSig): double;
 begin
@@ -606,8 +623,8 @@ begin
       end;
       dt:=dt-TimeLength;
       p:=@s.m_t.m_TagData[0];
-      //s.m_t.tag.PushDataEx(p^, BlSize, 0, -1);
-      s.m_t.tag.PushData(p^, BlSize);
+      s.m_t.tag.PushDataEx(p, BlSize, -1, -1);
+      //s.m_t.tag.PushData(p^, BlSize);
       if (i=0) and (k=0) then
       begin
         m_prevTime:=curT;

@@ -3,7 +3,7 @@ object Form1: TForm1
   Top = 0
   Caption = 'Form1'
   ClientHeight = 694
-  ClientWidth = 939
+  ClientWidth = 948
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,7 +14,7 @@ object Form1: TForm1
   OnClose = FormClose
   OnCreate = FormCreate
   DesignSize = (
-    939
+    948
     694)
   PixelsPerInch = 120
   TextHeight = 16
@@ -56,8 +56,8 @@ object Form1: TForm1
   end
   object cChart1: cChart
     Left = 8
-    Top = 71
-    Width = 884
+    Top = 156
+    Width = 893
     Height = 530
     Anchors = [akLeft, akTop, akRight, akBottom]
     Caption = 'cChart1'
@@ -66,6 +66,7 @@ object Form1: TForm1
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitWidth = 884
   end
   object IterCountIE: TIntEdit
     Left = 773
@@ -78,7 +79,7 @@ object Form1: TForm1
   object LgyCb: TCheckBox
     Left = 600
     Top = 41
-    Width = 88
+    Width = 72
     Height = 23
     Margins.Left = 4
     Margins.Top = 4
@@ -100,5 +101,18 @@ object Form1: TForm1
     Caption = 'UseShaders'
     TabOrder = 7
     OnClick = UseShadersClick
+  end
+  object CheckBox1: TCheckBox
+    Left = 600
+    Top = 72
+    Width = 72
+    Height = 23
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
+    Caption = 'LgXCb'
+    TabOrder = 8
+    OnClick = CheckBox1Click
   end
 end

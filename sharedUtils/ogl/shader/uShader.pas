@@ -8,6 +8,7 @@ uses
   //glExt; // dglOpengl и glExt делфевые заголовки, должны
          //быть идентичны но, сука, отличаются
 Type
+  cShaderManager = class;
   PGLCharARB = PChar;
   PPChar = Array of string;
  // Последовательность работы с шейдером:
@@ -16,6 +17,7 @@ Type
  // 3) Использовать программу UseProgram.
  cShader = class
  public
+   mng: cShaderManager;
    m_program:glHandleARB; // идентификаторы шейдеров и программы
  private
    m_active:boolean;
@@ -63,17 +65,19 @@ Type
     function getshader(i:integer):cShader;overload;
  public
    procedure GetInfo;
-   Procedure AddShader(folder:string;name:string);
+   function AddShader(folder:string;name:string):cshader;
  end;
 implementation
 
-Procedure cShaderManager.AddShader(folder:string;name:string);
+function cShaderManager.AddShader(folder:string;name:string):cshader;
 var shader:cshader;
 begin
+  result:=nil;
   if DirectoryExists(folder) then
   begin
     shader:=cshader.Create(folder,name);
     add(shader);
+    result:=shader;
   end;
 end;
 
@@ -127,6 +131,7 @@ end;
 
 procedure cShaderManager.add(shader:cshader);
 begin
+  shader.mng:=self;
   m_shaders.AddObject(shader.name,shader);
 end;
 

@@ -203,6 +203,8 @@
     <File Path="chart\items\framelisteners\uChartClickFrListener.pas"/>
     <File Path="chart\items\framelisteners\uObjFrameListener.pas"/>
     <File Path="chart\items\framelisteners\uPageFrameListener.pas"/>
+    <File Path="chart\items\shaders"/>
+    <File Path="chart\items\shaders\uLineLgShader.pas"/>
     <File Path="chart\items\uAutoPage.pas"/>
     <File Path="chart\items\uAxis.pas"/>
     <File Path="chart\items\uBasePage.pas"/>

@@ -61,7 +61,14 @@ end;
 
 function cCfgFile.findShaderFile(name:string):string;
 begin
-  result:=GetFile(name+'.*', ShaderSection);
+  if FileExists(filename) then
+  begin
+    result:=GetFile(name+'.*', ShaderSection);
+  end
+  else
+  begin
+    result:=FindFile(name+'.*', startdir, deep+2);
+  end;
 end;
 
 function cCfgFile.findCfgPathFile(name:string):string;

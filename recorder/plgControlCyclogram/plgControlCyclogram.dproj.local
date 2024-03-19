@@ -154,6 +154,8 @@
     <File Path="..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners\uChartClickFrListener.pas"/>
     <File Path="..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners\uObjFrameListener.pas"/>
     <File Path="..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners\uPageFrameListener.pas"/>
+    <File Path="..\..\sharedUtils\компоненты\chart_dpk\chart\items\shaders"/>
+    <File Path="..\..\sharedUtils\компоненты\chart_dpk\chart\items\shaders\uLineLgShader.pas"/>
     <File Path="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uAutoPage.pas"/>
     <File Path="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uAxis.pas"/>
     <File Path="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uBasePage.pas"/>

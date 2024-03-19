@@ -188,6 +188,7 @@ type
 
     // список настроек алгоритмов
     m_cfgList:Tlist;
+    m_enabled:boolean;
   protected
     function getplace(str: string): TPlace;
     // происходит при переходе в просмотр/запись
@@ -757,6 +758,7 @@ end;
 constructor cAlgMng.create;
 begin
   inherited;
+  m_enabled:=true;
   createEvents;
   m_AHNames := tstringlist.create;
   m_AHNames.Sorted := true;
@@ -982,6 +984,8 @@ var
   a: cbaseobj;
   i: integer;
 begin
+  if not m_enabled then exit;
+
   // предрасчет
   for i := 0 to Count - 1 do
   begin

@@ -9183,3 +9183,87 @@ This application has leaked memory. The small block leaks are (excluding expecte
 69 - 84 bytes: TStringList x 1
 
 Note: Memory leak detail is logged to a text file in the same folder as this application. To disable this memory leak check, undefine "EnableMemoryLeakReporting".
+
+--------------------------------2024/3/19 10:57:07--------------------------------
+A memory block has been leaked. The size is: 52
+
+This block was allocated by thread 0x8F4, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40586F [System.pas][System][TObject.NewInstance][9433]
+405E06 [System.pas][System][@ClassCreate][10277]
+56FD2E [..\..\ogl\shader\uShader.pas][uShader][cShader.Create][152]
+57BCB0 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][384]
+57B8E8 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][292]
+4C4DBE [Controls.pas][Controls][TWinControl.GetHandle][11856]
+57C756 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.initscene][804]
+57C30B [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.WndProc][645]
+4C16C3 [Controls.pas][Controls][TWinControl.MainWndProc][9540]
+44A2D2 [Classes][StdWndProc]
+
+The block is currently used for an object of class: cLineLgShader
+
+The allocation number is: 9315
+
+Current memory dump of 256 bytes starting at pointer address 7EE53270:
+58 3E 57 00 00 00 00 00 02 00 00 00 00 00 00 00 FC 5E E9 7E 01 00 00 00 01 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 06 B7 08 7A 80 80 80 80 80 80 80 80 00 00 00 00 71 2A E5 7E
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 2A 25 00 00 AA 44 40 00 1B 85 40 00 C4 7A 40 00
+25 A6 52 00 55 10 59 00 E1 03 59 00 D3 0D 57 00 30 C4 57 00 B4 BE 57 00 5D C7 57 00 0B C3 57 00
+F4 08 00 00 F4 08 00 00 C6 44 40 00 C5 6B 40 00 B9 89 40 00 01 89 40 00 43 59 40 00 86 58 40 00
+51 5E 40 00 C6 58 40 00 00 A9 52 00 75 A2 54 00 EF A3 54 00 2C 00 00 00 B0 04 02 00 2A A4 62 85
+C4 01 5C 00 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 D5 5B 9D 7A 80 80 80 80 80 80 80 80 00 00 00 00 F1 2B E5 7E
+X  >  W  .  .  .  .  .  .  .  .  .  .  .  .  .  ь  ^  й  ~  .  .  .  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  Ј  .  z  А  А  А  А  А  А  А  А  .  .  .  .  q  *  е  ~
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  *  %  .  .  ™  D  @  .  .  Е  @  .  ƒ  z  @  .
+%  ¶  R  .  U  .  Y  .  б  .  Y  .  ”  .  W  .  0  ƒ  W  .  і  Њ  W  .  ]  «  W  .  .  √  W  .
+ф  .  .  .  ф  .  .  .  ∆  D  @  .  ≈  k  @  .  є  Й  @  .  .  Й  @  .  C  Y  @  .  Ж  X  @  .
+Q  ^  @  .  ∆  X  @  .  .  ©  R  .  u  Ґ  T  .  п  £  T  .  ,  .  .  .  ∞  .  .  .  *  §  b  Е
+ƒ  .  \  .  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  ’  [  Э  z  А  А  А  А  А  А  А  А  .  .  .  .  с  +  е  ~
+
+--------------------------------2024/3/19 10:57:07--------------------------------
+A memory block has been leaked. The size is: 36
+
+This block was allocated by thread 0x8F4, and the stack trace (return addresses) at the time was:
+4044AA [System.pas][System][@GetMem][2979]
+40851B [System.pas][System][@NewUnicodeString][18372]
+407AC4 [System.pas][System][@UStrAsg][16911]
+56FD66 [..\..\ogl\shader\uShader.pas][uShader][cShader.Create][155]
+57BCB0 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.LoadShaders][384]
+57B8E8 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.GetGlContext][292]
+4C4DBE [Controls.pas][Controls][TWinControl.GetHandle][11856]
+57C756 [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.initscene][804]
+57C30B [..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas][uChart][cChart.WndProc][645]
+4C16C3 [Controls.pas][Controls][TWinControl.MainWndProc][9540]
+44A2D2 [Classes][StdWndProc]
+
+The block is currently used for an object of class: UnicodeString
+
+The allocation number is: 9316
+
+Current memory dump of 256 bytes starting at pointer address 7EE95EF0:
+B0 04 02 00 01 00 00 00 06 00 00 00 4C 00 69 00 6E 00 65 00 4C 00 67 00 00 00 B1 5B 25 7A 80 80
+80 80 80 80 80 80 80 80 00 00 00 00 E1 61 E9 7E 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+F6 0A 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00 53 A5 4B 00 EE CB 45 00 31 AB 4B 00 11 F2 4B 00
+93 15 4E 00 F2 21 4E 00 59 B4 4B 00 18 BB 57 00 F4 08 00 00 F4 08 00 00 C6 44 40 00 8D 58 40 00
+51 5E 40 00 B5 C8 43 00 D3 58 40 00 A6 AC 4B 00 8D 58 40 00 51 5E 40 00 B5 C8 43 00 B1 F4 4B 00
+55 16 4E 00 24 00 00 00 B8 EA 4A 00 DD 6B 4D 85 C4 01 5C 00 80 80 80 80 80 80 80 80 80 80 80 80
+80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 22 94 B2 7A 00 00 00 00 21 75 E9 7E
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 F7 0A 00 00 AA 44 40 00 6F 58 40 00 06 5E 40 00
+∞  .  .  .  .  .  .  .  .  .  .  .  L  .  i  .  n  .  e  .  L  .  g  .  .  .  ±  [  %  z  А  А
+А  А  А  А  А  А  А  А  .  .  .  .  б  a  й  ~  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+ц  .  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .  S  •  K  .  о  Ћ  E  .  1  Ђ  K  .  .  т  K  .
+У  .  N  .  т  !  N  .  Y  і  K  .  .  ї  W  .  ф  .  .  .  ф  .  .  .  ∆  D  @  .  Н  X  @  .
+Q  ^  @  .  µ  »  C  .  ”  X  @  .  ¶  ђ  K  .  Н  X  @  .  Q  ^  @  .  µ  »  C  .  ±  ф  K  .
+U  .  N  .  $  .  .  .  Є  к  J  .  Ё  k  M  Е  ƒ  .  \  .  А  А  А  А  А  А  А  А  А  А  А  А
+А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  А  "  Ф  ≤  z  .  .  .  .  !  u  й  ~
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ч  .  .  .  ™  D  @  .  o  X  @  .  .  ^  @  .
+
+--------------------------------2024/3/19 10:57:07--------------------------------
+This application has leaked memory. The small block leaks are (excluding expected leaks registered by pointer):
+
+21 - 36 bytes: UnicodeString x 1
+37 - 52 bytes: cLineLgShader x 1
+
+Note: Memory leak detail is logged to a text file in the same folder as this application. To disable this memory leak check, undefine "EnableMemoryLeakReporting".

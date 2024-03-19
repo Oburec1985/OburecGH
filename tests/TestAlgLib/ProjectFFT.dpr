@@ -185,7 +185,8 @@ uses
   uFloatEdit in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uFloatEdit.pas',
   uFloatLabel in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uFloatLabel.pas',
   uLegend in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uLegend.pas',
-  upage in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\upage.pas';
+  upage in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\upage.pas',
+  uLineLgShader in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\shaders\uLineLgShader.pas';
 
 {$R *.res}
 

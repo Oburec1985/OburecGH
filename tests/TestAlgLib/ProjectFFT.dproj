@@ -231,6 +231,7 @@
 			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uFloatLabel.pas"/>
 			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uLegend.pas"/>
 			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\upage.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\shaders\uLineLgShader.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

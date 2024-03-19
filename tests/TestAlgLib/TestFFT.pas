@@ -27,6 +27,7 @@ type
     IterCountIE: TIntEdit;
     LgyCb: TCheckBox;
     UseShaders: TCheckBox;
+    CheckBox1: TCheckBox;
     procedure AlgLibClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure SSEBtnClick(Sender: TObject);
@@ -34,6 +35,7 @@ type
     procedure MultArraySSEClick(Sender: TObject);
     procedure LgyCbClick(Sender: TObject);
     procedure UseShadersClick(Sender: TObject);
+    procedure CheckBox1Click(Sender: TObject);
   private
     rezSignals:tstringlist;
     FFTProp:TFFTProp;
@@ -158,6 +160,12 @@ end;
 procedure TForm1.LgyCbClick(Sender: TObject);
 begin
   cpage(cchart1.activePage).activeAxis.Lg:=not cpage(cchart1.activePage).activeAxis.Lg;
+end;
+
+
+procedure TForm1.CheckBox1Click(Sender: TObject);
+begin
+  cpage(cchart1.activePage).LgX:=not cpage(cchart1.activePage).LgX;
 end;
 
 procedure TForm1.SSEBtnClick(Sender: TObject);

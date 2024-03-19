@@ -312,23 +312,14 @@ begin
       end;
       if caxis(parent).lg then
       begin
-        p.y := logpointsY[i];
+        p.y := EvalY_log(i);
       end;
       page := cpage(getpage);
       if page.LgX then
       begin
-        p.x := logpointsX[i];
+        p.x := EvalX_log(i);
       end;
       glVertex2f(p.x, p.y);
-      // if caxis(parent).lg then
-      // begin
-      // glVertex2f(p.x, logpointsY[i]);
-      // end
-      // else
-      // begin
-      // if True then
-      // glVertex2f(p.x, p.y);
-      // end;
     end;
   end;
   glEnd;

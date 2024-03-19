@@ -95,7 +95,8 @@ contains
   u2DMath in '..\..\math\u2DMath.pas',
   uFreqBand in 'chart\items\uFreqBand.pas',
   uPolarGraphPage in 'chart\items\uPolarGraphPage.pas',
-  uShader in '..\..\ogl\shader\uShader.pas';
+  uShader in '..\..\ogl\shader\uShader.pas',
+  uLineLgShader in 'chart\items\shaders\uLineLgShader.pas';
 
 end.
 
