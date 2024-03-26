@@ -2,13 +2,13 @@ object TagsListFrame: TTagsListFrame
   Left = 0
   Top = 0
   Width = 202
-  Height = 445
+  Height = 303
   TabOrder = 0
   object FormChannelsGB: TGroupBox
     Left = 0
     Top = 0
     Width = 202
-    Height = 445
+    Height = 303
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -16,9 +16,10 @@ object TagsListFrame: TTagsListFrame
     Align = alClient
     Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
     TabOrder = 0
+    ExplicitHeight = 445
     object ChanNamesPanel: TPanel
       Left = 2
-      Top = 18
+      Top = 15
       Width = 198
       Height = 111
       Margins.Left = 4
@@ -33,8 +34,8 @@ object TagsListFrame: TTagsListFrame
       object FrmTagPropLabel: TLabel
         Left = 5
         Top = 58
-        Width = 55
-        Height = 16
+        Width = 48
+        Height = 13
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -44,8 +45,8 @@ object TagsListFrame: TTagsListFrame
       object FrmTagPropValue: TLabel
         Left = 121
         Top = 60
-        Width = 56
-        Height = 16
+        Width = 48
+        Height = 13
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -56,7 +57,7 @@ object TagsListFrame: TTagsListFrame
         Left = 5
         Top = 8
         Width = 187
-        Height = 24
+        Height = 21
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -69,7 +70,7 @@ object TagsListFrame: TTagsListFrame
         Left = 121
         Top = 82
         Width = 71
-        Height = 24
+        Height = 21
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -81,7 +82,7 @@ object TagsListFrame: TTagsListFrame
         Left = 5
         Top = 82
         Width = 108
-        Height = 24
+        Height = 21
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -91,9 +92,9 @@ object TagsListFrame: TTagsListFrame
     end
     object TagsLV: TBtnListView
       Left = 2
-      Top = 129
+      Top = 126
       Width = 198
-      Height = 314
+      Height = 175
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -122,6 +123,7 @@ object TagsListFrame: TTagsListFrame
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
+      ExplicitHeight = 317
     end
   end
 end

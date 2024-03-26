@@ -691,6 +691,10 @@ begin
   inherited;
   GetNotifyCB.Checked := a_pIni.ReadBool(str, 'GetNonify', false);
   ContinueCB.Checked := a_pIni.ReadBool(str, 'LoadState', false);
+  i := a_pIni.ReadInteger(str, 'SplitPos', 300);
+  if i<1 then
+    i:=300;
+  RightGB.Width:=i;
   ConfirmModeCB.Checked := a_pIni.ReadBool(str, 'ConfirmModeChange', true);
   TimeUnitsCB.ItemIndex := a_pIni.ReadInteger(str, 'Units', 0);
   RightGB.Width := a_pIni.ReadInteger(str, 'Table_Controls_Splitter_Pos',
@@ -718,6 +722,7 @@ begin
   // получать настроечные сообщения
   a_pIni.WriteBool(str, 'GetNonify', GetNotifyCB.Checked);
   a_pIni.WriteBool(str, 'LoadState', ContinueCB.Checked);
+  a_pIni.WriteInteger(str, 'SplitPos', RightGB.width);
   a_pIni.WriteBool(str, 'ConfirmModeChange', ConfirmModeCB.Checked);
   a_pIni.WriteInteger(str, 'Units', TimeUnitsCB.ItemIndex);
   a_pIni.WriteInteger(str, 'Units', TimeUnitsCB.ItemIndex);
@@ -889,10 +894,10 @@ var
   t: ctask;
 begin
   // 2 - кол-во строк сверху имена режимов
-  TableModeSG.RowCount := c_ModeTable_headerSize + g_conmng.ControlsCount;
   p := g_conmng.getprogram(0);
   if p = nil then
     exit;
+  TableModeSG.RowCount := c_ModeTable_headerSize + p.ControlCount;
   // -1 тк c_ModeTable_headerCol неправильный
   TableModeSG.ColCount := (c_ModeTable_headerCol-1) + p.ModeCount;
   TableModeSG.Cells[0, 1] := 'Время работы';
@@ -2510,21 +2515,24 @@ begin
     ppair := z.GetZonePairPointer(ind);
     if ppair <> nil then
     begin
-      str1 := GetSubString(str2, ';', 1, j);
-      str3 := itag(ppair.tag).GetName + '=' + str1;
-      while str1 <> '' do
+      if ppair.tag<>nil then
       begin
-        inc(ind);
-        if ind > (z.tags.Count - 1) then
-          break;
-        ppair := z.GetZonePairPointer(ind);
-        str1 := GetSubString(str2, ';', j + 1, j);
-        if str3 = '' then
-          str3 := str3 + itag(ppair.tag).GetName + '=' + str1
-        else
-          str3 := str3 + ';' + itag(ppair.tag).GetName + '=' + str1;
+        str1 := GetSubString(str2, ';', 1, j);
+        str3 := itag(ppair.tag).GetName + '=' + str1;
+        while str1 <> '' do
+        begin
+          inc(ind);
+          if ind > (z.tags.Count - 1) then
+            break;
+          ppair := z.GetZonePairPointer(ind);
+          str1 := GetSubString(str2, ';', j + 1, j);
+          if str3 = '' then
+            str3 := str3 + itag(ppair.tag).GetName + '=' + str1
+          else
+            str3 := str3 + ';' + itag(ppair.tag).GetName + '=' + str1;
+        end;
+        result := str3;
       end;
-      result := str3;
     end;
   end;
 end;
