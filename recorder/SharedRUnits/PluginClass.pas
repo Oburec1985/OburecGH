@@ -865,6 +865,10 @@ begin
       begin
         EList.CallAllEvents(c_RC_SynchroRead);
       end;
+    PN_RCINITIALIZED:
+    begin
+      EList.CallAllEvents(E_RC_Init);
+    end;
     PN_UPDATEDATA:
       begin
         for I := 0 to m_CompMng.Count - 1 do

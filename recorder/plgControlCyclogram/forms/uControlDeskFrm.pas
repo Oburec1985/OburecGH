@@ -74,6 +74,7 @@ type
     ConfirmModeCB: TCheckBox;
     ActiveModeE: TEdit;
     Label3: TLabel;
+    GetNotifyCB: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -127,8 +128,10 @@ type
     // форма посчитана фабрикой класса. Нужно для ограничения числа форм
     m_counted: boolean;
     m_curCol, m_curRow: integer;
-    finit: boolean;
     SGbuttons: tlist;
+    // Устанавливается в true когда произошло loadsettings
+    finit, fload: boolean;
+
 
     m_val: string;
     m_row, m_col: integer;
@@ -157,7 +160,7 @@ type
     procedure ControlSGEditCell(ARow, ACol: integer; const Value: string);
     procedure FormCfgClose(Sender: TObject; var Action: TCloseAction);
     function getprogram(row: integer): cProgramObj;
-    function getmode(row: integer): cModeObj;overload;
+    function getmodeFromProgramSG(row: integer): cModeObj;overload;
     function getTableModeSGByCol(col: integer): cModeObj;
     // отмена редактирования режима(перенос настроек режима обратно в таблицу)
     procedure CancelEditMode;
@@ -192,6 +195,7 @@ type
     procedure EnablePult(b_state: boolean);
     procedure doChangeRState(Sender: TObject);
     procedure doLeaveCfg(Sender: TObject);
+    procedure doRcInit(Sender: TObject);
     procedure doLoad(Sender: TObject);
     procedure doAddObj(Sender: TObject);
     procedure doShowStop(Sender: TObject);
@@ -259,7 +263,7 @@ const
 
   c_Log_ControlDeskFrm = true;
   c_ModeTable_headerSize = 2;
-  c_ModeTable_headerCol = 2;
+  c_ModeTable_headerCol = 2; // по факту 1 но напутано с индексами
   c_headerSize = 1;
   c_Col_Control = 0;
   c_Col_Task = 1;
@@ -422,8 +426,9 @@ begin
   m_counted := false;
   m_uiThread := GetCurrentThreadId;
   mThread := MainThreadID;
-  finit := false;
   SGbuttons := tlist.Create;
+
+  finit := false;
 
   EnablePult(false);
 
@@ -440,6 +445,7 @@ begin
   addplgevent('TControlDeskFrm_doChangeRState', c_RC_DoChangeRCState,
     doChangeRState);
   addplgevent('TControlDeskFrm_doLeaveCfg', c_RC_LeaveCfg, doLeaveCfg);
+  addplgevent('TControlDeskFrm_doRcInit', E_RC_Init, doRcInit);
   g_conmng.Events.AddEvent('TControlDeskFrm_doStopControlMng',
     E_OnStopControlMng, doShowStop);
 end;
@@ -522,14 +528,14 @@ begin
         ActiveModeE.text :=str;
       end;
       TableModeSG.Invalidate;
-      // KillTimer(handle,m_timerid);
-      // KillTimer(MainThreadID,m_timerid);
     end;
   end;
 end;
 
 procedure TControlDeskFrm.doLeaveCfg(Sender: TObject);
 begin
+  if not finit then exit;
+  if not fload then exit;
   m_CurControl := nil;
   ControlPropE.text := '';
   if g_createGUI then
@@ -539,6 +545,11 @@ end;
 procedure TControlDeskFrm.doLoad(Sender: TObject);
 begin
   Preview;
+end;
+
+procedure TControlDeskFrm.doRcInit(Sender: TObject);
+begin
+  finit:=true;
 end;
 
 procedure TControlDeskFrm.doAddObj(Sender: TObject);
@@ -678,6 +689,7 @@ var
   con:ccontrolobj;
 begin
   inherited;
+  GetNotifyCB.Checked := a_pIni.ReadBool(str, 'GetNonify', false);
   ContinueCB.Checked := a_pIni.ReadBool(str, 'LoadState', false);
   ConfirmModeCB.Checked := a_pIni.ReadBool(str, 'ConfirmModeChange', true);
   TimeUnitsCB.ItemIndex := a_pIni.ReadInteger(str, 'Units', 0);
@@ -693,6 +705,7 @@ begin
     con:=g_conmng.getControlObj(s1);
     m_ViewControls.Add(con);
   end;
+  fload:=true;
 end;
 
 procedure TControlDeskFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -702,8 +715,11 @@ var
   s:string;
 begin
   inherited;
+  // получать настроечные сообщения
+  a_pIni.WriteBool(str, 'GetNonify', GetNotifyCB.Checked);
   a_pIni.WriteBool(str, 'LoadState', ContinueCB.Checked);
   a_pIni.WriteBool(str, 'ConfirmModeChange', ConfirmModeCB.Checked);
+  a_pIni.WriteInteger(str, 'Units', TimeUnitsCB.ItemIndex);
   a_pIni.WriteInteger(str, 'Units', TimeUnitsCB.ItemIndex);
   a_pIni.WriteInteger(str, 'Table_Controls_Splitter_Pos', RightGB.Width);
   a_pIni.WriteBool(str,'CustSort', m_CustSort);
@@ -770,7 +786,7 @@ begin
   begin
     if g_conmng.State <> c_stop then
     begin
-      m := getmode(xRow);
+      m := getmodeFromProgramSG(xRow);
       if m = nil then
         exit;
       if g_conmng.State = c_play then
@@ -877,8 +893,8 @@ begin
   p := g_conmng.getprogram(0);
   if p = nil then
     exit;
-
-  TableModeSG.ColCount := c_ModeTable_headerCol + p.ModeCount;
+  // -1 тк c_ModeTable_headerCol неправильный
+  TableModeSG.ColCount := (c_ModeTable_headerCol-1) + p.ModeCount;
   TableModeSG.Cells[0, 1] := 'Время работы';
   for I := 0 to p.ModeCount - 1 do
   begin
@@ -915,7 +931,7 @@ begin
   result := g_conmng.getControlObj(cname);
 end;
 
-function TControlDeskFrm.getmode(row: integer): cModeObj;
+function TControlDeskFrm.getmodeFromProgramSG(row: integer): cModeObj;
 var
   p: cProgramObj;
   str: string;
@@ -1993,6 +2009,19 @@ begin
     begin
       GridRemoveColumn(TStringGrid(Sender), m_insert);
       m_insert:=-1;
+    end
+    else
+    begin
+      if g_conmng.State = c_stop then
+      begin
+        m:=getTableModeSGByCol(m_curCol);
+        if m<>nil then
+        begin
+          m_CurMode:=nil;
+          m.destroy;
+          ShowModeTable;
+        end;
+      end;
     end;
   end;
   // вставка режима
@@ -2710,6 +2739,8 @@ var
   t:itag;
   createCon:boolean;
 begin
+  if not TControlDeskFrm(m_pMasterWnd).GetNotifyCB.Checked then exit;
+
   s:=str;
   //exit;
   pars:=ParsStrParam(str);

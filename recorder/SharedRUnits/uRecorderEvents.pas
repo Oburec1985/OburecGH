@@ -25,6 +25,8 @@ const
   E_MDBCreate =$00000800;
   E_RC_ChangeCfg =$00001000;
   E_RC_DestroyObject =$00002000;
+  // рекордер загрузил плагины и конфиги
+  E_RC_Init =         $00004000;
 
 implementation
 
