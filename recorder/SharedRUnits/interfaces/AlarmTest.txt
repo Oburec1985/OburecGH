@@ -1,0 +1,47 @@
+procedure TMainFrm.Button1Click(Sender: TObject);
+var
+  WorkTag : Itag;
+  i : Integer;
+  punCount: ULONG;
+  pAlarm: IAlarm;
+  pAlarmControl: IAlarmsControl;
+  vbEnable: VARIANT_BOOL;
+  temp_BSTR: BSTR;
+begin
+  GetRecorderTags;
+
+  WorkTag := GetTagByName('A004');
+  if WorkTag = nil then Exit;
+
+  // получаем интерфейс IAlarmsControl
+  if FAILED(WorkTag.QueryInterface(IID_IAlarmsControl, pAlarmControl)) then Exit;
+
+  //внешний тег дл€ определени€ состо€ни€ уставок, если нужен
+  {pAlarmControl.GetIsStateTagUsed(vbEnable); // ѕолучить признак использовани€ внешнего тега дл€ определени€ состо€ни€ уставок
+  pAlarmControl.SetIsStateTagUsed(Variant_True); // ”становить признак использовани€ внешнего тега дл€ определени€ состо€ни€ уставок
+
+  pAlarmControl.GetStateTag(temp_BSTR); // ѕолучить им€ внешнего тега дл€ определени€ состо€ни€ уставок
+  pAlarmControl.SetStateTag('A003'); // ”становить им€ внешнего тега дл€ определени€ состо€ни€ уставок
+  }
+
+  pAlarmControl.GetAlarmsCount(punCount);
+
+  // по 4-м уставкам
+  for i := 0 to punCount - 1 do
+    begin
+      // получаем интерфейс IAlarm
+      pAlarmControl.GetAlarm(i, pAlarm);
+
+      if pAlarm = nil then Continue;
+
+      // название уставки
+      // 0 - ¬ерхн€€ аварийна€, 1 - ¬ерхн€€ предупредительна€, 2 - Ќижн€€ предупредительна€, 3 - Ќижн€€ аварийна€
+      pAlarm.GetName(temp_BSTR);
+
+      pAlarm.SetEnabled(Variant_True); // включаем уставку
+      //pAlarm.SetColor(clLime);         // цвет уставки
+
+      // устанавливаем уставку
+      pAlarm.SetLevel((10-i));
+    end;
+end;
