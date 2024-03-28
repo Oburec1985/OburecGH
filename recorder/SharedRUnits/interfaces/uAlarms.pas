@@ -14,12 +14,12 @@ const
   Variant_True=-1;
   Variant_False=0;
 
-
+  ALM_FIXED_VALUE = 0;
+	ALM_LINE = 1;
 
 // {25AB9A87-EE0E-4a65-B535-761FD235C232}
   IID_IAlarmEvent: TGUID = (
     D1:$25ab9a87;  D2: $ee0e; D3: $4a65; D4: ($b5, $35, $76, $1f, $d2, $35, $c2, $32 ));
-
 
   // {5DCF608C-846A-4af6-8976-636D45D80765}
   IID_IAlarmsHandler: TGUID = (
@@ -44,10 +44,6 @@ const
   IID_IAlarmEventHandler: TGUID = (
     //   4cbf0abb       76d7       439c        8f   3b   dd   e8   5b   b0   a1   38
     D1: $4CBF0ABB; D2: $76D7; D3: $439C; D4: ($8F, $3B, $DD, $E8, $5B, $B0, $A1, $38));
-
-
-
-
 
 
 type
@@ -99,10 +95,15 @@ type
     function GetSignalTo(var a_pbstrName: BStr): HRESULT;stdcall;
     // virtual HRESULT STDMETHODCALLTYPE SetSignalTo(BSTR a_pbstrName)=0;
     function SetSignalTo(a_pbstrName: BStr): HRESULT;stdcall;
+	  // virtual HRESULT STDMETHODCALLTYPE GetSignalFrom(BSTR* a_pbstrName) = 0;
+    function GetSignalFrom(var a_pbstrName: BStr): HRESULT;stdcall;
+	  // virtual HRESULT STDMETHODCALLTYPE SetSignalFrom(BSTR a_pbstrName) = 0;
+    function SetSignalFrom(a_pbstrName: BStr): HRESULT;stdcall;
     // virtual HRESULT STDMETHODCALLTYPE GetSignalToValue(double* a_pdblVal)=0;
     function GetSignalToValue(var a_pdblVal: double): HRESULT;stdcall;
     // virtual HRESULT STDMETHODCALLTYPE SetSignalToValue(double a_dblVal)=0;
     function SetSignalToValue(var a_dblVal: double): HRESULT;stdcall;
+
     // Получить имя уставки
     // выделение памяти соответствует правилам COM
     // поэтому после получения имени требуется освободить память
@@ -111,31 +112,48 @@ type
     // Установить имя уставки
     // virtual HRESULT STDMETHODCALLTYPE SetName(BSTR a_pbstrName)=0;
     function SetName(a_pbstrName: BStr): HRESULT;stdcall;
+
     // Получить цвет
     // virtual HRESULT STDMETHODCALLTYPE GetColor(COLORREF* a_pColor)=0;
     function GetColor(var a_pColor: COLORREF): HRESULT;stdcall;
     // virtual HRESULT STDMETHODCALLTYPE SetColor(COLORREF a_clColor)=0;
     function SetColor(a_clColor: COLORREF): HRESULT;stdcall;
+
     // virtual HRESULT STDMETHODCALLTYPE Reset()=0;
     function Reset(): HRESULT;stdcall;
     // virtual HRESULT STDMETHODCALLTYPE AddEventHandler(IAlarmEvent* a_pHandler)=0;
     function AddEventHandler(a_pHandler: IAlarmEvent): HRESULT;stdcall;
+
 		// Путь к звуковому файлу воспроизводимому при срабатывании уставки
 		// Если строка пустая,значит звуковой сигнал отключен
     //virtual HRESULT STDMETHODCALLTYPE GetSoundName(BSTR* a_pbstrPath)=0;
     function GetSoundName(var a_pbstrPath: BSTR): HRESULT;stdcall;
 		//virtual HRESULT STDMETHODCALLTYPE SetSoundName(BSTR a_bstrPath)=0;
     function SetSoundName(a_pbstrName: BStr): HRESULT;stdcall;
+
     // Гистерезис в процентах
     // virtual HRESULT STDMETHODCALLTYPE GetGistPerc(double* a_pdblP)=0;
     function GetGistPerc(var a_pdblP: double): HRESULT;stdcall;
     // virtual HRESULT STDMETHODCALLTYPE SetGistPerc(double a_dblP)=0;
     function SetGistPerc(var a_dblP: double): HRESULT;stdcall;
+
+	  // since rc version 3.3.4.29
+
+	  // Получение флага режима воспроизведения до конца звукового файла после останови
+	  //virtual HRESULT STDMETHODCALLTYPE GetPlayTillTheEnd(VARIANT_BOOL* a_pbFlag) const = 0;
+    function GetPlayTillTheEnd(var a_pbFlag: VARIANT_BOOL): HRESULT;stdcall;
+
+	  // Установка флага режима воспроизведения до конца звукового файла после останови
+	  //virtual HRESULT STDMETHODCALLTYPE SetPlayTillTheEnd(VARIANT_BOOL a_bFlag) = 0;
+    function SetPlayTillTheEnd(var a_pbFlag: VARIANT_BOOL): HRESULT;stdcall;
+
+	  // Режим задания уставки - фиксированное значение или линия (заданная неск.точками)
+	  //virtual HRESULT STDMETHODCALLTYPE GetMode(ULONG* pnMode) const = 0;
+    function GetMode(var pnMode: ULONG): HRESULT;stdcall;
+	  //virtual HRESULT STDMETHODCALLTYPE SetMode(ULONG nMode) = 0;
+    function SetMode(pnMode: ULONG): HRESULT;stdcall;
   end;
 
-  // глобальный обработчик аварий
-  // Реализуем класс в котором прописаны методы обработки аварий
-  // создаем экземпляр и подписываем его методом Attach
   IAlarmEventHandler = interface
     ['{4CBF0ABB-76D7-439C-8F3B-DDE85BB0A138}']
 	  //public:	virtual HRESULT STDMETHODCALLTYPE OnAlarmEvent(
@@ -154,15 +172,33 @@ type
 // Интерфейс для управления тегом
   IAlarmsControl = interface
     ['{47248BF5-198C-417c-9a6a-ee3ab8f46020}']
-    // Разрешить / запретить обрботку уставок
-    // virtual HRESULT STDMETHODCALLTYPE EnableAlarmsProcessing(VARIANT_BOOL vbEnable) = 0;
-    function EnableAlarmsProcessing(vbEnable: VARIANT_BOOL): HRESULT;
-    /// Получить число уставок
-    // virtual HRESULT STDMETHODCALLTYPE GetAlarmsCount(/*[out, retval]*/ULONG* punCount) = 0;
-    function GetAlarmsCount(var punCount: cardinal): HRESULT;
-    /// Получить уставоку
-    // virtual HRESULT STDMETHODCALLTYPE GetAlarm(/*[in]*/ ULONG a_unIndex, /*[out]*/IAlarm** ppAlarm) = 0;
-    function GetAlarm(var ppAlarm: IAlarm): HRESULT;
+    // Разрешить / запретить обработку уставок
+    //virtual HRESULT STDMETHODCALLTYPE EnableAlarmsProcessing(VARIANT_BOOL vbEnable) = 0;
+    function EnableAlarmsProcessing(vbEnable: VARIANT_BOOL): HRESULT; stdcall;
+
+    // Получить число уставок
+    //virtual HRESULT STDMETHODCALLTYPE GetAlarmsCount(/*[out, retval]*/ULONG* punCount) = 0;
+    function GetAlarmsCount(var punCount: ULONG): HRESULT; stdcall;
+
+    // Получить уставку
+    //virtual HRESULT STDMETHODCALLTYPE GetAlarm(/*[in]*/ ULONG a_unIndex, /*[out]*/IAlarm** ppAlarm) = 0;
+    function GetAlarm(const a_unIndex : ULONG; var ppAlarm: IAlarm): HRESULT; stdcall;
+
+    // Получить признак использования внешнего тега для определения состояния уставок
+    //virtual HRESULT STDMETHODCALLTYPE GetIsStateTagUsed(VARIANT_BOOL * isStateTagUsed) = 0;
+    function GetIsStateTagUsed(var isStateTagUsed: VARIANT_BOOL): HRESULT; stdcall;
+
+    // Установить признак использования внешнего тега для определения состояния уставок
+    //virtual HRESULT STDMETHODCALLTYPE SetIsStateTagUsed(VARIANT_BOOL isStateTagUsed) = 0;
+    function SetIsStateTagUsed(isStateTagUsed: VARIANT_BOOL): HRESULT; stdcall;
+
+    // Получить имя внешнего тега для определения состояния уставок
+    //virtual HRESULT STDMETHODCALLTYPE GetStateTag(BSTR * StateTag) = 0;
+    function GetStateTag(var StateTag: BSTR): HRESULT; stdcall;
+
+    // Установить имя внешнего тега для определения состояния уставок
+    //virtual HRESULT STDMETHODCALLTYPE SetStateTag(BSTR StateTag) = 0;}
+    function SetStateTag(StateTag: BSTR): HRESULT; stdcall;
   end;
 
 implementation

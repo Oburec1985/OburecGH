@@ -17,6 +17,7 @@ uses
   uSetList,
   uConfirmDlg,
   uEditPropertiesFrm,
+  uThresholdsFrm,
   PluginClass, ImgList;
 
 type
@@ -75,6 +76,7 @@ type
     ActiveModeE: TEdit;
     Label3: TLabel;
     GetNotifyCB: TCheckBox;
+    AlarmsBtn: TSpeedButton;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -120,6 +122,7 @@ type
       Shift: TShiftState);
     procedure TableModeSGSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
+    procedure AlarmsBtnClick(Sender: TObject);
   private
     // Режим подтверждения перехода
     m_CurControl: ccontrolobj;
@@ -1930,6 +1933,16 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TControlDeskFrm.AlarmsBtnClick(Sender: TObject);
+begin
+  if ThresholdFrm=nil then
+  begin
+    ThresholdFrm:=TThresholdFrm.Create(nil);
+  end;
+  ThresholdFrm.UpdateTagList;
+  ThresholdFrm.ShowModal;
 end;
 
 procedure TControlDeskFrm.CancelEditMode;

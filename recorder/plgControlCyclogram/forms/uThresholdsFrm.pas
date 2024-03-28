@@ -7,6 +7,7 @@ uses
   Dialogs, ComCtrls, uBtnListView, StdCtrls, ExtCtrls, Buttons,
   uControlEditFrame, uModeFrame, uRecorderEvents, uControlObj,
   uComponentServises,
+  uAlarms,
   pluginClass, ImgList, VirtualTrees, uVTServices, Menus, inifiles, uFilemng,
   uBaseObj, uRCFunc, uRvclService,
   tags, recorder, uBaseObjService, uModesTabsForm, activex, uRTrig,
@@ -14,12 +15,19 @@ uses
   uExcel, Spin, uSpin, uTagsListFrame;
 
 type
+  TAlarms = class;
+
   TThresholdGroup = class
   public
     ControlTag:itag;
-    AlarmList:tlist;
+    AlarmList:tstringlist;
     name:string;
+
+    normal, HH, h, L, LL:double;
+    outRange:double;
+    normalCol, outRangeCol, HHCol, hCol, LCol, LLCol:integer;
   public
+    function addtag(t:itag; var new:boolean):TAlarms;
     constructor create;
     destructor destroy;
   end;
@@ -27,8 +35,7 @@ type
   TAlarms = class
   public
     owner:TThresholdGroup;
-    normal, outRange, HH, h, L, LL:double;
-    normalCol, outRangeCol, HHCol, hCol, LCol, LLCol:integer;
+    t:itag;
   end;
 
   TThresholdFrm = class(TForm)
@@ -66,17 +73,19 @@ type
     GroupNameLabel: TLabel;
     ControTaglCB: TRcComboBox;
     ControlTagLabel: TLabel;
+    ImageList_16: TImageList;
+    NotValidCB: TCheckBox;
     procedure TagsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
     procedure TagsTVDragDrop(Sender: TBaseVirtualTree; Source: TObject;
       DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
       Pt: TPoint; var Effect: Integer; Mode: TDropMode);
+    procedure TagsTVChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
   private
-    procedure UpdateTagList;
-    function AddGroup:TThresholdGroup;
+    function AddGroup:pVirtualNode;
   public
-    { Public declarations }
+    procedure UpdateTagList;
   end;
 
 var
@@ -88,12 +97,41 @@ implementation
 
 { TThresholdFrm }
 
-function TThresholdFrm.AddGroup: TThresholdGroup;
+function TThresholdFrm.AddGroup: pVirtualnode;
+var
+  d:pnodedata;
+  g:TThresholdGroup;
 begin
-  result:=TThresholdGroup.create;
-  new:=AlgsTV.AddChild(n, nil);
-  TagsTV.Nodes()
-  result.name:=
+  g:=TThresholdGroup.create;
+  result:=TagsTV.AddChild(TagsTV.rootNode, nil);
+  d:=TagsTV.getNodeData(result);
+  g.name:='Group_'+inttostr(result.Index);
+  d.Caption:=g.name;
+  d.color:=TagsTV.normalcolor;
+  d.ImageIndex:=1;
+  D.data:=g;
+end;
+
+procedure TThresholdFrm.TagsTVChange(Sender: TBaseVirtualTree;
+  Node: PVirtualNode);
+var
+  d:pnodedata;
+  g:TThresholdGroup;
+  a:TAlarms;
+begin
+  Node := tagsTV.GetFirstSelected(true);
+  if Node <> nil then
+  begin
+    d:=tagsTV.GetNodeData(Node);
+    if tobject(d.Data) is TThresholdGroup then
+    begin
+      g:=TThresholdGroup(d.Data);
+    end;
+    if tobject(d.Data) is TAlarms then
+    begin
+      a:=TAlarms(d.Data);
+    end;
+  end;
 end;
 
 procedure TThresholdFrm.TagsTVDragDrop(Sender: TBaseVirtualTree;
@@ -101,10 +139,15 @@ procedure TThresholdFrm.TagsTVDragDrop(Sender: TBaseVirtualTree;
   Shift: TShiftState; Pt: TPoint; var Effect: Integer; Mode: TDropMode);
 var
   I: Integer;
-  n, sn, new, prev: PVirtualNode;
-  d, sd, nd:pnodedata;
+  n, new: PVirtualNode;
+  d, sd:pnodedata;
+  g:TThresholdGroup;
+  t:itag;
+  a:TAlarms;
+  newAlarm:boolean;
+  li:tlistitem;
 begin
-  // перетаскиваем vcl компонент
+  // создаем узел при необходимости
   n := Sender.DropTargetNode;
   if n<>nil then
   begin
@@ -112,47 +155,35 @@ begin
   end
   else
   begin
-
+    n:=AddGroup;
+    d:=TagsTV.getNodeData(n);
   end;
+  g:=TThresholdGroup(d.data);
+  // добавляем к узлу новые теги
   if source=TagsListFrame1.TagsLV then
   begin
-    if DataObject = nil then
+    li:=TagsListFrame1.TagsLV.Selected;
+    t:=itag(li.data);
+    while li<>nil do
     begin
-      AddAlgToNode(n);
-    end;
-  end
-  else
-  begin
-    if source=AlgsTV then // если источник само дерево алгоритмов
-    begin
-      sn:=AlgsTV.GetFirstSelected(false);
-      while sn<>nil do
+      a:=g.addtag(t, newAlarm);
+      if newAlarm then
       begin
-        sd:=AlgsTV.GetNodeData(sn);
-        if tobject(d.data) is cBaseAlgContainer then
-        begin
-          n:=n.Parent;
-          d:=AlgsTV.GetNodeData(n);
-        end;
-        if tobject(d.data) is cAlgConfig then // если дропаем в конфиг
-        begin
-          if tobject(sd.data) is cbasealgcontainer then
-          begin
-            if cbasealgcontainer(sd.data).ClassType=cAlgConfig(d.data).clType then
-            begin
-              new:=AlgsTV.AddChild(n, nil);
-              nd:=AlgsTV.GetNodeData(new);
-              nd.data:=sd.data;
-              nd.ImageIndex:=sd.ImageIndex;
-              nd.color:=sd.color;
-              nd.Caption:=sd.Caption;
-              cAlgConfig(d.data).AddChild(cbasealgcontainer(sd.data));
-              prev:=sn;
-              sn:=AlgsTV.GetNextSelected(sn, false);
-              AlgsTV.DeleteNode(prev,true);
-            end;
-          end;
-        end;
+        new:=TagsTV.AddChild(n, nil);
+        sd:=TagsTV.GetNodeData(new);
+        sd.data:=a;
+        sd.color:=TagsTV.normalcolor;
+        sd.ImageIndex:=0;
+        sd.Caption:=li.Caption;
+        li:=TagsListFrame1.TagsLV.GetNextItem(li, sdAll, [isSelected]);
+        if li<>nil then
+          t:=itag(li.data);
+      end
+      else
+      begin
+        li:=TagsListFrame1.TagsLV.GetNextItem(li, sdAll, [isSelected]);
+        if li<>nil then
+          t:=itag(li.data);
       end;
     end;
   end;
@@ -173,10 +204,47 @@ begin
 end;
 
 { TThresholdGroup }
+function TThresholdGroup.addtag(t: itag; var new:boolean): TAlarms;
+var
+  s:string;
+  a:TAlarms;
+  i:integer;
+begin
+  s:=t.GetName;
+  if not AlarmList.find(s, i) then
+  begin
+    a:=TAlarms.Create;
+    a.t:=t;
+    a.owner:=self;
+    AlarmList.AddObject(s, a);
+    result:=a;
+    new:=true;
+    if AlarmList.Count=1 then
+    begin
+      {HH:=;
+      h:=;
+      L:=;
+      LL:=;
+      normalCol:=;
+      outRangeCol:=;
+      HHCol:=;
+      hCol:=;
+      LCol:=;
+      LLCol:=;}
+    end;
+  end
+  else
+  begin
+    a:=TAlarms(AlarmList.Objects[i]);
+    result:=a;
+    new:=false;
+  end;
+end;
 
 constructor TThresholdGroup.create;
 begin
-  AlarmList:=TList.Create;
+  AlarmList:=TStringList.Create;
+  AlarmList.Sorted:=true;
 end;
 
 destructor TThresholdGroup.destroy;
@@ -186,7 +254,7 @@ var
 begin
   for I := 0 to AlarmList.Count - 1 do
   begin
-    a:=TAlarms(AlarmList.Items[i]);
+    a:=TAlarms(AlarmList.objects[i]);
     a.Destroy;
   end;
   AlarmList.Destroy;
