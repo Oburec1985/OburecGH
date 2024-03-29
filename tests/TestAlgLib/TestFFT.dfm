@@ -66,7 +66,6 @@ object Form1: TForm1
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitWidth = 884
   end
   object IterCountIE: TIntEdit
     Left = 773
@@ -114,5 +113,14 @@ object Form1: TForm1
     Caption = 'LgXCb'
     TabOrder = 8
     OnClick = CheckBox1Click
+  end
+  object Button1: TButton
+    Left = 8
+    Top = 84
+    Width = 170
+    Height = 25
+    Caption = 'SSE'
+    TabOrder = 9
+    OnClick = SSEBtnClick
   end
 end

@@ -1124,14 +1124,14 @@ begin
             else
               params:=params+'Zone_state='+str+',';
           end;
-          // «начени€
+          // «начени€ ‘ормат "32Е42; 50" где 50 - значение дл€ первого тега
           str:=sh.Cells[j+4,6+4+modeind*c_modeColCount];
           if str<>'' then
           begin
             // or (pos('Е', str)=2)
-            if pos('.', str)<1  then
+            if pos('.', str)<1  then // если не нашли точку
             begin
-              if pos('Е', str)=2 then
+              if pos('Е', str)>0 then // и не нашли троиточие
               begin
               end
               else
@@ -1142,7 +1142,7 @@ begin
                   l_b:=true;
                 end;
               end;
-              str:='0...0;';
+              // str:='0...0;'; // тупо затирал полезные данные?
               params:=params+'Vals='+str+',';
             end
             else

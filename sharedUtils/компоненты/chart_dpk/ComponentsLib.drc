@@ -3453,23 +3453,23 @@ BEGIN
 END
 
 /* ..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common\JclUnicode.res */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.dfm */
+/* chart\forms\uDrawObjFrame.dfm */
 /* ..\..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uAxisForm.dfm */
 /* chart\forms\uTextLabelForm.dfm */
 /* chart\forms\uDoubleCursorForm.dfm */
 /* chart\forms\uCursorForm.dfm */
 /* chart\forms\uPageForm.dfm */
 /* chart\forms\uDrawObjEditForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
+/* chart\forms\uGistFrame.dfm */
+/* chart\forms\uGistForm.dfm */
 /* chart\forms\uTrendFrame.dfm */
 /* chart\forms\uTrendForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uEditChartObjFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateTrendFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateObjForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\frames\uChartInputFrame.dfm */
+/* chart\forms\uChartCfgForm.dfm */
+/* chart\forms\uEditMenuChartForm.dfm */
+/* chart\forms\uEditChartObjFrame.dfm */
+/* chart\forms\uCreateTrendFrame.dfm */
+/* chart\forms\uCreateObjForm.dfm */
+/* chart\forms\frames\uChartInputFrame.dfm */
 /* chart\forms\uCreateObjFrm.dfm */
 /* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\ComponentsLib.res */
 /* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\ComponentsLib.drf */

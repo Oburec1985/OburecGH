@@ -9,7 +9,7 @@ uses
   complex,
   uHardwareMath,
   uFFT,
-  performancetime,
+  performancetime, nativexml,
   fft, fht, Ap, DCL_MYOWN, ComCtrls, ExtCtrls, uChart, utrend, upage, uaxis, uBuffTrend1d;
 
 // AVal - массив анализируемых данных, Nvl - длина массива, должна быть кратна степени 2.
@@ -28,6 +28,7 @@ type
     LgyCb: TCheckBox;
     UseShaders: TCheckBox;
     CheckBox1: TCheckBox;
+    Button1: TButton;
     procedure AlgLibClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure SSEBtnClick(Sender: TObject);
@@ -170,51 +171,21 @@ end;
 
 procedure TForm1.SSEBtnClick(Sender: TObject);
 var
-  m:cmerafile;
-  s:cbuffsignal;
-  rezS:cbuffsignal;
-  resMera:cMeraFile;
-  meraopts:tmeraopts;
-  cmplx_resArray:TComplex1DArray;
-  ar,outArray:TArrayValues;
+  doc:TNativeXml;
+  node:txmlnode;
   I: Integer;
-  w:pwndFunc;
+
 begin
-  meraopts.TestName:='Фаза';
-  meraopts.TestDsc:='Фаза';
-
-  m:=cmerafile.create('c:\USML\Файлы\cos_221_fs13500\cosinus.MERA',cBuffSignal);
-  s:=cbuffsignal(m.GetSignal(0));
-
-  setlength(outarray,round(fcount));
-  setlength(cbuffsignal(s).d_points1d,fcount);
-
-  ar:=tarrayvalues(cbuffsignal(s).d_points1d);
-  setlength(outarray,round(fcount/2));
-  //w:=GetFFTWnd(FFTProp.PCount,wdRect);
-  w:=GetFFTWnd(FFTProp.PCount,wdHann);
-  fft_al_d_sse(tdoublearray(ar),TCmxArray_d(CalcSampl.p),fftprop, w);
-  // без учета оконной функции
-  NormalizeAndScaleSpmMag(TCmxArray_d(CalcSampl.p), TDoubleArray(MagFFTarray.p));
-
-  rezS:=cBuffSignal.create;
-  rezS.datatype:='r8';
-
-  rezs.AddPoints(TDoubleArray(MagFFTarray.p));
-
-  rezS.name:='res_rect';
-  rezS.freqX:=(2*FCount)/(cbuffsignal(s).freqx*2);
-  //rezs.x0:=1/rezs.freqx;
-  rezs.x0:=0;
-
-  rezSignals:=TStringList.Create;
-  rezSignals.AddObject(rezS.name,rezS);
-  resMera:=cMeraFile.create('c:\USML\Файлы\cos_221_fs13500\hann\res_rect.mera','c:\USML\Файлы\cos_221_fs13500\hann\',
-                             rezSignals,
-                             meraopts,nil);
-  resMera.Save;
-  resMera.Destroy;
-  rezSignals.Destroy;
+  doc:=TNativeXml.Create(nil);
+  doc.XmlFormat:=xfReadable;
+  doc.LoadFromFile('c:\Mera Files\Recorder\configs\cfg_cyclogram_001\005\баг\начало в2_.xml');
+  //node:=doc.Root.FindNode(sectionname);
+  if node<>nil then
+  begin
+    //result:=AddFromXML(node);
+  end
+  else
+    doc.Destroy;
 end;
 
 procedure TForm1.UseShadersClick(Sender: TObject);

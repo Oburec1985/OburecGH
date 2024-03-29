@@ -3089,6 +3089,7 @@ begin
     xmlNode.WriteAttributeBool('Zones_UsePrevVal', z.fUsePrevZoneVals);
   begin
     pars := tstringlist.create;
+    // 'Tol=0/0,tCount=1,t0=Уставка_1,tVal0=0'
     for i := 0 to m_ZoneList.Count - 1 do
     begin
       z := m_ZoneList.GetZone(i);
@@ -5440,10 +5441,10 @@ begin
         val := n.ReadAttributeFloat('TaskVal', 0);
         editTask(tname, val);
         t := GetTask(tname);
-        t.m_tolerance := n.ReadAttributeFloat('Tolerance', 0);
-        t.m_useTolerance := n.ReadAttributeBool('UseTolerance', false);
         if t <> nil then
         begin
+          t.m_tolerance := n.ReadAttributeFloat('Tolerance', 0);
+          t.m_useTolerance := n.ReadAttributeBool('UseTolerance', false);
           t.task := val;
           t.TaskType := IntToTPType(n.ReadAttributeInteger('TaskType', 0));
           t.leftTang.x := n.ReadAttributeFloat('LeftTangX', 0);

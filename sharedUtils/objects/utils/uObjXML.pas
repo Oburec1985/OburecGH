@@ -152,7 +152,7 @@ begin
 
   for I := 1 to length(obj.name) - 1 do
   begin
-    if str[i]=' ' then
+    if (str[i]=' ') or (str[i]='/') or (str[i]='\') then
     begin
       str[i]:='_';
     end;

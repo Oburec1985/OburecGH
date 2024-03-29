@@ -424,6 +424,8 @@ VAR
   mThread: integer;
 begin
   inherited;
+  m_CurMode:=nil;
+
   m_ViewControls:=TList.Create;
 
   m_counted := false;
@@ -540,6 +542,7 @@ begin
   if not finit then exit;
   if not fload then exit;
   m_CurControl := nil;
+  m_CurMode:= nil;
   ControlPropE.text := '';
   if g_createGUI then
     Preview;
@@ -2482,6 +2485,8 @@ begin
 end;
 
 // ZoneVals
+// возвращает строку вида "Тег = 1" на вход принимает 30...50;1;2 , где 1 - значение для первого тега
+// 2 для второго и т.д.
 function TControlDeskFrm.ZoneListToParams(str: string; zl: cZoneList): string;
 var
   I, k, j, ind: integer;
@@ -2493,11 +2498,11 @@ begin
   k := pos(':', str) + 1;
   j := pos(';', str);
   str1 := Copy(str, j + 1, length(str) - j);
-  if str1='' then
-  begin
-    result:='';
-    exit;
-  end;
+  //if str1='' then
+  //begin
+  //  result:='';
+  //  exit;
+  //end;
   k := pos('...', str) + 1;
   if k < 1 then
     k := pos('…', str);
@@ -2507,30 +2512,41 @@ begin
   ind := 0; // индекс тега
   str3 := '';
   k := 1;
-  if (str1[1] = 'N') or (str1[1] = 'P') then
+  if str1<>'' then
   begin
-    if str1[1] = 'N' then
-      z := zl.z_inf_neg
+    if (str1[1] = 'N') or (str1[1] = 'P') then
+    begin
+      if str1[1] = 'N' then
+        z := zl.z_inf_neg
+      else
+        z := zl.z_inf_pos;
+      k := 2
+    end
     else
-      z := zl.z_inf_pos;
-    k := 2
+    begin
+      z := zl.defaultZone;
+      if z.fUsePrevZoneVals then
+        z := zl.z_inf_neg;
+      k := 1;
+    end;
+    str2 := Copy(str1, k, length(str1) - k + 1);
   end
   else
   begin
     z := zl.defaultZone;
     if z.fUsePrevZoneVals then
       z := zl.z_inf_neg;
-    k := 1;
   end;
   // if (str1[1]='N') and  (length(str1)>1) then
   begin
-    str2 := Copy(str1, k, length(str1) - k + 1);
     ppair := z.GetZonePairPointer(ind);
     if ppair <> nil then
     begin
       if ppair.tag<>nil then
       begin
         str1 := GetSubString(str2, ';', 1, j);
+        if str1='' then
+          str1:='0';
         str3 := itag(ppair.tag).GetName + '=' + str1;
         while str1 <> '' do
         begin
