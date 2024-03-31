@@ -533,7 +533,7 @@ object ThresholdFrm: TThresholdFrm
       OnChange = TagsTVChange
       OnDragOver = TagsTVDragOver
       OnDragDrop = TagsTVDragDrop
-      ExplicitTop = 2
+      ExplicitLeft = 2
       Columns = <>
     end
   end

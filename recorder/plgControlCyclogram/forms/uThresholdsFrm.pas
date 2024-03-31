@@ -22,13 +22,14 @@ type
     outRange:double;
     normalCol, outRangeCol, HHCol, hCol, LCol, LLCol:integer;
     // если не valid то ставим цвет серый outRangeCol
-    m_valid:boolean;
+    m_notvalid:boolean;
   end;
 
   PDataRec = ^DataRec;
 
   TThresholdGroup = class
   public
+    initList:boolean;
     // тег для переключения наборов
     ControlTag:itag;
     AlarmList:tstringlist;
@@ -42,6 +43,7 @@ type
     // заполнить массив данными
     procedure fillData(from:integer; pd:PDataRec);
   public
+    procedure initiface;
     procedure setCount(c:integer);
     // получить запись с уставками
     function AlarmData:PDataRec;overload;
@@ -51,7 +53,8 @@ type
     procedure StringToData(str:string;i:integer);
     // получить значение тега управляющего наборами
     function ControlVal:integer;
-    function addtag(t:itag; var new:boolean):TAlarms;
+    function addtag(t:itag; var new:boolean):TAlarms;overload;
+    function addtag(tname:string; var new:boolean):TAlarms;overload;
     // обновить список аварий в тегах
     procedure ApplyAlarms;overload;
     procedure ApplyAlarms(pd:PDataRec);overload;
@@ -62,9 +65,14 @@ type
   TAlarms = class
   public
     owner:TThresholdGroup;
-    t:itag;
+    t:ctag;
     m_ACon: IAlarmsControl;
     m_a_ll,m_a_l,m_a_h,m_a_hh:IAlarm;
+  protected
+    procedure initTagIface;
+  public
+    constructor create;
+    destructor destroy;
   end;
 
   TThresholdFrm = class(TForm)
@@ -116,6 +124,7 @@ type
     procedure CountIEChange(Sender: TObject);
     procedure HHColorDblClick(Sender: TObject);
   public
+    m_Groups:TStringList;
     m_selGroup:TThresholdGroup;
   private
     function AddGroup:pVirtualNode;
@@ -126,6 +135,9 @@ type
     procedure save(fname:string);
     procedure load(fname:string);
     procedure UpdateTagList;
+    procedure clear;
+    constructor create(aowner:tcomponent);override;
+    destructor destroy;
   end;
 
 var
@@ -142,18 +154,55 @@ var
   g:TThresholdGroup;
 begin
   g:=TThresholdGroup.create;
-  result:=TagsTV.AddChild(TagsTV.rootNode, nil);
-  d:=TagsTV.getNodeData(result);
-  g.name:='Group_'+inttostr(result.Index);
-  d.Caption:=g.name;
-  d.color:=TagsTV.normalcolor;
-  d.ImageIndex:=1;
-  D.data:=g;
+  g.name:='Group_'+inttostr(m_Groups.Count);
+  m_Groups.AddObject(g.name, g);
+  if TagsTV<>nil then
+  begin
+    result:=TagsTV.AddChild(TagsTV.rootNode, nil);
+    d:=TagsTV.getNodeData(result);
+    d.Caption:=g.name;
+    d.color:=TagsTV.normalcolor;
+    d.ImageIndex:=1;
+    D.data:=g;
+  end;
+end;
+
+procedure TThresholdFrm.clear;
+var
+  I: Integer;
+  g:TThresholdGroup;
+begin
+  for I := 0 to m_Groups.Count - 1 do
+  begin
+    g:=TThresholdGroup(m_Groups.Objects[i]);
+    g.destroy;
+  end;
+  m_Groups.Clear;
+  TagsTV.Clear;
 end;
 
 procedure TThresholdFrm.CountIEChange(Sender: TObject);
 begin
   NumSe.MaxValue:=CountIE.IntNum-1;
+end;
+
+constructor TThresholdFrm.create(aowner: tcomponent);
+begin
+  inherited;
+  m_Groups:=TStringList.Create;
+end;
+
+destructor TThresholdFrm.destroy;
+var
+  I: Integer;
+  g:TThresholdGroup;
+begin
+  for I := 0 to m_Groups.Count - 1 do
+  begin
+    g:=TThresholdGroup(m_Groups.Objects[i]);
+    g.destroy;
+  end;
+  m_Groups.Destroy;
 end;
 
 function TThresholdFrm.getGroup(i:integer): TThresholdGroup;
@@ -207,12 +256,12 @@ var
   s, str:string;
 begin
   ifile:=TIniFile.Create(fname);
-  ifile.WriteString('Main', 'GCount', TagsTV.RootNode.ChildCount);
+  ifile.WriteString('Main', 'GCount', inttostr(TagsTV.RootNode.ChildCount));
   for I := 0 to TagsTV.RootNode.ChildCount - 1 do
   begin
     g:=getGroup(i);
     ifile.WriteString('G_'+inttostr(i), 'Name', g.name);
-    if s<>'' then
+    if g.ControlTag<>nil then
     begin
       s:=g.ControlTag.GetName;
       ifile.WriteString('G_'+inttostr(i), 'ControlTag', s);
@@ -220,14 +269,14 @@ begin
     ifile.WriteInteger('G_'+inttostr(i), 'Size', g.m_size);
     for j := 0 to g.m_size - 1 do
     begin
-      ifile.WriteString('G_'+inttostr(i), 'Data_'+inttostr(j), g.toString(i));
+      ifile.WriteString('G_'+inttostr(i), 'Data_'+inttostr(j), g.toString(j));
     end;
     ifile.WriteInteger('G_'+inttostr(i), 'TCount', g.AlarmList.Count);
     str:='';
     for j := 0 to g.AlarmList.Count - 1 do
     begin
       a:=g.GetAlarm(j);
-      s:=a.t.GetName;
+      s:=a.t.tagname;
       str:=str+s+';';
     end;
     ifile.WriteString('G_'+inttostr(i), 'Tags', str);
@@ -247,8 +296,9 @@ var
   new:boolean;
   a:TAlarms;
 begin
+  clear;
   ifile:=TIniFile.Create(fname);
-  c:=ifile.ReadString('Main', 'GCount', 0);
+  c:=ifile.ReadInteger('Main', 'GCount', 0);
   for I := 0 to c - 1 do
   begin
     n:=AddGroup;
@@ -258,20 +308,29 @@ begin
     s:=ifile.ReadString('G_'+inttostr(i), 'ControlTag', '');
     if s<>'' then
       g.ControlTag:=getTagByName(s);
-    g.setCount(ifile.ReadInteger('G_'+inttostr(i), 'Size', 1));
+    c:=ifile.ReadInteger('G_'+inttostr(i), 'Size', 1);
+    g.setCount(c);
     for j := 0 to g.m_size - 1 do
     begin
-      s:=ifile.ReadString('G_'+inttostr(i),  'Data_'+inttostr(j), '10;5;-5;-10;255;2;3;255;0;1');
+      s:=ifile.ReadString('G_'+inttostr(i),  'Data_'+inttostr(j), '10;5;-5;-10;255;65535;65535;255;0;1');
       g.StringToData(s,j);
     end;
+    g.initList:=true;
     c1:=ifile.ReadInteger('G_'+inttostr(i), 'TCount', 0);
     s:=ifile.ReadString('G_'+inttostr(i), 'Tags', '');
     for j := 0 to c1 - 1 do
     begin
       s1:=getSubStrByIndex(s, ';', 1, j);
       t:=getTagByName(s1);
-      a:=g.addtag(t, new);
-      a.t:=t;
+      if t<>nil then
+      begin
+        a:=g.addtag(t, new);
+        a.t.tag:=t;
+      end
+      else
+      begin
+        g.addtag(s1, new);
+      end;
     end;
   end;
   ifile.Destroy;
@@ -411,7 +470,8 @@ begin
 end;
 
 { TThresholdGroup }
-function TThresholdGroup.addtag(t: itag; var new:boolean): TAlarms;
+
+function TThresholdGroup.addtag(tname: string; var new: boolean): TAlarms;
 var
   s:string;
   a:TAlarms;
@@ -420,62 +480,42 @@ var
   count:cardinal;
   temp_BSTR: BSTR;
   v:double;
+
+  n:PVirtualNode;
+  d:PNodeData;
 begin
-  s:=t.GetName;
+  s:=tname;
   if not AlarmList.find(s, i) then
   begin
     a:=TAlarms.Create;
-    a.t:=t;
+    a.t.tagname:=tname;
     a.owner:=self;
-    if FAILED(t.QueryInterface(IID_IAlarmsControl, a.m_ACon)) then
-      a.m_ACon:=nil;
-    a.m_ACon.GetAlarmsCount(count);
-    for I := 0 to count-1 do
-    begin
-      a.m_ACon.GetAlarm(i, ia);
-      case i of
-        0:a.m_a_ll:=ia;
-        1:a.m_a_l:=ia;
-        2:a.m_a_h:=ia;
-        3:a.m_a_hh:=ia;
-      end;
-    end;
+    if a.t.tag<>nil then
+      a.initTagIface;
     AlarmList.AddObject(s, a);
     result:=a;
     new:=true;
+
+    n:=ThresholdFrm.TagsTV.GetNodeByName(TThresholdGroup(a.owner).name);
+    // добавляем к узлу новые теги
+    n:=ThresholdFrm.TagsTV.AddChild(n, nil);
+    d:=ThresholdFrm.TagsTV.GetNodeData(n);
+    d.data:=a;
+    d.color:=ThresholdFrm.TagsTV.normalcolor;
+    d.ImageIndex:=0;
+    d.Caption:=tname;
   end
   else
   begin
     result:=TAlarms(AlarmList.Objects[i]);
     new:=false;
   end;
-  //ia.GetName(temp_BSTR);
-  //ia.SetEnabled(Variant_True); // включаем уставку
-  //pAlarm.SetColor(clLime);   // цвет уставки
-  // устанавливаем уставку
-  //ia.SetLevel((10-i));
-  if AlarmList.Count=1 then
-  begin
-    a.m_a_hh.GetLevel(v);
-    m_Data[0].HH:=v;
-    a.m_a_h.GetLevel(v);
-    m_Data[0].h:=v;
-    a.m_a_l.GetLevel(v);
-    m_Data[0].L:=v;
-    a.m_a_ll.GetLevel(v);
-    m_Data[0].LL:=v;
-    m_Data[0].normalCol:=clWhite;
-    m_Data[0].outRangeCol:=clGray;
-    a.m_a_hh.GetColor(c);
-    m_Data[0].HHCol:=c;
-    a.m_a_h.GetColor(c);
-    m_Data[0].hCol:=c;
-    a.m_a_l.GetColor(c);
-    m_Data[0].LCol:=c;
-    a.m_a_ll.GetColor(c);
-    m_Data[0].LLCol:=c;
-    fillData(1, @m_Data[0]);
-  end;
+end;
+
+function TThresholdGroup.addtag(t: itag; var new:boolean): TAlarms;
+begin
+  if t<>nil then
+    addtag(t.GetName, new);
 end;
 
 function TThresholdGroup.AlarmData: PDataRec;
@@ -531,6 +571,7 @@ end;
 
 constructor TThresholdGroup.create;
 begin
+  initList:=false;
   AlarmList:=TStringList.Create;
   AlarmList.Sorted:=true;
   m_capacity:=20;
@@ -567,6 +608,18 @@ begin
   result:=TAlarms(AlarmList.Objects[i]);
 end;
 
+procedure TThresholdGroup.initiface;
+var
+  I: Integer;
+  a:TAlarms;
+begin
+  for I := 0 to AlarmList.Count - 1 do
+  begin
+    a:=GetAlarm(i);
+    a.initTagIface;
+  end;
+end;
+
 procedure TThresholdGroup.setCount(c: integer);
 begin
   if m_size<c then
@@ -584,12 +637,12 @@ end;
 procedure TThresholdGroup.StringToData(str: string; i: integer);
 var
   s:string;
-  ind:integer;
+  j:integer;
 begin
-  for I := 0 to 9 do
+  for j := 0 to 9 do
   begin
-    s:=getSubStrByIndex(str, ';',1,ind);
-    case i of
+    s:=getSubStrByIndex(str, ';',1,j);
+    case j of
       0:m_Data[i].HH:=strtofloat(s);
       1:m_Data[i].H:=strtofloat(s);
       2:m_Data[i].l:=strtofloat(s);
@@ -602,9 +655,9 @@ begin
       9:
       begin
         if s='0' then
-          m_Data[i].m_valid:=false
+          m_Data[i].m_notvalid:=false
         else
-          m_Data[i].m_valid:=true;
+          m_Data[i].m_notvalid:=true;
       end;
     end;
   end;
@@ -617,10 +670,81 @@ begin
           +inttostr(m_Data[i].HHCol)+';'+inttostr(m_Data[i].HCol)+';'
           +inttostr(m_Data[i].lCol)+';'+inttostr(m_Data[i].llCol)+';'
           +inttostr(m_Data[i].outRangeCol);
-  if m_Data[i].m_valid then
+  if m_Data[i].m_notvalid then
     result:=result+';1'
   else
     result:=result+';0';
+end;
+
+{ TAlarms }
+
+constructor TAlarms.create;
+begin
+  t:=cTag.create;
+end;
+
+destructor TAlarms.destroy;
+begin
+  t.destroy;
+end;
+
+procedure TAlarms.initTagIface;
+var
+  i:integer;
+  ia:IAlarm;
+  v:double;
+  c:integer;
+begin
+  if m_ACon<>nil then exit;
+  if t.tag=nil then
+    t.tag:=getTagByName(t.tagname);
+  if t.tag=nil then exit;
+
+  if FAILED(t.tag.QueryInterface(IID_IAlarmsControl, m_ACon)) then
+  begin
+    m_ACon:=nil;
+  end;
+  if m_aCon<>nil then
+  begin
+  //m_ACon.GetAlarmsCount(count);
+    for I := 0 to 3 do
+    begin
+      m_ACon.GetAlarm(i, ia);
+      case i of
+        0:m_a_ll:=ia;
+        1:m_a_l:=ia;
+        2:m_a_h:=ia;
+        3:m_a_hh:=ia;
+      end;
+    end;
+    if not owner.initList then
+    begin
+      owner.initList:=true;
+      // если инициализируем первый тег
+      if owner.AlarmList.Count=1 then
+      begin
+        m_a_hh.GetLevel(v);
+        owner.m_Data[0].HH:=v;
+        m_a_h.GetLevel(v);
+        owner.m_Data[0].h:=v;
+        m_a_l.GetLevel(v);
+        owner.m_Data[0].L:=v;
+        m_a_ll.GetLevel(v);
+        owner.m_Data[0].LL:=v;
+        owner.m_Data[0].normalCol:=clWhite;
+        owner.m_Data[0].outRangeCol:=clGray;
+        m_a_hh.GetColor(c);
+        owner.m_Data[0].HHCol:=c;
+        m_a_h.GetColor(c);
+        owner.m_Data[0].hCol:=c;
+        m_a_l.GetColor(c);
+        owner.m_Data[0].LCol:=c;
+        m_a_ll.GetColor(c);
+        owner.m_Data[0].LLCol:=c;
+        owner.fillData(1, @owner.m_Data[0]);
+      end;
+    end;
+  end;
 end;
 
 end.

@@ -554,8 +554,20 @@ begin
 end;
 
 procedure TControlDeskFrm.doRcInit(Sender: TObject);
+var
+  I: Integer;
+  g:TThresholdGroup;
 begin
   finit:=true;
+  if ThresholdFrm<>nil then
+  begin
+    for I := 0 to ThresholdFrm.m_Groups.Count - 1 do
+    begin
+      g:=ThresholdFrm.getGroup(i);
+      // инитим ифейсы тегов которые созданы
+      g.initiface;
+    end;
+  end;
 end;
 
 procedure TControlDeskFrm.doAddObj(Sender: TObject);
@@ -716,6 +728,20 @@ begin
     m_ViewControls.Add(con);
   end;
   fload:=true;
+
+  s:=ExtractFileDir(a_pIni.FileName)+'\alarms.ini';
+  if s<>'' then
+  begin
+    if ThresholdFrm=nil then
+    begin
+      ThresholdFrm:=tThresholdFrm.Create(nil);
+      ThresholdFrm.load(s);
+    end
+    else
+    begin
+      ThresholdFrm.load(s);
+    end;
+  end;
 end;
 
 procedure TControlDeskFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -723,6 +749,7 @@ var
   I: Integer;
   c:cControlObj;
   s:string;
+  ifile:tinifile;
 begin
   inherited;
   // получать настроечные сообщения
@@ -741,6 +768,12 @@ begin
     s:=s+c.name+',';
   end;
   a_pIni.WriteString(str,'CustSortList', s);
+
+  s:=ExtractFileDir(a_pIni.FileName)+'\alarms.ini';
+  if ThresholdFrm<>nil then
+  begin
+    ThresholdFrm.save(s);
+  end;
 end;
 
 procedure TControlDeskFrm.PauseBtnClick(Sender: TObject);
