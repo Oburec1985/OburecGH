@@ -391,7 +391,7 @@ object EditCntlWrnFrm: TEditCntlWrnFrm
               Caption = 'Fs'
               Width = 38
             end>
-          ExplicitTop = 113
+          ExplicitTop = 115
           ExplicitWidth = 214
           ExplicitHeight = 271
         end
@@ -971,8 +971,8 @@ object EditCntlWrnFrm: TEditCntlWrnFrm
     end
   end
   object BackGroundColorDialog: TColorDialog
-    Left = 656
-    Top = 458
+    Left = 104
+    Top = 66
   end
   object ImageList_32: TImageList
     Height = 32
