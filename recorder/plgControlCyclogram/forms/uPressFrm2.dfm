@@ -357,6 +357,8 @@ object PressFrm2: TPressFrm2
         TabOrder = 0
         ExplicitLeft = 1
         ExplicitTop = 1
+        ExplicitWidth = 354
+        ExplicitHeight = 39
         inherited ALabel: TLabel
           Width = 21
           Height = 17
@@ -371,6 +373,7 @@ object PressFrm2: TPressFrm2
         end
         inherited ProgrBar: TGauge
           Width = 192
+          ExplicitWidth = 192
         end
         inherited FreqEdit: TEdit
           Height = 25

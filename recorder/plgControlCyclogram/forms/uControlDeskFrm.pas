@@ -288,6 +288,8 @@ const
   c_Pause_State = 1;
   c_Play_State = 0;
 
+  c_digits = 4;
+
   clGrass = TColor($00A7FED0);
 
 
@@ -959,8 +961,7 @@ begin
       t := m.gettask(con.name);
       if t <> nil then
         TableModeSG.Cells[c_ModeTable_headerCol - 1 + j,
-          c_ModeTable_headerSize + I] := formatstrnoe
-          (t.task, 2);
+          c_ModeTable_headerSize + I] := formatstrnoe (t.task, c_digits);
     end;
   end;
   SGChange(TableModeSG);
@@ -1998,7 +1999,7 @@ begin
     t := m_CurMode.gettask(m_CurControl.name);
     if t <> nil then
     begin
-      TableModeSG.Cells[m_curCol, m_curRow] := formatstrnoe(t.task, 2);
+      TableModeSG.Cells[m_curCol, m_curRow] := formatstrnoe(t.task, c_digits);
     end;
     SGChange(TableModeSG);
   end;
@@ -2287,7 +2288,7 @@ begin
       ControlSG.Cells[c_Col_Feedback, I] := c.getFBstr;
       if (g_conmng.State <> c_stop) and (g_conmng.State <> c_Pause) then
       begin
-        ControlSG.Cells[c_Col_Task, I] := formatstrnoe(c.task, 4);
+        ControlSG.Cells[c_Col_Task, I] := formatstrnoe(c.task, c_digits);
       end;
     end;
   end;
@@ -2667,10 +2668,10 @@ begin
     if m_tolArray.Count > 0 then
     begin
       d := m_tolArray.GetDouble(0);
-      str := formatstrnoe(t.task + d, 4);
+      str := formatstrnoe(t.task + d, c_digits);
       ControlPropSG.Cells[I + 1, 3] := str;
       d := m_tolArray.GetDouble(m_tolArray.Count - 1);
-      str := formatstrnoe(t.task + d, 4);
+      str := formatstrnoe(t.task + d, c_digits);
       ControlPropSG.Cells[I + 1, 4] := str;
     end
     else

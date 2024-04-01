@@ -477,6 +477,12 @@
 			<DCCReference Include="forms\uThresholdsFrm.pas">
 				<Form>ThresholdFrm</Form>
 			</DCCReference>
+			<DCCReference Include="forms\uDigsFrm.pas">
+				<Form>DigsFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uDigsFrmEdit.pas">
+				<Form>DigsFrmEdit</Form>
+			</DCCReference>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

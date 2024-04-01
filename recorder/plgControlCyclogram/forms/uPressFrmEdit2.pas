@@ -3,10 +3,34 @@ unit uPressFrmEdit2;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Grids, uStringGridExt, DCL_MYOWN, Spin, StdCtrls, uRcCtrls,
-  uTagsListFrame, Buttons, ExtCtrls, uComponentservises, ComCtrls,
-  Tags, uCommonMath, uRCFunc, uPressFrm2, uPressFrmFrame2, uspm, uHardwareMath;
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
+  uRCFunc,
+  uHardwareMath, MathFunction,
+  Forms, ComCtrls,
+  uRecBasicFactory,
+  uRecorderEvents,
+  uComponentServises,
+  uChart,
+  inifiles,
+  upage,
+  tags,
+  complex,
+  uBuffTrend1d,
+  uCommonMath,
+  uCommonTypes,
+  pluginClass,
+  uMeasureBase,
+  uMBaseControl,
+  shellapi,
+  uPathMng,
+  uExcel,
+  uListMath,
+  uSpm, uBaseAlg,
+  opengl, uSimpleObjects,
+  math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend,
+  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uPressFrmFrame2,
+  uPressFrm2,
+  uRcCtrls, Menus, Grids, uStringGridExt, uTagsListFrame;
 
 type
   TPressFrmEdit2 = class(TForm)

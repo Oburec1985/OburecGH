@@ -212,7 +212,9 @@ uses
   rkVistaProBar in '..\..\sharedUtils\компоненты\dcl_dpk\VistaProbar\rkVistaProBar.pas',
   uShader in '..\..\sharedUtils\ogl\shader\uShader.pas',
   uLineLgShader in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\shaders\uLineLgShader.pas',
-  uThresholdsFrm in 'forms\uThresholdsFrm.pas' {ThresholdFrm};
+  uThresholdsFrm in 'forms\uThresholdsFrm.pas' {ThresholdFrm},
+  uDigsFrm in 'forms\uDigsFrm.pas' {DigsFrm},
+  uDigsFrmEdit in 'forms\uDigsFrmEdit.pas' {DigsFrmEdit};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

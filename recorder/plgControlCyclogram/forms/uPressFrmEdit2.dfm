@@ -43,15 +43,19 @@ object PressFrmEdit2: TPressFrmEdit2
         end
         inherited FilterEdit: TEdit
           Width = 270
+          Height = 24
           ExplicitWidth = 270
+          ExplicitHeight = 24
         end
         inherited FrmTagPropValueEdit: TEdit
           Left = 123
           Top = 83
           Width = 153
+          Height = 24
           ExplicitLeft = 123
           ExplicitTop = 83
           ExplicitWidth = 153
+          ExplicitHeight = 24
         end
         inherited FrmTagPropNameCB: TComboBox
           Top = 83

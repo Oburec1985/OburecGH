@@ -1415,7 +1415,7 @@ var
   astr: ansistring;
 begin
   b := false;
-  if Gettagname <> s then
+  if (Gettagname <> s) or (tag=nil) then
   begin
     if not RStateConfig then
     begin

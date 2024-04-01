@@ -402,11 +402,17 @@ begin
   end;
 end;
 
+procedure cPressCamFactory2.destroyevents;
+begin
+  RemovePlgEvent(doUpdateData, c_RUpdateData);
+  RemovePlgEvent(doChangeCfg, c_RC_LeaveCfg);
+  RemovePlgEvent(doChangeRState, c_RC_DoChangeRCState);
+end;
+
 procedure cPressCamFactory2.createevents;
 begin
   addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
-  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState,
-    doChangeRState);
+  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
   addplgevent('cSRSFactory_doChangeRState', c_RC_LeaveCfg, doChangeCfg);
 end;
 
@@ -444,11 +450,6 @@ begin
 
   destroyevents;
   inherited;
-end;
-
-procedure cPressCamFactory2.destroyevents;
-begin
-
 end;
 
 procedure cPressCamFactory2.doAfterLoad;
@@ -1206,7 +1207,7 @@ var
   s: string;
   i, c: integer;
   Strings: tstringlist;
-  w:twndtype;
+  w: TWndType;
 begin
   inherited;
   c := a_pIni.ReadInteger(str, 'sCount', 0);
@@ -1266,10 +1267,10 @@ begin
   bnumUpdate := true;
   // рисуем название полосы
   UpdateCaption;
-  if g_PressCamFactory2.getSpm(0)<>nil  then
+  if g_PressCamFactory2.getSpm(0) <> nil then
   begin
-    w:=g_PressCamFactory2.GetWndType;
-    wndcb.ItemIndex:=integer(w);
+    w := g_PressCamFactory2.GetWndType;
+    WndCB.ItemIndex := integer(w);
   end;
   sortframes;
   g_PressCamFactory2.Sort;
@@ -1431,14 +1432,19 @@ var
 begin
   if bWndUpdate then
   begin
-    case WndCb.ItemIndex of
-      0:g_PressCamFactory2.m_spmCfg.str:='Wnd=Rect';
-      1:g_PressCamFactory2.m_spmCfg.str:='Wnd=Hamming';
-      2:g_PressCamFactory2.m_spmCfg.str:='Wnd=Hann'; // Хеннинг
-      3:g_PressCamFactory2.m_spmCfg.str:='Wnd=Blackmann';
-      4:g_PressCamFactory2.m_spmCfg.str:='Wnd=Flattop';
+    case WndCB.ItemIndex of
+      0:
+        g_PressCamFactory2.m_spmCfg.str := 'Wnd=Rect';
+      1:
+        g_PressCamFactory2.m_spmCfg.str := 'Wnd=Hamming';
+      2:
+        g_PressCamFactory2.m_spmCfg.str := 'Wnd=Hann'; // Хеннинг
+      3:
+        g_PressCamFactory2.m_spmCfg.str := 'Wnd=Blackmann';
+      4:
+        g_PressCamFactory2.m_spmCfg.str := 'Wnd=Flattop';
     end;
-    bWndUpdate:=false;
+    bWndUpdate := false;
   end;
   for i := 0 to m_frames.Count - 1 do
   begin
@@ -1472,7 +1478,7 @@ end;
 
 procedure TPressFrm2.WndCBChange(Sender: TObject);
 begin
-  bWndUpdate:=true;
+  bWndUpdate := true;
 end;
 
 end.

@@ -29,9 +29,10 @@ type
 
   TThresholdGroup = class
   public
+    m_lastControlVal:integer;
     initList:boolean;
     // тег для переключения наборов
-    ControlTag:itag;
+    ControlTag:ctag;
     AlarmList:tstringlist;
     name:string;
     m_Data:array of DataRec;
@@ -129,7 +130,12 @@ type
   private
     function AddGroup:pVirtualNode;
     procedure setData(pdata:PDataRec);
-
+    procedure createevents;
+    procedure destroyevents;
+    procedure doUpdateData(Sender: TObject);
+    procedure doChangeRState(Sender: TObject);
+    procedure doStart;
+    procedure doStop;
   public
     function getGroup(i:integer):TThresholdGroup;
     procedure save(fname:string);
@@ -190,6 +196,7 @@ constructor TThresholdFrm.create(aowner: tcomponent);
 begin
   inherited;
   m_Groups:=TStringList.Create;
+  createevents;
 end;
 
 destructor TThresholdFrm.destroy;
@@ -203,6 +210,94 @@ begin
     g.destroy;
   end;
   m_Groups.Destroy;
+end;
+
+procedure TThresholdFrm.destroyevents;
+begin
+  RemovePlgEvent(doUpdateData, c_RUpdateData);
+end;
+
+procedure TThresholdFrm.createevents;
+begin
+  addplgevent('TThresholdFrm_doUpdateData', c_RUpdateData, doUpdateData);
+  addplgevent('TThresholdFrm_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
+end;
+
+procedure TThresholdFrm.doChangeRState(Sender: TObject);
+begin
+  case GetRCStateChange of
+    RSt_Init:
+      begin
+        doStart;
+        doStop;
+      end;
+    RSt_StopToView:
+      begin
+        doStart;
+      end;
+    RSt_StopToRec:
+      begin
+        doStart;
+      end;
+    RSt_ViewToStop:
+      begin
+        doStop;
+      end;
+    RSt_ViewToRec:
+      begin
+        // g_SRSFactory.m_meraFile := GetMeraFile;
+      end;
+    RSt_initToRec:
+      begin
+        // g_SRSFactory.m_meraFile := GetMeraFile;
+        doStart;
+      end;
+    RSt_initToView:
+      begin
+        // g_SRSFactory.m_meraFile := GetMeraFile;
+        doStart;
+      end;
+    RSt_RecToStop:
+      begin
+        doStop;
+      end;
+    RSt_RecToView:
+      begin
+        doStart;
+      end;
+  end;
+end;
+
+procedure TThresholdFrm.doUpdateData(Sender: TObject);
+var
+  i: integer;
+  g:TThresholdGroup;
+begin
+  // if g_disableFRF then
+  // exit;
+  for i := 0 to m_Groups.Count- 1 do
+  begin
+    g:=TThresholdGroup(m_Groups.Objects[i]);
+    g.ApplyAlarms;
+  end;
+end;
+
+procedure TThresholdFrm.doStart;
+var
+  I: Integer;
+  g:TThresholdGroup;
+begin
+  for i := 0 to m_Groups.Count- 1 do
+  begin
+    g:=TThresholdGroup(m_Groups.Objects[i]);
+    if g.ControlTag.tag=nil then
+      g.ControlTag.tagname:=g.ControlTag.tagname;
+  end;
+end;
+
+procedure TThresholdFrm.doStop;
+begin
+
 end;
 
 function TThresholdFrm.getGroup(i:integer): TThresholdGroup;
@@ -263,7 +358,7 @@ begin
     ifile.WriteString('G_'+inttostr(i), 'Name', g.name);
     if g.ControlTag<>nil then
     begin
-      s:=g.ControlTag.GetName;
+      s:=g.ControlTag.tagname;
       ifile.WriteString('G_'+inttostr(i), 'ControlTag', s);
     end;
     ifile.WriteInteger('G_'+inttostr(i), 'Size', g.m_size);
@@ -307,7 +402,7 @@ begin
     g.name:=ifile.ReadString('G_'+inttostr(i), 'Name', g.name);
     s:=ifile.ReadString('G_'+inttostr(i), 'ControlTag', '');
     if s<>'' then
-      g.ControlTag:=getTagByName(s);
+      g.ControlTag.tagname:=s;
     c:=ifile.ReadInteger('G_'+inttostr(i), 'Size', 1);
     g.setCount(c);
     for j := 0 to g.m_size - 1 do
@@ -367,6 +462,13 @@ begin
       CountIE.IntNum:=g.m_size;
       setData(pdata);
       m_selGroup:=g;
+      if m_selGroup<>nil then
+      begin
+        if m_selGroup.ControlTag<>nil then
+          setComboBoxItem(m_selGroup.ControlTag.tagname,ControTaglCB)
+        else
+          ControTaglCB.ItemIndex:=-1;
+      end;
     end;
     if tobject(d.Data) is TAlarms then
     begin
@@ -431,6 +533,7 @@ begin
           t:=itag(li.data);
       end;
     end;
+    g.initiface;
   end;
 end;
 
@@ -462,11 +565,13 @@ begin
   pd.lcol:=lColor.Color;
   pd.llcol:=llColor.Color;
   m_selGroup.ApplyAlarms(pd);
+  m_selGroup.ControlTag.tag:=ControTaglCB.gettag(ControTaglCB.ItemIndex);
 end;
 
 procedure TThresholdFrm.UpdateTagList;
 begin
   TagsListFrame1.ShowChannels;
+  ControTaglCB.updateTagsList;
 end;
 
 { TThresholdGroup }
@@ -515,7 +620,11 @@ end;
 function TThresholdGroup.addtag(t: itag; var new:boolean): TAlarms;
 begin
   if t<>nil then
-    addtag(t.GetName, new);
+  begin
+    result:=addtag(t.GetName, new);
+  end
+  else
+    result:=nil;
 end;
 
 function TThresholdGroup.AlarmData: PDataRec;
@@ -532,10 +641,15 @@ procedure TThresholdGroup.ApplyAlarms(pd: PDataRec);
 var
   I: Integer;
   a:TAlarms;
+  d:double;
 begin
   for I := 0 to AlarmList.Count - 1 do
   begin
     a:=TAlarms(AlarmList.Objects[i]);
+    a.m_a_hh.SetEnabled(Variant_True);
+    a.m_a_h.SetEnabled(Variant_True);
+    a.m_a_l.SetEnabled(Variant_True);
+    a.m_a_ll.SetEnabled(Variant_True);
     a.m_a_ll.SetLevel(pd.LL);
     a.m_a_l.SetLevel(pd.l);
     a.m_a_h.SetLevel(pd.h);
@@ -552,21 +666,29 @@ var
   I: Integer;
   a:TAlarms;
   pd:PDataRec;
+  v:integer;
 begin
-  for I := 0 to AlarmList.Count - 1 do
+  v:=ControlVal;
+  if m_lastControlVal<>v then
   begin
-    a:=TAlarms(AlarmList.Objects[i]);
-    pd:=AlarmData;
-    ApplyAlarms(pd);
+    m_lastControlVal:=v;
+    if m_lastControlVal>-1 then
+    begin
+      if m_lastControlVal<m_size then
+      begin
+        pd:=@m_data[m_lastControlVal];
+        ApplyAlarms(pd);
+      end;
+    end;
   end;
 end;
 
 function TThresholdGroup.ControlVal: integer;
 begin
-  if ControlTag=nil then
+  if ControlTag.tag=nil then
     result:=0
   else
-    result:=round(GetMean(ControlTag));
+    result:=round(GetMean(ControlTag.tag));
 end;
 
 constructor TThresholdGroup.create;
@@ -577,7 +699,8 @@ begin
   m_capacity:=20;
   m_size:=1;
   setlength(m_Data,m_capacity);
-  ControlTag:=nil;
+  ControlTag:=cTag.create;
+  m_lastControlVal:=-1;
 end;
 
 destructor TThresholdGroup.destroy;
@@ -591,6 +714,7 @@ begin
     a.Destroy;
   end;
   AlarmList.Destroy;
+  ControlTag.destroy;
 end;
 
 procedure TThresholdGroup.fillData(from: integer; pd: PDataRec);
@@ -618,6 +742,7 @@ begin
     a:=GetAlarm(i);
     a.initTagIface;
   end;
+  ControlTag.tagname:=ControlTag.tagname;
 end;
 
 procedure TThresholdGroup.setCount(c: integer);
@@ -695,11 +820,9 @@ var
   v:double;
   c:integer;
 begin
-  if m_ACon<>nil then exit;
   if t.tag=nil then
     t.tag:=getTagByName(t.tagname);
   if t.tag=nil then exit;
-
   if FAILED(t.tag.QueryInterface(IID_IAlarmsControl, m_ACon)) then
   begin
     m_ACon:=nil;
@@ -711,17 +834,17 @@ begin
     begin
       m_ACon.GetAlarm(i, ia);
       case i of
-        0:m_a_ll:=ia;
-        1:m_a_l:=ia;
-        2:m_a_h:=ia;
-        3:m_a_hh:=ia;
+        0:m_a_hh:=ia;
+        1:m_a_h:=ia;
+        2:m_a_l:=ia;
+        3:m_a_ll:=ia;
       end;
     end;
     if not owner.initList then
     begin
       owner.initList:=true;
       // если инициализируем первый тег
-      if owner.AlarmList.Count=1 then
+      if owner.AlarmList.Count=0 then
       begin
         m_a_hh.GetLevel(v);
         owner.m_Data[0].HH:=v;

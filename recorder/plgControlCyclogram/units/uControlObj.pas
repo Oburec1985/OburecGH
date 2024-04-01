@@ -147,6 +147,7 @@ type
     // включено свойство EnableOnStart
     procedure EnableTrigs;
   public
+    procedure SaveToXML(fname:string; sectionName:string);override;
     // сохран€ем момент останова
     procedure SaveState;
     procedure LoadState;
@@ -2326,6 +2327,36 @@ begin
   end;
   l.destroy;
   ifile.destroy;
+end;
+
+procedure cControlMng.SaveToXML(fname, sectionName: string);
+var
+  doc:TNativeXml;
+  node:txmlnode;
+  I: Integer;
+  obj:cbaseobj;
+  dir:string;
+begin
+  doc:=TNativeXml.Create(nil);
+  if fileexists(fname) then
+  begin
+    doc.LoadFromFile(fname);
+    node:=doc.Root;
+    Doc.XmlFormat := xfReadable;
+    node.name:='Root';
+    if node<>nil then
+    begin
+      node:=node.FindNode('ControlCyclogram');
+      if node<>nil then
+      begin
+        node:=node.FindNode('cProgramList');
+        node.clear;
+      end;
+    end;
+    doc.SaveToFile(fname);
+    doc.destroy;
+  end;
+  inherited;
 end;
 
 procedure cControlMng.StopControls;
