@@ -31,7 +31,7 @@ uses
 
 type
 
-  cTag = class
+  cTag = class(tnamedobj)
   private
     ftag: itag;
     ftagname: string;
@@ -43,6 +43,7 @@ type
     fdevicetime: double;
     fdT:double;
   public
+    owner:tstringlist;
     m_createOutTag: boolean;
     // кол-во обработанных блоков исходного тега
     // должно быть приватным. Не в точности равно readyBlock считанному из IBlockAccess
@@ -118,10 +119,6 @@ type
     function GetOutValue(i: integer): double;
 
     procedure settag(t: itag);
-    constructor create;
-    destructor destroy; overload;
-    // удаление в режиме конфига, чтобы не вызывать лишних событий ecm/ lcm
-    destructor destroy(InCfgMode: boolean); overload;
     procedure doOnStart;
     function BlockSize: integer;
     // установить массив m_TagData
@@ -176,6 +173,11 @@ type
     property freq: double read getfreq write setfreq;
     property readyVals: cardinal read getReadyVals write setReadyVals;
     property lastindex: integer read getlastindex write m_lastindex;
+
+    constructor create;
+    destructor destroy; overload;
+    // удаление в режиме конфига, чтобы не вызывать лишних событий ecm/ lcm
+    destructor destroy(InCfgMode: boolean); overload;
   end;
 
   TMBaseNotify = record
@@ -1042,6 +1044,7 @@ begin
 
 constructor cTag.create;
 begin
+  owner:=nil;
   m_createOutTag := true;
   ftag := nil;
   ftagid := -1;
@@ -1052,12 +1055,21 @@ end;
 destructor cTag.destroy;
 var
   changeState: boolean;
+  i:integer;
 begin
+  if owner<>nil then
+  begin
+    if owner.find(tagname, i) then
+    begin
+      owner.Delete(i);
+    end;
+  end;
   ftagname := 'freedTag';
   // ecm(changeState);
   ftag := nil;
   // if changeState then
   // lcm;
+  inherited;
 end;
 
 destructor cTag.destroy(InCfgMode: boolean);
@@ -1413,6 +1425,7 @@ procedure cTag.settagname(s: string);
 var
   b: boolean;
   astr: ansistring;
+  i:integer;
 begin
   b := false;
   if (Gettagname <> s) or (tag=nil) then
@@ -1431,6 +1444,14 @@ begin
     else
     begin
       tag := getTagByName(s);
+    end;
+    if owner<>nil then
+    begin
+      if owner.Find(s,i) then
+      begin
+        owner.Delete(i);
+        owner.AddObject(s, self);
+      end;
     end;
     ftagname := s;
     if b then
@@ -1829,5 +1850,6 @@ begin
       result := 'PN_ON_ZBALANCE_VTAG';
   end;
 end;
+
 
 end.

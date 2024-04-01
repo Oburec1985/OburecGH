@@ -32,14 +32,47 @@ uses
   // uPathMng,
   uRcCtrls, Menus, Grids;
 
-
 type
+  TDigColumn = class(TNamedObj)
+  public
+    owner:TNamedObjList;
+    fname:string;
+    estimate:integer;
+  protected
+    procedure setname(s:string);
+  public
+    property name:string read fname write setname;
+    destructor destroy;
+  end;
+
+
+  TGroup = class
+  public
+    owner:TNamedObjList;
+    fname:string;
+    m_tags: TNamedObjList;
+  protected
+    procedure setname(s:string);
+  public
+    property name:string read fname write setname;
+    constructor create;
+    destructor destroy;
+  end;
+
   TDigsFrm = class(TRecFrm)
     SignalsSG: TStringGrid;
   private
 
   public
-
+    fcolCount:integer;
+    colNames:TNamedObjList;
+    glist:TNamedObjList;
+  protected
+    procedure setColCount(c:integer);
+  public
+    property colCount:integer read fColCount Write setColCount;
+    constructor create(Aowner: tcomponent); override;
+    destructor destroy; override;
   end;
 
   IDigsFrm = class(cRecBasicIFrm)
@@ -94,7 +127,6 @@ var
 implementation
 
 {$R *.dfm}
-
 { cDigsFrmFactory }
 
 constructor cDigsFrmFactory.create;
@@ -124,10 +156,10 @@ end;
 procedure cDigsFrmFactory.createevents;
 begin
   addplgevent('DigsFrmFact_doUpdateData', c_RUpdateData, doUpdateData);
-  addplgevent('DigsFrmFact_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
+  addplgevent('DigsFrmFact_doChangeRState', c_RC_DoChangeRCState,
+    doChangeRState);
   addplgevent('DigsFrmFact_doChangeRState', c_RC_LeaveCfg, doChangeCfg);
 end;
-
 
 procedure cDigsFrmFactory.doAfterLoad;
 begin
@@ -142,7 +174,7 @@ end;
 
 procedure cDigsFrmFactory.doChangeRState(Sender: TObject);
 begin
- case GetRCStateChange of
+  case GetRCStateChange of
     RSt_Init:
       begin
         doStart;
@@ -221,23 +253,122 @@ end;
 
 procedure IDigsFrm.doClose;
 begin
-  inherited;
-
+  m_lRefCount := 1;
 end;
 
 function IDigsFrm.doCreateFrm: TRecFrm;
 begin
-
+  result := TDigsFrm.create(nil);
 end;
 
 function IDigsFrm.doGetName: LPCSTR;
 begin
-
+  result := c_Name;
 end;
 
 function IDigsFrm.doRepaint: boolean;
 begin
-
+  TDigsFrm(m_pMasterWnd).UpdateView;
 end;
+
+{ TGroup }
+
+constructor TGroup.create;
+begin
+  m_tags := TNamedobjList.create;
+end;
+
+destructor TGroup.destroy;
+var
+  i:integer;
+begin
+  if owner<>nil then
+  begin
+    if owner.find(name,i) then
+    begin
+      owner.Delete(i);
+    end;
+  end;
+  m_tags.destroy;
+  inherited;
+end;
+
+procedure TGroup.setname(s: string);
+var
+  i:integer;
+begin
+  if owner<>nil then
+  begin
+    if owner.Find(fname, i) then
+    begin
+      owner.Delete(i);
+      owner.AddObject(s, self);
+    end;
+  end;
+end;
+
+{ TDigsFrm }
+constructor TDigsFrm.create;
+begin
+  inherited;
+  glist:=TNamedobjList.Create;
+end;
+
+destructor TDigsFrm.destroy;
+begin
+  glist.Destroy;
+  inherited;
+end;
+
+procedure TDigsFrm.setColCount(c: integer);
+begin
+  if c>colNames.Count then
+  begin
+    while c>colNames.Count do
+    begin
+      colNames.Add('c_'+inttostr(colNames.Count));
+    end;
+  end
+  else
+  begin
+    if c<colNames.Count then
+    begin
+
+    end;
+  end;
+  fcolCount:=c;
+  SignalsSG.ColCount:=c;
+end;
+
+{ TColumn }
+
+destructor TDigColumn.destroy;
+var
+  i:integer;
+begin
+  if owner<>nil then
+  begin
+    if owner.find(name,i) then
+    begin
+      owner.Delete(i);
+    end;
+  end;
+  inherited;
+end;
+
+procedure TDigColumn.setname(s: string);
+var
+  i:integer;
+begin
+  if owner<>nil then
+  begin
+    if owner.Find(fname, i) then
+    begin
+      owner.Delete(i);
+      owner.AddObject(s, self);
+    end;
+  end;
+end;
+
 
 end.

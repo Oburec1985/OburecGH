@@ -77,6 +77,29 @@ type
     vk_shift:boolean;
   end;
 
+  TNamedObj = class
+  public
+    owner:tstringlist;
+    fname:string;
+  protected
+    procedure setname(s:string);
+  public
+    property name:string read fname write setname;
+    constructor create;virtual;
+    destructor destroy;virtual;
+  end;
+
+  TNamedobjList = class(tstringlist)
+  public
+    function Get(tname:string):TNamedObj;overload;
+    function Get(i:integer):TNamedObj;overload;
+    function Add(objname:string):TNamedObj;
+    procedure clear;override;
+    constructor create;
+    destructor destroy;
+  end;
+
+
 const
   c_carret = #13#10;
   cllightGreen=$0000FF80;
@@ -271,6 +294,103 @@ begin
   result.x:=x;
   result.y:=y;
   result.z:=z;
+end;
+
+{ TNamedObj }
+
+constructor TNamedObj.create;
+begin
+  inherited;
+end;
+
+destructor TNamedObj.destroy;
+var
+  i:integer;
+begin
+  if owner<>nil then
+  begin
+    if owner.find(name,i) then
+    begin
+      owner.Delete(i);
+    end;
+  end;
+end;
+
+procedure TNamedObj.setname(s: string);
+var
+  i:integer;
+begin
+  if owner<>nil then
+  begin
+    if owner.Find(fname, i) then
+    begin
+      owner.Delete(i);
+      owner.AddObject(s, self);
+    end;
+  end;
+end;
+
+{ TNamedobjList }
+
+function TNamedobjList.Add(objname: string): TNamedObj;
+var
+  i:integer;
+  o:TNamedobj;
+begin
+  if not find(objname, i) then
+  begin
+    o:=TNamedobj.create;
+    o.fname:=objname;
+    AddObject(objname, o);
+    result:=o;
+    o.owner:=self;
+  end
+  else
+  begin
+    result:=TNamedobj(Objects[i]);
+  end;
+end;
+
+procedure TNamedobjList.clear;
+var
+  I: integer;
+  o: TNamedobj;
+begin
+  for I := Count - 1 downto 0 do
+  begin
+    o := TNamedobj(Objects[I]);
+    o.destroy;
+  end;
+  inherited clear;
+end;
+
+constructor TNamedobjList.create;
+begin
+  inherited;
+  sorted:=true;
+end;
+
+destructor TNamedobjList.destroy;
+begin
+  clear;
+  inherited;
+end;
+
+function TNamedobjList.Get(tname: string): TNamedObj;
+var
+  i:integer;
+begin
+  if find(tname, i) then
+  begin
+    result:=TNamedObj(objects[i]);
+  end
+  else
+    result:=nil;
+end;
+
+function TNamedobjList.Get(i: integer): TNamedObj;
+begin
+  result:=TNamedObj(objects[i]);
 end;
 
 end.
