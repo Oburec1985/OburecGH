@@ -321,6 +321,8 @@ begin
 end;
 
 procedure TDigsFrm.setColCount(c: integer);
+var
+  col:TDigColumn;
 begin
   if c>colNames.Count then
   begin
@@ -331,9 +333,10 @@ begin
   end
   else
   begin
-    if c<colNames.Count then
+    while c<colNames.Count do
     begin
-
+      col:=colNames.Get(colNames.Count-1);
+      col.destroy;
     end;
   end;
   fcolCount:=c;

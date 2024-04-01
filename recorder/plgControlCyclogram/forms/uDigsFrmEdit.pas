@@ -35,9 +35,11 @@ type
     FirstL: TLabel;
     FirstIE: TIntEdit;
     OkBtn: TButton;
+    ColOkBtn: TButton;
     procedure OkBtnClick(Sender: TObject);
   protected
     curFrm:TDigsFrm;
+    curGr:TGroup;
   private
     procedure ShowTags;
   public

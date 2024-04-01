@@ -20,9 +20,6 @@ object DigsFrmEdit: TDigsFrmEdit
     Height = 319
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 559
-    ExplicitTop = 85
-    ExplicitHeight = 214
     inline TagsListFrame1: TTagsListFrame
       Left = 1
       Top = 1
@@ -33,12 +30,12 @@ object DigsFrmEdit: TDigsFrmEdit
       ExplicitLeft = 1
       ExplicitTop = 1
       ExplicitWidth = 246
-      ExplicitHeight = 212
+      ExplicitHeight = 317
       inherited FormChannelsGB: TGroupBox
         Width = 246
         Height = 317
         ExplicitWidth = 246
-        ExplicitHeight = 212
+        ExplicitHeight = 317
         inherited ChanNamesPanel: TPanel
           Top = 14
           Width = 242
@@ -112,7 +109,7 @@ object DigsFrmEdit: TDigsFrmEdit
             end>
           ExplicitTop = 121
           ExplicitWidth = 242
-          ExplicitHeight = 89
+          ExplicitHeight = 194
         end
       end
     end
@@ -128,12 +125,10 @@ object DigsFrmEdit: TDigsFrmEdit
     Margins.Bottom = 2
     Align = alTop
     TabOrder = 1
-    ExplicitLeft = -1
-    ExplicitTop = -4
     object GroupCountLabel: TLabel
       Left = 5
       Top = 50
-      Width = 67
+      Width = 60
       Height = 12
       Margins.Left = 2
       Margins.Top = 2
@@ -211,7 +206,7 @@ object DigsFrmEdit: TDigsFrmEdit
       Text = '000'
     end
     object AddGroupBtn: TButton
-      Left = 92
+      Left = 90
       Top = 101
       Width = 70
       Height = 19
@@ -234,6 +229,7 @@ object DigsFrmEdit: TDigsFrmEdit
       Align = alRight
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080' '#1089#1090#1086#1073#1094#1086#1074
       TabOrder = 4
+      ExplicitTop = -2
       object TagSubstrL: TLabel
         Left = 134
         Top = 17
@@ -320,8 +316,8 @@ object DigsFrmEdit: TDigsFrmEdit
           'Rms')
       end
       object UpdateTagsBtn: TButton
-        Left = 245
-        Top = 66
+        Left = 133
+        Top = 99
         Width = 56
         Height = 19
         Margins.Left = 2
@@ -356,6 +352,19 @@ object DigsFrmEdit: TDigsFrmEdit
         TabOrder = 5
         Value = 0
       end
+      object ColOkBtn: TButton
+        Left = 244
+        Top = 66
+        Width = 37
+        Height = 19
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
+        Caption = 'Ok'
+        TabOrder = 6
+        OnClick = OkBtnClick
+      end
     end
     object ColCountE: TIntEdit
       Left = 88
@@ -383,7 +392,7 @@ object DigsFrmEdit: TDigsFrmEdit
     end
     object OkBtn: TButton
       Left = 172
-      Top = 22
+      Top = 21
       Width = 37
       Height = 19
       Margins.Left = 2
@@ -406,8 +415,5 @@ object DigsFrmEdit: TDigsFrmEdit
     Margins.Bottom = 2
     Align = alClient
     TabOrder = 2
-    ExplicitTop = 85
-    ExplicitWidth = 559
-    ExplicitHeight = 214
   end
 end
