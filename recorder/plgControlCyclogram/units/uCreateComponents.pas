@@ -55,8 +55,9 @@ uses
   uEditSRSFrm,
   uSRSFrm,
   uGLFrmEdit,
-  uPressFrm, uPressFrmEdit,
+  //uPressFrm, uPressFrmEdit,
   uPressFrm2, uPressFrmEdit2,
+  uDigsFrm,uDigsFrmEdit,
   uMBaseControl;
 
 type
@@ -563,14 +564,17 @@ begin
 
   np := cMBaseAlgNP.Create;
 
-  g_PressCamFactory := cPressCamFactory.Create;
-  compMng.Add(g_PressCamFactory);
+  //g_PressCamFactory := cPressCamFactory.Create;
+  //compMng.Add(g_PressCamFactory);
+  //PressFrmEdit := TPressFrmEdit.Create(nil);
   g_PressCamFactory2 := cPressCamFactory2.Create;
   compMng.Add(g_PressCamFactory2);
-
-
-  PressFrmEdit := TPressFrmEdit.Create(nil);
   PressFrmEdit2 := TPressFrmEdit2.Create(nil);
+
+  g_DigsFrmFactory := cDigsFrmFactory.Create;
+  compMng.Add(g_DigsFrmFactory);
+  DigsFrmEdit:=TDigsFrmEdit.create(nil);
+
 
   TExtRecorderPack(GPluginInstance).m_nplist.AddNP(np);
 end;

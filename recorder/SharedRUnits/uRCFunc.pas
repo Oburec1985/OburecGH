@@ -31,7 +31,7 @@ uses
 
 type
 
-  cTag = class(tnamedobj)
+  cTag = class
   private
     ftag: itag;
     ftagname: string;

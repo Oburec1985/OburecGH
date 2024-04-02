@@ -36,31 +36,29 @@ type
   TDigColumn = class(TNamedObj)
   public
     owner:TNamedObjList;
-    fname:string;
     estimate:integer;
   protected
-    procedure setname(s:string);
+
   public
-    property name:string read fname write setname;
     destructor destroy;
   end;
 
 
-  TGroup = class
+  TGroup = class(TNamedObj)
   public
     owner:TNamedObjList;
-    fname:string;
     m_tags: TNamedObjList;
   protected
-    procedure setname(s:string);
   public
-    property name:string read fname write setname;
     constructor create;
     destructor destroy;
   end;
 
   TDigsFrm = class(TRecFrm)
     SignalsSG: TStringGrid;
+    PopupMenu1: TPopupMenu;
+    N1: TMenuItem;
+    procedure N1Click(Sender: TObject);
   private
 
   public
@@ -108,10 +106,10 @@ type
   end;
 
 var
-  g_DigsFrmFactory2: cDigsFrmFactory;
+  g_DigsFrmFactory: cDigsFrmFactory;
 
 const
-  c_Pic = 'PRESSFRM2';
+  c_Pic = 'OSC_FRM';
   c_Name = 'Цифровой формуляр';
   c_defXSize = 560;
   c_defYSize = 355;
@@ -125,6 +123,8 @@ var
   DigsFrm: TDigsFrm;
 
 implementation
+uses
+  uDigsFrmEdit;
 
 {$R *.dfm}
 { cDigsFrmFactory }
@@ -293,31 +293,27 @@ begin
   inherited;
 end;
 
-procedure TGroup.setname(s: string);
-var
-  i:integer;
-begin
-  if owner<>nil then
-  begin
-    if owner.Find(fname, i) then
-    begin
-      owner.Delete(i);
-      owner.AddObject(s, self);
-    end;
-  end;
-end;
-
 { TDigsFrm }
 constructor TDigsFrm.create;
 begin
   inherited;
   glist:=TNamedobjList.Create;
+  glist.cl:=TGroup;
+  colNames:=TNamedobjList.Create;
+  colNames.Sorted:=false;
+  colNames.cl:=TDigColumn;
 end;
 
 destructor TDigsFrm.destroy;
 begin
   glist.Destroy;
+  colNames.destroy;
   inherited;
+end;
+
+procedure TDigsFrm.N1Click(Sender: TObject);
+begin
+  DigsFrmEdit.Edit(self);
 end;
 
 procedure TDigsFrm.setColCount(c: integer);
@@ -358,20 +354,5 @@ begin
   end;
   inherited;
 end;
-
-procedure TDigColumn.setname(s: string);
-var
-  i:integer;
-begin
-  if owner<>nil then
-  begin
-    if owner.Find(fname, i) then
-    begin
-      owner.Delete(i);
-      owner.AddObject(s, self);
-    end;
-  end;
-end;
-
 
 end.
