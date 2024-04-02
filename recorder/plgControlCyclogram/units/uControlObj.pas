@@ -33,9 +33,9 @@ type
     fcs: TRTLCriticalSection;
     // состояние ошибки. -1 если сброшено, дальше номер в зависимости от
     // места процедуры в которой упало
-    fErrorState:integer;
+    fErrorState: integer;
     // число ошибок
-    fErrorCount:integer;
+    fErrorCount: integer;
 
     m_configChanged: boolean;
     // место хранения предыдущей конфигурации
@@ -78,10 +78,10 @@ type
     // частота счетчика замера времени
     m_Freq: int64;
   public
-    function ErrorCount:integer;
-    function ErrorStr:string;
+    function ErrorCount: integer;
+    function ErrorStr: string;
   private
-    procedure PushErroCode(ec:integer);
+    procedure PushErroCode(ec: integer);
     procedure CheckError;
 
     procedure InitCS;
@@ -147,7 +147,7 @@ type
     // включено свойство EnableOnStart
     procedure EnableTrigs;
   public
-    procedure SaveToXML(fname:string; sectionName:string);override;
+    procedure SaveToXML(fname: string; sectionName: string); override;
     // сохраняем момент останова
     procedure SaveState;
     procedure LoadState;
@@ -179,7 +179,7 @@ type
     // переводит циклогамму в активный режим без сброса времени
     procedure continuePlay;
     // выполнить очередной шаг циклограммы режимов
-    function Exec:boolean; // возвращает Стоп только при полном останове
+    function Exec: boolean; // возвращает Стоп только при полном останове
     // выполнить шаг регуляторов
     procedure ExecControls;
     function createControl(name: string; classname: string): cControlObj;
@@ -225,13 +225,14 @@ type
     constructor create; override;
     destructor destroy; override;
   end;
+
   // лист для программы. Не удаляет объекты, умеет сортировать по имени и по индексу
   cProgControlList = class(cSetList)
   public
     // 0 - по имени; 1 - по индексу
-    sorttype:integer;
+    sorttype: integer;
   public
-    constructor create;override;
+    constructor create; override;
   end;
 
   // доп теги для контрола
@@ -240,12 +241,12 @@ type
     tag: cTag;
     value: double;
     // применять ШИМ к параметру
-    PWM:boolean;
+    PWM: boolean;
   protected
     function getname: string;
-    procedure setname(s:string);
+    procedure setname(s: string);
   public
-    property name:string read getname write setname;
+    property name: string read getname write setname;
     constructor create;
     destructor destroy;
   end;
@@ -298,7 +299,7 @@ type
     property tol: point2d read ftol write setTol;
   end;
 
-  cZoneList = class(csetlist)
+  cZoneList = class(cSetList)
   public
     z_inf_pos, z_inf_neg: cZone;
     // false - абсолютные зоны true - относительные зоны (от задания)
@@ -333,7 +334,7 @@ type
     // доп параметры отправляемые в контрол
     m_Params: tstringlist;
     // хранит свой набор cTagPair который соответствует но не равен списку тегов контрола
-    m_tags:tStringlist;
+    m_tags: tstringlist;
   public
     TaskType: TPType;
     // компоненты касательных векторов
@@ -361,8 +362,8 @@ type
     function getApplyed: boolean;
     procedure setApplyed(b: boolean);
   public
-    Procedure AddTagPair(t:cTagPair);
-    procedure copytaskto(t:ctask);
+    Procedure AddTagPair(t: cTagPair);
+    procedure copytaskto(t: cTask);
     // доп задания контролу
     function TagsToString: string;
     procedure InitCS;
@@ -389,7 +390,7 @@ type
     procedure setparams(str: string);
     function getparams: string;
   public
-    procedure ClearTags;
+    procedure cleartags;
     procedure setParam(key, str: string);
     // зачитать свойство хранящееся в m_Params
     function getParam(key: string): string;
@@ -436,14 +437,14 @@ type
     fScalarTolerance: boolean;
     // проверяемый на допуск режим
     fCurMode: cModeObj;
-    fCurTask:cTask;
+    fCurTask: cTask;
     // в допуске
     fInTolerance: boolean;
     fCheckOnMode: boolean;
     // доп теги для управления контролом cTagPair
     fTags: tstringlist;
   public
-    index:integer;
+    index: integer;
     m_zones_enabled: boolean;
     // зоны регулирования
     m_ZoneList: cZoneList;
@@ -454,8 +455,8 @@ type
     Procedure SetPWMVal(v: double); virtual;
     // применить новое значение к контролу (напрмиер при ручном упроравлдении)
     procedure ApplyTaskVal(v: double); virtual;
-    procedure ApplyTagsPWM(t:ctask; v:double);overload;
-    procedure ApplyTagsPWM(t:ctask);overload;
+    procedure ApplyTagsPWM(t: cTask; v: double); overload;
+    procedure ApplyTagsPWM(t: cTask); overload;
 
     procedure InitCS;
     procedure DeleteCS;
@@ -487,11 +488,11 @@ type
     procedure setInTol(b: boolean);
   public
     // применить теги их задачи cTask
-    procedure ApplyTags(t:ctask);
+    procedure ApplyTags(t: cTask);
     // применить новую задачу
-    procedure ApplyTask(t:cTask);
+    procedure ApplyTask(t: cTask);
     // параметр - сбрасывать время которое простояли на текущем режиме
-    Procedure ResetPWMTOnModeChange(resetWPMCurTime:boolean);
+    Procedure ResetPWMTOnModeChange(resetWPMCurTime: boolean);
 
     function TagsToString: string;
     // работа с доп тегами
@@ -619,7 +620,7 @@ type
     m_StartOnPlay: boolean;
     m_enableOnStart: boolean;
     // режим который устанавливается при останове программы
-    StopMode:cmodeObj;
+    StopMode: cModeObj;
   private
     cs: TRTLCriticalSection;
     m_applyModeStateTag: boolean;
@@ -773,7 +774,7 @@ type
     // применен режим или нет хотя бы один раз
     m_applyed: boolean;
   private
-    fCreateStateTag:boolean;
+    fCreateStateTag: boolean;
     findex: integer;
     m_tryActive: boolean;
     fCounter: Cardinal;
@@ -823,7 +824,7 @@ type
   public
     function getNextMode: cModeObj;
     function getPrevMode: cModeObj;
-    function CopyMode(before:boolean):cmodeObj;
+    function CopyMode(before: boolean): cModeObj;
     // параметр u значение 0..1 задает точку получаемую при интерполяции между задачами
     function GetTaskValue(t: cTask; x: double): double; overload;
     function GetTaskValue(c: cControlObj; x: double): double; overload;
@@ -1183,10 +1184,9 @@ var
 begin
   inherited;
   // состояние для поиска ошибок
-  fErrorState:=0;
-  fErrorCount:=0;
+  fErrorState := 0;
+  fErrorCount := 0;
   InitCS;
-
 
   AllowUserModeSelect := true;
 
@@ -1306,7 +1306,7 @@ var
   t: cBaseTrig;
   i: integer;
 begin
-  if state<>c_play then
+  if state <> c_Play then
     exit;
   for i := 0 to TrigCount - 1 do
   begin
@@ -1343,24 +1343,23 @@ begin
     t := getTrig(i);
     if t is crtrig then
     begin
-      if t.Trigtype = trStop then
+      if (t.Trigtype = trStop_cyclogram) or (t.Trigtype = trStop) then
       begin
         // if not Start then
         t.state := true; // триггер сработал
         t.ApplyActions;
-        // pushControlsTags;
       end;
     end;
   end;
 end;
 
-function cControlMng.Exec:boolean;
+function cControlMng.Exec: boolean;
 var
   i: integer;
   p: cProgramObj;
   bstop: boolean;
 begin
-  result:=true;
+  result := true;
   bstop := true;
   // проверяем триггеры
   ApplyActionTrigs;
@@ -1368,16 +1367,16 @@ begin
     c_TryPlay:
       state := c_Play;
     c_TryStop:
-    begin
-      // стоп триг здесь проверяется
-      state := c_Stop;
-    end;
+      begin
+        // стоп триг здесь проверяется
+        state := c_Stop;
+      end;
     c_TryPause:
       state := c_Pause;
   end;
-  if state=c_Stop then
+  if state = c_Stop then
   begin
-    result:=false;
+    result := false;
     exit;
   end;
   if (state = c_Play) or (state = c_Pause) then
@@ -1391,28 +1390,28 @@ begin
       // проверка нужно ли программу запустить или остановить
       case p.state of
         c_TryPlay:
-        begin
-          bstop := false;
-          p.Exec;
-        end;
+          begin
+            bstop := false;
+            p.Exec;
+          end;
         c_Play:
-        begin
-          bstop := false;
-          p.Exec;
-        end;
+          begin
+            bstop := false;
+            p.Exec;
+          end;
         c_Pause:
-        begin
-          p.Exec;
-          bstop := false;
-        end;
+          begin
+            p.Exec;
+            bstop := false;
+          end;
         c_Stop:
-        begin
+          begin
 
-        end;
+          end;
         c_End:
-        begin
+          begin
 
-        end
+          end
         else
         begin
           // bstop := true;
@@ -1572,12 +1571,12 @@ end;
 procedure cControlMng.pushControlsTags;
 var
   i: integer;
-  b:boolean;
+  b: boolean;
   c: cControlObj;
   p: cProgramObj;
   v: double;
 begin
-  c:=nil;
+  c := nil;
   for i := 0 to ControlsCount - 1 do
   begin
     c := getControlObj(i);
@@ -1593,10 +1592,10 @@ begin
   for i := 0 to ProgramCount - 1 do
   begin
     p := getProgram(i);
-    if c=nil then
-      b:=(p.state = c_Play)
+    if c = nil then
+      b := (p.state = c_Play)
     else
-      b:=(p.state = c_Play) or (c.state = c_TryPlay);
+      b := (p.state = c_Play) or (c.state = c_TryPlay);
     if b then
     begin
       p.changeStateTag(c_Prog_PlayTag);
@@ -1619,7 +1618,7 @@ end;
 
 procedure cControlMng.PushErroCode(ec: integer);
 begin
-  fErrorState:=ec;
+  fErrorState := ec;
 end;
 
 procedure cControlMng.renametrig(oldname, newname: string);
@@ -1868,26 +1867,27 @@ end;
 
 procedure cControlMng.CheckError;
 begin
-  if fErrorState<>0 then
+  if fErrorState <> 0 then
   begin
     entercs;
     inc(fErrorCount);
     exitcs;
-    logMessage('Er:'+inttostr(fErrorState)+' Count:'+ inttostr(fErrorCount));
+    logMessage('Er:' + inttostr(fErrorState) + ' Count:' + inttostr(fErrorCount)
+      );
   end;
 end;
 
-function cControlMng.ErrorCount:integer;
+function cControlMng.ErrorCount: integer;
 begin
   entercs;
-  result:=fErrorCount;
+  result := fErrorCount;
   exitcs;
 end;
 
-function cControlMng.ErrorStr:string;
+function cControlMng.ErrorStr: string;
 begin
   entercs;
-  result:='Er:'+inttostr(fErrorState)+' Count:'+ inttostr(fErrorCount);
+  result := 'Er:' + inttostr(fErrorState) + ' Count:' + inttostr(fErrorCount);
   exitcs;
 end;
 
@@ -2080,36 +2080,36 @@ end;
 
 procedure cControlMng.UpdateModeState;
 var
-  I: Integer;
-  p:cProgramObj;
-  v:double;
-  newmode:cmodeobj;
+  i: integer;
+  p: cProgramObj;
+  v: double;
+  newmode: cModeObj;
 begin
-  for I := 0 to ProgramCount - 1 do
+  for i := 0 to ProgramCount - 1 do
   begin
-    p:=getProgram(i);
+    p := getProgram(i);
     if p.active then
     begin
-      v:=GetMean(p.m_ModeIndTag);
-      if v<>p.ActiveMode.modeIndex then
+      v := GetMean(p.m_ModeIndTag);
+      if v <> p.ActiveMode.modeIndex then
       begin
-        if (g_conmng.State = c_Pause) or g_conmng.AllowUserModeSelect then
+        if (g_conmng.state = c_Pause) or g_conmng.AllowUserModeSelect then
         begin
-          newmode:=p.getMode(trunc(v));
-          if newmode<>nil then
+          newmode := p.getMode(trunc(v));
+          if newmode <> nil then
           begin
-            if g_conmng.State <> c_stop then
+            if g_conmng.state <> c_Stop then
             begin
               if newmode = nil then
                 exit;
-              if g_conmng.State = c_play then
+              if g_conmng.state = c_Play then
                 cModeObj(newmode).TryActive
               else
               begin
-                if g_conmng.State = c_Pause then
+                if g_conmng.state = c_Pause then
                 begin
                   cModeObj(newmode).active := true;
-                  cModeObj(newmode).exec;
+                  cModeObj(newmode).Exec;
                 end;
               end;
             end;
@@ -2243,7 +2243,8 @@ var
   i, c, J: integer;
   l: tlist;
 begin
-  ifile := tinifile.create(extractfiledir(m_prevDir) + '\' + 'CyclogramState.ini');
+  ifile := tinifile.create(extractfiledir(m_prevDir)
+      + '\' + 'CyclogramState.ini');
   // ifile.WriteInteger('Main','State', g_conmng.state);
   str := '';
   c := ifile.ReadInteger('Main', 'ActiveProgCount', 0);
@@ -2261,8 +2262,8 @@ begin
     end
     else
     begin
-      p:=g_conmng.getProgram(0);
-      if p=nil then
+      p := g_conmng.getProgram(0);
+      if p = nil then
         exit;
     end;
     str := ifile.ReadString('Prog_' + inttostr(i), 'MName', '');
@@ -2331,25 +2332,25 @@ end;
 
 procedure cControlMng.SaveToXML(fname, sectionName: string);
 var
-  doc:TNativeXml;
-  node:txmlnode;
-  I: Integer;
-  obj:cbaseobj;
-  dir:string;
+  doc: TNativeXml;
+  node: txmlnode;
+  i: integer;
+  obj: cbaseobj;
+  dir: string;
 begin
-  doc:=TNativeXml.Create(nil);
+  doc := TNativeXml.create(nil);
   if fileexists(fname) then
   begin
     doc.LoadFromFile(fname);
-    node:=doc.Root;
-    Doc.XmlFormat := xfReadable;
-    node.name:='Root';
-    if node<>nil then
+    node := doc.Root;
+    doc.XmlFormat := xfReadable;
+    node.name := 'Root';
+    if node <> nil then
     begin
-      node:=node.FindNode('ControlCyclogram');
-      if node<>nil then
+      node := node.FindNode('ControlCyclogram');
+      if node <> nil then
       begin
-        node:=node.FindNode('cProgramList');
+        node := node.FindNode('cProgramList');
         node.clear;
       end;
     end;
@@ -2578,7 +2579,7 @@ var
   t: cTagPair;
 begin
   pars := ParsStrParam(s, ';');
-  for i := 0 to pars.count - 1 do
+  for i := 0 to pars.Count - 1 do
   begin
     tname := pars.Strings[i];
     cstr := cstring(pars.Objects[i]);
@@ -2588,12 +2589,12 @@ end;
 
 function cControlObj.getTag(i: integer): cTagPair;
 begin
-  if i<fTags.count then
+  if i < fTags.Count then
   begin
     result := cTagPair(fTags.Objects[i]);
   end
   else
-    result:=nil;
+    result := nil;
 end;
 
 function cControlObj.getTag(s: string): cTagPair;
@@ -2648,7 +2649,7 @@ begin
     t := getTag(i);
     t.destroy;
   end;
-  fTags.Clear;
+  fTags.clear;
 end;
 
 function cControlObj.config(Feedback: itag; data: tobject): boolean;
@@ -2692,7 +2693,7 @@ var
   ir: irecorder;
   i: integer;
   p: cProgramObj;
-  b:boolean;
+  b: boolean;
 begin
   cleartags;
   fTags.destroy;
@@ -2858,39 +2859,41 @@ end;
 
 procedure cControlObj.UpdateTask;
 var
-  I, j, k: Integer;
-  m:cmodeobj;
-  p:cProgramObj;
-  t:ctask;
-  tag, TaskTag:cTagPair;
+  i, J, k: integer;
+  m: cModeObj;
+  p: cProgramObj;
+  t: cTask;
+  tag, TaskTag: cTagPair;
 begin
-  for I := 0 to g_conmng.ProgramCount - 1 do
+  ecm;
+  for i := 0 to g_conmng.ProgramCount - 1 do
   begin
-    p:=g_conmng.getProgram(i);
-    if p.getOwnControl(name)<>nil then
+    p := g_conmng.getProgram(i);
+    if p.getOwnControl(name) <> nil then
     begin
-      for j := 0 to p.ModeCount - 1 do
+      for J := 0 to p.ModeCount - 1 do
       begin
-        m:=p.getMode(j);
-        t:=m.createTask(self);
-        t.ClearTags;
+        m := p.getMode(J);
+        t := m.createTask(self);
+        t.cleartags;
         for k := 0 to TagsCount - 1 do
         begin
-          tag:=getTag(i);
+          tag := getTag(i);
           // при необходимости создаем в задаче новы тег
           t.AddTagPair(tag);
         end;
       end;
     end;
   end;
+  lcm;
 end;
 
-Procedure cControlObj.ResetPWMTOnModeChange(resetWPMCurTime:boolean);
+Procedure cControlObj.ResetPWMTOnModeChange(resetWPMCurTime: boolean);
 begin
   if resetWPMCurTime then
-    fPWMT:=0;
+    fPWMT := 0;
   QueryPerformanceCounter(fPWMTi);
-  fcurPWMState:=true;
+  fcurPWMState := true;
 end;
 
 procedure cControlObj.InitCS;
@@ -2953,7 +2956,7 @@ begin
   p := pos('...', vals);
   if p < 1 then
     p := pos('…', vals);
-  if p>0 then
+  if p > 0 then
   begin
     str := copy(vals, 1, p - 1);
     result.x := strToFloatExt(str);
@@ -2964,8 +2967,8 @@ begin
   end
   else
   begin
-    result.x:=0;
-    result.y:=0;
+    result.x := 0;
+    result.y := 0;
   end;
 end;
 
@@ -3163,7 +3166,7 @@ begin
   // CheckOnMode := xmlNode.ReadAttributeBool('CheckOnMode', false);
   fPWM_Ton := xmlNode.ReadAttributeFloat('PWM_T_ON', 0);
   fPWM_Toff := xmlNode.ReadAttributeFloat('PWM_T_OFF', 0);
-  str:=xmlNode.ReadAttributeString('Tags', '');
+  str := xmlNode.ReadAttributeString('Tags', '');
   ValsFromString(str);
   zCount := xmlNode.ReadAttributeInteger('ZoneCount', 1);
   m_zones_enabled := xmlNode.ReadAttributeBool('Zones_Enabled', false);
@@ -3215,7 +3218,7 @@ begin
   if z <> nil then
   begin
     z.fUsePrevZoneVals := xmlNode.ReadAttributeBool('Zones_UsePrevVal', true);
-   // z.fUsePrevZoneVals := true;
+    // z.fUsePrevZoneVals := true;
   end;
 end;
 
@@ -3327,33 +3330,33 @@ begin
   fCurMode := nil;
 end;
 
-procedure cControlObj.ApplyTagsPWM(t:ctask; v:double);
+procedure cControlObj.ApplyTagsPWM(t: cTask; v: double);
 var
-  I: Integer;
-  tag:cTagPair;
+  i: integer;
+  tag: cTagPair;
 begin
-  for I := 0 to t.m_tags.Count - 1 do
+  for i := 0 to t.m_tags.Count - 1 do
   begin
-    tag:=cTagPair(t.m_tags.Objects[i]);
+    tag := cTagPair(t.m_tags.Objects[i]);
     if tag.PWM then
     begin
-      if tag.tag<>nil then
+      if tag.tag <> nil then
         tag.tag.tag.PushValue(v, -1);
     end;
   end;
 end;
 
-procedure cControlObj.ApplyTagsPWM(t:ctask);
+procedure cControlObj.ApplyTagsPWM(t: cTask);
 var
-  I: Integer;
-  tag:cTagPair;
+  i: integer;
+  tag: cTagPair;
 begin
-  for I := 0 to t.m_tags.Count - 1 do
+  for i := 0 to t.m_tags.Count - 1 do
   begin
-    tag:=cTagPair(t.m_tags.Objects[i]);
+    tag := cTagPair(t.m_tags.Objects[i]);
     if tag.PWM then
     begin
-      if tag.tag<>nil then
+      if tag.tag <> nil then
       begin
         tag.tag.tag.PushValue(tag.value, -1);
       end;
@@ -3361,16 +3364,15 @@ begin
   end;
 end;
 
-
-procedure cControlObj.ApplyTags(t:ctask);
+procedure cControlObj.ApplyTags(t: cTask);
 var
-  I: Integer;
-  tag:cTagPair;
+  i: integer;
+  tag: cTagPair;
 begin
-  for I := 0 to t.m_tags.Count - 1 do
+  for i := 0 to t.m_tags.Count - 1 do
   begin
-    tag:=cTagPair(t.m_tags.Objects[i]);
-    if tag.tag<>nil then
+    tag := cTagPair(t.m_tags.Objects[i]);
+    if tag.tag <> nil then
     begin
       if isAlive(tag.tag.tag) then
       begin
@@ -3382,10 +3384,10 @@ end;
 
 procedure cControlObj.ApplyTask(t: cTask);
 var
-  I: Integer;
+  i: integer;
 begin
-  fCurTask:=t;
-  if t<>nil then
+  fCurTask := t;
+  if t <> nil then
     ApplyTags(t);
 end;
 
@@ -3479,13 +3481,13 @@ begin
   end;
 end;
 
-function ControlComparator(p1,p2:pointer):integer;
+function ControlComparator(p1, p2: pointer): integer;
 var
   c1, c2: cControlObj;
 begin
   c1 := cControlObj(p1);
   c2 := cControlObj(p2);
-  //if c1.OwnerProg.fcontrols.sorttype=1 then
+  // if c1.OwnerProg.fcontrols.sorttype=1 then
 
   if c1.Index > c2.Index then
   begin
@@ -3519,7 +3521,7 @@ begin
   fmodes.childrens.Sorted := true;
 
   fcontrols := tstringlist.create;
-  //fcontrols.comparator:=ControlComparator;
+  // fcontrols.comparator:=ControlComparator;
   fcontrols.Sorted := true;
   AddChild(fmodes);
 
@@ -3576,7 +3578,7 @@ end;
 
 procedure cProgramObj.removeOwnControls;
 begin
-  fcontrols.Clear;
+  fcontrols.clear;
 end;
 
 procedure cProgramObj.removeOwnControl(c: cControlObj);
@@ -3592,12 +3594,12 @@ end;
 procedure cProgramObj.removeOwnControl(cname: string);
 var
   i: integer;
-  c:cControlObj;
+  c: cControlObj;
 begin
-  for I := 0 to fcontrols.Count - 1 do
+  for i := 0 to fcontrols.Count - 1 do
   begin
-    c:=cControlObj(fcontrols.Objects[i]);
-    if c.name=cname then
+    c := cControlObj(fcontrols.Objects[i]);
+    if c.name = cname then
     begin
       fcontrols.Delete(i);
       break;
@@ -3618,29 +3620,29 @@ end;
 function cProgramObj.getOwnControl(name: string): cControlObj;
 var
   i: integer;
-  c:cControlObj;
-  b:boolean;
+  c: cControlObj;
+  b: boolean;
 begin
-  b:=false;
+  b := false;
   if fcontrols.Sorted then
   begin
-    if fcontrols.Find(name,i) then
+    if fcontrols.Find(name, i) then
     begin
-      result:=cControlObj(fcontrols.Objects[i]);
+      result := cControlObj(fcontrols.Objects[i]);
     end
     else
     begin
-      result:=nil;
+      result := nil;
     end;
   end
   else
   begin
-    for I := 0 to fcontrols.Count - 1 do
+    for i := 0 to fcontrols.Count - 1 do
     begin
-      c:=cControlObj(fcontrols.Objects[i]);
-      if c.name=name then
+      c := cControlObj(fcontrols.Objects[i]);
+      if c.name = name then
       begin
-        b:=true;
+        b := true;
         break;
       end;
     end;
@@ -3870,21 +3872,21 @@ end;
 
 function cProgramObj.getMode(t: cTask): cModeObj;
 var
-  I: Integer;
-  m:cmodeobj;
-  j: Integer;
-  lt:ctask;
+  i: integer;
+  m: cModeObj;
+  J: integer;
+  lt: cTask;
 begin
-  result:=nil;
-  for I := 0 to ModeCount - 1 do
+  result := nil;
+  for i := 0 to ModeCount - 1 do
   begin
-    m:=getMode(i);
-    for j := 0 to m.TaskCount - 1 do
+    m := getMode(i);
+    for J := 0 to m.TaskCount - 1 do
     BEGIN
-      lt:=m.GetTask(j);
-      if lt=t then
+      lt := m.GetTask(J);
+      if lt = t then
       begin
-        result:=m;
+        result := m;
         exit;
       end;
     END;
@@ -3980,13 +3982,13 @@ var
   act: TTrigAction;
   ct: cTag;
 begin
-  child := GetNode(node,key);
+  child := GetNode(node, key);
   if t.m_actions <> nil then
   begin
-    actions := GetNode(child,'Actions');
+    actions := GetNode(child, 'Actions');
     for i := 0 to t.m_actions.Count - 1 do
     begin
-      ActNode := GetNode(actions,'Act_' + inttostr(i));
+      ActNode := GetNode(actions, 'Act_' + inttostr(i));
       act := TTrigAction(t.m_actions.Items[i]);
       if act.m_target <> nil then
         ActNode.WriteAttributeString('TargetName', cbaseobj(act.m_target).name)
@@ -4241,7 +4243,7 @@ begin
   if StopTrigger <> nil then
     writeTrig(node, 'CommonStopTrig', StopTrigger);
 
-  TrigsNode := GetNode(node,'TrigsNode');
+  TrigsNode := GetNode(node, 'TrigsNode');
   // пишем триггеры с списком действий
   actTrigCount := 0;
   for i := 0 to TrigCount - 1 do
@@ -4366,7 +4368,7 @@ begin
   case s of
     c_Play:
       begin
-        StopMode:=nil;
+        StopMode := nil;
         // если первый раз стартуем программу
         if ActiveMode = nil then
         begin
@@ -4613,7 +4615,7 @@ begin
   end
   else
   begin
-    result:= GetTask(i);
+    result := GetTask(i);
   end;
 end;
 
@@ -4660,7 +4662,8 @@ var
   tagname, tname: lpcstr;
   var_type: Variant;
 begin
-  if fCreateStateTag = false then exit;
+  if fCreateStateTag = false then
+    exit;
   ir := getIR;
   str := GetModeDsc + '_State';
   if RStateConfig then
@@ -4900,7 +4903,7 @@ var
 begin
   if not m_applyed then
   begin
-    if m_stateTag<>nil then
+    if m_stateTag <> nil then
       m_stateTag.PushValue(1, -1);
     for i := 0 to stepValCount - 1 do
     begin
@@ -4925,14 +4928,14 @@ begin
     end
     else
     begin
-      //if not t.applyed then
-      //begin
-      //  c := t.control;
-      //  c.ResetPWMTOnModeChange(true);
-      //  c.setparams(t.m_Params);
-      //  c.ApplyTask(t);
-      //  t.applyed := true;
-      //end;
+      // if not t.applyed then
+      // begin
+      // c := t.control;
+      // c.ResetPWMTOnModeChange(true);
+      // c.setparams(t.m_Params);
+      // c.ApplyTask(t);
+      // t.applyed := true;
+      // end;
     end;
     // программа может влиять только на те контролы которые заняты программой
     if t.control.OwnerProg <> p then
@@ -4989,24 +4992,24 @@ begin
   end;
 end;
 
-function cModeObj.CopyMode(before:boolean):cmodeObj;
+function cModeObj.CopyMode(before: boolean): cModeObj;
 var
-  I: Integer;
-  t:ctask;
+  i: integer;
+  t: cTask;
 begin
-  result:=cModeObj.create;
+  result := cModeObj.create;
   if before then
-    result.MIndex:=MIndex
+    result.MIndex := MIndex
   else
-    result.MIndex:=MIndex+1;
-  getProgram.insertMode(result,result.MIndex);
-  result.ModeLength:=ModeLength;
+    result.MIndex := MIndex + 1;
+  getProgram.insertMode(result, result.MIndex);
+  result.ModeLength := ModeLength;
   result.CreateTasks;
-  for I := 0 to TaskCount - 1 do
+  for i := 0 to TaskCount - 1 do
   begin
-    t:=GetTask(i);
+    t := GetTask(i);
     t.copytaskto(result.GetTask(i));
- end;
+  end;
 end;
 
 function cModeObj.getNextMode: cModeObj;
@@ -5067,7 +5070,7 @@ begin
     v := cTask(TaskList.Objects[i]);
     v.destroy;
   end;
-  TaskList.Clear;
+  TaskList.clear;
 end;
 
 function cModeObj.createStepV(t: itag; v: double): cStepVal;
@@ -5164,7 +5167,7 @@ begin
     s := cStepVal(StepValsList.Objects[i]);
     s.destroy;
   end;
-  StepValsList.Clear;
+  StepValsList.clear;
 end;
 
 procedure cModeObj.clearStepVals;
@@ -5177,7 +5180,7 @@ begin
     v := cStepVal(StepValsList.Objects[i]);
     v.destroy;
   end;
-  StepValsList.Clear;
+  StepValsList.clear;
 end;
 
 procedure cModeObj.DelTask(i: integer);
@@ -5214,7 +5217,7 @@ begin
     exit;
   if not b then
   begin
-    if m_stateTag<>nil then
+    if m_stateTag <> nil then
       m_stateTag.PushValue(0, -1);
   end;
   p := cProgramObj(getmainparent);
@@ -5227,7 +5230,7 @@ begin
       if m.active then
       begin
         m.factive := false;
-        if m_stateTag<>nil then
+        if m_stateTag <> nil then
           m.m_stateTag.PushValue(0, -1);
         break;
       end;
@@ -5421,25 +5424,25 @@ begin
   end;
 end;
 
-procedure UpdateTaskTags(str:string; t:ctask);
+procedure UpdateTaskTags(str: string; t: cTask);
 var
-  i,p:integer;
-  cstr:cstring;
-  pars:tstringlist;
-  str1, vals:string;
-  tag, TaskTag:cTagPair;
+  i, p: integer;
+  cstr: cstring;
+  pars: tstringlist;
+  str1, vals: string;
+  tag, TaskTag: cTagPair;
 begin
-  pars:=ParsStrParam(str, ';');
-  for I := 0 to pars.Count - 1 do
+  pars := ParsStrParam(str, ';');
+  for i := 0 to pars.Count - 1 do
   begin
-    cstr:=cstring(pars.Objects[i]);
-    tag:=cTagPair.create;
-    tag.name:=pars.Strings[i];
-    tag.value:=strtofloat(cstr.str);
+    cstr := cstring(pars.Objects[i]);
+    tag := cTagPair.create;
+    tag.name := pars.Strings[i];
+    tag.value := strtofloat(cstr.str);
     t.m_tags.AddObject(tag.name, tag);
   end;
-  delPars(pars);
-  pars.Destroy;
+  delpars(pars);
+  pars.destroy;
 end;
 
 procedure cModeObj.LoadObjAttributes(xmlNode: txmlnode; mng: tobject);
@@ -5450,8 +5453,8 @@ var
   str, tname: string;
   val: double;
   s: cStepVal;
-  c:cControlObj;
-  p:cProgramObj;
+  c: cControlObj;
+  p: cProgramObj;
 begin
   inherited;
   ModeLength := xmlNode.ReadAttributeFloat('Length', 0);
@@ -5483,9 +5486,9 @@ begin
           t.rightTang.x := n.ReadAttributeFloat('RightTangX', 0);
           t.rightTang.y := n.ReadAttributeFloat('RightTangY', 0);
           t.params := n.ReadAttributeString('Opts', t.getparams);
-          str:=n.ReadAttributeString('TagsVals', '');
-          //p:=getProgram;
-          //c:=p.getOwnControl(tname);
+          str := n.ReadAttributeString('TagsVals', '');
+          // p:=getProgram;
+          // c:=p.getOwnControl(tname);
           UpdateTaskTags(str, t);
         end;
       end;
@@ -5521,12 +5524,12 @@ begin
   xmlNode.WriteAttributeFloat('CheckLength', CheckLength);
   xmlNode.WriteAttributeBool('CheckThreshold', CheckThreshold);
   xmlNode.WriteAttributeBool('Infinity', Infinity);
-  TaskNode := GetNode(xmlNode,'TaskList');
+  TaskNode := GetNode(xmlNode, 'TaskList');
   TaskNode.WriteAttributeFloat('NCount', TaskCount);
   for i := 0 to TaskCount - 1 do
   begin
     t := GetTask(i);
-    n := GetNode(TaskNode,'T' + inttostr(i));
+    n := GetNode(TaskNode, 'T' + inttostr(i));
     n.WriteAttributeString('TaskName', t.control.name);
     n.WriteAttributeFloat('TaskVal', t.GetTask);
     n.WriteAttributeFloat('Tolerance', t.m_tolerance);
@@ -5540,12 +5543,12 @@ begin
     n.WriteAttributeString('Opts', t.getparams);
     n.WriteAttributeString('TagsVals', t.TagsToString);
   end;
-  stepsNode := GetNode(xmlNode,'StepList');
+  stepsNode := GetNode(xmlNode, 'StepList');
   stepsNode.WriteAttributeFloat('NCount', stepValCount);
   for i := 0 to stepValCount - 1 do
   begin
     s := getstepval(i);
-    n := getNode(TaskNode,'Step' + inttostr(i));
+    n := GetNode(TaskNode, 'Step' + inttostr(i));
     n.WriteAttributeString('StepChannel', s.name);
     n.WriteAttributeFloat('StepVal', s.m_val);
   end;
@@ -5578,7 +5581,7 @@ begin
     result := parent.parent;
   end
   ELSE
-    result:=nil;
+    result := nil;
 end;
 
 procedure cModeObj.doUpdateData;
@@ -5599,29 +5602,29 @@ end;
 { cDacControl }
 procedure cDacControl.ApplyTaskVal(v: double);
 var
-  zpair:PTagPair;
-  b:boolean;
-  z:czone;
+  zpair: pTagPair;
+  b: boolean;
+  z: cZone;
 begin
   inherited;
-  b:=true;
+  b := true;
   if m_zones_enabled then
   begin
-    z:=m_ZoneList.defaultZone;
-    if z<>nil then
+    z := m_ZoneList.defaultZone;
+    if z <> nil then
     begin
-      zpair:=z.GetZonePairPointer(m_dac.GetName);
+      zpair := z.GetZonePairPointer(m_dac.getname);
       // если канал управля\ется по зонам и по заданию, то приоритет на зоны
-      if zpair<>nil then
-        b:=false;
+      if zpair <> nil then
+        b := false;
     end;
   end;
   if b then
   begin
-    if IsAlive(m_dac) then
+    if isAlive(m_dac) then
       m_dac.PushValue(v, -1)
     else
-      m_dac:=nil;
+      m_dac := nil;
   end;
 end;
 
@@ -5683,8 +5686,9 @@ procedure cDacControl.setDAC(dac: itag);
 var
   str: string;
 begin
-  if dac=m_dac then exit;
-  
+  if dac = m_dac then
+    exit;
+
   if m_dac <> nil then
   begin
     AddTagProp(m_dac, c_TagProp_nullpoly, '0');
@@ -5926,17 +5930,17 @@ begin
 end;
 
 { cTask }
-procedure cTask.ClearTags;
+procedure cTask.cleartags;
 var
-  i:integer;
-  tag:ctagpair;
+  i: integer;
+  tag: cTagPair;
 begin
-  for I := 0 to m_tags.Count - 1 do
+  for i := 0 to m_tags.Count - 1 do
   begin
-    tag:=ctagpair(m_tags.Objects[i]);
+    tag := cTagPair(m_tags.Objects[i]);
     tag.destroy;
   end;
-  m_tags.Clear;
+  m_tags.clear;
 end;
 
 procedure cTask.compilespline;
@@ -6018,56 +6022,56 @@ begin
   end;
 end;
 
-Procedure cTask.AddTagPair(t:cTagPair);
+Procedure cTask.AddTagPair(t: cTagPair);
 var
-  i:integer;
-  tp, ltp:cTagPair;
+  i: integer;
+  tp, ltp: cTagPair;
 begin
-  tp:=nil;
-  for I := 0 to m_tags.Count - 1 do
+  tp := nil;
+  for i := 0 to m_tags.Count - 1 do
   begin
-    ltp:=ctagpair(m_tags.Objects[i]);
-    if ltp.name=t.name then
+    ltp := cTagPair(m_tags.Objects[i]);
+    if ltp.name = t.name then
     begin
-      tp:=ltp;
+      tp := ltp;
       break;
     end;
   end;
   // если не нашли такого тега
-  if tp=nil then
+  if tp = nil then
   begin
-    tp:=cTagPair.create;
-    tp.name:=t.getname;
+    tp := cTagPair.create;
+    tp.name := t.getname;
     m_tags.AddObject(tp.name, tp);
   end;
-  tp.value:=t.value;
-  tp.PWM:=t.PWM;
+  tp.value := t.value;
+  tp.PWM := t.PWM;
 end;
 
-procedure cTask.copytaskto(t: ctask);
+procedure cTask.copytaskto(t: cTask);
 var
-  I: Integer;
-  tagpair, tp:cTagPair;
+  i: integer;
+  tagpair, tp: cTagPair;
 begin
-  t.fStopControlValue:=fStopControlValue;
-  t.leftTang:=leftTang;
-  t.rightTang:=rightTang;
-  t.TaskType:=TaskType;
-  t.control:=control;
-  t.point:=point;
-  t.spline:=spline;
-  t.m_UsePrev:=m_UsePrev;
-  t.m_tolerance:=m_tolerance;
-  t.m_useTolerance:=m_useTolerance;
-  t.SplineInterp:=SplineInterp;
-  t.params:=params;
-  for I := 0 to m_tags.Count - 1 do
+  t.fStopControlValue := fStopControlValue;
+  t.leftTang := leftTang;
+  t.rightTang := rightTang;
+  t.TaskType := TaskType;
+  t.control := control;
+  t.point := point;
+  t.spline := spline;
+  t.m_UsePrev := m_UsePrev;
+  t.m_tolerance := m_tolerance;
+  t.m_useTolerance := m_useTolerance;
+  t.SplineInterp := SplineInterp;
+  t.params := params;
+  for i := 0 to m_tags.Count - 1 do
   begin
-    tagpair:=ctagpair(m_tags.Objects[i]);
-    tp:=ctagpair.create;
-    tp.name:=tagpair.getname;
-    tp.value:=tagpair.value;
-    tp.PWM:=tagpair.PWM;
+    tagpair := cTagPair(m_tags.Objects[i]);
+    tp := cTagPair.create;
+    tp.name := tagpair.getname;
+    tp.value := tagpair.value;
+    tp.PWM := tagpair.PWM;
     t.m_tags.AddObject(tp.name, tp);
   end;
 end;
@@ -6082,19 +6086,19 @@ end;
 
 destructor cTask.destroy;
 var
-  I: Integer;
-  tag:ctagpair;
+  i: integer;
+  tag: cTagPair;
 begin
   DeleteCS;
   m_Params.destroy;
   m_Params := nil;
-  for I := 0 to m_tags.Count - 1 do
+  for i := 0 to m_tags.Count - 1 do
   begin
-    tag:=ctagpair(m_tags.Objects[i]);
+    tag := cTagPair(m_tags.Objects[i]);
     tag.destroy;
   end;
-  m_tags.Destroy;
-  m_tags:=nil;
+  m_tags.destroy;
+  m_tags := nil;
 end;
 
 function cTask.getApplyed: boolean;
@@ -6315,17 +6319,17 @@ end;
 
 function cTask.TagsToString: string;
 var
-  I: Integer;
-  t:cTagPair;
+  i: integer;
+  t: cTagPair;
 begin
-  result:='';
-  for I := 0 to m_tags.count - 1 do
+  result := '';
+  for i := 0 to m_tags.Count - 1 do
   begin
-    t:=cTagPair(m_tags.Objects[i]);
-    if i=0 then
-      result:=result+t.name+'='+floattostr(t.value)
+    t := cTagPair(m_tags.Objects[i]);
+    if i = 0 then
+      result := result + t.name + '=' + floattostr(t.value)
     else
-      result:=';'+result+t.name+'='+floattostr(t.value);
+      result := ';' + result + t.name + '=' + floattostr(t.value);
   end;
 end;
 
@@ -6397,7 +6401,7 @@ begin
   begin
     p := GetZonePair(i);
     t := itag(p.tag);
-    if isalive(t) then
+    if isAlive(t) then
       t.PushValue(p.value, -1);
   end;
 end;
@@ -6481,12 +6485,12 @@ var
 begin
   fHist := 10;
   ftol := tol;
-  fUsePrevZoneVals:=true;
+  fUsePrevZoneVals := true;
   tags := tlist.create;
   if List <> nil then
   begin
     owner := List;
-    i := csetlist(owner).AddObj(self);
+    i := cSetList(owner).AddObj(self);
     if owner.Count = 1 then
     begin
       defaultZone := true;
@@ -6545,7 +6549,7 @@ var
   i: integer;
   zp: pTagPair;
 begin
-  result:= nil;
+  result := nil;
   for i := 0 to tags.Count - 1 do
   begin
     zp := GetZonePairPointer(i);
@@ -7080,9 +7084,9 @@ begin
   result := tag.tagname;
 end;
 
-procedure cTagPair.setname(s:string);
+procedure cTagPair.setname(s: string);
 begin
-  tag.tagname:=s;
+  tag.tagname := s;
 end;
 
 { cProgControlList }
@@ -7090,8 +7094,8 @@ end;
 constructor cProgControlList.create;
 begin
   inherited;
-  comparator:=ControlComparator;
-  destroydata:=false;
+  comparator := ControlComparator;
+  destroydata := false;
 end;
 
 end.

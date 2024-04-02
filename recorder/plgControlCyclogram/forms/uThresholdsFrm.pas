@@ -352,6 +352,8 @@ var
 begin
   ifile:=TIniFile.Create(fname);
   ifile.WriteString('Main', 'GCount', inttostr(TagsTV.RootNode.ChildCount));
+  if TagsTV.RootNode.ChildCount=0 then exit;
+
   for I := 0 to TagsTV.RootNode.ChildCount - 1 do
   begin
     g:=getGroup(i);

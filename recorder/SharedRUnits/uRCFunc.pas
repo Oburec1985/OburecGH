@@ -43,6 +43,7 @@ type
     fdevicetime: double;
     fdT:double;
   public
+    useEcm:boolean;
     owner:tstringlist;
     m_createOutTag: boolean;
     // кол-во обработанных блоков исходного тега
@@ -1044,6 +1045,7 @@ begin
 
 constructor cTag.create;
 begin
+  useEcm:=true;
   owner:=nil;
   m_createOutTag := true;
   ftag := nil;

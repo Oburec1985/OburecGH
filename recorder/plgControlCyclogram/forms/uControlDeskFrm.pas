@@ -220,6 +220,7 @@ type
 
   IControlFrm = class(cRecBasicIFrm)
   protected
+    function doGetProperty(tag:integer):lpcstr;override;
     function doSetProperty(tag:integer; str:lpcstr):integer;override;
   public
     function doGetName: LPCSTR; override;
@@ -346,6 +347,57 @@ begin
   end;
 end;
 
+// Con=C_1;new_1=1;FB_1=T_1;Tag = T_1;
+function GetControlMngInit:boolean;
+var
+  rep: hresult;
+  val: OleVariant;
+  UISrv: tagVARIANT;
+  FormRegistrator: ICustomFormsRegistrator;
+  f: ICustomFormFactory;
+  cf: ICustomFactInterface;
+  CFrm: IVForm;
+
+  count: cardinal;
+  i: ULONG;
+  int: integer;
+  ws: widestring;
+  g: TGUID;
+  s:lpcstr;
+begin
+  result:=false;
+  rep := g_ir.GetProperty(RCPROP_UISERVERLINK, val);
+  UISrv := tagVARIANT(val);
+  if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
+  begin
+  end;
+  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator, FormRegistrator);
+  if FAILED(rep) or (FormRegistrator = niL) then
+  begin
+  end;
+  FormRegistrator.GetFactoriesCount(@count);
+  for i := 0 to count - 1 do
+  begin
+    FormRegistrator.GetFactoryByIndex(f, i);
+    f.GetFormTypeName(ws);
+    // f._Release;
+    // 'Пульт управления'
+    if ws = 'Пульт управления' then
+    begin
+      cf := f as ICustomFactInterface;
+      int := 0;
+      rep:=(cf as ICustomFactInterface).getChild(int, CFrm);
+      if FAILED(rep) then exit;
+      // (cf as ICustomFactInterface).getChild(int, mdb);
+      // вернуть произвольное свойство tag - id того что хотим получить
+      // 0: путь к испытанию 1: путь к регистрации
+      s:=(CFrm as ICustomVFormInterface).GetCustomProperty(0);
+      if s='1' then
+        result:=true;
+    end;
+  end;
+end;
+
 { cControlFactory }
 
 function TrigBoolToStr(b: boolean): string;
@@ -453,8 +505,7 @@ begin
     doChangeRState);
   addplgevent('TControlDeskFrm_doLeaveCfg', c_RC_LeaveCfg, doLeaveCfg);
   addplgevent('TControlDeskFrm_doRcInit', E_RC_Init, doRcInit);
-  g_conmng.Events.AddEvent('TControlDeskFrm_doStopControlMng',
-    E_OnStopControlMng, doShowStop);
+  g_conmng.Events.AddEvent('TControlDeskFrm_doStopControlMng', E_OnStopControlMng, doShowStop);
 end;
 
 procedure TControlDeskFrm.DestroyEvents;
@@ -744,6 +795,8 @@ begin
       ThresholdFrm.load(s);
     end;
   end;
+  //if GetControlMngInit then
+  //  showmessage('ok');
 end;
 
 procedure TControlDeskFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -1323,13 +1376,24 @@ begin
           // Изменяем значение
           str1 := Copy(str, 1, I);
           str1 := str1 + Value;
-          for j := I to length(str) do
+          // дописано 02.04.24
+          if t.m_tags.Count>0 then
           begin
-            if str[j] = ';' then
-              break;
-          end;
-          str2 := Copy(str, j, length(str) - j + 1);
-          str1 := str1 + str2;
+            for I := 0 to t.m_tags.Count - 1 do
+            begin
+              str1:=str1+';'+getSubStrByIndex(str, ';', 1, i+2);
+            end;
+          end
+          else
+            str1:=str1+';';
+          // убрано 02.04.24
+          ///for j := I to length(str) do
+          ///begin
+          ///  if str[j] = ';' then
+          ///    break;
+          ///end;
+          ///str2 := Copy(str, j, length(str) - j + 1);
+          ///str1 := str1 + str2;
           ControlPropSG.Cells[c, r] := ZoneListToParams(str1, m_CurControl.m_ZoneList);
           t.setParam('Vals', str1);
         end;
@@ -1764,6 +1828,7 @@ begin
   StopPanel.Color := CLgREEN;
   PlayPanel.Color := clBtnFace;
   PausePanel.Color := clBtnFace;
+  updateviews;
 end;
 
 procedure TControlDeskFrm.EnablePult(b_state: boolean);
@@ -1789,6 +1854,7 @@ procedure TControlDeskFrm.StopBtnClick(Sender: TObject);
 begin
   Stop;
   UpdateTimers;
+  //updateviews;
 end;
 
 procedure TControlDeskFrm.pause;
@@ -2800,15 +2866,33 @@ begin
   result := 'ControlCyclogram';
 end;
 
+function IControlFrm.doGetProperty(tag: integer): lpcstr;
+var
+  b:boolean;
+  s:lpcstr;
+begin
+  s:='0';
+  if tag=0 then
+  begin
+    b:=(TControlDeskFrm(m_pMasterWnd).finit and TControlDeskFrm(m_pMasterWnd).fload);
+    if b then
+      s:='1';
+  end;
+  result:=s;
+end;
+
 function IControlFrm.doSetProperty(tag: integer; str: lpcstr): integer;
 var
-  s:string;
+  s, stag:string;
   pars:TStringList;
   p:cprogramobj;
-  c:cControlObj;
+  c, lc:cControlObj;
   I: Integer;
   t:itag;
+  tp, ltp:ctagpair;
   createCon:boolean;
+  removetags:tlist;
+  j: Integer;
 begin
   if not TControlDeskFrm(m_pMasterWnd).GetNotifyCB.Checked then exit;
 
@@ -2828,7 +2912,20 @@ begin
   else
     createCon:=false;
   s:=GetParsValue(pars, 'C_1');
+  stag:=GetParsValue(pars, 'T_1');
   c:=g_conmng.getControlObj(s);
+  if c=nil then
+  begin
+    for I := 0 to g_conmng.ControlsCount - 1 do
+    begin
+      lc:=g_conmng.getControlObj(i);
+      if cDacControl(lc).dacname=stag then
+      begin
+        c:=lc;
+        break;
+      end;
+    end;
+  end;
   if c=nil then
   begin
     if createCon then
@@ -2840,36 +2937,78 @@ begin
         p:=g_conmng.getProgram(0);
         p.AddControl(c);
       end;
-    end;
+    end
   end;
   if c<>nil then
   begin
     s:=GetParsValue(pars, 'FB_1');
-    c.cleartags;
+
     if checkstr(s) then
     begin
       t:=getTagByName(s);
       if t<>nil then
         cDacControl(c).config(t, nil);
     end;
-    s:=GetParsValue(pars, 'T_1');
     i:=1;
+    s:=stag;
     if checkstr(s) then
     begin
       t:=getTagByName(s);
       if t<>nil then
         cDacControl(c).dac:=t;
     end;
-
+    if  c.TagsCount>0 then
+    begin
+      removetags:=tlist.create;
+      for j := 0 to c.TagsCount - 1 do
+      begin
+        removetags.Add(c.getTag(j));
+      end;
+    end
+    else
+    begin
+      removetags:=nil;
+    end;
     while checkstr(s) do
     begin
       if i>1 then
+      begin
+        // вычищаем теги которые уничтожать не нужно (которые есть в Горне)
+        if removetags<>nil then
+        begin
+          for j := removetags.count - 1 downto 0 do
+          begin
+            tp:=ctagpair(removetags.items[j]);
+            if tp.tag.tagname=s then
+            begin
+              removetags.Delete(j);
+              break;
+            end;
+          end;
+        end;
         cDacControl(c).AddTag(s, 0);
+      end;
       inc(i);
       s:=GetParsValue(pars, 'T_'+inttostr(i));
     end;
+    if removetags<>nil then
+    begin
+      if removetags.Count>0 then
+      begin
+        for j := 0 to removetags.count - 1 do
+        begin
+          tp:=ctagpair(removetags.items[j]);
+          ltp:=c.getTag(tp.tag.tagname);
+          if ltp<>nil then
+          begin
+            c.DelTag(tp.tag.tagname);
+          end;
+        end;
+      end;
+      removetags.Destroy;
+    end;
     // пересоздаем задачи для контрола
-    c.UpdateTask;
+    //c.UpdateTask;
   end;
   ClearParsResult(pars);
   pars.Destroy;

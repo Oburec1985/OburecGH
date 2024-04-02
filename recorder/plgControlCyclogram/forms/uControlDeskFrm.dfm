@@ -999,10 +999,6 @@ object ControlDeskFrm: TControlDeskFrm
     OnChange = PageControl1Change
     object TabSheet1: TTabSheet
       Caption = #1054#1073#1097#1080#1081' '#1074#1080#1076
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Splitter2: TSplitter
         Left = 715
         Top = 0
@@ -1041,8 +1037,6 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 0
-        ExplicitLeft = 392
-        ExplicitHeight = 411
         object ModePanel: TPanel
           Left = 1
           Top = 25
@@ -1101,7 +1095,6 @@ object ControlDeskFrm: TControlDeskFrm
           TabOrder = 2
           OnDblClick = ProgramSGDblClick
           OnDrawCell = ProgramSGDrawCell
-          ExplicitHeight = 300
           RowHeights = (
             32
             32
@@ -1133,13 +1126,11 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 1
-        ExplicitWidth = 392
-        ExplicitHeight = 411
         object ControlSG: TStringGrid
           Left = 1
           Top = 25
-          Width = 390
-          Height = 390
+          Width = 393
+          Height = 395
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -1185,13 +1176,11 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 2
-        ExplicitLeft = 716
-        ExplicitHeight = 411
         object TrigSG: TStringGrid
           Left = 1
           Top = 25
           Width = 322
-          Height = 390
+          Height = 395
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4

@@ -268,7 +268,7 @@ end;
 
 function IDigsFrm.doRepaint: boolean;
 begin
-  TDigsFrm(m_pMasterWnd).UpdateView;
+  //DigsFrm(m_pMasterWnd).UpdateView;
 end;
 
 { TGroup }
@@ -335,7 +335,7 @@ begin
   begin
     while c<colNames.Count do
     begin
-      col:=colNames.Get(colNames.Count-1);
+      col:=TDigColumn(colNames.Get(colNames.Count-1));
       col.destroy;
     end;
   end;
