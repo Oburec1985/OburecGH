@@ -27,6 +27,13 @@ type
 
   PDataRec = ^DataRec;
 
+  AlarmHandler = class(TInterfacedObject, IAlarmEventHandler)
+  public
+    procedure Attach;
+    procedure Detach;
+    function OnAlarmEvent(pTag: ITag; pAlarm:IAlarm; nIndex:integer; dblVal:double; flags:ULONG): HRESULT;stdcall;
+  end;
+
   TThresholdGroup = class
   public
     m_lastControlVal:integer;
@@ -49,7 +56,8 @@ type
     // получить запись с уставками
     function AlarmData:PDataRec;overload;
     function AlarmData(i:integer):PDataRec;overload;
-    function GetAlarm(i:integer):TAlarms;
+    function GetAlarm(i:integer):TAlarms;overload;
+    function GetAlarm(s:string):TAlarms;overload;
     function toString(i:integer):string;
     procedure StringToData(str:string;i:integer);
     // получить значение тега управляющего наборами
@@ -68,7 +76,9 @@ type
     owner:TThresholdGroup;
     t:ctag;
     m_ACon: IAlarmsControl;
-    m_a_ll,m_a_l,m_a_h,m_a_hh:IAlarm;
+    m_a_ll,m_a_l,m_a_h,m_a_hh,
+    activeA:IAlarm;
+    ActiveAlInd:integer;
   protected
     procedure initTagIface;
   public
@@ -125,6 +135,7 @@ type
     procedure CountIEChange(Sender: TObject);
     procedure HHColorDblClick(Sender: TObject);
   public
+    m_AlarmHandler :AlarmHandler;
     m_Groups:TStringList;
     m_selGroup:TThresholdGroup;
   private
@@ -137,6 +148,7 @@ type
     procedure doStart;
     procedure doStop;
   public
+    function getAlarm(tname:string):TAlarms;
     function getGroup(i:integer):TThresholdGroup;
     procedure save(fname:string);
     procedure load(fname:string);
@@ -197,6 +209,9 @@ begin
   inherited;
   m_Groups:=TStringList.Create;
   createevents;
+
+  m_AlarmHandler:=AlarmHandler.Create;
+  m_AlarmHandler.Attach;
 end;
 
 destructor TThresholdFrm.destroy;
@@ -210,6 +225,7 @@ begin
     g.destroy;
   end;
   m_Groups.Destroy;
+  m_AlarmHandler.Destroy;
 end;
 
 procedure TThresholdFrm.destroyevents;
@@ -298,6 +314,19 @@ end;
 procedure TThresholdFrm.doStop;
 begin
 
+end;
+
+function TThresholdFrm.getAlarm(tname: string): TAlarms;
+var
+  I: Integer;
+  g:TThresholdGroup;
+begin
+  result:=nil;
+  for I := 0 to m_Groups.Count - 1 do
+  begin
+    g:=getGroup(i);
+    result:=g.GetAlarm(tname);
+  end;
 end;
 
 function TThresholdFrm.getGroup(i:integer): TThresholdGroup;
@@ -518,12 +547,12 @@ begin
       a:=g.addtag(t, newAlarm);
       if newAlarm then
       begin
-        new:=TagsTV.AddChild(n, nil);
-        sd:=TagsTV.GetNodeData(new);
-        sd.data:=a;
-        sd.color:=TagsTV.normalcolor;
-        sd.ImageIndex:=0;
-        sd.Caption:=li.Caption;
+        //new:=TagsTV.AddChild(n, nil);
+        //sd:=TagsTV.GetNodeData(new);
+        //sd.data:=a;
+        //sd.color:=TagsTV.normalcolor;
+        //sd.ImageIndex:=0;
+        //sd.Caption:=li.Caption;
         li:=TagsListFrame1.TagsLV.GetNextItem(li, sdAll, [isSelected]);
         if li<>nil then
           t:=itag(li.data);
@@ -729,6 +758,16 @@ begin
   end;
 end;
 
+function TThresholdGroup.GetAlarm(s: string): TAlarms;
+var
+  i:integer;
+begin
+  if AlarmList.Find(s, i) then
+  begin
+    result:=GetAlarm(i);
+  end;
+end;
+
 function TThresholdGroup.GetAlarm(i: integer): TAlarms;
 begin
   result:=TAlarms(AlarmList.Objects[i]);
@@ -868,6 +907,73 @@ begin
         owner.m_Data[0].LLCol:=c;
         owner.fillData(1, @owner.m_Data[0]);
       end;
+    end;
+  end;
+end;
+
+{ AlarmHandler }
+
+procedure AlarmHandler.Attach;
+var
+  ir:irecorder;
+  iaeh:IAlarmEventHandler;
+  changed:boolean;
+begin
+  ir:=getIR;
+  //iaeh:=self;
+  if not FAILED(QueryInterface(IID_IAlarmEventHandler,iaeh)) then
+  begin
+    ecm(changed);
+    ir.Notify(RCN_SUBSCRALARMSEVENT, cardinal(iaeh));
+    if changed then
+      lcm;
+  end;
+end;
+
+procedure AlarmHandler.Detach;
+var
+  ir:irecorder;
+  iaeh:IAlarmEventHandler;
+  changed:boolean;
+begin
+  ir:=getIR;
+  //iaeh:=self;
+  if not FAILED(QueryInterface(IID_IAlarmEventHandler,iaeh)) then
+  begin
+    ecm(changed);
+    ir.Notify(RCN_UNSUBSCRALARMSEVENT, cardinal(iaeh));
+    if changed then
+      lcm;
+  end;
+end;
+
+function AlarmHandler.OnAlarmEvent(pTag: ITag; pAlarm: IAlarm;
+  nIndex: integer; dblVal: double; flags: ULONG): HRESULT;
+var
+  I: Integer;
+  tr:cbasetrig;
+  g:TThresholdGroup;
+  a:talarms;
+  s:string;
+begin
+  for I := 0 to ThresholdFrm.m_Groups.Count - 1 do
+  begin
+    g:=TThresholdGroup(ThresholdFrm.m_Groups.Objects[i]);
+    s:=pTag.GetName;
+    a:=g.GetAlarm(s);
+    if a<>nil then
+    begin
+      if flags>0 then
+      begin
+        a.activeA:=pAlarm;
+        a.ActiveAlInd:=nindex;
+      end
+      else
+      begin
+        a.activeA:=nil;
+        a.ActiveAlInd:=-1;
+      end;
+      break;
     end;
   end;
 end;

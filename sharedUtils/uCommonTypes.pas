@@ -79,6 +79,8 @@ type
 
   TNamedobjList = class;
 
+  TNamedClass = class of TNamedObj;
+
   TNamedObj = class
   public
     owner:TNamedobjList;
@@ -93,7 +95,7 @@ type
 
   TNamedobjList = class(tstringlist)
   public
-    cl:tclass;
+    cl:TNamedClass;
   public
     function findNoSort(s:string; var ind:integer):boolean;
     function Get(tname:string):TNamedObj;overload;
@@ -311,14 +313,20 @@ end;
 destructor TNamedObj.destroy;
 var
   i:integer;
+  b:boolean;
 begin
   if owner<>nil then
   begin
-    if owner.find(name,i) then
+    if owner.sorted then
+      b:=owner.Find(fname, i)
+    else
+      b:=owner.findNoSort(fname, i);
+    if b then
     begin
       owner.Delete(i);
     end;
   end;
+  inherited;
 end;
 
 procedure TNamedObj.setname(s: string);
@@ -439,7 +447,10 @@ end;
 
 function TNamedobjList.Get(i: integer): TNamedObj;
 begin
-  result:=TNamedObj(objects[i]);
+  result:=nil;
+  if i<0 then exit;
+  if i<count then
+    result:=TNamedObj(objects[i]);
 end;
 
 end.

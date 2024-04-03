@@ -86,6 +86,7 @@ function isdig(ch:ansichar):boolean;overload;
 function isdig(ch:char):boolean;overload;
 // получить подстроку содержащую номер
 function GetBaseNum(str:string):string;
+// получить подстроку содержащую номер в конце после _
 function getendnum(str:string):string;
 function DelNullCharsInNumStr(str:string):string;
 // получить подстроку содержащую окончание строки без номера

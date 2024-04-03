@@ -28,29 +28,32 @@ uses
   uSpm, uBaseAlg,
   opengl, uSimpleObjects,
   math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend,
-  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uPressFrmFrame2,
+  uThresholdsFrm,
+  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons,
   // uPathMng,
   uRcCtrls, Menus, Grids;
 
 type
   TDigColumn = class(TNamedObj)
   public
-    owner:TNamedObjList;
     estimate:integer;
   protected
 
   public
-    destructor destroy;
+
   end;
 
 
   TGroup = class(TNamedObj)
   public
-    owner:TNamedObjList;
-    m_tags: TNamedObjList;
+    m_tags: tlist;
   protected
   public
-    constructor create;
+    procedure clear;
+    function addTag(t:ctag):ctag;overload;
+    function addTag(s:string):ctag;overload;
+    function gettag(i:integer):ctag;
+    constructor create;override;
     destructor destroy;
   end;
 
@@ -59,18 +62,25 @@ type
     PopupMenu1: TPopupMenu;
     N1: TMenuItem;
     procedure N1Click(Sender: TObject);
+    procedure SignalsSGDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
   private
 
   public
-    fcolCount:integer;
     colNames:TNamedObjList;
     glist:TNamedObjList;
   protected
+    procedure ShowTagVals;
+    procedure UpdateView;
     procedure setColCount(c:integer);
+    function getColCount:integer;
   public
-    property colCount:integer read fColCount Write setColCount;
+    procedure showcfg;
+    property colCount:integer read getColCount Write setColCount;
     constructor create(Aowner: tcomponent); override;
     destructor destroy; override;
+    procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
+    procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
   end;
 
   IDigsFrm = class(cRecBasicIFrm)
@@ -83,7 +93,7 @@ type
 
   cDigsFrmFactory = class(cRecBasicFactory)
   public
-
+    m_digit:integer;
   private
     // число дочерних компонентов
     m_counter: integer;
@@ -132,6 +142,7 @@ uses
 constructor cDigsFrmFactory.create;
 begin
   inherited;
+  m_digit:=4;
   m_lRefCount := 1;
   m_counter := 0;
   m_name := c_Name;
@@ -268,14 +279,64 @@ end;
 
 function IDigsFrm.doRepaint: boolean;
 begin
-  //DigsFrm(m_pMasterWnd).UpdateView;
+  TDigsFrm(m_pMasterWnd).UpdateView;
 end;
 
 { TGroup }
 
+function TGroup.addTag(t: ctag): ctag;
+var
+  I: Integer;
+begin
+  result:=t;
+  for I := 0 to m_tags.Count - 1 do
+  begin
+    if m_tags.items[i]=t then
+      exit;
+  end;
+  m_tags.Add(t);
+end;
+
+function TGroup.addTag(s: string): ctag;
+var
+  I: Integer;
+  t, lt:ctag;
+begin
+  t:=nil;
+  for I := 0 to m_tags.Count - 1 do
+  begin
+    lt:=ctag(m_tags.items[i]);
+    if lt.tagname=s then
+    begin
+      t:=lt;
+      break;
+    end;
+  end;
+  if t=nil then
+  begin
+    t:=cTag.create;
+    t.tagname:=s;
+  end;
+  m_tags.Add(t);
+end;
+
+procedure TGroup.clear;
+var
+  I: Integer;
+  t:ctag;
+begin
+  for I := 0 to m_tags.Count - 1 do
+  begin
+    t:=gettag(i);
+    t.destroy;
+  end;
+  m_tags.Clear;
+end;
+
 constructor TGroup.create;
 begin
-  m_tags := TNamedobjList.create;
+  inherited;
+  m_tags := TList.create;
 end;
 
 destructor TGroup.destroy;
@@ -291,6 +352,16 @@ begin
   end;
   m_tags.destroy;
   inherited;
+end;
+
+function TGroup.gettag(i: integer): ctag;
+begin
+  result:=nil;
+  if i<0 then exit;
+  if i<m_tags.Count then
+  begin
+    result:=ctag(m_tags.items[i]);
+  end;
 end;
 
 { TDigsFrm }
@@ -311,10 +382,82 @@ begin
   inherited;
 end;
 
+function TDigsFrm.getColCount: integer;
+begin
+  result:=colNames.Count;
+end;
+
+procedure TDigsFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  i, j, k: integer;
+  col:TDigColumn;
+  g:TGroup;
+  s, s1:string;
+  t:ctag;
+begin
+  inherited;
+  j:=a_pIni.ReadInteger(str, 'GCount', 0);
+  for I := 0 to j - 1 do
+  begin
+    s:=a_pIni.ReadString(str, 'GName_'+inttostr(i), '');
+    g:=TGroup(glist.Add(s));
+    s:=a_pIni.ReadString(str, 'GTags_'+inttostr(i), s);
+    k:=0;
+    s1:=s;
+    while checkstr(s1) do
+    begin
+      s1:=getSubStrByIndex(s,';',1,k);
+      inc(k);
+      g.addTag(s1);
+    end;
+  end;
+  j:=a_pIni.ReadInteger(str, 'ColCount', 0);
+  for I := 0 to j-1 do
+  begin
+    s:=a_pIni.ReadString(str, 'CName_'+inttostr(i), '');
+    col:=tdigcolumn(colNames.Add(s));
+    col.estimate:=a_pIni.ReadInteger(str, 'CEst_'+inttostr(i), 0);
+  end;
+  showcfg;
+end;
+
+procedure TDigsFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  i: integer;
+  col:TDigColumn;
+  g:TGroup;
+  s:string;
+  j: Integer;
+  t:ctag;
+begin
+  inherited;
+  a_pIni.WriteInteger(str, 'GCount', glist.Count);
+  a_pIni.WriteInteger(str, 'ColCount', colNames.Count);
+  for I := 0 to colNames.Count-1 do
+  begin
+    col:=tdigcolumn(colNames.Get(i));
+    a_pIni.WriteString(str, 'CName_'+inttostr(i), col.name);
+    a_pIni.WriteInteger(str, 'CEst_'+inttostr(i), col.estimate);
+  end;
+  for I := 0 to glist.Count-1 do
+  begin
+    g:=tgroup(glist.Get(i));
+    a_pIni.WriteString(str, 'GName_'+inttostr(i), g.name);
+    s:='';
+    for j := 0 to g.m_tags.Count - 1 do
+    begin
+      t:=g.gettag(j);
+      s:=s+t.tagname+';';
+    end;
+    a_pIni.WriteString(str, 'GTags_'+inttostr(i), s);
+  end;
+end;
+
 procedure TDigsFrm.N1Click(Sender: TObject);
 begin
   DigsFrmEdit.Edit(self);
 end;
+
 
 procedure TDigsFrm.setColCount(c: integer);
 var
@@ -335,24 +478,114 @@ begin
       col.destroy;
     end;
   end;
-  fcolCount:=c;
   SignalsSG.ColCount:=c;
 end;
 
-{ TColumn }
-
-destructor TDigColumn.destroy;
+procedure TDigsFrm.showcfg;
 var
-  i:integer;
+  I, j: Integer;
+  g: tgroup;
+  c:tdigcolumn;
+  t:ctag;
 begin
-  if owner<>nil then
+  if glist.Count<1 then
+    SignalsSG.RowCount:=2
+  else
+    SignalsSG.RowCount:=glist.Count+1;
+  if colNames.Count<1 then
+    SignalsSG.ColCount:=2
+  else
+    SignalsSG.ColCount:=colNames.Count+1;
+  for I := 0 to colNames.Count - 1 do
   begin
-    if owner.find(name,i) then
+    c:=tdigcolumn(colNames.Get(i));
+    SignalsSG.Cells[i+1,0]:=c.name;
+  end;
+  for I := 0 to gList.Count - 1 do
+  begin
+    g:=tgroup(gList.Get(i));
+    SignalsSG.Cells[0,i+1]:=g.name;
+  end;
+  SGChange(SignalsSG);
+end;
+
+procedure TDigsFrm.ShowTagVals;
+var
+  I: Integer;
+  j: Integer;
+  g:tgroup;
+  c:TDigColumn;
+  t:ctag;
+  s:string;
+  v:double;
+begin
+  for I := 0 to glist.Count-1 do
+  begin
+    g:=tgroup(glist.Get(i));
+    for j := 0 to g.m_tags.Count - 1 do
     begin
-      owner.Delete(i);
+      t:=g.gettag(j);
+      c:=TDigColumn(colNames.Get(j));
+      if t.tag<>nil then
+      begin
+        case c.estimate of
+          0:v:=getmean(t.tag);
+          1:;
+          2:;
+        end;
+        s:=formatstrNoE(v,g_DigsFrmFactory.m_digit);
+        SignalsSG.Cells[j+1, i+1]:=s;
+      end;
     end;
   end;
-  inherited;
+end;
+
+procedure TDigsFrm.SignalsSGDrawCell(Sender: TObject; ACol, ARow: Integer;
+  Rect: TRect; State: TGridDrawState);
+var
+  g:TGroup;
+  t:cTag;
+  b:boolean;
+  a:TAlarms;
+  s:string;
+  c:integer;
+begin
+  Color := SignalsSG.Canvas.Brush.Color;
+  if ThresholdFrm<>nil then
+  begin
+    if arow>0 then
+    begin
+      if acol>0 then
+      begin
+        g:=tgroup(glist.Get(arow-1));
+        if g<>nil then
+        begin
+          t:=g.gettag(acol-1);
+          if t<>nil then
+          begin
+            a:=ThresholdFrm.getalarm(t.tagname);
+            if a<>nil then
+            begin
+              if a.activeA<>nil then
+              begin
+                a.activeA.GetColor(c);
+                SignalsSG.Canvas.Brush.Color := c;
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+  SignalsSG.Canvas.FillRect(Rect);
+  SignalsSG.Canvas.TextOut(Rect.Left, Rect.Top, SignalsSG.Cells[ACol, ARow]);
+  SignalsSG.Canvas.Brush.Color := Color;
+end;
+
+procedure TDigsFrm.UpdateView;
+begin
+  ShowTagVals;
+  SGChange(SignalsSG);
 end;
 
 end.
