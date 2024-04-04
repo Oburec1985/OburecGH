@@ -3008,7 +3008,7 @@ begin
       removetags.Destroy;
     end;
     // пересоздаем задачи для контрола
-    //c.UpdateTask;
+    c.UpdateTask;
   end;
   ClearParsResult(pars);
   pars.Destroy;

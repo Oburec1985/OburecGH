@@ -1,11 +1,11 @@
 inherited AriphmAlgFrame: TAriphmAlgFrame
-  Height = 287
   object ChannelLabel: TLabel [2]
     Left = 8
     Top = 106
     Width = 35
     Height = 16
     Caption = #1050#1072#1085#1072#1083
+    Visible = False
   end
   object Label2: TLabel [3]
     Left = 159
@@ -41,6 +41,7 @@ inherited AriphmAlgFrame: TAriphmAlgFrame
     Width = 145
     Height = 24
     TabOrder = 2
+    Visible = False
   end
   object OutChannelName: TEdit
     Left = 159

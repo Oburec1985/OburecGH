@@ -561,6 +561,8 @@ object ThresholdFrm: TThresholdFrm
       OnChange = TagsTVChange
       OnDragOver = TagsTVDragOver
       OnDragDrop = TagsTVDragDrop
+      OnKeyDown = TagsTVKeyDown
+      ExplicitTop = 2
       Columns = <>
     end
   end
@@ -923,18 +925,6 @@ object ThresholdFrm: TThresholdFrm
       TabOrder = 7
       OnDblClick = HHColorDblClick
     end
-    object NormalSE: TFloatSpinEdit
-      Left = 8
-      Top = 362
-      Width = 158
-      Height = 27
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
-      Increment = 0.100000000000000000
-      TabOrder = 8
-    end
     object NormalColor: TPanel
       Left = 205
       Top = 358
@@ -946,7 +936,7 @@ object ThresholdFrm: TThresholdFrm
       Margins.Bottom = 4
       Color = clBtnShadow
       ParentBackground = False
-      TabOrder = 9
+      TabOrder = 8
       OnDblClick = HHColorDblClick
     end
     object NumSe: TSpinEdit
@@ -960,7 +950,7 @@ object ThresholdFrm: TThresholdFrm
       Margins.Bottom = 4
       MaxValue = 0
       MinValue = 0
-      TabOrder = 10
+      TabOrder = 9
       Value = 0
       OnChange = NumSeChange
     end
@@ -973,7 +963,7 @@ object ThresholdFrm: TThresholdFrm
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
-      TabOrder = 11
+      TabOrder = 10
       Text = 'GroupNameEdit'
     end
     object ControTaglCB: TRcComboBox
@@ -985,16 +975,16 @@ object ThresholdFrm: TThresholdFrm
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
-      TabOrder = 12
+      TabOrder = 11
       Text = 'ControTaglCB'
     end
     object NotValidCB: TCheckBox
       Left = 7
-      Top = 398
+      Top = 367
       Width = 153
       Height = 17
       Caption = #1053#1077' '#1072#1082#1090#1080#1074#1085#1099#1081' '#1082#1072#1085#1072#1083
-      TabOrder = 13
+      TabOrder = 12
     end
     object CountIE: TIntEdit
       Left = 272
@@ -1005,7 +995,7 @@ object ThresholdFrm: TThresholdFrm
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
-      TabOrder = 14
+      TabOrder = 13
       Text = '000'
       OnChange = CountIEChange
     end

@@ -67,6 +67,8 @@ type
   private
 
   public
+    m_FontSize, m_digits:integer;
+
     colNames:TNamedObjList;
     glist:TNamedObjList;
   protected
@@ -93,7 +95,6 @@ type
 
   cDigsFrmFactory = class(cRecBasicFactory)
   public
-    m_digit:integer;
   private
     // число дочерних компонентов
     m_counter: integer;
@@ -142,7 +143,6 @@ uses
 constructor cDigsFrmFactory.create;
 begin
   inherited;
-  m_digit:=4;
   m_lRefCount := 1;
   m_counter := 0;
   m_name := c_Name;
@@ -368,6 +368,7 @@ end;
 constructor TDigsFrm.create;
 begin
   inherited;
+  m_digits:=4;
   glist:=TNamedobjList.Create;
   glist.cl:=TGroup;
   colNames:=TNamedobjList.Create;
@@ -396,6 +397,8 @@ var
   t:ctag;
 begin
   inherited;
+  m_FontSize:=a_pIni.ReadInteger(str, 'FSize', 0);
+  m_Digits:=a_pIni.ReadInteger(str, 'Digits', 4);
   j:=a_pIni.ReadInteger(str, 'GCount', 0);
   for I := 0 to j - 1 do
   begin
@@ -431,6 +434,8 @@ var
   t:ctag;
 begin
   inherited;
+  a_pIni.WriteInteger(str, 'FSize', m_FontSize);
+  a_pIni.WriteInteger(str, 'Digits', m_Digits);
   a_pIni.WriteInteger(str, 'GCount', glist.Count);
   a_pIni.WriteInteger(str, 'ColCount', colNames.Count);
   for I := 0 to colNames.Count-1 do
@@ -488,6 +493,7 @@ var
   c:tdigcolumn;
   t:ctag;
 begin
+  signalsSG.Font.Size:=m_FontSize;
   if glist.Count<1 then
     SignalsSG.RowCount:=2
   else
@@ -533,7 +539,7 @@ begin
           1:;
           2:;
         end;
-        s:=formatstrNoE(v,g_DigsFrmFactory.m_digit);
+        s:=formatstrNoE(v,m_digits);
         SignalsSG.Cells[j+1, i+1]:=s;
       end;
     end;
@@ -566,6 +572,11 @@ begin
             a:=ThresholdFrm.getalarm(t.tagname);
             if a<>nil then
             begin
+              if a.notValid then
+              begin
+                SignalsSG.Canvas.Brush.Color := a.notValidCol;
+              end
+              else
               if a.activeA<>nil then
               begin
                 a.activeA.GetColor(c);
@@ -585,7 +596,7 @@ end;
 procedure TDigsFrm.UpdateView;
 begin
   ShowTagVals;
-  SGChange(SignalsSG);
+  //SGChange(SignalsSG);
 end;
 
 end.

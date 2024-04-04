@@ -2801,7 +2801,7 @@ begin
     entercs;
     if m_zones_enabled then
     begin
-      if m_ZoneList.m_zones_Alg then
+      if m_ZoneList.m_zones_Alg then // относительные зоны
       begin
         err := m_dfeedback - task;
         m_ZoneList.ApplyZone(err);
@@ -2952,7 +2952,7 @@ begin
   Start := pos(':', vals);
   if Start <= 0 then
     Start := 1;
-  vals := GetSubString(vals, ';', Start + 1, p);
+  vals := getSubStrByIndex(vals, ';', Start, 0);
   p := pos('...', vals);
   if p < 1 then
     p := pos('Е', vals);

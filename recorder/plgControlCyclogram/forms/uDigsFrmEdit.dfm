@@ -24,8 +24,6 @@ object DigsFrmEdit: TDigsFrmEdit
     Margins.Bottom = 4
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 579
-    ExplicitHeight = 385
     inline TagsListFrame1: TTagsListFrame
       Left = 1
       Top = 1
@@ -40,7 +38,7 @@ object DigsFrmEdit: TDigsFrmEdit
       ExplicitLeft = 1
       ExplicitTop = 1
       ExplicitWidth = 328
-      ExplicitHeight = 383
+      ExplicitHeight = 361
       inherited FormChannelsGB: TGroupBox
         Width = 328
         Height = 361
@@ -49,7 +47,7 @@ object DigsFrmEdit: TDigsFrmEdit
         Margins.Right = 5
         Margins.Bottom = 5
         ExplicitWidth = 328
-        ExplicitHeight = 383
+        ExplicitHeight = 361
         inherited ChanNamesPanel: TPanel
           Width = 324
           Height = 142
@@ -139,7 +137,7 @@ object DigsFrmEdit: TDigsFrmEdit
             end>
           ExplicitTop = 160
           ExplicitWidth = 324
-          ExplicitHeight = 221
+          ExplicitHeight = 199
         end
       end
     end
@@ -151,7 +149,6 @@ object DigsFrmEdit: TDigsFrmEdit
     Height = 165
     Align = alTop
     TabOrder = 1
-    ExplicitWidth = 909
     object GroupCountLabel: TLabel
       Left = 7
       Top = 67
@@ -213,7 +210,6 @@ object DigsFrmEdit: TDigsFrmEdit
       Align = alRight
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080' '#1089#1090#1086#1073#1094#1086#1074
       TabOrder = 3
-      ExplicitLeft = 280
       object TagSubstrL: TLabel
         Left = 147
         Top = 23
@@ -325,8 +321,6 @@ object DigsFrmEdit: TDigsFrmEdit
     Align = alClient
     TabOrder = 2
     OnDrawCell = SignalsSGDrawCell
-    ExplicitWidth = 579
-    ExplicitHeight = 385
   end
   object Panel1: TPanel
     Left = 0
@@ -345,6 +339,13 @@ object DigsFrmEdit: TDigsFrmEdit
       Height = 16
       Caption = #1047#1085#1072#1095'. '#1094#1080#1092#1088
     end
+    object Label2: TLabel
+      Left = 127
+      Top = 6
+      Width = 93
+      Height = 16
+      Caption = #1056#1072#1079#1084#1077#1088' '#1096#1088#1080#1092#1090#1072
+    end
     object ApplyBtn: TButton
       Left = 503
       Top = 25
@@ -361,6 +362,14 @@ object DigsFrmEdit: TDigsFrmEdit
       Width = 107
       Height = 24
       TabOrder = 1
+      Text = '4'
+    end
+    object FontSizeIE: TIntEdit
+      Left = 127
+      Top = 25
+      Width = 107
+      Height = 24
+      TabOrder = 2
       Text = '4'
     end
   end

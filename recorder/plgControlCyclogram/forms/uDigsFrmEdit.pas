@@ -38,6 +38,8 @@ type
     ApplyBtn: TButton;
     Label1: TLabel;
     DigitsIE: TIntEdit;
+    Label2: TLabel;
+    FontSizeIE: TIntEdit;
     procedure ColOkBtnClick(Sender: TObject);
     procedure AddGroupBtnClick(Sender: TObject);
     procedure ColumnSEChange(Sender: TObject);
@@ -139,8 +141,16 @@ begin
         begin
           t:=cTag.create;
           g.addTag(t);
+          t.tagname:=s;
+        end
+        else
+        begin
+          if t.tagname<>s then
+          begin
+            t.tag:=nil;
+            t.tagname:=s;
+          end;
         end;
-        t.tagname:=s;
       end;
     end;
   end;
@@ -168,6 +178,8 @@ begin
   ShowCfg;
   if ShowModal = mrok then
   begin
+    curfrm.SignalsSG.Font.Size:=FontSizeIE.IntNum;
+    curfrm.m_FontSize:=FontSizeIE.IntNum;
     curfrm.showcfg;
   end;
 end;
@@ -179,7 +191,11 @@ var
   c:tdigcolumn;
   t:ctag;
 begin
-  DigitsIE.IntNum:=g_DigsFrmFactory.m_digit;
+  DigitsIE.IntNum:=curfrm.m_digits;
+  if curfrm.m_FontSize=0 then
+    FontSizeIE.IntNum:=SignalsSG.Font.Size
+  else
+    FontSizeIE.IntNum:=curfrm.m_FontSize;
   if curFrm.glist.Count<1 then
     SignalsSG.RowCount:=2
   else

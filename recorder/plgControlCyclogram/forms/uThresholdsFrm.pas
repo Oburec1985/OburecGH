@@ -36,6 +36,7 @@ type
 
   TThresholdGroup = class
   public
+    owner:tstringlist;
     m_lastControlVal:integer;
     initList:boolean;
     // тег для переключения наборов
@@ -82,6 +83,8 @@ type
   protected
     procedure initTagIface;
   public
+    function notValid:boolean;
+    function notValidCol:integer;
     constructor create;
     destructor destroy;
   end;
@@ -109,7 +112,6 @@ type
     HColor: TPanel;
     LColor: TPanel;
     LLColor: TPanel;
-    NormalSE: TFloatSpinEdit;
     NormalLabel: TLabel;
     NormalColor: TPanel;
     NumSe: TSpinEdit;
@@ -134,6 +136,7 @@ type
     procedure NumSeChange(Sender: TObject);
     procedure CountIEChange(Sender: TObject);
     procedure HHColorDblClick(Sender: TObject);
+    procedure TagsTVKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   public
     m_AlarmHandler :AlarmHandler;
     m_Groups:TStringList;
@@ -320,12 +323,20 @@ function TThresholdFrm.getAlarm(tname: string): TAlarms;
 var
   I: Integer;
   g:TThresholdGroup;
+  a:talarms;
 begin
   result:=nil;
   for I := 0 to m_Groups.Count - 1 do
   begin
     g:=getGroup(i);
-    result:=g.GetAlarm(tname);
+    a:=g.GetAlarm(tname);
+    if a<>nil then
+    begin
+      result:=a;
+      exit;
+
+
+    end;
   end;
 end;
 
@@ -333,6 +344,7 @@ function TThresholdFrm.getGroup(i:integer): TThresholdGroup;
 var
   n:pvirtualnode;
   ind:integer;
+  d:pnodedata;
 begin
   ind:=0;
   n:=tagstv.RootNode.FirstChild;
@@ -340,10 +352,12 @@ begin
   begin
     if i=ind then
     begin
-      result:=TThresholdGroup(pnodedata(tagstv.GetNodeData(n)).data);
+      d:=pnodedata(tagstv.GetNodeData(n));
+      result:=TThresholdGroup(d.data);
       exit;
     end;
-    n:=TagsTV.GetNext(n,false);
+    n:=TagsTV.GetNextSibling(n);
+    inc(ind);
   end;
 end;
 
@@ -356,14 +370,19 @@ end;
 procedure TThresholdFrm.NumSeChange(Sender: TObject);
 var
   pd:PDataRec;
+  p:TNotifyEvent;
 begin
-  if NumSe.Value<0 then
+  if m_selGroup=nil then exit;
+  p:=NumSe.OnChange;
+  NumSe.OnChange:=nil;
+  if (NumSe.Value<0) or (CountIE.IntNum=0) then
     NumSe.Value:=0
   else
   begin
     if NumSe.Value>CountIE.IntNum-1 then
       NumSe.Value:=CountIE.IntNum-1;
   end;
+  NumSe.OnChange:=p;
   pd:=@m_selGroup.m_Data[NumSe.Value];
   setData(pd);
 end;
@@ -472,6 +491,8 @@ begin
   HColor.color:=pdata.HCol;
   lColor.color:=pdata.lCol;
   llColor.color:=pdata.llCol;
+  NotValidCB.Checked:=pdata.m_notvalid;
+  NormalColor.Color:=pdata.outRangecol;
 end;
 
 procedure TThresholdFrm.TagsTVChange(Sender: TBaseVirtualTree;
@@ -530,6 +551,11 @@ begin
   if n<>nil then
   begin
     d:=TagsTV.GetNodeData(n);
+    if not (tobject(d.data) is TThresholdGroup) then
+    begin
+      n:=n.Parent;
+      d:=TagsTV.GetNodeData(n);
+    end;
   end
   else
   begin
@@ -577,6 +603,43 @@ begin
     Accept := true;
 end;
 
+procedure TThresholdFrm.TagsTVKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  node, next:pvirtualnode;
+  d:pnodedata;
+  g:TThresholdGroup;
+  a:TAlarms;
+begin
+  if Key = VK_DELETE then
+  begin
+    Node := TagsTV.GetFirstSelected(true);
+    next := TagsTV.GetNextSelected(Node, false);
+    while Node <> nil do
+    begin
+      d:=TagsTV.GetNodeData(node);
+      if tobject(d.data) is TThresholdGroup then
+      begin
+        g:=TThresholdGroup(d.data);
+        g.destroy;
+      end
+      else
+      begin
+        a:=TAlarms(d.data);
+        a.destroy;
+      end;
+      if next<>nil then
+      begin
+        next:=TagsTV.GetNextSelected(next, false);
+        node:=next;
+      end
+      else
+        node:=nil;
+    end;
+    tagstv.DeleteSelectedNodes;
+  end;
+end;
+
 procedure TThresholdFrm.UpdatePObjBtnClick(Sender: TObject);
 var
   pd:PDataRec;
@@ -595,8 +658,13 @@ begin
   pd.hcol:=HColor.Color;
   pd.lcol:=lColor.Color;
   pd.llcol:=llColor.Color;
+  pd.m_notvalid:=NotValidCB.Checked;
+  pd.outRangeCol:=NormalColor.Color;
   m_selGroup.ApplyAlarms(pd);
-  m_selGroup.ControlTag.tag:=ControTaglCB.gettag(ControTaglCB.ItemIndex);
+  if ControTaglCB.ItemIndex>-1 then
+  begin
+    m_selGroup.ControlTag.tag:=ControTaglCB.gettag(ControTaglCB.ItemIndex);
+  end;
 end;
 
 procedure TThresholdFrm.UpdateTagList;
@@ -739,6 +807,13 @@ var
   I: Integer;
   a:TAlarms;
 begin
+  if owner<>nil then
+  begin
+    if owner.Find(name,i) then
+    begin
+      owner.Delete(i);
+    end;
+  end;
   for I := 0 to AlarmList.Count - 1 do
   begin
     a:=TAlarms(AlarmList.objects[i]);
@@ -762,6 +837,7 @@ function TThresholdGroup.GetAlarm(s: string): TAlarms;
 var
   i:integer;
 begin
+  result:=nil;
   if AlarmList.Find(s, i) then
   begin
     result:=GetAlarm(i);
@@ -850,7 +926,13 @@ begin
 end;
 
 destructor TAlarms.destroy;
+var
+  i:integer;
 begin
+  if owner.AlarmList.Find(t.tagname, i) then
+  begin
+    owner.AlarmList.Delete(i);
+  end;
   t.destroy;
 end;
 
@@ -909,6 +991,16 @@ begin
       end;
     end;
   end;
+end;
+
+function TAlarms.notValid: boolean;
+begin
+  result:=owner.m_Data[owner.ControlVal].m_notvalid;
+end;
+
+function TAlarms.notValidCol: integer;
+begin
+  result:=owner.m_Data[owner.ControlVal].outRangeCol;
 end;
 
 { AlarmHandler }
