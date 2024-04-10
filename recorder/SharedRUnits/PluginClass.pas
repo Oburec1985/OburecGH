@@ -803,7 +803,6 @@ var
 begin
   result := ProcessNotify(dwCommand, dwData);
   case dwCommand of
-
     PN_RCLOADCONFIG:
       begin
         m_loadDefCfg := true;

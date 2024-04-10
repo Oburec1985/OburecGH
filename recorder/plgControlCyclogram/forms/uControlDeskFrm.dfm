@@ -1249,7 +1249,6 @@ object ControlDeskFrm: TControlDeskFrm
           BevelInner = bvLowered
           BevelKind = bkFlat
           DefaultRowHeight = 32
-          FixedRows = 0
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -15

@@ -9,7 +9,7 @@ uses
   complex,
   uHardwareMath,
   uFFT,
-  performancetime, nativexml,
+  performancetime, nativexml, ucommonmath,
   fft, fht, Ap, DCL_MYOWN, ComCtrls, ExtCtrls, uChart, utrend, upage, uaxis, uBuffTrend1d;
 
 // AVal - массив анализируемых данных, Nvl - длина массива, должна быть кратна степени 2.
@@ -169,23 +169,59 @@ begin
   cpage(cchart1.activePage).LgX:=not cpage(cchart1.activePage).LgX;
 end;
 
+//'PWM_Thi=0,PWM_Tlo=0,Zone_state=¬кл,Vals=27,5Е28;5;0;5; 0'
+procedure TaskupdateParams(pars:tstringlist; src:string; separator:string);
+var
+  newpars:tstringlist;
+  I, p, j, ind: Integer;
+  cstr
+  //, cstr1
+  :cstring;
+  str, key:string;
+  lstr, param:string;
+  Value:cString;
+begin
+  i:=0;
+  while i<=length(src) do
+  begin
+    str:=GetSubString(src,separator,i, ind);
+    if str<>'' then
+    begin
+      p:=pos('=',str);
+      if p>0 then
+      begin
+        param:=DeleteSpace(GetSubString(str,'=',1,j));
+        if param='Vals' then
+        begin
+          value:=cString.Create;
+          p:=i+5;
+          lstr:=Copy(src,i+5,length(src)-p+1);
+          value.str:=deletechars(lstr,'"');
+          pars.addobject(param, value);
+        end
+        else
+        begin
+          value:=cString.Create;
+          lstr:=GetSubString(str,separator,j+1,j);
+          value.str:=deletechars(lstr,'"');
+          pars.addobject(param, value);
+        end;
+      end;
+    end;
+    if i=-1 then
+      break;
+    i:=ind+1;
+  end;
+end;
+
+
+
 procedure TForm1.SSEBtnClick(Sender: TObject);
 var
-  doc:TNativeXml;
-  node:txmlnode;
-  I: Integer;
-
+  pars:tstringlist;
 begin
-  doc:=TNativeXml.Create(nil);
-  doc.XmlFormat:=xfReadable;
-  doc.LoadFromFile('c:\Mera Files\Recorder\configs\cfg_cyclogram_001\005\баг\начало в2_.xml');
-  //node:=doc.Root.FindNode(sectionname);
-  if node<>nil then
-  begin
-    //result:=AddFromXML(node);
-  end
-  else
-    doc.Destroy;
+  pars:=TStringList.Create;
+  TaskupdateParams(pars, 'PWM_Thi=0,PWM_Tlo=0,Zone_state=¬кл,Vals=27,5Е28;5;0;5; 0', ',');
 end;
 
 procedure TForm1.UseShadersClick(Sender: TObject);

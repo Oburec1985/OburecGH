@@ -208,6 +208,11 @@ begin
   for I := 0 to curFrm.colNames.Count - 1 do
   begin
     c:=tdigcolumn(curFrm.colNames.Get(i));
+    if i=0 then
+    begin
+      ColumnSE.Value:=0;
+      ColNameE.text:=c.name;
+    end;
     SignalsSG.Cells[i+1,0]:=c.name;
   end;
   for I := 0 to curFrm.gList.Count - 1 do

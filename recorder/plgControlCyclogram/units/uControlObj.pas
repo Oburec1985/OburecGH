@@ -5485,7 +5485,8 @@ begin
           t.leftTang.y := n.ReadAttributeFloat('LeftTangY', 0);
           t.rightTang.x := n.ReadAttributeFloat('RightTangX', 0);
           t.rightTang.y := n.ReadAttributeFloat('RightTangY', 0);
-          t.params := n.ReadAttributeString('Opts', t.getparams);
+          str:=n.ReadAttributeString('Opts', t.getparams);
+          t.params := str;
           str := n.ReadAttributeString('TagsVals', '');
           // p:=getProgram;
           // c:=p.getOwnControl(tname);
@@ -6243,6 +6244,53 @@ begin
   end;
 end;
 
+//'PWM_Thi=0,PWM_Tlo=0,Zone_state=¬кл,Vals=27,5Е28;5;0;5; 0'
+procedure TaskupdateParams(pars:tstringlist; src:string; separator:string);
+var
+  newpars:tstringlist;
+  I, p, j, ind: Integer;
+  cstr
+  //, cstr1
+  :cstring;
+  str, key:string;
+  lstr, param:string;
+  Value:cString;
+begin
+  i:=0;
+  while i<=length(src) do
+  begin
+    str:=GetSubString(src,separator,i, ind);
+    if str<>'' then
+    begin
+      p:=pos('=',str);
+      if p>0 then
+      begin
+        param:=DeleteSpace(GetSubString(str,'=',1,j));
+        if param='Vals' then
+        begin
+          value:=cString.Create;
+          p:=i+5;
+          lstr:=Copy(src,i+5,length(src)-p+1);
+          value.str:=deletechars(lstr,'"');
+          pars.addobject(param, value);
+          exit;
+        end
+        else
+        begin
+          value:=cString.Create;
+          lstr:=GetSubString(str,separator,j+1,j);
+          value.str:=deletechars(lstr,'"');
+          pars.addobject(param, value);
+        end;
+      end;
+    end;
+    if i=-1 then
+      break;
+    i:=ind+1;
+  end;
+end;
+
+
 procedure cTask.setparams(str: string);
 begin
   if m_Params.Count > 0 then
@@ -6251,7 +6299,8 @@ begin
     ClearParsResult(m_Params);
   end;
   if str <> '' then
-    updateParams(m_Params, str, ',');
+    //updateParams(m_Params, str, ','); используетс€ уникальный парсер изза проблемм с разделителем ","
+    TaskupdateParams(m_Params, str, ',');
 end;
 
 procedure cTask.SetTask(d: double);
