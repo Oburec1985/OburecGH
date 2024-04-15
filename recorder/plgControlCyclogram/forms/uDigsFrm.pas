@@ -37,10 +37,14 @@ type
   TDigColumn = class(TNamedObj)
   public
     estimate:integer;
+    useThreshold:boolean;
+    HH:double;
+    color:tcolor;
   protected
 
   public
-
+    function fullname:string;
+    constructor create;
   end;
 
 
@@ -68,7 +72,8 @@ type
 
   public
     m_FontSize, m_digits:integer;
-
+    // Знач. цифр/ Кол-о цифр
+    m_Format:boolean;
     colNames:TNamedObjList;
     glist:TNamedObjList;
   protected
@@ -371,6 +376,7 @@ begin
   m_digits:=4;
   glist:=TNamedobjList.Create;
   glist.cl:=TGroup;
+  glist.sorted:=false;
   colNames:=TNamedobjList.Create;
   colNames.Sorted:=false;
   colNames.cl:=TDigColumn;
@@ -397,6 +403,7 @@ var
   t:ctag;
 begin
   inherited;
+  m_Format:=a_pIni.ReadBool(str, 'DigFormat', False);
   m_FontSize:=a_pIni.ReadInteger(str, 'FSize', 0);
   m_Digits:=a_pIni.ReadInteger(str, 'Digits', 4);
   j:=a_pIni.ReadInteger(str, 'GCount', 0);
@@ -420,6 +427,12 @@ begin
     s:=a_pIni.ReadString(str, 'CName_'+inttostr(i), '');
     col:=tdigcolumn(colNames.Add(s));
     col.estimate:=a_pIni.ReadInteger(str, 'CEst_'+inttostr(i), 0);
+    if col.estimate<0 then
+      col.estimate:=0;
+
+    col.useThreshold:=a_pIni.ReadBool(str, 'CUseThresh_'+inttostr(i), false);
+    col.color:=a_pIni.ReadInteger(str, 'CColor_'+inttostr(i), clpink);
+    col.HH:=readFloatFromIni(a_pIni,str, 'CThresh_'+inttostr(i));
   end;
   showcfg;
 end;
@@ -434,6 +447,7 @@ var
   t:ctag;
 begin
   inherited;
+  a_pIni.WriteBool(str, 'DigFormat', m_Format);
   a_pIni.WriteInteger(str, 'FSize', m_FontSize);
   a_pIni.WriteInteger(str, 'Digits', m_Digits);
   a_pIni.WriteInteger(str, 'GCount', glist.Count);
@@ -443,6 +457,9 @@ begin
     col:=tdigcolumn(colNames.Get(i));
     a_pIni.WriteString(str, 'CName_'+inttostr(i), col.name);
     a_pIni.WriteInteger(str, 'CEst_'+inttostr(i), col.estimate);
+    a_pIni.WriteBool(str, 'CUseThresh_'+inttostr(i), col.useThreshold);
+    a_pIni.WriteFloat(str, 'CThresh_'+inttostr(i), col.HH);
+    a_pIni.WriteInteger(str, 'CColor_'+inttostr(i), col.color);
   end;
   for I := 0 to glist.Count-1 do
   begin
@@ -505,7 +522,7 @@ begin
   for I := 0 to colNames.Count - 1 do
   begin
     c:=tdigcolumn(colNames.Get(i));
-    SignalsSG.Cells[i+1,0]:=c.name;
+    SignalsSG.Cells[i+1,0]:=c.fullname;
   end;
   for I := 0 to gList.Count - 1 do
   begin
@@ -522,7 +539,7 @@ var
   g:tgroup;
   c:TDigColumn;
   t:ctag;
-  s:string;
+  s, f:string;
   v:double;
 begin
   for I := 0 to glist.Count-1 do
@@ -536,10 +553,17 @@ begin
       begin
         case c.estimate of
           0:v:=getmean(t.tag);
-          1:;
-          2:;
+          1:v:=getamp(t.tag);
+          2:v:=GetPkPk(t.tag);
+          3:v:=GetRMSD(t.tag)
         end;
-        s:=formatstrNoE(v,m_digits);
+        if m_Format then
+        begin
+          f:='%.' +inttostr(m_digits)+'g';
+          s:=format(f, [v]);
+        end
+        else
+          s:=formatstrNoE(v, m_digits);
         SignalsSG.Cells[j+1, i+1]:=s;
       end;
     end;
@@ -555,14 +579,20 @@ var
   a:TAlarms;
   s:string;
   c:integer;
+  col:TDigColumn;
+  bAlarm, bColThreshold:boolean;
+  v:double;
 begin
+  bColThreshold:=false;
   Color := SignalsSG.Canvas.Brush.Color;
+  t:=nil;
   if ThresholdFrm<>nil then
   begin
     if arow>0 then
     begin
       if acol>0 then
       begin
+        bAlarm:=false;
         g:=tgroup(glist.Get(arow-1));
         if g<>nil then
         begin
@@ -581,7 +611,35 @@ begin
               begin
                 a.activeA.GetColor(c);
                 SignalsSG.Canvas.Brush.Color := c;
+                bAlarm:=true;
               end;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+  if acol>0 then
+  begin
+    if not bAlarm then
+    begin
+      if t<>nil then
+      begin
+        if t.tag<>nil  then
+        begin
+          col:=TDigColumn(colNames.Get(acol));
+          case col.estimate of
+            0:v:=getmean(t.tag);
+            1:v:=getamp(t.tag);
+            2:v:=GetPkPk(t.tag);
+            3:v:=GetRMSD(t.tag)
+          end;
+          if col.useThreshold then
+          begin
+            if v>col.HH then
+            begin
+              bColThreshold:=true;
+              SignalsSG.Canvas.Brush.Color := col.color;
             end;
           end;
         end;
@@ -597,6 +655,28 @@ procedure TDigsFrm.UpdateView;
 begin
   ShowTagVals;
   //SGChange(SignalsSG);
+end;
+
+{ TDigColumn }
+constructor TDigColumn.create;
+begin
+  useThreshold:=false;
+  HH:=10;
+  color:=clPink;
+  estimate:=0;
+end;
+
+function TDigColumn.fullname: string;
+var
+  s:string;
+begin
+  case estimate of
+    0: s:='m';
+    1: s:='Pk';
+    2: s:='Pk-Pk';
+    3: s:='Rms';
+  end;
+  result:=name+', '+s;
 end;
 
 end.

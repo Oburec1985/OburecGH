@@ -236,6 +236,8 @@ procedure SetPeakEval(t: itag; val: boolean);
 // –абота с тегами
 function GetMean(t: itag): double;
 function GetAmp(t: itag): double;
+function GetPkPk(t: itag): double;
+function GetRMSD(t: itag): double;
 // получить посл значение
 function GetScalar(t: itag): double;
 function isVector(t: itag): boolean;
@@ -948,6 +950,20 @@ var
   d: double;
 begin
   result := t.GetEstimate(ESTIMATOR_PEAK);
+end;
+
+function GetPkPk(t: itag): double;
+var
+  d: double;
+begin
+  result := t.GetEstimate(ESTIMATOR_P2P);
+end;
+
+function GetRMSD(t: itag): double;
+var
+  d: double;
+begin
+  result := t.GetEstimate(ESTIMATOR_RMSD);
 end;
 
 function RStateConfig: boolean;

@@ -1229,10 +1229,8 @@ END
 /* ..\SharedRUnits\uRcClientFrm.dfm */
 /* ..\..\sharedUtils\mera\database\uDownloadRegsFrm.dfm */
 /* ..\SharedRUnits\uTagsListFrame.dfm */
-/* forms\uTrigsFrm.dfm */
-/* forms\uModesStepFrame.dfm */
-/* ..\..\sharedUtils\utils\./files/res/CURSORS.res */
 /* ..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common\JclUnicode.res */
+/* ..\..\sharedUtils\utils\./files/res/CURSORS.res */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uAxisForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTextLabelForm.dfm */
@@ -1246,6 +1244,8 @@ END
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
+/* forms\uTrigsFrm.dfm */
+/* forms\uModesStepFrame.dfm */
 /* forms\uModesTabsFrame.dfm */
 /* forms\uModesTabsForm.dfm */
 /* forms\uTrigFrame.dfm */
@@ -1254,8 +1254,8 @@ END
 /* forms\uDacControlEditFrame.dfm */
 /* forms\uControlEditFrame.dfm */
 /* forms\uThresholdsFrm.dfm */
-/* forms\uDigsFrm.dfm */
-/* forms\uDigsFrmEdit.dfm */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uDigsFrmEdit.dfm */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uDigsFrm.dfm */
 /* forms\uPressFrmFrame2.dfm */
 /* forms\uPressFrm2.dfm */
 /* forms\uPressFrmEdit2.dfm */
@@ -1320,6 +1320,6 @@ END
 /* forms\uPressFrmFrame.dfm */
 /* forms\uPressFrmEdit.dfm */
 /* forms\uPressFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */

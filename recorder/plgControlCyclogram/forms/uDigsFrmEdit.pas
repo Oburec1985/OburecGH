@@ -5,8 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, uTagsListFrame, ExtCtrls, StdCtrls, Spin, DCL_MYOWN, Grids, comctrls,
-  ucommonmath, mathfunction, uComponentServises, uRCFunc,
-  uDigsFrm;
+  ucommonmath, mathfunction, uComponentServises, uRCFunc, tags,
+  uDigsFrm, uCommonTypes;
 
 type
   TDigsFrmEdit = class(TForm)
@@ -40,6 +40,10 @@ type
     DigitsIE: TIntEdit;
     Label2: TLabel;
     FontSizeIE: TIntEdit;
+    HHColor: TPanel;
+    UseThreshold: TCheckBox;
+    HHEdit: TFloatEdit;
+    DigitFormatCB: TCheckBox;
     procedure ColOkBtnClick(Sender: TObject);
     procedure AddGroupBtnClick(Sender: TObject);
     procedure ColumnSEChange(Sender: TObject);
@@ -47,9 +51,18 @@ type
     procedure SignalsSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure ApplyBtnClick(Sender: TObject);
+    procedure SignalsSGKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure SignalsSGSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure SignalsSGDragOver(Sender, Source: TObject; X, Y: Integer;
+      State: TDragState; var Accept: Boolean);
+    procedure SignalsSGDragDrop(Sender, Source: TObject; X, Y: Integer);
+    procedure DigitFormatCBClick(Sender: TObject);
   protected
     curFrm:TDigsFrm;
     curGr:TGroup;
+    m_Col,m_Row:integer;
   private
     // отобразить конфигурацию родителя в настроечной форме
     procedure ShowCfg;
@@ -61,6 +74,7 @@ type
     procedure ShowGroups;
   public
     procedure Edit(f:TDigsFrm);
+    constructor create(aowner:tcomponent);override;
   end;
 
 var
@@ -122,9 +136,12 @@ begin
     col:=TDigColumn(curFrm.colNames.Get(ColumnSE.Value));
     if ColNameE.Text<>'' then
     begin
-      col.name:=ColNameE.Text;
       col.estimate:=EstCB.ItemIndex;
-      SignalsSG.Cells[ColumnSE.Value+1,0]:=ColNameE.Text;
+      col.name:=ColNameE.Text;
+      col.useThreshold:=UseThreshold.Checked;
+      col.color:=HHColor.Color;
+      col.HH:=HHEdit.FloatNum;
+      SignalsSG.Cells[ColumnSE.Value+1,0]:=col.fullname;
     end;
   end;
   // обновляем теги
@@ -167,6 +184,28 @@ begin
   begin
     col:=TDigColumn(curFrm.colNames.Get(ColumnSE.Value));
     ColNameE.Text:=col.name;
+    UseThreshold.Checked:=col.useThreshold;
+    HHColor:=col.color;
+    HHEdit.FloatNum:=col.HH;
+  end;
+end;
+
+constructor TDigsFrmEdit.create(aowner: tcomponent);
+begin
+  inherited;
+  m_Col:=1;
+  m_Row:=1;
+end;
+
+procedure TDigsFrmEdit.DigitFormatCBClick(Sender: TObject);
+begin
+  if DigitFormatCB.Checked then
+  begin
+    DigitFormatCB.Caption:='Кол. цифр';
+  end
+  else
+  begin
+    DigitFormatCB.Caption:='Знач-х цифр';
   end;
 end;
 
@@ -181,6 +220,7 @@ begin
   begin
     curfrm.SignalsSG.Font.Size:=FontSizeIE.IntNum;
     curfrm.m_FontSize:=FontSizeIE.IntNum;
+    curfrm.m_Format:=DigitFormatCB.Checked;
     curfrm.showcfg;
   end;
 end;
@@ -192,7 +232,10 @@ var
   c:tdigcolumn;
   t:ctag;
 begin
+  HHColor.Color:=clpink;
+
   DigitsIE.IntNum:=curfrm.m_digits;
+  DigitFormatCB.Checked:=curfrm.m_Format;
   if curfrm.m_FontSize=0 then
     FontSizeIE.IntNum:=SignalsSG.Font.Size
   else
@@ -213,8 +256,11 @@ begin
     begin
       ColumnSE.Value:=0;
       ColNameE.text:=c.name;
+      HHColor.Color:=C.color;
+      UseThreshold.Checked:=C.useThreshold;
+      HHEdit.FloatNum:=C.HH;
     end;
-    SignalsSG.Cells[i+1,0]:=c.name;
+    SignalsSG.Cells[i+1,0]:=c.fullname;
   end;
   for I := 0 to curFrm.gList.Count - 1 do
   begin
@@ -249,6 +295,25 @@ begin
   TagsListFrame1.ShowChannels;
 end;
 
+procedure TDigsFrmEdit.SignalsSGDragDrop(Sender, Source: TObject; X,
+  Y: Integer);
+var
+  col, row:integer;
+begin
+  SignalsSG.MouseToCell(x, y, col, row);
+  if (col>0) and (row>0) then
+    SignalsSG.Cells[col,row]:=itag(tlistview(Source).Selected.Data).GetName;
+end;
+
+procedure TDigsFrmEdit.SignalsSGDragOver(Sender, Source: TObject; X, Y: Integer;
+  State: TDragState; var Accept: Boolean);
+begin
+  if source=TagsListFrame1.TagsLV then
+    Accept:=true
+  else
+    Accept:=false;
+end;
+
 procedure TDigsFrmEdit.SignalsSGDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
 var
@@ -268,27 +333,59 @@ begin
   begin
     b:=true;
   end;
-  if g<>nil then
+  if acol=0 then
   begin
-    t:=g.gettag(acol-1);
-    if t<>nil then
+    Color := SignalsSG.Canvas.Brush.Color;
+    SignalsSG.Canvas.Brush.Color := clGray;
+  end
+  else
+  begin
+    if g<>nil then
     begin
-      if t.tagname<>s then
+      t:=g.gettag(acol-1);
+      if t<>nil then
       begin
-        b:=true;
-      end
-      else
-        b:=false;
+        if t.tagname<>s then
+        begin
+          b:=true;
+        end
+        else
+          b:=false;
+      end;
     end;
-  end;
-  Color := SignalsSG.Canvas.Brush.Color;
-  if b then
-  begin
-    SignalsSG.Canvas.Brush.Color := clYellow;
+    Color := SignalsSG.Canvas.Brush.Color;
+    if b then
+    begin
+      SignalsSG.Canvas.Brush.Color := clYellow;
+    end;
   end;
   SignalsSG.Canvas.FillRect(Rect);
   SignalsSG.Canvas.TextOut(Rect.Left, Rect.Top, SignalsSG.Cells[ACol, ARow]);
   SignalsSG.Canvas.Brush.Color := Color;
+end;
+
+procedure TDigsFrmEdit.SignalsSGKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  g:TGroup;
+begin
+  if key=VK_RETURN then
+  begin
+    if m_col=0 then
+    begin
+      g:=TGroup(curfrm.glist.get(m_Row-1));
+      if g=nil then exit;
+      g.name:=SignalsSG.Cells[m_Col,m_Row]+'_'+getendnum(g.name);
+      SignalsSG.Cells[m_Col,m_Row]:=g.name;
+    end;
+  end;
+end;
+
+procedure TDigsFrmEdit.SignalsSGSelectCell(Sender: TObject; ACol, ARow: Integer;
+  var CanSelect: Boolean);
+begin
+  m_Col:=acol;
+  m_Row:=arow;
 end;
 
 procedure TDigsFrmEdit.UpdateHeader;
@@ -299,7 +396,7 @@ begin
   for I := 0 to curFrm.colCount - 1 do
   begin
     col:=TDigColumn(curFrm.colNames.Get(i));
-    SignalsSG.Cells[i,0]:=col.name;
+    SignalsSG.Cells[i,0]:=col.fullname;
   end;
 end;
 
@@ -328,9 +425,12 @@ begin
         colname:=SignalsSG.Cells[k,0];
 
         if colname<>'' then
-          b1:=pos(lowercase(colname), lowercase(s))>0
+        begin
+          b1:=(pos(lowercase(colname), lowercase(s))>0) or
+              (pos(colname, s)>0)
+        end
         else
-          break;
+          continue;
         if subnum<>'' then
         begin
           b2:=pos(lowercase(subnum), lowercase(s))>0;
@@ -349,12 +449,12 @@ begin
         if b1 and b2 and b3 then
         begin
           signalsSG.Cells[k, j+1]:=s;
-          SGChange(signalsSG);
-          break;
+          continue;
         end;
       end;
     end;
   end;
+  SGChange(signalsSG);
 end;
 
 end.
