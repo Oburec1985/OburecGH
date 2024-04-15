@@ -1434,10 +1434,13 @@ begin
   b := false;
   if (Gettagname <> s) or (tag=nil) then
   begin
-    if not RStateConfig then
+    if useecm then
     begin
-      b := true;
-      ecm;
+      if not RStateConfig then
+      begin
+        b := true;
+        ecm;
+      end;
     end;
     astr := s;
     if tag <> nil then
@@ -1458,8 +1461,11 @@ begin
       end;
     end;
     ftagname := s;
-    if b then
-      lcm;
+    if useEcm then
+    begin
+      if b then
+        lcm;
+    end;
   end;
 end;
 

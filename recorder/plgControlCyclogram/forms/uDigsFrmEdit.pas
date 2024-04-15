@@ -140,6 +140,7 @@ begin
         if t=nil then
         begin
           t:=cTag.create;
+          t.useEcm:=false;
           g.addTag(t);
           t.tagname:=s;
         end

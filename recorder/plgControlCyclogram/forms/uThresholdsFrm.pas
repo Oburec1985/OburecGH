@@ -799,6 +799,7 @@ begin
   m_size:=1;
   setlength(m_Data,m_capacity);
   ControlTag:=cTag.create;
+  ControlTag.useEcm:=false;
   m_lastControlVal:=-1;
 end;
 
@@ -923,6 +924,7 @@ end;
 constructor TAlarms.create;
 begin
   t:=cTag.create;
+  t.useEcm:=false;
 end;
 
 destructor TAlarms.destroy;

@@ -1254,7 +1254,7 @@ object ControlDeskFrm: TControlDeskFrm
           Font.Height = -15
           Font.Name = 'Tahoma'
           Font.Style = []
-          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
+          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goFixedRowClick]
           ParentFont = False
           TabOrder = 0
           OnClick = TableModeSGClick
