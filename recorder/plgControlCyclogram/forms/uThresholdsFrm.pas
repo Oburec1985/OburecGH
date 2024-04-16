@@ -886,10 +886,10 @@ begin
   begin
     s:=getSubStrByIndex(str, ';',1,j);
     case j of
-      0:m_Data[i].HH:=strtofloat(s);
-      1:m_Data[i].H:=strtofloat(s);
-      2:m_Data[i].l:=strtofloat(s);
-      3:m_Data[i].ll:=strtofloat(s);
+      0:m_Data[i].HH:=strtoFloatExt(s);
+      1:m_Data[i].H:=strtoFloatExt(s);
+      2:m_Data[i].l:=strtoFloatExt(s);
+      3:m_Data[i].ll:=strtoFloatExt(s);
       4:m_Data[i].HHCol:=strtoint(s);
       5:m_Data[i].HCol:=strtoint(s);
       6:m_Data[i].lCol:=strtoint(s);

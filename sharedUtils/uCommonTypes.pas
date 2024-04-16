@@ -86,7 +86,7 @@ type
     owner:TNamedobjList;
     fname:string;
   protected
-    procedure setname(s:string);
+    procedure setname(s:string);virtual;
   public
     property name:string read fname write setname;
     constructor create;virtual;
@@ -329,17 +329,34 @@ begin
   inherited;
 end;
 
-procedure TNamedObj.setname(s: string);
+procedure TNamedobj.setname(s: string);
 var
   i:integer;
   b:boolean;
+  c:TNamedObj;
 begin
   if owner<>nil then
   begin
     if owner.sorted then
       b:=owner.Find(fname, i)
     else
+    begin
       b:=owner.findNoSort(fname, i);
+      if owner.Duplicates=dupAccept then
+      begin
+        c:=owner.Get(i);
+        while c<>self do
+        begin
+          inc(i);
+          c:=owner.Get(i);
+          if c.name<>s then
+          begin
+            b:=false;
+            break;
+          end;
+        end;
+      end;
+    end;
     if b then
     begin
       owner.Delete(i);

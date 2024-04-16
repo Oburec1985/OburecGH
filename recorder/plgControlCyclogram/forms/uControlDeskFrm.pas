@@ -852,6 +852,7 @@ procedure TControlDeskFrm.PlayBtnClick(Sender: TObject);
 VAR
   b: boolean;
 begin
+  TableModeSg.FixedRows:=1;
   b := PlayPanel.Color = CLgREEN;
   if b then
     b := false
@@ -1820,7 +1821,7 @@ end;
 procedure TControlDeskFrm.Stop;
 begin
   g_conmng.Stop;
-
+  TableModeSg.FixedRows:=0;
 end;
 
 procedure TControlDeskFrm.doShowStop(Sender: TObject);

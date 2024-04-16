@@ -48,6 +48,7 @@ type
     procedure AddGroupBtnClick(Sender: TObject);
     procedure ColumnSEChange(Sender: TObject);
     procedure UpdateTagsBtnClick(Sender: TObject);
+    procedure UpdateTagsBtnClick2(Sender: TObject);
     procedure SignalsSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure ApplyBtnClick(Sender: TObject);
@@ -94,6 +95,8 @@ begin
   curFrm.colCount:=ColCountE.IntNum;
   SignalsSG.ColCount:=ColCountE.IntNum+1;
 
+  ColumnSE.MaxValue:=ColCountE.IntNum-1;
+  ColumnSE.MinValue:=0;
   for I := 0 to GroupCountIE.IntNum - 1 do
   begin
     num:=i+FirstIE.IntNum;
@@ -184,8 +187,9 @@ begin
   begin
     col:=TDigColumn(curFrm.colNames.Get(ColumnSE.Value));
     ColNameE.Text:=col.name;
+    EstCB.ItemIndex:=col.estimate;
     UseThreshold.Checked:=col.useThreshold;
-    HHColor:=col.color;
+    HHColor.Color :=col.color;
     HHEdit.FloatNum:=col.HH;
   end;
 end;
@@ -201,7 +205,7 @@ procedure TDigsFrmEdit.DigitFormatCBClick(Sender: TObject);
 begin
   if DigitFormatCB.Checked then
   begin
-    DigitFormatCB.Caption:='Кол. цифр';
+    DigitFormatCB.Caption:='Знаков посл. запятой';
   end
   else
   begin
@@ -220,6 +224,7 @@ begin
   begin
     curfrm.SignalsSG.Font.Size:=FontSizeIE.IntNum;
     curfrm.m_FontSize:=FontSizeIE.IntNum;
+    curfrm.m_digits:=DigitsIE.IntNum;
     curfrm.m_Format:=DigitFormatCB.Checked;
     curfrm.showcfg;
   end;
@@ -249,6 +254,8 @@ begin
   else
     SignalsSG.ColCount:=curFrm.colNames.Count+1;
   ColCountE.IntNum:=curFrm.colNames.Count;
+  ColumnSE.MaxValue:=curFrm.colNames.Count-1;
+  ColumnSE.MinValue:=0;
   for I := 0 to curFrm.colNames.Count - 1 do
   begin
     c:=tdigcolumn(curFrm.colNames.Get(i));
@@ -404,6 +411,7 @@ procedure TDigsFrmEdit.UpdateTagsBtnClick(Sender: TObject);
 var
   I: Integer;
   li:tlistitem;
+  Col:TDigColumn;
   s, subnum, colname:string;
   g:TGroup;
   b1,b2,b3:boolean;
@@ -422,8 +430,9 @@ begin
       // цикл по столбцам
       for k := 1 to SignalsSG.colCount - 1 do
       begin
-        colname:=SignalsSG.Cells[k,0];
-
+        col:=TDigColumn(curFrm.colNames.Get(k-1));
+        colname:=col.name;
+        //colname:=SignalsSG.Cells[k,0];
         if colname<>'' then
         begin
           b1:=(pos(lowercase(colname), lowercase(s))>0) or
@@ -442,6 +451,65 @@ begin
         end
         else
           b2:=true;
+        if TagSubstrE.Text<>'' then
+          b3:=pos(lowercase(TagSubstrE.Text), lowercase(s))>0
+        else
+          b3:=true;
+        if b1 and b2 and b3 then
+        begin
+          signalsSG.Cells[k, j+1]:=s;
+          continue;
+        end;
+      end;
+    end;
+  end;
+  SGChange(signalsSG);
+end;
+
+procedure TDigsFrmEdit.UpdateTagsBtnClick2(Sender: TObject);
+var
+  I: Integer;
+  li:tlistitem;
+  t:itag;
+  Col:TDigColumn;
+  s, subnum, colname:string;
+  g:TGroup;
+  b1,b2,b3:boolean;
+  j, num, num2: Integer;
+  k: Integer;
+begin
+  // цикл по строкам
+  for j := 0 to curfrm.glist.Count - 1 do
+  begin
+    g:=TGroup(curfrm.glist.get(j));
+    subnum:=getendnum(g.name);
+    // цикл по столбцам
+    for k := 1 to SignalsSG.colCount - 1 do
+    begin
+      col:=TDigColumn(curFrm.colNames.Get(k-1));
+      colname:=col.name;
+      if colname='' then
+        continue;
+      for I := 0 to TagsListFrame1.TagsLV.Items.Count - 1 do
+      begin
+        t:=itag(TagsListFrame1.TagsLV.Items[i].Data);
+        s:=t.GetName;
+        // поиск по имени колонки
+        b1:=(pos(lowercase(colname), lowercase(s))>0) or (pos(colname, s)>0);
+        if subnum<>'' then
+        begin
+          // поиск по точному совпадению subnum
+          b2:=pos(lowercase(subnum), lowercase(s))>0;
+          if not b2 then
+          begin
+            num:=strtoint(subnum);
+            num2:=getSubNum(s, num);
+            if num2=num then
+            begin
+              b2:=true;
+            end;
+          end;
+        end;
         if TagSubstrE.Text<>'' then
           b3:=pos(lowercase(TagSubstrE.Text), lowercase(s))>0
         else

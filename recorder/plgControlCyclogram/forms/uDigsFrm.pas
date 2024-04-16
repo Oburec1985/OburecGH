@@ -41,7 +41,6 @@ type
     HH:double;
     color:tcolor;
   protected
-
   public
     function fullname:string;
     constructor create;
@@ -379,6 +378,7 @@ begin
   glist.sorted:=false;
   colNames:=TNamedobjList.Create;
   colNames.Sorted:=false;
+  colNames.Duplicates:=dupAccept;
   colNames.cl:=TDigColumn;
 end;
 
@@ -432,6 +432,8 @@ begin
 
     col.useThreshold:=a_pIni.ReadBool(str, 'CUseThresh_'+inttostr(i), false);
     col.color:=a_pIni.ReadInteger(str, 'CColor_'+inttostr(i), clpink);
+    if col.color=0 then
+      col.color:=clpink;
     col.HH:=readFloatFromIni(a_pIni,str, 'CThresh_'+inttostr(i));
   end;
   showcfg;
@@ -559,7 +561,7 @@ begin
         end;
         if m_Format then
         begin
-          f:='%.' +inttostr(m_digits)+'g';
+          f:='%.' +inttostr(m_digits)+'f';
           s:=format(f, [v]);
         end
         else
@@ -627,19 +629,22 @@ begin
       begin
         if t.tag<>nil  then
         begin
-          col:=TDigColumn(colNames.Get(acol));
-          case col.estimate of
-            0:v:=getmean(t.tag);
-            1:v:=getamp(t.tag);
-            2:v:=GetPkPk(t.tag);
-            3:v:=GetRMSD(t.tag)
-          end;
-          if col.useThreshold then
+          col:=TDigColumn(colNames.Get(acol-1));
+          if col<>nil then
           begin
-            if v>col.HH then
+            case col.estimate of
+              0:v:=getmean(t.tag);
+              1:v:=getamp(t.tag);
+              2:v:=GetPkPk(t.tag);
+              3:v:=GetRMSD(t.tag)
+            end;
+            if col.useThreshold then
             begin
-              bColThreshold:=true;
-              SignalsSG.Canvas.Brush.Color := col.color;
+              if v>col.HH then
+              begin
+                bColThreshold:=true;
+                SignalsSG.Canvas.Brush.Color := col.color;
+              end;
             end;
           end;
         end;

@@ -1452,10 +1452,13 @@ begin
   begin
     if useecm then
     begin
-      if not RStateConfig then
+      if tag<>nil then // вход в конфиг нужен только для переименования тега
       begin
-        b := true;
-        ecm;
+        if not RStateConfig then
+        begin
+          b := true;
+          ecm;
+        end;
       end;
     end;
     astr := s;

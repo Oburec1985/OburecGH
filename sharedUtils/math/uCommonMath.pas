@@ -88,6 +88,8 @@ function isdig(ch:char):boolean;overload;
 function GetBaseNum(str:string):string;
 // получить подстроку содержащую номер в конце после _
 function getendnum(str:string):string;
+// вытащить из строки подномер (Abc123def, 23) = 123
+function getSubNum(str:string; sub:integer):integer;
 function DelNullCharsInNumStr(str:string):string;
 // получить подстроку содержащую окончание строки без номера
 function GetLastStr(str:string):string;
@@ -1138,6 +1140,49 @@ begin
       result:=copy(str,i+1,length(str)-i);
       exit;
     end;
+  end;
+end;
+
+function getSubNum(str:string; sub:integer):integer;
+var
+  substr:string;
+  ch:char;
+  ind, i:integer;
+  interval:tpoint;
+begin
+  substr:=inttostr(sub);
+  ind:=pos(substr, str);
+  i:=ind;
+  if i<1 then
+  begin
+    result:=0;
+  end
+  else
+  begin
+    interval.x:=1;
+    while i-1>0 do
+    begin
+      ch:=str[i-1];
+      if not isdigit(ch) then
+      begin
+        interval.x:=i;
+        break;
+      end;
+      dec(i);
+    end;
+    i:=ind;
+    interval.y:=length(str);
+    while i+1<=length(str) do
+    begin
+      ch:=str[i+1];
+      if not isdigit(ch) then
+      begin
+        interval.y:=i;
+        break;
+      end;
+      inc(i);
+    end;
+    result:=strtoint(Copy(str,interval.x, interval.y-interval.x+1));
   end;
 end;
 
