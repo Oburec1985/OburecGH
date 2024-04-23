@@ -815,9 +815,9 @@ begin
       owner.Delete(i);
     end;
   end;
-  for I := 0 to AlarmList.Count - 1 do
+  while AlarmList.Count<>0 do
   begin
-    a:=TAlarms(AlarmList.objects[i]);
+    a:=TAlarms(AlarmList.objects[0]);
     a.Destroy;
   end;
   AlarmList.Destroy;

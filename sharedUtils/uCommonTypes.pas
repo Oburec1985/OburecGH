@@ -349,10 +349,13 @@ begin
         begin
           inc(i);
           c:=owner.Get(i);
-          if c.name<>s then
+          if c<>nil then
           begin
-            b:=false;
-            break;
+            if c.name<>s then
+            begin
+              b:=false;
+              break;
+            end;
           end;
         end;
       end;
@@ -365,7 +368,9 @@ begin
         owner.InsertObject(i, s, self);
       end
       else
+      begin
         owner.AddObject(s, self);
+      end;
     end;
   end;
   fname:=s;
@@ -434,6 +439,7 @@ begin
     begin
       result:=true;
       ind:=i;
+      break;
     end;
   end;
 end;

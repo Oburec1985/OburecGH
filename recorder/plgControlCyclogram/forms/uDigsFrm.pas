@@ -67,6 +67,8 @@ type
     procedure N1Click(Sender: TObject);
     procedure SignalsSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
+    procedure SignalsSGSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
   private
 
   public
@@ -140,6 +142,25 @@ var
 implementation
 uses
   uDigsFrmEdit;
+
+procedure SetGridFocus(SGrid: TStringGrid; r, c: integer);
+var
+  SRect: TGridRect;
+begin
+  with SGrid do
+  begin
+    SetFocus; {Передаем фокус сетке}
+    Row := r; {Устанавливаем Row/Col}
+    Col := c;
+    SRect.Top := r; {Определяем выбранную область}
+    SRect.Left := c;
+    SRect.Bottom := r;
+    SRect.Right := c;
+    Selection := SRect; {Устанавливаем выбор}
+  end;
+end;
+
+
 
 {$R *.dfm}
 { cDigsFrmFactory }
@@ -651,9 +672,23 @@ begin
       end;
     end;
   end;
+  if (gdSelected in State) then
+  begin
+    if not (bColThreshold or bAlarm) then
+    begin
+      SignalsSG.Canvas.Brush.Color := clwindow;
+      SignalsSG.Canvas.Font.Color:=clBlack;
+    end;
+  end;
   SignalsSG.Canvas.FillRect(Rect);
   SignalsSG.Canvas.TextOut(Rect.Left, Rect.Top, SignalsSG.Cells[ACol, ARow]);
   SignalsSG.Canvas.Brush.Color := Color;
+end;
+
+procedure TDigsFrm.SignalsSGSelectCell(Sender: TObject; ACol, ARow: Integer;
+  var CanSelect: Boolean);
+begin
+  SetGridFocus(SignalsSG,0,0);
 end;
 
 procedure TDigsFrm.UpdateView;
@@ -683,5 +718,6 @@ begin
   end;
   result:=name+', '+s;
 end;
+
 
 end.

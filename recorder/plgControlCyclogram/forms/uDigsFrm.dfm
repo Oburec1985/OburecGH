@@ -20,6 +20,7 @@ object DigsFrm: TDigsFrm
     Width = 633
     Height = 421
     Align = alClient
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goFixedHotTrack]
     TabOrder = 0
     OnDrawCell = SignalsSGDrawCell
   end
