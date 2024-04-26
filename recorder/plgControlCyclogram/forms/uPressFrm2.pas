@@ -1081,8 +1081,7 @@ begin
   result := r0;
 end;
 
-{
-  function GetEmptyRow(sh, r0, col: integer): integer;
+{ function GetEmptyRow(sh, r0, col: integer): integer;
   var
   ws: olevariant;
   res: string;

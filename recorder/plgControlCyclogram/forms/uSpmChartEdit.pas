@@ -307,8 +307,11 @@ begin
   for I := 0 to curChart.m_tagslist.count - 1 do
   begin
     ti := curChart.TagInfo(I);
-    if ti.m_spm <> nil then
-      TagsLB.items.AddObject(ti.m_algname, ti.m_spm);
+    if ti.m_spm=nil then
+    begin
+      ti.alg:=g_algMng.getSpm(ti.m_algname);
+    end;
+    TagsLB.items.AddObject(ti.m_algname, ti.m_spm);
   end;
 end;
 

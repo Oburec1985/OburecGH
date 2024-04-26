@@ -1181,7 +1181,7 @@ begin
     a := cBaseAlgContainer(getobj(i));
     if a is cSpm then
     begin
-      if cSpm(a).resname = str then
+      if lowercase(cSpm(a).resname) = lowercase(str) then
       begin
         result := a;
         exit;
