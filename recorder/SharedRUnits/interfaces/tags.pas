@@ -31,7 +31,7 @@ const
   //                                        F020021F     624A     4076      9D  A4  4F  45  12  1E  2C  0B
   IID_ITagBlockVectorControl: TGUID = ( D1:$F020021F;D2:$624A;D3:$4076;D4:($9D,$A4,$4F,$45,$12,$1E,$2C,$0B));
 
-  //E8DAE361-53EE-11d7-9244-00E029288A7F
+  //E8DAE361-53EE-11d7-9244-00E029288A7F   Get
   IID_ITAG: TGUID = (
     D1:$E8DAE361;D2:$53EE;D3:$11d7;D4:($92,$44,$00,$E0,$29,$28,$8A,$7F));
 
