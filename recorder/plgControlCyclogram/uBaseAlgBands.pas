@@ -37,9 +37,9 @@ type
 
   tBand = class
   private
+  public
     // список Bandtag
     m_TagsList: tstringlist;
-  public
     m_owner: tstringlist;
     m_f1f2: point2d;
     m_resultBand: point2d;
@@ -53,7 +53,8 @@ type
     procedure eval;
     procedure clearTags;
     procedure addBandTag(bt: BandTag);
-    function getbandtag(i: integer): BandTag;
+    function getbandtag(i: integer): BandTag;overload;
+    function getbandtag(tname: string): BandTag;overload;
     constructor create(owner: tstringlist);
     destructor destroy;
   end;
@@ -83,7 +84,7 @@ type
     destructor destroy;
   end;
 
-  //
+  // связь имени канала и списка полос
   TTagBandPair = class
   protected
     m_places: tlist;
@@ -201,6 +202,21 @@ begin
     m_MainFreq := m_f1f2.x + (m_f1f2.y - m_f1f2.x) / 2;
     m_resultBand.x := m_f1f2.x;
     m_resultBand.y := m_f1f2.y;
+  end;
+end;
+
+function tBand.getbandtag(tname: string): BandTag;
+var
+  I: Integer;
+begin
+  result:=nil;
+  for I := 0 to m_TagsList.Count - 1 do
+  begin
+    if BandTag(m_TagsList.Objects[i]).m_t=tname then
+    begin
+      result := BandTag(m_TagsList.Objects[i]);
+      exit;
+    end;
   end;
 end;
 

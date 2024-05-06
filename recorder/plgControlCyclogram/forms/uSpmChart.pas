@@ -21,17 +21,24 @@ type
   public
     // компонент котрый отображает полосу
     m_freqband:cFreqBand;
-    // сам расчет
+    // сам расчет (содержит список тахо каналов и их коэфициентов)
     m_b:tBand;
+    // список объектов для которых подписываем значение
+    m_trends:tstringlist;
   protected
     function getname:string;
   public
+    function getObj(s:string):tobject;
     property name:string read getname;
+    constructor create;
     destructor destroy;
   end;
 
 
   TSpmTagInfo = class
+  private
+    // ctextlabel; обновление положения TSpmChart.UpdateLabels;
+    flags: tlist;
   public
     m_spm: cSpm;
     m_algname: string;
@@ -39,8 +46,6 @@ type
     // для Spm
     m_spmtrend: cBuffTrend1d;
 
-    // ctextlabel; обновление положения TSpmChart.UpdateLabels;
-    flags: tlist;
     m_lastblock: double;
     m_lastblockind: integer;
     m_initGraph: boolean;
@@ -338,6 +343,7 @@ begin
       l.name := 'Lmax_' + ti.m_spm.resname;
       l.drawline := true;
       ti.m_initGraph := true;
+      l.visible:=fShowLabels;
     end;
   end;
 end;
@@ -456,19 +462,26 @@ begin
         begin
           band:=place.getBand(k);
           b:=getBand(band.name);
-          if b=nil then
+          if b=nil then // создание подписи полосы
           begin
             b:=tSpmBand.Create;
             b.m_b:=band;
             b.m_freqband:=cFreqBand.create;
+            b.m_freqband.m_fullname:=true;
             b.m_freqband.m_LineLabel.Visible:=false;
             b.m_freqband.layer:=2;
             b.m_freqband.m_LineLabel.layer:=0;
-            b.m_freqband.m_LineLabel.m_addscaleX:=1.25;
+            b.m_freqband.m_LineLabel.m_addscaleX:=1.1;
             b.m_freqband.name:=band.name;
+            b.m_freqband.m_names:=b.m_trends;
             page:=cpage(spmChart.activePage);
             page.AddChild(b.m_freqband);
             m_bands.Add(b);
+          end;
+          if b.getObj(ti.m_spm.m_tag.tagname)=nil then
+          begin
+            b.m_trends.AddObject(ti.m_spm.m_tag.tagname, ti);
+            b.m_freqband.length:=b.m_freqband.length+1;
           end;
           findband:=false;
           for n := 0 to ti.flags.count - 1 do
@@ -1101,9 +1114,10 @@ begin
   end;
 end;
 
+// обновить значения меток.
 procedure TSpmChart.UpdateLabels;
 var
-  i, j, ind: integer;
+  i, j, k, ind: integer;
   ti: TSpmTagInfo;
   l: cTextLabel;
   spm: cSpm;
@@ -1124,7 +1138,7 @@ begin
     ti := TagInfo(i);
     spm := ti.m_spm;
     if spm=nil then continue;
-    for j := 0 to ti.flags.Count - 1 do
+    for j := 0 to ti.flags.Count - 1 do // цикл по флагам
     begin
       l := cTextLabel(ti.flags.Items[j]);
       a := caxis(l.GetParentByClassName('cAxis'));
@@ -1140,18 +1154,12 @@ begin
       else
       begin
         l.visible:=true;
-        if spmmax.x>tspmband(l.data).m_b.m_resultBand.x then
-        begin
-          if spmmax.x<tspmband(l.data).m_b.m_resultBand.y then
-          begin
-            l.visible:=false;
-          end;
-        end;
         x:=tspmband(l.data).m_b.m_resultBand.x;
         ind:=ti.m_spm.getIndByX(x);
         if (ind<ti.m_spmtrend.count) and (ind>0) then
         begin
           max:=ti.m_spmtrend.GetYByInd(ind);
+          maxx:=x;
         end
         else
         begin
@@ -1169,7 +1177,14 @@ begin
           end;
         end;
         pos := correctPos(a, p, p2d(maxX, max));
-        tspmband(l.data).m_freqband.setY(max);
+        for k := 0 to tspmband(l.data).m_trends.Count - 1 do
+        begin
+          if ti=tspmband(l.data).m_trends.Objects[k] then
+          begin
+            tspmband(l.data).m_freqband.setY(max, k);
+            break;
+          end;
+        end;
       end;
       l.Position := p2(pos.x, pos.y);
       l.line := l.Position;
@@ -1695,7 +1710,14 @@ begin
   begin
     m_freqband.destroy;
   end;
+  m_trends.Destroy;
 end;
+
+constructor tSpmBand.create;
+begin
+  m_trends:=TStringList.create;
+end;
+
 
 function tSpmBand.getname: string;
 begin
@@ -1703,6 +1725,21 @@ begin
     result:=m_b.name
   else
     result:='';
+end;
+
+function tSpmBand.getObj(s: string): tobject;
+var
+  I: Integer;
+begin
+  result:=nil;
+  for I := 0 to m_trends.count - 1 do
+  begin
+    if m_trends.Strings[i]=s then
+    begin
+      result:=m_trends.Objects[i];
+      exit;
+    end;
+  end;
 end;
 
 end.

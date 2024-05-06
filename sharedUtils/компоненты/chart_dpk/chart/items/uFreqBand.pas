@@ -27,6 +27,9 @@ type
     m_Linedefpos:point2;
     // хранит cTrendPair
     m_trendLabels:tlist;
+    m_fullname:boolean;
+    // назначается из вне!!!!!
+    m_names:tstringlist;
   protected
     m_LineColor:point3;
     m_drawline:boolean;
@@ -37,7 +40,8 @@ type
     // центральная частота в координатах +-1
     m_x:double;
     // значение для подписи по Y
-    m_y:double;
+    m_y:array of double;
+    m_capacity, m_length:integer;
   public
     // влияет только на подпись. Пока реализация размещения в координатах
     // отрисовки на совести пользователя (см. uSpmChart как пример)
@@ -57,10 +61,14 @@ type
     procedure DeleteEvents;Override;
     procedure CreateEvents;override;
     procedure setname(s:string);override;
+    procedure settext(s:string; i:integer);
     function getLineText:string;
     procedure setLineText(s:string);
+    procedure setsize(i:integer);
   public
-    procedure setY(v:double);
+    property length:integer read m_length write setsize;
+    procedure setY(v:double);overload;
+    procedure setY(v: double; i:integer);overload;
     procedure inittrendlabels;
     constructor create;override;
     destructor destroy;override;
@@ -181,6 +189,10 @@ begin
   m_LineLabel.autocreate:=true;
   m_LineLabel.Transparent:=false;
   //AddChild(m_LineLabel);
+
+  m_capacity:=10;
+  setlength(m_y, m_capacity);
+  m_length:=0;
 end;
 
 
@@ -242,6 +254,16 @@ begin
   exitcs;
 end;
 
+procedure cFreqBand.setsize(i: integer);
+begin
+  if i>m_capacity then
+  begin
+    m_capacity:=i;
+    setlength(m_y, m_capacity);
+  end;
+  m_length:=i;
+end;
+
 function cFreqBand.getLineText: string;
 begin
   result:=m_LineLabel.text;
@@ -286,10 +308,41 @@ begin
 end;
 
 procedure cFreqBand.setname(s: string);
+var
+  str, namestr:string;
+  I: Integer;
 begin
   inherited;
   //m_LineLabel.Text:=s+char(10)+format(' X:%.3g', [m_realX]);
-  m_LineLabel.Text:=s+char(10)+'X: '+formatstrNoE(m_realX, 3)+char(10)+'Y: '+formatstrNoE(m_y, 3);
+  if length>0 then
+  begin
+    str:=s+char(10)+'X: '+formatstrNoE(m_realX, 3)+char(10);
+    for I := 0 to length - 1 do
+    begin
+      if (m_fullname) and (m_names<>nil) then
+      begin
+        namestr:=m_names.Strings[i]+': ';
+      end
+      else
+      begin
+        namestr:='Y'+inttostr(i)+': ';
+      end;
+      if i=length-1 then
+      begin
+        str:=str+namestr+formatstrNoE(m_y[i], 3);
+      end
+      else
+        str:=str+namestr+formatstrNoE(m_y[i], 3)+char(10);
+    end;
+    m_LineLabel.Text:=str;
+  end
+  else
+    m_LineLabel.Text:=s+char(10)+'X: '+formatstrNoE(m_realX, 3)+char(10)+'Y: '+'0';
+end;
+
+procedure cFreqBand.settext(s:string; i:integer);
+begin
+  m_LineLabel.Text:=s+char(10)+'X: '+formatstrNoE(m_realX, 3)+char(10)+'Y: '+formatstrNoE(m_y[i], 3);
 end;
 
 procedure cFreqBand.setx(v: double);
@@ -334,7 +387,16 @@ end;
 procedure cFreqBand.setY(v: double);
 begin
   EnterCS;
-  m_y:=v;
+  if length>0 then
+    m_y[0]:=v;
+  exitCS;
+end;
+
+procedure cFreqBand.setY(v: double; i:integer);
+begin
+  EnterCS;
+  if length>=i then
+    m_y[i]:=v;
   exitCS;
 end;
 

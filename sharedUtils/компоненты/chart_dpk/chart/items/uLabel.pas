@@ -25,6 +25,7 @@ type
     fPixBorderOffset: tpoint;
     // то же что предыдущий пункт но пересчитанов координаты -1..1
     fBorderOffset: point2d;
+    m_intervalScale:double;
   public
     // хранит данные на сколько пользователь удвигал компонент мышью относительно начального положения
     m_userOffset: tpoint;
@@ -167,6 +168,8 @@ end;
 constructor cLabel.create;
 begin
   inherited;
+  // межстроковый интервал
+  m_intervalScale:=1.1;
   m_drawobjVP := false;
   m_addscalex := 1;
   m_addscaley := 1;
@@ -482,8 +485,9 @@ begin
       rowHeight := EvalRowHeigth;
       for I := 0 to fText.count - 1 do
       begin
+        // 1.1 межстроковый интервал
         font.OutText(fText.Strings[I], p2(f_TextPos.x + fpos.x,
-            f_TextPos.y + fpos.y - rowHeight * I), align);
+            f_TextPos.y + fpos.y - m_intervalScale*rowHeight * I), align);
       end;
     end;
   end;
@@ -1099,7 +1103,7 @@ var
   rowH: double;
 begin
   rowH := EvalRowHeigth;
-  result := rowH * fText.count;
+  result := rowH * ((fText.count-1)*m_intervalScale+1);
 end;
 
 function cLabel.EvalRowHeigth(p_font: cfont): double;
