@@ -569,6 +569,8 @@ begin
   m_lastTahoBlock := nil;
   ready := false;
   t := getTaho;
+  if t=nil then
+    exit;
   t.fTrigState := TrOff;
   if t.m_tag <> nil then
   begin

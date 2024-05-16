@@ -2333,7 +2333,7 @@ end;
 procedure cControlMng.SaveToXML(fname, sectionName: string);
 var
   doc: TNativeXml;
-  node: txmlnode;
+  node, cn: txmlnode;
   i: integer;
   obj: cbaseobj;
   dir: string;
@@ -2341,7 +2341,7 @@ begin
   doc := TNativeXml.create(nil);
   if fileexists(fname) then
   begin
-    doc.LoadFromFile(fname);
+    //doc.LoadFromFile(fname);
     node := doc.Root;
     doc.XmlFormat := xfReadable;
     node.name := 'Root';
@@ -2350,9 +2350,10 @@ begin
       node := node.FindNode('ControlCyclogram');
       if node <> nil then
       begin
-        node := node.FindNode('cProgramList');
-        node.clear;
+        cn := node.FindNode('cProgramList');
+        cn.clear;
       end;
+      node.Clear;
     end;
     doc.SaveToFile(fname);
     doc.destroy;

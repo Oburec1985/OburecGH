@@ -804,7 +804,7 @@ begin
   begin
     s := GetSignal(i);
     b := true;
-    if s.t.UpdateTagData(true) or b then
+    if s.t.UpdateTagData(true) and b then
     begin
       if not m_init then
       begin
