@@ -161,7 +161,6 @@ begin
                                 pAnsiChar(@str1[1]), @str[1], GPluginInstance, m_btnID);
 end;
 
-
 procedure cEvalStepValNP.doLoad(path: string);
 var
   doc:TNativeXml;

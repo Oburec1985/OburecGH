@@ -609,7 +609,7 @@ begin
         end
         else
         begin
-          //if pMsgInfo.uID = m_BtnTagPropPageID then
+
         end;
       end;
     end;

@@ -36,7 +36,7 @@ type
   private
     ftag: itag;
     ftagname: string;
-    alarmHandler:IAlarmsHandler;
+    //alarmHandler:IAlarmsHandler;
 
     // индекс последнего актуального значения в массиве m_ReadData/ Точнее адрес
     // в который придет новый буфер данных.

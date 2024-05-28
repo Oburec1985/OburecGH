@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls,extctrls,Math, uBtnListView, uSpin, uAlignEdit, uVTServices,
-  rkVistaProBar, uStringGridExt;
+  rkVistaProBar,
+  uStringGridExt;
 
 type  //-----------------------------------------------//
   TFloatEdit = class(TEdit)
