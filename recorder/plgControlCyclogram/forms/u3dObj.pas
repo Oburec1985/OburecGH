@@ -26,18 +26,19 @@ uses
   uBaseGlComponent,
   uBasecamera,
   uMeasureBase,
-  uMBaseControl,
+  uMBaseControl, u3dSceneEditFrame,
   uSceneMng;
 
 type
   TObjFrm3d = class(TRecFrm)
     GL: cBaseGlComponent;
     ToolsGB: TGroupBox;
-    GroupBox1: TGroupBox;
+    RightGB: TGroupBox;
     RightSplitter: TSplitter;
     procedure GLInitScene(Sender: TObject);
   private
     m_TransformToolsFrame: TTrfrmToolsFrame;
+    m_EditFrame:TGlSceneEditFrame;
     fshowtools: boolean;
   public
     m_ScenePath, m_SceneName: string;
@@ -121,6 +122,8 @@ begin
   m_TransformToolsFrame.Align := alClient;
   m_TransformToolsFrame.Parent := ToolsGB;
   m_TransformToolsFrame.lincScene(GL.mUI);
+
+  m_EditFrame.lincScene(GL.mUI.scene);
 end;
 
 function TObjFrm3d.BuildPath: string;
@@ -150,6 +153,8 @@ constructor TObjFrm3d.create(Aowner: tcomponent);
 begin
   inherited;
   GL.OnRBtn := RBtnClick;
+  m_EditFrame:=TGlSceneEditFrame.Create(nil);
+  m_EditFrame.Parent:=RightGB;
 end;
 
 procedure TObjFrm3d.createevents;
@@ -180,8 +185,8 @@ begin
   if GL.mUI <> nil then
   begin
     GL.mUI.scene.LoadFile_Obr(m_SceneName);
-    airplane := cnodeobject(GL.mUI.scene.getobj('line001'));
-    airplane.name := 'Airplane';
+    //airplane := cnodeobject(GL.mUI.scene.getobj('line001'));
+    //airplane.name := 'Airplane';
     // t:=cglturbine.create(GL);
     // t.Name:='glTurbine';
     // t.node.RotateNodeGlobal(0,-45,0);
@@ -189,14 +194,13 @@ begin
     if l <> nil then
       l.position := p3(1.2, 1.5, -2.5);
     c := GL.mUI.m_RenderScene.Getactivecamera;
-    c.target:=airplane.Node;
-    if airplane is cshapeobj then
-    begin
+    //c.target:=airplane.Node;
+    //if airplane is cshapeobj then
+    //begin
       //c.ZoomBound(cshapeobj(airplane).bound);
-      c.MoveNodeLocal(0, 0, -50);
-    end;
+    //  c.MoveNodeLocal(0, 0, -50);
+    //end;
     //c.rotateAroundTarget(c.target,p3(1,0,0),-45);
-    //t.getstage(0).bladecount:=45;
     c.target := nil;
   end;
 end;
@@ -241,6 +245,8 @@ end;
 procedure TObjFrm3d.SetShowTools(b: boolean);
 begin
   fshowtools := b;
+  RightGB.Visible:=b;
+  RightSplitter.Visible:=b;
 end;
 
 procedure TObjFrm3d.RBtnClick(Sender: TObject);

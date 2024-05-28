@@ -20,6 +20,7 @@ type
     Label2: TLabel;
     OpenDialog1: TOpenDialog;
     PathBtn: TButton;
+    procedure PathBtnClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -51,5 +52,14 @@ begin
   end;
 end;
 
+
+procedure TObjFrm3dEdit.PathBtnClick(Sender: TObject);
+begin
+  if OpenDialog1.Execute() then
+  begin
+    SceneFolderEdit.Text:=extractfiledir(OpenDialog1.FileName);
+    SceneNameEdit.Text:=extractfilename(OpenDialog1.FileName);
+  end;
+end;
 
 end.

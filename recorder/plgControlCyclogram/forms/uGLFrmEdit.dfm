@@ -79,6 +79,7 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     Height = 25
     Caption = #1042#1099#1073#1088#1072#1090#1100
     TabOrder = 5
+    OnClick = PathBtnClick
   end
   object OpenDialog1: TOpenDialog
     Left = 352

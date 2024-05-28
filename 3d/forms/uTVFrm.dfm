@@ -2,12 +2,13 @@ object SceneTVFrame: TSceneTVFrame
   Left = 0
   Top = 0
   Width = 590
-  Height = 304
+  Height = 557
   Align = alClient
   TabOrder = 0
+  ExplicitHeight = 304
   object Splitter1: TSplitter
     Left = 0
-    Top = -328
+    Top = 68
     Width = 590
     Height = 3
     Cursor = crVSplit
@@ -19,7 +20,7 @@ object SceneTVFrame: TSceneTVFrame
     Left = 0
     Top = 29
     Width = 590
-    Height = 4
+    Height = 39
     Align = alClient
     Alignment = taRightJustify
     DragMode = dmAutomatic
@@ -35,6 +36,8 @@ object SceneTVFrame: TSceneTVFrame
     TabOrder = 0
     TreeOptions.SelectionOptions = [toExtendedFocus, toMiddleClickSelect, toMultiSelect, toRightClickSelect]
     OnChange = SceneTVChange
+    ExplicitTop = 20
+    ExplicitHeight = 13
     Columns = <
       item
         Position = 0
@@ -44,9 +47,9 @@ object SceneTVFrame: TSceneTVFrame
   end
   object ObjectPropertyScrollBox: TScrollBox
     Left = 0
-    Top = -325
+    Top = 71
     Width = 590
-    Height = 629
+    Height = 486
     HorzScrollBar.ButtonSize = 10
     VertScrollBar.ButtonSize = 10
     VertScrollBar.Style = ssFlat
@@ -54,6 +57,7 @@ object SceneTVFrame: TSceneTVFrame
     BevelInner = bvLowered
     Constraints.MinWidth = 590
     TabOrder = 1
+    ExplicitTop = -261
     object BoundingGroupBox: TGroupBox
       Left = 0
       Top = 0
@@ -104,7 +108,7 @@ object SceneTVFrame: TSceneTVFrame
         Text = '0'
       end
       object TypeE: TEdit
-        Left = 218
+        Left = 212
         Top = 16
         Width = 105
         Height = 21
@@ -135,6 +139,8 @@ object SceneTVFrame: TSceneTVFrame
       Align = alTop
       Caption = #1053#1086#1088#1084#1072#1083#1080
       TabOrder = 1
+      ExplicitLeft = 3
+      ExplicitTop = 318
       DesignSize = (
         586
         38)
@@ -381,19 +387,17 @@ object SceneTVFrame: TSceneTVFrame
       Left = 0
       Top = 350
       Width = 586
-      Height = 275
+      Height = 132
       ActivePage = TabSheet2
       Align = alClient
       TabOrder = 3
+      ExplicitHeight = 275
       object TabSheet1: TTabSheet
         Caption = #1050#1072#1084#1077#1088#1072
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
+        ExplicitHeight = 165
         DesignSize = (
           578
-          247)
+          104)
         object Label10: TLabel
           Left = 24
           Top = 61
@@ -467,7 +471,7 @@ object SceneTVFrame: TSceneTVFrame
         end
         object TargetComboBox: TComboBox
           Left = 19
-          Top = 323
+          Top = 180
           Width = 133
           Height = 21
           Anchors = [akLeft, akBottom]
@@ -476,6 +480,7 @@ object SceneTVFrame: TSceneTVFrame
             #1052#1077#1096
             #1057#1074#1077#1090#1080#1083#1100#1085#1080#1082
             #1050#1072#1084#1077#1088#1072)
+          ExplicitTop = 241
         end
         object FovSpinEdit: TFloatSpinEdit
           Left = 153
@@ -565,9 +570,10 @@ object SceneTVFrame: TSceneTVFrame
       object TabSheet2: TTabSheet
         Caption = #1043#1077#1086#1084#1077#1090#1088#1080#1103
         ImageIndex = 1
+        ExplicitHeight = 247
         DesignSize = (
           578
-          247)
+          104)
         object Label11: TLabel
           Left = 7
           Top = 30
@@ -612,7 +618,7 @@ object SceneTVFrame: TSceneTVFrame
         end
         object MaterialComboBox: TComboBox
           Left = 213
-          Top = 96
+          Top = -47
           Width = 133
           Height = 21
           Anchors = [akLeft, akBottom]
@@ -621,6 +627,7 @@ object SceneTVFrame: TSceneTVFrame
             #1052#1077#1096
             #1057#1074#1077#1090#1080#1083#1100#1085#1080#1082
             #1050#1072#1084#1077#1088#1072)
+          ExplicitTop = 96
         end
         object PointsCheckBox: TCheckBox
           Left = 75
@@ -650,13 +657,10 @@ object SceneTVFrame: TSceneTVFrame
       object TabSheet3: TTabSheet
         Caption = #1057#1074#1077#1090
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
+        ExplicitHeight = 165
         DesignSize = (
           578
-          247)
+          104)
         object Label20: TLabel
           Left = 19
           Top = 17

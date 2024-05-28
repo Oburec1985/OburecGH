@@ -66,7 +66,8 @@ uses
   SelectObjectsFrame in 'forms\SelectObjectsFrame.pas' {SelectObjectFrame: TFrame},
   uDeformerFrame in 'forms\uDeformerFrame.pas' {DeformerFrame: TFrame},
   uObjCtrFrame in 'forms\uObjCtrFrame.pas' {CtrlViewFrame: TFrame},
-  uMatrix in '..\sharedUtils\math\uMatrix.pas';
+  uMatrix in '..\sharedUtils\math\uMatrix.pas',
+  u3dSceneEditFrame in '..\sharedUtils\ogl\forms\u3dSceneEditFrame.pas' {GlSceneEditFrame: TFrame};
 
 {$R *.res}
 

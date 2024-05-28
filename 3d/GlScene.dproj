@@ -20,7 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_UnitSearchPath>..\sharedUtils\utils\xml;..\sharedUtils\objects;..\sharedUtils\objects\utils;..\sharedUtils\forms;..\sharedUtils\utils\files;..\sharedUtils\utils;..\sharedUtils\utils\PathUtils;..\sharedUtils\utils\jcl-2.3.1.4197;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows\obj;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes\containers;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;..\sharedUtils;..\sharedUtils\math;..\sharedUtils\компоненты\dcl_dpk;..\sharedUtils\ogl;.\core;.\tools;.\math;..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>..\sharedUtils\utils\xml;..\sharedUtils\objects;..\sharedUtils\objects\utils;..\sharedUtils\forms;..\sharedUtils\utils\files;..\sharedUtils\utils;..\sharedUtils\utils\PathUtils;..\sharedUtils\utils\jcl-2.3.1.4197;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows\obj;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes\containers;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;..\sharedUtils;..\sharedUtils\math;..\sharedUtils\компоненты\dcl_dpk;..\sharedUtils\utils\lists;..\sharedUtils\ogl;.\core;.\tools;.\math;..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source;..\sharedUtils\компоненты\dcl_dpk\VistaProbar;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_DependencyCheckOutputName>GlScene.exe</DCC_DependencyCheckOutputName>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
@@ -144,6 +144,10 @@
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="..\sharedUtils\math\uMatrix.pas"/>
+			<DCCReference Include="..\sharedUtils\ogl\forms\u3dSceneEditFrame.pas">
+				<Form>GlSceneEditFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
