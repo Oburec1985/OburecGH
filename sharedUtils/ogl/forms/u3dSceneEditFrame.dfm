@@ -1,16 +1,25 @@
 object GlSceneEditFrame: TGlSceneEditFrame
   Left = 0
   Top = 0
-  Width = 290
-  Height = 225
+  Width = 451
+  Height = 304
   Align = alClient
   TabOrder = 0
+  object Panel1: TPanel
+    Left = 0
+    Top = 263
+    Width = 451
+    Height = 41
+    Align = alBottom
+    TabOrder = 0
+  end
   object SceneTV: TVTree
     Left = 0
     Top = 0
-    Width = 290
-    Height = 184
+    Width = 451
+    Height = 263
     Align = alClient
+    CustomCheckImages = ImageList_16
     Header.AutoSizeIndex = 0
     Header.Font.Charset = DEFAULT_CHARSET
     Header.Font.Color = clWindowText
@@ -20,21 +29,15 @@ object GlSceneEditFrame: TGlSceneEditFrame
     Header.MainColumn = -1
     Images = ImageList_16
     NodeDataSize = 32
-    TabOrder = 0
+    ParentColor = True
+    TabOrder = 1
+    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowRoot, toShowTreeLines, toThemeAware, toUseBlendedImages, toGhostedIfUnfocused]
     TreeOptions.SelectionOptions = [toMultiSelect]
+    OnChange = SceneTVChange
+    OnClick = SceneTVClick
+    OnDblClick = SceneTVDblClick
     ExplicitTop = -6
     Columns = <>
-  end
-  object Panel1: TPanel
-    Left = 0
-    Top = 184
-    Width = 290
-    Height = 41
-    Align = alBottom
-    TabOrder = 1
-    ExplicitLeft = 64
-    ExplicitTop = 176
-    ExplicitWidth = 185
   end
   object ImageList_16: TImageList
     Left = 216

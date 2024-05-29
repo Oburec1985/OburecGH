@@ -166,7 +166,6 @@ end;
 
 procedure TSceneTVFrame.showScene;
 begin
-  sceneTV.clear;
   showInVTreeView(SceneTV, s.World, s.images_16);
 end;
 

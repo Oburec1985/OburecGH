@@ -1,7 +1,6 @@
 library plgControlCyclogram;
 
 uses
-  //fastmm4,
   u2dMath,
   Windows,
   Themes,
@@ -215,7 +214,8 @@ uses
   uLineLgShader in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\shaders\uLineLgShader.pas',
   uThresholdsFrm in 'forms\uThresholdsFrm.pas' {ThresholdFrm},
   uDigsFrm in 'forms\uDigsFrm.pas' {DigsFrm},
-  uDigsFrmEdit in 'forms\uDigsFrmEdit.pas' {DigsFrmEdit};
+  uDigsFrmEdit in 'forms\uDigsFrmEdit.pas' {DigsFrmEdit},
+  uEditGlObjFrm in 'forms\uEditGlObjFrm.pas' {EditGLObjFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

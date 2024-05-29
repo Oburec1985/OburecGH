@@ -37,6 +37,7 @@ type
     RightSplitter: TSplitter;
     ErrorEdit: TEdit;
     procedure GLInitScene(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     m_TransformToolsFrame: TTrfrmToolsFrame;
     m_EditFrame:TGlSceneEditFrame;
@@ -54,6 +55,7 @@ type
     procedure UpdateView;
     procedure updateData;
     procedure doStart;
+    procedure loadscene(path:string);
   protected
     procedure SetShowTools(b: boolean);
     procedure WndProc(var Message: TMessage); override;
@@ -124,8 +126,10 @@ begin
   m_TransformToolsFrame.Parent := ToolsGB;
   m_TransformToolsFrame.lincScene(GL.mUI);
 
-  m_EditFrame.lincScene(GL.mUI.scene);
+  m_EditFrame.lincScene(GL.mUI);
 end;
+
+
 
 function TObjFrm3d.BuildPath: string;
 var
@@ -178,14 +182,31 @@ begin
 
 end;
 
+procedure TObjFrm3d.FormShow(Sender: TObject);
+begin
+  RightSplitter.Left:=RightSplitter.Left;
+  RightGB.Realign;
+  Realign;
+  //RightSplitter.
+end;
+
+procedure TObjFrm3d.loadscene(path: string);
+begin
+  if GL.mUI.scene.LoadFile_Obr(m_SceneName) then
+  begin
+    m_EditFrame.ShowScene;
+  end;
+end;
+
 procedure TObjFrm3d.initComponents;
 var
   l: clight;
   c: cbasecamera;
+  b:boolean;
 begin
   if GL.mUI <> nil then
   begin
-    GL.mUI.scene.LoadFile_Obr(m_SceneName);
+    loadscene(m_SceneName);
     //airplane := cnodeobject(GL.mUI.scene.getobj('line001'));
     //airplane.name := 'Airplane';
     // t:=cglturbine.create(GL);
@@ -226,6 +247,7 @@ begin
   inherited;
   a_pIni.WriteString(str, 'ScenePath', m_ScenePath);
   a_pIni.WriteString(str, 'SceneName', m_SceneName);
+  a_pIni.WriteBool(str, 'ShowEditor', ShowTools);
 end;
 
 procedure TObjFrm3d.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -235,6 +257,8 @@ begin
   inherited;
   m_ScenePath := a_pIni.ReadString(str, 'ScenePath', '');
   m_SceneName := a_pIni.ReadString(str, 'SceneName', '');
+  ShowTools:=a_pIni.ReadBool(str, 'ShowEditor', true);
+
   basepath:=MBasePath+'\3dTypes\'+'resources.ini';
 
   if fileexists(basepath) then
@@ -255,6 +279,7 @@ begin
   fshowtools := b;
   RightGB.Visible:=b;
   RightSplitter.Visible:=b;
+  FormShow(nil);
 end;
 
 procedure TObjFrm3d.RBtnClick(Sender: TObject);

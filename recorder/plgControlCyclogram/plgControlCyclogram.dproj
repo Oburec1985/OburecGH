@@ -483,6 +483,9 @@
 			<DCCReference Include="forms\uDigsFrmEdit.pas">
 				<Form>DigsFrmEdit</Form>
 			</DCCReference>
+			<DCCReference Include="forms\uEditGlObjFrm.pas">
+				<Form>EditGLObjFrm</Form>
+			</DCCReference>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

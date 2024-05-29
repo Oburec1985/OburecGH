@@ -323,6 +323,8 @@
     <File Path="forms\uDigsFrm.dfm"/>
     <File Path="forms\uDigsFrmEdit.pas"/>
     <File Path="forms\uDigsFrmEdit.dfm"/>
+    <File Path="forms\uEditGlObjFrm.pas"/>
+    <File Path="forms\uEditGlObjFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\uAriphmAlg.pas"/>
     <File Path="units\uBaseAlg.pas"/>
@@ -431,5 +433,7 @@
     <Transaction>2024.04.01 15:59:40.429.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit2.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uDigsFrm.dfm</Transaction>
     <Transaction>2024.04.01 16:14:31.019.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit2.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uDigsFrmEdit.pas</Transaction>
     <Transaction>2024.04.01 16:14:31.019.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit2.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uDigsFrmEdit.dfm</Transaction>
+    <Transaction>2024.05.29 23:20:05.099.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit2.pas=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uEditGlObjFrm.pas</Transaction>
+    <Transaction>2024.05.29 23:20:05.099.dfm,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit2.dfm=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uEditGlObjFrm.dfm</Transaction>
   </Transactions>
 </BorlandProject>

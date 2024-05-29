@@ -2,13 +2,13 @@ object SceneTVFrame: TSceneTVFrame
   Left = 0
   Top = 0
   Width = 590
-  Height = 557
+  Height = 605
   Align = alClient
   TabOrder = 0
   ExplicitHeight = 304
   object Splitter1: TSplitter
     Left = 0
-    Top = 68
+    Top = 116
     Width = 590
     Height = 3
     Cursor = crVSplit
@@ -20,7 +20,7 @@ object SceneTVFrame: TSceneTVFrame
     Left = 0
     Top = 29
     Width = 590
-    Height = 39
+    Height = 87
     Align = alClient
     Alignment = taRightJustify
     DragMode = dmAutomatic
@@ -36,8 +36,7 @@ object SceneTVFrame: TSceneTVFrame
     TabOrder = 0
     TreeOptions.SelectionOptions = [toExtendedFocus, toMiddleClickSelect, toMultiSelect, toRightClickSelect]
     OnChange = SceneTVChange
-    ExplicitTop = 20
-    ExplicitHeight = 13
+    ExplicitTop = 28
     Columns = <
       item
         Position = 0
@@ -47,7 +46,7 @@ object SceneTVFrame: TSceneTVFrame
   end
   object ObjectPropertyScrollBox: TScrollBox
     Left = 0
-    Top = 71
+    Top = 119
     Width = 590
     Height = 486
     HorzScrollBar.ButtonSize = 10
@@ -57,7 +56,7 @@ object SceneTVFrame: TSceneTVFrame
     BevelInner = bvLowered
     Constraints.MinWidth = 590
     TabOrder = 1
-    ExplicitTop = -261
+    ExplicitTop = -182
     object BoundingGroupBox: TGroupBox
       Left = 0
       Top = 0
@@ -139,8 +138,6 @@ object SceneTVFrame: TSceneTVFrame
       Align = alTop
       Caption = #1053#1086#1088#1084#1072#1083#1080
       TabOrder = 1
-      ExplicitLeft = 3
-      ExplicitTop = 318
       DesignSize = (
         586
         38)
@@ -391,10 +388,8 @@ object SceneTVFrame: TSceneTVFrame
       ActivePage = TabSheet2
       Align = alClient
       TabOrder = 3
-      ExplicitHeight = 275
       object TabSheet1: TTabSheet
         Caption = #1050#1072#1084#1077#1088#1072
-        ExplicitHeight = 165
         DesignSize = (
           578
           104)
@@ -480,7 +475,6 @@ object SceneTVFrame: TSceneTVFrame
             #1052#1077#1096
             #1057#1074#1077#1090#1080#1083#1100#1085#1080#1082
             #1050#1072#1084#1077#1088#1072)
-          ExplicitTop = 241
         end
         object FovSpinEdit: TFloatSpinEdit
           Left = 153
@@ -570,7 +564,7 @@ object SceneTVFrame: TSceneTVFrame
       object TabSheet2: TTabSheet
         Caption = #1043#1077#1086#1084#1077#1090#1088#1080#1103
         ImageIndex = 1
-        ExplicitHeight = 247
+        ExplicitLeft = 7
         DesignSize = (
           578
           104)
@@ -627,7 +621,6 @@ object SceneTVFrame: TSceneTVFrame
             #1052#1077#1096
             #1057#1074#1077#1090#1080#1083#1100#1085#1080#1082
             #1050#1072#1084#1077#1088#1072)
-          ExplicitTop = 96
         end
         object PointsCheckBox: TCheckBox
           Left = 75
@@ -657,7 +650,6 @@ object SceneTVFrame: TSceneTVFrame
       object TabSheet3: TTabSheet
         Caption = #1057#1074#1077#1090
         ImageIndex = 2
-        ExplicitHeight = 165
         DesignSize = (
           578
           104)

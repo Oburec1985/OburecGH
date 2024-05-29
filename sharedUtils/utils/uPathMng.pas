@@ -411,13 +411,14 @@ end;
 function FindFile(name: string; dir: string; deep: integer): string;
 var
   sr: tSearchRec;
-  fullpath, res: string;
+  fullpath, res, str: string;
   findres: integer;
   ldeep: integer;
   direxist: boolean;
 begin
   dir:=AddSlashToPath(dir);
   direxist := DirectoryExists(dir);
+  name:=LowerCase(name);
   if not direxist then
     exit;
   // Поиск файла в текущем каталоге
@@ -439,6 +440,16 @@ begin
         begin
           while findres = 0 do
           begin
+            if (not(sr.Attr = faDirectory)) then
+            begin
+              str:=LowerCase(sr.name);
+              if str = name then
+              begin
+                inc(deep);
+                result := str;
+                exit;
+              end
+            end;
             if (sr.name = '.') or (sr.name = '..') or
               (not(sr.Attr = faDirectory)) then
             begin
@@ -672,7 +683,6 @@ begin
   end
   else
   begin
-    //result := findListFile(list, name);
     result := '';
   end;
 end;

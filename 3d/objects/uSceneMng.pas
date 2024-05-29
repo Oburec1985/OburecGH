@@ -26,7 +26,7 @@ type
   public
     procedure SaveScene(FileName:String);
     // —читывает ObrFile целиком
-    Procedure LoadFile_Obr(FileName:String);
+    function LoadFile_Obr(FileName:String):boolean;
     // —читывает из ObrFile-а выделенные объекты (выбор осуществл€етс€ пользователем)
     Procedure LoadObrSelObj(FileName:String);
     constructor create;override;
@@ -130,14 +130,14 @@ begin
   inherited;
 end;
 
-Procedure cScene.LoadFile_Obr(FileName:string);
+function cScene.LoadFile_Obr(FileName:string):boolean;
 var
   F:file;//читаемый файл
   obj:cNodeObject;
   texturedir:string;
   bRead:boolean;
 begin
-  LoadObrFile(filename,cui(crender(render).ui).ConfigFile,self);
+  result:=LoadObrFile(filename,cui(crender(render).ui).ConfigFile,self);
 end;
 
 Procedure cScene.LoadObrSelObj(FileName:String);
