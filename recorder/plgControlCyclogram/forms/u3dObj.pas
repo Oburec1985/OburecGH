@@ -35,6 +35,7 @@ type
     ToolsGB: TGroupBox;
     RightGB: TGroupBox;
     RightSplitter: TSplitter;
+    ErrorEdit: TEdit;
     procedure GLInitScene(Sender: TObject);
   private
     m_TransformToolsFrame: TTrfrmToolsFrame;
@@ -211,21 +212,6 @@ begin
   linkFrames;
 end;
 
-procedure TObjFrm3d.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
-var
-  basepath:string;
-begin
-  inherited;
-  m_ScenePath := a_pIni.ReadString(str, 'ScenePath', '');
-  m_SceneName := a_pIni.ReadString(str, 'SceneName', '');
-  basepath:=MBasePath+'\3dTypes\'+'resources.ini';
-
-  if fileexists(basepath) then
-  begin
-    GL.resources:=basepath;
-  end;
-end;
-
 function TObjFrm3d.MBasePath: string;
 begin
   result:='';
@@ -240,6 +226,28 @@ begin
   inherited;
   a_pIni.WriteString(str, 'ScenePath', m_ScenePath);
   a_pIni.WriteString(str, 'SceneName', m_SceneName);
+end;
+
+procedure TObjFrm3d.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  basepath:string;
+begin
+  inherited;
+  m_ScenePath := a_pIni.ReadString(str, 'ScenePath', '');
+  m_SceneName := a_pIni.ReadString(str, 'SceneName', '');
+  basepath:=MBasePath+'\3dTypes\'+'resources.ini';
+
+  if fileexists(basepath) then
+  begin
+    GL.resources:=basepath;
+  end
+  else
+  begin
+    if mbasePath='' then
+    begin
+      ErrorEdit.Text:='Путь к БДИ не найден (ресурсы для загрузки 3д Сцены)';
+    end;
+  end;
 end;
 
 procedure TObjFrm3d.SetShowTools(b: boolean);

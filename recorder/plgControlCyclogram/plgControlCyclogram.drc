@@ -1276,7 +1276,7 @@ END
 /* ..\..\3d\forms\SelectObjectsFrame.dfm */
 /* ..\..\3d\forms\uTransformButtons.dfm */
 /* ..\..\sharedUtils\ogl\forms\u3dSceneEditFrame.dfm */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\u3dObj.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\u3dObj.dfm */
 /* forms\uGenSignalsEditFrm.dfm */
 /* forms\uGenSignalsFrm.dfm */
 /* forms\uControlDeskFrm.dfm */
@@ -1307,7 +1307,7 @@ END
 /* forms\uSpmChartEdit.dfm */
 /* forms\uSpmChart.dfm */
 /* forms\uControlWarnFrm.dfm */
-/* forms\uGLFrmEdit.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uGLFrmEdit.dfm */
 /* forms\uMBaseControl.dfm */
 /* ..\SharedRUnits\uFrmSync.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditChartObjFrame.dfm */
@@ -1321,6 +1321,6 @@ END
 /* forms\uPressFrmFrame.dfm */
 /* forms\uPressFrmEdit.dfm */
 /* forms\uPressFrm.dfm */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */
