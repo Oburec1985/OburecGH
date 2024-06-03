@@ -18,11 +18,11 @@ type
     Label1: TLabel;
     SceneNameEdit: TEdit;
     Label2: TLabel;
-    OpenDialog1: TOpenDialog;
     PathBtn: TButton;
+    OpenDialog1vista: TFileOpenDialog;
     procedure PathBtnClick(Sender: TObject);
   private
-    { Private declarations }
+
   public
     procedure edit(glFrm:tobject);
   end;
@@ -55,11 +55,14 @@ end;
 
 procedure TObjFrm3dEdit.PathBtnClick(Sender: TObject);
 begin
-  if OpenDialog1.Execute() then
+  OpenDialog1vista.filename := SceneFolderEdit.text;
+  if OpenDialog1vista.Execute() then
   begin
-    SceneFolderEdit.Text:=extractfiledir(OpenDialog1.FileName);
-    SceneNameEdit.Text:=extractfilename(OpenDialog1.FileName);
+    OpenDialog1vista.Options := [fdoPickFolders, fdoForceFileSystem];
+    SceneFolderEdit.Text:=extractfiledir(OpenDialog1vista.FileName);
+    SceneNameEdit.Text:=extractfilename(OpenDialog1vista.FileName);
   end;
+
 end;
 
 end.

@@ -26,6 +26,7 @@ uses
   uBaseGlComponent,
   uBasecamera,
   uMeasureBase,
+  uPathMng,
   uMBaseControl, u3dSceneEditFrame,
   uSceneMng;
 
@@ -151,6 +152,10 @@ begin
         result := f;
       end;
     end;
+  end
+  else
+  begin
+    result:=m_ScenePath+'\'+m_SceneName;
   end;
 end;
 
@@ -252,14 +257,27 @@ end;
 
 procedure TObjFrm3d.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 var
-  basepath:string;
+  basepath, path:string;
 begin
   inherited;
   m_ScenePath := a_pIni.ReadString(str, 'ScenePath', '');
   m_SceneName := a_pIni.ReadString(str, 'SceneName', '');
   ShowTools:=a_pIni.ReadBool(str, 'ShowEditor', true);
 
-  basepath:=MBasePath+'\3dTypes\'+'resources.ini';
+  if MBasePath<>'' then
+  begin
+    basepath:=FindFile('resources.ini',MBasePath+'\3dTypes\',2);
+    //basepath:=MBasePath+'\3dTypes\'+'resources.ini';
+  end
+  else
+  begin
+    if m_ScenePath<>'' then
+    begin
+      // отрезаем 1 уровень
+      path:=ExtractFileDir(m_ScenePath);
+      basepath:=FindFile('resources.ini',path, 2);
+    end;
+  end;
 
   if fileexists(basepath) then
   begin

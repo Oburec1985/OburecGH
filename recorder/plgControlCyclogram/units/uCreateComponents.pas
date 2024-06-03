@@ -54,7 +54,7 @@ uses
   uIRDiagramEditFrm,
   uEditSRSFrm,
   uSRSFrm,
-  uGLFrmEdit,
+  uGLFrmEdit, uEditGlObjFrm,
   //uPressFrm, uPressFrmEdit,
   uPressFrm2, uPressFrmEdit2,
   uDigsFrm,uDigsFrmEdit,
@@ -250,6 +250,9 @@ begin
   sleep(1000);
   EditPropertiesFrm := TEditPropertiesFrm.Create(nil);
   ConfirmFmr := TConfirmFmr.Create(nil);
+
+  EditGLObjFrm := TEditGLObjFrm.Create(nil);
+  g_ObjFrm3dEdit := TObjFrm3dEdit.Create(nil);
 
   ControlCyclogramEditFrm := TControlCyclogramEditFrm.Create(nil);
   ControlCyclogramEditFrm.HandleNeeded;
@@ -477,6 +480,9 @@ begin
     TagInfoEditFrm := TTagInfoEditFrm.Create(nil);
     TagInfoEditFrm.show;
     TagInfoEditFrm.close;
+
+    //EditGLObjFrm.show;
+    //EditGLObjFrm.close;
   end;
 end;
 
@@ -537,7 +543,6 @@ begin
 
   g_ObjFrm3dFactory := cObjFrm3dFactory.Create;
   compMng.Add(g_ObjFrm3dFactory);
-  g_ObjFrm3dEdit := TObjFrm3dEdit.Create(nil);
 
   cfg := extractfiledir(getRConfig);
   i := 0;

@@ -59,7 +59,7 @@ var
 begin
   if EditGLObjFrm=nil then
   begin
-    EditGLObjFrm:=TEditGLObjFrm.create(nil);
+    //EditGLObjFrm:=TEditGLObjFrm.create(nil);
   end;
   n:=SceneTV.GetFirstSelected(false);
   if n<>nil then
