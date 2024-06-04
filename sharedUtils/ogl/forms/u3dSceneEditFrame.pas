@@ -5,7 +5,9 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, VirtualTrees, uVTServices, ImgList, ExtCtrls,
-  uBaseObjService, uUI, uEditGlObjFrm, ubaseobj,unodeobject,
+  uBaseObjService, uUI,
+  //uEditGlObjFrm,
+  ubaseobj,unodeobject,
   uSceneMng;
 
 type
@@ -57,7 +59,7 @@ var
   n:pvirtualnode;
   d:pnodedata;
 begin
-  if EditGLObjFrm=nil then
+  {if EditGLObjFrm=nil then
   begin
     //EditGLObjFrm:=TEditGLObjFrm.create(nil);
   end;
@@ -68,7 +70,7 @@ begin
     o:=cbaseobj(d.data);
     EditGLObjFrm.setObj(cnodeobject(o));
     EditGLObjFrm.show;
-  end;
+  end;}
 end;
 
 procedure TGlSceneEditFrame.ShowScene;

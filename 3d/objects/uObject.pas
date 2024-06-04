@@ -159,7 +159,7 @@ begin
   objtype:=constdummy;
   m_axisLength:=3;
   settings:=0;
-  boundsize:=0.5;
+  boundsize:=1;
   bound.exist:=true;
 end;
 

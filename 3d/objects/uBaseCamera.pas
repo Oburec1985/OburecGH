@@ -409,11 +409,11 @@ var
 
 
   c, // центр баундбокса
-  sc, // отступ из центра вдоль вектора взгляда камеры
+  sc, // отступ из центра в камеру
+  up,
   view, // вектор взгляд камеры
   pos, // позиция камеры
-  cross, // точка пересечения
-  VertToCross //  вектор из cross к вершине
+  cross // точка пересечения
   :point3;
   insidebox:boolean;
   poly:integer;
@@ -438,13 +438,18 @@ begin
   c.z:=0.5*(b.hi.z+b.lo.z);
   // косинус угла векторов мишень и взгляд
   view:=getSight;
+  sc:=subVector(c, pos);
+  // определяем сонаправленность
   angel:=VectorCos(sc,view);
-  // вектор в обратную сторону от взгляда
-  view:=scalevectorp3(-1,getSight);
-  // Координаты камеры
   // точка куда надо перенести камеру, чтобы сохранить ее ориентацию,
   // но смотреть в центр объема
   sc:=SummVectorP3(c, view);
+  up:=getUp;
+  // точка в направлеии -up от мишени
+  sc:=subVector(c, view);
+  // точка пересечения взгляда и плоскости проходящей через центр объема
+  cross:=LineCrossPlane(pos, sc);
+
   insidebox:=insideBox3d(sc, b.lo,b.hi);
   position:=sc;
   if insidebox then
@@ -455,14 +460,6 @@ begin
   begin
 
   end;
-  {
-  cross:=lineCrossBound(b.lo, b.hi, pos, c, poly);
-  dist:=0;
-  // определяем угол между отрезками L1 = (cross, boundPoint) и L2 = (newPos, cross) (при этом newpos сонаправлен с вектором взгляда)
-  c:=p1;
-  VertToCross:=subVector(c, cross);
-  //cos:=MultScalar(view, VertToCross);
-  }
 end;
 
 function cBaseCamera.GetTargetM:matrixgl;

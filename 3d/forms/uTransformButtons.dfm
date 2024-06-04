@@ -1,26 +1,27 @@
 object TransformToolsFrame: TTransformToolsFrame
   Left = 0
   Top = 0
-  Width = 610
-  Height = 129
+  Width = 925
+  Height = 286
   Align = alBottom
   Color = clMoneyGreen
   ParentColor = False
   TabOrder = 0
   TabStop = True
+  ExplicitTop = -2
   ExplicitWidth = 451
   object Label8: TLabel
     Left = 314
     Top = 16
-    Width = 32
-    Height = 13
+    Width = 37
+    Height = 16
     Caption = 'MoveZ'
   end
   object Label9: TLabel
     Left = 684
     Top = 22
-    Width = 103
-    Height = 13
+    Width = 116
+    Height = 16
     Caption = #1042#1099#1076#1077#1083#1077#1085#1099#1081' '#1086#1073#1098#1077#1082#1090':'
   end
   object GroupBox2: TGroupBox
@@ -33,29 +34,29 @@ object TransformToolsFrame: TTransformToolsFrame
     object Label1: TLabel
       Left = 32
       Top = 16
-      Width = 23
-      Height = 13
+      Width = 27
+      Height = 16
       Caption = 'RotX'
     end
     object Label2: TLabel
       Left = 132
       Top = 16
-      Width = 23
-      Height = 13
+      Width = 26
+      Height = 16
       Caption = 'RotY'
     end
     object Label3: TLabel
       Left = 231
       Top = 16
-      Width = 23
-      Height = 13
+      Width = 26
+      Height = 16
       Caption = 'RotZ'
     end
     object RotZSpinEdit: TFloatSpinEdit
       Left = 198
       Top = 31
       Width = 86
-      Height = 22
+      Height = 26
       Increment = 5.000000000000000000
       TabOrder = 0
       Value = 0.100000001490116000
@@ -65,7 +66,7 @@ object TransformToolsFrame: TTransformToolsFrame
       Left = 100
       Top = 31
       Width = 86
-      Height = 22
+      Height = 26
       Increment = 5.000000000000000000
       TabOrder = 1
       Value = 0.100000001490116000
@@ -75,7 +76,7 @@ object TransformToolsFrame: TTransformToolsFrame
       Left = 2
       Top = 31
       Width = 86
-      Height = 22
+      Height = 26
       Increment = 5.000000000000000000
       TabOrder = 2
       Value = 0.100000001490116000
@@ -86,7 +87,7 @@ object TransformToolsFrame: TTransformToolsFrame
     Left = 681
     Top = 37
     Width = 86
-    Height = 21
+    Height = 24
     TabOrder = 1
     Text = 'ObjNameE'
   end
@@ -94,7 +95,7 @@ object TransformToolsFrame: TTransformToolsFrame
     Left = 8
     Top = 32
     Width = 77
-    Height = 21
+    Height = 24
     TabOrder = 2
     Text = 'World'
     OnChange = WorldComboBoxChange
@@ -114,24 +115,24 @@ object TransformToolsFrame: TTransformToolsFrame
     TabOrder = 3
     inline AnimationCtrlFrame1: TAnimationCtrlFrame
       Left = 2
-      Top = 15
+      Top = 18
       Width = 415
-      Height = 47
+      Height = 44
       Align = alClient
       TabOrder = 0
       TabStop = True
       ExplicitLeft = 2
-      ExplicitTop = 15
+      ExplicitTop = 18
       ExplicitWidth = 415
-      ExplicitHeight = 47
+      ExplicitHeight = 44
       inherited AnimationControlGroupBox: TGroupBox
         Width = 415
-        Height = 47
+        Height = 44
         ExplicitWidth = 415
-        ExplicitHeight = 47
+        ExplicitHeight = 44
         DesignSize = (
           415
-          47)
+          44)
         inherited RewndBtn: TSpeedButton
           Left = 297
           Top = 18
@@ -172,16 +173,16 @@ object TransformToolsFrame: TTransformToolsFrame
     TabOrder = 4
     inline CtrlViewFrame1: TCtrlViewFrame
       Left = 2
-      Top = 15
+      Top = 18
       Width = 324
-      Height = 31
+      Height = 28
       Align = alClient
       TabOrder = 0
       TabStop = True
       ExplicitLeft = 2
-      ExplicitTop = 15
+      ExplicitTop = 18
       ExplicitWidth = 324
-      ExplicitHeight = 31
+      ExplicitHeight = 28
       inherited GroupBox1: TGroupBox
         inherited PanBtn: TSpeedButton
           Top = 0
@@ -217,22 +218,22 @@ object TransformToolsFrame: TTransformToolsFrame
     object Label5: TLabel
       Left = 132
       Top = 16
-      Width = 32
-      Height = 13
+      Width = 37
+      Height = 16
       Caption = 'MoveY'
     end
     object Label6: TLabel
       Left = 30
       Top = 16
-      Width = 32
-      Height = 13
+      Width = 38
+      Height = 16
       Caption = 'MoveX'
     end
     object MoveXSpinEdit: TFloatSpinEdit
       Left = 5
       Top = 31
       Width = 86
-      Height = 22
+      Height = 26
       Increment = 0.500000000000000000
       TabOrder = 0
       Value = 0.100000001490116000
@@ -242,7 +243,7 @@ object TransformToolsFrame: TTransformToolsFrame
       Left = 103
       Top = 31
       Width = 86
-      Height = 22
+      Height = 26
       Increment = 0.500000000000000000
       TabOrder = 1
       Value = 0.100000001490116000
@@ -252,7 +253,7 @@ object TransformToolsFrame: TTransformToolsFrame
       Left = 201
       Top = 31
       Width = 86
-      Height = 22
+      Height = 26
       Increment = 0.500000000000000000
       TabOrder = 2
       Value = 0.100000001490116000

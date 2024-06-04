@@ -82,8 +82,8 @@ type
     DrawNodeCheckBox: TCheckBox;
     ToolBar1: TToolBar;
     ApplyBtn: TToolButton;
-    procedure SceneTVChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure ApplyBtnClick(Sender: TObject);
+    procedure SceneTVClick(Sender: TObject);
   private
     s:cscene;
     ui:cUI;
@@ -136,33 +136,6 @@ begin
 
 end;
 
-procedure TSceneTVFrame.SceneTVChange(Sender: TBaseVirtualTree;
-  Node: PVirtualNode);
-var
-  i:integer;
-  n:pvirtualNode;
-  data:pnodedata;
-  obj:cbaseObj;
-begin
-  //getproperties;
-  //i:=0;
-  // получаем список выбранных осей
-  ui.ClearSelect;
-  n:=SceneTV.GetFirstSelected(true);
-  while node<>nil do
-  begin
-    data:=SceneTV.GetNodeData(node);
-    obj:=cbaseObj(data.data);
-    if obj is cbaseObj then
-    begin
-      ui.Addselect(obj);
-    end;
-    node:=SceneTV.GetNextSelected(node, true);
-    inc(i);
-  end;
-  ui.UpdateSelected;
-  ui.m_RenderScene.invalidaterect;
-end;
 
 procedure TSceneTVFrame.showScene;
 begin
@@ -599,6 +572,11 @@ begin
   end
   else
     cmeshobr(obj).material:=nil;
+end;
+
+procedure TSceneTVFrame.SceneTVClick(Sender: TObject);
+begin
+  showScene;
 end;
 
 procedure TSceneTVFrame.SetMeshProperty;

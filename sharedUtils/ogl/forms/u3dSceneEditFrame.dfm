@@ -36,7 +36,6 @@ object GlSceneEditFrame: TGlSceneEditFrame
     OnChange = SceneTVChange
     OnClick = SceneTVClick
     OnDblClick = SceneTVDblClick
-    ExplicitTop = -6
     Columns = <>
   end
   object ImageList_16: TImageList

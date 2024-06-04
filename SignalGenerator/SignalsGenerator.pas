@@ -124,12 +124,12 @@ procedure TGeneratorForm.FormCreate(Sender: TObject);
 begin
   events:=cEventList.create(self,true);
   lincFrames;
-  typecb.ItemIndex:=c_sinType;
-  FileMng:=cFileMng.Create(extractfiledir(Application.ExeName)+'\RecentFiles.ini',
+  typecb.ItemIndex:=c_sinType;  FileMng:=cFileMng.Create(extractfiledir(Application.ExeName)+'\RecentFiles.ini',
                     MainMenu1,c_RecentFiles,nil);
   signals:=cmerafile.create;
   signals.signalclass:=cBuffSignal;
   CreateEvents;
+
   // отображаем форму во весь экран
   WindowState:=wsMaximized;
   RequestAlign;

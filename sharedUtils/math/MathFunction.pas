@@ -910,8 +910,9 @@ end;
 
 function subVector(startp, endp: point3): point3;
 begin
-  startp := scalevectorp3(-1, startp);
-  result := SummVectorP3(startp, endp);
+  result.x := endp.x-startp.x;
+  result.y := endp.y-startp.y;
+  result.z := endp.z-startp.z;
 end;
 
 function subVector(startp, endp: Vector3f): Vector3f;
