@@ -48,10 +48,8 @@ function VectorCos(const v1, v2: Vector3f): GLFloat; overload;
 function VectorCos(const v1, v2: point3): GLFloat; overload;
 function CompareArray(const v1, v2: array of single): boolean;
 // аналог glOrtho
-procedure CreateOrthoMatrix(left, right, bottom, top, zNear, zFar: single;
-  var m: array of single);
-procedure CreateOrthoMatrixd(left, right, bottom, top, zNear, zFar: double;
-  var m: array of double);
+procedure CreateOrthoMatrix(left, right, bottom, top, zNear, zFar: single; var m: array of single);
+procedure CreateOrthoMatrixd(left, right, bottom, top, zNear, zFar: double; var m: array of double);
 // ------------------ возведение в степень --------------------------------------
 function extent(const x: single; const y: integer): double;
 // ------------------ округление ------------------------------------------------
@@ -73,11 +71,12 @@ Function SummVector(const v1: Vector3f; const v2: Vector3f): Vector3f;
 Function SummVectorP3(v1, v2: point3): point3;
 Function subVector(startp, endp: point3): point3; overload;
 Function subVector(startp, endp: Vector3f): Vector3f; overload;
+// принадлежность точки прямой
+Function isOnLine(l1,l2,p:point3):boolean;
 // -------------------- Определение пересечения прямых --------------------------
 Function LineCrossLine(const L1begin, L1end, L2begin, L2end: Vector3f;
   out Cross: Vector3f): boolean;overload;
-Function LineCrossLine(const L1begin, L1end, L2begin, L2end: point3;
-  out Cross: point3): boolean;overload;
+Function LineCrossLine(const L1begin, L1end, L2begin, L2end: point3;  out Cross: point3): boolean;overload;
 // растояние от точки до полигона. Возвращает True если есть растояние до плоскоксти внутри полигона
 Function PointToPlane(point,p1,p2,p3:point3; var cross:point3): boolean;
 // вычисление точки пересечения прямой l1,l2 и коробки определенной двумя противоположными вершинами
@@ -1090,6 +1089,23 @@ begin
   result.z := x * y1 - y * x1;
 end;
 
+Function isOnLine(l1,l2,p:point3):boolean;
+var
+  l, lp:point3;
+  k:double;
+begin
+  result:=false;
+  l:=SubP(l2,l1);
+  lp:=SubP(p,l1);
+  NormalizeVectorP3(l);
+  NormalizeVectorP3(lp);
+  k:=MultScalarP3(l, lp);
+  if (1-abs(k))<0.0000000001 then
+  begin
+    result:=true;
+  end;
+end;
+
 // -------------------- Определение пересечения прямых ----------------
 // Не работает!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Function LineCrossLine(const L1begin, L1end, L2begin, L2end: Vector3f;
@@ -1131,41 +1147,24 @@ end;
 Function LineCrossLine(const L1begin, L1end, L2begin, L2end: point3;
   out Cross: point3): boolean;
 var
-  i: word;
-  L1, L2: point3; // направляющие прямых
+  b:boolean;
+  L,L1, p: point3; // направляющие прямых
   t: single;
 begin
-  // - уравнение прямой (x-x0)/l1x = (y-y0)/l1y = (z-z0)/l1z = t
-  // x = x0+l1x*t;  y = y0+l1y*t; z = z0+l1z*t;
-  // Подставляем координаты одной прямой в другую
-  result := false;
-  L1.x := L1end.x - L1begin.x;
-  L1.y:= L1end.y - L1begin.y;
-  L1.z := L1end.z - L1begin.z;
-
-  L2.x := L2end.x - L2begin.x;
-  L2.y:= L2end.y - L2begin.y;
-  L2.z := L2end.z - L2begin.z;
-  // j:=0;
-  // for i:=0 to 2 do
-  // begin
-  // if L1[i]=0 then j:=j+1;
-  // end;
-  // Проверка на не параллельность
-  // Cross[0]:=(L1Begin[0]*L1[1]*L2[0]-L2Begin[0]*L2[1]*L1[0]+
-  // L2begin[1]*L1[0]*L2[0])/(L1[1]*L2[0]-L2[1]*L1[0]);
-  t := L1.x*L2.x+L1.y*L2.y+L1.z*L2.z;
-  t:=TruncTo(t, 4);
-  if (abs(t) = 1) then
-    exit;
-  result := true;
-  // Расчет параметра T
-  t := (L1begin.x+L1begin.y+L1begin.z-L2begin.x-L2begin.y-L2begin.z)/
-       (L2.x+L2.y+L2.z-L1.x-L1.y-L1.z);
-
-  Cross.x := L1begin.x + t * L1.x;
-  Cross.y := L1begin.y + t * L1.y;
-  Cross.z := L1begin.z + t * L1.z;
+  L1:=subVector(L1begin, L1end);
+  // вектор смещения к рандомной точке не лежащей на l1
+  l:=subVector(L2begin, L2end);
+  l.x:=(l.x+1)*2;
+  l.y:=(l.y+1)*3;
+  t:=MultScalarP3(l, L1);
+  if t=1 then
+  begin
+    l.x:=(l.x+1)*3;
+    l.y:=(l.y+1)*2;
+  end;
+  b:=LineCrossPlane(L1begin, L1end, L2begin, L2end, l, p);
+  result:=isOnLine(L1begin, L1end, p);
+  Cross:=p;
 end;
 
 Function PlaneIntersectLine(a, b, c, x, y: point3; var cp: point3): boolean;

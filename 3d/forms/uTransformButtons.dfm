@@ -1,14 +1,13 @@
 object TransformToolsFrame: TTransformToolsFrame
   Left = 0
   Top = 0
-  Width = 925
+  Width = 827
   Height = 286
   Align = alBottom
   Color = clMoneyGreen
   ParentColor = False
   TabOrder = 0
   TabStop = True
-  ExplicitTop = -2
   ExplicitWidth = 451
   object Label8: TLabel
     Left = 314

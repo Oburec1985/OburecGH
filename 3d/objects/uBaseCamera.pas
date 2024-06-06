@@ -2,8 +2,9 @@ unit uBaseCamera;
 
 interface
 uses
- Windows, Messages, OpenGL, Classes, MathFunction, uobject, uMatrix, math,
+ Windows, Messages, OpenGL, Classes, MathFunction, uobject, uMatrix, math, uCommonMath,
  usimpleobjects, uObjectTypes, umNode, uNode, uNodeObject, uCommonTypes, u3dTypes;
+
  Type
 
   cBaseCamera = class(cobject)
@@ -403,32 +404,32 @@ end;}
 procedure cBaseCamera.ZoomBound(b:tbound);
 var
   // bottom poly
-  p1,p2,p3,p4,
+  //p1,p2,p3,p4,
   // top poly
-  p5,p6,p7,p8,
+  //p5,p6,p7,p8,
+  //poly:integer;
 
-
+  p1,
   c, // центр баундбокса
-  sc, // отступ из центра в камеру
+  lp, // отступ из центра в камеру
   up,
   view, // вектор взгляд камеры
-  pos, // позиция камеры
+  pos, newpos, // позиция камеры
   cross // точка пересечения
   :point3;
-  insidebox:boolean;
-  poly:integer;
+  lb, insidebox:boolean;
   angel,dist, dist1:single;
 begin
   // ищем нижний полигон
   p1:=b.lo;
-  p2:=p1; p2.x:=b.hi.x;
-  p3:=p1; p2.z:=b.hi.z;
-  p4:=p2; p2.z:=b.hi.z;
+  //p2:=p1; p2.x:=b.hi.x;
+  //p3:=p1; p2.z:=b.hi.z;
+  //p4:=p2; p2.z:=b.hi.z;
   // верхний поли
-  p5:=p1; p5.y:=b.hi.y;
-  p6:=p2; p6.y:=b.hi.y;
-  p7:=p3; p7.y:=b.hi.y;
-  p8:=b.hi;
+  //p5:=p1; p5.y:=b.hi.y;
+  //p6:=p2; p6.y:=b.hi.y;
+  //p7:=p3; p7.y:=b.hi.y;
+  //p8:=b.hi;
 
   pos:=position;
 
@@ -438,28 +439,28 @@ begin
   c.z:=0.5*(b.hi.z+b.lo.z);
   // косинус угла векторов мишень и взгляд
   view:=getSight;
-  sc:=subVector(c, pos);
   // определяем сонаправленность
-  angel:=VectorCos(sc,view);
+  //lp:=subVector(pos, c);
+  //angel:=VectorCos(lp,view);
   // точка куда надо перенести камеру, чтобы сохранить ее ориентацию,
-  // но смотреть в центр объема
-  sc:=SummVectorP3(c, view);
+  // но смотреть в центр объема (смещяем позицию мишени вдоль вектора взгляда в обратном направлении)
+  // lp:=SubVectorP3(view, c);
   up:=getUp;
-  // точка в направлеии -up от мишени
-  sc:=subVector(c, view);
+  // точка в направлеии -up от мишени c-up
+  lp:=subVector(up, c);
   // точка пересечения взгляда и плоскости проходящей через центр объема
-  cross:=LineCrossPlane(pos, sc);
-
-  insidebox:=insideBox3d(sc, b.lo,b.hi);
-  position:=sc;
-  if insidebox then
-  begin
-
-  end
-  else
-  begin
-
-  end;
+  lb:=LineCrossLine(pos, SummVectorP3(pos, view), c, lp, cross);
+  // вектор смещения камеры
+  lp:=subVector(c, cross);
+  newpos:=SummVectorP3(pos, lp);
+  /// вписываем сферу с R=диагональ и положением C в 40 град
+  dist:=VectorLength(subVector(p1,c)); // длина диагонали (рад. сферы)
+  dist1:=dist/ sin(20*c_degtorad);
+  // отступ от центра мишени в сторону камеры на dist1
+  view:=scalevectorp3(dist1, view);
+  //NormalizeVectorP3(view);
+  pos:=subVector(view, c);
+  position:=pos;
 end;
 
 function cBaseCamera.GetTargetM:matrixgl;
