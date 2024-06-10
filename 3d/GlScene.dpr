@@ -12,7 +12,6 @@ uses
   uGlEventTypes in 'core\uGlEventTypes.pas',
   uUI in 'core\uUI.pas',
   uUiutils in 'tools\uUiutils.pas',
-  uselectools in 'tools\uselectools.pas',
   uCursors in '..\sharedUtils\utils\uCursors.pas',
   uConfigFile3d in 'tools\uConfigFile3d.pas',
   uObjectTypes in 'objects\uObjectTypes.pas',
@@ -67,7 +66,8 @@ uses
   uDeformerFrame in 'forms\uDeformerFrame.pas' {DeformerFrame: TFrame},
   uObjCtrFrame in 'forms\uObjCtrFrame.pas' {CtrlViewFrame: TFrame},
   uMatrix in '..\sharedUtils\math\uMatrix.pas',
-  u3dSceneEditFrame in '..\sharedUtils\ogl\forms\u3dSceneEditFrame.pas' {GlSceneEditFrame: TFrame};
+  u3dSceneEditFrame in '..\sharedUtils\ogl\forms\u3dSceneEditFrame.pas' {GlSceneEditFrame: TFrame},
+  uselectools in 'tools\uselectools.pas';
 
 {$R *.res}
 

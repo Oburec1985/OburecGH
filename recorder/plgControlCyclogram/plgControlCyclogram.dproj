@@ -219,7 +219,6 @@
 			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners\uObjFrameListener.pas"/>
 			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners\uPageFrameListener.pas"/>
 			<DCCReference Include="..\..\sharedUtils\math\uCommonMath.pas"/>
-			<DCCReference Include="..\..\3d\objects\uNodeObject.pas"/>
 			<DCCReference Include="..\..\sharedUtils\objects\uTreeNode.pas"/>
 			<DCCReference Include="forms\uTrigFrame.pas">
 				<Form>TrigFrame</Form>
@@ -486,6 +485,35 @@
 			<DCCReference Include="forms\uEditGlObjFrm.pas">
 				<Form>EditGLObjFrm</Form>
 			</DCCReference>
+			<DCCReference Include="..\..\3d\objects\TextureGL.pas"/>
+			<DCCReference Include="..\..\3d\objects\uBaseCamera.pas"/>
+			<DCCReference Include="..\..\3d\objects\uBaseDeformer.pas"/>
+			<DCCReference Include="..\..\3d\objects\uBaseModificator.pas"/>
+			<DCCReference Include="..\..\3d\objects\uFreeCamera.pas"/>
+			<DCCReference Include="..\..\3d\objects\uGroupObjects.pas"/>
+			<DCCReference Include="..\..\3d\objects\uLight.pas"/>
+			<DCCReference Include="..\..\3d\objects\uLoadSkin.pas"/>
+			<DCCReference Include="..\..\3d\objects\uMaterial.pas"/>
+			<DCCReference Include="..\..\3d\objects\uMesh.pas"/>
+			<DCCReference Include="..\..\3d\objects\uMeshData.pas"/>
+			<DCCReference Include="..\..\3d\objects\uMeshObr.pas"/>
+			<DCCReference Include="..\..\3d\objects\uMNode.pas"/>
+			<DCCReference Include="..\..\3d\objects\uModList.pas"/>
+			<DCCReference Include="..\..\3d\objects\uNode.pas"/>
+			<DCCReference Include="..\..\3d\objects\uNodeObject.pas"/>
+			<DCCReference Include="..\..\3d\objects\uObaFile.pas"/>
+			<DCCReference Include="..\..\3d\objects\uObject.pas"/>
+			<DCCReference Include="..\..\3d\objects\uObjectTypes.pas"/>
+			<DCCReference Include="..\..\3d\objects\uObrFile.pas"/>
+			<DCCReference Include="..\..\3d\objects\uQNode.pas"/>
+			<DCCReference Include="..\..\3d\objects\uSceneList.pas"/>
+			<DCCReference Include="..\..\3d\objects\uSceneMng.pas"/>
+			<DCCReference Include="..\..\3d\objects\uShape.pas"/>
+			<DCCReference Include="..\..\3d\objects\uSkin.pas"/>
+			<DCCReference Include="..\..\3d\objects\uTestObjects.pas"/>
+			<DCCReference Include="..\..\3d\objects\uVBOMesh.pas"/>
+			<DCCReference Include="..\..\3d\tools\uselectools.pas"/>
+			<DCCReference Include="..\..\3d\core\uClickFrListener.pas"/>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

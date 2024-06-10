@@ -19,6 +19,7 @@ uses
   windows,
   uEventList,
   uClickFrListener,
+  uDeformerFrame, //выбор вершин
   uTransformButtons,
   PathUtils,
   uglEventTypes;
@@ -36,6 +37,7 @@ type
     scene: string;
     // декорации на сцене. Объекты созданы без помощи idesigner
     mObjects: array of ceditobj;
+    DeformFrame:cEditFrameListener; // выбор вершин
     ClickFrame: cClickFrListener;
 
     fShowTransforms:boolean;
@@ -529,6 +531,9 @@ begin
   begin
     ClickFrame := cClickFrListener.Create(mUI, 'cClickFrListener');
     mUI.framelistener.add(ClickFrame);
+    DeformFrame:=cEditFrameListener.create(mUI,'cDeformFrListener');
+    mUI.framelistener.add(DeformFrame);
+    DeformFrame.LincScene(mUI);
   end;
 end;
 

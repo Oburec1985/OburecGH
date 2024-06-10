@@ -44,8 +44,18 @@ end;
 
 procedure TGlSceneEditFrame.SceneTVChange(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
+var
+  n:PVirtualNode;
+  d:PNodeData;
+  o:cNodeObject;
 begin
+  n:=SceneTV.GetFirstSelected(false);
   SceneTV.Repaint;
+  if n=nil then exit;
+  d:=SceneTV.GetNodeData(n);
+  o:=cNodeObject(d.data);
+  m_ui.selectobject(o, false);
+  m_ui.m_RenderScene.invalidaterect;
 end;
 
 procedure TGlSceneEditFrame.SceneTVClick(Sender: TObject);

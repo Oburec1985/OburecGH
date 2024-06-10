@@ -2,13 +2,13 @@ object SceneTVFrame: TSceneTVFrame
   Left = 0
   Top = 0
   Width = 590
-  Height = 708
+  Height = 602
   Align = alClient
   TabOrder = 0
   ExplicitHeight = 304
   object Splitter1: TSplitter
     Left = 0
-    Top = 219
+    Top = 113
     Width = 590
     Height = 3
     Cursor = crVSplit
@@ -20,7 +20,7 @@ object SceneTVFrame: TSceneTVFrame
     Left = 0
     Top = 29
     Width = 590
-    Height = 190
+    Height = 84
     Align = alClient
     Alignment = taRightJustify
     DragMode = dmAutomatic
@@ -35,7 +35,8 @@ object SceneTVFrame: TSceneTVFrame
     NodeDataSize = 32
     TabOrder = 0
     TreeOptions.SelectionOptions = [toExtendedFocus, toMiddleClickSelect, toMultiSelect, toRightClickSelect]
-    ExplicitHeight = 154
+    ExplicitTop = 85
+    ExplicitHeight = 134
     Columns = <
       item
         Position = 0
@@ -45,7 +46,7 @@ object SceneTVFrame: TSceneTVFrame
   end
   object ObjectPropertyScrollBox: TScrollBox
     Left = 0
-    Top = 222
+    Top = 116
     Width = 590
     Height = 486
     HorzScrollBar.ButtonSize = 10
@@ -70,22 +71,22 @@ object SceneTVFrame: TSceneTVFrame
       object Label9: TLabel
         Left = 7
         Top = 50
-        Width = 42
-        Height = 16
+        Width = 35
+        Height = 13
         Caption = #1056#1072#1079#1084#1077#1088
       end
       object Label2: TLabel
         Left = 188
         Top = 17
-        Width = 22
-        Height = 16
+        Width = 18
+        Height = 13
         Caption = #1058#1080#1087
       end
       object Label1: TLabel
         Left = 7
         Top = 19
-        Width = 23
-        Height = 16
+        Width = 19
+        Height = 13
         Caption = #1048#1084#1103
       end
       object DrawBoundsCheckBox: TCheckBox
@@ -101,7 +102,7 @@ object SceneTVFrame: TSceneTVFrame
         Left = 71
         Top = 46
         Width = 105
-        Height = 24
+        Height = 21
         TabOrder = 1
         Text = '0'
       end
@@ -109,14 +110,14 @@ object SceneTVFrame: TSceneTVFrame
         Left = 212
         Top = 16
         Width = 105
-        Height = 24
+        Height = 21
         TabOrder = 2
       end
       object NameE: TEdit
         Left = 71
         Top = 16
         Width = 105
-        Height = 24
+        Height = 21
         TabOrder = 3
       end
       object FreezCheckBox: TCheckBox
@@ -143,8 +144,8 @@ object SceneTVFrame: TSceneTVFrame
       object Label3: TLabel
         Left = 7
         Top = 14
-        Width = 37
-        Height = 16
+        Width = 32
+        Height = 13
         Caption = #1044#1083#1080#1085#1072
       end
       object DrawNormalCheckBox: TCheckBox
@@ -160,7 +161,7 @@ object SceneTVFrame: TSceneTVFrame
         Left = 67
         Top = 10
         Width = 105
-        Height = 24
+        Height = 21
         TabOrder = 1
         Text = '0'
       end
@@ -179,29 +180,29 @@ object SceneTVFrame: TSceneTVFrame
       object Label15: TLabel
         Left = 12
         Top = 16
-        Width = 150
-        Height = 16
+        Width = 128
+        Height = 13
         Caption = #1051#1086#1082#1072#1083#1100#1085#1072#1103' '#1084#1072#1090#1088#1080#1094#1072' Node'
       end
       object Label17: TLabel
         Left = 255
         Top = 16
-        Width = 179
-        Height = 16
+        Width = 152
+        Height = 13
         Caption = #1051#1086#1082#1072#1083#1100#1085#1072#1103' '#1084#1072#1090#1088#1080#1094#1072' LocalNode'
       end
       object Label18: TLabel
         Left = 12
         Top = 122
-        Width = 187
-        Height = 16
+        Width = 162
+        Height = 13
         Caption = #1056#1077#1079#1091#1083#1100#1090#1080#1088#1091#1102#1097#1072#1103' '#1084#1072#1090#1088#1080#1094#1072' Node'
       end
       object Label19: TLabel
         Left = 255
         Top = 122
-        Width = 216
-        Height = 16
+        Width = 186
+        Height = 13
         Caption = #1056#1077#1079#1091#1083#1100#1090#1080#1088#1091#1102#1097#1072#1103' '#1084#1072#1090#1088#1080#1094#1072' LocalNode'
       end
       object NodeMatrixLV: TBtnListView
@@ -391,68 +392,68 @@ object SceneTVFrame: TSceneTVFrame
         Caption = #1050#1072#1084#1077#1088#1072
         DesignSize = (
           578
-          101)
+          104)
         object Label10: TLabel
           Left = 24
           Top = 61
-          Width = 96
-          Height = 16
+          Width = 81
+          Height = 13
           Caption = #1052#1080#1096#1077#1085#1100' '#1082#1072#1084#1077#1088#1099
         end
         object Label6: TLabel
           Left = 209
           Top = 31
-          Width = 24
-          Height = 16
+          Width = 20
+          Height = 13
           Caption = 'FOV'
         end
         object Label7: TLabel
           Left = 208
           Top = 60
-          Width = 38
-          Height = 16
+          Width = 33
+          Height = 13
           Caption = 'Aspect'
         end
         object NearPlaneLabel: TLabel
           Left = 440
           Top = 14
-          Width = 58
-          Height = 16
+          Width = 49
+          Height = 13
           Caption = 'NearPlane'
         end
         object FarPlaneLabel: TLabel
           Left = 439
           Top = 38
-          Width = 50
-          Height = 16
+          Width = 42
+          Height = 13
           Caption = 'FarPlane'
         end
         object RightPlaneLabel: TLabel
           Left = 353
           Top = 38
-          Width = 29
-          Height = 16
+          Width = 25
+          Height = 13
           Caption = 'Right'
         end
         object LeftPlaneLabel: TLabel
           Left = 352
           Top = 14
-          Width = 21
-          Height = 16
+          Width = 19
+          Height = 13
           Caption = 'Left'
         end
         object BottomPlaneLabel: TLabel
           Left = 353
           Top = 88
-          Width = 40
-          Height = 16
+          Width = 34
+          Height = 13
           Caption = 'Bottom'
         end
         object TopPlaneLabel: TLabel
           Left = 352
           Top = 64
-          Width = 22
-          Height = 16
+          Width = 18
+          Height = 13
           Caption = 'Top'
         end
         object ActiveCheckBox: TCheckBox
@@ -467,7 +468,7 @@ object SceneTVFrame: TSceneTVFrame
           Left = 19
           Top = 180
           Width = 133
-          Height = 24
+          Height = 21
           Anchors = [akLeft, akBottom]
           TabOrder = 1
           Items.Strings = (
@@ -479,7 +480,7 @@ object SceneTVFrame: TSceneTVFrame
           Left = 153
           Top = 30
           Width = 54
-          Height = 26
+          Height = 22
           Increment = 1.000000000000000000
           TabOrder = 2
           Value = 45.000000000000000000
@@ -488,7 +489,7 @@ object SceneTVFrame: TSceneTVFrame
           Left = 153
           Top = 56
           Width = 54
-          Height = 26
+          Height = 22
           Increment = 0.100000001490116100
           TabOrder = 3
         end
@@ -496,7 +497,7 @@ object SceneTVFrame: TSceneTVFrame
           Left = 384
           Top = 9
           Width = 54
-          Height = 26
+          Height = 22
           Increment = 1.000000000000000000
           TabOrder = 4
           Value = 45.000000000000000000
@@ -505,7 +506,7 @@ object SceneTVFrame: TSceneTVFrame
           Left = 384
           Top = 34
           Width = 54
-          Height = 26
+          Height = 22
           Increment = 0.100000001490116100
           TabOrder = 5
         end
@@ -529,7 +530,7 @@ object SceneTVFrame: TSceneTVFrame
           Left = 298
           Top = 9
           Width = 54
-          Height = 26
+          Height = 22
           Increment = 1.000000000000000000
           TabOrder = 8
           Value = 45.000000000000000000
@@ -538,7 +539,7 @@ object SceneTVFrame: TSceneTVFrame
           Left = 298
           Top = 34
           Width = 54
-          Height = 26
+          Height = 22
           Increment = 0.100000001490116100
           TabOrder = 9
         end
@@ -546,7 +547,7 @@ object SceneTVFrame: TSceneTVFrame
           Left = 298
           Top = 59
           Width = 54
-          Height = 26
+          Height = 22
           Increment = 1.000000000000000000
           TabOrder = 10
           Value = 45.000000000000000000
@@ -555,7 +556,7 @@ object SceneTVFrame: TSceneTVFrame
           Left = 298
           Top = 84
           Width = 54
-          Height = 26
+          Height = 22
           Increment = 0.100000001490116100
           TabOrder = 11
         end
@@ -565,40 +566,40 @@ object SceneTVFrame: TSceneTVFrame
         ImageIndex = 1
         DesignSize = (
           578
-          101)
+          104)
         object Label11: TLabel
           Left = 7
           Top = 30
-          Width = 63
-          Height = 16
+          Width = 54
+          Height = 13
           Caption = #1043#1077#1086#1084#1077#1090#1088#1080#1103
         end
         object Label12: TLabel
           Left = 7
           Top = 49
-          Width = 35
-          Height = 16
+          Width = 30
+          Height = 13
           Caption = #1058#1086#1095#1082#1080
         end
         object Label13: TLabel
           Left = 7
           Top = 70
-          Width = 40
-          Height = 16
+          Width = 36
+          Height = 13
           Caption = #1050#1072#1088#1082#1072#1089
         end
         object MaterialLabel: TLabel
           Left = 157
           Top = 34
-          Width = 58
-          Height = 16
+          Width = 50
+          Height = 13
           Caption = #1052#1072#1090#1077#1088#1080#1072#1083
         end
         object DefaultColorLabel: TLabel
           Left = 178
           Top = 68
-          Width = 29
-          Height = 16
+          Width = 26
+          Height = 13
           Caption = #1062#1074#1077#1090
         end
         object DefColorPanel: TPanel
@@ -612,7 +613,7 @@ object SceneTVFrame: TSceneTVFrame
           Left = 213
           Top = -47
           Width = 133
-          Height = 24
+          Height = 21
           Anchors = [akLeft, akBottom]
           TabOrder = 1
           Items.Strings = (
@@ -650,12 +651,12 @@ object SceneTVFrame: TSceneTVFrame
         ImageIndex = 2
         DesignSize = (
           578
-          101)
+          104)
         object Label20: TLabel
           Left = 19
           Top = 17
-          Width = 44
-          Height = 16
+          Width = 38
+          Height = 13
           Caption = 'LightID:'
         end
         object EnableLightCheckBox: TCheckBox
@@ -671,7 +672,7 @@ object SceneTVFrame: TSceneTVFrame
           Left = 63
           Top = 14
           Width = 121
-          Height = 24
+          Height = 21
           TabOrder = 1
           Text = 'LightIDE'
         end
@@ -687,6 +688,7 @@ object SceneTVFrame: TSceneTVFrame
     ButtonWidth = 32
     Caption = 'ToolBar1'
     TabOrder = 2
+    ExplicitTop = 8
     object ApplyBtn: TToolButton
       Left = 0
       Top = 0

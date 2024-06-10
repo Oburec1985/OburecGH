@@ -1,7 +1,7 @@
 object TrfrmToolsFrame: TTrfrmToolsFrame
   Left = 0
   Top = 0
-  Width = 819
+  Width = 830
   Height = 142
   TabOrder = 0
   object Label9: TLabel
@@ -669,7 +669,7 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
   object ObjNameE: TEdit
     Left = 728
     Top = 29
-    Width = 106
+    Width = 88
     Height = 21
     TabOrder = 4
     Text = 'ObjNameE'

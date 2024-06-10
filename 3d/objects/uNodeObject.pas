@@ -40,7 +40,7 @@ type
   public
     constructor Create;override;
     destructor destroy;override;
-    // Управление движением объекта
+    // Управление движением объекта. Произвести расчет положения объекта
     procedure SetObjToWorld;virtual;
     // Работа с линковаными объектами
   public

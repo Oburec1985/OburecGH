@@ -56,7 +56,6 @@
 			<DCCReference Include="core\uGlEventTypes.pas"/>
 			<DCCReference Include="core\uUI.pas"/>
 			<DCCReference Include="tools\uUiutils.pas"/>
-			<DCCReference Include="tools\uselectools.pas"/>
 			<DCCReference Include="..\sharedUtils\utils\uCursors.pas"/>
 			<DCCReference Include="tools\uConfigFile3d.pas"/>
 			<DCCReference Include="objects\uObjectTypes.pas"/>
@@ -148,6 +147,7 @@
 				<Form>GlSceneEditFrame</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
+			<DCCReference Include="tools\uselectools.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

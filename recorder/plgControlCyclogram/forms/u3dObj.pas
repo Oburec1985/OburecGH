@@ -28,6 +28,7 @@ uses
   uMeasureBase,
   uPathMng,
   uMBaseControl, u3dSceneEditFrame,
+  uSkinFrame,
   uSceneMng;
 
 type
@@ -37,9 +38,11 @@ type
     RightGB: TGroupBox;
     RightSplitter: TSplitter;
     ErrorEdit: TEdit;
+    BotSplitter: TSplitter;
     procedure GLInitScene(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
+    M_camera:matrixgl;
     m_TransformToolsFrame: TTrfrmToolsFrame;
     m_EditFrame:TGlSceneEditFrame;
     fshowtools: boolean;
@@ -192,7 +195,11 @@ begin
   RightSplitter.Left:=RightSplitter.Left;
   RightGB.Realign;
   Realign;
-  //RightSplitter.
+
+  BotSplitter.Top:=BotSplitter.Top;
+  ToolsGB.Realign;
+  Realign;
+  BotSplitter.Color:=clBackground;
 end;
 
 procedure TObjFrm3d.loadscene(path: string);
@@ -233,9 +240,14 @@ begin
 end;
 
 procedure TObjFrm3d.GLInitScene(Sender: TObject);
+var
+  c:cbasecamera;
 begin
   initComponents;
   linkFrames;
+  c:=gl.mUI.scene.getactivecamera;
+  c.Node.setlocalTM(M_camera);
+  c.SetObjToWorld;
 end;
 
 function TObjFrm3d.MBasePath: string;
@@ -248,16 +260,24 @@ begin
 end;
 
 procedure TObjFrm3d.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  s:string;
+  c:cBaseCamera;
 begin
   inherited;
   a_pIni.WriteString(str, 'ScenePath', m_ScenePath);
   a_pIni.WriteString(str, 'SceneName', m_SceneName);
   a_pIni.WriteBool(str, 'ShowEditor', ShowTools);
+  c:=GL.mUI.scene.getactivecamera;
+  s:=matrixToStr(c.restm);
+  a_pIni.WriteString(str, 'CameraPos', s);
 end;
 
 procedure TObjFrm3d.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 var
-  basepath, path:string;
+  basepath, path, s:string;
+  m:MatrixGl;
+  c:cBaseCamera;
 begin
   inherited;
   m_ScenePath := a_pIni.ReadString(str, 'ScenePath', '');
@@ -290,6 +310,8 @@ begin
       ErrorEdit.Text:='Путь к БДИ не найден (ресурсы для загрузки 3д Сцены)';
     end;
   end;
+  s:=a_pIni.readString(str, 'CameraPos', '1;0;0;0;1;0;0;0;1;0;0;0');
+  M_camera:=StrToMatrix(s);
 end;
 
 procedure TObjFrm3d.SetShowTools(b: boolean);

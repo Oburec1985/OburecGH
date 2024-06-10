@@ -26,10 +26,13 @@ Type
   TFace = array of GlFace;
   TFaceC = array of GlFaceCard;
   TFaceFlagArray = array of word;
+
+function matrixToStr(m: MatrixGl): string;
+function StrToMatrix(str: string): MatrixGl;
 // перенос вершины pos в направлении dir на растояние distance
 // dir должен быть единичным
-function MovePoint(pos:point3; n_dir:point3; distance:single):point3;
-  // инициализировать массив значением p3
+function MovePoint(pos: point3; n_dir: point3; distance: single): point3;
+// инициализировать массив значением p3
 procedure InitP3Array(p3: point3; var ar: array of point3);
 // Узнать знак числа (или 0)
 function sign_(val: single): integer;
@@ -48,19 +51,21 @@ function VectorCos(const v1, v2: Vector3f): GLFloat; overload;
 function VectorCos(const v1, v2: point3): GLFloat; overload;
 function CompareArray(const v1, v2: array of single): boolean;
 // аналог glOrtho
-procedure CreateOrthoMatrix(left, right, bottom, top, zNear, zFar: single; var m: array of single);
-procedure CreateOrthoMatrixd(left, right, bottom, top, zNear, zFar: double; var m: array of double);
+procedure CreateOrthoMatrix(left, right, bottom, top, zNear, zFar: single;
+  var m: array of single);
+procedure CreateOrthoMatrixd(left, right, bottom, top, zNear, zFar: double;
+  var m: array of double);
 // ------------------ возведение в степень --------------------------------------
 function extent(const x: single; const y: integer): double;
 // ------------------ округление ------------------------------------------------
-function TruncTo(x: double; precision: Cardinal):double;
+function TruncTo(x: double; precision: Cardinal): double;
 // ------------------ Посчитать нормаль -----------------------------------------
 Procedure GetNormal(const Vertex1, Vertex2, Vertex3: Vector3f;
   var Normal: Vector3f); overload;
 Procedure GetNormal(const Vertex1, Vertex2, Vertex3: point3;
   var Normal: point3); overload;
-Function VectorLength(const v: Vector3f): GLFloat;overload;
-Function VectorLength(const v: point3): GLFloat;overload;
+Function VectorLength(const v: Vector3f): GLFloat; overload;
+Function VectorLength(const v: point3): GLFloat; overload;
 // --------------------- Нормировка вектора -----------------------------------
 Procedure NormalizeVector(var Normal: Vector3f);
 // --------------------- Нормировка вектора -----------------------------------
@@ -72,32 +77,40 @@ Function SummVectorP3(v1, v2: point3): point3;
 Function subVector(startp, endp: point3): point3; overload;
 Function subVector(startp, endp: Vector3f): Vector3f; overload;
 // принадлежность точки прямой
-Function isOnLine(l1,l2,p:point3):boolean;
+Function isOnLine(l1, l2, p: point3): boolean;
 // -------------------- Определение пересечения прямых --------------------------
 Function LineCrossLine(const L1begin, L1end, L2begin, L2end: Vector3f;
-  out Cross: Vector3f): boolean;overload;
-Function LineCrossLine(const L1begin, L1end, L2begin, L2end: point3;  out Cross: point3): boolean;overload;
+  out Cross: Vector3f): boolean; overload;
+Function LineCrossLine(const L1begin, L1end, L2begin, L2end: point3;
+  out Cross: point3): boolean; overload;
 // растояние от точки до полигона. Возвращает True если есть растояние до плоскоксти внутри полигона
-Function PointToPlane(point,p1,p2,p3:point3; var cross:point3): boolean;
+Function PointToPlane(point, p1, p2, p3: point3; var Cross: point3): boolean;
 // вычисление точки пересечения прямой l1,l2 и коробки определенной двумя противоположными вершинами
 // проверятся все пересечения с каждым из полигонов, затем определяется кратчайшее растояние и принадлежность точки пересечения прямой l1, l2
 // res = -1 если пересечения не было или возвращает номер полигона с которым было пересечение
-function lineCrossBound(b_lo, b_hi,l_start, l_end:point3; var res:integer):point3;
+function lineCrossBound(b_lo, b_hi, l_start, l_end: point3;
+  var res: integer): point3;
 // -------- Определение пересечения прямой и фейса ------------------------------
-Function LineCrossFace(const L1, L2, p1, p2, p3: Vector3f; out Cross: Vector3f): boolean; overload;
-Function LineCrossFace(const L1, L2, p1, p2, p3: point3; out Cross: point3)  : boolean; overload;
-Function LineCrossPoly(const L1, L2, p1, p2, p3, p4: point3; out Cross: point3)  : boolean; overload;
+Function LineCrossFace(const l1, l2, p1, p2, p3: Vector3f;
+  out Cross: Vector3f): boolean; overload;
+Function LineCrossFace(const l1, l2, p1, p2, p3: point3;
+  out Cross: point3): boolean; overload;
+Function LineCrossPoly(const l1, l2, p1, p2, p3, p4: point3;
+  out Cross: point3): boolean; overload;
 
 // точка пересечения прямой и плоскости
-Function LineCrossPlane(const L1, L2, p1, p2, p3: point3; out Cross: point3): boolean;overload;
+Function LineCrossPlane(const l1, l2, p1, p2, p3: point3;
+  out Cross: point3): boolean; overload;
 // L1- точка на прямой; N1- вектор параллельный прямой
-Function LineCrossPlaneN(const L1, N1, p1, p2, p3: point3; out Cross: point3): boolean;overload;
-function LineCrossPlane(const L1, L2, p1, p2, p3: Vector3f; out Cross: Vector3f)  : boolean;overload;
+Function LineCrossPlaneN(const l1, N1, p1, p2, p3: point3;
+  out Cross: point3): boolean; overload;
+function LineCrossPlane(const l1, l2, p1, p2, p3: Vector3f;
+  out Cross: Vector3f): boolean; overload;
 // проверка что вершина внутри полигона (проверка что она лежит в плоскости не производится!!!)
-function insidePoly(v, p1,p2,p3,p4:point3):boolean;
+function insidePoly(v, p1, p2, p3, p4: point3): boolean;
 // проверяет, что вершина внутри баунда
-function insideBox3d(const v, loCorner, hiCorner: Vector3f)  : boolean;overload;
-function insideBox3d(const v, loCorner, hiCorner: point3)  : boolean;overload;
+function insideBox3d(const v, loCorner, hiCorner: Vector3f): boolean; overload;
+function insideBox3d(const v, loCorner, hiCorner: point3): boolean; overload;
 // масштабировать вектор
 function scalevectorp3(s: single; v: point3): point3;
 //
@@ -131,10 +144,10 @@ function EqvF(v1: double; v2: double; precision: word): boolean;
 // Сравнить два вектора
 function EqvP3(p1: point3; p2: point3; precision: word): boolean;
 
-function FindInListLowBound(a: TList; obj: tobject; sortfunction: fcomparator)
-  : integer;
-function FindInListHiBound(a: TList; obj: tobject; sortfunction: fcomparator)
-  : integer;
+function FindInListLowBound(a: TList; obj: tobject;
+  sortfunction: fcomparator): integer;
+function FindInListHiBound(a: TList; obj: tobject;
+  sortfunction: fcomparator): integer;
 // получить вектор направленой по одной из осей x,y,z, длиной len.
 function GetAxis(len: single; index: integer): point3;
 // расстояние от точки до прямой
@@ -159,8 +172,9 @@ const
   identMatrix4d: MatrixGld = (1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
 
 implementation
+
 uses
-    u3dtypes;
+  u3dtypes;
 
 const
   axisX: point3 = (x: 1; y: 0; z: 0);
@@ -207,8 +221,8 @@ const
 
 function EqvF(v1: double; v2: double; precision: word): boolean;
 begin
-  v1:=TruncTo(v1, precision);
-  v2:=TruncTo(v2, precision);
+  v1 := TruncTo(v1, precision);
+  v2 := TruncTo(v2, precision);
   if (v2 - v1) = 0 then
     result := true
   else
@@ -263,7 +277,8 @@ begin
   end;
 end;
 
-function CopyStrSign(str: string; from: integer; count: integer; var endsymbol:integer): string;
+function CopyStrSign(str: string; from: integer; count: integer;
+  var endsymbol: integer): string;
 var
   s: string;
   i, toInd: integer;
@@ -277,21 +292,21 @@ begin
   begin
     s[i - from + 1] := str[i];
   end;
-  endsymbol:=toind;
+  endsymbol := toInd;
   result := truncZero(s);
 end;
 
 // версия для delphi с ansi строками
 function formatstr(val: single; sign: word): string;
 var
-  v,d:double;
+  v, d: double;
   str, strorder, dest, d_str: string;
   i, fromind, pos, len, order, pow, endpos: integer;
 begin
-  v:=val;
-  if val=0 then
+  v := val;
+  if val = 0 then
   begin
-    result:='0';
+    result := '0';
     exit;
   end;
   str := floattostr(val);
@@ -303,30 +318,29 @@ begin
   end;
   dest := str;
 
-
-  i:=system.pos('E',str);
-  if i=0 then
+  i := system.pos('E', str);
+  if i = 0 then
   begin
-    i:=system.pos('e',str);
+    i := system.pos('e', str);
   end;
-  if i<>0 then
+  if i <> 0 then
   begin
-    strorder:=Copy(str, i+1, length(str)-i);
-    pow:=abs(strtoint(strorder));
-    for I := 0 to pow - 1 do
+    strorder := Copy(str, i + 1, length(str) - i);
+    pow := abs(strtoint(strorder));
+    for i := 0 to pow - 1 do
     begin
-      val:=val*10;
+      val := val * 10;
     end;
     // пишем сюда результат
-    pos:=round(val);
-    result:=inttostr(pos)+'E-'+inttostr(pow);
-    if abs(v)<1 then
+    pos := round(val);
+    result := inttostr(pos) + 'E-' + inttostr(pow);
+    if abs(v) < 1 then
     begin
-      if strtoint(strorder)<0 then
+      if strtoint(strorder) < 0 then
       begin
-        if pow>sign+1 then
+        if pow > sign + 1 then
         begin
-          result:='0';
+          result := '0';
           exit;
         end;
       end;
@@ -350,12 +364,12 @@ begin
       begin
         // выделяем значащую подстроку (напрмимер если число -0.03456 и sign=3 ,
         // то результат 345)
-        if val<0 then
-          d:=TruncTo(val,fromind+sign-3)
+        if val < 0 then
+          d := TruncTo(val, fromind + sign - 3)
         else
-          d:=TruncTo(val,fromind+sign-2);
-        d_str:=floattostr(d);
-        endpos:=0;
+          d := TruncTo(val, fromind + sign - 2);
+        d_str := floattostr(d);
+        endpos := 0;
         dest := CopyStrSign(str, fromind, sign, endpos);
         len := length(dest);
         if str[1] = '-' then
@@ -363,14 +377,14 @@ begin
         order := fromind - pos - 1 + len;
         dest := dest + 'E-' + inttostr(order);
         setlength(str, endpos);
-        //val -0,003386140801
-        //d_str:=truncto(v, sign);
-        if length(dest)>length(d_str) then
+        // val -0,003386140801
+        // d_str:=truncto(v, sign);
+        if length(dest) > length(d_str) then
         begin
-          dest:=floattostr(d);
-          if length(str)<=length(dest) then
+          dest := floattostr(d);
+          if length(str) <= length(dest) then
           begin
-            dest:=str;
+            dest := str;
           end;
         end;
       end
@@ -395,31 +409,31 @@ end;
 // версия для delphi с ansi строками
 function formatstrNoE(val: single; sign: word): string;
 var
-  v,d:double;
+  v, d: double;
   str, strorder, dest, d_str: string;
-  i, fromind, sep_pos, pos,len, newlen,order, pow, endpos: integer;
+  i, fromind, sep_pos, pos, len, newlen, order, pow, endpos: integer;
 begin
-  v:=val;
-  if val=0 then
+  v := val;
+  if val = 0 then
   begin
-    result:='0';
+    result := '0';
     exit;
   end;
   str := floattostr(val);
   len := length(str);
 
-  sep_pos:=0;
-  for i:=1 to len do
+  sep_pos := 0;
+  for i := 1 to len do
   begin
     if (str[i] = '.') or (str[i] = ',') then
     begin
-      sep_pos:=i;
+      sep_pos := i;
       break;
     end;
   end;
-  if sep_pos=0 then
+  if sep_pos = 0 then
   begin
-    result:=str;
+    result := str;
     exit;
   end;
 
@@ -430,30 +444,29 @@ begin
   end;
   dest := str;
 
-
-  i:=system.pos('E',str);
-  if i=0 then
+  i := system.pos('E', str);
+  if i = 0 then
   begin
-    i:=system.pos('e',str);
+    i := system.pos('e', str);
   end;
-  if i<>0 then
+  if i <> 0 then
   begin
-    strorder:=Copy(str, i+1, length(str)-i);
-    pow:=abs(strtoint(strorder));
-    for I := 0 to pow - 1 do
+    strorder := Copy(str, i + 1, length(str) - i);
+    pow := abs(strtoint(strorder));
+    for i := 0 to pow - 1 do
     begin
-      val:=val*10;
+      val := val * 10;
     end;
     // пишем сюда результат
-    pos:=round(val);
-    result:=inttostr(pos)+'E-'+inttostr(pow);
-    if abs(v)<1 then
+    pos := round(val);
+    result := inttostr(pos) + 'E-' + inttostr(pow);
+    if abs(v) < 1 then
     begin
-      if strtoint(strorder)<0 then
+      if strtoint(strorder) < 0 then
       begin
-        if pow>sign+1 then
+        if pow > sign + 1 then
         begin
-          result:='0';
+          result := '0';
           exit;
         end;
       end;
@@ -466,10 +479,10 @@ begin
     sign := sign + 1;
   end;
   // отрезаем дробную часть
-  if sep_pos-1>=sign then
+  if sep_pos - 1 >= sign then
   begin
-    setlength(str,sep_pos-1);
-    result:=str;
+    setlength(str, sep_pos - 1);
+    result := str;
     exit;
   end
   else
@@ -488,27 +501,27 @@ begin
       begin
         // выделяем значащую подстроку (напрмимер если число -0.03456 и sign=3 ,
         // то результат 345)
-        if val<0 then
-          d:=TruncTo(val,fromind+sign-4)
+        if val < 0 then
+          d := TruncTo(val, fromind + sign - 4)
         else
-          d:=TruncTo(val,fromind+sign-3);
-        d_str:=floattostr(d);
-        //str:=FloatToStr(val);
-        //d_str:=Format('%f',[val,sign]);
-        result:=d_str;
+          d := TruncTo(val, fromind + sign - 3);
+        d_str := floattostr(d);
+        // str:=FloatToStr(val);
+        // d_str:=Format('%f',[val,sign]);
+        result := d_str;
         exit;
       end
     end
     else
     // елси значащие цифры есть после запятой 50.35 значащих цифр 3
     begin
-      newlen:=sign+1;
-      if (str[newlen]=',') or (str[newlen]='.') then
+      newlen := sign + 1;
+      if (str[newlen] = ',') or (str[newlen] = '.') then
         dec(newlen);
-      if newlen>len then
-        newlen:=len;
-      setlength(str,newlen);
-      result:=str;
+      if newlen > len then
+        newlen := len;
+      setlength(str, newlen);
+      result := str;
       exit;
     end;
   end;
@@ -562,10 +575,43 @@ end;
   result:=floattostr(val);
   end; }
 
-function MovePoint(pos:point3; n_dir:point3; distance:single):point3;
+function matrixToStr(m: MatrixGl): string;
+var
+  i: integer;
 begin
-  n_dir:=scalevectorp3(distance, n_dir);
-  result:=SummVectorP3(pos,n_dir);
+  result := floattostr(m[0]) + ';' + floattostr(m[1]) + ';' + floattostr(m[2])
+    + ';' + floattostr(m[4]) + ';' + floattostr(m[5]) + ';' + floattostr(m[6])
+    + ';' + floattostr(m[8]) + ';' + floattostr(m[9]) + ';' + floattostr(m[10])
+    + ';' + floattostr(m[12]) + ';' + floattostr(m[13]) + ';' + floattostr
+    (m[14]);
+end;
+
+function StrToMatrix(str: string): MatrixGl;
+var
+  i, ind: integer;
+begin
+  result[0] := strtofloat(getSubStrByIndex(str, ';', 1, 0));
+  result[1] := strtofloat(getSubStrByIndex(str, ';', 1, 1));
+  result[2] := strtofloat(getSubStrByIndex(str, ';', 1, 2));
+  result[3] := 0;
+  result[4] := strtofloat(getSubStrByIndex(str, ';', 1, 3));
+  result[5] := strtofloat(getSubStrByIndex(str, ';', 1, 4));
+  result[6] := strtofloat(getSubStrByIndex(str, ';', 1, 5));
+  result[7] := 0;
+  result[8] := strtofloat(getSubStrByIndex(str, ';', 1, 6));
+  result[9] := strtofloat(getSubStrByIndex(str, ';', 1, 7));
+  result[10] := strtofloat(getSubStrByIndex(str, ';', 1, 8));
+  result[11] := 0;
+  result[12] := strtofloat(getSubStrByIndex(str, ';', 1, 9));
+  result[13] := strtofloat(getSubStrByIndex(str, ';', 1, 10));
+  result[14] := strtofloat(getSubStrByIndex(str, ';', 1, 11));
+  result[15] := 1;
+end;
+
+function MovePoint(pos: point3; n_dir: point3; distance: single): point3;
+begin
+  n_dir := scalevectorp3(distance, n_dir);
+  result := SummVectorP3(pos, n_dir);
 end;
 
 procedure InitP3Array(p3: point3; var ar: array of point3);
@@ -580,8 +626,8 @@ begin
 end;
 
 // находит в массиве элемент слева от элемента с заданным x
-function FindInListLowBound(a: TList; obj: tobject; sortfunction: fcomparator)
-  : integer;
+function FindInListLowBound(a: TList; obj: tobject;
+  sortfunction: fcomparator): integer;
 var
   b: boolean;
   len, range, curind, left, right: integer;
@@ -649,8 +695,8 @@ begin
 end;
 
 // находит в массиве элемент справа от элемента с заданным x
-function FindInListHiBound(a: TList; obj: tobject; sortfunction: fcomparator)
-  : integer;
+function FindInListHiBound(a: TList; obj: tobject;
+  sortfunction: fcomparator): integer;
 var
   b: boolean;
   len, range, curind, left, right: integer;
@@ -865,7 +911,7 @@ begin
     result := -1;
   end;
   angel := abs(angel);
-  angel:=TruncTo(angel, 4);
+  angel := TruncTo(angel, 4);
   if (angel = 0) or (angel = 90) or (angel = 270) then
     result := 0;
 end;
@@ -875,7 +921,7 @@ var
   v: single;
 begin
   v := val;
-  val:=TruncTo(val, 4);
+  val := TruncTo(val, 4);
   if val = 0 then
     result := 0
   else
@@ -909,9 +955,9 @@ end;
 
 function subVector(startp, endp: point3): point3;
 begin
-  result.x := endp.x-startp.x;
-  result.y := endp.y-startp.y;
-  result.z := endp.z-startp.z;
+  result.x := endp.x - startp.x;
+  result.y := endp.y - startp.y;
+  result.z := endp.z - startp.z;
 end;
 
 function subVector(startp, endp: Vector3f): Vector3f;
@@ -962,8 +1008,8 @@ Procedure DrawAxis;
 const
   Axis: array [0 .. 17] of GLFloat = (0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0,
     0, 0, 0, 2);
-  c_Colors: array [0 .. 17] of GLFloat =
-    (1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1);
+  c_Colors: array [0 .. 17] of GLFloat = (1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0,
+    0, 0, 1, 0, 0, 1);
 Begin
   // Рисуем оси координат
   glEnableClientState(GL_COLOR_ARRAY);
@@ -1005,14 +1051,14 @@ end;
   end; }
 
 // ------------------ округление ---------------------------------------------
-function TruncTo(x: double; precision: Cardinal):double;
+function TruncTo(x: double; precision: Cardinal): double;
 var
   mult: double;
   i: word;
 begin
-  if precision=0 then
+  if precision = 0 then
   begin
-    result:=round(x);
+    result := round(x);
     exit;
   end;
   mult := 1;
@@ -1089,20 +1135,20 @@ begin
   result.z := x * y1 - y * x1;
 end;
 
-Function isOnLine(l1,l2,p:point3):boolean;
+Function isOnLine(l1, l2, p: point3): boolean;
 var
-  l, lp:point3;
-  k:double;
+  l, lp: point3;
+  k: double;
 begin
-  result:=false;
-  l:=SubP(l2,l1);
-  lp:=SubP(p,l1);
+  result := false;
+  l := SubP(l2, l1);
+  lp := SubP(p, l1);
   NormalizeVectorP3(l);
   NormalizeVectorP3(lp);
-  k:=MultScalarP3(l, lp);
-  if (1-abs(k))<0.0000000001 then
+  k := MultScalarP3(l, lp);
+  if (1 - abs(k)) < 0.0000000001 then
   begin
-    result:=true;
+    result := true;
   end;
 end;
 
@@ -1112,7 +1158,7 @@ Function LineCrossLine(const L1begin, L1end, L2begin, L2end: Vector3f;
   out Cross: Vector3f): boolean;
 var
   i: word;
-  L1, L2: array [0 .. 2] of single; // направляющие прямых
+  l1, l2: array [0 .. 2] of single; // направляющие прямых
   t: single;
 begin
   // - уравнение прямой (x-x0)/l1x = (y-y0)/l1y = (z-z0)/l1z = t
@@ -1121,8 +1167,8 @@ begin
   result := false;
   for i := 0 to 2 do
   begin
-    L1[i] := L1end[i] - L1begin[i];
-    L2[i] := L2end[i] - L2begin[i];
+    l1[i] := L1end[i] - L1begin[i];
+    l2[i] := L2end[i] - L2begin[i];
   end;
   // j:=0;
   // for i:=0 to 2 do
@@ -1132,39 +1178,39 @@ begin
   // Проверка на не параллельность
   // Cross[0]:=(L1Begin[0]*L1[1]*L2[0]-L2Begin[0]*L2[1]*L1[0]+
   // L2begin[1]*L1[0]*L2[0])/(L1[1]*L2[0]-L2[1]*L1[0]);
-  t := L1[0] * L2[0] + L1[1] * L2[1] + L1[2] * L2[2];
-  t:=TruncTo(t, 4);
+  t := l1[0] * l2[0] + l1[1] * l2[1] + l1[2] * l2[2];
+  t := TruncTo(t, 4);
   if (abs(t) = 1) then
     exit;
   result := true;
   // Расчет параметра T
   t := (L1begin[0] + L1begin[1] + L1begin[2] - L2begin[0] - L2begin[1] - L2begin
-      [2]) / (L2[0] + L2[1] + L2[2] - L1[0] - L1[1] - L1[2]);
+      [2]) / (l2[0] + l2[1] + l2[2] - l1[0] - l1[1] - l1[2]);
   for i := 0 to 2 do
-    Cross[i] := L1begin[i] + t * L1[i];
+    Cross[i] := L1begin[i] + t * l1[i];
 end;
 
 Function LineCrossLine(const L1begin, L1end, L2begin, L2end: point3;
   out Cross: point3): boolean;
 var
-  b:boolean;
-  L,L1, p: point3; // направляющие прямых
+  b: boolean;
+  l, l1, p: point3; // направляющие прямых
   t: single;
 begin
-  L1:=subVector(L1begin, L1end);
+  l1 := subVector(L1begin, L1end);
   // вектор смещения к рандомной точке не лежащей на l1
-  l:=subVector(L2begin, L2end);
-  l.x:=(l.x+1)*2;
-  l.y:=(l.y+1)*3;
-  t:=MultScalarP3(l, L1);
-  if t=1 then
+  l := subVector(L2begin, L2end);
+  l.x := (l.x + 1) * 2;
+  l.y := (l.y + 1) * 3;
+  t := MultScalarP3(l, l1);
+  if t = 1 then
   begin
-    l.x:=(l.x+1)*3;
-    l.y:=(l.y+1)*2;
+    l.x := (l.x + 1) * 3;
+    l.y := (l.y + 1) * 2;
   end;
-  b:=LineCrossPlane(L1begin, L1end, L2begin, L2end, l, p);
-  result:=isOnLine(L1begin, L1end, p);
-  Cross:=p;
+  b := LineCrossPlane(L1begin, L1end, L2begin, L2end, l, p);
+  result := isOnLine(L1begin, L1end, p);
+  Cross := p;
 end;
 
 Function PlaneIntersectLine(a, b, c, x, y: point3; var cp: point3): boolean;
@@ -1194,15 +1240,17 @@ begin
   end;
 end;
 
-Function LineCrossPlaneN(const L1, N1, p1, p2, p3: point3; out Cross: point3): boolean;
+Function LineCrossPlaneN(const l1, N1, p1, p2, p3: point3;
+  out Cross: point3): boolean;
 var
-  l2:point3;
+  l2: point3;
 begin
-  l2:=SummVectorP3(l1,n1);
-  result:=LineCrossPlane(L1, L2, p1, p2, p3, Cross);
+  l2 := SummVectorP3(l1, N1);
+  result := LineCrossPlane(l1, l2, p1, p2, p3, Cross);
 end;
 
-Function LineCrossPlane(const L1, L2, p1, p2, p3: point3; out Cross: point3): boolean;
+Function LineCrossPlane(const l1, l2, p1, p2, p3: point3;
+  out Cross: point3): boolean;
 var
   Normal: point3; // нормаль к фейсу
   d, t: single; // коеф.-ы в уравнении
@@ -1211,25 +1259,26 @@ begin
   // вычисляем составляющие вектора нормали
   GetNormal(p1, p2, p3, Normal);
   // проверка на не перпендикулярность
-  t := Normal.x * (L2.x - L1.x) + Normal.y * (L2.y - L1.y) + Normal.z *
-    (L2.z - L1.z);
+  t := Normal.x * (l2.x - l1.x) + Normal.y * (l2.y - l1.y) + Normal.z *
+    (l2.z - l1.z);
   d := t;
-  d:=TruncTo(d, 4);
+  d := TruncTo(d, 4);
   if d = 0 then
     exit;
   // высчитываем оставшийся коэффициент (A*x+B*y+C*z+D=0 уравнение плоскости)
   d := -(Normal.x * p1.x + Normal.y * p1.y + Normal.z * p1.z);
   // находим параметр T   x/nx=y/ny=z/nz=T (коеф. пропорц. координат прямой)
-  t := -(Normal.x * L1.x + Normal.y * L1.y + Normal.z * L1.z + d) / t;
+  t := -(Normal.x * l1.x + Normal.y * l1.y + Normal.z * l1.z + d) / t;
   // вычисление координат - подставляем T в уравнение прямой
-  Cross.x := L1.x + t * (L2.x - L1.x);
-  Cross.y := L1.y + t * (L2.y - L1.y);
-  Cross.z := L1.z + t * (L2.z - L1.z);
-  result:=true;
+  Cross.x := l1.x + t * (l2.x - l1.x);
+  Cross.y := l1.y + t * (l2.y - l1.y);
+  Cross.z := l1.z + t * (l2.z - l1.z);
+  result := true;
 end;
 
 // -------- Определение пересечения прямой и плоскости -------------------------
-function LineCrossPlane(const L1, L2, p1, p2, p3: Vector3f; out Cross: Vector3f)  : boolean;
+function LineCrossPlane(const l1, l2, p1, p2, p3: Vector3f;
+  out Cross: Vector3f): boolean;
 var
   Normal: Vector3f; // нормаль к фейсу
   d, t: single; // коеф.-ы в уравнении
@@ -1238,196 +1287,204 @@ begin
   // вычисляем составляющие вектора нормали
   GetNormal(p1, p2, p3, Normal);
   // проверка на не перпендикулярность
-  t := Normal[0] * (L2[0] - L1[0]) + Normal[1] * (L2[1] - L1[1]) + Normal[2] *
-    (L2[2] - L1[2]);
+  t := Normal[0] * (l2[0] - l1[0]) + Normal[1] * (l2[1] - l1[1]) + Normal[2] *
+    (l2[2] - l1[2]);
   d := t;
-  d:=TruncTo(d, 4);
+  d := TruncTo(d, 4);
   if d = 0 then
     exit;
   // высчитываем оставшийся коэффициент (A*x+B*y+C*z+D=0 уравнение плоскости)
   d := -(Normal[0] * p1[0] + Normal[1] * p1[1] + Normal[2] * p1[2]);
   // находим параметр T   x/nx=y/ny=z/nz=T (коеф. пропорц. координат прямой)
-  t := -(Normal[0] * L1[0] + Normal[1] * L1[1] + Normal[2] * L1[2] + d) / t;
+  t := -(Normal[0] * l1[0] + Normal[1] * l1[1] + Normal[2] * l1[2] + d) / t;
   // вычисление координат - подставляем T в уравнение прямой
-  Cross[0] := L1[0] + t * (L2[0] - L1[0]);
-  Cross[1] := L1[1] + t * (L2[1] - L1[1]);
-  Cross[2] := L1[2] + t * (L2[2] - L1[2]);
+  Cross[0] := l1[0] + t * (l2[0] - l1[0]);
+  Cross[1] := l1[1] + t * (l2[1] - l1[1]);
+  Cross[2] := l1[2] + t * (l2[2] - l1[2]);
 end;
 
-function lineCrossBound(b_lo, b_hi, l_start, l_end:point3;var res:integer):point3;
+function lineCrossBound(b_lo, b_hi, l_start, l_end: point3;
+  var res: integer): point3;
 var
   c, // центр баундбокса
   view, // вектор взгляд камеры
   // bottom poly
-  p1,p2,p3,p4,
+  p1, p2, p3, p4,
   // top poly
-  p5,p6,p7,p8,
-  cross1,cross, // точка пересечения
+  p5, p6, p7, p8, cross1, Cross, // точка пересечения
   v // вектор из центра в cross
-  :point3;
-  b:tbound;
+    : point3;
+  b: tbound;
   count, // число пересечений
-  i, ifirst :integer; // номер полигона с которым было первое пересечение
-  insidebox, bool:boolean;
-  l1,l2:single;
+  i, ifirst: integer; // номер полигона с которым было первое пересечение
+  insidebox, bool: boolean;
+  l1, l2: single;
 begin
-  c.x:=0.5*(b_hi.x+b_lo.x);
-  c.y:=0.5*(b_hi.y+b_lo.y);
-  c.z:=0.5*(b_hi.z+b_lo.z);
+  c.x := 0.5 * (b_hi.x + b_lo.x);
+  c.y := 0.5 * (b_hi.y + b_lo.y);
+  c.z := 0.5 * (b_hi.z + b_lo.z);
   // ищем нижний полигон
-  p1:=b_lo;
-  p2:=p1; p2.x:=b_hi.x;
-  p3:=p1; p2.z:=b_hi.z;
-  p4:=p2; p2.z:=b_hi.z;
+  p1 := b_lo;
+  p2 := p1;
+  p2.x := b_hi.x;
+  p3 := p1;
+  p2.z := b_hi.z;
+  p4 := p2;
+  p2.z := b_hi.z;
   // верхний поли
-  p5:=p1; p5.y:=b_hi.y;
-  p6:=p2; p6.y:=b_hi.y;
-  p7:=p3; p7.y:=b_hi.y;
-  p8:=b_hi;
-  view:=subVector(l_end, l_start);
+  p5 := p1;
+  p5.y := b_hi.y;
+  p6 := p2;
+  p6.y := b_hi.y;
+  p7 := p3;
+  p7.y := b_hi.y;
+  p8 := b_hi;
+  view := subVector(l_end, l_start);
   NormalizeVectorP3(view);
-  b.lo:=b_lo;
-  b.hi:=b_hi;
-  //insidebox:=insideBox3d(l_start, b);
+  b.lo := b_lo;
+  b.hi := b_hi;
+  // insidebox:=insideBox3d(l_start, b);
   // если снаружи
-  count:=0;
-  ifirst:=-1;
-  bool:=LineCrossPoly(l_start, l_end, p1,p5,p6,p2, cross);
+  count := 0;
+  ifirst := -1;
+  bool := LineCrossPoly(l_start, l_end, p1, p5, p6, p2, Cross);
   if bool then
   begin
     inc(count);
-    cross1:=cross;
-    i:=0;
-    v:=subVector(c, cross);
-    l1:=VectorLength(v);
-    ifirst:=0;
+    cross1 := Cross;
+    i := 0;
+    v := subVector(c, Cross);
+    l1 := VectorLength(v);
+    ifirst := 0;
   end;
-  bool:=LineCrossPoly(l_start, l_end, p1,p5,p7,p3, cross);
+  bool := LineCrossPoly(l_start, l_end, p1, p5, p7, p3, Cross);
   if bool then
   begin
     inc(count);
-    i:=1;
-    v:=subVector(c, cross);
-    if ifirst>-1 then
+    i := 1;
+    v := subVector(c, Cross);
+    if ifirst > -1 then
     begin
-      cross1:=cross;
-      l1:=VectorLength(v)
+      cross1 := Cross;
+      l1 := VectorLength(v)
     end
     else
     begin
-      l2:=VectorLength(v);
-      ifirst:=i;
+      l2 := VectorLength(v);
+      ifirst := i;
     end;
   end;
-  bool:=LineCrossPoly(l_start, l_end, p3,p7,p8,p4, cross);
+  bool := LineCrossPoly(l_start, l_end, p3, p7, p8, p4, Cross);
   if bool then
   begin
     inc(count);
-    i:=2;
-    v:=subVector(c, cross);
-    if ifirst>-1 then
+    i := 2;
+    v := subVector(c, Cross);
+    if ifirst > -1 then
     begin
-      cross1:=cross;
-      l1:=VectorLength(v)
+      cross1 := Cross;
+      l1 := VectorLength(v)
     end
     else
     begin
-      l2:=VectorLength(v);
-      ifirst:=i;
+      l2 := VectorLength(v);
+      ifirst := i;
     end;
   end;
-  bool:=LineCrossPoly(l_start, l_end, p2,p6,p8,p4, cross);
+  bool := LineCrossPoly(l_start, l_end, p2, p6, p8, p4, Cross);
   if bool then
   begin
     inc(count);
-    i:=3;
-    v:=subVector(c, cross);
-    if ifirst>-1 then
+    i := 3;
+    v := subVector(c, Cross);
+    if ifirst > -1 then
     begin
-      cross1:=cross;
-      l1:=VectorLength(v)
+      cross1 := Cross;
+      l1 := VectorLength(v)
     end
     else
     begin
-      l2:=VectorLength(v);
-      ifirst:=i;
+      l2 := VectorLength(v);
+      ifirst := i;
     end;
   end;
-  bool:=LineCrossPoly(l_start, l_end, p5,p7,p8,p6, cross);
+  bool := LineCrossPoly(l_start, l_end, p5, p7, p8, p6, Cross);
   if bool then
   begin
     inc(count);
-    i:=4;
-    v:=subVector(c, cross);
-    if ifirst>-1 then
+    i := 4;
+    v := subVector(c, Cross);
+    if ifirst > -1 then
     begin
-      cross1:=cross;
-      l1:=VectorLength(v)
+      cross1 := Cross;
+      l1 := VectorLength(v)
     end
     else
     begin
-      l2:=VectorLength(v);
-      ifirst:=i;
+      l2 := VectorLength(v);
+      ifirst := i;
     end;
   end;
-  bool:=LineCrossPoly(l_start, l_end, p1,p3,p4,p2, cross);
+  bool := LineCrossPoly(l_start, l_end, p1, p3, p4, p2, Cross);
   if bool then
   begin
     inc(count);
-    i:=5;
-    v:=subVector(c, cross);
-    if ifirst>-1 then
+    i := 5;
+    v := subVector(c, Cross);
+    if ifirst > -1 then
     begin
-      cross1:=cross;
-      l1:=VectorLength(v)
+      cross1 := Cross;
+      l1 := VectorLength(v)
     end
     else
     begin
-      l2:=VectorLength(v);
-      ifirst:=i;
+      l2 := VectorLength(v);
+      ifirst := i;
     end;
   end;
-  res:=-1;
-  if count>0 then
+  res := -1;
+  if count > 0 then
   begin
-    res:=i;
-    if count=1 then
+    res := i;
+    if count = 1 then
     begin
-      result:=cross1;
+      result := cross1;
     end
     else
     begin
-      if l1<l2 then
-        result:=cross1
+      if l1 < l2 then
+        result := cross1
       else
-        result:=cross;
+        result := Cross;
     end;
   end;
 end;
 
-Function PointToPlane(point,p1,p2,p3:point3; var cross:point3): boolean;
+Function PointToPlane(point, p1, p2, p3: point3; var Cross: point3): boolean;
 var
-  v1, v2, n:point3;
+  v1, v2, n: point3;
 begin
   // находим нормаль к полигону
-  v1:=subVector(p1,p2);
-  v2:=subVector(p1,p3);
+  v1 := subVector(p1, p2);
+  v2 := subVector(p1, p3);
   // вектор нормаль к полигон
-  n:=MultVectorP3(v1,v2);
-  ///n:=
+  n := MultVectorP3(v1, v2);
+  /// n:=
 end;
 
-Function LineCrossPoly(const L1, L2, p1, p2, p3, p4: point3; out Cross: point3)  : boolean;
+Function LineCrossPoly(const l1, l2, p1, p2, p3, p4: point3;
+  out Cross: point3): boolean;
 begin
-  result:=LineCrossFace(L1, L2, p1, p2, p3, Cross);
+  result := LineCrossFace(l1, l2, p1, p2, p3, Cross);
   if not result then
   begin
-    result:=insidepoly(cross, p1, p2, p3, p4);
+    result := insidePoly(Cross, p1, p2, p3, p4);
   end;
 end;
 
 /// нет проверки что вершина лежит на прямой L1, L2
-function LineCrossFace(const L1, L2, p1, p2, p3: Vector3f; out Cross: Vector3f)  : boolean;
+function LineCrossFace(const l1, l2, p1, p2, p3: Vector3f;
+  out Cross: Vector3f): boolean;
 var
   Normal: Vector3f; // направляющая (искомая точка -> middle)
   d, t: single; // коеф.-ы в уравнении
@@ -1439,20 +1496,20 @@ begin
   GetNormal(p1, p2, p3, Normal);
   // NormalizeVector(Normal) ;
   // проверка на не перпендикулярность
-  t := Normal[0] * (L2[0] - L1[0]) + Normal[1] * (L2[1] - L1[1]) + Normal[2] *
-    (L2[2] - L1[2]);
+  t := Normal[0] * (l2[0] - l1[0]) + Normal[1] * (l2[1] - l1[1]) + Normal[2] *
+    (l2[2] - l1[2]);
   d := t;
-  d:=TruncTo(d, 4);
+  d := TruncTo(d, 4);
   if d = 0 then
     exit;
   // высчитываем оставшийся коэффициент (A*x+B*y+C*z+D=0 уравнение плоскости)
   d := -(Normal[0] * p1[0] + Normal[1] * p1[1] + Normal[2] * p1[2]);
   // находим параметр T   x/nx=y/ny=z/nz=T (коеф. пропорц. координат прямой)
-  t := -(Normal[0] * L1[0] + Normal[1] * L1[1] + Normal[2] * L1[2] + d) / t;
+  t := -(Normal[0] * l1[0] + Normal[1] * l1[1] + Normal[2] * l1[2] + d) / t;
   // вычисление координат - подставляем T в уравнение прямой
-  Cross[0] := L1[0] + t * (L2[0] - L1[0]);
-  Cross[1] := L1[1] + t * (L2[1] - L1[1]);
-  Cross[2] := L1[2] + t * (L2[2] - L1[2]);
+  Cross[0] := l1[0] + t * (l2[0] - l1[0]);
+  Cross[1] := l1[1] + t * (l2[1] - l1[1]);
+  Cross[2] := l1[2] + t * (l2[2] - l1[2]);
   // ----------- Определяем лежит ли точка пересечения внутри фейса -----------
   // Если точка лежит внутри полигона, то сумма углов между всеми векторами к вер
   // шинам будет 360 градусов
@@ -1466,13 +1523,13 @@ begin
     result := true;
 end;
 
-function LineCrossFace(const L1, L2, p1, p2, p3: point3; out Cross: point3)
-  : boolean;
+function LineCrossFace(const l1, l2, p1, p2, p3: point3;
+  out Cross: point3): boolean;
 var
   l1_, l2_, p1_, p2_, p3_, cross_: Vector3f;
 begin
-  l1_ := P3toV(L1);
-  l2_ := P3toV(L2);
+  l1_ := P3toV(l1);
+  l2_ := P3toV(l2);
   p1_ := P3toV(p1);
   p2_ := P3toV(p2);
   p3_ := P3toV(p3);
@@ -1480,10 +1537,10 @@ begin
   Cross := VtoP3(cross_);
 end;
 
-function insidePoly(v, p1,p2,p3,p4:point3):boolean;
+function insidePoly(v, p1, p2, p3, p4: point3): boolean;
 var
-  v1,v2,v3, v4:point3;
-  a:single;
+  v1, v2, v3, v4: point3;
+  a: single;
 begin
   v1 := subVector(v, p1);
   v2 := subVector(v, p2);
@@ -1493,80 +1550,83 @@ begin
   a := GetAngel(v2, v3, true) + a;
   a := GetAngel(v3, v4, true) + a;
   a := GetAngel(v4, v1, true) + a;
-  if abs(A - 2 * pi) < 0.00001 then
+  if abs(a - 2 * pi) < 0.00001 then
     result := true;
 end;
 
-
-
-function insideBox3d(const v, loCorner, hiCorner: point3)  : boolean;
+function insideBox3d(const v, loCorner, hiCorner: point3): boolean;
 var
   // bottom poly
-  p1,p2,p3,p4,
+  p1, p2, p3, p4,
   // top poly
-  p5,p6,p7,p8,
-  c, // центр коробки
+  p5, p6, p7, p8, c, // центр коробки
   half, // длина от центра до середин полигонов
-  cx,cy,cz, // центры полигонов в направлении осей x y z
-  nx,ny,nz, // нормали к полигонам
+  cx, cy, cz, // центры полигонов в направлении осей x y z
+  nx, ny, nz, // нормали к полигонам
   vec // вектор к центру из вершины
-  :point3;
+    : point3;
 
 begin
   // ищем нижний полигон
-  p1:=locorner;
-  p2:=p1; p2.x:=hiCorner.x;
-  p3:=p1; p2.z:=hiCorner.z;
-  p4:=p2; p2.z:=hiCorner.z;
+  p1 := loCorner;
+  p2 := p1;
+  p2.x := hiCorner.x;
+  p3 := p1;
+  p2.z := hiCorner.z;
+  p4 := p2;
+  p2.z := hiCorner.z;
   // верхний поли
-  p5:=p1; p5.y:=hiCorner.y;
-  p6:=p2; p6.y:=hiCorner.y;
-  p7:=p3; p7.y:=hiCorner.y;
-  p8:=hiCorner;
-  c.x:=(loCorner.x + hiCorner.x)*0.5;
-  c.y:=(loCorner.y + hiCorner.y)*0.5;
-  c.z:=(loCorner.z + hiCorner.z)*0.5;
+  p5 := p1;
+  p5.y := hiCorner.y;
+  p6 := p2;
+  p6.y := hiCorner.y;
+  p7 := p3;
+  p7.y := hiCorner.y;
+  p8 := hiCorner;
+  c.x := (loCorner.x + hiCorner.x) * 0.5;
+  c.y := (loCorner.y + hiCorner.y) * 0.5;
+  c.z := (loCorner.z + hiCorner.z) * 0.5;
   // правый полигон
-  cx.x:=(p2.x+p8.x)*0.5;
-  cx.y:=(p2.y+p8.y)*0.5;
-  cx.z:=(p2.z+p8.z)*0.5;
-  nx:=SubP(cx,c);
+  cx.x := (p2.x + p8.x) * 0.5;
+  cx.y := (p2.y + p8.y) * 0.5;
+  cx.z := (p2.z + p8.z) * 0.5;
+  nx := SubP(cx, c);
   // верхний полигон
-  cy.x:=(p5.x+p8.x)*0.5;
-  cy.y:=(p5.y+p8.y)*0.5;
-  cy.z:=(p5.z+p8.z)*0.5;
-  ny:=SubP(cy,c);
+  cy.x := (p5.x + p8.x) * 0.5;
+  cy.y := (p5.y + p8.y) * 0.5;
+  cy.z := (p5.z + p8.z) * 0.5;
+  ny := SubP(cy, c);
   // дальний полигон
-  cz.x:=(p3.x+p8.x)*0.5;
-  cz.y:=(p3.y+p8.y)*0.5;
-  cz.z:=(p3.z+p8.z)*0.5;
-  nz:=SubP(cz,c);
+  cz.x := (p3.x + p8.x) * 0.5;
+  cz.y := (p3.y + p8.y) * 0.5;
+  cz.z := (p3.z + p8.z) * 0.5;
+  nz := SubP(cz, c);
   // длины нормалей
-  half.x:=VectorLength(nx);
-  half.y:=VectorLength(ny);
-  half.z:=VectorLength(nz);
-  nx:=scalevectorp3(1/half.x, nx);
-  ny:=scalevectorp3(1/half.y, ny);
-  nz:=scalevectorp3(1/half.z, nz);
-  vec:=SubP(v, c);
-  result:=false;
-  if abs(MultScalarP3(vec, nx))<half.x then
+  half.x := VectorLength(nx);
+  half.y := VectorLength(ny);
+  half.z := VectorLength(nz);
+  nx := scalevectorp3(1 / half.x, nx);
+  ny := scalevectorp3(1 / half.y, ny);
+  nz := scalevectorp3(1 / half.z, nz);
+  vec := SubP(v, c);
+  result := false;
+  if abs(MultScalarP3(vec, nx)) < half.x then
   begin
-    if abs(MultScalarP3(vec, ny))<half.y then
+    if abs(MultScalarP3(vec, ny)) < half.y then
     begin
-      if abs(MultScalarP3(vec, nz))<half.z then
+      if abs(MultScalarP3(vec, nz)) < half.z then
       begin
-        result:=true;
+        result := true;
       end;
     end;
   end;
 end;
 
-function insideBox3d(const v, loCorner, hiCorner: Vector3f)  : boolean;
+function insideBox3d(const v, loCorner, hiCorner: Vector3f): boolean;
 var
-  I: Integer;
+  i: integer;
 begin
-  result:=insideBox3d(point3(v), point3(loCorner), point3(hiCorner));
+  result := insideBox3d(point3(v), point3(loCorner), point3(hiCorner));
 end;
 
 function MultScalar(const v1: Vector3f; const v2: Vector3f): GLFloat;
@@ -1660,8 +1720,7 @@ asm
    db $DA,$C1                 /// fcmovb  st(0), st(1)
    ffree   st(1)
 {$ENDIF}
-end
-  ;
+end;
 
   // MaxFloat
   //
@@ -1680,8 +1739,7 @@ asm
    db $DA,$C1                 /// fcmovb  st(0), st(1)
    ffree   st(1)
 {$ENDIF}
-end
-    ;
+end;
 
     // MaxFloat
     //
@@ -1700,8 +1758,7 @@ asm
    db $DA,$C1                 /// fcmovb  st(0), st(1)
    ffree   st(1)
 {$ENDIF}
-end
-      ;
+end;
 
       // MaxFloat
       //
@@ -1733,8 +1790,7 @@ asm
    db $DA,$C1                 /// fcmovb  st(0), st(1)
    ffree   st(1)
 {$ENDIF}
-end
-        ;
+end;
 
         // MaxFloat
         //
@@ -1766,8 +1822,7 @@ asm
    ffree   st(2)
    ffree   st(1)
 {$ENDIF}
-end
-          ;
+end;
 
           // MaxFloat
           //
@@ -1799,109 +1854,108 @@ asm
    ffree   st(2)
    ffree   st(1)
 {$ENDIF}
-end
-            ;
-
-function InterpolateP3(p1, p2: point3; t: single): point3;
-begin
-  p2 := scalevectorp3(t, p2);
-  p1 := scalevectorp3(1 - t, p1);
-  result := SummVectorP3(p1, p2);
 end;
 
-procedure CreateOrthoMatrix(left, right, bottom, top, zNear,
-  zFar: single; var m: array of single);
-var
-  rl, tb, fn: single;
-begin
-  rl := (right - left);
-  m[0] := 2 / rl;
-  m[1] := 0;
-  m[2] := 0;
-  m[3] := 0;
-  m[4] := 0;
-  tb := (top - bottom);
-  m[5] := 2 / tb;
-  m[6] := 0;
-  m[7] := 0;
-  m[8] := 0;
-  m[9] := 0;
-  fn := (zFar - zNear);
-  m[10] := -2 / fn;
-  m[11] := 0;
-  m[12] := -(right + left) / rl;
-  m[13] := -(top + bottom) / tb;
-  m[14] := -(zNear + zFar) / fn;
-  m[15] := 1;
-end;
+            function InterpolateP3(p1, p2: point3; t: single): point3;
+            begin
+              p2 := scalevectorp3(t, p2);
+              p1 := scalevectorp3(1 - t, p1);
+              result := SummVectorP3(p1, p2);
+            end;
 
-procedure CreateOrthoMatrixd(left, right, bottom, top, zNear,
-  zFar: double; var m: array of double);
-var
-  rl, tb, fn: double;
-begin
-  rl := (right - left);
-  m[0] := 2 / rl;
-  m[1] := 0;
-  m[2] := 0;
-  m[3] := 0;
-  m[4] := 0;
-  tb := (top - bottom);
-  m[5] := 2 / tb;
-  m[6] := 0;
-  m[7] := 0;
-  m[8] := 0;
-  m[9] := 0;
-  fn := (zFar - zNear);
-  m[10] := -2 / fn;
-  m[11] := 0;
-  m[12] := -(right + left) / rl;
-  m[13] := -(top + bottom) / tb;
-  m[14] := -(zNear + zFar) / fn;
-  m[15] := 1;
-end;
+            procedure CreateOrthoMatrix(left, right, bottom, top, zNear,
+              zFar: single; var m: array of single);
+            var
+              rl, tb, fn: single;
+            begin
+              rl := (right - left);
+              m[0] := 2 / rl;
+              m[1] := 0;
+              m[2] := 0;
+              m[3] := 0;
+              m[4] := 0;
+              tb := (top - bottom);
+              m[5] := 2 / tb;
+              m[6] := 0;
+              m[7] := 0;
+              m[8] := 0;
+              m[9] := 0;
+              fn := (zFar - zNear);
+              m[10] := -2 / fn;
+              m[11] := 0;
+              m[12] := -(right + left) / rl;
+              m[13] := -(top + bottom) / tb;
+              m[14] := -(zNear + zFar) / fn;
+              m[15] := 1;
+            end;
 
-function GetDistance(p1, p_p2: point2; p: point2): single;
-var
-  // проекция на единичный вектор p1,p2
-  cosZ: single;
-  v, v_norm,
-  // вектор из p2 в p
-  z: point2;
-begin
-  v.x := (p_p2.x - p1.x);
-  v.y := (p_p2.y - p1.y);
-  result := sqrt(v.x * v.x + v.y * v.y);
-  v_norm := p2(v.x / result, v.y / result);
-  z := p2(p_p2.x - p.x, p_p2.y - p.y);
-  cosZ := z.x * v_norm.x + z.y * v_norm.y;
-  // координаты проекции
-  v_norm := p2(p_p2.x - cosZ * v_norm.x, p_p2.y - cosZ * v_norm.y);
-  // координаты вектора из p в проекцию
-  if v_norm.x > p1.x then
-  begin
-    if v_norm.x < p_p2.x then
-    begin
-      v.x := (v_norm.x - p.x);
-      v.y := (v_norm.y - p.y);
-      result := sqrt(v.x * v.x + v.y * v.y);
-      exit;
-    end;
-  end;
-  result := -1;
-end;
+            procedure CreateOrthoMatrixd(left, right, bottom, top, zNear,
+              zFar: double; var m: array of double);
+            var
+              rl, tb, fn: double;
+            begin
+              rl := (right - left);
+              m[0] := 2 / rl;
+              m[1] := 0;
+              m[2] := 0;
+              m[3] := 0;
+              m[4] := 0;
+              tb := (top - bottom);
+              m[5] := 2 / tb;
+              m[6] := 0;
+              m[7] := 0;
+              m[8] := 0;
+              m[9] := 0;
+              fn := (zFar - zNear);
+              m[10] := -2 / fn;
+              m[11] := 0;
+              m[12] := -(right + left) / rl;
+              m[13] := -(top + bottom) / tb;
+              m[14] := -(zNear + zFar) / fn;
+              m[15] := 1;
+            end;
 
-Function P2iToP2proc(irect: trect; rect: frect; pi: tpoint): point2;
-var
-  i_w, i_h: integer;
-  W, h: single;
-begin
-  i_w := irect.right - irect.left;
-  i_h := irect.top - irect.bottom;
-  W := rect.TopRight.x - rect.BottomLeft.x;
-  h := rect.TopRight.y - rect.BottomLeft.y;
-  result.x := W * (pi.x - irect.left) / i_w + rect.BottomLeft.x;
-  result.y := h * (pi.y - irect.top) / i_h + rect.TopRight.y;
-end;
+            function GetDistance(p1, p_p2: point2; p: point2): single;
+            var
+              // проекция на единичный вектор p1,p2
+              cosZ: single;
+              v, v_norm,
+              // вектор из p2 в p
+              z: point2;
+            begin
+              v.x := (p_p2.x - p1.x);
+              v.y := (p_p2.y - p1.y);
+              result := sqrt(v.x * v.x + v.y * v.y);
+              v_norm := p2(v.x / result, v.y / result);
+              z := p2(p_p2.x - p.x, p_p2.y - p.y);
+              cosZ := z.x * v_norm.x + z.y * v_norm.y;
+              // координаты проекции
+              v_norm := p2(p_p2.x - cosZ * v_norm.x, p_p2.y - cosZ * v_norm.y);
+              // координаты вектора из p в проекцию
+              if v_norm.x > p1.x then
+              begin
+                if v_norm.x < p_p2.x then
+                begin
+                  v.x := (v_norm.x - p.x);
+                  v.y := (v_norm.y - p.y);
+                  result := sqrt(v.x * v.x + v.y * v.y);
+                  exit;
+                end;
+              end;
+              result := -1;
+            end;
+
+            Function P2iToP2proc(irect: trect; rect: frect; pi: tpoint): point2;
+            var
+              i_w, i_h: integer;
+              W, h: single;
+            begin
+              i_w := irect.right - irect.left;
+              i_h := irect.top - irect.bottom;
+              W := rect.TopRight.x - rect.BottomLeft.x;
+              h := rect.TopRight.y - rect.BottomLeft.y;
+              result.x := W * (pi.x - irect.left) / i_w + rect.BottomLeft.x;
+              result.y := h * (pi.y - irect.top) / i_h + rect.TopRight.y;
+            end;
 
 end.
