@@ -514,6 +514,10 @@
 			<DCCReference Include="..\..\3d\objects\uVBOMesh.pas"/>
 			<DCCReference Include="..\..\3d\tools\uselectools.pas"/>
 			<DCCReference Include="..\..\3d\core\uClickFrListener.pas"/>
+			<DCCReference Include="forms\uVertexEditFrame.pas">
+				<Form>VertexEditFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

@@ -37,11 +37,11 @@ type
     scene: string;
     // декорации на сцене. Объекты созданы без помощи idesigner
     mObjects: array of ceditobj;
-    DeformFrame:cEditFrameListener; // выбор вершин
+    // выбор вершин
+    DeformFrame:cEditFrameListener;
     ClickFrame: cClickFrListener;
 
     fShowTransforms:boolean;
-    //TransformToolsFrame: TTransformToolsFrame;
     TransformToolsFrame: TCtrlViewFrame;
   public
     // сслыка на список событий компонента
@@ -533,7 +533,6 @@ begin
     mUI.framelistener.add(ClickFrame);
     DeformFrame:=cEditFrameListener.create(mUI,'cDeformFrListener');
     mUI.framelistener.add(DeformFrame);
-    DeformFrame.LincScene(mUI);
   end;
 end;
 

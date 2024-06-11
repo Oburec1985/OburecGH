@@ -243,7 +243,8 @@ uses
   uTestObjects in '..\..\3d\objects\uTestObjects.pas',
   uVBOMesh in '..\..\3d\objects\uVBOMesh.pas',
   uselectools in '..\..\3d\tools\uselectools.pas',
-  uClickFrListener in '..\..\3d\core\uClickFrListener.pas';
+  uClickFrListener in '..\..\3d\core\uClickFrListener.pas',
+  uVertexEditFrame in 'forms\uVertexEditFrame.pas' {VertexEditFrame: TFrame};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

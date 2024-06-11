@@ -216,6 +216,7 @@ begin
     updateselected;
     m_selectTools.selected:=nil;
     EventList.CallAllEvents(E_glUnSelect);
+    framelistener.Notify(c_SelObject);
     exit;
   end;
   // если объект в группе
@@ -233,6 +234,7 @@ begin
   ClearSelect;
   AddSelect(obj);
   updateselected;
+  framelistener.Notify(c_SelObject);
 end;
 
 procedure cUI.InitMouse;
@@ -354,9 +356,10 @@ begin
      end;
      wm_mousewheel:
      begin
-       if msg.wparam>0 then
+       //if msg.wparam>0 then
        begin
-         mouse.wheel:=hiword(msg.wparam);
+         mouse.wheel:= smallint(msg.wparam shr 16);
+         // hiword(msg.wparam);
        end;
      end;
    end;

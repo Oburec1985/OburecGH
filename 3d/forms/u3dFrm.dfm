@@ -2,12 +2,12 @@ object GlFrm: TGlFrm
   Left = 0
   Top = 0
   Caption = 'GlFrm'
-  ClientHeight = 381
-  ClientWidth = 751
+  ClientHeight = 498
+  ClientWidth = 982
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   Menu = MainMenu1
@@ -15,25 +15,32 @@ object GlFrm: TGlFrm
   OnClick = FormClick
   OnClose = FormClose
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object Splitter1: TSplitter
-    Left = 509
+    Left = 666
     Top = 0
-    Height = 381
+    Width = 4
+    Height = 498
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alRight
     Color = clBackground
     ParentColor = False
-    ExplicitLeft = 465
   end
   object GroupBox1: TGroupBox
-    Left = 512
+    Left = 670
     Top = 0
-    Width = 239
-    Height = 381
+    Width = 312
+    Height = 498
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 518
   end
   object MainMenu1: TMainMenu
     Left = 152

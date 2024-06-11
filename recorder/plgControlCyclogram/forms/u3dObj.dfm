@@ -2,35 +2,42 @@ object ObjFrm3d: TObjFrm3d
   Left = 0
   Top = 0
   Caption = 'GLFrm'
-  ClientHeight = 400
-  ClientWidth = 727
+  ClientHeight = 523
+  ClientWidth = 951
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object BotSplitter: TSplitter
     Left = 0
-    Top = 266
-    Width = 727
-    Height = 3
+    Top = 348
+    Width = 951
+    Height = 4
     Cursor = crVSplit
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alBottom
     Color = clBackground
     ParentColor = False
     Visible = False
-    ExplicitTop = 271
   end
   object GL: cBaseGlComponent
     Left = 0
     Top = 0
-    Width = 727
-    Height = 266
+    Width = 951
+    Height = 348
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alClient
     DockSite = True
     TabOrder = 0
@@ -38,21 +45,28 @@ object ObjFrm3d: TObjFrm3d
     ShowTrasforms = True
     OnInitScene = GLInitScene
     object RightSplitter: TSplitter
-      Left = 497
+      Left = 650
       Top = 1
-      Height = 264
+      Width = 4
+      Height = 346
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alRight
       Color = clBackground
       ParentColor = False
       Visible = False
-      ExplicitLeft = 491
-      ExplicitTop = -1
     end
     object RightGB: TGroupBox
-      Left = 500
+      Left = 654
       Top = 1
-      Width = 226
-      Height = 264
+      Width = 295
+      Height = 346
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alRight
       Caption = 'RightGB'
       TabOrder = 0
@@ -61,21 +75,21 @@ object ObjFrm3d: TObjFrm3d
   end
   object ToolsGB: TGroupBox
     Left = 0
-    Top = 269
-    Width = 727
-    Height = 131
+    Top = 352
+    Width = 951
+    Height = 171
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alBottom
     Caption = 'ToolsGB'
     TabOrder = 1
     object ErrorEdit: TEdit
       Left = 2
-      Top = 108
-      Width = 723
-      Height = 21
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 144
+      Width = 947
+      Height = 25
       Align = alBottom
       TabOrder = 0
     end

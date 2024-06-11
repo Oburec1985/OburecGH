@@ -165,9 +165,16 @@ begin
   if obj <> nil then
   begin
     ObjNameE.Text := obj.name;
+    // обновляем позицию
+    p3:=obj.position;
+    MoveXSpinEdit.Value:=p3.x;
+    MoveYSpinEdit.Value:=p3.y;
+    MoveZSpinEdit.Value:=p3.z;
   end
   else
     ObjNameE.Text := '';
+
+
 end;
 
 procedure TTrfrmToolsFrame.lincScene(p_ui: cUI);
@@ -176,12 +183,9 @@ begin
   m_fr := cCtrlFrameListener.create(p_ui, 'CntrlFrame');
   m_ui.framelistener.add(m_fr);
   // Опциональные фичи
-  m_ui.EventList.AddEvent('UI DrawMoveAxis', E_glRenderScene,
-    m_fr.DrawMoveAxis);
-  m_ui.EventList.AddEvent('UI DrawRotateInterface', E_glRenderScene,
-    m_fr.drawRotateInterface);
-  m_ui.EventList.AddEvent('TransformToolsFrameSelectUpdate', E_glSelectNew,
-    updateObjName);
+  m_ui.EventList.AddEvent('UI DrawMoveAxis', E_glRenderScene,  m_fr.DrawMoveAxis);
+  m_ui.EventList.AddEvent('UI DrawRotateInterface', E_glRenderScene,  m_fr.drawRotateInterface);
+  m_ui.EventList.AddEvent('TransformToolsFrameSelectUpdate', E_glSelectNew, updateObjName);
 
   // Анимация
   m_timecntrl:=m_ui.TimeCntrl;

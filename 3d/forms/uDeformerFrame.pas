@@ -5,7 +5,7 @@ interface
 uses
   Windows, messages, SysUtils, Classes, Controls, Forms,
   ComCtrls, uBtnListView, StdCtrls, uSpin, dialogs,mathfunction,
-  uui, uNodeObject, uEventList, uObjectTypes, uBaseDeformer, umeshobr,
+  uui, uNodeObject, uEventList, uObjectTypes, uBaseDeformer, umeshobr, uShape,
   DCL_MYOWN, uglFrameListener, uselectools, uglEventTypes, u3dTypes;
 
 type
@@ -15,6 +15,10 @@ type
     // редактируемый объект
     editMesh:cnodeobject;
     frame:tframe;
+  protected
+    procedure notify(etype:cardinal);override;
+    // событие при выборе объекта
+    procedure SelObjNotify(Sender: TObject);
   public
     procedure wndproc(msg:tmessage; mouse:mousestruct);override;
   end;
@@ -69,20 +73,54 @@ implementation
 
 {$R *.dfm}
 
+procedure cEditFrameListener.notify(etype: cardinal);
+begin
+  if checkflag(etype, c_SelObject) then
+  begin
+    SelObjNotify(nil);
+  end;
+end;
+
+procedure cEditFrameListener.SelObjNotify(Sender: TObject);
+var
+  i:integer;
+  obj:cNodeObject;
+begin
+  if cUI(ui).selectCount>0 then
+  begin
+    obj:=cUI(ui).getselected(0);
+    if (obj is cmeshobr) or (obj is cShapeObj) then
+      editMesh:=obj;
+  end;
+end;
+
 procedure cEditFrameListener.wndproc(msg:tmessage; mouse:mousestruct);
 var selectp:tpoint;
 begin
   case msg.msg of
     WM_LBUTTONDOWN:
     begin
-      LockMouse:=frame.Visible;
+      if frame<>nil then
+        LockMouse:=frame.Visible;
+      //else
+      //  LockMouse:=true;
       // Выделение вершин редактируемого объекта
       if editmesh<>nil then
       begin
         selectp:=findvertex(mouse.x,mouse.y,5,editMesh);
-        if selectp.x<>-1 then
+        //if selectp.x<>-1 then
         begin
-          cmeshobr(editMesh).mesh.selectp:=selectp.x;
+          if editMesh is cmeshobr then
+          begin
+            cmeshobr(editMesh).mesh.selectp:=selectp.x;
+          end
+          else
+          begin
+             if editMesh is cShapeObj then
+             begin
+               cShapeObj(editMesh).selectPoints:=selectp;
+             end;
+          end;
           cui(ui).scene.Events.CallAllEvents(E_glSelectMeshPoint);
           cui(ui).needredraw:=true;
         end;
@@ -120,12 +158,12 @@ var
   obj:cNodeObject;
 begin
   ShowBonesCB;
-  if ui.selectCount>0 then
-  begin
-    obj:=ui.getselected(0);
-    if obj is cmeshobr then
-      fr.editMesh:=obj;
-  end;
+  //if ui.selectCount>0 then
+  //begin
+  //  obj:=ui.getselected(0);
+  //  if obj is cmeshobr then
+  //    fr.editMesh:=obj;
+  //end;
 end;
 
 // Событие которое происходит при выделении вершины объекта

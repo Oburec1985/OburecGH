@@ -9,7 +9,7 @@ uses
   uUI, ExtCtrls, StdCtrls, ImgList, VirtualTrees, uVTServices,
   uTransformButtons,
   SelectObjectsFrame,
-  uModifyFrame,
+  uModifyFrame, uBaseCamera, uCommonTypes,
   uTVFrm;
 
 type
@@ -204,6 +204,7 @@ end;
 procedure TGlFrm.init;
 var
   menuitem:TMenuItem;
+  c:cbasecamera;
   //fr:cClickFrListener;
 begin
   DecimalSeparator:=',';
@@ -219,19 +220,13 @@ begin
                              MainMenu1,
                              HelpFiles,
                              TestRecentFiles);
-  //CreateFrames;
-  //SceneTreeViewFrame1.GetUI(g_UI);
-  //TransformToolsFrame1.Lincscene(g_UI);
-  //fr:=cClickFrListener.create(g_UI,cClickFrListener.ClassName);
-  //g_UI.framelistener.add(fr);
-  //MatFrame.LincToScene(g_UI);
   menuitem:=MainMenu1.items[0];
   //g_ui.EventList.AddEvent('OnObjClick',e_glOnClick,OnObjClick);
   g_ui.EventList.AddEvent('formclick',E_glWindowClick, FormClick);
   g_ui.EventList.AddEvent('changecursorunselect',e_glUnSelect, changecursorOnUnselect);
   OnInitContext(nil);
-  //LincFrames;
-  //SlaveForm1.lincUI(g_UI);
+  c:=g_ui.scene.getactivecamera;
+  c.position:=p3(0,0,0);
 end;
 
 

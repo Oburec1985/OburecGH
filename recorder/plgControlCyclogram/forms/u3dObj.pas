@@ -44,6 +44,7 @@ type
   private
     M_camera:matrixgl;
     m_TransformToolsFrame: TTrfrmToolsFrame;
+
     m_EditFrame:TGlSceneEditFrame;
     fshowtools: boolean;
   public

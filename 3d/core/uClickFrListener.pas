@@ -14,6 +14,7 @@ type
     procedure wndproc(msg:tmessage; mouse:mousestruct);override;
   end;
 
+
 implementation
 
 procedure cClickFrListener.wndproc(msg:tmessage; mouse:mousestruct);

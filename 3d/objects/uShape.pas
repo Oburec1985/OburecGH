@@ -16,12 +16,10 @@ type
   public
     inst: boolean; // Копия другого объекта?   instname:string; // имя прототипа
     instname: string;
-    fMesh: cMesh;
     LineCount: integer;
     Lines: array of tline;
 
     fdrawlines, fdrawverts:boolean;
-  private
     // x, y - номре линии, точка внутри линии;
     selectPoints:tpoint;
   private
@@ -109,6 +107,7 @@ begin
   objtype := constshape;
   setflag(draw_Edges);
   inst := false;
+  selectPoints.X:=-1;
 end;
 
 destructor cShapeObj.destroy;
@@ -171,13 +170,29 @@ end;
 procedure cShapeObj.DrawLine;
 begin
   glcolor3fv(@defoultcolor);
+  // отрисовка линий и вершин
   glCallList(CallListLine);
 end;
 
 procedure cShapeObj.DrawVert;
+var
+  l:tline;
+  p:point3;
 begin
-  glcolor3fv(@red);
+  glcolor3fv(@blue);
   glCallList(CallListVerts);
+  if selectPoints.X>-1 then
+  begin
+    l:=Lines[selectPoints.X];
+    p:=l.data[selectPoints.y];
+    glpointsize(10);
+    glBegin(GL_POINTS);
+      glColor3fv(@red);
+      glVertex3fv(@p);
+    glEnd;
+  end
+  else
+
 end;
 
 procedure cShapeObj.drawdata;

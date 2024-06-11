@@ -65,6 +65,7 @@ type
     procedure MoovXSpinEditChange(Sender: TObject);
     procedure CtrlViewFrame1SpeedZoomClick(Sender: TObject);
     procedure CtrlViewFrame1RotBtnClick(Sender: TObject);
+    procedure CtrlViewFrame1ZoomBtnClick(Sender: TObject);
   private
     updatePos:boolean;
     procedure GetObjPos;
@@ -274,7 +275,11 @@ end;
 procedure TTransformToolsFrame.CtrlViewFrame1SpeedZoomClick(Sender: TObject);
 begin
   CtrlViewFrame1.SpeedZoomClick(Sender);
+end;
 
+procedure TTransformToolsFrame.CtrlViewFrame1ZoomBtnClick(Sender: TObject);
+begin
+  CtrlViewFrame1.ZoomBtnClick(Sender);
 end;
 
 procedure TTransformToolsFrame.DecTimeClick(Sender: TObject);

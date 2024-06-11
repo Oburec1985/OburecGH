@@ -7,24 +7,36 @@ uses
   Dialogs,
   uMeasureBase,
   uMBaseControl,
-  StdCtrls;
+  uVertexEditFrame,
+  StdCtrls, ExtCtrls, uTagsListFrame;
 
 type
   TObjFrm3dEdit = class(TForm)
-    ShowTrfrmToolsCB: TCheckBox;
+    LowPanel: TPanel;
     CancelBtn: TButton;
     OkBtn: TButton;
-    SceneFolderEdit: TEdit;
-    Label1: TLabel;
-    SceneNameEdit: TEdit;
-    Label2: TLabel;
-    PathBtn: TButton;
+    AlClientPanel: TPanel;
     OpenDialog1vista: TFileOpenDialog;
+    RightPanel: TPanel;
+    TopPanel: TPanel;
+    Label1: TLabel;
+    Label2: TLabel;
+    ShowTrfrmToolsCB: TCheckBox;
+    SceneFolderEdit: TEdit;
+    SceneNameEdit: TEdit;
+    PathBtn: TButton;
+    TagsListFrame1: TTagsListFrame;
     procedure PathBtnClick(Sender: TObject);
+    procedure OkBtnClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
-
+    m_glFrm:tform;
+    frames:tlist;
   public
+    function getFrame(s:string):tframe;
     procedure edit(glFrm:tobject);
+    constructor create(aowner:tcomponent);override;
+    destructor destroy;override;
   end;
 
 var
@@ -36,22 +48,72 @@ uses
 
 {$R *.dfm}
 
+constructor TObjFrm3dEdit.create(aowner: tcomponent);
+var
+  fr:TFrame;
+begin
+  inherited;
+  // фрейм настройки вершин
+  fr:=TVertexEditFrame.create(nil);
+  fr.parent:=AlClientPanel;
+  fr.visible:=true;
+
+  frames:=TList.Create;
+  frames.add(fr);
+end;
+
+destructor TObjFrm3dEdit.destroy;
+begin
+  frames.Destroy;
+  inherited;
+end;
+
 Procedure TObjFrm3dEdit.edit(glFrm:tobject);
 var
   scenepath:string;
 begin
+  m_glFrm:=tform(glFrm);
+  TagsListFrame1.ShowChannels;
+
   ShowTrfrmToolsCB.Checked:=TObjFrm3d(glFrm).ShowTools;
   scenepath:=TObjFrm3d(glFrm).BuildPath;
   SceneFolderEdit.Text:=extractfiledir(scenepath);
   SceneNameEdit.Text:=ExtractFileName(scenepath);
-  if showModal=mrok then
+  show;
+end;
+
+
+procedure TObjFrm3dEdit.FormShow(Sender: TObject);
+var
+  fr:tframe;
+begin
+  fr:=getFrame('TVertexEditFrame');
+  fr.Align:=alClient;
+end;
+
+function TObjFrm3dEdit.getFrame(s: string): tframe;
+var
+  I: Integer;
+  fr:tframe;
+begin
+  result:=nil;
+  for I := 0 to frames.Count - 1 do
   begin
-    TObjFrm3d(glFrm).ShowTools:=ShowTrfrmToolsCB.Checked;
-    TObjFrm3d(glFrm).m_ScenePath:= SceneFolderEdit.Text;
-    TObjFrm3d(glFrm).m_SceneName:=SceneNameEdit.Text;
+    fr:=tframe(frames.items[i]);
+    if fr.classname=s then
+    begin
+      result:=fr;
+      exit;
+    end;
   end;
 end;
 
+procedure TObjFrm3dEdit.OkBtnClick(Sender: TObject);
+begin
+  TObjFrm3d(m_glFrm).ShowTools:=ShowTrfrmToolsCB.Checked;
+  TObjFrm3d(m_glFrm).m_ScenePath:= SceneFolderEdit.Text;
+  TObjFrm3d(m_glFrm).m_SceneName:=SceneNameEdit.Text;
+end;
 
 procedure TObjFrm3dEdit.PathBtnClick(Sender: TObject);
 begin

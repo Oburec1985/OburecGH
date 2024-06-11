@@ -1,14 +1,14 @@
 object TransformToolsFrame: TTransformToolsFrame
   Left = 0
   Top = 0
-  Width = 827
-  Height = 286
+  Width = 889
+  Height = 182
   Align = alBottom
   Color = clMoneyGreen
   ParentColor = False
   TabOrder = 0
   TabStop = True
-  ExplicitWidth = 451
+  ExplicitTop = -1
   object Label8: TLabel
     Left = 314
     Top = 16
@@ -194,6 +194,7 @@ object TransformToolsFrame: TTransformToolsFrame
         end
         inherited ZoomBtn: TSpeedButton
           Top = 0
+          OnClick = CtrlViewFrame1ZoomBtnClick
           ExplicitTop = 0
         end
         inherited SpeedZoom: TSpeedButton

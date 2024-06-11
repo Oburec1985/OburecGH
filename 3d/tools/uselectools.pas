@@ -121,7 +121,7 @@ begin
   end
   else
   begin
-    if intersect then
+    if (intersect and (obj<>nil)) then
       cui(ui).selectobject(obj,false);
   end;
   result:=obj;
@@ -299,6 +299,7 @@ begin
   end;
   if mesh is cShapeObj then
   begin
+    result:=point(-1,-1);
     for I := 0 to cShapeObj(mesh).LineCount - 1 do
     begin
       for j := 0 to length(cShapeObj(mesh).Lines[i].data)-1 do

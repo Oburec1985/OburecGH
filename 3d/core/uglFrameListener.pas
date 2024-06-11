@@ -30,6 +30,7 @@ type
     procedure setprioritet(p:integer);
     procedure SetLockMouse(b:boolean);
     function GetLockMouse:boolean;
+    procedure notify(etype:cardinal);virtual;
   public
     Constructor create(p_ui:tobject;pname:string);virtual;
     procedure WndProc(msg:tmessage; mouse:mousestruct);virtual;abstract;
@@ -55,11 +56,19 @@ type
     procedure deleteObj(i:integer);overload;
     procedure deleteObj(name:string);overload;
     procedure deleteObj(frame:cglFramelistener);overload;
+    // нотификация для событий наподобие инициализации
+    procedure Notify(eType:integer);
     procedure wndproc(msg:tmessage; mouse:mousestruct);
     function GetFramePrior(i:integer):cglframelistener;
   public
     property active:boolean read factive write setactive;
   end;
+
+const
+  // происходит при инициализации фреймов
+  c_initFrames = $0000001;
+  // происходит при выборе объекта
+  c_SelObject = $0000002;
 
 implementation
 
@@ -213,6 +222,18 @@ begin
 end;
 
 
+procedure cglFrameList.Notify(eType:integer);
+var i:integer;
+    frame:cglframelistener;
+begin
+  for I := 0 to count - 1 do
+  begin
+    frame:=GetFramePrior(i);
+    frame.notify(eType);
+  end;
+End;
+
+
 procedure cglframelistener.SetLockMouse(b:boolean);
 var
   i:integer;
@@ -257,6 +278,11 @@ end;
 function cglframelistener.GetLockMouse:boolean;
 begin
   result:=flockmouse;
+end;
+
+procedure cglFrameListener.notify(etype: cardinal);
+begin
+
 end;
 
 end.
