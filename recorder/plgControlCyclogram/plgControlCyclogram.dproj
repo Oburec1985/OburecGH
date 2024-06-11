@@ -518,6 +518,10 @@
 				<Form>VertexEditFrame</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
+			<DCCReference Include="..\..\3d\forms\uDeformerFrame.pas">
+				<Form>DeformerFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

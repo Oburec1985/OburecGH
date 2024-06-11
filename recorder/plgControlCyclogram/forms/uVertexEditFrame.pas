@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ComCtrls, uBtnListView, ExtCtrls, StdCtrls, Spin,
   ucommontypes,
-  uSkin,
+  uSkin, uUI, usceneMng, uRender, uGlEventTypes,
   uObject, uMeshObr, uShape;
 
 type
@@ -20,9 +20,16 @@ type
     ChanCountSE: TSpinEdit;
     SensorsLabel: TLabel;
     SkinCB: TCheckBox;
-  private
-    m_curObj:cobject;
   public
+    m_ui:cUI;
+  private
+    finit:Boolean;
+    m_curObj:cobject;
+  protected
+    procedure OnSelectVertex(sender:tobject);
+  public
+    procedure createevents;
+    procedure destroyevents;
     procedure Apply;
     procedure showObj(o:cObject);
   end;
@@ -39,13 +46,50 @@ var
 begin
   if m_curObj<>nil then
   begin
-    skin:=m_curObj.ModCreator.GetModificator('cSkin');
+    skin:=cskin(m_curObj.ModCreator.GetModificator('cSkin'));
     if SkinCB.Checked then
     begin
       if skin=nil then
       begin
-        skin:=m_curObj.ModCreator.CreateModificator('cSkin');
+        skin:=cskin(m_curObj.ModCreator.CreateModificator('cSkin'));
 
+      end;
+    end;
+  end;
+end;
+
+procedure TVertexEditFrame.createevents;
+begin
+  m_ui.eventlist.AddEvent('TVertexEditFrame_OnSelVert',E_glSelectNew,OnSelectVertex);
+end;
+
+procedure TVertexEditFrame.destroyevents;
+begin
+  m_ui.eventlist.removeEvent(OnSelectVertex, E_glSelectNew);
+end;
+
+procedure TVertexEditFrame.OnSelectVertex(sender: tobject);
+var
+  p:tpoint;
+  s,s1:string;
+  I: Integer;
+  li:tlistitem;
+begin
+  if m_curObj<>nil then
+  begin
+    if m_curObj is cshapeObj then
+    begin
+      p:=cshapeObj(m_curObj).selectPoints;
+      s:=inttostr(p.x)+'_'+inttostr(p.Y);
+      for I := 0 to VertLV.items.Count - 1 do
+      begin
+        li:=VertLV.Items[i];
+        s1:=li.SubItems[1];
+        if s=s1 then
+        begin
+          VertLV.Selected:=li;
+          break;
+        end;
       end;
     end;
   end;
@@ -62,11 +106,12 @@ var
   skin:cskin;
 begin
   m_curObj:=o;
+  m_ui:=cui(cRender(cscene(o.getmng).render).ui);
   if o is cshapeobj then
   begin
     s:=cShapeObj(o);
     VertLV.Clear;
-    skin:=s.ModCreator.GetModificator('cSkin');
+    skin:=cskin(s.ModCreator.GetModificator('cSkin'));
     if skin=nil then
     begin
       SkinCB.Checked:=false;

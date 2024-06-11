@@ -23,6 +23,7 @@ type
   // Узел объекта и локальный узел объекта
   protected
   public
+    // собственный elist внутри объекта
     events:ceventlist;
     // Объект для создания модификаторов
     ModCreator:cModCreator;

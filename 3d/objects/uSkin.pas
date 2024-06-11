@@ -26,7 +26,7 @@ type
   public
     function count:integer;
   end;
-
+  // список костей
   skinData = class(tstringlist)
   public
     constructor create;
@@ -99,6 +99,8 @@ type
   // все сетки которые будут помещены в DeformMeshes
   cSkin = class(cbasemodificator)
   public
+    // хранит данные о именах костей и весах вершин, пока не произойдет полная загрузка смцены для инициализации
+    // скелета
     ImpExpdata:skindata;
   private
     // деформируемые вершины

@@ -30,9 +30,12 @@ type
     procedure OkBtnClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
+    finit:boolean;
     m_glFrm:tform;
+    skinframe:TVertexEditFrame;
     frames:tlist;
   public
+    procedure init(t3dfrm:tform);
     function getFrame(s:string):tframe;
     procedure edit(glFrm:tobject);
     constructor create(aowner:tcomponent);override;
@@ -57,6 +60,7 @@ begin
   fr:=TVertexEditFrame.create(nil);
   fr.parent:=AlClientPanel;
   fr.visible:=true;
+  skinframe:=TVertexEditFrame(fr);
 
   frames:=TList.Create;
   frames.add(fr);
@@ -64,6 +68,8 @@ end;
 
 destructor TObjFrm3dEdit.destroy;
 begin
+  skinframe.destroyevents;
+
   frames.Destroy;
   inherited;
 end;
@@ -87,8 +93,9 @@ procedure TObjFrm3dEdit.FormShow(Sender: TObject);
 var
   fr:tframe;
 begin
-  fr:=getFrame('TVertexEditFrame');
-  fr.Align:=alClient;
+  //fr:=getFrame('TVertexEditFrame');
+  skinframe.Align:=alClient;
+  init(m_glFrm);
 end;
 
 function TObjFrm3dEdit.getFrame(s: string): tframe;
@@ -108,11 +115,23 @@ begin
   end;
 end;
 
+procedure TObjFrm3dEdit.init(t3dfrm: tform);
+begin
+  m_glFrm:= t3dfrm;
+  if not finit then
+  begin
+    finit:=true;
+    skinframe.m_ui:=TObjFrm3d(m_glFrm).GL.mUI;
+    skinframe.createevents;
+  end;
+end;
+
 procedure TObjFrm3dEdit.OkBtnClick(Sender: TObject);
 begin
   TObjFrm3d(m_glFrm).ShowTools:=ShowTrfrmToolsCB.Checked;
   TObjFrm3d(m_glFrm).m_ScenePath:= SceneFolderEdit.Text;
   TObjFrm3d(m_glFrm).m_SceneName:=SceneNameEdit.Text;
+  skinframe.apply;
 end;
 
 procedure TObjFrm3dEdit.PathBtnClick(Sender: TObject);

@@ -5,6 +5,7 @@ interface
   cBaseModificator = class
   public
     modtype:byte;
+    // объект на который накинули модификатор
     owner:tobject;
     name:string;
   public

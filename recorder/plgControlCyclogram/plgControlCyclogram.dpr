@@ -244,7 +244,8 @@ uses
   uVBOMesh in '..\..\3d\objects\uVBOMesh.pas',
   uselectools in '..\..\3d\tools\uselectools.pas',
   uClickFrListener in '..\..\3d\core\uClickFrListener.pas',
-  uVertexEditFrame in 'forms\uVertexEditFrame.pas' {VertexEditFrame: TFrame};
+  uVertexEditFrame in 'forms\uVertexEditFrame.pas' {VertexEditFrame: TFrame},
+  uDeformerFrame in '..\..\3d\forms\uDeformerFrame.pas' {DeformerFrame: TFrame};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

@@ -12,23 +12,21 @@ object VertexEditFrame: TVertexEditFrame
     Height = 73
     Align = alTop
     TabOrder = 0
-    ExplicitLeft = -3
-    ExplicitWidth = 569
     DesignSize = (
       508
       73)
     object ObjNameLabel: TLabel
       Left = 16
       Top = 11
-      Width = 79
-      Height = 16
+      Width = 69
+      Height = 13
       Caption = #1048#1084#1103' '#1086#1073#1098#1077#1082#1090#1072':'
     end
     object SensorsLabel: TLabel
       Left = 216
       Top = 9
-      Width = 79
-      Height = 16
+      Width = 69
+      Height = 13
       Caption = #1048#1084#1103' '#1086#1073#1098#1077#1082#1090#1072':'
     end
     object TypeCB: TCheckBox
@@ -44,7 +42,7 @@ object VertexEditFrame: TVertexEditFrame
       Left = 16
       Top = 33
       Width = 177
-      Height = 24
+      Height = 21
       TabOrder = 1
       Text = 'NameEdit'
     end
@@ -52,7 +50,7 @@ object VertexEditFrame: TVertexEditFrame
       Left = 216
       Top = 31
       Width = 121
-      Height = 26
+      Height = 22
       MaxValue = 100
       MinValue = 1
       TabOrder = 2
@@ -75,9 +73,6 @@ object VertexEditFrame: TVertexEditFrame
     Height = 404
     Align = alClient
     TabOrder = 1
-    ExplicitTop = 8
-    ExplicitWidth = 569
-    ExplicitHeight = 73
     object VertLV: TBtnListView
       Left = 1
       Top = 1
@@ -106,10 +101,8 @@ object VertexEditFrame: TVertexEditFrame
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitLeft = 72
-      ExplicitTop = 72
-      ExplicitWidth = 250
-      ExplicitHeight = 150
+      ExplicitLeft = 2
+      ExplicitTop = 6
     end
   end
 end

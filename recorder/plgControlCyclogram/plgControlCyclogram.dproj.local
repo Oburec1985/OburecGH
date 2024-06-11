@@ -50,6 +50,8 @@
     <File Path="..\..\3d\forms\uTransformButtons.dfm"/>
     <File Path="..\..\3d\forms\uTrfrmToolsFrame.pas"/>
     <File Path="..\..\3d\forms\uTrfrmToolsFrame.dfm"/>
+    <File Path="..\..\3d\forms\uDeformerFrame.pas"/>
+    <File Path="..\..\3d\forms\uDeformerFrame.dfm"/>
     <File Path="..\..\3d\objects"/>
     <File Path="..\..\3d\objects\uNodeObject.pas"/>
     <File Path="..\..\3d\objects\TextureGL.pas"/>

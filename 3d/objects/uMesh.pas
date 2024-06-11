@@ -275,7 +275,8 @@ end;
 
 procedure cmesh.setselectp(p:integer);
 begin
-  colorArray[fselectp]:=blue;
+  if p<>-1 then
+    colorArray[fselectp]:=blue;
   if p>-1 then
     colorArray[p]:=red;
   if selectp<>-1 then
