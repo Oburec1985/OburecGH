@@ -99,6 +99,7 @@ begin
   WorldCB.AddItem('Local', nil);
   WorldCB.AddItem('Parent', nil);
   WorldCB.AddItem('View', nil);
+  WorldCB.ItemIndex:=0;
 end;
 
 procedure TTrfrmToolsFrame.GetObjPos;

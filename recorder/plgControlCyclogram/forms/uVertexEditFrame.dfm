@@ -38,7 +38,7 @@ object VertexEditFrame: TVertexEditFrame
       Caption = #1042#1077#1088#1096#1080#1085#1099'/'#1044#1072#1090#1095#1080#1082#1080
       TabOrder = 0
     end
-    object Edit1: TEdit
+    object NameEdit: TEdit
       Left = 16
       Top = 33
       Width = 177
@@ -69,14 +69,15 @@ object VertexEditFrame: TVertexEditFrame
   object AlPanel: TPanel
     Left = 0
     Top = 73
-    Width = 508
+    Width = 323
     Height = 404
     Align = alClient
     TabOrder = 1
+    ExplicitWidth = 508
     object VertLV: TBtnListView
       Left = 1
       Top = 1
-      Width = 506
+      Width = 321
       Height = 402
       Align = alClient
       Columns = <
@@ -95,14 +96,61 @@ object VertexEditFrame: TVertexEditFrame
       RowSelect = True
       TabOrder = 0
       ViewStyle = vsReport
+      OnDragOver = VertLVDragOver
       BtnCol = 0
       QuoteColumnBtnClick = False
       QuoteColumnDblClick = False
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitLeft = 2
+      ExplicitLeft = -4
       ExplicitTop = 6
+    end
+  end
+  object GroupBox1: TGroupBox
+    Left = 323
+    Top = 73
+    Width = 185
+    Height = 404
+    Align = alRight
+    Caption = #1058#1086#1095#1082#1080
+    TabOrder = 2
+    ExplicitLeft = 328
+    ExplicitTop = 72
+    DesignSize = (
+      185
+      404)
+    object PNameLabel: TLabel
+      Left = 5
+      Top = 19
+      Width = 56
+      Height = 13
+      Caption = #1048#1084#1103' '#1090#1086#1095#1082#1080':'
+    end
+    object WeightLabel: TLabel
+      Left = 6
+      Top = 68
+      Width = 54
+      Height = 13
+      Anchors = [akRight, akBottom]
+      Caption = #1042#1077#1089' '#1090#1086#1095#1082#1080':'
+    end
+    object PointNumEdit: TIntEdit
+      Left = 5
+      Top = 38
+      Width = 121
+      Height = 21
+      TabOrder = 0
+      Text = '000'
+    end
+    object PointWeight: TFloatSpinEdit
+      Left = 6
+      Top = 87
+      Width = 95
+      Height = 22
+      Anchors = [akRight, akBottom]
+      Increment = 0.100000001490116100
+      TabOrder = 1
     end
   end
 end

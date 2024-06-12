@@ -7,7 +7,7 @@ uses
   Dialogs, ComCtrls, uBtnListView, ExtCtrls, StdCtrls, Spin,
   ucommontypes,
   uSkin, uUI, usceneMng, uRender, uGlEventTypes,
-  uObject, uMeshObr, uShape;
+  uObject, uMeshObr, uShape, DCL_MYOWN, uSpin;
 
 type
   TVertexEditFrame = class(TFrame)
@@ -15,11 +15,18 @@ type
     AlPanel: TPanel;
     VertLV: TBtnListView;
     TypeCB: TCheckBox;
-    Edit1: TEdit;
+    NameEdit: TEdit;
     ObjNameLabel: TLabel;
     ChanCountSE: TSpinEdit;
     SensorsLabel: TLabel;
     SkinCB: TCheckBox;
+    GroupBox1: TGroupBox;
+    PNameLabel: TLabel;
+    PointNumEdit: TIntEdit;
+    WeightLabel: TLabel;
+    PointWeight: TFloatSpinEdit;
+    procedure VertLVDragOver(Sender, Source: TObject; X, Y: Integer;
+      State: TDragState; var Accept: Boolean);
   public
     m_ui:cUI;
   private
@@ -60,12 +67,12 @@ end;
 
 procedure TVertexEditFrame.createevents;
 begin
-  m_ui.eventlist.AddEvent('TVertexEditFrame_OnSelVert',E_glSelectNew,OnSelectVertex);
+  m_ui.eventlist.AddEvent('TVertexEditFrame_OnSelVert',E_glSelectMeshPoint,OnSelectVertex);
 end;
 
 procedure TVertexEditFrame.destroyevents;
 begin
-  m_ui.eventlist.removeEvent(OnSelectVertex, E_glSelectNew);
+  m_ui.eventlist.removeEvent(OnSelectVertex, E_glSelectMeshPoint);
 end;
 
 procedure TVertexEditFrame.OnSelectVertex(sender: tobject);
@@ -87,7 +94,9 @@ begin
         s1:=li.SubItems[1];
         if s=s1 then
         begin
-          VertLV.Selected:=li;
+          VertLV.clearcolors;
+          VertLV.addColorItem(li.Index, clHighlight);
+          VertLV.Invalidate;
           break;
         end;
       end;
@@ -106,18 +115,12 @@ var
   skin:cskin;
 begin
   m_curObj:=o;
-  m_ui:=cui(cRender(cscene(o.getmng).render).ui);
-  if o is cshapeobj then
+  NameEdit.Text:=m_curObj.name;
+  VertLV.Clear;
+  if m_curObj is cshapeobj then
   begin
-    s:=cShapeObj(o);
-    VertLV.Clear;
-    skin:=cskin(s.ModCreator.GetModificator('cSkin'));
-    if skin=nil then
-    begin
-      SkinCB.Checked:=false;
-      exit;
-    end;
     n:=0;
+    s:=cShapeObj(o);
     for I := 0 to s.LineCount - 1 do
     begin
       l:=s.Lines[i];
@@ -132,6 +135,23 @@ begin
       end;
     end;
   end;
+  m_ui:=cui(cRender(cscene(o.getmng).render).ui);
+  if o is cshapeobj then
+  begin
+    skin:=cskin(s.ModCreator.GetModificator('cSkin'));
+    if skin=nil then
+    begin
+      SkinCB.Checked:=false;
+      exit;
+    end;
+  end;
+end;
+
+procedure TVertexEditFrame.VertLVDragOver(Sender, Source: TObject; X,
+  Y: Integer; State: TDragState; var Accept: Boolean);
+begin
+  if True then
+
 end;
 
 end.

@@ -62,8 +62,6 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     Margins.Bottom = 2
     Align = alClient
     TabOrder = 1
-    ExplicitLeft = -2
-    ExplicitTop = -1
     object TopPanel: TPanel
       Left = 1
       Top = 1
@@ -75,8 +73,6 @@ object ObjFrm3dEdit: TObjFrm3dEdit
       Margins.Bottom = 2
       Align = alTop
       TabOrder = 0
-      ExplicitLeft = 4
-      ExplicitTop = 0
       object Label1: TLabel
         Left = 5
         Top = 22

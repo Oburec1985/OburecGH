@@ -8,6 +8,8 @@ uses
   uMeasureBase,
   uMBaseControl,
   uVertexEditFrame,
+  uGlEventTypes,
+  uObject, uNodeobject,
   StdCtrls, ExtCtrls, uTagsListFrame;
 
 type
@@ -34,6 +36,11 @@ type
     m_glFrm:tform;
     skinframe:TVertexEditFrame;
     frames:tlist;
+    m_curObj:cnodeobject;
+  protected
+    procedure createevents;
+    procedure destroyevents;
+    procedure OnSelectObj(sender:tobject);
   public
     procedure init(t3dfrm:tform);
     function getFrame(s:string):tframe;
@@ -50,6 +57,16 @@ uses
   u3dObj;
 
 {$R *.dfm}
+
+procedure TObjFrm3dEdit.createevents;
+begin
+  TObjFrm3d(m_glFrm).GL.mUI.eventlist.AddEvent('TObjFrm3dEdit_OnSelObj',E_glSelectNew,OnSelectObj);
+end;
+
+procedure TObjFrm3dEdit.destroyevents;
+begin
+  TObjFrm3d(m_glFrm).GL.mUI.eventlist.removeEvent(OnSelectObj, E_glSelectNew);
+end;
 
 constructor TObjFrm3dEdit.create(aowner: tcomponent);
 var
@@ -68,6 +85,7 @@ end;
 
 destructor TObjFrm3dEdit.destroy;
 begin
+  destroyevents;
   skinframe.destroyevents;
 
   frames.Destroy;
@@ -122,6 +140,7 @@ begin
   begin
     finit:=true;
     skinframe.m_ui:=TObjFrm3d(m_glFrm).GL.mUI;
+    createevents;
     skinframe.createevents;
   end;
 end;
@@ -132,6 +151,17 @@ begin
   TObjFrm3d(m_glFrm).m_ScenePath:= SceneFolderEdit.Text;
   TObjFrm3d(m_glFrm).m_SceneName:=SceneNameEdit.Text;
   skinframe.apply;
+end;
+
+procedure TObjFrm3dEdit.OnSelectObj(sender: tobject);
+begin
+  if skinframe.m_ui.selectCount>0 then
+  begin
+    m_curObj:=skinframe.m_ui.getselected(0);
+    skinframe.showObj(cobject(m_curObj));
+  end
+  else
+    m_curObj:=nil;
 end;
 
 procedure TObjFrm3dEdit.PathBtnClick(Sender: TObject);
