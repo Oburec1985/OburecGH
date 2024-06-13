@@ -245,7 +245,8 @@ uses
   uselectools in '..\..\3d\tools\uselectools.pas',
   uClickFrListener in '..\..\3d\core\uClickFrListener.pas',
   uVertexEditFrame in 'forms\uVertexEditFrame.pas' {VertexEditFrame: TFrame},
-  uDeformerFrame in '..\..\3d\forms\uDeformerFrame.pas' {DeformerFrame: TFrame};
+  uDeformerFrame in '..\..\3d\forms\uDeformerFrame.pas' {DeformerFrame: TFrame},
+  u3dMoveEngine in 'units\u3dMoveEngine.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

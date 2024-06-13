@@ -14,7 +14,12 @@ uses
   ImgList, usetlist, upage,
   uCommonTypes,
   OpenGL,
+  uModList,
+  uSkin,
+  uBaseDeformer,
+  uBaseModificator,
   uShape,
+  uMeshObr,
   math,
   uObject, uNodeObject,
   uHardwareMath,
@@ -27,8 +32,10 @@ uses
   uBasecamera,
   uMeasureBase,
   uPathMng,
-  uMBaseControl, u3dSceneEditFrame,
+  uMBaseControl,
+  u3dSceneEditFrame,
   uSkinFrame,
+  u3dMoveEngine,
   uSceneMng;
 
 type
@@ -134,8 +141,6 @@ begin
   m_EditFrame.lincScene(GL.mUI);
 end;
 
-
-
 function TObjFrm3d.BuildPath: string;
 var
   o: cObjFolder;
@@ -220,22 +225,10 @@ begin
   if GL.mUI <> nil then
   begin
     loadscene(m_SceneName);
-    //airplane := cnodeobject(GL.mUI.scene.getobj('line001'));
-    //airplane.name := 'Airplane';
-    // t:=cglturbine.create(GL);
-    // t.Name:='glTurbine';
-    // t.node.RotateNodeGlobal(0,-45,0);
     l := GL.mUI.scene.lights.getlight(0);
     if l <> nil then
       l.position := p3(1.2, 1.5, -2.5);
     c := GL.mUI.m_RenderScene.Getactivecamera;
-    //c.target:=airplane.Node;
-    //if airplane is cshapeobj then
-    //begin
-      //c.ZoomBound(cshapeobj(airplane).bound);
-    //  c.MoveNodeLocal(0, 0, -50);
-    //end;
-    //c.rotateAroundTarget(c.target,p3(1,0,0),-45);
     c.target := nil;
   end;
 end;
@@ -262,8 +255,13 @@ end;
 
 procedure TObjFrm3d.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 var
-  s:string;
+  s, s1:string;
   c:cBaseCamera;
+  i, j, k, n:integer;
+  skin:cbasemodificator;
+  o:cNodeObject;
+  p:cDeformPoint;
+  ctrl:c3dCtrlObj;
 begin
   inherited;
   a_pIni.WriteString(str, 'ScenePath', m_ScenePath);
@@ -272,6 +270,64 @@ begin
   c:=GL.mUI.scene.getactivecamera;
   s:=matrixToStr(c.restm);
   a_pIni.WriteString(str, 'CameraPos', s);
+  n:=0;
+  for I := 0 to GL.mUI.scene.Count - 1 do
+  begin
+    o:=cnodeobject(GL.mUI.scene.getobj(i));
+    if (o is cmeshobr) or (o is cShapeObj) then
+    begin
+      skin:=o.ModCreator.GetModificator('cSkin');
+      if skin<>nil then
+      begin
+        a_pIni.WriteString(str, 'SkinObj_'+inttostr(n), o.name);
+        // костей в скине
+        a_pIni.WriteInteger(str, 'SkinBCount_'+inttostr(n), cskin(skin).count);
+        // имена костей
+        s:='';
+        for j:=0 to cskin(skin).count-1 do
+        begin
+          ctrl:=cskin(skin).getbone(j).fbone;
+          s:=s+ctrl.name+';';
+        end;
+        a_pIni.WriteString(str, 'SkinObjBNames_'+inttostr(n), s);
+        // число вершин
+        s:='';
+        for j:=0 to cskin(skin).count-1 do
+        begin
+          ctrl:=cskin(skin).getbone(j).fbone;
+          s:=s+inttostr(ctrl.m_bone.count)+';';
+        end;
+        a_pIni.WriteString(str, 'SkinVCount_'+inttostr(n), s);
+
+        // номера точек
+        s:='';
+        for j:=0 to cskin(skin).count-1 do
+        begin
+          ctrl:=cskin(skin).getbone(j).fbone;
+          s1:='';
+          for k := 0 to ctrl.m_bone.count - 1 do
+          begin
+            p:=ctrl.m_bone.getpoint(k);
+            s1:=s1+Tpointtostr(p.p)+'_'+p.weight+';';
+          end;
+          a_pIni.WriteString(str, 'SkinVerts_'+inttostr(n), s);
+          s:=inttostr(ctrl.m_PName)+';';
+        end;
+        a_pIni.WriteString(str, 'SkinObjPNums_'+inttostr(n), s);
+        // теги
+        s:='';
+        for j:=0 to cskin(skin).count-1 do
+        begin
+          ctrl:=cskin(skin).getbone(j).fbone;
+          s:=s+ctrl.xTag.tagname+'_'+ctrl.yTag.tagname+'_'+ctrl.zTag.tagname+';';
+        end;
+        a_pIni.WriteString(str, 'SkinBTags_'+inttostr(n), s);
+        inc(n);
+      end;
+    end;
+  end;
+
+
 end;
 
 procedure TObjFrm3d.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -343,7 +399,7 @@ end;
 
 procedure TObjFrm3d.UpdateView;
 begin
-
+  g_CtrlObjList.updateObjPos;
 end;
 
 procedure TObjFrm3d.WndProc(var Message: TMessage);
@@ -400,6 +456,7 @@ begin
   m_picname := c_Pic;
   m_Guid := IID_3DFRM;
   createevents;
+  g_CtrlObjList:=cCntrlObjList.Create;
 end;
 
 destructor cObjFrm3dFactory.destroy;

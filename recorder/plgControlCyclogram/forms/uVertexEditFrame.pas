@@ -18,25 +18,10 @@ uses
   DCL_MYOWN,
   uSpin,
   uRcFunc,
+  u3dMoveEngine,
   uRcCtrls;
 
 type
-  // объект (кость) управл€ющий скелетом
-  cSkinPoint = class(cObject)
-  public
-    m_bone:cBone; // информаци€ о кости
-    // номер точки
-    m_PName:integer;
-    m_w:double;
-    // деформируемый объект
-    m_defObj:cnodeobject;
-    PId:tpoint; // вершина скелета
-    // теги отвечающие за амплитуду смещени€ кости
-    xTag, yTag, zTag:cTag;
-  public
-    constructor create;override;
-    destructor destroy;override;
-  end;
 
   TVertexEditFrame = class(TFrame)
     TopPanel: TPanel;
@@ -83,8 +68,8 @@ type
     // найти по id вершину в ListView
     function findItem(pointnum:tpoint):integer;
     // найти кость по номеру точки
-    function findBone(pNum:integer):cSkinPoint;
-    procedure ShowPoint(p:cSkinPoint);
+    function findBone(pNum:integer):c3dCtrlObj;
+    procedure ShowPoint(p:c3dCtrlObj);
   public
     procedure createevents;
     procedure destroyevents;
@@ -106,7 +91,7 @@ procedure TVertexEditFrame.AddBtnClick(Sender: TObject);
 var
   I: Integer;
   li:tlistitem;
-  p:cSkinPoint;
+  p:c3dCtrlObj;
   deformP:cDeformPoint;
   b:boolean;
   bone:cbone;
@@ -127,7 +112,9 @@ begin
     p:=findBone(PointNumSE.Value);
     if p=nil then
     begin
-      p:=cSkinPoint.create;
+      p:=c3dCtrlObj.create;
+      g_CtrlObjList.addObj(p);
+
       p.fHelper:=false;
       p.Name:='Point_'+inttostr(PointNumSE.Value);
       p.m_PName:=PointNumSE.Value;
@@ -139,6 +126,7 @@ begin
         p3:=cShapeObj(m_curObj).getPoint(m_point);
         m:=cShapeObj(m_curObj).nodeResTm;
         p.position:=MultP3byM(m, p3);
+        p.startpos:=p.position;
       end;
       bone:=m_skin.AddBone(p);
       p.m_bone:=bone;
@@ -154,7 +142,7 @@ end;
 
 procedure TVertexEditFrame.Apply;
 var
-  p:cSkinPoint;
+  p:c3dCtrlObj;
 begin
   if m_curObj<>nil then
   begin
@@ -188,7 +176,7 @@ begin
   m_ui.eventlist.removeEvent(OnSelectVertex, E_glSelectMeshPoint);
 end;
 
-function TVertexEditFrame.findBone(pNum: integer): cSkinPoint;
+function TVertexEditFrame.findBone(pNum: integer): c3dCtrlObj;
 var
   I: Integer;
   b:cbone;
@@ -199,11 +187,11 @@ begin
     for I := 0 to m_skin.Count - 1 do
     begin
       b:=m_skin.getbone(i);
-      if b.fbone is cSkinPoint then
+      if b.fbone is c3dCtrlObj then
       begin
-        if cSkinPoint(b.fbone).m_PName=pNum then
+        if c3dCtrlObj(b.fbone).m_PName=pNum then
         begin
-          result:=cSkinPoint(b.fbone);
+          result:=c3dCtrlObj(b.fbone);
           exit;
         end;
       end;
@@ -320,14 +308,14 @@ begin
       begin
         b:=m_skin.getbone(i);
         p:=b.fbone;
-        if p is cSkinPoint then
+        if p is c3dCtrlObj then
           m_pList.Add(p);
       end;
     end;
   end;
 end;
 
-procedure TVertexEditFrame.ShowPoint(p: cSkinPoint);
+procedure TVertexEditFrame.ShowPoint(p: c3dCtrlObj);
 var
   I: Integer;
   dp:cDeformPoint;
@@ -356,22 +344,5 @@ begin
 
 end;
 
-{ cSkinPoint }
-
-constructor cSkinPoint.create;
-begin
-  inherited;
-  xTag:=cTag.create;
-  yTag:=cTag.create;
-  zTag:=cTag.create;
-end;
-
-destructor cSkinPoint.destroy;
-begin
-  xTag.destroy;
-  yTag.destroy;
-  zTag.destroy;
-  inherited;
-end;
 
 end.

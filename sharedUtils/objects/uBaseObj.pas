@@ -49,6 +49,9 @@ type
     // Сортировка (-1 если не сортирован)
     fsort: integer;
   public
+  // события
+    fOnDestroy:tnotifyevent;
+  public
     function NotSaveToXml:boolean;virtual;
     procedure DoBeforeLincParent; virtual;
     // происходит при назначении нового родителя (в том числе если новый родитель nil)
@@ -345,6 +348,8 @@ destructor cBaseObj.destroy;
 var
   events: ceventlist;
 begin
+  if assigned(fOnDestroy) then
+    fOnDestroy(self);
   metadata.destroy;
   metadata := nil;
   unlinc;
