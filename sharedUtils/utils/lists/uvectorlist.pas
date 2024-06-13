@@ -27,6 +27,17 @@ type
     constructor create;virtual;
   end;
 
+  cTPointVectorObj = class(cVectorObj)
+  public
+    key:tpoint;
+  protected
+    procedure setKey(k:pointer);override;
+  public
+    procedure setTPointKey(k: tpoint);
+    function compare(k:cVectorObj):integer;overload;override;
+    function compare(k:pointer):integer;overload;override;
+  end;
+
   cIntVectorObj = class(cVectorObj)
   public
     key:integer;
@@ -94,10 +105,17 @@ type
     function createObj:cVectorObj;override;
   end;
 
+  cTPointVectorList = class(cVectorList)
+  public
+    function createObj:cVectorObj;override;
+  end;
+
   cFloatVectorList = class(cVectorList)
   public
     function createObj:cVectorObj;override;
   end;
+
+function comparetpoint(p1,p2:tpoint):integer;
 
 implementation
 
@@ -181,6 +199,80 @@ begin
   setkey(@k);
 end;
 
+function comparetpoint(p1,p2:tpoint):integer;
+begin
+  if p1.x>p2.x then
+  begin
+    result:=1;
+  end
+  else
+  begin
+    if p1.x<p2.x then
+    begin
+      result:=-1;
+    end
+    else
+    begin
+      if p1.y>p2.y then
+      begin
+        result:=1;
+      end
+      else
+      begin
+        if p1.y<p2.y then
+        begin
+          result:=-1;
+        end
+        else
+        begin
+          result:=0;
+        end;
+      end;
+    end;
+  end;
+end;
+
+{ cTPointVectorObj }
+function cTPointVectorObj.compare(k: pointer): integer;
+begin
+  if parentlist<>nil then
+  begin
+    if parentList.useCustomSort then
+    begin
+      result:=inherited compare(k);
+      exit;
+    end
+  end;
+  // Теперь сравнение строк
+  result:=comparetpoint(key, tpoint(k^));
+end;
+
+function cTPointVectorObj.compare(k: cVectorObj): integer;
+begin
+  if parentlist<>nil then
+  begin
+    if parentList.useCustomSort then
+    begin
+      result:=inherited compare(k);
+      exit;
+    end
+  end;
+  // Теперь сравнение строк
+  result:=comparetpoint(key, cTPointVectorObj(k).key);
+end;
+
+procedure cTPointVectorObj.setKey(k:pointer);
+begin
+  key:=tpoint(k^);
+end;
+
+procedure cTPointVectorObj.setTPointKey(k:tpoint);
+begin
+  setkey(@k)
+end;
+
+
+
 
 procedure cFloatVectorObj.setfKey(k:single);
 begin
@@ -228,6 +320,13 @@ begin
     if key = single(k^) then
       Result := 0
     else Result := -1;
+end;
+
+{ cTPointVectorList }
+function cTPointVectorList.createObj: cVectorObj;
+begin
+  result:=ctpointvectorobj.Create;
+  result.parentList:=self;
 end;
 
 function cIntVectorList.createObj:cVectorObj;

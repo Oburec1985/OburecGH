@@ -329,10 +329,6 @@
     <File Path="forms\uTrigFrame.dfm"/>
     <File Path="forms\uTrigsFrm.pas"/>
     <File Path="forms\uTrigsFrm.dfm"/>
-    <File Path="forms\u3dObj.pas"/>
-    <File Path="forms\u3dObj.dfm"/>
-    <File Path="forms\uGLFrmEdit.pas"/>
-    <File Path="forms\uGLFrmEdit.dfm"/>
     <File Path="forms\uSRSFrm.pas"/>
     <File Path="forms\uSRSFrm.dfm"/>
     <File Path="forms\uEditSrsFrm.pas"/>
@@ -357,6 +353,10 @@
     <File Path="forms\uDigsFrmEdit.dfm"/>
     <File Path="forms\uEditGlObjFrm.pas"/>
     <File Path="forms\uEditGlObjFrm.dfm"/>
+    <File Path="forms\u3dObj.pas"/>
+    <File Path="forms\u3dObj.dfm"/>
+    <File Path="forms\uGLFrmEdit.pas"/>
+    <File Path="forms\uGLFrmEdit.dfm"/>
     <File Path="forms\uVertexEditFrame.pas"/>
     <File Path="forms\uVertexEditFrame.dfm"/>
     <File Path="units"/>

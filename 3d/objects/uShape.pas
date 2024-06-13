@@ -17,10 +17,10 @@ type
     inst: boolean; // Копия другого объекта?   instname:string; // имя прототипа
     instname: string;
     LineCount: integer;
+    // x,  - номре линии, y - точка внутри линии;
     Lines: array of tline;
-
     fdrawlines, fdrawverts:boolean;
-    // x, y - номре линии, точка внутри линии;
+    // x,  - номре линии, y - точка внутри линии;
     selectPoints:tpoint;
   private
     CallListLine, CallListVerts:cardinal;
@@ -38,6 +38,7 @@ type
     destructor destroy; override;
     function typestring:string;override;
     procedure UpdateBounds;override;
+    function getPoint(p:tpoint):point3;
   protected
   public
     property drawLines:boolean read fdrawLines write fdrawLines;
@@ -193,6 +194,14 @@ begin
   end
   else
 
+end;
+
+function cShapeObj.getPoint(p: tpoint): point3;
+var
+  l:tline;
+begin
+  l:=Lines[p.x];
+  result:=l.data[p.y];
 end;
 
 procedure cShapeObj.drawdata;

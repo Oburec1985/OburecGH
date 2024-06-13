@@ -1,14 +1,14 @@
 unit uBaseDeformer;
 
 interface
-uses classes,
+uses classes, types,
      umatrix, mathfunction, uObject, uMeshObr, uVectorList, uBaseModificator,
      uNodeObject, dialogs, uselectools,uCommonTypes;
 
 type
   // класс в котором хранится информация о деформациях точки
   cDeformPoint = class
-    p:integer; // индекс точки в сетке меша
+    p:tpoint; // индекс точки в сетке меша
     weight:single; // вес точки (степень влияния кости на точку)
 
     v:point3; // координаты точки в момент привязки в координатах модели
@@ -171,7 +171,7 @@ begin
   begin
     p:=getpoint(i);
     // матрица положения точки на момент привязки
-    p.v:=VtoP3(mesh.mesh.drawarray[p.p]);
+    p.v:=VtoP3(mesh.mesh.drawarray[p.p.x]);
   end;
 end;
 
@@ -199,7 +199,7 @@ function cDeformMesh.AddPoint(i:integer):cdeformpoint;
 var p:cDeformPoint;
 begin
   p:=cDeformPoint.Create;
-  p.p:=i;
+  p.p.x:=i;
   p.v:=VtoP3(mesh.mesh.drawarray[i]);
   pointers.AddObject(@p.p,p);
   result:=p;
@@ -222,7 +222,7 @@ begin
     l_m2:=multmatrix4(l_m,m_p); // новая позиция вершины в глобальных координатах
     l_m2:=evalrightmatrix(fmesh.restm,l_m2); // вычисляем матрицу смещения из мира модели в global+вершина
     p.Vres:=GetPosFromMatrixP3(l_m2);
-    mesh.mesh.DrawArray[p.p]:=P3ToV(summvectorp3(scalevectorp3(p.weight,p.Vres),
+    mesh.mesh.DrawArray[p.p.x]:=P3ToV(summvectorp3(scalevectorp3(p.weight,p.Vres),
                                     scalevectorp3(1-p.weight,p.v)));
   end;
 end;

@@ -2,7 +2,7 @@ unit uSkin;
 
 interface
 
-uses classes,
+uses classes, types, usetlist,
      umatrix, mathfunction, uObject, uMeshObr, uVectorList, uBaseModificator,
      uNodeObject, dialogs, uselectools,
      uBaseDeformer,
@@ -11,6 +11,7 @@ uses classes,
      sysutils,
      uCommonTypes,
      uBaseObj,
+     uShape,
      uBaseObjMng;
 
 type
@@ -38,7 +39,8 @@ type
   cbone = class;
 
   cSkinVertex = class
-    i:integer; // индекс уникальной вершины в масиве макса
+    i:tpoint; // индекс уникальной вершины в масиве макса. В случае Mesh использхуется только x
+              // в случае shape используется номер подэлемента (y)
     bones:tlist;
     vres:point3;
   public
@@ -48,18 +50,22 @@ type
     destructor desroy;
   end;
 
+
   cBone = class
     // Список ссылок на уникальные (пространственные) вершины объекта
     // (см.VPointers класса cMesh), веса этих вершин и положение на момент привязки
-    pointers:cIntVectorList;
+    //pointers:cPointsList;
+    //pointers:cIntVectorList;
+    pointers:cTPointVectorList;
     // матрица перехода из кости в меш в момент привязки в координатах модели
     m:matrixgl;
+  public
+    // объект сцены к которому прилинкована кость
+    fbone:cNodeObject;
   private
     skin:cskin;// ссылка на модификатор
     // сетка
-    fmesh:cMeshObr;
-    // кость
-    fbone:cNodeObject;
+    fmesh:cNodeobject;
   private
     // обновляет матрицу перехода из кости в объект и обновляет
     // кординаты вершин на момент привязки
@@ -82,10 +88,10 @@ type
     // получить ссыльку на вершину по индексу
     function getpoint(i:integer):cDeformPoint;
     // получить ссыльку на вершину по индексу уникальной вершины
-    function FindPoint(i:integer):cDeformPoint;
+    function FindPoint(i:tpoint):cDeformPoint;
     // Создает деформируемую точку с индексом i в массиве редактируемой сетки
     // возвращает ссылку на созданную точку
-    function AddPoint(i:integer;weight:single):cDeformPoint;
+    function AddPoint(i:tpoint;weight:single):cDeformPoint;
     // Удаляет точку из скелета
     procedure deletePoint(i:integer);
     // вычисляет новое положение для точек сетки в кординатах модели
@@ -104,13 +110,13 @@ type
     ImpExpdata:skindata;
   private
     // деформируемые вершины
-    vList:cIntVectorList; // хранит список cSkinVert
+    vList:cTPointVectorList; // хранит список cSkinVert
     // скелет
     boneList:tlist;
   protected
     // Отлинковывает меш и его события
     procedure UnLincMesh;
-    function FindSkinVert(key:integer):cSkinVertex;
+    function FindSkinVert(key:tpoint):cSkinVertex;
     // вычисляет значения всех точек для скелета
     procedure EvalAll;
   public
@@ -127,7 +133,7 @@ type
     procedure setmesh(obj:cmeshobr);
     function getmesh:cmeshobr;
   public
-    // возвращает число точек сетки
+    // возвращает число костей
     function count:integer;
     // перед тем как присваивать деформеру меш.нужно присвоить кость
     property mesh:cmeshobr read getmesh write setmesh;
@@ -188,7 +194,8 @@ end;
 constructor cBone.create(bone:cnodeobject;pmesh:cmeshObr);
 begin
   fmesh:=pmesh;
-  pointers:=cIntVectorList.create;
+  //pointers:=cIntVectorList.create;
+  pointers:=cTPointVectorList.create;
   fbone:=bone;
   bone.events.AddEvent(fbone.name+'updateBone',e_setObjtoworld,UpdateBone);
   updateBoneToObjM;
@@ -226,7 +233,7 @@ begin
   result:=cDeformPoint(pointers.getObj(i));
 end;
 
-function cBone.AddPoint(i:integer;weight:single):cdeformpoint;
+function cBone.AddPoint(i:tpoint;weight:single):cdeformpoint;
 var p:cDeformPoint;
     sV:cSkinVertex;
     j:integer;
@@ -237,7 +244,14 @@ begin
     p:=cDeformPoint.Create;
     p.weight:=weight;
     p.p:=i;
-    p.v:=VtoP3(fmesh.mesh.drawarray[fmesh.mesh.UnicVert[i].Pointers[0]]);
+    if fmesh is cMeshObr then
+    begin
+      p.v:=VtoP3(cMeshObr(fmesh).mesh.drawarray[cMeshObr(fmesh).mesh.UnicVert[i.x].Pointers[0]]);
+    end;
+    if fmesh is cShapeObj then
+    begin
+      p.v:=cShapeObj(fmesh).getPoint(i);
+    end;
     pointers.AddObject(@p.p,p);
     result:=p;
     sv:=skin.FindSkinVert(i);
@@ -294,6 +308,7 @@ begin
   // l_m - результирующая матрица вершины (переход в мировые координаты)
   // здесь мог бы быть mesh.restm но интересен расчет относительно момента привязки
   // т.е. это положение модели куда б она сместилась если б была залинкована к кости
+  // m - переход из костив меш
   l_m:=multmatrix4(fbone.restm,m);
   for I := 0 to Count - 1 do
   begin
@@ -307,7 +322,7 @@ begin
 end;
 
 // получить ссыльку на вершину по индексу уникальной вершины
-function cBone.FindPoint(i:integer):cDeformPoint;
+function cBone.FindPoint(i:tpoint):cDeformPoint;
 var
   p:cdeformpoint;
   j:integer;
@@ -325,7 +340,15 @@ begin
   begin
     p:=getpoint(i);
     // обновляем положение точки на момент привязки
-    p.v:=VtoP3(fmesh.mesh.drawarray[fmesh.mesh.UnicVert[p.p].Pointers[0]]);
+    if fmesh is cmeshobr then
+      p.v:=VtoP3(cmeshobr(fmesh).mesh.drawarray[cmeshobr(fmesh).mesh.UnicVert[p.p.x].Pointers[0]])
+    else
+    begin
+      if fmesh is cshapeobj then
+      begin
+        p.v:=cshapeobj(fmesh).getPoint(p.p);
+      end;
+    end;
   end;
 end;
 
@@ -337,6 +360,7 @@ var
   Objbone:cnodeobject;
   bone:cbone;
   str:string;
+  p:tpoint;
 begin
   bonecount:=impexpdata.Count;
   for I := 0 to bonecount - 1 do
@@ -348,16 +372,18 @@ begin
     bone:=AddBone(Objbone);
     // читаем число вершин кости
     vcount:=bdata.count;
+    p.y:=0;
     for j := 0 to vcount - 1 do
     begin
-      bone.addpoint(bdata.data[j].ind,bdata.data[j].weight);
+      p.x:=bdata.data[j].ind;
+      bone.addpoint(p,bdata.data[j].weight);
     end;
   end;
 end;
 
 constructor cSkin.create(p_mesh:cmeshobr);
 begin
-  vList:=cIntVectorlist.create;
+  vList:=cTPointVectorList.create;
   boneList:=tlist.create;
   mesh:=p_mesh;
   modtype:=constskin;
@@ -375,7 +401,7 @@ begin
   result:=BoneList.Count;
 end;
 
-function cSkin.FindSkinVert(key:integer):cSkinVertex;
+function cSkin.FindSkinVert(key:tpoint):cSkinVertex;
 begin
   result:=cSkinVertex(vList.findObj(@key));
 end;
@@ -434,6 +460,7 @@ var i,j,bonecount:integer;
     sv:cskinvertex;
     v:cdeformpoint;
     uv:cVPointer;
+    l:tline;
 begin
   bonecount:=count;
   for I := 0 to bonecount - 1 do
@@ -444,14 +471,28 @@ begin
   begin
     p3.x:=0;p3.y:=0;p3.z:=0;
     sv:=cskinvertex(vlist.getObj(i));
+    // усредняем вектор смещения вершины по нескольким костям
     for j := 0 to sv.Count - 1 do
     begin
       bone:=sv.bone(j);
       v:=bone.FindPoint(sv.i);
       p3:=SummVectorP3(p3,v.Vres);
     end;
-    uv:=cmeshobr(owner).mesh.UnicVert[i];
-    cmeshobr(owner).mesh.updateVertDataByUV(uv,p3);
+    if owner is cmeshobr then
+    begin
+      // обновляем координаты дублей
+      uv:=cmeshobr(owner).mesh.UnicVert[i];
+      cmeshobr(owner).mesh.updateVertDataByUV(uv,p3);
+    end
+    else
+    begin
+      if owner is cShapeObj then
+      begin
+        l:=cShapeObj(owner).Lines[sv.i.x];
+        l.data[sv.i.y]:=p3;
+        cShapeObj(owner).needRecompile:=true;
+      end;
+    end;
   end;
 end;
 
@@ -459,6 +500,5 @@ procedure cSkin.apply;
 begin
   EvalAll;
 end;
-
 
 end.

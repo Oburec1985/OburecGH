@@ -44,6 +44,7 @@ object ObjFrm3d: TObjFrm3d
     scenename = '.\files\scenes'
     ShowTrasforms = True
     OnInitScene = GLInitScene
+    ExplicitTop = -4
     object RightSplitter: TSplitter
       Left = 650
       Top = 1

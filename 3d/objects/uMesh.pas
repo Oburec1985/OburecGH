@@ -37,6 +37,7 @@ type
    // Отрисовать геометрию
    procedure drawgeometrie(textured:boolean);virtual;
    function getVertPos(ind:integer):point3;
+   // если обновилась уникальная вершина меняем координаты всех дублей
    procedure updateVertDataByUV(ind:integer;p3:point3);overload;
  public
    // Рассчитать min max позиции по x и y;

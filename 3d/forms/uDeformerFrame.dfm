@@ -24,8 +24,8 @@ object DeformerFrame: TDeformerFrame
     object Label2: TLabel
       Left = 110
       Top = 51
-      Width = 53
-      Height = 13
+      Width = 61
+      Height = 16
       Anchors = [akRight, akBottom]
       Caption = #1042#1077#1089' '#1082#1086#1089#1090#1080':'
     end
@@ -101,24 +101,24 @@ object DeformerFrame: TDeformerFrame
     object Label1: TLabel
       Left = 113
       Top = 72
-      Width = 54
-      Height = 13
+      Width = 62
+      Height = 16
       Anchors = [akRight, akBottom]
       Caption = #1042#1077#1089' '#1090#1086#1095#1082#1080':'
     end
     object Label3: TLabel
       Left = 113
       Top = 46
-      Width = 50
-      Height = 13
+      Width = 59
+      Height = 16
       Anchors = [akRight, akBottom]
       Caption = #8470' '#1058#1086#1095#1082#1080':'
     end
     object Label4: TLabel
       Left = 107
       Top = 20
-      Width = 67
-      Height = 13
+      Width = 77
+      Height = 16
       Anchors = [akRight, akBottom]
       Caption = #1063#1080#1089#1083#1086' '#1090#1086#1095#1077#1082':'
     end

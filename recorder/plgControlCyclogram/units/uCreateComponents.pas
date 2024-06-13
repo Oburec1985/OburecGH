@@ -254,6 +254,7 @@ begin
   EditGLObjFrm := TEditGLObjFrm.Create(nil);
   g_ObjFrm3dEdit := TObjFrm3dEdit.Create(nil);
 
+
   ControlCyclogramEditFrm := TControlCyclogramEditFrm.Create(nil);
   ControlCyclogramEditFrm.HandleNeeded;
   if show then

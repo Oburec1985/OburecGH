@@ -69,18 +69,7 @@ var
   n:pvirtualnode;
   d:pnodedata;
 begin
-  {if EditGLObjFrm=nil then
-  begin
-    //EditGLObjFrm:=TEditGLObjFrm.create(nil);
-  end;
-  n:=SceneTV.GetFirstSelected(false);
-  if n<>nil then
-  begin
-    d:=SceneTV.GetNodeData(n);
-    o:=cbaseobj(d.data);
-    EditGLObjFrm.setObj(cnodeobject(o));
-    EditGLObjFrm.show;
-  end;}
+
 end;
 
 procedure TGlSceneEditFrame.ShowScene;

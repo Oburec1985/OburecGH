@@ -44,7 +44,7 @@ type
   private
     M_camera:matrixgl;
     m_TransformToolsFrame: TTrfrmToolsFrame;
-
+    // TTreeView - дерево объектов
     m_EditFrame:TGlSceneEditFrame;
     fshowtools: boolean;
   public
@@ -65,6 +65,7 @@ type
     procedure SetShowTools(b: boolean);
     procedure WndProc(var Message: TMessage); override;
   public
+    procedure UpdateTreeView;
     function MBasePath:string;
     function BuildPath: string;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -130,7 +131,6 @@ begin
   m_TransformToolsFrame.Align := alClient;
   m_TransformToolsFrame.Parent := ToolsGB;
   m_TransformToolsFrame.lincScene(GL.mUI);
-
   m_EditFrame.lincScene(GL.mUI);
 end;
 
@@ -336,6 +336,11 @@ begin
 
 end;
 
+procedure TObjFrm3d.UpdateTreeView;
+begin
+  m_EditFrame.ShowScene;
+end;
+
 procedure TObjFrm3d.UpdateView;
 begin
 
@@ -351,12 +356,12 @@ begin
       begin
         case message.WParam of
           WM_RBUTTONUP:
-            begin
-              // CPoint pnt(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-              // ::ClientToScreen(m_pForm->getHWND(),&pnt);
-              // ScreenToClient(&pnt);
-              // return SendMessage(wParam,MK_RBUTTON,MAKELPARAM(pnt.x,pnt.y));
-            end;
+          begin
+            // CPoint pnt(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+            // ::ClientToScreen(m_pForm->getHWND(),&pnt);
+            // ScreenToClient(&pnt);
+            // return SendMessage(wParam,MK_RBUTTON,MAKELPARAM(pnt.x,pnt.y));
+          end;
         end;
       end;
   end;

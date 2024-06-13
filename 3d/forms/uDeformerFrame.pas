@@ -212,7 +212,7 @@ begin
     p:=mesh.getpoint(i);
     li:=PointsLV.items.Add;
     li.Data:=p;
-    PointsLV.SetSubItemByColumnName('Список точек',inttostr(p.p),li);
+    PointsLV.SetSubItemByColumnName('Список точек',inttostr(p.p.x),li);
     PointsLV.SetSubItemByColumnName('Вес',floattostr(p.weight),li);
   end;
 end;

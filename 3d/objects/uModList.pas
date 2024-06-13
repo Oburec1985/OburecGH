@@ -35,7 +35,9 @@ const
 
 implementation
 uses
-  uBaseDeformer, unodeobject, uskin, umeshobr, uMoveController, uSceneMng;
+  uBaseDeformer, unodeobject,
+  uskin, umeshobr, ushape,
+  uMoveController, uSceneMng;
 
 constructor cModCreator.create(aowner:tobject);
 begin
@@ -86,7 +88,7 @@ begin
   end;
   if name='cSkin' then
   begin
-    if obj is cmeshobr then
+    if (obj is cmeshobr) or (obj is cShapeObj) then
     begin
       result:=cSkin.create(cmeshobr(obj));
       cBaseDeformer(result).owner:=cnodeobject(obj);

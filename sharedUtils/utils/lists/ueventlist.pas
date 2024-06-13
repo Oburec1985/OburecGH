@@ -15,11 +15,13 @@ type
 
   cEvent = class
   public
+    active:boolean;
     name:string;
     dsc:string;
     EventType:cardinal; // идентификатор события
     action:EventProcedure;
   public
+    constructor create;
   end;
 
   cEventList = class(cSetList)
@@ -169,7 +171,8 @@ var
   e:cevent;
 begin
   e:=getevent(index);
-  e.action(owner);
+  if e.active then
+    e.action(owner);
 end;
 
 procedure cEventList.CallAllEvents(eventtype:cardinal);
@@ -207,7 +210,8 @@ begin
         call:=true;
       if call then
       begin
-        e.action(owner);
+        if e.active then
+          e.action(owner);
       end;
     end;
   end;
@@ -239,7 +243,8 @@ begin
       call:=e.EventType=eventtype;
     if call then
     begin
-      e.action(sender);
+      if e.active then
+        e.action(sender);
     end;
   end;
 end;
@@ -306,5 +311,12 @@ end;
 
 { cEvent }
 
+
+{ cEvent }
+
+constructor cEvent.create;
+begin
+  active:=true;
+end;
 
 end.

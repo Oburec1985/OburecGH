@@ -1,7 +1,7 @@
 unit uCommonTypes;
 
 interface
-uses classes, types, windows;
+uses classes, types, windows, sysutils;
 
 type
   cpoint2d = class
@@ -171,6 +171,7 @@ function p2d(x,y:double):point2d;
 function p2top2d(p:point2):point2d;
 function p3(x,y,z:single):point3;
 function p3ToStr(p3:point3; digs:integer):string;
+function TPointToStr(tp:tpoint):string;
 function summP2(p1,p2:point2):point2;
 function summP2d(p1,p2:point2d):point2d;
 function DecP2(p0,p1:point2):point2;
@@ -309,6 +310,11 @@ end;
 function p3ToStr(p3:point3; digs:integer):string;
 begin
   result:='x:'+formatstrNoE(p3.x, digs)+';'+'y:'+formatstrNoE(p3.y, digs)+';'+'z:'+formatstrNoE(p3.z, digs)
+end;
+
+function TPointToStr(tp:tpoint):string;
+begin
+  result:=inttostr(tp.X)+'_'+inttostr(tp.y);
 end;
 
 { TNamedObj }

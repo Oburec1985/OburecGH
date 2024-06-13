@@ -9,6 +9,7 @@ uses
   uMBaseControl,
   uVertexEditFrame,
   uGlEventTypes,
+  uEventList,
   uObject, uNodeobject,
   StdCtrls, ExtCtrls, uTagsListFrame;
 
@@ -31,12 +32,14 @@ type
     procedure PathBtnClick(Sender: TObject);
     procedure OkBtnClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     finit:boolean;
     m_glFrm:tform;
     skinframe:TVertexEditFrame;
     frames:tlist;
     m_curObj:cnodeobject;
+    e:cEvent;
   protected
     procedure createevents;
     procedure destroyevents;
@@ -60,7 +63,8 @@ uses
 
 procedure TObjFrm3dEdit.createevents;
 begin
-  TObjFrm3d(m_glFrm).GL.mUI.eventlist.AddEvent('TObjFrm3dEdit_OnSelObj',E_glSelectNew,OnSelectObj);
+  e:=TObjFrm3d(m_glFrm).GL.mUI.eventlist.AddEvent('TObjFrm3dEdit_OnSelObj',E_glSelectNew,OnSelectObj);
+  e.active:=false;
 end;
 
 procedure TObjFrm3dEdit.destroyevents;
@@ -74,9 +78,11 @@ var
 begin
   inherited;
   // фрейм настройки вершин
-  fr:=TVertexEditFrame.create(nil);
+  //fr:=TVertexEditFrame.CreateParented(AlClientPanel.Handle);
+  fr:=TVertexEditFrame.Create(nil);
   fr.parent:=AlClientPanel;
   fr.visible:=true;
+  TVertexEditFrame(fr).init;
   skinframe:=TVertexEditFrame(fr);
 
   frames:=TList.Create;
@@ -103,9 +109,18 @@ begin
   scenepath:=TObjFrm3d(glFrm).BuildPath;
   SceneFolderEdit.Text:=extractfiledir(scenepath);
   SceneNameEdit.Text:=ExtractFileName(scenepath);
+  if e<>nil then
+    e.active:=false;
+  OnSelectObj(nil);
   show;
 end;
 
+
+procedure TObjFrm3dEdit.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  if e<>nil then
+    e.Active:=true;
+end;
 
 procedure TObjFrm3dEdit.FormShow(Sender: TObject);
 var
@@ -155,10 +170,10 @@ end;
 
 procedure TObjFrm3dEdit.OnSelectObj(sender: tobject);
 begin
-  if skinframe.m_ui.selectCount>0 then
+  if TObjFrm3d(m_glFrm).GL.mUI.selectCount>0 then
   begin
-    m_curObj:=skinframe.m_ui.getselected(0);
-    skinframe.showObj(cobject(m_curObj));
+    m_curObj:=TObjFrm3d(m_glFrm).GL.mUI.getselected(0);
+    skinframe.showObj(cobject(m_curObj), m_glFrm);
   end
   else
     m_curObj:=nil;
