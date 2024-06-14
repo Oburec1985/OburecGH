@@ -29,15 +29,15 @@ object VertexEditFrame: TVertexEditFrame
     object ObjNameLabel: TLabel
       Left = 16
       Top = 11
-      Width = 69
-      Height = 13
+      Width = 79
+      Height = 16
       Caption = #1048#1084#1103' '#1086#1073#1098#1077#1082#1090#1072':'
     end
     object PintNumLabel: TLabel
       Left = 152
       Top = 11
-      Width = 69
-      Height = 13
+      Width = 79
+      Height = 16
       Caption = #1048#1084#1103' '#1086#1073#1098#1077#1082#1090#1072':'
     end
     object TypeCB: TCheckBox
@@ -53,7 +53,7 @@ object VertexEditFrame: TVertexEditFrame
       Left = 16
       Top = 33
       Width = 121
-      Height = 21
+      Height = 24
       TabOrder = 1
       Text = 'NameEdit'
     end
@@ -61,7 +61,7 @@ object VertexEditFrame: TVertexEditFrame
       Left = 152
       Top = 33
       Width = 97
-      Height = 22
+      Height = 26
       MaxValue = 100
       MinValue = 1
       TabOrder = 2
@@ -134,7 +134,7 @@ object VertexEditFrame: TVertexEditFrame
     TabOrder = 2
     object Panel1: TPanel
       Left = 2
-      Top = 15
+      Top = 18
       Width = 231
       Height = 183
       Align = alTop
@@ -142,50 +142,50 @@ object VertexEditFrame: TVertexEditFrame
       object PNameLabel: TLabel
         Left = 5
         Top = 2
-        Width = 56
-        Height = 13
+        Width = 65
+        Height = 16
         Caption = #1048#1084#1103' '#1090#1086#1095#1082#1080':'
       end
       object WeightLabel: TLabel
         Left = 5
         Top = 51
-        Width = 54
-        Height = 13
+        Width = 62
+        Height = 16
         Caption = #1042#1077#1089' '#1090#1086#1095#1082#1080':'
       end
       object TagLabel: TLabel
         Left = 6
         Top = 102
-        Width = 35
-        Height = 13
+        Width = 40
+        Height = 16
         Caption = #1050#1072#1085#1072#1083':'
       end
       object AxisLabel: TLabel
         Left = 124
         Top = 101
-        Width = 23
-        Height = 13
+        Width = 27
+        Height = 16
         Caption = #1054#1089#1100':'
       end
       object Label1: TLabel
         Left = 5
         Top = 156
-        Width = 123
-        Height = 13
+        Width = 144
+        Height = 16
         Caption = #1044#1086#1073#1072#1074#1083#1077#1085#1085#1099#1077' '#1074#1077#1088#1096#1080#1085#1099':'
       end
       object PIDLab: TLabel
         Left = 125
         Top = 2
-        Width = 56
-        Height = 13
+        Width = 65
+        Height = 16
         Caption = #1048#1084#1103' '#1090#1086#1095#1082#1080':'
       end
       object PointNumEdit: TIntEdit
         Left = 5
         Top = 21
         Width = 84
-        Height = 21
+        Height = 24
         TabOrder = 0
         Text = '000'
       end
@@ -193,7 +193,7 @@ object VertexEditFrame: TVertexEditFrame
         Left = 5
         Top = 70
         Width = 84
-        Height = 22
+        Height = 26
         Increment = 0.100000001490116100
         TabOrder = 1
       end
@@ -201,14 +201,14 @@ object VertexEditFrame: TVertexEditFrame
         Left = 125
         Top = 21
         Width = 74
-        Height = 21
+        Height = 24
         TabOrder = 2
       end
       object AxisCB: TComboBox
         Left = 124
         Top = 123
         Width = 41
-        Height = 21
+        Height = 24
         TabOrder = 3
         Text = '1'
       end
@@ -216,16 +216,16 @@ object VertexEditFrame: TVertexEditFrame
         Left = 5
         Top = 123
         Width = 84
-        Height = 21
+        Height = 24
         TabOrder = 4
         Text = 'TagCB'
       end
     end
     object SkinPointsLV: TBtnListView
       Left = 2
-      Top = 198
+      Top = 201
       Width = 231
-      Height = 267
+      Height = 264
       Align = alClient
       Columns = <
         item

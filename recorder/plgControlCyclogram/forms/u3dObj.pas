@@ -36,6 +36,7 @@ uses
   u3dSceneEditFrame,
   uSkinFrame,
   u3dMoveEngine,
+  umatrix,
   uSceneMng;
 
 type
@@ -55,13 +56,14 @@ type
     m_EditFrame:TGlSceneEditFrame;
     fshowtools: boolean;
   public
-    m_ScenePath, m_SceneName: string;
+    m_ScenePath, m_SceneName, m_inifile, m_loadsect: string;
     airplane: cnodeobject;
   private
     // инициация сцены
     procedure initComponents;
     procedure RBtnClick(Sender: TObject);
   protected
+    procedure doRcInit(sender:tobject);
     procedure createevents;
     procedure destroyevents;
     procedure UpdateView;
@@ -77,6 +79,7 @@ type
     function BuildPath: string;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
+    procedure LoadSkinIni;
     constructor create(Aowner: tcomponent); override;
     destructor destroy; override;
     procedure linkFrames;
@@ -128,6 +131,8 @@ const
 
 implementation
 
+uses uThresholdsFrm;
+
 {$R *.dfm}
 
 { TObjFrm3d }
@@ -174,21 +179,23 @@ begin
   GL.OnRBtn := RBtnClick;
   m_EditFrame:=TGlSceneEditFrame.Create(nil);
   m_EditFrame.Parent:=RightGB;
-end;
-
-procedure TObjFrm3d.createevents;
-begin
-
+  createevents;
 end;
 
 destructor TObjFrm3d.destroy;
 begin
+  destroyevents;
   inherited;
+end;
+
+procedure TObjFrm3d.createevents;
+begin
+  addplgevent('TObjFrm3d_doRcInit', E_RC_Init, doRcInit);
 end;
 
 procedure TObjFrm3d.destroyevents;
 begin
-
+  RemovePlgEvent(doRcInit, E_RC_Init);
 end;
 
 procedure TObjFrm3d.doStart;
@@ -255,13 +262,14 @@ end;
 
 procedure TObjFrm3d.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 var
-  s, s1:string;
+  s, s1, s2:string;
   c:cBaseCamera;
   i, j, k, n:integer;
   skin:cbasemodificator;
   o:cNodeObject;
   p:cDeformPoint;
-  ctrl:c3dCtrlObj;
+  //ctrl:c3dCtrlObj;
+  ctrl:cnodeobject;
 begin
   inherited;
   a_pIni.WriteString(str, 'ScenePath', m_ScenePath);
@@ -295,52 +303,62 @@ begin
         for j:=0 to cskin(skin).count-1 do
         begin
           ctrl:=cskin(skin).getbone(j).fbone;
-          s:=s+inttostr(ctrl.m_bone.count)+';';
+          s:=s+inttostr(c3dCtrlObj(ctrl).m_bone.count)+';';
         end;
         a_pIni.WriteString(str, 'SkinVCount_'+inttostr(n), s);
-
         // номера точек
         s:='';
+        // id точек
+        s2:='';
         for j:=0 to cskin(skin).count-1 do
         begin
           ctrl:=cskin(skin).getbone(j).fbone;
           s1:='';
-          for k := 0 to ctrl.m_bone.count - 1 do
+          // проход по вершинам
+          for k := 0 to c3dCtrlObj(ctrl).m_bone.count - 1 do
           begin
-            p:=ctrl.m_bone.getpoint(k);
-            s1:=s1+Tpointtostr(p.p)+'_'+p.weight+';';
+            p:=c3dCtrlObj(ctrl).m_bone.getpoint(k);
+            s1:=s1+Tpointtostr(p.p)+'_'+floattostr(p.weight)+';';
           end;
-          a_pIni.WriteString(str, 'SkinVerts_'+inttostr(n), s);
-          s:=inttostr(ctrl.m_PName)+';';
+          a_pIni.WriteString(str, 'SkinVerts_'+inttostr(n), s1);
+          s:=s+inttostr(c3dCtrlObj(ctrl).m_PName)+';';
+          s2:=s2+tpointtostr(c3dCtrlObj(ctrl).PId)+';';
         end;
         a_pIni.WriteString(str, 'SkinObjPNums_'+inttostr(n), s);
+        a_pIni.WriteString(str, 'SkinObjPID_'+inttostr(n), s2);
         // теги
         s:='';
         for j:=0 to cskin(skin).count-1 do
         begin
           ctrl:=cskin(skin).getbone(j).fbone;
-          s:=s+ctrl.xTag.tagname+'_'+ctrl.yTag.tagname+'_'+ctrl.zTag.tagname+';';
+          s:=s+c3dCtrlObj(ctrl).xTag.tagname+'/'+c3dCtrlObj(ctrl).yTag.tagname+
+             '/'+c3dCtrlObj(ctrl).zTag.tagname+';';
         end;
         a_pIni.WriteString(str, 'SkinBTags_'+inttostr(n), s);
         inc(n);
       end;
     end;
   end;
-
-
 end;
 
 procedure TObjFrm3d.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 var
-  basepath, path, s:string;
+  basepath, path, s, s1, s2, s3, s4:string;
+  b:boolean;
   m:MatrixGl;
   c:cBaseCamera;
+  skin:cbasedeformer;
+  o, mesh:cnodeobject;
+  tp:tpoint;
+  w:single;
+  I,j,k,vn,n: Integer;
 begin
   inherited;
+  m_inifile:=a_pIni.FileName;
+  m_loadsect:=str;
   m_ScenePath := a_pIni.ReadString(str, 'ScenePath', '');
   m_SceneName := a_pIni.ReadString(str, 'SceneName', '');
   ShowTools:=a_pIni.ReadBool(str, 'ShowEditor', true);
-
   if MBasePath<>'' then
   begin
     basepath:=FindFile('resources.ini',MBasePath+'\3dTypes\',2);
@@ -369,6 +387,122 @@ begin
   end;
   s:=a_pIni.readString(str, 'CameraPos', '1;0;0;0;1;0;0;0;1;0;0;0');
   M_camera:=StrToMatrix(s);
+end;
+
+procedure TObjFrm3d.doRcInit(sender: tobject);
+begin
+  // загрузить сцену
+  LoadSkinIni;
+end;
+
+procedure TObjFrm3d.LoadSkinIni;
+var
+  str,s, s1, s2, s3, s4, s5, s6:string;
+  b:boolean;
+  c:cBaseCamera;
+  skin:cBaseModificator;
+  DeformP:cDeformPoint;
+  o, mesh:cnodeobject;
+  bone:cbone;
+  tp:tpoint;
+  w:single;
+  I,j,k,vn,n: Integer;
+  a_pIni:TIniFile;
+  p3:point3;
+  m:matrixgl;
+begin
+  //exit;
+  a_pIni:=TIniFile.Create(m_inifile);
+  b:=true;
+  n:=0;
+  while b do
+  begin
+    s:=a_pIni.ReadString(m_loadsect, 'SkinObj_'+inttostr(n), '');
+    if s='' then
+      break;
+    o:=cnodeobject(GL.mUI.scene.getobj(s));
+    mesh:=o;
+    if o is cShapeObj then
+    begin
+      skin:=cShapeObj(o).ModCreator.CreateModificator('cSkin');
+    end;
+    // костей в скине
+    j:=a_pIni.ReadInteger(m_loadsect, 'SkinBCount_'+inttostr(n), 0);
+    // имена костей
+    s:=a_pIni.ReadString(m_loadsect, 'SkinObjBNames_'+inttostr(n), '');
+    // число вершин
+    s2:=a_pIni.ReadString(m_loadsect, 'SkinVCount_'+inttostr(n), '');
+    // имена точек
+    s3:=a_pIni.ReadString(m_loadsect, 'SkinObjPNums_'+inttostr(n), '');
+    s5:=a_pIni.ReadString(m_loadsect, 'SkinObjPID_'+inttostr(n), '');
+    s6:=a_pIni.ReadString(m_loadsect, 'SkinBTags_'+inttostr(n), '');
+    // id вершин точек
+    s4:=a_pIni.ReadString(m_loadsect, 'SkinVerts_'+inttostr(n), '');
+    for i:=0 to j-1 do
+    begin
+      // имена
+      s1:=getSubStrByIndex(s,';',1,i);
+      o:=c3dCtrlObj.create;
+      o.name:=s1;
+      // число вершин
+      s1:=getSubStrByIndex(s2,';',1,i);
+      vn:=strtoint(s1);
+      // номера точек
+      s1:=getSubStrByIndex(s3,';',1,i);
+      c3dCtrlObj(o).m_PName:=strtoint(s1);
+      // id точек
+      s1:=getSubStrByIndex(s5,';',1,i);
+      c3dCtrlObj(o).PId:=strtotpoint(s1);
+      // теги
+      s1:=getSubStrByIndex(s6,';',1,i);
+      s5:=getSubStrByIndex(s6,'/',1,0);
+      if s5<>'' then
+      begin
+        c3dCtrlObj(o).xTag.tagname:=s5;
+      end;
+      s5:=getSubStrByIndex(s6,'/',1,1);
+      if s5<>'' then
+      begin
+        c3dCtrlObj(o).yTag.tagname:=s5;
+      end;
+      s5:=getSubStrByIndex(s6,'/',1,2);
+      if (s5<>'') then
+      begin
+        if s5<>';' then
+          c3dCtrlObj(o).zTag.tagname:=s5;
+      end;
+
+      // привязываем к сцене
+      c3dCtrlObj(o).fHelper:=false;
+      GL.mUI.scene.Add(o, GL.mUI.scene.world);
+      if mesh is cShapeObj then
+      begin
+        p3:=cShapeObj(mesh).getPoint(c3dCtrlObj(o).PId);
+        m:=cShapeObj(mesh).nodeResTm;
+        c3dCtrlObj(o).position:=MultP3byM(m, p3);
+        c3dCtrlObj(o).startpos:=c3dCtrlObj(o).position;
+      end;
+      // число вершин
+      bone:=cskin(skin).AddBone(o);
+      c3dCtrlObj(o).m_bone:=bone;
+      // id вершин
+      for k := 0 to vn - 1 do
+      begin
+        s1:=getSubStrByIndex(s4,';',1,k);
+        tp.X:=strtoint(getSubStrByIndex(s1,'_',1,0));
+        tp.y:=strtoint(getSubStrByIndex(s1,'_',1,1));
+        w:=strtofloat(getSubStrByIndex(s1,'_',1,2));
+        // привязка к модификатору точки
+        deformP:=c3dCtrlObj(o).m_bone.AddPoint(tp, w);
+        deformP.weight:=w;
+        //c3dCtrlObj(o).PId
+      end;
+    end;
+    inc(n);
+    g_CtrlObjList.addObj(c3dCtrlObj(o));
+  end;
+  UpdateTreeView;
+  a_pIni.Destroy;
 end;
 
 procedure TObjFrm3d.SetShowTools(b: boolean);
@@ -535,6 +669,7 @@ begin
   inherited;
 
 end;
+
 
 procedure cObjFrm3dFactory.doSetDefSize(var PSize: SIZE);
 begin

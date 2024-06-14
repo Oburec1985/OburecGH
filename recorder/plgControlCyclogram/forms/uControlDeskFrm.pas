@@ -514,6 +514,7 @@ begin
   removeplgEvent(doLoad, E_OnLoadObjMng);
   removeplgEvent(doChangeRState, c_RC_DoChangeRCState);
   removeplgEvent(doLeaveCfg, c_RC_LeaveCfg);
+  removeplgEvent(doRcInit, E_RC_Init);
   if g_conmng <> nil then
     g_conmng.Events.removeEvent(doShowStop, E_OnStopControlMng);
 end;

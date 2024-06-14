@@ -172,6 +172,7 @@ function p2top2d(p:point2):point2d;
 function p3(x,y,z:single):point3;
 function p3ToStr(p3:point3; digs:integer):string;
 function TPointToStr(tp:tpoint):string;
+function StrToTpoint(s:string):tpoint;
 function summP2(p1,p2:point2):point2;
 function summP2d(p1,p2:point2d):point2d;
 function DecP2(p0,p1:point2):point2;
@@ -185,10 +186,44 @@ function NumLock : boolean;
 
 function ScrollLock : boolean;
 function getCommonInterval(i1, i2: point2d): point2d;
+function getSubStrByIndex(src:string; tabs:char; p_start, index:integer):string;
 
 implementation
 uses
   ucommonmath, mathfunction;
+
+function getSubStrByIndex(src:string; tabs:char; p_start, index:integer):string;
+var
+  start, ind, i, c:integer;
+  b:boolean;
+begin
+  ind:=0; // номер подслова
+  start:=p_start;
+  result:='';
+  for I := p_start to length(src) do
+  begin
+    b:=i=length(src);
+    if (src[i]=tabs) or (b) then
+    begin
+      if ind=index then
+      begin
+        c:=i-start;
+        if b then
+        begin
+          if not (src[i]=tabs) then
+            inc(c);
+        end;
+        result:=Copy(src, start, c);
+        exit;
+      end
+      else
+      begin
+        start:=i+1;
+        inc(ind);
+      end;
+    end;
+  end;
+end;
 
 function max(x, y: double; var b: boolean): double;
 begin
@@ -315,6 +350,16 @@ end;
 function TPointToStr(tp:tpoint):string;
 begin
   result:=inttostr(tp.X)+'_'+inttostr(tp.y);
+end;
+
+function StrToTpoint(s:string):tpoint;
+var
+  s1:string;
+begin
+  s1:=getSubStrByIndex(s, '_', 1, 0);
+  Result.x:=strtoint(s1);
+  s1:=getSubStrByIndex(s, '_', 1, 1);
+  Result.y:=strtoint(s1);
 end;
 
 { TNamedObj }

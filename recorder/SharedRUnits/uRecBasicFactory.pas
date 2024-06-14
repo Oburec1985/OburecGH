@@ -82,6 +82,7 @@ type
 
   cRecBasicFactory = class(TObject, IInterface, ICustomFormFactory, ICustomFactInterface)
   public
+
     m_Guid: TGUID;
     m_lRefCount: integer;
   protected

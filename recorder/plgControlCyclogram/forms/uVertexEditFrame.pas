@@ -58,7 +58,7 @@ type
     finit:Boolean;
     m_curObj:cobject;
     // список добавленных вершин
-    m_pList:tlist;
+    //m_pList:tlist;
     m_skin:cSkin;
     // Id выбраной вершины
     m_Point:TPoint;
@@ -115,12 +115,12 @@ begin
       p:=c3dCtrlObj.create;
       g_CtrlObjList.addObj(p);
 
-      p.fHelper:=false;
       p.Name:='Point_'+inttostr(PointNumSE.Value);
       p.m_PName:=PointNumSE.Value;
       p.m_defObj:=m_curObj;
       p.m_w:=1;
       m_ui.scene.Add(p, m_ui.scene.World);
+      p.fHelper:=false;
       if m_curObj is cShapeObj then
       begin
         p3:=cShapeObj(m_curObj).getPoint(m_point);
@@ -134,7 +134,7 @@ begin
     end;
     deformP:=p.m_bone.AddPoint(m_Point, 1);
     deformP.weight:=p.m_w;
-    m_pList.Add(p);
+    //m_pList.Add(p);
     ShowPoint(p);
     TObjFrm3d(m_frm).UpdateTreeView;
   end;
@@ -161,7 +161,7 @@ end;
 
 destructor TVertexEditFrame.destroy;
 begin
-  m_pList.Destroy;
+  //m_pList.Destroy;
 end;
 
 
@@ -221,7 +221,7 @@ end;
 
 procedure TVertexEditFrame.init;
 begin
-  m_pList:=TList.Create;
+  //m_pList:=TList.Create;
   AxisCB.Items.Add('X:');
   AxisCB.Items.Add('Y:');
   AxisCB.Items.Add('Z:');
@@ -303,13 +303,15 @@ begin
     end
     else
     begin
-      m_pList.Clear;
+      //m_pList.Clear;
       for I := 0 to m_skin.count - 1 do
       begin
         b:=m_skin.getbone(i);
         p:=b.fbone;
         if p is c3dCtrlObj then
-          m_pList.Add(p);
+        begin
+          //m_pList.Add(p);
+        end;
       end;
     end;
   end;
