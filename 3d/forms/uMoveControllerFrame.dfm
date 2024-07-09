@@ -2,7 +2,7 @@ object MoveControllerFrame: TMoveControllerFrame
   Left = 0
   Top = 0
   Width = 376
-  Height = 486
+  Height = 491
   TabOrder = 0
   TabStop = True
   object CommonGroupBox: TGroupBox
@@ -13,7 +13,6 @@ object MoveControllerFrame: TMoveControllerFrame
     Align = alTop
     Caption = #1054#1073#1097#1080#1077' '#1089#1074#1086#1081#1089#1090#1074#1072
     TabOrder = 0
-    ExplicitWidth = 356
     object FrameCountLabel: TLabel
       Left = 8
       Top = 25
@@ -46,7 +45,7 @@ object MoveControllerFrame: TMoveControllerFrame
       Left = 124
       Top = 22
       Width = 89
-      Height = 21
+      Height = 24
       TabOrder = 0
       Text = '000'
     end
@@ -54,7 +53,7 @@ object MoveControllerFrame: TMoveControllerFrame
       Left = 124
       Top = 49
       Width = 89
-      Height = 21
+      Height = 24
       TabOrder = 1
       Text = '000'
     end
@@ -62,7 +61,7 @@ object MoveControllerFrame: TMoveControllerFrame
       Left = 124
       Top = 76
       Width = 89
-      Height = 21
+      Height = 24
       TabOrder = 2
       Text = '000'
     end
@@ -70,7 +69,7 @@ object MoveControllerFrame: TMoveControllerFrame
       Left = 124
       Top = 103
       Width = 89
-      Height = 21
+      Height = 24
       TabOrder = 3
       Text = '000'
     end
@@ -83,12 +82,11 @@ object MoveControllerFrame: TMoveControllerFrame
     Align = alTop
     Caption = #1057#1087#1080#1089#1086#1082' '#1082#1083#1102#1095#1077#1081
     TabOrder = 1
-    ExplicitWidth = 356
     object KeyList: TBtnListView
       Left = 2
-      Top = 15
+      Top = 18
       Width = 372
-      Height = 144
+      Height = 141
       Align = alClient
       Columns = <
         item
@@ -111,7 +109,8 @@ object MoveControllerFrame: TMoveControllerFrame
       QuoteColumnBtnClick = False
       QuoteColumnDblClick = False
       DrawColorBox = False
-      ExplicitWidth = 352
+      ChangeTextColor = False
+      Editable = False
     end
   end
   object ToolBar1: TToolBar
@@ -124,7 +123,6 @@ object MoveControllerFrame: TMoveControllerFrame
     Caption = 'ToolBar1'
     Images = ImageList1
     TabOrder = 2
-    ExplicitWidth = 356
     object RemoveKeyBtn: TToolButton
       Left = 0
       Top = 0
@@ -146,7 +144,6 @@ object MoveControllerFrame: TMoveControllerFrame
     Align = alTop
     Caption = #1057#1074#1086#1081#1089#1090#1074#1072' '#1082#1083#1102#1095#1072
     TabOrder = 3
-    ExplicitWidth = 356
     object KeyTimeLabel: TLabel
       Left = 8
       Top = 20
@@ -179,7 +176,7 @@ object MoveControllerFrame: TMoveControllerFrame
       Left = 84
       Top = 17
       Width = 78
-      Height = 21
+      Height = 24
       TabOrder = 0
       Text = '000'
     end
@@ -187,7 +184,7 @@ object MoveControllerFrame: TMoveControllerFrame
       Left = 212
       Top = 17
       Width = 89
-      Height = 21
+      Height = 24
       TabOrder = 1
     end
     object MLV: TBtnListView
@@ -228,6 +225,8 @@ object MoveControllerFrame: TMoveControllerFrame
       QuoteColumnBtnClick = False
       QuoteColumnDblClick = False
       DrawColorBox = False
+      ChangeTextColor = False
+      Editable = False
     end
     object QLV: TBtnListView
       Left = 212
@@ -260,6 +259,8 @@ object MoveControllerFrame: TMoveControllerFrame
       QuoteColumnBtnClick = False
       QuoteColumnDblClick = False
       DrawColorBox = False
+      ChangeTextColor = False
+      Editable = False
     end
   end
   object ImageList1: TImageList

@@ -92,7 +92,6 @@ object ObjFrm3d: TObjFrm3d
       Height = 25
       Align = alBottom
       TabOrder = 0
-      ExplicitTop = 148
     end
   end
 end

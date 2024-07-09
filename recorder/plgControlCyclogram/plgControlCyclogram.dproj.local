@@ -359,6 +359,8 @@
     <File Path="forms\uGLFrmEdit.dfm"/>
     <File Path="forms\uVertexEditFrame.pas"/>
     <File Path="forms\uVertexEditFrame.dfm"/>
+    <File Path="forms\u3dObjEditFrame.pas"/>
+    <File Path="forms\u3dObjEditFrame.dfm"/>
     <File Path="units"/>
     <File Path="units\uAriphmAlg.pas"/>
     <File Path="units\uBaseAlg.pas"/>

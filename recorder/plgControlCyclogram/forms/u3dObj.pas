@@ -303,7 +303,7 @@ begin
         for j:=0 to cskin(skin).count-1 do
         begin
           ctrl:=cskin(skin).getbone(j).fbone;
-          s:=s+inttostr(c3dCtrlObj(ctrl).m_bone.count)+';';
+          s:=s+inttostr(c3dSkinObj(ctrl).m_bone.count)+';';
         end;
         a_pIni.WriteString(str, 'SkinVCount_'+inttostr(n), s);
         // номера точек
@@ -315,14 +315,14 @@ begin
           ctrl:=cskin(skin).getbone(j).fbone;
           s1:='';
           // проход по вершинам
-          for k := 0 to c3dCtrlObj(ctrl).m_bone.count - 1 do
+          for k := 0 to c3dSkinObj(ctrl).m_bone.count - 1 do
           begin
-            p:=c3dCtrlObj(ctrl).m_bone.getpoint(k);
+            p:=c3dSkinObj(ctrl).m_bone.getpoint(k);
             s1:=s1+Tpointtostr(p.p)+'_'+floattostr(p.weight)+';';
           end;
           a_pIni.WriteString(str, 'SkinVerts_'+inttostr(n), s1);
-          s:=s+inttostr(c3dCtrlObj(ctrl).m_PName)+';';
-          s2:=s2+tpointtostr(c3dCtrlObj(ctrl).PId)+';';
+          s:=s+inttostr(c3dSkinObj(ctrl).m_PName)+';';
+          s2:=s2+tpointtostr(c3dSkinObj(ctrl).PId)+';';
         end;
         a_pIni.WriteString(str, 'SkinObjPNums_'+inttostr(n), s);
         a_pIni.WriteString(str, 'SkinObjPID_'+inttostr(n), s2);
@@ -331,8 +331,8 @@ begin
         for j:=0 to cskin(skin).count-1 do
         begin
           ctrl:=cskin(skin).getbone(j).fbone;
-          s:=s+c3dCtrlObj(ctrl).xTag.tagname+'/'+c3dCtrlObj(ctrl).yTag.tagname+
-             '/'+c3dCtrlObj(ctrl).zTag.tagname+';';
+          s:=s+c3dSkinObj(ctrl).xTag.tagname+'/'+c3dSkinObj(ctrl).yTag.tagname+
+             '/'+c3dSkinObj(ctrl).zTag.tagname+';';
         end;
         a_pIni.WriteString(str, 'SkinBTags_'+inttostr(n), s);
         inc(n);
@@ -442,49 +442,49 @@ begin
     begin
       // имена
       s1:=getSubStrByIndex(s,';',1,i);
-      o:=c3dCtrlObj.create;
+      o:=c3dSkinObj.create;
       o.name:=s1;
       // число вершин
       s1:=getSubStrByIndex(s2,';',1,i);
       vn:=strtoint(s1);
       // номера точек
       s1:=getSubStrByIndex(s3,';',1,i);
-      c3dCtrlObj(o).m_PName:=strtoint(s1);
+      c3dSkinObj(o).m_PName:=strtoint(s1);
       // id точек
       s1:=getSubStrByIndex(s5,';',1,i);
-      c3dCtrlObj(o).PId:=strtotpoint(s1);
+      c3dSkinObj(o).PId:=strtotpoint(s1);
       // теги
       s1:=getSubStrByIndex(s6,';',1,i);
       s5:=getSubStrByIndex(s6,'/',1,0);
       if s5<>'' then
       begin
-        c3dCtrlObj(o).xTag.tagname:=s5;
+        c3dSkinObj(o).xTag.tagname:=s5;
       end;
       s5:=getSubStrByIndex(s6,'/',1,1);
       if s5<>'' then
       begin
-        c3dCtrlObj(o).yTag.tagname:=s5;
+        c3dSkinObj(o).yTag.tagname:=s5;
       end;
       s5:=getSubStrByIndex(s6,'/',1,2);
       if (s5<>'') then
       begin
         if s5<>';' then
-          c3dCtrlObj(o).zTag.tagname:=s5;
+          c3dSkinObj(o).zTag.tagname:=s5;
       end;
 
       // привязываем к сцене
-      c3dCtrlObj(o).fHelper:=false;
+      c3dSkinObj(o).fHelper:=false;
       GL.mUI.scene.Add(o, GL.mUI.scene.world);
       if mesh is cShapeObj then
       begin
-        p3:=cShapeObj(mesh).getPoint(c3dCtrlObj(o).PId);
+        p3:=cShapeObj(mesh).getPoint(c3dSkinObj(o).PId);
         m:=cShapeObj(mesh).nodeResTm;
-        c3dCtrlObj(o).position:=MultP3byM(m, p3);
-        c3dCtrlObj(o).startpos:=c3dCtrlObj(o).position;
+        c3dSkinObj(o).position:=MultP3byM(m, p3);
+        c3dSkinObj(o).startpos:=c3dSkinObj(o).position;
       end;
       // число вершин
       bone:=cskin(skin).AddBone(o);
-      c3dCtrlObj(o).m_bone:=bone;
+      c3dSkinObj(o).m_bone:=bone;
       // id вершин
       for k := 0 to vn - 1 do
       begin
@@ -493,13 +493,13 @@ begin
         tp.y:=strtoint(getSubStrByIndex(s1,'_',1,1));
         w:=strtofloat(getSubStrByIndex(s1,'_',1,2));
         // привязка к модификатору точки
-        deformP:=c3dCtrlObj(o).m_bone.AddPoint(tp, w);
+        deformP:=c3dSkinObj(o).m_bone.AddPoint(tp, w);
         deformP.weight:=w;
         //c3dCtrlObj(o).PId
       end;
     end;
     inc(n);
-    g_CtrlObjList.addObj(c3dCtrlObj(o));
+    g_CtrlObjList.addObj(c3dSkinObj(o));
   end;
   UpdateTreeView;
   a_pIni.Destroy;

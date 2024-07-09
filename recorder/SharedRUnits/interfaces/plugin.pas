@@ -170,7 +170,6 @@ type
        // Задать свойство
        function SetProperty(const dwPropertyID: DWORD;
                             {const} Value: OleVariant): boolean; stdcall;
-
        // Узнать можно ли завершить работу плагина
        function CanClose: boolean; stdcall;
        // Завершить работу плагина

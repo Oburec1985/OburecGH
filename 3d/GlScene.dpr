@@ -67,7 +67,8 @@ uses
   uObjCtrFrame in 'forms\uObjCtrFrame.pas' {CtrlViewFrame: TFrame},
   uMatrix in '..\sharedUtils\math\uMatrix.pas',
   u3dSceneEditFrame in '..\sharedUtils\ogl\forms\u3dSceneEditFrame.pas' {GlSceneEditFrame: TFrame},
-  uselectools in 'tools\uselectools.pas';
+  uselectools in 'tools\uselectools.pas',
+  u3dObjEditFrame in '..\recorder\plgControlCyclogram\forms\u3dObjEditFrame.pas' {ObjEditFrame: TFrame};
 
 {$R *.res}
 

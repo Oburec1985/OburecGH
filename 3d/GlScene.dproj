@@ -148,6 +148,10 @@
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="tools\uselectools.pas"/>
+			<DCCReference Include="..\recorder\plgControlCyclogram\forms\u3dObjEditFrame.pas">
+				<Form>ObjEditFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

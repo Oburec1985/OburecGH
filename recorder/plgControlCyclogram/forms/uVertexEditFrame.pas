@@ -22,12 +22,11 @@ uses
   uRcCtrls;
 
 type
-
+  // управляет по тегам движением сцены u3dMoveEngine.g_CtrlObjList
   TVertexEditFrame = class(TFrame)
     TopPanel: TPanel;
     AlPanel: TPanel;
     VertLV: TBtnListView;
-    TypeCB: TCheckBox;
     NameEdit: TEdit;
     ObjNameLabel: TLabel;
     PointNumSE: TSpinEdit;
@@ -68,8 +67,8 @@ type
     // найти по id вершину в ListView
     function findItem(pointnum:tpoint):integer;
     // найти кость по номеру точки
-    function findBone(pNum:integer):c3dCtrlObj;
-    procedure ShowPoint(p:c3dCtrlObj);
+    function findBone(pNum:integer):c3dSkinObj;
+    procedure ShowPoint(p:c3dSkinObj);
   public
     procedure createevents;
     procedure destroyevents;
@@ -91,7 +90,7 @@ procedure TVertexEditFrame.AddBtnClick(Sender: TObject);
 var
   I: Integer;
   li:tlistitem;
-  p:c3dCtrlObj;
+  p:c3dSkinObj;
   deformP:cDeformPoint;
   b:boolean;
   bone:cbone;
@@ -112,7 +111,7 @@ begin
     p:=findBone(PointNumSE.Value);
     if p=nil then
     begin
-      p:=c3dCtrlObj.create;
+      p:=c3dSkinObj.create;
       g_CtrlObjList.addObj(p);
 
       p.Name:='Point_'+inttostr(PointNumSE.Value);
@@ -142,7 +141,7 @@ end;
 
 procedure TVertexEditFrame.Apply;
 var
-  p:c3dCtrlObj;
+  p:c3dSkinObj;
 begin
   if m_curObj<>nil then
   begin
@@ -176,7 +175,7 @@ begin
   m_ui.eventlist.removeEvent(OnSelectVertex, E_glSelectMeshPoint);
 end;
 
-function TVertexEditFrame.findBone(pNum: integer): c3dCtrlObj;
+function TVertexEditFrame.findBone(pNum: integer): c3dSkinObj;
 var
   I: Integer;
   b:cbone;
@@ -187,11 +186,11 @@ begin
     for I := 0 to m_skin.Count - 1 do
     begin
       b:=m_skin.getbone(i);
-      if b.fbone is c3dCtrlObj then
+      if b.fbone is c3dSkinObj then
       begin
-        if c3dCtrlObj(b.fbone).m_PName=pNum then
+        if c3dSkinObj(b.fbone).m_PName=pNum then
         begin
-          result:=c3dCtrlObj(b.fbone);
+          result:=c3dSkinObj(b.fbone);
           exit;
         end;
       end;
@@ -303,12 +302,13 @@ begin
     end
     else
     begin
+      SkinCB.Checked:=true;
       //m_pList.Clear;
       for I := 0 to m_skin.count - 1 do
       begin
         b:=m_skin.getbone(i);
         p:=b.fbone;
-        if p is c3dCtrlObj then
+        if p is c3dSkinObj then
         begin
           //m_pList.Add(p);
         end;
@@ -317,7 +317,7 @@ begin
   end;
 end;
 
-procedure TVertexEditFrame.ShowPoint(p: c3dCtrlObj);
+procedure TVertexEditFrame.ShowPoint(p: c3dSkinObj);
 var
   I: Integer;
   dp:cDeformPoint;

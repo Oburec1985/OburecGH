@@ -1261,7 +1261,9 @@ END
 /* forms\uPressFrmEdit2.dfm */
 /* ..\..\3d\forms\uSelectLoadedObjects.dfm */
 /* forms\uEditGlObjFrm.dfm */
-/* forms\uEditProfileFrm.dfm */
+/* forms\u3dObjEditFrame.dfm */
+/* ..\..\3d\forms\uSkinFrame.dfm */
+/* ..\..\sharedUtils\ogl\forms\u3dSceneEditFrame.dfm */
 /* ..\..\3d\forms\uObjCtrFrame.dfm */
 /* ..\..\3d\forms\AnimationControlFrame.dfm */
 /* ..\..\3d\forms\uEditListForm.dfm */
@@ -1269,9 +1271,7 @@ END
 /* ..\..\3d\forms\uTransformButtons.dfm */
 /* ..\..\3d\forms\uDeformerFrame.dfm */
 /* ..\..\3d\forms\uTrfrmToolsFrame.dfm */
-/* ..\..\sharedUtils\ogl\forms\u3dSceneEditFrame.dfm */
-/* ..\..\3d\forms\uSkinFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\u3dObj.dfm */
+/* forms\uEditProfileFrm.dfm */
 /* forms\uEditSrsFrm.dfm */
 /* forms\uIRDiagram.dfm */
 /* forms\uIRDiagramEditFrm.dfm */
@@ -1310,6 +1310,7 @@ END
 /* forms\uSpmChartEdit.dfm */
 /* forms\uSpmChart.dfm */
 /* forms\uControlWarnFrm.dfm */
+/* forms\u3dObj.dfm */
 /* forms\uVertexEditFrame.dfm */
 /* forms\uGLFrmEdit.dfm */
 /* forms\uMBaseControl.dfm */

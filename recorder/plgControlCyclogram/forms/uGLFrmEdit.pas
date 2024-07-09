@@ -11,7 +11,7 @@ uses
   uGlEventTypes,
   uEventList,
   uObject, uNodeobject,
-  StdCtrls, ExtCtrls, uTagsListFrame;
+  StdCtrls, ExtCtrls, uTagsListFrame, u3dObjEditFrame;
 
 type
   TObjFrm3dEdit = class(TForm)
@@ -29,6 +29,8 @@ type
     SceneNameEdit: TEdit;
     PathBtn: TButton;
     TagsListFrame1: TTagsListFrame;
+    ObjPanel: TPanel;
+    ObjEditFrame1: TObjEditFrame;
     procedure PathBtnClick(Sender: TObject);
     procedure OkBtnClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -174,6 +176,7 @@ begin
   begin
     m_curObj:=TObjFrm3d(m_glFrm).GL.mUI.getselected(0);
     skinframe.showObj(cobject(m_curObj), m_glFrm);
+    ObjEditFrame1.SetEditObj(m_curObj);
   end
   else
     m_curObj:=nil;

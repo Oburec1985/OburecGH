@@ -17,13 +17,36 @@ uses
   DCL_MYOWN,
   uSpin,
   uRcFunc,
+  uQuat,
   uRcCtrls;
 
 type
-  // объект (кость) управл€ющий скелетом
   c3dCtrlObj = class(cObject)
   public
-    m_objlist:tlist; // список агрегатов объектов
+    m_objlist:tlist; // список агрегатор объектов
+  public
+    function ready:boolean;virtual;
+    procedure UpdateObj;virtual;abstract;
+  end;
+
+  // объект отвечающий за перемещением и ориентацию
+  c3dMoveObj = class(c3dCtrlObj)
+  public
+    // проинициализированы первые значени€ тегов (дл€ расчета матрицы смещени€)
+    m_TagsInit:boolean;
+    startPos, StartRot:point3;
+    // теги отвечающие за позицию
+    xTag, yTag, zTag:cTag;
+    RotXTag, RotYTag, RotZTag:cTag;
+  public
+    procedure UpdateObj;override;
+    constructor create;override;
+    destructor destroy;override;
+  end;
+
+  // объект (кость) управл€ющий скелетом
+  c3dSkinObj = class(c3dCtrlObj)
+  public
     m_bone:cBone; // информаци€ о кости
     // номер точки
     m_PName:integer;
@@ -32,10 +55,12 @@ type
     startpos:point3;
     // деформируемый объект
     m_defObj:cnodeobject;
-    PId:tpoint; // вершина скелета
+    // вершина скелета за которую зацеплен деформер
+    PId:tpoint;
     // теги отвечающие за амплитуду смещени€ кости
     xTag, yTag, zTag:cTag;
   public
+    procedure UpdateObj;override;
     constructor create;override;
     destructor destroy;override;
   end;
@@ -46,8 +71,8 @@ type
   protected
     procedure doOnDestroy(sender:tobject);
   public
-    procedure addObj(o:c3dCtrlObj);
-    function GetObj(i:integer):c3dCtrlObj;
+    procedure addObj(o:c3dSkinObj);
+    function GetObj(i:integer):c3dSkinObj;
     // прочитать теги/ обновить позиции костей
     procedure updateObjPos;
   end;
@@ -60,7 +85,7 @@ implementation
 
 { cSkinPoint }
 
-constructor c3dCtrlObj.create;
+constructor c3dSkinObj.create;
 begin
   inherited;
   xTag:=cTag.create;
@@ -68,7 +93,7 @@ begin
   zTag:=cTag.create;
 end;
 
-destructor c3dCtrlObj.destroy;
+destructor c3dSkinObj.destroy;
 begin
   xTag.destroy;
   yTag.destroy;
@@ -76,8 +101,34 @@ begin
   inherited;
 end;
 
+
+procedure c3dSkinObj.UpdateObj;
+var
+  p3,lp3:point3;
+  b:boolean;
+begin
+  lp3:=startpos;
+  p3:=lp3;
+  if xTag.tag<>nil then
+    p3.x:=lp3.x+xTag.GetMeanEst;
+  if yTag.tag<>nil then
+    p3.y:=lp3.y+yTag.GetMeanEst;
+  if xTag.tag<>nil then
+    p3.z:=lp3.z+zTag.GetMeanEst;
+  begin
+    b:=true;
+    lp3:=position;
+    if p3.x=lp3.x then
+      if p3.y=lp3.y then
+        if p3.Z=lp3.z then
+          b:=false;
+    if b then
+      position:=p3;
+  end;
+end;
+
 { cCntrlObjList }
-procedure cCntrlObjList.addObj(o: c3dCtrlObj);
+procedure cCntrlObjList.addObj(o: c3dSkinObj);
 begin
   if o.m_objlist<>self then
   begin
@@ -101,46 +152,79 @@ begin
   end;
 end;
 
-function cCntrlObjList.GetObj(i: integer): c3dCtrlObj;
+function cCntrlObjList.GetObj(i: integer): c3dSkinObj;
 begin
-  result:=c3dCtrlObj(items[i]);
+  result:=c3dSkinObj(items[i]);
 end;
 
 procedure cCntrlObjList.updateObjPos;
 var
   I: Integer;
   p3,lp3:point3;
-  o:c3dCtrlObj;
+  o:c3dSkinObj;
   b:boolean;
 begin
   for I := 0 to Count - 1 do
   begin
     o:=GetObj(i);
-    lp3:=o.startpos;
-    p3:=lp3;
-    if o.xTag.tag<>nil then
-    begin
-      p3.x:=lp3.x+o.xTag.GetMeanEst;
-    end;
-    if o.yTag.tag<>nil then
-    begin
-      p3.y:=lp3.y+o.yTag.GetMeanEst;
-    end;
-    if o.zTag.tag<>nil then
-    begin
-      p3.z:=lp3.z+o.zTag.GetMeanEst;
-    end;
-    b:=true;
-    lp3:=o.position;
-    if p3.x=lp3.x then
-      if p3.y=lp3.y then
-        if p3.Z=lp3.z then
-          b:=false;
-    if b then
-      o.position:=p3;
-
+    if o.ready then
+      o.UpdateObj;
   end;
   crender(cscene(o.getmng).render).invalidaterect;
+end;
+
+{ c3dMoveObj }
+constructor c3dMoveObj.create;
+begin
+  inherited;
+  xTag:=cTag.create;
+  yTag:=cTag.create;
+  zTag:=cTag.create;
+  RotXTag:=cTag.create;
+  RotYTag:=cTag.create;
+  RotZTag:=cTag.create;
+end;
+
+destructor c3dMoveObj.destroy;
+begin
+  xTag.destroy;
+  yTag.destroy;
+  zTag.destroy;
+  RotXTag.destroy;
+  RotYTag.destroy;
+  RotZTag.destroy;
+  inherited;
+end;
+
+
+procedure c3dMoveObj.UpdateObj;
+var
+  rot_p3, p3:point3;
+  //q:tQuat;
+begin
+  p3:=position;
+  if xTag.tag<>nil then
+    p3.x:=xTag.GetMeanEst;
+  if yTag.tag<>nil then
+    p3.y:=yTag.GetMeanEst;
+  if zTag.tag<>nil then
+    p3.z:=zTag.GetMeanEst;
+
+  {if RotXTag.tag<>nil then
+    q.axis.x:=RotXTag.GetMeanEst;
+  if RotYTag.tag<>nil then
+    q.axis.y:=RotYTag.GetMeanEst;
+  if RotZTag.tag<>nil then
+    q.axis.z:=RotZTag.GetMeanEst;
+  QuaternionSlerp()}
+  position:=p3;
+end;
+
+{ c3dCtrlObj }
+
+function c3dCtrlObj.ready: boolean;
+begin
+  result:=true;
 end;
 
 end.

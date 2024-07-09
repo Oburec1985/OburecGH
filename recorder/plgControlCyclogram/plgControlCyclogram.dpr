@@ -246,7 +246,8 @@ uses
   uClickFrListener in '..\..\3d\core\uClickFrListener.pas',
   uVertexEditFrame in 'forms\uVertexEditFrame.pas' {VertexEditFrame: TFrame},
   uDeformerFrame in '..\..\3d\forms\uDeformerFrame.pas' {DeformerFrame: TFrame},
-  u3dMoveEngine in 'units\u3dMoveEngine.pas';
+  u3dMoveEngine in 'units\u3dMoveEngine.pas',
+  u3dObjEditFrame in 'forms\u3dObjEditFrame.pas' {ObjEditFrame: TFrame};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

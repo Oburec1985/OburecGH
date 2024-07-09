@@ -40,21 +40,12 @@ object VertexEditFrame: TVertexEditFrame
       Height = 16
       Caption = #1048#1084#1103' '#1086#1073#1098#1077#1082#1090#1072':'
     end
-    object TypeCB: TCheckBox
-      Left = 438
-      Top = 12
-      Width = 138
-      Height = 17
-      Anchors = [akTop, akRight]
-      Caption = #1042#1077#1088#1096#1080#1085#1099'/'#1044#1072#1090#1095#1080#1082#1080
-      TabOrder = 0
-    end
     object NameEdit: TEdit
       Left = 16
       Top = 33
       Width = 121
       Height = 24
-      TabOrder = 1
+      TabOrder = 0
       Text = 'NameEdit'
     end
     object PointNumSE: TSpinEdit
@@ -64,7 +55,7 @@ object VertexEditFrame: TVertexEditFrame
       Height = 26
       MaxValue = 100
       MinValue = 1
-      TabOrder = 2
+      TabOrder = 1
       Value = 1
     end
     object SkinCB: TCheckBox
@@ -74,7 +65,7 @@ object VertexEditFrame: TVertexEditFrame
       Height = 17
       Anchors = [akTop, akRight]
       Caption = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1090#1100
-      TabOrder = 3
+      TabOrder = 2
     end
     object AddBtn: TButton
       Left = 261
@@ -82,7 +73,7 @@ object VertexEditFrame: TVertexEditFrame
       Width = 75
       Height = 25
       Caption = #1044#1086#1073#1072#1074#1080#1090#1100
-      TabOrder = 4
+      TabOrder = 3
       OnClick = AddBtnClick
     end
   end

@@ -2,7 +2,7 @@ object ObjFrm3dEdit: TObjFrm3dEdit
   Left = 0
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' 3d '#1084#1085#1077#1084#1086#1089#1093#1077#1084#1099
-  ClientHeight = 612
+  ClientHeight = 513
   ClientWidth = 1051
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,11 +18,12 @@ object ObjFrm3dEdit: TObjFrm3dEdit
   TextHeight = 17
   object LowPanel: TPanel
     Left = 0
-    Top = 571
+    Top = 472
     Width = 1051
     Height = 41
     Align = alBottom
     TabOrder = 0
+    ExplicitTop = 571
     DesignSize = (
       1051
       41)
@@ -60,14 +61,15 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     Left = 0
     Top = 0
     Width = 800
-    Height = 571
+    Height = 472
     Align = alClient
     TabOrder = 1
+    ExplicitHeight = 571
     object TopPanel: TPanel
       Left = 1
       Top = 1
       Width = 798
-      Height = 152
+      Height = 216
       Align = alTop
       TabOrder = 0
       object Label1: TLabel
@@ -107,7 +109,7 @@ object ObjFrm3dEdit: TObjFrm3dEdit
       object SceneFolderEdit: TEdit
         Left = 7
         Top = 54
-        Width = 388
+        Width = 338
         Height = 25
         Margins.Left = 4
         Margins.Top = 4
@@ -118,7 +120,7 @@ object ObjFrm3dEdit: TObjFrm3dEdit
       object SceneNameEdit: TEdit
         Left = 7
         Top = 105
-        Width = 388
+        Width = 338
         Height = 25
         Margins.Left = 4
         Margins.Top = 4
@@ -127,8 +129,8 @@ object ObjFrm3dEdit: TObjFrm3dEdit
         TabOrder = 2
       end
       object PathBtn: TButton
-        Left = 400
-        Top = 95
+        Left = 353
+        Top = 101
         Width = 76
         Height = 34
         Margins.Left = 4
@@ -139,20 +141,130 @@ object ObjFrm3dEdit: TObjFrm3dEdit
         TabOrder = 3
         OnClick = PathBtnClick
       end
+      object ObjPanel: TPanel
+        Left = 493
+        Top = 1
+        Width = 304
+        Height = 214
+        Align = alRight
+        TabOrder = 4
+        ExplicitLeft = 512
+        ExplicitHeight = 206
+        inline ObjEditFrame1: TObjEditFrame
+          Left = 1
+          Top = 1
+          Width = 302
+          Height = 212
+          Align = alClient
+          Constraints.MinWidth = 302
+          TabOrder = 0
+          ExplicitLeft = 1
+          ExplicitTop = 1
+          inherited PosGB: TGroupBox
+            ExplicitLeft = 0
+            ExplicitTop = 0
+            ExplicitWidth = 302
+            inherited XposLab: TLabel
+              Height = 17
+              ExplicitHeight = 17
+            end
+            inherited YposLab: TLabel
+              Width = 13
+              Height = 17
+              ExplicitWidth = 13
+              ExplicitHeight = 17
+            end
+            inherited ZposLab: TLabel
+              Width = 13
+              Height = 17
+              ExplicitWidth = 13
+              ExplicitHeight = 17
+            end
+            inherited XposSE: TFloatSpinEdit
+              Height = 27
+              ExplicitHeight = 27
+            end
+            inherited YposSE: TFloatSpinEdit
+              Height = 27
+              ExplicitHeight = 27
+            end
+            inherited ZposSE: TFloatSpinEdit
+              Height = 27
+              ExplicitHeight = 27
+            end
+            inherited XTagCB: TRcComboBox
+              Height = 25
+              ExplicitHeight = 25
+            end
+            inherited YTagCB: TRcComboBox
+              Height = 25
+              ExplicitHeight = 25
+            end
+            inherited ZTagCB: TRcComboBox
+              Height = 25
+              ExplicitHeight = 25
+            end
+          end
+          inherited OrientationGB: TGroupBox
+            ExplicitTop = 105
+            inherited XrotLab: TLabel
+              Height = 17
+              ExplicitHeight = 17
+            end
+            inherited YrotLab: TLabel
+              Width = 13
+              Height = 17
+              ExplicitWidth = 13
+              ExplicitHeight = 17
+            end
+            inherited ZrotLab: TLabel
+              Width = 13
+              Height = 17
+              ExplicitWidth = 13
+              ExplicitHeight = 17
+            end
+            inherited XrotSE: TFloatSpinEdit
+              Height = 27
+              ExplicitHeight = 27
+            end
+            inherited YrotSE: TFloatSpinEdit
+              Height = 27
+              ExplicitHeight = 27
+            end
+            inherited ZrotSE: TFloatSpinEdit
+              Height = 27
+              ExplicitHeight = 27
+            end
+            inherited XrotTagCB: TRcComboBox
+              Height = 25
+              ExplicitHeight = 25
+            end
+            inherited YrotTagCB: TRcComboBox
+              Height = 25
+              ExplicitHeight = 25
+            end
+            inherited ZrotTagCB: TRcComboBox
+              Height = 25
+              ExplicitHeight = 25
+            end
+          end
+        end
+      end
     end
   end
   object RightPanel: TPanel
     Left = 800
     Top = 0
     Width = 251
-    Height = 571
+    Height = 472
     Align = alRight
     TabOrder = 2
+    ExplicitHeight = 571
     inline TagsListFrame1: TTagsListFrame
       Left = 1
       Top = 1
       Width = 249
-      Height = 569
+      Height = 470
       Align = alClient
       TabOrder = 0
       ExplicitLeft = 1
@@ -161,7 +273,7 @@ object ObjFrm3dEdit: TObjFrm3dEdit
       ExplicitHeight = 569
       inherited FormChannelsGB: TGroupBox
         Width = 249
-        Height = 569
+        Height = 470
         ExplicitWidth = 249
         ExplicitHeight = 569
         inherited ChanNamesPanel: TPanel
@@ -209,7 +321,7 @@ object ObjFrm3dEdit: TObjFrm3dEdit
         inherited TagsLV: TBtnListView
           Top = 128
           Width = 245
-          Height = 439
+          Height = 340
           ExplicitTop = 128
           ExplicitWidth = 245
           ExplicitHeight = 439
@@ -221,7 +333,7 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     FavoriteLinks = <>
     FileTypes = <>
     Options = [fdoForceFileSystem]
-    Left = 440
-    Top = 40
+    Left = 328
+    Top = 8
   end
 end
