@@ -164,13 +164,18 @@ var
   o:c3dSkinObj;
   b:boolean;
 begin
+  b:=false;
   for I := 0 to Count - 1 do
   begin
     o:=GetObj(i);
     if o.ready then
+    begin
       o.UpdateObj;
+      b:=true;
+    end;
   end;
-  crender(cscene(o.getmng).render).invalidaterect;
+  if b then
+    crender(cscene(o.getmng).render).invalidaterect;
 end;
 
 { c3dMoveObj }
