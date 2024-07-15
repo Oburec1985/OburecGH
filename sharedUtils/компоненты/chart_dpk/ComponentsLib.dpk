@@ -39,6 +39,7 @@ requires
   glPackage,
   VclSmp;
 
+
 contains
   uChart in 'chart\uChart.pas',
   uPoint in 'chart\items\uPoint.pas',
