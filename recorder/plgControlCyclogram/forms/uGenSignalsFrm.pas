@@ -93,6 +93,8 @@ type
     procedure OffsetFEChange(Sender: TObject);
     procedure EnabledAlgMngCBClick(Sender: TObject);
     procedure GenDataCbClick(Sender: TObject);
+    procedure SignalsLBKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     m_prevTime:double;
     signals:tlist;
@@ -588,6 +590,30 @@ begin
   FreqSE.Value:=s.Freq;
   PhaseSE.Value:=s.Phase0;
   STypeRG.ItemIndex:=s.m_type;
+end;
+
+procedure TGenSignalsFrm.SignalsLBKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  s:cGenSig;
+  i:integer;
+begin
+  if key=VK_DELETE then
+  begin
+    s:=ActivSignal;
+    if s=nil then
+      exit;
+    s.destroy(true);
+    for I := 0 to signalsLB.Count - 1 do
+    begin
+      if signalslb.Selected[i] then
+      begin
+        signalslb.items.Delete(i);
+        signals.Delete(i);
+        exit;
+      end;
+    end;
+  end;
 end;
 
 procedure TGenSignalsFrm.UpdateData(sender:tobject);

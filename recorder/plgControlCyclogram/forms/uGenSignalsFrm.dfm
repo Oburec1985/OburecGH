@@ -165,6 +165,7 @@ object GenSignalsFrm: TGenSignalsFrm
     PopupMenu = PopupMenu1
     TabOrder = 1
     OnClick = SignalsLBClick
+    OnKeyDown = SignalsLBKeyDown
   end
   object PopupMenu1: TPopupMenu
     Left = 48

@@ -424,8 +424,8 @@ begin
           if what = 268828673 then
           // if (what = 270073857) or (what=268828673) or (what=269352961) then
           begin
-            if PSafeArray(TVarData(param).VArray)
-              .rgsabound[0].cElements = 3 then
+            if (PSafeArray(TVarData(param).VArray).rgsabound[0].cElements = 3) or
+              (PSafeArray(TVarData(param).VArray).rgsabound[0].cElements = 4)  then
             begin
               pvar := (PSafeArray(TVarData(param).VArray).pvdata);
               str1 := variant(pvar[0]);
