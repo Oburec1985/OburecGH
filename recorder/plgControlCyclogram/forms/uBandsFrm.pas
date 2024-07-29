@@ -73,6 +73,9 @@ type
       Pt: TPoint; var Effect: Integer; Mode: TDropMode);
     procedure PlacesTVChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure PairTVKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure BandsLVCustomDrawItem(Sender: TCustomListView; Item: TListItem;
+      State: TCustomDrawState; var DefaultDraw: Boolean);
+    procedure PlacesTVClick(Sender: TObject);
   private
     TagBandPairList:TTagBandPairList;
     BandsList:TStringList;
@@ -108,7 +111,6 @@ const
   c_col_N = 0;
   c_col_tag = 1;
   c_col_K = 2;
-
   c_im_place = 0;
   c_im_band = 1;
   c_im_TagPair = 2;
@@ -119,8 +121,6 @@ implementation
 {$R *.dfm}
 
 { TBandsFrm }
-
-
 procedure TBandsFrm.AddBandBtnClick(Sender: TObject);
 var
   b:tband;
@@ -302,6 +302,42 @@ begin
   endMultiSelect(f1fe);
   endMultiSelect(f2fe);
   endMultiSelect(abscb);
+end;
+
+procedure TBandsFrm.BandsLVCustomDrawItem(Sender: TCustomListView;
+  Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
+var
+  r:trect;
+  str:string;
+  i:integer;
+  lcolor:tcolor;
+begin
+  if Item.Selected and not (cdsFocused in State) then
+  begin
+    DefaultDraw:=false;
+    r:=Item.DisplayRect(drBounds);
+    with TListView(sender).Canvas do
+    begin
+      Brush.Color:=clHighlight;
+      FillRect(r);
+      Brush.Color:=clHighlightText;
+      lcolor:=TListView(sender).Canvas.Font.Color;
+      TListView(sender).Canvas.Font.Color:=clWhite;
+
+      str:=item.Caption;
+      for I := 0 to item.SubItems.Count - 1 do
+      begin
+        str:=str+ ' ' +item.SubItems[i];
+      end;
+
+      TextOut(r.Left,R.Top,str);
+      TListView(sender).Canvas.Font.Color:=lcolor;
+    end;
+  end
+  else
+  begin
+    DefaultDraw:=true;
+  end;
 end;
 
 procedure TBandsFrm.BandsLVKeyDown(Sender: TObject; var Key: Word;
@@ -584,6 +620,42 @@ begin
     if tobject(data.data) is tplace then
       placenameedit.text:=tplace(data.data).name;
   end;
+  // перевыбрать полосу
+  PlacesTVClick(placesTV);
+end;
+
+procedure TBandsFrm.PlacesTVClick(Sender: TObject);
+var
+  n: PVirtualNode;
+  Data: PNodeData;
+  li:tlistitem;
+  b:tband;
+  I: Integer;
+begin
+  n := GetSelectNode(placesTV);
+  if n<>nil then
+  begin
+    Data := placesTV.GetNodeData(n);
+    if data<>nil then
+    begin
+      if tobject(data.data) is tBand then
+      begin
+        for I := 0 to BandsLV.items.Count - 1 do
+        begin
+          li:=BandsLV.items[i];
+          b:=tband(li.Data);
+          if b=tobject(data.data) then
+          begin
+            bandslv.Selected:=nil;
+            bandslv.Selected:=li;
+            bandslv.ItemIndex:=li.Index;
+            bandslv.ItemFocused:=li;
+            exit;
+          end;
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TBandsFrm.PlacesTVDragDrop(Sender: TBaseVirtualTree; Source: TObject;
@@ -806,8 +878,6 @@ begin
   LVChange(bandslv);
 end;
 
-
-
 procedure TBandsFrm.ShowPairList(pl: TTagBandPairList);
 var
   I, j: Integer;
@@ -839,7 +909,6 @@ var
   f1, f2, lname:string;
   brate, rateerror:boolean;
 begin
-
   f1:=F1fe.Text;
   f2:=F2fe.Text;
   lname:=NameEdit.Text;

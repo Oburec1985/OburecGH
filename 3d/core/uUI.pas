@@ -97,7 +97,10 @@ end;
 
 function cUI.selectCount:integer;
 begin
-  result:=select.count;
+  if select<>nil then
+    result:=select.count
+  else
+    result:=0;
 end;
 
 procedure cUI.UpdateSelected;

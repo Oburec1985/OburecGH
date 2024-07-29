@@ -316,6 +316,7 @@ object BandsFrm: TBandsFrm
         TabOrder = 0
         ViewStyle = vsReport
         OnChange = BandsLVChange
+        OnCustomDrawItem = BandsLVCustomDrawItem
         OnKeyDown = BandsLVKeyDown
         BtnCol = 0
         QuoteColumnBtnClick = False

@@ -65,8 +65,11 @@ uses
 
 procedure TObjFrm3dEdit.createevents;
 begin
-  e:=TObjFrm3d(m_glFrm).GL.mUI.eventlist.AddEvent('TObjFrm3dEdit_OnSelObj',E_glSelectNew,OnSelectObj);
-  e.active:=false;
+  if TObjFrm3d(m_glFrm).GL.mUI<>nil then
+  begin
+    e:=TObjFrm3d(m_glFrm).GL.mUI.eventlist.AddEvent('TObjFrm3dEdit_OnSelObj',E_glSelectNew,OnSelectObj);
+    e.active:=false;
+  end;
 end;
 
 procedure TObjFrm3dEdit.destroyevents;
@@ -155,10 +158,13 @@ begin
   m_glFrm:= t3dfrm;
   if not finit then
   begin
-    finit:=true;
     skinframe.m_ui:=TObjFrm3d(m_glFrm).GL.mUI;
-    createevents;
-    skinframe.createevents;
+    if skinframe.m_ui<>nil then
+    begin
+      finit:=true;
+      createevents;
+      skinframe.createevents;
+    end;
   end;
 end;
 
@@ -172,6 +178,7 @@ end;
 
 procedure TObjFrm3dEdit.OnSelectObj(sender: tobject);
 begin
+  if TObjFrm3d(m_glFrm).GL.mUI=nil then exit;
   if TObjFrm3d(m_glFrm).GL.mUI.selectCount>0 then
   begin
     m_curObj:=TObjFrm3d(m_glFrm).GL.mUI.getselected(0);

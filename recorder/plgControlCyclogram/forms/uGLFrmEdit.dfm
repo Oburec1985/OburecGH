@@ -23,7 +23,6 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     Height = 41
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 571
     DesignSize = (
       1051
       41)
@@ -64,7 +63,6 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     Height = 472
     Align = alClient
     TabOrder = 1
-    ExplicitHeight = 571
     object TopPanel: TPanel
       Left = 1
       Top = 1
@@ -148,8 +146,6 @@ object ObjFrm3dEdit: TObjFrm3dEdit
         Height = 214
         Align = alRight
         TabOrder = 4
-        ExplicitLeft = 512
-        ExplicitHeight = 206
         inline ObjEditFrame1: TObjEditFrame
           Left = 1
           Top = 1
@@ -160,9 +156,10 @@ object ObjFrm3dEdit: TObjFrm3dEdit
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
+          ExplicitWidth = 302
+          ExplicitHeight = 212
           inherited PosGB: TGroupBox
-            ExplicitLeft = 0
-            ExplicitTop = 0
+            Width = 302
             ExplicitWidth = 302
             inherited XposLab: TLabel
               Height = 17
@@ -206,7 +203,8 @@ object ObjFrm3dEdit: TObjFrm3dEdit
             end
           end
           inherited OrientationGB: TGroupBox
-            ExplicitTop = 105
+            Width = 302
+            ExplicitWidth = 302
             inherited XrotLab: TLabel
               Height = 17
               ExplicitHeight = 17
@@ -259,7 +257,6 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     Height = 472
     Align = alRight
     TabOrder = 2
-    ExplicitHeight = 571
     inline TagsListFrame1: TTagsListFrame
       Left = 1
       Top = 1
@@ -270,12 +267,12 @@ object ObjFrm3dEdit: TObjFrm3dEdit
       ExplicitLeft = 1
       ExplicitTop = 1
       ExplicitWidth = 249
-      ExplicitHeight = 569
+      ExplicitHeight = 470
       inherited FormChannelsGB: TGroupBox
         Width = 249
         Height = 470
         ExplicitWidth = 249
-        ExplicitHeight = 569
+        ExplicitHeight = 470
         inherited ChanNamesPanel: TPanel
           Top = 19
           Width = 245
@@ -324,7 +321,7 @@ object ObjFrm3dEdit: TObjFrm3dEdit
           Height = 340
           ExplicitTop = 128
           ExplicitWidth = 245
-          ExplicitHeight = 439
+          ExplicitHeight = 340
         end
       end
     end
