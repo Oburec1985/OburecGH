@@ -116,6 +116,8 @@ type
     procedure SignalsLBKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure SweepSinCBClick(Sender: TObject);
+    procedure TimeSeChange(Sender: TObject);
+    procedure Freq2FeChange(Sender: TObject);
   private
     m_prevTime:double;
     signals:tlist;
@@ -496,8 +498,26 @@ var
   s:cGenSig;
 begin
   s:=ActivSignal;
-  if Freqse.text<>'' then
-    s.Freq:=Freqse.Value;
+  if FreqSE.text<>'' then
+    s.m_freq:=FreqSE.Value;
+end;
+
+procedure TGenSignalsFrm.Freq2FeChange(Sender: TObject);
+var
+  s:cGenSig;
+begin
+  s:=ActivSignal;
+  if Freq2Fe.text<>'' then
+    s.m_freq2:=Freq2Fe.Value;
+end;
+
+procedure TGenSignalsFrm.TimeSeChange(Sender: TObject);
+var
+  s:cGenSig;
+begin
+  s:=ActivSignal;
+  if TimeSe.text<>'' then
+    s.m_sweepTime:=TimeSe.Value;
 end;
 // p -фаза
 function TGenSignalsFrm.genVal(p: double; s: cGenSig): double;
@@ -563,6 +583,20 @@ begin
   s:=ActivSignal;
   if OffsetFE.text<>'' then
     s.m_offset:=OffsetFE.Value;
+end;
+
+procedure TGenSignalsFrm.SweepSinCBClick(Sender: TObject);
+var
+  s:cGenSig;
+begin
+  s:=ActivSignal;
+  s.m_sweep:=SweepSinCB.Checked;
+
+  Freq2Fe.Visible:=SweepSinCB.Checked;
+  F2SweepLabel.Visible:=SweepSinCB.Checked;
+  TimeSe.Visible:=SweepSinCB.Checked;
+  SweepTimeLabel.Visible:=SweepSinCB.Checked;
+  SweepLgCB.Visible:=SweepSinCB.Checked;
 end;
 
 procedure TGenSignalsFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -647,15 +681,6 @@ begin
       end;
     end;
   end;
-end;
-
-procedure TGenSignalsFrm.SweepSinCBClick(Sender: TObject);
-begin
-  Freq2Fe.Visible:=SweepSinCB.Checked;
-  F2SweepLabel.Visible:=SweepSinCB.Checked;
-  TimeSe.Visible:=SweepSinCB.Checked;
-  SweepTimeLabel.Visible:=SweepSinCB.Checked;
-  SweepLgCB.Visible:=SweepSinCB.Checked;
 end;
 
 procedure TGenSignalsFrm.UpdateData(sender:tobject);
