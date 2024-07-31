@@ -1,8 +1,8 @@
 object GenSignalsFrm: TGenSignalsFrm
   Left = 0
   Top = 0
-  ClientHeight = 379
-  ClientWidth = 499
+  ClientHeight = 376
+  ClientWidth = 627
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -13,9 +13,9 @@ object GenSignalsFrm: TGenSignalsFrm
   PixelsPerInch = 120
   TextHeight = 16
   object Splitter1: TSplitter
-    Left = 312
+    Left = 440
     Top = 0
-    Height = 379
+    Height = 376
     Align = alRight
     ExplicitLeft = 344
     ExplicitTop = 96
@@ -24,8 +24,8 @@ object GenSignalsFrm: TGenSignalsFrm
   object PropertyPanel: TPanel
     Left = 0
     Top = 0
-    Width = 312
-    Height = 379
+    Width = 440
+    Height = 376
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -35,6 +35,8 @@ object GenSignalsFrm: TGenSignalsFrm
     ParentFont = False
     PopupMenu = PopupMenu1
     TabOrder = 0
+    ExplicitLeft = -3
+    ExplicitHeight = 379
     object AmpLabel: TLabel
       Left = 128
       Top = 0
@@ -44,14 +46,14 @@ object GenSignalsFrm: TGenSignalsFrm
     end
     object FreqLabel: TLabel
       Left = 128
-      Top = 75
-      Width = 151
+      Top = 70
+      Width = 43
       Height = 24
-      Caption = #1063#1072#1089#1090#1086#1090#1072' '#1089#1080#1075#1085#1072#1083#1072
+      Caption = 'F, '#1043#1094
     end
     object PhaseLabel: TLabel
       Left = 128
-      Top = 135
+      Top = 134
       Width = 105
       Height = 24
       Caption = #1060#1072#1079#1072', '#1075#1088#1072#1076'.'
@@ -79,6 +81,20 @@ object GenSignalsFrm: TGenSignalsFrm
       Height = 24
       Caption = #1057#1084#1077#1097#1077#1085#1080#1077
     end
+    object F2SweepLabel: TLabel
+      Left = 234
+      Top = 70
+      Width = 54
+      Height = 24
+      Caption = 'F2, '#1043#1094
+    end
+    object SweepTimeLabel: TLabel
+      Left = 330
+      Top = 70
+      Width = 65
+      Height = 24
+      Caption = 'T2, '#1089#1077#1082
+    end
     object STypeRG: TRadioGroup
       Left = 0
       Top = 0
@@ -96,7 +112,7 @@ object GenSignalsFrm: TGenSignalsFrm
     object AmpSE: TFloatSpinEdit
       Left = 128
       Top = 27
-      Width = 121
+      Width = 97
       Height = 35
       Increment = 0.100000000000000000
       PopupMenu = PopupMenu1
@@ -106,9 +122,9 @@ object GenSignalsFrm: TGenSignalsFrm
     object FreqSE: TFloatSpinEdit
       Left = 128
       Top = 96
-      Width = 121
+      Width = 97
       Height = 35
-      Increment = 0.100000000000000000
+      Increment = 1.000000000000000000
       PopupMenu = PopupMenu1
       TabOrder = 2
       OnChange = FreqSEChange
@@ -116,7 +132,7 @@ object GenSignalsFrm: TGenSignalsFrm
     object PhaseSE: TFloatSpinEdit
       Left = 128
       Top = 160
-      Width = 121
+      Width = 97
       Height = 35
       Increment = 0.100000000000000000
       PopupMenu = PopupMenu1
@@ -126,7 +142,7 @@ object GenSignalsFrm: TGenSignalsFrm
     object OffsetFE: TFloatSpinEdit
       Left = 128
       Top = 227
-      Width = 123
+      Width = 97
       Height = 35
       Increment = 0.100000000000000000
       PopupMenu = PopupMenu1
@@ -135,7 +151,7 @@ object GenSignalsFrm: TGenSignalsFrm
     end
     object EnabledAlgMngCB: TCheckBox
       Left = 127
-      Top = 312
+      Top = 336
       Width = 138
       Height = 17
       Caption = #1054#1073#1088#1072#1073#1086#1090#1082#1072
@@ -146,7 +162,7 @@ object GenSignalsFrm: TGenSignalsFrm
     end
     object GenDataCb: TCheckBox
       Left = 127
-      Top = 281
+      Top = 305
       Width = 138
       Height = 17
       Caption = #1043#1077#1085#1077#1088#1072#1090#1086#1088
@@ -155,21 +171,66 @@ object GenSignalsFrm: TGenSignalsFrm
       TabOrder = 6
       OnClick = GenDataCbClick
     end
+    object SweepSinCB: TCheckBox
+      Left = 127
+      Top = 272
+      Width = 106
+      Height = 17
+      Caption = 'Sweep'
+      Checked = True
+      State = cbChecked
+      TabOrder = 7
+      OnClick = SweepSinCBClick
+    end
+    object Freq2Fe: TFloatSpinEdit
+      Left = 234
+      Top = 96
+      Width = 90
+      Height = 35
+      Increment = 5.000000000000000000
+      PopupMenu = PopupMenu1
+      TabOrder = 8
+      OnChange = FreqSEChange
+    end
+    object TimeSe: TFloatSpinEdit
+      Left = 330
+      Top = 96
+      Width = 90
+      Height = 35
+      Increment = 0.100000000000000000
+      PopupMenu = PopupMenu1
+      TabOrder = 9
+      Value = 100.000000000000000000
+      OnChange = FreqSEChange
+    end
+    object SweepLgCB: TCheckBox
+      Left = 234
+      Top = 268
+      Width = 54
+      Height = 27
+      Caption = 'Lg'
+      Checked = True
+      State = cbChecked
+      TabOrder = 10
+      OnClick = EnabledAlgMngCBClick
+    end
   end
   object SignalsLB: TListBox
-    Left = 315
+    Left = 443
     Top = 0
     Width = 184
-    Height = 379
+    Height = 376
     Align = alRight
     PopupMenu = PopupMenu1
     TabOrder = 1
     OnClick = SignalsLBClick
     OnKeyDown = SignalsLBKeyDown
+    ExplicitLeft = 315
+    ExplicitHeight = 379
   end
   object PopupMenu1: TPopupMenu
-    Left = 48
-    Top = 296
+    Left = 24
+    Top = 248
     object N1: TMenuItem
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072
       OnClick = N1Click

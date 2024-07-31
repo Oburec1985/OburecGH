@@ -18,21 +18,35 @@ uses
 type
   cGenSig = class
   private
+    // начальный сдвиг фазы
     m_phase0:double;
   public
     m_debug:integer;
     m_name:string;
     m_type:integer;
+    // включить sweepsin
+    m_sweep,
+    // логарифмическая развертка по времени
+    m_lg:boolean;
     // частота процесса
     m_freq:double;
+    // частота 2 для Sweep
+    m_freq2,
+    // длительность развертки
+    m_sweepTime:double;
     // частота опроса
     m_fs:double;
     m_t:ctag;
+    // приращение фазы между двумя соседними отсчетами.
+    // Для sweepsin должно корректроваться с учетом текущего времени
     m_dPhase:double;
     m_offset:double;
   private
     m_amp:double;
+    // текущая фаза
     m_Phase:double;
+    // текущая длина нагенерированных данных. Используется для расчета фазы при SweepSin
+    m_TimeLen:double;
     cs:TRTLCriticalSection;
   private
     procedure InitCS;
@@ -85,6 +99,12 @@ type
     EnabledAlgMngCB: TCheckBox;
     Splitter1: TSplitter;
     GenDataCb: TCheckBox;
+    SweepSinCB: TCheckBox;
+    Freq2Fe: TFloatSpinEdit;
+    F2SweepLabel: TLabel;
+    TimeSe: TFloatSpinEdit;
+    SweepTimeLabel: TLabel;
+    SweepLgCB: TCheckBox;
     procedure AmpSEChange(Sender: TObject);
     procedure PhaseSEChange(Sender: TObject);
     procedure SignalsLBClick(Sender: TObject);
@@ -95,6 +115,7 @@ type
     procedure GenDataCbClick(Sender: TObject);
     procedure SignalsLBKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure SweepSinCBClick(Sender: TObject);
   private
     m_prevTime:double;
     signals:tlist;
@@ -110,6 +131,8 @@ type
     procedure clearsignals;
     procedure showsignals;
     procedure Createtestsignals;
+    // обновить форму по выбранному сигналу
+    procedure UpdateFrmBySig(s:cgensig);
   public
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -459,6 +482,7 @@ begin
     s.Phase:=0;
     // частота процесса на частоту дискретизации
     s.m_dPhase:=c_2pi*(s.freq/s.m_t.freq);
+    s.m_TimeLen:=0;
   end;
 end;
 
@@ -475,9 +499,7 @@ begin
   if Freqse.text<>'' then
     s.Freq:=Freqse.Value;
 end;
-
-
-
+// p -фаза
 function TGenSignalsFrm.genVal(p: double; s: cGenSig): double;
 begin
   case s.m_type of
@@ -586,10 +608,21 @@ begin
   s:=ActivSignal;
   if s=nil then
     exit;
+  UpdateFrmBySig(s);
+end;
+
+procedure TGenSignalsFrm.UpdateFrmBySig(s: cgensig);
+begin
   AmpSE.Value:=s.Amp;
   FreqSE.Value:=s.Freq;
   PhaseSE.Value:=s.Phase0;
   STypeRG.ItemIndex:=s.m_type;
+
+  Freq2Fe.Value:=s.m_freq2;
+  SweepSinCB.Checked:=s.m_sweep;
+  SweepLgCB.Checked:=s.m_lg;
+  TimeSe.Value:=s.m_sweepTime;
+  SweepSinCBClick(nil);
 end;
 
 procedure TGenSignalsFrm.SignalsLBKeyDown(Sender: TObject; var Key: Word;
@@ -614,6 +647,15 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TGenSignalsFrm.SweepSinCBClick(Sender: TObject);
+begin
+  Freq2Fe.Visible:=SweepSinCB.Checked;
+  F2SweepLabel.Visible:=SweepSinCB.Checked;
+  TimeSe.Visible:=SweepSinCB.Checked;
+  SweepTimeLabel.Visible:=SweepSinCB.Checked;
+  SweepLgCB.Visible:=SweepSinCB.Checked;
 end;
 
 procedure TGenSignalsFrm.UpdateData(sender:tobject);
@@ -658,6 +700,7 @@ begin
     end;
   end;
 end;
+
 
 { cGenSig }
 

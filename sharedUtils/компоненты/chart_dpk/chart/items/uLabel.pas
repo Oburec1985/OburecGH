@@ -19,16 +19,13 @@ type
   // рисуется в контексте общего вьюпорта (не DrawObjVP)
   cLabel = class(cMoveObj)
   protected
-    // смещение пользователя на момент очередного onBeginDrag
-    m_StartuserOffset: tpoint;
     // смещение текста относительно рамки
     fPixBorderOffset: tpoint;
     // то же что предыдущий пункт но пересчитанов координаты -1..1
     fBorderOffset: point2d;
     m_intervalScale:double;
-  public
-    // хранит данные на сколько пользователь удвигал компонент мышью относительно начального положения
-    m_userOffset: tpoint;
+    // отладочная инфа
+    m_log:string;
   public
     // установить вьюпорт графиков перед отрисовкой
     m_drawobjVP: boolean;
@@ -37,9 +34,12 @@ type
     // пользовательский масштаб/ Скорее всего не работает определение ширины символов
     // если не равно 1 (не тестилось на 29.01.19)
     m_addscalex, m_addscaley: double;
+  public
+    fOnSetText: TNotifyEvent;
+    fKeyDown: TKeyEvent;
+    fOnMove: TNotifyEvent;
   protected
     fbufStrList: tstringlist;
-    fOnSetText: TNotifyEvent;
     // индексы выделенных букв
     fSelectText: array [0 .. 1] of tpoint;
     fText: tstringlist;
@@ -62,8 +62,6 @@ type
     // смещение текста относительно левого нижнего угла рамки
     f_TextPos: point2;
     fTransparent: boolean;
-
-    fKeyDown: TKeyEvent;
   protected
     procedure DoOnMove(p: point2); override;
     procedure SetPos(p: point2); override;
@@ -77,7 +75,7 @@ type
     procedure SetCursPos(pos: tpoint);
     procedure SetHeigth(h: integer);
     procedure SetWidth(w: integer);
-    procedure correctBorderBorderOffset;
+    procedure correctBorderOffset;
     procedure doUpdateWorldSize(sender: tobject); override;
     procedure reEvalScales;
     // x - строка, y - символ
@@ -138,7 +136,7 @@ begin
   end;
 end;
 
-procedure cLabel.correctBorderBorderOffset;
+procedure cLabel.correctBorderOffset;
 var
   p2: point2;
   rh, MaxRowWidth: double;
@@ -217,39 +215,6 @@ var
   str: string;
 begin
   inherited;
-  { if pos('001_cLabel',name)>0 then
-    begin
-    // кусок кода для вывода стека процедур в лог
-    // Raw – определяет метод, используемый для получения информации о стеке вызова. При значении
-    //       False анализируются только стековые фреймы.
-    //       Использование значения True позволяет провести анализ непосредственно стека программы
-    //       и по кодам команд процессора, которые используются при вызове подпрограмм
-    //       (в частности машинной команды call) в ряде случаев получить более полную
-    //       информацию о стеке вызовов подпрограмм.
-    // AIgnoreLevels – определяет количество первых вызовов подпрограмм в стеке, которые не будут анализироваться. Например, при создании экземпляра класса с помощью функции JclCreateStackList её вызов будет первым. Но обычно интерес представляет последующие вызовы подпрограмм. Используя значение данного параметра равное 1, можно пропустить анализ вызова данной функции.
-    // FirstCaller – адрес подпрограммы, о которой требуется получить информацию дополнительно к адресам подпрограмм из стека вызовов. Параметр обычно используется при анализе исключений.
-    callStack := JclCreateStackList(true, 2, nil);
-    m_stackStrings.Clear;
-    // список строк, имя модуля, смещение адреса
-    callStack.AddToStrings(m_stackStrings, false, false, true);
-    if m_LastProcName <> '' then
-    begin
-    cchart(chart).deadLockDSC := m_LastProcName + '__' +
-    m_stackStrings.Strings[0] + '_' + name;
-    if assigned(cchart(chart).OnDeadLock) then
-    cchart(chart).OnDeadLock(self);
-    end;
-    m_LastProcName := m_stackStrings.Strings[0];
-    callStack.Free;
-    for I := 0 to m_stackStrings.Count - 1 do
-    begin
-    j:=pos('(',m_stackStrings.Strings[i]);
-    str:=m_stackStrings.Strings[i];
-    setlength(str,j);
-    logMessage(str);
-    end;
-    end; }
-  // doUpdateWorldSize(nil);
 end;
 
 procedure cLabel.SetText(s: string);
@@ -291,7 +256,7 @@ begin
         textH));
     fWidth := textsize.x;
     fHeigth := textsize.y;
-    correctBorderBorderOffset;
+    correctBorderOffset;
   end;
   if Assigned(fOnSetText) then
     fOnSetText(self);
@@ -543,8 +508,7 @@ begin
         boundrect.TopRight.y := rh;
         boundrect.TopRight.x := p2.x + rh;
         boundrect.BottomLeft.y := rh - p2.y;
-        // boundrect.BottomLeft.x := boundrect.BottomLeft.x;
-        correctBorderBorderOffset;
+        correctBorderOffset;
         reEvalScales;
       end;
     end;
@@ -1043,8 +1007,10 @@ begin
   inherited;
   if fdrag then
   begin
-    m_userOffset.x := m_StartuserOffset.x + fCurDragI.x - fDragBeginI.x;
-    m_userOffset.y := m_StartuserOffset.y + fCurDragI.y - fDragBeginI.y;
+    if assigned(fOnMove) then
+    begin
+      fOnMove(self);
+    end;
   end;
 end;
 
@@ -1059,9 +1025,9 @@ begin
   end;
   if fdrag then
   begin
-    m_userOffset.x := m_StartuserOffset.x + fDragEndI.x - fDragBeginI.x;
-    m_userOffset.y := m_StartuserOffset.y + fDragEndI.y - fDragBeginI.y;
-    m_StartuserOffset := m_userOffset;
+    //m_userOffset.x := m_StartuserOffset.x + fDragEndI.x - fDragBeginI.x;
+    //m_userOffset.y := m_StartuserOffset.y + fDragEndI.y - fDragBeginI.y;
+    //m_StartuserOffset := m_userOffset;
   end;
   inherited;
 end;
@@ -1118,7 +1084,6 @@ function cLabel.EvalRowHeigth: double;
 var
   font: cfont;
 begin
-  // result:=boundrect.TopRight.y-boundrect.BottomLeft.y;
   font := GetFont(fontIndex);
   if font <> nil then
     result := EvalRowHeigth(font)

@@ -139,13 +139,25 @@ begin
 end;
 
 function cBuffTrend1d.GetYByInd(i: integer): double;
+var
+  l:integer;
 begin
   case datatype of
     c_single:
-      result:=data_s[i];
+    begin
+      l:=length(data_s);
+      if i<l then
+        result:=data_s[i]
+      else
+        result:=data_s[l-1]
+    end;
     c_real:
     begin
-      result:=data_r[i];
+      l:=length(data_r);
+      if i<l then
+        result:=data_r[i]
+      else
+        result:=data_r[l-1]
     end;
   end;
 end;

@@ -23,12 +23,10 @@ type
   public
     // подпись линии
     m_LineLabel:cLabel;
-    // дефйолтная позиция метки без пользовательского смещения
-    m_Linedefpos:point2;
     // хранит cTrendPair
     m_trendLabels:tlist;
     m_fullname:boolean;
-    // назначается из вне!!!!!
+    // назначается из вне!!!!! Работает в паре с листом m_y[i]
     m_names:tstringlist;
   protected
     m_LineColor:point3;
@@ -39,9 +37,11 @@ type
     m_x2:double;
     // центральная частота в координатах +-1
     m_x:double;
-    // значение для подписи по Y
+    // значение для подписи по Y. Работает в паре с листом m_names
     m_y:array of double;
     m_capacity, m_length:integer;
+    // отладочная для сохранения что передавалось в setname
+    m_text:string;
   public
     // влияет только на подпись. Пока реализация размещения в координатах
     // отрисовки на совести пользователя (см. uSpmChart как пример)
@@ -56,6 +56,7 @@ type
     procedure setx2(v:double);
     procedure setdrawline(v:boolean);
     // вызывается с пмоощью механизма event-ов при обновлении страницы
+    procedure doLabelMove(sender:tobject);
     procedure doUpdatePageSize(sender:tobject);
     procedure doUpdateTextLabels(sender:tobject);
     procedure DeleteEvents;Override;
@@ -206,10 +207,10 @@ begin
   page := cpage(getpage);
   if page<>nil then
   begin
+    m_LineLabel.fOnMove:=doLabelMove;
     page.addchild(m_LineLabel);
     m_LineLabel.Text:=m_LineLabel.Text;
     m_LineLabel.Position:=p2(0, page.m_TabSpace.BottomLeft.y+m_LineLabel.GetTextHeigth);
-    m_Linedefpos:=m_LineLabel.Position;
   end;
 end;
 
@@ -223,24 +224,12 @@ begin
   inherited;
   page := cpage(getpage);
   page.setDrawObjVP;
-  {a:=page.activeAxis;
-  // границы полосы
-  x1x2:=page.realXToX1(p2(m_x1, m_x2));
-  b:=true;
-  if x1x2.y<a.min.x then
-    b:=false
-  else
-  begin
-    if x1x2.x>a.max.x then
-      b:=false;
-  end;}
   if true then
   begin
     drawrect(boundrect, color);
     if drawline then
     begin
       glColor3fv(@m_LineColor);
-      //uSimpleObjects.DrawLine(p2(m_x,boundrect.BottomLeft.y), p2(m_x,boundrect.TopRight.y));
       uSimpleObjects.DrawLine(p2(m_x,-1), p2(m_x,1));
     end;
   end;
@@ -313,6 +302,7 @@ var
   I: Integer;
 begin
   inherited;
+  m_text:=s;
   //m_LineLabel.Text:=s+char(10)+format(' X:%.3g', [m_realX]);
   if length>0 then
   begin
@@ -334,6 +324,8 @@ begin
       else
         str:=str+namestr+formatstrNoE(m_y[i], 3)+char(10);
     end;
+    // отладочная инфа
+    //str:=str+char(10)+'Position:' +floattostr(m_LineLabel.Position.X)+' '+floattostr(m_LineLabel.Position.y);
     m_LineLabel.Text:=str;
   end
   else
@@ -345,26 +337,36 @@ begin
   m_LineLabel.Text:=s+char(10)+'X: '+formatstrNoE(m_realX, 3)+char(10)+'Y: '+formatstrNoE(m_y[i], 3);
 end;
 
+procedure cFreqBand.doLabelMove(sender: tobject);
+begin
+  setname(m_text);
+end;
+
 procedure cFreqBand.setx(v: double);
 var
   p:cpage;
-  lp2:point2;
-  offset:double;
+  lp2, lp:point2;
+  dx,offset:double;
+
 begin
   EnterCS;
+  // смещение позиции полосы
+  dx:=v-m_x;
   m_x:=v;
   boundrect.BottomLeft.x:=m_x-m_x1;
   boundrect.TopRight.x:=m_x+m_x2;
   p:=cpage(getpage);
+  // находим смещение
   if p<>nil then
   begin
-    lp2:=p.p2iTop2(m_LineLabel.m_userOffset);
+    //lp2:=p.p2iTop2(m_LineLabel.m_userOffset);
     lp2.x:=lp2.x+1;
     lp2.y:=lp2.y+1;
+    lp2.x:=0;
+    lp2.y:=0;
   end;
-  m_LineLabel.Position:=p2(m_x+lp2.x,m_Linedefpos.y+lp2.y);
-  m_Linedefpos.x:=m_x;
-  //m_LineLabel.Position:=p2(m_x,m_LineLabel.Position.y);
+  lp:=m_LineLabel.Position;
+  m_LineLabel.Position:=p2(lp.x+dx, lp.y);
   exitcs;
 end;
 
@@ -405,8 +407,6 @@ var
   page:cpage;
 begin
   page := cpage(getpage);
-  //boundrect.BottomLeft.y:=page.m_TabSpace.BottomLeft.y;
-  //boundrect.TopRight.y:=page.m_TabSpace.TopRight.y;
   boundrect.BottomLeft.y:=-1;
   boundrect.TopRight.y:=1;
 end;

@@ -3,7 +3,7 @@ object GenSignalsEditFrm: TGenSignalsEditFrm
   Top = 0
   Caption = #1057#1086#1079#1076#1072#1090#1100' '#1089#1080#1075#1085#1072#1083
   ClientHeight = 300
-  ClientWidth = 373
+  ClientWidth = 395
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,24 +16,24 @@ object GenSignalsEditFrm: TGenSignalsEditFrm
   object AmpLabel: TLabel
     Left = 125
     Top = 59
-    Width = 143
+    Width = 35
     Height = 19
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
     Margins.Bottom = 2
-    Caption = #1040#1084#1087#1083#1080#1090#1091#1076#1072' '#1089#1080#1075#1085#1072#1083#1072
+    Caption = #1040#1084#1087'.'
   end
   object FreqLabel: TLabel
     Left = 125
     Top = 113
-    Width = 120
+    Width = 35
     Height = 19
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
     Margins.Bottom = 2
-    Caption = #1063#1072#1089#1090#1086#1090#1072' '#1089#1080#1075#1085#1072#1083#1072
+    Caption = 'F, '#1043#1094
   end
   object PhaseLabel: TLabel
     Left = 125
@@ -79,6 +79,20 @@ object GenSignalsEditFrm: TGenSignalsEditFrm
     Margins.Bottom = 2
     Caption = #1057#1084#1077#1097#1077#1085#1080#1077
   end
+  object F2SweepLabel: TLabel
+    Left = 217
+    Top = 113
+    Width = 44
+    Height = 19
+    Caption = 'F2, '#1043#1094
+  end
+  object SweepTimeLabel: TLabel
+    Left = 293
+    Top = 113
+    Width = 52
+    Height = 19
+    Caption = 'T2, '#1089#1077#1082
+  end
   object NameEdit: TEdit
     Left = 7
     Top = 24
@@ -111,7 +125,7 @@ object GenSignalsEditFrm: TGenSignalsEditFrm
   object AmpSE: TFloatSpinEdit
     Left = 125
     Top = 80
-    Width = 108
+    Width = 80
     Height = 29
     Margins.Left = 2
     Margins.Top = 2
@@ -124,7 +138,7 @@ object GenSignalsEditFrm: TGenSignalsEditFrm
   object FreqSE: TFloatSpinEdit
     Left = 125
     Top = 132
-    Width = 108
+    Width = 80
     Height = 29
     Margins.Left = 2
     Margins.Top = 2
@@ -137,7 +151,7 @@ object GenSignalsEditFrm: TGenSignalsEditFrm
   object PhaseSE: TFloatSpinEdit
     Left = 125
     Top = 186
-    Width = 108
+    Width = 80
     Height = 29
     Margins.Left = 2
     Margins.Top = 2
@@ -174,7 +188,7 @@ object GenSignalsEditFrm: TGenSignalsEditFrm
   object OffsetFE: TFloatSpinEdit
     Left = 125
     Top = 242
-    Width = 108
+    Width = 80
     Height = 29
     Margins.Left = 2
     Margins.Top = 2
@@ -182,5 +196,42 @@ object GenSignalsEditFrm: TGenSignalsEditFrm
     Margins.Bottom = 2
     Increment = 0.100000000000000000
     TabOrder = 7
+  end
+  object Freq2Fe: TFloatSpinEdit
+    Left = 217
+    Top = 132
+    Width = 67
+    Height = 29
+    Increment = 5.000000000000000000
+    TabOrder = 8
+  end
+  object TimeSe: TFloatSpinEdit
+    Left = 293
+    Top = 132
+    Width = 70
+    Height = 29
+    Increment = 0.100000000000000000
+    TabOrder = 9
+    Value = 100.000000000000000000
+  end
+  object SweepSinCB: TCheckBox
+    Left = 217
+    Top = 85
+    Width = 71
+    Height = 17
+    Caption = 'Sweep'
+    Checked = True
+    State = cbChecked
+    TabOrder = 10
+  end
+  object SweepLgCB: TCheckBox
+    Left = 293
+    Top = 80
+    Width = 54
+    Height = 27
+    Caption = 'Lg'
+    Checked = True
+    State = cbChecked
+    TabOrder = 11
   end
 end

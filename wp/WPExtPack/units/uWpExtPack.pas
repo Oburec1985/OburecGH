@@ -432,10 +432,13 @@ begin
               // pvar[1].lVal;
               hgraph := pvar[1];
               haxis := pvar[2];
-
-              isig := FindSignal(str1);
-              sig := mng.GetWPSignal(isig);
-
+              if str1<>'' then
+              begin
+                isig := FindSignal(str1);
+                sig := mng.GetWPSignal(isig);
+              end
+              else
+                sig :=nil;
               if sig <> nil then
               begin
                 if sig.tube <> nil then

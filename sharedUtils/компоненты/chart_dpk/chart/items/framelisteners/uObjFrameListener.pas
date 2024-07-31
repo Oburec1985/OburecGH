@@ -94,9 +94,10 @@ begin
         end
         else
           fp:=cpage(page).p2itop2(mouse.iPos_inv);
-        // правка от 22.11.23 Не понял зачем вычитается delta, закоментил
-        /// curobj.Position:=p2(fp.x-delta.x, fp.y-delta.y);
-        curobj.Position:=p2(fp.x, fp.y);
+        // правка от 30.07.24
+        // delta - отклонение объекта от мыши на момент выделения. Ставим объект в новые координаты
+        // но сохраняем начальное смещение
+        curobj.Position:=p2(fp.x-delta.x, fp.y-delta.y);
         curobj.DoOnMove(mouse.iPos_inv);
       end
       else

@@ -75,6 +75,7 @@ type
     procedure BNumSBDownClick(Sender: TObject);
     procedure BNumSBUpClick(Sender: TObject);
     procedure WndCBChange(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   public
     m_BargraphStep: integer;
     m_lastFile: string;
@@ -94,6 +95,7 @@ type
     fInitBands: boolean;
     m_ind: integer;
   private
+    // выравнивает ширину фреймов на компоненте на всю ширину
     procedure sortframes;
     procedure InitExcel;
     procedure ClearFrames;
@@ -879,6 +881,11 @@ end;
 function TPressFrm2.FrameCount: integer;
 begin
   result := m_frames.Count;
+end;
+
+procedure TPressFrm2.FormShow(Sender: TObject);
+begin
+  sortframes;
 end;
 
 function TPressFrm2.Frame(s: string): TPressFrmFrame2;

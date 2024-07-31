@@ -12,6 +12,7 @@ object PressFrm2: TPressFrm2
   Font.Style = []
   OldCreateOrder = False
   PopupMenu = PopupMenu1
+  OnShow = FormShow
   PixelsPerInch = 120
   TextHeight = 17
   object BarGraphGB: TGroupBox

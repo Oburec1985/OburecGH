@@ -2353,7 +2353,8 @@ begin
         cn := node.FindNode('cProgramList');
         cn.clear;
       end;
-      node.Clear;
+      if node<>nil then
+        node.Clear;
     end;
     doc.SaveToFile(fname);
     doc.destroy;

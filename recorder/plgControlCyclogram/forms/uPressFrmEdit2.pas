@@ -340,8 +340,6 @@ begin
     begin
       m_pf.UnitMaxALab.Caption:='psi, pk-pk';
     end;
-
-    //showmessage(inttostr(length(TDoubleArray(m_pf.PressFrmFrame21.spm.m_rms.p))));
   end;
 end;
 

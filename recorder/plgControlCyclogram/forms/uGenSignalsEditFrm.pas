@@ -31,11 +31,18 @@ type
     CreateSignalBtn: TButton;
     OffsetFE: TFloatSpinEdit;
     Label2: TLabel;
+    F2SweepLabel: TLabel;
+    Freq2Fe: TFloatSpinEdit;
+    SweepTimeLabel: TLabel;
+    TimeSe: TFloatSpinEdit;
+    SweepSinCB: TCheckBox;
+    SweepLgCB: TCheckBox;
     procedure CreateSignalBtnClick(Sender: TObject);
   private
     m_l:tlist;
   protected
     function NewName:string;
+    procedure UpdateSignal(s:cGenSig);
   public
     procedure NewSignal(l:tlist);
   end;
@@ -49,18 +56,31 @@ implementation
 
 { TGenSignalsEditFrm }
 
-procedure TGenSignalsEditFrm.CreateSignalBtnClick(Sender: TObject);
-var
-  s:cgensig;
+
+procedure TGenSignalsEditFrm.UpdateSignal(s: cGenSig);
 begin
-  NameEdit.text:=NewName;
-  s:=cGenSig.create(NameEdit.text, 1000);
   s.Phase0:=phasese.Value;
   s.Amp:=AmpSE.Value;
   s.m_freq:=FreqSE.Value;
   s.m_fs:=FsEdit.FloatNum;
   s.m_type:=styperg.ItemIndex;
   s.m_offset:=OffsetFE.Value;
+
+  s.m_sweep:=SweepSinCB.Checked;
+  s.m_lg:=SweepLgCB.Checked;
+  s.m_freq2:=Freq2Fe.Value;
+  s.m_sweepTime:=Freq2Fe.Value;
+end;
+
+
+procedure TGenSignalsEditFrm.CreateSignalBtnClick(Sender: TObject);
+var
+  s:cgensig;
+begin
+  NameEdit.text:=NewName;
+  s:=cGenSig.create(NameEdit.text, 1000);
+  // копируем свойства формы в сигнал
+  UpdateSignal(s);
   m_l.Add(s);
 end;
 
