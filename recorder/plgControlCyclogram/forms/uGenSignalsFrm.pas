@@ -49,6 +49,8 @@ type
     m_amp:double;
     // текущая фаза
     m_Phase,
+    // обратная к fs
+    m_dt,m_dt2,
     // текущая частота при sweepSin, пересчитывается из m_dPhase
     m_curFreq:double;
     // текущая длина нагенерированных данных. Используется для расчета фазы при SweepSin
@@ -501,6 +503,8 @@ begin
     s.Phase:=0;
     // частота процесса на частоту дискретизации
     s.m_dPhase:=c_2pi*(s.freq/s.m_fs);
+    s.m_dt:=1/s.m_fs;
+    s.m_dt2:=s.m_dt*s.m_dt/2;
     s.m_curFreq:=s.m_dphase*s.m_fs/c_2pi;
     s.m_TimeLen:=0;
   end;
@@ -769,8 +773,9 @@ begin
         if m_dphase<0 then
           m_dphase:=0;
       end;
-      phase:=phase+m_dphase;
-      m_curFreq:=m_dPhVel*m_fs/c_2pi;
+      // v0t+at2/2
+      phase:=phase+m_dphase*m_dt+m_dPhVel*m_dt2;
+      m_curFreq:=m_dphase/c_2pi;
     end;
   end
   else

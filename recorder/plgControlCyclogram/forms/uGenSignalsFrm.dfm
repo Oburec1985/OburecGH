@@ -1,100 +1,145 @@
 object GenSignalsFrm: TGenSignalsFrm
   Left = 0
   Top = 0
-  ClientHeight = 421
-  ClientWidth = 627
+  ClientHeight = 316
+  ClientWidth = 470
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -10
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 120
-  TextHeight = 16
+  PixelsPerInch = 96
+  TextHeight = 12
   object Splitter1: TSplitter
-    Left = 440
+    Left = 330
     Top = 0
-    Height = 421
+    Width = 2
+    Height = 316
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alRight
   end
   object PropertyPanel: TPanel
     Left = 0
     Top = 0
-    Width = 440
-    Height = 421
+    Width = 330
+    Height = 316
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -20
+    Font.Height = -15
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
     PopupMenu = PopupMenu1
     TabOrder = 0
     object AmpLabel: TLabel
-      Left = 128
+      Left = 96
       Top = 0
-      Width = 177
-      Height = 24
+      Width = 133
+      Height = 18
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1040#1084#1087#1083#1080#1090#1091#1076#1072' '#1089#1080#1075#1085#1072#1083#1072
     end
     object FreqLabel: TLabel
-      Left = 128
-      Top = 71
-      Width = 43
-      Height = 24
+      Left = 96
+      Top = 53
+      Width = 35
+      Height = 18
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = 'F, '#1043#1094
     end
     object PhaseLabel: TLabel
-      Left = 128
-      Top = 135
-      Width = 105
-      Height = 24
+      Left = 96
+      Top = 101
+      Width = 78
+      Height = 18
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1060#1072#1079#1072', '#1075#1088#1072#1076'.'
     end
     object FormTimerLabel: TLabel
-      Left = 8
-      Top = 211
-      Width = 69
-      Height = 24
+      Left = 6
+      Top = 158
+      Width = 53
+      Height = 18
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = 'T'#1092#1086#1088#1084':'
       Visible = False
     end
     object SysTimerLabel: TLabel
-      Left = 8
-      Top = 164
-      Width = 46
-      Height = 24
+      Left = 6
+      Top = 123
+      Width = 35
+      Height = 18
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = 'Trec:'
       Visible = False
     end
     object Label1: TLabel
-      Left = 128
-      Top = 200
-      Width = 96
-      Height = 24
+      Left = 96
+      Top = 150
+      Width = 72
+      Height = 18
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1057#1084#1077#1097#1077#1085#1080#1077
     end
     object F2SweepLabel: TLabel
-      Left = 235
-      Top = 71
-      Width = 54
-      Height = 24
+      Left = 176
+      Top = 53
+      Width = 43
+      Height = 18
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = 'F2, '#1043#1094
     end
     object SweepTimeLabel: TLabel
-      Left = 331
-      Top = 71
-      Width = 65
-      Height = 24
+      Left = 248
+      Top = 53
+      Width = 50
+      Height = 18
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = 'T2, '#1089#1077#1082
     end
     object STypeRG: TRadioGroup
       Left = 0
       Top = 0
-      Width = 105
-      Height = 125
+      Width = 79
+      Height = 94
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1058#1080#1087' '#1089#1080#1075#1085#1072#1083#1072
       ItemIndex = 0
       Items.Strings = (
@@ -105,50 +150,70 @@ object GenSignalsFrm: TGenSignalsFrm
       TabOrder = 0
     end
     object AmpSE: TFloatSpinEdit
-      Left = 128
-      Top = 27
-      Width = 97
-      Height = 35
+      Left = 96
+      Top = 20
+      Width = 73
+      Height = 28
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Increment = 0.100000000000000000
       PopupMenu = PopupMenu1
       TabOrder = 1
       OnChange = AmpSEChange
     end
     object FreqSE: TFloatSpinEdit
-      Left = 128
-      Top = 96
-      Width = 97
-      Height = 35
+      Left = 96
+      Top = 72
+      Width = 73
+      Height = 28
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Increment = 1.000000000000000000
       PopupMenu = PopupMenu1
       TabOrder = 2
       OnChange = FreqSEChange
     end
     object PhaseSE: TFloatSpinEdit
-      Left = 128
-      Top = 160
-      Width = 97
-      Height = 35
+      Left = 96
+      Top = 120
+      Width = 73
+      Height = 28
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Increment = 0.100000000000000000
       PopupMenu = PopupMenu1
       TabOrder = 3
       OnChange = PhaseSEChange
     end
     object OffsetFE: TFloatSpinEdit
-      Left = 128
-      Top = 227
-      Width = 97
-      Height = 35
+      Left = 96
+      Top = 170
+      Width = 73
+      Height = 28
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Increment = 0.100000000000000000
       PopupMenu = PopupMenu1
       TabOrder = 4
       OnChange = OffsetFEChange
     end
     object EnabledAlgMngCB: TCheckBox
-      Left = 127
-      Top = 336
-      Width = 138
-      Height = 17
+      Left = 95
+      Top = 252
+      Width = 104
+      Height = 13
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1054#1073#1088#1072#1073#1086#1090#1082#1072
       Checked = True
       State = cbChecked
@@ -156,10 +221,14 @@ object GenSignalsFrm: TGenSignalsFrm
       OnClick = EnabledAlgMngCBClick
     end
     object GenDataCb: TCheckBox
-      Left = 127
-      Top = 305
-      Width = 138
-      Height = 18
+      Left = 95
+      Top = 229
+      Width = 104
+      Height = 13
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1043#1077#1085#1077#1088#1072#1090#1086#1088
       Checked = True
       State = cbChecked
@@ -167,10 +236,14 @@ object GenSignalsFrm: TGenSignalsFrm
       OnClick = GenDataCbClick
     end
     object SweepSinCB: TCheckBox
-      Left = 127
-      Top = 272
-      Width = 106
-      Height = 17
+      Left = 95
+      Top = 204
+      Width = 80
+      Height = 13
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = 'Sweep'
       Checked = True
       State = cbChecked
@@ -178,20 +251,28 @@ object GenSignalsFrm: TGenSignalsFrm
       OnClick = SweepSinCBClick
     end
     object Freq2Fe: TFloatSpinEdit
-      Left = 235
-      Top = 96
-      Width = 89
-      Height = 35
+      Left = 176
+      Top = 72
+      Width = 67
+      Height = 28
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Increment = 5.000000000000000000
       PopupMenu = PopupMenu1
       TabOrder = 8
       OnChange = Freq2FeChange
     end
     object TimeSe: TFloatSpinEdit
-      Left = 329
-      Top = 96
-      Width = 90
-      Height = 35
+      Left = 247
+      Top = 72
+      Width = 67
+      Height = 28
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Increment = 0.100000000000000000
       PopupMenu = PopupMenu1
       TabOrder = 9
@@ -199,10 +280,14 @@ object GenSignalsFrm: TGenSignalsFrm
       OnChange = TimeSeChange
     end
     object SweepLgCB: TCheckBox
-      Left = 235
-      Top = 268
-      Width = 53
-      Height = 27
+      Left = 176
+      Top = 201
+      Width = 40
+      Height = 20
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = 'Lg'
       Checked = True
       State = cbChecked
@@ -211,11 +296,16 @@ object GenSignalsFrm: TGenSignalsFrm
     end
   end
   object SignalsLB: TListBox
-    Left = 443
+    Left = 332
     Top = 0
-    Width = 184
-    Height = 421
+    Width = 138
+    Height = 316
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alRight
+    ItemHeight = 12
     PopupMenu = PopupMenu1
     TabOrder = 1
     OnClick = SignalsLBClick
