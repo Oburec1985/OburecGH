@@ -24,8 +24,6 @@ type
     m_debug:integer;
     m_name:string;
     m_type:integer;
-    // включить sweepsin
-    m_sweep,
     // логарифмическая развертка по времени
     m_lg:boolean;
     // частота процесса
@@ -39,12 +37,20 @@ type
     m_t:ctag;
     // приращение фазы между двумя соседними отсчетами.
     // Для sweepsin должно корректроваться с учетом текущего времени
-    m_dPhase:double;
+    // фактически определяет текущую частоту (приращение фазы за семпл)
+    m_dPhase,
+    // ускорение фазы для sweep
+    m_dPhVel:double;
+    // спещение по Y
     m_offset:double;
   private
+    // включить sweepsin
+    m_sweep:boolean;
     m_amp:double;
     // текущая фаза
-    m_Phase:double;
+    m_Phase,
+    // текущая частота при sweepSin, пересчитывается из m_dPhase
+    m_curFreq:double;
     // текущая длина нагенерированных данных. Используется для расчета фазы при SweepSin
     m_TimeLen:double;
     cs:TRTLCriticalSection;
@@ -53,6 +59,9 @@ type
     procedure DeleteCS;
     procedure entercs;
     procedure exitcs;
+    procedure UpdatePhaseVelocity(p_sweep:boolean);
+    // выполняется в цикле/ приращение фазы
+    procedure UpdatePhase;
   protected
     // в градусах
     function getphase0:double;
@@ -65,11 +74,13 @@ type
     procedure setphase(p:double);
     function getA:double;
     procedure setA(a:double);
+    function getCurF:double;
     function getF:double;
     procedure setF(f:double);
     function getcfgStr:string;
     procedure SetCfgStr(s:string);
   public
+    property Sweep:boolean read m_sweep write UpdatePhaseVelocity;
     property cfgStr:string read getcfgstr write setcfgstr;
     property Freq:double read getF write setF;
     property Amp:double read getA write setA;
@@ -136,6 +147,7 @@ type
     // обновить форму по выбранному сигналу
     procedure UpdateFrmBySig(s:cgensig);
   public
+    function doRepaint: boolean;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
     constructor create(Aowner: tcomponent); override;
@@ -371,7 +383,7 @@ end;
 
 function IGenSignalsFrm.doRepaint: boolean;
 begin
-
+  TGenSignalsFrm(m_pMasterWnd).doRepaint;
 end;
 
 { TGenSignalsFrm }
@@ -473,6 +485,11 @@ begin
   inherited;
 end;
 
+function TGenSignalsFrm.doRepaint: boolean;
+begin
+  FreqLabel.Caption:='F, Гц '+formatstrNoE(ActivSignal.getCurF, 3);
+end;
+
 procedure TGenSignalsFrm.dostart;
 var
   I: Integer;
@@ -483,7 +500,8 @@ begin
     s:=cGenSig(signals.items[i]);
     s.Phase:=0;
     // частота процесса на частоту дискретизации
-    s.m_dPhase:=c_2pi*(s.freq/s.m_t.freq);
+    s.m_dPhase:=c_2pi*(s.freq/s.m_fs);
+    s.m_curFreq:=s.m_dphase*s.m_fs/c_2pi;
     s.m_TimeLen:=0;
   end;
 end;
@@ -493,13 +511,17 @@ begin
 
 end;
 
+
 procedure TGenSignalsFrm.FreqSEChange(Sender: TObject);
 var
   s:cGenSig;
 begin
   s:=ActivSignal;
   if FreqSE.text<>'' then
+  begin
     s.m_freq:=FreqSE.Value;
+    s.UpdatePhaseVelocity(s.sweep);
+  end;
 end;
 
 procedure TGenSignalsFrm.Freq2FeChange(Sender: TObject);
@@ -508,7 +530,10 @@ var
 begin
   s:=ActivSignal;
   if Freq2Fe.text<>'' then
+  begin
     s.m_freq2:=Freq2Fe.Value;
+    s.UpdatePhaseVelocity(s.sweep);
+  end;
 end;
 
 procedure TGenSignalsFrm.TimeSeChange(Sender: TObject);
@@ -517,7 +542,9 @@ var
 begin
   s:=ActivSignal;
   if TimeSe.text<>'' then
-    s.m_sweepTime:=TimeSe.Value;
+    s.m_sweepTime:=TimeSe.Value
+  else
+    s.m_sweepTime:=100;
 end;
 // p -фаза
 function TGenSignalsFrm.genVal(p: double; s: cGenSig): double;
@@ -590,7 +617,7 @@ var
   s:cGenSig;
 begin
   s:=ActivSignal;
-  s.m_sweep:=SweepSinCB.Checked;
+  s.sweep:=SweepSinCB.Checked;
 
   Freq2Fe.Visible:=SweepSinCB.Checked;
   F2SweepLabel.Visible:=SweepSinCB.Checked;
@@ -709,9 +736,8 @@ begin
       s.m_t.m_TagData[0]:=genVal(s.phase+s.m_phase0,s);
       for j := 1 to blsize - 1 do
       begin
-        s.phase:=s.phase+s.m_dphase;
-        if s.phase>c_2pi then
-          s.phase:=s.phase-c_2pi;
+        // обновляем фазу
+        s.UpdatePhase;
         s.m_t.m_TagData[j]:=genVal(s.phase+s.m_phase0,s);
       end;
       dt:=dt-TimeLength;
@@ -726,8 +752,80 @@ begin
   end;
 end;
 
+procedure cGenSig.UpdatePhase;
+begin
+  if m_sweep then
+  begin
+    if m_lg then
+    begin
+
+    end
+    else
+    begin
+      m_dphase:=m_dphase+m_dPhVel;
+      if phase<0 then
+      begin
+        phase:=0;
+        if m_dphase<0 then
+          m_dphase:=0;
+      end;
+      phase:=phase+m_dphase;
+      m_curFreq:=m_dPhVel*m_fs/c_2pi;
+    end;
+  end
+  else
+  begin
+    phase:=phase+m_dphase;
+  end;
+  if phase>c_2pi then
+    phase:=phase-c_2pi;
+end;
+
 
 { cGenSig }
+
+function cGenSig.getCurF: double;
+begin
+  entercs;
+  result:=m_curFreq;
+  exitcs;
+end;
+
+procedure cGenSig.SetCfgStr(s: string);
+var
+  str:string;
+begin
+  str := GetParam(s, 'sname');
+  m_name:=str;
+  str := GetParam(s, 'type');
+  m_type:=strtoint(str);
+  str := GetParam(s, 'fs');
+  m_fs:=strtoFloatExt(str);
+  str := GetParam(s, 'phase0');
+  phase0:=strtoFloatExt(str);
+  str := GetParam(s, 'freq');
+  m_freq:=strtoFloatExt(str);
+  str := GetParam(s, 'amp');
+  m_amp:=strtoFloatExt(str);
+  str := GetParam(s, 'offset');
+  m_offset:=strtoFloatExt(str);
+
+  str := GetParam(s, 'lg');
+  if checkstr(str) then
+    m_lg:=strtobool(str)
+  else
+    m_lg:=false;
+  str := GetParam(s, 'F2');
+  m_freq2:=strtoFloatExt(str);;
+  str := GetParam(s, 'TimeLen');
+  m_TimeLen:=strtoFloatExt(str);;
+  str := GetParam(s, 'Sweep');
+  if checkstr(str) then
+    Sweep:=strtobool(str)
+  else
+    sweep:=false;
+end;
+
 
 function cGenSig.getcfgStr: string;
 var
@@ -752,30 +850,19 @@ begin
 
   str:=FloatToStrEx(phase0,'.');
   addParam(pars, 'phase0', str);
+
+  str := booltostr(m_lg);
+  addParam(pars, 'lg', str);
+  str:=FloatToStrEx(m_freq2,'.');
+  addParam(pars, 'F2', str);
+  str:=FloatToStrEx(m_TimeLen,'.');
+  addParam(pars, 'TimeLen', str);
+  str := booltostr(Sweep);
+  addParam(pars, 'Sweep', str);
+
   result:= ParsToStr(pars);
   delpars(pars);
   pars.destroy;
-end;
-
-
-procedure cGenSig.SetCfgStr(s: string);
-var
-  str:string;
-begin
-  str := GetParam(s, 'sname');
-  m_name:=str;
-  str := GetParam(s, 'type');
-  m_type:=strtoint(str);
-  str := GetParam(s, 'fs');
-  m_fs:=strtoFloatExt(str);
-  str := GetParam(s, 'phase0');
-  phase0:=strtoFloatExt(str);
-  str := GetParam(s, 'freq');
-  m_freq:=strtoFloatExt(str);
-  str := GetParam(s, 'amp');
-  m_amp:=strtoFloatExt(str);
-  str := GetParam(s, 'offset');
-  m_offset:=strtoFloatExt(str);
 end;
 
 constructor cGenSig.create(sname: string; p_Fs: double);
@@ -783,6 +870,7 @@ var
   bl: IBlockAccess;
   t:itag;
 begin
+  m_sweepTime:=100;
   InitCS;
   m_name:=sname;
   m_fs:=p_Fs;
@@ -875,7 +963,6 @@ begin
   exitcs;
 end;
 
-
 function cGenSig.getphase: double;
 begin
   entercs;
@@ -898,6 +985,28 @@ end;
 procedure cGenSig.setphase0(p: double);
 begin
   m_phase0:=c_degtorad*p;
+end;
+
+procedure cGenSig.UpdatePhaseVelocity(p_sweep: boolean);
+begin
+  m_sweep:=p_sweep;
+  if m_sweep then
+  begin
+    if m_lg then
+    begin
+
+    end
+    else
+    begin
+      if m_t.tag<>nil then
+      begin
+        // Hz за семпл
+        m_dPhVel:=(m_freq2-m_freq)/(m_t.freq*m_sweepTime);
+        // Рад за семпл
+        m_dPhVel:=c_2pi*m_dPhVel;
+      end;
+    end;
+  end;
 end;
 
 end.

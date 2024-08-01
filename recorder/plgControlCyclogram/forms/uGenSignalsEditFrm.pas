@@ -66,7 +66,7 @@ begin
   s.m_type:=styperg.ItemIndex;
   s.m_offset:=OffsetFE.Value;
 
-  s.m_sweep:=SweepSinCB.Checked;
+  s.sweep:=SweepSinCB.Checked;
   s.m_lg:=SweepLgCB.Checked;
   s.m_freq2:=Freq2Fe.Value;
   s.m_sweepTime:=Freq2Fe.Value;
