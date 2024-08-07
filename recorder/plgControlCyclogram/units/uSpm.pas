@@ -714,6 +714,7 @@ function cSpm.ready: boolean;
 begin
   result := false;
   if m_tag=nil then exit;
+
   if fOutSize=0 then
     updateOutChan;
 
@@ -728,7 +729,7 @@ begin
     begin
       updateOutChan;
       result:=true;
-    end;
+    end
   end;
 end;
 
