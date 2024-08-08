@@ -35,12 +35,13 @@ type
     // частота опроса
     m_fs:double;
     m_t:ctag;
-    // приращение фазы между двумя соседними отсчетами.
+    // приращение фазы в секунду
     // Для sweepsin должно корректроваться с учетом текущего времени
-    // фактически определяет текущую частоту (приращение фазы за семпл)
     m_dPhase,
     // ускорение фазы для sweep
     m_dPhVel:double;
+    m_ChangePhase:boolean;
+    m_phaseVel:double;
     // спещение по Y
     m_offset:double;
   private
@@ -118,19 +119,24 @@ type
     TimeSe: TFloatSpinEdit;
     SweepTimeLabel: TLabel;
     SweepLgCB: TCheckBox;
+    PhaseVelSE: TFloatSpinEdit;
+    PhaseVelLabel: TLabel;
+    ChangePhaseCB: TCheckBox;
     procedure AmpSEChange(Sender: TObject);
     procedure PhaseSEChange(Sender: TObject);
     procedure SignalsLBClick(Sender: TObject);
     procedure N1Click(Sender: TObject);
     procedure FreqSEChange(Sender: TObject);
     procedure OffsetFEChange(Sender: TObject);
-    procedure EnabledAlgMngCBClick(Sender: TObject);
     procedure GenDataCbClick(Sender: TObject);
     procedure SignalsLBKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure SweepSinCBClick(Sender: TObject);
     procedure TimeSeChange(Sender: TObject);
     procedure Freq2FeChange(Sender: TObject);
+    procedure PhaseVelSEChange(Sender: TObject);
+    procedure ChangePhaseCBClick(Sender: TObject);
+    procedure SweepLgCBClick(Sender: TObject);
   private
     m_prevTime:double;
     signals:tlist;
@@ -363,7 +369,7 @@ begin
   begin
     sigList:=TGenSignalsFrm(GetFrm(i));
     sigList.UpdateData(nil);
-  end;;
+  end;
 end;
 
 { IGenSignalsFrm }
@@ -420,9 +426,12 @@ begin
     s.Amp:=ampse.Value;
 end;
 
-procedure TGenSignalsFrm.EnabledAlgMngCBClick(Sender: TObject);
+procedure TGenSignalsFrm.ChangePhaseCBClick(Sender: TObject);
+var
+  s:cGenSig;
 begin
-  g_algMng.m_enabled:=EnabledAlgMngCB.Checked;
+  s:=ActivSignal;
+  s.m_ChangePhase:=ChangePhaseCB.Checked;
 end;
 
 procedure TGenSignalsFrm.GenDataCbClick(Sender: TObject);
@@ -439,6 +448,15 @@ begin
     s.phase0:=PhaseSE.Value;
 end;
 
+
+procedure TGenSignalsFrm.PhaseVelSEChange(Sender: TObject);
+var
+  s:cgensig;
+begin
+  s:=ActivSignal;
+  if PhaseVelSE.Text<>'' then
+    s.m_phaseVel:=PhaseVelSE.Value;
+end;
 
 procedure TGenSignalsFrm.clearsignals;
 var
@@ -490,6 +508,7 @@ end;
 function TGenSignalsFrm.doRepaint: boolean;
 begin
   FreqLabel.Caption:='F, Гц '+formatstrNoE(ActivSignal.getCurF, 3);
+
 end;
 
 procedure TGenSignalsFrm.dostart;
@@ -497,15 +516,16 @@ var
   I: Integer;
   s:cGenSig;
 begin
+  m_prevTime:=0;
   for I := 0 to signals.Count - 1 do
   begin
     s:=cGenSig(signals.items[i]);
     s.Phase:=0;
     // частота процесса на частоту дискретизации
-    s.m_dPhase:=c_2pi*(s.freq/s.m_fs);
+    s.m_dPhase:=c_2pi*(s.freq);
     s.m_dt:=1/s.m_fs;
     s.m_dt2:=s.m_dt*s.m_dt/2;
-    s.m_curFreq:=s.m_dphase*s.m_fs/c_2pi;
+    s.m_curFreq:=s.m_dphase/c_2pi;
     s.m_TimeLen:=0;
   end;
 end;
@@ -594,6 +614,7 @@ begin
     sfreq:=GetParam(lstr, 'fs');
     s:=cGenSig.create(lname,strtofloatext(sfreq));
     s.cfgStr:=lstr;
+    s.UpdatePhaseVelocity(s.m_sweep);
     signals.Add(s);
   end;
   showsignals;
@@ -614,6 +635,14 @@ begin
   s:=ActivSignal;
   if OffsetFE.text<>'' then
     s.m_offset:=OffsetFE.Value;
+end;
+
+procedure TGenSignalsFrm.SweepLgCBClick(Sender: TObject);
+var
+  s:cGenSig;
+begin
+  s:=ActivSignal;
+  s.m_lg:=SweepLgCB.Checked;
 end;
 
 procedure TGenSignalsFrm.SweepSinCBClick(Sender: TObject);
@@ -688,6 +717,9 @@ begin
   SweepLgCB.Checked:=s.m_lg;
   TimeSe.Value:=s.m_sweepTime;
   SweepSinCBClick(nil);
+
+  ChangePhaseCB.Checked:=s.m_ChangePhase;
+  PhaseVelSE.Value:=s.m_phaseVel;
 end;
 
 procedure TGenSignalsFrm.SignalsLBKeyDown(Sender: TObject; var Key: Word;
@@ -748,7 +780,7 @@ begin
       p:=@s.m_t.m_TagData[0];
       s.m_t.tag.PushDataEx(p, BlSize, -1, -1);
       //s.m_t.tag.PushData(p^, BlSize);
-      if (i=0) and (k=0) then
+      if (k=1) and (i=0) then
       begin
         m_prevTime:=curT;
       end;
@@ -758,6 +790,10 @@ end;
 
 procedure cGenSig.UpdatePhase;
 begin
+  if m_changePhase then
+  begin
+    m_phase0:=m_phase0;
+  end;
   if m_sweep then
   begin
     if m_lg then
@@ -774,7 +810,9 @@ begin
           m_dphase:=0;
       end;
       // v0t+at2/2
-      phase:=phase+m_dphase*m_dt+m_dPhVel*m_dt2;
+      phase:=phase+m_dphase*m_dt+m_dPhVel*m_dt2+
+      // смещение из-за сдвига нулевой фазы
+      (m_phaseVel/m_fs)*c_degtorad;
       m_curFreq:=m_dphase/c_2pi;
     end;
   end
@@ -826,9 +864,17 @@ begin
   m_TimeLen:=strtoFloatExt(str);;
   str := GetParam(s, 'Sweep');
   if checkstr(str) then
-    Sweep:=strtobool(str)
+    m_sweep:=strtobool(str)
   else
-    sweep:=false;
+    m_sweep:=false;
+  // изменение фазы
+  str := GetParam(s, 'ChangePhase');
+  if checkstr(str) then
+    m_ChangePhase:=strtobool(str)
+  else
+    m_ChangePhase:=false;
+  str := GetParam(s, 'PhaseVel');
+  m_phaseVel:=strtoFloatExt(str);
 end;
 
 
@@ -864,6 +910,12 @@ begin
   addParam(pars, 'TimeLen', str);
   str := booltostr(Sweep);
   addParam(pars, 'Sweep', str);
+
+  str := booltostr(m_ChangePhase);
+  addParam(pars, 'ChangePhase', str);
+  str:=FloatToStrEx(m_phaseVel,'.');
+  addParam(pars, 'PhaseVel', str);
+
 
   result:= ParsToStr(pars);
   delpars(pars);

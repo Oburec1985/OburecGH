@@ -966,10 +966,18 @@ var
   page: cpage;
 begin
   page := cpage(getpage);
-  gluUnProject(p.x, p.y, 1, @identMatrix4d, @projection, @page.m_viewport, x,
-    y, z);
-  result.x := x;
-  result.y := y;
+  if (min.x=0) and (max.x=0) then
+  begin
+    result.x := 0;
+    result.y := 0;
+  end
+  else
+  begin
+    gluUnProject(p.x, p.y, 1, @identMatrix4d, @projection, @page.m_viewport, x,
+      y, z);
+    result.x := x;
+    result.y := y;
+  end;
 end;
 
 procedure cAxis.setLg(b: boolean);
