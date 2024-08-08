@@ -94,8 +94,6 @@ begin
   max:=0;
   sum:=0;
   imax:=-1;
-  if not m_s.ready then
-    exit;
   if bnum>g_PressCamFactory2.BandCount-1 then
     exit;
   for I := g_PressCamFactory2.m_bands[bnum].i1 to g_PressCamFactory2.m_bands[bnum].i2 do
