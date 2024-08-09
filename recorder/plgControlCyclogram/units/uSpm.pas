@@ -434,7 +434,14 @@ end;
 
 function cSpm.getIndByX(x: double): integer;
 begin
-  result := trunc(x / m_spmdx);
+  if m_spmdx<>0 then
+  begin
+    result:=trunc(x / m_spmdx)
+  end
+  else
+  begin
+    result:=0;
+  end;
 end;
 
 procedure cSpm.doGetData;

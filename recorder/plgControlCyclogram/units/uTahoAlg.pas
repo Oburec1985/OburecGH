@@ -604,7 +604,6 @@ begin
   begin
     m_band.y := strtoFloatExt(lstr);
   end;
-
   lstr := GetParam(str, 'Channel');
   if checkstr(lstr) then
   begin

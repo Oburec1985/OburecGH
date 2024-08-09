@@ -160,6 +160,7 @@ type
     procedure doStart; override;
     procedure SetActiveChart(c: TSyncOscFrm);
     function GetActiveChart: TSyncOscFrm;
+    procedure doRCInit(sender:tobject);
   public
     procedure doUpdateData; override;
     procedure doAfterLoad; override;
@@ -320,7 +321,12 @@ begin
     if TOscSignal(m_signals.Items[i]).t.tag = t then
     begin
       Result := TOscSignal(m_signals.Items[i]);
-      Result.m_dt := 1 / Result.t.freq;
+      if Result.t.freq<>0 then
+      begin
+        Result.m_dt := 1 / Result.t.freq;
+      end
+      else
+        showmessage('1) TSyncOscFrm.CreateSignal t.freq=0: '+Result.t.tagname);
       Result.line.dx:= Result.m_dt ;
       break;
     end;
@@ -329,7 +335,20 @@ begin
   begin
     Result := TOscSignal.create;
     Result.t.tag := t;
-    Result.m_dt := 1 / Result.t.freq;
+    if Result.t<>nil then
+    begin
+      if Result.t.freq<>0 then
+        Result.m_dt := 1 / Result.t.freq
+      else
+      begin
+        showmessage('2) TSyncOscFrm.CreateSignal t.freq=0: '+Result.t.tagname);
+      end;
+    end
+    else
+    begin
+      showmessage('3) TSyncOscFrm.CreateSignal t=nil: '+Result.t.tagname);
+      Result.m_dt := 0;
+    end;
     Result.ax := a;
     Result.line := cBuffTrend1d.create;
     Result.line.name:=t.GetName;
@@ -345,7 +364,14 @@ function TSyncOscFrm.CreateSignal(a: caxis; tname: string): TOscSignal;
 begin
   Result := TOscSignal.create;
   Result.t.tagname := tname;
-  Result.m_dt := 1 / Result.t.freq;
+  if Result.t.freq<>0 then
+  begin
+    Result.m_dt := 1 / Result.t.freq;
+  end
+  else
+  begin
+    // showmessage('4) TSyncOscFrm.CreateSignal t.freq=0: '+Result.t.tagname);
+  end;
   Result.ax := a;
   Result.line := cBuffTrend1d.create;
   Result.ax.AddChild(Result.line);
@@ -919,6 +945,7 @@ begin
     if g_algMng <> nil then
     begin
       initevents := true;
+      addplgevent('OscFact_doRcInit', E_RC_Init, doRcInit);
       // addplgevent('OscFact_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
       // g_algMng.Events.AddEvent('OscFact_SpmSetProps',e_OnSetAlgProperties,doChangeAlgProps);
       // g_algMng.Events.AddEvent('OscFact_OnLeaveCfg', E_OnChangeAlgCfg, doChangeCfg);
@@ -928,7 +955,7 @@ end;
 
 procedure TOscilFact.DestroyEvents;
 begin
-  // removeplgEvent(doChangeRState, c_RC_DoChangeRCState);
+   removeplgEvent(doRcInit, E_RC_Init);
   if g_algMng <> nil then
   begin
 
@@ -984,6 +1011,33 @@ end;
 procedure TOscilFact.doDestroyForms;
 begin
   inherited;
+end;
+
+procedure TOscilFact.doRCInit(sender: tobject);
+var
+  i: integer;
+  frm: TSyncOscFrm;
+  j: integer;
+  s: TOscSignal;
+begin
+  for i := 0 to count - 1 do
+  begin
+    frm := TSyncOscFrm(getfrm(i));
+    for j := 0 to frm.m_signals.count - 1 do
+    begin
+      s := frm.GetSignal(j);
+      if s.t.tag=nil then
+      begin
+        s.t.tagname:=s.t.tagname;
+        if s.t.tag<>nil then
+        begin
+          s.m_dt:=1/s.t.freq;
+          s.line.dx:=s.m_dt;
+          s.line.color := ColorArray[j];
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TOscilFact.doSetDefSize(var pSize: SIZE);
