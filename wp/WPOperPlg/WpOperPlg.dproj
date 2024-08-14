@@ -1,0 +1,129 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{31EF5444-9CE0-49F4-9DE8-1BBF49968F66}</ProjectGuid>
+			<ProjectVersion>12.0</ProjectVersion>
+			<MainSource>WpOperPlg.dpr</MainSource>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_Optimize>false</DCC_Optimize>
+			<DCC_UnitSearchPath>..\..\..\oburec\OburecGH\sharedUtils\компоненты\dcl_dpk;..\..\..\oburec\OburecGH\sharedUtils\objects;..\..\..\oburec\OburecGH\sharedUtils\math;..\..\..\oburec\OburecGH\sharedUtils\utils;..\..\..\oburec\OburecGH\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source;..\..\..\oburec\OburecGH\sharedUtils\utils\lists;..\..\..\oburec\OburecGH\sharedUtils\forms;..\..\..\oburec\OburecGH\sharedUtils;..\..\..\oburec\OburecGH\sharedUtils\utils\xml;..\..\..\oburec\OburecGH\sharedUtils\utils\PathUtils;..\..\..\oburec\OburecGH\sharedUtils\utils\files;..\..\..\oburec\OburecGH\sharedUtils\objects\utils;..\..\..\oburec\OburecGH\3d;..\..\..\oburec\OburecGH\3d\objects;..\..\..\oburec\OburecGH\3d\forms;..\..\..\oburec\OburecGH\3d\3dComponents\components;..\..\..\oburec\OburecGH\3d\math;..\..\..\oburec\OburecGH\3d\tools;..\..\..\oburec\OburecGH\3d\core;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_RangeChecking>true</DCC_RangeChecking>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_MapFile>3</DCC_MapFile>
+			<ImageDebugInfo>true</ImageDebugInfo>
+			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+			<DCC_ExeOutput>C:\Program Files (x86)\Mera\WinPOS\PlugIns\OperPack\</DCC_ExeOutput>
+			<DCC_DebugDCUs>true</DCC_DebugDCUs>
+			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<DCC_E>false</DCC_E>
+			<DCC_DependencyCheckOutputName>C:\Program Files (x86)\Mera\WinPOS\PlugIns\OperPack\WpOperPlg.dll</DCC_DependencyCheckOutputName>
+			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
+			<DCC_Platform>x86</DCC_Platform>
+			<DCC_S>false</DCC_S>
+			<GenDll>true</GenDll>
+			<DCC_N>false</DCC_N>
+			<DCC_F>false</DCC_F>
+			<DCC_K>false</DCC_K>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="WpOperPlg.dpr">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="iface\Winpos_ole_TLB.pas"/>
+			<DCCReference Include="units\uOperPack.pas"/>
+			<DCCReference Include="iface\POSBase.pas"/>
+			<DCCReference Include="WpOperPlg_TLB.pas"/>
+			<DCCReference Include="forms\uIRGraphFrm.pas">
+				<Form>IRGraphFrm</Form>
+			</DCCReference>
+			<DCCReference Include="units\uWPservices.pas"/>
+			<DCCReference Include="units\UWPEvents.pas"/>
+			<DCCReference Include="..\..\..\oburec\OburecGH\sharedUtils\math\u2DMath.pas"/>
+			<RidlCompile Include="WpOperPlgLib.ridl"/>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Source>
+						<Source Name="MainSource">WpOperPlg.dpr</Source>
+					</Source>
+					<Parameters>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+						<Parameters Name="HostApplication">C:\Program Files (x86)\Mera\WinPOS\WinPos.exe</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">1</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1049</VersionInfo>
+						<VersionInfo Name="CodePage">1251</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName"/>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+				</Delphi.Personality>
+				<ActiveXProjectInfo>
+					<version>1</version>
+				</ActiveXProjectInfo>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>

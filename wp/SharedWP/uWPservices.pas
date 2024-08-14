@@ -75,7 +75,8 @@ function GetActiveCursorX: point2d;
 function GetGraphX(g: integer): point2d;
 function GetGraphCursorX(p,g: integer): point2d;
 
-function GetStartStop(m:iwpusml):point2d;
+function GetStartStop(m:iwpusml):point2d;overload;
+function GetStartStop(n:iwpnode):point2d;overload;
 
 // узел к которому прилинкован сигнал
 function findNode(isig:iwpsignal):iwpnode;overload;
@@ -964,7 +965,7 @@ begin
   result := nil;
   if IsSignal(s) then
   begin
-    n := wp.GetNode(s) as iwpnode;
+    n := TypeCastToIWNode(s);
     str := n.AbsolutePath;
     for i := length(str) downto 1 do
     begin
@@ -1068,6 +1069,41 @@ function getChildCount(srcnode:iwpnode):integer;
 begin
   result:=srcnode.ChildCount;
 end;
+
+function GetStartStop(n:iwpnode):point2d;overload;
+var
+  d:idispatch;
+  ch:idispatch;
+  s:iwpsignal;
+  I: Integer;
+  min, max:double;
+begin
+  result:=p2d(0,0);
+  if n.ChildCount=0 then
+    exit;
+  ch:=n.At(0);
+  s:=TypeCastToIWSignal(ch);
+  min:=s.MinX;
+  max:=s.MaxX;
+  for I := 1 to n.ChildCount - 1 do
+  begin
+    d:=n.at(i);
+    s:=TypeCastToIWSignal(d);
+    if s<>nil then
+    begin
+      if min>s.MinX then
+      begin
+        min:=s.MinX;
+      end;
+      if max<s.MaxX then
+      begin
+        max:=s.MaxX;
+      end;
+    end;
+  end;
+  result:=p2d(min, max);
+end;
+
 
 function GetStartStop(m:iwpusml):point2d;
 var
