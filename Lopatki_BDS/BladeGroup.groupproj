@@ -30,6 +30,9 @@
 			<Projects Include="..\wp\WPExtPack\WPExtPack.dproj">
 				<Dependencies/>
 			</Projects>
+			<Projects Include="..\wp\WPOperPlg\WpOperPlg.dproj">
+				<Dependencies/>
+			</Projects>
 			<Projects Include="..\Key_Logger\SniffDll.dproj">
 				<Dependencies/>
 			</Projects>
@@ -136,6 +139,15 @@
 		<Target Name="WPExtPack:Make">
 			<MSBuild Targets="Make" Projects="..\wp\WPExtPack\WPExtPack.dproj"/>
 		</Target>
+		<Target Name="WpOperPlg">
+			<MSBuild Projects="..\wp\WPOperPlg\WpOperPlg.dproj"/>
+		</Target>
+		<Target Name="WpOperPlg:Clean">
+			<MSBuild Targets="Clean" Projects="..\wp\WPOperPlg\WpOperPlg.dproj"/>
+		</Target>
+		<Target Name="WpOperPlg:Make">
+			<MSBuild Targets="Make" Projects="..\wp\WPOperPlg\WpOperPlg.dproj"/>
+		</Target>
 		<Target Name="SniffDll">
 			<MSBuild Projects="..\Key_Logger\SniffDll.dproj"/>
 		</Target>
@@ -182,13 +194,13 @@
 			<MSBuild Targets="Make" Projects="..\3d\GlScene.dproj"/>
 		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="dcl_own;ComponentsLib;GlPackage;Proilegenerator;RC_lib;plgControlCyclogram;SubdivFilePlg;WpServicePlg;WPExtPack;SniffDll;plgEvalStepVal;PrSinalsGenerator;ProjectFFT;GlScene"/>
+			<CallTarget Targets="dcl_own;ComponentsLib;GlPackage;Proilegenerator;RC_lib;plgControlCyclogram;SubdivFilePlg;WpServicePlg;WPExtPack;WpOperPlg;SniffDll;plgEvalStepVal;PrSinalsGenerator;ProjectFFT;GlScene"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="dcl_own:Clean;ComponentsLib:Clean;GlPackage:Clean;Proilegenerator:Clean;RC_lib:Clean;plgControlCyclogram:Clean;SubdivFilePlg:Clean;WpServicePlg:Clean;WPExtPack:Clean;SniffDll:Clean;plgEvalStepVal:Clean;PrSinalsGenerator:Clean;ProjectFFT:Clean;GlScene:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;ComponentsLib:Clean;GlPackage:Clean;Proilegenerator:Clean;RC_lib:Clean;plgControlCyclogram:Clean;SubdivFilePlg:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;SniffDll:Clean;plgEvalStepVal:Clean;PrSinalsGenerator:Clean;ProjectFFT:Clean;GlScene:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="dcl_own:Make;ComponentsLib:Make;GlPackage:Make;Proilegenerator:Make;RC_lib:Make;plgControlCyclogram:Make;SubdivFilePlg:Make;WpServicePlg:Make;WPExtPack:Make;SniffDll:Make;plgEvalStepVal:Make;PrSinalsGenerator:Make;ProjectFFT:Make;GlScene:Make"/>
+			<CallTarget Targets="dcl_own:Make;ComponentsLib:Make;GlPackage:Make;Proilegenerator:Make;RC_lib:Make;plgControlCyclogram:Make;SubdivFilePlg:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;SniffDll:Make;plgEvalStepVal:Make;PrSinalsGenerator:Make;ProjectFFT:Make;GlScene:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

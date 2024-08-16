@@ -34,7 +34,6 @@ type
     SearchLabel: TLabel;
     SignalsLV: TBtnListView;
     BlockSizeLabel: TLabel;
-    StepBox: TFloatEdit;
     Label2: TLabel;
     Label3: TLabel;
     blocksAmount: TSpinEdit;
@@ -47,6 +46,7 @@ type
     CheckBox2: TCheckBox;
     Label6: TLabel;
     WndCB: TComboBox;
+    StepBox: TFloatEdit;
     procedure FormShow(Sender: TObject);
     procedure FFTdecrease(Sender: TObject);
     procedure FFTincrease(Sender: TObject);
@@ -441,6 +441,8 @@ var
 begin
   // поиск тахо
   //tn2:=LoadCfgCb.Items.Objects[LoadCfgCb.ItemIndex];
+  if signalslv.items.count=0 then exit;
+
   for j := 0 to signalslv.GetCount - 1 do
   begin
     li2:=SignalsLV.items[j];
@@ -451,6 +453,13 @@ begin
       break;
     end;
   end;
+  if tn2=nil then
+  begin
+    LoadCfgCB.Color:=c_lightRed;
+    exit;
+  end
+  else
+    LoadCfgCB.Color:=clWindow;
 
   for j := 0 to signalsLV.items.Count - 1 do
   begin
@@ -541,7 +550,7 @@ begin
       m_prev:=lout;
     end;
     wp.Link('/Signals/result', signal.sname+'_ir', g_graph);
-    wp.Link('/Signals/result', signal.sname+'_alpha', g_temp);
+    //wp.Link('/Signals/result', signal.sname+'_alpha', g_temp);
     wp.Refresh();
     end;
   end;
@@ -636,6 +645,10 @@ begin
       n:=TypeCastToIWNode(d);
       m_curSrcNode:=n;
     end
+  end
+  else
+  begin
+    m_curSrcNode:=n;
   end;
   if m_curSrcNode=nil then
     exit;

@@ -19,15 +19,6 @@ type
   protected
     // хендл главного окна
     mainwnd: cardinal;
-    // сслыка на sniffDll. Грузиться динамически
-    HLib: thandle;
-    WM_KeyHOOK: cardinal;
-    hooktime:double;
-
-    // первый кто подменил оконную процедуру
-    m_firstHook:boolean;
-
-    oldWndProc, newWndProc: pointer;
 
     tagproc: function(p_tag: integer): integer;
     stdcall;
@@ -130,7 +121,7 @@ begin
   bar_ID := WINPOS.CreateToolbar();
   ID_RunPlg := WINPOS.RegisterCommand();
   // hinstans - глобальная переменная которая является идентификатором приложения
-  hbmp := LoadBitmap(HInstance, 'FX');
+  hbmp := LoadBitmap(HInstance, 'IRDIAG');
 
   date := now;
   c_vers := 'Скомпилирован ' + datetostr(now);
@@ -142,18 +133,8 @@ begin
 end;
 
 function TOperPack.Disconnect: integer;
-var
-  StartHookProc: function(switch: boolean; hMainProg: hwnd): integer stdcall;
 begin
   Result := 0;
-  SetWindowLong(mainwnd, gwl_wndProc, integer(oldWndProc));
-  // удаляем клавиатурный хук
-  if HLib > HINSTANCE_ERROR then
-  begin
-    // освобождаем библиотеку
-    StartHookProc(false, mainwnd);
-    FreeLibrary(HLib);
-  end;
 end;
 
 
