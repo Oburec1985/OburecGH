@@ -50,31 +50,30 @@ type
     procedure N2Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    enablecomponents:boolean;
+    enablecomponents: boolean;
     // фреймы
-    TVframe:TSceneTVFrame;
-    TransformToolsFrame1:TTransformToolsFrame;
-    SelectObjectsFrame:TSelectObjectFrame;
-    modifyframe:tmodifyframe;
+    TVframe: TSceneTVFrame;
+    TransformToolsFrame1: TTransformToolsFrame;
+    SelectObjectsFrame: TSelectObjectFrame;
+    modifyframe: tmodifyframe;
   private
     procedure init;
     procedure linkFrames;
-    procedure changecursorOnUnselect(sender:tobject);
-    procedure EnableComponent(state:boolean);
-    procedure OnInitContext(sender:tobject);
+    procedure changecursorOnUnselect(Sender: TObject);
+    procedure EnableComponent(state: boolean);
+    procedure OnInitContext(Sender: TObject);
   public
 
   end;
 
- var
-   m_fileMng:cFileMng;
-   m_HelpMng:cFileMng;
-   g_UI:cUI;
+var
+  m_fileMng: cFileMng;
+  m_HelpMng: cFileMng;
+  g_UI: cUI;
 
-
- const
-   FileMngName = 'Recently opened files';
-   HelpFiles = 'Помощь';
+const
+  FileMngName = 'Recently opened files';
+  HelpFiles = 'Помощь';
 
 var
   GlFrm: TGlFrm;
@@ -83,43 +82,40 @@ implementation
 
 {$R *.dfm}
 
-
 procedure TGlFrm.linkFrames;
 begin
-  TVframe:=TSceneTVFrame.Create(self);
-  g_ui.scene.images_16:=ImageList_16;
-  g_ui.scene.images_32:=ImageList_32;
-  tvframe.link(g_UI, GroupBox1, ImageList_32);
+  TVframe := TSceneTVFrame.Create(self);
+  g_UI.scene.images_16 := ImageList_16;
+  g_UI.scene.images_32 := ImageList_32;
+  TVframe.link(g_UI, GroupBox1, ImageList_32);
 
   TransformToolsFrame1 := TTransformToolsFrame.Create(self);
-  TransformToolsFrame1.Parent:=self;
-  TransformToolsFrame1.Visible:=true;
-  TransformToolsFrame1.Lincscene(g_ui);
-
+  TransformToolsFrame1.Parent := self;
+  TransformToolsFrame1.Visible := true;
+  TransformToolsFrame1.Lincscene(g_UI);
 
   SelectObjectsFrame := TSelectObjectFrame.Create(self);
-  SelectObjectsFrame.Parent:=self;
-  SelectObjectsFrame.Visible:=false;
-  selectObjectsFrame.GetUI(g_UI);
-  SelectObjectsFrame.ObjectsLV.Enabled:=true;
+  SelectObjectsFrame.Parent := self;
+  SelectObjectsFrame.Visible := false;
+  SelectObjectsFrame.GetUI(g_UI);
+  SelectObjectsFrame.ObjectsLV.Enabled := true;
 
-  modifyframe:=tmodifyframe.Create(self);
-  modifyframe.Parent:=self;
-  modifyframe.Visible:=false;
-  modifyframe.lincscene(g_ui);
+  modifyframe := tmodifyframe.Create(self);
+  modifyframe.Parent := self;
+  modifyframe.Visible := false;
+  modifyframe.Lincscene(g_UI);
 end;
 
 procedure TGlFrm.ModifyMenuClick(Sender: TObject);
 begin
-  //TVframe.Visible:=false;
+  // TVframe.Visible:=false;
 
-  SelectObjectsFrame.Visible:=false;
-  //MatFrame.Visible:=false;
-  ModifyFrame.Visible:=not ModifyFrame.Visible;
-  if not ModifyFrame.Visible then
-    ModifyFrame.SkinFrame1.OnHide;
+  SelectObjectsFrame.Visible := false;
+  // MatFrame.Visible:=false;
+  modifyframe.Visible := not modifyframe.Visible;
+  if not modifyframe.Visible then
+    modifyframe.SkinFrame1.OnHide;
 end;
-
 
 procedure TGlFrm.N2Click(Sender: TObject);
 begin
@@ -128,29 +124,31 @@ begin
     g_UI.m_RenderScene.LoadScene(OpenDialog1.FileName);
     m_fileMng.AddfilePath(OpenDialog1.FileName);
     // обновление деревьев
-    //lincFrames;
+    // lincFrames;
   end;
 end;
 
-procedure TGlFrm.EnableComponent(state:boolean);
-var i:integer;
+procedure TGlFrm.EnableComponent(state: boolean);
+var
+  i: integer;
 begin
-  if enablecomponents<>state then
+  if enablecomponents <> state then
   begin
-    for I := 0 to ComponentCount-1 do
+    for i := 0 to ComponentCount - 1 do
     begin
       if Components[i].InheritsFrom(TControl) then
-        tcontrol(Components[i]).Enabled:=state;
+        TControl(Components[i]).Enabled := state;
     end;
-    enablecomponents:=state;
+    enablecomponents := state;
   end;
 end;
 
 procedure TGlFrm.FormClick(Sender: TObject);
-var i:integer;
-    b:boolean;
+var
+  i: integer;
+  b: boolean;
 begin
-  b:=EnableComponents;
+  b := enablecomponents;
   EnableComponent(false);
   self.SetFocus;
   EnableComponent(b);
@@ -169,23 +167,24 @@ begin
   linkFrames;
 end;
 
-procedure TGlFrm.changecursorOnUnselect(sender:tobject);
+procedure TGlFrm.changecursorOnUnselect(Sender: TObject);
 begin
-  if g_ui.cursor<>crdefault then
+  if g_UI.cursor <> crdefault then
   begin
-    g_ui.cursor:=crdefault;
-    cursor:=g_ui.cursor;
+    g_UI.cursor := crdefault;
+    cursor := g_UI.cursor;
   end;
 end;
 
-procedure TGlFrm.OnInitContext(sender:tobject);
-var cur:ccursor;
-    i:integer;
+procedure TGlFrm.OnInitContext(Sender: TObject);
+var
+  cur: ccursor;
+  i: integer;
 begin
-  for I := 0 to g_ui.cursors.Count - 1 do
+  for i := 0 to g_UI.cursors.Count - 1 do
   begin
-    cur:=ccursor(g_ui.cursors.Objects[i]);
-    screen.Cursors[cur.index]:=cur.HIcon;
+    cur := ccursor(g_UI.cursors.Objects[i]);
+    screen.cursors[cur.index] := cur.HIcon;
   end;
 end;
 
@@ -193,41 +192,38 @@ procedure TGlFrm.Recentlyopenedfiles1Click(Sender: TObject);
 begin
   if m_fileMng.bclick then
   begin
-    m_fileMng.bclick:=false;
-    OpenDialog1.FileName:=m_fileMng.GetClickItem;
+    m_fileMng.bclick := false;
+    OpenDialog1.FileName := m_fileMng.GetClickItem;
     g_UI.m_RenderScene.LoadScene(OpenDialog1.FileName);
-    g_ui.eventlist.CallAllEvents(E_glLoadScene);
+    g_UI.eventlist.CallAllEvents(E_glLoadScene);
   end;
 end;
 
-
 procedure TGlFrm.init;
 var
-  menuitem:TMenuItem;
-  c:cbasecamera;
-  //fr:cClickFrListener;
+  menuitem: TMenuItem;
+  c: cbasecamera;
+  // fr:cClickFrListener;
 begin
-  DecimalSeparator:=',';
-  enablecomponents:=true;
+  DecimalSeparator := ',';
+  enablecomponents := true;
   // При передаче хендла в класс cUInterface он подвязывается для прорисовки окна
   // и для отлавливания wm_message.
-  g_UI:=cUI.Create(Handle,extractfiledir(application.ExeName)+'\files\resources.ini');
-  m_fileMng:=cFileMng.Create(ExtractFileDir(Application.ExeName)+'\files\Main.ini',
-                             MainMenu1,
-                             FileMngName,
-                             TestRecentFiles);
-  m_HelpMng:=cFileMng.Create(ExtractFileDir(Application.ExeName)+'\files\HelpFiles.ini',
-                             MainMenu1,
-                             HelpFiles,
-                             TestRecentFiles);
-  menuitem:=MainMenu1.items[0];
-  //g_ui.EventList.AddEvent('OnObjClick',e_glOnClick,OnObjClick);
-  g_ui.EventList.AddEvent('formclick',E_glWindowClick, FormClick);
-  g_ui.EventList.AddEvent('changecursorunselect',e_glUnSelect, changecursorOnUnselect);
+  g_UI := cUI.Create(Handle, extractfiledir(application.ExeName)
+      + '\files\resources.ini');
+  m_fileMng := cFileMng.Create(extractfiledir(application.ExeName)
+      + '\files\Main.ini', MainMenu1, FileMngName, TestRecentFiles);
+  m_HelpMng := cFileMng.Create(extractfiledir(application.ExeName)
+      + '\files\HelpFiles.ini', MainMenu1, HelpFiles, TestRecentFiles);
+  menuitem := MainMenu1.items[0];
+  // g_ui.EventList.AddEvent('OnObjClick',e_glOnClick,OnObjClick);
+  g_UI.eventlist.AddEvent('formclick', E_glWindowClick, FormClick);
+  g_UI.eventlist.AddEvent('changecursorunselect', e_glUnSelect,
+    changecursorOnUnselect);
   OnInitContext(nil);
-  c:=g_ui.scene.getactivecamera;
-  c.position:=p3(0,0,0);
+  c := g_UI.scene.getactivecamera;
+  c.position := p3(0, 5, 0);
+  c.target := m_shape;
 end;
-
 
 end.

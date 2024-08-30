@@ -22,5 +22,7 @@
     <Transaction>2018.06.09 23:32:19.693.pas,G:\oburec\project2010\2011\tests\TestAlgLib\cplxfft1.pas=</Transaction>
     <Transaction>2018.06.09 23:32:19.702.pas,G:\oburec\project2010\2011\tests\TestAlgLib\cplxfft2.pas=</Transaction>
     <Transaction>2024.03.19 10:45:27.219.pas,F:\Oburec\delphi\2011\OburecGH\tests\TestAlgLib\Unit1.pas=F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\items\shaders\uLineLgShader.pas</Transaction>
+    <Transaction>2024.08.27 18:31:34.301.pas,F:\Oburec\delphi\2011\OburecGH\tests\TestAlgLib\Unit2.pas=F:\Oburec\delphi\2011\OburecGH\tests\TestAlgLib\TestUDPsender.pas</Transaction>
+    <Transaction>2024.08.27 18:31:34.301.dfm,F:\Oburec\delphi\2011\OburecGH\tests\TestAlgLib\Unit2.dfm=F:\Oburec\delphi\2011\OburecGH\tests\TestAlgLib\TestUDPsender.dfm</Transaction>
   </Transactions>
 </BorlandProject>

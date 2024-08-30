@@ -46,14 +46,11 @@
     <Transaction>2024.05.28 23:27:01.315.dfm,C:\Oburec\OburecGH\3d\Unit2.dfm=C:\Oburec\OburecGH\sharedUtils\ogl\forms\u3dSceneEditFrame.dfm</Transaction>
     <Transaction>2024.06.19 08:41:30.990.pas,F:\Oburec\delphi\2011\OburecGH\3d\Unit2.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\u3dObjEditFrame.pas</Transaction>
     <Transaction>2024.06.19 08:41:30.990.dfm,F:\Oburec\delphi\2011\OburecGH\3d\Unit2.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\u3dObjEditFrame.dfm</Transaction>
+    <Transaction>2024.08.28 16:35:07.140.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\u3dObjEditFrame.pas=</Transaction>
+    <Transaction>2024.08.28 16:35:07.141.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\u3dObjEditFrame.dfm=</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\OburecGH"/>
-    <File Path="..\recorder"/>
-    <File Path="..\recorder\plgControlCyclogram"/>
-    <File Path="..\recorder\plgControlCyclogram\forms"/>
-    <File Path="..\recorder\plgControlCyclogram\forms\u3dObjEditFrame.pas"/>
-    <File Path="..\recorder\plgControlCyclogram\forms\u3dObjEditFrame.dfm"/>
     <File Path="..\sharedUtils"/>
     <File Path="..\sharedUtils\math"/>
     <File Path="..\sharedUtils\math\MathFunction.pas"/>

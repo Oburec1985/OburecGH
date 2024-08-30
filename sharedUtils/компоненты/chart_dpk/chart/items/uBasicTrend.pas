@@ -25,7 +25,8 @@ type
     //aLocation:integer;
     // id Uniform переменной для логарифмического шейдера lgx, lgy
     //aLocLg:integer;
-
+    // прерывистая линия
+    m_LineStripple:boolean;
     // толщина линии
     oldweight:double;
     // цвет вершины
@@ -353,6 +354,7 @@ var
 begin
   a:=caxis(parent);
   p:=cpage(getpage);
+
   if a.Lg or p.LgX then
     drawLineLg;
 end;
@@ -372,10 +374,18 @@ begin
   // GL_LINE_WIDTH_RANGE GL_LINE_WIDTH_GRANULARITY
   glGetDoubleV(GL_LINE_WIDTH,@oldweight);
   glLineWidth(weight);
+  // установка типа линии (пунктир)
+  if m_LineStripple then
+  begin
+    glLineStipple(1, $F0F0);
+    glEnable(GL_LINE_STIPPLE);
+  end;
   if drawlines then
   begin
     drawline;
   end;
+  if m_LineStripple then
+    glDisable(GL_LINE_STIPPLE);
   if drawpoint then
   begin
     glcolor3fv(@pointcolor);
@@ -539,7 +549,7 @@ end;
 constructor cBasicTrend.create;
 begin
   Inherited;
-
+  m_LineStripple:=false;
   DisplayListName:=0;
   imageindex:=c_trend_img;
   color:=blue;

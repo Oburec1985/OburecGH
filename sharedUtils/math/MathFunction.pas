@@ -516,6 +516,8 @@ begin
     // елси значащие цифры есть после запятой 50.35 значащих цифр 3
     begin
       newlen := sign + 1;
+      if newlen>length(str) then
+        newlen:=length(str);
       if (str[newlen] = ',') or (str[newlen] = '.') then
         dec(newlen);
       if newlen > len then

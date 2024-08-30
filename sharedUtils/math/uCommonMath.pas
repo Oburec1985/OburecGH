@@ -142,6 +142,12 @@ function toSec(t: double; ind:integer): double;
 function SecToTime(t: double; ind:integer): double;
 
 
+// работа с битами
+function bytetoBinStr(b:byte):string;
+function ReverseBits(b:byte):byte;
+Function CheckHex(str:string):boolean;
+
+
 const
 
   c_max_i64 = 9223372036854775807;
@@ -172,6 +178,53 @@ const
     cl3DLight, clWindow, clWindowFrame, clWindowText);
 
 implementation
+
+
+function bytetoBinStr(b:byte):string;
+var
+  i:integer;
+begin
+  result:='';
+  for I := 7 downto 0 do
+  begin
+    if (b and (1 shl i))<>0 then
+      result:=result+'1'
+    else
+      result:=result+'0';
+  end;
+end;
+
+function ReverseBits(b:byte):byte;
+var
+  i:integer;
+  r:byte;
+begin
+  r:=0;
+  for I := 0 to 7 do
+  begin
+    r:=(r shl 1) or (b and 1);
+    b:=b shr 1;
+  end;
+  result:=r
+end;
+
+Function CheckHex(str:string):boolean;
+var
+  I: Integer;
+const
+  c_str ='0123456789abcdefABCDEF';
+begin
+  result:=true;
+  for I := 1 to length(str) do
+  begin
+    if pos(str[i], c_str)<1 then
+    begin
+      result:=false;
+      exit;
+    end;
+  end;
+end;
+
 
 
 function toSec(t: double; ind:integer): double;

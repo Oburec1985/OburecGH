@@ -56,7 +56,7 @@ object Form1: TForm1
   end
   object cChart1: cChart
     Left = 8
-    Top = 156
+    Top = 132
     Width = 893
     Height = 530
     Anchors = [akLeft, akTop, akRight, akBottom]

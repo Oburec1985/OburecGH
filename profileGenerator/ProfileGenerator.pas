@@ -4,9 +4,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, uChart, DCL_MYOWN, Spin, uTrend, uPage, uAxis,
+  Dialogs, StdCtrls, ExtCtrls, uChart, DCL_MYOWN, Spin, uTrend, uBuffTrend1d, uPage, uAxis,
   uPoint, uCommonTypes, uCommonMath, math, MathFunction, ImgList, ComCtrls,
-  uBtnListView, uSpin, uEditform, uFloatEdit, uLabel, uFloatLabel, uChartInputFrame, uPolarGraphPage,
+  uBtnListView, uSpin, uEditform, uFloatEdit, uLabel, uFloatLabel, uChartInputFrame,
+  uPolarGraphPage, uBuffTrend2d,
   uGrid, uComponentServises, Menus, uEditTubeFrm, uMerafile, uSignalsUtils, uMeraSignal;
 
 type
@@ -64,7 +65,8 @@ type
     procedure FormShow(Sender: TObject);
     procedure ApplySelectBtnClick(Sender: TObject);
   private
-    profile,hihi,lolo,lo,hi:ctrend;
+    profile: ctrend;
+    hihi,lolo,lo,hi:ctrend;
     userAddPoint:boolean;
     importFile:string;
   private
@@ -194,7 +196,7 @@ begin
   ax.Lg:=true;
 
   profile:=ctrend.create;
-  profile.layer:=1;
+  profile.m_LineStripple:=true;
   profile.enabled:=true;
   profile.name:='Profile';
   profile.color:=p3(0,1,0);
@@ -230,6 +232,14 @@ begin
   frame.Visible:=true;
   frame.parent:=MouseGB;
   frame.lincchart(cChart1);
+
+  //ax:=page.Newaxis;
+  //ax.name:='Vax';
+  //ax.m_YUnits:='V';
+  //ax.minY:=0;
+  //ax.maxY:=100;
+  //page.addaxis(ax);
+
 
   page:=cpage(cchart1.activeTab.addPage(true));
   // отладка поларного графика

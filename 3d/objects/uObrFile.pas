@@ -388,6 +388,7 @@ begin
   if casestring <> 'ABCD' then
     exit; // Если тип файла не Obr, выход из процедуры
   BlockRead(F, objtype, 1, Readed); // тип объекта
+  objtype:=constShape;
   case objtype of
     constCamera:
       begin
@@ -412,7 +413,7 @@ begin
         readHeadObj(obj, list, F);
         result := obj;
       end;
-    constShape:
+      constShape:
       begin
         shape := cShapeObj.Create;
         readHeadObj(cNodeObject(shape), list, F);

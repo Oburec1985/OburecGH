@@ -8,15 +8,18 @@
   resources were bound to the produced executable.
 */
 
-#define NativeXml_sCannotManipulate 64992
-#define NativeXml_sBeginEndMismatch 64993
-#define NativeXml_sLevelMismatch 64994
-#define NativeXml_sRootElementNotDefined 64995
-#define NativeXml_sNonDefaultChardata 64996
-#define NativeXml_sSignificantDigitsOutOfRange 64997
-#define NativeXml_sMissingDataInBinaryStream 64998
-#define NativeXml_sErrorCalcStreamLength 64999
-#define NativeXml_sXmlOwnerNotAssigned 65000
+#define NativeXml_sCannotSetValue 64992
+#define NativeXml_sCannotManipulate 64993
+#define NativeXml_sBeginEndMismatch 64994
+#define NativeXml_sLevelMismatch 64995
+#define NativeXml_sRootElementNotDefined 64996
+#define NativeXml_sNonDefaultChardata 64997
+#define NativeXml_sSignificantDigitsOutOfRange 64998
+#define NativeXml_sMissingDataInBinaryStream 64999
+#define NativeXml_sErrorCalcStreamLength 65000
+#define NativeXml_sXmlOwnerNotAssigned 65001
+#define NativeXml_sXmlParentNotAssigned 65002
+#define NativeXml_sCopyFromOnlyWithXmlNode 65003
 #define JclResources_RsEFunctionNotFound 65008
 #define ComConst_SOleError 65009
 #define ComConst_SNoMethod 65010
@@ -31,8 +34,8 @@
 #define NativeXml_sIllegalEndTag 65019
 #define NativeXml_sQuoteCharExpected 65020
 #define NativeXml_sCannotAddNode 65021
-#define NativeXml_sCannotSetName 65022
-#define NativeXml_sCannotSetValue 65023
+#define NativeXml_sCannotAddAttribute 65022
+#define NativeXml_sCannotSetName 65023
 #define JclResources_RsIntelCacheDescrE2 65024
 #define JclResources_RsIntelCacheDescrE3 65025
 #define JclResources_RsIntelCacheDescrE4 65026
@@ -547,6 +550,7 @@
 #define SysConst_SZeroDivide 65535
 STRINGTABLE
 BEGIN
+	NativeXml_sCannotSetValue,	"cannot set value on this type of element"
 	NativeXml_sCannotManipulate,	"cannot manipulate nodes in this type of element"
 	NativeXml_sBeginEndMismatch,	"begin and end tag mismatch: \"%s\" and \"%s\" at line %d (pos %d)"
 	NativeXml_sLevelMismatch,	"level mismatch between subnode \"%s\" and endnode \"%s\" at line %d (pos %d)"
@@ -556,6 +560,8 @@ BEGIN
 	NativeXml_sMissingDataInBinaryStream,	"missing data in binary stream"
 	NativeXml_sErrorCalcStreamLength,	"error while calculating streamlength"
 	NativeXml_sXmlOwnerNotAssigned,	"XML owner is not assigned"
+	NativeXml_sXmlParentNotAssigned,	"XML parent is not assigned"
+	NativeXml_sCopyFromOnlyWithXmlNode,	"CopyFrom can only be used with TXmlNode descendants"
 	JclResources_RsEFunctionNotFound,	"Function not found: %s.%s"
 	ComConst_SOleError,	"OLE error %.8x"
 	ComConst_SNoMethod,	"Method '%s' not supported by automation object"
@@ -570,8 +576,8 @@ BEGIN
 	NativeXml_sIllegalEndTag,	"illegal end tag (\"%s\") at line %d (streampos %d)"
 	NativeXml_sQuoteCharExpected,	"quote char expected at pos %d"
 	NativeXml_sCannotAddNode,	"cannot add node to this type of element"
+	NativeXml_sCannotAddAttribute,	"cannot add attribute"
 	NativeXml_sCannotSetName,	"cannot set name on this type of element"
-	NativeXml_sCannotSetValue,	"cannot set value on this type of element"
 	JclResources_RsIntelCacheDescrE2,	"3rd-level cache: 2 MByte, 16-way set associative, 64 byte line size"
 	JclResources_RsIntelCacheDescrE3,	"3rd-level cache: 4 MByte, 16-way set associative, 64 byte line size"
 	JclResources_RsIntelCacheDescrE4,	"3rd-level cache: 8 MByte, 16-way set associative, 64 byte line size"
@@ -1107,9 +1113,9 @@ END
 /* ..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.dfm */
 /* ..\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
 /* ..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
-/* uEditTubeFrm.dfm */
-/* ..\sharedUtils\компоненты\chart_dpk\chart\forms\frames\uChartInputFrame.dfm */
 /* uEditForm.dfm */
-/* ProfileGenerator.dfm */
+/* ..\sharedUtils\компоненты\chart_dpk\chart\forms\frames\uChartInputFrame.dfm */
+/* uEditTubeFrm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\profileGenerator\ProfileGenerator.dfm */
 /* F:\Oburec\delphi\2011\OburecGH\profileGenerator\Proilegenerator.res */
 /* F:\Oburec\delphi\2011\OburecGH\profileGenerator\Proilegenerator.drf */

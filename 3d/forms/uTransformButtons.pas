@@ -77,6 +77,7 @@ type
   end;
 
 implementation
+
 var
   UI:cUI;
   render:crender;
@@ -171,6 +172,8 @@ begin
 end;
 
 procedure RotateObjectInSystem(obj:cnodeobject;rot:point3;system:word);
+var
+  w:matrixgl;
 begin
   case system of
     constWorld: cNodeObject(obj).RotateNodeGlobal(rot);
@@ -186,6 +189,12 @@ begin
     begin
       cNodeObject(obj).RotateNodeInParentWorld(rot);
     end;
+    constView:
+    begin
+      w:=ui.m_RenderScene.activecamera.nodeResTm;
+      SetPos(w,cNodeObject(obj).position);
+      cNodeObject(obj).RotateNodeWorld(rot, w);
+    end;
   end;
 end;
 
@@ -193,7 +202,9 @@ procedure TTransformToolsFrame.RotXSpinEditChange(Sender: TObject);
 var obj:cNodeObject;
     p3,axis:point3;
 begin
-  //if UI.GetSelected(obj) then
+  if ui=nil then exit;
+  obj:=UI.GetSelected;
+  if obj<>nil then
   begin
     if RotXspinEdit.enabled then
     begin

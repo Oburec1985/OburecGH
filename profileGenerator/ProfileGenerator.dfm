@@ -15,6 +15,8 @@ object EditProfileForm: TEditProfileForm
   Menu = MainMenu1
   OldCreateOrder = False
   OnShow = FormShow
+  ExplicitWidth = 320
+  ExplicitHeight = 240
   PixelsPerInch = 120
   TextHeight = 17
   object GroupBox1: TGroupBox

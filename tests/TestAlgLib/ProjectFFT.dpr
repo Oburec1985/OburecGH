@@ -1,7 +1,7 @@
 program ProjectFFT;
 
 uses
-  fastmm4,
+  //fastmm4,
   Forms,
   TestFFT in 'TestFFT.pas' {Form1},
   llstestunit in '..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\tests\llstestunit.pas',
@@ -186,13 +186,15 @@ uses
   uFloatLabel in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uFloatLabel.pas',
   uLegend in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uLegend.pas',
   upage in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\upage.pas',
-  uLineLgShader in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\shaders\uLineLgShader.pas';
+  uLineLgShader in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\shaders\uLineLgShader.pas',
+  TestUDPsender in 'TestUDPsender.pas' {TestUDPSenderFrm};
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TTestUDPSenderFrm, TestUDPSenderFrm);
   Application.CreateForm(TForm1, Form1);
   Application.Run;
 end.

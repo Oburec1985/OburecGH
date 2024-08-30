@@ -452,6 +452,10 @@ function cDrawObj.GetBound: frect;
 var
   offset: point2;
 begin
+  if needUpdateBound then
+  begin
+    EvalBound;
+  end;
   offset := p2(node.Position.x, node.Position.y);
   result.BottomLeft := p2(boundrect.BottomLeft.x + offset.x,
     boundrect.BottomLeft.y + offset.y);
