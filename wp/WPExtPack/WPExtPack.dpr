@@ -1,7 +1,6 @@
 library WPExtPack;
 
 uses
-  //stmm4,
   ComServ,
   SysUtils,
   Classes,
@@ -70,7 +69,7 @@ uses
   uSaveSimpleMeraFrm in 'forms\uSaveSimpleMeraFrm.pas' {SaveSimpleMeraFrm},
   uRzdFrm in 'forms\uRzdFrm.pas' {RZDFrm},
   uRZDTareFrame in 'forms\frames\uRZDTareFrame.pas' {RZDTareFrame: TFrame},
-  uMNK in 'units\uMNK.pas',
+  uMNK in '..\..\sharedUtils\math\uMNK.pas',
   uWPExtOperMNK in 'units\uWPExtOperMNK.pas',
   uMNKFrm in 'forms\uMNKFrm.pas' {MNKFrm},
   uExtOperMng in 'units\uExtOperMng.pas',

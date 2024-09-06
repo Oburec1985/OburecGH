@@ -11,7 +11,9 @@ uses
   uGlEventTypes,
   uEventList,
   uObject, uNodeobject,
-  StdCtrls, ExtCtrls, uTagsListFrame, u3dObjEditFrame;
+  StdCtrls, ExtCtrls, uTagsListFrame,
+  TestUDPSender,
+  u3dObjEditFrame;
 
 type
   TObjFrm3dEdit = class(TForm)
@@ -31,6 +33,7 @@ type
     TagsListFrame1: TTagsListFrame;
     ObjPanel: TPanel;
     ObjEditFrame1: TObjEditFrame;
+    Button1: TButton;
     procedure PathBtnClick(Sender: TObject);
     procedure OkBtnClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -92,6 +95,8 @@ begin
 
   frames:=TList.Create;
   frames.add(fr);
+
+  TestUDPSenderFrm:=TTestUDPSenderFrm.Create(nil);
 end;
 
 destructor TObjFrm3dEdit.destroy;

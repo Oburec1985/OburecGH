@@ -1366,7 +1366,7 @@ begin
     for i := 0 to ax.ChildCount - 1 do
     begin
       obj := cdrawobj(ax.GetChild(i));
-      if obj.visible then
+      if obj.visible and (not obj.fHelper) then
       begin
         childbound := obj.getbound;
         if not init then

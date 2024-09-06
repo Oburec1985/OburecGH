@@ -572,7 +572,12 @@ end;
 function TFloatSpinEdit.GetValue: double;
 begin
   try
-    Result := StrTofloatExt (Text);
+  begin
+    if text<>'' then
+      Result := StrTofloatExt (Text)
+    else
+      Result := FMinValue;
+  end;
   except
     Result := FMinValue;
   end;

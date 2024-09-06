@@ -4,7 +4,7 @@ object EditProfileForm: TEditProfileForm
   Top = 0
   Align = alClient
   Caption = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1085#1080#1077' '#1087#1088#1086#1092#1080#1083#1103' '#1080#1089#1087#1099#1090#1072#1085#1080#1103
-  ClientHeight = 994
+  ClientHeight = 783
   ClientWidth = 1114
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -15,26 +15,25 @@ object EditProfileForm: TEditProfileForm
   Menu = MainMenu1
   OldCreateOrder = False
   OnShow = FormShow
-  ExplicitWidth = 320
-  ExplicitHeight = 240
   PixelsPerInch = 120
   TextHeight = 17
   object GroupBox1: TGroupBox
     Left = 0
     Top = 0
     Width = 1114
-    Height = 795
+    Height = 584
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
     Margins.Bottom = 4
     Align = alClient
     TabOrder = 0
+    ExplicitHeight = 795
     object Splitter1: TSplitter
       Left = 728
       Top = 131
       Width = 7
-      Height = 662
+      Height = 451
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -48,7 +47,8 @@ object EditProfileForm: TEditProfileForm
       Left = 2
       Top = 131
       Width = 726
-      Height = 662
+      Height = 451
+      Cursor = crSizeAll
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -64,6 +64,7 @@ object EditProfileForm: TEditProfileForm
       showTV = False
       showLegend = True
       selectSize = 5
+      ExplicitHeight = 662
     end
     object MouseGB: TGroupBox
       Left = 2
@@ -82,7 +83,7 @@ object EditProfileForm: TEditProfileForm
       Left = 735
       Top = 131
       Width = 377
-      Height = 662
+      Height = 451
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -90,11 +91,12 @@ object EditProfileForm: TEditProfileForm
       Align = alRight
       Caption = #1047#1085#1072#1095#1077#1085#1080#1103' '#1090#1088#1091#1073#1086#1082' '#1076#1086#1087#1091#1089#1082#1072
       TabOrder = 2
+      ExplicitHeight = 662
       object ToleranceLV: TBtnListView
         Left = 2
         Top = 19
         Width = 373
-        Height = 562
+        Height = 351
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -140,10 +142,11 @@ object EditProfileForm: TEditProfileForm
         DrawColorBox = False
         ChangeTextColor = False
         Editable = False
+        ExplicitHeight = 562
       end
       object GroupBox5: TGroupBox
         Left = 2
-        Top = 581
+        Top = 370
         Width = 373
         Height = 79
         Margins.Left = 4
@@ -153,6 +156,7 @@ object EditProfileForm: TEditProfileForm
         Align = alBottom
         Caption = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1090#1100' '#1087#1088#1086#1092#1080#1083#1100
         TabOrder = 1
+        ExplicitTop = 581
         DesignSize = (
           373
           79)
@@ -188,7 +192,7 @@ object EditProfileForm: TEditProfileForm
   end
   object GroupBox2: TGroupBox
     Left = 0
-    Top = 795
+    Top = 584
     Width = 1114
     Height = 199
     Margins.Left = 4
@@ -198,6 +202,7 @@ object EditProfileForm: TEditProfileForm
     Align = alBottom
     Caption = #1056#1072#1076#1072#1082#1090#1080#1088#1086#1074#1072#1085#1080#1077' '#1087#1088#1086#1092#1080#1083#1103
     TabOrder = 1
+    ExplicitTop = 795
     object Label3: TLabel
       Left = 239
       Top = 17

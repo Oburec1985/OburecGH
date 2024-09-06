@@ -203,6 +203,7 @@ begin
   ax.AddChild(profile);
 
   LoLo:=ctrend.create;
+  LoLo.fHelper:=true;
   LoLo.selectable:=false;
   LoLo.name:='LoLo';
   LoLo.color:=p3(1,0,0);
@@ -221,6 +222,7 @@ begin
   ax.AddChild(Hi);
 
   HiHi:=ctrend.create;
+  HiHi.fHelper:=true;
   HiHi.selectable:=false;
   HiHi.name:='HiHi';
   HiHi.color:=p3(1,0,0);

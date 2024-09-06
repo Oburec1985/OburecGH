@@ -38,13 +38,14 @@ type
     fOnSetText: TNotifyEvent;
     fKeyDown: TKeyEvent;
     fOnMove: TNotifyEvent;
+  public
+    // индекс рабочего шрифта
+    fontIndex: integer;
   protected
     fbufStrList: tstringlist;
     // индексы выделенных букв
     fSelectText: array [0 .. 1] of tpoint;
     fText: tstringlist;
-    // индекс рабочего шрифта
-    fontIndex: integer;
     // позиция курсора (перед каким символом стоит позиция для вставки текста)
     // x - строка, y - индекс
     fCursorPos: tpoint;

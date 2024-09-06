@@ -3,7 +3,7 @@ object TestUDPSenderFrm: TTestUDPSenderFrm
   Top = 0
   Caption = 'TestUDPSenderFrm'
   ClientHeight = 702
-  ClientWidth = 942
+  ClientWidth = 1068
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,7 +14,7 @@ object TestUDPSenderFrm: TTestUDPSenderFrm
   OnClose = FormClose
   OnCreate = FormCreate
   DesignSize = (
-    942
+    1068
     702)
   PixelsPerInch = 120
   TextHeight = 16
@@ -63,6 +63,48 @@ object TestUDPSenderFrm: TTestUDPSenderFrm
   object KzLabel: TLabel
     Left = 115
     Top = 205
+    Width = 12
+    Height = 16
+    Caption = 'Z:'
+  end
+  object Label4: TLabel
+    Left = 307
+    Top = 130
+    Width = 13
+    Height = 16
+    Caption = 'X:'
+  end
+  object Label5: TLabel
+    Left = 307
+    Top = 166
+    Width = 12
+    Height = 16
+    Caption = 'Y:'
+  end
+  object Label6: TLabel
+    Left = 307
+    Top = 204
+    Width = 12
+    Height = 16
+    Caption = 'Z:'
+  end
+  object Label7: TLabel
+    Left = 547
+    Top = 130
+    Width = 13
+    Height = 16
+    Caption = 'X:'
+  end
+  object Label8: TLabel
+    Left = 547
+    Top = 166
+    Width = 12
+    Height = 16
+    Caption = 'Y:'
+  end
+  object Label9: TLabel
+    Left = 547
+    Top = 204
     Width = 12
     Height = 16
     Caption = 'Z:'
@@ -122,7 +164,7 @@ object TestUDPSenderFrm: TTestUDPSenderFrm
     OnClick = BalanceBtnClick
   end
   object xCalibrBtn: TButton
-    Left = 214
+    Left = 210
     Top = 128
     Width = 75
     Height = 25
@@ -163,7 +205,7 @@ object TestUDPSenderFrm: TTestUDPSenderFrm
     TabOrder = 10
   end
   object yCalibrBtn: TButton
-    Left = 213
+    Left = 209
     Top = 164
     Width = 75
     Height = 25
@@ -172,7 +214,7 @@ object TestUDPSenderFrm: TTestUDPSenderFrm
     OnClick = yCalibrBtnClick
   end
   object zCalibrBtn: TButton
-    Left = 213
+    Left = 209
     Top = 197
     Width = 75
     Height = 25
@@ -183,7 +225,7 @@ object TestUDPSenderFrm: TTestUDPSenderFrm
   object cBaseGlComponent1: cBaseGlComponent
     Left = 8
     Top = 288
-    Width = 905
+    Width = 1031
     Height = 406
     Anchors = [akLeft, akTop, akRight, akBottom]
     DockSite = True
@@ -200,76 +242,76 @@ object TestUDPSenderFrm: TTestUDPSenderFrm
     TabOrder = 14
   end
   object HiEdit: TEdit
-    Left = 751
-    Top = 108
-    Width = 121
+    Left = 927
+    Top = 32
+    Width = 110
     Height = 24
     TabOrder = 15
     Text = '0'
     OnChange = LoEditChange
   end
   object LoEdit: TEdit
-    Left = 624
-    Top = 108
-    Width = 121
+    Left = 808
+    Top = 32
+    Width = 110
     Height = 24
     TabOrder = 16
     Text = '0'
     OnChange = LoEditChange
   end
   object Edit3: TEdit
-    Left = 624
-    Top = 170
-    Width = 121
+    Left = 808
+    Top = 94
+    Width = 110
     Height = 24
     TabOrder = 17
     Text = '90'
     OnChange = LoEditChange
   end
   object b1e: TEdit
-    Left = 624
-    Top = 140
-    Width = 57
+    Left = 808
+    Top = 64
+    Width = 46
     Height = 24
     TabOrder = 18
     Text = '0'
   end
   object b2E: TEdit
-    Left = 687
-    Top = 140
-    Width = 57
+    Left = 871
+    Top = 64
+    Width = 46
     Height = 24
     TabOrder = 19
     Text = '0'
   end
   object b4e: TEdit
-    Left = 813
-    Top = 140
-    Width = 57
+    Left = 989
+    Top = 64
+    Width = 46
     Height = 24
     TabOrder = 20
     Text = '0'
   end
   object b3e: TEdit
-    Left = 750
-    Top = 140
-    Width = 57
+    Left = 926
+    Top = 64
+    Width = 46
     Height = 24
     TabOrder = 21
     Text = '0'
   end
   object b1re: TEdit
-    Left = 624
-    Top = 212
-    Width = 57
+    Left = 808
+    Top = 128
+    Width = 46
     Height = 24
     TabOrder = 22
     Text = '0'
   end
   object b2re: TEdit
-    Left = 687
-    Top = 212
-    Width = 57
+    Left = 871
+    Top = 128
+    Width = 46
     Height = 24
     TabOrder = 23
     Text = '0'
@@ -290,25 +332,235 @@ object TestUDPSenderFrm: TTestUDPSenderFrm
     Caption = 'ReverseByte'
     TabOrder = 25
   end
+  object x1e: TFloatSpinEdit
+    Left = 326
+    Top = 128
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 26
+  end
+  object x2e: TFloatSpinEdit
+    Left = 325
+    Top = 163
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 27
+  end
+  object x3e: TFloatSpinEdit
+    Left = 325
+    Top = 196
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 28
+  end
+  object y1e: TFloatSpinEdit
+    Left = 396
+    Top = 128
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 29
+  end
+  object y2e: TFloatSpinEdit
+    Left = 395
+    Top = 163
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 30
+  end
+  object y3e: TFloatSpinEdit
+    Left = 395
+    Top = 196
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 31
+  end
+  object z1e: TFloatSpinEdit
+    Left = 466
+    Top = 128
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 32
+  end
+  object z2e: TFloatSpinEdit
+    Left = 465
+    Top = 163
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 33
+  end
+  object z3e: TFloatSpinEdit
+    Left = 465
+    Top = 196
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 34
+  end
+  object CalX1: TFloatSpinEdit
+    Left = 566
+    Top = 128
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 35
+  end
+  object CalX2: TFloatSpinEdit
+    Left = 565
+    Top = 163
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 36
+  end
+  object CalX3: TFloatSpinEdit
+    Left = 565
+    Top = 196
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 37
+  end
+  object CalY1: TFloatSpinEdit
+    Left = 636
+    Top = 128
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 38
+  end
+  object CalY2: TFloatSpinEdit
+    Left = 635
+    Top = 163
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 39
+  end
+  object CalY3: TFloatSpinEdit
+    Left = 635
+    Top = 196
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 40
+  end
+  object CalZ1: TFloatSpinEdit
+    Left = 706
+    Top = 128
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 41
+  end
+  object CalZ2: TFloatSpinEdit
+    Left = 705
+    Top = 163
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 42
+  end
+  object CalZ3: TFloatSpinEdit
+    Left = 705
+    Top = 196
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 43
+  end
+  object BuildMatrix: TButton
+    Left = 326
+    Top = 240
+    Width = 135
+    Height = 25
+    Caption = 'BuildCalibrM'
+    TabOrder = 44
+    OnClick = BuildMatrixClick
+  end
+  object Test_x: TFloatSpinEdit
+    Left = 809
+    Top = 172
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 45
+  end
+  object Test_y: TFloatSpinEdit
+    Left = 808
+    Top = 207
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 46
+  end
+  object Test_z: TFloatSpinEdit
+    Left = 808
+    Top = 240
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 47
+  end
+  object out_x: TFloatSpinEdit
+    Left = 890
+    Top = 172
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 48
+  end
+  object out_y: TFloatSpinEdit
+    Left = 889
+    Top = 207
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 49
+  end
+  object out_z: TFloatSpinEdit
+    Left = 889
+    Top = 240
+    Width = 66
+    Height = 26
+    Increment = 0.100000000000000000
+    TabOrder = 50
+  end
+  object TestBtn: TButton
+    Left = 973
+    Top = 240
+    Width = 62
+    Height = 25
+    Caption = 'Test'
+    TabOrder = 51
+    OnClick = TestBtnClick
+  end
   object IdUDPServer1: TIdUDPServer
     BroadcastEnabled = True
     Bindings = <>
     DefaultPort = 0
     OnUDPRead = IdUDPServer1UDPRead
-    Left = 408
-    Top = 128
+    Left = 56
+    Top = 560
   end
   object IdUDPClient1: TIdUDPClient
     BroadcastEnabled = True
     Port = 1700
-    Left = 304
-    Top = 128
+    Left = 56
+    Top = 512
   end
   object ViewUpdateTimer: TTimer
     Enabled = False
     Interval = 100
     OnTimer = ViewUpdateTimerTimer
-    Left = 528
-    Top = 88
+    Left = 56
+    Top = 472
   end
 end

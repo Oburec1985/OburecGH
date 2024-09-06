@@ -151,6 +151,7 @@
     <Transaction>2020.06.30 23:45:08.841.dfm,G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\Unit3.dfm=G:\oburec\project2010\GH\OburecGH\wp\WPExtPack\forms\uFFTfltFrm.dfm</Transaction>
     <Transaction>2020.07.02 22:44:42.627.pas,G:\oburec\project2010\2011\tests\TestAlgLib\TestFFT.pas=</Transaction>
     <Transaction>2020.07.02 22:44:42.627.dfm,G:\oburec\project2010\2011\tests\TestAlgLib\TestFFT.dfm=</Transaction>
+    <Transaction>2024.09.02 18:11:13.038.pas,F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\units\uMNK.pas=F:\Oburec\delphi\2011\OburecGH\sharedUtils\math\uMNK.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\wp"/>
@@ -178,6 +179,7 @@
     <File Path="..\..\sharedUtils\math\u2DMath.pas"/>
     <File Path="..\..\sharedUtils\math\uCommonMath.pas"/>
     <File Path="..\..\sharedUtils\math\uFFT.pas"/>
+    <File Path="..\..\sharedUtils\math\uMNK.pas"/>
     <File Path="..\..\sharedUtils\mera"/>
     <File Path="..\..\sharedUtils\mera\database"/>
     <File Path="..\..\sharedUtils\mera\database\uDBObject.pas"/>
@@ -303,7 +305,6 @@
     <File Path="units\uFindMaxOper.pas"/>
     <File Path="units\uIEManchester2087.pas"/>
     <File Path="units\uIEPlgClass.pas"/>
-    <File Path="units\uMNK.pas"/>
     <File Path="units\uRZDBase.pas"/>
     <File Path="units\UWPEvents.pas"/>
     <File Path="units\uWPExtOperHilbFilter.pas"/>

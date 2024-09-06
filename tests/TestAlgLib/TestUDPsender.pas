@@ -5,6 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, uCommonMath, MathFunction, uCommonTypes, uobject,
+  uMnk,
   IdUDPClient, IdBaseComponent, IdComponent,
   IdUDPBase, IdUDPServer, IdSocketHandle, uSpin, uBaseGlComponent;
 
@@ -46,6 +47,38 @@ type
     b2re: TEdit;
     RevBitsCB: TCheckBox;
     RevByteCB: TCheckBox;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    x1e: TFloatSpinEdit;
+    x2e: TFloatSpinEdit;
+    x3e: TFloatSpinEdit;
+    y1e: TFloatSpinEdit;
+    y2e: TFloatSpinEdit;
+    y3e: TFloatSpinEdit;
+    z1e: TFloatSpinEdit;
+    z2e: TFloatSpinEdit;
+    z3e: TFloatSpinEdit;
+    Label7: TLabel;
+    Label8: TLabel;
+    Label9: TLabel;
+    CalX1: TFloatSpinEdit;
+    CalX2: TFloatSpinEdit;
+    CalX3: TFloatSpinEdit;
+    CalY1: TFloatSpinEdit;
+    CalY2: TFloatSpinEdit;
+    CalY3: TFloatSpinEdit;
+    CalZ1: TFloatSpinEdit;
+    CalZ2: TFloatSpinEdit;
+    CalZ3: TFloatSpinEdit;
+    BuildMatrix: TButton;
+    Test_x: TFloatSpinEdit;
+    Test_y: TFloatSpinEdit;
+    Test_z: TFloatSpinEdit;
+    out_x: TFloatSpinEdit;
+    out_y: TFloatSpinEdit;
+    out_z: TFloatSpinEdit;
+    TestBtn: TButton;
     procedure StartBtnClick(Sender: TObject);
     procedure StopBtnClick(Sender: TObject);
     procedure IdUDPServer1UDPRead(AThread: TIdUDPListenerThread; AData: TBytes;
@@ -60,8 +93,10 @@ type
     procedure cBaseGlComponent1InitScene(Sender: TObject);
     procedure XeditChange(Sender: TObject);
     procedure LoEditChange(Sender: TObject);
+    procedure BuildMatrixClick(Sender: TObject);
+    procedure TestBtnClick(Sender: TObject);
   private
-    fplay, ffirstval: boolean;
+    fplay, ffirstval, Mexists: boolean;
     // период работы
     fcycle: cardinal;
     fSrvPort: cardinal;
@@ -75,12 +110,16 @@ type
     m_shape: cobject;
     m_starttm: MatrixGl;
     fdatagram, fOutBuff: TBytes;
+    // матрица исходных данных
+    m, invM, in_m, out_m, cal_m:d2array;
   public
+    procedure GetColumn(c:integer);
     procedure resetfirstVal;
     function GetX: double;
     function GetY: double;
     function GetZ: double;
     procedure ShowCodes;
+    constructor create(aowner:tcomponent);override;
     destructor destroy;override;
   end;
 
@@ -115,6 +154,7 @@ begin
   ax := m_x - fx0;
   lk := xDouble / ax;
   KxcalibrE.Value := lk;
+  GetColumn(0);
 end;
 
 procedure TTestUDPSenderFrm.XeditChange(Sender: TObject);
@@ -143,6 +183,7 @@ begin
   ax := m_y - fy0;
   lk := xDouble / ax;
   kyCalibrE.Value := lk;
+  GetColumn(1);
 end;
 
 procedure TTestUDPSenderFrm.zCalibrBtnClick(Sender: TObject);
@@ -155,6 +196,62 @@ begin
   ax := m_z - fz0;
   lk := xDouble / ax;
   kzCalibrE.Value := lk;
+  GetColumn(2);
+end;
+
+procedure TTestUDPSenderFrm.BuildMatrixClick(Sender: TObject);
+var
+  tm:d2array;
+begin
+  m[0][0]:=x1e.Value;
+  m[0][1]:=x2e.Value;
+  m[0][2]:=x3e.Value;
+  m[1][0]:=y1e.Value;
+  m[1][1]:=y2e.Value;
+  m[1][2]:=y3e.Value;
+  m[2][0]:=z1e.Value;
+  m[2][1]:=z2e.Value;
+  m[2][2]:=z3e.Value;
+  invm:=Invers(m);
+  cal_m[0][0]:=90;
+  cal_m[0][1]:=0;
+
+  cal_m[0][2]:=0;
+
+  cal_m[1][0]:=0;
+  cal_m[1][1]:=90;
+  cal_m[1][2]:=0;
+
+  cal_m[2][0]:=0;
+  cal_m[2][1]:=0;
+  cal_m[2][2]:=90;
+  MultMatrix(invm, cal_m,   invm);
+
+  CalX1.Value:=invm[0][0];
+  CalX2.Value:=invm[0][1];
+  CalX3.Value:=invm[0][2];
+  CalY1.Value:=invm[1][0];
+  CalY2.Value:=invm[1][1];
+  CalY3.Value:=invm[1][2];
+  CalZ1.Value:=invm[2][0];
+  CalZ2.Value:=invm[2][1];
+  CalZ3.Value:=invm[2][2];
+  MultMatrix(m, invm, tm);
+  Mexists:=true;
+end;
+
+procedure TTestUDPSenderFrm.TestBtnClick(Sender: TObject);
+var
+  outm:d2array;
+begin
+
+  in_m[0][0]:=test_x.Value;
+  in_m[1][0]:=test_y.Value;
+  in_m[2][0]:=test_z.Value;
+  MultMatrix(in_m, invm, outm);
+  out_x.Value:=outm[0][0];
+  out_y.Value:=outm[1][0];
+  out_z.Value:=outm[2][0];
 end;
 
 procedure TTestUDPSenderFrm.cBaseGlComponent1InitScene(Sender: TObject);
@@ -181,6 +278,16 @@ begin
     cBaseGlComponent1.mUI.m_RenderScene.activecamera.target:=m_shape.Node;
     cBaseGlComponent1.mUI.m_RenderScene.activecamera.MoveNodeInLocalNodeWorld(0,20,70);
   end;
+end;
+
+constructor TTestUDPSenderFrm.create(aowner: tcomponent);
+begin
+  inherited;
+  setlength(m,3,3);
+  setlength(invM,3,3);
+  setlength(cal_M,3,3);
+  setlength(in_m,3,1);
+  Mexists:=false;
 end;
 
 destructor TTestUDPSenderFrm.destroy;
@@ -382,11 +489,43 @@ begin
     m_y := round((1 - c_exp) * fy + c_exp * m_y);
     m_z := round((1 - c_exp) * fz + c_exp * m_z);
   end;
+
+  if Mexists then
+  begin
+    Test_x.Value:=m_x;
+    Test_y.Value:=m_y;
+    Test_z.Value:=m_z;
+    TestBtnClick(nil);
+  end;
 end;
 
 procedure TTestUDPSenderFrm.resetfirstVal;
 begin
   ffirstval := true;
+end;
+
+procedure TTestUDPSenderFrm.GetColumn(c: integer);
+begin
+  case c of
+    0:
+    begin
+      x1e.Value:=m_x;
+      x2e.Value:=m_y;
+      x3e.Value:=m_z;
+    end;
+    1:
+    begin
+      y1e.Value:=m_x;
+      y2e.Value:=m_y;
+      y3e.Value:=m_z;
+    end;
+    2:
+    begin
+      z1e.Value:=m_x;
+      z2e.Value:=m_y;
+      z3e.Value:=m_z;
+    end;
+  end;
 end;
 
 function TTestUDPSenderFrm.GetX: double;

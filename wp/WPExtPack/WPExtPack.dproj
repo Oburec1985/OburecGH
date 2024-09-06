@@ -200,7 +200,7 @@
 				<Form>RZDTareFrame</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
-			<DCCReference Include="units\uMNK.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\uMNK.pas"/>
 			<DCCReference Include="units\uWPExtOperMNK.pas"/>
 			<DCCReference Include="forms\uMNKFrm.pas">
 				<Form>MNKFrm</Form>

@@ -2,7 +2,7 @@ object ObjFrm3dEdit: TObjFrm3dEdit
   Left = 0
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' 3d '#1084#1085#1077#1084#1086#1089#1093#1077#1084#1099
-  ClientHeight = 513
+  ClientHeight = 702
   ClientWidth = 1051
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,11 +18,12 @@ object ObjFrm3dEdit: TObjFrm3dEdit
   TextHeight = 17
   object LowPanel: TPanel
     Left = 0
-    Top = 472
+    Top = 661
     Width = 1051
     Height = 41
     Align = alBottom
     TabOrder = 0
+    ExplicitTop = 472
     DesignSize = (
       1051
       41)
@@ -60,9 +61,10 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     Left = 0
     Top = 0
     Width = 800
-    Height = 472
+    Height = 661
     Align = alClient
     TabOrder = 1
+    ExplicitHeight = 472
     object TopPanel: TPanel
       Left = 1
       Top = 1
@@ -254,14 +256,15 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     Left = 800
     Top = 0
     Width = 251
-    Height = 472
+    Height = 661
     Align = alRight
     TabOrder = 2
+    ExplicitHeight = 472
     inline TagsListFrame1: TTagsListFrame
       Left = 1
       Top = 1
       Width = 249
-      Height = 470
+      Height = 659
       Align = alClient
       TabOrder = 0
       ExplicitLeft = 1
@@ -270,7 +273,7 @@ object ObjFrm3dEdit: TObjFrm3dEdit
       ExplicitHeight = 470
       inherited FormChannelsGB: TGroupBox
         Width = 249
-        Height = 470
+        Height = 659
         ExplicitWidth = 249
         ExplicitHeight = 470
         inherited ChanNamesPanel: TPanel
@@ -318,7 +321,7 @@ object ObjFrm3dEdit: TObjFrm3dEdit
         inherited TagsLV: TBtnListView
           Top = 128
           Width = 245
-          Height = 340
+          Height = 529
           ExplicitTop = 128
           ExplicitWidth = 245
           ExplicitHeight = 340
@@ -326,11 +329,22 @@ object ObjFrm3dEdit: TObjFrm3dEdit
       end
     end
   end
+  object Button1: TButton
+    Left = 448
+    Top = 180
+    Width = 40
+    Height = 25
+    Hint = #1058#1077#1089#1090#1086#1074#1099#1077' '#1076#1072#1085#1085#1099#1077' '#1080#1079' ESP '#1075#1080#1088#1086#1089#1082#1086#1087#1072
+    Caption = 'Add'
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 3
+  end
   object OpenDialog1vista: TFileOpenDialog
     FavoriteLinks = <>
     FileTypes = <>
     Options = [fdoForceFileSystem]
-    Left = 328
-    Top = 8
+    Left = 376
+    Top = 144
   end
 end
