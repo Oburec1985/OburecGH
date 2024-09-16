@@ -55,6 +55,7 @@ uses
   uEditSRSFrm,
   uSRSFrm,
   uGLFrmEdit, uEditGlObjFrm,
+  TestUDPSender,
   //uPressFrm, uPressFrmEdit,
   uPressFrm2, uPressFrmEdit2,
   uDigsFrm,uDigsFrmEdit,
@@ -253,7 +254,7 @@ begin
 
   EditGLObjFrm := TEditGLObjFrm.Create(nil);
   g_ObjFrm3dEdit := TObjFrm3dEdit.Create(nil);
-
+  //TestUDPSenderFrm:=TTestUDPSenderFrm.Create(NIL);
 
   ControlCyclogramEditFrm := TControlCyclogramEditFrm.Create(nil);
   ControlCyclogramEditFrm.HandleNeeded;
@@ -482,8 +483,7 @@ begin
     TagInfoEditFrm.show;
     TagInfoEditFrm.close;
 
-    //EditGLObjFrm.show;
-    //EditGLObjFrm.close;
+    TestUDPSenderFrm:=TTestUDPSenderFrm.Create(nil);
   end;
 end;
 
@@ -497,6 +497,9 @@ begin
       TagInfoEditFrm.destroy;
       TagInfoEditFrm := nil;
     end;
+
+    if TestUDPSenderFrm<>nil then
+      TestUDPSenderFrm.Destroy;
   end;
 end;
 

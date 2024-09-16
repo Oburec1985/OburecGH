@@ -1,22 +1,19 @@
 object ObjEditFrame: TObjEditFrame
   Left = 0
   Top = 0
-  Width = 302
-  Height = 211
+  Width = 451
+  Height = 304
   Align = alClient
   Constraints.MinWidth = 302
   TabOrder = 0
   object PosGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 302
+    Width = 451
     Height = 105
     Align = alTop
     Caption = 'Position:'
     TabOrder = 0
-    ExplicitLeft = 40
-    ExplicitTop = 80
-    ExplicitWidth = 185
     object XposLab: TLabel
       Left = 9
       Top = 18
@@ -87,12 +84,11 @@ object ObjEditFrame: TObjEditFrame
   object OrientationGB: TGroupBox
     Left = 0
     Top = 105
-    Width = 302
+    Width = 451
     Height = 105
     Align = alTop
     Caption = 'OrientationGB:'
     TabOrder = 1
-    ExplicitTop = 8
     object XrotLab: TLabel
       Left = 9
       Top = 18

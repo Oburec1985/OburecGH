@@ -866,6 +866,11 @@ begin
       end;
     PN_RCINITIALIZED:
     begin
+      for I := 0 to m_CompMng.Count - 1 do
+      begin
+        fact:=cRecBasicFactory(m_CompMng.Objects[i]);
+        fact.doRecorderInit;
+      end;
       EList.CallAllEvents(E_RC_Init);
     end;
     PN_UPDATEDATA:

@@ -88,13 +88,15 @@ uses
 
 procedure TVertexEditFrame.AddBtnClick(Sender: TObject);
 var
-  I: Integer;
+  I, j: Integer;
+  id:tpoint;
   li:tlistitem;
   p:c3dSkinObj;
   deformP:cDeformPoint;
   b:boolean;
   bone:cbone;
-  p3:point3;
+  p3, selP:point3;
+  dist:double;
   m:matrixgl;
 begin
   if m_Point.x<>-1 then
@@ -132,7 +134,29 @@ begin
       p.PId:=m_Point;
     end;
     deformP:=p.m_bone.AddPoint(m_Point, 1);
-    deformP.weight:=p.m_w;
+    deformP.weight:=pointweight.Value;
+    selP:=deformP.v;
+    if m_curObj is cShapeObj then
+    begin
+      for I := 0 to cShapeObj(m_curObj).LineCount - 1 do
+      begin
+        for j := 0 to length(cShapeObj(m_curObj).Lines[i].data)- 1 do
+        begin
+          id.x:=i;id.y:=j;
+          p3:=cShapeObj(m_curObj).getPoint(id);
+          p3:=subVector(selp,p3);
+          dist:=VectorLength(p3);
+          if dist<0.1 then
+          begin
+            if (m_point.x<>id.x) or (m_point.y<>id.y) then
+            begin
+              deformP:=p.m_bone.AddPoint(id, 1);
+              deformP.weight:=pointweight.Value;
+            end;
+          end;
+        end;
+      end;
+    end;
     //m_pList.Add(p);
     ShowPoint(p);
     TObjFrm3d(m_frm).UpdateTreeView;
@@ -325,7 +349,7 @@ var
 begin
   PointNumEdit.IntNum:=p.m_PName;
   pIdEdit.text:=inttostr(p.PId.x)+'_'+inttostr(p.PId.y);
-  PointWeight.Value:=p.m_w;
+  //PointWeight.Value:=p.m_w;
   TagCB.SetTagName(p.yTag.tagname);
   SkinPointsLV.Clear;
   for I := 0 to p.m_bone.Count - 1 do

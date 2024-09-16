@@ -223,7 +223,7 @@ begin
   OnInitContext(nil);
   c := g_UI.scene.getactivecamera;
   c.position := p3(0, 5, 0);
-  c.target := m_shape;
+  //c.target := m_shape;
 end;
 
 end.

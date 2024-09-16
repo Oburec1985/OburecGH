@@ -82,6 +82,12 @@ begin
   XrotSE.Value:=p3.x;
   YrotSE.Value:=p3.y;
   ZrotSE.Value:=p3.z;
+  if o is c3dMoveObj then
+  begin
+    XrotTagCB.SetTagName(c3dMoveObj(o).RotXTag.tagname);
+    YrotTagCB.SetTagName(c3dMoveObj(o).RotYTag.tagname);
+    ZrotTagCB.SetTagName(c3dMoveObj(o).RotZTag.tagname);
+  end;
 end;
 
 end.

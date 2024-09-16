@@ -1,3 +1,4 @@
+
 unit uGLFrmEdit;
 
 interface
@@ -13,6 +14,8 @@ uses
   uObject, uNodeobject,
   StdCtrls, ExtCtrls, uTagsListFrame,
   TestUDPSender,
+  u3dMoveEngine,
+  uUI,
   u3dObjEditFrame;
 
 type
@@ -38,6 +41,7 @@ type
     procedure OkBtnClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure Button1Click(Sender: TObject);
   private
     finit:boolean;
     m_glFrm:tform;
@@ -46,11 +50,13 @@ type
     m_curObj:cnodeobject;
     e:cEvent;
   protected
+    procedure doStart(sender:tobject);
     procedure createevents;
     procedure destroyevents;
     procedure OnSelectObj(sender:tobject);
   public
-    procedure init(t3dfrm:tform);
+    procedure doRecroderInit;
+    procedure init;
     function getFrame(s:string):tframe;
     procedure edit(glFrm:tobject);
     constructor create(aowner:tcomponent);override;
@@ -62,22 +68,76 @@ var
 
 implementation
 uses
-  u3dObj;
+  u3dObj, PluginClass, uRecorderEvents;
 
 {$R *.dfm}
 
 procedure TObjFrm3dEdit.createevents;
 begin
-  if TObjFrm3d(m_glFrm).GL.mUI<>nil then
-  begin
-    e:=TObjFrm3d(m_glFrm).GL.mUI.eventlist.AddEvent('TObjFrm3dEdit_OnSelObj',E_glSelectNew,OnSelectObj);
-    e.active:=false;
-  end;
+  e:=TObjFrm3d(m_glFrm).GL.mUI.eventlist.AddEvent('TObjFrm3dEdit_OnSelObj',E_glSelectNew,OnSelectObj);
+  e.active:=false;
+  addplgevent('TObjFrm3d_doRcInit', c_RC_DoChangeRCState, doStart);
 end;
 
 procedure TObjFrm3dEdit.destroyevents;
 begin
   TObjFrm3d(m_glFrm).GL.mUI.eventlist.removeEvent(OnSelectObj, E_glSelectNew);
+end;
+
+procedure TObjFrm3dEdit.doRecroderInit;
+begin
+  init;
+  TestUDPSenderFrm.createtags;
+  TestUDPSenderFrm.doRCinit;
+end;
+
+procedure TObjFrm3dEdit.doStart(sender: tobject);
+begin
+  if RStatePlay then
+  begin
+    if TestUDPSenderFrm<>nil then
+      TestUDPSenderFrm.doRCStart;
+  end
+  else
+  begin
+    if TestUDPSenderFrm<>nil then
+      TestUDPSenderFrm.doRCStop;
+  end;
+end;
+
+procedure TObjFrm3dEdit.Button1Click(Sender: TObject);
+var
+  o:c3dCtrlObj;
+  m:c3dMoveObj;
+  ui:cUi;
+begin
+  if m_curObj=nil then exit;
+
+  ObjEditFrame1.xRotTagCb.SetTagName('YRotTag');
+  ObjEditFrame1.yRotTagCb.SetTagName('XRotTag');
+  ObjEditFrame1.zRotTagCb.SetTagName('ZRotTag');
+
+  o:=(g_CtrlObjList.GetObj(m_curObj.name+'_Ctrl'));
+  if o=nil then
+  begin
+    m:=c3dMoveObj.create;
+    m.name:=m_curObj.name+'_Ctrl';
+    g_CtrlObjList.addObj(m);
+    ui:=TObjFrm3d(m_glFrm).GL.mUI;
+
+    UI.scene.Add(m, ui.scene.World);
+    m.fHelper:=false;
+    m.nodetm:=m_curObj.nodeResTm;
+    m.addchild(m_curObj);
+    m.RotXTag.tag:=ObjEditFrame1.xRotTagCb.gettag;
+    m.RotYTag.tag:=ObjEditFrame1.yRotTagCb.gettag;
+    m.RotZTag.tag:=ObjEditFrame1.zRotTagCb.gettag;
+    TObjFrm3d(m_glFrm).UpdateTreeView;
+  end
+  else
+  begin
+    m:=c3dMoveObj(o);
+  end;
 end;
 
 constructor TObjFrm3dEdit.create(aowner: tcomponent);
@@ -96,7 +156,8 @@ begin
   frames:=TList.Create;
   frames.add(fr);
 
-  TestUDPSenderFrm:=TTestUDPSenderFrm.Create(nil);
+  if TestUDPSenderFrm=nil then
+    TestUDPSenderFrm:=TTestUDPSenderFrm.Create(nil);
 end;
 
 destructor TObjFrm3dEdit.destroy;
@@ -123,6 +184,7 @@ begin
     e.active:=false;
   OnSelectObj(nil);
   show;
+  TestUDPSenderFrm.show;
 end;
 
 
@@ -136,9 +198,7 @@ procedure TObjFrm3dEdit.FormShow(Sender: TObject);
 var
   fr:tframe;
 begin
-  //fr:=getFrame('TVertexEditFrame');
   skinframe.Align:=alClient;
-  init(m_glFrm);
 end;
 
 function TObjFrm3dEdit.getFrame(s: string): tframe;
@@ -158,9 +218,22 @@ begin
   end;
 end;
 
-procedure TObjFrm3dEdit.init(t3dfrm: tform);
+procedure TObjFrm3dEdit.init;
+var
+  I: Integer;
 begin
-  m_glFrm:= t3dfrm;
+  if m_glFrm=nil then
+  begin
+    for I := 0 to g_ObjFrm3dFactory.Count - 1 do
+    begin
+      if i=0 then
+      begin
+        m_glFrm:=g_ObjFrm3dFactory.GetFrm(i);
+        break;
+      end;
+    end;
+  end;
+
   if not finit then
   begin
     skinframe.m_ui:=TObjFrm3d(m_glFrm).GL.mUI;
@@ -182,6 +255,8 @@ begin
 end;
 
 procedure TObjFrm3dEdit.OnSelectObj(sender: tobject);
+var
+  p:cnodeobject;
 begin
   if TObjFrm3d(m_glFrm).GL.mUI=nil then exit;
   if TObjFrm3d(m_glFrm).GL.mUI.selectCount>0 then
@@ -189,6 +264,10 @@ begin
     m_curObj:=TObjFrm3d(m_glFrm).GL.mUI.getselected(0);
     skinframe.showObj(cobject(m_curObj), m_glFrm);
     ObjEditFrame1.SetEditObj(m_curObj);
+    if m_curObj.parent<>nil then
+    begin
+
+    end;
   end
   else
     m_curObj:=nil;

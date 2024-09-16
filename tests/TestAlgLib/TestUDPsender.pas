@@ -368,6 +368,11 @@ begin
   KxcalibrE.Value := 1;
   kyCalibrE.Value := 1;
   kzCalibrE.Value := 1;
+
+  KxcalibrE.Value := 0;
+  kyCalibrE.Value := -0.0884086444007859;
+  kzCalibrE.Value := 0.117955439056356;
+
   // Настройка считывателя
   IdUDPServer1.BroadcastEnabled := true;
   IdUDPServer1.DefaultPort := fClientPort;

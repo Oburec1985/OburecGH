@@ -23,7 +23,6 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     Height = 41
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 472
     DesignSize = (
       1051
       41)
@@ -64,7 +63,6 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     Height = 661
     Align = alClient
     TabOrder = 1
-    ExplicitHeight = 472
     object TopPanel: TPanel
       Left = 1
       Top = 1
@@ -259,7 +257,6 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     Height = 661
     Align = alRight
     TabOrder = 2
-    ExplicitHeight = 472
     inline TagsListFrame1: TTagsListFrame
       Left = 1
       Top = 1
@@ -270,12 +267,12 @@ object ObjFrm3dEdit: TObjFrm3dEdit
       ExplicitLeft = 1
       ExplicitTop = 1
       ExplicitWidth = 249
-      ExplicitHeight = 470
+      ExplicitHeight = 659
       inherited FormChannelsGB: TGroupBox
         Width = 249
         Height = 659
         ExplicitWidth = 249
-        ExplicitHeight = 470
+        ExplicitHeight = 659
         inherited ChanNamesPanel: TPanel
           Top = 19
           Width = 245
@@ -324,7 +321,7 @@ object ObjFrm3dEdit: TObjFrm3dEdit
           Height = 529
           ExplicitTop = 128
           ExplicitWidth = 245
-          ExplicitHeight = 340
+          ExplicitHeight = 529
         end
       end
     end
@@ -339,12 +336,13 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     ParentShowHint = False
     ShowHint = True
     TabOrder = 3
+    OnClick = Button1Click
   end
   object OpenDialog1vista: TFileOpenDialog
     FavoriteLinks = <>
     FileTypes = <>
     Options = [fdoForceFileSystem]
-    Left = 376
-    Top = 144
+    Left = 328
+    Top = 152
   end
 end

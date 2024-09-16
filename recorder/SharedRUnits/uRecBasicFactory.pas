@@ -103,6 +103,8 @@ type
     function doCreateForm: cRecBasicIFrm; virtual; abstract;
     procedure doSetDefSize(var pSize: SIZE); virtual;
     procedure doAfterLoad;virtual;
+    // когда Recorder загрузил конфиги;
+    procedure doRecorderInit;virtual;
     procedure doStart;virtual;
     function count: integer;
   public
@@ -243,6 +245,11 @@ end;
 procedure cRecBasicFactory.doInit;
 begin
   m_CompList := TList.create;
+end;
+
+procedure cRecBasicFactory.doRecorderInit;
+begin
+
 end;
 
 destructor cRecBasicFactory.destroy;

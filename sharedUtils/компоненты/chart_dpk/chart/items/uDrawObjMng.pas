@@ -88,11 +88,23 @@ begin
 end;
 
 destructor cDrawObjMng.destroy;
+var
+  i: Integer;
+  bo:cBaseObj;
+  o:cDrawObj;
 begin
   if fontmng <> nil then
   begin
     fontmng.destroy;
     fontmng := nil;
+  end;
+  for i := 0 to Count - 1 do
+  begin
+    bo:=getobj(i);
+    if bo is cDrawObj then
+    begin
+      cDrawObj(bo).events:=nil;
+    end;
   end;
   inherited;
 end;

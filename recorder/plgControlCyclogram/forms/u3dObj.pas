@@ -80,6 +80,7 @@ type
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSkinIni;
+    procedure LoadCtrlObjIni;
     constructor create(Aowner: tcomponent); override;
     destructor destroy; override;
     procedure linkFrames;
@@ -104,6 +105,7 @@ type
     procedure destroyevents;
   public
     procedure doAfterLoad; override;
+    procedure doRecorderinit; override;
     procedure doUpdateData(Sender: TObject);
     procedure doChangeRState(Sender: TObject);
     procedure doStart;
@@ -200,7 +202,7 @@ end;
 
 procedure TObjFrm3d.doStart;
 begin
-
+  g_CtrlObjList.doStart;
 end;
 
 procedure TObjFrm3d.FormShow(Sender: TObject);
@@ -270,6 +272,7 @@ var
   p:cDeformPoint;
   //ctrl:c3dCtrlObj;
   ctrl:cnodeobject;
+  t:ctag;
 begin
   inherited;
   a_pIni.WriteString(str, 'ScenePath', m_ScenePath);
@@ -279,6 +282,32 @@ begin
   s:=matrixToStr(c.restm);
   a_pIni.WriteString(str, 'CameraPos', s);
   n:=0;
+  for I := 0 to g_CtrlObjList.count - 1 do
+  begin
+    ctrl:=(g_CtrlObjList.GetObj(i));
+    if ctrl is c3dMoveObj then
+    begin
+      inc(n);
+      a_pIni.WriteString(str, 'Ctrl_'+inttostr(i), c3dMoveObj(ctrl).name);
+      t:=c3dMoveObj(ctrl).RotXTag;
+      a_pIni.WriteString(str, 'Ctrl_Xrot_'+inttostr(i), t.tagname);
+      t:=c3dMoveObj(ctrl).RotYTag;
+      a_pIni.WriteString(str, 'Ctrl_Yrot_'+inttostr(i), t.tagname);
+      t:=c3dMoveObj(ctrl).RotZTag;
+      a_pIni.WriteString(str, 'Ctrl_Zrot_'+inttostr(i), t.tagname);
+      a_pIni.WriteInteger(str, 'ChildCount_'+inttostr(i), ctrl.ChildCount);
+      s:='';
+      for j := 0 to ctrl.ChildCount - 1 do
+      begin
+        o:=cnodeobject(ctrl.getChild(j));
+        s:=s+o.name+';';
+      end;
+      a_pIni.WriteString(str, 'ChildNames_'+inttostr(i), s);
+    end;
+  end;
+  // сохранение инф-ии о анимации ориентации
+  a_pIni.WriteInteger(str, 'CtrlObjCount', n);
+  // сохранение инф-ии о вершинной деформации
   for I := 0 to GL.mUI.scene.Count - 1 do
   begin
     o:=cnodeobject(GL.mUI.scene.getobj(i));
@@ -393,6 +422,59 @@ procedure TObjFrm3d.doRcInit(sender: tobject);
 begin
   // загрузить сцену
   LoadSkinIni;
+  LoadCtrlObjIni;
+end;
+
+
+procedure TObjFrm3d.LoadCtrlObjIni;
+var
+  str,s:string;
+  a_pIni:TIniFile;
+  n,c,i,j, ind:integer;
+  m:c3dMoveObj;
+  o:cnodeobject;
+begin
+  //exit;
+  a_pIni:=TIniFile.Create(m_inifile);
+  // сохранение инф-ии о анимации ориентации
+  n:=a_pIni.ReadInteger(m_loadsect, 'CtrlObjCount', g_CtrlObjList.count);
+  for I := 0 to n - 1 do
+  begin
+    str:=a_pIni.ReadString(m_loadsect, 'Ctrl_'+inttostr(i), '');
+    if checkstr(str) then
+    begin
+      m:=c3dMoveObj.create;
+      m.name:=str;
+      g_CtrlObjList.addObj(m);
+      GL.mUI.scene.Add(m, GL.mUI.scene.World);
+      m.fHelper:=false;
+      // поиск тегов
+      str:=a_pIni.ReadString(m_loadsect, 'Ctrl_Xrot_'+inttostr(i), '');
+      m.RotXTag.tagname:=str;
+      str:=a_pIni.ReadString(m_loadsect, 'Ctrl_Yrot_'+inttostr(i), '');
+      m.RotyTag.tagname:=str;
+      str:=a_pIni.ReadString(m_loadsect, 'Ctrl_Zrot_'+inttostr(i), '');
+      m.RotzTag.tagname:=str;
+      // поиск и линковка дочерних узлов
+      c:=a_pIni.ReadInteger(m_loadsect, 'ChildCount_'+inttostr(i), 0);
+      str:=a_pIni.ReadString(m_loadsect, 'ChildNames_'+inttostr(i), '');
+      for j := 0 to c - 1 do
+      begin
+        s:=getSubStrByIndex(str,';', 1, ind);
+        if checkstr(s) then
+        begin
+          o:=cnodeobject(GL.mUI.scene.getobj(s));
+        end;
+        if j=0 then
+        begin
+          m.nodetm:=o.nodeResTm;
+        end;
+        m.addchild(o);
+      end;
+    end;
+  end;
+  UpdateTreeView;
+  a_pIni.Destroy;
 end;
 
 procedure TObjFrm3d.LoadSkinIni;
@@ -670,6 +752,11 @@ begin
 
 end;
 
+
+procedure cObjFrm3dFactory.doRecorderinit;
+begin
+  g_ObjFrm3dEdit.doRecroderInit;
+end;
 
 procedure cObjFrm3dFactory.doSetDefSize(var PSize: SIZE);
 begin

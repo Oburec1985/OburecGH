@@ -3,7 +3,7 @@ object TestUDPSenderFrm: TTestUDPSenderFrm
   Top = 0
   Caption = 'TestUDPSenderFrm'
   ClientHeight = 247
-  ClientWidth = 437
+  ClientWidth = 548
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -143,12 +143,23 @@ object TestUDPSenderFrm: TTestUDPSenderFrm
     Width = 97
     Height = 17
     Caption = 'ReverseByte'
+    Checked = True
+    State = cbChecked
     TabOrder = 10
+  end
+  object CheckBox1: TCheckBox
+    Left = 393
+    Top = 156
+    Width = 97
+    Height = 17
+    Caption = 'Conect'
+    TabOrder = 12
   end
   object IdUDPServer1: TIdUDPServer
     BroadcastEnabled = True
     Bindings = <>
     DefaultPort = 0
+    ThreadedEvent = True
     OnUDPRead = IdUDPServer1UDPRead
     Left = 328
     Top = 184
@@ -156,6 +167,7 @@ object TestUDPSenderFrm: TTestUDPSenderFrm
   object IdUDPClient1: TIdUDPClient
     BroadcastEnabled = True
     Port = 1700
+    OnConnected = IdUDPClient1Connected
     Left = 328
     Top = 136
   end

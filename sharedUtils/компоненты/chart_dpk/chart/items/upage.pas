@@ -647,10 +647,13 @@ end;
 
 procedure cPage.destroyevents;
 begin
-  events.RemoveEvent(setEditPos, e_OnResize);
-  events.RemoveEvent(DoChangeAxisScale, e_OnChangeAxisScale);
-  events.RemoveEvent(OnDraw, e_OnDraw);
-  inherited;
+  if events<>nil then
+  begin
+    events.RemoveEvent(setEditPos, e_OnResize);
+    events.RemoveEvent(DoChangeAxisScale, e_OnChangeAxisScale);
+    events.RemoveEvent(OnDraw, e_OnDraw);
+    inherited;
+  end;
 end;
 
 procedure cPage.DoChangeAxisScale(Sender: tobject);
@@ -1234,13 +1237,21 @@ end;
 destructor cPage.destroy;
 var
   i: integer;
+  o:cbaseobj;
 begin
   DeleteCriticalSection(TextCS);
 
   // удаление осей
   axises.destroy;
   destroyevents;
-
+  for i := 0 to ChildCount - 1 do
+  begin
+    o:=getChild(i);
+    if o is cDrawObj then
+    begin
+      cDrawObj(o).events:=nil;
+    end;
+  end;
   inherited;
 end;
 
@@ -1374,7 +1385,7 @@ begin
           result := childbound;
           init := true;
         end;
-        if i = 0 then
+        if (i = 0) and (not obj.fHelper) then
         begin
           result := childbound;
         end

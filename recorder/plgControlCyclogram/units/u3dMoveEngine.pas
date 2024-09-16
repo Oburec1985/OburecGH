@@ -18,12 +18,15 @@ uses
   uSpin,
   uRcFunc,
   uQuat,
+  uGroupObjects,
   uRcCtrls;
 
 type
   c3dCtrlObj = class(cObject)
   public
     m_objlist:tlist; // список агрегатор объектов
+  protected
+    procedure dostart;virtual; // происходит при старте рекордера
   public
     function ready:boolean;virtual;
     procedure UpdateObj;virtual;abstract;
@@ -34,17 +37,24 @@ type
   public
     // проинициализированы первые значени€ тегов (дл€ расчета матрицы смещени€)
     m_TagsInit:boolean;
-    startPos, StartRot:point3;
+    m_starttm:MatrixGl;
+    startPos:point3;
     // теги отвечающие за позицию
     xTag, yTag, zTag:cTag;
     RotXTag, RotYTag, RotZTag:cTag;
+  protected
+    procedure dostart;override;
   public
+    // при изменении позиции объекта дочерний объект будет мен€ть положение
+    procedure AddChild(o:cnodeobject);
+    procedure initTM;
     procedure UpdateObj;override;
     constructor create;override;
     destructor destroy;override;
   end;
 
   // объект (кость) управл€ющий скелетом
+  // создаетс€ в TVertexEditFrame
   c3dSkinObj = class(c3dCtrlObj)
   public
     m_bone:cBone; // информаци€ о кости
@@ -68,11 +78,15 @@ type
   // список c3dCtrlObj из файла uVertexEditFrame
   cCntrlObjList = class (tlist)
   public
+  private
+
   protected
     procedure doOnDestroy(sender:tobject);
   public
-    procedure addObj(o:c3dSkinObj);
-    function GetObj(i:integer):c3dSkinObj;
+    procedure doStart;
+    procedure addObj(o:c3dCtrlObj);
+    function GetObj(s:string):c3dCtrlObj;overload;
+    function GetObj(i:integer):c3dCtrlObj;overload;
     // прочитать теги/ обновить позиции костей
     procedure updateObjPos;
   end;
@@ -128,7 +142,7 @@ begin
 end;
 
 { cCntrlObjList }
-procedure cCntrlObjList.addObj(o: c3dSkinObj);
+procedure cCntrlObjList.addObj(o: c3dCtrlObj);
 begin
   if o.m_objlist<>self then
   begin
@@ -152,11 +166,6 @@ begin
   end;
 end;
 
-function cCntrlObjList.GetObj(i: integer): c3dSkinObj;
-begin
-  result:=c3dSkinObj(items[i]);
-end;
-
 procedure cCntrlObjList.updateObjPos;
 var
   I: Integer;
@@ -167,7 +176,7 @@ begin
   b:=false;
   for I := 0 to Count - 1 do
   begin
-    o:=GetObj(i);
+    o:=c3dSkinObj(GetObj(i));
     if o.ready then
     begin
       o.UpdateObj;
@@ -178,7 +187,46 @@ begin
     crender(cscene(o.getmng).render).invalidaterect;
 end;
 
+procedure cCntrlObjList.doStart;
+var
+  I: Integer;
+  o:c3dCtrlObj;
+begin
+  for I := 0 to Count - 1 do
+  begin
+    o:=GetObj(i);
+    o.dostart;
+  end;
+end;
+
+function cCntrlObjList.GetObj(s: string): c3dCtrlObj;
+var
+  I: Integer;
+  o:c3dCtrlObj;
+begin
+  result:=nil;
+  for I := 0 to count-1 do
+  begin
+    o:=GetObj(i);
+    if o.name=s then
+    begin
+      result:=o;
+      exit;
+    end;
+  end;
+end;
+
+function cCntrlObjList.GetObj(i: integer): c3dCtrlObj;
+begin
+  result:=c3dCtrlObj(items[i]); // c3dSkinObj
+end;
+
 { c3dMoveObj }
+procedure c3dMoveObj.AddChild(o: cnodeobject);
+begin
+  GroupTo(o,self);
+end;
+
 constructor c3dMoveObj.create;
 begin
   inherited;
@@ -202,6 +250,16 @@ begin
 end;
 
 
+procedure c3dMoveObj.dostart;
+begin
+  initTM;
+end;
+
+procedure c3dMoveObj.initTM;
+begin
+  m_starttm:=nodetm;
+end;
+
 procedure c3dMoveObj.UpdateObj;
 var
   rot_p3, p3:point3;
@@ -214,18 +272,25 @@ begin
     p3.y:=yTag.GetMeanEst;
   if zTag.tag<>nil then
     p3.z:=zTag.GetMeanEst;
-
-  {if RotXTag.tag<>nil then
-    q.axis.x:=RotXTag.GetMeanEst;
-  if RotYTag.tag<>nil then
-    q.axis.y:=RotYTag.GetMeanEst;
-  if RotZTag.tag<>nil then
-    q.axis.z:=RotZTag.GetMeanEst;
-  QuaternionSlerp()}
   position:=p3;
+
+
+  nodetm := m_starttm;
+  if RotXTag.tag<>nil then
+    rot_p3.x := RotXTag.GetMeanEst;
+  if RotYTag.tag<>nil then
+    rot_p3.y := RotYTag.GetMeanEst;
+  if RotZTag.tag<>nil then
+    rot_p3.z := RotZTag.GetMeanEst;
+  RotateNodeInLocalNodeWorld(rot_p3);
 end;
 
 { c3dCtrlObj }
+
+procedure c3dCtrlObj.dostart;
+begin
+
+end;
 
 function c3dCtrlObj.ready: boolean;
 begin

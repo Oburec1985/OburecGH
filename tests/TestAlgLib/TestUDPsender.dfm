@@ -548,19 +548,19 @@ object TestUDPSenderFrm: TTestUDPSenderFrm
     DefaultPort = 0
     OnUDPRead = IdUDPServer1UDPRead
     Left = 56
-    Top = 560
+    Top = 568
   end
   object IdUDPClient1: TIdUDPClient
     BroadcastEnabled = True
     Port = 1700
     Left = 56
-    Top = 512
+    Top = 472
   end
   object ViewUpdateTimer: TTimer
     Enabled = False
     Interval = 100
     OnTimer = ViewUpdateTimerTimer
     Left = 56
-    Top = 472
+    Top = 408
   end
 end

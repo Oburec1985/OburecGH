@@ -30,6 +30,7 @@ type
     zCalibrBtn: TButton;
     RevBitsCB: TCheckBox;
     RevByteCB: TCheckBox;
+    CheckBox1: TCheckBox;
     procedure StartBtnClick(Sender: TObject);
     procedure StopBtnClick(Sender: TObject);
     procedure IdUDPServer1UDPRead(AThread: TIdUDPListenerThread; AData: TBytes;
@@ -38,10 +39,12 @@ type
     procedure FormCreate(Sender: TObject);
     procedure BalanceBtnClick(Sender: TObject);
     procedure xCalibrBtnClick(Sender: TObject);
-    procedure ViewUpdateTimerTimer(Sender: TObject);
     procedure yCalibrBtnClick(Sender: TObject);
     procedure zCalibrBtnClick(Sender: TObject);
+    procedure IdUDPClient1Connected(Sender: TObject);
+    procedure ViewUpdateTimerTimer(Sender: TObject);
   private
+    finit:boolean;
     fplay, ffirstval: boolean;
     // период работы
     fcycle: cardinal;
@@ -53,18 +56,23 @@ type
     fx, fy, fz,
     // после экспоненциального усреднения
     m_x, m_y, m_z: integer;
-    m_shape: cobject;
-    m_starttm: MatrixGl;
+    m_ang:point3d;
     fdatagram, fOutBuff: TBytes;
     m_xTag, m_yTag, m_zTag:ctag;
-    procedure ShowCodes;
+    mainThread, uThread:cardinal;
   protected
-    procedure createtags;
   public
+    procedure loadtags;
+    procedure createtags;
+    procedure PushTags;
+    procedure doRCinit;
     procedure resetfirstVal;
     function GetX: double;
     function GetY: double;
     function GetZ: double;
+    procedure initUDP;
+    procedure doRCStart;
+    procedure doRCStop;
     constructor create(aowner:tcomponent);override;
     destructor destroy;override;
   end;
@@ -79,6 +87,8 @@ const
   c_broadcast = '255.255.255.255';
 
 implementation
+uses
+  PluginClass;
 
 {$R *.dfm}
 
@@ -131,28 +141,57 @@ end;
 constructor TTestUDPSenderFrm.create(aowner: tcomponent);
 begin
   inherited;
+  m_xTag:=cTag.create;
+  m_yTag:=cTag.create;
+  m_zTag:=cTag.create;
+
+  mainThread:=GetCurrentThreadId;
+  finit:=false;
 end;
 
 procedure TTestUDPSenderFrm.createtags;
 begin
+  loadtags;
   if m_xTag.tag=nil then
   begin
-
+    m_xTag.tag:=CreateStateTag('xRotTag', nil);
+    m_xTag.tag.CfgWritable(true);
   end;
   if m_yTag.tag=nil then
   begin
-
-
+    m_yTag.tag:=CreateStateTag('yRotTag', nil);
+    m_yTag.tag.CfgWritable(true);
   end;
   if m_zTag.tag=nil then
   begin
+    m_zTag.tag:=CreateStateTag('zRotTag', nil);
+    m_zTag.tag.CfgWritable(true);
+  end;
+end;
 
+procedure TTestUDPSenderFrm.loadtags;
+begin
+  m_xTag.tag:=getTagByName('xRotTag');
+  m_yTag.tag:=getTagByName('yRotTag');
+  m_zTag.tag:=getTagByName('zRotTag');
+end;
+
+procedure TTestUDPSenderFrm.PushTags;
+begin
+  //if RStatePlay then
+  begin
+    m_xTag.tag.PushValue(m_ang.x, -1);
+    m_yTag.tag.PushValue(m_ang.y, -1);
+    m_zTag.tag.PushValue(m_ang.z, -1);
   end;
 end;
 
 destructor TTestUDPSenderFrm.destroy;
 begin
   exit;
+  m_xTag.destroy;
+  m_yTag.destroy;
+  m_zTag.destroy;
   inherited;
 end;
 
@@ -181,17 +220,9 @@ begin
   fx0 := 0;
   fy0 := 0;
   fz0 := 0;
-  KxcalibrE.Value := 1;
-  kyCalibrE.Value := 1;
-  kzCalibrE.Value := 1;
-  // Настройка считывателя
-  IdUDPServer1.BroadcastEnabled := true;
-  IdUDPServer1.DefaultPort := fClientPort;
-  IdUDPServer1.Active := true;
-  // UDPClient отправляет пакеты
-  IdUDPClient1.BroadcastEnabled := true;
-  IdUDPClient1.Host := c_broadcast;
-  IdUDPClient1.port := fSrvPort;
+  KxcalibrE.Value := 0;
+  kyCalibrE.Value := -0.0884086444007859;
+  kzCalibrE.Value := 0.117955439056356;
 
 end;
 
@@ -206,6 +237,7 @@ begin
     fdatagram[1] := $CD;
     fdatagram[2] := $EF;
     IdUDPClient1.Broadcast(fdatagram, fSrvPort);
+    ffirstval:=true;
   end;
 end;
 
@@ -224,7 +256,12 @@ end;
 
 procedure TTestUDPSenderFrm.ViewUpdateTimerTimer(Sender: TObject);
 begin
-  ShowCodes;
+  PushTags;
+end;
+
+procedure TTestUDPSenderFrm.IdUDPClient1Connected(Sender: TObject);
+begin
+  CheckBox1.Checked:=true;
 end;
 
 procedure TTestUDPSenderFrm.IdUDPServer1UDPRead(AThread: TIdUDPListenerThread;
@@ -289,9 +326,13 @@ begin
   if ffirstval then
   begin
     ffirstval := false;
-    m_x := fx;
-    m_y := fy;
-    m_z := fz;
+    fx0 := fx;
+    fy0 := fy;
+    fz0 := fz;
+
+    m_x := 0;
+    m_y := 0;
+    m_z := 0;
   end
   else // экспоненциальное усреднение
   begin
@@ -299,6 +340,46 @@ begin
     m_y := round((1 - c_exp) * fy + c_exp * m_y);
     m_z := round((1 - c_exp) * fz + c_exp * m_z);
   end;
+
+  m_ang.x := GetX;
+  m_ang.y := GetY;
+  m_ang.z := GetZ;
+end;
+
+procedure TTestUDPSenderFrm.initUDP;
+begin
+  if not finit then
+  begin
+    uThread:=GetCurrentThreadId;
+    // Настройка считывателя
+    IdUDPServer1.BroadcastEnabled := true;
+    IdUDPServer1.DefaultPort := fClientPort;
+    IdUDPServer1.Active := true;
+    //IdUDPServer1.OnUDPRead:= IdUDPServer1UDPRead;
+    // UDPClient отправляет пакеты
+    IdUDPClient1.BroadcastEnabled := true;
+    IdUDPClient1.Host := c_broadcast;
+    IdUDPClient1.port := fSrvPort;
+    finit:=true;
+  end;
+  caption:='MainThread='+inttostr( mainThread)+' CurThread='+inttostr( uThread);
+end;
+
+procedure TTestUDPSenderFrm.doRCinit;
+begin
+  createtags;
+  initudp;
+end;
+
+procedure TTestUDPSenderFrm.doRCStart;
+begin
+  // Настройка считывателя
+  StartBtnClick(nil);
+end;
+
+procedure TTestUDPSenderFrm.doRCStop;
+begin
+  StopBtnClick(nil);
 end;
 
 procedure TTestUDPSenderFrm.resetfirstVal;
@@ -322,13 +403,5 @@ begin
   result := (m_z - fz0) * kzCalibrE.Value;
 end;
 
-procedure TTestUDPSenderFrm.ShowCodes;
-var
-  ang: point3;
-begin
-  ang.x := GetX;
-  ang.y := GetY;
-  ang.z := GetZ;
-end;
 
 end.

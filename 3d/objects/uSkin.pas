@@ -282,7 +282,7 @@ end;
 function cBone.EvalPointPos(i:integer;l_m:matrixgl):cdeformpoint;
 var p:cdeformpoint;
     m_p, l_m2:matrixgl;
-    p_global:point3;
+    prev, shift:point3;
 begin
   // m - матрица перехода из кости в координаты модели
   p:=getpoint(i);
@@ -290,8 +290,12 @@ begin
   m_p:=setpos(identmatrix4,p.v);
   l_m2:=multmatrix4(l_m,m_p); // новая позиция вершины в глобальных координатах
   l_m2:=evalrightmatrix(fmesh.restm,l_m2); // вычисляем матрицу смещения из мира модели в global+вершина
+  prev:=p.v;
   p.Vres:=GetPosFromMatrixP3(l_m2);
-  p.Vres:=scalevectorp3(p.weight,p.Vres);
+  // добавлено 11.09.24
+  shift:=subVector(prev, p.Vres);
+  shift:=scalevectorp3(p.weight,shift);
+  p.Vres:=summvectorp3(prev, shift);
   //p.Vres:=GetPosFromMatrixP3(l_m2);
   //if p.weight<>1 then
   //  p.Vres:=P3ToV(summvectorp3(scalevectorp3(p.weight,p.Vres),
