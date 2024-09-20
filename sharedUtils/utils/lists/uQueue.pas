@@ -21,6 +21,8 @@ type
     data: TArray<T>;
   protected
   public
+    // удалить элемент
+    procedure Delete(i:integer);
     // вытащить в порядке очереди 0 - первый в очереди на выход
     function Peak(i:integer):T;
     function GetByInd(i:integer):T;
@@ -79,6 +81,22 @@ begin
   capacity:=10;
   fFirst:=-1;
   fLast:=-1;
+end;
+
+procedure cQueue<T>.Delete(i: integer);
+VAR
+  copycount:integer;
+begin
+  if i>=fFirst then
+  begin
+    if fcount<capacity then
+      copycount:=(fLast-i)
+    else
+      copycount:=capacity-i;
+    move(data[i+1], data[i], copycount*sizeof(T));
+  end;
+  dec(fcount);
+  dec(flast);
 end;
 
 procedure cQueue<T>.drop_front(i: integer);
@@ -184,7 +202,7 @@ begin
     begin
       copycount:=fcount-fFirst;
       newpos:=capacity-copycount;
-      move(data[fFirst], data[newpos], copycount*sizeof(point2d));
+      move(data[fFirst], data[newpos], copycount*sizeof(T));
       fFirst:=newpos;
       Flast:=Flast+1;
     end;
@@ -243,7 +261,7 @@ begin
     begin
       copycount:=fcount-ffirst; // число элементов в конце массива от начала очереди
       newpos:=capacity-copycount;
-      move(data[fFirst], data[newpos], copycount*sizeof(point2d));
+      move(data[fFirst], data[newpos], copycount*sizeof(T));
       fFirst:=newpos-1;
       data[fFirst]:=p;
       inc(fcount);

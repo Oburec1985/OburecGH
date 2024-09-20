@@ -419,7 +419,7 @@ end;
 procedure TEditSyncOscFrm.TagsTVKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
-  next, Node: PVirtualNode;
+  next,n, Node: PVirtualNode;
   Data, parentdata: PNodeData;
   I: Integer;
   p:cpage;
@@ -448,7 +448,19 @@ begin
         else
         begin
           del:=true;
+          a:=caxis(data.data);
+          // удаляем потомков
+          next:=node.FirstChild;
+          while (next<>nil) do
+          begin
+            n:=next;
+            Data := TagsTV.GetNodeData(n);
+            TOscSignal(data.data).Destroy;
+            next:=TagsTV.GetNextSibling(n);
+          end;
+          i:=TSyncOscFrm(m_curObj).GetAxCfgInd(a.name);
           a.destroy;
+          TSyncOscFrm(m_curObj).m_ax.Delete(i);
         end;
       end;
       next := TagsTV.GetNextSelected(Node, false);

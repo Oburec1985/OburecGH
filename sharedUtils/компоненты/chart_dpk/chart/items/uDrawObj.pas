@@ -337,6 +337,8 @@ begin
 end;
 
 destructor cDrawObj.destroy;
+var
+  p:cpage;
 begin
   if fChart <> nil then
   begin

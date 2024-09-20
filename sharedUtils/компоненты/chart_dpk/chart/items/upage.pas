@@ -59,6 +59,8 @@ type
     YMinEdit: cfloatlabel;
     XMaxEdit: cfloatlabel;
     XMinEdit: cfloatlabel;
+    // узел дерева к которому крепится список осей
+    axises: cdrawobj;
   protected
     prevgridcountY, prevgridcountX: integer;
     // логарифм по оси X
@@ -70,8 +72,6 @@ type
     axisCount: integer;
     // нормализовать график по x, y
     NormalizeXButton, NormalizeYButton: TButton;
-    // узел дерева к которому крепится список осей
-    axises: cdrawobj;
     fNeedUpdateText: boolean;
   public
     // сетка. В координатах от -1..1

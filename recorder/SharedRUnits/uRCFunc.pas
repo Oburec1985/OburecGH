@@ -54,6 +54,11 @@ type
     // становится равно readyBlock считанному из IBlockAccess в методе dogetdata после чего новые данные
     // из m_ReadData попадают в обработку
     m_readyBlock: integer;
+    // размер блока рекордреа в секндах
+    m_blLen,
+    // размер всей истории рекордера
+    m_TagLen:double;
+
     ftagid: tagid;
 
     fBlock: IBlockAccess;
@@ -75,12 +80,6 @@ type
     m_ReadData: array of double;
     // время первого отсчета в m_ReadData
     m_ReadDataTime: double;
-    // сохранять предысторию. Длину предыстории настраивать руками из вне!!! см. пример uSrsFrm
-    // на уровне тега отрабатывается только drop значений
-    // поддержано в ResetTagDataTimeInd
-    //m_bHistData:boolean;
-    //m_histData:array of double;
-    //m_ihistData:integer;
 
     // массив значений который пишется в itag (по идее здесь результаты расчетов алгоритмов)
     // кольцевой буфер
@@ -131,8 +130,7 @@ type
     // возвращает true если пришли новые данные
     // сбрасывается в 0 если сброс данных не произошел
     // AutoResetData количество элементов которое пришлось дропнуть
-    function UpdateTagData(tare: boolean; var AutoResetData: integer): boolean;
-      overload;
+    function UpdateTagData(tare: boolean; var AutoResetData: integer): boolean; overload;
     function UpdateTagData(tare: boolean): boolean; overload;
     // необходимо вызывать каждый раз когда расчет по накопленным данным m_ReadData завершен
     // в результате копируются неиспользованные данные в начало буфера и происходит перевод
@@ -167,7 +165,10 @@ type
     // возвращает время i-о отсчета в m_readData/ в зависимости от типа тега по разному
     // реализует расчет времени
     function getReadTime(i: integer): double;
-
+    // вычисляем интервал который накоплен в теге
+    function EvalTimeInterval:point2d;
+    // скопировать из тега накопленные данные по интервалу i
+    procedure EvalDataBlock(i:point2d; var d:array of double; var count:integer);
     property tag: itag read ftag write settag;
     property block: IBlockAccess read fBlock write setBlock;
     property blockCount: integer read fBlCount write fBlCount;
@@ -1125,11 +1126,15 @@ begin
   m_timeShtamp_i := 0;
 
   fdT:=1/freq;
+  m_blLen:=block.GetBlocksSize*fdT;
+  m_TagLen:=m_blLen*block.GetBlocksCount;
+
   // добавлено 07.02.2020
   l := length(m_ReadData);
   if l > 0 then
     ZeroMemory(@m_ReadData[0], l * sizeof(double));
 end;
+
 
 function cTag.GetDefaultEst: double;
 begin
@@ -1208,7 +1213,6 @@ begin
   begin
     v := Size shl 2;
   end;
-  // iBlock.GetBlocksSize - дает тот же результат???
   SetLength(m_TagData, integer(v));
   SetLength(m_TagData2d, integer(v));
   m_ReadSize := integer(v) * blCount;
@@ -1297,15 +1301,6 @@ begin
     begin
       if m_ReadSize - datacount <> 0 then
       begin
-        // если храним предысторию
-        //if m_bHistData then
-        //begin
-        //  if m_ihistData<endTimeInd then
-        //    ihist:=m_ihistData
-        //  else
-        //    ihist:=endTimeInd;
-        //  move(m_ReadData[endTimeInd-ihist], m_histData[0], ihist * sizeof(double));
-        //end;
         move(m_ReadData[endTimeInd], m_ReadData[0], datacount * sizeof(double));
       end;
     end;
@@ -1441,6 +1436,7 @@ begin
     result := ftagname;
 end;
 
+
 procedure cTag.settagname(s: string);
 var
   b: boolean;
@@ -1486,6 +1482,46 @@ begin
         lcm;
     end;
   end;
+end;
+
+procedure cTag.EvalDataBlock(i: point2d; var d: array of double; var count: integer);
+var
+  t, offset1,offset2:double;
+  // номера первого и последнего блока
+  b12:tpoint;
+  j: integer;
+begin
+  t:=block.GetBlockDeviceTime(0);
+  if i.x<t then
+    offset1:=t
+  else
+    offset1:=i.x-t;
+  if i.y>(t+m_TagLen) then
+    offset2:=t+m_TagLen
+  else
+    offset2:=i.y;
+
+  b12.X:=trunc(offset1/m_blLen);
+  b12.y:=trunc(offset2/m_blLen);
+  for j:=b12.X to b12.y do
+  begin
+    if SUCCEEDED(block.GetVectorR8(pointer(m_TagData)^, j, block.GetBlocksSize, )) then
+    begin
+
+    end;
+  end;
+end;
+
+function cTag.EvalTimeInterval: point2d;
+var
+  ready, bcount, bSize:integer;
+begin
+  block.LockVector;
+  bcount := block.GetBlocksCount; // размер буфера в блоках
+  bSize := block.GetBlocksSize; // размер блока
+  ready := readyBlockCount; // число накопленных блоков
+  result.x:=block.GetBlockDeviceTime(0);
+  result.y:=block.GetBlockDeviceTime(bcount-1)+block.GetBlocksSize*getfreq;
 end;
 
 function cTag.UpdateTagData(tare: boolean): boolean;

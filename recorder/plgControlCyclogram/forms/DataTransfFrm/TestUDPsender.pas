@@ -44,7 +44,7 @@ type
     procedure IdUDPClient1Connected(Sender: TObject);
     procedure ViewUpdateTimerTimer(Sender: TObject);
   private
-    finit:boolean;
+    finit, fneedupdate:boolean;
     fplay, ffirstval: boolean;
     // период работы
     fcycle: cardinal;
@@ -178,11 +178,15 @@ end;
 
 procedure TTestUDPSenderFrm.PushTags;
 begin
-  //if RStatePlay then
+  if RStatePlay then
   begin
-    m_xTag.tag.PushValue(m_ang.x, -1);
-    m_yTag.tag.PushValue(m_ang.y, -1);
-    m_zTag.tag.PushValue(m_ang.z, -1);
+    if fneedupdate then
+    begin
+      m_xTag.tag.PushValue(m_ang.x, -1);
+      m_yTag.tag.PushValue(m_ang.y, -1);
+      m_zTag.tag.PushValue(m_ang.z, -1);
+      fneedupdate:=false;
+    end;
   end;
 end;
 
@@ -206,6 +210,7 @@ var
   p: point3;
   str:string;
 begin
+  fneedupdate:=false;
   setlength(fOutBuff, 6);
   setlength(fdatagram, 3);
   // период работы сервера
@@ -344,6 +349,7 @@ begin
   m_ang.x := GetX;
   m_ang.y := GetY;
   m_ang.z := GetZ;
+  fneedupdate:=true;
 end;
 
 procedure TTestUDPSenderFrm.initUDP;

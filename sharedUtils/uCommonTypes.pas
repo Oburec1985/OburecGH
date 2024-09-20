@@ -186,6 +186,7 @@ function NumLock : boolean;
 
 function ScrollLock : boolean;
 function getCommonInterval(i1, i2: point2d): point2d;
+function CompareInterval(i1, i2: point2d): boolean;
 function getSubStrByIndex(src:string; tabs:char; p_start, index:integer):string;
 
 implementation
@@ -264,6 +265,15 @@ begin
     result.y:=result.x;
 end;
 
+function CompareInterval(i1, i2: point2d): boolean;
+begin
+  result:=false;
+  if i1.x=i2.x then
+  begin
+    if i1.y=i2.y then
+      result:=true;
+  end;
+end;
 
 function AltKeyDown : boolean;
 begin

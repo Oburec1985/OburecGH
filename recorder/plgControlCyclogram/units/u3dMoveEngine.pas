@@ -85,6 +85,8 @@ type
   public
     procedure doStart;
     procedure addObj(o:c3dCtrlObj);
+    // id - имя номер кости; s - имя кожи
+    function GetObjBySkin(s:string; id:integer):c3dSkinObj;
     function GetObj(s:string):c3dCtrlObj;overload;
     function GetObj(i:integer):c3dCtrlObj;overload;
     // прочитать теги/ обновить позиции костей
@@ -219,6 +221,27 @@ end;
 function cCntrlObjList.GetObj(i: integer): c3dCtrlObj;
 begin
   result:=c3dCtrlObj(items[i]); // c3dSkinObj
+end;
+
+function cCntrlObjList.GetObjBySkin(s: string; id:integer): c3dSkinObj;
+var
+  I: Integer;
+  o:c3dCtrlObj;
+begin
+  result:=nil;
+  for I := 0 to count-1 do
+  begin
+    o:=GetObj(i);
+    if o is c3dSkinObj then
+    begin
+      if (c3dSkinObj(o).m_defObj.name=s) and (c3dSkinObj(o).m_PName=id)
+      then
+      begin
+        result:=c3dSkinObj(o);
+        exit;
+      end;
+    end;
+  end;
 end;
 
 { c3dMoveObj }

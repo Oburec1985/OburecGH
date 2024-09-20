@@ -39,25 +39,20 @@ type
     m_owner: tlist;
     t: cTag;
     m_dt: double;
-    // отображать предысторию
-    m_bHist: boolean;
-    //
-    m_histX0: double;
-    // данные для отображения предистории
-    m_histdata: array of double;
+    // обновляется в updatedata
+    m_interval,
+    // поправка интервала с учетом триггера
+    m_drawInterval: point2d;
     m_outdata: array of double;
-    m_histLen, // длина предыстории
-    m_histUsed, // используется
-    // длина осциллографирования в int
-    m_Resetsize: integer;
-
     // ось на которой лежит сигнал
     ax: caxis;
     axname: string;
     // линия
     line: cBuffTrend1d;
     // размер отображаемых данных
-    m_portion: integer;
+    m_portion,
+    // накоплено блоков
+    m_readyBl: integer;
   protected
     procedure saveData(fname: string; num: integer);
     procedure resetData(lastind: integer);
@@ -115,6 +110,8 @@ type
     procedure doCursorMove(Sender: tobject);
     procedure ChartInit(Sender: tobject);
     procedure UpdateData;
+    function SearchTrig(t: cTag; p_threshold: double;
+      var p_interval: point2d): boolean;
   protected
     procedure WndProc(var Message: TMessage); override;
   public
@@ -122,6 +119,7 @@ type
     procedure SaveMera(f: string; num: integer);
     Function GetAxCfg(name: string): TAxis;
     Function GetPAxCfg(name: string): PAxis;
+    Function GetAxCfgInd(name: string): integer;
     procedure UpdateProps;
     function sCount: integer;
     function CreateSignal(a: caxis; t: itag): TOscSignal; overload;
@@ -160,7 +158,7 @@ type
     procedure doStart; override;
     procedure SetActiveChart(c: TSyncOscFrm);
     function GetActiveChart: TSyncOscFrm;
-    procedure doRCInit(sender:tobject);
+    procedure doRCInit(Sender: tobject);
   public
     procedure doUpdateData; override;
     procedure doAfterLoad; override;
@@ -245,8 +243,8 @@ begin
     ifile.WriteString(s.t.tagname + '_' + inttostr(num), 'XUnits', 'Гц');
     // Подпись оси Y
     // ifile.WriteString(s.tagname, 'YUnits', TagUnits(wp.m_YParam.tag));
-    WriteFloatToIniMera(ifile, s.t.tagname + '_' + inttostr(num), 'Start',
-      s.m_histX0);
+    // WriteFloatToIniMera(ifile, s.t.tagname + '_' + inttostr(num), 'Start',
+    // s.m_histX0);
     // k0
     ifile.WriteFloat(s.t.tagname + '_' + inttostr(num), 'k0', 0);
     // k1
@@ -268,14 +266,6 @@ begin
   Rewrite(f, 1);
   BlockWrite(f, line.data_r[0], sizeof(double) * line.count);
   closefile(f);
-  // lname := extractfiledir(fname) + '\' + tagname + '.x';
-  // AssignFile(f, lname);
-  // Rewrite(f, 1);
-  // for i := 0 to fready - 1 do
-  // begin
-  // BlockWrite(f, fdrawarray[i].x, sizeof(double));
-  // end;
-  // closefile(f);
 end;
 
 procedure TSyncOscFrm.FormClick(Sender: tobject);
@@ -321,13 +311,14 @@ begin
     if TOscSignal(m_signals.Items[i]).t.tag = t then
     begin
       Result := TOscSignal(m_signals.Items[i]);
-      if Result.t.freq<>0 then
+      if Result.t.freq <> 0 then
       begin
         Result.m_dt := 1 / Result.t.freq;
       end
       else
-        showmessage('1) TSyncOscFrm.CreateSignal t.freq=0: '+Result.t.tagname);
-      Result.line.dx:= Result.m_dt ;
+        showmessage
+          ('1) TSyncOscFrm.CreateSignal t.freq=0: ' + Result.t.tagname);
+      Result.line.dx := Result.m_dt;
       break;
     end;
   end;
@@ -335,24 +326,25 @@ begin
   begin
     Result := TOscSignal.create;
     Result.t.tag := t;
-    if Result.t<>nil then
+    if Result.t <> nil then
     begin
-      if Result.t.freq<>0 then
+      if Result.t.freq <> 0 then
         Result.m_dt := 1 / Result.t.freq
       else
       begin
-        showmessage('2) TSyncOscFrm.CreateSignal t.freq=0: '+Result.t.tagname);
+        showmessage
+          ('2) TSyncOscFrm.CreateSignal t.freq=0: ' + Result.t.tagname);
       end;
     end
     else
     begin
-      showmessage('3) TSyncOscFrm.CreateSignal t=nil: '+Result.t.tagname);
+      showmessage('3) TSyncOscFrm.CreateSignal t=nil: ' + Result.t.tagname);
       Result.m_dt := 0;
     end;
     Result.ax := a;
     Result.line := cBuffTrend1d.create;
-    Result.line.name:=t.GetName;
-    Result.line.dx:= Result.m_dt ;
+    Result.line.name := t.GetName;
+    Result.line.dx := Result.m_dt;
     Result.ax.AddChild(Result.line);
     m_signals.Add(Result);
     Result.m_owner := m_signals;
@@ -364,7 +356,7 @@ function TSyncOscFrm.CreateSignal(a: caxis; tname: string): TOscSignal;
 begin
   Result := TOscSignal.create;
   Result.t.tagname := tname;
-  if Result.t.freq<>0 then
+  if Result.t.freq <> 0 then
   begin
     Result.m_dt := 1 / Result.t.freq;
   end
@@ -461,6 +453,23 @@ begin
   end;
 end;
 
+Function TSyncOscFrm.GetAxCfgInd(name: string): integer;
+var
+  i: integer;
+  a: PAxis;
+begin
+  Result := -1;
+  for i := 0 to m_ax.SIZE - 1 do
+  begin
+    a := PAxis(m_ax.GetPByInd(i));
+    if a.name = name then
+    begin
+      Result := i;
+      exit;
+    end;
+  end;
+end;
+
 function TSyncOscFrm.GetAxCfg(name: string): TAxis;
 var
   i: integer;
@@ -541,7 +550,7 @@ var
 begin
   m_ax.destroy;
   m_TrigTag.destroy;
-  while sCount<>0 do
+  while sCount <> 0 do
   begin
     s := GetSignal(0);
     s.line := nil;
@@ -688,200 +697,104 @@ begin
   Result := m_signals.count;
 end;
 
+function TSyncOscFrm.SearchTrig(t: cTag; p_threshold: double;
+  var p_interval: point2d): boolean;
+var
+  v_min, v_max, v, prev: double;
+  i, imin: integer;
+begin
+  v_min := t.m_ReadData[0];
+  v_max := t.m_ReadData[0];
+  for i := 1 to t.lastindex - 1 do
+  begin
+    v := t.m_ReadData[i];
+    if v > v_max then
+    begin
+      v_max := v;
+      imin := i;
+      // rise
+      if (v_max - v_min) > p_threshold then
+      begin
+        m_TrigTime := t.getReadTime(i);
+        m_TrigInterval.x := m_TrigTime + m_Phase0;
+        m_TrigInterval.y := m_TrigInterval.x + m_Length;
+        m_TrigRes := true;
+        break;
+      end;
+    end
+    else
+    begin
+      if v < v_min then
+      begin
+        v_min := v;
+        imin := i;
+        // fall
+        if (v_max - v_min) > m_Threshold then
+        begin
+          m_TrigTime := t.getReadTime(i);
+          m_TrigInterval.x := m_TrigTime + m_Phase0;
+          m_TrigInterval.y := m_TrigInterval.x + m_Length;
+          m_TrigRes := true;
+          break;
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure TSyncOscFrm.UpdateData;
 var
   s: TOscSignal;
-  i, ind, j, imin, imax, lreset: integer;
-  b, lb: boolean;
+  i, ind, j: integer;
   // отображаемый интервал
   t: point2d;
+  // интервал графика который будет нарисован
   interval: point2d;
   interval_i: tpoint;
-  v_min, v_max, v, prev: double;
+  v, prev: double;
 begin
-  b := false;
-  if m_type = tHarmOscil then
-  begin
-    if m_TrigTag.UpdateTagData(true) then
-    begin
-      v_min := m_TrigTag.m_ReadData[0];
-      v_max := m_TrigTag.m_ReadData[0];
-      for i := 1 to m_TrigTag.lastindex - 1 do
-      begin
-        v := m_TrigTag.m_ReadData[i];
-        if v > m_Threshold then
-        begin
-          v_max := max(v_max, v, lb);
-          if lb then
-          begin
-            if m_TahoStart then
-            begin
-              m_iTahoStart := i;
-            end
-            else
-            begin
-              m_iTahoStop := i;
-              inc(m_iTahoN);
-            end;
-          end
-        end;
-        prev := v;
-      end;
-      m_TrigTag.ResetTagData();
-    end;
-  end;
   // триггерный старт
   if m_type = TtrigOscil then
   begin
     if m_TrigTag.UpdateTagData(true) then
     begin
-      v_min := m_TrigTag.m_ReadData[0];
-      v_max := m_TrigTag.m_ReadData[0];
-      for i := 1 to m_TrigTag.lastindex - 1 do
-      begin
-        v := m_TrigTag.m_ReadData[i];
-        if v > v_max then
-        begin
-          v_max := v;
-          imin := i;
-          // rise
-          if (v_max - v_min) > m_Threshold then
-          begin
-            m_TrigTime := m_TrigTag.getReadTime(i);
-            m_TrigInterval.x := m_TrigTime + m_Phase0;
-            m_TrigInterval.y := m_TrigInterval.x + m_Length;
-            m_TrigRes := true;
-            break;
-          end;
-        end
-        else
-        begin
-          if v < v_min then
-          begin
-            v_min := v;
-            imin := i;
-            // fall
-            if (v_max - v_min) > m_Threshold then
-            begin
-              m_TrigTime := m_TrigTag.getReadTime(i);
-              m_TrigInterval.x := m_TrigTime + m_Phase0;
-              m_TrigInterval.y := m_TrigInterval.x + m_Length;
-              m_TrigRes := true;
-              break;
-            end;
-          end;
-        end;
-      end;
+      m_TrigRes := SearchTrig(m_TrigTag, m_Threshold, m_TrigInterval);
       m_TrigTag.ResetTagData();
     end;
-    b := false;
-    for i := 0 to m_signals.count - 1 do
-    begin
-      s := GetSignal(i);
-      if s.t.UpdateTagData(true, s.m_Resetsize) or b then
-      begin
-        t := s.GetInterval;
-        if (t.y > m_TrigInterval.y) and m_TrigRes then
-        begin
-          if i = 0 then
-            interval := getCommonInterval(m_TrigInterval, t)
-          else
-            interval := getCommonInterval(interval, t);
-          if b or (i = 0) then
-            b := true;
-        end
-        else
-        begin
-          // данные триггера накопились не по всем каналам
-          b := false;
-        end;
-      end;
-    end;
-    // отображение триггерных данных
-    if b then
-    begin
-      m_TrigRes := false;
-      m_TimeLabel.Text := 'Time: ' + formatstr(interval.x, 3);
-      for i := 0 to m_signals.count - 1 do
-      begin
-        s := GetSignal(i);
-        if interval.x > 0 then
-        begin
-          v := interval.x;
-          s.m_histX0 := v;
-        end
-        else
-        begin
-
-        end;
-        // возвращает количество элементов в m_outData, ind - посл элемент в m_readData
-        j := s.GetOscTrigData(s.m_outdata, interval, ind);
-        if j > 0 then
-        begin
-          s.line.AddPoints(s.m_outdata, j);
-          s.resetData(ind);
-        end;
-      end;
-    end;
-    exit;
   end;
-  // сбор данных
+
   for i := 0 to m_signals.count - 1 do
   begin
     s := GetSignal(i);
-    b := true;
-    if s.t.UpdateTagData(true) and b then
+    j := s.t.block.GetReadyBlocksCount;
+    if j <> s.m_readyBl then
     begin
-      if not m_init then
+      s.m_interval := s.t.EvalTimeInterval;
+      s.m_readyBl := j;
+      // вычисляем рисуемый интервал
+      if m_type = TtrigOscil then
       begin
-        m_init := true;
-      end;
-      t := s.t.getPortionTime;
-
-      if (t.y - t.x) > m_Length then
-        b := true
-      else
-        b := false;
-      if not b then
-        break;
-      if i = 0 then
-        interval := t
-      else
-        interval := getCommonInterval(interval, t);
-      if (interval.y - interval.x < m_Length) then
-      // if (interval.y - interval.x <= 0) then
-      begin
-        b := false;
-        break;
+        interval := getCommonInterval(s.m_interval, m_TrigInterval);
+        if not CompareInterval(s.m_drawInterval, interval) then
+        begin
+          s.m_drawInterval := interval;
+        end;
       end
-    end
-    else
-    begin
-
+      else
+      begin
+        s.m_drawInterval := s.m_interval;
+        if i=0 then
+          interval:=s.m_interval;
+      end;
     end;
   end;
-  if b then
+  // рисуем синхронные данные
+  m_TimeLabel.Text := 'Time: ' + formatstr(interval.x, 3);
+  for i := 0 to m_signals.count - 1 do
   begin
-    // рисуем только последние синхронные данные, а не весь объем
-    interval.x := interval.y - m_Length;
-    m_TimeLabel.Text := 'Time: ' + formatstr(interval.x, 3);
-    for i := 0 to m_signals.count - 1 do
-    begin
-      s := GetSignal(i);
-      interval_i := s.t.getIntervalInd(interval);
-      if interval_i.x > 0 then
-      begin
-        if interval_i.y < s.t.lastindex then
-        begin
-          s.line.AddPoints(s.t.m_ReadData, interval_i.x,
-            (interval_i.y - interval_i.x));
-          if s.t.lastindex >= interval_i.y then
-          begin
-            s.t.ResetTagDataTimeInd(interval_i.y);
-          end;
-        end;
-      end;
-    end;
+    s := GetSignal(i);
+
+    s.line.AddPoints(s.t.m_ReadData, interval_i.x,(interval_i.y - interval_i.x));
   end;
 end;
 
@@ -945,7 +858,7 @@ begin
     if g_algMng <> nil then
     begin
       initevents := true;
-      addplgevent('OscFact_doRcInit', E_RC_Init, doRcInit);
+      addplgevent('OscFact_doRcInit', E_RC_Init, doRCInit);
       // addplgevent('OscFact_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
       // g_algMng.Events.AddEvent('OscFact_SpmSetProps',e_OnSetAlgProperties,doChangeAlgProps);
       // g_algMng.Events.AddEvent('OscFact_OnLeaveCfg', E_OnChangeAlgCfg, doChangeCfg);
@@ -955,7 +868,7 @@ end;
 
 procedure TOscilFact.DestroyEvents;
 begin
-   removeplgEvent(doRcInit, E_RC_Init);
+  removeplgEvent(doRCInit, E_RC_Init);
   if g_algMng <> nil then
   begin
 
@@ -1013,7 +926,7 @@ begin
   inherited;
 end;
 
-procedure TOscilFact.doRCInit(sender: tobject);
+procedure TOscilFact.doRCInit(Sender: tobject);
 var
   i: integer;
   frm: TSyncOscFrm;
@@ -1026,13 +939,13 @@ begin
     for j := 0 to frm.m_signals.count - 1 do
     begin
       s := frm.GetSignal(j);
-      if s.t.tag=nil then
+      if s.t.tag = nil then
       begin
-        s.t.tagname:=s.t.tagname;
-        if s.t.tag<>nil then
+        s.t.tagname := s.t.tagname;
+        if s.t.tag <> nil then
         begin
-          s.m_dt:=1/s.t.freq;
-          s.line.dx:=s.m_dt;
+          s.m_dt := 1 / s.t.freq;
+          s.line.dx := s.m_dt;
           s.line.color := ColorArray[j];
         end;
       end;
@@ -1160,6 +1073,7 @@ procedure TOscSignal.doStart(oscLen, Phase0: double; oscType: TOscType);
 begin
   t.doOnStart;
   m_portion := trunc(oscLen * t.freq);
+  s.
   case oscType of
     tOscil:
       ;
@@ -1168,12 +1082,6 @@ begin
     TtrigOscil:
       begin
         setlength(m_outdata, trunc(oscLen * t.freq));
-        if Phase0 < 0 then
-        begin
-          setlength(m_histdata, round(abs(Phase0) * t.freq));
-          m_histLen := round(abs(Phase0) * t.freq);
-          m_Resetsize := round(oscLen * t.freq);
-        end;
       end;
   end;
 end;

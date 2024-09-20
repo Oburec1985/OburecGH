@@ -290,6 +290,8 @@ var
   p3:point3;
   b:cbone;
   p:cNodeObject;
+  // объект движка контролирующий костную анимацию в движке Recorder
+  skinObj:c3dSkinObj;
 begin
   TagCB.updateTagsList;
   m_curObj:=o;
@@ -327,16 +329,9 @@ begin
     else
     begin
       SkinCB.Checked:=true;
-      //m_pList.Clear;
-      for I := 0 to m_skin.count - 1 do
-      begin
-        b:=m_skin.getbone(i);
-        p:=b.fbone;
-        if p is c3dSkinObj then
-        begin
-          //m_pList.Add(p);
-        end;
-      end;
+      // ищем контроллер костей
+      skinObj:=c3dSkinObj(g_CtrlObjList.GetObjBySkin(m_curObj.name, PointNumSE.value));
+      ShowPoint(skinObj);
     end;
   end;
 end;

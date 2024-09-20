@@ -2,167 +2,100 @@ object EditSyncOscFrm: TEditSyncOscFrm
   Left = 0
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1086#1089#1094#1080#1083#1083#1086#1075#1088#1072#1084#1084#1099
-  ClientHeight = 472
-  ClientWidth = 782
+  ClientHeight = 629
+  ClientWidth = 1043
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -10
+  Font.Height = -13
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 96
-  TextHeight = 12
+  PixelsPerInch = 120
+  TextHeight = 16
   inline TagsListFrame1: TTagsListFrame
-    Left = 510
+    Left = 680
     Top = 0
-    Width = 272
-    Height = 422
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 363
+    Height = 563
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 571
-    ExplicitWidth = 272
-    ExplicitHeight = 422
+    ExplicitLeft = 680
+    ExplicitWidth = 363
+    ExplicitHeight = 563
     inherited FormChannelsGB: TGroupBox
-      Width = 272
-      Height = 422
-      Margins.Left = 3
-      Margins.Top = 3
-      Margins.Right = 3
-      Margins.Bottom = 3
-      ExplicitWidth = 272
-      ExplicitHeight = 422
+      Width = 363
+      Height = 563
+      ExplicitWidth = 363
+      ExplicitHeight = 563
       inherited ChanNamesPanel: TPanel
-        Top = 14
-        Width = 268
-        Height = 82
-        Margins.Left = 3
-        Margins.Top = 3
-        Margins.Right = 3
-        Margins.Bottom = 3
-        ExplicitTop = 14
-        ExplicitWidth = 268
-        ExplicitHeight = 82
+        Width = 359
+        Height = 109
+        ExplicitWidth = 359
+        ExplicitHeight = 109
         inherited FrmTagPropLabel: TLabel
-          Left = 4
-          Top = 44
-          Width = 46
-          Height = 12
-          Margins.Left = 3
-          Margins.Top = 3
-          Margins.Right = 3
-          Margins.Bottom = 3
-          ExplicitLeft = 4
-          ExplicitTop = 44
-          ExplicitWidth = 46
-          ExplicitHeight = 12
-        end
-        inherited FrmTagPropValue: TLabel
-          Left = 91
-          Top = 45
-          Width = 43
-          Height = 12
-          Margins.Left = 3
-          Margins.Top = 3
-          Margins.Right = 3
-          Margins.Bottom = 3
-          ExplicitLeft = 91
-          ExplicitTop = 45
-          ExplicitWidth = 43
-          ExplicitHeight = 12
+          Top = 59
+          ExplicitTop = 59
         end
         inherited FilterEdit: TEdit
-          Left = 4
-          Top = 6
-          Width = 261
-          Height = 20
-          Margins.Left = 3
-          Margins.Top = 3
-          Margins.Right = 3
-          Margins.Bottom = 3
-          ExplicitLeft = 4
-          ExplicitTop = 6
-          ExplicitWidth = 261
-          ExplicitHeight = 20
+          Width = 348
+          Height = 24
+          ExplicitWidth = 348
+          ExplicitHeight = 24
         end
         inherited FrmTagPropValueEdit: TEdit
-          Left = 91
-          Top = 62
-          Width = 174
-          Height = 20
-          Margins.Left = 3
-          Margins.Top = 3
-          Margins.Right = 3
-          Margins.Bottom = 3
-          ExplicitLeft = 91
-          ExplicitTop = 62
-          ExplicitWidth = 174
-          ExplicitHeight = 20
+          Top = 83
+          Width = 232
+          Height = 24
+          ExplicitTop = 83
+          ExplicitWidth = 232
+          ExplicitHeight = 24
         end
         inherited FrmTagPropNameCB: TComboBox
-          Left = 4
-          Top = 62
-          Width = 81
-          Height = 20
-          Margins.Left = 3
-          Margins.Top = 3
-          Margins.Right = 3
-          Margins.Bottom = 3
-          ExplicitLeft = 4
-          ExplicitTop = 62
-          ExplicitWidth = 81
-          ExplicitHeight = 20
+          Top = 83
+          ExplicitTop = 83
         end
       end
       inherited TagsLV: TBtnListView
-        Top = 96
-        Width = 268
-        Height = 324
-        Margins.Left = 3
-        Margins.Top = 3
-        Margins.Right = 3
-        Margins.Bottom = 3
+        Top = 127
+        Width = 359
+        Height = 434
         Columns = <
           item
             Caption = #1048#1084#1103
-            Width = 49
+            Width = 65
           end
           item
             Caption = #1058#1080#1087
-            Width = 49
+            Width = 65
           end
           item
             Caption = 'Fs'
-            Width = 38
+            Width = 51
           end>
-        ExplicitTop = 96
-        ExplicitWidth = 268
-        ExplicitHeight = 324
+        ExplicitTop = 127
+        ExplicitWidth = 359
+        ExplicitHeight = 434
       end
     end
   end
   object BottomPanel: TPanel
     Left = 0
-    Top = 422
-    Width = 782
-    Height = 50
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Top = 563
+    Width = 1043
+    Height = 66
     Align = alBottom
     TabOrder = 1
-    ExplicitWidth = 843
     object UpdateBtn: TSpeedButton
-      Left = 14
-      Top = 5
-      Width = 46
-      Height = 36
+      Left = 19
+      Top = 7
+      Width = 61
+      Height = 48
       Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       AllowAllUp = True
       BiDiMode = bdLeftToRight
       Flat = True
@@ -274,24 +207,16 @@ object EditSyncOscFrm: TEditSyncOscFrm
   object TagsGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 187
-    Height = 422
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 249
+    Height = 563
     Align = alLeft
     Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
     TabOrder = 2
     object TagsTV: TVTree
       Left = 2
-      Top = 14
-      Width = 183
-      Height = 406
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 18
+      Width = 245
+      Height = 543
       Align = alClient
       DragMode = dmAutomatic
       Header.AutoSizeIndex = 0
@@ -308,111 +233,80 @@ object EditSyncOscFrm: TEditSyncOscFrm
       OnDragOver = TagsTVDragOver
       OnDragDrop = TagsTVDragDrop
       OnKeyDown = TagsTVKeyDown
-      ExplicitTop = 16
       Columns = <>
     end
   end
   object MainPanel: TPanel
-    Left = 187
+    Left = 249
     Top = 0
-    Width = 323
-    Height = 422
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 431
+    Height = 563
     Align = alClient
-    Constraints.MinWidth = 273
+    Constraints.MinWidth = 364
     TabOrder = 3
-    ExplicitWidth = 384
     object LengthLabel: TLabel
-      Left = 5
-      Top = 3
-      Width = 91
-      Height = 12
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 7
+      Top = 4
+      Width = 110
+      Height = 16
       Caption = #1044#1083#1080#1090#1077#1083#1100#1085#1086#1089#1090#1100', '#1089#1077#1082
     end
     object TrigLabel: TLabel
-      Left = 131
-      Top = 2
-      Width = 37
-      Height = 12
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 175
+      Top = 3
+      Width = 46
+      Height = 16
       Caption = #1058#1088#1080#1075#1075#1077#1088
     end
     object Label1: TLabel
-      Left = 131
-      Top = 38
-      Width = 53
-      Height = 12
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 175
+      Top = 51
+      Width = 65
+      Height = 16
       Caption = #1057#1076#1074#1080#1075', '#1089#1077#1082'.'
     end
     object Threshlbl: TLabel
-      Left = 4
-      Top = 38
-      Width = 29
-      Height = 12
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 5
+      Top = 51
+      Width = 34
+      Height = 16
       Caption = #1055#1086#1088#1086#1075
     end
     object YAxisGB: TGroupBox
       Left = 1
-      Top = 311
-      Width = 321
-      Height = 110
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 416
+      Width = 429
+      Height = 146
       Align = alBottom
       Caption = #1054#1089#1100' Y'
       Color = 11783677
       ParentBackground = False
       ParentColor = False
       TabOrder = 0
-      ExplicitWidth = 382
       object MinYLabel: TLabel
-        Left = 13
-        Top = 19
-        Width = 57
-        Height = 12
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 17
+        Top = 25
+        Width = 69
+        Height = 16
         Caption = #1052#1080#1085#1080#1084#1091#1084' Y:'
       end
       object MaxYLabel: TLabel
-        Left = 122
-        Top = 19
-        Width = 61
-        Height = 12
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 163
+        Top = 25
+        Width = 74
+        Height = 16
         Caption = #1052#1072#1082#1089#1080#1084#1091#1084' Y:'
       end
       object AddAxisBtn: TSpeedButton
-        Left = 226
-        Top = 23
-        Width = 40
-        Height = 33
+        Left = 301
+        Top = 31
+        Width = 54
+        Height = 44
         Hint = #1044#1086#1073#1072#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         AllowAllUp = True
         BiDiMode = bdLeftToRight
         Glyph.Data = {
@@ -486,70 +380,54 @@ object EditSyncOscFrm: TEditSyncOscFrm
         OnClick = AddAxisBtnClick
       end
       object NameAxisLabel: TLabel
-        Left = 15
-        Top = 65
-        Width = 44
-        Height = 12
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 20
+        Top = 87
+        Width = 56
+        Height = 16
         Caption = #1053#1072#1079#1074#1072#1085#1080#1077
       end
       object MinYfe: TFloatEdit
-        Left = 13
-        Top = 35
-        Width = 89
-        Height = 20
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 17
+        Top = 47
+        Width = 119
+        Height = 24
         TabOrder = 0
         Text = '0.0'
       end
       object MaxYfe: TFloatEdit
-        Left = 122
-        Top = 35
-        Width = 89
-        Height = 20
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 163
+        Top = 47
+        Width = 118
+        Height = 24
         TabOrder = 1
         Text = '10'
       end
       object NameAxisEdit: TEdit
-        Left = 13
-        Top = 81
-        Width = 214
-        Height = 20
+        Left = 17
+        Top = 108
+        Width = 286
+        Height = 24
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 2
         Text = 'Axis'
       end
     end
     object LengthFE: TFloatEdit
-      Left = 5
-      Top = 20
-      Width = 110
-      Height = 20
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 7
+      Top = 27
+      Width = 146
+      Height = 24
       TabOrder = 1
       Text = '1'
     end
     object TrigRG: TRadioGroup
-      Left = 3
-      Top = 105
-      Width = 162
-      Height = 79
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 4
+      Top = 140
+      Width = 216
+      Height = 105
       Caption = #1042#1099#1073#1086#1088#1082#1072' '#1076#1072#1085#1085#1099#1093
       Items.Strings = (
         #1054#1089#1094#1080#1083#1083#1086#1075#1088#1072#1084#1084#1072
@@ -558,91 +436,82 @@ object EditSyncOscFrm: TEditSyncOscFrm
       TabOrder = 2
     end
     object ChannelXCB: TRcComboBox
-      Left = 131
-      Top = 20
-      Width = 112
-      Height = 20
+      Left = 175
+      Top = 27
+      Width = 149
+      Height = 24
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       TabOrder = 3
     end
     object LegendCB: TCheckBox
-      Left = 3
-      Top = 194
-      Width = 89
-      Height = 12
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 4
+      Top = 259
+      Width = 119
+      Height = 16
       Caption = #1051#1077#1075#1077#1085#1076#1072
       TabOrder = 4
     end
     object LineGB: TGroupBox
       Left = 1
-      Top = 255
-      Width = 321
-      Height = 56
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 341
+      Width = 429
+      Height = 75
       Align = alBottom
       Caption = #1051#1080#1085#1080#1103
       Color = clSkyBlue
       ParentBackground = False
       ParentColor = False
       TabOrder = 5
-      ExplicitWidth = 382
       object Label3: TLabel
-        Left = 15
-        Top = 11
-        Width = 44
-        Height = 12
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 20
+        Top = 15
+        Width = 56
+        Height = 16
         Caption = #1053#1072#1079#1074#1072#1085#1080#1077
       end
       object LineNameEdit: TEdit
-        Left = 13
-        Top = 28
-        Width = 214
-        Height = 20
+        Left = 17
+        Top = 37
+        Width = 286
+        Height = 24
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Enabled = False
         TabOrder = 0
         Text = 'Axis'
       end
       object LineColor: TPanel
-        Left = 233
-        Top = 26
-        Width = 26
-        Height = 25
+        Left = 311
+        Top = 35
+        Width = 34
+        Height = 33
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Color = clCaptionText
         ParentBackground = False
         TabOrder = 1
       end
     end
     object PhaseE: TFloatEdit
-      Left = 131
-      Top = 55
-      Width = 111
-      Height = 20
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 175
+      Top = 73
+      Width = 148
+      Height = 24
       TabOrder = 6
       Text = '0.0'
     end
     object ThresholdFE: TFloatEdit
-      Left = 4
-      Top = 55
-      Width = 111
-      Height = 20
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 5
+      Top = 73
+      Width = 148
+      Height = 24
       TabOrder = 7
       Text = '0.5'
     end

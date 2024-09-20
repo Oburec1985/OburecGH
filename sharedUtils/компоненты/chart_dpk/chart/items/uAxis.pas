@@ -270,8 +270,18 @@ begin
 end;
 
 destructor cAxis.destroy;
+var
+  p:cpage;
 begin
+  p:=cpage(getpage());
   inherited;
+  if p.activeAxis=nil then
+  begin
+    if p.getAxisCount>0 then
+    begin
+      p.activeAxis:=caxis(p.axises.getChild(0));
+    end;
+  end;
 end;
 
 procedure cAxis.setmainParent(p: cbaseObj);

@@ -282,27 +282,28 @@ begin
   s:=matrixToStr(c.restm);
   a_pIni.WriteString(str, 'CameraPos', s);
   n:=0;
+  // пишем управл€ющие объекты
   for I := 0 to g_CtrlObjList.count - 1 do
   begin
     ctrl:=(g_CtrlObjList.GetObj(i));
     if ctrl is c3dMoveObj then
     begin
-      inc(n);
-      a_pIni.WriteString(str, 'Ctrl_'+inttostr(i), c3dMoveObj(ctrl).name);
+      a_pIni.WriteString(str, 'Ctrl_'+inttostr(n), c3dMoveObj(ctrl).name);
       t:=c3dMoveObj(ctrl).RotXTag;
-      a_pIni.WriteString(str, 'Ctrl_Xrot_'+inttostr(i), t.tagname);
+      a_pIni.WriteString(str, 'Ctrl_Xrot_'+inttostr(n), t.tagname);
       t:=c3dMoveObj(ctrl).RotYTag;
-      a_pIni.WriteString(str, 'Ctrl_Yrot_'+inttostr(i), t.tagname);
+      a_pIni.WriteString(str, 'Ctrl_Yrot_'+inttostr(n), t.tagname);
       t:=c3dMoveObj(ctrl).RotZTag;
-      a_pIni.WriteString(str, 'Ctrl_Zrot_'+inttostr(i), t.tagname);
-      a_pIni.WriteInteger(str, 'ChildCount_'+inttostr(i), ctrl.ChildCount);
+      a_pIni.WriteString(str, 'Ctrl_Zrot_'+inttostr(n), t.tagname);
+      a_pIni.WriteInteger(str, 'ChildCount_'+inttostr(n), ctrl.ChildCount);
       s:='';
       for j := 0 to ctrl.ChildCount - 1 do
       begin
         o:=cnodeobject(ctrl.getChild(j));
         s:=s+o.name+';';
       end;
-      a_pIni.WriteString(str, 'ChildNames_'+inttostr(i), s);
+      a_pIni.WriteString(str, 'ChildNames_'+inttostr(n), s);
+      inc(n);
     end;
   end;
   // сохранение инф-ии о анимации ориентации
@@ -496,7 +497,7 @@ begin
   //exit;
   a_pIni:=TIniFile.Create(m_inifile);
   b:=true;
-  n:=0;
+  n:=1;
   while b do
   begin
     s:=a_pIni.ReadString(m_loadsect, 'SkinObj_'+inttostr(n), '');
@@ -567,6 +568,7 @@ begin
       // число вершин
       bone:=cskin(skin).AddBone(o);
       c3dSkinObj(o).m_bone:=bone;
+      c3dSkinObj(o).m_defObj:=cnodeobject(cskin(skin).owner);
       // id вершин
       for k := 0 to vn - 1 do
       begin
