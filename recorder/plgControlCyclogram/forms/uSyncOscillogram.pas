@@ -55,14 +55,7 @@ type
     m_readyBl: integer;
   protected
     procedure saveData(fname: string; num: integer);
-    procedure resetData(lastind: integer);
-    // получить данные с учетом истории (склейка буферов)
-    function GetOscTrigData(var data: array of double; time: point2d;
-      var lastind: integer): integer;
     procedure doStart(oscLen: double; Phase0: double; oscType: TOscType);
-    function GetInterval: point2d;
-    // длительность предистории
-    function HistLength: double;
   public
     constructor create;
     destructor destroy;
@@ -742,7 +735,9 @@ begin
   end;
 end;
 
-procedure TSyncOscFrm.UpdateData;
+procedure TSyncOscFrm.UpdateData
+
+;
 var
   s: TOscSignal;
   i, ind, j: integer;
@@ -1073,7 +1068,6 @@ procedure TOscSignal.doStart(oscLen, Phase0: double; oscType: TOscType);
 begin
   t.doOnStart;
   m_portion := trunc(oscLen * t.freq);
-  s.
   case oscType of
     tOscil:
       ;
@@ -1086,59 +1080,5 @@ begin
   end;
 end;
 
-function TOscSignal.GetInterval: point2d;
-begin
-  Result := t.getPortionTime;
-  Result.x := Result.x - HistLength;
-end;
-
-function TOscSignal.HistLength: double;
-begin
-  Result := m_dt * m_histLen;
-end;
-
-function TOscSignal.GetOscTrigData(var data: array of double; time: point2d;
-  var lastind: integer): integer;
-var
-  t1: point2d;
-  l: double;
-  intervali: tpoint;
-  i1, i2: integer;
-begin
-  t1 := t.getPortionTime;
-  if t1.x > time.x then
-  begin
-    l := (t1.x - time.x);
-    i1 := round(l * t.freq);
-    move(m_histdata[m_histLen - i1], data[0], i1 * sizeof(double));
-    i2 := round((time.y - l) * t.freq);
-    move(t.m_ReadData[0], data[i1], i2 * sizeof(double));
-    Result := i1 + i2;
-    lastind := i2;
-  end
-  else
-  begin
-    intervali := t.getIntervalInd(time);
-    lastind := intervali.y;
-    move(t.m_ReadData[intervali.x], data[0],
-      (intervali.y - intervali.x) * sizeof(double));
-    Result := intervali.y - intervali.x;
-  end;
-end;
-
-// сдвигаем данные до lastind+histlen
-procedure TOscSignal.resetData(lastind: integer);
-var
-  i: integer;
-begin
-  i := t.m_ReadSize - lastind;
-  if i >= m_histLen then
-  begin
-    i := m_histLen;
-  end;
-  m_histUsed := i;
-  move(t.m_ReadData[lastind], m_histdata[0], i * sizeof(double));
-  t.ResetTagDataTimeInd(lastind + i);
-end;
 
 end.

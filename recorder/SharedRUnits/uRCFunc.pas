@@ -1505,7 +1505,7 @@ begin
   b12.y:=trunc(offset2/m_blLen);
   for j:=b12.X to b12.y do
   begin
-    if SUCCEEDED(block.GetVectorR8(pointer(m_TagData)^, j, block.GetBlocksSize, )) then
+    if SUCCEEDED(block.GetVectorR8(pointer(m_TagData)^, j, block.GetBlocksSize, true)) then
     begin
 
     end;
