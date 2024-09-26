@@ -1131,14 +1131,18 @@ begin
   m_timeShtamp := 0;
   m_timeShtamp_i := 0;
 
-  fdT:=1/freq;
-  m_blLen:=block.GetBlocksSize*fdT;
-  m_TagLen:=m_blLen*block.GetBlocksCount;
+  if tag<>nil then
+  begin
+    fdT:=1/freq;
 
-  // добавлено 07.02.2020
-  l := length(m_ReadData);
-  if l > 0 then
-    ZeroMemory(@m_ReadData[0], l * sizeof(double));
+    m_blLen:=block.GetBlocksSize*fdT;
+    m_TagLen:=m_blLen*block.GetBlocksCount;
+
+    // добавлено 07.02.2020
+    l := length(m_ReadData);
+    if l > 0 then
+      ZeroMemory(@m_ReadData[0], l * sizeof(double));
+  end;
 end;
 
 

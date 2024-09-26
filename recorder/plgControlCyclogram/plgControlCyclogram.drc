@@ -1486,13 +1486,13 @@ END
 /* forms\uEditSrsFrm.dfm */
 /* forms\uIRDiagram.dfm */
 /* forms\uIRDiagramEditFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSyncOscillogram.dfm */
+/* forms\uSyncOscillogram.dfm */
 /* forms\uSyncOscillogramEditFrm.dfm */
 /* forms\uAlgsSaveFrm.dfm */
 /* forms\uEditPropertiesFrm.dfm */
 /* ..\..\sharedUtils\forms\uConfirmDlg.dfm */
 /* forms\uGenSignalsEditFrm.dfm */
-/* forms\uGenSignalsFrm.dfm */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uGenSignalsFrm.dfm */
 /* forms\uControlDeskFrm.dfm */
 /* forms\uCyclogramReportFrm.dfm */
 /* forms\uTagInfoFrm.dfm */
@@ -1537,6 +1537,6 @@ END
 /* forms\uPressFrmFrame.dfm */
 /* forms\uPressFrmEdit.dfm */
 /* forms\uPressFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */

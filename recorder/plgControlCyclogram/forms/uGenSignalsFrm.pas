@@ -345,8 +345,8 @@ var
   sigList:TGenSignalsFrm;
 begin
   time:=0;
+  Timer1.enabled:=True;
   Timer1.Interval:=round(getrefreshperiod*1000);
-  timer1.Enabled:=true;
   for I := 0 to m_CompList.Count- 1 do
   begin
     sigList:=TGenSignalsFrm(GetFrm(i));
@@ -364,7 +364,6 @@ var
   I: Integer;
   sigList:TGenSignalsFrm;
 begin
-  exit;
   time:=time+(g_GenSignalsFactory.Timer1.Interval/1000);
   for I := 0 to m_CompList.Count- 1 do
   begin
@@ -820,7 +819,7 @@ begin
   end
   else
   begin
-    phase:=phase+m_dphase;
+    phase:=phase+m_dphase*m_dt;
   end;
   if phase>c_2pi then
     phase:=phase-c_2pi;
