@@ -50,9 +50,7 @@ type
     // линия
     line: cBuffTrend1d;
     // размер отображаемых данных
-    m_portion,
-    // накоплено блоков
-    m_readyBl: integer;
+    m_portion:double;
   protected
     procedure saveData(fname: string; num: integer);
     procedure doStart(oscLen: double; Phase0: double; oscType: TOscType);
@@ -533,6 +531,7 @@ begin
   m_Length := 1;
   m_type := tOscil;
   m_TrigTag := cTag.create;
+  m_TrigTag.m_useReadBuffer:=false;
   m_ax := cQueue<TAxis>.create;
 end;
 
@@ -762,10 +761,11 @@ begin
   begin
     s := GetSignal(i);
     j := s.t.block.GetReadyBlocksCount;
-    if j <> s.m_readyBl then
+    ind:=0;
+    if s.t.UpdateTagData(false) then
     begin
+      inc(ind);
       s.m_interval := s.t.EvalTimeInterval;
-      s.m_readyBl := j;
       // вычисляем рисуемый интервал
       if m_type = TtrigOscil then
       begin
@@ -778,7 +778,7 @@ begin
       else
       begin
         s.m_drawInterval := s.m_interval;
-        if i=0 then
+        if ind=0 then
           interval:=s.m_interval;
       end;
     end;
@@ -788,7 +788,7 @@ begin
   for i := 0 to m_signals.count - 1 do
   begin
     s := GetSignal(i);
-
+    interval_i:=s.t.getIntervalInd(interval);
     s.line.AddPoints(s.t.m_ReadData, interval_i.x,(interval_i.y - interval_i.x));
   end;
 end;
@@ -1039,6 +1039,7 @@ end;
 constructor TOscSignal.create;
 begin
   t := cTag.create;
+  t.m_useReadBuffer:=false;
 end;
 
 destructor TOscSignal.destroy;

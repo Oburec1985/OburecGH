@@ -30,6 +30,7 @@ type
     // тк блок может дополняться нулями
     m_EvalBlock1, m_EvalBlock2: TAlignDarray;
   protected
+    procedure updateReady;override;
     function OutExists: boolean;
     function Bexists: boolean;
     function Aexists: boolean;
@@ -47,7 +48,6 @@ type
     procedure LoadObjAttributes(xmlNode: txmlNode; mng: tobject); override;
     procedure SaveObjAttributes(xmlNode: txmlNode); override;
     procedure LoadTags(node: txmlNode); override;
-    function ready: boolean; override;
     function getresname: string; override;
   public
     procedure updateOutChan; override;
@@ -200,9 +200,12 @@ end;
 procedure cAriphmAlg.doOnStart;
 begin
   inherited;
-  m_A.doOnStart;
-  m_B.doOnStart;
-  m_Out.doOnStart;
+  if ready then
+  begin
+    m_A.doOnStart;
+    m_B.doOnStart;
+    m_Out.doOnStart;
+  end;
 end;
 
 function cAriphmAlg.genTagName: string;
@@ -261,15 +264,6 @@ end;
 procedure cAriphmAlg.LoadTags(node: txmlNode);
 begin
   inherited;
-end;
-
-function cAriphmAlg.ready: boolean;
-begin
-  result := false;
-  if Aexists and Bexists then
-  begin
-    result := true;
-  end;
 end;
 
 procedure cAriphmAlg.SaveObjAttributes(xmlNode: txmlNode);
@@ -389,6 +383,19 @@ begin
       end;
     end;
     lcm;
+  end;
+end;
+
+
+procedure cAriphmAlg.updateReady;
+begin
+  fready:=false;
+  if m_A.tag<>nil then
+  begin
+    if m_B.tag<>nil then
+    begin
+      fready:=true;
+    end;
   end;
 end;
 

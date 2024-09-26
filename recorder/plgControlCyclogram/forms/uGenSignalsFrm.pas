@@ -364,6 +364,7 @@ var
   I: Integer;
   sigList:TGenSignalsFrm;
 begin
+  exit;
   time:=time+(g_GenSignalsFactory.Timer1.Interval/1000);
   for I := 0 to m_CompList.Count- 1 do
   begin
@@ -507,7 +508,8 @@ end;
 
 function TGenSignalsFrm.doRepaint: boolean;
 begin
-  FreqLabel.Caption:='F, Ãö '+formatstrNoE(ActivSignal.getCurF, 3);
+  if ActivSignal<>nil then
+    FreqLabel.Caption:='F, Ãö '+formatstrNoE(ActivSignal.getCurF, 3);
 
 end;
 

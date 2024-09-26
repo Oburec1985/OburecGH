@@ -469,6 +469,8 @@ var
   i: integer;
   t: cTag;
 begin
+  inherited;
+  if not ready then exit;
   if m_tag <> nil then
   begin
     m_tag.doOnStart;

@@ -45,15 +45,20 @@ type
     fdevicetime: double;
     fdT:double;
   public
+    // делать склейку непрерывного буфера в updateTagData.
+    m_useReadBuffer:boolean;
     useEcm:boolean;
     owner:tstringlist;
     m_createOutTag: boolean;
+
+    m_newBlockCount, // кол-о новых (не обработанных) блоков в кольцевом буфере
     // кол-во обработанных блоков исходного тега
     // должно быть приватным. Не в точности равно readyBlock считанному из IBlockAccess
     // т.к. нужна переменная которая хранит число обработанных блоков именно алгоритмом для определения кол-ва новых блоков
     // становится равно readyBlock считанному из IBlockAccess в методе dogetdata после чего новые данные
     // из m_ReadData попадают в обработку
     m_readyBlock: integer;
+
     // размер блока рекордреа в секндах
     m_blLen,
     // размер всей истории рекордера
@@ -1064,6 +1069,7 @@ begin
 
 constructor cTag.create;
 begin
+  m_useReadBuffer:=true;
   useEcm:=true;
   owner:=nil;
   m_createOutTag := true;
@@ -1516,12 +1522,18 @@ function cTag.EvalTimeInterval: point2d;
 var
   ready, bcount, bSize:integer;
 begin
-  block.LockVector;
-  bcount := block.GetBlocksCount; // размер буфера в блоках
+  //block.LockVector;
+  //  m_newBlockCount обновляется в UpdateTagData
+  bcount := m_newBlockCount;
+  // потери данных
+  if bcount>block.GetBlocksCount then
+  begin
+    bcount:=block.GetBlocksCount;
+  end;
   bSize := block.GetBlocksSize; // размер блока
-  ready := readyBlockCount; // число накопленных блоков
   result.x:=block.GetBlockDeviceTime(0);
-  result.y:=block.GetBlockDeviceTime(bcount-1)+block.GetBlocksSize*getfreq;
+  result.y:=block.GetBlockDeviceTime(bcount-1)+bSize/getfreq;
+  //block.UnlockVector;
 end;
 
 function cTag.UpdateTagData(tare: boolean): boolean;
@@ -1536,18 +1548,17 @@ function cTag.UpdateTagData(tare: boolean; var AutoResetData: integer)
 var
   i, BufCount, // кол-о блоков которое кладется в m_ReadData. Похорошему равно newBlockCount
   // но из за лагов может превысить размер буфера и тогда равно кол-ву блоков выходного буфера
-  newBlockCount, // кол-о новых (не обработанных) блоков в кольцевом буфере
   blCount, // кол-о блоков в кольцевом буфере
   blSize, // размер блока
   readyBlockCount, // кол-о готовых к считыванию блоков
   blInd, writeBlockSize: integer;
-  looseData: boolean;
+  b, looseData: boolean;
   endTime:double; // время lastindex
 begin
   result := false;
   if tag = nil then
     exit;
-  block.LockVector;
+  //block.LockVector;
   blCount := block.GetBlocksCount;
   blSize := block.GetBlocksSize;
   looseData := false;
@@ -1558,79 +1569,82 @@ begin
     // если количество блоков больше чем кол-во обработанных блоков (т.е. есть новые данные)
     if readyBlockCount > m_readyBlock then
     begin
-      newBlockCount := readyBlockCount - m_readyBlock;
-      BufCount := newBlockCount;
+      m_newBlockCount := readyBlockCount - m_readyBlock;
+      BufCount := m_newBlockCount;
       // если готовых блоков больше чем размер буфера (blCount), = потери,
       // но с этим уже ничего не поделать
-      if newBlockCount > blCount then
+      if m_newBlockCount > blCount then
       begin
         /// BufCount := newBlockCount;
         BufCount := blCount;
-        newBlockCount := blCount;
+        m_newBlockCount := blCount;
         looseData := true;
       end;
       m_readyBlock := readyBlockCount;
-      // m_lastindex := 0; // сбрасывается в resetdata
-      for i := 0 to BufCount - 1 do
+      result := true;
+      if m_useReadBuffer then
       begin
-        tare := true;
-        // например новых блоков 2. Последний блок в буфере всегда имеет последний тайм штамп.
-        // Тогда, в цикле получаем блоки с последнего необработанного
-        blInd := i + blCount - newBlockCount;
-        if SUCCEEDED(block.GetVectorR8(pointer(m_TagData)^, blInd, blSize,
-            tare)) then
+        for i := 0 to BufCount - 1 do
         begin
-          // block.GetVectorPairR8(pointer(m_TagData2d)^, blInd, blSize, tare);
-          if looseData then
+          tare := true;
+          // например новых блоков 2. Последний блок в буфере всегда имеет последний тайм штамп.
+          // Тогда, в цикле получаем блоки с последнего необработанного
+          blInd := i + blCount - m_newBlockCount;
+          block.LockVector;
+          b:=SUCCEEDED(block.GetVectorR8(pointer(m_TagData)^, blInd, blSize,tare));
+          block.unLockVector;
+          if b then
           begin
-            fdevicetime := block.GetBlockDeviceTime(blInd);
-            // Были потери данных!!!
-            if fdevicetime-getPortionEndTime>fdT then
-            begin
-              m_ReadDataTime := fdevicetime;
-              m_lastindex:=0; // сбрасываем все что накопили непосильным трудом
-            end;
-          end
-          else
-          begin
-            // первый полученный блок
-            if m_lastindex = 0 then
+            // block.GetVectorPairR8(pointer(m_TagData2d)^, blInd, blSize, tare);
+            if looseData then
             begin
               fdevicetime := block.GetBlockDeviceTime(blInd);
-              m_ReadDataTime := fdevicetime;
+              // Были потери данных!!!
+              if fdevicetime-getPortionEndTime>fdT then
+              begin
+                m_ReadDataTime := fdevicetime;
+                m_lastindex:=0; // сбрасываем все что накопили непосильным трудом
+              end;
+            end
+            else
+            begin
+              // первый полученный блок
+              if m_lastindex = 0 then
+              begin
+                fdevicetime := block.GetBlockDeviceTime(blInd);
+                m_ReadDataTime := fdevicetime;
+              end;
             end;
           end;
-        end;
-        if m_ReadSize >= m_lastindex + blSize then
-        begin
-          if m_lastindex < 0 then
+          if m_ReadSize >= m_lastindex + blSize then
           begin
-            // showmessage('uRCFunc cTag.UpdateTagData 1297:m_lastindex<0');
+            if m_lastindex < 0 then
+            begin
+              // showmessage('uRCFunc cTag.UpdateTagData 1297:m_lastindex<0');
+            end
+            else
+            begin
+              // ERROR
+              move(m_TagData[0], m_ReadData[m_lastindex], blSize * (sizeof(double)));
+              m_lastindex := m_lastindex + blSize;
+            end;
+            AutoResetData := 0;
           end
           else
           begin
-            // ERROR
+            // m_ReadSize не вмещает новые данные!!!
+            // break;
+            AutoResetData := m_lastindex;
+            ResetTagDataTimeInd(m_lastindex);
             move(m_TagData[0], m_ReadData[m_lastindex], blSize * (sizeof(double)));
+            fdevicetime := block.GetBlockDeviceTime(blInd);
+            m_ReadDataTime := fdevicetime;
             m_lastindex := m_lastindex + blSize;
-          end;
-          AutoResetData := 0;
-        end
-        else
-        begin
-          // m_ReadSize не вмещает новые данные!!!
-          // break;
-          AutoResetData := m_lastindex;
-          ResetTagDataTimeInd(m_lastindex);
-          move(m_TagData[0], m_ReadData[m_lastindex], blSize * (sizeof(double)));
-          fdevicetime := block.GetBlockDeviceTime(blInd);
-          m_ReadDataTime := fdevicetime;
-          m_lastindex := m_lastindex + blSize;
-        end
+          end
+        end;
       end;
-      result := true;
     end;
   end;
-  block.unLockVector;
 end;
 
 function GetMeraFile: string;

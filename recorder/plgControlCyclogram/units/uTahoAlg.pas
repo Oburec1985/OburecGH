@@ -65,9 +65,9 @@ type
     // здесь сам посчитанный спектр
     outarray:TAlignDarray;
     fftPlan:TFFTProp;
-
     finitbuff:boolean;
   protected
+    procedure updateReady;override;
     procedure SetProperties(str: string); override;
     function GetProperties: string; override;
     function getExtProp: string;override;
@@ -378,6 +378,7 @@ end;
 procedure cTahoAlg.doOnStart;
 begin
   inherited;
+  if not ready then exit;
   if fInTag<>nil then
     fInTag.doOnStart;
   if fOutTag<>nil then
@@ -443,24 +444,7 @@ end;
 
 function cTahoAlg.ready: boolean;
 begin
-  result:=false;
-  if fintag<>nil then
-  begin
-    result:=true;
-    if fintag.tag<>nil then
-    begin
-      if not finitbuff then
-      begin
-        setSpmArray;
-      end;
-    end
-    else
-    begin
-      fintag.tag:=getTagByName(fintag.tagname);
-      updateOutChan;
-      setSpmArray;
-    end;
-  end;
+  result:=fready;
 end;
 
 procedure cTahoAlg.setinptag(t: cTag);
@@ -730,6 +714,36 @@ begin
     fOutTag.block := bl;
   end;
   lcm;
+end;
+
+procedure cTahoAlg.updateReady;
+begin
+  fready:=false;
+  if fintag<>nil then
+  begin
+    if fintag.tag<>nil then
+    begin
+      fready:=true;
+      if not finitbuff then
+      begin
+        setSpmArray;
+      end;
+    end
+    else
+    begin
+      fintag.tag:=getTagByName(fintag.tagname);
+      if fintag.tag<>nil then
+      begin
+        fready:=true;
+        updateOutChan;
+        setSpmArray;
+      end
+      else
+      begin
+        fready:=false;
+      end;
+    end;
+  end;
 end;
 
 end.

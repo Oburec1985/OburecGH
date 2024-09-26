@@ -51,11 +51,13 @@ type
     // список алгоритмов кот передают данные по подписке сюда
     m_refList: tlist;
   protected
+    fready:boolean;
     m_errors: tstringlist;
     m_properties: string;
     // список алгоритмов кот подписаны на обновлеение данных
     m_SubscribeList: tlist;
   protected
+    procedure updateReady;virtual;
     procedure SetParentCfg(c:cAlgConfig);
     procedure doStopRecord;virtual;
     procedure doAfterload; virtual;
@@ -520,6 +522,11 @@ begin
 
 end;
 
+procedure cBaseAlgContainer.updateReady;
+begin
+
+end;
+
 procedure cBaseAlgContainer.SaveObjAttributes(xmlNode: txmlNode);
 begin
   inherited;
@@ -559,7 +566,7 @@ end;
 
 function cBaseAlgContainer.ready: boolean;
 begin
-  result := true;
+  result := fready;
 end;
 
 { cBaseAlg }
@@ -652,6 +659,7 @@ begin
     t := getOutTag(i);
     t.m_readyBlock := 0;
   end;
+  updateReady;
 end;
 
 function cBaseAlg.getInpTag(index: integer): cTag;
@@ -935,8 +943,7 @@ begin
     a := getobj(i);
     if a is cBaseAlgContainer then
     begin
-      if cBaseAlgContainer(a).ready then
-        cBaseAlgContainer(a).doOnStart;
+      cBaseAlgContainer(a).doOnStart;
     end;
   end;
 end;
