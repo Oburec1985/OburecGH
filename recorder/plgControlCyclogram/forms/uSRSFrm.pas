@@ -888,7 +888,7 @@ begin
 
       l := cBuffTrend1d.create;
       // l.color := ColorArray[i+10];
-      l.color := yellow;
+      l.color := violet;
       l.dx := c.fspmdx;
       axCoh.AddChild(l);
       s.lineCoh := l;

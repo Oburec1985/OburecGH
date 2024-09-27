@@ -40,9 +40,11 @@ type
     t: cTag;
     m_dt: double;
     // обновляется в updatedata
-    m_interval,
+    m_interval:point2d;
     // поправка интервала с учетом триггера
     m_drawInterval: point2d;
+    m_updateDrawInterval:boolean;
+
     m_outdata: array of double;
     // ось на которой лежит сигнал
     ax: caxis;
@@ -734,17 +736,12 @@ begin
   end;
 end;
 
-procedure TSyncOscFrm.UpdateData
-
-;
+procedure TSyncOscFrm.UpdateData;
 var
   s: TOscSignal;
-  i, ind, j: integer;
-  // отображаемый интервал
-  t: point2d;
+  i, j: integer;
   // интервал графика который будет нарисован
   interval: point2d;
-  interval_i: tpoint;
   v, prev: double;
 begin
   // триггерный старт
@@ -755,41 +752,78 @@ begin
       m_TrigRes := SearchTrig(m_TrigTag, m_Threshold, m_TrigInterval);
       m_TrigTag.ResetTagData();
     end;
-  end;
-
-  for i := 0 to m_signals.count - 1 do
+  end
+  else
   begin
-    s := GetSignal(i);
-    j := s.t.block.GetReadyBlocksCount;
-    ind:=0;
-    if s.t.UpdateTagData(false) then
+    v:=GetRCTime;
+    if v>m_TrigInterval.y then
     begin
-      inc(ind);
-      s.m_interval := s.t.EvalTimeInterval;
-      // вычисляем рисуемый интервал
-      if m_type = TtrigOscil then
-      begin
-        interval := getCommonInterval(s.m_interval, m_TrigInterval);
-        if not CompareInterval(s.m_drawInterval, interval) then
-        begin
-          s.m_drawInterval := interval;
-        end;
+      if v-m_Length>m_TrigInterval.y then
+      begin // если новое время Recorder вышло за следующий интервал отображения
+        m_TrigInterval.x:=v;
+        m_TrigInterval.y:=v+m_Length;
       end
-      else
+      else // если новое время Recorder попало в следующий интервал отображения
       begin
-        s.m_drawInterval := s.m_interval;
-        if ind=0 then
-          interval:=s.m_interval;
+        m_TrigInterval.x:=m_TrigInterval.y;
+        m_TrigInterval.y:=m_TrigInterval.y+m_Length;
       end;
     end;
   end;
-  // рисуем синхронные данные
-  m_TimeLabel.Text := 'Time: ' + formatstr(interval.x, 3);
+  // обновляем данные и накопленные интервалы в тегах. Корректируем интервал отображения
+  s:=GetSignal(0);
+  if s.t.UpdateTagData(false) then
+  begin
+    s.m_interval := s.t.EvalTimeInterval;
+    if v=0 then
+    begin
+      if s.m_interval.y>m_TrigInterval.y then
+      begin
+        m_TrigInterval.y:=s.m_interval.y;
+        m_TrigInterval.x:=m_TrigInterval.y-m_Length;
+
+        ///m_TimeLabel.Text :=m_TimeLabel.Text+'Time: ' + formatstr(m_TrigInterval.x, 3);
+      end;
+    end;
+  end;
+  for i := 1 to m_signals.count - 1 do
+  begin
+    s := GetSignal(i);
+    if s.t.UpdateTagData(false) then
+    begin
+      s.m_interval := s.t.EvalTimeInterval;
+      // сдвигаем триг в сторону самого отстающего по правой границе сигнала
+      if m_TrigInterval.y>s.m_interval.y then
+      begin
+        // добавить порог на случай мертвого канала. Порог в длину осциллограммы.
+        // возможно стоит сделать в периодах обновления данных
+        if (s.m_interval.y+m_Length)>m_TrigInterval.y then
+          m_TrigInterval.y:=s.m_interval.y
+        else
+        begin
+          //showmessage('1');
+        end;
+      end;
+    end;
+  end;
+  m_TrigInterval.x:=m_TrigInterval.y-m_Length;
+  if m_TrigInterval.x<0 then
+    m_TrigInterval.x:=0;
+
+  // вычисляем рисуемый интервал
   for i := 0 to m_signals.count - 1 do
   begin
     s := GetSignal(i);
-    interval_i:=s.t.getIntervalInd(interval);
-    s.line.AddPoints(s.t.m_ReadData, interval_i.x,(interval_i.y - interval_i.x));
+    interval := getCommonInterval(s.m_interval, m_TrigInterval);
+    if not CompareInterval(s.m_drawInterval, interval) then
+    begin
+      s.m_drawInterval := interval;
+      s.m_updateDrawInterval:=true;
+    end
+    else
+    begin
+      //s.m_updateDrawInterval:=false; // перенесено в repaint
+    end;
   end;
 end;
 
@@ -811,10 +845,29 @@ end;
 procedure TSyncOscFrm.UpdateView;
 var
   i: integer;
+  s: TOscSignal;
+  interval_i: tpoint;
 begin
   if RStatePlay then
   begin
-    // m_time:=
+    // рисуем синхронные данные
+    //m_TimeLabel.Text := 'Time: ' + formatstr(m_TrigInterval.x, 3);
+  end;
+  // перенос данных в линии
+  for i := 0 to m_signals.count - 1 do
+  begin
+    s := GetSignal(i);
+    if s.m_updateDrawInterval then
+    begin
+      s.t.RebuildReadBuff(true, s.m_drawInterval);
+      interval_i:=s.t.getIntervalInd(s.m_drawInterval);
+      if interval_i.y>=length(s.t.m_ReadData) then
+      begin
+        interval_i.y:=length(s.t.m_ReadData)-1;
+      end;
+      s.line.AddPoints(s.t.m_ReadData, interval_i.x,(interval_i.y - interval_i.x));
+      s.m_updateDrawInterval:=false;
+    end;
   end;
   m_Chart.redraw;
 end;
@@ -968,11 +1021,17 @@ begin
     if frm.m_TrigTag.tag <> nil then
     begin
       frm.m_TrigTag.doOnStart;
+    end
+    else
+    begin
+      frm.m_TrigInterval.x:=0;
+      frm.m_TrigInterval.y:=frm.m_Length;
     end;
     for j := 0 to frm.m_signals.count - 1 do
     begin
       s := frm.GetSignal(j);
       s.doStart(frm.m_Length, frm.m_Phase0, frm.m_type);
+
     end;
     frm.m_init := false;
   end;

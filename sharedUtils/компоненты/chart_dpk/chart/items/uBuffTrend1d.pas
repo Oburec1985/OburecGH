@@ -22,6 +22,7 @@ type
     // шаг по оси x между индексированными точками
     fdx: double;
   protected
+    procedure compile; override;
     // получить установить число вершин
     function GetCount: integer; override;
     procedure SetCount(i: integer); override;
@@ -30,7 +31,6 @@ type
     function GetP2(i: integer): point2; override;
     procedure setx0(v: single);
     procedure setdx(v: double);
-    procedure compile; override;
     procedure drawdata; override;
     // Метод отрисовки
     procedure drawLine; override;
@@ -39,6 +39,7 @@ type
     procedure clear; override;
     procedure setvisible(b:boolean);override;
   public
+
     function GetYByInd(i:integer):double;override;
     function GetXByInd(i:integer):double;override;
     function GetLowInd(key: single): integer; override;
@@ -51,6 +52,7 @@ type
     procedure AddPoints(const a: array of double); override;
     // замещает данные в линии
     procedure AddPoints(const a: array of double; p_count:integer); override;
+    // dropOld - отбрасывать старые данные если их было больше чем добавлено
     procedure AddPoints(const a: array of double; start, p_count:integer);override;
     property Count: integer read GetCount write SetCount;
     property x0: single read fx0 write setx0;
@@ -275,6 +277,10 @@ begin
             fcapacity := p_count;
             flength:=p_count;
             Setlength(data_r, fcapacity);
+          end
+          else
+          begin
+            flength:=p_count;
           end;
           move(a[start], data_r[0], p_count * sizeof(double));
         end;

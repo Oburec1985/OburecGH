@@ -17,8 +17,9 @@ object SRSFrm: TSRSFrm
   object SpmChart: cChart
     Left = 0
     Top = 0
-    Width = 700
+    Width = 680
     Height = 656
+    Cursor = crSizeAll
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 0
@@ -28,11 +29,12 @@ object SRSFrm: TSRSFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitWidth = 700
   end
   object RightGB: TGroupBox
-    Left = 700
+    Left = 680
     Top = 0
-    Width = 198
+    Width = 218
     Height = 656
     Margins.Left = 4
     Margins.Top = 4
@@ -252,9 +254,9 @@ object SRSFrm: TSRSFrm
     end
     object CompareBtn: TSpeedButton
       Left = 161
-      Top = 260
-      Width = 26
-      Height = 33
+      Top = 252
+      Width = 40
+      Height = 45
       Hint = #1054#1090#1082#1088#1099#1090#1100' '#1074' WinPos'
       Margins.Left = 4
       Margins.Top = 4
