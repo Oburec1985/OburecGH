@@ -236,12 +236,15 @@ begin
 
   if not finit then
   begin
-    skinframe.m_ui:=TObjFrm3d(m_glFrm).GL.mUI;
-    if skinframe.m_ui<>nil then
+    if m_glFrm<>nil then
     begin
-      finit:=true;
-      createevents;
-      skinframe.createevents;
+      skinframe.m_ui:=TObjFrm3d(m_glFrm).GL.mUI;
+      if skinframe.m_ui<>nil then
+      begin
+        finit:=true;
+        createevents;
+        skinframe.createevents;
+      end;
     end;
   end;
 end;

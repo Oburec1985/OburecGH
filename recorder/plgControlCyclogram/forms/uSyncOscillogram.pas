@@ -903,14 +903,11 @@ procedure TOscilFact.CreateEvents;
 begin
   if not initevents then
   begin
-    if g_algMng <> nil then
-    begin
-      initevents := true;
-      addplgevent('OscFact_doRcInit', E_RC_Init, doRCInit);
-      // addplgevent('OscFact_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
-      // g_algMng.Events.AddEvent('OscFact_SpmSetProps',e_OnSetAlgProperties,doChangeAlgProps);
-      // g_algMng.Events.AddEvent('OscFact_OnLeaveCfg', E_OnChangeAlgCfg, doChangeCfg);
-    end;
+    initevents := true;
+    addplgevent('OscFact_doRcInit', E_RC_Init, doRCInit);
+    // addplgevent('OscFact_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
+    // g_algMng.Events.AddEvent('OscFact_SpmSetProps',e_OnSetAlgProperties,doChangeAlgProps);
+    // g_algMng.Events.AddEvent('OscFact_OnLeaveCfg', E_OnChangeAlgCfg, doChangeCfg);
   end;
 end;
 
@@ -997,6 +994,7 @@ begin
           s.line.color := ColorArray[j];
         end;
       end;
+      s.t.initTag;
     end;
   end;
 end;

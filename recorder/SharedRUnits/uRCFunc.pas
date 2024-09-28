@@ -1213,14 +1213,15 @@ end;
 
 procedure cTag.initTag;
 var
-bl:IBlockAccess;
+  bl:IBlockAccess;
 begin
-if ftag=nil then
-begin
-  ftag:=getTagByName(ftagname);
   if ftag=nil then
   begin
-    ftag:=getTagById(ftagid);
+    ftag:=getTagByName(ftagname);
+    if ftag=nil then
+    begin
+      ftag:=getTagById(ftagid);
+    end;
   end;
   if ftag<>nil then
   begin
@@ -1230,7 +1231,6 @@ begin
       bl := nil;
     end;
   end;
-end;
 end;
 
 procedure cTag.initTagData(blCount: integer);

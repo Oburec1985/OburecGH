@@ -2,53 +2,49 @@ object ObjFrm3dEdit: TObjFrm3dEdit
   Left = 0
   Top = 0
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' 3d '#1084#1085#1077#1084#1086#1089#1093#1077#1084#1099
-  ClientHeight = 702
-  ClientWidth = 1051
+  ClientHeight = 537
+  ClientWidth = 804
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -14
+  Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   OnClose = FormClose
   OnShow = FormShow
-  PixelsPerInch = 120
-  TextHeight = 17
+  PixelsPerInch = 96
+  TextHeight = 13
   object LowPanel: TPanel
     Left = 0
-    Top = 661
-    Width = 1051
-    Height = 41
+    Top = 505
+    Width = 804
+    Height = 32
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alBottom
     TabOrder = 0
     DesignSize = (
-      1051
-      41)
+      804
+      32)
     object CancelBtn: TButton
-      Left = 10
-      Top = 5
-      Width = 99
-      Height = 32
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 8
+      Top = 4
+      Width = 75
+      Height = 24
       Anchors = [akLeft, akBottom]
       Caption = #1054#1090#1084#1077#1085#1072
       ModalResult = 2
       TabOrder = 0
     end
     object OkBtn: TButton
-      Left = 944
-      Top = 7
-      Width = 100
-      Height = 31
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 722
+      Top = 5
+      Width = 76
+      Height = 24
       Anchors = [akRight, akBottom]
       Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
       ModalResult = 1
@@ -59,191 +55,334 @@ object ObjFrm3dEdit: TObjFrm3dEdit
   object AlClientPanel: TPanel
     Left = 0
     Top = 0
-    Width = 800
-    Height = 661
+    Width = 612
+    Height = 505
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alClient
     TabOrder = 1
     object TopPanel: TPanel
       Left = 1
       Top = 1
-      Width = 798
-      Height = 216
+      Width = 610
+      Height = 165
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alTop
       TabOrder = 0
       object Label1: TLabel
-        Left = 7
-        Top = 29
-        Width = 84
-        Height = 17
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 5
+        Top = 22
+        Width = 66
+        Height = 13
         Caption = #1055#1091#1090#1100' '#1082' '#1089#1094#1077#1085#1077
       end
       object Label2: TLabel
-        Left = 7
-        Top = 81
-        Width = 69
-        Height = 17
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 5
+        Top = 62
+        Width = 53
+        Height = 13
         Caption = #1048#1084#1103' '#1089#1094#1077#1085#1099
       end
       object ShowTrfrmToolsCB: TCheckBox
-        Left = 7
-        Top = 7
-        Width = 315
-        Height = 22
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 5
+        Top = 5
+        Width = 241
+        Height = 17
         Caption = #1055#1086#1082#1072#1079#1099#1074#1072#1090#1100' '#1080#1085#1089#1090#1088#1091#1084#1077#1085#1090#1099' '#1088#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1085#1080#1103
         TabOrder = 0
       end
       object SceneFolderEdit: TEdit
-        Left = 7
-        Top = 54
-        Width = 338
+        Left = 5
+        Top = 41
+        Width = 259
         Height = 25
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         TabOrder = 1
       end
       object SceneNameEdit: TEdit
-        Left = 7
-        Top = 105
-        Width = 338
+        Left = 5
+        Top = 80
+        Width = 259
         Height = 25
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         TabOrder = 2
       end
       object PathBtn: TButton
-        Left = 353
-        Top = 101
-        Width = 76
-        Height = 34
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 270
+        Top = 77
+        Width = 58
+        Height = 26
         Caption = #1042#1099#1073#1088#1072#1090#1100
         TabOrder = 3
         OnClick = PathBtnClick
       end
       object ObjPanel: TPanel
-        Left = 493
+        Left = 376
         Top = 1
-        Width = 304
-        Height = 214
+        Width = 233
+        Height = 163
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Align = alRight
         TabOrder = 4
+        ExplicitLeft = 377
         inline ObjEditFrame1: TObjEditFrame
           Left = 1
           Top = 1
-          Width = 302
-          Height = 212
+          Width = 231
+          Height = 161
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           Align = alClient
-          Constraints.MinWidth = 302
+          Constraints.MinWidth = 231
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 302
-          ExplicitHeight = 212
+          ExplicitWidth = 231
+          ExplicitHeight = 162
           inherited PosGB: TGroupBox
-            Width = 302
-            ExplicitWidth = 302
+            Width = 231
+            Height = 80
+            Margins.Left = 2
+            Margins.Top = 2
+            Margins.Right = 2
+            Margins.Bottom = 2
+            ExplicitWidth = 231
+            ExplicitHeight = 80
             inherited XposLab: TLabel
-              Height = 17
-              ExplicitHeight = 17
+              Left = 7
+              Top = 14
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 7
+              ExplicitTop = 14
             end
             inherited YposLab: TLabel
-              Width = 13
-              Height = 17
-              ExplicitWidth = 13
-              ExplicitHeight = 17
+              Left = 82
+              Top = 14
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 82
+              ExplicitTop = 14
             end
             inherited ZposLab: TLabel
-              Width = 13
-              Height = 17
-              ExplicitWidth = 13
-              ExplicitHeight = 17
+              Left = 158
+              Top = 14
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 158
+              ExplicitTop = 14
             end
             inherited XposSE: TFloatSpinEdit
+              Left = 7
+              Top = 28
+              Width = 66
               Height = 27
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 7
+              ExplicitTop = 28
+              ExplicitWidth = 66
               ExplicitHeight = 27
             end
             inherited YposSE: TFloatSpinEdit
+              Left = 82
+              Top = 28
+              Width = 66
               Height = 27
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 82
+              ExplicitTop = 28
+              ExplicitWidth = 66
               ExplicitHeight = 27
             end
             inherited ZposSE: TFloatSpinEdit
+              Left = 158
+              Top = 28
+              Width = 67
               Height = 27
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 158
+              ExplicitTop = 28
+              ExplicitWidth = 67
               ExplicitHeight = 27
             end
             inherited XTagCB: TRcComboBox
-              Height = 25
-              ExplicitHeight = 25
+              Left = 7
+              Top = 55
+              Width = 66
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 7
+              ExplicitTop = 55
+              ExplicitWidth = 66
             end
             inherited YTagCB: TRcComboBox
-              Height = 25
-              ExplicitHeight = 25
+              Left = 82
+              Top = 55
+              Width = 66
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 82
+              ExplicitTop = 55
+              ExplicitWidth = 66
             end
             inherited ZTagCB: TRcComboBox
-              Height = 25
-              ExplicitHeight = 25
+              Left = 158
+              Top = 55
+              Width = 67
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 158
+              ExplicitTop = 55
+              ExplicitWidth = 67
             end
           end
           inherited OrientationGB: TGroupBox
-            Width = 302
-            ExplicitWidth = 302
+            Top = 80
+            Width = 231
+            Height = 81
+            Margins.Left = 2
+            Margins.Top = 2
+            Margins.Right = 2
+            Margins.Bottom = 2
+            ExplicitTop = 80
+            ExplicitWidth = 231
+            ExplicitHeight = 81
             inherited XrotLab: TLabel
-              Height = 17
-              ExplicitHeight = 17
+              Left = 7
+              Top = 14
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 7
+              ExplicitTop = 14
             end
             inherited YrotLab: TLabel
-              Width = 13
-              Height = 17
-              ExplicitWidth = 13
-              ExplicitHeight = 17
+              Left = 82
+              Top = 14
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 82
+              ExplicitTop = 14
             end
             inherited ZrotLab: TLabel
-              Width = 13
-              Height = 17
-              ExplicitWidth = 13
-              ExplicitHeight = 17
+              Left = 158
+              Top = 14
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 158
+              ExplicitTop = 14
             end
             inherited XrotSE: TFloatSpinEdit
+              Left = 7
+              Top = 28
+              Width = 66
               Height = 27
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 7
+              ExplicitTop = 28
+              ExplicitWidth = 66
               ExplicitHeight = 27
             end
             inherited YrotSE: TFloatSpinEdit
+              Left = 82
+              Top = 28
+              Width = 66
               Height = 27
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 82
+              ExplicitTop = 28
+              ExplicitWidth = 66
               ExplicitHeight = 27
             end
             inherited ZrotSE: TFloatSpinEdit
+              Left = 158
+              Top = 28
+              Width = 67
               Height = 27
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 158
+              ExplicitTop = 28
+              ExplicitWidth = 67
               ExplicitHeight = 27
             end
             inherited XrotTagCB: TRcComboBox
-              Height = 25
-              ExplicitHeight = 25
+              Left = 7
+              Top = 55
+              Width = 66
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 7
+              ExplicitTop = 55
+              ExplicitWidth = 66
             end
             inherited YrotTagCB: TRcComboBox
-              Height = 25
-              ExplicitHeight = 25
+              Left = 82
+              Top = 55
+              Width = 66
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 82
+              ExplicitTop = 55
+              ExplicitWidth = 66
             end
             inherited ZrotTagCB: TRcComboBox
-              Height = 25
-              ExplicitHeight = 25
+              Left = 158
+              Top = 55
+              Width = 67
+              Margins.Left = 2
+              Margins.Top = 2
+              Margins.Right = 2
+              Margins.Bottom = 2
+              ExplicitLeft = 158
+              ExplicitTop = 55
+              ExplicitWidth = 67
             end
           end
         end
@@ -251,87 +390,146 @@ object ObjFrm3dEdit: TObjFrm3dEdit
     end
   end
   object RightPanel: TPanel
-    Left = 800
+    Left = 612
     Top = 0
-    Width = 251
-    Height = 661
+    Width = 192
+    Height = 505
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alRight
     TabOrder = 2
     inline TagsListFrame1: TTagsListFrame
       Left = 1
       Top = 1
-      Width = 249
-      Height = 659
+      Width = 190
+      Height = 503
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alClient
       TabOrder = 0
       ExplicitLeft = 1
       ExplicitTop = 1
-      ExplicitWidth = 249
-      ExplicitHeight = 659
+      ExplicitWidth = 190
+      ExplicitHeight = 504
       inherited FormChannelsGB: TGroupBox
-        Width = 249
-        Height = 659
-        ExplicitWidth = 249
-        ExplicitHeight = 659
+        Width = 190
+        Height = 503
+        Margins.Left = 3
+        Margins.Top = 3
+        Margins.Right = 3
+        Margins.Bottom = 3
+        ExplicitWidth = 190
+        ExplicitHeight = 503
         inherited ChanNamesPanel: TPanel
-          Top = 19
-          Width = 245
-          Height = 109
-          ExplicitTop = 19
-          ExplicitWidth = 245
-          ExplicitHeight = 109
+          Width = 186
+          Height = 83
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          ExplicitWidth = 186
+          ExplicitHeight = 83
           inherited FrmTagPropLabel: TLabel
-            Width = 62
-            Height = 17
-            ExplicitWidth = 62
-            ExplicitHeight = 17
+            Left = 4
+            Top = 44
+            Margins.Left = 3
+            Margins.Top = 3
+            Margins.Right = 3
+            Margins.Bottom = 3
+            ExplicitLeft = 4
+            ExplicitTop = 44
           end
           inherited FrmTagPropValue: TLabel
-            Left = 122
-            Width = 60
-            Height = 17
-            ExplicitLeft = 122
-            ExplicitWidth = 60
-            ExplicitHeight = 17
+            Left = 93
+            Top = 46
+            Margins.Left = 3
+            Margins.Top = 3
+            Margins.Right = 3
+            Margins.Bottom = 3
+            ExplicitLeft = 93
+            ExplicitTop = 46
           end
           inherited FilterEdit: TEdit
-            Width = 234
+            Left = 4
+            Top = 6
+            Width = 179
             Height = 25
-            ExplicitWidth = 234
+            Margins.Left = 3
+            Margins.Top = 3
+            Margins.Right = 3
+            Margins.Bottom = 3
+            ExplicitLeft = 4
+            ExplicitTop = 6
+            ExplicitWidth = 179
             ExplicitHeight = 25
           end
           inherited FrmTagPropValueEdit: TEdit
-            Left = 122
-            Width = 117
+            Left = 93
+            Top = 63
+            Width = 90
             Height = 25
-            ExplicitLeft = 122
-            ExplicitWidth = 117
+            Margins.Left = 3
+            Margins.Top = 3
+            Margins.Right = 3
+            Margins.Bottom = 3
+            ExplicitLeft = 93
+            ExplicitTop = 63
+            ExplicitWidth = 90
             ExplicitHeight = 25
           end
           inherited FrmTagPropNameCB: TComboBox
-            Width = 107
-            Height = 25
-            ExplicitWidth = 107
-            ExplicitHeight = 25
+            Left = 4
+            Top = 63
+            Width = 82
+            Margins.Left = 3
+            Margins.Top = 3
+            Margins.Right = 3
+            Margins.Bottom = 3
+            ExplicitLeft = 4
+            ExplicitTop = 63
+            ExplicitWidth = 82
           end
         end
         inherited TagsLV: TBtnListView
-          Top = 128
-          Width = 245
-          Height = 529
-          ExplicitTop = 128
-          ExplicitWidth = 245
-          ExplicitHeight = 529
+          Top = 98
+          Width = 186
+          Height = 403
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          Columns = <
+            item
+              Caption = #1048#1084#1103
+            end
+            item
+              Caption = #1058#1080#1087
+            end
+            item
+              Caption = 'Fs'
+              Width = 38
+            end>
+          ExplicitTop = 98
+          ExplicitWidth = 187
+          ExplicitHeight = 404
         end
       end
     end
   end
   object Button1: TButton
-    Left = 448
-    Top = 180
-    Width = 40
-    Height = 25
+    Left = 343
+    Top = 138
+    Width = 30
+    Height = 19
     Hint = #1058#1077#1089#1090#1086#1074#1099#1077' '#1076#1072#1085#1085#1099#1077' '#1080#1079' ESP '#1075#1080#1088#1086#1089#1082#1086#1087#1072
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Caption = 'Add'
     ParentShowHint = False
     ShowHint = True

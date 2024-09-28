@@ -23,7 +23,10 @@ type
   public
     m_debug:integer;
     m_name:string;
-    m_type:integer;
+    // пила/ синус и т.д.
+    m_type,
+    // число сгенерированных блоков
+    m_ReadyBlock:integer;
     // логарифмическая развертка по времени
     m_lg:boolean;
     // частота процесса
@@ -173,6 +176,7 @@ type
   cGenSignalsFactory = class(cRecBasicFactory)
   public
     Timer1: TTimer;
+    // время в часах Timer1
     time:double;
   private
     m_init:boolean;
@@ -528,6 +532,8 @@ begin
     s.m_dt2:=s.m_dt*s.m_dt/2;
     s.m_curFreq:=s.m_dphase/c_2pi;
     s.m_TimeLen:=0;
+    s.m_ReadyBlock:=0;
+    s.m_t.m_blLen:=s.m_t.BlockSize/s.m_t.freq;
   end;
 end;
 
@@ -753,7 +759,7 @@ var
   s:cGenSig;
   j, k,blsize: Integer;
   p:pointer;
-  dtstart, dt, curT, TimeLength:double;
+  dtstart, dt, curT, TimeLength, blen:double;
 begin
   curT:=g_GenSignalsFactory.time;
   dtstart:=curT-m_prevTime;
@@ -779,7 +785,9 @@ begin
       end;
       dt:=dt-TimeLength;
       p:=@s.m_t.m_TagData[0];
-      s.m_t.tag.PushDataEx(p, BlSize, -1, -1);
+      blen:= s.m_ReadyBlock*s.m_t.m_blLen;
+      s.m_t.tag.PushDataEx(p, BlSize, blen, blen);
+      inc(s.m_ReadyBlock);
       //s.m_t.tag.PushData(p^, BlSize);
       if (k=1) and (i=0) then
       begin
