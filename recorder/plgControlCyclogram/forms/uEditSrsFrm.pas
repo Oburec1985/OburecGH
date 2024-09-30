@@ -311,6 +311,8 @@ var
   c:cSpmCfg;
 begin
   setComboBoxItem(t.name,TahoNameCB);
+  if t.m_tag.tag=nil then
+    t.m_tag.tag:=getTagByName(t.m_tag.tagname);
   ThresholdFE.FloatNum:=t.m_treshold;
   LeftShiftEdit.FloatNum:=t.m_ShiftLeft;
   LengthFE.FloatNum:=t.m_Length;
@@ -318,8 +320,10 @@ begin
   ResTypeRG.ItemIndex:=C.typeRes;
   FFTBlockSizeIE.IntNum:=c.m_fftCount;
   //FFTShiftIE.IntNum:=c.m_fftCount;
-  FFTdxFE.FloatNum:=csrstaho(c.taho).m_tag.freq/c.m_fftCount;
-  BlockSizeFE.FloatNum:=FFTBlockSizeIE.IntNum/csrstaho(c.taho).m_tag.freq;
+  if c.m_fftCount<>0 then
+    FFTdxFE.FloatNum:=csrstaho(c.taho).m_tag.freq/c.m_fftCount;
+  if csrstaho(c.taho).m_tag.freq<>0 then
+    BlockSizeFE.FloatNum:=FFTBlockSizeIE.IntNum/csrstaho(c.taho).m_tag.freq;
   ShCountIE.IntNum:=1;
   NullCB.Checked:=false;
   ShCountIE.IntNum:=c.m_capacity;
