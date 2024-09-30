@@ -74,6 +74,7 @@ type
     procedure SetParams(x0, x1, y1: double);
     function getScale(x: double): double;
     constructor create; override;
+    destructor destroy; override;
   end;
 
   // структура для хранения удара
@@ -334,6 +335,8 @@ type
     procedure SPMcbClick(Sender: TObject);
   public
     ready: boolean;
+    // axRef - воздействие; ax - отклик
+    axRef, ax:caxis;
     // h0, h1, h2
     m_estimator: integer;
     pageT, pageSpm: cpage;
@@ -342,7 +345,7 @@ type
     // список настроек Тахо
     m_TahoList: tlist;
     // spm
-    m_lgX, m_lgY: boolean;
+    m_lgX, m_lgY, m_newAx: boolean;
     m_minX, m_maxX: double;
     m_minY, m_maxY: double;
     m_saveT0: boolean;
@@ -362,6 +365,7 @@ type
     procedure doUpdateParams(sender: tobject);
     // расчет числа боков для усреднения
     procedure EvalWelchBCount;
+    procedure setNewAx(b:boolean);
   public
     function hideind: integer;
     procedure delCurrentShock;
@@ -382,6 +386,7 @@ type
     procedure updateFrf (rebuildspm:boolean);
     procedure updateWelchFrf;
   public
+    property NewAxis:boolean read m_newAx write SetNewAx;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
     constructor create(Aowner: tcomponent); override;
@@ -520,7 +525,10 @@ begin
   else
     sd:=s.m_shockList.getLastBlock;
   s.lineAvFRF.AddPoints(s.m_frf, c.fHalfFft);
-  s.lineFrf.AddPoints(sd.m_frf, c.fHalfFft);
+  if sd<>nil then
+  begin
+    s.lineFrf.AddPoints(sd.m_frf, c.fHalfFft);
+  end;
   fUpdateFrf:=false;
 end;
 
@@ -784,19 +792,20 @@ var
   s: cSRSres;
   i: integer;
   fr: frect;
+  a:caxis;
   bfrf: boolean;
 begin
-  pageT.activeAxis.clear;
+  for I := 0 to pageT.axises.ChildCount - 1 do
+  begin
+    a:=pageT.getaxis(i);
+    a.clear;
+  end;
   pageSpm.activeAxis.clear;
   t := getTaho;
   c := t.getCfg;
 
   UseWndFcb.Checked := t.m_shockList.m_wnd.wndfunc <> wnd_no;
-  if m_expWndline <> nil then
-  begin
-    m_expWndline.fUpdateParams := doUpdateParams;
-    m_expWndline.visible := m_corrS;
-  end;
+
   if t <> nil then
   begin
     if t.m_corrTaho then
@@ -817,7 +826,10 @@ begin
     end;
 
     l := cBuffTrend1d.create;
-    pageT.activeAxis.AddChild(l);
+    if m_newAx then
+      axRef.AddChild(l)
+    else
+      pageT.getaxis(0).AddChild(l);
     l.color := ColorArray[0];
     t.line := l;
     t.line.name := t.name;
@@ -825,12 +837,13 @@ begin
 
     l := cBuffTrend1d.create;
     l.color := ColorArray[0];
-    pageSpm.activeAxis.AddChild(l);
     t.lineSpm := l;
     t.lineSpm.dx := c.fspmdx;
     t.lineSpm.name := t.name + '_spm';
     bfrf := c.typeres = c_FRF;
+    pageSpm.activeAxis.AddChild(l);
     l.visible := not bfrf;
+
 
     m_expWndline := cExpFuncObj.create;
     m_expWndline.name := 'ExpWndLine';
@@ -838,7 +851,6 @@ begin
     m_expWndline.enabled := UseWndFcb.Checked;
     m_expWndline.selectable := UseWndFcb.Checked;
     m_expWndline.fUpdateParams := doUpdateParams;
-
     pageT.activeAxis.AddChild(m_expWndline);
 
     c := t.cfg;
@@ -1291,6 +1303,7 @@ begin
   m_maxY := strtoFloatExt(a_pIni.ReadString(str, 'Spm_maxY', '10'));
   m_lgX := a_pIni.ReadBool(str, 'Spm_Lg_x', false);
   m_lgY := a_pIni.ReadBool(str, 'Spm_Lg_y', false);
+  NewAxis:= a_pIni.ReadBool(str, 'TahoNewAxis', false);
   m_saveT0 := a_pIni.ReadBool(str, 'SaveT0', false);
   m_estimator := a_pIni.ReadInteger(str, 'Estimator', 1);
 
@@ -1506,6 +1519,7 @@ begin
     a_pIni.WriteBool(str, 'Spm_Lg_x', m_lgX);
     a_pIni.WriteBool(str, 'Spm_Lg_y', m_lgY);
     a_pIni.WriteBool(str, 'SaveT0', m_saveT0);
+    a_pIni.WriteBool(str, 'TahoNewAxis', m_newAx);
     a_pIni.WriteInteger(str, 'Estimator', m_estimator);
     c := t.cfg;
     if c <> nil then
@@ -1526,6 +1540,28 @@ begin
     a_pIni.WriteInteger(str, 'WelchShift', m_WelchShift);
     a_pIni.WriteBool(str, 'useWelch', m_UseWelch);
   end;
+end;
+
+procedure TSRSFrm.setNewAx(b: boolean);
+var
+  t: cSRSTaho;
+  I: Integer;
+  a:caxis;
+begin
+  if b then
+  begin
+    if not m_newAx then
+    begin
+      axRef:=caxis.create;
+      axRef.name:='RefAxis';
+      pageT.addaxis(axref);
+      t := getTaho;
+      a:=caxis(t.line.parent);
+      axRef.AddChild(t.line);
+      //showmessage(inttostr(a.childcount));
+    end;
+  end;
+  m_newAx:=b;
 end;
 
 procedure TSRSFrm.ShowShock(shock: integer);
@@ -1625,13 +1661,25 @@ end;
 procedure TSRSFrm.SpmChartDblClick(sender: tobject);
 var
   r: frect;
+  I: Integer;
+  a:caxis;
 begin
   r.BottomLeft.x := m_minX;
   r.BottomLeft.y := m_minY;
   r.TopRight.x := m_maxX;
   r.TopRight.y := m_maxY;
-  pageSpm.activeAxis := axSpm;
-  pageSpm.ZoomfRect(r);
+  for I := 0 to pageSpm.axises.ChildCount - 1 do
+  begin
+    a:=pageSpm.getaxis(i);
+    a.ZoomfRect(r);
+  end;
+
+
+  for I := 0 to pageT.axises.ChildCount - 1 do
+  begin
+    a:=pageT.getaxis(i);
+    pageT.Normalise(a);
+  end;
 end;
 
 procedure TSRSFrm.ShockSBDownClick(sender: tobject);
@@ -2913,6 +2961,11 @@ begin
   locked := false;
 end;
 
+destructor cExpFuncObj.destroy;
+begin
+  inherited;
+end;
+
 procedure cExpFuncObj.doOnUpdateParams;
 begin
   if assigned(fUpdateParams) then
@@ -2927,13 +2980,16 @@ begin
   inherited;
   p := cpage(GetPage);
   a := cAxis(parent);
-  faxmin := a.minY;
-  fdy := a.maxY - a.minY;
-  fdy005 := 0.05 * fdy;
-  fy0 := a.maxY;
-  fy1 := fdy * m_y1 + faxmin;
+  if a=sender then
+  begin
+    faxmin := a.minY;
+    fdy := a.maxY - a.minY;
+    fdy005 := 0.05 * fdy;
+    fy0 := a.maxY;
+    fy1 := fdy * m_y1 + faxmin;
 
-  m_needRecompile := true;
+    m_needRecompile := true;
+  end;
 end;
 
 procedure cExpFuncObj.drawdata;

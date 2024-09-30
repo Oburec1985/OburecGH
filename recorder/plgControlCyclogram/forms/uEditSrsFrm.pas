@@ -66,6 +66,7 @@ type
     WelchBCountIE: TIntEdit;
     WelchCountLabel: TLabel;
     UseWelchCb: TCheckBox;
+    NewAxCb: TCheckBox;
     procedure SignalsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
@@ -276,6 +277,8 @@ begin
   MaxYfe.FloatNum:=m_SRS.m_maxY;
   LgXcb.Checked:=m_SRS.m_lgX;
   LgYcb.Checked:=m_SRS.m_lgY;
+  NewAxCb.Checked:=m_SRS.m_newAx;
+
   EstimatorRG.ItemIndex:=m_SRS.m_estimator;
   SaveT0CB.Checked:=m_srs.m_saveT0;
   t:=m_SRS.getTaho;
@@ -438,6 +441,7 @@ begin
   m_SRS.m_WelchCount:=WelchBCountIE.IntNum;
   m_SRS.m_WelchShift:=FFTShiftIE.IntNum;
   m_SRS.m_WelchCount:=WelchBCountIE.IntNum;
+  m_SRS.NewAxis:=NewAxCb.Checked;
 
   c.m_capacity:=ShCountIE.IntNum;
   t.m_CohTreshold:=CohThresholdFE.FloatNum;

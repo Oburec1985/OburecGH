@@ -37,7 +37,6 @@ object EditSrsFrm: TEditSrsFrm
     OnChange = SignalsTVChange
     OnDragOver = SignalsTVDragOver
     OnDragDrop = SignalsTVDragDrop
-    ExplicitHeight = 578
     Columns = <>
   end
   inline TagsListFrame1: TTagsListFrame
@@ -53,7 +52,7 @@ object EditSrsFrm: TEditSrsFrm
     TabOrder = 1
     ExplicitLeft = 826
     ExplicitWidth = 265
-    ExplicitHeight = 578
+    ExplicitHeight = 613
     inherited FormChannelsGB: TGroupBox
       Width = 265
       Height = 613
@@ -62,7 +61,7 @@ object EditSrsFrm: TEditSrsFrm
       Margins.Right = 5
       Margins.Bottom = 5
       ExplicitWidth = 265
-      ExplicitHeight = 578
+      ExplicitHeight = 613
       inherited ChanNamesPanel: TPanel
         Top = 19
         Width = 261
@@ -168,7 +167,7 @@ object EditSrsFrm: TEditSrsFrm
           end>
         ExplicitTop = 159
         ExplicitWidth = 261
-        ExplicitHeight = 417
+        ExplicitHeight = 452
       end
     end
   end
@@ -183,7 +182,6 @@ object EditSrsFrm: TEditSrsFrm
     Margins.Bottom = 4
     Align = alClient
     TabOrder = 2
-    ExplicitHeight = 578
     object Splitter1: TSplitter
       Left = 1
       Top = 156
@@ -531,9 +529,8 @@ object EditSrsFrm: TEditSrsFrm
       Margins.Right = 4
       Margins.Bottom = 4
       Align = alClient
-      Caption = 'ChartGB'
+      Caption = #1054#1090#1086#1073#1088#1072#1078#1077#1085#1080#1077
       TabOrder = 2
-      ExplicitHeight = 168
       object UpdateBtn: TSpeedButton
         Left = 545
         Top = 72
@@ -753,7 +750,7 @@ object EditSrsFrm: TEditSrsFrm
       object SaveT0CB: TCheckBox
         Left = 177
         Top = 162
-        Width = 234
+        Width = 196
         Height = 25
         Margins.Left = 4
         Margins.Top = 4
@@ -761,6 +758,18 @@ object EditSrsFrm: TEditSrsFrm
         Margins.Bottom = 4
         Caption = #1057#1086#1093#1088#1072#1085#1103#1090#1100' T0 '#1076#1083#1103' '#1091#1076#1072#1088#1086#1074
         TabOrder = 7
+      end
+      object NewAxCb: TCheckBox
+        Left = 174
+        Top = 27
+        Width = 251
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Caption = #1042#1086#1079#1076#1077#1081#1089#1090#1074#1080#1077' '#1074' '#1086#1090#1076#1077#1083#1100#1085#1091#1102' '#1086#1089#1100
+        TabOrder = 8
       end
     end
     object WelchGB: TGroupBox

@@ -292,8 +292,6 @@
     <File Path="forms\uEditProfileFrm.dfm"/>
     <File Path="forms\uEditPropertiesFrm.pas"/>
     <File Path="forms\uEditPropertiesFrm.dfm"/>
-    <File Path="forms\uEditSrsFrm.pas"/>
-    <File Path="forms\uEditSrsFrm.dfm"/>
     <File Path="forms\uFillFctFrame.pas"/>
     <File Path="forms\uFillFctFrame.dfm"/>
     <File Path="forms\uGenSignalsEditFrm.pas"/>
@@ -348,6 +346,8 @@
     <File Path="forms\uSpmFrame.dfm"/>
     <File Path="forms\uSRSFrm.pas"/>
     <File Path="forms\uSRSFrm.dfm"/>
+    <File Path="forms\uEditSrsFrm.pas"/>
+    <File Path="forms\uEditSrsFrm.dfm"/>
     <File Path="forms\uSyncOscillogram.pas"/>
     <File Path="forms\uSyncOscillogram.dfm"/>
     <File Path="forms\uSyncOscillogramEditFrm.pas"/>

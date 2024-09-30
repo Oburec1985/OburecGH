@@ -803,10 +803,6 @@ begin
       ax.ZoomfRect(zoomrect);
     end;
   end;
-
-  // cchart(chart).redraw;
-  if events <> nil then
-    events.CallAllEvents(e_onZoom);
 end;
 
 // --------------------- Призумить прямоугольник ----------------------

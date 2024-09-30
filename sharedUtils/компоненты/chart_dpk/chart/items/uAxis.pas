@@ -776,7 +776,7 @@ begin
 
   // заменена стандартная функция т.к. в случае изменения зума
   // из другого потока glOrtho не работает
-  mathfunction.CreateOrthoMatrix(min.x, max.x, min.y, max.y, -1, 1, stateM);
+  mathfunction.CreateOrthoMatrix(page.MinX, page.MaxX, min.y, max.y, -1, 1, stateM);
   for i := 0 to 15 - 1 do
   begin
     projection[i] := stateM[i];
@@ -792,7 +792,8 @@ begin
     if events <> nil then
       events.CallAllEventsWithSender(e_OnChangeAxisScale, self);
   end;
-  callLgEvent;
+  // закомент 30.09.24
+  //callLgEvent;
 end;
 
 function cAxis.XToXi(x: single): integer;
@@ -1026,6 +1027,7 @@ begin
   begin
     // p.gridlinecount_Y:=p.prevgridcountY;
   end;
+  // закомент от 30.09.24 - некорректно рисовались оси
   for i := 0 to ChildCount - 1 do
   begin
     obj := cdrawobj(GetChild(i));

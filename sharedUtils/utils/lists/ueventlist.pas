@@ -223,7 +223,6 @@ var i:integer;
     call:boolean;
 begin
   if not active then exit;
-  if not active then exit;
   if fsorttype=st_TypeSort then
   begin
     e:=cEvent.Create;

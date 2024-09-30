@@ -367,8 +367,12 @@ end;
 procedure cBasicTrend.drawdata;
 var
   w:double;
+  m:matrixgl;
+  v:array [0 .. 3] of glint;
 begin
   inherited;
+  glgetfloatv(GL_PROJECTION_MATRIX, @m);
+  glGetIntegerv(GL_VIEWPORT, @v); // узнаём параметры viewport-a.
   if NeedRecompile then
     compile;
   // GL_LINE_WIDTH_RANGE GL_LINE_WIDTH_GRANULARITY
