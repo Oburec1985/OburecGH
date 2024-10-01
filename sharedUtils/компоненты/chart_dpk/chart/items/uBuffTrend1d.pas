@@ -170,8 +170,11 @@ var
   a: caxis;
   p: cpage;
 begin
-  if DisplayListName <> -1 then
+  if DisplayListName <> 0 then
+  begin
     glDeleteLists(DisplayListName, 1);
+    DisplayListName:=0;
+  end;
   EvalBound;
 
   if drawLines then
@@ -213,6 +216,36 @@ begin
   end;
   needRecompile := false;
 end;
+
+ {
+procedure cBuffTrend1d.drawLine;
+var
+  i: integer;
+  a: caxis;
+  p: cpage;
+begin
+  if drawLines then
+  begin
+    a := caxis(parent);
+    p := cpage(getpage);
+    glLineWidth(weight);
+    glBegin(GL_LINE_STRIP);
+    case datatype of
+      c_single:
+        for i := 0 to Count - 1 do
+        begin
+          glVertex2f(i * dx + fx0, data_s[i]);
+        end;
+      c_real:
+        for i := 0 to Count - 1 do
+        begin
+          glVertex2f(i * dx + fx0, data_r[i]);
+        end;
+    end;
+    glEnd;
+  end;
+end;}
+
 
 procedure cBuffTrend1d.drawLine;
 begin

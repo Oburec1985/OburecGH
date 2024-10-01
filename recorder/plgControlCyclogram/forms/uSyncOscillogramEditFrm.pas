@@ -377,6 +377,14 @@ begin
       begin
         n:=pTarget;
         a:=caxis(dstdata.data);
+      end
+      else
+      begin
+        if tobject(dstdata.data) is TOscSignal then
+        begin
+          n:=pTarget.Parent;
+          a:=TOscSignal(dstdata.data).ax;
+        end;
       end;
     end;
   end;

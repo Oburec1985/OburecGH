@@ -219,7 +219,7 @@ type
     line, lineSpm, lineCoh, lineFrf,
     // усредненная Frf
     lineAvFRF: cBuffTrend1d;
-    // список ударов (TDataBlock)
+    // список ударов (TDataBlock) (хранит спектры)
     m_shockList: TDataBlockList;
     // обработан последний удар
     m_shockProcessed: boolean;
@@ -755,6 +755,9 @@ var
 begin
   refresh := GetREFRESHPERIOD;
   lt := getTaho;
+  if lt.m_tag.freq<>0 then
+    lt.line.dx:=1/lt.m_tag.freq;
+
   c := lt.cfg;
   c.fHalfFft := c.m_fftCount shr 1;
   // размер блока для расчета в секундах
@@ -772,6 +775,8 @@ begin
   for i := 0 to c.SRSCount - 1 do
   begin
     s := c.GetSrs(i);
+    if s.m_tag.freq<>0 then
+      s.line.dx:=1/s.m_tag.freq;
     GetMemAlignedArray_d(c.fportionsizei, s.m_T1data);
     // tCmxArray_d(cSRSres(s).m_T1ClxData.p)
     GetMemAlignedArray_cmpx_d(c.m_fftCount, s.m_T1ClxData);
@@ -846,7 +851,10 @@ begin
     l.color := ColorArray[0];
     t.line := l;
     t.line.name := t.name;
-    l.dx := 1 / t.m_tag.Freq;
+    if t.m_tag.Freq=0 then
+      l.dx := 1 / t.m_tag.Freq
+    else
+      l.dx := 0;
 
     l := cBuffTrend1d.create;
     l.color := ColorArray[0];
@@ -882,8 +890,10 @@ begin
       l.color := ColorArray[i + 1];
       s.line := l;
       s.line.name := s.name;
-      l.dx := 1 / t.m_tag.Freq;
-
+      if t.m_tag.Freq=0 then
+        l.dx := 1 / t.m_tag.Freq
+      else
+        l.dx := 0;
       l := cBuffTrend1d.create;
       l.color := ColorArray[i + 1];
       axSpm.AddChild(l);
@@ -1056,6 +1066,7 @@ begin
     if t.fTrigState = TrEnd then
     begin
       b := true;
+      // проверяем все ли блоки данных от датчиков засчитаны в удар
       for i := 0 to c.SRSCount - 1 do
       begin
         s := c.GetSrs(i);
@@ -1594,6 +1605,8 @@ begin
   if t = nil then
     exit;
   c := t.cfg;
+  tahobl := t.m_shockList.getBlock(shock);
+  t.line.AddPoints(TDoubleArray(tahobl.m_TimeBlockFlt.p), tahobl.m_TimeArrSize);
   for i := 0 to c.m_SRSList.Count - 1 do
   begin
     s := c.GetSrs(i);
@@ -1602,16 +1615,12 @@ begin
     if (shock < s.m_shockList.Count) and (shock > -1) then
     begin
       block := s.m_shockList.getBlock(shock);
-      tahobl := t.m_shockList.getBlock(shock);
-
       s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p), block.m_TimeArrSize);
-
-      t.line.AddPoints(TDoubleArray(tahobl.m_TimeBlockFlt.p), tahobl.m_TimeArrSize);
-      SpmChartDblClick(nil);
-      fUpdateFrf := true;
-      UpdateView;
     end;
   end;
+  SpmChartDblClick(nil);
+  fUpdateFrf := true;
+  UpdateView;
 end;
 
 procedure TSRSFrm.ShowSpm;
@@ -2457,12 +2466,16 @@ begin
     Frm := GetFrm(i);
     t := TSRSFrm(Frm).getTaho;
     if t.m_tag.tag = nil then
+    begin
       t.m_tag.tag := getTagByName(t.m_tag.tagname);
+    end;
     for j := 0 to t.cfg.SRSCount - 1 do
     begin
       s := t.cfg.GetSrs(j);
       if s.m_tag.tag = nil then
-        t.m_tag.tag := getTagByName(t.m_tag.tagname);
+      begin
+        s.m_tag.tag := getTagByName(s.m_tag.tagname);
+      end;
     end;
     TSRSFrm(Frm).UpdateBlocks;
   end;

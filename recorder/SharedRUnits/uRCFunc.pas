@@ -1648,7 +1648,6 @@ var
   endTime:double; // время lastindex
 begin
   result := false;
-  //block.LockVector;
   blCount := block.GetBlocksCount;
   m_looseData:= false;
   if blCount > 0 then
