@@ -1642,18 +1642,14 @@ function cTag.UpdateTagData(tare: boolean; var AutoResetData: integer)
 var
   // но из за лагов может превысить размер буфера и тогда равно кол-ву блоков выходного буфера
   blCount, // кол-о блоков в кольцевом буфере
-  blSize, // размер блока
   readyBlockCount, // кол-о готовых к считыванию блоков
   blInd, writeBlockSize: integer;
   b: boolean;
   endTime:double; // время lastindex
 begin
   result := false;
-  //if tag = nil then
-  //  exit;
   //block.LockVector;
   blCount := block.GetBlocksCount;
-  blSize := block.GetBlocksSize;
   m_looseData:= false;
   if blCount > 0 then
   begin

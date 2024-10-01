@@ -185,6 +185,7 @@ type
     procedure setWnd(wf: TSpmWndFunc; x1, x2, y: double); overload;
     procedure setWnd(wf: TSpmWndFunc); overload;
     procedure addSRS(s: pointer);
+    procedure delSRS(s: tobject);
     function GetSrs(i: integer): cSRSres;
     function SRSCount: integer;
     // частота дискретизации сигнала
@@ -194,6 +195,8 @@ type
     constructor create;
     destructor destroy;
   end;
+
+  cSRSTaho = class;
 
   cSRSres = class
   public
@@ -231,6 +234,7 @@ type
   public
     property cfg: cSpmCfg read fcfg write setcfg;
     function name: string;
+    function getTaho:cSRSTaho;
     constructor create;
     destructor destroy;
   end;
@@ -337,7 +341,7 @@ type
   public
     ready: boolean;
     // axRef - воздействие; ax - отклик
-    axRef, ax: caxis;
+    axRef, TimeAx: caxis;
     // h0, h1, h2
     m_estimator: integer;
     pageT, pageSpm: cpage;
@@ -722,6 +726,7 @@ begin
   p.ZoomfRect(r);
   p.Caption := 'Oscillogram';
   pageT := p;
+  TimeAx:=pageT.getaxis(0);
 
   p := SpmChart.tabs.activeTab.GetPage(1);
   r.BottomLeft.x := 0;
@@ -803,7 +808,7 @@ begin
     a := pageT.getaxis(i);
     a.clear;
   end;
-  pageSpm.activeAxis.clear;
+  axSpm.clear;
   t := getTaho;
   c := t.getCfg;
 
@@ -830,9 +835,14 @@ begin
 
     l := cBuffTrend1d.create;
     if m_newAx then
+    begin
       axRef.AddChild(l)
+    end
     else
+    begin
+      axRef:=TimeAx;
       pageT.getaxis(0).AddChild(l);
+    end;
     l.color := ColorArray[0];
     t.line := l;
     t.line.name := t.name;
@@ -844,7 +854,7 @@ begin
     t.lineSpm.dx := c.fspmdx;
     t.lineSpm.name := t.name + '_spm';
     bfrf := c.typeres = c_FRF;
-    pageSpm.activeAxis.AddChild(l);
+    axSpm.AddChild(l);
     l.visible := not bfrf;
 
     m_expWndline := cExpFuncObj.create;
@@ -853,7 +863,7 @@ begin
     m_expWndline.enabled := UseWndFcb.Checked;
     m_expWndline.selectable := UseWndFcb.Checked;
     m_expWndline.fUpdateParams := doUpdateParams;
-    pageT.activeAxis.AddChild(m_expWndline);
+    TimeAx.AddChild(m_expWndline);
 
     c := t.cfg;
     if m_corrS then
@@ -868,7 +878,7 @@ begin
     begin
       s := c.GetSrs(i);
       l := cBuffTrend1d.create;
-      pageT.activeAxis.AddChild(l);
+      TimeAx.AddChild(l);
       l.color := ColorArray[i + 1];
       s.line := l;
       s.line.name := s.name;
@@ -876,7 +886,7 @@ begin
 
       l := cBuffTrend1d.create;
       l.color := ColorArray[i + 1];
-      pageSpm.activeAxis.AddChild(l);
+      axSpm.AddChild(l);
       s.lineSpm := l;
       s.lineSpm.dx := c.fspmdx;
       s.lineSpm.name := s.name + '_spm';
@@ -885,7 +895,7 @@ begin
       l := cBuffTrend1d.create;
       l.color := ColorArray[i + 1];
       l.dx := c.fspmdx;
-      pageSpm.activeAxis.AddChild(l);
+      axSpm.AddChild(l);
       s.lineFrf := l;
       s.lineFrf.name := s.name + '_frf';
       l.visible := bfrf;
@@ -893,7 +903,7 @@ begin
       l := cBuffTrend1d.create;
       l.color := ColorArray[i + 2];
       l.dx := c.fspmdx;
-      pageSpm.activeAxis.AddChild(l);
+      axSpm.AddChild(l);
 
       s.lineAvFRF := l;
       s.lineAvFRF.name := s.name + '_AvFrf';
@@ -918,7 +928,7 @@ begin
     fr.BottomLeft := p2(m_minX, m_minY);
     fr.TopRight := p2(m_maxX, m_maxY);
     pageSpm.LgX := m_lgX;
-    pageSpm.activeAxis.Lg := m_lgY;
+    axSpm.Lg := m_lgY;
     pageSpm.ZoomfRect(fr);
   end;
   UpdateBlocks;
@@ -990,7 +1000,14 @@ begin
         else
         begin
           if t.fTrigState = TrRise then
+          begin
             t.fTrigState := TrFall;
+            // считаем границы порции
+            t.TrigInterval.x := t.m_tag.getReadTime(t.f_imax) - t.m_ShiftLeft;
+            t.TrigInterval.y := t.TrigInterval.x + t.m_Length;
+            t.f_iEnd := t.m_tag.getIndex(t.TrigInterval.y);
+            break;
+          end;
         end;
       end;
       // сдвигаем индекс проанализированных данных т.к. отбрасываемые данные ограничены iEnd
@@ -1002,9 +1019,6 @@ begin
     if t.fTrigState = TrFall then
     begin
       inc(t.fShockInd);
-      t.TrigInterval.x := t.m_tag.getReadTime(t.f_imax) - t.m_ShiftLeft;
-      t.TrigInterval.y := t.TrigInterval.x + t.m_Length;
-      t.f_iEnd := t.m_tag.getIndex(t.TrigInterval.y);
       // если данных накопилось на целиковый удар
       if t.f_iEnd <= t.m_tag.lastindex then
       begin
@@ -1027,12 +1041,11 @@ begin
 
           // AddBlock делать без перевыделения памяти!!!
 
-          m_lastTahoBlock := t.m_shockList.addBlock(c.m_fftCount,
-            p2d(t.TrigInterval.x, t.TrigInterval.x + pcount / t.m_tag.Freq),
-            TDoubleArray(t.m_T1data.p), pcount);
+          m_lastTahoBlock := t.m_shockList.addBlock(c.m_fftCount, p2d(t.TrigInterval.x, t.TrigInterval.x + pcount / t.m_tag.Freq), TDoubleArray(t.m_T1data.p), pcount);
+          // накладываем окно
           m_lastTahoBlock.prepareData;
-          t.line.AddPoints(TDoubleArray(m_lastTahoBlock.m_TimeBlockFlt.p),
-            pcount);
+          // рисуем с учетом окна
+          t.line.AddPoints(TDoubleArray(m_lastTahoBlock.m_TimeBlockFlt.p), pcount);
           t.line.flength := pcount;
           m_lastTahoBlock.BuildSpm;
           // t.lineSpm.AddPoints(TDoubleArray(m_lastTahoBlock.m_mod.p),
@@ -1169,7 +1182,11 @@ begin
   begin
     if t <> nil then
     begin
-      ShockCountE.Text := inttostr(t.m_shockList.Count);
+      s := c.GetSrs(0);
+      if s<>nil then
+        ShockCountE.Text := inttostr(s.m_shockList.Count)
+      else
+        ShockCountE.Text := '0';
     end;
   end;
   if not SPMcb.Checked then
@@ -1587,13 +1604,9 @@ begin
       block := s.m_shockList.getBlock(shock);
       tahobl := t.m_shockList.getBlock(shock);
 
-      s.line.flength := block.m_TimeArrSize;
-      s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p),
-        block.m_TimeArrSize);
+      s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p), block.m_TimeArrSize);
 
-      t.line.flength := tahobl.m_TimeArrSize;
-      t.line.AddPoints(TDoubleArray(tahobl.m_TimeBlockFlt.p),
-        tahobl.m_TimeArrSize);
+      t.line.AddPoints(TDoubleArray(tahobl.m_TimeBlockFlt.p), tahobl.m_TimeArrSize);
       SpmChartDblClick(nil);
       fUpdateFrf := true;
       UpdateView;
@@ -2219,6 +2232,22 @@ begin
     cSRSTaho(taho).m_shockList.m_wnd.wndfunc := wnd_no;
 end;
 
+procedure cSpmCfg.delSRS(s: tobject);
+var
+  I: Integer;
+  res:cSRSres;
+begin
+  for I := 0 to SRSCount - 1 do
+  begin
+    res:=GetSrs(i);
+    if res=s then
+    begin
+      m_SRSList.delete(i);
+      break;
+    end;
+  end;
+end;
+
 destructor cSpmCfg.destroy;
 begin
   m_SRSList.destroy;
@@ -2285,6 +2314,26 @@ destructor cSRSres.destroy;
 begin
   m_tag.destroy;
   m_shockList.destroy;
+  cfg.delSRS(self);
+  if line<>nil then
+    line.destroy;
+  if lineSpm<>nil then
+    lineSpm.destroy;
+  if lineCoh<>nil then
+    lineCoh.destroy;
+  if lineFrf<>nil then
+    lineFrf.destroy;
+  if lineAvFRF<>nil then
+    lineAvFRF.destroy;
+end;
+
+function cSRSres.getTaho: cSRSTaho;
+begin
+  result:=nil;
+  if cfg<>nil then
+  begin
+    result:=cSRSTaho(cfg.taho);
+  end;
 end;
 
 function cSRSres.name: string;
@@ -2707,10 +2756,8 @@ begin
 end;
 
 function TDataBlockList.addBlock(p_spmsize: integer; time: point2d; // timestamp
-  // timeblock
-  tb: TDoubleArray;
-  // размер очередного блока
-  p_timesize: integer): TDataBlock;
+                        tb: TDoubleArray;// timeblock
+                        p_timesize: integer): TDataBlock;// размер очередного блока
 begin
   result := addBlock(p_spmsize);
   result.m_timeStamp := time;

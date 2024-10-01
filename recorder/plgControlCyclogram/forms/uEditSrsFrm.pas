@@ -81,6 +81,8 @@ type
     procedure WelchShiftIEChange(Sender: TObject);
     procedure FFTBlockSizeIEChange(Sender: TObject);
     procedure FFTShiftIEChange(Sender: TObject);
+    procedure SignalsTVKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   public
     m_SRS:TSRSFrm;
   private
@@ -409,6 +411,44 @@ begin
   else
   begin
 
+  end;
+end;
+
+procedure TEditSrsFrm.SignalsTVKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  next,n, Node: PVirtualNode;
+  Data, parentdata: PNodeData;
+  I: Integer;
+  del:boolean;
+begin
+  if Key = VK_DELETE then
+  begin
+    Node := SignalsTV.GetFirstSelected(true);
+    while Node <> nil do
+    begin
+      del:=false;
+      Data := SignalsTV.GetNodeData(Node);
+      if tobject(data.data) is cSRSres then
+      begin
+        del:=true;
+        cSRSres(data.data).Destroy;
+      end;
+      next := SignalsTV.GetNextSelected(Node, false);
+      if next = nil then
+      begin
+        if Data.Data<>nil then
+        begin
+
+        end;
+      end;
+      if del then
+      begin
+        SignalsTV.DeleteNode(node);
+      end;
+      Node := next;
+      inc(I);
+    end;
   end;
 end;
 

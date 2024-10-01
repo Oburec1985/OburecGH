@@ -744,6 +744,7 @@ var
   interval: point2d;
   v, prev: double;
 begin
+  if m_signals.count=0 then exit;
   // триггерный старт
   if m_type = TtrigOscil then
   begin

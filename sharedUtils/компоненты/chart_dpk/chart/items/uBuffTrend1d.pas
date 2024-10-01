@@ -300,9 +300,9 @@ begin
   case datatype of
     c_real:
       begin
+        flength := p_count;
         if length(data_r) < p_count then
         begin
-          flength := p_count;
           Setlength(data_r, p_count);
         end;
         // sorce; dst; sizze
