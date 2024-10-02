@@ -209,7 +209,7 @@ var
 begin
   date:=now;
   t:=GetCurrentThreadId;
-  datestr:=DateToStr(date)+' '+TimeToStr(date)+ 'tid: '+inttostr(t);
+  datestr:=DateToStr(date)+' '+TimeToStr(date)+ ' tid: '+inttostr(t);
   str:=datestr+separator+mes+separator+mesType;
   if TryEnterCS then
   begin

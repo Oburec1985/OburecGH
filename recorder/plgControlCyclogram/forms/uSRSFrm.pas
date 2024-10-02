@@ -956,6 +956,7 @@ var
   sig_interval, common_interval: point2d;
   b: boolean;
   block: TDataBlock;
+  siglen,
   v, comIntervalLen, blocklen, refresh, dropLen: double;
 begin
   if not ready then
@@ -972,6 +973,10 @@ begin
     // еще не накопился целиком
     if t.fTrigState <> TrFall then
     begin
+      logMessage('RBlock: ' + inttostr(t.m_tag.m_readyBlock));
+      sig_interval:=t.m_tag.getPortionTime;
+      siglen:=sig_interval.y;
+      logMessage('SLen: ' + floattostr(siglen));
       dropLen := t.m_tag.getPortionLen - 2 * blocklen;
       if dropLen > 0 then // при этом условии гарантированно остается 2*blocklen
       begin
@@ -982,6 +987,7 @@ begin
             dropCount := t.f_iEnd;
         end;
         t.m_tag.ResetTagDataTimeInd(dropCount);      //1,000027805
+        logMessage('ReadDataTime: ' +floattostr(t.m_tag.m_ReadDataTime));
         t.f_iEnd := t.f_iEnd - dropCount;
         if t.f_iEnd < 0 then
         begin
@@ -1004,6 +1010,7 @@ begin
         begin
           if v > t.v_max then
           begin
+            logMessage('SLen2: ' + floattostr(siglen));
             t.fTrigState := TrRise;
             t.v_max := v;
             t.f_imax := i;
@@ -1016,6 +1023,7 @@ begin
             t.fTrigState := TrFall;
             // считаем границы порции
             t.m_MaxTime:=t.m_tag.getReadTime(t.f_imax);
+            logMessage('MaxTime: ' +floattostr(t.m_MaxTime));
             t.TrigInterval.x := t.m_MaxTime - t.m_ShiftLeft;
             t.TrigInterval.y := t.TrigInterval.x + t.m_Length;
             t.f_iEnd := t.m_tag.getIndex(t.TrigInterval.y);

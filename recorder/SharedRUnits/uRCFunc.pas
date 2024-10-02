@@ -321,6 +321,8 @@ const
   c_MBaseName = 'Циклограмма работы регуляторов';
 
 implementation
+uses
+  pluginclass;
 
 // uMBaseControl;
 
@@ -1374,7 +1376,7 @@ end;
 function cTag.getPortionTime: point2d;
 begin
   result.x := m_ReadDataTime;
-  result.y := m_ReadDataTime + m_lastindex * (1 / getfreq);
+  result.y := m_ReadDataTime + m_lastindex*fdt;
 end;
 
 function cTag.getPortionLen: double;
@@ -1645,11 +1647,12 @@ function cTag.UpdateTagData(tare: boolean; var AutoResetData: integer)
   : boolean;
 var
   // но из за лагов может превысить размер буфера и тогда равно кол-ву блоков выходного буфера
-  blCount, // кол-о блоков в кольцевом буфере
+  i,blCount, // кол-о блоков в кольцевом буфере
   readyBlockCount, // кол-о готовых к считыванию блоков
   blInd, writeBlockSize: integer;
   b: boolean;
   endTime:double; // время lastindex
+  str:string;
 begin
   result := false;
   blCount := block.GetBlocksCount;
@@ -1673,6 +1676,14 @@ begin
       result := true;
       if m_useReadBuffer then
       begin
+        str:='Btime=';
+        // кол-о блоков которое кладется в m_ReadData
+        for i := 0 to m_newBlockCount - 1 do
+        begin
+          endTime:=block.GetBlockDeviceTime(i);
+          str:=str+floattostr(endTime)+'; ';
+        end;
+        logmessage(str);
         BuildReadBuff(tare, AutoResetData);
       end;
     end;

@@ -145,7 +145,7 @@ begin
       if readyBlockCount > InTag.m_readyBlock then
       begin
         newBlockCount := readyBlockCount - InTag.m_readyBlock;
-        //logMessage('newBlockCount: ' + inttostr(newBlockCount));
+        logMessage('newBlockCount: ' + inttostr(newBlockCount));
         BufCount := newBlockCount;
         // если готовых блоков больше чем размер буфера, то есть потери,
         // но с этим уже ничего не поделать
