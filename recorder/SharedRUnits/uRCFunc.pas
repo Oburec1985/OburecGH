@@ -46,7 +46,10 @@ type
     // 1/freq
     fdT:double;
     // потеря в очередном updatetagdata
-    m_looseData:boolean;
+    m_looseData,
+    // первый полученный блок. инициализируется в doStart, используется в BuildReadBuff
+    m_firstBlock
+    :boolean;
   public
     // делать склейку непрерывного буфера в updateTagData.
     m_useReadBuffer:boolean;
@@ -1143,6 +1146,7 @@ procedure cTag.doOnStart;
 var
   l: integer;
 begin
+  m_firstBlock:=true;
   m_ReadDataTime := 0;
   m_readyBlock := 0;
   m_lastindex := 0;
@@ -1338,7 +1342,7 @@ begin
       end;
     end;
     m_lastindex := datacount;
-    m_ReadDataTime := m_ReadDataTime + (1 / getfreq) * (endTimeInd);
+    m_ReadDataTime := m_ReadDataTime + fdt*endTimeInd;
     if lastindex >= 0 then
     begin
       ZeroMemory(@m_ReadData[lastindex],(m_ReadSize - m_lastindex) * sizeof(double))
@@ -1409,7 +1413,7 @@ function cTag.getReadTime(i: integer): double;
 begin
   if not isScalar(tag) then
   begin
-    result := m_ReadDataTime + i * (1 / getfreq);
+    result := m_ReadDataTime + i * fdt;
   end;
 end;
 
@@ -1706,10 +1710,11 @@ begin
       else
       begin
         // первый полученный блок
-        if m_lastindex = 0 then
+        if m_firstBlock  then
         begin
           fdevicetime := block.GetBlockDeviceTime(blInd);
           m_ReadDataTime := fdevicetime;
+          m_firstBlock:=false;
         end;
       end;
     end;
@@ -1733,10 +1738,10 @@ begin
       // break;
       AutoResetData := m_lastindex;
       ResetTagDataTimeInd(m_lastindex);
-      move(m_TagData[0], m_ReadData[m_lastindex], block.GetBlocksSize * (sizeof(double)));
-      fdevicetime := block.GetBlockDeviceTime(blInd);
-      m_ReadDataTime := fdevicetime;
-      m_lastindex := m_lastindex + block.GetBlocksSize;
+      //move(m_TagData[0], m_ReadData[m_lastindex], block.GetBlocksSize * (sizeof(double)));
+      //fdevicetime := block.GetBlockDeviceTime(blInd);
+      //m_ReadDataTime := fdevicetime;
+      //m_lastindex := m_lastindex + block.GetBlocksSize;
     end
   end;
 end;

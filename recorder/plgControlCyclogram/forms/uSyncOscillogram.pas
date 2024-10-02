@@ -542,7 +542,7 @@ var
   i: integer;
   s: TOscSignal;
 begin
-  m_ax.destroy;
+  //m_ax.destroy;
   m_TrigTag.destroy;
   while sCount <> 0 do
   begin

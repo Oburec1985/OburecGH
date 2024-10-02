@@ -275,11 +275,14 @@ var
 begin
   p:=cpage(getpage());
   inherited;
-  if p.activeAxis=nil then
+  if p<>nil then
   begin
-    if p.getAxisCount>0 then
+    if p.activeAxis=nil then
     begin
-      p.activeAxis:=caxis(p.axises.getChild(0));
+      if p.getAxisCount>0 then
+      begin
+        p.activeAxis:=caxis(p.axises.getChild(0));
+      end;
     end;
   end;
 end;

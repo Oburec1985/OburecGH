@@ -267,11 +267,14 @@ type
   private // переменные для обсчета в алгоритме обработки
     v_min, v_max: double;
     f_imin, f_imax, // индексы отсчетов содержащих максимум и минимум в текущем ударе
-    f_iEnd: integer; // индекс последнего отсчета в текущем ударе
+    // индекс последнего отсчета который уже проанализирован f_iEnd+1 не проанализирован
+    // все что  в диапазоне 0...f_iEnd можно дропать
+    f_iEnd: integer;
     fTrigState: TtrigStates;
     // номер удара в серии
     fShockInd: integer;
     // начало и конец найденного для обработки удара
+    m_MaxTime:double;
     TrigInterval: point2d;
   private
     fSpmCfgList: tlist;
@@ -973,14 +976,12 @@ begin
       if dropLen > 0 then // при этом условии гарантированно остается 2*blocklen
       begin
         dropCount := trunc(dropLen * t.m_tag.Freq);
-        // возможно следует ограничить размер отбрасываемых данных
-        // по f_iEnd
         if t.f_iEnd > 0 then
         begin
           if dropCount > t.f_iEnd then
             dropCount := t.f_iEnd;
         end;
-        t.m_tag.ResetTagDataTimeInd(dropCount);
+        t.m_tag.ResetTagDataTimeInd(dropCount);      //1,000027805
         t.f_iEnd := t.f_iEnd - dropCount;
         if t.f_iEnd < 0 then
         begin
@@ -996,6 +997,7 @@ begin
     if t.fTrigState = TrOff then
     begin
       for i := t.f_iEnd to t.m_tag.lastindex - 1 do
+      //for i := 0 to t.m_tag.lastindex - 1 do
       begin
         v := t.m_tag.m_ReadData[i];
         if v > t.m_treshold then
@@ -1013,7 +1015,8 @@ begin
           begin
             t.fTrigState := TrFall;
             // считаем границы порции
-            t.TrigInterval.x := t.m_tag.getReadTime(t.f_imax) - t.m_ShiftLeft;
+            t.m_MaxTime:=t.m_tag.getReadTime(t.f_imax);
+            t.TrigInterval.x := t.m_MaxTime - t.m_ShiftLeft;
             t.TrigInterval.y := t.TrigInterval.x + t.m_Length;
             t.f_iEnd := t.m_tag.getIndex(t.TrigInterval.y);
             break;
