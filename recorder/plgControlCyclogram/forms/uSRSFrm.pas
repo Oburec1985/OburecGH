@@ -568,7 +568,15 @@ begin
 end;
 
 destructor TSRSFrm.destroy;
+var
+  I: Integer;
+  t:cSRSTaho;
 begin
+  for I := 0 to m_TahoList.Count - 1 do
+  begin
+    t:=m_TahoList.Items[i];
+    t.destroy;
+  end;
   m_TahoList.destroy;
 end;
 
@@ -866,6 +874,7 @@ begin
     t.lineSpm.name := t.name + '_spm';
     bfrf := c.typeres = c_FRF;
     axSpm.AddChild(l);
+    // нельзя делать если не инициализирован
     l.visible := not bfrf;
 
     m_expWndline := cExpFuncObj.create;

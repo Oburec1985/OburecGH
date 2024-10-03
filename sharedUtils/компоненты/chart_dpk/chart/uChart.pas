@@ -317,9 +317,9 @@ Constructor cChart.Create(AOwner: TComponent);
 var
   dc: hdc;
 begin
+  inherited Create(AOwner);
   RedrawOnDemand := FALSE;
   InitializeCriticalSection(cs);
-  inherited Create(AOwner);
   selectSize := 5;
   cursor := crdefault;
   cursowners := 1;

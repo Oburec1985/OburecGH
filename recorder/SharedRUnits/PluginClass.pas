@@ -419,8 +419,11 @@ end;
 
 procedure TExtRecorderPack.destroyLog;
 begin
-  g_logFile.destroy;
-  g_logFile := nil;
+  if g_logFile<>nil then
+  begin
+    g_logFile.destroy;
+    g_logFile := nil;
+  end;
 end;
 
 procedure TExtRecorderPack.doChangeRCState(Sender: TObject);
@@ -544,6 +547,7 @@ end;
 
 destructor TExtRecorderPack.destroy;
 begin
+  exit;
   g_startdir := '';
   EList.destroy;
   EList := nil;
@@ -625,6 +629,7 @@ begin
     if m_FrmSync.createThreadId = GetCurrentThreadId then
     begin
       try
+        exit;
         m_FrmSync.Free;
         m_FrmSync := nil;
       except
@@ -938,8 +943,6 @@ end;
 // Завершить работу плагина
 function TExtRecorderPack.Close: boolean; stdcall;
 begin
-  // TfrmModbusSettings(FSettingsForm).Hide;  //закрытие plug-in`а - сокрытие формы
-  // frmTestSettings.Close;
   // FreeAndNil(frmTestSettings);
   destroyEngine;
   result := true;

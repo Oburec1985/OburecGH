@@ -1227,7 +1227,7 @@ begin
   DeleteCS;
   // m_TagGroup := nil;
 
-  m_TrigAlarmHandler.Detach;
+  //m_TrigAlarmHandler.Detach;
   // m_TrigAlarmHandler.Destroy;
   m_TrigAlarmHandler := nil;
 

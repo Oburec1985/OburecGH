@@ -66,7 +66,7 @@ const
 implementation
 
 uses
-  upage, uaxis;
+  uchart, upage, uaxis;
 
 function cBuffTrend1d.GetCount: integer;
 begin
@@ -170,6 +170,8 @@ var
   a: caxis;
   p: cpage;
 begin
+  if not cChart(chart).initgl then exit;
+
   if DisplayListName <> 0 then
   begin
     glDeleteLists(DisplayListName, 1);

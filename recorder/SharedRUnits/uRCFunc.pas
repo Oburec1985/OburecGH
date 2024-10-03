@@ -1676,14 +1676,19 @@ begin
       result := true;
       if m_useReadBuffer then
       begin
-        str:='Btime=';
+
+        //str:='Btime='; // блок отладки
         // кол-о блоков которое кладется в m_ReadData
-        for i := 0 to m_newBlockCount - 1 do
-        begin
-          endTime:=block.GetBlockDeviceTime(i);
-          str:=str+floattostr(endTime)+'; ';
-        end;
-        logmessage(str);
+        // брать надо не все блоки в буфере, а только новые!!!
+        //for i := 0 to m_newBlockCount - 1 do
+        //begin
+        //  blInd:= i + blCount - m_newBlockCount;
+        //  endTime:=block.GetBlockDeviceTime(i);
+        //  str:=str+floattostr(endTime)+'; ';
+        //end;
+        //if tagname='молоток' then
+        //  logmessage(str);
+
         BuildReadBuff(tare, AutoResetData);
       end;
     end;
@@ -1701,7 +1706,7 @@ begin
     tare := true;
     // например новых блоков 2. Последний блок в буфере всегда имеет последний тайм штамп.
     // Тогда, в цикле получаем блоки с последнего необработанного
-    blInd := i;
+    blInd := i + block.GetBlocksCount - m_newBlockCount;
     block.LockVector;
     b:=SUCCEEDED(block.GetVectorR8(pointer(m_TagData)^, blInd, block.GetBlocksSize,tare));
     block.unLockVector;

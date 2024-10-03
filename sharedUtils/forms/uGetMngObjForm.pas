@@ -12,11 +12,13 @@ type
     ApplyBtn: TButton;
     CancelBtn: TButton;
     ObjectsLV: TBtnListView;
+
   private
     procedure initObjectsLV;
     procedure showObjects(mng:cBaseObjMng);
   public
     Constructor create(aOwner:tComponent);override;
+    destructor destroy;override;
     function GetObj(mng:cBaseObjMng):cbaseobj;
   end;
 
@@ -55,6 +57,11 @@ begin
     objectslv.SetSubItemByColumnName(v_ColNum,inttostr(i),li);
     objectslv.SetSubItemByColumnName(v_ColName,obj.name,li);
   end;
+end;
+
+destructor TGetMngObjForm.destroy;
+begin
+  inherited;
 end;
 
 function TGetMngObjForm.GetObj(mng:cBaseObjMng):cbaseobj;

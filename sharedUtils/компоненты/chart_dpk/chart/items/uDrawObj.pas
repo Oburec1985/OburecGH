@@ -181,7 +181,7 @@ const
 implementation
 
 uses
-  upage, uaxis, uchart, uBasePage;
+  uchart, upage, uaxis, uBasePage;
 
 function NameLayerComparator(p1,p2:pointer):integer;
 var
