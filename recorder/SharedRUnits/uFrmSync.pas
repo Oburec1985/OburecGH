@@ -45,7 +45,7 @@ begin
   else
   if GetCurrentThreadId<>createThreadId then
   begin
-    showmessage('TFrmSync.destroy GetCurrentThreadId<>createThreadId');
+    //showmessage('TFrmSync.destroy GetCurrentThreadId<>createThreadId');
   end;
   inherited;
 end;

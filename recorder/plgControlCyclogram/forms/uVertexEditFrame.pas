@@ -196,7 +196,8 @@ end;
 
 procedure TVertexEditFrame.destroyevents;
 begin
-  m_ui.eventlist.removeEvent(OnSelectVertex, E_glSelectMeshPoint);
+  if m_ui<>nil then
+    m_ui.eventlist.removeEvent(OnSelectVertex, E_glSelectMeshPoint);
 end;
 
 function TVertexEditFrame.findBone(pNum: integer): c3dSkinObj;

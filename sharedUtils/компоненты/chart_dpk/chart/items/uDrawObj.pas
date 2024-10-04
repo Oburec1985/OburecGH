@@ -72,14 +72,15 @@ type
     procedure DeleteCS;
     // включить матрицы объекта (позиция поворот масштаб)
     procedure SetPosMatrix;
-    // происходит когда обновился масштаб оси объекта
-    procedure doUpdateWorldSize(sender: tobject); virtual;
     function getpage: cDrawObj;
     // установить родительскую матрицу обзора
     procedure SetParentMatrixView; virtual;
     procedure SetSelected(b: boolean);
     function GetSelected: boolean;
     procedure SetVisible(b:boolean);virtual;
+  public
+    // происходит когда обновился масштаб оси объекта
+    procedure doUpdateWorldSize(sender: tobject); virtual;
   public
     function getCarrierPage:cdrawobj;
     procedure OnAxisChangeLg; virtual;
@@ -215,8 +216,7 @@ end;
 
 procedure cDrawObj.createEvents;
 begin
-  events.AddEvent(name + '_OnUpadeteTextLabelBound', e_onResize + E_OnZoom,
-    doUpdateWorldSize);
+  events.AddEvent(name + '_OnUpadeteTextLabelBound', e_onResize + E_OnZoom, doUpdateWorldSize);
 end;
 
 procedure cDrawObj.DeleteEvents;

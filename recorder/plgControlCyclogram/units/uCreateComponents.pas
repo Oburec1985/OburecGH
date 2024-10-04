@@ -255,7 +255,9 @@ begin
 
   EditGLObjFrm := TEditGLObjFrm.Create(nil);
   g_ObjFrm3dEdit := TObjFrm3dEdit.Create(nil);
-  //TestUDPSenderFrm:=TTestUDPSenderFrm.Create(NIL);
+  if TestUDPSenderFrm=nil then
+    TestUDPSenderFrm:=TTestUDPSenderFrm.Create(nil);
+
 
   if g_conmng<>nil then
   begin
@@ -337,8 +339,10 @@ begin
 
   EditSRSFrm := TEditSRSFrm.Create(nil);
   if show then
+  begin
     EditSRSFrm.show;
-  EditSRSFrm.close;
+    EditSRSFrm.close;
+  end;
 
   BandsFrm := TBandsFrm.Create(nil);
   if show then
@@ -400,6 +404,16 @@ begin
     IRDiagrEditFrm := nil;
   end;
 
+  if EditGLObjFrm<>nil then
+    EditGLObjFrm.destroy;
+
+  if g_ObjFrm3dEdit<>nil then
+    g_ObjFrm3dEdit.destroy;
+
+  if TestUDPSenderFrm<>nil then
+    TestUDPSenderFrm.destroy;
+
+
   if ControlCyclogramEditFrm <> nil then
   begin
     ControlCyclogramEditFrm.UnLinkPlg;
@@ -429,12 +443,17 @@ begin
   begin
     DownloadRegsFrm.destroy;
     DownloadRegsFrm := nil;
-
-    MDBFrm.destroy;
-    MDBFrm := nil;
-
+  end;
+  if RcClientFrm<>nil then
+  begin
     RcClientFrm.destroy;
     RcClientFrm := nil;
+  end;
+
+  if MDBFrm<>nil then
+  begin
+    MDBFrm.destroy;
+    MDBFrm := nil;
   end;
 
   if AlgFrm <> nil then
@@ -446,11 +465,19 @@ begin
     g_SaveAlgsFrm.destroy;
     g_SaveAlgsFrm := nil;
   end;
+
   if SpmChartEditFrm <> nil then
   begin
-    SpmChartEditFrm.destroy;
+    ////SpmChartEditFrm.destroy;
     SpmChartEditFrm := nil;
   end;
+
+  if EditSrsFrm<> nil then
+  begin
+    ////EditSrsFrm.destroy;
+    EditSrsFrm:= nil;
+  end;
+
   if EditCntlWrnFrm <> nil then
   begin
     EditCntlWrnFrm.destroy;
@@ -504,9 +531,6 @@ begin
       TagInfoEditFrm.destroy;
       TagInfoEditFrm := nil;
     end;
-
-    if TestUDPSenderFrm<>nil then
-      TestUDPSenderFrm.Destroy;
   end;
 end;
 
@@ -560,7 +584,7 @@ begin
   g_SRSFactory := cSRSFactory.Create;
   compMng.Add(g_SRSFactory);
 
-  {g_GenSignalsFactory := cGenSignalsFactory.Create;
+  g_GenSignalsFactory := cGenSignalsFactory.Create;
   compMng.Add(g_GenSignalsFactory);
 
   g_ObjFrm3dFactory := cObjFrm3dFactory.Create;
@@ -583,11 +607,12 @@ begin
     g_logFile := cLogFile.Create(fname, ';');
     g_logFile.m_Rewrite := false;
   end;
+
   // создание объектов движка
   g_conmng := cControlMng.Create;
   uControlsNp.createNP;
   np := cMBaseAlgNP.Create;
-  TExtRecorderPack(GPluginInstance).m_nplist.AddNP(np);}
+  TExtRecorderPack(GPluginInstance).m_nplist.AddNP(np);
 end;
 
 procedure destroyEngine;

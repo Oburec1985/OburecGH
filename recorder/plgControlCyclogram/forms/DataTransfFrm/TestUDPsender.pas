@@ -137,18 +137,6 @@ begin
   kzCalibrE.Value := lk;
 end;
 
-
-constructor TTestUDPSenderFrm.create(aowner: tcomponent);
-begin
-  inherited;
-  m_xTag:=cTag.create;
-  m_yTag:=cTag.create;
-  m_zTag:=cTag.create;
-
-  mainThread:=GetCurrentThreadId;
-  finit:=false;
-end;
-
 procedure TTestUDPSenderFrm.createtags;
 begin
   loadtags;
@@ -190,9 +178,20 @@ begin
   end;
 end;
 
+
+constructor TTestUDPSenderFrm.create(aowner: tcomponent);
+begin
+  inherited;
+  m_xTag:=cTag.create;
+  m_yTag:=cTag.create;
+  m_zTag:=cTag.create;
+
+  mainThread:=GetCurrentThreadId;
+  finit:=false;
+end;
+
 destructor TTestUDPSenderFrm.destroy;
 begin
-  exit;
   m_xTag.destroy;
   m_yTag.destroy;
   m_zTag.destroy;

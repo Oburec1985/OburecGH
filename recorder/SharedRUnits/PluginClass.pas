@@ -621,24 +621,25 @@ begin
   LogRecorderMessage('Exit_'+TranslateNotifyToStr(a_dwCommand), c_Log_PlgClass);
 end;
 
+// вызов из
+// function DestroyPluginClass(piPlg: IRecorderPlugin): integer; cdecl;
 procedure TExtRecorderPack.destroyForms;
 begin
 {$ifdef DEBUG}
   if m_FrmSync <> nil then
   begin
-    if m_FrmSync.createThreadId = GetCurrentThreadId then
+    ///if m_FrmSync.createThreadId = GetCurrentThreadId then
     begin
       try
-        exit;
         m_FrmSync.Free;
         m_FrmSync := nil;
       except
         g_logFile.addErrorMes('FrmSync - не удалось удалить');
       end;
-    end
-    else
+    end;
+    ///else
     begin
-      g_logFile.addErrorMes('FrmSync пытается удалиться в другом потоке нежели был создан');
+    ///  g_logFile.addErrorMes('FrmSync пытается удалиться в другом потоке нежели был создан');
     end;
   end;
 {$endif}
@@ -823,6 +824,7 @@ begin
     PN_ON_DESTROY_UI_SRV:
       begin
         result := (DestroyGUI = 0);
+        destroyForms;
         destroyFormsRecorderUIThread(m_CompMng);
       end;
     PN_ENTERRCCONFIG:

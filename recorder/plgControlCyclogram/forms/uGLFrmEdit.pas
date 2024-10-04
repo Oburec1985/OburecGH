@@ -81,7 +81,8 @@ end;
 
 procedure TObjFrm3dEdit.destroyevents;
 begin
-  TObjFrm3d(m_glFrm).GL.mUI.eventlist.removeEvent(OnSelectObj, E_glSelectNew);
+  if m_glFrm<>nil then
+    TObjFrm3d(m_glFrm).GL.mUI.eventlist.removeEvent(OnSelectObj, E_glSelectNew);
 end;
 
 procedure TObjFrm3dEdit.doRecroderInit;
@@ -156,8 +157,8 @@ begin
   frames:=TList.Create;
   frames.add(fr);
 
-  if TestUDPSenderFrm=nil then
-    TestUDPSenderFrm:=TTestUDPSenderFrm.Create(nil);
+  //if TestUDPSenderFrm=nil then
+  //  TestUDPSenderFrm:=TTestUDPSenderFrm.Create(nil);
 end;
 
 destructor TObjFrm3dEdit.destroy;

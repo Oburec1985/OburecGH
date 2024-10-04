@@ -1,6 +1,7 @@
 library plgControlCyclogram;
 
 uses
+  // fastmm4,
   u2dMath,
   Windows,
   Themes,
@@ -310,7 +311,6 @@ begin
   GlobDetach;
   Result := RCERROR_NOERROR;
   {$ifdef DEBUG}
-  TExtRecorderPack(GPluginInstance).destroyForms;
   TExtRecorderPack(GPluginInstance).destroyLog;
 
   GPluginInstance._release;

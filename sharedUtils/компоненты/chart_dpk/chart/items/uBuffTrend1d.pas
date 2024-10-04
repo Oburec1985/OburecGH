@@ -170,6 +170,8 @@ var
   a: caxis;
   p: cpage;
 begin
+  if chart=nil then exit;
+  
   if not cChart(chart).initgl then exit;
 
   if DisplayListName <> 0 then

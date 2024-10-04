@@ -1347,7 +1347,8 @@ begin
     m_ReadDataTime := m_ReadDataTime + fdt*endTimeInd;
     if lastindex >= 0 then
     begin
-      ZeroMemory(@m_ReadData[lastindex],(m_ReadSize - m_lastindex) * sizeof(double))
+      if lastindex<m_ReadSize-1 then
+        ZeroMemory(@m_ReadData[lastindex],(m_ReadSize - m_lastindex) * sizeof(double))
     end
     else
     begin

@@ -70,8 +70,8 @@ type
     procedure SignalsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
-    procedure SignalsTVDragDrop(Sender: TBaseVirtualTree; Source: TObject; DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
-      Pt: TPoint; var Effect: Integer; Mode: TDropMode);
+    procedure SignalsTVDragDrop(Sender: TBaseVirtualTree; Source: TObject; DataObject: IDataObject;
+         Formats: TFormatArray; Shift: TShiftState; Pt: TPoint; var Effect: Integer; Mode: TDropMode);
     procedure FormShow(Sender: TObject);
     procedure ApplyBtnClick(Sender: TObject);
     procedure SignalsTVChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -81,8 +81,9 @@ type
     procedure WelchShiftIEChange(Sender: TObject);
     procedure FFTBlockSizeIEChange(Sender: TObject);
     procedure FFTShiftIEChange(Sender: TObject);
-    procedure SignalsTVKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
+    procedure SignalsTVKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormDestroy(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   public
     m_SRS:TSRSFrm;
   private
@@ -118,8 +119,8 @@ begin
       lt:=cSRSTaho.Create;
       lt.m_tag.tag:=t;
       lt.m_treshold:=ThresholdFE.FloatNum;
-      lt.m_ShiftLeft:=LeftShiftEdit.FloatNum;
-      lt.m_Length:=LengthFE.FloatNum;
+      m_SRS.m_ShiftLeft:=LeftShiftEdit.FloatNum;
+      m_SRS.m_Length:=LengthFE.FloatNum;
       m_SRS.addTaho(lt);
       cfg:=cSpmCfg.Create;
       cfg.m_fftCount:=FFTBlockSizeIE.IntNum;
@@ -213,6 +214,16 @@ begin
     FFTdxFE.FloatNum:=csrstaho(t).m_tag.freq/FFTBlockSizeIE.IntNum;
     BlockSizeFE.FloatNum:=FFTBlockSizeIE.IntNum/csrstaho(t).m_tag.freq;
   end;
+end;
+
+procedure TEditSrsFrm.FormCreate(Sender: TObject);
+begin
+  //exit;
+end;
+
+procedure TEditSrsFrm.FormDestroy(Sender: TObject);
+begin
+  //showmessage('TEditSrsFrm.FormDestroy');
 end;
 
 procedure TEditSrsFrm.FormShow(Sender: TObject);
@@ -316,8 +327,8 @@ begin
   if t.m_tag.tag=nil then
     t.m_tag.tag:=getTagByName(t.m_tag.tagname);
   ThresholdFE.FloatNum:=t.m_treshold;
-  LeftShiftEdit.FloatNum:=t.m_ShiftLeft;
-  LengthFE.FloatNum:=t.m_Length;
+  LeftShiftEdit.FloatNum:=m_SRS.m_ShiftLeft;
+  LengthFE.FloatNum:=m_SRS.m_Length;
   c:=t.Cfg;
   ResTypeRG.ItemIndex:=C.typeRes;
   FFTBlockSizeIE.IntNum:=c.m_fftCount;
@@ -465,8 +476,8 @@ begin
 
   if t=nil then exit;
   t.m_treshold:=ThresholdFE.FloatNum;
-  t.m_ShiftLeft:=LeftShiftEdit.FloatNum;
-  t.m_Length:=LengthFE.FloatNum;
+  m_SRS.m_ShiftLeft:=LeftShiftEdit.FloatNum;
+  m_SRS.m_Length:=LengthFE.FloatNum;
   c.m_fftCount:=FFTBlockSizeIE.IntNum;
   c.m_blockcount:=ShCountIE.IntNum;
   c.m_addNulls:=NullCB.Checked;

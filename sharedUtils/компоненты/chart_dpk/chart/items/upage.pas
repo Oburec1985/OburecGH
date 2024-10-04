@@ -785,6 +785,8 @@ Procedure cPage.ZoomfRect(var rect: fRect; ax: caxis);
 var
   i: integer;
   zoomrect: fRect;
+  o:cdrawobj;
+  a:caxis;
 begin
   if ax = nil then
     exit;
@@ -794,14 +796,22 @@ begin
   // призумливаем ось x других осей
   for i := 0 to getAxisCount - 1 do
   begin
-    ax := getaxis(i);
-    if not ax.active then
+    a := getaxis(i);
+    if a<>ax then
     begin
-      zoomrect := ax.getzoomrect;
-      zoomrect.BottomLeft.x := rect.BottomLeft.x;
-      zoomrect.TopRight.x := rect.TopRight.x;
-      ax.ZoomfRect(zoomrect);
+      if not a.active then
+      begin
+        zoomrect := a.getzoomrect;
+        zoomrect.BottomLeft.x := rect.BottomLeft.x;
+        zoomrect.TopRight.x := rect.TopRight.x;
+        a.ZoomfRect(zoomrect);
+      end;
     end;
+  end;
+  for I := 0 to ax.ChildCount - 1 do
+  begin
+    o:=cdrawobj(ax.getChild(i));
+    o.doUpdateWorldSize(ax);
   end;
 end;
 

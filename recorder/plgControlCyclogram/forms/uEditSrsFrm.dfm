@@ -11,6 +11,8 @@ object EditSrsFrm: TEditSrsFrm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnShow = FormShow
   PixelsPerInch = 120
   TextHeight = 17
@@ -38,8 +40,6 @@ object EditSrsFrm: TEditSrsFrm
     OnDragOver = SignalsTVDragOver
     OnDragDrop = SignalsTVDragDrop
     OnKeyDown = SignalsTVKeyDown
-    ExplicitLeft = 201
-    ExplicitTop = 29
     Columns = <>
   end
   inline TagsListFrame1: TTagsListFrame

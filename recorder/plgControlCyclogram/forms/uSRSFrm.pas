@@ -42,7 +42,7 @@ type
   public
     // 0 - точка в которой экс. ф-я=1,
     // x1 - точка в которой нормируется значение экспоненты
-    // y1 - значение экспоненты для x1
+    // y1 - значение экспоненты для x1 (например 0,1 шкалы)
     m_x0, m_x1, m_y1: double;
     // событие при обновлении координат
     fUpdateParams: TNotifyEvent;
@@ -66,10 +66,11 @@ type
     procedure EvalA;
     procedure compile;
     procedure drawdata; override;
-    // происходит когда обновился масштаб оси объекта
-    procedure doUpdateWorldSize(sender: tobject); override;
     procedure SetPos(p: point2); override;
     procedure doOnUpdateParams;
+  public
+    // происходит когда обновился масштаб оси объекта
+    procedure doUpdateWorldSize(sender: tobject); override;
   public
     procedure SetParams(x0, x1, y1: double);
     function getScale(x: double): double;
@@ -248,8 +249,6 @@ type
     m_CohTreshold,
     // Амплдитуда для обнаружения события
     m_treshold: double;
-    // отступ слева и длительность
-    m_ShiftLeft, m_Length: double;
     m_tag: ctag;
     // блок данных по которому идет расчет. Размер fportionsizei = length*ShockCount
     m_T1data: TAlignDarray;
@@ -342,6 +341,9 @@ type
     procedure DisableCBClick(sender: tobject);
     procedure SPMcbClick(sender: tobject);
   public
+    // отступ слева и длительность
+    m_ShiftLeft, m_Length: double;
+
     ready: boolean;
     // axRef - воздействие; ax - отклик
     axRef, TimeAx: caxis;
@@ -453,7 +455,7 @@ const
   // ctrl+shift+G
   // ['{54C462CD-E137-4BA6-9FB5-EFD92D159DE5}']
   IID_SRS: TGuid = (D1: $54C462CD; D2: $E137; D3: $4BA6;
-    D4: ($9F, $B5, $EF, $D9, $2D, $15, $9D, $E5));
+    D4: ($9F, $B5, $EF, $D9, $2D, $15, $9D, $E6));
 
 implementation
 
@@ -514,6 +516,10 @@ end;
 
 constructor TSRSFrm.create(Aowner: tcomponent);
 begin
+  // отступ слева и длительность
+  m_ShiftLeft := 0.05;
+  m_Length := 1;
+
   m_TahoList := tlist.create;
   inherited;
 end;
@@ -578,6 +584,7 @@ begin
     t.destroy;
   end;
   m_TahoList.destroy;
+  inherited;
 end;
 
 procedure TSRSFrm.DisableCBClick(sender: tobject);
@@ -772,7 +779,7 @@ begin
   c := lt.cfg;
   c.fHalfFft := c.m_fftCount shr 1;
   // размер блока для расчета в секундах
-  c.fportionsize := lt.m_Length * c.m_blockcount;
+  c.fportionsize := m_Length * c.m_blockcount;
   c.fportionsizei := round(c.fportionsize * lt.m_tag.Freq);
   c.fOutSize := c.m_fftCount * c.m_blockcount;
   c.fspmdx := lt.m_tag.Freq / c.m_fftCount;
@@ -882,13 +889,14 @@ begin
     m_expWndline.visible := UseWndFcb.Checked;
     m_expWndline.enabled := UseWndFcb.Checked;
     m_expWndline.selectable := UseWndFcb.Checked;
+    m_expWndline.fHelper:=true;
     m_expWndline.fUpdateParams := doUpdateParams;
     TimeAx.AddChild(m_expWndline);
 
     c := t.cfg;
     if m_corrS then
     begin
-      c.setWnd(wnd_exp, t.m_ShiftLeft, t.m_Length, 0.0001);
+      c.setWnd(wnd_exp, m_ShiftLeft, m_Length, 0.0001);
     end
     else
     begin
@@ -943,9 +951,9 @@ begin
     c.typeres := c.typeres;
 
     fr.BottomLeft := p2(0, -2 * t.m_treshold);
-    fr.TopRight := p2(t.m_Length, t.m_treshold * 2);
+    fr.TopRight := p2(m_Length, t.m_treshold * 2);
     pageT.ZoomfRect(fr);
-    m_expWndline.SetParams(t.m_ShiftLeft, t.m_Length, 0.001);
+    m_expWndline.SetParams(m_ShiftLeft, m_Length, 0.001);
 
     fr.BottomLeft := p2(m_minX, m_minY);
     fr.TopRight := p2(m_maxX, m_maxY);
@@ -972,7 +980,7 @@ begin
     exit;
   t := getTaho;
   c := t.cfg;
-  blocklen := t.m_Length;
+  blocklen := m_Length;
   refresh := t.m_tag.BlockSize / t.m_tag.Freq;
   if blocklen < refresh then
     blocklen := refresh;
@@ -1033,8 +1041,8 @@ begin
             // считаем границы порции
             t.m_MaxTime:=t.m_tag.getReadTime(t.f_imax);
             logMessage('MaxTime: ' +floattostr(t.m_MaxTime));
-            t.TrigInterval.x := t.m_MaxTime - t.m_ShiftLeft;
-            t.TrigInterval.y := t.TrigInterval.x + t.m_Length;
+            t.TrigInterval.x := t.m_MaxTime - m_ShiftLeft;
+            t.TrigInterval.y := t.TrigInterval.x + m_Length;
             t.f_iEnd := t.m_tag.getIndex(t.TrigInterval.y);
             break;
           end;
@@ -1256,7 +1264,7 @@ begin
     pageT.cursor.setx1(0);
     if t.corrLen <= 0 then
     begin
-      t.m_shockList.m_wnd.x2 := t.m_Length * 0.7;
+      t.m_shockList.m_wnd.x2 := m_Length * 0.7;
     end;
     pageT.cursor.setx2(t.m_shockList.m_wnd.x2);
     t.m_shockList.m_wnd.x1 := 0;
@@ -1273,7 +1281,8 @@ begin
   if UseWndFcb.Checked then
   begin
     t.m_shockList.m_wnd.wndfunc := wnd_rect;
-    c.setWnd(wnd_exp);
+    m_expWndline.doUpdateWorldSize(nil);
+    m_expWndline.SetParams(m_ShiftLeft*0.5, 0.7*m_length, 0.001);
   end
   else
   begin
@@ -1342,9 +1351,9 @@ begin
   end
   else
     exit;
-  t.m_ShiftLeft := strtoFloatExt(a_pIni.ReadString(str, 'ShiftLeft', '0.05'));
+  m_ShiftLeft := strtoFloatExt(a_pIni.ReadString(str, 'ShiftLeft', '0.05'));
+  m_Length := strtoFloatExt(a_pIni.ReadString(str, 'Length', '0.05'));
   t.m_treshold := strtoFloatExt(a_pIni.ReadString(str, 'Threshold', '0.05'));
-  t.m_Length := strtoFloatExt(a_pIni.ReadString(str, 'Length', '0.05'));
 
   m_minX := strtoFloatExt(a_pIni.ReadString(str, 'Spm_minX', '0'));
   m_maxX := strtoFloatExt(a_pIni.ReadString(str, 'Spm_maxX', '1000'));
@@ -1556,9 +1565,9 @@ begin
   if t <> nil then
   begin
     saveTagToIni(a_pIni, t.m_tag, str, 'Taho_Tag');
-    WriteFloatToIniMera(a_pIni, str, 'ShiftLeft', t.m_ShiftLeft);
+    WriteFloatToIniMera(a_pIni, str, 'ShiftLeft', m_ShiftLeft);
     WriteFloatToIniMera(a_pIni, str, 'Threshold', t.m_treshold);
-    WriteFloatToIniMera(a_pIni, str, 'Length', t.m_Length);
+    WriteFloatToIniMera(a_pIni, str, 'Length', m_Length);
     WriteFloatToIniMera(a_pIni, str, 'CohThreshold', t.m_CohTreshold);
 
     WriteFloatToIniMera(a_pIni, str, 'Spm_minX', m_minX);
@@ -1705,23 +1714,37 @@ end;
 procedure TSRSFrm.SpmChartDblClick(sender: tobject);
 var
   r: frect;
-  i: integer;
+  i,j: integer;
   a: caxis;
+  o:cdrawobj;
+  rect: fRect;
+  dy: single;
 begin
   r.BottomLeft.x := m_minX;
   r.BottomLeft.y := m_minY;
   r.TopRight.x := m_maxX;
   r.TopRight.y := m_maxY;
+  // нормализация спектров
   for i := 0 to pageSpm.axises.ChildCount - 1 do
   begin
     a := pageSpm.getaxis(i);
     a.ZoomfRect(r);
   end;
-
+  // нормализация времени
   for i := 0 to pageT.axises.ChildCount - 1 do
   begin
     a := pageT.getaxis(i);
-    pageT.Normalise(a);
+    rect := pageT.getbound(a);
+    dy := rect.TopRight.y - rect.BottomLeft.y;
+    dy := dy * 0.1;
+    rect.TopRight.y := rect.TopRight.y + dy;
+    rect.BottomLeft.y := rect.BottomLeft.y - dy;
+    a.ZoomfRect(rect);
+    for j := 0 to a.ChildCount - 1 do
+    begin
+      o:=cdrawobj(a.getChild(j));
+      o.doUpdateWorldSize(a);
+    end;
   end;
 end;
 
@@ -1754,7 +1777,7 @@ begin
   c := t.cfg;
   if t = nil then
     exit;
-  lastpos := trunc(t.m_Length * t.m_tag.Freq) - c.m_fftCount;
+  lastpos := trunc(m_Length * t.m_tag.Freq) - c.m_fftCount;
   if lastpos > 0 then
     m_WelchCount := trunc(lastpos / m_WelchShift) + 1
   else
@@ -1862,9 +1885,6 @@ begin
   inherited;
   m_treshold := 1;
   m_CohTreshold := 0.5;
-  // отступ слева и длительность
-  m_ShiftLeft := 0.05;
-  m_Length := 1;
   m_tag := ctag.create;
   fSpmCfgList := tlist.create;
 
@@ -2342,8 +2362,10 @@ end;
 destructor cSRSres.destroy;
 begin
   m_tag.destroy;
+  m_tag:=nil;
   m_shockList.destroy;
   cfg.delSRS(self);
+  cfg:=nil;
   if line<>nil then
     line.destroy;
   if lineSpm<>nil then
@@ -2380,8 +2402,7 @@ end;
 procedure cSRSFactory.createevents;
 begin
   addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
-  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState,
-    doChangeRState);
+  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
 end;
 
 constructor cSRSFactory.create;
@@ -2403,7 +2424,8 @@ end;
 
 procedure cSRSFactory.destroyevents;
 begin
-
+  RemovePlgEvent(doUpdateData, c_RUpdateData);
+  RemovePlgEvent(doChangeRState, c_RC_DoChangeRCState);
 end;
 
 procedure cSRSFactory.doAfterLoad;
@@ -2470,7 +2492,6 @@ end;
 procedure cSRSFactory.doDestroyForms;
 begin
   inherited;
-
 end;
 
 procedure cSRSFactory.doRecorderInit;
@@ -2481,6 +2502,7 @@ var
   t: cSRSTaho;
   c: cSpmCfg;
 begin
+  exit;
   for i := 0 to m_CompList.Count - 1 do
   begin
     Frm := GetFrm(i);
@@ -2499,7 +2521,6 @@ begin
     end;
     TSRSFrm(Frm).UpdateBlocks;
   end;
-
 end;
 
 procedure cSRSFactory.doSetDefSize(var PSize: SIZE);
@@ -3143,6 +3164,8 @@ begin
     lnx := -10
   else
     lnx := ln(m_y1);
+  // константа для градуировки точки x1 y1
+  // exp(-fA*x1)=y1
   fA := -lnx / (m_x1 - m_x0);
 end;
 
@@ -3188,7 +3211,10 @@ begin
     2:
       begin
         m_x1 := p.x;
-        m_y1 := (p.y - faxmin) / fdy;
+        if fdy=0 then
+          m_y1 :=0
+        else
+          m_y1 := (p.y - faxmin) / fdy;
         fy1 := fdy * m_y1 + faxmin;
       end;
   end;
