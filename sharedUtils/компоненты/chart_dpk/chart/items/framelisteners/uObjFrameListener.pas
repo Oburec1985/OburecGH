@@ -161,7 +161,6 @@ begin
           end
           else
             fp:=cpage(page).p2itop2(mouse.iPos_inv);
-
           delta:=p2(fp.x - curobj.Position.x,
                     fp.y - curobj.Position.y);
         end;

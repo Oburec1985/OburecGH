@@ -67,6 +67,7 @@ type
     procedure compile;
     procedure drawdata; override;
     procedure SetPos(p: point2); override;
+    function GetPos: point2; override;
     procedure doOnUpdateParams;
   public
     // происходит когда обновился масштаб оси объекта
@@ -557,11 +558,30 @@ procedure TSRSFrm.ShowCohCBClick(Sender: TObject);
 var
   s: cSRSres;
   t: cSRSTaho;
+  r:frect;
 begin
   s:=ActiveSignal;
   s.lineCoh.visible:=ShowCohCB.Checked;
   s.lineFrf.visible:=not ShowCohCB.Checked;
   s.lineAvFRF.visible:=not ShowCohCB.Checked;
+  if ShowCohCB.Checked then
+  begin
+    r.BottomLeft.x:=m_minX;
+    r.TopRight.x:=m_maxX;
+    r.BottomLeft.y:=0;
+    r.TopRight.y:=1.2;
+    axSpm.Lg:=false;
+  end
+  else
+  begin
+    r.BottomLeft.x:=m_minX;
+    r.TopRight.x:=m_maxX;
+    r.BottomLeft.y:=m_minY;
+    r.TopRight.y:=m_minY;
+    axSpm.Lg:=m_lgY;
+  end;
+  axSpm.ZoomfRect(r);
+
 end;
 
 procedure TSRSFrm.ShowFrf(s: cSRSres; c: cSpmCfg; shInd: integer);
@@ -1306,7 +1326,8 @@ var
   t: cSRSTaho;
   c: cSpmCfg;
   s: cSRSres;
-  i: integer;
+  i,j: integer;
+  db:tdatablock;
 begin
   t := getTaho;
   c := t.cfg;
@@ -1335,6 +1356,7 @@ begin
   if UseWndFcb.Checked then
   begin
     t.m_shockList.m_wnd.wndfunc := wnd_rect;
+    c.setWnd(wnd_exp);
     m_expWndline.doUpdateWorldSize(nil);
     m_expWndline.SetParams(m_ShiftLeft*0.5, 0.7*m_length, 0.001);
   end
@@ -1347,6 +1369,30 @@ begin
   m_expWndline.visible := UseWndFcb.Checked;
   m_expWndline.enabled := UseWndFcb.Checked;
   m_expWndline.selectable := UseWndFcb.Checked;
+  // пересчет с учетом окон
+
+  for I := 0 to t.cfg.SRSCount- 1 do
+  begin
+    s:=c.GetSrs(i);
+    for j := 0 to s.m_shockList.Count - 1 do
+    begin
+      db := s.m_shockList.getBlock(j);
+      db.prepareData;
+      db.BuildSpm;
+    end;
+    for j := 0 to t.m_shockList.Count - 1 do
+    begin
+      db := t.m_shockList.getBlock(j);
+      db.prepareData;
+      db.BuildSpm;
+    end;
+    db:=t.m_shockList.getblock(shockie.IntNum);
+    t.line.AddPoints(TDoubleArray(db.m_TimeBlockFlt.p), db.m_TimeArrSize);
+    db:=s.m_shockList.getblock(shockie.IntNum);
+    s.line.AddPoints(TDoubleArray(db.m_TimeBlockFlt.p), db.m_TimeArrSize);
+    updateFrf(false);
+    UpdateView;
+  end;
 end;
 
 procedure TSRSFrm.WelchCBClick(sender: tobject);
@@ -2919,11 +2965,14 @@ begin
         dx := 1 / TDataBlockList(m_owner).m_cfg.Freq;
         x := wnd.x1;
         m := mean(m_TimeBlock);
+        // обрабатываем только часть порции начиная с x0
         for i := 1 to n - 1 do
         begin
           x := x + dx;
           if wnd.y = 0 then
             wnd.y := 0.000001;
+          // wnd.x2 - wnd.x1 - нормировка на длину окна
+          // в точке x2 экспонента равна заданному значению в точке y2
           TDoubleArray(m_TimeBlockFlt.p)[i + j] := m + (m_TimeBlock[i + j] - m)
             * exp(ln(wnd.y) * (x - wnd.x1) / (wnd.x2 - wnd.x1));
         end;
@@ -3273,6 +3322,24 @@ begin
   EvalA;
   EvalBound;
   m_needRecompile := true;
+end;
+
+function cExpFuncObj.GetPos: point2;
+begin
+  case fTestObj of
+    0:
+      ;
+    1:
+    begin
+      result.x:=m_x0;
+      result.y:=fy0;
+    end;
+    2:
+    begin
+      result.x:=m_x1;
+      result.y:=m_y1*fdy+faxmin;
+    end;
+  end;
 end;
 
 procedure cExpFuncObj.SetPos(p: point2);
