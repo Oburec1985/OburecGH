@@ -82,11 +82,10 @@ type
   TDataBlock = class
   public
     m_owner: tlist;
-    // используетс€ дл€ тахо. Ќайден блок данных хот€ бы по одному датчику
+    // используетс€ дл€ ƒатчика. ’ранит номер блока данных “ахо
     m_connectedInd: integer;
 
     m_timeStamp: point2d;
-    m_timeInd: integer; // дл€ синхронизации.блок srs хранит индекс блока тахо
     m_timecapacity: integer; // вместимость дл€ осцилограммы
     // размер дл€ m_TimeBlock
     m_TimeArrSize: integer;
@@ -117,6 +116,7 @@ type
     procedure BuildSpm;
     function index: integer;
     property spmsize: integer read getsize write setsize;
+    constructor create;
   end;
 
   TDataBlockList = class(tlist)
@@ -228,7 +228,6 @@ type
     fcfg: cSpmCfg;
     fComInt: point2d;
     // найден общий интервал с взведенным тригом
-    // fComInterval:boolean;
     fComIntervalLen: double;
   protected
     procedure setcfg(c: cSpmCfg);
@@ -990,10 +989,10 @@ begin
     // еще не накопилс€ целиком
     if t.fTrigState <> TrFall then
     begin
-      logMessage('RBlock: ' + inttostr(t.m_tag.m_readyBlock));
+      //logMessage('RBlock: ' + inttostr(t.m_tag.m_readyBlock));
       sig_interval:=t.m_tag.getPortionTime;
       siglen:=sig_interval.y;
-      logMessage('SLen: ' + floattostr(siglen));
+      //logMessage('SLen: ' + floattostr(siglen));
       dropLen := t.m_tag.getPortionLen - 2 * blocklen;
       if dropLen > 0 then // при этом условии гарантированно остаетс€ 2*blocklen
       begin
@@ -1004,7 +1003,7 @@ begin
             dropCount := t.f_iEnd;
         end;
         t.m_tag.ResetTagDataTimeInd(dropCount);      //1,000027805
-        logMessage('ReadDataTime: ' +floattostr(t.m_tag.m_ReadDataTime));
+        //logMessage('ReadDataTime: ' +floattostr(t.m_tag.m_ReadDataTime));
         t.f_iEnd := t.f_iEnd - dropCount;
         if t.f_iEnd < 0 then
         begin
@@ -1027,7 +1026,7 @@ begin
         begin
           if v > t.v_max then
           begin
-            logMessage('SLen2: ' + floattostr(siglen));
+            //logMessage('SLen2: ' + floattostr(siglen));
             t.fTrigState := TrRise;
             t.v_max := v;
             t.f_imax := i;
@@ -1040,9 +1039,10 @@ begin
             t.fTrigState := TrFall;
             // считаем границы порции
             t.m_MaxTime:=t.m_tag.getReadTime(t.f_imax);
-            logMessage('MaxTime: ' +floattostr(t.m_MaxTime));
+            //logMessage('MaxTime: ' +floattostr(t.m_MaxTime));
             t.TrigInterval.x := t.m_MaxTime - m_ShiftLeft;
             t.TrigInterval.y := t.TrigInterval.x + m_Length;
+            logMessage('TrigInterval: ' +floattostr(t.TrigInterval.x)+'...'+floattostr(t.TrigInterval.y));
             t.f_iEnd := t.m_tag.getIndex(t.TrigInterval.y);
             break;
           end;
@@ -1069,16 +1069,7 @@ begin
 
         end;
         begin
-          if m_lastTahoBlock <> nil then
-          begin
-            if m_lastTahoBlock.m_connectedInd = -1 then
-            begin
-              t.m_shockList.delBlock(m_lastTahoBlock);
-            end;
-          end;
-
           // AddBlock делать без перевыделени€ пам€ти!!!
-
           m_lastTahoBlock := t.m_shockList.addBlock(c.m_fftCount, p2d(t.TrigInterval.x, t.TrigInterval.x + pcount / t.m_tag.Freq), TDoubleArray(t.m_T1data.p), pcount);
           // накладываем окно
           m_lastTahoBlock.prepareData;
@@ -1086,8 +1077,6 @@ begin
           t.line.AddPoints(TDoubleArray(m_lastTahoBlock.m_TimeBlockFlt.p), pcount);
           t.line.flength := pcount;
           m_lastTahoBlock.BuildSpm;
-          // t.lineSpm.AddPoints(TDoubleArray(m_lastTahoBlock.m_mod.p),
-          // c.fHalfFft);
         end;
       end;
     end;
@@ -1121,6 +1110,56 @@ begin
       if s.m_tag.UpdateTagData(true) then
       begin
         sig_interval := s.m_tag.getPortionTime;
+        logMessage('sig_interval: ' +floattostr(sig_interval.x)+'...'+floattostr(sig_interval.y));
+        common_interval := p2d(0, 0);
+        comIntervalLen := 0;
+        if sig_interval.y > t.TrigInterval.x then
+        begin
+          if t.TrigInterval.y > sig_interval.x then
+          begin
+            common_interval := getCommonInterval(sig_interval, t.TrigInterval);
+            comIntervalLen := common_interval.y - common_interval.x;
+          end;
+        end;
+        logMessage('com_interval: ' +floattostr(common_interval.x)+'...'+floattostr(common_interval.y));
+        if comIntervalLen > 0 then
+        begin
+          // если данные накопились и тахо тоже накопилс€
+          if (comIntervalLen > s.fComIntervalLen) then
+          begin
+            // сброс в resettrig
+            s.fComIntervalLen := comIntervalLen;
+            s.fComInt := common_interval;
+            pcount := copyData(s.m_tag, common_interval, s.m_T1data);
+            if pcount >= c.m_fftCount then
+            begin
+
+            end;
+
+            logMessage('ShockIndex: ' +inttostr(m_lastTahoBlock.index));
+            s.fDataCount := pcount; // скопровано отсчетов в блок
+            block := s.m_shockList.addBlock(c.m_fftCount, // SpmSize
+                  p2d(common_interval.x,
+                  common_interval.x + pcount / s.m_tag.Freq), // timeStamp
+                  TDoubleArray(s.m_T1data.p), // timeData
+                   pcount); // timeData size
+            block.prepareData;
+            block.BuildSpm;
+            s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p), pcount);
+            s.line.flength := pcount;
+
+            block.m_connectedInd:=m_lastTahoBlock.index;
+            s.m_shockProcessed := true;
+            dropCount := s.m_tag.getIndex(t.TrigInterval.x);
+            if dropCount>0 then
+            begin
+              if dropCount<s.m_tag.lastindex then
+                s.m_tag.ResetTagDataTimeInd(dropCount);
+            end;
+            t.evalCoh(hideind);
+          end;
+        end;
+        // херим старые данные
         if s.m_tag.getPortionLen > 2 * blocklen then
         begin
           dropCount := s.m_tag.getIndex(t.TrigInterval.x);
@@ -1129,48 +1168,6 @@ begin
           begin
             s.m_tag.ResetTagDataTimeInd(dropCount - 1);
           end;
-        end;
-      end;
-      common_interval := p2d(0, 0);
-      comIntervalLen := 0;
-      if sig_interval.y > t.TrigInterval.x then
-      begin
-        if t.TrigInterval.y > sig_interval.x then
-        begin
-          common_interval := getCommonInterval(sig_interval, t.TrigInterval);
-          comIntervalLen := common_interval.y - common_interval.x;
-        end;
-      end;
-      if comIntervalLen > 0 then
-      begin
-        // s.fComInterval:=true;
-        // если данные накопились и тахо тоже накопилс€
-        if (comIntervalLen > s.fComIntervalLen) and (t.fTrigState = TrEnd) then
-        begin
-          s.fComIntervalLen := comIntervalLen;
-          s.fComInt := common_interval;
-          pcount := copyData(s.m_tag, common_interval, s.m_T1data);
-          if pcount >= c.m_fftCount then
-          begin
-
-          end;
-          begin
-            s.fDataCount := pcount;
-
-            block := s.m_shockList.addBlock(c.m_fftCount, // SpmSize
-              p2d(common_interval.x,
-                common_interval.x + pcount / s.m_tag.Freq), // timeStamp
-              TDoubleArray(s.m_T1data.p), // timeData
-              pcount); // timeData size
-            block.prepareData;
-            block.BuildSpm;
-            s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p), pcount);
-            s.line.flength := pcount;
-
-            m_lastTahoBlock.m_connectedInd := s.m_shockList.m_LastBlock;
-            s.m_shockProcessed := true;
-          end;
-          t.evalCoh(hideind);
         end;
       end;
     end;
@@ -2733,6 +2730,11 @@ begin
   MULT_SSE_al_cmpx_d(TCmxArray_d(m_ClxData.p), k);
   evalmod2;
   EvalSpmMag(TCmxArray_d(m_ClxData.p), TDoubleArray(m_mod.p));
+end;
+
+constructor TDataBlock.create;
+begin
+  m_connectedInd:=-1;
 end;
 
 procedure TDataBlock.evalmod2;

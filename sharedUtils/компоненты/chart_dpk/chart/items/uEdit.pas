@@ -54,12 +54,12 @@ type
     procedure DoButtonUp(i_p: tpoint; f_p: point2); override;
     procedure DoMouseMove(i_p: tpoint; f_p: point2); override;
     procedure DoDblClick(i_p: tpoint; f_p: point2); override;
-    procedure DoKeyDowne(key:word);override;
     procedure BuildSelectRect(left: integer; right: integer);
   protected
     procedure setTransparent(b: boolean);
     procedure SelectText(rect: trect);
   public
+    procedure DoKeyDowne(key:word);override;
     constructor create; override;
     property Caption: string read fCaption write setCaption;
     property Text: string read fText write setText;
@@ -245,7 +245,6 @@ var
   ip: tpoint;
   font: cfont;
   lHeight: single;
-  pixH: integer;
 begin
   f_iCaptionPos := p;
   if getwidth <> 0 then
@@ -340,8 +339,6 @@ begin
 end;
 
 procedure cEdit.DoButtonUp(i_p: tpoint; f_p: point2);
-var
-  rect: trect;
 begin
   inherited;
   if (not fDblClick) and (fDragBegin.X=fDragEnd.X) then

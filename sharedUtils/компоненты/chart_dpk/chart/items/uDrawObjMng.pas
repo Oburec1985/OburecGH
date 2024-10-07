@@ -91,7 +91,6 @@ destructor cDrawObjMng.destroy;
 var
   i: Integer;
   bo:cBaseObj;
-  o:cDrawObj;
 begin
   if fontmng <> nil then
   begin
