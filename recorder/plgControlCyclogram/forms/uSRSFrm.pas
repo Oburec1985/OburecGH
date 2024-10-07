@@ -85,6 +85,7 @@ type
     // используетс€ дл€ ƒатчика. ’ранит номер блока данных “ахо
     m_connectedInd: integer;
 
+    m_timeMax: double; // врем€ отметки в ударе
     m_timeStamp: point2d;
     m_timecapacity: integer; // вместимость дл€ осцилограммы
     // размер дл€ m_TimeBlock
@@ -138,7 +139,9 @@ type
     procedure evalCoh(TahoShockList: TDataBlockList; hideind: integer);
     procedure clearData;
     procedure delBlock(db: TDataBlock);
-    function getBlock(i: integer): TDataBlock;
+    // получить блок по максимуму в ударе
+    function getBlock(tstamp: double): TDataBlock; overload;
+    function getBlock(i: integer): TDataBlock; overload;
     function getLastBlock: TDataBlock; overload;
     function getLastBlock(d: TDataBlock): TDataBlock; overload;
     function getPrevBlock(d: TDataBlock): TDataBlock;
@@ -323,6 +326,7 @@ type
     WelchCB: TCheckBox;
     DisableCB: TCheckBox;
     SPMcb: TCheckBox;
+    ShowCohCB: TCheckBox;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -339,6 +343,7 @@ type
     procedure WelchCBClick(sender: tobject);
     procedure DisableCBClick(sender: tobject);
     procedure SPMcbClick(sender: tobject);
+    procedure ShowCohCBClick(Sender: TObject);
   public
     // отступ слева и длительность
     m_ShiftLeft, m_Length: double;
@@ -349,7 +354,7 @@ type
     // h0, h1, h2
     m_estimator: integer;
     pageT, pageSpm: cpage;
-    axSpm, axCoh: caxis;
+    axSpm: caxis;
     m_expWndline: cExpFuncObj;
     // список настроек “ахо
     m_TahoList: tlist;
@@ -383,6 +388,8 @@ type
     procedure ShowFrf(s: cSRSres; c: cSpmCfg; shInd: integer);
     procedure ShowSpm;
     procedure UpdateView;
+    // возвращает найден ли удар или нет. ¬ызов внутри updatedata
+    function SearchTrig(t:cSRSTaho):boolean;
     procedure updatedata;
     // выделение пам€ти. происходит при загрузке или смене конфига
     procedure UpdateBlocks;
@@ -394,6 +401,7 @@ type
     procedure TestCoh;
     procedure updateFrf(rebuildspm: boolean);
     procedure updateWelchFrf;
+    function  ActiveSignal:cSRSres;
   public
     property NewAxis: boolean read m_newAx write setNewAx;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -477,6 +485,8 @@ begin
 end;
 
 { TSRSFrm }
+
+
 procedure TSRSFrm.addTaho(t: cSRSTaho);
 begin
   t.m_frm := self;
@@ -528,6 +538,30 @@ begin
   fdelBtn := true;
   if RStateStop then
     UpdateView;
+end;
+
+function TSRSFrm.ActiveSignal: cSRSres;
+var
+  td, sd: TDataBlock;
+  s: cSRSres;
+  t: cSRSTaho;
+  c: cSpmCfg;
+  i: integer;
+begin
+  t := getTaho;
+  s:=t.cfg.GetSrs(0);
+  result:=s;
+end;
+
+procedure TSRSFrm.ShowCohCBClick(Sender: TObject);
+var
+  s: cSRSres;
+  t: cSRSTaho;
+begin
+  s:=ActiveSignal;
+  s.lineCoh.visible:=ShowCohCB.Checked;
+  s.lineFrf.visible:=not ShowCohCB.Checked;
+  s.lineAvFRF.visible:=not ShowCohCB.Checked;
 end;
 
 procedure TSRSFrm.ShowFrf(s: cSRSres; c: cSpmCfg; shInd: integer);
@@ -609,6 +643,9 @@ begin
     t.m_tag.doOnStart;
     t.m_shockList.clearData;
     t.f_iEnd := 0;
+    t.m_MaxTime:=0;
+    t.TrigInterval.x:=0;
+    t.TrigInterval.y:=0;
     ZeroMemory(t.m_T1data.p, t.cfg.fportionsizei * sizeof(double));
     if t.cfg <> nil then
     begin
@@ -616,6 +653,7 @@ begin
       begin
         s := t.cfg.GetSrs(i);
         s.m_tag.doOnStart;
+        s.fComIntervalLen:=0;
         s.m_shockList.clearData;
         ZeroMemory(s.m_T1data.p, t.cfg.fportionsizei * sizeof(double));
         ZeroMemory(s.m_frf, t.cfg.fHalfFft * sizeof(double));
@@ -754,12 +792,6 @@ begin
   p.Caption := 'Freq Dom.';
   pageSpm := p;
   axSpm := p.activeAxis;
-
-  axCoh := caxis.create;
-  axCoh.name := 'CoherenceAx';
-  p.addaxis(axCoh);
-  axCoh.min := p2d(0, 0);
-  axCoh.max := p2d(10, 2);
 end;
 
 procedure TSRSFrm.UpdateBlocks;
@@ -942,8 +974,9 @@ begin
       l := cBuffTrend1d.create;
       // l.color := ColorArray[i+10];
       l.color := violet;
+      l.visible:=false;
       l.dx := c.fspmdx;
-      axCoh.AddChild(l);
+      axSpm.AddChild(l);
       s.lineCoh := l;
       s.lineCoh.name := s.name + '_coh';
     end;
@@ -963,26 +996,15 @@ begin
   UpdateBlocks;
 end;
 
-procedure TSRSFrm.updatedata;
+function TSRSFrm.SearchTrig(t:cSRSTaho):boolean;
 var
-  t: cSRSTaho;
-  c: cSpmCfg;
-  s: cSRSres;
   i, pcount, dropCount: integer;
   sig_interval, common_interval: point2d;
-  b: boolean;
-  block: TDataBlock;
-  siglen,
-  v, comIntervalLen, blocklen, refresh, dropLen: double;
+  v, siglen, dropLen:double;
+  b:boolean;
+  s:csrsres;
 begin
-  if not ready then
-    exit;
-  t := getTaho;
-  c := t.cfg;
-  blocklen := m_Length;
-  refresh := t.m_tag.BlockSize / t.m_tag.Freq;
-  if blocklen < refresh then
-    blocklen := refresh;
+  result:=false;
   if t.m_tag.UpdateTagData(true) then
   begin
     // не отбрасываем данные если находимс€ в состо€нии когда триг найден но
@@ -993,7 +1015,7 @@ begin
       sig_interval:=t.m_tag.getPortionTime;
       siglen:=sig_interval.y;
       //logMessage('SLen: ' + floattostr(siglen));
-      dropLen := t.m_tag.getPortionLen - 2 * blocklen;
+      dropLen := t.m_tag.getPortionLen - 2 * m_Length;
       if dropLen > 0 then // при этом условии гарантированно остаетс€ 2*blocklen
       begin
         dropCount := trunc(dropLen * t.m_tag.Freq);
@@ -1044,6 +1066,7 @@ begin
             t.TrigInterval.y := t.TrigInterval.x + m_Length;
             logMessage('TrigInterval: ' +floattostr(t.TrigInterval.x)+'...'+floattostr(t.TrigInterval.y));
             t.f_iEnd := t.m_tag.getIndex(t.TrigInterval.y);
+            result:=true;
             break;
           end;
         end;
@@ -1064,13 +1087,14 @@ begin
         pcount := copyData(t.m_tag, t.TrigInterval, t.m_T1data);
         t.fDataCount := pcount;
         /// дополн€ть нул€ми
-        if pcount < c.m_fftCount then
+        if pcount < t.cfg.m_fftCount then
         begin
 
         end;
         begin
           // AddBlock делать без перевыделени€ пам€ти!!!
-          m_lastTahoBlock := t.m_shockList.addBlock(c.m_fftCount, p2d(t.TrigInterval.x, t.TrigInterval.x + pcount / t.m_tag.Freq), TDoubleArray(t.m_T1data.p), pcount);
+          m_lastTahoBlock := t.m_shockList.addBlock(t.cfg.m_fftCount, p2d(t.TrigInterval.x, t.TrigInterval.x + pcount / t.m_tag.Freq), TDoubleArray(t.m_T1data.p), pcount);
+          m_lastTahoBlock.m_timeMax :=t.m_MaxTime;
           // накладываем окно
           m_lastTahoBlock.prepareData;
           // рисуем с учетом окна
@@ -1084,9 +1108,9 @@ begin
     begin
       b := true;
       // провер€ем все ли блоки данных от датчиков засчитаны в удар
-      for i := 0 to c.SRSCount - 1 do
+      for i := 0 to t.cfg.SRSCount - 1 do
       begin
-        s := c.GetSrs(i);
+        s := t.cfg.GetSrs(i);
         if s.m_shockProcessed = false then
         begin
           b := false;
@@ -1104,45 +1128,74 @@ begin
         t.resetTrig;
       end;
     end;
-    for i := 0 to c.SRSCount - 1 do
+  end;
+end;
+
+procedure TSRSFrm.updatedata;
+var
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s: cSRSres;
+  i, pcount, dropCount: integer;
+  sig_interval, common_interval: point2d;
+  find: boolean;
+  block: TDataBlock;
+  siglen,
+  comIntervalLen, refresh, dropLen: double;
+begin
+  if not ready then
+    exit;
+  t := getTaho;
+  c := t.cfg;
+  refresh := t.m_tag.BlockSize / t.m_tag.Freq;
+  if m_Length < refresh then
+    m_Length := refresh;
+  // поиск удара. внутри обновл€ютс€ данные по тахо, ущетс€ удар, обновл€етс€ автомат trigstate
+  find:=SearchTrig(t);
+
+  for i := 0 to c.SRSCount - 1 do
+  begin
+    s := c.GetSrs(i);
+    if s.m_tag.UpdateTagData(true) then
     begin
-      s := c.GetSrs(i);
-      if s.m_tag.UpdateTagData(true) then
+      sig_interval := s.m_tag.getPortionTime;
+      //logMessage('sig_interval: ' +floattostr(sig_interval.x)+'...'+floattostr(sig_interval.y));
+      common_interval := p2d(0, 0);
+      comIntervalLen := 0;
+      if sig_interval.y > t.TrigInterval.x then
       begin
-        sig_interval := s.m_tag.getPortionTime;
-        logMessage('sig_interval: ' +floattostr(sig_interval.x)+'...'+floattostr(sig_interval.y));
-        common_interval := p2d(0, 0);
-        comIntervalLen := 0;
-        if sig_interval.y > t.TrigInterval.x then
+        if t.TrigInterval.y > sig_interval.x then
         begin
-          if t.TrigInterval.y > sig_interval.x then
-          begin
-            common_interval := getCommonInterval(sig_interval, t.TrigInterval);
-            comIntervalLen := common_interval.y - common_interval.x;
-          end;
+          common_interval := getCommonInterval(sig_interval, t.TrigInterval);
+          comIntervalLen := common_interval.y - common_interval.x;
         end;
-        logMessage('com_interval: ' +floattostr(common_interval.x)+'...'+floattostr(common_interval.y));
-        if comIntervalLen > 0 then
+      end;
+      //logMessage('com_interval: ' +floattostr(common_interval.x)+'...'+floattostr(common_interval.y));
+      if comIntervalLen > 0 then
+      begin
+        // если данные накопились и тахо тоже накопилс€
+        if (comIntervalLen >= s.fComIntervalLen) then
         begin
-          // если данные накопились и тахо тоже накопилс€
-          if (comIntervalLen > s.fComIntervalLen) then
+          // сброс в resettrig
+          s.fComIntervalLen := comIntervalLen;
+          s.fComInt := common_interval;
+          pcount := copyData(s.m_tag, common_interval, s.m_T1data);
+          if pcount >= c.m_fftCount then
           begin
-            // сброс в resettrig
-            s.fComIntervalLen := comIntervalLen;
-            s.fComInt := common_interval;
-            pcount := copyData(s.m_tag, common_interval, s.m_T1data);
-            if pcount >= c.m_fftCount then
-            begin
 
-            end;
+          end;
 
-            logMessage('ShockIndex: ' +inttostr(m_lastTahoBlock.index));
-            s.fDataCount := pcount; // скопровано отсчетов в блок
+          logMessage('ShockIndex: ' +inttostr(m_lastTahoBlock.index));
+          s.fDataCount := pcount; // скопровано отсчетов в блок
+          block:=s.m_shockList.getBlock(t.m_MaxTime);
+          if block=nil then
+          begin
             block := s.m_shockList.addBlock(c.m_fftCount, // SpmSize
                   p2d(common_interval.x,
                   common_interval.x + pcount / s.m_tag.Freq), // timeStamp
                   TDoubleArray(s.m_T1data.p), // timeData
                    pcount); // timeData size
+            block.m_timeMax:=t.m_MaxTime;
             block.prepareData;
             block.BuildSpm;
             s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p), pcount);
@@ -1159,15 +1212,19 @@ begin
             t.evalCoh(hideind);
           end;
         end;
-        // херим старые данные
-        if s.m_tag.getPortionLen > 2 * blocklen then
+      end;
+      // херим старые данные
+      if s.m_tag.getPortionLen > 2 * m_Length then
+      begin
+        dropLen := s.m_tag.getPortionLen - 2 * m_Length;
+        if dropLen > 0 then // при этом условии гарантированно остаетс€ 2*blocklen
         begin
-          dropCount := s.m_tag.getIndex(t.TrigInterval.x);
-          // отбрасываем все что слева по времени от найденного удара
-          if dropCount > 0 then
-          begin
-            s.m_tag.ResetTagDataTimeInd(dropCount - 1);
-          end;
+          dropCount := trunc(dropLen * s.m_tag.Freq);
+        end;
+        // отбрасываем все что слева по времени от найденного удара
+        if dropCount > 0 then
+        begin
+          s.m_tag.ResetTagDataTimeInd(dropCount - 1);
         end;
       end;
     end;
@@ -2976,6 +3033,23 @@ begin
     m_coh[j] := mod2(m_Cxy[j]) / (m_Sxx[j] * m_Syy[j]);
     // делаем средний кросс спектр
     m_Cxy[j] := m_Cxy[j] * k;
+  end;
+end;
+
+function TDataBlockList.getBlock(tstamp: double): TDataBlock;
+var
+  I: Integer;
+  bl:TDataBlock;
+begin
+  result:=nil;
+  for I := 0 to Count - 1 do
+  begin
+    bl:=getBlock(i);
+    if bl.m_timeMax=tstamp then
+    begin
+      result:=bl;
+      exit;
+    end;
   end;
 end;
 

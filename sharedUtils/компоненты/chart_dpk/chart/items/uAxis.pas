@@ -46,7 +46,7 @@ type
     // индекс оси в массиве осей страницы
     index: integer;
   protected
-    // происходитв zoomfrect
+    // происходитв zoomfrect. При изменении масштаба пересчет сетки и логарифмических трендов
     procedure callLgEvent;
     procedure setLg(b: boolean);
     procedure setmainParent(p: cbaseObj); override;
@@ -796,7 +796,8 @@ begin
       events.CallAllEventsWithSender(e_OnChangeAxisScale, self);
   end;
   // закомент 30.09.24
-  //callLgEvent;
+  if Lg or page.LgX then
+    callLgEvent;
 end;
 
 function cAxis.XToXi(x: single): integer;
