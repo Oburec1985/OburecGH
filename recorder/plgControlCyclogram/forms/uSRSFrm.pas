@@ -6,8 +6,10 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
   uRCFunc,
   uHardwareMath,
+  uComponentServises,
   Forms, ComCtrls,
   uRecBasicFactory,
+  uCommonMath, MathFunction, u2DMath,
   uRecorderEvents,
   uChart,
   inifiles,
@@ -15,7 +17,6 @@ uses
   tags,
   complex,
   uBuffTrend1d,
-  uCommonMath,
   uCommonTypes,
   pluginClass,
   uMeasureBase,
@@ -218,7 +219,7 @@ type
     m_T1ClxData: TAlignDCmpx;
     // спектр амплитуд
     m_rms: TAlignDarray;
-    // синтезированная передаточная характеристика
+    // синтезированная передаточная характеристика (усредненная)
     m_frf, m_phase: TDoubleArray;
     m_fltFrf: array of integer; // счетчик отбракованных точек
     line, lineSpm, lineCoh, lineFrf,
@@ -260,7 +261,7 @@ type
     // m_T1ClxData:TAlignDCmpx;
     // тот же спектр, но амплитуда
     // m_rms: TAlignDarray;
-    line, lineSpm: cBuffTrend1d;
+    line: cBuffTrend1d;
 
     // список ударов (TDataBlock)
     m_shockList: TDataBlockList;
@@ -330,6 +331,7 @@ type
     ShowCohCB: TCheckBox;
     GroupBox1: TGroupBox;
     SignalsLV: TBtnListView;
+    Splitter1: TSplitter;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -347,6 +349,7 @@ type
     procedure DisableCBClick(sender: tobject);
     procedure SPMcbClick(sender: tobject);
     procedure ShowCohCBClick(Sender: TObject);
+    procedure SignalsLVClick(Sender: TObject);
   public
     // отступ слева и длительность
     m_ShiftLeft, m_Length: double;
@@ -388,7 +391,8 @@ type
     function hideind: integer;
     procedure delCurrentShock;
     PROCEDURE ShowShock(shock: integer);
-
+    // спрятать лишние frf
+    procedure hideFRF(s: cSRSres);
     // отобразить последнюю передаточную характеристику блока в S и усредн. передаточную
     procedure ShowFrf(s: cSRSres; c: cSpmCfg; shInd: integer);
     procedure ShowSpm;
@@ -554,7 +558,10 @@ var
   i: integer;
 begin
   t := getTaho;
-  s:=t.cfg.GetSrs(0);
+  if SignalsLV.ItemIndex=-1 then
+    s:=t.cfg.GetSrs(0)
+  else
+    s:=t.cfg.GetSrs(SignalsLV.ItemIndex);
   result:=s;
 end;
 
@@ -592,11 +599,13 @@ procedure TSRSFrm.ShowFrf(s: cSRSres; c: cSpmCfg; shInd: integer);
 var
   sd: TDataBlock;
 begin
+  hideFRF(s);
   // рисуем
   if shInd > -1 then
     sd := s.m_shockList.getBlock(shInd)
   else
     sd := s.m_shockList.getLastBlock;
+
   s.lineAvFRF.AddPoints(s.m_frf, c.fHalfFft);
   if sd <> nil then
   begin
@@ -844,7 +853,6 @@ begin
   GetMemAlignedArray_d(c.fportionsizei, lt.m_T1data);
   // GetMemAlignedArray_cmpx_d(c.m_fftCount, lt.m_T1ClxData);
   // GetMemAlignedArray_d(c.m_fftCount, lt.m_rms);
-  lt.lineSpm.dx := c.fspmdx;
   for i := 0 to c.SRSCount - 1 do
   begin
     s := c.GetSrs(i);
@@ -928,16 +936,6 @@ begin
       l.dx := 1 / t.m_tag.Freq
     else
       l.dx := 0;
-
-    l := cBuffTrend1d.create;
-    l.color := ColorArray[0];
-    t.lineSpm := l;
-    t.lineSpm.dx := c.fspmdx;
-    t.lineSpm.name := t.name + '_spm';
-    bfrf := c.typeres = c_FRF;
-    axSpm.AddChild(l);
-    // нельзя делать если не инициализирован
-    l.visible := not bfrf;
 
     m_expWndline := cExpFuncObj.create;
     m_expWndline.name := 'ExpWndLine';
@@ -1267,6 +1265,31 @@ begin
   UpdateView;
 end;
 
+procedure TSRSFrm.hideFRF(s: cSRSres);
+var
+  t:cSRSTaho;
+  c:cSpmCfg;
+  I: Integer;
+  ls:cSRSres;
+begin
+  t:=getTaho;
+  c:=t.cfg;
+  for I := 0 to c.SRSCount - 1 do
+  begin
+    ls:=c.GetSrs(i);
+    if ls<>s then
+    begin
+      ls.lineFrf.visible:=false;
+      ls.lineAvFRF.visible:=false;
+    end
+    else
+    begin
+      ls.lineFrf.visible:=true;
+      ls.lineAvFRF.visible:=true;
+    end;
+  end;
+end;
+
 function TSRSFrm.hideind: integer;
 begin
   if hideCB.Checked then
@@ -1310,7 +1333,7 @@ begin
   begin
     if fUpdateFrf then
     begin
-      s := c.GetSrs(0);
+      s := ActiveSignal;
       if fShowLast then
         ShowFrf(s, c, -1)
       else
@@ -1491,6 +1514,7 @@ begin
   m_UseWelch := a_pIni.ReadBool(str, 'useWelch', true);
   WelchCB.Checked := m_UseWelch;
   UpdateChart;
+  ShowSignalsLV;
 end;
 
 procedure savedata(dir: string; sname: string; db: TDoubleArray); overload;
@@ -1779,8 +1803,10 @@ begin
   for I := 0 to c.SrsCount - 1 do
   begin
     s:=c.GetSrs(i);
-    //li:=SignalsLV.items.Add(s.m_tag.tagname);
-    //SignalsLV.SetSubItemByColumnName('№', inttostr(i), li);
+    li:=SignalsLV.items.Add;
+    li.Data:=s;
+    SignalsLV.SetSubItemByColumnName('№', inttostr(i+1), li);
+    SignalsLV.SetSubItemByColumnName('Имя', s.m_tag.tagname, li);
   end;
 end;
 
@@ -1808,6 +1834,27 @@ begin
   end;
 end;
 
+procedure TSRSFrm.SignalsLVClick(Sender: TObject);
+var
+  t:cSRSTaho;
+  c:cSpmCfg;
+  s:cSRSres;
+begin
+  t:=getTaho;
+  if t=nil then
+    exit;
+  if t.m_shockList.Count=0 then
+    exit;
+  s := ActiveSignal;
+  c:=t.cfg;
+  if fShowLast then
+    ShowFrf(s, c, -1)
+  else
+    ShowFrf(s, c, ShockIE.intnum);
+  fShowLast := false;
+  SpmChart.redraw;
+end;
+
 procedure TSRSFrm.SPMcbClick(sender: tobject);
 var
   t: cSRSTaho;
@@ -1827,9 +1874,29 @@ procedure TSRSFrm.SpmChartCursorMove(sender: tobject);
 var
   t: cSRSTaho;
   c: cSpmCfg;
+  s:cSRSres;
   tb: TDataBlock;
-  j: integer;
+  j, ind: integer;
+  x1,y:double;
+  li:TListItem;
 begin
+  if SpmChart.activePage = pageSpm then
+  begin
+    t := getTaho;
+    c := t.cfg;
+    x1:=pageSpm.cursor.getx1;
+    for j := 0 to c.srsCount - 1 do
+    begin
+      s:=c.GetSrs(j);
+      li:=SignalsLV.Items[j];
+      SignalsLV.SetSubItemByColumnName('X',formatstr(x1,4), li);
+      ind:=trunc(x1/c.fspmdx);
+      y:=EvalLineYd(x1, p2d(ind*c.fspmdx,s.m_frf[ind]),
+                     p2d((ind+1)*c.fspmdx,s.m_frf[ind+1]));
+      SignalsLV.SetSubItemByColumnName('Y',formatstrnoe(y,4), li);
+    end;
+    LVChange(SignalsLV);
+  end;
   if UseWndFcb.Checked then
   begin
     if SpmChart.activePage = pageT then
@@ -1893,15 +1960,11 @@ end;
 procedure TSRSFrm.ShockSBDownClick(sender: tobject);
 var
   t: cSRSTaho;
-  c: cSpmCfg;
-  s: cSRSres;
-  i, j: integer;
   block, tahobl: TDataBlock;
 begin
   t := getTaho;
   if t = nil then
     exit;
-  c := t.cfg;
   if ShockIE.intnum > 0 then
   begin
     ShockIE.intnum := ShockIE.intnum - 1;
@@ -2168,6 +2231,8 @@ begin
         begin
           for j := 0 to cfg.fHalfFft - 1 do
           begin
+            s.m_phase[j] := (180 / pi) * s.m_shockList.m_Cxy[j]
+              .im / s.m_shockList.m_Cxy[j].Re;
             s.m_frf[j] := abs(s.m_shockList.m_Cxy[j]) / s.m_shockList.m_Sxx[j];
           end;
         end;
@@ -2175,6 +2240,8 @@ begin
         begin
           for j := 0 to cfg.fHalfFft - 1 do
           begin
+            s.m_phase[j] := (180 / pi) * s.m_shockList.m_Cxy[j]
+              .im / s.m_shockList.m_Cxy[j].Re;
             s.m_frf[j] := s.m_shockList.m_Syy[j] / abs(s.m_shockList.m_Cxy[j]);
           end;
         end;
@@ -2475,14 +2542,6 @@ begin
       s.lineSpm.visible := not b;
     if s.lineFrf <> nil then
       s.lineFrf.visible := b;
-  end;
-  if taho <> nil then
-  begin
-    ltaho := cSRSTaho(taho);
-    if ltaho.lineSpm <> nil then
-    begin
-      ltaho.lineSpm.visible := not b;
-    end;
   end;
 end;
 
@@ -3118,6 +3177,7 @@ begin
       m_Syy[j] := t.m_mod2[j] + m_Syy[j];
     end;
   end;
+  // усреднение по серии ударов
   k := 1 / (n);
   for j := 0 to s.m_spmsize - 1 do
   begin

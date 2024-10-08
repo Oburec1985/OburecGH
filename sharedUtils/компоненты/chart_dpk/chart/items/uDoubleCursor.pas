@@ -44,6 +44,8 @@ type
     // обновляется при движении курсора, отрисовка по fx1, fx2
     // (которые не сответствуют положению на оси при логарифме)
     m_lgx1, m_lgx2:double;
+  private
+    fmagniteObj:cDrawObj;
   protected
     // координаты в линейном окне
     fx1, fx2:single;
@@ -60,7 +62,6 @@ type
     // чувствительность магнита шкалы X
     fmagniteValue:double;
     fmagniteValuePix:integer;
-    fmagniteObj:cDrawObj;
   protected
     procedure fsetx1(v:integer);overload;
     procedure fsetx2(v:integer);overload;
@@ -69,6 +70,7 @@ type
     procedure setDrawYLine(b:boolean);
     function getDrawYLine:boolean;
     function GetPage:cdrawobj;
+    procedure setMagnitudeObj(o:cdrawobj);
   public
     function dx:single;
   public
@@ -97,7 +99,7 @@ type
     property magniteMin:boolean read fmagniteMin write fmagniteMin;
     property magniteMax:boolean read fmagniteMax write fmagniteMax;
     property magniteValue:double read fmagniteValue write fmagniteValue;
-    property magniteObj:cdrawobj read fmagniteObj write fmagniteObj;
+    property magniteObj:cdrawobj read fmagniteObj write setMagnitudeObj;
   end;
 
   const
@@ -266,6 +268,12 @@ begin
   p:=cpage(c.getpage);
   a:=p.activeAxis;
   t:=cbasictrend(c.magniteObj);
+  if t.count=0 then
+  begin
+    result:=0;
+    ind:=-1;
+    exit;
+  end;
   if t<>nil then
   begin
     lo:=t.GetLowInd(x-c.fmagniteValue);
@@ -338,8 +346,11 @@ begin
                 if a.getChild(i) is cbasictrend then
                 begin
                   t:=cbasictrend(a.getChild(i));
-                  cursor.magniteObj:=t;
-                  break;
+                  if t.visible then
+                  begin
+                    cursor.magniteObj:=t;
+                    break;
+                  end;
                 end;
               end;
             end;
@@ -845,6 +856,11 @@ begin
   begin
     setx2(m_lgx2);
   end;
+end;
+
+procedure cDoubleCursor.setMagnitudeObj(o: cdrawobj);
+begin
+  fmagniteObj:=o;
 end;
 
 procedure cDoubleCursor.procdrawYLine(tr:ctrend);
