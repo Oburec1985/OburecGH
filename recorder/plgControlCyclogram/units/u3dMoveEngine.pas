@@ -21,7 +21,9 @@ uses
   uGroupObjects,
   uRcCtrls;
 
+// набор классов отвечающих за анимацию объектов через теги
 type
+  //
   c3dCtrlObj = class(cObject)
   public
     m_objlist:tlist; // список агрегатор объектов
@@ -29,6 +31,9 @@ type
     procedure dostart;virtual; // происходит при старте рекордера
   public
     function ready:boolean;virtual;
+    // функция вызывается в цикле для обновления объектов
+    // в зависимости от типа пересчитывается геометрия на основании тегов
+    // или другой информации
     procedure UpdateObj;virtual;abstract;
   end;
 

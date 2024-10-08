@@ -384,6 +384,7 @@
     <File Path="units\uSynchroPhaseAlg.pas"/>
     <File Path="units\uTahoAlg.pas"/>
     <File Path="units\uTimeIntervalAlg.pas"/>
+    <File Path="units\uModelPointMng.pas"/>
     <File Path="uBaseAlgBands.pas"/>
   </ProjectSortOrder>
 	<Transactions>
@@ -478,5 +479,6 @@
     <Transaction>2024.06.11 17:00:34.371.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit1.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uVertexEditFrame.pas</Transaction>
     <Transaction>2024.06.11 17:00:34.371.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit1.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uVertexEditFrame.dfm</Transaction>
     <Transaction>2024.06.13 22:10:39.755.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit1.pas=C:\Oburec\OburecGH\recorder\plgControlCyclogram\units\u3dMoveEngine.pas</Transaction>
+    <Transaction>2024.10.08 23:41:50.737.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit1.pas=C:\Oburec\OburecGH\recorder\plgControlCyclogram\units\uModelPointMng.pas</Transaction>
   </Transactions>
 </BorlandProject>

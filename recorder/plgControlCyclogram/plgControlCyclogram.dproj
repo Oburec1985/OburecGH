@@ -530,6 +530,7 @@
 			<DCCReference Include="forms\DataTransfFrm\TestUDPsender.pas">
 				<Form>TestUDPSenderFrm</Form>
 			</DCCReference>
+			<DCCReference Include="units\uModelPointMng.pas"/>
 			<None Include="..\..\sharedUtils\utils\FastMM\FastMM4Options.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
