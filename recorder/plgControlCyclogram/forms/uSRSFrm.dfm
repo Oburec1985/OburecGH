@@ -1,29 +1,27 @@
 object SRSFrm: TSRSFrm
   Left = 0
   Top = 0
+  Hint = #1042#1082#1083#1102#1095#1080#1090#1100'/'#1086#1090#1082#1083#1102#1095#1080#1090#1100' '#1088#1072#1089#1095#1077#1090
   Caption = 'SRSFrm'
-  ClientHeight = 457
-  ClientWidth = 687
+  ClientHeight = 729
+  ClientWidth = 1124
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  ShowHint = True
   OnCreate = FormCreate
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object SpmChart: cChart
     Left = 0
     Top = 0
-    Width = 520
-    Height = 457
+    Width = 840
+    Height = 729
     Cursor = crSizeAll
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 0
@@ -33,41 +31,48 @@ object SRSFrm: TSRSFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitLeft = 1
-    ExplicitTop = 3
+    ExplicitWidth = 880
   end
   object RightGB: TGroupBox
-    Left = 520
+    Left = 840
     Top = 0
-    Width = 167
-    Height = 457
+    Width = 284
+    Height = 729
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
     object ShockCountLabel: TLabel
-      Left = 8
-      Top = 21
-      Width = 84
-      Height = 13
+      Left = 10
+      Top = 27
+      Width = 105
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1053#1072#1081#1076#1077#1085#1086' '#1091#1076#1072#1088#1086#1074
     end
     object ShockLabel: TLabel
-      Left = 4
-      Top = 150
-      Width = 39
-      Height = 13
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 5
+      Top = 183
+      Width = 47
+      Height = 17
       Caption = #1059#1076#1072#1088#8470
     end
     object WinPosBtn: TSpeedButton
-      Left = 86
-      Top = 108
-      Width = 34
-      Height = 35
+      Left = 144
+      Top = 135
+      Width = 45
+      Height = 46
       Hint = #1054#1090#1082#1088#1099#1090#1100' '#1074' WinPos'
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       AllowAllUp = True
       BiDiMode = bdLeftToRight
       Glyph.Data = {
@@ -243,22 +248,22 @@ object SRSFrm: TSRSFrm
       OnClick = WinPosBtnClick
     end
     object Point_No: TLabel
-      Left = 4
-      Top = 370
-      Width = 43
-      Height = 13
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 91
+      Top = 374
+      Width = 54
+      Height = 17
       Caption = #1058#1086#1095#1082#1072#8470
     end
     object CompareBtn: TSpeedButton
-      Left = 123
-      Top = 193
-      Width = 31
-      Height = 34
+      Left = 143
+      Top = 239
+      Width = 46
+      Height = 45
       Hint = #1054#1090#1082#1088#1099#1090#1100' '#1074' WinPos'
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       AllowAllUp = True
       BiDiMode = bdLeftToRight
       Glyph.Data = {
@@ -434,30 +439,34 @@ object SRSFrm: TSRSFrm
       OnClick = CompareBtnClick
     end
     object ShockCountE: TEdit
-      Left = 5
-      Top = 40
-      Width = 121
-      Height = 21
+      Left = 7
+      Top = 52
+      Width = 114
+      Height = 25
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       TabOrder = 0
     end
     object SaveBtn: TButton
-      Left = 5
-      Top = 108
-      Width = 75
-      Height = 25
+      Left = 7
+      Top = 141
+      Width = 134
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
       TabOrder = 1
       OnClick = SaveBtnClick
     end
     object ShockSB: TSpinButton
-      Left = 117
-      Top = 169
-      Width = 15
-      Height = 19
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 142
+      Top = 205
+      Width = 20
+      Height = 25
       DownGlyph.Data = {
         0E010000424D0E01000000000000360000002800000009000000060000000100
         200000000000D800000000000000000000000000000000000000008080000080
@@ -483,38 +492,26 @@ object SRSFrm: TSRSFrm
       OnUpClick = ShockSBUpClick
     end
     object ShockIE: TIntEdit
-      Left = 4
-      Top = 167
-      Width = 109
-      Height = 21
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 5
+      Top = 205
+      Width = 136
+      Height = 25
       TabOrder = 3
       Text = '0'
     end
     object PointIE: TIntEdit
-      Left = 4
-      Top = 387
-      Width = 109
-      Height = 21
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 91
+      Top = 396
+      Width = 76
+      Height = 25
       TabOrder = 4
       Text = '0'
     end
     object PointSE: TSpinButton
-      Left = 117
-      Top = 387
-      Width = 15
-      Height = 19
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 173
+      Top = 396
+      Width = 20
+      Height = 25
       DownGlyph.Data = {
         0E010000424D0E01000000000000360000002800000009000000060000000100
         200000000000D800000000000000000000000000000000000000008080000080
@@ -538,57 +535,73 @@ object SRSFrm: TSRSFrm
         800000808000008080000080800000808000}
     end
     object SaveMdbPan: TPanel
-      Left = 5
-      Top = 193
-      Width = 116
-      Height = 33
+      Left = 7
+      Top = 239
+      Width = 134
+      Height = 44
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       TabOrder = 6
       object SaveMdbBtn: TButton
-        Left = 5
-        Top = 4
-        Width = 107
-        Height = 25
+        Left = 7
+        Top = 5
+        Width = 119
+        Height = 33
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100' '#1074' '#1041#1044
         TabOrder = 0
         OnClick = SaveMdbBtnClick
       end
     end
     object Button1: TButton
-      Left = 10
-      Top = 232
-      Width = 107
-      Height = 25
+      Left = 13
+      Top = 290
+      Width = 120
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1057#1088#1072#1074#1085#1080#1090#1100' '#1089' '#1041#1044
       TabOrder = 7
       Visible = False
     end
     object DelBtn: TButton
-      Left = 5
-      Top = 77
-      Width = 75
-      Height = 25
+      Left = 7
+      Top = 101
+      Width = 134
+      Height = 32
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1059#1076#1072#1083#1080#1090#1100
       TabOrder = 8
       OnClick = DelBtnClick
     end
     object hideCB: TCheckBox
-      Left = 86
-      Top = 85
-      Width = 59
-      Height = 17
+      Left = 7
+      Top = 80
+      Width = 78
+      Height = 22
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1057#1082#1088#1099#1090#1100
       TabOrder = 9
       OnClick = hideCBClick
     end
     object EstimatorRG: TRadioGroup
-      Left = 5
-      Top = 262
-      Width = 60
-      Height = 75
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 7
+      Top = 330
+      Width = 78
+      Height = 104
       Caption = #1054#1094#1077#1085#1082#1072
       ItemIndex = 0
       Items.Strings = (
@@ -599,49 +612,109 @@ object SRSFrm: TSRSFrm
       OnClick = EstimatorRGClick
     end
     object UseWndFcb: TCheckBox
-      Left = 70
-      Top = 275
-      Width = 47
-      Height = 16
+      Left = 92
+      Top = 334
+      Width = 61
+      Height = 21
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1054#1082#1085#1086
       TabOrder = 11
       OnClick = UseWndFcbClick
     end
     object WelchCB: TCheckBox
-      Left = 70
-      Top = 297
-      Width = 59
-      Height = 17
+      Left = 153
+      Top = 333
+      Width = 77
+      Height = 23
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Welch'
       TabOrder = 12
       OnClick = WelchCBClick
     end
     object DisableCB: TCheckBox
-      Left = 5
-      Top = 465
-      Width = 83
-      Height = 17
-      Caption = #1054#1090#1082#1083#1102#1095#1080#1090#1100
+      Left = 129
+      Top = 54
+      Width = 108
+      Height = 22
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = #1042#1082#1083'.'
       TabOrder = 13
       OnClick = DisableCBClick
     end
     object SPMcb: TCheckBox
-      Left = 70
-      Top = 320
-      Width = 59
-      Height = 17
+      Left = 92
+      Top = 352
+      Width = 77
+      Height = 23
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Spm'
       TabOrder = 14
       OnClick = SPMcbClick
     end
     object ShowCohCB: TCheckBox
-      Left = 70
-      Top = 343
-      Width = 59
-      Height = 18
+      Left = 153
+      Top = 352
+      Width = 77
+      Height = 23
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Coh'
       TabOrder = 15
       OnClick = ShowCohCBClick
+    end
+    object GroupBox1: TGroupBox
+      Left = 2
+      Top = 544
+      Width = 280
+      Height = 183
+      Align = alBottom
+      Caption = #1057#1080#1075#1085#1072#1083#1099
+      TabOrder = 16
+      object SignalsLV: TBtnListView
+        Left = 2
+        Top = 19
+        Width = 276
+        Height = 162
+        Align = alClient
+        Columns = <
+          item
+            Caption = #8470
+          end
+          item
+            Caption = #1048#1084#1103
+          end
+          item
+            Caption = 'X'
+          end
+          item
+            Caption = 'Y'
+          end>
+        RowSelect = True
+        TabOrder = 0
+        ViewStyle = vsReport
+        BtnCol = 0
+        QuoteColumnBtnClick = False
+        QuoteColumnDblClick = False
+        DrawColorBox = False
+        ChangeTextColor = False
+        Editable = False
+        ExplicitWidth = 236
+        ExplicitHeight = 266
+      end
     end
   end
 end

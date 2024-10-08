@@ -583,11 +583,9 @@ begin
   end;
   if length(m_axises) = 0 then
     SetLength(m_axises, 1);
-  m_axises[0].name := p.activeAxis.name;
-  m_axises[0].name := p.activeAxis.caption;
-  m_axises[0].min := p.activeAxis.minY;
-  m_axises[0].max := p.activeAxis.maxY;
-  m_axises[0].lg := p.activeAxis.lg;
+  //m_axises[0].min := p.activeAxis.minY;
+  //m_axises[0].max := p.activeAxis.maxY;
+  //m_axises[0].lg := p.activeAxis.lg;
 end;
 
 procedure TCntrlWrnChart.TestInit;
@@ -1506,14 +1504,14 @@ begin
     end;
     if axis = nil then
     begin
-      if length(fchart.m_axises) = 1 then
-      begin
-        axis := cpage(fchart.chart.activePage).activeAxis;
-        fchart.m_axises[0].name := axis.caption;
-        fchart.m_axises[0].min := axis.minY;
-        fchart.m_axises[0].max := axis.maxY;
-        fchart.m_axises[0].lg := axis.lg;
-      end;
+      //if length(fchart.m_axises) = 1 then
+      //begin
+      //  axis := cpage(fchart.chart.activePage).activeAxis;
+      //  fchart.m_axises[0].name := axis.caption;
+      //  fchart.m_axises[0].min := axis.minY;
+      //  fchart.m_axises[0].max := axis.maxY;
+      //  fchart.m_axises[0].lg := axis.lg;
+      //end;
     end;
     // a.AddChild(m_tr);
     m_tr.color := ColorArray[index];

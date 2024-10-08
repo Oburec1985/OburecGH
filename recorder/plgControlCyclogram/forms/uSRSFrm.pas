@@ -24,7 +24,7 @@ uses
   uPathMng,
   opengl, uSimpleObjects,
   math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend,
-  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons;
+  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uBtnListView;
 
 type
   TSpmWndFunc = (wnd_no, wnd_rect, wnd_exp, // окно с формулой *e^(-x), где x 0...1 (1 при времени)
@@ -328,6 +328,8 @@ type
     DisableCB: TCheckBox;
     SPMcb: TCheckBox;
     ShowCohCB: TCheckBox;
+    GroupBox1: TGroupBox;
+    SignalsLV: TBtnListView;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -381,10 +383,12 @@ type
     // расчет числа боков для усреднения
     procedure EvalWelchBCount;
     procedure setNewAx(b: boolean);
+    procedure ShowSignalsLV;
   public
     function hideind: integer;
     procedure delCurrentShock;
     PROCEDURE ShowShock(shock: integer);
+
     // отобразить последнюю передаточную характеристику блока в S и усредн. передаточную
     procedure ShowFrf(s: cSRSres; c: cSpmCfg; shInd: integer);
     procedure ShowSpm;
@@ -577,7 +581,7 @@ begin
     r.BottomLeft.x:=m_minX;
     r.TopRight.x:=m_maxX;
     r.BottomLeft.y:=m_minY;
-    r.TopRight.y:=m_minY;
+    r.TopRight.y:=m_maxY;
     axSpm.Lg:=m_lgY;
   end;
   axSpm.ZoomfRect(r);
@@ -1559,13 +1563,13 @@ begin
 end;
 
 procedure saveHeader(ifile: TIniFile; Freq: double; start: double;
-  ident: string);
+  ident: string; xUnits:string);
 begin
   WriteFloatToIniMera(ifile, ident, 'Freq', Freq);
   ifile.WriteString(ident, 'XFormat', 'R8');
   ifile.WriteString(ident, 'YFormat', 'R8');
   // Подпись оси x
-  ifile.WriteString(ident, 'XUnits', 'Гц');
+  ifile.WriteString(ident, 'XUnits', xUnits);
   // Подпись оси Y
   // ifile.WriteString(s.tagname, 'YUnits', TagUnits(wp.m_YParam.tag));
   WriteFloatToIniMera(ifile, ident, 'Start', start);
@@ -1573,6 +1577,15 @@ begin
   ifile.WriteFloat(ident, 'k0', 0);
   // k1
   ifile.WriteFloat(ident, 'k1', 1);
+  if xUnits='с' then
+  begin
+    ifile.WriteString(ident, 'Function', '1');
+    ifile.WriteString(ident, 'XType', '5');
+    // напряжение
+    ifile.WriteString(ident, 'YType', '160');
+    ifile.WriteString(ident, 'XUnitsId', '0x100000501');
+    ifile.WriteString(ident, 'YUnitsId', '0x100003201');
+  end;
 end;
 
 procedure TSRSFrm.SaveBtnClick(sender: tobject);
@@ -1617,36 +1630,36 @@ begin
       num := s.m_shockList.Count - j;
       // spm
       ident := 'spm_' + s.m_tag.tagname + '_' + inttostr(num);
-      saveHeader(ifile, 1 / c.fspmdx, 0, ident);
+      saveHeader(ifile, 1 / c.fspmdx, 0, ident, 'Гц');
       // frf
       ident := 'frf_' + s.m_tag.tagname + '_' + inttostr(num);
-      saveHeader(ifile, 1 / c.fspmdx, 0, ident);
+      saveHeader(ifile, 1 / c.fspmdx, 0, ident, 'Гц');
       // временной блок
       ident := s.m_tag.tagname + '_' + inttostr(num);
       if m_saveT0 then
-        saveHeader(ifile, s.m_tag.Freq, db.m_timeStamp.x, ident)
+        saveHeader(ifile, s.m_tag.Freq, db.m_timeStamp.x, ident, 'с')
       else
-        saveHeader(ifile, s.m_tag.Freq, 0, ident);
+        saveHeader(ifile, s.m_tag.Freq, 0, ident, 'с');
       savedata(f, s.m_tag.tagname + '_' + inttostr(num), db, false);
 
       if i = 0 then
       begin
         ident := t.m_tag.tagname + '_' + inttostr(num);
         if m_saveT0 then
-          saveHeader(ifile, t.m_tag.Freq, tb.m_timeStamp.x, ident)
+          saveHeader(ifile, t.m_tag.Freq, tb.m_timeStamp.x, ident, 'с')
         else
-          saveHeader(ifile, t.m_tag.Freq, 0, ident);
+          saveHeader(ifile, t.m_tag.Freq, 0, ident, 'с');
         savedata(f, ident, tb, true);
       end;
     end;
 
     ident := 'AvFRF_' + s.m_tag.tagname;
     // ident := extractfiledir(ident) + '\'+'AvFRF_'+s.m_tag.tagname+'.dat';
-    saveHeader(ifile, 1 / c.fspmdx, 0, ident);
+    saveHeader(ifile, 1 / c.fspmdx, 0, ident, 'Гц');
     savedata(f, s.m_tag.tagname, s);
 
     ident := 'Coh_' + s.m_tag.tagname;
-    saveHeader(ifile, 1 / c.fspmdx, 0, ident);
+    saveHeader(ifile, 1 / c.fspmdx, 0, ident, 'Гц');
     dir := extractfiledir(g_SRSFactory.m_meraFile) + '\Shock\';
     savedataCoh(dir, ident, s);
   end;
@@ -1752,6 +1765,25 @@ begin
   UpdateView;
 end;
 
+procedure TSRSFrm.ShowSignalsLV;
+var
+  t:cSRSTaho;
+  s:cSRSres;
+  i:integer;
+  c:cSpmCfg;
+  li:tlistitem;
+begin
+  t:=getTaho;
+  c:=t.cfg;
+  SignalsLV.Clear;
+  for I := 0 to c.SrsCount - 1 do
+  begin
+    s:=c.GetSrs(i);
+    //li:=SignalsLV.items.Add(s.m_tag.tagname);
+    //SignalsLV.SetSubItemByColumnName('№', inttostr(i), li);
+  end;
+end;
+
 procedure TSRSFrm.ShowSpm;
 var
   t: cSRSTaho;
@@ -1761,9 +1793,19 @@ var
 begin
   t := getTaho;
   c := t.getCfg;
-  s := c.GetSrs(PointIE.intnum);
-  b := s.m_shockList.getBlock(ShockIE.intnum);
-  s.lineSpm.AddPoints(TDoubleArray(b.m_mod.p), c.fHalfFft);
+  if c<>nil then
+  begin
+    s := c.GetSrs(PointIE.intnum);
+    if s<>nil then
+    begin
+      b := s.m_shockList.getBlock(ShockIE.intnum);
+      if b<>nil then
+      begin
+          if s.linespm<>nil then
+            s.lineSpm.AddPoints(TDoubleArray(b.m_mod.p), c.fHalfFft);
+      end;
+    end;
+  end;
 end;
 
 procedure TSRSFrm.SPMcbClick(sender: tobject);
@@ -2731,13 +2773,13 @@ begin
           s := c.GetSrs(i);
           sname := s.m_tag.tagname + '_p№' + inttostr(PointIE.intnum) + '_frf';
           ident := sname;
-          saveHeader(ifile, 1 / c.fspmdx, 0, ident);
+          saveHeader(ifile, 1 / c.fspmdx, 0, ident, 'Гц');
           savedata(path, sname, s.m_frf);
 
           sname := s.m_tag.tagname + '_p№' + inttostr(PointIE.intnum)
             + '_phase';
           ident := sname;
-          saveHeader(ifile, 1 / c.fspmdx, 0, ident);
+          saveHeader(ifile, 1 / c.fspmdx, 0, ident, 'Гц');
           savedata(path, sname, s.m_phase);
 
           ifile.destroy;
