@@ -952,6 +952,7 @@ begin
   end;
   if PageControl1.TabIndex = 1 then
   begin
+    // отобразить режимы
     ShowControlPropsModes;
     UpdateControlsPropSG;
     ShowModeTable;

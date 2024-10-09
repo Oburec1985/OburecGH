@@ -385,7 +385,7 @@ begin
   // визуализация
   cBaseGlComponent1.resources :='F:\Oburec\delphi\2011\OburecGH\3d\files\resources.ini';
   //str:='c:\Users\SkripnikAA\Documents\3ds Max 2020\export\1.OBR';
-  str:='e:\Users\SkripnikAA\Documents\3ds Max 2020\export\1.OBR';
+  str:='e:\Users\SkripnikAA\Documents\3ds Max 2020\export\4.OBR';
   //cbaseglcomponent1.scenename:='f:\Oburec\delphi\2011\OburecGH\3d\files\3d\Meshes\Type_001.OBR';
   cBaseGlComponent1.scenename := str;
 end;

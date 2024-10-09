@@ -510,7 +510,7 @@ begin
     if tobject(d.Data) is TThresholdGroup then
     begin
       g:=TThresholdGroup(d.Data);
-      pdata:=g.AlarmData;
+      pdata:=g.AlarmData(NumSe.Value);
       CountIE.IntNum:=g.m_size;
       setData(pdata);
       m_selGroup:=g;
@@ -525,7 +525,7 @@ begin
     if tobject(d.Data) is TAlarms then
     begin
       a:=TAlarms(d.Data);
-      pdata:=a.owner.AlarmData;
+      pdata:=a.owner.AlarmData(NumSe.Value);
       CountIE.IntNum:=a.owner.m_size;
       setData(pdata);
       m_selGroup:=a.owner;

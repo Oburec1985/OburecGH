@@ -406,6 +406,7 @@ type
     procedure doStart;
     procedure addTaho(t: cSRSTaho);
     function getTaho: cSRSTaho;
+    function getRes(s:string): cSRSres;
     procedure RBtnClick(sender: tobject);
     procedure TestCoh;
     procedure updateFrf(rebuildspm: boolean);
@@ -1437,6 +1438,16 @@ begin
   if fileexists(g_SRSFactory.m_meraFile) then
     ShellExecute(0, nil, pwidechar(g_SRSFactory.m_ShockFile), nil, nil,
       SW_HIDE);
+end;
+
+function TSRSFrm.getRes(s:string): cSRSres;
+var
+  t:cSRSTaho;
+  c:cSpmCfg;
+begin
+  t:=getTaho;
+  c:=t.cfg
+  result:=getRes(s);
 end;
 
 function TSRSFrm.getTaho: cSRSTaho;
