@@ -37,7 +37,6 @@ type
     FFTdxFE: TFloatEdit;
     BlockSizeFE: TFloatEdit;
     Splitter1: TSplitter;
-    ResTypeRG: TRadioGroup;
     ShCountLabel: TLabel;
     NullCB: TCheckBox;
     ChartGB: TGroupBox;
@@ -59,14 +58,14 @@ type
     CohThresholdFE: TFloatEdit;
     Label3: TLabel;
     SaveT0CB: TCheckBox;
-    EstimatorRG: TRadioGroup;
-    CorrTahoCB: TCheckBox;
-    CorrSCB: TCheckBox;
     WelchGB: TGroupBox;
     WelchBCountIE: TIntEdit;
     WelchCountLabel: TLabel;
     UseWelchCb: TCheckBox;
     NewAxCb: TCheckBox;
+    SigAx: TRadioGroup;
+    AddPNumIE: TIntEdit;
+    AddPNumLabel: TLabel;
     procedure SignalsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
@@ -89,6 +88,7 @@ type
   private
     procedure UpdateWelchBCount;
     procedure ShowTaho(t:cSrsTaho);
+    procedure ShowSrsRes(s:cSrsRes);
     // обновить списки тегов в элементах
     Procedure UpdateTags;
     procedure ShowSrsCfg;
@@ -292,7 +292,6 @@ begin
   LgYcb.Checked:=m_SRS.m_lgY;
   NewAxCb.Checked:=m_SRS.m_newAx;
 
-  EstimatorRG.ItemIndex:=m_SRS.m_estimator;
   SaveT0CB.Checked:=m_srs.m_saveT0;
   t:=m_SRS.getTaho;
   if t<>nil then
@@ -319,6 +318,12 @@ begin
   end;
 end;
 
+procedure TEditSrsFrm.ShowSrsRes(s:cSrsRes);
+begin
+  SigAx.ItemIndex:=s.m_axis;
+  AddPNumIE.IntNum:=s.m_incPNum;
+end;
+
 procedure TEditSrsFrm.ShowTaho(t: cSrsTaho);
 var
   c:cSpmCfg;
@@ -330,7 +335,6 @@ begin
   LeftShiftEdit.FloatNum:=m_SRS.m_ShiftLeft;
   LengthFE.FloatNum:=m_SRS.m_Length;
   c:=t.Cfg;
-  ResTypeRG.ItemIndex:=C.typeRes;
   FFTBlockSizeIE.IntNum:=c.m_fftCount;
   //FFTShiftIE.IntNum:=c.m_fftCount;
   if c.m_fftCount<>0 then
@@ -357,6 +361,10 @@ begin
     if TObject(d.data) is cSRSTaho then
     begin
       ShowTaho(cSRSTaho(TObject(d.data)));
+    end;
+    if TObject(d.data) is cSRSRes then
+    begin
+      ShowSrsRes(cSRSRes(TObject(d.data)));
     end;
   end;
 end;
@@ -467,11 +475,11 @@ procedure TEditSrsFrm.UpdateBtnClick(Sender: TObject);
 var
   t:cSRSTaho;
   c:cSpmCfg;
+  n:PVirtualNode;
+  d:PNodeData;
 begin
   t:=GetSelectTaho;
   c:=t.Cfg;
-
-  t.m_corrTaho:=CorrTahoCB.Checked;
   t.m_shockList.m_wnd.x2:=LengthFE.FloatNum*0.7;
 
   if t=nil then exit;
@@ -481,16 +489,13 @@ begin
   c.m_fftCount:=FFTBlockSizeIE.IntNum;
   c.m_blockcount:=ShCountIE.IntNum;
   c.m_addNulls:=NullCB.Checked;
-  C.typeRes:=ResTypeRg.ItemIndex;
   m_SRS.m_lgX:=lgXcb.Checked;
   m_SRS.m_lgY:=lgYcb.Checked;
   m_SRS.m_minX:=MinXfe.FloatNum;
   m_SRS.m_maxX:=MaxXfe.FloatNum;
   m_SRS.m_minY:=MinYfe.FloatNum;
   m_SRS.m_maxY:=MaxYfe.FloatNum;
-  m_SRS.m_estimator:=EstimatorRG.ItemIndex;
   m_SRS.m_saveT0:=SaveT0CB.Checked;
-  m_SRS.m_corrS:=CorrSCB.Checked;
 
   m_SRS.m_UseWelch:=UseWelchCb.Checked;
   m_SRS.m_WelchCount:=WelchBCountIE.IntNum;
@@ -501,6 +506,14 @@ begin
   c.m_capacity:=ShCountIE.IntNum;
   t.m_CohTreshold:=CohThresholdFE.FloatNum;
   m_SRS.UpdateChart;
+
+  n:=SignalsTV.FocusedNode;
+  d:=SignalsTV.GetNodeData(n);
+  if tobject(d.data) is cSRSres then
+  begin
+    csrsres(d).m_axis:=SigAx.ItemIndex;
+    csrsres(d).m_incPNum:=AddPNumIE.IntNum;
+  end;
 end;
 
 procedure TEditSrsFrm.UpdateTags;

@@ -31,10 +31,12 @@ type
     m_xName, m_yName, m_zName:string;
     // id точки (связывает номер FRF и номер точки модели)
     m_num:integer;
+  protected
+    procedure readFRFSensors(x,y,z:string);
   public
+    procedure setnames(x,y,z:string);
     function ready:boolean;
     function SrsFrm:TSRSFrm;
-    procedure readFRFSensors(x,y,z:string);
     constructor create(owner:tlist; num:integer);
     destructor destroy;
   end;
@@ -49,11 +51,17 @@ type
     m_Model: c3dSkinObj;
     // масштаб анимации
     m_scale:double;
+  protected
+    procedure ReadPointsFromSrsFrm;
   public
     function getByIndPoint(i:integer):cModelPoint;
     function getByNamePoint(num:integer):cModelPoint;
     function AddPoint(Pnum:integer):cModelPoint;
+    procedure setSrsFrm(f:tsrsfrm);
   end;
+
+var
+  g_ModelPointList:cModelPointList;
 
 implementation
 
@@ -99,6 +107,13 @@ begin
 
 end;
 
+procedure cModelPoint.setnames(x, y, z: string);
+begin
+  m_xName:=x;
+  m_yName:=y;
+  m_zName:=z;
+end;
+
 function cModelPoint.SrsFrm: TSRSFrm;
 begin
   result:=cModelPointList(m_owner).m_SRSFrm;
@@ -107,7 +122,7 @@ end;
 { cModelPointList }
 function cModelPointList.AddPoint(Pnum: integer): cModelPoint;
 begin
-  result:=cModelPoint
+  //result:=cModelPoint
 end;
 
 function cModelPointList.getByIndPoint(i: integer): cModelPoint;
@@ -123,13 +138,31 @@ begin
   for I := 0 to count - 1 do
   begin
     p:=getByIndPoint(i);
-    if p=num then
+    if p.m_num=num then
     begin
       result:=p;
       exit;
     end;
   end;
   result:=cModelPoint.create(self, num);
+end;
+
+procedure cModelPointList.ReadPointsFromSrsFrm;
+var
+  I: Integer;
+  p:cModelPoint;
+begin
+  for I := 0 to Count - 1 do
+  begin
+    p:=getByIndPoint(i);
+    p.readFRFSensors(p.m_xName,p.m_yName, p.m_zName);
+  end;
+end;
+
+procedure cModelPointList.setSrsFrm(f: tsrsfrm);
+begin
+  m_SRSFrm:=f;
+  ReadPointsFromSrsFrm;
 end;
 
 end.

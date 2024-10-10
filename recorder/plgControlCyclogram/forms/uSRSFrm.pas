@@ -190,7 +190,7 @@ type
   public
     procedure setWnd(wf: TSpmWndFunc; x1, x2, y: double); overload;
     procedure setWnd(wf: TSpmWndFunc); overload;
-    procedure addSRS(s: pointer);
+    function addSRS(s: pointer):csrsres;
     procedure delSRS(s: tobject);
     function GetSrs(i: integer): cSRSres;
     function SRSCount: integer;
@@ -229,6 +229,10 @@ type
     m_shockList: TDataBlockList;
     // обработан последний удар
     m_shockProcessed: boolean;
+    // 1 - x, 2- y, 3 - z, 0 - noAx
+    m_axis,
+    // прибавлять номер точки
+    m_incPNum:byte;
   private
     fcfg: cSpmCfg;
     fComInt: point2d;
@@ -332,6 +336,7 @@ type
     GroupBox1: TGroupBox;
     SignalsLV: TBtnListView;
     Splitter1: TSplitter;
+    SavePBtn: TButton;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -350,6 +355,7 @@ type
     procedure SPMcbClick(sender: tobject);
     procedure ShowCohCBClick(Sender: TObject);
     procedure SignalsLVClick(Sender: TObject);
+    procedure SavePBtnClick(Sender: TObject);
   public
     // отступ слева и длительность
     m_ShiftLeft, m_Length: double;
@@ -479,7 +485,7 @@ const
 implementation
 
 uses
-  uEditSrsFrm, uCreateComponents;
+  uEditSrsFrm, uCreateComponents, uModelPointMng;
 {$R *.dfm}
 
 function copyData(t: ctag; var time: point2d; buf: TAlignDarray): integer;
@@ -1534,7 +1540,9 @@ begin
       ltag := LoadTagIni(a_pIni, str, 'Tag_' + inttostr(i));
       if ltag <> nil then
       begin
-        c.addSRS(pointer(ltag));
+        s:=c.addSRS(pointer(ltag));
+        s.m_axis:=a_pIni.ReadInteger(str,
+                                     'Axis_' + inttostr(i), 0);
       end;
     end;
     c.typeres := a_pIni.ReadInteger(str, 'ResType', 0);
@@ -1760,6 +1768,7 @@ begin
       begin
         s := c.GetSrs(i);
         saveTagToIni(a_pIni, s.m_tag, str, 'Tag_' + inttostr(i));
+        a_pIni.WriteInteger(str, 'Axis_' + inttostr(i), s.m_axis);
       end;
     end;
     a_pIni.WriteInteger(str, 'WelchBlockCount', m_WelchCount);
@@ -2457,7 +2466,7 @@ begin
   end;
 end;
 
-procedure cSpmCfg.addSRS(s: pointer);
+function cSpmCfg.addSRS(s: pointer):cSRSres;
 var
   i: integer;
   ls: cSRSres;
@@ -2471,12 +2480,14 @@ begin
       for i := 0 to m_SRSList.Count - 1 do
       begin
         ls := cSRSres(m_SRSList.Items[i]);
+        result:=ls;
         if t = ls.m_tag.tag then
           exit;
       end;
       ls := cSRSres.create;
       ls.m_tag.tag := t;
       ls.cfg := self;
+      result:=ls;
       m_SRSList.Add(ls);
     end
   end
@@ -2487,6 +2498,7 @@ begin
       for i := 0 to m_SRSList.Count - 1 do
       begin
         ls := cSRSres(m_SRSList.Items[i]);
+        result:=ls;
         if s = ls then
           exit;
       end;
@@ -2497,6 +2509,7 @@ begin
       for i := 0 to m_SRSList.Count - 1 do
       begin
         ls := cSRSres(m_SRSList.Items[i]);
+        result:=ls;
         if ctag(s).tagname = ls.m_tag.tagname then
         begin
           ctag(s).destroy;
@@ -2504,6 +2517,7 @@ begin
         end;
       end;
       ls := cSRSres.create;
+      result:=ls;
       ls.m_tag := ctag(s);
       ls.cfg := self;
       m_SRSList.Add(ls);
@@ -2878,6 +2892,26 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TSRSFrm.SavePBtnClick(Sender: TObject);
+var
+  p:cModelPoint;
+  I, j: Integer;
+  s:csrsres;
+  li:tlistitem;
+begin
+  if g_ModelPointList=nil then
+    g_ModelPointList:=cModelPointList.Create;
+  g_ModelPointList.setSrsFrm(self);
+  j:=0;
+  for I := 0 to SignalsLV.Count - 1 do
+  begin
+    li:=SignalsLV.Items[i];
+    s:=csrsres(li.Data);
+  end;
+  p:=g_ModelPointList.AddPoint(PointIE.IntNum);
+
 end;
 
 procedure cSRSFactory.doStop;
