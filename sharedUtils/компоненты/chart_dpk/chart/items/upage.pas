@@ -1426,6 +1426,25 @@ begin
   dy := dy * 0.1;
   rect.TopRight.y := rect.TopRight.y + dy;
   rect.BottomLeft.y := rect.BottomLeft.y - dy;
+  if a.Lg then
+  begin
+    if rect.BottomLeft.y<=0 then
+    begin
+      rect.BottomLeft.y:=0.00000001;
+    end;
+    if rect.TopRight.y<=0 then
+    begin
+      rect.TopRight.y:=0.0000001;
+    end;
+    if rect.BottomLeft.x<=0 then
+    begin
+      rect.BottomLeft.x:=0.00000001;
+    end;
+    if rect.TopRight.x<=0 then
+    begin
+      rect.TopRight.x:=0.0000001;
+    end;
+  end;
   ZoomfRect(rect, a);
 end;
 

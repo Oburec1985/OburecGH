@@ -189,6 +189,7 @@ begin
         targettm[12]:=center.x;
         targettm[13]:=center.y;
         targettm[14]:=center.z;
+        targettm[15]:=1;
       end;
     end
     else

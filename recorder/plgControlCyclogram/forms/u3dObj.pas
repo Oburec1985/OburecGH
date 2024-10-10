@@ -751,7 +751,6 @@ end;
 procedure cObjFrm3dFactory.doDestroyForms;
 begin
   inherited;
-
 end;
 
 

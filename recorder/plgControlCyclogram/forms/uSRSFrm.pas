@@ -412,6 +412,8 @@ type
     procedure updateFrf(rebuildspm: boolean);
     procedure updateWelchFrf;
     function  ActiveSignal:cSRSres;
+    function  MaxSpmY:double;
+    function  MinSpmY:double;
   public
     property NewAxis: boolean read m_newAx write setNewAx;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -566,6 +568,22 @@ begin
   result:=s;
 end;
 
+function  TSRSFrm.MaxSpmY:double;
+begin
+  if ShowCohCb.checked then
+    result:=1.1
+  else
+    result:=m_maxY;
+end;
+
+function  TSRSFrm.MinSpmY:double;
+begin
+  if ShowCohCb.checked then
+    result:=0.1
+  else
+    result:=m_minY;
+end;
+
 procedure TSRSFrm.ShowCohCBClick(Sender: TObject);
 var
   s: cSRSres;
@@ -580,37 +598,38 @@ begin
   begin
     r.BottomLeft.x:=m_minX;
     r.TopRight.x:=m_maxX;
-    r.BottomLeft.y:=0;
-    r.TopRight.y:=1.2;
     axSpm.Lg:=false;
   end
   else
   begin
     r.BottomLeft.x:=m_minX;
     r.TopRight.x:=m_maxX;
-    r.BottomLeft.y:=m_minY;
-    r.TopRight.y:=m_maxY;
     axSpm.Lg:=m_lgY;
   end;
+  r.BottomLeft.y:=MinSpmY;
+  r.TopRight.y:=MaxSpmY;
   axSpm.ZoomfRect(r);
-
 end;
 
 procedure TSRSFrm.ShowFrf(s: cSRSres; c: cSpmCfg; shInd: integer);
 var
   sd: TDataBlock;
 begin
-  hideFRF(s);
   // рисуем
   if shInd > -1 then
     sd := s.m_shockList.getBlock(shInd)
   else
     sd := s.m_shockList.getLastBlock;
-
-  s.lineAvFRF.AddPoints(s.m_frf, c.fHalfFft);
+  if s.lineAvFRF.visible then
+  begin
+    s.lineAvFRF.AddPoints(s.m_frf, c.fHalfFft);
+  end;
   if sd <> nil then
   begin
-    s.lineFrf.AddPoints(sd.m_frf, c.fHalfFft);
+    if s.lineFrf.visible then
+    begin
+      s.lineFrf.AddPoints(sd.m_frf, c.fHalfFft);
+    end;
   end;
   fUpdateFrf := false;
 end;
@@ -1446,7 +1465,7 @@ var
   c:cSpmCfg;
 begin
   t:=getTaho;
-  c:=t.cfg
+  c:=t.cfg;
   result:=getRes(s);
 end;
 
@@ -1526,6 +1545,7 @@ begin
   WelchCB.Checked := m_UseWelch;
   UpdateChart;
   ShowSignalsLV;
+  hideFRF(ActiveSignal);
 end;
 
 procedure savedata(dir: string; sname: string; db: TDoubleArray); overload;
@@ -1856,8 +1876,9 @@ begin
     exit;
   if t.m_shockList.Count=0 then
     exit;
-  s := ActiveSignal;
   c:=t.cfg;
+  s := ActiveSignal;
+  hideFRF(s);
   if fShowLast then
     ShowFrf(s, c, -1)
   else
@@ -1941,9 +1962,9 @@ var
   dy: single;
 begin
   r.BottomLeft.x := m_minX;
-  r.BottomLeft.y := m_minY;
   r.TopRight.x := m_maxX;
-  r.TopRight.y := m_maxY;
+  r.BottomLeft.y:=MinSpmY;
+  r.TopRight.y:=MaxSpmY;
   // нормализация спектров
   for i := 0 to pageSpm.axises.ChildCount - 1 do
   begin
@@ -3470,7 +3491,11 @@ begin
         if fdy=0 then
           m_y1 :=0
         else
+        begin
+          if p.y<faxmin then
+            p.y:=faxmin;
           m_y1 := (p.y - faxmin) / fdy;
+        end;
         fy1 := fdy * m_y1 + faxmin;
       end;
   end;

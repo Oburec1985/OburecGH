@@ -50,7 +50,9 @@ type
     // масштаб анимации
     m_scale:double;
   public
-    function getPoint(i:integer):cModelPoint;
+    function getByIndPoint(i:integer):cModelPoint;
+    function getByNamePoint(num:integer):cModelPoint;
+    function AddPoint(Pnum:integer):cModelPoint;
   end;
 
 implementation
@@ -70,7 +72,7 @@ var
 begin
   for I := 0 to m_owner.Count - 1 do
   begin
-    p:=cModelPointList(m_owner).getPoint(i);
+    p:=cModelPointList(m_owner).getByIndPoint(i);
     if p=self then
     begin
       m_owner.Delete(i);
@@ -87,8 +89,8 @@ begin
   if checkstr(x) then
   begin
     m_frfSignalX:=f.getRes(x);
-    m_frfSignalY:=f.getRes(x);
-    m_frfSignalZ:=f.getRes(x);
+    m_frfSignalY:=f.getRes(y);
+    m_frfSignalZ:=f.getRes(z);
   end;
 end;
 
@@ -103,9 +105,31 @@ begin
 end;
 
 { cModelPointList }
-function cModelPointList.getPoint(i: integer): cModelPoint;
+function cModelPointList.AddPoint(Pnum: integer): cModelPoint;
+begin
+  result:=cModelPoint
+end;
+
+function cModelPointList.getByIndPoint(i: integer): cModelPoint;
 begin
   result:=cModelPoint(items[i]);
+end;
+
+function cModelPointList.getByNamePoint(num: integer): cModelPoint;
+var
+  I: Integer;
+  p:cModelPoint;
+begin
+  for I := 0 to count - 1 do
+  begin
+    p:=getByIndPoint(i);
+    if p=num then
+    begin
+      result:=p;
+      exit;
+    end;
+  end;
+  result:=cModelPoint.create(self, num);
 end;
 
 end.
