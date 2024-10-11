@@ -2,13 +2,13 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
   Left = 0
   Top = 0
   Width = 830
-  Height = 142
+  Height = 126
   TabOrder = 0
   object Label9: TLabel
     Left = 731
-    Top = 0
-    Width = 103
-    Height = 13
+    Top = 8
+    Width = 116
+    Height = 16
     Caption = #1042#1099#1076#1077#1083#1077#1085#1099#1081' '#1086#1073#1098#1077#1082#1090':'
   end
   object GroupBox1: TGroupBox
@@ -550,29 +550,29 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
     object Label5: TLabel
       Left = 132
       Top = 16
-      Width = 32
-      Height = 13
+      Width = 37
+      Height = 16
       Caption = 'MoveY'
     end
     object Label6: TLabel
       Left = 30
       Top = 16
-      Width = 32
-      Height = 13
+      Width = 38
+      Height = 16
       Caption = 'MoveX'
     end
     object Label4: TLabel
       Left = 220
       Top = 16
-      Width = 32
-      Height = 13
+      Width = 37
+      Height = 16
       Caption = 'MoveZ'
     end
     object MoveXSpinEdit: TFloatSpinEdit
       Left = 5
       Top = 29
       Width = 86
-      Height = 22
+      Height = 26
       Increment = 0.500000000000000000
       TabOrder = 0
       Value = 0.100000001490116000
@@ -582,7 +582,7 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
       Left = 100
       Top = 29
       Width = 86
-      Height = 22
+      Height = 26
       Increment = 0.500000000000000000
       TabOrder = 1
       Value = 0.100000001490116000
@@ -592,7 +592,7 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
       Left = 201
       Top = 29
       Width = 86
-      Height = 22
+      Height = 26
       Increment = 0.500000000000000000
       TabOrder = 2
       Value = 0.100000001490116000
@@ -603,7 +603,7 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
     Left = 3
     Top = 42
     Width = 129
-    Height = 21
+    Height = 24
     TabOrder = 2
     OnChange = WorldCBChange
   end
@@ -617,29 +617,29 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
     object Label1: TLabel
       Left = 32
       Top = 16
-      Width = 23
-      Height = 13
+      Width = 27
+      Height = 16
       Caption = 'RotX'
     end
     object Label2: TLabel
       Left = 132
       Top = 16
-      Width = 23
-      Height = 13
+      Width = 26
+      Height = 16
       Caption = 'RotY'
     end
     object Label3: TLabel
       Left = 231
       Top = 16
-      Width = 23
-      Height = 13
+      Width = 26
+      Height = 16
       Caption = 'RotZ'
     end
     object RotZSpinEdit: TFloatSpinEdit
       Left = 198
       Top = 31
       Width = 86
-      Height = 22
+      Height = 26
       Increment = 5.000000000000000000
       TabOrder = 0
       Value = 0.100000001490116000
@@ -649,7 +649,7 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
       Left = 100
       Top = 31
       Width = 86
-      Height = 22
+      Height = 26
       Increment = 5.000000000000000000
       TabOrder = 1
       Value = 0.100000001490116000
@@ -659,7 +659,7 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
       Left = 2
       Top = 31
       Width = 86
-      Height = 22
+      Height = 26
       Increment = 5.000000000000000000
       TabOrder = 2
       Value = 0.100000001490116000
@@ -668,25 +668,25 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
   end
   object ObjNameE: TEdit
     Left = 728
-    Top = 29
+    Top = 31
     Width = 88
-    Height = 21
+    Height = 24
     TabOrder = 4
     Text = 'ObjNameE'
   end
   object AnimationControlGroupBox: TGroupBox
     Left = 3
     Top = 63
-    Width = 710
+    Width = 434
     Height = 58
     Caption = #1042#1088#1077#1084#1103
     TabOrder = 5
     DesignSize = (
-      710
+      434
       58)
     object FrwBtn: TSpeedButton
-      Left = 672
-      Top = 15
+      Left = 394
+      Top = 20
       Width = 32
       Height = 32
       Anchors = [akTop, akRight]
@@ -741,10 +741,11 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
         0202020202020202020202020202020202020202020202020202020202020202
         0202020202020202020202020202020202020202020202020202020202020202
         02020202020202020202020202020202020202020202}
+      ExplicitLeft = 478
     end
     object PausePlayBtn: TSpeedButton
-      Left = 635
-      Top = 15
+      Left = 357
+      Top = 20
       Width = 32
       Height = 32
       AllowAllUp = True
@@ -1139,10 +1140,11 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
         00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF}
       NumGlyphs = 4
       OnClick = PausePlayBtnClick
+      ExplicitLeft = 441
     end
     object RewndBtn: TSpeedButton
-      Left = 602
-      Top = 15
+      Left = 324
+      Top = 20
       Width = 33
       Height = 32
       Anchors = [akTop, akRight]
@@ -1195,12 +1197,13 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
         0202020202020202020202020202020202020202020202020202020202020202
         0202020202020202020202020202020202020202020202020202020202020202
         0202}
+      ExplicitLeft = 408
     end
     object TimeScrollBar: TScrollBar
       Left = 6
-      Top = 26
-      Width = 590
-      Height = 29
+      Top = 20
+      Width = 312
+      Height = 32
       Anchors = [akLeft, akTop, akRight]
       PageSize = 0
       TabOrder = 0
@@ -1208,9 +1211,9 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
   end
   object AnimationTimer: TTimer
     Enabled = False
-    Interval = 30
+    Interval = 50
     OnTimer = AnimationTimerTimer
-    Left = 752
+    Left = 480
     Top = 72
   end
 end

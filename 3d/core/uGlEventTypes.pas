@@ -39,6 +39,8 @@ const
   // То же что и выше, но можно использовать
   E_glOnDestroyScene = $04000000;
   e_glOnChartResize = $08000000;
+  // событие обновления кадра анимации
+  e_glOnPlayTimer = $10000000;
 
 implementation
 

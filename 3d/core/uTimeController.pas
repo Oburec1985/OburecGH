@@ -56,6 +56,8 @@ implementation
 
 constructor cTimeController.create;
 begin
+  ffps:=30;
+  ftps:=1;
   TimeEvents:=ceventlist.create(self,true);
 end;
 

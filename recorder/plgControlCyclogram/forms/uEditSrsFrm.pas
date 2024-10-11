@@ -375,7 +375,7 @@ procedure TEditSrsFrm.SignalsTVDragDrop(Sender: TBaseVirtualTree;
 var
   I: Integer;
   n, sn, new, prev: PVirtualNode;
-  d, sd, nd:pnodedata;
+  data, sd, nd:pnodedata;
   li:TListItem;
   t:cSRSTaho;
   it:itag;
@@ -385,7 +385,7 @@ begin
   n := Sender.DropTargetNode;
   if n<>nil then
   begin
-    d:=SignalsTV.GetNodeData(n);
+    data:=SignalsTV.GetNodeData(n);
   end;
   if source=TagsListFrame1.TagsLV then
   begin
@@ -511,8 +511,8 @@ begin
   d:=SignalsTV.GetNodeData(n);
   if tobject(d.data) is cSRSres then
   begin
-    csrsres(d).m_axis:=SigAx.ItemIndex;
-    csrsres(d).m_incPNum:=AddPNumIE.IntNum;
+    csrsres(d.data).m_axis:=SigAx.ItemIndex;
+    csrsres(d.data).m_incPNum:=AddPNumIE.IntNum;
   end;
 end;
 

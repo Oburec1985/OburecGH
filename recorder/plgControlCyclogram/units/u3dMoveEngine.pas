@@ -34,7 +34,7 @@ type
     // функция вызывается в цикле для обновления объектов
     // в зависимости от типа пересчитывается геометрия на основании тегов
     // или другой информации
-    procedure UpdateObj;virtual;abstract;
+    procedure UpdateObjByTag;virtual;abstract;
   end;
 
   // объект отвечающий за перемещением и ориентацию
@@ -53,7 +53,7 @@ type
     // при изменении позиции объекта дочерний объект будет менять положение
     procedure AddChild(o:cnodeobject);
     procedure initTM;
-    procedure UpdateObj;override;
+    procedure UpdateObjByTag;override;
     constructor create;override;
     destructor destroy;override;
   end;
@@ -75,7 +75,7 @@ type
     // теги отвечающие за амплитуду смещения кости
     xTag, yTag, zTag:cTag;
   public
-    procedure UpdateObj;override;
+    procedure UpdateObjByTag;override;
     constructor create;override;
     destructor destroy;override;
   end;
@@ -123,7 +123,7 @@ begin
 end;
 
 
-procedure c3dSkinObj.UpdateObj;
+procedure c3dSkinObj.UpdateObjByTag;
 var
   p3,lp3:point3;
   b:boolean;
@@ -186,7 +186,7 @@ begin
     o:=c3dSkinObj(GetObj(i));
     if o.ready then
     begin
-      o.UpdateObj;
+      o.UpdateObjByTag;
       b:=true;
     end;
   end;
@@ -288,7 +288,7 @@ begin
   m_starttm:=nodetm;
 end;
 
-procedure c3dMoveObj.UpdateObj;
+procedure c3dMoveObj.UpdateObjByTag;
 var
   rot_p3, p3:point3;
   //q:tQuat;

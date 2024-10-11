@@ -88,7 +88,7 @@ begin
   end;
   if name='cSkin' then
   begin
-    if (obj is cmeshobr) or (obj is cShapeObj) then
+    if (obj is cmeshobr) or (obj is cshapeobj) then
     begin
       result:=cSkin.create(cmeshobr(obj));
       cBaseDeformer(result).owner:=cnodeobject(obj);

@@ -117,7 +117,6 @@ type
   end;
 
 var
-  ObjFrm3d: TObjFrm3d;
   g_ObjFrm3dFactory: cObjFrm3dFactory;
 
 const
@@ -497,7 +496,7 @@ begin
   //exit;
   a_pIni:=TIniFile.Create(m_inifile);
   b:=true;
-  n:=1;
+  n:=0;
   while b do
   begin
     s:=a_pIni.ReadString(m_loadsect, 'SkinObj_'+inttostr(n), '');
@@ -507,7 +506,8 @@ begin
     mesh:=o;
     if o is cShapeObj then
     begin
-      skin:=cShapeObj(o).ModCreator.CreateModificator('cSkin');
+      skin:=cskin(o.ModCreator.CreateModificator('cSkin'));
+      //skin:=cShapeObj(o).ModCreator.CreateModificator('cSkin');
     end;
     // костей в скине
     j:=a_pIni.ReadInteger(m_loadsect, 'SkinBCount_'+inttostr(n), 0);
@@ -538,21 +538,21 @@ begin
       c3dSkinObj(o).PId:=strtotpoint(s1);
       // теги
       s1:=getSubStrByIndex(s6,';',1,i);
-      s5:=getSubStrByIndex(s6,'/',1,0);
-      if s5<>'' then
+      str:=getSubStrByIndex(s6,'/',1,0);
+      if str<>'' then
       begin
-        c3dSkinObj(o).xTag.tagname:=s5;
+        c3dSkinObj(o).xTag.tagname:=str;
       end;
-      s5:=getSubStrByIndex(s6,'/',1,1);
-      if s5<>'' then
+      str:=getSubStrByIndex(s6,'/',1,1);
+      if str<>'' then
       begin
-        c3dSkinObj(o).yTag.tagname:=s5;
+        c3dSkinObj(o).yTag.tagname:=str;
       end;
-      s5:=getSubStrByIndex(s6,'/',1,2);
-      if (s5<>'') then
+      str:=getSubStrByIndex(s6,'/',1,2);
+      if (str<>'') then
       begin
-        if s5<>';' then
-          c3dSkinObj(o).zTag.tagname:=s5;
+        if str<>';' then
+          c3dSkinObj(o).zTag.tagname:=str;
       end;
 
       // привязываем к сцене

@@ -81,7 +81,7 @@ type
 
     function getname:string;
   public
-    constructor create(bone:cnodeobject;pmesh:cmeshObr);
+    constructor create(bone:cnodeobject;pmesh:cobject);
     destructor destroy;override;
     // число вершин
     function count:integer;
@@ -191,7 +191,7 @@ begin
 end;
 
 
-constructor cBone.create(bone:cnodeobject;pmesh:cmeshObr);
+constructor cBone.create(bone:cnodeobject;pmesh:cobject);
 begin
   fmesh:=pmesh;
   //pointers:=cIntVectorList.create;

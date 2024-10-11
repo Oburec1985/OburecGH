@@ -180,6 +180,7 @@ begin
     end;
     camera:=cui(ui).m_RenderScene.activecamera;
     b:=cui(ui).getSelectBound(res);
+    targettm:=camera.GetTargetM;
     if res then
     begin
       if getBoundCenter(b, center) then
@@ -191,10 +192,6 @@ begin
         targettm[14]:=center.z;
         targettm[15]:=1;
       end;
-    end
-    else
-    begin
-      targettm:=camera.GetTargetM;
     end;
     targettm:=NoRotateMatrix4(targettm);
     // Переносит компоненты вращения из второго аргумента в первый и дает рез-т

@@ -2,7 +2,7 @@ object ObjFrm3d: TObjFrm3d
   Left = 0
   Top = 0
   Caption = 'GLFrm'
-  ClientHeight = 515
+  ClientHeight = 564
   ClientWidth = 951
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -16,7 +16,7 @@ object ObjFrm3d: TObjFrm3d
   TextHeight = 17
   object BotSplitter: TSplitter
     Left = 0
-    Top = 340
+    Top = 389
     Width = 951
     Height = 4
     Cursor = crVSplit
@@ -34,7 +34,7 @@ object ObjFrm3d: TObjFrm3d
     Left = 0
     Top = 0
     Width = 951
-    Height = 340
+    Height = 389
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -45,7 +45,6 @@ object ObjFrm3d: TObjFrm3d
     scenename = '.\files\scenes'
     ShowTrasforms = True
     OnInitScene = GLInitScene
-    ExplicitHeight = 348
     object RightSplitter: TSplitter
       Left = 650
       Top = 1
@@ -77,7 +76,7 @@ object ObjFrm3d: TObjFrm3d
   end
   object ToolsGB: TGroupBox
     Left = 0
-    Top = 344
+    Top = 393
     Width = 951
     Height = 171
     Margins.Left = 4
@@ -87,7 +86,6 @@ object ObjFrm3d: TObjFrm3d
     Align = alBottom
     Caption = 'ToolsGB'
     TabOrder = 1
-    ExplicitTop = 352
     object ErrorEdit: TEdit
       Left = 2
       Top = 144

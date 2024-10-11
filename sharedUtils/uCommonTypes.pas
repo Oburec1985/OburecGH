@@ -25,16 +25,23 @@ type
 
   pointsArray = array of point2;
 
+
   point3=record
     x,
     y,
     z:single;
+    class operator Add(p1:point3; p2:point3):point3;
+    class operator Subtract(p1, p2:point3):point3;
   end;
 
   point3d=record
     x,
     y,
     z:double;
+    class operator Add(p1, p2:point3d):point3d;
+    class operator Add(p1:point3d; p2:point3):point3d;
+    class operator Subtract(p1, p2:point3d):point3d;
+    class operator implicit(p:point3d):point3;
   end;
 
   point4d=record
@@ -543,6 +550,53 @@ begin
   if i<0 then exit;
   if i<count then
     result:=TNamedObj(objects[i]);
+end;
+
+{ point3d }
+
+class operator point3d.Add(p1, p2: point3d): point3d;
+begin
+  result.x:=p1.x+p2.x;
+  result.y:=p1.y+p2.y;
+  result.z:=p1.z+p2.z;
+end;
+
+class operator point3d.Add(p1: point3d; p2: point3): point3d;
+begin
+  result.x:=p1.x+p2.x;
+  result.y:=p1.y+p2.y;
+  result.z:=p1.z+p2.z;
+end;
+
+class operator point3d.implicit(p: point3d): point3;
+begin
+  result.x:=p.x;
+  result.y:=p.y;
+  result.z:=p.z;
+end;
+
+class operator point3d.Subtract(p1, p2: point3d): point3d;
+begin
+  result.x:=p1.x-p2.x;
+  result.y:=p1.y-p2.y;
+  result.z:=p1.z-p2.z;
+end;
+
+{ point3 }
+
+class operator point3.Add(p1, p2: point3): point3;
+begin
+  result.x:=p1.x+p2.x;
+  result.y:=p1.y+p2.y;
+  result.z:=p1.z+p2.z;
+end;
+
+
+class operator point3.Subtract(p1, p2: point3): point3;
+begin
+  result.x:=p1.x-p2.x;
+  result.y:=p1.y-p2.y;
+  result.z:=p1.z-p2.z;
 end;
 
 end.

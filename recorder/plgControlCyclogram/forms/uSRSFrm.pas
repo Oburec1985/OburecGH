@@ -168,10 +168,10 @@ type
     m_fftCount, fHalfFft, m_blockcount: integer;
     // добавлять нули
     m_addNulls: boolean;
-  private
-    ftypeRes: integer;
     // разрешение спектра
     fspmdx: double;
+  private
+    ftypeRes: integer;
     // размер порции по которой идет расчет (length*fs*blockCount) в сек.
     fportionsize: double;
     // размер порции по которой идет расчет в отсчетах
@@ -192,7 +192,8 @@ type
     procedure setWnd(wf: TSpmWndFunc); overload;
     function addSRS(s: pointer):csrsres;
     procedure delSRS(s: tobject);
-    function GetSrs(i: integer): cSRSres;
+    function GetSrs(i: integer): cSRSres;overload;
+    function GetSrs(s: string): cSRSres;overload;
     function SRSCount: integer;
     // частота дискретизации сигнала
     function Freq: double;
@@ -208,7 +209,6 @@ type
   public
     m_tag: ctag;
   public
-    m_SpmDx: double;
     m_freq: double;
     // размер блока для расчета спектра = freq*Numpoints
     blSize: double;
@@ -374,6 +374,8 @@ type
     m_lgX, m_lgY, m_newAx: boolean;
     m_minX, m_maxX: double;
     m_minY, m_maxY: double;
+    // текущая частота
+    m_curFreq:double;
     m_saveT0: boolean;
 
     m_UseWelch: boolean;
@@ -1472,7 +1474,7 @@ var
 begin
   t:=getTaho;
   c:=t.cfg;
-  result:=getRes(s);
+  result:=c.GetSrs(s);
 end;
 
 function TSRSFrm.getTaho: cSRSTaho;
@@ -1926,6 +1928,7 @@ begin
     t := getTaho;
     c := t.cfg;
     x1:=pageSpm.cursor.getx1;
+    m_curFreq:=x1;
     for j := 0 to c.srsCount - 1 do
     begin
       s:=c.GetSrs(j);
@@ -2562,9 +2565,28 @@ begin
   result := cSRSTaho(taho).m_tag.Freq;
 end;
 
+
+
 function cSpmCfg.GetSrs(i: integer): cSRSres;
 begin
   result := cSRSres(m_SRSList.Items[i]);
+end;
+
+function cSpmCfg.GetSrs(s: string): cSRSres;
+var
+  res:cSRSres;
+  i:integer;
+begin
+  result:=nil;
+  for I := 0 to m_SRSList.Count - 1 do
+  begin
+    res:=getsrs(i);
+    if res.m_tag.tagname=s then
+    begin
+      result:=res;
+      exit;
+    end;
+  end;
 end;
 
 function cSpmCfg.name: string;
@@ -2902,16 +2924,33 @@ var
   li:tlistitem;
 begin
   if g_ModelPointList=nil then
+  begin
     g_ModelPointList:=cModelPointList.Create;
+  end;
   g_ModelPointList.setSrsFrm(self);
   j:=0;
-  for I := 0 to SignalsLV.Count - 1 do
+  for I := 0 to SignalsLV.items.Count - 1 do
   begin
     li:=SignalsLV.Items[i];
     s:=csrsres(li.Data);
+    j:=s.m_incPNum+1+PointIE.IntNum;
+    p:=g_ModelPointList.AddPoint(j);
+    case s.m_axis of
+      0:
+      begin
+        p.m_xName:=s.m_tag.tagname;
+      end;
+      1:
+      begin
+        p.m_yName:=s.m_tag.tagname;
+      end;
+      2:
+      begin
+        p.m_zName:=s.m_tag.tagname;
+      end;
+    end;
   end;
-  p:=g_ModelPointList.AddPoint(PointIE.IntNum);
-
+  g_ModelPointList.ReadPointsFromSrsFrm;
 end;
 
 procedure cSRSFactory.doStop;

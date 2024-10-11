@@ -7,7 +7,8 @@ uses
   Variants, Classes, Graphics,
   Controls, Forms,
   uNodeObject, MathFunction, uObject, uObjectTypes, uBaseCamera, uMatrix,
-  uObjCtrFrame, uGlEventTypes, uCommonTypes, uTimeController,
+  uObjCtrFrame, uGlEventTypes, uCommonTypes,
+  uTimeController,
   Dialogs, Buttons, StdCtrls, uUI, uSpin, ExtCtrls;
 
 type
@@ -90,6 +91,7 @@ procedure TTrfrmToolsFrame.AnimationTimerTimer(Sender: TObject);
 begin
   m_ui.TimeCntrl.time:=m_ui.TimeCntrl.time+AnimationTimer.Interval;
   m_ui.m_RenderScene.invalidaterect;
+  m_ui.eventlist.CallAllEvents(e_glOnPlayTimer);
 end;
 
 procedure TTrfrmToolsFrame.InitWorldCB;
