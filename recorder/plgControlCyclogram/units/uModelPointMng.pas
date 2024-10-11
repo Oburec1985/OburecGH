@@ -114,24 +114,24 @@ var
 begin
   result.x:=0; result.y:=0; result.z:=0;
   ind:=trunc(freq/m_dF);
-  p:=phase;
+  //p:=phase;
   if m_xS<>nil then
   begin
     y:=EvalLineYd(freq, p2d(ind*m_dF, m_frfX[ind]),p2d((ind+1)*m_dF, m_frfX[ind+1]));
-    //p:=EvalLineYd(freq, p2d(ind*m_dF, m_phaseX[ind]),p2d((ind+1)*m_dF, m_phaseX[ind+1]));
-    result.x:=y*sc*sin(p+phase);
+    p:=EvalLineYd(freq, p2d(ind*m_dF, m_phaseX[ind]),p2d((ind+1)*m_dF, m_phaseX[ind+1]));
+    result.x:=y*sc*sin(p*c_degtorad+phase);
   end;
   if m_yS<>nil then
   begin
     y:=EvalLineYd(freq, p2d(ind*m_dF, m_frfY[ind]),p2d((ind+1)*m_dF, m_frfY[ind+1]));
-    //p:=EvalLineYd(freq, p2d(ind*m_dF, m_phaseY[ind]),p2d((ind+1)*m_dF, m_phaseY[ind+1]));
-    result.y:=y*sc*sin(p+phase);
+    p:=EvalLineYd(freq, p2d(ind*m_dF, m_phaseY[ind]),p2d((ind+1)*m_dF, m_phaseY[ind+1]));
+    result.y:=y*sc*sin(p*c_degtorad+phase);
   end;
   if m_zS<>nil then
   begin
     y:=EvalLineYd(freq, p2d(ind*m_dF, m_frfZ[ind]),p2d((ind+1)*m_dF, m_frfZ[ind+1]));
-    //p:=EvalLineYd(freq, p2d(ind*m_dF, m_phaseZ[ind]),p2d((ind+1)*m_dF, m_phaseZ[ind+1]));
-    result.z:=y*sc*sin(p+phase);
+    p:=EvalLineYd(freq, p2d(ind*m_dF, m_phaseZ[ind]),p2d((ind+1)*m_dF, m_phaseZ[ind+1]));
+    result.z:=y*sc*sin(p*c_degtorad+phase);
   end;
 end;
 
@@ -343,6 +343,7 @@ end;
 procedure cModelPointList.setSrsFrm(f: tsrsfrm);
 begin
   m_SRSFrm:=f;
+  m_scale:=f.Scalefe.FloatNum;
 end;
 
 end.

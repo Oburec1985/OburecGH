@@ -327,7 +327,7 @@ begin
           s:=s+ctrl.name+';';
         end;
         a_pIni.WriteString(str, 'SkinObjBNames_'+inttostr(n), s);
-        // число вершин
+        // число вершин контролируемое каждой костью
         s:='';
         for j:=0 to cskin(skin).count-1 do
         begin
@@ -349,7 +349,7 @@ begin
             p:=c3dSkinObj(ctrl).m_bone.getpoint(k);
             s1:=s1+Tpointtostr(p.p)+'_'+floattostr(p.weight)+';';
           end;
-          a_pIni.WriteString(str, 'SkinVerts_'+inttostr(n), s1);
+          a_pIni.WriteString(str, 'SkinVerts_'+inttostr(j), s1);
           s:=s+inttostr(c3dSkinObj(ctrl).m_PName)+';';
           s2:=s2+tpointtostr(c3dSkinObj(ctrl).PId)+';';
         end;
@@ -519,8 +519,6 @@ begin
     s3:=a_pIni.ReadString(m_loadsect, 'SkinObjPNums_'+inttostr(n), '');
     s5:=a_pIni.ReadString(m_loadsect, 'SkinObjPID_'+inttostr(n), '');
     s6:=a_pIni.ReadString(m_loadsect, 'SkinBTags_'+inttostr(n), '');
-    // id вершин точек
-    s4:=a_pIni.ReadString(m_loadsect, 'SkinVerts_'+inttostr(n), '');
     for i:=0 to j-1 do
     begin
       // имена
@@ -530,6 +528,8 @@ begin
       // число вершин
       s1:=getSubStrByIndex(s2,';',1,i);
       vn:=strtoint(s1);
+     // id вершин точек
+      s4:=a_pIni.ReadString(m_loadsect, 'SkinVerts_'+inttostr(i), '');
       // номера точек
       s1:=getSubStrByIndex(s3,';',1,i);
       c3dSkinObj(o).m_PName:=strtoint(s1);
@@ -581,9 +581,9 @@ begin
         deformP.weight:=w;
         //c3dCtrlObj(o).PId
       end;
+      g_CtrlObjList.addObj(c3dSkinObj(o));
     end;
     inc(n);
-    g_CtrlObjList.addObj(c3dSkinObj(o));
   end;
   UpdateTreeView;
   a_pIni.Destroy;

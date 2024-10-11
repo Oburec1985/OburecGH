@@ -337,6 +337,8 @@ type
     SignalsLV: TBtnListView;
     Splitter1: TSplitter;
     SavePBtn: TButton;
+    Scale: TLabel;
+    ScaleFE: TFloatEdit;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -1543,8 +1545,8 @@ begin
       if ltag <> nil then
       begin
         s:=c.addSRS(pointer(ltag));
-        s.m_axis:=a_pIni.ReadInteger(str,
-                                     'Axis_' + inttostr(i), 0);
+        s.m_axis:=a_pIni.ReadInteger(str,'Axis_' + inttostr(i), 0);
+        s.m_incPNum:=a_pIni.ReadInteger(str,'Pinc_' + inttostr(i), 0);
       end;
     end;
     c.typeres := a_pIni.ReadInteger(str, 'ResType', 0);
@@ -1771,6 +1773,7 @@ begin
         s := c.GetSrs(i);
         saveTagToIni(a_pIni, s.m_tag, str, 'Tag_' + inttostr(i));
         a_pIni.WriteInteger(str, 'Axis_' + inttostr(i), s.m_axis);
+        a_pIni.WriteInteger(str, 'Pinc_' + inttostr(i), s.m_incPNum);
       end;
     end;
     a_pIni.WriteInteger(str, 'WelchBlockCount', m_WelchCount);
@@ -2311,8 +2314,7 @@ begin
   begin
     s := c.GetSrs(i);
     ZeroMemory(s.m_frf, length(s.m_frf) * sizeof(double));
-    ZeroMemory(s.m_shockList.m_Cxy,
-      length(s.m_shockList.m_Cxy) * sizeof(TComplex_d));
+    //ZeroMemory(s.m_shockList.m_Cxy, length(s.m_shockList.m_Cxy) * sizeof(TComplex_d));
     td := nil;
     sd := nil;
     for k := 0 to s.m_shockList.Count - 1 do
@@ -2348,17 +2350,10 @@ begin
         begin
           for j := 0 to cfg.fHalfFft - 1 do
           begin
-            s.m_phase[j] := (180 / pi) * s.m_shockList.m_Cxy[j]
-              .im / s.m_shockList.m_Cxy[j].Re;
+            s.m_phase[j]:=(180/pi)*s.m_shockList.m_Cxy[j].im/
+                                   s.m_shockList.m_Cxy[j].Re;
             // if s.m_shockList.m_coh[j] < m_CohTreshold then
-            if false then
-            begin
-              s.m_frf[j] := 0;
-            end
-            else
-            begin
-              s.m_frf[j] := s.m_frf[j] / shockCount;
-            end;
+            s.m_frf[j] := s.m_frf[j] / shockCount;
           end;
         end;
       1: // H1 Syx/Sxx  x - тахо
@@ -2367,6 +2362,8 @@ begin
           begin
             cross := 0;
             v2 := 0;
+            s.m_phase[j]:=(180/pi)*s.m_shockList.m_Cxy[j].im/
+                                   s.m_shockList.m_Cxy[j].Re;
             for k := 0 to s.m_shockList.Count - 1 do
             begin
               if k = hideind then
@@ -2389,6 +2386,8 @@ begin
           begin
             cross := 0;
             v1 := 0;
+            s.m_phase[j]:=(180/pi)*s.m_shockList.m_Cxy[j].im/
+                                   s.m_shockList.m_Cxy[j].Re;
             for k := 0 to s.m_shockList.Count - 1 do
             begin
               if k = hideind then
