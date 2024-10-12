@@ -222,7 +222,7 @@ type
     // синтезированная передаточная характеристика (усредненная)
     m_frf, m_phase: TDoubleArray;
     m_fltFrf: array of integer; // счетчик отбракованных точек
-    line, lineSpm, lineCoh, lineFrf,
+    line, lineSpm, lineCoh, lineFrf, linePhase,
     // усредненная Frf
     lineAvFRF: cBuffTrend1d;
     // список ударов (TDataBlock) (хранит спектры)
@@ -331,14 +331,13 @@ type
     UseWndFcb: TCheckBox;
     WelchCB: TCheckBox;
     DisableCB: TCheckBox;
-    SPMcb: TCheckBox;
-    ShowCohCB: TCheckBox;
     GroupBox1: TGroupBox;
     SignalsLV: TBtnListView;
     Splitter1: TSplitter;
     SavePBtn: TButton;
     Scale: TLabel;
     ScaleFE: TFloatEdit;
+    ResTypeRG: TRadioGroup;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -358,6 +357,7 @@ type
     procedure ShowCohCBClick(Sender: TObject);
     procedure SignalsLVClick(Sender: TObject);
     procedure SavePBtnClick(Sender: TObject);
+    procedure ResTypeRGClick(Sender: TObject);
   public
     // отступ слева и длительность
     m_ShiftLeft, m_Length: double;
@@ -406,6 +406,7 @@ type
     // отобразить последнюю передаточную характеристику блока в S и усредн. передаточную
     procedure ShowFrf(s: cSRSres; c: cSpmCfg; shInd: integer);
     procedure ShowSpm;
+    procedure ShowPhase;
     procedure UpdateView;
     // возвращает найден ли удар или нет. Вызов внутри updatedata
     function SearchTrig(t:cSRSTaho):boolean;
@@ -580,18 +581,28 @@ end;
 
 function  TSRSFrm.MaxSpmY:double;
 begin
-  if ShowCohCb.checked then
+  if ResTypeRG.itemindex=1 then
     result:=1.1
   else
-    result:=m_maxY;
+  begin
+    if ResTypeRG.itemindex=3 then
+      result:=180
+    else
+      result:=m_maxY;
+  end;
 end;
 
 function  TSRSFrm.MinSpmY:double;
 begin
-  if ShowCohCb.checked then
+  if ResTypeRG.itemindex=1 then
     result:=0.1
   else
-    result:=m_minY;
+  begin
+    if ResTypeRG.itemindex=3 then
+      result:=-180
+    else
+      result:=m_minY;
+  end;
 end;
 
 procedure TSRSFrm.ShowCohCBClick(Sender: TObject);
@@ -601,10 +612,27 @@ var
   r:frect;
 begin
   s:=ActiveSignal;
-  s.lineCoh.visible:=ShowCohCB.Checked;
-  s.lineFrf.visible:=not ShowCohCB.Checked;
-  s.lineAvFRF.visible:=not ShowCohCB.Checked;
-  if ShowCohCB.Checked then
+  s.lineCoh.visible:=ResTypeRG.itemindex=1;
+  s.lineFrf.visible:=ResTypeRG.itemindex=0;
+  s.lineAvFRF.visible:=ResTypeRG.itemindex=0;
+  if ResTypeRG.itemindex=2 then
+  begin
+    s.lineSpm.visible:=true;
+    ShowSpm;
+  end
+  else
+    s.lineSpm.visible:=false;
+  if ResTypeRG.itemindex=3 then
+  begin
+    s.linePhase.visible:=true;
+    ShowPhase;
+  end
+  else
+    s.linePhase.visible:=false;
+
+  // перекочевало сюда из showspm
+  UpdateView;
+  if (ResTypeRG.itemindex=1) or (ResTypeRG.itemindex=3) then
   begin
     r.BottomLeft.x:=m_minX;
     r.TopRight.x:=m_maxX;
@@ -653,6 +681,8 @@ var
   i: integer;
 begin
   t := getTaho;
+  td := t.m_shockList.getBlock(ShockIE.intnum);
+  t.m_shockList.delBlock(td);
   for i := 0 to t.cfg.SRSCount - 1 do
   begin
     hideCB.Checked := false;
@@ -660,11 +690,9 @@ begin
     sd := s.m_shockList.getBlock(ShockIE.intnum);
     if sd = nil then
       exit;
-    td := t.m_shockList.getBlock(ShockIE.intnum);
     s.m_shockList.delBlock(sd);
-    t.m_shockList.delBlock(td);
-    updateFrf(false);
   end;
+  updateFrf(false);
   ShockCountE.Text := inttostr(t.m_shockList.Count);
   fdelBtn := false;
 end;
@@ -902,6 +930,7 @@ begin
     SetLength(s.m_shockList.m_coh, c.fHalfFft);
 
     s.lineSpm.dx := c.fspmdx;
+    s.linePhase.dx:=c.fspmdx;
     s.lineCoh.dx := c.fspmdx;
     s.lineFrf.dx := c.fspmdx;
     s.lineAvFRF.dx := c.fspmdx;
@@ -997,6 +1026,7 @@ begin
         l.dx := 1 / t.m_tag.Freq
       else
         l.dx := 0;
+
       l := cBuffTrend1d.create;
       l.color := ColorArray[i + 1];
       axSpm.AddChild(l);
@@ -1004,6 +1034,14 @@ begin
       s.lineSpm.dx := c.fspmdx;
       s.lineSpm.name := s.name + '_spm';
       l.visible := not bfrf;
+
+      l := cBuffTrend1d.create;
+      l.color := ColorArray[i + 1];
+      axSpm.AddChild(l);
+      s.linePhase := l;
+      s.linePhase.dx := c.fspmdx;
+      s.linePhase.name := s.name + '_Phase';
+      l.visible := ResTypeRG.ItemIndex=3;
 
       l := cBuffTrend1d.create;
       l.color := ColorArray[i + 1];
@@ -1311,11 +1349,34 @@ begin
     begin
       ls.lineFrf.visible:=false;
       ls.lineAvFRF.visible:=false;
+      ls.lineSpm.visible:=false;
+      ls.linePhase.visible:=false;
+      ls.lineCoh.visible:=false;
     end
     else
     begin
-      ls.lineFrf.visible:=true;
-      ls.lineAvFRF.visible:=true;
+      case ResTypeRG.ItemIndex of
+        0:
+        begin
+          ls.lineFrf.visible:=true;
+          ls.lineAvFRF.visible:=true;
+        end;
+        1:
+        begin
+          ls.lineCoh.visible:=true;
+          ShowCohCBClick(nil);
+        end;
+        2:
+        begin
+          ls.lineSpm.visible:=true;
+          ShowSpm;
+        end;
+        3:
+        begin
+          ls.linePhase.visible:=true;
+          ShowPhase;
+        end;
+      end;
     end;
   end;
 end;
@@ -1359,7 +1420,7 @@ begin
         ShockCountE.Text := '0';
     end;
   end;
-  if not SPMcb.Checked then
+  if ResTypeRG.itemindex=0 then
   begin
     if fUpdateFrf then
     begin
@@ -1370,10 +1431,12 @@ begin
         ShowFrf(s, c, ShockIE.intnum);
       fShowLast := false;
     end;
-  end
-  else
-  begin
+  end;
+  if ResTypeRG.itemindex=2 then
     ShowSpm;
+  if ResTypeRG.itemindex=3 then
+  begin
+    ShowPhase;
   end;
   SpmChart.redraw;
 end;
@@ -1485,6 +1548,11 @@ begin
     result := cSRSTaho(m_TahoList.Items[0])
   else
     result := nil;
+end;
+
+procedure TSRSFrm.ResTypeRGClick(Sender: TObject);
+begin
+  ShowCohCbClick(nil);
 end;
 
 procedure TSRSFrm.RBtnClick(sender: tobject);
@@ -1855,6 +1923,25 @@ begin
   end;
 end;
 
+procedure TSRSFrm.ShowPhase;
+var
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s: cSRSres;
+  b: TDataBlock;
+begin
+  t := getTaho;
+  c := t.getCfg;
+  if c<>nil then
+  begin
+    s := ActiveSignal;
+    if s<>nil then
+    begin
+      s.linePhase.AddPoints(TDoubleArray(s.m_phase), c.fHalfFft);
+    end;
+  end;
+end;
+
 procedure TSRSFrm.ShowSpm;
 var
   t: cSRSTaho;
@@ -1866,7 +1953,7 @@ begin
   c := t.getCfg;
   if c<>nil then
   begin
-    s := c.GetSrs(PointIE.intnum);
+    s := ActiveSignal;
     if s<>nil then
     begin
       b := s.m_shockList.getBlock(ShockIE.intnum);
@@ -1893,10 +1980,13 @@ begin
   c:=t.cfg;
   s := ActiveSignal;
   hideFRF(s);
-  if fShowLast then
-    ShowFrf(s, c, -1)
-  else
-    ShowFrf(s, c, ShockIE.intnum);
+  if ResTypeRG.ItemIndex=0 then
+  begin
+   if fShowLast then
+      ShowFrf(s, c, -1)
+    else
+      ShowFrf(s, c, ShockIE.intnum);
+  end;
   fShowLast := false;
   SpmChart.redraw;
 end;
@@ -1910,9 +2000,9 @@ begin
   t := getTaho;
   c := t.getCfg;
   s := c.GetSrs(PointIE.intnum);
-  s.lineFrf.visible := not SPMcb.Checked;
-  s.lineAvFRF.visible := not SPMcb.Checked;
-  s.lineSpm.visible := SPMcb.Checked;
+  s.lineFrf.visible := ResTypeRG.ItemIndex=0;
+  s.lineAvFRF.visible := ResTypeRG.ItemIndex=0;
+  s.lineSpm.visible := ResTypeRG.ItemIndex=2;
   UpdateView;
 end;
 
@@ -2268,8 +2358,8 @@ begin
         begin
           for j := 0 to cfg.fHalfFft - 1 do
           begin
-            s.m_phase[j] := (180 / pi) * s.m_shockList.m_Cxy[j]
-              .im / s.m_shockList.m_Cxy[j].Re;
+            s.m_phase[j] := (180 / pi) * ArcTan(s.m_shockList.m_Cxy[j]
+              .im / s.m_shockList.m_Cxy[j].Re);
             // Sensor/Taho
             s.m_frf[j] := sqrt(s.m_shockList.m_Syy[j] / s.m_shockList.m_Sxx[j]);
           end;
@@ -2278,8 +2368,8 @@ begin
         begin
           for j := 0 to cfg.fHalfFft - 1 do
           begin
-            s.m_phase[j] := (180 / pi) * s.m_shockList.m_Cxy[j]
-              .im / s.m_shockList.m_Cxy[j].Re;
+            s.m_phase[j] := (180 / pi) * ArcTan(s.m_shockList.m_Cxy[j]
+              .im / s.m_shockList.m_Cxy[j].Re);
             s.m_frf[j] := abs(s.m_shockList.m_Cxy[j]) / s.m_shockList.m_Sxx[j];
           end;
         end;
@@ -2287,8 +2377,8 @@ begin
         begin
           for j := 0 to cfg.fHalfFft - 1 do
           begin
-            s.m_phase[j] := (180 / pi) * s.m_shockList.m_Cxy[j]
-              .im / s.m_shockList.m_Cxy[j].Re;
+            s.m_phase[j] := (180 / pi) * ArcTan(s.m_shockList.m_Cxy[j]
+              .im / s.m_shockList.m_Cxy[j].Re);
             s.m_frf[j] := s.m_shockList.m_Syy[j] / abs(s.m_shockList.m_Cxy[j]);
           end;
         end;
@@ -2350,8 +2440,8 @@ begin
         begin
           for j := 0 to cfg.fHalfFft - 1 do
           begin
-            s.m_phase[j]:=(180/pi)*s.m_shockList.m_Cxy[j].im/
-                                   s.m_shockList.m_Cxy[j].Re;
+            s.m_phase[j]:=(180/pi)*ArcTan(s.m_shockList.m_Cxy[j].im/
+                                   s.m_shockList.m_Cxy[j].Re);
             // if s.m_shockList.m_coh[j] < m_CohTreshold then
             s.m_frf[j] := s.m_frf[j] / shockCount;
           end;
@@ -2362,8 +2452,8 @@ begin
           begin
             cross := 0;
             v2 := 0;
-            s.m_phase[j]:=(180/pi)*s.m_shockList.m_Cxy[j].im/
-                                   s.m_shockList.m_Cxy[j].Re;
+            s.m_phase[j]:=(180/pi)*ArcTan(s.m_shockList.m_Cxy[j].im/
+                                   s.m_shockList.m_Cxy[j].Re);
             for k := 0 to s.m_shockList.Count - 1 do
             begin
               if k = hideind then
@@ -2386,8 +2476,8 @@ begin
           begin
             cross := 0;
             v1 := 0;
-            s.m_phase[j]:=(180/pi)*s.m_shockList.m_Cxy[j].im/
-                                   s.m_shockList.m_Cxy[j].Re;
+            s.m_phase[j]:=(180/pi)*ArcTan(s.m_shockList.m_Cxy[j].im/
+                                   s.m_shockList.m_Cxy[j].Re);
             for k := 0 to s.m_shockList.Count - 1 do
             begin
               if k = hideind then

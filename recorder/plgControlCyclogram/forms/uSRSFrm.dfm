@@ -4,7 +4,7 @@ object SRSFrm: TSRSFrm
   Hint = #1042#1082#1083#1102#1095#1080#1090#1100'/'#1086#1090#1082#1083#1102#1095#1080#1090#1100' '#1088#1072#1089#1095#1077#1090
   Caption = 'SRSFrm'
   ClientHeight = 479
-  ClientWidth = 853
+  ClientWidth = 837
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,17 +17,18 @@ object SRSFrm: TSRSFrm
   PixelsPerInch = 96
   TextHeight = 13
   object Splitter1: TSplitter
-    Left = 629
+    Left = 613
     Top = 0
     Height = 479
     Align = alRight
     Color = clBackground
     ParentColor = False
+    ExplicitLeft = 629
   end
   object SpmChart: cChart
     Left = 0
     Top = 0
-    Width = 629
+    Width = 613
     Height = 479
     Cursor = crSizeAll
     Margins.Left = 2
@@ -43,15 +44,17 @@ object SRSFrm: TSRSFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitWidth = 629
   end
   object RightGB: TGroupBox
-    Left = 632
+    Left = 616
     Top = 0
     Width = 221
     Height = 479
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
+    ExplicitLeft = 618
     object ShockCountLabel: TLabel
       Left = 8
       Top = 21
@@ -627,8 +630,8 @@ object SRSFrm: TSRSFrm
       OnClick = UseWndFcbClick
     end
     object WelchCB: TCheckBox
-      Left = 117
-      Top = 255
+      Left = 151
+      Top = 200
       Width = 59
       Height = 17
       Caption = 'Welch'
@@ -644,24 +647,6 @@ object SRSFrm: TSRSFrm
       TabOrder = 13
       OnClick = DisableCBClick
     end
-    object SPMcb: TCheckBox
-      Left = 70
-      Top = 269
-      Width = 59
-      Height = 18
-      Caption = 'Spm'
-      TabOrder = 14
-      OnClick = SPMcbClick
-    end
-    object ShowCohCB: TCheckBox
-      Left = 117
-      Top = 269
-      Width = 59
-      Height = 18
-      Caption = 'Coh'
-      TabOrder = 15
-      OnClick = ShowCohCBClick
-    end
     object GroupBox1: TGroupBox
       Left = 2
       Top = 336
@@ -673,7 +658,7 @@ object SRSFrm: TSRSFrm
       Margins.Bottom = 2
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
-      TabOrder = 16
+      TabOrder = 14
       object SignalsLV: TBtnListView
         Left = 2
         Top = 15
@@ -711,6 +696,7 @@ object SRSFrm: TSRSFrm
         DrawColorBox = False
         ChangeTextColor = False
         Editable = False
+        ExplicitLeft = 3
       end
     end
     object SavePBtn: TButton
@@ -719,7 +705,7 @@ object SRSFrm: TSRSFrm
       Width = 63
       Height = 25
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
-      TabOrder = 17
+      TabOrder = 15
       OnClick = SavePBtnClick
     end
     object ScaleFE: TFloatEdit
@@ -727,8 +713,23 @@ object SRSFrm: TSRSFrm
       Top = 158
       Width = 61
       Height = 21
-      TabOrder = 18
+      TabOrder = 16
       Text = '10000'
+    end
+    object ResTypeRG: TRadioGroup
+      Left = 118
+      Top = 223
+      Width = 66
+      Height = 77
+      Caption = 'ResTypeRG'
+      ItemIndex = 0
+      Items.Strings = (
+        'FRF'
+        'Coh'
+        'Spm'
+        'Phase')
+      TabOrder = 17
+      OnClick = ResTypeRGClick
     end
   end
 end
