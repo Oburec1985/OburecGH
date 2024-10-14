@@ -209,6 +209,8 @@ type
   public
     m_tag: ctag;
   public
+    m_color:point3;
+    m_colorAlt:point3;
     m_freq: double;
     // размер блока для расчета спектра = freq*Numpoints
     blSize: double;
@@ -253,6 +255,7 @@ type
 
   cSRSTaho = class
   public
+    m_color:point3;
     m_frm: tform;
     m_CohTreshold,
     // Амплдитуда для обнаружения события
@@ -354,10 +357,11 @@ type
     procedure WelchCBClick(sender: tobject);
     procedure DisableCBClick(sender: tobject);
     procedure SPMcbClick(sender: tobject);
-    procedure ShowCohCBClick(Sender: TObject);
+    procedure ShowLines(Sender: TObject);
     procedure SignalsLVClick(Sender: TObject);
     procedure SavePBtnClick(Sender: TObject);
     procedure ResTypeRGClick(Sender: TObject);
+    procedure SignalsLVColumnBtnClick(item: TListItem; lv: TListView);
   public
     // отступ слева и длительность
     m_ShiftLeft, m_Length: double;
@@ -402,11 +406,13 @@ type
     procedure delCurrentShock;
     PROCEDURE ShowShock(shock: integer);
     // спрятать лишние frf
-    procedure hideFRF(s: cSRSres);
+    procedure hideFRF;
     // отобразить последнюю передаточную характеристику блока в S и усредн. передаточную
     procedure ShowFrf(s: cSRSres; c: cSpmCfg; shInd: integer);
     procedure ShowSpm;
     procedure ShowPhase;
+    // сколько выбранных сигналов
+    function CheckedCount:integer;
     procedure UpdateView;
     // возвращает найден ли удар или нет. Вызов внутри updatedata
     function SearchTrig(t:cSRSTaho):boolean;
@@ -516,6 +522,20 @@ begin
   m_TahoList.Add(t);
 end;
 
+function TSRSFrm.CheckedCount: integer;
+var
+  i,c: Integer;
+  li:tlistitem;
+begin
+  result:=0;
+  for i := 0 to SignalsLV.items.Count - 1 do
+  begin
+    li:=SignalsLV.Items[i];
+    if li.Checked then
+      inc(result);
+  end;
+end;
+
 procedure TSRSFrm.CompareBtnClick(sender: tobject);
 var
   o: cObjFolder;
@@ -551,7 +571,6 @@ begin
   // отступ слева и длительность
   m_ShiftLeft := 0.05;
   m_Length := 1;
-
   m_TahoList := tlist.create;
   inherited;
 end;
@@ -605,30 +624,41 @@ begin
   end;
 end;
 
-procedure TSRSFrm.ShowCohCBClick(Sender: TObject);
+procedure TSRSFrm.ShowLines(Sender: TObject);
 var
   s: cSRSres;
   t: cSRSTaho;
   r:frect;
+  li:tlistitem;
+  I, lcount: Integer;
 begin
-  s:=ActiveSignal;
-  s.lineCoh.visible:=ResTypeRG.itemindex=1;
-  s.lineFrf.visible:=ResTypeRG.itemindex=0;
-  s.lineAvFRF.visible:=ResTypeRG.itemindex=0;
-  if ResTypeRG.itemindex=2 then
+  for I := 0 to SignalsLV.Items.Count - 1 do
   begin
-    s.lineSpm.visible:=true;
-    ShowSpm;
-  end
-  else
-    s.lineSpm.visible:=false;
-  if ResTypeRG.itemindex=3 then
-  begin
-    s.linePhase.visible:=true;
-    ShowPhase;
-  end
-  else
-    s.linePhase.visible:=false;
+    li:=SignalsLV.Items[i];
+    if not li.Checked then continue;
+    s:=csrsres(li.Data);
+    s.lineCoh.visible:=ResTypeRG.itemindex=1;
+    if ResTypeRG.itemindex=0 then
+    begin
+      lcount:=CheckedCount;
+      s.lineFrf.visible:=lcount=1;
+      s.lineAvFRF.visible:=true;
+    end;
+    if ResTypeRG.itemindex=2 then
+    begin
+      s.lineSpm.visible:=true;
+      ShowSpm;
+    end
+    else
+      s.lineSpm.visible:=false;
+    if ResTypeRG.itemindex=3 then
+    begin
+      s.linePhase.visible:=true;
+      ShowPhase;
+    end
+    else
+      s.linePhase.visible:=false;
+  end;
 
   // перекочевало сюда из showspm
   UpdateView;
@@ -658,10 +688,8 @@ begin
     sd := s.m_shockList.getBlock(shInd)
   else
     sd := s.m_shockList.getLastBlock;
-  if s.lineAvFRF.visible then
-  begin
-    s.lineAvFRF.AddPoints(s.m_frf, c.fHalfFft);
-  end;
+
+  s.lineAvFRF.AddPoints(s.m_frf, c.fHalfFft);
   if sd <> nil then
   begin
     if s.lineFrf.visible then
@@ -811,7 +839,6 @@ begin
   t := getTaho;
   if t = nil then
     exit;
-
   if t.m_shockList.Count > 0 then
   begin
     t.evalCoh(hideind);
@@ -988,7 +1015,7 @@ begin
       axRef:=TimeAx;
       pageT.getaxis(0).AddChild(l);
     end;
-    l.color := ColorArray[0];
+    l.color := t.m_color;
     t.line := l;
     t.line.name := t.name;
     if t.m_tag.Freq=0 then
@@ -1019,7 +1046,7 @@ begin
       s := c.GetSrs(i);
       l := cBuffTrend1d.create;
       TimeAx.AddChild(l);
-      l.color := ColorArray[i + 1];
+      l.color := s.m_color;
       s.line := l;
       s.line.name := s.name;
       if t.m_tag.Freq=0 then
@@ -1028,7 +1055,7 @@ begin
         l.dx := 0;
 
       l := cBuffTrend1d.create;
-      l.color := ColorArray[i + 1];
+      l.color := s.m_color;
       axSpm.AddChild(l);
       s.lineSpm := l;
       s.lineSpm.dx := c.fspmdx;
@@ -1036,7 +1063,7 @@ begin
       l.visible := not bfrf;
 
       l := cBuffTrend1d.create;
-      l.color := ColorArray[i + 1];
+      l.color := s.m_color;
       axSpm.AddChild(l);
       s.linePhase := l;
       s.linePhase.dx := c.fspmdx;
@@ -1044,7 +1071,7 @@ begin
       l.visible := ResTypeRG.ItemIndex=3;
 
       l := cBuffTrend1d.create;
-      l.color := ColorArray[i + 1];
+      l.color := s.m_colorAlt;
       l.dx := c.fspmdx;
       axSpm.AddChild(l);
       s.lineFrf := l;
@@ -1052,7 +1079,7 @@ begin
       l.visible := bfrf;
 
       l := cBuffTrend1d.create;
-      l.color := ColorArray[i + 2];
+      l.color := s.m_color;
       l.dx := c.fspmdx;
       axSpm.AddChild(l);
 
@@ -1062,8 +1089,7 @@ begin
       s.lineAvFRF.visible := true;
 
       l := cBuffTrend1d.create;
-      // l.color := ColorArray[i+10];
-      l.color := violet;
+      l.color := s.m_color;
       l.visible:=false;
       l.dx := c.fspmdx;
       axSpm.AddChild(l);
@@ -1333,19 +1359,27 @@ begin
   UpdateView;
 end;
 
-procedure TSRSFrm.hideFRF(s: cSRSres);
+procedure TSRSFrm.hideFRF;
 var
   t:cSRSTaho;
   c:cSpmCfg;
   I: Integer;
   ls:cSRSres;
+  li:tlistitem;
+  lcount:integer;
 begin
   t:=getTaho;
   c:=t.cfg;
+  lcount:=CheckedCount;
+  if lcount=0 then
+  begin
+
+  end;
   for I := 0 to c.SRSCount - 1 do
   begin
     ls:=c.GetSrs(i);
-    if ls<>s then
+    li:=SignalsLV.Items[i];
+    if not li.Checked then
     begin
       ls.lineFrf.visible:=false;
       ls.lineAvFRF.visible:=false;
@@ -1358,13 +1392,22 @@ begin
       case ResTypeRG.ItemIndex of
         0:
         begin
-          ls.lineFrf.visible:=true;
+          if lcount<2 then
+          begin
+            ls.lineFrf.visible:=true;
+            ls.lineAvFRF.weight:=5;
+          end
+          else
+          begin
+            ls.lineFrf.visible:=false;
+            ls.lineAvFRF.weight:=1;
+          end;
           ls.lineAvFRF.visible:=true;
         end;
         1:
         begin
           ls.lineCoh.visible:=true;
-          ShowCohCBClick(nil);
+          ShowLines(nil);
         end;
         2:
         begin
@@ -1424,11 +1467,21 @@ begin
   begin
     if fUpdateFrf then
     begin
-      s := ActiveSignal;
-      if fShowLast then
-        ShowFrf(s, c, -1)
-      else
-        ShowFrf(s, c, ShockIE.intnum);
+      for I := 0 to c.srsCount - 1 do
+      begin
+        s:=c.GetSrs(i);
+        if fShowLast then
+          ShowFrf(s, c, -1)
+        else
+          ShowFrf(s, c, ShockIE.intnum);
+      end;
+      if CheckedCount=0 then
+      begin
+        hideFRF;
+        s:=ActiveSignal;
+        s.lineFrf.visible:=true;
+        s.lineAvFRF.visible:=true;
+      end;
       fShowLast := false;
     end;
   end;
@@ -1552,7 +1605,7 @@ end;
 
 procedure TSRSFrm.ResTypeRGClick(Sender: TObject);
 begin
-  ShowCohCbClick(nil);
+  ShowLines(nil);
 end;
 
 procedure TSRSFrm.RBtnClick(sender: tobject);
@@ -1577,6 +1630,7 @@ begin
   if ltag <> nil then
   begin
     t := cSRSTaho.create;
+    t.m_color:=ColorArray[0];
     t.m_tag.tag := ltag.tag;
     t.m_tag.tagname := ltag.tagname;
     ltag.destroy;
@@ -1625,7 +1679,7 @@ begin
   WelchCB.Checked := m_UseWelch;
   UpdateChart;
   ShowSignalsLV;
-  hideFRF(ActiveSignal);
+  hideFRF;
 end;
 
 procedure savedata(dir: string; sname: string; db: TDoubleArray); overload;
@@ -1971,6 +2025,8 @@ var
   t:cSRSTaho;
   c:cSpmCfg;
   s:cSRSres;
+  lcount:integer;
+  I: Integer;
 begin
   t:=getTaho;
   if t=nil then
@@ -1979,16 +2035,29 @@ begin
     exit;
   c:=t.cfg;
   s := ActiveSignal;
-  hideFRF(s);
-  if ResTypeRG.ItemIndex=0 then
+  hideFRF;
+  lcount:=CheckedCount;
+  if lcount=0 then
   begin
-   if fShowLast then
-      ShowFrf(s, c, -1)
-    else
-      ShowFrf(s, c, ShockIE.intnum);
+    if ResTypeRG.ItemIndex=0 then
+    begin
+     if fShowLast then
+        ShowFrf(s, c, -1)
+      else
+        ShowFrf(s, c, ShockIE.intnum);
+    end;
+  end
+  else
+  begin
+    ShowLines(nil);
   end;
   fShowLast := false;
   SpmChart.redraw;
+end;
+
+procedure TSRSFrm.SignalsLVColumnBtnClick(item: TListItem; lv: TListView);
+begin
+  SignalsLVClick(nil);
 end;
 
 procedure TSRSFrm.SPMcbClick(sender: tobject);
@@ -2021,6 +2090,8 @@ begin
     t := getTaho;
     c := t.cfg;
     x1:=pageSpm.cursor.getx1;
+    if pagespm.LgX then
+      x1:=pageSpm.cursor.LinearToLgPos(x1);
     m_curFreq:=x1;
     for j := 0 to c.srsCount - 1 do
     begin
@@ -2581,6 +2652,8 @@ begin
       ls.cfg := self;
       result:=ls;
       m_SRSList.Add(ls);
+      ls.m_color:=colorArray[m_SRSList.count];
+      ls.m_colorAlt:=colorArray[length(colorArray)-m_SRSList.count];
     end
   end
   else
@@ -2613,7 +2686,9 @@ begin
       ls.m_tag := ctag(s);
       ls.cfg := self;
       m_SRSList.Add(ls);
+      ls.m_color:=ColorArray[m_SRSList.Count];
     end;
+
   end;
 end;
 
@@ -2852,6 +2927,11 @@ begin
   inherited;
 end;
 
+function fgetcolor(li: tlistitem): integer;
+begin
+  result := rgbtoint(cSRSres(li.Data).m_color);
+end;
+
 procedure cSRSFactory.doRecorderInit;
 var
   i, j: integer;
@@ -2860,10 +2940,12 @@ var
   t: cSRSTaho;
   c: cSpmCfg;
 begin
-  exit;
+  //exit;
   for i := 0 to m_CompList.Count - 1 do
   begin
     Frm := GetFrm(i);
+    TSRSFrm(frm).signalslv.drawcolorbox:=true;
+    TSRSFrm(frm).signalslv.getcolor:= fgetcolor;
     t := TSRSFrm(Frm).getTaho;
     if t.m_tag.tag = nil then
     begin

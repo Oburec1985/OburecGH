@@ -24,6 +24,7 @@ uses
   TBtnListView = class(TListView)
   public
     defcolor:tcolor;
+    // влияет на ColorBox-ы
     getcolor:TGetColor;
     colorlist:tlist;
   protected

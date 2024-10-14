@@ -16,65 +16,69 @@ object ObjFrm3d: TObjFrm3d
   TextHeight = 13
   object BotSplitter: TSplitter
     Left = 0
-    Top = 297
+    Top = 260
     Width = 727
     Height = 4
     Cursor = crVSplit
     Align = alBottom
     Color = clBackground
     ParentColor = False
-    Visible = False
+    ExplicitTop = 254
   end
   object GL: cBaseGlComponent
     Left = 0
     Top = 0
     Width = 727
-    Height = 297
+    Height = 260
     Align = alClient
     DockSite = True
     TabOrder = 0
     scenename = '.\files\scenes'
     ShowTrasforms = True
     OnInitScene = GLInitScene
+    ExplicitHeight = 297
     object RightSplitter: TSplitter
       Left = 497
       Top = 1
-      Height = 264
+      Height = 258
       Align = alRight
       Color = clBackground
       ParentColor = False
-      Visible = False
+      ExplicitHeight = 264
     end
     object RightGB: TGroupBox
       Left = 500
       Top = 1
       Width = 226
-      Height = 264
+      Height = 258
       Align = alRight
       Caption = 'RightGB'
       TabOrder = 0
       Visible = False
+      ExplicitLeft = 506
+      ExplicitHeight = 264
     end
   end
   object ToolsGB: TGroupBox
     Left = 0
-    Top = 301
+    Top = 264
     Width = 727
-    Height = 130
+    Height = 167
     Align = alBottom
     Caption = 'ToolsGB'
     TabOrder = 1
     object ErrorEdit: TEdit
       Left = 2
-      Top = 110
-      Width = 724
-      Height = 25
+      Top = 144
+      Width = 723
+      Height = 21
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
       Margins.Bottom = 2
       Align = alBottom
       TabOrder = 0
+      ExplicitTop = 103
     end
   end
 end

@@ -44,7 +44,8 @@ object SRSFrm: TSRSFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitWidth = 629
+    ExplicitLeft = -2
+    ExplicitTop = -6
   end
   object RightGB: TGroupBox
     Left = 616
@@ -54,7 +55,6 @@ object SRSFrm: TSRSFrm
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
-    ExplicitLeft = 618
     object ShockCountLabel: TLabel
       Left = 8
       Top = 21
@@ -669,6 +669,7 @@ object SRSFrm: TSRSFrm
         Margins.Right = 2
         Margins.Bottom = 2
         Align = alClient
+        Checkboxes = True
         Columns = <
           item
             Caption = #8470
@@ -690,6 +691,7 @@ object SRSFrm: TSRSFrm
         TabOrder = 0
         ViewStyle = vsReport
         OnClick = SignalsLVClick
+        OnColumnBtnClick = SignalsLVColumnBtnClick
         BtnCol = 0
         QuoteColumnBtnClick = False
         QuoteColumnDblClick = False
