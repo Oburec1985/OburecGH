@@ -2,13 +2,17 @@ unit uBuffTrend1d;
 
 interface
 
-uses uPoint, uvectorlist, uCommonTypes, classes, opengl,
+uses
+  windows, dialogs,
+  uPoint, uvectorlist, uCommonTypes, classes, opengl,
   uOglExpFunc, uCommonMath, u2DMath, uBaseObj, uDrawObj,
   uEventList, types, NativeXML, uChartEvents, uBasicTrend, dglopengl;
 
 type
   cBuffTrend1d = class(cBasicTrend)
   public
+    m_compileThread:integer;
+    m_useLists:boolean;
     datatype: integer;
     // данные
     data_s: array of single;
@@ -39,7 +43,6 @@ type
     procedure clear; override;
     procedure setvisible(b:boolean);override;
   public
-
     function GetYByInd(i:integer):double;override;
     function GetXByInd(i:integer):double;override;
     function GetLowInd(key: single): integer; override;
@@ -167,11 +170,12 @@ end;
 procedure cBuffTrend1d.compile;
 var
   i: integer;
+  id:cardinal;
   a: caxis;
   p: cpage;
 begin
   if chart=nil then exit;
-  
+
   if not cChart(chart).initgl then exit;
 
   EvalBound;
@@ -179,6 +183,11 @@ begin
   begin
     a := caxis(parent);
     p := cpage(getpage);
+    id:=GetCurrentThreadId;
+    if m_compileThread=0 then
+      m_compileThread:=id;
+    if m_compileThread<>id then
+      showmessage('GetCurrentThreadId');
     if a.Lg or p.LgX then
     begin
       inherited;
@@ -219,35 +228,6 @@ begin
   end;
   needRecompile := false;
 end;
-
- {
-procedure cBuffTrend1d.drawLine;
-var
-  i: integer;
-  a: caxis;
-  p: cpage;
-begin
-  if drawLines then
-  begin
-    a := caxis(parent);
-    p := cpage(getpage);
-    glLineWidth(weight);
-    glBegin(GL_LINE_STRIP);
-    case datatype of
-      c_single:
-        for i := 0 to Count - 1 do
-        begin
-          glVertex2f(i * dx + fx0, data_s[i]);
-        end;
-      c_real:
-        for i := 0 to Count - 1 do
-        begin
-          glVertex2f(i * dx + fx0, data_r[i]);
-        end;
-    end;
-    glEnd;
-  end;
-end;}
 
 
 procedure cBuffTrend1d.drawLine;
@@ -446,6 +426,7 @@ end;
 constructor cBuffTrend1d.create;
 begin
   inherited;
+  m_useLists:=true;
   datatype := c_real;
   boundrect.BottomLeft := p2(0, 0);
   boundrect.TopRight := p2(0, 0);

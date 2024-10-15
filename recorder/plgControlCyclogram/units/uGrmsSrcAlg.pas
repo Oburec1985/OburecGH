@@ -530,6 +530,32 @@ begin
   setTahoTag(t.tag);
 end;
 
+  //C_SpmOpts = 'FFTCount,Overflow,dX,BCount,Addnull';
+  //c_Rect = 'Rect';
+  //c_Hann = 'Hann';
+  //c_Hamming = 'Hamming';
+  //c_Blackmann = 'Blackman';
+  //c_Flattop = 'Flattop';
+
+
+function getSpmStr(str:string):string;
+var
+  l:tstringlist;
+  res:string;
+  I: Integer;
+begin
+  l:=ParsStrParam(str,',');
+  for I := l.Count-1 downto 0 do
+  begin
+    res:=l.Strings[i];
+    if pos(res,'FFTCount,Overflow,dX,BCount,Addnull')<1 then
+    begin
+      l.Delete(i);
+    end;
+  end;
+  result:=ParsToStr(l);
+end;
+
 procedure cGrmsSrcAlg.setTahoTag(t: itag);
 var
   bl: IBlockAccess;
@@ -552,8 +578,9 @@ begin
           if m_tahoSpm = nil then
           begin
             m_tahoSpm := cspm.create;
-            m_tahoSpm.setinptag(m_Taho.tag);
-            m_tahoSpm.Properties := Properties;
+            m_tahoSpm.setinptag(m_Taho);
+            m_tahoSpm.name:=m_Taho.tagname+'_spm';
+            m_tahoSpm.Properties := getSpmStr(Properties);
             g_algMng.Add(m_tahoSpm, nil);
           end
           else

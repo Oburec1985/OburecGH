@@ -357,7 +357,7 @@ type
     procedure WelchCBClick(sender: tobject);
     procedure DisableCBClick(sender: tobject);
     procedure SPMcbClick(sender: tobject);
-    procedure ShowLines(Sender: TObject);
+    procedure doShowLines(Sender: TObject);
     procedure SignalsLVClick(Sender: TObject);
     procedure SavePBtnClick(Sender: TObject);
     procedure ResTypeRGClick(Sender: TObject);
@@ -406,7 +406,7 @@ type
     procedure delCurrentShock;
     PROCEDURE ShowShock(shock: integer);
     // спр€тать лишние frf
-    procedure hideFRF;
+    procedure ShowLines;
     // отобразить последнюю передаточную характеристику блока в S и усредн. передаточную
     procedure ShowFrf(s: cSRSres; c: cSpmCfg; shInd: integer);
     procedure ShowSpm;
@@ -624,7 +624,7 @@ begin
   end;
 end;
 
-procedure TSRSFrm.ShowLines(Sender: TObject);
+procedure TSRSFrm.doShowLines(Sender: TObject);
 var
   s: cSRSres;
   t: cSRSTaho;
@@ -1359,7 +1359,7 @@ begin
   UpdateView;
 end;
 
-procedure TSRSFrm.hideFRF;
+procedure TSRSFrm.ShowLines;
 var
   t:cSRSTaho;
   c:cSpmCfg;
@@ -1367,6 +1367,7 @@ var
   ls, asig:cSRSres;
   li:tlistitem;
   lcount:integer;
+  r:frect;
   b:boolean;
 begin
   t:=getTaho;
@@ -1402,25 +1403,55 @@ begin
             ls.lineAvFRF.weight:=1;
           end;
           ls.lineAvFRF.visible:=true;
+          ls.lineSpm.visible:=false;
+          ls.lineCoh.visible:=false;
+          ls.linePhase.visible:=false;
         end;
         1:
         begin
           ls.lineCoh.visible:=true;
-          ShowLines(nil);
+          ls.lineAvFRF.visible:=false;
+          ls.lineSpm.visible:=false;
+          ls.linePhase.visible:=false;
+          ls.lineFrf.visible:=false;
+          ls.lineAvFRF.visible:=false;
         end;
         2:
         begin
+          ls.lineCoh.visible:=false;
+          ls.lineAvFRF.visible:=false;
           ls.lineSpm.visible:=true;
+          ls.linePhase.visible:=false;
+          ls.lineFrf.visible:=false;
+          ls.lineAvFRF.visible:=false;
           ShowSpm;
         end;
         3:
         begin
+          ls.lineCoh.visible:=false;
+          ls.lineAvFRF.visible:=false;
+          ls.lineSpm.visible:=false;
           ls.linePhase.visible:=true;
+          ls.lineFrf.visible:=false;
+          ls.lineAvFRF.visible:=false;
           ShowPhase;
         end;
       end;
     end;
   end;
+  if (ResTypeRG.itemindex=1) or (ResTypeRG.itemindex=3) then
+  begin
+    axSpm.Lg:=false;
+  end
+  else
+  begin
+    axSpm.Lg:=m_lgY;
+  end;
+  r.BottomLeft.x:=m_minX;
+  r.TopRight.x:=m_maxX;
+  r.BottomLeft.y:=MinSpmY;
+  r.TopRight.y:=MaxSpmY;
+  axSpm.ZoomfRect(r);
 end;
 
 function TSRSFrm.hideind: integer;
@@ -1476,7 +1507,7 @@ begin
       end;
       if CheckedCount=0 then
       begin
-        hideFRF;
+        ShowLines;
         s:=ActiveSignal;
         s.lineFrf.visible:=true;
         s.lineAvFRF.visible:=true;
@@ -1604,7 +1635,8 @@ end;
 
 procedure TSRSFrm.ResTypeRGClick(Sender: TObject);
 begin
-  ShowLines(nil);
+  //ShowLines(nil);
+  SignalsLVClick(nil);
 end;
 
 procedure TSRSFrm.RBtnClick(sender: tobject);
@@ -1678,7 +1710,7 @@ begin
   WelchCB.Checked := m_UseWelch;
   UpdateChart;
   ShowSignalsLV;
-  hideFRF;
+  ShowLines;
 end;
 
 procedure savedata(dir: string; sname: string; db: TDoubleArray); overload;
@@ -2012,8 +2044,8 @@ begin
       b := s.m_shockList.getBlock(ShockIE.intnum);
       if b<>nil then
       begin
-          if s.linespm<>nil then
-            s.lineSpm.AddPoints(TDoubleArray(b.m_mod.p), c.fHalfFft);
+        if s.linespm<>nil then
+          s.lineSpm.AddPoints(TDoubleArray(b.m_mod.p), c.fHalfFft);
       end;
     end;
   end;
@@ -2034,7 +2066,7 @@ begin
     exit;
   c:=t.cfg;
   s := ActiveSignal;
-  hideFRF;
+  ShowLines;
   lcount:=CheckedCount;
   if lcount=0 then
   begin
@@ -2048,7 +2080,7 @@ begin
   end
   else
   begin
-    ShowLines(nil);
+    //ShowLines(nil);
   end;
   fShowLast := false;
   SpmChart.redraw;
@@ -3549,6 +3581,11 @@ begin
         EvalBound;
         EvalA;
         // подготовка к компил€ции списка
+        if m_DisplayListName<>0 then
+        begin
+          glDeleteLists(m_DisplayListName, 1);
+          m_DisplayListName:=0;
+        end;
         m_DisplayListName := glGenLists(1);
         glNewList(m_DisplayListName, GL_COMPILE);
         glLineWidth(m_weight);

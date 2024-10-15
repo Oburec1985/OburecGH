@@ -132,7 +132,7 @@ begin
   end;
   lgRange:=lgmax-lgmin;
   range:=caxis(parent).max.y-caxis(parent).min.y;
-  if DisplayListName<>-1 then
+  if DisplayListName<>0 then
     glDeleteLists(DisplayListName, 1);
   lgrange:=1/lgrange;
   setlength(logpointsY,count);
@@ -183,7 +183,7 @@ var
 begin
   if needRecompile then
   begin
-    if DisplayListName<>-1 then
+    if DisplayListName<>0 then
       glDeleteLists(DisplayListName, 1);
     // подготовка к компиляции списка
     DisplayListName:=glGenLists( 1 );

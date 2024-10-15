@@ -319,7 +319,7 @@ begin
     updatebound;
     if needRecompile then
     begin
-      if DisplayListName<>-1 then
+      if DisplayListName<>0 then
         glDeleteLists(DisplayListName, 1);
       // подготовка к компиляции списка
       DisplayListName:=glGenLists( 1 );

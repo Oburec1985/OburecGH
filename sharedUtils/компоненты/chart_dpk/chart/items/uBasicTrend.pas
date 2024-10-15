@@ -289,7 +289,7 @@ begin
     xlgrange:=1/xlgrange;
   end;
 
-  if DisplayListName<>-1 then
+  if DisplayListName<>0 then
   begin
     glDeleteLists(DisplayListName, 1);
     DisplayListName:=0;

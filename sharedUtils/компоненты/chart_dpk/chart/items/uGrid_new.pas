@@ -279,8 +279,11 @@ begin
   font := GetFont(fFontIndex);
   if font = nil then
     exit;
-  if DisplayListName <> -1 then
+  if DisplayListName <> 0 then
+  begin
     glDeleteLists(DisplayListName, 1);
+    DisplayListName:=0;
+  end;
   // подготовка к компиляции списка
   DisplayListName := glGenLists(1);
   glNewList(DisplayListName, GL_COMPILE);
