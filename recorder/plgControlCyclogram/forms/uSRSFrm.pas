@@ -1364,22 +1364,21 @@ var
   t:cSRSTaho;
   c:cSpmCfg;
   I: Integer;
-  ls:cSRSres;
+  ls, asig:cSRSres;
   li:tlistitem;
   lcount:integer;
+  b:boolean;
 begin
   t:=getTaho;
   c:=t.cfg;
   lcount:=CheckedCount;
-  if lcount=0 then
-  begin
-
-  end;
+  asig:=ActiveSignal;
   for I := 0 to c.SRSCount - 1 do
   begin
     ls:=c.GetSrs(i);
     li:=SignalsLV.Items[i];
-    if not li.Checked then
+    b:=(lcount=0) and (ls=asig);
+    if (not li.Checked) and (not b) then
     begin
       ls.lineFrf.visible:=false;
       ls.lineAvFRF.visible:=false;

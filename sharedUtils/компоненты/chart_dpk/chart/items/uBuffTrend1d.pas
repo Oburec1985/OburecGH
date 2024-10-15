@@ -174,13 +174,7 @@ begin
   
   if not cChart(chart).initgl then exit;
 
-  if DisplayListName <> 0 then
-  begin
-    glDeleteLists(DisplayListName, 1);
-    DisplayListName:=0;
-  end;
   EvalBound;
-
   if drawLines then
   begin
     a := caxis(parent);
@@ -191,6 +185,11 @@ begin
     end
     else
     begin
+      if DisplayListName <> 0 then
+      begin
+        glDeleteLists(DisplayListName, 1);
+        DisplayListName:=0;
+      end;
       // подготовка к компиляции списка
       DisplayListName := glGenLists(1);
       glNewList(DisplayListName, GL_COMPILE);

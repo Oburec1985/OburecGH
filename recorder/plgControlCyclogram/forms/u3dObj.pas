@@ -573,12 +573,15 @@ begin
       for k := 0 to vn - 1 do
       begin
         s1:=getSubStrByIndex(s4,';',1,k);
-        tp.X:=strtoint(getSubStrByIndex(s1,'_',1,0));
-        tp.y:=strtoint(getSubStrByIndex(s1,'_',1,1));
-        w:=strtofloat(getSubStrByIndex(s1,'_',1,2));
-        // привязка к модификатору точки
-        deformP:=c3dSkinObj(o).m_bone.AddPoint(tp, w);
-        deformP.weight:=w;
+        if s1<>'' then
+        begin
+          tp.X:=strtoint(getSubStrByIndex(s1,'_',1,0));
+          tp.y:=strtoint(getSubStrByIndex(s1,'_',1,1));
+          w:=strtofloat(getSubStrByIndex(s1,'_',1,2));
+          // привязка к модификатору точки
+          deformP:=c3dSkinObj(o).m_bone.AddPoint(tp, w);
+          deformP.weight:=w;
+        end;
         //c3dCtrlObj(o).PId
       end;
       g_CtrlObjList.addObj(c3dSkinObj(o));

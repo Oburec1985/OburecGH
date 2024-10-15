@@ -509,10 +509,13 @@ begin
 
   n:=SignalsTV.FocusedNode;
   d:=SignalsTV.GetNodeData(n);
-  if tobject(d.data) is cSRSres then
+  if d<>nil then
   begin
-    csrsres(d.data).m_axis:=SigAx.ItemIndex;
-    csrsres(d.data).m_incPNum:=AddPNumIE.IntNum;
+    if tobject(d.data) is cSRSres then
+    begin
+      csrsres(d.data).m_axis:=SigAx.ItemIndex;
+      csrsres(d.data).m_incPNum:=AddPNumIE.IntNum;
+    end;
   end;
 end;
 

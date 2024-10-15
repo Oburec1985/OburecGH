@@ -19,6 +19,7 @@ uses
   uSpin,
   uRcFunc,
   u3dMoveEngine,
+  ucommonmath,
   uRcCtrls;
 
 type
@@ -34,9 +35,7 @@ type
     SkinCB: TCheckBox;
     RightPan: TGroupBox;
     Panel1: TPanel;
-    PNameLabel: TLabel;
     WeightLabel: TLabel;
-    PointNumEdit: TIntEdit;
     PointWeight: TFloatSpinEdit;
     TagLabel: TLabel;
     AxisLabel: TLabel;
@@ -48,9 +47,12 @@ type
     pIdEdit: TEdit;
     AxisCB: TComboBox;
     TagCB: TRcComboBox;
+    ChangePBtn: TButton;
     procedure VertLVDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure AddBtnClick(Sender: TObject);
+    procedure PointNumSEChange(Sender: TObject);
+    procedure ChangePBtnClick(Sender: TObject);
   public
     m_ui:cUI;
   private
@@ -182,6 +184,32 @@ begin
 end;
 
 
+procedure TVertexEditFrame.ChangePBtnClick(Sender: TObject);
+var
+  I: Integer;
+  id:tpoint;
+  li:tlistitem;
+  s, s1:string;
+  p:c3dSkinObj;
+  deformP:cDeformPoint;
+begin
+  li:=SkinPointsLV.Selected;
+  while li<>nil do
+  begin
+    SkinPointsLV.GetSubItemByColumnName('ID', li, s);
+    s1:=getSubStrByIndex(s,'_', 1, 0);
+    id.x:=StrToInt(s1);
+    s1:=getSubStrByIndex(s,'_', 1,1);
+    id.y:=StrToInt(s1);
+    // признак что такая кость найдена
+    p:=findBone(PointNumSE.Value);
+    deformP:=p.m_bone.FindPoint(id);
+    deformP.weight:=PointWeight.Value;
+    SkinPointsLV.SetSubItemByColumnName('Вес',floattostr(PointWeight.Value),li);
+    li:=SkinPointsLV.GetNextItem(li,sdAll,[isselected]);
+  end;
+end;
+
 destructor TVertexEditFrame.destroy;
 begin
   //m_pList.Destroy;
@@ -281,6 +309,15 @@ begin
   end;
 end;
 
+procedure TVertexEditFrame.PointNumSEChange(Sender: TObject);
+var
+  p:c3dSkinObj; // кость аниматор вершины
+begin
+  p:=g_CtrlObjList.GetObjBySkin(m_curObj.name, PointNumSE.Value);
+  if p<>nil then
+    ShowPoint(p);
+end;
+
 procedure TVertexEditFrame.showObj(o: cObject; frm:tform);
 var
   I, n: Integer;
@@ -343,7 +380,7 @@ var
   dp:cDeformPoint;
   li:tlistitem;
 begin
-  PointNumEdit.IntNum:=p.m_PName;
+  //PointNumEdit.IntNum:=p.m_PName;
   pIdEdit.text:=inttostr(p.PId.x)+'_'+inttostr(p.PId.y);
   //PointWeight.Value:=p.m_w;
   TagCB.SetTagName(p.yTag.tagname);

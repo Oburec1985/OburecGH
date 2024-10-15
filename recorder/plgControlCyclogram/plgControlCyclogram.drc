@@ -1517,12 +1517,12 @@ END
 /* forms\uCounterAlgFrame.dfm */
 /* forms\uAlgFrm.dfm */
 /* forms\uControlCyclogramEditFrm.dfm */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uSRSFrm.dfm */
+/* forms\uSRSFrm.dfm */
 /* forms\uSpmChartEdit.dfm */
 /* forms\uSpmChart.dfm */
 /* forms\uControlWarnFrm.dfm */
 /* forms\u3dObj.dfm */
-/* forms\uVertexEditFrame.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uVertexEditFrame.dfm */
 /* forms\uGLFrmEdit.dfm */
 /* forms\uMBaseControl.dfm */
 /* ..\SharedRUnits\uFrmSync.dfm */
@@ -1537,6 +1537,6 @@ END
 /* forms\uPressFrmFrame.dfm */
 /* forms\uPressFrmEdit.dfm */
 /* forms\uPressFrm.dfm */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */
