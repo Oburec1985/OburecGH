@@ -8,6 +8,7 @@ uses
   uChartEvents, uPoint, dialogs, types, controls, forms, uAlignEdit,
   uDoubleCursor, usimpleobjects, NativeXML, uBasePage, dglopengl, uFloatLabel,
   uLogFile,
+  ubasicTrend,
   uLabel, math;
 
 type
@@ -515,8 +516,7 @@ begin
   end;
 end;
 
-procedure cPage.DrawLinesData(NumberGridLines: integer;
-  var data: array of point2);
+procedure cPage.DrawLinesData(NumberGridLines: integer;var data: array of point2);
 begin
   if NumberGridLines <> 0 then
   begin
@@ -699,7 +699,10 @@ end;
 procedure cPage.UpdateAxisbyText(Sender: tobject; var Key: Word;
   Shift: TShiftState);
 var
+  o:cDrawObj;
+  a:caxis;
   rect: fRect;
+  I: Integer;
   function getnum(str: string; default: single): single;
   var
     f: single;
@@ -717,11 +720,21 @@ var
 begin
   if Key = 13 then
   begin
-    rect.BottomLeft.x := getnum(XMinEdit.Text, activeAxis.min.x);
-    rect.BottomLeft.y := getnum(YMinEdit.Text, activeAxis.min.y);
-    rect.TopRight.x := getnum(XMaxEdit.Text, activeAxis.max.x);
-    rect.TopRight.y := getnum(YMaxEdit.Text, activeAxis.max.y);
-    ZoomfRect(rect);
+    a:=activeAxis;
+    rect.BottomLeft.x := getnum(XMinEdit.Text, a.min.x);
+    rect.BottomLeft.y := getnum(YMinEdit.Text, a.min.y);
+    rect.TopRight.x := getnum(XMaxEdit.Text, a.max.x);
+    rect.TopRight.y := getnum(YMaxEdit.Text, a.max.y);
+    //for I := 0 to a.ChildCount - 1 do
+    //begin
+    //  o:=cdrawobj(activeAxis.getChild(i));
+    //  if o is cBasicTrend then
+    //  begin
+    //    cBasicTrend(o).caa
+    //  end;
+    //end;
+    //ZoomfRect(rect);
+    a.ZoomfRect(rect);
   end;
   cchart(chart).redraw;
 end;

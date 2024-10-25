@@ -9,7 +9,7 @@ uses
   complex,
   uHardwareMath,
   uFFT,
-  performancetime, nativexml, ucommonmath,
+  performancetime, nativexml, ucommonmath, uCommonTypes,
   fft, fht, Ap, DCL_MYOWN, ComCtrls, ExtCtrls, uChart, utrend, upage, uaxis, uBuffTrend1d;
 
 // AVal - массив анализируемых данных, Nvl - длина массива, должна быть кратна степени 2.
@@ -28,7 +28,6 @@ type
     LgyCb: TCheckBox;
     UseShaders: TCheckBox;
     CheckBox1: TCheckBox;
-    Button1: TButton;
     procedure AlgLibClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure SSEBtnClick(Sender: TObject);
@@ -136,7 +135,9 @@ var
   s:tstringlist;
   p:tpair;
   STR:STRING;
-  i:integer;
+  i, j:integer;
+  t:cBuffTrend1d;
+  a:caxis;
 begin
   GetMemAlignedArray_d(fcount, AlignedSampl);
   GetMemAlignedArray_d(fcount, AlignedSampl2);
@@ -155,6 +156,20 @@ begin
     i:=i shr 1;
   GetFFTExpTable(i, false, tcmxArray_d(FFTProp.TableExp.p));
   FFTProp.TableInd := GetArrayIndex(i, 2);
+  for I := 0 to 4 do
+  begin
+    t:=cBuffTrend1d.create;
+    t.flength:=1000;
+    t.dx:=1;
+    t.color:=colorarray[i];
+    for j := 0 to t.flength - 1 do
+    begin
+      tdoublearray(AlignedSampl.p)[j]:=(i+1)*Sin(2*Pi*j/t.flength);
+    end;
+    a:=cpage(cChart1.activePage).activeAxis;
+    a.AddChild(t);
+    t.AddPoints(tdoublearray(AlignedSampl.p));
+  end;
 end;
 
 

@@ -81,7 +81,7 @@ var
   TestUDPSenderFrm: TTestUDPSenderFrm;
 
 const
-  c_exp = 0.95;
+  c_exp = 0.8;
   c_SrvPort = 33444;
   c_ClientPort = 44555;
   c_broadcast = '255.255.255.255';

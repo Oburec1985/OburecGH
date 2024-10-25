@@ -55,6 +55,7 @@ type
     // TTreeView - дерево объектов
     m_EditFrame:TGlSceneEditFrame;
     fshowtools: boolean;
+    m_cfgLoad:boolean;
   public
     m_ScenePath, m_SceneName, m_inifile, m_loadsect: string;
     airplane: cnodeobject;
@@ -250,6 +251,10 @@ begin
   c:=gl.mUI.scene.getactivecamera;
   c.Node.setlocalTM(M_camera);
   c.SetObjToWorld;
+  if not m_cfgLoad then
+  begin
+    doRcInit(nil);
+  end;
 end;
 
 function TObjFrm3d.MBasePath: string;
@@ -306,7 +311,7 @@ begin
     end;
   end;
   // сохранение инф-ии о анимации ориентации
-  a_pIni.WriteInteger(str, 'CtrlObjCount', n);
+  a_pIni.WriteInteger(str, 'CtrlObjCount', g_CtrlObjList.count);
   // сохранение инф-ии о вершинной деформации
   for I := 0 to GL.mUI.scene.Count - 1 do
   begin
@@ -420,9 +425,12 @@ end;
 
 procedure TObjFrm3d.doRcInit(sender: tobject);
 begin
+  if (GL.mUI=nil) then exit;
+  if m_cfgLoad then exit;
   // загрузить сцену
   LoadSkinIni;
   LoadCtrlObjIni;
+  m_cfgLoad:=true;
 end;
 
 
@@ -488,20 +496,24 @@ var
   bone:cbone;
   tp:tpoint;
   w:single;
-  I,j,k,vn,n: Integer;
+  I,j,k,vn,n, ocount: Integer;
   a_pIni:TIniFile;
   p3:point3;
   m:matrixgl;
 begin
   //exit;
   a_pIni:=TIniFile.Create(m_inifile);
+  ocount:=a_pIni.ReadInteger(m_loadsect, 'CtrlObjCount', g_CtrlObjList.count);
   b:=true;
-  n:=0;
+  n:=-1;
   while b do
   begin
+    inc(n);
+    if n>=ocount then
+      break;
     s:=a_pIni.ReadString(m_loadsect, 'SkinObj_'+inttostr(n), '');
     if s='' then
-      break;
+      continue;
     o:=cnodeobject(GL.mUI.scene.getobj(s));
     mesh:=o;
     if o is cShapeObj then

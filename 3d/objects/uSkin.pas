@@ -93,7 +93,8 @@ type
     // возвращает ссылку на созданную точку
     function AddPoint(i:tpoint;weight:single):cDeformPoint;
     // Удаляет точку из скелета
-    procedure deletePoint(i:integer);
+    procedure deletePoint(i:integer);overload;
+    procedure deletePoint(p:cDeformPoint);overload;
     // вычисляет новое положение для точек сетки в кординатах модели
     // при расчете использует положение точки в момент привязки, матрицу перехода
     // из кости в меш и вес вершины
@@ -217,6 +218,7 @@ begin
   skin.EvalAll;
 end;
 
+
 destructor cBone.destroy;
 begin
   pointers.destroy;
@@ -278,6 +280,24 @@ begin
   p:=cDeformPoint(pointers.deleteobj(@i));
   p.destroy;
 end;
+
+procedure cBone.deletePoint(p: cDeformPoint);
+var
+  I: Integer;
+  lp:cDeformPoint;
+begin
+  for I := 0 to pointers.Count - 1 do
+  begin
+    lp:=getpoint(i);
+    if lp=p then
+    begin
+      pointers.Delete(i);
+      p.destroy;
+      exit;
+    end;
+  end;
+end;
+
 
 function cBone.EvalPointPos(i:integer;l_m:matrixgl):cdeformpoint;
 var p:cdeformpoint;

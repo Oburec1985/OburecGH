@@ -193,8 +193,8 @@ uses
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TTestUDPSenderFrm, TestUDPSenderFrm);
   Application.CreateForm(TForm1, Form1);
+  //Application.CreateForm(TTestUDPSenderFrm, TestUDPSenderFrm);
   Application.Run;
 end.
 

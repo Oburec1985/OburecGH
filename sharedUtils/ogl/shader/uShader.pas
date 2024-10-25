@@ -30,11 +30,11 @@ Type
    procedure LoadShader(const src: ansiString; var shader:GLhandleARB);
    procedure LoadShaderFromFile(const filename: AnsiString; stype:byte);
  public
-   constructor Create(path,pname:string);
+  constructor Create(path,pname:string);
   // Загрузить шейдер из файла.
   procedure CreateShader(const filename:string;const ShaderType:byte);
   // Отвязать шейдер от программы
-  procedure DeleteShader(p_Program:GLhandleARB;p_Shader: GLhandleARB);
+  procedure DeleteShader(p_Program:GLhandleARB;p_Shader: GLhandleARB);virtual;
   // Создать и слинковать программу с шейдером.
   procedure CreateProgram;
   // Получить подробную информацию об ошибке
@@ -254,6 +254,7 @@ procedure cShader.DeleteShader(p_program:GLhandleARB;p_Shader:GLhandleARB);
 begin
   glDetachObjectARB(p_program,p_shader);// отсоединить шейдер от программы
   glDeleteObjectARB(p_shader);// удаление шейдера.
+  glDeleteProgramsARB(1, @m_program);
 end;
 
 procedure cShader.CreateProgram;

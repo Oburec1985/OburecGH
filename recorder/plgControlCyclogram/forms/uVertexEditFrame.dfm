@@ -23,7 +23,6 @@ object VertexEditFrame: TVertexEditFrame
     Height = 73
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 603
     DesignSize = (
       594
       73)
@@ -68,7 +67,6 @@ object VertexEditFrame: TVertexEditFrame
       Anchors = [akTop, akRight]
       Caption = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1090#1100
       TabOrder = 2
-      ExplicitLeft = 438
     end
     object AddBtn: TButton
       Left = 255
@@ -87,7 +85,6 @@ object VertexEditFrame: TVertexEditFrame
     Height = 467
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 365
     object VertLV: TBtnListView
       Left = 1
       Top = 1
@@ -117,7 +114,6 @@ object VertexEditFrame: TVertexEditFrame
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitWidth = 363
     end
   end
   object RightPan: TGroupBox
@@ -128,7 +124,6 @@ object VertexEditFrame: TVertexEditFrame
     Align = alRight
     Caption = #1058#1086#1095#1082#1080
     TabOrder = 2
-    ExplicitLeft = 368
     object Panel1: TPanel
       Left = 2
       Top = 18
@@ -232,6 +227,7 @@ object VertexEditFrame: TVertexEditFrame
       TabOrder = 1
       ViewStyle = vsReport
       OnDragOver = VertLVDragOver
+      OnKeyDown = SkinPointsLVKeyDown
       BtnCol = 0
       QuoteColumnBtnClick = False
       QuoteColumnDblClick = False

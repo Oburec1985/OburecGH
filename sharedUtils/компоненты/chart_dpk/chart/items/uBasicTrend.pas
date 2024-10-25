@@ -48,8 +48,8 @@ type
     settings:cardinal;
   protected
     // процедуры для рисования шейдера логарифмирования
-    procedure SetLgShaderData;
-    procedure SwitchLgProg(b:boolean);
+    procedure SetLgShaderData;virtual;
+    procedure SwitchLgProg(b:boolean; sh:cshader);
 
     procedure setNeedRecompile(b:boolean);
     procedure setflag(flag:cardinal);
@@ -198,14 +198,11 @@ end;
 procedure cBasicTrend.CompileLineLgShader;
 var
   I: Integer;
-  range, lgRange, lgMax, lgMin, y,
-  xrange, xlgRange, xlgMin, x,
-  rate
-  :double;
+  range, lgRange, lgMax, lgMin, y,xrange, xlgRange,
+  xlgMin, x, rate, l_xlgMax:double;
   p:cpage;
   a:caxis;
   b:bool;
-  l_xlgMax:double;
 begin
   a:=caxis(parent);
   p:=cpage(getpage);
@@ -213,7 +210,6 @@ begin
   begin
     exit;
   end;
-
   if DisplayListName<>0 then
   begin
     glDeleteLists(DisplayListName, 1);
@@ -233,7 +229,7 @@ begin
   end;
   glend;
   if b then
-    SwitchLgProg(false);
+    SwitchLgProg(false, nil);
   glEndList;
 end;
 
@@ -738,7 +734,7 @@ var
 
 begin
   sh:=cLineLgShader(cchart(chart).m_ShaderMng.getshader(0));
-  SwitchLgProg(true);
+  SwitchLgProg(true, sh);
 
   a:=caxis(parent);
   p:=cpage(a.parent.parent);
@@ -758,13 +754,13 @@ begin
   glUniform4f(sh.aLocation, vertexData[0],vertexData[1],vertexData[2],vertexData[3]);
 end;
 
-procedure cBasicTrend.SwitchLgProg(b:boolean);
-var
-  sh:cshader;
+procedure cBasicTrend.SwitchLgProg(b:boolean; sh:cshader);
 begin
-  sh:=cchart(chart).m_ShaderMng.getshader(0);
-  if sh<>nil then
-    sh.UseProgram(b);
+  if sh=nil then
+  begin
+    sh:=cchart(chart).m_ShaderMng.getshader(0);
+  end;
+  sh.UseProgram(b);
 end;
 
 end.

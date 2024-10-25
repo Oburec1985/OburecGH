@@ -478,6 +478,7 @@ var
   str: string;
   i: integer;
 begin
+  result:='';
   if PathList.Count = 0 then
   begin
     str := FindFile(name, startdir, deep);

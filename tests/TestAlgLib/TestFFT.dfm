@@ -3,7 +3,7 @@ object Form1: TForm1
   Top = 0
   Caption = 'Form1'
   ClientHeight = 694
-  ClientWidth = 948
+  ClientWidth = 1112
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,7 +14,7 @@ object Form1: TForm1
   OnClose = FormClose
   OnCreate = FormCreate
   DesignSize = (
-    948
+    1112
     694)
   PixelsPerInch = 120
   TextHeight = 16
@@ -37,8 +37,8 @@ object Form1: TForm1
     OnClick = AlgLibClick
   end
   object SSEBtn: TButton
-    Left = 9
-    Top = 36
+    Left = 8
+    Top = 41
     Width = 170
     Height = 25
     Caption = 'SSE'
@@ -57,8 +57,9 @@ object Form1: TForm1
   object cChart1: cChart
     Left = 8
     Top = 132
-    Width = 893
+    Width = 1057
     Height = 530
+    Cursor = crSizeAll
     Anchors = [akLeft, akTop, akRight, akBottom]
     Caption = 'cChart1'
     TabOrder = 4
@@ -113,14 +114,5 @@ object Form1: TForm1
     Caption = 'LgXCb'
     TabOrder = 8
     OnClick = CheckBox1Click
-  end
-  object Button1: TButton
-    Left = 8
-    Top = 84
-    Width = 170
-    Height = 25
-    Caption = 'SSE'
-    TabOrder = 9
-    OnClick = SSEBtnClick
   end
 end

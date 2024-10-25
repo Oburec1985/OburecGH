@@ -386,6 +386,18 @@ begin
     cLineLgShader(sh).BindLgShaderData;
     m_UseShaders:=true;
   end;
+  s:='LineLg1d';
+  shadername:=configfile.findShaderFile(s);
+  if shadername<>'' then
+  begin
+    if fileexists(shadername) then
+    begin
+      sh:=cLineLgShader1d.Create(extractFilePath(shadername),s);
+      m_shaderMng.add(sh);
+      cLineLgShader1d(sh).BindLgShaderData;
+      m_UseShaders:=true;
+    end;
+  end;
 end;
 
 

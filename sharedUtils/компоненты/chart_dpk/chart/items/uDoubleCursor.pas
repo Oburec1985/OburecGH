@@ -268,6 +268,9 @@ begin
   p:=cpage(c.getpage);
   a:=p.activeAxis;
   t:=cbasictrend(c.magniteObj);
+  result:=0;
+  if t=nil then
+    exit;
   if t.count=0 then
   begin
     result:=0;

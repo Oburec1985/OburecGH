@@ -53,6 +53,8 @@ type
     procedure AddBtnClick(Sender: TObject);
     procedure PointNumSEChange(Sender: TObject);
     procedure ChangePBtnClick(Sender: TObject);
+    procedure SkinPointsLVKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   public
     m_ui:cUI;
   private
@@ -394,6 +396,36 @@ begin
     SkinPointsLV.SetSubItemByColumnName('Вес',floattostr(dp.weight),li);
   end;
   LVChange(SkinPointsLV);
+end;
+
+procedure TVertexEditFrame.SkinPointsLVKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  I: Integer;
+  id:tpoint;
+  li:tlistitem;
+  s, s1:string;
+  p:c3dSkinObj;
+  deformP:cDeformPoint;
+begin
+  if key=VK_DELETE then
+  begin
+    li:=SkinPointsLV.Selected;
+    while li<>nil do
+    begin
+      SkinPointsLV.GetSubItemByColumnName('ID', li, s);
+      s1:=getSubStrByIndex(s,'_', 1, 0);
+      id.x:=StrToInt(s1);
+      s1:=getSubStrByIndex(s,'_', 1,1);
+      id.y:=StrToInt(s1);
+      // признак что такая кость найдена
+      p:=findBone(PointNumSE.Value);
+      deformP:=p.m_bone.FindPoint(id);
+      p.m_bone.deletePoint(deformP);
+      li:=SkinPointsLV.GetNextItem(li,sdAll,[isselected]);
+    end;
+  end;
+  SkinPointsLV.DeleteSelected;
 end;
 
 procedure TVertexEditFrame.VertLVDragOver(Sender, Source: TObject; X,

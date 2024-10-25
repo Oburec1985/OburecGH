@@ -84,10 +84,10 @@ object ObjFrm3d: TObjFrm3d
     Caption = 'ToolsGB'
     TabOrder = 1
     object ErrorEdit: TEdit
-      Left = 3
-      Top = 188
-      Width = 945
-      Height = 21
+      Left = 2
+      Top = 192
+      Width = 947
+      Height = 25
       Align = alBottom
       TabOrder = 0
     end
