@@ -773,6 +773,7 @@ begin
     if m_tags[i].name = tag then
     begin
       m_tags[i].m_bandTags[bnum].PushValue(v, -1);
+      break;
     end;
   end;
 end;
@@ -795,6 +796,8 @@ end;
 procedure cPressCamFactory2.SetBCount(c: integer);
 var
   s: cspm;
+  Frm: TPressFrm2;
+  i:integer;
 begin
   setlength(m_bands, c);
   if m_spmCfg = nil then

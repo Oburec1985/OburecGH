@@ -439,7 +439,11 @@ function cSpm.getIndByX(x: double): integer;
 begin
   if m_spmdx <> 0 then
   begin
-    result := trunc(x / m_spmdx)
+    result := trunc(x / m_spmdx);
+    if result>=(m_fftCount shr 1) then
+    begin
+      result:=(m_fftCount shr 1)-1;
+    end;
   end
   else
   begin

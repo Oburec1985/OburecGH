@@ -41,7 +41,7 @@ type
     finit:boolean;
   public
     // средн амп, главные амплитуда и частота в полосе
-    m_A,m_Max, m_f:double;
+    m_A, m_Max, m_f:double;
   public
     m_frm:TForm;
   protected

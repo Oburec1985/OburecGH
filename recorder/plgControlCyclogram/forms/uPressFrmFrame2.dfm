@@ -11,15 +11,15 @@ object PressFrmFrame2: TPressFrmFrame2
   object ALabel: TLabel
     Left = 5
     Top = 4
-    Width = 20
-    Height = 16
+    Width = 17
+    Height = 13
     Caption = 'A1:'
   end
   object FLabel: TLabel
     Left = 75
     Top = 4
-    Width = 19
-    Height = 16
+    Width = 16
+    Height = 13
     Caption = 'F1:'
   end
   object ProgrBar: TGauge
@@ -41,7 +41,7 @@ object PressFrmFrame2: TPressFrmFrame2
     Left = 95
     Top = 3
     Width = 43
-    Height = 24
+    Height = 21
     ReadOnly = True
     TabOrder = 0
     Text = '0'
@@ -50,7 +50,7 @@ object PressFrmFrame2: TPressFrmFrame2
     Left = 27
     Top = 3
     Width = 45
-    Height = 24
+    Height = 21
     ReadOnly = True
     TabOrder = 1
     Text = '0'
