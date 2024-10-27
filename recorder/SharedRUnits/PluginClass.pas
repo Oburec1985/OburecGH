@@ -55,6 +55,8 @@ type
     procedure doSave(path: string); virtual;
     procedure doLoad(path: string); virtual;
     procedure doLeaveCfg; virtual;
+    // когда все плагины уже загружены и конфиг тоже
+    procedure doRCInit; virtual;
   public
     function ProcessNotify(a_dwCommand: dword; a_dwData: dword): boolean;
       virtual;
@@ -290,6 +292,11 @@ begin
 
 end;
 
+procedure cNonifyProcessor.doRCInit;
+begin
+
+end;
+
 procedure cNonifyProcessor.doSave(path: string);
 begin
 
@@ -319,6 +326,10 @@ begin
       begin
         path := getRConfig;
         doLoad(path);
+      end;
+    PN_RCINITIALIZED:
+      begin
+        doRCInit;
       end;
     PN_RCSAVECONFIG:
       begin

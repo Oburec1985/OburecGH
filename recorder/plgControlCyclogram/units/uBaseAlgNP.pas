@@ -8,7 +8,7 @@ uses
   uCommonMath,
   uAlgsSaveFrm,
   uControlCyclogramEditFrm,
-  shellApi,
+  shellApi, ubaseobj,
   uSyncOscillogram,
   uMBaseControl;
 
@@ -27,6 +27,7 @@ type
     procedure doAddParentList;override;
     procedure doSave(path: string);override;
     procedure doLoad(path: string);override;
+    procedure doRCInit;override;
   public
     function ProcessBtnClick(pMsgInfo:PCB_MESSAGE): boolean;override;
   end;
@@ -80,6 +81,19 @@ begin
       g_algMng.LoadFromXML(newpath, 'Algorithm');
       lcm;
     end;
+  end;
+end;
+
+procedure cMBaseAlgNP.doRCInit;
+var
+  I: Integer;
+  A:cbaseobj;
+begin
+  for I := 0 to g_algMng.Count - 1 do
+  begin
+    a:=g_algMng.getobj(i);
+    if a is cbasealgcontainer then
+      cbasealgcontainer(a).linkTags;
   end;
 end;
 

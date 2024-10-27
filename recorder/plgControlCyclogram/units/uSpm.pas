@@ -9,14 +9,13 @@ uses
   urecorderevents, uCommonMath, uMyMath, mathfunction, math, u2dmath, uBaseAlg,
   complex, urctags;
 
-
 type
 
   cSpm = class(cSrcAlg)
   public
     min: point2d;
     max: point2d;
-    minmax_i:tpoint;
+    minmax_i: tpoint;
     // значение ско по временной реализации за блок (evalblock)
     // m_rmsValue:double;
     // отладочный тег с временной реализацией исходных данных
@@ -26,7 +25,7 @@ type
     // интеграл первой и второй степени (только амплитуды)
     m_magI1, m_magI2: array of double;
     // включить первое и второе интегрирование 0 - без интеграла, 1 - 1 однократное, 2 - двукратное
-    m_I:integer;
+    m_I: integer;
     // интеграл первой и второй степени (только амплитуды)
     m_ReIm1, m_ReIm2: array of TComplex_d;
 
@@ -52,10 +51,9 @@ type
     m_BlockTimeInd: integer;
     m_opts: string;
     m_outTag: cTag;
-    FFTProp:TFFTProp;
+    FFTProp: TFFTProp;
     // число точек fft, число блоков по которым идет расчет спектров,
-    m_fftCount,
-    m_blockcount,
+    m_fftCount, m_blockcount,
     // перекрытие блоков m_overflowP=(1/ 2^m_overflow)
     m_overflow, m_overflowP: integer;
     // разрешение спектра
@@ -75,11 +73,11 @@ type
     // число точек на которое происходит смещение для того чтобы считать новый блок (не равно fOutSize если есть перекрытие)
     fShift: cardinal;
     // окно
-    fWnd:PWndFunc;
+    fWnd: PWndFunc;
   protected
-    function getrestype:integer;
-    procedure setrestype(i:integer);
-    procedure setWnd(s:string);
+    function getrestype: integer;
+    procedure setrestype(i: integer);
+    procedure setWnd(s: string);
     // расчет минмаксов
     procedure evalMinMax;
     procedure doOnStart; override;
@@ -107,18 +105,18 @@ type
     function GetWndType: TWndType;
     function GetWndStr: string;
     function GetProperties: string; override;
-    function getExtProp: string;override;
+    function getExtProp: string; override;
     procedure SetProperties(str: string); override;
     function genTagName: string; override;
-    procedure setfirstchannel(t:itag);override;
+    procedure setfirstchannel(t: itag); override;
   public
-    procedure updateOutChan;override;
+    procedure updateOutChan; override;
     // вызывается при загрузке или при установке входного тега
-    procedure createOutChan;override;
-    procedure createOutChan(name:string);override;
-    property restype:integer read getrestype write setrestype;
+    procedure createOutChan; override;
+    procedure createOutChan(name: string); override;
+    property restype: integer read getrestype write setrestype;
     procedure doStopRecord;
-    property CreateOutTag:boolean read getCreateOutTag write setCreateOutTag;
+    property CreateOutTag: boolean read getCreateOutTag write setCreateOutTag;
     function getIndByX(x: double): integer;
     function LastBlockTime: double;
     function GetPeriod: double;
@@ -127,7 +125,7 @@ type
     procedure setinptag(t: cTag); overload;
     function ready: boolean; override;
     // возвращает шаг по частте в спектре
-    function SpmDx:double;
+    function SpmDx: double;
     class function getdsc: string; override;
     constructor create; override;
     destructor destroy; override;
@@ -147,8 +145,7 @@ const
   c_Blackmann = 'Blackman';
   c_Flattop = 'Flattop';
 
-
-{ cSpm }
+  { cSpm }
 
 constructor cSpm.create;
 begin
@@ -157,11 +154,11 @@ begin
   fdx := -1;
   m_blockcount := 1;
   m_overflow := 0;
-  m_addNulls:=false;
+  m_addNulls := false;
   m_fftCount := 256;
-  m_properties:=C_SpmOpts;
+  m_properties := C_SpmOpts;
   m_outTag := cTag.create;
-  m_outTag.m_createOutTag:=false;
+  m_outTag.m_createOutTag := false;
 end;
 
 destructor cSpm.destroy;
@@ -173,16 +170,16 @@ begin
   end;
 
   FreeMemAligned(m_EvalBlock);
-  m_EvalBlock.p:=nil;
+  m_EvalBlock.p := nil;
 
   FreeMemAligned(cmplx_resArray);
-  cmplx_resArray.p:=nil;
+  cmplx_resArray.p := nil;
 
   FreeMemAligned(mid_cmplx_resArray);
-  cmplx_resArray.p:=nil;
+  cmplx_resArray.p := nil;
 
   FreeMemAligned(m_rms);
-  m_rms.p:=nil;
+  m_rms.p := nil;
 
   m_tag.destroy;
   m_tag := nil;
@@ -197,8 +194,8 @@ var
   i: integer;
   x, y: double;
 begin
-  minmax_i.X:=0;
-  minmax_i.y:=0;
+  minmax_i.x := 0;
+  minmax_i.y := 0;
 
   min.x := tdoubleARRAy(m_rms.p)[0];
   min.y := tdoubleARRAy(m_rms.p)[0];
@@ -211,7 +208,7 @@ begin
     begin
       max.y := y;
       max.x := x;
-      minmax_i.y:=i;
+      minmax_i.y := i;
     end
     else
     begin
@@ -219,7 +216,7 @@ begin
       begin
         min.y := y;
         min.x := x;
-        minmax_i.x:=i;
+        minmax_i.x := i;
       end;
     end;
   end;
@@ -303,29 +300,29 @@ begin
     end;
     m_EvalBlockTag.setBlock(fOutSize, m_EvalBlock.p);
   end;
-  FFTProp:=GetFFTPlan(m_fftCount);
+  FFTProp := GetFFTPlan(m_fftCount);
 end;
 
 procedure cSpm.doEval(intag: cTag; time: double);
 var
-  ar:tdoublearray;
+  ar: tdoubleARRAy;
   // номер обрабатываемого блока в массиве исходных данных
   procBlock,
   // количество готовых блоков
-  bCount,
-  len, startind, endind: integer;
+  bCount, len, startind, endind: integer;
   v, dt: double;
   // число копирований при добавлении нулями
   NCopy, copycount: integer;
   // дополнять нулями или копировать исходные данные вместо нулей
   copyBlocks: boolean;
   knorm, k: double;
-  i,j: integer;
+  i, j: integer;
 begin
   // если размер блока для расчета меньше чем кол-во готовых необработанных данных
   procBlock := 0;
   copycount := fOutSize - fNullsPoints;
-  if copycount=0 then exit;
+  if copycount = 0 then
+    exit;
 
   bCount := trunc(m_tag.lastindex / copycount);
   while procBlock < bCount do
@@ -333,7 +330,8 @@ begin
     // копируем входные данные в выходной буфер
     // source dest count
     /// Error???
-    move(m_tag.m_ReadData[fShift * procBlock], m_EvalBlock.p^, copycount * sizeof(double));
+    move(m_tag.m_ReadData[fShift * procBlock], m_EvalBlock.p^,
+      copycount * sizeof(double));
 
     dt := 1 / intag.freq;
     if m_EvalBlockTag <> nil then
@@ -342,46 +340,50 @@ begin
         m_EvalBlockTag.saveBlock(intag.m_ReadDataTime + (dt)
             * fShift * procBlock);
     end;
-    FFTProp.StartInd:=0;
+    FFTProp.startind := 0;
     begin
-      ar:=tdoublearray(m_rms.p);
-      //FFTAnalysis(TArrayValues(m_EvalBlock.p), tarrayValues(ar), m_fftCount, AlignBlockLength(m_rms));
-      j:=0;
-      while FFTProp.StartInd<copycount do
+      ar := tdoubleARRAy(m_rms.p);
+      // FFTAnalysis(TArrayValues(m_EvalBlock.p), tarrayValues(ar), m_fftCount, AlignBlockLength(m_rms));
+      j := 0;
+      while FFTProp.startind < copycount do
       begin
-        if fWnd<>nil then
+        if fWnd <> nil then
         begin
-          fft_al_d_sse(TDoubleArray(m_EvalBlock.p), tCmxArray_d(cmplx_resArray.p), FFTProp, fWnd);
+          fft_al_d_sse(tdoubleARRAy(m_EvalBlock.p),
+            tCmxArray_d(cmplx_resArray.p), FFTProp, fWnd);
         end
         else
         begin
-          fft_al_d_sse(TDoubleArray(m_EvalBlock.p), tCmxArray_d(cmplx_resArray.p), FFTProp);
+          fft_al_d_sse(tdoubleARRAy(m_EvalBlock.p),
+            tCmxArray_d(cmplx_resArray.p), FFTProp);
         end;
-        if FFTProp.StartInd=0 then
+        if FFTProp.startind = 0 then
         begin
-          move(cmplx_resArray.p^, mid_cmplx_resArray.p^, m_fftCount * sizeof(TComplex_d));
+          move(cmplx_resArray.p^, mid_cmplx_resArray.p^,
+            m_fftCount * sizeof(TComplex_d));
         end
         else
         begin
-          for I := 0 to m_fftCount - 1 do
+          for i := 0 to m_fftCount - 1 do
           begin
-            tCmxArray_d(mid_cmplx_resArray.p)[i]:=tCmxArray_d(mid_cmplx_resArray.p)[i]+tCmxArray_d(cmplx_resArray.p)[i];
+            tCmxArray_d(mid_cmplx_resArray.p)[i] := tCmxArray_d
+              (mid_cmplx_resArray.p)[i] + tCmxArray_d(cmplx_resArray.p)[i];
           end;
         end;
-        FFTProp.StartInd:=FFTProp.StartInd+m_fftCount;
+        FFTProp.startind := FFTProp.startind + m_fftCount;
         inc(j);
       end;
 
-      //NormalizeAndScaleSpmMag(TCmxArray_d(cmplx_resArray.p), TDoubleArray(m_rms.p));
+      // NormalizeAndScaleSpmMag(TCmxArray_d(cmplx_resArray.p), TDoubleArray(m_rms.p));
       // wnd.scale зависит от типа окна
-      if fWnd=nil then
-        k:=1/(FFTProp.PCount shr 1)
+      if fWnd = nil then
+        k := 1 / (FFTProp.PCount shr 1)
       else
-        k:=fWnd.acf/(FFTProp.PCount shr 1);
-      if j>1 then
-        k:=k/j; // усреднение спектра
+        k := fWnd.acf / (FFTProp.PCount shr 1);
+      if j > 1 then
+        k := k / j; // усреднение спектра
       MULT_SSE_al_cmpx_d(tCmxArray_d(mid_cmplx_resArray.p), k);
-      EvalSpmMag(TCmxArray_d(mid_cmplx_resArray.p), TDoubleArray(m_rms.p));
+      EvalSpmMag(tCmxArray_d(mid_cmplx_resArray.p), tdoubleARRAy(m_rms.p));
       // нормировка с учетом дополнения нулями
       if fNullsPoints = 0 then
       begin
@@ -390,27 +392,27 @@ begin
       else
       begin
         knorm := fOutSize / copycount;
-        MULT_SSE_al_d(TDoubleArray(m_rms.p),knorm);
+        MULT_SSE_al_d(tdoubleARRAy(m_rms.p), knorm);
       end;
       // расчет амплитудных спектров
-      if m_I>0 then
+      if m_I > 0 then
       begin
-        if m_i=1 then
+        if m_I = 1 then
         begin
-          knorm:=1/(TwoPi*m_spmdx);
-          for I := 1 to length(m_magI1)-1 do
+          knorm := 1 / (TwoPi * m_spmdx);
+          for i := 1 to length(m_magI1) - 1 do
           begin
-            k:=knorm/i;
-            m_magI1[i]:=k*TDoubleArray(m_rms.p)[i];
+            k := knorm / i;
+            m_magI1[i] := k * tdoubleARRAy(m_rms.p)[i];
           end;
         end
         else
         begin
-          knorm:=1/(TwoPi*m_spmdx*TwoPi*m_spmdx);
-          for I := 1 to length(m_magI2)-1 do
+          knorm := 1 / (TwoPi * m_spmdx * TwoPi * m_spmdx);
+          for i := 1 to length(m_magI2) - 1 do
           begin
-            k:=knorm/i;
-            m_magI2[i]:=k*TDoubleArray(m_rms.p)[i];
+            k := knorm / i;
+            m_magI2[i] := k * tdoubleARRAy(m_rms.p)[i];
           end;
         end;
       end;
@@ -419,28 +421,29 @@ begin
 
     m_BlockTime[procBlock] := intag.m_ReadDataTime + fdx * procBlock;
     m_BlockTimeInd := procBlock;
-    if m_outTag.tag<>nil then
+    if m_outTag.tag <> nil then
     begin
-      m_outTag.tag.PushDataEx(m_rms.p, AlignBlockLength(m_rms), 0,m_BlockTime[procBlock]);
+      m_outTag.tag.PushDataEx(m_rms.p, AlignBlockLength(m_rms), 0,
+        m_BlockTime[procBlock]);
     end;
     inc(m_ReadyBlockCount);
     CallUpdateDataEvent;
     inc(procBlock);
   end;
-  if procBlock>0 then
+  if procBlock > 0 then
 
-  CallEndEvalBlock;
+    CallEndEvalBlock;
 end;
 
 function cSpm.getIndByX(x: double): integer;
 begin
-  if m_spmdx<>0 then
+  if m_spmdx <> 0 then
   begin
-    result:=trunc(x / m_spmdx)
+    result := trunc(x / m_spmdx)
   end
   else
   begin
-    result:=0;
+    result := 0;
   end;
 end;
 
@@ -470,7 +473,8 @@ var
   t: cTag;
 begin
   inherited;
-  if not ready then exit;
+  if not ready then
+    exit;
   if m_tag <> nil then
   begin
     m_tag.doOnStart;
@@ -484,7 +488,7 @@ begin
     m_outTag.doOnStart;
   end;
   ZeroMemory(m_EvalBlock.p, fOutSize * sizeof(double));
-  ZeroMemory(m_rms.p, (m_fftCount shr 1)* sizeof(double));
+  ZeroMemory(m_rms.p, (m_fftCount shr 1) * sizeof(double));
 
   m_ReadyBlockCount := 0;
   m_BlockTimeInd := 0;
@@ -509,12 +513,12 @@ end;
 
 function cSpm.getCreateOutTag: boolean;
 begin
-  result:=m_outTag.m_createOutTag;
+  result := m_outTag.m_createOutTag;
 end;
 
 procedure cSpm.setCreateOutTag(b: boolean);
 begin
-  m_outTag.m_createOutTag:=b;
+  m_outTag.m_createOutTag := b;
 end;
 
 class function cSpm.getdsc: string;
@@ -532,7 +536,7 @@ var
   pars: tstringlist;
   b: boolean;
   t: itag;
-  refcount:integer;
+  refcount: integer;
   str: string;
 begin
   pars := tstringlist.create;
@@ -572,8 +576,8 @@ var
   t: itag;
   changed: boolean;
 begin
-  //inherited;
-  m_properties:=updateParams(m_properties, str, '', ' ');
+  // inherited;
+  m_properties := updateParams(m_properties, str, '', ' ');
   changed := false;
   // FFTCount=256,Overflow=0,dx=-1,blockcount=1
   lstr := GetParam(str, 'FFTCount');
@@ -588,19 +592,19 @@ begin
   lstr := GetParam(str, 'FFTrestype');
   if CheckStr(lstr) then
   begin
-    if strtoint(lstr)<> restype then
+    if strtoInt(lstr) <> restype then
     begin
-      restype:=strtoint(lstr);
-      changed:=true;
+      restype := strtoInt(lstr);
+      changed := true;
     end;
   end;
   lstr := GetParam(str, 'Wnd');
   if CheckStr(lstr) then
   begin
-    if lstr<> GetWndStr then
+    if lstr <> GetWndStr then
     begin
-      SetWnd(lstr);
-      changed:=true;
+      setWnd(lstr);
+      changed := true;
     end;
   end;
   lstr := GetParam(str, 'Addnull');
@@ -671,11 +675,11 @@ end;
 
 function cSpm.getExtProp: string;
 begin
-  result:='';
-  if m_tag<>nil then
-    result:='Channel='+m_tag.tagname;
-  if m_outTag<>nil then
-    result:=result+',OutChannel='+m_outTag.tagname;
+  result := '';
+  if m_tag <> nil then
+    result := 'Channel=' + m_tag.tagname;
+  if m_outTag <> nil then
+    result := result + ',OutChannel=' + m_outTag.tagname;
 end;
 
 function cSpm.LastBlockTime: double;
@@ -722,73 +726,82 @@ end;
 function cSpm.ready: boolean;
 begin
   result := false;
-  if m_tag=nil then exit;
-  if fOutSize=0 then
+  if m_tag = nil then
+    exit;
+  if fOutSize = 0 then
     updateOutChan;
 
-  if m_Tag.tag <> nil then
+  if m_tag.tag <> nil then
   begin
     result := true;
   end
   else
   begin
-    m_tag.tag:=getTagByName(m_tag.tagname);
-    if m_tag.tag<>nil then
+    m_tag.tag := getTagByName(m_tag.tagname);
+    if m_tag.tag <> nil then
     begin
       updateOutChan;
-      result:=true;
+      result := true;
     end;
   end;
 end;
 
 procedure cSpm.setrestype(i: integer);
 begin
-  if i<3 then
+  if i < 3 then
   begin
-    m_i:=i;
+    m_I := i;
   end
   else
   begin
-    m_i:=i-3;
+    m_I := i - 3;
   end;
 end;
 
 function cSpm.getrestype: integer;
 begin
   case m_I of
-    0: result:=0;
-    1: result:=1;
-    2: result:=2;
+    0:
+      result := 0;
+    1:
+      result := 1;
+    2:
+      result := 2;
   end;
 end;
 
 function cSpm.GetWndFunc: PWndFunc;
 begin
-  result:=fWnd;
+  result := fWnd;
 end;
 
 function cSpm.GetWndStr: string;
 begin
-  if fWnd=nil then
-    result:=c_Rect
+  if fWnd = nil then
+    result := c_Rect
   else
   begin
     case fWnd.wndtype of
-      wdRect: result:=c_Rect;
-      wdHann: result:=c_Hann;
-      wdHamming: result:=c_Hamming;
-      wdBlackman: result:=c_Blackmann;
-      wdFlattop: result:=c_Flattop;
+      wdRect:
+        result := c_Rect;
+      wdHann:
+        result := c_Hann;
+      wdHamming:
+        result := c_Hamming;
+      wdBlackman:
+        result := c_Blackmann;
+      wdFlattop:
+        result := c_Flattop;
     end;
   end;
 end;
 
 function cSpm.GetWndType: TWndType;
 begin
-  if fWnd=nil then
-    result:=wdRect
+  if fWnd = nil then
+    result := wdRect
   else
-    result:=fwnd.wndtype;
+    result := fWnd.wndtype;
 end;
 
 function cSpm.GetResName: string;
@@ -802,7 +815,7 @@ end;
 procedure cSpm.SetResName(s: string);
 var
   pstr: pansichar;
-  b:boolean;
+  b: boolean;
 begin
   m_outTag.tagname := s;
   if m_outTag.tag <> nil then
@@ -822,7 +835,7 @@ begin
   t := m_tag;
   if t <> nil then
   begin
-    tnode := getNode(node,'InputTag');
+    tnode := getNode(node, 'InputTag');
 
     saveTag(t, tnode);
   end;
@@ -836,36 +849,36 @@ var
   // частота выходного спектра (определяет растояние между отсчетами спектра)
   outfreq: double;
 begin
-  createoutchan(genTagName);
+  createOutChan(genTagName);
 end;
 
-procedure cSpm.createOutChan(name:string);
+procedure cSpm.createOutChan(name: string);
 var
   bl: IBlockAccess;
   // частота выходного спектра (определяет растояние между отсчетами спектра)
   outfreq: double;
 begin
-  if createOutTag then
+  if CreateOutTag then
   begin
     if m_tag <> nil then
     begin
       if m_tag.tag <> nil then
       begin
-        //ecm;
+        // ecm;
         outfreq := m_fftCount / m_tag.tag.GetFreq;
-        m_outTag.tag := createVectorTagR8(name, outfreq, false, true,false);
+        m_outTag.tag := createVectorTagR8(name, outfreq, false, true, false);
         if not FAILED(m_outTag.tag.QueryInterface(IBlockAccess, bl)) then
         begin
           m_outTag.block := bl;
           bl := nil;
         end;
-        //lcm;
+        // lcm;
       end;
     end;
   end
   else
   begin
-    m_outTag.tagname:=name;
+    m_outTag.tagname := name;
   end;
 end;
 
@@ -895,10 +908,11 @@ begin
   end;
   if m_tag.tag = nil then
   begin
-    m_tag.tag:=getTagByName(m_tag.tagname);
+    m_tag.tag := getTagByName(m_tag.tagname);
     if m_tag.tag = nil then
     begin
-      m_errors.add('cSpm.updateOutChan Отсутствует входной тег: ' + m_tag.tagname);
+      m_errors.add('cSpm.updateOutChan Отсутствует входной тег: ' +
+          m_tag.tagname);
       exit;
     end;
   end;
@@ -918,8 +932,8 @@ begin
         lstr := ModName(lstr, false);
     end;
     createOutChan(lstr);
-    if m_outTag.tag<>nil then
-      m_outTag.tagname:=lstr;
+    if m_outTag.tag <> nil then
+      m_outTag.tagname := lstr;
     if changeCfgMode then
       lcm;
   end
@@ -937,7 +951,7 @@ begin
     if m_outTag <> nil then
     begin
       m_outTag.freq := m_fftCount shr 1;
-      if m_outTag.tag<>nil then
+      if m_outTag.tag <> nil then
       begin
         m_outTag.tag.setname(str);
         if not FAILED(m_outTag.tag.QueryInterface(IBlockAccess, bl)) then
@@ -953,20 +967,18 @@ begin
   evalOutSize(m_overflow, m_fftCount, m_blockcount, fdx);
 end;
 
-
-
 procedure cSpm.setfirstchannel(t: itag);
 var
-  lstr:string;
+  lstr: string;
 begin
   setinptag(t);
-  lstr := GetParam(m_Properties, 'Channel');
-  if m_tag<>nil then
+  lstr := GetParam(m_properties, 'Channel');
+  if m_tag <> nil then
   begin
-    m_Properties:=AddParamF(m_Properties,'Channel',m_tag.tagname);
-    if lstr='' then
+    m_properties := AddParamF(m_properties, 'Channel', m_tag.tagname);
+    if lstr = '' then
     begin
-      name:=genTagName;
+      name := genTagName;
     end;
   end;
 end;
@@ -998,10 +1010,9 @@ begin
   else
   begin
     // оставлено только в setprops и в loadprops
-    //updateOutChan;
+    // updateOutChan;
   end;
 end;
-
 
 procedure cSpm.settag(t: itag);
 begin
@@ -1018,31 +1029,31 @@ end;
 
 procedure cSpm.setWnd(s: string);
 begin
-  if s=c_Rect then
+  if s = c_Rect then
   begin
-    fWnd:=GetFFTWnd(m_fftCount, wdRect);
+    fWnd := GetFFTWnd(m_fftCount, wdRect);
   end;
-  if s=c_Hann then
+  if s = c_Hann then
   begin
-    fWnd:=GetFFTWnd(m_fftCount, wdHann);
+    fWnd := GetFFTWnd(m_fftCount, wdHann);
   end;
-  if s=c_Hamming then
+  if s = c_Hamming then
   begin
-    fWnd:=GetFFTWnd(m_fftCount, wdHamming);
+    fWnd := GetFFTWnd(m_fftCount, wdHamming);
   end;
-  if s=c_Blackmann then
+  if s = c_Blackmann then
   begin
-    fWnd:=GetFFTWnd(m_fftCount, wdBlackman);
+    fWnd := GetFFTWnd(m_fftCount, wdBlackman);
   end;
-  if s=c_Flattop then
+  if s = c_Flattop then
   begin
-    fWnd:=GetFFTWnd(m_fftCount, wdFlattop);
+    fWnd := GetFFTWnd(m_fftCount, wdFlattop);
   end;
 end;
 
 function cSpm.SpmDx: double;
 begin
-  result:=m_spmdx;
+  result := m_spmdx;
 end;
 
 procedure cSpm.settag(str: string);
@@ -1052,6 +1063,5 @@ begin
   t := getTagByName(str);
   settag(t);
 end;
-
 
 end.

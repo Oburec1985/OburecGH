@@ -73,6 +73,7 @@ type
     procedure LoadTags(node: txmlNode); override;
     function ready: boolean; override;
     function getlasttime: double;
+    procedure LinkTags;override;
   public
     procedure setfirstchannel(t:itag);override;
   public
@@ -323,6 +324,12 @@ begin
 end;
 
 
+procedure cGrmsSrcAlg.LinkTags;
+begin
+  m_Taho.initTag;
+  m_InTag.initTag;
+end;
+
 procedure cGrmsSrcAlg.LoadTags(node: txmlNode);
 var
   tnode: txmlNode;
@@ -391,19 +398,30 @@ begin
         result := true;
     end;
   end;
-  if m_InTag.tag <> nil then
+  if result then
   begin
-
-  end
-  else
-  begin
-    m_InTag.tag:=getTagByName(m_InTag.tagname);
-    if m_InTag.tag<>nil then
+    if m_InTag.tag <> nil then
     begin
-      setinptag(m_InTag.tag);
+
     end
     else
-      result:=false;
+    begin
+      m_InTag.tag:=getTagByName(m_InTag.tagname);
+      if m_InTag.tag<>nil then
+      begin
+        setinptag(m_InTag.tag);
+        if m_spm<>nil then
+        begin
+          result:=true;
+        end
+        else
+        begin
+          result:=false;
+        end;
+      end
+      else
+        result:=false;
+    end;
   end;
 end;
 

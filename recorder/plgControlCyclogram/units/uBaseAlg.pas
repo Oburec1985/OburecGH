@@ -88,6 +88,8 @@ type
     // отлинковать алгоритм назначения
     procedure delDstLink(dst: cBaseObj);
   public
+    // поискать входные теги
+    procedure LinkTags; virtual;
     function NotSaveToXml: boolean;override;
     procedure updateOutChan;virtual;
     procedure createOutChan;overload;virtual;
@@ -542,6 +544,11 @@ end;
 procedure cBaseAlgContainer.setParentCfg(c: cAlgConfig);
 begin
   m_ParentCfg:=c;
+end;
+
+procedure cBaseAlgContainer.LinkTags;
+begin
+
 end;
 
 procedure cBaseAlgContainer.LoadObjAttributes(xmlNode: txmlNode; mng: tobject);
