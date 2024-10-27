@@ -931,12 +931,6 @@ var
   fr: TPressFrmFrame2;
   c: tcomponent;
 begin
-  // for i:=m_frames.Count-1 downto 1 do
-  // begin
-  // c:=BarGraphGB.FindComponent(BarPanel.name+'_'+inttostr(i));
-  // if c<>nil then
-  // c.Destroy;
-  // end;
   for i := 1 to m_frames.Count - 1 do
   begin
     fr := Frame(i);
@@ -1079,7 +1073,6 @@ var
 
   adr: string;
 begin
-  // ws := E.ActiveWorkbook.Sheets.Item[sh];
   ws := E.ActiveWorkbook.Sheets[sh];
   ws.activate;
   res := ws.cells[r0, col];
@@ -1090,23 +1083,6 @@ begin
   end;
   result := r0;
 end;
-
-{ function GetEmptyRow(sh, r0, col: integer): integer;
-  var
-  ws: olevariant;
-  res: string;
-  r: integer;
-  begin
-  ws := E.ActiveWorkbook.Sheets.Item[sh];
-  r := r0;
-  res := ws.cells[r0, col];
-  while res <> '' do
-  begin
-  inc(r0);
-  res := ws.cells[r0, col];
-  end;
-  result := r0;
-  end; }
 
 procedure TPressFrm2.SaveBtnClick(Sender: TObject);
 var

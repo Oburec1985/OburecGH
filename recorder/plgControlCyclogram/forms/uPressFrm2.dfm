@@ -240,8 +240,8 @@ object PressFrm2: TPressFrm2
         OnClick = OpenBtnClick
       end
       object BNumSB: TSpinButton
-        Left = 238
-        Top = 92
+        Left = 240
+        Top = 97
         Width = 15
         Height = 18
         Margins.Left = 2
