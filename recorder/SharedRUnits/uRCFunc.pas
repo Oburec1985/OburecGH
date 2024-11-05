@@ -777,6 +777,10 @@ var
   v: OleVariant;
 begin
   ir := getIR;
+  result :=getTagByName(tagname);
+  // если тег существует выходим
+  if result<>nil then
+    exit;
   result := itag(ir.CreateTag(lpcstr(StrToAnsi(tagname)), LS_VIRTUAL, nil));
 
   // сохран€ть в конфиге

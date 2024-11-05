@@ -111,15 +111,6 @@ begin
   m_Max:=max;
   m_f:=m_s.SpmDx*imax;
   m_A:=sum/(g_PressCamFactory2.m_bands[bnum].i2-g_PressCamFactory2.m_bands[bnum].i1);
-  if g_PressCamFactory2.m_createTags then
-  begin
-    if g_PressCamFactory2.m_tagsinit then
-    begin
-      v:=getEst;
-      g_PressCamFactory2.pushTag(m_s.m_tag.tagname ,bnum, m_max);
-      //g_PressCamFactory2.pushTag(m_s.m_tag.tagname ,bnum, v);
-    end;
-  end;
 end;
 
 function TPressFrmFrame2.f1: double;

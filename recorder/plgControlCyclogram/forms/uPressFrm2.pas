@@ -38,12 +38,26 @@ type
     i1, i2: integer;
   end;
 
+  tEvalData = record
+    rms_mean:double; // среднее в полосе СКО
+    rms_max:double; // главный пик (СКО)
+    Freq:double;
+    iMax:integer;
+  end;
+
   TTagRec = record
     // rms // исходный тег по которому идет расчет
     name: string;
+    // спектр тега
+    m_s:cspm;
     // тег рекордера
     m_bandTags: array of itag;
+    // максимум
+    m_SKO: array of tEvalData;
+    // m
   end;
+
+
 
   TPressFrm2 = class(TRecFrm)
     BarGraphGB: TGroupBox;
@@ -189,9 +203,9 @@ type
     function RefsToStr: string;
     procedure StrToBands(s: string);
     procedure StrToRefs(s: string);
-    // записать значение в тег
-    procedure pushTag(tag: string; bnum: integer; v: double);
     function getFrmByBNum(i: integer): TPressFrm2;
+    // пересчет rms в амплитуду
+    function RescaleEst(restype:integer; rms:double):double;
   public
     constructor create;
     destructor destroy; override;
@@ -275,6 +289,31 @@ begin
   begin
     result := result + floattostr(m_refArray[i]) + ';';
   end;
+end;
+
+function cPressCamFactory2.RescaleEst(restype: integer; rms: double): double;
+var
+  w:PWndFunc;
+  v:double;
+begin
+  if restype=0 then // СКО
+  begin
+    v:=rms/sqrt2;
+    w:=GetWndFunc;
+    // коррекция с цчетом оконной функции для СКО (т.к. исходный спектр корректируется по acf для А)
+    if w<>nil then
+    begin
+      if w.wndtype<>wdRect then
+      begin
+        v:=v*w.ecf/w.acf;
+      end;
+    end;
+  end
+  else  // p-p
+  begin
+    v:=rms*2;
+  end;
+  result:=v;
 end;
 
 function cPressCamFactory2.BandsToStr: string;
@@ -479,12 +518,15 @@ begin
     if not m_tagsinit then
     begin
       setlength(m_tags, m_spmCfg.ChildCount);
+
       for i := 0 to m_spmCfg.ChildCount - 1 do
       begin
         m_tagsinit := true;
         s := getSpm(i);
         m_tags[i].name := s.m_tag.tagname;
+        m_tags[i].m_s:=s;
         setlength(m_tags[i].m_bandTags, BandCount);
+        setlength(m_tags[i].m_SKO, BandCount);
         for j := 0 to BandCount - 1 do
         begin
           m_tags[i].m_bandTags[j] := createScalar
@@ -591,8 +633,13 @@ end;
 
 procedure cPressCamFactory2.doUpdateData(Sender: TObject);
 var
-  i: integer;
+  bnum, j, i,
+  // индекс максимума в спектре
+  imax: integer;
   Frm: TRecFrm;
+  t:TTagRec;
+  k: Integer;
+  v, sum, max:double;
 begin
   // if g_disableFRF then
   // exit;
@@ -600,6 +647,45 @@ begin
   begin
     Frm := GetFrm(i);
     TPressFrm2(Frm).updatedata;
+  end;
+  //// добавлено 05.11.24. Оценки и теги считать вфабрике
+  /// а в компоненте только отображать
+  // сохранение тегов
+  if m_createTags then
+  begin
+    // проход по списку тегов
+    for i := 0 to length(m_tags) - 1 do
+    begin
+      t:=m_tags[i];
+      // проход по списку полос
+      for bnum := 0 to length(m_bands)-1 do
+      begin
+        // проход по списку
+        for k := m_bands[bnum].i1 to m_bands[bnum].i2 do
+        begin
+          v:=tdoubleArray(t.m_s.m_rms.p)[k];
+          sum:=sum+v;
+          if v>max then
+          begin
+            max:=v;
+            imax:=i;
+          end;
+        end;
+        t.m_SKO[bnum].rms_max:=max;
+        t.m_SKO[bnum].Freq:=t.m_s.SpmDx*imax;
+        t.m_SKO[bnum].iMax:=imax;
+        // поменять на сумму квадратов корень?
+        t.m_SKO[bnum].rms_mean:=sum/(m_bands[bnum].i2-m_bands[bnum].i1);
+        if m_createTags then
+        begin
+          if m_tagsinit then
+          begin
+            max:=RescaleEst(m_typeRes ,t.m_SKO[bnum].rms_max);
+            t.m_bandTags[bnum].PushValue(v, -1);
+          end;
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -762,20 +848,6 @@ begin
   result := wdRect;
   if s <> nil then
     result := s.GetWndType;
-end;
-
-procedure cPressCamFactory2.pushTag(tag: string; bnum: integer; v: double);
-var
-  i: integer;
-begin
-  for i := 0 to m_spmCfg.ChildCount - 1 do
-  begin
-    if m_tags[i].name = tag then
-    begin
-      m_tags[i].m_bandTags[bnum].PushValue(v, -1);
-      break;
-    end;
-  end;
 end;
 
 procedure cPressCamFactory2.ReevalBands(s: cspm);
