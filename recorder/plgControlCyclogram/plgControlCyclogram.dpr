@@ -248,8 +248,8 @@ uses
   uDeformerFrame in '..\..\3d\forms\uDeformerFrame.pas' {DeformerFrame: TFrame},
   u3dMoveEngine in 'units\u3dMoveEngine.pas',
   u3dObjEditFrame in 'forms\u3dObjEditFrame.pas' {ObjEditFrame: TFrame},
-  TestUDPsender in 'forms\DataTransfFrm\TestUDPsender.pas' {TestUDPSenderFrm},
-  uModelPointMng in 'units\uModelPointMng.pas';
+  uModelPointMng in 'units\uModelPointMng.pas',
+  TestUDPsender in 'forms\DataTransfFrm\TestUDPsender.pas' {TestUDPSenderFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

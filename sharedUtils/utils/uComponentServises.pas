@@ -310,7 +310,7 @@ begin
           MaxWidth := w;
       end;
       //sg.ColWidths[x] := round(1.1*MaxWidth) + 5;
-      sg.ColWidths[x] := round(1.25*MaxWidth) + 5;
+      sg.ColWidths[x] := round(1.5*MaxWidth) + 5;
       //sg.ColWidths[x] := 100;
     end;
   end;

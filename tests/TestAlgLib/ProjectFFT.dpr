@@ -186,13 +186,15 @@ uses
   uLegend in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\uLegend.pas',
   upage in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\upage.pas',
   uLineLgShader in '..\..\sharedUtils\компоненты\chart_dpk\chart\items\shaders\uLineLgShader.pas',
-  TestUDPsender in 'TestUDPsender.pas' {TestUDPSenderFrm};
+  TestUDPsender in 'TestUDPsender.pas' {TestUDPSenderFrm},
+  u3120Frm in 'u3120Frm.pas' {Form2};
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TForm2, Form2);
   Application.CreateForm(TForm1, Form1);
   //Application.CreateForm(TTestUDPSenderFrm, TestUDPSenderFrm);
   Application.Run;

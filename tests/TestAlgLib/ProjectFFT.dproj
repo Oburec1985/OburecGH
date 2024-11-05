@@ -235,6 +235,9 @@
 			<DCCReference Include="TestUDPsender.pas">
 				<Form>TestUDPSenderFrm</Form>
 			</DCCReference>
+			<DCCReference Include="u3120Frm.pas">
+				<Form>Form2</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

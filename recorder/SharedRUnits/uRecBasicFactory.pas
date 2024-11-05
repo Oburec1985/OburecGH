@@ -146,6 +146,7 @@ type
     // наша форма компонент
     m_name: LPCSTR;
   protected
+    //
     function doGetProperty(tag:integer):lpcstr;virtual;
     function doSetProperty(tag:integer; str:lpcstr):integer;virtual;
   public
