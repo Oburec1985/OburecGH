@@ -249,7 +249,8 @@ uses
   u3dMoveEngine in 'units\u3dMoveEngine.pas',
   u3dObjEditFrame in 'forms\u3dObjEditFrame.pas' {ObjEditFrame: TFrame},
   uModelPointMng in 'units\uModelPointMng.pas',
-  TestUDPsender in 'forms\DataTransfFrm\TestUDPsender.pas' {TestUDPSenderFrm};
+  TestUDPsender in 'forms\DataTransfFrm\TestUDPsender.pas' {TestUDPSenderFrm},
+  uEditCurveFrm in 'forms\uEditCurveFrm.pas' {Form3};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

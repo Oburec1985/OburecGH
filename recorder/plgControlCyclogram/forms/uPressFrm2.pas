@@ -301,13 +301,14 @@ begin
     v:=rms/sqrt2;
     w:=GetWndFunc;
     // коррекция с цчетом оконной функции для СКО (т.к. исходный спектр корректируется по acf для А)
-    if w<>nil then
-    begin
-      if w.wndtype<>wdRect then
-      begin
-        v:=v*w.ecf/w.acf;
-      end;
-    end;
+    //if w<>nil then
+    //begin
+    //  if w.wndtype<>wdRect then
+    //  begin
+        //v:=v*w.ecf/w.acf;
+    //    v:=v*w.ecf;
+    //  end;
+    //end;
   end
   else  // p-p
   begin
@@ -651,38 +652,35 @@ begin
   //// добавлено 05.11.24. Оценки и теги считать вфабрике
   /// а в компоненте только отображать
   // сохранение тегов
-  if m_createTags then
+  // проход по списку тегов
+  for i := 0 to length(m_tags) - 1 do
   begin
-    // проход по списку тегов
-    for i := 0 to length(m_tags) - 1 do
+    t:=m_tags[i];
+    // проход по списку полос
+    for bnum := 0 to length(m_bands)-1 do
     begin
-      t:=m_tags[i];
-      // проход по списку полос
-      for bnum := 0 to length(m_bands)-1 do
+      // проход по списку
+      for k := m_bands[bnum].i1 to m_bands[bnum].i2 do
       begin
-        // проход по списку
-        for k := m_bands[bnum].i1 to m_bands[bnum].i2 do
+        v:=tdoubleArray(t.m_s.m_rms.p)[k];
+        sum:=sum+v;
+        if v>max then
         begin
-          v:=tdoubleArray(t.m_s.m_rms.p)[k];
-          sum:=sum+v;
-          if v>max then
-          begin
-            max:=v;
-            imax:=i;
-          end;
+          max:=v;
+          imax:=i;
         end;
-        t.m_SKO[bnum].rms_max:=max;
-        t.m_SKO[bnum].Freq:=t.m_s.SpmDx*imax;
-        t.m_SKO[bnum].iMax:=imax;
-        // поменять на сумму квадратов корень?
-        t.m_SKO[bnum].rms_mean:=sum/(m_bands[bnum].i2-m_bands[bnum].i1);
-        if m_createTags then
+      end;
+      t.m_SKO[bnum].rms_max:=max;
+      t.m_SKO[bnum].Freq:=t.m_s.SpmDx*imax;
+      t.m_SKO[bnum].iMax:=imax;
+      // поменять на сумму квадратов корень?
+      t.m_SKO[bnum].rms_mean:=sum/(m_bands[bnum].i2-m_bands[bnum].i1);
+      if m_createTags then
+      begin
+        if m_tagsinit then
         begin
-          if m_tagsinit then
-          begin
-            max:=RescaleEst(m_typeRes ,t.m_SKO[bnum].rms_max);
-            t.m_bandTags[bnum].PushValue(v, -1);
-          end;
+          max:=RescaleEst(m_typeRes ,t.m_SKO[bnum].rms_max);
+          t.m_bandTags[bnum].PushValue(max, -1);
         end;
       end;
     end;
@@ -1452,6 +1450,7 @@ var
   i: integer;
   fr: TPressFrmFrame2;
   b: boolean;
+  t:TTagRec;
 begin
   sum := 0;
   b := false;
@@ -1471,7 +1470,11 @@ begin
     end;
     // if b then
     begin
-      fr.Eval;
+      //fr.Eval;
+      t:=g_PressCamFactory2.m_tags[i];
+      fr.m_Max:=t.m_SKO[m_bnum].rms_max;
+      fr.m_f:=t.m_SKO[m_bnum].Freq;
+      fr.m_A:=t.m_SKO[m_bnum].rms_mean;
       if m_Max.Y < fr.m_Max then
       begin
         m_Max.Y := fr.m_Max;

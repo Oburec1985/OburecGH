@@ -59,7 +59,7 @@ type
     function getA:double; // возврат A с учетом окна
     procedure Prepare;
     procedure updateView;
-    procedure Eval;
+    //procedure Eval;
   public
     property spm:cspm read m_s write setspm;
     constructor create(aowner:tcomponent);override;
@@ -85,7 +85,7 @@ constructor TPressFrmFrame2.create(aowner: tcomponent);
 begin
   inherited;
 end;
-
+{
 procedure TPressFrmFrame2.Eval;
 var
   I, imax: Integer;
@@ -111,7 +111,7 @@ begin
   m_Max:=max;
   m_f:=m_s.SpmDx*imax;
   m_A:=sum/(g_PressCamFactory2.m_bands[bnum].i2-g_PressCamFactory2.m_bands[bnum].i1);
-end;
+end;}
 
 function TPressFrmFrame2.f1: double;
 begin
@@ -191,15 +191,6 @@ begin
   if g_PressCamFactory2.m_typeRes=0 then // СКО
   begin
     v:=m_Max/sqrt2;
-    w:=g_PressCamFactory2.GetWndFunc;
-    // коррекция с цчетом оконной функции для СКО (т.к. исходный спектр корректируется по acf для А)
-    if w<>nil then
-    begin
-      if w.wndtype<>wdRect then
-      begin
-        v:=v*w.ecf/w.acf;
-      end;
-    end;
   end
   else  // p-p
   begin
@@ -219,24 +210,14 @@ begin
     // rms
     if g_PressCamFactory2.m_typeRes=0 then // СКО
     begin
-      v:=m_Max/sqrt2;
-      w:=g_PressCamFactory2.GetWndFunc;
-      // коррекция с цчетом оконной функции для СКО (т.к. исходный спектр корректируется по acf для А)
-      if w<>nil then
-      begin
-        if w.wndtype<>wdRect then
-        begin
-          v:=v*w.ecf/w.acf;
-        end;
-      end;
       // используем реф первого датчика
       r:=g_PressCamFactory2.GetRef(0)/sqrt2;
     end
     else  // p-p
     begin
-      v:=m_Max*2;
       r:=g_PressCamFactory2.GetRef(0)*2;
     end;
+    v:=getEst;
     FreqEdit.Text:=formatstrnoe(m_f, c_digs);
     AmpE.Text:=formatstrnoe(v, c_digs);
 
