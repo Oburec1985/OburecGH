@@ -291,13 +291,12 @@ begin
     DownloadRegsFrm.show;
   DownloadRegsFrm.close;
 
-  if g_MBaseControl<>nil then
-  begin
     MDBFrm := TMDBFrm.Create(nil);
     if show then
       MDBFrm.show;
     MDBFrm.close;
-
+  if g_MBaseControl<>nil then
+  begin
     RcClientFrm := TRcClientFrm.Create(nil);
     if show then
       RcClientFrm.show;
