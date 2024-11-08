@@ -1657,14 +1657,17 @@ begin
 end;
 
 Function GetSectSinCos(PSIN, PcOS, asin, acos:double):integer;
+var
+  lThreshold:double;
 begin
-  if (pcos>=0) and (psin>=0) then
+  lThreshold:=5*c_degtorad;
+  if (pcos>=lThreshold) and (psin>=lThreshold) then
     result:=0;
-  if (pcos<=0) and (psin>=0) then
+  if (pcos<=lThreshold) and (psin>=lThreshold) then
     result:=1;
-  if (pcos<=0) and (psin<=0) then
+  if (pcos<=lThreshold) and (psin<=lThreshold) then
     result:=2;
-  if (pcos>=0) and (psin<=0) then
+  if (pcos>=lThreshold) and (psin<=lThreshold) then
     result:=3;
 end;
 
