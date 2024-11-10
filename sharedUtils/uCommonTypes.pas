@@ -4,6 +4,9 @@ interface
 uses classes, types, windows, sysutils;
 
 type
+  // тип интерпол€ции
+  TPType = (ptNullPoly, ptlinePoly, ptCubePoly);
+
   cpoint2d = class
   public
     x,y:double;

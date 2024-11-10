@@ -4,8 +4,6 @@ interface
 uses uCommonTypes, classes;
 
 type
-
-  TPType = (ptNullPoly, ptlinePoly, ptCubePoly);
   TChangePState = (stCubeToLine, stCubeToNull,
                    stLineToCube, stLineToNull,
                    stNullToLine, stNullToCube, stNone);

@@ -15,6 +15,7 @@ uses
 
 type
   TDoubleArray = array of double;
+  PDoubleArray = ^TDoubleArray;
 
   TFFTStats_d = record
     imax: cardinal; // максимум в спектре
@@ -27,6 +28,8 @@ type
     nAlignedSampl: pointer;
     nAlignedSize: integer; // в байтах
   end;
+
+  PAlignDarray = ^TAlignDarray;
 
   TAlignDCmpx = record
     // d:TCmxArray_d;
@@ -45,12 +48,17 @@ type
   TWndType = (wdRect, wdHann, wdHamming, wdBlackman, wdFlattop);
   PWndType = ^TWndType;
 
+
   TWndFunc = record
     size: integer;
     ecf:double; // зависит от типа окна. норм-ия СКО
     acf:double; // зависит от типа окна. норм-ия А
     ar: TAlignDarray;
     wndtype: TWndType;
+    // вкл коррекцию АЧХ
+    useCorrAFH:boolean;
+    // коррекция АЧХ
+    CorrAFHar: TAlignDarray;
   end;
 
   PWndFunc = ^TWndFunc;

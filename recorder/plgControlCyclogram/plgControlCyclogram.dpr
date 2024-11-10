@@ -250,7 +250,7 @@ uses
   u3dObjEditFrame in 'forms\u3dObjEditFrame.pas' {ObjEditFrame: TFrame},
   uModelPointMng in 'units\uModelPointMng.pas',
   TestUDPsender in 'forms\DataTransfFrm\TestUDPsender.pas' {TestUDPSenderFrm},
-  uEditCurveFrm in 'forms\uEditCurveFrm.pas' {Form3};
+  uEditCurveFrm in 'forms\uEditCurveFrm.pas' {EditCurveFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

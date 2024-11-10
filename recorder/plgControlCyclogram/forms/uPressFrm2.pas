@@ -30,6 +30,7 @@ uses
   math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uPressFrmFrame2,
   // uPathMng,
+  uEditCurveFrm,
   uRcCtrls, Menus;
 
 type
@@ -46,15 +47,17 @@ type
   end;
 
   TTagRec = record
-    // rms // исходный тег по которому идет расчет
+    // rms
     name: string;
     // спектр тега
     m_s:cspm;
-    // тег рекордера
+    // кривая для коррекции ачх
+    m_curve:cCurve;
+    // тег рекордера ( по одному тегу создается несколько
+    // скалярн полосовых тегов)
     m_bandTags: array of itag;
     // максимум
     m_SKO: array of tEvalData;
-    // m
   end;
 
 

@@ -29,7 +29,7 @@ uses
   opengl, uSimpleObjects,
   math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uPressFrmFrame2,
-  uPressFrm2,
+  uPressFrm2, uEditCurveFrm,
   uRcCtrls, Menus, Grids, uStringGridExt, uTagsListFrame;
 
 type
@@ -62,6 +62,7 @@ type
     CreateTagsCB: TCheckBox;
     WndCB: TComboBox;
     Label3: TLabel;
+    AFHcb: TCheckBox;
     procedure FFTCountSpinBtnDownClick(Sender: TObject);
     procedure FFTCountSpinBtnUpClick(Sender: TObject);
     procedure UpdateAlgBtnClick(Sender: TObject);
@@ -80,6 +81,7 @@ type
     procedure BNumSBUpClick(Sender: TObject);
     procedure TagsLBClick(Sender: TObject);
     procedure RefFEChange(Sender: TObject);
+    procedure AFHcbClick(Sender: TObject);
   private
     m_init,
     m_manualRef:boolean;
@@ -102,6 +104,11 @@ implementation
 {$R *.dfm}
 
 { TPressFrmEdit }
+procedure TPressFrmEdit2.AFHcbClick(Sender: TObject);
+begin
+  //EditCurveFrm.editCurve();
+end;
+
 procedure TPressFrmEdit2.BandSGDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
 var
@@ -240,6 +247,7 @@ begin
   BandSG.ColCount:=2;
   BandSG.Cells[0,0]:='F1';
   BandSG.Cells[1,0]:='F2';
+  EditCurveFrm:=TEditCurveFrm.Create(nil);
 end;
 
 procedure TPressFrmEdit2.EditPressFrm(Pf: TPressFrm2);

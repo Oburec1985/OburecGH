@@ -1,27 +1,24 @@
 object ModesTabFrame: TModesTabFrame
   Left = 0
   Top = 0
-  Width = 647
-  Height = 643
+  Width = 451
+  Height = 304
   Align = alClient
   TabOrder = 0
-  ExplicitWidth = 451
-  ExplicitHeight = 304
   object Splitter1: TSplitter
     Left = 0
-    Top = 482
-    Width = 647
+    Top = 143
+    Width = 451
     Height = 3
     Cursor = crVSplit
     Align = alBottom
     ExplicitLeft = 3
     ExplicitTop = 323
-    ExplicitWidth = 451
   end
   object ModesSG: TStringGrid
     Left = 0
-    Top = 485
-    Width = 647
+    Top = 146
+    Width = 451
     Height = 158
     Align = alBottom
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing]
@@ -32,57 +29,60 @@ object ModesTabFrame: TModesTabFrame
     OnKeyDown = ModesSGKeyDown
     OnSelectCell = ModesSGSelectCell
     OnSetEditText = ModesSGSetEditText
-    ExplicitTop = 146
-    ExplicitWidth = 451
+    ExplicitTop = 149
+    ColWidths = (
+      64
+      64
+      64
+      64
+      64)
   end
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 647
-    Height = 435
+    Width = 451
+    Height = 96
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 451
-    ExplicitHeight = 96
+    ExplicitLeft = -9
+    ExplicitTop = 1
   end
   object Panel2: TPanel
     Left = 0
-    Top = 435
-    Width = 647
+    Top = 96
+    Width = 451
     Height = 47
     Align = alBottom
     TabOrder = 2
-    ExplicitTop = 96
-    ExplicitWidth = 451
     DesignSize = (
-      647
+      451
       47)
     object Label3: TLabel
       Left = 220
       Top = 11
-      Width = 27
-      Height = 16
+      Width = 22
+      Height = 13
       Caption = #1058#1080#1087':'
     end
     object Label1: TLabel
       Left = 115
       Top = 11
-      Width = 12
-      Height = 16
+      Width = 10
+      Height = 13
       Caption = 'Y:'
     end
     object Label2: TLabel
       Left = 10
       Top = 11
-      Width = 13
-      Height = 16
+      Width = 10
+      Height = 13
       Caption = 'X:'
     end
     object CursorPosY: TFloatSpinEdit
       Left = 448
       Top = 5
       Width = 78
-      Height = 26
+      Height = 22
       Increment = 0.100000000000000000
       TabOrder = 0
       OnKeyDown = YFEKeyDown
@@ -91,7 +91,7 @@ object ModesTabFrame: TModesTabFrame
       Left = 27
       Top = 7
       Width = 78
-      Height = 26
+      Height = 22
       Increment = 0.100000000000000000
       TabOrder = 1
       OnKeyDown = XFEKeyDown
@@ -100,7 +100,7 @@ object ModesTabFrame: TModesTabFrame
       Left = 136
       Top = 7
       Width = 78
-      Height = 26
+      Height = 22
       Increment = 0.100000000000000000
       TabOrder = 2
       OnKeyDown = YFEKeyDown
@@ -109,7 +109,7 @@ object ModesTabFrame: TModesTabFrame
       Left = 257
       Top = 7
       Width = 145
-      Height = 24
+      Height = 21
       ItemIndex = 0
       TabOrder = 3
       Text = '0 '#1080#1085#1090#1077#1088#1087#1086#1083#1103#1094#1080#1103
@@ -123,10 +123,9 @@ object ModesTabFrame: TModesTabFrame
       Left = 568
       Top = 5
       Width = 1421
-      Height = 24
+      Height = 21
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 4
-      ExplicitWidth = 1225
     end
   end
   object ImageList_32: TImageList

@@ -532,7 +532,7 @@
 				<Form>TestUDPSenderFrm</Form>
 			</DCCReference>
 			<DCCReference Include="forms\uEditCurveFrm.pas">
-				<Form>Form3</Form>
+				<Form>EditCurveFrm</Form>
 			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
