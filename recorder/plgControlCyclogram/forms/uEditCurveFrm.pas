@@ -46,12 +46,12 @@ type
   public
 
   private
+    m_curve:ccurve;
     m_tr:ctrend;
     m_page:cpage;
     m_ax:caxis;
   private
     procedure init;
-    procedure showCurve;
   public
     procedure editCurve(p_curve:cCurve);
   end;
@@ -70,15 +70,21 @@ var
   I: Integer;
   p:cBeziePoint;
 begin
+  m_curve:=p_curve;
   m_tr.Clear;
-  for I := 0 to p_curve.m_size - 1 do
+  if p_curve<>nil then
   begin
-    p:=cBeziePoint.create;
-    p.point.y:=p_curve.m_points[i].p.y;
-    p.point.x:=p_curve.m_points[i].p.x;
-    p.PType:=p_curve.m_points[i].ptype;
-    m_tr.AddPoint(p);
+    for I := 0 to p_curve.m_size - 1 do
+    begin
+      p:=cBeziePoint.create;
+      p.point.y:=p_curve.m_points[i].p.y;
+      p.point.x:=p_curve.m_points[i].p.x;
+      p.PType:=p_curve.m_points[i].ptype;
+      m_tr.AddPoint(p);
+    end;
+    cChart1.redraw;
   end;
+  ShowModal;
 end;
 
 procedure TEditCurveFrm.FormCreate(Sender: TObject);
@@ -99,16 +105,6 @@ begin
   SGChange(CurvelSG);
 end;
 
-procedure TEditCurveFrm.showCurve;
-var
-  I: Integer;
-begin
-
-  for I := 0 to List.Count - 1 do
-  begin
-
-  end;
-end;
 
 { cCurve }
 

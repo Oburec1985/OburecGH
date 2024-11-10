@@ -3,7 +3,7 @@ object EditCurveFrm: TEditCurveFrm
   Top = 0
   Caption = 'EditCurveFrm'
   ClientHeight = 425
-  ClientWidth = 636
+  ClientWidth = 661
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,7 +15,7 @@ object EditCurveFrm: TEditCurveFrm
   PixelsPerInch = 96
   TextHeight = 13
   object Splitter1: TSplitter
-    Left = 427
+    Left = 452
     Top = 0
     Height = 384
     Align = alRight
@@ -26,7 +26,7 @@ object EditCurveFrm: TEditCurveFrm
     ExplicitHeight = 100
   end
   object CurvelSG: TStringGrid
-    Left = 430
+    Left = 455
     Top = 0
     Width = 206
     Height = 384
@@ -42,12 +42,12 @@ object EditCurveFrm: TEditCurveFrm
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
     ParentFont = False
     TabOrder = 0
-    ExplicitLeft = 433
+    ExplicitLeft = 430
   end
   object cChart1: cChart
     Left = 0
     Top = 0
-    Width = 427
+    Width = 452
     Height = 384
     Cursor = crSizeAll
     Align = alClient
@@ -57,17 +57,16 @@ object EditCurveFrm: TEditCurveFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitLeft = -3
-    ExplicitTop = -6
+    ExplicitWidth = 427
   end
   object BottomPanel: TPanel
     Left = 0
     Top = 384
-    Width = 636
+    Width = 661
     Height = 41
     Align = alBottom
     TabOrder = 2
-    ExplicitTop = 390
+    ExplicitWidth = 636
     object OkBtn: TButton
       Left = 544
       Top = 6

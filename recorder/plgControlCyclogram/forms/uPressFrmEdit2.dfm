@@ -156,8 +156,6 @@ object PressFrmEdit2: TPressFrmEdit2
     Margins.Bottom = 2
     Align = alClient
     TabOrder = 1
-    ExplicitLeft = 1
-    ExplicitTop = -1
     object FFTCountLabel: TLabel
       Left = 172
       Top = 17

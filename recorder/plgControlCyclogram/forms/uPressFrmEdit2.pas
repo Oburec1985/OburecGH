@@ -105,8 +105,11 @@ implementation
 
 { TPressFrmEdit }
 procedure TPressFrmEdit2.AFHcbClick(Sender: TObject);
+var
+  s:TTagRec;
 begin
-  //EditCurveFrm.editCurve();
+  s:=
+  EditCurveFrm.editCurve();
 end;
 
 procedure TPressFrmEdit2.BandSGDrawCell(Sender: TObject; ACol, ARow: Integer;
