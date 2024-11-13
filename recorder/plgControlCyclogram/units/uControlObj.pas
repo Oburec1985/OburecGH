@@ -20,7 +20,6 @@ uses
 
 type
 
-  TPType = (ptNullPoly, ptlinePoly, ptCubePoly);
 
   cControlObj = class;
   cModeObj = class;

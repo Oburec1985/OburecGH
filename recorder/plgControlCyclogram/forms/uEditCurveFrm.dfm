@@ -2,54 +2,66 @@ object EditCurveFrm: TEditCurveFrm
   Left = 0
   Top = 0
   Caption = 'EditCurveFrm'
-  ClientHeight = 425
-  ClientWidth = 661
+  ClientHeight = 556
+  ClientWidth = 864
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
+  FormStyle = fsStayOnTop
   OldCreateOrder = False
   OnCreate = FormCreate
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object Splitter1: TSplitter
-    Left = 452
+    Left = 591
     Top = 0
-    Height = 384
+    Width = 4
+    Height = 502
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alRight
     Color = clBackground
     ParentColor = False
-    ExplicitLeft = 288
-    ExplicitTop = 144
-    ExplicitHeight = 100
   end
-  object CurvelSG: TStringGrid
-    Left = 455
+  object CurveSG: TStringGrid
+    Left = 595
     Top = 0
-    Width = 206
-    Height = 384
+    Width = 269
+    Height = 502
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alRight
     BevelInner = bvLowered
     BevelKind = bkFlat
     DefaultRowHeight = 32
+    FixedCols = 0
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -11
+    Font.Height = -15
     Font.Name = 'Tahoma'
     Font.Style = []
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
     ParentFont = False
     TabOrder = 0
-    ExplicitLeft = 430
+    OnDrawCell = CurveSGDrawCell
   end
   object cChart1: cChart
     Left = 0
     Top = 0
-    Width = 452
-    Height = 384
+    Width = 591
+    Height = 502
     Cursor = crSizeAll
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 1
@@ -57,21 +69,27 @@ object EditCurveFrm: TEditCurveFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitWidth = 427
   end
   object BottomPanel: TPanel
     Left = 0
-    Top = 384
-    Width = 661
-    Height = 41
+    Top = 502
+    Width = 864
+    Height = 54
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alBottom
     TabOrder = 2
-    ExplicitWidth = 636
     object OkBtn: TButton
-      Left = 544
-      Top = 6
-      Width = 75
-      Height = 25
+      Left = 711
+      Top = 8
+      Width = 98
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'OkBtn'
       TabOrder = 0
     end

@@ -106,10 +106,25 @@ implementation
 { TPressFrmEdit }
 procedure TPressFrmEdit2.AFHcbClick(Sender: TObject);
 var
-  s:TTagRec;
+  s:PTagRec;
+  i:integer;
 begin
-  s:=
-  EditCurveFrm.editCurve();
+  if not AFHcb.Checked then exit;
+  if TagsLB.ItemIndex=-1 then
+  begin
+    i:=0;
+  end
+  else
+    i:=TagsLB.ItemIndex;
+  s:=g_PressCamFactory2.getTag(TagsLB.Items[i]);
+  if s<>nil then
+  begin
+    if s.m_curve=nil then
+    begin
+      s.m_curve:=cCurve.create;
+    end;
+    EditCurveFrm.editCurve(s.m_curve);
+  end;
 end;
 
 procedure TPressFrmEdit2.BandSGDrawCell(Sender: TObject; ACol, ARow: Integer;

@@ -60,6 +60,8 @@ type
     m_SKO: array of tEvalData;
   end;
 
+  PTagRec = ^TTagRec;
+
 
 
   TPressFrm2 = class(TRecFrm)
@@ -207,6 +209,7 @@ type
     procedure StrToBands(s: string);
     procedure StrToRefs(s: string);
     function getFrmByBNum(i: integer): TPressFrm2;
+    function getTag(s: string): PTagRec;
     // пересчет rms в амплитуду
     function RescaleEst(restype:integer; rms:double):double;
   public
@@ -517,24 +520,29 @@ var
   i, j: integer;
   s: cspm;
 begin
-  if m_createTags then
+  if not m_tagsinit then
   begin
-    if not m_tagsinit then
+    if m_spmCfg<>nil then
     begin
-      setlength(m_tags, m_spmCfg.ChildCount);
-
-      for i := 0 to m_spmCfg.ChildCount - 1 do
+      if m_spmCfg.ChildCount>0 then
       begin
+        setlength(m_tags, m_spmCfg.ChildCount);
         m_tagsinit := true;
-        s := getSpm(i);
-        m_tags[i].name := s.m_tag.tagname;
-        m_tags[i].m_s:=s;
-        setlength(m_tags[i].m_bandTags, BandCount);
-        setlength(m_tags[i].m_SKO, BandCount);
-        for j := 0 to BandCount - 1 do
+        for i := 0 to m_spmCfg.ChildCount - 1 do
         begin
-          m_tags[i].m_bandTags[j] := createScalar
-            (s.m_tag.tagname + 'b' + inttostr(j), false);
+          s := getSpm(i);
+          m_tags[i].name := s.m_tag.tagname;
+          m_tags[i].m_s:=s;
+          setlength(m_tags[i].m_bandTags, BandCount);
+          setlength(m_tags[i].m_SKO, BandCount);
+          if m_createTags then
+          begin
+            for j := 0 to BandCount - 1 do
+            begin
+              m_tags[i].m_bandTags[j] := createScalar
+                (s.m_tag.tagname + 'b' + inttostr(j), false);
+            end;
+          end;
         end;
       end;
     end;
@@ -775,6 +783,21 @@ begin
         result := spm;
         exit;
       end;
+    end;
+  end;
+end;
+
+function cPressCamFactory2.getTag(s: string): PTagRec;
+var
+  I: Integer;
+begin
+  result:=nil;
+  for I := 0 to length(m_tags) - 1 do
+  begin
+    if m_tags[i].name=s then
+    begin
+      result:=@m_tags[i];
+      exit;
     end;
   end;
 end;

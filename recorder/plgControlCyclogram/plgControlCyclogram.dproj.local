@@ -258,10 +258,10 @@
     <File Path="forms\uBandsFrm.dfm"/>
     <File Path="forms\uComplexDiagram.pas"/>
     <File Path="forms\uComplexDiagram.dfm"/>
-    <File Path="forms\uControlCyclogramEditFrm.pas"/>
-    <File Path="forms\uControlCyclogramEditFrm.dfm"/>
     <File Path="forms\uControlDeskFrm.pas"/>
     <File Path="forms\uControlDeskFrm.dfm"/>
+    <File Path="forms\uControlCyclogramEditFrm.pas"/>
+    <File Path="forms\uControlCyclogramEditFrm.dfm"/>
     <File Path="forms\uControlEditFrame.pas"/>
     <File Path="forms\uControlEditFrame.dfm"/>
     <File Path="forms\uControlWarnFrm.pas"/>
@@ -336,6 +336,8 @@
     <File Path="forms\uPressFrmFrame.dfm"/>
     <File Path="forms\uPressFrmFrame2.pas"/>
     <File Path="forms\uPressFrmFrame2.dfm"/>
+    <File Path="forms\uEditCurveFrm.pas"/>
+    <File Path="forms\uEditCurveFrm.dfm"/>
     <File Path="forms\uSpmChart.pas"/>
     <File Path="forms\uSpmChart.dfm"/>
     <File Path="forms\uSpmChartEdit.pas"/>
@@ -362,8 +364,6 @@
     <File Path="forms\uTrigFrame.dfm"/>
     <File Path="forms\uTrigsFrm.pas"/>
     <File Path="forms\uTrigsFrm.dfm"/>
-    <File Path="forms\uEditCurveFrm.pas"/>
-    <File Path="forms\uEditCurveFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\u3dMoveEngine.pas"/>
     <File Path="units\uAriphmAlg.pas"/>

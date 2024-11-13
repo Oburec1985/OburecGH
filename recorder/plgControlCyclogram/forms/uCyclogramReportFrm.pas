@@ -77,37 +77,37 @@ var
   bp:cBeziePoint;
 begin
   case t.TaskType of
-    uControlObj.ptNullPoly:
+    ptNullPoly:
     begin
       bp:=cBeziePoint.create;
       case t.TaskType of
-        uControlObj.ptNullPoly: bp.PType:=ptNullPoly;
-        uControlObj.ptLinePoly: bp.PType:=ptLinePoly;
-        uControlObj.ptCubePoly: bp.PType:=ptCubePoly;
+        ptNullPoly: bp.PType:=ptNullPoly;
+        ptLinePoly: bp.PType:=ptLinePoly;
+        ptCubePoly: bp.PType:=ptCubePoly;
       end;
       bp.point:=p2(t.mode.gettimeinterval.x,t.task);
       tr.AddPoint(bp);
     end;
-    uControlObj.ptLinePoly:
+    ptLinePoly:
     begin
       bp:=cBeziePoint.create;
       case t.TaskType of
-        uControlObj.ptNullPoly: bp.PType:=ptNullPoly;
-        uControlObj.ptLinePoly: bp.PType:=ptLinePoly;
-        uControlObj.ptCubePoly: bp.PType:=ptCubePoly;
+        ptNullPoly: bp.PType:=ptNullPoly;
+        ptLinePoly: bp.PType:=ptLinePoly;
+        ptCubePoly: bp.PType:=ptCubePoly;
       end;
       bp.point:=p2(t.mode.gettimeinterval.x,t.task);
       bp.left:=t.leftTang;
       bp.right:=t.rightTang;
       tr.AddPoint(bp);
     end;
-    uControlObj.ptCubePoly:
+    ptCubePoly:
     begin
       bp:=cBeziePoint.create;
       case t.TaskType of
-        uControlObj.ptNullPoly: bp.PType:=ptNullPoly;
-        uControlObj.ptLinePoly: bp.PType:=ptLinePoly;
-        uControlObj.ptCubePoly: bp.PType:=ptCubePoly;
+        ptNullPoly: bp.PType:=ptNullPoly;
+        ptLinePoly: bp.PType:=ptLinePoly;
+        ptCubePoly: bp.PType:=ptCubePoly;
       end;
       bp.point:=p2(t.mode.gettimeinterval.x,t.task);
       bp.left:=t.leftTang;
