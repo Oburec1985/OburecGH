@@ -29,7 +29,6 @@ object ModesTabFrame: TModesTabFrame
     OnKeyDown = ModesSGKeyDown
     OnSelectCell = ModesSGSelectCell
     OnSetEditText = ModesSGSetEditText
-    ExplicitTop = 149
     ColWidths = (
       64
       64
@@ -44,7 +43,6 @@ object ModesTabFrame: TModesTabFrame
     Height = 96
     Align = alClient
     TabOrder = 1
-    ExplicitLeft = -9
     ExplicitTop = 1
   end
   object Panel2: TPanel
@@ -60,22 +58,22 @@ object ModesTabFrame: TModesTabFrame
     object Label3: TLabel
       Left = 220
       Top = 11
-      Width = 27
-      Height = 16
+      Width = 22
+      Height = 13
       Caption = #1058#1080#1087':'
     end
     object Label1: TLabel
       Left = 115
       Top = 11
-      Width = 12
-      Height = 16
+      Width = 10
+      Height = 13
       Caption = 'Y:'
     end
     object Label2: TLabel
       Left = 10
       Top = 11
-      Width = 13
-      Height = 16
+      Width = 10
+      Height = 13
       Caption = 'X:'
     end
     object CursorPosY: TFloatSpinEdit
@@ -109,7 +107,7 @@ object ModesTabFrame: TModesTabFrame
       Left = 257
       Top = 7
       Width = 145
-      Height = 24
+      Height = 21
       ItemIndex = 0
       TabOrder = 3
       Text = '0 '#1080#1085#1090#1077#1088#1087#1086#1083#1103#1094#1080#1103

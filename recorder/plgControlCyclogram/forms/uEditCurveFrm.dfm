@@ -2,41 +2,33 @@ object EditCurveFrm: TEditCurveFrm
   Left = 0
   Top = 0
   Caption = 'EditCurveFrm'
-  ClientHeight = 556
-  ClientWidth = 864
+  ClientHeight = 425
+  ClientWidth = 661
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -14
+  Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
+  OnClose = FormClose
   OnCreate = FormCreate
-  PixelsPerInch = 120
-  TextHeight = 17
+  PixelsPerInch = 96
+  TextHeight = 13
   object Splitter1: TSplitter
-    Left = 591
+    Left = 452
     Top = 0
-    Width = 4
-    Height = 502
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Height = 384
     Align = alRight
     Color = clBackground
     ParentColor = False
   end
   object CurveSG: TStringGrid
-    Left = 595
+    Left = 455
     Top = 0
-    Width = 269
-    Height = 502
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Width = 206
+    Height = 384
     Align = alRight
     BevelInner = bvLowered
     BevelKind = bkFlat
@@ -44,24 +36,24 @@ object EditCurveFrm: TEditCurveFrm
     FixedCols = 0
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -15
+    Font.Height = -11
     Font.Name = 'Tahoma'
     Font.Style = []
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
     ParentFont = False
     TabOrder = 0
+    OnDblClick = CurveSGDblClick
     OnDrawCell = CurveSGDrawCell
+    OnKeyDown = CurveSGKeyDown
+    OnSelectCell = CurveSGSelectCell
+    ExplicitLeft = 458
   end
   object cChart1: cChart
     Left = 0
     Top = 0
-    Width = 591
-    Height = 502
+    Width = 452
+    Height = 384
     Cursor = crSizeAll
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 1
@@ -69,30 +61,15 @@ object EditCurveFrm: TEditCurveFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitLeft = -3
   end
   object BottomPanel: TPanel
     Left = 0
-    Top = 502
-    Width = 864
-    Height = 54
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Top = 384
+    Width = 661
+    Height = 41
     Align = alBottom
     TabOrder = 2
-    object OkBtn: TButton
-      Left = 711
-      Top = 8
-      Width = 98
-      Height = 33
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
-      Caption = 'OkBtn'
-      TabOrder = 0
-    end
   end
   object SGPic: TImageList
     Left = 136

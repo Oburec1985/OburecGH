@@ -1413,7 +1413,6 @@ var
   prop, val: string;
   ARow, ACol, ind:integer;
 begin
-
   obj := nil;
 
   sg := TStringGridExt(Sender);
