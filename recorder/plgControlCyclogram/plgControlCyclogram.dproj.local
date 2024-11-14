@@ -328,10 +328,10 @@
     <File Path="forms\uPressFrm.dfm"/>
     <File Path="forms\uPressFrm2.pas"/>
     <File Path="forms\uPressFrm2.dfm"/>
-    <File Path="forms\uPressFrmEdit.pas"/>
-    <File Path="forms\uPressFrmEdit.dfm"/>
     <File Path="forms\uPressFrmEdit2.pas"/>
     <File Path="forms\uPressFrmEdit2.dfm"/>
+    <File Path="forms\uPressFrmEdit.pas"/>
+    <File Path="forms\uPressFrmEdit.dfm"/>
     <File Path="forms\uPressFrmFrame.pas"/>
     <File Path="forms\uPressFrmFrame.dfm"/>
     <File Path="forms\uPressFrmFrame2.pas"/>
