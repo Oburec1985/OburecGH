@@ -97,7 +97,7 @@ type
     procedure FormShow(Sender: TObject);
   public
     m_BargraphStep: integer;
-    m_lastFile: string;
+    m_lastFile:string;
     m_saveBlockNum: integer;
 
     m_bnum: integer;
@@ -148,6 +148,7 @@ type
 
   cPressCamFactory2 = class(cRecBasicFactory)
   public
+    m_loadFile,m_Section: string;
     sortedFrames: tlist;
     m_comparator: fcomparator;
 
@@ -209,9 +210,12 @@ type
     procedure StrToBands(s: string);
     procedure StrToRefs(s: string);
     function getFrmByBNum(i: integer): TPressFrm2;
-    function getTag(s: string): PTagRec;
+    function getTag(s: string): PTagRec;overload;
+    function getTag(i: integer): PTagRec;overload;
     // пересчет rms в амплитуду
     function RescaleEst(restype:integer; rms:double):double;
+    // когда Recorder загрузил конфиги;
+    procedure doRecorderInit;override;
   public
     constructor create;
     destructor destroy; override;
@@ -609,6 +613,8 @@ begin
 
 end;
 
+
+
 procedure cPressCamFactory2.doSetDefSize(var PSize: SIZE);
 begin
   inherited;
@@ -800,6 +806,11 @@ begin
       exit;
     end;
   end;
+end;
+
+function cPressCamFactory2.getTag(i: integer): PTagRec;
+begin
+  result:=@m_tags[i];
 end;
 
 function cPressCamFactory2.GetWnd: string;
@@ -1291,6 +1302,8 @@ var
   w: TWndType;
 begin
   inherited;
+  g_PressCamFactory2.m_loadFile:=a_pIni.FileName;
+  g_PressCamFactory2.m_Section:=str;
   c := a_pIni.ReadInteger(str, 'sCount', 0);
   if c > 0 then
   begin
@@ -1357,14 +1370,48 @@ begin
   g_PressCamFactory2.Sort;
 end;
 
+procedure cPressCamFactory2.doRecorderInit;
+var
+  ifile:TIniFile;
+  I, c, len: Integer;
+  s, scurve:string;
+  tr:PTagRec;
+begin
+  if fileexists(m_loadFile) then
+  begin
+    ifile:=TIniFile.Create(m_loadFile);
+    c:= ifile.ReadInteger(m_section, 'sCount', 0);
+    for I := 0 to c - 1 do
+    begin
+      s:=ifile.ReadString(m_section, 's_' + inttostr(i), '');
+      scurve:=ifile.ReadString(m_section, 'AFH_' + inttostr(i), '');
+      tr:=getTag(s);
+      if tr<>nil then
+      begin
+        if scurve<>'' then
+        begin
+          tr.m_curve:=cCurve.create;
+          tr.m_curve.fromStr(scurve);
+          len:=length(tdoublearray(tr.m_s.m_rms.p));
+          tr.m_curve.getMemScaleData(len);
+          tr.m_curve.EvalData;
+          tr.m_s.SetScaleData(tr.m_curve.m_ScaleData.p);
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure TPressFrm2.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 var
   i, c: integer;
   fr: TPressFrmFrame2;
   s: cspm;
+  sig:ptagrec;
   lstr: string;
 begin
   inherited;
+  // сохраняется при загрузке iniFile GUI Recorder чтобы после инициализации всех структур донастроить
   c := 0;
   for i := 0 to m_frames.Count - 1 do
   begin
@@ -1382,6 +1429,16 @@ begin
     a_pIni.WriteString(str, 'Wnd', 'c_Rect');
   a_pIni.WriteInteger(str, 'BarGraphStepCount', m_BargraphStep);
   a_pIni.WriteInteger(str, 'sCount', c);
+  // сохраняем АЧХ
+  for I := 0 to c - 1 do
+  begin
+    sig:=g_PressCamFactory2.getTag(i);
+    if sig.m_curve<>nil then
+      lstr:=sig.m_curve.ToStr
+    else
+      lstr:='';
+    a_pIni.WriteString(str, 'AFH_'+inttostr(i), lstr);
+  end;
   a_pIni.WriteInteger(str, 'BNum', m_bnum);
   if self = g_PressCamFactory2.GetFrm(0) then
   begin

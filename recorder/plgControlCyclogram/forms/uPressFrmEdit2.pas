@@ -123,7 +123,9 @@ begin
     begin
       s.m_curve:=cCurve.create;
     end;
-    EditCurveFrm.editCurve(s.m_curve);
+    s.m_curve.getMemScaleData(FFTCountEdit.IntNum shr 1);
+    s.m_s.SetScaleData(s.m_curve.m_ScaleData.p);
+    EditCurveFrm.editCurve(s.m_curve, FFTCountEdit.IntNum);
   end;
 end;
 

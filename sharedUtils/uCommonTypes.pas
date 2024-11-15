@@ -117,6 +117,7 @@ type
   end;
 
 
+
 const
   c_carret = #13#10;
   cllightGreen=$0000FF80;
@@ -198,6 +199,12 @@ function ScrollLock : boolean;
 function getCommonInterval(i1, i2: point2d): point2d;
 function CompareInterval(i1, i2: point2d): boolean;
 function getSubStrByIndex(src:string; tabs:char; p_start, index:integer):string;
+
+function PTypeToInt(p:tptype):integer;
+function IntToPtype(p:integer):tptype;
+function PTypeToStr(p:tptype):string;
+function StrToPType(p:string):tptype;
+
 
 implementation
 uses
@@ -554,6 +561,35 @@ begin
   if i<count then
     result:=TNamedObj(objects[i]);
 end;
+
+function PTypeToInt(p:tptype):integer;
+begin
+  case p of
+    ptNullPoly: result:=0;
+    ptlinePoly: result:=1;
+    ptCubePoly: result:=2;
+  end;
+end;
+
+function IntToPtype(p:integer):tptype;
+begin
+  case p of
+    0: result:=ptNullPoly;
+    1: result:=ptlinePoly;
+    2: result:=ptCubePoly;
+  end;
+end;
+
+function PTypeToStr(p:tptype):string;
+begin
+  result:=inttostr(PTypeToInt(p));
+end;
+
+function StrToPType(p:string):tptype;
+begin
+  result:=inttoptype(strtoint(p));
+end;
+
 
 { point3d }
 

@@ -25,8 +25,9 @@ type
     m_capacity:integer;
     m_size:integer;
     // данные для калибровки АЧХ.
-    m_ScaleData:PAlignDarray;
+    m_ScaleData:TAlignDarray;
     m_ScaleDataSize:integer;
+    m_use:boolean;
   protected
     function getLowInd(x:double):integer;
   public
@@ -73,6 +74,8 @@ type
     m_page:cpage;
     m_ax:caxis;
     m_r, m_c:integer;
+    // количество точек в ГХ
+    m_size:integer;
   private
     procedure init;
     procedure showTrend;
@@ -82,7 +85,7 @@ type
     procedure createSGBtn;
     function EmptyRow(sg:tstringgrid; r:integer):boolean;
   public
-    procedure editCurve(p_curve:cCurve);
+    procedure editCurve(p_curve:cCurve; size:integer);
   end;
 
 var
@@ -170,10 +173,11 @@ begin
   m_c:=ACol;
 end;
 
-procedure TEditCurveFrm.editCurve(p_curve: cCurve);
+procedure TEditCurveFrm.editCurve(p_curve: cCurve; size:integer);
 begin
   m_curve:=p_curve;
   m_tr.Clear;
+  m_size:=size;
   if p_curve<>nil then
   begin
     ShowTrend;
@@ -344,25 +348,27 @@ var
 begin
   dx:=(m_points[m_size-1].p.x-m_points[0].p.x)/m_ScaleDataSize;
   x:=m_points[0].p.x;
-  for I := 0 to m_ScaleDataSize - 1 do
+  TDoubleArray(m_ScaleData.p)[0]:=m_points[0].p.y;
+  x:=x+dx;
+  for I := 1 to m_ScaleDataSize - 1 do
   begin
     ind:=getLowInd(x);
     if (ind+1)<=m_ScaleDataSize - 1 then
     begin
       case m_points[ind+1].ptype of
-        ptlinePoly: TAlignDarray(m_ScaleData.p)[i]:=EvalLineY(x, m_points[ind].p, m_points[ind+1].p);
+        ptlinePoly: TDoubleArray(m_ScaleData.p)[i]:=EvalLineYd(x, m_points[ind].p, m_points[ind+1].p);
         ptNullPoly:
         begin
           if x<m_points[ind+1].p.x then
-            TAlignDarray(m_ScaleData.p)[i]:=m_points[ind].p.y
+            TDoubleArray(m_ScaleData.p)[i]:=m_points[ind].p.y
           else
-            TAlignDarray(m_ScaleData.p)[i]:=m_points[ind+1].p.y
+            TDoubleArray(m_ScaleData.p)[i]:=m_points[ind+1].p.y
         end;
       end;
     end
     else
     begin
-      TAlignDarray(m_ScaleData.p)[i]:=m_points[ind].p.y
+      TDoubleArray(m_ScaleData.p)[i]:=m_points[ind].p.y
     end;
     x:=x+dx;
   end;
@@ -398,18 +404,51 @@ end;
 
 procedure cCurve.getMemScaleData(len:integer);
 begin
-  GetMemAlignedArray_d(len, m_ScaleData^);
+  GetMemAlignedArray_d(len, m_ScaleData);
   m_ScaleDataSize:=len;
 end;
 
 function cCurve.toStr: string;
+var
+  I: Integer;
 begin
-
+  result:=inttostr(m_size)+';';
+  for I := 0 to m_size - 1 do
+  begin
+    result:=result+floattostr(m_points[i].p.x)+';'+
+            floattostr(m_points[i].p.y)+';'+PTypeToStr(m_points[i].ptype)+';';
+  end;
+  if m_use then
+    result:=result+'1;'
+  else
+    result:=result+'0;';
 end;
 
 procedure cCurve.fromStr(s: string);
+var
+  I, ind, c: Integer;
+  s1:string;
+  p:TCurvePoint;
 begin
+  s1:=GetSubString(s, ';', 0, ind);
+  c:=strtoint(s1);
+  m_size:=c;
+  for I := 0 to c - 1 do
+  begin
+    s1:=GetSubString(s, ';', ind+1, ind);
+    p.p.x:=strtofloatext(s1);
 
+    s1:=GetSubString(s, ';', ind+1, ind);
+    p.p.y:=strtofloatext(s1);
+    s1:=GetSubString(s, ';', ind+1, ind);
+    p.ptype:=StrToPType(s1);
+    s1:=GetSubString(s, ';', ind+1, ind);
+    m_points[i]:=p;
+  end;
+  if s1='1' then
+    m_use:=true
+  else
+    m_use:=false;
 end;
 
 { cBmp }

@@ -55,10 +55,6 @@ type
     acf:double; // зависит от типа окна. норм-ия А
     ar: TAlignDarray;
     wndtype: TWndType;
-    // вкл коррекцию АЧХ
-    useCorrAFH:boolean;
-    // коррекция АЧХ
-    CorrAFHar: TAlignDarray;
   end;
 
   PWndFunc = ^TWndFunc;
@@ -72,6 +68,8 @@ type
     StartInd: integer;
     PCount: integer; // Число точек FFT
     inverse: boolean;
+    m_useScaleCurve:boolean;
+    m_scaleCurve:pDoubleArray;
   end;
 
   pFFTProp = ^TFFTProp;
@@ -94,8 +92,7 @@ procedure ifft_al_d_sse(inData: TCmxArray_d; var outData: TCmxArray_d;
 // OutData в обязательном порядке должен иметь размер FFTSize!!! FFTPlan влияет лишь на
 // подготовку данных из inData в OutData
 // первый элемент - двойное среднее!!!
-procedure fft_al_d_sse(inData: TDoubleArray; var outData: TCmxArray_d;
-  FFTPlan: TFFTProp); overload;
+procedure fft_al_d_sse(inData: TDoubleArray; var outData: TCmxArray_d; FFTPlan: TFFTProp); overload;
 procedure fft_al_d_sse(inData: TDoubleArray; var outData: TCmxArray_d;
   FFTPlan: TFFTProp; wnd: PWndFunc); overload;
 // нормализация вида Abs(inData[i])*(1/FFTSize). размер OutData FFTSize/2
@@ -156,6 +153,8 @@ function GetFFTWnd(fftCount: integer; wnd:TWndType): PWndFunc;
 
 function MulAr_sse_al(const D1: array of double;const D2: array of double; var dOut: array of double): Extended;overload;
 function MulAr_sse_al(const D1: array of double;const D2: array of double; var dOut: array of double; count:integer): Extended;overload;
+
+procedure MulAr_sse_al_Cmpx(const D1: array of TComplex_d;const D2: array of double; var dOut: array of TComplex_d);
 
 var
   // настройки FFT прямого и обратного преобразования
@@ -831,6 +830,17 @@ begin
   fft_al_d_sse(inData, outData, FFTPlan);
 end;
 
+procedure MulAr_sse_al_Cmpx(const D1: array of TComplex_d;const D2: array of double; var dOut: array of TComplex_d);
+var
+  I: Integer;
+begin
+  // D2 сожержит множители без учета отраженного спектра
+  for I := 0 to length(d2) - 1 do
+  begin
+    dout[i]:=d1[i]*d2[i];
+  end;
+end;
+
 procedure fft_al_d_sse(inData: TDoubleArray; var outData: TCmxArray_d;
   FFTPlan: TFFTProp);
 var
@@ -846,6 +856,13 @@ begin
   adr := integer(@inData[0]) - 4;
   // EvalFFT_al_d_sse(outData, FFTPlan.TableExp);
   recursive_sse2_sse3_d_al_fft.fft(outData, FFTPlan.TableExp.p);
+  if FFTPlan.m_useScaleCurve then
+  begin
+    if FFTPlan.m_scaleCurve<>nil then
+    begin
+      MulAr_sse_al_Cmpx(outData, tdoublearray(FFTPlan.m_scaleCurve), outData);
+    end;
+  end;
 end;
 
 procedure MULT_SSE_al_cmpx_d(var ar: TCmxArray_d; scale: double);
@@ -1578,10 +1595,10 @@ begin
       exit;
   end;
   GetMemAlignedArray_d(4, alData.p, // src
-    SrcSize * sizeof(double), // srcSize
-    alData.p, // DstAligned
-    alData.nAlignedSampl, // DstUnAligned
-    alData.nAlignedSize); // DstUnSize
+                       SrcSize * sizeof(double), // srcSize
+                       alData.p, // DstAligned
+                       alData.nAlignedSampl, // DstUnAligned
+                       alData.nAlignedSize); // DstUnSize
 {$ENDIF}
 end;
 

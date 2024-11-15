@@ -27,7 +27,6 @@ object PressFrm2: TPressFrm2
     Align = alClient
     Caption = #1055#1086#1083#1086#1089#1072' '#8470
     TabOrder = 0
-    ExplicitWidth = 360
     object Panel1: TPanel
       Left = 2
       Top = 295
@@ -41,7 +40,6 @@ object PressFrm2: TPressFrm2
       ParentShowHint = False
       ShowHint = True
       TabOrder = 1
-      ExplicitWidth = 356
       object MaxLabel: TLabel
         Left = 82
         Top = 10
@@ -351,7 +349,6 @@ object PressFrm2: TPressFrm2
       ParentShowHint = False
       ShowHint = False
       TabOrder = 0
-      ExplicitWidth = 356
       inline PressFrmFrame21: TPressFrmFrame2
         Left = 1
         Top = 1
@@ -361,7 +358,7 @@ object PressFrm2: TPressFrm2
         TabOrder = 0
         ExplicitLeft = 1
         ExplicitTop = 1
-        ExplicitWidth = 354
+        ExplicitWidth = 386
         ExplicitHeight = 37
         inherited ALabel: TLabel
           Width = 21

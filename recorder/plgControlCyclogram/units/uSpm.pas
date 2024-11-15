@@ -59,6 +59,8 @@ type
     // разрешение спектра
     m_spmdx: double;
     m_addNulls: boolean;
+    // окно
+    fWnd: PWndFunc;
   private
     // определение размера блока по которому идет расчет
     // период расчета алгоритма
@@ -72,8 +74,6 @@ type
     fNullsPoints,
     // число точек на которое происходит смещение для того чтобы считать новый блок (не равно fOutSize если есть перекрытие)
     fShift: cardinal;
-    // окно
-    fWnd: PWndFunc;
   protected
     function getrestype: integer;
     procedure setrestype(i: integer);
@@ -101,6 +101,8 @@ type
     function getCreateOutTag: boolean;
     procedure setCreateOutTag(b: boolean);
   public
+    // коррекция ачх
+    procedure SetScaleData(pscale:pdoublearray);
     function GetWndFunc: PWndFunc;
     function GetWndType: TWndType;
     function GetWndStr: string;
@@ -349,13 +351,11 @@ begin
       begin
         if fWnd <> nil then
         begin
-          fft_al_d_sse(tdoubleARRAy(m_EvalBlock.p),
-            tCmxArray_d(cmplx_resArray.p), FFTProp, fWnd);
+          fft_al_d_sse(tdoubleARRAy(m_EvalBlock.p), tCmxArray_d(cmplx_resArray.p), FFTProp, fWnd);
         end
         else
         begin
-          fft_al_d_sse(tdoubleARRAy(m_EvalBlock.p),
-            tCmxArray_d(cmplx_resArray.p), FFTProp);
+          fft_al_d_sse(tdoubleARRAy(m_EvalBlock.p), tCmxArray_d(cmplx_resArray.p), FFTProp);
         end;
         if FFTProp.startind = 0 then
         begin
@@ -760,6 +760,11 @@ begin
   begin
     m_I := i - 3;
   end;
+end;
+
+procedure cSpm.SetScaleData(pscale: pdoublearray);
+begin
+  FFTProp.m_scaleCurve:=pscale;
 end;
 
 function cSpm.getrestype: integer;

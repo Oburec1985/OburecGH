@@ -1898,6 +1898,7 @@ begin
   r := g_FFTPlanList[j];
   r.StartInd := 0;
   r.PCount := fftCount;
+  r.m_scaleCurve:=nil;
   GetMemAlignedArray_cmpx_d(fftCount, r.TableExp);
   r.TableInd := GetArrayIndex(fftCount, 2);
   GetFFTExpTable(fftCount, false, tcmxArray_d(r.TableExp.p));
