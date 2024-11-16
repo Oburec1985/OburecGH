@@ -324,11 +324,6 @@ begin
     result := LPCSTR(StrToAnsi(s1));
 end;
 
-function doGetProperty2(tag: LPCSTR): LPCSTR; override;
-begin
-
-end;
-
 // 0 - объект; 1 - тест; 2 - регистрция
 // str "prop;value"
 function IMBaseControl.doSetProperty(tag: integer; str: lpcstr): integer;
@@ -344,8 +339,8 @@ begin
   end;
   s:=str;
   ind:=0;
-  s1:=GetSubString(s, ind, ind);
-  s2:=GetSubString(s, ind+1, ind);
+  s1:=GetSubString(s, '', ind, ind);
+  s2:=GetSubString(s, '',ind+1, ind);
   if s1<>'' then
   begin
     if s2<>'' then

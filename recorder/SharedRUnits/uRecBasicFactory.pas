@@ -201,7 +201,7 @@ type
   // ICustomVFormIntarface
   public
 		function GetCustomProperty(tag:integer):LPCSTR;stdcall;
-		function GetCustomProperty2(p:LPCSTR):LPCSTR;stdcall;
+		function GetCustomProperty2(obj:integer;prop: LPCSTR):LPCSTR;stdcall;
     function SetCustomProperty(tag:integer; str:lpcstr):Integer;stdcall;
   public
     // IUnknown
@@ -520,9 +520,9 @@ begin
   result:=doGetProperty(tag);
 end;
 
-function cRecBasicIFrm.GetCustomProperty2(p: LPCSTR): LPCSTR;
+function cRecBasicIFrm.GetCustomProperty2(obj:integer;prop: LPCSTR): LPCSTR;
 begin
-  result:=doGetProperty2(p);
+  result:=doGetProperty2(obj, prop);
 end;
 
 function cRecBasicIFrm.SetCustomProperty(tag: integer; str: lpcstr): Integer;
