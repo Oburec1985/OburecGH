@@ -72,6 +72,7 @@ type
     procedure saveTags(node: txmlNode); override;
     procedure LoadTags(node: txmlNode); override;
     function ready: boolean; override;
+    procedure updateReady;override;
     function getlasttime: double;
     procedure LinkTags;override;
   public
@@ -96,6 +97,8 @@ const
 implementation
 
 { cPhaseAlg }
+
+
 
 constructor cGrmsSrcAlg.create;
 begin
@@ -305,7 +308,7 @@ begin
   pCount := 0;
   m_lastblockind := 0;
   ZeroMemory(@m_outTagX[0], length(m_outTagX) * sizeof(double));
-  // inherited;
+  inherited;
 end;
 
 class function cGrmsSrcAlg.getdsc: string;
@@ -387,18 +390,28 @@ begin
     saveTag(m_outTag, tnode);
 end;
 
-function cGrmsSrcAlg.ready: boolean;
+
+procedure cGrmsSrcAlg.updateReady;
 begin
-  result := false;
+  fready := false;
   if m_Taho <> nil then
   begin
     if m_Taho.tag <> nil then
     begin
       if m_InTag.tag <> nil then
-        result := true;
+      begin
+        if m_spm<>nil then
+        begin
+          if m_spm.m_tag.tag<>nil then
+          begin
+            fready := true;
+          end;
+        end;
+      end;
     end;
   end;
-  if result then
+
+  if fready then
   begin
     if m_InTag.tag <> nil then
     begin
@@ -412,17 +425,22 @@ begin
         setinptag(m_InTag.tag);
         if m_spm<>nil then
         begin
-          result:=true;
+          fready:=true;
         end
         else
         begin
-          result:=false;
+          fready:=false;
         end;
       end
       else
-        result:=false;
+        fready:=false;
     end;
   end;
+end;
+
+function cGrmsSrcAlg.ready: boolean;
+begin
+  result:=fready;
 end;
 
 function cGrmsSrcAlg.readyBlockCount: integer;

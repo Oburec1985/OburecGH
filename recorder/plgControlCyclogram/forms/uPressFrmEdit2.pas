@@ -109,7 +109,6 @@ var
   s:PTagRec;
   i:integer;
 begin
-  if not AFHcb.Checked then exit;
   if TagsLB.ItemIndex=-1 then
   begin
     i:=0;
@@ -119,13 +118,24 @@ begin
   s:=g_PressCamFactory2.getTag(TagsLB.Items[i]);
   if s<>nil then
   begin
-    if s.m_curve=nil then
+    if AFHcb.Checked then
     begin
-      s.m_curve:=cCurve.create;
+      if s.m_curve=nil then
+      begin
+        s.m_curve:=cCurve.create;
+      end;
+      s.m_curve.m_use:=true;
+      s.m_curve.getMemScaleData(FFTCountEdit.IntNum shr 1);
+      s.m_s.SetScaleData(s.m_curve.m_ScaleData.p);
+      EditCurveFrm.editCurve(s.m_curve, FFTCountEdit.IntNum);
+    end
+    else
+    begin
+      if s.m_curve<>nil then
+        s.m_curve.m_use:=true;
     end;
-    s.m_curve.getMemScaleData(FFTCountEdit.IntNum shr 1);
-    s.m_s.SetScaleData(s.m_curve.m_ScaleData.p);
-    EditCurveFrm.editCurve(s.m_curve, FFTCountEdit.IntNum);
+    if s.m_curve<>nil then
+      s.m_s.SetUseScaleData(s.m_curve.m_use);
   end;
 end;
 
@@ -335,6 +345,7 @@ begin
   sgchange(BandSG);
   TypeResCB.ItemIndex:=g_PressCamFactory2.m_typeRes;
   wndCB.ItemIndex:=g_PressCamFactory2.GetWndInd;
+  CreateTagsCB.Checked:=g_PressCamFactory2.m_createTags;
   if ShowModal=mrok then
   begin
     updateBands;

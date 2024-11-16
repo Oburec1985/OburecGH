@@ -442,9 +442,9 @@ begin
     p.p.y:=strtofloatext(s1);
     s1:=GetSubString(s, ';', ind+1, ind);
     p.ptype:=StrToPType(s1);
-    s1:=GetSubString(s, ';', ind+1, ind);
     m_points[i]:=p;
   end;
+  s1:=GetSubString(s, ';', ind+1, ind);
   if s1='1' then
     m_use:=true
   else

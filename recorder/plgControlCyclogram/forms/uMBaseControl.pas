@@ -172,6 +172,11 @@ type
   protected
     // путь к испытанию 0; путь к регистрации 1
     function doGetProperty(tag: Integer): LPCSTR; override;
+    // 0 - объект; 1 - тест; 2 - регистрция; propname
+    function doGetProperty2(obj:integer;prop: LPCSTR): LPCSTR; override;
+    // 0 - объект; 1 - тест; 2 - регистрция
+    // str "prop;value"
+    function doSetProperty(tag:integer; str:lpcstr):integer;override;
   public
     function doGetName: LPCSTR; override;
     procedure doClose; override;
@@ -277,6 +282,7 @@ begin
   result := 'БДИ';
 end;
 
+// 0 - путь к испытанию; 1 - путь к регистрации;
 function IMBaseControl.doGetProperty(tag: Integer): LPCSTR;
 var
   str: string;
@@ -297,6 +303,54 @@ begin
       end;
   end;
   result := LPCSTR(StrToAnsi(str));
+end;
+
+function IMBaseControl.doGetProperty2(obj: integer; prop: LPCSTR): LPCSTR;
+var
+  o:cXmlFolder;
+  s, s1:string;
+  ind:integer;
+  b:boolean;
+begin
+  case obj of
+    0: o:=TMBaseControl(m_pMasterWnd).GetSelectObj;
+    1: o:=TMBaseControl(m_pMasterWnd).GetSelectTest;
+    2: o:=TMBaseControl(m_pMasterWnd).GetSelectReg;
+  end;
+  s:=prop;
+  s1:=o.getProperty(s, b);
+  result:='';
+  if b then
+    result := LPCSTR(StrToAnsi(s1));
+end;
+
+function doGetProperty2(tag: LPCSTR): LPCSTR; override;
+begin
+
+end;
+
+// 0 - объект; 1 - тест; 2 - регистрция
+// str "prop;value"
+function IMBaseControl.doSetProperty(tag: integer; str: lpcstr): integer;
+var
+  o:cXmlFolder;
+  s, s1, s2:string;
+  ind:integer;
+begin
+  case tag of
+    0: o:=TMBaseControl(m_pMasterWnd).GetSelectObj;
+    1: o:=TMBaseControl(m_pMasterWnd).GetSelectTest;
+    2: o:=TMBaseControl(m_pMasterWnd).GetSelectReg;
+  end;
+  s:=str;
+  ind:=0;
+  s1:=GetSubString(s, ind, ind);
+  s2:=GetSubString(s, ind+1, ind);
+  if s1<>'' then
+  begin
+    if s2<>'' then
+      o.Setpropertie(s1, s2);
+  end;
 end;
 
 { cMBaseFactory }

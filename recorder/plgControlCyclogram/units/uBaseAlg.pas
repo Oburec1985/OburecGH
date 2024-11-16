@@ -318,7 +318,8 @@ begin
   for i := 0 to m_SubscribeList.Count - 1 do
   begin
     a := cBaseAlgContainer(m_SubscribeList.items[i]);
-    a.doUpdateSrcData(self);
+    if a.ready then
+      a.doUpdateSrcData(self);
   end;
 end;
 

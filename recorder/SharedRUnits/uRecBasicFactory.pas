@@ -148,6 +148,7 @@ type
   protected
     //
     function doGetProperty(tag:integer):lpcstr;virtual;
+    function doGetProperty2(obj:integer;prop: LPCSTR):lpcstr;virtual;
     function doSetProperty(tag:integer; str:lpcstr):integer;virtual;
   public
     function getIRecorder: irecorder;
@@ -200,6 +201,7 @@ type
   // ICustomVFormIntarface
   public
 		function GetCustomProperty(tag:integer):LPCSTR;stdcall;
+		function GetCustomProperty2(p:LPCSTR):LPCSTR;stdcall;
     function SetCustomProperty(tag:integer; str:lpcstr):Integer;stdcall;
   public
     // IUnknown
@@ -518,6 +520,11 @@ begin
   result:=doGetProperty(tag);
 end;
 
+function cRecBasicIFrm.GetCustomProperty2(p: LPCSTR): LPCSTR;
+begin
+  result:=doGetProperty2(p);
+end;
+
 function cRecBasicIFrm.SetCustomProperty(tag: integer; str: lpcstr): Integer;
 begin
   result:=doSetProperty(tag, str);
@@ -579,6 +586,11 @@ end;
 function cRecBasicIFrm.doGetProperty(tag: integer): lpcstr;
 begin
   result:=lpcstr(StrToAnsi(classname));
+end;
+
+function cRecBasicIFrm.doGetProperty2(obj:integer;prop: LPCSTR): lpcstr;
+begin
+
 end;
 
 function cRecBasicIFrm.doNotify(const dwCommand: DWORD;

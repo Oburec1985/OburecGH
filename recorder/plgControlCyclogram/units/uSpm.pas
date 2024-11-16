@@ -102,6 +102,7 @@ type
     procedure setCreateOutTag(b: boolean);
   public
     // коррекция ачх
+    procedure SetUseScaleData(b:boolean);
     procedure SetScaleData(pscale:pdoublearray);
     function GetWndFunc: PWndFunc;
     function GetWndType: TWndType;
@@ -765,6 +766,11 @@ end;
 procedure cSpm.SetScaleData(pscale: pdoublearray);
 begin
   FFTProp.m_scaleCurve:=pscale;
+end;
+
+procedure cSpm.SetUseScaleData(b:boolean);
+begin
+  FFTProp.m_useScaleCurve:=b;
 end;
 
 function cSpm.getrestype: integer;

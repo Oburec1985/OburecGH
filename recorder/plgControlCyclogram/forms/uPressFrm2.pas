@@ -1396,6 +1396,7 @@ begin
           tr.m_curve.getMemScaleData(len);
           tr.m_curve.EvalData;
           tr.m_s.SetScaleData(tr.m_curve.m_ScaleData.p);
+          tr.m_s.SetUseScaleData(tr.m_curve.m_use);
         end;
       end;
     end;
