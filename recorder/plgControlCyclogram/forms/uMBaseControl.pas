@@ -10,6 +10,8 @@ uses
   uComponentServises,
   uRCFunc, recorder, PathUtils, uDownloadregsfrm, urcclientfrm,
   iplgmngr,
+  activex,
+  cfreg, blaccess,
   uMeasureBase, uMdbFrm, DB, DBClient, uRcClient, Sockets, ImgList, Buttons,
   plugin, Menus, ScktComp, ShlObj, uPathMng;
 
@@ -152,8 +154,9 @@ type
     procedure FillRegCB(t: cTestFolder);
     procedure UpdateXmlDescr;
     procedure doChangePathNotify(objtype:DWORD);
-    // кеопируем свойства из SG в O
+    // копируем свойства из SG в O
     procedure SaveProperties(o:cXmlFolder);
+
   public
     procedure ShowObjProps(o:cXmlFolder);
 
@@ -170,7 +173,7 @@ type
 
   IMBaseControl = class(cRecBasicIFrm)
   protected
-    // путь к испытанию 0; путь к регистрации 1
+    // путь к испытанию 0; путь к регистрации 1; 2 - объект
     function doGetProperty(tag: Integer): LPCSTR; override;
     // 0 - объект; 1 - тест; 2 - регистрция; propname
     function doGetProperty2(obj:integer;prop: LPCSTR): LPCSTR; override;
@@ -242,6 +245,7 @@ const
   // путь "объект;тест;регистрация"
   c_CustProp_Obj = 1;
 
+
 procedure InitPropSG(sg: tstringgrid);
 
 implementation
@@ -249,6 +253,102 @@ implementation
 uses
   uControlsNP, uCreateComponents;
 {$R *.dfm}
+
+
+// 0 - объект; 1 - тест; 2 - регистрция
+// str "prop;value"
+function GetMDBProp(obj:integer;s:lpcstr):lpcstr;
+var
+  rep: hresult;
+  val: OleVariant;
+  UISrv: tagVARIANT;
+  FormRegistrator: ICustomFormsRegistrator;
+  f: ICustomFormFactory;
+  cf: ICustomFactInterface;
+
+  ifrm: IVForm;
+
+  count: cardinal;
+  i: ULONG;
+  int: integer;
+  ws: widestring;
+  g: TGUID;
+begin
+  result:='';
+  rep := g_ir.GetProperty(RCPROP_UISERVERLINK, val);
+  UISrv := tagVARIANT(val);
+  if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
+  begin
+  end;
+  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,
+    FormRegistrator);
+  if FAILED(rep) or (FormRegistrator = niL) then
+  begin
+  end;
+  FormRegistrator.GetFactoriesCount(@count);
+  for i := 0 to count - 1 do
+  begin
+    FormRegistrator.GetFactoryByIndex(f, i);
+    f.GetFormTypeName(ws);
+    // f._Release;
+    if ws = c_MDBFormName then
+    begin
+      cf := f as ICustomFactInterface;
+      int := 0;
+      (cf as ICustomFactInterface).getChild(int, ifrm);
+      // (cf as ICustomFactInterface).getChild(int, mdb);
+      result:=(ifrm as ICustomVFormInterface).GetCustomProperty2(obj, s);
+    end;
+  end;
+end;
+
+// 0 - объект; 1 - тест; 2 - регистрция
+// str "prop;value"
+function SetMDBProp(obj:integer;s:lpcstr):integer;
+var
+  rep: hresult;
+  val: OleVariant;
+  UISrv: tagVARIANT;
+  FormRegistrator: ICustomFormsRegistrator;
+  f: ICustomFormFactory;
+  cf: ICustomFactInterface;
+
+  ifrm: IVForm;
+
+  count: cardinal;
+  i: ULONG;
+  int: integer;
+  ws: widestring;
+  g: TGUID;
+begin
+  result:=-1;
+  rep := g_ir.GetProperty(RCPROP_UISERVERLINK, val);
+  UISrv := tagVARIANT(val);
+  if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
+  begin
+  end;
+  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,
+    FormRegistrator);
+  if FAILED(rep) or (FormRegistrator = niL) then
+  begin
+  end;
+  FormRegistrator.GetFactoriesCount(@count);
+  for i := 0 to count - 1 do
+  begin
+    FormRegistrator.GetFactoryByIndex(f, i);
+    f.GetFormTypeName(ws);
+    // f._Release;
+    if ws = c_MDBFormName then
+    begin
+      cf := f as ICustomFactInterface;
+      int := 0;
+      (cf as ICustomFactInterface).getChild(int, ifrm);
+      // (cf as ICustomFactInterface).getChild(int, mdb);
+      result:=(ifrm as ICustomVFormInterface).SetCustomProperty(obj, s);
+    end;
+  end;
+end;
+
 { IMBaseControl }
 
 function mBaseControl: TMBaseControl;
@@ -282,7 +382,7 @@ begin
   result := 'БДИ';
 end;
 
-// 0 - путь к испытанию; 1 - путь к регистрации;
+// 0 - путь к испытанию; 1 - путь к регистрации; 2 - путь к объекту
 function IMBaseControl.doGetProperty(tag: Integer): LPCSTR;
 var
   str: string;
@@ -291,16 +391,22 @@ begin
   case tag of
     // путь к испытанию
     0:
-      begin
-        if TMBaseControl(m_pMasterWnd).GetSelectTest <> nil then
-          str := TMBaseControl(m_pMasterWnd).GetSelectTest.Absolutepath;
-      end;
+    begin
+      if TMBaseControl(m_pMasterWnd).GetSelectTest <> nil then
+        str := TMBaseControl(m_pMasterWnd).GetSelectTest.Absolutepath;
+    end;
     // путь к регистрации
     1:
-      begin
-        if TMBaseControl(m_pMasterWnd).GetSelectReg <> nil then
-          str := TMBaseControl(m_pMasterWnd).GetSelectReg.Path;
-      end;
+    begin
+      if TMBaseControl(m_pMasterWnd).GetSelectReg <> nil then
+        str := TMBaseControl(m_pMasterWnd).GetSelectReg.Path;
+    end;
+    // путь к объекту
+    2:
+    begin
+      if TMBaseControl(m_pMasterWnd).GetSelectObj <> nil then
+        str := TMBaseControl(m_pMasterWnd).GetSelectObj.Path;
+    end;
   end;
   result := LPCSTR(StrToAnsi(str));
 end;
@@ -337,14 +443,22 @@ begin
     1: o:=TMBaseControl(m_pMasterWnd).GetSelectTest;
     2: o:=TMBaseControl(m_pMasterWnd).GetSelectReg;
   end;
-  s:=str;
-  ind:=0;
-  s1:=GetSubString(s, '', ind, ind);
-  s2:=GetSubString(s, '',ind+1, ind);
-  if s1<>'' then
+  if o=nil then
   begin
-    if s2<>'' then
-      o.Setpropertie(s1, s2);
+    result:=-1;
+  end
+  else
+  begin
+    result:=0;
+    s:=str;
+    ind:=0;
+    s1:=GetSubString(s, ';', ind, ind);
+    s2:=GetSubString(s, ';',ind+1, ind);
+    if s1<>'' then
+    begin
+      if s2<>'' then
+        o.Setpropertie(s1, s2);
+    end;
   end;
 end;
 
@@ -1544,6 +1658,8 @@ var
   objFolder:cxmlFolder;
   str:string;
 begin
+  SetMDBProp(0, '111;223');
+  //str:=GetMDBProp(0, '1');
   if selectObj <> nil then
   begin
     // сохраняем свойтсва SG в O
@@ -1590,6 +1706,8 @@ begin
     end;
     cBaseMeaFolder(m_base.m_BaseFolder).CreateXMLDesc;
   end;
+
+
 end;
 
 procedure TMBaseControl.SaveSettings(a_pIni: TIniFile; str: LPCSTR);

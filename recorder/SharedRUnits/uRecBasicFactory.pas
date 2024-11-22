@@ -4,14 +4,15 @@ unit uRecBasicFactory;
 interface
 
 uses
-  recorder, windows, activex, cfreg, messages,
+  recorder, windows, activex,
+  cfreg, blaccess,
+  messages,
   // Ole2,
   Classes,
   sysutils,
   dialogs,
   ShlObj,
   inifiles,
-  blaccess,
   forms,
   uRCFunc,
   uRecorderEvents,
@@ -27,6 +28,7 @@ type
 		// вернуть произвольное свойство tag - id того что хотим получить
 		function GetCustomProperty(tag:integer):LPCSTR;stdcall;
 		function SetCustomProperty(tag:integer; str:lpcstr):integer;stdcall;
+		function GetCustomProperty2(obj:integer;prop: LPCSTR):LPCSTR;stdcall;
   end;
 
    // Интерфейс фабрики объектов VForm
