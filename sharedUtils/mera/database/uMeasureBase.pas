@@ -53,6 +53,7 @@ type
     procedure setObjType(s:string); overload;
     procedure setObjType(s:string; delProp:boolean; proplist:tstringlist); overload;
     procedure setObjType(s:string; proplist:tstringlist); overload;
+    // сохранить объект в БД
     procedure CreateXMLDesc;
     function PropCount:integer;
     function FindPropertie(pname:string):integer;

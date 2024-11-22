@@ -108,7 +108,8 @@ type
     procedure ObjPropSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
   private
-
+    // взводится при удалении формы
+    m_tryDestroy:boolean;
     m_rstate: dword;
     // форма посчитана фабрикой класса. Нужно для ограничения числа форм
     m_counted: Boolean;
@@ -302,7 +303,7 @@ begin
   end;
 end;
 
-// 0 - объект; 1 - тест; 2 - регистрция
+// 0 - объект; 1 - тест; 2 - регистрция ; s= 'save' - сохранить бд
 // str "prop;value"
 function SetMDBProp(obj:integer;s:lpcstr):integer;
 var
@@ -430,8 +431,8 @@ begin
     result := LPCSTR(StrToAnsi(s1));
 end;
 
-// 0 - объект; 1 - тест; 2 - регистрция
-// str "prop;value"
+// 0 - объект; 1 - тест; 2 - регистрция str
+// str "prop;value" str=save сохранить объект
 function IMBaseControl.doSetProperty(tag: integer; str: lpcstr): integer;
 var
   o:cXmlFolder;
@@ -442,6 +443,16 @@ begin
     0: o:=TMBaseControl(m_pMasterWnd).GetSelectObj;
     1: o:=TMBaseControl(m_pMasterWnd).GetSelectTest;
     2: o:=TMBaseControl(m_pMasterWnd).GetSelectReg;
+  end;
+  if str='save' then
+  begin
+    if o=nil then
+      result:=-1
+    else
+    begin
+      o.CreateXMLDesc;
+      exit;
+    end;
   end;
   if o=nil then
   begin
@@ -481,7 +492,7 @@ end;
 
 destructor cMBaseFactory.destroy;
 begin
-  // m_lRefCount:=0; // добавлено от 13.03.18
+  m_lRefCount:=0; // добавлено от 13.03.18
   inherited;
 end;
 
@@ -772,6 +783,7 @@ end;
 
 destructor TMBaseControl.destroy;
 begin
+  m_tryDestroy:=true;
   g_MBaseControl := nil;
 
   if m_base <> nil then
@@ -785,7 +797,6 @@ begin
     rc_pan := nil;
   end;
 
-  cMBaseFactory(m_f).decFrmCounter;
   DestroyEvents;
   inherited;
 end;
@@ -799,6 +810,7 @@ end;
 
 procedure TMBaseControl.DestroyEvents;
 begin
+
   RemovePlgEvent(doSaveCfg, c_RC_SaveCfg);
   RemovePlgEvent(doChangeRCState, c_RC_DoChangeRCState);
   if m_base <> nil then
@@ -1460,6 +1472,8 @@ var
   c,r:integer;
   b:boolean;
 begin
+  if m_tryDestroy then exit;
+
   r:=TStringGridExt(sender).RowCount-1;
   c:=TStringGridExt(sender).ColCount-1;
   b:=true;
@@ -1658,8 +1672,9 @@ var
   objFolder:cxmlFolder;
   str:string;
 begin
-  SetMDBProp(0, '111;223');
-  //str:=GetMDBProp(0, '1');
+  //SetMDBProp(0, '1123;223');
+  //SetMDBProp(0, 'save');
+  //exit;
   if selectObj <> nil then
   begin
     // сохраняем свойтсва SG в O
@@ -2283,50 +2298,5 @@ begin
 end;
 
 
-procedure SetMDBPropertie();
-var
-  rep: hresult;
-  val: OleVariant;
-  UISrv: tagVARIANT;
-  FormRegistrator: ICustomFormsRegistrator;
-  f: ICustomFormFactory;
-  cf: ICustomFactInterface;
-
-  ifrm: IVForm;
-
-  count: cardinal;
-  i: ULONG;
-  int: integer;
-  ws: widestring;
-  g: TGUID;
-begin
-  result := '';
-  rep := g_ir.GetProperty(RCPROP_UISERVERLINK, val);
-  UISrv := tagVARIANT(val);
-  if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
-  begin
-  end;
-  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,
-    FormRegistrator);
-  if FAILED(rep) or (FormRegistrator = niL) then
-  begin
-  end;
-  FormRegistrator.GetFactoriesCount(@count);
-  for i := 0 to count - 1 do
-  begin
-    FormRegistrator.GetFactoryByIndex(f, i);
-    f.GetFormTypeName(ws);
-    // f._Release;
-    if ws = c_MDBFormName then
-    begin
-      cf := f as ICustomFactInterface;
-      int := 0; (cf as ICustomFactInterface).getChild(int, ifrm);
-      // (cf as ICustomFactInterface).getChild(int, mdb);
-      // вернуть произвольное свойство tag - id того что хотим получить
-      // 0: путь к испытанию 1: путь к регистрации
-      result := (ifrm as ICustomVFormInterface).GetCustomProperty(0);
-    end;
-  end;
-end;
 
 end.

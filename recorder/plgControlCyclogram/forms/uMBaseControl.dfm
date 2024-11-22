@@ -1950,7 +1950,7 @@ object MBaseControl: TMBaseControl
       Font.Style = []
       ParentFont = False
       ParentShowHint = False
-      ShowHint = True
+      ShowHint = False
       TabOrder = 0
       OnDrawCell = ObjPropSGDrawCell
       OnExit = ObjPropSGExit
