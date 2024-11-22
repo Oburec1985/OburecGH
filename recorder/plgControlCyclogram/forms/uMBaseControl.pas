@@ -2282,4 +2282,51 @@ begin
   sg.Cells[c_col_propVal, 0] := 'Значение';
 end;
 
+
+procedure SetMDBPropertie();
+var
+  rep: hresult;
+  val: OleVariant;
+  UISrv: tagVARIANT;
+  FormRegistrator: ICustomFormsRegistrator;
+  f: ICustomFormFactory;
+  cf: ICustomFactInterface;
+
+  ifrm: IVForm;
+
+  count: cardinal;
+  i: ULONG;
+  int: integer;
+  ws: widestring;
+  g: TGUID;
+begin
+  result := '';
+  rep := g_ir.GetProperty(RCPROP_UISERVERLINK, val);
+  UISrv := tagVARIANT(val);
+  if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
+  begin
+  end;
+  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,
+    FormRegistrator);
+  if FAILED(rep) or (FormRegistrator = niL) then
+  begin
+  end;
+  FormRegistrator.GetFactoriesCount(@count);
+  for i := 0 to count - 1 do
+  begin
+    FormRegistrator.GetFactoryByIndex(f, i);
+    f.GetFormTypeName(ws);
+    // f._Release;
+    if ws = c_MDBFormName then
+    begin
+      cf := f as ICustomFactInterface;
+      int := 0; (cf as ICustomFactInterface).getChild(int, ifrm);
+      // (cf as ICustomFactInterface).getChild(int, mdb);
+      // вернуть произвольное свойство tag - id того что хотим получить
+      // 0: путь к испытанию 1: путь к регистрации
+      result := (ifrm as ICustomVFormInterface).GetCustomProperty(0);
+    end;
+  end;
+end;
+
 end.
