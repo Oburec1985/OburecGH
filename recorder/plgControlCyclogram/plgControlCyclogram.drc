@@ -1432,12 +1432,12 @@ END
 /* ..\..\sharedUtils\forms\uGetMngObjForm.dfm */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\filectrl.res */
 /* ..\..\sharedUtils\ZipMaster\ZipMstr.res */
+/* ..\..\sharedUtils\mera\database\uDownloadRegsFrm.dfm */
+/* ..\SharedRUnits\uRcClientFrm.dfm */
 /* ..\..\sharedUtils\mera\database\uMDBBaseObjFrame.dfm */
 /* ..\..\sharedUtils\mera\database\uMDBRegObjFrame.dfm */
 /* ..\..\sharedUtils\mera\database\uMDBTestObjFrame.dfm */
 /* ..\..\sharedUtils\mera\database\uMDBFrm.dfm */
-/* ..\SharedRUnits\uRcClientFrm.dfm */
-/* ..\..\sharedUtils\mera\database\uDownloadRegsFrm.dfm */
 /* ..\SharedRUnits\uTagsListFrame.dfm */
 /* forms\uTrigsFrm.dfm */
 /* forms\uModesStepFrame.dfm */
@@ -1464,6 +1464,11 @@ END
 /* forms\uDacControlEditFrame.dfm */
 /* forms\uControlEditFrame.dfm */
 /* forms\uThresholdsFrm.dfm */
+/* forms\uEditPropertiesFrm.dfm */
+/* ..\..\sharedUtils\forms\uConfirmDlg.dfm */
+/* forms\uCyclogramReportFrm.dfm */
+/* forms\uControlDeskFrm.dfm */
+/* forms\uControlCyclogramEditFrm.dfm */
 /* forms\uDigsFrm.dfm */
 /* forms\uDigsFrmEdit.dfm */
 /* forms\uEditCurveFrm.dfm */
@@ -1490,12 +1495,8 @@ END
 /* forms\uSyncOscillogram.dfm */
 /* forms\uSyncOscillogramEditFrm.dfm */
 /* forms\uAlgsSaveFrm.dfm */
-/* forms\uEditPropertiesFrm.dfm */
-/* ..\..\sharedUtils\forms\uConfirmDlg.dfm */
 /* forms\uGenSignalsEditFrm.dfm */
 /* forms\uGenSignalsFrm.dfm */
-/* forms\uControlDeskFrm.dfm */
-/* forms\uCyclogramReportFrm.dfm */
 /* forms\uTagInfoFrm.dfm */
 /* forms\uTagInfoEditFrm.dfm */
 /* forms\uEditPolarFrm.dfm */
@@ -1517,7 +1518,6 @@ END
 /* forms\uPhaseFrame.dfm */
 /* forms\uCounterAlgFrame.dfm */
 /* forms\uAlgFrm.dfm */
-/* forms\uControlCyclogramEditFrm.dfm */
 /* forms\uSRSFrm.dfm */
 /* forms\uSpmChartEdit.dfm */
 /* forms\uSpmChart.dfm */
@@ -1525,7 +1525,7 @@ END
 /* forms\u3dObj.dfm */
 /* forms\uVertexEditFrame.dfm */
 /* forms\uGLFrmEdit.dfm */
-/* forms\uMBaseControl.dfm */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uMBaseControl.dfm */
 /* ..\SharedRUnits\uFrmSync.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditChartObjFrame.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateTrendFrame.dfm */
