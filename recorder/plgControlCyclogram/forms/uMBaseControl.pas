@@ -10,7 +10,7 @@ uses
   uComponentServises,
   uRCFunc, recorder, PathUtils, uDownloadregsfrm, urcclientfrm,
   iplgmngr,
-  activex,
+  activex, ubaseobj,
   cfreg, blaccess,
   uMeasureBase, uMdbFrm, DB, DBClient, uRcClient, Sockets, ImgList, Buttons,
   plugin, Menus, ScktComp, ShlObj, uPathMng;
@@ -164,7 +164,8 @@ type
     function GetSelectObj: cObjFolder;
     function GetSelectTest: cTestFolder;
     function GetSelectReg: cregFolder;
-
+    // дл€ установки свойств из другого плагина
+    // см sendMDBNotifyMessage
     procedure DoGetNotify(data: dword);
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -1590,6 +1591,7 @@ var
   obj: cXmlFolder;
   prop, val: string;
   ARow, ACol, ind:integer;
+  n:TMBaseNotify;
 begin
   obj := nil;
 
@@ -1605,7 +1607,15 @@ begin
     if obj <> Nil then
     begin
       if not sg.EditorMode then
+      begin
+        n.ObjID:=obj.name;
+        // 0 - добавить/изменить свойство 1 - удалить
+        n.OperType:=1;
+        prop:=obj.getPropertyName(sg.row - 1);
+        n.Operation:=prop+';';
         obj.delpropertie(sg.row - 1);
+        sendMDBNotifyMessage(n);
+      end;
     end;
     if sg.rowcount = 1 then
       sg.rowcount := 2;
@@ -1622,7 +1632,8 @@ begin
       if sg.Col = c_col_propName then
       begin
         ind := sg.row-1;
-        // модифицируем им€ только в том случае если вписано свойство с повторившимс€ именем в новую €чейку
+        // модифицируем им€ только в том случае если вписано свойство
+        // повторившимс€ именем в новую €чейку
         if ind <> -1 then
         begin
           if ind <> sg.RowCount - 2 then
@@ -1644,6 +1655,12 @@ begin
         end;
       end;
     end;
+    n.ObjID:=obj.name;
+    // 0 - добавить/изменить свойство 1 - удалить
+    n.OperType:=0;
+    prop:=obj.getPropertyName(sg.row - 1);
+    n.Operation:=prop+';'+val;
+    sendMDBNotifyMessage(n);
   end;
 end;
 
@@ -2062,6 +2079,7 @@ var
   str, param: string;
 
   obj: cXmlFolder;
+  bo:cbaseobj;
   callevent: Boolean;
 begin
   callevent := false;
@@ -2069,28 +2087,41 @@ begin
 
   // парсим значени€ в tstringlist
   I := 0;
+  obj:=nil;
   pars := TStringList.Create;
-  if MBaseNotify.ObjID = 'curobj' then
+  bo:=m_base.m_BaseFolder.getChildrenByName(MBaseNotify.ObjID);
+  if bo<>nil then
   begin
-    obj := GetSelectObj;
-  end
-  else
+    if bo is cxmlfolder then
+      obj:=cxmlfolder(bo);
+  end;
+  if obj=nil then
   begin
-    if MBaseNotify.ObjID = 'curtest' then
+    if MBaseNotify.ObjID = 'curobj' then
     begin
-      obj := GetSelectTest;
+      obj := GetSelectObj;
     end
     else
     begin
-      if MBaseNotify.ObjID = 'curreg' then
+      if MBaseNotify.ObjID = 'curtest' then
       begin
-        obj := GetSelectReg;
+        obj := GetSelectTest;
+      end
+      else
+      begin
+        if MBaseNotify.ObjID = 'curreg' then
+        begin
+          obj := GetSelectReg;
+        end;
       end;
     end;
+    if obj=nil then
+      exit;
   end;
-  if obj = nil then
-    exit;
 
+  // добавление свойств и удаление через эвент. Ќужно переделать механизм
+  // в триггерах дл€ правки бд на пр€мые вызовы интерфесов
+  {
   while I <= length(MBaseNotify.Operation) do
   begin
     str := GetSubString(MBaseNotify.Operation, ';', I, I);
@@ -2120,6 +2151,7 @@ begin
   end;
   if callevent then
     m_base.Events.CallAllEventsWithSender(E_AddNotifyPropertieEvent, obj);
+  }
 end;
 
 procedure TMBaseControl.showRegistrators;
@@ -2298,8 +2330,4 @@ begin
 end;
 
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 35282a7cfe96c23a542ddec37c5e775bf1fd9e44
 end.

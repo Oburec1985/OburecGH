@@ -98,7 +98,7 @@ procedure destroyEngine;
 // Если удаляем то через разделитель ";" идут имена свойств
 // Operation: string;
 // end;
-
+// допустимые значения 'curobj'; 'curtest';'curreg'
 procedure sendMDBNotifyMessage(notify: TMBaseNotify);
 // получить путь к текущему испытанию
 function getMDBTestPath: lpcstr;

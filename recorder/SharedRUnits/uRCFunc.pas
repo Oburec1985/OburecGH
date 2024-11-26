@@ -318,7 +318,7 @@ const
   // количество порций которое может накопить алгоритм между двумя периодами расчета выходного значения
   c_blockCount = 10;
   c_fftPlan_blockLength = 10;
-  c_MBaseName = 'Циклограмма работы регуляторов';
+  c_MBaseName = 'Plugin Циклограмма';
 
 implementation
 uses

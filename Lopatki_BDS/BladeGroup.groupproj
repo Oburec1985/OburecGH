@@ -6,10 +6,10 @@
 			<Projects Include="..\sharedUtils\компоненты\dcl_dpk\dcl_own.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj">
+			<Projects Include="..\3d\3dComponents\GlPackage.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\3d\3dComponents\GlPackage.dproj">
+			<Projects Include="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj">
 				<Dependencies/>
 			</Projects>
 			<Projects Include="..\profileGenerator\Proilegenerator.dproj">
@@ -67,15 +67,6 @@
 		<Target Name="dcl_own:Make">
 			<MSBuild Targets="Make" Projects="..\sharedUtils\компоненты\dcl_dpk\dcl_own.dproj"/>
 		</Target>
-		<Target Name="ComponentsLib">
-			<MSBuild Projects="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj"/>
-		</Target>
-		<Target Name="ComponentsLib:Clean">
-			<MSBuild Targets="Clean" Projects="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj"/>
-		</Target>
-		<Target Name="ComponentsLib:Make">
-			<MSBuild Targets="Make" Projects="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj"/>
-		</Target>
 		<Target Name="GlPackage">
 			<MSBuild Projects="..\3d\3dComponents\GlPackage.dproj"/>
 		</Target>
@@ -84,6 +75,15 @@
 		</Target>
 		<Target Name="GlPackage:Make">
 			<MSBuild Targets="Make" Projects="..\3d\3dComponents\GlPackage.dproj"/>
+		</Target>
+		<Target Name="ComponentsLib">
+			<MSBuild Projects="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj"/>
+		</Target>
+		<Target Name="ComponentsLib:Clean">
+			<MSBuild Targets="Clean" Projects="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj"/>
+		</Target>
+		<Target Name="ComponentsLib:Make">
+			<MSBuild Targets="Make" Projects="..\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj"/>
 		</Target>
 		<Target Name="Proilegenerator">
 			<MSBuild Projects="..\profileGenerator\Proilegenerator.dproj"/>
@@ -194,13 +194,13 @@
 			<MSBuild Targets="Make" Projects="..\3d\GlScene.dproj"/>
 		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="dcl_own;ComponentsLib;GlPackage;Proilegenerator;RC_lib;plgControlCyclogram;SubdivFilePlg;WpServicePlg;WPExtPack;WpOperPlg;SniffDll;plgEvalStepVal;PrSinalsGenerator;ProjectFFT;GlScene"/>
+			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;Proilegenerator;RC_lib;plgControlCyclogram;SubdivFilePlg;WpServicePlg;WPExtPack;WpOperPlg;SniffDll;plgEvalStepVal;PrSinalsGenerator;ProjectFFT;GlScene"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="dcl_own:Clean;ComponentsLib:Clean;GlPackage:Clean;Proilegenerator:Clean;RC_lib:Clean;plgControlCyclogram:Clean;SubdivFilePlg:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;SniffDll:Clean;plgEvalStepVal:Clean;PrSinalsGenerator:Clean;ProjectFFT:Clean;GlScene:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;Proilegenerator:Clean;RC_lib:Clean;plgControlCyclogram:Clean;SubdivFilePlg:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;SniffDll:Clean;plgEvalStepVal:Clean;PrSinalsGenerator:Clean;ProjectFFT:Clean;GlScene:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="dcl_own:Make;ComponentsLib:Make;GlPackage:Make;Proilegenerator:Make;RC_lib:Make;plgControlCyclogram:Make;SubdivFilePlg:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;SniffDll:Make;plgEvalStepVal:Make;PrSinalsGenerator:Make;ProjectFFT:Make;GlScene:Make"/>
+			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;Proilegenerator:Make;RC_lib:Make;plgControlCyclogram:Make;SubdivFilePlg:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;SniffDll:Make;plgEvalStepVal:Make;PrSinalsGenerator:Make;ProjectFFT:Make;GlScene:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>
