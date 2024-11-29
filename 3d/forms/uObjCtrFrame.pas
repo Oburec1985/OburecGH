@@ -14,11 +14,14 @@ const
   zoom = 2;
 
 type
+  TCtrlViewFrame = class;
+
   cCtrlFrameListener = class(cglFrameListener)
   private
     // идентификатор выделеной оси. x - 0;y - 1; z - 2 иначе -1;
     selected:integer;
   public
+    fUpdateDebugText:TNotifyEvent;
     btn:smallint; // содержит идентификатор нажатой кнопки (pan(0), rot(1), zoom(2))
   private
     // Находим на сколько надо развернуть камеру вида (определяется по проекции
@@ -51,6 +54,7 @@ type
     RotBtn: TSpeedButton;
     ZoomBtn: TSpeedButton;
     SpeedZoom: TSpeedButton;
+    Edit1: TEdit;
     procedure ZoomBtnClick(Sender: TObject);
     procedure RotBtnClick(Sender: TObject);
     procedure PanBtnClick(Sender: TObject);
@@ -81,6 +85,10 @@ procedure cCtrlFrameListener.PanCamera;
 var p3:point3;
     camera:cbasecamera;
 begin
+  if (abs(cUI(ui).mouse.dx)>65000) or (abs(cUI(ui).mouse.dy)>65000) then
+    exit;
+  if assigned(fUpdateDebugText) then
+    fUpdateDebugText(cUI(ui));
   p3.x:=cUI(ui).mouse.dx*0.01;
   p3.y:=-cUI(ui).mouse.dy*0.01;
   p3.z:=0;

@@ -41,6 +41,7 @@ type
     RewndBtn: TSpeedButton;
     TimeScrollBar: TScrollBar;
     AnimationTimer: TTimer;
+    Edit1: TEdit;
     procedure PanBtnClick(Sender: TObject);
     procedure RotBtnClick(Sender: TObject);
     procedure SpeedZoomClick(Sender: TObject);
@@ -63,7 +64,7 @@ type
   public
     procedure OnTimeCtrlChange(sender:tobject);
     function GetTime:cardinal;
-
+    procedure UpdateDebugText(sender:tobject);
     procedure RotateObjectInSystem(obj:cnodeobject;rot:point3;system:word);
     procedure updateObjName(Sender: TObject);
     procedure InitWorldCB;
@@ -184,6 +185,7 @@ procedure TTrfrmToolsFrame.lincScene(p_ui: cUI);
 begin
   m_ui := p_ui;
   m_fr := cCtrlFrameListener.create(p_ui, 'CntrlFrame');
+  m_fr.fUpdateDebugText:=UpdateDebugText;
   m_ui.framelistener.add(m_fr);
   // Опциональные фичи
   m_ui.EventList.AddEvent('UI DrawMoveAxis', E_glRenderScene,  m_fr.DrawMoveAxis);
@@ -321,6 +323,11 @@ begin
   m_ui.Zoom;
   m_ui.m_RenderScene.invalidaterect;
   SpeedZoom.Down := false;
+end;
+
+procedure TTrfrmToolsFrame.UpdateDebugText(sender: tobject);
+begin
+  Edit1.Text:=inttostr(cUI(sender).mouse.dx) + ';'+inttostr(cUI(sender).mouse.dy);
 end;
 
 procedure TTrfrmToolsFrame.WorldCBChange(Sender: TObject);

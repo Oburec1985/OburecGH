@@ -534,4 +534,12 @@ object CtrlViewFrame: TCtrlViewFrame
       OnClick = SpeedZoomClick
     end
   end
+  object Edit1: TEdit
+    Left = 113
+    Top = 3
+    Width = 121
+    Height = 24
+    TabOrder = 1
+    Text = 'Edit1'
+  end
 end

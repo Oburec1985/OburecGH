@@ -258,7 +258,7 @@ uses
 
 
 // 0 - объект; 1 - тест; 2 - регистрция
-// str "prop;value"
+// s - строка вида "prop;value"
 function GetMDBProp(obj:integer;s:lpcstr):lpcstr;
 var
   rep: hresult;
@@ -269,7 +269,6 @@ var
   cf: ICustomFactInterface;
 
   ifrm: IVForm;
-
   count: cardinal;
   i: ULONG;
   int: integer;
@@ -282,8 +281,7 @@ begin
   if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
   begin
   end;
-  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,
-    FormRegistrator);
+   rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,FormRegistrator);
   if FAILED(rep) or (FormRegistrator = niL) then
   begin
   end;
@@ -292,13 +290,11 @@ begin
   begin
     FormRegistrator.GetFactoryByIndex(f, i);
     f.GetFormTypeName(ws);
-    // f._Release;
-    if ws = c_MDBFormName then
+    if ws = 'Управление базой данных' then
     begin
       cf := f as ICustomFactInterface;
       int := 0;
       (cf as ICustomFactInterface).getChild(int, ifrm);
-      // (cf as ICustomFactInterface).getChild(int, mdb);
       result:=(ifrm as ICustomVFormInterface).GetCustomProperty2(obj, s);
     end;
   end;
@@ -326,26 +322,17 @@ begin
   result:=-1;
   rep := g_ir.GetProperty(RCPROP_UISERVERLINK, val);
   UISrv := tagVARIANT(val);
-  if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
-  begin
-  end;
-  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,
-    FormRegistrator);
-  if FAILED(rep) or (FormRegistrator = niL) then
-  begin
-  end;
+  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,FormRegistrator);
   FormRegistrator.GetFactoriesCount(@count);
   for i := 0 to count - 1 do
   begin
     FormRegistrator.GetFactoryByIndex(f, i);
     f.GetFormTypeName(ws);
-    // f._Release;
     if ws = c_MDBFormName then
     begin
       cf := f as ICustomFactInterface;
       int := 0;
       (cf as ICustomFactInterface).getChild(int, ifrm);
-      // (cf as ICustomFactInterface).getChild(int, mdb);
       result:=(ifrm as ICustomVFormInterface).SetCustomProperty(obj, s);
     end;
   end;

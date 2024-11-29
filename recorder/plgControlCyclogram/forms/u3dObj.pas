@@ -282,6 +282,7 @@ begin
   a_pIni.WriteString(str, 'ScenePath', m_ScenePath);
   a_pIni.WriteString(str, 'SceneName', m_SceneName);
   a_pIni.WriteBool(str, 'ShowEditor', ShowTools);
+  if GL.mUI=nil then exit;
   c:=GL.mUI.scene.getactivecamera;
   s:=matrixToStr(c.restm);
   a_pIni.WriteString(str, 'CameraPos', s);

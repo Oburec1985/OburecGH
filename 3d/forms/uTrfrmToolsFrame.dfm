@@ -1209,11 +1209,20 @@ object TrfrmToolsFrame: TTrfrmToolsFrame
       TabOrder = 0
     end
   end
+  object Edit1: TEdit
+    Left = 443
+    Top = 83
+    Width = 121
+    Height = 24
+    TabOrder = 6
+    Text = 'Edit1'
+    Visible = False
+  end
   object AnimationTimer: TTimer
     Enabled = False
     Interval = 50
     OnTimer = AnimationTimerTimer
-    Left = 480
-    Top = 72
+    Left = 752
+    Top = 64
   end
 end
