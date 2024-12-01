@@ -9,19 +9,16 @@ uses
   uComponentservises, uEventTypes, ComCtrls, uBtnListView, recorder,
   ucommonmath, uDoubleCursor, uChartEvents, uLabel,
   uRecorderEvents, ubaseObj, uCommonTypes, uEditProfileFrm, uControlWarnFrm,
-  uRTrig, uRCFunc, ubasealg, uBuffTrend1d, upage, utextlabel, uaxis, utrend,
+  uRTrig, uRCFunc, uBuffTrend1d, upage, utextlabel, uaxis, utrend,
   PluginClass,
   ImgList,
   uChart,
   usetlist,
-  ufreqband,
-  uHardwareMath,
   tags,
   uSyncOscillogramEditFrm,
   ufloatlabel,
   MathFunction,
-  uQueue,
-  uSpm;
+  uQueue;
 
 type
   TOscType = (tOscil, tHarmOscil, TtrigOscil);
@@ -102,7 +99,7 @@ type
     procedure DblClick(Sender: tobject);
     procedure doCursorMove(Sender: tobject);
     procedure ChartInit(Sender: tobject);
-    procedure UpdateData;
+    procedure UpdateData;override;
     function SearchTrig(t: cTag; p_threshold: double;
       var p_interval: point2d): boolean;
   protected
@@ -153,7 +150,6 @@ type
     function GetActiveChart: TSyncOscFrm;
     procedure doRCInit(Sender: tobject);
   public
-    procedure doUpdateData; override;
     procedure doAfterLoad; override;
     procedure doCursorMove(Sender: tobject);
   public
@@ -915,7 +911,7 @@ end;
 procedure TOscilFact.DestroyEvents;
 begin
   removeplgEvent(doRCInit, E_RC_Init);
-  if g_algMng <> nil then
+  //if g_algMng <> nil then
   begin
 
   end;
@@ -1033,19 +1029,6 @@ begin
 
     end;
     frm.m_init := false;
-  end;
-end;
-
-procedure TOscilFact.doUpdateData;
-var
-  s: TOscSignal;
-  j: integer;
-  frm: TSyncOscFrm;
-begin
-  for j := 0 to count - 1 do
-  begin
-    frm := TSyncOscFrm(getfrm(j));
-    frm.UpdateData;
   end;
 end;
 

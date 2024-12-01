@@ -533,7 +533,7 @@ object PressFrmEdit2: TPressFrmEdit2
     TabOrder = 2
     object UpdateAlgBtn: TSpeedButton
       Left = 2
-      Top = 3
+      Top = 5
       Width = 48
       Height = 36
       Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088

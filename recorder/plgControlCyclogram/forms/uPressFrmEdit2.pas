@@ -379,6 +379,7 @@ begin
     begin
       m_pf.UnitMaxALab.Caption:='psi, pk-pk';
     end;
+    g_PressCamFactory2.CreateTags;
   end;
 end;
 

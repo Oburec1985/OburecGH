@@ -334,10 +334,10 @@
     <File Path="forms\uPressFrmEdit.dfm"/>
     <File Path="forms\uPressFrmFrame.pas"/>
     <File Path="forms\uPressFrmFrame.dfm"/>
-    <File Path="forms\uPressFrmFrame2.pas"/>
-    <File Path="forms\uPressFrmFrame2.dfm"/>
     <File Path="forms\uEditCurveFrm.pas"/>
     <File Path="forms\uEditCurveFrm.dfm"/>
+    <File Path="forms\uPressFrmFrame2.pas"/>
+    <File Path="forms\uPressFrmFrame2.dfm"/>
     <File Path="forms\uSpmChart.pas"/>
     <File Path="forms\uSpmChart.dfm"/>
     <File Path="forms\uSpmChartEdit.pas"/>
@@ -364,6 +364,10 @@
     <File Path="forms\uTrigFrame.dfm"/>
     <File Path="forms\uTrigsFrm.pas"/>
     <File Path="forms\uTrigsFrm.dfm"/>
+    <File Path="forms\uLissajousCurve.pas"/>
+    <File Path="forms\uLissajousCurve.dfm"/>
+    <File Path="forms\ulissajousCurveEdit.pas"/>
+    <File Path="forms\ulissajousCurveEdit.dfm"/>
     <File Path="units"/>
     <File Path="units\u3dMoveEngine.pas"/>
     <File Path="units\uAriphmAlg.pas"/>
@@ -490,5 +494,9 @@
     <Transaction>2024.11.01 15:03:20.204.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\DataTransfFrm\TestUDPsender.dfm=</Transaction>
     <Transaction>2024.11.07 23:24:47.712.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.pas=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uEditCurveFrm.pas</Transaction>
     <Transaction>2024.11.07 23:24:47.712.dfm,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uEditCurveFrm.dfm</Transaction>
+    <Transaction>2024.11.30 17:19:54.847.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.pas=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uLissajousCurve.pas</Transaction>
+    <Transaction>2024.11.30 17:19:54.847.dfm,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uLissajousCurve.dfm</Transaction>
+    <Transaction>2024.12.01 21:43:10.913.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.pas=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\ulissajousCurveEdit.pas</Transaction>
+    <Transaction>2024.12.01 21:43:10.913.dfm,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\ulissajousCurveEdit.dfm</Transaction>
   </Transactions>
 </BorlandProject>

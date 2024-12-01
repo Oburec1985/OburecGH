@@ -59,6 +59,8 @@ uses
   //uPressFrm, uPressFrmEdit,
   uPressFrm2, uPressFrmEdit2,
   uDigsFrm,uDigsFrmEdit,
+  uLissajousCurve,
+  ulissajousCurveEdit,
   uMBaseControl;
 
 type
@@ -335,6 +337,11 @@ begin
     GenSignalsEditFrm.show;
   GenSignalsEditFrm.close;
 
+  g_LisEditFrm:=TLisEditFrm.Create(nil);
+  if show then
+    g_LisEditFrm.show;
+  g_LisEditFrm.close;
+
 
   EditSRSFrm := TEditSRSFrm.Create(nil);
   if show then
@@ -550,6 +557,9 @@ begin
   // ”правление базой данных
   Basefact := cMBaseFactory.Create;
   compMng.Add(Basefact);
+
+  g_LissajousFactory := TLissajousFact.Create;
+  compMng.Add(g_LissajousFactory);
 
   g_SpmFactory := cSpmFactory.Create;
   compMng.Add(g_SpmFactory);

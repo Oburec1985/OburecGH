@@ -534,6 +534,12 @@
 			<DCCReference Include="forms\uEditCurveFrm.pas">
 				<Form>EditCurveFrm</Form>
 			</DCCReference>
+			<DCCReference Include="forms\uLissajousCurve.pas">
+				<Form>LissajousFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\ulissajousCurveEdit.pas">
+				<Form>LisEditFrm</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

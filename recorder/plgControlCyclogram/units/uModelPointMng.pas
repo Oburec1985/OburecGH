@@ -6,6 +6,7 @@ uses
   classes,
   uRCFunc,
   uSrsFrm,
+  uRecBasicFactory,
   uMBaseControl,
   uMeasureBase,
   uHardwareMath,
@@ -272,10 +273,14 @@ var
   p:cModelPoint;
   o:c3dSkinObj;
   obj: c3dCtrlObj;
+  f:TRecFrm;
 begin
   if g_ObjFrm3dFactory<>nil then
   begin
-    CreateGlEvent(TObjFrm3d(g_ObjFrm3dFactory.GetFrm(0)).GL.mUI);
+    f:=g_ObjFrm3dFactory.GetFrm(0);
+    if f=nil then
+      exit;
+    CreateGlEvent(TObjFrm3d(f).GL.mUI);
     if m_model=nil then
     begin
       for I := 0 to g_CtrlObjList.Count - 1 do

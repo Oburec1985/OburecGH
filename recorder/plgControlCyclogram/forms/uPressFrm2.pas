@@ -196,6 +196,8 @@ type
     procedure doUpdateData(Sender: TObject);
     procedure doChangeRState(Sender: TObject);
     procedure doChangeCfg(Sender: TObject);
+    // создать теги из списка спектров
+    procedure CreateTags();
     procedure doStart;
     procedure doStop;
     // ПОЛУЧАЕТ НА ВХОД список тегов и создает cspm-ы
@@ -519,36 +521,41 @@ begin
   end;
 end;
 
-procedure cPressCamFactory2.doChangeCfg(Sender: TObject);
+procedure cPressCamFactory2.CreateTags();
 var
   i, j: integer;
   s: cspm;
 begin
-  if not m_tagsinit then
+  if length(m_tags)<>m_spmCfg.ChildCount then
+    setlength(m_tags, m_spmCfg.ChildCount);
+  for i := 0 to m_spmCfg.ChildCount - 1 do
   begin
-    if m_spmCfg<>nil then
+    s := getSpm(i);
+    m_tags[i].name := s.m_tag.tagname;
+    m_tags[i].m_s:=s;
+    setlength(m_tags[i].m_bandTags, BandCount);
+    setlength(m_tags[i].m_SKO, BandCount);
+    if m_createTags then
     begin
-      if m_spmCfg.ChildCount>0 then
+      for j := 0 to BandCount - 1 do
       begin
-        setlength(m_tags, m_spmCfg.ChildCount);
-        m_tagsinit := true;
-        for i := 0 to m_spmCfg.ChildCount - 1 do
-        begin
-          s := getSpm(i);
-          m_tags[i].name := s.m_tag.tagname;
-          m_tags[i].m_s:=s;
-          setlength(m_tags[i].m_bandTags, BandCount);
-          setlength(m_tags[i].m_SKO, BandCount);
-          if m_createTags then
-          begin
-            for j := 0 to BandCount - 1 do
-            begin
-              m_tags[i].m_bandTags[j] := createScalar
-                (s.m_tag.tagname + 'b' + inttostr(j), false);
-            end;
-          end;
-        end;
+        m_tags[i].m_bandTags[j] := createScalar
+          (s.m_tag.tagname + 'b' + inttostr(j), false);
       end;
+    end;
+  end;
+end;
+
+procedure cPressCamFactory2.doChangeCfg(Sender: TObject);
+var
+  s: cspm;
+begin
+  if m_spmCfg<>nil then
+  begin
+    if m_spmCfg.ChildCount>0 then
+    begin
+      m_tagsinit := true;
+      CreateTags;
     end;
   end;
 end;
@@ -1393,9 +1400,12 @@ begin
           tr.m_curve:=cCurve.create;
           tr.m_curve.fromStr(scurve);
           len:=length(tdoublearray(tr.m_s.m_rms.p));
-          tr.m_curve.getMemScaleData(len);
-          tr.m_curve.EvalData;
-          tr.m_s.SetScaleData(tr.m_curve.m_ScaleData.p);
+          if len>0 then
+          begin
+            tr.m_curve.getMemScaleData(len);
+            tr.m_curve.EvalData;
+            tr.m_s.SetScaleData(tr.m_curve.m_ScaleData.p);
+          end;
           tr.m_s.SetUseScaleData(tr.m_curve.m_use);
         end;
       end;

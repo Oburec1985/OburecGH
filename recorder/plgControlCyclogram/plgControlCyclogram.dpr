@@ -1,5 +1,3 @@
-
-
 library plgControlCyclogram;
 
 uses
@@ -252,7 +250,9 @@ uses
   u3dObjEditFrame in 'forms\u3dObjEditFrame.pas' {ObjEditFrame: TFrame},
   uModelPointMng in 'units\uModelPointMng.pas',
   TestUDPsender in 'forms\DataTransfFrm\TestUDPsender.pas' {TestUDPSenderFrm},
-  uEditCurveFrm in 'forms\uEditCurveFrm.pas' {EditCurveFrm};
+  uEditCurveFrm in 'forms\uEditCurveFrm.pas' {EditCurveFrm},
+  uLissajousCurve in 'forms\uLissajousCurve.pas' {LissajousFrm},
+  ulissajousCurveEdit in 'forms\ulissajousCurveEdit.pas' {LisEditFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

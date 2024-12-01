@@ -53,6 +53,9 @@ type
     // приходится повторно сохранять т.к. иначе BoundRect сбрасывается при инициализации в 0
     m_bounds: trect;
   protected
+    procedure doStart;virtual;
+    // вызывается фабрикой при обновлении данных
+    procedure UpdateData; virtual;
     procedure DoCreate; override;
     procedure DoShow; override;
     procedure Resizing(State: TWindowState); override;
@@ -337,13 +340,27 @@ begin
 end;
 
 procedure cRecBasicFactory.doStart;
+var
+  j: integer;
+  frm: TRecFrm;
 begin
-
+  for j := 0 to count - 1 do
+  begin
+    frm := TRecFrm(getfrm(j));
+    frm.doStart;
+  end;
 end;
 
 procedure cRecBasicFactory.doUpdateData;
+var
+  j: integer;
+  frm: TRecFrm;
 begin
-
+  for j := 0 to count - 1 do
+  begin
+    frm := TRecFrm(getfrm(j));
+    frm.UpdateData;
+  end;
 end;
 
 function cRecBasicFactory.GetDefaultFormSize(var pSize: SIZE): HRESULT;
@@ -395,8 +412,15 @@ function cRecBasicFactory.GetFrm(i: integer): TRecFrm;
 var
   ifrm: cRecBasicIFrm;
 begin
-  ifrm := cRecBasicIFrm(m_CompList.Items[i]);
-  result := ifrm.m_pMasterWnd;
+  if i>=m_CompList.count then
+  begin
+    result:=nil;
+  end
+  else
+  begin
+    ifrm := cRecBasicIFrm(m_CompList.Items[i]);
+    result := ifrm.m_pMasterWnd;
+  end;
 end;
 
 function cRecBasicFactory.GetSingleTagFlag(var pFlag: VARIANT_BOOL): HRESULT;
@@ -823,6 +847,11 @@ procedure TRecFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 begin
 end;
 
+procedure TRecFrm.UpdateData;
+begin
+
+end;
+
 procedure TRecFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 var
   rect:trect;
@@ -850,6 +879,11 @@ begin
     m_firstShow := false;
   end;
   inherited;
+end;
+
+procedure TRecFrm.doStart;
+begin
+
 end;
 
 procedure TRecFrm.DoCreate;
