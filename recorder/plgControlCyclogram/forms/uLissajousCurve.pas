@@ -42,12 +42,12 @@ type
   Protected
     // найти теги если они не были проинициализированы
     procedure updateTags;
-    procedure updatetrend;
     // вызывается в updatedata IFrm. Обновляет блоки данных и интервал
     function updateData:boolean;
     // перенести данные в линию
     procedure updateLine;
   public
+    procedure updatetrend;
     function name:string;
     procedure doStart();
     constructor create(p_owner:TRecFrm);
@@ -155,8 +155,16 @@ begin
 end;
 
 procedure TLissajousFrm.DblClick(Sender: tobject);
+var
+  r: frect;
+  p: cpage;
 begin
-  
+  p := cpage(m_Chart.activePage);
+  r.BottomLeft.x:=m_axis.xmin;
+  r.BottomLeft.y:=m_axis.ymin;
+  r.TopRight.x:=m_axis.xmax;
+  r.TopRight.y:=m_axis.ymax;
+  p.ZoomfRect(r);
 end;
 
 
@@ -267,13 +275,45 @@ begin
 end;
 
 procedure TLissajousFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  i: integer;
+  s: TLisSig;
+  axCfg: TAxis;
 begin
   inherited;
+  a_pIni.WriteFloat(str, 'Length', m_timeLen);
+  a_pIni.WriteFloat(str, 'XAxMin', m_axis.xmin);
+  a_pIni.WriteFloat(str, 'XAxMax', m_axis.xmax);
+  a_pIni.WriteFloat(str, 'YAxMin', m_axis.ymin);
+  a_pIni.WriteFloat(str, 'YAxMax', m_axis.ymax);
+  a_pIni.WriteInteger(str, 'SCount', m_signals.count);
+  for i := 0 to m_signals.count - 1 do
+  begin
+    s := GetSignal(i);
+    saveTagToIni(a_pIni, s.m_tx,str, 'sigX_' + inttostr(i));
+    saveTagToIni(a_pIni, s.m_ty,str, 'sigY_' + inttostr(i));
+  end;
 end;
 
 procedure TLissajousFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  i,n: integer;
+  s: TLisSig;
+  axCfg: TAxis;
 begin
   inherited;
+  m_timeLen := a_pIni.ReadFloat(str, 'Length', 0.3);
+  m_axis.xmin := a_pIni.ReadFloat(str, 'XAxMin', -3);
+  m_axis.xmax := a_pIni.ReadFloat(str, 'XAxMax', 3);
+  m_axis.ymin := a_pIni.ReadFloat(str, 'YAxMin', -3);
+  m_axis.ymax := a_pIni.ReadFloat(str, 'YAxMax', 3);
+  n:=a_pIni.ReadInteger(str, 'SCount', 0);
+  for i := 0 to n - 1 do
+  begin
+    s:=createsignal;
+    LoadExTagIni(a_pIni, s.m_tx, str, 'sigX_' + inttostr(i));
+    LoadExTagIni(a_pIni, s.m_ty, str, 'sigY_' + inttostr(i));
+  end;
 end;
 
 function TLisSig.updateData:boolean;
@@ -483,7 +523,7 @@ begin
   for i := 0 to count - 1 do
   begin
     frm := TLissajousFrm(getfrm(i));
-    frm.m_axis.name:='Test';
+    {frm.m_axis.name:='Test';
     frm.m_axis.xmin:=-3;
     frm.m_axis.xmax:=3;
     frm.m_axis.ymin:=-3;
@@ -501,7 +541,7 @@ begin
 
     s:=frm.createsignal;
     s.m_tx.tagname:='GenSignal_0002';
-    s.m_ty.tagname:='GenSignal_001';
+    s.m_ty.tagname:='GenSignal_001'; }
 
     // обновление сигналов по загрузке
     for j := 0 to frm.m_signals.count - 1 do

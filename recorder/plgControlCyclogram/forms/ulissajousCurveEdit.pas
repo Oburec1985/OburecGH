@@ -33,8 +33,6 @@ type
     MaxYfe: TFloatEdit;
     LengthFE: TFloatEdit;
     LineGB: TGroupBox;
-    Label3: TLabel;
-    LineNameEdit: TEdit;
     LineColor: TPanel;
     TagsGB: TGroupBox;
     TagsTV: TVTree;
@@ -43,18 +41,25 @@ type
     Label2: TLabel;
     MinXEdit: TFloatEdit;
     MaxXEdit: TFloatEdit;
+    XTagCB: TRcComboBox;
+    YTagCB: TRcComboBox;
+    Label4: TLabel;
+    Label5: TLabel;
     procedure TagsTVDragDrop(Sender: TBaseVirtualTree; Source: TObject;
       DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
       Pt: TPoint; var Effect: Integer; Mode: TDropMode);
     procedure TagsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
+    procedure TagsTVChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure UpdateBtnClick(Sender: TObject);
   private
     m_curObj:tobject;
   private
     procedure ShowTV;
     function getSignalAxisNode(s:Tobject):pvirtualnode;
   public
+    procedure updateselected;
     procedure updateTagsList;
     procedure SetEditObj(p_osc:tobject);
   public
@@ -172,6 +177,54 @@ begin
   end;
 end;
 
+procedure TLisEditFrm.TagsTVChange(Sender: TBaseVirtualTree;
+  Node: PVirtualNode);
+var
+  i,j:integer;
+  a:caxis;
+  pa:PAxis;
+  s:TLisSig;
+  next: PVirtualNode;
+  D, parentdata: PNodeData;
+begin
+  i:=0;
+  j:=0;
+  Node := tagsTV.GetFirstSelected(true);
+  while Node <> nil do
+  begin
+    D := tagsTV.GetNodeData(node);
+    if tobject(D.Data) is caxis then
+    begin
+      a:=caxis(D.Data);
+      pa:=TLissajousFrm(m_curObj).GetPAxCfg;
+      if pa=nil then
+      begin
+        SetMultiSelectComponentString(MinYfe, floattostr(a.minY));
+        SetMultiSelectComponentString(MaxYfe, floattostr(a.maxY));
+      end
+      else
+      begin
+        SetMultiSelectComponentString(MinYfe, floattostr(pa.ymin));
+        SetMultiSelectComponentString(MaxYfe, floattostr(pa.ymax));
+      end;
+    end;
+    if tobject(D.Data) is TLisSig then
+    begin
+      s:=TLisSig(D.Data);
+      linecolor.Color:=rgbtoint(s.m_trend.color);
+      SetMultiSelectComponentString(XTagCB,s.m_tx.tagname);
+      SetMultiSelectComponentString(YTagCB,s.m_ty.tagname);
+    end;
+    next := tagsTV.GetNextSelected(Node, true);
+    Node := next;
+    inc(I);
+  end;
+  endMultiSelect(MinYfe);
+  endMultiSelect(MaxYfe);
+  endMultiSelect(XTagCB);
+  endMultiSelect(YTagCB);
+end;
+
 procedure TLisEditFrm.TagsTVDragDrop(Sender: TBaseVirtualTree; Source: TObject;
   DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
   Pt: TPoint; var Effect: Integer; Mode: TDropMode);
@@ -187,46 +240,15 @@ var
   LisFrm:TLissajousFrm;
 begin
   LisFrm:=TLissajousFrm(m_curObj);
-  pTarget := Sender.DropTargetNode;
-  if pTarget=nil then
-  begin
-    pTarget:=tagsTV.RootNode.FirstChild;
-    dstdata:=tagsTV.GetNodeData(pTarget);
-    a:=cpage(LisFrm.m_Chart.activePage).activeAxis;
-    dstdata.data:=a;
-    n:=pTarget;
-  end
-  else
-  begin
-    dstdata:=tagsTV.GetNodeData(pTarget);
-    if tobject(dstdata.data) is ctag then
-    begin
-      n:=pTarget.Parent;
-      dstdata:=tagsTV.GetNodeData(n);
-      a:=caxis(dstdata.data);
-    end
-    else
-    begin
-      if tobject(dstdata.data) is caxis then
-      begin
-        n:=pTarget;
-        a:=caxis(dstdata.data);
-      end
-      else
-      begin
-        if tobject(dstdata.data) is TLisSig then
-        begin
-          n:=pTarget.Parent;
-        end;
-      end;
-    end;
-  end;
 
+  n:=TagsTV.GetFirst(false);
   li:=TagsListFrame1.TagsLV.Selected;
   while li<>nil do
   begin
     t:=itag(li.data);
     s:=LisFrm.createsignal;
+    s.updatetrend;
+    s.m_ty.settag(t);
     child:=tagsTV.AddChild(n);
     dstdata:=tagsTV.GetNodeData(child);
     dstdata.data:=s;
@@ -255,9 +277,45 @@ begin
   end;
 end;
 
+procedure TLisEditFrm.UpdateBtnClick(Sender: TObject);
+var
+  pax:PAxis;
+begin
+  updateselected;
+  TLissajousFrm(m_curObj).m_timeLen:=LengthFE.FloatNum;
+  pax:=TLissajousFrm(m_curObj).GetPAxCfg;
+  pax.xmin:=MinXEdit.FloatNum;
+  pax.xmax:=MaxXEdit.FloatNum;
+  pax.ymin:=MinYfe.FloatNum;
+  pax.ymax:=MaxYfe.FloatNum;
+end;
+
+procedure TLisEditFrm.updateselected;
+var
+  i: Integer;
+  n:pVirtualNode;
+  d:PNodeData;
+begin
+  n:=tagsTV.GetFirstSelected(true);
+  while n<>nil do
+  begin
+    d:=TagsTV.GetNodeData(n);
+    if tobject(d.data) is TLisSig then
+    begin
+      if XTagCB.ItemIndex<>-1 then
+        TLisSig(d.data).m_tx.settag(XTagCB.gettag());
+      if YTagCB.ItemIndex<>-1 then
+        TLisSig(d.data).m_ty.settag(yTagCB.gettag());
+    end;
+    n:=TagsTV.GetNextSelected(n);
+  end;
+end;
+
 procedure TLisEditFrm.updateTagsList;
 begin
   TagsListFrame1.ShowChannels;
+  XTagCB.updateTagsList;
+  YTagCB.updateTagsList;
 end;
 
 end.

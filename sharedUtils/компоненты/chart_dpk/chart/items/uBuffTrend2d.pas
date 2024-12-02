@@ -30,7 +30,11 @@ type
     procedure drawLine;override;
     procedure EvalBound; override;
   public
-    procedure Clear;override;
+    function GetYByInd(i: integer): double; override;
+    function GetXByInd(i: integer): double; override;
+    function GetLowInd(key: single): integer; override;
+    function GetHiInd(key: single): integer; override;
+   procedure Clear;override;
     procedure addpoints(p:array of point2; p_count:integer);override;
   end;
 
@@ -44,6 +48,40 @@ begin
   result:=fcount;
 end;
 
+function cBuffTrend2d.GetHiInd(key: single): integer;
+var
+  I: Integer;
+begin
+  result:=-1;
+  for I := 0 to Count - 1 do
+  begin
+    if data[i].x<key then
+    begin
+
+    end
+    else
+    begin
+      result:=i;
+      exit;
+    end;
+  end;
+end;
+
+function cBuffTrend2d.GetLowInd(key: single): integer;
+var
+  I: Integer;
+begin
+  result:=-1;
+  for I := Count - 1 downto 0 do
+  begin
+    if data[i].x<key then
+    begin
+      result:=i;
+      exit;
+    end
+  end;
+end;
+
 procedure cBuffTrend2d.SetCount(i:integer);
 begin
   fcount:=i;
@@ -53,6 +91,16 @@ end;
 function cBuffTrend2d.GetP2(i:integer):point2;
 begin
   result:=data[i];
+end;
+
+function cBuffTrend2d.GetXByInd(i: integer): double;
+begin
+  result:=Data[i].x;
+end;
+
+function cBuffTrend2d.GetYByInd(i: integer): double;
+begin
+  result:=Data[i].y;
 end;
 
 procedure cBuffTrend2d.compile;

@@ -281,14 +281,20 @@ begin
   begin
     lo:=t.GetLowInd(x-c.fmagniteValue);
     hi:=t.GetHiInd(x+c.fmagniteValue);
-    result:=t.GetP2(LO).y;
-    for I := lo+1 to hi do
+    if t.Count>0 then
     begin
-      y:=t.GetP2(i).y;
-      if y<result then
+      if (lo>-1) and (hi<(t.count-1)) then
       begin
-        result:=y;
-        ind:=i;
+        result:=t.GetP2(LO).y;
+        for I := lo+1 to hi do
+        begin
+          y:=t.GetP2(i).y;
+          if y<result then
+          begin
+            result:=y;
+            ind:=i;
+          end;
+        end;
       end;
     end;
   end
