@@ -71,7 +71,7 @@ type
     constructor create;
     destructor destroy;
   end;
-
+  // класс отвечает за работу с алармами рекордера. Создается классом TThresholdGroup в addtag
   TAlarms = class
   public
     owner:TThresholdGroup;
@@ -334,8 +334,6 @@ begin
     begin
       result:=a;
       exit;
-
-
     end;
   end;
 end;

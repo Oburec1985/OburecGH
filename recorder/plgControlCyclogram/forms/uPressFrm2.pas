@@ -31,6 +31,7 @@ uses
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uPressFrmFrame2,
   // uPathMng,
   uEditCurveFrm,
+  uThresholdsFrm,
   uRcCtrls, Menus;
 
 type
@@ -170,6 +171,13 @@ type
     m_createTags: boolean;
     m_tagsinit: boolean;
     m_tags: array of TTagRec;
+
+    m_AlarmHandler:AlarmHandler;
+    m_Thresholds:TThresholdGroup;
+    // относительные уровни для расчета Alarm-а
+    m_AlarmHlev, m_AlarmHHlev,
+    // заданный абсолютный максимум
+    m_AlarmBase:double;
   private
     // число дочерних компонентов
     m_counter: integer;
@@ -496,11 +504,20 @@ begin
   m_Guid := IID_PRESS;
   createevents;
   BandCount := 6;
+
+  m_AlarmHandler:=AlarmHandler.Create;
+  m_AlarmHandler.Attach;
+  m_Thresholds:=TThresholdGroup.create;
+  m_AlarmHlev:=0.5;
+  m_AlarmHHlev:=0.7;
+  m_AlarmBase:=1;
 end;
 
 destructor cPressCamFactory2.destroy;
 begin
   sortedFrames.destroy;
+  m_AlarmHandler.Destroy;
+  m_Thresholds.destroy;
 
   destroyevents;
   inherited;
@@ -525,6 +542,9 @@ procedure cPressCamFactory2.CreateTags();
 var
   i, j: integer;
   s: cspm;
+  b:boolean;
+  k: Integer;
+  a:TAlarms;
 begin
   if length(m_tags)<>m_spmCfg.ChildCount then
     setlength(m_tags, m_spmCfg.ChildCount);
@@ -539,10 +559,17 @@ begin
     begin
       for j := 0 to BandCount - 1 do
       begin
-        m_tags[i].m_bandTags[j] := createScalar
-          (s.m_tag.tagname + 'b' + inttostr(j), false);
+        m_tags[i].m_bandTags[j] := createScalar(s.m_tag.tagname + 'b' + inttostr(j), false);
+        // добавляем алармы по каждому из тегов
+        m_Thresholds.addtag(m_tags[i].m_bandTags[j],b);
       end;
     end;
+  end;
+  for k := 0 to m_Thresholds.AlarmList.Count - 1 do
+  begin
+    a:=m_Thresholds.GetAlarm(i);
+    a.m_a_hh:=m_AlarmBase*m_AlarmHHlev;
+    a.m_a_h:=m_AlarmBase*m_AlarmHlev;
   end;
 end;
 
@@ -733,6 +760,7 @@ function cPressCamFactory2.GetRef(i: integer): double;
 var
   s: cspm;
 begin
+  if i>length(m_refArray)-1 then exit;
   if m_Manualref then
   begin
     result := m_refArray[i];

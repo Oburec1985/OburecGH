@@ -61,9 +61,9 @@ type
     procedure SignalsSGDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure DigitFormatCBClick(Sender: TObject);
   protected
-    curFrm:TDigsFrm;
-    curGr:TGroup;
-    m_Col,m_Row:integer;
+    curFrm: TDigsFrm;
+    curGr: TGroup;
+    m_Col, m_Row: Integer;
   private
     // отобразить конфигурацию родителя в настроечной форме
     procedure ShowCfg;
@@ -74,8 +74,8 @@ type
     // отобразщить имена строк
     procedure ShowGroups;
   public
-    procedure Edit(f:TDigsFrm);
-    constructor create(aowner:tcomponent);override;
+    procedure Edit(f: TDigsFrm);
+    constructor create(aowner: tcomponent); override;
   end;
 
 var
@@ -89,87 +89,87 @@ implementation
 procedure TDigsFrmEdit.AddGroupBtnClick(Sender: TObject);
 var
   I, num: Integer;
-  g:TGroup;
-  s:string;
+  g: TGroup;
+  s: string;
 begin
-  curFrm.colCount:=ColCountE.IntNum;
-  SignalsSG.ColCount:=ColCountE.IntNum+1;
+  curFrm.colCount := ColCountE.IntNum;
+  SignalsSG.colCount := ColCountE.IntNum + 1;
 
-  ColumnSE.MaxValue:=ColCountE.IntNum-1;
-  ColumnSE.MinValue:=0;
+  ColumnSE.MaxValue := ColCountE.IntNum - 1;
+  ColumnSE.MinValue := 0;
   for I := 0 to GroupCountIE.IntNum - 1 do
   begin
-    num:=i+FirstIE.IntNum;
-    if num<10 then
-      s:=GroupNameE.Text+'_00'+IntToStr(num)
+    num := I + FirstIE.IntNum;
+    if num < 10 then
+      s := GroupNameE.Text + '_00' + IntToStr(num)
     else
     begin
-      if num<100 then
+      if num < 100 then
       begin
-        s:=GroupNameE.Text+'_0'+IntToStr(num)
+        s := GroupNameE.Text + '_0' + IntToStr(num)
       end
       else
       begin
-        s:=GroupNameE.Text+'_'+IntToStr(num);
+        s := GroupNameE.Text + '_' + IntToStr(num);
       end;
     end;
-    g:=tgroup(curFrm.glist.Add(s));
+    g := TGroup(curFrm.glist.Add(s));
   end;
   ShowGroups;
-  GroupCountIE.IntNum:=0;
+  GroupCountIE.IntNum := 0;
 end;
 
 procedure TDigsFrmEdit.ApplyBtnClick(Sender: TObject);
 begin
-  Modalresult:=mrok;
+  Modalresult := mrok;
 end;
 
 procedure TDigsFrmEdit.ColOkBtnClick(Sender: TObject);
 var
-  col:TDigColumn;
+  col: TDigColumn;
   I: Integer;
-  g:tgroup;
+  g: TGroup;
   j: Integer;
-  s:string;
-  t:ctag;
+  s: string;
+  t: ctag;
 begin
   // обновляем колонку
-  if ColumnSE.Value<curFrm.colNames.Count then
+  if ColumnSE.Value < curFrm.colNames.Count then
   begin
-    col:=TDigColumn(curFrm.colNames.Get(ColumnSE.Value));
-    if ColNameE.Text<>'' then
+    col := TDigColumn(curFrm.colNames.Get(ColumnSE.Value));
+    if ColNameE.Text <> '' then
     begin
-      col.estimate:=EstCB.ItemIndex;
-      col.name:=ColNameE.Text;
-      col.useThreshold:=UseThreshold.Checked;
-      col.color:=HHColor.Color;
-      col.HH:=HHEdit.FloatNum;
-      SignalsSG.Cells[ColumnSE.Value+1,0]:=col.fullname;
+      col.estimate := EstCB.ItemIndex;
+      col.name := ColNameE.Text;
+      col.UseThreshold := UseThreshold.Checked;
+      col.color := HHColor.color;
+      col.HH := HHEdit.FloatNum;
+      SignalsSG.Cells[ColumnSE.Value + 1, 0] := col.fullname;
     end;
   end;
   // обновляем теги
   for I := 1 to SignalsSG.RowCount - 1 do
   begin
-    g:=tgroup(curFrm.glist.Get(i-1));
-    for j := 1 to SignalsSG.ColCount - 1 do
+    g := TGroup(curFrm.glist.Get(I - 1));
+    for j := 1 to SignalsSG.colCount - 1 do
     begin
-      s:=SignalsSG.Cells[j,i];
-      if s<>'' then
+      s := SignalsSG.Cells[j, I];
+      if s <> '' then
       begin
-        t:=g.gettag(j-1);
-        if t=nil then
+        t := g.gettag(j - 1);
+        if t = nil then
         begin
-          t:=cTag.create;
-          t.useEcm:=false;
+          t := ctag.create;
+          t.useEcm := false;
           g.addTag(t);
-          t.tagname:=s;
+          t.tagname := s;
         end
         else
         begin
-          if t.tagname<>s then
+          if t.tagname <> s then
           begin
-            t.tag:=nil;
-            t.tagname:=s;
+            t.tag := nil;
+            t.tagname := s;
           end;
         end;
       end;
@@ -180,36 +180,37 @@ end;
 
 procedure TDigsFrmEdit.ColumnSEChange(Sender: TObject);
 var
-  col:TDigColumn;
+  col: TDigColumn;
 begin
-  if ColumnSE.Value<0 then exit;
-  if ColumnSE.Value<curFrm.colNames.Count then
+  if ColumnSE.Value < 0 then
+    exit;
+  if ColumnSE.Value < curFrm.colNames.Count then
   begin
-    col:=TDigColumn(curFrm.colNames.Get(ColumnSE.Value));
-    ColNameE.Text:=col.name;
-    EstCB.ItemIndex:=col.estimate;
-    UseThreshold.Checked:=col.useThreshold;
-    HHColor.Color :=col.color;
-    HHEdit.FloatNum:=col.HH;
+    col := TDigColumn(curFrm.colNames.Get(ColumnSE.Value));
+    ColNameE.Text := col.name;
+    EstCB.ItemIndex := col.estimate;
+    UseThreshold.Checked := col.UseThreshold;
+    HHColor.color := col.color;
+    HHEdit.FloatNum := col.HH;
   end;
 end;
 
 constructor TDigsFrmEdit.create(aowner: tcomponent);
 begin
   inherited;
-  m_Col:=1;
-  m_Row:=1;
+  m_Col := 1;
+  m_Row := 1;
 end;
 
 procedure TDigsFrmEdit.DigitFormatCBClick(Sender: TObject);
 begin
   if DigitFormatCB.Checked then
   begin
-    DigitFormatCB.Caption:='Знаков посл. запятой';
+    DigitFormatCB.Caption := 'Знаков посл. запятой';
   end
   else
   begin
-    DigitFormatCB.Caption:='Знач-х цифр';
+    DigitFormatCB.Caption := 'Знач-х цифр';
   end;
 end;
 
@@ -217,68 +218,68 @@ procedure TDigsFrmEdit.Edit(f: TDigsFrm);
 var
   I: Integer;
 begin
-  curFrm:=f;
+  curFrm := f;
   ShowTags;
   ShowCfg;
   if ShowModal = mrok then
   begin
-    curfrm.SignalsSG.Font.Size:=FontSizeIE.IntNum;
-    curfrm.m_FontSize:=FontSizeIE.IntNum;
-    curfrm.m_digits:=DigitsIE.IntNum;
-    curfrm.m_Format:=DigitFormatCB.Checked;
-    curfrm.showcfg;
+    curFrm.SignalsSG.Font.Size := FontSizeIE.IntNum;
+    curFrm.m_FontSize := FontSizeIE.IntNum;
+    curFrm.m_digits := DigitsIE.IntNum;
+    curFrm.m_Format := DigitFormatCB.Checked;
+    curFrm.ShowCfg;
   end;
 end;
 
 procedure TDigsFrmEdit.ShowCfg;
 var
   I, j: Integer;
-  g: tgroup;
-  c:tdigcolumn;
-  t:ctag;
+  g: TGroup;
+  c: TDigColumn;
+  t: ctag;
 begin
-  HHColor.Color:=clpink;
+  HHColor.color := clpink;
 
-  DigitsIE.IntNum:=curfrm.m_digits;
-  DigitFormatCB.Checked:=curfrm.m_Format;
-  if curfrm.m_FontSize=0 then
-    FontSizeIE.IntNum:=SignalsSG.Font.Size
+  DigitsIE.IntNum := curFrm.m_digits;
+  DigitFormatCB.Checked := curFrm.m_Format;
+  if curFrm.m_FontSize = 0 then
+    FontSizeIE.IntNum := SignalsSG.Font.Size
   else
-    FontSizeIE.IntNum:=curfrm.m_FontSize;
-  if curFrm.glist.Count<1 then
-    SignalsSG.RowCount:=2
+    FontSizeIE.IntNum := curFrm.m_FontSize;
+  if curFrm.glist.Count < 1 then
+    SignalsSG.RowCount := 2
   else
-    SignalsSG.RowCount:=curFrm.glist.Count+1;
-  if curFrm.colNames.Count<1 then
-    SignalsSG.ColCount:=2
+    SignalsSG.RowCount := curFrm.glist.Count + 1;
+  if curFrm.colNames.Count < 1 then
+    SignalsSG.colCount := 2
   else
-    SignalsSG.ColCount:=curFrm.colNames.Count+1;
-  ColCountE.IntNum:=curFrm.colNames.Count;
-  ColumnSE.MaxValue:=curFrm.colNames.Count-1;
-  ColumnSE.MinValue:=0;
+    SignalsSG.colCount := curFrm.colNames.Count + 1;
+  ColCountE.IntNum := curFrm.colNames.Count;
+  ColumnSE.MaxValue := curFrm.colNames.Count - 1;
+  ColumnSE.MinValue := 0;
   for I := 0 to curFrm.colNames.Count - 1 do
   begin
-    c:=tdigcolumn(curFrm.colNames.Get(i));
-    if i=0 then
+    c := TDigColumn(curFrm.colNames.Get(I));
+    if I = 0 then
     begin
-      ColumnSE.Value:=0;
-      ColNameE.text:=c.name;
-      HHColor.Color:=C.color;
-      UseThreshold.Checked:=C.useThreshold;
-      HHEdit.FloatNum:=C.HH;
+      ColumnSE.Value := 0;
+      ColNameE.Text := c.name;
+      HHColor.color := c.color;
+      UseThreshold.Checked := c.UseThreshold;
+      HHEdit.FloatNum := c.HH;
     end;
-    SignalsSG.Cells[i+1,0]:=c.fullname;
+    SignalsSG.Cells[I + 1, 0] := c.fullname;
   end;
-  for I := 0 to curFrm.gList.Count - 1 do
+  for I := 0 to curFrm.glist.Count - 1 do
   begin
-    g:=tgroup(curFrm.gList.Get(i));
-    SignalsSG.Cells[0,i+1]:=g.name;
+    g := TGroup(curFrm.glist.Get(I));
+    SignalsSG.Cells[0, I + 1] := g.name;
     for j := 0 to g.m_tags.Count - 1 do
     begin
-      t:=g.gettag(j);
-      if t<>nil then
+      t := g.gettag(j);
+      if t <> nil then
       begin
-        SignalsSG.Cells[j+1,i+1]:=t.tagname;
+        SignalsSG.Cells[j + 1, I + 1] := t.tagname;
       end;
     end;
   end;
@@ -287,13 +288,13 @@ end;
 procedure TDigsFrmEdit.ShowGroups;
 var
   I: Integer;
-  g:tgroup;
+  g: TGroup;
 begin
-  SignalsSG.RowCount:=curFrm.glist.Count+1;
+  SignalsSG.RowCount := curFrm.glist.Count + 1;
   for I := 0 to curFrm.glist.Count - 1 do
   begin
-    g:=tgroup(curFrm.glist.Get(i));
-    SignalsSG.Cells[0,i+1]:=g.name;
+    g := TGroup(curFrm.glist.Get(I));
+    SignalsSG.Cells[0, I + 1] := g.name;
   end;
 end;
 
@@ -302,227 +303,229 @@ begin
   TagsListFrame1.ShowChannels;
 end;
 
-procedure TDigsFrmEdit.SignalsSGDragDrop(Sender, Source: TObject; X,
-  Y: Integer);
+procedure TDigsFrmEdit.SignalsSGDragDrop(Sender, Source: TObject;
+  X, Y: Integer);
 var
-  col, row:integer;
+  col, row: Integer;
 begin
-  SignalsSG.MouseToCell(x, y, col, row);
-  if (col>0) and (row>0) then
-    SignalsSG.Cells[col,row]:=itag(tlistview(Source).Selected.Data).GetName;
+  SignalsSG.MouseToCell(X, Y, col, row);
+  if (col > 0) and (row > 0) then
+    SignalsSG.Cells[col, row] := itag(tlistview(Source).Selected.Data).GetName;
 end;
 
-procedure TDigsFrmEdit.SignalsSGDragOver(Sender, Source: TObject; X, Y: Integer;
-  State: TDragState; var Accept: Boolean);
+procedure TDigsFrmEdit.SignalsSGDragOver(Sender, Source: TObject;
+  X, Y: Integer; State: TDragState; var Accept: Boolean);
 begin
-  if source=TagsListFrame1.TagsLV then
-    Accept:=true
+  if Source = TagsListFrame1.TagsLV then
+    Accept := true
   else
-    Accept:=false;
+    Accept := false;
 end;
 
 procedure TDigsFrmEdit.SignalsSGDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
 var
-  s:string;
-  g:TGroup;
-  t:ctag;
-  b:boolean;
+  s: string;
+  g: TGroup;
+  t: ctag;
+  b: Boolean;
 begin
-  s:=SignalsSG.Cells[acol, arow];
-  g:=tgroup(curfrm.glist.Get(arow-1));
-  t:=nil;
-  if (s='') or (arow=0) or (acol=0) then
+  s := SignalsSG.Cells[ACol, ARow];
+  g := TGroup(curFrm.glist.Get(ARow - 1));
+  t := nil;
+  if (s = '') or (ARow = 0) or (ACol = 0) then
   begin
-    b:=false;
+    b := false;
   end
   else
   begin
-    b:=true;
+    b := true;
   end;
-  if acol=0 then
+  if ACol = 0 then
   begin
-    Color := SignalsSG.Canvas.Brush.Color;
-    SignalsSG.Canvas.Brush.Color := clGray;
+    color := SignalsSG.Canvas.Brush.color;
+    SignalsSG.Canvas.Brush.color := clGray;
   end
   else
   begin
-    if g<>nil then
+    if g <> nil then
     begin
-      t:=g.gettag(acol-1);
-      if t<>nil then
+      t := g.gettag(ACol - 1);
+      if t <> nil then
       begin
-        if t.tagname<>s then
+        if t.tagname <> s then
         begin
-          b:=true;
+          b := true;
         end
         else
-          b:=false;
+          b := false;
       end;
     end;
-    Color := SignalsSG.Canvas.Brush.Color;
+    color := SignalsSG.Canvas.Brush.color;
     if b then
     begin
-      SignalsSG.Canvas.Brush.Color := clYellow;
+      SignalsSG.Canvas.Brush.color := clYellow;
     end;
   end;
   SignalsSG.Canvas.FillRect(Rect);
   SignalsSG.Canvas.TextOut(Rect.Left, Rect.Top, SignalsSG.Cells[ACol, ARow]);
-  SignalsSG.Canvas.Brush.Color := Color;
+  SignalsSG.Canvas.Brush.color := color;
 end;
 
 procedure TDigsFrmEdit.SignalsSGKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
-  g:TGroup;
+  g: TGroup;
 begin
-  if key=VK_RETURN then
+  if Key = VK_RETURN then
   begin
-    if m_col=0 then
+    if m_Col = 0 then
     begin
-      g:=TGroup(curfrm.glist.get(m_Row-1));
-      if g=nil then exit;
-      g.name:=SignalsSG.Cells[m_Col,m_Row]+'_'+getendnum(g.name);
-      SignalsSG.Cells[m_Col,m_Row]:=g.name;
+      g := TGroup(curFrm.glist.Get(m_Row - 1));
+      if g = nil then
+        exit;
+      g.name := SignalsSG.Cells[m_Col, m_Row] + '_' + getendnum(g.name);
+      SignalsSG.Cells[m_Col, m_Row] := g.name;
     end;
   end;
 end;
 
-procedure TDigsFrmEdit.SignalsSGSelectCell(Sender: TObject; ACol, ARow: Integer;
-  var CanSelect: Boolean);
+procedure TDigsFrmEdit.SignalsSGSelectCell(Sender: TObject;
+  ACol, ARow: Integer; var CanSelect: Boolean);
 begin
-  m_Col:=acol;
-  m_Row:=arow;
+  m_Col := ACol;
+  m_Row := ARow;
 end;
 
 procedure TDigsFrmEdit.UpdateHeader;
 var
   I: Integer;
-  col:TDigColumn;
+  col: TDigColumn;
 begin
   for I := 0 to curFrm.colCount - 1 do
   begin
-    col:=TDigColumn(curFrm.colNames.Get(i));
-    SignalsSG.Cells[i,0]:=col.fullname;
+    col := TDigColumn(curFrm.colNames.Get(I));
+    SignalsSG.Cells[I, 0] := col.fullname;
   end;
 end;
 
 procedure TDigsFrmEdit.UpdateTagsBtnClick(Sender: TObject);
 var
   I: Integer;
-  li:tlistitem;
-  Col:TDigColumn;
-  s, subnum, colname:string;
-  g:TGroup;
-  b1,b2,b3:boolean;
+  li: tlistitem;
+  col: TDigColumn;
+  s, subnum, colname: string;
+  g: TGroup;
+  b1, b2, b3: Boolean;
   j, num: Integer;
   k: Integer;
 begin
-  for I := 0 to TagsListFrame1.TagsLV.Items.Count-1 do
+  for I := 0 to TagsListFrame1.TagsLV.Items.Count - 1 do
   begin
-    li:=TagsListFrame1.TagsLV.items[i];
-    s:=li.Caption;
+    li := TagsListFrame1.TagsLV.Items[I];
+    s := li.Caption;
     // цикл по строкам
-    for j := 0 to curfrm.glist.Count - 1 do
+    for j := 0 to curFrm.glist.Count - 1 do
     begin
-      g:=TGroup(curfrm.glist.get(j));
-      subnum:=getendnum(g.name);
+      g := TGroup(curFrm.glist.Get(j));
+      subnum := getendnum(g.name);
       // цикл по столбцам
       for k := 1 to SignalsSG.colCount - 1 do
       begin
-        col:=TDigColumn(curFrm.colNames.Get(k-1));
-        colname:=col.name;
-        //colname:=SignalsSG.Cells[k,0];
-        if colname<>'' then
+        col := TDigColumn(curFrm.colNames.Get(k - 1));
+        colname := col.name;
+        // colname:=SignalsSG.Cells[k,0];
+        if colname <> '' then
         begin
-          b1:=(pos(lowercase(colname), lowercase(s))>0) or
-              (pos(colname, s)>0)
+          b1 := (pos(lowercase(colname), lowercase(s)) > 0) or
+            (pos(colname, s) > 0)
         end
         else
           continue;
-        if subnum<>'' then
+        if subnum <> '' then
         begin
-          b2:=pos(lowercase(subnum), lowercase(s))>0;
+          b2 := pos(lowercase(subnum), lowercase(s)) > 0;
           if not b2 then
           begin
-            num:=strtoint(subnum);
-            b2:=pos(inttostr(num), s)>0;
+            num := strtoint(subnum);
+            b2 := pos(IntToStr(num), s) > 0;
           end;
         end
         else
-          b2:=true;
-        if TagSubstrE.Text<>'' then
-          b3:=pos(lowercase(TagSubstrE.Text), lowercase(s))>0
+          b2 := true;
+        if TagSubstrE.Text <> '' then
+          b3 := pos(lowercase(TagSubstrE.Text), lowercase(s)) > 0
         else
-          b3:=true;
+          b3 := true;
         if b1 and b2 and b3 then
         begin
-          signalsSG.Cells[k, j+1]:=s;
+          SignalsSG.Cells[k, j + 1] := s;
           continue;
         end;
       end;
     end;
   end;
-  SGChange(signalsSG);
+  SGChange(SignalsSG);
 end;
 
 procedure TDigsFrmEdit.UpdateTagsBtnClick2(Sender: TObject);
 var
   I: Integer;
-  li:tlistitem;
-  t:itag;
-  Col:TDigColumn;
-  s, subnum, colname:string;
-  g:TGroup;
-  b1,b2,b3:boolean;
+  li: tlistitem;
+  t: itag;
+  col: TDigColumn;
+  s, subnum, colname: string;
+  g: TGroup;
+  b1, b2, b3: Boolean;
   j, num, num2: Integer;
   k: Integer;
 begin
   // цикл по строкам
-  for j := 0 to curfrm.glist.Count - 1 do
+  for j := 0 to curFrm.glist.Count - 1 do
   begin
-    g:=TGroup(curfrm.glist.get(j));
-    subnum:=getendnum(g.name);
+    g := TGroup(curFrm.glist.Get(j));
+    subnum := getendnum(g.name);
     // цикл по столбцам
     for k := 1 to SignalsSG.colCount - 1 do
     begin
-      col:=TDigColumn(curFrm.colNames.Get(k-1));
-      colname:=col.name;
-      if colname='' then
+      col := TDigColumn(curFrm.colNames.Get(k - 1));
+      colname := col.name;
+      if colname = '' then
         continue;
       for I := 0 to TagsListFrame1.TagsLV.Items.Count - 1 do
       begin
-        t:=itag(TagsListFrame1.TagsLV.Items[i].Data);
-        s:=t.GetName;
+        t := itag(TagsListFrame1.TagsLV.Items[I].Data);
+        s := t.GetName;
         // поиск по имени колонки
-        b1:=(pos(lowercase(colname), lowercase(s))>0) or (pos(colname, s)>0);
-        if subnum<>'' then
+        b1 := (pos(lowercase(colname), lowercase(s)) > 0) or
+          (pos(colname, s) > 0);
+        if subnum <> '' then
         begin
           // поиск по точному совпадению subnum
-          b2:=pos(lowercase(subnum), lowercase(s))>0;
+          b2 := pos(lowercase(subnum), lowercase(s)) > 0;
           if not b2 then
           begin
-            num:=strtoint(subnum);
-            num2:=getSubNum(s, num);
-            if num2=num then
+            num := strtoint(subnum);
+            num2 := getSubNum(s, num);
+            if num2 = num then
             begin
-              b2:=true;
+              b2 := true;
             end;
           end;
         end;
-        if TagSubstrE.Text<>'' then
-          b3:=pos(lowercase(TagSubstrE.Text), lowercase(s))>0
+        if TagSubstrE.Text <> '' then
+          b3 := pos(lowercase(TagSubstrE.Text), lowercase(s)) > 0
         else
-          b3:=true;
+          b3 := true;
         if b1 and b2 and b3 then
         begin
-          signalsSG.Cells[k, j+1]:=s;
+          SignalsSG.Cells[k, j + 1] := s;
           continue;
         end;
       end;
     end;
   end;
-  SGChange(signalsSG);
+  SGChange(SignalsSG);
 end;
 
 end.
