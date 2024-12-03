@@ -83,6 +83,7 @@ type
     procedure setColCount(c:integer);
     function getColCount:integer;
   public
+    procedure rcInit;
     procedure showcfg;
     property colCount:integer read getColCount Write setColCount;
     constructor create(Aowner: tcomponent); override;
@@ -110,6 +111,7 @@ type
     procedure destroyevents;
   public
     procedure doAfterLoad; override;
+    procedure doRecorderInit; override;
     procedure doUpdateData(Sender: TObject);
     procedure doChangeRState(Sender: TObject);
     procedure doChangeCfg(Sender: TObject);
@@ -261,6 +263,19 @@ procedure cDigsFrmFactory.doDestroyForms;
 begin
   inherited;
 
+end;
+
+procedure cDigsFrmFactory.doRecorderInit;
+var
+  I: Integer;
+  f:TRecFrm;
+begin
+  inherited;
+  for i := 0 to m_CompList.count - 1 do
+  begin
+    f:=GetFrm(i);
+    TDigsFrm(f).rcInit;
+  end;
 end;
 
 procedure cDigsFrmFactory.doSetDefSize(var PSize: SIZE);
@@ -503,6 +518,23 @@ begin
   DigsFrmEdit.Edit(self);
 end;
 
+
+procedure TDigsFrm.rcInit;
+var
+  I, j: Integer;
+  g:TGroup;
+  t:ctag;
+begin
+  for I := 0 to glist.Count - 1 do
+  begin
+    g:=tgroup(gList.Get(i));
+    for j := 0 to g.m_tags.Count - 1 do
+    begin
+      t:=g.gettag(j);
+      t.tagname:=t.tagname;
+    end;
+  end;
+end;
 
 procedure TDigsFrm.setColCount(c: integer);
 var

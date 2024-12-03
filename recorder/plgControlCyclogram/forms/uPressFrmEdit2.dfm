@@ -2,7 +2,7 @@ object PressFrmEdit2: TPressFrmEdit2
   Left = 0
   Top = 0
   Caption = 'PressFrmEdit2'
-  ClientHeight = 404
+  ClientHeight = 425
   ClientWidth = 671
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,7 +17,7 @@ object PressFrmEdit2: TPressFrmEdit2
     Left = 458
     Top = 0
     Width = 213
-    Height = 362
+    Height = 383
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -29,7 +29,7 @@ object PressFrmEdit2: TPressFrmEdit2
     ExplicitHeight = 362
     inherited FormChannelsGB: TGroupBox
       Width = 213
-      Height = 362
+      Height = 383
       Margins.Left = 3
       Margins.Top = 3
       Margins.Right = 3
@@ -121,7 +121,7 @@ object PressFrmEdit2: TPressFrmEdit2
       inherited TagsLV: TBtnListView
         Top = 113
         Width = 209
-        Height = 247
+        Height = 268
         Margins.Left = 3
         Margins.Top = 3
         Margins.Right = 3
@@ -149,13 +149,14 @@ object PressFrmEdit2: TPressFrmEdit2
     Left = 0
     Top = 0
     Width = 458
-    Height = 362
+    Height = 383
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
     Margins.Bottom = 2
     Align = alClient
     TabOrder = 1
+    ExplicitLeft = 1
     object FFTCountLabel: TLabel
       Left = 172
       Top = 17
@@ -180,7 +181,7 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object BCountLabel: TLabel
       Left = 170
-      Top = 161
+      Top = 181
       Width = 61
       Height = 12
       Margins.Left = 2
@@ -191,7 +192,7 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object HHLabel: TLabel
       Left = 172
-      Top = 71
+      Top = 53
       Width = 33
       Height = 12
       Margins.Left = 2
@@ -202,7 +203,7 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object HLabel: TLabel
       Left = 245
-      Top = 71
+      Top = 53
       Width = 29
       Height = 12
       Margins.Left = 2
@@ -213,7 +214,7 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object BNumLabel: TLabel
       Left = 170
-      Top = 121
+      Top = 144
       Width = 69
       Height = 12
       Margins.Left = 2
@@ -223,8 +224,8 @@ object PressFrmEdit2: TPressFrmEdit2
       Caption = #1053#1086#1084#1077#1088' '#1087#1086#1083#1086#1089#1099
     end
     object Label1: TLabel
-      Left = 313
-      Top = 71
+      Left = 314
+      Top = 53
       Width = 14
       Height = 12
       Margins.Left = 2
@@ -235,7 +236,7 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object Label2: TLabel
       Left = 263
-      Top = 158
+      Top = 178
       Width = 56
       Height = 12
       Margins.Left = 2
@@ -246,7 +247,7 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object Label3: TLabel
       Left = 353
-      Top = 121
+      Top = 144
       Width = 26
       Height = 12
       Margins.Left = 2
@@ -254,6 +255,28 @@ object PressFrmEdit2: TPressFrmEdit2
       Margins.Right = 2
       Margins.Bottom = 2
       Caption = #1054#1082#1085#1086
+    end
+    object Label4: TLabel
+      Left = 303
+      Top = 96
+      Width = 42
+      Height = 12
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
+      Caption = 'H_AlTag:'
+    end
+    object Label5: TLabel
+      Left = 296
+      Top = 124
+      Width = 49
+      Height = 12
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
+      Caption = 'HH_AlTag:'
     end
     object FFTCountEdit: TIntEdit
       Left = 172
@@ -315,7 +338,7 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object BCountSB: TSpinButton
       Left = 236
-      Top = 174
+      Top = 194
       Width = 15
       Height = 19
       Margins.Left = 2
@@ -348,7 +371,7 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object BCountIE: TIntEdit
       Left = 172
-      Top = 173
+      Top = 193
       Width = 61
       Height = 20
       Margins.Left = 2
@@ -361,9 +384,9 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object BandSG: TStringGridExt
       Left = 2
-      Top = 197
+      Top = 237
       Width = 454
-      Height = 163
+      Height = 144
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -376,10 +399,11 @@ object PressFrmEdit2: TPressFrmEdit2
       OnDrawCell = BandSGDrawCell
       OnKeyDown = BandSGKeyDown
       OnSelectCell = BandSGSelectCell
+      ExplicitTop = 216
     end
     object HHFE: TFloatEdit
       Left = 172
-      Top = 83
+      Top = 65
       Width = 61
       Height = 20
       Margins.Left = 2
@@ -391,7 +415,7 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object HFE: TFloatEdit
       Left = 245
-      Top = 83
+      Top = 65
       Width = 56
       Height = 20
       Margins.Left = 2
@@ -405,7 +429,7 @@ object PressFrmEdit2: TPressFrmEdit2
       Left = 2
       Top = 14
       Width = 159
-      Height = 183
+      Height = 223
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -417,10 +441,11 @@ object PressFrmEdit2: TPressFrmEdit2
       OnDragDrop = TagsLBDragDrop
       OnDragOver = TagsLBDragOver
       OnKeyDown = TagsLBKeyDown
+      ExplicitHeight = 183
     end
     object BNumIE: TIntEdit
       Left = 172
-      Top = 137
+      Top = 160
       Width = 61
       Height = 20
       Margins.Left = 2
@@ -432,7 +457,7 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object BNumSB: TSpinButton
       Left = 236
-      Top = 139
+      Top = 162
       Width = 15
       Height = 18
       Margins.Left = 2
@@ -465,7 +490,7 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object RefFE: TFloatEdit
       Left = 313
-      Top = 83
+      Top = 65
       Width = 55
       Height = 20
       Margins.Left = 2
@@ -478,7 +503,7 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object TypeResCB: TComboBox
       Left = 263
-      Top = 173
+      Top = 193
       Width = 94
       Height = 20
       ItemIndex = 0
@@ -489,8 +514,8 @@ object PressFrmEdit2: TPressFrmEdit2
         'Pk-pk')
     end
     object CreateTagsCB: TCheckBox
-      Left = 265
-      Top = 136
+      Left = 263
+      Top = 162
       Width = 97
       Height = 17
       Caption = #1057#1086#1079#1076#1072#1090#1100' '#1090#1077#1075#1080
@@ -498,8 +523,8 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object WndCB: TComboBox
       Left = 353
-      Top = 135
-      Width = 93
+      Top = 160
+      Width = 86
       Height = 20
       TabOrder = 14
       Text = 'Rectangular'
@@ -519,10 +544,26 @@ object PressFrmEdit2: TPressFrmEdit2
       TabOrder = 15
       OnClick = AFHcbClick
     end
+    object HH_AlTagCB: TRcComboBox
+      Left = 353
+      Top = 121
+      Width = 79
+      Height = 20
+      TabOrder = 16
+      Text = 'HH_AlTagCB'
+    end
+    object H_AlTagCB: TRcComboBox
+      Left = 353
+      Top = 93
+      Width = 79
+      Height = 20
+      TabOrder = 17
+      Text = 'RcComboBox1'
+    end
   end
   object Panel1: TPanel
     Left = 0
-    Top = 362
+    Top = 383
     Width = 671
     Height = 42
     Margins.Left = 2
@@ -531,6 +572,7 @@ object PressFrmEdit2: TPressFrmEdit2
     Margins.Bottom = 2
     Align = alBottom
     TabOrder = 2
+    ExplicitTop = 362
     object UpdateAlgBtn: TSpeedButton
       Left = 2
       Top = 5

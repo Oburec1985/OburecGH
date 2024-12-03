@@ -29,6 +29,8 @@ type
 
   AlarmHandler = class(TInterfacedObject, IAlarmEventHandler)
   public
+    fAlarm:TNotifyEvent;
+  public
     procedure Attach;
     procedure Detach;
     function OnAlarmEvent(pTag: ITag; pAlarm:IAlarm; nIndex:integer; dblVal:double; flags:ULONG): HRESULT;stdcall;
@@ -43,6 +45,7 @@ type
     ControlTag:ctag;
     AlarmList:tstringlist;
     name:string;
+    // данные набора прописываемые в алармы
     m_Data:array of DataRec;
     // емкость
     m_capacity:integer;
@@ -65,6 +68,7 @@ type
     function ControlVal:integer;
     function addtag(t:itag; var new:boolean):TAlarms;overload;
     function addtag(tname:string; var new:boolean):TAlarms;overload;
+    procedure clear;
     // обновить список аварий в тегах
     procedure ApplyAlarms;overload;
     procedure ApplyAlarms(pd:PDataRec);overload;
@@ -345,7 +349,8 @@ var
   d:pnodedata;
 begin
   ind:=0;
-  n:=tagstv.RootNode.FirstChild;
+  result:= TThresholdGroup(m_Groups.Objects[i]);
+  {n:=tagstv.RootNode.FirstChild;
   while n<>nil do
   begin
     if i=ind then
@@ -356,7 +361,7 @@ begin
     end;
     n:=TagsTV.GetNextSibling(n);
     inc(ind);
-  end;
+  end;}
 end;
 
 procedure TThresholdFrm.HHColorDblClick(Sender: TObject);
@@ -673,6 +678,16 @@ end;
 
 { TThresholdGroup }
 
+function TThresholdGroup.addtag(t: itag; var new:boolean): TAlarms;
+begin
+  if t<>nil then
+  begin
+    result:=addtag(t.GetName, new);
+  end
+  else
+    result:=nil;
+end;
+
 function TThresholdGroup.addtag(tname: string; var new: boolean): TAlarms;
 var
   s:string;
@@ -697,15 +712,17 @@ begin
     AlarmList.AddObject(s, a);
     result:=a;
     new:=true;
-
-    n:=ThresholdFrm.TagsTV.GetNodeByName(TThresholdGroup(a.owner).name);
-    // добавляем к узлу новые теги
-    n:=ThresholdFrm.TagsTV.AddChild(n, nil);
-    d:=ThresholdFrm.TagsTV.GetNodeData(n);
-    d.data:=a;
-    d.color:=ThresholdFrm.TagsTV.normalcolor;
-    d.ImageIndex:=0;
-    d.Caption:=tname;
+    if ThresholdFrm<>nil then
+    begin
+      n:=ThresholdFrm.TagsTV.GetNodeByName(TThresholdGroup(a.owner).name);
+      // добавляем к узлу новые теги
+      n:=ThresholdFrm.TagsTV.AddChild(n, nil);
+      d:=ThresholdFrm.TagsTV.GetNodeData(n);
+      d.data:=a;
+      d.color:=ThresholdFrm.TagsTV.normalcolor;
+      d.ImageIndex:=0;
+      d.Caption:=tname;
+    end;
   end
   else
   begin
@@ -714,15 +731,18 @@ begin
   end;
 end;
 
-function TThresholdGroup.addtag(t: itag; var new:boolean): TAlarms;
+procedure TThresholdGroup.clear;
+var
+  I: Integer;
+  a:TAlarms;
 begin
-  if t<>nil then
+  while AlarmList.Count<>0 do
   begin
-    result:=addtag(t.GetName, new);
-  end
-  else
-    result:=nil;
+    a:=GetAlarm(0);
+    a.destroy;
+  end;
 end;
+
 
 function TThresholdGroup.AlarmData: PDataRec;
 begin
@@ -757,6 +777,7 @@ begin
     a.m_a_hh.SetColor(pd.hhCol);
   end;
 end;
+
 
 procedure TThresholdGroup.ApplyAlarms;
 var
@@ -1064,6 +1085,10 @@ begin
       begin
         a.activeA:=nil;
         a.ActiveAlInd:=-1;
+      end;
+      if assigned(fAlarm) then
+      begin
+        fAlarm(a);
       end;
       break;
     end;

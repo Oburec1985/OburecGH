@@ -55,7 +55,7 @@ uses
   uEditSRSFrm,
   uSRSFrm,
   uGLFrmEdit, uEditGlObjFrm,
-  TestUDPSender,
+  TestUDPSender, uThresholdsFrm,
   //uPressFrm, uPressFrmEdit,
   uPressFrm2, uPressFrmEdit2,
   uDigsFrm,uDigsFrmEdit,
@@ -260,7 +260,10 @@ begin
   if TestUDPSenderFrm=nil then
     TestUDPSenderFrm:=TTestUDPSenderFrm.Create(nil);
 
-
+  if ThresholdFrm=nil then
+  begin
+    ThresholdFrm:=tThresholdFrm.Create(nil);
+  end;
   if g_conmng<>nil then
   begin
     ControlCyclogramEditFrm := TControlCyclogramEditFrm.Create(nil);
@@ -408,6 +411,12 @@ begin
   begin
     IRDiagrEditFrm.free;
     IRDiagrEditFrm := nil;
+  end;
+
+  if ThresholdFrm <> nil then
+  begin
+    ThresholdFrm.free;
+    ThresholdFrm := nil;
   end;
 
   if EditGLObjFrm<>nil then

@@ -63,6 +63,10 @@ type
     WndCB: TComboBox;
     Label3: TLabel;
     AFHcb: TCheckBox;
+    HH_AlTagCB: TRcComboBox;
+    H_AlTagCB: TRcComboBox;
+    Label4: TLabel;
+    Label5: TLabel;
     procedure FFTCountSpinBtnDownClick(Sender: TObject);
     procedure FFTCountSpinBtnUpClick(Sender: TObject);
     procedure UpdateAlgBtnClick(Sender: TObject);
@@ -292,6 +296,11 @@ begin
   m_pf:=pf;
   pf.bnumupdate:=true;
   BNumIE.IntNum:=pf.m_bnum;
+  H_AlTagCB.updateTagsList;
+  HH_AlTagCB.updateTagsList;
+
+  H_AlTagCB.SetTagName(g_PressCamFactory2.m_AlarmTagH.tagname);
+  HH_AlTagCB.SetTagName(g_PressCamFactory2.m_AlarmTagH.tagname);
   // отображаем векторные теги
   if not m_init then
   begin
@@ -367,6 +376,8 @@ begin
       3:g_PressCamFactory2.m_spmCfg.str:='Wnd=Blackmann';
       4:g_PressCamFactory2.m_spmCfg.str:='Wnd=Flattop';
     end;
+    g_PressCamFactory2.m_AlarmTagH.tag:=H_AlTagCB.gettag();
+    g_PressCamFactory2.m_AlarmTagHH.tag:=HH_AlTagCB.gettag();
     // номер полосы
     m_pf.m_bnum:=BNumIE.IntNum;
     m_pf.BNumIE.IntNum:=BNumIE.IntNum;

@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
-  uRCFunc,
+  uRCFunc, ActiveX,
   uHardwareMath, MathFunction,
   Forms, ComCtrls,
   uRecBasicFactory,
@@ -178,10 +178,12 @@ type
     m_AlarmHlev, m_AlarmHHlev,
     // заданный абсолютный максимум
     m_AlarmBase:double;
+    m_AlarmTagH, m_AlarmTagHH:ctag;
   private
     // число дочерних компонентов
     m_counter: integer;
   protected
+    procedure doOnAlarm(sender:tobject);
     procedure GenRepFilePath;
     procedure doDestroyForms; override;
     procedure createevents;
@@ -206,6 +208,8 @@ type
     procedure doChangeCfg(Sender: TObject);
     // создать теги из списка спектров
     procedure CreateTags();
+    // сгенерировать данные для алармов полосовых тегов
+    procedure SetAlarms;
     procedure doStart;
     procedure doStop;
     // ПОЛУЧАЕТ НА ВХОД список тегов и создает cspm-ы
@@ -222,6 +226,7 @@ type
     function getFrmByBNum(i: integer): TPressFrm2;
     function getTag(s: string): PTagRec;overload;
     function getTag(i: integer): PTagRec;overload;
+    function getTagByBandTag(t: itag; var ind:integer): PTagRec;
     // пересчет rms в амплитуду
     function RescaleEst(restype:integer; rms:double):double;
     // когда Recorder загрузил конфиги;
@@ -242,6 +247,8 @@ const
   c_Name = 'Анализ камер сгорания2';
   c_defXSize = 560;
   c_defYSize = 355;
+  Variant_True=-1;
+  Variant_False=0;
 
   // ctrl+shift+G
   // ['{54C462CD-E137-4BA6-9EB5-EFD92D159DE5}']
@@ -445,7 +452,6 @@ begin
     end;
     Frm.sortframes;
   end;
-  setlength(m_refArray, m_spmCfg.ChildCount);
 end;
 
 procedure cPressCamFactory2.CreateAlgConfig;
@@ -467,7 +473,7 @@ end;
 procedure cPressCamFactory2.destroyevents;
 begin
   RemovePlgEvent(doUpdateData, c_RUpdateData);
-  RemovePlgEvent(doChangeCfg, c_RC_LeaveCfg);
+  //RemovePlgEvent(doChangeCfg, c_RC_LeaveCfg);
   RemovePlgEvent(doChangeRState, c_RC_DoChangeRCState);
 end;
 
@@ -475,7 +481,7 @@ procedure cPressCamFactory2.createevents;
 begin
   addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
   addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
-  addplgevent('cSRSFactory_doChangeRState', c_RC_LeaveCfg, doChangeCfg);
+  //addplgevent('cSRSFactory_doChangeCfg', c_RC_LeaveCfg, doChangeCfg);
 end;
 
 function TlistSortCompare(p1, p2: pointer): integer;
@@ -505,9 +511,14 @@ begin
   createevents;
   BandCount := 6;
 
+  m_AlarmTagH:=ctag.create;
+  m_AlarmTagHH:=ctag.create;
   m_AlarmHandler:=AlarmHandler.Create;
   m_AlarmHandler.Attach;
+  m_AlarmHandler.fAlarm:=doOnAlarm;
   m_Thresholds:=TThresholdGroup.create;
+  m_Thresholds.name:='PressFrmAlarms';
+
   m_AlarmHlev:=0.5;
   m_AlarmHHlev:=0.7;
   m_AlarmBase:=1;
@@ -515,6 +526,9 @@ end;
 
 destructor cPressCamFactory2.destroy;
 begin
+  m_AlarmTagH.destroy;
+  m_AlarmTagHH.destroy;
+
   sortedFrames.destroy;
   m_AlarmHandler.Destroy;
   m_Thresholds.destroy;
@@ -542,16 +556,31 @@ procedure cPressCamFactory2.CreateTags();
 var
   i, j: integer;
   s: cspm;
+  str:string;
   b:boolean;
   k: Integer;
-  a:TAlarms;
+  t:itag;
+  pTag:PTagRec;
+  bInitRefs:boolean;
 begin
+  bInitRefs:=false;
   if length(m_tags)<>m_spmCfg.ChildCount then
+  begin
     setlength(m_tags, m_spmCfg.ChildCount);
+    if length(m_refArray)=0 then
+    begin
+      bInitRefs:=true;
+    end;
+    setlength(m_refArray, m_spmCfg.ChildCount);
+  end;
   for i := 0 to m_spmCfg.ChildCount - 1 do
   begin
     s := getSpm(i);
     m_tags[i].name := s.m_tag.tagname;
+    if bInitRefs then
+    begin
+      m_refArray[i]:=s.m_tag.GetMaxYValue;
+    end;
     m_tags[i].m_s:=s;
     setlength(m_tags[i].m_bandTags, BandCount);
     setlength(m_tags[i].m_SKO, BandCount);
@@ -559,17 +588,60 @@ begin
     begin
       for j := 0 to BandCount - 1 do
       begin
-        m_tags[i].m_bandTags[j] := createScalar(s.m_tag.tagname + 'b' + inttostr(j), false);
-        // добавляем алармы по каждому из тегов
-        m_Thresholds.addtag(m_tags[i].m_bandTags[j],b);
+        str:=s.m_tag.tagname + 'b' + inttostr(j);
+        t:=getTagByName(str);
+        pTag:=getTag(i);
+        if (pTag.m_bandTags[j]<>t) or (t=nil)  then
+        begin
+          m_tags[i].m_bandTags[j] := createScalar(str, false);
+        end;
       end;
     end;
   end;
+  m_Thresholds.clear;
+  for j := 0 to length(m_tags) - 1 do
+  begin
+    pTag:=getTag(j);
+    for k := 0 to BandCount - 1 do
+    begin
+      str:=ptag.name + 'b' + inttostr(k);
+      // добавляем алармы по каждому из тегов
+      m_Thresholds.addtag(pTag.m_bandTags[j],b);
+    end;
+  end;
+  SetAlarms;
+end;
+
+procedure cPressCamFactory2.SetAlarms;
+var
+  i,k:integer;
+  a:TAlarms;
+  pt:PTagRec;
+begin
   for k := 0 to m_Thresholds.AlarmList.Count - 1 do
   begin
-    a:=m_Thresholds.GetAlarm(i);
-    a.m_a_hh:=m_AlarmBase*m_AlarmHHlev;
-    a.m_a_h:=m_AlarmBase*m_AlarmHlev;
+    a:=m_Thresholds.GetAlarm(k);
+    pt:=getTagByBandTag(a.t.tag, i);
+    if i<>-1 then
+    begin
+      m_AlarmBase:=m_refArray[i];
+    end;
+    a.m_a_hh.SetLevel(m_AlarmBase*m_AlarmHHlev);
+    a.m_a_h.SetLevel(m_AlarmBase*m_AlarmHlev);
+    a.m_a_l.SetLevel(-m_AlarmBase*m_AlarmHlev);
+    a.m_a_ll.SetLevel(-m_AlarmBase*m_AlarmHlev);
+    a.m_a_hh.SetLevel(m_AlarmBase*m_AlarmHHlev);
+    a.m_a_h.SetLevel(m_AlarmBase*m_AlarmHlev);
+    a.m_a_l.SetLevel(-m_AlarmBase*m_AlarmHlev);
+    a.m_a_ll.SetLevel(-m_AlarmBase*m_AlarmHlev);
+    a.m_a_hh.SetEnabled(Variant_True);
+    a.m_a_h.SetEnabled(Variant_True);
+    a.m_a_l.SetEnabled(Variant_True);
+    a.m_a_ll.SetEnabled(Variant_True);
+    a.m_a_ll.SetColor(clRed);
+    a.m_a_l.SetColor(clYellow);
+    a.m_a_h.SetColor(clYellow);
+    a.m_a_hh.SetColor(clRed);
   end;
 end;
 
@@ -647,7 +719,33 @@ begin
 
 end;
 
-
+procedure cPressCamFactory2.doOnAlarm(sender: tobject);
+var
+  I: Integer;
+  a:talarms;
+  h,hh:boolean;
+begin
+  h:=false;
+  hh:=false;
+  for I := 0 to m_Thresholds.AlarmList.Count - 1 do
+  begin
+    a:=m_Thresholds.GetAlarm(i);
+    if not h then
+    begin
+      if a.ActiveAlInd=2 then
+      begin
+        h:=true;
+      end;
+    end;
+    if not hh then
+    begin
+      if a.ActiveAlInd=3 then
+      begin
+        hh:=true;
+      end;
+    end;
+  end;
+end;
 
 procedure cPressCamFactory2.doSetDefSize(var PSize: SIZE);
 begin
@@ -822,6 +920,29 @@ begin
       if spm.m_tag.tagname = s then
       begin
         result := spm;
+        exit;
+      end;
+    end;
+  end;
+end;
+
+function cPressCamFactory2.getTagByBandTag(t: itag; var ind:integer): PTagRec;
+var
+  I: Integer;
+  pt:PTagRec;
+  j: Integer;
+begin
+  result:=nil;
+  ind:=-1;
+  for I := 0 to length(m_tags) - 1 do
+  begin
+    pt:=getTag(i);
+    for j := 0 to length(pt.m_bandTags) - 1 do
+    begin
+      if pt.m_bandTags[j]=t then
+      begin
+        ind:=i;
+        result:=pt;
         exit;
       end;
     end;
@@ -1363,6 +1484,11 @@ begin
   m_bnum := a_pIni.ReadInteger(str, 'BNum', 0);
   if self = g_PressCamFactory2.GetFrm(0) then
   begin
+    LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTagH,
+                'PressCamFactory2', 'AlarmHTag');
+    LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH,
+                  'PressCamFactory2', 'AlarmHHTag');
+
     c := a_pIni.ReadInteger('PressCamFactory2', 'FFTCount', 256);
     s := 'FFTCount=' + inttostr(c) + ',';
     s := s + 'Wnd=' + a_pIni.ReadString(str, 'Wnd', 'Rect');
@@ -1412,6 +1538,11 @@ var
   s, scurve:string;
   tr:PTagRec;
 begin
+  doChangeCfg(nil);
+  if ThresholdFrm<>nil then
+  begin
+    ThresholdFrm.m_Groups.AddObject(m_Thresholds.name, m_Thresholds);
+  end;
   if fileexists(m_loadFile) then
   begin
     ifile:=TIniFile.Create(m_loadFile);
@@ -1482,6 +1613,10 @@ begin
   if self = g_PressCamFactory2.GetFrm(0) then
   begin
     lstr := getparam(s.GetProperties, 'FFTCount');
+    saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagH,
+                  'PressCamFactory2', 'AlarmHTag');
+    saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH,
+                  'PressCamFactory2', 'AlarmHHTag');
     a_pIni.WriteInteger('PressCamFactory2', 'FFTCount', strtoint(lstr));
     a_pIni.WriteInteger('PressCamFactory2', 'BandCount',
       g_PressCamFactory2.BandCount);
