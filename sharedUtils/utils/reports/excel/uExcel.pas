@@ -388,6 +388,7 @@ const
   procedure CopyPage(wbSrc,wbDst:oleVariant; pageIndSrc:integer; pageDst:olevariant);overload;
   // в активном доке
   procedure RunMacros(Mname:string);
+  function IsExcelFileOpen(const FilePath: string): Boolean;
 
 var
   E:OleVariant;
@@ -396,6 +397,40 @@ implementation
 uses
   forms;
 
+function IsExcelFileOpen(const FilePath: string): Boolean;
+var
+  ExcelApp: Variant;
+  Workbook: Variant;
+  i: Integer;
+begin
+  Result := False;
+  try
+    // Подключаемся к запущенному экземпляру Excel (если он есть)
+    ExcelApp := GetActiveOleObject('Excel.Application');
+  except
+    on E: Exception do
+    begin
+      // Если Excel не запущен, возвращаем False
+      Exit;
+    end;
+  end;
+
+  try
+    // Проверяем все открытые книги
+    for i := 1 to ExcelApp.Workbooks.Count do
+    begin
+      Workbook := ExcelApp.Workbooks[i];
+      if SameText(Workbook.FullName, ExpandFileName(FilePath)) then
+      begin
+        Result := True;
+        //ExcelApp.ActiveWorkbook:=Workbook;
+        Break;
+      end;
+    end;
+  finally
+    // Не освобождаем ExcelApp, так как мы только подключались
+  end;
+end;
 
 function CheckExcelInstall:boolean;
 var

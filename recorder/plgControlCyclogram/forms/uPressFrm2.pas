@@ -32,7 +32,7 @@ uses
   // uPathMng,
   uEditCurveFrm,
   uThresholdsFrm,
-  uRcCtrls, Menus;
+  uRcCtrls, Menus, uSpin;
 
 type
   tband = record
@@ -67,25 +67,27 @@ type
 
   TPressFrm2 = class(TRecFrm)
     BarGraphGB: TGroupBox;
-    BarPanel: TPanel;
+    PopupMenu1: TPopupMenu;
+    N1: TMenuItem;
+    ScrollBox1: TScrollBox;
     Panel1: TPanel;
     MaxLabel: TLabel;
     MaxFreqLabel: TLabel;
     MaxCamLabel: TLabel;
+    UnitMaxALab: TLabel;
+    UnitMaxFLab: TLabel;
+    SaveBtn: TSpeedButton;
+    BNumLabel: TLabel;
     MaxAE: TEdit;
     MaxFE: TEdit;
     MaxCamE: TEdit;
-    UnitMaxALab: TLabel;
-    UnitMaxFLab: TLabel;
     AvrCB: TCheckBox;
-    PopupMenu1: TPopupMenu;
-    N1: TMenuItem;
-    SaveBtn: TSpeedButton;
     OpenBtn: TButton;
     BNumSB: TSpinButton;
     BNumIE: TIntEdit;
-    BNumLabel: TLabel;
     WndCB: TComboBox;
+    RefValSE: TFloatSpinEdit;
+    BarPanel: TPanel;
     PressFrmFrame21: TPressFrmFrame2;
     procedure N1Click(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
@@ -96,6 +98,8 @@ type
     procedure BNumSBUpClick(Sender: TObject);
     procedure WndCBChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure RefValSEKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   public
     m_BargraphStep: integer;
     m_lastFile:string;
@@ -205,7 +209,6 @@ type
     procedure doAfterLoad; override;
     procedure doUpdateData(Sender: TObject);
     procedure doChangeRState(Sender: TObject);
-    procedure doChangeCfg(Sender: TObject);
     // создать теги из списка спектров
     procedure CreateTags();
     // сгенерировать данные для алармов полосовых тегов
@@ -231,6 +234,7 @@ type
     function RescaleEst(restype:integer; rms:double):double;
     // когда Recorder загрузил конфиги;
     procedure doRecorderInit;override;
+    procedure UpdateRefs(base:double);
   public
     constructor create;
     destructor destroy; override;
@@ -307,6 +311,18 @@ begin
   end;
 end;
 
+procedure cPressCamFactory2.UpdateRefs(base: double);
+var
+  I: Integer;
+begin
+  for I := 0 to length(m_refArray)-1 do
+  begin
+    m_refArray[i]:=base;
+  end;
+  // пересчет уставок
+  SetAlarms;
+end;
+
 function cPressCamFactory2.RefsToStr: string;
 var
   i: integer;
@@ -363,7 +379,7 @@ var
   i, j: integer;
   sname: string;
   spm: cspm;
-  find: boolean;
+  find, b: boolean;
 begin
   // удаляем лишние
   for i := m_spmCfg.ChildCount - 1 downto 0 do
@@ -384,6 +400,7 @@ begin
     end;
   end;
   // добавляем новые
+  ecm(b);
   for i := 0 to list.Count - 1 do
   begin
     sname := list.Strings[i];
@@ -400,6 +417,8 @@ begin
       g_algMng.Add(spm, nil);
     end;
   end;
+  if b then
+    lcm;
 end;
 
 procedure cPressCamFactory2.createFrames(f: tform);
@@ -528,11 +547,10 @@ destructor cPressCamFactory2.destroy;
 begin
   m_AlarmTagH.destroy;
   m_AlarmTagHH.destroy;
-
   sortedFrames.destroy;
-  m_AlarmHandler.Destroy;
-  m_Thresholds.destroy;
 
+  //m_AlarmHandler.release;
+  m_Thresholds.destroy;
   destroyevents;
   inherited;
 end;
@@ -593,6 +611,7 @@ begin
         pTag:=getTag(i);
         if (pTag.m_bandTags[j]<>t) or (t=nil)  then
         begin
+          //ecm;
           m_tags[i].m_bandTags[j] := createScalar(str, false);
         end;
       end;
@@ -606,7 +625,7 @@ begin
     begin
       str:=ptag.name + 'b' + inttostr(k);
       // добавляем алармы по каждому из тегов
-      m_Thresholds.addtag(pTag.m_bandTags[j],b);
+      m_Thresholds.addtag(pTag.m_bandTags[k],b);
     end;
   end;
   SetAlarms;
@@ -642,20 +661,6 @@ begin
     a.m_a_l.SetColor(clYellow);
     a.m_a_h.SetColor(clYellow);
     a.m_a_hh.SetColor(clRed);
-  end;
-end;
-
-procedure cPressCamFactory2.doChangeCfg(Sender: TObject);
-var
-  s: cspm;
-begin
-  if m_spmCfg<>nil then
-  begin
-    if m_spmCfg.ChildCount>0 then
-    begin
-      m_tagsinit := true;
-      CreateTags;
-    end;
   end;
 end;
 
@@ -732,18 +737,33 @@ begin
     a:=m_Thresholds.GetAlarm(i);
     if not h then
     begin
-      if a.ActiveAlInd=2 then
+      if a.activeA=a.m_a_h then
       begin
         h:=true;
       end;
     end;
     if not hh then
     begin
-      if a.ActiveAlInd=3 then
+      if a.activeA=a.m_a_hh then
       begin
         hh:=true;
       end;
     end;
+  end;
+  if m_AlarmTagH<>nil then
+  begin
+    if h then
+      m_AlarmTagH.tag.PushValue(1,-1)
+    else
+      m_AlarmTagH.tag.PushValue(0,-1);
+  end;
+
+  if m_AlarmTagHH<>nil then
+  begin
+    if hh then
+      m_AlarmTagHH.tag.PushValue(1,-1)
+    else
+      m_AlarmTagHH.tag.PushValue(0,-1);
   end;
 end;
 
@@ -826,11 +846,8 @@ begin
       t.m_SKO[bnum].rms_mean:=sum/(m_bands[bnum].i2-m_bands[bnum].i1);
       if m_createTags then
       begin
-        if m_tagsinit then
-        begin
-          max:=RescaleEst(m_typeRes ,t.m_SKO[bnum].rms_max);
-          t.m_bandTags[bnum].PushValue(max, -1);
-        end;
+        max:=RescaleEst(m_typeRes ,t.m_SKO[bnum].rms_max);
+        t.m_bandTags[bnum].PushValue(max, -1);
       end;
     end;
   end;
@@ -1224,7 +1241,8 @@ begin
   i := m_frames.Count;
   txt := BarPanel.name + '_' + inttostr(i);
   p := TPanel.create(self);
-  p.parent := BarGraphGB;
+  //p.parent := BarGraphGB;
+  p.parent := ScrollBox1;
   p.Align := alTop;
   p.Width := BarPanel.Width;
   p.Height := BarPanel.Height;
@@ -1278,6 +1296,15 @@ begin
         result := true;
       end;
     end;
+  end;
+end;
+
+procedure TPressFrm2.RefValSEKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if key=VK_RETURN then
+  begin
+    g_PressCamFactory2.UpdateRefs(RefValSE.Value);
   end;
 end;
 
@@ -1373,7 +1400,18 @@ begin
   InitExcel;
   if fileexists(fname) then
   begin
-    OpenWorkBook(fname);
+    if not IsExcelFileOpen(fname) then
+    begin
+      OpenWorkBook(fname);
+    end
+    else
+    begin
+      //CloseWorkBook;
+      //CloseExcel;
+      //InitExcel;
+      //OpenWorkBook(fname);
+      //OpenWorkBookEx(fname);
+    end;
     if m_saveBlockNum = 0 then
     begin
       E.ActiveWorkbook.Sheets.Item[1].cells.clear;
@@ -1517,6 +1555,8 @@ begin
       'ManualRef', false);
     s := a_pIni.ReadString('PressCamFactory2', 'Refs', '');
     g_PressCamFactory2.StrToRefs(s);
+    if length(g_PressCamFactory2.m_refArray)>0 then
+      RefValSE.Value:=g_PressCamFactory2.m_refArray[0];
   end;
   BNumIE.IntNum := m_bnum;
   bnumUpdate := true;
@@ -1537,12 +1577,19 @@ var
   I, c, len: Integer;
   s, scurve:string;
   tr:PTagRec;
+  b:boolean;
 begin
-  doChangeCfg(nil);
+  ecm(b);
+  if m_spmCfg.ChildCount>0 then
+  begin
+    CreateTags;
+  end;
   if ThresholdFrm<>nil then
   begin
     ThresholdFrm.m_Groups.AddObject(m_Thresholds.name, m_Thresholds);
   end;
+  if b then
+    lcm;
   if fileexists(m_loadFile) then
   begin
     ifile:=TIniFile.Create(m_loadFile);
@@ -1612,32 +1659,28 @@ begin
   a_pIni.WriteInteger(str, 'BNum', m_bnum);
   if self = g_PressCamFactory2.GetFrm(0) then
   begin
-    lstr := getparam(s.GetProperties, 'FFTCount');
-    saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagH,
-                  'PressCamFactory2', 'AlarmHTag');
-    saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH,
-                  'PressCamFactory2', 'AlarmHHTag');
-    a_pIni.WriteInteger('PressCamFactory2', 'FFTCount', strtoint(lstr));
-    a_pIni.WriteInteger('PressCamFactory2', 'BandCount',
-      g_PressCamFactory2.BandCount);
-    a_pIni.WriteInteger('PressCamFactory2', 'TypeRes',
-      g_PressCamFactory2.m_typeRes);
-    a_pIni.WriteBool('PressCamFactory2', 'CreateTags',
-      g_PressCamFactory2.m_createTags);
+    if s<>nil then
+    begin
+      lstr := getparam(s.GetProperties, 'FFTCount');
+      saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagH,
+                    'PressCamFactory2', 'AlarmHTag');
+      saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH,
+                    'PressCamFactory2', 'AlarmHHTag');
+      a_pIni.WriteInteger('PressCamFactory2', 'FFTCount', strtoint(lstr));
+      a_pIni.WriteInteger('PressCamFactory2', 'BandCount', g_PressCamFactory2.BandCount);
+      a_pIni.WriteInteger('PressCamFactory2', 'TypeRes', g_PressCamFactory2.m_typeRes);
+      a_pIni.WriteBool('PressCamFactory2', 'CreateTags', g_PressCamFactory2.m_createTags);
 
-    a_pIni.WriteBool('PressCamFactory2', 'ManualBand',
-      g_PressCamFactory2.m_manualBand);
-    if g_PressCamFactory2.m_manualBand then
-    begin
-      a_pIni.WriteString('PressCamFactory2', 'Bands',
-        g_PressCamFactory2.BandsToStr);
-    end;
-    a_pIni.WriteBool('PressCamFactory2', 'ManualRef',
-      g_PressCamFactory2.m_Manualref);
-    if g_PressCamFactory2.m_Manualref then
-    begin
-      a_pIni.WriteString('PressCamFactory2', 'Refs',
-        g_PressCamFactory2.RefsToStr);
+      a_pIni.WriteBool('PressCamFactory2', 'ManualBand', g_PressCamFactory2.m_manualBand);
+      if g_PressCamFactory2.m_manualBand then
+      begin
+        a_pIni.WriteString('PressCamFactory2', 'Bands', g_PressCamFactory2.BandsToStr);
+      end;
+      a_pIni.WriteBool('PressCamFactory2', 'ManualRef', g_PressCamFactory2.m_Manualref);
+      if g_PressCamFactory2.m_Manualref then
+      begin
+        a_pIni.WriteString('PressCamFactory2', 'Refs', g_PressCamFactory2.RefsToStr);
+      end;
     end;
   end;
 end;

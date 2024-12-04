@@ -292,6 +292,7 @@ var
   i: Integer;
   t: itag;
   s:cspm;
+  b:boolean;
 begin
   m_pf:=pf;
   pf.bnumupdate:=true;
@@ -300,7 +301,7 @@ begin
   HH_AlTagCB.updateTagsList;
 
   H_AlTagCB.SetTagName(g_PressCamFactory2.m_AlarmTagH.tagname);
-  HH_AlTagCB.SetTagName(g_PressCamFactory2.m_AlarmTagH.tagname);
+  HH_AlTagCB.SetTagName(g_PressCamFactory2.m_AlarmTagHH.tagname);
   // отображаем векторные теги
   if not m_init then
   begin
@@ -366,6 +367,7 @@ begin
     end;
     g_PressCamFactory2.m_createTags:=CreateTagsCB.Checked;
     g_PressCamFactory2.m_typeRes:=TypeResCB.ItemIndex;
+    ecm(b);
     g_PressCamFactory2.CreateAlg(TagsLB.Items);
     g_PressCamFactory2.CreateFrames;
     g_PressCamFactory2.m_spmCfg.str:='FFTCount='+FFTCountEdit.text;
@@ -391,6 +393,8 @@ begin
       m_pf.UnitMaxALab.Caption:='psi, pk-pk';
     end;
     g_PressCamFactory2.CreateTags;
+    if b then
+      lcm;
   end;
 end;
 

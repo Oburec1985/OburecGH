@@ -1860,11 +1860,13 @@ procedure cAlgConfig.setprops(s: string);
 var
   a:cbasealgcontainer;
   I: Integer;
+  b:boolean;
 begin
   ///m_str:=s;
   m_str:=updateParams(m_str, s);
   if ChildCount>0 then
   begin
+    ecm(b);
     if ChildCount=1 then
       m_str:=updateParams(m_str, s)
     else
@@ -1877,6 +1879,9 @@ begin
       a:=getAlg(i);
       a.Properties:=m_str;
     end;
+    // выходим если входили в этой функции
+    if b then
+      lcm;
   end;
 end;
 

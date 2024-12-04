@@ -1,13 +1,13 @@
 object TagsListFrame: TTagsListFrame
   Left = 0
   Top = 0
-  Width = 202
+  Width = 284
   Height = 303
   TabOrder = 0
   object FormChannelsGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 202
+    Width = 284
     Height = 303
     Margins.Left = 4
     Margins.Top = 4
@@ -16,11 +16,11 @@ object TagsListFrame: TTagsListFrame
     Align = alClient
     Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
     TabOrder = 0
-    ExplicitHeight = 445
+    ExplicitWidth = 202
     object ChanNamesPanel: TPanel
       Left = 2
-      Top = 15
-      Width = 198
+      Top = 18
+      Width = 280
       Height = 111
       Margins.Left = 4
       Margins.Top = 4
@@ -28,14 +28,15 @@ object TagsListFrame: TTagsListFrame
       Margins.Bottom = 4
       Align = alTop
       TabOrder = 0
+      ExplicitWidth = 198
       DesignSize = (
-        198
+        280
         111)
       object FrmTagPropLabel: TLabel
         Left = 5
         Top = 58
-        Width = 48
-        Height = 13
+        Width = 55
+        Height = 16
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -45,8 +46,8 @@ object TagsListFrame: TTagsListFrame
       object FrmTagPropValue: TLabel
         Left = 121
         Top = 60
-        Width = 48
-        Height = 13
+        Width = 56
+        Height = 16
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -56,8 +57,8 @@ object TagsListFrame: TTagsListFrame
       object FilterEdit: TEdit
         Left = 5
         Top = 8
-        Width = 187
-        Height = 21
+        Width = 269
+        Height = 24
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -65,36 +66,47 @@ object TagsListFrame: TTagsListFrame
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
         OnChange = FilterEditChange
+        ExplicitWidth = 187
       end
       object FrmTagPropValueEdit: TEdit
         Left = 121
         Top = 82
-        Width = 71
-        Height = 21
+        Width = 153
+        Height = 24
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
         Margins.Bottom = 4
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 1
+        ExplicitWidth = 71
       end
       object FrmTagPropNameCB: TComboBox
         Left = 5
         Top = 82
         Width = 108
-        Height = 21
+        Height = 24
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
         Margins.Bottom = 4
         TabOrder = 2
       end
+      object ShowScalarCB: TCheckBox
+        Left = 5
+        Top = 39
+        Width = 204
+        Height = 17
+        Caption = #1087#1086#1082#1072#1079#1099#1074#1072#1090#1100' '#1089#1082#1072#1083#1103#1088#1085#1099#1077' '#1090#1077#1075#1080
+        TabOrder = 3
+        OnClick = ShowScalarCBClick
+      end
     end
     object TagsLV: TBtnListView
       Left = 2
-      Top = 126
-      Width = 198
-      Height = 175
+      Top = 129
+      Width = 280
+      Height = 172
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -123,7 +135,7 @@ object TagsListFrame: TTagsListFrame
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitHeight = 317
+      ExplicitWidth = 198
     end
   end
 end

@@ -23,7 +23,9 @@ type
     FrmTagPropValueEdit: TEdit;
     FrmTagPropNameCB: TComboBox;
     TagsLV: TBtnListView;
+    ShowScalarCB: TCheckBox;
     procedure FilterEditChange(Sender: TObject);
+    procedure ShowScalarCBClick(Sender: TObject);
   public
     // отображать только вектора
     ShowVectortags:boolean;
@@ -99,5 +101,11 @@ begin
   LVChange(TagsLV);
 end;
 
+
+procedure TTagsListFrame.ShowScalarCBClick(Sender: TObject);
+begin
+  ShowVectortags:=not ShowScalarCB.Checked;
+  ShowChannels;
+end;
 
 end.
