@@ -1350,8 +1350,14 @@ begin
     showmessage('Необходима установка Excel');
     exit;
   end;
-  CreateExcel;
-  VisibleExcel(true);
+  if VarIsEmpty(E) then
+  begin
+    //if not CheckExcelRun then
+    begin
+      CreateExcel;
+      VisibleExcel(true);
+    end;
+  end;
 end;
 
 // получить номер строки в которое встречена пустая ячейка
@@ -1406,11 +1412,7 @@ begin
     end
     else
     begin
-      //CloseWorkBook;
-      //CloseExcel;
-      //InitExcel;
-      //OpenWorkBook(fname);
-      //OpenWorkBookEx(fname);
+
     end;
     if m_saveBlockNum = 0 then
     begin
@@ -1734,8 +1736,15 @@ end;
 procedure TPressFrm2.OpenBtnClick(Sender: TObject);
 begin
   // sortframes;
-  if fileexists(m_lastFile) then
-    ShellExecute(0, nil, pwidechar(m_lastFile), nil, nil, SW_HIDE);
+  InitExcel;
+  if not IsExcelFileOpen(m_lastFile) then
+  begin
+    OpenWorkBook(m_lastFile);
+  end
+  //if fileexists(m_lastFile) then
+  //begin
+  //  ShellExecute(0, nil, pwidechar(m_lastFile), nil, nil, SW_HIDE);
+  //end;
 end;
 
 procedure TPressFrm2.PressFrmFrame21ProgrBarMouseMove(Sender: TObject;

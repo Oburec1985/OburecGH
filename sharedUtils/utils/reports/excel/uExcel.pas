@@ -404,31 +404,25 @@ var
   i: Integer;
 begin
   Result := False;
-  try
+  if VarIsEmpty(E) then
+  begin
     // Подключаемся к запущенному экземпляру Excel (если он есть)
-    ExcelApp := GetActiveOleObject('Excel.Application');
-  except
-    on E: Exception do
-    begin
-      // Если Excel не запущен, возвращаем False
-      Exit;
-    end;
-  end;
+    E := GetActiveOleObject('Excel.Application');
+  end
+  else
+  begin
 
-  try
-    // Проверяем все открытые книги
-    for i := 1 to ExcelApp.Workbooks.Count do
+  end;
+  // Проверяем все открытые книги
+  for i := 1 to E.Workbooks.Count do
+  begin
+    Workbook := E.Workbooks[i];
+    if SameText(Workbook.FullName, ExpandFileName(FilePath)) then
     begin
-      Workbook := ExcelApp.Workbooks[i];
-      if SameText(Workbook.FullName, ExpandFileName(FilePath)) then
-      begin
-        Result := True;
-        //ExcelApp.ActiveWorkbook:=Workbook;
-        Break;
-      end;
+      Result := True;
+      //ExcelApp.ActiveWorkbook:=Workbook;
+      Break;
     end;
-  finally
-    // Не освобождаем ExcelApp, так как мы только подключались
   end;
 end;
 
@@ -488,6 +482,26 @@ begin
     Result:=false;
   end;
 end;
+
+
+Function CloseExcel:boolean;
+var
+  res:olevariant;
+begin
+  CloseExcel:=true;
+  try
+  begin
+    E.Quit;
+    // Послать Excel-у команду закрытия,
+    // т.к. eApp.Quit иногда сбоит, а под Win7 вообще никогда не срабатывает
+    //SendMessageA(E.Hinstance, WM_QUIT, 0, 0);
+    //Marshal.FinalReleaseComObject(eApp);
+    E:=Unassigned;
+  end;
+  except
+    CloseExcel:=false;
+  end;
+End;
 
 
 Function  FontToEFont(font:Tfont;EFont:OleVariant):boolean;
@@ -676,24 +690,6 @@ begin
   end;
 end;
 
-Function CloseExcel:boolean;
-var
-  res:olevariant;
-begin
-  CloseExcel:=true;
-  try
-  begin
-    E.Quit;
-    // Послать Excel-у команду закрытия,
-    // т.к. eApp.Quit иногда сбоит, а под Win7 вообще никогда не срабатывает
-    //SendMessageA(E.Hinstance, WM_QUIT, 0, 0);
-    //Marshal.FinalReleaseComObject(eApp);
-    E:=null;
-  end;
-  except
-    CloseExcel:=false;
-  end;
-End;
 
 //--------------------------------------------------------------------------
 Function  SetRange(sheet:OleVariant;range:string;value_:OleVariant):boolean;
