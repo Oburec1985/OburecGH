@@ -221,7 +221,10 @@ begin
     FreqEdit.Text:=formatstrnoe(m_f, c_digs);
     AmpE.Text:=formatstrnoe(v, c_digs);
 
-    ProgrBar.Progress:=round(ProgrBar.MaxValue*v/r);
+    if v<10000 then
+    begin
+      ProgrBar.Progress:=round(ProgrBar.MaxValue*v/r);
+    end;
     ProgrBar.ShowHint:=true;
     ProgrBar.Hint:='max='+floattostr(ProgrBar.MaxValue)+' v=' +floattostr(v)+' r='+floattostr(r);
     if m_Max>r*hh then

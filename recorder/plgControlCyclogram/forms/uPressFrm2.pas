@@ -100,6 +100,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure RefValSEKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure AvrCBClick(Sender: TObject);
   public
     m_BargraphStep: integer;
     m_lastFile:string;
@@ -159,8 +160,11 @@ type
 
     fLastBlock: double;
     // пересчитано в интдексы или нет
-    M_InitBands: boolean;
-    m_manualBand: boolean;
+    M_InitBands,
+    m_manualBand,
+    m_avrBand
+    : boolean;
+
     m_bands: array of tband;
     // merafile
     m_RepFile: string;
@@ -828,25 +832,34 @@ begin
     // проход по списку полос
     for bnum := 0 to length(m_bands)-1 do
     begin
+      max:=0;
+      sum:=0;
       // проход по списку
       for k := m_bands[bnum].i1 to m_bands[bnum].i2 do
       begin
         v:=tdoubleArray(t.m_s.m_rms.p)[k];
-        sum:=sum+v;
+        sum:=sum+v*v;
         if v>max then
         begin
           max:=v;
-          imax:=i;
+          imax:=k;
         end;
       end;
       t.m_SKO[bnum].rms_max:=max;
       t.m_SKO[bnum].Freq:=t.m_s.SpmDx*imax;
       t.m_SKO[bnum].iMax:=imax;
-      // поменять на сумму квадратов корень?
-      t.m_SKO[bnum].rms_mean:=sum/(m_bands[bnum].i2-m_bands[bnum].i1);
+      // поменять на сумму квадратов
+      t.m_SKO[bnum].rms_mean:=sqrt(sum);
       if m_createTags then
       begin
-        max:=RescaleEst(m_typeRes ,t.m_SKO[bnum].rms_max);
+        if m_avrBand then
+        begin
+          max:=RescaleEst(m_typeRes, t.m_SKO[bnum].rms_mean);
+        end
+        else
+        begin
+          max:=RescaleEst(m_typeRes ,t.m_SKO[bnum].rms_max);
+        end;
         t.m_bandTags[bnum].PushValue(max, -1);
       end;
     end;
@@ -1187,6 +1200,11 @@ begin
   end;
 end;
 
+procedure TPressFrm2.AvrCBClick(Sender: TObject);
+begin
+  g_PressCamFactory2.m_avrBand:=AvrCB.Checked;
+end;
+
 procedure TPressFrm2.BNumSBDownClick(Sender: TObject);
 begin
   if BNumIE.IntNum > 0 then
@@ -1323,6 +1341,7 @@ begin
     fr := Frame(i);
     fr.Prepare;
   end;
+  BarPanel.ShowHint:=false;
 end;
 
 procedure TPressFrm2.doStop;
@@ -1330,7 +1349,7 @@ var
   fr: TPressFrmFrame2;
   i: integer;
 begin
-
+  BarPanel.ShowHint:=true;
 end;
 
 function TPressFrm2.f1: double;
