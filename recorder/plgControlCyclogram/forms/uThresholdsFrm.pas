@@ -84,6 +84,9 @@ type
     m_a_ll,m_a_l,m_a_h,m_a_hh,
     activeA:IAlarm;
     ActiveAlInd:integer;
+    // выход за допустимый диапазон
+    m_OutRangeLevel:double;
+    m_OutRange:boolean;
   protected
     procedure initTagIface;
   public
@@ -942,6 +945,7 @@ end;
 
 constructor TAlarms.create;
 begin
+  m_OutRange:=false;
   t:=cTag.create;
   t.useEcm:=false;
 end;

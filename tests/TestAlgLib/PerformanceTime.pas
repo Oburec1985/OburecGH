@@ -36,6 +36,7 @@ uses
       FDelay :Real; //измеренное время в секундах
       StartTime :Real; //Время начала теста в секундах
     public      constructor Create;      property Delay:Real read FDelay;
+      function GetCurTime:double;
       procedure Start;
       function Stop:double;    end;
   Function GetTimeInSec:Real; //вернет время в секундах, с начало работы ОС
@@ -63,18 +64,24 @@ var
   TempValue:Real;
 begin
   TempValue :=GetTimeInSec; //Первый раз холостой, чтобы подгрузить нужные системные dll
-  TempValue :=GetTimeInSec; //Ну на всякий случай :)
+  //TempValue :=GetTimeInSec; //Ну на всякий случай :)
 end;
 //------------------------------------------------------------------//
 procedure TPerformanceTime.Start;
 begin
   StartTime:=GetTimeInSec;
 end;
+
 //------------------------------------------------------------------//
-function TPerformanceTime.Stop;
+function TPerformanceTime.Stop:double;
 begin
   FDelay:=GetTimeInSec-StartTime;
   result:=FDelay;
+end;
+
+function TPerformanceTime.GetCurTime:double;
+begin
+  result:=GetTimeInSec-StartTime;
 end;
 
 end.

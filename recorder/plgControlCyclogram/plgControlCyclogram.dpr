@@ -172,7 +172,6 @@ uses
   uPeakFactorFrame in 'forms\uPeakFactorFrame.pas' {PeakFactorFrame: TFrame},
   uHardwareMath in '..\..\sharedUtils\math\uHardwareMath.pas',
   uCommonTypes in '..\..\sharedUtils\uCommonTypes.pas',
-  PerformanceTime in '..\..\sharedUtils\utils\PerformanceTime.pas',
   uComplexDiagram in 'forms\uComplexDiagram.pas' {ComplexDiagramFrm},
   uCounterAlg in 'units\uCounterAlg.pas',
   uCounterAlgFrame in 'forms\uCounterAlgFrame.pas' {CounterAlgFrame: TFrame},
@@ -252,7 +251,8 @@ uses
   TestUDPsender in 'forms\DataTransfFrm\TestUDPsender.pas' {TestUDPSenderFrm},
   uEditCurveFrm in 'forms\uEditCurveFrm.pas' {EditCurveFrm},
   uLissajousCurve in 'forms\uLissajousCurve.pas' {LissajousFrm},
-  ulissajousCurveEdit in 'forms\ulissajousCurveEdit.pas' {LisEditFrm};
+  ulissajousCurveEdit in 'forms\ulissajousCurveEdit.pas' {LisEditFrm},
+  uPerformanceTime in '..\..\sharedUtils\utils\uPerformanceTime.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

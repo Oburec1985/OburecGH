@@ -132,10 +132,10 @@
     <File Path="..\..\sharedUtils\utils\reports\excel\uExcel.pas"/>
     <File Path="..\..\sharedUtils\utils\socket"/>
     <File Path="..\..\sharedUtils\utils\socket\uScktComp.pas"/>
-    <File Path="..\..\sharedUtils\utils\PerformanceTime.pas"/>
     <File Path="..\..\sharedUtils\utils\uComponentServises.pas"/>
     <File Path="..\..\sharedUtils\utils\uPathMng.pas"/>
     <File Path="..\..\sharedUtils\utils\uVTServices.pas"/>
+    <File Path="..\..\sharedUtils\utils\uPerformanceTime.pas"/>
     <File Path="..\..\sharedUtils\ZipMaster"/>
     <File Path="..\..\sharedUtils\ZipMaster\ZipMstr.pas"/>
     <File Path="..\..\sharedUtils\компоненты"/>
@@ -498,5 +498,7 @@
     <Transaction>2024.11.30 17:19:54.847.dfm,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uLissajousCurve.dfm</Transaction>
     <Transaction>2024.12.01 21:43:10.913.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.pas=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\ulissajousCurveEdit.pas</Transaction>
     <Transaction>2024.12.01 21:43:10.913.dfm,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\ulissajousCurveEdit.dfm</Transaction>
+    <Transaction>2024.12.05 23:39:48.177.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit1.pas=C:\Oburec\OburecGH\sharedUtils\utils\uPerformanceTime.pas</Transaction>
+    <Transaction>2024.12.05 23:41:21.116.pas,C:\Oburec\OburecGH\sharedUtils\utils\PerformanceTime.pas=</Transaction>
   </Transactions>
 </BorlandProject>

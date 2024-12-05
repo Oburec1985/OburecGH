@@ -567,11 +567,15 @@ object ThresholdFrm: TThresholdFrm
           ExplicitHeight = 109
           inherited FilterEdit: TEdit
             Width = 206
+            Height = 21
             ExplicitWidth = 206
+            ExplicitHeight = 21
           end
           inherited FrmTagPropValueEdit: TEdit
             Width = 90
+            Height = 21
             ExplicitWidth = 90
+            ExplicitHeight = 21
           end
         end
         inherited TagsLV: TBtnListView
@@ -592,6 +596,7 @@ object ThresholdFrm: TThresholdFrm
     Height = 370
     Align = alClient
     TabOrder = 3
+    ExplicitLeft = 170
     object HHLabel: TLabel
       Left = 6
       Top = 71

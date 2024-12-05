@@ -27,17 +27,21 @@ unit PerformanceTime;
 
 interface
 uses
- Classes, SysUtils,
- Windows;
+ Classes, SysUtils, Windows;
 
-  Type
-    TPerformanceTime=class
-    private
-      FDelay :Real; //измеренное время в секундах
-      StartTime :Real; //Время начала теста в секундах
-    public      constructor Create;      property Delay:Real read FDelay;
-      function Start:double;
-      function Stop:double;    end;
+Type
+
+  TPerformanceTime=class
+  private
+    fperiod:double;
+    // включен или выключен
+    fstate:boolean;
+    FDelay :Real; //измеренное время в секундах
+    StartTime :Real; //Время начала теста в секундах
+  public    constructor Create;    property Delay:Real read FDelay;
+    function Start:double;
+    // получить время от Start
+    function CurTime:double;    function checkCycle:boolean;  end;
   Function GetTimeInSec:Real; //вернет время в секундах, с начало работы ОС
 
 
@@ -59,25 +63,43 @@ begin
 end;
 
 // TPerformanceTime
-//------------------------------------------------------------------//
+function TPerformanceTime.checkCycle: boolean;
+begin
+  if fstate then
+  begin
+    Start;
+  end
+  else
+  begin
+    if CurTime>fperiod then
+    begin
+
+    end;
+  end;
+end;
+
 constructor TPerformanceTime.Create;
 var
   TempValue:Real;
 begin
+  fperiod:=1; // секунда
   TempValue :=GetTimeInSec; //Первый раз холостой, чтобы подгрузить нужные системные dll
-  TempValue :=GetTimeInSec; //Ну на всякий случай :)
+  fstate:=false;
 end;
-//------------------------------------------------------------------//
+
 function TPerformanceTime.Start:double;
 begin
+  fstate:=true;
   StartTime:=GetTimeInSec;
   result:=StartTime;
 end;
-//------------------------------------------------------------------//
-function TPerformanceTime.Stop:double;
+
+
+function TPerformanceTime.CurTime:double;
 begin
   FDelay:=GetTimeInSec-StartTime;
   Result:=FDelay;
+  fstate:=false;
 end;
 
 end.

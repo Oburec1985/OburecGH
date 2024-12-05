@@ -55,18 +55,22 @@ type
     BNumLabel: TLabel;
     BNumIE: TIntEdit;
     BNumSB: TSpinButton;
-    Label1: TLabel;
+    RefLabel: TLabel;
     RefFE: TFloatEdit;
     TypeResCB: TComboBox;
-    Label2: TLabel;
+    TypeLabel: TLabel;
     CreateTagsCB: TCheckBox;
     WndCB: TComboBox;
-    Label3: TLabel;
+    WndLab: TLabel;
     AFHcb: TCheckBox;
     HH_AlTagCB: TRcComboBox;
     H_AlTagCB: TRcComboBox;
     Label4: TLabel;
-    Label5: TLabel;
+    HHLab: TLabel;
+    AlarmCB: TRcComboBox;
+    AlarmLabel: TLabel;
+    Label1: TLabel;
+    NormalCB: TRcComboBox;
     procedure FFTCountSpinBtnDownClick(Sender: TObject);
     procedure FFTCountSpinBtnUpClick(Sender: TObject);
     procedure UpdateAlgBtnClick(Sender: TObject);
@@ -299,9 +303,13 @@ begin
   BNumIE.IntNum:=pf.m_bnum;
   H_AlTagCB.updateTagsList;
   HH_AlTagCB.updateTagsList;
+  AlarmCB.updateTagsList;
+  NormalCB.updateTagsList;
 
   H_AlTagCB.SetTagName(g_PressCamFactory2.m_AlarmTagH.tagname);
   HH_AlTagCB.SetTagName(g_PressCamFactory2.m_AlarmTagHH.tagname);
+  AlarmCB.SetTagName(g_PressCamFactory2.m_AlarmTag.tagname);
+  NormalCB.SetTagName(g_PressCamFactory2.m_NormalTag.tagname);
   // отображаем векторные теги
   if not m_init then
   begin
@@ -380,6 +388,9 @@ begin
     end;
     g_PressCamFactory2.m_AlarmTagH.tag:=H_AlTagCB.gettag();
     g_PressCamFactory2.m_AlarmTagHH.tag:=HH_AlTagCB.gettag();
+    g_PressCamFactory2.m_AlarmTag.tag:=AlarmCB.gettag();
+    g_PressCamFactory2.m_NormalTag.tag:=NormalCB.gettag();
+
     // номер полосы
     m_pf.m_bnum:=BNumIE.IntNum;
     m_pf.BNumIE.IntNum:=BNumIE.IntNum;

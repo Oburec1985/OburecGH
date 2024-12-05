@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
-  uRCFunc, ActiveX,
+  uRCFunc, ActiveX, uPerformanceTime,
   uHardwareMath, MathFunction,
   Forms, ComCtrls,
   uRecBasicFactory,
@@ -186,7 +186,9 @@ type
     m_AlarmHlev, m_AlarmHHlev,
     // заданный абсолютный максимум
     m_AlarmBase:double;
-    m_AlarmTagH, m_AlarmTagHH:ctag;
+    m_AlarmTagH, m_AlarmTagHH, m_NormalTag, m_AlarmTag:ctag;
+    // время последнего перекидывания тега m_NormalTag
+    m_Timer:TPerformanceTime;
   private
     // число дочерних компонентов
     m_counter: integer;
@@ -536,6 +538,9 @@ begin
 
   m_AlarmTagH:=ctag.create;
   m_AlarmTagHH:=ctag.create;
+  m_NormalTag:=ctag.create;
+  m_AlarmTag:=ctag.create;
+
   m_AlarmHandler:=AlarmHandler.Create;
   m_AlarmHandler.Attach;
   m_AlarmHandler.fAlarm:=doOnAlarm;
@@ -545,12 +550,19 @@ begin
   m_AlarmHlev:=0.5;
   m_AlarmHHlev:=0.7;
   m_AlarmBase:=1;
+
+  m_Timer:=TPerformanceTime.Create;
 end;
 
 destructor cPressCamFactory2.destroy;
 begin
   m_AlarmTagH.destroy;
   m_AlarmTagHH.destroy;
+  m_NormalTag.destroy;
+  m_AlarmTag.destroy;
+
+  m_Timer.Destroy;
+
   sortedFrames.destroy;
 
   //m_AlarmHandler.release;
@@ -585,6 +597,10 @@ var
   pTag:PTagRec;
   bInitRefs:boolean;
 begin
+  if m_NormalTag.tag=nil then
+    m_NormalTag.tag:= createScalar('NormalMode', false);
+  if m_AlarmTag.tag=nil then
+    m_AlarmTag.tag:= createScalar('AlarmTag', false);
   bInitRefs:=false;
   if length(m_tags)<>m_spmCfg.ChildCount then
   begin
@@ -649,6 +665,7 @@ begin
     begin
       m_AlarmBase:=m_refArray[i];
     end;
+    a.m_OutRangeLevel:=m_AlarmBase; // *1
     a.m_a_hh.SetLevel(m_AlarmBase*m_AlarmHHlev);
     a.m_a_h.SetLevel(m_AlarmBase*m_AlarmHlev);
     a.m_a_l.SetLevel(-m_AlarmBase*m_AlarmHlev);
@@ -814,9 +831,26 @@ var
   t:TTagRec;
   k: Integer;
   v, sum, max:double;
+  a:talarms;
+  alarmdata:PDataRec;
+  changealarm:boolean;
+  s:string;
 begin
   // if g_disableFRF then
   // exit;
+  // меандр для диагностики Recorder
+  //changealarm:=false;
+  if m_NormalTag.tag<>nil then
+  begin
+    if m_Timer.checkCycle then
+    begin
+      m_NormalTag.tag.PushValue(1,-1);
+    end
+    else
+    begin
+      m_NormalTag.tag.PushValue(0,-1);
+    end;
+  end;
   for i := 0 to m_CompList.Count - 1 do
   begin
     Frm := GetFrm(i);
@@ -860,7 +894,23 @@ begin
         begin
           max:=RescaleEst(m_typeRes ,t.m_SKO[bnum].rms_max);
         end;
+        s:=t.m_bandTags[bnum].GetName;
+        a:=m_Thresholds.GetAlarm(s);
+        alarmdata:=m_Thresholds.AlarmData;
         t.m_bandTags[bnum].PushValue(max, -1);
+        if max>a.m_outRangeLevel then
+        begin
+          a.m_OutRange:=true;
+          if m_AlarmTag.tag<>nil then
+            m_AlarmTag.tag.PushValue(1,-1);
+          t.m_bandTags[bnum].PushValue(max, -1);
+        end
+        else
+        begin
+          if m_AlarmTag.tag<>nil then
+            m_AlarmTag.tag.PushValue(0,-1);
+          a.m_OutRange:=false;
+        end;
       end;
     end;
   end;
@@ -1556,6 +1606,8 @@ begin
       'BandCount', 0);
     g_PressCamFactory2.m_manualBand := a_pIni.ReadBool('PressCamFactory2',
       'ManualBand', false);
+    g_PressCamFactory2.m_avrBand := a_pIni.ReadBool('PressCamFactory2',
+      'AvrRms', false);
     g_PressCamFactory2.m_typeRes := a_pIni.ReadInteger('PressCamFactory2',
       'TypeRes', 0);
     g_PressCamFactory2.m_createTags := a_pIni.ReadBool('PressCamFactory2',
@@ -1662,9 +1714,13 @@ begin
     inc(c);
   end;
   if s <> nil then
+  begin
     a_pIni.WriteString(str, 'Wnd', s.GetWndStr)
+  end
   else
+  begin
     a_pIni.WriteString(str, 'Wnd', 'c_Rect');
+  end;
   a_pIni.WriteInteger(str, 'BarGraphStepCount', m_BargraphStep);
   a_pIni.WriteInteger(str, 'sCount', c);
   // сохраняем АЧХ
@@ -1691,7 +1747,7 @@ begin
       a_pIni.WriteInteger('PressCamFactory2', 'BandCount', g_PressCamFactory2.BandCount);
       a_pIni.WriteInteger('PressCamFactory2', 'TypeRes', g_PressCamFactory2.m_typeRes);
       a_pIni.WriteBool('PressCamFactory2', 'CreateTags', g_PressCamFactory2.m_createTags);
-
+      a_pIni.WriteBool('PressCamFactory2', 'AvrRms', g_PressCamFactory2.m_avrBand);
       a_pIni.WriteBool('PressCamFactory2', 'ManualBand', g_PressCamFactory2.m_manualBand);
       if g_PressCamFactory2.m_manualBand then
       begin

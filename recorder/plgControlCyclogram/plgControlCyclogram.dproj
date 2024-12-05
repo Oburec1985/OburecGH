@@ -378,7 +378,6 @@
 			</DCCReference>
 			<DCCReference Include="..\..\sharedUtils\math\uHardwareMath.pas"/>
 			<DCCReference Include="..\..\sharedUtils\uCommonTypes.pas"/>
-			<DCCReference Include="..\..\sharedUtils\utils\PerformanceTime.pas"/>
 			<DCCReference Include="forms\uComplexDiagram.pas">
 				<Form>ComplexDiagramFrm</Form>
 			</DCCReference>
@@ -540,6 +539,7 @@
 			<DCCReference Include="forms\ulissajousCurveEdit.pas">
 				<Form>LisEditFrm</Form>
 			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\uPerformanceTime.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

@@ -657,7 +657,7 @@ begin
             a:=ThresholdFrm.getalarm(t.tagname);
             if a<>nil then
             begin
-              if a.notValid then
+              if (a.notValid) or (a.m_OutRange) then
               begin
                 SignalsSG.Canvas.Brush.Color := a.notValidCol;
               end
