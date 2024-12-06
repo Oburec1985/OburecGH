@@ -97,7 +97,7 @@ object ControlDeskFrm: TControlDeskFrm
       ParentFont = False
     end
     object AlarmsBtn: TSpeedButton
-      Left = 753
+      Left = 758
       Top = 78
       Width = 29
       Height = 29
@@ -959,10 +959,6 @@ object ControlDeskFrm: TControlDeskFrm
       Margins.Right = 2
       Margins.Bottom = 2
       Caption = #1054#1073#1097#1080#1081' '#1074#1080#1076
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Splitter2: TSplitter
         Left = 597
         Top = 0
@@ -1129,10 +1125,6 @@ object ControlDeskFrm: TControlDeskFrm
       Margins.Bottom = 2
       Caption = #1058#1072#1073#1083#1080#1094#1072' '#1088#1077#1078#1080#1084#1086#1074
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Splitter3: TSplitter
         Left = 441
         Top = 0
@@ -1189,7 +1181,6 @@ object ControlDeskFrm: TControlDeskFrm
           OnKeyDown = TableModeSGKeyDown
           OnSelectCell = TableModeSGSelectCell
           OnSetEditText = TableModeSGSetEditText
-          ExplicitTop = 14
           ColWidths = (
             64
             64

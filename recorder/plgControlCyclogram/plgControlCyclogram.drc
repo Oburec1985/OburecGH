@@ -1464,12 +1464,12 @@ END
 /* forms\uTrigsFrm.dfm */
 /* forms\uTrigFrame.dfm */
 /* forms\uModeFrame.dfm */
-/* forms\uThresholdsFrm.dfm */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uThresholdsFrm.dfm */
 /* forms\uDigsFrm.dfm */
 /* forms\uDigsFrmEdit.dfm */
 /* forms\uEditCurveFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrm2.dfm */
 /* forms\uPressFrmFrame2.dfm */
+/* forms\uPressFrm2.dfm */
 /* forms\uPressFrmEdit2.dfm */
 /* ..\..\3d\forms\uSelectLoadedObjects.dfm */
 /* forms\DataTransfFrm\TestUDPsender.dfm */
@@ -1540,6 +1540,6 @@ END
 /* forms\uPressFrmFrame.dfm */
 /* forms\uPressFrmEdit.dfm */
 /* forms\uPressFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */

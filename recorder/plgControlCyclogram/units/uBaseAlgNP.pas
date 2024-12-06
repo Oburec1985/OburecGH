@@ -76,10 +76,7 @@ begin
   begin
     if g_algMng<>nil then
     begin
-      if not RStateConfig then
-        ecm;
       g_algMng.LoadFromXML(newpath, 'Algorithm');
-      lcm;
     end;
   end;
 end;

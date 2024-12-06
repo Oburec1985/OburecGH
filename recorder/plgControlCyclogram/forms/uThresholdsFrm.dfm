@@ -11,6 +11,7 @@ object ThresholdFrm: TThresholdFrm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object BotPan: TPanel
@@ -596,7 +597,6 @@ object ThresholdFrm: TThresholdFrm
     Height = 370
     Align = alClient
     TabOrder = 3
-    ExplicitLeft = 170
     object HHLabel: TLabel
       Left = 6
       Top = 71

@@ -573,10 +573,13 @@ begin
       begin
         g_conmng.state:=c_stop;
       end;
-      if p.ActiveMode <> nil then
-        str:= p.ActiveMode.name
-      else
-        str:= '';
+      if p<>nil then
+      begin
+        if p.ActiveMode <> nil then
+          str:= p.ActiveMode.name
+        else
+          str:= '';
+      end;
       ec:=g_conmng.ErrorCount;
       if ec<>0 then
       begin
@@ -2047,7 +2050,6 @@ begin
   begin
     ThresholdFrm:=TThresholdFrm.Create(nil);
   end;
-  ThresholdFrm.UpdateTagList;
   ThresholdFrm.ShowModal;
 end;
 

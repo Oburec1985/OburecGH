@@ -144,12 +144,12 @@ type
     procedure CountIEChange(Sender: TObject);
     procedure HHColorDblClick(Sender: TObject);
     procedure TagsTVKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormShow(Sender: TObject);
   public
     m_AlarmHandler :AlarmHandler;
     m_Groups:TStringList;
     m_selGroup:TThresholdGroup;
   private
-    function AddGroup:pVirtualNode;
     procedure setData(pdata:PDataRec);
     procedure createevents;
     procedure destroyevents;
@@ -157,7 +157,10 @@ type
     procedure doChangeRState(Sender: TObject);
     procedure doStart;
     procedure doStop;
+    procedure ShowTV;
   public
+    function AddGroup:pVirtualNode;overload;
+    function AddGroup(g: TThresholdGroup):pVirtualNode;overload;
     function getAlarm(tname:string):TAlarms;
     function getGroup(i:integer):TThresholdGroup;
     procedure save(fname:string);
@@ -183,6 +186,22 @@ var
 begin
   g:=TThresholdGroup.create;
   g.name:='Group_'+inttostr(m_Groups.Count);
+  m_Groups.AddObject(g.name, g);
+  if TagsTV<>nil then
+  begin
+    result:=TagsTV.AddChild(TagsTV.rootNode, nil);
+    d:=TagsTV.getNodeData(result);
+    d.Caption:=g.name;
+    d.color:=TagsTV.normalcolor;
+    d.ImageIndex:=1;
+    D.data:=g;
+  end;
+end;
+
+function TThresholdFrm.AddGroup(g: TThresholdGroup): pVirtualNode;
+var
+  d:pnodedata;
+begin
   m_Groups.AddObject(g.name, g);
   if TagsTV<>nil then
   begin
@@ -308,6 +327,12 @@ begin
   end;
 end;
 
+procedure TThresholdFrm.FormShow(Sender: TObject);
+begin
+  UpdateTagList;
+  ShowTV;
+end;
+
 procedure TThresholdFrm.doStart;
 var
   I: Integer;
@@ -318,6 +343,7 @@ begin
     g:=TThresholdGroup(m_Groups.Objects[i]);
     if g.ControlTag.tag=nil then
       g.ControlTag.tagname:=g.ControlTag.tagname;
+    g.ApplyAlarms;
   end;
 end;
 
@@ -401,16 +427,21 @@ var
   d:PNodeData;
   g:TThresholdGroup;
   a:TAlarms;
-  j: Integer;
+  j, gCount: Integer;
   s, str:string;
 begin
   ifile:=TIniFile.Create(fname);
-  ifile.WriteString('Main', 'GCount', inttostr(TagsTV.RootNode.ChildCount));
+  //ifile.WriteString('Main', 'GCount', '0');
+  //exit;
   if TagsTV.RootNode.ChildCount=0 then exit;
-
-  for I := 0 to TagsTV.RootNode.ChildCount - 1 do
+  gCount:=0;
+  for I := 0 to m_Groups.Count - 1 do
   begin
     g:=getGroup(i);
+    // пропускаем служебные автосоздаваемые группы
+    if g.name='PressFrmAlarms' then
+      continue;
+    inc(gCount);
     ifile.WriteString('G_'+inttostr(i), 'Name', g.name);
     if g.ControlTag<>nil then
     begin
@@ -432,6 +463,7 @@ begin
     end;
     ifile.WriteString('G_'+inttostr(i), 'Tags', str);
   end;
+  ifile.WriteInteger('Main', 'GCount', gCount);
   ifile.Destroy;
 end;
 
@@ -499,6 +531,42 @@ begin
   llColor.color:=pdata.llCol;
   NotValidCB.Checked:=pdata.m_notvalid;
   NormalColor.Color:=pdata.outRangecol;
+end;
+
+procedure TThresholdFrm.ShowTV;
+var
+  I: Integer;
+  g:TThresholdGroup;
+  a:TAlarms;
+  n, n1:pVirtualNode;
+  d:pnodedata;
+  j: Integer;
+begin
+  TagsTV.Clear;
+  for I := 0 to m_Groups.Count - 1 do
+  begin
+    g:=getGroup(i);
+    if TagsTV<>nil then
+    begin
+      n:=TagsTV.AddChild(TagsTV.rootNode, nil);
+      d:=TagsTV.getNodeData(n);
+      d.Caption:=g.name;
+      d.color:=TagsTV.normalcolor;
+      d.ImageIndex:=1;
+      D.data:=g;
+    end;
+    for j := 0 to g.AlarmList.Count - 1 do
+    begin
+      a:=g.GetAlarm(j);
+      // добавляем к узлу новые теги
+      n1:=ThresholdFrm.TagsTV.AddChild(n, nil);
+      d:=ThresholdFrm.TagsTV.GetNodeData(n1);
+      d.data:=a;
+      d.color:=ThresholdFrm.TagsTV.normalcolor;
+      d.ImageIndex:=0;
+      d.Caption:=a.t.tagname;
+    end;
+  end;
 end;
 
 procedure TThresholdFrm.TagsTVChange(Sender: TBaseVirtualTree;
@@ -898,6 +966,7 @@ begin
   end;
   m_size:=c;
 end;
+
 
 procedure TThresholdGroup.StringToData(str: string; i: integer);
 var

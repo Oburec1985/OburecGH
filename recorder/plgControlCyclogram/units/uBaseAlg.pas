@@ -864,8 +864,10 @@ procedure cAlgMng.doChangeCfg(sender: tobject);
 var
   a: cbaseobj;
   i: integer;
+  b:boolean;
 begin
   // предрасчет
+  ecm(b);
   for i := 0 to Count - 1 do
   begin
     a := getobj(i);
@@ -886,6 +888,8 @@ begin
       end;
     end;
   end;
+  if b then
+    lcm;
 end;
 
 procedure cAlgMng.doChangeRState(sender: tobject);

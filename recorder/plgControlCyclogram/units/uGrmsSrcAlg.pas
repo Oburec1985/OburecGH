@@ -869,6 +869,7 @@ var
   bl: IBlockAccess;
   infreq, outfreq: double;
   OutTag: cTag;
+  b:boolean;
 begin
   if m_outTag <> nil then
   begin
@@ -878,7 +879,7 @@ begin
     // updatedx;
     if m_outTag.tag<>nil then
     begin
-      ecm;
+      ecm(b);
       m_outTag.tag.SetFreq(1 / fdX);
       m_outTag.block := nil;
       if not FAILED(m_outTag.tag.QueryInterface(IBlockAccess, bl)) then
@@ -886,7 +887,8 @@ begin
         m_outTag.block := bl;
       end;
       updateBuff;
-      lcm;
+      if b then
+        lcm;
     end;
   end;
 end;

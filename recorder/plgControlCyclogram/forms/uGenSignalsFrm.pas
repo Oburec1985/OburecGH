@@ -610,10 +610,12 @@ var
   s:cGenSig;
   f:double;
   lname, lstr, sfreq:string;
+  b:boolean;
 begin
   inherited;
   c:=a_pIni.ReadInteger(str, 'SCount', 0);
   signals.clear;
+  ecm(b);
   for I := 0 to c - 1 do
   begin
     lstr:=a_pIni.ReadString(str, 'sig_' + inttostr(i), '');
@@ -624,6 +626,8 @@ begin
     s.UpdatePhaseVelocity(s.m_sweep);
     signals.Add(s);
   end;
+  if b then
+    lcm;
   showsignals;
   g_GenSignalsFactory.m_init:=true;
 end;
@@ -935,13 +939,14 @@ constructor cGenSig.create(sname: string; p_Fs: double);
 var
   bl: IBlockAccess;
   t:itag;
+  b:boolean;
 begin
   m_sweepTime:=100;
   InitCS;
   m_name:=sname;
   m_fs:=p_Fs;
   m_t:=cTag.create;
-  ecm;
+  ecm(b);
   t:=getTagByName(sname);
   if t<>nil then
     m_t.tag:=t
@@ -955,7 +960,8 @@ begin
     m_t.block := bl;
     bl := nil;
   end;
-  lcm;
+  if b then
+    lcm;
 end;
 
 destructor cGenSig.destroy(inCfg:boolean);

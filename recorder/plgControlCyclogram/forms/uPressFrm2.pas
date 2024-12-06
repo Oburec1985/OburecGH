@@ -663,6 +663,12 @@ var
 begin
   for k := 0 to m_Thresholds.AlarmList.Count - 1 do
   begin
+    m_Thresholds.m_Data[0].outRange:=m_AlarmBase;
+    m_Thresholds.m_Data[0].HH:=m_AlarmBase*m_AlarmHHlev;
+    m_Thresholds.m_Data[0].h:=m_AlarmBase*m_AlarmHlev;
+    m_Thresholds.m_Data[0].L:=-m_AlarmBase*m_AlarmHlev;
+    m_Thresholds.m_Data[0].LL:=-m_AlarmBase*m_AlarmHHlev;
+
     a:=m_Thresholds.GetAlarm(k);
     pt:=getTagByBandTag(a.t.tag, i);
     if i<>-1 then
@@ -888,6 +894,7 @@ begin
       t.m_SKO[bnum].iMax:=imax;
       // поменять на сумму квадратов
       t.m_SKO[bnum].rms_mean:=sqrt(sum);
+      // если теги созданы то обновляем значения
       if m_createTags then
       begin
         if m_avrBand then
@@ -1668,7 +1675,7 @@ begin
   end;
   if ThresholdFrm<>nil then
   begin
-    ThresholdFrm.m_Groups.AddObject(m_Thresholds.name, m_Thresholds);
+    ThresholdFrm.AddGroup(m_Thresholds);
   end;
   if b then
     lcm;

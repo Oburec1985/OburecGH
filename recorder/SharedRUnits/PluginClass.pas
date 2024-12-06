@@ -312,6 +312,7 @@ function cNonifyProcessor.ProcessNotify(a_dwCommand: dword;
 var
   pMsgInfo: PCB_MESSAGE;
   path: string;
+  b:boolean;
 begin
   case a_dwCommand of
     PN_SHOWINFO:
@@ -325,7 +326,10 @@ begin
     PN_RCLOADCONFIG:
       begin
         path := getRConfig;
+        ecm(b);
         doLoad(path);
+        if b then
+          lcm;
       end;
     PN_RCINITIALIZED:
       begin
