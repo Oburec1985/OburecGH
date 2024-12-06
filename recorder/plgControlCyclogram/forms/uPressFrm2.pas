@@ -136,7 +136,7 @@ type
     function FrameCount: integer;
     function f1: double;
     function f2: double;
-    procedure CreateFrame(sname: string);
+    function CreateFrame(sname: string):TPressFrmFrame2;
   public
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -442,11 +442,11 @@ begin
   Frm.PressFrmFrame21.spm := g_PressCamFactory2.getSpm(s.m_tag.tagname);
   Frm.BarPanel.ShowHint := true;
   Frm.BarPanel.Hint := s.m_tag.tagname;
-
   for j := 1 to m_spmCfg.ChildCount - 1 do
   begin
     s := getSpm(j);
-    Frm.CreateFrame(s.m_tag.tagname);
+    fr:=Frm.CreateFrame(s.m_tag.tagname);
+    fr.ALabel.Caption:='A'+inttostr(j+1);
   end;
   Frm.sortframes;
   // сортировка по размещению
@@ -598,9 +598,13 @@ var
   bInitRefs:boolean;
 begin
   if m_NormalTag.tag=nil then
-    m_NormalTag.tag:= createScalar('NormalMode', false);
+  begin
+    //m_NormalTag.tag:= createScalar('NormalMode', false);
+  end;
   if m_AlarmTag.tag=nil then
-    m_AlarmTag.tag:= createScalar('AlarmTag', false);
+  begin
+    //m_AlarmTag.tag:= createScalar('AlarmTag', false);
+  end;
   bInitRefs:=false;
   if length(m_tags)<>m_spmCfg.ChildCount then
   begin
@@ -839,7 +843,7 @@ begin
   // if g_disableFRF then
   // exit;
   // меандр для диагностики Recorder
-  //changealarm:=false;
+  changealarm:=false;
   if m_NormalTag.tag<>nil then
   begin
     if m_Timer.checkCycle then
@@ -901,18 +905,22 @@ begin
         if max>a.m_outRangeLevel then
         begin
           a.m_OutRange:=true;
+          t.m_bandTags[bnum].PushValue(max, -1);
+          changealarm:=true;
           if m_AlarmTag.tag<>nil then
             m_AlarmTag.tag.PushValue(1,-1);
-          t.m_bandTags[bnum].PushValue(max, -1);
         end
         else
         begin
-          if m_AlarmTag.tag<>nil then
-            m_AlarmTag.tag.PushValue(0,-1);
           a.m_OutRange:=false;
         end;
       end;
     end;
+  end;
+  if not changealarm then
+  begin
+    if m_AlarmTag.tag<>nil then
+      m_AlarmTag.tag.PushValue(0,-1);
   end;
 end;
 
@@ -1232,6 +1240,7 @@ end;
 procedure TPressFrm2.FormShow(Sender: TObject);
 begin
   sortframes;
+  AvrCB.Checked:= g_PressCamFactory2.m_avrBand;
 end;
 
 function TPressFrm2.Frame(s: string): TPressFrmFrame2;
@@ -1299,7 +1308,7 @@ begin
   g_PressCamFactory2.sortedFrames.Add(self);
 end;
 
-procedure TPressFrm2.CreateFrame(sname: string);
+function TPressFrm2.CreateFrame(sname: string):TPressFrmFrame2;
 var
   fr: TPressFrmFrame2;
   p: TPanel;
@@ -1341,6 +1350,7 @@ begin
   // fr.ProgrBar.width:=p.Width-fr.ProgrBar.Left-2;
 
   m_frames.Add(fr);
+  result:=fr;
 end;
 
 destructor TPressFrm2.destroy;
@@ -1593,10 +1603,10 @@ begin
   m_bnum := a_pIni.ReadInteger(str, 'BNum', 0);
   if self = g_PressCamFactory2.GetFrm(0) then
   begin
-    LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTagH,
-                'PressCamFactory2', 'AlarmHTag');
-    LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH,
-                  'PressCamFactory2', 'AlarmHHTag');
+    LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTagH,'PressCamFactory2', 'AlarmHTag');
+    LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH,'PressCamFactory2', 'AlarmHHTag');
+    LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTag,'PressCamFactory2', 'AlarmTag');
+    LoadExTagIni(a_pIni,g_PressCamFactory2.m_NormalTag,'PressCamFactory2', 'NormalTag');
 
     c := a_pIni.ReadInteger('PressCamFactory2', 'FFTCount', 256);
     s := 'FFTCount=' + inttostr(c) + ',';
@@ -1606,8 +1616,7 @@ begin
       'BandCount', 0);
     g_PressCamFactory2.m_manualBand := a_pIni.ReadBool('PressCamFactory2',
       'ManualBand', false);
-    g_PressCamFactory2.m_avrBand := a_pIni.ReadBool('PressCamFactory2',
-      'AvrRms', false);
+    g_PressCamFactory2.m_avrBand := a_pIni.ReadBool('PressCamFactory2', 'AvrRms', false);
     g_PressCamFactory2.m_typeRes := a_pIni.ReadInteger('PressCamFactory2',
       'TypeRes', 0);
     g_PressCamFactory2.m_createTags := a_pIni.ReadBool('PressCamFactory2',
@@ -1739,10 +1748,10 @@ begin
     if s<>nil then
     begin
       lstr := getparam(s.GetProperties, 'FFTCount');
-      saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagH,
-                    'PressCamFactory2', 'AlarmHTag');
-      saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH,
-                    'PressCamFactory2', 'AlarmHHTag');
+      saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagH, 'PressCamFactory2', 'AlarmHTag');
+      saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH, 'PressCamFactory2', 'AlarmHHTag');
+      saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTag, 'PressCamFactory2', 'AlarmTag');
+      saveTagToIni(a_pIni,g_PressCamFactory2.m_NormalTag, 'PressCamFactory2', 'NormalTag');
       a_pIni.WriteInteger('PressCamFactory2', 'FFTCount', strtoint(lstr));
       a_pIni.WriteInteger('PressCamFactory2', 'BandCount', g_PressCamFactory2.BandCount);
       a_pIni.WriteInteger('PressCamFactory2', 'TypeRes', g_PressCamFactory2.m_typeRes);

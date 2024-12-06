@@ -49,7 +49,8 @@ begin
     if curtime>fperiod then
     begin
       start;
-      result:=not flevel;
+      flevel:=not flevel;
+      result:=flevel;
     end;
   end;
   result:=flevel;

@@ -69,7 +69,7 @@ type
     HHLab: TLabel;
     AlarmCB: TRcComboBox;
     AlarmLabel: TLabel;
-    Label1: TLabel;
+    NormalLabel: TLabel;
     NormalCB: TRcComboBox;
     procedure FFTCountSpinBtnDownClick(Sender: TObject);
     procedure FFTCountSpinBtnUpClick(Sender: TObject);

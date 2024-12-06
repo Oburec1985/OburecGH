@@ -101,6 +101,7 @@ type
   end;
 
   cIntNode = class
+  public
     i:integer;
     d:pointer;
   end;

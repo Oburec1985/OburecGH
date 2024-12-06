@@ -81,7 +81,6 @@ object DigsFrmEdit: TDigsFrmEdit
             Left = 7
             Top = 11
             Width = 314
-            Height = 24
             Margins.Left = 5
             Margins.Top = 5
             Margins.Right = 5
@@ -89,13 +88,11 @@ object DigsFrmEdit: TDigsFrmEdit
             ExplicitLeft = 7
             ExplicitTop = 11
             ExplicitWidth = 314
-            ExplicitHeight = 24
           end
           inherited FrmTagPropValueEdit: TEdit
             Left = 159
             Top = 107
             Width = 197
-            Height = 24
             Margins.Left = 5
             Margins.Top = 5
             Margins.Right = 5
@@ -103,7 +100,6 @@ object DigsFrmEdit: TDigsFrmEdit
             ExplicitLeft = 159
             ExplicitTop = 107
             ExplicitWidth = 197
-            ExplicitHeight = 24
           end
           inherited FrmTagPropNameCB: TComboBox
             Left = 7

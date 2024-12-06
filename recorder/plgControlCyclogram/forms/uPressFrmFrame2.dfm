@@ -9,7 +9,7 @@ object PressFrmFrame2: TPressFrmFrame2
     451
     304)
   object ALabel: TLabel
-    Left = 5
+    Left = 1
     Top = 4
     Width = 20
     Height = 16
@@ -41,7 +41,7 @@ object PressFrmFrame2: TPressFrmFrame2
     Left = 95
     Top = 3
     Width = 43
-    Height = 21
+    Height = 24
     ReadOnly = True
     TabOrder = 0
     Text = '0'
@@ -50,7 +50,7 @@ object PressFrmFrame2: TPressFrmFrame2
     Left = 27
     Top = 3
     Width = 45
-    Height = 21
+    Height = 24
     ReadOnly = True
     TabOrder = 1
     Text = '0'

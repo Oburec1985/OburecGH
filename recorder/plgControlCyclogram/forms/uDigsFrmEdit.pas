@@ -175,6 +175,7 @@ begin
       end;
     end;
   end;
+  SGChange(SignalsSG);
   SignalsSG.Invalidate;
 end;
 
