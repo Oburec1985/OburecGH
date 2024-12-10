@@ -1464,7 +1464,8 @@ END
 /* forms\uTrigsFrm.dfm */
 /* forms\uTrigFrame.dfm */
 /* forms\uModeFrame.dfm */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uThresholdsFrm.dfm */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uLissajousCurve.dfm */
+/* forms\uThresholdsFrm.dfm */
 /* forms\uDigsFrm.dfm */
 /* forms\uDigsFrmEdit.dfm */
 /* forms\uEditCurveFrm.dfm */
@@ -1525,7 +1526,6 @@ END
 /* forms\uSpmChartEdit.dfm */
 /* forms\uSpmChart.dfm */
 /* forms\uControlWarnFrm.dfm */
-/* forms\uLissajousCurve.dfm */
 /* forms\ulissajousCurveEdit.dfm */
 /* forms\uMBaseControl.dfm */
 /* ..\SharedRUnits\uFrmSync.dfm */

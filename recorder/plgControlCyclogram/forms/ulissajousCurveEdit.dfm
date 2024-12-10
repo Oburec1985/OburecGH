@@ -24,7 +24,6 @@ object LisEditFrm: TLisEditFrm
     Margins.Bottom = 2
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 346
     object UpdateBtn: TSpeedButton
       Left = 14
       Top = 5
@@ -151,8 +150,6 @@ object LisEditFrm: TLisEditFrm
     Align = alClient
     Constraints.MinWidth = 273
     TabOrder = 1
-    ExplicitLeft = 188
-    ExplicitTop = -4
     object LengthLabel: TLabel
       Left = 5
       Top = 3
@@ -201,7 +198,6 @@ object LisEditFrm: TLisEditFrm
       ParentBackground = False
       ParentColor = False
       TabOrder = 0
-      ExplicitTop = 179
       object MinYLabel: TLabel
         Left = 11
         Top = 18
@@ -322,7 +318,6 @@ object LisEditFrm: TLisEditFrm
       ParentBackground = False
       ParentColor = False
       TabOrder = 2
-      ExplicitTop = 123
       object LineColor: TPanel
         Left = 11
         Top = 18
@@ -362,7 +357,6 @@ object LisEditFrm: TLisEditFrm
     Align = alLeft
     Caption = #1057#1087#1080#1089#1086#1082' '#1082#1072#1085#1072#1083#1086#1074
     TabOrder = 2
-    ExplicitHeight = 346
     object TagsTV: TVTree
       Left = 2
       Top = 15
@@ -387,7 +381,6 @@ object LisEditFrm: TLisEditFrm
       OnChange = TagsTVChange
       OnDragOver = TagsTVDragOver
       OnDragDrop = TagsTVDragDrop
-      ExplicitLeft = 1
       Columns = <>
     end
   end
@@ -404,7 +397,7 @@ object LisEditFrm: TLisEditFrm
     TabOrder = 3
     ExplicitLeft = 460
     ExplicitWidth = 272
-    ExplicitHeight = 346
+    ExplicitHeight = 369
     inherited FormChannelsGB: TGroupBox
       Width = 272
       Height = 369
@@ -413,7 +406,7 @@ object LisEditFrm: TLisEditFrm
       Margins.Right = 3
       Margins.Bottom = 3
       ExplicitWidth = 272
-      ExplicitHeight = 346
+      ExplicitHeight = 369
       inherited ChanNamesPanel: TPanel
         Width = 268
         Height = 81
@@ -447,6 +440,7 @@ object LisEditFrm: TLisEditFrm
           Left = 4
           Top = 6
           Width = 257
+          Height = 21
           Margins.Left = 3
           Margins.Top = 3
           Margins.Right = 3
@@ -454,11 +448,13 @@ object LisEditFrm: TLisEditFrm
           ExplicitLeft = 4
           ExplicitTop = 6
           ExplicitWidth = 257
+          ExplicitHeight = 21
         end
         inherited FrmTagPropValueEdit: TEdit
           Left = 91
           Top = 62
           Width = 141
+          Height = 21
           Margins.Left = 3
           Margins.Top = 3
           Margins.Right = 3
@@ -466,6 +462,7 @@ object LisEditFrm: TLisEditFrm
           ExplicitLeft = 91
           ExplicitTop = 62
           ExplicitWidth = 141
+          ExplicitHeight = 21
         end
         inherited FrmTagPropNameCB: TComboBox
           Left = 4
@@ -503,7 +500,7 @@ object LisEditFrm: TLisEditFrm
           end>
         ExplicitTop = 96
         ExplicitWidth = 268
-        ExplicitHeight = 248
+        ExplicitHeight = 271
       end
     end
   end

@@ -170,7 +170,9 @@ type
     m_RepFile: string;
     m_spmCfg: cAlgConfig;
     // manual
-    m_Manualref: boolean;
+    m_Manualref,
+    m_useRefTag: boolean;
+    m_refTag:ctag;
     // список ref дл€ каждого датчика
     m_refArray: array of double;
     //
@@ -536,10 +538,13 @@ begin
   createevents;
   BandCount := 6;
 
+  m_useRefTag:=false;
+
   m_AlarmTagH:=ctag.create;
   m_AlarmTagHH:=ctag.create;
   m_NormalTag:=ctag.create;
   m_AlarmTag:=ctag.create;
+  m_RefTag:=ctag.create;
 
   m_AlarmHandler:=AlarmHandler.Create;
   m_AlarmHandler.Attach;
@@ -560,6 +565,7 @@ begin
   m_AlarmTagHH.destroy;
   m_NormalTag.destroy;
   m_AlarmTag.destroy;
+  m_RefTag.destroy;
 
   m_Timer.Destroy;
 
@@ -578,6 +584,7 @@ var
   f: TPressFrm2;
 begin
   inherited;
+
   CreateAlgConfig;
   for i := 0 to m_CompList.Count - 1 do
   begin
@@ -660,9 +667,26 @@ var
   i,k:integer;
   a:TAlarms;
   pt:PTagRec;
+  ref:double;
 begin
   for k := 0 to m_Thresholds.AlarmList.Count - 1 do
   begin
+    //if i<>-1 then
+    begin
+      //m_AlarmBase:=m_refArray[i];
+      if length(m_refArray)=0 then
+        ref:=1
+      else
+        ref:=m_refArray[0];
+      m_AlarmBase:=ref;
+      if m_useRefTag then
+      begin
+        if m_refTag.tag<>nil then
+        begin
+          m_AlarmBase:=GetMean(m_refTag.tag)*ref;
+        end;
+      end;
+    end;
     m_Thresholds.m_Data[0].outRange:=m_AlarmBase;
     m_Thresholds.m_Data[0].HH:=m_AlarmBase*m_AlarmHHlev;
     m_Thresholds.m_Data[0].h:=m_AlarmBase*m_AlarmHlev;
@@ -671,10 +695,7 @@ begin
 
     a:=m_Thresholds.GetAlarm(k);
     pt:=getTagByBandTag(a.t.tag, i);
-    if i<>-1 then
-    begin
-      m_AlarmBase:=m_refArray[i];
-    end;
+
     a.m_OutRangeLevel:=m_AlarmBase; // *1
     a.m_a_hh.SetLevel(m_AlarmBase*m_AlarmHHlev);
     a.m_a_h.SetLevel(m_AlarmBase*m_AlarmHlev);
@@ -866,6 +887,13 @@ begin
     Frm := GetFrm(i);
     TPressFrm2(Frm).updatedata;
   end;
+  if m_useRefTag then
+  begin
+    if m_refTag.tag<>nil then
+    begin
+      SetAlarms;
+    end;
+  end;
   //// добавлено 05.11.24. ќценки и теги считать вфабрике
   /// а в компоненте только отображать
   // сохранение тегов
@@ -924,7 +952,7 @@ begin
       end;
     end;
   end;
-  if not changealarm then
+  if not changeAlarm then
   begin
     if m_AlarmTag.tag<>nil then
       m_AlarmTag.tag.PushValue(0,-1);
@@ -1614,6 +1642,7 @@ begin
     LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH,'PressCamFactory2', 'AlarmHHTag');
     LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTag,'PressCamFactory2', 'AlarmTag');
     LoadExTagIni(a_pIni,g_PressCamFactory2.m_NormalTag,'PressCamFactory2', 'NormalTag');
+    LoadExTagIni(a_pIni,g_PressCamFactory2.m_RefTag,'PressCamFactory2', 'RefTag');
 
     c := a_pIni.ReadInteger('PressCamFactory2', 'FFTCount', 256);
     s := 'FFTCount=' + inttostr(c) + ',';
@@ -1640,6 +1669,7 @@ begin
         g_PressCamFactory2.SetBCount(6);
       end;
     end;
+    g_PressCamFactory2.m_useRefTag := a_pIni.ReadBool('PressCamFactory2','UseRefTag', false);
     g_PressCamFactory2.m_Manualref := a_pIni.ReadBool('PressCamFactory2',
       'ManualRef', false);
     s := a_pIni.ReadString('PressCamFactory2', 'Refs', '');
@@ -1677,6 +1707,11 @@ begin
   begin
     ThresholdFrm.AddGroup(m_Thresholds);
   end;
+  m_refTag.tagname:=m_refTag.tagname;
+  m_NormalTag.tagname:=m_NormalTag.tagname;
+  m_AlarmTagH.tagname:=m_AlarmTagH.tagname;
+  m_AlarmTagHH.tagname:=m_AlarmTagHH.tagname;
+
   if b then
     lcm;
   if fileexists(m_loadFile) then
@@ -1759,6 +1794,9 @@ begin
       saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH, 'PressCamFactory2', 'AlarmHHTag');
       saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTag, 'PressCamFactory2', 'AlarmTag');
       saveTagToIni(a_pIni,g_PressCamFactory2.m_NormalTag, 'PressCamFactory2', 'NormalTag');
+      saveTagToIni(a_pIni,g_PressCamFactory2.m_RefTag,'PressCamFactory2', 'RefTag');
+      a_pIni.WriteBool('PressCamFactory2', 'UseRefTag', g_PressCamFactory2.m_useRefTag);
+
       a_pIni.WriteInteger('PressCamFactory2', 'FFTCount', strtoint(lstr));
       a_pIni.WriteInteger('PressCamFactory2', 'BandCount', g_PressCamFactory2.BandCount);
       a_pIni.WriteInteger('PressCamFactory2', 'TypeRes', g_PressCamFactory2.m_typeRes);

@@ -211,7 +211,10 @@ begin
     if tobject(D.Data) is TLisSig then
     begin
       s:=TLisSig(D.Data);
-      linecolor.Color:=rgbtoint(s.m_trend.color);
+      if s.m_trend<>nil then
+      begin
+        linecolor.Color:=rgbtoint(s.m_trend.color);
+      end;
       SetMultiSelectComponentString(XTagCB,s.m_tx.tagname);
       SetMultiSelectComponentString(YTagCB,s.m_ty.tagname);
     end;

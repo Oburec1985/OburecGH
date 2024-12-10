@@ -71,6 +71,8 @@ type
     AlarmLabel: TLabel;
     NormalLabel: TLabel;
     NormalCB: TRcComboBox;
+    UseRefTagCb: TCheckBox;
+    RefTagCb: TRcComboBox;
     procedure FFTCountSpinBtnDownClick(Sender: TObject);
     procedure FFTCountSpinBtnUpClick(Sender: TObject);
     procedure UpdateAlgBtnClick(Sender: TObject);
@@ -90,6 +92,7 @@ type
     procedure TagsLBClick(Sender: TObject);
     procedure RefFEChange(Sender: TObject);
     procedure AFHcbClick(Sender: TObject);
+    procedure UseRefTagCbClick(Sender: TObject);
   private
     m_init,
     m_manualRef:boolean;
@@ -305,11 +308,16 @@ begin
   HH_AlTagCB.updateTagsList;
   AlarmCB.updateTagsList;
   NormalCB.updateTagsList;
+  RefTagCb.updateTagsList;
 
   H_AlTagCB.SetTagName(g_PressCamFactory2.m_AlarmTagH.tagname);
   HH_AlTagCB.SetTagName(g_PressCamFactory2.m_AlarmTagHH.tagname);
   AlarmCB.SetTagName(g_PressCamFactory2.m_AlarmTag.tagname);
   NormalCB.SetTagName(g_PressCamFactory2.m_NormalTag.tagname);
+  RefTagCb.SetTagName(g_PressCamFactory2.m_RefTag.tagname);
+  useRefTagCb.Checked:=g_PressCamFactory2.m_useRefTag;
+  RefTagCb.Visible:=g_PressCamFactory2.m_useRefTag;
+
   // отображаем векторные теги
   if not m_init then
   begin
@@ -390,6 +398,8 @@ begin
     g_PressCamFactory2.m_AlarmTagHH.tag:=HH_AlTagCB.gettag();
     g_PressCamFactory2.m_AlarmTag.tag:=AlarmCB.gettag();
     g_PressCamFactory2.m_NormalTag.tag:=NormalCB.gettag();
+    g_PressCamFactory2.m_RefTag.tag:=RefTagCb.gettag();
+    g_PressCamFactory2.m_useRefTag:=useRefTagCb.Checked;
 
     // номер полосы
     m_pf.m_bnum:=BNumIE.IntNum;
@@ -463,6 +473,19 @@ begin
   t:=getTagByName(TagsLB.Items[0]);
   if t<>nil then
     fftdx.FloatNum := FFTCountEdit.IntNum/t.GetFreq;
+end;
+
+procedure TPressFrmEdit2.UseRefTagCbClick(Sender: TObject);
+begin
+  RefTagcb.Visible:=UseRefTagCb.Checked;
+  if UseRefTagCb.Checked then
+  begin
+    RefLabel.Caption:='Масштаб';
+  end
+  else
+  begin
+    RefLabel.Caption:='Ref';
+  end;
 end;
 
 end.

@@ -172,10 +172,18 @@ end;
 procedure TLissajousFrm.ChartInit(Sender: tobject);
 var
   i: integer;
+  s:TLisSig;
 begin
   m_p := cpage(m_Chart.activePage);
   m_p.Caption := '‘игуры Ћиссажу';
   m_ax := m_p.activeAxis;
+  // обновление сигналов по загрузке
+  for i := 0 to m_signals.count - 1 do
+  begin
+    s := GetSignal(i);
+    s.updateTags;
+    s.updatetrend;
+  end;
 end;
 
 constructor TLissajousFrm.create(Aowner: tcomponent);
@@ -523,25 +531,6 @@ begin
   for i := 0 to count - 1 do
   begin
     frm := TLissajousFrm(getfrm(i));
-    {frm.m_axis.name:='Test';
-    frm.m_axis.xmin:=-3;
-    frm.m_axis.xmax:=3;
-    frm.m_axis.ymin:=-3;
-    frm.m_axis.ymax:=3;
-    frm.m_timeLen:=0.3;
-    r.BottomLeft.x:=frm.m_axis.xmin;
-    r.BottomLeft.y:=frm.m_axis.ymin;
-    r.TopRight.x:=frm.m_axis.xmax;
-    r.TopRight.y:=frm.m_axis.ymax;
-    frm.m_p.ZoomfRect(r);
-    // тестова€ инициаци€
-    s:=frm.createsignal;
-    s.m_tx.tagname:='GenSignal_001';
-    s.m_ty.tagname:='GenSignal_0002';
-
-    s:=frm.createsignal;
-    s.m_tx.tagname:='GenSignal_0002';
-    s.m_ty.tagname:='GenSignal_001'; }
 
     // обновление сигналов по загрузке
     for j := 0 to frm.m_signals.count - 1 do
