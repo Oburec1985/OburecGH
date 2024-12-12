@@ -197,7 +197,7 @@ type
     function getprograms: cProgramList;
   public
     property StopTrigger: cBaseTrig read fStoptrig write setStopTrigger;
-    // вызывать напрямую опасно, т.к. должны использоваться флагивида c_TryStop и c_TryPlay
+    // вызывать напрямую опасно, т.к. должны использоваться флаги вида c_TryStop и c_TryPlay
     // для управления режимом из потока в котором вызывается exec
     property state: integer read fstate write setstate;
     property programs: cProgramList read getprograms write fprograms;

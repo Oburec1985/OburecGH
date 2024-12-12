@@ -85,6 +85,8 @@ type
     специальную форму}
   TExtRecorderPack = class(TInterfacedObject, IRecorderPlugin)
   public
+    // для прореживания LeaveConfig событий
+    m_loadState:boolean;
     delplg: boolean;
     // Загружен конфиг при стартовой загрузке рекордера
     // сделано для анализа произошло событие SwitchOnUI до загрузки или после
@@ -321,16 +323,18 @@ begin
     end;
     PN_LEAVERCCONFIG:
     begin
-      doLeaveCfg;
+      if TExtRecorderPack(G_Plg).m_loadState then
+      begin
+
+      end
+      else
+        doLeaveCfg;
     end;
     PN_RCLOADCONFIG:
-      begin
-        path := getRConfig;
-        ecm(b);
-        doLoad(path);
-        if b then
-          lcm;
-      end;
+    begin
+      path := getRConfig;
+      doLoad(path);
+    end;
     PN_RCINITIALIZED:
       begin
         doRCInit;
@@ -376,11 +380,25 @@ procedure cNotifyProcessorList.CallAllProcessNotify(a_dwCommand: dword;
 var
   i: integer;
   np: cNonifyProcessor;
+  b, b1:boolean;
 begin
+  b:=false;
+  b1:=(a_dwCommand=PN_RCLOADCONFIG);
+  if b1 then
+  begin
+    TExtRecorderPack(G_Plg).m_loadState:=true;
+    ecm(b);
+  end;
   for i := 0 to count - 1 do
   begin
     np := GetNP(i);
     np.ProcessNotify(a_dwCommand, a_dwData);
+  end;
+  if b1 then
+  begin
+    TExtRecorderPack(G_Plg).m_loadState:=false;
+    if b then
+      lcm;
   end;
 end;
 
@@ -552,6 +570,7 @@ end;
 { Конструктор } { Создание формы тестового plug-in`а }
 constructor TExtRecorderPack.Create;
 begin
+  m_loadState:=false;
   g_startdir := extractfiledir(Application.ExeName) + '\plugins\';
   g_startdir := ExtractFileDrive(GetSystemDir)+'\Mera files\Recorder\plugins\';
   if not DirectoryExists(g_startdir) then
@@ -599,11 +618,13 @@ begin
   case a_dwCommand of
     PN_RCLOADCONFIG:
     begin
+      m_loadState:=true;
       for I := 0 to m_CompMng.Count - 1 do
       begin
         m_CompMng.doafterload;
       end;
       CallPlgEvents(c_RC_LoadCfg);
+      m_loadState:=false;
     end;
     PN_RCSAVECONFIG:
     begin
@@ -827,7 +848,6 @@ begin
     PN_RCLOADCONFIG:
       begin
         m_loadDefCfg := true;
-        // LoadConfName;
       end;
     PN_ON_SWITCH_TO_UI_THREAD:
       begin
@@ -857,7 +877,12 @@ begin
         // передать ей новый список ссылок на интерфейсы тегов
         // frmTestSettings.EndConfigure(Tags);
         result := true;
-        CallPlgEvents(c_RC_LeaveCfg);
+        if m_loadState then
+        BEGIN
+
+        END
+        ELSE
+          CallPlgEvents(c_RC_LeaveCfg);
       end;
     PN_RCSTOP:
       begin

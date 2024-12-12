@@ -211,7 +211,9 @@ begin
       if call then
       begin
         if e.active then
+        begin
           e.action(owner);
+        end;
       end;
     end;
   end;

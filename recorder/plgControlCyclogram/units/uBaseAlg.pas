@@ -135,6 +135,7 @@ type
     function getwnd:TWndType;
     function ChildCount:integer;
     function getAlg(i:integer):cBaseAlgContainer;
+    // не удалить объект а исключить из списка
     procedure delAlg(a:cBaseAlgContainer);
     property name:string read m_name write m_name;
     property str:string read getprops write setprops;
@@ -373,6 +374,11 @@ begin
 
   m_errors.destroy;
   m_errors := nil;
+
+  if m_parentCfg<>nil then
+  begin
+    m_parentCfg.delAlg(self);
+  end;
   inherited;
 end;
 

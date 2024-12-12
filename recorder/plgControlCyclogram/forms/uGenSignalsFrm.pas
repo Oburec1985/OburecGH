@@ -941,6 +941,7 @@ var
   t:itag;
   b:boolean;
 begin
+  m_lg:=false;
   m_sweepTime:=100;
   InitCS;
   m_name:=sname;

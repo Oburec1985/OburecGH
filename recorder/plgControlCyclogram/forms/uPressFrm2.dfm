@@ -2,43 +2,49 @@ object PressFrm2: TPressFrm2
   Left = 0
   Top = 0
   Caption = #1054#1073#1088#1072#1073#1086#1090#1082#1072' '#1076#1072#1074#1083#1077#1085#1080#1103' '#1074' '#1082#1072#1084#1077#1088#1077' '#1089#1075#1086#1088#1072#1085#1080#1103
-  ClientHeight = 437
-  ClientWidth = 292
+  ClientHeight = 608
+  ClientWidth = 382
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   PopupMenu = PopupMenu1
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object BarGraphGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 292
-    Height = 437
+    Width = 382
+    Height = 608
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alClient
     Caption = #1055#1086#1083#1086#1089#1072' '#8470
     TabOrder = 0
+    ExplicitHeight = 571
     object ScrollBox1: TScrollBox
       Left = 2
-      Top = 15
-      Width = 288
-      Height = 300
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 19
+      Width = 378
+      Height = 430
       Align = alClient
       TabOrder = 0
+      ExplicitHeight = 393
       object BarPanel: TPanel
         Left = 0
         Top = 0
-        Width = 284
-        Height = 29
+        Width = 374
+        Height = 38
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alTop
         ParentShowHint = False
         ShowHint = False
@@ -46,128 +52,123 @@ object PressFrm2: TPressFrm2
         inline PressFrmFrame21: TPressFrmFrame2
           Left = 1
           Top = 1
-          Width = 282
-          Height = 27
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Width = 372
+          Height = 36
           Align = alClient
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 282
-          ExplicitHeight = 27
+          ExplicitWidth = 372
+          ExplicitHeight = 36
           inherited ALabel: TLabel
-            Top = 3
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
-            ExplicitTop = 3
+            Width = 21
+            Height = 17
+            ExplicitWidth = 21
+            ExplicitHeight = 17
           end
           inherited FLabel: TLabel
-            Left = 57
-            Top = 3
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
-            ExplicitLeft = 57
-            ExplicitTop = 3
+            Width = 20
+            Height = 17
+            ExplicitWidth = 20
+            ExplicitHeight = 17
           end
           inherited ProgrBar: TGauge
-            Left = 116
-            Top = 2
-            Width = 161
-            Height = 19
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
-            Font.Height = -11
-            ExplicitLeft = 116
-            ExplicitTop = 2
-            ExplicitWidth = 161
-            ExplicitHeight = 19
+            Width = 210
+            Font.Height = -15
+            ExplicitWidth = 210
           end
           inherited FreqEdit: TEdit
-            Left = 73
-            Top = 2
-            Width = 33
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
-            ExplicitLeft = 73
-            ExplicitTop = 2
-            ExplicitWidth = 33
+            Width = 44
+            Height = 25
+            ExplicitWidth = 44
+            ExplicitHeight = 25
           end
           inherited AmpE: TEdit
-            Left = 21
-            Top = 2
-            Width = 34
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
-            ExplicitLeft = 21
-            ExplicitTop = 2
-            ExplicitWidth = 34
+            Height = 25
+            ExplicitHeight = 25
           end
         end
       end
     end
     object Panel1: TPanel
       Left = 2
-      Top = 315
-      Width = 288
-      Height = 120
+      Top = 449
+      Width = 378
+      Height = 157
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alBottom
       ParentShowHint = False
       ShowHint = True
       TabOrder = 1
+      ExplicitTop = 412
       object MaxLabel: TLabel
-        Left = 2
-        Top = 8
-        Width = 49
-        Height = 13
+        Left = 3
+        Top = 10
+        Width = 62
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'Max. ampl'
       end
       object MaxFreqLabel: TLabel
-        Left = 2
-        Top = 35
-        Width = 43
-        Height = 13
+        Left = 3
+        Top = 46
+        Width = 53
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'Max freq'
       end
       object MaxCamLabel: TLabel
-        Left = 2
-        Top = 62
-        Width = 57
-        Height = 13
+        Left = 3
+        Top = 81
+        Width = 73
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'Max Cam'#8470
       end
       object UnitMaxALab: TLabel
-        Left = 111
-        Top = 8
-        Width = 46
-        Height = 13
+        Left = 145
+        Top = 10
+        Width = 59
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'psi, pk-pk'
       end
       object UnitMaxFLab: TLabel
-        Left = 111
-        Top = 35
-        Width = 12
-        Height = 13
+        Left = 145
+        Top = 46
+        Width = 15
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'Hz'
       end
       object SaveBtn: TSpeedButton
-        Left = 3
-        Top = 81
-        Width = 39
-        Height = 33
+        Left = 4
+        Top = 106
+        Width = 51
+        Height = 43
         Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         AllowAllUp = True
         BiDiMode = bdLeftToRight
         Flat = True
@@ -276,74 +277,85 @@ object PressFrm2: TPressFrm2
         OnClick = SaveBtnClick
       end
       object BNumLabel: TLabel
-        Left = 231
-        Top = 36
-        Width = 39
-        Height = 13
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 302
+        Top = 47
+        Width = 49
+        Height = 17
         Caption = #8470' '#1055#1086#1083'.'
       end
+      object RefVal: TLabel
+        Left = 214
+        Top = 92
+        Width = 117
+        Height = 17
+        Caption = #1054#1087#1086#1088#1085#1099#1081' '#1091#1088#1086#1074#1077#1085#1100
+      end
       object MaxAE: TEdit
-        Left = 60
-        Top = 5
-        Width = 48
-        Height = 21
+        Left = 78
+        Top = 7
+        Width = 63
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         ReadOnly = True
         TabOrder = 0
         Text = 'FreqEdit'
       end
       object MaxFE: TEdit
-        Left = 60
-        Top = 32
-        Width = 48
-        Height = 21
+        Left = 78
+        Top = 42
+        Width = 63
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         ReadOnly = True
         TabOrder = 1
         Text = 'FreqEdit'
       end
       object MaxCamE: TEdit
-        Left = 60
-        Top = 63
-        Width = 48
-        Height = 21
+        Left = 78
+        Top = 82
+        Width = 63
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         ReadOnly = True
         TabOrder = 2
         Text = 'FreqEdit'
       end
       object AvrCB: TCheckBox
-        Left = 164
-        Top = 67
-        Width = 51
-        Height = 16
+        Left = 214
+        Top = 71
+        Width = 67
+        Height = 21
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'AvrCB'
         TabOrder = 3
         OnClick = AvrCBClick
       end
       object OpenBtn: TButton
-        Left = 60
-        Top = 89
-        Width = 57
-        Height = 18
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 78
+        Top = 116
+        Width = 75
+        Height = 24
         Caption = 'Open'
         TabOrder = 4
         OnClick = OpenBtnClick
       end
       object BNumSB: TSpinButton
-        Left = 212
-        Top = 31
-        Width = 15
-        Height = 18
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 277
+        Top = 41
+        Width = 20
+        Height = 23
         DownGlyph.Data = {
           0E010000424D0E01000000000000360000002800000009000000060000000100
           200000000000D800000000000000000000000000000000000000008080000080
@@ -369,22 +381,22 @@ object PressFrm2: TPressFrm2
         OnUpClick = BNumSBUpClick
       end
       object BNumIE: TIntEdit
-        Left = 164
-        Top = 32
-        Width = 46
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 214
+        Top = 42
+        Width = 61
+        Height = 25
         TabOrder = 6
         Text = '0'
       end
       object WndCB: TComboBox
-        Left = 164
-        Top = 5
-        Width = 63
-        Height = 21
+        Left = 214
+        Top = 7
+        Width = 83
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 7
         Text = 'WndCB'
         OnChange = WndCBChange
@@ -396,14 +408,10 @@ object PressFrm2: TPressFrm2
           'Flattop')
       end
       object RefValSE: TFloatSpinEdit
-        Left = 164
-        Top = 88
-        Width = 92
-        Height = 22
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 214
+        Top = 115
+        Width = 121
+        Height = 27
         Increment = 0.100000000000000000
         TabOrder = 8
         OnKeyDown = RefValSEKeyDown

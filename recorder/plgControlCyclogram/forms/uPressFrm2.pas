@@ -89,6 +89,7 @@ type
     RefValSE: TFloatSpinEdit;
     BarPanel: TPanel;
     PressFrmFrame21: TPressFrmFrame2;
+    RefVal: TLabel;
     procedure N1Click(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
     procedure OpenBtnClick(Sender: TObject);
@@ -1414,10 +1415,21 @@ end;
 
 procedure TPressFrm2.RefValSEKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
+var
+  i:integer;
+  f:TPressFrm2;
 begin
   if key=VK_RETURN then
   begin
     g_PressCamFactory2.UpdateRefs(RefValSE.Value);
+    for I := 0 to g_PressCamFactory2.Count - 1 do
+    begin
+      f:=TPressFrm2(g_PressCamFactory2.GetFrm(i));
+      if f<>self then
+      begin
+        f.RefValSE.Value:=RefValSE.Value;
+      end;
+    end;
   end;
 end;
 
@@ -1615,29 +1627,31 @@ begin
   g_PressCamFactory2.m_loadFile:=a_pIni.FileName;
   g_PressCamFactory2.m_Section:=str;
   c := a_pIni.ReadInteger(str, 'sCount', 0);
-  if c > 0 then
-  begin
-    Strings := tstringlist.create;
-    for i := 0 to c - 1 do
-    begin
-      s := a_pIni.ReadString(str, 's_' + inttostr(i), '');
-      if s <> '' then
-      begin
-        Strings.Add(s);
-      end;
-    end;
-    if Strings.Count > 0 then
-    begin
-      g_PressCamFactory2.CreateAlg(Strings);
-      g_PressCamFactory2.createFrames(self);
-    end;
-    Strings.destroy;
-  end;
+
   m_BargraphStep := a_pIni.ReadInteger(str, 'BarGraphStepCount', 100);
   m_BargraphStep := 100;
   m_bnum := a_pIni.ReadInteger(str, 'BNum', 0);
+
   if self = g_PressCamFactory2.GetFrm(0) then
   begin
+    if c > 0 then
+    begin
+      Strings := tstringlist.create;
+      for i := 0 to c - 1 do
+      begin
+        s := a_pIni.ReadString(str, 's_' + inttostr(i), '');
+        if s <> '' then
+        begin
+          Strings.Add(s);
+        end;
+      end;
+      if Strings.Count > 0 then
+      begin
+        g_PressCamFactory2.CreateAlg(Strings);
+      end;
+      Strings.destroy;
+    end;
+
     LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTagH,'PressCamFactory2', 'AlarmHTag');
     LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH,'PressCamFactory2', 'AlarmHHTag');
     LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTag,'PressCamFactory2', 'AlarmTag');
@@ -1677,6 +1691,7 @@ begin
     if length(g_PressCamFactory2.m_refArray)>0 then
       RefValSE.Value:=g_PressCamFactory2.m_refArray[0];
   end;
+  g_PressCamFactory2.createFrames(self);
   BNumIE.IntNum := m_bnum;
   bnumUpdate := true;
   // рисуем название полосы
@@ -1758,9 +1773,12 @@ begin
   begin
     fr := Frame(i);
     s := fr.spm;
-    if s.m_tag.tagname <> '' then
+    if s<>nil then
     begin
-      a_pIni.WriteString(str, 's_' + inttostr(c), s.m_tag.tagname);
+      if s.m_tag.tagname <> '' then
+      begin
+        a_pIni.WriteString(str, 's_' + inttostr(c), s.m_tag.tagname);
+      end;
     end;
     inc(c);
   end;
@@ -1775,7 +1793,7 @@ begin
   a_pIni.WriteInteger(str, 'BarGraphStepCount', m_BargraphStep);
   a_pIni.WriteInteger(str, 'sCount', c);
   // сохраняем АЧХ
-  for I := 0 to c - 1 do
+  for I := 0 to length(g_PressCamFactory2.m_tags) - 1 do
   begin
     sig:=g_PressCamFactory2.getTag(i);
     if sig.m_curve<>nil then
