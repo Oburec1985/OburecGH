@@ -419,6 +419,12 @@ begin
     ThresholdFrm := nil;
   end;
 
+  if EditPolarFrm <> nil then
+  begin
+    EditPolarFrm.destroy;
+    EditPolarFrm := nil;
+  end;
+
   if EditGLObjFrm<>nil then
     EditGLObjFrm.destroy;
 
@@ -505,12 +511,6 @@ begin
     EditProfileFrm := nil;
   end;
 
-  if EditPolarFrm <> nil then
-  begin
-    EditPolarFrm.destroy;
-    EditPolarFrm := nil;
-  end;
-
   if BandsFrm <> nil then
   begin
     BandsFrm.destroy;
@@ -567,18 +567,6 @@ begin
   Basefact := cMBaseFactory.Create;
   compMng.Add(Basefact);
 
-  g_LissajousFactory := TLissajousFact.Create;
-  compMng.Add(g_LissajousFactory);
-
-  g_SpmFactory := cSpmFactory.Create;
-  compMng.Add(g_SpmFactory);
-
-  g_CtrlWrnFactory := cCtrlWrnFactory.Create;
-  compMng.Add(g_CtrlWrnFactory);
-
-  g_CursorFactory := cCursorFactory.Create;
-  compMng.Add(g_CursorFactory);
-
   g_PolarFactory := cPolarFactory.Create;
   compMng.Add(g_PolarFactory);
 
@@ -588,22 +576,11 @@ begin
   g_IRDiagramFactory := cIRDiagramFactory.Create;
   compMng.Add(g_IRDiagramFactory);
 
-  //g_PressCamFactory := cPressCamFactory.Create;
-  //compMng.Add(g_PressCamFactory);
-  //PressFrmEdit := TPressFrmEdit.Create(nil);
-  g_PressCamFactory2 := cPressCamFactory2.Create;
-  compMng.Add(g_PressCamFactory2);
-  PressFrmEdit2 := TPressFrmEdit2.Create(nil);
-
-  g_DigsFrmFactory := cDigsFrmFactory.Create;
-  compMng.Add(g_DigsFrmFactory);
-  DigsFrmEdit:=TDigsFrmEdit.create(nil);
+  g_LissajousFactory := TLissajousFact.Create;
+  compMng.Add(g_LissajousFactory);
 
   g_SRSFactory := cSRSFactory.Create;
   compMng.Add(g_SRSFactory);
-
-  g_GenSignalsFactory := cGenSignalsFactory.Create;
-  compMng.Add(g_GenSignalsFactory);
 
   g_ObjFrm3dFactory := cObjFrm3dFactory.Create;
   compMng.Add(g_ObjFrm3dFactory);
@@ -625,6 +602,29 @@ begin
     g_logFile := cLogFile.Create(fname, ';');
     g_logFile.m_Rewrite := false;
   end;
+
+  g_SpmFactory := cSpmFactory.Create;
+  compMng.Add(g_SpmFactory);
+
+  g_CtrlWrnFactory := cCtrlWrnFactory.Create;
+  compMng.Add(g_CtrlWrnFactory);
+
+  g_CursorFactory := cCursorFactory.Create;
+  compMng.Add(g_CursorFactory);
+
+  //g_PressCamFactory := cPressCamFactory.Create;
+  //compMng.Add(g_PressCamFactory);
+  //PressFrmEdit := TPressFrmEdit.Create(nil);
+  g_PressCamFactory2 := cPressCamFactory2.Create;
+  compMng.Add(g_PressCamFactory2);
+  PressFrmEdit2 := TPressFrmEdit2.Create(nil);
+
+  g_DigsFrmFactory := cDigsFrmFactory.Create;
+  compMng.Add(g_DigsFrmFactory);
+  DigsFrmEdit:=TDigsFrmEdit.create(nil);
+
+  g_GenSignalsFactory := cGenSignalsFactory.Create;
+  compMng.Add(g_GenSignalsFactory);
 
   // создание объектов движка
   g_conmng := cControlMng.Create;

@@ -1688,8 +1688,6 @@ begin
       'ManualRef', false);
     s := a_pIni.ReadString('PressCamFactory2', 'Refs', '');
     g_PressCamFactory2.StrToRefs(s);
-    if length(g_PressCamFactory2.m_refArray)>0 then
-      RefValSE.Value:=g_PressCamFactory2.m_refArray[0];
   end;
   g_PressCamFactory2.createFrames(self);
   BNumIE.IntNum := m_bnum;
@@ -1703,6 +1701,8 @@ begin
   end;
   sortframes;
   g_PressCamFactory2.Sort;
+  if length(g_PressCamFactory2.m_refArray)>0 then
+    RefValSE.Value:=g_PressCamFactory2.m_refArray[0];
 end;
 
 procedure cPressCamFactory2.doRecorderInit;
