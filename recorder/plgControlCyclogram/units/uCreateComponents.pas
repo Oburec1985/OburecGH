@@ -78,6 +78,7 @@ type
 
 procedure createComponents(compMng: cCompMng);
 // Thread окна Recorder. Здесь надо создавать виджеты для формуляров
+// Нельзя делать ecm!!!!
 procedure createFormsRecorderUIThread(compMng: cCompMng);
 procedure destroyFormsRecorderUIThread(compMng: cCompMng);
 // MainThead. Здесь создавать формы для настройки плагина в режиме стопа
@@ -88,6 +89,8 @@ function ProcessShowVersionInfo(pMsgInfo: PCB_MESSAGE): boolean;
 // удаление объектов движка в потоке создания плагина. Здесь должно удалиться все, что было создано
 // и загружено до createFormsRecorderUIThread
 procedure destroyEngine;
+// когда все плагины загружены
+procedure RecorderInit;
 
 // отправить плагину MBaseControl нотификацию для редактирования свойств объекта
 // TMBaseNotify = record
@@ -631,6 +634,12 @@ begin
   uControlsNp.createNP;
   np := cMBaseAlgNP.Create;
   TExtRecorderPack(GPluginInstance).m_nplist.AddNP(np);
+end;
+
+procedure RecorderInit;
+begin
+  if ThresholdFrm<>nil then
+    ThresholdFrm.AttachAlarms;
 end;
 
 procedure destroyEngine;

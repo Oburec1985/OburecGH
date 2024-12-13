@@ -86,7 +86,9 @@ type
   TExtRecorderPack = class(TInterfacedObject, IRecorderPlugin)
   public
     // для прореживания LeaveConfig событий
-    m_loadState:boolean;
+    m_loadState,
+    // взводится при leavecfg
+    m_leavecfgNotify:boolean;
     delplg: boolean;
     // Загружен конфиг при стартовой загрузке рекордера
     // сделано для анализа произошло событие SwitchOnUI до загрузки или после
@@ -296,7 +298,7 @@ end;
 
 procedure cNonifyProcessor.doRCInit;
 begin
-
+  RecorderInit;
 end;
 
 procedure cNonifyProcessor.doSave(path: string);
@@ -611,8 +613,14 @@ function TExtRecorderPack.ProcessNotify(a_dwCommand: dword;
 var
   pMsgInfo: PCB_MESSAGE;
   I: Integer;
+  b:boolean;
 begin
   result := false;
+  b:=a_dwCommand=PN_LEAVERCCONFIG;
+  if b then
+  begin
+    m_leavecfgNotify:=true;
+  end;
   m_nplist.CallAllProcessNotify(a_dwCommand, a_dwData);
   LogRecorderMessage('Enter_'+TranslateNotifyToStr(a_dwCommand), c_Log_PlgClass);
   case a_dwCommand of
@@ -653,6 +661,10 @@ begin
         end;
       end;
     end;
+  end;
+  if b then
+  begin
+    m_leavecfgNotify:=false;
   end;
   LogRecorderMessage('Exit_'+TranslateNotifyToStr(a_dwCommand), c_Log_PlgClass);
 end;

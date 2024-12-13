@@ -873,7 +873,8 @@ var
   b:boolean;
 begin
   // предрасчет
-  ecm(b);
+  ///ecm(b); // нельзя lcm порождает новый doChangeCfg по PL_LeaveConfig
+  ///  нужно делать ecm только если состояние действительно обновилось (например удалился тег)
   for i := 0 to Count - 1 do
   begin
     a := getobj(i);
@@ -894,8 +895,8 @@ begin
       end;
     end;
   end;
-  if b then
-    lcm;
+  ///if b then
+  ///  lcm;
 end;
 
 procedure cAlgMng.doChangeRState(sender: tobject);

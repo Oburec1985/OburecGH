@@ -1318,6 +1318,8 @@ begin
   end;
 end;
 
+
+
 procedure TPressFrm2.ClearFrames;
 var
   i: integer;
@@ -1993,8 +1995,19 @@ begin
 end;
 
 procedure TPressFrm2.WndCBChange(Sender: TObject);
+var
+  i:integer;
+  f:TPressFrm2;
 begin
   bWndUpdate := true;
+  for I := 0 to g_PressCamFactory2.Count - 1 do
+  begin
+    f:=TPressFrm2(g_PressCamFactory2.GetFrm(i));
+    if f<>self then
+    begin
+      f.WndCB.ItemIndex:=WndCB.ItemIndex;
+    end;
+  end;
 end;
 
 end.

@@ -1009,7 +1009,11 @@ end;
 
 function ecm(var changeState: boolean): boolean;
 begin
-  if RStateConfig then
+  if TExtRecorderPack(G_Plg).m_leavecfgNotify then
+  begin
+    showmessage('Повторный вход в конфигурацию! при выходе из конфигурирования (function ecm(var)...)');
+  end;
+  if RStateConfig or TExtRecorderPack(G_Plg).m_leavecfgNotify then
   begin
     result := false;
     changeState := false;

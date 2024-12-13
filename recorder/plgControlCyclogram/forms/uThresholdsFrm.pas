@@ -161,6 +161,7 @@ type
     procedure doStop;
     procedure ShowTV;
   public
+    procedure AttachAlarms;
     function AddGroup:pVirtualNode;overload;
     function AddGroup(g: TThresholdGroup):pVirtualNode;overload;
     function getAlarm(tname:string):TAlarms;
@@ -216,6 +217,8 @@ begin
   end;
 end;
 
+
+
 procedure TThresholdFrm.clear;
 var
   I: Integer;
@@ -241,6 +244,10 @@ begin
   m_Groups:=TStringList.Create;
   createevents;
 
+end;
+
+procedure TThresholdFrm.AttachAlarms;
+begin
   m_AlarmHandler:=AlarmHandler.Create;
   m_AlarmHandler.Attach;
 end;
