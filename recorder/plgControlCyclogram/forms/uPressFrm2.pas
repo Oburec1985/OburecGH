@@ -1420,7 +1420,6 @@ begin
       f.AlarmsCB.Checked:=g_PressCamFactory2.m_UseAlarms;
     end;
   end;
-  g_PressCamFactory2.SetEnabledAlarms(AlarmsCB.Checked);
 end;
 
 procedure TPressFrm2.AvrCBClick(Sender: TObject);
@@ -1844,12 +1843,23 @@ var
   s, scurve:string;
   tr:PTagRec;
   b:boolean;
+  spm:cspm;
 begin
   ecm(b);
   if m_spmCfg.ChildCount>0 then
   begin
     CreateTags;
+    for I := 0 to m_spmCfg.ChildCount- 1 do
+    begin
+      spm:=cspm(m_spmCfg.getAlg(i));
+      if spm.ready then
+      begin
+        g_PressCamFactory2.ReevalBands(Spm);
+        break;
+      end;
+    end;
   end;
+  // настройка уставок
   if ThresholdFrm<>nil then
   begin
     ThresholdFrm.AddGroup(m_Thresholds);

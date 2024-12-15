@@ -131,7 +131,6 @@ object PressFrm2: TPressFrm2
       ParentShowHint = False
       ShowHint = True
       TabOrder = 1
-      ExplicitTop = 349
       object MaxLabel: TLabel
         Left = 2
         Top = 8
