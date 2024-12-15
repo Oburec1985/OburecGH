@@ -173,6 +173,7 @@ object PressFrmEdit2: TPressFrmEdit2
     Margins.Bottom = 2
     Align = alClient
     TabOrder = 1
+    ExplicitLeft = 1
     object FFTCountLabel: TLabel
       Left = 180
       Top = 17
@@ -462,23 +463,6 @@ object PressFrmEdit2: TPressFrmEdit2
       TabOrder = 7
       Text = '0.5'
     end
-    object TagsLB: TListBox
-      Left = 2
-      Top = 14
-      Width = 165
-      Height = 263
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
-      Align = alLeft
-      ItemHeight = 12
-      TabOrder = 8
-      OnClick = TagsLBClick
-      OnDragDrop = TagsLBDragDrop
-      OnDragOver = TagsLBDragOver
-      OnKeyDown = TagsLBKeyDown
-    end
     object BNumIE: TIntEdit
       Left = 180
       Top = 208
@@ -488,7 +472,7 @@ object PressFrmEdit2: TPressFrmEdit2
       Margins.Top = 2
       Margins.Right = 2
       Margins.Bottom = 2
-      TabOrder = 9
+      TabOrder = 8
       Text = '0'
     end
     object BNumSB: TSpinButton
@@ -510,7 +494,7 @@ object PressFrmEdit2: TPressFrmEdit2
         0000008080000080800000808000000000000000000000000000000000000000
         0000000000000000000000808000008080000080800000808000008080000080
         800000808000008080000080800000808000}
-      TabOrder = 10
+      TabOrder = 9
       UpGlyph.Data = {
         0E010000424D0E01000000000000360000002800000009000000060000000100
         200000000000D800000000000000000000000000000000000000008080000080
@@ -533,7 +517,7 @@ object PressFrmEdit2: TPressFrmEdit2
       Margins.Top = 2
       Margins.Right = 2
       Margins.Bottom = 2
-      TabOrder = 11
+      TabOrder = 10
       Text = '0.5'
       OnChange = RefFEChange
     end
@@ -543,7 +527,7 @@ object PressFrmEdit2: TPressFrmEdit2
       Width = 94
       Height = 20
       ItemIndex = 0
-      TabOrder = 12
+      TabOrder = 11
       Text = #1057#1050#1054
       Items.Strings = (
         #1057#1050#1054
@@ -555,14 +539,14 @@ object PressFrmEdit2: TPressFrmEdit2
       Width = 85
       Height = 17
       Caption = #1057#1086#1079#1076#1072#1090#1100' '#1090#1077#1075#1080
-      TabOrder = 13
+      TabOrder = 12
     end
     object WndCB: TComboBox
       Left = 361
       Top = 208
       Width = 86
       Height = 20
-      TabOrder = 14
+      TabOrder = 13
       Text = 'Rectangular'
       Items.Strings = (
         'Rectangular'
@@ -577,7 +561,7 @@ object PressFrmEdit2: TPressFrmEdit2
       Width = 51
       Height = 17
       Caption = #1040#1063#1061
-      TabOrder = 15
+      TabOrder = 14
       OnClick = AFHcbClick
     end
     object HH_AlTagCB: TRcComboBox
@@ -585,7 +569,7 @@ object PressFrmEdit2: TPressFrmEdit2
       Top = 162
       Width = 79
       Height = 20
-      TabOrder = 16
+      TabOrder = 15
       Text = 'HH_AlTagCB'
     end
     object H_AlTagCB: TRcComboBox
@@ -593,7 +577,7 @@ object PressFrmEdit2: TPressFrmEdit2
       Top = 131
       Width = 79
       Height = 20
-      TabOrder = 17
+      TabOrder = 16
       Text = 'RcComboBox1'
     end
     object AlarmCB: TRcComboBox
@@ -601,7 +585,7 @@ object PressFrmEdit2: TPressFrmEdit2
       Top = 131
       Width = 73
       Height = 20
-      TabOrder = 18
+      TabOrder = 17
       Text = 'AlarmCB'
     end
     object NormalCB: TRcComboBox
@@ -609,7 +593,7 @@ object PressFrmEdit2: TPressFrmEdit2
       Top = 162
       Width = 73
       Height = 20
-      TabOrder = 19
+      TabOrder = 18
       Text = 'AlarmCB'
     end
     object UseRefTagCb: TCheckBox
@@ -618,7 +602,7 @@ object PressFrmEdit2: TPressFrmEdit2
       Width = 138
       Height = 17
       Caption = #1058#1077#1075' '#1076#1083#1103' '#1086#1087#1086#1088#1085#1086#1075#1086' '#1091#1088#1086#1074#1085#1103
-      TabOrder = 20
+      TabOrder = 19
       OnClick = UseRefTagCbClick
     end
     object RefTagCb: TRcComboBox
@@ -626,8 +610,34 @@ object PressFrmEdit2: TPressFrmEdit2
       Top = 103
       Width = 73
       Height = 20
-      TabOrder = 21
+      TabOrder = 20
       Text = 'AlarmCB'
+    end
+    object TagsLB: TListView
+      Left = 2
+      Top = 14
+      Width = 169
+      Height = 263
+      Align = alLeft
+      Checkboxes = True
+      Columns = <
+        item
+          AutoSize = True
+          Caption = #1057#1080#1075#1085#1072#1083
+        end>
+      GridLines = True
+      Items.ItemData = {
+        037C0000000300000000000000FFFFFFFFFFFFFFFF00000000FFFFFFFF000000
+        000644044B04320444044B04320400000000FFFFFFFFFFFFFFFF00000000FFFF
+        FFFF0000000009320430043F04320430043F04320430043F0400000000FFFFFF
+        FFFFFFFFFF00000000FFFFFFFF0000000008470441043C04470441043C044704
+        4104}
+      TabOrder = 21
+      ViewStyle = vsReport
+      OnDragDrop = TagsLBDragDrop
+      OnDragOver = TagsLBDragOver
+      OnKeyDown = TagsLBKeyDown
+      ExplicitTop = 9
     end
   end
   object Panel1: TPanel

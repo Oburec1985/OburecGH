@@ -8,120 +8,120 @@
   resources were bound to the produced executable.
 */
 
-#define JConsts_sJPEGError 64816
-#define JConsts_sJPEGImageFile 64817
-#define IdResourceStringsCore_RSDataTooLarge 64832
-#define IdResourceStringsCore_RSConnectTimeout 64833
-#define IdResourceStringsCore_RSThreadTerminateAndWaitFor 64834
-#define IdResourceStringsCore_RSAlreadyConnected 64835
-#define IdResourceStringsCore_RSMaximumNumberOfCaptureLineExceeded 64836
-#define IdResourceStringsCore_RSInterceptIsDifferent 64837
-#define IdResourceStringsCore_RSTransparentProxyCannotBind 64838
-#define IdResourceStringsCore_RSTransparentProxyCanNotSupportUDP 64839
-#define IdResourceStringsCore_RSBufferMissingTerminator 64840
-#define IdResourceStringsCore_RSBufferInvalidStartPos 64841
-#define IdResourceStringsCore_RSIOHandlerCannotChange 64842
-#define IdResourceStringsCore_RSIOHandlerTypeNotInstalled 64843
-#define IdResourceStringsCore_RSReplyInvalidCode 64844
-#define IdResourceStringsCore_RSReplyCodeAlreadyExists 64845
-#define IdResourceStringsCore_RSUDPMustUseProxyOpen 64846
-#define JConsts_sChangeJPGSize 64847
-#define IdResourceStringsCore_RSSocksServerHostUnreachableError 64848
-#define IdResourceStringsCore_RSSocksServerConnectionRefusedError 64849
-#define IdResourceStringsCore_RSSocksServerTTLExpiredError 64850
-#define IdResourceStringsCore_RSSocksServerCommandError 64851
-#define IdResourceStringsCore_RSSocksServerAddressError 64852
-#define IdResourceStringsCore_RSInterceptCircularLink 64853
-#define IdResourceStringsCore_RSNotEnoughDataInBuffer 64854
-#define IdResourceStringsCore_RSTooMuchDataInBuffer 64855
-#define IdResourceStringsCore_RSFileNotFound 64856
-#define IdResourceStringsCore_RSNotConnected 64857
-#define IdResourceStringsCore_RSObjectTypeNotSupported 64858
-#define IdResourceStringsCore_RSIdNoDataToRead 64859
-#define IdResourceStringsCore_RSReadTimeout 64860
-#define IdResourceStringsCore_RSReadLnWaitMaxAttemptsExceeded 64861
-#define IdResourceStringsCore_RSReadLnMaxLineLengthExceeded 64862
-#define IdResourceStringsCore_RSRequiresLargeStream 64863
-#define IdResourceStrings_RSInvalidIPv6Address 64864
-#define IdResourceStrings_RSIPVersionUnsupported 64865
-#define IdResourceStrings_RSNotAllBytesSent 64866
-#define IdResourceStrings_RSPackageSizeTooBig 64867
-#define IdResourceStrings_RSSetSizeExceeded 64868
-#define IdResourceStringsCore_RSSocksUDPNotSupported 64869
-#define IdResourceStringsCore_RSSocksRequestFailed 64870
-#define IdResourceStringsCore_RSSocksRequestServerFailed 64871
-#define IdResourceStringsCore_RSSocksRequestIdentFailed 64872
-#define IdResourceStringsCore_RSSocksUnknownError 64873
-#define IdResourceStringsCore_RSSocksServerRespondError 64874
-#define IdResourceStringsCore_RSSocksAuthMethodError 64875
-#define IdResourceStringsCore_RSSocksAuthError 64876
-#define IdResourceStringsCore_RSSocksServerGeneralError 64877
-#define IdResourceStringsCore_RSSocksServerPermissionError 64878
-#define IdResourceStringsCore_RSSocksServerNetUnreachableError 64879
-#define IdResourceStrings_RSStackELOOP 64880
-#define IdResourceStrings_RSStackENAMETOOLONG 64881
-#define IdResourceStrings_RSStackEHOSTDOWN 64882
-#define IdResourceStrings_RSStackEHOSTUNREACH 64883
-#define IdResourceStrings_RSStackENOTEMPTY 64884
-#define IdResourceStrings_RSStackHOST_NOT_FOUND 64885
-#define IdResourceStrings_RSStackClassUndefined 64886
-#define IdResourceStrings_RSStackAlreadyCreated 64887
-#define IdResourceStrings_RSAntiFreezeOnlyOne 64888
-#define IdResourceStrings_RSCannotSetIPVersionWhenConnected 64889
-#define IdResourceStrings_RSCannotBindRange 64890
-#define IdResourceStrings_RSConnectionClosedGracefully 64891
-#define IdResourceStrings_RSCouldNotBindSocket 64892
-#define IdResourceStrings_RSInvalidPortRange 64893
-#define IdResourceStrings_RSInvalidServiceName 64894
-#define IdResourceStrings_RSIPv6Unavailable 64895
-#define IdResourceStrings_RSStackEPFNOSUPPORT 64896
-#define IdResourceStrings_RSStackEAFNOSUPPORT 64897
-#define IdResourceStrings_RSStackEADDRINUSE 64898
-#define IdResourceStrings_RSStackEADDRNOTAVAIL 64899
-#define IdResourceStrings_RSStackENETDOWN 64900
-#define IdResourceStrings_RSStackENETUNREACH 64901
-#define IdResourceStrings_RSStackENETRESET 64902
-#define IdResourceStrings_RSStackECONNABORTED 64903
-#define IdResourceStrings_RSStackECONNRESET 64904
-#define IdResourceStrings_RSStackENOBUFS 64905
-#define IdResourceStrings_RSStackEISCONN 64906
-#define IdResourceStrings_RSStackENOTCONN 64907
-#define IdResourceStrings_RSStackESHUTDOWN 64908
-#define IdResourceStrings_RSStackETOOMANYREFS 64909
-#define IdResourceStrings_RSStackETIMEDOUT 64910
-#define IdResourceStrings_RSStackECONNREFUSED 64911
-#define IdResourceStrings_RSStackEBADF 64912
-#define IdResourceStrings_RSStackEACCES 64913
-#define IdResourceStrings_RSStackEFAULT 64914
-#define IdResourceStrings_RSStackEINVAL 64915
-#define IdResourceStrings_RSStackEMFILE 64916
-#define IdResourceStrings_RSStackEWOULDBLOCK 64917
-#define IdResourceStrings_RSStackEINPROGRESS 64918
-#define IdResourceStrings_RSStackEALREADY 64919
-#define IdResourceStrings_RSStackENOTSOCK 64920
-#define IdResourceStrings_RSStackEDESTADDRREQ 64921
-#define IdResourceStrings_RSStackEMSGSIZE 64922
-#define IdResourceStrings_RSStackEPROTOTYPE 64923
-#define IdResourceStrings_RSStackENOPROTOOPT 64924
-#define IdResourceStrings_RSStackEPROTONOSUPPORT 64925
-#define IdResourceStrings_RSStackESOCKTNOSUPPORT 64926
-#define IdResourceStrings_RSStackEOPNOTSUPP 64927
+#define IdResourceStringsCore_RSReplyCodeAlreadyExists 64816
+#define IdResourceStringsCore_RSUDPMustUseProxyOpen 64817
+#define IdResourceStringsCore_RSReadLnWaitMaxAttemptsExceeded 64832
+#define IdResourceStringsCore_RSReadLnMaxLineLengthExceeded 64833
+#define IdResourceStringsCore_RSRequiresLargeStream 64834
+#define IdResourceStringsCore_RSDataTooLarge 64835
+#define IdResourceStringsCore_RSConnectTimeout 64836
+#define IdResourceStringsCore_RSThreadTerminateAndWaitFor 64837
+#define IdResourceStringsCore_RSAlreadyConnected 64838
+#define IdResourceStringsCore_RSMaximumNumberOfCaptureLineExceeded 64839
+#define IdResourceStringsCore_RSInterceptIsDifferent 64840
+#define IdResourceStringsCore_RSTransparentProxyCannotBind 64841
+#define IdResourceStringsCore_RSTransparentProxyCanNotSupportUDP 64842
+#define IdResourceStringsCore_RSBufferMissingTerminator 64843
+#define IdResourceStringsCore_RSBufferInvalidStartPos 64844
+#define IdResourceStringsCore_RSIOHandlerCannotChange 64845
+#define IdResourceStringsCore_RSIOHandlerTypeNotInstalled 64846
+#define IdResourceStringsCore_RSReplyInvalidCode 64847
+#define IdResourceStringsCore_RSSocksServerGeneralError 64848
+#define IdResourceStringsCore_RSSocksServerPermissionError 64849
+#define IdResourceStringsCore_RSSocksServerNetUnreachableError 64850
+#define IdResourceStringsCore_RSSocksServerHostUnreachableError 64851
+#define IdResourceStringsCore_RSSocksServerConnectionRefusedError 64852
+#define IdResourceStringsCore_RSSocksServerTTLExpiredError 64853
+#define IdResourceStringsCore_RSSocksServerCommandError 64854
+#define IdResourceStringsCore_RSSocksServerAddressError 64855
+#define IdResourceStringsCore_RSInterceptCircularLink 64856
+#define IdResourceStringsCore_RSNotEnoughDataInBuffer 64857
+#define IdResourceStringsCore_RSTooMuchDataInBuffer 64858
+#define IdResourceStringsCore_RSFileNotFound 64859
+#define IdResourceStringsCore_RSNotConnected 64860
+#define IdResourceStringsCore_RSObjectTypeNotSupported 64861
+#define IdResourceStringsCore_RSIdNoDataToRead 64862
+#define IdResourceStringsCore_RSReadTimeout 64863
+#define IdResourceStrings_RSInvalidPortRange 64864
+#define IdResourceStrings_RSInvalidServiceName 64865
+#define IdResourceStrings_RSIPv6Unavailable 64866
+#define IdResourceStrings_RSInvalidIPv6Address 64867
+#define IdResourceStrings_RSIPVersionUnsupported 64868
+#define IdResourceStrings_RSNotAllBytesSent 64869
+#define IdResourceStrings_RSPackageSizeTooBig 64870
+#define IdResourceStrings_RSSetSizeExceeded 64871
+#define IdResourceStringsCore_RSSocksUDPNotSupported 64872
+#define IdResourceStringsCore_RSSocksRequestFailed 64873
+#define IdResourceStringsCore_RSSocksRequestServerFailed 64874
+#define IdResourceStringsCore_RSSocksRequestIdentFailed 64875
+#define IdResourceStringsCore_RSSocksUnknownError 64876
+#define IdResourceStringsCore_RSSocksServerRespondError 64877
+#define IdResourceStringsCore_RSSocksAuthMethodError 64878
+#define IdResourceStringsCore_RSSocksAuthError 64879
+#define IdResourceStrings_RSStackETOOMANYREFS 64880
+#define IdResourceStrings_RSStackETIMEDOUT 64881
+#define IdResourceStrings_RSStackECONNREFUSED 64882
+#define IdResourceStrings_RSStackELOOP 64883
+#define IdResourceStrings_RSStackENAMETOOLONG 64884
+#define IdResourceStrings_RSStackEHOSTDOWN 64885
+#define IdResourceStrings_RSStackEHOSTUNREACH 64886
+#define IdResourceStrings_RSStackENOTEMPTY 64887
+#define IdResourceStrings_RSStackHOST_NOT_FOUND 64888
+#define IdResourceStrings_RSStackClassUndefined 64889
+#define IdResourceStrings_RSStackAlreadyCreated 64890
+#define IdResourceStrings_RSAntiFreezeOnlyOne 64891
+#define IdResourceStrings_RSCannotSetIPVersionWhenConnected 64892
+#define IdResourceStrings_RSCannotBindRange 64893
+#define IdResourceStrings_RSConnectionClosedGracefully 64894
+#define IdResourceStrings_RSCouldNotBindSocket 64895
+#define IdResourceStrings_RSStackEPROTONOSUPPORT 64896
+#define IdResourceStrings_RSStackESOCKTNOSUPPORT 64897
+#define IdResourceStrings_RSStackEOPNOTSUPP 64898
+#define IdResourceStrings_RSStackEPFNOSUPPORT 64899
+#define IdResourceStrings_RSStackEAFNOSUPPORT 64900
+#define IdResourceStrings_RSStackEADDRINUSE 64901
+#define IdResourceStrings_RSStackEADDRNOTAVAIL 64902
+#define IdResourceStrings_RSStackENETDOWN 64903
+#define IdResourceStrings_RSStackENETUNREACH 64904
+#define IdResourceStrings_RSStackENETRESET 64905
+#define IdResourceStrings_RSStackECONNABORTED 64906
+#define IdResourceStrings_RSStackECONNRESET 64907
+#define IdResourceStrings_RSStackENOBUFS 64908
+#define IdResourceStrings_RSStackEISCONN 64909
+#define IdResourceStrings_RSStackENOTCONN 64910
+#define IdResourceStrings_RSStackESHUTDOWN 64911
+#define IdResourceStrings_RSStatusText 64912
+#define IdResourceStrings_RSStackError 64913
+#define IdResourceStrings_RSStackEINTR 64914
+#define IdResourceStrings_RSStackEBADF 64915
+#define IdResourceStrings_RSStackEACCES 64916
+#define IdResourceStrings_RSStackEFAULT 64917
+#define IdResourceStrings_RSStackEINVAL 64918
+#define IdResourceStrings_RSStackEMFILE 64919
+#define IdResourceStrings_RSStackEWOULDBLOCK 64920
+#define IdResourceStrings_RSStackEINPROGRESS 64921
+#define IdResourceStrings_RSStackEALREADY 64922
+#define IdResourceStrings_RSStackENOTSOCK 64923
+#define IdResourceStrings_RSStackEDESTADDRREQ 64924
+#define IdResourceStrings_RSStackEMSGSIZE 64925
+#define IdResourceStrings_RSStackEPROTOTYPE 64926
+#define IdResourceStrings_RSStackENOPROTOOPT 64927
 #define JclResources_RsInvalidMMFEmpty 64928
 #define JclResources_RsHasNotTD32Info 64929
 #define JclResources_RsEUnexpectedEOSeq 64930
 #define JclResources_RsWin32Error 64931
 #define JclResources_RsELibraryNotFound 64932
 #define JclResources_RsEFunctionNotFound 64933
-#define IdResourceStrings_RSWinsockCallError 64934
-#define IdResourceStrings_RSWinsockLoadError 64935
-#define IdResourceStrings_RSStatusResolving 64936
-#define IdResourceStrings_RSStatusConnecting 64937
-#define IdResourceStrings_RSStatusConnected 64938
-#define IdResourceStrings_RSStatusDisconnecting 64939
-#define IdResourceStrings_RSStatusDisconnected 64940
-#define IdResourceStrings_RSStatusText 64941
-#define IdResourceStrings_RSStackError 64942
-#define IdResourceStrings_RSStackEINTR 64943
+#define JConsts_sChangeJPGSize 64934
+#define JConsts_sJPEGError 64935
+#define JConsts_sJPEGImageFile 64936
+#define IdResourceStrings_RSWinsockCallError 64937
+#define IdResourceStrings_RSWinsockLoadError 64938
+#define IdResourceStrings_RSStatusResolving 64939
+#define IdResourceStrings_RSStatusConnecting 64940
+#define IdResourceStrings_RSStatusConnected 64941
+#define IdResourceStrings_RSStatusDisconnecting 64942
+#define IdResourceStrings_RSStatusDisconnected 64943
 #define JclResources_RsIntelCacheDescrD7 64944
 #define JclResources_RsIntelCacheDescrD8 64945
 #define JclResources_RsIntelCacheDescrDC 64946
@@ -716,8 +716,11 @@
 #define SysConst_SZeroDivide 65535
 STRINGTABLE
 BEGIN
-	JConsts_sJPEGError,	"JPEG error #%d"
-	JConsts_sJPEGImageFile,	"JPEG Image File"
+	IdResourceStringsCore_RSReplyCodeAlreadyExists,	"Reply Code already exists: %s"
+	IdResourceStringsCore_RSUDPMustUseProxyOpen,	"You must use proxyOpen"
+	IdResourceStringsCore_RSReadLnWaitMaxAttemptsExceeded,	"Max line read attempts exceeded."
+	IdResourceStringsCore_RSReadLnMaxLineLengthExceeded,	"Max line length exceeded."
+	IdResourceStringsCore_RSRequiresLargeStream,	"Set LargeStream to True to send streams greater than 2GB"
 	IdResourceStringsCore_RSDataTooLarge,	"Data is too large for stream"
 	IdResourceStringsCore_RSConnectTimeout,	"Connect timed out."
 	IdResourceStringsCore_RSThreadTerminateAndWaitFor,	"Cannot call TerminateAndWaitFor on FreeAndTerminate threads"
@@ -731,9 +734,9 @@ BEGIN
 	IdResourceStringsCore_RSIOHandlerCannotChange,	"Cannot change a connected IOHandler."
 	IdResourceStringsCore_RSIOHandlerTypeNotInstalled,	"No IOHandler of type %s is installed."
 	IdResourceStringsCore_RSReplyInvalidCode,	"Reply Code is not valid: %s"
-	IdResourceStringsCore_RSReplyCodeAlreadyExists,	"Reply Code already exists: %s"
-	IdResourceStringsCore_RSUDPMustUseProxyOpen,	"You must use proxyOpen"
-	JConsts_sChangeJPGSize,	"Cannot change the size of a JPEG image"
+	IdResourceStringsCore_RSSocksServerGeneralError,	"General SOCKS server failure."
+	IdResourceStringsCore_RSSocksServerPermissionError,	"Connection not allowed by ruleset."
+	IdResourceStringsCore_RSSocksServerNetUnreachableError,	"Network unreachable."
 	IdResourceStringsCore_RSSocksServerHostUnreachableError,	"Host unreachable."
 	IdResourceStringsCore_RSSocksServerConnectionRefusedError,	"Connection refused."
 	IdResourceStringsCore_RSSocksServerTTLExpiredError,	"TTL expired."
@@ -747,9 +750,9 @@ BEGIN
 	IdResourceStringsCore_RSObjectTypeNotSupported,	"Object type not supported."
 	IdResourceStringsCore_RSIdNoDataToRead,	"No data to read."
 	IdResourceStringsCore_RSReadTimeout,	"Read timed out."
-	IdResourceStringsCore_RSReadLnWaitMaxAttemptsExceeded,	"Max line read attempts exceeded."
-	IdResourceStringsCore_RSReadLnMaxLineLengthExceeded,	"Max line length exceeded."
-	IdResourceStringsCore_RSRequiresLargeStream,	"Set LargeStream to True to send streams greater than 2GB"
+	IdResourceStrings_RSInvalidPortRange,	"Invalid Port Range (%d - %d)"
+	IdResourceStrings_RSInvalidServiceName,	"%s is not a valid service."
+	IdResourceStrings_RSIPv6Unavailable,	"IPv6 unavailable"
 	IdResourceStrings_RSInvalidIPv6Address,	"%s is not a valid IPv6 address"
 	IdResourceStrings_RSIPVersionUnsupported,	"The requested IPVersion / Address family is not supported."
 	IdResourceStrings_RSNotAllBytesSent,	"Not all bytes sent."
@@ -763,9 +766,9 @@ BEGIN
 	IdResourceStringsCore_RSSocksServerRespondError,	"Socks server did not respond."
 	IdResourceStringsCore_RSSocksAuthMethodError,	"Invalid socks authentication method."
 	IdResourceStringsCore_RSSocksAuthError,	"Authentication error to socks server."
-	IdResourceStringsCore_RSSocksServerGeneralError,	"General SOCKS server failure."
-	IdResourceStringsCore_RSSocksServerPermissionError,	"Connection not allowed by ruleset."
-	IdResourceStringsCore_RSSocksServerNetUnreachableError,	"Network unreachable."
+	IdResourceStrings_RSStackETOOMANYREFS,	"Too many references, cannot splice."
+	IdResourceStrings_RSStackETIMEDOUT,	"Connection timed out."
+	IdResourceStrings_RSStackECONNREFUSED,	"Connection refused."
 	IdResourceStrings_RSStackELOOP,	"Too many levels of symbolic links."
 	IdResourceStrings_RSStackENAMETOOLONG,	"File name too long."
 	IdResourceStrings_RSStackEHOSTDOWN,	"Host is down."
@@ -779,9 +782,9 @@ BEGIN
 	IdResourceStrings_RSCannotBindRange,	"Can not bind in port range (%d - %d)"
 	IdResourceStrings_RSConnectionClosedGracefully,	"Connection Closed Gracefully."
 	IdResourceStrings_RSCouldNotBindSocket,	"Could not bind socket. Address and port are already in use."
-	IdResourceStrings_RSInvalidPortRange,	"Invalid Port Range (%d - %d)"
-	IdResourceStrings_RSInvalidServiceName,	"%s is not a valid service."
-	IdResourceStrings_RSIPv6Unavailable,	"IPv6 unavailable"
+	IdResourceStrings_RSStackEPROTONOSUPPORT,	"Protocol not supported."
+	IdResourceStrings_RSStackESOCKTNOSUPPORT,	"Socket type not supported."
+	IdResourceStrings_RSStackEOPNOTSUPP,	"Operation not supported on socket."
 	IdResourceStrings_RSStackEPFNOSUPPORT,	"Protocol family not supported."
 	IdResourceStrings_RSStackEAFNOSUPPORT,	"Address family not supported by protocol family."
 	IdResourceStrings_RSStackEADDRINUSE,	"Address already in use."
@@ -795,9 +798,9 @@ BEGIN
 	IdResourceStrings_RSStackEISCONN,	"Socket is already connected."
 	IdResourceStrings_RSStackENOTCONN,	"Socket is not connected."
 	IdResourceStrings_RSStackESHUTDOWN,	"Cannot send or receive after socket is closed."
-	IdResourceStrings_RSStackETOOMANYREFS,	"Too many references, cannot splice."
-	IdResourceStrings_RSStackETIMEDOUT,	"Connection timed out."
-	IdResourceStrings_RSStackECONNREFUSED,	"Connection refused."
+	IdResourceStrings_RSStatusText,	"%s"
+	IdResourceStrings_RSStackError,	"Socket Error # %d\r\n%s"
+	IdResourceStrings_RSStackEINTR,	"Interrupted system call."
 	IdResourceStrings_RSStackEBADF,	"Bad file number."
 	IdResourceStrings_RSStackEACCES,	"Access denied."
 	IdResourceStrings_RSStackEFAULT,	"Buffer fault."
@@ -811,15 +814,15 @@ BEGIN
 	IdResourceStrings_RSStackEMSGSIZE,	"Message too long."
 	IdResourceStrings_RSStackEPROTOTYPE,	"Protocol wrong type for socket."
 	IdResourceStrings_RSStackENOPROTOOPT,	"Bad protocol option."
-	IdResourceStrings_RSStackEPROTONOSUPPORT,	"Protocol not supported."
-	IdResourceStrings_RSStackESOCKTNOSUPPORT,	"Socket type not supported."
-	IdResourceStrings_RSStackEOPNOTSUPP,	"Operation not supported on socket."
 	JclResources_RsInvalidMMFEmpty,	"The MMF named \"%s\" cannot be created empty"
 	JclResources_RsHasNotTD32Info,	"File [%s] has not TD32 debug information!"
 	JclResources_RsEUnexpectedEOSeq,	"Unexpected end of sequence"
 	JclResources_RsWin32Error,	"Win32 error: %s (%u)%s%s"
 	JclResources_RsELibraryNotFound,	"Library not found: %s"
 	JclResources_RsEFunctionNotFound,	"Function not found: %s.%s"
+	JConsts_sChangeJPGSize,	"Cannot change the size of a JPEG image"
+	JConsts_sJPEGError,	"JPEG error #%d"
+	JConsts_sJPEGImageFile,	"JPEG Image File"
 	IdResourceStrings_RSWinsockCallError,	"Error on call to Winsock2 library function %s"
 	IdResourceStrings_RSWinsockLoadError,	"Error on loading Winsock2 library (%s)"
 	IdResourceStrings_RSStatusResolving,	"Resolving hostname %s."
@@ -827,9 +830,6 @@ BEGIN
 	IdResourceStrings_RSStatusConnected,	"Connected."
 	IdResourceStrings_RSStatusDisconnecting,	"Disconnecting."
 	IdResourceStrings_RSStatusDisconnected,	"Disconnected."
-	IdResourceStrings_RSStatusText,	"%s"
-	IdResourceStrings_RSStackError,	"Socket Error # %d\r\n%s"
-	IdResourceStrings_RSStackEINTR,	"Interrupted system call."
 	JclResources_RsIntelCacheDescrD7,	"3rd-level cache: 2 MByte, 8-way set associative, 64 byte line size"
 	JclResources_RsIntelCacheDescrD8,	"3rd-level cache: 4 MByte, 8-way set associative, 64 byte line size"
 	JclResources_RsIntelCacheDescrDC,	"3rd-level cache: 1.5 MByte, 12-way set associative, 64 byte line size"
@@ -1468,45 +1468,19 @@ END
 /* forms\uDigsFrm.dfm */
 /* forms\uDigsFrmEdit.dfm */
 /* forms\uEditCurveFrm.dfm */
-/* forms\uPressFrmFrame2.dfm */
-/* forms\uPressFrm2.dfm */
-/* forms\uPressFrmEdit2.dfm */
-/* ..\..\3d\forms\uSelectLoadedObjects.dfm */
-/* forms\DataTransfFrm\TestUDPsender.dfm */
-/* forms\uEditGlObjFrm.dfm */
-/* forms\u3dObjEditFrame.dfm */
-/* ..\..\3d\forms\uSkinFrame.dfm */
-/* ..\..\sharedUtils\ogl\forms\u3dSceneEditFrame.dfm */
-/* ..\..\3d\forms\uObjCtrFrame.dfm */
-/* ..\..\3d\forms\AnimationControlFrame.dfm */
-/* ..\..\3d\forms\uEditListForm.dfm */
-/* ..\..\3d\forms\SelectObjectsFrame.dfm */
-/* ..\..\3d\forms\uTransformButtons.dfm */
-/* ..\..\3d\forms\uDeformerFrame.dfm */
-/* ..\..\3d\forms\uTrfrmToolsFrame.dfm */
-/* forms\u3dObj.dfm */
-/* forms\uVertexEditFrame.dfm */
-/* forms\uGLFrmEdit.dfm */
-/* forms\uEditSrsFrm.dfm */
-/* forms\uIRDiagram.dfm */
-/* forms\uIRDiagramEditFrm.dfm */
-/* forms\uSyncOscillogram.dfm */
-/* forms\uSyncOscillogramEditFrm.dfm */
-/* forms\uAlgsSaveFrm.dfm */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmEdit2.dfm */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uPressFrm2.dfm */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmFrame2.dfm */
 /* forms\uEditPropertiesFrm.dfm */
 /* ..\..\sharedUtils\forms\uConfirmDlg.dfm */
-/* forms\uGenSignalsEditFrm.dfm */
-/* forms\uGenSignalsFrm.dfm */
-/* forms\uControlDeskFrm.dfm */
 /* forms\uCyclogramReportFrm.dfm */
-/* forms\uTagInfoFrm.dfm */
-/* forms\uTagInfoEditFrm.dfm */
-/* forms\uEditPolarFrm.dfm */
-/* forms\uPolarGraph.dfm */
-/* forms\uBandsFrm.dfm */
-/* forms\uEditControlWrnFrm.dfm */
-/* forms\uCursorFrm.dfm */
+/* forms\uControlDeskFrm.dfm */
+/* forms\uControlCyclogramEditFrm.dfm */
+/* forms\uSyncOscillogramEditFrm.dfm */
+/* forms\uSyncOscillogram.dfm */
+/* forms\uAlgsSaveFrm.dfm */
 /* forms\uAlgAddFrm.dfm */
+/* forms\uBandsFrm.dfm */
 /* forms\uAlgFrame.dfm */
 /* forms\uIntegralAlgFrame.dfm */
 /* forms\uPeakFactorFrame.dfm */
@@ -1520,8 +1494,34 @@ END
 /* forms\uPhaseFrame.dfm */
 /* forms\uCounterAlgFrame.dfm */
 /* forms\uAlgFrm.dfm */
-/* forms\uControlCyclogramEditFrm.dfm */
+/* forms\uCursorFrm.dfm */
+/* forms\uEditControlWrnFrm.dfm */
+/* forms\uPolarGraph.dfm */
+/* forms\uEditPolarFrm.dfm */
+/* forms\uTagInfoEditFrm.dfm */
+/* forms\uTagInfoFrm.dfm */
+/* forms\uIRDiagramEditFrm.dfm */
+/* forms\uIRDiagram.dfm */
+/* forms\uGenSignalsFrm.dfm */
+/* forms\uGenSignalsEditFrm.dfm */
+/* ..\..\3d\forms\uSelectLoadedObjects.dfm */
+/* ..\..\3d\forms\uSkinFrame.dfm */
+/* ..\..\sharedUtils\ogl\forms\u3dSceneEditFrame.dfm */
+/* ..\..\3d\forms\uObjCtrFrame.dfm */
+/* ..\..\3d\forms\AnimationControlFrame.dfm */
+/* ..\..\3d\forms\uEditListForm.dfm */
+/* ..\..\3d\forms\SelectObjectsFrame.dfm */
+/* ..\..\3d\forms\uTransformButtons.dfm */
+/* ..\..\3d\forms\uDeformerFrame.dfm */
+/* ..\..\3d\forms\uTrfrmToolsFrame.dfm */
+/* forms\u3dObjEditFrame.dfm */
+/* forms\DataTransfFrm\TestUDPsender.dfm */
+/* forms\uVertexEditFrame.dfm */
+/* forms\uGLFrmEdit.dfm */
+/* forms\u3dObj.dfm */
+/* forms\uEditGlObjFrm.dfm */
 /* forms\uSRSFrm.dfm */
+/* forms\uEditSrsFrm.dfm */
 /* forms\uSpmChartEdit.dfm */
 /* forms\uSpmChart.dfm */
 /* forms\uControlWarnFrm.dfm */
@@ -1540,6 +1540,6 @@ END
 /* forms\uPressFrmFrame.dfm */
 /* forms\uPressFrmEdit.dfm */
 /* forms\uPressFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */

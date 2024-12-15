@@ -90,6 +90,7 @@ type
     BarPanel: TPanel;
     PressFrmFrame21: TPressFrmFrame2;
     RefVal: TLabel;
+    AlarmsCB: TCheckBox;
     procedure N1Click(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
     procedure OpenBtnClick(Sender: TObject);
@@ -102,6 +103,7 @@ type
     procedure RefValSEKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure AvrCBClick(Sender: TObject);
+    procedure AlarmsCBClick(Sender: TObject);
   public
     m_BargraphStep: integer;
     m_lastFile:string;
@@ -125,6 +127,7 @@ type
     procedure sortframes;
     procedure InitExcel;
     procedure ClearFrames;
+    // происходит в цикле обновления экрана рекордера
     procedure UpdateView;
     procedure updatedata;
     procedure doStart;
@@ -167,6 +170,7 @@ type
     : boolean;
 
     m_bands: array of tband;
+    m_showtags:array of boolean;
     // merafile
     m_RepFile: string;
     m_spmCfg: cAlgConfig;
@@ -178,11 +182,12 @@ type
     m_refArray: array of double;
     //
     m_typeRes: integer;
+
     // теги
     m_createTags: boolean;
     m_tagsinit: boolean;
     m_tags: array of TTagRec;
-
+    m_UseAlarms:boolean;
     m_AlarmHandler:AlarmHandler;
     m_Thresholds:TThresholdGroup;
     // относительные уровни для расчета Alarm-а
@@ -222,10 +227,14 @@ type
     procedure CreateTags();
     // сгенерировать данные для алармов полосовых тегов
     procedure SetAlarms;
+    // вкл выкл алармы - расцветка
+    procedure SetEnabledAlarms(b:boolean);
+    procedure SetUseAlarms(b:boolean);
     procedure doStart;
     procedure doStop;
     // ПОЛУЧАЕТ НА ВХОД список тегов и создает cspm-ы
-    procedure CreateAlg(list: tstrings);
+    procedure CreateAlg(list: tstrings);overload;
+    procedure CreateAlg(list: tlistview);overload;
     procedure createFrames; overload;
     procedure createFrames(f: tform); overload;
     procedure AutoEvalBand(t: itag);
@@ -381,6 +390,56 @@ begin
     b := m_bands[i];
     result := result + floattostr(b.f1) + ',' + floattostr(b.f2) + ';';
   end;
+end;
+
+procedure cPressCamFactory2.CreateAlg(list: tlistview);
+var
+  i, j: integer;
+  sname: string;
+  spm: cspm;
+  find, b: boolean;
+  li:tlistitem;
+begin
+  // удаляем лишние
+  for i := m_spmCfg.ChildCount - 1 downto 0 do
+  begin
+    spm := cspm(m_spmCfg.getAlg(i));
+    find := false;
+    for j := 0 to list.Items.Count - 1 do
+    begin
+      li:=list.Items[j];
+      if spm.m_tag.tagname = li.Caption then
+      begin
+        find := true;
+        break;
+      end;
+    end;
+    if not find then
+    begin
+      m_spmCfg.delAlg(spm);
+    end;
+  end;
+  // добавляем новые
+  ecm(b);
+  for i := 0 to list.Items.Count - 1 do
+  begin
+    li:=list.Items[i];
+    sname := li.caption;
+    spm := getSpm(sname);
+    if spm = nil then
+    begin
+      spm := cspm(g_algMng.CreateObjByType('cSpm'));
+      if g_PressCamFactory2.m_spmCfg.str = '' then
+      begin
+        g_PressCamFactory2.m_spmCfg.str := spm.Properties;
+      end;
+      spm.Properties := 'Channel=' + sname;
+      g_PressCamFactory2.m_spmCfg.AddChild(spm);
+      g_algMng.Add(spm, nil);
+    end;
+  end;
+  if b then
+    lcm;
 end;
 
 procedure cPressCamFactory2.CreateAlg(list: tstrings);
@@ -556,6 +615,7 @@ begin
   m_AlarmHlev:=0.5;
   m_AlarmHHlev:=0.7;
   m_AlarmBase:=1;
+  m_UseAlarms:=true;
 
   m_Timer:=TPerformanceTime.Create;
 end;
@@ -661,6 +721,40 @@ begin
     end;
   end;
   SetAlarms;
+  SetEnabledAlarms(true);
+end;
+
+procedure cPressCamFactory2.SetUseAlarms(b:boolean);
+begin
+  m_UseAlarms:=b;
+end;
+
+procedure cPressCamFactory2.SetEnabledAlarms(b: boolean);
+var
+  i,k:integer;
+  a:TAlarms;
+  pt:PTagRec;
+  ref:double;
+begin
+  for k := 0 to m_Thresholds.AlarmList.Count - 1 do
+  begin
+    a:=m_Thresholds.GetAlarm(k);
+    a.m_OutRangeEnabled:=b;
+    if b then
+    begin
+      a.m_a_hh.SetEnabled(Variant_True);
+      a.m_a_h.SetEnabled(Variant_True);
+      a.m_a_l.SetEnabled(Variant_True);
+      a.m_a_ll.SetEnabled(Variant_True);
+    end
+    else
+    begin
+      a.m_a_hh.SetEnabled(Variant_False);
+      a.m_a_h.SetEnabled(Variant_False);
+      a.m_a_l.SetEnabled(Variant_False);
+      a.m_a_ll.SetEnabled(Variant_False);
+    end;
+  end;
 end;
 
 procedure cPressCamFactory2.SetAlarms;
@@ -668,6 +762,7 @@ var
   i,k:integer;
   a:TAlarms;
   pt:PTagRec;
+  reftag:boolean;
   ref:double;
 begin
   for k := 0 to m_Thresholds.AlarmList.Count - 1 do
@@ -684,7 +779,15 @@ begin
       begin
         if m_refTag.tag<>nil then
         begin
-          m_AlarmBase:=GetMean(m_refTag.tag)*ref;
+          m_AlarmBase:=GetMean(m_refTag.tag);
+          if m_AlarmBase=0 then
+          begin
+            m_AlarmBase:=ref;
+          end;
+        end
+        else
+        begin
+          m_AlarmBase:=ref;
         end;
       end;
     end;
@@ -803,20 +906,23 @@ begin
       end;
     end;
   end;
-  if m_AlarmTagH<>nil then
+  if m_useAlarms then
   begin
-    if h then
-      m_AlarmTagH.tag.PushValue(1,-1)
-    else
-      m_AlarmTagH.tag.PushValue(0,-1);
-  end;
+    if m_AlarmTagH<>nil then
+    begin
+      if h then
+        m_AlarmTagH.tag.PushValue(1,-1)
+      else
+        m_AlarmTagH.tag.PushValue(0,-1);
+    end;
 
-  if m_AlarmTagHH<>nil then
-  begin
-    if hh then
-      m_AlarmTagHH.tag.PushValue(1,-1)
-    else
-      m_AlarmTagHH.tag.PushValue(0,-1);
+    if m_AlarmTagHH<>nil then
+    begin
+      if hh then
+        m_AlarmTagHH.tag.PushValue(1,-1)
+      else
+        m_AlarmTagHH.tag.PushValue(0,-1);
+    end;
   end;
 end;
 
@@ -902,6 +1008,7 @@ begin
   for i := 0 to length(m_tags) - 1 do
   begin
     t:=m_tags[i];
+    if not t.m_s.ready then continue;
     // проход по списку полос
     for bnum := 0 to length(m_bands)-1 do
     begin
@@ -938,13 +1045,16 @@ begin
         a:=m_Thresholds.GetAlarm(s);
         alarmdata:=m_Thresholds.AlarmData;
         t.m_bandTags[bnum].PushValue(max, -1);
-        if max>a.m_outRangeLevel then
+        if (max>a.m_outRangeLevel) and a.m_OutRangeEnabled then
         begin
           a.m_OutRange:=true;
           t.m_bandTags[bnum].PushValue(max, -1);
           changealarm:=true;
-          if m_AlarmTag.tag<>nil then
-            m_AlarmTag.tag.PushValue(1,-1);
+          if m_useAlarms then
+          begin
+            if m_AlarmTag.tag<>nil then
+              m_AlarmTag.tag.PushValue(1,-1);
+          end;
         end
         else
         begin
@@ -1203,6 +1313,7 @@ begin
   end;
 end;
 
+
 procedure cPressCamFactory2.AutoEvalBand(t: itag);
 var
   i: integer;
@@ -1293,6 +1404,23 @@ begin
       exit;
     end;
   end;
+end;
+
+procedure TPressFrm2.AlarmsCBClick(Sender: TObject);
+var
+  i:integer;
+  f:TPressFrm2;
+begin
+  g_PressCamFactory2.m_UseAlarms:=AlarmsCB.Checked;
+  for I := 0 to g_PressCamFactory2.Count - 1 do
+  begin
+    f:=TPressFrm2(g_PressCamFactory2.GetFrm(i));
+    if f<>self then
+    begin
+      f.AlarmsCB.Checked:=g_PressCamFactory2.m_UseAlarms;
+    end;
+  end;
+  g_PressCamFactory2.SetEnabledAlarms(AlarmsCB.Checked);
 end;
 
 procedure TPressFrm2.AvrCBClick(Sender: TObject);
@@ -1660,6 +1788,7 @@ begin
     LoadExTagIni(a_pIni,g_PressCamFactory2.m_NormalTag,'PressCamFactory2', 'NormalTag');
     LoadExTagIni(a_pIni,g_PressCamFactory2.m_RefTag,'PressCamFactory2', 'RefTag');
 
+    g_PressCamFactory2.m_UseAlarms := a_pIni.ReadBool('PressCamFactory2', 'UseAlarms', true);
     c := a_pIni.ReadInteger('PressCamFactory2', 'FFTCount', 256);
     s := 'FFTCount=' + inttostr(c) + ',';
     s := s + 'Wnd=' + a_pIni.ReadString(str, 'Wnd', 'Rect');
@@ -1705,6 +1834,7 @@ begin
   g_PressCamFactory2.Sort;
   if length(g_PressCamFactory2.m_refArray)>0 then
     RefValSE.Value:=g_PressCamFactory2.m_refArray[0];
+  AlarmsCB.Checked:=g_PressCamFactory2.m_UseAlarms;
 end;
 
 procedure cPressCamFactory2.doRecorderInit;
@@ -1816,7 +1946,7 @@ begin
       saveTagToIni(a_pIni,g_PressCamFactory2.m_NormalTag, 'PressCamFactory2', 'NormalTag');
       saveTagToIni(a_pIni,g_PressCamFactory2.m_RefTag,'PressCamFactory2', 'RefTag');
       a_pIni.WriteBool('PressCamFactory2', 'UseRefTag', g_PressCamFactory2.m_useRefTag);
-
+      a_pIni.WriteBool('PressCamFactory2', 'UseAlarms', g_PressCamFactory2.m_UseAlarms);
       a_pIni.WriteInteger('PressCamFactory2', 'FFTCount', strtoint(lstr));
       a_pIni.WriteInteger('PressCamFactory2', 'BandCount', g_PressCamFactory2.BandCount);
       a_pIni.WriteInteger('PressCamFactory2', 'TypeRes', g_PressCamFactory2.m_typeRes);

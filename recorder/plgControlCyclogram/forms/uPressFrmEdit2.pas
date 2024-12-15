@@ -51,7 +51,6 @@ type
     HHLabel: TLabel;
     HLabel: TLabel;
     HFE: TFloatEdit;
-    TagsLB: TListBox;
     BNumLabel: TLabel;
     BNumIE: TIntEdit;
     BNumSB: TSpinButton;
@@ -73,6 +72,7 @@ type
     NormalCB: TRcComboBox;
     UseRefTagCb: TCheckBox;
     RefTagCb: TRcComboBox;
+    TagsLB: TListView;
     procedure FFTCountSpinBtnDownClick(Sender: TObject);
     procedure FFTCountSpinBtnUpClick(Sender: TObject);
     procedure UpdateAlgBtnClick(Sender: TObject);
@@ -119,6 +119,7 @@ procedure TPressFrmEdit2.AFHcbClick(Sender: TObject);
 var
   s:PTagRec;
   i:integer;
+  li:tlistitem;
 begin
   if TagsLB.ItemIndex=-1 then
   begin
@@ -126,7 +127,8 @@ begin
   end
   else
     i:=TagsLB.ItemIndex;
-  s:=g_PressCamFactory2.getTag(TagsLB.Items[i]);
+  li:=TagsLB.items[i];
+  s:=g_PressCamFactory2.getTag(li.Caption);
   if s<>nil then
   begin
     if AFHcb.Checked then
@@ -195,15 +197,7 @@ procedure TPressFrmEdit2.TagsLBClick(Sender: TObject);
 var
   I, sel: Integer;
 begin
-  sel:=-1;
-  for I := 0 to tagsLB.Count - 1 do
-  begin
-    if tagsLB.Selected[i] then
-    begin
-      sel:=i;
-      break;
-    end;
-  end;
+  sel:=tagsLB.itemindex;
   if sel<>-1 then
     RefFE.FloatNum:=g_PressCamFactory2.GetRef(sel);
 end;
@@ -226,6 +220,8 @@ begin
     end;
     t:=itag(li.data);
     tagslb.AddItem(t.GetName, nil);
+    li:=tagslb.Items[tagslb.items.Count-1];
+    li.Checked:=true;
   end;
 end;
 
@@ -300,6 +296,7 @@ var
   t: itag;
   s:cspm;
   b:boolean;
+  li:tlistitem;
 begin
   m_pf:=pf;
   pf.bnumupdate:=true;
@@ -384,7 +381,7 @@ begin
     g_PressCamFactory2.m_createTags:=CreateTagsCB.Checked;
     g_PressCamFactory2.m_typeRes:=TypeResCB.ItemIndex;
     ecm(b);
-    g_PressCamFactory2.CreateAlg(TagsLB.Items);
+    g_PressCamFactory2.CreateAlg(TagsLB);
     g_PressCamFactory2.CreateFrames;
     g_PressCamFactory2.m_spmCfg.str:='FFTCount='+FFTCountEdit.text;
     case WndCb.ItemIndex of
@@ -469,8 +466,7 @@ var
   t:itag;
 begin
   if TagsLB.Items.Count=0 then exit;
-
-  t:=getTagByName(TagsLB.Items[0]);
+  t:=getTagByName(TagsLB.Items[0].Caption);
   if t<>nil then
     fftdx.FloatNum := FFTCountEdit.IntNum/t.GetFreq;
 end;
