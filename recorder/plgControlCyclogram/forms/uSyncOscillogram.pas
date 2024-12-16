@@ -24,7 +24,8 @@ type
   TOscType = (tOscil, tHarmOscil, TtrigOscil);
 
   TAxis = record
-    name: string;
+    ax: caxis;
+    axname:string;
     ymin, ymax: double;
   end;
 
@@ -411,7 +412,7 @@ begin
   for i := 0 to m_ax.SIZE - 1 do
   begin
     axCfg := m_ax.GetByInd(i);
-    a := p.getaxis(axCfg.name);
+    a := axCfg.ax;
     p.activeAxis := a;
 
     r.BottomLeft := p2(p.MinX, axCfg.ymin);
@@ -434,10 +435,21 @@ begin
   for i := 0 to m_ax.SIZE - 1 do
   begin
     a := PAxis(m_ax.GetPByInd(i));
-    if a.name = name then
+    if a.ax=nil then
     begin
-      Result := a;
-      exit;
+      if a.axname = name then
+      begin
+        Result := a;
+        exit;
+      end;
+    end
+    else
+    begin
+      if a.ax.name = name then
+      begin
+        Result := a;
+        exit;
+      end;
     end;
   end;
 end;
@@ -451,7 +463,7 @@ begin
   for i := 0 to m_ax.SIZE - 1 do
   begin
     a := PAxis(m_ax.GetPByInd(i));
-    if a.name = name then
+    if a.ax.name = name then
     begin
       Result := i;
       exit;
@@ -464,11 +476,11 @@ var
   i: integer;
   a: TAxis;
 begin
-  Result.name := '';
+  Result.ax.name := '';
   for i := 0 to m_ax.SIZE - 1 do
   begin
     a := m_ax.GetByInd(i);
-    if a.name = name then
+    if a.ax.name = name then
     begin
       Result := a;
       exit;
@@ -499,6 +511,7 @@ end;
 constructor TSyncOscFrm.create(Aowner: tcomponent);
 var
   p: cpage;
+  axcfg:TAxis;
 begin
   inherited;
   m_signals := tlist.create;
@@ -531,6 +544,12 @@ begin
   m_TrigTag := cTag.create;
   m_TrigTag.m_useReadBuffer:=false;
   m_ax := cQueue<TAxis>.create;
+
+  axcfg.ax:=p.activeAxis;
+  axcfg.axname:=p.activeAxis.name;
+  axcfg.ymin:=-1;
+  axcfg.ymax:=1;
+  m_ax.push_back(axcfg);
 end;
 
 destructor TSyncOscFrm.destroy;
@@ -580,7 +599,7 @@ begin
   for i := 0 to c - 1 do
   begin
     axCfg := m_ax.GetByInd(i);
-    axCfg.name := a_pIni.ReadString(str, 'axCfg_name_' + inttostr(i), '');
+    axCfg.axname := a_pIni.ReadString(str, 'axCfg_name_' + inttostr(i), '');
     ls := a_pIni.ReadString(str, 'axCfg_y1_' + inttostr(i), '0');
     axCfg.ymin := strtoFloatExt(ls);
     ls := a_pIni.ReadString(str, 'axCfg_y2_' + inttostr(i), '10');
@@ -589,16 +608,17 @@ begin
     if i > 0 then
     begin
       a := caxis.create;
-      a.name := axCfg.name;
+      a.name := axCfg.axname;
       p.addaxis(a);
     end
     else
     begin
-      if axCfg.name <> '' then
-        a.name := axCfg.name
+      if axCfg.axname <> '' then
+        a.name := axCfg.axname
       else
-        axCfg.name := a.name;
+        axCfg.axname := a.name;
     end;
+    axCfg.ax:=a;
     m_ax.push_back(axCfg);
   end;
   c := a_pIni.ReadInteger(str, 'SCount', 0);
@@ -621,14 +641,14 @@ begin
     pAxCfg := GetPAxCfg(axname);
     if pAxCfg = nil then
     begin
-      axCfg.name := axname;
+      axCfg.axname := axname;
       m_ax.push_back(axCfg);
     end;
 
     for j := 0 to m_ax.SIZE - 1 do
     begin
       pAxCfg := PAxis(m_ax.GetPByInd(j));
-      if pAxCfg.name = axname then
+      if pAxCfg.axname = axname then
       begin
         a.minY := pAxCfg.ymin;
         a.maxY := pAxCfg.ymax;
@@ -669,7 +689,7 @@ begin
   for i := 0 to m_ax.SIZE - 1 do
   begin
     axCfg := m_ax.GetByInd(i);
-    a_pIni.WriteString(str, 'axCfg_name_' + inttostr(i), axCfg.name);
+    a_pIni.WriteString(str, 'axCfg_name_' + inttostr(i), axCfg.axname);
     WriteFloatToIniMera(a_pIni, str, 'axCfg_y1_' + inttostr(i), axCfg.ymin);
     WriteFloatToIniMera(a_pIni, str, 'axCfg_y2_' + inttostr(i), axCfg.ymax);
   end;

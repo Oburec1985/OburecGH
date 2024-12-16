@@ -93,9 +93,10 @@ begin
   a.min:=p2d(0,MinYfe.FloatNum);
   a.max:=p2d(TSyncOscFrm(m_curObj).m_length, MaxYfe.FloatNum);
 
-  axCfg.name:=NameAxisEdit.Text;
+  axCfg.axname:=NameAxisEdit.Text;
   axCfg.ymin:=MinYfe.FloatNum;
   axCfg.ymax:=MaxYfe.FloatNum;
+  axCfg.ax:=a;
   TSyncOscFrm(m_curObj).m_ax.push_back(axcfg);
   ShowTV;
 end;
@@ -272,6 +273,11 @@ var
   str:string;
 begin
   n := tagsTV.GetFirstSelected(true);
+  if n=nil then
+  begin
+    n:=tagsTV.RootNode;
+    n:=tagsTV.GetFirst(false);
+  end;
   while n <> nil do
   begin
     D := tagsTV.GetNodeData(n);
@@ -301,7 +307,7 @@ begin
       begin
         a.name:=str;
         if pax<>nil then
-          pAx.name:=str;
+          pAx.axname:=str;
       end;
     end;
     if tobject(D.Data) is TOscSignal then

@@ -345,8 +345,9 @@ end;
 
 procedure TThresholdFrm.doStart;
 var
-  I: Integer;
+  I, j: Integer;
   g:TThresholdGroup;
+  a:TAlarms;
 begin
   for i := 0 to m_Groups.Count- 1 do
   begin
@@ -354,6 +355,11 @@ begin
     if g.ControlTag.tag=nil then
       g.ControlTag.tagname:=g.ControlTag.tagname;
     g.ApplyAlarms;
+    for j := 0 to g.AlarmList.Count - 1 do
+    begin
+      a:=TAlarms(g.AlarmList.Objects[i]);
+      a.activeA:=nil;
+    end;
   end;
 end;
 
