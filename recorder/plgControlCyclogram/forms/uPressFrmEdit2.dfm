@@ -173,7 +173,6 @@ object PressFrmEdit2: TPressFrmEdit2
     Margins.Bottom = 2
     Align = alClient
     TabOrder = 1
-    ExplicitLeft = 1
     object FFTCountLabel: TLabel
       Left = 180
       Top = 17
@@ -637,7 +636,6 @@ object PressFrmEdit2: TPressFrmEdit2
       OnDragDrop = TagsLBDragDrop
       OnDragOver = TagsLBDragOver
       OnKeyDown = TagsLBKeyDown
-      ExplicitTop = 9
     end
   end
   object Panel1: TPanel

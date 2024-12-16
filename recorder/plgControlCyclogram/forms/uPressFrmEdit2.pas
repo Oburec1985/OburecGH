@@ -73,6 +73,9 @@ type
     UseRefTagCb: TCheckBox;
     RefTagCb: TRcComboBox;
     TagsLB: TListView;
+    procedure setHideTags;
+    // отобразить галочки отображаемых сигналов на основании инф-ии в m_pf.m_hidesignals
+    procedure SetCheckBoxes;
     procedure FFTCountSpinBtnDownClick(Sender: TObject);
     procedure FFTCountSpinBtnUpClick(Sender: TObject);
     procedure UpdateAlgBtnClick(Sender: TObject);
@@ -369,8 +372,11 @@ begin
   TypeResCB.ItemIndex:=g_PressCamFactory2.m_typeRes;
   wndCB.ItemIndex:=g_PressCamFactory2.GetWndInd;
   CreateTagsCB.Checked:=g_PressCamFactory2.m_createTags;
+  // отобразить галочки спрятанных тегов
+  SetCheckBoxes;
   if ShowModal=mrok then
   begin
+    setHideTags;
     updateBands;
     if m_manualRef then
     begin
@@ -382,7 +388,7 @@ begin
     g_PressCamFactory2.m_typeRes:=TypeResCB.ItemIndex;
     ecm(b);
     g_PressCamFactory2.CreateAlg(TagsLB);
-    g_PressCamFactory2.CreateFrames;
+    g_PressCamFactory2.CreateFrames(true);
     g_PressCamFactory2.m_spmCfg.str:='FFTCount='+FFTCountEdit.text;
     case WndCb.ItemIndex of
       0:g_PressCamFactory2.m_spmCfg.str:='Wnd=Rect';
@@ -397,7 +403,6 @@ begin
     g_PressCamFactory2.m_NormalTag.tag:=NormalCB.gettag();
     g_PressCamFactory2.m_RefTag.tag:=RefTagCb.gettag();
     g_PressCamFactory2.m_useRefTag:=useRefTagCb.Checked;
-
     // номер полосы
     m_pf.m_bnum:=BNumIE.IntNum;
     m_pf.BNumIE.IntNum:=BNumIE.IntNum;
@@ -433,6 +438,56 @@ end;
 procedure TPressFrmEdit2.RefFEChange(Sender: TObject);
 begin
   m_manualRef:=true;
+end;
+
+procedure TPressFrmEdit2.SetCheckBoxes;
+var
+  I: Integer;
+  s:cspm;
+  j: Integer;
+  hide:boolean;
+begin
+  for I := 0 to g_PressCamFactory2.m_spmCfg.ChildCount - 1 do
+  begin
+    s:=cspm(g_PressCamFactory2.m_spmCfg.getAlg(i));
+    hide:=false;
+    for j := 0 to length(m_pf.m_hidesignals) - 1 do
+    begin
+      if s.m_tag.tag=m_pf.m_hidesignals[j] then
+      begin
+        hide:=true;
+        break;
+      end;
+    end;
+    TagsLB.Items[i].Checked:=not hide;
+  end;
+end;
+
+procedure TPressFrmEdit2.setHideTags;
+var
+  I,c: Integer;
+  li:tlistitem;
+begin
+  c:=0;
+  for I := 0 to TagsLB.items.Count - 1 do
+  begin
+    li:=TagsLB.items[i];
+    if not li.Checked then
+    begin
+      inc(c);
+    end;
+  end;
+  setlength(m_pf.m_hidesignals,c);
+  c:=0;
+  for I := 0 to TagsLB.items.Count - 1 do
+  begin
+    li:=TagsLB.items[i];
+    if not li.Checked then
+    begin
+      m_pf.m_hidesignals[c]:=cspm(g_PressCamFactory2.m_spmCfg.getAlg(i)).m_tag.tag;
+      inc(c);
+    end;
+  end;
 end;
 
 procedure TPressFrmEdit2.UpdateAlgBtnClick(Sender: TObject);

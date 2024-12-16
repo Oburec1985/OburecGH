@@ -114,6 +114,9 @@ type
     bWndUpdate: boolean;
 
     m_frames: tlist;
+    // используется исключительно при загрузке из формы тк на момент загрузки еще нет тегов
+    m_hidenames:string;
+    m_hidesignals:array of itag;
     // максимум (по умолчанию из тега)
     m_ManualRange: boolean;
     m_HH, m_H: double;
@@ -133,7 +136,10 @@ type
     procedure doStart;
     procedure doStop;
     function Ready: boolean;
+    // при загрузке превратить строку с именами тегов в список ссылок
+    procedure UpdateHideTags;
   public
+    function CheckHide(s:cspm):boolean;
     procedure UpdateCaption;
     function Frame(i: integer): TPressFrmFrame2; overload;
     function Frame(s: string): TPressFrmFrame2; overload;
@@ -159,6 +165,7 @@ type
   cPressCamFactory2 = class(cRecBasicFactory)
   public
     m_loadFile,m_Section: string;
+    // сортировка по номеру полосы
     sortedFrames: tlist;
     m_comparator: fcomparator;
 
@@ -235,7 +242,7 @@ type
     // ПОЛУЧАЕТ НА ВХОД список тегов и создает cspm-ы
     procedure CreateAlg(list: tstrings);overload;
     procedure CreateAlg(list: tlistview);overload;
-    procedure createFrames; overload;
+    procedure createFrames(sort:boolean); overload;
     procedure createFrames(f: tform); overload;
     procedure AutoEvalBand(t: itag);
     procedure SetBCount(c: integer);
@@ -510,11 +517,11 @@ begin
     fr:=Frm.CreateFrame(s.m_tag.tagname);
     fr.ALabel.Caption:='A'+inttostr(j+1);
   end;
-  Frm.sortframes;
+  //Frm.sortframes;
   // сортировка по размещению
 end;
 
-procedure cPressCamFactory2.createFrames;
+procedure cPressCamFactory2.createFrames(sort:boolean);
 var
   i: integer;
   Frm: TPressFrm2;
@@ -525,19 +532,11 @@ begin
   for i := 0 to m_CompList.Count - 1 do
   begin
     Frm := TPressFrm2(GetFrm(i));
-    Frm.ClearFrames;
-    Frm.m_frames.Add(Frm.PressFrmFrame21);
-    s := getSpm(0);
-    Frm.PressFrmFrame21.spm := g_PressCamFactory2.getSpm(s.m_tag.tagname);
-    Frm.BarPanel.ShowHint := true;
-    Frm.BarPanel.Hint := s.m_tag.tagname;
-
-    for j := 1 to m_spmCfg.ChildCount - 1 do
+    createFrames(frm);
+    if sort then
     begin
-      s := getSpm(j);
-      Frm.CreateFrame(s.m_tag.tagname);
+      frm.sortframes;
     end;
-    Frm.sortframes;
   end;
 end;
 
@@ -1447,6 +1446,21 @@ end;
 
 
 
+function TPressFrm2.CheckHide(s: cspm): boolean;
+var
+  I: Integer;
+begin
+  result:=false;
+  for I := 0 to Length(m_hidesignals) - 1 do
+  begin
+    if s.m_tag.tag=m_hidesignals[i] then
+    begin
+      result:=true;
+      exit;
+    end;
+  end;
+end;
+
 procedure TPressFrm2.ClearFrames;
 var
   i: integer;
@@ -1745,9 +1759,21 @@ begin
   CloseExcel;
 end;
 
+procedure TPressFrm2.UpdateHideTags;
+var
+  i, ind:integer;
+  s:string;
+begin
+  for I := 0 to length(m_hidesignals) - 1 do
+  begin
+    s:=getSubStrByIndex(m_hidenames,';',1, i);
+    m_hidesignals[i]:=getTagByName(s);
+  end;
+end;
+
 procedure TPressFrm2.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 var
-  s: string;
+  s, s1: string;
   i, c: integer;
   Strings: tstringlist;
   w: TWndType;
@@ -1755,20 +1781,22 @@ begin
   inherited;
   g_PressCamFactory2.m_loadFile:=a_pIni.FileName;
   g_PressCamFactory2.m_Section:=str;
-  c := a_pIni.ReadInteger(str, 'sCount', 0);
 
   m_BargraphStep := a_pIni.ReadInteger(str, 'BarGraphStepCount', 100);
   m_BargraphStep := 100;
-  m_bnum := a_pIni.ReadInteger(str, 'BNum', 0);
-
+  c:=a_pIni.ReadInteger(str, 'HideCount', 0);
+  setlength(m_hidesignals, c);
+  m_hidenames:=a_pIni.ReadString(str, 'HideSignals', '');
   if self = g_PressCamFactory2.GetFrm(0) then
   begin
+    m_bnum := a_pIni.ReadInteger('PressCamFactory2', 'BNum', 0);
+    c := a_pIni.ReadInteger('PressCamFactory2', 'sCount', 0);
     if c > 0 then
     begin
       Strings := tstringlist.create;
       for i := 0 to c - 1 do
       begin
-        s := a_pIni.ReadString(str, 's_' + inttostr(i), '');
+        s := a_pIni.ReadString('PressCamFactory2', 's_' + inttostr(i), '');
         if s <> '' then
         begin
           Strings.Add(s);
@@ -1844,8 +1872,17 @@ var
   tr:PTagRec;
   b:boolean;
   spm:cspm;
+  f:TPressFrm2;
 begin
   ecm(b);
+  for I := 0 to Count - 1 do
+  begin
+    f:=TPressFrm2(GetFrm(i));
+    f.UpdateHideTags;
+    f.sortframes;
+  end;
+  // нельзя не тот поток!!!
+  //createFrames;
   if m_spmCfg.ChildCount>0 then
   begin
     CreateTags;
@@ -1906,34 +1943,19 @@ var
   fr: TPressFrmFrame2;
   s: cspm;
   sig:ptagrec;
-  lstr: string;
+  lstr, ls: string;
 begin
   inherited;
   // сохраняется при загрузке iniFile GUI Recorder чтобы после инициализации всех структур донастроить
-  c := 0;
-  for i := 0 to m_frames.Count - 1 do
-  begin
-    fr := Frame(i);
-    s := fr.spm;
-    if s<>nil then
-    begin
-      if s.m_tag.tagname <> '' then
-      begin
-        a_pIni.WriteString(str, 's_' + inttostr(c), s.m_tag.tagname);
-      end;
-    end;
-    inc(c);
-  end;
-  if s <> nil then
-  begin
-    a_pIni.WriteString(str, 'Wnd', s.GetWndStr)
-  end
-  else
-  begin
-    a_pIni.WriteString(str, 'Wnd', 'c_Rect');
-  end;
   a_pIni.WriteInteger(str, 'BarGraphStepCount', m_BargraphStep);
-  a_pIni.WriteInteger(str, 'sCount', c);
+  a_pIni.WriteInteger(str, 'HideCount', length(m_hidesignals));
+  lstr:='';
+  for I := 0 to length(m_hidesignals) - 1 do
+  begin
+    ls:=m_hidesignals[i].GetName;
+    lstr:=lstr+ls+';'
+  end;
+  a_pIni.WriteString(str, 'HideSignals', lstr);
   // сохраняем АЧХ
   for I := 0 to length(g_PressCamFactory2.m_tags) - 1 do
   begin
@@ -1944,34 +1966,54 @@ begin
       lstr:='';
     a_pIni.WriteString(str, 'AFH_'+inttostr(i), lstr);
   end;
-  a_pIni.WriteInteger(str, 'BNum', m_bnum);
   if self = g_PressCamFactory2.GetFrm(0) then
   begin
-    if s<>nil then
+    // сохраняется при загрузке iniFile GUI Recorder чтобы после инициализации всех структур донастроить
+    c := 0;
+    for i := 0 to g_PressCamFactory2.m_spmCfg.ChildCount - 1 do
     begin
-      lstr := getparam(s.GetProperties, 'FFTCount');
-      saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagH, 'PressCamFactory2', 'AlarmHTag');
-      saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH, 'PressCamFactory2', 'AlarmHHTag');
-      saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTag, 'PressCamFactory2', 'AlarmTag');
-      saveTagToIni(a_pIni,g_PressCamFactory2.m_NormalTag, 'PressCamFactory2', 'NormalTag');
-      saveTagToIni(a_pIni,g_PressCamFactory2.m_RefTag,'PressCamFactory2', 'RefTag');
-      a_pIni.WriteBool('PressCamFactory2', 'UseRefTag', g_PressCamFactory2.m_useRefTag);
-      a_pIni.WriteBool('PressCamFactory2', 'UseAlarms', g_PressCamFactory2.m_UseAlarms);
-      a_pIni.WriteInteger('PressCamFactory2', 'FFTCount', strtoint(lstr));
-      a_pIni.WriteInteger('PressCamFactory2', 'BandCount', g_PressCamFactory2.BandCount);
-      a_pIni.WriteInteger('PressCamFactory2', 'TypeRes', g_PressCamFactory2.m_typeRes);
-      a_pIni.WriteBool('PressCamFactory2', 'CreateTags', g_PressCamFactory2.m_createTags);
-      a_pIni.WriteBool('PressCamFactory2', 'AvrRms', g_PressCamFactory2.m_avrBand);
-      a_pIni.WriteBool('PressCamFactory2', 'ManualBand', g_PressCamFactory2.m_manualBand);
-      if g_PressCamFactory2.m_manualBand then
+      s := cspm(g_PressCamFactory2.m_spmCfg.getAlg(i));
+      if s<>nil then
       begin
-        a_pIni.WriteString('PressCamFactory2', 'Bands', g_PressCamFactory2.BandsToStr);
+        if s.m_tag.tagname <> '' then
+        begin
+          a_pIni.WriteString('PressCamFactory2', 's_' + inttostr(c), s.m_tag.tagname);
+        end;
+        inc(c);
       end;
-      a_pIni.WriteBool('PressCamFactory2', 'ManualRef', g_PressCamFactory2.m_Manualref);
-      if g_PressCamFactory2.m_Manualref then
-      begin
-        a_pIni.WriteString('PressCamFactory2', 'Refs', g_PressCamFactory2.RefsToStr);
-      end;
+    end;
+    a_pIni.WriteInteger('PressCamFactory2', 'BNum', m_bnum);
+    if s <> nil then
+    begin
+      a_pIni.WriteString('PressCamFactory2', 'Wnd', s.GetWndStr)
+    end
+    else
+    begin
+      a_pIni.WriteString('PressCamFactory2', 'Wnd', 'c_Rect');
+    end;
+    a_pIni.WriteInteger('PressCamFactory2', 'sCount', c);
+    lstr := getparam(s.GetProperties, 'FFTCount');
+    saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagH, 'PressCamFactory2', 'AlarmHTag');
+    saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH, 'PressCamFactory2', 'AlarmHHTag');
+    saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTag, 'PressCamFactory2', 'AlarmTag');
+    saveTagToIni(a_pIni,g_PressCamFactory2.m_NormalTag, 'PressCamFactory2', 'NormalTag');
+    saveTagToIni(a_pIni,g_PressCamFactory2.m_RefTag,'PressCamFactory2', 'RefTag');
+    a_pIni.WriteBool('PressCamFactory2', 'UseRefTag', g_PressCamFactory2.m_useRefTag);
+    a_pIni.WriteBool('PressCamFactory2', 'UseAlarms', g_PressCamFactory2.m_UseAlarms);
+    a_pIni.WriteInteger('PressCamFactory2', 'FFTCount', strtoint(lstr));
+    a_pIni.WriteInteger('PressCamFactory2', 'BandCount', g_PressCamFactory2.BandCount);
+    a_pIni.WriteInteger('PressCamFactory2', 'TypeRes', g_PressCamFactory2.m_typeRes);
+    a_pIni.WriteBool('PressCamFactory2', 'CreateTags', g_PressCamFactory2.m_createTags);
+    a_pIni.WriteBool('PressCamFactory2', 'AvrRms', g_PressCamFactory2.m_avrBand);
+    a_pIni.WriteBool('PressCamFactory2', 'ManualBand', g_PressCamFactory2.m_manualBand);
+    if g_PressCamFactory2.m_manualBand then
+    begin
+      a_pIni.WriteString('PressCamFactory2', 'Bands', g_PressCamFactory2.BandsToStr);
+    end;
+    a_pIni.WriteBool('PressCamFactory2', 'ManualRef', g_PressCamFactory2.m_Manualref);
+    if g_PressCamFactory2.m_Manualref then
+    begin
+      a_pIni.WriteString('PressCamFactory2', 'Refs', g_PressCamFactory2.RefsToStr);
     end;
   end;
 end;
@@ -1982,7 +2024,6 @@ var
   j: integer;
   fr: TPressFrmFrame2;
 begin
-
   // сортировка по размещению
   if m_frames.Count > 1 then
   begin
@@ -1992,6 +2033,14 @@ begin
       fr := Frame(s.m_tag.tagname);
       fr.parent.Top := 0;
       fr.ProgrBar.Width := TPanel(fr.parent).Width - fr.ProgrBar.left - 4;
+      if CheckHide(s) then
+      begin
+        fr.parent.Visible:=false;
+      end
+      else
+      begin
+        fr.parent.Visible:=true;
+      end;
     end;
   end;
   for j := 0 to FrameCount - 1 do
