@@ -615,6 +615,12 @@ begin
   g_CursorFactory := cCursorFactory.Create;
   compMng.Add(g_CursorFactory);
 
+  // создание объектов движка
+  g_conmng := cControlMng.Create;
+  uControlsNp.createNP;
+  np := cMBaseAlgNP.Create;
+  TExtRecorderPack(GPluginInstance).m_nplist.AddNP(np);
+
   //g_PressCamFactory := cPressCamFactory.Create;
   //compMng.Add(g_PressCamFactory);
   //PressFrmEdit := TPressFrmEdit.Create(nil);
@@ -628,12 +634,6 @@ begin
 
   g_GenSignalsFactory := cGenSignalsFactory.Create;
   compMng.Add(g_GenSignalsFactory);
-
-  // создание объектов движка
-  g_conmng := cControlMng.Create;
-  uControlsNp.createNP;
-  np := cMBaseAlgNP.Create;
-  TExtRecorderPack(GPluginInstance).m_nplist.AddNP(np);
 end;
 
 procedure RecorderInit;

@@ -617,6 +617,8 @@ begin
   m_UseAlarms:=true;
 
   m_Timer:=TPerformanceTime.Create;
+
+  CreateAlgConfig;
 end;
 
 destructor cPressCamFactory2.destroy;
@@ -1883,16 +1885,19 @@ begin
   end;
   // нельзя не тот поток!!!
   //createFrames;
-  if m_spmCfg.ChildCount>0 then
+  if m_spmCfg<>nil then
   begin
-    CreateTags;
-    for I := 0 to m_spmCfg.ChildCount- 1 do
+    if m_spmCfg.ChildCount>0 then
     begin
-      spm:=cspm(m_spmCfg.getAlg(i));
-      if spm.ready then
+      CreateTags;
+      for I := 0 to m_spmCfg.ChildCount- 1 do
       begin
-        g_PressCamFactory2.ReevalBands(Spm);
-        break;
+        spm:=cspm(m_spmCfg.getAlg(i));
+        if spm.ready then
+        begin
+          g_PressCamFactory2.ReevalBands(Spm);
+          break;
+        end;
       end;
     end;
   end;
@@ -1992,7 +1997,11 @@ begin
       a_pIni.WriteString('PressCamFactory2', 'Wnd', 'c_Rect');
     end;
     a_pIni.WriteInteger('PressCamFactory2', 'sCount', c);
-    lstr := getparam(s.GetProperties, 'FFTCount');
+    if s<>nil then
+    begin
+      lstr := getparam(s.GetProperties, 'FFTCount');
+      a_pIni.WriteInteger('PressCamFactory2', 'FFTCount', strtoint(lstr));
+    end;
     saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagH, 'PressCamFactory2', 'AlarmHTag');
     saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH, 'PressCamFactory2', 'AlarmHHTag');
     saveTagToIni(a_pIni,g_PressCamFactory2.m_AlarmTag, 'PressCamFactory2', 'AlarmTag');
@@ -2000,7 +2009,6 @@ begin
     saveTagToIni(a_pIni,g_PressCamFactory2.m_RefTag,'PressCamFactory2', 'RefTag');
     a_pIni.WriteBool('PressCamFactory2', 'UseRefTag', g_PressCamFactory2.m_useRefTag);
     a_pIni.WriteBool('PressCamFactory2', 'UseAlarms', g_PressCamFactory2.m_UseAlarms);
-    a_pIni.WriteInteger('PressCamFactory2', 'FFTCount', strtoint(lstr));
     a_pIni.WriteInteger('PressCamFactory2', 'BandCount', g_PressCamFactory2.BandCount);
     a_pIni.WriteInteger('PressCamFactory2', 'TypeRes', g_PressCamFactory2.m_typeRes);
     a_pIni.WriteBool('PressCamFactory2', 'CreateTags', g_PressCamFactory2.m_createTags);

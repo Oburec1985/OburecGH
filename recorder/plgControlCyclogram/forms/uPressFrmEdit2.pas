@@ -73,6 +73,7 @@ type
     UseRefTagCb: TCheckBox;
     RefTagCb: TRcComboBox;
     TagsLB: TListView;
+    Splitter1: TSplitter;
     procedure setHideTags;
     // отобразить галочки отображаемых сигналов на основании инф-ии в m_pf.m_hidesignals
     procedure SetCheckBoxes;
@@ -325,8 +326,12 @@ begin
     TagsListFrame1.ShowVectortags:=true;
     TagsListFrame1.ShowChannels;
   end;
-  props:=g_PressCamFactory2.m_spmCfg.str;
-  str := GetParam(props, 'FFTCount');
+  str := '';
+  if g_PressCamFactory2.m_spmCfg<>nil then
+  begin
+    props:=g_PressCamFactory2.m_spmCfg.str;
+    str := GetParam(props, 'FFTCount');
+  end;
   if CheckStr(str) then
   begin
     p := FFTCountEdit.OnChange;
@@ -335,24 +340,27 @@ begin
     FFTCountEdit.OnChange := p;
   end;
   TagsLB.Clear;
-  for I := 0 to g_PressCamFactory2.m_spmCfg.ChildCount - 1 do
+  if g_PressCamFactory2.m_spmCfg<>nil then
   begin
-    s:=cspm(g_PressCamFactory2.m_spmCfg.getAlg(i));
-    TagsLB.AddItem(s.m_tag.tagname, nil);
-    if i=0 then
+    for I := 0 to g_PressCamFactory2.m_spmCfg.ChildCount - 1 do
     begin
-      if s.m_tag<>nil then
+      s:=cspm(g_PressCamFactory2.m_spmCfg.getAlg(i));
+      TagsLB.AddItem(s.m_tag.tagname, nil);
+      if i=0 then
       begin
-        if s.m_tag.tag=nil then
+        if s.m_tag<>nil then
         begin
-          if s.m_tag.tagname<>'' then
-            s.m_tag.tag:=getTagByName(s.m_tag.tagname);
-        end;
-        if s.m_tag.tag<>nil then
-        begin
-          if not g_PressCamFactory2.m_manualBand then
+          if s.m_tag.tag=nil then
           begin
-            g_PressCamFactory2.AutoEvalBand(s.m_tag.tag);
+            if s.m_tag.tagname<>'' then
+              s.m_tag.tag:=getTagByName(s.m_tag.tagname);
+          end;
+          if s.m_tag.tag<>nil then
+          begin
+            if not g_PressCamFactory2.m_manualBand then
+            begin
+              g_PressCamFactory2.AutoEvalBand(s.m_tag.tag);
+            end;
           end;
         end;
       end;

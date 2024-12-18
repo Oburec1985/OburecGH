@@ -469,15 +469,32 @@ begin
   SGChange(SignalsSG);
 end;
 
+function getGname(s:string):string;
+var
+  I: Integer;
+begin
+  for I := length(s) downto 1 do
+  begin
+    if s[i]='_' then
+    begin
+      result:=Copy(s,1,i-1);
+      exit;
+    end;
+  end;
+  result:=s;
+end;
+
 procedure TDigsFrmEdit.UpdateTagsBtnClick2(Sender: TObject);
 var
   I: Integer;
   li: tlistitem;
   t: itag;
   col: TDigColumn;
-  s, subnum, colname: string;
+  s, subnum, colname, gname: string;
   g: TGroup;
-  b1, b2, b3: Boolean;
+  b1, b2, b3,
+  // поиск по имени группы
+  b4: Boolean;
   j, num, num2: Integer;
   k: Integer;
 begin
@@ -485,6 +502,8 @@ begin
   for j := 0 to curFrm.glist.Count - 1 do
   begin
     g := TGroup(curFrm.glist.Get(j));
+    // отрезаем номер строки с конца
+    gname:=getGname(g.name);
     subnum := getendnum(g.name);
     // цикл по столбцам
     for k := 1 to SignalsSG.colCount - 1 do
@@ -518,7 +537,11 @@ begin
           b3 := pos(lowercase(TagSubstrE.Text), lowercase(s)) > 0
         else
           b3 := true;
-        if b1 and b2 and b3 then
+        if TagSubstrE.Text <> '' then
+          b4 := pos(lowercase(GName), lowercase(s)) > 0
+        else
+          b4 := true;
+        if b1 and b2 and b3 and b4 then
         begin
           SignalsSG.Cells[k, j + 1] := s;
           continue;
