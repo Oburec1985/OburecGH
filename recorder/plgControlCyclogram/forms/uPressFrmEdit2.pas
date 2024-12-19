@@ -417,11 +417,11 @@ begin
     m_pf.updatecaption;
     if TypeResCB.ItemIndex=0 then // ัสฮ
     begin
-      m_pf.UnitMaxALab.Caption:='psi, rms';
+      m_pf.UnitMaxALab.Caption:='rms';
     end
     else
     begin
-      m_pf.UnitMaxALab.Caption:='psi, pk-pk';
+      m_pf.UnitMaxALab.Caption:='pk-pk';
     end;
     g_PressCamFactory2.CreateTags;
     if b then

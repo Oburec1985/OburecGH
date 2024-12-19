@@ -1433,8 +1433,10 @@ begin
   if BNumIE.IntNum > 0 then
   begin
     BNumIE.IntNum := BNumIE.IntNum - 1;
+    m_bnum:=BNumIE.IntNum;
     bnumUpdate := true;
   end;
+  UpdateCaption;
 end;
 
 procedure TPressFrm2.BNumSBUpClick(Sender: TObject);
@@ -1442,8 +1444,10 @@ begin
   if BNumIE.IntNum < g_PressCamFactory2.BandCount - 1 then
   begin
     BNumIE.IntNum := BNumIE.IntNum + 1;
+    m_bnum:=BNumIE.IntNum;
     bnumUpdate := true;
   end;
+  UpdateCaption;
 end;
 
 
@@ -1785,13 +1789,14 @@ begin
   g_PressCamFactory2.m_Section:=str;
 
   m_BargraphStep := a_pIni.ReadInteger(str, 'BarGraphStepCount', 100);
+  m_bnum := a_pIni.ReadInteger(str, 'BNum', 0);
+
   m_BargraphStep := 100;
   c:=a_pIni.ReadInteger(str, 'HideCount', 0);
   setlength(m_hidesignals, c);
   m_hidenames:=a_pIni.ReadString(str, 'HideSignals', '');
   if self = g_PressCamFactory2.GetFrm(0) then
   begin
-    m_bnum := a_pIni.ReadInteger('PressCamFactory2', 'BNum', 0);
     c := a_pIni.ReadInteger('PressCamFactory2', 'sCount', 0);
     if c > 0 then
     begin
@@ -1827,8 +1832,8 @@ begin
     g_PressCamFactory2.m_manualBand := a_pIni.ReadBool('PressCamFactory2',
       'ManualBand', false);
     g_PressCamFactory2.m_avrBand := a_pIni.ReadBool('PressCamFactory2', 'AvrRms', false);
-    g_PressCamFactory2.m_typeRes := a_pIni.ReadInteger('PressCamFactory2',
-      'TypeRes', 0);
+    g_PressCamFactory2.m_typeRes := a_pIni.ReadInteger('PressCamFactory2', 'TypeRes', 0);
+
     g_PressCamFactory2.m_createTags := a_pIni.ReadBool('PressCamFactory2',
       'CreateTags', false);
     if g_PressCamFactory2.m_manualBand then
@@ -1882,6 +1887,14 @@ begin
     f:=TPressFrm2(GetFrm(i));
     f.UpdateHideTags;
     f.sortframes;
+    if  m_typeRes=0 then // СКО
+    begin
+      f.UnitMaxALab.Caption:='rms';
+    end
+    else
+    begin
+      f.UnitMaxALab.Caption:='pk-pk';
+    end;
   end;
   // нельзя не тот поток!!!
   //createFrames;
@@ -1953,6 +1966,7 @@ begin
   inherited;
   // сохраняется при загрузке iniFile GUI Recorder чтобы после инициализации всех структур донастроить
   a_pIni.WriteInteger(str, 'BarGraphStepCount', m_BargraphStep);
+  a_pIni.WriteInteger(str, 'BNum', m_bnum);
   a_pIni.WriteInteger(str, 'HideCount', length(m_hidesignals));
   lstr:='';
   for I := 0 to length(m_hidesignals) - 1 do
@@ -1987,7 +2001,6 @@ begin
         inc(c);
       end;
     end;
-    a_pIni.WriteInteger('PressCamFactory2', 'BNum', m_bnum);
     if s <> nil then
     begin
       a_pIni.WriteString('PressCamFactory2', 'Wnd', s.GetWndStr)

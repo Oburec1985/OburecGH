@@ -353,7 +353,7 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object TypeResCB: TComboBox
       Left = 361
-      Top = 332
+      Top = 333
       Width = 126
       Height = 24
       Margins.Left = 4

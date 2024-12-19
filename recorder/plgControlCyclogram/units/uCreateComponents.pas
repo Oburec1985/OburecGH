@@ -111,8 +111,8 @@ function getMDBRegPath: lpcstr;
 
 var
   // Глобальная переменная для храения описания plug-in`а.
-  GPluginInfo: TInternalPluginInfo = (Name: 'Plugin Циклограмма';
-    Dsc: 'Циклограмма работы регуляторов'; Vendor: 'НПП Мера'; Version: 1;
+  GPluginInfo: TInternalPluginInfo = (Name: 'PlgСontrolCyclogram';
+    Dsc: 'Циклограмма, БДИ, расчетные каналы'; Vendor: 'НПП Мера'; Version: 1;
     SubVertion: 12; );
 
 var
