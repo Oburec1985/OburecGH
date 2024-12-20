@@ -35,6 +35,7 @@ type
 
   cChart = class(tPanel)
   public
+    debugLB:tlistbox;
     tabs: cPageMngList;
     OBJmNG: cDrawObjMng;
     dc: hdc;
@@ -174,6 +175,8 @@ type
     procedure EnterCS;
     procedure ExitCS;
   public
+    // если привязан debugLB то будет добавлена строка
+    procedure logstr(str:string);
     procedure SelectInTV(obj: cdrawobj);
     procedure SaveToFile(filename: string);
     property activeTab: cPageMng read getActivePageMng write setactivepageMng;
@@ -377,6 +380,7 @@ var
   shadername,s:string;
   sh: cshader;
 begin
+  logstr('EnterLoadShaders');
   s:='LineLg';
   shadername:=configfile.findShaderFile(s);
   if shadername<>'' then
@@ -398,8 +402,17 @@ begin
       m_UseShaders:=true;
     end;
   end;
+  logstr('ExitLoadShaders');
 end;
 
+
+procedure cChart.logstr(str: string);
+begin
+  if debugLB<>nil then
+  begin
+    debugLB.AddItem(str, nil);
+  end;
+end;
 
 destructor cChart.destroy;
 begin
@@ -567,6 +580,7 @@ end;
 
 procedure cChart.redraw;
 begin
+
   if needPostMessage then
   begin
     if tabs <> nil then
@@ -588,6 +602,8 @@ var
 begin
   if not initGl then
     exit;
+
+  logstr('Enter_renderscene');
   updateTV;
   // если не коментировать wglMakeCurrent происходит утечка памяти
   if wglGetCurrentContext <> hrc then
@@ -608,6 +624,7 @@ begin
   OBJmNG.events.CallAllEvents(e_onDraw);
   SwapBuffers(dc);
   EndPaint(Handle, ps);
+  logstr('Exit_renderscene');
   needPostMessage := true;
   // вероятно не коректно так делать (скорее надо вызывать в wm_size)
   // wglMakeCurrent(0,0);
@@ -811,6 +828,7 @@ end;
 
 procedure cChart.initscene;
 begin
+  logstr('Enter_initscene');
   if HandleAllocated then
   begin
     if not initGl then
@@ -822,6 +840,7 @@ begin
         fOninit(self);
     end;
   end;
+  logstr('Exit_initscene');
 end;
 
 function cChart.gettrend: ctrend;
