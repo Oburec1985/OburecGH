@@ -134,8 +134,8 @@
     <File Path="..\..\sharedUtils\utils\socket\uScktComp.pas"/>
     <File Path="..\..\sharedUtils\utils\uComponentServises.pas"/>
     <File Path="..\..\sharedUtils\utils\uPathMng.pas"/>
-    <File Path="..\..\sharedUtils\utils\uVTServices.pas"/>
     <File Path="..\..\sharedUtils\utils\uPerformanceTime.pas"/>
+    <File Path="..\..\sharedUtils\utils\uVTServices.pas"/>
     <File Path="..\..\sharedUtils\ZipMaster"/>
     <File Path="..\..\sharedUtils\ZipMaster\ZipMstr.pas"/>
     <File Path="..\..\sharedUtils\компоненты"/>
@@ -286,8 +286,6 @@
     <File Path="forms\uEditGlObjFrm.dfm"/>
     <File Path="forms\uEditPolarFrm.pas"/>
     <File Path="forms\uEditPolarFrm.dfm"/>
-    <File Path="forms\uEditProfileFrm.pas"/>
-    <File Path="forms\uEditProfileFrm.dfm"/>
     <File Path="forms\uEditPropertiesFrm.pas"/>
     <File Path="forms\uEditPropertiesFrm.dfm"/>
     <File Path="forms\uFillFctFrame.pas"/>
@@ -368,6 +366,10 @@
     <File Path="forms\uLissajousCurve.dfm"/>
     <File Path="forms\ulissajousCurveEdit.pas"/>
     <File Path="forms\ulissajousCurveEdit.dfm"/>
+    <File Path="forms\uEditAlarmsProfileFrm.pas"/>
+    <File Path="forms\uEditAlarmsProfileFrm.dfm"/>
+    <File Path="forms\uEditProfileFrm.pas"/>
+    <File Path="forms\uEditProfileFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\u3dMoveEngine.pas"/>
     <File Path="units\uAriphmAlg.pas"/>
@@ -381,6 +383,7 @@
     <File Path="units\uGrmsAlg.pas"/>
     <File Path="units\uGrmsSrcAlg.pas"/>
     <File Path="units\uIntegralAlg.pas"/>
+    <File Path="units\uModelPointMng.pas"/>
     <File Path="units\uPeakFactorAlg.pas"/>
     <File Path="units\uPhaseAlg.pas"/>
     <File Path="units\uRTrig.pas"/>
@@ -388,7 +391,6 @@
     <File Path="units\uSynchroPhaseAlg.pas"/>
     <File Path="units\uTahoAlg.pas"/>
     <File Path="units\uTimeIntervalAlg.pas"/>
-    <File Path="units\uModelPointMng.pas"/>
     <File Path="uBaseAlgBands.pas"/>
   </ProjectSortOrder>
 	<Transactions>
@@ -500,5 +502,7 @@
     <Transaction>2024.12.01 21:43:10.913.dfm,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\ulissajousCurveEdit.dfm</Transaction>
     <Transaction>2024.12.05 23:39:48.177.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit1.pas=C:\Oburec\OburecGH\sharedUtils\utils\uPerformanceTime.pas</Transaction>
     <Transaction>2024.12.05 23:41:21.116.pas,C:\Oburec\OburecGH\sharedUtils\utils\PerformanceTime.pas=</Transaction>
+    <Transaction>2024.12.28 15:43:41.758.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uEditProfileFrm.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uEditAlarmsProfileFrm.pas</Transaction>
+    <Transaction>2024.12.28 15:43:41.758.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uEditProfileFrm.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uEditAlarmsProfileFrm.dfm</Transaction>
   </Transactions>
 </BorlandProject>

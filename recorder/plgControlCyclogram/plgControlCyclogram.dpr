@@ -149,7 +149,7 @@ uses
   uFillFctFrame in 'forms\uFillFctFrame.pas' {FillFctFrame: TFrame},
   uControlWarnFrm in 'forms\uControlWarnFrm.pas' {CntrlWrnChart},
   uEditControlWrnFrm in 'forms\uEditControlWrnFrm.pas' {EditCntlWrnFrm},
-  uEditProfileFrm in 'forms\uEditProfileFrm.pas' {EditProfileFrm},
+  uEditAlarmsProfileFrm in 'forms\uEditAlarmsProfileFrm.pas' {EditProfileRefFrm},
   uCursorFrm in 'forms\uCursorFrm.pas' {CursorFrm},
   ubuffsignal in '..\..\sharedUtils\mera\ubuffsignal.pas',
   uMeraFile in '..\..\sharedUtils\mera\uMeraFile.pas',
@@ -252,7 +252,8 @@ uses
   uEditCurveFrm in 'forms\uEditCurveFrm.pas' {EditCurveFrm},
   uLissajousCurve in 'forms\uLissajousCurve.pas' {LissajousFrm},
   ulissajousCurveEdit in 'forms\ulissajousCurveEdit.pas' {LisEditFrm},
-  uPerformanceTime in '..\..\sharedUtils\utils\uPerformanceTime.pas';
+  uPerformanceTime in '..\..\sharedUtils\utils\uPerformanceTime.pas',
+  uEditProfileFrm in 'forms\uEditProfileFrm.pas' {uEditProfileFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

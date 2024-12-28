@@ -331,8 +331,8 @@
 			<DCCReference Include="forms\uEditControlWrnFrm.pas">
 				<Form>EditCntlWrnFrm</Form>
 			</DCCReference>
-			<DCCReference Include="forms\uEditProfileFrm.pas">
-				<Form>EditProfileFrm</Form>
+			<DCCReference Include="forms\uEditAlarmsProfileFrm.pas">
+				<Form>EditProfileRefFrm</Form>
 			</DCCReference>
 			<DCCReference Include="forms\uCursorFrm.pas">
 				<Form>CursorFrm</Form>
@@ -540,6 +540,9 @@
 				<Form>LisEditFrm</Form>
 			</DCCReference>
 			<DCCReference Include="..\..\sharedUtils\utils\uPerformanceTime.pas"/>
+			<DCCReference Include="forms\uEditProfileFrm.pas">
+				<Form>uEditProfileFrm</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
