@@ -252,7 +252,9 @@ uses
   uEditCurveFrm in 'forms\uEditCurveFrm.pas' {EditCurveFrm},
   uLissajousCurve in 'forms\uLissajousCurve.pas' {LissajousFrm},
   ulissajousCurveEdit in 'forms\ulissajousCurveEdit.pas' {LisEditFrm},
-  uPerformanceTime in '..\..\sharedUtils\utils\uPerformanceTime.pas';
+  uPerformanceTime in '..\..\sharedUtils\utils\uPerformanceTime.pas',
+  uProfile in 'units\uProfile.pas',
+  uSpmThresholdProfile in 'forms\uSpmThresholdProfile.pas' {SpmThresholdProfileFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

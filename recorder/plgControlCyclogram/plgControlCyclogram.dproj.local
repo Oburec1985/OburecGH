@@ -368,6 +368,8 @@
     <File Path="forms\uLissajousCurve.dfm"/>
     <File Path="forms\ulissajousCurveEdit.pas"/>
     <File Path="forms\ulissajousCurveEdit.dfm"/>
+    <File Path="forms\uSpmThresholdProfile.pas"/>
+    <File Path="forms\uSpmThresholdProfile.dfm"/>
     <File Path="units"/>
     <File Path="units\u3dMoveEngine.pas"/>
     <File Path="units\uAriphmAlg.pas"/>
@@ -389,6 +391,7 @@
     <File Path="units\uTahoAlg.pas"/>
     <File Path="units\uTimeIntervalAlg.pas"/>
     <File Path="units\uModelPointMng.pas"/>
+    <File Path="units\uProfile.pas"/>
     <File Path="uBaseAlgBands.pas"/>
   </ProjectSortOrder>
 	<Transactions>
@@ -500,5 +503,8 @@
     <Transaction>2024.12.01 21:43:10.913.dfm,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\ulissajousCurveEdit.dfm</Transaction>
     <Transaction>2024.12.05 23:39:48.177.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit1.pas=C:\Oburec\OburecGH\sharedUtils\utils\uPerformanceTime.pas</Transaction>
     <Transaction>2024.12.05 23:41:21.116.pas,C:\Oburec\OburecGH\sharedUtils\utils\PerformanceTime.pas=</Transaction>
+    <Transaction>2025.01.05 22:43:47.315.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit1.pas=C:\Oburec\OburecGH\recorder\plgControlCyclogram\units\uProfile.pas</Transaction>
+    <Transaction>2025.01.06 23:21:17.511.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.pas=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uSpmThresholdProfile.pas</Transaction>
+    <Transaction>2025.01.06 23:21:17.511.dfm,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uSpmThresholdProfile.dfm</Transaction>
   </Transactions>
 </BorlandProject>

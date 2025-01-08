@@ -17,7 +17,6 @@ type
   cTrend = class(cBasicTrend)
   public
     nearestP: point2d;
-
     // цвет направл€ющей вершины
     VectorPointColor: point3;
     // цвет линии вектора

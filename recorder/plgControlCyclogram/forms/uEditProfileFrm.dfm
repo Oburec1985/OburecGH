@@ -40,7 +40,6 @@ object EditProfileFrm: TEditProfileFrm
     TabOrder = 0
     OnKeyDown = ProfilePointsSGKeyDown
     OnEndEdititng = ProfilePointsSGEndEdititng
-    ExplicitLeft = 554
   end
   object Panel1: TPanel
     Left = 174
@@ -53,7 +52,7 @@ object EditProfileFrm: TEditProfileFrm
       375
       355)
     object ProfileNameLabel: TLabel
-      Left = 12
+      Left = 13
       Top = 14
       Width = 68
       Height = 12
@@ -64,7 +63,7 @@ object EditProfileFrm: TEditProfileFrm
       Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077
     end
     object UnitsLabel: TLabel
-      Left = 11
+      Left = 6
       Top = 86
       Width = 43
       Height = 12

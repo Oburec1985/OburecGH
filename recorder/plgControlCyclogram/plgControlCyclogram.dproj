@@ -540,6 +540,10 @@
 				<Form>LisEditFrm</Form>
 			</DCCReference>
 			<DCCReference Include="..\..\sharedUtils\utils\uPerformanceTime.pas"/>
+			<DCCReference Include="units\uProfile.pas"/>
+			<DCCReference Include="forms\uSpmThresholdProfile.pas">
+				<Form>SpmThresholdProfileFrm</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

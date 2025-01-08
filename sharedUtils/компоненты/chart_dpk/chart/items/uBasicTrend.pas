@@ -21,6 +21,7 @@ type
 
   cBasicTrend = class(cGraphObj)
   public
+    m_data:pointer;
     // id Uniform переменной для логарифмического шейдера по осям x,xmax,y,ymax
     //aLocation:integer;
     // id Uniform переменной для логарифмического шейдера lgx, lgy
