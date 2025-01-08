@@ -74,6 +74,7 @@ type
     RefTagCb: TRcComboBox;
     TagsLB: TListView;
     Splitter1: TSplitter;
+    UseRefProfileCB: TCheckBox;
     procedure setHideTags;
     // отобразить галочки отображаемых сигналов на основании инф-ии в m_pf.m_hidesignals
     procedure SetCheckBoxes;
