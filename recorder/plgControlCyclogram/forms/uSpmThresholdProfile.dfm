@@ -20,7 +20,6 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
     Height = 48
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 347
     object UnitsLabel: TLabel
       Left = 201
       Top = 5
@@ -57,7 +56,7 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       Left = 3
       Top = 20
       Width = 193
-      Height = 20
+      Height = 21
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -73,10 +72,6 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
     Height = 344
     Align = alClient
     TabOrder = 1
-    ExplicitLeft = 256
-    ExplicitTop = 192
-    ExplicitWidth = 185
-    ExplicitHeight = 41
     object GBleft: TGroupBox
       Left = 1
       Top = 1
@@ -85,7 +80,6 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       Align = alLeft
       Caption = #1055#1088#1086#1092#1080#1083#1100
       TabOrder = 0
-      ExplicitHeight = 349
       object ProfileSG: TStringGridExt
         Left = 2
         Top = 15
@@ -94,8 +88,7 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
         Align = alClient
         TabOrder = 0
         ExplicitLeft = 3
-        ExplicitTop = 12
-        ExplicitHeight = 332
+        ExplicitTop = 17
       end
     end
   end

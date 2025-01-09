@@ -66,8 +66,10 @@ type
     function EvalP(v:double):double;overload;
     // расчитать точку с номером i
     procedure updatePoint(i:integer);
+    // сразу вызывает reEvalPoints
     procedure setRef(v:double);
   public
+    function toStr:string;
     // добавить линию профиля на страницу
     procedure addline(c:cchart; p:cpage; ax:caxis);
     property Ref:double read m_ref write setref;
@@ -81,13 +83,16 @@ type
   public
     // номер сработавшей уставки
     m_NumLine: integer;
+    // x,y,t
     m_data:array of TProfPoint;
+    // список cProfileLine
     childs:tlist;
   protected
     procedure setsize(s:integer);
     function getsize:integer;
     procedure exclude(l:cProfileLine);
   public
+    function toStr:string;
     // обновить точки всех дочерних линий
     procedure UpdatePoints;
     property size:integer read getsize write setsize;
@@ -141,6 +146,29 @@ begin
   begin
     ch:=cProfileLine(childs.Items[i]);
     setlength(ch.m_data, s);
+  end;
+end;
+
+// pCount;x1;y1;t1;...xn;yn;tn;ChildCount;LineType; LineUnits; ;
+function cProfile.toStr: string;
+var
+  I: Integer;
+  p:TProfPoint;
+  l:cProfileLine;
+begin
+  result:=inttostr(size);
+  for I := 0 to size - 1 do
+  begin
+    result:=result+';';
+    p:=m_data[i];
+    result:=result+p2toStr(p.p)+';'+PTypeToStr(p.t);
+  end;
+  result:=result+';'+inttostr(childs.Count);
+  for I := 0 to childs.Count - 1 do
+  begin
+    result:=result+';';
+    l:=cProfileLine(childs.Items[i]);
+    result:=result+l.toStr;
   end;
 end;
 
@@ -247,6 +275,22 @@ procedure cProfileLine.setRef(v: double);
 begin
   m_ref:=v;
   reEvalPoints;
+end;
+
+function cProfileLine.toStr: string;
+begin
+  if m_LineType then
+    result:='1;'
+  else
+    result:='0;';
+  case m_LineUnits of
+    tuPercent:result+'0;';
+    tuLg10:result+'1;';
+    tuLg20:result+'2;';
+    tuAbs:result+'3;';
+    tuVals:result+'4;';
+  end;
+  result:=result+floattostr(m_ref);
 end;
 
 procedure cProfileLine.EvalP(p: double; i: integer);

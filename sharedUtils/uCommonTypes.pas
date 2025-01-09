@@ -180,6 +180,7 @@ const
 function p2(x,y:single):point2;
 function p2d(x,y:double):point2d;
 function p2top2d(p:point2):point2d;
+function p2toStr(p2:point3; digs:integer):string;
 function p3(x,y,z:single):point3;
 function p3ToStr(p3:point3; digs:integer):string;
 function TPointToStr(tp:tpoint):string;
@@ -372,6 +373,11 @@ end;
 function p3ToStr(p3:point3; digs:integer):string;
 begin
   result:='x:'+formatstrNoE(p3.x, digs)+';'+'y:'+formatstrNoE(p3.y, digs)+';'+'z:'+formatstrNoE(p3.z, digs)
+end;
+
+function p2toStr(p2:point3; digs:integer):string;
+begin
+  result:='x:'+formatstrNoE(p2.x, digs)+';'+'y:'+formatstrNoE(p2.y, digs);
 end;
 
 function TPointToStr(tp:tpoint):string;

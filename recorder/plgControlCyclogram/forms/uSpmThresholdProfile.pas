@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, uProfile, StdCtrls, ExtCtrls, Grids, uStringGridExt;
+  Dialogs, uProfile, StdCtrls, ExtCtrls, Grids,
+  uComponentServises, uStringGridExt;
 
 type
   TSpmThresholdProfileFrm = class(TForm)
@@ -19,7 +20,7 @@ type
   private
     procedure init;
   public
-    { Public declarations }
+    constructor create(aowner:twincontrol);
   end;
 
 var
@@ -35,13 +36,19 @@ implementation
 
 {$R *.dfm}
 
+constructor TSpmThresholdProfileFrm.create(aowner: twincontrol);
+begin
+  inherited;
+  init;
+end;
+
 procedure TSpmThresholdProfileFrm.init;
 begin
-  ProfilePointsSG.RowCount:=2;
-  ProfilePointsSG.ColCount:=7;
-  ProfilePointsSG.Cells[c_Col_N, 0] :=  '№';
-  ProfilePointsSG.Cells[c_Col_X, 0] :=  'X';
-  ProfilePointsSG.Cells[c_Col_P, 0] :=  'Задание';
+  ProfileSG.RowCount:=2;
+  ProfileSG.ColCount:=3;
+  ProfileSG.Cells[c_Col_N, 0] :=  '№';
+  ProfileSG.Cells[c_Col_X, 0] :=  'X';
+  ProfileSG.Cells[c_Col_P, 0] :=  'Задание';
   SGChange(ProfileSG);
 end;
 

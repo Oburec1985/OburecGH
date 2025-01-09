@@ -57,7 +57,7 @@ uses
   uGLFrmEdit, uEditGlObjFrm,
   TestUDPSender, uThresholdsFrm,
   //uPressFrm, uPressFrmEdit,
-  uPressFrm2, uPressFrmEdit2,
+  uPressFrm2, uPressFrmEdit2, uSpmThresholdProfile,
   uDigsFrm,uDigsFrmEdit,
   uLissajousCurve,
   ulissajousCurveEdit,
@@ -514,6 +514,12 @@ begin
     EditProfileFrm := nil;
   end;
 
+  if SpmThresholdProfileFrm <> nil then
+  begin
+    SpmThresholdProfileFrm.destroy;
+    SpmThresholdProfileFrm := nil;
+  end;
+
   if BandsFrm <> nil then
   begin
     BandsFrm.destroy;
@@ -627,6 +633,7 @@ begin
   g_PressCamFactory2 := cPressCamFactory2.Create;
   compMng.Add(g_PressCamFactory2);
   PressFrmEdit2 := TPressFrmEdit2.Create(nil);
+  SpmThresholdProfileFrm:=TSpmThresholdProfileFrm.create(nil);
 
   g_DigsFrmFactory := cDigsFrmFactory.Create;
   compMng.Add(g_DigsFrmFactory);
