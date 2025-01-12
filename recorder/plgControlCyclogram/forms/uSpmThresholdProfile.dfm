@@ -87,7 +87,7 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
         Height = 325
         Align = alClient
         TabOrder = 0
-        ExplicitLeft = 3
+        OnSelectCell = ProfileSGSelectCell
         ExplicitTop = 17
       end
     end

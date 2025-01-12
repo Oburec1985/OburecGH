@@ -27,14 +27,14 @@ uses
 type
   // тип расчета
   tunits = (tuPercent, // ref*((100+v)/100);
-  // ref*(Power(10,v/10));
-  tuLg10,
-  // ref*(Power(10,v/20));
-  tuLg20,
-  // ref+prof
-  tuAbs,
-  // значение равно ref
-  tuVals);
+            // ref*(Power(10,v/10));
+            tuLg10,
+            // ref*(Power(10,v/20));
+            tuLg20,
+            // ref+prof
+            tuAbs,
+            // значение равно ref
+            tuVals);
 
   TProfPoint = record
     p:point2d;
@@ -69,7 +69,10 @@ type
     // сразу вызывает reEvalPoints
     procedure setRef(v:double);
   public
+    // преобразовать параметры в строку
     function toStr:string;
+    // строку в параметры
+    procedure fromStr(s:string; var start:integer);
     // добавить линию профиля на страницу
     procedure addline(c:cchart; p:cpage; ax:caxis);
     property Ref:double read m_ref write setref;
@@ -93,6 +96,7 @@ type
     procedure exclude(l:cProfileLine);
   public
     function toStr:string;
+    procedure fromStr(s: string; var start:integer);
     // обновить точки всех дочерних линий
     procedure UpdatePoints;
     property size:integer read getsize write setsize;
@@ -161,7 +165,7 @@ begin
   begin
     result:=result+';';
     p:=m_data[i];
-    result:=result+p2toStr(p.p)+';'+PTypeToStr(p.t);
+    result:=result+p2toStr(p.p, 4)+';'+PTypeToStr(p.t);
   end;
   result:=result+';'+inttostr(childs.Count);
   for I := 0 to childs.Count - 1 do
@@ -169,6 +173,35 @@ begin
     result:=result+';';
     l:=cProfileLine(childs.Items[i]);
     result:=result+l.toStr;
+  end;
+end;
+
+procedure cProfile.fromStr(s: string; var start:integer);
+var
+  ls:string;
+  i, j,c:integer;
+  p:TProfPoint;
+  line:cProfileLine;
+begin
+  ls:=GetSubString(s, ';',start,i);
+  size:=strtoint(ls);
+  for I := 0 to size - 1 do
+  begin
+    ls:=GetSubString(s, ';',i+1,i);
+    p.p.x:=StrTofloatext(ls);
+    ls:=GetSubString(s, ';',i+1,i);
+    p.p.y:=StrTofloatext(ls);
+    ls:=GetSubString(s, ';',i+1,i);
+    p.t:=StrToPType(ls);
+  end;
+  ls:=GetSubString(s, ';',i+1,i);
+  j:=i+1;
+  c:=strtoint(ls);
+  for I := 0 to c - 1 do
+  begin
+    line:=cProfileLine.create(self);
+    line.fromStr(s, j);
+    inc(j);
   end;
 end;
 
@@ -261,6 +294,7 @@ begin
   end;
 end;
 
+
 procedure cProfileLine.reEvalPoints;
 var
   j:integer;
@@ -284,14 +318,39 @@ begin
   else
     result:='0;';
   case m_LineUnits of
-    tuPercent:result+'0;';
-    tuLg10:result+'1;';
-    tuLg20:result+'2;';
-    tuAbs:result+'3;';
-    tuVals:result+'4;';
+    tuPercent:result:=result+'0;';
+    tuLg10:result:=result+'1;';
+    tuLg20:result:=result+'2;';
+    tuAbs:result:=result+'3;';
+    tuVals:result:=result+'4;';
   end;
   result:=result+floattostr(m_ref);
 end;
+
+procedure cProfileLine.fromStr(s: string; var start:integer);
+var
+  ls:string;
+  i,j:integer;
+begin
+  ls:=GetSubString(s, ';',start,i);
+  if ls='1' then
+    m_LineType:=true
+  else
+    m_LineType:=false;
+  ls:=GetSubString(s, ';',i+1,i);
+  j:=StrToInt(ls[1]);
+  case j of
+    0:m_LineUnits:=tuPercent;
+    1:m_LineUnits:=tuLg10;
+    2:m_LineUnits:=tuLg20;
+    3:m_LineUnits:=tuAbs;
+    4:m_LineUnits:=tuVals;
+  end;
+  ls:=GetSubString(s, ';',i+1,i);
+  m_ref:=strtofloat(ls);
+  start:=i+1;
+end;
+
 
 procedure cProfileLine.EvalP(p: double; i: integer);
 begin

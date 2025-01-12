@@ -28,7 +28,8 @@ uses
   uSpm, uBaseAlg,
   opengl, uSimpleObjects,
   math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend,
-  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uPressFrmFrame2,
+  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons,
+  uPressFrmFrame2, uProfile, uSpmThresholdProfile,
   // uPathMng,
   uEditCurveFrm,
   uThresholdsFrm,
@@ -164,6 +165,7 @@ type
 
   cPressCamFactory2 = class(cRecBasicFactory)
   public
+    m_spmProfile:cProfile;
     m_loadFile,m_Section: string;
     // сортировка по номеру полосы
     sortedFrames: tlist;

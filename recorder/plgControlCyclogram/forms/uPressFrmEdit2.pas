@@ -29,7 +29,7 @@ uses
   opengl, uSimpleObjects,
   math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uPressFrmFrame2,
-  uPressFrm2, uEditCurveFrm,
+  uPressFrm2, uEditCurveFrm, uSpmThresholdProfile,
   uRcCtrls, Menus, Grids, uStringGridExt, uTagsListFrame;
 
 type
@@ -98,6 +98,7 @@ type
     procedure RefFEChange(Sender: TObject);
     procedure AFHcbClick(Sender: TObject);
     procedure UseRefTagCbClick(Sender: TObject);
+    procedure UseRefProfileCBClick(Sender: TObject);
   private
     m_init,
     m_manualRef:boolean;
@@ -533,6 +534,14 @@ begin
   t:=getTagByName(TagsLB.Items[0].Caption);
   if t<>nil then
     fftdx.FloatNum := FFTCountEdit.IntNum/t.GetFreq;
+end;
+
+procedure TPressFrmEdit2.UseRefProfileCBClick(Sender: TObject);
+begin
+  if UseRefProfileCB.Checked then
+  begin
+    SpmThresholdProfileFrm.edit();
+  end;
 end;
 
 procedure TPressFrmEdit2.UseRefTagCbClick(Sender: TObject);
