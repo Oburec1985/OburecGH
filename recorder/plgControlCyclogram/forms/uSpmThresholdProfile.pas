@@ -42,7 +42,7 @@ type
     m_r:integer;
     m_c:integer;
     m_prof:cProfile;
-    m_tr: ctrend;
+    m_tProf, m_tH, m_tHH, m_tAlarm: ctrend;
   private
     procedure init;
     procedure ClearSGButtons;
@@ -71,7 +71,17 @@ implementation
 
 procedure TSpmThresholdProfileFrm.cChart1Init(Sender: TObject);
 begin
-  m_tr:=cpage(cChart1.activePage).activeAxis.AddTrend;
+  m_tProf:=cpage(cChart1.activePage).activeAxis.AddTrend;
+  m_tProf.color:=green;
+
+  m_tH:= cpage(cChart1.activePage).activeAxis.AddTrend;
+  m_tH.color:=yellow;
+
+  m_tHH:=cpage(cChart1.activePage).activeAxis.AddTrend;
+  m_tHH.color:=Orange;
+
+  m_tAlarm:=cpage(cChart1.activePage).activeAxis.AddTrend;
+  m_tAlarm.color:=red;
 end;
 
 procedure TSpmThresholdProfileFrm.ClearSGButtons;
@@ -169,7 +179,7 @@ var
 begin
   // отображаем тренд
   m_tr.Clear;
-  for I := 0 to m_prof.m_size - 1 do
+  for I := 0 to m_prof.size - 1 do
   begin
     p:=cBeziePoint.create;
     p.point.y:=m_curve.m_points[i].p.y;
