@@ -588,6 +588,8 @@ end;
 constructor cPressCamFactory2.create;
 begin
   inherited;
+  m_spmProfile:=cProfile.create;
+
   sortedFrames := tlist.create;
   m_comparator := TlistSortCompare;
 
@@ -625,6 +627,8 @@ end;
 
 destructor cPressCamFactory2.destroy;
 begin
+  m_spmProfile.destroy;
+
   m_AlarmTagH.destroy;
   m_AlarmTagHH.destroy;
   m_NormalTag.destroy;

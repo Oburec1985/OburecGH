@@ -47,7 +47,6 @@ object EditCurveFrm: TEditCurveFrm
     OnKeyDown = CurveSGKeyDown
     OnSelectCell = CurveSGSelectCell
     ExplicitLeft = 458
-    ExplicitTop = -6
   end
   object cChart1: cChart
     Left = 0
@@ -62,6 +61,8 @@ object EditCurveFrm: TEditCurveFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitLeft = -3
+    ExplicitTop = -6
   end
   object BottomPanel: TPanel
     Left = 0

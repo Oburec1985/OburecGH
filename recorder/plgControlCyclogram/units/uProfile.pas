@@ -73,6 +73,7 @@ type
     function toStr:string;
     // строку в параметры
     procedure fromStr(s:string; var start:integer);
+    procedure clear;
     // добавить линию профиля на страницу
     procedure addline(c:cchart; p:cpage; ax:caxis);
     property Ref:double read m_ref write setref;
@@ -83,6 +84,8 @@ type
   // профиль определяет линии которые к нему прилинкованы
   // если меняется профиль меняется и дочерний ряд (h,hh,l,ll)
   cProfile = class
+  protected
+    m_capacity, m_size:integer;
   public
     // номер сработавшей уставки
     m_NumLine: integer;
@@ -95,8 +98,12 @@ type
     function getsize:integer;
     procedure exclude(l:cProfileLine);
   public
+    // update - обновить дочерние линии
+    procedure AddP(x,y:double; t:TPType; update:boolean);
     function toStr:string;
     procedure fromStr(s: string; var start:integer);
+    // очистить
+    procedure clear;
     // обновить точки всех дочерних линий
     procedure UpdatePoints;
     property size:integer read getsize write setsize;
@@ -109,8 +116,41 @@ type
 implementation
 
 { cProfile }
+procedure cProfile.AddP(x, y: double; t: TPType; update: boolean);
+var
+  p:TProfPoint;
+begin
+  p.p.x:=x;
+  p.p.y:=y;
+  p.t:=t;
+  if m_size=m_capacity then
+  begin
+    m_capacity:=m_size+10;
+    SetLength(m_data,m_capacity);
+  end;
+  m_data[m_size]:=p;
+  Inc(m_size);
+  if update then
+    UpdatePoints;
+end;
+
+procedure cProfile.clear;
+var
+  I: Integer;
+  ch:cProfileLine;
+begin
+  size:=0;
+  for I := 0 to childs.Count - 1 do
+  begin
+    ch:=cProfileLine(childs.Items[i]);
+    ch.clear;
+  end;
+end;
+
 constructor cProfile.create;
 begin
+  m_capacity:=100;
+  SetLength(m_data, m_capacity);
   childs:=TList.Create;
 end;
 
@@ -137,7 +177,7 @@ function cProfile.getsize: integer;
 var
   I: Integer;
 begin
-  result:=Length(m_data);
+  result:=m_size;
 end;
 
 procedure cProfile.setsize(s: integer);
@@ -145,7 +185,12 @@ var
   i:integer;
   ch:cProfileLine;
 begin
-  setlength(m_data, s);
+  m_size:=s;
+  if s>m_capacity then
+  begin
+    m_capacity:=s;
+    setlength(m_data, s);
+  end;
   for I := 0 to childs.Count - 1 do
   begin
     ch:=cProfileLine(childs.Items[i]);
@@ -245,6 +290,19 @@ begin
     tr:=ax.AddTrend;
     tr.m_data:=self;
     m_lines.Add(tr);
+  end;
+end;
+
+procedure cProfileLine.clear;
+var
+  I: Integer;
+  tr:ctrend;
+begin
+  setlength(m_data, 0);
+  for I := 0 to m_lines.Count - 1 do
+  begin
+    tr:=ctrend(m_lines.Items[i]);
+    tr.Clear;
   end;
 end;
 

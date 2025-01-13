@@ -173,7 +173,6 @@ object PressFrmEdit2: TPressFrmEdit2
     Margins.Bottom = 2
     Align = alClient
     TabOrder = 1
-    ExplicitLeft = 1
     object FFTCountLabel: TLabel
       Left = 190
       Top = 17
@@ -657,8 +656,8 @@ object PressFrmEdit2: TPressFrmEdit2
       OnKeyDown = TagsLBKeyDown
     end
     object UseRefProfileCB: TCheckBox
-      Left = 332
-      Top = 50
+      Left = 331
+      Top = 46
       Width = 150
       Height = 17
       Caption = #1047#1072#1076#1072#1090#1100' '#1087#1088#1086#1092#1080#1083#1100' '#1091#1089#1090#1072#1074#1086#1082
