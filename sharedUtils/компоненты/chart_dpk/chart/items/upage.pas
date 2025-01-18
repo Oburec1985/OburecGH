@@ -1286,8 +1286,10 @@ end;
 procedure cPage.SetTabText(tabs: TPoint);
 begin
   cfg.pixelTabText := tabs;
-  cfg.m_TabText.y := cfg.pixelTabText.y * 2 / getheight;
-  cfg.m_TabText.x := cfg.pixelTabText.x * 2 / getwidth;
+  if getheight>0 then
+    cfg.m_TabText.y := cfg.pixelTabText.y * 2 / getheight;
+  if getwidth>0 then
+    cfg.m_TabText.x := cfg.pixelTabText.x * 2 / getwidth;
 end;
 
 procedure cPage.SetTabSpace(rect: TRect);

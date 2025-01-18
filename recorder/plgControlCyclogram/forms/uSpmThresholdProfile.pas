@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, uProfile, StdCtrls, ExtCtrls, Grids,
-  utrend, upage, uPoint,
+  utrend, upage, uPoint, mathfunction, uCommonMath,
   uComponentServises, uStringGridExt, uCommonTypes, ImgList, uChart;
 
 type
@@ -27,6 +27,8 @@ type
     ProfileNameLabel: TLabel;
     ProfileNameEdit: TEdit;
     SGPic: TImageList;
+    ApplyBtn: TButton;
+    Splitter1: TSplitter;
     cChart1: cChart;
     procedure ProfileSGSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
@@ -36,6 +38,8 @@ type
       Rect: TRect; State: TGridDrawState);
     procedure ProfileSGDblClick(Sender: TObject);
     procedure cChart1Init(Sender: TObject);
+    procedure ApplyBtnClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   public
     // список кнопок с интерполяцией
     SGbuttons:tlist;
@@ -63,11 +67,17 @@ const
   c_Col_N = 0;
   c_Col_X = 1;
   c_Col_P = 2;
+  c_Col_Bmp = 3;
 
 implementation
 
 {$R *.dfm}
 
+
+procedure TSpmThresholdProfileFrm.ApplyBtnClick(Sender: TObject);
+begin
+  showTrend;
+end;
 
 procedure TSpmThresholdProfileFrm.cChart1Init(Sender: TObject);
 begin
@@ -117,7 +127,7 @@ begin
   begin
     row := SGbuttons.Count + 1;
     btn := cbmp.Create();
-    ProfileSG.Objects[2, row] := btn;
+    ProfileSG.Objects[c_Col_Bmp, row] := btn;
     SGbuttons.Add(btn);
   end;
 end;
@@ -143,6 +153,8 @@ begin
     profilesg.Cells[c_Col_X,i+1]:=floattostr(tp.p.x);
     profilesg.Cells[c_Col_P,i+1]:=floattostr(tp.p.y);
   end;
+  SGChange(ProfileSG);
+  ProfileSG.ColWidths[c_Col_bmp]:=60;
   showmodal;
 end;
 
@@ -161,14 +173,22 @@ begin
   end;
 end;
 
+procedure TSpmThresholdProfileFrm.FormShow(Sender: TObject);
+begin
+  cChart1.Realign;
+  cChart1.Width:=PanAlClient.Width-GBleft.Width;
+  Realign;
+end;
+
 procedure TSpmThresholdProfileFrm.init;
 begin
   ProfileSG.RowCount:=2;
-  ProfileSG.ColCount:=3;
+  ProfileSG.ColCount:=4;
   ProfileSG.Cells[c_Col_N, 0] :=  '№';
   ProfileSG.Cells[c_Col_X, 0] :=  'X';
   ProfileSG.Cells[c_Col_P, 0] :=  'Задание';
   SGChange(ProfileSG);
+  ProfileSG.ColWidths[c_Col_bmp]:=60;
 end;
 
 
@@ -178,18 +198,20 @@ var
   p:cBeziePoint;
 begin
   // отображаем тренд
-  m_tr.Clear;
+  m_tProf.Clear;
   for I := 0 to m_prof.size - 1 do
   begin
     p:=cBeziePoint.create;
-    p.point.y:=m_curve.m_points[i].p.y;
-    p.point.x:=m_curve.m_points[i].p.x;
-    p.PType:=m_curve.m_points[i].ptype;
-    m_tr.AddPoint(p);
+    p.point.y:=m_prof.m_data[i].p.y;
+    p.point.x:=m_prof.m_data[i].p.x;
+    p.PType:=m_prof.m_data[i].t;
+    m_tProf.AddPoint(p);
   end;
-  m_ax.AddChild(m_tr);
-  m_page.Normalise;
-  cChart1.redraw;
+  if cchart1<>nil then
+  begin
+    cpage(cChart1.activePage).Normalise;
+    cChart1.redraw;
+  end;
 end;
 
 procedure TSpmThresholdProfileFrm.ProfileSGDblClick(Sender: TObject);
@@ -218,7 +240,7 @@ var
 begin
   if ARow < 1 then // headersize
     exit;
-  if ACol = 2 then
+  if ACol = c_Col_Bmp then
   begin // Простое рисование
     ProfileSG.Canvas.FillRect(Rect);
     ProfileSG.Canvas.FillRect(Rect);
@@ -254,8 +276,11 @@ begin
       if not EmptyRow(Profilesg, m_r) then
       begin
         Profilesg.RowCount:=Profilesg.RowCount+1;
+
       end;
     end;
+    SGChange(Profilesg);
+    ProfileSG.ColWidths[c_Col_bmp]:=60;
     TableToTrend;
     showTrend;
   end;
@@ -282,9 +307,15 @@ begin
     if not EmptyRow(Profilesg,i) then
     begin
       inc(c);
-      p.p.x:=strtofloat(Profilesg.Cells[1,i]);
-      p.p.y:=strtofloat(Profilesg.Cells[2,i]);
-      bmp:=cbmp(Profilesg.Objects[2,i]);
+      p.p.x:=strtofloatext(Profilesg.Cells[c_Col_X,i]);
+      p.p.y:=strtofloatext(Profilesg.Cells[c_Col_P,i]);
+      bmp:=cbmp(Profilesg.Objects[c_Col_Bmp,i]);
+      if bmp=nil then
+      begin
+        bmp := cbmp.Create();
+        ProfileSG.Objects[c_Col_Bmp, i] := bmp;
+        SGbuttons.Add(bmp);
+      end;
       p.t:=bmp.t;
       b:=false;
       if i=Profilesg.RowCount - 1 then

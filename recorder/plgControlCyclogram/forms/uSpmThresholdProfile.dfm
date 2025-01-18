@@ -3,7 +3,7 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
   Top = 0
   Caption = #1055#1088#1086#1092#1080#1083#1100' '#1080#1089#1087#1099#1090#1072#1085#1080#1103
   ClientHeight = 392
-  ClientWidth = 660
+  ClientWidth = 692
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,16 +11,17 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object PanBottom: TPanel
     Left = 0
     Top = 344
-    Width = 660
+    Width = 692
     Height = 48
     Align = alBottom
     TabOrder = 0
-    ExplicitWidth = 643
+    ExplicitWidth = 660
     object UnitsLabel: TLabel
       Left = 201
       Top = 5
@@ -41,7 +42,7 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
     end
     object UnitsCB: TComboBox
       Left = 201
-      Top = 20
+      Top = 19
       Width = 94
       Height = 21
       TabOrder = 0
@@ -65,28 +66,48 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       TabOrder = 1
       Text = 'ProfileNameEdit'
     end
+    object ApplyBtn: TButton
+      Left = 301
+      Top = 16
+      Width = 75
+      Height = 25
+      Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
+      TabOrder = 2
+      OnClick = ApplyBtnClick
+    end
   end
   object PanAlClient: TPanel
     Left = 0
     Top = 0
-    Width = 660
+    Width = 692
     Height = 344
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 643
-    object GBleft: TGroupBox
+    ExplicitWidth = 660
+    object Splitter1: TSplitter
       Left = 1
       Top = 1
-      Width = 208
       Height = 342
-      Align = alLeft
+      ExplicitLeft = 304
+      ExplicitTop = 112
+      ExplicitHeight = 100
+    end
+    object GBleft: TGroupBox
+      AlignWithMargins = True
+      Left = 480
+      Top = 4
+      Width = 208
+      Height = 336
+      Align = alRight
       Caption = #1055#1088#1086#1092#1080#1083#1100
       TabOrder = 0
+      ExplicitLeft = 4
+      ExplicitTop = 2
       object ProfileSG: TStringGridExt
         Left = 2
         Top = 15
         Width = 204
-        Height = 325
+        Height = 319
         Align = alClient
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
         TabOrder = 0
@@ -94,14 +115,21 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
         OnDrawCell = ProfileSGDrawCell
         OnKeyDown = ProfileSGKeyDown
         OnSelectCell = ProfileSGSelectCell
-        ExplicitLeft = 1
+        ExplicitLeft = 3
         ExplicitTop = 17
+        ExplicitHeight = 325
+        ColWidths = (
+          64
+          65
+          64
+          64
+          64)
       end
     end
     object cChart1: cChart
-      Left = 209
+      Left = 4
       Top = 1
-      Width = 450
+      Width = 473
       Height = 342
       Cursor = crSizeAll
       Align = alClient
@@ -112,7 +140,8 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       showTV = False
       showLegend = False
       selectSize = 5
-      ExplicitLeft = 213
+      ExplicitLeft = 218
+      ExplicitWidth = 327
     end
   end
   object SGPic: TImageList

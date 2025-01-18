@@ -1858,106 +1858,108 @@ asm
 {$ENDIF}
 end;
 
-            function InterpolateP3(p1, p2: point3; t: single): point3;
-            begin
-              p2 := scalevectorp3(t, p2);
-              p1 := scalevectorp3(1 - t, p1);
-              result := SummVectorP3(p1, p2);
-            end;
+function InterpolateP3(p1, p2: point3; t: single): point3;
+begin
+  p2 := scalevectorp3(t, p2);
+  p1 := scalevectorp3(1 - t, p1);
+  result := SummVectorP3(p1, p2);
+end;
 
-            procedure CreateOrthoMatrix(left, right, bottom, top, zNear,
-              zFar: single; var m: array of single);
-            var
-              rl, tb, fn: single;
-            begin
-              rl := (right - left);
-              m[0] := 2 / rl;
-              m[1] := 0;
-              m[2] := 0;
-              m[3] := 0;
-              m[4] := 0;
-              tb := (top - bottom);
-              m[5] := 2 / tb;
-              m[6] := 0;
-              m[7] := 0;
-              m[8] := 0;
-              m[9] := 0;
-              fn := (zFar - zNear);
-              m[10] := -2 / fn;
-              m[11] := 0;
-              m[12] := -(right + left) / rl;
-              m[13] := -(top + bottom) / tb;
-              m[14] := -(zNear + zFar) / fn;
-              m[15] := 1;
-            end;
+procedure CreateOrthoMatrix(left, right, bottom, top, zNear,
+  zFar: single; var m: array of single);
+var
+  rl, tb, fn: single;
+begin
+  rl := (right - left);
+  if rl=0 then exit;
 
-            procedure CreateOrthoMatrixd(left, right, bottom, top, zNear,
-              zFar: double; var m: array of double);
-            var
-              rl, tb, fn: double;
-            begin
-              rl := (right - left);
-              m[0] := 2 / rl;
-              m[1] := 0;
-              m[2] := 0;
-              m[3] := 0;
-              m[4] := 0;
-              tb := (top - bottom);
-              m[5] := 2 / tb;
-              m[6] := 0;
-              m[7] := 0;
-              m[8] := 0;
-              m[9] := 0;
-              fn := (zFar - zNear);
-              m[10] := -2 / fn;
-              m[11] := 0;
-              m[12] := -(right + left) / rl;
-              m[13] := -(top + bottom) / tb;
-              m[14] := -(zNear + zFar) / fn;
-              m[15] := 1;
-            end;
+  m[0] := 2 / rl;
+  m[1] := 0;
+  m[2] := 0;
+  m[3] := 0;
+  m[4] := 0;
+  tb := (top - bottom);
+  m[5] := 2 / tb;
+  m[6] := 0;
+  m[7] := 0;
+  m[8] := 0;
+  m[9] := 0;
+  fn := (zFar - zNear);
+  m[10] := -2 / fn;
+  m[11] := 0;
+  m[12] := -(right + left) / rl;
+  m[13] := -(top + bottom) / tb;
+  m[14] := -(zNear + zFar) / fn;
+  m[15] := 1;
+end;
 
-            function GetDistance(p1, p_p2: point2; p: point2): single;
-            var
-              // проекция на единичный вектор p1,p2
-              cosZ: single;
-              v, v_norm,
-              // вектор из p2 в p
-              z: point2;
-            begin
-              v.x := (p_p2.x - p1.x);
-              v.y := (p_p2.y - p1.y);
-              result := sqrt(v.x * v.x + v.y * v.y);
-              v_norm := p2(v.x / result, v.y / result);
-              z := p2(p_p2.x - p.x, p_p2.y - p.y);
-              cosZ := z.x * v_norm.x + z.y * v_norm.y;
-              // координаты проекции
-              v_norm := p2(p_p2.x - cosZ * v_norm.x, p_p2.y - cosZ * v_norm.y);
-              // координаты вектора из p в проекцию
-              if v_norm.x > p1.x then
-              begin
-                if v_norm.x < p_p2.x then
-                begin
-                  v.x := (v_norm.x - p.x);
-                  v.y := (v_norm.y - p.y);
-                  result := sqrt(v.x * v.x + v.y * v.y);
-                  exit;
-                end;
-              end;
-              result := -1;
-            end;
+procedure CreateOrthoMatrixd(left, right, bottom, top, zNear,
+  zFar: double; var m: array of double);
+var
+  rl, tb, fn: double;
+begin
+  rl := (right - left);
+  m[0] := 2 / rl;
+  m[1] := 0;
+  m[2] := 0;
+  m[3] := 0;
+  m[4] := 0;
+  tb := (top - bottom);
+  m[5] := 2 / tb;
+  m[6] := 0;
+  m[7] := 0;
+  m[8] := 0;
+  m[9] := 0;
+  fn := (zFar - zNear);
+  m[10] := -2 / fn;
+  m[11] := 0;
+  m[12] := -(right + left) / rl;
+  m[13] := -(top + bottom) / tb;
+  m[14] := -(zNear + zFar) / fn;
+  m[15] := 1;
+end;
 
-            Function P2iToP2proc(irect: trect; rect: frect; pi: tpoint): point2;
-            var
-              i_w, i_h: integer;
-              W, h: single;
-            begin
-              i_w := irect.right - irect.left;
-              i_h := irect.top - irect.bottom;
-              W := rect.TopRight.x - rect.BottomLeft.x;
-              h := rect.TopRight.y - rect.BottomLeft.y;
-              result.x := W * (pi.x - irect.left) / i_w + rect.BottomLeft.x;
-              result.y := h * (pi.y - irect.top) / i_h + rect.TopRight.y;
-            end;
+function GetDistance(p1, p_p2: point2; p: point2): single;
+var
+  // проекция на единичный вектор p1,p2
+  cosZ: single;
+  v, v_norm,
+  // вектор из p2 в p
+  z: point2;
+begin
+  v.x := (p_p2.x - p1.x);
+  v.y := (p_p2.y - p1.y);
+  result := sqrt(v.x * v.x + v.y * v.y);
+  v_norm := p2(v.x / result, v.y / result);
+  z := p2(p_p2.x - p.x, p_p2.y - p.y);
+  cosZ := z.x * v_norm.x + z.y * v_norm.y;
+  // координаты проекции
+  v_norm := p2(p_p2.x - cosZ * v_norm.x, p_p2.y - cosZ * v_norm.y);
+  // координаты вектора из p в проекцию
+  if v_norm.x > p1.x then
+  begin
+    if v_norm.x < p_p2.x then
+    begin
+      v.x := (v_norm.x - p.x);
+      v.y := (v_norm.y - p.y);
+      result := sqrt(v.x * v.x + v.y * v.y);
+      exit;
+    end;
+  end;
+  result := -1;
+end;
+
+Function P2iToP2proc(irect: trect; rect: frect; pi: tpoint): point2;
+var
+  i_w, i_h: integer;
+  W, h: single;
+begin
+  i_w := irect.right - irect.left;
+  i_h := irect.top - irect.bottom;
+  W := rect.TopRight.x - rect.BottomLeft.x;
+  h := rect.TopRight.y - rect.BottomLeft.y;
+  result.x := W * (pi.x - irect.left) / i_w + rect.BottomLeft.x;
+  result.y := h * (pi.y - irect.top) / i_h + rect.TopRight.y;
+end;
 
 end.
