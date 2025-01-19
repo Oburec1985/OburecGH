@@ -16,12 +16,11 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
   TextHeight = 13
   object PanBottom: TPanel
     Left = 0
-    Top = 344
+    Top = 320
     Width = 692
-    Height = 48
+    Height = 72
     Align = alBottom
     TabOrder = 0
-    ExplicitWidth = 660
     object UnitsLabel: TLabel
       Left = 201
       Top = 5
@@ -40,9 +39,42 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       Margins.Bottom = 2
       Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077
     end
+    object HLabel: TLabel
+      Left = 391
+      Top = 5
+      Width = 31
+      Height = 13
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
+      Caption = 'H Lev.'
+    end
+    object HHLabel: TLabel
+      Left = 462
+      Top = 5
+      Width = 35
+      Height = 13
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
+      Caption = 'HH lev.'
+    end
+    object EmergencyLabel: TLabel
+      Left = 537
+      Top = 5
+      Width = 53
+      Height = 13
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
+      Caption = 'Emergency'
+    end
     object UnitsCB: TComboBox
       Left = 201
-      Top = 19
+      Top = 24
       Width = 94
       Height = 21
       TabOrder = 0
@@ -75,19 +107,55 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       TabOrder = 2
       OnClick = ApplyBtnClick
     end
+    object HFE: TFloatEdit
+      Left = 391
+      Top = 22
+      Width = 56
+      Height = 20
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
+      TabOrder = 3
+      Text = '0.5'
+    end
+    object HHFE: TFloatEdit
+      Left = 462
+      Top = 21
+      Width = 61
+      Height = 20
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
+      TabOrder = 4
+      Text = '0.7'
+    end
+    object EmergencyFE: TFloatEdit
+      Left = 537
+      Top = 22
+      Width = 61
+      Height = 20
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
+      TabOrder = 5
+      Text = '1'
+    end
   end
   object PanAlClient: TPanel
     Left = 0
     Top = 0
     Width = 692
-    Height = 344
+    Height = 320
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 660
+    ExplicitHeight = 344
     object Splitter1: TSplitter
       Left = 1
       Top = 1
-      Height = 342
+      Height = 318
       ExplicitLeft = 304
       ExplicitTop = 112
       ExplicitHeight = 100
@@ -97,17 +165,16 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       Left = 480
       Top = 4
       Width = 208
-      Height = 336
+      Height = 312
       Align = alRight
       Caption = #1055#1088#1086#1092#1080#1083#1100
       TabOrder = 0
-      ExplicitLeft = 4
-      ExplicitTop = 2
+      ExplicitHeight = 336
       object ProfileSG: TStringGridExt
         Left = 2
         Top = 15
         Width = 204
-        Height = 319
+        Height = 295
         Align = alClient
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
         TabOrder = 0
@@ -115,9 +182,7 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
         OnDrawCell = ProfileSGDrawCell
         OnKeyDown = ProfileSGKeyDown
         OnSelectCell = ProfileSGSelectCell
-        ExplicitLeft = 3
-        ExplicitTop = 17
-        ExplicitHeight = 325
+        ExplicitHeight = 319
         ColWidths = (
           64
           65
@@ -130,7 +195,7 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       Left = 4
       Top = 1
       Width = 473
-      Height = 342
+      Height = 318
       Cursor = crSizeAll
       Align = alClient
       Caption = 'cChart1'
@@ -140,8 +205,7 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       showTV = False
       showLegend = False
       selectSize = 5
-      ExplicitLeft = 218
-      ExplicitWidth = 327
+      ExplicitHeight = 342
     end
   end
   object SGPic: TImageList

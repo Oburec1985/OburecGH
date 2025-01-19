@@ -49,12 +49,12 @@ type
   public
     // false - срабатывает если значение ниже/ true - если выше
     m_LineType:boolean;
-    m_LineUnits:tunits;
     m_ref:double;
     m_data:array of double;
     m_owner:cprofile;
     // каждой линии может принадлежать несколько трендов
     m_lines:tlist;
+    name:string;
   protected
     // обновить точки всех трендов
     procedure updatepoints;
@@ -87,6 +87,7 @@ type
   protected
     m_capacity, m_size:integer;
   public
+    m_LineUnits:tunits;
     // номер сработавшей уставки
     m_NumLine: integer;
     // x,y,t
@@ -97,6 +98,7 @@ type
     procedure setsize(s:integer);
     function getsize:integer;
     procedure exclude(l:cProfileLine);
+    procedure addline(l:cProfileLine);
   public
     // update - обновить дочерние линии
     procedure AddP(x,y:double; t:TPType; update:boolean);
@@ -111,11 +113,42 @@ type
     destructor destroy;
   end;
 
-
+  function IntToTUnits(i:integer):tunits;
 
 implementation
 
+function IntToTUnits(i:integer):tunits;
+begin
+  case i of
+    0:result:=tuPercent;
+    1:result:=tuLg10;
+    2:result:=tuLg20;
+    3:result:=tuAbs;
+    4:result:=tuVals;
+  end;
+end;
+
 { cProfile }
+procedure cProfile.addline(l: cProfileLine);
+var
+  I: Integer;
+  b:boolean;
+begin
+  b:=false;
+  for I := 0 to childs.Count - 1 do
+  begin
+    if childs.items[i]=l then
+    begin
+      b:=true;
+      break;
+    end;
+  end;
+  if not b then
+  begin
+    childs.Add(l);
+  end;
+end;
+
 procedure cProfile.AddP(x, y: double; t: TPType; update: boolean);
 var
   p:TProfPoint;
@@ -309,6 +342,7 @@ end;
 constructor cProfileLine.create(owner: cprofile);
 begin
   m_owner:=owner;
+  m_owner.addline(self);
   m_Lines:=tlist.Create;
 end;
 
@@ -328,7 +362,7 @@ end;
 
 function cProfileLine.EvalP(v: double): double;
 begin
-  case m_LineUnits of
+  case m_owner.m_LineUnits of
     tuPercent:
     begin
       result:=m_ref*((100+v)/100);
@@ -375,7 +409,7 @@ begin
     result:='1;'
   else
     result:='0;';
-  case m_LineUnits of
+  case m_owner.m_LineUnits of
     tuPercent:result:=result+'0;';
     tuLg10:result:=result+'1;';
     tuLg20:result:=result+'2;';
@@ -398,11 +432,11 @@ begin
   ls:=GetSubString(s, ';',i+1,i);
   j:=StrToInt(ls[1]);
   case j of
-    0:m_LineUnits:=tuPercent;
-    1:m_LineUnits:=tuLg10;
-    2:m_LineUnits:=tuLg20;
-    3:m_LineUnits:=tuAbs;
-    4:m_LineUnits:=tuVals;
+    0:m_owner.m_LineUnits:=tuPercent;
+    1:m_owner.m_LineUnits:=tuLg10;
+    2:m_owner.m_LineUnits:=tuLg20;
+    3:m_owner.m_LineUnits:=tuAbs;
+    4:m_owner.m_LineUnits:=tuVals;
   end;
   ls:=GetSubString(s, ';',i+1,i);
   m_ref:=strtofloat(ls);

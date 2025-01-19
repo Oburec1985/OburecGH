@@ -4,9 +4,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, uProfile, StdCtrls, ExtCtrls, Grids,
+  Dialogs, uProfile, StdCtrls, ExtCtrls, Grids, math,
   utrend, upage, uPoint, mathfunction, uCommonMath,
-  uComponentServises, uStringGridExt, uCommonTypes, ImgList, uChart;
+  uComponentServises, uStringGridExt, uCommonTypes, ImgList, uChart, DCL_MYOWN;
 
 type
   cBmp = class
@@ -30,6 +30,12 @@ type
     ApplyBtn: TButton;
     Splitter1: TSplitter;
     cChart1: cChart;
+    HLabel: TLabel;
+    HFE: TFloatEdit;
+    HHLabel: TLabel;
+    HHFE: TFloatEdit;
+    EmergencyLabel: TLabel;
+    EmergencyFE: TFloatEdit;
     procedure ProfileSGSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure ProfileSGKeyDown(Sender: TObject; var Key: Word;
@@ -46,11 +52,13 @@ type
     m_r:integer;
     m_c:integer;
     m_prof:cProfile;
+    m_h, m_hh, m_alarm:cProfileLine;
     m_tProf, m_tH, m_tHH, m_tAlarm: ctrend;
   private
     procedure init;
     procedure ClearSGButtons;
     procedure createSGBtn;
+    function EvalLevel(v, threshold:double):double;
     function EmptyRow(sg: tstringgrid; r: integer): boolean;
     procedure TableToTrend;
     procedure showTrend;
@@ -75,7 +83,20 @@ implementation
 
 
 procedure TSpmThresholdProfileFrm.ApplyBtnClick(Sender: TObject);
+var
+  I: Integer;
+  l:cProfileLine;
 begin
+  m_prof.m_LineUnits:=IntToTUnits(UnitsCB.ItemIndex);
+
+  l:=cProfileLine(m_prof.childs.Items[0]);
+  l.m_ref:=HFE.FloatNum;
+
+  l:=cProfileLine(m_prof.childs.Items[1]);
+  l.m_ref:=HhFE.FloatNum;
+
+  l:=cProfileLine(m_prof.childs.Items[2]);
+  l.m_ref:=EmergencyFE.FloatNum;
   showTrend;
 end;
 
@@ -173,6 +194,32 @@ begin
   end;
 end;
 
+function TSpmThresholdProfileFrm.EvalLevel(v, threshold: double): double;
+begin
+  case UnitsCB.ItemIndex of
+    // %
+    0:
+    begin
+      result:=v*threshold;
+    end;
+    // Дб, SweepSinus 10Log(...)
+    1:
+    begin
+      result:=threshold*(Power(10,v/10));
+    end;
+    // Дб, ШСВ 20Log(...)
+    2:
+    begin
+      result:=threshold*(Power(10,v/20));
+    end;
+    // Абс. (отклонение)
+    3:
+    begin
+      result:=threshold;
+    end;
+  end;
+end;
+
 procedure TSpmThresholdProfileFrm.FormShow(Sender: TObject);
 begin
   cChart1.Realign;
@@ -182,6 +229,8 @@ end;
 
 procedure TSpmThresholdProfileFrm.init;
 begin
+  UnitsCB.ItemIndex:=0;
+
   ProfileSG.RowCount:=2;
   ProfileSG.ColCount:=4;
   ProfileSG.Cells[c_Col_N, 0] :=  '№';
@@ -199,6 +248,9 @@ var
 begin
   // отображаем тренд
   m_tProf.Clear;
+  m_tH.Clear;
+  m_tHH.Clear;
+  m_tAlarm.Clear;
   for I := 0 to m_prof.size - 1 do
   begin
     p:=cBeziePoint.create;
@@ -206,6 +258,24 @@ begin
     p.point.x:=m_prof.m_data[i].p.x;
     p.PType:=m_prof.m_data[i].t;
     m_tProf.AddPoint(p);
+
+    p:=cBeziePoint.create;
+    p.point.y:=EvalLevel(m_prof.m_data[i].p.y,HFE.FloatNum);
+    p.point.x:=m_prof.m_data[i].p.x;
+    p.PType:=m_prof.m_data[i].t;
+    m_tH.AddPoint(p);
+
+    p:=cBeziePoint.create;
+    p.point.y:=EvalLevel(m_prof.m_data[i].p.y,HhFE.FloatNum);
+    p.point.x:=m_prof.m_data[i].p.x;
+    p.PType:=m_prof.m_data[i].t;
+    m_tHH.AddPoint(p);
+
+    p:=cBeziePoint.create;
+    p.point.y:=EvalLevel(m_prof.m_data[i].p.y,EmergencyFE.FloatNum);
+    p.point.x:=m_prof.m_data[i].p.x;
+    p.PType:=m_prof.m_data[i].t;
+    m_tAlarm.AddPoint(p);
   end;
   if cchart1<>nil then
   begin
@@ -218,13 +288,25 @@ procedure TSpmThresholdProfileFrm.ProfileSGDblClick(Sender: TObject);
 var
   b:cbmp;
 begin
-  if m_c=2 then
+  if m_c=c_Col_Bmp then
   begin
     b:=cbmp(ProfileSG.Objects[m_c,m_r]);
     case b.t of
-      ptNullPoly: b.t:=ptlinePoly;
-      ptlinePoly: b.t:=ptNullPoly;
-      ptCubePoly: b.t:=ptNullPoly;
+      ptNullPoly:
+      begin
+        b.t:=ptlinePoly;
+        m_prof.m_data[m_r-1].t:=ptlinePoly;
+      end;
+      ptlinePoly:
+      begin
+        b.t:=ptNullPoly;
+        m_prof.m_data[m_r-1].t:=ptNullPoly;
+      end;
+      ptCubePoly:
+      begin
+        b.t:=ptNullPoly;
+        m_prof.m_data[m_r-1].t:=ptNullPoly;
+      end;
     end;
     TableToTrend;
     showTrend;

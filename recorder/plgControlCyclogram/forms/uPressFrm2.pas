@@ -586,9 +586,20 @@ begin
 end;
 
 constructor cPressCamFactory2.create;
+var
+  l:cProfileLine;
 begin
   inherited;
   m_spmProfile:=cProfile.create;
+  l:=cProfileLine.create(m_spmProfile);
+  l.m_ref:=0.5;
+  l.name:='H';
+  l:=cProfileLine.create(m_spmProfile);
+  l.m_ref:=0.7;
+  l.name:='HH';
+  l:=cProfileLine.create(m_spmProfile);
+  l.m_ref:=1;
+  l.name:='Emergency';
 
   sortedFrames := tlist.create;
   m_comparator := TlistSortCompare;
