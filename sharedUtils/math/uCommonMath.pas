@@ -1637,6 +1637,12 @@ var
 begin
   buf := '';
   len := length(src);
+  if len=0 then
+  begin
+    index:=-1;
+    result:='';
+    exit;
+  end;
   ind := -1;
   if p = 0 then
   begin

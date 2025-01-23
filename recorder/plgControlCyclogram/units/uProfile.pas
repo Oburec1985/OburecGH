@@ -262,6 +262,10 @@ var
   line:cProfileLine;
 begin
   ls:=GetSubString(s, ';',start,i);
+  if ls='' then
+  begin
+    exit;
+  end;
   size:=strtoint(ls);
   for I := 0 to size - 1 do
   begin

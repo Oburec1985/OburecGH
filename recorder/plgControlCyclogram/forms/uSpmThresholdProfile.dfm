@@ -111,7 +111,7 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       Left = 391
       Top = 22
       Width = 56
-      Height = 20
+      Height = 21
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -123,7 +123,7 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       Left = 462
       Top = 21
       Width = 61
-      Height = 20
+      Height = 21
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -135,7 +135,7 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       Left = 537
       Top = 22
       Width = 61
-      Height = 20
+      Height = 21
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -151,7 +151,6 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
     Height = 320
     Align = alClient
     TabOrder = 1
-    ExplicitHeight = 344
     object Splitter1: TSplitter
       Left = 1
       Top = 1
@@ -169,7 +168,6 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       Align = alRight
       Caption = #1055#1088#1086#1092#1080#1083#1100
       TabOrder = 0
-      ExplicitHeight = 336
       object ProfileSG: TStringGridExt
         Left = 2
         Top = 15
@@ -182,7 +180,8 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
         OnDrawCell = ProfileSGDrawCell
         OnKeyDown = ProfileSGKeyDown
         OnSelectCell = ProfileSGSelectCell
-        ExplicitHeight = 319
+        ExplicitLeft = 1
+        ExplicitTop = 14
         ColWidths = (
           64
           65
@@ -205,7 +204,6 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       showTV = False
       showLegend = False
       selectSize = 5
-      ExplicitHeight = 342
     end
   end
   object SGPic: TImageList

@@ -165,6 +165,7 @@ type
 
   cPressCamFactory2 = class(cRecBasicFactory)
   public
+    m_UseProfile:boolean;
     m_spmProfile:cProfile;
     m_loadFile,m_Section: string;
     // сортировка по номеру полосы
@@ -172,11 +173,8 @@ type
     m_comparator: fcomparator;
 
     fLastBlock: double;
-    // пересчитано в интдексы или нет
-    M_InitBands,
-    m_manualBand,
-    m_avrBand
-    : boolean;
+    // пересчитано в индексы или нет
+    M_InitBands, m_manualBand,  m_avrBand : boolean;
 
     m_bands: array of tband;
     m_showtags:array of boolean;
@@ -184,8 +182,7 @@ type
     m_RepFile: string;
     m_spmCfg: cAlgConfig;
     // manual
-    m_Manualref,
-    m_useRefTag: boolean;
+    m_ManualRef, m_useRefTag: boolean;
     m_refTag:ctag;
     // список ref для каждого датчика
     m_refArray: array of double;
@@ -1833,6 +1830,17 @@ begin
       Strings.destroy;
     end;
 
+    g_PressCamFactory2.m_UseProfile :=
+      a_pIni.ReadBool('PressCamFactory2', 'UseProfile', false);
+    s:=a_pIni.ReadString('PressCamFactory2', 'ProfileStr','');
+    i:=0;
+    g_PressCamFactory2.m_spmProfile.fromStr(s, i);
+
+    // пишем профиль уставок
+    a_pIni.WriteBool('PressCamFactory2', 'UseProfile',
+                       g_PressCamFactory2.m_UseProfile);
+
+
     LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTagH,'PressCamFactory2', 'AlarmHTag');
     LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH,'PressCamFactory2', 'AlarmHHTag');
     LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTag,'PressCamFactory2', 'AlarmTag');
@@ -2002,6 +2010,7 @@ begin
       lstr:='';
     a_pIni.WriteString(str, 'AFH_'+inttostr(i), lstr);
   end;
+  // свойства фабрики сохраняем только для первого элемента
   if self = g_PressCamFactory2.GetFrm(0) then
   begin
     // сохраняется при загрузке iniFile GUI Recorder чтобы после инициализации всех структур донастроить
@@ -2018,6 +2027,11 @@ begin
         inc(c);
       end;
     end;
+    // пишем профиль уставок
+    a_pIni.WriteBool('PressCamFactory2', 'UseProfile',
+                       g_PressCamFactory2.m_UseProfile);
+    a_pIni.WriteString('PressCamFactory2', 'ProfileStr',
+                       g_PressCamFactory2.m_spmProfile.toStr);
     if s <> nil then
     begin
       a_pIni.WriteString('PressCamFactory2', 'Wnd', s.GetWndStr)

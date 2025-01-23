@@ -368,6 +368,8 @@ begin
       end;
     end;
   end;
+  UseRefProfileCB.Checked:=g_PressCamFactory2.m_UseProfile;
+
   RefFE.FloatNum:=g_PressCamFactory2.GetRef(0);
   BCountIE.IntNum:=g_PressCamFactory2.BandCount;
   BandSG.RowCount:=BCountIE.IntNum+1;
@@ -538,6 +540,7 @@ end;
 
 procedure TPressFrmEdit2.UseRefProfileCBClick(Sender: TObject);
 begin
+  g_PressCamFactory2.m_UseProfile:=UseRefProfileCB.Checked;
   if UseRefProfileCB.Checked then
   begin
     SpmThresholdProfileFrm.edit(g_PressCamFactory2.m_spmProfile);
