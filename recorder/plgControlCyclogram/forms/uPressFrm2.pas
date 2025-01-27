@@ -258,6 +258,7 @@ type
     function RescaleEst(restype:integer; rms:double):double;
     // когда Recorder загрузил конфиги;
     procedure doRecorderInit;override;
+    // пересчет аварий
     procedure UpdateRefs(base:double);
   public
     constructor create;
@@ -1835,11 +1836,6 @@ begin
     s:=a_pIni.ReadString('PressCamFactory2', 'ProfileStr','');
     i:=0;
     g_PressCamFactory2.m_spmProfile.fromStr(s, i);
-
-    // пишем профиль уставок
-    a_pIni.WriteBool('PressCamFactory2', 'UseProfile',
-                       g_PressCamFactory2.m_UseProfile);
-
 
     LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTagH,'PressCamFactory2', 'AlarmHTag');
     LoadExTagIni(a_pIni,g_PressCamFactory2.m_AlarmTagHH,'PressCamFactory2', 'AlarmHHTag');

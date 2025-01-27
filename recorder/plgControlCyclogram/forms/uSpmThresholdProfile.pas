@@ -10,7 +10,7 @@ uses
 
 type
   cBmp = class
-    bmp:tbitmap;
+    bmp: tbitmap;
     t: TPType;
   public
     constructor create;
@@ -48,23 +48,23 @@ type
     procedure FormShow(Sender: TObject);
   public
     // список кнопок с интерполяцией
-    SGbuttons:tlist;
-    m_r:integer;
-    m_c:integer;
-    m_prof:cProfile;
-    m_h, m_hh, m_alarm:cProfileLine;
+    SGbuttons: tlist;
+    m_r: Integer;
+    m_c: Integer;
+    m_prof: cProfile;
+    m_h, m_hh, m_alarm: cProfileLine;
     m_tProf, m_tH, m_tHH, m_tAlarm: ctrend;
   private
     procedure init;
     procedure ClearSGButtons;
     procedure createSGBtn;
-    function EvalLevel(v, threshold:double):double;
-    function EmptyRow(sg: tstringgrid; r: integer): boolean;
-    procedure TableToTrend;
+    function EvalLevel(v, threshold: double): double;
+    function EmptyRow(sg: tstringgrid; r: Integer): Boolean;
+    procedure TableToProf;
     procedure showTrend;
   public
     constructor create(AOwner: TComponent); override;
-    procedure edit(p:cProfile);
+    procedure edit(p: cProfile);
   end;
 
 var
@@ -81,73 +81,72 @@ implementation
 
 {$R *.dfm}
 
-
 procedure TSpmThresholdProfileFrm.ApplyBtnClick(Sender: TObject);
 var
   I: Integer;
-  l:cProfileLine;
+  l: cProfileLine;
 begin
-  m_prof.m_LineUnits:=IntToTUnits(UnitsCB.ItemIndex);
+  m_prof.m_LineUnits := IntToTUnits(UnitsCB.ItemIndex);
 
-  l:=cProfileLine(m_prof.childs.Items[0]);
-  l.m_ref:=HFE.FloatNum;
+  l := cProfileLine(m_prof.childs.Items[0]);
+  l.m_ref := HFE.FloatNum;
 
-  l:=cProfileLine(m_prof.childs.Items[1]);
-  l.m_ref:=HhFE.FloatNum;
+  l := cProfileLine(m_prof.childs.Items[1]);
+  l.m_ref := HHFE.FloatNum;
 
-  l:=cProfileLine(m_prof.childs.Items[2]);
-  l.m_ref:=EmergencyFE.FloatNum;
+  l := cProfileLine(m_prof.childs.Items[2]);
+  l.m_ref := EmergencyFE.FloatNum;
   showTrend;
 end;
 
 procedure TSpmThresholdProfileFrm.cChart1Init(Sender: TObject);
 begin
-  m_tProf:=cpage(cChart1.activePage).activeAxis.AddTrend;
-  m_tProf.color:=green;
+  m_tProf := cpage(cChart1.activePage).activeAxis.AddTrend;
+  m_tProf.color := green;
 
-  m_tH:= cpage(cChart1.activePage).activeAxis.AddTrend;
-  m_tH.color:=yellow;
+  m_tH := cpage(cChart1.activePage).activeAxis.AddTrend;
+  m_tH.color := yellow;
 
-  m_tHH:=cpage(cChart1.activePage).activeAxis.AddTrend;
-  m_tHH.color:=Orange;
+  m_tHH := cpage(cChart1.activePage).activeAxis.AddTrend;
+  m_tHH.color := Orange;
 
-  m_tAlarm:=cpage(cChart1.activePage).activeAxis.AddTrend;
-  m_tAlarm.color:=red;
+  m_tAlarm := cpage(cChart1.activePage).activeAxis.AddTrend;
+  m_tAlarm.color := red;
+  showTrend;
 end;
 
 procedure TSpmThresholdProfileFrm.ClearSGButtons;
 var
-  btn: cbmp;
-  i: integer;
+  btn: cBmp;
+  I: Integer;
 begin
-  for i := 0 to SGbuttons.Count - 1 do
+  for I := 0 to SGbuttons.Count - 1 do
   begin
-    btn := cbmp(SGbuttons.Items[i]);
+    btn := cBmp(SGbuttons.Items[I]);
     btn.destroy;
   end;
   SGbuttons.clear;
 end;
 
-
 procedure TSpmThresholdProfileFrm.createSGBtn;
 var
-  btn: cbmp;
-  row, i: integer;
+  btn: cBmp;
+  row, I: Integer;
 begin
   if ProfileSG.RowCount < SGbuttons.Count then
   begin
     while ProfileSG.RowCount <> SGbuttons.Count do
     begin
-      i := SGbuttons.Count - 1;
-      btn := cbmp(SGbuttons.Items[i]);
+      I := SGbuttons.Count - 1;
+      btn := cBmp(SGbuttons.Items[I]);
       btn.destroy;
-      SGbuttons.Delete(i);
+      SGbuttons.Delete(I);
     end;
   end;
   while SGbuttons.Count < ProfileSG.RowCount - 1 do
   begin
     row := SGbuttons.Count + 1;
-    btn := cbmp.Create();
+    btn := cBmp.create();
     ProfileSG.Objects[c_Col_Bmp, row] := btn;
     SGbuttons.Add(btn);
   end;
@@ -156,39 +155,49 @@ end;
 constructor TSpmThresholdProfileFrm.create(AOwner: TComponent);
 begin
   inherited;
-  SGbuttons:=TList.Create;
+  SGbuttons := tlist.create;
   init;
 end;
 
 procedure TSpmThresholdProfileFrm.edit(p: cProfile);
 var
   I: Integer;
-  tp:TProfPoint;
+  tp: TProfPoint;
+  bmp:cBmp;
 begin
-  m_prof:=p;
-  profilesg.RowCount:=p.size+2;
+  m_prof := p;
+  ProfileSG.RowCount := p.size + 2;
   for I := 0 to p.size - 1 do
   begin
-    tp:=p.m_data[i];
-    profilesg.Cells[c_Col_N,i+1]:=inttostr(i+1);
-    profilesg.Cells[c_Col_X,i+1]:=floattostr(tp.p.x);
-    profilesg.Cells[c_Col_P,i+1]:=floattostr(tp.p.y);
+    tp := p.m_data[I];
+    ProfileSG.Cells[c_Col_N, I + 1] := inttostr(I + 1);
+    ProfileSG.Cells[c_Col_X, I + 1] := floattostr(tp.p.x);
+    ProfileSG.Cells[c_Col_P, I + 1] := floattostr(tp.p.y);
+    bmp:=cbmp(Profilesg.Objects[c_Col_Bmp,i+1]);
+    if bmp=nil then
+    begin
+      bmp := cbmp.Create();
+      ProfileSG.Objects[c_Col_Bmp, i+1] := bmp;
+      SGbuttons.Add(bmp);
+      bmp.t:=tp.t;
+    end;
   end;
   SGChange(ProfileSG);
-  ProfileSG.ColWidths[c_Col_bmp]:=60;
+  ProfileSG.ColWidths[c_Col_Bmp] := 60;
+  showTrend;
   showmodal;
 end;
 
-function TSpmThresholdProfileFrm.EmptyRow(sg: tstringgrid; r: integer): boolean;
+function TSpmThresholdProfileFrm.EmptyRow(sg: tstringgrid; r: Integer): Boolean;
 var
   I: Integer;
 begin
-  result:=true;
+  result := true;
   for I := 0 to sg.ColCount - 1 do
   begin
-    if sg.Cells[i, r]<>'' then
+    if sg.Cells[I, r] <> '' then
     begin
-      result:=false;
+      result := false;
       exit;
     end;
   end;
@@ -199,126 +208,128 @@ begin
   case UnitsCB.ItemIndex of
     // %
     0:
-    begin
-      result:=v*threshold;
-    end;
+      begin
+        result := v * threshold;
+      end;
     // Дб, SweepSinus 10Log(...)
     1:
-    begin
-      result:=threshold*(Power(10,v/10));
-    end;
+      begin
+        result := threshold * (Power(10, v / 10));
+      end;
     // Дб, ШСВ 20Log(...)
     2:
-    begin
-      result:=threshold*(Power(10,v/20));
-    end;
+      begin
+        result := threshold * (Power(10, v / 20));
+      end;
     // Абс. (отклонение)
     3:
-    begin
-      result:=threshold;
-    end;
+      begin
+        result := threshold;
+      end;
   end;
 end;
 
 procedure TSpmThresholdProfileFrm.FormShow(Sender: TObject);
 begin
   cChart1.Realign;
-  cChart1.Width:=PanAlClient.Width-GBleft.Width;
+  cChart1.Width := PanAlClient.Width - GBleft.Width;
   Realign;
 end;
 
 procedure TSpmThresholdProfileFrm.init;
 begin
-  UnitsCB.ItemIndex:=0;
+  UnitsCB.ItemIndex := 0;
 
-  ProfileSG.RowCount:=2;
-  ProfileSG.ColCount:=4;
-  ProfileSG.Cells[c_Col_N, 0] :=  '№';
-  ProfileSG.Cells[c_Col_X, 0] :=  'X';
-  ProfileSG.Cells[c_Col_P, 0] :=  'Задание';
+  ProfileSG.RowCount := 2;
+  ProfileSG.ColCount := 4;
+  ProfileSG.Cells[c_Col_N, 0] := '№';
+  ProfileSG.Cells[c_Col_X, 0] := 'X';
+  ProfileSG.Cells[c_Col_P, 0] := 'Задание';
   SGChange(ProfileSG);
-  ProfileSG.ColWidths[c_Col_bmp]:=60;
+  ProfileSG.ColWidths[c_Col_Bmp] := 60;
 end;
-
 
 procedure TSpmThresholdProfileFrm.showTrend;
 var
-  i:integer;
-  p:cBeziePoint;
+  I: Integer;
+  p: cBeziePoint;
 begin
-  // отображаем тренд
-  m_tProf.Clear;
-  m_tH.Clear;
-  m_tHH.Clear;
-  m_tAlarm.Clear;
-  for I := 0 to m_prof.size - 1 do
+  if m_tProf<>nil then
   begin
-    p:=cBeziePoint.create;
-    p.point.y:=m_prof.m_data[i].p.y;
-    p.point.x:=m_prof.m_data[i].p.x;
-    p.PType:=m_prof.m_data[i].t;
-    m_tProf.AddPoint(p);
+    // отображаем тренд
+    m_tProf.clear;
+    m_tH.clear;
+    m_tHH.clear;
+    m_tAlarm.clear;
+    for I := 0 to m_prof.size - 1 do
+    begin
+      p := cBeziePoint.create;
+      p.point.y := m_prof.m_data[I].p.y;
+      p.point.x := m_prof.m_data[I].p.x;
+      p.PType := m_prof.m_data[I].t;
+      m_tProf.AddPoint(p);
 
-    p:=cBeziePoint.create;
-    p.point.y:=EvalLevel(m_prof.m_data[i].p.y,HFE.FloatNum);
-    p.point.x:=m_prof.m_data[i].p.x;
-    p.PType:=m_prof.m_data[i].t;
-    m_tH.AddPoint(p);
+      p := cBeziePoint.create;
+      p.point.y := EvalLevel(m_prof.m_data[I].p.y, HFE.FloatNum);
+      p.point.x := m_prof.m_data[I].p.x;
+      p.PType := m_prof.m_data[I].t;
+      m_tH.AddPoint(p);
 
-    p:=cBeziePoint.create;
-    p.point.y:=EvalLevel(m_prof.m_data[i].p.y,HhFE.FloatNum);
-    p.point.x:=m_prof.m_data[i].p.x;
-    p.PType:=m_prof.m_data[i].t;
-    m_tHH.AddPoint(p);
+      p := cBeziePoint.create;
+      p.point.y := EvalLevel(m_prof.m_data[I].p.y, HHFE.FloatNum);
+      p.point.x := m_prof.m_data[I].p.x;
+      p.PType := m_prof.m_data[I].t;
+      m_tHH.AddPoint(p);
 
-    p:=cBeziePoint.create;
-    p.point.y:=EvalLevel(m_prof.m_data[i].p.y,EmergencyFE.FloatNum);
-    p.point.x:=m_prof.m_data[i].p.x;
-    p.PType:=m_prof.m_data[i].t;
-    m_tAlarm.AddPoint(p);
-  end;
-  if cchart1<>nil then
-  begin
-    cpage(cChart1.activePage).Normalise;
-    cChart1.redraw;
+      p := cBeziePoint.create;
+      p.point.y := EvalLevel(m_prof.m_data[I].p.y, EmergencyFE.FloatNum);
+      p.point.x := m_prof.m_data[I].p.x;
+      p.PType := m_prof.m_data[I].t;
+      m_tAlarm.AddPoint(p);
+    end;
+    if cChart1 <> nil then
+    begin
+      cpage(cChart1.activePage).Normalise;
+      cChart1.redraw;
+    end;
   end;
 end;
 
 procedure TSpmThresholdProfileFrm.ProfileSGDblClick(Sender: TObject);
 var
-  b:cbmp;
+  b: cBmp;
 begin
-  if m_c=c_Col_Bmp then
+  if m_c = c_Col_Bmp then
   begin
-    b:=cbmp(ProfileSG.Objects[m_c,m_r]);
+    b := cBmp(ProfileSG.Objects[m_c, m_r]);
     case b.t of
       ptNullPoly:
-      begin
-        b.t:=ptlinePoly;
-        m_prof.m_data[m_r-1].t:=ptlinePoly;
-      end;
+        begin
+          b.t := ptlinePoly;
+          m_prof.m_data[m_r - 1].t := ptlinePoly;
+        end;
       ptlinePoly:
-      begin
-        b.t:=ptNullPoly;
-        m_prof.m_data[m_r-1].t:=ptNullPoly;
-      end;
+        begin
+          b.t := ptNullPoly;
+          m_prof.m_data[m_r - 1].t := ptNullPoly;
+        end;
       ptCubePoly:
-      begin
-        b.t:=ptNullPoly;
-        m_prof.m_data[m_r-1].t:=ptNullPoly;
-      end;
+        begin
+          b.t := ptNullPoly;
+          m_prof.m_data[m_r - 1].t := ptNullPoly;
+        end;
     end;
-    TableToTrend;
+    TableToProf;
     showTrend;
   end;
 end;
 
-procedure TSpmThresholdProfileFrm.ProfileSGDrawCell(Sender: TObject; ACol,
-  ARow: Integer; Rect: TRect; State: TGridDrawState);
+procedure TSpmThresholdProfileFrm.ProfileSGDrawCell(Sender: TObject;
+  ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
 var
-  bmp: cbmp;
+  bmp: cBmp;
 
-  imageind, X, Y: integer;
+  imageind, x, y: Integer;
 begin
   if ARow < 1 then // headersize
     exit;
@@ -326,21 +337,24 @@ begin
   begin // Простое рисование
     ProfileSG.Canvas.FillRect(Rect);
     ProfileSG.Canvas.FillRect(Rect);
-    bmp := cbmp(ProfileSG.Objects[ACol, ARow]);
+    bmp := cBmp(ProfileSG.Objects[ACol, ARow]);
     if bmp = nil then
       exit;
     case bmp.t of
-      ptNullPoly:imageind:=2;
-      ptlinePoly:imageind:=0;
-      ptCubePoly:imageind:=1;
+      ptNullPoly:
+        imageind := 2;
+      ptlinePoly:
+        imageind := 0;
+      ptCubePoly:
+        imageind := 1;
     end;
     bmp.bmp.Height := SGPic.Height;
     bmp.bmp.Width := SGPic.Width;
     bmp.bmp.Assign(nil);
     SGPic.GetBitmap(imageind, bmp.bmp);
-    X := round((Rect.Left + Rect.Right - bmp.bmp.Width) / 2);
-    Y := round((Rect.Top + Rect.Bottom - bmp.bmp.Height) / 2);
-    ProfileSG.Canvas.Draw(X, Y, bmp.bmp);
+    x := round((Rect.Left + Rect.Right - bmp.bmp.Width) / 2);
+    y := round((Rect.Top + Rect.Bottom - bmp.bmp.Height) / 2);
+    ProfileSG.Canvas.Draw(x, y, bmp.bmp);
   end;
 end;
 
@@ -353,55 +367,55 @@ begin
   end;
   if Key = VK_RETURN then
   begin
-    if m_r=Profilesg.RowCount-1 then
+    if m_r = ProfileSG.RowCount - 1 then
     begin
-      if not EmptyRow(Profilesg, m_r) then
+      if not EmptyRow(ProfileSG, m_r) then
       begin
-        Profilesg.RowCount:=Profilesg.RowCount+1;
+        ProfileSG.RowCount := ProfileSG.RowCount + 1;
 
       end;
     end;
-    SGChange(Profilesg);
-    ProfileSG.ColWidths[c_Col_bmp]:=60;
-    TableToTrend;
+    SGChange(ProfileSG);
+    ProfileSG.ColWidths[c_Col_Bmp] := 60;
+    TableToProf;
     showTrend;
   end;
 end;
 
-procedure TSpmThresholdProfileFrm.ProfileSGSelectCell(Sender: TObject; ACol,
-  ARow: Integer; var CanSelect: Boolean);
+procedure TSpmThresholdProfileFrm.ProfileSGSelectCell(Sender: TObject;
+  ACol, ARow: Integer; var CanSelect: Boolean);
 begin
-  m_r:=ARow;
-  m_c:=ACol;
+  m_r := ARow;
+  m_c := ACol;
 end;
 
-procedure TSpmThresholdProfileFrm.TableToTrend;
+procedure TSpmThresholdProfileFrm.TableToProf;
 var
   I, c: Integer;
-  p:TProfPoint;
-  bmp:cbmp;
-  b:boolean;
+  p: TProfPoint;
+  bmp: cBmp;
+  b: Boolean;
 begin
-  c:=0;
+  c := 0;
   m_prof.clear;
-  for I := 1 to Profilesg.RowCount - 1 do
+  for I := 1 to ProfileSG.RowCount - 1 do
   begin
-    if not EmptyRow(Profilesg,i) then
+    if not EmptyRow(ProfileSG, I) then
     begin
       inc(c);
-      p.p.x:=strtofloatext(Profilesg.Cells[c_Col_X,i]);
-      p.p.y:=strtofloatext(Profilesg.Cells[c_Col_P,i]);
-      bmp:=cbmp(Profilesg.Objects[c_Col_Bmp,i]);
-      if bmp=nil then
+      p.p.x := strtofloatext(ProfileSG.Cells[c_Col_X, I]);
+      p.p.y := strtofloatext(ProfileSG.Cells[c_Col_P, I]);
+      bmp := cBmp(ProfileSG.Objects[c_Col_Bmp, I]);
+      if bmp = nil then
       begin
-        bmp := cbmp.Create();
-        ProfileSG.Objects[c_Col_Bmp, i] := bmp;
+        bmp := cBmp.create();
+        ProfileSG.Objects[c_Col_Bmp, I] := bmp;
         SGbuttons.Add(bmp);
       end;
-      p.t:=bmp.t;
-      b:=false;
-      if i=Profilesg.RowCount - 1 then
-        b:=true;
+      p.t := bmp.t;
+      b := false;
+      if I = ProfileSG.RowCount - 1 then
+        b := true;
       m_prof.AddP(p.p.x, p.p.y, p.t, b);
     end;
   end;
@@ -411,14 +425,13 @@ end;
 
 constructor cBmp.create;
 begin
-  bmp:=TBitmap.Create;
-  t:=ptlinePoly;
+  bmp := tbitmap.create;
+  t := ptlinePoly;
 end;
 
 destructor cBmp.destroy;
 begin
-  bmp.Destroy;
+  bmp.destroy;
 end;
-
 
 end.

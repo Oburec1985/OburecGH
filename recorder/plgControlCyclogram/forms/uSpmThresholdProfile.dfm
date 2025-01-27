@@ -180,8 +180,6 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
         OnDrawCell = ProfileSGDrawCell
         OnKeyDown = ProfileSGKeyDown
         OnSelectCell = ProfileSGSelectCell
-        ExplicitLeft = 1
-        ExplicitTop = 14
         ColWidths = (
           64
           65
@@ -204,6 +202,7 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       showTV = False
       showLegend = False
       selectSize = 5
+      ExplicitLeft = 3
     end
   end
   object SGPic: TImageList

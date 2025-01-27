@@ -243,7 +243,7 @@ begin
   begin
     result:=result+';';
     p:=m_data[i];
-    result:=result+p2toStr(p.p, 4)+';'+PTypeToStr(p.t);
+    result:=result+p2toStrNoChar(p.p, 4)+';'+PTypeToStr(p.t);
   end;
   result:=result+';'+inttostr(childs.Count);
   for I := 0 to childs.Count - 1 do
@@ -267,7 +267,7 @@ begin
     exit;
   end;
   size:=strtoint(ls);
-  for I := 0 to size - 1 do
+  for j := 0 to size - 1 do
   begin
     ls:=GetSubString(s, ';',i+1,i);
     p.p.x:=StrTofloatext(ls);
@@ -275,6 +275,7 @@ begin
     p.p.y:=StrTofloatext(ls);
     ls:=GetSubString(s, ';',i+1,i);
     p.t:=StrToPType(ls);
+    m_data[j]:=p;
   end;
   ls:=GetSubString(s, ';',i+1,i);
   j:=i+1;

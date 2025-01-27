@@ -38,11 +38,16 @@ type
 
   TThresholdGroup = class
   public
+    // использовать подгруппы
+    m_useSubGroups:boolean;
+    // список подгруп TThresholdGroup. Нужно например для частотного профиля
+    m_SubGroups:tlist;
     owner:tstringlist;
     m_lastControlVal:integer;
     initList:boolean;
     // тег для переключения наборов
     ControlTag:ctag;
+    // список TAlarms
     AlarmList:tstringlist;
     name:string;
     // данные набора прописываемые в алармы
@@ -149,10 +154,11 @@ type
     procedure TagsTVKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormShow(Sender: TObject);
   public
-    m_AlarmHandler :AlarmHandler;
+    m_AlarmHandler:AlarmHandler;
     m_Groups:TStringList;
     m_selGroup:TThresholdGroup;
   private
+    procedure ShowGroup(g:TThresholdGroup; parent:pVirtualNode);
     procedure setData(pdata:PDataRec);
     procedure createevents;
     procedure destroyevents;
@@ -339,6 +345,7 @@ end;
 
 procedure TThresholdFrm.FormShow(Sender: TObject);
 begin
+  // отбразить списки каналов в комбобоксах
   UpdateTagList;
   ShowTV;
 end;
@@ -549,6 +556,46 @@ begin
   NormalColor.Color:=pdata.outRangecol;
 end;
 
+procedure TThresholdFrm.ShowGroup(g:TThresholdGroup; parent:pVirtualNode);
+var
+  a:TAlarms;
+  n, n1:pVirtualNode;
+  d:pnodedata;
+  j:integer;
+  subG:TThresholdGroup;
+  I: Integer;
+begin
+  if TagsTV<>nil then
+  begin
+    n:=TagsTV.AddChild(parent, nil);
+    d:=TagsTV.getNodeData(n);
+    d.Caption:=g.name;
+    d.color:=TagsTV.normalcolor;
+    d.ImageIndex:=1;
+    D.data:=g;
+  end;
+  // добавляем подгруппы
+  if m_useSubGroups then
+  begin
+    for I := 0 to g.m_SubGroups.Count - 1 do
+    begin
+      subG:=TThresholdGroup(g.m_SubGroups.Items[i]);
+      ShowGroup(subG);
+    end;
+  end;
+  for j := 0 to g.AlarmList.Count - 1 do
+  begin
+    a:=g.GetAlarm(j);
+    // добавляем к узлу новые теги
+    n1:=ThresholdFrm.TagsTV.AddChild(n, nil);
+    d:=ThresholdFrm.TagsTV.GetNodeData(n1);
+    d.data:=a;
+    d.color:=ThresholdFrm.TagsTV.normalcolor;
+    d.ImageIndex:=0;
+    d.Caption:=a.t.tagname;
+  end;
+end;
+
 procedure TThresholdFrm.ShowTV;
 var
   I: Integer;
@@ -564,23 +611,7 @@ begin
     g:=getGroup(i);
     if TagsTV<>nil then
     begin
-      n:=TagsTV.AddChild(TagsTV.rootNode, nil);
-      d:=TagsTV.getNodeData(n);
-      d.Caption:=g.name;
-      d.color:=TagsTV.normalcolor;
-      d.ImageIndex:=1;
-      D.data:=g;
-    end;
-    for j := 0 to g.AlarmList.Count - 1 do
-    begin
-      a:=g.GetAlarm(j);
-      // добавляем к узлу новые теги
-      n1:=ThresholdFrm.TagsTV.AddChild(n, nil);
-      d:=ThresholdFrm.TagsTV.GetNodeData(n1);
-      d.data:=a;
-      d.color:=ThresholdFrm.TagsTV.normalcolor;
-      d.ImageIndex:=0;
-      d.Caption:=a.t.tagname;
+      ShowGroup(TagsTV.rootNode, g);
     end;
   end;
 end;
@@ -907,6 +938,7 @@ begin
   ControlTag:=cTag.create;
   ControlTag.useEcm:=false;
   m_lastControlVal:=-1;
+  m_SubGroups:=TThresholdGroup.create;
 end;
 
 destructor TThresholdGroup.destroy;
@@ -914,6 +946,7 @@ var
   I: Integer;
   a:TAlarms;
 begin
+  m_SubGroups.Destroy;
   if owner<>nil then
   begin
     if owner.Find(name,i) then
