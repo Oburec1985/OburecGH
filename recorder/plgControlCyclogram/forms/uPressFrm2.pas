@@ -56,7 +56,7 @@ type
     // крива€ дл€ коррекции ачх
     m_curve:cCurve;
     // тег рекордера ( по одному тегу создаетс€ несколько
-    // скал€рн полосовых тегов)
+    // скал€рн полосовых тегов), индекс в массиве номер полосы
     m_bandTags: array of itag;
     // максимум
     m_SKO: array of tEvalData;
@@ -207,6 +207,7 @@ type
     // число дочерних компонентов
     m_counter: integer;
   protected
+    // когда произошел аларм перебрасываем теги
     procedure doOnAlarm(sender:tobject);
     procedure GenRepFilePath;
     procedure doDestroyForms; override;
@@ -674,6 +675,7 @@ procedure cPressCamFactory2.CreateTags();
 var
   i, j: integer;
   s: cspm;
+  g:TThresholdGroup;
   str:string;
   b:boolean;
   k: Integer;
@@ -732,8 +734,18 @@ begin
     for k := 0 to BandCount - 1 do
     begin
       str:=ptag.name + 'b' + inttostr(k);
-      // добавл€ем алармы по каждому из тегов
-      m_Thresholds.addtag(pTag.m_bandTags[k],b);
+      // подгруппы дл€ профил€
+      if m_Thresholds.m_useSubGroups then
+      begin
+        g:=TThresholdGroup.create;
+        m_Thresholds.m_SubGroups.Add(g);
+        m_Thresholds.addtag(pTag.m_bandTags[k], g, b);
+      end
+      else
+      begin
+        // добавл€ем алармы по каждому из тегов
+        m_Thresholds.addtag(pTag.m_bandTags[k],b);
+      end;
     end;
   end;
   SetAlarms;
@@ -813,9 +825,15 @@ begin
     m_Thresholds.m_Data[0].L:=-m_AlarmBase*m_AlarmHlev;
     m_Thresholds.m_Data[0].LL:=-m_AlarmBase*m_AlarmHHlev;
 
+    if m_Thresholds.m_useSubGroups then
+    begin
+      for I := 0 to m_Thresholds.Count - 1 do
+      begin
+
+      end;
+    end;
     a:=m_Thresholds.GetAlarm(k);
     pt:=getTagByBandTag(a.t.tag, i);
-
     a.m_OutRangeLevel:=m_AlarmBase; // *1
     a.m_a_hh.SetLevel(m_AlarmBase*m_AlarmHHlev);
     a.m_a_h.SetLevel(m_AlarmBase*m_AlarmHlev);

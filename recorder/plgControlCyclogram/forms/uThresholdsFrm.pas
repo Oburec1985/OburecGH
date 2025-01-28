@@ -51,6 +51,8 @@ type
     AlarmList:tstringlist;
     name:string;
     // данные набора прописываемые в алармы
+    // номер в массиве определяется по сути номером режима с набором
+    // уставок
     m_Data:array of DataRec;
     // емкость
     m_capacity:integer;
@@ -73,6 +75,7 @@ type
     function ControlVal:integer;
     function addtag(t:itag; var new:boolean):TAlarms;overload;
     function addtag(tname:string; var new:boolean):TAlarms;overload;
+    function addtag(tname: string; parentGroup:TThresholdGroup;var new: boolean): TAlarms; overload;
     procedure clear;
     // обновить список аварий в тегах
     procedure ApplyAlarms;overload;
@@ -575,12 +578,12 @@ begin
     D.data:=g;
   end;
   // добавляем подгруппы
-  if m_useSubGroups then
+  if g.m_useSubGroups then
   begin
     for I := 0 to g.m_SubGroups.Count - 1 do
     begin
       subG:=TThresholdGroup(g.m_SubGroups.Items[i]);
-      ShowGroup(subG);
+      ShowGroup(subG,n);
     end;
   end;
   for j := 0 to g.AlarmList.Count - 1 do
@@ -611,7 +614,7 @@ begin
     g:=getGroup(i);
     if TagsTV<>nil then
     begin
-      ShowGroup(TagsTV.rootNode, g);
+      ShowGroup(g, TagsTV.rootNode);
     end;
   end;
 end;
@@ -806,6 +809,12 @@ begin
     result:=nil;
 end;
 
+function TThresholdGroup.addtag(tname: string; parentGroup: TThresholdGroup;
+  var new: boolean): TAlarms;
+begin
+  result:=parentGroup.addtag(tname, new);
+end;
+
 function TThresholdGroup.addtag(tname: string; var new: boolean): TAlarms;
 var
   s:string;
@@ -859,6 +868,10 @@ begin
     a:=GetAlarm(0);
     a.destroy;
   end;
+  if m_useSubGroups then
+  begin
+
+  end;
 end;
 
 
@@ -866,6 +879,7 @@ function TThresholdGroup.AlarmData: PDataRec;
 begin
   result:=@m_Data[ControlVal];
 end;
+
 
 function TThresholdGroup.AlarmData(i: integer): PDataRec;
 begin
@@ -938,14 +952,20 @@ begin
   ControlTag:=cTag.create;
   ControlTag.useEcm:=false;
   m_lastControlVal:=-1;
-  m_SubGroups:=TThresholdGroup.create;
+  m_SubGroups:=tlist.create;
 end;
 
 destructor TThresholdGroup.destroy;
 var
   I: Integer;
   a:TAlarms;
+  g:TThresholdGroup;
 begin
+  for I := 0 to m_SubGroups.Count - 1 do
+  begin
+    g:=TThresholdGroup(m_SubGroups.Items[i]);
+    g.destroy;
+  end;
   m_SubGroups.Destroy;
   if owner<>nil then
   begin
