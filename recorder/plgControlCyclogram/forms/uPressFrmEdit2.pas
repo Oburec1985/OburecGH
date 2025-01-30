@@ -540,7 +540,7 @@ end;
 
 procedure TPressFrmEdit2.UseRefProfileCBClick(Sender: TObject);
 begin
-  g_PressCamFactory2.m_UseProfile:=UseRefProfileCB.Checked;
+  g_PressCamFactory2.UseProfile:=UseRefProfileCB.Checked;
   if UseRefProfileCB.Checked then
   begin
     SpmThresholdProfileFrm.edit(g_PressCamFactory2.m_spmProfile);

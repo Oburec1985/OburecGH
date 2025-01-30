@@ -219,6 +219,7 @@ type
     function getSpm(s: string): cspm; overload;
     // пересчитать полосы в индексы
     procedure ReevalBands(s: cspm);
+    procedure SetUseProfile(b:boolean);
   public
     procedure Sort;
     function GetWnd: string;
@@ -264,6 +265,7 @@ type
   public
     constructor create;
     destructor destroy; override;
+    property UseProfile: boolean read m_UseProfile write SetUseProfile;
     property BandCount: integer read getBCount write SetBCount;
     function doCreateForm: cRecBasicIFrm; override;
     procedure doSetDefSize(var PSize: SIZE); override;
@@ -677,7 +679,7 @@ var
   s: cspm;
   g:TThresholdGroup;
   str:string;
-  b:boolean;
+  b, b1:boolean;
   k: Integer;
   t:itag;
   pTag:PTagRec;
@@ -731,15 +733,20 @@ begin
   for j := 0 to length(m_tags) - 1 do
   begin
     pTag:=getTag(j);
+    b1:=false;
     for k := 0 to BandCount - 1 do
     begin
       str:=ptag.name + 'b' + inttostr(k);
       // подгруппы для профиля
       if m_Thresholds.m_useSubGroups then
       begin
-        g:=TThresholdGroup.create;
-        m_Thresholds.m_SubGroups.Add(g);
-        m_Thresholds.addtag(pTag.m_bandTags[k], g, b);
+        if not b1 then
+        begin
+          b1:=true;
+          g:=TThresholdGroup.create;
+          m_Thresholds.m_SubGroups.Add(g);
+        end;
+        g.addtag(pTag.m_bandTags[k], b);
       end
       else
       begin
@@ -755,6 +762,12 @@ end;
 procedure cPressCamFactory2.SetUseAlarms(b:boolean);
 begin
   m_UseAlarms:=b;
+end;
+
+procedure cPressCamFactory2.SetUseProfile(b: boolean);
+begin
+  m_UseProfile:=b;
+  m_Thresholds.m_useSubGroups:=b;
 end;
 
 procedure cPressCamFactory2.SetEnabledAlarms(b: boolean);
@@ -792,7 +805,39 @@ var
   pt:PTagRec;
   reftag:boolean;
   ref:double;
+  g:TThresholdGroup;
 begin
+  if m_Thresholds.m_useSubGroups then
+  begin
+    for I := 0 to m_Thresholds.m_SubGroups.Count - 1 do
+    begin
+      for k := 0 to m_Thresholds.AlarmList.Count - 1 do
+      begin
+        g:=TThresholdGroup(m_Thresholds.m_SubGroups.Items[i]);
+        a:=g.GetAlarm(i);
+        pt:=getTagByBandTag(a.t.tag, i);
+
+        a.m_OutRangeLevel:=g_PressCamFactory2.m_spmProfile.m_data[i].p.y;
+        a.m_a_hh.SetLevel(a.m_OutRangeLevel*m_AlarmHHlev);
+        a.m_a_h.SetLevel(a.m_OutRangeLevel*m_AlarmHlev);
+        a.m_a_l.SetLevel(-a.m_OutRangeLevel*m_AlarmHlev);
+        a.m_a_ll.SetLevel(-a.m_OutRangeLevel*m_AlarmHlev);
+        a.m_a_hh.SetLevel(a.m_OutRangeLevel*m_AlarmHHlev);
+        a.m_a_h.SetLevel(a.m_OutRangeLevel*m_AlarmHlev);
+        a.m_a_l.SetLevel(-a.m_OutRangeLevel*m_AlarmHlev);
+        a.m_a_ll.SetLevel(-a.m_OutRangeLevel*m_AlarmHlev);
+        a.m_a_hh.SetEnabled(Variant_True);
+        a.m_a_h.SetEnabled(Variant_True);
+        a.m_a_l.SetEnabled(Variant_True);
+        a.m_a_ll.SetEnabled(Variant_True);
+        a.m_a_ll.SetColor(clRed);
+        a.m_a_l.SetColor(clYellow);
+        a.m_a_h.SetColor(clYellow);
+        a.m_a_hh.SetColor(clRed);
+      end;
+    end;
+    exit;
+  end;
   for k := 0 to m_Thresholds.AlarmList.Count - 1 do
   begin
     //if i<>-1 then
@@ -824,33 +869,27 @@ begin
     m_Thresholds.m_Data[0].h:=m_AlarmBase*m_AlarmHlev;
     m_Thresholds.m_Data[0].L:=-m_AlarmBase*m_AlarmHlev;
     m_Thresholds.m_Data[0].LL:=-m_AlarmBase*m_AlarmHHlev;
-
-    if m_Thresholds.m_useSubGroups then
     begin
-      for I := 0 to m_Thresholds.Count - 1 do
-      begin
-
-      end;
+      a:=m_Thresholds.GetAlarm(k);
+      pt:=getTagByBandTag(a.t.tag, i);
+      a.m_OutRangeLevel:=m_AlarmBase; // *1
+      a.m_a_hh.SetLevel(m_AlarmBase*m_AlarmHHlev);
+      a.m_a_h.SetLevel(m_AlarmBase*m_AlarmHlev);
+      a.m_a_l.SetLevel(-m_AlarmBase*m_AlarmHlev);
+      a.m_a_ll.SetLevel(-m_AlarmBase*m_AlarmHlev);
+      a.m_a_hh.SetLevel(m_AlarmBase*m_AlarmHHlev);
+      a.m_a_h.SetLevel(m_AlarmBase*m_AlarmHlev);
+      a.m_a_l.SetLevel(-m_AlarmBase*m_AlarmHlev);
+      a.m_a_ll.SetLevel(-m_AlarmBase*m_AlarmHlev);
+      a.m_a_hh.SetEnabled(Variant_True);
+      a.m_a_h.SetEnabled(Variant_True);
+      a.m_a_l.SetEnabled(Variant_True);
+      a.m_a_ll.SetEnabled(Variant_True);
+      a.m_a_ll.SetColor(clRed);
+      a.m_a_l.SetColor(clYellow);
+      a.m_a_h.SetColor(clYellow);
+      a.m_a_hh.SetColor(clRed);
     end;
-    a:=m_Thresholds.GetAlarm(k);
-    pt:=getTagByBandTag(a.t.tag, i);
-    a.m_OutRangeLevel:=m_AlarmBase; // *1
-    a.m_a_hh.SetLevel(m_AlarmBase*m_AlarmHHlev);
-    a.m_a_h.SetLevel(m_AlarmBase*m_AlarmHlev);
-    a.m_a_l.SetLevel(-m_AlarmBase*m_AlarmHlev);
-    a.m_a_ll.SetLevel(-m_AlarmBase*m_AlarmHlev);
-    a.m_a_hh.SetLevel(m_AlarmBase*m_AlarmHHlev);
-    a.m_a_h.SetLevel(m_AlarmBase*m_AlarmHlev);
-    a.m_a_l.SetLevel(-m_AlarmBase*m_AlarmHlev);
-    a.m_a_ll.SetLevel(-m_AlarmBase*m_AlarmHlev);
-    a.m_a_hh.SetEnabled(Variant_True);
-    a.m_a_h.SetEnabled(Variant_True);
-    a.m_a_l.SetEnabled(Variant_True);
-    a.m_a_ll.SetEnabled(Variant_True);
-    a.m_a_ll.SetColor(clRed);
-    a.m_a_l.SetColor(clYellow);
-    a.m_a_h.SetColor(clYellow);
-    a.m_a_hh.SetColor(clRed);
   end;
 end;
 
