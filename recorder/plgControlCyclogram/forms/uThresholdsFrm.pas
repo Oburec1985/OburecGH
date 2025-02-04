@@ -53,6 +53,7 @@ type
     // данные набора прописываемые в алармы
     // номер в массиве определяется по сути номером режима с набором
     // уставок
+    // не используется для профиля частот!!!
     m_Data:array of DataRec;
     // емкость
     m_capacity:integer;
@@ -917,8 +918,21 @@ var
   a:TAlarms;
   pd:PDataRec;
   v:integer;
+  g:TThresholdGroup;
 begin
   v:=ControlVal;
+  if m_useSubGroups then
+  begin
+    for I := 0 to m_SubGroups.Count - 1 do
+    begin
+      g:=TThresholdGroup(m_subGroups.Items[i]);
+      pd:=@g.m_data[0];
+      ApplyAlarms(pd);
+    end;
+    pd:=@m_data[0];
+    ApplyAlarms(pd);
+    exit;
+  end;
   if m_lastControlVal<>v then
   begin
     m_lastControlVal:=v;
@@ -1134,23 +1148,26 @@ begin
       if owner.AlarmList.Count=0 then
       begin
         m_a_hh.GetLevel(v);
-        owner.m_Data[0].HH:=v;
-        m_a_h.GetLevel(v);
-        owner.m_Data[0].h:=v;
-        m_a_l.GetLevel(v);
-        owner.m_Data[0].L:=v;
-        m_a_ll.GetLevel(v);
-        owner.m_Data[0].LL:=v;
-        owner.m_Data[0].normalCol:=clWhite;
-        owner.m_Data[0].outRangeCol:=clGray;
-        m_a_hh.GetColor(c);
-        owner.m_Data[0].HHCol:=c;
-        m_a_h.GetColor(c);
-        owner.m_Data[0].hCol:=c;
-        m_a_l.GetColor(c);
-        owner.m_Data[0].LCol:=c;
-        m_a_ll.GetColor(c);
-        owner.m_Data[0].LLCol:=c;
+        if owner.m_Data[0].hh=0 then
+        begin
+          owner.m_Data[0].HH:=v;
+          owner.m_Data[0].normalCol:=clWhite;
+          owner.m_Data[0].outRangeCol:=clGray;
+          m_a_hh.GetColor(c);
+          owner.m_Data[0].HHCol:=c;
+          m_a_h.GetColor(c);
+          owner.m_Data[0].hCol:=c;
+          m_a_l.GetColor(c);
+          owner.m_Data[0].LCol:=c;
+          m_a_ll.GetColor(c);
+          owner.m_Data[0].LLCol:=c;
+          m_a_h.GetLevel(v);
+          owner.m_Data[0].h:=v;
+          m_a_l.GetLevel(v);
+          owner.m_Data[0].L:=v;
+          m_a_ll.GetLevel(v);
+          owner.m_Data[0].LL:=v;
+        end;
         owner.fillData(1, @owner.m_Data[0]);
       end;
     end;

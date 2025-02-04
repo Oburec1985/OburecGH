@@ -235,6 +235,8 @@ type
     procedure CreateTags();
     // сгенерировать данные для алармов полосовых тегов
     procedure SetAlarms;
+    // чистит и заполняет группы управления уставками тегов
+    procedure createThresholds;
     // вкл выкл алармы - расцветка
     procedure SetEnabledAlarms(b:boolean);
     procedure SetUseAlarms(b:boolean);
@@ -677,9 +679,7 @@ procedure cPressCamFactory2.CreateTags();
 var
   i, j: integer;
   s: cspm;
-  g:TThresholdGroup;
   str:string;
-  b, b1:boolean;
   k: Integer;
   t:itag;
   pTag:PTagRec;
@@ -729,23 +729,43 @@ begin
       end;
     end;
   end;
+  createThresholds;
+  SetAlarms;
+  SetEnabledAlarms(true);
+end;
+
+// чистит и заполняет группы управления уставками тегов
+procedure cPressCamFactory2.createThresholds;
+var
+  j, k:integer;
+  b:boolean;
+  g:TThresholdGroup;
+  pTag:PTagRec;
+  str:string;
+  v:double;
+begin
   m_Thresholds.clear;
-  for j := 0 to length(m_tags) - 1 do
+  for k := 0 to BandCount - 1 do
   begin
-    pTag:=getTag(j);
-    b1:=false;
-    for k := 0 to BandCount - 1 do
+    for j := 0 to length(m_tags) - 1 do
     begin
+      if (j=0) and m_Thresholds.m_useSubGroups then
+      begin
+        g:=TThresholdGroup.create;
+        v:=g_PressCamFactory2.m_spmProfile.m_data[k].p.y;
+        g.m_Data[0].outRange:=v;
+        g.m_Data[0].HH:=v*m_AlarmHHlev;
+        g.m_Data[0].h:=v*m_AlarmHlev;
+        g.m_Data[0].L:=-v*m_AlarmHlev;
+        g.m_Data[0].LL:=-v*m_AlarmHHlev;
+        g.name:='b' + inttostr(k);
+        m_Thresholds.m_SubGroups.Add(g);
+      end;
+      pTag:=getTag(j);
       str:=ptag.name + 'b' + inttostr(k);
       // подгруппы для профиля
       if m_Thresholds.m_useSubGroups then
       begin
-        if not b1 then
-        begin
-          b1:=true;
-          g:=TThresholdGroup.create;
-          m_Thresholds.m_SubGroups.Add(g);
-        end;
         g.addtag(pTag.m_bandTags[k], b);
       end
       else
@@ -755,8 +775,6 @@ begin
       end;
     end;
   end;
-  SetAlarms;
-  SetEnabledAlarms(true);
 end;
 
 procedure cPressCamFactory2.SetUseAlarms(b:boolean);
@@ -806,34 +824,22 @@ var
   reftag:boolean;
   ref:double;
   g:TThresholdGroup;
+  pd:PDataRec;
 begin
   if m_Thresholds.m_useSubGroups then
   begin
     for I := 0 to m_Thresholds.m_SubGroups.Count - 1 do
     begin
-      for k := 0 to m_Thresholds.AlarmList.Count - 1 do
+      g:=TThresholdGroup(m_Thresholds.m_SubGroups.Items[i]);
+      for k := 0 to g.AlarmList.Count - 1 do
       begin
-        g:=TThresholdGroup(m_Thresholds.m_SubGroups.Items[i]);
         a:=g.GetAlarm(i);
         pt:=getTagByBandTag(a.t.tag, i);
-
         a.m_OutRangeLevel:=g_PressCamFactory2.m_spmProfile.m_data[i].p.y;
         a.m_a_hh.SetLevel(a.m_OutRangeLevel*m_AlarmHHlev);
         a.m_a_h.SetLevel(a.m_OutRangeLevel*m_AlarmHlev);
         a.m_a_l.SetLevel(-a.m_OutRangeLevel*m_AlarmHlev);
         a.m_a_ll.SetLevel(-a.m_OutRangeLevel*m_AlarmHlev);
-        a.m_a_hh.SetLevel(a.m_OutRangeLevel*m_AlarmHHlev);
-        a.m_a_h.SetLevel(a.m_OutRangeLevel*m_AlarmHlev);
-        a.m_a_l.SetLevel(-a.m_OutRangeLevel*m_AlarmHlev);
-        a.m_a_ll.SetLevel(-a.m_OutRangeLevel*m_AlarmHlev);
-        a.m_a_hh.SetEnabled(Variant_True);
-        a.m_a_h.SetEnabled(Variant_True);
-        a.m_a_l.SetEnabled(Variant_True);
-        a.m_a_ll.SetEnabled(Variant_True);
-        a.m_a_ll.SetColor(clRed);
-        a.m_a_l.SetColor(clYellow);
-        a.m_a_h.SetColor(clYellow);
-        a.m_a_hh.SetColor(clRed);
       end;
     end;
     exit;
@@ -1888,7 +1894,7 @@ begin
       Strings.destroy;
     end;
 
-    g_PressCamFactory2.m_UseProfile :=
+    g_PressCamFactory2.UseProfile :=
       a_pIni.ReadBool('PressCamFactory2', 'UseProfile', false);
     s:=a_pIni.ReadString('PressCamFactory2', 'ProfileStr','');
     i:=0;
