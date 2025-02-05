@@ -102,6 +102,7 @@ type
   protected
     procedure initTagIface;
   public
+    procedure SetEnabled(b:boolean);
     function notValid:boolean;
     function notValidCol:integer;
     constructor create;
@@ -1010,11 +1011,28 @@ end;
 function TThresholdGroup.GetAlarm(s: string): TAlarms;
 var
   i:integer;
+  g:TThresholdGroup;
 begin
   result:=nil;
   if AlarmList.Find(s, i) then
   begin
     result:=GetAlarm(i);
+    exit;
+  end;
+  if m_useSubGroups then
+  begin
+  if result=nil then
+    begin
+      for I := 0 to m_SubGroups.Count - 1 do
+      begin
+        g:=TThresholdGroup(m_SubGroups.Items[i]);
+        result:=g.GetAlarm(s);
+        if result<>nil then
+        begin
+          exit;
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -1182,6 +1200,25 @@ end;
 function TAlarms.notValidCol: integer;
 begin
   result:=owner.m_Data[owner.ControlVal].outRangeCol;
+end;
+
+procedure TAlarms.SetEnabled(b: boolean);
+begin
+  m_OutRangeEnabled:=b;
+  if b then
+  begin
+    m_a_hh.SetEnabled(Variant_True);
+    m_a_h.SetEnabled(Variant_True);
+    m_a_l.SetEnabled(Variant_True);
+    m_a_ll.SetEnabled(Variant_True);
+  end
+  else
+  begin
+    m_a_hh.SetEnabled(Variant_False);
+    m_a_h.SetEnabled(Variant_False);
+    m_a_l.SetEnabled(Variant_False);
+    m_a_ll.SetEnabled(Variant_False);
+  end;
 end;
 
 { AlarmHandler }

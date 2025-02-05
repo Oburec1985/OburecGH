@@ -368,7 +368,10 @@ begin
       end;
     end;
   end;
+  p:=UseRefProfileCB.OnClick;
+  UseRefProfileCB.OnClick:=nil;
   UseRefProfileCB.Checked:=g_PressCamFactory2.m_UseProfile;
+  UseRefProfileCB.OnClick:=p;
 
   RefFE.FloatNum:=g_PressCamFactory2.GetRef(0);
   BCountIE.IntNum:=g_PressCamFactory2.BandCount;

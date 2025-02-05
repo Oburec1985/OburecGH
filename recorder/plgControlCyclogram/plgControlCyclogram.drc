@@ -1464,14 +1464,14 @@ END
 /* forms\uTrigsFrm.dfm */
 /* forms\uTrigFrame.dfm */
 /* forms\uModeFrame.dfm */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uThresholdsFrm.dfm */
+/* forms\uThresholdsFrm.dfm */
 /* forms\uDigsFrm.dfm */
 /* forms\uDigsFrmEdit.dfm */
 /* forms\uSpmThresholdProfile.dfm */
 /* forms\uEditCurveFrm.dfm */
-/* forms\uPressFrmFrame2.dfm */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmEdit2.dfm */
 /* forms\uPressFrm2.dfm */
-/* forms\uPressFrmEdit2.dfm */
+/* forms\uPressFrmFrame2.dfm */
 /* ..\..\3d\forms\uSelectLoadedObjects.dfm */
 /* forms\DataTransfFrm\TestUDPsender.dfm */
 /* forms\uEditGlObjFrm.dfm */

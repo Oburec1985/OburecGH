@@ -656,7 +656,7 @@ object PressFrmEdit2: TPressFrmEdit2
       OnKeyDown = TagsLBKeyDown
     end
     object UseRefProfileCB: TCheckBox
-      Left = 331
+      Left = 332
       Top = 46
       Width = 150
       Height = 17

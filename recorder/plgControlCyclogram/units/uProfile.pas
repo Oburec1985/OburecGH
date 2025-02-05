@@ -396,6 +396,10 @@ procedure cProfileLine.reEvalPoints;
 var
   j:integer;
 begin
+  if m_owner.size<>length(m_data) then
+  begin
+    setlength(m_data,m_owner.size);
+  end;
   for j := 0 to m_owner.size - 1 do
   begin
     evalp( m_owner.m_data[j].p.y, j);
