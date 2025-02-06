@@ -317,7 +317,6 @@ begin
   Result := RCERROR_NOERROR;
   {$ifdef DEBUG}
   TExtRecorderPack(GPluginInstance).destroyLog;
-
   GPluginInstance._release;
   GPluginInstance := NIL;
   {$endif}

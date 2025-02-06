@@ -26,7 +26,7 @@ uses
 
 type
   // тип расчета
-  tunits = (tuPercent, // ref*((100+v)/100);
+  tunits = (tuPercent, // scALE*ref*v;
             // ref*(Power(10,v/10));
             tuLg10,
             // ref*(Power(10,v/20));
@@ -47,6 +47,7 @@ type
   // линия
   cProfileLine = class
   public
+    m_scale:double;
     // false - срабатывает если значение ниже/ true - если выше
     m_LineType:boolean;
     m_ref:double;
@@ -56,8 +57,6 @@ type
     m_lines:tlist;
     name:string;
   protected
-    // обновить точки всех трендов
-    procedure updatepoints;
     procedure reEvalPoints;
     // обновить point
     procedure EvalP(p: double; i:integer);overload;
@@ -69,13 +68,15 @@ type
     // сразу вызывает reEvalPoints
     procedure setRef(v:double);
   public
+    // обновить точки всех трендов
+    procedure updatepoints;
     // преобразовать параметры в строку
     function toStr:string;
     // строку в параметры
     procedure fromStr(s:string; var start:integer);
     procedure clear;
     // добавить линию профиля на страницу
-    procedure addline(c:cchart; p:cpage; ax:caxis);
+    function addline(c: cchart; p: cpage; ax: caxis):ctrend;
     property Ref:double read m_ref write setref;
     constructor create(owner:cprofile);
     destructor destroy;
@@ -87,6 +88,7 @@ type
   protected
     m_capacity, m_size:integer;
   public
+    m_scale:double; // масштаб линий уставок
     m_LineUnits:tunits;
     // номер сработавшей уставки
     m_NumLine: integer;
@@ -103,6 +105,7 @@ type
     // update - обновить дочерние линии
     procedure AddP(x,y:double; t:TPType; update:boolean);
     function toStr:string;
+    // pCount;x1;y1;t1;...xn;yn;tn;ChildCount;LineType; LineUnits; ;
     procedure fromStr(s: string; var start:integer);
     // очистить
     procedure clear;
@@ -183,6 +186,7 @@ end;
 constructor cProfile.create;
 begin
   m_capacity:=100;
+  m_scale:=1;
   SetLength(m_data, m_capacity);
   childs:=TList.Create;
 end;
@@ -278,11 +282,19 @@ begin
     m_data[j]:=p;
   end;
   ls:=GetSubString(s, ';',i+1,i);
+  //ls:='3';
   j:=i+1;
   c:=strtoint(ls);
   for I := 0 to c - 1 do
   begin
-    line:=cProfileLine.create(self);
+    if i<childs.Count then
+    begin
+      line:=cProfileLine(childs.Items[i]);
+    end
+    else
+    begin
+      line:=cProfileLine.create(self);
+    end;
     line.fromStr(s, j);
     inc(j);
   end;
@@ -304,7 +316,7 @@ begin
 end;
 
 { cProfileLine }
-procedure cProfileLine.addline(c: cchart; p: cpage; ax: caxis);
+function cProfileLine.addline(c: cchart; p: cpage; ax: caxis):ctrend;
 var
   I: Integer;
   tr:ctrend;
@@ -329,6 +341,7 @@ begin
     tr.m_data:=self;
     m_lines.Add(tr);
   end;
+  result:=tr;
 end;
 
 procedure cProfileLine.clear;
@@ -370,7 +383,7 @@ begin
   case m_owner.m_LineUnits of
     tuPercent:
     begin
-      result:=m_ref*((100+v)/100);
+      result:=m_owner.m_scale*m_ref*v;
     end;
     tuLg20: //20log
     begin
@@ -427,7 +440,7 @@ begin
   end;
   result:=result+floattostr(m_ref);
 end;
-
+// LineCount; UnitType;
 procedure cProfileLine.fromStr(s: string; var start:integer);
 var
   ls:string;
@@ -491,16 +504,16 @@ begin
         p:=cBeziePoint.create;
         p.PType:=m_owner.m_data[j].t;
         p.point.x:=m_owner.m_data[j].p.x;
-        p.point.y:=m_data[i];
+        p.point.y:=m_data[j];
         tr.AddPoint(p);
       end;
     end
     else
-      begin
+    begin
       for j := 0 to length(m_data) - 1 do
       begin
         p:=tr.getPoint(i);
-        p.PType:=m_owner.m_data[j].t;
+        //p.PType:=m_owner.m_data[j].t;
         p.point.x:=m_owner.m_data[j].p.x;
         p.point.y:=m_data[j];
       end;

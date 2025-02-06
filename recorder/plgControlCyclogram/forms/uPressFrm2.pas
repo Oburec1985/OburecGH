@@ -33,6 +33,7 @@ uses
   // uPathMng,
   uEditCurveFrm,
   uThresholdsFrm,
+  uSpmChart,utrend,
   uRcCtrls, Menus, uSpin;
 
 type
@@ -264,6 +265,7 @@ type
     function RescaleEst(restype:integer; rms:double):double;
     // когда Recorder загрузил конфиги;
     procedure doRecorderInit;override;
+    procedure UpdateSpmGraphProfiles;
     // пересчет аварий
     procedure UpdateRefs(base:double);
   public
@@ -353,6 +355,42 @@ begin
   end;
   // пересчет уставок
   SetAlarms;
+  m_spmProfile.m_scale:=base;
+  m_spmProfile.UpdatePoints;
+end;
+
+procedure cPressCamFactory2.UpdateSpmGraphProfiles;
+var
+  I: Integer;
+  ch:TSpmChart;
+  j: Integer;
+  l:cProfileLine;
+  tr:ctrend;
+begin
+  for I := 0 to g_SpmFactory.Count - 1 do
+  begin
+    ch:=TSpmChart(g_SpmFactory.GetFrm(i));
+    for j:=0 to m_spmProfile.childs.Count-1 do
+    begin
+      l:=cProfileLine(m_spmProfile.childs.Items[j]);
+      tr:=l.addline(ch.spmChart, cpage(ch.spmChart.activePage), cpage(ch.spmChart.activePage).activeAxis);
+      tr.visible:=true;
+      tr.name:=l.name;
+      if l.name='H' then
+      begin
+        tr.color:=red;
+      end;
+      if l.name='HH' then
+      begin
+        tr.color:=yellow;
+      end;
+      if l.name='Emergency' then
+      begin
+        tr.color:=green;
+      end;
+    end;
+    m_spmProfile.UpdatePoints;
+  end;
 end;
 
 function cPressCamFactory2.RefsToStr: string;
@@ -515,14 +553,17 @@ begin
   Frm.ClearFrames;
   Frm.m_frames.Add(Frm.PressFrmFrame21);
   s := getSpm(0);
-  Frm.PressFrmFrame21.spm := g_PressCamFactory2.getSpm(s.m_tag.tagname);
-  Frm.BarPanel.ShowHint := true;
-  Frm.BarPanel.Hint := s.m_tag.tagname;
-  for j := 1 to m_spmCfg.ChildCount - 1 do
+  if s<>nil then
   begin
-    s := getSpm(j);
-    fr:=Frm.CreateFrame(s.m_tag.tagname);
-    fr.ALabel.Caption:='A'+inttostr(j+1);
+    Frm.PressFrmFrame21.spm := g_PressCamFactory2.getSpm(s.m_tag.tagname);
+    Frm.BarPanel.ShowHint := true;
+    Frm.BarPanel.Hint := s.m_tag.tagname;
+    for j := 1 to m_spmCfg.ChildCount - 1 do
+    begin
+      s := getSpm(j);
+      fr:=Frm.CreateFrame(s.m_tag.tagname);
+      fr.ALabel.Caption:='A'+inttostr(j+1);
+    end;
   end;
   //Frm.sortframes;
   // сортировка по размещению
@@ -1990,10 +2031,17 @@ begin
       for I := 0 to g_PressCamFactory2.BandCount-c - 1 do
       begin
         b:=g_PressCamFactory2.m_bands[i+c];
-        g_PressCamFactory2.m_spmProfile.
-          AddP(b.f2,
-               g_PressCamFactory2.m_spmProfile.m_data[i+c-1].p.y,
-               g_PressCamFactory2.m_spmProfile.m_data[i+c-1].t, true);
+        if c=0 then
+        begin
+          g_PressCamFactory2.m_spmProfile.
+           AddP(b.f2,1,ptNullPoly, true);
+        end
+        else
+        begin
+          g_PressCamFactory2.m_spmProfile.AddP(b.f2,
+           g_PressCamFactory2.m_spmProfile.m_data[i+c-1].p.y,
+           g_PressCamFactory2.m_spmProfile.m_data[i+c-1].t, true);
+        end;
       end;
     end;
     g_PressCamFactory2.m_useRefTag := a_pIni.ReadBool('PressCamFactory2','UseRefTag', false);
@@ -2101,6 +2149,7 @@ begin
       end;
     end;
   end;
+  UpdateSpmGraphProfiles;
 end;
 
 procedure TPressFrm2.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -2119,6 +2168,11 @@ begin
   lstr:='';
   for I := 0 to length(m_hidesignals) - 1 do
   begin
+    if m_hidesignals[i]=nil then
+    begin
+      a_pIni.WriteInteger(str, 'HideCount', 0);
+      break;
+    end;
     ls:=m_hidesignals[i].GetName;
     lstr:=lstr+ls+';'
   end;

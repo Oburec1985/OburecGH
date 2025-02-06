@@ -391,7 +391,6 @@ begin
   SetCheckBoxes;
   if ShowModal=mrok then
   begin
-    setHideTags;
     updateBands;
     if m_manualRef then
     begin
@@ -431,6 +430,7 @@ begin
       m_pf.UnitMaxALab.Caption:='pk-pk';
     end;
     g_PressCamFactory2.CreateTags;
+    setHideTags;
     if b then
       lcm;
   end;
@@ -546,6 +546,7 @@ begin
   g_PressCamFactory2.UseProfile:=UseRefProfileCB.Checked;
   if UseRefProfileCB.Checked then
   begin
+    g_PressCamFactory2.m_spmProfile.size:=g_PressCamFactory2.BandCount;
     SpmThresholdProfileFrm.edit(g_PressCamFactory2.m_spmProfile);
   end;
 end;
