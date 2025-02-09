@@ -412,7 +412,7 @@ object PressFrm2: TPressFrm2
       end
       object RefValSE: TFloatSpinEdit
         Left = 164
-        Top = 88
+        Top = 87
         Width = 92
         Height = 22
         Margins.Left = 2
@@ -421,6 +421,7 @@ object PressFrm2: TPressFrm2
         Margins.Bottom = 2
         Increment = 0.100000000000000000
         TabOrder = 8
+        OnChange = RefValSEChange
         OnKeyDown = RefValSEKeyDown
       end
       object AlarmsCB: TCheckBox

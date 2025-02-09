@@ -979,6 +979,7 @@ function cAxis.p2iToP2(p: tpoint): point2;
 var
   x, y, z: double;
   page: cpage;
+  xWnd, yWnd:integer;
 begin
   page := cpage(getpage);
   if (min.x=0) and (max.x=0) then
@@ -988,10 +989,20 @@ begin
   end
   else
   begin
-    gluUnProject(p.x, p.y, 1, @identMatrix4d, @projection, @page.m_viewport, x,
-      y, z);
-    result.x := x;
-    result.y := y;
+    //gluUnProject(p.x, p.y, 1, @identMatrix4d, @projection, @page.m_viewport, x,
+    //gluUnProject(p.x, p.y, 1, @identMatrix4d, @identMatrix4d, @page.m_viewport, x,
+    //  y, z);
+    // bl.x,y; w;h
+    xWnd:=p.x-page.m_viewport[0];
+    yWnd:=p.x-page.m_viewport[1];
+    if xWnd<=0 then
+      result.x:=page.MinX
+    else
+      result.x := (page.MaxX-page.MinX)*(xWnd/page.m_viewport[2])+page.MinX;
+    if yWnd<=0 then
+      result.y:=Miny
+    else
+      result.y := (MaxY-MinY)*(yWnd/page.m_viewport[3])+MinY;
   end;
 end;
 

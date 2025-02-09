@@ -967,6 +967,10 @@ begin
       if cursor = crdefault then
       begin
         cursorowner := -1;
+      end
+      else
+      begin
+        //showmessage('c');
       end;
       SetCursorByHinst(cursor, Handle);
     end

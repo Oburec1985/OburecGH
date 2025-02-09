@@ -47,7 +47,7 @@ type
   private
     fmagniteObj:cDrawObj;
   protected
-    // координаты в линейном окне
+    // координаты в линейном окне. Отрисовка по ним
     fx1, fx2:single;
     // положение курсора по x
     ix1,
@@ -174,8 +174,10 @@ begin
       end
       else
       begin
+        p.setDrawObjVP;
         x:=p.p2iToTrend(point(mouse.x,0),a).x;
         lsize:=p.PixelSizeToTrend(point(size,0),a).x;
+        p.Caption:=floattostr(x);
       end;
       if (x<=cursor.fx1+lsize) and (x>=cursor.fx1-lsize) then
       begin

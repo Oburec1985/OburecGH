@@ -47,9 +47,9 @@ type
   // линия
   cProfileLine = class
   public
-    m_scale:double;
     // false - срабатывает если значение ниже/ true - если выше
     m_LineType:boolean;
+    // множитель относительно профиля
     m_ref:double;
     m_data:array of double;
     m_owner:cprofile;
@@ -87,8 +87,9 @@ type
   cProfile = class
   protected
     m_capacity, m_size:integer;
-  public
     m_scale:double; // масштаб линий уставок
+  public
+    m_sko:boolean;
     m_LineUnits:tunits;
     // номер сработавшей уставки
     m_NumLine: integer;
@@ -101,6 +102,7 @@ type
     function getsize:integer;
     procedure exclude(l:cProfileLine);
     procedure addline(l:cProfileLine);
+    procedure setscale(s:double);
   public
     // update - обновить дочерние линии
     procedure AddP(x,y:double; t:TPType; update:boolean);
@@ -112,11 +114,16 @@ type
     // обновить точки всех дочерних линий
     procedure UpdatePoints;
     property size:integer read getsize write setsize;
+    property scale:double read m_scale write setscale;
     constructor create;
     destructor destroy;
   end;
 
   function IntToTUnits(i:integer):tunits;
+
+CONST
+  c_RmsScale = 0.707106781;
+
 
 implementation
 
@@ -187,6 +194,7 @@ constructor cProfile.create;
 begin
   m_capacity:=100;
   m_scale:=1;
+  m_sko:=true;
   SetLength(m_data, m_capacity);
   childs:=TList.Create;
 end;
@@ -215,6 +223,12 @@ var
   I: Integer;
 begin
   result:=m_size;
+end;
+
+procedure cProfile.setscale(s: double);
+begin
+  m_scale:=s;
+  UpdatePoints;
 end;
 
 procedure cProfile.setsize(s: integer);
@@ -383,7 +397,7 @@ begin
   case m_owner.m_LineUnits of
     tuPercent:
     begin
-      result:=m_owner.m_scale*m_ref*v;
+      result:=m_ref*v;
     end;
     tuLg20: //20log
     begin
@@ -415,7 +429,7 @@ begin
   end;
   for j := 0 to m_owner.size - 1 do
   begin
-    evalp( m_owner.m_data[j].p.y, j);
+    evalp( m_owner.m_data[j].p.y*m_owner.m_scale, j);
   end;
 end;
 
@@ -504,7 +518,10 @@ begin
         p:=cBeziePoint.create;
         p.PType:=m_owner.m_data[j].t;
         p.point.x:=m_owner.m_data[j].p.x;
-        p.point.y:=m_data[j];
+        if m_owner.m_sko then
+          p.point.y:=m_data[j]*c_RmsScale
+        else
+          p.point.y:=m_data[j];
         tr.AddPoint(p);
       end;
     end
@@ -512,10 +529,13 @@ begin
     begin
       for j := 0 to length(m_data) - 1 do
       begin
-        p:=tr.getPoint(i);
+        p:=tr.getPoint(j);
         //p.PType:=m_owner.m_data[j].t;
         p.point.x:=m_owner.m_data[j].p.x;
-        p.point.y:=m_data[j];
+        if m_owner.m_sko then
+          p.point.y:=m_data[j]*c_RmsScale
+        else
+          p.point.y:=m_data[j];
       end;
     end;
     tr.NeedRecompile:=true;

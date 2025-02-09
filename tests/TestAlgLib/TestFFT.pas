@@ -170,6 +170,9 @@ begin
     a.AddChild(t);
     t.AddPoints(tdoublearray(AlignedSampl.p));
   end;
+  cpage(cChart1.activePage).Normalise;
+  cpage(cChart1.activePage).cursor.visible:=true;
+  cpage(cChart1.activePage).cursor.setx1(100);
 end;
 
 

@@ -17,7 +17,8 @@ type
     BorderColor:point3;
     // отступ в пикселях
     m_pixelTabSpace:trect;
-    // вьюпорт отрисовываемого объекта. С учетом отсутпов для осей x, y, width, heigth
+    // вьюпорт отрисовываемого объекта. С учетом отсутпов дляосей
+    // x, y, width, heigth
     // (x, y - левый нижний угол)
     m_viewport:array[0..3] of glint;
     // весь вьюпорт окна

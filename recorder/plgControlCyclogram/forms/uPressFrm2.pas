@@ -106,6 +106,7 @@ type
       Shift: TShiftState);
     procedure AvrCBClick(Sender: TObject);
     procedure AlarmsCBClick(Sender: TObject);
+    procedure RefValSEChange(Sender: TObject);
   public
     m_BargraphStep: integer;
     m_lastFile:string;
@@ -355,8 +356,7 @@ begin
   end;
   // пересчет уставок
   SetAlarms;
-  m_spmProfile.m_scale:=base;
-  m_spmProfile.UpdatePoints;
+  m_spmProfile.scale:=base;
 end;
 
 procedure cPressCamFactory2.UpdateSpmGraphProfiles;
@@ -875,6 +875,11 @@ var
   g:TThresholdGroup;
   pd:PDataRec;
 begin
+  if length(m_refArray)=0 then
+    ref:=1
+  else
+    ref:=m_refArray[0];
+  m_AlarmBase:=ref;
   if m_Thresholds.m_useSubGroups then
   begin
     for I := 0 to m_Thresholds.m_SubGroups.Count - 1 do
@@ -884,7 +889,7 @@ begin
       begin
         a:=g.GetAlarm(k);
         pt:=getTagByBandTag(a.t.tag, k);
-        a.m_OutRangeLevel:=g_PressCamFactory2.m_spmProfile.m_data[i].p.y;
+        a.m_OutRangeLevel:=g_PressCamFactory2.m_spmProfile.m_data[i].p.y*m_AlarmBase;
         a.m_a_hh.SetLevel(a.m_OutRangeLevel*m_AlarmHHlev);
         a.m_a_h.SetLevel(a.m_OutRangeLevel*m_AlarmHlev);
         a.m_a_l.SetLevel(-a.m_OutRangeLevel*m_AlarmHlev);
@@ -897,12 +902,6 @@ begin
   begin
     //if i<>-1 then
     begin
-      //m_AlarmBase:=m_refArray[i];
-      if length(m_refArray)=0 then
-        ref:=1
-      else
-        ref:=m_refArray[0];
-      m_AlarmBase:=ref;
       if m_useRefTag then
       begin
         if m_refTag.tag<>nil then
@@ -1731,6 +1730,22 @@ begin
   end;
 end;
 
+procedure TPressFrm2.RefValSEChange(Sender: TObject);
+var
+  i:integer;
+  f:TPressFrm2;
+begin
+  g_PressCamFactory2.UpdateRefs(RefValSE.Value);
+  for I := 0 to g_PressCamFactory2.Count - 1 do
+  begin
+    f:=TPressFrm2(g_PressCamFactory2.GetFrm(i));
+    if f<>self then
+    begin
+      f.RefValSE.Value:=RefValSE.Value;
+    end;
+  end;
+end;
+
 procedure TPressFrm2.RefValSEKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
@@ -1739,15 +1754,7 @@ var
 begin
   if key=VK_RETURN then
   begin
-    g_PressCamFactory2.UpdateRefs(RefValSE.Value);
-    for I := 0 to g_PressCamFactory2.Count - 1 do
-    begin
-      f:=TPressFrm2(g_PressCamFactory2.GetFrm(i));
-      if f<>self then
-      begin
-        f.RefValSE.Value:=RefValSE.Value;
-      end;
-    end;
+    RefValSEChange(nil);
   end;
 end;
 
