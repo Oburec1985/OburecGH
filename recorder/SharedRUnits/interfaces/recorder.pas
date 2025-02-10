@@ -338,7 +338,6 @@ type
   RECORDERSTATE = DWORD;
   //Интерфейс формуляра отображения
   IVForm = interface;
-
    //Интерфейс для управления ядром измерительного ПО
    IRecorder = interface
    ['{EE880620-53EF-11d7-9244-00E029288A7F}']
