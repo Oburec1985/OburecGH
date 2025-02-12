@@ -350,12 +350,12 @@
     <File Path="forms\uEditSrsFrm.dfm"/>
     <File Path="forms\uSyncOscillogram.pas"/>
     <File Path="forms\uSyncOscillogram.dfm"/>
-    <File Path="forms\uSyncOscillogramEditFrm.pas"/>
-    <File Path="forms\uSyncOscillogramEditFrm.dfm"/>
     <File Path="forms\uTagInfoEditFrm.pas"/>
     <File Path="forms\uTagInfoEditFrm.dfm"/>
     <File Path="forms\uTagInfoFrm.pas"/>
     <File Path="forms\uTagInfoFrm.dfm"/>
+    <File Path="forms\uSyncOscillogramEditFrm.pas"/>
+    <File Path="forms\uSyncOscillogramEditFrm.dfm"/>
     <File Path="forms\uTahoAlgFrame.pas"/>
     <File Path="forms\uTahoAlgFrame.dfm"/>
     <File Path="forms\uThresholdsFrm.pas"/>

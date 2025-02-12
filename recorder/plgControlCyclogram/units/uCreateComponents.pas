@@ -263,6 +263,11 @@ begin
   if TestUDPSenderFrm=nil then
     TestUDPSenderFrm:=TTestUDPSenderFrm.Create(nil);
 
+  TagInfoEditFrm := TTagInfoEditFrm.Create(nil);
+  TagInfoEditFrm.show;
+  TagInfoEditFrm.close;
+
+
   if ThresholdFrm=nil then
   begin
     ThresholdFrm:=tThresholdFrm.Create(nil);

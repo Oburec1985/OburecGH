@@ -48,8 +48,7 @@ type
     // потеря в очередном updatetagdata
     m_looseData,
     // первый полученный блок. инициализируется в doStart, используется в BuildReadBuff
-    m_firstBlock
-    :boolean;
+    m_firstBlock: boolean;
   public
     // делать склейку непрерывного буфера в updateTagData.
     m_useReadBuffer:boolean;
