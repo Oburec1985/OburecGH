@@ -1,7 +1,7 @@
 library plgTestClear;
 
 uses
-  fastmm4,
+  //fastmm4,
   Windows,
   Themes,
   SysUtils,

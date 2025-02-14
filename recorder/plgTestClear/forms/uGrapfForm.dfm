@@ -2,8 +2,8 @@ object GraphFrm: TGraphFrm
   Left = 0
   Top = 0
   Caption = 'GraphFrm'
-  ClientHeight = 499
-  ClientWidth = 858
+  ClientHeight = 334
+  ClientWidth = 750
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,30 +14,132 @@ object GraphFrm: TGraphFrm
   PixelsPerInch = 120
   TextHeight = 16
   object RightSplitter: TSplitter
-    Left = 670
+    Left = 517
     Top = 0
-    Height = 499
+    Height = 334
     Align = alRight
-    ExplicitLeft = 544
-    ExplicitTop = 176
-    ExplicitHeight = 100
+    Color = clBackground
+    ParentColor = False
+    ExplicitLeft = 981
+    ExplicitHeight = 800
   end
   object RightGB: TGroupBox
-    Left = 673
+    Left = 520
     Top = 0
-    Width = 185
-    Height = 499
+    Width = 230
+    Height = 334
     Align = alRight
     Caption = 'RightGB'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -18
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
     TabOrder = 0
-    ExplicitLeft = 448
-    ExplicitHeight = 293
+    ExplicitHeight = 724
+    object XScaleLabel: TLabel
+      Left = 9
+      Top = 31
+      Width = 97
+      Height = 22
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = #1056#1072#1079#1074#1077#1088#1090#1082#1072' X'
+    end
+    object Label1: TLabel
+      Left = 116
+      Top = 32
+      Width = 93
+      Height = 21
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = #1052#1072#1089#1096#1090#1072#1073' Y'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -18
+      Font.Name = 'YScaleLabel'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Splitter1: TSplitter
+      Left = 2
+      Top = 143
+      Width = 226
+      Height = 3
+      Cursor = crVSplit
+      Align = alBottom
+      Color = clBackground
+      ParentColor = False
+      ExplicitTop = 24
+      ExplicitWidth = 122
+    end
+    object SignalsLV: TBtnListView
+      Left = 2
+      Top = 146
+      Width = 226
+      Height = 186
+      Align = alBottom
+      Checkboxes = True
+      Columns = <
+        item
+          Caption = #8470
+          Width = 51
+        end
+        item
+          Caption = #1048#1084#1103
+          Width = 51
+        end
+        item
+          Caption = 'Y'
+          Width = 51
+        end>
+      RowSelect = True
+      TabOrder = 0
+      ViewStyle = vsReport
+      BtnCol = 0
+      QuoteColumnBtnClick = False
+      QuoteColumnDblClick = False
+      DrawColorBox = False
+      ChangeTextColor = False
+      Editable = False
+      ExplicitTop = 536
+    end
+    object XScaleSE: TFloatSpinEdit
+      Left = 9
+      Top = 55
+      Width = 104
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Increment = 0.100000000000000000
+      TabOrder = 1
+      OnChange = XScaleSEChange
+    end
+    object YScaleSE: TFloatSpinEdit
+      Left = 116
+      Top = 55
+      Width = 101
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Increment = 0.100000000000000000
+      TabOrder = 2
+    end
   end
   object cChart1: cChart
     Left = 0
     Top = 0
-    Width = 670
-    Height = 499
+    Width = 517
+    Height = 334
     Cursor = crSizeAll
     Align = alClient
     Caption = 'cChart1'
@@ -47,10 +149,7 @@ object GraphFrm: TGraphFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitLeft = 8
-    ExplicitTop = 8
-    ExplicitWidth = 400
-    ExplicitHeight = 400
+    ExplicitLeft = -1
   end
   object ImageList_16: TImageList
     Left = 80

@@ -37,6 +37,7 @@ uses
 
 destructor TFrmSync.destroy;
 begin
+  //exit;
   fenterdestroy:=true;
   if GetCurrentThreadId=MainThreadID then
   begin

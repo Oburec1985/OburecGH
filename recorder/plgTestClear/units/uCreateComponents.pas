@@ -69,15 +69,9 @@ end;
 
 procedure destroyForms(compMng: cCompMng);
 begin
-  exit;
   if GetCurrentThreadId = MainThreadID then
   begin
-    //if EvalStepCfgFrm<>nil then
-    begin
-    //  EvalStepCfgFrm.destroy;
-    //  EvalStepCfgFrm:=nil;
-    end;
-    //g_EvalStepValNP.Destroy;
+
   end;
 end;
 
@@ -99,21 +93,13 @@ var
   str, str1:string;
   show:boolean;
 begin
-  //if EvalStepCfgFrm=nil then
   begin
-  //  EvalStepCfgFrm:=TEvalStepCfgFrm.Create(nil);
-  //  EvalStepCfgFrm.show;
-  //  EvalStepCfgFrm.close;
   end;
 end;
 
 procedure destroyFormsRecorderUIThread(compMng: cCompMng);
 begin
-  if true then exit;
-  //if EvalStepCfgFrm<>nil then
   begin
-  //  EvalStepCfgFrm.free;
-  //  EvalStepCfgFrm := nil;
   end;
 end;
 
