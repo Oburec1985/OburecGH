@@ -27,7 +27,7 @@ uses
   uPathMng,
   uHardwareMath,
   complex,
-  uAlarms,
+  //uAlarms,
   variants;
 
 type
@@ -320,8 +320,8 @@ const
   c_MBaseName = 'Plugin Циклограмма';
 
 implementation
-uses
-  pluginclass;
+//uses
+//  pluginclass;
 
 // uMBaseControl;
 
@@ -1008,11 +1008,12 @@ end;
 
 function ecm(var changeState: boolean): boolean;
 begin
-  if TExtRecorderPack(G_Plg).m_leavecfgNotify then
-  begin
-    showmessage('Повторный вход в конфигурацию! при выходе из конфигурирования (function ecm(var)...)');
-  end;
-  if RStateConfig or TExtRecorderPack(G_Plg).m_leavecfgNotify then
+  //if TExtRecorderPack(G_Plg).m_leavecfgNotify then
+  //begin
+  //  showmessage('Повторный вход в конфигурацию! при выходе из конфигурирования (function ecm(var)...)');
+  //end;
+  //if RStateConfig or TExtRecorderPack(G_Plg).m_leavecfgNotify then
+  if RStateConfig then
   begin
     result := false;
     changeState := false;

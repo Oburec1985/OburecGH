@@ -7,7 +7,7 @@ uses
   Dialogs, ExtCtrls, StdCtrls, uRecBasicFactory, inifiles,
   uEventList, //udrawobj,
   uComponentservises, uEventTypes, ComCtrls, uBtnListView, recorder,
-  ucommonmath, MathFunction, uMyMath, uTag,
+  ucommonmath, MathFunction, uMyMath, //uTag,
   uaxis, upage, uBuffTrend1d,
   uRecorderEvents, ubaseObj, uCommonTypes, uRCFunc,
   //uBuffTrend1d,
@@ -15,6 +15,13 @@ uses
   PluginClass, ImgList, Menus, uChart, uSpin;
 
 type
+  TAxCfg = record
+    name:string;
+    scale,
+    shift:double;
+    ax:caxis;
+  end;
+
   cGraphTag = class
     m_t:ctag;
     m_line:cBuffTrend1d;
@@ -22,10 +29,10 @@ type
   protected
     // если привязан тег пересчитываем параметры линии (шаг дискретизации)
     procedure UpdateTag;
+    function axis:caxis;
   public
     constructor create;
     destructor destroy;
-
   end;
 
   TGraphFrm = class(TRecFrm)
@@ -40,7 +47,12 @@ type
     YScaleSE: TFloatSpinEdit;
     Label1: TLabel;
     Splitter1: TSplitter;
+    ShiftSE: TFloatSpinEdit;
+    ShiftLabel: TLabel;
     procedure XScaleSEChange(Sender: TObject);
+    procedure SignalsLVClick(Sender: TObject);
+    procedure YScaleSEChange(Sender: TObject);
+    procedure ShiftSEChange(Sender: TObject);
   public
     cs: TRTLCriticalSection;
     // развертка X
@@ -53,9 +65,17 @@ type
     m_comInterv:point2d;
     // обновляется в UpdateData
     m_updateDrawInterval:boolean;
+    // настройки осей
+    fAxCfgCapacity:integer;
+    fAxCfgCount:integer;
+    m_axCfg:array of TAxCfg;
   protected
+    procedure OnRecorderInit;
     procedure TestConfig;
     procedure showsignalsinLV;
+    function ActiveSignal:cGraphTag;
+    // номер оси сигнала
+    function axInd(s:cGraphTag):integer;
     function getSignal(i:integer):cGraphTag;
     procedure doStart;override;
     procedure updatedata;override;
@@ -125,6 +145,19 @@ implementation
 
 { TGraphFrm }
 
+function TGraphFrm.ActiveSignal: cGraphTag;
+begin
+  if m_slist.Count>0 then
+  begin
+    if SignalsLV.ItemIndex=-1 then
+      result:=getSignal(0)
+    else
+      result:=cGraphTag(SignalsLV.items[SignalsLV.ItemIndex].Data);
+  end
+  else
+    result:=nil;
+end;
+
 function TGraphFrm.addSignal(s: string; ax:string):cGraphTag;
 var
   t:cGraphTag;
@@ -149,6 +182,26 @@ begin
   end;
 end;
 
+function TGraphFrm.axInd(s: cGraphTag): integer;
+var
+  I: Integer;
+  parAx:caxis;
+begin
+  result:=-1;
+  parAx:=s.axis;
+  if parax<>nil then
+  begin
+    for I := 0 to fAxCfgCount - 1 do
+    begin
+      if m_axCfg[i].ax=s.axis then
+      begin
+        result:=i;
+        exit;
+      end;
+    end;
+  end;
+end;
+
 procedure TGraphFrm.clear;
 var
   I: Integer;
@@ -166,6 +219,11 @@ constructor TGraphFrm.create(Aowner: tcomponent);
 begin
   inherited;
   m_slist:=TStringList.Create;
+  // установка оси поумолчанию
+  fAxCfgCapacity:=10;
+  setlength(m_axCfg, fAxCfgCapacity);
+  fAxCfgCount:=1;
+
   InitCS;
 end;
 
@@ -223,15 +281,60 @@ begin
 
 end;
 
+function fgetcolor(li: tlistitem): integer;
+begin
+  result := rgbtoint(cGraphTag(li.Data).m_line.color);
+end;
+
+procedure TGraphFrm.OnRecorderInit;
+var
+  r:frect;
+begin
+  SignalsLV.DrawColorBox:=true;
+  SignalsLV.getcolor:=fgetcolor;
+  m_xScale:=0.3;
+  XScaleSE.Value:=0.3;
+  m_axCfg[0].ax:=cpage(cChart1.activePage).activeAxis;
+
+  r.BottomLeft.x:=0;
+  r.BottomLeft.y:=0;
+  r.TopRight.x:=0.3;
+  r.TopRight.y:=10;
+  cpage(cChart1.activePage).ZoomfRect(r);
+end;
+
 procedure TGraphFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 begin
   inherited;
 
 end;
 
-function fgetcolor(li: tlistitem): integer;
+procedure TGraphFrm.ShiftSEChange(Sender: TObject);
+var
+  s:cGraphTag;
+  lcount:integer;
+  I ,y: Integer;
+  p:TNotifyEvent;
+  r:fRect;
+  a:caxis;
 begin
-  result := rgbtoint(cGraphTag(li.Data).m_line.color);
+  s := ActiveSignal;
+  i:=axInd(s);
+  if YScaleSE.Value>0 then
+  begin
+    if i>-1 then
+    begin
+      m_axCfg[i].shift:=ShiftSE.Value;
+      a:=m_axcfg[i].ax;
+      y:=cpage(cChart1.activePage).gridlinecount_Y;
+      r.TopRight.y:=0.5*y*m_axCfg[i].scale+m_axCfg[i].shift;
+      r.BottomLeft.y:=-0.5*y*m_axCfg[i].scale+m_axCfg[i].shift;
+      r.BottomLeft.x:=0;
+      r.BottomLeft.x:=m_xScale;
+      a.ZoomfRect(r);
+      cChart1.redraw;
+    end;
+  end;
 end;
 
 procedure TGraphFrm.showsignalsinLV;
@@ -254,10 +357,59 @@ begin
   LVchange(SignalsLV);
 end;
 
+procedure TGraphFrm.SignalsLVClick(Sender: TObject);
+var
+  s:cGraphTag;
+  lcount:integer;
+  I: Integer;
+  p:TNotifyEvent;
+begin
+  s := ActiveSignal;
+  i:=axInd(s);
+  if i>-1 then
+  begin
+    p:=YScaleSE.OnChange;
+    YScaleSE.OnChange:=nil;
+    YScaleSE.Value:=m_axcfg[i].scale;
+    YScaleSE.OnChange:=p;
+  end;
+end;
+
+procedure TGraphFrm.YScaleSEChange(Sender: TObject);
+var
+  s:cGraphTag;
+  lcount:integer;
+  I ,y: Integer;
+  p:TNotifyEvent;
+  r:fRect;
+  a:caxis;
+begin
+  s := ActiveSignal;
+  i:=axInd(s);
+  if YScaleSE.Value>0 then
+  begin
+    if i>-1 then
+    begin
+      m_axCfg[i].scale:=YScaleSE.Value;
+      a:=m_axcfg[i].ax;
+      m_axcfg[i].scale:=YScaleSE.Value;
+      y:=cpage(cChart1.activePage).gridlinecount_Y;
+      r.TopRight.y:=0.5*y*m_axCfg[i].scale+m_axCfg[i].shift;
+      r.BottomLeft.y:=-0.5*y*m_axCfg[i].scale+m_axCfg[i].shift;
+      r.BottomLeft.x:=0;
+      r.BottomLeft.x:=m_xScale;
+      a.ZoomfRect(r);
+      cChart1.redraw;
+    end;
+  end;
+end;
+
 procedure TGraphFrm.TestConfig;
 var
   a0, a:caxis;
   s:cGraphTag;
+  I, y: Integer;
+  r:frect;
 begin
   a:=cAxis.create;
   cpage(cChart1.activePage).addaxis(a);
@@ -268,6 +420,32 @@ begin
 
   m_xScale:=0.3;
   showsignalsinLV;
+
+  cpage(cChart1.activePage).gridlinecount_Y:=8;
+  XScaleSE.Value:=1;
+  fAxCfgCount:=2;
+  // ось 1
+  m_axCfg[0].ax:=a0;
+  m_axCfg[0].name:=a0.name;
+  m_axCfg[0].scale:=1;
+  m_axCfg[0].shift:=0;
+  y:=cpage(cChart1.activePage).gridlinecount_Y;
+  r.TopRight.y:=0.5*y*m_axCfg[0].scale+m_axCfg[0].shift;
+  r.BottomLeft.y:=-0.5*y*m_axCfg[0].scale+m_axCfg[0].shift;
+  r.BottomLeft.x:=0;
+  r.BottomLeft.x:=m_xScale;
+  a0.ZoomfRect(r);
+  // ось 2
+  m_axCfg[1].ax:=a;
+  m_axCfg[1].name:=a.name;
+  m_axCfg[1].scale:=1;
+  m_axCfg[1].shift:=0;
+  y:=cpage(cChart1.activePage).gridlinecount_Y;
+  r.TopRight.y:=0.5*y*m_axCfg[1].scale+m_axCfg[1].shift;
+  r.BottomLeft.y:=-0.5*y*m_axCfg[1].scale+m_axCfg[1].shift;
+  r.BottomLeft.x:=0;
+  r.BottomLeft.x:=m_xScale;
+  a.ZoomfRect(r);
 end;
 
 function TGraphFrm.TryEnterCS: boolean;
@@ -369,6 +547,8 @@ begin
     updateView;
 end;
 
+
+
 { IGraphFrm }
 
 procedure IGraphFrm.doClose;
@@ -432,20 +612,12 @@ procedure cGraphFrmFactory.doRecorderInit;
 var
   i, j: integer;
   Frm: TRecFrm;
-  r:frect;
 begin
   //exit;
   for i := 0 to m_CompList.Count - 1 do
   begin
     Frm := GetFrm(i);
-    TGraphFrm(frm).SignalsLV.DrawColorBox:=true;
-    TGraphFrm(frm).SignalsLV.getcolor:=fgetcolor;
-    TGraphFrm(frm).m_xScale:=0.3;
-    r.BottomLeft.x:=0;
-    r.BottomLeft.y:=0;
-    r.TopRight.x:=0.3;
-    r.TopRight.y:=10;
-    cpage(TGraphFrm(frm).cChart1.activePage).ZoomfRect(r);
+    TGraphFrm(Frm).OnRecorderInit;
     TGraphFrm(frm).TestConfig;
   end;
 end;
@@ -468,6 +640,15 @@ begin
 end;
 
 { cGraphTag }
+function cGraphTag.axis: caxis;
+begin
+  result:=nil;
+  if m_line<>nil then
+  begin
+    result:=caxis(m_line.parent);
+  end;
+end;
+
 constructor cGraphTag.create;
 begin
   m_t:=cTag.create;

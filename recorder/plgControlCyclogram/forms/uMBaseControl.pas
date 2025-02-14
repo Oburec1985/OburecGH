@@ -8,7 +8,7 @@ uses
   Dialogs, StdCtrls, ExtCtrls, Grids, ComCtrls,
   uBtnListView, uRecBasicFactory, pluginclass, uRecorderEvents,
   uComponentServises,
-  uRCFunc, recorder, PathUtils, uDownloadregsfrm, urcclientfrm,
+  uRCFunc, recorder, PathUtils, uDownloadregsfrm, uRCclientfrm,
   iplgmngr,
   activex, ubaseobj,
   cfreg, blaccess,
@@ -550,8 +550,8 @@ begin
     begin
       objFolder := cObjFolder.Create;
       // для вновь создаваемых нет смысла что то искать внутри
-      objFolder.fscanFolders := false;
-      objFolder.fscanFiles := false;
+      objFolder.scanFolder := false;
+      objFolder.scanFile := false;
       m_base.m_BaseFolder.AddChild(objFolder);
       objFolder.Path := ObjNameCB.text;
       // создаем описатели и каталог
@@ -599,8 +599,8 @@ begin
       cTestFolder(testFolder).ObjType:=TestTypeCB.text;
       testFolder.name := TestNameCB.text;
       // для вновь создаваемых нет смысла что то искать внутри
-      testFolder.fscanFolders := false;
-      testFolder.fscanFiles := false;
+      testFolder.scanFolder := false;
+      testFolder.scanFile := false;
       ObjFolder.AddChild(testFolder);
       testFolder.Path := TestNameCB.text;
       testFolder.caption := TestNameCB.text;
@@ -1105,8 +1105,8 @@ begin
     test.ObjType := TestTypeCB.text;
     test.name := TestNameCB.text;
     // для вновь создаваемых нет смысла что то искать внутри
-    test.fscanFolders := false;
-    test.fscanFiles := false;
+    test.scanFolder := false;
+    test.scanFile := false;
     objFolder := GetSelectObj;
     objFolder.AddChild(test);
     test.Path := TestNameCB.text;
@@ -1141,8 +1141,8 @@ begin
       m_reg.Path := Path;
 
       test.AddChild(m_reg);
-      m_reg.fscanFolders := false;
-      m_reg.fscanFiles := false;
+      m_reg.scanFolder := false;
+      m_reg.scanFile := false;
       m_reg.CreateFiles;
 
       RegNameEdit.AddItem(m_reg.caption, m_reg);

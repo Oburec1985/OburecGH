@@ -2,7 +2,8 @@ unit uRvclService;
 
 interface
 uses
-  recorder, tags, classes, controls, StdCtrls, uRCFunc;
+  recorder, tags, classes, controls, StdCtrls, uRCFunc
+  ;
 
 procedure tagsToCB(r:irecorder;cb:tcombobox);
 

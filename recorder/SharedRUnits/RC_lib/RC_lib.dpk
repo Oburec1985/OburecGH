@@ -30,7 +30,10 @@ requires
   VclSmp,
   dcl_own,
   GlPackage,
-  ComponentsLib;
+  ComponentsLib,
+  dsnap,
+  IndyCore,
+  IndySystem;
 
 contains
   uRcCtrls in 'uRcCtrls.pas',
@@ -50,8 +53,6 @@ contains
   transf in '..\interfaces\transf.pas',
   transformers in '..\interfaces\transformers.pas',
   waitwnd in '..\interfaces\waitwnd.pas',
-  uRCFunc in '..\uRCFunc.pas',
-  iplgmngr in '..\interfaces\iplgmngr.pas',
-  scales in '..\interfaces\scales.pas';
+  iplgmngr in '..\interfaces\iplgmngr.pas' {/,scales in '..\interfaces\scales.pas'};
 
 end.

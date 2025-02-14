@@ -14,5 +14,37 @@
     <Transaction>2017.12.28 14:40:16.614.dfm,E:\Oburec\delphi\2011\recorder\SharedRUnits\uFrmSync.dfm=</Transaction>
     <Transaction>2017.12.28 14:52:20.642.PAS,E:\Oburec\delphi\2011\recorder\SharedRUnits\interfaces\GUIDDEF.PAS=</Transaction>
     <Transaction>2017.12.28 14:53:12.696.PAS,E:\Oburec\delphi\2011\recorder\SharedRUnits\interfaces\IVFORM.PAS=</Transaction>
+    <Transaction>2025.02.14 09:16:59.100.pas,E:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\uRCFunc.pas=</Transaction>
   </Transactions>
+	<ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path="..\..\SharedRUnits"/>
+    <File Path="..\interfaces"/>
+    <File Path="..\interfaces\blaccess.pas"/>
+    <File Path="..\interfaces\CFREG.PAS"/>
+    <File Path="..\interfaces\DevAPI.pas"/>
+    <File Path="..\interfaces\device.pas"/>
+    <File Path="..\interfaces\iplgmngr.pas"/>
+    <File Path="..\interfaces\journal.pas"/>
+    <File Path="..\interfaces\modules.pas"/>
+    <File Path="..\interfaces\plugin.pas"/>
+    <File Path="..\interfaces\rcPlugin.pas"/>
+    <File Path="..\interfaces\recorder.pas"/>
+    <File Path="..\interfaces\signal.pas"/>
+    <File Path="..\interfaces\tags.pas"/>
+    <File Path="..\interfaces\transf.pas"/>
+    <File Path="..\interfaces\transformers.pas"/>
+    <File Path="..\interfaces\waitwnd.pas"/>
+    <File Path="..\uRecorderEvents.pas"/>
+    <File Path="..\uRvclService.pas"/>
+    <File Path="uRcCtrls.pas"/>
+    <File Path="ComponentsLib.dcp"/>
+    <File Path="dcl_own.dcp"/>
+    <File Path="dsnap.dcp"/>
+    <File Path="GlPackage.dcp"/>
+    <File Path="IndyCore.dcp"/>
+    <File Path="IndySystem.dcp"/>
+    <File Path="rtl.dcp"/>
+    <File Path="vcl.dcp"/>
+    <File Path="VclSmp.dcp"/>
+  </ProjectSortOrder>
 </BorlandProject>

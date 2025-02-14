@@ -21,7 +21,7 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<DesignOnlyPackage>false</DesignOnlyPackage>
-			<DCC_UnitSearchPath>$(BDS)\AlphaControls\D2010\;..\..\..\sharedUtils\utils\xml;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\objects\utils;..\..\..\sharedUtils\forms;..\..\..\sharedUtils\utils\files;..\..\..\sharedUtils\utils;..\..\..\sharedUtils\utils\PathUtils;..\..\sharedUtils\utils\jcl-2.3.1.4197;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows\obj;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes\containers;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;..\..\..\sharedUtils;..\..\..\sharedUtils\math;..\..\..\sharedUtils\компоненты\dcl_dpk;..\..\sharedUtils\ogl;..\..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\utils\FastMM\;..\..\..\3d\3dComponents\components\Asutp ;..\..\..\3d\3dComponents\components\;..\..\..\3d\3dComponents\dialogs;..\..\..\3d\3dComponents\PropertEditors\;..\..\..\3d\core;..\..\..\3d\forms;..\..\..\3d\math;..\..\..\3d\objects;..\..\..\3d\tools;..\..\..\sharedUtils\math\FFT_койнов;..\..\SharedRUnits;..\..\SharedRUnits\RC_lib;..\..\plgControlCyclogram\units;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>$(BDS)\AlphaControls\D2010\;..\..\..\sharedUtils\utils\xml;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\objects\utils;..\..\..\sharedUtils\forms;..\..\..\sharedUtils\utils\files;..\..\..\sharedUtils\utils;..\..\..\sharedUtils\utils\PathUtils;..\..\sharedUtils\utils\jcl-2.3.1.4197;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows\obj;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes\containers;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;..\..\..\sharedUtils;..\..\..\sharedUtils\math;..\..\..\sharedUtils\компоненты\dcl_dpk;..\..\sharedUtils\ogl;..\..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\utils\FastMM\;..\..\..\3d\3dComponents\components\Asutp ;..\..\..\3d\3dComponents\components\;..\..\..\3d\3dComponents\dialogs;..\..\..\3d\3dComponents\PropertEditors\;..\..\..\3d\core;..\..\..\3d\forms;..\..\..\3d\math;..\..\..\3d\objects;..\..\..\3d\tools;..\..\..\sharedUtils\math\FFT_койнов;..\..\SharedRUnits;..\..\SharedRUnits\RC_lib;..\..\plgControlCyclogram\units;..\..\sharedUtils\mera\database;..\..\..\sharedUtils\ZipMaster;..\..\SharedRUnits\interfaces;..\..\recorder\plgControlCyclogram\forms;..\..\sharedUtils\socket;..\..\..\sharedUtils\utils\reports\excel;..\..\..\recorder\plgControlCyclogram;..\..\..\sharedUtils\math\форум;..\..\..\..\recorder\plgControlCyclogram\forms\DataTransfFrm;..\..\sharedUtils\ogl\forms\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<GenPackage>true</GenPackage>
 			<DCC_DependencyCheckOutputName>C:\Users\Public\Documents\RAD Studio\7.0\Bpl\RC_lib.bpl</DCC_DependencyCheckOutputName>
@@ -53,6 +53,9 @@
 			<DCCReference Include="dcl_own.dcp"/>
 			<DCCReference Include="GlPackage.dcp"/>
 			<DCCReference Include="ComponentsLib.dcp"/>
+			<DCCReference Include="dsnap.dcp"/>
+			<DCCReference Include="IndyCore.dcp"/>
+			<DCCReference Include="IndySystem.dcp"/>
 			<DCCReference Include="uRcCtrls.pas"/>
 			<DCCReference Include="..\uRecorderEvents.pas"/>
 			<DCCReference Include="..\uRvclService.pas"/>
@@ -70,9 +73,9 @@
 			<DCCReference Include="..\interfaces\transf.pas"/>
 			<DCCReference Include="..\interfaces\transformers.pas"/>
 			<DCCReference Include="..\interfaces\waitwnd.pas"/>
-			<DCCReference Include="..\uRCFunc.pas"/>
-			<DCCReference Include="..\interfaces\iplgmngr.pas"/>
-			<DCCReference Include="..\interfaces\scales.pas"/>
+			<DCCReference Include="..\interfaces\iplgmngr.pas">
+				<Form>/,scales in &apos;..\interfaces\scales.pas&apos;</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

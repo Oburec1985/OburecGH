@@ -12,7 +12,7 @@ const
     MaxRealNumber = 1E300;
     MinRealNumber = 1E-300;
  
-// arrays
+type
  
     Complex = record
         X, Y: Double;

@@ -2,145 +2,173 @@ object GraphFrm: TGraphFrm
   Left = 0
   Top = 0
   Caption = 'GraphFrm'
-  ClientHeight = 334
-  ClientWidth = 750
+  ClientHeight = 316
+  ClientWidth = 810
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -10
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 120
-  TextHeight = 16
+  PixelsPerInch = 96
+  TextHeight = 12
   object RightSplitter: TSplitter
-    Left = 517
+    Left = 582
     Top = 0
-    Height = 334
+    Width = 2
+    Height = 316
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alRight
     Color = clBackground
     ParentColor = False
-    ExplicitLeft = 981
-    ExplicitHeight = 800
+    ExplicitLeft = 388
+    ExplicitHeight = 251
   end
   object RightGB: TGroupBox
-    Left = 520
+    Left = 584
     Top = 0
-    Width = 230
-    Height = 334
+    Width = 226
+    Height = 316
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alRight
     Caption = 'RightGB'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -18
+    Font.Height = -15
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-    ExplicitHeight = 724
     object XScaleLabel: TLabel
-      Left = 9
-      Top = 31
-      Width = 97
-      Height = 22
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 85
+      Top = 25
+      Width = 84
+      Height = 18
       Caption = #1056#1072#1079#1074#1077#1088#1090#1082#1072' X'
     end
     object Label1: TLabel
-      Left = 116
-      Top = 32
-      Width = 93
-      Height = 21
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
-      Caption = #1052#1072#1089#1096#1090#1072#1073' Y'
+      Left = 85
+      Top = 67
+      Width = 81
+      Height = 17
+      Caption = 'YScaleLabel'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -18
+      Font.Height = -15
       Font.Name = 'YScaleLabel'
       Font.Style = []
       ParentFont = False
     end
     object Splitter1: TSplitter
       Left = 2
-      Top = 143
-      Width = 226
+      Top = 172
+      Width = 222
       Height = 3
       Cursor = crVSplit
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alBottom
       Color = clBackground
       ParentColor = False
-      ExplicitTop = 24
-      ExplicitWidth = 122
+      ExplicitTop = 107
+      ExplicitWidth = 169
+    end
+    object ShiftLabel: TLabel
+      Left = 85
+      Top = 101
+      Width = 72
+      Height = 17
+      Caption = #1057#1084#1077#1097#1077#1085#1080#1077
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -15
+      Font.Name = 'YScaleLabel'
+      Font.Style = []
+      ParentFont = False
     end
     object SignalsLV: TBtnListView
       Left = 2
-      Top = 146
-      Width = 226
-      Height = 186
+      Top = 175
+      Width = 222
+      Height = 139
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alBottom
       Checkboxes = True
       Columns = <
         item
           Caption = #8470
-          Width = 51
+          Width = 38
         end
         item
           Caption = #1048#1084#1103
-          Width = 51
+          Width = 38
         end
         item
           Caption = 'Y'
-          Width = 51
+          Width = 38
         end>
       RowSelect = True
       TabOrder = 0
       ViewStyle = vsReport
+      OnClick = SignalsLVClick
       BtnCol = 0
       QuoteColumnBtnClick = False
       QuoteColumnDblClick = False
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitTop = 536
+      ExplicitWidth = 188
     end
     object XScaleSE: TFloatSpinEdit
-      Left = 9
-      Top = 55
-      Width = 104
-      Height = 33
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 7
+      Top = 25
+      Width = 78
+      Height = 28
       Increment = 0.100000000000000000
       TabOrder = 1
       OnChange = XScaleSEChange
     end
     object YScaleSE: TFloatSpinEdit
-      Left = 116
-      Top = 55
-      Width = 101
-      Height = 33
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 7
+      Top = 63
+      Width = 78
+      Height = 28
       Increment = 0.100000000000000000
       TabOrder = 2
+      OnChange = YScaleSEChange
+    end
+    object ShiftSE: TFloatSpinEdit
+      Left = 7
+      Top = 97
+      Width = 78
+      Height = 28
+      Increment = 0.100000000000000000
+      TabOrder = 3
+      OnChange = ShiftSEChange
     end
   end
   object cChart1: cChart
     Left = 0
     Top = 0
-    Width = 517
-    Height = 334
+    Width = 582
+    Height = 316
     Cursor = crSizeAll
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 1
@@ -149,7 +177,7 @@ object GraphFrm: TGraphFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitLeft = -1
+    ExplicitWidth = 414
   end
   object ImageList_16: TImageList
     Left = 80
