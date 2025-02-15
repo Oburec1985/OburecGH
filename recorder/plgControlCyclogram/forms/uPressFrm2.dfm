@@ -2,7 +2,7 @@ object PressFrm2: TPressFrm2
   Left = 0
   Top = 0
   Caption = #1054#1073#1088#1072#1073#1086#1090#1082#1072' '#1076#1072#1074#1083#1077#1085#1080#1103' '#1074' '#1082#1072#1084#1077#1088#1077' '#1089#1075#1086#1088#1072#1085#1080#1103
-  ClientHeight = 465
+  ClientHeight = 310
   ClientWidth = 292
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,21 +19,23 @@ object PressFrm2: TPressFrm2
     Left = 0
     Top = 0
     Width = 292
-    Height = 465
+    Height = 310
     Align = alClient
     Caption = #1055#1086#1083#1086#1089#1072' '#8470
     TabOrder = 0
+    ExplicitHeight = 465
     object ScrollBox1: TScrollBox
       Left = 2
       Top = 15
       Width = 288
-      Height = 330
+      Height = 175
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
       Margins.Bottom = 2
       Align = alClient
       TabOrder = 0
+      ExplicitHeight = 330
       object BarPanel: TPanel
         Left = 0
         Top = 0
@@ -124,13 +126,14 @@ object PressFrm2: TPressFrm2
     end
     object Panel1: TPanel
       Left = 2
-      Top = 345
+      Top = 190
       Width = 288
       Height = 118
       Align = alBottom
       ParentShowHint = False
       ShowHint = True
       TabOrder = 1
+      ExplicitTop = 345
       object MaxLabel: TLabel
         Left = 2
         Top = 8

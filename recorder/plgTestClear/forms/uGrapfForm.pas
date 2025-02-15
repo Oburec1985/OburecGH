@@ -31,6 +31,8 @@ type
     procedure UpdateTag;
     function axis:caxis;
   public
+    function ToStr:string;
+    procedure fromstr(s:string);
     constructor create;
     destructor destroy;
   end;
@@ -76,7 +78,8 @@ type
     function ActiveSignal:cGraphTag;
     // номер оси сигнала
     function axInd(s:cGraphTag):integer;
-    function getSignal(i:integer):cGraphTag;
+    function getSignal(i:integer):cGraphTag;overload;
+    function getSignal(S:string):cGraphTag;overload;
     procedure doStart;override;
     procedure updatedata;override;
     procedure updateView;
@@ -86,11 +89,18 @@ type
     function  TryEnterCS:boolean;
     procedure EnterCS;
     procedure ExitCS;
+    function AxCfgToStr(i:integer):string;
+    function StrToAxCfg(s:string):TAxCfg;
+  protected
+    procedure setAxCount(c:integer);
   public
+    property AxCount:integer read fAxCfgCount write setAxCount;
     // очистить список сигналов в осциле
     procedure clear;
     // добавить сигнал в осцил
-    function addSignal(s: string; ax:string):cGraphTag;
+    function addSignal(s: string; ax:string):cGraphTag;overload;
+    function addSignal(s: cGraphTag):cGraphTag;overload;
+
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
     constructor create(Aowner: tcomponent); override;
@@ -162,6 +172,7 @@ function TGraphFrm.addSignal(s: string; ax:string):cGraphTag;
 var
   t:cGraphTag;
   l_ax:caxis;
+  f:ulong;
 begin
   t:=cGraphTag.create;
   t.m_axisName:=ax;
@@ -179,7 +190,62 @@ begin
       // обновляем dx для линии
       t.UpdateTag;
     end;
+    // Задать маску оценок оценок
+    f:=t.m_t.tag.GetEstimatorsMask;
+    setflag(f, ESTIMATOR_PEAK+ESTIMATOR_RMSD);
+    t.m_t.tag.SetEstimatorsMask(f);
   end;
+end;
+
+// scale; shift
+function TGraphFrm.addSignal(s: cGraphTag): cGraphTag;
+var
+  l_ax:caxis;
+  f:ulong;
+begin
+  result:=getSignal(s.m_t.tagname);
+  if result=nil then
+  begin
+    m_slist.AddObject(s.m_t.tagname, s);
+    result:=s;
+    l_ax:=cpage(cChart1.activePage).getaxis(s.m_axisName);
+    if l_ax<>nil then
+    begin
+      s.m_line:=cBuffTrend1d.create;
+      s.m_line.color:=ColorArray[m_slist.count];
+      l_ax.AddChild(s.m_line);
+      if s.m_t.tag<>nil then
+      begin
+        // обновляем dx для линии
+        s.UpdateTag;
+      end;
+      // Задать маску оценок оценок
+      f:=s.m_t.tag.GetEstimatorsMask;
+      setflag(f, ESTIMATOR_PEAK+ESTIMATOR_RMSD);
+      s.m_t.tag.SetEstimatorsMask(f);
+    end;
+  end;
+end;
+
+function TGraphFrm.AxCfgToStr(i: integer): string;
+var
+  a:TAxCfg;
+begin
+  a:=m_axCfg[i];
+  result:=floattostr(a.scale)+';'+floattostr(a.shift)+';'+a.name;
+end;
+
+function TGraphFrm.StrToAxCfg(s: string):TAxCfg;
+var
+  s1:string;
+  i:integer;
+begin
+  s1:=getSubStrByIndex(s,';',1,0);
+  result.scale:=strtofloat(s1);
+  s1:=getSubStrByIndex(s,';',1,1);
+  result.shift:=strtofloat(s1);
+  s1:=getSubStrByIndex(s,';',1,2);
+  result.name:=s1;
 end;
 
 function TGraphFrm.axInd(s: cGraphTag): integer;
@@ -269,16 +335,26 @@ end;
 
 
 
+function TGraphFrm.getSignal(S: string): cGraphTag;
+var
+  I: Integer;
+  t:cGraphTag;
+begin
+  result:=nil;
+  for I := 0 to m_slist.Count - 1 do
+  begin
+    t:=getSignal(i);
+    if t.m_t.tagname=s then
+    begin
+      result:=t;
+      exit;
+    end;
+  end;
+end;
+
 function TGraphFrm.getSignal(i: integer): cGraphTag;
 begin
   result:=cGraphTag(m_slist.Objects[i]);
-end;
-
-
-procedure TGraphFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
-begin
-  inherited;
-
 end;
 
 function fgetcolor(li: tlistitem): integer;
@@ -304,9 +380,73 @@ begin
 end;
 
 procedure TGraphFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  i: integer;
+  s: cGraphTag;
+  s1:string;
 begin
   inherited;
+  a_pIni.WriteInteger(str, 'AxCount', AxCount);
+  for I := 0 to AxCount - 1 do
+  begin
+    s1:=AxCfgToStr(i);
+    a_pIni.WriteString(str, 'Ax_'+inttostr(i), s1);
+  end;
+  a_pIni.WriteInteger(str, 'SCount', m_slist.count);
+  for I := 0 to m_slist.count - 1 do
+  begin
+    s:=getSignal(i);
+    s1:=s.ToStr;
+    a_pIni.WriteString(str, 'Tag_'+inttostr(i), s1);
+  end;
+end;
 
+procedure TGraphFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  i,c: integer;
+  s: cGraphTag;
+  s1:string;
+  a:caxis;
+begin
+  // загрузка осей
+  AxCount:= a_pIni.ReadInteger(str, 'AxCount', 1);
+  for I := 0 to AxCount - 1 do
+  begin
+    s1:= a_pIni.ReadString(str, 'Ax_'+inttostr(i), '');
+    m_axCfg[i]:=StrToAxCfg(s1);
+    if i=cpage(cChart1.activePage).axises.ChildCount then
+    begin
+      a:=cAxis.create;
+      a.name:=m_axCfg[i].name;
+      cpage(cChart1.activePage).addaxis(a);
+      m_axCfg[i].ax:=a;
+    end
+    else
+    begin
+      m_axCfg[i].ax:=cpage(cChart1.activePage).getaxis(m_axCfg[i].name);
+    end;
+  end;
+  // загрузка сигналов
+  c:= a_pIni.ReadInteger(str, 'SCount', 0);
+  for I := 0 to c - 1 do
+  begin
+    s1:= a_pIni.ReadString(str, 'Tag_'+inttostr(i), s1);
+    s:=cGraphTag.create;
+    s.fromstr(s1);
+    addSignal(s);
+  end;
+  showsignalsinLV;
+end;
+
+
+procedure TGraphFrm.setAxCount(c:integer);
+begin
+  fAxCfgCount:=c;
+  if c>length(m_axCfg) then
+  begin
+    fAxCfgCapacity:=fAxCfgCapacity+10;
+    setlength(m_axCfg,fAxCfgCapacity);
+  end;
 end;
 
 procedure TGraphFrm.ShiftSEChange(Sender: TObject);
@@ -349,6 +489,7 @@ begin
   begin
     s:=getSignal(i);
     li:=SignalsLV.Items.Add;
+    li.Checked:=true;
     li.data:=s;
     SignalsLV.SetSubItemByColumnName('№',inttostr(i),li);
     SignalsLV.SetSubItemByColumnName('Имя',s.m_t.tagname,li);
@@ -363,6 +504,7 @@ var
   lcount:integer;
   I: Integer;
   p:TNotifyEvent;
+  li:tlistitem;
 begin
   s := ActiveSignal;
   i:=axInd(s);
@@ -373,7 +515,15 @@ begin
     YScaleSE.Value:=m_axcfg[i].scale;
     YScaleSE.OnChange:=p;
   end;
+  for I := 0 to SignalsLV.Items.Count - 1 do
+  begin
+    li:=SignalsLV.Items[i];
+    s:=getSignal(i);
+    s.m_line.visible:=li.Checked;
+  end;
 end;
+
+
 
 procedure TGraphFrm.YScaleSEChange(Sender: TObject);
 var
@@ -494,6 +644,8 @@ var
   interval_i: tpoint;
   j, len: Integer;
   r:frect;
+  li:tlistitem;
+  v:double;
 begin
   if RStatePlay then
   begin
@@ -531,6 +683,16 @@ begin
     m_updateDrawInterval:=false;
   end;
   cChart1.redraw;
+  // отобразить амплитуды
+  for I := 0 to SignalsLV.Items.Count - 1 do
+  begin
+    li:=SignalsLV.Items[i];
+    s:=getSignal(i);
+    v:=s.m_t.GetPeakEst;
+    SignalsLV.SetSubItemByColumnName('A',formatStrnoe(v,4),li);
+    v:=s.m_t.GetRMSEst;
+    SignalsLV.SetSubItemByColumnName('Rms',formatStrnoe(v,4),li);
+  end;
 end;
 
 procedure TGraphFrm.XScaleSEChange(Sender: TObject);
@@ -618,7 +780,7 @@ begin
   begin
     Frm := GetFrm(i);
     TGraphFrm(Frm).OnRecorderInit;
-    TGraphFrm(frm).TestConfig;
+    //TGraphFrm(frm).TestConfig;
   end;
 end;
 
@@ -657,6 +819,20 @@ end;
 destructor cGraphTag.destroy;
 begin
   m_t.destroy;
+end;
+
+procedure cGraphTag.fromstr(s: string);
+var
+  s1:string;
+begin
+  m_t.FromStr(s);
+  s1:=getSubStrByIndex(s,';',1,2);
+  m_axisName:=s1;
+end;
+
+function cGraphTag.ToStr: string;
+begin
+  result:=m_t.ToStr+';'+m_axisName;
 end;
 
 procedure cGraphTag.UpdateTag;

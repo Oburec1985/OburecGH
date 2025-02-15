@@ -190,7 +190,9 @@ type
     property freq: double read getfreq write setfreq;
     property readyVals: cardinal read getReadyVals write setReadyVals;
     property lastindex: integer read getlastindex write m_lastindex;
-
+    // tagname; tagid
+    Function ToStr:string;
+    procedure FromStr(s:string);
     constructor create;
     destructor destroy; overload;
     // удаление в режиме конфига, чтобы не вызывать лишних событий ecm/ lcm
@@ -1537,6 +1539,24 @@ begin
       if b then
         lcm;
     end;
+  end;
+end;
+// tagname; tagid
+function cTag.ToStr: string;
+begin
+  result:=ftagname+';'+inttostr(ftagid);
+end;
+
+procedure cTag.FromStr(s: string);
+var
+  s1:string;
+begin
+  s1:=getSubStrByIndex(s,';',1,0);
+  tagname:=s1;
+  s1:=getSubStrByIndex(s,';',1,1);
+  if tag=nil then
+  begin
+    tag_id:=strtoint(s1);
   end;
 end;
 

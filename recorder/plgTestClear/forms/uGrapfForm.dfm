@@ -118,6 +118,12 @@ object GraphFrm: TGraphFrm
         item
           Caption = 'Y'
           Width = 38
+        end
+        item
+          Caption = 'A'
+        end
+        item
+          Caption = 'Rms'
         end>
       RowSelect = True
       TabOrder = 0
@@ -129,7 +135,6 @@ object GraphFrm: TGraphFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitWidth = 188
     end
     object XScaleSE: TFloatSpinEdit
       Left = 7
@@ -164,7 +169,6 @@ object GraphFrm: TGraphFrm
     Top = 0
     Width = 582
     Height = 316
-    Cursor = crSizeAll
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -177,7 +181,6 @@ object GraphFrm: TGraphFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitWidth = 414
   end
   object ImageList_16: TImageList
     Left = 80
