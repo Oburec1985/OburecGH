@@ -5,7 +5,7 @@ object ControlDeskFrm: TControlDeskFrm
   BorderWidth = 2
   Caption = #1055#1091#1083#1100#1090' '#1091#1087#1088#1072#1074#1083#1077#1085#1080#1103' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1086#1074
   ClientHeight = 496
-  ClientWidth = 851
+  ClientWidth = 802
   Color = clCream
   Constraints.MinHeight = 248
   Constraints.MinWidth = 730
@@ -23,7 +23,7 @@ object ControlDeskFrm: TControlDeskFrm
   object DeskGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 851
+    Width = 802
     Height = 157
     Align = alTop
     Caption = #1055#1091#1083#1100#1090' '#1091#1087#1088#1072#1074#1083#1077#1085#1080#1103
@@ -40,8 +40,9 @@ object ControlDeskFrm: TControlDeskFrm
     ParentCtl3D = False
     ParentFont = False
     TabOrder = 0
+    ExplicitWidth = 851
     DesignSize = (
-      851
+      802
       157)
     object InfoLabel: TLabel
       Left = 755
@@ -912,7 +913,7 @@ object ControlDeskFrm: TControlDeskFrm
     object ActiveModeE: TEdit
       Left = 542
       Top = 107
-      Width = 264
+      Width = 215
       Height = 27
       Anchors = [akLeft, akTop, akRight]
       Font.Charset = DEFAULT_CHARSET
@@ -923,6 +924,7 @@ object ControlDeskFrm: TControlDeskFrm
       ParentFont = False
       ReadOnly = True
       TabOrder = 9
+      ExplicitWidth = 264
     end
     object GetNotifyCB: TCheckBox
       Left = 6
@@ -943,7 +945,7 @@ object ControlDeskFrm: TControlDeskFrm
   object PageControl1: TPageControl
     Left = 0
     Top = 157
-    Width = 851
+    Width = 802
     Height = 339
     Margins.Left = 2
     Margins.Top = 2
@@ -953,14 +955,16 @@ object ControlDeskFrm: TControlDeskFrm
     Align = alClient
     TabOrder = 1
     OnChange = PageControl1Change
+    ExplicitWidth = 851
     object TabSheet1: TTabSheet
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
       Margins.Bottom = 2
       Caption = #1054#1073#1097#1080#1081' '#1074#1080#1076
+      ExplicitWidth = 843
       object Splitter2: TSplitter
-        Left = 597
+        Left = 548
         Top = 0
         Height = 312
         Align = alRight
@@ -970,7 +974,7 @@ object ControlDeskFrm: TControlDeskFrm
         ExplicitHeight = 319
       end
       object GroupBox1: TGroupBox
-        Left = 357
+        Left = 308
         Top = 0
         Width = 240
         Height = 312
@@ -988,6 +992,7 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 0
+        ExplicitLeft = 357
         object ModePanel: TPanel
           Left = 1
           Top = 19
@@ -1041,7 +1046,7 @@ object ControlDeskFrm: TControlDeskFrm
       object ModesListPanel: TGroupBox
         Left = 0
         Top = 0
-        Width = 357
+        Width = 308
         Height = 312
         Align = alClient
         Caption = #1057#1087#1080#1089#1086#1082' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1086#1074
@@ -1057,10 +1062,11 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 1
+        ExplicitWidth = 357
         object ControlSG: TStringGrid
           Left = 1
           Top = 19
-          Width = 355
+          Width = 306
           Height = 292
           Align = alClient
           BevelInner = bvLowered
@@ -1078,10 +1084,11 @@ object ControlDeskFrm: TControlDeskFrm
           OnDrawCell = ControlSGDrawCell
           OnMouseDown = ControlSGMouseDown
           OnSetEditText = ControlSGSetEditText
+          ExplicitWidth = 355
         end
       end
       object GroupBox2: TGroupBox
-        Left = 600
+        Left = 551
         Top = 0
         Width = 243
         Height = 312
@@ -1099,6 +1106,7 @@ object ControlDeskFrm: TControlDeskFrm
         ParentCtl3D = False
         ParentFont = False
         TabOrder = 2
+        ExplicitLeft = 600
         object TrigSG: TStringGrid
           Left = 1
           Top = 19
@@ -1125,6 +1133,10 @@ object ControlDeskFrm: TControlDeskFrm
       Margins.Bottom = 2
       Caption = #1058#1072#1073#1083#1080#1094#1072' '#1088#1077#1078#1080#1084#1086#1074
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Splitter3: TSplitter
         Left = 441
         Top = 0
