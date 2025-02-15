@@ -4,7 +4,8 @@ interface
 
 uses
   classes, windows, activex, ubasealg, uCommonMath, uRCFunc, tags, recorder,
-  blaccess, nativexml, ucommontypes, uFFT, Ap, fft, dialogs,
+  blaccess, nativexml, ucommontypes, uFFT, Ap, fft,
+  dialogs,
   uHardwareMath,
   uSpm,
   complex,
@@ -345,8 +346,8 @@ var
   i: integer;
 begin
   inherited;
-  tnode := getNode(xmlNode,'OutputTag');
-  tagnode := getNode(tnode,'OutChan');
+  tnode := getNode(xmlNode, 'OutputTag');
+  tagnode := getNode(tnode, 'OutChan');
   saveTag(m_outTag, tagnode);
 end;
 

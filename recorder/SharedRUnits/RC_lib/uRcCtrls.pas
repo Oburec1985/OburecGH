@@ -2,10 +2,15 @@ unit uRcCtrls;
 
 interface
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Controls, Forms,
-  Dialogs, ComCtrls, StdCtrls, ExtCtrls, Buttons, uComponentServises,
-  uRecorderEvents,   uRCFunc, ubtnlistview, uRvclService,
-  tags, recorder, activex;
+  Windows, Messages, SysUtils, Variants, Classes, Controls, Forms, Graphics,
+  Dialogs, ComCtrls, StdCtrls, ExtCtrls, Buttons,
+  //uComponentServises,
+  uRecorderEvents,
+  ubtnlistview,
+  uRvclService,
+  recorder, uRCFunc,
+  tags, // теги рекордера
+  activex;
 type
 
   TRcComboBox = class(TCombobox)
@@ -25,6 +30,53 @@ type
 procedure Register;
 
 implementation
+
+const
+  c_lightRed = $008080FF;
+
+
+function CheckCBItemInd(c:tcombobox):boolean;
+begin
+  if c.itemindex=-1 then
+  begin
+    c.Color:=c_lightRed;
+    result:=false;
+  end
+  else
+  begin
+    c.Color:=clWindow;
+    result:=true;
+  end;
+end;
+
+
+function setComboBoxItem(str:string; c:tcombobox):integer;
+var
+  I: Integer;
+begin
+  result:=-1;
+  for I := 0 to c.Items.Count - 1 do
+  begin
+    if (lowercase(c.Items[i])=lowercase(str)) then
+    begin
+      c.ItemIndex:=i;
+      c.text:=str;
+      result:=i;
+      CheckCBItemInd(c);
+      exit;
+    end;
+  end;
+  if str='' then
+  begin
+    c.ItemIndex:=-1;
+  end
+  else
+  begin
+    c.ItemIndex:=-1;
+    c.text:=str;
+  end;
+  CheckCBItemInd(c);
+end;
 
 procedure TRcComboBox.DragDrop(Source: TObject; X, Y: Integer);
 var

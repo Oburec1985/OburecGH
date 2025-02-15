@@ -187,7 +187,8 @@ type
     // вызывается в конструкторе cDB класса
     function createBaseFolder:cDBFolder;override;
   public
-    procedure InitBaseFolder(str:string);override;
+    //procedure InitBaseFolder(str:string);override;
+    procedure InitBaseFolder(str:string);
     function getRegByMeraFile(merafile:string):cRegFolder;
     // пересохраняет все xml описатели всех объектов
     procedure UpdateXMLDescriptors;

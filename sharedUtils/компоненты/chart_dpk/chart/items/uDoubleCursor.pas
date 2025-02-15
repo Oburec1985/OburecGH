@@ -177,7 +177,7 @@ begin
         p.setDrawObjVP;
         x:=p.p2iToTrend(point(mouse.x,0),a).x;
         lsize:=p.PixelSizeToTrend(point(size,0),a).x;
-        p.Caption:=floattostr(x);
+        //p.Caption:=floattostr(x);
       end;
       if (x<=cursor.fx1+lsize) and (x>=cursor.fx1-lsize) then
       begin

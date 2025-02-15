@@ -937,7 +937,9 @@ var
 implementation
 
 uses
-  uMeasureBase, uMBaseControl;
+  uMeasureBase
+  ,uMBaseControl
+  ;
 
 { cControlMng }
 procedure cControlMng.regObjClasses;

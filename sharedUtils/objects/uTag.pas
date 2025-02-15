@@ -1,6 +1,7 @@
 unit uTag;
 
 interface
+// ִװּ עודט
 
 uses
   sysutils, udrawobj, classes, uBaseObj, uBaseObjMng, uPoint, uCommonTypes,

@@ -4,7 +4,9 @@ interface
 
 uses
   classes, windows, uEventList, uBaseObj, nativexml, uVTServices, VirtualTrees,
-  recorder, tags, uBaseObjService, uRCFunc, uMeasureBase, ucommonmath, sysutils,
+  recorder, tags, uBaseObjService, uRCFunc,
+  uMeasureBase,
+  ucommonmath, sysutils,
   uAlarms;
 
 type

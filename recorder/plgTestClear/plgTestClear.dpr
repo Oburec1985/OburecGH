@@ -12,15 +12,12 @@ uses
   uComponentServises in '..\..\sharedUtils\utils\uComponentServises.pas',
   uListMath in '..\..\sharedUtils\math\uListMath.pas',
   uCommonTypes in '..\..\sharedUtils\uCommonTypes.pas',
-  uGlFrm in 'forms\uGlFrm.pas' {GLScene},
   uGlTurbine in '..\..\3d\3dComponents\components\Asutp\uGlTurbine.pas',
   uTrfrmToolsFrame in '..\..\3d\forms\uTrfrmToolsFrame.pas' {TrfrmToolsFrame: TFrame},
   uObjCtrFrame in '..\..\3d\forms\uObjCtrFrame.pas' {CtrlViewFrame: TFrame},
   uMatrix in '..\..\sharedUtils\math\uMatrix.pas',
-  uGLFrmEdit in 'forms\uGLFrmEdit.pas' {glFrmEdit},
   PluginClass in '..\SharedRUnits\PluginClass.pas',
   uCompMng in '..\SharedRUnits\uCompMng.pas',
-  uFrmSync in '..\..\sharedUtils\forms\uFrmSync.pas' {FrmSync},
   uRecBasicFactory in '..\SharedRUnits\uRecBasicFactory.pas',
   uRecorderEvents in '..\SharedRUnits\uRecorderEvents.pas',
   uCreateComponents in 'units\uCreateComponents.pas',
@@ -38,9 +35,9 @@ uses
   transf in '..\SharedRUnits\interfaces\transf.pas',
   transformers in '..\SharedRUnits\interfaces\transformers.pas',
   waitwnd in '..\SharedRUnits\interfaces\waitwnd.pas',
-  uRecFactory in 'units\uRecFactory.pas'
-  //,uSyncThread in '..\..\wp\WPExtPack\units\uSyncThread.pas'
-  ;
+  uRecFactory in 'units\uRecFactory.pas' {/,uSyncThread in '..\..\wp\WPExtPack\units\uSyncThread.pas'},
+  uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
+  uGrapfForm in 'forms\uGrapfForm.pas' {GraphFrm};
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 
@@ -109,8 +106,8 @@ end;
 function GetPluginDescription: LPCSTR; cdecl;
 begin
    //Описание извлекается из глобальной описательной структуры}
-   //Result := LPCSTR(GPluginInfo.Dsc);
-   Result := LPCSTR('Модуль для теста (пустой)');
+   Result := LPCSTR(GPluginInfo.Dsc);
+   //Result := LPCSTR('Модуль для теста (пустой)');
 end;
 {Функция получения полного описания plug-in`а}
 procedure GetPluginInfo(var lpPluginInfo: PLUGININFO); cdecl;

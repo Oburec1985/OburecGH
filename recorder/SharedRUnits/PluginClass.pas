@@ -679,8 +679,8 @@ begin
     ///if m_FrmSync.createThreadId = GetCurrentThreadId then
     begin
       try
-        m_FrmSync.Free;
-        m_FrmSync := nil;
+        //m_FrmSync.Free;
+        //m_FrmSync := nil;
       except
         g_logFile.addErrorMes('FrmSync - не удалось удалить');
       end;
