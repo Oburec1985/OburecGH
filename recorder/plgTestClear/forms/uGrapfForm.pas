@@ -57,6 +57,9 @@ type
     procedure YScaleSEChange(Sender: TObject);
     procedure ShiftSEChange(Sender: TObject);
     procedure cChart1RBtnClick(Sender: TObject);
+    procedure XScaleSEKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure YScaleSEDownClick(Sender: TObject);
   public
     cs: TRTLCriticalSection;
     // развертка X
@@ -81,8 +84,6 @@ type
     function ActiveSignal:cGraphTag;
     // номер оси сигнала
     function axInd(s:cGraphTag):integer;
-    function getSignal(i:integer):cGraphTag;overload;
-    function getSignal(S:string):cGraphTag;overload;
     procedure doStart;override;
     procedure updatedata;override;
     procedure updateView;
@@ -97,10 +98,14 @@ type
   protected
     procedure setAxCount(c:integer);
   public
+    function getSignal(i:integer):cGraphTag;overload;
+    function getSignal(S:string):cGraphTag;overload;
+
     property AxCount:integer read fAxCfgCount write setAxCount;
     // очистить список сигналов в осциле
     procedure clear;
     // добавить сигнал в осцил
+    function addSignal(s: string; ax:caxis):cGraphTag;overload;
     function addSignal(s: string; ax:string):cGraphTag;overload;
     function addSignal(s: cGraphTag):cGraphTag;overload;
 
@@ -171,23 +176,21 @@ begin
     result:=nil;
 end;
 
-function TGraphFrm.addSignal(s: string; ax:string):cGraphTag;
+function TGraphFrm.addSignal(s: string; ax:caxis):cGraphTag;
 var
   t:cGraphTag;
-  l_ax:caxis;
   f:ulong;
 begin
   t:=cGraphTag.create;
-  t.m_axisName:=ax;
+  t.m_axisName:=ax.name;
   t.m_t.tagname:=s;
   m_slist.AddObject(s, t);
   result:=t;
-  l_ax:=cpage(cChart1.activePage).getaxis(ax);
-  if l_ax<>nil then
+  if ax<>nil then
   begin
     t.m_line:=cBuffTrend1d.create;
     t.m_line.color:=ColorArray[m_slist.count];
-    l_ax.AddChild(t.m_line);
+    ax.AddChild(t.m_line);
     if t.m_t.tag<>nil then
     begin
       // обновляем dx для линии
@@ -198,6 +201,14 @@ begin
     setflag(f, ESTIMATOR_PEAK+ESTIMATOR_RMSD);
     t.m_t.tag.SetEstimatorsMask(f);
   end;
+end;
+
+function TGraphFrm.addSignal(s: string; ax:string):cGraphTag;
+var
+  l_ax:caxis;
+begin
+  l_ax:=cpage(cChart1.activePage).getaxis(ax);
+  result:=addSignal(s, l_ax);
 end;
 
 // scale; shift
@@ -276,7 +287,7 @@ begin
   EditGraphFrm.editFrm(self);
   if EditGraphFrm.ShowModal=mrok then
   begin
-
+    showsignalsinLV;
   end;
 end;
 
@@ -565,6 +576,28 @@ begin
   end;
 end;
 
+procedure TGraphFrm.YScaleSEDownClick(Sender: TObject);
+var
+  lInc:double;
+  p:TNotifyEvent;
+begin
+  p:=tfloatspinedit(sender).OnChange;
+  tfloatspinedit(sender).OnChange:=nil;
+  if tfloatspinedit(sender).Value<=0 then
+  begin
+    tfloatspinedit(sender).Value:=tfloatspinedit(sender).Value+tfloatspinedit(sender).Increment;
+    linc:=tfloatspinedit(sender).Increment/10;
+    while tfloatspinedit(sender).Value-linc<=0 do
+    begin
+      linc:=linc/10;
+    end;
+    tfloatspinedit(sender).OnChange:=p;
+    tfloatspinedit(sender).Value:=tfloatspinedit(sender).Value-lInc;
+    exit;
+  end;
+  tfloatspinedit(sender).OnChange:=p;
+end;
+
 procedure TGraphFrm.TestConfig;
 var
   a0, a:caxis;
@@ -721,6 +754,12 @@ begin
 end;
 
 
+
+procedure TGraphFrm.XScaleSEKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  
+end;
 
 { IGraphFrm }
 

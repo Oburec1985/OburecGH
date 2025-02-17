@@ -54,8 +54,8 @@ object GraphFrm: TGraphFrm
       Caption = #1056#1072#1079#1074#1077#1088#1090#1082#1072' X'
     end
     object Label1: TLabel
-      Left = 85
-      Top = 67
+      Left = 89
+      Top = 63
       Width = 81
       Height = 17
       Caption = 'YScaleLabel'
@@ -137,22 +137,25 @@ object GraphFrm: TGraphFrm
       Editable = False
     end
     object XScaleSE: TFloatSpinEdit
-      Left = 7
-      Top = 25
+      Left = 5
+      Top = 29
       Width = 78
       Height = 28
       Increment = 0.100000000000000000
       TabOrder = 1
       OnChange = XScaleSEChange
+      OnKeyDown = XScaleSEKeyDown
+      OnDownClick = YScaleSEDownClick
     end
     object YScaleSE: TFloatSpinEdit
-      Left = 7
+      Left = 5
       Top = 63
       Width = 78
       Height = 28
       Increment = 0.100000000000000000
       TabOrder = 2
       OnChange = YScaleSEChange
+      OnDownClick = YScaleSEDownClick
     end
     object ShiftSE: TFloatSpinEdit
       Left = 7

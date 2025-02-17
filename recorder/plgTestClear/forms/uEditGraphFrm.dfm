@@ -24,9 +24,9 @@ object EditGraphFrm: TEditGraphFrm
     Margins.Bottom = 2
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 363
+    ExplicitLeft = 656
     ExplicitWidth = 272
-    ExplicitHeight = 369
+    ExplicitHeight = 441
     inherited FormChannelsGB: TGroupBox
       Width = 272
       Height = 441
@@ -35,7 +35,7 @@ object EditGraphFrm: TEditGraphFrm
       Margins.Right = 3
       Margins.Bottom = 3
       ExplicitWidth = 272
-      ExplicitHeight = 369
+      ExplicitHeight = 441
       inherited ChanNamesPanel: TPanel
         Width = 268
         Height = 90
@@ -127,9 +127,9 @@ object EditGraphFrm: TEditGraphFrm
             Caption = 'Fs'
             Width = 38
           end>
-        ExplicitTop = 96
+        ExplicitTop = 105
         ExplicitWidth = 268
-        ExplicitHeight = 271
+        ExplicitHeight = 334
       end
     end
   end
@@ -140,9 +140,6 @@ object EditGraphFrm: TEditGraphFrm
     Height = 41
     Align = alBottom
     TabOrder = 1
-    ExplicitLeft = 208
-    ExplicitTop = 360
-    ExplicitWidth = 185
     DesignSize = (
       928
       41)
@@ -153,8 +150,8 @@ object EditGraphFrm: TEditGraphFrm
       Height = 25
       Anchors = [akTop, akRight]
       Caption = 'Ok'
+      ModalResult = 1
       TabOrder = 0
-      ExplicitLeft = 717
     end
   end
   object TagsTV: TVTree

@@ -6,11 +6,10 @@ uses Windows, Classes, StdCtrls, ExtCtrls, Controls, Messages, SysUtils,
   Forms, Graphics, Menus, Buttons;
 
 const
-  InitRepeatPause = 400;  { pause before repeat timer (ms) }
-  RepeatPause     = 100;  { pause before hint window displays (ms)}
+  InitRepeatPause = 400;  {pause before repeat timer (ms)}
+  RepeatPause     = 100;  {pause before hint window displays (ms)}
 
 type
-
   TNumGlyphs = Buttons.TNumGlyphs;
 
   TTimerSpeedButton = class;
@@ -88,6 +87,8 @@ type
 
   TFloatSpinEdit = class(TCustomEdit)
   private
+    fOnDownClick, fOnUpClick:tnotifyevent;
+  private
     FMinValue: double;
     FMaxValue: double;
     FIncrement: double;
@@ -158,6 +159,8 @@ type
     property OnMouseMove;
     property OnMouseUp;
     property OnStartDrag;
+    property OnDownClick: tnotifyevent read fOnDownClick write fOnDownClick;
+    property OnUpClick: tnotifyevent read fOnUpClick write fOnUpClick;
   end;
 
 { TTimerSpeedButton }
@@ -520,12 +523,18 @@ procedure TFloatSpinEdit.UpClick (Sender: TObject);
 begin
   if ReadOnly then MessageBeep(0)
   else Value := Value + FIncrement;
+
+  if Assigned(fOnUpClick) then
+    fOnUpClick(sender);
 end;
 
 procedure TFloatSpinEdit.DownClick (Sender: TObject);
 begin
   if ReadOnly then MessageBeep(0)
   else Value := Value - FIncrement;
+
+  if Assigned(fOnDownClick) then
+    fOnDownClick(self);
 end;
 
 procedure TFloatSpinEdit.WMPaste(var Message: TWMPaste);
