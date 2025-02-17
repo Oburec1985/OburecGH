@@ -1,7 +1,6 @@
 library plgTestClear;
 
 uses
-  //fastmm4,
   Windows,
   Themes,
   SysUtils,
@@ -37,7 +36,8 @@ uses
   waitwnd in '..\SharedRUnits\interfaces\waitwnd.pas',
   uRecFactory in 'units\uRecFactory.pas' {/,uSyncThread in '..\..\wp\WPExtPack\units\uSyncThread.pas'},
   uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
-  uGrapfForm in 'forms\uGrapfForm.pas' {GraphFrm};
+  uGrapfForm in 'forms\uGrapfForm.pas' {GraphFrm},
+  uEditGraphFrm in 'forms\uEditGraphFrm.pas' {EditGraphFrm};
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 

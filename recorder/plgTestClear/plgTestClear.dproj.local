@@ -53,6 +53,8 @@
     <Transaction>2025.02.11 20:12:22.246.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\Unit3.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uGrapfForm.dfm</Transaction>
     <Transaction>2025.02.11 20:18:52.393.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uGraphFrm.pas=</Transaction>
     <Transaction>2025.02.11 20:18:52.393.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uGraphFrm.dfm=</Transaction>
+    <Transaction>2025.02.17 19:44:42.014.pas,E:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\Unit3.pas=E:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uEditGraphFrm.pas</Transaction>
+    <Transaction>2025.02.17 19:44:42.014.dfm,E:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\Unit3.dfm=E:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uEditGraphFrm.dfm</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
@@ -104,6 +106,8 @@
     <File Path="forms\uExtFrm.dfm"/>
     <File Path="forms\uGrapfForm.pas"/>
     <File Path="forms\uGrapfForm.dfm"/>
+    <File Path="forms\uEditGraphFrm.pas"/>
+    <File Path="forms\uEditGraphFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\uCreateComponents.pas"/>
     <File Path="units\uRecFactory.pas"/>

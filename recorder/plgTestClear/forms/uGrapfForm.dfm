@@ -169,6 +169,7 @@ object GraphFrm: TGraphFrm
     Top = 0
     Width = 582
     Height = 316
+    Cursor = crSizeAll
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -176,6 +177,7 @@ object GraphFrm: TGraphFrm
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 1
+    OnRBtnClick = cChart1RBtnClick
     allowEditPages = False
     imagelist = ImageList_16
     showTV = False

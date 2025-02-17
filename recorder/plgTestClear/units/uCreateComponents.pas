@@ -8,6 +8,7 @@ uses
   uCompMng, cfreg, uRecorderEvents, PluginClass, tags, Recorder, uRCFunc,
   uCommonMath, nativeXml,
   Generics.Collections, Controls, uRecBasicFactory,
+  uEditGraphFrm,
   uGrapfForm;
 
 type
@@ -62,8 +63,7 @@ begin
     // —ќ«ƒјЌџ≈ «ƒ≈—№ ‘ќ–ћџ Ќ≈Ћ№«я ƒ≈Ћј“№ SHOWMODAL ¬ UITHREAD
     // необходимо быть осторожным, т.к. создание формы и создание хендлоа разные событи€
     // если форма первый раз показана не в том же потоке где создана то будут проблеммыс удалением формы
-    //g_EvalStepValNP:=cEvalStepValNP.Create;
-    //TExtRecorderPack(GPluginInstance).m_nplist.AddNP(g_EvalStepValNP);
+    EditGraphFrm:=TEditGraphFrm.Create(nil);
   end;
 end;
 

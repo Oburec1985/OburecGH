@@ -1556,7 +1556,7 @@ begin
   s1:=getSubStrByIndex(s,';',1,1);
   if tag=nil then
   begin
-    tag_id:=strtoint(s1);
+    tag_id:=StrToInt64(s1);
   end;
 end;
 

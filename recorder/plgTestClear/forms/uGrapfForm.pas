@@ -12,6 +12,7 @@ uses
   uRecorderEvents, ubaseObj, uCommonTypes, uRCFunc,
   //uBuffTrend1d,
   tags,
+  uEditGraphFrm,
   PluginClass, ImgList, Menus, uChart, uSpin;
 
 type
@@ -55,6 +56,7 @@ type
     procedure SignalsLVClick(Sender: TObject);
     procedure YScaleSEChange(Sender: TObject);
     procedure ShiftSEChange(Sender: TObject);
+    procedure cChart1RBtnClick(Sender: TObject);
   public
     cs: TRTLCriticalSection;
     // развертка X
@@ -72,6 +74,7 @@ type
     fAxCfgCount:integer;
     m_axCfg:array of TAxCfg;
   protected
+    // происходит когда все плагины загружены
     procedure OnRecorderInit;
     procedure TestConfig;
     procedure showsignalsinLV;
@@ -268,6 +271,15 @@ begin
   end;
 end;
 
+procedure TGraphFrm.cChart1RBtnClick(Sender: TObject);
+begin
+  EditGraphFrm.editFrm(self);
+  if EditGraphFrm.ShowModal=mrok then
+  begin
+
+  end;
+end;
+
 procedure TGraphFrm.clear;
 var
   I: Integer;
@@ -332,8 +344,6 @@ procedure TGraphFrm.ExitCS;
 begin
   LeaveCriticalSection(cs);
 end;
-
-
 
 function TGraphFrm.getSignal(S: string): cGraphTag;
 var
@@ -409,7 +419,8 @@ var
   a:caxis;
 begin
   // загрузка осей
-  AxCount:= a_pIni.ReadInteger(str, 'AxCount', 1);
+  AxCount:= a_pIni.ReadInteger(str, 'AxCount', 0);
+  if AxCount=0 then exit;
   for I := 0 to AxCount - 1 do
   begin
     s1:= a_pIni.ReadString(str, 'Ax_'+inttostr(i), '');

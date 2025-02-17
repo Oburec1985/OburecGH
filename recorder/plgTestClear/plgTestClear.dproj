@@ -100,6 +100,9 @@
 			<DCCReference Include="forms\uGrapfForm.pas">
 				<Form>GraphFrm</Form>
 			</DCCReference>
+			<DCCReference Include="forms\uEditGraphFrm.pas">
+				<Form>EditGraphFrm</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
