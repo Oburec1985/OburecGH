@@ -41,6 +41,7 @@ type
     // список 2d точек отсортированный по x
     points: cFloatVectorList;
   protected
+    procedure CompileLineLgShader;override;
     procedure evalDrawPointsList; override;
     procedure createEvents; override;
     procedure DeleteEvents; override;
@@ -271,6 +272,52 @@ begin
   end;
 end;
 
+
+procedure cTrend.CompileLineLgShader;
+var
+  I: Integer;
+  range, lgRange, lgMax, lgMin, y,xrange, xlgRange,
+  xlgMin, x, rate, l_xlgMax:double;
+  p:cpage;
+  a:caxis;
+  b:boolean;
+  bp, prev:cbeziepoint;
+begin
+  a:=caxis(parent);
+  p:=cpage(getpage);
+  if a.max.y<=0 then
+  begin
+    exit;
+  end;
+  if DisplayListName<>0 then
+  begin
+    glDeleteLists(DisplayListName, 1);
+    DisplayListName:=0;
+  end;
+  // подготовка к компил€ции списка
+  DisplayListName:=glGenLists( 1 );
+  glNewList(DisplayListName, GL_COMPILE);
+  /// шейдерный логарифм
+  b:=a.Lg or p.LgX;
+  if b then
+    SetLgShaderData;
+  glbegin(GL_LINE_STRIP);
+  for I := 0 to Count - 1 do
+  begin
+    bp:=getPoint(i);
+    if (bp.PType=ptNullPoly) and (i>0) then
+    begin
+      prev:=getPoint(i-1);
+      glVertex2f(bp.point.x, prev.point.y);
+    end;
+    glVertex2f(bp.point.x, bp.point.y);
+  end;
+  glend;
+  if b then
+    SwitchLgProg(false, nil);
+  glEndList;
+end;
+
 procedure cTrend.evalDrawPointsList;
 var
   bp: cBeziePoint;
@@ -484,23 +531,6 @@ Begin
     if len = 0 then
       exit;
     glCallList(drawPointsCallList);
-    { red.x:=1; red.y:=0; red.z:=0;
-      // ќпределение цветов рисуемых точек
-      if selected.Count=0 then
-      glColor3fv(@pointcolor)
-      else
-      begin
-      glEnableClientState(GL_Color_ARRAY);
-      glColorPointer(3, GL_FLOAT, 0,@colors[0]);
-      end;
-      glEnableClientState(GL_VERTEX_ARRAY) ;
-      glVertexPointer(2, GL_FLOAT, 0,@drawArray[0]);
-      glDrawArrays(GL_Points,0,len);
-      glDisableClientState(GL_VERTEX_ARRAY);
-      if selected.Count<>0 then
-      begin
-      glDisableClientState(GL_Color_ARRAY);
-      end; }
   end;
   // отрисовка ближайшей точки
   if false then
@@ -1355,6 +1385,7 @@ begin
   evalDrawPoints;
   inherited;
 end;
+
 
 function cTrend.GetT0: single;
 begin

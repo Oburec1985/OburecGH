@@ -13,7 +13,7 @@ uses
   //uBuffTrend1d,
   tags,
   uEditGraphFrm,
-  PluginClass, ImgList, Menus, uChart, uSpin;
+  PluginClass, ImgList, Menus, uChart, uSpin, uRcCtrls;
 
 type
   TAxCfg = record
@@ -52,6 +52,10 @@ type
     Splitter1: TSplitter;
     ShiftSE: TFloatSpinEdit;
     ShiftLabel: TLabel;
+    TrigCB: TRcComboBox;
+    TrigCbox: TCheckBox;
+    TrigFE: TFloatSpinEdit;
+    TrigLvlLabel: TLabel;
     procedure XScaleSEChange(Sender: TObject);
     procedure SignalsLVClick(Sender: TObject);
     procedure YScaleSEChange(Sender: TObject);
@@ -60,6 +64,7 @@ type
     procedure XScaleSEKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure YScaleSEDownClick(Sender: TObject);
+    procedure TrigCBChange(Sender: TObject);
   public
     cs: TRTLCriticalSection;
     // развертка X
@@ -398,6 +403,8 @@ begin
   r.TopRight.x:=0.3;
   r.TopRight.y:=10;
   cpage(cChart1.activePage).ZoomfRect(r);
+  // заполнить комбо бокс тегами
+  trigcb.updateTagsList(true);
 end;
 
 procedure TGraphFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -420,6 +427,9 @@ begin
     s1:=s.ToStr;
     a_pIni.WriteString(str, 'Tag_'+inttostr(i), s1);
   end;
+  a_pIni.WriteString(str, 'TrigTag', TrigCB.Text);
+  a_pIni.WriteBool(str, 'TrigEnabled', TrigCBox.Checked);
+  a_pIni.WriteFloat(str, 'TrigLvl', TrigFE.Value);
 end;
 
 procedure TGraphFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -458,6 +468,9 @@ begin
     addSignal(s);
   end;
   showsignalsinLV;
+  TrigCB.Text:=a_pIni.ReadString(str, 'TrigTag', '');
+  TrigCBox.Checked:=a_pIni.ReadBool(str, 'TrigEnabled', false);
+  TrigFE.Value:=a_pIni.ReadFloat(str, 'TrigLvl', 1);
 end;
 
 
@@ -640,6 +653,11 @@ begin
   r.BottomLeft.x:=0;
   r.BottomLeft.x:=m_xScale;
   a.ZoomfRect(r);
+end;
+
+procedure TGraphFrm.TrigCBChange(Sender: TObject);
+begin
+  setComboBoxItem(TrigCB.Text, tcombobox(Sender));
 end;
 
 function TGraphFrm.TryEnterCS: boolean;

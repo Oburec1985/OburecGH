@@ -23,7 +23,8 @@ type
   public
     function gettag(i:integer):itag; overload;
     function gettag:itag; overload;
-    procedure updateTagsList;
+    procedure updateTagsList;overload;
+    procedure updateTagsList(vector:boolean);overload;
     procedure SetTagName(s:string);
   end;
 
@@ -103,6 +104,8 @@ begin
   setComboBoxItem(s,tcombobox(self));
 end;
 
+
+
 procedure TRcComboBox.DragOver(Source: TObject; X, Y: Integer;
                       State: TDragState; var Accept: Boolean);
 var
@@ -153,6 +156,21 @@ begin
     tagsToCB(ir, self);
   end;
   setComboBoxItem(str,tcombobox(self));
+end;
+
+procedure TRcComboBox.updateTagsList(vector: boolean);
+var
+  str:string;
+  ir:irecorder;
+begin
+  str:=text;
+  ir:=getIR;
+  Clear;
+  if ir<>nil then
+  begin
+    tagsToCB(ir, self, vector);
+  end;
+  setComboBoxItem(str, tcombobox(self));
 end;
 
 //procedure TRcComboBox.WndProc(var Message: TMessage);

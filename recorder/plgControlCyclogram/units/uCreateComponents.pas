@@ -299,6 +299,10 @@ begin
     ModesTabForm.LinkMng(g_conmng);
   end;
 
+  SpmThresholdProfileFrm:=TSpmThresholdProfileFrm.create(nil);
+  SpmThresholdProfileFrm.show;
+  SpmThresholdProfileFrm.close;
+
   DownloadRegsFrm := TDownloadRegsFrm.Create(nil);
   if show then
     DownloadRegsFrm.show;
@@ -638,7 +642,6 @@ begin
   g_PressCamFactory2 := cPressCamFactory2.Create;
   compMng.Add(g_PressCamFactory2);
   PressFrmEdit2 := TPressFrmEdit2.Create(nil);
-  SpmThresholdProfileFrm:=TSpmThresholdProfileFrm.create(nil);
 
   g_DigsFrmFactory := cDigsFrmFactory.Create;
   compMng.Add(g_DigsFrmFactory);

@@ -724,7 +724,7 @@ var
   v: OleVariant;
 begin
   t.GetProperty(TAGPROP_TYPE, v);
-  result := TTAG_SCALAR and v;
+  result := TTAG_VECTOR and v;
 end;
 
 function isScalar(t: itag): boolean;

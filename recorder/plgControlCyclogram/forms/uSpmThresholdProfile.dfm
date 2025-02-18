@@ -202,7 +202,6 @@ object SpmThresholdProfileFrm: TSpmThresholdProfileFrm
       showTV = False
       showLegend = False
       selectSize = 5
-      ExplicitLeft = 3
     end
   end
   object SGPic: TImageList

@@ -185,7 +185,7 @@ begin
   SGChange(ProfileSG);
   ProfileSG.ColWidths[c_Col_Bmp] := 60;
   showTrend;
-  showmodal;
+  show;
 end;
 
 function TSpmThresholdProfileFrm.EmptyRow(sg: tstringgrid; r: Integer): Boolean;
@@ -254,6 +254,8 @@ var
   I: Integer;
   p: cBeziePoint;
 begin
+  if m_prof=nil then exit;
+  
   if m_tProf<>nil then
   begin
     // отображаем тренд

@@ -2,7 +2,7 @@ object GraphFrm: TGraphFrm
   Left = 0
   Top = 0
   Caption = 'GraphFrm'
-  ClientHeight = 316
+  ClientHeight = 389
   ClientWidth = 810
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,7 +17,7 @@ object GraphFrm: TGraphFrm
     Left = 582
     Top = 0
     Width = 2
-    Height = 316
+    Height = 389
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -32,7 +32,7 @@ object GraphFrm: TGraphFrm
     Left = 584
     Top = 0
     Width = 226
-    Height = 316
+    Height = 389
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -46,9 +46,10 @@ object GraphFrm: TGraphFrm
     Font.Style = []
     ParentFont = False
     TabOrder = 0
+    ExplicitLeft = 586
     object XScaleLabel: TLabel
-      Left = 85
-      Top = 25
+      Left = 89
+      Top = 32
       Width = 84
       Height = 18
       Caption = #1056#1072#1079#1074#1077#1088#1090#1082#1072' X'
@@ -68,7 +69,7 @@ object GraphFrm: TGraphFrm
     end
     object Splitter1: TSplitter
       Left = 2
-      Top = 172
+      Top = 245
       Width = 222
       Height = 3
       Cursor = crVSplit
@@ -83,8 +84,21 @@ object GraphFrm: TGraphFrm
       ExplicitWidth = 169
     end
     object ShiftLabel: TLabel
-      Left = 85
-      Top = 101
+      Left = 89
+      Top = 100
+      Width = 72
+      Height = 17
+      Caption = #1057#1084#1077#1097#1077#1085#1080#1077
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -15
+      Font.Name = 'YScaleLabel'
+      Font.Style = []
+      ParentFont = False
+    end
+    object TrigLvlLabel: TLabel
+      Left = 89
+      Top = 166
       Width = 72
       Height = 17
       Caption = #1057#1084#1077#1097#1077#1085#1080#1077
@@ -97,7 +111,7 @@ object GraphFrm: TGraphFrm
     end
     object SignalsLV: TBtnListView
       Left = 2
-      Top = 175
+      Top = 248
       Width = 222
       Height = 139
       Margins.Left = 2
@@ -135,6 +149,7 @@ object GraphFrm: TGraphFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
+      ExplicitTop = 175
     end
     object XScaleSE: TFloatSpinEdit
       Left = 5
@@ -158,7 +173,7 @@ object GraphFrm: TGraphFrm
       OnDownClick = YScaleSEDownClick
     end
     object ShiftSE: TFloatSpinEdit
-      Left = 7
+      Left = 5
       Top = 97
       Width = 78
       Height = 28
@@ -166,12 +181,38 @@ object GraphFrm: TGraphFrm
       TabOrder = 3
       OnChange = ShiftSEChange
     end
+    object TrigCB: TRcComboBox
+      Left = 5
+      Top = 131
+      Width = 126
+      Height = 26
+      TabOrder = 4
+      Text = 'TrigCB'
+      OnChange = TrigCBChange
+    end
+    object TrigCbox: TCheckBox
+      Left = 137
+      Top = 135
+      Width = 97
+      Height = 17
+      Caption = #1058#1088#1080#1075#1075#1077#1088
+      TabOrder = 5
+    end
+    object TrigFE: TFloatSpinEdit
+      Left = 5
+      Top = 162
+      Width = 78
+      Height = 28
+      Increment = 0.100000000000000000
+      TabOrder = 6
+      OnChange = ShiftSEChange
+    end
   end
   object cChart1: cChart
     Left = 0
     Top = 0
     Width = 582
-    Height = 316
+    Height = 389
     Cursor = crSizeAll
     Margins.Left = 2
     Margins.Top = 2
@@ -186,6 +227,7 @@ object GraphFrm: TGraphFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitHeight = 316
   end
   object ImageList_16: TImageList
     Left = 80
