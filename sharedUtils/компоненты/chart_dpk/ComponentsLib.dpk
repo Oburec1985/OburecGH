@@ -39,7 +39,6 @@ requires
   glPackage,
   VclSmp;
 
-
 contains
   uChart in 'chart\uChart.pas',
   uPoint in 'chart\items\uPoint.pas',
@@ -97,7 +96,8 @@ contains
   uFreqBand in 'chart\items\uFreqBand.pas',
   uPolarGraphPage in 'chart\items\uPolarGraphPage.pas',
   uShader in '..\..\ogl\shader\uShader.pas',
-  uLineLgShader in 'chart\items\shaders\uLineLgShader.pas';
+  uLineLgShader in 'chart\items\shaders\uLineLgShader.pas',
+  uYCursor in 'chart\items\uYCursor.pas';
 
 end.
 

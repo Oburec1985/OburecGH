@@ -71,12 +71,18 @@ type
     m_xScale:double;
     // список сигналов
     m_slist:tstringlist;
+
+    m_trig:ctag;
+    // находимс€ ниже трига
+    m_lostate:boolean;
   protected
     m_updateGraph:boolean;
     // обновл€етс€ на кажд итерации UpdateData
     m_comInterv:point2d;
+
     // обновл€етс€ в UpdateData
     m_updateDrawInterval:boolean;
+
     // настройки осей
     fAxCfgCapacity:integer;
     fAxCfgCount:integer;
@@ -92,16 +98,19 @@ type
     procedure doStart;override;
     procedure updatedata;override;
     procedure updateView;
+    function SearchTrig(t: cTag; p_threshold: double;
+      var p_interval: point2d): boolean;
 
     procedure InitCS;
     procedure DeleteCS;
     function  TryEnterCS:boolean;
     procedure EnterCS;
     procedure ExitCS;
+
     function AxCfgToStr(i:integer):string;
     function StrToAxCfg(s:string):TAxCfg;
-  protected
     procedure setAxCount(c:integer);
+    procedure addaxis(a:caxis);
   public
     function getSignal(i:integer):cGraphTag;overload;
     function getSignal(S:string):cGraphTag;overload;
@@ -185,11 +194,17 @@ function TGraphFrm.addSignal(s: string; ax:caxis):cGraphTag;
 var
   t:cGraphTag;
   f:ulong;
+  ind:integer;
 begin
   t:=cGraphTag.create;
   t.m_axisName:=ax.name;
   t.m_t.tagname:=s;
   m_slist.AddObject(s, t);
+  ind:=axInd(t);
+  if ind=-1 then
+  begin
+    addaxis(ax);
+  end;
   result:=t;
   if ax<>nil then
   begin
@@ -217,6 +232,13 @@ begin
 end;
 
 // scale; shift
+procedure TGraphFrm.addaxis(a: caxis);
+begin
+  m_axCfg[AxCount].ax:=a;
+  m_axCfg[AxCount].name:=a.name;
+  AxCount:=AxCount+1;
+end;
+
 function TGraphFrm.addSignal(s: cGraphTag): cGraphTag;
 var
   l_ax:caxis;
@@ -239,9 +261,12 @@ begin
         s.UpdateTag;
       end;
       // «адать маску оценок оценок
-      f:=s.m_t.tag.GetEstimatorsMask;
-      setflag(f, ESTIMATOR_PEAK+ESTIMATOR_RMSD);
-      s.m_t.tag.SetEstimatorsMask(f);
+      if s.m_t.tag<>nil then
+      begin
+        f:=s.m_t.tag.GetEstimatorsMask;
+        setflag(f, ESTIMATOR_PEAK+ESTIMATOR_RMSD);
+        s.m_t.tag.SetEstimatorsMask(f);
+      end;
     end;
   end;
 end;
@@ -312,6 +337,8 @@ end;
 constructor TGraphFrm.create(Aowner: tcomponent);
 begin
   inherited;
+  m_trig:=cTag.create;
+
   m_slist:=TStringList.Create;
   // установка оси поумолчанию
   fAxCfgCapacity:=10;
@@ -323,6 +350,11 @@ end;
 
 destructor TGraphFrm.destroy;
 begin
+  m_trig.destroy;
+
+  clear;
+  m_slist.Destroy;
+
   DeleteCS;
   inherited;
 end;
@@ -334,6 +366,7 @@ var
 begin
   m_comInterv.x:=0;
   m_comInterv.y:=0;
+  m_lostate:=true;
   for I := 0 to m_slist.Count - 1 do
   begin
     t:=getSignal(i);
@@ -391,6 +424,8 @@ end;
 procedure TGraphFrm.OnRecorderInit;
 var
   r:frect;
+  I: Integer;
+  s:cGraphTag;
 begin
   SignalsLV.DrawColorBox:=true;
   SignalsLV.getcolor:=fgetcolor;
@@ -405,6 +440,12 @@ begin
   cpage(cChart1.activePage).ZoomfRect(r);
   // заполнить комбо бокс тегами
   trigcb.updateTagsList(true);
+  // инициаци€ тегов
+  for I := 0 to m_slist.Count - 1 do
+  begin
+    s:=getSignal(i);
+    s.m_t.doOnStart
+  end;
 end;
 
 procedure TGraphFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -440,6 +481,7 @@ var
   a:caxis;
 begin
   // загрузка осей
+  //exit;
   AxCount:= a_pIni.ReadInteger(str, 'AxCount', 0);
   if AxCount=0 then exit;
   for I := 0 to AxCount - 1 do
@@ -656,8 +698,15 @@ begin
 end;
 
 procedure TGraphFrm.TrigCBChange(Sender: TObject);
+var
+  t:itag;
 begin
   setComboBoxItem(TrigCB.Text, tcombobox(Sender));
+  t:=TrigCB.gettag();
+  if t<>nil then
+  begin
+    m_trig.tag:=t;
+  end;
 end;
 
 function TGraphFrm.TryEnterCS: boolean;
@@ -668,10 +717,13 @@ end;
 procedure TGraphFrm.updatedata;
 var
   s: cGraphTag;
+  trigTag, t:ctag;
+  it:itag;
   i, j: integer;
   // интервал графика который будет нарисован
   interval: point2d;
   v, prev: double;
+  b:boolean;
 begin
   if m_slist.count=0 then exit;
 
@@ -692,11 +744,59 @@ begin
     end;
     // защита m_xScale
     entercs;
-    // подрезаем интервал по длине кадра
-    if (m_comInterv.y-m_xScale)>m_comInterv.x then
-      m_comInterv.x:=m_comInterv.y-m_xScale;
+    if TrigCbox.Checked and (TrigCB.ItemIndex<>-1) then
+    begin
+      b:=false;
+      if m_trig.UpdateTagData(false) then
+      begin
+        // данные триггера обновились
+        b:=true;
+      end;
+      SearchTrig(t, TrigFE.Value, interval);
+      m_comInterv:=interval;
+    end
+    else
+    begin
+      // подрезаем интервал по длине кадра
+      if (m_comInterv.y-m_xScale)>m_comInterv.x then
+        m_comInterv.x:=m_comInterv.y-m_xScale;
+    end;
     exitcs;
   end;
+end;
+
+function TGraphFrm.SearchTrig(t: cTag; p_threshold: double;
+  var p_interval: point2d): boolean;
+var
+  TrigTime, v, prev: double;
+  i, imin: integer;
+  TrigRes:boolean;
+begin
+  for i := 1 to t.lastindex - 1 do
+  begin
+    v := t.m_ReadData[i];
+    if m_lostate then
+    begin
+      // rise
+      if v>p_threshold then
+      begin
+        TrigTime:= t.getReadTime(i);
+        TrigRes:= true;
+        m_lostate:=false;
+        p_interval.x:=TrigTime;
+        p_interval.y:=TrigTime+m_xScale;
+        break;
+      end;
+    end
+    else
+    begin
+      if v<p_threshold then
+      begin
+        m_lostate:=false;
+      end;
+    end
+  end;
+  result:=TrigRes;
 end;
 
 procedure TGraphFrm.updateView;

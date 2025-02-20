@@ -256,6 +256,8 @@ begin
 
   ax:=nil;
   page:=cObjFrListener(data).curpage;
+  // координаты m_p в нормализованных координатах страницы -1..1
+  // координаты страницы или вьюпорта???
   fp:=cObjFrListener(data).m_fp;
 
   if obj.parent<>page then

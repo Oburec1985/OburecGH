@@ -9,6 +9,7 @@ uses
   complex,
   uHardwareMath,
   uFFT,
+  uYCursor,
   performancetime, nativexml, ucommonmath, uCommonTypes,
   fft, fht, Ap, DCL_MYOWN, ComCtrls, ExtCtrls, uChart, utrend, upage, uaxis, uBuffTrend1d;
 
@@ -138,6 +139,7 @@ var
   i, j:integer;
   t:cBuffTrend1d;
   a:caxis;
+  curs:cYCursor;
 begin
   GetMemAlignedArray_d(fcount, AlignedSampl);
   GetMemAlignedArray_d(fcount, AlignedSampl2);
@@ -173,6 +175,8 @@ begin
   cpage(cChart1.activePage).Normalise;
   cpage(cChart1.activePage).cursor.visible:=true;
   cpage(cChart1.activePage).cursor.setx1(100);
+  curs:=cYCursor.create;
+  cChart1.activePage.AddChild(curs);
 end;
 
 

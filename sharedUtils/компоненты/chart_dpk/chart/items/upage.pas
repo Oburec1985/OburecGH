@@ -879,7 +879,8 @@ begin
   result.y := range * (x.y / m_viewport[2]) + axis.min.x;
 end;
 
-// Узнать размер пикселя в координатах тренда
+// Узнать размер пикселя в координатах тренда если axis<>nil
+// если axis = nil то в координатах вьюпорта -1...1
 function cPage.PixelSizeToTrend(p: TPoint; axis: caxis): point2;
 var
   lp2d: point2d;

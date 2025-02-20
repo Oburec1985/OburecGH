@@ -146,6 +146,7 @@
     <Transaction>2018.09.26 22:23:46.290.pas,G:\oburec\project2010\2011\sharedUtils\math\MathFunction.pas=</Transaction>
     <Transaction>2019.01.28 18:36:51.696.pas,D:\Oburec\delphi\2011\sharedUtils\компоненты\chart_dpk\Unit1.pas=D:\Oburec\delphi\2011\sharedUtils\компоненты\chart_dpk\chart\items\uFreqBand.pas</Transaction>
     <Transaction>2019.02.15 16:55:01.545.pas,D:\Oburec\delphi\2011\sharedUtils\компоненты\chart_dpk\Unit1.pas=D:\Oburec\delphi\2011\sharedUtils\компоненты\chart_dpk\chart\items\uPolarGraphPage.pas</Transaction>
+    <Transaction>2025.02.20 19:11:42.814.pas,F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\Unit1.pas=F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\items\uYCursor.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\..\sharedUtils"/>
@@ -232,6 +233,7 @@
     <File Path="chart\items\uPolarGraphPage.pas"/>
     <File Path="chart\items\uTextLabel.pas"/>
     <File Path="chart\items\uTrend.pas"/>
+    <File Path="chart\items\uYCursor.pas"/>
     <File Path="chart\utils"/>
     <File Path="chart\utils\lists"/>
     <File Path="chart\utils\lists\uChartEvents.pas"/>
