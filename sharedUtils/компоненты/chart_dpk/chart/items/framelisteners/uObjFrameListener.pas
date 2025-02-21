@@ -3,7 +3,8 @@ unit uObjFrameListener;
 
 interface
 uses
-  uFrameListener, messages, classes, windows, uCommonTypes, uPage, uTrend, uAxis,
+  uFrameListener, messages, sysutils,
+  classes, windows, uCommonTypes, uPage, uTrend, uAxis,
   uPoint, uCommonMath, types, opengl, uOglExpFunc, uChartEvents, udrawobj,
   ucursors, controls, uMarkers, usimpleobjects, uBasePage, uBaseObj;
 
@@ -270,14 +271,15 @@ begin
 
   bound:=cDrawObj(obj).getbound;
   chart:=cchart(cObjFrListener(data).data);
+  //cpage(page).Caption:=floattostr(fp.x)+';'+floattostr(fp.y);
   dist:=cpage(page).PixelSizeToTrend(point(chart.selectSize,chart.selectSize),ax);
   if bound.BottomLeft.x-dist.x<fp.x then
   begin
     if bound.topright.x+dist.x>fp.x then
     begin
-      if bound.BottomLeft.y-dist.y<fp.y then
+      if abs(bound.BottomLeft.y-fp.y)<dist.y then
       begin
-        if bound.topright.y+dist.y>fp.y then
+        //if bound.topright.y+dist.y>fp.y then
         begin
           if cMoveObj(obj).selectable then
           begin
@@ -306,7 +308,8 @@ begin
   curpage:=cchart(data).activepage;
   // координаты на чарте
   m_p:=p;
-  m_fp:=curpage.p2iTop2(p, curpage.m_view, false);
+  // замена false на true от 21.02.25
+  m_fp:=curpage.p2iTop2(p, curpage.m_view, true);
   curpage.EnumGroupMembers(OverObjEnumerator, self);
   result:=m_OverObj;
 end;

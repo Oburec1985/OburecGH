@@ -75,6 +75,7 @@ type
     // переводит пиксельную точку в нормализованные координаты чарта
     function p2iTop2(p:tpoint):point2;overload;
     // localViewport - true если вьюпорт учитывающий поля
+    function p2iTop2(p:tpoint; localViewport:boolean):point2;overload;
     function p2iTop2(p:tpoint; const view:array of double; localViewport:boolean):point2;overload;
     //скармливаются нормализованные координаты чарта
     function p2ToP2i(p:point2):tpoint;
@@ -298,6 +299,28 @@ begin
   res.x:=p.x*2/getWidth-1;
   res.y:=p.y*2/getheight-1;
   result:=res;
+end;
+
+function cBasePage.p2iTop2(p:tpoint; localViewport:boolean):point2;
+var res:point2;
+    width,height:glFloat;
+begin
+  if not localViewport then
+  begin
+    p.x:=p.x - bound.Left;
+    p.y:=p.y - bound.bottom;
+    res.x:=p.x*2/getWidth-1;
+    res.y:=p.y*2/getheight-1;
+    result:=res;
+  end
+  else
+  begin
+    p.x:=p.x - bound.Left-m_pixelTabSpace.Left;
+    p.y:=p.y - bound.bottom - bound.Left-m_pixelTabSpace.Bottom;
+    res.x:=p.x*2/getWidth-1;
+    res.y:=p.y*2/getheight-1;
+    result:=res;
+  end;
 end;
 
 function cBasePage.p2iTop2(p:tpoint; const view:array of double; localViewport:boolean):point2;
