@@ -336,6 +336,8 @@
     <File Path="forms\uPressFrmEdit.dfm"/>
     <File Path="forms\uPressFrmFrame.pas"/>
     <File Path="forms\uPressFrmFrame.dfm"/>
+    <File Path="forms\uSpmThresholdProfile.pas"/>
+    <File Path="forms\uSpmThresholdProfile.dfm"/>
     <File Path="forms\uEditCurveFrm.pas"/>
     <File Path="forms\uEditCurveFrm.dfm"/>
     <File Path="forms\uSpmChart.pas"/>
@@ -368,8 +370,6 @@
     <File Path="forms\uLissajousCurve.dfm"/>
     <File Path="forms\ulissajousCurveEdit.pas"/>
     <File Path="forms\ulissajousCurveEdit.dfm"/>
-    <File Path="forms\uSpmThresholdProfile.pas"/>
-    <File Path="forms\uSpmThresholdProfile.dfm"/>
     <File Path="units"/>
     <File Path="units\u3dMoveEngine.pas"/>
     <File Path="units\uAriphmAlg.pas"/>

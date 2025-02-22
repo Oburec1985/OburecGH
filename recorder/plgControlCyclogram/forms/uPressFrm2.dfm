@@ -23,7 +23,6 @@ object PressFrm2: TPressFrm2
     Align = alClient
     Caption = #1055#1086#1083#1086#1089#1072' '#8470
     TabOrder = 0
-    ExplicitHeight = 465
     object ScrollBox1: TScrollBox
       Left = 2
       Top = 15
@@ -35,7 +34,6 @@ object PressFrm2: TPressFrm2
       Margins.Bottom = 2
       Align = alClient
       TabOrder = 0
-      ExplicitHeight = 330
       object BarPanel: TPanel
         Left = 0
         Top = 0
@@ -133,7 +131,6 @@ object PressFrm2: TPressFrm2
       ParentShowHint = False
       ShowHint = True
       TabOrder = 1
-      ExplicitTop = 345
       object MaxLabel: TLabel
         Left = 2
         Top = 8

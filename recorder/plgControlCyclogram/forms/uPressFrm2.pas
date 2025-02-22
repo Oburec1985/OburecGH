@@ -783,6 +783,8 @@ var
   j, k:integer;
   b:boolean;
   g:TThresholdGroup;
+  a:TAlarms;
+  AlarmData:PDataRec;
   pTag:PTagRec;
   str:string;
   v:double;
@@ -821,7 +823,13 @@ begin
       else
       begin
         // добавляем алармы по каждому из тегов
-        m_Thresholds.addtag(pTag.m_bandTags[k],b);
+        a:=m_Thresholds.addtag(pTag.m_bandTags[k],b);
+        AlarmData:=m_Thresholds.AlarmData;
+        AlarmData.outRangeCol:=clRed;
+        AlarmData.HHCol:=clWebOrange;
+        AlarmData.HCol:=clYellow;
+        AlarmData.LLCol:=clWebOrange;
+        AlarmData.LCol:=clYellow;
       end;
     end;
   end;
@@ -1019,31 +1027,40 @@ procedure cPressCamFactory2.doOnAlarm(sender: tobject);
 var
   I, j, k: Integer;
   a:talarms;
-  h,hh:boolean;
+  h, hh, emerg:boolean;
   t:PTagRec;
   g:TThresholdGroup;
 begin
   h:=false;
   hh:=false;
+  emerg:=false;
   for I := 0 to m_Thresholds.AlarmList.Count - 1 do
   begin
     a:=m_Thresholds.GetAlarm(i);
     //t:=g_PressCamFactory2.getTag(a.t.tagname);
-    if not h then
+    if a.m_OutRange then
     begin
-      if a.activeA=a.m_a_h then
+      emerg:=true;
+    end;
+    if not a.m_OutRange then
+    begin
+      if not h then
       begin
-        h:=true;
+        if a.activeA=a.m_a_h then
+        begin
+          h:=true;
+        end;
+      end;
+      if not hh then
+      begin
+        if a.activeA=a.m_a_hh then
+        begin
+          hh:=true;
+        end;
       end;
     end;
-    if not hh then
-    begin
-      if a.activeA=a.m_a_hh then
-      begin
-        hh:=true;
-      end;
-    end;
-    if (h=true) and (hh=true) then
+
+    if (h=true) and (hh=true) and (emerg=true) then
       break;
   end;
   if m_Thresholds.m_useSubGroups then
@@ -1090,6 +1107,13 @@ begin
         m_AlarmTagHH.tag.PushValue(1,-1)
       else
         m_AlarmTagHH.tag.PushValue(0,-1);
+    end;
+    if m_AlarmTag<>nil then
+    begin
+      if emerg then
+        m_AlarmTag.tag.PushValue(1,-1)
+      else
+        m_AlarmTag.tag.PushValue(0,-1);
     end;
   end;
 end;
@@ -1143,6 +1167,7 @@ var
   alarmdata:PDataRec;
   changealarm:boolean;
   s:string;
+  doAlarm:boolean;
 begin
   // if g_disableFRF then
   // exit;
@@ -1223,17 +1248,23 @@ begin
           changealarm:=true;
           if m_useAlarms then
           begin
-            if m_AlarmTag.tag<>nil then
-              m_AlarmTag.tag.PushValue(1,-1);
+            doAlarm:=true;
+            doOnAlarm(nil);
           end;
         end
         else
         begin
-          a.m_OutRange:=false;
+          if a.m_OutRange then
+          begin
+            a.m_OutRange:=false;
+            doAlarm:=true;
+          end;
         end;
       end;
     end;
   end;
+  if doAlarm then
+    doOnAlarm(nil);
   if not changeAlarm then
   begin
     if m_AlarmTag.tag<>nil then
