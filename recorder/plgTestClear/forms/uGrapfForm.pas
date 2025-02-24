@@ -327,16 +327,28 @@ end;
 
 procedure TGraphFrm.cChart1MouseZoom(Sender: TObject; UpScale: Boolean);
 var
-  A:caxis;
   p:TNotifyEvent;
+  s:cGraphTag;
+  i:integer;
 begin
   if UpScale then
   BEGIN
-    a:=cpage(cchart1.activePage).activeAxis;
-    p:=shiftse.OnChange;
-    shiftse.OnChange:=nil;
-    shiftse.Value:=(a.maxY+a.minY)/2;
-    shiftse.OnChange:=p;
+    s:=ActiveSignal;
+    if s<>nil then
+    begin
+      shiftse.OnChange:=nil;
+      shiftse.Value:=s.m_t.GetMeanEst;
+      shiftse.OnChange:=p;
+      i:=axInd(s);
+      m_axCfg[i].shift:=shiftse.Value;
+      p:=YScaleSE.OnChange;
+      YScaleSE.OnChange:=nil;
+      YScaleSE.Value:=(s.axis.maxY-s.axis.minY)/cpage(cChart1.activePage).gridlinecount_Y;
+      YScaleSE.OnChange:=p;
+      f_ActiveAxisInd:=i;
+      f_changeAx:=true;
+
+    end;
   END;
 end;
 
@@ -642,8 +654,11 @@ var
   I: Integer;
   p:TNotifyEvent;
   li:tlistitem;
+  page:cpage;
 begin
   s := ActiveSignal;
+  page:=cpage(cChart1.activePage);
+  page.activeAxis:=s.axis;
   i:=axInd(s);
   if i>-1 then
   begin
@@ -651,6 +666,11 @@ begin
     YScaleSE.OnChange:=nil;
     YScaleSE.Value:=m_axcfg[i].scale;
     YScaleSE.OnChange:=p;
+
+    p:=YScaleSE.OnChange;
+    ShiftSE.OnChange:=nil;
+    ShiftSE.Value:=m_axcfg[i].shift;
+    ShiftSE.OnChange:=p;
   end;
   for I := 0 to SignalsLV.Items.Count - 1 do
   begin

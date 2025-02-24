@@ -1142,8 +1142,8 @@ END
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
 /* ..\SharedRUnits\uTagsListFrame.dfm */
-/* C:\Oburec\OburecGH\recorder\plgTestClear\forms\uEditGraphFrm.dfm */
-/* forms\uGrapfForm.dfm */
+/* C:\Oburec\OburecGH\recorder\plgTestClear\forms\uGrapfForm.dfm */
+/* forms\uEditGraphFrm.dfm */
 /* ..\SharedRUnits\uFrmSync.dfm */
 /* forms\uExtFrm.dfm */
 /* ..\..\3d\forms\uSelectLoadedObjects.dfm */
