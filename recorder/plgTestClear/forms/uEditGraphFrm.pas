@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, uTagsListFrame, ExtCtrls, StdCtrls, VirtualTrees, uVTServices,
   ImgList,activex,
-  uAxis, upage, urcfunc,
+  uAxis, upage, urcfunc, udrawobj,
   ComCtrls,tags;
 
 type
@@ -24,6 +24,7 @@ type
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
     procedure NewAxBtnClick(Sender: TObject);
+    procedure TagsTVKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     m_f:tform;
   private
@@ -234,6 +235,49 @@ begin
   Accept := false;
   if Source = TagsListFrame1.TagsLV then
     Accept := true;
+end;
+
+procedure TEditGraphFrm.TagsTVKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  n, ch:PVirtualNode;
+  d, ch_d:PNodeData;
+  I: Integer;
+  s:cGraphTag;
+  a:caxis;
+  l:cdrawobj;
+begin
+  if key=VK_DELETE then
+  begin
+    n:=TagsTV.GetFirstSelected(false);
+    if n<>nil then
+    begin
+      d:=TagsTV.GetNodeData(n);
+      if tobject(d.data) is cGraphTag then
+      begin
+        cGraphTag(d.data).Destroy;
+        TagsTV.DeleteNode(n);
+      end;
+      if tobject(d.data) is cAxis then
+      begin
+        a:=caxis(d.data);
+        {for I := 0 to n.ChildCount - 1 do
+        begin
+          if i=0 then
+            ch:=tagstv.GetNext(n)
+          else
+            ch:=tagstv.GetNext(ch);
+          ch_d:=TagsTV.GetNodeData(CH);
+          if tobject(ch_d.data) is cGraphTag then
+          begin
+            cGraphTag(ch_d.data).Destroy;
+          end;
+        end;}
+        TGraphFrm(m_f).delaxis(a);
+        TagsTV.DeleteNode(n);
+      end;
+    end;
+  end;
 end;
 
 end.

@@ -2,153 +2,162 @@ object EditGraphFrm: TEditGraphFrm
   Left = 0
   Top = 0
   Caption = 'EditGraphFrm'
-  ClientHeight = 630
-  ClientWidth = 1214
+  ClientHeight = 482
+  ClientWidth = 928
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -14
+  Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 120
-  TextHeight = 17
+  PixelsPerInch = 96
+  TextHeight = 13
   inline TagsListFrame1: TTagsListFrame
-    Left = 858
+    Left = 656
     Top = 0
-    Width = 356
-    Height = 577
+    Width = 272
+    Height = 441
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alRight
     TabOrder = 0
-    ExplicitLeft = 858
-    ExplicitWidth = 356
-    ExplicitHeight = 577
+    ExplicitLeft = 656
+    ExplicitWidth = 272
+    ExplicitHeight = 441
     inherited FormChannelsGB: TGroupBox
-      Width = 356
-      Height = 577
-      ExplicitWidth = 356
-      ExplicitHeight = 577
+      Width = 272
+      Height = 441
+      Margins.Left = 3
+      Margins.Top = 3
+      Margins.Right = 3
+      Margins.Bottom = 3
+      ExplicitWidth = 272
+      ExplicitHeight = 441
       inherited ChanNamesPanel: TPanel
-        Top = 19
-        Width = 352
-        Height = 117
-        ExplicitTop = 19
-        ExplicitWidth = 352
-        ExplicitHeight = 117
+        Width = 268
+        Height = 89
+        Margins.Left = 3
+        Margins.Top = 3
+        Margins.Right = 3
+        Margins.Bottom = 3
+        ExplicitWidth = 268
+        ExplicitHeight = 89
         inherited FrmTagPropLabel: TLabel
-          Width = 62
-          Height = 17
-          ExplicitWidth = 62
-          ExplicitHeight = 17
+          Left = 4
+          Top = 44
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          ExplicitLeft = 4
+          ExplicitTop = 44
         end
         inherited FrmTagPropValue: TLabel
-          Left = 119
-          Top = 59
-          Width = 60
-          Height = 17
-          ExplicitLeft = 119
-          ExplicitTop = 59
-          ExplicitWidth = 60
-          ExplicitHeight = 17
+          Left = 91
+          Top = 45
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          ExplicitLeft = 91
+          ExplicitTop = 45
         end
         inherited FilterEdit: TEdit
-          Width = 336
-          Height = 25
-          ExplicitWidth = 336
-          ExplicitHeight = 25
+          Left = 4
+          Top = 6
+          Width = 257
+          Height = 21
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          ExplicitLeft = 4
+          ExplicitTop = 6
+          ExplicitWidth = 257
+          ExplicitHeight = 21
         end
         inherited FrmTagPropValueEdit: TEdit
-          Left = 119
-          Top = 81
-          Width = 184
-          Height = 25
-          ExplicitLeft = 119
-          ExplicitTop = 81
-          ExplicitWidth = 184
-          ExplicitHeight = 25
+          Left = 91
+          Top = 62
+          Width = 141
+          Height = 21
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          ExplicitLeft = 91
+          ExplicitTop = 62
+          ExplicitWidth = 141
+          ExplicitHeight = 21
         end
         inherited FrmTagPropNameCB: TComboBox
-          Top = 81
-          Width = 106
-          Height = 25
-          ExplicitTop = 81
-          ExplicitWidth = 106
-          ExplicitHeight = 25
-        end
-        inherited ShowScalarCB: TCheckBox
-          Left = 7
-          Top = 51
-          Width = 266
-          Height = 22
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
-          ExplicitLeft = 7
-          ExplicitTop = 51
-          ExplicitWidth = 266
-          ExplicitHeight = 22
+          Left = 4
+          Top = 62
+          Width = 81
+          Margins.Left = 3
+          Margins.Top = 3
+          Margins.Right = 3
+          Margins.Bottom = 3
+          ExplicitLeft = 4
+          ExplicitTop = 62
+          ExplicitWidth = 81
         end
       end
       inherited TagsLV: TBtnListView
-        Top = 136
-        Width = 352
-        Height = 439
+        Top = 104
+        Width = 268
+        Height = 335
+        Margins.Left = 3
+        Margins.Top = 3
+        Margins.Right = 3
+        Margins.Bottom = 3
         Columns = <
           item
             Caption = #1048#1084#1103
-            Width = 64
+            Width = 49
           end
           item
             Caption = #1058#1080#1087
-            Width = 64
+            Width = 49
           end
           item
             Caption = 'Fs'
+            Width = 38
           end>
-        ExplicitTop = 136
-        ExplicitWidth = 352
-        ExplicitHeight = 439
+        ExplicitTop = 104
+        ExplicitWidth = 268
+        ExplicitHeight = 335
       end
     end
   end
   object Panel1: TPanel
     Left = 0
-    Top = 577
-    Width = 1214
-    Height = 53
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Top = 441
+    Width = 928
+    Height = 41
     Align = alBottom
     TabOrder = 1
     DesignSize = (
-      1214
-      53)
+      928
+      41)
     object OkBtn: TButton
-      Left = 1104
-      Top = 5
-      Width = 98
-      Height = 33
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 844
+      Top = 4
+      Width = 75
+      Height = 25
       Anchors = [akTop, akRight]
       Caption = 'Ok'
       ModalResult = 1
       TabOrder = 0
     end
     object NewAxBtn: TButton
-      Left = 8
-      Top = 8
-      Width = 98
-      Height = 33
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 6
+      Top = 6
+      Width = 75
+      Height = 25
       Anchors = [akTop, akRight]
       Caption = 'NewAx'
       TabOrder = 1
@@ -158,12 +167,8 @@ object EditGraphFrm: TEditGraphFrm
   object TagsTV: TVTree
     Left = 0
     Top = 0
-    Width = 273
-    Height = 577
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Width = 209
+    Height = 441
     Align = alLeft
     Header.AutoSizeIndex = 0
     Header.Font.Charset = DEFAULT_CHARSET
@@ -178,6 +183,7 @@ object EditGraphFrm: TEditGraphFrm
     TreeOptions.SelectionOptions = [toMultiSelect]
     OnDragOver = TagsTVDragOver
     OnDragDrop = TagsTVDragDrop
+    OnKeyDown = TagsTVKeyDown
     Columns = <>
   end
   object ImageList_16: TImageList

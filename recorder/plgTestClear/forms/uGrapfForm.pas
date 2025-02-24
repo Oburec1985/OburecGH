@@ -8,7 +8,7 @@ uses
   uEventList, //udrawobj,
   uComponentservises, uEventTypes, ComCtrls, uBtnListView, recorder,
   ucommonmath, MathFunction, uMyMath, //uTag,
-  uaxis, upage, uBuffTrend1d,
+  uaxis, upage, uBuffTrend1d, uQueue,
   uRecorderEvents, ubaseObj, uCommonTypes, uRCFunc,
   //uBuffTrend1d,
   tags,
@@ -67,6 +67,7 @@ type
       Shift: TShiftState);
     procedure YScaleSEDownClick(Sender: TObject);
     procedure TrigCBChange(Sender: TObject);
+    procedure cChart1MouseZoom(Sender: TObject; UpScale: Boolean);
   public
     cs: TRTLCriticalSection;
     // развертка X
@@ -119,9 +120,11 @@ type
     procedure setAxCount(c:integer);
   public
     procedure addaxis(a:caxis);
-
     function getSignal(i:integer):cGraphTag;overload;
     function getSignal(S:string):cGraphTag;overload;
+    procedure delSignal(s:cGraphTag);
+    // удаляет только ось. сигналы не трогает
+    procedure delaxis(ax:caxis);
 
     property AxCount:integer read fAxCfgCount write setAxCount;
     // очистить список сигналов в осциле
@@ -322,6 +325,21 @@ begin
   end;
 end;
 
+procedure TGraphFrm.cChart1MouseZoom(Sender: TObject; UpScale: Boolean);
+var
+  A:caxis;
+  p:TNotifyEvent;
+begin
+  if UpScale then
+  BEGIN
+    a:=cpage(cchart1.activePage).activeAxis;
+    p:=shiftse.OnChange;
+    shiftse.OnChange:=nil;
+    shiftse.Value:=(a.maxY+a.minY)/2;
+    shiftse.OnChange:=p;
+  END;
+end;
+
 procedure TGraphFrm.cChart1RBtnClick(Sender: TObject);
 begin
   EditGraphFrm.editFrm(self);
@@ -356,6 +374,37 @@ begin
   fAxCfgCount:=1;
 
   InitCS;
+end;
+
+procedure TGraphFrm.delaxis(ax: caxis);
+var
+  I, j: Integer;
+  s:cGraphTag;
+begin
+  for I := 0 to axCount - 1 do
+  begin
+    if m_axCfg[i].ax=ax then
+    begin
+      dec(fAxCfgCount);
+      if fAxCfgCount>0 then
+      move(m_axCfg[i+1],m_axCfg[i],fAxCfgCount*sizeof(TAxCfg));
+      for j := 0 to m_slist.Count - 1 do
+      begin
+        s:=getSignal(j);
+        if s.axis=ax then
+        begin
+          s.destroy;
+        end;
+      end;
+      ax.destroy;
+      break;
+    end;
+  end;
+end;
+
+procedure TGraphFrm.delSignal(s: cGraphTag);
+begin
+  s.destroy;
 end;
 
 destructor TGraphFrm.destroy;
@@ -629,6 +678,8 @@ begin
       f_ActiveAxisInd:=i;
     end;
   end;
+  if not RStatePlay then
+    updateView;
 end;
 
 procedure TGraphFrm.updateYScale;
@@ -777,7 +828,7 @@ begin
       m_updateDrawInterval:=true;
     end;
     // защита m_xScale
-    entercs;
+    //entercs;
     if TrigCbox.Checked and (TrigCB.ItemIndex<>-1) then
     begin
       b:=false;
@@ -795,7 +846,7 @@ begin
       if (m_comInterv.y-m_xScale)>m_comInterv.x then
         m_comInterv.x:=m_comInterv.y-m_xScale;
     end;
-    exitcs;
+    //exitcs;
   end;
 end;
 
@@ -896,12 +947,12 @@ procedure TGraphFrm.XScaleSEChange(Sender: TObject);
 var
   r:frect;
 begin
-  EnterCS;
+  //EnterCS;
   m_updateGraph:=true;
   m_xScale:=XScaleSE.Value;
   if m_comInterv.y-m_xScale>m_comInterv.x then
     m_comInterv.x:=m_comInterv.y-m_xScale;
-  exitcs;
+  //exitcs;
   if not RStatePlay then
     updateView;
 end;
@@ -1020,8 +1071,26 @@ begin
 end;
 
 destructor cGraphTag.destroy;
+var
+  I: Integer;
 begin
   m_t.destroy;
+  if m_line<>nil then
+  begin
+    m_line.destroy;
+  end;
+  if m_owner<>nil then
+  begin
+    for I := 0 to TGraphFrm(m_owner).m_slist.Count - 1 do
+    begin
+      if TGraphFrm(m_owner).m_slist.Objects[i]=self then
+      begin
+        TGraphFrm(m_owner).m_slist.Delete(i);
+        TGraphFrm(m_owner).SignalsLV.Items.Delete(i);
+        break;
+      end;
+    end;
+  end;
 end;
 
 procedure cGraphTag.fromstr(s: string);
@@ -1031,9 +1100,15 @@ var
 begin
   m_t.FromStr(s);
   s1:=getSubStrByIndex(s,';',1,2);
-  //m_axisName:=s1;
-  i:=strtoint(s1);
-  m_axisName:=TGraphFrm(m_owner).m_axCfg[i].name;
+  if isValue(s1) then
+  begin
+    i:=strtoint(s1);
+    m_axisName:=TGraphFrm(m_owner).m_axCfg[i].name;
+  end
+  else
+  begin
+    m_axisName:=s1;
+  end;
 end;
 
 procedure cGraphTag.SetAxis(a: caxis);

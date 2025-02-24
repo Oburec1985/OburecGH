@@ -289,13 +289,18 @@ begin
           begin
             // переводим в лог масштаб rect
             axis:=cpage(page).activeAxis;
-            logMessage('uChartClickFrListener.RectToLogScale');
+            //logMessage('uChartClickFrListener.RectToLogScale');
             RectToLogScale(rect,p2d(axis.min.x,axis.min.y),p2d(axis.max.x,axis.max.y),cpage(page).lgx,axis.Lg);
-            logMessage('uChartClickFrListener.cpage(page).ZoomfRect(rect)');
+            //logMessage('uChartClickFrListener.cpage(page).ZoomfRect(rect)');
             cpage(page).ZoomfRect(rect);
+            cchart(data).doZoomEvent(data, false);
           end
           else
+          begin
             cpage(page).Normalise;
+            cchart(data).doZoomEvent(data, true);
+          end;
+
         end;
       end;
       DrawSelectRect:=false;

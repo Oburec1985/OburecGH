@@ -32,6 +32,8 @@ uses classes, stdctrls, controls, messages, windows, types, ExtCtrls, ComCtrls,
   jcldebug;
 
 type
+  TMouseZoomEvent = procedure(Sender: TObject; UpScale:boolean) of object;
+
 
   cChart = class(tPanel)
   public
@@ -89,6 +91,8 @@ type
     cursowners: integer;
     EditMenuChartForm: tobject;
   public
+    // происходит когда мышкой зазумили ось
+    fMouseZoomEvent:TMouseZoomEvent;
     OnDeadLock: tNotifyEvent;
     OnEnterCS: tNotifyEvent;
     OnExitCS: tNotifyEvent;
@@ -150,6 +154,7 @@ type
     procedure updateTV;
     procedure doOnDeleteObj(sender: tobject);
   public
+    procedure doZoomEvent(sender: tobject; b:boolean);
     procedure doOnInsertPoint(data: tobject; subdata: tobject);
   protected
     procedure setpath(p_path: string);
@@ -204,6 +209,7 @@ type
     function getcolor(i: integer): point3;
     procedure doSelectObj(sender: tobject);
   published
+    property OnMouseZoom:TMouseZoomEvent read fMouseZoomEvent write fMouseZoomEvent;
     // события
     property OnRightMBtnClick
       : tNotifyEvent read fOnMouseMove write fOnMouseMove;
@@ -942,6 +948,14 @@ begin
   if tv.selected <> nil then
   begin
     selected := cdrawobj(tv.selected.data);
+  end;
+end;
+
+procedure cChart.doZoomEvent(sender: tobject; b: boolean);
+begin
+  if assigned(fMouseZoomEvent) then
+  begin
+    fMouseZoomEvent(sender,b);
   end;
 end;
 
