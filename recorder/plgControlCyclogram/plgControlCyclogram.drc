@@ -330,9 +330,9 @@
 #define JclResources_RsPeImg_00 65149
 #define JclResources_RsPeImg_01 65150
 #define JclResources_RsPeImg_02 65151
-#define NativeXml_sXmlOwnerNotAssigned 65152
-#define NativeXml_sXmlParentNotAssigned 65153
-#define NativeXml_sCopyFromOnlyWithXmlNode 65154
+#define VirtualTrees_SCorruptStream2 65152
+#define VirtualTrees_SClipboardFailed 65153
+#define VirtualTrees_SCannotSetUserData 65154
 #define DBConsts_SBcdOverflow 65155
 #define DBConsts_SInvalidBcdValue 65156
 #define DBConsts_SCouldNotParseTimeStamp 65157
@@ -346,38 +346,38 @@
 #define JclResources_RsEModuleNotValid 65165
 #define JclResources_RsFileUtilsNoVersionInfo 65166
 #define JclResources_RsFileUtilsFileDoesNotExist 65167
-#define NativeXml_sIllegalTag 65168
-#define NativeXml_sUnsupportedTag 65169
-#define NativeXml_sIllegalEndTag 65170
-#define NativeXml_sQuoteCharExpected 65171
-#define NativeXml_sCannotAddNode 65172
-#define NativeXml_sCannotAddAttribute 65173
-#define NativeXml_sCannotSetName 65174
-#define NativeXml_sCannotSetValue 65175
-#define NativeXml_sCannotManipulate 65176
-#define NativeXml_sBeginEndMismatch 65177
-#define NativeXml_sLevelMismatch 65178
-#define NativeXml_sRootElementNotDefined 65179
-#define NativeXml_sNonDefaultChardata 65180
-#define NativeXml_sSignificantDigitsOutOfRange 65181
-#define NativeXml_sMissingDataInBinaryStream 65182
-#define NativeXml_sErrorCalcStreamLength 65183
-#define ComConst_SOleError 65184
-#define ComConst_SNoMethod 65185
-#define ComConst_SVarNotObject 65186
-#define ComConst_STooManyParams 65187
-#define VirtualTrees_SWrongMoveError 65188
-#define VirtualTrees_SWrongStreamFormat 65189
-#define VirtualTrees_SWrongStreamVersion 65190
-#define VirtualTrees_SStreamTooSmall 65191
-#define VirtualTrees_SCorruptStream1 65192
-#define VirtualTrees_SCorruptStream2 65193
-#define VirtualTrees_SClipboardFailed 65194
-#define VirtualTrees_SCannotSetUserData 65195
-#define NativeXml_sPrematureEnd 65196
-#define NativeXml_sUnknownEncoding 65197
-#define NativeXml_sUnsupportedEncoding 65198
-#define NativeXml_sDefaultCharUsed 65199
+#define NativeXml_sNonDefaultChardata 65168
+#define NativeXml_sSignificantDigitsOutOfRange 65169
+#define NativeXml_sMissingDataInBinaryStream 65170
+#define NativeXml_sErrorCalcStreamLength 65171
+#define NativeXml_sXmlOwnerNotAssigned 65172
+#define NativeXml_sXmlParentNotAssigned 65173
+#define NativeXml_sCopyFromOnlyWithXmlNode 65174
+#define ComConst_SOleError 65175
+#define ComConst_SNoMethod 65176
+#define ComConst_SVarNotObject 65177
+#define ComConst_STooManyParams 65178
+#define VirtualTrees_SWrongMoveError 65179
+#define VirtualTrees_SWrongStreamFormat 65180
+#define VirtualTrees_SWrongStreamVersion 65181
+#define VirtualTrees_SStreamTooSmall 65182
+#define VirtualTrees_SCorruptStream1 65183
+#define NativeXml_sPrematureEnd 65184
+#define NativeXml_sUnknownEncoding 65185
+#define NativeXml_sUnsupportedEncoding 65186
+#define NativeXml_sDefaultCharUsed 65187
+#define NativeXml_sIllegalTag 65188
+#define NativeXml_sUnsupportedTag 65189
+#define NativeXml_sIllegalEndTag 65190
+#define NativeXml_sQuoteCharExpected 65191
+#define NativeXml_sCannotAddNode 65192
+#define NativeXml_sCannotAddAttribute 65193
+#define NativeXml_sCannotSetName 65194
+#define NativeXml_sCannotSetValue 65195
+#define NativeXml_sCannotManipulate 65196
+#define NativeXml_sBeginEndMismatch 65197
+#define NativeXml_sLevelMismatch 65198
+#define NativeXml_sRootElementNotDefined 65199
 #define ComStrs_sInvalidLevelEx 65200
 #define ComStrs_sInvalidIndex 65201
 #define ComStrs_sInsertError 65202
@@ -1038,9 +1038,9 @@ BEGIN
 	JclResources_RsPeImg_00,	"Exports"
 	JclResources_RsPeImg_01,	"Imports"
 	JclResources_RsPeImg_02,	"Resources"
-	NativeXml_sXmlOwnerNotAssigned,	"XML owner is not assigned"
-	NativeXml_sXmlParentNotAssigned,	"XML parent is not assigned"
-	NativeXml_sCopyFromOnlyWithXmlNode,	"CopyFrom can only be used with TXmlNode descendants"
+	VirtualTrees_SCorruptStream2,	"Stream data corrupt. Unexpected data after node's end position."
+	VirtualTrees_SClipboardFailed,	"Clipboard operation failed."
+	VirtualTrees_SCannotSetUserData,	"Cannot set initial user data because there is not enough user data space allocated."
 	DBConsts_SBcdOverflow,	"BCD overflow"
 	DBConsts_SInvalidBcdValue,	"%s is not a valid BCD value"
 	DBConsts_SCouldNotParseTimeStamp,	"Could not parse SQL TimeStamp string"
@@ -1054,6 +1054,26 @@ BEGIN
 	JclResources_RsEModuleNotValid,	"The Module with handle %d is not valid"
 	JclResources_RsFileUtilsNoVersionInfo,	"File contains no version information"
 	JclResources_RsFileUtilsFileDoesNotExist,	"The file %s does not exist"
+	NativeXml_sNonDefaultChardata,	"non-default chardata at line %d (pos %d)"
+	NativeXml_sSignificantDigitsOutOfRange,	"significant digits out of range"
+	NativeXml_sMissingDataInBinaryStream,	"missing data in binary stream"
+	NativeXml_sErrorCalcStreamLength,	"error while calculating streamlength"
+	NativeXml_sXmlOwnerNotAssigned,	"XML owner is not assigned"
+	NativeXml_sXmlParentNotAssigned,	"XML parent is not assigned"
+	NativeXml_sCopyFromOnlyWithXmlNode,	"CopyFrom can only be used with TXmlNode descendants"
+	ComConst_SOleError,	"OLE error %.8x"
+	ComConst_SNoMethod,	"Method '%s' not supported by automation object"
+	ComConst_SVarNotObject,	"Variant does not reference an automation object"
+	ComConst_STooManyParams,	"Dispatch methods do not support more than 64 parameters"
+	VirtualTrees_SWrongMoveError,	"Target node cannot be a child node of the node to be moved."
+	VirtualTrees_SWrongStreamFormat,	"Unable to load tree structure, the format is wrong."
+	VirtualTrees_SWrongStreamVersion,	"Unable to load tree structure, the version is unknown."
+	VirtualTrees_SStreamTooSmall,	"Unable to load tree structure, not enough data available."
+	VirtualTrees_SCorruptStream1,	"Stream data corrupt. A node's anchor chunk is missing."
+	NativeXml_sPrematureEnd,	"stream terminated prematurely at pos %d"
+	NativeXml_sUnknownEncoding,	"unknown encoding"
+	NativeXml_sUnsupportedEncoding,	"unsupported encoding (%s)"
+	NativeXml_sDefaultCharUsed,	"default char used for codepage substitution"
 	NativeXml_sIllegalTag,	"illegal tag (\"%s\") at pos %d"
 	NativeXml_sUnsupportedTag,	"unsupported tag (\"%s\") at pos %d"
 	NativeXml_sIllegalEndTag,	"illegal end tag (\"%s\") at line %d (streampos %d)"
@@ -1066,26 +1086,6 @@ BEGIN
 	NativeXml_sBeginEndMismatch,	"begin and end tag mismatch: \"%s\" and \"%s\" at line %d (pos %d)"
 	NativeXml_sLevelMismatch,	"level mismatch between subnode \"%s\" and endnode \"%s\" at line %d (pos %d)"
 	NativeXml_sRootElementNotDefined,	"XML root element not defined."
-	NativeXml_sNonDefaultChardata,	"non-default chardata at line %d (pos %d)"
-	NativeXml_sSignificantDigitsOutOfRange,	"significant digits out of range"
-	NativeXml_sMissingDataInBinaryStream,	"missing data in binary stream"
-	NativeXml_sErrorCalcStreamLength,	"error while calculating streamlength"
-	ComConst_SOleError,	"OLE error %.8x"
-	ComConst_SNoMethod,	"Method '%s' not supported by automation object"
-	ComConst_SVarNotObject,	"Variant does not reference an automation object"
-	ComConst_STooManyParams,	"Dispatch methods do not support more than 64 parameters"
-	VirtualTrees_SWrongMoveError,	"Target node cannot be a child node of the node to be moved."
-	VirtualTrees_SWrongStreamFormat,	"Unable to load tree structure, the format is wrong."
-	VirtualTrees_SWrongStreamVersion,	"Unable to load tree structure, the version is unknown."
-	VirtualTrees_SStreamTooSmall,	"Unable to load tree structure, not enough data available."
-	VirtualTrees_SCorruptStream1,	"Stream data corrupt. A node's anchor chunk is missing."
-	VirtualTrees_SCorruptStream2,	"Stream data corrupt. Unexpected data after node's end position."
-	VirtualTrees_SClipboardFailed,	"Clipboard operation failed."
-	VirtualTrees_SCannotSetUserData,	"Cannot set initial user data because there is not enough user data space allocated."
-	NativeXml_sPrematureEnd,	"stream terminated prematurely at pos %d"
-	NativeXml_sUnknownEncoding,	"unknown encoding"
-	NativeXml_sUnsupportedEncoding,	"unsupported encoding (%s)"
-	NativeXml_sDefaultCharUsed,	"default char used for codepage substitution"
 	ComStrs_sInvalidLevelEx,	"Invalid level (%d) for item \"%s\""
 	ComStrs_sInvalidIndex,	"Invalid index"
 	ComStrs_sInsertError,	"Unable to insert an item"
@@ -1469,8 +1469,8 @@ END
 /* forms\uDigsFrmEdit.dfm */
 /* forms\uSpmThresholdProfile.dfm */
 /* forms\uEditCurveFrm.dfm */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uPressFrm2.dfm */
 /* forms\uPressFrmFrame2.dfm */
+/* forms\uPressFrm2.dfm */
 /* forms\uPressFrmEdit2.dfm */
 /* ..\..\3d\forms\uSelectLoadedObjects.dfm */
 /* forms\DataTransfFrm\TestUDPsender.dfm */
@@ -1541,6 +1541,6 @@ END
 /* forms\uPressFrmFrame.dfm */
 /* forms\uPressFrmEdit.dfm */
 /* forms\uPressFrm.dfm */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */

@@ -59,10 +59,16 @@ const
   procedure createForms(compMng: cCompMng);
   // MainThead
   procedure destroyForms(compMng: cCompMng);
-
+  procedure RecorderInit;
 
 
 implementation
+
+procedure RecorderInit;
+begin
+  //if ThresholdFrm<>nil then
+  //  ThresholdFrm.AttachAlarms;
+end;
 
 procedure destroyEngine;
 begin

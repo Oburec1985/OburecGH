@@ -85,7 +85,7 @@
     <File Path="..\SharedRUnits\uRvclService.pas"/>
     <File Path="..\SharedRUnits\uFrmSync.pas"/>
     <File Path="..\SharedRUnits\uFrmSync.dfm"/>
-    <File Path="..\..\..\source"/>
+    <File Path="..\..\..\OburecGH"/>
     <File Path="..\..\3d"/>
     <File Path="..\..\3d\3dComponents"/>
     <File Path="..\..\3d\3dComponents\components"/>

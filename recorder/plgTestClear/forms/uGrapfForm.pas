@@ -24,6 +24,7 @@ type
   end;
 
   cGraphTag = class
+    m_owner:tobject;
     m_t:ctag;
     m_line:cBuffTrend1d;
     m_axisName:string;
@@ -32,6 +33,7 @@ type
     procedure UpdateTag;
     function axis:caxis;
   public
+    procedure SetAxis(a:caxis);
     function ToStr:string;
     procedure fromstr(s:string);
     constructor create;
@@ -76,6 +78,10 @@ type
     // находимся ниже трига
     m_lostate:boolean;
   protected
+    // обновилась ось по клику Scale
+    f_changeAx:boolean;
+    f_ActiveAxisInd:integer;
+    // обновилась ось X
     m_updateGraph:boolean;
     // обновляется на кажд итерации UpdateData
     m_comInterv:point2d;
@@ -88,6 +94,7 @@ type
     fAxCfgCount:integer;
     m_axCfg:array of TAxCfg;
   protected
+    procedure updateYScale;
     // происходит когда все плагины загружены
     procedure OnRecorderInit;
     procedure TestConfig;
@@ -110,8 +117,9 @@ type
     function AxCfgToStr(i:integer):string;
     function StrToAxCfg(s:string):TAxCfg;
     procedure setAxCount(c:integer);
-    procedure addaxis(a:caxis);
   public
+    procedure addaxis(a:caxis);
+
     function getSignal(i:integer):cGraphTag;overload;
     function getSignal(S:string):cGraphTag;overload;
 
@@ -197,6 +205,7 @@ var
   ind:integer;
 begin
   t:=cGraphTag.create;
+  t.m_owner:=self;
   t.m_axisName:=ax.name;
   t.m_t.tagname:=s;
   m_slist.AddObject(s, t);
@@ -244,6 +253,7 @@ var
   l_ax:caxis;
   f:ulong;
 begin
+  s.m_owner:=self;
   result:=getSignal(s.m_t.tagname);
   if result=nil then
   begin
@@ -506,6 +516,7 @@ begin
   begin
     s1:= a_pIni.ReadString(str, 'Tag_'+inttostr(i), s1);
     s:=cGraphTag.create;
+    s.m_owner:=self;
     s.fromstr(s1);
     addSignal(s);
   end;
@@ -605,11 +616,7 @@ end;
 procedure TGraphFrm.YScaleSEChange(Sender: TObject);
 var
   s:cGraphTag;
-  lcount:integer;
-  I ,y: Integer;
-  p:TNotifyEvent;
-  r:fRect;
-  a:caxis;
+  i:integer;
 begin
   s := ActiveSignal;
   i:=axInd(s);
@@ -618,18 +625,45 @@ begin
     if i>-1 then
     begin
       m_axCfg[i].scale:=YScaleSE.Value;
-      a:=m_axcfg[i].ax;
-      m_axcfg[i].scale:=YScaleSE.Value;
-      y:=cpage(cChart1.activePage).gridlinecount_Y;
-      r.TopRight.y:=0.5*y*m_axCfg[i].scale+m_axCfg[i].shift;
-      r.BottomLeft.y:=-0.5*y*m_axCfg[i].scale+m_axCfg[i].shift;
-      r.BottomLeft.x:=0;
-      r.BottomLeft.x:=m_xScale;
-      a.ZoomfRect(r);
-      cChart1.redraw;
+      f_changeAx:=true;
+      f_ActiveAxisInd:=i;
     end;
   end;
 end;
+
+procedure TGraphFrm.updateYScale;
+var
+  lcount:integer;
+  I ,y: Integer;
+  p:TNotifyEvent;
+  r:fRect;
+  a:caxis;
+begin
+  if f_changeAx then
+  begin
+    //i:=axInd(s);
+    i:=f_ActiveAxisInd;
+    if YScaleSE.Value>0 then
+    begin
+      if i>-1 then
+      begin
+        m_axCfg[i].scale:=YScaleSE.Value;
+        f_changeAx:=true;
+
+        y:=cpage(cChart1.activePage).gridlinecount_Y;
+        r.TopRight.y:=0.5*y*m_axCfg[i].scale+m_axCfg[i].shift;
+        r.BottomLeft.y:=-0.5*y*m_axCfg[i].scale+m_axCfg[i].shift;
+        r.BottomLeft.x:=0;
+        r.BottomLeft.x:=m_xScale;
+        a:=m_axcfg[i].ax;
+        a.ZoomfRect(r);
+        cChart1.redraw;
+        f_changeAx:=false;
+      end;
+    end;
+  end;
+end;
+
 
 procedure TGraphFrm.YScaleSEDownClick(Sender: TObject);
 var
@@ -811,7 +845,7 @@ var
 begin
   if RStatePlay then
   begin
-
+    updateYScale;
   end;
   if m_updateGraph then
   begin
@@ -856,6 +890,7 @@ begin
     SignalsLV.SetSubItemByColumnName('Rms',formatStrnoe(v,4),li);
   end;
 end;
+
 
 procedure TGraphFrm.XScaleSEChange(Sender: TObject);
 var
@@ -992,15 +1027,34 @@ end;
 procedure cGraphTag.fromstr(s: string);
 var
   s1:string;
+  i:integer;
 begin
   m_t.FromStr(s);
   s1:=getSubStrByIndex(s,';',1,2);
-  m_axisName:=s1;
+  //m_axisName:=s1;
+  i:=strtoint(s1);
+  m_axisName:=TGraphFrm(m_owner).m_axCfg[i].name;
+end;
+
+procedure cGraphTag.SetAxis(a: caxis);
+var
+  ax:caxis;
+begin
+  if m_line<>nil then
+  begin
+    //ax:=caxis(m_line.parent);
+    m_line.parent:=a;
+    m_axisName:=a.name;
+  end;
 end;
 
 function cGraphTag.ToStr: string;
+var
+  i:integer;
 begin
-  result:=m_t.ToStr+';'+m_axisName;
+  //result:=m_t.ToStr+';'+m_axisName;
+  i:=TGraphFrm(m_owner).axInd(self);
+  result:=m_t.ToStr+';'+inttostr(i);
 end;
 
 procedure cGraphTag.UpdateTag;

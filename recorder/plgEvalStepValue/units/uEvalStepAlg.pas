@@ -730,7 +730,9 @@ begin
   dir := extractfiledir(g_cfgpath);
   name := trimext(extractfilename(g_cfgpath));
 
-  newpath := dir + '\' + name + '.xml';
+  newpath := dir + '\' + name + 'EvSt.xml';
+  if not fileexists(newpath) then exit;
+
   doc := TNativeXml.create(nil);
   doc.XmlFormat := xfReadable;
   doc.LoadFromFile(newpath);
@@ -816,7 +818,7 @@ begin
   dir := extractfiledir(g_cfgpath);
   name := trimext(extractfilename(g_cfgpath));
 
-  newpath := dir + '\' + name + '.xml';
+  newpath := dir + '\' + name + 'EvSt.xml';
   doc := TNativeXml.create(nil);
   doc.XmlFormat := xfReadable;
   if FileExists(newpath) then

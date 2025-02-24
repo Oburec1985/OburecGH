@@ -16,12 +16,14 @@ type
     OkBtn: TButton;
     TagsTV: TVTree;
     ImageList_16: TImageList;
+    NewAxBtn: TButton;
     procedure TagsTVDragDrop(Sender: TBaseVirtualTree; Source: TObject;
       DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
       Pt: TPoint; var Effect: Integer; Mode: TDropMode);
     procedure TagsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
+    procedure NewAxBtnClick(Sender: TObject);
   private
     m_f:tform;
   private
@@ -78,6 +80,40 @@ begin
         end;
       end;
     end;
+  end;
+end;
+
+procedure TEditGraphFrm.NewAxBtnClick(Sender: TObject);
+var
+  s:cGraphTag;
+  n, new, sig_n:pvirtualnode;
+  d, axd, sig_d:pnodedata;
+  a:caxis;
+begin
+  n:=TagsTV.GetFirstSelected(false);
+  if n<>nil then
+  begin
+    d:=TagsTV.GetNodeData(n);
+    if tobject(d.data) is cGraphTag then
+    begin
+      new:=tagsTV.AddChild(nil);
+      a:=cpage(TGraphFrm(m_f).cChart1.activePage).Newaxis;
+      TGraphFrm(m_f).addaxis(a);
+      axd:=tagsTV.GetNodeData(new);
+      axd.data:=a;
+      axd.color:=tagstv.normalcolor;
+      axd.Caption:=a.name;
+      axd.ImageIndex:=4; // ось
+
+      sig_n:=tagsTV.AddChild(new);
+      sig_d:=tagsTV.GetNodeData(sig_n);
+      sig_d.data:=tobject(d.data);
+      sig_d.color:=tagstv.normalcolor;
+      sig_d.caption:=cGraphTag(d.data).m_t.tagname;
+      sig_d.ImageIndex:=22;// линия
+      cGraphTag(d.data).SetAxis(a);
+    end;
+    TagsTV.DeleteNode(n,false);
   end;
 end;
 

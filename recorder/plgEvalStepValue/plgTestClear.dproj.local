@@ -76,7 +76,6 @@
     <File Path="..\..\sharedUtils"/>
     <File Path="..\..\sharedUtils\forms"/>
     <File Path="..\..\sharedUtils\forms\uFrmSync.pas"/>
-    <File Path="..\..\sharedUtils\forms\uFrmSync.dfm"/>
     <File Path="..\..\sharedUtils\math"/>
     <File Path="..\..\sharedUtils\math\uListMath.pas"/>
     <File Path="..\..\sharedUtils\math\uMatrix.pas"/>
