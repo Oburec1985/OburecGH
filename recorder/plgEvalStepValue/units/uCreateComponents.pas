@@ -24,6 +24,7 @@ type
   // трансл€тор сообщений из Recorder в базу TMBaseControl
   cEvalStepValNP = class(cNonifyProcessor)
   public
+    fload:boolean;
     m_toolBarIcon:IPicture;
     m_btnID:cardinal;
     // сохран€лка
@@ -34,6 +35,7 @@ type
     procedure doSave(path: string);override;
     procedure doLoad(path: string);override;
     procedure doLeaveCfg;override;
+    procedure doRCInit; override;
   public
     function ProcessBtnClick(pMsgInfo:PCB_MESSAGE): boolean;override;
   end;
@@ -84,20 +86,7 @@ begin
   // создание в MainThread
   if GetCurrentThreadId = MainThreadID then
   begin
-    // —ќ«ƒјЌџ≈ «ƒ≈—№ ‘ќ–ћџ Ќ≈Ћ№«я ƒ≈Ћј“№ SHOWMODAL ¬ UITHREAD
-    // необходимо быть осторожным, т.к. создание формы и создание хендлоа разные событи€
-    // если форма первый раз показана не в том же потоке где создана то будут проблеммыс удалением формы
-    if EvalStepCfgFrm=nil then
-    begin
-      EvalStepCfgFrm:=TEvalStepCfgFrm.Create(nil);
-      EvalStepCfgFrm.Show;
-      EvalStepCfgFrm.close;
-    end;
 
-    g_EvalStepValNP:=cEvalStepValNP.Create;
-    TExtRecorderPack(GPluginInstance).m_nplist.AddNP(g_EvalStepValNP);
-
-    g_AlgList:=cAlgList.Create;
   end;
 end;
 
@@ -138,6 +127,11 @@ begin
     EvalStepCfgFrm.show;
     EvalStepCfgFrm.close;
   end;
+
+  g_EvalStepValNP:=cEvalStepValNP.Create;
+  TExtRecorderPack(GPluginInstance).m_nplist.AddNP(g_EvalStepValNP);
+
+  g_AlgList:=cAlgList.Create;
 end;
 
 procedure destroyFormsRecorderUIThread(compMng: cCompMng);
@@ -177,6 +171,28 @@ begin
   ecm;
   g_algList.doLoad(nil);
   lcm;
+  fload:=true;
+end;
+
+procedure cEvalStepValNP.doRCInit;
+var
+  i:integer;
+  a:cEvalStepAlg;
+begin
+  if not fload then
+  begin
+    //doLoad(g_cfgpath);
+  end;
+  for i:=0 to g_AlgList.Count-1 do
+  begin
+    a:=g_AlgList.getobj(i);
+    a.m_tag.tagname:=a.m_tag.tagname;
+    a.m_outTag.tagname:=a.m_outTag.tagname;
+    ecm;
+    a.m_outTag.tag.SetFreq(a.m_tag.freq);
+    a.UpdateFFTSize;
+    lcm;
+  end;
 end;
 
 procedure cEvalStepValNP.doLeaveCfg;

@@ -213,19 +213,6 @@ begin
     begin
       checkTrig:=true;
     end;
-    //trigTime := fTrigTime + m_FallTime;
-    //if trigTime < m_outTag.m_ReadDataTime then
-    //begin
-    //  ftrig := false;
-    //end
-    //else
-    //begin
-    //  if trigTime < m_outTag.getReadTime(m_outTag.lastindex) then
-    //  begin
-    //    i2 := trunc((trigTime - m_outTag.m_ReadDataTime) / fPeriod);
-    //    ftrig := false;
-    //  end;
-    //end;
   end
   else
   begin
@@ -272,6 +259,7 @@ begin
     res := true;
     ftrig := false;
   end;
+  //ftrig:=false;
 end;
 
 function cEvalStepAlg.doEval(intag: cTag; time: double): boolean;
@@ -359,13 +347,15 @@ begin
       end;
       if not ftrig then
       begin
-      //if m_outTag.getPortionLen>c_MemLength then
-        begin
-          // сколько блоков можно забыть
-          ind := trunc((m_outTag.lastindex) / fblSize);
-          m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[0], fblSize, 0, m_outTag.m_ReadDataTime);
-          m_outTag.ResetTagDataTimeInd(fblSize * ind);
-        end;
+        // сколько блоков можно забыть
+        ind := trunc((m_outTag.lastindex) / fblSize);
+        m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[0], fblSize*ind, 0, m_outTag.m_ReadDataTime);
+        m_outTag.ResetTagDataTimeInd(fblSize * ind);
+        logmessage(floattostr(m_outTag.m_ReadDataTime));
+      end
+      else
+      begin
+        logmessage('123');
       end;
       Result := true;
     end;
@@ -378,6 +368,7 @@ begin
     fPortionSize := m_fftShift * bCount;
     if fPortionSize > 0 then
       m_tag.ResetTagDataTimeInd(fPortionSize);
+    logmessage(floattostr(m_tag.m_ReadDataTime));
   end;
 end;
 

@@ -542,12 +542,31 @@ begin
         if fSel<>nil then
         begin
           ScalesLV.items.Clear;
-          for I := 0 to length(cEvalStepAlg(fSel).m_band) - 1 do
+          if length(cEvalStepAlg(fSel).m_band)=0 then
           begin
-            li:=ScalesLV.Items.add;
+            li:=ScalesLV.items.add;
             ScalesLV.SetSubItemByColumnName('»нд.', inttostr(li.Index), li);
-            ScalesLV.SetSubItemByColumnName('F', floattostr(cEvalStepAlg(fSel).m_band[i].x), li);
-            ScalesLV.SetSubItemByColumnName('Scale', floattostr(cEvalStepAlg(fSel).m_band[i].y), li);
+            ScalesLV.SetSubItemByColumnName('F','0',li);
+            ScalesLV.SetSubItemByColumnName('Scale','1',li);
+            li:=ScalesLV.items.add;
+            ScalesLV.SetSubItemByColumnName('»нд.', inttostr(li.Index), li);
+            // фильтр 10 Hz
+            ScalesLV.SetSubItemByColumnName('F',floattostr(1000),li);
+            ScalesLV.SetSubItemByColumnName('Scale','1',li);
+            li:=ScalesLV.items.add;
+            ScalesLV.SetSubItemByColumnName('»нд.', inttostr(li.Index), li);
+            ScalesLV.SetSubItemByColumnName('F',floattostr(t.GetFreq/2),li);
+            ScalesLV.SetSubItemByColumnName('Scale','0',li);
+          end
+          else
+          begin
+            for I := 0 to length(cEvalStepAlg(fSel).m_band) - 1 do
+            begin
+              li:=ScalesLV.Items.add;
+              ScalesLV.SetSubItemByColumnName('»нд.', inttostr(li.Index), li);
+              ScalesLV.SetSubItemByColumnName('F', floattostr(cEvalStepAlg(fSel).m_band[i].x), li);
+              ScalesLV.SetSubItemByColumnName('Scale', floattostr(cEvalStepAlg(fSel).m_band[i].y), li);
+            end;
           end;
         end;
       end;
