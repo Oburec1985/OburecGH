@@ -106,8 +106,7 @@ type
     procedure doStart;override;
     procedure updatedata;override;
     procedure updateView;
-    function SearchTrig(t: cTag; p_threshold: double;
-      var p_interval: point2d): boolean;
+    function SearchTrig(t: cTag; p_threshold: double; var p_interval: point2d): boolean;
 
     procedure InitCS;
     procedure DeleteCS;
@@ -245,10 +244,25 @@ end;
 
 // scale; shift
 procedure TGraphFrm.addaxis(a: caxis);
+Var
+  b:boolean;
+  I: Integer;
 begin
-  m_axCfg[AxCount].ax:=a;
-  m_axCfg[AxCount].name:=a.name;
-  AxCount:=AxCount+1;
+  b:=false;
+  for I := 0 to AxCount - 1 do
+  begin
+    if m_axCfg[i].name=a.name then
+    begin
+      b:=true;
+      break;
+    end;
+  end;
+  if not b then
+  begin
+    m_axCfg[AxCount].ax:=a;
+    m_axCfg[AxCount].name:=a.name;
+    AxCount:=AxCount+1;
+  end;
 end;
 
 function TGraphFrm.addSignal(s: cGraphTag): cGraphTag;
@@ -289,6 +303,7 @@ var
   a:TAxCfg;
 begin
   a:=m_axCfg[i];
+
   result:=floattostr(a.scale)+';'+floattostr(a.shift)+';'+a.name;
 end;
 
@@ -347,7 +362,6 @@ begin
       YScaleSE.OnChange:=p;
       f_ActiveAxisInd:=i;
       f_changeAx:=true;
-
     end;
   END;
 end;
@@ -503,6 +517,7 @@ begin
   m_xScale:=0.3;
   XScaleSE.Value:=0.3;
   m_axCfg[0].ax:=cpage(cChart1.activePage).activeAxis;
+  m_axCfg[0].name:=m_axCfg[0].ax.name;
 
   r.BottomLeft.x:=0;
   r.BottomLeft.y:=0;
@@ -546,18 +561,20 @@ end;
 
 procedure TGraphFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 var
-  i,c: integer;
+  i,c, l_axCount: integer;
   s: cGraphTag;
   s1:string;
   a:caxis;
 begin
   // загрузка осей
   //exit;
-  AxCount:= a_pIni.ReadInteger(str, 'AxCount', 0);
-  if AxCount=0 then exit;
-  for I := 0 to AxCount - 1 do
+  l_axCount:= a_pIni.ReadInteger(str, 'AxCount', 0);
+  if l_axCount=0 then exit;
+  for I := 0 to l_axCount - 1 do
   begin
     s1:= a_pIni.ReadString(str, 'Ax_'+inttostr(i), '');
+    if s1='' then
+      exit;
     m_axCfg[i]:=StrToAxCfg(s1);
     if i=cpage(cChart1.activePage).axises.ChildCount then
     begin
@@ -568,9 +585,13 @@ begin
     end
     else
     begin
-      m_axCfg[i].ax:=cpage(cChart1.activePage).getaxis(m_axCfg[i].name);
+      if m_axCfg[i].name<>'' then
+        m_axCfg[i].ax:=cpage(cChart1.activePage).getaxis(m_axCfg[i].name)
+      else
+        m_axCfg[i].ax:=cpage(cChart1.activePage).getaxis(i);
     end;
   end;
+  axCount:=l_axCount;
   // загрузка сигналов
   c:= a_pIni.ReadInteger(str, 'SCount', 0);
   for I := 0 to c - 1 do

@@ -143,6 +143,7 @@ procedure saveTag(t: cScalarTag; node: txmlnode);
 const
   c_instance = 0;
   c_Mean = 1;
+  c_MemLength = 1;
 
 var
   g_AlgList: cAlgList;
@@ -203,32 +204,35 @@ var
 begin
   res := false;
   lastTime := m_outTag.getReadTime(m_outTag.lastindex);
-  // fMean:=tempSUM(m_outTag.m_ReadData,0,m_outTag.lastindex)/(m_outTag.lastindex+1);
   fMean := m_outTag.m_ReadData[0];
   // проверяем сбросится ли триггер на данной порции
   i2 := 0;
   if ftrig then
   begin
-    trigTime := fTrigTime + m_FallTime;
-    if trigTime < m_outTag.m_ReadDataTime then
+    if lastTime-fTrigTime>m_TrigMeanLenI *(1 / m_outTag.freq) then
     begin
-      ftrig := false;
-    end
-    else
-    begin
-      if trigTime < m_outTag.getReadTime(m_outTag.lastindex) then
-      begin
-        i2 := trunc((trigTime - m_outTag.m_ReadDataTime) / fPeriod);
-        ftrig := false;
-      end;
+      checkTrig:=true;
     end;
+    //trigTime := fTrigTime + m_FallTime;
+    //if trigTime < m_outTag.m_ReadDataTime then
+    //begin
+    //  ftrig := false;
+    //end
+    //else
+    //begin
+    //  if trigTime < m_outTag.getReadTime(m_outTag.lastindex) then
+    //  begin
+    //    i2 := trunc((trigTime - m_outTag.m_ReadDataTime) / fPeriod);
+    //    ftrig := false;
+    //  end;
+    //end;
   end
   else
   begin
     for j := i2 to m_outTag.lastindex - 1 do
     begin
       v := m_outTag.m_ReadData[j];
-      // смещение реигстрируемого значения
+      // смещение реигстрируемого значения (Длит.)/dX
       ind := trunc(m_TrigOffset / fPeriod);
       t1i := ind + j;
       // отклонение по мат. ожиданию
@@ -246,23 +250,27 @@ begin
             end;
           c_Mean:
             begin
-              checkTrig := (trigTime + m_TrigOffset + m_TrigMeanLenI *
-                  (1 / m_outTag.freq)) < lastTime;
-              fTrigTime := trigTime + m_TrigOffset +
-                (m_TrigMeanLenI * fPeriod / 2);
-              Result.y := tempSUM(m_outTag.m_ReadData, t1i,
-                t1i + m_TrigMeanLenI) / (m_TrigMeanLenI + 1);
+              fTrigTime := trigTime + m_TrigOffset;
+              checkTrig := (fTrigTime + m_TrigMeanLenI *(1 / m_outTag.freq)) < lastTime;
+              if checkTrig then
+              begin
+                break;
+              end;
             end;
-        end;
-        if checkTrig then
-        begin
-          Result.x := fTrigTime;
-          res := true;
-          m_outScTag.t.PushValue(Result.y, Result.x);
-          break; // for j := i2 to m_outTag.lastindex - 1 do
         end;
       end;
     end;
+  end;
+  // триг найден и накопился
+  if checkTrig then
+  begin
+    Result.x := fTrigTime;
+    t1i:=m_outTag.getIndex(fTrigTime);
+    t2i:=t1i+m_TrigMeanLenI;
+    Result.y := tempSUM(m_outTag.m_ReadData, t1i, t2i) / m_TrigMeanLenI;
+    m_outScTag.t.PushValue(Result.y, Result.x);
+    res := true;
+    ftrig := false;
   end;
 end;
 
@@ -344,23 +352,21 @@ begin
     // сколько можно забыть в входном буфере. -fOverlap т.к. нельзя сохранять данные котор не прошли через усреднение с след порцией
     if (m_outTag.lastindex) >= fblSize then
     begin
-      // сколько блоков можно забыть
-      ind := trunc((m_outTag.lastindex) / fblSize);
-      lt := 0;
-      for i := 0 to ind - 1 do
-      begin
-        m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[i * fblSize], fblSize, 0,
-          m_outTag.m_ReadDataTime + lt);
-        // размер блока данных в секундах
-        lt := lt + fdt;
-      end;
-      // ------------------------------------------------------------------------
       // поиск триггера
       if m_useScalar then
       begin
         trigPoint := FindTrig(bRes);
       end;
-      m_outTag.ResetTagDataTimeInd(fblSize * ind);
+      if not ftrig then
+      begin
+      //if m_outTag.getPortionLen>c_MemLength then
+        begin
+          // сколько блоков можно забыть
+          ind := trunc((m_outTag.lastindex) / fblSize);
+          m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[0], fblSize, 0, m_outTag.m_ReadDataTime);
+          m_outTag.ResetTagDataTimeInd(fblSize * ind);
+        end;
+      end;
       Result := true;
     end;
     inc(bCount);
@@ -487,7 +493,7 @@ begin
     // ac
     0:
       begin
-        m_func[0] := 1;
+        m_func[0] := 0;
         for i := 0 to length(m_func) - 1 do
         begin
           m_func[i] := 1;
