@@ -7,7 +7,7 @@ uses
   uEvalStepCfgFrm,
   types, ActiveX, forms, sysutils, windows, Classes, IniFiles, Dialogs,
   uCompMng, cfreg, uRecorderEvents, PluginClass, tags, Recorder, uRCFunc,
-  uEvalStepAlg, uCommonMath, nativeXml,
+  uEvalStepAlg, uCommonMath, nativeXml, ulogfile,
   Generics.Collections, Controls;
 
 type
@@ -109,11 +109,28 @@ end;
 
 procedure createComponents(compMng:cCompMng);
 var
-  str, str1:string;
+  str, str1, cfg, dir, fname:string;
   m_toolBarIcon:IPicture;
-  m_btnID:cardinal;
+  i, m_btnID:cardinal;
 begin
-  //CompMng.Add(cGLFact.Create);
+  cfg := extractfiledir(getRConfig);
+  i := 0;
+  if DirectoryExists(cfg) then
+  begin
+    dir := cfg + '\logs\';
+    if not DirectoryExists(dir) then
+    begin
+      ForceDirectories(dir);
+    end;
+    fname := dir + 'ControlCyclogramLog_' + inttostr(i) + '.log';
+    while FileExists(fname) do
+    begin
+      inc(i);
+      fname := dir + 'ControlCyclogramLog_' + inttostr(i) + '.log';
+    end;
+    g_logFile := cLogFile.Create(fname, ';');
+    g_logFile.m_Rewrite := false;
+  end;
 end;
 
 procedure createFormsRecorderUIThread(compMng: cCompMng);

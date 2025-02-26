@@ -37,6 +37,8 @@ type
   public
     m_tag: cTag;
     m_outTag: cTag;
+    // счетчик сколько данных положили в тег
+    m_pushDataCount:integer;
     // тип FFT фильтра
     m_fftType,
     // размер блока FFT
@@ -60,7 +62,9 @@ type
     // порог триггерного перепада
     m_Threshold,
     // время сброса триггера
-    m_FallTime: double;
+    m_FallTime,
+    // время до которого не ищем новый триггер
+    m_TrigDrop: double;
     // смещение в секундах от начала срабатывания триггера
     m_TrigOffset: double;
   protected
@@ -199,7 +203,7 @@ end;
 function cEvalStepAlg.FindTrig(var lastindex: integer): point2d;
 var
   j, i2, ind, t1i, t2i: integer;
-  v, trigTime, lastTime: double;
+  v, trigTime, lastTime, t: double;
   checkTrig: boolean;
 begin
   lastindex := -1;
@@ -217,15 +221,24 @@ begin
   end
   else
   begin
-    for j := i2 to m_outTag.lastindex - 1 do
+    t:=m_outTag.m_ReadDataTime;
+    // смещение реигстрируемого значения (Длит.)/dX
+    ind := trunc(m_TrigOffset / fPeriod);
+    for j := 0 to m_outTag.lastindex - 1 do
     begin
       v := m_outTag.m_ReadData[j];
-      // смещение реигстрируемого значения (Длит.)/dX
-      ind := trunc(m_TrigOffset / fPeriod);
-      t1i := ind + j;
+      // не ищем новый триггер если не закончился старый
+      // возможно m_TrigDrop нужно именно искать а не определять смещением
+      // но тогда он станет чувствителен к шумам
+      if t<m_TrigDrop then
+      begin
+        t:=t+fPeriod;
+        continue;
+      end;
       // отклонение по мат. ожиданию
       if abs(v - fMean) > m_Threshold then
       begin
+        t1i := ind + j; // индекс начала участка осреднения
         trigTime := m_outTag.m_ReadDataTime + j * fPeriod;
         ftrig := true;
         case m_TrigType of
@@ -233,12 +246,14 @@ begin
             begin
               // проверяем что нужное значение не ушло в след порцию
               checkTrig := (trigTime + m_TrigOffset) < lastTime;
-              fTrigTime := trigTime + m_TrigOffset;
+              fTrigTime := trigTime + m_FallTime;
+              m_TrigDrop:=fTrigTime+m_trigdrop;
               Result.y := m_outTag.m_ReadData[t1i];
             end;
           c_Mean:
             begin
               fTrigTime := trigTime + m_TrigOffset;
+              m_TrigDrop:=fTrigTime+m_FallTime;
               checkTrig := (fTrigTime + m_TrigMeanLenI *(1 / m_outTag.freq)) < lastTime;
               break;
               //if checkTrig then
@@ -248,6 +263,7 @@ begin
             end;
         end;
       end;
+      t:=t+fPeriod;
     end;
   end;
   // триг найден и накопился
@@ -326,8 +342,10 @@ begin
       i1 := i1 + m_fftShift;
     end;
     begin
-      if m_outTag.lastindex = 0 then
-        m_outTag.m_ReadDataTime := m_tag.m_ReadDataTime;
+      if m_outTag.m_ReadDataTime = -1 then
+      begin
+        m_outTag.m_ReadDataTime := m_tag.m_ReadDataTime+i1*fPeriod;
+      end;
       // source, dest, count // копируем все данные не взирая на перекрытие
       move(m_outData[0], m_outTag.m_ReadData[m_outTag.lastindex],
         (m_fftShift) * sizeof(double));
@@ -348,26 +366,43 @@ begin
         trigPoint := FindTrig(lastindex);
         if lastindex>-1 then
         begin
-          // сколько блоков можно забыть
-          //ind := trunc((m_outTag.lastindex) / fblSize);
-          //m_outTag.ResetTagDataTimeInd(fblSize * ind);
-          //trigPoint := FindTrig(lastindex);
-
-          logMessage(floattostr(trigPoint.x));
+          if name='MC-114-{ 1- 4- 6}' then
+          begin
+            logmessage('x:'+floattostr(trigPoint.x)+
+                       ' y:'+floattostr(trigPoint.y));
+          end;
         end;
       end;
-      if not ftrig then
+      //if not ftrig then
       begin
         // сколько блоков можно забыть
         ind := trunc((m_outTag.lastindex) / fblSize);
+        // 4.962 y=0.5276
+        if name='MC-114-{ 1- 4- 6}' then
+        begin
+          logmessage('c:='+inttostr(m_pushDataCount));
+          logmessage('readTime:='+floattostr(m_outTag.m_ReadDataTime));
+          logmessage('endTime:='+floattostr(m_outTag.getPortionEndTime));
+          i:=m_outTag.getIndex(m_outTag.getPortionEndTime);
+          v:=m_outTag.m_ReadData[i-1];
+          logmessage('endTimeY:='+floattostr(v));
+        end;
+        //i:=fblSize * ind;
+        //if i<m_outTag.lastindex then
         m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[0], fblSize*ind, 0, m_outTag.m_ReadDataTime);
-        m_outTag.ResetTagDataTimeInd(fblSize * ind);
+        m_pushDataCount:=fblSize*ind+m_pushDataCount;
 
-        logmessage(floattostr(m_outTag.m_ReadDataTime));
-      end
-      else
-      begin
-        logmessage('123');
+        m_outTag.ResetTagDataTimeInd(fblSize * ind);
+        if name='MC-114-{ 1- 4- 6}' then
+        begin
+          logmessage('endTime2:='+floattostr(m_outTag.getPortionEndTime));
+          i:=m_outTag.getIndex(m_outTag.getPortionEndTime);
+          if i>0 then
+            v:=m_outTag.m_ReadData[i-1]
+          else
+            v:=0;
+          logmessage('endTimeY:='+floattostr(v));
+        end;
       end;
       Result := true;
     end;
@@ -380,7 +415,7 @@ begin
     fPortionSize := m_fftShift * bCount;
     if fPortionSize > 0 then
       m_tag.ResetTagDataTimeInd(fPortionSize);
-    logmessage(floattostr(m_tag.m_ReadDataTime));
+    //logmessage(floattostr(m_tag.m_ReadDataTime));
   end;
 end;
 
@@ -414,6 +449,8 @@ var
   t: cTag;
 begin
   fTrigTime := 0;
+  m_TrigDrop:=0;
+  m_pushDataCount:=0;
   ftrig := false;
   fFirstBlock := true;
   if m_tag <> nil then
@@ -427,6 +464,7 @@ begin
   if m_outTag <> nil then
   begin
     m_outTag.doOnStart;
+    m_outTag.m_ReadDataTime:=-1;
   end;
   if m_outScTag<>nil then
     m_outScTag.t.PushValue(0, 0);

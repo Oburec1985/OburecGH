@@ -91,7 +91,6 @@ begin
         fact._Release;
     end;
   end;
-
   // очищаем список фабрик
   Clear;
   str:=inttostr(i);
