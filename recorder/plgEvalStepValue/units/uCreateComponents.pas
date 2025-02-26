@@ -38,6 +38,7 @@ type
     procedure doRCInit; override;
   public
     function ProcessBtnClick(pMsgInfo:PCB_MESSAGE): boolean;override;
+    constructor create;
   end;
 
 var
@@ -146,6 +147,11 @@ begin
 end;
 
 { cMBaseAlgNP }
+constructor cEvalStepValNP.create;
+begin
+  fload:=false;
+end;
+
 procedure cEvalStepValNP.doAddParentList;
 var
   str, str1:string;
@@ -181,7 +187,8 @@ var
 begin
   if not fload then
   begin
-    //doLoad(g_cfgpath);
+    g_cfgpath:=getRConfig;
+    doLoad(g_cfgpath);
   end;
   for i:=0 to g_AlgList.Count-1 do
   begin

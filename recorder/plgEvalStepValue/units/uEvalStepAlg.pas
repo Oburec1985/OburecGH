@@ -102,7 +102,7 @@ type
     procedure doOnLeaveCfg;
     procedure doOnStart;
     // попытка найти триггер
-    function FindTrig(var res: boolean): point2d;
+    function FindTrig(var lastindex: integer): point2d;
     function doEval(intag: cTag; time: double): boolean;
     procedure doGetData;
     function ready: boolean;
@@ -196,13 +196,14 @@ begin
   end;
 end;
 
-function cEvalStepAlg.FindTrig(var res: boolean): point2d;
+function cEvalStepAlg.FindTrig(var lastindex: integer): point2d;
 var
   j, i2, ind, t1i, t2i: integer;
   v, trigTime, lastTime: double;
   checkTrig: boolean;
 begin
-  res := false;
+  lastindex := -1;
+  checkTrig:=false;
   lastTime := m_outTag.getReadTime(m_outTag.lastindex);
   fMean := m_outTag.m_ReadData[0];
   // проверяем сбросится ли триггер на данной порции
@@ -239,10 +240,11 @@ begin
             begin
               fTrigTime := trigTime + m_TrigOffset;
               checkTrig := (fTrigTime + m_TrigMeanLenI *(1 / m_outTag.freq)) < lastTime;
-              if checkTrig then
-              begin
-                break;
-              end;
+              break;
+              //if checkTrig then
+              //begin
+                //break;
+              //end;
             end;
         end;
       end;
@@ -254,9 +256,9 @@ begin
     Result.x := fTrigTime;
     t1i:=m_outTag.getIndex(fTrigTime);
     t2i:=t1i+m_TrigMeanLenI;
-    Result.y := tempSUM(m_outTag.m_ReadData, t1i, t2i) / m_TrigMeanLenI;
+    Result.y := tempSUM(m_outTag.m_ReadData, t1i, t2i) / (m_TrigMeanLenI+1);
     m_outScTag.t.PushValue(Result.y, Result.x);
-    res := true;
+    lastindex := t2i;
     ftrig := false;
   end;
   //ftrig:=false;
@@ -268,7 +270,7 @@ var
   bCount: integer;
   b, bRes: boolean;
   i1: integer;
-  i, ind: integer;
+  i, ind, lastindex: integer;
   // dt,
   lt, k, v: double;
   j: integer;
@@ -285,6 +287,7 @@ begin
   else
     b := false;
   bCount := 0;
+  lastindex:=-1;
   while b do
   begin
     FFTProp.StartInd := i1;
@@ -331,8 +334,7 @@ begin
       fFirstBlock := false;
       if fOverlap > 0 then
       begin
-        move(m_outData[m_fftCount - fOverlap], m_OverlapBlock[0],
-          fOverlap * sizeof(double));
+        move(m_outData[m_fftCount-fOverlap], m_OverlapBlock[0], fOverlap * sizeof(double));
       end;
       // сколько можно забыть в выходном буфере
       m_outTag.lastindex := m_outTag.lastindex + m_fftShift;
@@ -343,7 +345,16 @@ begin
       // поиск триггера
       if m_useScalar then
       begin
-        trigPoint := FindTrig(bRes);
+        trigPoint := FindTrig(lastindex);
+        if lastindex>-1 then
+        begin
+          // сколько блоков можно забыть
+          //ind := trunc((m_outTag.lastindex) / fblSize);
+          //m_outTag.ResetTagDataTimeInd(fblSize * ind);
+          //trigPoint := FindTrig(lastindex);
+
+          logMessage(floattostr(trigPoint.x));
+        end;
       end;
       if not ftrig then
       begin
@@ -351,6 +362,7 @@ begin
         ind := trunc((m_outTag.lastindex) / fblSize);
         m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[0], fblSize*ind, 0, m_outTag.m_ReadDataTime);
         m_outTag.ResetTagDataTimeInd(fblSize * ind);
+
         logmessage(floattostr(m_outTag.m_ReadDataTime));
       end
       else
@@ -416,6 +428,8 @@ begin
   begin
     m_outTag.doOnStart;
   end;
+  if m_outScTag<>nil then
+    m_outScTag.t.PushValue(0, 0);
   /// flastindex := 0;
   // ZeroMemory(m_EvalBlock.p, fOutSize * sizeof(double));
 end;
