@@ -70,8 +70,6 @@ type
     procedure cChart1MouseZoom(Sender: TObject; UpScale: Boolean);
   public
     cs: TRTLCriticalSection;
-    // развертка X
-    m_xScale:double;
     // список сигналов
     m_slist:tstringlist;
 
@@ -82,6 +80,9 @@ type
     // обновилась ось по клику Scale
     f_changeAx:boolean;
     f_ActiveAxisInd:integer;
+    // развертка X
+    f_xScale:double;
+
     // обновилась ось X
     m_updateGraph:boolean;
     // обновляется на кажд итерации UpdateData
@@ -514,7 +515,7 @@ var
 begin
   SignalsLV.DrawColorBox:=true;
   SignalsLV.getcolor:=fgetcolor;
-  m_xScale:=0.3;
+  f_xScale:=0.3;
   XScaleSE.Value:=0.3;
   m_axCfg[0].ax:=cpage(cChart1.activePage).activeAxis;
   m_axCfg[0].name:=m_axCfg[0].ax.name;
@@ -635,16 +636,13 @@ begin
     if i>-1 then
     begin
       m_axCfg[i].shift:=ShiftSE.Value;
-      a:=m_axcfg[i].ax;
-      y:=cpage(cChart1.activePage).gridlinecount_Y;
-      r.TopRight.y:=0.5*y*m_axCfg[i].scale+m_axCfg[i].shift;
-      r.BottomLeft.y:=-0.5*y*m_axCfg[i].scale+m_axCfg[i].shift;
-      r.BottomLeft.x:=0;
-      r.BottomLeft.x:=m_xScale;
-      a.ZoomfRect(r);
-      cChart1.redraw;
+      f_ActiveAxisInd:=i;
+      f_changeAx:=true;
+      //GraphFrm.Perform(wm_paint,0,0);
     end;
   end;
+  if not RStatePlay then
+    updateView;
 end;
 
 procedure TGraphFrm.showsignalsinLV;
@@ -746,7 +744,7 @@ begin
         r.TopRight.y:=0.5*y*m_axCfg[i].scale+m_axCfg[i].shift;
         r.BottomLeft.y:=-0.5*y*m_axCfg[i].scale+m_axCfg[i].shift;
         r.BottomLeft.x:=0;
-        r.BottomLeft.x:=m_xScale;
+        r.BottomLeft.x:=f_xScale;
         a:=m_axcfg[i].ax;
         a.ZoomfRect(r);
         cChart1.redraw;
@@ -793,7 +791,7 @@ begin
   s:=addSignal('GenSignal_001', a0.name);
   s:=addSignal('GenSignal_0002', a.name);
 
-  m_xScale:=0.3;
+  f_xScale:=0.3;
   showsignalsinLV;
 
   cpage(cChart1.activePage).gridlinecount_Y:=8;
@@ -808,7 +806,7 @@ begin
   r.TopRight.y:=0.5*y*m_axCfg[0].scale+m_axCfg[0].shift;
   r.BottomLeft.y:=-0.5*y*m_axCfg[0].scale+m_axCfg[0].shift;
   r.BottomLeft.x:=0;
-  r.BottomLeft.x:=m_xScale;
+  r.BottomLeft.x:=f_xScale;
   a0.ZoomfRect(r);
   // ось 2
   m_axCfg[1].ax:=a;
@@ -819,7 +817,7 @@ begin
   r.TopRight.y:=0.5*y*m_axCfg[1].scale+m_axCfg[1].shift;
   r.BottomLeft.y:=-0.5*y*m_axCfg[1].scale+m_axCfg[1].shift;
   r.BottomLeft.x:=0;
-  r.BottomLeft.x:=m_xScale;
+  r.BottomLeft.x:=f_xScale;
   a.ZoomfRect(r);
 end;
 
@@ -849,10 +847,11 @@ var
   // интервал графика который будет нарисован
   interval: point2d;
   v, prev: double;
-  b:boolean;
+  b,
+  // триггер - один из каналов выложенных на чарт
+  bsameTrig:boolean;
 begin
   if m_slist.count=0 then exit;
-
   v:=GetRCTime;
   for i := 0 to m_slist.count - 1 do
   begin
@@ -868,26 +867,23 @@ begin
       end;
       m_updateDrawInterval:=true;
     end;
-    // защита m_xScale
-    //entercs;
-    if TrigCbox.Checked and (TrigCB.ItemIndex<>-1) then
+  end;
+  if TrigCbox.Checked and (TrigCB.ItemIndex<>-1) then
+  begin
+    b:=false;
+    if m_trig.UpdateTagData(false) then
     begin
-      b:=false;
-      if m_trig.UpdateTagData(false) then
-      begin
-        // данные триггера обновились
-        b:=true;
-      end;
-      SearchTrig(t, TrigFE.Value, interval);
-      m_comInterv:=interval;
-    end
-    else
-    begin
-      // подрезаем интервал по длине кадра
-      if (m_comInterv.y-m_xScale)>m_comInterv.x then
-        m_comInterv.x:=m_comInterv.y-m_xScale;
+      // данные триггера обновились
+      b:=true;
     end;
-    //exitcs;
+    SearchTrig(t, TrigFE.Value, interval);
+    m_comInterv:=interval;
+  end
+  else
+  begin
+    // подрезаем интервал по длине кадра
+    if (m_comInterv.y-f_xScale)>m_comInterv.x then
+      m_comInterv.x:=m_comInterv.y-f_xScale;
   end;
 end;
 
@@ -910,7 +906,7 @@ begin
         TrigRes:= true;
         m_lostate:=false;
         p_interval.x:=TrigTime;
-        p_interval.y:=TrigTime+m_xScale;
+        p_interval.y:=TrigTime+f_xScale;
         break;
       end;
     end
@@ -934,6 +930,8 @@ var
   r:frect;
   li:tlistitem;
   v:double;
+  a:caxis;
+  p:cpage;
 begin
   if RStatePlay then
   begin
@@ -943,11 +941,22 @@ begin
   begin
     r.TopRight.y:=cpage(cChart1.activePage).activeAxis.maxY;
     r.BottomLeft.y:=cpage(cChart1.activePage).activeAxis.minY;
-    r.TopRight.x:=m_xScale;
+    r.TopRight.x:=f_xScale;
     r.BottomLeft.x:=0;
     cpage(cChart1.activePage).ZoomfRect(r);
     m_updateGraph:=false;
     cChart1.redraw;
+  end;
+  if f_changeAx then
+  begin
+    a:=m_axcfg[f_ActiveAxisInd].ax;
+    v:=cpage(cChart1.activePage).gridlinecount_Y;
+    r.TopRight.y:=0.5*v*m_axCfg[f_ActiveAxisInd].scale+m_axCfg[f_ActiveAxisInd].shift;
+    r.BottomLeft.y:=-0.5*v*m_axCfg[f_ActiveAxisInd].scale+m_axCfg[f_ActiveAxisInd].shift;
+    r.BottomLeft.x:=0;
+    r.BottomLeft.x:=f_xScale;
+    a.ZoomfRect(r);
+    f_changeAx:=false;
   end;
 
   if m_updateDrawInterval then
@@ -990,9 +999,9 @@ var
 begin
   //EnterCS;
   m_updateGraph:=true;
-  m_xScale:=XScaleSE.Value;
-  if m_comInterv.y-m_xScale>m_comInterv.x then
-    m_comInterv.x:=m_comInterv.y-m_xScale;
+  f_xScale:=XScaleSE.Value;
+  if m_comInterv.y-f_xScale>m_comInterv.x then
+    m_comInterv.x:=m_comInterv.y-f_xScale;
   //exitcs;
   if not RStatePlay then
     updateView;

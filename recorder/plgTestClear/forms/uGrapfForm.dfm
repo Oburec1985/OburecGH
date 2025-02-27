@@ -96,13 +96,13 @@ object GraphFrm: TGraphFrm
     object TrigLvlLabel: TLabel
       Left = 119
       Top = 221
-      Width = 96
+      Width = 68
       Height = 23
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
-      Caption = #1057#1084#1077#1097#1077#1085#1080#1077
+      Caption = #1058#1088#1080#1075#1075#1077#1088
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -20
