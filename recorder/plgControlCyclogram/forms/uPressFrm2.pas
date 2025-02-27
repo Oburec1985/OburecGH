@@ -196,6 +196,7 @@ type
     m_tagsinit: boolean;
     m_tags: array of TTagRec;
     m_UseAlarms:boolean;
+    m_useAlarmsArr:array of boolean;
     m_AlarmHandler:AlarmHandler;
     m_Thresholds:TThresholdGroup;
     // относительные уровни для расчета Alarm-а
@@ -2145,6 +2146,11 @@ begin
     if m_spmCfg.ChildCount>0 then
     begin
       CreateTags;
+      setlength(m_useAlarmsArr,m_spmCfg.ChildCount);
+      for I := 0 to m_spmCfg.ChildCount- 1 do
+      begin
+        m_useAlarmsArr[i]:=true;
+      end;
       for I := 0 to m_spmCfg.ChildCount- 1 do
       begin
         spm:=cspm(m_spmCfg.getAlg(i));
@@ -2171,7 +2177,12 @@ begin
   if fileexists(m_loadFile) then
   begin
     ifile:=TIniFile.Create(m_loadFile);
-    c:= ifile.ReadInteger(m_section, 'sCount', 0);
+    c:= ifile.ReadInteger('PressCamFactory2', 'sCount', 0);
+    for I := 0 to c - 1 do
+    begin
+      g_PressCamFactory2.m_useAlarmsArr[i]:=
+      ifile.ReadBool(m_section, 'usealartms_'+inttostr(i), false);
+    end;
     for I := 0 to c - 1 do
     begin
       s:=ifile.ReadString(m_section, 's_' + inttostr(i), '');
@@ -2264,6 +2275,10 @@ begin
       a_pIni.WriteString('PressCamFactory2', 'Wnd', 'c_Rect');
     end;
     a_pIni.WriteInteger('PressCamFactory2', 'sCount', c);
+    for I := 0 to c - 1 do
+    begin
+      a_pIni.WriteBool(str, 'usealartms_'+inttostr(i), g_PressCamFactory2.m_useAlarmsArr[i]);
+    end;
     if s<>nil then
     begin
       lstr := getparam(s.GetProperties, 'FFTCount');

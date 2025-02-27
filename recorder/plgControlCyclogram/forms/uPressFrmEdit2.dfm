@@ -651,9 +651,12 @@ object PressFrmEdit2: TPressFrmEdit2
         4104}
       TabOrder = 21
       ViewStyle = vsReport
+      OnChange = TagsLBChange
       OnDragDrop = TagsLBDragDrop
       OnDragOver = TagsLBDragOver
       OnKeyDown = TagsLBKeyDown
+      ExplicitLeft = 11
+      ExplicitTop = 8
     end
     object UseRefProfileCB: TCheckBox
       Left = 332
@@ -663,6 +666,14 @@ object PressFrmEdit2: TPressFrmEdit2
       Caption = #1047#1072#1076#1072#1090#1100' '#1087#1088#1086#1092#1080#1083#1100' '#1091#1089#1090#1072#1074#1086#1082
       TabOrder = 22
       OnClick = UseRefProfileCBClick
+    end
+    object useAlarmsCB: TCheckBox
+      Left = 189
+      Top = 69
+      Width = 130
+      Height = 17
+      Caption = #1048#1089#1087#1086#1083#1100#1079#1086#1074#1072#1090#1100' '#1072#1074#1072#1088#1080#1080
+      TabOrder = 23
     end
   end
   object Panel1: TPanel

@@ -75,6 +75,7 @@ type
     TagsLB: TListView;
     Splitter1: TSplitter;
     UseRefProfileCB: TCheckBox;
+    useAlarmsCB: TCheckBox;
     procedure setHideTags;
     // отобразить галочки отображаемых сигналов на основании инф-ии в m_pf.m_hidesignals
     procedure SetCheckBoxes;
@@ -99,6 +100,8 @@ type
     procedure AFHcbClick(Sender: TObject);
     procedure UseRefTagCbClick(Sender: TObject);
     procedure UseRefProfileCBClick(Sender: TObject);
+    procedure TagsLBChange(Sender: TObject; Item: TListItem;
+      Change: TItemChange);
   private
     m_init,
     m_manualRef:boolean;
@@ -196,6 +199,34 @@ begin
         BandSG.Cells[m_col, m_row]:=floattostr(g_PressCamFactory2.m_bands[m_row-1].f2);
       end;
     end;
+  end;
+end;
+
+procedure TPressFrmEdit2.TagsLBChange(Sender: TObject; Item: TListItem;
+  Change: TItemChange);
+var
+  s:PTagRec;
+  li:tlistitem;
+begin
+  if tagsLB.SelCount=1 then
+  begin
+    li:=tagsLB.Selected;
+    s:=g_PressCamFactory2.getTag(li.Index);
+    useAlarmsCB.checked:=g_PressCamFactory2.m_useAlarmsArr[li.Index];
+  end
+  else
+  begin
+    if tagsLB.SelCount>0 then
+    begin
+      li:=tagsLB.Selected;
+      while li<>nil do
+      begin
+        s:=g_PressCamFactory2.getTag(li.Index);
+        SetMultiSelectComponentBool(useAlarmsCB, g_PressCamFactory2.m_useAlarmsArr[li.Index]);
+        li:=tagsLB.GetNextItem(li,sdAll,[isselected]);
+      end;
+    end;
+    endMultiSelect(useAlarmsCB);
   end;
 end;
 
@@ -301,7 +332,8 @@ var
   i: Integer;
   t: itag;
   s:cspm;
-  b:boolean;
+  sig:PTagRec;
+  b, err:boolean;
   li:tlistitem;
 begin
   m_pf:=pf;
@@ -392,6 +424,20 @@ begin
   if ShowModal=mrok then
   begin
     updateBands;
+    if tagsLB.SelCount>0 then
+    begin
+      li:=tagsLB.Selected;
+      while li<>nil do
+      begin
+        sig:=g_PressCamFactory2.getTag(li.Index);
+        b:=GetMultiSelectComponentBool(useAlarmsCB, err);
+        if not err then
+        begin
+          g_PressCamFactory2.m_useAlarmsArr[li.index]:=b;
+        end;
+        li:=tagsLB.GetNextItem(li,sdAll,[isselected]);
+      end;
+    end;
     if m_manualRef then
     begin
       g_PressCamFactory2.m_Manualref:=m_manualRef;
