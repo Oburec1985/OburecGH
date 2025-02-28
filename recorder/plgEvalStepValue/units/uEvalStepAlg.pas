@@ -108,6 +108,7 @@ type
     // попытка найти триггер
     function FindTrig(var lastindex: integer): point2d;
     function doEval(intag: cTag; time: double): boolean;
+    function doEvalNoFlt(intag: cTag; time: double): boolean;
     procedure doGetData;
     function ready: boolean;
     // пересчет фильтрующих коэффициентов
@@ -293,6 +294,11 @@ var
   trigPoint: point2d;
 begin
   Result := false;
+  if not m_fftFlt then
+  begin
+    Result:=doEvalNoFlt(intag, time);
+    exit;
+  end;
   bCount := trunc(m_tag.lastindex / m_fftCount);
   fPortionSize := 0;
   if bCount < 1 then
@@ -344,7 +350,8 @@ begin
     begin
       if m_outTag.m_ReadDataTime = -1 then
       begin
-        m_outTag.m_ReadDataTime := m_tag.m_ReadDataTime+i1*fPeriod;
+        //m_outTag.m_ReadDataTime := m_tag.m_ReadDataTime+i1*fPeriod;
+        m_outTag.m_ReadDataTime := m_tag.m_ReadDataTime;
       end;
       // source, dest, count // копируем все данные не взирая на перекрытие
       move(m_outData[0], m_outTag.m_ReadData[m_outTag.lastindex],
@@ -366,11 +373,11 @@ begin
         trigPoint := FindTrig(lastindex);
         if lastindex>-1 then
         begin
-          if name='MC-114-{ 1- 4- 6}' then
-          begin
-            logmessage('x:'+floattostr(trigPoint.x)+
-                       ' y:'+floattostr(trigPoint.y));
-          end;
+          //if name='MC-114-{ 1- 4- 6}' then
+          //begin
+          //  logmessage('x:'+floattostr(trigPoint.x)+
+          //             ' y:'+floattostr(trigPoint.y));
+          //end;
         end;
       end;
       //if not ftrig then
@@ -378,31 +385,31 @@ begin
         // сколько блоков можно забыть
         ind := trunc((m_outTag.lastindex) / fblSize);
         // 4.962 y=0.5276
-        if name='MC-114-{ 1- 4- 6}' then
-        begin
-          logmessage('c:='+inttostr(m_pushDataCount));
-          logmessage('readTime:='+floattostr(m_outTag.m_ReadDataTime));
-          logmessage('endTime:='+floattostr(m_outTag.getPortionEndTime));
-          i:=m_outTag.getIndex(m_outTag.getPortionEndTime);
-          v:=m_outTag.m_ReadData[i-1];
-          logmessage('endTimeY:='+floattostr(v));
-        end;
+        //if name='MC-114-{ 1- 4- 6}' then
+        // begin
+        //   logmessage('c:='+inttostr(m_pushDataCount));
+        //   logmessage('readTime:='+floattostr(m_outTag.m_ReadDataTime));
+        //   logmessage('endTime:='+floattostr(m_outTag.getPortionEndTime));
+        //   i:=m_outTag.getIndex(m_outTag.getPortionEndTime);
+        //   v:=m_outTag.m_ReadData[i-1];
+        //   logmessage('endTimeY:='+floattostr(v));
+        // end;
         //i:=fblSize * ind;
         //if i<m_outTag.lastindex then
         m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[0], fblSize*ind, 0, m_outTag.m_ReadDataTime);
         m_pushDataCount:=fblSize*ind+m_pushDataCount;
 
         m_outTag.ResetTagDataTimeInd(fblSize * ind);
-        if name='MC-114-{ 1- 4- 6}' then
-        begin
-          logmessage('endTime2:='+floattostr(m_outTag.getPortionEndTime));
-          i:=m_outTag.getIndex(m_outTag.getPortionEndTime);
-          if i>0 then
-            v:=m_outTag.m_ReadData[i-1]
-          else
-            v:=0;
-          logmessage('endTimeY:='+floattostr(v));
-        end;
+        //if name='MC-114-{ 1- 4- 6}' then
+        //begin
+        //  logmessage('endTime2:='+floattostr(m_outTag.getPortionEndTime));
+        //  i:=m_outTag.getIndex(m_outTag.getPortionEndTime);
+        //  if i>0 then
+        //    v:=m_outTag.m_ReadData[i-1]
+        //  else
+        //    v:=0;
+        //  logmessage('endTimeY:='+floattostr(v));
+        //end;
       end;
       Result := true;
     end;
@@ -416,6 +423,60 @@ begin
     if fPortionSize > 0 then
       m_tag.ResetTagDataTimeInd(fPortionSize);
     //logmessage(floattostr(m_tag.m_ReadDataTime));
+  end;
+end;
+
+function cEvalStepAlg.doEvalNoFlt(intag: cTag; time: double): boolean;
+var
+  i, t1i, t2i, j,  ind:integer;
+  v, trigTime, lastTime:double;
+  checkTrig:boolean;
+  res:point2d;
+begin
+  lastTime:=inTag.getPortionEndTime;
+  checkTrig:=false;
+  for I := 0 to intag.lastindex - 1 do
+  begin
+    if i=0 then
+      fMean := inTag.m_ReadData[0];
+    v:=intag.m_ReadData[i];
+    if (v - fMean) > m_Threshold then
+    begin
+      t1i := i; // индекс начала участка осреднения
+      trigTime := intag.m_ReadDataTime + i * fPeriod;
+      ftrig := true;
+      case m_TrigType of
+        c_instance: // мгновенное значение
+        begin
+          // проверяем что нужное значение не ушло в след порцию
+          checkTrig := (trigTime + m_TrigOffset) < lastTime;
+          fTrigTime := trigTime + m_FallTime;
+          m_TrigDrop:=fTrigTime+m_trigdrop;
+          res.y := m_outTag.m_ReadData[t1i];
+        end;
+        c_Mean:
+        begin
+          fTrigTime := trigTime + m_TrigOffset;
+          m_TrigDrop:=fTrigTime+m_FallTime;
+          // проверка что триггер накоплен
+          checkTrig := (fTrigTime + m_TrigMeanLenI*fPeriod<lastTime);
+        end;
+      end;
+      break;
+    end;
+  end;
+  // если нашли триггер
+  if checkTrig then
+  begin
+    res.x := fTrigTime;
+    t2i:=t1i+m_TrigMeanLenI;
+    res.y := tempSUM(inTag.m_ReadData, t1i, t2i) / (m_TrigMeanLenI+1);
+    m_outScTag.t.PushValue(res.y, res.x);
+    ftrig := false;
+  end;
+  if not ftrig then
+  begin
+    intag.ResetTagDataTimeInd(intag.lastindex);
   end;
 end;
 
@@ -475,13 +536,15 @@ end;
 function cEvalStepAlg.ready: boolean;
 begin
   Result := false;
-  if m_fftCount = 0 then
-    exit;
-
   if m_tag = nil then
     exit;
-  if m_outTag = nil then
-    exit;
+  if m_fftFlt then
+  begin
+    if m_fftCount = 0 then
+      exit;
+    if m_outTag = nil then
+      exit;
+  end;
   Result := true;
 end;
 
@@ -770,7 +833,6 @@ end;
 procedure cAlgList.doLoad(sender: tobject);
 var
   dir, name, newpath: string;
-
   doc: TNativeXml;
   node, child, tagnode: txmlnode;
   i, N: integer;
@@ -883,7 +945,7 @@ begin
     child.WriteAttributeString('AlgName', a.name, '');
     child.WriteAttributeInteger('numFFT', a.m_fftCount, 32);
     child.WriteAttributeInteger('OffsetFFT', a.m_fftShift, 32);
-    child.WriteAttributeBool('UseFFTflt', a.m_fftFlt, false);
+    child.WriteAttributeBool('UseFFTflt', a.m_fftFlt, true);
     child.WriteAttributeString('Band', a.GetCurveStr, '');
     child.WriteAttributeInteger('FltType', a.m_fltType, 0);
 

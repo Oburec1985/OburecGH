@@ -196,6 +196,8 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
     Margins.Bottom = 2
     Align = alClient
     TabOrder = 2
+    ExplicitLeft = 177
+    ExplicitTop = -4
     DesignSize = (
       395
       468)
@@ -412,9 +414,9 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       TabOrder = 0
     end
     object FFTCb: TCheckBox
-      Left = 5
-      Top = 264
-      Width = 72
+      Left = 4
+      Top = 257
+      Width = 91
       Height = 13
       Margins.Left = 2
       Margins.Top = 2
@@ -424,7 +426,6 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       Checked = True
       State = cbChecked
       TabOrder = 1
-      Visible = False
     end
     object FFTSizeSB: TSpinButton
       Left = 119
@@ -577,8 +578,8 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       end
       object ScalarTagCB: TCheckBox
         Left = 267
-        Top = 38
-        Width = 82
+        Top = 39
+        Width = 110
         Height = 13
         Margins.Left = 2
         Margins.Top = 2
@@ -589,7 +590,7 @@ object EvalStepCfgFrm: TEvalStepCfgFrm
       end
       object ValTypeRG: TRadioGroup
         Left = 4
-        Top = 59
+        Top = 60
         Width = 135
         Height = 61
         Margins.Left = 2

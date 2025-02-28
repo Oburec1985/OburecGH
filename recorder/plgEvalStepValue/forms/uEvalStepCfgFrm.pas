@@ -226,22 +226,25 @@ begin
   if AlgsLB.SelCount<2 then
     cEvalStepAlg(a).m_tag.tag := InChanCB.gettag(InChanCB.ItemIndex);
   t := cEvalStepAlg(a).m_tag.tag;
-  if t<>nil then
+  if cEvalStepAlg(a).m_fftFlt then
   begin
-    if cEvalStepAlg(a).m_outTag.tag = nil then
+    if t<>nil then
     begin
-      cEvalStepAlg(a).m_outTag.tag := GenOutTag(cEvalStepAlg(a).m_tag.tagname, cEvalStepAlg(a).m_tag.tag.GetFreq);
+      if cEvalStepAlg(a).m_outTag.tag = nil then
+      begin
+        cEvalStepAlg(a).m_outTag.tag := GenOutTag(cEvalStepAlg(a).m_tag.tagname, cEvalStepAlg(a).m_tag.tag.GetFreq);
+      end;
     end;
-    cEvalStepAlg(a).m_useScalar:=ScalarTagCB.Checked;
-    if ScalarTagCB.Checked then
-    begin
-      if cEvalStepAlg(a).m_outScTag=nil then
-        cEvalStepAlg(a).m_outScTag:=cScalarTag.Create;
-      cEvalStepAlg(a).m_outScTag.name:=cEvalStepAlg(a).m_tag.tagname+'_trig';
-      cEvalStepAlg(a).m_outScTag.CreateTag;
-    end;
+    cEvalStepAlg(a).UpdateFFTSize;
   end;
-  cEvalStepAlg(a).UpdateFFTSize;
+  cEvalStepAlg(a).m_useScalar:=ScalarTagCB.Checked;
+  if ScalarTagCB.Checked then
+  begin
+    if cEvalStepAlg(a).m_outScTag=nil then
+      cEvalStepAlg(a).m_outScTag:=cScalarTag.Create;
+    cEvalStepAlg(a).m_outScTag.name:=cEvalStepAlg(a).m_tag.tagname+'_trig';
+    cEvalStepAlg(a).m_outScTag.CreateTag;
+  end;
 end;
 
 procedure TEvalStepCfgFrm.AlgsLBClick(Sender: TObject);
