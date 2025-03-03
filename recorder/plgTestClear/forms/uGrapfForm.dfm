@@ -2,7 +2,7 @@ object GraphFrm: TGraphFrm
   Left = 0
   Top = 0
   Caption = 'GraphFrm'
-  ClientHeight = 519
+  ClientHeight = 622
   ClientWidth = 1080
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -16,16 +16,17 @@ object GraphFrm: TGraphFrm
   object RightSplitter: TSplitter
     Left = 776
     Top = 0
-    Height = 519
+    Height = 622
     Align = alRight
     Color = clBackground
     ParentColor = False
+    ExplicitHeight = 519
   end
   object RightGB: TGroupBox
     Left = 779
     Top = 0
     Width = 301
-    Height = 519
+    Height = 622
     Align = alRight
     Caption = 'RightGB'
     Font.Charset = DEFAULT_CHARSET
@@ -35,6 +36,7 @@ object GraphFrm: TGraphFrm
     Font.Style = []
     ParentFont = False
     TabOrder = 0
+    ExplicitHeight = 519
     object XScaleLabel: TLabel
       Left = 119
       Top = 43
@@ -65,7 +67,7 @@ object GraphFrm: TGraphFrm
     end
     object Splitter1: TSplitter
       Left = 2
-      Top = 328
+      Top = 431
       Width = 297
       Height = 4
       Cursor = crVSplit
@@ -112,7 +114,7 @@ object GraphFrm: TGraphFrm
     end
     object SignalsLV: TBtnListView
       Left = 2
-      Top = 332
+      Top = 435
       Width = 297
       Height = 185
       Align = alBottom
@@ -148,6 +150,7 @@ object GraphFrm: TGraphFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
+      ExplicitTop = 332
     end
     object XScaleSE: TFloatSpinEdit
       Left = 7
@@ -229,12 +232,36 @@ object GraphFrm: TGraphFrm
       TabOrder = 6
       OnChange = ShiftSEChange
     end
+    object Edit1: TEdit
+      Left = 6
+      Top = 258
+      Width = 147
+      Height = 32
+      TabOrder = 7
+      Text = 'Edit1'
+    end
+    object Edit2: TEdit
+      Left = 6
+      Top = 300
+      Width = 147
+      Height = 32
+      TabOrder = 8
+      Text = 'Edit1'
+    end
+    object Edit3: TEdit
+      Left = 6
+      Top = 344
+      Width = 147
+      Height = 32
+      TabOrder = 9
+      Text = 'Edit1'
+    end
   end
   object cChart1: cChart
     Left = 0
     Top = 0
     Width = 776
-    Height = 519
+    Height = 622
     Cursor = crSizeAll
     Align = alClient
     Caption = 'cChart1'
@@ -246,6 +273,7 @@ object GraphFrm: TGraphFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitHeight = 519
   end
   object ImageList_16: TImageList
     Left = 80

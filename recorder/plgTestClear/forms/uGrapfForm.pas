@@ -58,6 +58,9 @@ type
     TrigCbox: TCheckBox;
     TrigFE: TFloatSpinEdit;
     TrigLvlLabel: TLabel;
+    Edit1: TEdit;
+    Edit2: TEdit;
+    Edit3: TEdit;
     procedure XScaleSEChange(Sender: TObject);
     procedure SignalsLVClick(Sender: TObject);
     procedure YScaleSEChange(Sender: TObject);
@@ -74,20 +77,27 @@ type
     m_slist:tstringlist;
 
     m_trig:ctag;
-    // находимся ниже трига
+    // находимся ниже трига. По сути если триггер найден LoState = false
     m_lostate:boolean;
   protected
+    // триггерная точка для отладки
+    f_point:point2d;
     // обновилась ось по клику Scale
     f_changeAx:boolean;
     f_ActiveAxisInd:integer;
     // развертка X
-    f_xScale:double;
+    f_xScale,
+    f_trigVal:double;
+    // триггер найден
+    //f_trigEvent:boolean;
 
     // обновилась ось X
     m_updateGraph:boolean;
     // обновляется на кажд итерации UpdateData
-    m_comInterv:point2d;
+    m_comInterv,
+    m_trigInterval:point2d;
 
+    m_useTrig:boolean;
     // обновляется в UpdateData
     m_updateDrawInterval:boolean;
 
@@ -107,7 +117,8 @@ type
     procedure doStart;override;
     procedure updatedata;override;
     procedure updateView;
-    function SearchTrig(t: cTag; p_threshold: double; var p_interval: point2d): boolean;
+    //  p_interval - время с учетом оттупов которое рисует осциллограф при нахождении триггера
+    function SearchTrig(t: cTag; p_threshold: double; var p_interval: point2d; var p_point: point2d): boolean;
 
     procedure InitCS;
     procedure DeleteCS;
@@ -527,6 +538,14 @@ begin
   cpage(cChart1.activePage).ZoomfRect(r);
   // заполнить комбо бокс тегами
   trigcb.updateTagsList(true);
+  if trigcb.ItemIndex<>-1 then
+  begin
+    m_trig.tagname:=trigcb.Text;
+    if TrigCBox.Checked then
+    begin
+      m_useTrig:=true;
+    end;
+  end;
   // инициация тегов
   for I := 0 to m_slist.Count - 1 do
   begin
@@ -606,7 +625,10 @@ begin
   showsignalsinLV;
   TrigCB.Text:=a_pIni.ReadString(str, 'TrigTag', '');
   TrigCBox.Checked:=a_pIni.ReadBool(str, 'TrigEnabled', false);
+  m_useTrig:=TrigCBox.Checked;
+
   TrigFE.Value:=a_pIni.ReadFloat(str, 'TrigLvl', 1);
+  f_trigVal:=TrigFE.Value;
 end;
 
 
@@ -631,6 +653,8 @@ var
 begin
   s := ActiveSignal;
   i:=axInd(s);
+
+  f_trigVal:=TrigFE.Value;
   if YScaleSE.Value>0 then
   begin
     if i>-1 then
@@ -841,26 +865,85 @@ end;
 procedure TGraphFrm.updatedata;
 var
   s: cGraphTag;
-  trigTag, t:ctag;
+  trTag:ctag;
   it:itag;
   i, j: integer;
   // интервал графика который будет нарисован
   interval: point2d;
   v, prev: double;
-  b,
+  b, trigUpdate,
   // триггер - один из каналов выложенных на чарт
-  bsameTrig:boolean;
+  bSameTrig:boolean;
 begin
   if m_slist.count=0 then exit;
   v:=GetRCTime;
+  trigUpdate:=false;
+  // обновление данных
   for i := 0 to m_slist.count - 1 do
   begin
     // обновляем данные и накопленные интервалы в тегах. Корректируем интервал отображения
     s:=GetSignal(i);
+    if s.m_t.tag=m_trig.tag then
+    begin
+      bSameTrig:=true;
+    end;
     if s.m_t.UpdateTagData(false) then
     begin
-      // накопленный интервал по всем блокам
-      interval := s.m_t.EvalTimeInterval;
+      if s.m_t.tag=m_trig.tag then
+      begin
+        trigUpdate:=true;
+        trTag:=s.m_t;
+      end;
+    end;
+  end;
+  // расчет триггера
+  if TrigCbox.Checked and (TrigCB.ItemIndex<>-1) then
+  begin
+    b:=false;
+    m_updateDrawInterval:=false;
+    // проверям триггер на новые данные только если триг не рисуется
+    if not bSameTrig then
+    begin
+      if m_trig.UpdateTagData(false) then
+      begin
+        // данные триггера обновились
+        b:=true;
+        trTag:=m_trig;
+      end;
+    end
+    else
+    begin
+      b:=trigUpdate;
+    end;
+    if b then
+    begin
+      m_updateDrawInterval:=SearchTrig(trTag, f_trigVal, interval, f_point);
+      m_trigInterval:=interval;
+    end;
+  end;
+  // вычисляем что рисовать
+  for i := 0 to m_slist.count - 1 do
+  begin
+    // обновляем данные и накопленные интервалы в тегах. Корректируем интервал отображения
+    s:=GetSignal(i);
+    interval := s.m_t.EvalTimeInterval;
+    if m_useTrig then
+    begin
+      // триггер найден
+      if not m_lostate then
+      begin
+        m_comInterv:=m_trigInterval;
+        m_updateDrawInterval:=true;
+        break;
+      end
+      else
+      begin
+        m_updateDrawInterval:=false;
+        break;
+      end;
+    end
+    else
+    begin
       if interval.y>m_comInterv.y then
       begin
         m_comInterv:=interval;
@@ -868,45 +951,36 @@ begin
       m_updateDrawInterval:=true;
     end;
   end;
-  if TrigCbox.Checked and (TrigCB.ItemIndex<>-1) then
-  begin
-    b:=false;
-    if m_trig.UpdateTagData(false) then
-    begin
-      // данные триггера обновились
-      b:=true;
-    end;
-    SearchTrig(t, TrigFE.Value, interval);
-    m_comInterv:=interval;
-  end
-  else
-  begin
-    // подрезаем интервал по длине кадра
-    if (m_comInterv.y-f_xScale)>m_comInterv.x then
-      m_comInterv.x:=m_comInterv.y-f_xScale;
-  end;
+  // подрезаем интервал по длине кадра
+  if (m_comInterv.y-f_xScale)>m_comInterv.x then
+    m_comInterv.x:=m_comInterv.y-f_xScale;
 end;
 
 function TGraphFrm.SearchTrig(t: cTag; p_threshold: double;
-  var p_interval: point2d): boolean;
+  var p_interval: point2d; var p_point: point2d): boolean;
 var
   TrigTime, v, prev: double;
   i, imin: integer;
   TrigRes:boolean;
 begin
+  TrigRes:=false;
+  p_point.x:=0;
+  p_point.y:=0;
   for i := 1 to t.lastindex - 1 do
   begin
     v := t.m_ReadData[i];
-    if m_lostate then
+    if m_lostate then // если триг сброшен
     begin
       // rise
       if v>p_threshold then
       begin
         TrigTime:= t.getReadTime(i);
         TrigRes:= true;
-        m_lostate:=false;
+        m_lostate:=false;  // взводим триг
         p_interval.x:=TrigTime;
         p_interval.y:=TrigTime+f_xScale;
+        p_point.x:=TrigTime;
+        p_point.y:=v;
         break;
       end;
     end
@@ -914,7 +988,7 @@ begin
     begin
       if v<p_threshold then
       begin
-        m_lostate:=false;
+        m_lostate:=true;
       end;
     end
   end;
@@ -961,10 +1035,15 @@ begin
 
   if m_updateDrawInterval then
   begin
+    if m_useTrig then
+    begin
+      Edit1.text:='x: '+formatstrNoE(f_point.x,3)+' y: '+formatstrNoE(f_point.y,3);
+    end;
     // перенос данных в линии
     for i := 0 to m_slist.count - 1 do
     begin
       s := GetSignal(i);
+
       s.m_t.RebuildReadBuff(true,m_comInterv);
       // предполагается что частоты одинаковы!!! по X и по Y
       interval_i:=s.m_t.getIntervalInd(m_comInterv);
