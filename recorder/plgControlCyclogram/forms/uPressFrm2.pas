@@ -222,6 +222,7 @@ type
     procedure CreateAlgConfig;
     function getSpm(i: integer): cspm; overload;
     function getSpm(s: string): cspm; overload;
+    function getUseAlarm(a: TAlarms): boolean;
     // пересчитать полосы в индексы
     procedure ReevalBands(s: cspm);
     procedure SetUseProfile(b:boolean);
@@ -1038,6 +1039,8 @@ begin
   for I := 0 to m_Thresholds.AlarmList.Count - 1 do
   begin
     a:=m_Thresholds.GetAlarm(i);
+    if not getUseAlarm(a) then
+      continue;
     //t:=g_PressCamFactory2.getTag(a.t.tagname);
     if a.m_OutRange then
     begin
@@ -1386,6 +1389,31 @@ begin
       begin
         ind:=i;
         result:=pt;
+        exit;
+      end;
+    end;
+  end;
+end;
+
+function cPressCamFactory2.getUseAlarm(a: TAlarms): boolean;
+var
+  I: Integer;
+  spm:cSpm;
+  tr:PTagRec;
+  j: Integer;
+  la:TAlarms;
+begin
+  result:=true;
+  for I := 0 to m_spmCfg.ChildCount-1 do
+  begin
+    spm:=getSpm(i);
+    tr:=getTag(spm.m_tag.tagname);
+    for j := 0 to length(tr.m_bandTags) - 1 do
+    begin
+      la:=m_Thresholds.GetAlarm(tr.m_bandTags[j].GetName);
+      if la=a then
+      begin
+        result:=m_useAlarmsArr[i];
         exit;
       end;
     end;
@@ -2181,7 +2209,7 @@ begin
     for I := 0 to c - 1 do
     begin
       g_PressCamFactory2.m_useAlarmsArr[i]:=
-      ifile.ReadBool(m_section, 'usealartms_'+inttostr(i), false);
+      ifile.ReadBool(m_section, 'usealartms_'+inttostr(i), true);
     end;
     for I := 0 to c - 1 do
     begin
@@ -2275,7 +2303,7 @@ begin
       a_pIni.WriteString('PressCamFactory2', 'Wnd', 'c_Rect');
     end;
     a_pIni.WriteInteger('PressCamFactory2', 'sCount', c);
-    for I := 0 to c - 1 do
+    for I := 0 to length(g_PressCamFactory2.m_useAlarmsArr) - 1 do
     begin
       a_pIni.WriteBool(str, 'usealartms_'+inttostr(i), g_PressCamFactory2.m_useAlarmsArr[i]);
     end;

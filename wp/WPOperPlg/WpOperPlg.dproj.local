@@ -12,7 +12,7 @@
     <Transaction>2024.07.16 11:18:30.395.dfm,E:\DelphiProjects\Lazutin\WinPos\WPPerPlg\Unit1.dfm=E:\DelphiProjects\Lazutin\WinPos\WPPerPlg\forms\uIRGraphFrm.dfm</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
-    <File Path="C:\Oburec"/>
+    <File Path="..\..\..\..\2011"/>
     <File Path="..\..\..\oburec"/>
     <File Path="..\..\..\oburec\OburecGH"/>
     <File Path="..\..\..\oburec\OburecGH\sharedUtils"/>
@@ -28,7 +28,7 @@
     <File Path="units\uOperPack.pas"/>
     <File Path="units\UWPEvents.pas"/>
     <File Path="units\uWPservices.pas"/>
-    <File Path="WpOperPlg_TLB.pas"/>
     <File Path="WpOperPlgLib.ridl"/>
+    <File Path="WpOperPlg_TLB.pas"/>
   </ProjectSortOrder>
 </BorlandProject>
