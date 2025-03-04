@@ -1218,7 +1218,12 @@ end;
 
 function cTag.GetPeakEst: double;
 begin
-  result := tag.GetEstimate(ESTIMATOR_PEAK);
+  if tag<>nil then
+  begin
+    result := tag.GetEstimate(ESTIMATOR_PEAK);
+  end
+  else
+    result:=0;
 end;
 
 function cTag.GetValByTime(time: double; interp: boolean;

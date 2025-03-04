@@ -8,10 +8,11 @@ uses
   uEventList, //udrawobj,
   uComponentservises, uEventTypes, ComCtrls, uBtnListView, recorder,
   ucommonmath, MathFunction, uMyMath, //uTag,
-  uaxis, upage, uBuffTrend1d, uQueue,
+  uaxis, upage, uBuffTrend1d, uQueue, uYCursor,
   uRecorderEvents, ubaseObj, uCommonTypes, uRCFunc,
   //uBuffTrend1d,
   tags,
+
   uEditGraphFrm,
   PluginClass, ImgList, Menus, uChart, uSpin, uRcCtrls;
 
@@ -60,7 +61,6 @@ type
     TrigLvlLabel: TLabel;
     Edit1: TEdit;
     Edit2: TEdit;
-    Edit3: TEdit;
     procedure XScaleSEChange(Sender: TObject);
     procedure SignalsLVClick(Sender: TObject);
     procedure YScaleSEChange(Sender: TObject);
@@ -71,6 +71,7 @@ type
     procedure YScaleSEDownClick(Sender: TObject);
     procedure TrigCBChange(Sender: TObject);
     procedure cChart1MouseZoom(Sender: TObject; UpScale: Boolean);
+    procedure cChart1CursorMove(Sender: TObject);
   public
     cs: TRTLCriticalSection;
     // список сигналов
@@ -80,6 +81,7 @@ type
     // находимся ниже трига. По сути если триггер найден LoState = false
     m_lostate:boolean;
   protected
+    curs:cYCursor;
     // триггерная точка для отладки
     f_point:point2d;
     // обновилась ось по клику Scale
@@ -352,6 +354,7 @@ begin
   end;
 end;
 
+
 procedure TGraphFrm.cChart1MouseZoom(Sender: TObject; UpScale: Boolean);
 var
   p:TNotifyEvent;
@@ -518,6 +521,17 @@ begin
   result := rgbtoint(cGraphTag(li.Data).m_line.color);
 end;
 
+procedure TGraphFrm.cChart1CursorMove(Sender: TObject);
+var
+  a:caxis;
+  p2:point2;
+begin
+  a:=cpage(cChart1.activePage).activeAxis;
+  //p2:=cYCursor(Sender).Position;
+  p2:=cpage(cChart1.activePage).Point2ToTrend(cYCursor(Sender).Position, false, a);
+  TrigFE.Value:=p2.y;
+end;
+
 procedure TGraphFrm.OnRecorderInit;
 var
   r:frect;
@@ -535,7 +549,13 @@ begin
   r.BottomLeft.y:=0;
   r.TopRight.x:=0.3;
   r.TopRight.y:=10;
+
   cpage(cChart1.activePage).ZoomfRect(r);
+  cpage(cChart1.activePage).cursor.visible:=true;
+  cpage(cChart1.activePage).cursor.setx1(100);
+  curs:=cYCursor.create;
+  cChart1.activePage.AddChild(curs);
+
   // заполнить комбо бокс тегами
   trigcb.updateTagsList(true);
   if trigcb.ItemIndex<>-1 then
@@ -894,6 +914,11 @@ begin
         trigUpdate:=true;
         trTag:=s.m_t;
       end;
+      if s.m_t.getPortionLen>2 then
+      begin
+        j:=s.m_t.getIndex(s.m_t.m_ReadDataTime+1);
+        s.m_t.ResetTagDataTimeInd(j);
+      end;
     end;
   end;
   // расчет триггера
@@ -1038,13 +1063,13 @@ begin
     if m_useTrig then
     begin
       Edit1.text:='x: '+formatstrNoE(f_point.x,3)+' y: '+formatstrNoE(f_point.y,3);
+      Edit2.text:='x: '+formatstrNoE(m_comInterv.x,3)+' y: '+formatstrNoE(m_comInterv.y,3);
     end;
     // перенос данных в линии
     for i := 0 to m_slist.count - 1 do
     begin
       s := GetSignal(i);
-
-      s.m_t.RebuildReadBuff(true,m_comInterv);
+      //s.m_t.RebuildReadBuff(true,m_comInterv);
       // предполагается что частоты одинаковы!!! по X и по Y
       interval_i:=s.m_t.getIntervalInd(m_comInterv);
       if interval_i.y>=length(s.m_t.m_ReadData) then
@@ -1058,16 +1083,19 @@ begin
     end;
     m_updateDrawInterval:=false;
   end;
-  cChart1.redraw;
-  // отобразить амплитуды
-  for I := 0 to SignalsLV.Items.Count - 1 do
+  if RStatePlay then
   begin
-    li:=SignalsLV.Items[i];
-    s:=getSignal(i);
-    v:=s.m_t.GetPeakEst;
-    SignalsLV.SetSubItemByColumnName('A',formatStrnoe(v,4),li);
-    v:=s.m_t.GetRMSEst;
-    SignalsLV.SetSubItemByColumnName('Rms',formatStrnoe(v,4),li);
+    cChart1.redraw;
+    // отобразить амплитуды
+    for I := 0 to SignalsLV.Items.Count - 1 do
+    begin
+      li:=SignalsLV.Items[i];
+      s:=getSignal(i);
+      v:=s.m_t.GetPeakEst;
+      SignalsLV.SetSubItemByColumnName('A',formatStrnoe(v,4),li);
+      v:=s.m_t.GetRMSEst;
+      SignalsLV.SetSubItemByColumnName('Rms',formatStrnoe(v,4),li);
+    end;
   end;
 end;
 

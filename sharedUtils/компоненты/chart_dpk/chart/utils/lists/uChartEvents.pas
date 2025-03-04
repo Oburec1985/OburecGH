@@ -36,6 +36,8 @@ const
   e_OnMoveCursor = $00080000;
   // сдвинули второй курсор
   e_OnMoveCursor2 = $00100000;
+  // сдвинули курсор Y
+  e_OnMoveCursorY = $00200000;
 
 implementation
 

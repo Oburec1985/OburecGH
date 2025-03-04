@@ -4,7 +4,7 @@ interface
 uses
   ubtnlistview, classes, stdctrls, controls, ExtCtrls, ComCtrls, uchartevents,
   uBaseObj, utrend, ucommonmath, uCommonTypes, sysutils, uDrawObj, opengl,  uaxis,
-  upage,
+  upage, uchart, uEventList,
   uFrameListener, messages, windows, uCursors, ulogFile;
 
 type
@@ -22,6 +22,8 @@ type
     // мышь над курсором
     b_overCursor:boolean;
   protected
+    procedure linc(p_chart: tcomponent); override;
+    procedure DoOnMove(p: point2);override;
     function GetPos: point2; override;
     procedure SetPos(p: point2); override;
     procedure EvalBound; override;
@@ -48,6 +50,13 @@ begin
   locked:=false;
   enabled:=true;
   selectable:=true;
+end;
+
+
+procedure cYCursor.DoOnMove(p: point2);
+begin
+  inherited;
+  cchart(fchart).OBJmNG.events.CallAllEventsWithSender(e_OnMoveCursorY, self);
 end;
 
 procedure cYCursor.drawdata;
@@ -89,6 +98,12 @@ end;
 function cYCursor.GetPos: point2;
 begin
   result.y:=m_pos;
+end;
+
+procedure cYCursor.linc(p_chart: tcomponent);
+begin
+  inherited;
+
 end;
 
 procedure cYCursor.SetPos(p: point2);

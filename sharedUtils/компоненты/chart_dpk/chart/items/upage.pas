@@ -165,8 +165,10 @@ type
     // то же что предыдущая ф-ия но для 2-х точек по y
     function yiminmax_ToTrend(y: TPoint; axis: caxis): point2d;
     function ximinmax_ToTrend(x: TPoint; axis: caxis): point2d;
+    // Преобразует точку(нормализованного окна OpenGl в координаты графика) с учетом отступов
+    function Point2ToTrend(const p: point2; axis: caxis): point2; overload;
     // Преобразует точку(нормализованного окна OpenGl в координаты графика)
-    function Point2ToTrend(const p: point2; axis: caxis): point2;
+    function Point2ToTrend(const p: point2; useBordOffset:boolean; axis: caxis): point2;overload;
     // перевод координаты тренда в координаты окна
     function TrendPToP2i(p: point2): TPoint;
     // преобразовать координаты тренда в нормализованные координаты чарта
@@ -1130,7 +1132,31 @@ begin
   result := res;
 end;
 
-// Переводит нормализованные координаты точки чарта в координаты тренда
+function cPage.Point2ToTrend(const p: point2; useBordOffset:boolean; axis: caxis): point2;
+var
+  res: point2;
+  x1,x2,y1,y2, dx, dy:single;
+begin
+  if useBordOffset then
+  begin
+    Point2ToTrend(p,axis);
+  end
+  else
+  begin
+    res.x:=(p.x+1)/2;
+    res.y:=(p.y+1)/2;
+    x1:=axis.min.x;
+    x2:=axis.max.x;
+    y1:=axis.min.y;
+    y2:=axis.max.y;
+    dx:=x2-x1;
+    dy:=y2-y1;
+    result.x := res.x*dx+x1;
+    result.y := res.y*dy+y1;
+  end;
+end;
+
+// Переводит нормализованные координаты точки чарта в координаты тренда с учетом отступов
 function cPage.Point2ToTrend(const p: point2; axis: caxis): point2;
 var
   res: point2;

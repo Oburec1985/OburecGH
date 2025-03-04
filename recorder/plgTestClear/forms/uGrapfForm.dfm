@@ -2,143 +2,137 @@ object GraphFrm: TGraphFrm
   Left = 0
   Top = 0
   Caption = 'GraphFrm'
-  ClientHeight = 622
-  ClientWidth = 1080
+  ClientHeight = 467
+  ClientWidth = 810
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -10
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 120
-  TextHeight = 16
+  PixelsPerInch = 96
+  TextHeight = 12
   object RightSplitter: TSplitter
-    Left = 776
+    Left = 582
     Top = 0
-    Height = 622
+    Width = 2
+    Height = 467
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alRight
     Color = clBackground
     ParentColor = False
-    ExplicitHeight = 519
   end
   object RightGB: TGroupBox
-    Left = 779
+    Left = 584
     Top = 0
-    Width = 301
-    Height = 622
+    Width = 226
+    Height = 467
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alRight
     Caption = 'RightGB'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -20
+    Font.Height = -15
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-    ExplicitHeight = 519
     object XScaleLabel: TLabel
-      Left = 119
-      Top = 43
-      Width = 111
-      Height = 24
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 89
+      Top = 32
+      Width = 84
+      Height = 18
       Caption = #1056#1072#1079#1074#1077#1088#1090#1082#1072' X'
     end
     object Label1: TLabel
-      Left = 119
-      Top = 84
-      Width = 111
-      Height = 23
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 89
+      Top = 63
+      Width = 81
+      Height = 17
       Caption = 'YScaleLabel'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -20
+      Font.Height = -15
       Font.Name = 'YScaleLabel'
       Font.Style = []
       ParentFont = False
     end
     object Splitter1: TSplitter
       Left = 2
-      Top = 431
-      Width = 297
-      Height = 4
+      Top = 323
+      Width = 222
+      Height = 3
       Cursor = crVSplit
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alBottom
       Color = clBackground
       ParentColor = False
-      ExplicitLeft = 3
-      ExplicitTop = 327
-      ExplicitWidth = 296
     end
     object ShiftLabel: TLabel
-      Left = 119
-      Top = 133
-      Width = 96
-      Height = 23
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 89
+      Top = 100
+      Width = 72
+      Height = 17
       Caption = #1057#1084#1077#1097#1077#1085#1080#1077
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -20
+      Font.Height = -15
       Font.Name = 'YScaleLabel'
       Font.Style = []
       ParentFont = False
     end
     object TrigLvlLabel: TLabel
-      Left = 119
-      Top = 221
-      Width = 68
-      Height = 23
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 89
+      Top = 166
+      Width = 50
+      Height = 17
       Caption = #1058#1088#1080#1075#1075#1077#1088
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -20
+      Font.Height = -15
       Font.Name = 'YScaleLabel'
       Font.Style = []
       ParentFont = False
     end
     object SignalsLV: TBtnListView
       Left = 2
-      Top = 435
-      Width = 297
-      Height = 185
+      Top = 326
+      Width = 222
+      Height = 139
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alBottom
       Checkboxes = True
       Columns = <
         item
           Caption = #8470
-          Width = 51
+          Width = 38
         end
         item
           Caption = #1048#1084#1103
-          Width = 51
+          Width = 38
         end
         item
           Caption = 'Y'
-          Width = 51
+          Width = 38
         end
         item
           Caption = 'A'
-          Width = 67
         end
         item
           Caption = 'Rms'
-          Width = 67
         end>
       RowSelect = True
       TabOrder = 0
@@ -150,17 +144,12 @@ object GraphFrm: TGraphFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitTop = 332
     end
     object XScaleSE: TFloatSpinEdit
-      Left = 7
-      Top = 39
-      Width = 104
-      Height = 35
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 5
+      Top = 29
+      Width = 78
+      Height = 28
       Increment = 0.100000000000000000
       TabOrder = 1
       OnChange = XScaleSEChange
@@ -168,112 +157,96 @@ object GraphFrm: TGraphFrm
       OnDownClick = YScaleSEDownClick
     end
     object YScaleSE: TFloatSpinEdit
-      Left = 7
-      Top = 84
-      Width = 104
-      Height = 35
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 5
+      Top = 63
+      Width = 78
+      Height = 28
       Increment = 0.100000000000000000
       TabOrder = 2
       OnChange = YScaleSEChange
       OnDownClick = YScaleSEDownClick
     end
     object ShiftSE: TFloatSpinEdit
-      Left = 7
-      Top = 129
-      Width = 104
-      Height = 35
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 5
+      Top = 97
+      Width = 78
+      Height = 28
       Increment = 0.100000000000000000
       TabOrder = 3
       OnChange = ShiftSEChange
     end
     object TrigCB: TRcComboBox
-      Left = 7
-      Top = 175
-      Width = 168
-      Height = 32
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 5
+      Top = 131
+      Width = 126
+      Height = 26
       TabOrder = 4
       Text = 'TrigCB'
       OnChange = TrigCBChange
     end
     object TrigCbox: TCheckBox
-      Left = 183
-      Top = 180
-      Width = 129
-      Height = 23
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 137
+      Top = 135
+      Width = 97
+      Height = 17
       Caption = #1058#1088#1080#1075#1075#1077#1088
       TabOrder = 5
     end
     object TrigFE: TFloatSpinEdit
-      Left = 7
-      Top = 216
-      Width = 104
-      Height = 35
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 5
+      Top = 162
+      Width = 78
+      Height = 28
       Increment = 0.100000000000000000
       TabOrder = 6
       OnChange = ShiftSEChange
     end
     object Edit1: TEdit
-      Left = 6
-      Top = 258
-      Width = 147
-      Height = 32
+      Left = 5
+      Top = 194
+      Width = 110
+      Height = 26
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       TabOrder = 7
       Text = 'Edit1'
     end
     object Edit2: TEdit
-      Left = 6
-      Top = 300
-      Width = 147
-      Height = 32
+      Left = 5
+      Top = 225
+      Width = 110
+      Height = 26
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       TabOrder = 8
-      Text = 'Edit1'
-    end
-    object Edit3: TEdit
-      Left = 6
-      Top = 344
-      Width = 147
-      Height = 32
-      TabOrder = 9
       Text = 'Edit1'
     end
   end
   object cChart1: cChart
     Left = 0
     Top = 0
-    Width = 776
-    Height = 622
+    Width = 582
+    Height = 467
     Cursor = crSizeAll
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 1
     OnMouseZoom = cChart1MouseZoom
     OnRBtnClick = cChart1RBtnClick
+    OnCursorMove = cChart1CursorMove
     allowEditPages = False
     imagelist = ImageList_16
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitHeight = 519
   end
   object ImageList_16: TImageList
     Left = 80

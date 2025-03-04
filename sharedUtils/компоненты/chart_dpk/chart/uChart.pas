@@ -770,6 +770,7 @@ begin
   OBJmNG.events.AddEvent('OnNameUpdate', e_onChangeName, doOnUpdateCfg);
   // происходит при удалении объекта
   OBJmNG.events.AddEvent('OnDestroy', E_OnDestroyObject, doOnDeleteObj);
+  OBJmNG.events.AddEvent('e_OnMoveCursorY', e_OnMoveCursorY, doOnCursorMove);
 end;
 
 procedure cChart.redrawComponents;
