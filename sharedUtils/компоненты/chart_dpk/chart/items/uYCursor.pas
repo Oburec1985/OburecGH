@@ -4,7 +4,7 @@ interface
 uses
   ubtnlistview, classes, stdctrls, controls, ExtCtrls, ComCtrls, uchartevents,
   uBaseObj, utrend, ucommonmath, uCommonTypes, sysutils, uDrawObj, opengl,  uaxis,
-  upage, uchart, uEventList,
+  upage, uchart, uEventList, ubasepage,
   uFrameListener, messages, windows, uCursors, ulogFile;
 
 type
@@ -14,7 +14,8 @@ type
     m_dist:single;
     // положение курсора по Y в координатах -1..1
     // вьюпорт с учетом отступов!
-    m_pos:single;
+    m_pos,
+    M_fullViewportPos:single;
     cursowner:integer;
     // чувствительность к выделению мышкой
     size:integer;
@@ -26,6 +27,7 @@ type
     procedure linc(p_chart: tcomponent); override;
     procedure DoOnMove(p: point2);override;
     function GetPos: point2; override;
+    // в событии mouseMove setpos в координатах FullViewPort
     procedure SetPos(p: point2); override;
     // надо возвращать Bound в вьюпорте без учета отступов для корректной работы
     // выбора мышкой!!!
@@ -106,25 +108,24 @@ var
 begin
   // лев нижн x,y, width, height
   yScale:=page.m_viewport[3]/ page.m_NormalViewport[3];
-  result:=page.m_TabSpace.BottomLeft.y+yScale*p;
+  result:=page.m_TabSpace.BottomLeft.y+yScale*(p+1);
 end;
 
 
 procedure cYCursor.EvalBound;
-var
-  lpos:single;
 begin
   boundrect.BottomLeft.x:=-1;
   boundrect.TopRight.x:=1;
-  lpos:=ReEvalPosYFromBorderViewtoFullView(m_pos,cpage(getpage));
-  boundrect.BottomLeft.y:=m_pos-m_dist;
-  boundrect.TopRight.y:=m_pos+m_dist;
+  M_fullViewportPos:=ReEvalPosYFromBorderViewtoFullView(m_pos,cpage(getpage));
+  boundrect.BottomLeft.y:=M_fullViewportPos-m_dist;
+  boundrect.TopRight.y:=m_fullViewportPos+m_dist;
 end;
 
 
 function cYCursor.GetPos: point2;
 begin
-  result.y:=m_pos;
+  result.y:=ReEvalPosYFromBorderViewtoFullView(m_pos, cpage(getpage));
+  result.x:=1;
 end;
 
 procedure cYCursor.linc(p_chart: tcomponent);
@@ -135,6 +136,7 @@ end;
 
 procedure cYCursor.SetPos(p: point2);
 begin
+  p:=cbasepage(getpage).p2FullViewToBorderP2(p);
   m_pos:=p.y;
   needUpdateBound:=true;
   EvalBound;
@@ -144,7 +146,8 @@ function cYCursor.TestObj(p2: point2; dist: single): boolean;
 begin
   //m_dist:=dist;
   result:=false;
-  if p2.y-m_pos<dist then
+  //if p2.y-m_pos<dist then
+  if p2.y-M_fullViewportPos<dist then
   begin
     result:=true;
   end;

@@ -94,7 +94,11 @@ begin
             fp:=ax.p2iTop2(mouse.iPos_inv);
         end
         else
-          fp:=cpage(page).p2itop2(mouse.iPos_inv);
+        begin
+          //fp:=cpage(page).p2itop2(mouse.iPos_inv);
+          // true - вьюпорт с учетом отступов
+          fp:=cpage(page).p2itop2(mouse.iPos_inv, false);
+        end;
         // правка от 30.07.24
         // delta - отклонение объекта от мыши на момент выделения. Ставим объект в новые координаты
         // но сохраняем начальное смещение
@@ -115,7 +119,7 @@ begin
         begin
           curobj.DoOnMouseMove(mouse.iPos_inv);
           b_overCursor:=true;
-          if curobj<>cchart(data).selected then
+          //if curobj<>cchart(data).selected then
           begin
             curs:=crSizeNWSE;
             cchart(data).setcursor(curs, cursowner);
@@ -161,7 +165,9 @@ begin
             fp:=ax.p2iTop2(mouse.iPos_inv);
           end
           else
-            fp:=cpage(page).p2itop2(mouse.iPos_inv);
+          begin
+            fp:=cpage(page).p2itop2(mouse.iPos_inv, false);
+          end;
           delta:=p2(fp.x - curobj.Position.x,
                     fp.y - curobj.Position.y);
         end;
@@ -273,7 +279,7 @@ begin
   chart:=cchart(cObjFrListener(data).data);
   //fp.x:=0;
   //fp.y:=0.975;
-  cpage(page).Caption:=floattostr(fp.x)+';'+floattostr(fp.y);
+  //cpage(page).Caption:=floattostr(fp.x)+';'+floattostr(fp.y);
   dist:=cpage(page).PixelSizeToTrend(point(chart.selectSize,chart.selectSize),ax);
   // для корректной работы координаты bound должны быть в окне Вьюпорта без учета отступов -1...1
   // если родитель Page!!!

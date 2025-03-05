@@ -81,6 +81,7 @@ type
     function p2ToP2i(p:point2):tpoint;
     // координаты мира в координаты -1..+1
     function realXToX1(x1x2: point2): point2;
+    function p2FullViewToBorderP2(p:point2):point2;
     // Установить вьюпорт отрисовки трендов
     procedure setDrawObjVP;
     procedure setCommonVP;
@@ -321,6 +322,16 @@ begin
     res.y:=p.y*2/getheight-1;
     result:=res;
   end;
+end;
+
+function cBasePage.p2FullViewToBorderP2(p: point2): point2;
+var
+  sc:single;
+begin
+  sc:=m_NormalViewport[2]/m_viewport[2];
+  result.x:=sc*((p.x)-m_TabSpace.BottomLeft.x)-1;
+  sc:=m_NormalViewport[3]/m_viewport[3];
+  result.y:=sc*((p.y)-m_TabSpace.BottomLeft.y)-1;
 end;
 
 function cBasePage.p2iTop2(p:tpoint; const view:array of double; localViewport:boolean):point2;

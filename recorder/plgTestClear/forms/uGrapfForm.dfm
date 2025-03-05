@@ -247,6 +247,7 @@ object GraphFrm: TGraphFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitTop = 6
   end
   object ImageList_16: TImageList
     Left = 80

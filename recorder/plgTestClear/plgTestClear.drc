@@ -1135,12 +1135,12 @@ END
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCursorForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uPageForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjEditForm.dfm */
-/* E:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistFrame.dfm */
-/* E:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistForm.dfm */
+/* C:\Oburec\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistFrame.dfm */
+/* C:\Oburec\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendFrame.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.dfm */
-/* E:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
+/* C:\Oburec\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
 /* ..\SharedRUnits\uTagsListFrame.dfm */
 /* forms\uEditGraphFrm.dfm */
 /* forms\uGrapfForm.dfm */
@@ -1154,5 +1154,5 @@ END
 /* ..\..\3d\forms\uTransformButtons.dfm */
 /* ..\..\3d\forms\uDeformerFrame.dfm */
 /* ..\..\3d\forms\uTrfrmToolsFrame.dfm */
-/* E:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\toolbarExtPack.res */
-/* E:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\plgTestClear.drf */
+/* C:\Oburec\OburecGH\recorder\plgTestClear\toolbarExtPack.res */
+/* C:\Oburec\OburecGH\recorder\plgTestClear\plgTestClear.drf */
