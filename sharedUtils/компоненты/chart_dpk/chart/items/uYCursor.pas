@@ -13,6 +13,7 @@ type
     // чувствительность в пикселях
     m_dist:single;
     // положение курсора по Y в координатах -1..1
+    // вьюпорт с учетом отступов!
     m_pos:single;
     cursowner:integer;
     // чувствительность к выделению мышкой
@@ -26,6 +27,8 @@ type
     procedure DoOnMove(p: point2);override;
     function GetPos: point2; override;
     procedure SetPos(p: point2); override;
+    // надо возвращать Bound в вьюпорте без учета отступов для корректной работы
+    // выбора мышкой!!!
     procedure EvalBound; override;
     procedure drawdata;override;
     function TestObj(p2: point2; dist: single): boolean; override;
@@ -86,10 +89,34 @@ begin
   glLineWidth(w);
 end;
 
+function ReEvalPosFromBorderViewtoFullView(p:point2; page:cpage):point2;
+var
+  xScale, yScale:single;
+begin
+  // лев нижн x,y, width, height
+  yScale:=page.m_viewport[3]/ page.m_NormalViewport[3];
+  xScale:=page.m_viewport[2]/ page.m_NormalViewport[2];
+  result.x:=page.m_TabSpace.BottomLeft.x+xScale*p.x;
+  result.y:=page.m_TabSpace.BottomLeft.y+xScale*p.y;
+end;
+
+function ReEvalPosYFromBorderViewtoFullView(p:single; page:cpage):single;
+var
+  yScale:single;
+begin
+  // лев нижн x,y, width, height
+  yScale:=page.m_viewport[3]/ page.m_NormalViewport[3];
+  result:=page.m_TabSpace.BottomLeft.y+yScale*p;
+end;
+
+
 procedure cYCursor.EvalBound;
+var
+  lpos:single;
 begin
   boundrect.BottomLeft.x:=-1;
   boundrect.TopRight.x:=1;
+  lpos:=ReEvalPosYFromBorderViewtoFullView(m_pos,cpage(getpage));
   boundrect.BottomLeft.y:=m_pos-m_dist;
   boundrect.TopRight.y:=m_pos+m_dist;
 end;

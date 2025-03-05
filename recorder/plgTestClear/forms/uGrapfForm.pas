@@ -374,6 +374,7 @@ begin
       p:=YScaleSE.OnChange;
       YScaleSE.OnChange:=nil;
       YScaleSE.Value:=(s.axis.maxY-s.axis.minY)/cpage(cChart1.activePage).gridlinecount_Y;
+      m_axCfg[i].scale:=YScaleSE.Value;
       YScaleSE.OnChange:=p;
       f_ActiveAxisInd:=i;
       f_changeAx:=true;
