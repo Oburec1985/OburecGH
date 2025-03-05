@@ -367,7 +367,7 @@ begin
     if s<>nil then
     begin
       shiftse.OnChange:=nil;
-      shiftse.Value:=s.m_t.GetMeanEst;
+      shiftse.Value:=(s.axis.maxY+s.axis.minY)/2;
       shiftse.OnChange:=p;
       i:=axInd(s);
       m_axCfg[i].shift:=shiftse.Value;
@@ -378,6 +378,8 @@ begin
       YScaleSE.OnChange:=p;
       f_ActiveAxisInd:=i;
       f_changeAx:=true;
+
+      curs.setCursor(m_axCfg[i].ax, trigfe.Value);
     end;
   END;
 end;
@@ -528,8 +530,10 @@ var
   p2:point2;
 begin
   a:=cpage(cChart1.activePage).activeAxis;
-  //p2:=cYCursor(Sender).Position;
-  p2:=cpage(cChart1.activePage).Point2ToTrend(cYCursor(Sender).Position, false, a);
+  //p2:=cYCursor(Sender).Position; возвращает координаты в FullView
+  p2:=cYCursor(Sender).Position;
+  p2:=cpage(cChart1.activePage).p2FullViewToBorderP2(p2);
+  p2:=cpage(cChart1.activePage).Point2ToTrend(p2, false, a);
   TrigFE.Value:=p2.y;
 end;
 

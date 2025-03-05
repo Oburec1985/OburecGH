@@ -35,6 +35,7 @@ type
     procedure drawdata;override;
     function TestObj(p2: point2; dist: single): boolean; override;
   public
+    procedure setCursor(ax:caxis; y:single);
     constructor create;override;
   end;
 
@@ -132,6 +133,18 @@ procedure cYCursor.linc(p_chart: tcomponent);
 begin
   inherited;
 
+end;
+
+procedure cYCursor.setCursor(ax: caxis; y: single);
+var
+  p:point2;
+begin
+  p.x:=1;
+  p.y:=y;
+  p:=cpage(getpage).TrendPToP2(p,ax);
+  m_pos:=p.y;
+  needUpdateBound:=true;
+  EvalBound;
 end;
 
 procedure cYCursor.SetPos(p: point2);

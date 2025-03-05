@@ -194,7 +194,7 @@ object GraphFrm: TGraphFrm
     end
     object TrigFE: TFloatSpinEdit
       Left = 5
-      Top = 162
+      Top = 163
       Width = 78
       Height = 28
       Increment = 0.100000000000000000
