@@ -2863,11 +2863,6 @@ begin
 end;
 
 { cSRSFactory }
-procedure cSRSFactory.createevents;
-begin
-  addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
-  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
-end;
 
 constructor cSRSFactory.create;
 begin
@@ -2885,6 +2880,13 @@ begin
   destroyevents;
   inherited;
 end;
+
+procedure cSRSFactory.createevents;
+begin
+  addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
+  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
+end;
+
 
 procedure cSRSFactory.destroyevents;
 begin

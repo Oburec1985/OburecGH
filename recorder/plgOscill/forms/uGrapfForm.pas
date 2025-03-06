@@ -12,9 +12,11 @@ uses
   uRecorderEvents, ubaseObj, uCommonTypes, uRCFunc,
   //uBuffTrend1d,
   tags,
-
+  shellapi,
+  uPathMng,
   uEditGraphFrm,
-  PluginClass, ImgList, Menus, uChart, uSpin, uRcCtrls;
+  uHardwareMath,
+  PluginClass, ImgList, Menus, uChart, uSpin, uRcCtrls, Buttons;
 
 type
   TAxCfg = record
@@ -59,12 +61,11 @@ type
     TrigCbox: TCheckBox;
     TrigFE: TFloatSpinEdit;
     TrigLvlLabel: TLabel;
+    WinPosBtn: TSpeedButton;
     Edit1: TEdit;
-    Edit2: TEdit;
     procedure XScaleSEChange(Sender: TObject);
     procedure SignalsLVClick(Sender: TObject);
     procedure YScaleSEChange(Sender: TObject);
-    procedure ShiftSEChange(Sender: TObject);
     procedure cChart1RBtnClick(Sender: TObject);
     procedure XScaleSEKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -72,6 +73,7 @@ type
     procedure TrigCBChange(Sender: TObject);
     procedure cChart1MouseZoom(Sender: TObject; UpScale: Boolean);
     procedure cChart1CursorMove(Sender: TObject);
+    procedure WinPosBtnClick(Sender: TObject);
   public
     cs: TRTLCriticalSection;
     // список сигналов
@@ -98,6 +100,7 @@ type
     // обновляется на кажд итерации UpdateData
     m_comInterv,
     m_trigInterval:point2d;
+    m_trigPoint:point2d;
 
     m_useTrig:boolean;
     // обновляется в UpdateData
@@ -163,6 +166,7 @@ type
 
   cGraphFrmFactory = class(cRecBasicFactory)
   private
+    m_meraFile:string;
     m_counter: integer;
   protected
     procedure doUpdateData(Sender: TObject);
@@ -366,16 +370,19 @@ begin
     s:=ActiveSignal;
     if s<>nil then
     begin
+      p:=shiftse.OnChange;
       shiftse.OnChange:=nil;
       shiftse.Value:=(s.axis.maxY+s.axis.minY)/2;
       shiftse.OnChange:=p;
       i:=axInd(s);
       m_axCfg[i].shift:=shiftse.Value;
+
       p:=YScaleSE.OnChange;
       YScaleSE.OnChange:=nil;
       YScaleSE.Value:=(s.axis.maxY-s.axis.minY)/cpage(cChart1.activePage).gridlinecount_Y;
       m_axCfg[i].scale:=YScaleSE.Value;
       YScaleSE.OnChange:=p;
+
       f_ActiveAxisInd:=i;
       f_changeAx:=true;
 
@@ -667,32 +674,6 @@ begin
   end;
 end;
 
-procedure TGraphFrm.ShiftSEChange(Sender: TObject);
-var
-  s:cGraphTag;
-  lcount:integer;
-  I ,y: Integer;
-  p:TNotifyEvent;
-  r:fRect;
-  a:caxis;
-begin
-  s := ActiveSignal;
-  i:=axInd(s);
-
-  f_trigVal:=TrigFE.Value;
-  if YScaleSE.Value>0 then
-  begin
-    if i>-1 then
-    begin
-      m_axCfg[i].shift:=ShiftSE.Value;
-      f_ActiveAxisInd:=i;
-      f_changeAx:=true;
-      //GraphFrm.Perform(wm_paint,0,0);
-    end;
-  end;
-  if not RStatePlay then
-    updateView;
-end;
 
 procedure TGraphFrm.showsignalsinLV;
 var
@@ -762,6 +743,7 @@ begin
     if i>-1 then
     begin
       m_axCfg[i].scale:=YScaleSE.Value;
+      m_axCfg[i].shift:=ShiftSE.Value;
       f_changeAx:=true;
       f_ActiveAxisInd:=i;
     end;
@@ -803,6 +785,81 @@ begin
   end;
 end;
 
+// данные сигнала
+procedure savedata(dir: string; sname: string; db: array of double);
+var
+  lname: string;
+  f: file;
+begin
+  // временной блок
+  lname := dir + '\' + sname + '.dat';
+  AssignFile(f, lname);
+  Rewrite(f, 1);
+  BlockWrite(f, db[0], sizeof(double) * length(db));
+  closefile(f);
+end;
+// заголовок сигнала
+procedure saveHeader(ifile: TIniFile; Freq: double; start: double;
+  ident: string; xUnits:string);
+begin
+  WriteFloatToIniMera(ifile, ident, 'Freq', Freq);
+  ifile.WriteString(ident, 'XFormat', 'R8');
+  ifile.WriteString(ident, 'YFormat', 'R8');
+  // Подпись оси x
+  ifile.WriteString(ident, 'XUnits', xUnits);
+  // Подпись оси Y
+  // ifile.WriteString(s.tagname, 'YUnits', TagUnits(wp.m_YParam.tag));
+  WriteFloatToIniMera(ifile, ident, 'Start', start);
+  // k0
+  ifile.WriteFloat(ident, 'k0', 0);
+  // k1
+  ifile.WriteFloat(ident, 'k1', 1);
+  if xUnits='с' then
+  begin
+    ifile.WriteString(ident, 'Function', '1');
+    ifile.WriteString(ident, 'XType', '5');
+    // напряжение
+    ifile.WriteString(ident, 'YType', '160');
+    ifile.WriteString(ident, 'XUnitsId', '0x100000501');
+    ifile.WriteString(ident, 'YUnitsId', '0x100003201');
+  end;
+end;
+
+procedure TGraphFrm.WinPosBtnClick(Sender: TObject);
+var
+  dir, f:string;
+  ifile:tinifile;
+  i:integer;
+  s:cGraphTag;
+begin
+  if fileexists(g_GraphFrmFactory.m_meraFile) then
+  begin
+    dir := extractfiledir(g_GraphFrmFactory.m_meraFile) + '\Shot\';
+    f := dir + 'Shot.mera';
+    while fileexists(f) do
+    begin
+      dir := ModName(dir, false);
+      f := dir + 'Shot.mera';
+    end;
+  end;
+  if fileexists(f) then
+  begin
+
+  end
+  else
+  begin
+    ForceDirectories(dir);
+    ifile := TIniFile.create(f);
+    for i := 0 to m_slist.Count - 1 do
+    begin
+      s := getSignal(i);
+      saveHeader(ifile, s.m_t.freq, m_trigInterval.x, s.m_t.tagname, 'Гц');
+      savedata(dir, s.m_t.tagname, tdoublearray(s.m_line.data_r));
+    end;
+    ifile.destroy;
+  end;
+  ShellExecute(0, nil, pwidechar(f), nil, nil, SW_HIDE);
+end;
 
 procedure TGraphFrm.YScaleSEDownClick(Sender: TObject);
 var
@@ -945,10 +1002,13 @@ begin
     begin
       b:=trigUpdate;
     end;
-    if b then
+    if b then // обновились данные трига
     begin
       m_updateDrawInterval:=SearchTrig(trTag, f_trigVal, interval, f_point);
-      m_trigInterval:=interval;
+      m_trigPoint:=f_point;
+      if m_updateDrawInterval then
+        m_trigInterval:=interval;
+      edit1.text:=floattostr(m_trigInterval.x);
     end;
   end;
   // вычисляем что рисовать
@@ -1041,6 +1101,7 @@ begin
   begin
     updateYScale;
   end;
+  {
   if m_updateGraph then
   begin
     r.TopRight.y:=cpage(cChart1.activePage).activeAxis.maxY;
@@ -1051,14 +1112,15 @@ begin
     m_updateGraph:=false;
     cChart1.redraw;
   end;
-  if f_changeAx then
+  }
+  if f_changeAx or m_updateGraph then
   begin
     a:=m_axcfg[f_ActiveAxisInd].ax;
     v:=cpage(cChart1.activePage).gridlinecount_Y;
     r.TopRight.y:=0.5*v*m_axCfg[f_ActiveAxisInd].scale+m_axCfg[f_ActiveAxisInd].shift;
     r.BottomLeft.y:=-0.5*v*m_axCfg[f_ActiveAxisInd].scale+m_axCfg[f_ActiveAxisInd].shift;
     r.BottomLeft.x:=0;
-    r.BottomLeft.x:=f_xScale;
+    r.TopRight.x:=f_xScale;
     a.ZoomfRect(r);
     f_changeAx:=false;
   end;
@@ -1067,8 +1129,8 @@ begin
   begin
     if m_useTrig then
     begin
-      Edit1.text:='x: '+formatstrNoE(f_point.x,3)+' y: '+formatstrNoE(f_point.y,3);
-      Edit2.text:='x: '+formatstrNoE(m_comInterv.x,3)+' y: '+formatstrNoE(m_comInterv.y,3);
+      // Edit1.text:='x: '+formatstrNoE(f_point.x,3)+' y: '+formatstrNoE(f_point.y,3);
+      // Edit2.text:='x: '+formatstrNoE(m_comInterv.x,3)+' y: '+formatstrNoE(m_comInterv.y,3);
     end;
     // перенос данных в линии
     for i := 0 to m_slist.count - 1 do
@@ -1158,27 +1220,70 @@ begin
   m_name := c_Name;
   m_picname := c_Pic;
   m_Guid := IID_GRAPH;
+  createevents;
 end;
 
 procedure cGraphFrmFactory.CreateEvents;
 begin
-
+  addplgevent('cGraphFrmFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
 end;
 
 destructor cGraphFrmFactory.destroy;
 begin
-
+  DestroyEvents;
   inherited;
 end;
 
 procedure cGraphFrmFactory.DestroyEvents;
 begin
-
+  RemovePlgEvent(doChangeRState, c_RC_DoChangeRCState);
 end;
 
 procedure cGraphFrmFactory.doChangeRState(Sender: TObject);
 begin
-
+ case GetRCStateChange of
+    RSt_Init:
+      begin
+        doStart;
+        //doStop;
+      end;
+    RSt_StopToView:
+      begin
+        m_meraFile := GetMeraFile;
+        doStart;
+      end;
+    RSt_StopToRec:
+      begin
+        m_meraFile := GetMeraFile;
+        doStart;
+      end;
+    RSt_ViewToStop:
+      begin
+        //doStop;
+      end;
+    RSt_ViewToRec:
+      begin
+        m_meraFile := GetMeraFile;
+      end;
+    RSt_initToRec:
+      begin
+        m_meraFile := GetMeraFile;
+        doStart;
+      end;
+    RSt_initToView:
+      begin
+        m_meraFile := GetMeraFile;
+        doStart;
+      end;
+    RSt_RecToStop:
+      begin
+        //doStop;
+      end;
+    RSt_RecToView:
+      begin
+        doStart;
+      end;
+  end;
 end;
 
 function cGraphFrmFactory.doCreateForm: cRecBasicIFrm;
@@ -1277,6 +1382,7 @@ procedure cGraphTag.SetAxis(a: caxis);
 var
   ax:caxis;
 begin
+  // перелинковываем линию на вновь созданную ось
   if m_line<>nil then
   begin
     //ax:=caxis(m_line.parent);

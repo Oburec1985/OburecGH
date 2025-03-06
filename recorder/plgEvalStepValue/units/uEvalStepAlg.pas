@@ -206,6 +206,7 @@ var
   j, i2, ind, t1i, t2i: integer;
   v, trigTime, lastTime, t: double;
   checkTrig: boolean;
+  I: Integer;
 begin
   lastindex := -1;
   checkTrig:=false;
@@ -238,6 +239,7 @@ begin
       end;
       // отклонение по мат. ожиданию
       if abs(v - fMean) > m_Threshold then
+      //if v> m_Threshold then
       begin
         t1i := ind + j; // индекс начала участка осреднения
         trigTime := m_outTag.m_ReadDataTime + j * fPeriod;
@@ -273,7 +275,16 @@ begin
     Result.x := fTrigTime;
     t1i:=m_outTag.getIndex(fTrigTime);
     t2i:=t1i+m_TrigMeanLenI;
-    Result.y := tempSUM(m_outTag.m_ReadData, t1i, t2i) / (m_TrigMeanLenI+1);
+    //Result.y := tempSUM(m_outTag.m_ReadData, t1i, t2i) / (m_TrigMeanLenI+1);
+    Result.y:=0;
+    //for I := t1i to t2i do
+    //begin
+    //  Result.y:=m_outTag.m_ReadData[i]+Result.y;
+    //end;
+    //Result.y:=Result.y/(t2i-t1i+1);
+    if t2i=m_outTag.getlastindex then
+      dec(t2i);
+    Result.y := tempSUM(m_outTag.m_ReadData, t1i, t2i) / (t2i-t1i+1);
     m_outScTag.t.PushValue(Result.y, Result.x);
     lastindex := t2i;
     ftrig := false;

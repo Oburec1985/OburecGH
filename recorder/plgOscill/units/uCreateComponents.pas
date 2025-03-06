@@ -81,10 +81,9 @@ var
   str, str1:string;
   m_toolBarIcon:IPicture;
   m_btnID:cardinal;
-  f:cRecBasicFactory;
 begin
-  f:=cGraphFrmFactory.create;
-  CompMng.Add(f);
+  g_GraphFrmFactory:=cGraphFrmFactory.create;
+  CompMng.Add(g_GraphFrmFactory);
 end;
 
 procedure createFormsRecorderUIThread(compMng: cCompMng);
