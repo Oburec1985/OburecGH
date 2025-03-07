@@ -56,6 +56,7 @@
     <Transaction>2025.02.17 19:44:42.014.pas,E:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\Unit3.pas=E:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uEditGraphFrm.pas</Transaction>
     <Transaction>2025.02.17 19:44:42.014.dfm,E:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\Unit3.dfm=E:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uEditGraphFrm.dfm</Transaction>
     <Transaction>2025.03.06 10:14:42.452.dproj,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\plgTestClear.dproj=F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\plgOscill.dproj</Transaction>
+    <Transaction>2025.03.07 09:21:33.439.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgOscill\Unit1.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgOscill\units\uOscillSaver.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
@@ -112,5 +113,6 @@
     <File Path="units"/>
     <File Path="units\uCreateComponents.pas"/>
     <File Path="units\uRecFactory.pas"/>
+    <File Path="units\uOscillSaver.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

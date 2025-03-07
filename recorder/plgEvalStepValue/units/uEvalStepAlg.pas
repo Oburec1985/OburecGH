@@ -282,8 +282,8 @@ begin
     //  Result.y:=m_outTag.m_ReadData[i]+Result.y;
     //end;
     //Result.y:=Result.y/(t2i-t1i+1);
-    if t2i=m_outTag.getlastindex then
-      dec(t2i);
+    if t2i>m_outTag.getlastindex then
+      t2i:=m_outTag.getlastindex-1;
     Result.y := tempSUM(m_outTag.m_ReadData, t1i, t2i) / (t2i-t1i+1);
     m_outScTag.t.PushValue(Result.y, Result.x);
     lastindex := t2i;
@@ -382,45 +382,27 @@ begin
       if m_useScalar then
       begin
         trigPoint := FindTrig(lastindex);
-        if lastindex>-1 then
-        begin
-          //if name='MC-114-{ 1- 4- 6}' then
-          //begin
-          //  logmessage('x:'+floattostr(trigPoint.x)+
-          //             ' y:'+floattostr(trigPoint.y));
-          //end;
-        end;
       end;
-      //if not ftrig then
+      if lastindex=-1 then
       begin
         // сколько блоков можно забыть
         ind := trunc((m_outTag.lastindex) / fblSize);
-        // 4.962 y=0.5276
-        //if name='MC-114-{ 1- 4- 6}' then
-        // begin
-        //   logmessage('c:='+inttostr(m_pushDataCount));
-        //   logmessage('readTime:='+floattostr(m_outTag.m_ReadDataTime));
-        //   logmessage('endTime:='+floattostr(m_outTag.getPortionEndTime));
-        //   i:=m_outTag.getIndex(m_outTag.getPortionEndTime);
-        //   v:=m_outTag.m_ReadData[i-1];
-        //   logmessage('endTimeY:='+floattostr(v));
-        // end;
-        //i:=fblSize * ind;
-        //if i<m_outTag.lastindex then
         m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[0], fblSize*ind, 0, m_outTag.m_ReadDataTime);
         m_pushDataCount:=fblSize*ind+m_pushDataCount;
 
+        {
+        i:=m_outTag.getIndex(trigPoint.x);
+        if i<fblSize*ind then
+        begin
+          m_outTag.ResetTagDataTimeInd(i);
+        end
+        else
+        begin
+          m_outTag.ResetTagDataTimeInd(fblSize * ind);
+        end;}
+
+
         m_outTag.ResetTagDataTimeInd(fblSize * ind);
-        //if name='MC-114-{ 1- 4- 6}' then
-        //begin
-        //  logmessage('endTime2:='+floattostr(m_outTag.getPortionEndTime));
-        //  i:=m_outTag.getIndex(m_outTag.getPortionEndTime);
-        //  if i>0 then
-        //    v:=m_outTag.m_ReadData[i-1]
-        //  else
-        //    v:=0;
-        //  logmessage('endTimeY:='+floattostr(v));
-        //end;
       end;
       Result := true;
     end;
@@ -431,9 +413,8 @@ begin
     // нельзя отбрасывать m_fftcount-fftShift т.к. эти данные участвуют в расчетах двух перекрытых спектров
     // fportionsize:=(bCount-1)*m_fftcount+m_fftShift;
     fPortionSize := m_fftShift * bCount;
-    if fPortionSize > 0 then
-      m_tag.ResetTagDataTimeInd(fPortionSize);
-    //logmessage(floattostr(m_tag.m_ReadDataTime));
+
+    m_tag.ResetTagDataTimeInd(fPortionSize);
   end;
 end;
 
@@ -444,6 +425,7 @@ var
   checkTrig:boolean;
   res:point2d;
 begin
+  result:=false;
   lastTime:=inTag.getPortionEndTime;
   checkTrig:=false;
   for I := 0 to intag.lastindex - 1 do
@@ -479,6 +461,7 @@ begin
   // если нашли триггер
   if checkTrig then
   begin
+    result:=true;
     res.x := fTrigTime;
     t2i:=t1i+m_TrigMeanLenI;
     res.y := tempSUM(inTag.m_ReadData, t1i, t2i) / (m_TrigMeanLenI+1);

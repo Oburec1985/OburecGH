@@ -37,7 +37,8 @@ uses
   uRecFactory in 'units\uRecFactory.pas' {/,uSyncThread in '..\..\wp\WPExtPack\units\uSyncThread.pas'},
   uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
   uGrapfForm in 'forms\uGrapfForm.pas' {GraphFrm},
-  uEditGraphFrm in 'forms\uEditGraphFrm.pas' {EditGraphFrm};
+  uEditGraphFrm in 'forms\uEditGraphFrm.pas' {EditGraphFrm},
+  uOscillSaver in 'units\uOscillSaver.pas';
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 

@@ -38,24 +38,24 @@ object GraphFrm: TGraphFrm
     object XScaleLabel: TLabel
       Left = 119
       Top = 43
-      Width = 111
+      Width = 59
       Height = 24
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
-      Caption = #1056#1072#1079#1074#1077#1088#1090#1082#1072' X'
+      Caption = 'XScale'
     end
     object Label1: TLabel
       Left = 119
       Top = 84
-      Width = 111
+      Width = 63
       Height = 23
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
-      Caption = 'YScaleLabel'
+      Caption = 'YScale'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -20
@@ -79,13 +79,13 @@ object GraphFrm: TGraphFrm
     object ShiftLabel: TLabel
       Left = 119
       Top = 133
-      Width = 96
+      Width = 55
       Height = 23
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
-      Caption = #1057#1084#1077#1097#1077#1085#1080#1077
+      Caption = 'Offset'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -20
@@ -96,13 +96,13 @@ object GraphFrm: TGraphFrm
     object TrigLvlLabel: TLabel
       Left = 119
       Top = 221
-      Width = 68
+      Width = 30
       Height = 23
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
-      Caption = #1058#1088#1080#1075#1075#1077#1088
+      Caption = 'Lvl.'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -20
@@ -397,7 +397,7 @@ object GraphFrm: TGraphFrm
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
-      Caption = #1058#1088#1080#1075#1075#1077#1088
+      Caption = 'Trig'
       TabOrder = 5
     end
     object TrigFE: TFloatSpinEdit
@@ -411,14 +411,6 @@ object GraphFrm: TGraphFrm
       Margins.Bottom = 4
       Increment = 0.100000000000000000
       TabOrder = 6
-    end
-    object Edit1: TEdit
-      Left = 6
-      Top = 288
-      Width = 121
-      Height = 32
-      TabOrder = 7
-      Text = 'Edit1'
     end
   end
   object cChart1: cChart
