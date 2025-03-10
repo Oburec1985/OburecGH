@@ -55,6 +55,7 @@ type
     // использовать скал€рный тег
     m_useScalar: boolean;
     m_outScTag: cScalarTag;
+    m_trigPoint: point2d;
     // 0 - мгновенное; 1 - среднее
     m_TrigType: integer;
     // длина порции дл€ усреднени€ в точках
@@ -257,7 +258,7 @@ begin
             begin
               fTrigTime := trigTime + m_TrigOffset;
               m_TrigDrop:=fTrigTime+m_FallTime;
-              checkTrig := (fTrigTime + m_TrigMeanLenI *(1 / m_outTag.freq)) < lastTime;
+              checkTrig := (fTrigTime + m_TrigMeanLenI *(fperiod)) < lastTime;
               break;
               //if checkTrig then
               //begin
@@ -302,7 +303,6 @@ var
   // dt,
   lt, k, v: double;
   j: integer;
-  trigPoint: point2d;
 begin
   Result := false;
   if not m_fftFlt then
@@ -381,9 +381,9 @@ begin
       // поиск триггера
       if m_useScalar then
       begin
-        trigPoint := FindTrig(lastindex);
+        m_trigPoint := FindTrig(lastindex);
       end;
-      if lastindex=-1 then
+      if not ftrig then
       begin
         // сколько блоков можно забыть
         ind := trunc((m_outTag.lastindex) / fblSize);
