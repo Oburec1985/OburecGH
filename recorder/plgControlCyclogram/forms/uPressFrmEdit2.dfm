@@ -655,8 +655,6 @@ object PressFrmEdit2: TPressFrmEdit2
       OnDragDrop = TagsLBDragDrop
       OnDragOver = TagsLBDragOver
       OnKeyDown = TagsLBKeyDown
-      ExplicitLeft = 11
-      ExplicitTop = 8
     end
     object UseRefProfileCB: TCheckBox
       Left = 332

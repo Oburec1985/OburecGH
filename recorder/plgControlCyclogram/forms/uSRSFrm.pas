@@ -2980,19 +2980,22 @@ begin
     TSRSFrm(frm).signalslv.drawcolorbox:=true;
     TSRSFrm(frm).signalslv.getcolor:= fgetcolor;
     t := TSRSFrm(Frm).getTaho;
-    if t.m_tag.tag = nil then
+    if t<>nil then
     begin
-      t.m_tag.tag := getTagByName(t.m_tag.tagname);
-    end;
-    for j := 0 to t.cfg.SRSCount - 1 do
-    begin
-      s := t.cfg.GetSrs(j);
-      if s.m_tag.tag = nil then
+      if t.m_tag.tag = nil then
       begin
-        s.m_tag.tag := getTagByName(s.m_tag.tagname);
+        t.m_tag.tag := getTagByName(t.m_tag.tagname);
       end;
+      for j := 0 to t.cfg.SRSCount - 1 do
+      begin
+        s := t.cfg.GetSrs(j);
+        if s.m_tag.tag = nil then
+        begin
+          s.m_tag.tag := getTagByName(s.m_tag.tagname);
+        end;
+      end;
+      TSRSFrm(Frm).UpdateBlocks;
     end;
-    TSRSFrm(Frm).UpdateBlocks;
   end;
 end;
 

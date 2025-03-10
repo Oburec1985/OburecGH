@@ -211,8 +211,11 @@ begin
   if tagsLB.SelCount=1 then
   begin
     li:=tagsLB.Selected;
-    s:=g_PressCamFactory2.getTag(li.Index);
-    useAlarmsCB.checked:=g_PressCamFactory2.m_useAlarmsArr[li.Index];
+    if li.Index<length(g_PressCamFactory2.m_tags) then
+    begin
+      s:=g_PressCamFactory2.getTag(li.Index);
+      useAlarmsCB.checked:=g_PressCamFactory2.m_useAlarmsArr[li.Index];
+    end;
   end
   else
   begin

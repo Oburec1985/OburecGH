@@ -2436,6 +2436,8 @@ begin
     // if b then
     begin
       //fr.Eval;
+      if True then
+
       t:=g_PressCamFactory2.m_tags[i];
       fr.m_Max:=t.m_SKO[m_bnum].rms_max;
       fr.m_f:=t.m_SKO[m_bnum].Freq;
