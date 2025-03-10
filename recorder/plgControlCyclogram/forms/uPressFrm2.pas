@@ -135,7 +135,7 @@ type
     procedure ClearFrames;
     // происходит в цикле обновления экрана рекордера
     procedure UpdateView;
-    procedure updatedata;
+    procedure updatedata;override;
     procedure doStart;
     procedure doStop;
     function Ready: boolean;
@@ -235,7 +235,7 @@ type
     function GetRef(i: integer): double;
     procedure SetRef(d: double);
     procedure doAfterLoad; override;
-    procedure doUpdateData(Sender: TObject);
+    procedure doUpdateData;override;
     procedure doChangeRState(Sender: TObject);
     // создать теги из списка спектров
     procedure CreateTags();
@@ -608,14 +608,14 @@ end;
 
 procedure cPressCamFactory2.destroyevents;
 begin
-  RemovePlgEvent(doUpdateData, c_RUpdateData);
+  //RemovePlgEvent(doUpdateData, c_RUpdateData);
   //RemovePlgEvent(doChangeCfg, c_RC_LeaveCfg);
   RemovePlgEvent(doChangeRState, c_RC_DoChangeRCState);
 end;
 
 procedure cPressCamFactory2.createevents;
 begin
-  addplgevent('cPressCamFactory2_doUpdateData', c_RUpdateData, doUpdateData);
+  //addplgevent('cPressCamFactory2_doUpdateData', c_RUpdateData, doUpdateData);
   addplgevent('cPressCamFactory2_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
   //addplgevent('cSRSFactory_doChangeCfg', c_RC_LeaveCfg, doChangeCfg);
 end;
@@ -1098,21 +1098,21 @@ begin
   end;
   if m_useAlarms then
   begin
-    if m_AlarmTagH<>nil then
+    if m_AlarmTagH.tag<>nil then
     begin
       if h then
         m_AlarmTagH.tag.PushValue(1,-1)
       else
         m_AlarmTagH.tag.PushValue(0,-1);
     end;
-    if m_AlarmTagHH<>nil then
+    if m_AlarmTagHH.tag<>nil then
     begin
       if hh then
         m_AlarmTagHH.tag.PushValue(1,-1)
       else
         m_AlarmTagHH.tag.PushValue(0,-1);
     end;
-    if m_AlarmTag<>nil then
+    if m_AlarmTag.tag<>nil then
     begin
       if emerg then
         m_AlarmTag.tag.PushValue(1,-1)
@@ -1158,7 +1158,7 @@ begin
   end;
 end;
 
-procedure cPressCamFactory2.doUpdateData(Sender: TObject);
+procedure cPressCamFactory2.doUpdateData;
 var
   bnum, j, i,
   // индекс максимума в спектре

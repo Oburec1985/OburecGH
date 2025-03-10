@@ -10,7 +10,6 @@ uses
   uCompMng in '..\plgTestClear\units\uCompMng.pas',
   uRecBasicFactory in '..\SharedRUnits\uRecBasicFactory.pas',
   uRecorderEvents in '..\SharedRUnits\uRecorderEvents.pas',
-  uCreateComponents in 'units\uCreateComponents.pas',
   blaccess in '..\SharedRUnits\interfaces\blaccess.pas',
   CFREG in '..\SharedRUnits\interfaces\CFREG.PAS',
   DevAPI in '..\SharedRUnits\interfaces\DevAPI.pas',
@@ -254,7 +253,8 @@ uses
   ulissajousCurveEdit in 'forms\ulissajousCurveEdit.pas' {LisEditFrm},
   uPerformanceTime in '..\..\sharedUtils\utils\uPerformanceTime.pas',
   uProfile in 'units\uProfile.pas',
-  uSpmThresholdProfile in 'forms\uSpmThresholdProfile.pas' {SpmThresholdProfileFrm};
+  uSpmThresholdProfile in 'forms\uSpmThresholdProfile.pas' {SpmThresholdProfileFrm},
+  uCreateComponents in 'units\uCreateComponents.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

@@ -34,10 +34,6 @@ object PressFrm2: TPressFrm2
       Height = 229
       Align = alClient
       TabOrder = 0
-      ExplicitLeft = 3
-      ExplicitTop = 20
-      ExplicitWidth = 376
-      ExplicitHeight = 228
       object BarPanel: TPanel
         Left = 0
         Top = 0
@@ -51,7 +47,6 @@ object PressFrm2: TPressFrm2
         ParentShowHint = False
         ShowHint = False
         TabOrder = 0
-        ExplicitWidth = 371
         inline PressFrmFrame21: TPressFrmFrame2
           Left = 1
           Top = 1
@@ -61,7 +56,7 @@ object PressFrm2: TPressFrm2
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 369
+          ExplicitWidth = 372
           ExplicitHeight = 36
           inherited ALabel: TLabel
             Width = 21
@@ -82,13 +77,13 @@ object PressFrm2: TPressFrm2
           end
           inherited FreqEdit: TEdit
             Width = 44
-            Height = 21
+            Height = 25
             ExplicitWidth = 44
-            ExplicitHeight = 21
+            ExplicitHeight = 25
           end
           inherited AmpE: TEdit
-            Height = 21
-            ExplicitHeight = 21
+            Height = 25
+            ExplicitHeight = 25
           end
         end
       end
@@ -106,8 +101,6 @@ object PressFrm2: TPressFrm2
       ParentShowHint = False
       ShowHint = True
       TabOrder = 1
-      ExplicitLeft = 3
-      ExplicitWidth = 376
       object MaxLabel: TLabel
         Left = 3
         Top = 10
@@ -298,7 +291,7 @@ object PressFrm2: TPressFrm2
         Left = 78
         Top = 7
         Width = 63
-        Height = 21
+        Height = 25
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -311,7 +304,7 @@ object PressFrm2: TPressFrm2
         Left = 78
         Top = 42
         Width = 63
-        Height = 21
+        Height = 25
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -324,7 +317,7 @@ object PressFrm2: TPressFrm2
         Left = 78
         Top = 82
         Width = 63
-        Height = 21
+        Height = 25
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -388,7 +381,7 @@ object PressFrm2: TPressFrm2
         Left = 214
         Top = 42
         Width = 61
-        Height = 21
+        Height = 25
         TabOrder = 6
         Text = '0'
       end
@@ -415,7 +408,7 @@ object PressFrm2: TPressFrm2
         Left = 214
         Top = 114
         Width = 121
-        Height = 22
+        Height = 27
         Increment = 0.100000000000000000
         TabOrder = 8
         OnChange = RefValSEChange

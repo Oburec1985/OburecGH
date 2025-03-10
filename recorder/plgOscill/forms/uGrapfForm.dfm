@@ -418,7 +418,6 @@ object GraphFrm: TGraphFrm
     Top = 0
     Width = 776
     Height = 623
-    Cursor = crSizeAll
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 1

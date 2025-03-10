@@ -402,15 +402,13 @@ end;
 
 procedure TGraphFrm.clear;
 var
-  I: Integer;
   t:cGraphTag;
 begin
-  for I := 0 to m_sList.Count - 1 do
+  while m_sList.Count <>0 do
   begin
-    t:=cGraphTag(m_sList.Objects[i]);
+    t:=cGraphTag(m_sList.Objects[0]);
     t.destroy;
   end;
-  m_slist.Clear;
 end;
 
 constructor TGraphFrm.create(Aowner: tcomponent);
@@ -556,6 +554,9 @@ begin
   XScaleSE.Value:=0.3;
   m_axCfg[0].ax:=cpage(cChart1.activePage).activeAxis;
   m_axCfg[0].name:=m_axCfg[0].ax.name;
+
+  YScaleSE.Value:=m_axCfg[0].scale;
+  ShiftSE.Value:=m_axCfg[0].shift;
 
   r.BottomLeft.x:=0;
   r.BottomLeft.y:=0;

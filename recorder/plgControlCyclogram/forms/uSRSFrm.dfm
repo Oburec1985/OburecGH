@@ -3,7 +3,7 @@ object SRSFrm: TSRSFrm
   Top = 0
   Hint = #1042#1082#1083#1102#1095#1080#1090#1100'/'#1086#1090#1082#1083#1102#1095#1080#1090#1100' '#1088#1072#1089#1095#1077#1090
   Caption = 'SRSFrm'
-  ClientHeight = 451
+  ClientHeight = 581
   ClientWidth = 927
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,7 +20,7 @@ object SRSFrm: TSRSFrm
     Left = 634
     Top = 0
     Width = 4
-    Height = 451
+    Height = 581
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -28,12 +28,13 @@ object SRSFrm: TSRSFrm
     Align = alRight
     Color = clBackground
     ParentColor = False
+    ExplicitHeight = 451
   end
   object SpmChart: cChart
     Left = 0
     Top = 0
     Width = 634
-    Height = 451
+    Height = 581
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 0
@@ -43,12 +44,13 @@ object SRSFrm: TSRSFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitHeight = 451
   end
   object RightGB: TGroupBox
     Left = 638
     Top = 0
     Width = 289
-    Height = 451
+    Height = 581
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -56,6 +58,7 @@ object SRSFrm: TSRSFrm
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
+    ExplicitHeight = 451
     object ShockCountLabel: TLabel
       Left = 10
       Top = 27
@@ -670,12 +673,13 @@ object SRSFrm: TSRSFrm
     end
     object GroupBox1: TGroupBox
       Left = 2
-      Top = 264
+      Top = 394
       Width = 285
       Height = 185
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 14
+      ExplicitTop = 264
       object SignalsLV: TBtnListView
         Left = 2
         Top = 19

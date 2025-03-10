@@ -416,7 +416,7 @@ type
     procedure UpdateView;
     // возвращает найден ли удар или нет. Вызов внутри updatedata
     function SearchTrig(t:cSRSTaho):boolean;
-    procedure updatedata;
+    procedure updatedata;override;
     // выделение памяти. происходит при загрузке или смене конфига
     procedure UpdateBlocks;
     procedure UpdateChart;
@@ -462,7 +462,7 @@ type
     procedure doRecorderInit; override;
   public
     procedure doAfterLoad; override;
-    procedure doUpdateData(sender: tobject);
+    procedure doUpdateData;override;
     procedure doChangeRState(sender: tobject);
     procedure doStart;
     procedure doStop;
@@ -1180,7 +1180,7 @@ begin
             //logMessage('MaxTime: ' +floattostr(t.m_MaxTime));
             t.TrigInterval.x := t.m_MaxTime - m_ShiftLeft;
             t.TrigInterval.y := t.TrigInterval.x + m_Length;
-            logMessage('TrigInterval: ' +floattostr(t.TrigInterval.x)+'...'+floattostr(t.TrigInterval.y));
+            //logMessage('TrigInterval: ' +floattostr(t.TrigInterval.x)+'...'+floattostr(t.TrigInterval.y));
             t.f_iEnd := t.m_tag.getIndex(t.TrigInterval.y);
             result:=true;
             break;
@@ -2883,14 +2883,14 @@ end;
 
 procedure cSRSFactory.createevents;
 begin
-  addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
+  //addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
   addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
 end;
 
 
 procedure cSRSFactory.destroyevents;
 begin
-  RemovePlgEvent(doUpdateData, c_RUpdateData);
+  //RemovePlgEvent(doUpdateData, c_RUpdateData);
   RemovePlgEvent(doChangeRState, c_RC_DoChangeRCState);
 end;
 
@@ -3187,7 +3187,7 @@ begin
   end;
 end;
 
-procedure cSRSFactory.doUpdateData(sender: tobject);
+procedure cSRSFactory.doUpdateData;
 var
   i: integer;
   Frm: TRecFrm;
