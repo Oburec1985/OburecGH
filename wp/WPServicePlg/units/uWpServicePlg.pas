@@ -445,7 +445,25 @@ var
   opt, g, p, v, ltag: integer;
   t: double;
 begin
+
+  // (msg.msg>128) and (msg.msg<>275)
+  //if Msg.Msg = WM_KEYDOWN then
+  {if (Msg.Msg<>WM_TIMER) and (Msg.Msg<>WM_NOTIFY) and (Msg.Msg<>WM_paint)
+  and (Msg.Msg<>WM_size) and (Msg.Msg<>WM_ERASEBKGND) and (Msg.Msg<>WM_MOVE)
+  and (Msg.Msg<>WM_GETMINMAXINFO) and (Msg.Msg<>WM_GETMINMAXINFO)
+  and (Msg.Msg<>WM_WINDOWPOSCHANGING)  and (Msg.Msg<>WM_nccreate)
+  and (Msg.Msg<>WM_setcursor) and (Msg.Msg<>146) and (Msg.Msg<>147)
+  and (Msg.Msg<>831) and (Msg.Msg<>878) and (Msg.Msg<>28) and (Msg.Msg<>6) and (Msg.Msg<>7) and (Msg.Msg<>8)
+  and (Msg.Msg<>145) and (Msg.Msg<>134) and (Msg.Msg<>71) and (Msg.Msg<>31) and (Msg.Msg<>124) and (Msg.Msg<>125) and (Msg.Msg<>127)
+  and (Msg.Msg<>799) and (Msg.Msg<>866) and (Msg.Msg<>8) and (Msg.Msg<>13) and (Msg.Msg<>12) and (Msg.Msg<>148)
+  and (Msg.Msg<>289) and (Msg.Msg<>293) and (Msg.Msg<>533) and (Msg.Msg<>287) and (Msg.Msg<>85) and (Msg.Msg<>877)
+  and (Msg.Msg<>641) and (Msg.Msg<>642) and (Msg.Msg<>133) and (Msg.Msg<>131) and (Msg.Msg<>1154) and (Msg.Msg<>10)
+  and (Msg.Msg<>875) and (Msg.Msg<>1575) and (Msg.Msg<>874) and (Msg.Msg<>174) and (Msg.Msg<>297) and (Msg.Msg<>133)
+  and (Msg.Msg<>885) and (Msg.Msg<>132) and (Msg.Msg<>160) and (Msg.Msg<>674)
+  then
+    logmessage('TServicePlg_ltag='+inttostr(Msg.Msg));}
   if Msg.Msg = WM_KeyHOOK then
+  //if (Msg.Msg = WM_CHAR) or (Msg.Msg = WM_keydown) then
   begin
     ltag := tagproc(c_wpservicepack_tag);
     //logmessage('TServicePlg_ltag='+inttostr(ltag));
@@ -458,7 +476,7 @@ begin
         if (mainwnd = hwnd(Msg.lParam)) then
         begin
           // добавить замер Control
-          if GetKeyState(VK_CONTROL) < 0 then
+          if GetKeyState(VK_MENU) < 0 then
           begin
             if Msg.wParam = Ord('D') then
             begin

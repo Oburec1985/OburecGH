@@ -959,13 +959,60 @@ end;
 function getsrcBySignal(s:idispatch):iwpnode;
 var
   path, str: string;
-  n: iwpnode;
-  i: integer;
+  usml:IWPUSML;
+  n, root, srcnode : iwpnode;
+  ch, ch1:IDispatch;
+  ls:IWPSignal;
+  i, j: integer;
 begin
   result := nil;
   if IsSignal(s) then
   begin
     n := TypeCastToIWNode(s);
+    if n=nil then
+    begin
+      root:=GetWPRoot;
+      for I := 0 to root.ChildCount - 1 do
+      begin
+        ch:=root.At(i);
+        // если не usml
+        if isSrc(ch) then
+        begin
+          srcnode:=TypeCastToIWNode(ch);
+          for j := 0 to srcnode.ChildCount - 1 do
+          begin
+            ch1:=srcnode.At(j);
+            if issignal(ch1) then
+            begin
+              ls:=TypeCastToIWSignal(ch1);
+              if ls.SName=(s as iwpsignal).sname then
+              begin
+                result:=srcnode;
+                exit;
+              end;
+            end;
+          end;
+        end;
+       if isUSML(ch) then
+        begin
+          usml:=TypeCastToIWPUSML(ch);
+          for j := 0 to usml.ParamCount - 1 do
+          begin
+            ch1:=usml.Parameter(j);
+            if issignal(ch1) then
+            begin
+              ls:=TypeCastToIWSignal(ch1);
+              if ls.SName=(s as iwpsignal).sname then
+              begin
+                // возврат node
+                result:=TypeCastToIWNode(ch);
+                exit;
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
     str := n.AbsolutePath;
     for i := length(str) downto 1 do
     begin
