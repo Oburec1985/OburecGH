@@ -28,7 +28,7 @@ Type
   TFaceFlagArray = array of word;
 
 function matrixToStr(m: MatrixGl): string;
-function StrToMatrix(str: string): MatrixGl;
+function StrToMatrix(str: string; var err:boolean): MatrixGl;
 // перенос вершины pos в направлении dir на растояние distance
 // dir должен быть единичным
 function MovePoint(pos: point3; n_dir: point3; distance: single): point3;
@@ -588,10 +588,33 @@ begin
     (m[14]);
 end;
 
-function StrToMatrix(str: string): MatrixGl;
+function StrToMatrix(str: string; var err:boolean): MatrixGl;
 var
-  i, ind: integer;
+  i, ind, col: integer;
+  sub:string;
+  v:single;
 begin
+  err:=false;
+  for col := 0 to 3 do
+  begin
+    for I := 0 to 2 do
+    begin
+      ind:=i+col*3;
+      sub:=getSubStrByIndex(str, ';', 1, ind);
+      if sub<>'NAN' then
+      begin
+        result[ind+col]:=strtofloat(sub);
+      end
+      else
+      begin
+        result[ind+col]:=0;
+        err:=true;
+      end;
+    end;
+    result[ind+1+col] := 0;
+  end;
+  result[15] := 1;
+  exit;
   result[0] := strtofloat(getSubStrByIndex(str, ';', 1, 0));
   result[1] := strtofloat(getSubStrByIndex(str, ';', 1, 1));
   result[2] := strtofloat(getSubStrByIndex(str, ';', 1, 2));

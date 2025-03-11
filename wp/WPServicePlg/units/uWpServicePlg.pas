@@ -448,31 +448,30 @@ begin
   if Msg.Msg = WM_KeyHOOK then
   begin
     ltag := tagproc(c_wpservicepack_tag);
-    logmessage('TServicePlg_ltag='+inttostr(ltag));
+    //logmessage('TServicePlg_ltag='+inttostr(ltag));
     if ltag = -1 then
     begin
       t := gettimeinsec;
-      logmessage(floattostr(t - hooktime));
+      //logmessage(floattostr(t - hooktime));
       if abs(t - hooktime) > 0.1 then
       begin
         if (mainwnd = hwnd(Msg.lParam)) then
         begin
-          // добавить замер Alt
-          if GetKeyState(VK_Menu) < 0 then
+          // добавить замер Control
+          if GetKeyState(VK_CONTROL) < 0 then
           begin
-            logmessage('TServicePlg_Alt');
             if Msg.wParam = Ord('D') then
             begin
               CreateSubSignals;
             end;
             if Msg.wParam = Ord('T') then
             begin
-              logmessage('TServicePlg_T');
+              //logmessage('TServicePlg_T');
             end;
             // перебор типов курсоров
             if Msg.wParam = Ord('3') then
             begin
-              logmessage('TServicePlg_3');
+              //logmessage('TServicePlg_3');
               p := IWPGraphs(WP.GraphApi).ActiveGraphPage;
               g := IWPGraphs(WP.GraphApi).ActiveGraph(p);
               v := IWPGraphs(WP.GraphApi).GetCursorType(p);
@@ -485,7 +484,7 @@ begin
             end;
             if Msg.wParam = Ord('L') then
             begin
-              logmessage('TServicePlg_L');
+              //logmessage('TServicePlg_L');
               if not m_showlegend then
               begin
                 m_showlegend := true;
@@ -505,13 +504,13 @@ begin
         end;
         hooktime := t;
       end;
-      logmessage('TServicePlg_exit');
+      //logmessage('TServicePlg_exit');
     end
     else
     begin
       if ltag <> c_wpservicepack_tag then
       begin
-        logmessage('TServicePlg_tagproc(-1)');
+        //logmessage('TServicePlg_tagproc(-1)');
       end;
     end;
     tagproc(-1);

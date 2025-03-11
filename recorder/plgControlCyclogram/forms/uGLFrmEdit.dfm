@@ -341,10 +341,9 @@ object ObjFrm3dEdit: TObjFrm3dEdit
           Top = 127
           Width = 245
           Height = 529
-          ExplicitLeft = 3
-          ExplicitTop = 128
-          ExplicitWidth = 243
-          ExplicitHeight = 527
+          ExplicitTop = 127
+          ExplicitWidth = 245
+          ExplicitHeight = 529
         end
       end
     end

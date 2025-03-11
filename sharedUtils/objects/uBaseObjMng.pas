@@ -77,7 +77,8 @@ type
     Procedure Add(obj:cBaseObj);overload;
     // создаем объект по имени класса
     Function CreateObjByType(Classname:string):cbaseobj;virtual;
-    procedure SaveToXML(fname:string; sectionName:string);virtual;
+    procedure SaveToXML(fname:string; sectionName:string);overload;virtual;
+    procedure SaveToXML(fname:string; sectionName:string; rewrite:boolean);overload;virtual;
     procedure AddToXML(fname:string; sectionName:string);virtual;
     // не очищает engine перед загрузкой
     function AddFromXML(fname:string; sectionName:string):boolean;overload;virtual;
@@ -357,7 +358,7 @@ begin
   doc.destroy;
 end;
 
-procedure cBaseObjMng.SaveToXML(fname:string; sectionName:string);
+procedure cBaseObjMng.SaveToXML(fname:string; sectionName:string; rewrite:boolean);
 var
   doc:TNativeXml;
   node:txmlnode;
@@ -366,9 +367,12 @@ var
   dir:string;
 begin
   doc:=TNativeXml.Create(nil);
-  if fileexists(fname) then
+  if not rewrite then
   begin
-    doc.LoadFromFile(fname);
+    if fileexists(fname) then
+    begin
+      doc.LoadFromFile(fname);
+    end;
   end;
   node:=doc.Root;
   node.name:='Root';
@@ -383,6 +387,11 @@ begin
   end;
   doc.SaveToFile(fname);
   doc.destroy;
+end;
+
+procedure cBaseObjMng.SaveToXML(fname:string; sectionName:string);
+begin
+  SaveToXML(fname, sectionName, false);
 end;
 
 function cBaseObjMng.AddFromXML(node:tXmlNode):boolean;

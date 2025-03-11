@@ -25,7 +25,7 @@ type
 
   TAxis = record
     ax: caxis;
-    axname:string;
+    axname: string;
     ymin, ymax: double;
   end;
 
@@ -38,10 +38,10 @@ type
     t: cTag;
     m_dt: double;
     // обновляется в updatedata
-    m_interval:point2d;
+    m_interval: point2d;
     // поправка интервала с учетом триггера
     m_drawInterval: point2d;
-    m_updateDrawInterval:boolean;
+    m_updateDrawInterval: boolean;
 
     m_outdata: array of double;
     // ось на которой лежит сигнал
@@ -50,7 +50,7 @@ type
     // линия
     line: cBuffTrend1d;
     // размер отображаемых данных
-    m_portion:double;
+    m_portion: double;
   protected
     procedure saveData(fname: string; num: integer);
     procedure doStart(oscLen: double; Phase0: double; oscType: TOscType);
@@ -100,7 +100,7 @@ type
     procedure DblClick(Sender: tobject);
     procedure doCursorMove(Sender: tobject);
     procedure ChartInit(Sender: tobject);
-    procedure UpdateData;override;
+    procedure UpdateData; override;
     function SearchTrig(t: cTag; p_threshold: double;
       var p_interval: point2d): boolean;
   protected
@@ -435,7 +435,7 @@ begin
   for i := 0 to m_ax.SIZE - 1 do
   begin
     a := PAxis(m_ax.GetPByInd(i));
-    if a.ax=nil then
+    if a.ax = nil then
     begin
       if a.axname = name then
       begin
@@ -511,7 +511,7 @@ end;
 constructor TSyncOscFrm.create(Aowner: tcomponent);
 var
   p: cpage;
-  axcfg:TAxis;
+  axCfg: TAxis;
 begin
   inherited;
   m_signals := tlist.create;
@@ -542,14 +542,14 @@ begin
   m_Length := 1;
   m_type := tOscil;
   m_TrigTag := cTag.create;
-  m_TrigTag.m_useReadBuffer:=false;
+  m_TrigTag.m_useReadBuffer := true;
   m_ax := cQueue<TAxis>.create;
 
-  axcfg.ax:=p.activeAxis;
-  axcfg.axname:=p.activeAxis.name;
-  axcfg.ymin:=-1;
-  axcfg.ymax:=1;
-  m_ax.push_back(axcfg);
+  axCfg.ax := p.activeAxis;
+  axCfg.axname := p.activeAxis.name;
+  axCfg.ymin := -1;
+  axCfg.ymax := 1;
+  m_ax.push_back(axCfg);
 end;
 
 destructor TSyncOscFrm.destroy;
@@ -557,7 +557,7 @@ var
   i: integer;
   s: TOscSignal;
 begin
-  //m_ax.destroy;
+  // m_ax.destroy;
   m_TrigTag.destroy;
   while sCount <> 0 do
   begin
@@ -618,7 +618,7 @@ begin
       else
         axCfg.axname := a.name;
     end;
-    axCfg.ax:=a;
+    axCfg.ax := a;
     m_ax.push_back(axCfg);
   end;
   c := a_pIni.ReadInteger(str, 'SCount', 0);
@@ -760,7 +760,8 @@ var
   interval: point2d;
   v, prev: double;
 begin
-  if m_signals.count=0 then exit;
+  if m_signals.count = 0 then
+    exit;
   // триггерный старт
   if m_type = TtrigOscil then
   begin
@@ -772,34 +773,34 @@ begin
   end
   else
   begin
-    v:=GetRCTime;
-    if v>m_TrigInterval.y then
+    v := GetRCTime;
+    if v > m_TrigInterval.y then
     begin
-      if v-m_Length>m_TrigInterval.y then
+      if v - m_Length > m_TrigInterval.y then
       begin // если новое время Recorder вышло за следующий интервал отображения
-        m_TrigInterval.x:=v;
-        m_TrigInterval.y:=v+m_Length;
+        m_TrigInterval.x := v;
+        m_TrigInterval.y := v + m_Length;
       end
       else // если новое время Recorder попало в следующий интервал отображения
       begin
-        m_TrigInterval.x:=m_TrigInterval.y;
-        m_TrigInterval.y:=m_TrigInterval.y+m_Length;
+        m_TrigInterval.x := m_TrigInterval.y;
+        m_TrigInterval.y := m_TrigInterval.y + m_Length;
       end;
     end;
   end;
   // обновляем данные и накопленные интервалы в тегах. Корректируем интервал отображения
-  s:=GetSignal(0);
+  s := GetSignal(0);
   if s.t.UpdateTagData(false) then
   begin
     s.m_interval := s.t.EvalTimeInterval;
-    if v=0 then
+    if v = 0 then
     begin
-      if s.m_interval.y>m_TrigInterval.y then
+      if s.m_interval.y > m_TrigInterval.y then
       begin
-        m_TrigInterval.y:=s.m_interval.y;
-        m_TrigInterval.x:=m_TrigInterval.y-m_Length;
+        m_TrigInterval.y := s.m_interval.y;
+        m_TrigInterval.x := m_TrigInterval.y - m_Length;
 
-        ///m_TimeLabel.Text :=m_TimeLabel.Text+'Time: ' + formatstr(m_TrigInterval.x, 3);
+        /// m_TimeLabel.Text :=m_TimeLabel.Text+'Time: ' + formatstr(m_TrigInterval.x, 3);
       end;
     end;
   end;
@@ -810,22 +811,22 @@ begin
     begin
       s.m_interval := s.t.EvalTimeInterval;
       // сдвигаем триг в сторону самого отстающего по правой границе сигнала
-      if m_TrigInterval.y>s.m_interval.y then
+      if m_TrigInterval.y > s.m_interval.y then
       begin
         // добавить порог на случай мертвого канала. Порог в длину осциллограммы.
         // возможно стоит сделать в периодах обновления данных
-        if (s.m_interval.y+m_Length)>m_TrigInterval.y then
-          m_TrigInterval.y:=s.m_interval.y
+        if (s.m_interval.y + m_Length) > m_TrigInterval.y then
+          m_TrigInterval.y := s.m_interval.y
         else
         begin
-          //showmessage('1');
+          // showmessage('1');
         end;
       end;
     end;
   end;
-  m_TrigInterval.x:=m_TrigInterval.y-m_Length;
-  if m_TrigInterval.x<0 then
-    m_TrigInterval.x:=0;
+  m_TrigInterval.x := m_TrigInterval.y - m_Length;
+  if m_TrigInterval.x < 0 then
+    m_TrigInterval.x := 0;
 
   // вычисляем рисуемый интервал
   for i := 0 to m_signals.count - 1 do
@@ -835,11 +836,11 @@ begin
     if not CompareInterval(s.m_drawInterval, interval) then
     begin
       s.m_drawInterval := interval;
-      s.m_updateDrawInterval:=true;
+      s.m_updateDrawInterval := true;
     end
     else
     begin
-      //s.m_updateDrawInterval:=false; // перенесено в repaint
+      // s.m_updateDrawInterval:=false; // перенесено в repaint
     end;
   end;
 end;
@@ -868,7 +869,7 @@ begin
   if RStatePlay then
   begin
     // рисуем синхронные данные
-    //m_TimeLabel.Text := 'Time: ' + formatstr(m_TrigInterval.x, 3);
+    // m_TimeLabel.Text := 'Time: ' + formatstr(m_TrigInterval.x, 3);
   end;
   // перенос данных в линии
   for i := 0 to m_signals.count - 1 do
@@ -877,13 +878,14 @@ begin
     if s.m_updateDrawInterval then
     begin
       s.t.RebuildReadBuff(true, s.m_drawInterval);
-      interval_i:=s.t.getIntervalInd(s.m_drawInterval);
-      if interval_i.y>=length(s.t.m_ReadData) then
+      interval_i := s.t.getIntervalInd(s.m_drawInterval);
+      if interval_i.y >= length(s.t.m_ReadData) then
       begin
-        interval_i.y:=length(s.t.m_ReadData)-1;
+        interval_i.y := length(s.t.m_ReadData) - 1;
       end;
-      s.line.AddPoints(s.t.m_ReadData, interval_i.x,(interval_i.y - interval_i.x));
-      s.m_updateDrawInterval:=false;
+      s.line.AddPoints(s.t.m_ReadData, interval_i.x,
+        (interval_i.y - interval_i.x));
+      s.m_updateDrawInterval := false;
     end;
   end;
   m_Chart.redraw;
@@ -931,7 +933,7 @@ end;
 procedure TOscilFact.DestroyEvents;
 begin
   removeplgEvent(doRCInit, E_RC_Init);
-  //if g_algMng <> nil then
+  // if g_algMng <> nil then
   begin
 
   end;
@@ -1039,8 +1041,8 @@ begin
     end
     else
     begin
-      frm.m_TrigInterval.x:=0;
-      frm.m_TrigInterval.y:=frm.m_Length;
+      frm.m_TrigInterval.x := 0;
+      frm.m_TrigInterval.y := frm.m_Length;
     end;
     for j := 0 to frm.m_signals.count - 1 do
     begin
@@ -1100,7 +1102,7 @@ end;
 constructor TOscSignal.create;
 begin
   t := cTag.create;
-  t.m_useReadBuffer:=false;
+  t.m_useReadBuffer := false;
 end;
 
 destructor TOscSignal.destroy;
@@ -1141,6 +1143,5 @@ begin
       end;
   end;
 end;
-
 
 end.

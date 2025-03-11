@@ -78,7 +78,6 @@ uses
   uBaseObjService in '..\..\sharedUtils\objects\uBaseObjService.pas',
   uAddRZDDatafrm in 'forms\uAddRZDDatafrm.pas' {AddRZDDataFrm},
   UDirChangeNotifier in '..\..\sharedUtils\utils\PathUtils\UDirChangeNotifier.pas',
-  uFrmSync in '..\..\sharedUtils\forms\uFrmSync.pas' {FrmSync},
   uEventTypes in '..\..\sharedUtils\utils\lists\uEventTypes.pas',
   usetlist in '..\..\sharedUtils\utils\lists\usetlist.pas',
   uPointsList in '..\..\sharedUtils\utils\lists\uPointsList.pas',
@@ -100,6 +99,7 @@ uses
   uExtBalanceSignals in 'units\uExtBalanceSignals.pas',
   uExtBalanceSignalsFrm in 'forms\uExtBalanceSignalsFrm.pas' {BalanceZeroFrm},
   uLogFile in '..\..\sharedUtils\utils\uLogFile.pas',
+  //uFrmSync in '..\..\sharedUtils\forms\uFrmSync.pas' {FrmSync},
   uFFTFlt in 'units\uFFTFlt.pas',
   uFFTfltFrm in 'forms\uFFTfltFrm.pas' {FFTFltFrm};
 

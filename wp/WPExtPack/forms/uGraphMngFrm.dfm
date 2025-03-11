@@ -74,6 +74,10 @@
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = #1043#1088#1072#1092#1080#1082#1080
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         504
         781)
@@ -532,6 +536,10 @@
       Margins.Bottom = 4
       Caption = #1054#1089#1080
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object YAxisLabel: TLabel
         Left = 10
         Top = 10
@@ -671,6 +679,10 @@
       Margins.Bottom = 4
       Caption = #1051#1080#1085#1080#1080
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object LineNameLabel: TLabel
         Left = 33
         Top = 21
@@ -836,6 +848,10 @@
       Margins.Bottom = 4
       Caption = #1057#1090#1088#1072#1085#1080#1094#1099
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label5: TLabel
         Left = 211
         Top = 95
@@ -982,7 +998,7 @@
     Columns = <
       item
         Position = 0
-        Width = 165
+        Width = 169
         WideText = #1054#1073#1098#1077#1082#1090
       end>
   end

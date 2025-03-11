@@ -421,7 +421,9 @@ begin
     end;
   end;
   s:=a_pIni.readString(str, 'CameraPos', '1;0;0;0;1;0;0;0;1;0;0;0');
-  M_camera:=StrToMatrix(s);
+  M_camera:=StrToMatrix(s, b);
+  if b then
+    M_camera:=identMatrix4;
 end;
 
 procedure TObjFrm3d.doRcInit(sender: tobject);

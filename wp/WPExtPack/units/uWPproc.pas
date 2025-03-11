@@ -2239,7 +2239,7 @@ procedure cWPObjMng.save(path: string);
 begin
   LastCfg := path;
   saveString(startDir + '\Services.ini', 'LastCfg', LastCfg);
-  SaveToXML(path, 'WinœŒ—');
+  SaveToXML(path, 'WinœŒ—', true);
 end;
 
 procedure cWPObjMng.load(path: string);
@@ -3417,6 +3417,7 @@ begin
   // ' ofsNextBlock = 1024, typeMagnitude = 2 , type = 0 , isMO = 1 , '+
   // ' isCorrectFunc = 0 , fLog = 0, useOpZn = 1, OpZn = 0');
   str := ConvertPropertieStr(o.params);
+  //str:=ChangeParamF(str, 'nBlocks', '1');
   oper.LoadProperties(str);
   for i := 0 to o.srcList.count - 1 do
   begin

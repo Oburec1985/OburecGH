@@ -165,7 +165,6 @@
     <File Path="..\..\3d\objects\uNode.pas"/>
     <File Path="..\..\sharedUtils"/>
     <File Path="..\..\sharedUtils\forms"/>
-    <File Path="..\..\sharedUtils\forms\uFrmSync.pas"/>
     <File Path="..\..\sharedUtils\forms\uJournalForm.pas"/>
     <File Path="..\..\sharedUtils\forms\uJournalForm.dfm"/>
     <File Path="..\..\sharedUtils\forms\ulogFrame.pas"/>

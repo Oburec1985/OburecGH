@@ -41,7 +41,7 @@ uses
   uRzdfrm,
   uExtOperMng,
   uSyncThread,
-  uFrmSync,
+  //uFrmSync,
   uWPProcServices,
   uIEManchester2087,
   PerformanceTime,
@@ -242,10 +242,11 @@ begin
 
   PostMessage(MainThreadID, wmCreateInterface, 0, 0);
 
-  // synchronise(CreateFrm);
-  FrmSync := TFrmSync.Create(nil);
-  FrmSync.fCreateProc := CreateFrm;
-  SendMessage(FrmSync.Handle, WM_CreateFrms, 0, 0);
+  //synchronise(CreateFrm);
+  CreateFrm;
+  ///FrmSync := TFrmSync.Create(nil);
+  ///FrmSync.fCreateProc := CreateFrm;
+  ///SendMessage(FrmSync.Handle, WM_CreateFrms, 0, 0);
   // создаем клавиатурный хук
 {$IFDEF DEBUG}
 {$ELSE}
@@ -256,7 +257,6 @@ end;
 procedure TExtPack.CreateFrm;
 begin
   // создание форм
-  NIIPMForm := TNIIPMForm.Create(nil);
   FxForm := TFxForm.Create(nil);
   GenFrm := TGenFrm.Create(nil);
   GraphFrm := TGraphFrm.Create(nil);

@@ -1,8 +1,8 @@
 [Setup]
 AppName=WPExtPack
 
-AppVersion=1.099
-AppVerName=1.099
+AppVersion=1.105
+AppVerName=1.105
 ; защита от переустановки запущенной версии
 AppMutex=WPExtPack
 
@@ -12,7 +12,7 @@ OutputDir=output
 ;OutputDir=\\Fserv\e\MERA\PRODUCTS\WinPos\Utils\CorrectUTS_WpExtPack\versions\
 
 ;OutputBaseFilename=WPExtPack-installer_1.01_tryrzd
-OutputBaseFilename=WPExtPack-installer_1.103
+OutputBaseFilename=WPExtPack-installer_1.105
 
 [Types]
 Name: "full"; Description: "Полная установка"
@@ -21,8 +21,11 @@ Name: "full"; Description: "Полная установка"
 Name: "program"; Description: "Расширенные функции WinПОС"; Types: full; Flags: fixed
 
 [Files]
-Source: "source\WPExtPack.dll"; DestDir: "{app}\WPExtPack\"; Components: program; Flags:ignoreversion regserver;
-Source: "source\WpServicePlg.dll"; DestDir: "{app}\WPExtPack\"; Components: program; Flags:ignoreversion regserver;
+;Source: "source\WPExtPack.dll"; DestDir: "{app}\WPExtPack\"; Components: program; Flags:ignoreversion regserver;
+;Source: "source\WpServicePlg.dll"; DestDir: "{app}\WPExtPack\"; Components: program; Flags:ignoreversion regserver;
+Source: "c:\Program Files (x86)\Mera\WinPOS\PlugIns\WPExtPack\WPExtPack.dll"; DestDir: "{app}\WPExtPack\"; Components: program; Flags:ignoreversion regserver;
+Source: "c:\Program Files (x86)\Mera\WinPOS\PlugIns\WPExtPack\WpServicePlg.dll"; DestDir: "{app}\WPExtPack\"; Components: program; Flags:ignoreversion regserver;
+
 Source: "source\SniffDll.dll"; DestDir: "{app}\WPExtPack\"; Components: program;
 Source: "source\ScriptFile.xml"; DestDir: "{app}\WPExtPack\"; Components: program
 Source: "source\FastMM_FullDebugMode.dll"; DestDir: "{app}\WPExtPack\"; Components: program;

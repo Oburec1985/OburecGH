@@ -315,9 +315,12 @@ procedure TVertexEditFrame.PointNumSEChange(Sender: TObject);
 var
   p:c3dSkinObj; // кость аниматор вершины
 begin
-  p:=g_CtrlObjList.GetObjBySkin(m_curObj.name, PointNumSE.Value);
-  if p<>nil then
-    ShowPoint(p);
+  if m_curObj<>nil then
+  begin
+    p:=g_CtrlObjList.GetObjBySkin(m_curObj.name, PointNumSE.Value);
+    if p<>nil then
+      ShowPoint(p);
+  end;
 end;
 
 procedure TVertexEditFrame.showObj(o: cObject; frm:tform);
