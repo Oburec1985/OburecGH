@@ -13,6 +13,12 @@ type
     p0,p1,p2,p3:point2;
   end;
 
+//px, py — координаты точки, от которой рассчитывается расстояние.
+//A, x0, fA, y0 — параметры экспоненциальной кривой y = A * exp(-(x + x0) * fA) + y0.
+//XMin, XMax — интервал поиска минимума по оси X.
+// расстояние до экспоненты от точки px,py y=A*exp(-fA*(x+x0))+y0
+function DistanceToExponential(px, py, A, x0, fA, y0, XMin, XMax: Double): Double;
+
 function NearestPCubicSpline(spline:cubicspline; Ap:point2d):point2d;
 function DistPtoCubicSpline(spline:cubicspline; Ap:point2d):double;
 // Отыскивает только действительные корни
@@ -30,7 +36,62 @@ function EvalLineX(y:double; p1,p2:point2d):double;
 function EvalIntersectd(LineAP1, LineAP2, LineBP1, LineBP2 : point2d) : point2d;
 function EvalIntersect(LineAP1, LineAP2, LineBP1, LineBP2 : point2) : point2;
 
+
+
 implementation
+const
+  //GR = (1 + Sqrt(5))/2; // Золотое сечение
+  GR = 1.618033988749895 ;
+
+type
+  TFunc = function(x, px, py, A, x0, fA, y0: Double): Double;
+
+function SquareDistance(x, px, py, A, x0, fA, y0: Double): Double;
+begin
+  Result := Sqr(x - px) + Sqr(A * Exp(-(x + x0) * fA) + y0 - py);
+end;
+
+function GoldenSectionSearch(a, b, Tolerance: Double; Func: TFunc; px, py, Ay, x0, fA, y0: Double): Double;
+var
+  c, d, fc, fd: Double;
+begin
+  c := b - (b - a) / GR;
+  d := a + (b - a) / GR;
+
+  while (b - a) > Tolerance do
+  begin
+    fc := Func(c, px, py, A, x0, fA, y0);
+    fd := Func(d, px, py, A, x0, fA, y0);
+
+    if fc < fd then
+    begin
+      b := d;
+      d := c;
+      c := b - (b - a) / GR;
+    end
+    else
+    begin
+      a := c;
+      c := d;
+      d := a + (b - a) / GR;
+    end;
+  end;
+  Result := (a + b) / 2;
+end;
+
+function DistanceToExponential(px, py, A, x0, fA, y0, XMin, XMax: Double): Double;
+var
+  MinX: Double;
+begin
+  // Находим X, соответствующий минимальному расстоянию
+  MinX := GoldenSectionSearch(
+    XMin, XMax, 1e-6,
+    SquareDistance,
+    px, py, A, x0, fA, y0
+  );
+  // Вычисляем минимальное расстояние
+  Result := Sqrt(SquareDistance(MinX, px, py, A, x0, fA, y0));
+end;
 
 // Вычисляет точку на кубическом сплайне по известному u
 function EvalSplinePoint(u:single;spline:cubicspline):point2;

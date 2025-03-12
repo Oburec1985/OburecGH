@@ -29,6 +29,7 @@ object SRSFrm: TSRSFrm
     Top = 0
     Width = 485
     Height = 444
+    Cursor = crSizeAll
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -455,7 +456,7 @@ object SRSFrm: TSRSFrm
       Left = 5
       Top = 40
       Width = 88
-      Height = 25
+      Height = 21
       TabOrder = 0
     end
     object SaveBtn: TButton
@@ -504,7 +505,7 @@ object SRSFrm: TSRSFrm
       Left = 4
       Top = 157
       Width = 104
-      Height = 25
+      Height = 21
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -516,7 +517,7 @@ object SRSFrm: TSRSFrm
       Left = 70
       Top = 303
       Width = 58
-      Height = 25
+      Height = 21
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -618,7 +619,7 @@ object SRSFrm: TSRSFrm
     end
     object UseWndFcb: TCheckBox
       Left = 70
-      Top = 255
+      Top = 253
       Width = 47
       Height = 16
       Caption = #1054#1082#1085#1086
@@ -645,7 +646,7 @@ object SRSFrm: TSRSFrm
     end
     object GroupBox1: TGroupBox
       Left = 2
-      Top = 301
+      Top = 300
       Width = 217
       Height = 142
       Margins.Left = 2
@@ -658,7 +659,7 @@ object SRSFrm: TSRSFrm
       object SignalsLV: TBtnListView
         Left = 2
         Top = 15
-        Width = 214
+        Width = 213
         Height = 125
         Margins.Left = 2
         Margins.Top = 2
@@ -709,7 +710,7 @@ object SRSFrm: TSRSFrm
       Left = 151
       Top = 158
       Width = 61
-      Height = 25
+      Height = 21
       TabOrder = 16
       Text = '10000'
     end

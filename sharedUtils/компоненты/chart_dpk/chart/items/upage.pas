@@ -886,25 +886,20 @@ end;
 function cPage.PixelSizeToTrend(p: TPoint; axis: caxis): point2;
 var
   lp2d: point2d;
-  p2i: TPoint;
   w,h:integer;
-  l_p2, res: point2;
+  fw,fh:single;
 begin
   if axis <> nil then
   begin
-    p2i.x := m_pixelTabSpace.Left;
-    p2i.y := m_pixelTabSpace.bottom;
-    lp2d := axis.min;
-    l_p2 := p2(lp2d.x, lp2d.y);
-    p2i.x := p2i.x + p.x + bound.Left;
-    p2i.y := p2i.y + p.y + bound.bottom;
-    res := p2iToTrend(p2i, axis);
-    result.x := abs(l_p2.x - res.x);
-    result.y := abs(l_p2.y - res.y);
+    w:=getwidth-m_pixelTabSpace.Left-m_pixelTabSpace.Right;
+    h:=getheight-m_pixelTabSpace.Bottom-m_pixelTabSpace.Top;
+    fh:=axis.getdy;
+    fw:=axis.getdx;
+    result.x:=p.X*fw/w;
+    result.y:=p.y*fh/h;
   end
   else
   begin // вьюпорт
-    l_p2 := p2(-1, -1);
     w:=getwidth-m_pixelTabSpace.Left-m_pixelTabSpace.Right;
     h:=getheight-m_pixelTabSpace.Bottom-m_pixelTabSpace.Top;
     result.x:= 2*p.x/w;

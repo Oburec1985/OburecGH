@@ -1486,7 +1486,7 @@ END
 /* ..\..\3d\forms\uDeformerFrame.dfm */
 /* ..\..\3d\forms\uTrfrmToolsFrame.dfm */
 /* forms\u3dObj.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uVertexEditFrame.dfm */
+/* forms\uVertexEditFrame.dfm */
 /* forms\uGLFrmEdit.dfm */
 /* forms\uEditSrsFrm.dfm */
 /* forms\uIRDiagram.dfm */
@@ -1541,6 +1541,6 @@ END
 /* forms\uPressFrmFrame.dfm */
 /* forms\uPressFrmEdit.dfm */
 /* forms\uPressFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */

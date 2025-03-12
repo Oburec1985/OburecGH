@@ -1133,7 +1133,7 @@ begin
       sig_interval:=t.m_tag.getPortionTime;
       siglen:=sig_interval.y;
       //logMessage('SLen: ' + floattostr(siglen));
-      dropLen := t.m_tag.getPortionLen -  m_Length;
+      dropLen := t.m_tag.getPortionLen - 2 * m_Length;
       if dropLen > 0 then // при этом условии гарантированно остается 2*blocklen
       begin
         dropCount := trunc(dropLen * t.m_tag.Freq);
@@ -1591,15 +1591,12 @@ begin
       db.prepareData;
       db.BuildSpm;
     end;
-    if t.m_shockList.count<>0 then
-    begin
-      db:=t.m_shockList.getblock(shockie.IntNum);
-      t.line.AddPoints(TDoubleArray(db.m_TimeBlockFlt.p), db.m_TimeArrSize);
-      db:=s.m_shockList.getblock(shockie.IntNum);
-      s.line.AddPoints(TDoubleArray(db.m_TimeBlockFlt.p), db.m_TimeArrSize);
-      updateFrf(false);
-      UpdateView;
-    end;
+    db:=t.m_shockList.getblock(shockie.IntNum);
+    t.line.AddPoints(TDoubleArray(db.m_TimeBlockFlt.p), db.m_TimeArrSize);
+    db:=s.m_shockList.getblock(shockie.IntNum);
+    s.line.AddPoints(TDoubleArray(db.m_TimeBlockFlt.p), db.m_TimeArrSize);
+    updateFrf(false);
+    UpdateView;
   end;
 end;
 
@@ -2156,11 +2153,8 @@ begin
         tb.prepareData;
         tb.BuildSpm;
       end;
-      if t.m_shockList.Count<>0 then
-      begin
-        tb := t.m_shockList.getBlock(ShockIE.intnum);
-        t.line.AddPoints(TDoubleArray(tb.m_TimeBlockFlt.p), tb.m_TimeArrSize);
-      end;
+      tb := t.m_shockList.getBlock(ShockIE.intnum);
+      t.line.AddPoints(TDoubleArray(tb.m_TimeBlockFlt.p), tb.m_TimeArrSize);
     end;
   end;
   updateFrf(false);
@@ -3801,20 +3795,15 @@ var
   i: integer;
   lDist: single;
   lp2: point2;
-  page:cpage;
 begin
-  result:=false;
-  page:=cpage(getpage);
   fTestObj := 0;
 
   lp2.x := p_p2.x - m_x1;
   lp2.y := p_p2.y - fy1;
   lDist := sqrt(lp2.x * lp2.x + lp2.y * lp2.y);
   dist := dist * 2;
-  //page.Caption:=floattostr(p_p2.x)+' '+floattostr(p_p2.y);
   if lDist < dist then
   begin
-    //page.Caption:='test 2';
     fTestObj := 2;
     result := true;
     exit;
@@ -3825,7 +3814,6 @@ begin
   lDist := sqrt(lp2.x * lp2.x + lp2.y * lp2.y);
   if lDist < dist then
   begin
-    //page.Caption:='test 1';
     fTestObj := 1;
     result := true;
   end;

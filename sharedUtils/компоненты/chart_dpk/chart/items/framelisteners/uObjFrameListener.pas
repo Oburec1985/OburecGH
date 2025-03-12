@@ -5,6 +5,7 @@ interface
 uses
   uFrameListener, messages, sysutils,
   classes, windows, uCommonTypes, uPage, uTrend, uAxis,
+  MathFunction,
   uPoint, uCommonMath, types, opengl, uOglExpFunc, uChartEvents, udrawobj,
   ucursors, controls, uMarkers, usimpleobjects, uBasePage, uBaseObj;
 
@@ -274,6 +275,8 @@ begin
       exit;
     fp:=ax.p2iTop2(cObjFrListener(data).m_p);
   end;
+  //cpage(page).caption:=formatstrnoe(fp.x,4)+' '+ formatstrnoe(fp.y,4);
+
 
   bound:=cDrawObj(obj).getbound;
   chart:=cchart(cObjFrListener(data).data);
@@ -298,6 +301,7 @@ begin
             if cMoveObj(obj).TestObj(fp, mindist) then
             begin
               result:=false;
+              //cpage(page).caption:=obj.name;
               cObjFrListener(data).m_OverObj:=cMoveObj(obj);
               exit;
             end

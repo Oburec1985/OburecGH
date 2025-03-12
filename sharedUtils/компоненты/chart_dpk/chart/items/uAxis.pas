@@ -994,7 +994,7 @@ begin
     //  y, z);
     // bl.x,y; w;h
     xWnd:=p.x-page.m_viewport[0];
-    yWnd:=p.x-page.m_viewport[1];
+    yWnd:=p.y-page.m_viewport[1];
     if xWnd<=0 then
       result.x:=page.MinX
     else
