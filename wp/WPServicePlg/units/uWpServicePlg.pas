@@ -25,24 +25,14 @@ uses
 type
   TServicePlg = class(TAutoObject, IWPPlugin)
   protected
-    hooktime: double;
     // хендл главного окна
     mainwnd: cardinal;
-    // сслыка на sniffDll. Грузиться динамически
-    HLib: thandle;
-    WM_KeyHOOK: cardinal;
-    m_firstHook: boolean;
-    tagproc: function(p_tag: integer): integer;
-    stdcall;
-    oldWndProc, newWndProc: pointer;
   public
     init: boolean;
     // используется для клавиатурного хука
     m_showlegend: boolean;
   private
     procedure CreateSubSignals;
-    procedure createWndProc;
-    procedure CreateWndHook;
   public
     // надо бы создавать в интерфейсном потоке
     procedure CreateFrm;
@@ -58,6 +48,7 @@ var
   g_ServicePlg: TServicePlg;
 
 const
+  c_keydown = $00001FFFF;
   e_OnAddSRC = $00002000;
 
 implementation
@@ -98,44 +89,6 @@ var
   // происходит по событию выполнения алгbitmоритма
   ID_NotifyEvent: cardinal;
 
-procedure TServicePlg.createWndProc;
-begin
-  mainwnd := WINPOS.mainwnd;
-  newWndProc := MakeObjectInstance(WndProc);
-  oldWndProc := pointer(SetWindowLong(mainwnd, gwl_wndProc,
-      cardinal(newWndProc)));
-end;
-
-procedure TServicePlg.CreateWndHook;
-var
-  StartHookProc: function(switch: boolean; hMainProg: hwnd): integer stdcall;
-  res: integer;
-  str: string;
-begin
-  str := startDir + '\' + DllName;
-  HLib := LoadLibrary(@str[1]);
-  if HLib > HINSTANCE_ERROR then
-  begin
-    // регестрируем свой тип сообщения в системе
-    WM_KeyHOOK := RegisterWindowMessage('WM_OburecKeyHook');
-    // получаем указатель на необходимую процедуру
-    StartHookProc := GetProcAddress(HLib, 'SetHook');
-    tagproc := GetProcAddress(HLib, 'SetTag');
-    res := StartHookProc(true, mainwnd);
-    logmessage('TServicePlg_MainWnd=' + inttostr(mainwnd));
-    res := tagproc(-1);
-    if res <> 0 then
-    begin
-      m_firstHook := false;
-      // oldwndproc:=pointer(res);
-    end
-    else
-    begin
-      m_firstHook := true;
-    end;
-
-  end;
-end;
 
 function TServicePlg.Connect(const app: IDispatch): integer;
 var
@@ -148,13 +101,12 @@ begin
   init := false;
   WINPOS := app as IWinPOS;
   g_ServicePlg := self;
-
-  // создаем клавиатурный хук
+  // создаем клавиатурный хук  createWndProc;
 {$IFDEF DEBUG}
 {$ELSE}
+  // createWndProc;
+  // CreateWndHook;
   // g_logFile.addInfoMes('TServicePlg.WndProc_'+' Mess:'+'Release');
-  createWndProc;
-  CreateWndHook;
 {$ENDIF}
   ID_NotifyEvent := 9 shl 16 + 1;
   date := now;
@@ -173,16 +125,7 @@ function TServicePlg.Disconnect: integer;
 var
   StartHookProc: function(switch: boolean; hMainProg: hwnd): integer stdcall;
 begin
-
   Result := 0;
-  SetWindowLong(mainwnd, gwl_wndProc, integer(oldWndProc));
-  // удаляем клавиатурный хук
-  if HLib > HINSTANCE_ERROR then
-  begin
-    // освобождаем библиотеку
-    StartHookProc(false, mainwnd);
-    FreeLibrary(HLib);
-  end;
   if g_logFile <> nil then
   begin
     g_logFile.destroy;
@@ -258,11 +201,17 @@ var
   // в алгоритм передается несколько сигналов
   double: boolean;
 
-  pvar: array of variant;
   hgraph, haxis, hline: integer;
 
   isig, linesig: iwpsignal;
+  pvar: array of variant;
+
+  v:variant;
   hword: cardinal;
+  int:integer;
+  p1:pointer;
+  msg:TMessage;
+  lpmsg:PMsg;
 begin
   Result := 0;
   if not InPlugunCode then
@@ -270,6 +219,32 @@ begin
     InPlugunCode := true;
     try
       try
+        // Код сообщения 0x1FFFF (131071), второй параметр - указатель на структуру MSG
+        // для отлова wm_keydown
+        if (what = 131071) then
+        begin
+          // Пример: получение свойства объекта
+          if VarIsArray(param) then
+          begin
+            pvar := (PSafeArray(TVarData(param).VArray).pvdata);
+            v := variant(pvar[0]);
+            case TVarData(v).VType of
+              varSmallInt: ;
+              varInteger:
+              begin
+                int:=TVarData(v).VInteger;
+                lpmsg:=pmsg(int);
+                //logMessage(inttostr(lpmsg.message));
+                msg.Msg:=lpmsg.message;
+                msg.WParam:=lpmsg.wParam;
+                msg.LParam:=lpmsg.lParam;
+              end;
+            end;
+          end
+          else
+            v := param;
+          WndProc(msg);
+        end;
         if (what <> 131071) and (what <> 196607) then
         begin
           hword := HIWORD(what);
@@ -443,103 +418,53 @@ Procedure TServicePlg.WndProc(var Msg: TMessage);
 
 var
   opt, g, p, v, ltag: integer;
-  t: double;
 begin
-
-  // (msg.msg>128) and (msg.msg<>275)
-  //if Msg.Msg = WM_KEYDOWN then
-  {if (Msg.Msg<>WM_TIMER) and (Msg.Msg<>WM_NOTIFY) and (Msg.Msg<>WM_paint)
-  and (Msg.Msg<>WM_size) and (Msg.Msg<>WM_ERASEBKGND) and (Msg.Msg<>WM_MOVE)
-  and (Msg.Msg<>WM_GETMINMAXINFO) and (Msg.Msg<>WM_GETMINMAXINFO)
-  and (Msg.Msg<>WM_WINDOWPOSCHANGING)  and (Msg.Msg<>WM_nccreate)
-  and (Msg.Msg<>WM_setcursor) and (Msg.Msg<>146) and (Msg.Msg<>147)
-  and (Msg.Msg<>831) and (Msg.Msg<>878) and (Msg.Msg<>28) and (Msg.Msg<>6) and (Msg.Msg<>7) and (Msg.Msg<>8)
-  and (Msg.Msg<>145) and (Msg.Msg<>134) and (Msg.Msg<>71) and (Msg.Msg<>31) and (Msg.Msg<>124) and (Msg.Msg<>125) and (Msg.Msg<>127)
-  and (Msg.Msg<>799) and (Msg.Msg<>866) and (Msg.Msg<>8) and (Msg.Msg<>13) and (Msg.Msg<>12) and (Msg.Msg<>148)
-  and (Msg.Msg<>289) and (Msg.Msg<>293) and (Msg.Msg<>533) and (Msg.Msg<>287) and (Msg.Msg<>85) and (Msg.Msg<>877)
-  and (Msg.Msg<>641) and (Msg.Msg<>642) and (Msg.Msg<>133) and (Msg.Msg<>131) and (Msg.Msg<>1154) and (Msg.Msg<>10)
-  and (Msg.Msg<>875) and (Msg.Msg<>1575) and (Msg.Msg<>874) and (Msg.Msg<>174) and (Msg.Msg<>297) and (Msg.Msg<>133)
-  and (Msg.Msg<>885) and (Msg.Msg<>132) and (Msg.Msg<>160) and (Msg.Msg<>674)
-  then
-    logmessage('TServicePlg_ltag='+inttostr(Msg.Msg));}
-  if Msg.Msg = WM_KeyHOOK then
-  //if (Msg.Msg = WM_CHAR) or (Msg.Msg = WM_keydown) then
+  //if Msg.Msg = WM_KeyHOOK then
+  if Msg.Msg = WM_keydown then
   begin
-    ltag := tagproc(c_wpservicepack_tag);
-    //logmessage('TServicePlg_ltag='+inttostr(ltag));
-    if ltag = -1 then
+    //if (mainwnd = hwnd(Msg.lParam)) then
+    // добавить замер Control
+    if GetKeyState(VK_MENU) < 0 then
     begin
-      t := gettimeinsec;
-      //logmessage(floattostr(t - hooktime));
-      if abs(t - hooktime) > 0.1 then
+      if Msg.wParam = Ord('D') then
       begin
-        if (mainwnd = hwnd(Msg.lParam)) then
-        begin
-          // добавить замер Control
-          if GetKeyState(VK_MENU) < 0 then
-          begin
-            if Msg.wParam = Ord('D') then
-            begin
-              CreateSubSignals;
-            end;
-            if Msg.wParam = Ord('T') then
-            begin
-              //logmessage('TServicePlg_T');
-            end;
-            // перебор типов курсоров
-            if Msg.wParam = Ord('3') then
-            begin
-              //logmessage('TServicePlg_3');
-              p := IWPGraphs(WP.GraphApi).ActiveGraphPage;
-              g := IWPGraphs(WP.GraphApi).ActiveGraph(p);
-              v := IWPGraphs(WP.GraphApi).GetCursorType(p);
-              if v < 4 then
-                inc(v)
-              else
-                v := 1;
-              IWPGraphs(WP.GraphApi).ShowCursor(p, v);
-              IWPGraphs(WP.GraphApi).invalidate(g);
-            end;
-            if Msg.wParam = Ord('L') then
-            begin
-              //logmessage('TServicePlg_L');
-              if not m_showlegend then
-              begin
-                m_showlegend := true;
-                p := IWPGraphs(WP.GraphApi).ActiveGraphPage;
-                g := IWPGraphs(WP.GraphApi).ActiveGraph(p);
-                IWPGraphs(WP.GraphApi).SetGraphOpt(g, GROPT_SHOWLEGEND, GROPT_SHOWLEGEND);
-              end
-              else
-              begin
-                m_showlegend := false;
-                p := IWPGraphs(WP.GraphApi).ActiveGraphPage;
-                g := IWPGraphs(WP.GraphApi).ActiveGraph(p);
-                IWPGraphs(WP.GraphApi).SetGraphOpt(g, 0, GROPT_SHOWLEGEND);
-              end;
-            end;
-          end;
-        end;
-        hooktime := t;
+        CreateSubSignals;
       end;
-      //logmessage('TServicePlg_exit');
-    end
-    else
-    begin
-      if ltag <> c_wpservicepack_tag then
+      if Msg.wParam = Ord('T') then
       begin
-        //logmessage('TServicePlg_tagproc(-1)');
+      end;
+      // перебор типов курсоров
+      if Msg.wParam = Ord('3') then
+      begin
+        p := IWPGraphs(WP.GraphApi).ActiveGraphPage;
+        g := IWPGraphs(WP.GraphApi).ActiveGraph(p);
+        v := IWPGraphs(WP.GraphApi).GetCursorType(p);
+        if v < 4 then
+          inc(v)
+        else
+          v := 1;
+        IWPGraphs(WP.GraphApi).ShowCursor(p, v);
+        IWPGraphs(WP.GraphApi).invalidate(g);
+      end;
+      if Msg.wParam = Ord('L') then
+      begin
+        if not m_showlegend then
+        begin
+          m_showlegend := true;
+          p := IWPGraphs(WP.GraphApi).ActiveGraphPage;
+          g := IWPGraphs(WP.GraphApi).ActiveGraph(p);
+          IWPGraphs(WP.GraphApi).SetGraphOpt(g, GROPT_SHOWLEGEND, GROPT_SHOWLEGEND);
+        end
+        else
+        begin
+          m_showlegend := false;
+          p := IWPGraphs(WP.GraphApi).ActiveGraphPage;
+          g := IWPGraphs(WP.GraphApi).ActiveGraph(p);
+          IWPGraphs(WP.GraphApi).SetGraphOpt(g, 0, GROPT_SHOWLEGEND);
+        end;
       end;
     end;
-    tagproc(-1);
   end;
-  case Msg.Msg of
-    WM_KeyDown:
-      begin
-
-      end;
-  end;
-  Msg.Result := CallWindowProc(oldWndProc, mainwnd, Msg.Msg, Msg.wParam, Msg.lParam);
 end;
 
 initialization
