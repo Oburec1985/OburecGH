@@ -420,7 +420,7 @@ var
   opt, g, p, v, ltag: integer;
 begin
   //if Msg.Msg = WM_KeyHOOK then
-  if Msg.Msg = WM_keydown then
+  if (Msg.Msg = WM_keydown) or (Msg.Msg = WM_SYSKEYDOWN) then
   begin
     //if (mainwnd = hwnd(Msg.lParam)) then
     // добавить замер Control

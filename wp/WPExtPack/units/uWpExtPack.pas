@@ -52,27 +52,17 @@ type
   protected
     // хендл главного окна
     mainwnd: cardinal;
-    // сслыка на sniffDll. Грузиться динамически
-    HLib: thandle;
-    WM_KeyHOOK: cardinal;
-    hooktime:double;
-    hooktimer:TPerformanceTime;
 
-    // первый кто подменил оконную процедуру
-    m_firstHook:boolean;
-
-    oldWndProc, newWndProc: pointer;
     m_ExtOperMng: TExtOperMng;
 
-    tagproc: function(p_tag: integer): integer;
-    stdcall;
+    tagproc: function(p_tag: integer): integer;    stdcall;
   public
     init: boolean;
     // используется для клавиатурного хука
     m_showlegend: boolean;
   private
-    procedure createWndProc;
-    procedure CreateWndHook;
+    //procedure createWndProc;
+    //procedure CreateWndHook;
     procedure CreateSubSignals;
     procedure compiletubes(slist: tstringlist);
   public
@@ -136,44 +126,6 @@ var
   // происходит по событию выполнения алгbitmоритма
   ID_NotifyEvent: cardinal;
 
-procedure TExtPack.CreateWndHook;
-var
-  StartHookProc: function(switch: boolean; hMainProg: hwnd): integer stdcall;
-  res: integer;
-  str: string;
-begin
-  str := startDir + '\' + DllName;
-  HLib := LoadLibrary(@str[1]);
-  if HLib > HINSTANCE_ERROR then
-  begin
-    logMessage('TExtPack_CreateWndHook');
-    // регестрируем свой тип сообщения в системе
-    WM_KeyHOOK := RegisterWindowMessage('WM_OburecKeyHook');
-    // получаем указатель на необходимую процедуру
-    StartHookProc := GetProcAddress(HLib, 'SetHook');
-    res := StartHookProc(true, mainwnd);
-    logmessage('TExtPack_MainWnd=' + inttostr(mainwnd));
-    tagproc := GetProcAddress(HLib, 'SetTag');
-    res := tagproc(-1);
-    if res <> 0 then
-    begin
-      m_firstHook:=false;
-      // oldwndproc:=pointer(res);
-    end
-    else
-    begin
-      m_firstHook:=true;
-    end;
-  end;
-end;
-
-procedure TExtPack.createWndProc;
-begin
-  mainwnd := WINPOS.mainwnd;
-  newWndProc := MakeObjectInstance(WndProc);
-  oldWndProc := pointer(SetWindowLong(mainwnd, gwl_wndProc,
-      cardinal(newWndProc)));
-end;
 
 function TExtPack.Connect(const app: IDispatch): integer;
 var
@@ -193,8 +145,6 @@ begin
   init := false;
   WINPOS := app as IWinPOS;
   extPack := self;
-  // создаем оконную процедуру
-  createWndProc;
 
   mng := cWPObjMng.Create;
   m_ExtOperMng := TExtOperMng.Create(mng);
@@ -324,14 +274,6 @@ begin
   Ie2087.Disconnect;
 
   Result := 0;
-  SetWindowLong(mainwnd, gwl_wndProc, integer(oldWndProc));
-  // удаляем клавиатурный хук
-  if HLib > HINSTANCE_ERROR then
-  begin
-    // освобождаем библиотеку
-    StartHookProc(false, mainwnd);
-    FreeLibrary(HLib);
-  end;
   m_ExtOperMng.destroy;
 end;
 
@@ -409,6 +351,13 @@ var
   isig: iwpsignal;
   t: cwptube;
   hword: cardinal;
+
+  v:variant;
+  //hword: cardinal;
+  int:integer;
+  p1:pointer;
+  msg:TMessage;
+  lpmsg:PMsg;
 begin
   Result := 0;
   if not InPlugunCode then
@@ -416,10 +365,36 @@ begin
     InPlugunCode := true;
     try
       try
+        // Код сообщения 0x1FFFF (131071), второй параметр - указатель на структуру MSG
+        // для отлова wm_keydown
+        if (what = 131071) then
+        begin
+          // Пример: получение свойства объекта
+          if VarIsArray(param) then
+          begin
+            pvar := (PSafeArray(TVarData(param).VArray).pvdata);
+            v := variant(pvar[0]);
+            case TVarData(v).VType of
+              varSmallInt: ;
+              varInteger:
+              begin
+                int:=TVarData(v).VInteger;
+                lpmsg:=pmsg(int);
+                //logMessage(inttostr(lpmsg.message));
+                msg.Msg:=lpmsg.message;
+                msg.WParam:=lpmsg.wParam;
+                msg.LParam:=lpmsg.lParam;
+              end;
+            end;
+          end
+          else
+            v := param;
+          WndProc(msg);
+        end;
         if (what <> 131071) and (what <> 196607) then
         begin
           hword := HIWORD(what);
-          m_ExtOperMng.NotifyPlugin(what, param);
+          //m_ExtOperMng.NotifyPlugin(what, param);
           // what = $1006 then  ADD_LINE нотификация о добавлении линии на график
           if what = 268828673 then
           // if (what = 270073857) or (what=268828673) or (what=269352961) then
@@ -720,53 +695,25 @@ var
   ltag: integer;
   t:double;
 begin
-  ltag:=0;
-  if Msg.Msg = WM_KeyHOOK then
+  if (Msg.Msg = WM_keydown) or (Msg.Msg = WM_SYSKEYDOWN) then
   begin
-    //logMessage('TExtPack_WndProc_enter');
-    ltag := tagproc(c_wpextpack_tag);
-    if ltag=-1 then
+    if Msg.wParam = VK_F7 then
     begin
-      t:=gettimeinsec;
-      if abs(t-hooktime)>0.1 then
-      begin
-        logMessage(floattostr(t-hooktime));
-        if (mainwnd = hwnd(Msg.lParam)) then
-        begin
-          if Msg.wParam = VK_F6 then
-          begin
-            ScriptFrm.ShowModal;
-          end;
-          if Msg.wParam = VK_F5 then
-          begin
-            CorrectUTSFrm.ShowModal;
-          end;
-          // добавить замер
-          if GetKeyState(VK_Menu) < 0 then
-          begin
-            logMessage('TExtPack_Alt');
-            if Msg.wParam = Ord('T') then
-            begin
-              logMessage('TExtPack_VK_Menu+T');
-              mng.AddHelpTrig;
-            end;
-          end;
-        end;
-        hooktime:=t;
-      end;
-    end
-    else
-    begin
-      // если заняли чужое то возврат как было
-      if ltag<>c_wpextpack_tag then
-      begin
-        logMessage('TExtPack_tagproc(ltag)');
-      end
+      ScriptFrm.ShowModal;
     end;
-    tagproc(-1);
-    //logMessage('TExtPack_WndProc_exit');
+    if Msg.wParam = VK_F6 then
+    begin
+      CorrectUTSFrm.ShowModal;
+    end;
+    // добавить замер
+    if GetKeyState(VK_Menu) < 0 then
+    begin
+      if Msg.wParam = Ord('T') then
+      begin
+        mng.AddHelpTrig;
+      end;
+    end;
   end;
-  Msg.Result := CallWindowProc(oldWndProc, mainwnd, Msg.Msg, Msg.wParam,  Msg.lParam);
 end;
 
 initialization
