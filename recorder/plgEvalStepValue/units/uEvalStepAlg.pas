@@ -79,8 +79,9 @@ type
     // первый блок не проверяется на пересечение данных
     fFirstBlock: boolean;
   private
+    initfMean:boolean;
     // сред. ур для расчета триггера
-    fMean,
+    fMean, fMean_prev,
     // время последнего найденного триггера
     fTrigTime: double;
     ftrig: boolean; // триггер сработал
@@ -212,7 +213,19 @@ begin
   lastindex := -1;
   checkTrig:=false;
   lastTime := m_outTag.getReadTime(m_outTag.lastindex);
-  fMean := m_outTag.m_ReadData[0];
+  if not ftrig then
+  begin
+    fMean := m_outTag.m_ReadData[0];
+    if not initfMean then
+    begin
+      fMean_prev:=fMean;
+      initfMean:=true;
+    end;
+    if fMean-fMean_prev>m_Threshold then
+    begin
+      fMean:=fMean_prev;
+    end;
+  end;
   // проверяем сбросится ли триггер на данной порции
   i2 := 0;
   if ftrig then
@@ -283,14 +296,14 @@ begin
     //  Result.y:=m_outTag.m_ReadData[i]+Result.y;
     //end;
     //Result.y:=Result.y/(t2i-t1i+1);
-    if t2i>m_outTag.getlastindex then
+    if t2i>=m_outTag.getlastindex then
       t2i:=m_outTag.getlastindex-1;
     Result.y := tempSUM(m_outTag.m_ReadData, t1i, t2i) / (t2i-t1i+1);
     m_outScTag.t.PushValue(Result.y, Result.x);
     lastindex := t2i;
     ftrig := false;
   end;
-  //ftrig:=false;
+  // fMean_prev:=fMean;
 end;
 
 function cEvalStepAlg.doEval(intag: cTag; time: double): boolean;
@@ -505,6 +518,9 @@ var
 begin
   fTrigTime := 0;
   m_TrigDrop:=0;
+  initfMean:=false;
+  fMean_prev:=0;
+  fMean:=0;
   m_pushDataCount:=0;
   ftrig := false;
   fFirstBlock := true;

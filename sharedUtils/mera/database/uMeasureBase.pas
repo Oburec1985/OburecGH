@@ -328,7 +328,7 @@ begin
       prop.value:='0';
     if isvalue(prop.value)  then
     begin
-      prop.value:=floattostr(strtofloat(val)+strtofloat(prop.value));
+      prop.value:=floattostr(strtoFloatExt(val)+strtoFloatExt(prop.value));
     end;
   end
   else
