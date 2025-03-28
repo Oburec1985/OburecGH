@@ -108,6 +108,7 @@ object EditSrsFrm: TEditSrsFrm
           Left = 7
           Top = 10
           Width = 192
+          Height = 25
           Margins.Left = 5
           Margins.Top = 5
           Margins.Right = 5
@@ -115,11 +116,13 @@ object EditSrsFrm: TEditSrsFrm
           ExplicitLeft = 7
           ExplicitTop = 10
           ExplicitWidth = 192
+          ExplicitHeight = 25
         end
         inherited FrmTagPropValueEdit: TEdit
           Left = 158
           Top = 107
           Width = 41
+          Height = 25
           Margins.Left = 5
           Margins.Top = 5
           Margins.Right = 5
@@ -127,6 +130,7 @@ object EditSrsFrm: TEditSrsFrm
           ExplicitLeft = 158
           ExplicitTop = 107
           ExplicitWidth = 41
+          ExplicitHeight = 25
         end
         inherited FrmTagPropNameCB: TComboBox
           Left = 7

@@ -544,6 +544,7 @@ begin
   begin
     if FFTShiftIE.IntNum>0 then
     begin
+      // =≈—À»(C9>=fftsize;Œ –”√À¬Õ»«(1+(C9-fftsize)/fftshift;0);0)
       WelchBCountIE.IntNum:=trunc(lastpos/FFTShiftIE.IntNum)+1
     end;
   end

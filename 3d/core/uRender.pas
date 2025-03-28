@@ -157,9 +157,11 @@ var
   camera:cbasecamera;
   i:integer;
   obj:cnodeobject;
+  projection:array [0..15] of gldouble; // матрица проекции.
 begin
   if wglGetCurrentContext<>m_wndContext.hrc then
     wglMakeCurrent(m_wndContext.dc,m_wndContext.hrc);
+  glViewport(0, 0, m_wndContext.ClientWidth, m_wndContext.ClientHeight);
   //======================Подготовка к рисованию=========================
   BeginPaint(m_wndContext.Handle,ps);
   ClearViewPort(m_wndContext.color);
@@ -178,6 +180,7 @@ begin
       cObject(obj).drawbounds(boundColor);
     end;
   end;
+  glGetDoublev(GL_PROJECTION_MATRIX,@projection); // узнаём матрицу проекции.
   // Вызов событий отрисовки сцены
   eventlist.CallAllEvents(E_glRenderScene);
   //---------------------------------------------------------------------------

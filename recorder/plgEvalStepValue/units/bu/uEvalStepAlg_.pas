@@ -378,7 +378,8 @@ begin
         m_outTag.m_ReadDataTime := m_tag.m_ReadDataTime;
       end;
       // source, dest, count // копируем все данные не взирая на перекрытие
-      move(m_outData[0], m_outTag.m_ReadData[m_outTag.lastindex],(m_fftShift) * sizeof(double));
+      move(m_outData[0], m_outTag.m_ReadData[m_outTag.lastindex],
+        (m_fftShift) * sizeof(double));
       fFirstBlock := false;
       if fOverlap > 0 then
       begin
@@ -403,8 +404,7 @@ begin
         m_pushDataCount:=fblSize*ind+m_pushDataCount;
 
         m_outTag.ResetTagDataTimeInd(fblSize * ind);
-        // забываем то, что уж точно не понадобится
-        m_tag.ResetTagDataTimeInd(m_fftShift);
+        m_tag.ResetTagDataTimeInd(fPortionSize);
       end;
       Result := true;
     end;

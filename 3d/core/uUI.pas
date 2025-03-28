@@ -407,7 +407,7 @@ begin
       mouse.LButtonPos.y:=mouse.y;
       mouse.LButtonDown:=true;
     end;
-    WM_SIZE:
+    WM_SIZE or WM_SETFOCUS:
     begin
       if m_renderscene<>nil then
         // процедура вызывает перерисовку родителя

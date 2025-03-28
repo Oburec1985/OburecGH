@@ -306,8 +306,9 @@ begin
         Result.m_dt := 1 / Result.t.freq;
       end
       else
-        showmessage
-          ('1) TSyncOscFrm.CreateSignal t.freq=0: ' + Result.t.tagname);
+      begin
+        showmessage('1) TSyncOscFrm.CreateSignal t.freq=0: ' + Result.t.tagname);
+      end;
       Result.line.dx := Result.m_dt;
       break;
     end;
@@ -322,8 +323,7 @@ begin
         Result.m_dt := 1 / Result.t.freq
       else
       begin
-        showmessage
-          ('2) TSyncOscFrm.CreateSignal t.freq=0: ' + Result.t.tagname);
+        showmessage('2) TSyncOscFrm.CreateSignal t.freq=0: ' + Result.t.tagname);
       end;
     end
     else
