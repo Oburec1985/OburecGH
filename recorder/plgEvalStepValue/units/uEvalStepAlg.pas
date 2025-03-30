@@ -71,9 +71,11 @@ type
   protected
     m_iFFTPlan, FFTProp: TFFTProp;
     // кратность блока записи в тег. Имеем право писать только такими блоками
-    fblSize: integer;
-    // количество обработанных данных которые можно "забыть" после очередного расчета
-    fPortionSize: integer;
+    fblSize,
+    // индекс необработанных данных в входном буфере. сперва 0 потом fftCount
+    // после resetData = fftCount-resetdata и т.д.
+    fInDataIndex,
+    fWrittenBlock: integer;
     // набор множителей для фильтрации спектра (длина = FFTCount)
     m_func: TDoubleArray;
     // первый блок не проверяется на пересечение данных
@@ -291,11 +293,6 @@ begin
     t2i:=t1i+m_TrigMeanLenI;
     //Result.y := tempSUM(m_outTag.m_ReadData, t1i, t2i) / (m_TrigMeanLenI+1);
     Result.y:=0;
-    //for I := t1i to t2i do
-    //begin
-    //  Result.y:=m_outTag.m_ReadData[i]+Result.y;
-    //end;
-    //Result.y:=Result.y/(t2i-t1i+1);
     if t2i>=m_outTag.getlastindex then
       t2i:=m_outTag.getlastindex-1;
     Result.y := tempSUM(m_outTag.m_ReadData, t1i, t2i) / (t2i-t1i+1);
@@ -311,8 +308,9 @@ var
   // количество готовых блоков входного буфера
   bCount: integer;
   b, bRes: boolean;
-  i1: integer;
-  i, ind, lastindex: integer;
+  i, ind,
+  // используется для FindTrig
+  lastindex: integer;
   // dt,
   lt, k, v: double;
   j: integer;
@@ -324,11 +322,9 @@ begin
     exit;
   end;
   bCount := trunc(m_tag.lastindex / m_fftCount);
-  fPortionSize := 0;
   if bCount < 1 then
     exit;
-  i1 := 0;
-  if m_tag.lastindex > (i1 + m_fftCount) then
+  if m_tag.lastindex > (fInDataIndex + m_fftCount) then
     b := true
   else
     b := false;
@@ -336,7 +332,7 @@ begin
   lastindex:=-1;
   while b do
   begin
-    FFTProp.StartInd := i1;
+    FFTProp.StartInd := fInDataIndex;
     fft_al_d_sse(TDoubleArray(m_tag.m_ReadData), TCmxArray_d(cmplx_resArray.p),
       FFTProp);
     // частотная коррекция спектра
@@ -363,31 +359,28 @@ begin
         m_outData[i] := TCmxArray_d(m_inData1.p)[i].re;
       end;
     end;
-    if i1 + m_fftShift + m_fftCount > m_tag.lastindex then
+    // source, dest, count // копируем все данные не взирая на перекрытие
+    //move(m_outData[0], m_outTag.m_ReadData[m_outTag.lastindex],(m_fftShift) * sizeof(double));
+    move(m_outData[0], m_outTag.m_ReadData[fInDataIndex],(m_fftCount) * sizeof(double));
+    if fOverlap > 0 then
     begin
-      b := false
-    end
-    else
-    begin
-      i1 := i1 + m_fftShift;
+      move(m_outData[m_fftCount-fOverlap], m_OverlapBlock[0], fOverlap * sizeof(double));
     end;
+    m_outTag.lastindex := fInDataIndex+m_fftCount;
+    fInDataIndex := fInDataIndex + m_fftShift;
+    if fInDataIndex + m_fftCount > m_tag.lastindex then
     begin
-      if m_outTag.m_ReadDataTime = -1 then
-      begin
-        //m_outTag.m_ReadDataTime := m_tag.m_ReadDataTime+i1*fPeriod;
-        m_outTag.m_ReadDataTime := m_tag.m_ReadDataTime;
-      end;
-      // source, dest, count // копируем все данные не взирая на перекрытие
-      move(m_outData[0], m_outTag.m_ReadData[m_outTag.lastindex],(m_fftShift) * sizeof(double));
-      fFirstBlock := false;
-      if fOverlap > 0 then
-      begin
-        move(m_outData[m_fftCount-fOverlap], m_OverlapBlock[0], fOverlap * sizeof(double));
-      end;
-      // сколько можно забыть в выходном буфере
-      m_outTag.lastindex := m_outTag.lastindex + m_fftShift;
+      b := false; // продолжать расчет
     end;
-    // сколько можно забыть в входном буфере. -fOverlap т.к. нельзя сохранять данные котор не прошли через усреднение с след порцией
+    if m_outTag.m_ReadDataTime = -1 then
+    begin
+      //m_outTag.m_ReadDataTime := m_tag.m_ReadDataTime+i1*fPeriod;
+      m_outTag.m_ReadDataTime := m_tag.m_ReadDataTime;
+    end;
+    fFirstBlock := false;
+
+    // сколько можно забыть в входном буфере. -fOverlap т.к. нельзя сохранять
+    // данные котор не прошли через усреднение с след порцией
     if (m_outTag.lastindex) >= fblSize then
     begin
       // поиск триггера
@@ -397,26 +390,27 @@ begin
       end;
       if not ftrig then
       begin
-        // сколько блоков можно забыть
-        ind := trunc((m_outTag.lastindex) / fblSize);
-        m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[0], fblSize*ind, 0, m_outTag.m_ReadDataTime);
-        m_pushDataCount:=fblSize*ind+m_pushDataCount;
-
-        m_outTag.ResetTagDataTimeInd(fblSize * ind);
-        // забываем то, что уж точно не понадобится
-        m_tag.ResetTagDataTimeInd(m_fftShift);
+        ind := trunc((m_outTag.lastindex-fOverlap) / fblSize);
+        if ind>0 then
+        begin
+          for j := 0 to IND - 1 do
+          BEGIN
+            m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[0+fblSize*j], fblSize*1, 0, m_outTag.m_ReadDataTime+j*m_outTag.m_blLen);
+          END;
+          //m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[0], fblSize*ind, 0, m_outTag.m_ReadDataTime);
+          //m_pushDataCount:=fblSize*ind+m_pushDataCount;
+          m_pushDataCount:=fblSize*ind+m_pushDataCount;
+          m_outTag.ResetTagDataTimeInd(fblSize * ind);
+          m_tag.ResetTagDataTimeInd(fblSize * ind);
+          fInDataIndex:=fInDataIndex-fblSize * ind;
+          fWrittenBlock:=fWrittenBlock+ind;
+          logMessage('push '+inttostr(m_pushDataCount)+' bCount '+inttostr(bCount)+
+          ' I_out '+inttostr(m_outTag.lastindex)+' I_in '+inttostr(m_Tag.lastindex));
+        end;
       end;
       Result := true;
     end;
     inc(bCount);
-  end;
-  if bCount > 0 then
-  begin
-    // нельзя отбрасывать m_fftcount-fftShift т.к. эти данные участвуют в расчетах двух перекрытых спектров
-    // fportionsize:=(bCount-1)*m_fftcount+m_fftShift;
-    fPortionSize := m_fftShift * bCount;
-
-    //m_tag.ResetTagDataTimeInd(fPortionSize);
   end;
 end;
 
@@ -511,6 +505,8 @@ begin
   fMean_prev:=0;
   fMean:=0;
   m_pushDataCount:=0;
+  fInDataIndex:=0;
+  fWrittenBlock:=0;
   ftrig := false;
   fFirstBlock := true;
   if m_tag <> nil then
