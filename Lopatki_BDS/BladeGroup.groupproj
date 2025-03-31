@@ -45,7 +45,7 @@
 			<Projects Include="..\recorder\plgEvalStepValue\plgEvalStepVal.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\recorder\plgOscill\plgOscill.dproj">
+			<Projects Include="..\recorder\plgEvalFRF\plgEvakFRF.dproj">
 				<Dependencies/>
 			</Projects>
 		</ItemGroup>
@@ -184,23 +184,23 @@
 		<Target Name="plgEvalStepVal:Make">
 			<MSBuild Targets="Make" Projects="..\recorder\plgEvalStepValue\plgEvalStepVal.dproj"/>
 		</Target>
-		<Target Name="plgOscill">
-			<MSBuild Projects="..\recorder\plgOscill\plgOscill.dproj"/>
+		<Target Name="plgEvakFRF">
+			<MSBuild Projects="..\recorder\plgEvalFRF\plgEvakFRF.dproj"/>
 		</Target>
-		<Target Name="plgOscill:Clean">
-			<MSBuild Targets="Clean" Projects="..\recorder\plgOscill\plgOscill.dproj"/>
+		<Target Name="plgEvakFRF:Clean">
+			<MSBuild Targets="Clean" Projects="..\recorder\plgEvalFRF\plgEvakFRF.dproj"/>
 		</Target>
-		<Target Name="plgOscill:Make">
-			<MSBuild Targets="Make" Projects="..\recorder\plgOscill\plgOscill.dproj"/>
+		<Target Name="plgEvakFRF:Make">
+			<MSBuild Targets="Make" Projects="..\recorder\plgEvalFRF\plgEvakFRF.dproj"/>
 		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;Proilegenerator;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;SniffDll;ProjectFFT;GlScene;Project1;plgEvalStepVal;plgOscill"/>
+			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;Proilegenerator;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;SniffDll;ProjectFFT;GlScene;Project1;plgEvalStepVal;plgEvakFRF"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;Proilegenerator:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;SniffDll:Clean;ProjectFFT:Clean;GlScene:Clean;Project1:Clean;plgEvalStepVal:Clean;plgOscill:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;Proilegenerator:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;SniffDll:Clean;ProjectFFT:Clean;GlScene:Clean;Project1:Clean;plgEvalStepVal:Clean;plgEvakFRF:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;Proilegenerator:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;SniffDll:Make;ProjectFFT:Make;GlScene:Make;Project1:Make;plgEvalStepVal:Make;plgOscill:Make"/>
+			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;Proilegenerator:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;SniffDll:Make;ProjectFFT:Make;GlScene:Make;Project1:Make;plgEvalStepVal:Make;plgEvakFRF:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

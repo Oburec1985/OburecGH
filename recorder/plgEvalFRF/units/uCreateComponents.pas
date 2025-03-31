@@ -1,0 +1,109 @@
+unit uCreateComponents;
+// здесь прописываются конструкторы кастомных компонентов
+
+interface
+
+uses
+  types, ActiveX, forms, sysutils, windows, Classes, IniFiles, Dialogs,
+  uCompMng, cfreg, uRecorderEvents, PluginClass, tags, Recorder, uRCFunc,
+  uCommonMath, nativeXml, uEditEvalFRFFrm, uEvalFRFFrm,
+  Generics.Collections, Controls, uRecBasicFactory;
+
+type
+  {Тип для хранения информации о plug-in`е}
+  {Этот тип удобнее использовать в Delphi, чем PLUGININFO}
+  TInternalPluginInfo = record
+    Name: AnsiString; // наименование
+    Dsc: AnsiString; // описание
+    Vendor: AnsiString; // описание разработчика
+    Version: integer; // версия
+    SubVertion: integer; // под-версия
+  end;
+
+var
+  g_cfgpath:string;
+
+const
+  // Глобальная переменная для храения описания plug-in`а.
+  GPluginInfo: TInternalPluginInfo = (
+    Name: 'FrfPlg';
+    Dsc: 'Поиск собственных частот';
+    Vendor: 'НПП Мера';
+    Version: 1;
+    SubVertion:0;);
+
+  procedure createComponents(compMng:cCompMng);
+  procedure destroyEngine;
+  procedure createFormsRecorderUIThread(compMng: cCompMng);
+  procedure destroyFormsRecorderUIThread(compMng: cCompMng);
+  // MainThead. Здесь создавать формы для настройки плагина в режиме стопа
+  procedure createForms(compMng: cCompMng);
+  // MainThead
+  procedure destroyForms(compMng: cCompMng);
+  procedure RecorderInit;
+
+implementation
+
+procedure destroyEngine;
+begin
+ if true then exit;
+ // обьявле в начале проекта
+ {$IfDef DEBUG}
+ {$EndIf}
+end;
+
+
+procedure createForms(compMng: cCompMng);
+begin
+  // создание в MainThread
+  if GetCurrentThreadId = MainThreadID then
+  begin
+    // СОЗДАНЫЕ ЗДЕСЬ ФОРМЫ НЕЛЬЗЯ ДЕЛАТЬ SHOWMODAL В UITHREAD
+    // необходимо быть осторожным, т.к. создание формы и создание хендлоа разные события
+    // если форма первый раз показана не в том же потоке где создана то будут проблеммыс удалением формы
+    EditFRFFrm:=TEditFRFFrm.Create(nil);
+  end;
+end;
+
+procedure destroyForms(compMng: cCompMng);
+begin
+  if GetCurrentThreadId = MainThreadID then
+  begin
+
+  end;
+end;
+
+
+procedure createComponents(compMng:cCompMng);
+var
+  str, str1:string;
+  m_toolBarIcon:IPicture;
+  m_btnID:cardinal;
+begin
+  g_FrfFactory:=cFRFFactory.create;
+  CompMng.Add(g_FrfFactory);
+end;
+
+procedure createFormsRecorderUIThread(compMng: cCompMng);
+var
+  h: thandle;
+  str, str1:string;
+  show:boolean;
+begin
+  begin
+  end;
+end;
+
+procedure destroyFormsRecorderUIThread(compMng: cCompMng);
+begin
+  begin
+  end;
+end;
+
+procedure RecorderInit;
+begin
+  //if ThresholdFrm<>nil then
+  //  ThresholdFrm.AttachAlarms;
+end;
+
+end.
