@@ -1488,10 +1488,10 @@ END
 /* forms\u3dObj.dfm */
 /* forms\uVertexEditFrame.dfm */
 /* forms\uGLFrmEdit.dfm */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uEditSrsFrm.dfm */
+/* forms\uEditSrsFrm.dfm */
 /* forms\uIRDiagram.dfm */
 /* forms\uIRDiagramEditFrm.dfm */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uSyncOscillogram.dfm */
+/* forms\uSyncOscillogram.dfm */
 /* forms\uSyncOscillogramEditFrm.dfm */
 /* forms\uAlgsSaveFrm.dfm */
 /* forms\uEditPropertiesFrm.dfm */
@@ -1513,7 +1513,7 @@ END
 /* forms\uPeakFactorFrame.dfm */
 /* forms\uFillFctFrame.dfm */
 /* forms\uAriphmAlgFrame.dfm */
-/* forms\uSpmFrame.dfm */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uSpmFrame.dfm */
 /* forms\uGrmsSrcFrame.dfm */
 /* forms\uGrmsFrame.dfm */
 /* forms\uTahoAlgFrame.dfm */
@@ -1522,7 +1522,7 @@ END
 /* forms\uCounterAlgFrame.dfm */
 /* forms\uAlgFrm.dfm */
 /* forms\uControlCyclogramEditFrm.dfm */
-/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uSRSFrm.dfm */
+/* forms\uSRSFrm.dfm */
 /* forms\uSpmChartEdit.dfm */
 /* forms\uSpmChart.dfm */
 /* forms\uControlWarnFrm.dfm */

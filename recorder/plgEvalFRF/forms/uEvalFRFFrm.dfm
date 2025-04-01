@@ -3,7 +3,7 @@ object FRFFrm: TFRFFrm
   Top = 0
   Hint = #1042#1082#1083#1102#1095#1080#1090#1100'/'#1086#1090#1082#1083#1102#1095#1080#1090#1100' '#1088#1072#1089#1095#1077#1090
   Caption = 'FRFFrm'
-  ClientHeight = 444
+  ClientHeight = 441
   ClientWidth = 711
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,17 +19,18 @@ object FRFFrm: TFRFFrm
   object Splitter1: TSplitter
     Left = 487
     Top = 0
-    Height = 444
+    Height = 441
     Align = alRight
     Color = clBackground
     ParentColor = False
     ExplicitLeft = 485
+    ExplicitHeight = 444
   end
   object SpmChart: cChart
     Left = 0
     Top = 0
     Width = 487
-    Height = 444
+    Height = 441
     Cursor = crSizeAll
     Margins.Left = 2
     Margins.Top = 2
@@ -44,17 +45,17 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitLeft = 1
+    ExplicitHeight = 444
   end
   object RightGB: TGroupBox
     Left = 490
     Top = 0
     Width = 221
-    Height = 444
+    Height = 441
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
-    ExplicitLeft = 492
+    ExplicitHeight = 444
     object ShockCountLabel: TLabel
       Left = 8
       Top = 21
@@ -381,7 +382,7 @@ object FRFFrm: TFRFFrm
     end
     object GroupBox1: TGroupBox
       Left = 2
-      Top = 190
+      Top = 187
       Width = 217
       Height = 252
       Margins.Left = 2
@@ -391,6 +392,7 @@ object FRFFrm: TFRFFrm
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 10
+      ExplicitTop = 190
       object SignalsLV: TBtnListView
         Left = 2
         Top = 15
@@ -430,7 +432,6 @@ object FRFFrm: TFRFFrm
         DrawColorBox = False
         ChangeTextColor = False
         Editable = False
-        ExplicitHeight = 125
       end
     end
     object ResTypeRG: TRadioGroup

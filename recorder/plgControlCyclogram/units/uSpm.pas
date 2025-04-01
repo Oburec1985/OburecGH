@@ -54,12 +54,15 @@ type
     m_outTag: cTag;
     FFTProp: TFFTProp;
     // число точек fft, число блоков по которым идет расчет спектров,
-    m_fftCount, m_blockcount,
+    m_fftCount,
+    m_ZoomOrd,
+    m_blockcount,
     // перекрытие блоков m_overflowP=(1/ 2^m_overflow)
     m_overflow, m_overflowP: integer;
     // разрешение спектра
     m_spmdx: double;
-    m_addNulls: boolean;
+    m_addNulls,
+    m_Zoom: boolean;
     // окно
     fWnd: PWndFunc;
   private
@@ -620,6 +623,24 @@ begin
     begin
       changed := true;
       m_addNulls := strtoboolext(lstr);
+    end;
+  end;
+  lstr := GetParam(str, 'Zoom');
+  if CheckStr(lstr) then
+  begin
+    if strtoboolext(lstr) <> m_Zoom then
+    begin
+      changed := true;
+      m_Zoom := strtoboolext(lstr);
+    end;
+  end;
+  lstr := GetParam(str, 'ZoomOrd');
+  if CheckStr(lstr) then
+  begin
+    if strtointext(lstr) <> m_ZoomOrd then
+    begin
+      changed := true;
+      m_ZoomOrd := strtoIntExt(lstr);
     end;
   end;
   lstr := GetParam(str, 'dX');

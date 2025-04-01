@@ -31,6 +31,9 @@ type
     AHLabel: TLabel;
     AHBtn: TButton;
     ResTypeRG: TRadioGroup;
+    ZoomCB: TCheckBox;
+    ZoomOrderIE: TIntEdit;
+    ZoomOrdSB: TSpinButton;
 
     procedure FFTCountEditChange(Sender: TObject);
     procedure FFTCountSpinBtnDownClick(Sender: TObject);
@@ -40,6 +43,8 @@ type
     procedure AlgDTFEChange(Sender: TObject);
     procedure ChannelCBDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
+    procedure ZoomOrdSBDownClick(Sender: TObject);
+    procedure ZoomOrdSBUpClick(Sender: TObject);
   protected
     m_lastOutTag: string;
   protected
@@ -87,8 +92,7 @@ end;
 
 procedure TSpmFrame.FFTCountSpinBtnUpClick(Sender: TObject);
 begin
-  if FFTCountEdit.IntNum > 2 then
-    FFTCountEdit.IntNum := FFTCountEdit.IntNum * 2;
+  FFTCountEdit.IntNum := FFTCountEdit.IntNum * 2;
 end;
 
 function TSpmFrame.getProperties: string;
@@ -115,6 +119,16 @@ begin
   if not err then
   begin
     addParam(m_pars, 'Addnull', booltostr(b));
+  end;
+  b := GetMultiSelectComponentBool(ZoomCB, err);
+  if not err then
+  begin
+    addParam(m_pars, 'Zoom', booltostr(b));
+  end;
+  str := GetMultiSelectComponentString(ZoomOrderIE, err);
+  if not err then
+  begin
+    addParam(m_pars, 'ZoomOrd', str);
   end;
   str := GetMultiSelectComponentString(AlgDTFE, err);
   if not err then
@@ -308,7 +322,16 @@ begin
   begin
     SetMultiSelectComponentBool(AddNullCB, StrToBool(str));
   end;
-
+  str := GetParsValue(m_pars, 'Zoom');
+  if checkstr(str) then
+  begin
+    SetMultiSelectComponentBool(zoomCB, StrToBool(str));
+  end;
+  str := GetParsValue(m_pars, 'ZoomOrd');
+  if checkstr(str) then
+  begin
+    SetMultiSelectComponentBool(ZoomOrderIE, StrToBool(str));
+  end;
   str := GetParsValue(m_pars, 'BCount');
   if checkstr(str) then
   begin
@@ -319,14 +342,6 @@ begin
   end;
 
   str := GetParsValue(m_pars, 'dX');
-  //if checkstr(str) then
-  //begin
-  //  p := AlgDTFE.OnChange;
-  //  AlgDTFE.OnChange := nil;
-  //  SetMultiSelectComponentString(AlgDTFE, str);
-  //  AlgDTFE.OnChange := p;
-  //end
-  //else
   begin
     str := GetParsValue(m_pars, 'Channel');
     t := getTagByName(str);
@@ -366,6 +381,17 @@ begin
   end;
   if AlgDTFE.FloatNum = -1 then
     SetFFTCount(FFTCountEdit.IntNum, false, true);
+end;
+
+procedure TSpmFrame.ZoomOrdSBDownClick(Sender: TObject);
+begin
+  if ZoomOrderIE.IntNum > 1 then
+    ZoomOrderIE.IntNum := round(ZoomOrderIE.IntNum shr 1);
+end;
+
+procedure TSpmFrame.ZoomOrdSBUpClick(Sender: TObject);
+begin
+  ZoomOrderIE.IntNum := round(ZoomOrderIE.IntNum shl 1);
 end;
 
 function TSpmFrame.algClass: string;
