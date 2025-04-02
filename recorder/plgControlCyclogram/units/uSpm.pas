@@ -240,6 +240,10 @@ begin
   m_overflow := p_overflow;
   fdx := p_dx;
   m_spmdx := m_tag.tag.GetFreq / m_fftCount;
+  if m_Zoom then
+  begin
+    m_spmdx:=m_spmdx/Power(2,m_ZoomOrd);
+  end;
   if (fdx = -1) or (not m_addNulls) then
   begin
     fOutSize := m_fftCount * m_blockcount;
@@ -308,6 +312,8 @@ begin
     m_EvalBlockTag.setBlock(fOutSize, m_EvalBlock.p);
   end;
   FFTProp := GetFFTPlan(m_fftCount);
+  FFTProp.m_Zoom:=m_Zoom;
+  FFTProp.m_Zoomord:=m_Zoomord;
 end;
 
 procedure cSpm.doEval(intag: cTag; time: double);
@@ -632,6 +638,7 @@ begin
     begin
       changed := true;
       m_Zoom := strtoboolext(lstr);
+      FFTProp.m_zoom:=m_Zoom;
     end;
   end;
   lstr := GetParam(str, 'ZoomOrd');
@@ -641,6 +648,7 @@ begin
     begin
       changed := true;
       m_ZoomOrd := strtoIntExt(lstr);
+      FFTProp.m_ZoomOrd:=m_ZoomOrd;
     end;
   end;
   lstr := GetParam(str, 'dX');

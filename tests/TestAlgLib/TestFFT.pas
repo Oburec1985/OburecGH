@@ -8,7 +8,6 @@ uses
   StdCtrls, uMeraFile, uBuffSignal, umerasignal,
   complex,
   uHardwareMath,
-  uFFT,
   uYCursor,
   performancetime, nativexml, ucommonmath, uCommonTypes,
   fft, fht, Ap, DCL_MYOWN, ComCtrls, ExtCtrls, uChart, utrend, upage, uaxis, uBuffTrend1d;
