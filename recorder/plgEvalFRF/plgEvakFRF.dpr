@@ -14,7 +14,7 @@ uses
   uTrfrmToolsFrame in '..\..\3d\forms\uTrfrmToolsFrame.pas' {TrfrmToolsFrame: TFrame},
   uObjCtrFrame in '..\..\3d\forms\uObjCtrFrame.pas' {CtrlViewFrame: TFrame},
   uMatrix in '..\..\sharedUtils\math\uMatrix.pas',
-  PluginClass in '..\SharedRUnits\PluginClass.pas',
+  uPluginClass in '..\plgEvalStepValue\units\uPluginClass.pas',
   uCompMng in '..\SharedRUnits\uCompMng.pas',
   uRecBasicFactory in '..\SharedRUnits\uRecBasicFactory.pas',
   uRecorderEvents in '..\SharedRUnits\uRecorderEvents.pas',
@@ -33,7 +33,7 @@ uses
   transf in '..\SharedRUnits\interfaces\transf.pas',
   transformers in '..\SharedRUnits\interfaces\transformers.pas',
   waitwnd in '..\SharedRUnits\interfaces\waitwnd.pas',
-  uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
+  uFrmSyncEvStep in '..\plgEvalStepValue\forms\uFrmSyncEvStep.pas' {FrmSync},
   uEditEvalFRFFrm in 'forms\uEditEvalFRFFrm.pas' {EditFrfFrm},
   uEvalFRFFrm in 'forms\uEvalFRFFrm.pas' {FRFFrm};
 

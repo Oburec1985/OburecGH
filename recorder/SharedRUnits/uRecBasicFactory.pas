@@ -93,7 +93,6 @@ type
     m_name, m_picname: string;
     m_CompList: TList;
   protected
-    // m_pOwner:IInterface;
     m_pOwner: IUnknown;
   protected
     procedure ExcludeComp(comp: TObject);
@@ -233,8 +232,8 @@ const
 
 implementation
 
-uses
-  pluginclass;
+//uses
+//  pluginclass;
 
 function cRecBasicFactory.count: integer;
 begin
@@ -383,7 +382,8 @@ function cRecBasicFactory.GetFactoryOwner(var pOwner: IUnknown): HRESULT;
 begin
   //result := E_POINTER;
   result := S_OK;
-  pOwner:=GPluginInstance;
+  //pOwner:=GPluginInstance;
+  pOwner:=m_pOwner;
   if (pOwner <> nil) then
   begin
     pOwner := m_pOwner;
@@ -811,15 +811,15 @@ end;
 
 destructor cRecBasicIFrm.destroy;
 begin
-  TExtRecorderPack(GPluginInstance).EList.CallAllEventsWithSender (E_RC_DestroyObject, self);
+  ///TExtRecorderPack(GPluginInstance).EList.CallAllEventsWithSender (E_RC_DestroyObject, self);
   // удаляем компонент из спсика зарегестрированных объектов в фабрике классов
   m_f.ExcludeComp(self);
   // потенциально опасно!!!
   if m_f.count = 0 then
   begin
-    // если идет удаление плагина а не просто так выпилили все компоненты одного типа
-    if TExtRecorderPack(GPluginInstance).delPlg then
-      m_f._Release;
+    /// если идет удаление плагина а не просто так выпилили все компоненты одного типа
+    //if TExtRecorderPack(GPluginInstance).delPlg then
+    ///  m_f._Release;
   end;
   m_f := nil;
   inherited;

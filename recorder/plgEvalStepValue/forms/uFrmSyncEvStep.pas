@@ -1,4 +1,4 @@
-unit uFrmSync;
+unit uFrmSyncEvStep;
 
 interface
 
@@ -31,7 +31,7 @@ const
 
 implementation
 uses
-  PluginClass,
+  uPluginClass,
   uCreateComponents;
 
 {$R *.dfm}
@@ -42,6 +42,7 @@ begin
   fenterdestroy:=true;
   if GetCurrentThreadId=MainThreadID then
   begin
+    ///uCreateComponents.destroyForms(TExtRecorderPack(GPluginInstance).m_CompMng);
     uCreateComponents.destroyForms();
   end
   else
@@ -56,7 +57,7 @@ procedure TFrmSync.ProcNotifyFrmCreate(sender:tobject);
 begin
 //----------- не влияет на error 5
   createForms();
-  TExtRecorderPack(GPluginInstance).EList.CallAllEvents(c_RCreateFrmInMainThread);
+  TEvStepVal(GPluginInstance).EList.CallAllEvents(c_RCreateFrmInMainThread);
 end;
 
 procedure TFrmSync.FormCreate(Sender: TObject);

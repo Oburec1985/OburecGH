@@ -53,6 +53,9 @@
     <Transaction>2022.12.29 19:42:38.711.pas,F:\Oburec\delphi\2011\OburecGH\sharedUtils\forms\uFrmSync.pas=</Transaction>
     <Transaction>2022.12.29 19:42:38.711.dfm,F:\Oburec\delphi\2011\OburecGH\sharedUtils\forms\uFrmSync.dfm=</Transaction>
     <Transaction>2022.12.30 12:20:20.402.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\Unit2.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\units\uEvalStepAlg.pas</Transaction>
+    <Transaction>2025.04.04 22:43:00.854.pas,C:\Oburec\OburecGH\recorder\SharedRUnits\PluginClass.pas=C:\Oburec\OburecGH\recorder\plgEvalStepValue\units\uPluginClass.pas</Transaction>
+    <Transaction>2025.04.04 23:11:03.903.pas,C:\Oburec\OburecGH\recorder\SharedRUnits\uFrmSync.pas=C:\Oburec\OburecGH\recorder\plgEvalStepValue\forms\uFrmSyncEvStep.pas</Transaction>
+    <Transaction>2025.04.04 23:11:03.903.dfm,C:\Oburec\OburecGH\recorder\SharedRUnits\uFrmSync.dfm=C:\Oburec\OburecGH\recorder\plgEvalStepValue\forms\uFrmSyncEvStep.dfm</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
@@ -62,29 +65,26 @@
     <File Path="..\SharedRUnits\interfaces\CFREG.PAS"/>
     <File Path="..\SharedRUnits\interfaces\DevAPI.pas"/>
     <File Path="..\SharedRUnits\interfaces\device.pas"/>
+    <File Path="..\SharedRUnits\interfaces\iplgmngr.pas"/>
     <File Path="..\SharedRUnits\interfaces\journal.pas"/>
     <File Path="..\SharedRUnits\interfaces\modules.pas"/>
     <File Path="..\SharedRUnits\interfaces\plugin.pas"/>
     <File Path="..\SharedRUnits\interfaces\rcPlugin.pas"/>
     <File Path="..\SharedRUnits\interfaces\recorder.pas"/>
+    <File Path="..\SharedRUnits\interfaces\scales.pas"/>
     <File Path="..\SharedRUnits\interfaces\signal.pas"/>
     <File Path="..\SharedRUnits\interfaces\tags.pas"/>
     <File Path="..\SharedRUnits\interfaces\transf.pas"/>
     <File Path="..\SharedRUnits\interfaces\transformers.pas"/>
     <File Path="..\SharedRUnits\interfaces\waitwnd.pas"/>
-    <File Path="..\SharedRUnits\interfaces\iplgmngr.pas"/>
-    <File Path="..\SharedRUnits\interfaces\scales.pas"/>
     <File Path="..\SharedRUnits\RC_lib"/>
     <File Path="..\SharedRUnits\RC_lib\uRcCtrls.pas"/>
-    <File Path="..\SharedRUnits\PluginClass.pas"/>
+    <File Path="..\SharedRUnits\uRCFunc.pas"/>
     <File Path="..\SharedRUnits\uRecBasicFactory.pas"/>
     <File Path="..\SharedRUnits\uRecorderEvents.pas"/>
+    <File Path="..\SharedRUnits\uRvclService.pas"/>
     <File Path="..\SharedRUnits\uTagsListFrame.pas"/>
     <File Path="..\SharedRUnits\uTagsListFrame.dfm"/>
-    <File Path="..\SharedRUnits\uRCFunc.pas"/>
-    <File Path="..\SharedRUnits\uRvclService.pas"/>
-    <File Path="..\SharedRUnits\uFrmSync.pas"/>
-    <File Path="..\SharedRUnits\uFrmSync.dfm"/>
     <File Path="..\..\..\OburecGH"/>
     <File Path="..\..\3d"/>
     <File Path="..\..\3d\3dComponents"/>
@@ -113,9 +113,12 @@
     <File Path="forms"/>
     <File Path="forms\uEvalStepCfgFrm.pas"/>
     <File Path="forms\uEvalStepCfgFrm.dfm"/>
+    <File Path="forms\uFrmSyncEvStep.pas"/>
+    <File Path="forms\uFrmSyncEvStep.dfm"/>
     <File Path="units"/>
-    <File Path="units\uCreateComponents.pas"/>
     <File Path="units\uCompMng.pas"/>
+    <File Path="units\uCreateComponents.pas"/>
     <File Path="units\uEvalStepAlg.pas"/>
+    <File Path="units\uPluginClass.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

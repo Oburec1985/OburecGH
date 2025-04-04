@@ -28,9 +28,6 @@
     <File Path="..\SharedRUnits\interfaces\uAlarms.pas"/>
     <File Path="..\SharedRUnits\RC_lib"/>
     <File Path="..\SharedRUnits\RC_lib\uRcCtrls.pas"/>
-    <File Path="..\SharedRUnits\PluginClass.pas"/>
-    <File Path="..\SharedRUnits\uFrmSync.pas"/>
-    <File Path="..\SharedRUnits\uFrmSync.dfm"/>
     <File Path="..\SharedRUnits\uRcClient.pas"/>
     <File Path="..\SharedRUnits\uRcClientFrm.pas"/>
     <File Path="..\SharedRUnits\uRcClientFrm.dfm"/>
@@ -41,6 +38,7 @@
     <File Path="..\SharedRUnits\uRvclService.pas"/>
     <File Path="..\SharedRUnits\uTagsListFrame.pas"/>
     <File Path="..\SharedRUnits\uTagsListFrame.dfm"/>
+    <File Path="..\SharedRUnits\PluginClass.pas"/>
     <File Path="..\..\..\OburecGH"/>
     <File Path="..\..\3d"/>
     <File Path="..\..\3d\core"/>
@@ -352,12 +350,12 @@
     <File Path="forms\uEditSrsFrm.dfm"/>
     <File Path="forms\uSyncOscillogram.pas"/>
     <File Path="forms\uSyncOscillogram.dfm"/>
+    <File Path="forms\uSyncOscillogramEditFrm.pas"/>
+    <File Path="forms\uSyncOscillogramEditFrm.dfm"/>
     <File Path="forms\uTagInfoEditFrm.pas"/>
     <File Path="forms\uTagInfoEditFrm.dfm"/>
     <File Path="forms\uTagInfoFrm.pas"/>
     <File Path="forms\uTagInfoFrm.dfm"/>
-    <File Path="forms\uSyncOscillogramEditFrm.pas"/>
-    <File Path="forms\uSyncOscillogramEditFrm.dfm"/>
     <File Path="forms\uTahoAlgFrame.pas"/>
     <File Path="forms\uTahoAlgFrame.dfm"/>
     <File Path="forms\uThresholdsFrm.pas"/>
@@ -506,5 +504,11 @@
     <Transaction>2025.01.05 22:43:47.315.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit1.pas=C:\Oburec\OburecGH\recorder\plgControlCyclogram\units\uProfile.pas</Transaction>
     <Transaction>2025.01.06 23:21:17.511.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.pas=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uSpmThresholdProfile.pas</Transaction>
     <Transaction>2025.01.06 23:21:17.511.dfm,C:\Oburec\OburecGH\recorder\plgControlCyclogram\Unit3.dfm=C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uSpmThresholdProfile.dfm</Transaction>
+    <Transaction>2025.04.04 22:43:00.911.pas,C:\Oburec\OburecGH\recorder\SharedRUnits\PluginClass.pas=C:\Oburec\OburecGH\recorder\plgEvalStepValue\units\uPluginClass.pas</Transaction>
+    <Transaction>2025.04.04 22:55:43.664.pas,C:\Oburec\OburecGH\recorder\plgEvalStepValue\units\uPluginClass.pas=</Transaction>
+    <Transaction>2025.04.04 23:11:03.934.pas,C:\Oburec\OburecGH\recorder\SharedRUnits\uFrmSync.pas=C:\Oburec\OburecGH\recorder\plgEvalStepValue\forms\uFrmSyncEvStep.pas</Transaction>
+    <Transaction>2025.04.04 23:11:03.934.dfm,C:\Oburec\OburecGH\recorder\SharedRUnits\uFrmSync.dfm=C:\Oburec\OburecGH\recorder\plgEvalStepValue\forms\uFrmSyncEvStep.dfm</Transaction>
+    <Transaction>2025.04.04 23:28:28.734.pas,C:\Oburec\OburecGH\recorder\plgEvalStepValue\forms\uFrmSyncEvStep.pas=</Transaction>
+    <Transaction>2025.04.04 23:28:28.734.dfm,C:\Oburec\OburecGH\recorder\plgEvalStepValue\forms\uFrmSyncEvStep.dfm=</Transaction>
   </Transactions>
 </BorlandProject>

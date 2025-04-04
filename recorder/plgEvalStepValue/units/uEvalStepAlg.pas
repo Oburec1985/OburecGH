@@ -4,7 +4,7 @@ interface
 
 uses
   classes, Windows, tags, uBaseObj, uBaseObjMng, activeX, nativexml, uRCFunc,
-  pluginclass, blaccess, sysutils, uCommonTypes, uFFT,
+  upluginclass, blaccess, sysutils, uCommonTypes, uFFT,
   urecorderevents,
   uCommonMath,
   uMyMath,

@@ -6,7 +6,7 @@ interface
 uses
   uEvalStepCfgFrm,
   types, ActiveX, forms, sysutils, windows, Classes, IniFiles, Dialogs,
-  uCompMng, cfreg, uRecorderEvents, PluginClass, tags, Recorder, uRCFunc,
+  uCompMng, cfreg, uRecorderEvents, uPluginClass, tags, Recorder, uRCFunc,
   uEvalStepAlg, uCommonMath, nativeXml, ulogfile,
   Generics.Collections, Controls;
 
@@ -21,28 +21,7 @@ type
     SubVertion: integer; // под-верси€
   end;
 
-  // трансл€тор сообщений из Recorder в базу TMBaseControl
-  cEvalStepValNP = class(cNonifyProcessor)
-  public
-    fload:boolean;
-    m_toolBarIcon:IPicture;
-    m_btnID:cardinal;
-    // сохран€лка
-    m_toolBarIcon2:IPicture;
-    m_btnID2:cardinal;
-  protected
-    procedure doAddParentList;override;
-    procedure doSave(path: string);override;
-    procedure doLoad(path: string);override;
-    procedure doLeaveCfg;override;
-    procedure doRCInit; override;
-  public
-    function ProcessBtnClick(pMsgInfo:PCB_MESSAGE): boolean;override;
-    constructor create;
-  end;
-
 var
-  g_EvalStepValNP:cEvalStepValNP;
   g_cfgpath:string;
 
 const
@@ -54,14 +33,18 @@ const
     Version: 1;
     SubVertion:0;);
 
-  procedure createComponents(compMng:cCompMng);
+  procedure createComponents();
+  procedure doLoad(path: string);
+  procedure doSave(path: string);
+  procedure doRCInit(Loaded:boolean);
+
   procedure destroyEngine;
-  procedure createFormsRecorderUIThread(compMng: cCompMng);
-  procedure destroyFormsRecorderUIThread(compMng: cCompMng);
+  procedure createFormsRecorderUIThread();
+  procedure destroyFormsRecorderUIThread();
   // MainThead. «десь создавать формы дл€ настройки плагина в режиме стопа
-  procedure createForms(compMng: cCompMng);
+  procedure createForms();
   // MainThead
-  procedure destroyForms(compMng: cCompMng);
+  procedure destroyForms();
   procedure RecorderInit;
 
 
@@ -75,14 +58,12 @@ end;
 
 procedure destroyEngine;
 begin
+ g_AlgList.destroy;
  if true then exit;
- // обь€вле в начале проекта
- {$IfDef DEBUG}
- {$EndIf}
 end;
 
 
-procedure createForms(compMng: cCompMng);
+procedure createForms();
 begin
   // создание в MainThread
   if GetCurrentThreadId = MainThreadID then
@@ -91,7 +72,7 @@ begin
   end;
 end;
 
-procedure destroyForms(compMng: cCompMng);
+procedure destroyForms();
 begin
   exit;
   if GetCurrentThreadId = MainThreadID then
@@ -101,39 +82,40 @@ begin
       EvalStepCfgFrm.destroy;
       EvalStepCfgFrm:=nil;
     end;
-    g_EvalStepValNP.Destroy;
     g_AlgList.Destroy;
   end;
 end;
 
 
-procedure createComponents(compMng:cCompMng);
+procedure createComponents();
 var
   str, str1, cfg, dir, fname:string;
   m_toolBarIcon:IPicture;
   i, m_btnID:cardinal;
 begin
+  g_AlgList:=cAlgList.Create;
+
   cfg := extractfiledir(getRConfig);
   i := 0;
   if DirectoryExists(cfg) then
   begin
-    dir := cfg + '\logs\';
-    if not DirectoryExists(dir) then
-    begin
-      ForceDirectories(dir);
-    end;
-    fname := dir + 'ControlCyclogramLog_' + inttostr(i) + '.log';
-    while FileExists(fname) do
-    begin
-      inc(i);
-      fname := dir + 'ControlCyclogramLog_' + inttostr(i) + '.log';
-    end;
-    g_logFile := cLogFile.Create(fname, ';');
-    g_logFile.m_Rewrite := false;
+    //dir := cfg + '\logs\';
+    //if not DirectoryExists(dir) then
+    //begin
+    //  ForceDirectories(dir);
+    //end;
+    //fname := dir + 'ControlCyclogramLog_' + inttostr(i) + '.log';
+    //while FileExists(fname) do
+    //begin
+    //  inc(i);
+    //  fname := dir + 'ControlCyclogramLog_' + inttostr(i) + '.log';
+    //end;
+    //g_logFile := cLogFile.Create(fname, ';');
+    //g_logFile.m_Rewrite := false;
   end;
 end;
 
-procedure createFormsRecorderUIThread(compMng: cCompMng);
+procedure createFormsRecorderUIThread();
 var
   h: thandle;
   str, str1:string;
@@ -146,13 +128,9 @@ begin
     EvalStepCfgFrm.close;
   end;
 
-  g_EvalStepValNP:=cEvalStepValNP.Create;
-  TExtRecorderPack(GPluginInstance).m_nplist.AddNP(g_EvalStepValNP);
-
-  g_AlgList:=cAlgList.Create;
 end;
 
-procedure destroyFormsRecorderUIThread(compMng: cCompMng);
+procedure destroyFormsRecorderUIThread();
 begin
   if true then exit;
   
@@ -163,68 +141,20 @@ begin
   end;
 end;
 
-{ cMBaseAlgNP }
-constructor cEvalStepValNP.create;
-begin
-  fload:=false;
-end;
-
-procedure cEvalStepValNP.doAddParentList;
-var
-  str, str1:string;
-begin
-  inherited;
-  // добавл€ем кнопку в редакторе формул€ров
-  str  := '–асчетные каналы';
-  str1 := '–асчетные каналы';
-  m_toolBarIcon:= LoadPicFromRes('FX48');
-  cCompMng(TExtRecorderPack(GPluginInstance).m_CompMng).m_BtnTagPropPage.AddButton(m_toolBarIcon,
-                                m_toolBarIcon, m_toolBarIcon,
-                                m_toolBarIcon,
-                                pAnsiChar(@str1[1]), @str[1], GPluginInstance, m_btnID);
-end;
-
-
-procedure cEvalStepValNP.doLoad(path: string);
+procedure doLoad(path: string);
 var
   doc:TNativeXml;
   node:txmlnode;
+  b:boolean;
 begin
   g_cfgpath:=path;
-  ecm;
+  ecm(b);
   g_algList.doLoad(nil);
-  lcm;
-  fload:=true;
-end;
-
-procedure cEvalStepValNP.doRCInit;
-var
-  i:integer;
-  a:cEvalStepAlg;
-begin
-  if not fload then
-  begin
-    g_cfgpath:=getRConfig;
-    doLoad(g_cfgpath);
-  end;
-  for i:=0 to g_AlgList.Count-1 do
-  begin
-    a:=g_AlgList.getobj(i);
-    a.m_tag.tagname:=a.m_tag.tagname;
-    a.m_outTag.tagname:=a.m_outTag.tagname;
-    ecm;
-    a.m_outTag.tag.SetFreq(a.m_tag.freq);
-    a.UpdateFFTSize;
+  if b then
     lcm;
-  end;
 end;
 
-procedure cEvalStepValNP.doLeaveCfg;
-begin
-  g_algList.doLeaveCfg;
-end;
-
-procedure cEvalStepValNP.doSave(path: string);
+procedure doSave(path: string);
 var
   dir, name:string;
 begin
@@ -234,12 +164,31 @@ begin
   g_algList.doSave(nil);
 end;
 
-function cEvalStepValNP.ProcessBtnClick(pMsgInfo: PCB_MESSAGE): boolean;
+
+procedure doRCInit(Loaded:boolean);
+var
+  i:integer;
+  a:cEvalStepAlg;
+  b:boolean;
 begin
-  if pMsgInfo.uID=m_btnID then
+  if not Loaded then
   begin
-    EvalStepCfgFrm.Show;   // показываем форму настроек
+    g_cfgpath:=getRConfig;
+    doLoad(g_cfgpath);
+  end;
+  for i:=0 to g_AlgList.Count-1 do
+  begin
+    a:=g_AlgList.getobj(i);
+    a.m_tag.tagname:=a.m_tag.tagname;
+    a.m_outTag.tagname:=a.m_outTag.tagname;
+
+    ecm(b);
+    a.m_outTag.tag.SetFreq(a.m_tag.freq);
+    a.UpdateFFTSize;
+    if b then
+      lcm;
   end;
 end;
+
 
 end.

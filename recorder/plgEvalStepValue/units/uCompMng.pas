@@ -32,7 +32,9 @@ type
 implementation
 
 uses
-  uRecBasicFactory, pluginclass;
+  uRecBasicFactory
+  //,pluginclass
+  ;
 
 constructor cCompMng.create(r: irecorder);
 var

@@ -90,7 +90,7 @@
 				<Form>TagsListFrame</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
-			<DCCReference Include="..\SharedRUnits\PluginClass.pas"/>
+			<DCCReference Include="units\uPluginClass.pas"/>
 			<DCCReference Include="..\SharedRUnits\uRCFunc.pas"/>
 			<DCCReference Include="..\SharedRUnits\uRecBasicFactory.pas"/>
 			<DCCReference Include="..\SharedRUnits\uRecorderEvents.pas"/>
@@ -100,7 +100,7 @@
 			<DCCReference Include="..\..\sharedUtils\math\FFT_койнов\Iterative_FFT_sse.pas"/>
 			<DCCReference Include="..\..\sharedUtils\math\FFT_койнов\recursive_sse2_sse3_d_al_fft.pas"/>
 			<DCCReference Include="..\SharedRUnits\RC_lib\uRcCtrls.pas"/>
-			<DCCReference Include="..\SharedRUnits\uFrmSync.pas">
+			<DCCReference Include="forms\uFrmSyncEvStep.pas">
 				<Form>FrmSync</Form>
 			</DCCReference>
 			<DCCReference Include="..\SharedRUnits\interfaces\scales.pas"/>

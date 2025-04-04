@@ -32,7 +32,7 @@ uses
   waitwnd in '..\SharedRUnits\interfaces\waitwnd.pas',
   uEvalStepCfgFrm in 'forms\uEvalStepCfgFrm.pas' {EvalStepCfgFrm},
   uTagsListFrame in '..\SharedRUnits\uTagsListFrame.pas' {TagsListFrame: TFrame},
-  PluginClass in '..\SharedRUnits\PluginClass.pas',
+  uPluginClass in 'units\uPluginClass.pas',
   uRCFunc in '..\SharedRUnits\uRCFunc.pas',
   uRecBasicFactory in '..\SharedRUnits\uRecBasicFactory.pas',
   uRecorderEvents in '..\SharedRUnits\uRecorderEvents.pas',
@@ -42,7 +42,7 @@ uses
   Iterative_FFT_sse in '..\..\sharedUtils\math\FFT_койнов\Iterative_FFT_sse.pas',
   recursive_sse2_sse3_d_al_fft in '..\..\sharedUtils\math\FFT_койнов\recursive_sse2_sse3_d_al_fft.pas',
   uRcCtrls in '..\SharedRUnits\RC_lib\uRcCtrls.pas',
-  uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
+  uFrmSyncEvStep in 'forms\uFrmSyncEvStep.pas' {FrmSync},
   scales in '..\SharedRUnits\interfaces\scales.pas',
   uEvalStepAlg in 'units\uEvalStepAlg.pas';
 
@@ -90,7 +90,7 @@ end;
 //а указатель. Причина такого объявления обоснована в документе описания.
 function CreatePluginClass: pointer{IRecorderPlugin}; cdecl;
 begin
-  GPluginInstance := TExtRecorderPack.Create;
+  GPluginInstance := TEvStepVal.Create;
   //Создание одного глобального экземпляра plug-in`а}
   result := pointer(GPluginInstance);
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -105,7 +105,7 @@ begin
   //Объект plug-in`а удаляет себя сам (как любой COM объект),
   //если счетчик ссылок его интерфейсов станет равен нулю.
   Result := RCERROR_NOERROR;
-  TExtRecorderPack(piPlg).destroyForms;
+  TEvStepVal(piPlg).destroyForms;
   GPluginInstance:=NIL;
   piPlg._release;
 end;

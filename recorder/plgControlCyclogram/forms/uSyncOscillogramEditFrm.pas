@@ -61,6 +61,7 @@ type
     m_curObj:tobject;
   private
     procedure ShowTV;
+    procedure updateAx(a:caxis);
     function getSignalAxisNode(s:Tobject):pvirtualnode;
   public
     procedure updateTagsList;
@@ -257,19 +258,52 @@ begin
   endMultiSelect(LineNameEdit);
 end;
 
+procedure TEditSyncOscFrm.updateAx(a:caxis);
+var
+  pAx:paxis;
+  str:string;
+  b:boolean;
+begin
+  pAx:=TSyncOscFrm(m_curObj).GetPAxCfg(a.name);
+  // Мин оси
+  str:=GetMultiSelectComponentString(MinYfe, b);
+  if checkstr(str) then
+  begin
+    a.minY:=strtoFloatExt(str);
+    if pax<>nil then
+      pax.ymin:=a.minY;
+  end;
+  // Макс оси
+  str:=GetMultiSelectComponentString(MaxYfe, b);
+  if checkstr(str) then
+  begin
+    a.maxY:=strtoFloatExt(str);
+    if pax<>nil then
+      pax.ymax:=a.maxY;
+  end;
+  // имя оси
+  str:=GetMultiSelectComponentString(NameAxisEdit, b);
+  if checkstr(str) then
+  begin
+    a.name:=str;
+    if pax<>nil then
+      pAx.axname:=str;
+  end;
+end;
 
 procedure TEditSyncOscFrm.UpdateBtnClick(Sender: TObject);
 var
   I,j: Integer;
-  n, next:PVirtualNode;
+  n,par, next:PVirtualNode;
   d:PNodeData;
   p:cpage;
   a:caxis;
   obj:cdrawobj;
   line:cBuffTrend1d;
-  pAx:paxis;
+
   Ax:TAxis;
   b:boolean;
+  sig:toscsignal;
   str:string;
 begin
   n := tagsTV.GetFirstSelected(true);
@@ -284,35 +318,12 @@ begin
     if tobject(D.Data) is caxis then
     begin
       a:=caxis(D.Data);
-      pAx:=TSyncOscFrm(m_curObj).GetPAxCfg(a.name);
-      // Мин оси
-      str:=GetMultiSelectComponentString(MinYfe, b);
-      if checkstr(str) then
-      begin
-        a.minY:=strtoFloatExt(str);
-        if pax<>nil then
-          pax.ymin:=a.minY;
-      end;
-      // Макс оси
-      str:=GetMultiSelectComponentString(MaxYfe, b);
-      if checkstr(str) then
-      begin
-        a.maxY:=strtoFloatExt(str);
-        if pax<>nil then
-          pax.ymax:=a.maxY;
-      end;
-      // имя оси
-      str:=GetMultiSelectComponentString(NameAxisEdit, b);
-      if checkstr(str) then
-      begin
-        a.name:=str;
-        if pax<>nil then
-          pAx.axname:=str;
-      end;
+      updateAx(a);
     end;
     if tobject(D.Data) is TOscSignal then
     begin
-
+      a:=caxis(TOscSignal(D.Data).ax);
+      updateAx(a);
     end;
     next := tagsTV.GetNextSelected(N, true);
     N := next;

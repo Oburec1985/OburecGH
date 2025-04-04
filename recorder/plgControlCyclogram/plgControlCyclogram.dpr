@@ -6,7 +6,6 @@ uses
   Themes,
   SysUtils,
   Classes,
-  PluginClass in '..\SharedRUnits\PluginClass.pas',
   uCompMng in '..\plgTestClear\units\uCompMng.pas',
   uRecBasicFactory in '..\SharedRUnits\uRecBasicFactory.pas',
   uRecorderEvents in '..\SharedRUnits\uRecorderEvents.pas',
@@ -191,7 +190,6 @@ uses
   uBaseAlgBands in 'uBaseAlgBands.pas',
   uAlgsSaveFrm in 'forms\uAlgsSaveFrm.pas' {SaveAlgsFrm},
   Iterative_FFT_sse in '..\..\sharedUtils\math\FFT_койнов\Iterative_FFT_sse.pas',
-  uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
   uSyncOscillogram in 'forms\uSyncOscillogram.pas' {SyncOscFrm},
   uSyncOscillogramEditFrm in 'forms\uSyncOscillogramEditFrm.pas' {EditSyncOscFrm},
   uQueue2 in '..\..\sharedUtils\utils\lists\uQueue2.pas',
@@ -254,7 +252,8 @@ uses
   uPerformanceTime in '..\..\sharedUtils\utils\uPerformanceTime.pas',
   uProfile in 'units\uProfile.pas',
   uSpmThresholdProfile in 'forms\uSpmThresholdProfile.pas' {SpmThresholdProfileFrm},
-  uCreateComponents in 'units\uCreateComponents.pas';
+  uCreateComponents in 'units\uCreateComponents.pas',
+  PluginClass in '..\SharedRUnits\PluginClass.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

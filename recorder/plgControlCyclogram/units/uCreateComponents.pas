@@ -82,9 +82,9 @@ procedure createComponents(compMng: cCompMng);
 procedure createFormsRecorderUIThread(compMng: cCompMng);
 procedure destroyFormsRecorderUIThread(compMng: cCompMng);
 // MainThead. Здесь создавать формы для настройки плагина в режиме стопа
-procedure createForms(compMng: cCompMng);
+procedure createForms();
 // MainThead
-procedure destroyForms(compMng: cCompMng);
+procedure destroyForms();
 function ProcessShowVersionInfo(pMsgInfo: PCB_MESSAGE): boolean;
 // удаление объектов движка в потоке создания плагина. Здесь должно удалиться все, что было создано
 // и загружено до createFormsRecorderUIThread
@@ -539,7 +539,7 @@ begin
 {$ENDIF}
 end;
 
-procedure createForms(compMng: cCompMng);
+procedure createForms();
 begin
   // создание в MainThread
   {if GetCurrentThreadId = MainThreadID then
@@ -555,7 +555,7 @@ begin
   end;}
 end;
 
-procedure destroyForms(compMng: cCompMng);
+procedure destroyForms();
 begin
   if GetCurrentThreadId = MainThreadID then
   begin
