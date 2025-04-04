@@ -2,9 +2,6 @@
 <BorlandProject>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
-    <File Path="..\plgTestClear"/>
-    <File Path="..\plgTestClear\units"/>
-    <File Path="..\plgTestClear\units\uCompMng.pas"/>
     <File Path="..\SharedRUnits"/>
     <File Path="..\SharedRUnits\interfaces"/>
     <File Path="..\SharedRUnits\interfaces\blaccess.pas"/>
@@ -39,6 +36,7 @@
     <File Path="..\SharedRUnits\uTagsListFrame.pas"/>
     <File Path="..\SharedRUnits\uTagsListFrame.dfm"/>
     <File Path="..\SharedRUnits\PluginClass.pas"/>
+    <File Path="..\SharedRUnits\uCompMng.pas"/>
     <File Path="..\..\..\OburecGH"/>
     <File Path="..\..\3d"/>
     <File Path="..\..\3d\core"/>

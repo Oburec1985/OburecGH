@@ -97,6 +97,7 @@ type
   protected
     procedure ExcludeComp(comp: TObject);
   public
+    PROcedure setOwner(p_own:IUnknown);
     procedure doUpdateData;virtual;
     constructor create;
     procedure doInit;
@@ -472,6 +473,11 @@ end;
 function cRecBasicFactory.refcount: integer;
 begin
   result := m_lRefCount;
+end;
+
+procedure cRecBasicFactory.setOwner(p_own: IInterface);
+begin
+  m_pOwner :=p_own;
 end;
 
 function cRecBasicFactory._AddRef: integer;

@@ -6,7 +6,6 @@ uses
   Themes,
   SysUtils,
   Classes,
-  uCompMng in '..\plgTestClear\units\uCompMng.pas',
   uRecBasicFactory in '..\SharedRUnits\uRecBasicFactory.pas',
   uRecorderEvents in '..\SharedRUnits\uRecorderEvents.pas',
   blaccess in '..\SharedRUnits\interfaces\blaccess.pas',
@@ -253,7 +252,8 @@ uses
   uProfile in 'units\uProfile.pas',
   uSpmThresholdProfile in 'forms\uSpmThresholdProfile.pas' {SpmThresholdProfileFrm},
   uCreateComponents in 'units\uCreateComponents.pas',
-  PluginClass in '..\SharedRUnits\PluginClass.pas';
+  PluginClass in '..\SharedRUnits\PluginClass.pas',
+  uCompMng in '..\SharedRUnits\uCompMng.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

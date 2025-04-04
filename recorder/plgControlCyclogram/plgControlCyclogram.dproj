@@ -59,7 +59,6 @@
 			<DelphiCompile Include="plgControlCyclogram.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="..\plgTestClear\units\uCompMng.pas"/>
 			<DCCReference Include="..\SharedRUnits\uRecBasicFactory.pas"/>
 			<DCCReference Include="..\SharedRUnits\uRecorderEvents.pas"/>
 			<DCCReference Include="..\SharedRUnits\interfaces\blaccess.pas"/>
@@ -541,6 +540,7 @@
 			</DCCReference>
 			<DCCReference Include="units\uCreateComponents.pas"/>
 			<DCCReference Include="..\SharedRUnits\PluginClass.pas"/>
+			<DCCReference Include="..\SharedRUnits\uCompMng.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
