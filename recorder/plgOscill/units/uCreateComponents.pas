@@ -39,9 +39,9 @@ const
   procedure createFormsRecorderUIThread(compMng: cCompMng);
   procedure destroyFormsRecorderUIThread(compMng: cCompMng);
   // MainThead. Здесь создавать формы для настройки плагина в режиме стопа
-  procedure createForms(compMng: cCompMng);
+  procedure createForms();
   // MainThead
-  procedure destroyForms(compMng: cCompMng);
+  procedure destroyForms();
   procedure RecorderInit;
 
 implementation
@@ -55,7 +55,7 @@ begin
 end;
 
 
-procedure createForms(compMng: cCompMng);
+procedure createForms();
 begin
   // создание в MainThread
   if GetCurrentThreadId = MainThreadID then
@@ -67,7 +67,7 @@ begin
   end;
 end;
 
-procedure destroyForms(compMng: cCompMng);
+procedure destroyForms();
 begin
   if GetCurrentThreadId = MainThreadID then
   begin

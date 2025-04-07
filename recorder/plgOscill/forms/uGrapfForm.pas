@@ -82,6 +82,7 @@ type
     m_trig:ctag;
     // находимс€ ниже трига. ѕо сути если триггер найден LoState = false
     m_lostate:boolean;
+    m_histLength:double;
   protected
     curs:cYCursor;
     // триггерна€ точка дл€ отладки
@@ -104,6 +105,7 @@ type
 
     m_useTrig:boolean;
     // обновл€етс€ в UpdateData
+    //m_IntervDrawn,
     m_updateDrawInterval:boolean;
 
     // настройки осей
@@ -421,6 +423,7 @@ begin
   fAxCfgCapacity:=10;
   setlength(m_axCfg, fAxCfgCapacity);
   fAxCfgCount:=1;
+  m_histLength:=3;
 
   InitCS;
 end;
@@ -912,15 +915,16 @@ var
   it:itag;
   i, j: integer;
   // интервал графика который будет нарисован
-  interval: point2d;
-  v, prev: double;
-  b, trigUpdate,
+  interval, int2: point2d;
+  v, prev, time: double;
+  b, trigUpdate, updateD,
   // триггер - один из каналов выложенных на чарт
   bSameTrig:boolean;
 begin
   if m_slist.count=0 then exit;
   v:=GetRCTime;
   trigUpdate:=false;
+  updateD:=false;
   // обновление данных
   for i := 0 to m_slist.count - 1 do
   begin
@@ -930,14 +934,26 @@ begin
     begin
       bSameTrig:=true;
     end;
+    time:=s.m_t.m_ReadDataTime;
     if s.m_t.UpdateTagData(false) then
     begin
+      updateD:=true;
+      // если врем€ девайса сбросилось например в плей дата
+      if s.m_t.m_ReadDataTime<time then
+      begin
+        //doStart;
+        //m_comInterv.x:=0;
+        //m_comInterv.y:=0;
+        //m_lostate:=true;
+      end;
+
       if s.m_t.tag=m_trig.tag then
       begin
-        trigUpdate:=true;
+        trigUpdate:=true; // обновились данные в триге
         trTag:=s.m_t;
       end;
-      if s.m_t.getPortionLen>2 then
+      // m_histLength - сколько секунд накопить прежде чем отбросить секунду
+      if s.m_t.getPortionLen>m_histLength then
       begin
         j:=s.m_t.getIndex(s.m_t.m_ReadDataTime+1);
         s.m_t.ResetTagDataTimeInd(j);
@@ -978,6 +994,10 @@ begin
     // обновл€ем данные и накопленные интервалы в тегах.  орректируем интервал отображени€
     s:=GetSignal(i);
     interval := s.m_t.EvalTimeInterval;
+    if i=0 then
+      int2:=interval
+    else
+      int2:=getCommonInterval(interval,int2);
     if m_useTrig then
     begin
       // триггер найден
@@ -992,14 +1012,18 @@ begin
         m_updateDrawInterval:=false;
         break;
       end;
-    end
-    else
+    end;
+  end;
+  if not m_useTrig then
+  begin
+    //if int2.y>m_comInterv.y then
+    if (updateD) and (not m_updateDrawInterval) then
     begin
-      if interval.y>m_comInterv.y then
-      begin
-        m_comInterv:=interval;
-      end;
+      m_comInterv:=int2;
       m_updateDrawInterval:=true;
+      RightGB.Caption:=formatstrNoE(m_comInterv.x, 3) + ' ' +
+                       formatstrNoE(m_comInterv.y, 3);
+      //m_IntervDrawn:=false;
     end;
   end;
   // подрезаем интервал по длине кадра
@@ -1062,18 +1086,7 @@ begin
   begin
     updateYScale;
   end;
-  {
-  if m_updateGraph then
-  begin
-    r.TopRight.y:=cpage(cChart1.activePage).activeAxis.maxY;
-    r.BottomLeft.y:=cpage(cChart1.activePage).activeAxis.minY;
-    r.TopRight.x:=f_xScale;
-    r.BottomLeft.x:=0;
-    cpage(cChart1.activePage).ZoomfRect(r);
-    m_updateGraph:=false;
-    cChart1.redraw;
-  end;
-  }
+
   if f_changeAx or m_updateGraph then
   begin
     a:=m_axcfg[f_ActiveAxisInd].ax;
