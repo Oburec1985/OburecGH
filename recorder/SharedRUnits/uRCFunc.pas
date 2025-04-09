@@ -1668,6 +1668,17 @@ begin
     move(m_TagData[0], m_ReadData[m_lastindex], block.GetBlocksSize * (sizeof(double)));
     m_lastindex:=m_lastindex+block.GetBlocksSize;
   end;
+  b1:=round((interval.x-m_ReadDataTime)*ftag.getfreq);
+  b2:=b1+round((interval.y-interval.x)*ftag.getfreq);
+  if b1>0 then
+  begin
+    if (b2-b1)>0 then
+    begin
+     move(m_ReadData[b1], m_ReadData[0], (b2-b1) * (sizeof(double)));
+     m_ReadDataTime:=interval.x;
+     m_lastindex:=b2-b1;
+    end;
+  end;
 end;
 
 function cTag.UpdateTagData(tare: boolean): boolean;

@@ -17,6 +17,8 @@ uses
   uOscillSaver,
   uEditGraphFrm,
   uHardwareMath,
+  uDoubleCursor,
+  uChartEvents,
   PluginClass, ImgList, Menus, uChart, uSpin, uRcCtrls, Buttons;
 
 type
@@ -74,6 +76,8 @@ type
     procedure cChart1MouseZoom(Sender: TObject; UpScale: Boolean);
     procedure cChart1CursorMove(Sender: TObject);
     procedure WinPosBtnClick(Sender: TObject);
+    procedure TrigFEChange(Sender: TObject);
+    procedure TrigCboxClick(Sender: TObject);
   public
     cs: TRTLCriticalSection;
     // список сигналов
@@ -113,6 +117,7 @@ type
     fAxCfgCount:integer;
     m_axCfg:array of TAxCfg;
   protected
+    procedure doZoomEvent(Sender: TObject);
     procedure updateYScale;
     // происходит когда все плагины загружены
     procedure OnRecorderInit;
@@ -408,8 +413,8 @@ begin
 
       f_ActiveAxisInd:=i;
       f_changeAx:=true;
-
-      curs.setCursor(m_axCfg[i].ax, trigfe.Value);
+      if curs<>nil then
+        curs.setCursor(m_axCfg[i].ax, trigfe.Value);
     end;
   END;
 end;
@@ -445,6 +450,9 @@ begin
   setlength(m_axCfg, fAxCfgCapacity);
   fAxCfgCount:=1;
   m_histLength:=3;
+
+  cChart1.OBJmNG.Events.AddEvent('OscFrmOnZoom',
+                 e_OnChangeAxisScale,doZoomEvent);
 
   InitCS;
 end;
@@ -506,6 +514,11 @@ begin
   end;
 end;
 
+procedure TGraphFrm.doZoomEvent(Sender: TObject);
+begin
+  cChart1MouseZoom(nil, true);
+end;
+
 procedure TGraphFrm.InitCS;
 begin
   InitializeCriticalSection(cs);
@@ -557,13 +570,34 @@ procedure TGraphFrm.cChart1CursorMove(Sender: TObject);
 var
   a:caxis;
   p2:point2;
+  I: Integer;
+  s:cGraphTag;
+  li:tlistitem;
+  p:TNotifyEvent;
 begin
   a:=cpage(cChart1.activePage).activeAxis;
-  //p2:=cYCursor(Sender).Position; возвращает координаты в FullView
-  p2:=cYCursor(Sender).Position;
-  p2:=cpage(cChart1.activePage).p2FullViewToBorderP2(p2);
-  p2:=cpage(cChart1.activePage).Point2ToTrend(p2, false, a);
-  TrigFE.Value:=p2.y;
+  if Sender is cYCursor then
+  begin
+    //p2:=cYCursor(Sender).Position; возвращает координаты в FullView
+    p2:=cYCursor(Sender).Position;
+    p2:=cpage(cChart1.activePage).p2FullViewToBorderP2(p2);
+    p2:=cpage(cChart1.activePage).Point2ToTrend(p2, false, a);
+    p:=TrigFE.OnChange;
+    TrigFE.OnChange:=nil;
+    TrigFE.Value:=p2.y;
+    TrigFE.OnChange:=p;
+  end;
+  if Sender is cDoubleCursor then
+  begin
+    //p2:=cYCursor(Sender).Position; возвращает координаты в FullView
+    p2.x:=cDoubleCursor(Sender).getx1;
+    for I := 0 to SignalsLV.Items.Count - 1 do
+    begin
+      s:=getSignal(i);
+      li:=SignalsLV.items[i];
+      SignalsLV.SetSubItemByColumnName('Y',formatstrNoE(s.m_line.GetY(p2.x),4),li);
+    end;
+  end;
 end;
 
 procedure TGraphFrm.OnRecorderInit;
@@ -618,6 +652,8 @@ var
   s1:string;
 begin
   inherited;
+  a_pIni.WriteInteger(str, 'lvWidth', RightGB.Width);
+  a_pIni.WriteInteger(str, 'lvheight', SignalsLV.Height);
   a_pIni.WriteInteger(str, 'AxCount', AxCount);
   for I := 0 to AxCount - 1 do
   begin
@@ -642,9 +678,12 @@ var
   s: cGraphTag;
   s1:string;
   a:caxis;
+  p:TNotifyEvent;
 begin
   // загрузка осей
   //exit;
+  RightGB.Width:=a_pIni.rEADInteger(str, 'lvWidth', RightGB.Width);
+  SignalsLV.Height:= a_pIni.rEADInteger(str, 'lvheight', SignalsLV.Height);
   l_axCount:= a_pIni.ReadInteger(str, 'AxCount', 0);
   if l_axCount=0 then exit;
   for I := 0 to l_axCount - 1 do
@@ -684,8 +723,11 @@ begin
   TrigCBox.Checked:=a_pIni.ReadBool(str, 'TrigEnabled', false);
   m_useTrig:=TrigCBox.Checked;
 
+  p:=TrigFE.OnChange;
+  TrigFE.OnChange:=nil;
   TrigFE.Value:=a_pIni.ReadFloat(str, 'TrigLvl', 1);
   f_trigVal:=TrigFE.Value;
+  TrigFE.OnChange:=p;
 end;
 
 
@@ -924,6 +966,20 @@ begin
   end;
 end;
 
+procedure TGraphFrm.TrigCboxClick(Sender: TObject);
+begin
+  m_useTrig :=TrigCbox.Checked;
+end;
+
+procedure TGraphFrm.TrigFEChange(Sender: TObject);
+var
+  a:caxis;
+begin
+  a:=cpage(cChart1.activePage).activeAxis;
+  curs.setCursor(a, TrigFE.Value);
+  cChart1.Repaint;
+end;
+
 function TGraphFrm.TryEnterCS: boolean;
 begin
 
@@ -1154,7 +1210,7 @@ begin
       SignalsLV.SetSubItemByColumnName('t',p2toStr(interval, 4), li);
       s.m_t.block.UnlockVector;
     end;
-    RightGB.Caption:=formatstrNoE(m_comInterv.x, 3) + ' ' +
+    RightGB.Caption:=formatstrNoE(m_comInterv.x, 3) + '...' +
                      formatstrNoE(m_comInterv.y, 3);
     m_updateDrawInterval:=false;
   end;
@@ -1194,7 +1250,7 @@ end;
 procedure TGraphFrm.XScaleSEKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  
+
 end;
 
 { IGraphFrm }
@@ -1232,6 +1288,8 @@ begin
 end;
 
 procedure cGraphFrmFactory.CreateEvents;
+var
+  I: Integer;
 begin
   addplgevent('cGraphFrmFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
 end;
