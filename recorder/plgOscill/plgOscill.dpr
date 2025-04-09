@@ -34,8 +34,7 @@ uses
   transf in '..\SharedRUnits\interfaces\transf.pas',
   transformers in '..\SharedRUnits\interfaces\transformers.pas',
   waitwnd in '..\SharedRUnits\interfaces\waitwnd.pas',
-  uRecFactory in 'units\uRecFactory.pas' {/,uSyncThread in '..\..\wp\WPExtPack\units\uSyncThread.pas'},
-  uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
+  uRecFactory in 'units\uRecFactory.pas' {/,uSyncThread in '..\..\wp\WPExtPack\units\uSyncThread.pas'},  uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
   uGrapfForm in 'forms\uGrapfForm.pas' {GraphFrm},
   uEditGraphFrm in 'forms\uEditGraphFrm.pas' {EditGraphFrm},
   uOscillSaver in 'units\uOscillSaver.pas';

@@ -104,15 +104,15 @@
     <File Path="..\..\sharedUtils\utils\uLogFile.pas"/>
     <File Path="..\..\sharedUtils\uCommonTypes.pas"/>
     <File Path="forms"/>
+    <File Path="forms\uEditGraphFrm.pas"/>
+    <File Path="forms\uEditGraphFrm.dfm"/>
     <File Path="forms\uExtFrm.pas"/>
     <File Path="forms\uExtFrm.dfm"/>
     <File Path="forms\uGrapfForm.pas"/>
     <File Path="forms\uGrapfForm.dfm"/>
-    <File Path="forms\uEditGraphFrm.pas"/>
-    <File Path="forms\uEditGraphFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\uCreateComponents.pas"/>
-    <File Path="units\uRecFactory.pas"/>
     <File Path="units\uOscillSaver.pas"/>
+    <File Path="units\uRecFactory.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

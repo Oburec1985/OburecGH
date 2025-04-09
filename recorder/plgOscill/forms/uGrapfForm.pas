@@ -231,6 +231,13 @@ begin
   t.m_axisName:=ax.name;
   t.m_t.tagname:=s;
   m_slist.AddObject(s, t);
+  if ax<>nil then
+  begin
+    if t.m_axisName='' then
+    begin
+      t.m_axisName:=ax.name;
+    end;
+  end;
   ind:=axInd(t);
   if ind=-1 then
   begin
@@ -355,6 +362,20 @@ begin
       begin
         result:=i;
         exit;
+      end;
+    end;
+  end
+  else
+  begin
+    if s.m_axisName<>'' then
+    begin
+      for I := 0 to fAxCfgCount - 1 do
+      begin
+        if m_axCfg[i].name=s.m_axisName then
+        begin
+          result:=i;
+          exit;
+        end;
       end;
     end;
   end;
@@ -994,6 +1015,7 @@ begin
     // обновляем данные и накопленные интервалы в тегах. Корректируем интервал отображения
     s:=GetSignal(i);
     interval := s.m_t.EvalTimeInterval;
+
     if i=0 then
       int2:=interval
     else
@@ -1019,10 +1041,9 @@ begin
     //if int2.y>m_comInterv.y then
     if (updateD) and (not m_updateDrawInterval) then
     begin
+      // int2 - общее по всем сигналам
       m_comInterv:=int2;
       m_updateDrawInterval:=true;
-      RightGB.Caption:=formatstrNoE(m_comInterv.x, 3) + ' ' +
-                       formatstrNoE(m_comInterv.y, 3);
       //m_IntervDrawn:=false;
     end;
   end;
@@ -1078,6 +1099,7 @@ var
   j, len: Integer;
   r:frect;
   li:tlistitem;
+  interval:point2d;
   v:double;
   a:caxis;
   p:cpage;
@@ -1117,11 +1139,23 @@ begin
       begin
         interval_i.y:=length(s.m_t.m_ReadData)-1;
       end;
-      if interval_i.y - interval_i.x>0 then
+      s.m_t.block.LockVector;
+      interval := s.m_t.EvalTimeInterval;
+      if (interval.x<m_comInterv.y) then
       begin
-        s.m_line.AddPoints(s.m_t.m_ReadData, interval_i.x,(interval_i.y - interval_i.x));
+        if interval_i.y - interval_i.x>0 then
+        begin
+          //s.m_line.AddPoints(s.m_t.m_ReadData, interval_i.x,(interval_i.y - interval_i.x));
+          s.m_t.RebuildReadBuff(true, m_comInterv);
+          s.m_line.AddPoints(s.m_t.m_ReadData,(interval_i.y - interval_i.x));
+        end;
       end;
+      li:=SignalsLV.Items[i];
+      SignalsLV.SetSubItemByColumnName('t',p2toStr(interval, 4), li);
+      s.m_t.block.UnlockVector;
     end;
+    RightGB.Caption:=formatstrNoE(m_comInterv.x, 3) + ' ' +
+                     formatstrNoE(m_comInterv.y, 3);
     m_updateDrawInterval:=false;
   end;
   if RStatePlay then

@@ -92,7 +92,7 @@
 			<DCCReference Include="..\SharedRUnits\interfaces\transformers.pas"/>
 			<DCCReference Include="..\SharedRUnits\interfaces\waitwnd.pas"/>
 			<DCCReference Include="units\uRecFactory.pas">
-				<Form>/,uSyncThread in &apos;..\..\wp\WPExtPack\units\uSyncThread.pas&apos;</Form>
+				<Form>/,uSyncThread in &apos;..\..\wp\WPExtPack\units\uSyncThread.pas&apos;</Form>
 			</DCCReference>
 			<DCCReference Include="..\SharedRUnits\uFrmSync.pas">
 				<Form>FrmSync</Form>
