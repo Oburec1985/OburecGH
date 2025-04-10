@@ -1743,6 +1743,7 @@ end;
 procedure cTag.BuildReadBuff(tare: boolean; var AutoResetData:integer);
 var
   i, blInd:integer;
+  dtime, tshift:double;
   b:boolean;
 begin
   // кол-о блоков которое кладется в m_ReadData
@@ -1755,12 +1756,12 @@ begin
     block.LockVector;
     b:=SUCCEEDED(block.GetVectorR8(pointer(m_TagData)^, blInd, block.GetBlocksSize,tare));
     block.unLockVector;
+    fdevicetime := block.GetBlockDeviceTime(blInd);
     if b then
     begin
       // block.GetVectorPairR8(pointer(m_TagData2d)^, blInd, blSize, tare);
       if m_looseData then
       begin
-        fdevicetime := block.GetBlockDeviceTime(blInd);
         // Были потери данных!!!
         if fdevicetime-getPortionEndTime>fdT then
         begin
@@ -1773,7 +1774,6 @@ begin
         // первый полученный блок
         if m_firstBlock  then
         begin
-          fdevicetime := block.GetBlockDeviceTime(blInd);
           m_ReadDataTime := fdevicetime;
           m_firstBlock:=false;
         end;
@@ -1787,6 +1787,15 @@ begin
       end
       else
       begin
+        // 10.04.25
+        // обработка провалов времени (например ускоренное воспроизведение)
+        dtime:=getReadTime(m_lastindex);
+        tshift:=m_lastindex*fdt;
+        if dtime-(m_ReadDataTime+tshift)>fdt then
+        begin
+          m_ReadDataTime:=fdevicetime-tshift;
+        end;
+
         // ERROR
         move(m_TagData[0], m_ReadData[m_lastindex], block.GetBlocksSize * (sizeof(double)));
         m_lastindex := m_lastindex + block.GetBlocksSize;
