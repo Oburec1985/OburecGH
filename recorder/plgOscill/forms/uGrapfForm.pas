@@ -506,6 +506,8 @@ var
 begin
   m_comInterv.x:=0;
   m_comInterv.y:=0;
+  m_trigInterval.x:=0;
+  m_trigInterval.y:=0;
   m_lostate:=true;
   for I := 0 to m_slist.Count - 1 do
   begin
@@ -1112,13 +1114,16 @@ function TGraphFrm.SearchTrig(t: cTag; p_threshold: double;
   var p_interval: point2d; var p_point: point2d): boolean;
 var
   TrigTime, v, prev: double;
-  i, imin: integer;
+  i, imin, start: integer;
   TrigRes:boolean;
 begin
   TrigRes:=false;
   p_point.x:=0;
   p_point.y:=0;
-  for i := 1 to t.lastindex - 1 do
+  start:=t.getIndex(m_trigInterval.y);
+  if start<0 then
+    start:=0;
+  for i := start to t.lastindex - 1 do
   begin
     v := t.m_ReadData[i];
     if m_lostate then // если триг сброшен

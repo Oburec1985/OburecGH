@@ -99,9 +99,9 @@ uses
   uExtBalanceSignals in 'units\uExtBalanceSignals.pas',
   uExtBalanceSignalsFrm in 'forms\uExtBalanceSignalsFrm.pas' {BalanceZeroFrm},
   uLogFile in '..\..\sharedUtils\utils\uLogFile.pas',
-  //uFrmSync in '..\..\sharedUtils\forms\uFrmSync.pas' {FrmSync},
   uFFTFlt in 'units\uFFTFlt.pas',
-  uFFTfltFrm in 'forms\uFFTfltFrm.pas' {FFTFltFrm};
+  uFFTfltFrm in 'forms\uFFTfltFrm.pas' {FFTFltFrm},
+  uLissajousFrm in 'forms\uLissajousFrm.pas' {LissajousFrm};
 
 exports
   DllGetClassObject,

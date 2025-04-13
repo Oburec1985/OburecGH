@@ -248,6 +248,9 @@
 			<DCCReference Include="forms\uFFTfltFrm.pas">
 				<Form>FFTFltFrm</Form>
 			</DCCReference>
+			<DCCReference Include="forms\uLissajousFrm.pas">
+				<Form>LissajousFrm</Form>
+			</DCCReference>
 			<RidlCompile Include="WPExtPack.ridl"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

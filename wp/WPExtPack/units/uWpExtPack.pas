@@ -36,6 +36,7 @@ uses
   uEditSelsinFrm,
   uScriptFrm,
   uJournalForm,
+  uLissajousFrm,
   uSaveSimpleMeraFrm,
   uIEPlgClass,
   uRzdfrm,
@@ -123,6 +124,7 @@ var
   ID_RunKBHM: integer = 5;
   ID_RunSelsin: integer = 6;
   ID_RunRZD: integer = 7;
+  ID_RunLissajous: integer = 8;
   // происходит по событию выполнения алгbitmоритма
   ID_NotifyEvent: cardinal;
 
@@ -187,6 +189,12 @@ begin
   WINPOS.CreatetoolbarButton(bar_ID, ID_RunRZD, hbmp,
     'Расчет силы действующей на рельс'#10'Расчет силы действующей на рельс');
 
+  hbmp := LoadBitmap(HInstance, 'LISSAJOUS');
+  ID_RunLissajous := WINPOS.RegisterCommand();
+  WINPOS.CreatetoolbarButton(bar_ID, ID_RunLissajous, hbmp,
+    'Фигуры Лиссажу'#10'Фигуры Лиссажу');
+
+
   Result := 0;
   LoadStrings(startDir + 'Services.Ini');
 
@@ -211,6 +219,9 @@ begin
   GenFrm := TGenFrm.Create(nil);
   GraphFrm := TGraphFrm.Create(nil);
   KBHMFrm := TKbhmFrm.Create(nil);
+
+  LissajousFrm:=TLissajousFrm.Create(nil);
+  LissajousFrm.LinkMng(mng);
 
   CyclogramRepFrm := TCyclogramRepFrm.Create(nil);
   CyclogramRepFrm.LinkMng(mng);
@@ -559,7 +570,10 @@ begin
         begin
           RZDFrm.Show;
         end;
-
+        if HIWORD(what) = ID_RunLissajous then
+        begin
+          LissajousFrm.Show;
+        end;
         // Событие загрузки файла ((5 shl 16) or 1) или восстановления сеанса
         if what = 327681 then
         begin

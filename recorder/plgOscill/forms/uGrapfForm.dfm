@@ -3,7 +3,7 @@ object GraphFrm: TGraphFrm
   Top = 0
   Caption = 'GraphFrm'
   ClientHeight = 467
-  ClientWidth = 810
+  ClientWidth = 781
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,7 +14,7 @@ object GraphFrm: TGraphFrm
   PixelsPerInch = 96
   TextHeight = 12
   object RightSplitter: TSplitter
-    Left = 582
+    Left = 553
     Top = 0
     Width = 2
     Height = 467
@@ -25,9 +25,10 @@ object GraphFrm: TGraphFrm
     Align = alRight
     Color = clBackground
     ParentColor = False
+    ExplicitLeft = 582
   end
   object RightGB: TGroupBox
-    Left = 584
+    Left = 555
     Top = 0
     Width = 226
     Height = 467
@@ -44,7 +45,7 @@ object GraphFrm: TGraphFrm
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-    ExplicitLeft = 586
+    ExplicitLeft = 584
     object XScaleLabel: TLabel
       Left = 89
       Top = 32
@@ -392,7 +393,7 @@ object GraphFrm: TGraphFrm
   object cChart1: cChart
     Left = 0
     Top = 0
-    Width = 582
+    Width = 553
     Height = 467
     Cursor = crSizeAll
     Margins.Left = 2
@@ -410,7 +411,7 @@ object GraphFrm: TGraphFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitLeft = 2
+    ExplicitWidth = 582
   end
   object ImageList_16: TImageList
     Left = 80
