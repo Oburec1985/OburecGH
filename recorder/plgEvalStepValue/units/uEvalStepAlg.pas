@@ -309,6 +309,8 @@ var
   bCount: integer;
   b, bRes: boolean;
   i, ind,
+  // разница между количеством блоков входного и выходного тега
+  difblocks,
   // используется для FindTrig
   lastindex: integer;
   // dt,
@@ -395,7 +397,11 @@ begin
         begin
           for j := 0 to IND - 1 do
           BEGIN
+            //m_outTag.m_readyBlock:=m_outTag.m_readyBlock+1;
+            //difblocks:=m_tag.m_readyBlock-m_outTag.m_readyBlock;
+            //lt:=m_tag.EvalTimeInterval.y-(difblocks-1)*m_outTag.m_blLen;
             m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[0+fblSize*j], fblSize*1, 0, m_outTag.m_ReadDataTime+j*m_outTag.m_blLen);
+            //m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[0+fblSize*j], fblSize*1, 0, lt);
           END;
           //m_outTag.tag.PushDataEx(@m_outTag.m_ReadData[0], fblSize*ind, 0, m_outTag.m_ReadDataTime);
           //m_pushDataCount:=fblSize*ind+m_pushDataCount;
