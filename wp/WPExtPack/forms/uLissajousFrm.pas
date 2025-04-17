@@ -36,8 +36,6 @@ type
     Xmaxfe: TFloatSpinEdit;
     YmaxFe: TFloatSpinEdit;
     Label3: TLabel;
-    Edit1: TEdit;
-    Label4: TLabel;
     Chart: cChart;
     SigLV: TBtnListView;
     pCount: TIntEdit;
@@ -46,6 +44,13 @@ type
     StartFe: TFloatEdit;
     Label5: TLabel;
     OkBtn: TButton;
+    AutoCB: TCheckBox;
+    Panel1: TPanel;
+    Label4: TLabel;
+    SearchEdit: TEdit;
+    Label6: TLabel;
+    IncFe: TFloatEdit;
+    Timer1: TTimer;
     procedure FormShow(Sender: TObject);
     procedure XCbDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
@@ -54,16 +59,24 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure SearchEditChange(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
+    procedure YminFeKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure YmaxFeKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     wp:cWPObjMng;
     sList:tlist;
+    m_updateZoom:boolean;
   public
+    procedure ClearSignals;
+    procedure UpdateChart;
     procedure save;
     procedure load;
     function NewSig:TLisSig; overload;
     function NewSig(x,y:cwpsignal):TLisSig;overload;
     function GetSignal(i:integer):TLisSig;
     procedure showSignals();
+    procedure showSignalsLV();
     procedure LinkMng(mng: cWPObjMng);
   end;
 
@@ -74,6 +87,19 @@ implementation
 uses
   uWpExtPack;
 {$R *.dfm}
+
+procedure TLissajousFrm.ClearSignals;
+var
+  I: Integer;
+  s:TLisSig;
+begin
+  for I := 0 to sList.Count - 1 do
+  begin
+    s:=GetSignal(i);
+    s.Destroy;
+  end;
+  sList.Clear;
+end;
 
 procedure TLissajousFrm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
@@ -125,8 +151,15 @@ var
   sig: TLisSig;
   t:double;
   y,x:cwpsignal;
-  I, j, indX, indY: Integer;
+  I, j, c1, c2, indX, indY: Integer;
 begin
+  if autocb.Checked then
+  begin
+    if not Timer1.Enabled then
+      Timer1.Enabled:=true;
+  end
+  else
+    Timer1.Enabled:=false;
   t:=startfe.FloatNum;
   for I := 0 to sList.Count - 1 do
   begin
@@ -136,11 +169,23 @@ begin
     sig.m_count:=pCount.IntNum;
     for j := 0 to pCount.IntNum - 1 do
     begin
-      sig.m_data[j].x:=sig.x.Signal.GetY(indx+j);
-      sig.m_data[j].y:=sig.y.Signal.GetY(indy+j);
+      c1:=indx+j;
+      c2:=indx+j;
+      if (c1>=sig.x.Signal.size-1) or (c2>=sig.y.Signal.size-1) then
+      begin
+        sig.line.addpoints(sig.m_data, j);
+        Timer1.Enabled:=false;
+        startfe.FloatNum:=0;
+        AutoCB.Checked:=false;
+        break;
+      end;
+      sig.m_data[j].x:=sig.x.Signal.GetY(c1);
+      sig.m_data[j].y:=sig.y.Signal.GetY(c2);
     end;
     sig.line.addpoints(sig.m_data, sig.m_count);
   end;
+  LissajousFrm.Chart.redraw;
+  startfe.FloatNum:=startfe.FloatNum+IncFe.FloatNum;
 end;
 
 procedure TLissajousFrm.save;
@@ -165,6 +210,11 @@ begin
   end;
 end;
 
+procedure TLissajousFrm.SearchEditChange(Sender: TObject);
+begin
+  showSignalsLV;
+end;
+
 procedure TLissajousFrm.load;
 var
   I, count: Integer;
@@ -179,6 +229,7 @@ begin
   count:=f.ReadInteger('main', 'sCount',0);
   pCount.IntNum:=f.ReadInteger('main', 'Portion',512);
   src:=wp.GetCurSrcInMainWnd;
+  ClearSignals;
   for I := 0 to Count - 1 do
   begin
     id:='S_'+inttostr(i);
@@ -200,6 +251,49 @@ begin
   end;
 end;
 
+procedure TLissajousFrm.showSignalsLV();
+var
+  s:cSrc;
+  sig: cWPSignal;
+  i: integer;
+  li:tlistitem;
+begin
+  s:=wp.GetCurSrcInMainWnd;
+  SigLV.Clear;
+  for I := 0 to s.ChildCount - 1 do
+  begin
+    sig:=s.getSignalObj(i);
+    if (pos(lowercase(SearchEdit.text), lowercase(sig.name))>0) or (SearchEdit.text='') then
+    begin
+      li:=SigLV.Items.Add;
+      li.Data:=sig;
+      SigLV.SetSubItemByColumnName('Сигнал',sig.name,li);
+      SigLV.SetSubItemByColumnName('Fs',floattostr(sig.getFs),li);
+    end;
+  end;
+end;
+
+procedure TLissajousFrm.Timer1Timer(Sender: TObject);
+var
+  r:frect;
+begin
+  if Timer1.Enabled then
+  begin
+    if m_updateZoom then
+    begin
+      m_updateZoom:=false;
+      r.BottomLeft.x:=LissajousFrm.xminfe.Value;
+      r.BottomLeft.y:=LissajousFrm.yminfe.Value;
+      r.TopRight.x:=LissajousFrm.xmaxfe.Value;
+      r.TopRight.y:=LissajousFrm.ymaxfe.Value;
+      cpage(LissajousFrm.Chart.activepage).ZoomfRect(r);
+      LissajousFrm.Chart.redraw;
+    end;
+  end;
+  OkBtnClick(nil);
+end;
+
+
 procedure TLissajousFrm.showSignals;
 var
   s:cSrc;
@@ -212,17 +306,13 @@ begin
   XCb.Clear;
   YCb.Clear;
   if s=nil then exit;
-  
   for I := 0 to s.ChildCount - 1 do
   begin
     sig:=s.getSignalObj(i);
-    xcb.AddItem(sig.name, sig);
-    ycb.AddItem(sig.name, sig);
-    li:=SigLV.Items.Add;
-    li.Data:=sig;
-    SigLV.SetSubItemByColumnName('Сигнал',sig.name,li);
-    SigLV.SetSubItemByColumnName('Fs',floattostr(sig.getFs),li);
+    XCb.AddItem(sig.name, sig);
+    YCb.AddItem(sig.name, sig);
   end;
+  showSignalsLV;
 end;
 
 procedure TLissajousFrm.XCbDragOver(Sender, Source: TObject; X, Y: Integer;
@@ -259,6 +349,51 @@ begin
     s:=GetSignal(0);
     s.x:=cwpSignal(xcb.Items.Objects[xcb.ItemIndex]);
     s.y:=cwpSignal(ycb.Items.Objects[ycb.ItemIndex]);
+  end;
+end;
+
+
+procedure TLissajousFrm.UpdateChart;
+var
+  r:frect;
+begin
+  if not Timer1.Enabled then
+  begin
+    r.BottomLeft.x:=LissajousFrm.xminfe.Value;
+    r.BottomLeft.y:=LissajousFrm.yminfe.Value;
+    r.TopRight.x:=LissajousFrm.xmaxfe.Value;
+    r.TopRight.y:=LissajousFrm.ymaxfe.Value;
+    cpage(LissajousFrm.Chart.activepage).ZoomfRect(r);
+    m_updateZoom:=false;
+    LissajousFrm.Chart.redraw;
+  end;
+end;
+
+procedure TLissajousFrm.YmaxFeKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if key=VK_RETURN then
+  begin
+    m_updateZoom:=true;
+    if sender=Ymaxfe then
+      Xmaxfe.Value:= Ymaxfe.Value
+    else
+      Ymaxfe.Value:=Xmaxfe.Value;
+    UpdateChart;
+  end;
+end;
+
+procedure TLissajousFrm.YminFeKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if key=VK_RETURN then
+  begin
+    m_updateZoom:=true;
+    if sender=Yminfe then
+      Xminfe.Value:= Yminfe.Value
+    else
+      Yminfe.Value:=Xminfe.Value;
+    UpdateChart;
   end;
 end;
 

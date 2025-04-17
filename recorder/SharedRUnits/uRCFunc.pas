@@ -1656,8 +1656,14 @@ begin
   end;
   t:=interval.x-block.GetBlockDeviceTime(0);
   b1:=trunc(t/m_blLen);
+  if b1<0 then
+    exit;
   t:=interval.y-block.GetBlockDeviceTime(0);
   b2:=trunc(t/m_blLen);
+  if b2<0 then
+    exit;
+  if b2>(block.GetBlocksCount-1) then
+    b2:=(block.GetBlocksCount-1);
   m_ReadDataTime:=block.GetBlockDeviceTime(b1);
   m_lastindex:=0;
   for I := b1 to b2 do
@@ -1670,13 +1676,15 @@ begin
   end;
   b1:=round((interval.x-m_ReadDataTime)*ftag.getfreq);
   b2:=b1+round((interval.y-interval.x)*ftag.getfreq);
+  if b2>length(m_ReadData)-1 then
+    b2:=length(m_ReadData)-1;
   if b1>0 then
   begin
     if (b2-b1)>0 then
     begin
-     move(m_ReadData[b1], m_ReadData[0], (b2-b1) * (sizeof(double)));
-     m_ReadDataTime:=interval.x;
-     m_lastindex:=b2-b1;
+      move(m_ReadData[b1], m_ReadData[0], (b2-b1) * (sizeof(double)));
+      m_ReadDataTime:=interval.x;
+      m_lastindex:=b2-b1;
     end;
   end;
 end;

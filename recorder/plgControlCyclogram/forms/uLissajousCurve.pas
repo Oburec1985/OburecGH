@@ -34,7 +34,13 @@ type
   public
     owner:TRecFrm;
     m_tx, m_ty:cTag;
+    // линия фигуры
     m_trend:cBuffTrend2d;
+    // центр масс
+    m_center:cBuffTrend2d;
+    // главный диаметр
+    m_Diam:cBuffTrend2d;
+
     // накопленный интервал по всем блокам
     m_intervalX, m_intervalY, m_comInterval:point2d;
     // обновляется в UpdateData
@@ -404,8 +410,10 @@ begin
     s := GetSignal(i);
     if s.m_updateDrawInterval then
     begin
+      logMessage('LisFrm_01');
       s.m_tx.RebuildReadBuff(true, s.m_comInterval);
       s.m_ty.RebuildReadBuff(true, s.m_comInterval);
+      logMessage('LisFrm_02');
       // предполагается что частоты одинаковы!!! по X и по Y
       intervalx_i:=s.m_tx.getIntervalInd(s.m_comInterval);
       intervaly_i:=s.m_ty.getIntervalInd(s.m_comInterval);
@@ -429,6 +437,7 @@ begin
     end;
   end;
   m_Chart.redraw;
+  logMessage('LisFrm_03');
 end;
 
 procedure TLissajousFrm.WndProc(var Message: TMessage);
