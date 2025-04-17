@@ -18,6 +18,7 @@ uses
   uBuffTrend2d,
   MathFunction,
   ulissajousCurveEdit,
+  uHardwareMath,
   uQueue;
 
 
@@ -37,6 +38,7 @@ type
     // линия фигуры
     m_trend:cBuffTrend2d;
     // центр масс
+    m_centerData:cQueue<point2d>;
     m_center:cBuffTrend2d;
     // главный диаметр
     m_Diam:cBuffTrend2d;
@@ -189,6 +191,8 @@ begin
     s := GetSignal(i);
     s.updateTags;
     s.updatetrend;
+    s.m_trend.color:=ColorArray[i];
+    s.m_center.pointcolor:=Orange;
   end;
 end;
 
@@ -397,8 +401,11 @@ procedure TLissajousFrm.UpdateView;
 var
   i: integer;
   s: TLisSig;
+  p:point2d;
+  lp:point2;
   intervalx_i, intervaly_i: tpoint;
   j, len: Integer;
+  scale:double;
 begin
   if RStatePlay then
   begin
@@ -410,10 +417,9 @@ begin
     s := GetSignal(i);
     if s.m_updateDrawInterval then
     begin
-      logMessage('LisFrm_01');
+      //logMessage('LisFrm_01');
       s.m_tx.RebuildReadBuff(true, s.m_comInterval);
       s.m_ty.RebuildReadBuff(true, s.m_comInterval);
-      logMessage('LisFrm_02');
       // предполагается что частоты одинаковы!!! по X и по Y
       intervalx_i:=s.m_tx.getIntervalInd(s.m_comInterval);
       intervaly_i:=s.m_ty.getIntervalInd(s.m_comInterval);
@@ -425,12 +431,30 @@ begin
       if len>0 then
       begin
         s.m_trend.Count:=len;
+        p.x:=0;
+        p.y:=0;
         for j := 0 to len - 1 do
         begin
           s.m_trend.data[j].x:=s.m_tx.m_ReadData[intervalx_i.x+j];
           s.m_trend.data[j].y:=s.m_ty.m_ReadData[intervaly_i.x+j];
         end;
+        scale:=1/len;
+        p.x:=tempSUM(s.m_tx.m_ReadData,intervalx_i.x,len-1)*scale;
+        p.y:=tempSUM(s.m_ty.m_ReadData,intervaly_i.x,len-1)*scale;
         //s.m_trend.AddPoints();
+        s.m_centerData.push_back(p);
+        if s.m_centerData.size>4 then
+        begin
+          s.m_centerData.pop_front;
+        end;
+        s.m_center.Count:=0;
+        for j := 0 to s.m_centerData.size - 1 do
+        begin
+          p:=s.m_centerData.Peak(j);
+          lp.x:=p.x;
+          lp.y:=p.y;
+          s.m_center.addpoint(lp);
+        end;
         s.m_trend.NeedRecompile:=true;
         s.m_updateDrawInterval:=false;
       end;
@@ -592,12 +616,15 @@ begin
   owner:=p_owner;
   m_tx:=cTag.create;
   m_ty:=cTag.create;
+
 end;
 
 destructor TLisSig.destroy;
 begin
   m_tx.destroy;
   m_ty.destroy;
+  if m_centerData<>nil then
+    m_centerData.Destroy;
 end;
 
 procedure TLisSig.doStart;
@@ -630,6 +657,12 @@ begin
       m_trend.name:=name;
       TLissajousFrm(owner).m_ax.AddChild(m_trend);
       m_trend.color:=ColorArray[TLissajousFrm(owner).m_ax.ChildCount - 1];
+      m_centerData:=cQueue<point2d>.create;
+      m_center:=cBuffTrend2d.create;
+      m_center.drawpoint:=true;
+      m_center.drawLines:=true;
+      m_center.pointcolor:=Orange;
+      TLissajousFrm(owner).m_ax.AddChild(m_center);
     end;
   end;
 end;

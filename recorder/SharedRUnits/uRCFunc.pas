@@ -322,8 +322,8 @@ const
   c_MBaseName = 'Plugin Циклограмма';
 
 implementation
-//uses
-//  pluginclass;
+uses
+  pluginclass;
 
 // uMBaseControl;
 
@@ -1645,6 +1645,8 @@ var
   I: Integer;
   b:boolean;
 begin
+  if m_blLen=0 then
+    exit;
   // всего блоков получено
   ready := block.GetReadyBlocksCount;
   // размер буфера
@@ -1662,8 +1664,10 @@ begin
   b2:=trunc(t/m_blLen);
   if b2<0 then
     exit;
-  if b2>(block.GetBlocksCount-1) then
-    b2:=(block.GetBlocksCount-1);
+  i:=block.GetBlocksCount;
+  I:=I-1;
+  if b2>i then
+    b2:=i;
   m_ReadDataTime:=block.GetBlockDeviceTime(b1);
   m_lastindex:=0;
   for I := b1 to b2 do
