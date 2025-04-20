@@ -2,27 +2,29 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 554
-  ClientWidth = 851
+  ClientHeight = 416
+  ClientWidth = 638
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -10
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   OnCreate = FormCreate
-  PixelsPerInch = 120
-  TextHeight = 16
+  PixelsPerInch = 96
+  TextHeight = 12
   object ListBox1: TListBox
-    Left = 609
+    Left = 457
     Top = 0
-    Width = 242
-    Height = 554
+    Width = 181
+    Height = 416
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alRight
+    ItemHeight = 12
     TabOrder = 0
-    ExplicitLeft = 608
-    ExplicitTop = 1
-    ExplicitHeight = 450
   end
 end
