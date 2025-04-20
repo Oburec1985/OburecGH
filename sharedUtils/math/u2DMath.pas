@@ -489,6 +489,7 @@ var
     temp: point2;
   begin
     for i := 1 to High(SortedPoints) - 1 do
+    //for i := 1 to length(SortedPoints) - 1 do
       for j := i + 1 to High(SortedPoints) do
       begin
         if (Orientation(P0, SortedPoints[i], SortedPoints[j]) < 0) or
@@ -564,7 +565,9 @@ begin
   for i := 3 to p_size-1 do
   begin
     while (Length(Stack) > 1) and
-      (Orientation(Stack[High(Stack)-2], Stack[High(Stack)-1], SortedPoints[i]) <= 0) do
+      (Orientation(Stack[High(Stack)-2],
+        Stack[High(Stack)-1],
+        SortedPoints[i]) <= 0) do
       SetLength(Stack, Length(Stack)-1);
     SetLength(Stack, Length(Stack)+1);
     Stack[High(Stack)] := SortedPoints[i];
