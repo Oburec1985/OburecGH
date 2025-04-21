@@ -20,6 +20,10 @@ type
     OutChannelName: TEdit;
     MinThresholdSE: TFloatSpinEdit;
     LabelMinThreshold: TLabel;
+    TrigCB: TRcComboBox;
+    Label2: TLabel;
+    NullTagCB: TRcComboBox;
+    Label3: TLabel;
     procedure LoThresholdSEChange(Sender: TObject);
     procedure HiThresholdSEChange(Sender: TObject);
     procedure ChannelCBChange(Sender: TObject);
@@ -84,6 +88,8 @@ procedure TCounterAlgFrame.doShow;
 begin
   inherited;
   ChannelCB.updateTagsList;
+  TrigCB.updateTagsList;
+  NullTagCB.updateTagsList;
 end;
 
 function TCounterAlgFrame.getProperties: string;
@@ -102,6 +108,17 @@ begin
     addParam(m_pars, 'Channel', ChannelCB.text);
     OutChannelName.text:=ChannelCB.text+'_cnt';
   end;
+  // канал разрешени€ счета
+  if TrigCB.text<>'' then
+  begin
+    addParam(m_pars, 'TrigTag', TrigCB.text);
+  end;
+  // канал сброса значени€
+  if NullTagCB.text<>'' then
+  begin
+    addParam(m_pars, 'NullTag', NullTagCB.text);
+  end;
+
   result:=ParsToStr(m_pars);
 end;
 
@@ -126,6 +143,8 @@ begin
   MinThresholdSE.Text := GetParsValue(m_pars, 'MinThreshold');
   MinThresholdSE.OnChange:=p;
 
+  setcomboboxitem(GetParsValue(m_pars, 'TrigTag'), TrigCB);
+  setcomboboxitem(GetParsValue(m_pars, 'NullTag'), NullTagCB);
   setcomboboxitem(GetParsValue(m_pars, 'Channel'), ChannelCB);
   if channelcb.ItemIndex>0 then
   begin

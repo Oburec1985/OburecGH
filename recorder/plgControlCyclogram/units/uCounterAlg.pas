@@ -18,8 +18,13 @@ type
     fMinThreshold:double;
     fOutTag: cTag;
     fCounter: cardinal;
+    // 0 <lo 1 >lo 2 >hi
+    m_statetrig:integer;
   protected
     InTag: cTag;
+    TrigTag: cTag;
+    NullTag: cTag;
+    m_NullPrev:double;
   protected
     procedure LoadTags(node: txmlNode);override;
     procedure SetProperties(str: string); override;
@@ -64,57 +69,89 @@ begin
   inherited;
   Properties := C_CounterOpts;
   fRelative:=true;
+  TrigTag:=cTag.create;
+  NullTag:=cTag.create;
 end;
 
 destructor cCounterAlg.destroy;
 begin
+  TrigTag.destroy;
+  NullTag.destroy;
   inherited;
 end;
 
 procedure cCounterAlg.doEval(tag: cTag; time: double);
 var
   I, len: Integer;
-  v, prev, h,l, lmin, lmax: double;
+  v, null, a, h,l, lmin, lmax: double;
   // уровень выше hi, начинаем искать спад
-  startTrig, b: boolean;
+  b, drop: boolean;
 begin
   len := length(tag.m_TagData);
-  prev := tag.m_TagData[0];
+  null:=NullTag.GetMeanEst;
+  if null<>m_NullPrev then
+  begin
+    drop:=true;
+    fCounter:=0;
+  end;
+  if TrigTag.GetMeanEst=0 then
+  begin
+    for I := 0 to len - 1 do
+    begin
+      fOutTag.m_TagData[I] := fCounter;
+    end;
+    fOutTag.tag.PushDataEx(@fOutTag.m_TagData[0], len, 0, time);
+    exit;
+  end;
+
   h:=hi;
   l:=lo;
-  startTrig := prev > h;
   fOutTag.m_TagData[0] := fCounter;
   lmin:= tag.m_TagData[1];
   lmax:= tag.m_TagData[1];
-  for I := 1 to len - 1 do
+  for I := 0 to len - 1 do
   begin
     v := tag.m_TagData[I];
     lmin:=min(lmin,v,b);
     lmax:=max(lmax,v, b);
-    if prev <> v then
-    begin
-      prev := v;
-      if startTrig then
+    case m_statetrig of
+      0:
       begin
-        if v < L then
+        if v>l then
         begin
-          startTrig := false;
-          if (lmax-lmin)>fMinThreshold then
-          begin
-            inc(fCounter);
-          end;
-          // сброс значений для поиса след периода
-          lmin:=lmax;
-          lmax:=lmin;
+          m_statetrig:=1;
         end;
-      end
-      else
+      end;
+      1:
       begin
-        startTrig := v > h;
+        if v<l then
+        begin
+          m_statetrig:=0;
+        end
+        else
+        begin
+          if v>h then
+          begin
+            m_statetrig:=2;
+          end;
+        end;
+      end;
+      2:
+      begin
+        if v<l then
+        begin
+          a:=GetAmp(InTag.tag);
+          if a>fMinThreshold then
+          begin
+            inc(fcounter);
+          end;
+          m_statetrig:=0;
+        end;
       end;
     end;
     fOutTag.m_TagData[I] := fCounter;
   end;
+  m_NullPrev:=null;
   fOutTag.tag.PushDataEx(@fOutTag.m_TagData[0], len, 0, time);
 end;
 
@@ -178,6 +215,7 @@ procedure cCounterAlg.doOnStart;
 begin
   inherited;
   fCounter := 0;
+  m_statetrig:=0;
 end;
 
 class function cCounterAlg.getdsc: string;
@@ -188,6 +226,12 @@ end;
 function cCounterAlg.getExtProp: string;
 begin
   result:='';
+  if NullTag.tag<>nil then
+    result:='NullTag='+NullTag.tagname;
+
+  if TrigTag.tag<>nil then
+    result:='TrigTag='+TrigTag.tagname;
+
   if intag<>nil then
     result:='Channel='+intag.tagname;
   if fOutTag<>nil then
@@ -353,6 +397,18 @@ begin
   begin
     fMinThreshold := strtoFloatExt(lstr);
   end;
+  lstr := GetParam(str, 'TrigTag');
+  if CheckStr(lstr) then
+  begin
+    TrigTag.tagname:=lstr;
+  end;
+
+  lstr := GetParam(str, 'NullTag');
+  if CheckStr(lstr) then
+  begin
+    NullTag.tagname:=lstr;
+  end;
+
   lstr := GetParam(str, 'Channel');
   if lstr <> '' then
   begin
