@@ -5,7 +5,7 @@ interface
 uses
   classes, Windows, tags, uBaseObj, uBaseObjMng, activeX, nativexml, uRCFunc,
   pluginclass, blaccess, sysutils, uCommonTypes, uFFT,
-  //fft,
+  // fft,
   urecorderevents,
   uCommonMath,
   uMyMath,
@@ -48,19 +48,19 @@ type
 
   cBaseAlgContainer = class(cBaseObj)
   public
-    m_parentCfg:cAlgConfig;
+    m_parentCfg: cAlgConfig;
     // список алгоритмов кот передают данные по подписке сюда
     m_refList: tlist;
   protected
-    fready:boolean;
+    fready: boolean;
     m_errors: tstringlist;
     m_properties: string;
     // список алгоритмов кот подписаны на обновлеение данных
     m_SubscribeList: tlist;
   protected
-    procedure updateReady;virtual;
-    procedure SetParentCfg(c:cAlgConfig);
-    procedure doStopRecord;virtual;
+    procedure updateReady; virtual;
+    procedure SetParentCfg(c: cAlgConfig);
+    procedure doStopRecord; virtual;
     procedure doAfterload; virtual;
     procedure UpdatePropStr; virtual;
     procedure SetProperties(str: string); virtual;
@@ -91,11 +91,11 @@ type
   public
     // поискать входные теги
     procedure LinkTags; virtual;
-    function NotSaveToXml: boolean;override;
-    procedure updateOutChan;virtual;
-    procedure createOutChan;overload;virtual;
-    procedure createOutChan(name:string);overload;virtual;
-    procedure setfirstchannel(t:itag);virtual;
+    function NotSaveToXml: boolean; override;
+    procedure updateOutChan; virtual;
+    procedure createOutChan; overload; virtual;
+    procedure createOutChan(name: string); overload; virtual;
+    procedure setfirstchannel(t: itag); virtual;
     procedure subscribe(dst: cBaseObj); virtual;
     // отписать алгоритм от источника
     // функция завиртуалена на случай если у приемника несколько источников.
@@ -108,48 +108,47 @@ type
     // получаем несколько отсчетов)
     property dX: double read Getdx write Setdx;
     class function getdsc: string; virtual;
-    function GetFullProperties: string;virtual;
+    function GetFullProperties: string; virtual;
     property Properties: string read GetProperties write SetProperties;
     property resname: string read GetResName write SetResName;
-    property parentCfg: cAlgConfig read m_parentCfg write setParentCfg;
+    property parentCfg: cAlgConfig read m_parentCfg write SetParentCfg;
     constructor create; override;
     destructor destroy; override;
   end;
 
   cAlgConfig = class
   public
-    clType:tClass;
+    clType: tClass;
     // для автосоздаваемых не треубется сохранение
-    m_NotSaveCfg:boolean;
+    m_NotSaveCfg: boolean;
   private
     // родительский список конфигов
-    m_cfgList:TList;
-    m_str,
-    m_name:string;
+    m_cfgList: tlist;
+    m_str, m_name: string;
     // список подписанных алгоритмов
     m_childs: tlist;
   protected
-    function getprops(algNum:integer):string;overload;
-    function getprops:string;overload;
-    procedure setprops(s:string);
+    function getprops(algNum: integer): string; overload;
+    function getprops: string; overload;
+    procedure setprops(s: string);
   public
-    function getwnd:TWndType;
-    function ChildCount:integer;
-    function getAlg(i:integer):cBaseAlgContainer;
+    function getwnd: TWndType;
+    function ChildCount: integer;
+    function getAlg(i: integer): cBaseAlgContainer;
     // не удалить объект а исключить из списка
-    procedure delAlg(a:cBaseAlgContainer);
-    property name:string read m_name write m_name;
-    property str:string read getprops write setprops;
-    constructor create(cl:TClass);
+    procedure delAlg(a: cBaseAlgContainer);
+    property name: string read m_name write m_name;
+    property str: string read getprops write setprops;
+    constructor create(cl: tClass);
     destructor destroy;
-    procedure AddChild(a:cBaseAlgContainer);
+    procedure AddChild(a: cBaseAlgContainer);
   end;
 
   cBaseAlg = class(cBaseAlgContainer)
   protected
     m_inpTags: tstringlist;
     m_outTags: tstringlist;
-    m_config:cAlgConfig;
+    m_config: cAlgConfig;
   protected
     procedure doOnStart; override;
     procedure destroyTagsList;
@@ -180,10 +179,9 @@ type
 
   cSrcAlg = class(cBaseAlgContainer);
 
-  cAlgMng = class(cBaseObjMng)
-  public
+    cAlgMng = class(cBaseObjMng)public
     // привязки тегов к ГХ. ключ - имя тега, объект - ГХ
-    m_AHNames: tstringlist;
+      m_AHNames: tstringlist;
     // список ГХ для корректировки АЧХ
     m_AHList: tlist;
     m_srcList: cSrcList;
@@ -193,8 +191,8 @@ type
     m_TagBandPairList: TTagBandPairList;
 
     // список настроек алгоритмов
-    m_cfgList:Tlist;
-    m_enabled:boolean;
+    m_cfgList: tlist;
+    m_enabled: boolean;
   protected
     function getplace(str: string): TPlace;
     // происходит при переходе в просмотр/запись
@@ -207,7 +205,7 @@ type
     procedure doUpdateTags(sender: tobject);
     procedure doGetData;
     procedure regObjClasses; override;
-    function getAlgClass(str:string): tclass;
+    function getAlgClass(str: string): tClass;
     procedure AddBaseObjInstance(obj: cBaseObj); override;
     procedure removeObj(obj: cBaseObj); override;
     procedure doRenameObj(sender: tobject); override;
@@ -215,7 +213,7 @@ type
     procedure doAfterLoadXML; override;
     procedure XMLSaveMngAttributes(node: txmlNode); override;
     procedure XMLlOADMngAttributes(node: txmlNode); override;
-    procedure XMLlOADMngAttributesAfterObjects(node:txmlnode);override;
+    procedure XMLlOADMngAttributesAfterObjects(node: txmlNode); override;
 
     function getBand(i: integer): tBand; overload;
     function getBand(str: string): tBand; overload;
@@ -227,10 +225,10 @@ type
     function newAH(name: string): cAHgrad;
     procedure clearAHlist;
 
-    function getCfg(i: integer): cAlgConfig;overload;
-    function getCfg(cfgname: string): cAlgConfig;overload;
-    function CfgCount:integer;
-    function newCfg(name: string; cltype:TClass): cAlgConfig;
+    function getCfg(i: integer): cAlgConfig; overload;
+    function getCfg(cfgname: string): cAlgConfig; overload;
+    function CfgCount: integer;
+    function newCfg(name: string; clType: tClass): cAlgConfig;
     procedure clearCfgList;
 
     procedure AddAHName(tagname: string; AHGrad: cAHgrad);
@@ -259,10 +257,8 @@ const
   E_OnChangeAlgCfg = $00008000;
   c_debugAlg = false;
 
-
 var
   g_algMng: cAlgMng;
-
 
 implementation
 
@@ -298,7 +294,6 @@ begin
       result := AHpercent;
   end;
 end;
-
 
 procedure cBaseAlgContainer.CallEndEvalBlock;
 var
@@ -349,7 +344,7 @@ var
   a: cBaseAlgContainer;
 begin
   // чистим тех кто подписан на нас
-  for i:=0 to m_SubscribeList.Count-1 do
+  for i := 0 to m_SubscribeList.Count - 1 do
   begin
     a := cBaseAlgContainer(m_SubscribeList.items[i]);
     a.unsubscribe(self);
@@ -361,9 +356,9 @@ begin
   begin
     a := cBaseAlgContainer(m_refList.items[i]);
     // отписываем получателя у владельца
-    for j:=0 to a.m_SubscribeList.Count - 1 do
+    for j := 0 to a.m_SubscribeList.Count - 1 do
     begin
-      if a.m_SubscribeList.Items[j]=self then
+      if a.m_SubscribeList.items[j] = self then
       begin
         a.m_SubscribeList.Delete(j);
         break;
@@ -376,7 +371,7 @@ begin
   m_errors.destroy;
   m_errors := nil;
 
-  if m_parentCfg<>nil then
+  if m_parentCfg <> nil then
   begin
     m_parentCfg.delAlg(self);
   end;
@@ -425,18 +420,18 @@ end;
 
 function cBaseAlgContainer.GetFullProperties: string;
 begin
-  result:=updateParams(Properties, getExtProp);
+  result := updateParams(Properties, getExtProp);
 end;
 
 function cBaseAlgContainer.GetProperties: string;
 begin
-  if m_parentCfg<>nil then
+  if m_parentCfg <> nil then
   begin
-    result:=updateParams(m_parentCfg.str, getExtProp);
+    result := updateParams(m_parentCfg.str, getExtProp);
   end
   else
   begin
-    result:=m_properties;
+    result := m_properties;
   end;
 end;
 
@@ -459,37 +454,37 @@ end;
 procedure cBaseAlgContainer.subscribe(dst: cBaseObj);
 var
   prevsrc: cBaseAlgContainer;
-  I: Integer;
-  b:boolean;
+  i: integer;
+  b: boolean;
 begin
-  b:=true;
-  for I := 0 to cBaseAlgContainer(dst).m_refList.Count - 1 do
+  b := true;
+  for i := 0 to cBaseAlgContainer(dst).m_refList.Count - 1 do
   begin
-    if cBaseAlgContainer(dst).m_refList.items[i]=self then
+    if cBaseAlgContainer(dst).m_refList.items[i] = self then
     begin
-      b:=false;
+      b := false;
       break;
     end;
   end;
   if b then
     cBaseAlgContainer(dst).m_refList.Add(self);
-  b:=true;
-  for I := 0 to m_SubscribeList.Count - 1 do
+  b := true;
+  for i := 0 to m_SubscribeList.Count - 1 do
   begin
-    if m_SubscribeList.Items[i]=dst then
+    if m_SubscribeList.items[i] = dst then
     begin
-      b:=false;
+      b := false;
       break;
     end;
   end;
   if b then
-    m_SubscribeList.add(dst);
+    m_SubscribeList.Add(dst);
 end;
 
 procedure cBaseAlgContainer.unsubscribe(src: cBaseObj);
 begin
   delRef(src);
-  cbasealgcontainer(src).delDstLink(self);
+  cBaseAlgContainer(src).delDstLink(self);
 end;
 
 procedure cBaseAlgContainer.updateOutChan;
@@ -499,13 +494,13 @@ end;
 
 procedure cBaseAlgContainer.delDstLink(dst: cBaseObj);
 var
-  I: Integer;
-  a:cBaseObj;
+  i: integer;
+  a: cBaseObj;
 begin
-  for I := 0 to m_SubscribeList.Count - 1 do
+  for i := 0 to m_SubscribeList.Count - 1 do
   begin
-    a:=cBaseAlgContainer(m_SubscribeList.items[i]);
-    if a=dst then
+    a := cBaseAlgContainer(m_SubscribeList.items[i]);
+    if a = dst then
     begin
       m_SubscribeList.Delete(i);
       break;
@@ -549,9 +544,9 @@ begin
 
 end;
 
-procedure cBaseAlgContainer.setParentCfg(c: cAlgConfig);
+procedure cBaseAlgContainer.SetParentCfg(c: cAlgConfig);
 begin
-  m_ParentCfg:=c;
+  m_parentCfg := c;
 end;
 
 procedure cBaseAlgContainer.LinkTags;
@@ -568,13 +563,13 @@ end;
 
 function cBaseAlgContainer.NotSaveToXml: boolean;
 begin
-  if parentCfg=nil then
-    result:=m_NotSaveToXml
+  if parentCfg = nil then
+    result := m_NotSaveToXml
   else
   begin
     if not m_NotSaveToXml then
     begin
-      result:=parentCfg.m_NotSaveCfg;
+      result := parentCfg.m_NotSaveCfg;
     end;
   end;
 end;
@@ -703,18 +698,18 @@ var
   i: integer;
   t: cTag;
 begin
-  tnode := getNode(node,'InputTags');
+  tnode := getNode(node, 'InputTags');
   for i := 0 to m_inpTags.Count - 1 do
   begin
     t := InputTag[i];
-    tagnode := getNode(tnode,'Tag_' + inttostr(i));
+    tagnode := getNode(tnode, 'Tag_' + inttostr(i));
     saveTag(t, tagnode);
   end;
-  tnode := getNode(node,'OutputTags');
+  tnode := getNode(node, 'OutputTags');
   for i := 0 to m_outTags.Count - 1 do
   begin
     t := OutputTag[i];
-    tagnode := getNode(tnode,'Tag_' + inttostr(i));
+    tagnode := getNode(tnode, 'Tag_' + inttostr(i));
     saveTag(t, tagnode);
   end;
 end;
@@ -736,12 +731,12 @@ begin
         addInputTag(t);
     end;
   end;
-  tnode := getNode(node,'OutputTags');
+  tnode := getNode(node, 'OutputTags');
   if tnode <> nil then
   begin
     for i := 0 to tnode.NodeCount - 1 do
     begin
-      tagnode := getNode(tnode,'Tag_' + inttostr(i));
+      tagnode := getNode(tnode, 'Tag_' + inttostr(i));
       t := loadTag(tagnode, nil);
       if t <> nil then
         addOutTag(t);
@@ -769,7 +764,7 @@ var
   i: integer;
   b: tBand;
 begin
-  while m_bands.Count>0 do
+  while m_bands.Count > 0 do
   begin
     b := tBand(m_bands.Objects[0]);
     b.destroy;
@@ -777,11 +772,10 @@ begin
   Clear;
 end;
 
-
 constructor cAlgMng.create;
 begin
   inherited;
-  m_enabled:=true;
+  m_enabled := true;
   createEvents;
   m_AHNames := tstringlist.create;
   m_AHNames.Sorted := true;
@@ -790,22 +784,22 @@ begin
 
   m_srcList := cSrcList.create;
   m_srcList.autocreate := true;
-  add(m_srcList);
+  Add(m_srcList);
 
   m_bands := tstringlist.create;
   m_places := TPlaces.create;
   m_TagBandPairList := TTagBandPairList.create;
 
-  m_cfgList:=TList.Create;
+  m_cfgList := tlist.create;
 end;
 
 destructor cAlgMng.destroy;
 var
-  I: Integer;
+  i: integer;
 begin
   DestroyEvents;
 
-  clearahlist;
+  clearAHlist;
   m_AHList.destroy;
   m_AHNames.destroy;
 
@@ -869,13 +863,13 @@ end;
 
 procedure cAlgMng.doChangeCfg(sender: tobject);
 var
-  a: cbaseobj;
+  a: cBaseObj;
   i: integer;
-  b:boolean;
+  b: boolean;
 begin
   // предрасчет
-  ///ecm(b); // нельзя lcm порождает новый doChangeCfg по PL_LeaveConfig
-  ///  нужно делать ecm только если состояние действительно обновилось (например удалился тег)
+  /// ecm(b); // нельзя lcm порождает новый doChangeCfg по PL_LeaveConfig
+  /// нужно делать ecm только если состояние действительно обновилось (например удалился тег)
   for i := 0 to Count - 1 do
   begin
     a := getobj(i);
@@ -896,8 +890,8 @@ begin
       end;
     end;
   end;
-  ///if b then
-  ///  lcm;
+  /// if b then
+  /// lcm;
 end;
 
 procedure cAlgMng.doChangeRState(sender: tobject);
@@ -977,7 +971,8 @@ begin
   for i := 0 to Count - 1 do
   begin
     a := getAlg(i);
-    if a=nil then continue;
+    if a = nil then
+      continue;
 
     if a is cSrcAlg then
     begin
@@ -1008,10 +1003,11 @@ end;
 
 procedure cAlgMng.doUpdateTags(sender: tobject);
 var
-  a: cbaseobj;
+  a: cBaseObj;
   i: integer;
 begin
-  if not m_enabled then exit;
+  if not m_enabled then
+    exit;
 
   // предрасчет
   for i := 0 to Count - 1 do
@@ -1044,13 +1040,13 @@ end;
 
 function cAlgMng.getAlg(i: integer): cBaseAlg;
 var
-  o:cbaseobj;
+  o: cBaseObj;
 begin
-  o:=getobj(i);
-  if o is cbasealg then
+  o := getobj(i);
+  if o is cBaseAlg then
     result := cBaseAlg(getobj(i))
   else
-    result:=nil;
+    result := nil;
 end;
 
 function cAlgMng.getAH(i: integer): cAHgrad;
@@ -1090,55 +1086,55 @@ end;
 function cAlgMng.newAH(name: string): cAHgrad;
 begin
   result := cAHgrad.create(name);
-  m_AHList.add(result);
+  m_AHList.Add(result);
 end;
 
-function cAlgMng.CfgCount:integer;
+function cAlgMng.CfgCount: integer;
 begin
-  result:=m_cfgList.Count;
+  result := m_cfgList.Count;
 end;
 
 procedure cAlgMng.clearCfgList;
 var
-  I: Integer;
-  cfg:cAlgConfig;
+  i: integer;
+  cfg: cAlgConfig;
 begin
-  while CfgCount<>0 do
+  while CfgCount <> 0 do
   begin
-    cfg:=getCfg(0);
+    cfg := getCfg(0);
     cfg.destroy;
   end;
 end;
 
 function cAlgMng.getCfg(i: integer): cAlgConfig;
 begin
-  result:=cAlgConfig(m_cfgList.Items[i]);
+  result := cAlgConfig(m_cfgList.items[i]);
 end;
 
 function cAlgMng.getCfg(cfgname: string): cAlgConfig;
 var
-  I: Integer;
+  i: integer;
 begin
-  result:=nil;
-  for I := 0 to m_cfgList.Count - 1 do
+  result := nil;
+  for i := 0 to m_cfgList.Count - 1 do
   begin
-    if cAlgConfig(m_cfgList.Items[i]).name=cfgname then
+    if cAlgConfig(m_cfgList.items[i]).name = cfgname then
     begin
-      result:=cAlgConfig(m_cfgList.Items[i]);
+      result := cAlgConfig(m_cfgList.items[i]);
       exit;
     end;
   end;
 end;
 
-function cAlgMng.newCfg(name: string; cltype:TClass): cAlgConfig;
+function cAlgMng.newCfg(name: string; clType: tClass): cAlgConfig;
 begin
-  result:=cAlgConfig.create(cltype);
-  result.name:=name;
-  result.m_cfgList:=m_cfgList;
+  result := cAlgConfig.create(clType);
+  result.name := name;
+  result.m_cfgList := m_cfgList;
   m_cfgList.Add(result);
 end;
 
-procedure cAlgMng.clearahlist;
+procedure cAlgMng.clearAHlist;
 var
   i: integer;
   a: cAHgrad;
@@ -1220,7 +1216,7 @@ end;
 function cAlgMng.getSpmByTagName(str: string): cBaseAlgContainer;
 var
   i: integer;
-  a: cbaseobj;
+  a: cBaseObj;
 begin
   result := nil;
   for i := 0 to Count - 1 do
@@ -1253,16 +1249,16 @@ begin
   regclass(cAriphmAlg);
 end;
 
-function cAlgMng.getAlgClass(str:string): tclass;
+function cAlgMng.getAlgClass(str: string): tClass;
 var
-  I: Integer;
+  i: integer;
 begin
-  result:=nil;
-  for I := 0 to regclasses.Count - 1 do
+  result := nil;
+  for i := 0 to regclasses.Count - 1 do
   begin
-    if regclasses.strings[i]=str then
+    if regclasses.Strings[i] = str then
     begin
-      result:=tclass(cObjCreator(regclasses.Objects[i]).createfunc);
+      result := tClass(cObjCreator(regclasses.Objects[i]).createfunc);
       exit;
     end;
   end;
@@ -1299,7 +1295,7 @@ var
   pair: TTagBandPair;
   t: BandTag;
   nodetype, str, str1, substr: string;
-  a:cahgrad;
+  a: cAHgrad;
 begin
   inherited;
   child := node.FindNode('BandsNode');
@@ -1326,7 +1322,7 @@ begin
             t := BandTag.create;
             t.tagname := tnode.ReadAttributeString('TagName', '');
             t.k := tnode.ReadAttributeFloat('Kmult', 0);
-            //b.m_TagsList.AddObject(t.m_t, t);
+            // b.m_TagsList.AddObject(t.m_t, t);
             b.addBandTag(t);
           end;
         end;
@@ -1404,19 +1400,19 @@ begin
       nodetype := pnode.ReadAttributeString('NodeType', '');
       if nodetype = 'AHNode' then
       begin
-        str:=n.ReadAttributeString('NodeName', '');
-        a:=newAH(str);
-        a.m_units:=IntToAHUn(n.readAttributeInteger('AHUnits',0));
-        a.size:=n.readAttributeInteger('AHCount', 0);
-        str :=n.ReadAttributeString('AHpoints', '');
-        substr:=GetSubString(str, ';', 0, j);
-        k:=0;
-        while substr<>'' do
+        str := n.ReadAttributeString('NodeName', '');
+        a := newAH(str);
+        a.m_units := IntToAHUn(n.ReadAttributeInteger('AHUnits', 0));
+        a.size := n.ReadAttributeInteger('AHCount', 0);
+        str := n.ReadAttributeString('AHpoints', '');
+        substr := GetSubString(str, ';', 0, j);
+        k := 0;
+        while substr <> '' do
         begin
-          a.m_points[k].x:=strtofloatext(substr);
-          substr:=GetSubString(str, ';', j, j);
-          a.m_points[k].y:=strtofloatext(substr);
-          substr:=GetSubString(str, ';', j, j);
+          a.m_points[k].x := strtofloatext(substr);
+          substr := GetSubString(str, ';', j, j);
+          a.m_points[k].y := strtofloatext(substr);
+          substr := GetSubString(str, ';', j, j);
           inc(k);
         end;
       end;
@@ -1432,12 +1428,12 @@ begin
       nodetype := pnode.ReadAttributeString('NodeType', '');
       if nodetype = 'AHNameNode' then
       begin
-        str:=n.ReadAttributeString('NodeName', '');
-        substr:=n.ReadAttributeString('AHgrad', '');
-        a:=getAH(substr);
-        if a<>nil then
+        str := n.ReadAttributeString('NodeName', '');
+        substr := n.ReadAttributeString('AHgrad', '');
+        a := getAH(substr);
+        if a <> nil then
         begin
-          m_AHNames.AddObject(str,a);
+          m_AHNames.AddObject(str, a);
         end;
       end;
     end;
@@ -1450,30 +1446,30 @@ var
   i, j, tcount: integer;
   b: tBand;
   nodetype, str, str1: string;
-  alg:cBaseAlgContainer;
-  cfg:cAlgConfig;
+  alg: cBaseAlgContainer;
+  cfg: cAlgConfig;
 begin
   child := node.FindNode('CfgList');
-  if child<>nil then
+  if child <> nil then
   begin
     for i := 0 to child.NodeCount - 1 do
     begin
-      n:=child.Nodes[i];
+      n := child.Nodes[i];
       nodetype := n.ReadAttributeString('NodeType', '');
-      if nodetype='AlgCfgNode' then
+      if nodetype = 'AlgCfgNode' then
       begin
-        str:=n.ReadAttributeString('NodeName',  '');
-        str1:=n.ReadAttributeString('AlgClass',  '');
-        if str1<>'' then
+        str := n.ReadAttributeString('NodeName', '');
+        str1 := n.ReadAttributeString('AlgClass', '');
+        if str1 <> '' then
         begin
-          cfg:=g_algMng.newCfg(str,g_algMng.getAlgClass(str1));
+          cfg := g_algMng.newCfg(str, g_algMng.getAlgClass(str1));
           cfg.str := n.ReadAttributeString('Cfg', '');
-          tcount:=n.ReadAttributeInteger('AlgCount', 0);
+          tcount := n.ReadAttributeInteger('AlgCount', 0);
           for j := 0 to tcount - 1 do
           begin
-            str:=n.ReadAttributeString('A_'+inttostr(j), '');
-            alg:=cbasealgcontainer(g_algMng.getObj(str));
-            if alg<>nil then
+            str := n.ReadAttributeString('A_' + inttostr(j), '');
+            alg := cBaseAlgContainer(g_algMng.getobj(str));
+            if alg <> nil then
               cfg.AddChild(alg);
           end;
         end;
@@ -1491,16 +1487,16 @@ var
   pair: TTagBandPair;
   t: BandTag;
   a: cAHgrad;
-  alg:cbasealgcontainer;
-  cfg:cAlgConfig;
-  str:string;
+  alg: cBaseAlgContainer;
+  cfg: cAlgConfig;
+  str: string;
 begin
   inherited;
-  child := getNode(node,'BandsNode');
+  child := getNode(node, 'BandsNode');
   for i := 0 to m_bands.Count - 1 do
   begin
     b := tBand(m_bands.Objects[i]);
-    bnode := getNode(child,'Band_' + inttostr(i));
+    bnode := getNode(child, 'Band_' + inttostr(i));
     bnode.WriteAttributeString('NodeName', b.name, '');
     bnode.WriteAttributeString('NodeType', 'BNode', '');
     bnode.WriteAttributeFloat('F1', b.m_f1f2.x, 0);
@@ -1509,7 +1505,7 @@ begin
     bnode.WriteAttributeInteger('TagCount', b.tagCount, 0);
     for j := 0 to b.tagCount - 1 do
     begin
-      tnode := getNode(bnode,b.name);
+      tnode := getNode(bnode, b.name);
       tnode.WriteAttributeString('NodeType', 'TNode', '');
       t := b.getbandtag(j);
       tnode.WriteAttributeString('TagName', t.tagname, '');
@@ -1517,44 +1513,44 @@ begin
     end;
   end;
 
-  child := getNode(node,'PlacesNode');
+  child := getNode(node, 'PlacesNode');
   for i := 0 to m_places.Count - 1 do
   begin
     p := m_places.getplace(i);
-    pnode := getNode(child,'Place_' + inttostr(i));
+    pnode := getNode(child, 'Place_' + inttostr(i));
     pnode.WriteAttributeString('NodeName', p.name, '');
     pnode.WriteAttributeString('NodeType', 'PlaceNode', '');
     for j := 0 to p.Bandcount - 1 do
     begin
       b := p.getBand(j);
-      bnode := getNode(pnode,'Band_' + inttostr(j));
+      bnode := getNode(pnode, 'Band_' + inttostr(j));
       bnode.WriteAttributeString('NodeType', 'BNode', '');
       bnode.WriteAttributeString('NodeName', b.name, '');
     end;
   end;
 
-  child := getNode(node,'TagsBandPairNode');
+  child := getNode(node, 'TagsBandPairNode');
   for i := 0 to m_TagBandPairList.Count - 1 do
   begin
     pair := m_TagBandPairList.getPair(i);
-    pnode := getNode(child,'BandPair_' + inttostr(i));
+    pnode := getNode(child, 'BandPair_' + inttostr(i));
     pnode.WriteAttributeString('NodeType', 'TagBandNode', '');
     pnode.WriteAttributeString('NodeName', pair.name, '');
     pnode.WriteAttributeInt64('TagID', pair.m_id, -1);
     for j := 0 to pair.placeCount - 1 do
     begin
       p := pair.getplace(j);
-      bnode := getNode(pnode,'TagPlace_' + inttostr(j));
+      bnode := getNode(pnode, 'TagPlace_' + inttostr(j));
       bnode.WriteAttributeString('NodeType', 'TagPlace', '');
       bnode.WriteAttributeString('NodeName', p.name, '');
     end;
   end;
   // корректировка АЧХ
-  child := getNode(node,'AHGradList');
+  child := getNode(node, 'AHGradList');
   for i := 0 to m_AHList.Count - 1 do
   begin
     a := getAH(i);
-    n := getNode(child,'AHNode_' + inttostr(i));
+    n := getNode(child, 'AHNode_' + inttostr(i));
     n.WriteAttributeString('NodeType', 'AHNode', '');
     n.WriteAttributeString('NodeName', a.m_name, '');
     n.WriteAttributeInteger('AHUnits', TAHUnToInt(a.m_units), 0);
@@ -1562,42 +1558,43 @@ begin
     str := '';
     for j := 0 to a.size - 1 do
     begin
-      str := str + floattostr(a.m_points[j].x) + ';' + floattostr(a.m_points[j].y);
+      str := str + floattostr(a.m_points[j].x) + ';' + floattostr
+        (a.m_points[j].y);
       if j <> a.size - 1 then
         str := str + ';';
     end;
     n.WriteAttributeString('AHpoints', str, '');
   end;
-  child := getNode(node,'AHNameList');
+  child := getNode(node, 'AHNameList');
   for i := 0 to m_AHNames.Count - 1 do
   begin
     str := m_AHNames.Strings[i];
-    n := getNode(child,'AHNode_' + inttostr(i));
+    n := getNode(child, 'AHNode_' + inttostr(i));
     n.WriteAttributeString('NodeType', 'AHNameNode', '');
     n.WriteAttributeString('NodeName', str, '');
-    n.WriteAttributeString('AHgrad', cAHGrad(m_AHNames.Objects[i]).m_name, '');
+    n.WriteAttributeString('AHgrad', cAHgrad(m_AHNames.Objects[i]).m_name, '');
   end;
 
-  child := getNode(node,'CfgList');
+  child := getNode(node, 'CfgList');
   for i := 0 to m_cfgList.Count - 1 do
   begin
-    cfg:=getCfg(i);
+    cfg := getCfg(i);
     if cfg.m_NotSaveCfg then
       continue;
     str := cfg.name;
-    n := getNode(child,'AlgCfgNode_' + inttostr(i));
+    n := getNode(child, 'AlgCfgNode_' + inttostr(i));
     n.WriteAttributeString('NodeType', 'AlgCfgNode', '');
     n.WriteAttributeString('NodeName', str, '');
-    n.WriteAttributeString('AlgClass', cfg.clType.ClassName, '');
+    n.WriteAttributeString('AlgClass', cfg.clType.classname, '');
     str := cfg.m_str;
     n.WriteAttributeString('Cfg', str, '');
-    k:=0;
+    k := 0;
     for j := 0 to cfg.ChildCount - 1 do
     begin
-      alg:=cfg.getAlg(j);
-      if alg.notSaveToXml then
+      alg := cfg.getAlg(j);
+      if alg.NotSaveToXml then
         continue;
-      n.WriteAttributeString('A_'+inttostr(k), alg.name, '');
+      n.WriteAttributeString('A_' + inttostr(k), alg.name, '');
       inc(k);
     end;
     n.WriteAttributeInteger('AlgCount', cfg.ChildCount, 0);
@@ -1618,8 +1615,6 @@ destructor cSrcList.destroy;
 begin
   inherited;
 end;
-
-
 
 { cAHgrad }
 function cAHgrad.CorrectValue(v, freq: double): double;
@@ -1754,33 +1749,33 @@ begin
 end;
 
 { cAlgConfig }
-constructor cAlgConfig.create(cl:TClass);
+constructor cAlgConfig.create(cl: tClass);
 begin
-  clType:=cl;
-  m_childs:=TList.Create;
+  clType := cl;
+  m_childs := tlist.create;
 end;
 
 destructor cAlgConfig.destroy;
 var
-  I: Integer;
-  c:cAlgConfig;
-  a:cbasealgcontainer;
+  i: integer;
+  c: cAlgConfig;
+  a: cBaseAlgContainer;
 begin
-  if m_cfgList<>nil then
+  if m_cfgList <> nil then
   begin
-    for I := 0 to m_cfgList.Count - 1 do
+    for i := 0 to m_cfgList.Count - 1 do
     begin
-      c:=cAlgConfig(m_cfgList.Items[i]);
-      if c=self then
+      c := cAlgConfig(m_cfgList.items[i]);
+      if c = self then
       begin
         m_cfgList.Delete(i);
         break;
       end;
     end;
   end;
-  for I := m_childs.Count - 1 downto 0 do
+  for i := m_childs.Count - 1 downto 0 do
   begin
-    a:=getAlg(i);
+    a := getAlg(i);
     a.destroy;
   end;
   m_childs.destroy;
@@ -1788,46 +1783,46 @@ end;
 
 procedure cAlgConfig.AddChild(a: cBaseAlgContainer);
 var
-  I: Integer;
-  b:boolean;
+  i: integer;
+  b: boolean;
 begin
-  if a.ClassType=clType then
+  if a.ClassType = clType then
   begin
-    b:=false;
-    for I := 0 to ChildCount - 1 do
+    b := false;
+    for i := 0 to ChildCount - 1 do
     begin
-      if getAlg(i)=a then
+      if getAlg(i) = a then
       begin
-        b:=true;
+        b := true;
         break;
       end;
     end;
     if not b then
     begin
-      a.parentCfg:=self;
-      a.Properties:=m_str;
+      a.parentCfg := self;
+      a.Properties := m_str;
       m_childs.Add(a);
     end;
   end;
 end;
 
-function cAlgConfig.ChildCount:integer;
+function cAlgConfig.ChildCount: integer;
 begin
-  result:=m_childs.Count;
+  result := m_childs.Count;
 end;
 
-function cAlgConfig.getAlg(i:integer):cBaseAlgContainer;
+function cAlgConfig.getAlg(i: integer): cBaseAlgContainer;
 begin
-  result:=cBaseAlgContainer(m_childs.Items[i]);
+  result := cBaseAlgContainer(m_childs.items[i]);
 end;
 
-procedure cAlgConfig.delAlg(a:cBaseAlgContainer);
+procedure cAlgConfig.delAlg(a: cBaseAlgContainer);
 var
-  I: Integer;
+  i: integer;
 begin
-  for I := 0 to ChildCount-1 do
+  for i := 0 to ChildCount - 1 do
   begin
-    if a=getAlg(i) then
+    if a = getAlg(i) then
     begin
       m_childs.Delete(i);
       exit;
@@ -1835,61 +1830,61 @@ begin
   end;
 end;
 
-function cAlgConfig.getprops(algNum:integer): string;
+function cAlgConfig.getprops(algNum: integer): string;
 var
-  extstr:string;
-  a:cbasealgcontainer;
+  extstr: string;
+  a: cBaseAlgContainer;
 begin
-  extstr:='';
-  if algNum<(ChildCount-1) then
+  extstr := '';
+  if algNum < (ChildCount - 1) then
   begin
-    a:=getAlg(algNum);
-    extstr:=a.getExtProp;
+    a := getAlg(algNum);
+    extstr := a.getExtProp;
   end;
-  result:=updateParams(m_str,extstr);
+  result := updateParams(m_str, extstr);
 end;
 
-function cAlgConfig.getprops:string;
+function cAlgConfig.getprops: string;
 begin
-  result:=getprops(0);
+  result := getprops(0);
 end;
 
 function cAlgConfig.getwnd: TWndType;
 var
-  a:cbasealgcontainer;
-  s:cspm;
+  a: cBaseAlgContainer;
+  s: cSpm;
 begin
-  a:=getAlg(0);
-  result:=wdRect;
-  if a is cspm then
+  a := getAlg(0);
+  result := wdRect;
+  if a is cSpm then
   begin
-    s:=cspm(a);
-    Result:=s.GetWndType;
+    s := cSpm(a);
+    result := s.GetWndType;
   end;
 end;
 
 procedure cAlgConfig.setprops(s: string);
 var
-  a:cbasealgcontainer;
-  I: Integer;
-  b:boolean;
+  a: cBaseAlgContainer;
+  i: integer;
+  b: boolean;
 begin
-  ///m_str:=s;
-  m_str:=updateParams(m_str, s);
-  if ChildCount>0 then
+  /// m_str:=s;
+  m_str := updateParams(m_str, s);
+  if ChildCount > 0 then
   begin
     ecm(b);
-    if ChildCount=1 then
-      m_str:=updateParams(m_str, s)
+    if ChildCount = 1 then
+      m_str := updateParams(m_str, s)
     else
     begin
-      a:=getAlg(0);
-      m_str:=DelParams(m_str,a.getExtProp, ',');
+      a := getAlg(0);
+      m_str := DelParams(m_str, a.getExtProp, ',');
     end;
-    for I := 0 to ChildCount - 1 do
+    for i := 0 to ChildCount - 1 do
     begin
-      a:=getAlg(i);
-      a.Properties:=m_str;
+      a := getAlg(i);
+      a.Properties := m_str;
     end;
     // выходим если входили в этой функции
     if b then

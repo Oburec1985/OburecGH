@@ -860,8 +860,6 @@ var
   i: integer;
   w: TWrkPoint;
 begin
-  // logMessage('TCntrlWrnChart.UpdateData tid: '+inttostr(GetCurrentThreadId));
-  // spmChart.activePage.caption := modname(spmChart.activePage.caption, false);
   for i := 0 to GraphCount - 1 do
   begin
     w := getWP(i);

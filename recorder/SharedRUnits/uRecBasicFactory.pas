@@ -720,7 +720,6 @@ begin
     Result := E_NOINTERFACE; }
   if IsEqualIID(IID, IID_IVForm) then
   begin
-    //showmessage(g_logFile.filename);
     IVForm(Obj) := IVForm(self); // self as IVForm;
     // _AddRef();
     result := S_OK;

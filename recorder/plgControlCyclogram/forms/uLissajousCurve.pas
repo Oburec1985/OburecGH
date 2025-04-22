@@ -417,7 +417,6 @@ begin
     s := GetSignal(i);
     if s.m_updateDrawInterval then
     begin
-      //logMessage('LisFrm_01');
       s.m_tx.RebuildReadBuff(true, s.m_comInterval);
       s.m_ty.RebuildReadBuff(true, s.m_comInterval);
       // предполагается что частоты одинаковы!!! по X и по Y
@@ -461,7 +460,6 @@ begin
     end;
   end;
   m_Chart.redraw;
-  logMessage('LisFrm_03');
 end;
 
 procedure TLissajousFrm.WndProc(var Message: TMessage);

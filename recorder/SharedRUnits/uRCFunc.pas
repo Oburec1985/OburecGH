@@ -433,7 +433,6 @@ begin
     err := ir.GetLastError;
     errMes := ir.ConvertErrorCodeToString(err);
     exit;
-    // showmessage(errMes);
   end;
   // установка типа тега : вектор, прием и передача
   VariantInit(v);
@@ -1012,7 +1011,6 @@ function ecm(var changeState: boolean): boolean;
 begin
   //if TExtRecorderPack(G_Plg).m_leavecfgNotify then
   //begin
-  //  showmessage('Повторный вход в конфигурацию! при выходе из конфигурирования (function ecm(var)...)');
   //end;
   //if RStateConfig or TExtRecorderPack(G_Plg).m_leavecfgNotify then
   if RStateConfig then
@@ -1368,7 +1366,6 @@ begin
     else
     begin
       m_lastindex:=0;
-      // showmessage('lastindex<0: cTag.ResetTagDataTimeInd(endTimeInd:integer) - ZeroMemory(@m_ReadData[lastindex], (m_ReadSize-m_lastindex)*sizeof(double))')
     end;
   end;
 end;
@@ -1739,12 +1736,11 @@ begin
         // брать надо не все блоки в буфере, а только новые!!!
         //for i := 0 to m_newBlockCount - 1 do
         //begin
-        //  blInd:= i + blCount - m_newBlockCount;
+
         //  endTime:=block.GetBlockDeviceTime(i);
         //  str:=str+floattostr(endTime)+'; ';
         //end;
         //if tagname='молоток' then
-        //  logmessage(str);
 
         BuildReadBuff(tare, AutoResetData);
       end;
@@ -1795,7 +1791,6 @@ begin
     begin
       if m_lastindex < 0 then
       begin
-        // showmessage('uRCFunc cTag.UpdateTagData 1297:m_lastindex<0');
       end
       else
       begin
@@ -1809,6 +1804,14 @@ begin
         end;
 
         // ERROR
+        if m_lastindex<0 then
+        begin
+          showmessage('m_lastindex<0');
+        end;
+        if m_lastindex+block.GetBlocksSize >length(m_ReadData) then
+        begin
+          showmessage('m_lastindex+block.GetBlocksSize >length(m_ReadData)');
+        end;
         move(m_TagData[0], m_ReadData[m_lastindex], block.GetBlocksSize * (sizeof(double)));
         m_lastindex := m_lastindex + block.GetBlocksSize;
       end;

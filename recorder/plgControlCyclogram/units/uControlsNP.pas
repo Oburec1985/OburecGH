@@ -146,11 +146,11 @@ begin
 
   if a_dwCommand=v_NotifyMBaseChangePath then
   begin
-    case a_dwData of
-      0:logMessage('ChangeObj');
-      1:logMessage('ChangeTest');
-      2:logMessage('ChangeReg');
-    end;
+    //case a_dwData of
+    //  0:logMessage('ChangeObj');
+    //  1:logMessage('ChangeTest');
+    //  2:logMessage('ChangeReg');
+    //end;
   end;
   if a_dwCommand=v_NotifyMBaseSetProperties then
   begin
@@ -164,11 +164,11 @@ begin
   end;
   if a_dwCommand=v_NotifyMBaseChangePath then
   begin
-    case a_dwData of
-      0:logMessage('ChangeObj');
-      1:logMessage('ChangeTest');
-      2:logMessage('ChangeReg');
-    end;
+//    case a_dwData of
+//      0:logMessage('ChangeObj');
+//      1:logMessage('ChangeTest');
+//      2:logMessage('ChangeReg');
+//    end;
   end;
 end;
 

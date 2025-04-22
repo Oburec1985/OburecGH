@@ -188,12 +188,10 @@ begin
     begin
       // сколько всего
       readyBlockCount := InTag.block.GetReadyBlocksCount;
-      // logMessage('ReadyBlock: ' + inttostr(readyBlockCount));
       // если количество блоков больше чем кол-во обработанных блоков (т.е. есть новые данные)
       if readyBlockCount > InTag.m_readyBlock then
       begin
         newBlockCount := readyBlockCount - InTag.m_readyBlock;
-        // logMessage('newBlockCount: ' + inttostr(newBlockCount));
         BufCount := newBlockCount;
         // если готовых блоков больше чем размер буфера, то есть потери,
         // но с этим уже ничего не поделать
@@ -206,13 +204,11 @@ begin
           // например новых блоков 2. Последний блок в буфере всегда имеет последний тайм штамп.
           // Тогда, в цикле получаем блоки с последнего необработанного
           blInd := I + blCount - newBlockCount;
-          // logMessage('blInd: ' + inttostr(newBlockCount));
           if SUCCEEDED(InTag.block.GetVectorR8(pointer(InTag.m_TagData)^,
               blInd, blSize, tare)) then
           begin
             timeinterval := InTag.block.GetBlockDeviceTime(blInd);
           end;
-          // logMessage('BlInd:'+inttostr(blInd)+' Time:'+format('%.3g', [timeinterval]));
           // пишем блок данных
           doEval(InTag, timeinterval);
         end;

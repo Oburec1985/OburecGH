@@ -4,7 +4,7 @@ interface
 
 uses
   classes, windows, activex, ubasealg, uCommonMath, uRCFunc, tags, recorder,
-  blaccess, nativexml,
+  blaccess, nativexml,  MathFunction,
   pluginclass, sysutils;
 
 type
@@ -26,6 +26,8 @@ type
     NullTag: cTag;
     m_NullPrev:double;
   protected
+    // поискать входные теги
+    procedure LinkTags; override; // doRcInit
     procedure LoadTags(node: txmlNode);override;
     procedure SetProperties(str: string); override;
     function GetProperties: string; override;
@@ -71,23 +73,27 @@ begin
   fRelative:=true;
   TrigTag:=cTag.create;
   NullTag:=cTag.create;
+  fOutTag:=cTag.create;
+  fOutTag.owner:=m_outTags;
 end;
 
 destructor cCounterAlg.destroy;
 begin
   TrigTag.destroy;
   NullTag.destroy;
+  fOutTag.destroy;
   inherited;
 end;
 
 procedure cCounterAlg.doEval(tag: cTag; time: double);
 var
-  I, len: Integer;
-  v, null, a, h,l, lmin, lmax: double;
+  I, j, len, blCount: Integer;
+  v, null, a, h,l: double;
   // уровень выше hi, начинаем искать спад
   b, drop: boolean;
 begin
-  len := length(tag.m_TagData);
+  len := tag.lastindex;
+  blCount:=round(len/fOutTag.BlockSize);
   null:=NullTag.GetMeanEst;
   if null<>m_NullPrev then
   begin
@@ -96,124 +102,94 @@ begin
   end;
   if TrigTag.GetMeanEst=0 then
   begin
-    for I := 0 to len - 1 do
+    for j := 0 to blCount - 1 do
     begin
-      fOutTag.m_TagData[I] := fCounter;
+      for I := 0 to fOutTag.BlockSize - 1 do
+      begin
+        fOutTag.m_TagData[I] := fCounter;
+      end;
+      //logmessage('time: '+formatstrNoE(time,4));
+      fOutTag.tag.PushDataEx(@fOutTag.m_TagData[0], fOutTag.BlockSize, time+j*tag.getPortionLen, time+j*tag.getPortionLen);
+      exit;
     end;
-    fOutTag.tag.PushDataEx(@fOutTag.m_TagData[0], len, 0, time);
-    exit;
   end;
 
   h:=hi;
   l:=lo;
   fOutTag.m_TagData[0] := fCounter;
-  lmin:= tag.m_TagData[1];
-  lmax:= tag.m_TagData[1];
-  for I := 0 to len - 1 do
+  for j := 0 to blCount - 1 do
   begin
-    v := tag.m_TagData[I];
-    lmin:=min(lmin,v,b);
-    lmax:=max(lmax,v, b);
-    case m_statetrig of
-      0:
-      begin
-        if v>l then
+    for I := 0 to len - 1 do
+    begin
+      v := tag.m_ReadData[I+j*tag.BlockSize];
+
+      case m_statetrig of
+        0:
         begin
-          m_statetrig:=1;
-        end;
-      end;
-      1:
-      begin
-        if v<l then
-        begin
-          m_statetrig:=0;
-        end
-        else
-        begin
-          if v>h then
+          if v>l then
           begin
-            m_statetrig:=2;
+            m_statetrig:=1;
+          end;
+        end;
+        1:
+        begin
+          if v<l then
+          begin
+            m_statetrig:=0;
+          end
+          else
+          begin
+            if v>h then
+            begin
+              m_statetrig:=2;
+            end;
+          end;
+        end;
+        2:
+        begin
+          if v<l then
+          begin
+            a:=GetAmp(InTag.tag);
+            if a>fMinThreshold then
+            begin
+              inc(fcounter);
+            end;
+            m_statetrig:=0;
           end;
         end;
       end;
-      2:
-      begin
-        if v<l then
-        begin
-          a:=GetAmp(InTag.tag);
-          if a>fMinThreshold then
-          begin
-            inc(fcounter);
-          end;
-          m_statetrig:=0;
-        end;
-      end;
+      fOutTag.m_TagData[I] := fCounter;
     end;
-    fOutTag.m_TagData[I] := fCounter;
+    m_NullPrev:=null;
+    //logmessage('time: '+formatstrNoE(time,4));
+    fOutTag.tag.PushDataEx(@fOutTag.m_TagData[0], tag.BlockSize, time+j*tag.getPortionLen, time+j*tag.getPortionLen);
   end;
-  m_NullPrev:=null;
-  fOutTag.tag.PushDataEx(@fOutTag.m_TagData[0], len, 0, time);
 end;
 
 procedure cCounterAlg.doGetData;
 var
-  I, BufCount, newBlockCount, blCount, readyBlockCount, blSize, blInd,
-    writeBlockSize: Integer;
-  tare: boolean;
-  timeinterval: double;
+  b:boolean;
 begin
+  if InTag.block = nil then
+    exit;
   if InTag <> nil then
   begin
-    InTag.block.LockVector;
-    blCount := InTag.block.GetBlocksCount;
-    blSize := InTag.block.GetBlocksSize;
-    writeBlockSize := fOutTag.block.GetBlocksSize;
-    if writeBlockSize > length(fOutTag.m_TagData) then
+    b:=InTag.UpdateTagData(true);
+    if b then
     begin
-      setlength(fOutTag.m_TagData, writeBlockSize);
+      doEval(InTag, InTag.m_ReadDataTime);
+      //logmessage('InTag: '+formatstrNoE(InTag.m_ReadDataTime,4));
+      //logmessage('InTag: '+inttostr(InTag.lastindex));
+      InTag.ResetTagData();
     end;
-    readyBlockCount := 0;
-    if blCount > 0 then
-    begin
-      // сколько всего
-      readyBlockCount := InTag.block.GetReadyBlocksCount;
-      //logMessage('ReadyBlock: ' + inttostr(readyBlockCount));
-      // если количество блоков больше чем кол-во обработанных блоков (т.е. есть новые данные)
-      if readyBlockCount > InTag.m_readyBlock then
-      begin
-        newBlockCount := readyBlockCount - InTag.m_readyBlock;
-        logMessage('newBlockCount: ' + inttostr(newBlockCount));
-        BufCount := newBlockCount;
-        // если готовых блоков больше чем размер буфера, то есть потери,
-        // но с этим уже ничего не поделать
-        if newBlockCount > blCount then
-          BufCount := newBlockCount;
-        for I := 0 to BufCount - 1 do
-        begin
-          InTag.m_readyBlock := readyBlockCount;
-          tare := true;
-          // например новых блоков 2. Последний блок в буфере всегда имеет последний тайм штамп.
-          // Тогда, в цикле получаем блоки с последнего необработанного
-          blInd := I + blCount - newBlockCount;
-          //logMessage('blInd: ' + inttostr(newBlockCount));
-          if SUCCEEDED(InTag.block.GetVectorR8(pointer(InTag.m_TagData)^,
-              blInd, blSize, tare)) then
-          begin
-            timeinterval := InTag.block.GetBlockDeviceTime(blInd);
-          end;
-          // logMessage('BlInd:'+inttostr(blInd)+' Time:'+format('%.3g', [timeinterval]));
-          // пишем блок данных
-          doEval(InTag, timeinterval);
-        end;
-      end;
-    end;
-    InTag.block.unLockVector;
   end;
 end;
 
 procedure cCounterAlg.doOnStart;
 begin
   inherited;
+  InTag.doOnStart;
+  fOutTag.doOnStart;
   fCounter := 0;
   m_statetrig:=0;
 end;
@@ -234,8 +210,7 @@ begin
 
   if intag<>nil then
     result:='Channel='+intag.tagname;
-  if fOutTag<>nil then
-    result:=result+',OutChannel='+foutTag.tagname;
+  result:=result+',OutChannel='+foutTag.tagname;
 end;
 
 function cCounterAlg.getHi: double;
@@ -274,6 +249,29 @@ end;
 function cCounterAlg.getinptag: itag;
 begin
 
+end;
+
+procedure cCounterAlg.LinkTags;
+var
+  mask:Cardinal;
+begin
+  inherited;
+  if intag.tag=nil then
+  begin
+    InTag.tagname:=InTag.tagname;
+    setflag(mask,ESTIMATOR_MEAN);
+    setflag(mask,ESTIMATOR_PEAK);
+    InTag.tag.SetEstimatorsMask(mask);
+  end;
+
+  if fOutTag.tagname<>'' then
+  begin
+    if fOutTag.tag=nil then
+    begin
+      if InTag.tag<>nil then
+        createOutChan;
+    end;
+  end;
 end;
 
 procedure cCounterAlg.LoadObjAttributes(xmlNode: txmlNode; mng: tobject);
@@ -321,6 +319,7 @@ end;
 procedure cCounterAlg.setinptag(t: cTag);
 var
   bl: IBlockAccess;
+  mask:cardinal;
 begin
   if t = nil then
     exit;
@@ -331,6 +330,9 @@ begin
   end;
   InTag := t;
   addInputTag(InTag);
+  setflag(mask,ESTIMATOR_MEAN);
+  setflag(mask,ESTIMATOR_PEAK);
+  t.tag.SetEstimatorsMask(mask);
   if not FAILED(t.tag.QueryInterface(IBlockAccess, bl)) then
   begin
     InTag.block := bl;
@@ -346,8 +348,6 @@ procedure cCounterAlg.setinptag(t: itag);
 var
   bl: IBlockAccess;
 begin
-  if t = nil then
-    exit;
   if InTag = nil then
   begin
     InTag := cTag.create;
@@ -361,10 +361,6 @@ begin
     InTag.block := bl;
     bl := nil;
   end;
-  if fOutTag = nil then
-    createOutChan
-  else
-    updateOutChan;
 end;
 
 function cCounterAlg.GetProperties: string;
@@ -416,7 +412,20 @@ begin
     begin
       InTag := cTag.create;
       t := getTagByName(lstr);
-      setinptag(t);
+      if t<>nil then
+      begin
+        setinptag(t);
+        if fOutTag.tag = nil then
+          createOutChan
+        else
+        begin
+          updateOutChan;
+        end;
+      end
+      else
+      begin
+        fOutTag.tagname:=lstr+'_cnt';
+      end;
     end;
     ChangeCTag(InTag, lstr);
   end;
@@ -435,7 +444,6 @@ begin
   begin
     err := ir.GetLastError;
     errMes := ir.ConvertErrorCodeToString(err);
-    // showmessage(errMes);
   end;
   // установка типа тега : вектор, прием и передача
   VariantInit(v);
@@ -455,12 +463,6 @@ begin
   result.SetProperty(TAGPROP_DATATYPE, v);
   result.CfgWritable(CfgWritable);
   // минимальное и максимальное значение диапазона
-  // VariantClear(v);
-  // m_TestWriteVTag.getProperty(TAGPROP_MINVALUE, v);
-  // m_TestVTag.SetProperty(TAGPROP_MINVALUE, v);
-  // VariantClear(v);
-  // m_TestWriteVTag.getProperty(TAGPROP_MAXVALUE, v);
-  // m_TestWriteVTag.SetProperty(TAGPROP_MAXVALUE, v);
 end;
 
 function cCounterAlg.genTagName: string;
@@ -481,7 +483,6 @@ begin
     if InTag.tag <> nil then
     begin
       ecm;
-      fOutTag := cTag.create;
       fOutTag.tag := createVectorTagR8(genTagName, InTag.tag.getfreq, false);
       if not FAILED(fOutTag.tag.QueryInterface(IBlockAccess, bl)) then
       begin

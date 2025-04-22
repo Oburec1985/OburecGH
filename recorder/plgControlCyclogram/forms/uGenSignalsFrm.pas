@@ -10,6 +10,7 @@ uses
   activex,
   blaccess,
   urcfunc,
+  PerformanceTime,
   ucommonmath, MathFunction, uMyMath,
   uRecorderEvents, ubaseObj, uCommonTypes,
   uRTrig, ubasealg, uBuffTrend1d, tags,
@@ -178,6 +179,7 @@ type
     Timer1: TTimer;
     // время в часах Timer1
     time:double;
+    m_PerfTime:TPerformanceTime;
   private
     m_init:boolean;
     m_counter: integer;
@@ -227,6 +229,7 @@ const
 
 constructor cGenSignalsFactory.create;
 begin
+  m_PerfTime:=TPerformanceTime.create;
   m_lRefCount := 1;
   m_counter := 0;
   m_name := c_Name;
@@ -241,6 +244,8 @@ end;
 
 destructor cGenSignalsFactory.destroy;
 begin
+  m_PerfTime.Destroy;
+
   Timer1.Enabled:=false;
   Timer1.destroy;
   DestroyEvents;
@@ -348,9 +353,10 @@ var
   I: Integer;
   sigList:TGenSignalsFrm;
 begin
+  m_PerfTime.Start;
   time:=0;
-  Timer1.enabled:=True;
   Timer1.Interval:=round(getrefreshperiod*1000);
+  Timer1.enabled:=True;
   for I := 0 to m_CompList.Count- 1 do
   begin
     sigList:=TGenSignalsFrm(GetFrm(i));
@@ -525,6 +531,7 @@ begin
   for I := 0 to signals.Count - 1 do
   begin
     s:=cGenSig(signals.items[i]);
+    s.m_t.doOnStart;
     s.Phase:=0;
     // частота процесса на частоту дискретизации
     s.m_dPhase:=c_2pi*(s.freq);
@@ -766,6 +773,7 @@ var
   dtstart, dt, curT, TimeLength, blen:double;
 begin
   curT:=g_GenSignalsFactory.time;
+  //curT:=g_GenSignalsFactory.m_PerfTime.CurTime;
   dtstart:=curT-m_prevTime;
   FormTimerLabel.Caption:='Tформ: '+floattostr(curT);
   //SysTimerLabel.Caption:='Trec: '+floattostr(RecorderSysTime);
@@ -790,6 +798,7 @@ begin
       dt:=dt-TimeLength;
       p:=@s.m_t.m_TagData[0];
       blen:= s.m_ReadyBlock*s.m_t.m_blLen;
+      logmessage('bllen: '+ formatstr(blen, 4)+'curT: ' + formatstr(curT, 4));
       s.m_t.tag.PushDataEx(p, BlSize, blen, blen);
       inc(s.m_ReadyBlock);
       //s.m_t.tag.PushData(p^, BlSize);
