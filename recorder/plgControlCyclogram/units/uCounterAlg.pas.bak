@@ -435,7 +435,6 @@ begin
       if t<>nil then
       begin
         setinptag(t);
-        fOutTag.tagname:=lstr+'_cnt';
         if fOutTag.tag = nil then
           createOutChan
         else
@@ -465,7 +464,6 @@ begin
   begin
     err := ir.GetLastError;
     errMes := ir.ConvertErrorCodeToString(err);
-    exit;
   end;
   // установка типа тега : вектор, прием и передача
   VariantInit(v);
@@ -506,10 +504,6 @@ begin
     begin
       ecm;
       fOutTag.tag := createVectorTagR8(genTagName, InTag.tag.getfreq, false);
-      if fOutTag.tag=nil then
-      begin
-        fOutTag.tagname:=fOutTag.tagname;
-      end;
       if not FAILED(fOutTag.tag.QueryInterface(IBlockAccess, bl)) then
       begin
         fOutTag.block := bl;
