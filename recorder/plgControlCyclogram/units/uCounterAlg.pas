@@ -94,23 +94,29 @@ var
 begin
   len := tag.lastindex;
   blCount:=round(len/fOutTag.BlockSize);
-  null:=NullTag.GetMeanEst;
-  if null<>m_NullPrev then
+  if NullTag.tag<>nil then
   begin
-    drop:=true;
-    fCounter:=0;
-  end;
-  if TrigTag.GetMeanEst=0 then
-  begin
-    for j := 0 to blCount - 1 do
+    null:=NullTag.GetMeanEst;
+    if null<>m_NullPrev then
     begin
-      for I := 0 to fOutTag.BlockSize - 1 do
+      drop:=true;
+      fCounter:=0;
+    end;
+  end;
+  if TrigTag.tag<>nil then
+  begin
+    if TrigTag.GetMeanEst=0 then
+    begin
+      for j := 0 to blCount - 1 do
       begin
-        fOutTag.m_TagData[I] := fCounter;
+        for I := 0 to fOutTag.BlockSize - 1 do
+        begin
+          fOutTag.m_TagData[I] := fCounter;
+        end;
+        //logmessage('time: '+formatstrNoE(time,4));
+        fOutTag.tag.PushDataEx(@fOutTag.m_TagData[0], fOutTag.BlockSize, time+j*tag.getPortionLen, time+j*tag.getPortionLen);
+        exit;
       end;
-      //logmessage('time: '+formatstrNoE(time,4));
-      fOutTag.tag.PushDataEx(@fOutTag.m_TagData[0], fOutTag.BlockSize, time+j*tag.getPortionLen, time+j*tag.getPortionLen);
-      exit;
     end;
   end;
 
@@ -119,7 +125,7 @@ begin
   fOutTag.m_TagData[0] := fCounter;
   for j := 0 to blCount - 1 do
   begin
-    for I := 0 to len - 1 do
+    for I := 0 to tag.BlockSize - 1 do
     begin
       v := tag.m_ReadData[I+j*tag.BlockSize];
 
@@ -161,8 +167,9 @@ begin
       fOutTag.m_TagData[I] := fCounter;
     end;
     m_NullPrev:=null;
-    //logmessage('time: '+formatstrNoE(time,4));
-    fOutTag.tag.PushDataEx(@fOutTag.m_TagData[0], tag.BlockSize, time+j*tag.getPortionLen, time+j*tag.getPortionLen);
+    //logmessage('Counter time: '+formatstrNoE(time+j*tag.m_blLen,4)
+    // + ' blCount: '+INTToSTR(blCount)+ ' fCount: '+INTToSTR(fCounter));
+    fOutTag.tag.PushDataEx(@fOutTag.m_TagData[0], tag.BlockSize, time+j*tag.m_blLen, time+j*tag.m_blLen);
   end;
 end;
 
@@ -180,7 +187,7 @@ begin
       doEval(InTag, InTag.m_ReadDataTime);
       //logmessage('InTag: '+formatstrNoE(InTag.m_ReadDataTime,4));
       //logmessage('InTag: '+inttostr(InTag.lastindex));
-      InTag.ResetTagData();
+      InTag.ResetTagData(InTag.lastindex);
     end;
   end;
 end;
