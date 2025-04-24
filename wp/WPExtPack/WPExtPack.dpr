@@ -101,7 +101,8 @@ uses
   uLogFile in '..\..\sharedUtils\utils\uLogFile.pas',
   uFFTFlt in 'units\uFFTFlt.pas',
   uFFTfltFrm in 'forms\uFFTfltFrm.pas' {FFTFltFrm},
-  uLissajousFrm in 'forms\uLissajousFrm.pas' {LissajousFrm};
+  uLissajousFrm in 'forms\uLissajousFrm.pas' {LissajousFrm},
+  uGrahamScan in '..\..\sharedUtils\math\uGrahamScan.pas';
 
 exports
   DllGetClassObject,

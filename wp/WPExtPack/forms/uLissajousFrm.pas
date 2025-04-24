@@ -7,7 +7,7 @@ uses
   Dialogs, ExtCtrls, ComCtrls, uBtnListView, StdCtrls, ImgList, ToolWin,
   uWPproc, uCommonMath, NativeXML, uComponentServises, uExcel, ulogfile,
   uSetList, inifiles, PathUtils, uTrigLvlEditFrm, uTmpltNameFrame,
-  uSpin, DCL_MYOWN,
+  uSpin, DCL_MYOWN, uGrahamScan,
   uCommonTypes, Winpos_ole_TLB,
   uChart, uWPServices, uBuffTrend2d, upage;
 
@@ -21,8 +21,13 @@ type
     m_count:integer;
     m_capacity:integer;
     line:cBuffTrend2d;
+    grahem:pointsarray;
+    p1,p2:point2; // диаметр
+    Dtrend:cBuffTrend2d;
+    dist:double;
   public
     constructor create (p_x,p_y:cwpsignal);
+    destructor destroy();
   end;
 
   TLissajousFrm = class(TForm)
@@ -51,6 +56,8 @@ type
     Label6: TLabel;
     IncFe: TFloatEdit;
     Timer1: TTimer;
+    DistFe: TFloatEdit;
+    Label7: TLabel;
     procedure FormShow(Sender: TObject);
     procedure XCbDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
@@ -183,7 +190,17 @@ begin
       sig.m_data[j].y:=sig.y.Signal.GetY(c2);
     end;
     sig.line.addpoints(sig.m_data, sig.m_count);
+
+    sig.grahem:=GrahamScan(pointsarray(@sig.m_data[0]), sig.m_count);
+    FindDiameter(sig.grahem, sig.p1, sig.p2,sig.dist);
+    sig.Dtrend.data[0]:=sig.p1;
+    sig.Dtrend.data[1]:=sig.p2;
+
+    distfe.FloatNum:=sig.dist;
+    sig.Dtrend.needUpdateBound:=true;
+    sig.Dtrend.needRecompile:=true;
   end;
+
   LissajousFrm.Chart.redraw;
   startfe.FloatNum:=startfe.FloatNum+IncFe.FloatNum;
 end;
@@ -226,7 +243,8 @@ var
   fl:double;
 begin
   f:=tinifile.Create(startdir+'\Opers\Lissajous.ini');
-  count:=f.ReadInteger('main', 'sCount',0);
+  //count:=f.ReadInteger('main', 'sCount',1);
+  count:=1;
   pCount.IntNum:=f.ReadInteger('main', 'Portion',512);
   src:=wp.GetCurSrcInMainWnd;
   ClearSignals;
@@ -408,6 +426,7 @@ begin
   name:=x.name+'_'+y.name;
   line:=cBuffTrend2d.create;
   cpage(LissajousFrm.Chart.activepage).activeAxis.addchild(line);
+
   r.BottomLeft.x:=LissajousFrm.xminfe.Value;
   r.BottomLeft.y:=LissajousFrm.yminfe.Value;
   r.TopRight.x:=LissajousFrm.xmaxfe.Value;
@@ -415,6 +434,19 @@ begin
   cpage(LissajousFrm.Chart.activepage).ZoomfRect(r);
   m_capacity:=16384;
   SetLength(m_data,m_capacity);
+  Dtrend:=cBuffTrend2d.create;
+  cpage(LissajousFrm.Chart.activepage).activeAxis.addchild(Dtrend);
+  Dtrend.Count:=2;
+  Dtrend.drawLines:=true;
+  Dtrend.drawpoint:=true;
+  Dtrend.visible:=true;
+  Dtrend.color:=green;
+end;
+
+destructor TLisSig.destroy;
+begin
+  name:=x.name+'_'+y.name;
+  Dtrend.destroy;
 end;
 
 end.

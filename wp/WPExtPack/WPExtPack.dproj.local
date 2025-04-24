@@ -180,6 +180,7 @@
     <File Path="..\..\sharedUtils\math\uCommonMath.pas"/>
     <File Path="..\..\sharedUtils\math\uFFT.pas"/>
     <File Path="..\..\sharedUtils\math\uMNK.pas"/>
+    <File Path="..\..\sharedUtils\math\uGrahamScan.pas"/>
     <File Path="..\..\sharedUtils\mera"/>
     <File Path="..\..\sharedUtils\mera\database"/>
     <File Path="..\..\sharedUtils\mera\database\uDBObject.pas"/>

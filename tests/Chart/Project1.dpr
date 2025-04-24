@@ -2,7 +2,8 @@ program Project1;
 
 uses
   Forms,
-  uMainFrmChart in 'uMainFrmChart.pas' {Form1};
+  uMainFrmChart in 'uMainFrmChart.pas' {Form1},
+  uGrahamScan in '..\..\sharedUtils\math\uGrahamScan.pas';
 
 {$R *.res}
 

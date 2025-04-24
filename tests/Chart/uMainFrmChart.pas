@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls,
   uChart, u2dmath,
-  ucommontypes, uPoint, MathFunction, uCommonMath,
+  ucommontypes, uPoint, MathFunction, uCommonMath, uGrahamScan,
+  uGrahamScan2,
   upage, uAxis, ubasictrend, uBuffTrend2d,
   StdCtrls;
 
@@ -16,7 +17,7 @@ type
     ListBox1: TListBox;
     procedure FormCreate(Sender: TObject);
   public
-    grahem:TPointArray;
+    grahem:pointsarray;
     m_diam:TDiameterResult;
   private
     procedure DoInit(sender:tobject);
@@ -42,7 +43,8 @@ var
   r:fRect;
   t:cBuffTrend2d;
   I: Integer;
-  p:point2;
+  p,p1:point2;
+  dist:double;
 begin
   chart:=cChart.Create(nil);
   chart.Parent:=self;
@@ -50,21 +52,24 @@ begin
   chart.Align:=alClient;
   chart.OnInit:=DoInit;
   r.BottomLeft:=p2(-10,-10);
-  r.TopRight:=p2(10,10);
-  t:=cBuffTrend2d.create;
+  //r.TopRight:=p2(10,10);
+
   cpage(chart.activePage).ZoomfRect(r);
+
+  t:=cBuffTrend2d.create;
+  t.drawLines:=true;
   cpage(chart.activePage).activeAxis.AddChild(t);
   t.drawpoint:=true;
-
   // ύλθορ X:=A*cos(w*t+ph) Y:=B*cos(w*t+ph)
-  p.x:=0;
-  p.y:=0;
-  t.addpoint(p);
   p.x:=1;
   p.y:=0;
   t.addpoint(p);
   p.x:=1;
   p.y:=1;
+  t.addpoint(p);
+  p.x:=0;
+  p.y:=0;
+
   t.addpoint(p);
   p.x:=0;
   p.y:=1;
@@ -78,21 +83,28 @@ begin
   p.x:=0.52;
   p.y:=0.6;
   t.addpoint(p);
-  p.x:=0.53;
-  p.y:=0.6;
-  t.addpoint(p);
-  p.x:=0.54;
-  p.y:=0.6;
-  t.addpoint(p);
+  //t.addpoints(tpointarray(@t.data[0]),9);
 
-  t.visible:=false;
-  setlength(grahem, 9);
-  grahem:=GrahamScanWithDiameter(tpointarray(@t.data[0]),9,m_diam);
+  t.visible:=true;
+  setlength(grahem, 7);
+  //grahem:=GrahamScanWithDiameter(tpointarray(@t.data[0]),9,m_diam);
+  grahem:=GrahamScan(pointsarray(@t.data[0]), 7);
+  FindDiameter(grahem, p,p1 ,dist);
 
   t:=cBuffTrend2d.create;
   cpage(chart.activePage).activeAxis.AddChild(t);
   t.drawpoint:=true;
   t.addpoints(grahem, length(grahem));
+  t.color:=red;
+
+  t:=cBuffTrend2d.create;
+  cpage(chart.activePage).activeAxis.AddChild(t);
+  t.drawpoint:=true;
+  t.addpoint(p);
+  t.addpoint(p1);
+  t.color:=green;
+
+
 end;
 
 end.

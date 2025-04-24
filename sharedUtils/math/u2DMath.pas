@@ -24,7 +24,7 @@ type
   end;
 
   // поиск выпуклой оболочки
-  function GrahamScan(const Points: TPointArray; p_size:integer): TPointArray;
+  //function GrahamScan(const Points: TPointArray; p_size:integer): TPointArray;
   function GrahamScanWithDiameter(const Points: TPointArray; p_size:integer;
           out Diameter: TDiameterResult): TPointArray;
 

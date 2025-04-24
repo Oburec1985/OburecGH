@@ -6,5 +6,6 @@
     <Transaction>2024.12.20 18:54:01.769.dproj,C:\Users\Skripnik\Documents\RAD Studio\Projects\Project1.dproj=F:\Oburec\delphi\2011\OburecGH\tests\Chart\Project1.dproj</Transaction>
     <Transaction>2024.12.20 18:54:59.518.pas,F:\Oburec\delphi\2011\OburecGH\tests\Chart\uChart.pas=F:\Oburec\delphi\2011\OburecGH\tests\Chart\uMainFrmChart.pas</Transaction>
     <Transaction>2024.12.20 18:54:59.518.dfm,F:\Oburec\delphi\2011\OburecGH\tests\Chart\uChart.dfm=F:\Oburec\delphi\2011\OburecGH\tests\Chart\uMainFrmChart.dfm</Transaction>
+    <Transaction>2025.04.24 23:26:54.906.pas,C:\Oburec\OburecGH\sharedUtils\math\uGrahamScan2.pas=</Transaction>
   </Transactions>
 </BorlandProject>
