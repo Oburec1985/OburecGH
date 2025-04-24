@@ -24,6 +24,7 @@ type
     Label2: TLabel;
     NullTagCB: TRcComboBox;
     Label3: TLabel;
+    SaveOnStartCb: TCheckBox;
     procedure LoThresholdSEChange(Sender: TObject);
     procedure HiThresholdSEChange(Sender: TObject);
     procedure ChannelCBChange(Sender: TObject);
@@ -93,6 +94,8 @@ begin
 end;
 
 function TCounterAlgFrame.getProperties: string;
+var
+  b, err: Boolean;
 begin
   //inherited;
   if HiThresholdSE.text<>'' then
@@ -102,6 +105,12 @@ begin
 
   if MinThresholdSE.text<>'' then
     addParam(m_pars, 'MinThreshold', replaceChar(MinThresholdSE.text,',','.'));
+
+  b := GetMultiSelectComponentBool(SaveOnStartCb, err);
+  if not err then
+  begin
+    addParam(m_pars, 'SaveVal', booltostr(b));
+  end;
 
   if ChannelCB.text<>'' then
   begin
@@ -125,6 +134,7 @@ end;
 procedure TCounterAlgFrame.setProperties(s: string);
 var
   p:tnotifyevent;
+  str:string;
 begin
   inherited;
   // m_pars обновлен в inherited
@@ -137,6 +147,12 @@ begin
   HiThresholdSE.OnChange:=nil;
   HiThresholdSE.Text := GetParsValue(m_pars, 'Hi');
   HiThresholdSE.OnChange:=p;
+
+  str := GetParsValue(m_pars, 'SaveVal');
+  if checkstr(str) then
+  begin
+    SetMultiSelectComponentBool(SaveOnStartCb, StrToBool(str));
+  end;
 
   p:=MinThresholdSE.OnChange;
   MinThresholdSE.OnChange:=nil;

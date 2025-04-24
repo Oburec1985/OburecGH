@@ -143,6 +143,7 @@ type
     procedure SweepLgCBClick(Sender: TObject);
   private
     m_prevTime:double;
+    m_blCount:integer;
     signals:tlist;
   public
   private
@@ -527,6 +528,7 @@ var
   I: Integer;
   s:cGenSig;
 begin
+  m_blCount:=0;
   m_prevTime:=0;
   for I := 0 to signals.Count - 1 do
   begin
@@ -798,7 +800,12 @@ begin
       dt:=dt-TimeLength;
       p:=@s.m_t.m_TagData[0];
       blen:= s.m_ReadyBlock*s.m_t.m_blLen;
-      logmessage('bllen: '+ formatstr(blen, 4)+'curT: ' + formatstr(curT, 4));
+      if (i=0) then
+      begin
+        //logmessage(' bllen: '+ formatstr(blen, 4)+' curT: ' + formatstr(curT, 4)
+        //  + ' blInd: '+ inttostr(m_blCount));
+        inc(m_blCount);
+      end;
       s.m_t.tag.PushDataEx(p, BlSize, blen, blen);
       inc(s.m_ReadyBlock);
       //s.m_t.tag.PushData(p^, BlSize);
