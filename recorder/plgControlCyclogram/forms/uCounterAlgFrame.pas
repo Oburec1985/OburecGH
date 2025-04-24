@@ -25,6 +25,8 @@ type
     NullTagCB: TRcComboBox;
     Label3: TLabel;
     SaveOnStartCb: TCheckBox;
+    Label4: TLabel;
+    ShiftTagCB: TRcComboBox;
     procedure LoThresholdSEChange(Sender: TObject);
     procedure HiThresholdSEChange(Sender: TObject);
     procedure ChannelCBChange(Sender: TObject);
@@ -91,6 +93,7 @@ begin
   ChannelCB.updateTagsList;
   TrigCB.updateTagsList;
   NullTagCB.updateTagsList;
+  ShiftTagCB.updateTagsList;
 end;
 
 function TCounterAlgFrame.getProperties: string;
@@ -127,7 +130,11 @@ begin
   begin
     addParam(m_pars, 'NullTag', NullTagCB.text);
   end;
-
+  // канал смещения
+  if ShiftTagCB.text<>'' then
+  begin
+    addParam(m_pars, 'ShiftTag', ShiftTagCB.text);
+  end;
   result:=ParsToStr(m_pars);
 end;
 
@@ -161,6 +168,7 @@ begin
 
   setcomboboxitem(GetParsValue(m_pars, 'TrigTag'), TrigCB);
   setcomboboxitem(GetParsValue(m_pars, 'NullTag'), NullTagCB);
+  setcomboboxitem(GetParsValue(m_pars, 'ShiftTag'), ShiftTagCB);
   setcomboboxitem(GetParsValue(m_pars, 'Channel'), ChannelCB);
   if channelcb.ItemIndex>0 then
   begin

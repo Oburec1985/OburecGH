@@ -527,6 +527,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             Margins.Bottom = 3
             Font.Height = -17
             ParentFont = False
+            ExplicitLeft = 4
             ExplicitTop = 81
             ExplicitWidth = 650
             ExplicitHeight = 273
@@ -1165,9 +1166,9 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             Margins.Right = 4
             Margins.Bottom = 4
             ExplicitLeft = 4
-            ExplicitTop = 24
+            ExplicitTop = 28
             ExplicitWidth = 548
-            ExplicitHeight = 300
+            ExplicitHeight = 296
             inherited ProgramCounterLabel: TLabel
               Left = 4
               Top = 69
@@ -1220,7 +1221,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              Value = 0
+              Value = 1
               ExplicitTop = 94
               ExplicitWidth = 158
               ExplicitHeight = 27

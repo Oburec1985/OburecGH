@@ -26,6 +26,8 @@ type
     InTag: cTag;
     TrigTag: cTag;
     NullTag: cTag;
+    // значение смещения счетчика (принимается извне и суммируется с fCounter)
+    ShiftTag: cTag;
     m_NullPrev:double;
   protected
     // поискать входные теги
@@ -63,6 +65,7 @@ type
 
 const
   C_CounterOpts = 'Hi=70,Lo=30';
+  c_maxCard = 4294967295;
 
 implementation
 
@@ -78,6 +81,7 @@ begin
   NullTag:=cTag.create;
   fOutTag:=cTag.create;
   fOutTag.owner:=m_outTags;
+  ShiftTag:=cTag.create;
 end;
 
 destructor cCounterAlg.destroy;
@@ -85,6 +89,7 @@ begin
   TrigTag.destroy;
   NullTag.destroy;
   fOutTag.destroy;
+  ShiftTag.destroy;
   inherited;
 end;
 
@@ -94,9 +99,18 @@ var
   v, null, a, h,l: double;
   // уровень выше hi, начинаем искать спад
   b, drop: boolean;
+  lshift:cardinal;
 begin
   len := tag.lastindex;
   blCount:=round(len/fOutTag.BlockSize);
+
+  if ShiftTag.tag<>nil then
+  begin
+    lshift:=round(ShiftTag.GetMeanEst);
+  end
+  else
+    lshift:=0;
+
   if NullTag.tag<>nil then
   begin
     null:=NullTag.GetMeanEst;
@@ -106,6 +120,7 @@ begin
       fCounter:=0;
     end;
   end;
+
   if TrigTag.tag<>nil then
   begin
     if TrigTag.GetMeanEst=0 then
@@ -114,7 +129,7 @@ begin
       begin
         for I := 0 to fOutTag.BlockSize - 1 do
         begin
-          fOutTag.m_TagData[I] := fCounter;
+          fOutTag.m_TagData[I] := fCounter+lshift;
         end;
         //logmessage('time: '+formatstrNoE(time,4));
         fOutTag.tag.PushDataEx(@fOutTag.m_TagData[0], fOutTag.BlockSize, time+j*tag.getPortionLen, time+j*tag.getPortionLen);
@@ -161,13 +176,16 @@ begin
             a:=GetAmp(InTag.tag);
             if a>fMinThreshold then
             begin
-              inc(fcounter);
+              if fCounter=c_maxCard then
+                fcounter:=0
+              else
+                inc(fcounter);
             end;
             m_statetrig:=0;
           end;
         end;
       end;
-      fOutTag.m_TagData[I] := fCounter;
+      fOutTag.m_TagData[I] := fCounter+lshift;
     end;
     m_NullPrev:=null;
     //logmessage('Counter time: '+formatstrNoE(time+j*tag.m_blLen,4)
@@ -423,6 +441,11 @@ begin
   if CheckStr(lstr) then
   begin
     NullTag.tagname:=lstr;
+  end;
+  lstr := GetParam(str, 'ShiftTag');
+  if CheckStr(lstr) then
+  begin
+    ShiftTag.tagname:=lstr;
   end;
 
   lstr := GetParam(str, 'Channel');
