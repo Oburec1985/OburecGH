@@ -549,7 +549,7 @@ begin
       SortedPoints[j] := SortedPoints[i];
   end;
   SetLength(SortedPoints, j + 1);
-
+  p_size:=j + 1;
   if Length(SortedPoints) < 3 then
   begin
     Result := SortedPoints;

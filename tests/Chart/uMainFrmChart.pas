@@ -55,18 +55,39 @@ begin
   cpage(chart.activePage).ZoomfRect(r);
   cpage(chart.activePage).activeAxis.AddChild(t);
   t.drawpoint:=true;
-  for I := 0 to 9 do
-  begin
-    // ύλθορ X:=A*cos(w*t+ph) Y:=B*cos(w*t+ph)
-    p.x:=2*cos(pi/2+i*c_2pi/9);
-    p.y:=-1*sin(pi/2+i*c_2pi/9);
-    t.addpoint(p);
-  end;
-  t.addpoint(p2(0,0));
-  t.addpoint(p2(0.5,0.5));
+
+  // ύλθορ X:=A*cos(w*t+ph) Y:=B*cos(w*t+ph)
+  p.x:=0;
+  p.y:=0;
+  t.addpoint(p);
+  p.x:=1;
+  p.y:=0;
+  t.addpoint(p);
+  p.x:=1;
+  p.y:=1;
+  t.addpoint(p);
+  p.x:=0;
+  p.y:=1;
+  t.addpoint(p);
+  p.x:=-0.1;
+  p.y:=0.2;
+  t.addpoint(p);
+  p.x:=0.5;
+  p.y:=0.6;
+  t.addpoint(p);
+  p.x:=0.52;
+  p.y:=0.6;
+  t.addpoint(p);
+  p.x:=0.53;
+  p.y:=0.6;
+  t.addpoint(p);
+  p.x:=0.54;
+  p.y:=0.6;
+  t.addpoint(p);
+
   t.visible:=false;
-  setlength(grahem, 12);
-  grahem:=GrahamScanWithDiameter(tpointarray(@t.data[0]),12 ,m_diam);
+  setlength(grahem, 9);
+  grahem:=GrahamScanWithDiameter(tpointarray(@t.data[0]),9,m_diam);
 
   t:=cBuffTrend2d.create;
   cpage(chart.activePage).activeAxis.AddChild(t);
