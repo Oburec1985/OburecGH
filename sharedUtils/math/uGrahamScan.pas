@@ -6,7 +6,7 @@ uses
 
 
   function GrahamScan(points: pointsArray; p_size:integer): pointsArray;
-  procedure SortForGrahamScan(var points: pointsArray);
+  procedure SortForGrahamScan(var points: pointsArray; var bottom:point2);
   procedure FindDiameter(const hull: pointsArray; var p1, p2: point2;
             var maxDist: Double);
 implementation
@@ -81,7 +81,7 @@ begin
   end;
 end;
 
-procedure SortForGrahamScan(var points: pointsArray);
+procedure SortForGrahamScan(var points: pointsArray; var bottom:point2);
 var
   n, i, pivotIdx: Integer;
 begin
@@ -98,6 +98,7 @@ begin
 
   // Устанавливаем опорную точку в глобальную переменную
   Pivot := points[pivotIdx];
+  bottom:=Pivot;
 
   // Перемещаем опорную точку в начало
   if pivotIdx <> 0 then
@@ -165,7 +166,7 @@ begin
   move(points[0], sortedPoints[0], p_size*sizeof(point2));
   // Sort points by polar angle
 
-  SortForGrahamScan(sortedPoints);
+  SortForGrahamScan(sortedPoints, bottom);
 
   // Graham scan
   SetLength(stack, n);
