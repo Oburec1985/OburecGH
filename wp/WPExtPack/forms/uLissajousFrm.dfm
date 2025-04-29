@@ -3,7 +3,7 @@ object LissajousFrm: TLissajousFrm
   Top = 0
   Caption = 'LissajousFrm'
   ClientHeight = 567
-  ClientWidth = 718
+  ClientWidth = 742
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,8 +17,19 @@ object LissajousFrm: TLissajousFrm
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
+  object Splitter1: TSplitter
+    Left = 382
+    Top = 0
+    Height = 567
+    Align = alRight
+    Color = clBtnText
+    ParentColor = False
+    ExplicitLeft = 360
+    ExplicitTop = 192
+    ExplicitHeight = 100
+  end
   object RightGB: TGroupBox
-    Left = 519
+    Left = 543
     Top = 0
     Width = 199
     Height = 567
@@ -321,7 +332,7 @@ object LissajousFrm: TLissajousFrm
   object Chart: cChart
     Left = 0
     Top = 0
-    Width = 519
+    Width = 382
     Height = 567
     Cursor = crSizeAll
     Margins.Left = 2
@@ -335,11 +346,42 @@ object LissajousFrm: TLissajousFrm
     showTV = False
     showLegend = True
     selectSize = 5
+    ExplicitWidth = 385
+  end
+  object GraphLV: TBtnListView
+    Left = 385
+    Top = 0
+    Width = 158
+    Height = 567
+    Align = alRight
+    Columns = <
+      item
+        Caption = #8470
+      end
+      item
+        Caption = 'Sx'
+      end
+      item
+        Caption = 'Sy'
+      end>
+    DragMode = dmAutomatic
+    RowSelect = True
+    TabOrder = 2
+    ViewStyle = vsReport
+    OnDragDrop = GraphLVDragDrop
+    OnDragOver = GraphLVDragOver
+    OnKeyDown = GraphLVKeyDown
+    BtnCol = 0
+    QuoteColumnBtnClick = False
+    QuoteColumnDblClick = False
+    DrawColorBox = False
+    ChangeTextColor = False
+    Editable = False
+    ExplicitLeft = 384
   end
   object Timer1: TTimer
     Interval = 300
     OnTimer = Timer1Timer
-    Left = 640
-    Top = 320
+    Left = 680
   end
 end

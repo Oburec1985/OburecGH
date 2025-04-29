@@ -15,6 +15,7 @@ uses
 type
   TLisSig = class
   public
+    owner:TList;
     name:string;
     x, y: cwpsignal;
     m_data:array of point2;
@@ -25,6 +26,8 @@ type
     p1,p2:point2; // диаметр
     Dtrend:cBuffTrend2d;
     dist:double;
+  protected
+    procedure initsignal;
   public
     constructor create (p_x,p_y:cwpsignal);
     destructor destroy();
@@ -58,6 +61,8 @@ type
     Timer1: TTimer;
     DistFe: TFloatEdit;
     Label7: TLabel;
+    GraphLV: TBtnListView;
+    Splitter1: TSplitter;
     procedure FormShow(Sender: TObject);
     procedure XCbDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
@@ -70,10 +75,19 @@ type
     procedure Timer1Timer(Sender: TObject);
     procedure YminFeKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure YmaxFeKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure GraphLVKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure GraphLVDragOver(Sender, Source: TObject; X, Y: Integer;
+      State: TDragState; var Accept: Boolean);
+    procedure GraphLVDragDrop(Sender, Source: TObject; X, Y: Integer);
   private
     wp:cWPObjMng;
     sList:tlist;
     m_updateZoom:boolean;
+
+    m_sx,m_sy:cWPSignal;
+  protected
+    procedure showSlist;
   public
     procedure ClearSignals;
     procedure UpdateChart;
@@ -134,6 +148,110 @@ begin
   result:=TLisSig(slist.items[i]);
 end;
 
+
+procedure TLissajousFrm.GraphLVDragDrop(Sender, Source: TObject; X, Y: Integer);
+var
+  screenLeftTopLV, P, p1: TPoint;
+  li, targ: tlistitem;
+  liInd, i, w, colind: integer;
+  s: cwpsignal;
+
+  col: TListColumn;
+  parent: twincontrol;
+
+  sig:TLisSig;
+begin
+  GetCursorPos(P);
+  // получить итем под курсором
+  p1 := TBtnListView(Sender).ScreenToClient(P);
+  Y := P.Y;
+  targ := nil;
+  if TListView(Sender).TopItem <> nil then
+  begin
+    targ := TListView(Sender).GetItemAt(TListView(Sender).TopItem.Position.X,
+      p1.Y);
+    if targ=nil then
+    begin
+      targ:=GraphLV.Items.Add;
+      GraphLV.SetSubItemByColumnName('№',inttostr(targ.index),targ);
+      targ.Data:=NewSig(nil,nil);
+    end;
+    liInd := targ.index;
+  end;
+
+  w := 0;
+  colind := -1;
+  parent := TBtnListView(Sender).parent;
+  screenLeftTopLV := parent.ClientToScreen(point(TBtnListView(Sender).left,
+      TBtnListView(Sender).top));
+  for i := 0 to TBtnListView(Sender).Columns.count - 1 do
+  begin
+    col := TBtnListView(Sender).Columns[i];
+    if (P.X - screenLeftTopLV.X) < w + col.width then
+    begin
+      colind := i;
+      break;
+    end
+    else
+    begin
+      w := w + col.width;
+    end;
+  end;
+  for I := 0 to SigLV.SelCount - 1 do
+  begin
+    if i=0 then
+    begin
+      li:=SigLV.Selected;
+      s:=cWPSignal(li.Data);
+    end
+    else
+    begin
+      li:=SigLV.GetNextItem(li,sdAll,[isselected]);
+      s:=cWPSignal(li.Data);
+    end;
+    if colind=0 or 1 then
+    begin
+      tlissig(targ.Data).x:=s;
+      tlissig(targ.Data).initsignal;
+      GraphLV.SetSubItemByColumnName('Sx',s.name,targ);
+    end
+    else
+    begin
+      tlissig(targ.Data).y:=s;
+      tlissig(targ.Data).initsignal;
+      GraphLV.SetSubItemByColumnName('Sy',s.name,targ);
+      break;
+    end;
+  end;
+end;
+
+procedure TLissajousFrm.GraphLVDragOver(Sender, Source: TObject; X, Y: Integer;
+  State: TDragState; var Accept: Boolean);
+begin
+  if source=SigLV then
+  begin
+    Accept:=true;
+  end;
+end;
+
+procedure TLissajousFrm.GraphLVKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  li:tlistitem;
+  s:TLisSig;
+begin
+  if key=VK_DELETE then
+  begin
+    li:=GraphLV.Selected;
+    if li<>nil then
+    begin
+      s:=li.Data;
+      s.destroy;
+      li.Destroy;
+    end;
+  end;
+end;
+
 procedure TLissajousFrm.LinkMng(mng: cWPObjMng);
 begin
   wp := mng;
@@ -150,6 +268,7 @@ function TLissajousFrm.NewSig(x,y:cwpsignal):TLisSig;
 begin
   result:=TLisSig.create(x, y);
   sList.Add(result);
+  result.owner:=sList;
 end;
 
 procedure TLissajousFrm.OkBtnClick(Sender: TObject);
@@ -247,6 +366,8 @@ begin
   count:=1;
   pCount.IntNum:=f.ReadInteger('main', 'Portion',512);
   src:=wp.GetCurSrcInMainWnd;
+  if src=nil then
+    exit;
   ClearSignals;
   for I := 0 to Count - 1 do
   begin
@@ -267,6 +388,7 @@ begin
       end;
     end;
   end;
+  showSlist;
 end;
 
 procedure TLissajousFrm.showSignalsLV();
@@ -289,6 +411,25 @@ begin
       SigLV.SetSubItemByColumnName('Fs',floattostr(sig.getFs),li);
     end;
   end;
+end;
+
+procedure TLissajousFrm.showSlist;
+var
+  I: Integer;
+  li:tlistitem;
+  s:TLisSig;
+begin
+  GraphLV.clear;
+  for I := 0 to sList.Count - 1 do
+  begin
+    li:=GraphLV.Items.Add;
+    s:=GetSignal(i);
+    li.Data:=S;
+    GraphLV.SetSubItemByColumnName('№',inttostr(i),li);
+    GraphLV.SetSubItemByColumnName('Sx',s.x.name,li);
+    GraphLV.SetSubItemByColumnName('Sy',s.y.name,li);
+  end;
+  LVChange(GraphLV);
 end;
 
 procedure TLissajousFrm.Timer1Timer(Sender: TObject);
@@ -320,6 +461,8 @@ var
   li:tlistitem;
 begin
   s:=wp.GetCurSrcInMainWnd;
+  if s=nil then
+    exit;
   SigLV.Clear;
   XCb.Clear;
   YCb.Clear;
@@ -418,35 +561,70 @@ end;
 { TLisSig }
 
 constructor TLisSig.create(p_x, p_y: cwpsignal);
-var
-  r:frect;
 begin
   x:=p_x;
   y:=p_y;
-  name:=x.name+'_'+y.name;
-  line:=cBuffTrend2d.create;
-  cpage(LissajousFrm.Chart.activepage).activeAxis.addchild(line);
-
-  r.BottomLeft.x:=LissajousFrm.xminfe.Value;
-  r.BottomLeft.y:=LissajousFrm.yminfe.Value;
-  r.TopRight.x:=LissajousFrm.xmaxfe.Value;
-  r.TopRight.y:=LissajousFrm.ymaxfe.Value;
-  cpage(LissajousFrm.Chart.activepage).ZoomfRect(r);
-  m_capacity:=16384;
-  SetLength(m_data,m_capacity);
-  Dtrend:=cBuffTrend2d.create;
-  cpage(LissajousFrm.Chart.activepage).activeAxis.addchild(Dtrend);
-  Dtrend.Count:=2;
-  Dtrend.drawLines:=true;
-  Dtrend.drawpoint:=true;
-  Dtrend.visible:=true;
-  Dtrend.color:=green;
+  initsignal;
 end;
 
 destructor TLisSig.destroy;
+var
+  I: Integer;
 begin
+  if owner<>nil then
+  begin
+    for I := 0 to owner.Count - 1 do
+    begin
+      if owner.Items[i]=self then
+      begin
+        owner.Delete(i);
+        break;
+      end;
+    end;
+  end;
+  if line<>nil then
+  begin
+    line.destroy;
+    Dtrend.destroy;
+  end;
   name:=x.name+'_'+y.name;
-  Dtrend.destroy;
+end;
+
+procedure TLisSig.initsignal;
+var
+  r:frect;
+begin
+  if (x<>nil) and (y<>nil) then
+  begin
+    name:=x.name+'_'+y.name;
+    if line=nil then
+    begin
+     line:=cBuffTrend2d.create;
+     cpage(LissajousFrm.Chart.activepage).activeAxis.addchild(line);
+     line.color:=ColorArray[LissajousFrm.sList.Count];
+    end;
+    if dtrend=nil then
+    begin
+      Dtrend:=cBuffTrend2d.create;
+      cpage(LissajousFrm.Chart.activepage).activeAxis.addchild(Dtrend);
+      Dtrend.Count:=2;
+      Dtrend.drawLines:=true;
+      Dtrend.drawpoint:=true;
+      Dtrend.visible:=true;
+      Dtrend.color:=green;
+    end;
+    if m_capacity=0 then
+    begin
+      r.BottomLeft.x:=LissajousFrm.xminfe.Value;
+      r.BottomLeft.y:=LissajousFrm.yminfe.Value;
+      r.TopRight.x:=LissajousFrm.xmaxfe.Value;
+      r.TopRight.y:=LissajousFrm.ymaxfe.Value;
+      cpage(LissajousFrm.Chart.activepage).ZoomfRect(r);
+
+      m_capacity:=16384;
+      SetLength(m_data,m_capacity);
+    end;
+  end;
 end;
 
 end.

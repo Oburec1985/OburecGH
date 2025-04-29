@@ -278,7 +278,6 @@ var
   parent: twincontrol;
 begin
   GetCursorPos(P);
-
   // получить итем под курсором
   p1 := TBtnListView(Sender).ScreenToClient(P);
   Y := P.Y;
