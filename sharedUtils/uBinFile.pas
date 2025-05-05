@@ -15,6 +15,8 @@ uses
   function ReadString(const f:file;len:integer):string;overload;
   // записать терминированную символом '#0' строку
   procedure WriteCString(const f:file;str:string);
+  // зачитать терминированную символом '#0' строку
+  function ReadCString(const f:file):ansistring;
   // записать строку с константным числом букв (по длине строки)
   procedure WriteString(const f:file;str:string);
   // записать строку первым символом которой является число букв в строке
@@ -166,6 +168,20 @@ begin
     BlockWrite(f,str[1],len);
   ch:=char(0);
   BlockWrite(f,ch,1);
+end;
+
+function ReadCString(const f:file):ansistring;
+var
+  r:integer;
+  ch:ansichar;
+begin
+  ch:='1';
+  result:='';
+  while ch<>ansichar(0) do
+  begin
+    BlockRead(f, ch, 1,r);
+    result:=result+ch;
+  end;
 end;
 
 function ReadString(const f:file;len:integer):string;

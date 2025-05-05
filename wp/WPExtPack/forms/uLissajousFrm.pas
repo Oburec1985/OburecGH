@@ -342,7 +342,6 @@ begin
     f.WriteString(id,'Name',s.name);
     f.WriteString(id,'x',s.x.name);
     f.WriteString(id,'y',s.y.name);
-
   end;
 end;
 
@@ -362,8 +361,8 @@ var
   fl:double;
 begin
   f:=tinifile.Create(startdir+'\Opers\Lissajous.ini');
-  //count:=f.ReadInteger('main', 'sCount',1);
-  count:=1;
+  count:=f.ReadInteger('main', 'sCount',1);
+  //count:=1;
   pCount.IntNum:=f.ReadInteger('main', 'Portion',512);
   src:=wp.GetCurSrcInMainWnd;
   if src=nil then
@@ -587,7 +586,6 @@ begin
     line.destroy;
     Dtrend.destroy;
   end;
-  name:=x.name+'_'+y.name;
 end;
 
 procedure TLisSig.initsignal;
@@ -601,7 +599,12 @@ begin
     begin
      line:=cBuffTrend2d.create;
      cpage(LissajousFrm.Chart.activepage).activeAxis.addchild(line);
-     line.color:=ColorArray[LissajousFrm.sList.Count];
+     if LissajousFrm.sList.Count>0 then
+     begin
+       line.color:=ColorArray[LissajousFrm.sList.Count+1];
+     end
+     else
+       line.color:=ColorArray[LissajousFrm.sList.Count];
     end;
     if dtrend=nil then
     begin
@@ -624,6 +627,8 @@ begin
       m_capacity:=16384;
       SetLength(m_data,m_capacity);
     end;
+    line.name:=name;
+    Dtrend.name:=name+'_D';
   end;
 end;
 
