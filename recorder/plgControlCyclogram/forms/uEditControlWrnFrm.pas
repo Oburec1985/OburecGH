@@ -12,7 +12,7 @@ uses
   uBaseObj, uRCFunc, uRvclService, uCommonTypes,uCommonMath,
   tags, recorder, uBaseObjService, uModesTabsForm, activex, uRTrig,
   DCL_MYOWN, uRcCtrls, uTrigsFrm, uEventTypes, uSpin, uControlWarnFrm, uEditProfileFrm, Spin,
-  uTagsListFrame, uaxis;
+  uTagsListFrame, uaxis, uBaseAlg, uGrmsSrcAlg;
 
 type
 
@@ -192,7 +192,7 @@ begin
     if TagsTV.TotalCount>0 then
     begin
       n:=TagsTV.GetFirst();
-      d:=TagsTV.GetNodeData(n.parent);
+      d:=TagsTV.GetNodeData(n);
       result:=caxis(d.data);
     end;
   end;
@@ -565,9 +565,44 @@ var
   a:caxis;
   n:pvirtualnode;
   d:PNodeData;
+
+  li:tlistitem;
+  t, taho:itag;
+  alg:cBaseAlgcontainer;
 begin
+  if source=TagsListFrame1.TagsLV then
+  begin
+    li:=TagsListFrame1.TagsLV.Selected;
+    while li<>Nil do
+    begin
+      t:=itag(li.data);
+      w:=TWrkPoint.create(curChart.Chart);
+      w.name:=t.GetName;
+      w.m_YParam.tag:=t;
+      alg:=g_algMng.getAlgByTagName(t.GetName);
+      if alg<>nil then
+      begin
+        if alg is cGrmsSrcAlg then
+        begin
+          if cGrmsSrcAlg(alg).m_Taho.tag<>nil then
+          begin
+            taho:=g_algMng.getOutTagByInTagName(cGrmsSrcAlg(alg).m_Taho.tagname);
+            if taho<>nil then
+              w.m_XParam.tag:=taho;
+          end;
+        end;
+      end;
+
+      curChart.addGraph(w, selectAxis);
+      WrkPointLine.text:=w.name;
+      li:=TagsListFrame1.TagsLV.GetNextItem(li, sdAll, [isSelected]);
+    end;
+    showChartTags;
+    exit;
+  end;
   pSource := TVirtualStringTree(Source).FocusedNode;
   pTarget := Sender.DropTargetNode;
+
 
   srcdata:=tagstv.GetNodeData(pSource);
   if tobject(srcdata.data) is TWrkPoint then
@@ -617,6 +652,11 @@ var
   a:caxis;
 begin
   Accept := false;
+  if Source = TagsListFrame1.TagsLV then
+  begin
+    Accept := true;
+    exit;
+  end;
   if Source = tagstv then
   begin
     pSource := TVirtualStringTree(Source).FocusedNode;

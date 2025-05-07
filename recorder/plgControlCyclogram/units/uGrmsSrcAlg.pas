@@ -45,6 +45,8 @@ type
     // расчет в UpdateBandWidth (doeval)
     m_curTahoValue: double;
   protected
+    function getInpTag(index: integer): cTag;override;
+    function getOutTag(index: integer): cTag;override;
     function getBandI(x:double):Tpoint;
     procedure setSpmAlg(spm:cspm);
     function genTagName: string; override;
@@ -64,7 +66,6 @@ type
     procedure updateOutChan;
     procedure updatedx;
     procedure updateBuff;
-    function getinptag: itag;
     procedure setTahoTag(t: itag); overload;
     procedure setTahoTag(t: cTag); overload;
     procedure setinptag(t: itag); overload;
@@ -321,11 +322,6 @@ begin
   result := fdX;
 end;
 
-function cGrmsSrcAlg.getinptag: itag;
-begin
-
-end;
-
 
 procedure cGrmsSrcAlg.LinkTags;
 begin
@@ -473,6 +469,8 @@ function cGrmsSrcAlg.getlasttime: double;
 begin
   result := m_outTagX[m_lastblockind];
 end;
+
+
 
 destructor cGrmsSrcAlg.destroy;
 begin
@@ -636,6 +634,16 @@ begin
   begin
     result:=result+',OutChannel='+m_outTag.tagname;
   end;
+end;
+
+function cGrmsSrcAlg.getInpTag(index: integer): cTag;
+begin
+  result:=m_InTag;
+end;
+
+function cGrmsSrcAlg.getOutTag(index: integer): cTag;
+begin
+  result:=m_outTag;
 end;
 
 function cGrmsSrcAlg.GetProperties: string;
@@ -813,18 +821,18 @@ begin
   tagname := m_InTag.tagname;
   result := tagname + '_rms';
 
-  b := true;
-  while b do
-  begin
-    t := getTagByName(result);
-    if (t = nil) or (result = m_lastname) then
-    begin
-      b := false;
-      m_lastname := result;
-    end
-    else
-      result := ModName(result, false);
-  end;
+  //b := true;
+  //while b do
+  //begin
+  //  t := getTagByName(result);
+  //  if (t = nil) or (result = m_lastname) then
+  //  begin
+  //    b := false;
+  //    m_lastname := result;
+  //  end
+  //  else
+  //    result := ModName(result, false);
+  //end;
 end;
 
 procedure cGrmsSrcAlg.createOutChan;

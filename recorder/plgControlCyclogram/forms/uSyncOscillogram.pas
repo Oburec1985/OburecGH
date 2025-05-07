@@ -774,6 +774,8 @@ begin
   else
   begin
     v := GetRCTime;
+    if v=0 then
+      v:=RecorderSysTime;
     if v > m_TrigInterval.y then
     begin
       if v - m_Length > m_TrigInterval.y then

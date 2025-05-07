@@ -355,8 +355,8 @@ begin
 
   fShowRms := true;
   fShowPhase := true;
-
-  PSize := 5;
+  if g_initGL then
+    PSize := 5;
 end;
 
 procedure TCntrlWrnChart.DblClick(Sender: TObject);
@@ -583,6 +583,8 @@ begin
   end;
   if length(m_axises) = 0 then
     SetLength(m_axises, 1);
+
+  PSize := 5;
   //m_axises[0].min := p.activeAxis.minY;
   //m_axises[0].max := p.activeAxis.maxY;
   //m_axises[0].lg := p.activeAxis.lg;

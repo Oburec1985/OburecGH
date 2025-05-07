@@ -113,12 +113,9 @@ type
     BotPan: TPanel;
     AddPObjBtn: TSpeedButton;
     UpdatePObjBtn: TSpeedButton;
-    LoadFromExcelBtn: TSpeedButton;
-    SaveToExcelBtn: TSpeedButton;
     LeftPan: TPanel;
     TagsTV: TVTree;
     Panel3: TPanel;
-    TagsListFrame1: TTagsListFrame;
     AlClPan: TPanel;
     HHSe: TFloatSpinEdit;
     HHLabel: TLabel;
@@ -140,11 +137,11 @@ type
     GroupNameLabel: TLabel;
     ControTaglCB: TRcComboBox;
     ControlTagLabel: TLabel;
-    ImageList_16: TImageList;
     NotValidCB: TCheckBox;
     CountIE: TIntEdit;
     Label1: TLabel;
     BackGroundColorDialog: TColorDialog;
+    TagsListFrame1: TTagsListFrame;
     procedure TagsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
@@ -158,6 +155,7 @@ type
     procedure HHColorDblClick(Sender: TObject);
     procedure TagsTVKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormShow(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   public
     m_AlarmHandler:AlarmHandler;
     m_Groups:TStringList;
@@ -182,7 +180,7 @@ type
     procedure load(fname:string);
     procedure UpdateTagList;
     procedure clear;
-    constructor create(aowner:tcomponent);override;
+    //constructor create(aowner:tcomponent);override;
     destructor destroy;
   end;
 
@@ -248,14 +246,6 @@ end;
 procedure TThresholdFrm.CountIEChange(Sender: TObject);
 begin
   NumSe.MaxValue:=CountIE.IntNum-1;
-end;
-
-constructor TThresholdFrm.create(aowner: tcomponent);
-begin
-  inherited;
-  m_Groups:=TStringList.Create;
-  createevents;
-
 end;
 
 procedure TThresholdFrm.AttachAlarms;
@@ -346,6 +336,12 @@ begin
     g:=TThresholdGroup(m_Groups.Objects[i]);
     g.ApplyAlarms;
   end;
+end;
+
+procedure TThresholdFrm.FormCreate(Sender: TObject);
+begin
+  m_Groups:=TStringList.Create;
+  createevents;
 end;
 
 procedure TThresholdFrm.FormShow(Sender: TObject);

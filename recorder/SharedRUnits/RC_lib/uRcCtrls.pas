@@ -8,7 +8,8 @@ uses
   uRecorderEvents,
   ubtnlistview,
   uRvclService,
-  recorder, uRCFunc,
+  recorder,
+  uRCFunc,
   tags, // теги рекордера
   activex;
 type

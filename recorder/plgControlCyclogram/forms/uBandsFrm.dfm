@@ -124,8 +124,11 @@ object BandsFrm: TBandsFrm
       Top = 19
       Width = 455
       Height = 512
+      Hint = #1044#1086#1073#1072#1074#1083#1103#1090#1100' '#1090#1077#1075#1080' '#1089' '#1088#1072#1089#1095#1080#1090#1072#1085#1085#1086#1081' '#1095#1072#1089#1090#1086#1090#1086#1081
       Align = alClient
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 0
       OnDragDrop = PropSGDragDrop
       OnDragOver = PropSGDragOver

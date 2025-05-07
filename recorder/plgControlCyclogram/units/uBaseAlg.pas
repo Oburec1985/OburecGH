@@ -152,8 +152,8 @@ type
   protected
     procedure doOnStart; override;
     procedure destroyTagsList;
-    function getInpTag(index: integer): cTag;
-    function getOutTag(index: integer): cTag;
+    function getInpTag(index: integer): cTag;virtual;
+    function getOutTag(index: integer): cTag;virtual;
     procedure doEval(intag: cTag; time: double); virtual;
     procedure addInputTag(t: cTag);
     procedure addOutTag(t: cTag);
@@ -224,6 +224,7 @@ type
     function getAH(p_name: string): cAHgrad; overload;
     function newAH(name: string): cAHgrad;
     procedure clearAHlist;
+    procedure doRCinit;
 
     function getCfg(i: integer): cAlgConfig; overload;
     function getCfg(cfgname: string): cAlgConfig; overload;
@@ -239,6 +240,8 @@ type
     destructor destroy; override;
     function getSpm(str: string): cBaseAlgContainer;
     function getSpmByTagName(str: string): cBaseAlgContainer;
+    function getAlgByTagName(str: string): cBaseAlgContainer;
+    function getOutTagByInTagName(str: string): itag;
     function getAlg(i: integer): cBaseAlg; overload;
     function getAlg(s: string): cBaseAlg; overload;
   end;
@@ -942,6 +945,11 @@ begin
 
 end;
 
+procedure cAlgMng.doRCinit;
+begin
+  m_TagBandPairList.doRCinit;
+end;
+
 procedure cAlgMng.doRenameObj(sender: tobject);
 begin
   inherited;
@@ -1228,6 +1236,54 @@ begin
       begin
         result := cBaseAlgContainer(a);
         exit;
+      end;
+    end;
+  end;
+end;
+
+function cAlgMng.getAlgByTagName(str: string): cBaseAlgContainer;
+var
+  i: integer;
+  a: cBaseObj;
+begin
+  result := nil;
+  for i := 0 to Count - 1 do
+  begin
+    a := getobj(i);
+    if a is cBaseAlgContainer then
+    begin
+      if cBaseAlgContainer(a).resname = str then
+      begin
+        result := cBaseAlgContainer(a);
+        exit;
+      end;
+    end;
+  end;
+end;
+
+function cAlgMng.getOutTagByInTagName(str: string): itag;
+var
+  i: integer;
+  a: cBaseObj;
+  t:ctag;
+begin
+  result := nil;
+  for i := 0 to Count - 1 do
+  begin
+    a := getobj(i);
+    if a is cBaseAlg then
+    begin
+      t:=cBaseAlg(a).getInpTag(0);
+      if t<>nil then
+      begin
+        if t.tagname=str then
+        begin
+          t:=cBaseAlg(a).getOutTag(0);
+          if t<>nil then
+          begin
+            result:=t.tag;
+          end;
+        end;
       end;
     end;
   end;

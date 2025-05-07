@@ -10,6 +10,7 @@ uses
   uControlCyclogramEditFrm,
   shellApi, ubaseobj,
   uSyncOscillogram,
+  uProcNotify,
   uMBaseControl;
 
 type

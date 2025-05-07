@@ -5,7 +5,7 @@ interface
 uses
   types, ActiveX, forms, sysutils, windows, Classes, IniFiles, Dialogs,
   uCompMng, cfreg, uRecorderEvents, PluginClass, tags, Recorder, uRCFunc,
-  iplgmngr, plugin,
+  iplgmngr, plugin,     uProcNotify,
   Generics.Collections, Controls, uControlObj, uCommonMath, uControlCyclogramEditFrm, uMBaseControl;
 
 type

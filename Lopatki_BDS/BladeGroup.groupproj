@@ -39,19 +39,7 @@
 			<Projects Include="..\tests\Chart\Project1.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\recorder\plgEvalStepValue\plgEvalStepVal.dproj">
-				<Dependencies/>
-			</Projects>
-			<Projects Include="..\recorder\plgEvalFRF\plgEvakFRF.dproj">
-				<Dependencies/>
-			</Projects>
-			<Projects Include="..\recorder\plgOscill\plgOscill.dproj">
-				<Dependencies/>
-			</Projects>
 			<Projects Include="..\..\MERA\2150 converter\Conv_2150.dproj">
-				<Dependencies/>
-			</Projects>
-			<Projects Include="..\copyfiles\CopyFiles.dproj">
 				<Dependencies/>
 			</Projects>
 		</ItemGroup>
@@ -172,33 +160,6 @@
 		<Target Name="Project1:Make">
 			<MSBuild Targets="Make" Projects="..\tests\Chart\Project1.dproj"/>
 		</Target>
-		<Target Name="plgEvalStepVal">
-			<MSBuild Projects="..\recorder\plgEvalStepValue\plgEvalStepVal.dproj"/>
-		</Target>
-		<Target Name="plgEvalStepVal:Clean">
-			<MSBuild Targets="Clean" Projects="..\recorder\plgEvalStepValue\plgEvalStepVal.dproj"/>
-		</Target>
-		<Target Name="plgEvalStepVal:Make">
-			<MSBuild Targets="Make" Projects="..\recorder\plgEvalStepValue\plgEvalStepVal.dproj"/>
-		</Target>
-		<Target Name="plgEvakFRF">
-			<MSBuild Projects="..\recorder\plgEvalFRF\plgEvakFRF.dproj"/>
-		</Target>
-		<Target Name="plgEvakFRF:Clean">
-			<MSBuild Targets="Clean" Projects="..\recorder\plgEvalFRF\plgEvakFRF.dproj"/>
-		</Target>
-		<Target Name="plgEvakFRF:Make">
-			<MSBuild Targets="Make" Projects="..\recorder\plgEvalFRF\plgEvakFRF.dproj"/>
-		</Target>
-		<Target Name="plgOscill">
-			<MSBuild Projects="..\recorder\plgOscill\plgOscill.dproj"/>
-		</Target>
-		<Target Name="plgOscill:Clean">
-			<MSBuild Targets="Clean" Projects="..\recorder\plgOscill\plgOscill.dproj"/>
-		</Target>
-		<Target Name="plgOscill:Make">
-			<MSBuild Targets="Make" Projects="..\recorder\plgOscill\plgOscill.dproj"/>
-		</Target>
 		<Target Name="Conv_2150">
 			<MSBuild Projects="..\..\MERA\2150 converter\Conv_2150.dproj"/>
 		</Target>
@@ -208,23 +169,14 @@
 		<Target Name="Conv_2150:Make">
 			<MSBuild Targets="Make" Projects="..\..\MERA\2150 converter\Conv_2150.dproj"/>
 		</Target>
-		<Target Name="CopyFiles">
-			<MSBuild Projects="..\copyfiles\CopyFiles.dproj"/>
-		</Target>
-		<Target Name="CopyFiles:Clean">
-			<MSBuild Targets="Clean" Projects="..\copyfiles\CopyFiles.dproj"/>
-		</Target>
-		<Target Name="CopyFiles:Make">
-			<MSBuild Targets="Make" Projects="..\copyfiles\CopyFiles.dproj"/>
-		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;SniffDll;ProjectFFT;GlScene;Project1;plgEvalStepVal;plgEvakFRF;plgOscill;Conv_2150;CopyFiles"/>
+			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;SniffDll;ProjectFFT;GlScene;Project1;Conv_2150"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;SniffDll:Clean;ProjectFFT:Clean;GlScene:Clean;Project1:Clean;plgEvalStepVal:Clean;plgEvakFRF:Clean;plgOscill:Clean;Conv_2150:Clean;CopyFiles:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;SniffDll:Clean;ProjectFFT:Clean;GlScene:Clean;Project1:Clean;Conv_2150:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;SniffDll:Make;ProjectFFT:Make;GlScene:Make;Project1:Make;plgEvalStepVal:Make;plgEvakFRF:Make;plgOscill:Make;Conv_2150:Make;CopyFiles:Make"/>
+			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;SniffDll:Make;ProjectFFT:Make;GlScene:Make;Project1:Make;Conv_2150:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

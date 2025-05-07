@@ -39,7 +39,7 @@ type
   tBand = class
   private
   public
-    // список Bandtag
+    // список Bandtag по которым идет расчет
     m_TagsList: tstringlist;
     m_owner: tstringlist;
     m_f1f2: point2d;
@@ -98,6 +98,7 @@ type
   protected
     function getname: string;
     procedure setname(s: string);
+    procedure doRCinit;
   public
     procedure setId(id: TAGID);
     procedure settag(t: itag);
@@ -113,6 +114,7 @@ type
 
   TTagBandPairList = class(tlist)
   public
+    procedure doRCinit;
     function newPair: TTagBandPair;
     function getPair(i: integer): TTagBandPair; overload;
     function getPair(tagname: string): TTagBandPair; overload;
@@ -371,6 +373,32 @@ begin
   inherited;
 end;
 
+procedure TTagBandPair.doRCinit;
+var
+  p:TPlace;
+  b:tBand;
+  t:BandTag;
+  I,j,k: Integer;
+begin
+  m_it:=getTagByName(m_t);
+  for I := 0 to placeCount - 1 do
+  begin
+    p:=getplace(i);
+    for j := 0 to p.Bandcount - 1 do
+    begin
+      b:=p.getBand(j);
+      for k := 0 to b.tagCount - 1 do
+      begin
+        t:=b.getbandtag(k);
+        if t.m_it=nil then
+        begin
+          t.m_it:=getTagByName(t.m_t);
+        end;
+      end;
+    end;
+  end;
+end;
+
 function TTagBandPair.getname: string;
 begin
   if m_it <> nil then
@@ -455,6 +483,21 @@ end;
 function TTagBandPairList.getPair(i: integer): TTagBandPair;
 begin
   result := TTagBandPair(items[i]);
+end;
+
+procedure TTagBandPairList.doRCinit;
+var
+  i: integer;
+  t: TTagBandPair;
+begin
+  for i := 0 to Count - 1 do
+  begin
+    t := getPair(i);
+    if t.m_it = nil then
+    begin
+      t.doRCinit;
+    end;
+  end;
 end;
 
 function TTagBandPairList.getPair(tagname: string): TTagBandPair;

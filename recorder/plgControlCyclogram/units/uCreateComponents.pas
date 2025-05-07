@@ -6,6 +6,7 @@ interface
 uses
   // stmm4,
   Windows,
+  forms,
   SysUtils,
   activex,
   cfreg,
@@ -27,6 +28,7 @@ uses
   uAlgAddFrm,
   ubasealg,
   uLogFile,
+  uProcNotify,
   uControlWarnFrm,
   uCursorFrm,
   uEditControlWrnFrm,
@@ -118,6 +120,10 @@ var
 var
   // флаг для запрета удаления frmSync пока не удалим все формы в потоке формы FrmSync
   g_CreateFrms, g_delFrms: boolean;
+
+const
+  c_MBaseName = 'Plugin Циклограмма';
+
 
 implementation
 
@@ -249,12 +255,13 @@ var
   h: thandle;
   str, str1: string;
   show: boolean;
+  fr:tForm;
 begin
+  //exit;
   g_delFrms := false;
-  // FullDebugModeScanMemoryPoolBeforeEveryOperation:=true;
-  // GetCurrentThreadId;
+  if g_CreateFrms then
+    exit;
   show := false;
-  sleep(1000);
   EditPropertiesFrm := TEditPropertiesFrm.Create(nil);
   ConfirmFmr := TConfirmFmr.Create(nil);
 
@@ -639,6 +646,7 @@ begin
   //g_PressCamFactory := cPressCamFactory.Create;
   //compMng.Add(g_PressCamFactory);
   //PressFrmEdit := TPressFrmEdit.Create(nil);
+
   g_PressCamFactory2 := cPressCamFactory2.Create;
   compMng.Add(g_PressCamFactory2);
   PressFrmEdit2 := TPressFrmEdit2.Create(nil);
@@ -653,6 +661,8 @@ end;
 
 procedure RecorderInit;
 begin
+  if g_algMng<>nil then
+    g_algMng.doRCinit;
   if ThresholdFrm<>nil then
     ThresholdFrm.AttachAlarms;
 end;

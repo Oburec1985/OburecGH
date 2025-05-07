@@ -67,6 +67,8 @@ type
     fftPlan:TFFTProp;
     finitbuff:boolean;
   protected
+    function getInpTag(index: integer): cTag;override;
+    function getOutTag(index: integer): cTag;override;
     procedure updateReady;override;
     procedure SetProperties(str: string); override;
     function GetProperties: string; override;
@@ -80,7 +82,6 @@ type
     // вызывается при загрузке или при установке входного тега
     procedure createOutChan;
     procedure updateOutChan;
-    function getinptag: itag;
     procedure setinptag(t: itag); overload;
     procedure setinptag(t: cTag); overload;
     function genTagName: string;override;
@@ -394,10 +395,6 @@ begin
   result := 'Тахо';
 end;
 
-function cTahoAlg.getinptag: itag;
-begin
-
-end;
 
 procedure cTahoAlg.LoadObjAttributes(xmlNode: txmlNode; mng: tobject);
 var
@@ -420,7 +417,7 @@ begin
   inherited;
   if m_inpTags.Count > 0 then
   begin
-    fInTag := InputTag[0];
+    fInTag := ctag(m_inpTags.objects[0]);
     if fInTag.tag <> nil then
       SetPeakEval(fInTag.tag, true);
   end;
@@ -512,6 +509,18 @@ begin
   //if m_outTag<>nil then
   //  result:=result+',OutChannel='+m_outTag.tagname;
 end;
+
+function cTahoAlg.getInpTag(index: integer): cTag;
+begin
+  result:=fInTag;
+end;
+
+
+function cTahoAlg.getOutTag(index: integer): cTag;
+begin
+  result:=fOutTag;
+end;
+
 
 function cTahoAlg.GetResName: string;
 begin
