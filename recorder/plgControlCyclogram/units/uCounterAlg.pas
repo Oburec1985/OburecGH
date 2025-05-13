@@ -520,7 +520,7 @@ end;
 
 procedure cCounterAlg.createOutChan;
 var
-  tagname: string;
+  str, tagname: string;
   bl: IBlockAccess;
 begin
   if InTag <> nil then
@@ -528,7 +528,10 @@ begin
     if InTag.tag <> nil then
     begin
       ecm;
-      fOutTag.tag := createVectorTagR8(genTagName, InTag.tag.getfreq, false);
+      str:=genTagName;
+      fOutTag.tag:=getTagByName(str);
+      if fOutTag.tag=nil then
+        fOutTag.tag := createVectorTagR8(str, InTag.tag.getfreq, true);
       if fOutTag.tag=nil then
       begin
         fOutTag.tagname:=fOutTag.tagname;

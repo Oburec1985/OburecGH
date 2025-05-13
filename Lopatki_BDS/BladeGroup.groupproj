@@ -27,15 +27,6 @@
 			<Projects Include="..\wp\WPOperPlg\WpOperPlg.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\Key_Logger\SniffDll.dproj">
-				<Dependencies/>
-			</Projects>
-			<Projects Include="..\tests\TestAlgLib\ProjectFFT.dproj">
-				<Dependencies/>
-			</Projects>
-			<Projects Include="..\3d\GlScene.dproj">
-				<Dependencies/>
-			</Projects>
 			<Projects Include="..\tests\Chart\Project1.dproj">
 				<Dependencies/>
 			</Projects>
@@ -124,33 +115,6 @@
 		<Target Name="WpOperPlg:Make">
 			<MSBuild Targets="Make" Projects="..\wp\WPOperPlg\WpOperPlg.dproj"/>
 		</Target>
-		<Target Name="SniffDll">
-			<MSBuild Projects="..\Key_Logger\SniffDll.dproj"/>
-		</Target>
-		<Target Name="SniffDll:Clean">
-			<MSBuild Targets="Clean" Projects="..\Key_Logger\SniffDll.dproj"/>
-		</Target>
-		<Target Name="SniffDll:Make">
-			<MSBuild Targets="Make" Projects="..\Key_Logger\SniffDll.dproj"/>
-		</Target>
-		<Target Name="ProjectFFT">
-			<MSBuild Projects="..\tests\TestAlgLib\ProjectFFT.dproj"/>
-		</Target>
-		<Target Name="ProjectFFT:Clean">
-			<MSBuild Targets="Clean" Projects="..\tests\TestAlgLib\ProjectFFT.dproj"/>
-		</Target>
-		<Target Name="ProjectFFT:Make">
-			<MSBuild Targets="Make" Projects="..\tests\TestAlgLib\ProjectFFT.dproj"/>
-		</Target>
-		<Target Name="GlScene">
-			<MSBuild Projects="..\3d\GlScene.dproj"/>
-		</Target>
-		<Target Name="GlScene:Clean">
-			<MSBuild Targets="Clean" Projects="..\3d\GlScene.dproj"/>
-		</Target>
-		<Target Name="GlScene:Make">
-			<MSBuild Targets="Make" Projects="..\3d\GlScene.dproj"/>
-		</Target>
 		<Target Name="Project1">
 			<MSBuild Projects="..\tests\Chart\Project1.dproj"/>
 		</Target>
@@ -170,13 +134,13 @@
 			<MSBuild Targets="Make" Projects="..\..\MERA\2150 converter\Conv_2150.dproj"/>
 		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;SniffDll;ProjectFFT;GlScene;Project1;Conv_2150"/>
+			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;Project1;Conv_2150"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;SniffDll:Clean;ProjectFFT:Clean;GlScene:Clean;Project1:Clean;Conv_2150:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;Project1:Clean;Conv_2150:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;SniffDll:Make;ProjectFFT:Make;GlScene:Make;Project1:Make;Conv_2150:Make"/>
+			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;Project1:Make;Conv_2150:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

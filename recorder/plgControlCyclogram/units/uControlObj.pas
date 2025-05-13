@@ -6846,7 +6846,7 @@ begin
   result := false;
   if x <= r.y then
   begin
-    if x > r.x then
+    if x >= r.x then
       result := true;
   end;
 end;

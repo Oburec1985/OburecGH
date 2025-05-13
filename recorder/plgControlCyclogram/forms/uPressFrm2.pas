@@ -1831,6 +1831,11 @@ var
   fr: TPressFrmFrame2;
   i: integer;
 begin
+  if m_bnum>=g_PressCamFactory2.BandCount then
+  begin
+    m_bnum:=g_PressCamFactory2.BandCount-1;
+    bnumUpdate := true;
+  end;
   if Ready then
   begin
     g_PressCamFactory2.AutoEvalBand(PressFrmFrame21.spm.m_tag.tag);
@@ -2373,12 +2378,19 @@ begin
   begin
     if g_PressCamFactory2.BandCount > 0 then
     begin
-      if g_PressCamFactory2.m_bands[m_bnum].f2 <> 0 then
+      if m_bnum>=length(g_PressCamFactory2.m_bands) then
       begin
-        BarGraphGB.Caption := 'Band: ' + formatstr
-          (g_PressCamFactory2.m_bands[m_bnum].f1, c_digs) + '..' + formatstr
-          (g_PressCamFactory2.m_bands[m_bnum].f2, c_digs);
-        bnumUpdate := false;
+
+      end
+      else
+      begin
+        if g_PressCamFactory2.m_bands[m_bnum].f2 <> 0 then
+        begin
+          BarGraphGB.Caption := 'Band: ' + formatstr
+            (g_PressCamFactory2.m_bands[m_bnum].f1, c_digs) + '..' + formatstr
+            (g_PressCamFactory2.m_bands[m_bnum].f2, c_digs);
+          bnumUpdate := false;
+        end;
       end;
     end;
   end;
