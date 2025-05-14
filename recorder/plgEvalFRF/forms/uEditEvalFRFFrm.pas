@@ -479,6 +479,8 @@ var
   d:PNodeData;
 begin
   t:=GetSelectTaho;
+  if t=nil then
+    exit;
   c:=t.Cfg;
   t.m_shockList.m_wnd.x2:=LengthFE.FloatNum*0.7;
 

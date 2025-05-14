@@ -67,7 +67,6 @@ type
 
     // путь к папке с ресурсами
     path: string;
-    configfile: cCfgFile;
 
     m_ShaderMng: cShaderManager;
     m_UseShaders:boolean;
@@ -250,6 +249,7 @@ type
 
 var
   g_initGL:boolean = false;
+  g_configfile: cCfgFile;
 const
   // рисовать селектирующий прямойгольник
   c_drawSelRect = $000001;
@@ -298,7 +298,8 @@ begin
   if m_ShaderMng<>nil then
   begin
     m_ShaderMng.GetInfo;
-    LoadShaders;
+    if m_ShaderMng.m_ExtSupported then
+      LoadShaders;
   end;
 end;
 
@@ -376,7 +377,8 @@ begin
 
   debugMode := FALSE;
 
-  configfile:=cCfgFile.create('resources.ini');
+  if g_configfile=nil then
+    g_configfile:=cCfgFile.create('resources.ini');
   m_ShaderMng:=cShaderManager.Create;
 end;
 
@@ -388,7 +390,7 @@ var
 begin
   logstr('EnterLoadShaders');
   s:='LineLg';
-  shadername:=configfile.findShaderFile(s);
+  shadername:=g_configfile.findShaderFile(s);
   if shadername<>'' then
   begin
     sh:=cLineLgShader.Create(extractFilePath(shadername),s);
@@ -397,7 +399,7 @@ begin
     m_UseShaders:=true;
   end;
   s:='LineLg1d';
-  shadername:=configfile.findShaderFile(s);
+  shadername:=g_configfile.findShaderFile(s);
   if shadername<>'' then
   begin
     if fileexists(shadername) then
@@ -433,9 +435,10 @@ begin
   // if m_ShaderMng <> nil then
   // begin
   // m_ShaderMng.destroy;
-  if configfile <> nil then
+  if g_configfile <> nil then
   begin
-    configfile.destroy;
+    g_configfile.destroy;
+    g_configfile:=nil;
   end;
   // end;
   tv.destroy;

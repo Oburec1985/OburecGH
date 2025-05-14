@@ -321,21 +321,75 @@ begin
   {$endif}
 end;
 
-{ Функция получения строки описания plug-in`а }
+{Функция получения строки описания plug-in`а}
+function GetPluginDescription: LPCSTR; cdecl;
+var
+  I: Integer;
+begin
+  for I := 0 to length(GPluginInfo.Dsc)-1 do
+  begin
+    GPlgDSC[i]:=GPluginInfo.Dsc[i+1];
+  end;
+  Result := LPCSTR(@GPlgDSC[0]);
+end;
+{Функция получения полного описания plug-in`а}
+
+
+procedure GetPluginInfo(var lpPluginInfo: PLUGININFO); cdecl;
+var
+  lName, lDst, lVend:array of ansichar;
+  i:integer;
+begin
+  //Описание извлекается из глобальной описательной структуры
+  //Копирование строк производится именно функциями StrCopy()
+  // из-за того, что структура описания plug-in`а описана
+  // в языке C++}
+  setlength(lname, length(GPluginInfo.Name)+1);
+  setlength(lDst, length(GPluginInfo.Dsc)+1);
+  setlength(lVend, length(GPluginInfo.Vendor)+1);
+  for I := 0 to length(GPluginInfo.Name)-1 do
+  begin
+    lname[i]:=GPluginInfo.Name[i+1];
+  end;
+  for I := 0 to length(GPluginInfo.Dsc)-1 do
+  begin
+    lDst[i]:=GPluginInfo.Dsc[i+1];
+  end;
+  for I := 0 to length(GPluginInfo.Vendor)-1 do
+  begin
+    lVend[i]:=GPluginInfo.Vendor[i+1];
+  end;
+  lname[length(lname)-1]:=ansichar(0);
+  lDst[length(lDst)-1]:=ansichar(0);
+  lVend[length(lVend)-1]:=ansichar(0);
+
+  StrCopy( @lpPluginInfo.name,lpcstr(@lname[0]));
+  StrCopy( @lpPluginInfo.describe,lpcstr(@lDst[0]));
+  StrCopy( @lpPluginInfo.vendor,lpcstr(@lVend[0]));
+
+  //StrCopy( @lpPluginInfo.name,LPCSTR(GPluginInfo.Name));
+  //StrCopy( @lpPluginInfo.describe,LPCSTR(GPluginInfo.Dsc));
+  //StrCopy( @lpPluginInfo.vendor,LPCSTR(GPluginInfo.Vendor));
+  lpPluginInfo.version := GPluginInfo.Version;
+  lpPluginInfo.subversion := GPluginInfo.SubVertion;
+end;
+
+{
+// Функция получения строки описания plug-in`а
 function GetPluginDescription: LPCSTR; cdecl;
 begin
-  // Описание извлекается из глобальной описательной структуры}
+  // Описание извлекается из глобальной описательной структуры
   Result := LPCSTR(GPluginInfo.Dsc);
   // Result := LPCSTR('Модуль для теста (пустой)');
 end;
 
-{ Функция получения полного описания plug-in`а }
+// Функция получения полного описания plug-in`а
 procedure GetPluginInfo(var lpPluginInfo: PLUGININFO); cdecl;
 begin
   // Описание извлекается из глобальной описательной структуры
   // Копирование строк производится именно функциями StrCopy()
   // из-за того, что структура описания plug-in`а описана
-  // в языке C++}
+  // в языке C++
   //ZeroMemory(lpPluginInfo,sizeof(lpPluginInfo));
   StrCopy(@lpPluginInfo.name, LPCSTR(GPluginInfo.Name));
   StrCopy(@lpPluginInfo.describe, LPCSTR(GPluginInfo.Dsc));
@@ -343,6 +397,7 @@ begin
   lpPluginInfo.version := GPluginInfo.version;
   lpPluginInfo.subversion := GPluginInfo.SubVertion;
 end;
+}
 
 { ---------------------Объявление экспортируемых процедур---------------------- }
 // Оъявление строковых имен экспортируемых функций

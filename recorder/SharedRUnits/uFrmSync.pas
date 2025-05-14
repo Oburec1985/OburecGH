@@ -1,3 +1,4 @@
+
 unit uFrmSync;
 
 interface
@@ -55,7 +56,7 @@ end;
 procedure TFrmSync.ProcNotifyFrmCreate(sender:tobject);
 begin
 //----------- не влияет на error 5
-  createForms();
+  createForms;
   TExtRecorderPack(GPluginInstance).EList.CallAllEvents(c_RCreateFrmInMainThread);
 end;
 

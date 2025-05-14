@@ -69,7 +69,6 @@
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="..\..\sharedUtils\math\uMatrix.pas"/>
-			<DCCReference Include="..\plgEvalStepValue\units\uPluginClass.pas"/>
 			<DCCReference Include="..\SharedRUnits\uCompMng.pas"/>
 			<DCCReference Include="..\SharedRUnits\uRecBasicFactory.pas"/>
 			<DCCReference Include="..\SharedRUnits\uRecorderEvents.pas"/>
@@ -88,14 +87,15 @@
 			<DCCReference Include="..\SharedRUnits\interfaces\transf.pas"/>
 			<DCCReference Include="..\SharedRUnits\interfaces\transformers.pas"/>
 			<DCCReference Include="..\SharedRUnits\interfaces\waitwnd.pas"/>
-			<DCCReference Include="..\plgEvalStepValue\forms\uFrmSyncEvStep.pas">
-				<Form>FrmSync</Form>
-			</DCCReference>
 			<DCCReference Include="forms\uEditEvalFRFFrm.pas">
 				<Form>EditFrfFrm</Form>
 			</DCCReference>
 			<DCCReference Include="forms\uEvalFRFFrm.pas">
 				<Form>FRFFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\SharedRUnits\PluginClass.pas"/>
+			<DCCReference Include="..\SharedRUnits\uFrmSync.pas">
+				<Form>FrmSync</Form>
 			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

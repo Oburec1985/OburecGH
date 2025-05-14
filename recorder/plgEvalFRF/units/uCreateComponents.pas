@@ -22,7 +22,7 @@ type
 
 var
   g_cfgpath:string;
-
+  GPlgDSC: array [0..255] of ansichar;
 const
   // Глобальная переменная для храения описания plug-in`а.
   GPluginInfo: TInternalPluginInfo = (
@@ -32,14 +32,16 @@ const
     Version: 1;
     SubVertion:0;);
 
+
+
   procedure createComponents(compMng:cCompMng);
   procedure destroyEngine;
   procedure createFormsRecorderUIThread(compMng: cCompMng);
   procedure destroyFormsRecorderUIThread(compMng: cCompMng);
   // MainThead. Здесь создавать формы для настройки плагина в режиме стопа
-  procedure createForms(compMng: cCompMng);
+  procedure createForms;
   // MainThead
-  procedure destroyForms(compMng: cCompMng);
+  procedure destroyForms();
   procedure RecorderInit;
 
 implementation
@@ -53,7 +55,7 @@ begin
 end;
 
 
-procedure createForms(compMng: cCompMng);
+procedure createForms;
 begin
   // создание в MainThread
   if GetCurrentThreadId = MainThreadID then
@@ -65,7 +67,7 @@ begin
   end;
 end;
 
-procedure destroyForms(compMng: cCompMng);
+procedure destroyForms();
 begin
   if GetCurrentThreadId = MainThreadID then
   begin

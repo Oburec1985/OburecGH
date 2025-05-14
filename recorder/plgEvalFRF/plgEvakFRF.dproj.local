@@ -73,15 +73,12 @@
     <Transaction>2025.04.04 22:43:00.960.pas,C:\Oburec\OburecGH\recorder\SharedRUnits\PluginClass.pas=C:\Oburec\OburecGH\recorder\plgEvalStepValue\units\uPluginClass.pas</Transaction>
     <Transaction>2025.04.04 23:11:03.947.pas,C:\Oburec\OburecGH\recorder\SharedRUnits\uFrmSync.pas=C:\Oburec\OburecGH\recorder\plgEvalStepValue\forms\uFrmSyncEvStep.pas</Transaction>
     <Transaction>2025.04.04 23:11:03.947.dfm,C:\Oburec\OburecGH\recorder\SharedRUnits\uFrmSync.dfm=C:\Oburec\OburecGH\recorder\plgEvalStepValue\forms\uFrmSyncEvStep.dfm</Transaction>
+    <Transaction>2025.05.14 18:40:06.689.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalStepValue\units\uPluginClass.pas=</Transaction>
+    <Transaction>2025.05.14 18:41:42.964.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalStepValue\forms\uFrmSyncEvStep.pas=</Transaction>
+    <Transaction>2025.05.14 18:41:42.964.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalStepValue\forms\uFrmSyncEvStep.dfm=</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
-    <File Path="..\plgEvalStepValue"/>
-    <File Path="..\plgEvalStepValue\forms"/>
-    <File Path="..\plgEvalStepValue\forms\uFrmSyncEvStep.pas"/>
-    <File Path="..\plgEvalStepValue\forms\uFrmSyncEvStep.dfm"/>
-    <File Path="..\plgEvalStepValue\units"/>
-    <File Path="..\plgEvalStepValue\units\uPluginClass.pas"/>
     <File Path="..\SharedRUnits"/>
     <File Path="..\SharedRUnits\interfaces"/>
     <File Path="..\SharedRUnits\interfaces\blaccess.pas"/>
@@ -101,6 +98,9 @@
     <File Path="..\SharedRUnits\uCompMng.pas"/>
     <File Path="..\SharedRUnits\uRecBasicFactory.pas"/>
     <File Path="..\SharedRUnits\uRecorderEvents.pas"/>
+    <File Path="..\SharedRUnits\PluginClass.pas"/>
+    <File Path="..\SharedRUnits\uFrmSync.pas"/>
+    <File Path="..\SharedRUnits\uFrmSync.dfm"/>
     <File Path="..\..\..\OburecGH"/>
     <File Path="..\..\3d"/>
     <File Path="..\..\3d\3dComponents"/>

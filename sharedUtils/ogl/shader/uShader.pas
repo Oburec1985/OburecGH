@@ -50,8 +50,11 @@ Type
 
  cShaderManager = class
  public
+    m_Extensions:PAnsiChar;
+    m_ExtSupported:boolean;
     // ìàêñ ÷èñëî àòòğèáóòîâ
     m_MaxVertsAttr:integer;
+
 
     m_shaders:tStringList;
     ActiveShader:integer; // âûäåëåííûé øåéäåğ
@@ -98,6 +101,15 @@ var
 begin
   glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, @Attr);
   m_MaxVertsAttr:=Attr;
+
+  m_Extensions := glGetString(GL_EXTENSIONS);
+
+  if Pos('GL_ARB_shader_objects', m_Extensions)>0 then
+  begin
+    m_ExtSupported:=true;
+  end
+  else
+    m_ExtSupported:=false;
 end;
 
 procedure cShaderManager.disableShaders;
@@ -109,6 +121,14 @@ begin
     shader.useprogram(false);
     active:=false;
   end;
+end;
+
+function IsExtensionSupported(const Extension: AnsiString): Boolean;
+var
+  ExtList: AnsiString;
+begin
+  ExtList := glGetString(GL_EXTENSIONS);
+  Result := Pos(Extension, ExtList) > 0;
 end;
 
 

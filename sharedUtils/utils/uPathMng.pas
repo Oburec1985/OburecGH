@@ -699,9 +699,8 @@ begin
   begin
     if filename <> '' then
     begin
+      filename := startdir + '\'+name;
       ifile := tIniFile.create(filename);
-      filename := startdir + extractfilename(Application.ExeName);
-      tIniFile.create(filename);
       deep := 2;
     end;
   end

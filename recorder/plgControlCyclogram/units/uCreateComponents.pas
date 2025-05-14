@@ -58,9 +58,9 @@ uses
   uSRSFrm,
   uGLFrmEdit, uEditGlObjFrm,
   TestUDPSender, uThresholdsFrm,
-  //uPressFrm, uPressFrmEdit,
+  // uPressFrm, uPressFrmEdit,
   uPressFrm2, uPressFrmEdit2, uSpmThresholdProfile,
-  uDigsFrm,uDigsFrmEdit,
+  uDigsFrm, uDigsFrmEdit,
   uLissajousCurve,
   ulissajousCurveEdit,
   uMBaseControl;
@@ -73,7 +73,7 @@ type
     Name: AnsiString; // наименование
     Dsc: AnsiString; // описание
     Vendor: AnsiString; // описание разработчика
-    wstr:String;
+    wstr: String;
     Version: integer; // версия
     SubVertion: integer; // под-версия
   end;
@@ -112,6 +112,8 @@ function getMDBTestPath: lpcstr;
 function getMDBRegPath: lpcstr;
 
 var
+  GPlgDSC: array [0..255] of ansichar;
+
   // Глобальная переменная для храения описания plug-in`а.
   GPluginInfo: TInternalPluginInfo = (Name: 'PlgСontrolCyclogram';
     Dsc: 'Циклограмма, БДИ, расчетные каналы'; Vendor: 'НПП Мера'; Version: 1;
@@ -123,7 +125,6 @@ var
 
 const
   c_MBaseName = 'Plugin Циклограмма';
-
 
 implementation
 
@@ -167,7 +168,8 @@ begin
     if ws = c_MDBFormName then
     begin
       cf := f as ICustomFactInterface;
-      int := 0; (cf as ICustomFactInterface).getChild(int, ifrm);
+      int := 0; (cf as ICustomFactInterface)
+      .getChild(int, ifrm);
       // (cf as ICustomFactInterface).getChild(int, mdb);
       // вернуть произвольное свойство tag - id того что хотим получить
       // 0: путь к испытанию 1: путь к регистрации
@@ -255,9 +257,9 @@ var
   h: thandle;
   str, str1: string;
   show: boolean;
-  fr:tForm;
+  fr: tForm;
 begin
-  //exit;
+  // exit;
   g_delFrms := false;
   if g_CreateFrms then
     exit;
@@ -267,19 +269,18 @@ begin
 
   EditGLObjFrm := TEditGLObjFrm.Create(nil);
   g_ObjFrm3dEdit := TObjFrm3dEdit.Create(nil);
-  if TestUDPSenderFrm=nil then
-    TestUDPSenderFrm:=TTestUDPSenderFrm.Create(nil);
+  if TestUDPSenderFrm = nil then
+    TestUDPSenderFrm := TTestUDPSenderFrm.Create(nil);
 
   TagInfoEditFrm := TTagInfoEditFrm.Create(nil);
   TagInfoEditFrm.show;
   TagInfoEditFrm.close;
 
-
-  if ThresholdFrm=nil then
+  if ThresholdFrm = nil then
   begin
-    ThresholdFrm:=tThresholdFrm.Create(nil);
+    ThresholdFrm := tThresholdFrm.Create(nil);
   end;
-  if g_conmng<>nil then
+  if g_conmng <> nil then
   begin
     ControlCyclogramEditFrm := TControlCyclogramEditFrm.Create(nil);
     ControlCyclogramEditFrm.HandleNeeded;
@@ -306,7 +307,7 @@ begin
     ModesTabForm.LinkMng(g_conmng);
   end;
 
-  SpmThresholdProfileFrm:=TSpmThresholdProfileFrm.create(nil);
+  SpmThresholdProfileFrm := TSpmThresholdProfileFrm.Create(nil);
   SpmThresholdProfileFrm.show;
   SpmThresholdProfileFrm.close;
 
@@ -315,18 +316,18 @@ begin
     DownloadRegsFrm.show;
   DownloadRegsFrm.close;
 
-    MDBFrm := TMDBFrm.Create(nil);
-    if show then
-      MDBFrm.show;
-    MDBFrm.close;
-  if g_MBaseControl<>nil then
+  MDBFrm := TMDBFrm.Create(nil);
+  if show then
+    MDBFrm.show;
+  MDBFrm.close;
+  if g_MBaseControl <> nil then
   begin
     RcClientFrm := TRcClientFrm.Create(nil);
     if show then
       RcClientFrm.show;
     RcClientFrm.close;
   end;
-  if g_algMng<>nil then
+  if g_algMng <> nil then
   begin
     SpmChartEditFrm := TSpmChartEditFrm.Create(nil);
     if show then
@@ -359,11 +360,10 @@ begin
     GenSignalsEditFrm.show;
   GenSignalsEditFrm.close;
 
-  g_LisEditFrm:=TLisEditFrm.Create(nil);
+  g_LisEditFrm := TLisEditFrm.Create(nil);
   if show then
     g_LisEditFrm.show;
   g_LisEditFrm.close;
-
 
   EditSRSFrm := TEditSRSFrm.Create(nil);
   if show then
@@ -444,15 +444,14 @@ begin
     EditPolarFrm := nil;
   end;
 
-  if EditGLObjFrm<>nil then
+  if EditGLObjFrm <> nil then
     EditGLObjFrm.destroy;
 
-  if g_ObjFrm3dEdit<>nil then
+  if g_ObjFrm3dEdit <> nil then
     g_ObjFrm3dEdit.destroy;
 
-  if TestUDPSenderFrm<>nil then
+  if TestUDPSenderFrm <> nil then
     TestUDPSenderFrm.destroy;
-
 
   if ControlCyclogramEditFrm <> nil then
   begin
@@ -484,13 +483,13 @@ begin
     DownloadRegsFrm.destroy;
     DownloadRegsFrm := nil;
   end;
-  if RcClientFrm<>nil then
+  if RcClientFrm <> nil then
   begin
     RcClientFrm.destroy;
     RcClientFrm := nil;
   end;
 
-  if MDBFrm<>nil then
+  if MDBFrm <> nil then
   begin
     MDBFrm.destroy;
     MDBFrm := nil;
@@ -508,14 +507,14 @@ begin
 
   if SpmChartEditFrm <> nil then
   begin
-    ////SpmChartEditFrm.destroy;
+    /// /SpmChartEditFrm.destroy;
     SpmChartEditFrm := nil;
   end;
 
-  if EditSrsFrm<> nil then
+  if EditSRSFrm <> nil then
   begin
-    ////EditSrsFrm.destroy;
-    EditSrsFrm:= nil;
+    /// /EditSrsFrm.destroy;
+    EditSRSFrm := nil;
   end;
 
   if EditCntlWrnFrm <> nil then
@@ -549,8 +548,8 @@ end;
 procedure createForms();
 begin
   // создание в MainThread
-  {if GetCurrentThreadId = MainThreadID then
-  begin
+  { if GetCurrentThreadId = MainThreadID then
+    begin
     // СОЗДАНЫЕ ЗДЕСЬ ФОРМЫ НЕЛЬЗЯ ДЕЛАТЬ SHOWMODAL В UITHREAD
     // необходимо быть осторожным, т.к. создание формы и создание хендлоа разные события
     // если форма первый раз показана не в том же потоке где создана то будут проблеммыс удалением формы
@@ -559,7 +558,7 @@ begin
     TagInfoEditFrm.close;
 
     TestUDPSenderFrm:=TTestUDPSenderFrm.Create(nil);
-  end;}
+    end; }
 end;
 
 procedure destroyForms();
@@ -643,9 +642,9 @@ begin
   np := cMBaseAlgNP.Create;
   TExtRecorderPack(GPluginInstance).m_nplist.AddNP(np);
 
-  //g_PressCamFactory := cPressCamFactory.Create;
-  //compMng.Add(g_PressCamFactory);
-  //PressFrmEdit := TPressFrmEdit.Create(nil);
+  // g_PressCamFactory := cPressCamFactory.Create;
+  // compMng.Add(g_PressCamFactory);
+  // PressFrmEdit := TPressFrmEdit.Create(nil);
 
   g_PressCamFactory2 := cPressCamFactory2.Create;
   compMng.Add(g_PressCamFactory2);
@@ -653,7 +652,7 @@ begin
 
   g_DigsFrmFactory := cDigsFrmFactory.Create;
   compMng.Add(g_DigsFrmFactory);
-  DigsFrmEdit:=TDigsFrmEdit.create(nil);
+  DigsFrmEdit := TDigsFrmEdit.Create(nil);
 
   g_GenSignalsFactory := cGenSignalsFactory.Create;
   compMng.Add(g_GenSignalsFactory);
@@ -661,9 +660,9 @@ end;
 
 procedure RecorderInit;
 begin
-  if g_algMng<>nil then
+  if g_algMng <> nil then
     g_algMng.doRCinit;
-  if ThresholdFrm<>nil then
+  if ThresholdFrm <> nil then
     ThresholdFrm.AttachAlarms;
 end;
 
@@ -687,13 +686,15 @@ end;
 
 function ProcessShowVersionInfo(pMsgInfo: PCB_MESSAGE): boolean;
 var
-  str:string;
+  str: string;
 begin
   str := GPluginInfo.Name + char(0) + char(0) + char(0) + GPluginInfo.Dsc + char
     (0) + 'Версия ' + inttostr(GPluginInfo.Version) + '.' + inttostr
-    (GPluginInfo.SubVertion)+char(0)+char(0)+ GPluginInfo.Vendor + ', 2017';
-  GPluginInfo.wstr:=StrToAnsi(str);
-  MessageBox(0, PChar(GPluginInfo.wstr), 'Информация о модуле', MB_OK + MB_ICONINFORMATION + MB_APPLMODAL + MB_TOPMOST);
+    (GPluginInfo.SubVertion) + char(0) + char(0)
+    + GPluginInfo.Vendor + ', 2017';
+  GPluginInfo.wstr := StrToAnsi(str);
+  MessageBox(0, PChar(GPluginInfo.wstr), 'Информация о модуле',
+    MB_OK + MB_ICONINFORMATION + MB_APPLMODAL + MB_TOPMOST);
   result := true;
 end;
 
