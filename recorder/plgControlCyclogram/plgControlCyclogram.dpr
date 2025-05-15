@@ -249,8 +249,8 @@ uses
   uLissajousCurve in 'forms\uLissajousCurve.pas' {LissajousFrm},
   ulissajousCurveEdit in 'forms\ulissajousCurveEdit.pas' {LisEditFrm},
   uPerformanceTime in '..\..\sharedUtils\utils\uPerformanceTime.pas',
-  uProfile in 'units\uProfile.pas',
-  uSpmThresholdProfile in 'forms\uSpmThresholdProfile.pas' {SpmThresholdProfileFrm},
+  uProfile in '..\..\sharedUtils\objects\uProfile.pas',
+  uSpmProfile in '..\plgEvalFRF\forms\uSpmProfile.pas' {SpmProfileFrm},
   uCreateComponents in 'units\uCreateComponents.pas',
   PluginClass in '..\SharedRUnits\PluginClass.pas',
   uCompMng in '..\SharedRUnits\uCompMng.pas';

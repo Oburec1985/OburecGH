@@ -9,6 +9,7 @@ uses
   uComponentServises, uStringGridExt, uCommonTypes, ImgList, uChart, DCL_MYOWN;
 
 type
+  // картинки для отображения в Stringgrid
   cBmp = class
     bmp: tbitmap;
     t: TPType;

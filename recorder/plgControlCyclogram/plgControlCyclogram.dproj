@@ -534,9 +534,9 @@
 				<Form>LisEditFrm</Form>
 			</DCCReference>
 			<DCCReference Include="..\..\sharedUtils\utils\uPerformanceTime.pas"/>
-			<DCCReference Include="units\uProfile.pas"/>
-			<DCCReference Include="forms\uSpmThresholdProfile.pas">
-				<Form>SpmThresholdProfileFrm</Form>
+			<DCCReference Include="..\..\sharedUtils\objects\uProfile.pas"/>
+			<DCCReference Include="..\plgEvalFRF\forms\uSpmProfile.pas">
+				<Form>SpmProfileFrm</Form>
 			</DCCReference>
 			<DCCReference Include="units\uCreateComponents.pas"/>
 			<DCCReference Include="..\SharedRUnits\PluginClass.pas"/>

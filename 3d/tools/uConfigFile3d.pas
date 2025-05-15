@@ -6,11 +6,15 @@ interface
  type
  // класс для загрузки путей к ресурсам
   cCfgFile = class(cPathMng)
+  private
+    fref:integer;
   public
     UIConfigname:string;
   protected
     procedure addDefaultPathLists;override;
   public
+    procedure addref;
+    procedure release;
     function findMeshFile(name:string):string;
     function findShaderFile(name:string):string;
     function findCfgPathFile(name:string):string;
@@ -34,6 +38,19 @@ begin
   UIConfigname:=ifile.ReadString(uisection,UISection+'name','UICfg.ini');
   UIConfigname:=findCfgPathFile(UIConfigname);
 end;
+
+procedure cCfgFile.release;
+begin
+  dec(fref);
+  if fref=0 then
+    destroy;
+end;
+
+procedure cCfgFile.addref;
+begin
+  inc(fref);
+end;
+
 
 procedure cCfgFile.save;
 begin
@@ -70,6 +87,7 @@ begin
     result:=FindFile(name+'.*', startdir, deep+2);
   end;
 end;
+
 
 function cCfgFile.findCfgPathFile(name:string):string;
 begin

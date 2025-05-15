@@ -16,13 +16,13 @@ uses
   upage,
   tags,
   complex,
-  uBuffTrend1d,
+  uBuffTrend1d,  utrend,
   uCommonTypes,
   pluginClass,
   shellapi,
   uPathMng,
   opengl, uSimpleObjects,
-  math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend,
+  math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend, uProfile,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uBtnListView;
 
 type
@@ -255,6 +255,9 @@ type
 
   cSRSTaho = class
   public
+    // профиль испытания
+    m_profile:cprofile;
+
     m_color:point3;
     m_frm: tform;
     m_CohTreshold,
@@ -268,6 +271,7 @@ type
     // m_T1ClxData:TAlignDCmpx;
     // тот же спектр, но амплитуда
     // m_rms: TAlignDarray;
+
     line: cBuffTrend1d;
 
     // список ударов (TDataBlock)
@@ -360,7 +364,10 @@ type
     m_estimator: integer;
     pageT, pageSpm: cpage;
     axSpm: caxis;
+
     m_expWndline: cExpFuncObj;
+    // профиль текущего выбраного тахо
+    m_profileline:ctrend;
     // список настроек Тахо
     m_TahoList: tlist;
     // spm
@@ -866,6 +873,11 @@ begin
   p.ZoomfRect(r);
   p.Caption := 'Freq Dom.';
   pageSpm := p;
+  m_profileline:=cTrend.create;
+  m_profileline.name:='Profile';
+  pageSpm.activeAxis.AddChild(m_profileline);
+  m_profileline.visible:=true;
+
   axSpm := p.activeAxis;
 end;
 
@@ -931,14 +943,22 @@ var
   fr: frect;
   a: caxis;
   bfrf: boolean;
+
+  prLine:cProfileLine;
 begin
+  t := getTaho;
+  if t<>nil then
+  begin
+    prLine:=cProfileLine(t.m_profile.getline('Profile'));
+    prLine.exclude(m_profileline);
+  end;
+
   for i := 0 to pageT.axises.ChildCount - 1 do
   begin
     a := pageT.getaxis(i);
     a.clear;
   end;
   axSpm.clear;
-  t := getTaho;
   c := t.getCfg;
 
   UseWndFcb.Checked := t.m_shockList.m_wnd.wndfunc <> wnd_no;
@@ -1054,6 +1074,17 @@ begin
       s.lineCoh.name := s.name + '_coh';
     end;
     c.typeres := c.typeres;
+
+    m_profileline:=cTrend.create;
+    m_profileline.name:='Profile';
+    m_profileline.color:=green;
+    pageSpm.activeAxis.AddChild(m_profileline);
+    m_profileline.visible:=true;
+
+    prLine:=cProfileLine(t.m_profile.getline('Profile'));
+    prLine.addline(m_profileline);
+    prLine.updatepoints;
+
 
     fr.BottomLeft := p2(0, -2 * t.m_treshold);
     fr.TopRight := p2(m_Length, t.m_treshold * 2);
@@ -1617,12 +1648,22 @@ var
   s: cSRSres;
   tag: itag;
   ltag: ctag;
+  prof:cProfileLine;
+
 begin
   inherited;
   ltag := LoadTagIni(a_pIni, str, 'Taho_Tag');
   if ltag <> nil then
   begin
     t := cSRSTaho.create;
+    prof:=t.m_profile.getline('Profile');
+    prof.addline(m_profileline);
+    prof.updatepoints;
+    if pageSpm.activeAxis.getChild('Profile')=nil then
+    begin
+      showmessage('nil');
+    end;
+
     t.m_color:=ColorArray[0];
     t.m_tag.tag := ltag.tag;
     t.m_tag.tagname := ltag.tagname;
@@ -2292,8 +2333,15 @@ begin
 end;
 
 constructor cSRSTaho.create;
+var
+  pline:cProfileLine;
 begin
   inherited;
+  m_profile:=cprofile.create;
+  m_profile.newline('Profile', 1);
+  m_profile.AddP(1,1,ptlinePoly, false);
+  m_profile.AddP(1000,1,ptlinePoly, false);
+
   m_treshold := 1;
   m_CohTreshold := 0.5;
   m_tag := ctag.create;
@@ -2304,6 +2352,7 @@ end;
 
 destructor cSRSTaho.destroy;
 begin
+  m_profile.destroy;
   m_tag.destroy;
   fSpmCfgList.destroy;
   m_shockList.destroy;

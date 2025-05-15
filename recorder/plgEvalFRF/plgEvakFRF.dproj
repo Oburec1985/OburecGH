@@ -97,6 +97,9 @@
 			<DCCReference Include="..\SharedRUnits\uFrmSync.pas">
 				<Form>FrmSync</Form>
 			</DCCReference>
+			<DCCReference Include="forms\uSpmProfile.pas">
+				<Form>SpmProfileFrm</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

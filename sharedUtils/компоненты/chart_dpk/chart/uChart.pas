@@ -378,7 +378,10 @@ begin
   debugMode := FALSE;
 
   if g_configfile=nil then
+  begin
     g_configfile:=cCfgFile.create('resources.ini');
+  end;
+  g_configfile.addref;
   m_ShaderMng:=cShaderManager.Create;
 end;
 
@@ -437,7 +440,7 @@ begin
   // m_ShaderMng.destroy;
   if g_configfile <> nil then
   begin
-    g_configfile.destroy;
+    g_configfile.release;
     g_configfile:=nil;
   end;
   // end;

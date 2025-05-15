@@ -35,7 +35,8 @@ uses
   uEditEvalFRFFrm in 'forms\uEditEvalFRFFrm.pas' {EditFrfFrm},
   uEvalFRFFrm in 'forms\uEvalFRFFrm.pas' {FRFFrm},
   PluginClass in '..\SharedRUnits\PluginClass.pas',
-  uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync};
+  uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
+  uSpmProfile in 'forms\uSpmProfile.pas' {SpmProfileFrm};
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 
@@ -100,6 +101,7 @@ begin
   GPluginInstance:=NIL;
   piPlg._release;
 end;
+
 {Функция получения строки описания plug-in`а}
 function GetPluginDescription: LPCSTR; cdecl;
 var
@@ -111,9 +113,8 @@ begin
   end;
   Result := LPCSTR(@GPlgDSC[0]);
 end;
+
 {Функция получения полного описания plug-in`а}
-
-
 procedure GetPluginInfo(var lpPluginInfo: PLUGININFO); cdecl;
 var
   lName, lDst, lVend:array of ansichar;

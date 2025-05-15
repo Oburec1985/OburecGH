@@ -3,7 +3,7 @@ object FRFFrm: TFRFFrm
   Top = 0
   Hint = #1042#1082#1083#1102#1095#1080#1090#1100'/'#1086#1090#1082#1083#1102#1095#1080#1090#1100' '#1088#1072#1089#1095#1077#1090
   Caption = 'FRFFrm'
-  ClientHeight = 626
+  ClientHeight = 659
   ClientWidth = 930
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,7 +20,7 @@ object FRFFrm: TFRFFrm
     Left = 637
     Top = 0
     Width = 4
-    Height = 626
+    Height = 659
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -34,7 +34,7 @@ object FRFFrm: TFRFFrm
     Left = 0
     Top = 0
     Width = 637
-    Height = 626
+    Height = 659
     Cursor = crSizeAll
     Align = alClient
     Caption = 'cChart1'
@@ -45,13 +45,12 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitHeight = 577
   end
   object RightGB: TGroupBox
     Left = 641
     Top = 0
     Width = 289
-    Height = 626
+    Height = 659
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -59,7 +58,6 @@ object FRFFrm: TFRFFrm
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
-    ExplicitHeight = 577
     object ShockCountLabel: TLabel
       Left = 10
       Top = 27
@@ -406,13 +404,12 @@ object FRFFrm: TFRFFrm
     end
     object GroupBox1: TGroupBox
       Left = 2
-      Top = 295
+      Top = 328
       Width = 285
       Height = 329
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 10
-      ExplicitTop = 246
       object SignalsLV: TBtnListView
         Left = 2
         Top = 19
@@ -463,7 +460,6 @@ object FRFFrm: TFRFFrm
         'Spm'
         'Phase')
       TabOrder = 11
-      Visible = False
       OnClick = ResTypeRGClick
     end
   end

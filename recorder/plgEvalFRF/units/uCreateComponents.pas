@@ -6,7 +6,9 @@ interface
 uses
   types, ActiveX, forms, sysutils, windows, Classes, IniFiles, Dialogs,
   uCompMng, cfreg, uRecorderEvents, PluginClass, tags, Recorder, uRCFunc,
-  uCommonMath, nativeXml, uEditEvalFRFFrm, uEvalFRFFrm,
+  uCommonMath, nativeXml, uEditEvalFRFFrm,
+  uSpmProfile,
+  uEvalFRFFrm,
   Generics.Collections, Controls, uRecBasicFactory;
 
 type
@@ -64,6 +66,7 @@ begin
     // необходимо быть осторожным, т.к. создание формы и создание хендлоа разные события
     // если форма первый раз показана не в том же потоке где создана то будут проблеммыс удалением формы
     EditFRFFrm:=TEditFRFFrm.Create(nil);
+    SpmProfileFrm:=TSpmProfileFrm.Create(nil);
   end;
 end;
 

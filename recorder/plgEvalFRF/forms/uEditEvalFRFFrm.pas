@@ -10,7 +10,7 @@ uses
   uHardwareMath,
   uCommonMath,
   uComponentServises,
-  tags, uEvalFRFFrm,
+  tags, uEvalFRFFrm, uSpmProfile, uProfile,
   uRcCtrls, DCL_MYOWN, Spin, ImgList, Buttons;
 
 type
@@ -66,6 +66,7 @@ type
     SigAx: TRadioGroup;
     AddPNumIE: TIntEdit;
     AddPNumLabel: TLabel;
+    ProfileBtn: TButton;
     procedure SignalsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
@@ -83,6 +84,7 @@ type
     procedure SignalsTVKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure ProfileBtnClick(Sender: TObject);
   public
     m_SRS:TFRFFrm;
   private
@@ -266,6 +268,14 @@ begin
   begin
     result:=csrstaho(d.Data);
   end;
+end;
+
+procedure TEditFrfFrm.ProfileBtnClick(Sender: TObject);
+var
+  t:cSRSTaho;
+begin
+  t:=m_SRS.getTaho;
+  SpmProfileFrm.edit(t.m_profile);
 end;
 
 procedure TEditFrfFrm.ShowSrsCfg;

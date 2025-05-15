@@ -797,6 +797,15 @@ object EditFrfFrm: TEditFrfFrm
         TabOrder = 1
       end
     end
+    object ProfileBtn: TButton
+      Left = 400
+      Top = 48
+      Width = 147
+      Height = 25
+      Caption = #1055#1088#1086#1092#1080#1083#1100' '#1080#1089#1087#1099#1090#1072#1085#1080#1103
+      TabOrder = 4
+      OnClick = ProfileBtnClick
+    end
   end
   object ImageList1: TImageList
     Left = 56
