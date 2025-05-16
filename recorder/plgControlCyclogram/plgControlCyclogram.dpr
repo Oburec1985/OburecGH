@@ -253,7 +253,8 @@ uses
   uSpmProfile in '..\plgEvalFRF\forms\uSpmProfile.pas' {SpmProfileFrm},
   uCreateComponents in 'units\uCreateComponents.pas',
   PluginClass in '..\SharedRUnits\PluginClass.pas',
-  uCompMng in '..\SharedRUnits\uCompMng.pas';
+  uCompMng in '..\SharedRUnits\uCompMng.pas',
+  uSpmThresholdProfile in 'forms\uSpmThresholdProfile.pas' {SpmThresholdProfileFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

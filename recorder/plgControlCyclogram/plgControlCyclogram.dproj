@@ -541,6 +541,9 @@
 			<DCCReference Include="units\uCreateComponents.pas"/>
 			<DCCReference Include="..\SharedRUnits\PluginClass.pas"/>
 			<DCCReference Include="..\SharedRUnits\uCompMng.pas"/>
+			<DCCReference Include="forms\uSpmThresholdProfile.pas">
+				<Form>SpmThresholdProfileFrm</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

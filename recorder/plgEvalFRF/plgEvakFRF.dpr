@@ -36,7 +36,8 @@ uses
   uEvalFRFFrm in 'forms\uEvalFRFFrm.pas' {FRFFrm},
   PluginClass in '..\SharedRUnits\PluginClass.pas',
   uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
-  uSpmProfile in 'forms\uSpmProfile.pas' {SpmProfileFrm};
+  uSpmProfile in 'forms\uSpmProfile.pas' {SpmProfileFrm},
+  uEditTest in 'forms\uEditTest.pas' {EditTestFrm};
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 

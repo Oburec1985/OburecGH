@@ -369,6 +369,8 @@
     <File Path="forms\uTrigsFrm.dfm"/>
     <File Path="forms\uVertexEditFrame.pas"/>
     <File Path="forms\uVertexEditFrame.dfm"/>
+    <File Path="forms\uSpmThresholdProfile.pas"/>
+    <File Path="forms\uSpmThresholdProfile.dfm"/>
     <File Path="units"/>
     <File Path="units\u3dMoveEngine.pas"/>
     <File Path="units\uAriphmAlg.pas"/>
