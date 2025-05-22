@@ -2,10 +2,6 @@
 <BorlandProject>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
-    <File Path="..\plgEvalFRF"/>
-    <File Path="..\plgEvalFRF\forms"/>
-    <File Path="..\plgEvalFRF\forms\uSpmProfile.pas"/>
-    <File Path="..\plgEvalFRF\forms\uSpmProfile.dfm"/>
     <File Path="..\SharedRUnits"/>
     <File Path="..\SharedRUnits\interfaces"/>
     <File Path="..\SharedRUnits\interfaces\blaccess.pas"/>
@@ -41,6 +37,8 @@
     <File Path="..\SharedRUnits\uRvclService.pas"/>
     <File Path="..\SharedRUnits\uTagsListFrame.pas"/>
     <File Path="..\SharedRUnits\uTagsListFrame.dfm"/>
+    <File Path="..\SharedRUnits\uFrmSync.pas"/>
+    <File Path="..\SharedRUnits\uFrmSync.dfm"/>
     <File Path="..\..\..\OburecGH"/>
     <File Path="..\..\3d"/>
     <File Path="..\..\3d\core"/>
@@ -115,7 +113,6 @@
     <File Path="..\..\sharedUtils\objects\uBaseObjMng.pas"/>
     <File Path="..\..\sharedUtils\objects\uBaseObjService.pas"/>
     <File Path="..\..\sharedUtils\objects\uTreeNode.pas"/>
-    <File Path="..\..\sharedUtils\objects\uProfile.pas"/>
     <File Path="..\..\sharedUtils\ogl"/>
     <File Path="..\..\sharedUtils\ogl\shader"/>
     <File Path="..\..\sharedUtils\ogl\shader\uShader.pas"/>
@@ -349,6 +346,8 @@
     <File Path="forms\uSpmChartEdit.dfm"/>
     <File Path="forms\uSpmFrame.pas"/>
     <File Path="forms\uSpmFrame.dfm"/>
+    <File Path="forms\uSpmThresholdProfile.pas"/>
+    <File Path="forms\uSpmThresholdProfile.dfm"/>
     <File Path="forms\uSRSFrm.pas"/>
     <File Path="forms\uSRSFrm.dfm"/>
     <File Path="forms\uSyncOscillogram.pas"/>
@@ -369,8 +368,6 @@
     <File Path="forms\uTrigsFrm.dfm"/>
     <File Path="forms\uVertexEditFrame.pas"/>
     <File Path="forms\uVertexEditFrame.dfm"/>
-    <File Path="forms\uSpmThresholdProfile.pas"/>
-    <File Path="forms\uSpmThresholdProfile.dfm"/>
     <File Path="units"/>
     <File Path="units\u3dMoveEngine.pas"/>
     <File Path="units\uAriphmAlg.pas"/>
@@ -387,6 +384,7 @@
     <File Path="units\uModelPointMng.pas"/>
     <File Path="units\uPeakFactorAlg.pas"/>
     <File Path="units\uPhaseAlg.pas"/>
+    <File Path="units\uProfile.pas"/>
     <File Path="units\uRTrig.pas"/>
     <File Path="units\uSpm.pas"/>
     <File Path="units\uSynchroPhaseAlg.pas"/>
@@ -512,8 +510,5 @@
     <Transaction>2025.04.04 23:11:03.934.dfm,C:\Oburec\OburecGH\recorder\SharedRUnits\uFrmSync.dfm=C:\Oburec\OburecGH\recorder\plgEvalStepValue\forms\uFrmSyncEvStep.dfm</Transaction>
     <Transaction>2025.04.04 23:28:28.734.pas,C:\Oburec\OburecGH\recorder\plgEvalStepValue\forms\uFrmSyncEvStep.pas=</Transaction>
     <Transaction>2025.04.04 23:28:28.734.dfm,C:\Oburec\OburecGH\recorder\plgEvalStepValue\forms\uFrmSyncEvStep.dfm=</Transaction>
-    <Transaction>2025.05.15 10:53:13.601.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\units\uProfile.pas=F:\Oburec\delphi\2011\OburecGH\sharedUtils\objects\uProfile.pas</Transaction>
-    <Transaction>2025.05.15 14:03:32.452.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSpmThresholdProfile.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\forms\uSpmProfile.pas</Transaction>
-    <Transaction>2025.05.15 14:03:32.452.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSpmThresholdProfile.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\forms\uSpmProfile.dfm</Transaction>
   </Transactions>
 </BorlandProject>
