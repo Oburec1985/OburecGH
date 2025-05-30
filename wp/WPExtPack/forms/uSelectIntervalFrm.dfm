@@ -91,7 +91,7 @@ object SelectIntervalFrm: TSelectIntervalFrm
       Left = 348
       Top = 95
       Width = 158
-      Height = 21
+      Height = 25
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -103,7 +103,7 @@ object SelectIntervalFrm: TSelectIntervalFrm
       Left = 16
       Top = 95
       Width = 158
-      Height = 21
+      Height = 25
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -116,7 +116,7 @@ object SelectIntervalFrm: TSelectIntervalFrm
       Left = 182
       Top = 95
       Width = 158
-      Height = 21
+      Height = 25
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -160,7 +160,7 @@ object SelectIntervalFrm: TSelectIntervalFrm
       Left = 16
       Top = 38
       Width = 158
-      Height = 21
+      Height = 25
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -231,7 +231,7 @@ object SelectIntervalFrm: TSelectIntervalFrm
       Left = 4
       Top = 58
       Width = 286
-      Height = 24
+      Height = 29
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -244,7 +244,7 @@ object SelectIntervalFrm: TSelectIntervalFrm
       Left = 4
       Top = 120
       Width = 286
-      Height = 24
+      Height = 29
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -321,7 +321,7 @@ object SelectIntervalFrm: TSelectIntervalFrm
         Left = 7
         Top = 119
         Width = 360
-        Height = 21
+        Height = 25
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -335,7 +335,7 @@ object SelectIntervalFrm: TSelectIntervalFrm
         Left = 7
         Top = 56
         Width = 360
-        Height = 21
+        Height = 25
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -365,7 +365,6 @@ object SelectIntervalFrm: TSelectIntervalFrm
       showTV = False
       showLegend = True
       selectSize = 5
-      ExplicitHeight = 448
     end
   end
   object ImageList_32: TImageList

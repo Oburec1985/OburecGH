@@ -179,8 +179,8 @@
     <File Path="..\..\sharedUtils\math\u2DMath.pas"/>
     <File Path="..\..\sharedUtils\math\uCommonMath.pas"/>
     <File Path="..\..\sharedUtils\math\uFFT.pas"/>
-    <File Path="..\..\sharedUtils\math\uMNK.pas"/>
     <File Path="..\..\sharedUtils\math\uGrahamScan.pas"/>
+    <File Path="..\..\sharedUtils\math\uMNK.pas"/>
     <File Path="..\..\sharedUtils\mera"/>
     <File Path="..\..\sharedUtils\mera\database"/>
     <File Path="..\..\sharedUtils\mera\database\uDBObject.pas"/>
@@ -270,6 +270,8 @@
     <File Path="forms\uIntervalFrm.dfm"/>
     <File Path="forms\uKBHMFrm.pas"/>
     <File Path="forms\uKBHMFrm.dfm"/>
+    <File Path="forms\uLissajousFrm.pas"/>
+    <File Path="forms\uLissajousFrm.dfm"/>
     <File Path="forms\uMNKFrm.pas"/>
     <File Path="forms\uMNKFrm.dfm"/>
     <File Path="forms\uNIIPMTenzopluginForm.pas"/>
@@ -298,8 +300,6 @@
     <File Path="forms\uTrigsFrm.dfm"/>
     <File Path="forms\uWPProcFrm.pas"/>
     <File Path="forms\uWPProcFrm.dfm"/>
-    <File Path="forms\uLissajousFrm.pas"/>
-    <File Path="forms\uLissajousFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\uExtBalanceSignals.pas"/>
     <File Path="units\uExtFFTInverse.pas"/>

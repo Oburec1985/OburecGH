@@ -388,8 +388,8 @@
     <File Path="units\uRTrig.pas"/>
     <File Path="units\uSpm.pas"/>
     <File Path="units\uSynchroPhaseAlg.pas"/>
-    <File Path="units\uTahoAlg.pas"/>
     <File Path="units\uTimeIntervalAlg.pas"/>
+    <File Path="units\uTahoAlg.pas"/>
     <File Path="uBaseAlgBands.pas"/>
   </ProjectSortOrder>
 	<Transactions>

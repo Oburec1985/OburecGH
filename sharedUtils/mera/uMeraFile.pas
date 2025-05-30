@@ -36,10 +36,9 @@ uses
     // список сохраняемых сигналов
     // сигналы должны быть потомками cBaseObj
     signals:tstringlist;
-  public
     signalClass:cSignalClass;
-  protected
     opts:TMeraOpts;
+  protected
     // имя файла
     dir,name:string;
     // сигнал СЕВ
@@ -51,6 +50,8 @@ uses
     procedure SaveTrend(signal:cSignal);
     procedure ModNames;
   public
+    // возвращает интервал времени
+    function StartStop:point2d;
     procedure Save;overload;
     procedure Save(p_name:string);overload;
     procedure Load(p_name:string);
@@ -233,6 +234,8 @@ begin
   f.ReadSections(sections);
   for I := 1 to sections.Count - 1 do
   begin
+    if signalClass=nil then
+      signalClass:=cSignal;
     s:=signalClass.create;
     str:=sections.Strings[i];
     s.DataType:=f.ReadString(str, 'YFormat', '');
@@ -385,6 +388,27 @@ begin
   if signal.WriteXY then
   begin
     CloseFile(fx);
+  end;
+end;
+
+function cMeraFile.StartStop: point2d;
+var
+  I: Integer;
+  s:cSignal;
+  x1,x2:double;
+begin
+  s:=GetSignal(0);
+  Result.x:=s.GetT0;
+  Result.y:=s.GetTEnd;
+  for I := 1 to signals.Count - 1 do
+  begin
+    s:=GetSignal(i);
+    x1:=s.GetT0;
+    x2:=s.GetTEnd;
+    if x1>Result.x then
+      Result.x:=x1;
+    if x2<Result.y then
+      Result.y:=x2;
   end;
 end;
 

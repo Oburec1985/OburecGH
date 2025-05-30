@@ -1467,11 +1467,11 @@ END
 /* forms\uThresholdsFrm.dfm */
 /* forms\uDigsFrm.dfm */
 /* forms\uDigsFrmEdit.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSpmThresholdProfile.dfm */
+/* forms\uSpmThresholdProfile.dfm */
 /* forms\uEditCurveFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmEdit2.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrm2.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmFrame2.dfm */
+/* forms\uPressFrmFrame2.dfm */
+/* forms\uPressFrm2.dfm */
+/* forms\uPressFrmEdit2.dfm */
 /* ..\..\3d\forms\uSelectLoadedObjects.dfm */
 /* forms\DataTransfFrm\TestUDPsender.dfm */
 /* forms\uEditGlObjFrm.dfm */

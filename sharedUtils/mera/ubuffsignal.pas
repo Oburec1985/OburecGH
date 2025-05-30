@@ -2,7 +2,10 @@ unit uBuffSignal;
 
 interface
 uses
-  uMeraSignal, uTrend, uCommonTypes, uBasicTrend, uMyMath, sysutils;
+  uMeraSignal,
+  uCommonTypes,
+  //uBasicTrend, uTrend,
+  uMyMath, sysutils;
 
 type
   cBuffSignal = class(cSignal)
