@@ -5113,9 +5113,12 @@ begin
   case IntervalOpts of
     c_IntervalTrigs:
     begin
-      if fTrigStop<>nil then
+      if fTrigStop<>fTrigStop then
       begin
-        result:=fTrigStop.GetTime(self);
+        if fTrigStop<>nil then
+        begin
+          result:=fTrigStop.GetTime(self);
+        end;
       end;
     end;
   end;

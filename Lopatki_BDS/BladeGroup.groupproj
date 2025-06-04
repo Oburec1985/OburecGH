@@ -33,6 +33,9 @@
 			<Projects Include="..\recorder\plgEvalFRF\plgEvakFRF.dproj">
 				<Dependencies/>
 			</Projects>
+			<Projects Include="..\3d\GlScene.dproj">
+				<Dependencies/>
+			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -133,14 +136,23 @@
 		<Target Name="plgEvakFRF:Make">
 			<MSBuild Targets="Make" Projects="..\recorder\plgEvalFRF\plgEvakFRF.dproj"/>
 		</Target>
+		<Target Name="GlScene">
+			<MSBuild Projects="..\3d\GlScene.dproj"/>
+		</Target>
+		<Target Name="GlScene:Clean">
+			<MSBuild Targets="Clean" Projects="..\3d\GlScene.dproj"/>
+		</Target>
+		<Target Name="GlScene:Make">
+			<MSBuild Targets="Make" Projects="..\3d\GlScene.dproj"/>
+		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;Project1;plgEvakFRF"/>
+			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;Project1;plgEvakFRF;GlScene"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;Project1:Clean;plgEvakFRF:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;Project1:Clean;plgEvakFRF:Clean;GlScene:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;Project1:Make;plgEvakFRF:Make"/>
+			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;Project1:Make;plgEvakFRF:Make;GlScene:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

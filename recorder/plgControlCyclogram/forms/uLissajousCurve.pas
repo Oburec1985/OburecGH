@@ -89,6 +89,7 @@ type
   protected
     procedure WndProc(var Message: TMessage); override;
   public
+    function ready:boolean;
     function sCount: integer;
     function createsignal:TLisSig;
     function GetSignal(i: integer): TLisSig; overload;
@@ -334,6 +335,11 @@ begin
   end;
 end;
 
+function TLissajousFrm.ready: boolean;
+begin
+  result:=true;
+end;
+
 function TLisSig.updateData:boolean;
 var
   interv:point2d;
@@ -342,6 +348,8 @@ var
 begin
   b:=false;
   result:=false;
+  if (m_tx.tag=nil) or (m_ty.tag=nil) then
+    exit;
   if m_tx.UpdateTagData(false) then
   begin
     // накопленный интервал по всем блокам

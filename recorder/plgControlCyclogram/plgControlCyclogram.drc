@@ -1529,7 +1529,7 @@ END
 /* forms\uLissajousCurve.dfm */
 /* forms\ulissajousCurveEdit.dfm */
 /* forms\uMBaseControl.dfm */
-/* ..\..\recorder\SharedRUnits\uFrmSync.dfm */
+/* ..\SharedRUnits\uFrmSync.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditChartObjFrame.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateTrendFrame.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateObjForm.dfm */

@@ -408,6 +408,7 @@ end;
 procedure destroyFormsRecorderUIThread(compMng: cCompMng);
 begin
 {$IFDEF DEBUG}
+  exit;
   // удаление форм в UIThread
   // ВАЖНО!!! Первое изменение свойств формы имеет право происходить только в UIThread
   // Если произойдет в MainThread (например менять форму при загрузке объектов программы),

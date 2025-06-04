@@ -37,7 +37,7 @@ uses
   PluginClass in '..\SharedRUnits\PluginClass.pas',
   uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
   uSpmProfile in 'forms\uSpmProfile.pas' {SpmProfileFrm},
-  uEditFreqBandsForm in 'forms\uEditFreqBandsForm.pas' {EditFreqBandsForm};
+  uEditTest in 'forms\uEditTest.pas' {EditTestFrm};
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 

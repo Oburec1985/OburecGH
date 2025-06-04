@@ -3123,9 +3123,8 @@ begin
           ident := sname;
           saveHeader(ifile, 1 / c.fspmdx, 0, ident, 'Ãö');
           savedata(path, sname, s.m_phase);
-
-          ifile.destroy;
         end;
+        ifile.destroy;
       end;
     end;
   end;

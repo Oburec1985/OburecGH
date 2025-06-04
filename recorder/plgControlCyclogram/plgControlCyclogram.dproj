@@ -26,10 +26,10 @@
 			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_UnitSearchPath>$(BDS)\AlphaControls\D2010\;..\..\sharedUtils\utils\xml;..\..\sharedUtils\objects;..\..\sharedUtils\objects\utils;..\..\sharedUtils\forms;..\..\sharedUtils\utils\files;..\..\sharedUtils\utils;..\..\sharedUtils\utils\PathUtils;..\..\sharedUtils\utils\jcl-2.3.1.4197;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows\obj;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes\containers;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;..\..\sharedUtils;..\..\sharedUtils\math;..\..\sharedUtils\компоненты\dcl_dpk;..\..\sharedUtils\ogl;..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source;..\..\sharedUtils\utils\lists;..\..\sharedUtils\utils\FastMM\;..\..\3d\3dComponents\components\Asutp ;..\..\3d\3dComponents\components\;..\..\3d\3dComponents\dialogs;..\..\3d\3dComponents\PropertEditors\;..\..\3d\core;..\..\3d\forms;..\..\3d\math;..\..\3d\objects;..\..\3d\tools;..\..\sharedUtils\ZipMaster;..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\;..\..\sharedUtils\utils\socket;..\..\sharedUtils\math\FFT_койнов;..\..\sharedUtils\utils\FastMM4991;..\..\sharedUtils\utils\reports;..\..\sharedUtils\utils\reports\excel;..\..\sharedUtils\utils\FastMM4991\;..\..\sharedUtils\ogl\forms;..\..\recorder\SharedRUnits;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-			<DCC_DependencyCheckOutputName>c:\Program Files (x86)\Mera\Recorder\plugins\plgControlCyclogram.dll</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>C:\Program Files (x86)\Mera\Recorder\plugins\plgControlCyclogram.dll</DCC_DependencyCheckOutputName>
 			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
 			<DCC_K>false</DCC_K>
-			<DCC_ExeOutput>c:\Program Files (x86)\Mera\Recorder\plugins\</DCC_ExeOutput>
+			<DCC_ExeOutput>C:\Program Files (x86)\Mera\Recorder\plugins\</DCC_ExeOutput>
 			<DCC_F>false</DCC_F>
 			<DCC_UsePackage>vclx;vcl;vclimg;dbrtl;Rave77VCL;bdertl;rtl;vclactnband;xmlrtl;vcldb;vcldbx;vcltouch;dsnap;dsnapcon;TeeUI;TeeDB;Tee;vclib;ibxpress;adortl;IndyCore;IndySystem;IndyProtocols;inet;intrawebdb_100_140;Intraweb_100_140;VclSmp;vclie;websnap;webdsnap;inetdb;inetdbbde;inetdbxpress;soaprtl;vclribbon;dbexpress;DbxCommonDriver;DataSnapIndy10ServerTransport;DataSnapProviderClient;DbxClientDriver;DataSnapServer;DBXInterBaseDriver;DBXMySQLDriver;dbxcds;DBXFirebirdDriver;DBXSybaseASEDriver;DBXSybaseASADriver;DBXOracleDriver;DBXMSSQLDriver;DBXInformixDriver;DBXDb2Driver;acnt2010_R</DCC_UsePackage>
 			<DCC_E>false</DCC_E>
@@ -534,13 +534,16 @@
 				<Form>LisEditFrm</Form>
 			</DCCReference>
 			<DCCReference Include="..\..\sharedUtils\utils\uPerformanceTime.pas"/>
-			<DCCReference Include="..\..\sharedUtils\objects\uProfile.pas"/>
-			<DCCReference Include="..\plgEvalFRF\forms\uSpmProfile.pas">
-				<Form>SpmProfileFrm</Form>
+			<DCCReference Include="units\uProfile.pas"/>
+			<DCCReference Include="forms\uSpmThresholdProfile.pas">
+				<Form>SpmThresholdProfileFrm</Form>
 			</DCCReference>
 			<DCCReference Include="units\uCreateComponents.pas"/>
 			<DCCReference Include="..\SharedRUnits\PluginClass.pas"/>
 			<DCCReference Include="..\SharedRUnits\uCompMng.pas"/>
+			<DCCReference Include="..\SharedRUnits\uFrmSync.pas">
+				<Form>FrmSync</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -566,7 +569,7 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
-						<Parameters Name="HostApplication">c:\Program Files (x86)\MERA\Recorder\Recorder.exe</Parameters>
+						<Parameters Name="HostApplication">C:\Program Files (x86)\Mera\Recorder\Recorder.exe</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>

@@ -67,8 +67,8 @@ type
     // (мат ожидание, размах)
     function EvalEstimates:point2;virtual;abstract;
 
-    function getname:string;virtual; abstract;
-    procedure setname(s:string);virtual;abstract;
+    function getname:string;virtual;
+    procedure setname(s:string);virtual;
     procedure loadSignal(p_name:string);virtual; abstract;
     procedure SaveData(const f:file);virtual;
   public
@@ -96,6 +96,16 @@ end;
 procedure cSignal.setfreqX(v:single);
 begin
   ffreqx:=v;
+end;
+
+procedure cSignal.setname(s: string);
+begin
+  fname:=s;
+end;
+
+function cSignal.getname: string;
+begin
+  result:=fname;
 end;
 
 procedure cSignal.SaveData(const f:file);
