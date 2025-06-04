@@ -78,6 +78,8 @@
     <Transaction>2025.05.14 18:41:42.964.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalStepValue\forms\uFrmSyncEvStep.dfm=</Transaction>
     <Transaction>2025.05.15 14:03:32.416.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSpmThresholdProfile.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\forms\uSpmProfile.pas</Transaction>
     <Transaction>2025.05.15 14:03:32.416.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSpmThresholdProfile.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\forms\uSpmProfile.dfm</Transaction>
+    <Transaction>2025.05.15 23:38:15.748.pas,C:\Oburec\OburecGH\recorder\plgEvalFRF\Unit2.pas=C:\Oburec\OburecGH\recorder\plgEvalFRF\forms\uEditFreqBandsForm.pas</Transaction>
+    <Transaction>2025.05.15 23:38:15.748.dfm,C:\Oburec\OburecGH\recorder\plgEvalFRF\Unit2.dfm=C:\Oburec\OburecGH\recorder\plgEvalFRF\forms\uEditFreqBandsForm.dfm</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
@@ -131,6 +133,8 @@
     <File Path="forms\uEvalFRFFrm.dfm"/>
     <File Path="forms\uSpmProfile.pas"/>
     <File Path="forms\uSpmProfile.dfm"/>
+    <File Path="forms\uEditFreqBandsForm.pas"/>
+    <File Path="forms\uEditFreqBandsForm.dfm"/>
     <File Path="units"/>
     <File Path="units\uCreateComponents.pas"/>
   </ProjectSortOrder>

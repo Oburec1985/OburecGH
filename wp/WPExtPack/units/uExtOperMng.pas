@@ -17,6 +17,7 @@ uses
   uExtBalanceSignalsFrm,
   uFFTFlt,
   uFFTFltFrm,
+  uCounterFrm,
   Windows
   ;
 
@@ -29,6 +30,8 @@ type
     eoRpt: TExtOperRpt;
     eoHilbFlt: TExtOperHilbertFlt;
     eoFFTFlt: TExtFFTflt;
+    eoCounter: TCounterOper;
+
     m_mng:cWPObjMng;
   public
     procedure NotifyPlugin(what:integer; var param: OleVariant);
@@ -104,6 +107,14 @@ begin
 
   eoFFTFlt:=TExtFFTflt.create();
   eoFFTFlt.link(m_mng);
+
+  eoCounter:=TCounterOper.create();
+  eoCounter.link(m_mng);
+  CounterFrm:=TCounterFrm.create(nil);
+  CounterFrm.link(eoCounter);
+  b:=WINPOS.RegisterExtOper(eoCounter, 1, 1, 'Counter', 'Counter', true);
+
+
   b:=WINPOS.RegisterExtOper(eoFFTFlt, 1, 1, 'FFT фильтр', 'FFT фильтр', true);
   FFTFltFrm:=TFFTFltFrm.Create(nil);
   FFTFltFrm.link(eoFFTFlt);

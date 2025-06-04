@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 25.01.2022 14:12:59 (- $Rev: 12980 $, 17995869).
+// File generated on 04.06.2025 23:36:59 (- $Rev: 12980 $, 5781671).
 
 [
   uuid(980F3DE2-7238-453B-B956-C525AA8B018A),
@@ -27,6 +27,7 @@ library WPExtPack
   coclass IEManchester2087;
   coclass ExtFFTInvers;
   coclass ExtBalanceSignals;
+  coclass CounterRpt;
 
 
   [
@@ -95,6 +96,13 @@ library WPExtPack
   coclass ExtBalanceSignals
   {
     [default] interface IWPExtOper;
+  };
+
+  [
+    uuid(34EFD1BC-0D3D-4BAA-A00B-D79347DAFFBA)
+  ]
+  coclass CounterRpt
+  {
   };
 
 };
