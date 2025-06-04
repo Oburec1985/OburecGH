@@ -34,16 +34,26 @@ type
     LoSE: TFloatSpinEdit;
     GroupBox1: TGroupBox;
     SignalsLV: TBtnListView;
-    Panel1: TPanel;
-    EvalBtn: TButton;
     Panel2: TPanel;
     Button1: TButton;
     SearchSignal: TEdit;
+    Panel1: TPanel;
+    Label1: TLabel;
+    Label2: TLabel;
+    T1Se: TFloatSpinEdit;
+    T2Se: TFloatSpinEdit;
+    EvalBtn: TButton;
+    AllTestBtn: TButton;
+    CursorsBtn: TButton;
     procedure ApplyBtnClick(Sender: TObject);
     procedure SignalsLBClick(Sender: TObject);
     procedure SearchSignalChange(Sender: TObject);
+    procedure AllTestBtnClick(Sender: TObject);
+    procedure CursorsBtnClick(Sender: TObject);
+    procedure T2SeChange(Sender: TObject);
   private
     m_oper: TCounterOper;
+    useChange:boolean;
     procedure showSignals;
     function Selected: iwpSignal;
     function getsignal(i: integer): iwpsignal;
@@ -62,6 +72,9 @@ type
   private
     m_mng: cBaseObjmng;
     m_Hi, m_Lo:double;
+    T1, t2:double;
+    // 0 - user; 1 - allTest; 2 - Cursors
+    Ttype:integer;
   public
     procedure GetError(out pnerrcode: integer; out perrstr: WideString);safecall;
     procedure OnApply; safecall;
@@ -257,12 +270,13 @@ function TCounterFrm.EditOper: string;
 var
   res: integer;
   i: integer;
-  s: iwpsignal;
+  s, interv: iwpsignal;
   iD: idispatch;
   str: widestring;
   rec: LBRecord;
   li: tlistitem;
   param: olevariant;
+  t1t2:point2d;
 begin
   showSignals;
   SetPropStr(m_oper.GetPropStrF(str));
@@ -270,6 +284,8 @@ begin
   if res = mrok then
   begin
     m_oper.SetPropStr(GetPropStr);
+    m_oper.t1:=t1se.Value;
+    m_oper.t2:=t1se.Value;
     for i := 0 to SignalsLV.items.count - 1 do
     begin
       li := SignalsLV.Items[i];
@@ -277,9 +293,12 @@ begin
       begin
         rec := LBRecord(li.data);
         s := rec.s;
+        t1t2.x:=t1se.Value;
+        t1t2.y:=t2se.Value;
+        interv:=getinterval(s, t1t2);
         if s.DeltaX <> 0 then
         begin
-          m_oper.Exec(s, s, iD, iD);
+          m_oper.Exec(interv, interv, iD, iD);
         end;
       end;
     end;
@@ -354,6 +373,7 @@ end;
 procedure TCounterFrm.link(eo: TCounterOper);
 begin
   m_oper := eo;
+  useChange:=true;
 end;
 
 procedure TCounterFrm.SearchSignalChange(Sender: TObject);
@@ -402,7 +422,7 @@ begin
     if issignal(ch) then
     begin
       s:=TypeCastToIWSignal(ch);
-      sname:=s/sname;
+      sname:=s.sname;
       if (pos(lowercase(SearchSignal.text), lowercase(sname))>0) or (SearchSignal.text='') then
       begin
         rec:=LBRecord.Create;
@@ -425,10 +445,43 @@ begin
   //EvalBtn.Enabled := Selected <> nil;
 end;
 
+procedure TCounterFrm.T2SeChange(Sender: TObject);
+begin
+  if useChange then
+    m_oper.Ttype:=0;
+end;
+
+procedure TCounterFrm.AllTestBtnClick(Sender: TObject);
+var
+  n:iwpnode;
+  p:point2d;
+begin
+  m_oper.Ttype:=1;
+  useChange:=false;
+  n:=getCurSrcInMainWnd;
+  p:=GetStartStop(n);
+  t1se.Value:=p.x;
+  t2se.Value:=p.y;
+  useChange:=true;
+end;
+
+procedure TCounterFrm.CursorsBtnClick(Sender: TObject);
+var
+  n:iwpnode;
+  p:point2d;
+begin
+  m_oper.Ttype:=2;
+  useChange:=false;
+  n:=getCurSrcInMainWnd;
+  p:=GetActiveCursorX;
+  t1se.Value:=p.x;
+  t2se.Value:=p.y;
+  useChange:=true;
+end;
+
 procedure TCounterFrm.ApplyBtnClick(Sender: TObject);
 begin
   ModalResult := mrOk;
 end;
-
 
 end.

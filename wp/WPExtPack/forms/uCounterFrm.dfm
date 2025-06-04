@@ -2,8 +2,8 @@ object CounterFrm: TCounterFrm
   Left = 0
   Top = 0
   Caption = 'Counter config'
-  ClientHeight = 302
-  ClientWidth = 409
+  ClientHeight = 374
+  ClientWidth = 452
   Color = clBtnFace
   Constraints.MinWidth = 425
   Font.Charset = DEFAULT_CHARSET
@@ -32,7 +32,7 @@ object CounterFrm: TCounterFrm
     Left = 8
     Top = 35
     Width = 121
-    Height = 22
+    Height = 23
     Increment = 0.100000000000000000
     TabOrder = 0
     Value = 70.000000000000000000
@@ -41,16 +41,16 @@ object CounterFrm: TCounterFrm
     Left = 8
     Top = 104
     Width = 121
-    Height = 22
+    Height = 23
     Increment = 0.100000000000000000
     TabOrder = 1
     Value = 30.000000000000000000
   end
   object GroupBox1: TGroupBox
-    Left = 138
+    Left = 181
     Top = 0
     Width = 271
-    Height = 261
+    Height = 311
     Align = alRight
     Caption = 'Signals'
     Font.Charset = DEFAULT_CHARSET
@@ -60,12 +60,13 @@ object CounterFrm: TCounterFrm
     Font.Style = []
     ParentFont = False
     TabOrder = 2
-    ExplicitLeft = 200
+    ExplicitLeft = 138
+    ExplicitHeight = 261
     object SignalsLV: TBtnListView
       Left = 2
       Top = 16
       Width = 267
-      Height = 202
+      Height = 252
       Align = alClient
       Checkboxes = True
       Columns = <
@@ -85,19 +86,16 @@ object CounterFrm: TCounterFrm
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitLeft = -3
-      ExplicitTop = 9
-      ExplicitHeight = 203
+      ExplicitHeight = 202
     end
     object Panel2: TPanel
       Left = 2
-      Top = 218
+      Top = 268
       Width = 267
       Height = 41
       Align = alBottom
       TabOrder = 1
-      ExplicitLeft = 1
-      ExplicitTop = 217
+      ExplicitTop = 218
       DesignSize = (
         267
         41)
@@ -123,26 +121,78 @@ object CounterFrm: TCounterFrm
   end
   object Panel1: TPanel
     Left = 0
-    Top = 261
-    Width = 409
-    Height = 41
+    Top = 311
+    Width = 452
+    Height = 63
     Align = alBottom
     TabOrder = 3
-    ExplicitTop = 265
+    ExplicitTop = 301
     DesignSize = (
-      409
-      41)
+      452
+      63)
+    object Label1: TLabel
+      Left = 11
+      Top = 14
+      Width = 41
+      Height = 14
+      Caption = 'T1, sec'
+    end
+    object Label2: TLabel
+      Left = 135
+      Top = 14
+      Width = 41
+      Height = 14
+      Caption = 'T2, sec'
+    end
+    object T1Se: TFloatSpinEdit
+      Left = 8
+      Top = 34
+      Width = 121
+      Height = 23
+      Increment = 0.100000000000000000
+      TabOrder = 0
+      Value = 30.000000000000000000
+      OnChange = T2SeChange
+    end
+    object T2Se: TFloatSpinEdit
+      Left = 135
+      Top = 34
+      Width = 121
+      Height = 23
+      Increment = 0.100000000000000000
+      TabOrder = 1
+      Value = 30.000000000000000000
+      OnChange = T2SeChange
+    end
     object EvalBtn: TButton
-      Left = 324
-      Top = 6
+      Left = 359
+      Top = 30
       Width = 75
       Height = 25
       Anchors = [akTop, akRight]
       Caption = 'Apply'
       ModalResult = 1
-      TabOrder = 0
+      TabOrder = 2
       OnClick = ApplyBtnClick
-      ExplicitLeft = 486
+      ExplicitLeft = 501
+    end
+    object AllTestBtn: TButton
+      Left = 262
+      Top = 6
+      Width = 75
+      Height = 25
+      Caption = 'AllTest'
+      TabOrder = 3
+      OnClick = AllTestBtnClick
+    end
+    object CursorsBtn: TButton
+      Left = 262
+      Top = 37
+      Width = 75
+      Height = 25
+      Caption = 'Cursors'
+      TabOrder = 4
+      OnClick = CursorsBtnClick
     end
   end
 end

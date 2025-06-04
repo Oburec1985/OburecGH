@@ -8,77 +8,77 @@
   resources were bound to the produced executable.
 */
 
-#define GIFConsts_sProgressLoading 64800
-#define GIFConsts_sProgressSaving 64801
-#define GIFConsts_sProgressConverting 64802
-#define GIFConsts_sProgressRendering 64803
-#define GIFConsts_sProgressCopying 64804
-#define GIFConsts_sProgressOptimizing 64805
-#define GDIPicture_GDIPERRMSG 64806
-#define GIFConsts_sInvalidData 64816
-#define GIFConsts_sBadSize 64817
-#define GIFConsts_sScreenSizeExceeded 64818
-#define GIFConsts_sNoColorTable 64819
-#define GIFConsts_sBadPixelCoordinates 64820
-#define GIFConsts_sInvalidPixelFormat 64821
-#define GIFConsts_sBadDimension 64822
-#define GIFConsts_sNoDIB 64823
-#define GIFConsts_sInvalidStream 64824
-#define GIFConsts_sInvalidColor 64825
-#define GIFConsts_sInvalidBitSize 64826
-#define GIFConsts_sEmptyColorMap 64827
-#define GIFConsts_sEmptyImage 64828
-#define GIFConsts_sMultipleGCE 64829
-#define GIFConsts_sNoPalette 64830
-#define GIFConsts_sGIFImageFile 64831
-#define GIFConsts_sBadColorIndex 64832
-#define GIFConsts_sBadColorIndexFixed 64833
-#define GIFConsts_sGIFErrorSaveEmpty 64834
-#define GIFConsts_sBadSignature 64835
-#define GIFConsts_sScreenBadColorSize 64836
-#define GIFConsts_sImageBadColorSize 64837
-#define GIFConsts_sUnknownExtension 64838
-#define GIFConsts_sBadExtensionLabel 64839
-#define GIFConsts_sOutOfMemDIB 64840
-#define GIFConsts_sDecodeTooFewBits 64841
-#define GIFConsts_sDecodeCircular 64842
-#define GIFConsts_sBadTrailer 64843
-#define GIFConsts_sBadExtensionInstance 64844
-#define GIFConsts_sBadBlockSize 64845
-#define GIFConsts_sBadBlock 64846
-#define GIFConsts_sUnsupportedClass 64847
-#define pnglang_EPNGCannotAssignChunkText 64848
-#define pnglang_EPNGUnexpectedEndText 64849
-#define pnglang_EPNGNoImageDataText 64850
-#define pnglang_EPNGCannotAddChunkText 64851
-#define pnglang_EPNGCannotAddInvalidImageText 64852
-#define pnglang_EPNGCouldNotLoadResourceText 64853
-#define pnglang_EPNGOutMemoryText 64854
-#define pnglang_EPNGCannotChangeTransparentText 64855
-#define pnglang_EPNGHeaderNotPresentText 64856
-#define pnglang_EInvalidNewSize 64857
-#define pnglang_EInvalidSpec 64858
-#define JConsts_sChangeJPGSize 64859
-#define JConsts_sJPEGError 64860
-#define JConsts_sJPEGImageFile 64861
-#define GIFConsts_sOutOfData 64862
-#define GIFConsts_sTooManyColors 64863
+#define GIFConsts_sGIFImageFile 64800
+#define GIFConsts_sProgressLoading 64801
+#define GIFConsts_sProgressSaving 64802
+#define GIFConsts_sProgressConverting 64803
+#define GIFConsts_sProgressRendering 64804
+#define GIFConsts_sProgressCopying 64805
+#define GIFConsts_sProgressOptimizing 64806
+#define GIFConsts_sUnsupportedClass 64816
+#define GIFConsts_sInvalidData 64817
+#define GIFConsts_sBadSize 64818
+#define GIFConsts_sScreenSizeExceeded 64819
+#define GIFConsts_sNoColorTable 64820
+#define GIFConsts_sBadPixelCoordinates 64821
+#define GIFConsts_sInvalidPixelFormat 64822
+#define GIFConsts_sBadDimension 64823
+#define GIFConsts_sNoDIB 64824
+#define GIFConsts_sInvalidStream 64825
+#define GIFConsts_sInvalidColor 64826
+#define GIFConsts_sInvalidBitSize 64827
+#define GIFConsts_sEmptyColorMap 64828
+#define GIFConsts_sEmptyImage 64829
+#define GIFConsts_sMultipleGCE 64830
+#define GIFConsts_sNoPalette 64831
+#define GIFConsts_sTooManyColors 64832
+#define GIFConsts_sBadColorIndex 64833
+#define GIFConsts_sBadColorIndexFixed 64834
+#define GIFConsts_sGIFErrorSaveEmpty 64835
+#define GIFConsts_sBadSignature 64836
+#define GIFConsts_sScreenBadColorSize 64837
+#define GIFConsts_sImageBadColorSize 64838
+#define GIFConsts_sUnknownExtension 64839
+#define GIFConsts_sBadExtensionLabel 64840
+#define GIFConsts_sOutOfMemDIB 64841
+#define GIFConsts_sDecodeTooFewBits 64842
+#define GIFConsts_sDecodeCircular 64843
+#define GIFConsts_sBadTrailer 64844
+#define GIFConsts_sBadExtensionInstance 64845
+#define GIFConsts_sBadBlockSize 64846
+#define GIFConsts_sBadBlock 64847
+#define pnglang_EPNGUnknownPalEntryText 64848
+#define pnglang_EPNGUnknownCriticalChunkText 64849
+#define pnglang_EPNGUnknownCompressionText 64850
+#define pnglang_EPNGUnknownInterlaceText 64851
+#define pnglang_EPNGCannotAssignChunkText 64852
+#define pnglang_EPNGUnexpectedEndText 64853
+#define pnglang_EPNGNoImageDataText 64854
+#define pnglang_EPNGCannotAddChunkText 64855
+#define pnglang_EPNGCannotAddInvalidImageText 64856
+#define pnglang_EPNGCouldNotLoadResourceText 64857
+#define pnglang_EPNGOutMemoryText 64858
+#define pnglang_EPNGCannotChangeTransparentText 64859
+#define pnglang_EPNGHeaderNotPresentText 64860
+#define pnglang_EInvalidNewSize 64861
+#define pnglang_EInvalidSpec 64862
+#define GIFConsts_sOutOfData 64863
 #define JclResources_RsEUnexpectedEOSeq 64864
 #define JclResources_RsWin32Error 64865
 #define JclResources_RsELibraryNotFound 64866
 #define JclResources_RsEFunctionNotFound 64867
-#define pnglang_EPngInvalidCRCText 64868
-#define pnglang_EPNGInvalidIHDRText 64869
-#define pnglang_EPNGMissingMultipleIDATText 64870
-#define pnglang_EPNGZLIBErrorText 64871
-#define pnglang_EPNGInvalidPaletteText 64872
-#define pnglang_EPNGInvalidFileHeaderText 64873
-#define pnglang_EPNGIHDRNotFirstText 64874
-#define pnglang_EPNGSizeExceedsText 64875
-#define pnglang_EPNGUnknownPalEntryText 64876
-#define pnglang_EPNGUnknownCriticalChunkText 64877
-#define pnglang_EPNGUnknownCompressionText 64878
-#define pnglang_EPNGUnknownInterlaceText 64879
+#define JConsts_sChangeJPGSize 64868
+#define JConsts_sJPEGError 64869
+#define JConsts_sJPEGImageFile 64870
+#define GDIPicture_GDIPERRMSG 64871
+#define pnglang_EPngInvalidCRCText 64872
+#define pnglang_EPNGInvalidIHDRText 64873
+#define pnglang_EPNGMissingMultipleIDATText 64874
+#define pnglang_EPNGZLIBErrorText 64875
+#define pnglang_EPNGInvalidPaletteText 64876
+#define pnglang_EPNGInvalidFileHeaderText 64877
+#define pnglang_EPNGIHDRNotFirstText 64878
+#define pnglang_EPNGSizeExceedsText 64879
 #define JclResources_RsIntelCacheDescrDC 64880
 #define JclResources_RsIntelCacheDescrDD 64881
 #define JclResources_RsIntelCacheDescrDE 64882
@@ -737,13 +737,14 @@
 #define SysConst_SZeroDivide 65535
 STRINGTABLE
 BEGIN
+	GIFConsts_sGIFImageFile,	"GIF Image"
 	GIFConsts_sProgressLoading,	"Loading"
 	GIFConsts_sProgressSaving,	"Saving"
 	GIFConsts_sProgressConverting,	"Converting"
 	GIFConsts_sProgressRendering,	"Rendering"
 	GIFConsts_sProgressCopying,	"Copying"
 	GIFConsts_sProgressOptimizing,	"Optimizing"
-	GDIPicture_GDIPERRMSG,	"Could not allocate memory for image"
+	GIFConsts_sUnsupportedClass,	"Object type not supported for operation"
 	GIFConsts_sInvalidData,	"Invalid GIF data"
 	GIFConsts_sBadSize,	"Invalid image size"
 	GIFConsts_sScreenSizeExceeded,	"Image exceeds Logical Screen size"
@@ -759,7 +760,7 @@ BEGIN
 	GIFConsts_sEmptyImage,	"Image is empty"
 	GIFConsts_sMultipleGCE,	"Frame contains multiple Graphic Control Extension blocks"
 	GIFConsts_sNoPalette,	"Missing, invalid or empty palette"
-	GIFConsts_sGIFImageFile,	"GIF Image"
+	GIFConsts_sTooManyColors,	"Color table overflow"
 	GIFConsts_sBadColorIndex,	"Invalid color index"
 	GIFConsts_sBadColorIndexFixed,	"Invalid color index - color map expanded"
 	GIFConsts_sGIFErrorSaveEmpty,	"Cannot save empty GIF"
@@ -775,7 +776,10 @@ BEGIN
 	GIFConsts_sBadExtensionInstance,	"Internal error: Extension Instance does not match Extension Label"
 	GIFConsts_sBadBlockSize,	"Unsupported Application Extension block size"
 	GIFConsts_sBadBlock,	"Unknown GIF block type"
-	GIFConsts_sUnsupportedClass,	"Object type not supported for operation"
+	pnglang_EPNGUnknownPalEntryText,	"There is no such palette entry."
+	pnglang_EPNGUnknownCriticalChunkText,	"This \"Portable Network Graphics\" image contains an unknown critical part which could not be decoded."
+	pnglang_EPNGUnknownCompressionText,	"This \"Portable Network Graphics\" image is encoded with an unknown compression scheme which could not be decoded."
+	pnglang_EPNGUnknownInterlaceText,	"This \"Portable Network Graphics\" image uses an unknown interlace scheme which could not be decoded."
 	pnglang_EPNGCannotAssignChunkText,	"The chunks must be compatible to be assigned."
 	pnglang_EPNGUnexpectedEndText,	"This \"Portable Network Graphics\" image is invalid because the decoder found an unexpected end of the file."
 	pnglang_EPNGNoImageDataText,	"This \"Portable Network Graphics\" image contains no data."
@@ -787,15 +791,15 @@ BEGIN
 	pnglang_EPNGHeaderNotPresentText,	"This operation is not valid because the current image contains no valid header."
 	pnglang_EInvalidNewSize,	"The new size provided for image resizing is invalid."
 	pnglang_EInvalidSpec,	"The \"Portable Network Graphics\" could not be created because invalid image type parameters have being provided."
-	JConsts_sChangeJPGSize,	"Cannot change the size of a JPEG image"
-	JConsts_sJPEGError,	"JPEG error #%d"
-	JConsts_sJPEGImageFile,	"JPEG Image File"
 	GIFConsts_sOutOfData,	"Premature end of data"
-	GIFConsts_sTooManyColors,	"Color table overflow"
 	JclResources_RsEUnexpectedEOSeq,	"Unexpected end of sequence"
 	JclResources_RsWin32Error,	"Win32 error: %s (%u)%s%s"
 	JclResources_RsELibraryNotFound,	"Library not found: %s"
 	JclResources_RsEFunctionNotFound,	"Function not found: %s.%s"
+	JConsts_sChangeJPGSize,	"Cannot change the size of a JPEG image"
+	JConsts_sJPEGError,	"JPEG error #%d"
+	JConsts_sJPEGImageFile,	"JPEG Image File"
+	GDIPicture_GDIPERRMSG,	"Could not allocate memory for image"
 	pnglang_EPngInvalidCRCText,	"This \"Portable Network Graphics\" image is not valid because it contains invalid pieces of data (crc error)"
 	pnglang_EPNGInvalidIHDRText,	"The \"Portable Network Graphics\" image could not be loaded because one of its main piece of data (ihdr) might be corrupted"
 	pnglang_EPNGMissingMultipleIDATText,	"This \"Portable Network Graphics\" image is invalid because it has missing image parts."
@@ -804,10 +808,6 @@ BEGIN
 	pnglang_EPNGInvalidFileHeaderText,	"The file being read is not a valid \"Portable Network Graphics\" image because it contains an invalid header. This file may be corrupted, try obtaining it again"
 	pnglang_EPNGIHDRNotFirstText,	"This \"Portable Network Graphics\" image is not supported or it might be invalid.\r\n(IHDR chunk is not the first)"
 	pnglang_EPNGSizeExceedsText,	"This \"Portable Network Graphics\" image is not supported because either it's width or height exceeds the maximum size, which is 65535 pixels length."
-	pnglang_EPNGUnknownPalEntryText,	"There is no such palette entry."
-	pnglang_EPNGUnknownCriticalChunkText,	"This \"Portable Network Graphics\" image contains an unknown critical part which could not be decoded."
-	pnglang_EPNGUnknownCompressionText,	"This \"Portable Network Graphics\" image is encoded with an unknown compression scheme which could not be decoded."
-	pnglang_EPNGUnknownInterlaceText,	"This \"Portable Network Graphics\" image uses an unknown interlace scheme which could not be decoded."
 	JclResources_RsIntelCacheDescrDC,	"3rd-level cache: 1.5 MByte, 12-way set associative, 64 byte line size"
 	JclResources_RsIntelCacheDescrDD,	"3rd-level cache: 3 MByte, 12-way set associative, 64 byte line size"
 	JclResources_RsIntelCacheDescrDE,	"3rd-level cache: 6 MByte, 12-way set associative, 64 byte line size"
@@ -1494,6 +1494,26 @@ END
 /* forms\uEditSignalsRepPropFrn.dfm */
 /* forms\frames\uWPSpmFrame.dfm */
 /* forms\uSpmFrm.dfm */
+/* ..\..\sharedUtils\forms\ulogFrame.dfm */
+/* ..\..\sharedUtils\forms\uJournalForm.dfm */
+/* forms\frames\uIntervalFrame.dfm */
+/* forms\uIntervalFrm.dfm */
+/* forms\uAddScriptItemFrm.dfm */
+/* forms\uEditTubeFrm.dfm */
+/* forms\uTrigsFrm.dfm */
+/* forms\EditSignalPathFrm.dfm */
+/* forms\uGraphMngFrm.dfm */
+/* forms\uSelectIntervalFrm.dfm */
+/* forms\uGenForm.dfm */
+/* forms\uSelectPathForm.dfm */
+/* .\forms\uTrigFrm.dfm */
+/* ..\..\sharedUtils\utils\TmsPack\advcolorpickerdropdown.res */
+/* ..\..\sharedUtils\utils\TmsPack\asgspin.res */
+/* ..\..\sharedUtils\utils\TmsPack\advgrid.res */
+/* ..\..\sharedUtils\utils\TmsPack\asgres.res */
+/* ..\..\sharedUtils\utils\TmsPack\advmetro.res */
+/* ..\..\sharedUtils\utils\TmsPack\asgfltr.res */
+/* forms\uEditSelsinFrm.dfm */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxInheritError.dfm */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxCtrls.res */
 /* ..\..\sharedUtils\utils\fastreport\Fastreport_4.10.5_FS\LibD14\frxPrintDialog.dfm */
@@ -1518,44 +1538,24 @@ END
 /* forms\frames\uRZDTareFrame.dfm */
 /* forms\uAddRZDDatafrm.dfm */
 /* forms\uRzdFrm.dfm */
-/* ..\..\sharedUtils\forms\ulogFrame.dfm */
-/* ..\..\sharedUtils\forms\uJournalForm.dfm */
-/* forms\uAddScriptItemFrm.dfm */
-/* forms\uEditSelsinFrm.dfm */
-/* ..\..\sharedUtils\utils\TmsPack\advcolorpickerdropdown.res */
-/* ..\..\sharedUtils\utils\TmsPack\asgspin.res */
-/* ..\..\sharedUtils\utils\TmsPack\advgrid.res */
-/* ..\..\sharedUtils\utils\TmsPack\asgres.res */
-/* ..\..\sharedUtils\utils\TmsPack\advmetro.res */
-/* ..\..\sharedUtils\utils\TmsPack\asgfltr.res */
-/* forms\uTrigsFrm.dfm */
-/* .\forms\uTrigFrm.dfm */
-/* forms\EditSignalPathFrm.dfm */
-/* forms\uGraphMngFrm.dfm */
-/* forms\uSelectPathForm.dfm */
-/* forms\uGenForm.dfm */
-/* forms\uSelectIntervalFrm.dfm */
-/* forms\frames\uIntervalFrame.dfm */
-/* forms\uIntervalFrm.dfm */
-/* forms\uEditTubeFrm.dfm */
-/* forms\uWPProcFrm.dfm */
+/* forms\uLissajousFrm.dfm */
+/* forms\uSelsinFrm.dfm */
+/* forms\uKBHMFrm.dfm */
+/* forms\uTrigLvlEditFrm.dfm */
+/* forms\uCyclogramRepFrm.dfm */
 /* forms\uNIIPMTenzopluginForm.dfm */
 /* forms\uCorrectUTS.dfm */
 /* forms\uAddSignalFrm.dfm */
-/* forms\uKBHMFrm.dfm */
-/* forms\uSelsinFrm.dfm */
 /* forms\uScriptFrm.dfm */
-/* forms\uCyclogramRepFrm.dfm */
-/* forms\uTrigLvlEditFrm.dfm */
-/* forms\uLissajousFrm.dfm */
+/* forms\uWPProcFrm.dfm */
 /* forms\uRptFrm.dfm */
-/* forms\uFrmHibFltFrm.dfm */
-/* forms\uFFTInverseFrm.dfm */
-/* forms\uExtBalanceSignalsFrm.dfm */
-/* forms\uFFTfltFrm.dfm */
+/* C:\Oburec\OburecGH\wp\WPExtPack\forms\uFFTfltFrm.dfm */
+/* C:\Oburec\OburecGH\wp\WPExtPack\forms\uExtBalanceSignalsFrm.dfm */
+/* C:\Oburec\OburecGH\wp\WPExtPack\forms\uFFTInverseFrm.dfm */
+/* C:\Oburec\OburecGH\wp\WPExtPack\forms\uFrmHibFltFrm.dfm */
 /* C:\Oburec\OburecGH\wp\WPExtPack\forms\uCounterFrm.dfm */
 /* C:\Oburec\OburecGH\wp\WPExtPack\forms\uCounterFrm.dfm */
-/* forms\uFindMaxForm.dfm */
+/* C:\Oburec\OburecGH\wp\WPExtPack\forms\uFindMaxForm.dfm */
 /* forms\frames\uWPNameFilterFrame.dfm */
 /* forms\uBDIFrm.dfm */
 /* forms\uMNKFrm.dfm */
