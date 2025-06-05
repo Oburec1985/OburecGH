@@ -102,7 +102,8 @@ uses
   uFFTFlt in 'units\uFFTFlt.pas',
   uFFTfltFrm in 'forms\uFFTfltFrm.pas' {FFTFltFrm},
   uLissajousFrm in 'forms\uLissajousFrm.pas' {LissajousFrm},
-  uGrahamScan in '..\..\sharedUtils\math\uGrahamScan.pas';
+  uGrahamScan in '..\..\sharedUtils\math\uGrahamScan.pas',
+  uCounterFrm in 'forms\uCounterFrm.pas' {CounterFrm};
 
 exports
   DllGetClassObject,

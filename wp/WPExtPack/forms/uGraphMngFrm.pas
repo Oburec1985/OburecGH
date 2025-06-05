@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, VirtualTrees, uVTServices, StdCtrls, ImgList, ComCtrls, uBtnListView,
-  uWPProc, ExtCtrls, DCL_MYOWN, uSetList, PosBase, ActiveX, Spin;
+  uWPProc, ExtCtrls, DCL_MYOWN, uSetList, PosBase, ActiveX, Spin, uWPOpers, uWPServices;
 
 type
   cSelectList = class(cSetList)
@@ -96,6 +96,8 @@ type
     Label7: TLabel;
     SyncCursorsCB: TCheckBox;
     ShowLegendCB: TCheckBox;
+    UnitsCB: TComboBox;
+    UnitsLabel: TLabel;
     procedure GraphTVGetImageIndexEx(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
       var Ghosted: Boolean; var ImageIndex: Integer;
@@ -751,6 +753,7 @@ procedure TGraphFrm.SetLinesOpts;
 var
   i:integer;
   l:cwpLine;
+  s:iwpsignal;
 begin
   for I := 0 to selLines.Count - 1 do
   begin
@@ -769,6 +772,11 @@ begin
     if l.hline<>0 then
     begin
       l.ApplyOpts;
+      s:=GetIWPSignalByHLine(l.hline);
+      case UnitsCB.ItemIndex of
+        c_ax
+        setSignalUnits(s,,c_AxX_sec);
+      end;
     end;
   end;
   wp.Refresh;

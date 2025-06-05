@@ -689,8 +689,6 @@ function EvalTrig(s: cWPSignal; from: double; finish: double; lvl: double;
   hi: boolean; num: integer; dsc: string; CallBack: TProcessEvent;
   var p_success: boolean): double;
 
-function GetSignalFolder(s:iwpsignal):string;
-
 function isHelpChannel(s:string):boolean;overload;
 function isHelpChannel(s:iwpsignal):boolean;overload;
 function isHelpChannel(s:cwpsignal):boolean;overload;
@@ -6112,27 +6110,9 @@ begin
         y2, '', '', 0);
     end;
   end;
+
 end;
 
-function GetSignalFolder(s:iwpsignal):string;
-var
-  n:iwpnode;
-  i,len:integer;
-  str:string;
-begin
-  n:=winpos.GetNode(s) as iwpnode;
-  str:=n.AbsolutePath;
-  len:=length(str);
-  result:='';
-  for I := len downto 1 do
-  begin
-    if str[i]='/' then
-    begin
-      result:=copy(str,1, i-1);
-      exit;
-    end;
-  end;
-end;
 
 function findSignal(path:string):iwpsignal;
 var

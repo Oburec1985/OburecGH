@@ -98,6 +98,8 @@ procedure setLineCloud(hline:integer);
 procedure setLineHist(hline:integer);
 procedure setLineNullPoly(hline:integer);
 
+function GetSignalFolder(s:iwpsignal):string;
+
 
 const
   c_Vibr_g = 0;
@@ -118,6 +120,26 @@ const
   //debug = true;
 
 implementation
+
+function GetSignalFolder(s:iwpsignal):string;
+var
+  n:iwpnode;
+  i,len:integer;
+  str:string;
+begin
+  n:=winpos.GetNode(s) as iwpnode;
+  str:=n.AbsolutePath;
+  len:=length(str);
+  result:='';
+  for I := len downto 1 do
+  begin
+    if str[i]='/' then
+    begin
+      result:=copy(str,1, i-1);
+      exit;
+    end;
+  end;
+end;
 
 procedure setLineCloud(hline:integer);
 begin

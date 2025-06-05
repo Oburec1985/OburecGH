@@ -36,6 +36,9 @@
 			<Projects Include="..\3d\GlScene.dproj">
 				<Dependencies/>
 			</Projects>
+			<Projects Include="..\..\MERA\2150 converter\Conv_2150.dproj">
+				<Dependencies/>
+			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -145,14 +148,23 @@
 		<Target Name="GlScene:Make">
 			<MSBuild Targets="Make" Projects="..\3d\GlScene.dproj"/>
 		</Target>
+		<Target Name="Conv_2150">
+			<MSBuild Projects="..\..\MERA\2150 converter\Conv_2150.dproj"/>
+		</Target>
+		<Target Name="Conv_2150:Clean">
+			<MSBuild Targets="Clean" Projects="..\..\MERA\2150 converter\Conv_2150.dproj"/>
+		</Target>
+		<Target Name="Conv_2150:Make">
+			<MSBuild Targets="Make" Projects="..\..\MERA\2150 converter\Conv_2150.dproj"/>
+		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;Project1;plgEvakFRF;GlScene"/>
+			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;Project1;plgEvakFRF;GlScene;Conv_2150"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;Project1:Clean;plgEvakFRF:Clean;GlScene:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;Project1:Clean;plgEvakFRF:Clean;GlScene:Clean;Conv_2150:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;Project1:Make;plgEvakFRF:Make;GlScene:Make"/>
+			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;Project1:Make;plgEvakFRF:Make;GlScene:Make;Conv_2150:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

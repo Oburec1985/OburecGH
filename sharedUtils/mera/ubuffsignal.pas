@@ -4,6 +4,7 @@ interface
 uses
   uMeraSignal,
   uCommonTypes,
+  u2dMath,
   //uBasicTrend, uTrend,
   uMyMath, sysutils;
 
@@ -111,8 +112,6 @@ begin
   // копируем данные
   move(p[0], d_points1d[startind], sizeof(double)*p_count);
 end;
-
-
 
 function cBuffSignal.EvalEstimates:point2;
 var
@@ -227,14 +226,74 @@ begin
     end;
     result:=points2d[i].y;
   end;
-
 end;
+
+function FindLeftPoint(arr:array of point2; arrLength: Integer; x: Double): Integer;
+var
+  left, right, mid: Integer;
+  result_idx: Integer;
+begin
+  left := 0;
+  right := arrLength - 1;
+  result_idx := -1; // -1 означает, что точка не найдена
+
+  while left <= right do
+  begin
+    mid := (left + right) div 2;
+
+    // Если текущая точка слева от искомой x
+    if arr[mid].x < x then
+    begin
+      result_idx := mid; // Запоминаем потенциальный результат
+      left := mid + 1;   // Ищем дальше справа
+    end
+    else
+    begin
+      right := mid - 1;  // Ищем слева
+    end;
+  end;
+  Result := result_idx;
+end;
+
+
+function FindLeftPointEx(arr: array of point2; arrLength: Integer; x: Double; startIndex: Integer = 0): Integer;
+var
+  left, right, mid: Integer;
+  result_idx: Integer;
+begin
+  // Проверяем корректность параметров
+  if (startIndex < 0) or (startIndex >= arrLength) then
+  begin
+    Result := -1;
+    Exit;
+  end;
+  left := startIndex;
+  right := arrLength - 1;
+  result_idx := -1; // -1 означает, что точка не найдена
+  while left <= right do
+  begin
+    mid := (left + right) div 2;
+    // Если текущая точка слева от искомой x
+    if arr[mid].x < x then
+    begin
+      result_idx := mid; // Запоминаем потенциальный результат
+      left := mid + 1;   // Ищем дальше справа
+    end
+    else
+    begin
+      right := mid - 1;  // Ищем слева
+    end;
+  end;
+  Result := result_idx;
+end;
+
 
 function cBuffSignal.GetY(t:single):single;
 var
   right,left:integer;
   k:single;
-  p1,p2,dt:single;
+  p1, p2, dt:single;
+  lp1,lp2:point2;
 begin
   if m_1d then
   begin
@@ -251,20 +310,31 @@ begin
     k:=(p2-p1)*freqx;
     result:=p1+k*(t-left*dt);
   end
-  else
+  else  // двумерный массив
   begin
-    dt:=1/ffreqx;
-    left:= trunc(t*ffreqx);
-    right:=left+1;
-    if right=count then
+    if datatype='r8' then
     begin
-      result:=gety(left);
-      exit;
+      result:=c_Double;
     end;
-    p2:=gety(right);
-    p1:=gety(left);
-    k:=(p2-p1)*freqx;
-    result:=p1+k*(t-left*dt);
+    if datatype='r4' then
+    begin
+      left:= FindLeftPoint(points2d, length(points2d), t);
+      if left+1=count then
+      begin
+        result:=gety(left);
+        exit;
+      end;
+      if left=-1 then
+      begin
+        result:=points2d[0].y;
+      end;
+      lp1:=points2d[left];
+      lp2:=points2d[left+1];
+      if t>lp1.x then
+      begin
+        result:=EvalLineY(t, lp1, lp2);
+      end;
+    end;
   end;
 end;
 
@@ -384,6 +454,7 @@ var
   read:integer;
   fsize, datasize, len, j:cardinal;
   d:double;
+  s:single;
 begin
   fname:=p_name+'.dat';
   if fileexists(fname) then
@@ -408,22 +479,33 @@ begin
       reset(f,1);
       for j := 0 to len - 1 do
       begin
-        blockread(f, d, datasize, read);
         if datatype='r8' then
+        begin
+          blockread(f, d, datasize, read);
           d_points2d[j].y:=d;
+        end;
         if datatype='r4' then
-          points2d[j].y:=d;
+        begin
+          blockread(f, s, datasize, read);
+          points2d[j].y:=s;
+        end;
       end;
       closefile(f);
       AssignFile(f,p_name+'.x');
       reset(f,1);
       for j := 0 to len - 1 do
       begin
-        blockread(f, d, datasize, read);
+
         if datatype='r8' then
+        begin
+          blockread(f, d, datasize, read);
           d_points2d[j].x:=d;
+        end;
         if datatype='r4' then
-          points2d[j].x:=d;
+        begin
+          blockread(f, s, datasize, read);
+          points2d[j].x:=s;
+        end;
       end;
       closefile(f);
     end

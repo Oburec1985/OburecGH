@@ -252,6 +252,9 @@
 				<Form>LissajousFrm</Form>
 			</DCCReference>
 			<DCCReference Include="..\..\sharedUtils\math\uGrahamScan.pas"/>
+			<DCCReference Include="forms\uCounterFrm.pas">
+				<Form>CounterFrm</Form>
+			</DCCReference>
 			<RidlCompile Include="WPExtPack.ridl"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

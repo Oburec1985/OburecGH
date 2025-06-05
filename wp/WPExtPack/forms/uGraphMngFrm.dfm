@@ -63,7 +63,7 @@
     Margins.Top = 4
     Margins.Right = 4
     Margins.Bottom = 4
-    ActivePage = TabSheet1
+    ActivePage = TabSheet3
     Align = alClient
     TabOrder = 1
     OnChange = TabControlChange
@@ -74,10 +74,6 @@
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = #1043#1088#1072#1092#1080#1082#1080
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         504
         781)
@@ -536,10 +532,6 @@
       Margins.Bottom = 4
       Caption = #1054#1089#1080
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object YAxisLabel: TLabel
         Left = 10
         Top = 10
@@ -679,10 +671,6 @@
       Margins.Bottom = 4
       Caption = #1051#1080#1085#1080#1080
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object LineNameLabel: TLabel
         Left = 33
         Top = 21
@@ -737,6 +725,17 @@
         Margins.Right = 4
         Margins.Bottom = 4
         Caption = #1058#1080#1087' '#1083#1080#1085#1080#1080
+      end
+      object UnitsLabel: TLabel
+        Left = 252
+        Top = 164
+        Width = 58
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Caption = #1045#1076#1080#1085#1080#1094#1099
       end
       object LineNameEdit: TEdit
         Left = 33
@@ -848,10 +847,6 @@
       Margins.Bottom = 4
       Caption = #1057#1090#1088#1072#1085#1080#1094#1099
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label5: TLabel
         Left = 211
         Top = 95
@@ -998,7 +993,7 @@
     Columns = <
       item
         Position = 0
-        Width = 169
+        Width = 165
         WideText = #1054#1073#1098#1077#1082#1090
       end>
   end
@@ -1020,6 +1015,17 @@
     TabOrder = 4
     OnDrawItem = SelObjLBDrawItem
     OnMouseMove = SelObjLBMouseMove
+  end
+  object UnitsCB: TComboBox
+    Left = 432
+    Top = 216
+    Width = 145
+    Height = 25
+    ItemIndex = 0
+    TabOrder = 5
+    Text = #1059#1089#1082#1086#1088#1077#1085#1080#1077', g'
+    Items.Strings = (
+      #1059#1089#1082#1086#1088#1077#1085#1080#1077', g')
   end
   object ImageList_32: TImageList
     Height = 32
