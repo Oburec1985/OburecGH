@@ -2,77 +2,81 @@ object SpmProfileFrm: TSpmProfileFrm
   Left = 0
   Top = 0
   Caption = #1055#1088#1086#1092#1080#1083#1100' '#1080#1089#1087#1099#1090#1072#1085#1080#1103
-  ClientHeight = 513
-  ClientWidth = 905
+  ClientHeight = 392
+  ClientWidth = 692
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -14
+  Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   OnShow = FormShow
-  PixelsPerInch = 120
-  TextHeight = 17
+  PixelsPerInch = 96
+  TextHeight = 13
   object PanBottom: TPanel
     Left = 0
-    Top = 418
-    Width = 905
-    Height = 95
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Top = 320
+    Width = 692
+    Height = 72
     Align = alBottom
     TabOrder = 0
     object UnitsLabel: TLabel
-      Left = 263
-      Top = 7
-      Width = 58
-      Height = 17
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 201
+      Top = 5
+      Width = 45
+      Height = 13
       Caption = #1045#1076#1080#1085#1080#1094#1099
     end
     object ProfileNameLabel: TLabel
-      Left = 4
-      Top = 7
-      Width = 93
-      Height = 17
+      Left = 3
+      Top = 5
+      Width = 73
+      Height = 13
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077
     end
     object HLabel: TLabel
-      Left = 511
-      Top = 7
-      Width = 39
-      Height = 17
+      Left = 391
+      Top = 5
+      Width = 31
+      Height = 13
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = 'H Lev.'
     end
     object HHLabel: TLabel
-      Left = 604
-      Top = 7
-      Width = 43
-      Height = 17
+      Left = 462
+      Top = 5
+      Width = 35
+      Height = 13
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = 'HH lev.'
     end
     object EmergencyLabel: TLabel
-      Left = 702
-      Top = 7
-      Width = 70
-      Height = 17
+      Left = 537
+      Top = 5
+      Width = 53
+      Height = 13
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = 'Emergency'
     end
     object UnitsCB: TComboBox
-      Left = 263
-      Top = 31
-      Width = 123
-      Height = 25
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 201
+      Top = 24
+      Width = 94
+      Height = 21
       TabOrder = 0
       Text = '%'
       Items.Strings = (
@@ -83,47 +87,59 @@ object SpmProfileFrm: TSpmProfileFrm
         #1047#1085#1072#1095#1077#1085#1080#1077)
     end
     object ProfileNameEdit: TEdit
-      Left = 4
-      Top = 26
-      Width = 252
-      Height = 25
+      Left = 3
+      Top = 20
+      Width = 193
+      Height = 21
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       TabOrder = 1
       Text = 'ProfileNameEdit'
     end
     object ApplyBtn: TButton
-      Left = 394
-      Top = 21
-      Width = 98
-      Height = 33
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 301
+      Top = 16
+      Width = 75
+      Height = 25
       Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
       TabOrder = 2
       OnClick = ApplyBtnClick
     end
     object HFE: TFloatEdit
-      Left = 511
-      Top = 29
-      Width = 74
-      Height = 25
+      Left = 391
+      Top = 22
+      Width = 56
+      Height = 21
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       TabOrder = 3
       Text = '0.5'
     end
     object HHFE: TFloatEdit
-      Left = 604
-      Top = 27
-      Width = 80
-      Height = 25
+      Left = 462
+      Top = 21
+      Width = 61
+      Height = 21
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       TabOrder = 4
       Text = '0.7'
     end
     object EmergencyFE: TFloatEdit
-      Left = 702
-      Top = 29
-      Width = 80
-      Height = 25
+      Left = 537
+      Top = 22
+      Width = 61
+      Height = 21
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       TabOrder = 5
       Text = '1'
     end
@@ -131,46 +147,29 @@ object SpmProfileFrm: TSpmProfileFrm
   object PanAlClient: TPanel
     Left = 0
     Top = 0
-    Width = 905
-    Height = 418
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Width = 692
+    Height = 320
     Align = alClient
     TabOrder = 1
     object Splitter1: TSplitter
       Left = 1
       Top = 1
-      Width = 4
-      Height = 416
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Height = 318
     end
     object GBleft: TGroupBox
       AlignWithMargins = True
-      Left = 628
-      Top = 5
-      Width = 272
-      Height = 408
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Left = 480
+      Top = 4
+      Width = 208
+      Height = 312
       Align = alRight
       Caption = #1055#1088#1086#1092#1080#1083#1100
       TabOrder = 0
       object ProfileSG: TStringGridExt
         Left = 2
-        Top = 19
-        Width = 268
-        Height = 387
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Top = 15
+        Width = 204
+        Height = 295
         Align = alClient
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
         TabOrder = 0
@@ -184,17 +183,19 @@ object SpmProfileFrm: TSpmProfileFrm
           64
           64
           64)
+        RowHeights = (
+          24
+          24
+          24
+          24
+          24)
       end
     end
     object cChart1: cChart
-      Left = 5
+      Left = 4
       Top = 1
-      Width = 619
-      Height = 416
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Width = 473
+      Height = 318
       Align = alClient
       Caption = 'cChart1'
       TabOrder = 1
