@@ -108,6 +108,7 @@ const
   c_Pres_kPa = 3;
   c_Pres_MPa = 4;
   c_Temp_C = 5;
+  c_Volt = 6;
 
   c_AxX_sec = 0;
   c_AxX_msec = 1;
@@ -411,26 +412,6 @@ begin
   end;
 end;
 
-function GetSignalFolder(s:iwpsignal):string;
-var
-  n:iwpnode;
-  i,len:integer;
-  str:string;
-begin
-  n:=winpos.GetNode(s) as iwpnode;
-  str:=n.AbsolutePath;
-  len:=length(str);
-  result:='';
-  for I := len downto 1 do
-  begin
-    if str[i]='/' then
-    begin
-      result:=copy(str,1, i-1);
-      exit;
-    end;
-  end;
-end;
-
 
 function findSignal(path:string):iwpsignal;
 var
@@ -694,6 +675,13 @@ begin
       s.SetSType(1, 1, 80);
       // 2 - задаем  тип значения юнитов; 0 - задаем юниты по Y; 4294972687 - g
       s.SetSType(2, 1, 4294972687);
+    end;
+    c_Volt:
+    begin
+      // 1 - задаем  тип оси; 1 - задаем ось Y; 160 - вольтаж
+      s.SetSType(1, 1, 160);
+      // 2 - задаем  тип значения юнитов; 0 - задаем юниты по Y; 0x100003201 - V
+      s.SetSType(2, 1, $100003201);
     end;
     c_Vibr_ms:
     begin

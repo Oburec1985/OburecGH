@@ -2,55 +2,75 @@ object SelsinFrm: TSelsinFrm
   Left = 0
   Top = 0
   Caption = #1056#1072#1089#1095#1077#1090' '#1091#1075#1083#1072' '#1076#1083#1103' '#1089#1077#1083#1100#1089#1080#1085' '#1076#1072#1090#1095#1080#1082#1072
-  ClientHeight = 515
-  ClientWidth = 863
+  ClientHeight = 673
+  ClientWidth = 1129
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   OnClose = FormClose
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object GroupBox1: TGroupBox
     Left = 0
-    Top = 402
-    Width = 863
-    Height = 113
+    Top = 526
+    Width = 1129
+    Height = 147
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alBottom
     TabOrder = 0
     object Label3: TLabel
-      Left = 11
-      Top = 54
-      Width = 102
-      Height = 13
+      Left = 14
+      Top = 71
+      Width = 130
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1056#1072#1079#1084#1077#1088' '#1087#1086#1088#1094#1080#1080', '#1089#1077#1082'.'
     end
     object dTfe: TFloatEdit
-      Left = 11
-      Top = 73
-      Width = 145
-      Height = 21
+      Left = 14
+      Top = 95
+      Width = 190
+      Height = 25
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       TabOrder = 0
       Text = '0.3'
     end
     object EvalBtn: TButton
-      Left = 191
-      Top = 72
-      Width = 75
-      Height = 25
+      Left = 250
+      Top = 94
+      Width = 98
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1056#1072#1089#1095#1077#1090
       TabOrder = 1
       OnClick = EvalBtnClick
     end
     object EngDelBtn: TBitBtn
-      Left = 44
-      Top = 11
-      Width = 35
-      Height = 35
+      Left = 58
+      Top = 14
+      Width = 45
+      Height = 46
       Hint = #1059#1076#1072#1083#1080#1090#1100' '#1075#1088#1091#1087#1087#1091
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Glyph.Data = {
         C2070000424DC207000000000000C20300002800000020000000200000000100
         08000000000000040000120B0000120B0000E3000000E300000000000000FFFF
@@ -119,11 +139,15 @@ object SelsinFrm: TSelsinFrm
       OnClick = EngDelBtnClick
     end
     object EngAddBtn: TBitBtn
-      Left = 3
-      Top = 11
-      Width = 35
-      Height = 35
+      Left = 4
+      Top = 14
+      Width = 46
+      Height = 46
       Hint = #1044#1086#1073#1072#1074#1080#1090#1100' '#1075#1088#1091#1087#1087#1091
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Glyph.Data = {
         C2070000424DC207000000000000C20300002800000020000000200000000100
         08000000000000040000120B0000120B0000E3000000E300000000000000FFFF
@@ -195,60 +219,81 @@ object SelsinFrm: TSelsinFrm
   object ChansLV: TBtnListView
     Left = 0
     Top = 0
-    Width = 863
-    Height = 402
+    Width = 1129
+    Height = 526
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alClient
     Columns = <
       item
         Caption = #8470
+        Width = 65
       end
       item
         Caption = #1048#1084#1103
+        Width = 65
       end
       item
         Caption = 'L1'
+        Width = 65
       end
       item
         Caption = 'L2'
+        Width = 65
       end
       item
         Caption = 'L3'
+        Width = 65
       end
       item
         Caption = 'Exc'
+        Width = 65
       end
       item
         Caption = 'SectShift'
+        Width = 65
       end
       item
         Caption = 'Min1'
+        Width = 65
       end
       item
         Caption = 'Max1'
+        Width = 65
       end
       item
         Caption = 'Min2'
+        Width = 65
       end
       item
         Caption = 'Max2'
+        Width = 65
       end
       item
         Caption = 'Min3'
+        Width = 65
       end
       item
         Caption = 'Max3'
+        Width = 65
       end
       item
         Caption = 'AutoCalibr'
+        Width = 65
       end
       item
         Caption = #1052#1086#1076#1091#1083#1100
+        Width = 65
       end
       item
         Caption = #1073#1077#1079' '#1086#1073#1097'. '#1090#1095#1082'.'
+        Width = 65
       end
       item
         Caption = #1058#1080#1087
+        Width = 65
       end>
     DragMode = dmAutomatic
     MultiSelect = True
@@ -263,6 +308,5 @@ object SelsinFrm: TSelsinFrm
     DrawColorBox = False
     ChangeTextColor = False
     Editable = False
-    ExplicitTop = -6
   end
 end

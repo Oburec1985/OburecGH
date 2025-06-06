@@ -432,6 +432,7 @@ type
     function getUSML: iwpusml;
     function GetP2(i: integer): point2;
     // мастаб по Y
+    function getLength: double;
     function getMinMaxX: point2d;
     function getMinMaxY: point2d;
     property fs: double read getFs write setFs;
@@ -5517,6 +5518,11 @@ end;
 function cWPSignal.getFs: double;
 begin
   result := 1 / Signal.DeltaX;
+end;
+
+function cWPSignal.getLength: double;
+begin
+  result:=Signal.MaxX-Signal.MinX;
 end;
 
 procedure cWPSignal.setFs(f: double);

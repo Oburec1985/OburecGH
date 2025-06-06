@@ -8,7 +8,7 @@ uses
   uWPproc, uCommonMath, NativeXML, uComponentServises, uExcel, ulogfile,
   uSetList, inifiles, PathUtils, uTrigLvlEditFrm, uTmpltNameFrame,
   uSpin, DCL_MYOWN, uGrahamScan,
-  uCommonTypes, Winpos_ole_TLB,
+  uCommonTypes, Winpos_ole_TLB,POSBase,
   uChart, uWPServices, uBuffTrend2d, upage;
 
 
@@ -26,6 +26,8 @@ type
     p1,p2:point2; // диаметр
     Dtrend:cBuffTrend2d;
     dist:double;
+    res:iwpsignal;
+    interv:point2d;
   protected
     procedure initsignal;
   public
@@ -63,6 +65,7 @@ type
     Label7: TLabel;
     GraphLV: TBtnListView;
     Splitter1: TSplitter;
+    BuildTrend: TButton;
     procedure FormShow(Sender: TObject);
     procedure XCbDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
@@ -80,6 +83,7 @@ type
     procedure GraphLVDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure GraphLVDragDrop(Sender, Source: TObject; X, Y: Integer);
+    procedure BuildTrendClick(Sender: TObject);
   private
     wp:cWPObjMng;
     sList:tlist;
@@ -89,6 +93,7 @@ type
   protected
     procedure showSlist;
   public
+    procedure buildDiam;
     procedure ClearSignals;
     procedure UpdateChart;
     procedure save;
@@ -108,6 +113,13 @@ implementation
 uses
   uWpExtPack;
 {$R *.dfm}
+
+
+
+procedure TLissajousFrm.BuildTrendClick(Sender: TObject);
+begin
+  buildDiam;
+end;
 
 procedure TLissajousFrm.ClearSignals;
 var
@@ -273,7 +285,6 @@ end;
 
 procedure TLissajousFrm.OkBtnClick(Sender: TObject);
 var
-  s:cSrc;
   sig: TLisSig;
   t:double;
   y,x:cwpsignal;
@@ -309,8 +320,9 @@ begin
       sig.m_data[j].y:=sig.y.Signal.GetY(c2);
     end;
     sig.line.addpoints(sig.m_data, sig.m_count);
-
+    // построение оболочки по облаку
     sig.grahem:=GrahamScan(pointsarray(@sig.m_data[0]), sig.m_count);
+    // расчет диаметра
     FindDiameter(sig.grahem, sig.p1, sig.p2,sig.dist);
     sig.Dtrend.data[0]:=sig.p1;
     sig.Dtrend.data[1]:=sig.p2;
@@ -322,6 +334,82 @@ begin
 
   LissajousFrm.Chart.redraw;
   startfe.FloatNum:=startfe.FloatNum+IncFe.FloatNum;
+end;
+
+function getmax(t1,t2:double):double;
+begin
+  if t1>t2 then
+    result:=t1
+  else
+    result:=t2;
+end;
+
+function getmin(t1,t2:double):double;
+begin
+  if t1<t2 then
+    result:=t1
+  else
+    result:=t2;
+end;
+
+
+procedure TLissajousFrm.buildDiam;
+var
+  s:cSrc;
+  sig: TLisSig;
+  I, j, k, c1, c2, indX, indY: Integer;
+  t, dt, plen, fs, len:double;
+  p1,p2:point2d;
+begin
+  dt:=incfe.FloatNum;
+  fs:=1/dt;
+
+  // создаем сигналы
+  for I := 0 to sList.Count - 1 do
+  begin
+    sig:=TLisSig(sList.Items[i]);
+    p1:=sig.x.getMinMaxX;
+    p2:=sig.x.getMinMaxX;
+    // интервал результата
+    p1.x:=getmax(p1.x,p2.x);
+    p2.y:=getmin(p1.y,p2.y);
+    len:=p1.y-p1.x;
+    sig.res := iwpsignal(winpos.CreateSignal(vt_r8));
+    sig.res.StartX := p1.x;
+    sig.res.DeltaX := dt;
+    sig.res.size := trunc(len/dt);
+    setSignalUnits(sig.res,c_Volt,c_AxX_sec);
+
+    sig.res.sname:=sig.x.name+'_'+sig.y.name+'_d';
+    sig.interv:=p1;
+    winpos.Link('/Signals/results', sig.res.sname, sig.res as IDispatch);
+  end;
+  for I := 0 to sList.Count - 1 do
+  begin
+    sig:=TLisSig(sList.Items[i]);
+    t:=sig.interv.x;
+    k:=0;
+    plen:=pCount.IntNum/sig.x.getFs;
+
+    while t+plen<sig.interv.y do
+    begin
+      indX:=sig.x.Signal.IndexOf(t);
+      indY:=sig.y.Signal.IndexOf(t);
+      for j := 0 to pCount.IntNum - 1 do
+      begin
+        c1:=indx+j;
+        c2:=indx+j;
+        sig.m_data[j].x:=sig.x.Signal.GetY(c1);
+        sig.m_data[j].y:=sig.y.Signal.GetY(c2);
+      end;
+      sig.grahem:=GrahamScan(pointsarray(@sig.m_data[0]), sig.m_count);
+      FindDiameter(sig.grahem, sig.p1, sig.p2,sig.dist);
+      sig.res.SetY(k,sig.dist);
+      t:=t+dt;
+      inc(k);
+    end;
+  end;
+  WINPOS.Refresh;
 end;
 
 procedure TLissajousFrm.save;

@@ -383,6 +383,5 @@ begin
 end;
 
 begin
-  WINPOS:= nil;
   WP:= TWinPOS.Create(nil);
 end.

@@ -4,8 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, VirtualTrees, uVTServices, StdCtrls, ImgList, ComCtrls, uBtnListView,
-  uWPProc, ExtCtrls, DCL_MYOWN, uSetList, PosBase, ActiveX, Spin, uWPOpers, uWPServices;
+  Dialogs, VirtualTrees, uVTServices, StdCtrls, ImgList, ComCtrls, uBtnListView, posbase,
+  uWPProc, ExtCtrls, DCL_MYOWN, uSetList, Winpos_ole_TLB, ActiveX, Spin, uWPOpers, uWPServices;
 
 type
   cSelectList = class(cSetList)
@@ -772,11 +772,11 @@ begin
     if l.hline<>0 then
     begin
       l.ApplyOpts;
-      s:=GetIWPSignalByHLine(l.hline);
-      case UnitsCB.ItemIndex of
-        c_ax
-        setSignalUnits(s,,c_AxX_sec);
-      end;
+      //s:=GetIWPSignalByHLine(l.hline);
+      //case UnitsCB.ItemIndex of
+        // c_ax
+        //setSignalUnits(s,,c_AxX_sec);
+      //end;
     end;
   end;
   wp.Refresh;

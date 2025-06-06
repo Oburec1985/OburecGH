@@ -6,7 +6,7 @@ uses
   Windows, ActiveX, Classes, ComObj, uNiiPMlib_TLB, StdVcl,
   uBaseObjService, variants, sysutils,
   Winpos_ole_TLB, uCommonMath,  uCommonTypes, uWPProcServices, mathfunction,
-  uWPEvents, posbase, u2dMath, uWPServices,
+  uWPEvents, posbase, u2dMath, uWPServices, dialogs,
   math;
 
 Function GetMO(s: iwpsignal): double;
@@ -22,6 +22,7 @@ function Multiply(const sig: olevariant; const d:double): iwpsignal;
 function Resample(const sig: olevariant; const freq:double): iwpsignal;
 // Усреднение
 function TrendMO(const sig: olevariant; const points:integer): iwpsignal;
+function TrendAmp(const sig: olevariant; const points:integer): iwpsignal;
 function LPF(const sig: olevariant; const order:integer; freq:double): iwpsignal;
 // Фиьлтр Oburec
 function H2Flt(const sig: olevariant; const points:integer; resample:integer): iwpsignal;
@@ -70,30 +71,41 @@ begin
   result:=r1.GetY(2);
 end;
 
+{GetObjectType
+long GetObjectType(IDispatch* Object)
+Получить тип объекта.
+
+Тип объекта тип
+объекта знач.
+описание OBJTYPE_EMPTY
+0 Пустой объект OBJTYPE_UNKNOWN
+1 Объект неизвестного типа OBJTYPE_NODE
+2 Узел дерева (IWPNode) OBJTYPE_SIGNAL
+3 Сигнал (IWPSignal) OBJTYPE_OPER
+4 Оператор (IWPOperator)
+Object Объект.}
+
 function GetMO(s: iwpsignal): double;
 var
+  n:iwpnode;
+  res:integer;
   oper:iwpoperator;
+  d:idispatch;
   opts:string;
   r1,r2:olevariant;
 begin
-  oper:=WP.GetObject('/Operators/Вероятн. характеристики') as IWPOperator;
+  d:=WP.GetObject('/Operators/Вероятн. характеристики');
+  winpos:=wp.DefaultInterface;
+  res:=winpos.GetObjectType(d);
+  if res=0 then // английская версия
+  begin
+    d:=WP.GetObject('/Operators/Probabilistic analisys');
+  end;
+  oper:=d as IWPOperator;
   // 0- прибавить константу
   oper.Exec(s,s,refvar(r1),refvar(r2));
   //result.M := r1.GetY(0);
   result:=r1.GetY(0);
-//var
-//  i: integer;
-//  y: double;
-//begin
-//  y := 0;
-//  if s.size <> 0 then
-//  begin
-//    for i := 0 to s.size - 1 do
-//    begin
-//      y := s.GetY(i) + y;
-//    end;
-//    result := y / s.size;
-//  end;
 end;
 
 function GetIntervalSignal (t1t2:point2d; s:iwpsignal):iwpsignal;
@@ -236,11 +248,48 @@ var
   opts, str, flP:string;
   r1,r2:olevariant;
   s1, s2:iwpsignal;
+  d:idispatch;
+  res:integer;
 begin
-  oper:=WP.GetObject('/VibroOpers/Последовательная обработка (тренды)') as IWPOperator;
+  d:=WP.GetObject('/VibroOpers/Последовательная обработка (тренды)');
+  winpos:=wp.DefaultInterface;
+  res:=winpos.GetObjectType(d);
+  if res=0 then // английская версия
+  begin
+    d:=WP.GetObject('/VibroOpers/Sequence processing (trends)');
+  end;
+  oper:=d as IWPOperator;
+
   flP:=inttostr(points);
   // 3- среднее 0 -RMS
   opts:='typeRez=3,bEquivMag=0,nPoints='+flP;
+  oper.loadProperties(opts);
+  oper.Exec(sig,sig,refvar(r1),refvar(r2));
+  result:=iwpsignal(TVarData(r1).VPointer);
+end;
+
+function TrendAmp(const sig: olevariant; const points:integer): iwpsignal;
+var
+  oper:iwpoperator;
+  pars:tstringlist;
+  opts, str, flP:string;
+  r1,r2:olevariant;
+  s1, s2:iwpsignal;
+  d:idispatch;
+  res:integer;
+begin
+  d:=WP.GetObject('/VibroOpers/Последовательная обработка (тренды)');
+  winpos:=wp.DefaultInterface;
+  res:=winpos.GetObjectType(d);
+  if res=0 then // английская версия
+  begin
+    d:=WP.GetObject('/VibroOpers/Sequence processing (trends)');
+  end;
+  oper:=d as IWPOperator;
+
+  flP:=inttostr(points);
+  // 3- среднее 0 - RMS; 1 - ampl
+  opts:='typeRez=1,bEquivMag=0,nPoints='+flP;
   oper.loadProperties(opts);
   oper.Exec(sig,sig,refvar(r1),refvar(r2));
   result:=iwpsignal(TVarData(r1).VPointer);

@@ -45,6 +45,9 @@ type
     EvalBtn: TButton;
     AllTestBtn: TButton;
     CursorsBtn: TButton;
+    FilterTrendCB: TCheckBox;
+    PortionSE: TFloatSpinEdit;
+    Label3: TLabel;
     procedure ApplyBtnClick(Sender: TObject);
     procedure SignalsLBClick(Sender: TObject);
     procedure SearchSignalChange(Sender: TObject);
@@ -72,6 +75,8 @@ type
   private
     m_mng: cBaseObjmng;
     m_Hi, m_Lo:double;
+    m_FltTrend:boolean;
+    m_wnd:double;
     T1, t2:double;
     // 0 - user; 1 - allTest; 2 - Cursors
     Ttype:integer;
@@ -112,6 +117,8 @@ constructor TCounterOper.create;
 begin
   m_Hi := 0.7;
   m_Lo := 0.3;
+  m_wnd:=1;
+  m_FltTrend:=false;
 end;
 
 destructor TCounterOper.destroy;
@@ -127,13 +134,59 @@ begin
   Exec(psrc1, psrc1, D, D);
 end;
 
+
+function GetMTrend(const src: olevariant; dt:double): iwpsignal;
+var
+  opts, str:string;
+  v:cString;
+  pars:tstringlist;
+  ind:integer;
+  oper:iwpoperator;
+  r1, r2, opt, err: olevariant;
+  s1:iwpsignal;
+begin
+  result:=nil;
+  //12:12:51|Выполнение алгоритма ""|typeRez=6,nPoints=4800,bEquivMag=0,
+  opts:='typeRez=6,'+ // Re Im спектр
+         'nPoints=4800,'+ // размер порции
+          'nOfs=4800,'+ // смещение порции
+         'bEquivMag=0';
+
+  pars:=ParsStrParamNoSort(opts, ',');
+  if FindInPars(pars,'nPoints',ind) then
+  begin
+    v:=cstring(pars.Objects[ind]);
+    v.str:=floattostr(round(dt/src.deltax));
+  end;
+  if FindInPars(pars,'nOfs',ind) then
+  begin
+    v:=cstring(pars.Objects[ind]);
+    v.str:=floattostr(round(dt/src.deltax));
+  end;
+  str:=ParsToStr(pars);
+  pars.Destroy;
+  oper:= WP.GetObject('/VibroOpers/Последовательная обработка (тренды)') as IWPOperator;
+  if (Assigned(oper)) then
+  begin
+    oper.loadProperties(str);
+    oper.Exec(src,src,refvar(r1),refvar(r2));
+
+    s1 := iwpsignal(TVarData(r1).VPointer);
+    result:=s1;
+  end;
+end;
+
 procedure TCounterOper.Exec(const psrc1, psrc2: IDispatch; out pdst1, pdst2: IDispatch);
 var
-  s, res: iwpsignal;
-  i: integer;
-  count: integer;
-  val, max, min, mean, h,l, pp: double;
+  s, res,
+  trendM, trendA: iwpsignal;
+
+  i, ind, count: integer;
+
+  val, max, min, mean, h,l, pp, fs: double;
+  t, dt:double;
   wstr:widestring;
+
   // 0 - start, 1 - triggered , 2 end
   state:integer;
 begin
@@ -142,19 +195,31 @@ begin
   res.StartX := s.StartX;
   res.DeltaX := s.DeltaX;
   res.size := s.size;
+  fs:=1/s.DeltaX;
+  trendM:=TrendMO(s, round(m_wnd*fs));
+  trendA:=TrendAmp(s, round(m_wnd*fs));
   mean:=GetMO(s);
   min:=s.MinY;
   max:=s.MaxY;
   pp:=max-min;
   h:=pp*m_hi+min;
   l:=pp*m_lo+min;
-
   count := 0;
   state:=0;
 
+  dt:=s.DeltaX;
+  t:=s.MinX;
   for i := 0 to s.size - 1 do
   begin
-    val := s.GetY(i) - mean;
+    if m_FltTrend then
+    begin
+      mean:=trendM.GetYX(t, 1);
+      pp:=2*trendA.GetYX(t, 1);
+      min:=mean-pp/2;
+      h:=pp*m_hi+min;
+      l:=pp*m_lo+min;
+    end;
+    val := s.GetY(i);
     case state of
       0: //search
       begin
@@ -184,11 +249,16 @@ begin
         end;
       end;
     end;
+    t:=t+dt;
     res.SetY(i, count);
   end;
 
-  wp.Link('/Signals/results', s.sname+'_'+'cnt',
-          res as IDispatch);
+  wp.Link('/Signals/results', s.sname+'_'+'cnt', res as IDispatch);
+  //if m_FltTrend then
+  //begin
+  //  wp.Link('/Signals/results', trendM.sname+'_'+'MO', trendM as IDispatch);
+  //  wp.Link('/Signals/results', trendA.sname+'_'+'A', trendA as IDispatch);
+  //end;
 
   winpos.Refresh;
   GetPropStr(wstr);
@@ -219,8 +289,15 @@ var
   pars: tstringlist;
 begin
   pars := tstringlist.Create;
+
   addParam(pars, 'Hi', floattostrex(m_hi,'.'));
   addParam(pars, 'Lo', floattostrex(m_lo,'.'));
+  addParam(pars, 'UseFlt', booltostr(m_FltTrend,false));
+  if m_wnd=0 then
+    m_wnd:=1;
+
+  addParam(pars, 'Wnd', floattostrex(m_wnd,'.'));
+
   pstr := ParsToStr(pars);
   delpars(pars);
   pars.Destroy;
@@ -230,6 +307,8 @@ procedure TCounterOper.SetPropStr(const str: WideString);
 begin
   m_Hi := strtofloatext(GetParam(str, 'Hi'));
   m_Lo := strtofloatext(GetParam(str, 'Lo'));
+  m_FltTrend:=StrtoBoolExt(GetParam(str, 'UseFlt'));
+  m_wnd:=strtofloatext(GetParam(str, 'Wnd'));
 end;
 
 procedure TCounterOper.link(m: cbaseObjMng);
@@ -263,9 +342,6 @@ begin
   OnSetup(0,h);
 end;
 
-
-
-
 function TCounterFrm.EditOper: string;
 var
   res: integer;
@@ -280,12 +356,14 @@ var
 begin
   showSignals;
   SetPropStr(m_oper.GetPropStrF(str));
+  AllTestBtnClick(nil);
   res := showmodal;
   if res = mrok then
   begin
     m_oper.SetPropStr(GetPropStr);
     m_oper.t1:=t1se.Value;
     m_oper.t2:=t1se.Value;
+
     for i := 0 to SignalsLV.items.count - 1 do
     begin
       li := SignalsLV.Items[i];
@@ -344,6 +422,8 @@ begin
   pars := tstringlist.Create;
   addParam(pars, 'Hi', floattostrex(HiSE.Value/100, '.'));
   addParam(pars, 'Lo', floattostrex(LoSE.Value/100, '.'));
+  addParam(pars, 'Wnd', floattostrex(PortionSE.Value, '.'));
+  addParam(pars, 'UseFlt', booltostr(FilterTrendCB.Checked));
   result := ParsToStr(pars);
   delpars(pars);
   pars.Destroy;
@@ -357,6 +437,8 @@ begin
   end;
   HiSE.Value := 100*strtofloatext(GetParam(str, 'Hi'));
   LoSE.Value := 100*strtofloatext(GetParam(str, 'Lo'));
+  PortionSE.Value:=strtofloatext(GetParam(str, 'Wnd'));
+  FilterTrendCB.Checked:=StrToBool(GetParam(str, 'UseFlt'));
 end;
 
 
