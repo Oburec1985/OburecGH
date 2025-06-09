@@ -104,11 +104,13 @@ type
 
   cBladeBaseFolder = class(cXmlFolder)
   public
+    // списки содержат cObjType
     m_turbTypes:TStringList;
     m_StageTypes:TStringList;
     m_BladeTypes:TStringList;
   protected
     procedure doCreateFiles(node:txmlnode);override;
+    procedure doLoadDesc(node: txmlnode);override;
   public
     // палучить тип из базы типов
     function getType(s:string):cObjType;
@@ -218,10 +220,15 @@ var
 
 begin
   inherited;
-  lstr:=str+'base.xml';
+  lstr:=str+'bladeMdb.xml';
   xml:=TNativeXml.Create(nil);
   if fileexists(lstr) then
-    xml.LoadFromFile(lstr)
+  begin
+    xml.LoadFromFile(lstr);
+    node:=xml.Root;
+    root.doloadDesc(node);
+    xml.Destroy;
+  end
   else
   begin
     objtype:=cObjType.create;
@@ -238,8 +245,6 @@ begin
 
     cXmlFolder(m_BaseFolder).CreateXMLDesc;
   end;
-  node:=xml.Root;
-  xml.Destroy;
 end;
 
 function cBladeBase.root: cBladeBaseFolder;
@@ -615,7 +620,9 @@ begin
   newpath:=XMLDescPath;
   fld:=ExtractFileDir(newpath);
   if not DirectoryExists(fld) then
-    exit;
+  begin
+    ForceDirectories(fld);
+  end;
   if newpath='.xml' then
     exit;
   xml:=TNativeXml.Create(nil);
@@ -706,6 +713,7 @@ begin
     begin
       objType:=cObjType(sList.Objects[i]);
       child:=getNode(types,objtype.name);
+      child.WriteAttributeInteger('PropCount', objtype.proplist.Count,0);
       // сохраняем возможные свойства объекта
       for j := 0 to objtype.proplist.Count - 1 do
       begin
@@ -786,6 +794,56 @@ begin
   end;
 end;
 
+procedure LoadProp(node: txmlnode; sList:tstringlist);
+var
+  s, s1:string;
+  objType:cObjType;
+  i, j, k:integer;
+  child:txmlnode;
+begin
+  for I := 0 to node.NodeCount - 1 do
+  begin
+    child:=node.Nodes[i];
+    s:=child.name;
+    if slist.Find(s, j) then
+    begin
+      objtype:=cObjType(slist.Objects[j]);
+    end
+    else
+    begin
+      objtype:=cObjType.create;
+      objType.name:=child.name;
+      objType.owner:=slist;
+      slist.AddObject(child.name, objType);
+    end;
+    objType.owner:=sList;
+    j:=child.ReadAttributeInteger('PropCount',0);
+    for k := 0 to j - 1 do
+    begin
+      s:=child.ReadAttributeString('Prop_'+inttostr(k), '');
+      s1:=child.ReadAttributeString('Prop_v_'+inttostr(k),'');
+      objType.addProp(s, s1);
+    end;
+  end;
+end;
+
+procedure cBladeBaseFolder.doLoadDesc(node: txmlnode);
+var
+  s, lclass:string;
+  objType:cObjType;
+  i, j:integer;
+  tests,child:txmlnode;
+begin
+  inherited;
+  tests:=node.FindNode('TurbineType');
+  LoadProp(tests, m_turbTypes);
+
+  //tests:=node.FindNode('StageType');
+  //LoadProp(tests, m_StageTypes);
+
+  tests:=node.FindNode('BladeType');
+  LoadProp(tests, m_BladeTypes);
+end;
 
 function cBladeBaseFolder.getType(s:string): cObjType;
 var

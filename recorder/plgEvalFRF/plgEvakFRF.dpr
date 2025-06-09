@@ -38,7 +38,8 @@ uses
   uSpmProfile in 'forms\uSpmProfile.pas' {SpmProfileFrm},
   uEditTest in 'forms\uEditTest.pas' {EditTestFrm},
   uBladeDB in 'units\uBladeDB.pas',
-  uComponentServises in '..\..\sharedUtils\utils\uComponentServises.pas';
+  uComponentServises in '..\..\sharedUtils\utils\uComponentServises.pas',
+  uSpmBand in 'units\uSpmBand.pas';
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 

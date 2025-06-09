@@ -1289,7 +1289,6 @@ begin
           begin
 
           end;
-
           //logMessage('ShockIndex: ' +inttostr(m_lastTahoBlock.index));
           s.fDataCount := pcount; // скопровано отсчетов в блок
           block:=s.m_shockList.getBlock(t.m_MaxTime);

@@ -123,6 +123,10 @@ end;
 
 function cDBObject.extractObjNamefromPath(str:string):string;
 begin
+  if str[length(str)]='\' then
+  begin
+    SetLength(str,length(str)-1);
+  end;
   result:=ExtractFileName(str);
 end;
 

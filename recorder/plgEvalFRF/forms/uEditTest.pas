@@ -22,15 +22,17 @@ type
     Label1: TLabel;
     PersonE: TEdit;
     DateLabel: TLabel;
-    ProfileSG: TStringGridExt;
-    Splitter1: TSplitter;
     GroupBox2: TGroupBox;
     OkBtn: TButton;
     ObjPropSG: TStringGridExt;
     Splitter2: TSplitter;
     blNumSE: TLabel;
     BladeSe: TSpinEdit;
+    ProfileSG: TStringGridExt;
+    Splitter1: TSplitter;
     procedure OkBtnClick(Sender: TObject);
+    procedure ProfileSGKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     procedure init;
     procedure showbase;
@@ -86,6 +88,16 @@ begin
   g_mbase.UpdateXMLDescriptors;
 end;
 
+procedure TEditTestFrm.ProfileSGKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+
+  if key=VK_RETURN then
+  begin
+    SGChange(ProfileSG);
+  end;
+end;
+
 procedure TEditTestFrm.showbase;
 var
   I: Integer;
@@ -97,14 +109,15 @@ begin
     turbcb.Items.AddObject(g_mbase.root.m_turbTypes.Strings[i], g_mbase.root.m_turbTypes.Objects[i]);
   end;
   turbCB.ItemIndex:=0;
-  turbCB.Clear;
+
+  BladeCB.clear;
   for I := 0 to g_mbase.root.m_BladeTypes.Count-1 do
   begin
     BladeCB.Items.AddObject(g_mbase.root.m_BladeTypes.Strings[i], g_mbase.root.m_BladeTypes.Objects[i]);
   end;
   BladeCB.ItemIndex:=0;
-  SGChange(ProfileSG);
   ShowTone;
+  SGChange(ProfileSG);
 end;
 
 procedure TEditTestFrm.ShowTone;
@@ -124,9 +137,9 @@ begin
     end;
     for r := 0 to c-1 do
     begin
-      ProfileSG.Cells[1, r+1]:=o.getval('F1_'+inttostr(r));
-      ProfileSG.Cells[2, r+1]:=o.getval('F2_'+inttostr(r));
-      ProfileSG.Cells[3, r+1]:=o.getval('Threshold_'+inttostr(r));
+      ProfileSG.Cells[1, r+1]:=o.getval('F1_'+inttostr(r+1));
+      ProfileSG.Cells[2, r+1]:=o.getval('F2_'+inttostr(r+1));
+      ProfileSG.Cells[3, r+1]:=o.getval('Threshold_'+inttostr(r+1));
     end;
   end;
 end;
@@ -149,14 +162,14 @@ begin
   o:=g_mbase.root.getType(BladeCB.Text);
   if o<>nil then
   begin
-    o.setPropVal('ToneCount', inttostr(ProfileSG.rowCount-1));
+    o.addProp('ToneCount', inttostr(ProfileSG.rowCount-1));
     for r := 1 to ProfileSG.rowCount - 1 do
     begin
       if isValidRow(ProfileSG, r) then
       begin
-        o.setPropVal('F1_'+inttostr(r), ProfileSG.Cells[1, r]);
-        o.setPropVal('F2_'+inttostr(r), ProfileSG.Cells[2, r]);
-        o.setPropVal('Threshold_'+inttostr(r), ProfileSG.Cells[3, r]);
+        o.addProp('F1_'+inttostr(r), ProfileSG.Cells[1, r]);
+        o.addProp('F2_'+inttostr(r), ProfileSG.Cells[2, r]);
+        o.addProp('Threshold_'+inttostr(r), ProfileSG.Cells[3, r]);
       end;
     end;
   end;
