@@ -7,7 +7,6 @@ uses
   Classes,
   uLogFile in '..\..\sharedUtils\utils\uLogFile.pas',
   usetlist in '..\..\sharedUtils\utils\lists\usetlist.pas',
-  uComponentServises in '..\..\sharedUtils\utils\uComponentServises.pas',
   uListMath in '..\..\sharedUtils\math\uListMath.pas',
   uCommonTypes in '..\..\sharedUtils\uCommonTypes.pas',
   uGlTurbine in '..\..\3d\3dComponents\components\Asutp\uGlTurbine.pas',
@@ -37,7 +36,9 @@ uses
   PluginClass in '..\SharedRUnits\PluginClass.pas',
   uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
   uSpmProfile in 'forms\uSpmProfile.pas' {SpmProfileFrm},
-  uEditTest in 'forms\uEditTest.pas' {EditTestFrm};
+  uEditTest in 'forms\uEditTest.pas' {EditTestFrm},
+  uBladeDB in 'units\uBladeDB.pas',
+  uComponentServises in '..\..\sharedUtils\utils\uComponentServises.pas';
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 

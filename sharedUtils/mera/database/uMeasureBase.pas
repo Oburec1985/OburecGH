@@ -49,8 +49,9 @@ type
     function getdsc:string;
     //procedure DoLincParent;override;
   public
-      // установить тип объекта
+    // установить тип объекта
     procedure setObjType(s:string); overload;
+    // установить тип объекта propList пары имя/ значение cString
     procedure setObjType(s:string; delProp:boolean; proplist:tstringlist); overload;
     procedure setObjType(s:string; proplist:tstringlist); overload;
     // сохранить объект в БД

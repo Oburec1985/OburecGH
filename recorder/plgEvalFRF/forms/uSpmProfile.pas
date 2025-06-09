@@ -37,6 +37,8 @@ type
     HHFE: TFloatEdit;
     EmergencyLabel: TLabel;
     EmergencyFE: TFloatEdit;
+    ComboBox1: TComboBox;
+    Label1: TLabel;
     procedure ProfileSGSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure ProfileSGKeyDown(Sender: TObject; var Key: Word;

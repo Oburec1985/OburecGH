@@ -23,6 +23,7 @@ uses
   uPathMng,
   opengl, uSimpleObjects,
   math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend, uProfile,
+  uBladeDB,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uBtnListView;
 
 type
@@ -2883,6 +2884,9 @@ end;
 constructor cFRFFactory.create;
 begin
   inherited;
+  g_mbase :=cBladeBase.create;
+  g_mbase.InitBaseFolder('c:\Mera Files\bladeMdb\');
+
   m_lRefCount := 1;
   m_counter := 0;
   m_name := c_Name;

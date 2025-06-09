@@ -45,6 +45,7 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitTop = 72
   end
   object RightGB: TGroupBox
     Left = 641

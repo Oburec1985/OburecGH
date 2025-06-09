@@ -7,9 +7,9 @@ DefaultDirName={pf}\Mera\Recorder\plugins
 DefaultGroupName=Mera
 UninstallDisplayIcon={app}\plgControlCyclogram.dll
 
-OutputDir=output
-;OutputDir=\\Fserv\e\MERA\WORKS\ДСИ\УП\Skripnik\soft\recorder\ControlCyclogram\
-OutputBaseFilename=plgControlCyclogram_installer_v1.3.1
+;OutputDir=output
+OutputDir=\\Fserv\e\MERA\WORKS\ДСИ\УП\Skripnik\soft\recorder\ControlCyclogram\
+OutputBaseFilename=plgControlCyclogram_installer_v1.3.2
 
 [Types]
 Name: "full"; Description: "Полная установка"

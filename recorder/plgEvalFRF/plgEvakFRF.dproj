@@ -56,7 +56,6 @@
 			</DelphiCompile>
 			<DCCReference Include="..\..\sharedUtils\utils\uLogFile.pas"/>
 			<DCCReference Include="..\..\sharedUtils\utils\lists\usetlist.pas"/>
-			<DCCReference Include="..\..\sharedUtils\utils\uComponentServises.pas"/>
 			<DCCReference Include="..\..\sharedUtils\math\uListMath.pas"/>
 			<DCCReference Include="..\..\sharedUtils\uCommonTypes.pas"/>
 			<DCCReference Include="..\..\3d\3dComponents\components\Asutp\uGlTurbine.pas"/>
@@ -103,6 +102,8 @@
 			<DCCReference Include="forms\uEditTest.pas">
 				<Form>EditTestFrm</Form>
 			</DCCReference>
+			<DCCReference Include="units\uBladeDB.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\uComponentServises.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

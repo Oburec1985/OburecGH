@@ -10,7 +10,7 @@ uses
   uHardwareMath,
   uCommonMath,
   uComponentServises,
-  tags, uEvalFRFFrm, uSpmProfile, uProfile,
+  tags, uEvalFRFFrm, uSpmProfile, uProfile, uEditTest,
   uRcCtrls, DCL_MYOWN, Spin, ImgList, Buttons;
 
 type
@@ -275,7 +275,9 @@ var
   t:cSRSTaho;
 begin
   t:=m_SRS.getTaho;
-  SpmProfileFrm.edit(t.m_profile);
+  if EditTestFrm=nil then
+    EditTestFrm:=TEditTestFrm.create(nil);
+  EditTestFrm.edit(nil);
 end;
 
 procedure TEditFrfFrm.ShowSrsCfg;
