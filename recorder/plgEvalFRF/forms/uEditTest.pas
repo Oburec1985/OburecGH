@@ -30,6 +30,7 @@ type
     BladeSe: TSpinEdit;
     ProfileSG: TStringGridExt;
     Splitter1: TSplitter;
+    TurbNameCb: TComboBox;
     procedure OkBtnClick(Sender: TObject);
     procedure ProfileSGKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -83,8 +84,33 @@ begin
 end;
 
 procedure TEditTestFrm.OkBtnClick(Sender: TObject);
+var
+  f, s, bl:cxmlfolder;
 begin
   ToneToType;
+  if TurbNameCb.text<>'' then
+  begin
+    f:=cxmlfolder(g_mbase.getobj(TurbNameCb.text));
+    if f=nil then
+    begin
+      f:=cTurbFolder.create;
+      f.setObjType(TurbCB.text);
+      f.name:=TurbNameCb.text;
+      g_mbase.root.selected:=f;
+      g_mbase.root.AddChild(f);
+
+      s:=cStageFolder.create;
+      s.name:=f.name+'_Stage_'+StageCB.text;
+      f.AddChild(s);
+      f.selected:=s;
+
+      bl:=cBladeFolder.create;
+      bl.setObjType(BladeCB.text);
+      bl.name:='Bl_'+inttostr(BladeSe.Value);
+      s.AddChild(bl);
+      f.selected:=bl;
+    end;
+  end;
   g_mbase.UpdateXMLDescriptors;
 end;
 

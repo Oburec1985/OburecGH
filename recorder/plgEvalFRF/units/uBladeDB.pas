@@ -3,7 +3,7 @@ unit uBladeDB;
 interface
 uses
   uDBObject, ubaseobj, pathutils, uCommonMath, sysutils, nativexml, classes, uPathMng, dialogs,
-  inifiles;
+  inifiles, upoint, ucommontypes;
 
 type
   // структура для описания замера внутри регистрации
@@ -25,6 +25,8 @@ type
   public
   end;
 
+  cObjType  = class;
+
   // базовый класс для хранения информации о данных каталога в xml файле
   cXmlFolder = class(cDbFolder)
   public
@@ -37,6 +39,7 @@ type
     procedure clearProps;
   protected
     procedure setname(str:string);override;
+    function getObjType:cobjtype;
     // использовать str не рекомендуется, тк str это путь, который все равно присваивается далее в методе
     // setpath сразу после создания объекта
     function CreateDBObj(str:string):cDBobject;override;
@@ -48,6 +51,7 @@ type
     //procedure DoLincParent;override;
   public
       // установить тип объекта
+
     procedure setObjType(s:string); overload;
     procedure setObjType(s:string; delProp:boolean; proplist:tstringlist); overload;
     procedure setObjType(s:string; proplist:tstringlist); overload;
@@ -141,10 +145,10 @@ type
   cBladeFolder = class(cXmlFolder)
   public
 
-  protected
-
   public
-
+    function ToneCount:integer;
+    // f1,f2,threshold
+    function Tone(i:integer):point3d;
   end;
 
   cBladeBase = class(cDB)
@@ -153,6 +157,7 @@ type
   protected
     // вызывается в конструкторе cDB класса
     function createBaseFolder:cDBFolder;override;
+    function getObjType(t:string):cObjtype;
   public
     function SelectTurb:cTurbFolder;
     function SelectStage:cStageFolder;
@@ -209,6 +214,11 @@ begin
   inherited;
 end;
 
+function cBladeBase.getObjType(t:string): cObjtype;
+begin
+  result:=root.getType(t);
+end;
+
 procedure cBladeBase.InitBaseFolder(str: string);
 var
   xml:tnativexml;
@@ -245,6 +255,7 @@ begin
 
     cXmlFolder(m_BaseFolder).CreateXMLDesc;
   end;
+
 end;
 
 function cBladeBase.root: cBladeBaseFolder;
@@ -298,6 +309,7 @@ end;
 
 function cBladeBase.SelectTurb: cTurbFolder;
 begin
+  result:=nil;
   if root.selected=nil then
   begin
     if root.ChildCount>0 then
@@ -524,6 +536,11 @@ end;
 function cXmlFolder.getdsc: string;
 begin
   result:=m_dsc;
+end;
+
+function cXmlFolder.getObjType: cobjtype;
+begin
+  result:=g_mbase.getObjType(m_ObjType);
 end;
 
 function cXmlFolder.getProperty(i: integer): string;
@@ -1077,5 +1094,35 @@ begin
 end;
 
 
+
+{ cBladeFolder }
+
+function cBladeFolder.Tone(i: integer): point3d;
+var
+  o:cObjType;
+  s1,s2,s3:string;
+begin
+  o:=getObjType;
+  s1:=o.getval('F1_'+inttostr(i+1));
+  s2:=o.getval('F2_'+inttostr(i+1));
+  s3:=o.getval('Threshold_'+inttostr(i+1));
+  result.x:=strtoFloatExt(s1);
+  result.y:=strtofloatExt(s1);
+  result.z:=strtofloatExt(s1);
+end;
+
+function cBladeFolder.ToneCount: integer;
+var
+  o:cObjType;
+  s:string;
+begin
+  result:=0;
+  o:=getObjType;
+  if o<>nil then
+  begin
+    s:=o.getval('ToneCount');
+    result:=strtoint(s);
+  end;
+end;
 
 end.

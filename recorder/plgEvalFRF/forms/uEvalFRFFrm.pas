@@ -23,7 +23,7 @@ uses
   uPathMng,
   opengl, uSimpleObjects,
   math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend, uProfile,
-  uBladeDB,
+  uBladeDB, uSpmBand,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uBtnListView;
 
 type
@@ -386,6 +386,8 @@ type
     m_lastMDBfile: string;
     // редактировать отклик
     m_corrS: boolean;
+
+    m_bands:bList;
   protected
     fdelBtn: boolean; // нажали кнопку удалить удар
     fUpdateFrf: boolean; // обновился frf
@@ -464,6 +466,7 @@ type
   public
     constructor create;
     destructor destroy; override;
+    procedure CreateBands(f:TFRFFrm; base:cBladeBase);
     function doCreateForm: cRecBasicIFrm; override;
     procedure doSetDefSize(var PSize: SIZE); override;
   end;
@@ -537,6 +540,8 @@ begin
   m_ShiftLeft := 0.05;
   m_Length := 1;
   m_TahoList := tlist.create;
+
+  m_bands:=bList.Create;
   inherited;
 end;
 
@@ -2900,6 +2905,22 @@ begin
   inherited;
 end;
 
+procedure cFRFFactory.CreateBands(f: TFRFFrm; base: cBladeBase);
+var
+  i, c:integer;
+  blade:cBladeFolder;
+  p3:point3d;
+begin
+  f.m_bands.cleardata;
+  blade:=base.SelectBlade;
+  c:=blade.ToneCount;
+  for I := 0 to c - 1 do
+  begin
+    p3:=blade.Tone(i);
+    f.m_bands.addband(p3.x,p3.y,p3.z, f.SpmChart);
+  end;
+end;
+
 procedure cFRFFactory.createevents;
 begin
   //addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
@@ -3015,6 +3036,7 @@ begin
       end;
       TFrfFrm(Frm).UpdateBlocks;
     end;
+    CreateBands(tFrfFrm(frm), g_mbase);
   end;
 end;
 
