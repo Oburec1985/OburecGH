@@ -143,8 +143,8 @@ type
 
   // испытания
   cBladeFolder = class(cXmlFolder)
-  public
-
+  protected
+    procedure doCreateFiles(node:txmlnode);override;
   public
     function ToneCount:integer;
     // f1,f2,threshold
@@ -158,6 +158,7 @@ type
     // вызывается в конструкторе cDB класса
     function createBaseFolder:cDBFolder;override;
     function getObjType(t:string):cObjtype;
+    procedure regObjClasses;override;
   public
     function SelectTurb:cTurbFolder;
     function SelectStage:cStageFolder;
@@ -199,8 +200,6 @@ begin
   // папка с dll
   dir:=GetCurrentDir;
   //showmessage(dir);
-  regclass(cXmlFolder);
-  regclass(cBladeBaseFolder);
 end;
 
 
@@ -256,6 +255,16 @@ begin
     cXmlFolder(m_BaseFolder).CreateXMLDesc;
   end;
 
+end;
+
+procedure cBladeBase.regObjClasses;
+begin
+  inherited;
+  regclass(cXmlFolder);
+  regclass(cBladeBaseFolder);
+  regclass(cTurbFolder);
+  regclass(cStageFolder);
+  regclass(cBladeFolder);
 end;
 
 function cBladeBase.root: cBladeBaseFolder;
@@ -317,7 +326,9 @@ begin
       root.selected:=cxmlfolder(root.getChild(0));
       result:=cTurbFolder(root.getChild(0));
     end;
-  end;
+  end
+  else
+    result:=cTurbFolder(root.selected);
 end;
 
 procedure cBladeBase.UpdateXMLDescriptors;
@@ -591,6 +602,7 @@ begin
     result:=cDBobject(cBladeBase(getmng).CreateObjByType(lstr));
     if result<>nil then
     begin
+      cxmlfolder(result).m_ObjType:=node.ReadAttributeString('ObjType');
       child:=node.FindNode('Properies');
       if child<>nil then
       begin
@@ -647,6 +659,7 @@ begin
   node:=xml.Root;
   node.name:=name;
   node.WriteAttributeString('Class',classname,'');
+  node.WriteAttributeString('ObjType',m_ObjType,'');
   if m_Properties.Count>0 then
   begin
     props:=getNode(node,'Properies');
@@ -710,7 +723,7 @@ end;
 
 function cXmlFolder.XMLDescPath: string;
 begin
-  result:=Absolutepath;
+  result:=Absolutepath+'.xml';
 end;
 
 procedure SaveProperties(node:txmlnode; sList:tstringlist);
@@ -757,6 +770,7 @@ begin
   m_BladeTypes:=TStringList.Create;
   m_BladeTypes.Sorted:=true;
   m_BladeTypes.Duplicates:=dupIgnore;
+
 end;
 
 destructor cBladeBaseFolder.destroy;
@@ -967,10 +981,7 @@ procedure cxmlFolder.setObjType(s:string);
 var
   otype:cObjType;
 begin
-
-
   m_ObjType:=s;
-
 end;
 
 { cObjType }
@@ -1096,6 +1107,15 @@ end;
 
 
 { cBladeFolder }
+
+procedure cBladeFolder.doCreateFiles(node:txmlnode);
+var
+  lpath:string;
+begin
+  inherited;
+  lpath:=Absolutepath;
+  ForceDirectories(lpath);
+end;
 
 function cBladeFolder.Tone(i: integer): point3d;
 var
