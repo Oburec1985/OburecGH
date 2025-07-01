@@ -43,6 +43,7 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitLeft = 1
   end
   object RightGB: TGroupBox
     Left = 490
@@ -52,7 +53,6 @@ object FRFFrm: TFRFFrm
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
-    ExplicitLeft = 492
     object ShockCountLabel: TLabel
       Left = 8
       Top = 21

@@ -490,19 +490,9 @@ var
   n:PVirtualNode;
   d:PNodeData;
 begin
-  t:=GetSelectTaho;
-  if t=nil then
-    exit;
-  c:=t.Cfg;
-  t.m_shockList.m_wnd.x2:=LengthFE.FloatNum*0.7;
-
-  if t=nil then exit;
-  t.m_treshold:=ThresholdFE.FloatNum;
   m_SRS.m_ShiftLeft:=LeftShiftEdit.FloatNum;
   m_SRS.m_Length:=LengthFE.FloatNum;
-  c.m_fftCount:=FFTBlockSizeIE.IntNum;
-  c.m_blockcount:=ShCountIE.IntNum;
-  c.m_addNulls:=NullCB.Checked;
+
   m_SRS.m_lgX:=lgXcb.Checked;
   m_SRS.m_lgY:=lgYcb.Checked;
   m_SRS.m_minX:=MinXfe.FloatNum;
@@ -516,9 +506,6 @@ begin
   m_SRS.m_WelchShift:=FFTShiftIE.IntNum;
   m_SRS.m_WelchCount:=WelchBCountIE.IntNum;
   m_SRS.NewAxis:=NewAxCb.Checked;
-
-  c.m_capacity:=ShCountIE.IntNum;
-  t.m_CohTreshold:=CohThresholdFE.FloatNum;
   m_SRS.UpdateChart;
 
   n:=SignalsTV.FocusedNode;
@@ -531,6 +518,19 @@ begin
       csrsres(d.data).m_incPNum:=AddPNumIE.IntNum;
     end;
   end;
+
+  t:=GetSelectTaho;
+  if t=nil then
+    exit;
+  c:=t.Cfg;
+  t.m_shockList.m_wnd.x2:=LengthFE.FloatNum*0.7;
+  if t=nil then exit;
+  t.m_treshold:=ThresholdFE.FloatNum;
+  c.m_fftCount:=FFTBlockSizeIE.IntNum;
+  c.m_blockcount:=ShCountIE.IntNum;
+  c.m_addNulls:=NullCB.Checked;
+  c.m_capacity:=ShCountIE.IntNum;
+  t.m_CohTreshold:=CohThresholdFE.FloatNum;
 end;
 
 procedure TEditFrfFrm.UpdateTags;
