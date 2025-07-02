@@ -1127,8 +1127,8 @@ begin
   s2:=o.getval('F2_'+inttostr(i+1));
   s3:=o.getval('Threshold_'+inttostr(i+1));
   result.x:=strtoFloatExt(s1);
-  result.y:=strtofloatExt(s1);
-  result.z:=strtofloatExt(s1);
+  result.y:=strtofloatExt(s2);
+  result.z:=strtofloatExt(s3);
 end;
 
 function cBladeFolder.ToneCount: integer;

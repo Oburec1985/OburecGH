@@ -75,6 +75,7 @@ type
     destructor destroy;override;
     property linetext:string read getLineText write setLineText;
     property x:double read m_x write setx;
+    // координаты ставить в координатах +-1
     property x1:double read m_x1 write setx1;
     property x2:double read m_x2 write setx2;
     property drawline:boolean read m_drawline write setdrawline;
@@ -194,6 +195,9 @@ begin
   m_capacity:=10;
   setlength(m_y, m_capacity);
   m_length:=0;
+
+  boundrect.BottomLeft.y:=-1;
+  boundrect.TopRight.y:=1;
 end;
 
 
@@ -407,8 +411,8 @@ var
   page:cpage;
 begin
   page := cpage(getpage);
-  boundrect.BottomLeft.y:=-1;
-  boundrect.TopRight.y:=1;
+  //boundrect.BottomLeft.y:=-1;
+  //boundrect.TopRight.y:=1;
 end;
 
 procedure cFreqBand.doUpdateTextLabels(sender: tobject);

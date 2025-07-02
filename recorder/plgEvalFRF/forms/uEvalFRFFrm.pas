@@ -23,7 +23,7 @@ uses
   uPathMng,
   opengl, uSimpleObjects,
   math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend, uProfile,
-  uBladeDB, uSpmBand,
+  uBladeDB, uSpmBand, uChartEvents,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uBtnListView;
 
 type
@@ -399,6 +399,7 @@ type
     procedure setNewAx(b: boolean);
     procedure ShowSignalsLV;
   public
+    procedure doOnZoom(sender:tobject);
     function hideind: integer;
     procedure delCurrentShock;
     PROCEDURE ShowShock(shock: integer);
@@ -542,6 +543,7 @@ begin
   m_TahoList := tlist.create;
 
   m_bands:=bList.Create;
+
   inherited;
 end;
 
@@ -592,6 +594,11 @@ begin
     else
       result:=m_minY;
   end;
+end;
+
+procedure TFRFFrm.doOnZoom(sender: tobject);
+begin
+  m_bands.UpdateBands;
 end;
 
 procedure TFRFFrm.doShowLines(Sender: TObject);
@@ -860,6 +867,8 @@ var
 begin
   SpmChart.OnRBtnClick := RBtnClick;
   SpmChart.tabs.activeTab.addPage(true);
+  SpmChart.OBJmNG.Events.AddEvent('SpmChart_OnZoom', e_OnChangeAxisScale, doOnZoom);
+
 
   p := SpmChart.tabs.activeTab.GetPage(0);
   r.BottomLeft.x := 0;
@@ -965,6 +974,8 @@ begin
     a.clear;
   end;
   axSpm.clear;
+  if t=nil then
+    exit;
   c := t.getCfg;
 
   UseWndFcb.Checked := t.m_shockList.m_wnd.wndfunc <> wnd_no;
@@ -1957,8 +1968,11 @@ begin
       axRef.name := 'RefAxis';
       pageT.addaxis(axRef);
       t := getTaho;
-      a := caxis(t.line.parent);
-      axRef.AddChild(t.line);
+      if t<>nil then
+      begin
+        a := caxis(t.line.parent);
+        axRef.AddChild(t.line);
+      end;
       // showmessage(inttostr(a.childcount));
     end;
   end;
@@ -2316,7 +2330,9 @@ end;
 
 function cSRSTaho.getCfg: cSpmCfg;
 begin
-  result := cSpmCfg(fSpmCfgList.Items[0]);
+  result:=nil;
+  if fSpmCfgList.count>0 then
+    result := cSpmCfg(fSpmCfgList.Items[0]);
 end;
 
 function cSRSTaho.getCfg(i: integer): cSpmCfg;

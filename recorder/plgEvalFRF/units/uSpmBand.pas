@@ -19,11 +19,14 @@ type
   tSpmBand = class
   public
     owner:tlist;
+    // в абсолютных координатах
+    m_f1,m_f2:double;
     // компонент котрый отображает полосу
     m_freqband:cFreqBand;
     // список объектов для которых подписываем значение
     m_trends:tstringlist;
     m_thresh:double;
+    m_chart:cChart;
   protected
     function getname:string;
   public
@@ -36,12 +39,37 @@ type
   // список полос
   bList = class(tlist)
   public
+    m_c:cchart;
+  public
+    procedure UpdateBands;
     function addband(f1,f2, threshold:double; chart:cchart):tspmBand;
     function getband(i:integer):tSpmBand;
     procedure cleardata;
   end;
 
 implementation
+
+function correctPosX(page: cpage; x: double; var error:boolean): double;
+var
+  min, max: double;
+begin
+  error:=false;
+  if page.lgX then
+  begin
+    min:=page.MinX;
+    max:=page.MaxX;
+    if (min < x) and (x < max) then
+    begin
+      result := LogValToLinearScale(x, p2d(min, max));
+    end
+    else
+      error:=true;
+  end
+  else
+  begin
+    result := x;
+  end;
+end;
 
 { tSpmBand }
 
@@ -87,7 +115,7 @@ procedure tSpmBand.setchart(c: cchart);
 var
   page:cpage;
 begin
-  m_freqband:=cFreqBand.create;
+  m_chart:=c;
   m_freqband.m_fullname:=true;
   m_freqband.m_LineLabel.Visible:=false;
   m_freqband.layer:=2;
@@ -95,20 +123,25 @@ begin
   m_freqband.m_LineLabel.m_addscaleX:=1.1;
   m_freqband.name:='FreqBand';
   m_freqband.m_names:=m_trends;
+  //m_freqband.x1:=
   page:=cpage(c.activeTab.GetPage(1));
   page.AddChild(m_freqband);
 end;
 
 { bList }
 
+
 function bList.addband(f1, f2, threshold:double; chart:cchart): tspmBand;
+
 begin
   result:=tSpmBand.create;
   result.owner:=self;
-  result.m_freqband.x1:=f1;
-  result.m_freqband.x2:=f2;
+  result.m_f1:=f1;
+  result.m_f2:=f2;
+  m_c:=chart;
   result.m_thresh:=threshold;
   result.setchart(chart);
+  Add(result);
 end;
 
 procedure bList.cleardata;
@@ -127,6 +160,34 @@ end;
 function bList.getband(i: integer): tSpmBand;
 begin
   result:=tSpmBand(items[i]);
+end;
+
+procedure bList.UpdateBands;
+var
+  lx1, lx2, lx,r, min, max:double;
+  er:boolean;
+  page:cpage;
+  I: Integer;
+  b:tspmband;
+begin
+  if m_c=nil then exit;
+  page:=cpage(m_c.activeTab.GetPage(1));
+  min:=page.MinX;
+  max:=page.MaxX;
+  r:=max-min;
+  for I := 0 to Count - 1 do
+  begin
+    b:=getband(i);
+    lx1:=correctPosX(page,b.m_f1,er);
+    lx2:=correctPosX(page,b.m_f2,er);
+    lx1:=(2*(lx1-min)/r)-1;
+    lx2:=(2*(lx2-min)/r)-1;
+    lx:=0.5*(lx1+lx2);
+
+    b.m_freqband.x1:=lx-lx1;
+    b.m_freqband.x2:=lx2-lx;
+    b.m_freqband.x:=lx;
+  end;
 end;
 
 end.
