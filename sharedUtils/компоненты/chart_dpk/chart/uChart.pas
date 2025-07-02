@@ -28,8 +28,7 @@ uses classes, stdctrls, controls, messages, windows, types, ExtCtrls, ComCtrls,
   uShader,
   uConfigFile3d,
   uBasePage,
-  uLineLgShader,
-  jcldebug;
+  uLineLgShader;
 
 type
   TMouseZoomEvent = procedure(Sender: TObject; UpScale:boolean) of object;

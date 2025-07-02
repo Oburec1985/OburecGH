@@ -8,8 +8,7 @@ uses
   umatrix, uNode, uMNode, uFontMng, uCommonMath,
   MathFunction, uText,
   uLogFile,
-  dialogs,
-  jclDebug;
+  dialogs;
 
 type
 
@@ -592,8 +591,8 @@ begin
 end;
 
 procedure cDrawObj.EnterCS;
-var
-  callStack: TJclStackInfoList;
+//var
+  //callStack: TJclStackInfoList;
 begin
   if chart <> nil then
   begin
@@ -608,10 +607,10 @@ begin
       // Raw – определяет метод, используемый для получения информации о стеке вызова. При значении False анализируются только стековые фреймы. Использование значения True позволяет провести анализ непосредственно стека программы и по кодам команд процессора, которые используются при вызове подпрограмм (в частности машинной команды call) в ряде случаев получить более полную информацию о стеке вызовов подпрограмм.
       // AIgnoreLevels – определяет количество первых вызовов подпрограмм в стеке, которые не будут анализироваться. Например, при создании экземпляра класса с помощью функции JclCreateStackList её вызов будет первым. Но обычно интерес представляет последующие вызовы подпрограмм. Используя значение данного параметра равное 1, можно пропустить анализ вызова данной функции.
       // FirstCaller – адрес подпрограммы, о которой требуется получить информацию дополнительно к адресам подпрограмм из стека вызовов. Параметр обычно используется при анализе исключений.
-      callStack := JclCreateStackList(true, 3, nil);
+      //callStack := JclCreateStackList(true, 3, nil);
       m_stackStrings.Clear;
       // список строк, имя модуля, смещение адреса
-      callStack.AddToStrings(m_stackStrings, false, false, true);
+      //callStack.AddToStrings(m_stackStrings, false, false, true);
       if m_LastProcName <> '' then
       begin
         cchart(chart).deadLockDSC := m_LastProcName + '__' +
@@ -620,7 +619,7 @@ begin
           cchart(chart).OnDeadLock(self);
       end;
       m_LastProcName := m_stackStrings.Strings[0];
-      callStack.Free;
+      //callStack.Free;
     end;
   end;
   EnterCriticalSection(cs);

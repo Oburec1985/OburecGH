@@ -12,7 +12,6 @@ uses
   uGraphObj, windows,
   messages,
   uLogFile,
-  jclDebug,
   clipbrd;
 
 type
@@ -211,7 +210,7 @@ end;
 
 procedure cLabel.SetPos(p: point2);
 var
-  callStack: TJclStackInfoList;
+  //callStack: TJclStackInfoList;
   I, j: integer;
   str: string;
 begin

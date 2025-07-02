@@ -1,0 +1,116 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{324CF56B-7352-4F81-90AA-75F9542B3EF6}</ProjectGuid>
+			<ProjectVersion>12.0</ProjectVersion>
+			<MainSource>MeraFileMng.dpr</MainSource>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<BRCC_IncludePath>..\..\2011\sharedUtils\mera;..\..\..\2011\sharedUtils\mera;$(BRCC_IncludePath)</BRCC_IncludePath>
+			<DCC_UnitSearchPath>..\sharedUtils\компоненты\dcl_dpk;..\sharedUtils\objects;..\sharedUtils\utils;..\sharedUtils\utils\lists;..\sharedUtils\utils\PathUtils;..\sharedUtils\math;..\sharedUtils;..\sharedUtils\utils\xml;..\sharedUtils\forms;..\sharedUtils\objects\utils;..\sharedUtils\utils\jcl-2.3.1.4197;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source;..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1;..\sharedUtils\компоненты\chart_dpk\chart;..\sharedUtils\компоненты\chart_dpk\chart\utils;..\sharedUtils\компоненты\chart_dpk\chart\items;..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners;..\sharedUtils\компоненты\chart_dpk\chart\items\shaders;..\sharedUtils\компоненты\chart_dpk\chart\utils\lists;..\sharedUtils\ogl\;..\3d\objects;..\3d\math;..\sharedUtils\ogl\shader;..\3d\tools;..\..\2011\sharedUtils\utils\FastMM;..\..\..\2011\sharedUtils\utils\lists;..\..\..\2011\sharedUtils\utils\FastMM;..\..\..\2011\sharedUtils\objects\utils;..\..\..\2011\sharedUtils\forms;..\..\..\2011\sharedUtils\utils\xml;..\..\..\2011\sharedUtils;..\..\..\2011\sharedUtils\math;..\..\..\2011\sharedUtils\utils\PathUtils;..\..\..\2011\sharedUtils\objects;..\..\..\2011\sharedUtils\компоненты\dcl_dpk;..\..\..\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\..\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\..\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\..\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\..\2011\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;..\..\..\2011\sharedUtils\utils\jcl-2.3.1.4197;..\..\..\2011\sharedUtils\mera;..\..\2011\sharedUtils\компоненты\chart_dpk\chart;..\..\..\2011\sharedUtils\компоненты\chart_dpk\chart\items;..\..\..\2011\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners;..\..\..\2011\sharedUtils\компоненты\chart_dpk\chart\utils;..\..\..\2011\sharedUtils\компоненты\chart_dpk\chart\utils\lists;..\..\..\2011\sharedUtils\компоненты\chart_dpk\chart\forms;..\..\..\2011\sharedUtils\компоненты\chart_dpk\chart\forms\frames;..\..\..\2011\sharedUtils\компоненты\chart_dpk\chart;..\..\..\2011\sharedUtils\ogl\dglOpenGL;..\..\..\2011\sharedUtils\ogl;..\..\..\2011\3dProj\Loader_\Scene\objects;..\..\..\2011\3dProj\Loader_\Scene\objects\helputils;..\..\..\2011\3dProj\Loader_\Scene;..\..\..\2011\3dProj\Loader_\math;..\..\..\2011\3dProj\Loader_\shaders;..\..\..\2011\3dProj\Loader_\Render;..\..\..\2011\3dProj\Loader_\Render\Shaders;..\3d\core;..\3d\forms;..\sharedUtils\компоненты\chart_dpk\chart\forms;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_DependencyCheckOutputName>MeraFileMng.exe</DCC_DependencyCheckOutputName>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
+			<DCC_Platform>x86</DCC_Platform>
+			<DCC_E>false</DCC_E>
+			<DCC_N>false</DCC_N>
+			<DCC_S>false</DCC_S>
+			<DCC_F>false</DCC_F>
+			<DCC_K>false</DCC_K>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_RangeChecking>true</DCC_RangeChecking>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="MeraFileMng.dpr">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="uMainFrm.pas">
+				<Form>MeraFileMngFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\sharedUtils\компоненты\dcl_dpk\uSpin.pas"/>
+			<DCCReference Include="..\sharedUtils\mera\uMeraFile.pas"/>
+			<DCCReference Include="..\sharedUtils\mera\ubuffsignal.pas"/>
+			<DCCReference Include="..\sharedUtils\mera\umeraSignal.pas"/>
+			<DCCReference Include="..\sharedUtils\mera\uSignalsUtils.pas"/>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Source>
+						<Source Name="MainSource">MeraFileMng.dpr</Source>
+					</Source>
+					<Parameters>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">1</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1049</VersionInfo>
+						<VersionInfo Name="CodePage">1251</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName"/>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+				</Delphi.Personality>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>

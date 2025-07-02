@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2012.12.29 10:41:58.328.pas,D:\Documents and Settings\Admin\Мои документы\RAD Studio\Projects\Unit1.pas=E:\Oburec\delphi\2011\Mera\MeraFileMng\uMainFrm.pas</Transaction>
+    <Transaction>2012.12.29 10:41:58.328.dfm,D:\Documents and Settings\Admin\Мои документы\RAD Studio\Projects\Unit1.dfm=E:\Oburec\delphi\2011\Mera\MeraFileMng\uMainFrm.dfm</Transaction>
+    <Transaction>2012.12.29 10:42:13.375.dproj,D:\Documents and Settings\Admin\Мои документы\RAD Studio\Projects\Project1.dproj=E:\Oburec\delphi\2011\Mera\MeraFileMng\MeraFileMng.dproj</Transaction>
+  </Transactions>
+</BorlandProject>

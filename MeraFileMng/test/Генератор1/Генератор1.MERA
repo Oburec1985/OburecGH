@@ -1,0 +1,27 @@
+[MERA]
+Test=Папка создана пакетом WinПОС
+Prod=Генератор
+Date= 4.01.2013
+Time=21:35:16.899
+[sinus]
+Char=НЗ
+Comment=Испытание: Папка создана пакетом WinПОСДата:  4.01.2013
+DateTime=41278.898831018516
+XUnits=с
+YUnits=V
+Start=0
+Step=0.002500000000
+Freq=400.000000000000
+k0=0
+k1=1.000000000000
+YFormat=R8
+[cos]
+DateTime=41279.012569444443
+XUnits=с
+YUnits=V
+Start=0
+Step=0.001666666667
+Freq=600.000000000000
+k0=0
+k1=1.000000000000
+YFormat=R8
