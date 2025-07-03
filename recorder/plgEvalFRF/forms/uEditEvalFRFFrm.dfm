@@ -188,6 +188,8 @@ object EditFrfFrm: TEditFrfFrm
       Align = alTop
       Caption = 'SPMGB'
       TabOrder = 1
+      ExplicitLeft = 2
+      ExplicitTop = 125
       object FFTBlockSizeLabel: TLabel
         Left = 8
         Top = 22
@@ -419,6 +421,8 @@ object EditFrfFrm: TEditFrfFrm
       Align = alClient
       Caption = #1054#1090#1086#1073#1088#1072#1078#1077#1085#1080#1077
       TabOrder = 2
+      ExplicitLeft = 6
+      ExplicitTop = 319
       object UpdateBtn: TSpeedButton
         Left = 354
         Top = 87
@@ -678,6 +682,22 @@ object EditFrfFrm: TEditFrfFrm
         Height = 19
         Caption = #1042#1086#1079#1076#1077#1081#1089#1090#1074#1080#1077' '#1074' '#1086#1090#1076#1077#1083#1100#1085#1091#1102' '#1086#1089#1100
         TabOrder = 8
+      end
+      object FlagsCB: TCheckBox
+        Left = 331
+        Top = 21
+        Width = 149
+        Height = 20
+        Caption = #1092#1083#1072#1078#1082#1080
+        TabOrder = 9
+      end
+      object BandLabelCB: TCheckBox
+        Left = 331
+        Top = 47
+        Width = 149
+        Height = 20
+        Caption = #1052#1077#1090#1082#1072' '#1085#1072' '#1087#1086#1083#1086#1089#1091
+        TabOrder = 10
       end
     end
     object WelchGB: TGroupBox

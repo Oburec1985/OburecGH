@@ -16,13 +16,14 @@ uses
   upage,
   tags,
   complex,
-  uBuffTrend1d,  utrend,
+  uTextLabel,
+  uBuffTrend1d,  utrend, uaxis,
   uCommonTypes,
   pluginClass,
   shellapi,
   uPathMng,
   opengl, uSimpleObjects,
-  math, uAxis, uDrawObj, uDoubleCursor, uBasicTrend, uProfile,
+  math, uDrawObj, uDoubleCursor, uBasicTrend, uProfile,
   uBladeDB, uSpmBand, uChartEvents,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uBtnListView;
 
@@ -359,6 +360,8 @@ type
     m_ShiftLeft, m_Length: double;
 
     ready: boolean;
+    // показывать флажки на максимумы
+    m_showflags, m_showBandLab:boolean;
     // axRef - воздействие; ax - отклик
     axRef, TimeAx: caxis;
     // h0, h1, h2
@@ -388,6 +391,8 @@ type
     m_corrS: boolean;
 
     m_bands:bList;
+    // текстовые метки на полосах
+    m_labList:tlist;
   protected
     fdelBtn: boolean; // нажали кнопку удалить удар
     fUpdateFrf: boolean; // обновился frf
@@ -432,6 +437,7 @@ type
     // обновить надписи в метках полос
     procedure UpdateBands(s:cSRSres);
     procedure UpdateBandNames;
+    procedure UpdateLabels;
   public
     property NewAxis: boolean read m_newAx write setNewAx;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -516,6 +522,99 @@ begin
   move(t.m_ReadData[int.x], buf.p^, result * sizeof(double));
 end;
 
+
+function TextLabelsComparator(p1, p2: pointer): integer;
+begin
+  if cTextLabel(p1).Position.x > cTextLabel(p2).Position.x then
+    result := 1
+  else
+  begin
+    if cTextLabel(p1).Position.x < cTextLabel(p2).Position.x then
+      result := -1
+    else
+      result := 0;
+  end;
+end;
+
+
+function correctPos(aX: caxis; page: cpage; p: point2d): point2d;
+var
+  x, y: double;
+begin
+  if page.lgX then
+  begin
+    if (aX.min.x < p.x) and (p.x < aX.max.x) then
+    begin
+      x := LogValToLinearScale(p.x, p2d(aX.min.x, aX.max.x));
+    end;
+  end
+  else
+  begin
+    x := p.x;
+  end;
+  if aX.lg then
+  begin
+    if (aX.min.y < p.y) and (p.y < aX.max.y) then
+    begin
+      y := LogValToLinearScale(p.y, p2d(aX.min.y, aX.max.y));
+    end;
+  end
+  else
+  begin
+    y := p.y;
+  end;
+  result := p2d(x, y);
+end;
+
+function corrcetBound(r: frect): frect;
+var
+  b: boolean;
+begin
+  result.BottomLeft.x := min(r.BottomLeft.x, r.TopRight.x, b);
+  result.BottomLeft.y := min(r.BottomLeft.y, r.TopRight.y, b);
+  result.TopRight.x := max(r.BottomLeft.x, r.TopRight.x, b);
+  result.TopRight.y := max(r.BottomLeft.y, r.TopRight.y, b);
+end;
+
+function intersectlabel(i: integer; a: caxis; flags: tlist; l: cTextLabel;
+  shift: point2d): boolean;
+var
+  j: integer;
+  l2: cTextLabel;
+  r2, r: frect;
+begin
+  result := false;
+  r := l.boundrect;
+  r.BottomLeft := SummP2(r.BottomLeft, p2(shift.x, shift.y));
+  r.TopRight := SummP2(r.TopRight, p2(shift.x, shift.y));
+  r := corrcetBound(r);
+  for j := i - 1 downto 0 do
+  begin
+    l2 := cTextLabel(flags.Items[j]);
+    if not l2.visible then continue;
+    r2 := l2.boundrect;
+    r2 := corrcetBound(r2);
+    // не ушли за правую границу
+    if r.BottomLeft.x <= r2.TopRight.x then
+    begin
+      // не ушли за нижнюю границу
+      if r.TopRight.y >= r2.BottomLeft.y then
+      begin
+        // не ушли за левую границу
+        if r.TopRight.x >= r2.BottomLeft.x then
+        begin
+          // не ушли за верхнюю границу
+          if r.BottomLeft.y <= r2.TopRight.y then
+            result := true;
+        end;
+      end;
+    end;
+    // если есть пересечение
+    if result then
+      exit;
+  end;
+end;
+
 { TSRSFrm }
 
 
@@ -547,7 +646,9 @@ begin
   m_TahoList := tlist.create;
 
   m_bands:=bList.Create;
-
+  m_labList := tlist.create;
+  m_showBandLab:=false;
+  m_showflags:=false;
   inherited;
 end;
 
@@ -677,6 +778,7 @@ begin
     begin
       s.lineFrf.AddPoints(sd.m_frf, c.fHalfFft);
       UpdateBands(s);
+      UpdateLabels;
     end;
   end;
   fUpdateFrf := false;
@@ -718,6 +820,8 @@ begin
     t.destroy;
   end;
   m_TahoList.destroy;
+  m_bands.Destroy;
+  m_labList.Destroy;
   inherited;
 end;
 
@@ -914,12 +1018,104 @@ begin
     for I := 0 to m_bands.Count - 1 do
     begin
       b:=m_bands.getband(i);
+      b.m_trends.clear;
       for j := 0 to t.cfg.SRSCount - 1 do
       begin
         s:=t.cfg.GetSrs(j);
         b.m_trends.AddObject(s.name, s);
+        if b.flag=nil then
+          b.createlabel;
+        s.lineFrf.AddChild(b.flag);
       end;
     end;
+  end;
+end;
+
+// обновить значения меток.
+procedure TFRFFrm.UpdateLabels;
+var
+  i, j, k, ind: integer;
+  b: tspmband;
+  tr:cBuffTrend1d;
+  l: cTextLabel;
+  p: cpage;
+  a: caxis;
+  x, y, max, maxX: double;
+  spmMax,pos: point2d;
+  // смещение положения метки для непересечения
+  percentSize: point2;
+  r: frect;
+  // пересекаем другую метку
+  intersect: boolean;
+begin
+  m_labList.Clear;
+  if not m_showflags then
+    exit;
+
+  for i := 0 to m_bands.Count - 1 do
+  begin
+    b := m_bands.getband(i);
+    l := b.flag;
+    l.visible:=m_showflags;
+    if not m_showflags then
+      continue;
+
+    a := caxis(l.GetParentByClassName('cAxis'));
+    p := cpage(a.GetParentByClassName('cPage'));
+    l.visible:=true;
+    x:=b.m_freqband.m_realX;
+    tr:=cBuffTrend1d(l.parent);
+    ind:=tr.GetLowInd(x)+1;
+    if (ind<tr.count) and (ind>0) then
+    begin
+      max:=tr.GetYByInd(ind);
+      maxx:=x;
+    end
+    else
+    begin
+      continue;
+    end;
+    while x<b.m_f2 do
+    begin
+      inc(ind);
+      x:=tr.GetXByInd(ind);
+      y:=tr.GetYByInd(ind);
+      if y>max then
+      begin
+        max:=y;
+        maxX:=x;
+      end;
+    end;
+    pos := correctPos(a, p, p2d(maxX, max));
+    l.Position := p2(pos.x, pos.y);
+    l.line := l.Position;
+    l.text := format('F:%.3g', [maxx]) + format(' V:%.3g', [max]);
+    m_labList.Add(l);
+  end;
+  m_labList.Sort(TextLabelsComparator);
+  // пересчитываем положения меток
+  for i := 0 to m_labList.Count - 1 do
+  begin
+    l := cTextLabel(m_labList.Items[i]);
+    // смещаем метку
+    r := l.boundrect;
+    percentSize.x := r.TopRight.x - r.BottomLeft.x;
+    percentSize.x := percentSize.x / a.getdx;
+    percentSize.y := r.TopRight.y - r.BottomLeft.y;
+    percentSize.y := percentSize.y / a.getdy;
+    // пытаемся сместиться вверх
+    intersect := true;
+    pos := p2d(l.Position.x, l.Position.y);
+    j := 1; // число смещений
+    while intersect do
+    begin
+      // pos.x:=pos.x+percentSize.x*a.getdx;
+      pos.y := pos.y + percentSize.y * a.getdy;
+      // intersectlabel(i:integer;a:caxis;flags:tlist;l:ctextlabel;pos:point2d)
+      intersect := intersectlabel(i, a, m_labList, l, p2d(0, percentSize.y * a.getdy * j));
+      inc(j);
+    end;
+    l.Position := p2(pos.x, pos.y);
   end;
 end;
 
@@ -931,10 +1127,17 @@ var
   act_s:cSRSres;
   p, max:Double;
 begin
+
   act_s:=ActiveSignal;
   for I := 0 to m_bands.Count - 1 do
   begin
     b:=m_bands.getband(i);
+    if not m_showBandLab then
+    begin
+      b.m_freqband.m_LineLabel.visible:=false;
+      continue;
+    end;
+
     i1i2.x:=s.lineFrf.GetLowInd(b.m_f1)+1;
     i1i2.y:=s.lineFrf.GetLowInd(b.m_f2);
     max:=0;
@@ -1769,6 +1972,8 @@ begin
   m_lgY := a_pIni.ReadBool(str, 'Spm_Lg_y', false);
   NewAxis := a_pIni.ReadBool(str, 'TahoNewAxis', false);
   m_saveT0 := a_pIni.ReadBool(str, 'SaveT0', false);
+  m_showflags := a_pIni.ReadBool(str, 'ShowFlags', false);
+  m_showBandLab := a_pIni.ReadBool(str, 'ShowBandLabels', false);
   m_estimator := a_pIni.ReadInteger(str, 'Estimator', 1);
 
   if c <> nil then
@@ -1998,6 +2203,8 @@ begin
     a_pIni.WriteBool(str, 'SaveT0', m_saveT0);
     a_pIni.WriteBool(str, 'TahoNewAxis', m_newAx);
     a_pIni.WriteInteger(str, 'Estimator', m_estimator);
+    a_pIni.WriteBool(str, 'ShowFlags', m_showflags);
+    a_pIni.WriteBool(str, 'ShowBandLabels', m_showBandLab);
     c := t.cfg;
     if c <> nil then
     begin

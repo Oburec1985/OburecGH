@@ -23,6 +23,7 @@ type
     m_f1,m_f2:double;
     // компонент котрый отображает полосу
     m_freqband:cFreqBand;
+    flag:ctextlabel;
     // список объектов для которых подписываем значение
     m_trends:tstringlist;
     m_thresh:double;
@@ -30,6 +31,8 @@ type
   protected
     function getname:string;
   public
+    procedure createlabel;
+    procedure OnDestroyLabel(sender:tobject);
     procedure setchart(c:cchart);
     function getObj(s:string):tobject;
     property name:string read getname;
@@ -77,6 +80,16 @@ constructor tSpmBand.create;
 begin
   m_trends:=TStringList.create;
   m_freqband:=cFreqBand.create;
+  createlabel;
+end;
+
+procedure tSpmBand.createlabel;
+begin
+  flag:=cTextLabel.create;
+  flag.data:=self;
+  flag.color := blue;
+  flag.drawline := true;
+  flag.fOnDestroy:=OnDestroyLabel;
 end;
 
 destructor tSpmBand.destroy;
@@ -84,6 +97,10 @@ begin
   if m_freqband<>nil then
   begin
     m_freqband.destroy;
+  end;
+  if flag<>nil then
+  begin
+    flag.destroy;
   end;
   m_trends.Destroy;
 end;
@@ -111,6 +128,11 @@ begin
   end;
 end;
 
+procedure tSpmBand.OnDestroyLabel(sender: tobject);
+begin
+  flag:=nil;
+end;
+
 procedure tSpmBand.setchart(c: cchart);
 var
   page:cpage;
@@ -120,7 +142,7 @@ begin
   m_freqband.m_LineLabel.Visible:=true;
   m_freqband.layer:=2;
   m_freqband.m_LineLabel.layer:=0;
-  m_freqband.m_LineLabel.m_addscaleX:=1.1;
+  m_freqband.m_LineLabel.m_addscaleX:=1.15;
   m_freqband.name:='FreqBand';
   m_freqband.m_names:=m_trends;
   //m_freqband.x1:=

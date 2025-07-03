@@ -67,6 +67,8 @@ type
     AddPNumIE: TIntEdit;
     AddPNumLabel: TLabel;
     ProfileBtn: TButton;
+    FlagsCB: TCheckBox;
+    BandLabelCB: TCheckBox;
     procedure SignalsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
@@ -304,6 +306,9 @@ begin
   LgYcb.Checked:=m_SRS.m_lgY;
   NewAxCb.Checked:=m_SRS.m_newAx;
 
+  FlagsCB.Checked:=m_SRS.m_showflags;
+  BandLabelCB.Checked:=m_SRS.m_showBandLab;
+
   SaveT0CB.Checked:=m_srs.m_saveT0;
   t:=m_SRS.getTaho;
   if t<>nil then
@@ -507,6 +512,9 @@ begin
   m_SRS.m_WelchCount:=WelchBCountIE.IntNum;
   m_SRS.NewAxis:=NewAxCb.Checked;
   m_SRS.UpdateChart;
+  m_SRS.m_showflags:=FlagsCB.Checked;
+  m_SRS.m_showBandLab:=BandLabelCB.Checked;
+  m_SRS.UpdateBandNames;
 
   n:=SignalsTV.FocusedNode;
   d:=SignalsTV.GetNodeData(n);
