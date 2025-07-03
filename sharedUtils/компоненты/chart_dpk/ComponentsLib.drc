@@ -3452,7 +3452,6 @@ BEGIN
 	JclResources_RsCILNamestloc1,	"stloc.1"
 END
 
-/* ..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common\JclUnicode.res */
 /* chart\forms\uDrawObjFrame.dfm */
 /* ..\..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uAxisForm.dfm */
 /* chart\forms\uTextLabelForm.dfm */
@@ -3470,6 +3469,7 @@ END
 /* chart\forms\uCreateTrendFrame.dfm */
 /* chart\forms\uCreateObjForm.dfm */
 /* chart\forms\frames\uChartInputFrame.dfm */
+/* ..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common\JclUnicode.res */
 /* chart\forms\uCreateObjFrm.dfm */
-/* C:\Oburec\OburecGH\sharedUtils\компоненты\chart_dpk\ComponentsLib.res */
-/* C:\Oburec\OburecGH\sharedUtils\компоненты\chart_dpk\ComponentsLib.drf */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\ComponentsLib.res */
+/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\ComponentsLib.drf */

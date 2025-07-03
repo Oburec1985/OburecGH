@@ -71,6 +71,7 @@ type
     aX, aY: point2d;
     lgX, lgY: boolean;
     // список текстовых меток для сортировки по X
+
     m_labList: tlist;
     fprofile: tprofile;
     // список полос для отображения (cFreqBand)

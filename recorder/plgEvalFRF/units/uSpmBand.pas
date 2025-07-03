@@ -117,7 +117,7 @@ var
 begin
   m_chart:=c;
   m_freqband.m_fullname:=true;
-  m_freqband.m_LineLabel.Visible:=false;
+  m_freqband.m_LineLabel.Visible:=true;
   m_freqband.layer:=2;
   m_freqband.m_LineLabel.layer:=0;
   m_freqband.m_LineLabel.m_addscaleX:=1.1;

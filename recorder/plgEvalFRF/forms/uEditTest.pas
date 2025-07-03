@@ -152,10 +152,11 @@ begin
   end;
   BladeCB.ItemIndex:=0;
   g_mbase.root.selected:=cxmlfolder(g_mbase.root.getChild(0));
-  g_mbase.root.selected.selected:=cxmlfolder(g_mbase.root.selected.getChild(0));
-  g_mbase.root.selected.selected.selected:=cxmlfolder(g_mbase.root.selected.selected.getChild(0));
-
-
+  if g_mbase.root.selected<>nil then
+  begin
+    g_mbase.root.selected.selected:=cxmlfolder(g_mbase.root.selected.getChild(0));
+    g_mbase.root.selected.selected.selected:=cxmlfolder(g_mbase.root.selected.selected.getChild(0));
+  end;
   ShowTone;
   SGChange(ProfileSG);
 end;

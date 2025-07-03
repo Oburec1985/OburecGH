@@ -267,16 +267,19 @@ procedure cBuffTrend1d.BindVBA(sh: cshader);
 begin
   // готовим VAO для отрисовки
   // связка с аттрибутами вершин
-  glBindVertexArray(cLineLgShader1d(sh).m_VAO);
-  // загрузка данных
-  glBindBuffer(gl_array_buffer, cLineLgShader1d(sh).m_VBO);
-  glBufferData(gl_array_buffer, flength * SizeOf(double), @data_r[0],
-    GL_STATIC_DRAW);
-  // 0 - вершинные данные; 1 - 1 элемент на вершину (только Y) ; 0 - т.к. берем из видео карты; nil - тоже
-  glVertexAttribPointer(0, 1, GL_DOUBLE, false, 0, 0);
-  // включаем использование для вершинного буфера VAO (0)
-  glEnableVertexAttribArray(0);
-  // glBindVertexArray(cLineLgShader1d(sh).m_VAO);
+  if length(data_r)>0 then
+  begin
+    glBindVertexArray(cLineLgShader1d(sh).m_VAO);
+    // загрузка данных
+    glBindBuffer(gl_array_buffer, cLineLgShader1d(sh).m_VBO);
+    glBufferData(gl_array_buffer, flength * SizeOf(double), @data_r[0],
+      GL_STATIC_DRAW);
+    // 0 - вершинные данные; 1 - 1 элемент на вершину (только Y) ; 0 - т.к. берем из видео карты; nil - тоже
+    glVertexAttribPointer(0, 1, GL_DOUBLE, false, 0, 0);
+    // включаем использование для вершинного буфера VAO (0)
+    glEnableVertexAttribArray(0);
+    // glBindVertexArray(cLineLgShader1d(sh).m_VAO);
+  end;
 end;
 
 procedure cBuffTrend1d.SetLgShaderData;

@@ -21,7 +21,7 @@ type
 
   cFreqBand = class(cdrawobj)
   public
-    // подпись линии
+    // подпись линий
     m_LineLabel:cLabel;
     // хранит cTrendPair
     m_trendLabels:tlist;
@@ -308,32 +308,39 @@ begin
   inherited;
   m_text:=s;
   //m_LineLabel.Text:=s+char(10)+format(' X:%.3g', [m_realX]);
-  if length>0 then
+  if m_names<>nil then
   begin
-    str:=s+char(10)+'X: '+formatstrNoE(m_realX, 3)+char(10);
-    for I := 0 to length - 1 do
+    if m_names.Count>0 then
     begin
-      if (m_fullname) and (m_names<>nil) then
+      str:=s+char(10)+'X: '+formatstrNoE(m_realX, 3)+char(10);
+      for I := 0 to m_names.Count - 1 do
       begin
-        namestr:=m_names.Strings[i]+': ';
-      end
-      else
-      begin
-        namestr:='Y'+inttostr(i)+': ';
+        if (m_fullname) and (m_names<>nil) then
+        begin
+          namestr:=m_names.Strings[i]+': ';
+        end
+        else
+        begin
+          namestr:='Y'+inttostr(i)+': ';
+        end;
+        if i=length-1 then
+        begin
+          str:=str+namestr+formatstrNoE(m_y[i], 3);
+        end
+        else
+          str:=str+namestr+formatstrNoE(m_y[i], 3)+char(10);
       end;
-      if i=length-1 then
-      begin
-        str:=str+namestr+formatstrNoE(m_y[i], 3);
-      end
-      else
-        str:=str+namestr+formatstrNoE(m_y[i], 3)+char(10);
-    end;
-    // отладочная инфа
-    //str:=str+char(10)+'Position:' +floattostr(m_LineLabel.Position.X)+' '+floattostr(m_LineLabel.Position.y);
-    m_LineLabel.Text:=str;
+      // отладочная инфа
+      //str:=str+char(10)+'Position:' +floattostr(m_LineLabel.Position.X)+' '+floattostr(m_LineLabel.Position.y);
+      m_LineLabel.Text:=str;
+    end
+    else
+      m_LineLabel.Text:=s+char(10)+'X: '+formatstrNoE(m_realX, 3)+char(10)+'Y: '+'0';
   end
   else
+  begin
     m_LineLabel.Text:=s+char(10)+'X: '+formatstrNoE(m_realX, 3)+char(10)+'Y: '+'0';
+  end;
 end;
 
 procedure cFreqBand.settext(s:string; i:integer);

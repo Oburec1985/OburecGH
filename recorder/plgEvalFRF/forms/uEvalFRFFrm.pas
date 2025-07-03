@@ -429,6 +429,9 @@ type
     function  ActiveSignal:cSRSres;
     function  MaxSpmY:double;
     function  MinSpmY:double;
+    // обновить надписи в метках полос
+    procedure UpdateBands(s:cSRSres);
+    procedure UpdateBandNames;
   public
     property NewAxis: boolean read m_newAx write setNewAx;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -467,6 +470,7 @@ type
   public
     constructor create;
     destructor destroy; override;
+    // создаем метки
     procedure CreateBands(f:TFRFFrm; base:cBladeBase);
     function doCreateForm: cRecBasicIFrm; override;
     procedure doSetDefSize(var PSize: SIZE); override;
@@ -672,6 +676,7 @@ begin
     if s.lineFrf.visible then
     begin
       s.lineFrf.AddPoints(sd.m_frf, c.fHalfFft);
+      UpdateBands(s);
     end;
   end;
   fUpdateFrf := false;
@@ -896,6 +901,67 @@ begin
   axSpm := p.activeAxis;
 end;
 
+procedure TFRFFrm.UpdateBandNames;
+var
+  I, j: Integer;
+  b:tSpmBand;
+  s:cSRSres;
+  t:cSRSTaho;
+begin
+  t:=getTaho;
+  if t<>nil then
+  begin
+    for I := 0 to m_bands.Count - 1 do
+    begin
+      b:=m_bands.getband(i);
+      for j := 0 to t.cfg.SRSCount - 1 do
+      begin
+        s:=t.cfg.GetSrs(j);
+        b.m_trends.AddObject(s.name, s);
+      end;
+    end;
+  end;
+end;
+
+procedure TFRFFrm.UpdateBands(s:cSRSres);
+var
+  I, j, maxi: Integer;
+  i1i2:tpoint;
+  b:tSpmBand;
+  act_s:cSRSres;
+  p, max:Double;
+begin
+  act_s:=ActiveSignal;
+  for I := 0 to m_bands.Count - 1 do
+  begin
+    b:=m_bands.getband(i);
+    i1i2.x:=s.lineFrf.GetLowInd(b.m_f1)+1;
+    i1i2.y:=s.lineFrf.GetLowInd(b.m_f2);
+    max:=0;
+    maxi:=0;
+    for j := i1i2.x to i1i2.y do
+    begin
+      p:=s.lineFrf.GetYByInd(j);
+      if max<p then
+      begin
+        max:=p;
+        maxi:=j;
+      end;
+    end;
+    if s=act_s then
+      b.m_freqband.m_realX:=s.lineFrf.GetXByInd(maxi);
+    for j := 0 to b.m_trends.Count - 1 do
+    begin
+      if s=b.m_trends.Objects[j] then
+      begin
+        b.m_freqband.setY(max, j);
+        break;
+      end;
+    end;
+    b.m_freqband.name:=b.m_freqband.name;
+  end;
+end;
+
 procedure TFRFFrm.UpdateBlocks;
 var
   refresh: double;
@@ -1090,6 +1156,7 @@ begin
       s.lineCoh := l;
       s.lineCoh.name := s.name + '_coh';
     end;
+    UpdateBandNames;
     c.typeres := c.typeres;
 
     m_profileline:=cTrend.create;
@@ -2923,17 +2990,24 @@ end;
 
 procedure cFRFFactory.CreateBands(f: TFRFFrm; base: cBladeBase);
 var
-  i, c:integer;
+  i, j, c:integer;
   blade:cBladeFolder;
+  b:tSpmBand;
   p3:point3d;
+  li:tlistitem;
+  s:cSRSres;
 begin
   f.m_bands.cleardata;
   blade:=base.SelectBlade;
-  c:=blade.ToneCount;
-  for I := 0 to c - 1 do
+  if blade<>nil then
   begin
-    p3:=blade.Tone(i);
-    f.m_bands.addband(p3.x,p3.y,p3.z, f.SpmChart);
+    c:=blade.ToneCount;
+    for I := 0 to c - 1 do
+    begin
+      p3:=blade.Tone(i);
+      b:=f.m_bands.addband(p3.x,p3.y,p3.z, f.SpmChart);
+    end;
+    f.UpdateBandNames;
   end;
 end;
 
