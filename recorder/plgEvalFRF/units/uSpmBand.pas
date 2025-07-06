@@ -21,6 +21,7 @@ type
     owner:tlist;
     // в абсолютных координатах
     m_f1,m_f2:double;
+    m_f1i,m_f2i, m_fmaxi:integer;
     // компонент котрый отображает полосу
     m_freqband:cFreqBand;
     flag:ctextlabel;

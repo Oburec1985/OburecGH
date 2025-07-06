@@ -3,7 +3,9 @@ unit uCommonMath;
 interface
 
 uses
-  uCommonTypes, windows, sysutils, math, graphics, strUtils, inifiles, classes;
+  uCommonTypes, windows, sysutils, math,
+  dialogs,
+  graphics, strUtils, inifiles, classes;
 
 type
   cString =Class
@@ -146,6 +148,12 @@ function SecToTime(t: double; ind:integer): double;
 function bytetoBinStr(b:byte):string;
 function ReverseBits(b:byte):byte;
 Function CheckHex(str:string):boolean;
+
+ // ‘ункци€ дл€ поиска минимального и максимального значени€ в массиве Double.
+ // ѕараметры:
+ //   Data: ¬ходной динамический массив значений Double.
+ //   MinVal: ¬ыходной параметр. «десь будет записано минимальное значение, найденное в массиве.  //   MaxVal: ¬ыходной параметр. «десь будет записано максимальное значение, найденное в массиве.  // ¬озвращает True, если массив не пуст и поиск успешно выполнен, иначе False.
+ function FindMinMaxDouble(const Data: array of double; var MinVal, MaxVal: Double): Boolean;
 
 
 const
@@ -1860,66 +1868,109 @@ begin
     result := src;
 end;
 
-  function DeleteSubstr(src, SubStr: string; index: integer): string;
-  var
-    i, count, position: integer;
-    S: pstring;
+function DeleteSubstr(src, SubStr: string; index: integer): string;
+var
+  i, count, position: integer;
+  S: pstring;
+begin
+  S := @src[index];
+  position := pos(SubStr, string(S));
+  if position > 0 then
   begin
-    S := @src[index];
-    position := pos(SubStr, string(S));
-    if position > 0 then
-    begin
-      // setlength(result,count);
-      result := Copy(src, 1, position + index);
-      SubStr := Copy(src, position, length(src) - position - index);
-      result := result + SubStr;
-    end;
-    result := src;
+    // setlength(result,count);
+    result := Copy(src, 1, position + index);
+    SubStr := Copy(src, position, length(src) - position - index);
+    result := result + SubStr;
   end;
+  result := src;
+end;
 
-  function ReplaseChars(src, SubStr: string; ch: char): string;
-  var
-    i, j: integer;
+function ReplaseChars(src, SubStr: string; ch: char): string;
+var
+  i, j: integer;
+begin
+  for i := 1 to length(SubStr) do
   begin
-    for i := 1 to length(SubStr) do
+    for j := 1 to length(src) do
     begin
-      for j := 1 to length(src) do
+      if src[j] = SubStr[i] then
       begin
-        if src[j] = SubStr[i] then
-        begin
-          src[j] := ch;
-        end;
+        src[j] := ch;
       end;
     end;
-    result := src;
+  end;
+  result := src;
+end;
+
+function replaceChar(Str: string; ch, newchar: char): string;
+var
+  i: integer;
+begin
+  for i := 1 to length(Str) do
+  begin
+    if Str[i] = ch then
+    begin
+      Str[i] := newchar;
+    end;
+  end;
+  result := Str;
+end;
+
+function replaceSpace(Str: string; newchar: char): string;
+var
+  i: integer;
+begin
+  for i := 1 to length(Str) do
+  begin
+    if Str[i] = ' ' then
+    begin
+      Str[i] := newchar;
+    end;
+  end;
+  result := Str;
+end;
+
+
+function FindMinMaxDouble(const Data: array of double;
+                          var MinVal, MaxVal: Double): Boolean;
+var
+  i, mini, maxi: Integer;
+begin
+  // »значально предполагаем, что массив пуст или некорректен
+  Result := False;
+  MinVal := MaxDouble; // »нициализируем минимальное значение максимально возможным
+  MaxVal := -MaxDouble; // »нициализируем максимальное значение минимально возможным
+
+  // ѕровер€ем, не пуст ли входной массив
+  if Length(Data) = 0 then
+  begin
+    Exit; // ≈сли массив пуст, выходим, возвраща€ False
   end;
 
-  function replaceChar(Str: string; ch, newchar: char): string;
-  var
-    i: integer;
-  begin
-    for i := 1 to length(Str) do
-    begin
-      if Str[i] = ch then
-      begin
-        Str[i] := newchar;
-      end;
-    end;
-    result := Str;
-  end;
+  // »нициализируем MinVal и MaxVal первым элементом массива.
+  // Ёто важно, чтобы корректно обработать массивы из одного элемента
+  // и избежать проблем, если все значени€ будут, например, отрицательными.
+  MinVal := Data[Low(Data)];
+  MaxVal := Data[Low(Data)];
 
-  function replaceSpace(Str: string; newchar: char): string;
-  var
-    i: integer;
+  // ѕеребираем остальные элементы массива, начина€ со второго
+  for i := Low(Data) + 1 to High(Data) do
   begin
-    for i := 1 to length(Str) do
+    // ≈сли текущий элемент меньше текущего минимума, обновл€ем минимум
+    if Data[i] < MinVal then
     begin
-      if Str[i] = ' ' then
-      begin
-        Str[i] := newchar;
-      end;
+      MinVal := Data[i];
+      mini:=i;
     end;
-    result := Str;
+    // ≈сли текущий элемент больше текущего максимума, обновл€ем максимум
+    if Data[i] > MaxVal then
+    begin
+      MaxVal := Data[i];
+      maxi:=i;
+    end;
   end;
+  //showmessage(inttostr(mini)+' '+inttostr(maxi));
+  Result := True; // ≈сли мы дошли до сюда, значит, массив не пуст и значени€ найдены
+end;
 
 end.

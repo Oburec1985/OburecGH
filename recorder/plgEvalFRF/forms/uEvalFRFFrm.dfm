@@ -4,7 +4,7 @@ object FRFFrm: TFRFFrm
   Hint = #1042#1082#1083#1102#1095#1080#1090#1100'/'#1086#1090#1082#1083#1102#1095#1080#1090#1100' '#1088#1072#1089#1095#1077#1090
   Caption = 'FRFFrm'
   ClientHeight = 504
-  ClientWidth = 711
+  ClientWidth = 721
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,17 +17,18 @@ object FRFFrm: TFRFFrm
   PixelsPerInch = 96
   TextHeight = 13
   object Splitter1: TSplitter
-    Left = 487
+    Left = 497
     Top = 0
     Height = 504
     Align = alRight
     Color = clBackground
     ParentColor = False
+    ExplicitLeft = 487
   end
   object SpmChart: cChart
     Left = 0
     Top = 0
-    Width = 487
+    Width = 497
     Height = 504
     Cursor = crSizeAll
     Margins.Left = 2
@@ -45,7 +46,7 @@ object FRFFrm: TFRFFrm
     selectSize = 5
   end
   object RightGB: TGroupBox
-    Left = 490
+    Left = 500
     Top = 0
     Width = 221
     Height = 504
@@ -71,10 +72,10 @@ object FRFFrm: TFRFFrm
       Caption = #1059#1076#1072#1088#8470
     end
     object WinPosBtn: TSpeedButton
-      Left = 112
-      Top = 108
-      Width = 25
-      Height = 25
+      Left = 72
+      Top = 88
+      Width = 49
+      Height = 45
       Hint = #1054#1090#1082#1088#1099#1090#1100' '#1074' WinPos'
       AllowAllUp = True
       BiDiMode = bdLeftToRight
@@ -259,8 +260,8 @@ object FRFFrm: TFRFFrm
     end
     object SaveBtn: TButton
       Left = 3
-      Top = 108
-      Width = 103
+      Top = 110
+      Width = 69
       Height = 25
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
       TabOrder = 1
@@ -312,16 +313,16 @@ object FRFFrm: TFRFFrm
       Text = '0'
     end
     object DelBtn: TButton
-      Left = 5
+      Left = 4
       Top = 77
-      Width = 103
+      Width = 68
       Height = 25
       Caption = #1059#1076#1072#1083#1080#1090#1100
       TabOrder = 4
       OnClick = DelBtnClick
     end
     object hideCB: TCheckBox
-      Left = 99
+      Left = 94
       Top = 43
       Width = 60
       Height = 17
@@ -330,8 +331,8 @@ object FRFFrm: TFRFFrm
       OnClick = hideCBClick
     end
     object EstimatorRG: TRadioGroup
-      Left = 77
-      Top = 178
+      Left = 5
+      Top = 179
       Width = 60
       Height = 70
       Margins.Left = 2
@@ -368,7 +369,7 @@ object FRFFrm: TFRFFrm
       OnClick = WelchCBClick
     end
     object DisableCB: TCheckBox
-      Left = 99
+      Left = 94
       Top = 20
       Width = 46
       Height = 17
@@ -378,9 +379,9 @@ object FRFFrm: TFRFFrm
     end
     object GroupBox1: TGroupBox
       Left = 2
-      Top = 253
+      Top = 200
       Width = 217
-      Height = 249
+      Height = 302
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -392,7 +393,7 @@ object FRFFrm: TFRFFrm
         Left = 2
         Top = 15
         Width = 213
-        Height = 232
+        Height = 285
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
@@ -430,9 +431,9 @@ object FRFFrm: TFRFFrm
       end
     end
     object ResTypeRG: TRadioGroup
-      Left = 6
-      Top = 178
-      Width = 66
+      Left = 123
+      Top = 66
+      Width = 57
       Height = 69
       Caption = 'ResTypeRG'
       ItemIndex = 2

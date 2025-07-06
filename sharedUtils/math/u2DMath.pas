@@ -1,7 +1,7 @@
 unit u2DMath;
 
 interface
-uses math, uCommonTypes;
+uses math, uCommonTypes, classes;
 
 type
   // сплайн 4-о порядка
@@ -14,6 +14,7 @@ type
   end;
 
   TPointArray = array of point2;
+  TPointArrayd = array of point2d;
 
   TDiameterResult = record
     Point1: point2;
@@ -22,6 +23,22 @@ type
     Index2: Integer;
     Distance: Double;
   end;
+
+// Определение записи для хранения экстремума
+  // Мы будем хранить указатели на динамически созданные записи TExtremum в TList.
+  PExtremum = ^TExtremum;
+  TExtremum = record
+    Index: Integer; // Индекс элемента в исходном массиве Point2D
+    Value: Double;  // Значение экстремума (координата Y Point2D)
+    Point: Point2D; // Полная точка, соответствующая экстремуму
+  end;
+
+  TExtremum1d = record
+    Index: Integer; // Индекс элемента в исходном массиве Y
+    Value: Double;  // Значение экстремума (найденное Y-значение)
+  end;
+
+  PExtremum1d =^TExtremum1d;
 
   // поиск выпуклой оболочки
   //function GrahamScan(const Points: TPointArray; p_size:integer): TPointArray;
@@ -52,6 +69,26 @@ function EvalLineX(y:double; p1,p2:point2d):double;
 function EvalIntersectd(LineAP1, LineAP2, LineBP1, LineBP2 : point2d) : point2d;
 function EvalIntersect(LineAP1, LineAP2, LineBP1, LineBP2 : point2) : point2;
 
+  // Функция для поиска экстремумов
+  // Параметры:
+  //   Points: Входной массив записей TPoint2D. Координата Y используется для поиска экстремумов.
+  //   StartIndex, EndIndex: Индексы начала и конца поиска в массиве (включительно)
+  //   HiLevel, LoLevel: Верхний и нижний уровни для определения экстремума
+  //   Extremums: Выходной список, куда будут добавлены найденные экстремумы
+  // Возвращает True, если найден хотя бы один экстремум, иначе False.
+  function FindExtremumsFromPoints(const Points: TPointArrayd; StartIndex, EndIndex: Integer;
+    HiLevel, LoLevel: Double; Extremums: TList): Boolean;
+  // Функция для поиска экстремумов в одномерном массиве значений Y
+  // Параметры:
+  //   Y: Входной массив значений Double.
+  //   StartIndex, EndIndex: Индексы начала и конца поиска в массиве (включительно)
+  //   HiLevel, LoLevel: Верхний и нижний уровни для определения экстремума
+  //   Extremums: Выходной список, куда будут добавлены найденные экстремумы.
+  //              Каждый элемент списка - это PExtremum, содержащий Index и Value.
+  // Возвращает True, если найден хотя бы один экстремум, иначе False.
+  // освобождать экстремумы надо с пом Dispose(Extr)
+  function FindExtremumsInY(const Y: array of double; StartIndex, EndIndex: Integer;
+    HiLevel, LoLevel: Double; Extremums: TList): Boolean;
 
 
 implementation
@@ -651,6 +688,148 @@ end;
 function PointDistance(const P1, P2: point2): Double;
 begin
   Result := Sqrt(Sqr(P1.X - P2.X) + Sqr(P1.Y - P2.Y));
+end;
+
+
+function FindExtremumsFromPoints(const Points: TPointArrayd; StartIndex, EndIndex: Integer;
+  HiLevel, LoLevel: Double; Extremums: TList): Boolean;
+var
+  i: Integer;
+  Searching: Boolean;        // Флаг, указывающий, находимся ли мы в режиме поиска экстремума
+  CurrentMax: Double;        // Текущий максимальный найденный максимум в зоне поиска
+  CurrentMaxIndex: Integer;  // Индекс текущего максимального значения
+  NewExtremum: PExtremum;    // Указатель на новую запись экстремума для добавления в TList
+begin
+  Result := False; // Изначально предполагаем, что экстремумы не найдены
+  Extremums.Clear; // Очищаем выходной список перед началом поиска
+
+  // Проверка корректности диапазона поиска и размера массива
+  if (Length(Points) = 0) or (StartIndex < Low(Points)) or (EndIndex > High(Points)) or (StartIndex > EndIndex) then
+  begin
+    Exit; // Некорректный диапазон поиска или пустой массив
+  end;
+
+  Searching := False;
+  CurrentMax := -MaxDouble; // Инициализируем текущий максимум наименьшим возможным значением double
+  CurrentMaxIndex := -1;    // Инициализируем индекс максимума
+
+  // Перебор элементов массива Points в заданном диапазоне
+  for i := StartIndex to EndIndex do
+  begin
+    // Используем Y-координату текущей точки для анализа
+    if not Searching then
+    begin
+      // Если мы не в режиме поиска экстремума, ищем пересечение верхнего уровня (HiLevel) по Y-координате
+      if Points[i].Y > HiLevel then
+      begin
+        Searching := True;        // Начинаем поиск экстремума
+        CurrentMax := Points[i].Y;  // Текущее Y-значение становится первым кандидатом на максимум
+        CurrentMaxIndex := i;     // Запоминаем его индекс
+      end;
+    end
+    else // Мы находимся в режиме поиска экстремума (Y-координата Points[i] > HiLevel где-то ранее)
+    begin
+      // Обновляем текущий максимум, если найдено большее Y-значение
+      if Points[i].Y > CurrentMax then
+      begin
+        CurrentMax := Points[i].Y;
+        CurrentMaxIndex := i;
+      end;
+
+      // Проверяем пересечение нижнего уровня (LoLevel) по Y-координате для завершения поиска экстремума
+      if Points[i].Y < LoLevel then
+      begin
+        // Если мы нашли максимум в этой зоне (CurrentMaxIndex не -1)
+        if CurrentMaxIndex <> -1 then
+        begin
+          // Создаем новую запись TExtremum динамически
+          New(NewExtremum);
+          NewExtremum^.Index := CurrentMaxIndex;
+          NewExtremum^.Value := CurrentMax;
+          // Добавляем полную точку (X и Y) соответствующую экстремуму
+          NewExtremum^.Point := Points[CurrentMaxIndex];
+          // Добавляем указатель на эту запись в TList
+          Extremums.Add(NewExtremum);
+          Result := True; // Устанавливаем флаг, что экстремум найден
+        end;
+        Searching := False;       // Завершаем текущий поиск экстремума
+        CurrentMax := -MaxDouble; // Сбрасываем текущий максимум
+        CurrentMaxIndex := -1;    // Сбрасываем индекс максимума
+      end;
+    end;
+  end;
+end;
+
+
+function FindExtremumsInY(const Y: array of double; StartIndex,
+                          EndIndex: Integer;
+                          HiLevel, LoLevel: Double;
+                          Extremums: TList): Boolean;
+var
+  i: Integer;
+  Searching: Boolean;        // Флаг, указывающий, находимся ли мы в режиме поиска экстремума
+  CurrentMax: Double;        // Текущий максимальный найденный максимум в зоне поиска
+  CurrentMaxIndex: Integer;  // Индекс текущего максимального значения в массиве Y
+  NewExtremum: PExtremum1d;    // Указатель на новую запись экстремума для добавления в TList
+begin
+  Result := False; // Изначально предполагаем, что экстремумы не найдены
+  for i := 0 to Extremums.Count - 1 do
+  begin
+    Dispose(PExtremum1d(Extremums[i])); // Освобождаем память записи
+  end;
+  Extremums.Clear; // Очищаем выходной список перед началом поиска
+
+  // Проверка корректности диапазона поиска и размера массива
+  if (Length(Y) = 0) or (StartIndex < Low(Y)) or (EndIndex > High(Y)) or (StartIndex > EndIndex) then
+  begin
+    Exit; // Некорректный диапазон поиска или пустой массив
+  end;
+
+  Searching := False;
+  CurrentMax := -MaxDouble; // Инициализируем текущий максимум наименьшим возможным значением double
+  CurrentMaxIndex := -1;    // Инициализируем индекс максимума
+
+  // Перебор элементов массива Y в заданном диапазоне
+  for i := StartIndex to EndIndex do
+  begin
+    if not Searching then
+    begin
+      // Если мы не в режиме поиска экстремума, ищем пересечение верхнего уровня (HiLevel)
+      if Y[i] > HiLevel then
+      begin
+        Searching := True;        // Начинаем поиск экстремума
+        CurrentMax := Y[i];       // Текущее значение становится первым кандидатом на максимум
+        CurrentMaxIndex := i;     // Запоминаем его индекс
+      end;
+    end
+    else // Мы находимся в режиме поиска экстремума (Y[i] > HiLevel где-то ранее)
+    begin
+      // Обновляем текущий максимум, если найдено большее значение
+      if Y[i] > CurrentMax then
+      begin
+        CurrentMax := Y[i];
+        CurrentMaxIndex := i;
+      end;
+      // Проверяем пересечение нижнего уровня (LoLevel) для завершения поиска экстремума
+      if Y[i] < LoLevel then
+      begin
+        // Если мы нашли максимум в этой зоне (CurrentMaxIndex не -1)
+        if CurrentMaxIndex <> -1 then
+        begin
+          // Создаем новую запись TExtremum динамически
+          New(NewExtremum);
+          NewExtremum^.Index := CurrentMaxIndex; // Запоминаем индекс вершины
+          NewExtremum^.Value := CurrentMax;      // Запоминаем значение вершины
+          // Добавляем указатель на эту запись в TList
+          Extremums.Add(NewExtremum);
+          Result := True; // Устанавливаем флаг, что экстремум найден
+        end;
+        Searching := False;       // Завершаем текущий поиск экстремума
+        CurrentMax := -MaxDouble; // Сбрасываем текущий максимум
+        CurrentMaxIndex := -1;    // Сбрасываем индекс максимума
+      end;
+    end;
+  end;
 end;
 
 end.

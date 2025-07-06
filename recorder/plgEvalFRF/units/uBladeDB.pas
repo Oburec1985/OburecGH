@@ -143,9 +143,13 @@ type
 
   // испытания
   cBladeFolder = class(cXmlFolder)
+  public
+    m_res:boolean;
   protected
     procedure doCreateFiles(node:txmlnode);override;
+    procedure doLoadDesc(node:txmlnode);override;
   public
+    function BladeReport:string;
     function ToneCount:integer;
     // f1,f2,threshold
     function Tone(i:integer):point3d;
@@ -153,7 +157,7 @@ type
 
   cBladeBase = class(cDB)
   public
-
+    m_sn:integer;
   protected
     // вызывается в конструкторе cDB класса
     function createBaseFolder:cDBFolder;override;
@@ -195,6 +199,7 @@ var
   list:tstringlist;
 begin
   inherited;
+  m_sn:=0;
   g_mbase:=self;
 
   // папка с dll
@@ -212,6 +217,7 @@ destructor cBladeBase.destroy;
 begin
   inherited;
 end;
+
 
 function cBladeBase.getObjType(t:string): cObjtype;
 begin
@@ -1104,9 +1110,11 @@ begin
   fname:=s;
 end;
 
-
-
 { cBladeFolder }
+function cBladeFolder.BladeReport: string;
+begin
+  result:=ChangeFileExt(Absolutepath,'.xlsx');
+end;
 
 procedure cBladeFolder.doCreateFiles(node:txmlnode);
 var
@@ -1115,6 +1123,13 @@ begin
   inherited;
   lpath:=Absolutepath;
   ForceDirectories(lpath);
+  node.WriteAttributeBool('Result',m_res);
+end;
+
+procedure cBladeFolder.doLoadDesc(node: txmlnode);
+begin
+  inherited;
+  M_res:=node.ReadAttributeBool('Result',false);
 end;
 
 function cBladeFolder.Tone(i: integer): point3d;

@@ -23,7 +23,7 @@ uses
   shellapi,
   uPathMng,
   opengl, uSimpleObjects,
-  math, uDrawObj, uDoubleCursor, uBasicTrend, uProfile,
+  math, uDrawObj, uDoubleCursor, uBasicTrend, uProfile, uExcel,
   uBladeDB, uSpmBand, uChartEvents,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uBtnListView;
 
@@ -235,6 +235,13 @@ type
     m_axis,
     // прибавлять номер точки
     m_incPNum:byte;
+    // список найденных флагов (сравнивается с флагами в полосах)
+    m_flags:array of point2d;
+    // список найденных экстремумов на линии для сравненияс
+    // полосами TExtremum1d
+    m_extremums:tlist;
+    // экстремумы совпали с диапазоном полос tspmband
+    m_checkres:boolean;
   private
     fcfg: cSpmCfg;
     fComInt: point2d;
@@ -404,6 +411,10 @@ type
     procedure setNewAx(b: boolean);
     procedure ShowSignalsLV;
   public
+    // просчитать по линиям флаги и сравнить их с band
+    // если не попадают в bands то лопатка бракованная
+    // сразу сохраняет в БД отчет по лопатке в excel
+    function CheckFlags:boolean;
     procedure doOnZoom(sender:tobject);
     function hideind: integer;
     procedure delCurrentShock;
@@ -638,6 +649,67 @@ begin
   end;
 end;
 
+function TFRFFrm.CheckFlags: boolean;
+var
+  t:cSRSTaho;
+  s:cSRSres;
+  cfg:cSpmCfg;
+  I, j: Integer;
+  bl:cBladeFolder;
+  b:tspmband;
+  extr:PExtremum1d;
+  res:boolean;
+  repPath:string;
+  minmax:point2d;
+begin
+  t:=getTaho;
+  cfg:=t.getCfg;
+  bl:=g_mbase.SelectBlade;
+  result:=true;
+  for I := 0 to cfg.srsCount - 1 do
+  begin
+    s:=cfg.GetSrs(i);
+    s.m_checkres:=false;
+    b:=m_bands.getband(bl.ToneCount-1);
+    // поиск в экстремумов ограниченном джиапазоне (ограничение по концу посл тона)
+    FindMinMaxDouble(s.lineFrf.data_r,minmax.x,minmax.y);
+    minmax.y:=0.01*(minmax.y-minmax.x)+minmax.x;
+    minmax.x:=0.001*(minmax.y-minmax.x)+minmax.x;
+    FindExtremumsInY(s.lineFrf.data_r,
+                     1,
+                     b.m_f2i,minmax.y,
+                     minmax.x,
+                     s.m_extremums);
+    for j := 0 to s.m_extremums.Count - 1 do
+    begin
+      extr:=PExtremum1d(s.m_extremums[j]);
+      if not b.m_fmaxi=extr.Index then
+      begin
+        result:=false;
+        break;
+      end;
+    end;
+    s.m_checkres:=true;
+  end;
+  bl.m_res:=result;
+
+  if not CheckExcelInstall then
+  begin
+    showmessage('Необходима установка Excel');
+    exit;
+  end;
+  if VarIsEmpty(E) then
+  begin
+    //if not CheckExcelRun then
+    begin
+      CreateExcel;
+      VisibleExcel(true);
+    end;
+  end;
+  repPath:=bl.BladeReport;
+
+end;
+
 constructor TFRFFrm.create(Aowner: tcomponent);
 begin
   // отступ слева и длительность
@@ -704,6 +776,8 @@ end;
 procedure TFRFFrm.doOnZoom(sender: tobject);
 begin
   m_bands.UpdateBands;
+  //UpdateBands;
+  UpdateLabels;
 end;
 
 procedure TFRFFrm.doShowLines(Sender: TObject);
@@ -1063,29 +1137,45 @@ begin
     a := caxis(l.GetParentByClassName('cAxis'));
     p := cpage(a.GetParentByClassName('cPage'));
     l.visible:=true;
+    // xMax
     x:=b.m_freqband.m_realX;
     tr:=cBuffTrend1d(l.parent);
-    ind:=tr.GetLowInd(x)+1;
-    if (ind<tr.count) and (ind>0) then
+    if b.m_fmaxi>0 then
     begin
-      max:=tr.GetYByInd(ind);
-      maxx:=x;
-    end
-    else
-    begin
-      continue;
-    end;
-    while x<b.m_f2 do
-    begin
-      inc(ind);
-      x:=tr.GetXByInd(ind);
-      y:=tr.GetYByInd(ind);
-      if y>max then
+      max:=tr.GetYByInd(b.m_fmaxi);
+      maxX:=tr.GetXByInd(b.m_fmaxi);
+      if (b.m_fmaxi=b.m_f1i) or (b.m_fmaxi=b.m_f2i) then
       begin
-        max:=y;
-        maxX:=x;
+        l.visible:=false;
+      end
+      else
+      begin
+        l.visible:=true;
       end;
     end;
+
+    //ind:=tr.GetLowInd(x)+1;
+    //if (ind<tr.count) and (ind>0) then
+    //begin
+    //  max:=tr.GetYByInd(ind);
+    //  maxx:=x;
+    //end
+    //else
+    //begin
+    //  continue;
+    //end;
+
+    //while x<b.m_f2 do
+    //begin
+    //  inc(ind);
+    //  x:=tr.GetXByInd(ind);
+    //  y:=tr.GetYByInd(ind);
+    //  if y>max then
+    //  begin
+    //    max:=y;
+    //    maxX:=x;
+    //  end;
+    //end;
     pos := correctPos(a, p, p2d(maxX, max));
     l.Position := p2(pos.x, pos.y);
     l.line := l.Position;
@@ -1121,8 +1211,7 @@ end;
 
 procedure TFRFFrm.UpdateBands(s:cSRSres);
 var
-  I, j, maxi: Integer;
-  i1i2:tpoint;
+  I, j: Integer;
   b:tSpmBand;
   act_s:cSRSres;
   p, max:Double;
@@ -1135,24 +1224,23 @@ begin
     if not m_showBandLab then
     begin
       b.m_freqband.m_LineLabel.visible:=false;
-      continue;
     end;
 
-    i1i2.x:=s.lineFrf.GetLowInd(b.m_f1)+1;
-    i1i2.y:=s.lineFrf.GetLowInd(b.m_f2);
+    b.m_f1i:=s.lineFrf.GetLowInd(b.m_f1)+1;
+    b.m_f2i:=s.lineFrf.GetLowInd(b.m_f2);
     max:=0;
-    maxi:=0;
-    for j := i1i2.x to i1i2.y do
+    b.m_fmaxi:=0;
+    for j := b.m_f1i to b.m_f2i do
     begin
       p:=s.lineFrf.GetYByInd(j);
       if max<p then
       begin
         max:=p;
-        maxi:=j;
+        b.m_fmaxi:=j;
       end;
     end;
     if s=act_s then
-      b.m_freqband.m_realX:=s.lineFrf.GetXByInd(maxi);
+      b.m_freqband.m_realX:=s.lineFrf.GetXByInd(b.m_fmaxi);
     for j := 0 to b.m_trends.Count - 1 do
     begin
       if s=b.m_trends.Objects[j] then
@@ -2109,7 +2197,8 @@ var
   s: cSRSres;
   db, tb: TDataBlock;
 begin
-  dir := extractfiledir(g_FrfFactory.m_meraFile) + '\Shock';
+  //dir := extractfiledir(g_FrfFactory.m_meraFile) + '\Shock';
+  dir:=extractfiledir(g_mbase.SelectBlade.Absolutepath)+ '\Shock';
   f := dir + '\' + trimext(extractfilename(g_FrfFactory.m_meraFile))
     + '_Shocks.mera';
   while fileexists(f) do
@@ -2168,13 +2257,9 @@ begin
     // ident := extractfiledir(ident) + '\'+'AvFRF_'+s.m_tag.tagname+'.dat';
     saveHeader(ifile, 1 / c.fspmdx, 0, ident, 'Гц');
     savedata(f, s.m_tag.tagname, s);
-
-    ident := 'Coh_' + s.m_tag.tagname;
-    saveHeader(ifile, 1 / c.fspmdx, 0, ident, 'Гц');
-    dir := extractfiledir(g_FrfFactory.m_meraFile) + '\Shock\';
-    savedataCoh(dir, ident, s);
   end;
   ifile.destroy;
+  CheckFlags;
 end;
 
 procedure TFRFFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -3132,6 +3217,7 @@ begin
   m_shockList.m_wnd.wndfunc := wnd_no;
   m_shockList.m_wnd.x1 := 0;
   m_shockList.m_wnd.x2 := 1;
+  m_extremums:=TList.Create;
 end;
 
 destructor cSRSres.destroy;
@@ -3141,6 +3227,7 @@ begin
   m_shockList.destroy;
   cfg.delSRS(self);
   cfg:=nil;
+  m_extremums.Destroy;
   if line<>nil then
     line.destroy;
   if lineSpm<>nil then
@@ -3202,6 +3289,7 @@ var
   b:tSpmBand;
   p3:point3d;
   li:tlistitem;
+  t:cSRSTaho;
   s:cSRSres;
 begin
   f.m_bands.cleardata;
@@ -3213,6 +3301,15 @@ begin
     begin
       p3:=blade.Tone(i);
       b:=f.m_bands.addband(p3.x,p3.y,p3.z, f.SpmChart);
+    end;
+    t:=f.getTaho;
+    if t<>nil then
+    begin
+      for I := 0 to t.cfg.SRSCount - 1 do
+      begin
+        s:=t.cfg.GetSrs(i);
+        setlength(s.m_flags,c);
+      end;
     end;
     f.UpdateBandNames;
   end;
