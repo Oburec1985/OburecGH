@@ -38,6 +38,13 @@ type
     Value: Double;  // Значение экстремума (найденное Y-значение)
   end;
 
+  TExtremumSearchState = (
+    esIdle,           // Состояние ожидания: ждем, пока значение поднимется выше HiLevel
+    esAboveHiLevel,   // Состояние "Над HiLevel": значение выше HiLevel, ищем максимум
+    esFoundExtremum,  // Состояние "Найден экстремум": значение опустилось ниже LoLevel, экстремум зафиксирован
+    esHi   // Состояние "Найден экстремум": значение опустилось ниже LoLevel, экстремум зафиксирован
+  );
+
   PExtremum1d =^TExtremum1d;
 
   // поиск выпуклой оболочки
@@ -760,76 +767,106 @@ begin
   end;
 end;
 
-
-function FindExtremumsInY(const Y: array of double; StartIndex,
-                          EndIndex: Integer;
-                          HiLevel, LoLevel: Double;
-                          Extremums: TList): Boolean;
+function FindExtremumsInY(const Y: array of double; StartIndex, EndIndex: Integer;
+  HiLevel, LoLevel: Double; Extremums: TList): Boolean;
 var
   i: Integer;
-  Searching: Boolean;        // Флаг, указывающий, находимся ли мы в режиме поиска экстремума
+  CurrentState: TExtremumSearchState; // Текущее состояние конечного автомата
   CurrentMax: Double;        // Текущий максимальный найденный максимум в зоне поиска
   CurrentMaxIndex: Integer;  // Индекс текущего максимального значения в массиве Y
   NewExtremum: PExtremum1d;    // Указатель на новую запись экстремума для добавления в TList
 begin
   Result := False; // Изначально предполагаем, что экстремумы не найдены
-  for i := 0 to Extremums.Count - 1 do
-  begin
-    Dispose(PExtremum1d(Extremums[i])); // Освобождаем память записи
-  end;
   Extremums.Clear; // Очищаем выходной список перед началом поиска
-
   // Проверка корректности диапазона поиска и размера массива
   if (Length(Y) = 0) or (StartIndex < Low(Y)) or (EndIndex > High(Y)) or (StartIndex > EndIndex) then
   begin
     Exit; // Некорректный диапазон поиска или пустой массив
   end;
-
-  Searching := False;
-  CurrentMax := -MaxDouble; // Инициализируем текущий максимум наименьшим возможным значением double
+  if y[StartIndex]>HiLevel then
+    CurrentState := esHi
+  else
+    CurrentState := esIdle; // Начинаем с состояния ожидания
+  CurrentMax := -MaxDouble; // Инициализируем текущий максимум
   CurrentMaxIndex := -1;    // Инициализируем индекс максимума
-
   // Перебор элементов массива Y в заданном диапазоне
   for i := StartIndex to EndIndex do
   begin
-    if not Searching then
-    begin
-      // Если мы не в режиме поиска экстремума, ищем пересечение верхнего уровня (HiLevel)
-      if Y[i] > HiLevel then
-      begin
-        Searching := True;        // Начинаем поиск экстремума
-        CurrentMax := Y[i];       // Текущее значение становится первым кандидатом на максимум
-        CurrentMaxIndex := i;     // Запоминаем его индекс
-      end;
-    end
-    else // Мы находимся в режиме поиска экстремума (Y[i] > HiLevel где-то ранее)
-    begin
-      // Обновляем текущий максимум, если найдено большее значение
-      if Y[i] > CurrentMax then
-      begin
-        CurrentMax := Y[i];
-        CurrentMaxIndex := i;
-      end;
-      // Проверяем пересечение нижнего уровня (LoLevel) для завершения поиска экстремума
-      if Y[i] < LoLevel then
-      begin
-        // Если мы нашли максимум в этой зоне (CurrentMaxIndex не -1)
-        if CurrentMaxIndex <> -1 then
+    case CurrentState of
+      esHi: // Состояние ожидания: ждем, пока значение поднимется выше HiLevel
         begin
-          // Создаем новую запись TExtremum динамически
-          New(NewExtremum);
-          NewExtremum^.Index := CurrentMaxIndex; // Запоминаем индекс вершины
-          NewExtremum^.Value := CurrentMax;      // Запоминаем значение вершины
-          // Добавляем указатель на эту запись в TList
-          Extremums.Add(NewExtremum);
-          Result := True; // Устанавливаем флаг, что экстремум найден
+          // Условие для перехода в состояние esAboveHiLevel:
+          // Текущее значение должно быть выше HiLevel.
+          // (Дополнительная проверка, что предыдущее было ниже HiLevel,
+          //  обеспечивается самим фактом нахождения в esIdle и затем перехода)
+          if Y[i] < HiLevel then
+          begin
+            // разрешаем поиск
+            CurrentState := esIdle; // Переход в состояние поиска максимума
+          end;
         end;
-        Searching := False;       // Завершаем текущий поиск экстремума
-        CurrentMax := -MaxDouble; // Сбрасываем текущий максимум
-        CurrentMaxIndex := -1;    // Сбрасываем индекс максимума
-      end;
-    end;
-  end;
+      esIdle: // Состояние ожидания: ждем, пока значение поднимется выше HiLevel
+        begin
+          if Y[i] > HiLevel then
+          begin
+            CurrentState := esAboveHiLevel; // Переход в состояние поиска максимума
+            CurrentMax := Y[i];             // Инициализируем текущий максимум
+            CurrentMaxIndex := i;           // Запоминаем индекс
+          end;
+        end;
+      esAboveHiLevel: // Состояние "Над HiLevel": значение выше HiLevel, ищем максимум
+        begin
+          // Обновляем текущий максимум, если найдено большее значение
+          if Y[i] > CurrentMax then
+          begin
+            CurrentMax := Y[i];
+            CurrentMaxIndex := i;
+          end;
+
+          // Условие для перехода в состояние esFoundExtremum:
+          // Текущее значение должно опуститься ниже LoLevel.
+          if Y[i] < LoLevel then
+          begin
+            CurrentState := esFoundExtremum; // Переход в состояние фиксации экстремума
+            // Здесь мы не сбрасываем CurrentMax/Index сразу,
+            // потому что они нужны для добавления в список.
+          end;
+        end;
+      esFoundExtremum: // Состояние "Найден экстремум": значение опустилось ниже LoLevel
+        begin
+          // Этот блок выполняется, когда мы уже обнаружили экстремум
+          // и значение опустилось ниже LoLevel.
+          // Мы добавляем найденный экстремум в список.
+          if CurrentMaxIndex <> -1 then // Проверяем, что максимум был найден
+          begin
+            New(NewExtremum);
+            NewExtremum^.Index := CurrentMaxIndex; // Индекс вершины
+            NewExtremum^.Value := CurrentMax;      // Значение вершины
+            Extremums.Add(NewExtremum);
+            Result := True; // Устанавливаем флаг, что экстремум найден
+          end;
+
+          // После добавления экстремума, сбрасываем параметры и возвращаемся в esIdle
+          CurrentMax := -MaxDouble; // Сбрасываем текущий максимум
+          CurrentMaxIndex := -1;    // Сбрасываем индекс максимума
+          CurrentState := esIdle;   // Возвращаемся в состояние ожидания для нового экстремума
+
+          // Важный момент: текущая точка (Y[i]) уже ниже LoLevel,
+          // поэтому она не может быть началом нового поиска.
+          // Если бы мы хотели, чтобы она потенциально могла быть началом,
+          // нужно было бы добавить проверку Y[i] > HiLevel здесь,
+          // но это противоречило бы логике "пересечения снизу вверх".
+        end;
+    end; // end case CurrentState
+  end; // end for loop
+
+  // Важный момент после цикла:
+  // Если цикл завершился, а мы находились в состоянии esAboveHiLevel,
+  // это означает, что мы нашли пик, но он так и не опустился ниже LoLevel
+  // до конца анализируемого диапазона. В этом случае экстремум не считается завершенным
+  // по вашим правилам (не пересекся LoLevel).
 end;
+
+
 
 end.

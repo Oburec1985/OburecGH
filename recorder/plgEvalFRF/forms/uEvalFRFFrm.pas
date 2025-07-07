@@ -415,6 +415,7 @@ type
     // если не попадают в bands то лопатка бракованная
     // сразу сохраняет в БД отчет по лопатке в excel
     function CheckFlags:boolean;
+    procedure SaveReport(repname: string; bl:cBladeFolder);
     procedure doOnZoom(sender:tobject);
     function hideind: integer;
     procedure delCurrentShock;
@@ -673,8 +674,10 @@ begin
     b:=m_bands.getband(bl.ToneCount-1);
     // поиск в экстремумов ограниченном джиапазоне (ограничение по концу посл тона)
     FindMinMaxDouble(s.lineFrf.data_r,minmax.x,minmax.y);
-    minmax.y:=0.01*(minmax.y-minmax.x)+minmax.x;
-    minmax.x:=0.001*(minmax.y-minmax.x)+minmax.x;
+    //minmax.y:=0.01*(minmax.y-minmax.x)+minmax.x;
+    //minmax.x:=0.005*(minmax.y-minmax.x)+minmax.x;
+    minmax.y:=5;
+    minmax.x:=0.5;
     FindExtremumsInY(s.lineFrf.data_r,
                      1,
                      b.m_f2i,minmax.y,
@@ -683,6 +686,8 @@ begin
     for j := 0 to s.m_extremums.Count - 1 do
     begin
       extr:=PExtremum1d(s.m_extremums[j]);
+      b:=m_bands.getband(j);
+      // экстремумы полос и найденные должны соответствовать др. другу
       if not b.m_fmaxi=extr.Index then
       begin
         result:=false;
@@ -698,6 +703,24 @@ begin
     showmessage('Необходима установка Excel');
     exit;
   end;
+  repPath:=bl.BladeReport;
+  SaveReport(repPath, bl);
+end;
+
+procedure TFRFFrm.SaveReport(repname: string; bl:cBladeFolder);
+var
+  r0, i, j, r, c:integer;
+  t:cSRSTaho;
+  s:cSRSres;
+  cfg:cSpmCfg;
+  b:tspmband;
+  extr:PExtremum1d;
+  date:TDateTime;
+  res:boolean;
+  rng: olevariant;
+  str, repPath:string;
+  minmax:point2d;
+begin
   if VarIsEmpty(E) then
   begin
     //if not CheckExcelRun then
@@ -706,8 +729,70 @@ begin
       VisibleExcel(true);
     end;
   end;
-  repPath:=bl.BladeReport;
 
+  if fileexists(repname) then
+  begin
+    if not IsExcelFileOpen(repname) then
+    begin
+      OpenWorkBook(repname);
+    end
+    else
+    begin
+
+    end;
+  end
+  else
+  begin
+    AddWorkBook;
+    AddSheet('Page_01');
+  end;
+  r0 := GetEmptyRow(1, 1, 2);
+  SetCell(1, r0, 2, 'Blade:');
+  SetCell(1, r0, 3, bl.m_sn);
+  SetCell(1, r0, 4, 'Чертеж:');
+  SetCell(1, r0, 5, bl.ObjType);
+
+  inc(r0);
+  SetCell(1, r0, 2, 'MeraFile:');
+  //SetCell(1, r0, 3, fname);
+  SetCell(1, r0, 4, 'Time:');
+  date := now;
+  SetCell(1, r0, 5, DateToStr(date) + ' ' + TimeToStr(date));
+  r := r0 + 2;
+  c := 2;
+
+  t:=getTaho;
+  cfg:=t.getCfg;
+  for i := 0 to cfg.SRSCount - 1 do
+  begin
+    s := cfg.GetSrs(i);
+    str := s.m_tag.tagname;
+    SetCell(1, r - 1, c, str);
+    SetCell(1, r, c, 'Band');
+    SetCell(1, r, c + 1, 'A1');
+    SetCell(1, r, c + 2, 'F1');
+    // проход по формам (полосам)
+    for j := 0 to m_bands.Count - 1 do
+    begin
+      b:=m_bands.getband(j);
+      SetCell(1, r + 1 + j, c, floattostr(b.m_f1) + '...' + floattostr(b.m_f2));
+      SetCell(1, r + 1 + j, c+1, b.m_freqband.m_realX);
+      SetCell(1, r + 1 + j, c+2, b.m_freqband.m_y[i]);
+    end;
+    c := c + 4;
+  end;
+  // разметка заголовка
+  rng := GetRangeObj(1, point(r, 2), point(r, c - 1));
+  // c_Excel_GrayInd = 15;
+  rng.Interior.ColorIndex := 15;
+  rng.Font.Bold := true;
+  // ставим сетку всего блока
+  rng := GetRangeObj(1, point(r, 2), point(r + j, c - 1));
+  SetRangeBorder(rng);
+
+  SaveWorkBookAs(repname);
+  CloseWorkBook;
+  CloseExcel;
 end;
 
 constructor TFRFFrm.create(Aowner: tcomponent);
@@ -2261,6 +2346,7 @@ begin
   ifile.destroy;
   CheckFlags;
 end;
+
 
 procedure TFRFFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 var

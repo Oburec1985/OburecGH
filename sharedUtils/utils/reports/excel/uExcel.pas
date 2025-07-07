@@ -389,6 +389,9 @@ const
   // в активном доке
   procedure RunMacros(Mname:string);
   function IsExcelFileOpen(const FilePath: string): Boolean;
+  // получить номер строки в которое встречена пустая ячейка
+  // проверка идет по колонке col в листе sh начиная с sh
+  function GetEmptyRow(sh, r0, col: integer): integer;
 
 var
   E:OleVariant;
@@ -396,6 +399,26 @@ var
 implementation
 uses
   forms;
+
+// получить номер строки в которое встречена пустая ячейка
+// проверка идет по колонке col в листе sh начиная с sh
+function GetEmptyRow(sh, r0, col: integer): integer;
+var
+  ws, rng: olevariant;
+  res: string;
+
+  adr: string;
+begin
+  ws := E.ActiveWorkbook.Sheets[sh];
+  ws.activate;
+  res := ws.cells[r0, col];
+  while res <> '' do
+  begin
+    inc(r0);
+    res := ws.cells[r0, col];
+  end;
+  result := r0;
+end;
 
 function IsExcelFileOpen(const FilePath: string): Boolean;
 var

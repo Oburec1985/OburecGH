@@ -28,6 +28,8 @@ type
     m_fullname:boolean;
     // назначаетс€ из вне!!!!! –аботает в паре с листом m_y[i]
     m_names:tstringlist;
+    // значение дл€ подписи по Y. –аботает в паре с листом m_names
+    m_y:array of double;
   protected
     m_LineColor:point3;
     m_drawline:boolean;
@@ -37,8 +39,6 @@ type
     m_x2:double;
     // центральна€ частота в координатах +-1
     m_x:double;
-    // значение дл€ подписи по Y. –аботает в паре с листом m_names
-    m_y:array of double;
     m_capacity, m_length:integer;
     // отладочна€ дл€ сохранени€ что передавалось в setname
     m_text:string;

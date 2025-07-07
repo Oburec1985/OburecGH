@@ -145,10 +145,13 @@ type
   cBladeFolder = class(cXmlFolder)
   public
     m_res:boolean;
+    m_sn:integer;
   protected
     procedure doCreateFiles(node:txmlnode);override;
     procedure doLoadDesc(node:txmlnode);override;
   public
+    function ObjType:string;
+    function BladeType:string;
     function BladeReport:string;
     function ToneCount:integer;
     // f1,f2,threshold
@@ -1113,7 +1116,12 @@ end;
 { cBladeFolder }
 function cBladeFolder.BladeReport: string;
 begin
-  result:=ChangeFileExt(Absolutepath,'.xlsx');
+  result:=Absolutepath+'\'+extractfilename(Absolutepath)+'.xlsx';
+end;
+
+function cBladeFolder.BladeType: string;
+begin
+
 end;
 
 procedure cBladeFolder.doCreateFiles(node:txmlnode);
@@ -1130,6 +1138,11 @@ procedure cBladeFolder.doLoadDesc(node: txmlnode);
 begin
   inherited;
   M_res:=node.ReadAttributeBool('Result',false);
+end;
+
+function cBladeFolder.ObjType: string;
+begin
+  result:=m_ObjType;
 end;
 
 function cBladeFolder.Tone(i: integer): point3d;
