@@ -45,7 +45,6 @@ object GraphFrm: TGraphFrm
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-    ExplicitLeft = 584
     object XScaleLabel: TLabel
       Left = 89
       Top = 32
@@ -411,7 +410,7 @@ object GraphFrm: TGraphFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitWidth = 582
+    ExplicitLeft = 2
   end
   object ImageList_16: TImageList
     Left = 80

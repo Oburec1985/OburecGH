@@ -17,7 +17,7 @@ uses
   tags,
   complex,
   uTextLabel,
-  uBuffTrend1d,  utrend, uaxis,
+  uBuffTrend1d,  utrend, uaxis, uYCursor,
   uCommonTypes,
   pluginClass,
   shellapi,
@@ -25,7 +25,7 @@ uses
   opengl, uSimpleObjects,
   math, uDrawObj, uDoubleCursor, uBasicTrend, uProfile, uExcel,
   uBladeDB, uSpmBand, uChartEvents,
-  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uBtnListView;
+  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uBtnListView, uSpin;
 
 type
   TSpmWndFunc = (wnd_no, wnd_rect, wnd_exp, // окно с формулой *e^(-x), где x 0...1 (1 при времени)
@@ -340,10 +340,18 @@ type
     UseWndFcb: TCheckBox;
     WelchCB: TCheckBox;
     DisableCB: TCheckBox;
-    GroupBox1: TGroupBox;
+    SignalsGroupBox: TGroupBox;
     SignalsLV: TBtnListView;
     Splitter1: TSplitter;
     ResTypeRG: TRadioGroup;
+    BladeGB: TGroupBox;
+    BladeLabel: TLabel;
+    StatusEdit: TEdit;
+    StatusLabel: TLabel;
+    BladeNumEdit: TEdit;
+    BladeSE: TSpinButton;
+    TrigLvlLabel: TLabel;
+    TrigFE: TFloatSpinEdit;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -362,6 +370,8 @@ type
     procedure SignalsLVClick(Sender: TObject);
     procedure ResTypeRGClick(Sender: TObject);
     procedure SignalsLVColumnBtnClick(item: TListItem; lv: TListView);
+    procedure BladeSEUpClick(Sender: TObject);
+    procedure SpmChartMouseZoom(Sender: TObject; UpScale: Boolean);
   public
     // отступ слева и длительность
     m_ShiftLeft, m_Length: double;
@@ -371,7 +381,7 @@ type
     m_showflags, m_showBandLab:boolean;
     // axRef - воздействие; ax - отклик
     axRef, TimeAx: caxis;
-    // h0, h1, h2
+    // h0, h1, h2                         -
     m_estimator: integer;
     pageT, pageSpm: cpage;
     axSpm: caxis;
@@ -393,7 +403,10 @@ type
     m_WelchShift, m_WelchCount: integer;
     // последний полученный блок тахо
     m_lastTahoBlock: TDataBlock;
-    m_lastMDBfile: string;
+    m_lastMDBfile,
+    // Путь к последнему Mera файлу в который сохранили FRF
+    // при формировании отчета
+    m_MeraFile: string;
     // редактировать отклик
     m_corrS: boolean;
 
@@ -401,6 +414,9 @@ type
     // текстовые метки на полосах
     m_labList:tlist;
   protected
+    // курсор для триггера
+    Ycurs:cYCursor;
+
     fdelBtn: boolean; // нажали кнопку удалить удар
     fUpdateFrf: boolean; // обновился frf
     fShowLast: boolean; // обновился frf  в потоке
@@ -410,6 +426,7 @@ type
     procedure EvalWelchBCount;
     procedure setNewAx(b: boolean);
     procedure ShowSignalsLV;
+    procedure Showbladestatus(s:integer);
   public
     // просчитать по линиям флаги и сравнить их с band
     // если не попадают в bands то лопатка бракованная
@@ -636,6 +653,28 @@ begin
   m_TahoList.Add(t);
 end;
 
+procedure TFRFFrm.BladeSEUpClick(Sender: TObject);
+var
+  s:cStageFolder;
+  bl, sb:cbladefolder;
+begin
+  s:=g_mbase.SelectStage;
+  if s<>nil then
+  begin
+    sb:=g_mbase.SelectBlade;
+    if sb<>nil then
+    begin
+      bl:=cbladefolder(s.GetNext(sb));
+      if bl<>nil then
+      begin
+        sb.selected:=bl;
+        BladeNumEdit.Text:=inttostr(bl.m_sn);
+        Showbladestatus(bl.m_res);
+      end;
+    end;
+  end;
+end;
+
 function TFRFFrm.CheckedCount: integer;
 var
   i,c: Integer;
@@ -676,27 +715,41 @@ begin
     FindMinMaxDouble(s.lineFrf.data_r,minmax.x,minmax.y);
     //minmax.y:=0.01*(minmax.y-minmax.x)+minmax.x;
     //minmax.x:=0.005*(minmax.y-minmax.x)+minmax.x;
-    minmax.y:=5;
-    minmax.x:=0.5;
+    minmax.y:=TrigFE.Value;
+    minmax.x:=0.5*TrigFE.Value;
     FindExtremumsInY(s.lineFrf.data_r,
                      1,
                      b.m_f2i,minmax.y,
                      minmax.x,
                      s.m_extremums);
+    if s.m_extremums.Count=0 then
+    begin
+      result:=false;
+      s.m_checkres:=false;
+      break;
+    end;
     for j := 0 to s.m_extremums.Count - 1 do
     begin
       extr:=PExtremum1d(s.m_extremums[j]);
       b:=m_bands.getband(j);
       // экстремумы полос и найденные должны соответствовать др. другу
-      if not b.m_fmaxi=extr.Index then
+      if b.m_fmaxi=extr.Index then
+      begin
+
+      end
+      else
       begin
         result:=false;
         break;
       end;
     end;
-    s.m_checkres:=true;
+    s.m_checkres:=result;
   end;
-  bl.m_res:=result;
+  if result then
+    bl.m_res:=2
+  else
+    bl.m_res:=1;
+  Showbladestatus(bl.m_res);
 
   if not CheckExcelInstall then
   begin
@@ -704,6 +757,8 @@ begin
     exit;
   end;
   repPath:=bl.BladeReport;
+  // сохраняем статус лопатки
+  bl.CreateXMLDesc;
   SaveReport(repPath, bl);
 end;
 
@@ -720,6 +775,7 @@ var
   rng: olevariant;
   str, repPath:string;
   minmax:point2d;
+  v:double;
 begin
   if VarIsEmpty(E) then
   begin
@@ -751,10 +807,10 @@ begin
   SetCell(1, r0, 3, bl.m_sn);
   SetCell(1, r0, 4, 'Чертеж:');
   SetCell(1, r0, 5, bl.ObjType);
+  SetCell(1, r0, 6, 'MeraFile:');
+  SetCell(1, r0, 7, m_MeraFile);
 
   inc(r0);
-  SetCell(1, r0, 2, 'MeraFile:');
-  //SetCell(1, r0, 3, fname);
   SetCell(1, r0, 4, 'Time:');
   date := now;
   SetCell(1, r0, 5, DateToStr(date) + ' ' + TimeToStr(date));
@@ -771,13 +827,45 @@ begin
     SetCell(1, r, c, 'Band');
     SetCell(1, r, c + 1, 'A1');
     SetCell(1, r, c + 2, 'F1');
+    SetCell(1, r, c + 3, 'Res');
     // проход по формам (полосам)
-    for j := 0 to m_bands.Count - 1 do
+    if m_bands.Count=0 then
     begin
-      b:=m_bands.getband(j);
       SetCell(1, r + 1 + j, c, floattostr(b.m_f1) + '...' + floattostr(b.m_f2));
-      SetCell(1, r + 1 + j, c+1, b.m_freqband.m_realX);
-      SetCell(1, r + 1 + j, c+2, b.m_freqband.m_y[i]);
+      SetCell(1, r + 1 + j, c+1, 0);
+      SetCell(1, r + 1 + j, c+2, 0);
+      rng:=GetRangeObj(1, point(r + 1 + j, 2), point(r + 1 + j, 5));
+      SetCell(1, r + 1 + j, c+3, 'Не испытан');
+    end
+    else
+    begin
+      for j := 0 to m_bands.Count - 1 do
+      begin
+        b:=m_bands.getband(j);
+        SetCell(1, r + 1 + j, c, floattostr(b.m_f1) + '...' + floattostr(b.m_f2));
+        if s.m_extremums.count>0 then
+        begin
+          extr:=s.m_extremums[j];
+          v:=s.lineFrf.GetXByInd(extr.Index);
+          SetCell(1, r + 1 + j, c+1, extr.Value);
+        end
+        else
+        begin
+          v:=0;
+          SetCell(1, r + 1 + j, c+1, 0);
+        end;
+        SetCell(1, r + 1 + j, c+2, v);
+        if (v>b.m_f1) and (v<b.m_f2) then
+        begin
+          SetCell(1, r + 1 + j, c+3, 'Годен');
+        end
+        else
+        begin
+          rng:=GetRangeObj(1, point(r + 1 + j, 2), point(r + 1 + j, 5));
+          rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
+          SetCell(1, r + 1 + j, c+3, 'Не годен');
+        end;
+      end;
     end;
     c := c + 4;
   end;
@@ -918,6 +1006,27 @@ begin
   r.BottomLeft.y:=MinSpmY;
   r.TopRight.y:=MaxSpmY;
   axSpm.ZoomfRect(r);
+end;
+
+procedure TFRFFrm.Showbladestatus(s:integer);
+begin
+  case s of
+    0:
+    begin
+      StatusEdit.Text:='Не испытан';
+      StatusEdit.Color:=clWindow;
+    end;
+    1:
+    begin
+      StatusEdit.Text:='Не годен';
+      StatusEdit.Color:=$008080FF;
+    end;
+    2:
+    begin
+      StatusEdit.Text:='Годен';
+      StatusEdit.Color:=clWindow;
+    end;
+  end;
 end;
 
 procedure TFRFFrm.ShowFrf(s: cSRSres; c: cSpmCfg; shInd: integer);
@@ -2292,6 +2401,7 @@ begin
     f := dir + '\' + trimext(extractfilename(g_FrfFactory.m_meraFile))
       + '_Shocks.mera';
   end;
+  m_MeraFile:=f;
   g_FrfFactory.m_ShockFile := f;
   ForceDirectories(dir);
   ifile := TIniFile.create(f);
@@ -2578,11 +2688,30 @@ var
   t: cSRSTaho;
   c: cSpmCfg;
   s:cSRSres;
+  a:caxis;
   tb: TDataBlock;
   j, ind: integer;
   x1,y:double;
   li:TListItem;
+  p:TNotifyEvent;
+  p2:point2;
 begin
+  if Sender is cYCursor then
+  begin
+    a:=pageSpm.activeAxis;
+    //p2:=cYCursor(Sender).Position; возвращает координаты в FullView
+    p2:=cYCursor(Sender).Position;
+    p2:=pageSpm.p2FullViewToBorderP2(p2);
+    p2:=pageSpm.Point2ToTrend(p2, false, a);
+    if m_lgY then
+    begin
+      p2.y:=ValToLogScale(p2.y, p2d(A.minY, A.maxY));
+    end;
+    p:=TrigFE.OnChange;
+    TrigFE.OnChange:=nil;
+    TrigFE.Value:=p2.y;
+    TrigFE.OnChange:=p;
+  end;
   if SpmChart.activePage = pageSpm then
   begin
     t := getTaho;
@@ -2665,6 +2794,19 @@ begin
       o:=cdrawobj(a.getChild(j));
       o.doUpdateWorldSize(a);
     end;
+  end;
+end;
+
+procedure TFRFFrm.SpmChartMouseZoom(Sender: TObject; UpScale: Boolean);
+var
+  p:cpage;
+  a:caxis;
+begin
+  if ycurs<>nil then
+  begin
+    p:=pageSpm;
+    a:=p.activeAxis;
+    ycurs.setCursor(a, (a.maxY+a.minY)*0.5);
   end;
 end;
 
@@ -3492,11 +3634,15 @@ var
   s: cSRSres;
   t: cSRSTaho;
   c: cSpmCfg;
+  blade:cBladeFolder;
 begin
   //exit;
   for i := 0 to m_CompList.Count - 1 do
   begin
     Frm := GetFrm(i);
+    tfrffrm(Frm).Ycurs:=cYCursor.create;
+    tfrffrm(Frm).pageSpm.AddChild(tfrffrm(Frm).Ycurs);
+
     TFrfFrm(frm).signalslv.drawcolorbox:=true;
     TFrfFrm(frm).signalslv.getcolor:= fgetcolor;
     t := TFrfFrm(Frm).getTaho;
@@ -3517,6 +3663,11 @@ begin
       TFrfFrm(Frm).UpdateBlocks;
     end;
     CreateBands(tFrfFrm(frm), g_mbase);
+    blade:=g_mbase.SelectBlade;
+    if blade<>nil then
+    begin
+      tFrfFrm(frm).BladeNumEdit.Text:=inttostr(blade.m_sn);
+    end;
   end;
 end;
 

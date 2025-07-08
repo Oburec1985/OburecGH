@@ -30,6 +30,7 @@ object FRFFrm: TFRFFrm
     Top = 0
     Width = 497
     Height = 504
+    Cursor = crSizeAll
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -38,11 +39,13 @@ object FRFFrm: TFRFFrm
     Caption = 'cChart1'
     TabOrder = 0
     OnDblClick = SpmChartDblClick
+    OnMouseZoom = SpmChartMouseZoom
     OnCursorMove = SpmChartCursorMove
     allowEditPages = False
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitLeft = 1
   end
   object RightGB: TGroupBox
     Left = 500
@@ -52,8 +55,9 @@ object FRFFrm: TFRFFrm
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
+    ExplicitLeft = 502
     object ShockCountLabel: TLabel
-      Left = 8
+      Left = 6
       Top = 21
       Width = 84
       Height = 13
@@ -61,7 +65,7 @@ object FRFFrm: TFRFFrm
     end
     object ShockLabel: TLabel
       Left = 4
-      Top = 140
+      Top = 148
       Width = 39
       Height = 13
       Margins.Left = 2
@@ -72,7 +76,7 @@ object FRFFrm: TFRFFrm
     end
     object WinPosBtn: TSpeedButton
       Left = 72
-      Top = 88
+      Top = 96
       Width = 49
       Height = 45
       Hint = #1054#1090#1082#1088#1099#1090#1100' '#1074' WinPos'
@@ -250,6 +254,19 @@ object FRFFrm: TFRFFrm
       Transparent = False
       OnClick = WinPosBtnClick
     end
+    object TrigLvlLabel: TLabel
+      Left = 95
+      Top = 66
+      Width = 22
+      Height = 17
+      Caption = 'Lvl.'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -15
+      Font.Name = 'YScaleLabel'
+      Font.Style = []
+      ParentFont = False
+    end
     object ShockCountE: TEdit
       Left = 5
       Top = 40
@@ -258,8 +275,8 @@ object FRFFrm: TFRFFrm
       TabOrder = 0
     end
     object SaveBtn: TButton
-      Left = 3
-      Top = 110
+      Left = 6
+      Top = 116
       Width = 69
       Height = 25
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
@@ -268,7 +285,7 @@ object FRFFrm: TFRFFrm
     end
     object ShockSB: TSpinButton
       Left = 112
-      Top = 157
+      Top = 165
       Width = 15
       Height = 19
       Margins.Left = 2
@@ -301,7 +318,7 @@ object FRFFrm: TFRFFrm
     end
     object ShockIE: TIntEdit
       Left = 5
-      Top = 157
+      Top = 165
       Width = 104
       Height = 21
       Margins.Left = 2
@@ -313,7 +330,7 @@ object FRFFrm: TFRFFrm
     end
     object DelBtn: TButton
       Left = 4
-      Top = 77
+      Top = 85
       Width = 68
       Height = 25
       Caption = #1059#1076#1072#1083#1080#1090#1100
@@ -331,7 +348,7 @@ object FRFFrm: TFRFFrm
     end
     object EstimatorRG: TRadioGroup
       Left = 5
-      Top = 179
+      Top = 187
       Width = 60
       Height = 70
       Margins.Left = 2
@@ -350,7 +367,7 @@ object FRFFrm: TFRFFrm
     end
     object UseWndFcb: TCheckBox
       Left = 132
-      Top = 160
+      Top = 168
       Width = 47
       Height = 16
       Caption = #1054#1082#1085#1086
@@ -358,8 +375,8 @@ object FRFFrm: TFRFFrm
       OnClick = UseWndFcbClick
     end
     object WelchCB: TCheckBox
-      Left = 86
-      Top = 273
+      Left = 134
+      Top = 190
       Width = 59
       Height = 17
       Caption = 'Welch'
@@ -376,11 +393,11 @@ object FRFFrm: TFRFFrm
       TabOrder = 9
       OnClick = DisableCBClick
     end
-    object GroupBox1: TGroupBox
+    object SignalsGroupBox: TGroupBox
       Left = 2
-      Top = 200
+      Top = 260
       Width = 217
-      Height = 302
+      Height = 124
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -388,11 +405,12 @@ object FRFFrm: TFRFFrm
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 10
+      ExplicitTop = 261
       object SignalsLV: TBtnListView
         Left = 2
         Top = 15
         Width = 213
-        Height = 285
+        Height = 107
         Margins.Left = 2
         Margins.Top = 2
         Margins.Right = 2
@@ -427,11 +445,13 @@ object FRFFrm: TFRFFrm
         DrawColorBox = False
         ChangeTextColor = False
         Editable = False
+        ExplicitTop = 12
+        ExplicitHeight = 127
       end
     end
     object ResTypeRG: TRadioGroup
-      Left = 123
-      Top = 66
+      Left = 127
+      Top = 72
       Width = 57
       Height = 69
       Caption = 'ResTypeRG'
@@ -443,6 +463,84 @@ object FRFFrm: TFRFFrm
         'Phase')
       TabOrder = 11
       OnClick = ResTypeRGClick
+    end
+    object BladeGB: TGroupBox
+      Left = 2
+      Top = 384
+      Width = 217
+      Height = 118
+      Align = alBottom
+      Caption = #1051#1086#1087#1072#1090#1082#1072
+      TabOrder = 12
+      object BladeLabel: TLabel
+        Left = 5
+        Top = 16
+        Width = 76
+        Height = 13
+        Caption = #1053#1086#1084#1077#1088' '#1083#1086#1087#1072#1090#1082#1080
+      end
+      object StatusLabel: TLabel
+        Left = 4
+        Top = 54
+        Width = 40
+        Height = 13
+        Caption = #1057#1090#1072#1090#1091#1089':'
+      end
+      object StatusEdit: TEdit
+        Left = 4
+        Top = 73
+        Width = 117
+        Height = 21
+        Color = clWhite
+        TabOrder = 0
+      end
+      object BladeNumEdit: TEdit
+        Left = 3
+        Top = 35
+        Width = 119
+        Height = 21
+        TabOrder = 1
+      end
+      object BladeSE: TSpinButton
+        Left = 127
+        Top = 35
+        Width = 15
+        Height = 19
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
+        DownGlyph.Data = {
+          0E010000424D0E01000000000000360000002800000009000000060000000100
+          200000000000D800000000000000000000000000000000000000008080000080
+          8000008080000080800000808000008080000080800000808000008080000080
+          8000008080000080800000808000000000000080800000808000008080000080
+          8000008080000080800000808000000000000000000000000000008080000080
+          8000008080000080800000808000000000000000000000000000000000000000
+          0000008080000080800000808000000000000000000000000000000000000000
+          0000000000000000000000808000008080000080800000808000008080000080
+          800000808000008080000080800000808000}
+        TabOrder = 2
+        UpGlyph.Data = {
+          0E010000424D0E01000000000000360000002800000009000000060000000100
+          200000000000D800000000000000000000000000000000000000008080000080
+          8000008080000080800000808000008080000080800000808000008080000080
+          8000000000000000000000000000000000000000000000000000000000000080
+          8000008080000080800000000000000000000000000000000000000000000080
+          8000008080000080800000808000008080000000000000000000000000000080
+          8000008080000080800000808000008080000080800000808000000000000080
+          8000008080000080800000808000008080000080800000808000008080000080
+          800000808000008080000080800000808000}
+        OnUpClick = BladeSEUpClick
+      end
+    end
+    object TrigFE: TFloatSpinEdit
+      Left = 5
+      Top = 64
+      Width = 78
+      Height = 22
+      Increment = 0.100000000000000000
+      TabOrder = 13
     end
   end
 end

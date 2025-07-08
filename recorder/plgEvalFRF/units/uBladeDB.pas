@@ -138,13 +138,15 @@ type
   protected
 
   public
-
+    // получить след или предыдущ лопатку
+    function GetNext(b:cXmlFolder):cXmlFolder;
+    function GetPrev(b:cXmlFolder):cXmlFolder;
   end;
 
   // испытани€
   cBladeFolder = class(cXmlFolder)
   public
-    m_res:boolean;
+    m_res:integer;
     m_sn:integer;
   protected
     procedure doCreateFiles(node:txmlnode);override;
@@ -1131,13 +1133,13 @@ begin
   inherited;
   lpath:=Absolutepath;
   ForceDirectories(lpath);
-  node.WriteAttributeBool('Result',m_res);
+  node.WriteAttributeInteger('Result',m_res);
 end;
 
 procedure cBladeFolder.doLoadDesc(node: txmlnode);
 begin
   inherited;
-  M_res:=node.ReadAttributeBool('Result',false);
+  M_res:=node.ReadAttributeInteger('Result',-1);
 end;
 
 function cBladeFolder.ObjType: string;
@@ -1170,6 +1172,40 @@ begin
   begin
     s:=o.getval('ToneCount');
     result:=strtoint(s);
+  end;
+end;
+
+{ cStageFolder }
+
+function cStageFolder.GetNext(b: cXmlFolder): cXmlFolder;
+var
+  bl:cBladeFolder;
+  I: Integer;
+begin
+  result:=nil;
+  for I := 0 to ChildCount - 2 do
+  begin
+    bl:=cBladeFolder(getchild(i));
+    if bl=b then
+    begin
+      result:=cBladeFolder(getchild(i+1));
+    end;
+  end;
+end;
+
+function cStageFolder.GetPrev(b: cXmlFolder): cXmlFolder;
+var
+  bl:cBladeFolder;
+  I: Integer;
+begin
+  result:=nil;
+  for I := ChildCount - 1 downto 1 do
+  begin
+    bl:=cBladeFolder(getchild(i));
+    if bl=b then
+    begin
+      result:=cBladeFolder(getchild(i-1));
+    end;
   end;
 end;
 

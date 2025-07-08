@@ -777,6 +777,11 @@ var
   NewExtremum: PExtremum1d;    // Указатель на новую запись экстремума для добавления в TList
 begin
   Result := False; // Изначально предполагаем, что экстремумы не найдены
+  for I := 0 to Extremums.Count - 1 do
+  begin
+    NewExtremum:=Extremums[i];
+    dispose(NewExtremum);
+  end;
   Extremums.Clear; // Очищаем выходной список перед началом поиска
   // Проверка корректности диапазона поиска и размера массива
   if (Length(Y) = 0) or (StartIndex < Low(Y)) or (EndIndex > High(Y)) or (StartIndex > EndIndex) then
