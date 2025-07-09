@@ -45,7 +45,6 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitLeft = 1
   end
   object RightGB: TGroupBox
     Left = 500
@@ -55,7 +54,6 @@ object FRFFrm: TFRFFrm
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
-    ExplicitLeft = 502
     object ShockCountLabel: TLabel
       Left = 6
       Top = 21
@@ -76,7 +74,7 @@ object FRFFrm: TFRFFrm
     end
     object WinPosBtn: TSpeedButton
       Left = 72
-      Top = 96
+      Top = 92
       Width = 49
       Height = 45
       Hint = #1054#1090#1082#1088#1099#1090#1100' '#1074' WinPos'
@@ -276,7 +274,7 @@ object FRFFrm: TFRFFrm
     end
     object SaveBtn: TButton
       Left = 6
-      Top = 116
+      Top = 118
       Width = 69
       Height = 25
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
@@ -405,7 +403,6 @@ object FRFFrm: TFRFFrm
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 10
-      ExplicitTop = 261
       object SignalsLV: TBtnListView
         Left = 2
         Top = 15
@@ -445,8 +442,6 @@ object FRFFrm: TFRFFrm
         DrawColorBox = False
         ChangeTextColor = False
         Editable = False
-        ExplicitTop = 12
-        ExplicitHeight = 127
       end
     end
     object ResTypeRG: TRadioGroup
@@ -531,6 +526,7 @@ object FRFFrm: TFRFFrm
           8000008080000080800000808000008080000080800000808000000000000080
           8000008080000080800000808000008080000080800000808000008080000080
           800000808000008080000080800000808000}
+        OnDownClick = BladeSEDownClick
         OnUpClick = BladeSEUpClick
       end
     end

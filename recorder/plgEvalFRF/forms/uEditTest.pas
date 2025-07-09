@@ -31,10 +31,14 @@ type
     ProfileSG: TStringGridExt;
     Splitter1: TSplitter;
     TurbNameCb: TComboBox;
+    BlCountIE: TSpinEdit;
+    BlCountLabel: TLabel;
+    TNameLabel: TLabel;
     procedure OkBtnClick(Sender: TObject);
     procedure ProfileSGKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure Splitter2Moved(Sender: TObject);
+    procedure BladeSeChange(Sender: TObject);
   private
     procedure init;
     procedure showbase;
@@ -56,6 +60,25 @@ implementation
 {$R *.dfm}
 
 { TEditTestFrm }
+
+procedure TEditTestFrm.BladeSeChange(Sender: TObject);
+var
+  f, s, bl:cxmlfolder;
+begin
+  f:=g_mbase.SelectTurb;
+  if f<>nil then
+  begin
+    s:=f.selected;
+    if s<>nil then
+    begin
+      bl:=cxmlFolder(s.getChild(BladeSe.Value));
+      if bl<>nil then
+      begin
+        s.selected:=bl;
+      end;
+    end;
+  end;
+end;
 
 constructor TEditTestFrm.create(aowner: tcomponent);
 begin
@@ -103,6 +126,7 @@ begin
 
       s:=cStageFolder.create;
       s.name:=f.name+'_Stage_'+StageCB.text;
+      cStageFolder(s).BlCount:=BlCountIE.Value;
       f.AddChild(s);
       f.selected:=s;
 
@@ -115,7 +139,8 @@ begin
     else
     begin
       f.setObjType(TurbCB.text);
-
+      s:=g_mbase.SelectStage;
+      cStageFolder(s).BlCount:=BlCountIE.Value;
       bl:=g_mbase.SelectBlade;
       bl.setObjType(BladeCB.Text);
     end;
@@ -154,7 +179,10 @@ begin
   g_mbase.root.selected:=cxmlfolder(g_mbase.root.getChild(0));
   if g_mbase.root.selected<>nil then
   begin
+    // ступень
     g_mbase.root.selected.selected:=cxmlfolder(g_mbase.root.selected.getChild(0));
+    BlCountIE.Value:=cStageFolder(g_mbase.root.selected.selected).BlCount;
+    // лопатка
     g_mbase.root.selected.selected.selected:=cxmlfolder(g_mbase.root.selected.selected.getChild(0));
   end;
   ShowTone;

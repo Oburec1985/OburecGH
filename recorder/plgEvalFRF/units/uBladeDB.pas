@@ -40,6 +40,7 @@ type
   protected
     procedure setname(str:string);override;
     function getObjType:cobjtype;
+
     // использовать str не рекомендуется, тк str это путь, который все равно присваивается далее в методе
     // setpath сразу после создания объекта
     function CreateDBObj(str:string):cDBobject;override;
@@ -50,8 +51,9 @@ type
     function getdsc:string;
     //procedure DoLincParent;override;
   public
-      // установить тип объекта
-
+    // получить путь к паке рядом с дескриптором
+    function getFolder:string;
+    // установить тип объекта
     procedure setObjType(s:string); overload;
     procedure setObjType(s:string; delProp:boolean; proplist:tstringlist); overload;
     procedure setObjType(s:string; proplist:tstringlist); overload;
@@ -135,17 +137,23 @@ type
   cStageFolder = class(cXmlFolder)
   public
     m_date:tdatetime;
+    m_sn:integer;
   protected
-
+    procedure setBlCount(c:integer);
+    function getBlCount:integer;
   public
     // получить след или предыдущ лопатку
     function GetNext(b:cXmlFolder):cXmlFolder;
     function GetPrev(b:cXmlFolder):cXmlFolder;
+    property BlCount:integer read getBlCount write setBlCount;
   end;
 
   // испытания
   cBladeFolder = class(cXmlFolder)
   public
+    // результа последнего поиска частот
+    // формат: f1...f2_a1_f1;f1...f2_an_fn
+    m_resStr:string;
     m_res:integer;
     m_sn:integer;
   protected
@@ -558,6 +566,11 @@ end;
 function cXmlFolder.getdsc: string;
 begin
   result:=m_dsc;
+end;
+
+function cXmlFolder.getFolder: string;
+begin
+  result:=Absolutepath+'\'+extractfilename(Absolutepath);
 end;
 
 function cXmlFolder.getObjType: cobjtype;
@@ -1134,12 +1147,14 @@ begin
   lpath:=Absolutepath;
   ForceDirectories(lpath);
   node.WriteAttributeInteger('Result',m_res);
+  node.WriteAttributeString('ResStr',m_resStr);
 end;
 
 procedure cBladeFolder.doLoadDesc(node: txmlnode);
 begin
   inherited;
   M_res:=node.ReadAttributeInteger('Result',-1);
+  m_resStr:=node.ReadAttributeString('ResStr','');
 end;
 
 function cBladeFolder.ObjType: string;
@@ -1183,12 +1198,18 @@ var
   I: Integer;
 begin
   result:=nil;
+  if b=nil then
+  begin
+    result:=cBladeFolder(getchild(0));
+    exit;
+  end;
   for I := 0 to ChildCount - 2 do
   begin
     bl:=cBladeFolder(getchild(i));
     if bl=b then
     begin
       result:=cBladeFolder(getchild(i+1));
+      exit;
     end;
   end;
 end;
@@ -1205,8 +1226,38 @@ begin
     if bl=b then
     begin
       result:=cBladeFolder(getchild(i-1));
+      exit;
     end;
   end;
+end;
+
+procedure cStageFolder.setBlCount(c: integer);
+var
+  bl:cBladeFolder;
+  f:string;
+begin
+  while c<>ChildCount do
+  begin
+    if c>ChildCount then
+    begin
+      bl:=cBladeFolder.create;
+      bl.setObjType(cBladeFolder(selected).ObjType);
+      bl.name:='Bl_'+inttostr(ChildCount+1);
+      AddChild(bl);
+    end
+    else
+    begin
+      bl:=cBladeFolder(getchild(ChildCount-1));
+      f:=bl.Absolutepath;
+      DeleteFile(f);
+      bl.destroy;
+    end;
+  end;
+end;
+
+function cStageFolder.getBlCount: integer;
+begin
+  result:=ChildCount;
 end;
 
 end.

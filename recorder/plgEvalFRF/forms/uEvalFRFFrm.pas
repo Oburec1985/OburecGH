@@ -372,6 +372,7 @@ type
     procedure SignalsLVColumnBtnClick(item: TListItem; lv: TListView);
     procedure BladeSEUpClick(Sender: TObject);
     procedure SpmChartMouseZoom(Sender: TObject; UpScale: Boolean);
+    procedure BladeSEDownClick(Sender: TObject);
   public
     // отступ слева и длительность
     m_ShiftLeft, m_Length: double;
@@ -433,6 +434,8 @@ type
     // сразу сохраняет в БД отчет по лопатке в excel
     function CheckFlags:boolean;
     procedure SaveReport(repname: string; bl:cBladeFolder);
+    // построить отчет по турбине
+    procedure buildReport();
     procedure doOnZoom(sender:tobject);
     function hideind: integer;
     procedure delCurrentShock;
@@ -653,6 +656,28 @@ begin
   m_TahoList.Add(t);
 end;
 
+procedure TFRFFrm.BladeSEDownClick(Sender: TObject);
+var
+  s:cStageFolder;
+  bl, sb:cbladefolder;
+begin
+  s:=g_mbase.SelectStage;
+  if s<>nil then
+  begin
+    sb:=g_mbase.SelectBlade;
+    if sb<>nil then
+    begin
+      bl:=cbladefolder(s.GetPrev(sb));
+      if bl<>nil then
+      begin
+        s.selected:=bl;
+        BladeNumEdit.Text:=bl.name;
+        Showbladestatus(bl.m_res);
+      end;
+    end;
+  end;
+end;
+
 procedure TFRFFrm.BladeSEUpClick(Sender: TObject);
 var
   s:cStageFolder;
@@ -667,13 +692,14 @@ begin
       bl:=cbladefolder(s.GetNext(sb));
       if bl<>nil then
       begin
-        sb.selected:=bl;
-        BladeNumEdit.Text:=inttostr(bl.m_sn);
+        s.selected:=bl;
+        BladeNumEdit.Text:=(bl.name);
         Showbladestatus(bl.m_res);
       end;
     end;
   end;
 end;
+
 
 function TFRFFrm.CheckedCount: integer;
 var
@@ -699,7 +725,8 @@ var
   b:tspmband;
   extr:PExtremum1d;
   res:boolean;
-  repPath:string;
+  repPath, resStr:string;
+  v, vf:double;
   minmax:point2d;
 begin
   t:=getTaho;
@@ -731,7 +758,12 @@ begin
     for j := 0 to s.m_extremums.Count - 1 do
     begin
       extr:=PExtremum1d(s.m_extremums[j]);
-      b:=m_bands.getband(j);
+      if m_bands.Count<j then
+        b:=m_bands.getband(j)
+      else
+        b:=nil;
+      if b=nil then
+        break;
       // экстремумы полос и найденные должны соответствовать др. другу
       if b.m_fmaxi=extr.Index then
       begin
@@ -749,8 +781,30 @@ begin
     bl.m_res:=2
   else
     bl.m_res:=1;
+  resstr:='';
+  for I := 0 to m_bands.Count - 1 do
+  begin
+    b:=m_bands[i];
+    if s.m_extremums.Count=0 then
+      extr:=nil
+    else
+      extr:=PExtremum1d(s.m_extremums[i]);
+    if extr<>nil then
+    begin
+      v:=extr.Value;
+      vf:=s.lineFrf.GetXByInd(extr.Index);
+    end
+    else
+    begin
+      v:=0;
+      vf:=0;
+    end;
+    resstr:=resstr+floattostr(b.m_f1)+'..'+
+                   floattostr(b.m_f2)+'_'+floattostr(v)+'_'+
+                   floattostr(vf)+';';
+  end;
+  bl.m_resStr:=resstr;
   Showbladestatus(bl.m_res);
-
   if not CheckExcelInstall then
   begin
     showmessage('Необходима установка Excel');
@@ -760,6 +814,93 @@ begin
   // сохраняем статус лопатки
   bl.CreateXMLDesc;
   SaveReport(repPath, bl);
+end;
+
+
+procedure TFRFFrm.buildReport;
+var
+  r0, i, j, r, c:integer;
+  t:cSRSTaho;
+  s:cSRSres;
+  cfg:cSpmCfg;
+  b:tspmband;
+  extr:PExtremum1d;
+  date:TDateTime;
+  res:boolean;
+  rng: olevariant;
+  str, str1, str2, repPath:string;
+  minmax:point2d;
+  v:double;
+  turb:cTurbFolder;
+  stage:cStageFolder;
+  blade:cBladeFolder;
+begin
+  if VarIsEmpty(E) then
+  begin
+    //if not CheckExcelRun then
+    begin
+      CreateExcel;
+      VisibleExcel(true);
+    end;
+  end;
+  turb:=g_mbase.SelectTurb;
+  stage:=g_mbase.SelectStage;
+  blade:=g_mbase.SelectBlade;
+  repPath:=turb.getFolder+'Report.xlsx';
+  if fileexists(repPath) then
+  begin
+    if not IsExcelFileOpen(repPath) then
+    begin
+      OpenWorkBook(repPath);
+    end
+  end
+  else
+  begin
+    AddWorkBook;
+    AddSheet('Page_01');
+  end;
+  r0 := GetEmptyRow(1, 1, 2);
+  SetCell(1, r0, 2, 'Турбина:');
+  SetCell(1, r0, 3, Turb.ObjType);
+  SetCell(1, r0, 4, 'Ступень:');
+  SetCell(1, r0, 5, stage.m_sn);
+  SetCell(1, r0, 6, 'MeraFile:');
+  SetCell(1, r0, 7, m_MeraFile);
+  inc(r0);
+  SetCell(1, r0, 2, 'Число лопаток:');
+  SetCell(1, r0, 3, stage.BlCount);
+  inc(r0);
+  SetCell(1, r0, 2, 'Лопатка');
+  SetCell(1, r0, 3, 'Band');
+  SetCell(1, r0, 4, 'A1');
+  SetCell(1, r0, 5, 'F1');
+  // проход по формам (полосам)
+  blade:=nil;
+  for I := 0 to stage.BlCount - 1 do
+  begin
+    inc(r0);
+    blade:=cbladefolder(stage.GetNext(blade));
+    SetCell(1, r0, 2, blade.name);
+    for j := 0 to m_bands.Count - 1 do
+    begin
+      str:=getSubStrByIndex(blade.m_resStr,';',1,j);
+      str1:=getSubStrByIndex(str, '_',1,0);
+      SetCell(1, r0, 3, str1);
+      str1:=getSubStrByIndex(str, '_',1,1);
+      str2:=getSubStrByIndex(str, '_',1,2);
+      SetCell(1, r0, 4, strtofloatext(str1));
+      SetCell(1, r0, 5, strtofloatext(str2));
+      if blade.m_res=1 then
+      begin
+        rng:=GetRangeObj(1, point(r0, 2), point(r0, 5));
+        rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
+      end;
+    end;
+  end;
+
+  SaveWorkBookAs(repPath);
+  CloseWorkBook;
+  CloseExcel;
 end;
 
 procedure TFRFFrm.SaveReport(repname: string; bl:cBladeFolder);
@@ -842,7 +983,7 @@ begin
       for j := 0 to m_bands.Count - 1 do
       begin
         b:=m_bands.getband(j);
-        SetCell(1, r + 1 + j, c, floattostr(b.m_f1) + '...' + floattostr(b.m_f2));
+        SetCell(1, r + 1 + j, c, floattostr(b.m_f1) + '..' + floattostr(b.m_f2));
         if s.m_extremums.count>0 then
         begin
           extr:=s.m_extremums[j];
@@ -2171,6 +2312,7 @@ end;
 
 procedure TFRFFrm.WinPosBtnClick(sender: tobject);
 begin
+  buildReport;
   if fileexists(g_FrfFactory.m_meraFile) then
     ShellExecute(0, nil, pwidechar(g_FrfFactory.m_ShockFile), nil, nil,
       SW_HIDE);
@@ -2392,7 +2534,7 @@ var
   db, tb: TDataBlock;
 begin
   //dir := extractfiledir(g_FrfFactory.m_meraFile) + '\Shock';
-  dir:=extractfiledir(g_mbase.SelectBlade.Absolutepath)+ '\Shock';
+  dir:=extractfiledir(g_mbase.SelectBlade.getfolder)+ '\Shock';
   f := dir + '\' + trimext(extractfilename(g_FrfFactory.m_meraFile))
     + '_Shocks.mera';
   while fileexists(f) do

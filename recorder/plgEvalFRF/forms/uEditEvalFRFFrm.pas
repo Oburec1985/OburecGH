@@ -9,6 +9,7 @@ uses
   uRCFunc,
   uHardwareMath,
   uCommonMath,
+  uBladeDb,
   uComponentServises,
   tags, uEvalFRFFrm, uSpmProfile, uProfile, uEditTest,
   uRcCtrls, DCL_MYOWN, Spin, ImgList, Buttons;
@@ -515,6 +516,7 @@ begin
   m_SRS.m_showflags:=FlagsCB.Checked;
   m_SRS.m_showBandLab:=BandLabelCB.Checked;
   m_SRS.UpdateBandNames;
+  m_SRS.BladeNumEdit.Text:=cbladefolder(g_mbase.SelectBlade).name;
 
   n:=SignalsTV.FocusedNode;
   d:=SignalsTV.GetNodeData(n);
@@ -539,6 +541,7 @@ begin
   c.m_addNulls:=NullCB.Checked;
   c.m_capacity:=ShCountIE.IntNum;
   t.m_CohTreshold:=CohThresholdFE.FloatNum;
+
 end;
 
 procedure TEditFrfFrm.UpdateTags;

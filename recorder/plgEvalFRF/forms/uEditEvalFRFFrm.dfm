@@ -188,8 +188,6 @@ object EditFrfFrm: TEditFrfFrm
       Align = alTop
       Caption = 'SPMGB'
       TabOrder = 1
-      ExplicitLeft = 2
-      ExplicitTop = 125
       object FFTBlockSizeLabel: TLabel
         Left = 8
         Top = 22
@@ -421,8 +419,6 @@ object EditFrfFrm: TEditFrfFrm
       Align = alClient
       Caption = #1054#1090#1086#1073#1088#1072#1078#1077#1085#1080#1077
       TabOrder = 2
-      ExplicitLeft = 6
-      ExplicitTop = 319
       object UpdateBtn: TSpeedButton
         Left = 354
         Top = 87
