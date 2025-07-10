@@ -777,10 +777,16 @@ begin
     end;
     s.m_checkres:=result;
   end;
-  if result then
-    bl.m_res:=2
-  else
-    bl.m_res:=1;
+  result:=true;
+  for I := 0 to cfg.srsCount - 1 do
+  begin
+    s:=cfg.GetSrs(i);
+    if not s.m_checkres then
+    begin
+      result:=false;
+      break;
+    end;
+  end;
   resstr:='';
   for I := 0 to m_bands.Count - 1 do
   begin
@@ -803,6 +809,10 @@ begin
                    floattostr(b.m_f2)+'_'+floattostr(v)+'_'+
                    floattostr(vf)+';';
   end;
+  if result then
+    bl.m_res:=2
+  else
+    bl.m_res:=1;
   bl.m_resStr:=resstr;
   Showbladestatus(bl.m_res);
   if not CheckExcelInstall then
@@ -916,7 +926,7 @@ var
   rng: olevariant;
   str, repPath:string;
   minmax:point2d;
-  v:double;
+  v, v1:double;
 begin
   if VarIsEmpty(E) then
   begin
@@ -943,7 +953,8 @@ begin
     AddWorkBook;
     AddSheet('Page_01');
   end;
-  r0 := GetEmptyRow(1, 1, 2);
+  // в пятом столбце строки идут заполненные подряд
+  r0 := GetEmptyRow(1, 1, 6);
   SetCell(1, r0, 2, 'Blade:');
   SetCell(1, r0, 3, bl.m_sn);
   SetCell(1, r0, 4, 'Чертеж:');
@@ -954,7 +965,8 @@ begin
   inc(r0);
   SetCell(1, r0, 4, 'Time:');
   date := now;
-  SetCell(1, r0, 5, DateToStr(date) + ' ' + TimeToStr(date));
+  SetCell(1, r0, 5, DateToStr(date));
+  SetCell(1, r0, 6, TimeToStr(date));
   r := r0 + 2;
   c := 2;
 
@@ -986,23 +998,33 @@ begin
         SetCell(1, r + 1 + j, c, floattostr(b.m_f1) + '..' + floattostr(b.m_f2));
         if s.m_extremums.count>0 then
         begin
-          extr:=s.m_extremums[j];
-          v:=s.lineFrf.GetXByInd(extr.Index);
-          SetCell(1, r + 1 + j, c+1, extr.Value);
+          if j<s.m_extremums.count then
+          begin
+            extr:=s.m_extremums[j];
+            v1:=s.lineFrf.GetXByInd(extr.Index);
+            v:=extr.Value;
+          end
+          else
+          begin
+            v1:=0;
+            v1:=0;
+            extr:=nil;
+          end;
+          SetCell(1, r + 1 + j, c+1, v);
         end
         else
         begin
           v:=0;
           SetCell(1, r + 1 + j, c+1, 0);
         end;
-        SetCell(1, r + 1 + j, c+2, v);
+        SetCell(1, r + 1 + j, c+2, v1);
         if (v>b.m_f1) and (v<b.m_f2) then
         begin
           SetCell(1, r + 1 + j, c+3, 'Годен');
         end
         else
         begin
-          rng:=GetRangeObj(1, point(r + 1 + j, 2), point(r + 1 + j, 5));
+          rng:=GetRangeObj(1, point(r + 1 + j, c), point(r + 1 + j, c+3));
           rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
           SetCell(1, r + 1 + j, c+3, 'Не годен');
         end;
@@ -1474,7 +1496,11 @@ begin
     l.visible:=true;
     // xMax
     x:=b.m_freqband.m_realX;
-    tr:=cBuffTrend1d(l.parent);
+    //tr:=cBuffTrend1d(l.parent);
+    // UpdateBandNames создает привязки
+    tr:=ActiveSignal.lineFrf;
+    l.parent:=tr;
+    if b.m_fmaxi>tr.Count then exit;
     if b.m_fmaxi>0 then
     begin
       max:=tr.GetYByInd(b.m_fmaxi);
@@ -1488,29 +1514,6 @@ begin
         l.visible:=true;
       end;
     end;
-
-    //ind:=tr.GetLowInd(x)+1;
-    //if (ind<tr.count) and (ind>0) then
-    //begin
-    //  max:=tr.GetYByInd(ind);
-    //  maxx:=x;
-    //end
-    //else
-    //begin
-    //  continue;
-    //end;
-
-    //while x<b.m_f2 do
-    //begin
-    //  inc(ind);
-    //  x:=tr.GetXByInd(ind);
-    //  y:=tr.GetYByInd(ind);
-    //  if y>max then
-    //  begin
-    //    max:=y;
-    //    maxX:=x;
-    //  end;
-    //end;
     pos := correctPos(a, p, p2d(maxX, max));
     l.Position := p2(pos.x, pos.y);
     l.line := l.Position;

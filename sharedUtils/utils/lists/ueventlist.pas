@@ -238,6 +238,8 @@ begin
   for I := 0 to count - 1 do
   begin
     e:=GetEvent(i);
+    if e=nil then
+      continue;
     if usemask then
       call:=checkflag(e.EventType,eventtype)
     else
