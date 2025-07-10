@@ -7,14 +7,13 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, uMeraFile, uBuffSignal, umerasignal,
   complex,
-  uHardwareMath,
+  uHardwareMath, math,
   uYCursor,
   performancetime, nativexml, ucommonmath, uCommonTypes,
   fft, fht, Ap, DCL_MYOWN, ComCtrls, ExtCtrls, uChart, utrend, upage, uaxis, uBuffTrend1d;
 
 // AVal - массив анализируемых данных, Nvl - длина массива, должна быть кратна степени 2.
 // FTvl - массив полученных значений, Nft - длина массива, должна быть равна Nvl / 2 или меньше.
-
 type
 
 
@@ -28,20 +27,25 @@ type
     LgyCb: TCheckBox;
     UseShaders: TCheckBox;
     CheckBox1: TCheckBox;
-    procedure AlgLibClick(Sender: TObject);
+    SpmDxFe: TFloatEdit;
     procedure FormCreate(Sender: TObject);
-    procedure SSEBtnClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure MultArraySSEClick(Sender: TObject);
     procedure LgyCbClick(Sender: TObject);
     procedure UseShadersClick(Sender: TObject);
     procedure CheckBox1Click(Sender: TObject);
+    procedure SSEBtnClick(Sender: TObject);
   private
     rezSignals:tstringlist;
-    FFTProp:TFFTProp;
+    FFTProp,
+    FFTProp2
+    :TFFTProp;
+    m_spmpage:cpage;
     AlignedSampl,AlignedSampl2:TAlignDarray;
+    CmxArray, CmxArrayZoom:TAlignDCmpx;
+    // тест перемножения массива
     CalcSampl: TAlignDCmpx;
-    MagFFTarray:TAlignDarray;
+    MagFFTarray,MagFFTarrayZoom:TAlignDarray;
   public
 
   end;
@@ -53,81 +57,118 @@ type
     b:double;
   end;
 
+function GetFFTPlan(fftCount: integer): TFFTProp;
+function GetInverseFFTPlan(fftCount: integer): TFFTProp;
+
 const
   TwoPi = 6.283185307179586;
 
 var
-  //FCount=8192;
   FCount:integer = 16384;
-
   Form1: TForm1;
+  // настройки FFT прямого и обратного преобразования
+  g_FFTPlanList: array of TFFTProp;
+  g_inverseFFTPlanList: array of TFFTProp;
 
 implementation
-
 {$R *.DFM}
-
-procedure TForm1.AlgLibClick(Sender: TObject);
+function GetFFTPlan(fftCount: integer): TFFTProp;
 var
-  m:cmerafile;
-  s:cbuffsignal;
-  spmcount:integer;
-  rezS:cbuffsignal;
-  resMera:cMeraFile;
-  meraopts:tmeraopts;
-  cmplx_resArray:TComplex1DArray;
-  outArray:array of double;
-  k:double;
-  I: Integer;
+  i, j, l: integer;
+  r: TFFTProp;
 begin
-  meraopts.TestName:='Фаза';
-  meraopts.TestDsc:='Фаза';
-
-  m:=cmerafile.create('g:\oburec\project2010\2011\tests\signals\Cos_100_500_1000_2000\Cos_100_500_1000_2000.MERA',
-                      cBuffSignal);
-  s:=cbuffsignal(m.GetSignal(0));
-
-  setlength(outarray,round(fcount/2));
-  setlength(cbuffsignal(s).d_points1d,fcount);
-  for I := 0 to fcount - 1 do
+  j := -1;
+  r.PCount := 0;
+  for i := 0 to length(g_FFTPlanList) - 1 do
   begin
-    cbuffsignal(s).d_points1d[i]:=i;
+    r := g_FFTPlanList[i];
+    if r.PCount = fftCount then
+    begin
+      result := g_FFTPlanList[i];
+      exit;
+    end
+    else
+    begin
+      if j = -1 then
+      begin
+        if r.PCount = 0 then
+        begin
+          j := i;
+        end;
+      end;
+    end;
   end;
-
-  FFTR1D(treal1darray(cbuffsignal(s).d_points1d), FCount, cmplx_resArray);
-  spmcount:=fcount div 2;
-  setlength(outArray, spmcount);
-  k:=1/spmcount;
-  for I := 0 to spmcount - 1 do
+  if (j = -1) then
   begin
-    outArray[i]:=k*sqrt(cmplx_resArray[i].x*cmplx_resArray[i].x+cmplx_resArray[i].y*cmplx_resArray[i].y);
+    // длина массива
+    j := length(g_FFTPlanList);
+    SetLength(g_FFTPlanList, j + c_fftPlan_blockLength);
   end;
-
-  rezS:=cBuffSignal.create;
-  rezS.datatype:='r8';
-
-  rezs.AddPoints(outArray);
-
-  rezS.name:='SpmTest';
-  rezS.freqX:=(2*FCount)/(cbuffsignal(s).freqx*2);
-  //rezs.x0:=1/rezs.freqx;
-  rezs.x0:=0;
-
-  rezSignals:=TStringList.Create;
-  rezSignals.AddObject(rezS.name,rezS);
-  resMera:=cMeraFile.create('g:\oburec\project2010\2011\tests\signals\alglib\res_alglib.mera','g:\oburec\project2010\2011\tests\signals\',
-                             rezSignals, meraopts,nil);
-  resMera.Save;
-  resMera.Destroy;
-  rezSignals.Destroy;
+  r := g_FFTPlanList[j];
+  r.StartInd := 0;
+  r.PCount := fftCount;
+  r.m_scaleCurve:=nil;
+  GetMemAlignedArray_cmpx_d(fftCount, r.TableExp);
+  r.TableInd := GetArrayIndex(fftCount, 2);
+  GetFFTExpTable(fftCount, false, tcmxArray_d(r.TableExp.p));
+  g_FFTPlanList[j] := r;
+  result := g_FFTPlanList[j];
 end;
+
+function GetInverseFFTPlan(fftCount: integer): TFFTProp;
+var
+  i, j, l: integer;
+  r: TFFTProp;
+begin
+  j := -1;
+  r.PCount := 0;
+  for i := 0 to length(g_inverseFFTPlanList) - 1 do
+  begin
+    r := g_inverseFFTPlanList[i];
+    if r.PCount = fftCount then
+    begin
+      result := g_inverseFFTPlanList[i];
+      exit;
+    end
+    else
+    begin
+      if j = -1 then
+      begin
+        if r.PCount = 0 then
+        begin
+          j := i;
+        end;
+      end;
+    end;
+  end;
+  if (j = -1) then
+  begin
+    // длина массива
+    j := length(g_inverseFFTPlanList);
+    SetLength(g_inverseFFTPlanList, j + c_fftPlan_blockLength);
+  end;
+  r := g_inverseFFTPlanList[j];
+  r.inverse := true;
+  r.StartInd := 0;
+  r.PCount := fftCount;
+  GetMemAlignedArray_cmpx_d(fftCount, r.TableExp);
+  r.TableInd := GetArrayIndex(fftCount, 2);
+  GetFFTExpTable(fftCount, true, tcmxArray_d(r.TableExp.p));
+  g_inverseFFTPlanList[j] := r;
+  result := g_inverseFFTPlanList[j];
+end;
+
 
 procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   FreeMemAligned(AlignedSampl);
   FreeMemAligned(AlignedSampl2);
   FreeMemAligned(MagFFTarray);
+  FreeMemAligned(MagFFTarrayZoom);
   FreeMemAligned(CalcSampl);
   FreeMemAligned(FFTProp.TableExp);
+  FreeMemAligned(CmxArray);
+  FreeMemAligned(CmxArrayZoom);
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
@@ -136,15 +177,23 @@ var
   p:tpair;
   STR:STRING;
   i, j:integer;
-  t:cBuffTrend1d;
+  t, tzoom, spmTrend, spmTrendZoom:cBuffTrend1d;
+
   a:caxis;
   curs:cYCursor;
+  F1, F2, Fs, dFspm,
+  dPhase1, Phase1,
+  dPhase2, Phase2:double;
+  rect:frect;
 begin
   GetMemAlignedArray_d(fcount, AlignedSampl);
-  GetMemAlignedArray_d(fcount, AlignedSampl2);
+  GetMemAlignedArray_d(fcount*2, AlignedSampl2);
   GetMemAlignedArray_d(fcount shr 1, MagFFTarray);
+  GetMemAlignedArray_d(fcount, MagFFTarrayZoom);
   GetMemAlignedArray_cmpx_d(fcount, CalcSampl);
   GetMemAlignedArray_cmpx_d(fcount, FFTProp.TableExp);
+  GetMemAlignedArray_cmpx_d(fcount, CmxArray);
+  GetMemAlignedArray_cmpx_d(fcount*2, CmxArrayZoom);
 
   FFTProp.StartInd:=0;
   FFTProp.PCount:=fcount;
@@ -155,19 +204,29 @@ begin
   end;
   if fcount<i then
     i:=i shr 1;
-  GetFFTExpTable(i, false, tcmxArray_d(FFTProp.TableExp.p));
-  FFTProp.TableInd := GetArrayIndex(i, 2);
-  for I := 0 to 4 do
+  fftprop:=GetFFTPlan(fcount);
+  fftprop2:=GetFFTPlan(fcount*2);
+  //for I := 0 to 4 do
   begin
-    t:=cBuffTrend1d.create;
-    t.flength:=1000;
-    t.dx:=1;
-    t.color:=colorarray[i];
-    for j := 0 to t.flength - 1 do
-    begin
-      tdoublearray(AlignedSampl.p)[j]:=(i+1)*Sin(2*Pi*j/t.flength);
-    end;
+    Fs:=10000;
+    // F1=1000; F2=10
+    f1:=1000; f2:=10;
+    dPhase1:=2*pi*F1/Fs;
+    dPhase2:=2*pi*F2/Fs;
+    Phase1:=0;
+    Phase2:=0;
     a:=cpage(cChart1.activePage).activeAxis;
+    t:=cBuffTrend1d.create;
+    t.flength:=FCount;
+    for j :=0 to t.flength - 1 do
+    begin
+      tdoublearray(AlignedSampl.p)[j]:=1*Sin(Phase1)+1*Sin(Phase2);
+      Phase1:=Phase1+dPhase1;
+      Phase2:=Phase2+dPhase2;
+    end;
+    // fs=10 kHz
+    t.dx:=1/Fs;
+    t.color:=colorarray[0];
     a.AddChild(t);
     t.AddPoints(tdoublearray(AlignedSampl.p));
   end;
@@ -176,74 +235,74 @@ begin
   cpage(cChart1.activePage).cursor.setx1(100);
   curs:=cYCursor.create;
   cChart1.activePage.AddChild(curs);
+  rect.BottomLeft.x:=0;
+  rect.BottomLeft.y:=0;
+  rect.TopRight.x:=5000;
+  rect.TopRight.y:=2;
+  cpage(cChart1.activePage).ZoomfRect(rect);
+
+  m_spmpage:=cChart1.activeTab.addPage(true);
+  m_spmpage.name:='Freq.dom';
+
+
+  spmTrend:=cBuffTrend1d.create;
+  spmTrend.flength:=FCount;
+  dFspm:=Fs/FCount;
+  spmTrend.dx:=dFspm;
+  FFTProp.StartInd:=0;
+  fft_al_d_sse(tdoublearray(AlignedSampl.p),
+               tcmxArray_d(CmxArray.p), FFTProp);
+  EvalSpmMag(tcmxArray_d(CmxArray.p), TDoubleArray(MagFFTarray.p));
+  MULT_SSE_al_d(TDoubleArray(MagFFTarray.p), 1/fcount);
+
+  FFTProp.m_Zoom:=false;
+  FFTProp.m_ZoomOrd:=0;
+  // расчет zoom спектра
+  a:=cpage(cChart1.activePage).activeAxis;
+  tzoom:=cBuffTrend1d.create;
+  tzoom.flength:=FCount;
+  // fs=10 kHz
+  tzoom.dx:=1/(Fs/Power(2,FFTProp.m_ZoomOrd));
+  tzoom.color:=red;
+  a.AddChild(tzoom);
+
+  // с добавкой нулей
+  move(tdoublearray(AlignedSampl.p)[0],tdoublearray(AlignedSampl2.p)[0],fcount*sizeof(double));
+  fft_al_d_sse(tdoublearray(AlignedSampl2.p),
+               tcmxArray_d(CmxArrayZoom.p), FFTProp2);
+  tzoom.AddPoints(tdoublearray(AlignedSampl.p));
+  EvalSpmMag(tcmxArray_d(CmxArrayZoom.p), TDoubleArray(MagFFTarrayZoom.p));
+  MULT_SSE_al_d(TDoubleArray(MagFFTarrayZoom.p), 1/fcount);
+
+  a:=m_spmpage.activeAxis;
+  spmTrendZoom:=cBuffTrend1d.create;
+  spmTrendZoom.flength:=FCount*2;
+  spmTrendZoom.dx:=dFspm/2;
+  spmTrendZoom.color:=red;
+  a.AddChild(spmTrendZoom);
+  spmTrendZoom.AddPoints(tdoublearray(MagFFTarrayZoom.p));
+
+  a.AddChild(spmTrend);
+  SpmDxFe.FloatNum:=spmTrend.dx;
+  spmTrend.AddPoints(tdoublearray(MagFFTarray.p));
+
+  rect.BottomLeft.x:=0.1;
+  rect.BottomLeft.y:=0.0001;
+  rect.TopRight.x:=10;
+  rect.TopRight.y:=20;
+  m_spmpage.ZoomfRect(rect);
 end;
 
-
-procedure TForm1.LgyCbClick(Sender: TObject);
+procedure TForm1.LgYCbClick(Sender: TObject);
 begin
   cpage(cchart1.activePage).activeAxis.Lg:=not cpage(cchart1.activePage).activeAxis.Lg;
 end;
-
 
 procedure TForm1.CheckBox1Click(Sender: TObject);
 begin
   cpage(cchart1.activePage).LgX:=not cpage(cchart1.activePage).LgX;
 end;
 
-//'PWM_Thi=0,PWM_Tlo=0,Zone_state=Вкл,Vals=27,5…28;5;0;5; 0'
-procedure TaskupdateParams(pars:tstringlist; src:string; separator:string);
-var
-  newpars:tstringlist;
-  I, p, j, ind: Integer;
-  cstr
-  //, cstr1
-  :cstring;
-  str, key:string;
-  lstr, param:string;
-  Value:cString;
-begin
-  i:=0;
-  while i<=length(src) do
-  begin
-    str:=GetSubString(src,separator,i, ind);
-    if str<>'' then
-    begin
-      p:=pos('=',str);
-      if p>0 then
-      begin
-        param:=DeleteSpace(GetSubString(str,'=',1,j));
-        if param='Vals' then
-        begin
-          value:=cString.Create;
-          p:=i+5;
-          lstr:=Copy(src,i+5,length(src)-p+1);
-          value.str:=deletechars(lstr,'"');
-          pars.addobject(param, value);
-        end
-        else
-        begin
-          value:=cString.Create;
-          lstr:=GetSubString(str,separator,j+1,j);
-          value.str:=deletechars(lstr,'"');
-          pars.addobject(param, value);
-        end;
-      end;
-    end;
-    if i=-1 then
-      break;
-    i:=ind+1;
-  end;
-end;
-
-
-
-procedure TForm1.SSEBtnClick(Sender: TObject);
-var
-  pars:tstringlist;
-begin
-  pars:=TStringList.Create;
-  TaskupdateParams(pars, 'PWM_Thi=0,PWM_Tlo=0,Zone_state=Вкл,Vals=27,5…28;5;0;5; 0', ',');
-end;
 
 procedure TForm1.UseShadersClick(Sender: TObject);
 var
@@ -263,7 +322,7 @@ var
   // размер блока при вычислении умножения
   shift: integer;
 asm
- // сохранить в стек регистры EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI.
+  // сохранить в стек регистры EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI.
   pushad
   // квадратные скобки - обратиться к значению по адресу в eax
   //mov eax, d1 // @D1[0]
@@ -435,10 +494,6 @@ begin
     t.flength:=c;
     t.dx:=1;
     a.AddChild(t);
-  end
-  else
-  begin
-
   end;
   pf:=TPerformanceTime.Create;
   //for I := 1 to c-1 do
@@ -450,7 +505,6 @@ begin
       //MulAr_sse_al(tdoublearray(AlignedSampl.p), tdoublearray(AlignedSampl2.p), tdoublearray(CalcSampl.p));
       MulAr_sse_al(tdoublearray(AlignedSampl.p), tdoublearray(AlignedSampl2.p), tdoublearray(CalcSampl.p), i);
     end;
-
     t1:=pf.Stop;
     pf.Start;
     for k := 0 to IterCountIE.IntNum do
@@ -471,5 +525,21 @@ begin
   pf.Destroy;
 end;
 
+
+procedure TForm1.SSEBtnClick(Sender: TObject);
+var
+  a1,a2:TDoubleArray;
+  I: Integer;
+begin
+  setlength(a1,16);
+  setlength(a2,16);
+  for I := 0 to length(a2) - 1 do
+  begin
+    a1[i]:=i;
+    a2[i]:=i;
+  end;
+  //ReindexArray(a1,a2,0,8,2);
+  PerformArrayReindexing(a1,2);
+end;
 
 end.

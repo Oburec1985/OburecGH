@@ -185,6 +185,20 @@ begin
   h:=clBound.top-clBound.bottom;
   size.x:=trunc(w/cols);
   size.y:=trunc(h/rows);
+  // перенес код снизу 10.07.25
+  for I := 0 to ChildCount - 1 do
+  begin
+    page:=GetPage(i);
+    row:= i div cols;
+    col:=I MOD cols;
+    fsize.y:=1/rows;
+    fsize.x:=1/cols;
+    relbound.BottomLeft.x:=fsize.x*col;
+    relbound.TopRight.x:=fsize.x*col+fsize.x;
+    relbound.TopRight.y:=1-fsize.y*row;
+    relbound.BottomLeft.y:=1-(fsize.y*row+fsize.y);
+    page.Relativebound:=relbound;
+  end;
 
   i:=0;
   col:=0;
@@ -215,7 +229,7 @@ begin
   end;
   // установка габаритов по относительным координатам. Возможно все что выше надо похерить...2023
   // т.к. код выше не работает для случая когда чарт появился с нулевыми габаритами
-  if (w<=0) or (h<=0) then
+  {if (w<=0) or (h<=0) then
   begin
     for I := 0 to ChildCount - 1 do
     begin
@@ -230,7 +244,7 @@ begin
       relbound.BottomLeft.y:=1-(fsize.y*row+fsize.y);
       page.Relativebound:=relbound;
     end;
-  end;
+  end;}
 end;
 
 procedure cPageMng.doalign(sender:tobject);

@@ -13,9 +13,6 @@ object Form1: TForm1
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
-  DesignSize = (
-    834
-    521)
   PixelsPerInch = 96
   TextHeight = 12
   object Memo1: TMemo
@@ -42,11 +39,10 @@ object Form1: TForm1
     Margins.Bottom = 2
     Caption = 'AlgLib'
     TabOrder = 1
-    OnClick = AlgLibClick
   end
   object SSEBtn: TButton
-    Left = 6
-    Top = 31
+    Left = 7
+    Top = 30
     Width = 128
     Height = 19
     Margins.Left = 2
@@ -71,15 +67,16 @@ object Form1: TForm1
     OnClick = MultArraySSEClick
   end
   object cChart1: cChart
-    Left = 6
-    Top = 99
-    Width = 793
-    Height = 398
+    Left = 0
+    Top = 76
+    Width = 834
+    Height = 445
+    Cursor = crSizeAll
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
     Margins.Bottom = 2
-    Anchors = [akLeft, akTop, akRight, akBottom]
+    Align = alBottom
     Caption = 'cChart1'
     TabOrder = 4
     allowEditPages = False
@@ -125,5 +122,13 @@ object Form1: TForm1
     Caption = 'LgXCb'
     TabOrder = 8
     OnClick = CheckBox1Click
+  end
+  object SpmDxFe: TFloatEdit
+    Left = 580
+    Top = 31
+    Width = 91
+    Height = 20
+    TabOrder = 9
+    Text = '0.0'
   end
 end

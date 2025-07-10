@@ -487,6 +487,13 @@ begin
 
   boundrect.BottomLeft.X := x0;
   l := Count;
+  if count=0 then
+  begin
+    boundrect.BottomLeft.X:=0;
+    boundrect.TopRight.X:=0;
+    boundrect.BottomLeft.y:=1;
+    boundrect.TopRight.y:=1;
+  end;
   boundrect.TopRight.X := x0 + (l - 1) * dx;
   case datatype of
     c_single:
