@@ -177,7 +177,7 @@ var
   p:tpair;
   STR:STRING;
   i, j:integer;
-  t, tzoom, spmTrend, spmTrendZoom:cBuffTrend1d;
+  t, spmTrend, spmTrendZoom:cBuffTrend1d;
 
   a:caxis;
   curs:cYCursor;
@@ -257,20 +257,10 @@ begin
 
   FFTProp.m_Zoom:=false;
   FFTProp.m_ZoomOrd:=0;
-  // расчет zoom спектра
-  a:=cpage(cChart1.activePage).activeAxis;
-  tzoom:=cBuffTrend1d.create;
-  tzoom.flength:=FCount;
-  // fs=10 kHz
-  tzoom.dx:=1/(Fs/Power(2,FFTProp.m_ZoomOrd));
-  tzoom.color:=red;
-  a.AddChild(tzoom);
-
   // с добавкой нулей
   move(tdoublearray(AlignedSampl.p)[0],tdoublearray(AlignedSampl2.p)[0],fcount*sizeof(double));
   fft_al_d_sse(tdoublearray(AlignedSampl2.p),
                tcmxArray_d(CmxArrayZoom.p), FFTProp2);
-  tzoom.AddPoints(tdoublearray(AlignedSampl.p));
   EvalSpmMag(tcmxArray_d(CmxArrayZoom.p), TDoubleArray(MagFFTarrayZoom.p));
   MULT_SSE_al_d(TDoubleArray(MagFFTarrayZoom.p), 1/fcount);
 

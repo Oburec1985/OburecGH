@@ -312,6 +312,7 @@ begin
 
   SaveT0CB.Checked:=m_srs.m_saveT0;
   t:=m_SRS.getTaho;
+  NullCB.Checked:=t.cfg.m_addNulls;
   if t<>nil then
     ShowTaho(t);
   SignalsTV.clear;
@@ -360,7 +361,6 @@ begin
   if csrstaho(c.taho).m_tag.freq<>0 then
     BlockSizeFE.FloatNum:=FFTBlockSizeIE.IntNum/csrstaho(c.taho).m_tag.freq;
   ShCountIE.IntNum:=1;
-  NullCB.Checked:=false;
   ShCountIE.IntNum:=c.m_capacity;
   CohThresholdFE.FloatNum:=t.m_CohTreshold;
   UpdateWelchBCount;
@@ -493,8 +493,11 @@ procedure TEditFrfFrm.UpdateBtnClick(Sender: TObject);
 var
   t:cSRSTaho;
   c:cSpmCfg;
+  s:cSRSres;
+  bl:TDataBlock;
   n:PVirtualNode;
   d:PNodeData;
+  I, j: Integer;
 begin
   m_SRS.m_ShiftLeft:=LeftShiftEdit.FloatNum;
   m_SRS.m_Length:=LengthFE.FloatNum;
@@ -542,6 +545,11 @@ begin
   c.m_capacity:=ShCountIE.IntNum;
   t.m_CohTreshold:=CohThresholdFE.FloatNum;
 
+  for I := 0 to c.SRSCount - 1 do
+  begin
+    s:=c.GetSrs(i);
+    s.updateBlock(FFTBlockSizeIE.IntNum, round(m_srs.m_length*s.m_tag.freq));
+  end;
 end;
 
 procedure TEditFrfFrm.UpdateTags;

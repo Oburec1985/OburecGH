@@ -93,6 +93,7 @@ type
     // размер для m_TimeBlock
     m_TimeArrSize: integer;
     m_spmsize: integer;
+    addnull:boolean;
     // усредненнй спектр
     m_WechSpm: TCmxArray_d;
     m_Cxy: TCmxArray_d;
@@ -102,8 +103,9 @@ type
     m_TimeBlock: TDoubleArray;
     // спектр амплитуд.
     m_mod,
-    // блок данных по которому идет расчет спектра.
-    m_TimeBlockFlt: TAlignDarray;
+    // блок данных по которому идет расчет спектра. (с учетом окна)
+    m_TimeBlockFlt,
+    m_TimeBlockFltNull: TAlignDarray;
     // спектр re_im
     m_ClxData: TAlignDCmpx;
   protected
@@ -211,14 +213,14 @@ type
   public
     m_color:point3;
     m_colorAlt:point3;
-    m_freq: double;
+    //m_freq: double;
     // размер блока для расчета спектра = freq*Numpoints
     blSize: double;
-    // блок данных по которому идет расчет.
-    m_T1data: TAlignDarray;
     fDataCount: integer; // количество данных в m_T1data
     // спектр re_im
     m_T1ClxData: TAlignDCmpx;
+    // блок данных по которому идет расчет.
+    m_T1data: TAlignDarray;
     // спектр амплитуд
     m_rms: TAlignDarray;
     // синтезированная передаточная характеристика (усредненная)
@@ -250,6 +252,7 @@ type
   protected
     procedure setcfg(c: cSpmCfg);
   public
+    procedure updateBlock(p_spmSize:integer; p_timeBlock:integer);
     property cfg: cSpmCfg read fcfg write setcfg;
     function name: string;
     function getTaho:cSRSTaho;
@@ -1615,8 +1618,6 @@ begin
   c.FFTProp.StartInd := 0;
 
   GetMemAlignedArray_d(c.fportionsizei, lt.m_T1data);
-  // GetMemAlignedArray_cmpx_d(c.m_fftCount, lt.m_T1ClxData);
-  // GetMemAlignedArray_d(c.m_fftCount, lt.m_rms);
   for i := 0 to c.SRSCount - 1 do
   begin
     s := c.GetSrs(i);
@@ -2014,7 +2015,8 @@ begin
             block.m_timeMax:=t.m_MaxTime;
             block.prepareData;
             block.BuildSpm;
-            s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p), pcount);
+            s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p),
+                             pcount);
             s.line.flength := pcount;
 
             block.m_connectedInd:=m_lastTahoBlock.index;
@@ -3633,6 +3635,25 @@ begin
   m_shockList.m_cfg := c;
 end;
 
+procedure cSRSres.updateBlock(p_spmSize, p_timeBlock: integer);
+var
+  j:integer;
+  bl:TDataBlock;
+begin
+  for j := 0 to m_shockList.Count - 1 do
+  begin
+    bl:=m_shockList.getBlock(j);
+    if bl.m_spmsize<>p_spmSize then
+    begin
+      bl.m_spmsize:=p_spmSize;
+      bl.m_TimeArrSize:=p_timeBlock;
+      FreeMemAligned(bl.m_TimeBlockFltNull);
+      GetMemAlignedArray_d( p_spmSize,
+                            bl.m_TimeBlockFltNull);
+    end;
+  end;
+end;
+
 { cSRSFactory }
 
 constructor cFRFFactory.create;
@@ -3916,17 +3937,31 @@ var
   c: cSpmCfg;
   t: cSRSTaho;
   maxT, maxS: double;
-  i, halfNP: integer;
+  i, ind: integer;
 begin
   c := TDataBlockList(m_owner).m_cfg;
-  fft_al_d_sse(TDoubleArray(m_TimeBlockFlt.p), TCmxArray_d(m_ClxData.p),
-    cSpmCfg(c).FFTProp);
-  // расчет первого спектра
-  k := 2 / c.m_fftCount;
-  halfNP := c.m_fftCount shr 1;
+  if addnull then
+  begin
+    fft_al_d_sse(TDoubleArray(m_TimeBlockFlt.p),
+                 TDoubleArray(m_TimeBlockFltNull.p),
+                 TCmxArray_d(m_ClxData.p),
+                 cSpmCfg(c).FFTProp);
+    k:=2/ m_TimeArrSize;
+  end
+  else
+  begin
+    fft_al_d_sse(TDoubleArray(m_TimeBlockFlt.p),
+                 TCmxArray_d(m_ClxData.p),
+                 cSpmCfg(c).FFTProp);
+    // расчет первого спектра
+    k := 2 / c.m_fftCount;
+  end;
+
   MULT_SSE_al_cmpx_d(TCmxArray_d(m_ClxData.p), k);
+  // расчет по m_ClxData квадрат амплитудн спектра
   evalmod2;
   EvalSpmMag(TCmxArray_d(m_ClxData.p), TDoubleArray(m_mod.p));
+  //FindMaxAndIndex(TDoubleArray(m_mod.p), v, ind);
 end;
 
 constructor TDataBlock.create;
@@ -4017,14 +4052,20 @@ begin
   // дополняем нулями
   if p_timesize < p_spmsize then
   begin
-    // zeromem???
-    p_timesize := p_spmsize;
+    //p_timesize := p_spmsize;
   end;
   if p_timesize > result.m_timecapacity then
   begin
     SetLength(result.m_TimeBlock, p_timesize);
     result.m_timecapacity := p_timesize;
     GetMemAlignedArray_d(p_timesize, result.m_TimeBlockFlt);
+    result.addnull:=false;
+    if p_spmsize>p_timesize then
+    begin
+      result.addnull:=true;
+      // выделяем память под блок с дополнением нулями
+      GetMemAlignedArray_d(p_timesize+p_spmsize-p_timesize, result.m_TimeBlockFltNull);
+    end;
   end;
   GetMemAlignedArray_cmpx_d(p_spmsize, result.m_ClxData);
   GetMemAlignedArray_d(p_spmsize, result.m_mod);
