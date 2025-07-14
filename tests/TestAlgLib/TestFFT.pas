@@ -28,6 +28,7 @@ type
     UseShaders: TCheckBox;
     CheckBox1: TCheckBox;
     SpmDxFe: TFloatEdit;
+    Splitter1: TSplitter;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure MultArraySSEClick(Sender: TObject);
@@ -177,7 +178,7 @@ var
   p:tpair;
   STR:STRING;
   i, j:integer;
-  t, tzoom, spmTrend, spmTrendZoom:cBuffTrend1d;
+  t, spmTrend, spmTrendZoom:cBuffTrend1d;
 
   a:caxis;
   curs:cYCursor;
@@ -209,22 +210,20 @@ begin
   //for I := 0 to 4 do
   begin
     Fs:=10000;
-    // F1=1000; F2=10
     f1:=1000; f2:=10;
     dPhase1:=2*pi*F1/Fs;
     dPhase2:=2*pi*F2/Fs;
     Phase1:=0;
     Phase2:=0;
-    a:=cpage(cChart1.activePage).activeAxis;
-    t:=cBuffTrend1d.create;
-    t.flength:=FCount;
-    for j :=0 to t.flength - 1 do
+    for j :=0 to fCount - 1 do
     begin
       tdoublearray(AlignedSampl.p)[j]:=1*Sin(Phase1)+1*Sin(Phase2);
       Phase1:=Phase1+dPhase1;
       Phase2:=Phase2+dPhase2;
     end;
-    // fs=10 kHz
+    a:=cpage(cChart1.activePage).activeAxis;
+    t:=cBuffTrend1d.create;
+    t.flength:=FCount;
     t.dx:=1/Fs;
     t.color:=colorarray[0];
     a.AddChild(t);
@@ -255,22 +254,10 @@ begin
   EvalSpmMag(tcmxArray_d(CmxArray.p), TDoubleArray(MagFFTarray.p));
   MULT_SSE_al_d(TDoubleArray(MagFFTarray.p), 1/fcount);
 
-  FFTProp.m_Zoom:=false;
-  FFTProp.m_ZoomOrd:=0;
-  // расчет zoom спектра
-  a:=cpage(cChart1.activePage).activeAxis;
-  tzoom:=cBuffTrend1d.create;
-  tzoom.flength:=FCount;
-  // fs=10 kHz
-  tzoom.dx:=1/(Fs/Power(2,FFTProp.m_ZoomOrd));
-  tzoom.color:=red;
-  a.AddChild(tzoom);
-
   // с добавкой нулей
   move(tdoublearray(AlignedSampl.p)[0],tdoublearray(AlignedSampl2.p)[0],fcount*sizeof(double));
   fft_al_d_sse(tdoublearray(AlignedSampl2.p),
                tcmxArray_d(CmxArrayZoom.p), FFTProp2);
-  tzoom.AddPoints(tdoublearray(AlignedSampl.p));
   EvalSpmMag(tcmxArray_d(CmxArrayZoom.p), TDoubleArray(MagFFTarrayZoom.p));
   MULT_SSE_al_d(TDoubleArray(MagFFTarrayZoom.p), 1/fcount);
 
