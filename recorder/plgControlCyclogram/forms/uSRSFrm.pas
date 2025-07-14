@@ -1318,8 +1318,10 @@ begin
             block.BuildSpm;
             s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p), pcount);
             s.line.flength := pcount;
-
-            block.m_connectedInd:=m_lastTahoBlock.index;
+            if m_lastTahoBlock<>nil then
+              block.m_connectedInd:=m_lastTahoBlock.index
+            else
+              block.m_connectedInd:=0;
             s.m_shockProcessed := true;
             dropCount := s.m_tag.getIndex(t.TrigInterval.x);
             if dropCount>0 then

@@ -180,19 +180,22 @@ object GenFrm: TGenFrm
       end
     end
   end
-  object PageControl1: TPageControl
+  object TabControl: TPageControl
     Left = 0
     Top = 0
     Width = 638
     Height = 288
-    ActivePage = MeandrTS
+    ActivePage = ShockPage
     Align = alClient
     TabOrder = 1
+    ExplicitTop = -6
     object MeandrTS: TTabSheet
       Caption = #1052#1077#1072#1085#1076#1088
+      ExplicitLeft = 6
+      ExplicitTop = 22
       object Label1: TLabel
         Left = 16
-        Top = 16
+        Top = 15
         Width = 195
         Height = 13
         Caption = #1057#1082#1074#1072#1078#1085#1086#1089#1090#1100' ('#1055#1077#1088#1080#1086#1076'/'#1044#1083#1080#1090'. '#1080#1084#1087#1091#1083#1100#1089#1072')'
@@ -207,6 +210,147 @@ object GenFrm: TGenFrm
         Value = 2.000000000000000000
       end
     end
+    object ShockPage: TTabSheet
+      Caption = 'Shock'
+      ImageIndex = 1
+      ExplicitLeft = 5
+      ExplicitTop = 22
+      object AmplImpactLabel: TLabel
+        Left = 18
+        Top = 49
+        Width = 61
+        Height = 13
+        Caption = 'Ampl. impact'
+      end
+      object RefAmpl: TLabel
+        Left = 18
+        Top = 105
+        Width = 44
+        Height = 13
+        Caption = 'Ampl ref.'
+      end
+      object ShockCountL: TLabel
+        Left = 18
+        Top = 151
+        Width = 57
+        Height = 13
+        Caption = 'ShockCount'
+      end
+      object RefLenL: TLabel
+        Left = 162
+        Top = 105
+        Width = 38
+        Height = 13
+        Caption = 'Ref. len'
+      end
+      object ImpactLenL: TLabel
+        Left = 162
+        Top = 49
+        Width = 50
+        Height = 13
+        Caption = 'Impact len'
+      end
+      object RefShiftL: TLabel
+        Left = 305
+        Top = 105
+        Width = 45
+        Height = 13
+        Caption = 'Ref. shift'
+      end
+      object FsLab: TLabel
+        Left = 18
+        Top = 2
+        Width = 61
+        Height = 13
+        Caption = 'Ampl. impact'
+      end
+      object PauseLabel: TLabel
+        Left = 18
+        Top = 201
+        Width = 38
+        Height = 13
+        Caption = 'Ref. len'
+      end
+      object AmplImpact: TFloatSpinEdit
+        Left = 18
+        Top = 68
+        Width = 121
+        Height = 22
+        Increment = 0.100000000000000000
+        TabOrder = 0
+        Value = 2.000000000000000000
+      end
+      object AmplRefFE: TFloatSpinEdit
+        Left = 18
+        Top = 124
+        Width = 121
+        Height = 22
+        Increment = 0.100000000000000000
+        TabOrder = 1
+        Value = 1.000000000000000000
+      end
+      object RefLenE: TFloatSpinEdit
+        Left = 162
+        Top = 124
+        Width = 121
+        Height = 22
+        Increment = 0.100000000000000000
+        TabOrder = 2
+        Value = 0.030000000000000000
+      end
+      object ImpactLenSE: TFloatSpinEdit
+        Left = 162
+        Top = 68
+        Width = 121
+        Height = 22
+        Increment = 0.100000000000000000
+        TabOrder = 3
+        Value = 0.030000000000000000
+      end
+      object RefShiftSE: TFloatSpinEdit
+        Left = 305
+        Top = 124
+        Width = 121
+        Height = 22
+        Increment = 0.003000000000000000
+        TabOrder = 4
+        Value = 0.003000000000000000
+      end
+      object FsFe: TFloatSpinEdit
+        Left = 18
+        Top = 21
+        Width = 121
+        Height = 22
+        Increment = 0.100000000000000000
+        TabOrder = 5
+        Value = 57600.000000000000000000
+      end
+      object ImpactE: TEdit
+        Left = 305
+        Top = 21
+        Width = 121
+        Height = 21
+        TabOrder = 6
+        Text = 'Impact'
+      end
+      object RefNameE: TEdit
+        Left = 305
+        Top = 68
+        Width = 121
+        Height = 21
+        TabOrder = 7
+        Text = 'Ref'
+      end
+      object PauseFe: TFloatSpinEdit
+        Left = 17
+        Top = 220
+        Width = 121
+        Height = 22
+        Increment = 0.100000000000000000
+        TabOrder = 8
+        Value = 1.000000000000000000
+      end
+    end
   end
   object GroupBox1: TGroupBox
     Left = 0
@@ -219,7 +363,7 @@ object GenFrm: TGenFrm
     DesignSize = (
       638
       56)
-    object Button1: TButton
+    object CancelBtn: TButton
       Left = 22
       Top = 28
       Width = 75
@@ -228,9 +372,9 @@ object GenFrm: TGenFrm
       ModalResult = 2
       TabOrder = 0
     end
-    object Button2: TButton
-      Left = 551
-      Top = 24
+    object ApplyBtn: TButton
+      Left = 560
+      Top = 28
       Width = 75
       Height = 25
       Anchors = [akTop, akRight]
@@ -238,5 +382,15 @@ object GenFrm: TGenFrm
       ModalResult = 1
       TabOrder = 1
     end
+  end
+  object ShockCountIE: TSpinEdit
+    Left = 22
+    Top = 194
+    Width = 121
+    Height = 22
+    MaxValue = 0
+    MinValue = 0
+    TabOrder = 3
+    Value = 2
   end
 end

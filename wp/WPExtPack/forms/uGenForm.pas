@@ -10,13 +10,13 @@ uses
 type
   TGenFrm = class(TForm)
     ActionGB: TGroupBox;
-    PageControl1: TPageControl;
+    TabControl: TPageControl;
     MeandrTS: TTabSheet;
     SKse: TFloatSpinEdit;
     Label1: TLabel;
     GroupBox1: TGroupBox;
-    Button1: TButton;
-    Button2: TButton;
+    CancelBtn: TButton;
+    ApplyBtn: TButton;
     FSLabel: TLabel;
     FSse: TSpinEdit;
     LengthSE: TFloatSpinEdit;
@@ -35,11 +35,32 @@ type
     A1se: TFloatSpinEdit;
     A2se: TFloatSpinEdit;
     AmpRG: TRadioGroup;
+    ShockPage: TTabSheet;
+    AmplImpactLabel: TLabel;
+    AmplImpact: TFloatSpinEdit;
+    RefAmpl: TLabel;
+    AmplRefFE: TFloatSpinEdit;
+    ShockCountIE: TSpinEdit;
+    ShockCountL: TLabel;
+    RefLenL: TLabel;
+    RefLenE: TFloatSpinEdit;
+    ImpactLenSE: TFloatSpinEdit;
+    ImpactLenL: TLabel;
+    RefShiftL: TLabel;
+    RefShiftSE: TFloatSpinEdit;
+    FsLab: TLabel;
+    FsFe: TFloatSpinEdit;
+    ImpactE: TEdit;
+    RefNameE: TEdit;
+    PauseFe: TFloatSpinEdit;
+    PauseLabel: TLabel;
     procedure FreqRGClick(Sender: TObject);
     procedure AmpRGClick(Sender: TObject);
   private
     vPhase, aPhase, a:double;
   private
+    procedure GenMeandr;
+    procedure GenShock;
     // решаем уравнение x:=x0+v0*t+a*tt/2
     function GetSqrX(x0, v0, a, t:double):double;
     function GetScale(t:double):double;
@@ -79,6 +100,122 @@ begin
   else
   begin
     f2se.Enabled:=true;
+  end;
+end;
+
+procedure TGenFrm.GenMeandr;
+var
+  i, len:cardinal;
+  val, phase, dt, t, p0:double;
+  s:iwpsignal;
+  d:idispatch;
+begin
+  case freqrg.ItemIndex of
+    // постоянная частота
+    0:a:=0;
+    // линейный рост частоты
+    1:a:=(f2se.Value-f1se.Value)/LengthSE.Value;
+  end;
+  len:=round(fsse.value*lengthse.value);
+  dt:=1/fsse.Value;
+  t:=0;
+  Vphase:=F1SE.Value*2*pi;
+  Aphase:=a*2*pi;
+
+  s:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
+  //-- помещаем сигнал в дерево
+  posbase.winpos.Link('/Signals/generator', 'Меандр', S as IDispatch);
+  posbase.winpos.Refresh();
+  //-- зададим длину сигнала
+  S.size:= Len;
+  s.DeltaX:=dt;
+  for I := 0 to len - 1 do
+  begin
+    phase:=GetPhase(t)+p0;
+    // убираем целое число периодов
+    phase:=phase-2*pi*trunc(phase/(2*pi));
+    // значение
+    val:=GetLevel(phase)*GetScale(t);
+    t:=t+dt;
+    s.SetY(i, val);
+  end;
+end;
+
+procedure TGenFrm.GenShock;
+var
+  i, len:cardinal;
+  val, phase, dt, period,curt, t, p0, dp1, dp2:double;
+  s1,s2:iwpsignal;
+  d:idispatch;
+  j: Integer;
+begin
+  if ImpactLenSE.Value>(RefLenE.Value+RefShiftSE.Value) then
+  begin
+    t:=ImpactLenSE.Value;
+  end
+  else
+  begin
+    t:=RefLenE.Value+RefShiftSE.Value;
+  end;
+
+  t:=t+PauseFe.Value;
+  period:=t;
+  t:=t*ShockCountIE.Value;
+  len:=round(fsfe.value*t);
+  dt:=1/fsFe.Value;
+
+  s1:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
+  s2:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
+  //-- помещаем сигнал в дерево
+  posbase.winpos.Link('/Signals/generator', ImpactE.Text, S1 as IDispatch);
+  posbase.winpos.Link('/Signals/generator', RefNameE.Text, S2 as IDispatch);
+  posbase.winpos.Refresh();
+  //-- зададим длину сигнала
+  S1.size:= Len;
+  s1.DeltaX:=dt;
+  S2.size:= Len;
+  s2.DeltaX:=dt;
+  s1.StartX:=0;
+  s2.StartX:=0;
+  dp1:=ImpactLenSE.Value/FsFe.Value;
+  dp2:=RefLenE.Value/FsFe.Value;
+  j:=0;
+  curt:=0;
+  for I := 0 to ShockCountIE.Value - 1 do
+  begin
+    while j<=len do
+    begin
+      if curt<PauseFe.Value then
+      begin
+        s1.SetY(j,0);
+        s2.SetY(j,0);
+      end
+      else
+      begin
+        phase:=pi*(curt-PauseFe.Value)/ImpactLenSE.Value;
+        if phase>pi then
+        begin
+          s1.SetY(j,0);
+        end
+        else
+          s1.SetY(j,AmplImpact.Value*sin(phase));
+        if (curt-PauseFe.Value)<RefShiftSE.Value then
+        begin
+          s2.SetY(j,0);
+        end
+        else
+        begin
+          phase:=pi*(curt-PauseFe.Value-RefShiftSE.Value)/ImpactLenSE.Value;
+          s2.SetY(j,AmplImpact.Value*AmplRefFE.Value*sin(phase));
+        end;
+      end;
+      inc(j);
+      curt:=curt+dt;
+      if curt>period then
+      begin
+        curt:=curt-period;
+      end;
+    end;
   end;
 end;
 
@@ -130,7 +267,7 @@ function TGenFrm.GetLevel(phase:double):double;
 var
   P:double;
 begin
-  case PageControl1.tabIndex of
+  case TabControl.tabIndex of
     // меандр
     0:
     begin
@@ -144,44 +281,14 @@ begin
 end;
 
 Function TGenFrm.ShowModal:integer;
-var
-  i, len:cardinal;
-  val, phase, dt, t, p0:double;
-  s:iwpsignal;
-  d:idispatch;
 begin
   AmpRGClick(nil);
   FreqRGClick(nil);
   if inherited showmodal=mrok then
   begin
-    case freqrg.ItemIndex of
-      // постоянная частота
-      0:a:=0;
-      // линейный рост частоты
-      1:a:=(f2se.Value-f1se.Value)/LengthSE.Value;
-    end;
-    len:=round(fsse.value*lengthse.value);
-    dt:=1/fsse.Value;
-    t:=0;
-    Vphase:=F1SE.Value*2*pi;
-    Aphase:=a*2*pi;
-
-    s:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
-    //-- помещаем сигнал в дерево
-    posbase.winpos.Link('/Signals/generator', 'Меандр', S as IDispatch);
-    posbase.winpos.Refresh();
-    //-- зададим длину сигнала
-    S.size:= Len;
-    s.DeltaX:=dt;
-    for I := 0 to len - 1 do
-    begin
-      phase:=GetPhase(t)+p0;
-      // убираем целое число периодов
-      phase:=phase-2*pi*trunc(phase/(2*pi));
-      // значение
-      val:=GetLevel(phase)*GetScale(t);
-      t:=t+dt;
-      s.SetY(i, val);
+    case TabControl.ActivePageIndex of
+      0:GenMeandr;
+      1:GenShock;
     end;
   end;
 end;

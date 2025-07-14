@@ -29,6 +29,7 @@ object FRFFrm: TFRFFrm
     Top = 0
     Width = 497
     Height = 504
+    Cursor = crSizeAll
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2

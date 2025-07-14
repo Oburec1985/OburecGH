@@ -17,7 +17,7 @@ uses
   tags,
   complex,
   uTextLabel,
-  uBuffTrend1d,  utrend, uaxis, uYCursor,
+  uBuffTrend1d, utrend, uaxis, uYCursor,
   uCommonTypes,
   pluginClass,
   shellapi,
@@ -93,7 +93,7 @@ type
     // размер для m_TimeBlock
     m_TimeArrSize: integer;
     m_spmsize: integer;
-    addnull:boolean;
+    addnull: boolean;
     // усредненнй спектр
     m_WechSpm: TCmxArray_d;
     m_Cxy: TCmxArray_d;
@@ -104,8 +104,7 @@ type
     // спектр амплитуд.
     m_mod,
     // блок данных по которому идет расчет спектра. (с учетом окна)
-    m_TimeBlockFlt,
-    m_TimeBlockFltNull: TAlignDarray;
+    m_TimeBlockFlt, m_TimeBlockFltNull: TAlignDarray;
     // спектр re_im
     m_ClxData: TAlignDCmpx;
   protected
@@ -192,10 +191,10 @@ type
   public
     procedure setWnd(wf: TSpmWndFunc; x1, x2, y: double); overload;
     procedure setWnd(wf: TSpmWndFunc); overload;
-    function addSRS(s: pointer):csrsres;
+    function addSRS(s: pointer): cSRSres;
     procedure delSRS(s: tobject);
-    function GetSrs(i: integer): cSRSres;overload;
-    function GetSrs(s: string): cSRSres;overload;
+    function GetSrs(i: integer): cSRSres; overload;
+    function GetSrs(s: string): cSRSres; overload;
     function SRSCount: integer;
     // частота дискретизации сигнала
     function Freq: double;
@@ -211,9 +210,9 @@ type
   public
     m_tag: ctag;
   public
-    m_color:point3;
-    m_colorAlt:point3;
-    //m_freq: double;
+    m_color: point3;
+    m_colorAlt: point3;
+    // m_freq: double;
     // размер блока для расчета спектра = freq*Numpoints
     blSize: double;
     fDataCount: integer; // количество данных в m_T1data
@@ -236,14 +235,14 @@ type
     // 1 - x, 2- y, 3 - z, 0 - noAx
     m_axis,
     // прибавлять номер точки
-    m_incPNum:byte;
+    m_incPNum: byte;
     // список найденных флагов (сравнивается с флагами в полосах)
-    m_flags:array of point2d;
+    m_flags: array of point2d;
     // список найденных экстремумов на линии для сравненияс
     // полосами TExtremum1d
-    m_extremums:tlist;
+    m_extremums: tlist;
     // экстремумы совпали с диапазоном полос tspmband
-    m_checkres:boolean;
+    m_checkres: boolean;
   private
     fcfg: cSpmCfg;
     fComInt: point2d;
@@ -252,25 +251,25 @@ type
   protected
     procedure setcfg(c: cSpmCfg);
   public
-    procedure updateBlock(p_spmSize:integer; p_timeBlock:integer);
+    procedure updateBlock(p_spmsize: integer; p_timeBlock: integer);
     property cfg: cSpmCfg read fcfg write setcfg;
     function name: string;
-    function getTaho:cSRSTaho;
+    function getTaho: cSRSTaho;
     constructor create;
     destructor destroy;
   end;
 
   // выключен/ найден/ завершен TrEnd - накоплены данные для удара на тахо канале
   TtrigStates = (TrOff, TrRise,
-  // найден но не финализирован
-  TrFall, TrEnd);
+    // найден но не финализирован
+    TrFall, TrEnd);
 
   cSRSTaho = class
   public
     // профиль испытания
-    m_profile:cprofile;
+    m_profile: cprofile;
 
-    m_color:point3;
+    m_color: point3;
     m_frm: tform;
     m_CohTreshold,
     // Амплдитуда для обнаружения события
@@ -300,7 +299,7 @@ type
     // номер удара в серии
     fShockInd: integer;
     // начало и конец найденного для обработки удара
-    m_MaxTime:double;
+    m_MaxTime: double;
     TrigInterval: point2d;
   private
     fSpmCfgList: tlist;
@@ -369,20 +368,20 @@ type
     procedure WelchCBClick(sender: tobject);
     procedure DisableCBClick(sender: tobject);
     procedure SPMcbClick(sender: tobject);
-    procedure doShowLines(Sender: TObject);
-    procedure SignalsLVClick(Sender: TObject);
-    procedure ResTypeRGClick(Sender: TObject);
+    procedure doShowLines(sender: tobject);
+    procedure SignalsLVClick(sender: tobject);
+    procedure ResTypeRGClick(sender: tobject);
     procedure SignalsLVColumnBtnClick(item: TListItem; lv: TListView);
-    procedure BladeSEUpClick(Sender: TObject);
-    procedure SpmChartMouseZoom(Sender: TObject; UpScale: Boolean);
-    procedure BladeSEDownClick(Sender: TObject);
+    procedure BladeSEUpClick(sender: tobject);
+    procedure SpmChartMouseZoom(sender: tobject; UpScale: boolean);
+    procedure BladeSEDownClick(sender: tobject);
   public
     // отступ слева и длительность
     m_ShiftLeft, m_Length: double;
 
     ready: boolean;
     // показывать флажки на максимумы
-    m_showflags, m_showBandLab:boolean;
+    m_showflags, m_showBandLab: boolean;
     // axRef - воздействие; ax - отклик
     axRef, TimeAx: caxis;
     // h0, h1, h2                         -
@@ -392,7 +391,7 @@ type
 
     m_expWndline: cExpFuncObj;
     // профиль текущего выбраного тахо
-    m_profileline:ctrend;
+    m_profileline: ctrend;
     // список настроек Тахо
     m_TahoList: tlist;
     // spm
@@ -400,7 +399,7 @@ type
     m_minX, m_maxX: double;
     m_minY, m_maxY: double;
     // текущая частота
-    m_curFreq:double;
+    m_curFreq: double;
     m_saveT0: boolean;
 
     m_UseWelch: boolean;
@@ -414,12 +413,12 @@ type
     // редактировать отклик
     m_corrS: boolean;
 
-    m_bands:bList;
+    m_bands: bList;
     // текстовые метки на полосах
-    m_labList:tlist;
+    m_labList: tlist;
   protected
     // курсор для триггера
-    Ycurs:cYCursor;
+    Ycurs: cYCursor;
 
     fdelBtn: boolean; // нажали кнопку удалить удар
     fUpdateFrf: boolean; // обновился frf
@@ -430,16 +429,16 @@ type
     procedure EvalWelchBCount;
     procedure setNewAx(b: boolean);
     procedure ShowSignalsLV;
-    procedure Showbladestatus(s:integer);
+    procedure Showbladestatus(s: integer);
   public
     // просчитать по линиям флаги и сравнить их с band
     // если не попадают в bands то лопатка бракованная
     // сразу сохраняет в БД отчет по лопатке в excel
-    function CheckFlags:boolean;
-    procedure SaveReport(repname: string; bl:cBladeFolder);
+    function CheckFlags: boolean;
+    procedure SaveReport(repname: string; bl: cBladeFolder);
     // построить отчет по турбине
     procedure buildReport();
-    procedure doOnZoom(sender:tobject);
+    procedure doOnZoom(sender: tobject);
     function hideind: integer;
     procedure delCurrentShock;
     PROCEDURE ShowShock(shock: integer);
@@ -450,27 +449,27 @@ type
     procedure ShowSpm;
     procedure ShowPhase;
     // сколько выбранных сигналов
-    function CheckedCount:integer;
+    function CheckedCount: integer;
     procedure UpdateView;
     // возвращает найден ли удар или нет. Вызов внутри updatedata
-    function SearchTrig(t:cSRSTaho):boolean;
-    procedure updatedata;override;
+    function SearchTrig(t: cSRSTaho): boolean;
+    procedure updatedata; override;
     // выделение памяти. происходит при загрузке или смене конфига
     procedure UpdateBlocks;
     procedure UpdateChart;
     procedure doStart;
     procedure addTaho(t: cSRSTaho);
     function getTaho: cSRSTaho;
-    function getRes(s:string): cSRSres;
+    function getRes(s: string): cSRSres;
     procedure RBtnClick(sender: tobject);
     procedure TestCoh;
     procedure updateFrf(rebuildspm: boolean);
     procedure updateWelchFrf;
-    function  ActiveSignal:cSRSres;
-    function  MaxSpmY:double;
-    function  MinSpmY:double;
+    function ActiveSignal: cSRSres;
+    function MaxSpmY: double;
+    function MinSpmY: double;
     // обновить надписи в метках полос
-    procedure UpdateBands(s:cSRSres);
+    procedure UpdateBands(s: cSRSres);
     procedure UpdateBandNames;
     procedure UpdateLabels;
   public
@@ -492,7 +491,7 @@ type
   cFRFFactory = class(cRecBasicFactory)
   public
     // merafile
-    m_meraFile: string;
+    m_MeraFile: string;
     m_ShockFile: string;
   private
     m_counter: integer;
@@ -504,7 +503,7 @@ type
     procedure doRecorderInit; override;
   public
     procedure doAfterLoad; override;
-    procedure doUpdateData;override;
+    procedure doUpdateData; override;
     procedure doChangeRState(sender: tobject);
     procedure doStart;
     procedure doStop;
@@ -512,7 +511,7 @@ type
     constructor create;
     destructor destroy; override;
     // создаем метки
-    procedure CreateBands(f:TFRFFrm; base:cBladeBase);
+    procedure CreateBands(f: TFRFFrm; base: cBladeBase);
     function doCreateForm: cRecBasicIFrm; override;
     procedure doSetDefSize(var PSize: SIZE); override;
   end;
@@ -557,7 +556,6 @@ begin
   move(t.m_ReadData[int.x], buf.p^, result * sizeof(double));
 end;
 
-
 function TextLabelsComparator(p1, p2: pointer): integer;
 begin
   if cTextLabel(p1).Position.x > cTextLabel(p2).Position.x then
@@ -570,7 +568,6 @@ begin
       result := 0;
   end;
 end;
-
 
 function correctPos(aX: caxis; page: cpage; p: point2d): point2d;
 var
@@ -626,7 +623,8 @@ begin
   for j := i - 1 downto 0 do
   begin
     l2 := cTextLabel(flags.Items[j]);
-    if not l2.visible then continue;
+    if not l2.visible then
+      continue;
     r2 := l2.boundrect;
     r2 := corrcetBound(r2);
     // не ушли за правую границу
@@ -652,67 +650,65 @@ end;
 
 { TSRSFrm }
 
-
 procedure TFRFFrm.addTaho(t: cSRSTaho);
 begin
   t.m_frm := self;
   m_TahoList.Add(t);
 end;
 
-procedure TFRFFrm.BladeSEDownClick(Sender: TObject);
+procedure TFRFFrm.BladeSEDownClick(sender: tobject);
 var
-  s:cStageFolder;
-  bl, sb:cbladefolder;
+  s: cStageFolder;
+  bl, sb: cBladeFolder;
 begin
-  s:=g_mbase.SelectStage;
-  if s<>nil then
+  s := g_mbase.SelectStage;
+  if s <> nil then
   begin
-    sb:=g_mbase.SelectBlade;
-    if sb<>nil then
+    sb := g_mbase.SelectBlade;
+    if sb <> nil then
     begin
-      bl:=cbladefolder(s.GetPrev(sb));
-      if bl<>nil then
+      bl := cBladeFolder(s.GetPrev(sb));
+      if bl <> nil then
       begin
-        s.selected:=bl;
-        BladeNumEdit.Text:=bl.name;
+        s.selected := bl;
+        BladeNumEdit.Text := bl.name;
         Showbladestatus(bl.m_res);
       end;
     end;
   end;
 end;
 
-procedure TFRFFrm.BladeSEUpClick(Sender: TObject);
+procedure TFRFFrm.BladeSEUpClick(sender: tobject);
 var
-  s:cStageFolder;
-  bl, sb:cbladefolder;
+  s: cStageFolder;
+  bl, sb: cBladeFolder;
 begin
-  s:=g_mbase.SelectStage;
-  if s<>nil then
+  s := g_mbase.SelectStage;
+  if s <> nil then
   begin
-    sb:=g_mbase.SelectBlade;
-    if sb<>nil then
+    sb := g_mbase.SelectBlade;
+    if sb <> nil then
     begin
-      bl:=cbladefolder(s.GetNext(sb));
-      if bl<>nil then
+      bl := cBladeFolder(s.GetNext(sb));
+      if bl <> nil then
       begin
-        s.selected:=bl;
-        BladeNumEdit.Text:=(bl.name);
+        s.selected := bl;
+        BladeNumEdit.Text := (bl.name);
         Showbladestatus(bl.m_res);
       end;
     end;
   end;
 end;
-
 
 function TFRFFrm.CheckedCount: integer;
 var
-  i,c: Integer;
-  li:tlistitem;
+  i, c: integer;
+  li: TListItem;
 begin
-  result:=0;
-  for i := 0 to SignalsLV.items.Count - 1 do
+  result := 0;
+  for i := 0 to SignalsLV.Items.Count - 1 do
   begin
-    li:=SignalsLV.Items[i];
+    li := SignalsLV.Items[i];
     if li.Checked then
       inc(result);
   end;
@@ -720,146 +716,141 @@ end;
 
 function TFRFFrm.CheckFlags: boolean;
 var
-  t:cSRSTaho;
-  s:cSRSres;
-  cfg:cSpmCfg;
-  I, j: Integer;
-  bl:cBladeFolder;
-  b:tspmband;
-  extr:PExtremum1d;
-  res:boolean;
-  repPath, resStr:string;
-  v, vf:double;
-  minmax:point2d;
+  t: cSRSTaho;
+  s: cSRSres;
+  cfg: cSpmCfg;
+  i, j: integer;
+  bl: cBladeFolder;
+  b: tspmband;
+  extr: PExtremum1d;
+  res: boolean;
+  repPath, resStr: string;
+  v, vf: double;
+  minmax: point2d;
 begin
-  t:=getTaho;
-  cfg:=t.getCfg;
-  bl:=g_mbase.SelectBlade;
-  result:=true;
-  for I := 0 to cfg.srsCount - 1 do
+  t := getTaho;
+  cfg := t.getCfg;
+  bl := g_mbase.SelectBlade;
+  result := true;
+  for i := 0 to cfg.SRSCount - 1 do
   begin
-    s:=cfg.GetSrs(i);
-    s.m_checkres:=false;
-    b:=m_bands.getband(bl.ToneCount-1);
+    s := cfg.GetSrs(i);
+    s.m_checkres := false;
+    b := m_bands.getband(bl.ToneCount - 1);
     // поиск в экстремумов ограниченном джиапазоне (ограничение по концу посл тона)
-    FindMinMaxDouble(s.lineFrf.data_r,minmax.x,minmax.y);
-    //minmax.y:=0.01*(minmax.y-minmax.x)+minmax.x;
-    //minmax.x:=0.005*(minmax.y-minmax.x)+minmax.x;
-    minmax.y:=TrigFE.Value;
-    minmax.x:=0.5*TrigFE.Value;
-    FindExtremumsInY(s.lineFrf.data_r,
-                     1,
-                     b.m_f2i,minmax.y,
-                     minmax.x,
-                     s.m_extremums);
-    if s.m_extremums.Count=0 then
+    FindMinMaxDouble(s.lineFrf.data_r, minmax.x, minmax.y);
+    // minmax.y:=0.01*(minmax.y-minmax.x)+minmax.x;
+    // minmax.x:=0.005*(minmax.y-minmax.x)+minmax.x;
+    minmax.y := TrigFE.Value;
+    minmax.x := 0.5 * TrigFE.Value;
+    FindExtremumsInY(s.lineFrf.data_r, 1, b.m_f2i, minmax.y, minmax.x,
+      s.m_extremums);
+    if s.m_extremums.Count = 0 then
     begin
-      result:=false;
-      s.m_checkres:=false;
+      result := false;
+      s.m_checkres := false;
       break;
     end;
     for j := 0 to s.m_extremums.Count - 1 do
     begin
-      extr:=PExtremum1d(s.m_extremums[j]);
-      if m_bands.Count<j then
-        b:=m_bands.getband(j)
+      extr := PExtremum1d(s.m_extremums[j]);
+      if m_bands.Count < j then
+        b := m_bands.getband(j)
       else
-        b:=nil;
-      if b=nil then
+        b := nil;
+      if b = nil then
         break;
       // экстремумы полос и найденные должны соответствовать др. другу
-      if b.m_fmaxi=extr.Index then
+      if b.m_fmaxi = extr.Index then
       begin
 
       end
       else
       begin
-        result:=false;
+        result := false;
         break;
       end;
     end;
-    s.m_checkres:=result;
+    s.m_checkres := result;
   end;
-  result:=true;
-  for I := 0 to cfg.srsCount - 1 do
+  result := true;
+  for i := 0 to cfg.SRSCount - 1 do
   begin
-    s:=cfg.GetSrs(i);
+    s := cfg.GetSrs(i);
     if not s.m_checkres then
     begin
-      result:=false;
+      result := false;
       break;
     end;
   end;
-  resstr:='';
-  for I := 0 to m_bands.Count - 1 do
+  resStr := '';
+  for i := 0 to m_bands.Count - 1 do
   begin
-    b:=m_bands[i];
-    if s.m_extremums.Count=0 then
-      extr:=nil
+    b := m_bands[i];
+    if s.m_extremums.Count = 0 then
+      extr := nil
     else
-      extr:=PExtremum1d(s.m_extremums[i]);
-    if extr<>nil then
+      extr := PExtremum1d(s.m_extremums[i]);
+    if extr <> nil then
     begin
-      v:=extr.Value;
-      vf:=s.lineFrf.GetXByInd(extr.Index);
+      v := extr.Value;
+      vf := s.lineFrf.GetXByInd(extr.Index);
     end
     else
     begin
-      v:=0;
-      vf:=0;
+      v := 0;
+      vf := 0;
     end;
-    resstr:=resstr+floattostr(b.m_f1)+'..'+
-                   floattostr(b.m_f2)+'_'+floattostr(v)+'_'+
-                   floattostr(vf)+';';
+    resStr := resStr + floattostr(b.m_f1) + '..' + floattostr(b.m_f2)
+      + '_' + floattostr(v) + '_' + floattostr(vf) + ';';
   end;
   if result then
-    bl.m_res:=2
+    bl.m_res := 2
   else
-    bl.m_res:=1;
-  bl.m_resStr:=resstr;
+    bl.m_res := 1;
+  bl.m_resStr := resStr;
   Showbladestatus(bl.m_res);
   if not CheckExcelInstall then
   begin
     showmessage('Необходима установка Excel');
     exit;
   end;
-  repPath:=bl.BladeReport;
+  repPath := bl.BladeReport;
   // сохраняем статус лопатки
   bl.CreateXMLDesc;
   SaveReport(repPath, bl);
 end;
 
-
 procedure TFRFFrm.buildReport;
 var
-  r0, i, j, r, c:integer;
-  t:cSRSTaho;
-  s:cSRSres;
-  cfg:cSpmCfg;
-  b:tspmband;
-  extr:PExtremum1d;
-  date:TDateTime;
-  res:boolean;
+  r0, i, j, r, c: integer;
+  t: cSRSTaho;
+  s: cSRSres;
+  cfg: cSpmCfg;
+  b: tspmband;
+  extr: PExtremum1d;
+  date: TDateTime;
+  res: boolean;
   rng: olevariant;
-  str, str1, str2, repPath:string;
-  minmax:point2d;
-  v:double;
-  turb:cTurbFolder;
-  stage:cStageFolder;
-  blade:cBladeFolder;
+  str, str1, str2, repPath: string;
+  minmax: point2d;
+  v: double;
+  turb: cTurbFolder;
+  stage: cStageFolder;
+  blade: cBladeFolder;
 begin
   if VarIsEmpty(E) then
   begin
-    //if not CheckExcelRun then
+    // if not CheckExcelRun then
     begin
       CreateExcel;
       VisibleExcel(true);
     end;
   end;
-  turb:=g_mbase.SelectTurb;
-  stage:=g_mbase.SelectStage;
-  blade:=g_mbase.SelectBlade;
-  repPath:=turb.getFolder+'Report.xlsx';
+  turb := g_mbase.SelectTurb;
+  stage := g_mbase.SelectStage;
+  blade := g_mbase.SelectBlade;
+  repPath := turb.getFolder + 'Report.xlsx';
   if fileexists(repPath) then
   begin
     if not IsExcelFileOpen(repPath) then
@@ -874,7 +865,7 @@ begin
   end;
   r0 := GetEmptyRow(1, 1, 2);
   SetCell(1, r0, 2, 'Турбина:');
-  SetCell(1, r0, 3, Turb.ObjType);
+  SetCell(1, r0, 3, turb.ObjType);
   SetCell(1, r0, 4, 'Ступень:');
   SetCell(1, r0, 5, stage.m_sn);
   SetCell(1, r0, 6, 'MeraFile:');
@@ -888,24 +879,24 @@ begin
   SetCell(1, r0, 4, 'A1');
   SetCell(1, r0, 5, 'F1');
   // проход по формам (полосам)
-  blade:=nil;
-  for I := 0 to stage.BlCount - 1 do
+  blade := nil;
+  for i := 0 to stage.BlCount - 1 do
   begin
     inc(r0);
-    blade:=cbladefolder(stage.GetNext(blade));
+    blade := cBladeFolder(stage.GetNext(blade));
     SetCell(1, r0, 2, blade.name);
     for j := 0 to m_bands.Count - 1 do
     begin
-      str:=getSubStrByIndex(blade.m_resStr,';',1,j);
-      str1:=getSubStrByIndex(str, '_',1,0);
+      str := getSubStrByIndex(blade.m_resStr, ';', 1, j);
+      str1 := getSubStrByIndex(str, '_', 1, 0);
       SetCell(1, r0, 3, str1);
-      str1:=getSubStrByIndex(str, '_',1,1);
-      str2:=getSubStrByIndex(str, '_',1,2);
+      str1 := getSubStrByIndex(str, '_', 1, 1);
+      str2 := getSubStrByIndex(str, '_', 1, 2);
       SetCell(1, r0, 4, strtofloatext(str1));
       SetCell(1, r0, 5, strtofloatext(str2));
-      if blade.m_res=1 then
+      if blade.m_res = 1 then
       begin
-        rng:=GetRangeObj(1, point(r0, 2), point(r0, 5));
+        rng := GetRangeObj(1, point(r0, 2), point(r0, 5));
         rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
       end;
     end;
@@ -916,24 +907,24 @@ begin
   CloseExcel;
 end;
 
-procedure TFRFFrm.SaveReport(repname: string; bl:cBladeFolder);
+procedure TFRFFrm.SaveReport(repname: string; bl: cBladeFolder);
 var
-  r0, i, j, r, c:integer;
-  t:cSRSTaho;
-  s:cSRSres;
-  cfg:cSpmCfg;
-  b:tspmband;
-  extr:PExtremum1d;
-  date:TDateTime;
-  res:boolean;
+  r0, i, j, r, c: integer;
+  t: cSRSTaho;
+  s: cSRSres;
+  cfg: cSpmCfg;
+  b: tspmband;
+  extr: PExtremum1d;
+  date: TDateTime;
+  res: boolean;
   rng: olevariant;
-  str, repPath:string;
-  minmax:point2d;
-  v, v1:double;
+  str, repPath: string;
+  minmax: point2d;
+  v, v1: double;
 begin
   if VarIsEmpty(E) then
   begin
-    //if not CheckExcelRun then
+    // if not CheckExcelRun then
     begin
       CreateExcel;
       VisibleExcel(true);
@@ -973,8 +964,8 @@ begin
   r := r0 + 2;
   c := 2;
 
-  t:=getTaho;
-  cfg:=t.getCfg;
+  t := getTaho;
+  cfg := t.getCfg;
   for i := 0 to cfg.SRSCount - 1 do
   begin
     s := cfg.GetSrs(i);
@@ -985,51 +976,52 @@ begin
     SetCell(1, r, c + 2, 'F1');
     SetCell(1, r, c + 3, 'Res');
     // проход по формам (полосам)
-    if m_bands.Count=0 then
+    if m_bands.Count = 0 then
     begin
       SetCell(1, r + 1 + j, c, floattostr(b.m_f1) + '...' + floattostr(b.m_f2));
-      SetCell(1, r + 1 + j, c+1, 0);
-      SetCell(1, r + 1 + j, c+2, 0);
-      rng:=GetRangeObj(1, point(r + 1 + j, 2), point(r + 1 + j, 5));
-      SetCell(1, r + 1 + j, c+3, 'Не испытан');
+      SetCell(1, r + 1 + j, c + 1, 0);
+      SetCell(1, r + 1 + j, c + 2, 0);
+      rng := GetRangeObj(1, point(r + 1 + j, 2), point(r + 1 + j, 5));
+      SetCell(1, r + 1 + j, c + 3, 'Не испытан');
     end
     else
     begin
       for j := 0 to m_bands.Count - 1 do
       begin
-        b:=m_bands.getband(j);
-        SetCell(1, r + 1 + j, c, floattostr(b.m_f1) + '..' + floattostr(b.m_f2));
-        if s.m_extremums.count>0 then
+        b := m_bands.getband(j);
+        SetCell(1, r + 1 + j, c,
+          floattostr(b.m_f1) + '..' + floattostr(b.m_f2));
+        if s.m_extremums.Count > 0 then
         begin
-          if j<s.m_extremums.count then
+          if j < s.m_extremums.Count then
           begin
-            extr:=s.m_extremums[j];
-            v1:=s.lineFrf.GetXByInd(extr.Index);
-            v:=extr.Value;
+            extr := s.m_extremums[j];
+            v1 := s.lineFrf.GetXByInd(extr.Index);
+            v := extr.Value;
           end
           else
           begin
-            v1:=0;
-            v1:=0;
-            extr:=nil;
+            v1 := 0;
+            v1 := 0;
+            extr := nil;
           end;
-          SetCell(1, r + 1 + j, c+1, v);
+          SetCell(1, r + 1 + j, c + 1, v);
         end
         else
         begin
-          v:=0;
-          SetCell(1, r + 1 + j, c+1, 0);
+          v := 0;
+          SetCell(1, r + 1 + j, c + 1, 0);
         end;
-        SetCell(1, r + 1 + j, c+2, v1);
-        if (v>b.m_f1) and (v<b.m_f2) then
+        SetCell(1, r + 1 + j, c + 2, v1);
+        if (v > b.m_f1) and (v < b.m_f2) then
         begin
-          SetCell(1, r + 1 + j, c+3, 'Годен');
+          SetCell(1, r + 1 + j, c + 3, 'Годен');
         end
         else
         begin
-          rng:=GetRangeObj(1, point(r + 1 + j, c), point(r + 1 + j, c+3));
+          rng := GetRangeObj(1, point(r + 1 + j, c), point(r + 1 + j, c + 3));
           rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
-          SetCell(1, r + 1 + j, c+3, 'Не годен');
+          SetCell(1, r + 1 + j, c + 3, 'Не годен');
         end;
       end;
     end;
@@ -1056,10 +1048,10 @@ begin
   m_Length := 1;
   m_TahoList := tlist.create;
 
-  m_bands:=bList.Create;
+  m_bands := bList.create;
   m_labList := tlist.create;
-  m_showBandLab:=false;
-  m_showflags:=false;
+  m_showBandLab := false;
+  m_showflags := false;
   inherited;
 end;
 
@@ -1079,119 +1071,120 @@ var
   i: integer;
 begin
   t := getTaho;
-  if SignalsLV.ItemIndex=-1 then
-    s:=t.cfg.GetSrs(0)
+  if SignalsLV.ItemIndex = -1 then
+    s := t.cfg.GetSrs(0)
   else
-    s:=t.cfg.GetSrs(SignalsLV.ItemIndex);
-  result:=s;
+    s := t.cfg.GetSrs(SignalsLV.ItemIndex);
+  result := s;
 end;
 
-function  TFRFFrm.MaxSpmY:double;
+function TFRFFrm.MaxSpmY: double;
 begin
-  if ResTypeRG.itemindex=1 then
-    result:=1.1
+  if ResTypeRG.ItemIndex = 1 then
+    result := 1.1
   else
   begin
-    if ResTypeRG.itemindex=3 then
-      result:=180
+    if ResTypeRG.ItemIndex = 3 then
+      result := 180
     else
-      result:=m_maxY;
+      result := m_maxY;
   end;
 end;
 
-function  TFRFFrm.MinSpmY:double;
+function TFRFFrm.MinSpmY: double;
 begin
-  if ResTypeRG.itemindex=1 then
-    result:=0.1
+  if ResTypeRG.ItemIndex = 1 then
+    result := 0.1
   else
   begin
-    if ResTypeRG.itemindex=3 then
-      result:=-180
+    if ResTypeRG.ItemIndex = 3 then
+      result := -180
     else
-      result:=m_minY;
+      result := m_minY;
   end;
 end;
 
 procedure TFRFFrm.doOnZoom(sender: tobject);
 begin
   m_bands.UpdateBands;
-  //UpdateBands;
+  // UpdateBands;
   UpdateLabels;
 end;
 
-procedure TFRFFrm.doShowLines(Sender: TObject);
+procedure TFRFFrm.doShowLines(sender: tobject);
 var
   s: cSRSres;
   t: cSRSTaho;
-  r:frect;
-  li:tlistitem;
-  I, lcount: Integer;
+  r: frect;
+  li: TListItem;
+  i, lcount: integer;
 begin
-  for I := 0 to SignalsLV.Items.Count - 1 do
+  for i := 0 to SignalsLV.Items.Count - 1 do
   begin
-    li:=SignalsLV.Items[i];
-    if not li.Checked then continue;
-    s:=csrsres(li.Data);
-    s.lineCoh.visible:=ResTypeRG.itemindex=1;
-    if ResTypeRG.itemindex=0 then
+    li := SignalsLV.Items[i];
+    if not li.Checked then
+      continue;
+    s := cSRSres(li.Data);
+    s.lineCoh.visible := ResTypeRG.ItemIndex = 1;
+    if ResTypeRG.ItemIndex = 0 then
     begin
-      lcount:=CheckedCount;
-      s.lineFrf.visible:=lcount=1;
-      s.lineAvFRF.visible:=true;
+      lcount := CheckedCount;
+      s.lineFrf.visible := lcount = 1;
+      s.lineAvFRF.visible := true;
     end;
-    if ResTypeRG.itemindex=2 then
+    if ResTypeRG.ItemIndex = 2 then
     begin
-      s.lineSpm.visible:=true;
+      s.lineSpm.visible := true;
       ShowSpm;
     end
     else
-      s.lineSpm.visible:=false;
-    if ResTypeRG.itemindex=3 then
+      s.lineSpm.visible := false;
+    if ResTypeRG.ItemIndex = 3 then
     begin
-      s.linePhase.visible:=true;
+      s.linePhase.visible := true;
       ShowPhase;
     end
     else
-      s.linePhase.visible:=false;
+      s.linePhase.visible := false;
   end;
 
   // перекочевало сюда из showspm
   UpdateView;
-  if (ResTypeRG.itemindex=1) or (ResTypeRG.itemindex=3) then
+  if (ResTypeRG.ItemIndex = 1) or (ResTypeRG.ItemIndex = 3) then
   begin
-    r.BottomLeft.x:=m_minX;
-    r.TopRight.x:=m_maxX;
-    axSpm.Lg:=false;
+    r.BottomLeft.x := m_minX;
+    r.TopRight.x := m_maxX;
+    axSpm.lg := false;
   end
   else
   begin
-    r.BottomLeft.x:=m_minX;
-    r.TopRight.x:=m_maxX;
-    axSpm.Lg:=m_lgY;
+    r.BottomLeft.x := m_minX;
+    r.TopRight.x := m_maxX;
+    axSpm.lg := m_lgY;
   end;
-  r.BottomLeft.y:=MinSpmY;
-  r.TopRight.y:=MaxSpmY;
+  r.BottomLeft.y := MinSpmY;
+  r.TopRight.y := MaxSpmY;
   axSpm.ZoomfRect(r);
 end;
 
-procedure TFRFFrm.Showbladestatus(s:integer);
+procedure TFRFFrm.Showbladestatus(s: integer);
 begin
   case s of
     0:
-    begin
-      StatusEdit.Text:='Не испытан';
-      StatusEdit.Color:=clWindow;
-    end;
+      begin
+        StatusEdit.Text := 'Не испытан';
+        StatusEdit.Color := clWindow;
+      end;
     1:
-    begin
-      StatusEdit.Text:='Не годен';
-      StatusEdit.Color:=$008080FF;
-    end;
+      begin
+        StatusEdit.Text := 'Не годен';
+        StatusEdit.Color := $008080FF;
+      end;
     2:
-    begin
-      StatusEdit.Text:='Годен';
-      StatusEdit.Color:=clWindow;
-    end;
+      begin
+        StatusEdit.Text := 'Годен';
+        StatusEdit.Color := clWindow;
+      end;
   end;
 end;
 
@@ -1245,17 +1238,17 @@ end;
 
 destructor TFRFFrm.destroy;
 var
-  I: Integer;
-  t:cSRSTaho;
+  i: integer;
+  t: cSRSTaho;
 begin
-  for I := 0 to m_TahoList.Count - 1 do
+  for i := 0 to m_TahoList.Count - 1 do
   begin
-    t:=m_TahoList.Items[i];
+    t := m_TahoList.Items[i];
     t.destroy;
   end;
   m_TahoList.destroy;
-  m_bands.Destroy;
-  m_labList.Destroy;
+  m_bands.destroy;
+  m_labList.destroy;
   inherited;
 end;
 
@@ -1282,9 +1275,9 @@ begin
     t.m_tag.doOnStart;
     t.m_shockList.clearData;
     t.f_iEnd := 0;
-    t.m_MaxTime:=0;
-    t.TrigInterval.x:=0;
-    t.TrigInterval.y:=0;
+    t.m_MaxTime := 0;
+    t.TrigInterval.x := 0;
+    t.TrigInterval.y := 0;
     ZeroMemory(t.m_T1data.p, t.cfg.fportionsizei * sizeof(double));
     if t.cfg <> nil then
     begin
@@ -1292,7 +1285,7 @@ begin
       begin
         s := t.cfg.GetSrs(i);
         s.m_tag.doOnStart;
-        s.fComIntervalLen:=0;
+        s.fComIntervalLen := 0;
         s.m_shockList.clearData;
         ZeroMemory(s.m_T1data.p, t.cfg.fportionsizei * sizeof(double));
         ZeroMemory(s.m_frf, t.cfg.fHalfFft * sizeof(double));
@@ -1410,8 +1403,8 @@ var
 begin
   SpmChart.OnRBtnClick := RBtnClick;
   SpmChart.tabs.activeTab.addPage(true);
-  SpmChart.OBJmNG.Events.AddEvent('SpmChart_OnZoom', e_OnChangeAxisScale, doOnZoom);
-
+  SpmChart.OBJmNG.Events.AddEvent('SpmChart_OnZoom', e_OnChangeAxisScale,
+    doOnZoom);
 
   p := SpmChart.tabs.activeTab.GetPage(0);
   r.BottomLeft.x := 0;
@@ -1421,7 +1414,7 @@ begin
   p.ZoomfRect(r);
   p.Caption := 'Oscillogram';
   pageT := p;
-  TimeAx:=pageT.getaxis(0);
+  TimeAx := pageT.getaxis(0);
 
   p := SpmChart.tabs.activeTab.GetPage(1);
   r.BottomLeft.x := 0;
@@ -1431,33 +1424,33 @@ begin
   p.ZoomfRect(r);
   p.Caption := 'Freq Dom.';
   pageSpm := p;
-  m_profileline:=cTrend.create;
-  m_profileline.name:='Profile';
+  m_profileline := ctrend.create;
+  m_profileline.name := 'Profile';
   pageSpm.activeAxis.AddChild(m_profileline);
-  m_profileline.visible:=true;
+  m_profileline.visible := true;
 
   axSpm := p.activeAxis;
 end;
 
 procedure TFRFFrm.UpdateBandNames;
 var
-  I, j: Integer;
-  b:tSpmBand;
-  s:cSRSres;
-  t:cSRSTaho;
+  i, j: integer;
+  b: tspmband;
+  s: cSRSres;
+  t: cSRSTaho;
 begin
-  t:=getTaho;
-  if t<>nil then
+  t := getTaho;
+  if t <> nil then
   begin
-    for I := 0 to m_bands.Count - 1 do
+    for i := 0 to m_bands.Count - 1 do
     begin
-      b:=m_bands.getband(i);
+      b := m_bands.getband(i);
       b.m_trends.clear;
       for j := 0 to t.cfg.SRSCount - 1 do
       begin
-        s:=t.cfg.GetSrs(j);
+        s := t.cfg.GetSrs(j);
         b.m_trends.AddObject(s.name, s);
-        if b.flag=nil then
+        if b.flag = nil then
           b.createlabel;
         s.lineFrf.AddChild(b.flag);
       end;
@@ -1470,19 +1463,19 @@ procedure TFRFFrm.UpdateLabels;
 var
   i, j, k, ind: integer;
   b: tspmband;
-  tr:cBuffTrend1d;
+  tr: cBuffTrend1d;
   l: cTextLabel;
   p: cpage;
   a: caxis;
   x, y, max, maxX: double;
-  spmMax,pos: point2d;
+  spmMax, pos: point2d;
   // смещение положения метки для непересечения
   percentSize: point2;
   r: frect;
   // пересекаем другую метку
   intersect: boolean;
 begin
-  m_labList.Clear;
+  m_labList.clear;
   if not m_showflags then
     exit;
 
@@ -1490,37 +1483,38 @@ begin
   begin
     b := m_bands.getband(i);
     l := b.flag;
-    l.visible:=m_showflags;
+    l.visible := m_showflags;
     if not m_showflags then
       continue;
 
     a := caxis(l.GetParentByClassName('cAxis'));
     p := cpage(a.GetParentByClassName('cPage'));
-    l.visible:=true;
+    l.visible := true;
     // xMax
-    x:=b.m_freqband.m_realX;
-    //tr:=cBuffTrend1d(l.parent);
+    x := b.m_freqband.m_realX;
+    // tr:=cBuffTrend1d(l.parent);
     // UpdateBandNames создает привязки
-    tr:=ActiveSignal.lineFrf;
-    l.parent:=tr;
-    if b.m_fmaxi>tr.Count then exit;
-    if b.m_fmaxi>0 then
+    tr := ActiveSignal.lineFrf;
+    l.parent := tr;
+    if b.m_fmaxi > tr.Count then
+      exit;
+    if b.m_fmaxi > 0 then
     begin
-      max:=tr.GetYByInd(b.m_fmaxi);
-      maxX:=tr.GetXByInd(b.m_fmaxi);
-      if (b.m_fmaxi=b.m_f1i) or (b.m_fmaxi=b.m_f2i) then
+      max := tr.GetYByInd(b.m_fmaxi);
+      maxX := tr.GetXByInd(b.m_fmaxi);
+      if (b.m_fmaxi = b.m_f1i) or (b.m_fmaxi = b.m_f2i) then
       begin
-        l.visible:=false;
+        l.visible := false;
       end
       else
       begin
-        l.visible:=true;
+        l.visible := true;
       end;
     end;
     pos := correctPos(a, p, p2d(maxX, max));
     l.Position := p2(pos.x, pos.y);
     l.line := l.Position;
-    l.text := format('F:%.3g', [maxx]) + format(' V:%.3g', [max]);
+    l.Text := format('F:%.3g', [maxX]) + format(' V:%.3g', [max]);
     m_labList.Add(l);
   end;
   m_labList.Sort(TextLabelsComparator);
@@ -1543,54 +1537,55 @@ begin
       // pos.x:=pos.x+percentSize.x*a.getdx;
       pos.y := pos.y + percentSize.y * a.getdy;
       // intersectlabel(i:integer;a:caxis;flags:tlist;l:ctextlabel;pos:point2d)
-      intersect := intersectlabel(i, a, m_labList, l, p2d(0, percentSize.y * a.getdy * j));
+      intersect := intersectlabel(i, a, m_labList, l,
+        p2d(0, percentSize.y * a.getdy * j));
       inc(j);
     end;
     l.Position := p2(pos.x, pos.y);
   end;
 end;
 
-procedure TFRFFrm.UpdateBands(s:cSRSres);
+procedure TFRFFrm.UpdateBands(s: cSRSres);
 var
-  I, j: Integer;
-  b:tSpmBand;
-  act_s:cSRSres;
-  p, max:Double;
+  i, j: integer;
+  b: tspmband;
+  act_s: cSRSres;
+  p, max: double;
 begin
 
-  act_s:=ActiveSignal;
-  for I := 0 to m_bands.Count - 1 do
+  act_s := ActiveSignal;
+  for i := 0 to m_bands.Count - 1 do
   begin
-    b:=m_bands.getband(i);
+    b := m_bands.getband(i);
     if not m_showBandLab then
     begin
-      b.m_freqband.m_LineLabel.visible:=false;
+      b.m_freqband.m_LineLabel.visible := false;
     end;
 
-    b.m_f1i:=s.lineFrf.GetLowInd(b.m_f1)+1;
-    b.m_f2i:=s.lineFrf.GetLowInd(b.m_f2);
-    max:=0;
-    b.m_fmaxi:=0;
+    b.m_f1i := s.lineFrf.GetLowInd(b.m_f1) + 1;
+    b.m_f2i := s.lineFrf.GetLowInd(b.m_f2);
+    max := 0;
+    b.m_fmaxi := 0;
     for j := b.m_f1i to b.m_f2i do
     begin
-      p:=s.lineFrf.GetYByInd(j);
-      if max<p then
+      p := s.lineFrf.GetYByInd(j);
+      if max < p then
       begin
-        max:=p;
-        b.m_fmaxi:=j;
+        max := p;
+        b.m_fmaxi := j;
       end;
     end;
-    if s=act_s then
-      b.m_freqband.m_realX:=s.lineFrf.GetXByInd(b.m_fmaxi);
+    if s = act_s then
+      b.m_freqband.m_realX := s.lineFrf.GetXByInd(b.m_fmaxi);
     for j := 0 to b.m_trends.Count - 1 do
     begin
-      if s=b.m_trends.Objects[j] then
+      if s = b.m_trends.Objects[j] then
       begin
         b.m_freqband.setY(max, j);
         break;
       end;
     end;
-    b.m_freqband.name:=b.m_freqband.name;
+    b.m_freqband.name := b.m_freqband.name;
   end;
 end;
 
@@ -1604,8 +1599,8 @@ var
 begin
   refresh := GetREFRESHPERIOD;
   lt := getTaho;
-  if lt.m_tag.freq<>0 then
-    lt.line.dx:=1/lt.m_tag.freq;
+  if lt.m_tag.Freq <> 0 then
+    lt.line.dx := 1 / lt.m_tag.Freq;
 
   c := lt.cfg;
   c.fHalfFft := c.m_fftCount shr 1;
@@ -1621,8 +1616,8 @@ begin
   for i := 0 to c.SRSCount - 1 do
   begin
     s := c.GetSrs(i);
-    if s.m_tag.freq<>0 then
-      s.line.dx:=1/s.m_tag.freq;
+    if s.m_tag.Freq <> 0 then
+      s.line.dx := 1 / s.m_tag.Freq;
     GetMemAlignedArray_d(c.fportionsizei, s.m_T1data);
     // tCmxArray_d(cSRSres(s).m_T1ClxData.p)
     GetMemAlignedArray_cmpx_d(c.m_fftCount, s.m_T1ClxData);
@@ -1637,7 +1632,7 @@ begin
     SetLength(s.m_shockList.m_coh, c.fHalfFft);
 
     s.lineSpm.dx := c.fspmdx;
-    s.linePhase.dx:=c.fspmdx;
+    s.linePhase.dx := c.fspmdx;
     s.lineCoh.dx := c.fspmdx;
     s.lineFrf.dx := c.fspmdx;
     s.lineAvFRF.dx := c.fspmdx;
@@ -1655,12 +1650,12 @@ var
   a: caxis;
   bfrf: boolean;
 
-  prLine:cProfileLine;
+  prLine: cProfileLine;
 begin
   t := getTaho;
-  if t<>nil then
+  if t <> nil then
   begin
-    prLine:=cProfileLine(t.m_profile.getline('Profile'));
+    prLine := cProfileLine(t.m_profile.getline('Profile'));
     prLine.exclude(m_profileline);
   end;
 
@@ -1670,7 +1665,7 @@ begin
     a.clear;
   end;
   axSpm.clear;
-  if t=nil then
+  if t = nil then
     exit;
   c := t.getCfg;
 
@@ -1702,13 +1697,13 @@ begin
     end
     else
     begin
-      axRef:=TimeAx;
+      axRef := TimeAx;
       pageT.getaxis(0).AddChild(l);
     end;
-    l.color := t.m_color;
+    l.Color := t.m_color;
     t.line := l;
     t.line.name := t.name;
-    if t.m_tag.Freq=0 then
+    if t.m_tag.Freq = 0 then
       l.dx := 1 / t.m_tag.Freq
     else
       l.dx := 0;
@@ -1718,7 +1713,7 @@ begin
     m_expWndline.visible := UseWndFcb.Checked;
     m_expWndline.enabled := UseWndFcb.Checked;
     m_expWndline.selectable := UseWndFcb.Checked;
-    m_expWndline.fHelper:=true;
+    m_expWndline.fHelper := true;
     m_expWndline.fUpdateParams := doUpdateParams;
     TimeAx.AddChild(m_expWndline);
 
@@ -1736,16 +1731,16 @@ begin
       s := c.GetSrs(i);
       l := cBuffTrend1d.create;
       TimeAx.AddChild(l);
-      l.color := s.m_color;
+      l.Color := s.m_color;
       s.line := l;
       s.line.name := s.name;
-      if t.m_tag.Freq=0 then
+      if t.m_tag.Freq = 0 then
         l.dx := 1 / t.m_tag.Freq
       else
         l.dx := 0;
 
       l := cBuffTrend1d.create;
-      l.color := s.m_color;
+      l.Color := s.m_color;
       axSpm.AddChild(l);
       s.lineSpm := l;
       s.lineSpm.dx := c.fspmdx;
@@ -1753,15 +1748,15 @@ begin
       l.visible := not bfrf;
 
       l := cBuffTrend1d.create;
-      l.color := s.m_color;
+      l.Color := s.m_color;
       axSpm.AddChild(l);
       s.linePhase := l;
       s.linePhase.dx := c.fspmdx;
       s.linePhase.name := s.name + '_Phase';
-      l.visible := ResTypeRG.ItemIndex=3;
+      l.visible := ResTypeRG.ItemIndex = 3;
 
       l := cBuffTrend1d.create;
-      l.color := s.m_colorAlt;
+      l.Color := s.m_colorAlt;
       l.dx := c.fspmdx;
       axSpm.AddChild(l);
       s.lineFrf := l;
@@ -1769,7 +1764,7 @@ begin
       l.visible := bfrf;
 
       l := cBuffTrend1d.create;
-      l.color := s.m_color;
+      l.Color := s.m_color;
       l.dx := c.fspmdx;
       axSpm.AddChild(l);
 
@@ -1779,8 +1774,8 @@ begin
       s.lineAvFRF.visible := true;
 
       l := cBuffTrend1d.create;
-      l.color := s.m_color;
-      l.visible:=false;
+      l.Color := s.m_color;
+      l.visible := false;
       l.dx := c.fspmdx;
       axSpm.AddChild(l);
       s.lineCoh := l;
@@ -1789,16 +1784,15 @@ begin
     UpdateBandNames;
     c.typeres := c.typeres;
 
-    m_profileline:=cTrend.create;
-    m_profileline.name:='Profile';
-    m_profileline.color:=green;
+    m_profileline := ctrend.create;
+    m_profileline.name := 'Profile';
+    m_profileline.Color := green;
     pageSpm.activeAxis.AddChild(m_profileline);
-    m_profileline.visible:=true;
+    m_profileline.visible := true;
 
-    prLine:=cProfileLine(t.m_profile.getline('Profile'));
+    prLine := cProfileLine(t.m_profile.getline('Profile'));
     prLine.addline(m_profileline);
     prLine.updatepoints;
-
 
     fr.BottomLeft := p2(0, -2 * t.m_treshold);
     fr.TopRight := p2(m_Length, t.m_treshold * 2);
@@ -1807,33 +1801,33 @@ begin
 
     fr.BottomLeft := p2(m_minX, m_minY);
     fr.TopRight := p2(m_maxX, m_maxY);
-    pageSpm.LgX := m_lgX;
-    axSpm.Lg := m_lgY;
+    pageSpm.lgX := m_lgX;
+    axSpm.lg := m_lgY;
     pageSpm.ZoomfRect(fr);
   end;
   UpdateBlocks;
 end;
 
-function TFRFFrm.SearchTrig(t:cSRSTaho):boolean;
+function TFRFFrm.SearchTrig(t: cSRSTaho): boolean;
 var
   i, pcount, dropCount: integer;
   sig_interval, common_interval: point2d;
-  v, siglen, dropLen:double;
-  b:boolean;
-  s:csrsres;
+  v, siglen, dropLen: double;
+  b: boolean;
+  s: cSRSres;
 begin
-  result:=false;
+  result := false;
   if t.m_tag.UpdateTagData(true) then
   begin
     // не отбрасываем данные если находимся в состоянии когда триг найден но
     // еще не накопился целиком
     if t.fTrigState <> TrFall then
     begin
-      //logMessage('RBlock: ' + inttostr(t.m_tag.m_readyBlock));
-      sig_interval:=t.m_tag.getPortionTime;
-      siglen:=sig_interval.y;
-      //logMessage('SLen: ' + floattostr(siglen));
-      dropLen := t.m_tag.getPortionLen -  m_Length;
+      // logMessage('RBlock: ' + inttostr(t.m_tag.m_readyBlock));
+      sig_interval := t.m_tag.getPortionTime;
+      siglen := sig_interval.y;
+      // logMessage('SLen: ' + floattostr(siglen));
+      dropLen := t.m_tag.getPortionLen - m_Length;
       if dropLen > 0 then // при этом условии гарантированно остается 2*blocklen
       begin
         dropCount := trunc(dropLen * t.m_tag.Freq);
@@ -1842,8 +1836,8 @@ begin
           if dropCount > t.f_iEnd then
             dropCount := t.f_iEnd;
         end;
-        t.m_tag.ResetTagDataTimeInd(dropCount);      //1,000027805
-        //logMessage('ReadDataTime: ' +floattostr(t.m_tag.m_ReadDataTime));
+        t.m_tag.ResetTagDataTimeInd(dropCount); // 1,000027805
+        // logMessage('ReadDataTime: ' +floattostr(t.m_tag.m_ReadDataTime));
         t.f_iEnd := t.f_iEnd - dropCount;
         if t.f_iEnd < 0 then
         begin
@@ -1859,14 +1853,14 @@ begin
     if t.fTrigState = TrOff then
     begin
       for i := t.f_iEnd to t.m_tag.lastindex - 1 do
-      //for i := 0 to t.m_tag.lastindex - 1 do
+      // for i := 0 to t.m_tag.lastindex - 1 do
       begin
         v := t.m_tag.m_ReadData[i];
         if v > t.m_treshold then
         begin
           if v > t.v_max then
           begin
-            //logMessage('SLen2: ' + floattostr(siglen));
+            // logMessage('SLen2: ' + floattostr(siglen));
             t.fTrigState := TrRise;
             t.v_max := v;
             t.f_imax := i;
@@ -1878,13 +1872,13 @@ begin
           begin
             t.fTrigState := TrFall;
             // считаем границы порции
-            t.m_MaxTime:=t.m_tag.getReadTime(t.f_imax);
-            //logMessage('MaxTime: ' +floattostr(t.m_MaxTime));
+            t.m_MaxTime := t.m_tag.getReadTime(t.f_imax);
+            // logMessage('MaxTime: ' +floattostr(t.m_MaxTime));
             t.TrigInterval.x := t.m_MaxTime - m_ShiftLeft;
             t.TrigInterval.y := t.TrigInterval.x + m_Length;
-            //logMessage('TrigInterval: ' +floattostr(t.TrigInterval.x)+'...'+floattostr(t.TrigInterval.y));
+            // logMessage('TrigInterval: ' +floattostr(t.TrigInterval.x)+'...'+floattostr(t.TrigInterval.y));
             t.f_iEnd := t.m_tag.getIndex(t.TrigInterval.y);
-            result:=true;
+            result := true;
             break;
           end;
         end;
@@ -1911,12 +1905,15 @@ begin
         end;
         begin
           // AddBlock делать без перевыделения памяти!!!
-          m_lastTahoBlock := t.m_shockList.addBlock(t.cfg.m_fftCount, p2d(t.TrigInterval.x, t.TrigInterval.x + pcount / t.m_tag.Freq), TDoubleArray(t.m_T1data.p), pcount);
-          m_lastTahoBlock.m_timeMax :=t.m_MaxTime;
+          m_lastTahoBlock := t.m_shockList.addBlock(t.cfg.m_fftCount,
+            p2d(t.TrigInterval.x, t.TrigInterval.x + pcount / t.m_tag.Freq),
+            TDoubleArray(t.m_T1data.p), pcount);
+          m_lastTahoBlock.m_timeMax := t.m_MaxTime;
           // накладываем окно
           m_lastTahoBlock.prepareData;
           // рисуем с учетом окна
-          t.line.AddPoints(TDoubleArray(m_lastTahoBlock.m_TimeBlockFlt.p), pcount);
+          t.line.AddPoints(TDoubleArray(m_lastTahoBlock.m_TimeBlockFlt.p),
+            pcount);
           t.line.flength := pcount;
           m_lastTahoBlock.BuildSpm;
         end;
@@ -1958,8 +1955,7 @@ var
   sig_interval, common_interval: point2d;
   find: boolean;
   block: TDataBlock;
-  siglen,
-  comIntervalLen, refresh, dropLen: double;
+  siglen, comIntervalLen, refresh, dropLen: double;
 begin
   if not ready then
     exit;
@@ -1969,7 +1965,7 @@ begin
   if m_Length < refresh then
     m_Length := refresh;
   // поиск удара. внутри обновляются данные по тахо, ущется удар, обновляется автомат trigstate
-  find:=SearchTrig(t);
+  find := SearchTrig(t);
 
   for i := 0 to c.SRSCount - 1 do
   begin
@@ -1977,7 +1973,7 @@ begin
     if s.m_tag.UpdateTagData(true) then
     begin
       sig_interval := s.m_tag.getPortionTime;
-      //logMessage('sig_interval: ' +floattostr(sig_interval.x)+'...'+floattostr(sig_interval.y));
+      // logMessage('sig_interval: ' +floattostr(sig_interval.x)+'...'+floattostr(sig_interval.y));
       common_interval := p2d(0, 0);
       comIntervalLen := 0;
       if sig_interval.y > t.TrigInterval.x then
@@ -1988,7 +1984,7 @@ begin
           comIntervalLen := common_interval.y - common_interval.x;
         end;
       end;
-      //logMessage('com_interval: ' +floattostr(common_interval.x)+'...'+floattostr(common_interval.y));
+      // logMessage('com_interval: ' +floattostr(common_interval.x)+'...'+floattostr(common_interval.y));
       if comIntervalLen > 0 then
       begin
         // если данные накопились и тахо тоже накопился
@@ -2002,29 +1998,35 @@ begin
           begin
 
           end;
-          //logMessage('ShockIndex: ' +inttostr(m_lastTahoBlock.index));
+          // logMessage('ShockIndex: ' +inttostr(m_lastTahoBlock.index));
           s.fDataCount := pcount; // скопровано отсчетов в блок
-          block:=s.m_shockList.getBlock(t.m_MaxTime);
-          if block=nil then
+          block := s.m_shockList.getBlock(t.m_MaxTime);
+          if block = nil then
           begin
             block := s.m_shockList.addBlock(c.m_fftCount, // SpmSize
-                  p2d(common_interval.x,
-                  common_interval.x + pcount / s.m_tag.Freq), // timeStamp
-                  TDoubleArray(s.m_T1data.p), // timeData
-                   pcount); // timeData size
-            block.m_timeMax:=t.m_MaxTime;
+              p2d(common_interval.x,
+                common_interval.x + pcount / s.m_tag.Freq), // timeStamp
+              TDoubleArray(s.m_T1data.p), // timeData
+              pcount); // timeData size
+            block.m_timeMax := t.m_MaxTime;
             block.prepareData;
-            block.BuildSpm;
-            s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p),
-                             pcount);
-            s.line.flength := pcount;
 
-            block.m_connectedInd:=m_lastTahoBlock.index;
+            block.BuildSpm;
+            s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p), pcount);
+            s.line.flength := pcount;
+            if m_lastTahoBlock<>nil then
+            begin
+              block.m_connectedInd := m_lastTahoBlock.index;
+            end
+            else
+            begin
+              block.m_connectedInd:=0;
+            end;
             s.m_shockProcessed := true;
             dropCount := s.m_tag.getIndex(t.TrigInterval.x);
-            if dropCount>0 then
+            if dropCount > 0 then
             begin
-              if dropCount<s.m_tag.lastindex then
+              if dropCount < s.m_tag.lastindex then
                 s.m_tag.ResetTagDataTimeInd(dropCount);
             end;
             t.evalCoh(hideind);
@@ -2063,96 +2065,96 @@ end;
 
 procedure TFRFFrm.ShowLines;
 var
-  t:cSRSTaho;
-  c:cSpmCfg;
-  I: Integer;
-  ls, asig:cSRSres;
-  li:tlistitem;
-  lcount:integer;
-  r:frect;
-  b:boolean;
+  t: cSRSTaho;
+  c: cSpmCfg;
+  i: integer;
+  ls, asig: cSRSres;
+  li: TListItem;
+  lcount: integer;
+  r: frect;
+  b: boolean;
 begin
-  t:=getTaho;
-  c:=t.cfg;
-  lcount:=CheckedCount;
-  asig:=ActiveSignal;
-  for I := 0 to c.SRSCount - 1 do
+  t := getTaho;
+  c := t.cfg;
+  lcount := CheckedCount;
+  asig := ActiveSignal;
+  for i := 0 to c.SRSCount - 1 do
   begin
-    ls:=c.GetSrs(i);
-    li:=SignalsLV.Items[i];
-    b:=(lcount=0) and (ls=asig);
+    ls := c.GetSrs(i);
+    li := SignalsLV.Items[i];
+    b := (lcount = 0) and (ls = asig);
     if (not li.Checked) and (not b) then
     begin
-      ls.lineFrf.visible:=false;
-      ls.lineAvFRF.visible:=false;
-      ls.lineSpm.visible:=false;
-      ls.linePhase.visible:=false;
-      ls.lineCoh.visible:=false;
+      ls.lineFrf.visible := false;
+      ls.lineAvFRF.visible := false;
+      ls.lineSpm.visible := false;
+      ls.linePhase.visible := false;
+      ls.lineCoh.visible := false;
     end
     else
     begin
       case ResTypeRG.ItemIndex of
         0:
-        begin
-          if lcount<2 then
           begin
-            ls.lineFrf.visible:=true;
-            ls.lineAvFRF.weight:=5;
-          end
-          else
-          begin
-            ls.lineFrf.visible:=false;
-            ls.lineAvFRF.weight:=1;
+            if lcount < 2 then
+            begin
+              ls.lineFrf.visible := true;
+              ls.lineAvFRF.weight := 5;
+            end
+            else
+            begin
+              ls.lineFrf.visible := false;
+              ls.lineAvFRF.weight := 1;
+            end;
+            ls.lineAvFRF.visible := true;
+            ls.lineSpm.visible := false;
+            ls.lineCoh.visible := false;
+            ls.linePhase.visible := false;
           end;
-          ls.lineAvFRF.visible:=true;
-          ls.lineSpm.visible:=false;
-          ls.lineCoh.visible:=false;
-          ls.linePhase.visible:=false;
-        end;
         1:
-        begin
-          ls.lineCoh.visible:=true;
-          ls.lineAvFRF.visible:=false;
-          ls.lineSpm.visible:=false;
-          ls.linePhase.visible:=false;
-          ls.lineFrf.visible:=false;
-          ls.lineAvFRF.visible:=false;
-        end;
+          begin
+            ls.lineCoh.visible := true;
+            ls.lineAvFRF.visible := false;
+            ls.lineSpm.visible := false;
+            ls.linePhase.visible := false;
+            ls.lineFrf.visible := false;
+            ls.lineAvFRF.visible := false;
+          end;
         2:
-        begin
-          ls.lineCoh.visible:=false;
-          ls.lineAvFRF.visible:=false;
-          ls.lineSpm.visible:=true;
-          ls.linePhase.visible:=false;
-          ls.lineFrf.visible:=false;
-          ls.lineAvFRF.visible:=false;
-          ShowSpm;
-        end;
+          begin
+            ls.lineCoh.visible := false;
+            ls.lineAvFRF.visible := false;
+            ls.lineSpm.visible := true;
+            ls.linePhase.visible := false;
+            ls.lineFrf.visible := false;
+            ls.lineAvFRF.visible := false;
+            ShowSpm;
+          end;
         3:
-        begin
-          ls.lineCoh.visible:=false;
-          ls.lineAvFRF.visible:=false;
-          ls.lineSpm.visible:=false;
-          ls.linePhase.visible:=true;
-          ls.lineFrf.visible:=false;
-          ls.lineAvFRF.visible:=false;
-          ShowPhase;
-        end;
+          begin
+            ls.lineCoh.visible := false;
+            ls.lineAvFRF.visible := false;
+            ls.lineSpm.visible := false;
+            ls.linePhase.visible := true;
+            ls.lineFrf.visible := false;
+            ls.lineAvFRF.visible := false;
+            ShowPhase;
+          end;
       end;
     end;
   end;
-  if (ResTypeRG.itemindex=1) or (ResTypeRG.itemindex=3) then
+  if (ResTypeRG.ItemIndex = 1) or (ResTypeRG.ItemIndex = 3) then
   begin
-    axSpm.Lg:=false;
+    axSpm.lg := false;
   end
   else
   begin
-    axSpm.Lg:=m_lgY;
+    axSpm.lg := m_lgY;
   end;
-  r.BottomLeft.x:=m_minX;
-  r.TopRight.x:=m_maxX;
-  r.BottomLeft.y:=MinSpmY;
-  r.TopRight.y:=MaxSpmY;
+  r.BottomLeft.x := m_minX;
+  r.TopRight.x := m_maxX;
+  r.BottomLeft.y := MinSpmY;
+  r.TopRight.y := MaxSpmY;
   axSpm.ZoomfRect(r);
 end;
 
@@ -2189,37 +2191,37 @@ begin
     if t <> nil then
     begin
       s := c.GetSrs(0);
-      if s<>nil then
+      if s <> nil then
         ShockCountE.Text := inttostr(s.m_shockList.Count)
       else
         ShockCountE.Text := '0';
     end;
   end;
-  if ResTypeRG.itemindex=0 then
+  if ResTypeRG.ItemIndex = 0 then
   begin
     if fUpdateFrf then
     begin
-      for I := 0 to c.srsCount - 1 do
+      for i := 0 to c.SRSCount - 1 do
       begin
-        s:=c.GetSrs(i);
+        s := c.GetSrs(i);
         if fShowLast then
           ShowFrf(s, c, -1)
         else
           ShowFrf(s, c, ShockIE.intnum);
       end;
-      if CheckedCount=0 then
+      if CheckedCount = 0 then
       begin
         ShowLines;
-        s:=ActiveSignal;
-        s.lineFrf.visible:=true;
-        s.lineAvFRF.visible:=true;
+        s := ActiveSignal;
+        s.lineFrf.visible := true;
+        s.lineAvFRF.visible := true;
       end;
       fShowLast := false;
     end;
   end;
-  if ResTypeRG.itemindex=2 then
+  if ResTypeRG.ItemIndex = 2 then
     ShowSpm;
-  if ResTypeRG.itemindex=3 then
+  if ResTypeRG.ItemIndex = 3 then
   begin
     ShowPhase;
   end;
@@ -2231,11 +2233,11 @@ var
   t: cSRSTaho;
   c: cSpmCfg;
   s: cSRSres;
-  i,j: integer;
-  db:tdatablock;
+  i, j: integer;
+  db: TDataBlock;
 begin
   t := getTaho;
-  if t=nil then
+  if t = nil then
     exit;
   c := t.cfg;
   t.m_corrTaho := UseWndFcb.Checked;
@@ -2265,7 +2267,7 @@ begin
     t.m_shockList.m_wnd.wndfunc := wnd_rect;
     c.setWnd(wnd_exp);
     m_expWndline.doUpdateWorldSize(nil);
-    m_expWndline.SetParams(m_ShiftLeft*0.5, 0.7*m_length, 0.001);
+    m_expWndline.SetParams(m_ShiftLeft * 0.5, 0.7 * m_Length, 0.001);
   end
   else
   begin
@@ -2278,9 +2280,9 @@ begin
   m_expWndline.selectable := UseWndFcb.Checked;
   // пересчет с учетом окон
 
-  for I := 0 to t.cfg.SRSCount- 1 do
+  for i := 0 to t.cfg.SRSCount - 1 do
   begin
-    s:=c.GetSrs(i);
+    s := c.GetSrs(i);
     for j := 0 to s.m_shockList.Count - 1 do
     begin
       db := s.m_shockList.getBlock(j);
@@ -2293,11 +2295,11 @@ begin
       db.prepareData;
       db.BuildSpm;
     end;
-    if t.m_shockList.count<>0 then
+    if t.m_shockList.Count <> 0 then
     begin
-      db:=t.m_shockList.getblock(shockie.IntNum);
+      db := t.m_shockList.getBlock(ShockIE.intnum);
       t.line.AddPoints(TDoubleArray(db.m_TimeBlockFlt.p), db.m_TimeArrSize);
-      db:=s.m_shockList.getblock(shockie.IntNum);
+      db := s.m_shockList.getBlock(ShockIE.intnum);
       s.line.AddPoints(TDoubleArray(db.m_TimeBlockFlt.p), db.m_TimeArrSize);
       updateFrf(false);
       UpdateView;
@@ -2318,19 +2320,19 @@ end;
 procedure TFRFFrm.WinPosBtnClick(sender: tobject);
 begin
   buildReport;
-  if fileexists(g_FrfFactory.m_meraFile) then
+  if fileexists(g_FrfFactory.m_MeraFile) then
     ShellExecute(0, nil, pwidechar(g_FrfFactory.m_ShockFile), nil, nil,
       SW_HIDE);
 end;
 
-function TFRFFrm.getRes(s:string): cSRSres;
+function TFRFFrm.getRes(s: string): cSRSres;
 var
-  t:cSRSTaho;
-  c:cSpmCfg;
+  t: cSRSTaho;
+  c: cSpmCfg;
 begin
-  t:=getTaho;
-  c:=t.cfg;
-  result:=c.GetSrs(s);
+  t := getTaho;
+  c := t.cfg;
+  result := c.GetSrs(s);
 end;
 
 function TFRFFrm.getTaho: cSRSTaho;
@@ -2341,9 +2343,9 @@ begin
     result := nil;
 end;
 
-procedure TFRFFrm.ResTypeRGClick(Sender: TObject);
+procedure TFRFFrm.ResTypeRGClick(sender: tobject);
 begin
-  //ShowLines(nil);
+  // ShowLines(nil);
   SignalsLVClick(nil);
 end;
 
@@ -2363,7 +2365,7 @@ var
   s: cSRSres;
   tag: itag;
   ltag: ctag;
-  prof:cProfileLine;
+  prof: cProfileLine;
 
 begin
   inherited;
@@ -2371,15 +2373,15 @@ begin
   if ltag <> nil then
   begin
     t := cSRSTaho.create;
-    prof:=t.m_profile.getline('Profile');
+    prof := t.m_profile.getline('Profile');
     prof.addline(m_profileline);
     prof.updatepoints;
-    if pageSpm.activeAxis.getChild('Profile')=nil then
+    if pageSpm.activeAxis.getChild('Profile') = nil then
     begin
       showmessage('nil');
     end;
 
-    t.m_color:=ColorArray[0];
+    t.m_color := ColorArray[0];
     t.m_tag.tag := ltag.tag;
     t.m_tag.tagname := ltag.tagname;
     ltag.destroy;
@@ -2389,14 +2391,14 @@ begin
   end
   else
     exit;
-  m_ShiftLeft := strtoFloatExt(a_pIni.ReadString(str, 'ShiftLeft', '0.05'));
-  m_Length := strtoFloatExt(a_pIni.ReadString(str, 'Length', '0.05'));
-  t.m_treshold := strtoFloatExt(a_pIni.ReadString(str, 'Threshold', '0.05'));
+  m_ShiftLeft := strtofloatext(a_pIni.ReadString(str, 'ShiftLeft', '0.05'));
+  m_Length := strtofloatext(a_pIni.ReadString(str, 'Length', '0.05'));
+  t.m_treshold := strtofloatext(a_pIni.ReadString(str, 'Threshold', '0.05'));
 
-  m_minX := strtoFloatExt(a_pIni.ReadString(str, 'Spm_minX', '0'));
-  m_maxX := strtoFloatExt(a_pIni.ReadString(str, 'Spm_maxX', '1000'));
-  m_minY := strtoFloatExt(a_pIni.ReadString(str, 'Spm_minY', '0.0001'));
-  m_maxY := strtoFloatExt(a_pIni.ReadString(str, 'Spm_maxY', '10'));
+  m_minX := strtofloatext(a_pIni.ReadString(str, 'Spm_minX', '0'));
+  m_maxX := strtofloatext(a_pIni.ReadString(str, 'Spm_maxX', '1000'));
+  m_minY := strtofloatext(a_pIni.ReadString(str, 'Spm_minY', '0.0001'));
+  m_maxY := strtofloatext(a_pIni.ReadString(str, 'Spm_maxY', '10'));
   m_lgX := a_pIni.ReadBool(str, 'Spm_Lg_x', false);
   m_lgY := a_pIni.ReadBool(str, 'Spm_Lg_y', false);
   NewAxis := a_pIni.ReadBool(str, 'TahoNewAxis', false);
@@ -2417,9 +2419,9 @@ begin
       ltag := LoadTagIni(a_pIni, str, 'Tag_' + inttostr(i));
       if ltag <> nil then
       begin
-        s:=c.addSRS(pointer(ltag));
-        s.m_axis:=a_pIni.ReadInteger(str,'Axis_' + inttostr(i), 0);
-        s.m_incPNum:=a_pIni.ReadInteger(str,'Pinc_' + inttostr(i), 0);
+        s := c.addSRS(pointer(ltag));
+        s.m_axis := a_pIni.ReadInteger(str, 'Axis_' + inttostr(i), 0);
+        s.m_incPNum := a_pIni.ReadInteger(str, 'Pinc_' + inttostr(i), 0);
       end;
     end;
     c.typeres := a_pIni.ReadInteger(str, 'ResType', 0);
@@ -2503,7 +2505,7 @@ begin
 end;
 
 procedure saveHeader(ifile: TIniFile; Freq: double; start: double;
-  ident: string; xUnits:string);
+  ident: string; xUnits: string);
 begin
   WriteFloatToIniMera(ifile, ident, 'Freq', Freq);
   ifile.WriteString(ident, 'XFormat', 'R8');
@@ -2517,7 +2519,7 @@ begin
   ifile.WriteFloat(ident, 'k0', 0);
   // k1
   ifile.WriteFloat(ident, 'k1', 1);
-  if xUnits='с' then
+  if xUnits = 'с' then
   begin
     ifile.WriteString(ident, 'Function', '1');
     ifile.WriteString(ident, 'XType', '5');
@@ -2538,17 +2540,17 @@ var
   s: cSRSres;
   db, tb: TDataBlock;
 begin
-  //dir := extractfiledir(g_FrfFactory.m_meraFile) + '\Shock';
-  dir:=extractfiledir(g_mbase.SelectBlade.getfolder)+ '\Shock';
-  f := dir + '\' + trimext(extractfilename(g_FrfFactory.m_meraFile))
+  // dir := extractfiledir(g_FrfFactory.m_meraFile) + '\Shock';
+  dir := extractfiledir(g_mbase.SelectBlade.getFolder) + '\Shock';
+  f := dir + '\' + trimext(extractfilename(g_FrfFactory.m_MeraFile))
     + '_Shocks.mera';
   while fileexists(f) do
   begin
     dir := ModName(dir, false);
-    f := dir + '\' + trimext(extractfilename(g_FrfFactory.m_meraFile))
+    f := dir + '\' + trimext(extractfilename(g_FrfFactory.m_MeraFile))
       + '_Shocks.mera';
   end;
-  m_MeraFile:=f;
+  m_MeraFile := f;
   g_FrfFactory.m_ShockFile := f;
   ForceDirectories(dir);
   ifile := TIniFile.create(f);
@@ -2603,7 +2605,6 @@ begin
   ifile.destroy;
   CheckFlags;
 end;
-
 
 procedure TFRFFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 var
@@ -2670,7 +2671,7 @@ begin
       axRef.name := 'RefAxis';
       pageT.addaxis(axRef);
       t := getTaho;
-      if t<>nil then
+      if t <> nil then
       begin
         a := caxis(t.line.parent);
         axRef.AddChild(t.line);
@@ -2703,7 +2704,8 @@ begin
     if (shock < s.m_shockList.Count) and (shock > -1) then
     begin
       block := s.m_shockList.getBlock(shock);
-      s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p), block.m_TimeArrSize);
+      s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p),
+        block.m_TimeArrSize);
     end;
   end;
   SpmChartDblClick(nil);
@@ -2713,21 +2715,21 @@ end;
 
 procedure TFRFFrm.ShowSignalsLV;
 var
-  t:cSRSTaho;
-  s:cSRSres;
-  i:integer;
-  c:cSpmCfg;
-  li:tlistitem;
+  t: cSRSTaho;
+  s: cSRSres;
+  i: integer;
+  c: cSpmCfg;
+  li: TListItem;
 begin
-  t:=getTaho;
-  c:=t.cfg;
-  SignalsLV.Clear;
-  for I := 0 to c.SrsCount - 1 do
+  t := getTaho;
+  c := t.cfg;
+  SignalsLV.clear;
+  for i := 0 to c.SRSCount - 1 do
   begin
-    s:=c.GetSrs(i);
-    li:=SignalsLV.items.Add;
-    li.Data:=s;
-    SignalsLV.SetSubItemByColumnName('№', inttostr(i+1), li);
+    s := c.GetSrs(i);
+    li := SignalsLV.Items.Add;
+    li.Data := s;
+    SignalsLV.SetSubItemByColumnName('№', inttostr(i + 1), li);
     SignalsLV.SetSubItemByColumnName('Имя', s.m_tag.tagname, li);
   end;
 end;
@@ -2741,10 +2743,10 @@ var
 begin
   t := getTaho;
   c := t.getCfg;
-  if c<>nil then
+  if c <> nil then
   begin
     s := ActiveSignal;
-    if s<>nil then
+    if s <> nil then
     begin
       s.linePhase.AddPoints(TDoubleArray(s.m_phase), c.fHalfFft);
     end;
@@ -2760,43 +2762,43 @@ var
 begin
   t := getTaho;
   c := t.getCfg;
-  if c<>nil then
+  if c <> nil then
   begin
     s := ActiveSignal;
-    if s<>nil then
+    if s <> nil then
     begin
       b := s.m_shockList.getBlock(ShockIE.intnum);
-      if b<>nil then
+      if b <> nil then
       begin
-        if s.linespm<>nil then
+        if s.lineSpm <> nil then
           s.lineSpm.AddPoints(TDoubleArray(b.m_mod.p), c.fHalfFft);
       end;
     end;
   end;
 end;
 
-procedure TFRFFrm.SignalsLVClick(Sender: TObject);
+procedure TFRFFrm.SignalsLVClick(sender: tobject);
 var
-  t:cSRSTaho;
-  c:cSpmCfg;
-  s:cSRSres;
-  lcount:integer;
-  I: Integer;
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s: cSRSres;
+  lcount: integer;
+  i: integer;
 begin
-  t:=getTaho;
-  if t=nil then
+  t := getTaho;
+  if t = nil then
     exit;
-  if t.m_shockList.Count=0 then
+  if t.m_shockList.Count = 0 then
     exit;
-  c:=t.cfg;
+  c := t.cfg;
   s := ActiveSignal;
   ShowLines;
-  lcount:=CheckedCount;
-  if lcount=0 then
+  lcount := CheckedCount;
+  if lcount = 0 then
   begin
-    if ResTypeRG.ItemIndex=0 then
+    if ResTypeRG.ItemIndex = 0 then
     begin
-     if fShowLast then
+      if fShowLast then
         ShowFrf(s, c, -1)
       else
         ShowFrf(s, c, ShockIE.intnum);
@@ -2804,7 +2806,7 @@ begin
   end
   else
   begin
-    //ShowLines(nil);
+    // ShowLines(nil);
   end;
   fShowLast := false;
   SpmChart.redraw;
@@ -2824,9 +2826,9 @@ begin
   t := getTaho;
   c := t.getCfg;
   s := c.GetSrs(ShockIE.intnum);
-  s.lineFrf.visible := ResTypeRG.ItemIndex=0;
-  s.lineAvFRF.visible := ResTypeRG.ItemIndex=0;
-  s.lineSpm.visible := ResTypeRG.ItemIndex=2;
+  s.lineFrf.visible := ResTypeRG.ItemIndex = 0;
+  s.lineAvFRF.visible := ResTypeRG.ItemIndex = 0;
+  s.lineSpm.visible := ResTypeRG.ItemIndex = 2;
   UpdateView;
 end;
 
@@ -2834,50 +2836,50 @@ procedure TFRFFrm.SpmChartCursorMove(sender: tobject);
 var
   t: cSRSTaho;
   c: cSpmCfg;
-  s:cSRSres;
-  a:caxis;
+  s: cSRSres;
+  a: caxis;
   tb: TDataBlock;
   j, ind: integer;
-  x1,y:double;
-  li:TListItem;
-  p:TNotifyEvent;
-  p2:point2;
+  x1, y: double;
+  li: TListItem;
+  p: TNotifyEvent;
+  p2: point2;
 begin
-  if Sender is cYCursor then
+  if sender is cYCursor then
   begin
-    a:=pageSpm.activeAxis;
-    //p2:=cYCursor(Sender).Position; возвращает координаты в FullView
-    p2:=cYCursor(Sender).Position;
-    p2:=pageSpm.p2FullViewToBorderP2(p2);
-    p2:=pageSpm.Point2ToTrend(p2, false, a);
+    a := pageSpm.activeAxis;
+    // p2:=cYCursor(Sender).Position; возвращает координаты в FullView
+    p2 := cYCursor(sender).Position;
+    p2 := pageSpm.p2FullViewToBorderP2(p2);
+    p2 := pageSpm.Point2ToTrend(p2, false, a);
     if m_lgY then
     begin
-      p2.y:=ValToLogScale(p2.y, p2d(A.minY, A.maxY));
+      p2.y := ValToLogScale(p2.y, p2d(a.minY, a.maxY));
     end;
-    p:=TrigFE.OnChange;
-    TrigFE.OnChange:=nil;
-    TrigFE.Value:=p2.y;
-    TrigFE.OnChange:=p;
+    p := TrigFE.OnChange;
+    TrigFE.OnChange := nil;
+    TrigFE.Value := p2.y;
+    TrigFE.OnChange := p;
   end;
   if SpmChart.activePage = pageSpm then
   begin
     t := getTaho;
-    if t=nil then
+    if t = nil then
       exit;
     c := t.cfg;
-    x1:=pageSpm.cursor.getx1;
-    if pagespm.LgX then
-      x1:=pageSpm.cursor.LinearToLgPos(x1);
-    m_curFreq:=x1;
-    for j := 0 to c.srsCount - 1 do
+    x1 := pageSpm.cursor.getx1;
+    if pageSpm.lgX then
+      x1 := pageSpm.cursor.LinearToLgPos(x1);
+    m_curFreq := x1;
+    for j := 0 to c.SRSCount - 1 do
     begin
-      s:=c.GetSrs(j);
-      li:=SignalsLV.Items[j];
-      SignalsLV.SetSubItemByColumnName('X',formatstr(x1,4), li);
-      ind:=trunc(x1/c.fspmdx);
-      y:=EvalLineYd(x1, p2d(ind*c.fspmdx,s.m_frf[ind]),
-                     p2d((ind+1)*c.fspmdx,s.m_frf[ind+1]));
-      SignalsLV.SetSubItemByColumnName('Y',formatstrnoe(y,4), li);
+      s := c.GetSrs(j);
+      li := SignalsLV.Items[j];
+      SignalsLV.SetSubItemByColumnName('X', formatstr(x1, 4), li);
+      ind := trunc(x1 / c.fspmdx);
+      y := EvalLineYd(x1, p2d(ind * c.fspmdx, s.m_frf[ind]),
+        p2d((ind + 1) * c.fspmdx, s.m_frf[ind + 1]));
+      SignalsLV.SetSubItemByColumnName('Y', formatstrnoe(y, 4), li);
     end;
     LVChange(SignalsLV);
   end;
@@ -2896,7 +2898,7 @@ begin
         tb.prepareData;
         tb.BuildSpm;
       end;
-      if t.m_shockList.Count<>0 then
+      if t.m_shockList.Count <> 0 then
       begin
         tb := t.m_shockList.getBlock(ShockIE.intnum);
         t.line.AddPoints(TDoubleArray(tb.m_TimeBlockFlt.p), tb.m_TimeArrSize);
@@ -2910,16 +2912,16 @@ end;
 procedure TFRFFrm.SpmChartDblClick(sender: tobject);
 var
   r: frect;
-  i,j: integer;
+  i, j: integer;
   a: caxis;
-  o:cdrawobj;
-  rect: fRect;
+  o: cdrawobj;
+  rect: frect;
   dy: single;
 begin
   r.BottomLeft.x := m_minX;
   r.TopRight.x := m_maxX;
-  r.BottomLeft.y:=MinSpmY;
-  r.TopRight.y:=MaxSpmY;
+  r.BottomLeft.y := MinSpmY;
+  r.TopRight.y := MaxSpmY;
   // нормализация спектров
   for i := 0 to pageSpm.axises.ChildCount - 1 do
   begin
@@ -2938,22 +2940,22 @@ begin
     a.ZoomfRect(rect);
     for j := 0 to a.ChildCount - 1 do
     begin
-      o:=cdrawobj(a.getChild(j));
+      o := cdrawobj(a.getChild(j));
       o.doUpdateWorldSize(a);
     end;
   end;
 end;
 
-procedure TFRFFrm.SpmChartMouseZoom(Sender: TObject; UpScale: Boolean);
+procedure TFRFFrm.SpmChartMouseZoom(sender: tobject; UpScale: boolean);
 var
-  p:cpage;
-  a:caxis;
+  p: cpage;
+  a: caxis;
 begin
-  if ycurs<>nil then
+  if Ycurs <> nil then
   begin
-    p:=pageSpm;
-    a:=p.activeAxis;
-    ycurs.setCursor(a, (a.maxY+a.minY)*0.5);
+    p := pageSpm;
+    a := p.activeAxis;
+    Ycurs.setCursor(a, (a.maxY + a.minY) * 0.5);
   end;
 end;
 
@@ -3064,8 +3066,8 @@ end;
 
 function cSRSTaho.getCfg: cSpmCfg;
 begin
-  result:=nil;
-  if fSpmCfgList.count>0 then
+  result := nil;
+  if fSpmCfgList.Count > 0 then
     result := cSpmCfg(fSpmCfgList.Items[0]);
 end;
 
@@ -3089,13 +3091,13 @@ end;
 
 constructor cSRSTaho.create;
 var
-  pline:cProfileLine;
+  pline: cProfileLine;
 begin
   inherited;
-  m_profile:=cprofile.create;
+  m_profile := cprofile.create;
   m_profile.newline('Profile', 1);
-  m_profile.AddP(1,1,ptlinePoly, false);
-  m_profile.AddP(1000,1,ptlinePoly, false);
+  m_profile.AddP(1, 1, ptlinePoly, false);
+  m_profile.AddP(1000, 1, ptlinePoly, false);
 
   m_treshold := 1;
   m_CohTreshold := 0.5;
@@ -3158,7 +3160,7 @@ begin
   halfNP := c.m_fftCount shr 1;
   ZeroMemory(@sb.m_WechSpm[0], length(sb.m_WechSpm) * sizeof(TComplex_d));
   ZeroMemory(@tb.m_WechSpm[0], length(tb.m_WechSpm) * sizeof(TComplex_d));
-  for i := 0 to TFrfFrm(m_frm).m_WelchCount - 1 do
+  for i := 0 to TFRFFrm(m_frm).m_WelchCount - 1 do
   begin
     fft_al_d_sse(TDoubleArray(tb.m_TimeBlockFlt.p),
       TCmxArray_d(tb.m_ClxData.p), plan);
@@ -3166,14 +3168,14 @@ begin
     fft_al_d_sse(TDoubleArray(sb.m_TimeBlockFlt.p),
       TCmxArray_d(sb.m_ClxData.p), plan);
     // MULT_SSE_al_cmpx_d(TCmxArray_d(sb.m_ClxData.p), k);
-    plan.StartInd := TFrfFrm(m_frm).m_WelchShift + plan.StartInd;
+    plan.StartInd := TFRFFrm(m_frm).m_WelchShift + plan.StartInd;
     for j := 0 to halfNP - 1 do
     begin
       sb.m_WechSpm[j] := sb.m_WechSpm[j] + TCmxArray_d(sb.m_ClxData.p)[j];
       tb.m_WechSpm[j] := tb.m_WechSpm[j] + TCmxArray_d(tb.m_ClxData.p)[j];
     end;
   end;
-  k := 2 / (c.m_fftCount * TFrfFrm(m_frm).m_WelchCount);
+  k := 2 / (c.m_fftCount * TFRFFrm(m_frm).m_WelchCount);
   // нормировка
   for i := 0 to halfNP - 1 do
   begin
@@ -3231,8 +3233,8 @@ begin
         begin
           for j := 0 to cfg.fHalfFft - 1 do
           begin
-            s.m_phase[j] := (180 / pi) * ArcTan(s.m_shockList.m_Cxy[j]
-              .im / s.m_shockList.m_Cxy[j].Re);
+            s.m_phase[j] := (180 / pi) * ArcTan
+              (s.m_shockList.m_Cxy[j].im / s.m_shockList.m_Cxy[j].Re);
             // Sensor/Taho
             s.m_frf[j] := sqrt(s.m_shockList.m_Syy[j] / s.m_shockList.m_Sxx[j]);
           end;
@@ -3241,8 +3243,8 @@ begin
         begin
           for j := 0 to cfg.fHalfFft - 1 do
           begin
-            s.m_phase[j] := (180 / pi) * ArcTan(s.m_shockList.m_Cxy[j]
-              .im / s.m_shockList.m_Cxy[j].Re);
+            s.m_phase[j] := (180 / pi) * ArcTan
+              (s.m_shockList.m_Cxy[j].im / s.m_shockList.m_Cxy[j].Re);
             s.m_frf[j] := abs(s.m_shockList.m_Cxy[j]) / s.m_shockList.m_Sxx[j];
           end;
         end;
@@ -3250,8 +3252,8 @@ begin
         begin
           for j := 0 to cfg.fHalfFft - 1 do
           begin
-            s.m_phase[j] := (180 / pi) * ArcTan(s.m_shockList.m_Cxy[j]
-              .im / s.m_shockList.m_Cxy[j].Re);
+            s.m_phase[j] := (180 / pi) * ArcTan
+              (s.m_shockList.m_Cxy[j].im / s.m_shockList.m_Cxy[j].Re);
             s.m_frf[j] := s.m_shockList.m_Syy[j] / abs(s.m_shockList.m_Cxy[j]);
           end;
         end;
@@ -3277,7 +3279,7 @@ begin
   begin
     s := c.GetSrs(i);
     ZeroMemory(s.m_frf, length(s.m_frf) * sizeof(double));
-    //ZeroMemory(s.m_shockList.m_Cxy, length(s.m_shockList.m_Cxy) * sizeof(TComplex_d));
+    // ZeroMemory(s.m_shockList.m_Cxy, length(s.m_shockList.m_Cxy) * sizeof(TComplex_d));
     td := nil;
     sd := nil;
     for k := 0 to s.m_shockList.Count - 1 do
@@ -3313,8 +3315,8 @@ begin
         begin
           for j := 0 to cfg.fHalfFft - 1 do
           begin
-            s.m_phase[j]:=(180/pi)*ArcTan(s.m_shockList.m_Cxy[j].im/
-                                   s.m_shockList.m_Cxy[j].Re);
+            s.m_phase[j] := (180 / pi) * ArcTan
+              (s.m_shockList.m_Cxy[j].im / s.m_shockList.m_Cxy[j].Re);
             // if s.m_shockList.m_coh[j] < m_CohTreshold then
             s.m_frf[j] := s.m_frf[j] / shockCount;
           end;
@@ -3325,8 +3327,8 @@ begin
           begin
             cross := 0;
             v2 := 0;
-            s.m_phase[j]:=(180/pi)*ArcTan(s.m_shockList.m_Cxy[j].im/
-                                   s.m_shockList.m_Cxy[j].Re);
+            s.m_phase[j] := (180 / pi) * ArcTan
+              (s.m_shockList.m_Cxy[j].im / s.m_shockList.m_Cxy[j].Re);
             for k := 0 to s.m_shockList.Count - 1 do
             begin
               if k = hideind then
@@ -3349,8 +3351,8 @@ begin
           begin
             cross := 0;
             v1 := 0;
-            s.m_phase[j]:=(180/pi)*ArcTan(s.m_shockList.m_Cxy[j].im/
-                                   s.m_shockList.m_Cxy[j].Re);
+            s.m_phase[j] := (180 / pi) * ArcTan
+              (s.m_shockList.m_Cxy[j].im / s.m_shockList.m_Cxy[j].Re);
             for k := 0 to s.m_shockList.Count - 1 do
             begin
               if k = hideind then
@@ -3431,7 +3433,7 @@ begin
   end;
 end;
 
-function cSpmCfg.addSRS(s: pointer):cSRSres;
+function cSpmCfg.addSRS(s: pointer): cSRSres;
 var
   i: integer;
   ls: cSRSres;
@@ -3445,17 +3447,17 @@ begin
       for i := 0 to m_SRSList.Count - 1 do
       begin
         ls := cSRSres(m_SRSList.Items[i]);
-        result:=ls;
+        result := ls;
         if t = ls.m_tag.tag then
           exit;
       end;
       ls := cSRSres.create;
       ls.m_tag.tag := t;
       ls.cfg := self;
-      result:=ls;
+      result := ls;
       m_SRSList.Add(ls);
-      ls.m_color:=colorArray[m_SRSList.count];
-      ls.m_colorAlt:=colorArray[length(colorArray)-m_SRSList.count];
+      ls.m_color := ColorArray[m_SRSList.Count];
+      ls.m_colorAlt := ColorArray[length(ColorArray) - m_SRSList.Count];
     end
   end
   else
@@ -3465,7 +3467,7 @@ begin
       for i := 0 to m_SRSList.Count - 1 do
       begin
         ls := cSRSres(m_SRSList.Items[i]);
-        result:=ls;
+        result := ls;
         if s = ls then
           exit;
       end;
@@ -3476,7 +3478,7 @@ begin
       for i := 0 to m_SRSList.Count - 1 do
       begin
         ls := cSRSres(m_SRSList.Items[i]);
-        result:=ls;
+        result := ls;
         if ctag(s).tagname = ls.m_tag.tagname then
         begin
           ctag(s).destroy;
@@ -3484,11 +3486,11 @@ begin
         end;
       end;
       ls := cSRSres.create;
-      result:=ls;
+      result := ls;
       ls.m_tag := ctag(s);
       ls.cfg := self;
       m_SRSList.Add(ls);
-      ls.m_color:=ColorArray[m_SRSList.Count];
+      ls.m_color := ColorArray[m_SRSList.Count];
     end;
 
   end;
@@ -3507,13 +3509,13 @@ end;
 
 procedure cSpmCfg.delSRS(s: tobject);
 var
-  I: Integer;
-  res:cSRSres;
+  i: integer;
+  res: cSRSres;
 begin
-  for I := 0 to SRSCount - 1 do
+  for i := 0 to SRSCount - 1 do
   begin
-    res:=GetSrs(i);
-    if res=s then
+    res := GetSrs(i);
+    if res = s then
     begin
       m_SRSList.delete(i);
       break;
@@ -3531,8 +3533,6 @@ begin
   result := cSRSTaho(taho).m_tag.Freq;
 end;
 
-
-
 function cSpmCfg.GetSrs(i: integer): cSRSres;
 begin
   result := cSRSres(m_SRSList.Items[i]);
@@ -3540,16 +3540,16 @@ end;
 
 function cSpmCfg.GetSrs(s: string): cSRSres;
 var
-  res:cSRSres;
-  i:integer;
+  res: cSRSres;
+  i: integer;
 begin
-  result:=nil;
-  for I := 0 to m_SRSList.Count - 1 do
+  result := nil;
+  for i := 0 to m_SRSList.Count - 1 do
   begin
-    res:=getsrs(i);
-    if res.m_tag.tagname=s then
+    res := GetSrs(i);
+    if res.m_tag.tagname = s then
     begin
-      result:=res;
+      result := res;
       exit;
     end;
   end;
@@ -3592,35 +3592,35 @@ begin
   m_shockList.m_wnd.wndfunc := wnd_no;
   m_shockList.m_wnd.x1 := 0;
   m_shockList.m_wnd.x2 := 1;
-  m_extremums:=TList.Create;
+  m_extremums := tlist.create;
 end;
 
 destructor cSRSres.destroy;
 begin
   m_tag.destroy;
-  m_tag:=nil;
+  m_tag := nil;
   m_shockList.destroy;
   cfg.delSRS(self);
-  cfg:=nil;
-  m_extremums.Destroy;
-  if line<>nil then
+  cfg := nil;
+  m_extremums.destroy;
+  if line <> nil then
     line.destroy;
-  if lineSpm<>nil then
+  if lineSpm <> nil then
     lineSpm.destroy;
-  if lineCoh<>nil then
+  if lineCoh <> nil then
     lineCoh.destroy;
-  if lineFrf<>nil then
+  if lineFrf <> nil then
     lineFrf.destroy;
-  if lineAvFRF<>nil then
+  if lineAvFRF <> nil then
     lineAvFRF.destroy;
 end;
 
 function cSRSres.getTaho: cSRSTaho;
 begin
-  result:=nil;
-  if cfg<>nil then
+  result := nil;
+  if cfg <> nil then
   begin
-    result:=cSRSTaho(cfg.taho);
+    result := cSRSTaho(cfg.taho);
   end;
 end;
 
@@ -3635,21 +3635,20 @@ begin
   m_shockList.m_cfg := c;
 end;
 
-procedure cSRSres.updateBlock(p_spmSize, p_timeBlock: integer);
+procedure cSRSres.updateBlock(p_spmsize, p_timeBlock: integer);
 var
-  j:integer;
-  bl:TDataBlock;
+  j: integer;
+  bl: TDataBlock;
 begin
   for j := 0 to m_shockList.Count - 1 do
   begin
-    bl:=m_shockList.getBlock(j);
-    if bl.m_spmsize<>p_spmSize then
+    bl := m_shockList.getBlock(j);
+    if bl.m_spmsize <> p_spmsize then
     begin
-      bl.m_spmsize:=p_spmSize;
-      bl.m_TimeArrSize:=p_timeBlock;
+      bl.m_spmsize := p_spmsize;
+      bl.m_TimeArrSize := p_timeBlock;
       FreeMemAligned(bl.m_TimeBlockFltNull);
-      GetMemAlignedArray_d( p_spmSize,
-                            bl.m_TimeBlockFltNull);
+      GetMemAlignedArray_d(p_spmsize, bl.m_TimeBlockFltNull);
     end;
   end;
 end;
@@ -3659,7 +3658,7 @@ end;
 constructor cFRFFactory.create;
 begin
   inherited;
-  g_mbase :=cBladeBase.create;
+  g_mbase := cBladeBase.create;
   g_mbase.InitBaseFolder('c:\Mera Files\bladeMdb\');
 
   m_lRefCount := 1;
@@ -3678,31 +3677,31 @@ end;
 
 procedure cFRFFactory.CreateBands(f: TFRFFrm; base: cBladeBase);
 var
-  i, j, c:integer;
-  blade:cBladeFolder;
-  b:tSpmBand;
-  p3:point3d;
-  li:tlistitem;
-  t:cSRSTaho;
-  s:cSRSres;
+  i, j, c: integer;
+  blade: cBladeFolder;
+  b: tspmband;
+  p3: point3d;
+  li: TListItem;
+  t: cSRSTaho;
+  s: cSRSres;
 begin
-  f.m_bands.cleardata;
-  blade:=base.SelectBlade;
-  if blade<>nil then
+  f.m_bands.clearData;
+  blade := base.SelectBlade;
+  if blade <> nil then
   begin
-    c:=blade.ToneCount;
-    for I := 0 to c - 1 do
+    c := blade.ToneCount;
+    for i := 0 to c - 1 do
     begin
-      p3:=blade.Tone(i);
-      b:=f.m_bands.addband(p3.x,p3.y,p3.z, f.SpmChart);
+      p3 := blade.Tone(i);
+      b := f.m_bands.addband(p3.x, p3.y, p3.z, f.SpmChart);
     end;
-    t:=f.getTaho;
-    if t<>nil then
+    t := f.getTaho;
+    if t <> nil then
     begin
-      for I := 0 to t.cfg.SRSCount - 1 do
+      for i := 0 to t.cfg.SRSCount - 1 do
       begin
-        s:=t.cfg.GetSrs(i);
-        setlength(s.m_flags,c);
+        s := t.cfg.GetSrs(i);
+        SetLength(s.m_flags, c);
       end;
     end;
     f.UpdateBandNames;
@@ -3711,14 +3710,14 @@ end;
 
 procedure cFRFFactory.createevents;
 begin
-  //addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
-  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
+  // addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
+  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState,
+    doChangeRState);
 end;
-
 
 procedure cFRFFactory.destroyevents;
 begin
-  //RemovePlgEvent(doUpdateData, c_RUpdateData);
+  // RemovePlgEvent(doUpdateData, c_RUpdateData);
   RemovePlgEvent(doChangeRState, c_RC_DoChangeRCState);
 end;
 
@@ -3737,12 +3736,12 @@ begin
       end;
     RSt_StopToView:
       begin
-        g_FrfFactory.m_meraFile := GetMeraFile;
+        g_FrfFactory.m_MeraFile := GetMeraFile;
         doStart;
       end;
     RSt_StopToRec:
       begin
-        g_FrfFactory.m_meraFile := GetMeraFile;
+        g_FrfFactory.m_MeraFile := GetMeraFile;
         doStart;
       end;
     RSt_ViewToStop:
@@ -3751,16 +3750,16 @@ begin
       end;
     RSt_ViewToRec:
       begin
-        g_FrfFactory.m_meraFile := GetMeraFile;
+        g_FrfFactory.m_MeraFile := GetMeraFile;
       end;
     RSt_initToRec:
       begin
-        g_FrfFactory.m_meraFile := GetMeraFile;
+        g_FrfFactory.m_MeraFile := GetMeraFile;
         doStart;
       end;
     RSt_initToView:
       begin
-        g_FrfFactory.m_meraFile := GetMeraFile;
+        g_FrfFactory.m_MeraFile := GetMeraFile;
         doStart;
       end;
     RSt_RecToStop:
@@ -3788,7 +3787,7 @@ begin
   inherited;
 end;
 
-function fgetcolor(li: tlistitem): integer;
+function fgetcolor(li: TListItem): integer;
 begin
   result := rgbtoint(cSRSres(li.Data).m_color);
 end;
@@ -3800,19 +3799,19 @@ var
   s: cSRSres;
   t: cSRSTaho;
   c: cSpmCfg;
-  blade:cBladeFolder;
+  blade: cBladeFolder;
 begin
-  //exit;
+  // exit;
   for i := 0 to m_CompList.Count - 1 do
   begin
     Frm := GetFrm(i);
-    tfrffrm(Frm).Ycurs:=cYCursor.create;
-    tfrffrm(Frm).pageSpm.AddChild(tfrffrm(Frm).Ycurs);
+    TFRFFrm(Frm).Ycurs := cYCursor.create;
+    TFRFFrm(Frm).pageSpm.AddChild(TFRFFrm(Frm).Ycurs);
 
-    TFrfFrm(frm).signalslv.drawcolorbox:=true;
-    TFrfFrm(frm).signalslv.getcolor:= fgetcolor;
-    t := TFrfFrm(Frm).getTaho;
-    if t<>nil then
+    TFRFFrm(Frm).SignalsLV.drawcolorbox := true;
+    TFRFFrm(Frm).SignalsLV.getcolor := fgetcolor;
+    t := TFRFFrm(Frm).getTaho;
+    if t <> nil then
     begin
       if t.m_tag.tag = nil then
       begin
@@ -3826,13 +3825,13 @@ begin
           s.m_tag.tag := getTagByName(s.m_tag.tagname);
         end;
       end;
-      TFrfFrm(Frm).UpdateBlocks;
+      TFRFFrm(Frm).UpdateBlocks;
     end;
-    CreateBands(tFrfFrm(frm), g_mbase);
-    blade:=g_mbase.SelectBlade;
-    if blade<>nil then
+    CreateBands(TFRFFrm(Frm), g_mbase);
+    blade := g_mbase.SelectBlade;
+    if blade <> nil then
     begin
-      tFrfFrm(frm).BladeNumEdit.Text:=inttostr(blade.m_sn);
+      TFRFFrm(Frm).BladeNumEdit.Text := inttostr(blade.m_sn);
     end;
   end;
 end;
@@ -3850,7 +3849,7 @@ begin
   for i := 0 to m_CompList.Count - 1 do
   begin
     Frm := GetFrm(i);
-    TFrfFrm(Frm).doStart;
+    TFRFFrm(Frm).doStart;
   end;
 end;
 
@@ -3879,16 +3878,15 @@ begin
   end;
 end;
 
-
 procedure cFRFFactory.doStop;
 var
   path: string;
   i: integer;
-  f: TFrfFrm;
+  f: TFRFFrm;
 begin
   for i := 0 to Count - 1 do
   begin
-    f := TFrfFrm(GetFrm(i));
+    f := TFRFFrm(GetFrm(i));
   end;
 end;
 
@@ -3902,7 +3900,7 @@ begin
   for i := 0 to m_CompList.Count - 1 do
   begin
     Frm := GetFrm(i);
-    TFrfFrm(Frm).updatedata;
+    TFRFFrm(Frm).updatedata;
   end;
 end;
 
@@ -3915,7 +3913,7 @@ end;
 
 function ISRSFrm.doCreateFrm: TRecFrm;
 begin
-  result := TFrfFrm.create(nil);
+  result := TFRFFrm.create(nil);
 end;
 
 function ISRSFrm.doGetName: LPCSTR;
@@ -3926,7 +3924,7 @@ end;
 function ISRSFrm.doRepaint: boolean;
 begin
   inherited;
-  TFrfFrm(m_pMasterWnd).UpdateView;
+  TFRFFrm(m_pMasterWnd).UpdateView;
 end;
 
 { TDataBlock }
@@ -3943,16 +3941,14 @@ begin
   if addnull then
   begin
     fft_al_d_sse(TDoubleArray(m_TimeBlockFlt.p),
-                 TDoubleArray(m_TimeBlockFltNull.p),
-                 TCmxArray_d(m_ClxData.p),
-                 cSpmCfg(c).FFTProp);
-    k:=2/ m_TimeArrSize;
+      TDoubleArray(m_TimeBlockFltNull.p),
+      TCmxArray_d(m_ClxData.p), cSpmCfg(c).FFTProp);
+    k := 2 / m_TimeArrSize;
   end
   else
   begin
-    fft_al_d_sse(TDoubleArray(m_TimeBlockFlt.p),
-                 TCmxArray_d(m_ClxData.p),
-                 cSpmCfg(c).FFTProp);
+    fft_al_d_sse(TDoubleArray(m_TimeBlockFlt.p), TCmxArray_d(m_ClxData.p),
+      cSpmCfg(c).FFTProp);
     // расчет первого спектра
     k := 2 / c.m_fftCount;
   end;
@@ -3961,12 +3957,12 @@ begin
   // расчет по m_ClxData квадрат амплитудн спектра
   evalmod2;
   EvalSpmMag(TCmxArray_d(m_ClxData.p), TDoubleArray(m_mod.p));
-  //FindMaxAndIndex(TDoubleArray(m_mod.p), v, ind);
+  // FindMaxAndIndex(TDoubleArray(m_mod.p), v, ind);
 end;
 
 constructor TDataBlock.create;
 begin
-  m_connectedInd:=-1;
+  m_connectedInd := -1;
 end;
 
 procedure TDataBlock.evalmod2;
@@ -4044,27 +4040,28 @@ begin
 end;
 
 function TDataBlockList.addBlock(p_spmsize: integer; time: point2d; // timestamp
-                        tb: TDoubleArray;// timeblock
-                        p_timesize: integer): TDataBlock;// размер очередного блока
+  tb: TDoubleArray; // timeblock
+  p_timesize: integer): TDataBlock; // размер очередного блока
 begin
   result := addBlock(p_spmsize);
   result.m_timeStamp := time;
   // дополняем нулями
   if p_timesize < p_spmsize then
   begin
-    //p_timesize := p_spmsize;
+    // p_timesize := p_spmsize;
   end;
   if p_timesize > result.m_timecapacity then
   begin
     SetLength(result.m_TimeBlock, p_timesize);
     result.m_timecapacity := p_timesize;
     GetMemAlignedArray_d(p_timesize, result.m_TimeBlockFlt);
-    result.addnull:=false;
-    if p_spmsize>p_timesize then
+    result.addnull := false;
+    if p_spmsize > p_timesize then
     begin
-      result.addnull:=true;
+      result.addnull := true;
       // выделяем память под блок с дополнением нулями
-      GetMemAlignedArray_d(p_timesize+p_spmsize-p_timesize, result.m_TimeBlockFltNull);
+      GetMemAlignedArray_d(p_timesize + p_spmsize - p_timesize,
+        result.m_TimeBlockFltNull);
     end;
   end;
   GetMemAlignedArray_cmpx_d(p_spmsize, result.m_ClxData);
@@ -4151,7 +4148,7 @@ begin
     bl := getBlock(i);
     if bl = db then
     begin
-      Delete(i);
+      delete(i);
       db.destroy;
       if m_LastBlock > i then
       begin
@@ -4223,16 +4220,16 @@ end;
 
 function TDataBlockList.getBlock(tstamp: double): TDataBlock;
 var
-  I: Integer;
-  bl:TDataBlock;
+  i: integer;
+  bl: TDataBlock;
 begin
-  result:=nil;
-  for I := 0 to Count - 1 do
+  result := nil;
+  for i := 0 to Count - 1 do
   begin
-    bl:=getBlock(i);
-    if bl.m_timeMax=tstamp then
+    bl := getBlock(i);
+    if bl.m_timeMax = tstamp then
     begin
-      result:=bl;
+      result := bl;
       exit;
     end;
   end;
@@ -4291,7 +4288,7 @@ begin
   begin
     a := caxis(parent);
     p := cpage(GetPage);
-    if a.Lg or p.LgX then
+    if a.lg or p.lgX then
     begin
       // CompileLineLg;
     end
@@ -4299,7 +4296,7 @@ begin
     begin
       a := caxis(parent);
       p := cpage(GetPage);
-      if a.Lg or p.LgX then
+      if a.lg or p.lgX then
       begin
         inherited;
       end
@@ -4308,10 +4305,10 @@ begin
         EvalBound;
         EvalA;
         // подготовка к компиляции списка
-        if m_DisplayListName<>0 then
+        if m_DisplayListName <> 0 then
         begin
           glDeleteLists(m_DisplayListName, 1);
-          m_DisplayListName:=0;
+          m_DisplayListName := 0;
         end;
         m_DisplayListName := glGenLists(1);
         glNewList(m_DisplayListName, GL_COMPILE);
@@ -4364,7 +4361,7 @@ end;
 constructor cExpFuncObj.create;
 begin
   inherited;
-  color := orange;
+  Color := orange;
   m_count := 200;
   fA := 1;
   m_x0 := 0;
@@ -4471,15 +4468,15 @@ begin
     0:
       ;
     1:
-    begin
-      result.x:=m_x0;
-      result.y:=fy0;
-    end;
+      begin
+        result.x := m_x0;
+        result.y := fy0;
+      end;
     2:
-    begin
-      result.x:=m_x1;
-      result.y:=m_y1*fdy+faxmin;
-    end;
+      begin
+        result.x := m_x1;
+        result.y := m_y1 * fdy + faxmin;
+      end;
   end;
 end;
 
@@ -4495,12 +4492,12 @@ begin
     2:
       begin
         m_x1 := p.x;
-        if fdy=0 then
-          m_y1 :=0
+        if fdy = 0 then
+          m_y1 := 0
         else
         begin
-          if p.y<faxmin then
-            p.y:=faxmin;
+          if p.y < faxmin then
+            p.y := faxmin;
           m_y1 := (p.y - faxmin) / fdy;
         end;
         fy1 := fdy * m_y1 + faxmin;
@@ -4515,20 +4512,20 @@ var
   i: integer;
   lDist: single;
   lp2: point2;
-  page:cpage;
+  page: cpage;
 begin
-  result:=false;
-  page:=cpage(getpage);
+  result := false;
+  page := cpage(GetPage);
   fTestObj := 0;
 
   lp2.x := p_p2.x - m_x1;
   lp2.y := p_p2.y - fy1;
   lDist := sqrt(lp2.x * lp2.x + lp2.y * lp2.y);
   dist := dist * 2;
-  //page.Caption:=floattostr(p_p2.x)+' '+floattostr(p_p2.y);
+  // page.Caption:=floattostr(p_p2.x)+' '+floattostr(p_p2.y);
   if lDist < dist then
   begin
-    //page.Caption:='test 2';
+    // page.Caption:='test 2';
     fTestObj := 2;
     result := true;
     exit;
@@ -4539,7 +4536,7 @@ begin
   lDist := sqrt(lp2.x * lp2.x + lp2.y * lp2.y);
   if lDist < dist then
   begin
-    //page.Caption:='test 1';
+    // page.Caption:='test 1';
     fTestObj := 1;
     result := true;
   end;
