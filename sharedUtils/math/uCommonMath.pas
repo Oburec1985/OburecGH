@@ -154,7 +154,14 @@ Function CheckHex(str:string):boolean;
  //   Data: ¬ходной динамический массив значений Double.
  //   MinVal: ¬ыходной параметр. «десь будет записано минимальное значение, найденное в массиве.  //   MaxVal: ¬ыходной параметр. «десь будет записано максимальное значение, найденное в массиве.  // ¬озвращает True, если массив не пуст и поиск успешно выполнен, иначе False.
  function FindMinMaxDouble(const Data: array of double; var MinVal, MaxVal: Double): Boolean;
-
+ // ‘ункци€ дл€ поиска максимального значени€ и его индекса в массиве Double.
+  // ѕараметры:
+  //   Data: ¬ходной динамический массив значений Double.
+  //   MaxVal: ¬ыходной параметр. «десь будет записано максимальное значение, найденное в массиве.
+  //   MaxIndex: ¬ыходной параметр. «десь будет записан индекс элемента, содержащего MaxVal.
+  //             ≈сли массив пуст, MaxIndex будет равен -1.
+  // ¬озвращает True, если массив не пуст и поиск успешно выполнен, иначе False.
+ function FindMaxAndIndex(const Data: array of double; var MaxVal: Double; var MaxIndex: Integer): Boolean;
 
 const
 
@@ -1971,6 +1978,42 @@ begin
   end;
   //showmessage(inttostr(mini)+' '+inttostr(maxi));
   Result := True; // ≈сли мы дошли до сюда, значит, массив не пуст и значени€ найдены
+end;
+
+function FindMaxAndIndex(const Data: array of double;
+                         var MaxVal: Double;
+                         var MaxIndex: Integer): Boolean;
+var
+  i: Integer;
+begin
+  // »значально предполагаем, что массив пуст или некорректен
+  Result := False;
+  MaxVal := -MaxDouble; // »нициализируем максимальное значение наименьшим возможным double
+  MaxIndex := -1;       // »нициализируем индекс максимума как -1 (дл€ пустого массива)
+
+  // ѕровер€ем, не пуст ли входной массив
+  if Length(Data) = 0 then
+  begin
+    Exit; // ≈сли массив пуст, выходим, возвраща€ False
+  end;
+
+  // »нициализируем MaxVal и MaxIndex первым элементом массива.
+  // Ёто важно, чтобы корректно обработать массивы из одного элемента
+  // и избежать проблем, если все значени€ будут, например, отрицательными.
+  MaxVal := Data[Low(Data)];
+  MaxIndex := Low(Data);
+
+  // ѕеребираем остальные элементы массива, начина€ со второго
+  for i := Low(Data) + 1 to High(Data) do
+  begin
+    // ≈сли текущий элемент больше текущего максимума, обновл€ем максимум и его индекс
+    if Data[i] > MaxVal then
+    begin
+      MaxVal := Data[i];
+      MaxIndex := i;
+    end;
+  end;
+  Result := True; // ≈сли мы дошли до сюда, значит, массив не пуст и максимум найден
 end;
 
 end.

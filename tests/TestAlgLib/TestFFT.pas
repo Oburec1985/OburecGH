@@ -28,7 +28,6 @@ type
     UseShaders: TCheckBox;
     CheckBox1: TCheckBox;
     SpmDxFe: TFloatEdit;
-    Splitter1: TSplitter;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure MultArraySSEClick(Sender: TObject);
@@ -210,20 +209,22 @@ begin
   //for I := 0 to 4 do
   begin
     Fs:=10000;
+    // F1=1000; F2=10
     f1:=1000; f2:=10;
     dPhase1:=2*pi*F1/Fs;
     dPhase2:=2*pi*F2/Fs;
     Phase1:=0;
     Phase2:=0;
-    for j :=0 to fCount - 1 do
+    a:=cpage(cChart1.activePage).activeAxis;
+    t:=cBuffTrend1d.create;
+    t.flength:=FCount;
+    for j :=0 to t.flength - 1 do
     begin
       tdoublearray(AlignedSampl.p)[j]:=1*Sin(Phase1)+1*Sin(Phase2);
       Phase1:=Phase1+dPhase1;
       Phase2:=Phase2+dPhase2;
     end;
-    a:=cpage(cChart1.activePage).activeAxis;
-    t:=cBuffTrend1d.create;
-    t.flength:=FCount;
+    // fs=10 kHz
     t.dx:=1/Fs;
     t.color:=colorarray[0];
     a.AddChild(t);
@@ -254,6 +255,8 @@ begin
   EvalSpmMag(tcmxArray_d(CmxArray.p), TDoubleArray(MagFFTarray.p));
   MULT_SSE_al_d(TDoubleArray(MagFFTarray.p), 1/fcount);
 
+  FFTProp.m_Zoom:=false;
+  FFTProp.m_ZoomOrd:=0;
   // с добавкой нулей
   move(tdoublearray(AlignedSampl.p)[0],tdoublearray(AlignedSampl2.p)[0],fcount*sizeof(double));
   fft_al_d_sse(tdoublearray(AlignedSampl2.p),

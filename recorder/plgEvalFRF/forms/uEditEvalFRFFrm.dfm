@@ -371,7 +371,7 @@ object EditFrfFrm: TEditFrfFrm
       end
       object NullCB: TCheckBox
         Left = 122
-        Top = 69
+        Top = 89
         Width = 128
         Height = 16
         Caption = #1044#1086#1087#1086#1083#1085#1103#1090#1100' '#1085#1091#1083#1103#1084#1080
