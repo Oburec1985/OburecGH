@@ -209,10 +209,12 @@ begin
   //for I := 0 to 4 do
   begin
     Fs:=10000;
-    // F1=1000; F2=10
-    f1:=1000; f2:=10;
+    dFspm:=Fs/FCount;
+    F1:=1000; F2:=10;
+    //f1:=dFspm*2000; f2:=dFspm*20;
     dPhase1:=2*pi*F1/Fs;
     dPhase2:=2*pi*F2/Fs;
+
     Phase1:=0;
     Phase2:=0;
     a:=cpage(cChart1.activePage).activeAxis;
@@ -247,7 +249,6 @@ begin
 
   spmTrend:=cBuffTrend1d.create;
   spmTrend.flength:=FCount;
-  dFspm:=Fs/FCount;
   spmTrend.dx:=dFspm;
   FFTProp.StartInd:=0;
   fft_al_d_sse(tdoublearray(AlignedSampl.p),
@@ -266,8 +267,8 @@ begin
 
   a:=m_spmpage.activeAxis;
   spmTrendZoom:=cBuffTrend1d.create;
-  spmTrendZoom.flength:=FCount*2;
-  spmTrendZoom.dx:=dFspm/2;
+  spmTrendZoom.flength:=FFTProp2.PCount;
+  spmTrendZoom.dx:=Fs/FFTProp2.PCount;
   spmTrendZoom.color:=red;
   a.AddChild(spmTrendZoom);
   spmTrendZoom.AddPoints(tdoublearray(MagFFTarrayZoom.p));

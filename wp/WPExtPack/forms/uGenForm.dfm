@@ -188,11 +188,8 @@ object GenFrm: TGenFrm
     ActivePage = ShockPage
     Align = alClient
     TabOrder = 1
-    ExplicitTop = -6
     object MeandrTS: TTabSheet
       Caption = #1052#1077#1072#1085#1076#1088
-      ExplicitLeft = 6
-      ExplicitTop = 22
       object Label1: TLabel
         Left = 16
         Top = 15
@@ -213,7 +210,6 @@ object GenFrm: TGenFrm
     object ShockPage: TTabSheet
       Caption = 'Shock'
       ImageIndex = 1
-      ExplicitLeft = 5
       ExplicitTop = 22
       object AmplImpactLabel: TLabel
         Left = 18
@@ -223,8 +219,8 @@ object GenFrm: TGenFrm
         Caption = 'Ampl. impact'
       end
       object RefAmpl: TLabel
-        Left = 18
-        Top = 105
+        Left = 305
+        Top = 49
         Width = 44
         Height = 13
         Caption = 'Ampl ref.'
@@ -237,8 +233,8 @@ object GenFrm: TGenFrm
         Caption = 'ShockCount'
       end
       object RefLenL: TLabel
-        Left = 162
-        Top = 105
+        Left = 449
+        Top = 49
         Width = 38
         Height = 13
         Caption = 'Ref. len'
@@ -252,24 +248,38 @@ object GenFrm: TGenFrm
       end
       object RefShiftL: TLabel
         Left = 305
-        Top = 105
+        Top = 103
         Width = 45
         Height = 13
         Caption = 'Ref. shift'
       end
-      object FsLab: TLabel
-        Left = 18
-        Top = 2
-        Width = 61
-        Height = 13
-        Caption = 'Ampl. impact'
-      end
       object PauseLabel: TLabel
         Left = 18
         Top = 201
+        Width = 52
+        Height = 13
+        Caption = 'Pause, sec'
+      end
+      object SigNameLabel: TLabel
+        Left = 17
+        Top = 3
+        Width = 62
+        Height = 13
+        Caption = #1048#1084#1103' '#1089#1080#1075#1085#1072#1083#1072
+      end
+      object RefNameLabel: TLabel
+        Left = 305
+        Top = 3
         Width = 38
         Height = 13
-        Caption = 'Ref. len'
+        Caption = #1054#1090#1082#1083#1080#1082
+      end
+      object InfoLabel: TLabel
+        Left = 162
+        Top = 223
+        Width = 24
+        Height = 13
+        Caption = 'Info:'
       end
       object AmplImpact: TFloatSpinEdit
         Left = 18
@@ -281,8 +291,8 @@ object GenFrm: TGenFrm
         Value = 2.000000000000000000
       end
       object AmplRefFE: TFloatSpinEdit
-        Left = 18
-        Top = 124
+        Left = 305
+        Top = 68
         Width = 121
         Height = 22
         Increment = 0.100000000000000000
@@ -290,8 +300,8 @@ object GenFrm: TGenFrm
         Value = 1.000000000000000000
       end
       object RefLenE: TFloatSpinEdit
-        Left = 162
-        Top = 124
+        Left = 449
+        Top = 68
         Width = 121
         Height = 22
         Increment = 0.100000000000000000
@@ -309,45 +319,36 @@ object GenFrm: TGenFrm
       end
       object RefShiftSE: TFloatSpinEdit
         Left = 305
-        Top = 124
+        Top = 122
         Width = 121
         Height = 22
         Increment = 0.003000000000000000
         TabOrder = 4
         Value = 0.003000000000000000
       end
-      object FsFe: TFloatSpinEdit
-        Left = 18
-        Top = 21
-        Width = 121
-        Height = 22
-        Increment = 0.100000000000000000
-        TabOrder = 5
-        Value = 57600.000000000000000000
-      end
       object ImpactE: TEdit
-        Left = 305
-        Top = 21
+        Left = 18
+        Top = 22
         Width = 121
         Height = 21
-        TabOrder = 6
+        TabOrder = 5
         Text = 'Impact'
       end
       object RefNameE: TEdit
         Left = 305
-        Top = 68
+        Top = 22
         Width = 121
         Height = 21
-        TabOrder = 7
+        TabOrder = 6
         Text = 'Ref'
       end
       object PauseFe: TFloatSpinEdit
-        Left = 17
+        Left = 16
         Top = 220
         Width = 121
         Height = 22
         Increment = 0.100000000000000000
-        TabOrder = 8
+        TabOrder = 7
         Value = 1.000000000000000000
       end
     end
@@ -392,5 +393,6 @@ object GenFrm: TGenFrm
     MinValue = 0
     TabOrder = 3
     Value = 2
+    OnChange = ShockCountIEChange
   end
 end

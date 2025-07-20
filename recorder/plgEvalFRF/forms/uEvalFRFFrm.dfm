@@ -429,6 +429,9 @@ object FRFFrm: TFRFFrm
           item
             Caption = 'Y'
             Width = 38
+          end
+          item
+            Caption = 'Ind'
           end>
         RowSelect = True
         TabOrder = 0
@@ -445,7 +448,7 @@ object FRFFrm: TFRFFrm
     end
     object ResTypeRG: TRadioGroup
       Left = 127
-      Top = 72
+      Top = 66
       Width = 57
       Height = 69
       Caption = 'ResTypeRG'

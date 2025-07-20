@@ -1083,12 +1083,12 @@ END
 /* forms\uGraphMngFrm.dfm */
 /* forms\uSelectPathForm.dfm */
 /* C:\Oburec\OburecGH\wp\WPExtPack\forms\uGenForm.dfm */
-/* forms\uSelectIntervalFrm.dfm */
 /* forms\frames\uIntervalFrame.dfm */
 /* forms\uIntervalFrm.dfm */
 /* forms\uEditTubeFrm.dfm */
-/* forms\uWPProcFrm.dfm */
+/* forms\uSelectIntervalFrm.dfm */
 /* forms\uNIIPMTenzopluginForm.dfm */
+/* C:\Oburec\OburecGH\wp\WPExtPack\forms\uWPProcFrm.dfm */
 /* forms\uCorrectUTS.dfm */
 /* forms\uAddSignalFrm.dfm */
 /* forms\uKBHMFrm.dfm */

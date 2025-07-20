@@ -48,19 +48,22 @@ type
     ImpactLenL: TLabel;
     RefShiftL: TLabel;
     RefShiftSE: TFloatSpinEdit;
-    FsLab: TLabel;
-    FsFe: TFloatSpinEdit;
     ImpactE: TEdit;
     RefNameE: TEdit;
     PauseFe: TFloatSpinEdit;
     PauseLabel: TLabel;
+    SigNameLabel: TLabel;
+    RefNameLabel: TLabel;
+    InfoLabel: TLabel;
     procedure FreqRGClick(Sender: TObject);
     procedure AmpRGClick(Sender: TObject);
+    procedure ShockCountIEChange(Sender: TObject);
   private
     vPhase, aPhase, a:double;
   private
     procedure GenMeandr;
     procedure GenShock;
+    procedure UpdateInfo;
     // решаем уравнение x:=x0+v0*t+a*tt/2
     function GetSqrX(x0, v0, a, t:double):double;
     function GetScale(t:double):double;
@@ -161,8 +164,8 @@ begin
   t:=t+PauseFe.Value;
   period:=t;
   t:=t*ShockCountIE.Value;
-  len:=round(fsfe.value*t);
-  dt:=1/fsFe.Value;
+  len:=round(FSse.value*t);
+  dt:=1/FSse.Value;
 
   s1:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
   s2:=posbase.winpos.CreateSignal(VT_R8) as IWPSignal;
@@ -177,8 +180,8 @@ begin
   s2.DeltaX:=dt;
   s1.StartX:=0;
   s2.StartX:=0;
-  dp1:=ImpactLenSE.Value/FsFe.Value;
-  dp2:=RefLenE.Value/FsFe.Value;
+  dp1:=ImpactLenSE.Value/FSse.Value;
+  dp2:=RefLenE.Value/FSse.Value;
   j:=0;
   curt:=0;
   for I := 0 to ShockCountIE.Value - 1 do
@@ -193,7 +196,7 @@ begin
       else
       begin
         phase:=pi*(curt-PauseFe.Value)/ImpactLenSE.Value;
-        if phase>pi then
+        if phase>pi then  // удар завершен
         begin
           s1.SetY(j,0);
         end
@@ -201,12 +204,12 @@ begin
           s1.SetY(j,AmplImpact.Value*sin(phase));
         if (curt-PauseFe.Value)<RefShiftSE.Value then
         begin
-          s2.SetY(j,0);
+          s2.SetY(j,0); // удар завершен
         end
         else
-        begin
+        begin // коррекция фазы отклика на RefShiftSE
           phase:=pi*(curt-PauseFe.Value-RefShiftSE.Value)/ImpactLenSE.Value;
-          s2.SetY(j,AmplImpact.Value*AmplRefFE.Value*sin(phase));
+          s2.SetY(j,AmplRefFE.Value*sin(phase));
         end;
       end;
       inc(j);
@@ -280,6 +283,11 @@ begin
   end;
 end;
 
+procedure TGenFrm.ShockCountIEChange(Sender: TObject);
+begin
+  UpdateInfo;
+end;
+
 Function TGenFrm.ShowModal:integer;
 begin
   AmpRGClick(nil);
@@ -291,6 +299,14 @@ begin
       1:GenShock;
     end;
   end;
+end;
+
+procedure TGenFrm.UpdateInfo;
+begin
+  InfoLabel.caption:='Info: ShockLen='+
+                 floattostr(ShockCountIE.Value*
+                            (RefShiftSE.Value+
+                            RefLenE.Value+PauseFe.Value));
 end;
 
 end.

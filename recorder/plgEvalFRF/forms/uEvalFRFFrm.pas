@@ -430,6 +430,8 @@ type
     procedure setNewAx(b: boolean);
     procedure ShowSignalsLV;
     procedure Showbladestatus(s: integer);
+    // получить значение датчика в заданном X с учетом типа выбраной линии
+    function GetSelectValue(s: csrsres; x:double; shockIndex:integer):double;
   public
     // просчитать по линиям флаги и сравнить их с band
     // если не попадают в bands то лопатка бракованная
@@ -2335,6 +2337,7 @@ begin
   result := c.GetSrs(s);
 end;
 
+
 function TFRFFrm.getTaho: cSRSTaho;
 begin
   if m_TahoList.Count > 0 then
@@ -2460,7 +2463,7 @@ begin
     lname := extractfiledir(fname) + '\' + 'spm_' + sname + '.dat';
     AssignFile(f, lname);
     Rewrite(f, 1);
-    BlockWrite(f, db.m_mod.p, sizeof(double) * db.m_spmsize);
+    BlockWrite(f, tdoublearray(db.m_mod.p)[0], sizeof(double) * db.m_spmsize);
     closefile(f);
 
     lname := extractfiledir(fname) + '\' + 'frf_' + sname + '.dat';
@@ -2832,6 +2835,47 @@ begin
   UpdateView;
 end;
 
+function TFRFFrm.GetSelectValue(s: csrsres; x: double;
+                                shockIndex:integer): double;
+var
+  c:cSpmCfg;
+  ind:integer;
+  y, y1,y2, x1:double;
+  db:TDataBlock;
+begin
+  c:=s.cfg;
+  ind := trunc(x / c.fspmdx);
+  db:=s.m_shockList.getBlock(shockIndex);
+  case ResTypeRG.ItemIndex of
+    0: // frf
+    begin
+      y1:=db.m_frf[ind];
+      y2:=db.m_frf[ind+1];
+    end;
+    1: // coh
+    begin
+      y1:=s.m_shockList.m_coh[ind];
+      y2:=s.m_shockList.m_coh[ind+1];
+    end;
+    2: // spm
+    begin
+      y1:=tdoublearray(db.m_mod.p)[ind];
+      y2:=tdoublearray(db.m_mod.p)[ind+1];
+    end;
+    3: // phase
+    begin
+      y1:=(180 / pi) * ArcTan
+              (s.m_shockList.m_Cxy[ind].im / s.m_shockList.m_Cxy[ind].Re);
+      y2:=(180 / pi) * ArcTan
+              (s.m_shockList.m_Cxy[ind+1].im /
+              s.m_shockList.m_Cxy[ind+1].Re);
+    end;
+  end;
+  x1:=ind * c.fspmdx;
+  y := EvalLineYd(x, p2d(x1, y1), p2d(x1+c.fspmdx, y2));
+  result:=y;
+end;
+
 procedure TFRFFrm.SpmChartCursorMove(sender: tobject);
 var
   t: cSRSTaho;
@@ -2875,10 +2919,10 @@ begin
     begin
       s := c.GetSrs(j);
       li := SignalsLV.Items[j];
+      ind:=trunc(x1/s.cfg.fspmdx);
+      SignalsLV.SetSubItemByColumnName('Ind', inttostr(ind), li);
       SignalsLV.SetSubItemByColumnName('X', formatstr(x1, 4), li);
-      ind := trunc(x1 / c.fspmdx);
-      y := EvalLineYd(x1, p2d(ind * c.fspmdx, s.m_frf[ind]),
-        p2d((ind + 1) * c.fspmdx, s.m_frf[ind + 1]));
+      y := GetSelectValue(s, x1, shockie.IntNum);
       SignalsLV.SetSubItemByColumnName('Y', formatstrnoe(y, 4), li);
     end;
     LVChange(SignalsLV);
@@ -2905,8 +2949,8 @@ begin
       end;
     end;
   end;
-  updateFrf(false);
-  UpdateView;
+  //updateFrf(false);
+  //UpdateView;
 end;
 
 procedure TFRFFrm.SpmChartDblClick(sender: tobject);
@@ -4110,6 +4154,9 @@ begin
         end;
       end;
   end;
+  // сдвиг нуля (центрирование)
+  m:=mean(m_TimeBlock);
+  SubtractFromArray_SSE_Double(TDoubleArray(m_TimeBlockFlt.p),m);
 end;
 
 procedure TDataBlockList.clearData;

@@ -550,6 +550,7 @@ begin
     s:=c.GetSrs(i);
     s.updateBlock(FFTBlockSizeIE.IntNum, round(m_srs.m_length*s.m_tag.freq));
   end;
+  m_SRS.UpdateBlocks;
 end;
 
 procedure TEditFrfFrm.UpdateTags;
