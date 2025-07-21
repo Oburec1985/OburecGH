@@ -1241,7 +1241,10 @@ begin
     if c>ChildCount then
     begin
       bl:=cBladeFolder.create;
-      bl.setObjType(cBladeFolder(selected).ObjType);
+      if cBladeFolder(selected)<>nil then
+      begin
+        bl.setObjType(cBladeFolder(selected).ObjType);
+      end;
       bl.name:='Bl_'+inttostr(ChildCount+1);
       AddChild(bl);
     end

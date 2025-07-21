@@ -2843,9 +2843,12 @@ var
   y, y1,y2, x1:double;
   db:TDataBlock;
 begin
+  result:=0;
   c:=s.cfg;
   ind := trunc(x / c.fspmdx);
   db:=s.m_shockList.getBlock(shockIndex);
+  if db=nil then exit;
+
   case ResTypeRG.ItemIndex of
     0: // frf
     begin

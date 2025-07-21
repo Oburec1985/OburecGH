@@ -111,6 +111,7 @@ end;
 procedure TEditTestFrm.OkBtnClick(Sender: TObject);
 var
   f, s, bl:cxmlfolder;
+  I: Integer;
 begin
   ToneToType;
   if TurbNameCb.text<>'' then
@@ -141,6 +142,14 @@ begin
       f.setObjType(TurbCB.text);
       s:=g_mbase.SelectStage;
       cStageFolder(s).BlCount:=BlCountIE.Value;
+      if cStageFolder(s).selected=nil then
+      begin
+        for I := 0 to cStageFolder(s).ChildCount - 1 do
+        begin
+          bl:=cBladeFolder(cStageFolder(s).getChild(i));
+          bl.setObjType(BladeCB.Text);
+        end;
+      end;
       bl:=g_mbase.SelectBlade;
       bl.setObjType(BladeCB.Text);
     end;

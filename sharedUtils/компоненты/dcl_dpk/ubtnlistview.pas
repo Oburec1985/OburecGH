@@ -238,9 +238,12 @@ begin
       li.Caption:=Name
     else
     begin
-      while li.SubItems.Count<colNumber do
-            ind:=li.SubItems.Add('1');
-      li.SubItems.Strings[colNumber-1]:=Name;
+      if li<>nil then
+      begin
+        while li.SubItems.Count<colNumber do
+              ind:=li.SubItems.Add('1');
+        li.SubItems.Strings[colNumber-1]:=Name;
+      end;
     end;
     Result:=true;
     exit;

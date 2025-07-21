@@ -312,9 +312,12 @@ begin
 
   SaveT0CB.Checked:=m_srs.m_saveT0;
   t:=m_SRS.getTaho;
-  NullCB.Checked:=t.cfg.m_addNulls;
   if t<>nil then
-    ShowTaho(t);
+  begin
+    NullCB.Checked:=t.cfg.m_addNulls;
+    if t<>nil then
+      ShowTaho(t);
+  end;
   SignalsTV.clear;
   if t<>nil then
   begin
@@ -498,6 +501,7 @@ var
   n:PVirtualNode;
   d:PNodeData;
   I, j: Integer;
+  selbl:cxmlfolder;
 begin
   m_SRS.m_ShiftLeft:=LeftShiftEdit.FloatNum;
   m_SRS.m_Length:=LengthFE.FloatNum;
@@ -519,8 +523,9 @@ begin
   m_SRS.m_showflags:=FlagsCB.Checked;
   m_SRS.m_showBandLab:=BandLabelCB.Checked;
   m_SRS.UpdateBandNames;
-  m_SRS.BladeNumEdit.Text:=cbladefolder(g_mbase.SelectBlade).name;
-
+  selbl:=g_mbase.SelectBlade;
+  if selbl<>nil then
+    m_SRS.BladeNumEdit.Text:=selbl.name;
   n:=SignalsTV.FocusedNode;
   d:=SignalsTV.GetNodeData(n);
   if d<>nil then
