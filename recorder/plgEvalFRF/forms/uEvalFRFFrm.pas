@@ -825,88 +825,10 @@ end;
 
 procedure TFRFFrm.buildReport;
 var
-  r0, i, j, r, c: integer;
-  t: cSRSTaho;
-  s: cSRSres;
-  cfg: cSpmCfg;
-  b: tspmband;
-  extr: PExtremum1d;
-  date: TDateTime;
-  res: boolean;
-  rng: olevariant;
-  str, str1, str2, repPath: string;
-  minmax: point2d;
-  v: double;
   turb: cTurbFolder;
-  stage: cStageFolder;
-  blade: cBladeFolder;
 begin
-  if VarIsEmpty(E) then
-  begin
-    // if not CheckExcelRun then
-    begin
-      CreateExcel;
-      VisibleExcel(true);
-    end;
-  end;
   turb := g_mbase.SelectTurb;
-  stage := g_mbase.SelectStage;
-  blade := g_mbase.SelectBlade;
-  repPath := turb.getFolder + 'Report.xlsx';
-  if fileexists(repPath) then
-  begin
-    if not IsExcelFileOpen(repPath) then
-    begin
-      OpenWorkBook(repPath);
-    end
-  end
-  else
-  begin
-    AddWorkBook;
-    AddSheet('Page_01');
-  end;
-  r0 := GetEmptyRow(1, 1, 2);
-  SetCell(1, r0, 2, 'Турбина:');
-  SetCell(1, r0, 3, turb.ObjType);
-  SetCell(1, r0, 4, 'Ступень:');
-  SetCell(1, r0, 5, stage.m_sn);
-  SetCell(1, r0, 6, 'MeraFile:');
-  SetCell(1, r0, 7, m_MeraFile);
-  inc(r0);
-  SetCell(1, r0, 2, 'Число лопаток:');
-  SetCell(1, r0, 3, stage.BlCount);
-  inc(r0);
-  SetCell(1, r0, 2, 'Лопатка');
-  SetCell(1, r0, 3, 'Band');
-  SetCell(1, r0, 4, 'A1');
-  SetCell(1, r0, 5, 'F1');
-  // проход по формам (полосам)
-  blade := nil;
-  for i := 0 to stage.BlCount - 1 do
-  begin
-    inc(r0);
-    blade := cBladeFolder(stage.GetNext(blade));
-    SetCell(1, r0, 2, blade.name);
-    for j := 0 to m_bands.Count - 1 do
-    begin
-      str := getSubStrByIndex(blade.m_resStr, ';', 1, j);
-      str1 := getSubStrByIndex(str, '_', 1, 0);
-      SetCell(1, r0, 3, str1);
-      str1 := getSubStrByIndex(str, '_', 1, 1);
-      str2 := getSubStrByIndex(str, '_', 1, 2);
-      SetCell(1, r0, 4, strtofloatext(str1));
-      SetCell(1, r0, 5, strtofloatext(str2));
-      if blade.m_res = 1 then
-      begin
-        rng := GetRangeObj(1, point(r0, 2), point(r0, 5));
-        rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
-      end;
-    end;
-  end;
-
-  SaveWorkBookAs(repPath);
-  CloseWorkBook;
-  CloseExcel;
+  turb.Buildreport;
 end;
 
 procedure TFRFFrm.SaveReport(repname: string; bl: cBladeFolder);

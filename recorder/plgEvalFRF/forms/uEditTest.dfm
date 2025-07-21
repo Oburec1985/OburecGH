@@ -86,7 +86,7 @@ object EditTestFrm: TEditTestFrm
     end
     object BlCountLabel: TLabel
       Left = 296
-      Top = 74
+      Top = 160
       Width = 58
       Height = 21
       Margins.Left = 2
@@ -98,13 +98,24 @@ object EditTestFrm: TEditTestFrm
     object TNameLabel: TLabel
       Left = 296
       Top = 32
-      Width = 36
+      Width = 37
       Height = 21
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
       Margins.Bottom = 2
-      Caption = #1058#1080#1087':'
+      Caption = #1048#1084#1103':'
+    end
+    object StageCountLabel: TLabel
+      Left = 296
+      Top = 74
+      Width = 58
+      Height = 21
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
+      Caption = #1050#1086#1083'-'#1074#1086':'
     end
     object TurbCB: TComboBox
       Left = 149
@@ -117,11 +128,12 @@ object EditTestFrm: TEditTestFrm
       Margins.Bottom = 2
       TabOrder = 0
       Text = 'TurbCB'
+      OnChange = TurbCBChange
       Items.Strings = (
         #1043#1058#1069'-170.1')
     end
     object StageCB: TComboBox
-      Left = 147
+      Left = 149
       Top = 71
       Width = 135
       Height = 29
@@ -131,6 +143,7 @@ object EditTestFrm: TEditTestFrm
       Margins.Bottom = 2
       TabOrder = 1
       Text = '1'
+      OnChange = StageCBChange
       Items.Strings = (
         '1')
     end
@@ -203,10 +216,25 @@ object EditTestFrm: TEditTestFrm
       Margins.Bottom = 2
       TabOrder = 5
       Text = 'TurbCB'
+      OnChange = TurbNameCbChange
       Items.Strings = (
         #1043#1058#1069'-170.1')
     end
     object BlCountIE: TSpinEdit
+      Left = 358
+      Top = 157
+      Width = 135
+      Height = 31
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
+      MaxValue = 0
+      MinValue = 0
+      TabOrder = 6
+      Value = 0
+    end
+    object StageCountSE: TSpinEdit
       Left = 358
       Top = 71
       Width = 135
@@ -217,7 +245,7 @@ object EditTestFrm: TEditTestFrm
       Margins.Bottom = 2
       MaxValue = 0
       MinValue = 0
-      TabOrder = 6
+      TabOrder = 7
       Value = 0
     end
   end
@@ -282,9 +310,9 @@ object EditTestFrm: TEditTestFrm
       ExplicitHeight = 146
     end
     object ThresholdSE: TFloatSpinEdit
-      Left = 111
+      Left = 119
       Top = 36
-      Width = 96
+      Width = 114
       Height = 31
       Margins.Left = 2
       Margins.Top = 2
@@ -295,9 +323,9 @@ object EditTestFrm: TEditTestFrm
       Value = 5.000000000000000000
     end
     object PersonE: TEdit
-      Left = 111
-      Top = 77
-      Width = 96
+      Left = 119
+      Top = 71
+      Width = 114
       Height = 29
       Margins.Left = 2
       Margins.Top = 2

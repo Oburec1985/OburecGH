@@ -392,6 +392,9 @@ const
   // получить номер строки в которое встречена пустая ячейка
   // проверка идет по колонке col в листе sh начиная с sh
   function GetEmptyRow(sh, r0, col: integer): integer;
+  function ClearExcelSheet(const ExcelApp: Variant;
+                           const ASheetIdentifier: OleVariant;
+                           AContentsOnly: Boolean = False): Boolean;
 
 var
   E:OleVariant;
@@ -399,6 +402,37 @@ var
 implementation
 uses
   forms;
+
+function ClearExcelSheet(const ExcelApp: Variant; const ASheetIdentifier: OleVariant; AContentsOnly: Boolean = False): Boolean;
+var
+  Sheet: Variant;
+begin
+  Result := False;
+  // Проверяем, что OLE-объект Excel действителен
+  if VarIsEmpty(ExcelApp) or VarIsNull(ExcelApp) then
+    Exit;
+  try
+    // Получаем доступ к листу по имени или индексу
+    Sheet := ExcelApp.Worksheets[ASheetIdentifier];
+
+    // Выбираем метод очистки
+    if AContentsOnly then
+      // Очищаем только содержимое используемых ячеек
+      Sheet.UsedRange.ClearContents
+    else
+      // Очищаем содержимое, форматы и примечания
+      Sheet.UsedRange.Clear;
+
+    Result := True;
+  except
+    on E: Exception do
+    begin
+      // В случае ошибки (например, лист не найден) функция вернет False.
+      // Можно добавить логирование или показ сообщения:
+      // ShowMessage('Ошибка при очистке листа Excel: ' + E.Message);
+    end;
+  end;
+end;
 
 // получить номер строки в которое встречена пустая ячейка
 // проверка идет по колонке col в листе sh начиная с sh

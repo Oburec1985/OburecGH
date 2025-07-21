@@ -34,17 +34,24 @@ type
     BlCountIE: TSpinEdit;
     BlCountLabel: TLabel;
     TNameLabel: TLabel;
+    StageCountLabel: TLabel;
+    StageCountSE: TSpinEdit;
     procedure OkBtnClick(Sender: TObject);
     procedure ProfileSGKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure Splitter2Moved(Sender: TObject);
     procedure BladeSeChange(Sender: TObject);
+    procedure TurbNameCbChange(Sender: TObject);
+    procedure TurbCBChange(Sender: TObject);
+    procedure StageCBChange(Sender: TObject);
   private
     procedure init;
     procedure showbase;
+    procedure showTurb(t:cTurbFolder);
+    procedure updateTypes;
     // перенести данные из Sg в тип лопатки
     procedure ToneToType;
-    // показать свойства лопатки
+    // показать свойства типа лопатки выбраной в поле "чертеж"
     procedure ShowTone;
     function ValidRowCount:integer;
   public
@@ -113,7 +120,7 @@ var
   f, s, bl:cxmlfolder;
   I: Integer;
 begin
-  ToneToType;
+  updateTypes;
   if TurbNameCb.text<>'' then
   begin
     f:=cxmlfolder(g_mbase.getobj(TurbNameCb.text));
@@ -124,6 +131,8 @@ begin
       f.name:=TurbNameCb.text;
       g_mbase.root.selected:=f;
       g_mbase.root.AddChild(f);
+      TurbNameCb.AddItem(f.name, f);
+      CheckCBItemInd(TurbNameCb);
 
       s:=cStageFolder.create;
       s.name:=f.name+'_Stage_'+StageCB.text;
@@ -170,6 +179,7 @@ end;
 procedure TEditTestFrm.showbase;
 var
   I: Integer;
+  t:cTurbFolder;
 begin
   // заполняем типы объектов
   turbCB.Clear;
@@ -184,17 +194,28 @@ begin
   begin
     BladeCB.Items.AddObject(g_mbase.root.m_BladeTypes.Strings[i], g_mbase.root.m_BladeTypes.Objects[i]);
   end;
-  BladeCB.ItemIndex:=0;
-  g_mbase.root.selected:=cxmlfolder(g_mbase.root.getChild(0));
-  if g_mbase.root.selected<>nil then
+
+  TurbNameCB.Clear;
+  for I := 0 to g_mbase.root.ChildCount - 1 do
   begin
-    // ступень
-    g_mbase.root.selected.selected:=cxmlfolder(g_mbase.root.selected.getChild(0));
-    BlCountIE.Value:=cStageFolder(g_mbase.root.selected.selected).BlCount;
-    // лопатка
-    g_mbase.root.selected.selected.selected:=cxmlfolder(g_mbase.root.selected.selected.getChild(0));
+    t:=cTurbFolder(g_mbase.root.getChild(i));
+    TurbNameCB.AddItem(t.name, t);
+    if i=0 then
+    begin
+      TurbNameCB.ItemIndex:=0;
+    end;
   end;
-  ShowTone;
+  BladeCB.ItemIndex:=0;
+  if t<>nil then
+  begin
+    showTurb(t);
+    // ступень
+    t.selected:=cxmlfolder(t.getChild(0));
+    BlCountIE.Value:=cStageFolder(t.selected).BlCount;
+    // лопатка
+    t.selected.selected:=cxmlfolder(t.selected.getChild(0));
+    ShowTone;
+  end;
   SGChange(ProfileSG);
 end;
 
@@ -222,9 +243,39 @@ begin
   end;
 end;
 
+procedure TEditTestFrm.showTurb(t: cTurbFolder);
+var
+  I: Integer;
+  s:cStageFolder;
+begin
+  StageCountSE.Value:=t.GetStageCount;
+  StageCB.Items.Clear;
+
+  for I := 0 to StageCountSE.Value - 1 do
+  begin
+    s:=cStageFolder(t.getChild(i));
+    StageCB.Items.AddObject(inttostr(i+1), s);
+  end;
+  BlCountIE.Value:=t.GetBladeCount(strtoint(StageCB.Text));
+end;
+
 procedure TEditTestFrm.Splitter2Moved(Sender: TObject);
 begin
   splitter1.Left:=Splitter2.Left;
+end;
+
+procedure TEditTestFrm.StageCBChange(Sender: TObject);
+var
+  t:cTurbFolder;
+  s:cStageFolder;
+begin
+  t:=g_mbase.SelectTurb;
+  s:=t.GetStage(StageCB.ItemIndex);
+  if s<>nil then
+  begin
+    t.selected:=s;
+    BlCountIE.Value:=t.GetBladeCount(StageCB.ItemIndex);
+  end;
 end;
 
 function isValidRow(sg:tstringgrid;r:integer):boolean;
@@ -233,6 +284,28 @@ begin
   if sg.Cells[1,r]<>'' then
     if sg.Cells[2,r]<>'' then
       result:=true;
+end;
+
+procedure TEditTestFrm.updateTypes;
+var
+  o:cObjType;
+begin
+  ToneToType;
+  // тип турбины
+  o:=g_mbase.root.getType(TurbCB.text);
+  if o<>nil then
+  begin
+  end
+  else
+  begin
+    o:=cObjType.create;
+    o.name:=TurbCB.text;
+    g_mbase.root.m_turbTypes.AddObject(o.name,o);
+    TurbCB.AddItem(o.name, o);
+    CheckCBItemInd(TurbCB);
+  end;
+  o.setPropVal('StageCount', inttostr(StageCountSE.Value));
+  o.setPropVal('StageBCount_'+stageCB.Text, inttostr(BlCountIE.Value));
 end;
 
 procedure TEditTestFrm.ToneToType;
@@ -258,6 +331,21 @@ begin
         o.addProp('Threshold_'+inttostr(r), ProfileSG.Cells[3, r]);
       end;
     end;
+  end;
+end;
+
+procedure TEditTestFrm.TurbCBChange(Sender: TObject);
+begin
+  TurbNameCbChange(Sender);
+end;
+
+procedure TEditTestFrm.TurbNameCbChange(Sender: TObject);
+begin
+  if CheckCBItemInd(tcombobox(Sender)) then
+  begin
+    g_mbase.root.selected:=
+                cTurbFolder(g_mbase.root.
+                getChild(TurbNameCb.ItemIndex));
   end;
 end;
 

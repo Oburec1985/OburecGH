@@ -155,7 +155,6 @@ end;
 
 
 function bList.addband(f1, f2, threshold:double; chart:cchart): tspmBand;
-
 begin
   result:=tSpmBand.create;
   result.owner:=self;
@@ -163,7 +162,8 @@ begin
   result.m_f2:=f2;
   m_c:=chart;
   result.m_thresh:=threshold;
-  result.setchart(chart);
+  if m_c<>nil then
+    result.setchart(chart);
   Add(result);
 end;
 

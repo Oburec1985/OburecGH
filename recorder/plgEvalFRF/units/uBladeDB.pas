@@ -2,8 +2,10 @@ unit uBladeDB;
 
 interface
 uses
+  windows,
   uDBObject, ubaseobj, pathutils, uCommonMath, sysutils, nativexml, classes, uPathMng, dialogs,
-  inifiles, upoint, ucommontypes;
+  inifiles, upoint, ucommontypes, uspmband,
+  variants, uExcel, u2dmath;
 
 type
   // структура для описания замера внутри регистрации
@@ -39,8 +41,6 @@ type
     procedure clearProps;
   protected
     procedure setname(str:string);override;
-    function getObjType:cobjtype;
-
     // использовать str не рекомендуется, тк str это путь, который все равно присваивается далее в методе
     // setpath сразу после создания объекта
     function CreateDBObj(str:string):cDBobject;override;
@@ -51,6 +51,7 @@ type
     function getdsc:string;
     //procedure DoLincParent;override;
   public
+    function getObjType:cobjtype;
     // получить путь к паке рядом с дескриптором
     function getFolder:string;
     // установить тип объекта
@@ -125,12 +126,17 @@ type
     destructor destroy;override;
   end;
 
+  cStageFolder  = class;
+
   // испытываемый объект
   cTurbFolder = class(cXmlFolder)
   private
 
   public
-
+    function GetBladeCount(stageNum:integer):integer;
+    function GetStageCount:integer;
+    function GetStage(i:integer):cstageFolder;
+    procedure Buildreport;
   end;
 
   // испытания
@@ -157,6 +163,7 @@ type
     m_res:integer;
     m_sn:integer;
   protected
+    procedure getTones(list:blist);
     procedure doCreateFiles(node:txmlnode);override;
     procedure doLoadDesc(node:txmlnode);override;
   public
@@ -176,6 +183,8 @@ type
     function createBaseFolder:cDBFolder;override;
     function getObjType(t:string):cObjtype;
     procedure regObjClasses;override;
+    // происходит вконце загрузки
+    procedure doAfterLoadXML;override;
   public
     function SelectTurb:cTurbFolder;
     function SelectStage:cStageFolder;
@@ -232,6 +241,34 @@ begin
 end;
 
 
+procedure cBladeBase.doAfterLoadXML;
+var
+  t:cTurbFolder;
+  s:cStageFolder;
+  o:cObjType;
+  I, j, c: Integer;
+begin
+  inherited;
+  // корректируем типы турбины. Если каталогов ступеней больше чем
+  // ступеней в типе то корректируем тип
+  for I := 0 to root.ChildCount - 1 do
+  begin
+    t:=cTurbFolder(root.getChild(i));
+    o:=t.getObjType;
+    for j := 0 to t.ChildCount - 1 do
+    begin
+      s:=t.GetStage(j);
+      if t.GetBladeCount(j)=0 then
+      begin
+        if s.BlCount>0 then
+        begin
+          o.addProp('StageBCount_'+IntToStr(i+1), inttostr(s.BlCount));
+        end;
+      end;
+    end;
+  end;
+end;
+
 function cBladeBase.getObjType(t:string): cObjtype;
 begin
   result:=root.getType(t);
@@ -255,13 +292,14 @@ begin
     xml.LoadFromFile(lstr);
     node:=xml.Root;
     root.doloadDesc(node);
+    doAfterLoadXML;
     xml.Destroy;
   end
   else
   begin
     objtype:=cObjType.create;
     objtype.fname:='ГТЭ-170.1';
-    objtype.addProp('Ступеней','2');
+    objtype.addProp('StageCount','2');
     objtype.owner:=cBladeBaseFolder(m_BaseFolder).m_turbTypes;
     cBladeBaseFolder(m_BaseFolder).m_turbTypes.AddObject(objtype.fname,objtype);
     // Типы лопаток
@@ -1157,6 +1195,20 @@ begin
   m_resStr:=node.ReadAttributeString('ResStr','');
 end;
 
+procedure cBladeFolder.getTones(list: blist);
+var
+  c, i:integer;
+  p3:point3d;
+begin
+  list.cleardata;
+  c := ToneCount;
+  for i := 0 to c - 1 do
+  begin
+    p3 := Tone(i);
+    list.addband(p3.x, p3.y, p3.z, nil);
+  end;
+end;
+
 function cBladeFolder.ObjType: string;
 begin
   result:=m_ObjType;
@@ -1261,6 +1313,126 @@ end;
 function cStageFolder.getBlCount: integer;
 begin
   result:=ChildCount;
+end;
+
+{ cTurbFolder }
+
+procedure cTurbFolder.Buildreport;
+var
+  r0, i, j, r, c: integer;
+  b: tspmband;
+  extr: PExtremum1d;
+  date: TDateTime;
+  res: boolean;
+  rng: olevariant;
+  str, str1, str2, repPath: string;
+  minmax: point2d;
+  v: double;
+  turb: cTurbFolder;
+  stage: cStageFolder;
+  blade: cBladeFolder;
+begin
+  if VarIsEmpty(E) then
+  begin
+    // if not CheckExcelRun then
+    begin
+      CreateExcel;
+      VisibleExcel(true);
+    end;
+  end;
+  turb := g_mbase.SelectTurb;
+  stage := g_mbase.SelectStage;
+  blade := g_mbase.SelectBlade;
+  repPath := turb.getFolder + 'Report.xlsx';
+  if fileexists(repPath) then
+  begin
+    if not IsExcelFileOpen(repPath) then
+    begin
+      OpenWorkBook(repPath);
+      ClearExcelSheet(E,1,false);
+    end
+  end
+  else
+  begin
+    AddWorkBook;
+    AddSheet('Page_01');
+  end;
+  r0 := GetEmptyRow(1, 1, 2);
+  SetCell(1, r0, 2, 'Турбина:');
+  SetCell(1, r0, 3, turb.ObjType);
+  SetCell(1, r0, 4, 'Ступень:');
+  SetCell(1, r0, 5, stage.m_sn);
+  inc(r0);
+  SetCell(1, r0, 2, 'Число лопаток:');
+  SetCell(1, r0, 3, stage.BlCount);
+  inc(r0);
+  SetCell(1, r0, 2, 'Лопатка');
+  SetCell(1, r0, 3, 'Band');
+  SetCell(1, r0, 4, 'A1');
+  SetCell(1, r0, 5, 'F1');
+  // проход по формам (полосам)
+  blade := nil;
+  for i := 0 to stage.BlCount - 1 do
+  begin
+    inc(r0);
+    blade := cBladeFolder(stage.GetNext(blade));
+    if i=0 then
+      c:=blade.ToneCount;
+    SetCell(1, r0, 2, blade.name);
+    // c - число тонов
+    for j := 0 to c - 1 do
+    begin
+      str := getSubStrByIndex(blade.m_resStr, ';', 1, j);
+      // f1..f2
+      str1 := getSubStrByIndex(str, '_', 1, 0);
+      SetCell(1, r0, 3, str1);
+      // A
+      str1 := getSubStrByIndex(str, '_', 1, 1);
+      // F
+      str2 := getSubStrByIndex(str, '_', 1, 2);
+      SetCell(1, r0, 4, strtofloatext(str1));
+      SetCell(1, r0, 5, strtofloatext(str2));
+      if blade.m_res = 1 then
+      begin
+        rng := GetRangeObj(1, point(r0, 2), point(r0, 5));
+        rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
+      end;
+    end;
+  end;
+  SaveWorkBookAs(repPath);
+  CloseWorkBook;
+  CloseExcel;
+end;
+
+function cTurbFolder.GetBladeCount(stageNum: integer): integer;
+var
+  o:cObjType;
+  s:cString;
+begin
+  o:=getObjType;
+  s:=o.getProp('StageBCount_'+inttostr(stageNum+1));
+  if s<>nil then
+    result:=strtoint(s.str)
+  else
+    result:=0;
+end;
+
+function cTurbFolder.GetStage(i: integer): cstageFolder;
+begin
+  result:=cstageFolder(getchild(i));
+end;
+
+function cTurbFolder.GetStageCount: integer;
+var
+  o:cObjType;
+  s:cString;
+begin
+  o:=getObjType;
+  s:=o.getProp('StageCount');
+  if s<>nil then
+    result:=strtoint(s.str)
+  else
+    result:=0;
 end;
 
 end.
