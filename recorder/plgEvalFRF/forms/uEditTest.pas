@@ -132,7 +132,7 @@ begin
       g_mbase.root.selected:=f;
       g_mbase.root.AddChild(f);
       TurbNameCb.AddItem(f.name, f);
-      CheckCBItemInd(TurbNameCb);
+      setComboBoxItem(f.name,TurbNameCb);
 
       s:=cStageFolder.create;
       s.name:=f.name+'_Stage_'+StageCB.text;
@@ -245,10 +245,19 @@ end;
 
 procedure TEditTestFrm.showTurb(t: cTurbFolder);
 var
-  I: Integer;
+  I, c: Integer;
   s:cStageFolder;
 begin
-  StageCountSE.Value:=t.GetStageCount;
+  c:=t.StageCount;
+  if c=0 then
+  begin
+    if t.childcount>0 then
+    begin
+      c:=t.childcount;
+      t.StageCount:=c;
+    end;
+  end;
+  StageCountSE.Value:=c;
   StageCB.Items.Clear;
 
   for I := 0 to StageCountSE.Value - 1 do

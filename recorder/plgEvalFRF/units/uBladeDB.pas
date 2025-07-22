@@ -131,12 +131,13 @@ type
   // испытываемый объект
   cTurbFolder = class(cXmlFolder)
   private
-
+    function GetStageCount:integer;
+    procedure  SetStageCount(c:integer);
   public
     function GetBladeCount(stageNum:integer):integer;
-    function GetStageCount:integer;
-    function GetStage(i:integer):cstageFolder;
     procedure Buildreport;
+    function GetStage(i:integer):cstageFolder;
+    property StageCount:integer read getstagecount write setstagecount;
   end;
 
   // испытания
@@ -355,6 +356,7 @@ function cBladeBase.SelectBlade: cBladeFolder;
 var
   s:cStageFolder;
 begin
+  result:=nil;
   s:=SelectStage;
   if s<>nil then
   begin
@@ -368,9 +370,7 @@ begin
     end
     else
       result:=cBladeFolder(s.selected);
-  end
-  else
-    result:=nil;
+  end;
 end;
 
 function cBladeBase.SelectTurb: cTurbFolder;
@@ -1433,6 +1433,15 @@ begin
     result:=strtoint(s.str)
   else
     result:=0;
+end;
+
+procedure cTurbFolder.SetStageCount(c: integer);
+var
+  o:cObjType;
+  s:cString;
+begin
+  o:=getObjType;
+  o.addProp('StageCount', inttostr(c));
 end;
 
 end.
