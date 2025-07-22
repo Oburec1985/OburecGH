@@ -241,6 +241,7 @@ type
     // список найденных экстремумов на линии для сравненияс
     // полосами TExtremum1d
     m_extremums: tlist;
+    m_decrement: array of double;
     // экстремумы совпали с диапазоном полос tspmband
     m_checkres: boolean;
   private
@@ -354,6 +355,8 @@ type
     BladeSE: TSpinButton;
     TrigLvlLabel: TLabel;
     TrigFE: TFloatSpinEdit;
+    DempfE: TEdit;
+    DempfLabel: TLabel;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -673,7 +676,7 @@ begin
       if bl <> nil then
       begin
         s.selected := bl;
-        BladeNumEdit.Text := bl.name;
+        BladeNumEdit.Text := bl.caption;
         Showbladestatus(bl.m_res);
       end;
     end;
@@ -695,7 +698,7 @@ begin
       if bl <> nil then
       begin
         s.selected := bl;
-        BladeNumEdit.Text := (bl.name);
+        BladeNumEdit.Text := (bl.caption);
         Showbladestatus(bl.m_res);
       end;
     end;
@@ -721,14 +724,14 @@ var
   t: cSRSTaho;
   s: cSRSres;
   cfg: cSpmCfg;
-  i, j: integer;
+  i, j, k: integer;
   bl: cBladeFolder;
   b: tspmband;
   extr: PExtremum1d;
   res: boolean;
   repPath, resStr: string;
-  v, vf: double;
-  minmax: point2d;
+  v, vf, f1, f2, decrement: double;
+  minmax, p1,p2: point2d;
 begin
   t := getTaho;
   cfg := t.getCfg;
@@ -745,8 +748,9 @@ begin
     // minmax.x:=0.005*(minmax.y-minmax.x)+minmax.x;
     minmax.y := TrigFE.Value;
     minmax.x := 0.5 * TrigFE.Value;
-    FindExtremumsInY(s.lineFrf.data_r, 1, b.m_f2i, minmax.y, minmax.x,
-      s.m_extremums);
+    FindExtremumsInY(s.lineFrf.data_r, 1, b.m_f2i,
+                      minmax.y, minmax.x,
+                      s.m_extremums);
     if s.m_extremums.Count = 0 then
     begin
       result := false;
@@ -756,7 +760,7 @@ begin
     for j := 0 to s.m_extremums.Count - 1 do
     begin
       extr := PExtremum1d(s.m_extremums[j]);
-      if m_bands.Count < j then
+      if m_bands.Count > j then
         b := m_bands.getband(j)
       else
         b := nil;
@@ -765,7 +769,31 @@ begin
       // экстремумы полос и найденные должны соответствовать др. другу
       if b.m_fmaxi = extr.Index then
       begin
+        // расчет демпфирования
+        v:=extr.Value*0.5;
+        k:=extr.Index;
+        while s.lineFrf.data_r[k]>v do
+        begin
+          dec(k);
+        end;
+        p1.x:=s.lineFrf.GetXByInd(k);
+        p1.y:=s.lineFrf.GetYByInd(k);
+        p2.x:=s.lineFrf.GetXByInd(extr.Index);
+        p2.y:=s.lineFrf.GetYByInd(extr.Index);
+        f1:=EvalLineX(v, p1, p2);
 
+        k:=extr.Index;
+        while s.lineFrf.data_r[k]>v do
+        begin
+          inc(k);
+        end;
+        p1.x:=s.lineFrf.GetXByInd(k);
+        p1.y:=s.lineFrf.GetYByInd(k);
+        p2.x:=s.lineFrf.GetXByInd(extr.Index);
+        p2.y:=s.lineFrf.GetYByInd(extr.Index);
+        f2:=EvalLineX(v, p1, p2);
+        vf:=2*p2.x;
+        s.m_decrement[j]:=(f2-f1)/vf;
       end
       else
       begin
@@ -797,6 +825,7 @@ begin
     begin
       v := extr.Value;
       vf := s.lineFrf.GetXByInd(extr.Index);
+      decrement:=s.m_decrement[i];
     end
     else
     begin
@@ -804,7 +833,7 @@ begin
       vf := 0;
     end;
     resStr := resStr + floattostr(b.m_f1) + '..' + floattostr(b.m_f2)
-      + '_' + floattostr(v) + '_' + floattostr(vf) + ';';
+      + '_' + floattostr(v) + '_' + floattostr(vf) +floattostr(decrement)+ ';';
   end;
   if result then
     bl.m_res := 2
@@ -844,7 +873,7 @@ var
   rng: olevariant;
   str, repPath: string;
   minmax: point2d;
-  v, v1: double;
+  v, v1, d: double;
 begin
   if VarIsEmpty(E) then
   begin
@@ -872,7 +901,7 @@ begin
     AddSheet('Page_01');
   end;
   // в пятом столбце строки идут заполненные подряд
-  r0 := GetEmptyRow(1, 1, 6);
+  r0 := GetEmptyRow(1, 1, 5);
   SetCell(1, r0, 2, 'Blade:');
   SetCell(1, r0, 3, bl.m_sn);
   SetCell(1, r0, 4, 'Чертеж:');
@@ -884,7 +913,7 @@ begin
   SetCell(1, r0, 4, 'Time:');
   date := now;
   SetCell(1, r0, 5, DateToStr(date));
-  SetCell(1, r0, 6, TimeToStr(date));
+  SetCell(1, r0+1, 5, TimeToStr(date));
   r := r0 + 2;
   c := 2;
 
@@ -898,7 +927,8 @@ begin
     SetCell(1, r, c, 'Band');
     SetCell(1, r, c + 1, 'A1');
     SetCell(1, r, c + 2, 'F1');
-    SetCell(1, r, c + 3, 'Res');
+    SetCell(1, r, c + 3, 'Dekr');
+    SetCell(1, r, c + 4, 'Res');
     // проход по формам (полосам)
     if m_bands.Count = 0 then
     begin
@@ -906,7 +936,8 @@ begin
       SetCell(1, r + 1 + j, c + 1, 0);
       SetCell(1, r + 1 + j, c + 2, 0);
       rng := GetRangeObj(1, point(r + 1 + j, 2), point(r + 1 + j, 5));
-      SetCell(1, r + 1 + j, c + 3, 'Не испытан');
+      SetCell(1, r + 1 + j, c + 3, 0);
+      SetCell(1, r + 1 + j, c + 4, 'Не испытан');
     end
     else
     begin
@@ -922,11 +953,13 @@ begin
             extr := s.m_extremums[j];
             v1 := s.lineFrf.GetXByInd(extr.Index);
             v := extr.Value;
+            d:=s.m_decrement[j];
           end
           else
           begin
             v1 := 0;
             v1 := 0;
+            d:=0;
             extr := nil;
           end;
           SetCell(1, r + 1 + j, c + 1, v);
@@ -937,15 +970,16 @@ begin
           SetCell(1, r + 1 + j, c + 1, 0);
         end;
         SetCell(1, r + 1 + j, c + 2, v1);
+        SetCell(1, r + 1 + j, c + 3, d);
         if (v > b.m_f1) and (v < b.m_f2) then
         begin
-          SetCell(1, r + 1 + j, c + 3, 'Годен');
+          SetCell(1, r + 1 + j, c + 4, 'Годен');
         end
         else
         begin
           rng := GetRangeObj(1, point(r + 1 + j, c), point(r + 1 + j, c + 3));
           rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
-          SetCell(1, r + 1 + j, c + 3, 'Не годен');
+          SetCell(1, r + 1 + j, c + 4, 'Не годен');
         end;
       end;
     end;
@@ -2801,18 +2835,66 @@ begin
   result:=y;
 end;
 
+function InBand(x:double; x1,x2:double):boolean;
+begin
+  result:=false;
+  if x>x1 then
+  BEGIN
+    if x<x2 then
+      result:=true;
+  END;
+end;
+
+function getDecrement(line:cBuffTrend1d; extr:point2d):double;
+var
+  i, extrI:integer;
+  v1,v2, f1, f2:Double;
+  p1,p2:point2d;
+begin
+  extrI:=line.GetLowInd(extr.x);
+  v1:=line.GetXByInd(extrI);
+  v2:=line.GetXByInd(extrI+1);
+  if abs(v1-extr.x)>abs(v2-extr.x) then
+    extrI:=extrI+1;
+  v1:=extr.y*0.5;
+  i:=extri;
+  while line.data_r[i]>v1 do
+  begin
+    dec(i);
+  end;
+  p1.x:=line.GetXByInd(i);
+  p1.y:=line.GetYByInd(i);
+  p2.x:=line.GetXByInd(extri);
+  p2.y:=line.GetYByInd(extri);
+  f1:=EvalLineX(v1, p1, p2);
+  i:=extri;
+  while line.data_r[i]>v1 do
+  begin
+    inc(i);
+  end;
+  p1.x:=line.GetXByInd(i);
+  p1.y:=line.GetYByInd(i);
+  p2.x:=line.GetXByInd(extri);
+  p2.y:=line.GetYByInd(extri);
+  f2:=EvalLineX(v1, p1, p2);;
+  result:=(f2-f1)/(2*extr.x);
+end;
+
 procedure TFRFFrm.SpmChartCursorMove(sender: tobject);
 var
   t: cSRSTaho;
   c: cSpmCfg;
   s: cSRSres;
   a: caxis;
+  b:tSpmBand;
   tb: TDataBlock;
   j, ind: integer;
   x1, y: double;
   li: TListItem;
   p: TNotifyEvent;
   p2: point2;
+  lp2:point2d;
+  d:double;
 begin
   if sender is cYCursor then
   begin
@@ -2830,6 +2912,7 @@ begin
     TrigFE.Value := p2.y;
     TrigFE.OnChange := p;
   end;
+  // если курсор на спектрах
   if SpmChart.activePage = pageSpm then
   begin
     t := getTaho;
@@ -2851,6 +2934,22 @@ begin
       SignalsLV.SetSubItemByColumnName('Y', formatstrnoe(y, 4), li);
     end;
     LVChange(SignalsLV);
+    // поиск демпфирования
+
+    for j := 0 to m_bands.Count - 1 do
+    begin
+      b:=m_bands.getband(j);
+      if InBand(m_curFreq, b.m_f1,b.m_f2 ) then
+      begin
+        lp2.x:=b.m_freqband.m_realX;
+        if b.m_freqband.m_realX>0 then
+        begin
+          lp2.y:=s.lineFrf.GetY(lp2.x);
+          d:=getDecrement(s.lineFrf, lp2);
+          DempfE.Text:='F: '+formatstrnoe(lp2.x,3)+' D: '+formatstrnoe(d,4);
+        end;
+      end;
+    end;
   end;
   if UseWndFcb.Checked then
   begin
@@ -3562,6 +3661,8 @@ begin
   m_shockList.m_wnd.x1 := 0;
   m_shockList.m_wnd.x2 := 1;
   m_extremums := tlist.create;
+  // с запасиком
+  setlength(m_decrement,100);
 end;
 
 destructor cSRSres.destroy;

@@ -159,7 +159,8 @@ type
   cBladeFolder = class(cXmlFolder)
   public
     // результа последнего поиска частот
-    // формат: f1...f2_a1_f1;f1...f2_an_fn
+    // d - коэф демпфирования
+    // формат: f1...f2_a1_f1_d;f1...f2_an_fn_dn
     m_resStr:string;
     m_res:integer;
     m_sn:integer;

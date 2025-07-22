@@ -17,17 +17,19 @@ object FRFFrm: TFRFFrm
   PixelsPerInch = 96
   TextHeight = 13
   object Splitter1: TSplitter
-    Left = 497
+    Left = 475
     Top = 0
+    Width = 5
     Height = 504
     Align = alRight
     Color = clBackground
     ParentColor = False
+    ExplicitLeft = 489
   end
   object SpmChart: cChart
     Left = 0
     Top = 0
-    Width = 497
+    Width = 475
     Height = 504
     Cursor = crSizeAll
     Margins.Left = 2
@@ -44,11 +46,12 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitWidth = 497
   end
   object RightGB: TGroupBox
-    Left = 500
+    Left = 480
     Top = 0
-    Width = 221
+    Width = 241
     Height = 504
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
@@ -393,7 +396,7 @@ object FRFFrm: TFRFFrm
     object SignalsGroupBox: TGroupBox
       Left = 2
       Top = 261
-      Width = 217
+      Width = 237
       Height = 124
       Margins.Left = 2
       Margins.Top = 2
@@ -402,10 +405,11 @@ object FRFFrm: TFRFFrm
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 10
+      ExplicitWidth = 217
       object SignalsLV: TBtnListView
         Left = 2
         Top = 15
-        Width = 213
+        Width = 233
         Height = 107
         Margins.Left = 2
         Margins.Top = 2
@@ -444,6 +448,7 @@ object FRFFrm: TFRFFrm
         DrawColorBox = False
         ChangeTextColor = False
         Editable = False
+        ExplicitWidth = 213
       end
     end
     object ResTypeRG: TRadioGroup
@@ -464,11 +469,12 @@ object FRFFrm: TFRFFrm
     object BladeGB: TGroupBox
       Left = 2
       Top = 385
-      Width = 217
+      Width = 237
       Height = 117
       Align = alBottom
       Caption = #1051#1086#1087#1072#1090#1082#1072
       TabOrder = 12
+      ExplicitWidth = 217
       object BladeLabel: TLabel
         Left = 5
         Top = 16
@@ -482,6 +488,13 @@ object FRFFrm: TFRFFrm
         Width = 40
         Height = 13
         Caption = #1057#1090#1072#1090#1091#1089':'
+      end
+      object DempfLabel: TLabel
+        Left = 128
+        Top = 54
+        Width = 82
+        Height = 13
+        Caption = #1044#1077#1084#1087#1092#1080#1088#1086#1074#1072#1085#1080#1077
       end
       object StatusEdit: TEdit
         Left = 4
@@ -530,6 +543,14 @@ object FRFFrm: TFRFFrm
           800000808000008080000080800000808000}
         OnDownClick = BladeSEDownClick
         OnUpClick = BladeSEUpClick
+      end
+      object DempfE: TEdit
+        Left = 127
+        Top = 73
+        Width = 107
+        Height = 21
+        Color = clWhite
+        TabOrder = 3
       end
     end
     object TrigFE: TFloatSpinEdit
