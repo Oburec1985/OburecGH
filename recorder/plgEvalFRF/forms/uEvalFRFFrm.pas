@@ -2277,7 +2277,7 @@ end;
 
 procedure TFRFFrm.WinPosBtnClick(sender: tobject);
 begin
-  buildReport;
+  buildReport('');
   if fileexists(g_FrfFactory.m_MeraFile) then
     ShellExecute(0, nil, pwidechar(g_FrfFactory.m_ShockFile), nil, nil,
       SW_HIDE);

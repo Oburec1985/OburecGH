@@ -46,7 +46,6 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitWidth = 497
   end
   object RightGB: TGroupBox
     Left = 480
@@ -405,7 +404,6 @@ object FRFFrm: TFRFFrm
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 10
-      ExplicitWidth = 217
       object SignalsLV: TBtnListView
         Left = 2
         Top = 15
@@ -448,7 +446,6 @@ object FRFFrm: TFRFFrm
         DrawColorBox = False
         ChangeTextColor = False
         Editable = False
-        ExplicitWidth = 213
       end
     end
     object ResTypeRG: TRadioGroup
@@ -474,7 +471,6 @@ object FRFFrm: TFRFFrm
       Align = alBottom
       Caption = #1051#1086#1087#1072#1090#1082#1072
       TabOrder = 12
-      ExplicitWidth = 217
       object BladeLabel: TLabel
         Left = 5
         Top = 16

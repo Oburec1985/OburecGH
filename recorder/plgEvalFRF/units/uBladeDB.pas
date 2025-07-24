@@ -135,7 +135,9 @@ type
     procedure  SetStageCount(c:integer);
   public
     function GetBladeCount(stageNum:integer):integer;
-    procedure Buildreport;
+    procedure Buildreport; overload;
+    // путь к шаблону
+    procedure Buildreport(tmpl:string);overload;
     function GetStage(i:integer):cstageFolder;
     property StageCount:integer read getstagecount write setstagecount;
   end;
@@ -152,6 +154,7 @@ type
     // получить след или предыдущ лопатку
     function GetNext(b:cXmlFolder):cXmlFolder;
     function GetPrev(b:cXmlFolder):cXmlFolder;
+    function StageNum:integer;
     property BlCount:integer read getBlCount write setBlCount;
   end;
 
@@ -164,6 +167,8 @@ type
     m_resStr:string;
     m_res:integer;
     m_sn:integer;
+    // false - левая, true - правая
+    m_sideCB:boolean;
   protected
     procedure getTones(list:blist);
     procedure doCreateFiles(node:txmlnode);override;
@@ -171,7 +176,8 @@ type
   public
     function ObjType:string;
     function BladeType:string;
-    function BladeReport:string;
+    function BladeReport:string;overload;
+    // параметр - путь к шаблону
     function ToneCount:integer;
     // f1,f2,threshold
     function Tone(i:integer):point3d;
@@ -1187,6 +1193,7 @@ begin
   ForceDirectories(lpath);
   node.WriteAttributeInteger('Result',m_res);
   node.WriteAttributeString('ResStr',m_resStr);
+  node.WriteAttributeBool('Side',m_sideCB);
 end;
 
 procedure cBladeFolder.doLoadDesc(node: txmlnode);
@@ -1194,6 +1201,7 @@ begin
   inherited;
   M_res:=node.ReadAttributeInteger('Result',-1);
   m_resStr:=node.ReadAttributeString('ResStr','');
+  m_sideCB:=node.ReadAttributeBool('Side',false);
 end;
 
 procedure cBladeFolder.getTones(list: blist);
@@ -1311,6 +1319,21 @@ begin
   end;
 end;
 
+function cStageFolder.StageNum: integer;
+var
+  I: Integer;
+begin
+  result:=0;
+  for I := 0 to parent.childCount - 1 do
+  begin
+    if parent.getChild(i)=self then
+    begin
+      result:=i;
+      exit;
+    end;
+  end;
+end;
+
 function cStageFolder.getBlCount: integer;
 begin
   result:=ChildCount;
@@ -1400,6 +1423,96 @@ begin
       end;
     end;
   end;
+  SaveWorkBookAs(repPath);
+  CloseWorkBook;
+  CloseExcel;
+end;
+
+procedure cTurbFolder.Buildreport(tmpl: string);
+var
+  r0, i, j, r, c: integer;
+  b: tspmband;
+  extr: PExtremum1d;
+  date: TDateTime;
+  res: boolean;
+  rng, rng2: olevariant;
+  str, str1, str2, repPath: string;
+  p3:point3d;
+  minmax: point2d;
+  v: double;
+  turb: cTurbFolder;
+  stage: cStageFolder;
+  blade: cBladeFolder;
+begin
+  if tmpl='' then
+  begin
+    tmpl:=g_mbase.root.Absolutepath+'Template\Report_tmpl.xlsx';
+  end;
+  if VarIsEmpty(E) then
+  begin
+    // if not CheckExcelRun then
+    begin
+      CreateExcel;
+      VisibleExcel(true);
+    end;
+  end;
+  if fileexists(tmpl) then
+  begin
+    if not IsExcelFileOpen(tmpl) then
+    begin
+      OpenWorkBook(repPath);
+    end;
+
+    turb := g_mbase.SelectTurb;
+    stage := g_mbase.SelectStage;
+    blade := g_mbase.SelectBlade;
+
+    rng:=GetRange(1,'c_Sketch');
+    rng.value:=blade.m_ObjType;
+    rng:=GetRange(1,'c_BlCount');
+    rng.value:=stage.BlCount;
+    rng:=GetRange(1,'c_ToneCount');
+    rng.value:=blade.ToneCount;
+    rng.value:=GetRange(1,'c_Tone');
+    rng2:=GetRange(1,'c_Start');
+    for I := 0 to blade.ToneCount - 1 do
+    begin
+      SetCell(1, rng.Row-1, rng.Column+i, i+1);
+      p3:=blade.Tone(i);
+      SetCell(1, rng.Row, rng.Column+i, p3.x);
+      SetCell(1, rng.Row+1,rng.Column+i, p3.y);
+
+      SetCell(1, rng2.Row-1,rng.Column+2+i*3, p3.x);
+      SetCell(1, rng2.Row-1,rng.Column+3+i*3, '-');
+      SetCell(1, rng2.Row-1,rng.Column+4+i*3, p3.y);
+    end;
+    rng:=GetRange(1,'c_Type');
+    rng.value:=turb.m_ObjType;
+    rng:=GetRange(1,'c_Stage');
+    rng.value:=stage.StageNum;
+    for I := 0 to stage.BlCount - 1 do
+    begin
+      SetCell(1, rng.Row+i,rng.Column+1, blade.m_sn);
+      for j := 0 to blade.ToneCount - 1 do
+      begin
+        str := getSubStrByIndex(blade.m_resStr, ';', 1, j);
+        // F
+        str2 := getSubStrByIndex(str, '_', 1, 2);
+        SetCell(1, rng2.Row+i,rng2.Column+2+j*3, str2);
+      end;
+      str2 := getSubStrByIndex(str, '_', 1, 3);
+      rng2:=GetRange(1,'c_decr');
+      rng2.value:=Str2;
+      SetCell(1, rng2.Row,rng2.Column+1, blade.m_res=2);
+      if blade.m_res=1 then
+      begin
+        rng := GetRangeObj(1, point(rng2.row, rng.column),
+                              point(rng2.row, rng2.column+1));
+        rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
+      end;
+    end;
+  end;
+  repPath := turb.getFolder + 'Report.xlsx';
   SaveWorkBookAs(repPath);
   CloseWorkBook;
   CloseExcel;

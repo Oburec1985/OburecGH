@@ -36,6 +36,7 @@ type
     TNameLabel: TLabel;
     StageCountLabel: TLabel;
     StageCountSE: TSpinEdit;
+    SideCB: TCheckBox;
     procedure OkBtnClick(Sender: TObject);
     procedure ProfileSGKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -44,6 +45,7 @@ type
     procedure TurbNameCbChange(Sender: TObject);
     procedure TurbCBChange(Sender: TObject);
     procedure StageCBChange(Sender: TObject);
+    procedure SideCBClick(Sender: TObject);
   private
     procedure init;
     procedure showbase;
@@ -266,6 +268,18 @@ begin
     StageCB.Items.AddObject(inttostr(i+1), s);
   end;
   BlCountIE.Value:=t.GetBladeCount(strtoint(StageCB.Text));
+end;
+
+procedure TEditTestFrm.SideCBClick(Sender: TObject);
+begin
+  if SideCB.Checked then
+  begin
+    SideCB.Caption:= 'Правая лопатка';
+  end
+  else
+  begin
+    SideCB.Caption:='Левая лопатка';
+  end;
 end;
 
 procedure TEditTestFrm.Splitter2Moved(Sender: TObject);
