@@ -834,7 +834,7 @@ begin
       vf := 0;
     end;
     resStr := resStr + floattostr(b.m_f1) + '..' + floattostr(b.m_f2)
-      + '_' + floattostr(v) + '_' + floattostr(vf) +floattostr(decrement)+ ';';
+      + '_' + floattostr(v) + '_' + floattostr(vf) +'_'+floattostr(decrement)+ ';';
   end;
   if result then
     bl.m_res := 2
@@ -858,7 +858,7 @@ var
   turb: cTurbFolder;
 begin
   turb := g_mbase.SelectTurb;
-  turb.Buildreport;
+  turb.Buildreport('');
 end;
 
 procedure TFRFFrm.SaveReport(repname: string; bl: cBladeFolder);
@@ -972,7 +972,7 @@ begin
         end;
         SetCell(1, r + 1 + j, c + 2, v1);
         SetCell(1, r + 1 + j, c + 3, d);
-        if (v > b.m_f1) and (v < b.m_f2) then
+        if (v1 > b.m_f1) and (v1 < b.m_f2) then
         begin
           SetCell(1, r + 1 + j, c + 4, 'Годен');
         end
@@ -2278,7 +2278,7 @@ end;
 
 procedure TFRFFrm.WinPosBtnClick(sender: tobject);
 begin
-  buildReport('');
+  buildReport;
   if fileexists(g_FrfFactory.m_MeraFile) then
     ShellExecute(0, nil, pwidechar(g_FrfFactory.m_ShockFile), nil, nil,
       SW_HIDE);

@@ -174,6 +174,8 @@ type
     procedure doCreateFiles(node:txmlnode);override;
     procedure doLoadDesc(node:txmlnode);override;
   public
+    procedure DoLincParent; override;
+
     function ObjType:string;
     function BladeType:string;
     function BladeReport:string;overload;
@@ -1196,7 +1198,24 @@ begin
   node.WriteAttributeBool('Side',m_sideCB);
 end;
 
+procedure cBladeFolder.DoLincParent;
+var
+  bl:cBladeFolder;
+begin
+  inherited;
+  if m_ObjType='' then
+  begin
+    if parent<>nil then
+    begin
+      bl:=cbladefolder(parent.getChild(0));
+      m_ObjType:=bl.m_ObjType;
+    end;
+  end;
+end;
+
 procedure cBladeFolder.doLoadDesc(node: txmlnode);
+var
+  bl:cBladeFolder;
 begin
   inherited;
   M_res:=node.ReadAttributeInteger('Result',-1);
@@ -1430,13 +1449,14 @@ end;
 
 procedure cTurbFolder.Buildreport(tmpl: string);
 var
-  r0, i, j, r, c: integer;
+  r0, i, j, r,col, c, c2: integer;
   b: tspmband;
   extr: PExtremum1d;
   date: TDateTime;
   res: boolean;
   rng, rng2: olevariant;
   str, str1, str2, repPath: string;
+  tp:tpoint;
   p3:point3d;
   minmax: point2d;
   v: double;
@@ -1460,7 +1480,7 @@ begin
   begin
     if not IsExcelFileOpen(tmpl) then
     begin
-      OpenWorkBook(repPath);
+      OpenWorkBook(tmpl);
     end;
 
     turb := g_mbase.SelectTurb;
@@ -1468,12 +1488,16 @@ begin
     blade := g_mbase.SelectBlade;
 
     rng:=GetRange(1,'c_Sketch');
-    rng.value:=blade.m_ObjType;
+    rng:=blade.m_ObjType;
     rng:=GetRange(1,'c_BlCount');
     rng.value:=stage.BlCount;
     rng:=GetRange(1,'c_ToneCount');
+    c:=rng.value;
+    rng:=GetRange(1,'c_ToneCount2');
+    c2:=rng.value;
+
     rng.value:=blade.ToneCount;
-    rng.value:=GetRange(1,'c_Tone');
+    rng:=GetRange(1,'c_Tone');
     rng2:=GetRange(1,'c_Start');
     for I := 0 to blade.ToneCount - 1 do
     begin
@@ -1482,9 +1506,8 @@ begin
       SetCell(1, rng.Row, rng.Column+i, p3.x);
       SetCell(1, rng.Row+1,rng.Column+i, p3.y);
 
-      SetCell(1, rng2.Row-1,rng.Column+2+i*3, p3.x);
-      SetCell(1, rng2.Row-1,rng.Column+3+i*3, '-');
-      SetCell(1, rng2.Row-1,rng.Column+4+i*3, p3.y);
+      SetCell(1, rng2.Row-1,rng2.Column+2+i*3, p3.x);
+      SetCell(1, rng2.Row-1,rng2.Column+4+i*3, p3.y);
     end;
     rng:=GetRange(1,'c_Type');
     rng.value:=turb.m_ObjType;
@@ -1492,27 +1515,36 @@ begin
     rng.value:=stage.StageNum;
     for I := 0 to stage.BlCount - 1 do
     begin
-      SetCell(1, rng.Row+i,rng.Column+1, blade.m_sn);
+      SetCell(1, rng2.Row+i,rng2.Column+1, blade.m_sn);
       for j := 0 to blade.ToneCount - 1 do
       begin
         str := getSubStrByIndex(blade.m_resStr, ';', 1, j);
         // F
         str2 := getSubStrByIndex(str, '_', 1, 2);
-        SetCell(1, rng2.Row+i,rng2.Column+2+j*3, str2);
+        r:=rng2.Row+i;
+        col:=rng2.Column+2+j*3;
+        SetCell(1, r,col, strtofloatext(str2));
       end;
       str2 := getSubStrByIndex(str, '_', 1, 3);
-      rng2:=GetRange(1,'c_decr');
-      rng2.value:=Str2;
-      SetCell(1, rng2.Row,rng2.Column+1, blade.m_res=2);
+      rng:=GetRange(1,'c_Start');
+      //tp:=point(r,rng2.column+c*3+2+c2);
+      //rng:=GetRangeObj(1,tpoint(tp),tp);
+      rng:=GetRange(1,'c_decr');
+      rng.value:=strtofloatext(Str2);
+      if blade.m_res=2 then
+      begin
+        SetCell(1, rng.Row+i,rng.Column+1, 'годен');
+      end;
       if blade.m_res=1 then
       begin
         rng := GetRangeObj(1, point(rng2.row, rng.column),
                               point(rng2.row, rng2.column+1));
         rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
+        SetCell(1, rng2.Row+i,rng2.Column+1, 'не годен');
       end;
     end;
   end;
-  repPath := turb.getFolder + 'Report.xlsx';
+  repPath := ExtractFileDir(turb.getFolder) + '\Report.xlsx';
   SaveWorkBookAs(repPath);
   CloseWorkBook;
   CloseExcel;
