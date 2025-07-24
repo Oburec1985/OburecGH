@@ -817,10 +817,11 @@ begin
   for i := 0 to m_bands.Count - 1 do
   begin
     b := m_bands[i];
-    if s.m_extremums.Count = 0 then
-      extr := nil
-    else
+    extr := nil;
+    if i<s.m_extremums.count then
+    begin
       extr := PExtremum1d(s.m_extremums[i]);
+    end;
     if extr <> nil then
     begin
       v := extr.Value;
@@ -2861,6 +2862,11 @@ begin
   while line.data_r[i]>v1 do
   begin
     dec(i);
+    if i=0 then
+    begin
+      result:=-1;
+      exit;
+    end;
   end;
   p1.x:=line.GetXByInd(i);
   p1.y:=line.GetYByInd(i);
@@ -2871,6 +2877,11 @@ begin
   while line.data_r[i]>v1 do
   begin
     inc(i);
+    if (i=length(line.data_r)-1) then
+    begin
+      result:=-1;
+      exit;
+    end;
   end;
   p1.x:=line.GetXByInd(i);
   p1.y:=line.GetYByInd(i);
@@ -2935,7 +2946,7 @@ begin
     end;
     LVChange(SignalsLV);
     // поиск демпфирования
-
+    s:=ActiveSignal;
     for j := 0 to m_bands.Count - 1 do
     begin
       b:=m_bands.getband(j);
