@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2015.02.03 12:11:54.267.dproj,C:\Users\Александр\Documents\RAD Studio\Projects\Project1.dproj=C:\DelphiProj\plgModbus.dproj</Transaction>
+    <Transaction>2015.02.03 13:16:35.464.pas,C:\DelphiProj\plgModbus\Unit1.pas=C:\DelphiProj\plgModbus\frmSettings.pas</Transaction>
+    <Transaction>2015.02.03 13:16:35.464.dfm,C:\DelphiProj\plgModbus\Unit1.dfm=C:\DelphiProj\plgModbus\frmSettings.dfm</Transaction>
+    <Transaction>2015.02.04 17:02:17.015.pas,C:\DelphiProj\plgModbus\Unit1.pas=C:\DelphiProj\plgModbus\UModbusRTUServ.pas</Transaction>
+    <Transaction>2015.02.04 20:47:23.088.pas,C:\DelphiProj\plgModbus\BCPort.pas=</Transaction>
+    <Transaction>2015.02.20 16:50:32.730.pas,C:\DelphiProj\plgModbus\Unit1.pas=C:\DelphiProj\plgModbus\UCommon.pas</Transaction>
+    <Transaction>2015.02.21 19:05:35.739.pas,C:\DelphiProj\plgModbus\TestFormUnit.pas=</Transaction>
+    <Transaction>2015.02.21 19:05:35.739.dfm,C:\DelphiProj\plgModbus\TestFormUnit.dfm=</Transaction>
+  </Transactions>
+</BorlandProject>

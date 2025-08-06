@@ -29,6 +29,7 @@ uses
   uRecorderEvents,
   dialogs,
   variants,
+  inifiles,
   uRCFunc,
   uRecBasicFactory,
   uProcNotify,
@@ -64,6 +65,10 @@ type
     // форма для организации очереди сообщений
     m_FrmSync: TFrmSync;
     beforestop:boolean;
+
+    m_cfgfile:tinifile;
+    // создавать тег для отслеживания утечки памяти
+    m_usememtag:boolean;
   protected
     m_rstate: dword;
     m_UIThreadID: integer;
@@ -394,6 +399,7 @@ var
   pMsgInfo: PCB_MESSAGE;
   I: Integer;
   b:boolean;
+  path:string;
 begin
   result := false;
   b:=a_dwCommand=PN_LEAVERCCONFIG;
@@ -411,11 +417,31 @@ begin
       begin
         m_CompMng.doafterload;
       end;
+      path:='c:\Mera files\Recorder\';
+      if DirectoryExists(path) then
+      begin
+        path:=path+'Configs';
+        ForceDirectories(path);
+        // загружаем настройки плагина
+        m_cfgfile:=TIniFile.Create(path+'\plgControlCyclogram.ini');
+        m_usememtag:=m_cfgfile.ReadBool('Main', 'UseMemTag', True);
+        m_cfgfile.Destroy;
+      end;
       CallPlgEvents(c_RC_LoadCfg);
       m_loadState:=false;
     end;
     PN_RCSAVECONFIG:
     begin
+      path:='c:\Mera files\Recorder\';
+      if DirectoryExists(path) then
+      begin
+        path:=path+'Configs';
+        ForceDirectories(path);
+        // сохраняем настройкиплагина
+        m_cfgfile:=TIniFile.Create(path+'\plgControlCyclogram.ini');
+        m_cfgfile.WriteBool('Main', 'UseMemTag', m_usememtag);
+        m_cfgfile.Destroy;
+      end;
       CallPlgEvents(c_RC_SaveCfg);
     end;
     PN_SHOWINFO:
@@ -705,6 +731,8 @@ begin
     PN_RCINITIALIZED:
     begin
       //createFormsRecorderUIThread(m_CompMng);
+      if m_usememtag then
+        InitMemTag;
       RecorderInit;
       for I := 0 to m_CompMng.Count - 1 do
       begin
@@ -721,6 +749,7 @@ begin
           fact.doUpdateData;
         end;
         // frmTestSettings.RecorderGotData;
+        UpdateMemTag;
         EList.CallAllEvents(c_RUpdateData);
         result := true;
       end

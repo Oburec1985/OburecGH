@@ -3,7 +3,7 @@ unit uRCFunc;
 interface
 
 uses
-  Windows,
+  Windows, PsAPI,
   recorder,
   tags,
   types,
@@ -304,6 +304,10 @@ function GetFFTPlan(fftCount: integer): TFFTProp;
 function GetInverseFFTPlan(fftCount: integer): TFFTProp;
 function TranslateNotifyToStr(n: integer): string;
 
+// создать тег для монитора памяти
+function InitMemTag:itag;
+function UpdateMemTag:dword;
+
 var
   g_IR: irecorder = nil;
   G_Plg: IRecorderPlugin = nil;
@@ -313,6 +317,7 @@ var
   // настройки FFT прямого и обратного преобразования
   g_FFTPlanList: array of TFFTProp;
   g_inverseFFTPlanList: array of TFFTProp;
+  g_memTag:itag;
 
 const
   // количество порций которое может накопить алгоритм между двумя периодами расчета выходного значения
@@ -323,6 +328,55 @@ implementation
 // uses
 // pluginclass;
 // uMBaseControl;
+
+
+
+function GetProcessWorkingSetMemory: DWORD;
+var
+  hProcess: THandle;
+  pmc: TProcessMemoryCounters;
+begin
+  Result := 0;
+
+  // Получаем хэндл текущего процесса
+  hProcess := OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, False, GetCurrentProcessId);
+
+  if hProcess = 0 then
+    RaiseLastOSError; // Ошибка открытия процесса
+
+  try
+    // Инициализируем структуру
+    ZeroMemory(@pmc, SizeOf(pmc));
+    pmc.cb := SizeOf(pmc);
+
+    // Получаем информацию о памяти
+    if not GetProcessMemoryInfo(hProcess, @pmc, SizeOf(pmc)) then
+      RaiseLastOSError; // Ошибка получения данных
+
+    // Возвращаем значение "Рабочего набора" (в килобайтах)
+    Result := pmc.WorkingSetSize div 1024;
+  finally
+    CloseHandle(hProcess); // Закрываем хэндл
+  end;
+end;
+
+function InitMemTag:itag;
+begin
+  result:=createScalar('MemTag', false);
+  g_memTag:=result;
+end;
+
+function UpdateMemTag:dword;
+var
+  dw:dword;
+begin
+  if g_memTag<>nil then
+  begin
+    dw:=GetProcessWorkingSetMemory;
+    g_memTag.PushValue(dw, -1);
+    result:=dw;
+  end;
+end;
 
 procedure GlobDetach;
 begin

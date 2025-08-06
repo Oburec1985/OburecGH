@@ -88,8 +88,11 @@ end;
 procedure TObjFrm3dEdit.doRecroderInit;
 begin
   init;
-  TestUDPSenderFrm.createtags;
-  TestUDPSenderFrm.doRCinit;
+  if g_ObjFrm3dFactory.count>0 then
+  begin
+    TestUDPSenderFrm.createtags;
+    TestUDPSenderFrm.doRCinit;
+  end;
 end;
 
 procedure TObjFrm3dEdit.doStart(sender: tobject);

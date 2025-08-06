@@ -58,6 +58,7 @@ type
     // список алгоритмов кот подписаны на обновлеение данных
     m_SubscribeList: tlist;
   protected
+    procedure adderror(str:string);
     procedure updateReady; virtual;
     procedure SetParentCfg(c: cAlgConfig);
     procedure doStopRecord; virtual;
@@ -296,6 +297,11 @@ begin
     3:
       result := AHpercent;
   end;
+end;
+
+procedure cBaseAlgContainer.adderror(str: string);
+begin
+  m_errors.Add(str);
 end;
 
 procedure cBaseAlgContainer.CallEndEvalBlock;
@@ -1292,12 +1298,12 @@ end;
 procedure cAlgMng.regObjClasses;
 begin
   regclass(cCounterAlg);
+  regclass(cSpm);
   regclass(cTahoAlg);
   // regclass(cGrmsAlg);
   regclass(cSyncPhaseAlg);
   regclass(cGrmsSrcAlg);
   regclass(cSrcList);
-  regclass(cSpm);
   regclass(cPhaseAlg);
   regclass(cFillingFactorAlg);
   regclass(cPeakFactorAlg);

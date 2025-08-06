@@ -54,13 +54,13 @@ type
     m_bounds: trect;
   protected
     procedure doStart;virtual;
-    // вызывается фабрикой при обновлении данных
-    procedure UpdateData; virtual;
     procedure DoCreate; override;
     procedure DoShow; override;
     procedure Resizing(State: TWindowState); override;
     function getIRecorder: irecorder;
   public
+    // вызывается фабрикой при обновлении данных
+    procedure UpdateData; virtual;
     procedure InitSize(b: trect); virtual;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); virtual;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); virtual;
@@ -658,8 +658,8 @@ begin
         end;
       end;
     VSN_EditIFrm:
-      begin
-      end;
+    begin
+    end;
   end;
 end;
 

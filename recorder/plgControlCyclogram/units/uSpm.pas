@@ -763,8 +763,8 @@ begin
   result := false;
   if m_tag = nil then
     exit;
-  if fOutSize = 0 then
-    updateOutChan;
+  //if fOutSize = 0 then
+  //  updateOutChan;   // нельз€ делать в ready тк вызов в цикле
 
   if m_tag.tag <> nil then
   begin
@@ -775,7 +775,7 @@ begin
     m_tag.tag := getTagByName(m_tag.tagname);
     if m_tag.tag <> nil then
     begin
-      updateOutChan;
+      //updateOutChan;
       result := true;
     end;
   end;
@@ -948,7 +948,7 @@ begin
   changeCfgMode := false;
   if m_tag = nil then
   begin
-    m_errors.add('cSpm.updateOutChan ¬ходной тег не создан:');
+    adderror('cSpm.updateOutChan ¬ходной тег не создан:');
     exit;
   end;
   if m_tag.tag = nil then
@@ -956,8 +956,7 @@ begin
     m_tag.tag := getTagByName(m_tag.tagname);
     if m_tag.tag = nil then
     begin
-      m_errors.add('cSpm.updateOutChan ќтсутствует входной тег: ' +
-          m_tag.tagname);
+      adderror('cSpm.updateOutChan ќтсутствует входной тег: ' + m_tag.tagname);
       exit;
     end;
   end;
