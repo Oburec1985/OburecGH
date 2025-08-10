@@ -178,7 +178,7 @@ end;
 procedure cEventList.CallAllEvents(eventtype:cardinal);
 var i,starti,c:integer;
     e:cevent;
-    call:boolean;
+    call, b:boolean;
 begin
   if not active then exit;
   c:=count;
@@ -212,6 +212,18 @@ begin
       begin
         if e.active then
         begin
+          /// PN_UPDATEDATA = 2
+          //if eventtype=2 then
+          //begin
+          //  if e.name='cAlgMng_doUpdateTags' then
+          //    b:=true
+          //  else
+          //    b:=false;
+          //end;
+          //call:=call and b;
+          //if not b then
+          //  continue;
+          //if e.name<>'cAlgMng_doUpdateTags' then
           e.action(owner);
         end;
       end;

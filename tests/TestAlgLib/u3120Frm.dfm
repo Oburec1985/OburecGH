@@ -1533,7 +1533,7 @@ object Form2: TForm2
     end
     object Label2: TLabel
       Left = 910
-      Top = 23
+      Top = 14
       Width = 106
       Height = 24
       Anchors = [akTop, akRight]

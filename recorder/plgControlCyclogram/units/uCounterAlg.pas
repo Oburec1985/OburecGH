@@ -206,8 +206,6 @@ begin
     if b then
     begin
       doEval(InTag, InTag.m_ReadDataTime);
-      //logmessage('InTag: '+formatstrNoE(InTag.m_ReadDataTime,4));
-      //logmessage('InTag: '+inttostr(InTag.lastindex));
       InTag.ResetTagData(InTag.lastindex);
     end;
   end;
