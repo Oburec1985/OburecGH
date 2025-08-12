@@ -64,7 +64,6 @@ object TagsListFrame: TTagsListFrame
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
         OnChange = FilterEditChange
-        ExplicitWidth = 187
       end
       object FrmTagPropValueEdit: TEdit
         Left = 121
@@ -77,7 +76,6 @@ object TagsListFrame: TTagsListFrame
         Margins.Bottom = 4
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 1
-        ExplicitWidth = 71
       end
       object FrmTagPropNameCB: TComboBox
         Left = 5
@@ -133,7 +131,6 @@ object TagsListFrame: TTagsListFrame
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
-      ExplicitWidth = 198
     end
   end
 end

@@ -94,7 +94,22 @@ begin
     begin
       li := TagsLV.Items.Add;
       li.Data := pointer(t);
-      TagsLV.SetSubItemByColumnName('Èìÿ', t.GetName, li);
+      li.Caption:=t.GetName;
+      if li.SubItems.Count>1 then
+        li.SubItems[1]:=formatstrNoE(t.GetFreq,3)
+      else
+      begin
+        if (isScalar(t)) then
+        begin
+          li.SubItems.Add('S.');
+        end
+        else
+        begin
+          li.SubItems.Add('V.');
+        end;
+        li.SubItems.Add(formatstrNoE(t.GetFreq,3));
+      end;
+      //TagsLV.SetSubItemByColumnName('Èìÿ', t.GetName, li);
       TagsLV.SetSubItemByColumnName('Fs', formatstrNoE(t.GetFreq,3), li);
     end;
   end;

@@ -2127,7 +2127,6 @@ object Frm3120: TFrm3120
     Height = 422
     Align = alClient
     TabOrder = 1
-    ExplicitHeight = 587
     object Splitter3: TSplitter
       Left = 534
       Top = 1
@@ -2147,7 +2146,6 @@ object Frm3120: TFrm3120
       Align = alRight
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1072
       TabOrder = 0
-      ExplicitHeight = 585
       object ControlPropSG: TStringGrid
         Left = 2
         Top = 78
@@ -2170,7 +2168,6 @@ object Frm3120: TFrm3120
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
         ParentFont = False
         TabOrder = 0
-        ExplicitHeight = 505
         RowHeights = (
           32
           32
@@ -2237,7 +2234,6 @@ object Frm3120: TFrm3120
       ParentCtl3D = False
       ParentFont = False
       TabOrder = 1
-      ExplicitHeight = 585
       object TableModeSG: TStringGrid
         Left = 1
         Top = 25
@@ -2260,7 +2256,6 @@ object Frm3120: TFrm3120
         ParentFont = False
         TabOrder = 0
         OnDrawCell = TableModeSGDrawCell
-        ExplicitHeight = 559
         ColWidths = (
           64
           64
@@ -2283,9 +2278,6 @@ object Frm3120: TFrm3120
     Height = 41
     Align = alBottom
     TabOrder = 2
-    ExplicitLeft = 1
-    ExplicitTop = 414
-    ExplicitWidth = 1029
     DesignSize = (
       1071
       41)
@@ -2297,7 +2289,6 @@ object Frm3120: TFrm3120
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
       Text = #1043#1086#1090#1086#1074' '#1082' '#1079#1072#1087#1091#1089#1082#1091
-      ExplicitWidth = 861
     end
     object ReportBtn: TButton
       Left = 922
@@ -2313,7 +2304,6 @@ object Frm3120: TFrm3120
       Font.Style = []
       ParentFont = False
       TabOrder = 1
-      ExplicitLeft = 880
     end
   end
   object Timer1: TTimer

@@ -167,14 +167,15 @@ type
     // cModeObj
     procedure LoadObjAttributes(xmlNode: txmlnode; mng: tobject); override;
     procedure SaveObjAttributes(xmlNode: txmlnode); override;
-    procedure CreateTasks;
     procedure setMng(m: tobject); override;
-    procedure createTags;
     procedure DestroyTags;
     procedure updateTagsNames;
     procedure unLincTags;
     procedure DoLincParent; override;
   public
+    procedure CreateTasks;
+    procedure createTags;
+
     procedure SwitchModeTrigs(b: boolean);
     // (resetCheck:boolean) - если resetCheck то fCurMode не сбрасывается
     // (сбрасываем только таймер но не останавливаем проверку)

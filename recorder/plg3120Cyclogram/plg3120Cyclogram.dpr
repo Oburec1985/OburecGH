@@ -41,7 +41,8 @@ uses
   uControlObj in '3120\uControlObj.pas',
   uModeObj in '3120\uModeObj.pas',
   uProgramObj in '3120\uProgramObj.pas',
-  uBaseProgramObj in 'uBaseProgramObj.pas';
+  uBaseProgramObj in 'uBaseProgramObj.pas',
+  uTest in '3120\uTest.pas';
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 

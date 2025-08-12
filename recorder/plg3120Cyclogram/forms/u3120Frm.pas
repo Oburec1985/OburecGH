@@ -8,8 +8,12 @@ uses
   uRecBasicFactory,
   uComponentServises,
   u3120Factory,
-  uControlObj, uModeObj,
-  u3120ControlObj, pngimage;
+  uControlObj,
+  uModeObj, uProgramObj,
+  u3120ControlObj,
+  MathFunction,
+  uTest,
+  pngimage;
 
 type
   TFrm3120 = class(TRecFrm)
@@ -77,6 +81,7 @@ type
     m_ViewControls:tlist;
 
   public
+    function SecToTime(t: double): double;
     // происходит в doRepaint
     procedure UpdateView;
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
@@ -85,6 +90,11 @@ type
     destructor destroy; override;
     //
     procedure testInit;
+    procedure ShowCyclogram;
+    // отобразить задания
+    procedure ShowModes;
+    // отобразить измерения
+    procedure ShowMeasured;
   end;
 
 var
@@ -124,6 +134,8 @@ begin
   inherited;
 
 end;
+
+
 
 procedure TFrm3120.TableModeSGDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
@@ -181,13 +193,104 @@ begin
   end;
 end;
 
+function TFrm3120.SecToTime(t: double): double;
+begin
+  case TimeUnitsCB.itemindex of
+    0:
+      result := t; // sec
+    1:
+      result := t / 60; // min
+    2:
+      result := t / 3600; // hour
+  end;
+end;
+
+procedure TFrm3120.ShowMeasured;
+var
+  col, j,i:integer;
+  m:cmodeobj;
+  p:cProgramObj;
+  c:cControlObj;
+  t:ctask;
+begin
+  p:=g_conmng.getProgram(0);
+  for I := 0 to p.ControlCount - 1 do
+  begin
+    c:=p.getOwnControl(i);
+    col:=p.ModeCount;
+    // M
+    TableModeSG.Cells[col+1,i+2]:=formatstrnoe(c.m_MtagFB.GetMeanEst,3);
+    // N
+    TableModeSG.Cells[col+2,i+2]:=formatstrnoe(c.m_NtagFB.GetMeanEst,3);
+  end;
+end;
+
+procedure TFrm3120.ShowModes;
+var
+  col, j,i:integer;
+  m:cmodeobj;
+  p:cProgramObj;
+  t:ctask;
+begin
+  p:=g_conmng.getProgram(0);
+  for I := 0 to p.ModeCount - 1 do
+  begin
+    col:=i+1;
+    m:=p.getmode(i);
+    // имя режима
+    for j := 0 to m.TaskCount - 1 do
+    begin
+      t:=m.GetTask(j);
+      TableModeSG.Cells[col,j+2]:=formatstrnoe(t.task,3);
+    end;
+  end;
+end;
+
+procedure TFrm3120.ShowCyclogram;
+var
+  i, col:integer;
+  m:cmodeobj;
+  p:cProgramObj;
+  c:cControlObj;
+begin
+  TableModeSG.RowCount:=10;
+  TableModeSG.ColCount:=g_conmng.ModeCount;
+  // имена режимов
+  p:=g_conmng.getProgram(0);
+  for I := 0 to p.ModeCount - 1 do
+  begin
+    col:=i+1;
+    m:=p.getmode(i);
+    // имя режима
+    TableModeSG.Cells[col,0]:=m.name;
+    // длительность режима
+    TableModeSG.Cells[col,1]:=floattostr(SecToTime(m.ModeLength));
+  end;
+  ShowModes;
+  ShowMeasured;
+  TableModeSG.Cells[p.ModeCount+1,0]:='Измерено М';
+  TableModeSG.Cells[p.ModeCount+2,0]:='Измерено N';
+  // отображаем контролы
+  for I := 0 to p.ControlCount - 1 do
+  begin
+    c:=p.getOwnControl(i);
+    TableModeSG.Cells[0,2+i]:=c.name;
+  end;
+  SGChange(TableModeSG);
+end;
+
 procedure TFrm3120.testInit;
 var
   I: Integer;
 begin
+  testinit3120;
+
   TableModeSG.RowCount:=10;
   TableModeSG.ColCount:=c_MCount+2;
   TableModeSG.Cells[0, 1] := 'Время работы';
+
+  ShowCyclogram;
+  exit;
   //режимы
   TableModeSG.Cells[1,0]:='Режим_1';
   TableModeSG.Cells[2,0]:='Режим_2';

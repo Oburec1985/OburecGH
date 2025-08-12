@@ -36,7 +36,9 @@ type
     // тип режима: тормозной (M)/ приводной (N)/ останов
     ModeType: TModeType;
     // запрет на рост быстрее
-    Nramp: double;
+    Nramp,
+    // текущее задание
+    Task: double;
   end;
 
   cControlList = class(cbaseobj)
@@ -52,30 +54,13 @@ type
   // регулятор
   cControlObj = class(cbaseobj)
   private
-    // программа которая в данный момент дает задание регулятору
-    // fOwnerProg: cProgramObj;
-    // единицы в которых работает контрол
-    funits: string;
     // c_NOTReady = 0;
     // c_Ready = 1;
     // c_Play = 2;
     // c_Stop = 7;
     fstate: integer;
     // на текущем шаге циклограммы пользователь вбил свое задание
-    f_manualMode: boolean;
-
-    m_feedback_name: string;
-    m_feedback_id: tagid;
-    m_feedback: itag;
-    m_feedbackBlA: IBlockAccess;
-    // массив считанных данных по feedback
-    fbData: array of double;
-    // текущее задание
-    m_dtask: double;
-    // обратная связь
-    m_dfeedback: double;
-    // задачу применили
-    m_TaskApplyed: boolean;
+    //f_manualMode: boolean;
     cs_state, cs: TRTLCriticalSection;
     // оценивать допуск по максимальному отклонению или по мат ожиданию
     fScalarTolerance: boolean;
@@ -86,9 +71,14 @@ type
     fInTolerance: boolean;
     fCheckOnMode: boolean;
   public
+    cfg:T3120Struct;
+    Index:integer;
+    // тег управления
+    m_Mtag, m_Ntag:ctag;
+    // тег измерения
+    m_MtagFB, m_NtagFB:ctag;
     // состояние регулятора
     m_stateTag: itag;
-    index: integer;
   protected
     // применить новое значение к контролу (напрмиер при ручном упроравлдении)
     procedure ApplyTaskVal(v: double); virtual;
@@ -96,7 +86,6 @@ type
     procedure DeleteCS;
     procedure entercs;
     procedure exitcs;
-    procedure createStateTags;
     // функция обработки регулятора.
     function doUpdateData(): integer; virtual;
     function getstate: integer; virtual;
@@ -104,15 +93,10 @@ type
     function getimageindex: integer; override;
     procedure setproperties(str: string); virtual; abstract;
     function getProperties: string; virtual;
-    procedure setfbname(str: string);
-    function getfbname: string;
-    procedure setunits(str: string); virtual;
-    function getunits: string; virtual;
     // cControlObj
     procedure LoadObjAttributes(xmlNode: txmlnode; mng: tobject); override;
     procedure SaveObjAttributes(xmlNode: txmlnode); override;
     // вычитать из тега обратную связь
-    function getFB: double; virtual;
     procedure doRename;
     // procedure setOwnerProg(p: cProgramObj);
     // procedure StarCheckMode(m: cModeObj);
@@ -121,11 +105,11 @@ type
     function getInTol: boolean;
     procedure setInTol(b: boolean);
   public
+    procedure createStateTags;
     // применить теги их задачи cTask
     // procedure ApplyTags(t: cTask);
     // применить новую задачу
     // procedure ApplyTask(t: cTask);
-
     function TagsToString: string;
     function TagsCount: integer;
     procedure ValsFromString(s: string);
@@ -135,7 +119,7 @@ type
     // Feedback - канал обратной связи
     // Task - задание
     // data - специализированные настройки могут отличаться для регуляторов раздичных типов
-    function config(Feedback: itag; data: tobject): boolean; virtual;
+    //function config(Feedback: itag; data: tobject): boolean; virtual;
     procedure Start; virtual;
     procedure stop; virtual;
     procedure pause; virtual;
@@ -145,7 +129,7 @@ type
     procedure SetManualTask(t: double); virtual;
     // установить доп. свойства контрола на циклограмме.
     // вызывается в cmode.exec, параметры читаются из задачи cTask
-    procedure SetTask(t: double); virtual; abstract;
+    procedure SetTask(t: double);
     function GetTask: double;
   public
     property CheckOnMode: boolean read GetCheckOnMode write fCheckOnMode;
@@ -158,12 +142,8 @@ type
     //property OwnerProg: cProgramObj read fOwnerProg write setOwnerProg;
     property state: integer read getstate write setstate;
     property Properties: string read getProperties write setproperties;
-    property feedbackname: string read getfbname write setfbname;
-    property task: double read GetTask write m_dtask;
+    property task: double read GetTask write SetTask;
     function getTaskstr(digits: integer): string;
-    property Feedback: double read getFB;
-    function getFBstr: string;
-    property units: string read getunits write setunits;
     constructor create; override;
     destructor destroy; override;
   end;
@@ -242,54 +222,12 @@ implementation
 
 { cControlObj }
 
-procedure cControlObj.setfbname(str: string);
-var
-  t: itag;
-begin
-  t := getTagByName(str);
-  if t <> nil then
-  begin
-    config(t, nil);
-  end
-  else
-    m_feedback_name := str;
-end;
-
 {
   procedure cControlObj.setOwnerProg(p: cProgramObj);
   begin
   fOwnerProg := p;
   end; }
 
-function cControlObj.getFB: double;
-begin
-  result := 0;
-  if m_feedback <> nil then
-  begin
-    result := m_feedback.GetEstimate(ESTIMATOR_MEAN);
-  end;
-end;
-
-function cControlObj.getFBstr: string;
-begin
-  if m_feedback <> nil then
-  begin
-    result := formatstrnoe(GetMean(m_feedback), 4);
-  end
-  else
-  begin
-    result := 'н.г.';
-  end;
-end;
-
-function cControlObj.getfbname: string;
-begin
-  result := m_feedback_name;
-  if m_feedback <> nil then
-  begin
-    result := m_feedback.getname;
-  end;
-end;
 
 function cControlObj.TagsCount: integer;
 begin
@@ -312,36 +250,16 @@ begin
   end;
 end;
 
-function cControlObj.config(Feedback: itag; data: tobject): boolean;
-var
-  fbsize: integer;
-begin
-  m_feedback := Feedback;
-  if Feedback = nil then
-  begin
-    state := c_NOTReady;
-    Feedback := nil;
-    m_feedback_name := '';
-  end
-  else
-  begin
-    m_feedback_name := Feedback.getname;
-    Feedback.GetTagId(m_feedback_id);
-    if not FAILED(Feedback.QueryInterface(IBlockAccess, m_feedbackBlA)) then
-    begin
-      fbsize := m_feedbackBlA.GetBlocksSize;
-      SetLength(fbData, fbsize);
-    end;
-  end;
-end;
 
 constructor cControlObj.create;
 begin
   inherited;
-
   InitCS;
-  funits := 'б.р.';
   fScalarTolerance := true;
+  m_Mtag:=ctag.create;
+  m_Ntag:=ctag.create;
+  m_MtagFB:=ctag.create;
+  m_NtagFB:=ctag.create;
 end;
 
 destructor cControlObj.destroy;
@@ -357,6 +275,11 @@ begin
     m_stateTag := nil;
   end;
   DeleteCS;
+  m_Mtag.destroy;
+  m_Ntag.destroy;
+  m_MtagFB.destroy;
+  m_NtagFB.destroy;
+
   // for i := 0 to g_conmng.ProgramCount - 1 do
   // begin
   // p := g_conmng.getProgram(i);
@@ -424,13 +347,13 @@ begin
   if result then // в состоянии Play
   begin
     // работа без ШИМ
-    if not m_TaskApplyed then
+    //if not m_TaskApplyed then
     begin
-      m_TaskApplyed := true;
+      //m_TaskApplyed := true;
       ApplyTaskVal(task);
     end;
-    if m_feedback <> nil then
-      m_dfeedback := GetMean(m_feedback);
+    //if m_feedback <> nil then
+    //  m_dfeedback := GetMean(m_feedback);
   end;
 end;
 
@@ -474,8 +397,13 @@ end;
 
 procedure cControlObj.SetManualTask(t: double);
 begin
-  f_manualMode := true;
+  //f_manualMode := true;
   SetTask(t);
+end;
+
+procedure cControlObj.SetTask(t: double);
+begin
+  cfg.Task:=t;
 end;
 
 function cControlObj.GetTask: double;
@@ -488,7 +416,7 @@ begin
   // result := 0;
   // end
   // else
-  result := m_dtask;
+  result := cfg.Task;
 end;
 
 procedure cControlObj.SaveObjAttributes(xmlNode: txmlnode);
@@ -498,9 +426,10 @@ var
   pars: tstringlist;
 begin
   inherited;
-  str := feedbackname;
-  xmlNode.WriteAttributeString('FeedBackName', str);
-  // xmlNode.WriteAttributeString('Tags', TagsToString);
+  saveTag(m_Mtag, xmlNode);
+  saveTag(m_Ntag, xmlNode);
+  saveTag(m_MtagFB, xmlNode);
+  saveTag(m_NtagFB, xmlNode);
 end;
 
 procedure cControlObj.LoadObjAttributes(xmlNode: txmlnode; mng: tobject);
@@ -508,14 +437,17 @@ var
   str: string;
 begin
   inherited;
-  feedbackname := xmlNode.ReadAttributeString('FeedBackName', '');
-  str := xmlNode.ReadAttributeString('Tags', '');
-  ValsFromString(str);
+  LoadTag(xmlNode,m_Mtag);
+  LoadTag(xmlNode,m_Ntag);
+  LoadTag(xmlNode,m_MtagFB);
+  LoadTag(xmlNode,m_NtagFB);
+  //str := xmlNode.ReadAttributeString('Tags', '');
+  //ValsFromString(str);
 end;
 
 function cControlObj.getProperties: string;
 begin
-  result := c_feedback_str + feedbackname + ';';
+  //result := c_feedback_str + feedbackname + ';';
 end;
 
 function cControlObj.getimageindex: integer;
@@ -556,30 +488,9 @@ begin
   end;
 end;
 
-function cControlObj.getTaskstr(digits: integer): string;
+function cControlObj.getTaskStr(digits: integer): string;
 begin
   result := format('%.*g', [digits, task]);
-end;
-
-function cControlObj.getunits: string;
-begin
-  if m_feedback <> nil then
-  begin
-    result := GetTagUnits(m_feedback);
-  end
-  else
-  begin
-    result := funits;
-  end;
-end;
-
-procedure cControlObj.setunits(str: string);
-begin
-  funits := str;
-  if m_feedback <> nil then
-  begin
-    SetTagUnits(m_feedback, str);
-  end;
 end;
 
 function cControlObj.getstate: integer;
@@ -609,6 +520,7 @@ begin
       m_stateTag.PushValue(0, -1);
   end;
 end;
+
 {
   procedure cControlObj.StarCheckMode(m: cModeObj);
   begin

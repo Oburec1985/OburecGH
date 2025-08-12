@@ -1252,7 +1252,10 @@ end;
 
 function cTag.GetMeanEst: double;
 begin
-  result := tag.GetEstimate(ESTIMATOR_MEAN);
+  if tag<>nil then
+    result := tag.GetEstimate(ESTIMATOR_MEAN)
+  else
+    result:=0;
 end;
 
 function cTag.GetOutValue(i: integer): double;

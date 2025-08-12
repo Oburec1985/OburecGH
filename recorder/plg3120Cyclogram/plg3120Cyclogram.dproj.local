@@ -75,6 +75,7 @@
     <Transaction>2025.07.30 12:54:08.894.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\Unit1.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\3120\uModeObj.pas</Transaction>
     <Transaction>2025.07.30 14:16:17.566.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\Unit1.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\3120\uProgramObj.pas</Transaction>
     <Transaction>2025.07.30 14:40:50.833.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\Unit1.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\uBaseProgramObj.pas</Transaction>
+    <Transaction>2025.08.01 19:08:44.400.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\Unit1.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\3120\uTest.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
@@ -128,6 +129,7 @@
     <File Path="3120\uControlObj.pas"/>
     <File Path="3120\uModeObj.pas"/>
     <File Path="3120\uProgramObj.pas"/>
+    <File Path="3120\uTest.pas"/>
     <File Path="forms"/>
     <File Path="forms\u3120Frm.pas"/>
     <File Path="forms\u3120Frm.dfm"/>

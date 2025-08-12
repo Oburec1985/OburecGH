@@ -190,7 +190,6 @@ type
     // выполнить шаг регуляторов
     procedure ExecControls;
     function createControl(name: string; classname: string): cControlObj;
-    function createProgram(name: string; classname: string): cProgramObj;
     function createMode(name: string; classname: string): cModeObj;
     function getControlObj(id: integer): cControlObj; overload;
     function getControlObj(id: string): cControlObj; overload;
@@ -224,6 +223,7 @@ implementation
 { cControlMng }
 procedure cControlMng.regObjClasses;
 begin
+  regclass(cControlObj);
   regclass(cModeObj);
   regclass(cProgramObj);
   regclass(cProgramList);
@@ -395,12 +395,12 @@ begin
     obj.parent := controls;
     //programs.DoAddTask(obj);
     //controls.DoAddControl(obj);
-    //cControlObj(obj).createStateTags;
+    cControlObj(obj).createStateTags;
   end;
   if obj is cModeObj then
   begin
-    //cModeObj(obj).CreateTasks;
-    //cModeObj(obj).createTags;
+    cModeObj(obj).CreateTasks;
+    cModeObj(obj).createTags;
   end;
 end;
 
@@ -539,11 +539,6 @@ begin
   AddBaseObjInstance(result);
 end;
 
-function cControlMng.createProgram(name: string;
-  classname: string): cProgramObj;
-begin
-
-end;
 
 function cControlMng.createMode(name: string; classname: string): cModeObj;
 begin

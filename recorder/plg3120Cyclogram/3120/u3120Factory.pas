@@ -17,6 +17,7 @@ uses
   pluginClass,
   shellapi,
   uPathMng,
+  u3120ControlObj,
   math;
 
 type
@@ -77,14 +78,13 @@ uses
 
 constructor c3120Factory.create;
 begin
-  //g_mbase := cBladeBase.create;
-  //g_mbase.InitBaseFolder('c:\Mera Files\bladeMdb\');
-
   m_lRefCount := 1;
   m_counter := 0;
   m_name := c_Name;
   m_picname := c_Pic;
   m_Guid := IID_3120;
+
+  g_conmng:=cControlMng.create;
   createevents;
 end;
 
@@ -96,6 +96,7 @@ end;
 
 destructor c3120Factory.destroy;
 begin
+  g_conmng.destroy;
   destroyevents;
   inherited;
 end;

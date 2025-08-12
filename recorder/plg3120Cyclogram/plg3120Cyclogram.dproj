@@ -101,6 +101,7 @@
 			<DCCReference Include="3120\uModeObj.pas"/>
 			<DCCReference Include="3120\uProgramObj.pas"/>
 			<DCCReference Include="uBaseProgramObj.pas"/>
+			<DCCReference Include="3120\uTest.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
