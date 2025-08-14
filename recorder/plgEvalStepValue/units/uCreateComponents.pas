@@ -176,18 +176,22 @@ begin
     g_cfgpath:=getRConfig;
     doLoad(g_cfgpath);
   end;
+  ecm(b);
   for i:=0 to g_AlgList.Count-1 do
   begin
     a:=g_AlgList.getobj(i);
     a.m_tag.tagname:=a.m_tag.tagname;
     a.m_outTag.tagname:=a.m_outTag.tagname;
 
-    ecm(b);
-    a.m_outTag.tag.SetFreq(a.m_tag.freq);
-    a.UpdateFFTSize;
-    if b then
-      lcm;
+
+    if a.m_outTag.tag<>nil then
+    begin
+      a.m_outTag.tag.SetFreq(a.m_tag.freq);
+      a.UpdateFFTSize;
+    end;
   end;
+  if b then
+    lcm;
 end;
 
 
