@@ -169,8 +169,8 @@ type
     procedure CancelEditMode;
     function getControlFromTableModeSGByRow(row: integer): ccontrolobj;
     procedure ClearSGButtons;
-    procedure WndProc(var Message: TMessage); override;
     procedure CreateSGButtons;
+    procedure WndProc(var Message: TMessage); override;
     // Показать регулояторы
     procedure ShowControls;
     // Показать Таблицу программ и режимов
@@ -501,8 +501,7 @@ procedure TControlDeskFrm.CreateEvents;
 begin
   addplgevent('TControlDeskFrm_doAddObj', E_OnAddObj, doAddObj);
   addplgevent('TControlDeskFrm_doLoad', E_OnLoadObjMng, doLoad);
-  addplgevent('TControlDeskFrm_doChangeRState', c_RC_DoChangeRCState,
-    doChangeRState);
+  addplgevent('TControlDeskFrm_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
   addplgevent('TControlDeskFrm_doLeaveCfg', c_RC_LeaveCfg, doLeaveCfg);
   addplgevent('TControlDeskFrm_doRcInit', E_RC_Init, doRcInit);
   g_conmng.Events.AddEvent('TControlDeskFrm_doStopControlMng', E_OnStopControlMng, doShowStop);
@@ -772,8 +771,7 @@ begin
   RightGB.Width:=i;
   ConfirmModeCB.Checked := a_pIni.ReadBool(str, 'ConfirmModeChange', true);
   TimeUnitsCB.ItemIndex := a_pIni.ReadInteger(str, 'Units', 0);
-  RightGB.Width := a_pIni.ReadInteger(str, 'Table_Controls_Splitter_Pos',
-    RightGB.Width);
+  RightGB.Width := a_pIni.ReadInteger(str, 'Table_Controls_Splitter_Pos', RightGB.Width);
   m_CustSort:=a_pIni.ReadBool(str, 'CustSort', false);
   s:=a_pIni.ReadString(str,'CustSortList', '');
   s1:=getSubStrByIndex(s,',',1,0);
@@ -1989,6 +1987,7 @@ begin
     sg.Canvas.Brush.Color := Color;
     exit;
   end;
+  // окрас строки выбраного контрола
   if aRow>=1 then
   begin
     if ACol=m_insert then
@@ -2401,8 +2400,7 @@ begin
   end;
 end;
 
-function TControlDeskFrm.getControlFromTableModeSGByRow(row: integer)
-  : ccontrolobj;
+function TControlDeskFrm.getControlFromTableModeSGByRow(row: integer): ccontrolobj;
 var
   str: string;
   p: cProgramObj;

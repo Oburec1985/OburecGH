@@ -72,10 +72,6 @@ type
     fmodes: cbaseobj;
     // объект пустышка для хранения используемых регуляторов
     fcontrols: tstringlist;
-    // время работы программы
-    fProgT: double;
-    // время на режиме
-    fModeT: double;
     // время паузы на режиме
     fModePauseT: double;
     fInTolerance: boolean;
@@ -83,9 +79,13 @@ type
     fModePauseTi: int64;
     // счетчик времени при выполнении посл шага программы
     fModeT1: int64;
-    // значение StateTag
+    // значение StateTag на предыдущей итерации
     m_stateTagVal: integer;
   public
+    // время работы программы
+    fProgT: double;
+    // время на режиме
+    fModeT: double;
     // время начала проверки выхода на режим
     fCheckStartTime: double;
     fCheckStartTime_i: int64;
@@ -115,7 +115,8 @@ type
     procedure UpdateModeT;
     // сброс времени программы
     procedure ResetProgT;
-    function getactive: boolean;
+
+    function getactive: boolean;override;
   public
     // сброс времени режима и время паузы на режиме (если время режима ноль то и паузы на нем не было)
     procedure ResetModeT;
@@ -152,6 +153,7 @@ type
     procedure ShowComponent(node: pointer; component: tcomponent); override;
     procedure DoLincParent; override;
   public
+    property stateTag: integer read m_stateTagVal write changeStateTag;
     // не предназначено для пользователя (нельзя ставить c_play или stop, можно tryPlay или tryStop
     // (применяется в execute для синхронизации потоков))
     property state: integer read getstate write setstate;
@@ -243,9 +245,6 @@ const
   c_TaskType_1 = 1;
   c_TaskType_poly = 2;
 
-  c_DAC_CLASSID = 'CDacControl';
-  c_DAC_Typestring = 'Прямое управление ЦАП';
-
   c_feedback_str = 'Обр.св.:';
   c_DAC_str = 'DAC:';
 
@@ -253,10 +252,8 @@ const
 
 
 implementation
-
-uses
-  u3120ControlObj;
-
+  uses
+    u3120ControlObj;
   //uMeasureBase,   uMBaseControl  ;
 
 function getmin(i1, i2: integer): integer;
@@ -281,11 +278,16 @@ end;
 
 { cProgramObj }
 procedure cProgramObj.changeStateTag(v: integer);
+//var
+  //r:double;
 begin
   if v <> m_stateTagVal then
   begin
     m_stateTagVal := v;
     m_stateTag.PushValue(v, -1);
+    //r := GetMean(m_stateTag);
+    //if r>0 then
+    //  showmessage('1');
   end;
 end;
 
@@ -695,11 +697,19 @@ begin
 end;
 
 function cProgramObj.CreateStateTag: itag;
+var
+  b:boolean;
 begin
-  m_stateTag := uRCFunc.CreateStateTag(name + '_State', self);
-  m_EnableTag := uRCFunc.CreateStateTag(name + '_Enable', self);
-  m_ModeIndTag := uRCFunc.CreateStateTag(name + '_ModeIndTag', self);
+  ecm(b);
+  if m_stateTag=nil  then
+  begin
+    m_stateTag := uRCFunc.CreateStateTag(name + '_State', self);
+    m_EnableTag := uRCFunc.CreateStateTag(name + '_Enable', self);
+    m_ModeIndTag := uRCFunc.CreateStateTag(name + '_ModeIndTag', self);
+  end;
   result := m_stateTag;
+  if b then
+    lcm;
 end;
 
 function cProgramObj.getactive: boolean;
@@ -931,7 +941,45 @@ begin
   end;
   xmlNode.WriteAttributeInteger('ProgRepeat', fRepeatCount);
   xmlNode.WriteAttributeBool('ProgStartOnPlay', m_StartOnPlay);
+end;
 
+
+
+procedure cProgramObj.LoadObjAttributes(xmlNode: txmlnode; mng: tobject);
+var
+  lConCount, i: integer;
+  TrigsNode, trignode: txmlnode;
+  str, conName: string;
+  c: cControlObj;
+  t: cBaseTrig;
+begin
+  inherited;
+  fRepeatCount := xmlNode.ReadAttributeInteger('ProgRepeat', 1);
+  m_StartOnPlay := xmlNode.ReadAttributeBool('ProgStartOnPlay', true);
+  lConCount := xmlNode.ReadAttributeInteger('ControlCount', 0);
+  // пишем используемые контролы
+  for i := 0 to lConCount - 1 do
+  begin
+    str := 'Control' + inttostr(i);
+    conName := xmlNode.ReadAttributeString(str, '');
+    if conName <> '' then
+    begin
+      c := g_conmng.getControlObj(conName);
+      if c <> nil then
+      begin
+        AddControl(c);
+      end;
+    end;
+  end;
+  fRepeatCount := xmlNode.ReadAttributeInteger('ProgRepeat');
+  TrigsNode := xmlNode.FindNode('TrigsNode');
+  if TrigsNode <> nil then
+  begin
+    for i := 0 to TrigsNode.NodeCount - 1 do
+    begin
+      //t := ReadTrig(TrigsNode, 'ActionTrig_' + inttostr(i), nil);
+    end;
+  end;
 end;
 
 function ReadTrig(node: txmlnode; key: string; p: tobject): cBaseTrig;
@@ -1063,47 +1111,6 @@ begin
   end;
 end;
 
-
-procedure cProgramObj.LoadObjAttributes(xmlNode: txmlnode; mng: tobject);
-var
-  lConCount, i: integer;
-  TrigsNode, trignode: txmlnode;
-  str, conName: string;
-  c: cControlObj;
-  t: cBaseTrig;
-begin
-  inherited;
-  fRepeatCount := xmlNode.ReadAttributeInteger('ProgRepeat', 1);
-  m_StartOnPlay := xmlNode.ReadAttributeBool('ProgStartOnPlay', true);
-  lConCount := xmlNode.ReadAttributeInteger('ControlCount', 0);
-  // пишем используемые контролы
-  for i := 0 to lConCount - 1 do
-  begin
-    str := 'Control' + inttostr(i);
-    conName := xmlNode.ReadAttributeString(str, '');
-    if conName <> '' then
-    begin
-      //c := g_conmng.getControlObj(conName);
-      if c <> nil then
-      begin
-      //  AddControl(c);
-      end;
-    end;
-  end;
-
-  fRepeatCount := xmlNode.ReadAttributeInteger('ProgRepeat');
-  // StartTrig := ReadTrig(xmlNode, 'StartTrig', self);
-  // StopTrig := ReadTrig(xmlNode, 'StopTrig', self);
-
-  TrigsNode := xmlNode.FindNode('TrigsNode');
-  if TrigsNode <> nil then
-  begin
-    for i := 0 to TrigsNode.NodeCount - 1 do
-    begin
-      t := ReadTrig(TrigsNode, 'ActionTrig_' + inttostr(i), nil);
-    end;
-  end;
-end;
 
 procedure cProgramObj.SetActiveMode(m: cModeObj);
 var

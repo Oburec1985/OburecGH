@@ -95,13 +95,16 @@
 				<Form>Frm3120</Form>
 			</DCCReference>
 			<DCCReference Include="3120\u3120Factory.pas"/>
-			<DCCReference Include="3120\u3120ControlObj.pas"/>
 			<DCCReference Include="3120\u3120RTrig.pas"/>
 			<DCCReference Include="3120\uControlObj.pas"/>
 			<DCCReference Include="3120\uModeObj.pas"/>
 			<DCCReference Include="3120\uProgramObj.pas"/>
 			<DCCReference Include="uBaseProgramObj.pas"/>
 			<DCCReference Include="3120\uTest.pas"/>
+			<DCCReference Include="3120\u3120ControlObj.pas"/>
+			<DCCReference Include="forms\uThresholds3120Frm.pas">
+				<Form>ThresholdFrm</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

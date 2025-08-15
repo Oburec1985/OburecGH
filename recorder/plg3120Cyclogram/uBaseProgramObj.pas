@@ -54,9 +54,6 @@ type
 
 implementation
 
-uses
-  u3120ControlObj;
-
   //uMeasureBase,   uMBaseControl  ;
 
 function getmin(i1, i2: integer): integer;
@@ -379,16 +376,16 @@ end;
 
 procedure cBaseProgramObj.DestroyEvents;
 begin
-  if g_conmng.Events <> nil then
-  begin
-    g_conmng.Events.removeEvent(doUpdateTrig, E_OnUpdateTrig);
-  end;
+  //if g_conmng.Events <> nil then
+  //begin
+  //  g_conmng.Events.removeEvent(doUpdateTrig, E_OnUpdateTrig);
+  //end;
 end;
 
 procedure cBaseProgramObj.createEvents;
 begin
-  g_conmng.Events.AddEvent('cBaseProgramObj_doUpdateTrig', E_OnUpdateTrig,
-    doUpdateTrig);
+  //g_conmng.Events.AddEvent('cBaseProgramObj_doUpdateTrig', E_OnUpdateTrig,
+  //  doUpdateTrig);
 end;
 
 // здесь по событию обновления триггера, если триггер сработал, то ставиться stateStart или StateStop в true
@@ -436,7 +433,7 @@ begin
     end;
   end;
   fStartTrig := t;
-  g_conmng.addtrig(t);
+  //g_conmng.addtrig(t);
 end;
 
 procedure cBaseProgramObj.setStopTrig(t: cBaseTrig);
@@ -449,7 +446,7 @@ begin
     end;
   end;
   fStoptrig := t;
-  g_conmng.addtrig(t);
+  //g_conmng.addtrig(t);
 end;
 
 

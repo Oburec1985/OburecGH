@@ -21,21 +21,6 @@ uses
 
 type
 
-  TModeType = (mtN, mtM, mtStop);
-
-  T3120Struct = record
-    // коэф. регулировани€
-    P,I,D:double;
-    // вкл защиту по температуре, по уровню, давл. масла, ур. масла, по оборотам/моменту
-    TAlarm, LAlarm, Palarm, LPAlarm, MNAlarm:boolean;
-    // уровень лд€ защиты по M/N
-    MNthreshold:double;
-    // тип режима: тормозной (M)/ приводной (N)/ останов
-    ModeType:TModeType;
-    // запрет на рост быстрее
-    Nramp:double;
-  end;
-
   cControlMng = class(cBaseObjMng)
   private
     fcs: TRTLCriticalSection;
@@ -113,8 +98,6 @@ type
     procedure ResetT;
     // продолжить отсчет времени на испытании
     procedure ContinueT;
-    procedure Start(p_resetTime: boolean); overload;
-
     procedure destroyTrigs;
     // блок процедур в цикле обновлени€ данных рекордера!!!
     // проверка триггеров по уровн€м
@@ -178,6 +161,7 @@ type
     procedure doDestroyTrig(sender: tobject);
     procedure destroyTrig(t: crtrig);
     // переводит регул€торы в активный режим. —брасывает врем€ в 0
+    procedure Start(p_resetTime: boolean); overload;
     procedure Start; overload;
     // переводит все регул€торы в останов. Ќе сбрасывает врем€ (работает как пауза)
     procedure stop;
@@ -224,6 +208,7 @@ implementation
 procedure cControlMng.regObjClasses;
 begin
   regclass(cControlObj);
+  regclass(cMNControl);
   regclass(cModeObj);
   regclass(cProgramObj);
   regclass(cProgramList);
@@ -441,11 +426,8 @@ end;
 procedure cControlMng.createEvents;
 begin
   AddPlgEvent('cControlMng_doUpdateTags', c_RUpdateData, doUpdateTags);
-  AddPlgEvent('cControlMng_doChangeRState', c_RC_DoChangeRCState,
-    doChangeRState);
-
-  Events.AddEvent('cControlMng_doDestroyObjForTrig', E_OnDestroyObject,
-    doDestroyObjForTrig);
+  AddPlgEvent('cControlMng_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
+  Events.AddEvent('cControlMng_doDestroyObjForTrig', E_OnDestroyObject, doDestroyObjForTrig);
 end;
 
 procedure cControlMng.DestroyEvents;
@@ -1346,6 +1328,7 @@ begin
   end;
 end;
 
+// обновить циклограмму по тегу
 procedure cControlMng.UpdateProgramState;
 var
   i: integer;
@@ -1353,12 +1336,13 @@ var
   v: double;
   b: boolean;
 begin
+  //exit;
   for i := 0 to ProgramCount - 1 do
   begin
     p := getProgram(i);
     v := GetScalar(p.m_stateTag);
-    //if v = p.m_stateTagVal then
-    //  continue;
+    if v = p.stateTag then
+      continue;
     b := false;
     case p.state of
       c_Play:
@@ -1484,7 +1468,7 @@ begin
     p := g_conmng.getProgram(str);
     if p <> nil then
     begin
-      p.active := true;
+      //p.active := true;
     end
     else
     begin
@@ -1501,17 +1485,17 @@ begin
     if m <> nil then
     begin
       m.active := true;
-      //p.fModeT := ifile.ReadFloat('Prog_' + inttostr(i), 'MTime', 0);
+      p.fModeT := ifile.ReadFloat('Prog_' + inttostr(i), 'MTime', 0);
       for J := 0 to p.ModeCount - 1 do
       begin
         m := p.getMode(J);
         if m = p.ActiveMode then
         begin
-          //p.fProgT := p.fProgT + p.fModeT;
+          p.fProgT := p.fProgT + p.fModeT;
         end
         else
         begin
-          //p.fProgT := p.fProgT + m.ModeLength;
+          p.fProgT := p.fProgT + m.ModeLength;
         end;
       end;
     end;
@@ -1551,7 +1535,7 @@ begin
     begin
       ifile.WriteString('Prog_' + inttostr(i), 'MName', m.name);
       // врем€ которое программа просто€ла на режиме
-      //ifile.WriteFloat('Prog_' + inttostr(i), 'MTime', p.fModeT);
+      ifile.WriteFloat('Prog_' + inttostr(i), 'MTime', p.fModeT);
     end;
   end;
   l.destroy;
@@ -1575,7 +1559,7 @@ begin
     node.name := 'Root';
     if node <> nil then
     begin
-      node := node.FindNode('ControlCyclogram');
+      node := node.FindNode('3120Cyclogram');
       if node <> nil then
       begin
         cn := node.FindNode('cProgramList');

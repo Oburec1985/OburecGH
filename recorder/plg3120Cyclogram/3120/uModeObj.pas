@@ -26,23 +26,6 @@ type
 
   cModeObj = class;
 
-  TModeType = (mtN, mtM, mtStop);
-
-  T3120Struct = record
-    // коэф. регулирования
-    P,I,D:double;
-    // вкл защиту по температуре, по уровню, давл. масла, ур. масла, по оборотам/моменту
-    TAlarm, LAlarm, Palarm, LPAlarm, MNAlarm:boolean;
-    // уровень лдя защиты по M/N
-    MNthreshold:double;
-    // тип режима: тормозной (M)/ приводной (N)/ останов
-    ModeType:TModeType;
-    // запрет на рост быстрее
-    Nramp:double;
-  end;
-
-
-
   cProgramList = class(cbaseobj)
   protected
     // перечитать список всех задач
@@ -67,7 +50,9 @@ type
   public
     TaskType: TPType;
     // компоненты касательных векторов
-    leftTang, rightTang, point: point2;
+    leftTang, rightTang,
+    // point.y задублирован с m_data.
+    point: point2;
     spline: cubicspline;
     // владелец задачи
     control: cControlObj;
@@ -91,6 +76,8 @@ type
     procedure copytaskto(t: cTask);
     // доп задания контролу
     function TagsToString: string;
+    function DataToStr: string;
+    procedure strtodata(s:string);
     procedure InitCS;
     procedure DeleteCS;
     procedure exitcs;
@@ -108,8 +95,7 @@ type
     function strValue: string;
     function strUseTol: string;
     property task: double read GetTask write SetTask;
-    property StopControlValue: boolean read fStopControlValue write
-      SetStopControlValue;
+    property StopControlValue: boolean read fStopControlValue write SetStopControlValue;
   public
     constructor create;
     destructor destroy;
@@ -296,7 +282,8 @@ const
 implementation
 
 uses
-  u3120ControlObj, uProgramObj;
+  u3120ControlObj,
+  uProgramObj;
 
   //uMeasureBase,   uMBaseControl  ;
 
@@ -638,28 +625,20 @@ begin
   for i := 0 to TaskCount - 1 do
   begin
     t := GetTask(i);
-    if not m_applyed then
+    if not t.fapplyed then
     begin
       c := t.control;
-      //c.setparams(t.m_Params);
-      //c.ApplyTask(t);
-      // t.applyed := true; // см ниже 19.10.22
+      c.Task:=t.task;
+      c.ApplyTask(t);
+      //t.applyed := true; // см ниже 19.10.22
     end
     else
     begin
-      // if not t.applyed then
-      // begin
-      // c := t.control;
-      // c.ResetPWMTOnModeChange(true);
-      // c.setparams(t.m_Params);
-      // c.ApplyTask(t);
-      // t.applyed := true;
-      // end;
     end;
     // программа может влиять только на те контролы которые заняты программой
     //if t.control.OwnerProg <> p then
     //  continue;
-    // если дано задание нре управлять в автомате
+    // если дано задание не управлять в автомате
     if t.StopControlValue then
     begin
       t.control.state := c_Stop;
@@ -673,8 +652,7 @@ begin
           //if not t.control.f_manualMode then
           begin
             t.entercs;
-
-            t.control.SetTask(t.task);
+            t.control.Task:=t.task;
             t.applyed := true;
             t.exitcs;
           end;
@@ -685,7 +663,7 @@ begin
         c := t.control;
         x := p.getModeTime / ModeLength;
         v := GetTaskValue(t, x);
-        c.SetTask(v);
+        c.Task:=v;
       end;
     end;
   end;
@@ -1184,12 +1162,9 @@ begin
           t.leftTang.y := n.ReadAttributeFloat('LeftTangY', 0);
           t.rightTang.x := n.ReadAttributeFloat('RightTangX', 0);
           t.rightTang.y := n.ReadAttributeFloat('RightTangY', 0);
-          //str:=n.ReadAttributeString('Opts', t.getparams);
-          //t.params := str;
-          str := n.ReadAttributeString('TagsVals', '');
-          // p:=getProgram;
-          // c:=p.getOwnControl(tname);
-          //UpdateTaskTags(str, t);
+          str := n.ReadAttributeString('Data', '');
+          if str<>'' then
+            t.StrToData(str);
         end;
       end;
     end;
@@ -1234,14 +1209,12 @@ begin
     n.WriteAttributeFloat('TaskVal', t.GetTask);
     n.WriteAttributeFloat('Tolerance', t.m_tolerance);
     n.WriteAttributeBool('UseTolerance', t.m_useTolerance);
-
     n.WriteAttributeInteger('TaskType', TPTypeToInt(t.TaskType));
     n.WriteAttributeFloat('LeftTangX', t.leftTang.x);
     n.WriteAttributeFloat('LeftTangY', t.leftTang.y);
     n.WriteAttributeFloat('RightTangX', t.rightTang.x);
     n.WriteAttributeFloat('RightTangY', t.rightTang.y);
-    //n.WriteAttributeString('Opts', t.getparams);
-    n.WriteAttributeString('TagsVals', t.TagsToString);
+    n.WriteAttributeString('Data', t.DataToStr);
   end;
   stepsNode := GetNode(xmlNode, 'StepList');
   stepsNode.WriteAttributeFloat('NCount', stepValCount);
@@ -1290,7 +1263,7 @@ begin
   begin
     t := GetTask(i);
     c := t.control;
-    c.SetTask(t.task);
+    c.Task:=t.task;
   end;
   incCounter(fCounter);
 end;
@@ -1603,6 +1576,7 @@ end;
 procedure cTask.SetTask(d: double);
 begin
   point.y := d;
+  m_data.Task:=d;
 end;
 
 function cTask.getunits: string;
@@ -1628,6 +1602,42 @@ end;
 procedure cTask.InitCS;
 begin
   InitializeCriticalSection(cs);
+end;
+
+
+function cTask.DataToStr: string;
+begin
+  // p;i;d
+  result:=floattostr(m_data.P)+';'+
+          floattostr(m_data.I)+';'+
+          floattostr(m_data.D)+';'+
+          booltostr(m_data.TAlarm)+';'+
+          booltostr(m_data.LAlarm)+';'+
+          booltostr(m_data.PAlarm)+';'+
+          booltostr(m_data.MNAlarm)+';'+
+          floattostr(m_data.Tthreshold)+';'+
+          floattostr(m_data.Lthreshold)+';'+
+          floattostr(m_data.Pthreshold)+';'+
+          floattostr(m_data.MNthreshold)+';'+
+          TModeTypeToStr(m_data.ModeType)+';'+
+          floattostr(m_data.Nramp);
+end;
+
+procedure cTask.strtodata(s:string);
+begin
+  m_data.P:=strtofloatext(getSubStrByIndex(s,';',1,0));
+  m_data.I:=strtofloatext(getSubStrByIndex(s,';',1,1));
+  m_data.D:=strtofloatext(getSubStrByIndex(s,';',1,2));
+  m_data.TAlarm:=StrtoBoolExt(getSubStrByIndex(s,';',1,3));
+  m_data.LAlarm:=StrtoBoolExt(getSubStrByIndex(s,';',1,4));
+  m_data.Palarm:=StrtoBoolExt(getSubStrByIndex(s,';',1,5));
+  m_data.MNAlarm:=StrtoBoolExt(getSubStrByIndex(s,';',1,6));
+  m_data.Tthreshold:=strtofloatext(getSubStrByIndex(s,';',1,7));
+  m_data.Lthreshold:=strtofloatext(getSubStrByIndex(s,';',1,8));
+  m_data.Pthreshold:=strtofloatext(getSubStrByIndex(s,';',1,9));
+  m_data.MNthreshold:=strtofloatext(getSubStrByIndex(s,';',1,10));
+  m_data.ModeType:=strToModeType(getSubStrByIndex(s,';',1,11));
+  m_data.Nramp:=strtofloatext(getSubStrByIndex(s,';',1,12));
 end;
 
 procedure cTask.DeleteCS;

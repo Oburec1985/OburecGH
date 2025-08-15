@@ -17,7 +17,7 @@ uses
   pluginClass,
   shellapi,
   uPathMng,
-  u3120ControlObj,
+  uControlObj,
   math;
 
 type
@@ -37,6 +37,8 @@ type
   private
     m_counter: integer;
   protected
+    procedure dosave(sender:tobject);
+    procedure doload(sender:tobject);
     procedure doDestroyForms; override;
     procedure createevents;
     procedure destroyevents;
@@ -49,6 +51,8 @@ type
     procedure doStart;
     procedure doStop;
   public
+    procedure incFrmCounter;
+
     constructor create;
     destructor destroy; override;
     // создаем метки
@@ -72,9 +76,15 @@ const
 
 implementation
 uses
-  u3120Frm;
+  u3120ControlObj, u3120Frm;
 
 { c3120Factory }
+
+procedure c3120Factory.incFrmCounter;
+begin
+  inc(m_counter);
+end;
+
 
 constructor c3120Factory.create;
 begin
@@ -88,10 +98,46 @@ begin
   createevents;
 end;
 
+procedure c3120Factory.dosave(sender: tobject);
+var
+  path, name, dir:string;
+begin
+  path:=getRConfig;
+  dir:=extractfiledir(path);
+  name:=trimext(extractfilename(path));
+  g_conmng.SaveToXML(dir+'\'+name+'_3120'+'.xml','3120Cyclogram');
+end;
+
+procedure c3120Factory.doload(sender: tobject);
+var
+  dir, name, path:string;
+  b:boolean;
+begin
+  inherited;
+  /// перенес загрузку в инициализацию
+  path:=getRConfig;
+  if not RStateConfig then
+    ecm(b);
+  if RStateConfig then
+  begin
+    dir:=extractfiledir(path);
+    name:=trimext(extractfilename(path));
+    name:=dir+'\'+name+'_3120'+'.xml';
+    if fileexists(name) then
+    begin
+      g_conmng.LoadFromXML(name, '3120Cyclogram');
+    end;
+    if b then
+      lcm;
+  end;
+end;
+
 procedure c3120Factory.createevents;
 begin
   // addplgevent('cSRSFactory_doUpdateData', c_RUpdateData, doUpdateData);
-  addplgevent('cSRSFactory_doChangeRState', c_RC_DoChangeRCState,    doChangeRState);
+  addplgevent('c3120Factory_doChangeRState', c_RC_DoChangeRCState,    doChangeRState);
+  addplgevent('c3120Factory_Save', c_RC_SaveCfg,    dosave);
+  addplgevent('c3120Factory_Load', c_RC_LoadCfg,    doload);
 end;
 
 destructor c3120Factory.destroy;
@@ -173,6 +219,8 @@ begin
   inherited;
 
 end;
+
+
 
 procedure c3120Factory.doRecorderInit;
 var

@@ -3,8 +3,8 @@ unit uTest;
 interface
 
 uses
-  sysutils,
-  uControlObj, uProgramObj, uModeObj, u3120Factory, u3120ControlObj;
+  sysutils, urcfunc,
+  u3120ControlObj, uControlObj, uProgramObj, uModeObj, u3120Factory;
 
 procedure testinit3120;
 
@@ -19,10 +19,13 @@ var
   I, j: Integer;
   t:ctask;
 begin
+  if g_conmng.ProgramCount>0 then exit;
+
   p:=cProgramObj.create;
+  p.CreateStateTag;
   p.name:='Prog_01';
   p.RepeatCount:=1;
-  p.m_StartOnPlay:=false;
+  p.m_StartOnPlay:=true;
   p.m_enableOnStart:=true;
   g_conmng.Add(p);
 
@@ -35,7 +38,45 @@ begin
     else
       mname:='M'+inttostr(i+1);
     end;
-    c:=g_conmng.createControl(mname, 'cControlObj');
+    if i<5 then
+    begin
+      c:=g_conmng.createControl(mname, 'cMNControl');
+
+      cMNControl(c).m_Mtag.tagname:=mname+'_Mtsk';
+      if cMNControl(c).m_Mtag.tag=nil then
+      begin
+        cMNControl(c).m_Mtag.tag:=createScalar(mname+'_Mtsk', true);
+      end;
+      cMNControl(c).m_Ntag.tagname:=mname+'_Ntsk';
+      if cMNControl(c).m_Ntag.tag=nil then
+      begin
+        cMNControl(c).m_Ntag.tag:=createScalar(mname+'_Ntsk', true);
+      end;
+
+      cMNControl(c).m_MtagFB.tagname:=mname+'_Mfb';
+      if cMNControl(c).m_MtagFB.tag=nil then
+      begin
+        cMNControl(c).m_MtagFB.tag:=createScalar(mname+'_Mfb', true);
+      end;
+      cMNControl(c).m_NtagFB.tagname:=mname+'_Nfb';
+      if cMNControl(c).m_NtagFB.tag=nil then
+      begin
+        cMNControl(c).m_NtagFB.tag:=createScalar(mname+'_Nfb', true);
+      end;
+    end
+    else
+    begin
+      c:=g_conmng.createControl(mname, 'cControlObj');
+      c.m_Tasktag.tagname:=mname+'_tsk';
+      if c.m_Tasktag.tag=nil then
+      begin
+        c.m_Tasktag.tag:=createScalar(mname+'_tsk', true);
+      end;
+      if c.m_FBtag.tag=nil then
+      begin
+        c.m_Tasktag.tag:=createScalar(mname+'_fb', true);
+      end;
+    end;
     g_conmng.Add(c);
     p.AddControl(c);
   end;

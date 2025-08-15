@@ -36,13 +36,14 @@ uses
   uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
   u3120Frm in 'forms\u3120Frm.pas' {Frm3120},
   u3120Factory in '3120\u3120Factory.pas',
-  u3120ControlObj in '3120\u3120ControlObj.pas',
   u3120RTrig in '3120\u3120RTrig.pas',
   uControlObj in '3120\uControlObj.pas',
   uModeObj in '3120\uModeObj.pas',
   uProgramObj in '3120\uProgramObj.pas',
   uBaseProgramObj in 'uBaseProgramObj.pas',
-  uTest in '3120\uTest.pas';
+  uTest in '3120\uTest.pas',
+  u3120ControlObj in '3120\u3120ControlObj.pas',
+  uThresholds3120Frm in 'forms\uThresholds3120Frm.pas' {ThresholdFrm};
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 

@@ -16,7 +16,7 @@ uses
   uEventTypes,
   uAlarms,
   uSetList,
-  //u3120RTrig,
+  // u3120RTrig,
   blaccess;
 
 type
@@ -32,7 +32,7 @@ type
     // вкл защиту по температуре, по уровню, давл. масла, ур. масла, по оборотам/моменту
     TAlarm, LAlarm, Palarm, LPAlarm, MNAlarm: boolean;
     // уровень лдя защиты по M/N
-    MNthreshold: double;
+    Tthreshold, Lthreshold, Pthreshold, MNthreshold: double;
     // тип режима: тормозной (M)/ приводной (N)/ останов
     ModeType: TModeType;
     // запрет на рост быстрее
@@ -51,7 +51,6 @@ type
     destructor destroy; override;
   end;
 
-  // регулятор
   cControlObj = class(cbaseobj)
   private
     // c_NOTReady = 0;
@@ -60,7 +59,7 @@ type
     // c_Stop = 7;
     fstate: integer;
     // на текущем шаге циклограммы пользователь вбил свое задание
-    //f_manualMode: boolean;
+    // f_manualMode: boolean;
     cs_state, cs: TRTLCriticalSection;
     // оценивать допуск по максимальному отклонению или по мат ожиданию
     fScalarTolerance: boolean;
@@ -70,13 +69,12 @@ type
     // в допуске
     fInTolerance: boolean;
     fCheckOnMode: boolean;
+    // задание
+    fTask, fFB: double;
   public
-    cfg:T3120Struct;
-    Index:integer;
-    // тег управления
-    m_Mtag, m_Ntag:ctag;
-    // тег измерения
-    m_MtagFB, m_NtagFB:ctag;
+    m_TaskTag, m_FBtag: ctag;
+    // m_data:T3120Struct;
+    Index: integer;
     // состояние регулятора
     m_stateTag: itag;
   protected
@@ -93,23 +91,25 @@ type
     function getimageindex: integer; override;
     procedure setproperties(str: string); virtual; abstract;
     function getProperties: string; virtual;
-    // cControlObj
-    procedure LoadObjAttributes(xmlNode: txmlnode; mng: tobject); override;
-    procedure SaveObjAttributes(xmlNode: txmlnode); override;
     // вычитать из тега обратную связь
     procedure doRename;
     // procedure setOwnerProg(p: cProgramObj);
     // procedure StarCheckMode(m: cModeObj);
-    //procedure StopCheckMode;
+    // procedure StopCheckMode;
     function CheckMode: boolean;
     function getInTol: boolean;
     procedure setInTol(b: boolean);
+
+    // установить доп. свойства контрола на циклограмме.
+    // вызывается в cmode.exec, параметры читаются из задачи cTask
+    procedure SetTask(t: double); virtual;
+    function GetTask: double; virtual;
   public
     procedure createStateTags;
     // применить теги их задачи cTask
     // procedure ApplyTags(t: cTask);
     // применить новую задачу
-    // procedure ApplyTask(t: cTask);
+    procedure ApplyTask(t: tobject);virtual;
     function TagsToString: string;
     function TagsCount: integer;
     procedure ValsFromString(s: string);
@@ -119,7 +119,7 @@ type
     // Feedback - канал обратной связи
     // Task - задание
     // data - специализированные настройки могут отличаться для регуляторов раздичных типов
-    //function config(Feedback: itag; data: tobject): boolean; virtual;
+    // function config(Feedback: itag; data: tobject): boolean; virtual;
     procedure Start; virtual;
     procedure stop; virtual;
     procedure pause; virtual;
@@ -127,10 +127,7 @@ type
     function InProgress: boolean;
     function GetCheckOnMode: boolean;
     procedure SetManualTask(t: double); virtual;
-    // установить доп. свойства контрола на циклограмме.
-    // вызывается в cmode.exec, параметры читаются из задачи cTask
-    procedure SetTask(t: double);
-    function GetTask: double;
+    function feedBack: double; virtual;
   public
     property CheckOnMode: boolean read GetCheckOnMode write fCheckOnMode;
     property InTolerance: boolean read getInTol write setInTol;
@@ -139,15 +136,35 @@ type
     // c_Play = 2;
     // c_Stop = 7
     // программа которая в данный момент дает задание регулятору
-    //property OwnerProg: cProgramObj read fOwnerProg write setOwnerProg;
+    // property OwnerProg: cProgramObj read fOwnerProg write setOwnerProg;
     property state: integer read getstate write setstate;
     property Properties: string read getProperties write setproperties;
-    property task: double read GetTask write SetTask;
+    property Task: double read GetTask write SetTask;
     function getTaskstr(digits: integer): string;
     constructor create; override;
     destructor destroy; override;
   end;
 
+  // регулятор
+  cMNControl = class(cControlObj)
+  private
+
+  public
+    // тег управления
+    m_Mtag, m_Ntag: ctag;
+    // тег измерения
+    m_MtagFB, m_NtagFB: ctag;
+    m_data: T3120Struct;
+  protected
+    procedure LoadObjAttributes(xmlNode: txmlnode; mng: tobject); override;
+    procedure SaveObjAttributes(xmlNode: txmlnode); override;
+  protected
+    procedure ApplyTask(t: tobject);override;
+    procedure SetTask(t: double); override;
+    function GetTask: double; override;
+    constructor create; override;
+    destructor destroy; override;
+  end;
 
   cStepVal = class
   public
@@ -157,6 +174,9 @@ type
   public
     function tagname: string;
   end;
+
+  function TModeTypeToStr(mt:TModeType):string;
+  function strToModeType(s:string):TModeType;
 
 const
   // событие обновления состояния рекордера
@@ -220,14 +240,31 @@ const
 
 implementation
 
+uses
+  uModeObj;
+
 { cControlObj }
 
-{
-  procedure cControlObj.setOwnerProg(p: cProgramObj);
-  begin
-  fOwnerProg := p;
-  end; }
+function TModeTypeToStr(mt:TModeType):string;
+begin
+  case mt of
+    mtN: result:='0';
+    mtM: result:='1';
+    mtStop: result:='2';
+  end;
+end;
 
+function strToModeType(s:string):TModeType;
+var
+  i:integer;
+begin
+  i:=strtoint(s);
+  case i of
+    0: result:=mtN;
+    1: result:=mtM;
+    2: result:=mtStop;
+  end;
+end;
 
 function cControlObj.TagsCount: integer;
 begin
@@ -250,16 +287,13 @@ begin
   end;
 end;
 
-
 constructor cControlObj.create;
 begin
   inherited;
   InitCS;
   fScalarTolerance := true;
-  m_Mtag:=ctag.create;
-  m_Ntag:=ctag.create;
-  m_MtagFB:=ctag.create;
-  m_NtagFB:=ctag.create;
+  m_FBtag := ctag.create;
+  m_TaskTag := ctag.create;
 end;
 
 destructor cControlObj.destroy;
@@ -274,11 +308,10 @@ begin
     CloseTag(m_stateTag);
     m_stateTag := nil;
   end;
+
+  m_FBtag.destroy;
+  m_TaskTag.destroy;
   DeleteCS;
-  m_Mtag.destroy;
-  m_Ntag.destroy;
-  m_MtagFB.destroy;
-  m_NtagFB.destroy;
 
   // for i := 0 to g_conmng.ProgramCount - 1 do
   // begin
@@ -347,13 +380,13 @@ begin
   if result then // в состоянии Play
   begin
     // работа без ШИМ
-    //if not m_TaskApplyed then
+    // if not m_TaskApplyed then
     begin
-      //m_TaskApplyed := true;
-      ApplyTaskVal(task);
+      // m_TaskApplyed := true;
+      ApplyTaskVal(Task);
     end;
-    //if m_feedback <> nil then
-    //  m_dfeedback := GetMean(m_feedback);
+    // if m_feedback <> nil then
+    // m_dfeedback := GetMean(m_feedback);
   end;
 end;
 
@@ -372,6 +405,11 @@ end;
 procedure cControlObj.exitcs;
 begin
   LeaveCriticalSection(cs_state);
+end;
+
+function cControlObj.feedBack: double;
+begin
+  result := m_FBtag.GetMeanEst;
 end;
 
 procedure cControlObj.entercs;
@@ -397,57 +435,91 @@ end;
 
 procedure cControlObj.SetManualTask(t: double);
 begin
-  //f_manualMode := true;
+  // f_manualMode := true;
   SetTask(t);
-end;
-
-procedure cControlObj.SetTask(t: double);
-begin
-  cfg.Task:=t;
 end;
 
 function cControlObj.GetTask: double;
 begin
-  // if fPWM then
-  // begin
-  // if fcurPWMState then
-  // result := m_dtask
-  // else
-  // result := 0;
-  // end
-  // else
-  result := cfg.Task;
+  result := fTask;
 end;
 
-procedure cControlObj.SaveObjAttributes(xmlNode: txmlnode);
+procedure cControlObj.SetTask(t: double);
+begin
+  fTask := t;
+end;
+
+procedure cMNControl.SaveObjAttributes(xmlNode: txmlnode);
 var
   str: utf8string;
   I, J, c: integer;
   pars: tstringlist;
 begin
   inherited;
-  saveTag(m_Mtag, xmlNode);
-  saveTag(m_Ntag, xmlNode);
-  saveTag(m_MtagFB, xmlNode);
-  saveTag(m_NtagFB, xmlNode);
+  //saveTag(m_Mtag, xmlNode);
+  //saveTag(m_Ntag, xmlNode);
+  //saveTag(m_MtagFB, xmlNode);
+  //saveTag(m_NtagFB, xmlNode);
 end;
 
-procedure cControlObj.LoadObjAttributes(xmlNode: txmlnode; mng: tobject);
+procedure cMNControl.LoadObjAttributes(xmlNode: txmlnode; mng: tobject);
 var
   str: string;
 begin
   inherited;
-  LoadTag(xmlNode,m_Mtag);
-  LoadTag(xmlNode,m_Ntag);
-  LoadTag(xmlNode,m_MtagFB);
-  LoadTag(xmlNode,m_NtagFB);
-  //str := xmlNode.ReadAttributeString('Tags', '');
-  //ValsFromString(str);
+  m_Mtag.tagname:=name+'_Mtsk';
+  m_Ntag.tagname:=name+'_Ntsk';
+  m_MtagFB.tagname:=name+'_Mfb';
+  m_NtagFB.tagname:=name+'_Nfb';
+  //LoadTag(xmlNode, m_Mtag);
+  //LoadTag(xmlNode, m_Ntag);
+  //LoadTag(xmlNode, m_MtagFB);
+  //LoadTag(xmlNode, m_NtagFB);
+  // str := xmlNode.ReadAttributeString('Tags', '');
+  // ValsFromString(str);
+end;
+
+procedure cMNControl.SetTask(t: double);
+begin
+  m_data.Task := t;
+end;
+
+procedure cMNControl.ApplyTask(t: tobject);
+begin
+  m_data:=ctask(t).m_data;
+  case m_data.ModeType of
+    mtN: m_Ntag.PushValue(m_data.Task);
+    mtM: m_Mtag.PushValue(m_data.Task);
+    mtStop:;
+  end;
+end;
+
+constructor cMNControl.create;
+begin
+  inherited;
+  m_Mtag := ctag.create;
+  m_Ntag := ctag.create;
+  m_MtagFB := ctag.create;
+  m_NtagFB := ctag.create;
+end;
+
+destructor cMNControl.destroy;
+begin
+  inherited;
+  m_Mtag.destroy;
+  m_Ntag.destroy;
+  m_MtagFB.destroy;
+  m_NtagFB.destroy;
+end;
+
+function cMNControl.GetTask: double;
+begin
+  result := m_data.Task;
 end;
 
 function cControlObj.getProperties: string;
 begin
-  //result := c_feedback_str + feedbackname + ';';
+  // result := c_feedback_str + feedbackname + ';';
 end;
 
 function cControlObj.getimageindex: integer;
@@ -488,9 +560,9 @@ begin
   end;
 end;
 
-function cControlObj.getTaskStr(digits: integer): string;
+function cControlObj.getTaskstr(digits: integer): string;
 begin
-  result := format('%.*g', [digits, task]);
+  result := format('%.*g', [digits, Task]);
 end;
 
 function cControlObj.getstate: integer;
@@ -555,9 +627,15 @@ end;
   ApplyTags(t);
   end; }
 
+procedure cControlObj.ApplyTask(t: tobject);
+begin
+  m_TaskTag.PushValue(ctask(t).m_data.Task);
+end;
+
 procedure cControlObj.ApplyTaskVal(v: double);
 begin
-
+  fTask:=v;
+  m_TaskTag.PushValue(v);
 end;
 
 function cControlObj.CheckMode: boolean;
@@ -585,7 +663,6 @@ begin
   else
     result := false;
 end;
-
 
 function ControlComparator(p1, p2: pointer): integer;
 var

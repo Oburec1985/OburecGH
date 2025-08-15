@@ -124,6 +124,7 @@ type
     function readyBlockCount: cardinal;
     // t врем€
     procedure PutOutValue(v, t: double);
+    procedure PushValue(v: double);
     // получить i-е значение тега. ѕри этом результат ведет себ€ так будто выходной буфер не кольцевой
     // т.е. посл значение может быть в нулевом индексе, однако посл. значению будет соответствовать i=OutSize-1
     function GetOutValue(i: integer): double;
@@ -971,8 +972,8 @@ function GetScalar(t: itag): double;
 var
   d: double;
 begin
-  // result:=t.GetEstimate(ESTIMATOR_LAST);
-  result := t.GetEstimate(ESTIMATOR_MEAN);
+  result:=t.GetEstimate(ESTIMATOR_LAST);
+  //result := t.GetEstimate(ESTIMATOR_MEAN);
 end;
 
 procedure SetMeanEval(t: itag; val: boolean);
@@ -1345,6 +1346,14 @@ begin
   inc(m_lastIndWriteData);
   if m_lastIndWriteData >= m_WriteDataSize then
     m_lastIndWriteData := 0;
+end;
+
+procedure cTag.PushValue(v: double);
+begin
+  if tag<>nil then
+  begin
+    tag.PushValue(v, -1);
+  end;
 end;
 
 function cTag.readyBlockCount: cardinal;

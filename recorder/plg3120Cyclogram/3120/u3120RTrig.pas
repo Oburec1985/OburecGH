@@ -283,7 +283,7 @@ const
 implementation
 
 uses
-  PLUGinClass, u3120ControlObj, uModeObj, uProgramObj;
+  PLUGinClass, uModeObj, u3120ControlObj, uProgramObj;
 { cRTrig }
 
 function TrigTypeToInt(trType:TTrigType):integer;
