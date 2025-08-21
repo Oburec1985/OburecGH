@@ -16,6 +16,8 @@ uses
   pluginclass, urcfunc,
   uTest,
   uThresholds3120Frm,
+  uEditPropertiesFrm,
+  uExcel,
   pngimage;
 
 type
@@ -39,7 +41,6 @@ type
     ModeStopTime: TEdit;
     ContinueCB: TCheckBox;
     ConfirmModeCB: TCheckBox;
-    GetNotifyCB: TCheckBox;
     Timer1: TTimer;
     ImageListBtnStates: TImageList;
     OpenDialog1: TOpenDialog;
@@ -56,12 +57,15 @@ type
     AlarmStopBtn: TImage;
     PChLabel: TLabel;
     FreqConvLamp: TImage;
-    TestTypeLabel: TLabel;
-    TestTypeCB: TComboBox;
     Panel3: TPanel;
     Edit1: TEdit;
     ReportBtn: TButton;
     AlarmsBtn: TSpeedButton;
+    GetNotifyCB: TCheckBox;
+    StopOnPause: TCheckBox;
+    ImageList1: TImageList;
+    SaveBtn: TSpeedButton;
+    CloseRep: TCheckBox;
     procedure TableModeSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure PlayBtnClick(Sender: TObject);
@@ -76,11 +80,17 @@ type
     procedure TableModeSGSetEditText(Sender: TObject; ACol, ARow: Integer;
       const Value: string);
     procedure AlarmsBtnClick(Sender: TObject);
+    procedure AlarmStopBtnClick(Sender: TObject);
+    procedure ControlPropSGDblClick(Sender: TObject);
+    procedure InitExcel;
+    procedure SaveBtnClick(Sender: TObject);
   private
     mThread: cardinal;
     // Режим подтверждения перехода
     m_CurControl: cControlobj;
-    m_CurMode: cModeObj;
+    // выбраный в таблице режим
+    m_curMode:cmodeobj;
+
     m_uiThread: Integer;
     // форма посчитана фабрикой класса. Нужно для ограничения числа форм
     m_counted: boolean;
@@ -94,12 +104,12 @@ type
 
     // вставка режиме в TableModeSG; номер колонки для вставки
     m_insert:integer;
-  public
-    // собственная сортировка для контролов
-    // m_CustSort:boolean;
-    // список cControlObj который может отличаться от сортировки в cProgrObj
-    // m_ViewControls:tlist;
+    // работа с отчетом
+    m_saveBlockNum:integer;
+    m_excelTmplt:string; // путь к шаблону
+    m_lastFile, m_ReportFile:string; // путь к отчету
   protected
+
     // отмена редактирования режима(перенос настроек режима обратно в таблицу)
     procedure CancelEditMode;
     procedure ConfirmManualSwitchMode(m: TObject);
@@ -125,11 +135,13 @@ type
     procedure InitControlsPropSG;
     procedure UpdateControlsPropSG;
     procedure UpdateControlsPropSGmode(m: cModeObj);
+    procedure UpdateControlsPropSGCallBack(m: tobject);
 
     // отредактирована ячейка
     procedure ModeTabSGEditCell(r, c: integer; val: string);
     function toSec(t: double): double;
   public
+    procedure doStart;
     function SecToTime(t: double): double;
     // происходит в doRepaint
     procedure UpdateView;
@@ -154,6 +166,13 @@ const
   clGrass = TColor($00A7FED0);
   c_digits = 4;
   c_MCount = 6;
+
+  c_Prow  =1;   c_Irow  =2;  c_Drow  =3; c_ForwRow  =4;
+  c_TAlarmRow  = 5; c_TthresholdRow  = 6;
+  c_PAlarmRow  = 7; c_PthresholdRow  = 8;
+  c_MNAlarmRow  = 9; c_MNthresholdRow  = 10;
+  c_ConditionRow  = 11; c_ModeRow  = 12;
+  c_NRampRow  = 13;
 
 implementation
 
@@ -216,6 +235,14 @@ begin
   updateviews;
 end;
 
+procedure TFrm3120.doStart;
+var
+  mf:string;
+begin
+  mf := GetMeraFile;
+  m_ReportFile := ExtractFileDir(mf) + '\Report' + '.xlsx';
+end;
+
 procedure TFrm3120.CreateEvents;
 begin
   addplgevent('TFrm3120_doAddObj', E_OnAddObj, doAddObj);
@@ -238,6 +265,7 @@ end;
 procedure TFrm3120.Start;
 var
   ir: irecorder;
+  p:cProgramObj;
 begin
   ir := getIRecorder;
   if g_conmng.State = c_stop then
@@ -252,6 +280,8 @@ begin
   begin
     if g_conmng.State = c_Pause then
     begin
+      p:=g_conmng.getProgram(0);
+      p.ActiveMode.applyed:=false;
       g_conmng.continuePlay;
     end;
   end;
@@ -268,7 +298,18 @@ begin
 end;
 
 procedure TFrm3120.pause;
+var
+  c:cControlObj;
+  I: Integer;
 begin
+  if StopOnPause.Checked then
+  begin
+    for I := 0 to g_conmng.ControlsCount - 1 do
+    begin
+      c:=g_conmng.getControlObj(i);
+      c.stop;
+    end;
+  end;
   g_conmng.pause;
   PausePanel.Color := clMoneyGreen;
   PlayPanel.Color := clBtnFace;
@@ -316,6 +357,10 @@ begin
 
   ConfirmFmr := TConfirmFmr.Create(nil);
   ThresholdFrm:=TThresholdFrm.Create(nil);
+  EditPropertiesFrm:=TEditPropertiesFrm.Create(nil);
+  if ThresholdFrm <> nil then
+    ThresholdFrm.AttachAlarms;
+
 
   CreateEvents;
   testInit;
@@ -493,6 +538,102 @@ begin
   end;
 end;
 
+procedure TFrm3120.InitExcel;
+begin
+  if not CheckExcelInstall then
+  begin
+    showmessage('Необходима установка Excel');
+    exit;
+  end;
+  if VarIsEmpty(E) then
+  begin
+    //if not CheckExcelRun then
+    begin
+      CreateExcel;
+      VisibleExcel(true);
+    end;
+  end;
+end;
+
+procedure TFrm3120.SaveBtnClick(Sender: TObject);
+var
+  r0,r,c,i, j:integer;
+  rng: olevariant;
+  date: tdatetime;
+begin
+  if m_lastFile <> m_ReportFile then
+  begin
+    m_saveBlockNum := 0;
+  end
+  else
+    inc(m_saveBlockNum);
+
+  m_lastFile := m_ReportFile;
+  InitExcel;
+  if fileexists(m_ReportFile) then
+  begin
+    if not IsExcelFileOpen(m_ReportFile) then
+    begin
+      OpenWorkBook(m_ReportFile);
+    end
+    else
+    begin
+
+    end;
+    if m_saveBlockNum = 0 then
+    begin
+      E.ActiveWorkbook.Sheets.Item[1].cells.clear;
+    end;
+  end
+  else
+  begin
+    AddWorkBook;
+    AddSheet('Page_01');
+    // DeleteSheet(2);
+  end;
+  r0 := GetEmptyRow(1, 1, 2);
+  begin
+    // showmessage(E.ActiveWorkbook.Sheets.Item[1].cells[r0, 2]);
+  end;
+  // sheet, r, c, v
+  SetCell(1, r0, 2, 'MeraFile:');
+  SetCell(1, r0, 3, GetMeraFile);
+  SetCell(1, r0, 4, 'Time:');
+  date := now;
+  SetCell(1, r0, 5, DateToStr(date) + ' ' + TimeToStr(date));
+  r := r0 + 2;
+  c := 2;
+  for i := 0 to 2 do
+  begin
+    // имя сигнала
+    SetCell(1, r, c, 'Band');
+    SetCell(1, r, c + 1, 'A1');
+    SetCell(1, r, c + 2, 'F1');
+    SetCell(1, r, c + 3, 'Pk-Pk');
+    // проход по формам (полосам)
+    for j := 0 to 3 - 1 do
+    begin
+      SetCell(1, r + 1 + j, c + 3, 'abc');
+    end;
+    c := c + 4;
+  end;
+  // разметка заголовка
+  rng := GetRangeObj(1, point(r, 2), point(r, c - 1));
+  // c_Excel_GrayInd = 15;
+  rng.Interior.ColorIndex := 15;
+  rng.Font.Bold := true;
+  // ставим сетку всего блока
+  rng := GetRangeObj(1, point(r, 2), point(r + j, c - 1));
+  SetRangeBorder(rng);
+
+  SaveWorkBookAs(m_ReportFile);
+  if closerep.Checked then
+  begin
+    CloseWorkBook;
+    CloseExcel;
+  end;
+end;
+
 procedure TFrm3120.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
 var
   I: Integer;
@@ -503,6 +644,7 @@ begin
   inherited;
   // получать настроечные сообщения
   a_pIni.WriteBool(str, 'ConfirmModeChange', ConfirmModeCB.Checked);
+  a_pIni.WriteBool(str, 'StopOnPause', StopOnPause.Checked);
   a_pIni.WriteInteger(str, 'Units', TimeUnitsCB.ItemIndex);
   a_pIni.WriteInteger(str, 'Table_Controls_Splitter_Pos', RightGB.Width);
   a_pIni.WriteBool(str, 'LoadState', ContinueCB.Checked);
@@ -519,8 +661,11 @@ begin
   inherited;
   ContinueCB.Checked := a_pIni.ReadBool(str, 'LoadState', false);
   ConfirmModeCB.Checked := a_pIni.ReadBool(str, 'ConfirmModeChange', true);
+  StopOnPause.Checked := a_pIni.ReadBool(str, 'StopOnPause', true);
   TimeUnitsCB.ItemIndex := a_pIni.ReadInteger(str, 'Units', 0);
   RightGB.Width := a_pIni.ReadInteger(str, 'Table_Controls_Splitter_Pos', RightGB.Width);
+  SGChange(TableModeSG);
+  SGChange(ControlPropSG);
 end;
 
 procedure TFrm3120.ConfirmManualSwitchMode(m: TObject);
@@ -541,6 +686,37 @@ begin
           cModeObj(m).exec;
         end;
       end;
+    end;
+  end;
+end;
+
+procedure TFrm3120.ControlPropSGDblClick(Sender: TObject);
+var
+  p:cProgramObj;
+  m: cModeObj;
+  t: ctask;
+  c:cControlObj;
+  pPnt: TPoint; // Координаты курсора
+  xCol, xRow: integer; // Адрес ячейки таблицы
+  str, Key: string;
+  changebool: boolean;
+begin
+  GetCursorPos(pPnt);
+  pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
+  // Находим позицию нашей ячейки
+  xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
+  xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
+  p:=g_conmng.getProgram(0);
+  m:=p.getMode(xCol-1);
+  if m<>nil then
+  begin
+    if m_CurControl<>nil then
+    begin
+      t:=m.GetTask(m_CurControl.name);
+      EditPropertiesFrm.showMN(t);
+      EditPropertiesFrm.cb:=UpdateControlsPropSGCallBack;
+      EditPropertiesFrm.mode:=m;
+      UpdateControlsPropSGmode(m);
     end;
   end;
 end;
@@ -595,6 +771,8 @@ var
   p: cProgramObj;
   m: cModeObj;
   c: cControlobj;
+  a:TAlarms;
+  b:boolean;
 begin
   sg := TStringGrid(Sender);
   Color := sg.Canvas.Brush.Color;
@@ -612,7 +790,7 @@ begin
     exit;
   end;
 
-  // измерения
+
   if (ACol = 5) then
   begin
     sg.Canvas.Brush.Color := clYellow;
@@ -621,14 +799,9 @@ begin
     sg.Canvas.Brush.Color := Color;
   end;
 
-  // измерения
-  if (ACol = 6) or (ACol = 7) then
-  begin
-    sg.Canvas.Brush.Color := clCream;
-    sg.Canvas.FillRect(Rect);
-    sg.Canvas.TextOut(Rect.Left, Rect.Top, sg.Cells[ACol, ARow]);
-    sg.Canvas.Brush.Color := Color;
-  end;
+  p := g_conmng.getprogram(0);
+  if p<>nil then
+    m := p.ActiveMode;
 
   // окрас строки выбраного контрола
   if ARow >= 1 then
@@ -653,13 +826,46 @@ begin
     end;
   end;
 
+  // измерения
+  if (ACol = (p.ModeCount+1)) or (ACol = (p.ModeCount+2)) then
+  begin
+    str:=sg.Cells[0, ARow];
+    a:=nil;
+    c:=g_conmng.getControlObj(str);
+    if c<>nil then
+    begin
+      if c is cMNControl then
+      begin
+        if acol=(p.ModeCount+1) then
+          a:=ThresholdFrm.getalarm(cMNControl(c).m_Mtagfb.tagname)
+        else
+          a:=ThresholdFrm.getalarm(cMNControl(c).m_Ntagfb.tagname);
+      end;
+    end;
+    b:=false;
+    if a<>nil then
+    begin
+      b:=a.activeA<>nil;
+    end;
+    if b then
+    begin
+      a.activeA.GetColor(Color);
+      sg.Canvas.Brush.Color :=color;
+    end
+    else
+    begin
+      sg.Canvas.Brush.Color := clCream;
+    end;
+    sg.Canvas.FillRect(Rect);
+    sg.Canvas.TextOut(Rect.Left, Rect.Top, sg.Cells[ACol, ARow]);
+    sg.Canvas.Brush.Color := Color;
+  end;
+
   // отрисовка цветов активного режима
   if (g_conmng.State = c_play) or (g_conmng.State = c_Pause) then
   begin
     for I := 0 to g_conmng.ProgramCount - 1 do
     begin
-      p := g_conmng.getprogram(I);
-      m := p.ActiveMode;
       if m <> nil then
       begin
         // имя режима
@@ -683,7 +889,6 @@ begin
   end;
 end;
 
-
 procedure TFrm3120.AlarmsBtnClick(Sender: TObject);
 begin
   if ThresholdFrm=nil then
@@ -691,6 +896,19 @@ begin
     ThresholdFrm:=TThresholdFrm.Create(nil);
   end;
   ThresholdFrm.ShowModal;
+end;
+
+procedure TFrm3120.AlarmStopBtnClick(Sender: TObject);
+var
+  i:integer;
+  c:cControlObj;
+begin
+  //for i:=0 to  g_conmng.ControlsCount-1 do
+  //begin
+  //  c:=g_conmng.getControlObj(i);
+  //  c.stop;
+  //end;
+  g_conmng.stop;
 end;
 
 procedure TFrm3120.CancelEditMode;
@@ -802,25 +1020,26 @@ begin
   end;
   if MNcontrol<>nil then
   begin
-    ControlPropSG.Cells[i+1,1]:=formatstrnoe (MNcontrol.m_data.P, c_digits);
-    ControlPropSG.Cells[i+1,2]:=formatstrnoe (MNcontrol.m_data.I,c_digits);
-    ControlPropSG.Cells[i+1,3]:=formatstrnoe (MNcontrol.m_data.D, c_digits);
-    ControlPropSG.Cells[i+1,4]:=BoolToStr(MNcontrol.m_data.TAlarm);
-    ControlPropSG.Cells[i+1,5]:=formatstrnoe (MNcontrol.m_data.Tthreshold,c_digits);
+    ControlPropSG.Cells[i+1,c_Prow]:=formatstrnoe (MNcontrol.m_data.P, c_digits);
+    ControlPropSG.Cells[i+1,c_Irow]:=formatstrnoe (MNcontrol.m_data.I,c_digits);
+    ControlPropSG.Cells[i+1,c_Drow]:=formatstrnoe (MNcontrol.m_data.D, c_digits);
+    ControlPropSG.Cells[i+1,c_ForwRow]:=dirtostr(MNcontrol.m_data.forw);
+    ControlPropSG.Cells[i+1,c_TAlarmRow]:=btostr(MNcontrol.m_data.TAlarm);
+    ControlPropSG.Cells[i+1,c_TthresholdRow]:=formatstrnoe (MNcontrol.m_data.Tthreshold,c_digits);
     // вкл защиту по давл масла
-    ControlPropSG.Cells[i+1,6]:=BoolToStr(MNcontrol.m_data.Palarm);
+    ControlPropSG.Cells[i+1,c_PAlarmRow]:=btostr(MNcontrol.m_data.Palarm);
     // Давление масла
-    ControlPropSG.Cells[i+1,7]:=formatstrnoe (MNcontrol.m_data.Pthreshold,c_digits);
-    ControlPropSG.Cells[i+1,8]:=BoolToStr(MNcontrol.m_data.MNAlarm);
+    ControlPropSG.Cells[i+1,c_PthresholdRow]:=formatstrnoe (MNcontrol.m_data.Pthreshold,c_digits);
+    ControlPropSG.Cells[i+1,c_MNAlarmRow]:=btostr(MNcontrol.m_data.MNAlarm);
     // ограничение по уровню M или N в зав от типа режима
-    ControlPropSG.Cells[i+1,9]:=formatstrnoe (MNcontrol.m_data.MNthreshold,c_digits);
-    //ControlPropSG.Cells[0,10]:=m_CurControl.m_data.;
+    ControlPropSG.Cells[i+1,c_MNthresholdRow]:=formatstrnoe (MNcontrol.m_data.MNthreshold,c_digits);
+    //ControlPropSG.Cells[i+1,c_ConditionRow]:=(MNcontrol.m_data.,c_digits);
     case MNcontrol.m_data.ModeType of
-      mtN: ControlPropSG.Cells[i+1,11]:='N';
-      mtM: ControlPropSG.Cells[i+1,11]:='M';
-      mtStop: ControlPropSG.Cells[i+1,11]:='Стоп';
+      mtN: ControlPropSG.Cells[i+1,c_ModeRow]:='N';
+      mtM: ControlPropSG.Cells[i+1,c_ModeRow]:='M';
+      mtStop: ControlPropSG.Cells[i+1,c_ModeRow]:='Стоп';
     end;
-    ControlPropSG.Cells[i+1,12]:=formatstrnoe (MNcontrol.m_data.Nramp,c_digits);
+    ControlPropSG.Cells[i+1,c_NRampRow]:=formatstrnoe (MNcontrol.m_data.Nramp,c_digits);
   end
   else
   begin
@@ -831,6 +1050,7 @@ begin
   end;
 end;
 
+
 procedure TFrm3120.InitControlsPropSG;
 var
   p:cProgramObj;
@@ -839,18 +1059,19 @@ begin
   ControlPropSG.ColCount := 1 + p.ModeCount;
   ControlPropSG.RowCount:=13;
   ControlPropSG.Cells[0,0]:='Свойство';
-  ControlPropSG.Cells[0,1]:='P';
-  ControlPropSG.Cells[0,2]:='I';
-  ControlPropSG.Cells[0,3]:='D';
-  ControlPropSG.Cells[0,4]:='Защита T';
-  ControlPropSG.Cells[0,5]:='Уровень T';
-  ControlPropSG.Cells[0,6]:='Защита Pм';
-  ControlPropSG.Cells[0,7]:='Уровень Pм';
-  ControlPropSG.Cells[0,8]:='Защита M/N';
-  ControlPropSG.Cells[0,9]:='Уровень M/N';
-  ControlPropSG.Cells[0,10]:='Работа по усл.';
-  ControlPropSG.Cells[0,11]:='Тип режима';
-  ControlPropSG.Cells[0,12]:='Ограничение скор. N';
+  ControlPropSG.Cells[0,c_Prow]:='P';
+  ControlPropSG.Cells[0,c_Irow]:='I';
+  ControlPropSG.Cells[0,c_Drow]:='D';
+  ControlPropSG.Cells[0,c_ForwRow]:='Направление';
+  ControlPropSG.Cells[0,c_TAlarmRow]:='Защита T';
+  ControlPropSG.Cells[0,c_TthresholdRow]:='Уровень T';
+  ControlPropSG.Cells[0,c_PAlarmRow]:='Защита Pм';
+  ControlPropSG.Cells[0,c_PthresholdRow]:='Уровень Pм';
+  ControlPropSG.Cells[0,c_MNAlarmRow]:='Защита M/N';
+  ControlPropSG.Cells[0,c_MNthresholdRow]:='Уровень M/N';
+  ControlPropSG.Cells[0,c_ConditionRow]:='Работа по усл.';
+  ControlPropSG.Cells[0,c_ModeRow]:='Тип режима';
+  ControlPropSG.Cells[0,c_NRampRow]:='Ограничение скор. N';
 end;
 
 procedure TFrm3120.UpdateControlsPropSG;
@@ -878,6 +1099,11 @@ begin
     UpdateControlsPropSGmode(m);
   end;
   SGChange(ControlPropSG);
+end;
+
+procedure TFrm3120.UpdateControlsPropSGCallBack(m: tobject);
+begin
+  UpdateControlsPropSGmode(cmodeobj(m));
 end;
 
 procedure TFrm3120.ShowMeasured;
@@ -949,7 +1175,7 @@ begin
     // имя режима
     TableModeSG.Cells[col, 0] := m.name;
     // длительность режима
-    TableModeSG.Cells[col, 1] := floattostr(SecToTime(m.ModeLength));
+    TableModeSG.Cells[col, 1] := formatstrnoe(SecToTime(m.ModeLength), c_digits);
   end;
   ShowModes;
   ShowMeasured;
@@ -969,185 +1195,14 @@ var
   I: Integer;
 begin
   testinit3120;
+  testinit3120Thresholds;
 
-  TableModeSG.RowCount := 10;
+  TableModeSG.RowCount := 11;
   TableModeSG.ColCount := c_MCount + 2;
   TableModeSG.Cells[0, 1] := 'Время работы';
 
   m_CurControl:=g_conmng.getControlObj(0);
   Preview;
-  exit;
-
-  // режимы
-  TableModeSG.Cells[1, 0] := 'Режим_1';
-  TableModeSG.Cells[2, 0] := 'Режим_2';
-  TableModeSG.Cells[3, 0] := 'Режим_3';
-  TableModeSG.Cells[4, 0] := 'Режим_Стоп';
-  TableModeSG.Cells[5, 0] := 'Измерено М';
-  TableModeSG.Cells[6, 0] := 'Измерено N';
-
-  // время работы
-  TableModeSG.Cells[1, 1] := '1, час';
-  TableModeSG.Cells[2, 1] := '0.5, час';
-  TableModeSG.Cells[3, 1] := '1.5, час';
-  TableModeSG.Cells[4, 1] := '10, мин';
-  // время работы
-  TableModeSG.Cells[0, 2] := 'M1';
-  TableModeSG.Cells[1, 2] := '1000 об/мин';
-  TableModeSG.Cells[2, 2] := '3000 Нм';
-  TableModeSG.Cells[3, 2] := '2500 Нм';
-  TableModeSG.Cells[4, 2] := '0 Нм';
-  TableModeSG.Cells[5, 2] := '2488 Нм';
-  TableModeSG.Cells[6, 2] := '2300 Об/мин';
-
-  TableModeSG.Cells[0, 3] := 'M2';
-  TableModeSG.Cells[1, 3] := '1000 об/мин';
-  TableModeSG.Cells[2, 3] := '2500 Нм';
-  TableModeSG.Cells[3, 3] := '1500 Нм';
-  TableModeSG.Cells[4, 3] := '0 Нм';
-  TableModeSG.Cells[5, 3] := '1495 Нм';
-  TableModeSG.Cells[6, 3] := '1334 Об/мин';
-
-  TableModeSG.Cells[0, 4] := 'M3';
-  TableModeSG.Cells[1, 4] := '1000 об/мин';
-  TableModeSG.Cells[2, 4] := '3000 Нм';
-  TableModeSG.Cells[3, 4] := '2000 Нм';
-  TableModeSG.Cells[4, 4] := '0 Нм';
-  TableModeSG.Cells[5, 4] := '1995 Нм';
-  TableModeSG.Cells[6, 4] := '1834 Об/мин';
-
-  TableModeSG.Cells[0, 5] := 'M4';
-  TableModeSG.Cells[1, 5] := '1000 об/мин';
-  TableModeSG.Cells[2, 5] := '3000 Нм';
-  TableModeSG.Cells[3, 5] := '2000 Нм';
-  TableModeSG.Cells[4, 5] := '0 Нм';
-  TableModeSG.Cells[5, 5] := '1995 Нм';
-  TableModeSG.Cells[6, 5] := '1834 Об/мин';
-
-  TableModeSG.Cells[0, 6] := 'M5';
-  TableModeSG.Cells[1, 6] := '1000 об/мин';
-  TableModeSG.Cells[2, 6] := '3000 Нм';
-  TableModeSG.Cells[3, 6] := '2000 Нм';
-  TableModeSG.Cells[4, 6] := '0 Нм';
-  TableModeSG.Cells[5, 6] := '1995 Нм';
-  TableModeSG.Cells[6, 6] := '1834 Об/мин';
-
-  TableModeSG.Cells[0, 7] := 'Торможение';
-  TableModeSG.Cells[1, 7] := '0%';
-  TableModeSG.Cells[2, 7] := '0%';
-  TableModeSG.Cells[3, 7] := '30%';
-  TableModeSG.Cells[4, 7] := '0%';
-  TableModeSG.Cells[5, 7] := '29%';
-
-  TableModeSG.Cells[0, 8] := 'Поворот';
-  TableModeSG.Cells[1, 8] := '0%';
-  TableModeSG.Cells[2, 8] := '30%';
-  TableModeSG.Cells[3, 8] := '50%';
-  TableModeSG.Cells[4, 8] := '80%';
-  TableModeSG.Cells[5, 8] := '50,5%';
-
-  TableModeSG.Cells[0, 9] := 'Авар. передача';
-  TableModeSG.Cells[1, 9] := '0%';
-  TableModeSG.Cells[2, 9] := '0%';
-  TableModeSG.Cells[3, 9] := '0%';
-  TableModeSG.Cells[4, 9] := '0%';
-  TableModeSG.Cells[5, 9] := '0%';
-
-  SGChange(TableModeSG);
-  TableModeSG.ColWidths[0] := TableModeSG.ColWidths[0] + 20;
-
-  ControlPropE.text := 'M2_лев';
-
-  ControlPropSG.RowCount := 13;
-  ControlPropSG.ColCount := c_MCount;
-  ControlPropSG.Cells[0, 0] := 'Свойство';
-  ControlPropSG.Cells[1, 0] := 'Режим_1';
-  ControlPropSG.Cells[2, 0] := 'Режим_2';
-  ControlPropSG.Cells[3, 0] := 'Режим_3';
-  ControlPropSG.Cells[4, 0] := 'Режим_Стоп';
-
-  ControlPropSG.Cells[0, 1] := 'P';
-  ControlPropSG.Cells[1, 1] := '1';
-  ControlPropSG.Cells[2, 1] := '1';
-  ControlPropSG.Cells[3, 1] := '1.1';
-  ControlPropSG.Cells[4, 1] := '1';
-
-  ControlPropSG.Cells[0, 2] := 'I';
-  ControlPropSG.Cells[1, 2] := '0.1';
-  ControlPropSG.Cells[2, 2] := '0.1';
-  ControlPropSG.Cells[3, 2] := '0.15';
-  ControlPropSG.Cells[4, 2] := '0.1';
-
-  ControlPropSG.Cells[0, 3] := 'D';
-  ControlPropSG.Cells[1, 3] := '0.01';
-  ControlPropSG.Cells[2, 3] := '0.01';
-  ControlPropSG.Cells[3, 3] := '0.015';
-  ControlPropSG.Cells[4, 3] := '0.01';
-
-  ControlPropSG.Cells[0, 4] := 'защита T';
-  ControlPropSG.Cells[1, 4] := 'Вкл.';
-  ControlPropSG.Cells[2, 4] := 'Вкл.';
-  ControlPropSG.Cells[3, 4] := 'Вкл.';
-  ControlPropSG.Cells[4, 4] := 'Вкл.';
-
-  ControlPropSG.Cells[0, 5] := 'Уровень T';
-  ControlPropSG.Cells[1, 5] := '200, С';
-  ControlPropSG.Cells[2, 5] := '200, С';
-  ControlPropSG.Cells[3, 5] := '200, С';
-  ControlPropSG.Cells[4, 5] := '200, С';
-
-  ControlPropSG.Cells[0, 6] := 'защита Pм';
-  ControlPropSG.Cells[1, 6] := 'Вкл.';
-  ControlPropSG.Cells[2, 6] := 'Вкл.';
-  ControlPropSG.Cells[3, 6] := 'Вкл.';
-  ControlPropSG.Cells[4, 6] := 'Вкл.';
-
-  ControlPropSG.Cells[0, 7] := 'Уровень Pм';
-  ControlPropSG.Cells[1, 7] := '1, Атм.';
-  ControlPropSG.Cells[2, 7] := '1, Атм.';
-  ControlPropSG.Cells[3, 7] := '1, Атм.';
-  ControlPropSG.Cells[4, 7] := '1, Атм.';
-
-  ControlPropSG.Cells[0, 8] := 'защита M/N';
-  ControlPropSG.Cells[1, 8] := 'Вкл.';
-  ControlPropSG.Cells[2, 8] := 'Вкл.';
-  ControlPropSG.Cells[3, 8] := 'Вкл.';
-  ControlPropSG.Cells[4, 8] := 'Вкл.';
-  // уставка отправляемая в контроллер при превышении которой во время
-  // измерения контроллер может уйти в защиту
-  ControlPropSG.Cells[0, 9] := 'Уровень защита';
-  ControlPropSG.Cells[1, 9] := '50, об/мин';
-  ControlPropSG.Cells[2, 9] := '100, Нм';
-  ControlPropSG.Cells[3, 9] := '100, Нм';
-  ControlPropSG.Cells[4, 9] := '10, Нм';
-
-  ControlPropSG.Cells[0, 10] := 'Работа по усл.';
-  ControlPropSG.Cells[1, 10] := 'Вкл.';
-  ControlPropSG.Cells[2, 10] := 'Вкл.';
-  ControlPropSG.Cells[3, 10] := 'Вкл.';
-  ControlPropSG.Cells[4, 10] := 'Вкл.';
-
-  ControlPropSG.Cells[0, 11] := 'Тип режима';
-  ControlPropSG.Cells[1, 11] := 'Приводной';
-  ControlPropSG.Cells[2, 11] := 'Тормозной';
-  ControlPropSG.Cells[3, 11] := 'Тормозной';
-  ControlPropSG.Cells[4, 11] := 'Стоп';
-
-  ControlPropSG.Cells[0, 12] := 'Ограничение скор. N';
-  ControlPropSG.Cells[1, 12] := '1, Гц';
-  ControlPropSG.Cells[2, 12] := '1, Гц';
-  ControlPropSG.Cells[3, 12] := '1, Гц';
-  ControlPropSG.Cells[4, 12] := '1, Гц';
-
-  GridAddColumn(TableModeSG, 6);
-  for I := 0 to 12 do
-  begin
-    TableModeSG.Cells[5, I] := TableModeSG.Cells[4, I];
-  end;
-  TableModeSG.Cells[5, 0] := 'Имя режима';
-
-  SGChange(ControlPropSG);
-  ControlPropSG.ColWidths[0] := ControlPropSG.ColWidths[0] + 30;
 end;
 
 procedure TFrm3120.updateviews;

@@ -105,6 +105,10 @@
 			<DCCReference Include="forms\uThresholds3120Frm.pas">
 				<Form>ThresholdFrm</Form>
 			</DCCReference>
+			<DCCReference Include="forms\uEditPropertiesFrm.pas">
+				<Form>EditPropertiesFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\reports\excel\uExcel.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

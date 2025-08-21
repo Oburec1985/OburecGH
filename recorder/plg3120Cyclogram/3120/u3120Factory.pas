@@ -248,7 +248,7 @@ begin
   for i := 0 to m_CompList.Count - 1 do
   begin
     Frm := GetFrm(i);
-    //T3120Frm(Frm).doStart;
+    TFrm3120(Frm).doStart;
   end;
 end;
 

@@ -424,7 +424,7 @@ begin
   for i := 0 to ModeCount - 1 do
   begin
     m := getMode(i);
-    m.m_applyed := false;
+    m.applyed := false;
   end;
 end;
 
@@ -804,7 +804,7 @@ begin
       if i <> (ModeCount - 1) then
       begin
         result := getMode(i + 1);
-        actMode.m_applyed := false;
+        actMode.applyed := false;
         result.active := true;
       end;
     end;

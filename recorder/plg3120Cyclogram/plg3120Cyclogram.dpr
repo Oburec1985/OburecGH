@@ -43,7 +43,9 @@ uses
   uBaseProgramObj in 'uBaseProgramObj.pas',
   uTest in '3120\uTest.pas',
   u3120ControlObj in '3120\u3120ControlObj.pas',
-  uThresholds3120Frm in 'forms\uThresholds3120Frm.pas' {ThresholdFrm};
+  uThresholds3120Frm in 'forms\uThresholds3120Frm.pas' {ThresholdFrm},
+  uEditPropertiesFrm in 'forms\uEditPropertiesFrm.pas' {EditPropertiesFrm},
+  uExcel in '..\..\sharedUtils\utils\reports\excel\uExcel.pas';
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 

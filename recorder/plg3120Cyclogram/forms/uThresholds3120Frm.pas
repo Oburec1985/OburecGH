@@ -18,6 +18,8 @@ type
   TAlarms = class;
 
   DataRec = record
+    // если <>nil
+    LvlTag:itag;
     normal, HH, h, L, LL:double;
     outRange:double;
     normalCol, outRangeCol, HHCol, hCol, LCol, LLCol:integer;
@@ -342,6 +344,9 @@ procedure TThresholdFrm.FormCreate(Sender: TObject);
 begin
   m_Groups:=TStringList.Create;
   createevents;
+  // не забыть вызвать!!!! RCInit
+  //  if ThresholdFrm <> nil then
+  //  ThresholdFrm.AttachAlarms;
 end;
 
 procedure TThresholdFrm.FormShow(Sender: TObject);
@@ -365,7 +370,7 @@ begin
     g.ApplyAlarms;
     for j := 0 to g.AlarmList.Count - 1 do
     begin
-      a:=TAlarms(g.AlarmList.Objects[i]);
+      a:=TAlarms(g.AlarmList.Objects[j]);
       a.activeA:=nil;
     end;
   end;
@@ -897,14 +902,29 @@ begin
     a.m_a_h.SetEnabled(Variant_True);
     a.m_a_l.SetEnabled(Variant_True);
     a.m_a_ll.SetEnabled(Variant_True);
-    a.m_a_ll.SetLevel(pd.LL);
-    a.m_a_l.SetLevel(pd.l);
-    a.m_a_h.SetLevel(pd.h);
-    a.m_a_hh.SetLevel(pd.hh);
-    a.m_a_ll.SetColor(pd.LLCol);
-    a.m_a_l.SetColor(pd.lCol);
-    a.m_a_h.SetColor(pd.hCol);
-    a.m_a_hh.SetColor(pd.hhCol);
+    if pd.LvlTag<>nil then
+    begin
+      d:=GetMean(pd.LvlTag);
+      a.m_a_ll.SetLevel(pd.LL*d);
+      a.m_a_l.SetLevel(pd.l*d);
+      a.m_a_h.SetLevel(pd.h*d);
+      a.m_a_hh.SetLevel(pd.hh*d);
+      a.m_a_ll.SetColor(pd.LLCol);
+      a.m_a_l.SetColor(pd.lCol);
+      a.m_a_h.SetColor(pd.hCol);
+      a.m_a_hh.SetColor(pd.hhCol);
+    end
+    else
+    begin
+      a.m_a_ll.SetLevel(pd.LL);
+      a.m_a_l.SetLevel(pd.l);
+      a.m_a_h.SetLevel(pd.h);
+      a.m_a_hh.SetLevel(pd.hh);
+      a.m_a_ll.SetColor(pd.LLCol);
+      a.m_a_l.SetColor(pd.lCol);
+      a.m_a_h.SetColor(pd.hCol);
+      a.m_a_hh.SetColor(pd.hhCol);
+    end;
   end;
 end;
 

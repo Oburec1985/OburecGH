@@ -43,6 +43,7 @@ type
     // список подгруп TThresholdGroup. Нужно например для частотного профиля
     m_SubGroups:tlist;
     owner:tstringlist;
+    // применяется в applyalarms
     m_lastControlVal:integer;
     initList:boolean;
     // тег для переключения наборов
@@ -918,17 +919,20 @@ var
   g:TThresholdGroup;
 begin
   v:=ControlVal;
-  if m_useSubGroups then
+  if m_lastControlVal<>v then
   begin
-    for I := 0 to m_SubGroups.Count - 1 do
+    if m_useSubGroups then
     begin
-      g:=TThresholdGroup(m_subGroups.Items[i]);
-      pd:=@g.m_data[0];
+      for I := 0 to m_SubGroups.Count - 1 do
+      begin
+        g:=TThresholdGroup(m_subGroups.Items[i]);
+        pd:=@g.m_data[0];
+        ApplyAlarms(pd);
+      end;
+      pd:=@m_data[0];
       ApplyAlarms(pd);
+      exit;
     end;
-    pd:=@m_data[0];
-    ApplyAlarms(pd);
-    exit;
   end;
   if m_lastControlVal<>v then
   begin

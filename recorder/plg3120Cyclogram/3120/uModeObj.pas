@@ -116,8 +116,6 @@ type
   public
     // тег индикатор что режим включен
     m_stateTag: itag;
-    // применен режим или нет хотя бы один раз
-    m_applyed: boolean;
     findex: integer;
     // в состоянии проверок (основная часть режима окончена)
     fCheckProgres: boolean;
@@ -125,6 +123,8 @@ type
     fCheckLength: double;
     m_tryActive: boolean;
   private
+    // применен режим или нет хотя бы один раз
+    m_applyed: boolean;
     fCreateStateTag: boolean;
     fCounter: Cardinal;
     factive: boolean;
@@ -158,6 +158,7 @@ type
     procedure updateTagsNames;
     procedure unLincTags;
     procedure DoLincParent; override;
+    procedure setApplyed(b: boolean);
   public
     procedure CreateTasks;
     procedure createTags;
@@ -214,6 +215,7 @@ type
     property CheckThreshold: boolean read fCheckThrehold write fCheckThrehold;
     property Infinity: boolean read fInfinity write fInfinity;
     property MIndex: integer read findex write setindex;
+    property applyed:boolean read m_applyed write setApplyed;
     constructor create; override;
     destructor destroy; override;
   end;
@@ -918,7 +920,7 @@ begin
       m_stateTag.PushValue(0, -1);
   end;
   p := cProgramObj(getmainparent);
-  m_applyed := false;
+  applyed := false;
   if not active then
   begin
     for i := 0 to p.ModeCount - 1 do
@@ -944,6 +946,19 @@ begin
   StopCheckThreshold(false);
   // p.ResetModeCheckTime;
   factive := b;
+end;
+
+procedure cModeObj.setApplyed(b: boolean);
+var
+  I: Integer;
+  t:cTask;
+begin
+  m_applyed:=b;
+  for I := 0 to TaskCount - 1 do
+  begin
+    t:=GetTask(i);
+    t.applyed:=false;
+  end;
 end;
 
 procedure cModeObj.setindex(i: integer);

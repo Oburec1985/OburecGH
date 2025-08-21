@@ -79,6 +79,9 @@
     <Transaction>2025.08.14 09:06:38.350.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\3120\u3120ControlObj.pas=</Transaction>
     <Transaction>2025.08.14 19:35:23.014.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uThresholdsFrm.pas=</Transaction>
     <Transaction>2025.08.14 19:35:23.014.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uThresholdsFrm.dfm=</Transaction>
+    <Transaction>2025.08.18 18:03:25.445.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\Unit3.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\forms\uEditPropertiesFrm.pas</Transaction>
+    <Transaction>2025.08.18 18:03:25.445.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\Unit3.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\forms\uEditPropertiesFrm.dfm</Transaction>
+    <Transaction>2025.08.18 18:03:34.672.dproj,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\plg3120Cyclogram.dproj=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\plg3120Cyclogram.dproj</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
@@ -122,6 +125,9 @@
     <File Path="..\..\sharedUtils\utils"/>
     <File Path="..\..\sharedUtils\utils\lists"/>
     <File Path="..\..\sharedUtils\utils\lists\usetlist.pas"/>
+    <File Path="..\..\sharedUtils\utils\reports"/>
+    <File Path="..\..\sharedUtils\utils\reports\excel"/>
+    <File Path="..\..\sharedUtils\utils\reports\excel\uExcel.pas"/>
     <File Path="..\..\sharedUtils\utils\uComponentServises.pas"/>
     <File Path="..\..\sharedUtils\utils\uLogFile.pas"/>
     <File Path="..\..\sharedUtils\uCommonTypes.pas"/>
@@ -138,6 +144,8 @@
     <File Path="forms\u3120Frm.dfm"/>
     <File Path="forms\uThresholds3120Frm.pas"/>
     <File Path="forms\uThresholds3120Frm.dfm"/>
+    <File Path="forms\uEditPropertiesFrm.pas"/>
+    <File Path="forms\uEditPropertiesFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\uCreateComponents.pas"/>
     <File Path="uBaseProgramObj.pas"/>

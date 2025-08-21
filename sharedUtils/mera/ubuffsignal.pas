@@ -182,7 +182,12 @@ begin
   if m_1d then
     result:=0
   else
-    result:=points2d[0].x;
+  begin
+    if length(points2d)=0 then
+      result:=0
+    else
+      result:=points2d[0].x;
+  end;
 end;
 
 function cBuffSignal.GetP2(i:integer):point2;
@@ -199,11 +204,17 @@ begin
   begin
     if datatype='r8' then
     begin
-      result:=d_points1d[i]
+      if i<length(d_points1d) then
+        result:=d_points1d[i]
+      else
+        result:=0;
     end;
     if datatype='r4' then
     begin
-      result:=points1d[i]
+      if i<length(points1d) then
+        result:=points1d[i]
+      else
+        result:=0;
     end;
     if datatype='i2' then
     begin
@@ -297,7 +308,10 @@ var
 begin
   if m_1d then
   begin
-    dt:=1/ffreqx;
+    if ffreqx<>0 then
+      dt:=1/ffreqx
+    else
+      dt:=0;
     left:= trunc(t*ffreqx);
     right:=left+1;
     if right=count then
@@ -349,9 +363,19 @@ end;
 function cBuffSignal.GetTEnd:single;
 begin
   if m_1d then
-    result:=count/freqx
+  begin
+    if freqx<>0 then
+      result:=count/freqx
+    else
+      result:=0
+  end
   else
-    result:=points2d[count-1].x;
+  begin
+    if length(points2d)>0 then
+      result:=points2d[count-1].x
+    else
+      result:=0;
+  end;
 end;
 
 function cBuffSignal.VType:integer;
@@ -469,6 +493,8 @@ begin
     if DataType='i2' then
       datasize:=2;
     len:=trunc(fsize/datasize);
+    if len=0 then
+      exit;
     // если сигнал xy
     if fileexists(p_name+'.x') then
     begin

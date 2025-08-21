@@ -1910,9 +1910,9 @@ var
   i, j, r, c, r0: integer;
   f: TPressFrm2;
   fr: TPressFrmFrame2;
-  rng: olevariant;
-  spm: cspm;
   k: integer;
+  spm: cspm;
+  rng: olevariant;
   date: tdatetime;
   p_list: tstringlist;
 begin

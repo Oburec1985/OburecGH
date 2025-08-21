@@ -168,7 +168,7 @@ begin
   m_tag := cTag.create;
   m_outTag := cTag.create;
   m_useScalar := true;
-  m_FallTime := 1;
+  m_FallTime := 0.3;
   m_fftCount := 16;
   m_fftShift := 16;
 end;
@@ -273,6 +273,7 @@ begin
             begin
               fTrigTime := trigTime + m_TrigOffset;
               m_TrigDrop:=fTrigTime+m_FallTime;
+              // LastTime - текущая накопленная длительность сигнала
               checkTrig := (fTrigTime + m_TrigMeanLenI *(fperiod)) < lastTime;
               break;
               //if checkTrig then

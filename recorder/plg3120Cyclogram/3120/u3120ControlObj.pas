@@ -74,6 +74,7 @@ type
   public
     function ErrorCount: integer;
     function ErrorStr: string;
+    procedure clear;override;
   private
     procedure PushErroCode(ec: integer);
     procedure CheckError;
@@ -1386,6 +1387,12 @@ begin
       end;
     end;
   end;
+end;
+
+procedure cControlMng.clear;
+begin
+  fprograms.clear;
+  inherited;
 end;
 
 procedure cControlMng.continuePlay;

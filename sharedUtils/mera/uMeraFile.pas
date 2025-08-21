@@ -273,6 +273,7 @@ begin
         end;
       end;
     end;
+    s.fname:=sname;
     signals.AddObject(sname, s);
   end;
   prtlist.Destroy;
@@ -405,9 +406,9 @@ begin
     s:=GetSignal(i);
     x1:=s.GetT0;
     x2:=s.GetTEnd;
-    if x1>Result.x then
+    if x1>=Result.x then
       Result.x:=x1;
-    if x2<Result.y then
+    if x2<=Result.y then
       Result.y:=x2;
   end;
 end;

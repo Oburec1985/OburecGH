@@ -139,6 +139,8 @@ var
   I: integer;
 begin
   result := nil;
+  if TotalCount=0 then exit;
+
   for I := 0 to TotalCount - 1 do
   begin
     if I <> 0 then

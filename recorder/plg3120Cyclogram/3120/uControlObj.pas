@@ -29,6 +29,8 @@ type
   T3120Struct = record
     // коэф. регулирования
     P, I, D: double;
+    // направление движения (по часовой/ против)
+    forw:boolean;
     // вкл защиту по температуре, по уровню, давл. масла, ур. масла, по оборотам/моменту
     TAlarm, LAlarm, Palarm, LPAlarm, MNAlarm: boolean;
     // уровень лдя защиты по M/N
@@ -158,7 +160,8 @@ type
   protected
     procedure LoadObjAttributes(xmlNode: txmlnode; mng: tobject); override;
     procedure SaveObjAttributes(xmlNode: txmlnode); override;
-  protected
+  public
+    procedure stop;override;
     procedure ApplyTask(t: tobject);override;
     procedure SetTask(t: double); override;
     function GetTask: double; override;
@@ -258,11 +261,24 @@ function strToModeType(s:string):TModeType;
 var
   i:integer;
 begin
-  i:=strtoint(s);
-  case i of
-    0: result:=mtN;
-    1: result:=mtM;
-    2: result:=mtStop;
+  if isDigit(s) then
+  begin
+    i:=strtoint(s);
+    case i of
+      0:result:=mtN;
+      1:result:=mtM;
+      2:result:=mtStop;
+    end;
+  end
+  else
+  begin
+    if s='N' then
+      result:=mtN
+    else
+    if s='M' then
+      result:=mtM
+    else
+      result:=mtStop;
   end;
 end;
 
@@ -484,6 +500,16 @@ begin
   m_data.Task := t;
 end;
 
+procedure cMNControl.stop;
+begin
+  inherited;
+  case m_data.ModeType of
+    mtN: m_Ntag.PushValue(0);
+    mtM: m_Mtag.PushValue(0);
+    mtStop:;
+  end;
+end;
+
 procedure cMNControl.ApplyTask(t: tobject);
 begin
   m_data:=ctask(t).m_data;
@@ -654,6 +680,7 @@ end;
 procedure cControlObj.stop;
 begin
   state := c_Stop;
+  m_TaskTag.PushValue(0);
 end;
 
 Function cControlObj.PlayState: boolean;
