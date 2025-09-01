@@ -2,31 +2,32 @@ object MDBBaseObjFrame: TMDBBaseObjFrame
   Left = 0
   Top = 0
   Width = 451
-  Height = 304
+  Height = 432
   Align = alClient
   TabOrder = 0
+  ExplicitHeight = 304
   DesignSize = (
     451
-    304)
+    432)
   object PathLabel: TLabel
     Left = 19
     Top = 2
-    Width = 29
-    Height = 13
+    Width = 32
+    Height = 16
     Caption = #1055#1091#1090#1100':'
   end
   object DscLabel: TLabel
     Left = 19
     Top = 50
-    Width = 53
-    Height = 13
+    Width = 62
+    Height = 16
     Caption = #1054#1087#1080#1089#1072#1085#1080#1077':'
   end
   object PathEdit: TEdit
     Left = 19
     Top = 24
     Width = 412
-    Height = 21
+    Height = 24
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 0
   end
@@ -34,16 +35,17 @@ object MDBBaseObjFrame: TMDBBaseObjFrame
     Left = 19
     Top = 72
     Width = 412
-    Height = 21
+    Height = 24
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 1
   end
   object Panel1: TPanel
     Left = 0
-    Top = 178
+    Top = 105
     Width = 451
-    Height = 126
+    Height = 327
     Align = alBottom
     TabOrder = 2
+    ExplicitTop = 160
   end
 end

@@ -141,6 +141,7 @@ type
     procedure doCreateFiles(node:txmlnode);override;
     procedure doLoadDesc(node:txmlnode);override;
   public
+    // дата первой регистрации в испытании
     function DateTime:tdatetime;
   end;
   // каталог содержит регистрации
@@ -182,6 +183,8 @@ type
   cMBase = class(cDB)
   public
     m_zip:tzipmaster;
+    // включить/ отключить БД
+    m_enable:boolean;
   public
     // имена базовых папок
   protected
@@ -1048,29 +1051,31 @@ var
   d:tdatetime;
 begin
   r:=nil;
+  d:=0;
   for I := 0 to ChildCount - 1 do
   begin
     o:=getChild(i);
-    if o is cRegFolder then
+    if d=0 then
     begin
-      r:=cRegFolder(o);
-    end
-    else
-      continue;
-    if d<>0 then
-    begin
-      if m_date=0 then
-        m_date:=d
-      else
+      if o is cRegFolder then
       begin
-        if d<m_date then
-          m_date:=d;
-      end;
+        r:=cRegFolder(o);
+        d:=r.dateTime;
+        break;
+      end
+      else
+        continue;
     end;
   end;
-  if m_date=0 then
+  if d<>0 then
   begin
-
+    if m_date=0 then
+      m_date:=d
+    else
+    begin
+      if d<m_date then
+        m_date:=d;
+    end;
   end;
   result:=m_date;
 end;

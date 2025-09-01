@@ -44,6 +44,7 @@ type
     procedure FindNameEditChange(Sender: TObject);
     procedure WinPosBtnClick(Sender: TObject);
     procedure mdbTVChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure PropertiesLVDblClickProcess(item: TListItem; lv: TListView);
   private
     m_db:cMBase;
     curfr:TMDBBaseObjFrame;
@@ -323,8 +324,11 @@ end;
 
 procedure TMDBFrm.ShowObjectProps(obj: cXmlFolder);
 var
-  I: Integer;
+  I, j: Integer;
   f:TMDBBaseObjFrame;
+  pr:TProp;
+  s:string;
+  li:tlistitem;
 begin
   if curfr<>nil then
     curfr.visible:=false;
@@ -336,6 +340,16 @@ begin
       f.Visible:=true;
       f.showObjProps(obj);
       curfr:=f;
+      PropertiesLV.Clear;
+      for j := 0 to obj.PropCount - 1 do
+      begin
+        li:=PropertiesLV.Items.Add;
+        s:=obj.getPropertyName(j);
+        li.Caption:=s;
+        s:=obj.getProperty(j);
+        PropertiesLV.SetSubItemByColumnName('Значение',s,li);
+      end;
+      LVChange(PropertiesLV);
     end;
   end;
 end;
@@ -409,6 +423,31 @@ begin
     d:=mdbTV.GetNodeData(n);
     obj:=cxmlfolder(d.data);
     ShowObjectProps(obj);
+  end;
+end;
+
+procedure TMDBFrm.PropertiesLVDblClickProcess(item: TListItem; lv: TListView);
+var
+  s:string;
+  r:cardinal;
+begin
+  PropertiesLV.GetSubItemByColumnName('Значение', item, s);
+  if fileexists(s) then
+  begin
+    r:=ShellExecute(0,nil,pwidechar(s),nil,nil, SW_SHOW);
+    case r of
+      SE_ERR_FNF:             ShowMessage('Open file - Файл не найден' + sLineBreak + s);
+      SE_ERR_PNF:             ShowMessage('Open file - Путь не найден' + sLineBreak + s);
+      SE_ERR_ACCESSDENIED:    ShowMessage('Open file - Доступ к файлу запрещен' + sLineBreak + s);
+      SE_ERR_OOM:             ShowMessage('Open file - He хватает памяти' + sLineBreak + s);
+      SE_ERR_DLLNOTFOUND:     ShowMessage('Open file - Не найдена необходимая DLL' + sLineBreak + s);
+      SE_ERR_SHARE:           ShowMessage('Open file - Файл захвачен другим пользователем' + sLineBreak + s);
+      SE_ERR_ASSOCINCOMPLETE: ShowMessage('Open file - Не полная информация о связанном с файлом приложении' + sLineBreak + s);
+      SE_ERR_DDETIMEOUT:      ShowMessage('Open file - Истекло время на выполнение операции DDE' + sLineBreak + s);
+      SE_ERR_DDEFAIL:         ShowMessage('Open file - Ошибочная операция DDE' + sLineBreak + s);
+      SE_ERR_DDEBUSY:         ShowMessage('Open file - Операция DDE занята' + sLineBreak + s);
+      SE_ERR_NOASSOC:         ShowMessage('Open file - Нет приложения, связанного с файлом' + sLineBreak + s);
+    end;
   end;
 end;
 

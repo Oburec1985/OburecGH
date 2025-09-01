@@ -2,64 +2,68 @@ object MBaseControl: TMBaseControl
   Left = 0
   Top = 0
   Caption = #1059#1087#1088#1072#1074#1083#1077#1085#1080#1077' '#1073#1072#1079#1086#1081' '#1076#1072#1085#1085#1099#1093
-  ClientHeight = 668
-  ClientWidth = 703
+  ClientHeight = 844
+  ClientWidth = 888
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -16
+  Font.Height = -20
   Font.Name = 'Tahoma'
   Font.Style = []
   Menu = MainMenu1
   OldCreateOrder = False
   OnPaint = FormPaint
-  PixelsPerInch = 96
-  TextHeight = 19
+  PixelsPerInch = 120
+  TextHeight = 24
   object Splitter1: TSplitter
     Left = 0
-    Top = 525
-    Width = 703
-    Height = 3
+    Top = 663
+    Width = 888
+    Height = 4
     Cursor = crVSplit
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
     Align = alBottom
     Color = clBackground
     ParentColor = False
   end
+  object Splitter2: TSplitter
+    Left = 561
+    Top = 0
+    Width = 4
+    Height = 663
+    Align = alRight
+    Color = clBackground
+    ParentColor = False
+    ExplicitLeft = 0
+    ExplicitTop = 659
+    ExplicitHeight = 888
+  end
   object ActionPanel: TPanel
     Left = 0
-    Top = 528
-    Width = 703
-    Height = 140
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Top = 667
+    Width = 888
+    Height = 177
     Align = alBottom
     TabOrder = 0
     DesignSize = (
-      703
-      140)
+      888
+      177)
     object Label3: TLabel
-      Left = 3
-      Top = 13
-      Width = 41
-      Height = 19
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 4
+      Top = 16
+      Width = 50
+      Height = 24
       Caption = #1055#1091#1090#1100':'
     end
     object ViewBtnGl: TSpeedButton
-      Left = 7
-      Top = 48
-      Width = 35
-      Height = 31
+      Left = 9
+      Top = 61
+      Width = 44
+      Height = 39
       Hint = #1055#1088#1086#1089#1084#1086#1090#1088
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       BiDiMode = bdLeftToRight
       Glyph.Data = {
         B2290000424DB22900000000000036000000280000003B0000003B0000000100
@@ -403,11 +407,15 @@ object MBaseControl: TMBaseControl
       OnClick = ViewBtnClick
     end
     object RecordBtnGl: TSpeedButton
-      Left = 45
-      Top = 48
-      Width = 36
-      Height = 31
+      Left = 57
+      Top = 61
+      Width = 45
+      Height = 39
       Hint = #1047#1072#1087#1080#1089#1100
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       BiDiMode = bdLeftToRight
       Flat = True
       Glyph.Data = {
@@ -751,11 +759,15 @@ object MBaseControl: TMBaseControl
       OnClick = RecordBtnClick
     end
     object StopBtnGl: TSpeedButton
-      Left = 84
-      Top = 48
-      Width = 36
-      Height = 31
+      Left = 106
+      Top = 61
+      Width = 46
+      Height = 39
       Hint = #1054#1089#1090#1072#1085#1086#1074#1080#1090#1100
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       BiDiMode = bdLeftToRight
       Flat = True
       Glyph.Data = {
@@ -1099,11 +1111,15 @@ object MBaseControl: TMBaseControl
       OnClick = StopBtnClick
     end
     object DownloadRegsBtn: TSpeedButton
-      Left = 126
-      Top = 48
-      Width = 35
-      Height = 31
+      Left = 159
+      Top = 61
+      Width = 44
+      Height = 39
       Hint = #1050#1086#1087#1080#1088#1086#1074#1072#1090#1100' '#1076#1072#1085#1085#1099#1077
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       BiDiMode = bdLeftToRight
       Flat = True
       Glyph.Data = {
@@ -1274,11 +1290,15 @@ object MBaseControl: TMBaseControl
       OnClick = DownloadRegsBtnClick
     end
     object CfgSB: TSpeedButton
-      Left = 535
-      Top = 42
-      Width = 35
-      Height = 31
+      Left = 652
+      Top = 46
+      Width = 44
+      Height = 39
       Hint = #1055#1086#1089#1083#1077#1076#1085#1103#1103' '#1082#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       BiDiMode = bdLeftToRight
       Flat = True
       Glyph.Data = {
@@ -1386,126 +1406,37 @@ object MBaseControl: TMBaseControl
       OnClick = CfgSBClick
     end
     object PathLabel: TLabel
-      Left = 7
-      Top = 88
-      Width = 68
-      Height = 19
+      Left = 9
+      Top = 111
+      Width = 88
+      Height = 24
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'PathLabel'
     end
     object TestPathLabel: TLabel
-      Left = 7
-      Top = 113
-      Width = 98
-      Height = 19
+      Left = 9
+      Top = 143
+      Width = 127
+      Height = 24
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'TestPathLabel'
     end
-    object SpeedButton1: TSpeedButton
-      Left = 434
-      Top = 43
-      Width = 35
-      Height = 31
-      Hint = #1057#1086#1093#1088#1072#1085#1080#1090#1100' '#1082#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1102' '#1074' '#1041#1044
-      BiDiMode = bdLeftToRight
-      Flat = True
-      Glyph.Data = {
-        B60A0000424DB60A0000000000003600000028000000200000001C0000000100
-        180000000000800A0000120B0000120B00000000000000000000B1B1B11A1A1A
-        0202020000000000000000000000000000000000000000000000000000000000
-        000000000000000000000000000000000000000000002424242C2C2C2C2C2C2C
-        2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2A2A2A3A3A3ABEBEBE949494000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        000000000000000000000000000000000000000000003C3C3C4B4B4B49494949
-        49494949494949494949494949494949494B4B4B333333000000A0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        00000000000000000000000000000000000000000000F5F5F5FFFFFFFFFFFFFF
-        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF010101A0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        00000000000000000000000000000000000000000000D2D2D2FFFFFFFFFFFFFF
-        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF111111A0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        00000000000000000000000000000000000000000000D1D1D1FFFFFFFFFFFFFF
-        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        00000000000000000000000000000000000000000000CFCFCFFFFFFFFFFFFFFF
-        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        00000000000000000000000000000000000000000000D9D9D9FCFCFCFFFFFFFF
-        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        00000000000000000000000000000000000000000000F5F5F59191914D4D4D86
-        8686D1D1D1FFFFFFFFFFFFFCFCFCFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        000000000000000000000000000000000000000A0A0AA0A0A0787878C6C6C686
-        8686636363606060AFAFAF787878C6C6C6FFFFFFFFFFFF0D0D0DA0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        000000000000000000000000000000000000001C1C1C4A4A4AA6A6A6FFFFFFFF
-        FFFFFFFFFFA9A9A99797975252526C6C6CF1F1F1F8F8F8111111A0A0A0000000
-        0000000000003232325252521717172323234444440000000000000000000000
-        002B2B2BA3A3A3DBDBDBC5C5C59292921515150505052C2C2CF7F7F7FFFFFFFF
-        FFFFFFFFFFFFFFFFFFFFFFBDBDBD6363637C7C7CA9A9A9343434A0A0A0000000
-        000000A5A5A5FFFFFFF9F9F94B4B4B9C9C9CFFFFFF0000000000000000004444
-        44FFFFFFFFFFFFAFAFAFE9E9E9FFFFFF353535000000656565FFFFFFFFFFFFFF
-        FFFFFFFFFFFFFFFFFFFFFFFFFFFF424242A1A1A1ECECEC1C1C1CA0A0A0000000
-        6D6D6DFFFFFF4141410B0B0B030303B7B7B7F4F4F4000000000000010101F7F7
-        F7F7F7F70707070000007D7D7DFFFFFF262626000000DFDFDFF6F6F67B7B7B2C
-        2C2CDDDDDDB1B1B1A6A6A6FFFFFF3434346C6C6CFFFFFF0909099F9F9F000000
-        D2D2D2CCCCCC000000000000000000969696FEFEFEEFEFEFCCCCCC1C1C1CFFFF
-        FF8E8E8E0000008F8F8FFFFFFFFFFFFF242424000000FFFFFF56565607070737
-        37371414148E8E8E525252E0E0E0B2B2B2111111FFFFFF1414149F9F9F000000
-        B9B9B9E5E5E5000000000000000000B0B0B0F5F5F55757574545450B0B0BFFFF
-        FFB8B8B80000001D1D1D393939313131090909191919707070030303FFFFFFFF
-        FFFF7A7A7A2E2E2E8B8B8BECECECBFBFBF0E0E0ED8D8D82C2C2CA0A0A0000000
-        313131FFFFFF9F9F9F606060232323AEAEAEFFFFFF2A2A2A2929290000008F8F
-        8FFFFFFF8080800F0F0F0000000101010000000F0F0F9E9E9E040404BBBBBBF9
-        F9F92323233D3D3DFFFFFFAEAEAE6C6C6CC2C2C2DBDBDB1F1F1FA0A0A0000000
-        000000464646E6E6E6F8F8F85454544E4E4EE4E4E4FFFFFFFFFFFF1F1F1F0000
-        00959595FFFFFFFFFFFFFFFFFFCCCCCC000000000000EFEFEF7C7C7C00000000
-        00000C0C0CF1F1F1FFFFFF5D5D5DA8A8A8FFFFFFFFFFFF0A0A0AA0A0A0000000
-        0000000000000000000202020000000000000202020D0D0D1515150808080000
-        000000001515154949494D4D4D2A2A2A000000000000E5E5E5FFFFFFB7B7B791
-        9191FEFEFEFFFFFFDEDEDE5E5E5EFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        00000000000000000000000000000000000000000000A3A3A3FFFFFFFFFFFFFF
-        FFFFFFFFFFFFFFFF8383837C7C7CFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        000000000000000000000000000000000000000606065C5C5C7373738D8D8DDA
-        DADAFFFFFFFFFFFF545454CECECEFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        00000000000000000000000000000000000000030303E2E2E2CBCBCB7A7A7A63
-        63637575756E6E6E666666FFFFFFFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        00000000000000000000000000000000000000000000D1D1D1FFFFFFFFFFFFFB
-        FBFBA9A9A9595959C6C6C6FFFFFFFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        00000000000000000000000000000000000000000000D1D1D1FFFFFFFFFFFFFF
-        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        00000000000000000000000000000000000000000000D1D1D1FFFFFFFFFFFFFF
-        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        00000000000000000000000000000000000000000000D1D1D1FFFFFFFFFFFFFF
-        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF111111A0A0A0000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        00000000000000000000000000000000000000000000F6F6F6FFFFFFFFFFFFFF
-        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF030303959595000000
-        0000000000000000000000000000000000000000000000000000000000000000
-        0000000000000000000000000000000000000000000042424252525251515151
-        51515151515151515151515151515151515353533A3A3A000000B0B0B0181818
-        0101010000000000000000000000000000000000000000000000000000000000
-        000000000000000000000000000000000000000000001E1E1E27272725252525
-        2525252525252525252525252525252525222222313131B7B7B7}
-      ParentShowHint = False
-      ParentBiDiMode = False
-      ShowHint = True
-      Visible = False
-      OnClick = CfgSBClick
-    end
     object SpeedButton2: TSpeedButton
-      Left = 475
-      Top = 43
-      Width = 35
-      Height = 31
+      Left = 600
+      Top = 46
+      Width = 44
+      Height = 39
       Hint = #1047#1072#1075#1088#1091#1079#1080#1090#1100' '#1082#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1102' '#1080#1079' '#1041#1044
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       BiDiMode = bdLeftToRight
       Flat = True
       Glyph.Data = {
@@ -1613,150 +1544,221 @@ object MBaseControl: TMBaseControl
       Visible = False
       OnClick = CfgSBClick
     end
+    object SpeedButton1: TSpeedButton
+      Left = 548
+      Top = 46
+      Width = 44
+      Height = 39
+      Hint = #1057#1086#1093#1088#1072#1085#1080#1090#1100' '#1082#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1102' '#1074' '#1041#1044
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      BiDiMode = bdLeftToRight
+      Flat = True
+      Glyph.Data = {
+        B60A0000424DB60A0000000000003600000028000000200000001C0000000100
+        180000000000800A0000120B0000120B00000000000000000000B1B1B11A1A1A
+        0202020000000000000000000000000000000000000000000000000000000000
+        000000000000000000000000000000000000000000002424242C2C2C2C2C2C2C
+        2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2A2A2A3A3A3ABEBEBE949494000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        000000000000000000000000000000000000000000003C3C3C4B4B4B49494949
+        49494949494949494949494949494949494B4B4B333333000000A0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000000000F5F5F5FFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF010101A0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000000000D2D2D2FFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF111111A0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000000000D1D1D1FFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000000000CFCFCFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000000000D9D9D9FCFCFCFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000000000F5F5F59191914D4D4D86
+        8686D1D1D1FFFFFFFFFFFFFCFCFCFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        000000000000000000000000000000000000000A0A0AA0A0A0787878C6C6C686
+        8686636363606060AFAFAF787878C6C6C6FFFFFFFFFFFF0D0D0DA0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        000000000000000000000000000000000000001C1C1C4A4A4AA6A6A6FFFFFFFF
+        FFFFFFFFFFA9A9A99797975252526C6C6CF1F1F1F8F8F8111111A0A0A0000000
+        0000000000003232325252521717172323234444440000000000000000000000
+        002B2B2BA3A3A3DBDBDBC5C5C59292921515150505052C2C2CF7F7F7FFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFBDBDBD6363637C7C7CA9A9A9343434A0A0A0000000
+        000000A5A5A5FFFFFFF9F9F94B4B4B9C9C9CFFFFFF0000000000000000004444
+        44FFFFFFFFFFFFAFAFAFE9E9E9FFFFFF353535000000656565FFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFF424242A1A1A1ECECEC1C1C1CA0A0A0000000
+        6D6D6DFFFFFF4141410B0B0B030303B7B7B7F4F4F4000000000000010101F7F7
+        F7F7F7F70707070000007D7D7DFFFFFF262626000000DFDFDFF6F6F67B7B7B2C
+        2C2CDDDDDDB1B1B1A6A6A6FFFFFF3434346C6C6CFFFFFF0909099F9F9F000000
+        D2D2D2CCCCCC000000000000000000969696FEFEFEEFEFEFCCCCCC1C1C1CFFFF
+        FF8E8E8E0000008F8F8FFFFFFFFFFFFF242424000000FFFFFF56565607070737
+        37371414148E8E8E525252E0E0E0B2B2B2111111FFFFFF1414149F9F9F000000
+        B9B9B9E5E5E5000000000000000000B0B0B0F5F5F55757574545450B0B0BFFFF
+        FFB8B8B80000001D1D1D393939313131090909191919707070030303FFFFFFFF
+        FFFF7A7A7A2E2E2E8B8B8BECECECBFBFBF0E0E0ED8D8D82C2C2CA0A0A0000000
+        313131FFFFFF9F9F9F606060232323AEAEAEFFFFFF2A2A2A2929290000008F8F
+        8FFFFFFF8080800F0F0F0000000101010000000F0F0F9E9E9E040404BBBBBBF9
+        F9F92323233D3D3DFFFFFFAEAEAE6C6C6CC2C2C2DBDBDB1F1F1FA0A0A0000000
+        000000464646E6E6E6F8F8F85454544E4E4EE4E4E4FFFFFFFFFFFF1F1F1F0000
+        00959595FFFFFFFFFFFFFFFFFFCCCCCC000000000000EFEFEF7C7C7C00000000
+        00000C0C0CF1F1F1FFFFFF5D5D5DA8A8A8FFFFFFFFFFFF0A0A0AA0A0A0000000
+        0000000000000000000202020000000000000202020D0D0D1515150808080000
+        000000001515154949494D4D4D2A2A2A000000000000E5E5E5FFFFFFB7B7B791
+        9191FEFEFEFFFFFFDEDEDE5E5E5EFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000000000A3A3A3FFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFF8383837C7C7CFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        000000000000000000000000000000000000000606065C5C5C7373738D8D8DDA
+        DADAFFFFFFFFFFFF545454CECECEFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000030303E2E2E2CBCBCB7A7A7A63
+        63637575756E6E6E666666FFFFFFFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000000000D1D1D1FFFFFFFFFFFFFB
+        FBFBA9A9A9595959C6C6C6FFFFFFFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000000000D1D1D1FFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000000000D1D1D1FFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0F0F0FA0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000000000D1D1D1FFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF111111A0A0A0000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000000000F6F6F6FFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF030303959595000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        0000000000000000000000000000000000000000000042424252525251515151
+        51515151515151515151515151515151515353533A3A3A000000B0B0B0181818
+        0101010000000000000000000000000000000000000000000000000000000000
+        000000000000000000000000000000000000000000001E1E1E27272725252525
+        2525252525252525252525252525252525222222313131B7B7B7}
+      ParentShowHint = False
+      ParentBiDiMode = False
+      ShowHint = True
+      Visible = False
+      OnClick = CfgSBClick
+    end
     object BaseFolderEdit: TEdit
-      Left = 48
-      Top = 7
-      Width = 471
-      Height = 27
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 61
+      Top = 9
+      Width = 595
+      Height = 32
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
     end
     object Button1: TButton
-      Left = 331
-      Top = 50
-      Width = 98
-      Height = 25
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 418
+      Top = 55
+      Width = 124
+      Height = 32
       Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
       TabOrder = 1
       OnClick = Button1Click
     end
     object mdbBtn: TButton
-      Left = 178
-      Top = 49
-      Width = 56
-      Height = 24
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 225
+      Top = 54
+      Width = 71
+      Height = 30
       Caption = #1041#1044
       TabOrder = 2
       OnClick = mdbBtnClick
     end
     object MdbPathBtn: TButton
-      Left = 254
-      Top = 46
-      Width = 55
-      Height = 26
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 321
+      Top = 50
+      Width = 69
+      Height = 33
       Caption = '...'
       TabOrder = 3
       OnClick = MdbPathBtnClick
+    end
+    object EnableMDB: TCheckBox
+      Left = 225
+      Top = 89
+      Width = 165
+      Height = 18
+      Caption = #1042#1082#1083#1102#1095#1080#1090#1100' '#1041#1044
+      Checked = True
+      State = cbChecked
+      TabOrder = 4
+      OnClick = EnableMDBClick
     end
   end
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 447
-    Height = 525
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 561
+    Height = 663
     Align = alClient
     TabOrder = 1
+    ExplicitWidth = 565
     object ObjGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 445
-      Height = 109
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Width = 559
+      Height = 138
       Align = alTop
       Caption = #1054#1073#1098#1077#1082#1090
       TabOrder = 0
+      ExplicitWidth = 563
       object ObjPanel: TPanel
         Left = 2
-        Top = 21
-        Width = 441
-        Height = 86
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Top = 26
+        Width = 555
+        Height = 110
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 559
         object ObjNameLabel: TLabel
-          Left = 12
+          Left = 15
           Top = 0
-          Width = 112
-          Height = 19
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Width = 143
+          Height = 24
           Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077':'
         end
         object Label4: TLabel
-          Left = 14
-          Top = 60
-          Width = 34
-          Height = 19
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 18
+          Top = 76
+          Width = 41
+          Height = 24
           Caption = #1058#1080#1087':'
         end
         object ObjRenameBtn: TButton
-          Left = 194
-          Top = 18
-          Width = 124
-          Height = 27
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 245
+          Top = 23
+          Width = 157
+          Height = 34
           Caption = #1055#1077#1088#1077#1080#1084#1077#1085#1086#1074#1072#1090#1100
           TabOrder = 0
           Visible = False
           OnClick = ObjRenameBtnClick
         end
         object ObjNameCB: TComboBox
-          Left = 13
-          Top = 23
-          Width = 168
-          Height = 27
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 16
+          Top = 29
+          Width = 213
+          Height = 32
           TabOrder = 1
           OnChange = ObjNameCBChange
           OnDblClick = ObjNameCBDblClick
         end
         object ObjTypeCB: TComboBox
-          Left = 52
-          Top = 57
-          Width = 129
-          Height = 27
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 66
+          Top = 72
+          Width = 163
+          Height = 32
           TabOrder = 2
           OnChange = TestTypeCBChange
         end
@@ -1764,86 +1766,60 @@ object MBaseControl: TMBaseControl
     end
     object TestGB: TGroupBox
       Left = 1
-      Top = 110
-      Width = 445
-      Height = 158
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 139
+      Width = 559
+      Height = 200
       Align = alTop
       Caption = #1048#1089#1087#1099#1090#1072#1085#1080#1077
       TabOrder = 1
+      ExplicitWidth = 563
       object TestPanel: TPanel
         Left = 2
-        Top = 21
-        Width = 441
-        Height = 135
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Top = 26
+        Width = 555
+        Height = 172
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 559
         object TestTypeLabel: TLabel
-          Left = 13
-          Top = 63
-          Width = 34
-          Height = 19
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 16
+          Top = 80
+          Width = 41
+          Height = 24
           Caption = #1058#1080#1087':'
         end
         object Label2: TLabel
-          Left = 13
-          Top = 5
-          Width = 112
-          Height = 19
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 16
+          Top = 6
+          Width = 143
+          Height = 24
           Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077':'
         end
         object TestTypeCB: TComboBox
-          Left = 14
-          Top = 80
-          Width = 167
-          Height = 27
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 18
+          Top = 101
+          Width = 211
+          Height = 32
           TabOrder = 0
           OnChange = TestTypeCBChange
           OnCloseUp = TestTypeCBCloseUp
         end
         object TestDateNameCB: TCheckBox
-          Left = 194
-          Top = 24
-          Width = 72
-          Height = 13
+          Left = 245
+          Top = 30
+          Width = 91
+          Height = 17
           Hint = #1042#1089#1090#1072#1074#1080#1090#1100' '#1076#1072#1090#1091' '#1074#1084#1077#1089#1090#1086' '#1080#1084#1077#1085#1080
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
           Caption = #1044#1072#1090#1072
           ParentShowHint = False
           ShowHint = True
           TabOrder = 1
         end
         object TestNameCB: TComboBox
-          Left = 12
-          Top = 28
-          Width = 167
-          Height = 27
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 15
+          Top = 35
+          Width = 211
+          Height = 32
           TabOrder = 2
           OnChange = TestNameCBChange
           OnDblClick = ObjNameCBDblClick
@@ -1852,76 +1828,58 @@ object MBaseControl: TMBaseControl
     end
     object RegGB: TGroupBox
       Left = 1
-      Top = 268
-      Width = 445
-      Height = 256
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 339
+      Width = 559
+      Height = 323
       Align = alClient
       Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1094#1080#1103
       TabOrder = 2
+      ExplicitWidth = 563
       object RegPanel: TPanel
         Left = 2
-        Top = 21
-        Width = 441
-        Height = 233
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Top = 26
+        Width = 555
+        Height = 295
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 559
         object Label1: TLabel
-          Left = 12
-          Top = 12
-          Width = 112
-          Height = 19
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 15
+          Top = 15
+          Width = 143
+          Height = 24
           Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077':'
         end
         object Splitter7: TSplitter
           Left = 1
-          Top = 77
-          Width = 439
-          Height = 3
+          Top = 98
+          Width = 553
+          Height = 4
           Cursor = crVSplit
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
           Align = alBottom
           Color = clBackground
           ParentColor = False
-          ExplicitTop = 78
-          ExplicitWidth = 441
+          ExplicitTop = 97
+          ExplicitWidth = 555
         end
         object RegistratorsLV: TBtnListView
           Left = 1
-          Top = 164
-          Width = 439
-          Height = 68
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Top = 208
+          Width = 553
+          Height = 86
           Align = alBottom
           Columns = <
             item
               Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1090#1086#1088
-              Width = 38
+              Width = 48
             end
             item
               Caption = #1055#1086#1076#1082#1072#1090#1072#1083#1086#1075
-              Width = 38
+              Width = 48
             end
             item
               Caption = #1055#1091#1090#1100
-              Width = 38
+              Width = 48
             end>
           RowSelect = True
           SmallImages = ImageList1
@@ -1934,74 +1892,52 @@ object MBaseControl: TMBaseControl
           DrawColorBox = False
           ChangeTextColor = False
           Editable = False
+          ExplicitWidth = 557
         end
         object AlarmCB: TCheckBox
-          Left = 197
-          Top = 32
-          Width = 73
-          Height = 19
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 249
+          Top = 40
+          Width = 92
+          Height = 24
           Caption = #1040#1074#1072#1088#1080#1103
           TabOrder = 1
           OnClick = AlarmCBClick
         end
         object AlarmPanel: TPanel
           Left = 1
-          Top = 80
-          Width = 439
-          Height = 84
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Top = 102
+          Width = 553
+          Height = 106
           Align = alBottom
           TabOrder = 2
           Visible = False
+          ExplicitWidth = 557
           object AlarmDscLabel: TLabel
-            Left = 4
-            Top = 5
-            Width = 77
-            Height = 19
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Left = 5
+            Top = 6
+            Width = 96
+            Height = 24
             Caption = #1054#1087#1080#1089#1072#1085#1080#1077':'
           end
           object AlarmTypeLabel: TLabel
-            Left = 196
-            Top = 5
-            Width = 77
-            Height = 19
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Left = 248
+            Top = 6
+            Width = 96
+            Height = 24
             Caption = #1054#1087#1080#1089#1072#1085#1080#1077':'
           end
           object AlarmDsc: TEdit
-            Left = 4
-            Top = 27
-            Width = 176
-            Height = 27
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Left = 5
+            Top = 34
+            Width = 222
+            Height = 32
             TabOrder = 0
           end
           object AlarmType: TComboBox
-            Left = 184
-            Top = 27
-            Width = 149
-            Height = 27
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
+            Left = 232
+            Top = 34
+            Width = 189
+            Height = 32
             ItemIndex = 0
             TabOrder = 1
             Text = #1055#1088#1077#1076#1091#1087#1088#1077#1078#1076#1077#1085#1080#1077
@@ -2012,14 +1948,10 @@ object MBaseControl: TMBaseControl
           end
         end
         object RegNameEdit: TComboBox
-          Left = 11
-          Top = 35
-          Width = 169
-          Height = 27
-          Margins.Left = 2
-          Margins.Top = 2
-          Margins.Right = 2
-          Margins.Bottom = 2
+          Left = 14
+          Top = 44
+          Width = 213
+          Height = 32
           TabOrder = 3
           OnChange = RegNameEditChange
           OnDblClick = ObjNameCBDblClick
@@ -2027,33 +1959,25 @@ object MBaseControl: TMBaseControl
       end
     end
   end
-  object Panel2: TPanel
-    Left = 447
+  object RightPanel: TPanel
+    Left = 565
     Top = 0
-    Width = 256
-    Height = 525
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 323
+    Height = 663
     Align = alRight
     TabOrder = 2
     object ObjPropSG: TStringGridExt
       Left = 1
       Top = 1
-      Width = 254
-      Height = 395
+      Width = 321
+      Height = 499
       Hint = 
         #1078#1077#1083#1090#1099#1081' - '#1091' '#1086#1073#1098#1077#1082#1090#1072' '#1085#1077' '#1085#1072#1081#1076#1077#1085#1086' '#1089#1074#1086#1081#1089#1090#1074#1086' '#1082#1086#1090#1086#1088#1086#1077' '#1077#1089#1090#1100' '#1091' '#1090#1080#1087#1072'. '#1047#1077#1083#1077 +
         #1085#1099#1081' - '#1091' '#1090#1080#1087#1072' '#1085#1077' '#1085#1072#1081#1076#1077#1085#1086' '#1089#1074#1086#1081#1089#1090#1074#1086' '#1087#1088#1080#1089#1091#1090#1089#1090#1074#1091#1102#1097#1077#1077' '#1091' '#1086#1073#1098#1077#1082#1090#1072
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
       Align = alClient
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -17
+      Font.Height = -22
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
@@ -2065,7 +1989,6 @@ object MBaseControl: TMBaseControl
       OnKeyDown = ObjPropSGKeyDown
       OnSelectCell = ObjPropSGSelectCell
       OnEndEdititng = ObjPropSGEndEdititng
-      ExplicitTop = -3
       RowHeights = (
         24
         24
@@ -2075,80 +1998,56 @@ object MBaseControl: TMBaseControl
     end
     object Panel3: TPanel
       Left = 1
-      Top = 396
-      Width = 254
-      Height = 128
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 500
+      Width = 321
+      Height = 162
       Align = alBottom
       TabOrder = 1
       object Label5: TLabel
-        Left = 18
-        Top = 10
-        Width = 60
-        Height = 19
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 23
+        Top = 13
+        Width = 73
+        Height = 24
         Caption = #1054#1073#1098#1077#1082#1090':'
       end
       object Label6: TLabel
-        Left = 2
-        Top = 94
-        Width = 197
-        Height = 16
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 3
+        Top = 119
+        Width = 257
+        Height = 21
         Caption = #1047#1077#1083'. - '#1091' '#1086#1073#1098#1077#1082#1090#1072' '#1089#1074'-'#1074#1086' '#1085#1077#1090' '#1074' '#1090#1080#1087#1077
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -13
+        Font.Height = -17
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
       end
       object Label7: TLabel
-        Left = 2
-        Top = 109
-        Width = 202
-        Height = 16
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 3
+        Top = 138
+        Width = 263
+        Height = 21
         Caption = #1046#1077#1083'. - '#1091' '#1090#1080#1087#1072' '#1089#1074'-'#1074#1086' '#1085#1077#1090' '#1074' '#1086#1073#1098#1077#1082#1090#1077
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -13
+        Font.Height = -17
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
       end
       object SelObjName: TEdit
-        Left = 17
-        Top = 33
-        Width = 216
-        Height = 27
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 21
+        Top = 42
+        Width = 273
+        Height = 32
         TabOrder = 0
       end
       object ApplyBtn: TButton
-        Left = 18
-        Top = 64
-        Width = 127
-        Height = 26
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 23
+        Top = 81
+        Width = 160
+        Height = 33
         Caption = #1054#1073#1085#1086#1074#1080#1090#1100' '#1090#1080#1087
         TabOrder = 1
         OnClick = ObjRenameBtnClick

@@ -67,16 +67,18 @@ type
     AlarmDsc: TEdit;
     AlarmType: TComboBox;
     RegNameEdit: TComboBox;
-    Panel2: TPanel;
+    RightPanel: TPanel;
     ObjPropSG: TStringGridExt;
     Panel3: TPanel;
     SelObjName: TEdit;
     Label5: TLabel;
     ApplyBtn: TButton;
-    SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     Label6: TLabel;
     Label7: TLabel;
+    SpeedButton1: TSpeedButton;
+    Splitter2: TSplitter;
+    EnableMDB: TCheckBox;
     procedure Button1Click(Sender: TObject);
     procedure mdbBtnClick(Sender: TObject);
     procedure ObjPropSGEndEdititng(Sender: TObject; ACol, ARow: Integer;
@@ -107,6 +109,7 @@ type
     procedure TestTypeCBCloseUp(Sender: TObject);
     procedure ObjPropSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
+    procedure EnableMDBClick(Sender: TObject);
   private
     // взводится при удалении формы
     m_tryDestroy:boolean;
@@ -257,7 +260,7 @@ uses
 {$R *.dfm}
 
 
-// 0 - объект; 1 - тест; 2 - регистрция
+// 0 - объект; 1 - тест; 2 - регистрция 3 - вкл/выкл DB
 // s - строка вида "prop;value"
 function GetMDBProp(obj:integer;s:lpcstr):lpcstr;
 var
@@ -300,7 +303,7 @@ begin
   end;
 end;
 
-// 0 - объект; 1 - тест; 2 - регистрция ; s= 'save' - сохранить бд
+// 0 - объект; 1 - тест; 2 - регистрция ; s= 'save' - сохранить бд ; 3 вкл выкл DB s='1/0'
 // str "prop;value"
 function SetMDBProp(obj:integer;s:lpcstr):integer;
 var
@@ -396,6 +399,13 @@ begin
       if TMBaseControl(m_pMasterWnd).GetSelectObj <> nil then
         str := TMBaseControl(m_pMasterWnd).GetSelectObj.Path;
     end;
+    3:
+    begin
+      if g_mbase.m_enable then
+        str := 'Base_Enabled'
+      else
+        str := 'Base_Disabled';
+    end;
   end;
   result := LPCSTR(StrToAnsi(str));
 end;
@@ -421,16 +431,26 @@ end;
 
 // 0 - объект; 1 - тест; 2 - регистрция str
 // str "prop;value" str=save сохранить объект
+// tag - 3; 1 - включить запись в БД/ 0 выключить
 function IMBaseControl.doSetProperty(tag: integer; str: lpcstr): integer;
 var
   o:cXmlFolder;
   s, s1, s2:string;
   ind:integer;
 begin
+  o:=nil;
   case tag of
     0: o:=TMBaseControl(m_pMasterWnd).GetSelectObj;
     1: o:=TMBaseControl(m_pMasterWnd).GetSelectTest;
     2: o:=TMBaseControl(m_pMasterWnd).GetSelectReg;
+    3:
+    begin
+      if str='1' then
+        g_mbase.m_enable:=true
+      else
+        g_mbase.m_enable:=false;
+      g_MBaseControl.EnableMDB.Checked:=g_mbase.m_enable;
+    end;
   end;
   if str='save' then
   begin
@@ -846,29 +866,35 @@ end;
 
 procedure TMBaseControl.doChangeRCState(Sender: TObject);
 begin
+  if not g_mbase.m_enable then exit;
+
   case rcStateChange of
     RSt_Init: ;
-    RSt_StopToView:
-      ;
+    RSt_StopToView: ;
     RSt_StopToRec:
+    begin
       createReg;
-    RSt_ViewToStop:
-      ;
+    end;
+    RSt_ViewToStop: ;
     RSt_ViewToRec:
+    begin
       createReg;
+    end;
     RSt_initToRec:
+    begin
       createReg;
+    end;
     RSt_RecToStop:
-      begin
-        createSubRegs;
-        setcurReg(m_reg);
-        doStopRec(self);
-      end;
+    begin
+      createSubRegs;
+      setcurReg(m_reg);
+      doStopRec(self);
+    end;
     RSt_RecToView:
-      begin
-        createSubRegs;
-        setcurReg(m_reg);
-      end;
+    begin
+      createSubRegs;
+      setcurReg(m_reg);
+    end;
   end;
   rc_pan.Read;
   showRegistrators;
@@ -994,6 +1020,11 @@ begin
       exit;
     end;
   end;
+end;
+
+procedure TMBaseControl.EnableMDBClick(Sender: TObject);
+begin
+  g_mbase.m_enable:=EnableMDB.Checked;
 end;
 
 procedure TMBaseControl.FillObjectsCB;
@@ -1729,35 +1760,6 @@ begin
 
 end;
 
-procedure TMBaseControl.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
-var
-  section: string;
-  I: Integer;
-  c: TRConnection;
-begin
-  inherited;
-  section := String(str);
-  a_pIni.WriteInteger(section, 'MBaseSetPropertiesNotify',
-    v_NotifyMBaseSetProperties);
-  a_pIni.WriteString(section, 'BaseFolder', BaseFolderEdit.text);
-  a_pIni.WriteString(section, 'ObjName', ObjNameCB.text);
-  a_pIni.WriteString(section, 'TestType', TestTypeCB.text);
-  a_pIni.WriteString(section, 'TestName', TestNameCB.text);
-  a_pIni.WriteString(section, 'RegName', RegNameEdit.text);
-  if rc_pan.Count > 1 then
-  begin
-    a_pIni.WriteInteger(section, 'ConnectionCount', rc_pan.Count);
-    for I := 0 to rc_pan.Count - 1 do
-    begin
-      c := rc_pan.getconnection(I);
-      a_pIni.WriteString(section, 'ConName' + inttostr(I),
-        rc_pan.getConnectionName(I));
-      a_pIni.WriteString(section, 'ConFld' + inttostr(I), c.folder);
-      a_pIni.WriteString(section, 'ConHost' + inttostr(I), c.Address);
-      a_pIni.WriteInteger(section, 'ConPort' + inttostr(I), c.port);
-    end;
-  end;
-end;
 
 procedure TMBaseControl.setcurObj(o: cObjFolder);
 begin
@@ -1854,6 +1856,39 @@ begin
 
 end;
 
+
+procedure TMBaseControl.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  section: string;
+  I: Integer;
+  c: TRConnection;
+begin
+  inherited;
+  section := String(str);
+  a_pIni.WriteInteger(section, 'MBaseSetPropertiesNotify',
+    v_NotifyMBaseSetProperties);
+  a_pIni.WriteString(section, 'BaseFolder', BaseFolderEdit.text);
+  a_pIni.WriteString(section, 'ObjName', ObjNameCB.text);
+  a_pIni.WriteString(section, 'TestType', TestTypeCB.text);
+  a_pIni.WriteString(section, 'TestName', TestNameCB.text);
+  a_pIni.WriteString(section, 'RegName', RegNameEdit.text);
+  a_pIni.WriteInteger(section, 'RightPanSize', RightPanel.Width);
+  a_pIni.WriteBool(section, 'EnableMDB', g_MBase.m_enable);
+  if rc_pan.Count > 1 then
+  begin
+    a_pIni.WriteInteger(section, 'ConnectionCount', rc_pan.Count);
+    for I := 0 to rc_pan.Count - 1 do
+    begin
+      c := rc_pan.getconnection(I);
+      a_pIni.WriteString(section, 'ConName' + inttostr(I),
+        rc_pan.getConnectionName(I));
+      a_pIni.WriteString(section, 'ConFld' + inttostr(I), c.folder);
+      a_pIni.WriteString(section, 'ConHost' + inttostr(I), c.Address);
+      a_pIni.WriteInteger(section, 'ConPort' + inttostr(I), c.port);
+    end;
+  end;
+end;
+
 procedure TMBaseControl.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 var
   lstr, section, host, conname, folder: string;
@@ -1906,8 +1941,11 @@ begin
   RegNameEdit.text := a_pIni.ReadString(section, 'RegName', '');
   obj := GetSelectTest;
 
-  FillRegCB(cTestFolder(obj));
+  g_MBase.m_enable:=a_pIni.ReadBool(section, 'EnableMDB', true);
+  EnableMDB.Checked:=g_MBase.m_enable;
 
+  RightPanel.Width:=a_pIni.ReadInteger(section, 'RightPanSize', 323);
+  FillRegCB(cTestFolder(obj));
   ccount := a_pIni.ReadInteger(section, 'ConnectionCount', 0);
   if ccount > 0 then
   begin

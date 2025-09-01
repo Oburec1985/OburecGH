@@ -559,21 +559,23 @@ object MDBFrm: TMDBFrm
     TabOrder = 2
     object Splitter1: TSplitter
       Left = 1
-      Top = 428
+      Top = 345
       Width = 590
-      Height = 5
+      Height = 4
       Cursor = crVSplit
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
       Align = alTop
+      Color = clBackground
+      ParentColor = False
     end
     object PropertiesLV: TBtnListView
       Left = 1
-      Top = 433
+      Top = 349
       Width = 590
-      Height = 170
+      Height = 254
       Align = alClient
       Columns = <
         item
@@ -587,6 +589,7 @@ object MDBFrm: TMDBFrm
       RowSelect = True
       TabOrder = 0
       ViewStyle = vsReport
+      OnDblClickProcess = PropertiesLVDblClickProcess
       BtnCol = 0
       QuoteColumnBtnClick = False
       QuoteColumnDblClick = False
@@ -598,14 +601,14 @@ object MDBFrm: TMDBFrm
       Left = 1
       Top = 1
       Width = 590
-      Height = 427
+      Height = 344
       Align = alTop
       TabOrder = 1
       object ObjPropsGB: TGroupBox
         Left = 1
         Top = 1
         Width = 588
-        Height = 425
+        Height = 342
         Align = alClient
         Caption = #1057#1074#1086#1081#1089#1090#1074#1072' '#1086#1073#1098#1077#1082#1090#1072
         TabOrder = 0
