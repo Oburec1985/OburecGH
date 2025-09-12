@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   uCommonMath, uComponentservises,
-  Dialogs, uAlgFrame, StdCtrls, ExtCtrls, uSpin, ubasealg, uCounterAlg,
+  Dialogs, uAlgFrame, StdCtrls, ExtCtrls, uSpin, ubasealg, uIntegralAlg,
   uRcCtrls, DCL_MYOWN, Spin;
 
 type
@@ -82,7 +82,7 @@ end;
 
 function TIntegralAlgFrame.CreateAlg: cBaseAlg;
 begin
-  result := cCounterAlg.create;
+  result := cIntegralAlg.create;
 end;
 
 procedure TIntegralAlgFrame.doShow;

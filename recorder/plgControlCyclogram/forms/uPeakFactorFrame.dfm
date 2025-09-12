@@ -2,29 +2,29 @@ inherited PeakFactorFrame: TPeakFactorFrame
   object PCountLabel: TLabel [2]
     Left = 8
     Top = 154
-    Width = 63
-    Height = 13
+    Width = 72
+    Height = 16
     Caption = #1063#1080#1089#1083#1086' '#1090#1086#1095#1077#1082
   end
   object dFLabel: TLabel [3]
     Left = 146
     Top = 154
-    Width = 102
-    Height = 13
+    Width = 119
+    Height = 16
     Caption = #1056#1072#1079#1084#1077#1088' '#1087#1086#1088#1094#1080#1080', '#1089#1077#1082'.'
   end
   object ChannelLabel: TLabel [4]
     Left = 9
     Top = 102
-    Width = 31
-    Height = 13
+    Width = 35
+    Height = 16
     Caption = #1050#1072#1085#1072#1083
   end
   object Label1: TLabel [5]
     Left = 155
     Top = 102
-    Width = 33
-    Height = 13
+    Width = 36
+    Height = 16
     Caption = #1042#1099#1093#1086#1076
   end
   object PCountEdit: TIntEdit

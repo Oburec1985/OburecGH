@@ -34,6 +34,7 @@ object FRFFrm: TFRFFrm
     Top = 0
     Width = 621
     Height = 659
+    Cursor = crSizeAll
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 0
@@ -44,7 +45,6 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitLeft = 5
   end
   object RightGB: TGroupBox
     Left = 628

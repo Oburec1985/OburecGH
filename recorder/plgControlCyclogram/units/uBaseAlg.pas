@@ -268,7 +268,7 @@ implementation
 
 uses
   uCounterAlg, uTahoAlg, uGrmsAlg, uGrmsSrcAlg, uPhaseAlg, uFillingFactorAlg,
-  uSynchroPhaseAlg, uSpm, uPeakFactorAlg, uIntegralAlg,
+  uSynchroPhaseAlg, uSpm, uPeakFactorAlg, uIntegralAlg, uThreshHolderAlg,
   uAriphmAlg;
 
 function TAHUnToInt(u: tAHUnit): integer;
@@ -1309,6 +1309,7 @@ begin
   regclass(cPeakFactorAlg);
   regclass(cIntegralAlg);
   regclass(cAriphmAlg);
+  regclass(cThresHoldAlg);
 end;
 
 function cAlgMng.getAlgClass(str: string): tClass;

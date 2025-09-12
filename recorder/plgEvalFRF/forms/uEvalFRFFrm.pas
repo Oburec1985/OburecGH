@@ -60,6 +60,7 @@ type
     m_needRecompile: boolean;
     m_weight: single;
     m_count: integer;
+    // true - sres/taho
   protected
     function TestObj(p_p2: point2; dist: single): boolean; override;
     // пересчитать границы
@@ -379,6 +380,7 @@ type
     procedure SpmChartMouseZoom(sender: tobject; UpScale: boolean);
     procedure BladeSEDownClick(sender: tobject);
   public
+    m_Frf_YX: boolean;
     // отступ слева и длительность
     m_ShiftLeft, m_Length: double;
 
@@ -2366,7 +2368,7 @@ begin
   m_showflags := a_pIni.ReadBool(str, 'ShowFlags', false);
   m_showBandLab := a_pIni.ReadBool(str, 'ShowBandLabels', false);
   m_estimator := a_pIni.ReadInteger(str, 'Estimator', 1);
-
+  ResTypeRG.ItemIndex:= a_pIni.readInteger(str, 'EvalType', 0);
   if c <> nil then
   begin
     c.m_capacity := a_pIni.ReadInteger(str, 'ShockCount', 5);
@@ -2592,6 +2594,7 @@ begin
     a_pIni.WriteBool(str, 'SaveT0', m_saveT0);
     a_pIni.WriteBool(str, 'TahoNewAxis', m_newAx);
     a_pIni.WriteInteger(str, 'Estimator', m_estimator);
+    a_pIni.WriteInteger(str, 'EvalType', ResTypeRG.ItemIndex);
     a_pIni.WriteBool(str, 'ShowFlags', m_showflags);
     a_pIni.WriteBool(str, 'ShowBandLabels', m_showBandLab);
     c := t.cfg;
@@ -3378,8 +3381,16 @@ begin
       // без использования фазы   y/x. x - тахо
       for j := 0 to c.fHalfFft - 1 do
       begin
-        v1 := TDoubleArray(sd.m_mod.p)[j];
-        v2 := TDoubleArray(td.m_mod.p)[j];
+        if TFRFFrm(m_frm).m_Frf_Yx then // sres/taho
+        begin
+          v1 := TDoubleArray(sd.m_mod.p)[j];
+          v2 := TDoubleArray(td.m_mod.p)[j];
+        end
+        else
+        begin
+          v2 := TDoubleArray(sd.m_mod.p)[j];
+          v1 := TDoubleArray(td.m_mod.p)[j];
+        end;
         if v2 <> 0 then
           sd.m_frf[j] := v1 / v2
         else
@@ -3421,7 +3432,14 @@ begin
               cross := py * sopr(px) + cross;
               v2 := td.m_mod2[j] + v2;
             end;
-            s.m_frf[j] := abs(cross) / v2;
+            if TFRFFrm(m_frm).m_Frf_Yx then // sres/taho
+            begin
+              s.m_frf[j] := abs(cross) / v2;
+            end
+            else
+            begin
+              s.m_frf[j] := v2/abs(cross);
+            end;
           end;
         end;
       2: // H1 Syy/Sxy  x - тахо
@@ -3446,7 +3464,14 @@ begin
               cross := px * sopr(py) + cross;
               v1 := sd.m_mod2[j] + v1;
             end;
-            s.m_frf[j] := v1 / abs(cross);
+            if TFRFFrm(m_frm).m_Frf_Yx then // sres/taho
+            begin
+              s.m_frf[j] := v1/abs(cross);
+            end
+            else
+            begin
+              s.m_frf[j] := abs(cross) / v1;
+            end;
           end;
         end;
     end;

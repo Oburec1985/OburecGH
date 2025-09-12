@@ -141,7 +141,7 @@ type
 implementation
 
 uses
-  uCounterAlg, uTahoAlg, uGrmsAlg, uGrmsSrcAlg, uPhaseAlg, uFillingFactorAlg,
+  uTahoAlg, uGrmsAlg, uGrmsSrcAlg, uPhaseAlg, uFillingFactorAlg,
   uSynchroPhaseAlg;
 
 const

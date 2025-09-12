@@ -1695,6 +1695,15 @@ object MBaseControl: TMBaseControl
       TabOrder = 4
       OnClick = EnableMDBClick
     end
+    object Button2: TButton
+      Left = 418
+      Top = 104
+      Width = 75
+      Height = 25
+      Caption = 'Button2'
+      TabOrder = 5
+      OnClick = Button2Click
+    end
   end
   object Panel1: TPanel
     Left = 0
@@ -1703,7 +1712,6 @@ object MBaseControl: TMBaseControl
     Height = 663
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 565
     object ObjGB: TGroupBox
       Left = 1
       Top = 1
@@ -1712,7 +1720,6 @@ object MBaseControl: TMBaseControl
       Align = alTop
       Caption = #1054#1073#1098#1077#1082#1090
       TabOrder = 0
-      ExplicitWidth = 563
       object ObjPanel: TPanel
         Left = 2
         Top = 26
@@ -1720,7 +1727,6 @@ object MBaseControl: TMBaseControl
         Height = 110
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 559
         object ObjNameLabel: TLabel
           Left = 15
           Top = 0
@@ -1772,7 +1778,6 @@ object MBaseControl: TMBaseControl
       Align = alTop
       Caption = #1048#1089#1087#1099#1090#1072#1085#1080#1077
       TabOrder = 1
-      ExplicitWidth = 563
       object TestPanel: TPanel
         Left = 2
         Top = 26
@@ -1780,7 +1785,6 @@ object MBaseControl: TMBaseControl
         Height = 172
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 559
         object TestTypeLabel: TLabel
           Left = 16
           Top = 80
@@ -1834,7 +1838,6 @@ object MBaseControl: TMBaseControl
       Align = alClient
       Caption = #1056#1077#1075#1080#1089#1090#1088#1072#1094#1080#1103
       TabOrder = 2
-      ExplicitWidth = 563
       object RegPanel: TPanel
         Left = 2
         Top = 26
@@ -1842,7 +1845,6 @@ object MBaseControl: TMBaseControl
         Height = 295
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 559
         object Label1: TLabel
           Left = 15
           Top = 15
@@ -1892,7 +1894,6 @@ object MBaseControl: TMBaseControl
           DrawColorBox = False
           ChangeTextColor = False
           Editable = False
-          ExplicitWidth = 557
         end
         object AlarmCB: TCheckBox
           Left = 249
@@ -1911,7 +1912,6 @@ object MBaseControl: TMBaseControl
           Align = alBottom
           TabOrder = 2
           Visible = False
-          ExplicitWidth = 557
           object AlarmDscLabel: TLabel
             Left = 5
             Top = 6

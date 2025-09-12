@@ -386,10 +386,13 @@ begin
       for i := 0 to getChildCount(src) - 1 do
       begin
         sig := GetChildSignal(src, i);
-        start := sig.IndexOf(p2.x);
-        endind := sig.IndexOf(p2.y);
-        sig := sig.Clone(start, endind - start) as iwpsignal;
-        WP.Link(path, sig.sname, sig);
+        if sig<>nil then
+        begin
+          start := sig.IndexOf(p2.x);
+          endind := sig.IndexOf(p2.y);
+          sig := sig.Clone(start, endind - start) as iwpsignal;
+          WP.Link(path, sig.sname, sig);
+        end;
       end;
       WP.Refresh;
 

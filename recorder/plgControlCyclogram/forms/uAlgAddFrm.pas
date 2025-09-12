@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uRegClassesList,
-  Dialogs, StdCtrls, ExtCtrls, ubaseAlg, uCounteralg, uTahoAlg, uGrmsAlg, uPhaseAlg, uGrmsSrcAlg;
+  Dialogs, StdCtrls, ExtCtrls, ubaseAlg;
 
 type
   // инструкция по добавлению фреймов и алгоритмов в uAlgMng

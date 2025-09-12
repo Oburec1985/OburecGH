@@ -79,6 +79,7 @@ type
     SpeedButton1: TSpeedButton;
     Splitter2: TSplitter;
     EnableMDB: TCheckBox;
+    Button2: TButton;
     procedure Button1Click(Sender: TObject);
     procedure mdbBtnClick(Sender: TObject);
     procedure ObjPropSGEndEdititng(Sender: TObject; ACol, ARow: Integer;
@@ -110,6 +111,7 @@ type
     procedure ObjPropSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure EnableMDBClick(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
   private
     // взводится при удалении формы
     m_tryDestroy:boolean;
@@ -459,6 +461,7 @@ begin
     else
     begin
       o.CreateXMLDesc;
+      result:=0;
       exit;
     end;
   end;
@@ -697,6 +700,25 @@ begin
     end;
   end;
 end;
+
+procedure setMDBPropertyError(obj : integer; s : AnsiString);
+var s2 : lpcstr;
+begin
+  s2 := PAnsiChar(s);
+  if SetMDBProp(obj, s2) <> S_OK then
+    MessageBox(0, PChar('Ошибка создания записи в MDB:' + sLineBreak +
+                        'номер obj MDB:'#9 + IntToStr(obj) + sLineBreak +
+                        'параметр:'#9 + string(s2)), PChar('Ошибка создания записи в MDB'), MB_OK + MB_ICONERROR + MB_APPLMODAL + MB_TOPMOST);
+end;
+
+
+procedure TMBaseControl.Button2Click(Sender: TObject);
+begin
+    setMDBPropertyError(1, AnsiString('Лог Значений ' +  ';' + '222'));
+    setMDBPropertyError(1, AnsiString('Лог Ошибок    '+ ';' + '111'));
+    setMDBPropertyError(1, 'save');
+end;
+
 
 procedure TMBaseControl.UpdateXmlDescr;
 var
@@ -1661,7 +1683,18 @@ begin
           end
           else
           begin
-            obj.Setpropertie(prop, val);
+            // если добавляем свойство которое уже существует
+            ind:=obj.FindPropertie(prop);
+            if ind=-1 then
+            begin
+              obj.Setpropertie(prop, val)
+            end
+            else
+            begin
+              // если такое свойство существуем то не добавляем
+              sg.Cells[c_col_propName, sg.Row]:='';
+              exit;
+            end;
           end;
         end;
       end

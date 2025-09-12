@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   uCommonMath, uComponentservises,
-  Dialogs, uAlgFrame, StdCtrls, ExtCtrls, uSpin, ubasealg, uCounterAlg,
+  Dialogs, uAlgFrame, StdCtrls, ExtCtrls, uSpin, ubasealg, uFillingFactorAlg,
   uRcCtrls;
 
 type
@@ -74,7 +74,7 @@ end;
 
 function TFillFctFrame.CreateAlg: cBaseAlg;
 begin
-  result := cCounterAlg.create;
+  result := cFillingFactorAlg.create;
 end;
 
 procedure TFillFctFrame.doShow;

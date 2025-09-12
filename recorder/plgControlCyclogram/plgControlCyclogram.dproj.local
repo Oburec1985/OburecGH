@@ -368,6 +368,8 @@
     <File Path="forms\uVertexEditFrame.dfm"/>
     <File Path="forms\uSpmThresholdProfile.pas"/>
     <File Path="forms\uSpmThresholdProfile.dfm"/>
+    <File Path="forms\uTresHoldFrame.pas"/>
+    <File Path="forms\uTresHoldFrame.dfm"/>
     <File Path="units"/>
     <File Path="units\u3dMoveEngine.pas"/>
     <File Path="units\uAriphmAlg.pas"/>
@@ -390,6 +392,7 @@
     <File Path="units\uTahoAlg.pas"/>
     <File Path="units\uTimeIntervalAlg.pas"/>
     <File Path="units\uProfile.pas"/>
+    <File Path="units\uThreshHolderAlg.pas"/>
     <File Path="uBaseAlgBands.pas"/>
   </ProjectSortOrder>
 	<Transactions>
@@ -513,5 +516,10 @@
     <Transaction>2025.05.15 10:53:13.601.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\units\uProfile.pas=F:\Oburec\delphi\2011\OburecGH\sharedUtils\objects\uProfile.pas</Transaction>
     <Transaction>2025.05.15 14:03:32.452.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSpmThresholdProfile.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\forms\uSpmProfile.pas</Transaction>
     <Transaction>2025.05.15 14:03:32.452.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSpmThresholdProfile.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\forms\uSpmProfile.dfm</Transaction>
+    <Transaction>2025.09.09 12:50:41.019.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit1.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\units\uThreshHolderAlg.pas</Transaction>
+    <Transaction>2025.09.09 15:09:50.770.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit1.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTresHoldFrm.pas</Transaction>
+    <Transaction>2025.09.09 15:09:50.770.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\Unit1.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTresHoldFrm.dfm</Transaction>
+    <Transaction>2025.09.09 15:10:34.221.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTresHoldFrm.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTresHoldFrame.pas</Transaction>
+    <Transaction>2025.09.09 15:10:34.221.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTresHoldFrm.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTresHoldFrame.dfm</Transaction>
   </Transactions>
 </BorlandProject>

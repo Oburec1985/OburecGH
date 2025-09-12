@@ -544,6 +544,11 @@
 			<DCCReference Include="..\SharedRUnits\uFrmSync.pas">
 				<Form>FrmSync</Form>
 			</DCCReference>
+			<DCCReference Include="units\uThreshHolderAlg.pas"/>
+			<DCCReference Include="forms\uTresHoldFrame.pas">
+				<Form>TresHoldFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

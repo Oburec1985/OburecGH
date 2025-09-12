@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   uCommonMath, uComponentservises, mathfunction, tags,
-  Dialogs, uAlgFrame, StdCtrls, ExtCtrls, uSpin, ubasealg, uCounterAlg,
+  Dialogs, uAlgFrame, StdCtrls, ExtCtrls, uSpin, ubasealg,
   uPeakFactorAlg,
   uRcCtrls,
   DCL_MYOWN, uTahoAlg, Spin, ComCtrls, uBtnListView, uRcFunc;

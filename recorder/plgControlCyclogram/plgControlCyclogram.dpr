@@ -254,7 +254,9 @@ uses
   uCreateComponents in 'units\uCreateComponents.pas',
   PluginClass in '..\SharedRUnits\PluginClass.pas',
   uCompMng in '..\SharedRUnits\uCompMng.pas',
-  uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync};
+  uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
+  uThreshHolderAlg in 'units\uThreshHolderAlg.pas',
+  uTresHoldFrame in 'forms\uTresHoldFrame.pas' {TresHoldFrame: TFrame};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

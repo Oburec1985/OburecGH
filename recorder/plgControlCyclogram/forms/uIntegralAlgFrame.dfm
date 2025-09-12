@@ -4,36 +4,36 @@ inherited IntegralAlgFrame: TIntegralAlgFrame
   object ThresholdLabel1: TLabel [1]
     Left = 9
     Top = 98
-    Width = 71
-    Height = 13
+    Width = 83
+    Height = 16
     Caption = #1053#1080#1078#1085#1080#1081' '#1087#1086#1088#1086#1075
   end
   object ChannelLabel: TLabel [3]
     Left = 9
     Top = 282
-    Width = 31
-    Height = 13
+    Width = 35
+    Height = 16
     Caption = #1050#1072#1085#1072#1083
   end
   object Label1: TLabel [4]
     Left = 173
     Top = 282
-    Width = 33
-    Height = 13
+    Width = 36
+    Height = 16
     Caption = #1042#1099#1093#1086#1076
   end
   object FltCountLabel: TLabel [5]
     Left = 175
     Top = 163
-    Width = 63
-    Height = 13
+    Width = 72
+    Height = 16
     Caption = #1063#1080#1089#1083#1086' '#1090#1086#1095#1077#1082
   end
   object ShiftLabel: TLabel [6]
     Left = 175
     Top = 211
-    Width = 52
-    Height = 13
+    Width = 62
+    Height = 16
     Caption = #1057#1084#1077#1097#1077#1085#1080#1077
   end
   inherited AlgNameEdit: TEdit
