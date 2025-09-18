@@ -36,12 +36,6 @@
 			<Projects Include="..\recorder\plg3120Cyclogram\plg3120Cyclogram.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\recorder\plgEvalStepValue\plgEvalStepVal.dproj">
-				<Dependencies/>
-			</Projects>
-			<Projects Include="..\..\MERA\2150 converter\Conv_2150.dproj">
-				<Dependencies/>
-			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -151,32 +145,14 @@
 		<Target Name="plg3120Cyclogram:Make">
 			<MSBuild Targets="Make" Projects="..\recorder\plg3120Cyclogram\plg3120Cyclogram.dproj"/>
 		</Target>
-		<Target Name="plgEvalStepVal">
-			<MSBuild Projects="..\recorder\plgEvalStepValue\plgEvalStepVal.dproj"/>
-		</Target>
-		<Target Name="plgEvalStepVal:Clean">
-			<MSBuild Targets="Clean" Projects="..\recorder\plgEvalStepValue\plgEvalStepVal.dproj"/>
-		</Target>
-		<Target Name="plgEvalStepVal:Make">
-			<MSBuild Targets="Make" Projects="..\recorder\plgEvalStepValue\plgEvalStepVal.dproj"/>
-		</Target>
-		<Target Name="Conv_2150">
-			<MSBuild Projects="..\..\MERA\2150 converter\Conv_2150.dproj"/>
-		</Target>
-		<Target Name="Conv_2150:Clean">
-			<MSBuild Targets="Clean" Projects="..\..\MERA\2150 converter\Conv_2150.dproj"/>
-		</Target>
-		<Target Name="Conv_2150:Make">
-			<MSBuild Targets="Make" Projects="..\..\MERA\2150 converter\Conv_2150.dproj"/>
-		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;plgEvakFRF;ProjectFFT;plg3120Cyclogram;plgEvalStepVal;Conv_2150"/>
+			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;plgEvakFRF;ProjectFFT;plg3120Cyclogram"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;plgEvakFRF:Clean;ProjectFFT:Clean;plg3120Cyclogram:Clean;plgEvalStepVal:Clean;Conv_2150:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;plgEvakFRF:Clean;ProjectFFT:Clean;plg3120Cyclogram:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;plgEvakFRF:Make;ProjectFFT:Make;plg3120Cyclogram:Make;plgEvalStepVal:Make;Conv_2150:Make"/>
+			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;plgEvakFRF:Make;ProjectFFT:Make;plg3120Cyclogram:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

@@ -15,6 +15,7 @@ type
   cSpm = class(cSrcAlg)
   public
     min: point2d;
+    // частота и амплитуда максимума
     max: point2d;
     minmax_i: tpoint;
     // значение ско по временной реализации за блок (evalblock)

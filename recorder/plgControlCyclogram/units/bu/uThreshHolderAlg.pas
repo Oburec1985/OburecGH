@@ -5,15 +5,13 @@ interface
 
 uses
   classes, windows, activex, ubasealg, uCommonMath, uRCFunc, tags, recorder,
-  blaccess, nativexml,  MathFunction,  dialogs,
+  blaccess, nativexml,  MathFunction,
   pluginclass, sysutils, uQueue, uCommonTypes;
 
 type
 
   // класс движок для расчета thresHld без механизма тегов
   cThresHld = class
-  public
-    m_name:string;
   protected
     m_data: cQueue<point2d>;
     m_max: double;
@@ -22,7 +20,6 @@ type
   public
     constructor create(histLen: double); // Pass history length in constructor
     destructor destroy;
-    procedure ClearData;
     // кладет в очередь новую точку и возвращает максимум
     function PushValue(p2: point2d): double;
   end;
@@ -64,8 +61,6 @@ type
     destructor destroy; override;
     class function getdsc: string; override;
   end;
-
-  procedure testAmpHolder;
 
 const
   C_TresHoldOpts = 'HistLen = 10';
@@ -360,11 +355,6 @@ end;
 
 { cThresHld }
 
-procedure cThresHld.ClearData;
-begin
-  m_data.clear;
-end;
-
 constructor cThresHld.create(histLen: double);
 begin
   m_data := cQueue<point2d>.create;
@@ -411,49 +401,6 @@ begin
     RecalcMax;
 
   result := m_max;
-end;
-
-procedure testAmpHolder;
-var
-  holder: cThresHld;
-  p: point2d;
-  maxVal: double;
-  i: integer;
-  points: array[0..19] of point2d;
-begin
-  holder := cThresHld.create(5.0); // History of 5 seconds
-
-  // Some test points
-  points[0] := p2d(1, 10);
-  points[1] := p2d(2, 20);
-  points[2] := p2d(3, 15);
-  points[3] := p2d(4, 25);
-  points[4] := p2d(5, 5);
-  points[5] := p2d(6, 12);
-  points[6] := p2d(7, 6); // New max
-  points[7] := p2d(8, 5);
-  points[8] := p2d(9, 7);
-  points[9] := p2d(10, 3);
-  points[10] := p2d(11, 6); // New max
-  points[11] := p2d(12, 5);
-  points[12] := p2d(13, 7);
-  points[13] := p2d(14, 3);
-  points[14] := p2d(15, 6); // New max
-  points[15] := p2d(16, 5);
-  points[16] := p2d(17, 7);
-  points[17] := p2d(18, 3);
-  points[18] := p2d(19, 5);
-  points[19] := p2d(20, 7);
-
-
-  for i := 0 to High(points) do
-  begin
-    p := points[i];
-    maxVal := holder.PushValue(p);
-    //logMessage(floattostr(maxVal));
-  end;
-
-  holder.destroy;
 end;
 
 end.

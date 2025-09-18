@@ -54,12 +54,13 @@ type
     name: string;
     // спектр тега
     m_s:cspm;
-    m_HldAlg:cThresHoldAlg;
     // кривая для коррекции ачх
     m_curve:cCurve;
     // тег рекордера ( по одному тегу создается несколько
     // скалярн полосовых тегов), индекс в массиве номер полосы
     m_bandTags: array of itag;
+    // список ThresHld
+    m_TresHoldList: tlist;
     // максимум
     m_SKO: array of tEvalData;
   end;
@@ -109,7 +110,7 @@ type
     procedure AlarmsCBClick(Sender: TObject);
     procedure RefValSEChange(Sender: TObject);
   public
-    m_BargraphStep: integer;
+    m_BarGraphStep: integer;
     m_lastFile:string;
     m_saveBlockNum: integer;
 
@@ -125,9 +126,11 @@ type
     m_ManualRange: boolean;
     m_HH, m_H: double;
     //
-    m_Max: point2d;
+
   private
     fInitBands: boolean;
+    // главный максимум для спектра и главный номер камеры
+    m_Max: point2d;
     m_ind: integer;
   private
     // выравнивает ширину фреймов на компоненте на всю ширину
@@ -195,7 +198,9 @@ type
     // теги
     m_createTags: boolean;
     m_tagsinit: boolean;
+    // список обработок
     m_tags: array of TTagRec;
+
     m_UseAlarms:boolean;
     m_useAlarmsArr:array of boolean;
     m_AlarmHandler:AlarmHandler;
@@ -227,6 +232,10 @@ type
     // пересчитать полосы в индексы
     procedure ReevalBands(s: cspm);
     procedure SetUseProfile(b:boolean);
+    // удалить TresHld
+    procedure clearTresHld;
+    // очистить значения в TresHld
+    procedure InitTresHld;
   public
     procedure Sort;
     function GetWnd: string;
@@ -634,6 +643,42 @@ begin
   end;
 end;
 
+procedure cPressCamFactory2.clearTresHld;
+var
+  I, j: Integer;
+  t:pTagRec;
+  hld:cThresHld;
+begin
+  for I := 0 to length(m_tags) - 1 do
+  begin
+    t:=getTag(i);
+    for j := 0 to t.m_TresHoldList.Count - 1 do
+    begin
+      hld:=cThresHld(t.m_TresHoldList.Items[j]);
+      hld.destroy;
+    end;
+    t.m_TresHoldList.Destroy;
+    t.m_TresHoldList:=nil;
+  end;
+end;
+
+procedure cPressCamFactory2.InitTresHld ;
+var
+  I, j: Integer;
+  t:pTagRec;
+  hld:cThresHld;
+begin
+  for I := 0 to length(m_tags) - 1 do
+  begin
+    t:=getTag(i);
+    for j := 0 to t.m_TresHoldList.Count - 1 do
+    begin
+      hld:=cThresHld(t.m_TresHoldList.Items[j]);
+      hld.ClearData;
+    end;
+  end;
+end;
+
 constructor cPressCamFactory2.create;
 var
   l:cProfileLine;
@@ -730,6 +775,7 @@ var
   t:itag;
   pTag:PTagRec;
   bInitRefs:boolean;
+  THld:cThresHld;
 begin
   if m_NormalTag.tag=nil then
   begin
@@ -761,6 +807,26 @@ begin
     m_tags[i].m_s:=s;
     setlength(m_tags[i].m_bandTags, BandCount);
     setlength(m_tags[i].m_SKO, BandCount);
+    // создаем ThresHld-ры
+    if m_tags[i].m_TresHoldList=nil then
+      m_tags[i].m_TresHoldList:=TList.create
+    else
+    begin
+      // очистка старых cThresHld
+      for j := 0 to m_tags[i].m_TresHoldList.Count - 1 do
+      begin
+        THld:=cThresHld(m_tags[i].m_TresHoldList.Items[j]);
+        THld.destroy;
+      end;
+      m_tags[i].m_TresHoldList.clear;
+    end;
+    // создаем новые cThresHld
+    for j := 0 to BandCount - 1 do
+    begin
+      THld:=cThresHld.create(5);
+      THld.m_name:=m_tags[i].name;
+      m_tags[i].m_TresHoldList.Add(THld);
+    end;
     // создаем теги для оценок чтоб писать в тренды
     if m_createTags then
     begin
@@ -1147,6 +1213,7 @@ begin
     Frm.doStart;
   end;
   Sort;
+  InitTresHld;
 end;
 
 procedure cPressCamFactory2.doStop;
@@ -1175,6 +1242,7 @@ var
   changealarm:boolean;
   s:string;
   doAlarm:boolean;
+  Hld:cThresHld;
 begin
   // if g_disableFRF then
   // exit;
@@ -1232,6 +1300,8 @@ begin
       t.m_SKO[bnum].iMax:=imax;
       // поменять на сумму квадратов
       t.m_SKO[bnum].rms_mean:=sqrt(sum);
+      Hld:=cThresHld(t.m_TresHoldList.Items[bnum]);
+      Hld.PushValue(p2d( t.m_s.LastBlockTime, max));
       // если теги созданы то обновляем значения
       if m_createTags then
       begin
@@ -2452,8 +2522,6 @@ begin
     // if b then
     begin
       //fr.Eval;
-      if True then
-
       t:=g_PressCamFactory2.m_tags[i];
       fr.m_Max:=t.m_SKO[m_bnum].rms_max;
       fr.m_f:=t.m_SKO[m_bnum].Freq;
