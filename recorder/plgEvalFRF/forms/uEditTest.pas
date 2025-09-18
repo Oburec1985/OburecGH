@@ -198,6 +198,7 @@ begin
   end;
 
   TurbNameCB.Clear;
+  t:=nil;
   for I := 0 to g_mbase.root.ChildCount - 1 do
   begin
     t:=cTurbFolder(g_mbase.root.getChild(i));
@@ -215,7 +216,8 @@ begin
     t.selected:=cxmlfolder(t.getChild(0));
     BlCountIE.Value:=cStageFolder(t.selected).BlCount;
     // лопатка
-    t.selected.selected:=cxmlfolder(t.selected.getChild(0));
+    t.selected.selected:=c
+    xmlfolder(t.selected.getChild(0));
     ShowTone;
   end;
   SGChange(ProfileSG);

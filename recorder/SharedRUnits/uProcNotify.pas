@@ -64,6 +64,8 @@ type
   end;
 
 implementation
+uses
+  PluginClass;
 
 
 procedure cNonifyProcessor.setName(s: string);

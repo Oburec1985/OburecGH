@@ -1,12 +1,20 @@
 object TresHoldFrame: TTresHoldFrame
   Left = 0
   Top = 0
-  Width = 504
-  Height = 348
-  TabOrder = 0
+  ClientHeight = 301
+  ClientWidth = 486
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -13
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = True
   DesignSize = (
-    504
-    348)
+    486
+    301)
+  PixelsPerInch = 120
+  TextHeight = 16
   object NameLabel: TLabel
     Left = 8
     Top = 2
@@ -35,10 +43,17 @@ object TresHoldFrame: TTresHoldFrame
     Height = 16
     Caption = #1042#1099#1093#1086#1076
   end
+  object Label1: TLabel
+    Left = 8
+    Top = 102
+    Width = 75
+    Height = 16
+    Caption = #1048#1089#1090#1086#1088#1080#1103', '#1089#1077#1082
+  end
   object AlgNameEdit: TEdit
     Left = 9
     Top = 24
-    Width = 481
+    Width = 463
     Height = 24
     Anchors = [akLeft, akTop, akRight]
     Enabled = False
@@ -47,12 +62,11 @@ object TresHoldFrame: TTresHoldFrame
   object OptsEdit: TEdit
     Left = 9
     Top = 72
-    Width = 481
+    Width = 463
     Height = 24
     Anchors = [akLeft, akTop, akRight]
     Enabled = False
     TabOrder = 1
-    ExplicitWidth = 489
   end
   object ChannelCB: TRcComboBox
     Left = 9
@@ -64,11 +78,18 @@ object TresHoldFrame: TTresHoldFrame
   object OutChannelName: TEdit
     Left = 160
     Top = 256
-    Width = 330
+    Width = 312
     Height = 24
     Anchors = [akLeft, akTop, akRight]
     Enabled = False
     TabOrder = 3
-    ExplicitWidth = 313
+  end
+  object HistFe: TFloatEdit
+    Left = 8
+    Top = 128
+    Width = 121
+    Height = 24
+    TabOrder = 4
+    Text = '10'
   end
 end

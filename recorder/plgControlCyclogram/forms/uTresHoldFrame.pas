@@ -4,9 +4,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  uCommonMath, uComponentservises,
-  Dialogs, uAlgFrame, StdCtrls, ExtCtrls, uSpin, ubasealg, uCounterAlg, uQueue,
-  uRcCtrls;
+  uCommonMath, uComponentservises, uThreshHolderAlg,
+  Dialogs, uAlgFrame, StdCtrls, ExtCtrls, uSpin, ubasealg, uQueue,
+  uRcCtrls, DCL_MYOWN;
 
 type
   TTresHoldFrame = class(TBaseAlgFrame)
@@ -14,6 +14,8 @@ type
     ChannelLabel: TLabel;
     OutLabel: TLabel;
     OutChannelName: TEdit;
+    HistFe: TFloatEdit;
+    Label1: TLabel;
     procedure ChannelCBChange(Sender: TObject);
   protected
     function getProperties: string; override;
@@ -67,7 +69,7 @@ end;
 
 function TTresHoldFrame.CreateAlg: cBaseAlg;
 begin
-  result := cCounterAlg.create;
+  result := cThresHoldAlg.create;
 end;
 
 procedure TTresHoldFrame.doShow;
@@ -81,11 +83,12 @@ var
   b, err: Boolean;
 begin
   //inherited;
-
+  addParam(m_pars, 'Hist', HistFe.text);
+  OutChannelName.text:=ChannelCB.text+'_Hld';
   if ChannelCB.text<>'' then
   begin
     addParam(m_pars, 'Channel', ChannelCB.text);
-    OutChannelName.text:=ChannelCB.text+'_Hold';
+    OutChannelName.text:=ChannelCB.text+'_Hld';
   end;
 
   result:=ParsToStr(m_pars);
@@ -97,10 +100,15 @@ var
   str:string;
 begin
   inherited;
+  str:=GetParsValue(m_pars, 'Hist');
+  if CheckStr(str) then
+  begin
+    HistFe.FloatNum:=strtoFloatExt(str);
+  end;
   setcomboboxitem(GetParsValue(m_pars, 'Channel'), ChannelCB);
   if channelcb.ItemIndex>0 then
   begin
-    OutChannelName.text:=ChannelCB.text+'_Hold';
+    OutChannelName.text:=ChannelCB.text+'_Hld';
   end;
 end;
 

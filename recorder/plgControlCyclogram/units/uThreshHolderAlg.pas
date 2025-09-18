@@ -6,9 +6,22 @@ interface
 uses
   classes, windows, activex, ubasealg, uCommonMath, uRCFunc, tags, recorder,
   blaccess, nativexml,  MathFunction,
-  pluginclass, sysutils;
+  pluginclass, sysutils, uQueue, uCommonTypes;
 
 type
+
+  // класс движок для расчета thresHld без механизма тегов
+  cThresHld = class
+  protected
+    m_data:cQueue<point2d>;
+    m_max:double;
+  public
+    constructor create;
+    destructor destroy;
+    // кладет в очередь новую точку и возвращает максимум
+    function PushValue(p2:point2d):double;
+  end;
+
   cThresHoldAlg = class(cbasealg)
   protected
     // длина предыстории в сек.
@@ -278,40 +291,6 @@ begin
   end;
 end;
 
-function createVectorTagR8(tagname: string; freq: double;  CfgWritable: boolean): itag;
-var
-  ir: irecorder;
-  Name, errMes: string;
-  err: cardinal;
-  v: OleVariant;
-begin
-  ir := getIR;
-  result := itag(ir.CreateTag(lpcstr(StrToAnsi(tagname)), LS_VIRTUAL, nil));
-  if result = nil then // ошибка создания виртуального тега
-  begin
-    err := ir.GetLastError;
-    errMes := ir.ConvertErrorCodeToString(err);
-    exit;
-  end;
-  // установка типа тега : вектор, прием и передача
-  VariantInit(v);
-  VariantClear(v);
-  TPropVariant(v).vt := VT_UI4;
-  v := TTAG_VECTOR or TTAG_INPUT;
-  result.SetProperty(TAGPROP_TYPE, v);
-  // частота опроса
-  result.SetProperty(TAGPROP_ENABLEFREQCORRECTION, true);
-  VariantClear(v);
-  // v := fintag.tag.GetFreq; // частота опроса датчика
-  result.SetFreq(freq);
-  // тип передаваемых данных
-  VariantClear(v);
-  TPropVariant(v).vt := VT_R8;
-  // v := VarAsType(v, varDouble);
-  result.SetProperty(TAGPROP_DATATYPE, v);
-  result.CfgWritable(CfgWritable);
-  // минимальное и максимальное значение диапазона
-end;
 
 function cThresHoldAlg.genTagName: string;
 var
@@ -334,7 +313,10 @@ begin
       str:=genTagName;
       OutTag.tag:=getTagByName(str);
       if OutTag.tag=nil then
-        OutTag.tag := createVectorTagR8(str, InTag.tag.getfreq, true);
+      begin
+        OutTag.tag:=createScalar(str, false);
+        //OutTag.tag := createVectorTagR8(str, InTag.tag.getfreq, true);
+      end;
       if OutTag.tag=nil then
       begin
         OutTag.tagname:=OutTag.tagname;
@@ -367,6 +349,23 @@ begin
     OutTag.block := bl;
   end;
   lcm;
+end;
+
+{ cThresHld }
+
+constructor cThresHld.create;
+begin
+
+end;
+
+destructor cThresHld.destroy;
+begin
+
+end;
+
+function cThresHld.PushValue(p2: point2d): double;
+begin
+
 end;
 
 end.

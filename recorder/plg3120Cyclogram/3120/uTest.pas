@@ -141,7 +141,7 @@ begin
       end;
     end
     else
-    begin
+    begin // создание и настройка актуаторов
       c:=g_conmng.createControl(mname, 'cControlObj');
       c.m_Tasktag.tagname:=mname+'_tsk';
       if c.m_Tasktag.tag=nil then

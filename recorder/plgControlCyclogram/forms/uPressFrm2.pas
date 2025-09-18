@@ -33,7 +33,7 @@ uses
   // uPathMng,
   uEditCurveFrm,
   uThresholdsFrm,
-  uSpmChart,utrend,
+  uSpmChart,utrend, uThreshHolderAlg,
   uRcCtrls, Menus, uSpin;
 
 type
@@ -54,6 +54,7 @@ type
     name: string;
     // спектр тега
     m_s:cspm;
+    m_HldAlg:cThresHoldAlg;
     // кривая для коррекции ачх
     m_curve:cCurve;
     // тег рекордера ( по одному тегу создается несколько
@@ -751,6 +752,7 @@ begin
   for i := 0 to m_spmCfg.ChildCount - 1 do
   begin
     s := getSpm(i);
+    // создаем полосовые теги
     m_tags[i].name := s.m_tag.tagname;
     if bInitRefs then
     begin
@@ -759,6 +761,7 @@ begin
     m_tags[i].m_s:=s;
     setlength(m_tags[i].m_bandTags, BandCount);
     setlength(m_tags[i].m_SKO, BandCount);
+    // создаем теги для оценок чтоб писать в тренды
     if m_createTags then
     begin
       for j := 0 to BandCount - 1 do
@@ -1243,6 +1246,7 @@ begin
         s:=t.m_bandTags[bnum].GetName;
         a:=m_Thresholds.GetAlarm(s);
         alarmdata:=m_Thresholds.AlarmData;
+        // заполнение значение в bandTags
         t.m_bandTags[bnum].PushValue(max, -1);
         if (max>a.m_outRangeLevel) and a.m_OutRangeEnabled then
         begin
