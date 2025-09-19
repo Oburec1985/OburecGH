@@ -41,6 +41,7 @@ type
     finit:boolean;
   public
     // средн амп, главные амплитуда и частота в полосе
+    // в m_Max всегда амплитуда?  см. updatedata формы
     m_A, m_Max, m_f:double;
   public
     m_frm:TForm;
@@ -85,33 +86,6 @@ constructor TPressFrmFrame2.create(aowner: tcomponent);
 begin
   inherited;
 end;
-{
-procedure TPressFrmFrame2.Eval;
-var
-  I, imax: Integer;
-  v, max, sum:double;
-begin
-  max:=0;
-  sum:=0;
-  imax:=-1;
-  if not m_s.ready then
-    exit;
-  if bnum>g_PressCamFactory2.BandCount-1 then
-    exit;
-  for I := g_PressCamFactory2.m_bands[bnum].i1 to g_PressCamFactory2.m_bands[bnum].i2 do
-  begin
-    v:=tdoubleArray(m_s.m_rms.p)[i];
-    sum:=sum+v;
-    if v>max then
-    begin
-      max:=v;
-      imax:=i;
-    end;
-  end;
-  m_Max:=max;
-  m_f:=m_s.SpmDx*imax;
-  m_A:=sum/(g_PressCamFactory2.m_bands[bnum].i2-g_PressCamFactory2.m_bands[bnum].i1);
-end;}
 
 function TPressFrmFrame2.f1: double;
 begin
@@ -168,19 +142,8 @@ begin
 end;
 
 function TPressFrmFrame2.getA: double;
-//var
-  //w:PWndFunc;
 begin
-  //w:=g_PressCamFactory2.GetWndFunc;
   result:=m_Max;
-  // коррекция с цчетом оконной функции для СКО (т.к. исходный спектр корректируется по acf для А)
-  //if w<>nil then
-  //begin
-  //  if w.wndtype<>wdRect then
-  //  begin
-  //    result:=result*w.ecf/w.acf;
-  //  end;
-  //end;
 end;
 
 function TPressFrmFrame2.getEst:double; // возврат отображаемой оценки

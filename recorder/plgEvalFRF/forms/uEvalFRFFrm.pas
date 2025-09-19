@@ -358,6 +358,7 @@ type
     TrigFE: TFloatSpinEdit;
     DempfE: TEdit;
     DempfLabel: TLabel;
+    HideExcelCB: TCheckBox;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -379,6 +380,7 @@ type
     procedure BladeSEUpClick(sender: tobject);
     procedure SpmChartMouseZoom(sender: tobject; UpScale: boolean);
     procedure BladeSEDownClick(sender: tobject);
+    procedure HideExcelCBClick(Sender: TObject);
   public
     m_Frf_YX: boolean;
     // отступ слева и длительность
@@ -500,6 +502,7 @@ type
     // merafile
     m_MeraFile: string;
     m_ShockFile: string;
+    m_hideExcel:boolean;
   private
     m_counter: integer;
   protected
@@ -860,7 +863,7 @@ var
   turb: cTurbFolder;
 begin
   turb := g_mbase.SelectTurb;
-  turb.Buildreport('');
+  turb.Buildreport('', g_FrfFactory.m_hideExcel);
 end;
 
 procedure TFRFFrm.SaveReport(repname: string; bl: cBladeFolder);
@@ -998,8 +1001,11 @@ begin
   SetRangeBorder(rng);
 
   SaveWorkBookAs(repname);
-  CloseWorkBook;
-  CloseExcel;
+  if g_FrfFactory.m_hideExcel then
+  begin
+    CloseWorkBook;
+    CloseExcel;
+  end;
 end;
 
 constructor TFRFFrm.create(Aowner: tcomponent);
@@ -2024,6 +2030,11 @@ begin
   UpdateView;
 end;
 
+procedure TFRFFrm.HideExcelCBClick(Sender: TObject);
+begin
+  g_FrfFactory.m_hideExcel:=HideExcelCB.Checked;
+end;
+
 procedure TFRFFrm.ShowLines;
 var
   t: cSRSTaho;
@@ -2282,8 +2293,10 @@ procedure TFRFFrm.WinPosBtnClick(sender: tobject);
 begin
   buildReport;
   if fileexists(g_FrfFactory.m_MeraFile) then
+  begin
     ShellExecute(0, nil, pwidechar(g_FrfFactory.m_ShockFile), nil, nil,
       SW_HIDE);
+  end;
 end;
 
 function TFRFFrm.getRes(s: string): cSRSres;
@@ -2369,6 +2382,8 @@ begin
   m_showBandLab := a_pIni.ReadBool(str, 'ShowBandLabels', false);
   m_estimator := a_pIni.ReadInteger(str, 'Estimator', 1);
   ResTypeRG.ItemIndex:= a_pIni.readInteger(str, 'EvalType', 0);
+  HideExcelCB.Checked:=a_pIni.ReadBool(str, 'HideExcel', false);
+  g_FrfFactory.m_hideExcel:=HideExcelCB.Checked;
   if c <> nil then
   begin
     c.m_capacity := a_pIni.ReadInteger(str, 'ShockCount', 5);
@@ -2597,6 +2612,7 @@ begin
     a_pIni.WriteInteger(str, 'EvalType', ResTypeRG.ItemIndex);
     a_pIni.WriteBool(str, 'ShowFlags', m_showflags);
     a_pIni.WriteBool(str, 'ShowBandLabels', m_showBandLab);
+    a_pIni.WriteBool(str, 'HideExcel', HideExcelCB.Checked);
     c := t.cfg;
     if c <> nil then
     begin

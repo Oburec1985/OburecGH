@@ -137,7 +137,7 @@ type
     function GetBladeCount(stageNum:integer):integer;
     procedure Buildreport; overload;
     // путь к шаблону
-    procedure Buildreport(tmpl:string);overload;
+    procedure Buildreport(tmpl:string; hideexcel:boolean);overload;
     function GetStage(i:integer):cstageFolder;
     property StageCount:integer read getstagecount write setstagecount;
   end;
@@ -1447,7 +1447,7 @@ begin
   CloseExcel;
 end;
 
-procedure cTurbFolder.Buildreport(tmpl: string);
+procedure cTurbFolder.Buildreport(tmpl: string; hideexcel:boolean);
 var
   r0, i, j, r,col, c, c2: integer;
   b: tspmband;
@@ -1546,8 +1546,11 @@ begin
   end;
   repPath := ExtractFileDir(turb.getFolder) + '\Report.xlsx';
   SaveWorkBookAs(repPath);
-  CloseWorkBook;
-  CloseExcel;
+  if hideexcel then
+  begin
+    CloseWorkBook;
+    CloseExcel;
+  end;
 end;
 
 function cTurbFolder.GetBladeCount(stageNum: integer): integer;

@@ -4,7 +4,7 @@ object FRFFrm: TFRFFrm
   Hint = #1042#1082#1083#1102#1095#1080#1090#1100'/'#1086#1090#1082#1083#1102#1095#1080#1090#1100' '#1088#1072#1089#1095#1077#1090
   Caption = 'FRFFrm'
   ClientHeight = 659
-  ClientWidth = 943
+  ClientWidth = 1097
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,7 +17,7 @@ object FRFFrm: TFRFFrm
   PixelsPerInch = 120
   TextHeight = 17
   object Splitter1: TSplitter
-    Left = 621
+    Left = 775
     Top = 0
     Width = 7
     Height = 659
@@ -28,11 +28,12 @@ object FRFFrm: TFRFFrm
     Align = alRight
     Color = clBackground
     ParentColor = False
+    ExplicitLeft = 621
   end
   object SpmChart: cChart
     Left = 0
     Top = 0
-    Width = 621
+    Width = 775
     Height = 659
     Cursor = crSizeAll
     Align = alClient
@@ -45,9 +46,10 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitWidth = 621
   end
   object RightGB: TGroupBox
-    Left = 628
+    Left = 782
     Top = 0
     Width = 315
     Height = 659
@@ -58,6 +60,7 @@ object FRFFrm: TFRFFrm
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     TabOrder = 1
+    ExplicitLeft = 790
     object ShockCountLabel: TLabel
       Left = 8
       Top = 27
@@ -280,7 +283,7 @@ object FRFFrm: TFRFFrm
     object ShockCountE: TEdit
       Left = 7
       Top = 52
-      Width = 115
+      Width = 101
       Height = 25
       Margins.Left = 4
       Margins.Top = 4
@@ -289,10 +292,10 @@ object FRFFrm: TFRFFrm
       TabOrder = 0
     end
     object SaveBtn: TButton
-      Left = 8
-      Top = 154
-      Width = 90
-      Height = 33
+      Left = 5
+      Top = 150
+      Width = 86
+      Height = 29
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -339,10 +342,10 @@ object FRFFrm: TFRFFrm
       Text = '0'
     end
     object DelBtn: TButton
-      Left = 5
-      Top = 111
-      Width = 89
-      Height = 33
+      Left = 7
+      Top = 115
+      Width = 84
+      Height = 28
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -352,8 +355,8 @@ object FRFFrm: TFRFFrm
       OnClick = DelBtnClick
     end
     object hideCB: TCheckBox
-      Left = 123
-      Top = 56
+      Left = 173
+      Top = 49
       Width = 78
       Height = 22
       Margins.Left = 4
@@ -381,7 +384,7 @@ object FRFFrm: TFRFFrm
     end
     object UseWndFcb: TCheckBox
       Left = 173
-      Top = 220
+      Top = 203
       Width = 61
       Height = 21
       Margins.Left = 4
@@ -393,8 +396,8 @@ object FRFFrm: TFRFFrm
       OnClick = UseWndFcbClick
     end
     object WelchCB: TCheckBox
-      Left = 175
-      Top = 248
+      Left = 173
+      Top = 224
       Width = 77
       Height = 23
       Margins.Left = 4
@@ -407,8 +410,8 @@ object FRFFrm: TFRFFrm
       OnClick = WelchCBClick
     end
     object DisableCB: TCheckBox
-      Left = 123
-      Top = 26
+      Left = 115
+      Top = 49
       Width = 60
       Height = 22
       Margins.Left = 4
@@ -465,10 +468,10 @@ object FRFFrm: TFRFFrm
       end
     end
     object ResTypeRG: TRadioGroup
-      Left = 166
-      Top = 86
-      Width = 75
-      Height = 91
+      Left = 173
+      Top = 74
+      Width = 91
+      Height = 93
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -604,6 +607,19 @@ object FRFFrm: TFRFFrm
       Margins.Bottom = 4
       Increment = 0.100000000000000000
       TabOrder = 13
+    end
+    object HideExcelCB: TCheckBox
+      Left = 173
+      Top = 168
+      Width = 116
+      Height = 22
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = #1057#1082#1088#1099#1090#1100' Excel'
+      TabOrder = 14
+      OnClick = HideExcelCBClick
     end
   end
 end
