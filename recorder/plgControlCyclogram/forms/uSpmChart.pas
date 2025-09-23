@@ -12,7 +12,7 @@ uses
   uRTrig, uRCFunc, ubasealg, uBuffTrend1d, upage, utextlabel, uaxis, utrend,
   PluginClass, ImgList, uChart, uGrmsSrcAlg, uPhaseAlg, usetlist, ufreqband,
   uHardwareMath,
-  tags,
+  tags, complex,
   uBaseAlgBands,
   uSpm;
 
@@ -45,6 +45,7 @@ type
 
     // для Spm
     m_spmtrend: cBuffTrend1d;
+    m_phase:array of double;
 
     m_lastblock: double;
     m_lastblockind: integer;
@@ -77,6 +78,11 @@ type
     m_bands:tlist;
     // отображать быстрые флажки на максимумы
     fShowLabels:boolean;
+    // 0 - спектр амплитуд; 1 фаза
+    m_TypeRes:integer;
+    // Тахо канал для расчета
+    m_tahoName:string;
+    m_tahoSpm:cspm;
   protected
     fShowProfile, fShowWarnings, fShowAlarms, fShowRms, fShowPhase: boolean;
   public
@@ -605,6 +611,8 @@ begin
       end;
     end;
   end;
+  m_TypeRes:=a_pIni.ReadInteger(str, 'TypeRes', 0);
+  m_tahoName:=a_pIni.ReadString(str, 'TahoName', '');
 
   lstr := a_pIni.ReadString(str, 'Profile', '');
   p := g_CtrlWrnFactory.m_pList.getprof(lstr, i);
@@ -632,7 +640,9 @@ var
   ti: TSpmTagInfo;
 begin
   inherited;
-  a_pIni.WriteInteger(str, 'SpmCount', m_tagslist.Count);
+  a_pIni.WriteInteger(str, 'TypeRes', m_tagslist.Count);
+  a_pIni.WriteString(str, 'TahoName', m_tahoName);
+  a_pIni.WriteInteger(str, 'SpmCount', m_TypeRes);
   for i := 0 to m_tagslist.Count - 1 do
   begin
     ti := TagInfo(i);
@@ -761,6 +771,15 @@ var
   l:ctextlabel;
   spm:cspm;
 begin
+  if m_tahoName<>'' then
+  begin
+    m_tahoSpm:=cspm(g_algmng.getSpm(m_tahoName));
+  end
+  else
+  begin
+    m_tahoSpm:=nil;
+  end;
+
   for i := 0 to m_tagslist.Count - 1 do
   begin
     ti := TagInfo(i);
@@ -776,6 +795,10 @@ begin
       if ti.m_spmtrend.dx=0 then
       begin
          ti.m_spmtrend.dx:= ti.m_spm.SpmDx;
+      end;
+      if m_typeRes=1 then
+      begin
+        setlength(ti.m_phase, length(tDoubleArray(ti.m_spm.m_rms.p)));
       end;
     end;
   end;
@@ -1240,7 +1263,8 @@ end;
 procedure TSpmChart.UpdateSpm;
 var
   ti: TSpmTagInfo;
-  i: integer;
+  i, j: integer;
+  c1,c2:TComplex_d;
 begin
   for i := 0 to m_tagslist.Count - 1 do
   begin
@@ -1251,10 +1275,36 @@ begin
       continue;
     if ti.update then
     begin
-      case ti.m_spm.m_I of
-        0:ti.m_spmtrend.AddPoints(tdoublearray(ti.m_spm.m_rms.p));
-        1:ti.m_spmtrend.AddPoints(tdoublearray(ti.m_spm.m_magI1));
-        2:ti.m_spmtrend.AddPoints(tdoublearray(ti.m_spm.m_magI2));
+      case m_TypeRes of
+        0: // амплитудный спектр
+        begin
+          case ti.m_spm.m_I of
+            0:ti.m_spmtrend.AddPoints(tdoublearray(ti.m_spm.m_rms.p));
+            1:ti.m_spmtrend.AddPoints(tdoublearray(ti.m_spm.m_magI1));
+            2:ti.m_spmtrend.AddPoints(tdoublearray(ti.m_spm.m_magI2));
+          end;
+        end;
+        1: // фаза
+        begin
+          if m_tahoSpm<>nil then
+          begin
+            for j := 0 to length(tDoubleArray(ti.m_spm.m_rms.p))-1 do
+            begin
+              c1:=tCmxArray_d(ti.m_spm.cmplx_resArray.p)[j];
+              c2:=tCmxArray_d(m_tahoSpm.cmplx_resArray.p)[j];
+              c1:=c1*sopr(c2);
+              if c1.Re<>0 then
+              begin
+                ti.m_phase[j]:=c_radtodeg*ArcTan(c1.Im/c1.Re);
+              end
+              else
+              begin
+                ti.m_phase[j]:=180;
+              end;
+            end;
+            ti.m_spmtrend.AddPoints(tdoublearray(ti.m_phase));
+          end;
+        end;
       end;
     end;
   end;

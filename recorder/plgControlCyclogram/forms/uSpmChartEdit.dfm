@@ -169,6 +169,13 @@ object SpmChartEditFrm: TSpmChartEditFrm
       ShowHint = True
       OnClick = UpdateBtnClick
     end
+    object Label2: TLabel
+      Left = 172
+      Top = 171
+      Width = 66
+      Height = 16
+      Caption = #1058#1072#1093#1086' '#1082#1072#1085#1072#1083
+    end
     object MinXfe: TFloatEdit
       Left = 4
       Top = 40
@@ -404,10 +411,32 @@ object SpmChartEditFrm: TSpmChartEditFrm
     object ShowLabels: TCheckBox
       Left = 5
       Top = 171
-      Width = 178
+      Width = 156
       Height = 28
       Caption = #1060#1083#1072#1078#1082#1080' '#1085#1072' '#1084#1072#1082#1089#1080#1084#1091#1084#1099
       TabOrder = 9
+    end
+    object TypeRes: TRadioGroup
+      Left = 312
+      Top = 19
+      Width = 124
+      Height = 76
+      Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090
+      ItemIndex = 0
+      Items.Strings = (
+        #1057#1087#1077#1082#1090#1088' '#1057#1050#1047
+        #1060#1072#1079#1072)
+      TabOrder = 10
+    end
+    object TahoCb: TComboBox
+      Left = 172
+      Top = 195
+      Width = 145
+      Height = 24
+      TabOrder = 11
+      Text = 'TahoCb'
+      OnDragDrop = TahoCbDragDrop
+      OnDragOver = TahoCbDragOver
     end
   end
   object Panel1: TPanel

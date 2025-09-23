@@ -370,7 +370,7 @@ constructor cThresHld.create(histLen: double);
 begin
   m_data := cQueue<point2d>.create;
   m_histLen := histLen;
-  m_max := -1.0/0.0; // Negative infinity
+  m_max := -1.0; // Negative infinity
 end;
 
 destructor cThresHld.destroy;

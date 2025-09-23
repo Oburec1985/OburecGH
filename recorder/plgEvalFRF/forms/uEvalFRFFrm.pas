@@ -751,6 +751,11 @@ begin
     FindMinMaxDouble(s.lineFrf.data_r, minmax.x, minmax.y);
     // minmax.y:=0.01*(minmax.y-minmax.x)+minmax.x;
     // minmax.x:=0.005*(minmax.y-minmax.x)+minmax.x;
+    if TrigFE.Value<=0 then
+    begin
+      showmessage('Установить уровень Trig >0');
+      exit;
+    end;
     minmax.y := TrigFE.Value;
     minmax.x := 0.5 * TrigFE.Value;
     FindExtremumsInY(s.lineFrf.data_r, 1, b.m_f2i,
@@ -2668,6 +2673,10 @@ var
   s: cSRSres;
   i, j: integer;
   block, tahobl: TDataBlock;
+  lax_X:point2d;
+  a:caxis;
+  r:frect;
+  o:cdrawobj;
 begin
   t := getTaho;
   if t = nil then
@@ -2687,7 +2696,24 @@ begin
         block.m_TimeArrSize);
     end;
   end;
+  lax_X:=p2d(TimeAx.min.x,TimeAx.max.x);
   SpmChartDblClick(nil);
+
+  // нормализация времени
+  for i := 0 to pageT.axises.ChildCount - 1 do
+  begin
+    a := pageT.getaxis(i);
+    r.BottomLeft.x := lax_X.x;
+    r.TopRight.x := lax_X.y;
+    r.BottomLeft.y := a.min.y;
+    r.TopRight.y := a.max.y;
+    a.ZoomfRect(r);
+    for j := 0 to a.ChildCount - 1 do
+    begin
+      o := cdrawobj(a.getChild(j));
+      o.doUpdateWorldSize(a);
+    end;
+  end;
   fUpdateFrf := true;
   UpdateView;
 end;
@@ -4166,6 +4192,8 @@ function TDataBlockList.addBlock(p_spmsize: integer; time: point2d; // timestamp
 begin
   result := addBlock(p_spmsize);
   result.m_timeStamp := time;
+
+
   // дополняем нулями
   if p_timesize < p_spmsize then
   begin
@@ -4185,11 +4213,18 @@ begin
         result.m_TimeBlockFltNull);
     end;
   end;
-  GetMemAlignedArray_cmpx_d(p_spmsize, result.m_ClxData);
-  GetMemAlignedArray_d(p_spmsize, result.m_mod);
-  // src/ dst/ count
-  system.move(tb[0], result.m_TimeBlock[0], p_timesize * sizeof(double));
-  result.m_TimeArrSize := p_timesize;
+  if p_timesize>0 then
+  begin
+    GetMemAlignedArray_cmpx_d(p_spmsize, result.m_ClxData);
+    GetMemAlignedArray_d(p_spmsize, result.m_mod);
+    // src/ dst/ count
+    system.move(tb[0], result.m_TimeBlock[0], p_timesize * sizeof(double));
+    result.m_TimeArrSize := p_timesize;
+  end
+  else
+  begin
+    result.m_TimeArrSize := 0;
+  end;
 end;
 
 procedure TDataBlock.prepareData;

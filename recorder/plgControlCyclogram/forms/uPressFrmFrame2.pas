@@ -167,6 +167,7 @@ procedure TPressFrmFrame2.updateView;
 var
   w:PWndFunc;
   r, v:double;
+  i:integer;
 begin
   if finit then
   begin
@@ -186,7 +187,14 @@ begin
 
     if v<10000 then
     begin
-      ProgrBar.Progress:=round(ProgrBar.MaxValue*v/r);
+      if abs(r)>0.000001 then
+      begin
+        i:=round(ProgrBar.MaxValue*v/r);
+        if i<ProgrBar.MaxValue then
+          ProgrBar.Progress:=i
+        else
+          ProgrBar.Progress:=ProgrBar.MaxValue;
+      end;
     end;
     ProgrBar.ShowHint:=true;
     ProgrBar.Hint:='max='+floattostr(ProgrBar.MaxValue)+' v=' +floattostr(v)+' r='+floattostr(r);

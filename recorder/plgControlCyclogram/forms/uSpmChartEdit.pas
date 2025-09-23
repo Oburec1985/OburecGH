@@ -50,6 +50,9 @@ type
     ProfileBtn: TButton;
     ProfileCB: TComboBox;
     ShowLabels: TCheckBox;
+    TypeRes: TRadioGroup;
+    Label2: TLabel;
+    TahoCb: TComboBox;
     procedure UpdateBtnClick(Sender: TObject);
     procedure TagsLBDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure TagsLBDragOver(Sender, Source: TObject; X, Y: Integer;
@@ -60,6 +63,9 @@ type
     procedure GraphTypeRGClick(Sender: TObject);
     procedure ProfileBtnClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure TahoCbDragDrop(Sender, Source: TObject; X, Y: Integer);
+    procedure TahoCbDragOver(Sender, Source: TObject; X, Y: Integer;
+      State: TDragState; var Accept: Boolean);
   public
     curChart: TSpmChart;
   private
@@ -156,6 +162,7 @@ begin
     TubeAlarmCB.Checked := chart.ShowAlarms;
     ShowLabels.Checked:=curChart.ShowLabels;
 
+    TypeRes.itemindex:=curChart.m_typeres;
     ShowProfiles;
     showChartTags;
     showmodal;
@@ -205,6 +212,9 @@ var
 begin
   if curChart <> nil then
   begin
+    curChart.m_TypeRes:=TypeRes.itemindex;
+    curChart.m_tahoName:=TahoCb.Text;
+
     curChart.aX.X := MinXfe.FloatNum;
     curChart.aX.Y := MaxXfe.FloatNum;
     curChart.aY.X := MinYfe.FloatNum;
@@ -302,6 +312,7 @@ procedure TSpmChartEditFrm.showChartTags;
 var
   I: Integer;
   ti: TSpmTagInfo;
+  a:cbasealgcontainer;
 begin
   TagsLB.Clear;
   for I := 0 to curChart.m_tagslist.count - 1 do
@@ -313,6 +324,16 @@ begin
     end;
     TagsLB.items.AddObject(ti.m_algname, ti.m_spm);
   end;
+  TahoCb.Clear;
+  for I := 0 to g_algMng.count - 1 do
+  begin
+    a := cBaseAlgContainer(g_algMng.getobj(I));
+    if a is cSpm then
+    begin
+      TahoCB.AddItem(cspm(a).m_tag.tagname+'_spm', ti.m_spm);
+    end;
+  end;
+  setComboBoxItem(curChart.m_tahoName ,TahoCB);
 end;
 
 procedure TSpmChartEditFrm.ShowSpmTags;
@@ -425,11 +446,6 @@ begin
       FillRect(Rect);
       if Index >= 0 then
         TextOut(Rect.Left + 2, Rect.Top, TagsLB.items[Index]);
-      // дефолтная отрисовка
-      { Brush.Color := clWhite;
-        FillRect(Rect);
-        Font.Color := font.Color;
-        TextOut(Rect.Left, Rect.Top, SignalsLB.Items[Index]); }
     end;
   end;
 end;
@@ -470,6 +486,26 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TSpmChartEditFrm.TahoCbDragDrop(Sender, Source: TObject; X,
+  Y: Integer);
+var
+  li:tlistitem;
+begin
+  if Source=TagsLV then
+  begin
+    setComboBoxItem(cspm(TagsLV.Selected.Data).m_tag.tagname+'_spm', TahoCb);
+  end;
+end;
+
+procedure TSpmChartEditFrm.TahoCbDragOver(Sender, Source: TObject; X,
+  Y: Integer; State: TDragState; var Accept: Boolean);
+begin
+  if Source=TagsLV then
+    Accept:=true
+  else
+    Accept:=false;
 end;
 
 procedure TSpmChartEditFrm.ShowProfiles;
