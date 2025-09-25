@@ -1,7 +1,7 @@
-unit uExcel;
+п»їunit uExcel;
 
 interface
-  uses Classes,Graphics,
+  uses Classes, Graphics,  TlHelp32,
   ComObj, ActiveX, Variants, Windows, Messages, SysUtils;
 
 const
@@ -11,7 +11,9 @@ const
   xlByRows =1;
   xlNext=	1;
   xlPrevious=2;
-  // ----- Параметры специальной вставки -----------------
+  xlPart = 2; // For Find method, match part of the cell content
+  xlCellTypeLastCell = $0000000B;
+  // ----- РџР°СЂР°РјРµС‚СЂС‹ СЃРїРµС†РёР°Р»СЊРЅРѕР№ РІСЃС‚Р°РІРєРё -----------------
   xlAll = 1;
   xlFormulas = 2;
   xlValues = 3;
@@ -33,19 +35,19 @@ const
   xlPasteFormulasAndNumberFormats = $0000000B;
   xlPasteValuesAndNumberFormats = $0000000C;}
 
-  xlPasteAll                      =	-4104 ; // Вставка всех данных
+xlPasteAll                      =	-4104 ; // Р’СЃС‚Р°РІРєР° РІСЃРµС… РґР°РЅРЅС‹С…
   xlPasteAll_                      =	-4163;
-  xlPasteAllExceptBorders         =	7	    ; // Вставка всего содержимого за исключением вида границ диапазона
-  xlPasteAllUsingSourceTheme      =	13    ; // Вставка всего содержимого, используя тему оформления источника
-  xlPasteColumnWidths	            =8	    ; // Копирует ширину столбцов
-  xlPasteComments                 =	-4144 ; // Вставка комментариев
-  xlPasteFormats                  =	-4122 ; // Вставка форматов данных
-  xlPasteFormulas	                =-4123  ; // Вставка формул
-  xlPasteFormulasAndNumberFormats	=11	    ; // Вставка формул и чисел
-  xlPasteValidation	              =6	    ; // Вставка проверок
-  xlPasteValues	                  =-4163  ; // Вставка значений
-  xlPasteValuesAndNumberFormats	  =12	    ; // Вставка значений и чисел
-  //------ Выравнивание по горизонтали -------------------
+  xlPasteAllExceptBorders         =	7	    ; // Р’СЃС‚Р°РІРєР° РІСЃРµРіРѕ СЃРѕРґРµСЂР¶РёРјРѕРіРѕ Р·Р° РёСЃРєР»СЋС‡РµРЅРёРµРј РІРёРґР° РіСЂР°РЅРёС† РґРёР°РїР°Р·РѕРЅР°
+  xlPasteAllUsingSourceTheme      =	13    ; // Р’СЃС‚Р°РІРєР° РІСЃРµРіРѕ СЃРѕРґРµСЂР¶РёРјРѕРіРѕ, РёСЃРїРѕР»СЊР·СѓСЏ С‚РµРјСѓ РѕС„РѕСЂРјР»РµРЅРёСЏ РёСЃС‚РѕС‡РЅРёРєР°
+  xlPasteColumnWidths	            =8	    ; // РљРѕРїРёСЂСѓРµС‚ С€РёСЂРёРЅСѓ СЃС‚РѕР»Р±С†РѕРІ
+  xlPasteComments                 =	-4144 ; // Р’СЃС‚Р°РІРєР° РєРѕРјРјРµРЅС‚Р°СЂРёРµРІ
+  xlPasteFormats                  =	-4122 ; // Р’СЃС‚Р°РІРєР° С„РѕСЂРјР°С‚РѕРІ РґР°РЅРЅС‹С…
+  xlPasteFormulas	                =-4123  ; // Р’СЃС‚Р°РІРєР° С„РѕСЂРјСѓР»
+  xlPasteFormulasAndNumberFormats	=11	    ; // Р’СЃС‚Р°РІРєР° С„РѕСЂРјСѓР» Рё С‡РёСЃРµР»
+  xlPasteValidation	              =6	    ; // Р’СЃС‚Р°РІРєР° РїСЂРѕРІРµСЂРѕРє
+  xlPasteValues	                  =-4163  ; // Р’СЃС‚Р°РІРєР° Р·РЅР°С‡РµРЅРёР№
+  xlPasteValuesAndNumberFormats	  =12	    ; // Р’СЃС‚Р°РІРєР° Р·РЅР°С‡РµРЅРёР№ Рё С‡РёСЃРµР»
+  //------ Р’С‹СЂР°РІРЅРёРІР°РЅРёРµ РїРѕ РіРѕСЂРёР·РѕРЅС‚Р°Р»Рё -------------------
   xlHAlignCenter=-4108;
   xlHAlignDistributed=-4117;
   xlHAlignJustify=-4130;
@@ -55,21 +57,21 @@ const
   xlHAlignFill=5;
   xlHAlignGeneral=1;
 
-  //------ Выравнивание по вертикали -------------------
+  //------ Р’С‹СЂР°РІРЅРёРІР°РЅРёРµ РїРѕ РІРµСЂС‚РёРєР°Р»Рё -------------------
   xlVAlignBottom=-4107;
   xlVAlignCenter=-4108;
   xlVAlignDistributed=-4117;
   xlVAlignJustify=-4130;
   xlVAlignTop=-4160;
 
-  //------- Режимы подчеркивания шрифта -----------------
+  //------- Р РµР¶РёРјС‹ РїРѕРґС‡РµСЂРєРёРІР°РЅРёСЏ С€СЂРёС„С‚Р° -----------------
   xlUnderlineStyleNone = -4142;
   xlUnderlineStyleSingle = 2;
   xlUnderlineStyleDouble = -4119;
   xlUnderlineStyleSingleAccounting = 4;
   xlUnderlineStyleDoubleAccounting = 5;
 
-  //------- Выбор границы ячейки -----------------
+  //------- Р’С‹Р±РѕСЂ РіСЂР°РЅРёС†С‹ СЏС‡РµР№РєРё -----------------
   xlInsideHorizontal=12;
   xlInsideVertical=11;
   xlDiagonalDown=5;
@@ -79,7 +81,7 @@ const
   xlEdgeRight=10;
   xlEdgeTop=8;
 
-  //------- Стиль границы ячейки -----------------
+  //------- РЎС‚РёР»СЊ РіСЂР°РЅРёС†С‹ СЏС‡РµР№РєРё -----------------
   xlContinuous=1;
   xlDash=-4115;
   xlDashDot=4;
@@ -89,13 +91,13 @@ const
   xlSlantDashDot=13;
   xlLineStyleNone=-4142;
 
-  //------- Толщина границы ячейки -----------------
+  //------- РўРѕР»С‰РёРЅР° РіСЂР°РЅРёС†С‹ СЏС‡РµР№РєРё -----------------
   xlHairline=1;
   xlThin=2;
   xlMedium=-4138;
   xlThick=4;
 
-  //---------- Тип узора для ячейки ----------------
+  //---------- РўРёРї СѓР·РѕСЂР° РґР»СЏ СЏС‡РµР№РєРё ----------------
   xlPatternAutomatic=4105;
   xlPatternChecker=9;
   xlPatternCrissCross=16;
@@ -117,17 +119,17 @@ const
   xlPatternUp=-4162;
   xlPatternVertical=-4166;
 
-  //---------- Диалоги ----------------
-  // печать
+  //---------- Р”РёР°Р»РѕРіРё ----------------
+  // РїРµС‡Р°С‚СЊ
   xlDialogPrint=8;
   xlDialogPrinterSetup=9;
   xlDialogPrintPreview=222;
 
-  //---------- Ориентация бумаги ------
-  xlLandscape=2;       // альбомная
-  xlPortrait=1;        // книжная
+  //---------- РћСЂРёРµРЅС‚Р°С†РёСЏ Р±СѓРјР°РіРё ------
+  xlLandscape=2;       // Р°Р»СЊР±РѕРјРЅР°СЏ
+  xlPortrait=1;        // РєРЅРёР¶РЅР°СЏ
 
-  //---------- Размер бумаги ----------
+  //---------- Р Р°Р·РјРµСЂ Р±СѓРјР°РіРё ----------
   xlPaperLetter=1;               //Letter (8-1/2 in. x 11 in.)
   xlPaperLetterSmall= 2;         //Letter Small (8-1/2 in. x 11 in.)
   xlPaperTabloid= 3;             //Tabloid (11 in. x 17 in.)
@@ -171,11 +173,11 @@ const
   xlPaperFanfoldLegalGerman= 41; //German Legal Fanfold (8-1/2 in. x 13 in.)
   xlPaperUser= 256;              // User - defined
 
-  //----------- Вид документа ----------------------------------
-  xlNormalView=1;                // Обычный
-  xlPageBreakPreview=2;          // Разметка страницы
+  //----------- Р’РёРґ РґРѕРєСѓРјРµРЅС‚Р° ----------------------------------
+  xlNormalView=1;                // РћР±С‹С‡РЅС‹Р№
+  xlPageBreakPreview=2;          // Р Р°Р·РјРµС‚РєР° СЃС‚СЂР°РЅРёС†С‹
 
-  //----------- Вид диаграммы ----------------------------------
+  //----------- Р’РёРґ РґРёР°РіСЂР°РјРјС‹ ----------------------------------
   xlColumnClustered=51;         //Column  Clustered Column
   xl3DColumnClustered=54;       // 3D Clustered Column
   xlColumnStacked=52;           // Stacked Column
@@ -250,20 +252,20 @@ const
   xlPyramidBarStacked100=111; // 100% Stacked Pyramid Bar
   xlPyramidCol=112; // 3D Pyramid Column
 
-  //---- Данные ----
-  xlColumns=2;       // В колонках
-  xlRows=1;          // В строках
+  //---- Р”Р°РЅРЅС‹Рµ ----
+  xlColumns=2;       // Р’ РєРѕР»РѕРЅРєР°С…
+  xlRows=1;          // Р’ СЃС‚СЂРѕРєР°С…
 
-  //----- Размещение диаграммы -------
-  xlLocationAsNewSheet=1;            //на отдельном новом листе
-  xlLocationAsObject=2;              // Разместить диаграмму листе с данными
+  //----- Р Р°Р·РјРµС‰РµРЅРёРµ РґРёР°РіСЂР°РјРјС‹ -------
+  xlLocationAsNewSheet=1;            //РЅР° РѕС‚РґРµР»СЊРЅРѕРј РЅРѕРІРѕРј Р»РёСЃС‚Рµ
+  xlLocationAsObject=2;              // Р Р°Р·РјРµСЃС‚РёС‚СЊ РґРёР°РіСЂР°РјРјСѓ Р»РёСЃС‚Рµ СЃ РґР°РЅРЅС‹РјРё
 
-  //----- Подписи осей ----
+  //----- РџРѕРґРїРёСЃРё РѕСЃРµР№ ----
   xlCategory=1;
   xlValue=2;
   xlSeries=3;
 
-  //---- Вид серий -----
+  //---- Р’РёРґ СЃРµСЂРёР№ -----
   xlBox=0;
   xlPyramidToPoint=1;
   xlPyramidToMax=2;
@@ -271,7 +273,7 @@ const
   xlConeToPoint=4;
   xlConeToMax=5;
 
-
+  function KillAllExcelProcesses: Boolean;
   function CheckExcelInstall:boolean;
   function CheckExcelRun: boolean;
   function RunExcel(DisableAlerts:boolean=true; Visible: boolean=false): boolean;
@@ -290,23 +292,28 @@ const
   Function  CountSheets:integer;
   Function  GetSheets(value:TStrings):boolean;
   Function  SelectSheet(sheet:OleVariant):boolean;
-  Function  SaveWorkBookAs(file_:string):boolean;overload;
-  Function  SaveWorkBookAs(wb:olevariant;file_:string):boolean;overload;
-  // закрыть активную книгу
+  // 0 - РЅРµС‚ РѕС€РёР±РєРё 1 - РЅРµС‚ Р°РєС‚РёРІРЅРѕР№ РєРЅРёРіРё 2 - РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚ РєР°С‚Р°Р»РѕРі
+  Function  SaveWorkBookAs(file_:string):integer;overload;
+  Function  SaveWorkBookAs(wb:olevariant;file_:string):integer;overload;
+  // Р·Р°РєСЂС‹С‚СЊ Р°РєС‚РёРІРЅСѓСЋ РєРЅРёРіСѓ
   Function  CloseWorkBook:boolean;overload;
   Function  CloseWorkBook(wb:olevariant):boolean;overload;
   Function  CloseExcel:boolean;
+  Function  CloseExcelMessage:boolean;
 
-  // получить объект диапазона для установки свойств
+  // РїРѕР»СѓС‡РёС‚СЊ РѕР±СЉРµРєС‚ РґРёР°РїР°Р·РѕРЅР° РґР»СЏ СѓСЃС‚Р°РЅРѕРІРєРё СЃРІРѕР№СЃС‚РІ
   Function GetRangeObj(sheetInd:integer;cell1,cell2:tpoint):OleVariant;overload;
   Function GetRangeObj(sheet:OleVariant;cell1,cell2:tpoint):OleVariant;overload;
   Function GetRangeAdress(sheet:OleVariant;cell1,cell2:tpoint):string;
   Function RangeObjToAdress(r:OleVariant):string;
   Function  GetRange(sheet:OleVariant;range:string):OleVariant;
+  Function  GetRangeFromSheet(sheet:OleVariant;range:string):OleVariant;OVERLOAD;
+  Function  GetRangeFromSheet(sheet:OleVariant;c1,c2:string):OleVariant;OVERLOAD;
   Procedure  SetRangeBorder(range:OleVariant);
 
-  Function  SetRange(sheet:OleVariant;range:string;value_:OleVariant):boolean;
-  Function  SetCell(sheet:OleVariant;row,col:integer; value:OleVariant):boolean;
+  // 0 - РІСЃРµ РћРє,1 - РЅРµ РѕС‚РєСЂС‹С‚Р° РєРЅРёРіР°,  2 - РЅРµ РЅР°Р№РґРµРЅ Р»РёСЃС‚; 3 РЅРµРІРµСЂРЅС‹Р№ Р°РґСЂРµСЃ
+  Function  SetRange(sheet:OleVariant;range:string;value_:OleVariant):integer;
+  Function  SetCell(sheet:OleVariant;row,col:integer; value:OleVariant):integer;
 
   Function  SetColumnWidth(sheet:OleVariant;column:OleVariant;width:real):boolean;
   Function  SetRowHeight(sheet:OleVariant;row:OleVariant;height:real):boolean;
@@ -334,7 +341,7 @@ const
   Function  WindowView(view:integer):boolean;
   Function  PagePrintArea(sheet:OleVariant;printarea:string):boolean;
 
-  //------------------------ Диаграммы -------------------------
+  //------------------------ Р”РёР°РіСЂР°РјРјС‹ -------------------------
   Function  AddChart(var Name:OleVariant;ChartType:integer):boolean;
   Function  SetSourceData(Name,Sheet:OleVariant;Range:string;XlRowCol:integer):boolean;
   Function  PositionChart(Name:OleVariant;Left,Top,Width,Height:real):boolean;
@@ -354,7 +361,7 @@ const
   Function  TextChartTitle(Name:OleVariant;text_:string):boolean;
   Function  PositionChartTitle(Name:OleVariant;Left,Top:real):boolean;
 
-  //------------------------ Диаграммы (продолжение) -------------------------
+  //------------------------ Р”РёР°РіСЂР°РјРјС‹ (РїСЂРѕРґРѕР»Р¶РµРЅРёРµ) -------------------------
   Function  SetChartType(Name:OleVariant;ChartType:integer):boolean;
   Function  SetChartLocation(var name:OleVariant;sheet:OleVariant;xlLocation:integer):boolean;
 
@@ -382,66 +389,496 @@ const
   Function  BrushSeries(Name:OleVariant;series:integer;Color,Pattern,PatternColor:integer):boolean;
   Function  BrushSeriesFromFile(Name:OleVariant;series:integer;File_:string):boolean;
   Function  BarShapeSeries(Name:OleVariant;series,BarShape:integer):boolean;
-  // скопировать Excel листсам в себя, но по значению
+  // СЃРєРѕРїРёСЂРѕРІР°С‚СЊ Excel Р»РёСЃС‚СЃР°Рј РІ СЃРµР±СЏ, РЅРѕ РїРѕ Р·РЅР°С‡РµРЅРёСЋ
   procedure CopyPage(sheetindex:integer);overload;
   procedure CopyPage(wbSrc,wbDst:oleVariant; pageIndSrc, pageIndDst:integer);overload;
   procedure CopyPage(wbSrc,wbDst:oleVariant; pageIndSrc:integer; pageDst:olevariant);overload;
-  // в активном доке
+  // РІ Р°РєС‚РёРІРЅРѕРј РґРѕРєРµ
   procedure RunMacros(Mname:string);
   function IsExcelFileOpen(const FilePath: string): Boolean;
-  // получить номер строки в которое встречена пустая ячейка
-  // проверка идет по колонке col в листе sh начиная с sh
+  // РїРѕР»СѓС‡РёС‚СЊ РЅРѕРјРµСЂ СЃС‚СЂРѕРєРё РІ РєРѕС‚РѕСЂРѕРµ РІСЃС‚СЂРµС‡РµРЅР° РїСѓСЃС‚Р°СЏ СЏС‡РµР№РєР°
+  // РїСЂРѕРІРµСЂРєР° РёРґРµС‚ РїРѕ РєРѕР»РѕРЅРєРµ col РІ Р»РёСЃС‚Рµ sh РЅР°С‡РёРЅР°СЏ СЃ sh
   function GetEmptyRow(sh, r0, col: integer): integer;
   function ClearExcelSheet(const ExcelApp: Variant;
                            const ASheetIdentifier: OleVariant;
                            AContentsOnly: Boolean = False): Boolean;
+  procedure SetCellFormula(sheet: OleVariant; row, col: integer; formula: string);
+  procedure CopySheet(const sourceSheet, destSheet: string);
+  procedure DeleteSheetByName(const sheetName: string);
+  procedure RenameSheet(const oldName, newName: string);
+  procedure CopyRange(const sourceSheet, sourceRange, destSheet, destRange: string);
+  procedure DeleteRange(const sheetName, range: string; shift: integer);
+  procedure InsertRows(const sheetName: string; row, count: integer; var er: integer);
+  procedure InsertCols(const sheetName: string; col, count: integer);
+  procedure DeleteRows(const sheetName: string; row, count: integer; var er: integer);
+  procedure DeleteCols(const sheetName: string; col, count: integer; var er: integer);
+  // 0 -РІСЃРµ РѕРє, 1- РЅРµ РѕС‚РєСЂС‹С‚Р° РєРЅРёРіР°, 2 - РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚ Р»РёСЃ, 3 - РѕС€РёР±РєР° Р°РґСЂСЃР° СЏС‡РµР№РєРё
+  function GetCell(sheet: OleVariant; cell: string; var er:integer): string;overload;
+  function GetCell(sheet: OleVariant; row, col: integer): OleVariant;overload;
+  function GetCellColor(sheet: OleVariant; cell: string; var er:integer): integer;
+  function SetCellColor(sheet: OleVariant; cell: string; color: integer; var er:integer): boolean;
+  procedure GetSheetDimensions(sheet: OleVariant; out rowCount, colCount: integer);
+  // 0 - РЅРµС‚ РѕС€РёР±РєРё, 1 РЅРµ РЅР°Р№РґРµРЅР° РєРЅРёРіР°, 2 РЅРµ РЅР°Р№РґРµРЅ Р»РёСЃС‚, 3 РЅРµ РІРµСЂРЅС‹Р№ РґРёР°РїР°Р·РѕРЅ
+  function ReadRangeAsText(sheet: OleVariant; start_cell, end_cell: string; var error:integer): string;
+  function FindInWorkbook(searchText: string): string;
+  // РїСЂРѕРІРµСЂРёС‚СЊ РѕР±СЉРµРєС‚ OleVariant
+  Function CheckVarObj(obj:oleVariant):boolean;
 
+  // 0 - РµСЃС‚СЊ СЃ С‚Р°РєРёРј РёРјРµРЅРµРј; 1 - РµСЃС‚СЊ СЃ С‚Р°РєРёРј РЅРѕРјРµСЂРѕРј; 2 - РѕС€РёР±РєР°
+  function SheetExists(const Workbook: olevariant;
+                     const SheetName: string): integer;
 var
   E:OleVariant;
+  excelhinst:cardinal;
 
 implementation
 uses
-  forms;
+  forms, IOUtils;
+
+Function CheckVarObj(obj:oleVariant):boolean;
+begin
+  result:=true;
+  if (VarIsClear (obj) or VarIsNull (obj) or VarIsEmpty (obj)) then
+    result:=false;
+end;
+
+function isDigit(Str: string): boolean;
+var
+  i: integer;
+const
+  DigStr = '0123456789';
+begin
+  result := false;
+  if str='' then exit;
+
+  for i := 1 to length(Str) do
+  begin
+    if pos(Str[i], DigStr) < 1 then
+    begin
+      result := false;
+      exit;
+    end;
+  end;
+  result := true;
+end;
+
+procedure LogMessage(const msg: string);
+var
+  logFile: TextFile;
+begin
+  AssignFile(logFile, 'C:\Oburec\Cursor\Test_003_mcp excel\excel-mcp\log.txt');
+  if not FileExists('C:\Oburec\Cursor\Test_003_mcp excel\excel-mcp\log.txt') then
+    Rewrite(logFile)
+  else
+    Append(logFile);
+  Writeln(logFile, DateTimeToStr(Now) + ' - ' + msg);
+  CloseFile(logFile);
+end;
+
+procedure GetSheetDimensions(sheet: OleVariant; out rowCount, colCount: integer);
+
+begin
+  try
+    rowCount := E.ActiveWorkbook.WorkSheets[sheet].Cells.SpecialCells(xlCellTypeLastCell).Row;
+    colCount := E.ActiveWorkbook.WorkSheets[sheet].Cells.SpecialCells(xlCellTypeLastCell).Column;
+  except
+    rowCount := 0;
+    colCount := 0;
+  end;
+end;
+
+function FindInWorkbook(searchText: string): string;
+var
+  wb,ws: OleVariant;
+  foundCell: OleVariant;
+  firstAddress, str: string;
+  resultList: TStringList;
+  i: Integer;
+begin
+  resultList := TStringList.Create;
+  try
+    wb:=E.ActiveWorkbook;
+    if not CheckVarObj(wb) then
+    begin
+      Result := 'Error finding in workbook - workbook not opened';
+      exit;
+    end;
+    for i := 1 to E.ActiveWorkbook.Worksheets.Count do
+    begin
+      ws := E.ActiveWorkbook.Worksheets.Item[i]; // This ensures 'ws' is a Worksheet
+      //foundCell := ws.Cells.Find(
+      //              searchText,  // what
+      //              Range('A1'), // from
+      //              xlValues, xlPart, xlByRows,
+      //              xlNext, False, False, False);
+      foundCell := ws.Cells.Find(searchText);
+      if CheckVarObj(foundCell) then
+      begin
+        firstAddress := foundCell.Address;
+        repeat
+          str:=ws.Name + ',' + foundCell.Address + ',' + VarToStr(foundCell.Value);
+          resultList.Add(str);
+          foundCell := ws.Cells.FindNext(foundCell);
+        until (VarIsNull(foundCell)) or (foundCell.Address = firstAddress);
+      end
+      else
+      begin
+        Result := 'Error finding in workbook: cell not found';
+      end;
+    end;
+    Result := resultList.Text;
+    if Result='' then
+      Result := 'Error finding in workbook: cell not found';
+  except
+    on E: Exception do
+      Result := 'Error finding in workbook: ' + E.Message;
+  end;
+  resultList.Free;
+end;
+
+
+function ReadRangeAsText(sheet: OleVariant; start_cell, end_cell: string; var error:integer): string;
+var
+  wb, sh, r, data:oleVariant;
+  i, j: Integer;
+  rowStr: string;
+begin
+  Result := '';
+  ERROR:=0;
+  try
+    wb:=E.ActiveWorkbook;
+    if CheckVarObj(wb) then
+    begin
+      case SheetExists(wb, sheet) of
+        0:sh:=E.ActiveWorkbook.Sheets.Item[sheet];
+        1:sh:=E.ActiveWorkbook.Sheets.Item[strtoint(sheet)];
+        2:
+        begin
+          error:=2;
+          exit;
+        end;
+      end;
+      r:=GetRangeFromSheet(sh,start_cell , end_cell);
+      if CheckVarObj(r) then
+      begin
+
+      end
+      else
+      begin
+        error:=3;
+        exit;
+      end;
+    end
+    else
+    begin
+      error:=1;
+      exit;
+    end;
+    data:=r.value;
+    if VarIsArray(data) then
+    begin
+      for i := VarArrayLowBound(data, 1) to VarArrayHighBound(data, 1) do
+      begin
+        rowStr := '';
+        for j := VarArrayLowBound(data, 2) to VarArrayHighBound(data, 2) do
+        begin
+          // j - РїСЂРѕС…РѕРґ РїРѕ СЃС‚РѕР»Р±С†Р°Рј
+          rowStr := rowStr + VarToStr(data[i, j]) + #9; // #9 - СЌС‚Рѕ С‚Р°Р±СѓР»СЏС†РёСЏ
+        end;
+        Result := Result + rowStr + #13#10; // #13#10 - РїРµСЂРµРІРѕРґ СЃС‚СЂРѕРєРё
+      end;
+    end
+    else
+    begin
+      Result := VarToStr(data);
+    end;
+  except
+    Result := 'Error reading range';
+  end;
+end;
+
+function GetCell(sheet: OleVariant; cell: string; var er:integer): string;
+var
+  wb, sh, r:oleVariant;
+begin
+  Result := '';
+  er:=0;
+  wb:=E.ActiveWorkbook;
+  if CheckVarObj(wb) then
+  begin
+    case SheetExists(wb, sheet) of
+      0:sh:=E.ActiveWorkbook.Sheets.Item[sheet];
+      1:sh:=E.ActiveWorkbook.Sheets.Item[strtoint(sheet)];
+      2:
+      begin
+        Result := 'Error: Failed to get cell, sheet not exists '+sheet;
+        er:=2;
+        exit;
+      end;
+    end;
+    r:=GetRangeFromSheet(sh, cell);
+    if CheckVarObj(r) then
+    begin
+      Result := r.Value;
+    end
+    else
+    begin
+      er:=3;
+      Result := 'Error: Failed to get cell ' + cell;
+      exit;
+    end;
+  end
+  else
+  begin
+    Result := 'Error: Failed to get cell, Workbook not opened';
+    er:=1;
+    exit;
+  end;
+end;
+
+function GetCell(sheet: OleVariant; row, col: integer): OleVariant;
+begin
+  result := E.ActiveWorkbook.WorkSheets[sheet].cells[row,col].Value;
+end;
+
+function GetCellColor(sheet: OleVariant; cell: string; var er:integer): integer;
+var
+  wb, sh, r:oleVariant;
+begin
+  Result := -1; // Return -1 on error
+  er:=0;
+  wb:=E.ActiveWorkbook;
+  if CheckVarObj(wb) then
+  begin
+    case SheetExists(wb, sheet) of
+      0:sh:=E.ActiveWorkbook.Sheets.Item[sheet];
+      1:sh:=E.ActiveWorkbook.Sheets.Item[strtoint(sheet)];
+      2:
+      begin
+        er:=2; // Sheet not exists
+        exit;
+      end;
+    end;
+    r:=GetRangeFromSheet(sh, cell);
+    if CheckVarObj(r) then
+    begin
+      Result := r.Interior.Color;
+    end
+    else
+    begin
+      er:=3; // Invalid cell address
+      exit;
+    end;
+  end
+  else
+  begin
+    er:=1; // Workbook not opened
+    exit;
+  end;
+end;
+
+function SetCellColor(sheet: OleVariant; cell: string; color: integer; var er:integer): boolean;
+var
+  wb, sh, r:oleVariant;
+begin
+  Result := false;
+  er:=0;
+  wb:=E.ActiveWorkbook;
+  if CheckVarObj(wb) then
+  begin
+    case SheetExists(wb, sheet) of
+      0:sh:=E.ActiveWorkbook.Sheets.Item[sheet];
+      1:sh:=E.ActiveWorkbook.Sheets.Item[strtoint(sheet)];
+      2:
+      begin
+        er:=2; // Sheet not exists
+        exit;
+      end;
+    end;
+    r:=GetRangeFromSheet(sh, cell);
+    if CheckVarObj(r) then
+    begin
+      r.Interior.Color := color;
+      Result := true;
+    end
+    else
+    begin
+      er:=3; // Invalid cell address
+      exit;
+    end;
+  end
+  else
+  begin
+    er:=1; // Workbook not opened
+    exit;
+  end;
+end;
+
+procedure SetCellFormula(sheet: OleVariant; row, col: integer; formula: string);
+begin
+  E.ActiveWorkbook.WorkSheets[sheet].cells[row,col].Formula := formula;
+end;
+
+procedure CopySheet(const sourceSheet, destSheet: string);
+begin
+  E.ActiveWorkbook.Sheets[sourceSheet].Copy(E.ActiveWorkbook.Sheets[destSheet]);
+end;
+
+procedure DeleteSheetByName(const sheetName: string);
+begin
+  E.DisplayAlerts := false;
+  E.ActiveWorkbook.Sheets[sheetName].Delete;
+  E.DisplayAlerts := true;
+end;
+
+procedure RenameSheet(const oldName, newName: string);
+begin
+  E.ActiveWorkbook.Sheets[oldName].Name := newName;
+end;
+
+procedure CopyRange(const sourceSheet, sourceRange, destSheet, destRange: string);
+begin
+  E.ActiveWorkbook.Sheets[sourceSheet].Range[sourceRange].Copy(E.ActiveWorkbook.Sheets[destSheet].Range[destRange]);
+end;
+
+procedure DeleteRange(const sheetName, range: string; shift: integer);
+begin
+  E.ActiveWorkbook.Sheets[sheetName].Range[range].Delete(shift);
+end;
+
+procedure InsertRows(const sheetName: string; row, count: integer; var er: integer);
+var
+  wb, sh: OleVariant;
+begin
+  er := 0;
+  try
+    wb := E.ActiveWorkbook;
+    if not CheckVarObj(wb) then
+    begin
+      er := 1; // Workbook not opened
+      Exit;
+    end;
+
+    case SheetExists(wb, sheetName) of
+      0: sh := wb.Sheets.Item[sheetName];
+      1: sh := wb.Sheets.Item[StrToInt(sheetName)];
+      2:
+      begin
+        er := 2; // Sheet not exists
+        Exit;
+      end;
+    end;
+
+    sh.Rows[row].Resize[count].Insert;
+  except
+    er := 3; // Other error
+  end;
+end;
+
+procedure InsertCols(const sheetName: string; col, count: integer);
+var
+  i: integer;
+begin
+  for i := 1 to count do
+    E.ActiveWorkbook.Sheets[sheetName].Columns[col].Insert;
+end;
+
+procedure DeleteRows(const sheetName: string; row, count: integer; var er: integer);
+var
+  wb, sh: OleVariant;
+begin
+  er := 0;
+  try
+    wb := E.ActiveWorkbook;
+    if not CheckVarObj(wb) then
+    begin
+      er := 1; // Workbook not opened
+      Exit;
+    end;
+
+    case SheetExists(wb, sheetName) of
+      0: sh := wb.Sheets.Item[sheetName];
+      1: sh := wb.Sheets.Item[StrToInt(sheetName)];
+      2:
+      begin
+        er := 2; // Sheet not exists
+        Exit;
+      end;
+    end;
+
+    sh.Rows[row].Resize[count].Delete;
+  except
+    er := 3; // Other error
+  end;
+end;
+
+procedure DeleteCols(const sheetName: string; col, count: integer; var er: integer);
+var
+  wb, sh: OleVariant;
+begin
+  er := 0;
+  try
+    wb := E.ActiveWorkbook;
+    if not CheckVarObj(wb) then
+    begin
+      er := 1; // Workbook not opened
+      Exit;
+    end;
+
+    case SheetExists(wb, sheetName) of
+      0: sh := wb.Sheets.Item[sheetName];
+      1: sh := wb.Sheets.Item[StrToInt(sheetName)];
+      2:
+      begin
+        er := 2; // Sheet not exists
+        Exit;
+      end;
+    end;
+
+    sh.Columns[col].Resize[count].Delete;
+  except
+    er := 3; // Other error
+  end;
+end;
+
 
 function ClearExcelSheet(const ExcelApp: Variant; const ASheetIdentifier: OleVariant; AContentsOnly: Boolean = False): Boolean;
 var
   Sheet: Variant;
 begin
   Result := False;
-  // Проверяем, что OLE-объект Excel действителен
+  // РџСЂРѕРІРµСЂСЏРµРј, С‡С‚Рѕ OLE-РѕР±СЉРµРєС‚ Excel РґРµР№СЃС‚РІРёС‚РµР»РµРЅ
   if VarIsEmpty(ExcelApp) or VarIsNull(ExcelApp) then
     Exit;
-  try
-    // Получаем доступ к листу по имени или индексу
+try
+    // РџРѕР»СѓС‡Р°РµРј РґРѕСЃС‚СѓРї Рє Р»РёСЃС‚Сѓ РїРѕ РёРјРµРЅРё РёР»Рё РёРЅРґРµРєСЃСѓ
     Sheet := ExcelApp.Worksheets[ASheetIdentifier];
 
-    // Выбираем метод очистки
+    // Р’С‹Р±РёСЂР°РµРј РјРµС‚РѕРґ РѕС‡РёСЃС‚РєРё
     if AContentsOnly then
-      // Очищаем только содержимое используемых ячеек
+      // РћС‡РёС‰Р°РµРј С‚РѕР»СЊРєРѕ СЃРѕРґРµСЂР¶РёРјРѕРµ РёСЃРїРѕР»СЊР·СѓРµРјС‹С… СЏС‡РµРµРє
       Sheet.UsedRange.ClearContents
     else
-      // Очищаем содержимое, форматы и примечания
+      // РћС‡РёС‰Р°РµРј СЃРѕРґРµСЂР¶РёРјРѕРµ, С„РѕСЂРјР°С‚С‹ Рё РїСЂРёРјРµС‡Р°РЅРёСЏ
       Sheet.UsedRange.Clear;
 
     Result := True;
   except
     on E: Exception do
     begin
-      // В случае ошибки (например, лист не найден) функция вернет False.
-      // Можно добавить логирование или показ сообщения:
-      // ShowMessage('Ошибка при очистке листа Excel: ' + E.Message);
+      // Р’ СЃР»СѓС‡Р°Рµ РѕС€РёР±РєРё (РЅР°РїСЂРёРјРµСЂ, Р»РёСЃС‚ РЅРµ РЅР°Р№РґРµРЅ) С„СѓРЅРєС†РёСЏ РІРµСЂРЅРµС‚ False.
+      // РњРѕР¶РЅРѕ РґРѕР±Р°РІРёС‚СЊ Р»РѕРіРёСЂРѕРІР°РЅРёРµ РёР»Рё РїРѕРєР°Р· СЃРѕРѕР±С‰РµРЅРёСЏ:
+      // ShowMessage('РћС€РёР±РєР° РїСЂРё РѕС‡РёСЃС‚РєРµ Р»РёСЃС‚Р° Excel: ' + E.Message);
     end;
   end;
 end;
 
-// получить номер строки в которое встречена пустая ячейка
-// проверка идет по колонке col в листе sh начиная с sh
+// РїРѕР»СѓС‡РёС‚СЊ РЅРѕРјРµСЂ СЃС‚СЂРѕРєРё РІ РєРѕС‚РѕСЂРѕРµ РІСЃС‚СЂРµС‡РµРЅР° РїСѓСЃС‚Р°СЏ СЏС‡РµР№РєР°
+// РїСЂРѕРІРµСЂРєР° РёРґРµС‚ РїРѕ РєРѕР»РѕРЅРєРµ col РІ Р»РёСЃС‚Рµ sh РЅР°С‡РёРЅР°СЏ СЃ sh
 function GetEmptyRow(sh, r0, col: integer): integer;
 var
-  ws, rng: olevariant;
+  ws: olevariant;
   res: string;
-
-  adr: string;
 begin
   ws := E.ActiveWorkbook.Sheets[sh];
   ws.activate;
@@ -454,23 +891,23 @@ begin
   result := r0;
 end;
 
+
 function IsExcelFileOpen(const FilePath: string): Boolean;
 var
-  ExcelApp: Variant;
   Workbook: Variant;
   i: Integer;
 begin
   Result := False;
   if VarIsEmpty(E) then
   begin
-    // Подключаемся к запущенному экземпляру Excel (если он есть)
+    // РџРѕРґРєР»СЋС‡Р°РµРјСЃСЏ Рє Р·Р°РїСѓС‰РµРЅРЅРѕРјСѓ СЌРєР·РµРјРїР»СЏСЂСѓ Excel (РµСЃР»Рё РѕРЅ РµСЃС‚СЊ)
     E := GetActiveOleObject('Excel.Application');
   end
   else
   begin
 
   end;
-  // Проверяем все открытые книги
+  // РџСЂРѕРІРµСЂСЏРµРј РІСЃРµ РѕС‚РєСЂС‹С‚С‹Рµ РєРЅРёРіРё
   for i := 1 to E.Workbooks.Count do
   begin
     Workbook := E.Workbooks[i];
@@ -488,9 +925,9 @@ var
   ClassID: TCLSID;
   Rez : HRESULT;
 begin
-  // Ищем CLSID OLE-объекта
+  // РС‰РµРј CLSID OLE-РѕР±СЉРµРєС‚Р°
   Rez := CLSIDFromProgID(PWideChar(WideString(ExcelApp)), ClassID);
-  if Rez = S_OK then  // Объект найден
+  if Rez = S_OK then  // РћР±СЉРµРєС‚ РЅР°Р№РґРµРЅ
     Result := true
   else
     Result := false;
@@ -498,29 +935,30 @@ end;
 
 function CheckExcelRun: boolean;
 begin
-  try
-    E:=GetActiveOleObject(ExcelApp);
-    Result:=True;
-  except
-    Result:=false;
+  Result := IsWindow(excelhinst);
+  if not Result then
+  begin
+    // If the window is gone, ensure the COM object reference is cleared.
+    E := Unassigned;
   end;
 end;
 
 function RunExcel(DisableAlerts:boolean=true; Visible: boolean=false): boolean;
 begin
 try
-  {проверяем установлен ли Excel}
+  {РїСЂРѕРІРµСЂСЏРµРј СѓСЃС‚Р°РЅРѕРІР»РµРЅ Р»Рё Excel}
  if CheckExcelInstall then
    begin
      E:=CreateOleObject(ExcelApp);
-     //показывать/не показывать системные сообщения Excel (лучше не показывать)
+     //РїРѕРєР°Р·С‹РІР°С‚СЊ/РЅРµ РїРѕРєР°Р·С‹РІР°С‚СЊ СЃРёСЃС‚РµРјРЅС‹Рµ СЃРѕРѕР±С‰РµРЅРёСЏ Excel (Р»СѓС‡С€Рµ РЅРµ РїРѕРєР°Р·С‹РІР°С‚СЊ)
      E.Application.EnableEvents:=DisableAlerts;
      E.Visible:=Visible;
+     excelhinst:=e.hwnd;
      Result:=true;
    end
  else
    begin
-     MessageBox(0,'Приложение MS Excel не установлено на этом компьютере','Ошибка',MB_OK+MB_ICONERROR);
+     MessageBox(0,'РџСЂРёР»РѕР¶РµРЅРёРµ MS Excel РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅРѕ РЅР° СЌС‚РѕРј РєРѕРјРїСЊСЋС‚РµСЂРµ','РћС€РёР±РєР°',MB_OK+MB_ICONERROR);
      Result:=false;
    end;
 except
@@ -530,27 +968,29 @@ end;
 
 function StopExcel:boolean;
 begin
+  Result:=false;
   try
-    if E.Visible then E.Visible:=false;
-    E.Quit;
-    E:=Unassigned;
-    Result:=True;
+    if CheckVarObj(E) then
+    begin
+      if E.Visible then E.Visible:=false;
+        E.Quit;
+      E:=Unassigned;
+      Result:=True;
+    end;
   except
-    Result:=false;
+
   end;
 end;
 
 
 Function CloseExcel:boolean;
-var
-  res:olevariant;
 begin
   CloseExcel:=true;
   try
   begin
     E.Quit;
-    // Послать Excel-у команду закрытия,
-    // т.к. eApp.Quit иногда сбоит, а под Win7 вообще никогда не срабатывает
+    // РџРѕСЃР»Р°С‚СЊ Excel-Сѓ РєРѕРјР°РЅРґСѓ Р·Р°РєСЂС‹С‚РёСЏ,
+    // С‚.Рє. eApp.Quit РёРЅРѕРіРґР° СЃР±РѕРёС‚, Р° РїРѕРґ Win7 РІРѕРѕР±С‰Рµ РЅРёРєРѕРіРґР° РЅРµ СЃСЂР°Р±Р°С‚С‹РІР°РµС‚
     //SendMessageA(E.Hinstance, WM_QUIT, 0, 0);
     //Marshal.FinalReleaseComObject(eApp);
     E:=Unassigned;
@@ -560,31 +1000,47 @@ begin
   end;
 End;
 
+Function  CloseExcelMessage:boolean;
+begin
+  result:=true;
+  try
+  begin
+    // РџРѕСЃР»Р°С‚СЊ Excel-Сѓ РєРѕРјР°РЅРґСѓ Р·Р°РєСЂС‹С‚РёСЏ,
+    // С‚.Рє. eApp.Quit РёРЅРѕРіРґР° СЃР±РѕРёС‚, Р° РїРѕРґ Win7 РІРѕРѕР±С‰Рµ РЅРёРєРѕРіРґР° РЅРµ СЃСЂР°Р±Р°С‚С‹РІР°РµС‚
+    //SendMessageA(excelhinst, WM_QUIT, 0, 0);
+    PostMessageA(excelhinst, WM_QUIT, 0, 0);
+    //Marshal.FinalReleaseComObject(eApp);
+  end;
+  except
+    result:=false;
+  end;
+end;
+
 
 Function  FontToEFont(font:Tfont;EFont:OleVariant):boolean;
 begin
   FontToEFont:=true;
   try
   EFont.Name:=font.Name;
-  if fsBold in font.Style      then EFont.Bold:=True                         //           Жирный
-                               else EFont.Bold:=False;                       //           Тонкий
-  if fsItalic in font.Style    then EFont.Italic:=True                       //           Наклонный
-                               else EFont.Italic:=False;                     //           Наклонный
-  EFont.Size:=font.Size;                                                     //           Размер
-  if fsStrikeOut in font.Style then EFont.Strikethrough:=True                //           Перечеркнутый
-                               else EFont.Strikethrough:=False;              //           Перечеркнутый
-  if fsUnderline in font.Style then EFont.Underline:=xlUnderlineStyleSingle  //           Подчеркивание
-                               else EFont.Underline:=xlUnderlineStyleNone;   //           Подчеркивание
-  EFont.Color:=font.Color;                                                   //           Цвет
+  if fsBold in font.Style      then EFont.Bold:=True                         //           пїЅпїЅпїЅпїЅпїЅпїЅ
+                               else EFont.Bold:=False;                       //           пїЅпїЅпїЅпїЅпїЅпїЅ
+  if fsItalic in font.Style    then EFont.Italic:=True                       //           пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+                               else EFont.Italic:=False;                     //           пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+  EFont.Size:=font.Size;                                                     //           пїЅпїЅпїЅпїЅпїЅпїЅ
+  if fsStrikeOut in font.Style then EFont.Strikethrough:=True                //           пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+                               else EFont.Strikethrough:=False;              //           пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+  if fsUnderline in font.Style then EFont.Underline:=xlUnderlineStyleSingle  //           пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+                               else EFont.Underline:=xlUnderlineStyleNone;   //           пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+  EFont.Color:=font.Color;                                                   //           пїЅпїЅпїЅпїЅ
   except
   FontToEFont:=false;
   end;
 End;
-//E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Superscript = False                'Верхний индекс
-//E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Subscript = False                  'Нижний индекс
-//E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.OutlineFont = True                 'Не используется
-//E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Shadow = False                     'Не используется
-//E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.ColorIndex = 41                    'Индекс цвета
+//E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Superscript = False                'пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+//E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Subscript = False                  'пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+//E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.OutlineFont = True                 'пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+//E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Shadow = False                     'пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+//E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.ColorIndex = 41                    'пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 Function CreateExcel:boolean;
 begin
   CreateExcel:=true;
@@ -610,9 +1066,9 @@ Function AddWorkBook:boolean;
 begin
   AddWorkBook:=true;
   try
-  E.Workbooks.Add;
+    E.Workbooks.Add;
   except
-  AddWorkBook:=false;
+    AddWorkBook:=false;
   end;
 End;
 
@@ -680,14 +1136,29 @@ begin
 End;
 
 Function  GetSheets(value:TStrings):boolean;
-var a_:integer;
+var
+  a_:integer;
+  wb:OleVariant;
 begin
   GetSheets:=true;
-  value.Clear;
   try
+    logMessage('Entering GetSheets');
+    wb:=E.ActiveWorkbook;
+    if not CheckVarObj(wb) then
+    begin
+      logMessage('GetSheets: ActiveWorkbook is not valid');
+      GetSheets:=false;
+      exit;
+    end;
+    logMessage('GetSheets: Sheets.Count = ' + IntToStr(E.ActiveWorkbook.Sheets.Count));
+    value.Clear;
     for a_:=1 to E.ActiveWorkbook.Sheets.Count do
+    begin
+        logMessage('GetSheets: Adding sheet ' + IntToStr(a_));
         value.Add(E.ActiveWorkbook.Sheets.Item[a_].Name);
+    end;
   except
+    logMessage('GetSheets: Exception');
     GetSheets:=false;
     value.Clear;
   end;
@@ -703,27 +1174,46 @@ begin
   end;
 End;
 
-Function SaveWorkBookAs(file_:string):boolean;
+Function SaveWorkBookAs(file_:string):integer;
+var
+  dir:string;
 begin
-  SaveWorkBookAs:=true;
+  SaveWorkBookAs:=0;
   try
   E.DisplayAlerts:=False;
-  E.ActiveWorkbook.SaveAs(file_);
-  E.DisplayAlerts:=True;
+  if CheckVarObj(E.ActiveWorkbook) then
+  //if not (VarIsClear (E.ActiveWorkbook) or VarIsNull (E.ActiveWorkbook)
+  //or VarIsEmpty (E.ActiveWorkbook)) then
+  begin
+    dir:=ExtractFileDir(file_);
+    if DirectoryExists(dir) then
+    begin
+      E.ActiveWorkbook.SaveAs(file_);
+      E.DisplayAlerts:=True;
+    end
+    else
+    begin
+      result:=2;
+    end;
+  end
+  else
+  begin
+    result:=1;
+  end;
   except
-  SaveWorkBookAs:=false;
+    SaveWorkBookAs:=2;
   end;
 End;
 
-Function  SaveWorkBookAs(wb:olevariant;file_:string):boolean;
+Function  SaveWorkBookAs(wb:olevariant;file_:string):integer;
 begin
-  SaveWorkBookAs:=true;
+  SaveWorkBookAs:=0;
   try
     E.DisplayAlerts:=False;
     wb.SaveAs(file_);
     E.DisplayAlerts:=True;
   except
-    SaveWorkBookAs:=false;
+    SaveWorkBookAs:=1;
   end;
 end;
 
@@ -731,7 +1221,14 @@ Function CloseWorkBook:boolean;
 begin
   CloseWorkBook:=true;
   try
-    E.ActiveWorkbook.Close;
+    if E.Workbooks.Count > 0 then
+    begin
+      E.ActiveWorkbook.Close;
+    end
+    else
+    begin
+      CloseWorkBook:=false;
+    end;
   except
     CloseWorkBook:=false;
   end;
@@ -747,33 +1244,86 @@ begin
   end;
 end;
 
-
-//--------------------------------------------------------------------------
-Function  SetRange(sheet:OleVariant;range:string;value_:OleVariant):boolean;
+// 0 - РµСЃС‚СЊ СЃ С‚Р°РєРёРј РёРјРµРЅРµРј; 1 - РµСЃС‚СЊ СЃ С‚Р°РєРёРј РЅРѕРјРµСЂРѕРј; 2 - РѕС€РёР±РєР°
+function SheetExists(const Workbook: olevariant;
+                     const SheetName: string): integer;
+var
+  i: Integer;
+  Sheet: olevariant;
 begin
-  SetRange:=true;
+  Result := 2; // РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ СЃС‡РёС‚Р°РµРј, С‡С‚Рѕ Р»РёСЃС‚ РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚
+  // РџРµСЂРµР±РёСЂР°РµРј РІСЃРµ Р»РёСЃС‚С‹ РІ РєРЅРёРіРµ
+  for i := 1 to Workbook.Sheets.Count do
+  begin
+    // РџРѕР»СѓС‡Р°РµРј С‚РµРєСѓС‰РёР№ Р»РёСЃС‚ РїРѕ РёРЅРґРµРєСЃСѓ
+    Sheet := Workbook.Sheets.Item[i];
+    // РЎСЂР°РІРЅРёРІР°РµРј РёРјСЏ С‚РµРєСѓС‰РµРіРѕ Р»РёСЃС‚Р° СЃ РёСЃРєРѕРјС‹Рј (Р±РµР· СѓС‡С‘С‚Р° СЂРµРіРёСЃС‚СЂР°, РґР»СЏ РЅР°РґС‘Р¶РЅРѕСЃС‚Рё)
+    if AnsiSameText(Sheet.Name, SheetName) then
+    begin
+      Result := 0; // Р•СЃР»Рё РЅР°С€Р»Рё, СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј Result РІ True
+      Exit; // Р РІС‹С…РѕРґРёРј РёР· С„СѓРЅРєС†РёРё
+    end;
+  end;
+  if isDigit(SheetName) then
+  begin
+    i:=strtoint(SheetName);
+    if (Workbook.Sheets.Count>=i) and (i>0) then
+    begin
+      result:=1;
+    end;
+  end;
+end;
+
+// 0 - РІСЃРµ РћРє,1 - РЅРµ РѕС‚РєСЂС‹С‚Р° РєРЅРёРіР°,  2 - РЅРµ РЅР°Р№РґРµРЅ Р»РёСЃС‚; 3 РЅРµРІРµСЂРЅС‹Р№ Р°РґСЂРµСЃ
+//--------------------------------------------------------------------------
+Function SetRange(sheet:OleVariant;range:string;value_:OleVariant):integer;
+var
+  wb, sh, r:oleVariant;
+begin
+  SetRange:=0;
   try
-    E.ActiveWorkbook.Sheets.Item[sheet].Range[range]:=value_;
+    wb:=E.ActiveWorkbook;
+    if CheckVarObj(wb) then
+    begin
+      case SheetExists(wb, sheet) of
+        0:sh:=E.ActiveWorkbook.Sheets.Item[sheet];
+        1:sh:=E.ActiveWorkbook.Sheets.Item[strtoint(sheet)];
+        2:
+        begin
+          result:=2;
+          exit;
+        end;
+      end;
+      r:=GetRangeFromSheet(sh, range);
+      if CheckVarObj(r) then
+        r.value:=value_
+      else
+        result:=3;
+    end
+    else
+    begin
+      result:=1;
+    end;
   except
-  SetRange:=false;
+    SetRange:=1;
   end;
 End;
-
-Function  SetCell(sheet:OleVariant;row,col:integer; value:OleVariant):boolean;
+  // 0 - РІСЃРµ РћРє, 1 - РЅРµ РЅР°Р№РґРµРЅ Р»РёСЃС‚; 2 РЅРµРІРµСЂРЅС‹Р№ Р°РґСЂРµСЃ
+Function  SetCell(sheet:OleVariant;row,col:integer; value:OleVariant):integer;
 var
   aSheet, oRng:oleVariant;
 begin
-  SetCell:=true;
+  SetCell:=0;
   try
     E.ActiveWorkbook.WorkSheets[sheet].cells[row,col]:=value;
   except
-    SetCell:=false;
+    SetCell:=1;
   end;
 end;
 
 Function RangeObjToAdress(r:OleVariant):string;
 begin
-  result:=Format('Строка %d, Колонка %d', [R.Row, R.Column]);
+  result:=Format('РЎС‚СЂРѕРєР° %d, РљРѕР»РѕРЅРєР° %d', [R.Row, R.Column]);
 end;
 
 Procedure  SetRangeBorder(range:OleVariant);
@@ -790,11 +1340,11 @@ Function GetRangeAdress(sheet:OleVariant;cell1,cell2:tpoint):string;
 var
   v_cell1, v_cell2: OLEVariant;
 begin
-  // получаем ссылку на объект Cells, соответствующей ячейке A1}
+  // РїРѕР»СѓС‡Р°РµРј СЃСЃС‹Р»РєСѓ РЅР° РѕР±СЉРµРєС‚ Cells, СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµР№ СЏС‡РµР№РєРµ A1}
   v_Cell1:=E.ActiveWorkbook.Sheets.Item[sheet].Cells[1,1];
-  // получаем ссылку на объект Cells, соответствующей ячейке C5}
+  // РїРѕР»СѓС‡Р°РµРј СЃСЃС‹Р»РєСѓ РЅР° РѕР±СЉРµРєС‚ Cells, СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµР№ СЏС‡РµР№РєРµ C5}
   v_Cell2:=E.ActiveWorkbook.Sheets.Item[sheet].Cells[5,3];
-  // получаем объект Range размером 3х5}
+  // РїРѕР»СѓС‡Р°РµРј РѕР±СЉРµРєС‚ Range СЂР°Р·РјРµСЂРѕРј 3С…5}
   result:=E.ActiveWorkbook.Sheets.Item[sheet].Range[v_Cell1, v_Cell2];
 end;
 
@@ -802,13 +1352,13 @@ Function GetRangeObj(sheet:OleVariant;cell1,cell2:tpoint):OleVariant;overload;
 var
   v_cell1, v_cell2: OLEVariant;
 begin
-  // получаем ссылку на объект Cells, соответствующей ячейке A1}
+  // РїРѕР»СѓС‡Р°РµРј СЃСЃС‹Р»РєСѓ РЅР° РѕР±СЉРµРєС‚ Cells, СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµР№ СЏС‡РµР№РєРµ A1}
   //v_Cell1:=E.ActiveWorkbook.Sheets.Item[sheet].Cells[1,1];
   v_Cell1:=sheet.Cells.Item[cell1.x, cell1.y];
-  // получаем ссылку на объект Cells, соответствующей ячейке C5}
+  // РїРѕР»СѓС‡Р°РµРј СЃСЃС‹Р»РєСѓ РЅР° РѕР±СЉРµРєС‚ Cells, СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµР№ СЏС‡РµР№РєРµ C5}
   //v_Cell2:=E.ActiveWorkbook.Sheets.Item[sheet].Cells[5,3];
   v_Cell2:=sheet.Cells.Item[cell2.x, cell2.y];
-  // получаем объект Range размером 3х5}
+  // РїРѕР»СѓС‡Р°РµРј РѕР±СЉРµРєС‚ Range СЂР°Р·РјРµСЂРѕРј 3С…5}
   result:=sheet.Range[v_Cell1, v_Cell2];
 end;
 
@@ -816,24 +1366,42 @@ Function GetRangeObj(sheetind:integer;cell1,cell2:tpoint):OleVariant;
 var
   v_cell1, v_cell2: OLEVariant;
 begin
-  // получаем ссылку на объект Cells, соответствующей ячейке A1}
+  // РїРѕР»СѓС‡Р°РµРј СЃСЃС‹Р»РєСѓ РЅР° РѕР±СЉРµРєС‚ Cells, СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµР№ СЏС‡РµР№РєРµ A1}
   //v_Cell1:=E.ActiveWorkbook.Sheets.Item[sheet].Cells[1,1];
   v_Cell1:=E.ActiveWorkbook.Sheets.Item[sheetind].Cells.Item[cell1.x, cell1.y];
-  // получаем ссылку на объект Cells, соответствующей ячейке C5}
+  // РїРѕР»СѓС‡Р°РµРј СЃСЃС‹Р»РєСѓ РЅР° РѕР±СЉРµРєС‚ Cells, СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµР№ СЏС‡РµР№РєРµ C5}
   //v_Cell2:=E.ActiveWorkbook.Sheets.Item[sheet].Cells[5,3];
   v_Cell2:=E.ActiveWorkbook.Sheets.Item[sheetind].Cells.Item[cell2.x, cell2.y];
-  // получаем объект Range размером 3х5}
+  // РїРѕР»СѓС‡Р°РµРј РѕР±СЉРµРєС‚ Range СЂР°Р·РјРµСЂРѕРј 3С…5}
   result:=E.ActiveWorkbook.Sheets.Item[sheetind].Range[v_Cell1, v_Cell2];
 end;
 
 Function  GetRange(sheet:OleVariant;range:string):OleVariant;
 begin
   try
-  GetRange:= E.ActiveWorkbook.Sheets.Item[sheet].Range[range];
+    GetRange:= E.ActiveWorkbook.Sheets.Item[sheet].Range[range];
   except
-  GetRange:=null;
+    GetRange:=null;
   end;
 End;
+
+Function  GetRangeFromSheet(sheet:OleVariant;range:string):OleVariant;
+begin
+  try
+    result:= sheet.Range[range];
+  except
+    result:=null;
+  end;
+end;
+
+Function  GetRangeFromSheet(sheet:OleVariant;c1,c2:string):OleVariant;OVERLOAD;
+begin
+  try
+    result:= sheet.Range[c1, c2];
+  except
+    result:=null;
+  end;
+end;
 
 Function  SetColumnWidth(sheet:OleVariant;column:OleVariant;width:real):boolean;
 begin
@@ -856,7 +1424,7 @@ begin
   end;
 End;
 
-//------------ Форматы ячеек -----------------------------------
+//------------ Р¤РѕСЂРјР°С‚С‹ СЏС‡РµРµРє -----------------------------------
 //    "mmmm yy"
 //    "#,##0.00_ ;[Red]-#,##0.00 "
 //    "@"
@@ -881,7 +1449,7 @@ begin
   end;
 End;
 
-// По горизонтали
+// РџРѕ РіРѕСЂРёР·РѕРЅС‚Р°Р»Рё
 Function  SetHorizontalAlignment(sheet:OleVariant;range:string;alignment:integer):boolean;
 begin
   SetHorizontalAlignment:=true;
@@ -892,7 +1460,7 @@ begin
   end;
 End;
 
-// По вертикали
+// РџРѕ РІРµСЂС‚РёРєР°Р»Рё
 Function  SetVerticalAlignment(sheet:OleVariant;range:string;alignment:integer):boolean;
 begin
   SetVerticalAlignment:=true;
@@ -903,7 +1471,7 @@ begin
   end;
 End;
 
-//----------------------- Поворот ------------------------
+//----------------------- РџРѕРІРѕСЂРѕС‚ ------------------------
 Function  SetOrientation(sheet:OleVariant;range:string;orientation:integer):boolean;
 begin
   SetOrientation:=true;
@@ -915,7 +1483,7 @@ begin
 End;
 
 
-//----------------------- Установка/отмена свойства "перенос по словам" ------------------------
+//----------------------- РЈСЃС‚Р°РЅРѕРІРєР°/РѕС‚РјРµРЅР° СЃРІРѕР№СЃС‚РІР° "РїРµСЂРµРЅРѕСЃ РїРѕ СЃР»РѕРІР°Рј" ------------------------
 Function  SetWrapText(sheet:OleVariant;range:string;WrapText:boolean):boolean;
 begin
   SetWrapText:=true;
@@ -927,7 +1495,7 @@ begin
 End;
 
 
-//----------------------- Объединение/отмена объединения ячеек ------------------------
+//----------------------- РћР±СЉРµРґРёРЅРµРЅРёРµ/РѕС‚РјРµРЅР° РѕР±СЉРµРґРёРЅРµРЅРёСЏ СЏС‡РµРµРє ------------------------
 Function  SetMergeCells(sheet:OleVariant;range:string;MergeCells:boolean):boolean;
 begin
   SetMergeCells:=true;
@@ -939,7 +1507,7 @@ begin
 End;
 
 
-//----------------------- Объединение/отмена объединения ячеек ------------------------
+//----------------------- РћР±СЉРµРґРёРЅРµРЅРёРµ/РѕС‚РјРµРЅР° РѕР±СЉРµРґРёРЅРµРЅРёСЏ СЏС‡РµРµРє ------------------------
 Function  SetShrinkToFit(sheet:OleVariant;range:string;ShrinkToFit:boolean):boolean;
 begin
   SetShrinkToFit:=true;
@@ -950,28 +1518,28 @@ begin
   end;
 End;
 
-//--------------------------- Изменение шрифта ячейки ---------------------------------
+//--------------------------- РР·РјРµРЅРµРЅРёРµ С€СЂРёС„С‚Р° СЏС‡РµР№РєРё ---------------------------------
 
 Function  SetFontRange(sheet:OleVariant;range:string;font:Tfont):boolean;
 begin
   SetFontRange:=true;
   try
   E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Name:=font.Name;
-  if fsBold in font.Style      then E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Bold:=True             //           Жирный
-                               else E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Bold:=False;           //           Тонкий
-  if fsItalic in font.Style    then E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Italic:=True           //           Наклонный
-                               else E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Italic:=False;         //           Наклонный
-  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Size:=font.Size;                                         //           Размер
-  if fsStrikeOut in font.Style then E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Strikethrough:=True    //           Перечеркнутый
-                               else E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Strikethrough:=False;  //           Перечеркнутый
-  //E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Superscript = False                'Верхний индекс
-  //E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Subscript = False                  'Нижний индекс
-  //E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.OutlineFont = True                 'Не используется
-  //E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Shadow = False                     'Не используется
-  //E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.ColorIndex = 41                    'Индекс цвета
-  if fsUnderline in font.Style then E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Underline:=xlUnderlineStyleSingle // 'Подчеркивание
-                               else E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Underline:=xlUnderlineStyleNone;  // 'Подчеркивание
-  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Color:=font.Color;                                       //           Цвет
+  if fsBold in font.Style      then E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Bold:=True             //           Р–РёСЂРЅС‹Р№
+                               else E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Bold:=False;           //           РўРѕРЅРєРёР№
+  if fsItalic in font.Style    then E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Italic:=True           //           РќР°РєР»РѕРЅРЅС‹Р№
+                               else E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Italic:=False;         //           РќР°РєР»РѕРЅРЅС‹Р№
+  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Size:=font.Size;                                         //           Р Р°Р·РјРµСЂ
+  if fsStrikeOut in font.Style then E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Strikethrough:=True    //           РџРµСЂРµС‡РµСЂРєРЅСѓС‚С‹Р№
+                               else E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Strikethrough:=False;  //           РџРµСЂРµС‡РµСЂРєРЅСѓС‚С‹Р№
+  //E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Superscript = False                'Р’РµСЂС…РЅРёР№ РёРЅРґРµРєСЃ
+  //E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Subscript = False                  'РќРёР¶РЅРёР№ РёРЅРґРµРєСЃ
+  //E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.OutlineFont = True                 'РќРµ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ
+  //E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Shadow = False                     'РќРµ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ
+  //E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.ColorIndex = 41                    'РРЅРґРµРєСЃ С†РІРµС‚Р°
+  if fsUnderline in font.Style then E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Underline:=xlUnderlineStyleSingle // 'РџРѕРґС‡РµСЂРєРёРІР°РЅРёРµ
+                               else E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Underline:=xlUnderlineStyleNone;  // 'РџРѕРґС‡РµСЂРєРёРІР°РЅРёРµ
+  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Color:=font.Color;                                       //           Р¦РІРµС‚
   except
   SetFontRange:=false;
   end;
@@ -983,10 +1551,10 @@ Function  SetFontRangeEx(sheet:OleVariant;range:string;underlinestyle,colorindex
 begin
   SetFontRangeEx:=true;
   try
-  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Superscript:=superscript;    //   Верхний индекс
-  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Subscript:=subscript;        //   Нижний индекс
-  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.ColorIndex:=colorindex;      //   Индекс цвета
-  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Underline:=underlinestyle;   //   Подчеркивание
+  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Superscript:=superscript;    //   Р’РµСЂС…РЅРёР№ РёРЅРґРµРєСЃ
+  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Subscript:=subscript;        //   РќРёР¶РЅРёР№ РёРЅРґРµРєСЃ
+  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.ColorIndex:=colorindex;      //   РРЅРґРµРєСЃ С†РІРµС‚Р°
+  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Font.Underline:=underlinestyle;   //   РџРѕРґС‡РµСЂРєРёРІР°РЅРёРµ
   except
   SetFontRangeEx:=false;
   end;
@@ -998,12 +1566,12 @@ Function  SetBorderRange(sheet:OleVariant;range:string;Edge,LineStyle,Weight,Col
 begin
   SetBorderRange:=true;
   try
-  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Borders.item[Edge].LineStyle:=LineStyle;       //   Стиль линн
-  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Borders.item[Edge].Weight:=Weight;             //   Толщина линн
+  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Borders.item[Edge].LineStyle:=LineStyle;       //   РЎС‚РёР»СЊ Р»РёРЅРЅ
+  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Borders.item[Edge].Weight:=Weight;             //   РўРѕР»С‰РёРЅР° Р»РёРЅРЅ
   if ColorIndex>0 then
-     E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Borders.item[Edge].ColorIndex:=ColorIndex   //   Индекс цвета
+     E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Borders.item[Edge].ColorIndex:=ColorIndex   //   РРЅРґРµРєСЃ С†РІРµС‚Р°
                   else
-     E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Borders.item[Edge].Color:=color;            //   Цвет
+     E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Borders.item[Edge].Color:=color;            //   Р¦РІРµС‚
   except
   SetBorderRange:=false;
   end;
@@ -1015,12 +1583,12 @@ Function  SetPatternRange(sheet:OleVariant;range:string;Pattern,ColorIndex,Patte
 begin
   SetPatternRange:=true;
   try
-  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Interior.Pattern:=Pattern;                                          //   Стиль линн
-  if ColorIndex>0 then E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Interior.ColorIndex:=ColorIndex                //   Индекс цвета
-                  else E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Interior.Color:=color;                         //   Цвет
+  E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Interior.Pattern:=Pattern;                                          //   РЎС‚РёР»СЊ Р»РёРЅРЅ
+  if ColorIndex>0 then E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Interior.ColorIndex:=ColorIndex                //   РРЅРґРµРєСЃ С†РІРµС‚Р°
+                  else E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Interior.Color:=color;                         //   Р¦РІРµС‚
   if PatternColorIndex>0
-                  then E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Interior.PatternColorIndex:=PatternColorIndex  //   Индекс цвета
-                  else E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Interior.PatternColor:=PatternColor;           //   Цвет
+                  then E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Interior.PatternColorIndex:=PatternColorIndex  //   РРЅРґРµРєСЃ С†РІРµС‚Р°
+                  else E.ActiveWorkbook.Sheets.Item[sheet].Range[range].Interior.PatternColor:=PatternColor;           //   Р¦РІРµС‚
   except
   SetPatternRange:=false;
   end;
@@ -1135,8 +1703,8 @@ begin
   end;
 End;
 
-//------------------------ Диаграммы -------------------------
-// Добавить диаграмму
+//------------------------ Р”РёР°РіСЂР°РјРјС‹ -------------------------
+// Р”РѕР±Р°РІРёС‚СЊ РґРёР°РіСЂР°РјРјСѓ
 Function  AddChart(var name:OleVariant;ChartType:integer):boolean;
 const xl3DArea=-4098;
 begin
@@ -1149,7 +1717,7 @@ begin
   end;
 End;
 
-// Координаты области данных диаграммы
+// РљРѕРѕСЂРґРёРЅР°С‚С‹ РѕР±Р»Р°СЃС‚Рё РґР°РЅРЅС‹С… РґРёР°РіСЂР°РјРјС‹
 Function  SetSourceData(Name,Sheet:OleVariant;Range:string;XlRowCol:integer):boolean;
 begin
   SetSourceData:=true;
@@ -1169,11 +1737,11 @@ begin
   E.Charts.Item[name].ChartArea.Width:=Width;
   E.Charts.Item[name].ChartArea.Height:=Height;
   except
-  PositionChart:=false;
+
   end;
 End;
 
-// Координаты области построения диаграммы
+// РљРѕРѕСЂРґРёРЅР°С‚С‹ РѕР±Р»Р°СЃС‚Рё РїРѕСЃС‚СЂРѕРµРЅРёСЏ РґРёР°РіСЂР°РјРјС‹
 Function  PositionPlotArea(Name:OleVariant;Left,Top,Width,Height:real):boolean;
 begin
   PositionPlotArea:=true;
@@ -1189,7 +1757,7 @@ End;
 
 
 
-// Рамка области построения диаграммы
+// Р Р°РјРєР° РѕР±Р»Р°СЃС‚Рё РїРѕСЃС‚СЂРѕРµРЅРёСЏ РґРёР°РіСЂР°РјРјС‹
 Function  BorderPlotArea(Name:OleVariant;Color,LineStyle,Weight:integer):boolean;
 begin
   BorderPlotArea:=true;
@@ -1204,7 +1772,7 @@ End;
 
 
 
-// Заливка области построения диаграммы (цвет, рисунок, цвет рисунка)
+// Р—Р°Р»РёРІРєР° РѕР±Р»Р°СЃС‚Рё РїРѕСЃС‚СЂРѕРµРЅРёСЏ РґРёР°РіСЂР°РјРјС‹ (С†РІРµС‚, СЂРёСЃСѓРЅРѕРє, С†РІРµС‚ СЂРёСЃСѓРЅРєР°)
 Function  BrushPlotArea(Name:OleVariant;Color,Pattern,PatternColor:integer):boolean;
 begin
   BrushPlotArea:=true;
@@ -1218,7 +1786,7 @@ begin
 End;
 
 
-// Заливка области построения диаграммы из файла
+// Р—Р°Р»РёРІРєР° РѕР±Р»Р°СЃС‚Рё РїРѕСЃС‚СЂРѕРµРЅРёСЏ РґРёР°РіСЂР°РјРјС‹ РёР· С„Р°Р№Р»Р°
 Function  BrushPlotAreaFromFile(Name:OleVariant;File_:string):boolean;
 begin
   BrushPlotAreaFromFile:=true;
@@ -1233,7 +1801,7 @@ End;
 
 
 
-// Рамка области диаграммы
+// Р Р°РјРєР° РѕР±Р»Р°СЃС‚Рё РґРёР°РіСЂР°РјРјС‹
 Function  BorderChartArea(Name:OleVariant;Color,LineStyle,Weight:integer):boolean;
 begin
   BorderChartArea:=true;
@@ -1246,7 +1814,7 @@ begin
   end;
 End;
 
-// Заливка области диаграммы (цвет, рисунок, цвет рисунка)
+// Р—Р°Р»РёРІРєР° РѕР±Р»Р°СЃС‚Рё РґРёР°РіСЂР°РјРјС‹ (С†РІРµС‚, СЂРёСЃСѓРЅРѕРє, С†РІРµС‚ СЂРёСЃСѓРЅРєР°)
 Function  BrushChartArea(Name:OleVariant;Color,Pattern,PatternColor:integer):boolean;
 begin
   BrushChartArea:=true;
@@ -1259,7 +1827,7 @@ begin
   end;
 End;
 
-// Заливка области диаграммы из файла
+// Р—Р°Р»РёРІРєР° РѕР±Р»Р°СЃС‚Рё РґРёР°РіСЂР°РјРјС‹ РёР· С„Р°Р№Р»Р°
 Function  BrushChartAreaFromFile(Name:OleVariant;File_:string):boolean;
 begin
   BrushChartAreaFromFile:=true;
@@ -1271,7 +1839,7 @@ begin
   end;
 End;
 
-// Заголовок диаграммы
+// Р—Р°РіРѕР»РѕРІРѕРє РґРёР°РіСЂР°РјРјС‹
 Function  TextChartTitle(Name:OleVariant;text_:string):boolean;
 begin
   TextChartTitle:=true;
@@ -1331,8 +1899,8 @@ begin
   end;
 End;
 
-//------------------------ Диаграммы (продолжение) -------------------------
-// Тип диаграммы
+//------------------------ Р”РёР°РіСЂР°РјРјС‹ (РїСЂРѕРґРѕР»Р¶РµРЅРёРµ) -------------------------
+// РўРёРї РґРёР°РіСЂР°РјРјС‹
 Function  SetChartType(Name:OleVariant;ChartType:integer):boolean;
 begin
   SetChartType:=true;
@@ -1343,7 +1911,7 @@ begin
   end;
 End;
 
-// Размещение диаграммы (на листе с данными, на отдельном листе)
+// Р Р°Р·РјРµС‰РµРЅРёРµ РґРёР°РіСЂР°РјРјС‹ (РЅР° Р»РёСЃС‚Рµ СЃ РґР°РЅРЅС‹РјРё, РЅР° РѕС‚РґРµР»СЊРЅРѕРј Р»РёСЃС‚Рµ)
 Function  SetChartLocation(var name:OleVariant;sheet:OleVariant;xlLocation:integer):boolean;
 var eee_:string;
 begin
@@ -1361,7 +1929,7 @@ begin
   end;
 End;
 
-// Легенда
+// Р›РµРіРµРЅРґР°
 //E.Charts.Item[name].Legend
 //E.Charts.Item[name].HasLegend
 Function PositionSizeLegend(Name:OleVariant;Left,Top,Width,Height:real):boolean;
@@ -1432,7 +2000,7 @@ End;
 
 
 
-// Подписи осей
+// РџРѕРґРїРёСЃРё РѕСЃРµР№
 Function  AxisChart(Name:OleVariant;Category,Series,Value:string):boolean;
 begin
   AxisChart:=true;
@@ -1448,7 +2016,7 @@ begin
   end;
 End;
 
-//Наклон
+//РќР°РєР»РѕРЅ
 Function  ElevationChart(Name:OleVariant;Elevation:real):boolean;
 begin
   ElevationChart:=true;
@@ -1459,7 +2027,7 @@ begin
   end;
 End;
 
-//Поворот
+//РџРѕРІРѕСЂРѕС‚
 Function  RotationChart(Name:OleVariant;Rotation:real):boolean;
 begin
   RotationChart:=true;
@@ -1471,8 +2039,8 @@ begin
 End;
 
 
-//Стены
-// Линии - границы стен
+//РЎС‚РµРЅС‹
+// Р›РёРЅРёРё - РіСЂР°РЅРёС†С‹ СЃС‚РµРЅ
 Function  BorderWalls(Name:OleVariant;Color,LineStyle,Weight:integer):boolean;
 begin
   BorderWalls:=true;
@@ -1485,7 +2053,7 @@ begin
   end;
 End;
 
-// цвет и рисунок стен
+// С†РІРµС‚ Рё СЂРёСЃСѓРЅРѕРє СЃС‚РµРЅ
 Function  BrushWalls(Name:OleVariant;Color,Pattern,PatternColor:integer):boolean;
 begin
   BrushWalls:=true;
@@ -1499,7 +2067,7 @@ begin
 End;
 
 
-// рисунок стен из файла
+// СЂРёСЃСѓРЅРѕРє СЃС‚РµРЅ РёР· С„Р°Р№Р»Р°
 Function  BrushWallsFromFile(Name:OleVariant;File_:string):boolean;
 begin
   BrushWallsFromFile:=true;
@@ -1511,8 +2079,8 @@ begin
   end;
 End;
 
-//Основание
-// Линии - границы основания
+//РћСЃРЅРѕРІР°РЅРёРµ
+// Р›РёРЅРёРё - РіСЂР°РЅРёС†С‹ РѕСЃРЅРѕРІР°РЅРёСЏ
 Function  BorderFloor(Name:OleVariant;Color,LineStyle,Weight:integer):boolean;
 begin
   BorderFloor:=true;
@@ -1526,7 +2094,7 @@ begin
 End;
 
 
-// цвет и рисунок основания
+// С†РІРµС‚ Рё СЂРёСЃСѓРЅРѕРє РѕСЃРЅРѕРІР°РЅРёСЏ
 Function  BrushFloor(Name:OleVariant;Color,Pattern,PatternColor:integer):boolean;
 begin
   BrushFloor:=true;
@@ -1540,7 +2108,7 @@ begin
 End;
 
 
-// рисунок стен из основания
+// СЂРёСЃСѓРЅРѕРє СЃС‚РµРЅ РёР· РѕСЃРЅРѕРІР°РЅРёСЏ
 Function  BrushFloorFromFile(Name:OleVariant;File_:string):boolean;
 begin
   BrushFloorFromFile:=true;
@@ -1553,20 +2121,20 @@ begin
 End;
 
 
-//--------------------- Коллекция ----------------
-// Количество
+//--------------------- РљРѕР»Р»РµРєС†РёСЏ ----------------
+// РљРѕР»РёС‡РµСЃС‚РІРѕ
 Function  SeriesCount(Name:OleVariant):integer;
 begin
-  SeriesCount:=-1;
+    result:=-1;
   try
-  SeriesCount:=E.Charts.Item[name].SeriesCollection.Count;
+    result:=E.Charts.Item[name].SeriesCollection.Count;
   except
-  SeriesCount:=-1;
+    result:=-1;
   end;
 End;
 
 
-// Линии - границы коллекции
+// Р›РёРЅРёРё - РіСЂР°РЅРёС†С‹ РєРѕР»Р»РµРєС†РёРё
 Function  BorderSeries(Name:OleVariant;series:integer;Color,LineStyle,Weight:integer):boolean;
 begin
   BorderSeries:=true;
@@ -1580,7 +2148,7 @@ begin
 End;
 
 
-// цвет и рисунок коллекции
+// С†РІРµС‚ Рё СЂРёСЃСѓРЅРѕРє РєРѕР»Р»РµРєС†РёРё
 Function  BrushSeries(Name:OleVariant;series:integer;Color,Pattern,PatternColor:integer):boolean;
 begin
   BrushSeries:=true;
@@ -1594,7 +2162,7 @@ begin
 End;
 
 
-// рисунок заливки коллекции
+// СЂРёСЃСѓРЅРѕРє Р·Р°Р»РёРІРєРё РєРѕР»Р»РµРєС†РёРё
 Function  BrushSeriesFromFile(Name:OleVariant;series:integer;File_:string):boolean;
 begin
   BrushSeriesFromFile:=true;
@@ -1606,7 +2174,7 @@ begin
   end;
 End;
 
-// вид коллекции
+// РІРёРґ РєРѕР»Р»РµРєС†РёРё
 Function  BarShapeSeries(Name:OleVariant;series,BarShape:integer):boolean;
 begin
   BarShapeSeries:=true;
@@ -1703,6 +2271,64 @@ begin
 
   end;
 end;
+
+
+procedure KillProcess(ProcessID: DWORD);
+var
+  hProcess: THandle;
+begin
+  // РћС‚РєСЂС‹РІР°РµРј РїСЂРѕС†РµСЃСЃ СЃ РїСЂР°РІРѕРј Р·Р°РІРµСЂС€РµРЅРёСЏ
+  hProcess := OpenProcess(PROCESS_TERMINATE, False, ProcessID);
+  if hProcess <> 0 then
+  begin
+    // Р—Р°РІРµСЂС€Р°РµРј РїСЂРѕС†РµСЃСЃ
+    TerminateProcess(hProcess, 0);
+    CloseHandle(hProcess);
+  end;
+end;
+
+function KillAllExcelProcesses: Boolean;
+var
+  hProcessSnap: THandle;
+  pe32: TProcessEntry32;
+  hProcess: THandle;
+begin
+  Result := True;
+  // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ СЂР°Р·РјРµСЂР° СЃС‚СЂСѓРєС‚СѓСЂС‹ Р”Рћ РµРµ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ
+  pe32.dwSize := SizeOf(TProcessEntry32);
+
+  hProcessSnap := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if hProcessSnap = INVALID_HANDLE_VALUE then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  if not Process32First(hProcessSnap, pe32) then
+  begin
+    CloseHandle(hProcessSnap);
+    Result := False;
+    Exit;
+  end;
+
+  repeat
+    if AnsiSameText(pe32.szExeFile, 'EXCEL.EXE') then
+    begin
+      hProcess := OpenProcess(PROCESS_TERMINATE, False, pe32.th32ProcessID);
+      if hProcess <> 0 then
+      begin
+        TerminateProcess(hProcess, 0);
+        CloseHandle(hProcess);
+      end;
+    end;
+  until not Process32Next(hProcessSnap, pe32);
+
+  CloseHandle(hProcessSnap);
+end;
+
+
+
+
 
 end.
 
