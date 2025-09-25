@@ -27,7 +27,7 @@
 			<Projects Include="..\wp\WPOperPlg\WpOperPlg.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\recorder\plgEvalFRF\plgEvakFRF.dproj">
+			<Projects Include="..\recorder\plgEvalFRF\plgEvalFRF.dproj">
 				<Dependencies/>
 			</Projects>
 			<Projects Include="..\tests\TestAlgLib\ProjectFFT.dproj">
@@ -118,14 +118,14 @@
 		<Target Name="WpOperPlg:Make">
 			<MSBuild Targets="Make" Projects="..\wp\WPOperPlg\WpOperPlg.dproj"/>
 		</Target>
-		<Target Name="plgEvakFRF">
-			<MSBuild Projects="..\recorder\plgEvalFRF\plgEvakFRF.dproj"/>
+		<Target Name="plgEvalFRF">
+			<MSBuild Projects="..\recorder\plgEvalFRF\plgEvalFRF.dproj"/>
 		</Target>
-		<Target Name="plgEvakFRF:Clean">
-			<MSBuild Targets="Clean" Projects="..\recorder\plgEvalFRF\plgEvakFRF.dproj"/>
+		<Target Name="plgEvalFRF:Clean">
+			<MSBuild Targets="Clean" Projects="..\recorder\plgEvalFRF\plgEvalFRF.dproj"/>
 		</Target>
-		<Target Name="plgEvakFRF:Make">
-			<MSBuild Targets="Make" Projects="..\recorder\plgEvalFRF\plgEvakFRF.dproj"/>
+		<Target Name="plgEvalFRF:Make">
+			<MSBuild Targets="Make" Projects="..\recorder\plgEvalFRF\plgEvalFRF.dproj"/>
 		</Target>
 		<Target Name="ProjectFFT">
 			<MSBuild Projects="..\tests\TestAlgLib\ProjectFFT.dproj"/>
@@ -146,13 +146,13 @@
 			<MSBuild Targets="Make" Projects="..\recorder\plg3120Cyclogram\plg3120Cyclogram.dproj"/>
 		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;plgEvakFRF;ProjectFFT;plg3120Cyclogram"/>
+			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;plgEvalFRF;ProjectFFT;plg3120Cyclogram"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;plgEvakFRF:Clean;ProjectFFT:Clean;plg3120Cyclogram:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;plgEvalFRF:Clean;ProjectFFT:Clean;plg3120Cyclogram:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;plgEvakFRF:Make;ProjectFFT:Make;plg3120Cyclogram:Make"/>
+			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;plgEvalFRF:Make;ProjectFFT:Make;plg3120Cyclogram:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

@@ -216,6 +216,23 @@ type
 
 implementation
 
+function encodeString(s:string):string;
+var
+  I: Integer;
+begin
+  s:=StringReplace(S, ' ', '%20', [rfReplaceAll]);
+  result:=s;
+end;
+
+function decodeString(s:string):string;
+var
+  I: Integer;
+begin
+  s:=StringReplace(S, '%20', ' ', [rfReplaceAll]);
+  result:=s;
+end;
+
+
 { cMeaBase }
 constructor cMBase.create;
 var
@@ -569,6 +586,7 @@ begin
           propnode:=child.Nodes[i];
           prop:=propnode.name;
           val:=propnode.ReadAttributeString('Value', '');
+          prop:=decodestring(prop);
           cXmlFolder(result).addpropertie(prop, val);
         end;
       end;
@@ -620,6 +638,8 @@ begin
     for I := 0 to m_Properties.Count - 1 do
     begin
       propname:=m_Properties.Strings[i];
+      // поиск/ создание если не существует узла
+      propname:=encodeString(propname);
       child:=getNode(props,propname);
       child.WriteAttributeString('Value',getProperty(i),'');
     end;
@@ -1323,11 +1343,12 @@ end;
 
 procedure cxmlFolder.setObjType(s: string; delProp: boolean; proplist:tstringlist);
 var
-  I,j,k: Integer;
-  pr, objpr:string;
+  I, j, k: Integer;
+  pr, objpr, otype:string;
   vPr, vObj:cString;
   find, del:boolean;
 begin
+  otype:=m_ObjType;
   m_ObjType:=s;
   if proplist=nil then
   begin
@@ -1355,12 +1376,13 @@ begin
       end;
     end;
   end;
-  clearProps;
+  if otype<>m_ObjType then  // без проверки будут выпилены существующие свойства которых нет в типе
+    clearProps;
   for I := 0 to proplist.Count - 1 do
   begin
     objpr:=proplist.Strings[i];
     pr:=cString(proplist.Objects[i]).str;
-    addpropertie(objpr, pr);
+    Setpropertie(objpr, pr);
   end;
 end;
 

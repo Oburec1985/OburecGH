@@ -21,10 +21,10 @@ object PressFrmEdit2: TPressFrmEdit2
     Align = alRight
     TabOrder = 0
     ExplicitLeft = 683
-    ExplicitHeight = 564
+    ExplicitHeight = 604
     inherited FormChannelsGB: TGroupBox
       Height = 604
-      ExplicitHeight = 564
+      ExplicitHeight = 604
       inherited ChanNamesPanel: TPanel
         Height = 132
         ExplicitHeight = 132
@@ -48,7 +48,6 @@ object PressFrmEdit2: TPressFrmEdit2
           Top = 83
           ExplicitLeft = 123
           ExplicitTop = 83
-          ExplicitWidth = 153
         end
         inherited FrmTagPropNameCB: TComboBox
           Top = 83
@@ -78,8 +77,7 @@ object PressFrmEdit2: TPressFrmEdit2
             Width = 51
           end>
         ExplicitTop = 150
-        ExplicitWidth = 280
-        ExplicitHeight = 412
+        ExplicitHeight = 452
       end
     end
   end
@@ -90,7 +88,6 @@ object PressFrmEdit2: TPressFrmEdit2
     Height = 604
     Align = alClient
     TabOrder = 1
-    ExplicitHeight = 564
     object FFTCountLabel: TLabel
       Left = 253
       Top = 23
@@ -193,6 +190,13 @@ object PressFrmEdit2: TPressFrmEdit2
       ExplicitTop = 24
       ExplicitHeight = 345
     end
+    object TresHoldHistL: TLabel
+      Left = 508
+      Top = 320
+      Width = 113
+      Height = 16
+      Caption = #1048#1089#1090#1086#1088#1080#1103' (TresHold)'
+    end
     object FFTCountEdit: TIntEdit
       Left = 253
       Top = 43
@@ -270,7 +274,7 @@ object PressFrmEdit2: TPressFrmEdit2
     end
     object BCountIE: TIntEdit
       Left = 253
-      Top = 340
+      Top = 341
       Width = 82
       Height = 24
       Enabled = False
@@ -290,7 +294,6 @@ object PressFrmEdit2: TPressFrmEdit2
       OnDrawCell = BandSGDrawCell
       OnKeyDown = BandSGKeyDown
       OnSelectCell = BandSGSelectCell
-      ExplicitTop = 370
     end
     object HHFE: TFloatEdit
       Left = 253
@@ -515,7 +518,6 @@ object PressFrmEdit2: TPressFrmEdit2
       OnDragDrop = TagsLBDragDrop
       OnDragOver = TagsLBDragOver
       OnKeyDown = TagsLBKeyDown
-      ExplicitHeight = 352
     end
     object UseRefProfileCB: TCheckBox
       Left = 443
@@ -542,6 +544,14 @@ object PressFrmEdit2: TPressFrmEdit2
       Caption = #1048#1089#1087#1086#1083#1100#1079#1086#1074#1072#1090#1100' '#1072#1074#1072#1088#1080#1080
       TabOrder = 23
     end
+    object TresHoldHistE: TFloatEdit
+      Left = 507
+      Top = 341
+      Width = 120
+      Height = 24
+      TabOrder = 24
+      Text = '5'
+    end
   end
   object Panel1: TPanel
     Left = 0
@@ -550,7 +560,6 @@ object PressFrmEdit2: TPressFrmEdit2
     Height = 56
     Align = alBottom
     TabOrder = 2
-    ExplicitTop = 564
     object UpdateAlgBtn: TSpeedButton
       Left = 3
       Top = 7

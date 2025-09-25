@@ -1659,9 +1659,9 @@ object MBaseControl: TMBaseControl
     end
     object Button1: TButton
       Left = 418
-      Top = 55
+      Top = 50
       Width = 124
-      Height = 32
+      Height = 34
       Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
       TabOrder = 1
       OnClick = Button1Click
@@ -1698,10 +1698,11 @@ object MBaseControl: TMBaseControl
     object Button2: TButton
       Left = 418
       Top = 104
-      Width = 75
-      Height = 25
+      Width = 124
+      Height = 33
       Caption = 'Button2'
       TabOrder = 5
+      Visible = False
       OnClick = Button2Click
     end
   end

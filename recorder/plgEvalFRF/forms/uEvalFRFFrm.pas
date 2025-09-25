@@ -358,6 +358,7 @@ type
     TrigFE: TFloatSpinEdit;
     DempfE: TEdit;
     DempfLabel: TLabel;
+    HideExcelCB: TCheckBox;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -379,6 +380,7 @@ type
     procedure BladeSEUpClick(sender: tobject);
     procedure SpmChartMouseZoom(sender: tobject; UpScale: boolean);
     procedure BladeSEDownClick(sender: tobject);
+    procedure HideExcelCBClick(Sender: TObject);
   public
     m_Frf_YX: boolean;
     // отступ слева и длительность
@@ -500,6 +502,7 @@ type
     // merafile
     m_MeraFile: string;
     m_ShockFile: string;
+    m_hideExcel:boolean;
   private
     m_counter: integer;
   protected
@@ -748,6 +751,11 @@ begin
     FindMinMaxDouble(s.lineFrf.data_r, minmax.x, minmax.y);
     // minmax.y:=0.01*(minmax.y-minmax.x)+minmax.x;
     // minmax.x:=0.005*(minmax.y-minmax.x)+minmax.x;
+    if TrigFE.Value<=0 then
+    begin
+      showmessage('Установить уровень Trig >0');
+      exit;
+    end;
     minmax.y := TrigFE.Value;
     minmax.x := 0.5 * TrigFE.Value;
     FindExtremumsInY(s.lineFrf.data_r, 1, b.m_f2i,
@@ -860,7 +868,7 @@ var
   turb: cTurbFolder;
 begin
   turb := g_mbase.SelectTurb;
-  turb.Buildreport('');
+  turb.Buildreport('', g_FrfFactory.m_hideExcel);
 end;
 
 procedure TFRFFrm.SaveReport(repname: string; bl: cBladeFolder);
@@ -998,8 +1006,11 @@ begin
   SetRangeBorder(rng);
 
   SaveWorkBookAs(repname);
-  CloseWorkBook;
-  CloseExcel;
+  if g_FrfFactory.m_hideExcel then
+  begin
+    CloseWorkBook;
+    CloseExcel;
+  end;
 end;
 
 constructor TFRFFrm.create(Aowner: tcomponent);
@@ -2024,6 +2035,11 @@ begin
   UpdateView;
 end;
 
+procedure TFRFFrm.HideExcelCBClick(Sender: TObject);
+begin
+  g_FrfFactory.m_hideExcel:=HideExcelCB.Checked;
+end;
+
 procedure TFRFFrm.ShowLines;
 var
   t: cSRSTaho;
@@ -2282,8 +2298,10 @@ procedure TFRFFrm.WinPosBtnClick(sender: tobject);
 begin
   buildReport;
   if fileexists(g_FrfFactory.m_MeraFile) then
+  begin
     ShellExecute(0, nil, pwidechar(g_FrfFactory.m_ShockFile), nil, nil,
       SW_HIDE);
+  end;
 end;
 
 function TFRFFrm.getRes(s: string): cSRSres;
@@ -2369,6 +2387,8 @@ begin
   m_showBandLab := a_pIni.ReadBool(str, 'ShowBandLabels', false);
   m_estimator := a_pIni.ReadInteger(str, 'Estimator', 1);
   ResTypeRG.ItemIndex:= a_pIni.readInteger(str, 'EvalType', 0);
+  HideExcelCB.Checked:=a_pIni.ReadBool(str, 'HideExcel', false);
+  g_FrfFactory.m_hideExcel:=HideExcelCB.Checked;
   if c <> nil then
   begin
     c.m_capacity := a_pIni.ReadInteger(str, 'ShockCount', 5);
@@ -2597,6 +2617,7 @@ begin
     a_pIni.WriteInteger(str, 'EvalType', ResTypeRG.ItemIndex);
     a_pIni.WriteBool(str, 'ShowFlags', m_showflags);
     a_pIni.WriteBool(str, 'ShowBandLabels', m_showBandLab);
+    a_pIni.WriteBool(str, 'HideExcel', HideExcelCB.Checked);
     c := t.cfg;
     if c <> nil then
     begin
@@ -2652,6 +2673,10 @@ var
   s: cSRSres;
   i, j: integer;
   block, tahobl: TDataBlock;
+  lax_X:point2d;
+  a:caxis;
+  r:frect;
+  o:cdrawobj;
 begin
   t := getTaho;
   if t = nil then
@@ -2671,7 +2696,24 @@ begin
         block.m_TimeArrSize);
     end;
   end;
+  lax_X:=p2d(TimeAx.min.x,TimeAx.max.x);
   SpmChartDblClick(nil);
+
+  // нормализация времени
+  for i := 0 to pageT.axises.ChildCount - 1 do
+  begin
+    a := pageT.getaxis(i);
+    r.BottomLeft.x := lax_X.x;
+    r.TopRight.x := lax_X.y;
+    r.BottomLeft.y := a.min.y;
+    r.TopRight.y := a.max.y;
+    a.ZoomfRect(r);
+    for j := 0 to a.ChildCount - 1 do
+    begin
+      o := cdrawobj(a.getChild(j));
+      o.doUpdateWorldSize(a);
+    end;
+  end;
   fUpdateFrf := true;
   UpdateView;
 end;
@@ -4150,6 +4192,8 @@ function TDataBlockList.addBlock(p_spmsize: integer; time: point2d; // timestamp
 begin
   result := addBlock(p_spmsize);
   result.m_timeStamp := time;
+
+
   // дополняем нулями
   if p_timesize < p_spmsize then
   begin
@@ -4169,11 +4213,18 @@ begin
         result.m_TimeBlockFltNull);
     end;
   end;
-  GetMemAlignedArray_cmpx_d(p_spmsize, result.m_ClxData);
-  GetMemAlignedArray_d(p_spmsize, result.m_mod);
-  // src/ dst/ count
-  system.move(tb[0], result.m_TimeBlock[0], p_timesize * sizeof(double));
-  result.m_TimeArrSize := p_timesize;
+  if p_timesize>0 then
+  begin
+    GetMemAlignedArray_cmpx_d(p_spmsize, result.m_ClxData);
+    GetMemAlignedArray_d(p_spmsize, result.m_mod);
+    // src/ dst/ count
+    system.move(tb[0], result.m_TimeBlock[0], p_timesize * sizeof(double));
+    result.m_TimeArrSize := p_timesize;
+  end
+  else
+  begin
+    result.m_TimeArrSize := 0;
+  end;
 end;
 
 procedure TDataBlock.prepareData;

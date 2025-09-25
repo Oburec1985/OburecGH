@@ -194,6 +194,7 @@ begin
   BladeCB.clear;
   for I := 0 to g_mbase.root.m_BladeTypes.Count-1 do
   begin
+
     BladeCB.Items.AddObject(g_mbase.root.m_BladeTypes.Strings[i], g_mbase.root.m_BladeTypes.Objects[i]);
   end;
 
@@ -216,8 +217,7 @@ begin
     t.selected:=cxmlfolder(t.getChild(0));
     BlCountIE.Value:=cStageFolder(t.selected).BlCount;
     // лопатка
-    t.selected.selected:=c
-    xmlfolder(t.selected.getChild(0));
+    t.selected.selected:=cxmlfolder(t.selected.getChild(0));
     ShowTone;
   end;
   SGChange(ProfileSG);

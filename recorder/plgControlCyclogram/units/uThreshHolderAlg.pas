@@ -14,10 +14,10 @@ type
   cThresHld = class
   public
     m_name:string;
+    m_histLen: double; // History length
   protected
     m_data: cQueue<point2d>;
     m_max: double;
-    m_histLen: double; // History length
     procedure RecalcMax;
   public
     constructor create(histLen: double); // Pass history length in constructor
@@ -25,6 +25,7 @@ type
     procedure ClearData;
     // кладет в очередь новую точку и возвращает максимум
     function PushValue(p2: point2d): double;
+    function GetMax: double;
   end;
 
   cThresHoldAlg = class(cbasealg)
@@ -369,13 +370,18 @@ constructor cThresHld.create(histLen: double);
 begin
   m_data := cQueue<point2d>.create;
   m_histLen := histLen;
-  m_max := -1.0/0.0; // Negative infinity
+  m_max := -1.0; // Negative infinity
 end;
 
 destructor cThresHld.destroy;
 begin
   m_data.destroy;
   inherited;
+end;
+
+function cThresHld.GetMax: double;
+begin
+  result:=m_max;
 end;
 
 procedure cThresHld.RecalcMax;

@@ -713,10 +713,14 @@ end;
 
 
 procedure TMBaseControl.Button2Click(Sender: TObject);
+var
+  o:cXmlFolder;
 begin
-    setMDBPropertyError(1, AnsiString('Лог Значений ' +  ';' + '222'));
-    setMDBPropertyError(1, AnsiString('Лог Ошибок    '+ ';' + '111'));
-    setMDBPropertyError(1, 'save');
+  //setMDBPropertyError(1, AnsiString('Лог Значений ' +  ';' + '222'));
+  //setMDBPropertyError(1, AnsiString('Лог Ошибок    '+ ';' + '111'));
+  //setMDBPropertyError(1, 'save');
+  o:=GetSelectObj;
+  o.addpropertie('Prop 1','1');
 end;
 
 
@@ -1632,14 +1636,16 @@ var
   prop, val: string;
   ARow, ACol, ind:integer;
   n:TMBaseNotify;
+  row:integer;
 begin
   obj := nil;
-
-  sg := TStringGridExt(Sender);
+  sg:=TStringGridExt(sender);
   if sg.row = 0 then
     exit;
   if Key = VK_DELETE then
   begin
+    if (sg.rowempty(sg.row)) or (sg.row=(sg.RowCount-1)) then
+      exit;
     if Sender = ObjPropSG then
     begin
       obj := selectObj;

@@ -95,6 +95,7 @@ type
     PressFrmFrame21: TPressFrmFrame2;
     RefVal: TLabel;
     AlarmsCB: TCheckBox;
+    PeackHolderCB: TCheckBox;
     procedure N1Click(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
     procedure OpenBtnClick(Sender: TObject);
@@ -109,6 +110,7 @@ type
     procedure AvrCBClick(Sender: TObject);
     procedure AlarmsCBClick(Sender: TObject);
     procedure RefValSEChange(Sender: TObject);
+    procedure PeackHolderCBClick(Sender: TObject);
   public
     m_BarGraphStep: integer;
     m_lastFile:string;
@@ -125,8 +127,8 @@ type
     // максимум (по умолчанию из тега)
     m_ManualRange: boolean;
     m_HH, m_H: double;
-    //
-
+    // Показывать AmpHld
+    m_showAmpHld:boolean;
   private
     fInitBands: boolean;
     // главный максимум для спектра и главный номер камеры
@@ -200,6 +202,7 @@ type
     m_tagsinit: boolean;
     // список обработок
     m_tags: array of TTagRec;
+    m_ThresHoldHist:double;
 
     m_UseAlarms:boolean;
     m_useAlarmsArr:array of boolean;
@@ -618,16 +621,12 @@ end;
 
 procedure cPressCamFactory2.destroyevents;
 begin
-  //RemovePlgEvent(doUpdateData, c_RUpdateData);
-  //RemovePlgEvent(doChangeCfg, c_RC_LeaveCfg);
   RemovePlgEvent(doChangeRState, c_RC_DoChangeRCState);
 end;
 
 procedure cPressCamFactory2.createevents;
 begin
-  //addplgevent('cPressCamFactory2_doUpdateData', c_RUpdateData, doUpdateData);
   addplgevent('cPressCamFactory2_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
-  //addplgevent('cSRSFactory_doChangeCfg', c_RC_LeaveCfg, doChangeCfg);
 end;
 
 function TlistSortCompare(p1, p2: pointer): integer;
@@ -675,6 +674,7 @@ begin
     begin
       hld:=cThresHld(t.m_TresHoldList.Items[j]);
       hld.ClearData;
+      hld.m_histLen:=m_ThresHoldHist;
     end;
   end;
 end;
@@ -684,6 +684,7 @@ var
   l:cProfileLine;
 begin
   inherited;
+  m_ThresHoldHist:=5;
   m_spmProfile:=cProfile.create;
   l:=cProfileLine.create(m_spmProfile);
   l.m_ref:=0.5;
@@ -1285,6 +1286,8 @@ begin
       max:=0;
       sum:=0;
       // проход по списку
+      if m_bands[bnum].i1=m_bands[bnum].i2 then
+        continue;
       for k := m_bands[bnum].i1 to m_bands[bnum].i2 do
       begin
         v:=tdoubleArray(t.m_s.m_rms.p)[k];
@@ -1295,6 +1298,7 @@ begin
           imax:=k;
         end;
       end;
+      // сумма квадратов
       t.m_SKO[bnum].rms_max:=max;
       t.m_SKO[bnum].Freq:=t.m_s.SpmDx*imax;
       t.m_SKO[bnum].iMax:=imax;
@@ -1797,6 +1801,7 @@ begin
   m_BargraphStep := 100;
   m_HH := 0.7;
   m_H := 0.5;
+  m_showAmpHld:=false;
   m_frames := tlist.create;
   PressFrmFrame21.m_frm := self;
 
@@ -2114,6 +2119,8 @@ begin
 
   m_BargraphStep := a_pIni.ReadInteger(str, 'BarGraphStepCount', 100);
   m_bnum := a_pIni.ReadInteger(str, 'BNum', 0);
+  m_showAmpHld:=a_pIni.ReadBool(str, 'PeakHolder', false);
+  PeackHolderCB.Checked:=m_showAmpHld;
 
   m_BargraphStep := 100;
   c:=a_pIni.ReadInteger(str, 'HideCount', 0);
@@ -2121,6 +2128,7 @@ begin
   m_hidenames:=a_pIni.ReadString(str, 'HideSignals', '');
   if self = g_PressCamFactory2.GetFrm(0) then
   begin
+    g_PressCamFactory2.m_ThresHoldHist:=a_pIni.ReadFloat('PressCamFactory2', 'PeakHoldHist', 5);
     c := a_pIni.ReadInteger('PressCamFactory2', 'sCount', 0);
     if c > 0 then
     begin
@@ -2232,6 +2240,11 @@ var
   f:TPressFrm2;
 begin
   ecm(b);
+  for I := 0 to m_spmCfg.ChildCount - 1 do
+  begin
+    spm := cspm(m_spmCfg.getAlg(i));
+    spm.updateOutChan;
+  end;
   for I := 0 to Count - 1 do
   begin
     f:=TPressFrm2(GetFrm(i));
@@ -2329,6 +2342,7 @@ begin
   a_pIni.WriteInteger(str, 'BarGraphStepCount', m_BargraphStep);
   a_pIni.WriteInteger(str, 'BNum', m_bnum);
   a_pIni.WriteInteger(str, 'HideCount', length(m_hidesignals));
+  a_pIni.WriteBool(str, 'PeakHolder', m_showAmpHld);
   lstr:='';
   for I := 0 to length(m_hidesignals) - 1 do
   begin
@@ -2368,6 +2382,7 @@ begin
         inc(c);
       end;
     end;
+    a_pIni.WriteFloat('PressCamFactory2', 'PeakHoldHist',g_PressCamFactory2.m_ThresHoldHist);
     // пишем профиль уставок
     a_pIni.WriteBool('PressCamFactory2', 'UseProfile',
                        g_PressCamFactory2.m_UseProfile);
@@ -2489,6 +2504,11 @@ begin
   //end;
 end;
 
+procedure TPressFrm2.PeackHolderCBClick(Sender: TObject);
+begin
+  m_showAmpHld:=PeackHolderCB.Checked;
+end;
+
 procedure TPressFrm2.PressFrmFrame21ProgrBarMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: integer);
 begin
@@ -2523,7 +2543,14 @@ begin
     begin
       //fr.Eval;
       t:=g_PressCamFactory2.m_tags[i];
-      fr.m_Max:=t.m_SKO[m_bnum].rms_max;
+      if m_showAmpHld then
+      begin
+        fr.m_Max:=cThresHld(t.m_TresHoldList.Items[m_bnum]).GetMax;
+      end
+      else
+      begin
+        fr.m_Max:=t.m_SKO[m_bnum].rms_max;
+      end;
       fr.m_f:=t.m_SKO[m_bnum].Freq;
       fr.m_A:=t.m_SKO[m_bnum].rms_mean;
       if m_Max.Y < fr.m_Max then
