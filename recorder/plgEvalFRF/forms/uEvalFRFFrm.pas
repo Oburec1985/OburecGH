@@ -381,10 +381,13 @@ type
     procedure SpmChartMouseZoom(sender: tobject; UpScale: boolean);
     procedure BladeSEDownClick(sender: tobject);
     procedure HideExcelCBClick(Sender: TObject);
+    procedure TrigFEChange(Sender: TObject);
   public
     m_Frf_YX: boolean;
     // отступ слева и длительность
-    m_ShiftLeft, m_Length: double;
+    m_ShiftLeft, m_Length,
+    // уровень для флагов на спектре
+    m_spmTrig: double;
 
     ready: boolean;
     // показывать флажки на максимумы
@@ -758,9 +761,7 @@ begin
     end;
     minmax.y := TrigFE.Value;
     minmax.x := 0.5 * TrigFE.Value;
-    FindExtremumsInY(s.lineFrf.data_r, 1, b.m_f2i,
-                      minmax.y, minmax.x,
-                      s.m_extremums);
+    FindExtremumsInY(s.lineFrf.data_r, 1, b.m_f2i, minmax.y, minmax.x, s.m_extremums);
     if s.m_extremums.Count = 0 then
     begin
       result := false;
@@ -903,7 +904,7 @@ begin
     end
     else
     begin
-
+      VisibleExcel(true);
     end;
   end
   else
@@ -1004,7 +1005,6 @@ begin
   // ставим сетку всего блока
   rng := GetRangeObj(1, point(r, 2), point(r + j, c - 1));
   SetRangeBorder(rng);
-
   SaveWorkBookAs(repname);
   if g_FrfFactory.m_hideExcel then
   begin
@@ -1474,6 +1474,7 @@ begin
     begin
       max := tr.GetYByInd(b.m_fmaxi);
       maxX := tr.GetXByInd(b.m_fmaxi);
+      // флаг показываем только если он выше граничного значения
       if (b.m_fmaxi = b.m_f1i) or (b.m_fmaxi = b.m_f2i) then
       begin
         l.visible := false;
@@ -2373,7 +2374,9 @@ begin
     exit;
   m_ShiftLeft := strtofloatext(a_pIni.ReadString(str, 'ShiftLeft', '0.05'));
   m_Length := strtofloatext(a_pIni.ReadString(str, 'Length', '0.05'));
+  // амплитуда для поиска события
   t.m_treshold := strtofloatext(a_pIni.ReadString(str, 'Threshold', '0.05'));
+  m_spmTrig:= strtofloatext(a_pIni.ReadString(str, 'TrigLvl', '0.05'));
 
   m_minX := strtofloatext(a_pIni.ReadString(str, 'Spm_minX', '0'));
   m_maxX := strtofloatext(a_pIni.ReadString(str, 'Spm_maxX', '1000'));
@@ -2604,6 +2607,7 @@ begin
     WriteFloatToIniMera(a_pIni, str, 'Threshold', t.m_treshold);
     WriteFloatToIniMera(a_pIni, str, 'Length', m_Length);
     WriteFloatToIniMera(a_pIni, str, 'CohThreshold', t.m_CohTreshold);
+    WriteFloatToIniMera(a_pIni, str, 'TrigLvl', TrigFE.Value);
 
     WriteFloatToIniMera(a_pIni, str, 'Spm_minX', m_minX);
     WriteFloatToIniMera(a_pIni, str, 'Spm_maxX', m_maxX);
@@ -3040,6 +3044,7 @@ var
   a: caxis;
   o: cdrawobj;
   rect: frect;
+  v:double;
   dy: single;
 begin
   r.BottomLeft.x := m_minX;
@@ -3051,6 +3056,11 @@ begin
   begin
     a := pageSpm.getaxis(i);
     a.ZoomfRect(r);
+    if a.Lg then
+      v:=evalLogPos( a.minY, a.maxY, TrigFE.Value)
+    else
+      v:=TrigFE.Value;
+    Ycurs.setCursor(a, v);
   end;
   // нормализация времени
   for i := 0 to pageT.axises.ChildCount - 1 do
@@ -3074,14 +3084,38 @@ procedure TFRFFrm.SpmChartMouseZoom(sender: tobject; UpScale: boolean);
 var
   p: cpage;
   a: caxis;
+  v:double;
 begin
   if Ycurs <> nil then
   begin
     p := pageSpm;
     a := p.activeAxis;
-    Ycurs.setCursor(a, (a.maxY + a.minY) * 0.5);
+    //Ycurs.setCursor(a, (a.maxY + a.minY) * 0.5);
+    if a.Lg then
+      v:=evalLogPos( a.minY, a.maxY, TrigFE.Value)
+    else
+      v:=TrigFE.Value;
+
+    Ycurs.setCursor(a, v);
   end;
 end;
+
+procedure TFRFFrm.TrigFEChange(Sender: TObject);
+var
+  p: cpage;
+  a: caxis;
+  v:double;
+begin
+  p := pageSpm;
+  a := p.activeAxis;
+  if a.Lg then
+    v:=evalLogPos( a.minY, a.maxY, TrigFE.Value)
+  else
+    v:=TrigFE.Value;
+  Ycurs.setCursor(a, v);
+  SpmChart.Repaint;
+end;
+
 
 procedure TFRFFrm.ShockSBDownClick(sender: tobject);
 var
@@ -3171,6 +3205,7 @@ begin
   SetLength(s.m_shockList.m_coh, 1);
   s.m_shockList.evalCoh(t.m_shockList, hideind);
 end;
+
 
 { cSRSTaho }
 procedure cSRSTaho.setcfg(c: cSpmCfg);
@@ -3957,6 +3992,7 @@ begin
 
     TFRFFrm(Frm).SignalsLV.drawcolorbox := true;
     TFRFFrm(Frm).SignalsLV.getcolor := fgetcolor;
+    TFRFFrm(Frm).TrigFE.Value:=TFRFFrm(Frm).m_spmTrig;
     t := TFRFFrm(Frm).getTaho;
     if t <> nil then
     begin

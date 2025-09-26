@@ -1314,7 +1314,7 @@ end;
 procedure cStageFolder.setBlCount(c: integer);
 var
   bl:cBladeFolder;
-  f:string;
+  f, s:string;
 begin
   while c<>ChildCount do
   begin
@@ -1325,7 +1325,10 @@ begin
       begin
         bl.setObjType(cBladeFolder(selected).ObjType);
       end;
-      bl.name:='Bl_'+inttostr(ChildCount+1);
+      s:=inttostr(ChildCount+1);
+      if length(s)<2 then
+        s:='0'+s;
+      bl.name:='Bl_'+s;
       AddChild(bl);
     end
     else

@@ -35,6 +35,7 @@ object FRFFrm: TFRFFrm
     Top = 0
     Width = 775
     Height = 659
+    Cursor = crSizeAll
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 0
@@ -604,6 +605,7 @@ object FRFFrm: TFRFFrm
       Margins.Bottom = 4
       Increment = 0.100000000000000000
       TabOrder = 13
+      OnChange = TrigFEChange
     end
     object HideExcelCB: TCheckBox
       Left = 173

@@ -3,7 +3,9 @@ unit uSpmChart;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes,
+  Graphics, jpeg, OpenGL, dglOpenGL,
+  Controls, Forms,
   Dialogs, StdCtrls, Buttons, Grids, ExtCtrls, uRecBasicFactory, inifiles,
   uControlObj, uEventList, udrawobj,
   uComponentservises, uEventTypes, ComCtrls, uBtnListView, recorder,
@@ -83,10 +85,14 @@ type
     // Тахо канал для расчета
     m_tahoName:string;
     m_tahoSpm:cspm;
+    // скриншот
+    needSave:boolean;
+    SavePath:string;
   protected
     fShowProfile, fShowWarnings, fShowAlarms, fShowRms, fShowPhase: boolean;
   public
     procedure SpmChartInit(Sender: TObject);
+    procedure doRedraw(Sender: TObject);
   public
     // список тегов привязанных к чарту
     m_tagslist: tstringlist;
@@ -171,6 +177,7 @@ type
   public
     eList:ceventlist;
     initevents:boolean;
+    m_saveFolder:string;
   private
     factivechart:tSpmChart;
     m_counter: integer;
@@ -255,9 +262,20 @@ begin
   g_SpmFactory.doCursorMove(self);
 end;
 
+function encodeString(s:string):string;
+var
+  I: Integer;
+begin
+  s:=StringReplace(S, ':', '_', [rfReplaceAll]);
+  result:=s;
+end;
+
 procedure TSpmChart.doKeyDown(sender:tobject; var Key: Word;  Shift: TShiftState);
 var
   p: cpage;
+  d:TDateTime;
+  str, fld:string;
+  t:double;
 begin
   if GetKeyState(VK_CONTROL)<0 then
   begin
@@ -283,7 +301,157 @@ begin
   begin
     testAddScale(false, false);
   end;
+  // скриншот
+  if GetKeyState(VK_F6)<0 then
+  begin
+    d:=now;
+    t:=GetRCTime;
+    if g_SpmFactory.m_saveFolder='' then
+    begin
+      fld:=TrimPath(GetMeraFile);
+    end
+    else
+    begin
+      fld:=g_SpmFactory.m_saveFolder;
+    end;
+    str:=encodeString(DateToStr(date));
+    str:=fld+'\'+'Spm_'+str+'_Time_'+FloatToStr(t)+'.jpg';
+    savepath:=str;
+    needsave:=true;
+    //spmChart.SaveToFile(str);
+    //spmChart.SaveWindowToFile(str);
+  end;
 end;
+
+procedure SaveOpenGLWindowToFileAdvanced(hWnd: HWND; AWidth, AHeight: Integer; const AFileName: string);
+var
+  Data: array of Byte;
+  Bitmap: TBitmap;
+  Pixel: PRGBTriple;
+  JpegImg: TJPEGImage;
+  i, j, SrcIndex, DstIndex: Integer;
+  ReadFormat: GLenum;
+begin
+  SetLength(Data, AWidth * AHeight * 4); // Используем RGBA для надежности
+  // Пробуем разные форматы чтения
+  ReadFormat := GL_RGBA;
+  glReadPixels(0, 0, AWidth, AHeight, ReadFormat, GL_UNSIGNED_BYTE, @Data[0]);
+  Bitmap := TBitmap.Create;
+  try
+    Bitmap.Width := AWidth;
+    Bitmap.Height := AHeight;
+    Bitmap.PixelFormat := pf24bit;
+    // Вручную конвертируем пиксели
+    for i := 0 to AHeight - 1 do
+    begin
+      for j := 0 to AWidth - 1 do
+      begin
+        // Вычисляем индексы для исходных данных и целевого bitmap
+        SrcIndex:=((AHeight - 1 - i) * AWidth + j) * 4;
+        DstIndex:= i * AWidth + j;
+
+        // Получаем указатель на пиксель в bitmap
+
+        Pixel := Bitmap.ScanLine[i];
+        Inc(Pixel, j);
+
+        // Конвертируем форматы
+        case ReadFormat of
+          GL_RGB, GL_RGBA:
+            begin
+              Pixel^.rgbtRed := Data[SrcIndex];
+              Pixel^.rgbtGreen := Data[SrcIndex + 1];
+              Pixel^.rgbtBlue := Data[SrcIndex + 2];
+            end;
+          GL_BGR:
+            begin
+              Pixel^.rgbtRed := Data[SrcIndex + 2];
+              Pixel^.rgbtGreen := Data[SrcIndex + 1];
+              Pixel^.rgbtBlue := Data[SrcIndex];
+            end;
+        end;
+      end;
+    end;
+    // Сохраняем результат
+    JpegImg := TJPEGImage.Create;
+    try
+      JpegImg.Assign(Bitmap);
+      JpegImg.CompressionQuality := 90;
+      JpegImg.SaveToFile(AFileName);
+    finally
+      JpegImg.Free;
+    end;
+  finally
+    Bitmap.Free;
+  end;
+end;
+
+
+procedure SaveOpenGLWindowToFile(hDC: HDC; AWidth, AHeight: Integer; const AFileName: string);
+var
+  Data: array of Byte;
+  Bitmap: TBitmap;
+  JpegImg: TJPEGImage;
+  i, LineSize, ActualLineSize: Integer;
+  ReadRect: TRect;
+begin
+  ReadRect := Rect(0, 0, AWidth, AHeight);
+
+  // Вычисляем размер строки с выравниванием по 4 байта
+  LineSize := AWidth * 3;
+  if (LineSize mod 4) <> 0 then
+    ActualLineSize := LineSize + (4 - (LineSize mod 4))
+  else
+    ActualLineSize := LineSize;
+
+  SetLength(Data, ActualLineSize * AHeight);
+
+  // Читаем пиксели в формате RGB (попробуйте также GL_BGR если RGB не работает)
+  glReadPixels(0, 0, AWidth, AHeight, GL_RGB, GL_UNSIGNED_BYTE, @Data[0]);
+
+  Bitmap := TBitmap.Create;
+  try
+    Bitmap.Width := AWidth;
+    Bitmap.Height := AHeight;
+    Bitmap.PixelFormat := pf24bit;
+
+    // Копируем данные с учетом выравнивания и переворачиваем по вертикали
+    for i := 0 to AHeight - 1 do
+      Move(Data[(AHeight - 1 - i) * ActualLineSize],
+           Bitmap.ScanLine[i]^,
+           LineSize);  // копируем только значимые байты (без выравнивания)
+
+    JpegImg := TJPEGImage.Create;
+    try
+      JpegImg.Assign(Bitmap);
+      JpegImg.SaveToFile(AFileName);
+    finally
+      JpegImg.Free;
+    end;
+  finally
+    Bitmap.Free;
+  end;
+end;
+
+procedure TSpmChart.doRedraw(Sender: TObject);
+var
+  s:string;
+begin
+  if needsave then
+  begin
+    needsave:=false;
+    while fileexists(savepath) do
+    begin
+      s:=TrimExt(savepath);
+      s:=modname(s,false);
+      SavePath:=s+'.jpg';
+    end;
+    SaveOpenGLWindowToFileAdvanced(spmchart.dc, spmchart.Width, spmchart.Height,savepath);
+    //SaveOpenGLWindowToFile(spmchart.dc, Width,Height,savepath);
+    //spmChart.SaveWindowToFile(savepath);
+  end;
+end;
+
 
 
 procedure TSpmChart.DblClick(Sender: TObject);
@@ -548,6 +716,7 @@ begin
   spmChart.OnInit := SpmChartInit;
   spmChart.OnKeyDown:=doKeyDown;
   spmChart.OnCursorMove:=doCursorMove;
+  spmChart.OnDraw:=doRedraw;
 
   m_labList := tlist.create;
 
@@ -640,9 +809,9 @@ var
   ti: TSpmTagInfo;
 begin
   inherited;
-  a_pIni.WriteInteger(str, 'TypeRes', m_tagslist.Count);
+  a_pIni.WriteInteger(str, 'TypeRes', m_TypeRes );
   a_pIni.WriteString(str, 'TahoName', m_tahoName);
-  a_pIni.WriteInteger(str, 'SpmCount', m_TypeRes);
+  a_pIni.WriteInteger(str, 'SpmCount', m_tagslist.Count);
   for i := 0 to m_tagslist.Count - 1 do
   begin
     ti := TagInfo(i);
@@ -825,6 +994,9 @@ procedure TSpmChart.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
   p:cpage;
+  str, fld:string;
+  d:TDateTime;
+  t:double;
 begin
   if GetKeyState(VK_CONTROL)<0 then
   begin
@@ -1070,6 +1242,7 @@ begin
   UpdateLabels;
   UpdateBands;
 end;
+
 
 
 procedure TSpmChart.UpdateBands;
@@ -1440,6 +1613,7 @@ begin
   m_Guid := IID_CHARTSPM;
   elist:=cEventList.create(self, true);
   CreateEvents;
+  m_saveFolder:='';
 end;
 
 procedure TSpmChart.createEvents;
@@ -1687,6 +1861,7 @@ function ISpmFrm.doRepaint: boolean;
 begin
   inherited;
   TSpmChart(m_pMasterWnd).UpdateView;
+
 end;
 
 { TSpmTagInfo }
