@@ -6,6 +6,11 @@ interface
 
 const
   ExcelApp = 'Excel.Application';
+
+  xlByColumns=2;
+  xlByRows =1;
+  xlNext=	1;
+  xlPrevious=2;
   // ----- Параметры специальной вставки -----------------
   xlAll = 1;
   xlFormulas = 2;
@@ -15,6 +20,7 @@ const
   xlDataValidation = 6;
   xlAllExceptBorders = 7;
   xlColumnWidths = 8;
+  xlPasteAllMergingConditionalFormats = 14;
 
   {xlPasteAll = $FFFFEFF8;
   xlPasteAllExceptBorders = $00000007;
@@ -28,6 +34,7 @@ const
   xlPasteValuesAndNumberFormats = $0000000C;}
 
   xlPasteAll                      =	-4104 ; // Вставка всех данных
+  xlPasteAll_                      =	-4163;
   xlPasteAllExceptBorders         =	7	    ; // Вставка всего содержимого за исключением вида границ диапазона
   xlPasteAllUsingSourceTheme      =	13    ; // Вставка всего содержимого, используя тему оформления источника
   xlPasteColumnWidths	            =8	    ; // Копирует ширину столбцов
@@ -264,6 +271,7 @@ const
   xlConeToPoint=4;
   xlConeToMax=5;
 
+
   function CheckExcelInstall:boolean;
   function CheckExcelRun: boolean;
   function RunExcel(DisableAlerts:boolean=true; Visible: boolean=false): boolean;
@@ -290,14 +298,15 @@ const
   Function  CloseExcel:boolean;
 
   // получить объект диапазона для установки свойств
-  Function GetRangeObj(sheet:OleVariant;cell1,cell2:tpoint):OleVariant;
+  Function GetRangeObj(sheetInd:integer;cell1,cell2:tpoint):OleVariant;overload;
+  Function GetRangeObj(sheet:OleVariant;cell1,cell2:tpoint):OleVariant;overload;
   Function GetRangeAdress(sheet:OleVariant;cell1,cell2:tpoint):string;
   Function RangeObjToAdress(r:OleVariant):string;
   Function  GetRange(sheet:OleVariant;range:string):OleVariant;
   Procedure  SetRangeBorder(range:OleVariant);
 
   Function  SetRange(sheet:OleVariant;range:string;value_:OleVariant):boolean;
-  Function  SetCell(sheetIndex:integer;row,col:integer; value:OleVariant):boolean;
+  Function  SetCell(sheet:OleVariant;row,col:integer; value:OleVariant):boolean;
 
   Function  SetColumnWidth(sheet:OleVariant;column:OleVariant;width:real):boolean;
   Function  SetRowHeight(sheet:OleVariant;row:OleVariant;height:real):boolean;
@@ -377,6 +386,15 @@ const
   procedure CopyPage(sheetindex:integer);overload;
   procedure CopyPage(wbSrc,wbDst:oleVariant; pageIndSrc, pageIndDst:integer);overload;
   procedure CopyPage(wbSrc,wbDst:oleVariant; pageIndSrc:integer; pageDst:olevariant);overload;
+  // в активном доке
+  procedure RunMacros(Mname:string);
+  function IsExcelFileOpen(const FilePath: string): Boolean;
+  // получить номер строки в которое встречена пустая ячейка
+  // проверка идет по колонке col в листе sh начиная с sh
+  function GetEmptyRow(sh, r0, col: integer): integer;
+  function ClearExcelSheet(const ExcelApp: Variant;
+                           const ASheetIdentifier: OleVariant;
+                           AContentsOnly: Boolean = False): Boolean;
 
 var
   E:OleVariant;
@@ -385,6 +403,85 @@ implementation
 uses
   forms;
 
+function ClearExcelSheet(const ExcelApp: Variant; const ASheetIdentifier: OleVariant; AContentsOnly: Boolean = False): Boolean;
+var
+  Sheet: Variant;
+begin
+  Result := False;
+  // Проверяем, что OLE-объект Excel действителен
+  if VarIsEmpty(ExcelApp) or VarIsNull(ExcelApp) then
+    Exit;
+  try
+    // Получаем доступ к листу по имени или индексу
+    Sheet := ExcelApp.Worksheets[ASheetIdentifier];
+
+    // Выбираем метод очистки
+    if AContentsOnly then
+      // Очищаем только содержимое используемых ячеек
+      Sheet.UsedRange.ClearContents
+    else
+      // Очищаем содержимое, форматы и примечания
+      Sheet.UsedRange.Clear;
+
+    Result := True;
+  except
+    on E: Exception do
+    begin
+      // В случае ошибки (например, лист не найден) функция вернет False.
+      // Можно добавить логирование или показ сообщения:
+      // ShowMessage('Ошибка при очистке листа Excel: ' + E.Message);
+    end;
+  end;
+end;
+
+// получить номер строки в которое встречена пустая ячейка
+// проверка идет по колонке col в листе sh начиная с sh
+function GetEmptyRow(sh, r0, col: integer): integer;
+var
+  ws, rng: olevariant;
+  res: string;
+
+  adr: string;
+begin
+  ws := E.ActiveWorkbook.Sheets[sh];
+  ws.activate;
+  res := ws.cells[r0, col];
+  while res <> '' do
+  begin
+    inc(r0);
+    res := ws.cells[r0, col];
+  end;
+  result := r0;
+end;
+
+function IsExcelFileOpen(const FilePath: string): Boolean;
+var
+  ExcelApp: Variant;
+  Workbook: Variant;
+  i: Integer;
+begin
+  Result := False;
+  if VarIsEmpty(E) then
+  begin
+    // Подключаемся к запущенному экземпляру Excel (если он есть)
+    E := GetActiveOleObject('Excel.Application');
+  end
+  else
+  begin
+
+  end;
+  // Проверяем все открытые книги
+  for i := 1 to E.Workbooks.Count do
+  begin
+    Workbook := E.Workbooks[i];
+    if SameText(Workbook.FullName, ExpandFileName(FilePath)) then
+    begin
+      Result := True;
+      //ExcelApp.ActiveWorkbook:=Workbook;
+      Break;
+    end;
+  end;
+end;
 
 function CheckExcelInstall:boolean;
 var
@@ -442,6 +539,26 @@ begin
     Result:=false;
   end;
 end;
+
+
+Function CloseExcel:boolean;
+var
+  res:olevariant;
+begin
+  CloseExcel:=true;
+  try
+  begin
+    E.Quit;
+    // Послать Excel-у команду закрытия,
+    // т.к. eApp.Quit иногда сбоит, а под Win7 вообще никогда не срабатывает
+    //SendMessageA(E.Hinstance, WM_QUIT, 0, 0);
+    //Marshal.FinalReleaseComObject(eApp);
+    E:=Unassigned;
+  end;
+  except
+    CloseExcel:=false;
+  end;
+End;
 
 
 Function  FontToEFont(font:Tfont;EFont:OleVariant):boolean;
@@ -503,9 +620,9 @@ Function OpenWorkBook(file_:string):boolean;
 begin
   OpenWorkBook:=true;
   try
-  E.Workbooks.Open(file_);
+    E.Workbooks.Open(file_);
   except
-  OpenWorkBook:=false;
+    OpenWorkBook:=false;
   end;
 End;
 
@@ -630,22 +747,6 @@ begin
   end;
 end;
 
-Function CloseExcel:boolean;
-begin
-  CloseExcel:=true;
-  try
-  begin
-    E.Quit;
-    // Послать Excel-у команду закрытия,
-    // т.к. eApp.Quit иногда сбоит, а под Win7 вообще никогда не срабатывает
-    SendMessageA(E.Hinstance, WM_QUIT, 0, 0);
-    //Marshal.FinalReleaseComObject(eApp);
-    E:=null;
-  end;
-  except
-    CloseExcel:=false;
-  end;
-End;
 
 //--------------------------------------------------------------------------
 Function  SetRange(sheet:OleVariant;range:string;value_:OleVariant):boolean;
@@ -658,13 +759,13 @@ begin
   end;
 End;
 
-Function  SetCell(sheetIndex:integer;row,col:integer; value:OleVariant):boolean;
+Function  SetCell(sheet:OleVariant;row,col:integer; value:OleVariant):boolean;
 var
   aSheet, oRng:oleVariant;
 begin
   SetCell:=true;
   try
-    E.ActiveWorkbook.WorkSheets[sheetIndex].cells[row,col]:=value;
+    E.ActiveWorkbook.WorkSheets[sheet].cells[row,col]:=value;
   except
     SetCell:=false;
   end;
@@ -697,18 +798,32 @@ begin
   result:=E.ActiveWorkbook.Sheets.Item[sheet].Range[v_Cell1, v_Cell2];
 end;
 
-Function GetRangeObj(sheet:OleVariant;cell1,cell2:tpoint):OleVariant;
+Function GetRangeObj(sheet:OleVariant;cell1,cell2:tpoint):OleVariant;overload;
 var
   v_cell1, v_cell2: OLEVariant;
 begin
   // получаем ссылку на объект Cells, соответствующей ячейке A1}
   //v_Cell1:=E.ActiveWorkbook.Sheets.Item[sheet].Cells[1,1];
-  v_Cell1:=E.ActiveWorkbook.Sheets.Item[sheet].Cells.Item[cell1.x, cell1.y];
+  v_Cell1:=sheet.Cells.Item[cell1.x, cell1.y];
   // получаем ссылку на объект Cells, соответствующей ячейке C5}
   //v_Cell2:=E.ActiveWorkbook.Sheets.Item[sheet].Cells[5,3];
-  v_Cell2:=E.ActiveWorkbook.Sheets.Item[sheet].Cells.Item[cell2.x, cell2.y];
+  v_Cell2:=sheet.Cells.Item[cell2.x, cell2.y];
   // получаем объект Range размером 3х5}
-  result:=E.ActiveWorkbook.Sheets.Item[sheet].Range[v_Cell1, v_Cell2];
+  result:=sheet.Range[v_Cell1, v_Cell2];
+end;
+
+Function GetRangeObj(sheetind:integer;cell1,cell2:tpoint):OleVariant;
+var
+  v_cell1, v_cell2: OLEVariant;
+begin
+  // получаем ссылку на объект Cells, соответствующей ячейке A1}
+  //v_Cell1:=E.ActiveWorkbook.Sheets.Item[sheet].Cells[1,1];
+  v_Cell1:=E.ActiveWorkbook.Sheets.Item[sheetind].Cells.Item[cell1.x, cell1.y];
+  // получаем ссылку на объект Cells, соответствующей ячейке C5}
+  //v_Cell2:=E.ActiveWorkbook.Sheets.Item[sheet].Cells[5,3];
+  v_Cell2:=E.ActiveWorkbook.Sheets.Item[sheetind].Cells.Item[cell2.x, cell2.y];
+  // получаем объект Range размером 3х5}
+  result:=E.ActiveWorkbook.Sheets.Item[sheetind].Range[v_Cell1, v_Cell2];
 end;
 
 Function  GetRange(sheet:OleVariant;range:string):OleVariant;
@@ -1512,6 +1627,7 @@ begin
   rng:=E.ActiveWorkbook.WorkSheets[sheetindex].UsedRange;
   rng.copy;
   //rng.PasteSpecial(xlPasteValues);
+  //rng.PasteSpecial(xlPasteColumnWidths);
   rng.PasteSpecial(xlValues);
   rng.PasteSpecial(xlFormats);
   rng.PasteSpecial(xlDataValidation);
@@ -1530,30 +1646,62 @@ begin
   wbDst.WorkSheets[pageIndSrc].Activate;
   wbDst.WorkSheets[pageIndSrc].select;
   dst:=wbDst.WorkSheets[pageIndDst].UsedRange;
+  //dst.PasteSpecial(xlAll);
+  dst.Paste;
+  dst.PasteSpecial(xlPasteAll_);
+  dst.PasteSpecial(xlFormats);
   dst.PasteSpecial(xlValues);
-  rng.PasteSpecial(xlFormats);
-  rng.PasteSpecial(xlDataValidation);
-  rng.PasteSpecial(xlColumnWidths);
+  dst.PasteSpecial(xlDataValidation);
+  dst.PasteSpecial(xlColumnWidths);
 end;
+
 
 procedure CopyPage(wbSrc,wbDst:oleVariant; pageIndSrc:integer; pageDst:olevariant);
 var
-  rng, dst:olevariant;
+  rngcell, rng, mergedRng, dst_mr,
+  dst, ss:olevariant;
+  i,j,x,y, ix, iy, ind:integer;
+  copiedrng:tstringlist;
+const
+  xlPasteFormats = $FFFFEFE6;
+  xlNone = $FFFFEFD2;
 begin
+  VisibleExcel(true);
+
   wbSrc.WorkSheets[pageIndSrc].Activate;
-  wbSrc.WorkSheets[pageIndSrc].select;
+  //wbSrc.WorkSheets[pageIndSrc].Select;
+  wbSrc.Sheets.Item[pageIndSrc].Select;
+
+
   //E.ActiveWorkbook.WorkSheets[sheetindex].PasteSpecial(xlPasteFormats+xlPasteValues+xlPasteColumnWidths+xlPasteValidation);
-  rng:=wbSrc.WorkSheets[pageIndSrc].UsedRange;
+  ss:=wbSrc.WorkSheets[pageIndSrc];
+  rng:=ss.UsedRange;
+  rng.activate;
+  rng.select;
   rng.copy;
 
-  pageDst.Activate;
-  pageDst.select;
+
   dst:=pageDst.UsedRange;
-  dst.PasteSpecial(xlAll);
+  //Paste:=xlAll, Operation:=xlNone, SkipBlanks:=False , Transpose:=False
   dst.PasteSpecial(xlValues);
-  rng.PasteSpecial(xlFormats);
-  rng.PasteSpecial(xlDataValidation);
-  rng.PasteSpecial(xlColumnWidths);
+  dst.PasteSpecial(xlFormats);
+  dst.PasteSpecial(xlDataValidation);
+  dst.PasteSpecial(xlColumnWidths);
+  dst.PasteSpecial(xlPasteAllMergingConditionalFormats,xlNone,False,False);
+
+
+  VisibleExcel(false);
+end;
+
+procedure RunMacros(Mname:string);
+begin
+  try
+    //E.ActiveWorkbook.Run(Mname);
+    //e.ActiveDocument.Application.Run(Mname);
+    e.Application.Run(Mname);
+  except
+
+  end;
 end;
 
 end.
