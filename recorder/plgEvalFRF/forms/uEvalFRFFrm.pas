@@ -1491,15 +1491,14 @@ begin
       0: tr := ActiveSignal.lineFrf;
       2: tr := ActiveSignal.lineSpm;
     end;
-    if tr<>nil then
-    begin
-      l.parent := tr;
-      a := caxis(l.GetParentByClassName('cAxis'));
-      p := cpage(a.GetParentByClassName('cPage'));
+    if tr=nil then
+      exit;
+    l.parent := tr;
+    a := caxis(l.GetParentByClassName('cAxis'));
+    p := cpage(a.GetParentByClassName('cPage'));
 
-      if b.m_fmaxi > tr.Count then
-        exit;
-    end;
+    if b.m_fmaxi > tr.Count then
+      exit;
     if b.m_fmaxi > 0 then
     begin
       max := tr.GetYByInd(b.m_fmaxi);
