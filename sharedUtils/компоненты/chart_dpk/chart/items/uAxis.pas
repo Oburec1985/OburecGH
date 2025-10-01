@@ -1026,9 +1026,9 @@ var
   obj: cdrawobj;
   p: cpage;
 begin
+  p := cpage(getpage);
   if fLg then
   begin
-    p := cpage(getpage);
     // обновляем сетку если активная ось
     if active then
     begin
@@ -1040,6 +1040,8 @@ begin
   end
   else
   begin
+    if p.lgx then
+      p.prepareXLgLineData;
     // p.gridlinecount_Y:=p.prevgridcountY;
   end;
   // закомент от 30.09.24 - некорректно рисовались оси

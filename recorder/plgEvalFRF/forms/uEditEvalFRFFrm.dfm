@@ -501,9 +501,9 @@ object EditFrfFrm: TEditFrfFrm
       end
       object Frf_YX_XY_CB: TCheckBox
         Left = 315
-        Top = 219
-        Width = 167
-        Height = 21
+        Top = 218
+        Width = 168
+        Height = 23
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -836,7 +836,7 @@ object EditFrfFrm: TEditFrfFrm
     end
     object ProfileBtn: TButton
       Left = 400
-      Top = 48
+      Top = 55
       Width = 147
       Height = 25
       Caption = #1055#1088#1086#1092#1080#1083#1100' '#1080#1089#1087#1099#1090#1072#1085#1080#1103

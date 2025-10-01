@@ -2324,6 +2324,7 @@ begin
   until not Process32Next(hProcessSnap, pe32);
 
   CloseHandle(hProcessSnap);
+  E:=Unassigned;
 end;
 
 

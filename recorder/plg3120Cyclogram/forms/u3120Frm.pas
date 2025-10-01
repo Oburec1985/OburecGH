@@ -16,7 +16,7 @@ uses
   pluginclass, urcfunc,
   uTest,
   uThresholds3120Frm,
-  uEditPropertiesFrm,
+  uEditPropertiesFrm, uTransmisNumFrm,
   uExcel,
   pngimage;
 
@@ -648,6 +648,7 @@ begin
   a_pIni.WriteInteger(str, 'Units', TimeUnitsCB.ItemIndex);
   a_pIni.WriteInteger(str, 'Table_Controls_Splitter_Pos', RightGB.Width);
   a_pIni.WriteBool(str, 'LoadState', ContinueCB.Checked);
+  a_pIni.WriteString(str, 'TransNumCfg', TransNumFrm.tostr);
 end;
 
 procedure TFrm3120.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -664,6 +665,12 @@ begin
   StopOnPause.Checked := a_pIni.ReadBool(str, 'StopOnPause', true);
   TimeUnitsCB.ItemIndex := a_pIni.ReadInteger(str, 'Units', 0);
   RightGB.Width := a_pIni.ReadInteger(str, 'Table_Controls_Splitter_Pos', RightGB.Width);
+  s:=a_pIni.ReadString(str, 'TransNumCfg', '');
+  if s<>'' then
+  begin
+    TransNumFrm.FromStr(s);
+    TransNumFrm.ShowColumns;
+  end;
   SGChange(TableModeSG);
   SGChange(ControlPropSG);
 end;

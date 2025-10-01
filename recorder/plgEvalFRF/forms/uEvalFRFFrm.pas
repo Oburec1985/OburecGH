@@ -760,7 +760,7 @@ begin
       exit;
     end;
     minmax.y := TrigFE.Value;
-    minmax.x := 0.5 * TrigFE.Value;
+    minmax.x := 0.95 * TrigFE.Value;
     FindExtremumsInY(s.lineFrf.data_r, 1, b.m_f2i, minmax.y, minmax.x, s.m_extremums);
     if s.m_extremums.Count = 0 then
     begin
@@ -887,9 +887,10 @@ var
   minmax: point2d;
   v, v1, d: double;
 begin
-  if VarIsEmpty(E) then
+  KillAllExcelProcesses;
+  if not CheckVarObj(E) then
   begin
-    // if not CheckExcelRun then
+    if not CheckExcelRun then
     begin
       CreateExcel;
       VisibleExcel(true);
@@ -2526,6 +2527,13 @@ var
   db, tb: TDataBlock;
 begin
   // dir := extractfiledir(g_FrfFactory.m_meraFile) + '\Shock';
+  if g_mbase.SelectBlade=nil then
+  begin
+    StatusEdit.Text:='Не выбрана лопатка';
+    StatusEdit.color:=clPink;
+    exit;
+  end;
+
   dir := extractfiledir(g_mbase.SelectBlade.getFolder) + '\Shock';
   f := dir + '\' + trimext(extractfilename(g_FrfFactory.m_MeraFile))
     + '_Shocks.mera';
@@ -2555,6 +2563,10 @@ begin
       begin
         db := s.m_shockList.getPrevBlock(db);
         tb := t.m_shockList.getPrevBlock(tb);
+      end;
+      if (tb=nil) or (db = nil) then
+      begin
+        continue;
       end;
       num := s.m_shockList.Count - j;
       // spm
@@ -3877,6 +3889,7 @@ begin
     begin
       p3 := blade.Tone(i);
       b := f.m_bands.addband(p3.x, p3.y, p3.z, f.SpmChart);
+      b.m_freqband.m_LineLabel.visible := f.m_showBandLab;
     end;
     t := f.getTaho;
     if t <> nil then
@@ -4011,6 +4024,7 @@ begin
       TFRFFrm(Frm).UpdateBlocks;
     end;
     CreateBands(TFRFFrm(Frm), g_mbase);
+
     blade := g_mbase.SelectBlade;
     if blade <> nil then
     begin
@@ -4153,7 +4167,7 @@ var
   i: integer;
   c: TComplex_d;
 begin
-  for i := 0 to m_spmsize - 1 do
+  for i := 0 to length(m_mod2) - 1 do
   begin
     c := sopr(TCmxArray_d(m_ClxData.p)[i]);
     c := TCmxArray_d(m_ClxData.p)[i] * c;
@@ -4392,7 +4406,7 @@ begin
     end;
     s := getBlock(i);
     t := TahoShockList.getBlock(i);
-    for j := 0 to s.m_spmsize - 1 do // проход по спектру
+    for j := 0 to  length(s.m_Cxy) - 1 do // проход по спектру
     begin
       p1 := TCmxArray_d(s.m_ClxData.p)[j];
       p2 := sopr(TCmxArray_d(t.m_ClxData.p)[j]);
@@ -4405,7 +4419,7 @@ begin
   end;
   // усреднение по серии ударов
   k := 1 / (n);
-  for j := 0 to s.m_spmsize - 1 do
+  for j := 0 to length(s.m_Cxy) - 1 do
   begin
     m_coh[j] := mod2(m_Cxy[j]) / (m_Sxx[j] * m_Syy[j]);
     // делаем средний кросс спектр

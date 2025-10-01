@@ -1,4 +1,4 @@
-library plg3120Cyclogram;
+library plgEvakFRF;
 
 uses
   Windows,
@@ -7,14 +7,12 @@ uses
   Classes,
   uLogFile in '..\..\sharedUtils\utils\uLogFile.pas',
   usetlist in '..\..\sharedUtils\utils\lists\usetlist.pas',
-  uComponentServises in '..\..\sharedUtils\utils\uComponentServises.pas',
   uListMath in '..\..\sharedUtils\math\uListMath.pas',
   uCommonTypes in '..\..\sharedUtils\uCommonTypes.pas',
   uGlTurbine in '..\..\3d\3dComponents\components\Asutp\uGlTurbine.pas',
   uTrfrmToolsFrame in '..\..\3d\forms\uTrfrmToolsFrame.pas' {TrfrmToolsFrame: TFrame},
   uObjCtrFrame in '..\..\3d\forms\uObjCtrFrame.pas' {CtrlViewFrame: TFrame},
   uMatrix in '..\..\sharedUtils\math\uMatrix.pas',
-  PluginClass in '..\SharedRUnits\PluginClass.pas',
   uCompMng in '..\SharedRUnits\uCompMng.pas',
   uRecBasicFactory in '..\SharedRUnits\uRecBasicFactory.pas',
   uRecorderEvents in '..\SharedRUnits\uRecorderEvents.pas',
@@ -33,21 +31,15 @@ uses
   transf in '..\SharedRUnits\interfaces\transf.pas',
   transformers in '..\SharedRUnits\interfaces\transformers.pas',
   waitwnd in '..\SharedRUnits\interfaces\waitwnd.pas',
+  uEditEvalFRFFrm in 'forms\uEditEvalFRFFrm.pas' {EditFrfFrm},
+  uEvalFRFFrm in 'forms\uEvalFRFFrm.pas' {FRFFrm},
+  PluginClass in '..\SharedRUnits\PluginClass.pas',
   uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
-  u3120Frm in 'forms\u3120Frm.pas' {Frm3120},
-  u3120Factory in '3120\u3120Factory.pas',
-  u3120RTrig in '3120\u3120RTrig.pas',
-  uControlObj in '3120\uControlObj.pas',
-  uModeObj in '3120\uModeObj.pas',
-  uProgramObj in '3120\uProgramObj.pas',
-  uBaseProgramObj in 'uBaseProgramObj.pas',
-  uTest in '3120\uTest.pas',
-  u3120ControlObj in '3120\u3120ControlObj.pas',
-  uThresholds3120Frm in 'forms\uThresholds3120Frm.pas' {ThresholdFrm},
-  uEditPropertiesFrm in 'forms\uEditPropertiesFrm.pas' {EditPropertiesFrm},
-  uExcel in '..\..\sharedUtils\utils\reports\excel\uExcel.pas',
-  uTransmisNumFrm in 'forms\uTransmisNumFrm.pas' {TransNumFrm},
-  uTagsListFrame in '..\SharedRUnits\uTagsListFrame.pas' {TagsListFrame: TFrame};
+  uSpmProfile in 'forms\uSpmProfile.pas' {SpmProfileFrm},
+  uEditTest in 'forms\uEditTest.pas' {EditTestFrm},
+  uBladeDB in 'units\uBladeDB.pas',
+  uComponentServises in '..\..\sharedUtils\utils\uComponentServises.pas',
+  uSpmBand in 'units\uSpmBand.pas';
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 
@@ -112,23 +104,55 @@ begin
   GPluginInstance:=NIL;
   piPlg._release;
 end;
+
 {Функция получения строки описания plug-in`а}
 function GetPluginDescription: LPCSTR; cdecl;
+var
+  I: Integer;
 begin
-   //Описание извлекается из глобальной описательной структуры}
-   Result := LPCSTR(GPluginInfo.Dsc);
-   //Result := LPCSTR('Модуль для теста (пустой)');
+  for I := 0 to length(GPluginInfo.Dsc)-1 do
+  begin
+    GPlgDSC[i]:=GPluginInfo.Dsc[i+1];
+  end;
+  Result := LPCSTR(@GPlgDSC[0]);
 end;
+
 {Функция получения полного описания plug-in`а}
 procedure GetPluginInfo(var lpPluginInfo: PLUGININFO); cdecl;
+var
+  lName, lDst, lVend:array of ansichar;
+  i:integer;
 begin
   //Описание извлекается из глобальной описательной структуры
   //Копирование строк производится именно функциями StrCopy()
   // из-за того, что структура описания plug-in`а описана
   // в языке C++}
-  StrCopy( @lpPluginInfo.name,LPCSTR(GPluginInfo.Name));
-  StrCopy( @lpPluginInfo.describe,LPCSTR(GPluginInfo.Dsc));
-  StrCopy( @lpPluginInfo.vendor,LPCSTR(GPluginInfo.Vendor));
+  setlength(lname, length(GPluginInfo.Name)+1);
+  setlength(lDst, length(GPluginInfo.Dsc)+1);
+  setlength(lVend, length(GPluginInfo.Vendor)+1);
+  for I := 0 to length(GPluginInfo.Name)-1 do
+  begin
+    lname[i]:=GPluginInfo.Name[i+1];
+  end;
+  for I := 0 to length(GPluginInfo.Dsc)-1 do
+  begin
+    lDst[i]:=GPluginInfo.Dsc[i+1];
+  end;
+  for I := 0 to length(GPluginInfo.Vendor)-1 do
+  begin
+    lVend[i]:=GPluginInfo.Vendor[i+1];
+  end;
+  lname[length(lname)-1]:=ansichar(0);
+  lDst[length(lDst)-1]:=ansichar(0);
+  lVend[length(lVend)-1]:=ansichar(0);
+
+  StrCopy( @lpPluginInfo.name,lpcstr(@lname[0]));
+  StrCopy( @lpPluginInfo.describe,lpcstr(@lDst[0]));
+  StrCopy( @lpPluginInfo.vendor,lpcstr(@lVend[0]));
+
+  //StrCopy( @lpPluginInfo.name,LPCSTR(GPluginInfo.Name));
+  //StrCopy( @lpPluginInfo.describe,LPCSTR(GPluginInfo.Dsc));
+  //StrCopy( @lpPluginInfo.vendor,LPCSTR(GPluginInfo.Vendor));
   lpPluginInfo.version := GPluginInfo.Version;
   lpPluginInfo.subversion := GPluginInfo.SubVertion;
 end;

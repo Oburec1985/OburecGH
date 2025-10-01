@@ -256,7 +256,8 @@ uses
   uCompMng in '..\SharedRUnits\uCompMng.pas',
   uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
   uThreshHolderAlg in 'units\uThreshHolderAlg.pas',
-  uTresHoldFrame in 'forms\uTresHoldFrame.pas' {TresHoldFrame: TFrame};
+  uTresHoldFrame in 'forms\uTresHoldFrame.pas' {TresHoldFrame: TFrame},
+  uDACFrm in 'forms\uDACFrm.pas' {DACFrm};
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

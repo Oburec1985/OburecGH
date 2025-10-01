@@ -12,6 +12,7 @@ object TagInfoEditFrm: TTagInfoEditFrm
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
+  OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 120
   TextHeight = 16
@@ -394,6 +395,7 @@ object TagInfoEditFrm: TTagInfoEditFrm
         TabOrder = 4
         Text = 'TagCB'
         OnChange = TagCBChange
+        OnDragDrop = TagCBDragDrop
       end
       object LabelEdit: TEdit
         Left = 13
@@ -414,29 +416,12 @@ object TagInfoEditFrm: TTagInfoEditFrm
       TabOrder = 2
       ExplicitLeft = 778
       ExplicitTop = 1
-      ExplicitWidth = 284
       ExplicitHeight = 574
       inherited FormChannelsGB: TGroupBox
-        Width = 284
         Height = 574
-        ExplicitWidth = 284
         ExplicitHeight = 574
-        inherited ChanNamesPanel: TPanel
-          Width = 280
-          ExplicitWidth = 280
-          inherited FilterEdit: TEdit
-            Width = 269
-            ExplicitWidth = 269
-          end
-          inherited FrmTagPropValueEdit: TEdit
-            Width = 153
-            ExplicitWidth = 153
-          end
-        end
         inherited TagsLV: TBtnListView
-          Width = 280
           Height = 443
-          ExplicitWidth = 280
           ExplicitHeight = 443
         end
       end

@@ -37,7 +37,6 @@ object Frm3120: TFrm3120
     ParentCtl3D = False
     ParentFont = False
     TabOrder = 0
-    ExplicitTop = -6
     DesignSize = (
       1154
       209)
@@ -2368,7 +2367,6 @@ object Frm3120: TFrm3120
     Height = 437
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 1071
     object Splitter3: TSplitter
       Left = 617
       Top = 1
@@ -2388,7 +2386,6 @@ object Frm3120: TFrm3120
       Align = alRight
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1072
       TabOrder = 0
-      ExplicitLeft = 538
       object ControlPropSG: TStringGrid
         Left = 2
         Top = 78
@@ -2412,8 +2409,6 @@ object Frm3120: TFrm3120
         ParentFont = False
         TabOrder = 0
         OnDblClick = ControlPropSGDblClick
-        ExplicitLeft = 3
-        ExplicitTop = 79
         RowHeights = (
           32
           32
@@ -2480,7 +2475,6 @@ object Frm3120: TFrm3120
       ParentCtl3D = False
       ParentFont = False
       TabOrder = 1
-      ExplicitWidth = 533
       object TableModeSG: TStringGrid
         Left = 1
         Top = 25
@@ -2507,7 +2501,6 @@ object Frm3120: TFrm3120
         OnKeyDown = TableModeSGKeyDown
         OnSelectCell = TableModeSGSelectCell
         OnSetEditText = TableModeSGSetEditText
-        ExplicitTop = 27
         ColWidths = (
           64
           64
@@ -2530,7 +2523,6 @@ object Frm3120: TFrm3120
     Height = 41
     Align = alBottom
     TabOrder = 2
-    ExplicitWidth = 1071
     DesignSize = (
       1154
       41)
@@ -2542,7 +2534,6 @@ object Frm3120: TFrm3120
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
       Text = #1043#1086#1090#1086#1074' '#1082' '#1079#1072#1087#1091#1089#1082#1091
-      ExplicitWidth = 903
     end
     object ReportBtn: TButton
       Left = 1005
@@ -2558,7 +2549,6 @@ object Frm3120: TFrm3120
       Font.Style = []
       ParentFont = False
       TabOrder = 1
-      ExplicitLeft = 922
     end
   end
   object Timer1: TTimer

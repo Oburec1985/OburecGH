@@ -28,7 +28,6 @@ object FRFFrm: TFRFFrm
     Align = alRight
     Color = clBackground
     ParentColor = False
-    ExplicitLeft = 621
   end
   object SpmChart: cChart
     Left = 0
@@ -281,7 +280,7 @@ object FRFFrm: TFRFFrm
     object ShockCountE: TEdit
       Left = 7
       Top = 52
-      Width = 101
+      Width = 102
       Height = 25
       Margins.Left = 4
       Margins.Top = 4
@@ -292,7 +291,7 @@ object FRFFrm: TFRFFrm
     object SaveBtn: TButton
       Left = 5
       Top = 150
-      Width = 86
+      Width = 87
       Height = 29
       Margins.Left = 4
       Margins.Top = 4
@@ -342,7 +341,7 @@ object FRFFrm: TFRFFrm
     object DelBtn: TButton
       Left = 7
       Top = 115
-      Width = 84
+      Width = 85
       Height = 28
       Margins.Left = 4
       Margins.Top = 4
@@ -354,9 +353,9 @@ object FRFFrm: TFRFFrm
     end
     object hideCB: TCheckBox
       Left = 173
-      Top = 49
+      Top = 48
       Width = 78
-      Height = 22
+      Height = 23
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -409,9 +408,9 @@ object FRFFrm: TFRFFrm
     end
     object DisableCB: TCheckBox
       Left = 115
-      Top = 49
+      Top = 48
       Width = 60
-      Height = 22
+      Height = 23
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -422,9 +421,9 @@ object FRFFrm: TFRFFrm
     end
     object SignalsGroupBox: TGroupBox
       Left = 2
-      Top = 342
+      Top = 344
       Width = 311
-      Height = 162
+      Height = 160
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 10
@@ -432,7 +431,7 @@ object FRFFrm: TFRFFrm
         Left = 2
         Top = 19
         Width = 307
-        Height = 141
+        Height = 139
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -467,9 +466,9 @@ object FRFFrm: TFRFFrm
     end
     object ResTypeRG: TRadioGroup
       Left = 173
-      Top = 74
+      Top = 75
       Width = 91
-      Height = 93
+      Height = 92
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -609,9 +608,9 @@ object FRFFrm: TFRFFrm
     end
     object HideExcelCB: TCheckBox
       Left = 173
-      Top = 168
+      Top = 167
       Width = 116
-      Height = 22
+      Height = 23
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4

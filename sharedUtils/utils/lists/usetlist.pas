@@ -3,7 +3,7 @@ unit uSetList;
 
 interface
 
-uses classes, uListMath, dialogs, ucommonmath, uqueue;
+uses classes, uListMath, dialogs, ucommonmath, uqueue, sysutils;
 
 type
 
@@ -20,14 +20,14 @@ type
   protected
     procedure setsorted(value:boolean);virtual;
     function getsorted:boolean;
-    procedure SortChildrens;
   public
+    // возвращает индекс элемента
     function AddObj(key:pointer):integer;virtual;
     procedure deletechild(node:pointer);overload;virtual;abstract;
     // вызов деструктора контейнера
     procedure deletechild(index:integer);overload;virtual;
     procedure setComparator(c:fcomparator);
-    // удаляет объект из списка
+    // удаляет объект из списка не уничтожая объект
     procedure RemoveObj(index:integer);overload;virtual;
     procedure RemoveObj(obj:tobject);overload;
     // возвращает индекс найденного объекта или -1
@@ -47,6 +47,7 @@ type
     procedure Listclear;
     property sorted:boolean read getsorted write setsorted;
  public
+    procedure SortChildrens;
     // при создани специализированного сет-а необходимо переопределить виртуальные функции
     // и назначить компаратор
     constructor create;virtual;
@@ -111,7 +112,13 @@ type
     procedure deletechild(node:pointer);override;
   public
     constructor create;override;
-    function addObj(i:integer; d:pointer):integer;
+    // созвращает индекс элемента
+    function addObj(i:integer; d:pointer):integer;overload;
+    function addObj(i:integer):integer;overload;
+    function getVal(i:integer):integer;
+    function find(i:integer):integer;
+    function findObj(i:integer):cIntNode;
+    function ChangeObj(ind:integer;i:integer):integer;
   end;
 
 
@@ -204,6 +211,7 @@ end;
 
 function cSetList.getsorted:boolean;
 begin
+
   result:=fsorted;
 end;
 
@@ -241,9 +249,20 @@ begin
       if res=0 then
       begin
         if node=key then
+        begin
+          result:=j;
           exit;
+        end;
       end;
       b:=(res<1);
+      if not b then
+      begin
+        if j>0 then
+          i:=j-1
+        else
+          i:=0;
+        break;
+      end;
       inc(j);
     end;
     if (count<>0) then
@@ -267,7 +286,7 @@ begin
         if (i+1)=count then
         begin
           add(key);
-          result:=Count;
+          result:=i+1;
         end
         else
         begin
@@ -280,7 +299,7 @@ begin
     else
     begin
       add(key);
-      result:=count;
+      result:=i;
     end;
   end
   else
@@ -706,19 +725,64 @@ var
   n:cIntNode;
 begin
   n:=cIntNode.Create;
-  result:=Add(n);
+  n.i:=i;
+  n.d:=d;
+  result:=inherited AddObj(n);
+end;
+
+function cIntNodeList.addObj(i: integer): integer;
+begin
+  result:=addObj(i, nil);
+end;
+
+function cIntNodeList.ChangeObj(ind, i: integer): integer;
+var
+  n:cIntNode;
+begin
+  n:=cIntNode(Items[ind]);
+  RemoveObj(n);
+  n.i:=i;
+  addObj(n);
 end;
 
 constructor cIntNodeList.create;
 begin
   inherited;
   destroydata:=true;
+  keyComparator:= IntNodeComparator;
   comparator:=IntNodeComparator;
 end;
 
 procedure cIntNodeList.deletechild(node: pointer);
 begin
   cIntNode(node).destroy;
+end;
+
+function cIntNodeList.find(i: integer): integer;
+var
+  n:cIntNode;
+begin
+  n:=cIntNode.Create;
+  n.i:=i;
+  result:=FindobjWithKey(n);
+  n.Destroy;
+end;
+
+function cIntNodeList.findObj(i: integer): cIntNode;
+var
+  n:cIntNode;
+  ind:integer;
+begin
+  n:=cIntNode.Create;
+  n.i:=i;
+  ind:=FindobjWithKey(n);
+  result:=cIntNode(items[ind]);
+  n.Destroy;
+end;
+
+function cIntNodeList.getVal(i: integer): integer;
+begin
+  result:=cIntNode(Items[i]).i;
 end;
 
 end.

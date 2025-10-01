@@ -7,7 +7,9 @@ uses
   types, ActiveX, forms, sysutils, windows, Classes, IniFiles, Dialogs,
   uCompMng, cfreg, uRecorderEvents, PluginClass, tags, Recorder, uRCFunc,
   uCommonMath, nativeXml,
-  Generics.Collections, Controls, uRecBasicFactory, u3120frm, u3120Factory;
+  Generics.Collections, Controls, uRecBasicFactory,
+  u3120frm, uTransmisNumFrm,
+  u3120Factory;
 
 type
   {Тип для хранения информации о plug-in`е}
@@ -26,8 +28,8 @@ var
 const
   // Глобальная переменная для храения описания plug-in`а.
   GPluginInfo: TInternalPluginInfo = (
-    Name: 'TestPlg';
-    Dsc: 'Пустой модуль';
+    Name: '3120Cyclogram';
+    Dsc: 'Испытания трансмиссии (p3120)';
     Vendor: 'НПП Мера';
     Version: 1;
     SubVertion:0;);
@@ -90,12 +92,15 @@ var
   str, str1:string;
   show:boolean;
 begin
+  TransNumFrm:=TTransNumFrm.Create(nil);
+  TransNumFrm.show;
   begin
   end;
 end;
 
 procedure destroyFormsRecorderUIThread(compMng: cCompMng);
 begin
+  TransNumFrm.Destroy;
   begin
   end;
 end;

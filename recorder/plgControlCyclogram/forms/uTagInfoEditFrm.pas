@@ -45,6 +45,8 @@ type
     procedure UpdateRowBtnClick(Sender: TObject);
     procedure BckGndColorPanClick(Sender: TObject);
     procedure TagCBChange(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure TagCBDragDrop(Sender, Source: TObject; X, Y: Integer);
   private
     m_init:boolean;
     cur:tobject;
@@ -96,6 +98,11 @@ end;
 procedure TTagInfoEditFrm.TagCBChange(Sender: TObject);
 begin
   obj.m_tag.tag:=tagcb.gettag(tagcb.ItemIndex);
+end;
+
+procedure TTagInfoEditFrm.TagCBDragDrop(Sender, Source: TObject; X, Y: Integer);
+begin
+  TagCBChange(nil);
 end;
 
 procedure TTagInfoEditFrm.TextInfoLVKeyDown(Sender: TObject; var Key: Word;
@@ -210,7 +217,6 @@ begin
   begin
     obj.font:=fontdialog1.font;
   end;
-  obj.TextLabel:=LabelEdit.Text;
 end;
 
 procedure TTagInfoEditFrm.LabFontBtnClick(Sender: TObject);
@@ -219,6 +225,12 @@ begin
   begin
     obj.LabelFont:=fontdialog1.font;
   end;
+end;
+
+procedure TTagInfoEditFrm.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  if obj<>nil then
+    obj.TextLabel:=LabelEdit.Text;
 end;
 
 procedure TTagInfoEditFrm.FormCreate(Sender: TObject);

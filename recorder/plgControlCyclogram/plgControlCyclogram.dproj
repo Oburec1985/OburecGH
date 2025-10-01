@@ -549,6 +549,9 @@
 				<Form>TresHoldFrame</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
+			<DCCReference Include="forms\uDACFrm.pas">
+				<Form>DACFrm</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

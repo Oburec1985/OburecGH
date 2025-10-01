@@ -566,6 +566,7 @@ begin
     s.updateBlock(FFTBlockSizeIE.IntNum, round(m_srs.m_length*s.m_tag.freq));
   end;
   m_SRS.UpdateBlocks;
+  g_FrfFactory.CreateBands(m_SRS, g_mbase);
 end;
 
 procedure TEditFrfFrm.UpdateTags;
