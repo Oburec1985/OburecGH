@@ -70,7 +70,6 @@ type
     ProfileBtn: TButton;
     FlagsCB: TCheckBox;
     BandLabelCB: TCheckBox;
-    Frf_YX_XY_CB: TCheckBox;
     procedure SignalsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
@@ -89,7 +88,6 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ProfileBtnClick(Sender: TObject);
-    procedure Frf_YX_XY_CBClick(Sender: TObject);
   public
     m_SRS:TFRFFrm;
   private
@@ -237,14 +235,6 @@ procedure TEditFrfFrm.FormShow(Sender: TObject);
 begin
   UpdateTags;
   ShowSrsCfg;
-end;
-
-procedure TEditFrfFrm.Frf_YX_XY_CBClick(Sender: TObject);
-begin
-  if Frf_YX_XY_CB.checked then
-    Frf_YX_XY_CB.Caption:='Out/In'
-  else
-    Frf_YX_XY_CB.Caption:='In/Out';
 end;
 
 function TEditFrfFrm.GetSelectTaho: cSRSTaho;

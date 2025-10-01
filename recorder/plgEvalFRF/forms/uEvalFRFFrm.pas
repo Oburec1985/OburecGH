@@ -359,6 +359,7 @@ type
     DempfE: TEdit;
     DempfLabel: TLabel;
     HideExcelCB: TCheckBox;
+    Frf_YX_XY_CB: TCheckBox;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -382,6 +383,7 @@ type
     procedure BladeSEDownClick(sender: tobject);
     procedure HideExcelCBClick(Sender: TObject);
     procedure TrigFEChange(Sender: TObject);
+    procedure Frf_YX_XY_CBClick(Sender: TObject);
   public
     m_Frf_YX: boolean;
     // отступ слева и длительность
@@ -740,6 +742,7 @@ var
   repPath, resStr: string;
   v, vf, f1, f2, decrement: double;
   minmax, p1,p2: point2d;
+  d:TDoubleArray;
 begin
   t := getTaho;
   cfg := t.getCfg;
@@ -750,8 +753,17 @@ begin
     s := cfg.GetSrs(i);
     s.m_checkres := false;
     b := m_bands.getband(bl.ToneCount - 1);
+
+    case ResTypeRG.ItemIndex of
+      0: d:=tdoublearray(s.lineFrf.data_r);
+      //0: d:=tdoublearray(s..data_r);
+      2: d:=tdoublearray(s.lineSpm.data_r);
+      1:;
+    end;
+
     // поиск в экстремумов ограниченном джиапазоне (ограничение по концу посл тона)
-    FindMinMaxDouble(s.lineFrf.data_r, minmax.x, minmax.y);
+    //FindMinMaxDouble(s.lineFrf.data_r, minmax.x, minmax.y);
+    FindMinMaxDouble(d, minmax.x, minmax.y);
     // minmax.y:=0.01*(minmax.y-minmax.x)+minmax.x;
     // minmax.x:=0.005*(minmax.y-minmax.x)+minmax.x;
     if TrigFE.Value<=0 then
@@ -761,7 +773,7 @@ begin
     end;
     minmax.y := TrigFE.Value;
     minmax.x := 0.95 * TrigFE.Value;
-    FindExtremumsInY(s.lineFrf.data_r, 1, b.m_f2i, minmax.y, minmax.x, s.m_extremums);
+    FindExtremumsInY(d, 1, b.m_f2i, minmax.y, minmax.x, s.m_extremums);
     if s.m_extremums.Count = 0 then
     begin
       result := false;
@@ -783,25 +795,25 @@ begin
         // расчет демпфирования
         v:=extr.Value*0.5;
         k:=extr.Index;
-        while s.lineFrf.data_r[k]>v do
+        while d[k]>v do
         begin
           dec(k);
         end;
         p1.x:=s.lineFrf.GetXByInd(k);
-        p1.y:=s.lineFrf.GetYByInd(k);
+        p1.y:=d[k];
         p2.x:=s.lineFrf.GetXByInd(extr.Index);
-        p2.y:=s.lineFrf.GetYByInd(extr.Index);
+        p2.y:=d[extr.Index];
         f1:=EvalLineX(v, p1, p2);
 
         k:=extr.Index;
-        while s.lineFrf.data_r[k]>v do
+        while d[k]>v do
         begin
           inc(k);
         end;
         p1.x:=s.lineFrf.GetXByInd(k);
-        p1.y:=s.lineFrf.GetYByInd(k);
+        p1.y:=d[k];
         p2.x:=s.lineFrf.GetXByInd(extr.Index);
-        p2.y:=s.lineFrf.GetYByInd(extr.Index);
+        p2.y:=d[extr.Index];
         f2:=EvalLineX(v, p1, p2);
         vf:=2*p2.x;
         s.m_decrement[j]:=(f2-f1)/vf;
@@ -1021,6 +1033,7 @@ begin
   m_Length := 1;
   m_TahoList := tlist.create;
 
+  m_Frf_YX:=true;
   m_bands := bList.create;
   m_labList := tlist.create;
   m_showBandLab := false;
@@ -1174,11 +1187,11 @@ begin
   s.lineAvFRF.AddPoints(s.m_frf, c.fHalfFft);
   if sd <> nil then
   begin
-    if s.lineFrf.visible then
+    if s.lineFrf.visible or s.lineSpm.visible then
     begin
-      s.lineFrf.AddPoints(sd.m_frf, c.fHalfFft);
       UpdateBands(s);
       UpdateLabels;
+      s.lineFrf.AddPoints(sd.m_frf, c.fHalfFft);
     end;
   end;
   fUpdateFrf := false;
@@ -1405,6 +1418,15 @@ begin
   axSpm := p.activeAxis;
 end;
 
+procedure TFRFFrm.Frf_YX_XY_CBClick(Sender: TObject);
+begin
+  if Frf_YX_XY_CB.checked then
+    Frf_YX_XY_CB.Caption:='Out/In'
+  else
+    Frf_YX_XY_CB.Caption:='In/Out';
+  m_Frf_YX:=Frf_YX_XY_CB.checked;
+end;
+
 procedure TFRFFrm.UpdateBandNames;
 var
   i, j: integer;
@@ -1460,17 +1482,24 @@ begin
     if not m_showflags then
       continue;
 
-    a := caxis(l.GetParentByClassName('cAxis'));
-    p := cpage(a.GetParentByClassName('cPage'));
     l.visible := true;
     // xMax
     x := b.m_freqband.m_realX;
     // tr:=cBuffTrend1d(l.parent);
     // UpdateBandNames создает привязки
-    tr := ActiveSignal.lineFrf;
-    l.parent := tr;
-    if b.m_fmaxi > tr.Count then
-      exit;
+    case ResTypeRG.ItemIndex of
+      0: tr := ActiveSignal.lineFrf;
+      2: tr := ActiveSignal.lineSpm;
+    end;
+    if tr<>nil then
+    begin
+      l.parent := tr;
+      a := caxis(l.GetParentByClassName('cAxis'));
+      p := cpage(a.GetParentByClassName('cPage'));
+
+      if b.m_fmaxi > tr.Count then
+        exit;
+    end;
     if b.m_fmaxi > 0 then
     begin
       max := tr.GetYByInd(b.m_fmaxi);
@@ -1525,6 +1554,7 @@ var
   b: tspmband;
   act_s: cSRSres;
   p, max: double;
+  l: cBuffTrend1d;
 begin
 
   act_s := ActiveSignal;
@@ -1535,14 +1565,19 @@ begin
     begin
       b.m_freqband.m_LineLabel.visible := false;
     end;
-
-    b.m_f1i := s.lineFrf.GetLowInd(b.m_f1) + 1;
-    b.m_f2i := s.lineFrf.GetLowInd(b.m_f2);
+    case ResTypeRG.ItemIndex of
+      0: l:=s.lineFrf;
+      2: l:=s.lineSpm;
+    end;
+    if l.Count=0 then
+      continue;
+    b.m_f1i := l.GetLowInd(b.m_f1) + 1;
+    b.m_f2i := l.GetLowInd(b.m_f2);
     max := 0;
     b.m_fmaxi := 0;
     for j := b.m_f1i to b.m_f2i do
     begin
-      p := s.lineFrf.GetYByInd(j);
+      p := l.GetYByInd(j);
       if max < p then
       begin
         max := p;
@@ -1550,7 +1585,7 @@ begin
       end;
     end;
     if s = act_s then
-      b.m_freqband.m_realX := s.lineFrf.GetXByInd(b.m_fmaxi);
+      b.m_freqband.m_realX := l.GetXByInd(b.m_fmaxi);
     for j := 0 to b.m_trends.Count - 1 do
     begin
       if s = b.m_trends.Objects[j] then
@@ -1715,10 +1750,10 @@ begin
 
       l := cBuffTrend1d.create;
       l.Color := s.m_color;
-      axSpm.AddChild(l);
       s.lineSpm := l;
       s.lineSpm.dx := c.fspmdx;
       s.lineSpm.name := s.name + '_spm';
+      axSpm.AddChild(l);
       l.visible := not bfrf;
 
       l := cBuffTrend1d.create;
@@ -2383,6 +2418,7 @@ begin
   m_maxX := strtofloatext(a_pIni.ReadString(str, 'Spm_maxX', '1000'));
   m_minY := strtofloatext(a_pIni.ReadString(str, 'Spm_minY', '0.0001'));
   m_maxY := strtofloatext(a_pIni.ReadString(str, 'Spm_maxY', '10'));
+  m_Frf_YX := a_pIni.ReadBool(str, 'Frf_YX', true);
   m_lgX := a_pIni.ReadBool(str, 'Spm_Lg_x', false);
   m_lgY := a_pIni.ReadBool(str, 'Spm_Lg_y', false);
   NewAxis := a_pIni.ReadBool(str, 'TahoNewAxis', false);
@@ -2625,6 +2661,7 @@ begin
     WriteFloatToIniMera(a_pIni, str, 'Spm_maxX', m_maxX);
     WriteFloatToIniMera(a_pIni, str, 'Spm_minY', m_minY);
     WriteFloatToIniMera(a_pIni, str, 'Spm_maxY', m_maxY);
+    a_pIni.WriteBool(str, 'Frf_YX', m_Frf_YX);
     a_pIni.WriteBool(str, 'Spm_Lg_x', m_lgX);
     a_pIni.WriteBool(str, 'Spm_Lg_y', m_lgY);
     a_pIni.WriteBool(str, 'SaveT0', m_saveT0);
@@ -2813,16 +2850,24 @@ begin
     exit;
   c := t.cfg;
   s := ActiveSignal;
+  // изменяет видимость линий
   ShowLines;
   lcount := CheckedCount;
   if lcount = 0 then
   begin
-    if ResTypeRG.ItemIndex = 0 then
-    begin
-      if fShowLast then
-        ShowFrf(s, c, -1)
-      else
-        ShowFrf(s, c, ShockIE.intnum);
+    case ResTypeRG.ItemIndex of
+    0:
+      begin
+        if fShowLast then
+          ShowFrf(s, c, -1)
+        else
+          ShowFrf(s, c, ShockIE.intnum);
+      end;
+    2:
+      begin
+        UpdateBands(s);
+        UpdateLabels;
+      end;
     end;
   end
   else
@@ -3468,7 +3513,7 @@ begin
         sd.BuildSpm;
       end;
       // без использования фазы   y/x. x - тахо
-      for j := 0 to c.fHalfFft - 1 do
+      for j := 1 to c.fHalfFft - 1 do
       begin
         if TFRFFrm(m_frm).m_Frf_Yx then // sres/taho
         begin
@@ -3488,6 +3533,7 @@ begin
           s.m_frf[j] := sd.m_frf[j] + s.m_frf[j];
       end;
     end;
+    s.m_frf[0]:=0;
     // усредняем
     case estimator of
       0: // без использования фазы
@@ -3502,7 +3548,7 @@ begin
         end;
       1: // H1 Syx/Sxx  x - тахо
         begin
-          for j := 0 to cfg.fHalfFft - 1 do
+          for j := 1 to cfg.fHalfFft - 1 do
           begin
             cross := 0;
             v2 := 0;
@@ -3533,7 +3579,7 @@ begin
         end;
       2: // H1 Syy/Sxy  x - тахо
         begin
-          for j := 0 to cfg.fHalfFft - 1 do
+          for j := 1 to cfg.fHalfFft - 1 do
           begin
             cross := 0;
             v1 := 0;
@@ -4283,6 +4329,7 @@ var
   x, dx, m: double;
   wnd: TSpmWnd;
 begin
+  // тут бывает ошибка!!!
   system.move(m_TimeBlock[0], TDoubleArray(m_TimeBlockFlt.p)[0],
     m_TimeArrSize * sizeof(double));
   wnd := TDataBlockList(m_owner).m_wnd;
