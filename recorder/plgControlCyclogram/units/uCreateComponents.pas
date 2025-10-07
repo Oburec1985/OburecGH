@@ -63,6 +63,7 @@ uses
   uDigsFrm, uDigsFrmEdit,
   uLissajousCurve,
   ulissajousCurveEdit,
+  uDACFrm,
   uMBaseControl;
 
 type
@@ -657,6 +658,9 @@ begin
 
   g_GenSignalsFactory := cGenSignalsFactory.Create;
   compMng.Add(g_GenSignalsFactory);
+
+  DacFrm:=TDACFrm.Create(nil);
+  DacFrm.show;
 end;
 
 procedure RecorderInit;
