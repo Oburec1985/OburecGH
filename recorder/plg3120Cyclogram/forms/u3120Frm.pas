@@ -17,7 +17,7 @@ uses
   uTest,
   uThresholds3120Frm,
   uEditPropertiesFrm, uTransmisNumFrm,
-  uExcel,
+  uGenReport,
   pngimage;
 
 type
@@ -538,22 +538,6 @@ begin
   end;
 end;
 
-procedure TFrm3120.InitExcel;
-begin
-  if not CheckExcelInstall then
-  begin
-    showmessage('Необходима установка Excel');
-    exit;
-  end;
-  if VarIsEmpty(E) then
-  begin
-    //if not CheckExcelRun then
-    begin
-      CreateExcel;
-      VisibleExcel(true);
-    end;
-  end;
-end;
 
 procedure TFrm3120.SaveBtnClick(Sender: TObject);
 var

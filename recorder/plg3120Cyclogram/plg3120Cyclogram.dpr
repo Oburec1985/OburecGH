@@ -47,7 +47,8 @@ uses
   uEditPropertiesFrm in 'forms\uEditPropertiesFrm.pas' {EditPropertiesFrm},
   uExcel in '..\..\sharedUtils\utils\reports\excel\uExcel.pas',
   uTransmisNumFrm in 'forms\uTransmisNumFrm.pas' {TransNumFrm},
-  uTagsListFrame in '..\SharedRUnits\uTagsListFrame.pas' {TagsListFrame: TFrame};
+  uTagsListFrame in '..\SharedRUnits\uTagsListFrame.pas' {TagsListFrame: TFrame},
+  uGenReport in 'units\uGenReport.pas';
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 

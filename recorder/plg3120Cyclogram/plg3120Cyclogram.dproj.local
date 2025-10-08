@@ -84,6 +84,7 @@
     <Transaction>2025.08.18 18:03:34.672.dproj,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\plg3120Cyclogram.dproj=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\plg3120Cyclogram.dproj</Transaction>
     <Transaction>2025.09.26 15:14:31.848.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\Unit3.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\forms\uTransmisNumFrm.pas</Transaction>
     <Transaction>2025.09.26 15:14:31.848.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\Unit3.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\forms\uTransmisNumFrm.dfm</Transaction>
+    <Transaction>2025.10.08 22:02:53.281.pas,C:\Oburec\OburecGH\recorder\plg3120Cyclogram\Unit1.pas=C:\Oburec\OburecGH\recorder\plg3120Cyclogram\units\uGenReport.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
@@ -154,6 +155,7 @@
     <File Path="forms\uTransmisNumFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\uCreateComponents.pas"/>
+    <File Path="units\uGenReport.pas"/>
     <File Path="uBaseProgramObj.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

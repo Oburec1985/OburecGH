@@ -2,26 +2,22 @@ object Frm3120: TFrm3120
   Left = 0
   Top = 0
   Caption = 'Frm3120'
-  ClientHeight = 687
-  ClientWidth = 1154
+  ClientHeight = 515
+  ClientWidth = 866
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -10
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 120
-  TextHeight = 16
+  PixelsPerInch = 96
+  TextHeight = 12
   object DeskGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 1154
-    Height = 209
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Width = 866
+    Height = 157
     Align = alTop
     Caption = #1055#1091#1083#1100#1090' '#1091#1087#1088#1072#1074#1083#1077#1085#1080#1103
     Color = clBtnFace
@@ -29,7 +25,7 @@ object Frm3120: TFrm3120
     DockSite = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -20
+    Font.Height = -15
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentBackground = False
@@ -38,21 +34,29 @@ object Frm3120: TFrm3120
     ParentFont = False
     TabOrder = 0
     DesignSize = (
-      1154
-      209)
+      866
+      157)
     object AlarmStopLabel: TLabel
-      Left = 722
-      Top = 98
-      Width = 106
-      Height = 24
+      Left = 542
+      Top = 74
+      Width = 82
+      Height = 18
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Anchors = [akTop, akRight]
       Caption = #1040#1074'. '#1086#1089#1090#1072#1085#1086#1074
     end
     object AlarmStopBtn: TImage
-      Left = 714
-      Top = 123
-      Width = 81
-      Height = 83
+      Left = 536
+      Top = 92
+      Width = 60
+      Height = 63
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Picture.Data = {
         0954506E67496D61676589504E470D0A1A0A0000000D49484452000001E00000
         01E008060000007DD4BE95000000097048597300000B1300000B1301009A9C18
@@ -868,17 +872,25 @@ object Frm3120: TFrm3120
       OnClick = AlarmStopBtnClick
     end
     object PChLabel: TLabel
-      Left = 722
-      Top = 21
-      Width = 134
-      Height = 24
+      Left = 542
+      Top = 16
+      Width = 104
+      Height = 18
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1043#1086#1090#1086#1074#1085#1086#1089#1090#1100' '#1055#1063
     end
     object FreqConvLamp: TImage
-      Left = 722
-      Top = 49
-      Width = 67
-      Height = 51
+      Left = 542
+      Top = 37
+      Width = 50
+      Height = 38
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Picture.Data = {
         0954506E67496D61676589504E470D0A1A0A0000000D49484452000000F10000
         00BB08020000003B6AEF54000050C44944415478DAEDBD69AF25497ADF179167
@@ -1532,15 +1544,11 @@ object Frm3120: TFrm3120
       Proportional = True
     end
     object AlarmsBtn: TSpeedButton
-      Left = 810
-      Top = 52
-      Width = 38
-      Height = 39
+      Left = 608
+      Top = 39
+      Width = 28
+      Height = 29
       Hint = #1055#1088#1086#1089#1084#1086#1090#1088' '#1082#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1080
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
       BiDiMode = bdLeftToRight
       Glyph.Data = {
         360C0000424D360C000000000000360000002800000020000000200000000100
@@ -1648,15 +1656,11 @@ object Frm3120: TFrm3120
       OnClick = AlarmsBtnClick
     end
     object SaveBtn: TSpeedButton
-      Left = 863
-      Top = 48
-      Width = 51
-      Height = 43
+      Left = 647
+      Top = 39
+      Width = 39
+      Height = 32
       Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
       AllowAllUp = True
       BiDiMode = bdLeftToRight
       Flat = True
@@ -1765,21 +1769,21 @@ object Frm3120: TFrm3120
       OnClick = SaveBtnClick
     end
     object PlayPanel: TPanel
-      Left = 9
-      Top = 39
-      Width = 61
-      Height = 58
+      Left = 7
+      Top = 29
+      Width = 46
+      Height = 44
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       TabOrder = 0
       object PlayBtn: TSpeedButton
-        Left = 6
-        Top = 4
-        Width = 50
-        Height = 51
+        Left = 5
+        Top = 3
+        Width = 37
+        Height = 38
         Hint = #1056#1072#1073#1086#1090#1072' '#1087#1086' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         BiDiMode = bdLeftToRight
         Glyph.Data = {
           360C0000424D360C000000000000360000002800000020000000200000000100
@@ -1888,21 +1892,21 @@ object Frm3120: TFrm3120
       end
     end
     object PausePanel: TPanel
-      Left = 73
-      Top = 39
-      Width = 63
-      Height = 58
+      Left = 55
+      Top = 29
+      Width = 47
+      Height = 44
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       TabOrder = 1
       object PauseBtn: TSpeedButton
-        Left = 6
-        Top = 4
-        Width = 51
-        Height = 51
+        Left = 5
+        Top = 3
+        Width = 38
+        Height = 38
         Hint = #1055#1072#1091#1079#1072' '#1088#1072#1073#1086#1090#1099' '#1087#1086' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         BiDiMode = bdLeftToRight
         Glyph.Data = {
           360C0000424D360C000000000000360000002800000020000000200000000100
@@ -2011,21 +2015,21 @@ object Frm3120: TFrm3120
       end
     end
     object StopPanel: TPanel
-      Left = 135
-      Top = 39
-      Width = 60
-      Height = 58
+      Left = 101
+      Top = 29
+      Width = 45
+      Height = 44
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       TabOrder = 2
       object StopBtn: TSpeedButton
-        Left = 6
-        Top = 4
-        Width = 50
-        Height = 50
+        Left = 5
+        Top = 3
+        Width = 37
+        Height = 38
         Hint = #1054#1089#1090#1072#1085#1086#1074#1080#1090#1100' '#1087#1088#1086#1075#1088#1072#1084#1084#1091
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         BiDiMode = bdLeftToRight
         Glyph.Data = {
           360C0000424D360C000000000000360000002800000020000000200000000100
@@ -2134,93 +2138,77 @@ object Frm3120: TFrm3120
       end
     end
     object GroupBox3: TGroupBox
-      Left = 247
-      Top = 27
-      Width = 461
-      Height = 156
+      Left = 185
+      Top = 20
+      Width = 346
+      Height = 117
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1042#1088#1077#1084#1103':'
       TabOrder = 3
       object ComTimeLabel: TLabel
-        Left = 156
-        Top = 91
-        Width = 63
-        Height = 24
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 117
+        Top = 68
+        Width = 48
+        Height = 18
         Caption = #1054#1073#1097#1077#1077
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -20
+        Font.Height = -15
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
       end
       object ModeTimeLabel: TLabel
-        Left = 11
-        Top = 91
-        Width = 103
-        Height = 24
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 8
+        Top = 68
+        Width = 77
+        Height = 18
         Caption = #1053#1072' '#1088#1077#1078#1080#1084#1077
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -20
+        Font.Height = -15
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
       end
       object Label1: TLabel
-        Left = 11
-        Top = 28
-        Width = 131
-        Height = 24
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 8
+        Top = 21
+        Width = 97
+        Height = 18
         Caption = #1053#1072' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -20
+        Font.Height = -15
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
       end
       object Label4: TLabel
-        Left = 299
-        Top = 91
-        Width = 128
-        Height = 24
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 224
+        Top = 68
+        Width = 97
+        Height = 18
         Caption = #1044#1086' '#1089#1083#1077#1076'. '#1088#1077#1078'.'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -20
+        Font.Height = -15
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
       end
       object ComTimeEdit: TEdit
-        Left = 156
-        Top = 117
-        Width = 128
-        Height = 33
+        Left = 117
+        Top = 88
+        Width = 96
+        Height = 27
         Hint = #1042#1088#1077#1084#1103' '#1085#1072' '#1080#1089#1087#1099#1090#1072#1085#1080#1080
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -22
+        Font.Height = -17
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
@@ -2231,17 +2219,13 @@ object Frm3120: TFrm3120
         Text = '0'
       end
       object ModeTimeEdit: TEdit
-        Left = 11
-        Top = 117
-        Width = 133
-        Height = 33
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 8
+        Top = 88
+        Width = 100
+        Height = 27
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -22
+        Font.Height = -17
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
@@ -2250,17 +2234,13 @@ object Frm3120: TFrm3120
         Text = '0'
       end
       object ProgTimeEdit: TEdit
-        Left = 11
-        Top = 55
-        Width = 133
-        Height = 33
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 8
+        Top = 41
+        Width = 100
+        Height = 27
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -22
+        Font.Height = -17
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
@@ -2269,10 +2249,14 @@ object Frm3120: TFrm3120
         Text = '0'
       end
       object TimeUnitsCB: TComboBox
-        Left = 156
-        Top = 55
-        Width = 128
-        Height = 32
+        Left = 117
+        Top = 41
+        Width = 96
+        Height = 26
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         ItemIndex = 0
         TabOrder = 3
         Text = #1057#1077#1082#1091#1085#1076#1099
@@ -2282,18 +2266,14 @@ object Frm3120: TFrm3120
           #1063#1072#1089#1099)
       end
       object ModeStopTime: TEdit
-        Left = 299
-        Top = 117
-        Width = 128
-        Height = 33
+        Left = 224
+        Top = 88
+        Width = 96
+        Height = 27
         Hint = #1042#1088#1077#1084#1103' '#1085#1072' '#1080#1089#1087#1099#1090#1072#1085#1080#1080
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -22
+        Font.Height = -17
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
@@ -2305,55 +2285,75 @@ object Frm3120: TFrm3120
       end
     end
     object ContinueCB: TCheckBox
-      Left = 8
-      Top = 124
-      Width = 176
-      Height = 17
+      Left = 6
+      Top = 93
+      Width = 132
+      Height = 13
       Hint = #1055#1088#1086#1076#1086#1083#1078#1072#1090#1100' '#1088#1072#1073#1086#1090#1091' '#1089' '#1087#1086#1089#1083'. '#1089#1086#1089#1090#1086#1103#1085#1080#1103
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1055#1088#1086#1076#1086#1083#1078#1080#1090#1100
       ParentShowHint = False
       ShowHint = True
       TabOrder = 4
     end
     object ConfirmModeCB: TCheckBox
-      Left = 8
-      Top = 148
-      Width = 233
-      Height = 19
+      Left = 6
+      Top = 111
+      Width = 175
+      Height = 14
       Hint = #1055#1086#1076#1090#1074#1077#1088#1078#1076#1072#1090#1100' '#1087#1077#1088#1077#1093#1086#1076' '#1085#1072' '#1088#1077#1078#1080#1084
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1055#1086#1076#1090#1074#1077#1088#1078#1076#1072#1090#1100' '#1088#1077#1078#1080#1084
       ParentShowHint = False
       ShowHint = True
       TabOrder = 5
     end
     object GetNotifyCB: TCheckBox
-      Left = 8
-      Top = 177
-      Width = 243
-      Height = 18
+      Left = 6
+      Top = 133
+      Width = 182
+      Height = 13
       Hint = #1055#1086#1083#1091#1095#1072#1090#1100' '#1085#1086#1090#1080#1092#1080#1082#1072#1094#1080#1080' '#1076#1083#1103' '#1085#1072#1089#1090#1088#1081#1086#1082#1080' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1086#1074' '#1080#1079' '#1087#1083#1072#1075#1080#1085#1086#1074
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1080#1079' '#1087#1083#1072#1075#1080#1085#1086#1074
       ParentShowHint = False
       ShowHint = True
       TabOrder = 6
     end
     object StopOnPause: TCheckBox
-      Left = 8
-      Top = 100
-      Width = 243
-      Height = 18
+      Left = 6
+      Top = 75
+      Width = 182
+      Height = 14
       Hint = #1055#1086#1083#1091#1095#1072#1090#1100' '#1085#1086#1090#1080#1092#1080#1082#1072#1094#1080#1080' '#1076#1083#1103' '#1085#1072#1089#1090#1088#1081#1086#1082#1080' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1086#1074' '#1080#1079' '#1087#1083#1072#1075#1080#1085#1086#1074
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1054#1089#1090#1072#1085#1086#1074' '#1085#1072' '#1087#1072#1091#1079#1077
       ParentShowHint = False
       ShowHint = True
       TabOrder = 7
     end
     object CloseRep: TCheckBox
-      Left = 921
-      Top = 59
-      Width = 194
-      Height = 18
+      Left = 691
+      Top = 44
+      Width = 145
+      Height = 14
       Hint = #1055#1086#1083#1091#1095#1072#1090#1100' '#1085#1086#1090#1080#1092#1080#1082#1072#1094#1080#1080' '#1076#1083#1103' '#1085#1072#1089#1090#1088#1081#1086#1082#1080' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1086#1074' '#1080#1079' '#1087#1083#1072#1075#1080#1085#1086#1074
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Caption = #1047#1072#1082#1088#1099#1074#1072#1090#1100' '#1086#1090#1095#1077#1090
       ParentShowHint = False
       ShowHint = True
@@ -2362,39 +2362,44 @@ object Frm3120: TFrm3120
   end
   object Panel1: TPanel
     Left = 0
-    Top = 209
-    Width = 1154
-    Height = 437
+    Top = 157
+    Width = 866
+    Height = 328
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alClient
     TabOrder = 1
     object Splitter3: TSplitter
-      Left = 617
+      Left = 463
       Top = 1
-      Width = 4
-      Height = 435
+      Height = 326
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alRight
       Color = clBackground
       ParentColor = False
-      ExplicitLeft = 504
-      ExplicitHeight = 416
     end
     object RightGB: TGroupBox
-      Left = 621
+      Left = 466
       Top = 1
-      Width = 532
-      Height = 435
+      Width = 399
+      Height = 326
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alRight
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1072
       TabOrder = 0
       object ControlPropSG: TStringGrid
         Left = 2
-        Top = 78
-        Width = 528
-        Height = 355
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Top = 59
+        Width = 395
+        Height = 265
         Align = alClient
         BevelInner = bvLowered
         BevelKind = bkFlat
@@ -2402,7 +2407,7 @@ object Frm3120: TFrm3120
         DefaultRowHeight = 32
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
@@ -2418,32 +2423,44 @@ object Frm3120: TFrm3120
       end
       object Panel2: TPanel
         Left = 2
-        Top = 18
-        Width = 528
-        Height = 60
+        Top = 14
+        Width = 395
+        Height = 45
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Align = alTop
         TabOrder = 1
         object ControlPropE: TEdit
-          Left = 15
-          Top = 19
-          Width = 153
-          Height = 32
+          Left = 11
+          Top = 14
+          Width = 115
+          Height = 26
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -20
+          Font.Height = -15
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
           TabOrder = 0
         end
         object ModePropE: TEdit
-          Left = 223
-          Top = 17
-          Width = 153
-          Height = 32
+          Left = 167
+          Top = 13
+          Width = 115
+          Height = 26
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -20
+          Font.Height = -15
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
@@ -2455,19 +2472,15 @@ object Frm3120: TFrm3120
     object TableModeGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 616
-      Height = 435
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Width = 462
+      Height = 326
       Align = alClient
       Caption = #1058#1072#1073#1083#1080#1094#1072' '#1088#1077#1078#1080#1084#1086#1074
       Color = clBtnFace
       Ctl3D = False
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -20
+      Font.Height = -15
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentBackground = False
@@ -2477,20 +2490,16 @@ object Frm3120: TFrm3120
       TabOrder = 1
       object TableModeSG: TStringGrid
         Left = 1
-        Top = 25
-        Width = 614
-        Height = 409
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Top = 19
+        Width = 460
+        Height = 306
         Align = alClient
         BevelInner = bvLowered
         BevelKind = bkFlat
         DefaultRowHeight = 32
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goFixedRowClick]
@@ -2518,33 +2527,45 @@ object Frm3120: TFrm3120
   end
   object Panel3: TPanel
     Left = 0
-    Top = 646
-    Width = 1154
-    Height = 41
+    Top = 485
+    Width = 866
+    Height = 30
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alBottom
     TabOrder = 2
     DesignSize = (
-      1154
-      41)
+      866
+      30)
     object Edit1: TEdit
-      Left = 7
-      Top = 7
-      Width = 986
-      Height = 24
+      Left = 5
+      Top = 5
+      Width = 740
+      Height = 20
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
       Text = #1043#1086#1090#1086#1074' '#1082' '#1079#1072#1087#1091#1089#1082#1091
     end
     object ReportBtn: TButton
-      Left = 1005
-      Top = 5
-      Width = 128
-      Height = 28
+      Left = 754
+      Top = 4
+      Width = 96
+      Height = 21
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Anchors = [akTop, akRight]
       Caption = #1054#1090#1095#1077#1090
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -20
+      Font.Height = -15
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
