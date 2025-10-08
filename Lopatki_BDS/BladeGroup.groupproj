@@ -36,9 +36,6 @@
 			<Projects Include="..\recorder\plg3120Cyclogram\plg3120Cyclogram.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\recorder\plgOscill\plgOscill.dproj">
-				<Dependencies/>
-			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -148,23 +145,14 @@
 		<Target Name="plg3120Cyclogram:Make">
 			<MSBuild Targets="Make" Projects="..\recorder\plg3120Cyclogram\plg3120Cyclogram.dproj"/>
 		</Target>
-		<Target Name="plgOscill">
-			<MSBuild Projects="..\recorder\plgOscill\plgOscill.dproj"/>
-		</Target>
-		<Target Name="plgOscill:Clean">
-			<MSBuild Targets="Clean" Projects="..\recorder\plgOscill\plgOscill.dproj"/>
-		</Target>
-		<Target Name="plgOscill:Make">
-			<MSBuild Targets="Make" Projects="..\recorder\plgOscill\plgOscill.dproj"/>
-		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;plgEvalFRF;ProjectFFT;plg3120Cyclogram;plgOscill"/>
+			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;plgEvalFRF;ProjectFFT;plg3120Cyclogram"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;plgEvalFRF:Clean;ProjectFFT:Clean;plg3120Cyclogram:Clean;plgOscill:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;plgEvalFRF:Clean;ProjectFFT:Clean;plg3120Cyclogram:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;plgEvalFRF:Make;ProjectFFT:Make;plg3120Cyclogram:Make;plgOscill:Make"/>
+			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;plgEvalFRF:Make;ProjectFFT:Make;plg3120Cyclogram:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

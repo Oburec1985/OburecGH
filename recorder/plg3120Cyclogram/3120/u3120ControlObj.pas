@@ -2021,28 +2021,5 @@ begin
   end;
 end;
 
-Function IntToTPType(i: integer): TPType;
-begin
-  case i of
-    0:
-      result := ptNullPoly;
-    1:
-      result := ptlinePoly;
-    2:
-      result := ptCubePoly;
-  end;
-end;
-
-Function TPTypeToInt(pt: TPType): integer;
-begin
-  case pt of
-    ptNullPoly:
-      result := 0;
-    ptlinePoly:
-      result := 1;
-    ptCubePoly:
-      result := 2;
-  end;
-end;
 
 end.

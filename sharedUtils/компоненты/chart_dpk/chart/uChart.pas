@@ -263,6 +263,26 @@ implementation
 uses
   uEditMenuChartForm, dglopengl, Forms;
 
+// пока хотьт раз не вызовешь не работает шейдерное рисование линий
+Procedure ProcDrawSelectRect;
+const Colors:array [0..19] of single = (0.2,0.2,0.2,0.1,  0.2,0.2,0.2,0.1, 0.2,0.2,0.2,0.1,  0.2,0.2,0.2,0.1, 0.2,0.2,0.2,0.1 );
+var
+  RectData:Array [0..1] of point2;
+  a:caxis;
+  p:cpage;
+begin
+  RectData[0]:=p2(0,0);
+  RectData[1]:=p2(0,0);
+  glEnableClientState(GL_COLOR_ARRAY);
+  glEnableClientState(GL_VERTEX_ARRAY) ;        // вкл. режим рисовани€
+  glColorPointer(4, GL_FLOAT, 0,@Colors[0]);    // указатель на массив цветов
+  glVertexPointer(2, GL_FLOAT, 0,@RectData[0]); // указатель на массив данных
+  glDrawArrays(GL_LINE_STRIP,0,2);
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_COLOR_ARRAY);
+end;
+
+
 // ==========================ѕолучение Gl контекста======================
 procedure cChart.GetGlContext(H: Hwnd);
 var
@@ -302,6 +322,7 @@ begin
     if m_ShaderMng.m_ExtSupported then
       LoadShaders;
   end;
+  ProcDrawSelectRect;
 end;
 
 procedure cChart.deletecontext;

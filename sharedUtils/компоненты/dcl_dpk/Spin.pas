@@ -6,8 +6,8 @@ uses Windows, Classes, StdCtrls, ExtCtrls, Controls, Messages, SysUtils,
   Forms, Graphics, Menus, Buttons;
 
 const
-  InitRepeatPause = 400;  { pause before repeat timer (ms) }
-  RepeatPause     = 100;  { pause before hint window displays (ms)}
+  InitRepeatPause = 10000;  { pause before repeat timer (ms) }
+  RepeatPause     = 10000;  { pause before hint window displays (ms)}
 
 type
 

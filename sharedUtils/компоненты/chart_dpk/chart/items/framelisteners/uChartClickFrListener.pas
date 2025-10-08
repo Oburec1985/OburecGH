@@ -602,8 +602,8 @@ begin
     // Рисуем сам прямоугольник ---------------------------------------
     glEnable (GL_LINE_STIPPLE);
     glEnableClientState(GL_COLOR_ARRAY);
-    glColorPointer(4, GL_FLOAT, 0,@Colors[0]);    // указатель на массив цветов
     glEnableClientState(GL_VERTEX_ARRAY) ;        // вкл. режим рисования
+    glColorPointer(4, GL_FLOAT, 0,@Colors[0]);    // указатель на массив цветов
     glVertexPointer(2, GL_FLOAT, 0,@RectData[0]); // указатель на массив данных
     glDrawArrays(GL_LINE_STRIP,0,5);
     glDisableClientState(GL_VERTEX_ARRAY);

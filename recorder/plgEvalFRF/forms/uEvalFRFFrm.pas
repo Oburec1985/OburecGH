@@ -429,6 +429,8 @@ type
     // текстовые метки на полосах
     m_labList: tlist;
   protected
+    // запрет лишних вызовов
+    callDoOnZoom:boolean;
     // курсор для триггера
     Ycurs: cYCursor;
 
@@ -593,6 +595,11 @@ begin
     if (aX.min.x < p.x) and (p.x < aX.max.x) then
     begin
       x := LogValToLinearScale(p.x, p2d(aX.min.x, aX.max.x));
+    end
+    else
+    begin
+      // вышли за пределы
+      x := LogValToLinearScale(p.x, p2d(aX.min.x, aX.max.x));
     end;
   end
   else
@@ -603,6 +610,10 @@ begin
   begin
     if (aX.min.y < p.y) and (p.y < aX.max.y) then
     begin
+      y := LogValToLinearScale(p.y, p2d(aX.min.y, aX.max.y));
+    end
+    else
+    begin // вышли за пределы по Y
       y := LogValToLinearScale(p.y, p2d(aX.min.y, aX.max.y));
     end;
   end
@@ -1092,9 +1103,13 @@ end;
 
 procedure TFRFFrm.doOnZoom(sender: tobject);
 begin
-  m_bands.UpdateBands;
-  // UpdateBands;
-  UpdateLabels;
+  if callDoOnZoom then
+  begin
+    m_bands.UpdateBands;
+    // UpdateBands;
+    // обновляем координаты метки в соотв с масштабами осей
+    UpdateLabels;
+  end;
 end;
 
 procedure TFRFFrm.doShowLines(sender: tobject);
@@ -1189,9 +1204,11 @@ begin
   begin
     if s.lineFrf.visible or s.lineSpm.visible then
     begin
-      UpdateBands(s);
-      UpdateLabels;
       s.lineFrf.AddPoints(sd.m_frf, c.fHalfFft);
+      // обновление информации о максимумах для линии
+      UpdateBands(s);
+      // обновление меток на основании инф-ии в полосах
+      UpdateLabels;
     end;
   end;
   fUpdateFrf := false;
@@ -1387,6 +1404,7 @@ var
   p: cpage;
   r: frect;
 begin
+  callDoOnZoom:=true;
   SpmChart.OnRBtnClick := RBtnClick;
   SpmChart.tabs.activeTab.addPage(true);
   SpmChart.OBJmNG.Events.AddEvent('SpmChart_OnZoom', e_OnChangeAxisScale,
@@ -1473,7 +1491,8 @@ begin
   m_labList.clear;
   if not m_showflags then
     exit;
-
+  if (ResTypeRG.ItemIndex=3) or (ResTypeRG.ItemIndex=1) then
+    exit;
   for i := 0 to m_bands.Count - 1 do
   begin
     b := m_bands.getband(i);
@@ -1504,13 +1523,52 @@ begin
       max := tr.GetYByInd(b.m_fmaxi);
       maxX := tr.GetXByInd(b.m_fmaxi);
       // флаг показываем только если он выше граничного значения
-      if (b.m_fmaxi = b.m_f1i) or (b.m_fmaxi = b.m_f2i) then
+      if (b.m_fmaxi = b.m_f1i) then
       begin
-        l.visible := false;
+        if max<=tr.GetYByInd(b.m_f1i) then
+        begin
+          if maxX>b.m_f1 then
+          begin
+            if tr.GetYByInd(b.m_f1i-1)<max then
+              l.visible := true
+            else
+              l.visible := false;
+          end
+          else
+          begin
+            l.visible := false
+          end;
+        end
+        else
+        begin
+          l.visible := true;
+        end;
       end
       else
       begin
-        l.visible := true;
+        if (b.m_fmaxi = b.m_f2i) then
+        begin
+          if max<=tr.GetYByInd(b.m_f2i) then
+          begin
+            if maxX<b.m_f2 then
+            begin
+              if tr.GetYByInd(b.m_f2i+1)<max then
+                l.visible := true
+              else
+                l.visible := false;
+            end
+            else
+              l.visible := false
+          end
+          else
+          begin
+            l.visible := true;
+          end;
+        end
+        else
+        begin
+          l.visible := true;
+        end;
       end;
     end;
     pos := correctPos(a, p, p2d(maxX, max));
@@ -2164,11 +2222,11 @@ begin
   begin
     axSpm.lg := m_lgY;
   end;
-  r.BottomLeft.x := m_minX;
-  r.TopRight.x := m_maxX;
-  r.BottomLeft.y := MinSpmY;
-  r.TopRight.y := MaxSpmY;
-  axSpm.ZoomfRect(r);
+  //r.BottomLeft.x := m_minX;
+  //r.TopRight.x := m_maxX;
+  //r.BottomLeft.y := MinSpmY;
+  //r.TopRight.y := MaxSpmY;
+  //axSpm.ZoomfRect(r);
 end;
 
 function TFRFFrm.hideind: integer;
@@ -2749,7 +2807,6 @@ begin
     end;
   end;
   lax_X:=p2d(TimeAx.min.x,TimeAx.max.x);
-  SpmChartDblClick(nil);
 
   // нормализация времени
   for i := 0 to pageT.axises.ChildCount - 1 do
@@ -2759,7 +2816,10 @@ begin
     r.TopRight.x := lax_X.y;
     r.BottomLeft.y := a.min.y;
     r.TopRight.y := a.max.y;
+    // отключаем лишнее событие
+    callDoOnZoom:=false;
     a.ZoomfRect(r);
+
     for j := 0 to a.ChildCount - 1 do
     begin
       o := cdrawobj(a.getChild(j));
@@ -2768,6 +2828,9 @@ begin
   end;
   fUpdateFrf := true;
   UpdateView;
+  // привязка масштаба
+  callDoOnZoom:=true;
+  //SpmChartDblClick(nil);
 end;
 
 procedure TFRFFrm.ShowSignalsLV;
@@ -3103,31 +3166,43 @@ var
   v:double;
   dy: single;
 begin
+  // нормализация спектров
   r.BottomLeft.x := m_minX;
   r.TopRight.x := m_maxX;
   r.BottomLeft.y := MinSpmY;
   r.TopRight.y := MaxSpmY;
-  // нормализация спектров
+  // зум частотных осей
   for i := 0 to pageSpm.axises.ChildCount - 1 do
   begin
     a := pageSpm.getaxis(i);
+    //RectToLogScale(r,p2d(a.min.x,a.min.y),p2d(a.max.x,a.max.y),pageSpm.lgx,a.Lg);
     a.ZoomfRect(r);
+    for j := 0 to a.ChildCount - 1 do
+    begin
+      o := cdrawobj(a.getChild(j));
+      o.doUpdateWorldSize(a);
+    end;
     if a.Lg then
       v:=evalLogPos( a.minY, a.maxY, TrigFE.Value)
     else
       v:=TrigFE.Value;
+    // пересчет позиции курсора по обновлению масштаба
     Ycurs.setCursor(a, v);
   end;
   // нормализация времени
   for i := 0 to pageT.axises.ChildCount - 1 do
   begin
     a := pageT.getaxis(i);
-    rect := pageT.getbound(a);
+    // ось X обновляем один раз (только для первой оси)
+    if i=0 then
+      rect := pageT.getbound(a);
     dy := rect.TopRight.y - rect.BottomLeft.y;
     dy := dy * 0.1;
     rect.TopRight.y := rect.TopRight.y + dy;
     rect.BottomLeft.y := rect.BottomLeft.y - dy;
+    callDoOnZoom:=false;
     a.ZoomfRect(rect);
+    callDoOnZoom:=true;
     for j := 0 to a.ChildCount - 1 do
     begin
       o := cdrawobj(a.getChild(j));
@@ -3186,6 +3261,7 @@ begin
     ShockIE.intnum := ShockIE.intnum - 1;
     ShowShock(ShockIE.intnum);
   end;
+  doOnZoom(nil);
 end;
 
 procedure TFRFFrm.EvalWelchBCount;

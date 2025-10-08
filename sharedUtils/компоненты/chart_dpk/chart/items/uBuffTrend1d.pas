@@ -267,14 +267,15 @@ procedure cBuffTrend1d.BindVBA(sh: cshader);
 begin
   // готовим VAO для отрисовки
   // связка с аттрибутами вершин
+  //ProcDrawSelectRect;  // перенесено в uChart
   if length(data_r)>0 then
   begin
     glBindVertexArray(cLineLgShader1d(sh).m_VAO);
     // загрузка данных
     glBindBuffer(gl_array_buffer, cLineLgShader1d(sh).m_VBO);
-    glBufferData(gl_array_buffer, flength * SizeOf(double), @data_r[0],
-      GL_STATIC_DRAW);
-    // 0 - вершинные данные; 1 - 1 элемент на вершину (только Y) ; 0 - т.к. берем из видео карты; nil - тоже
+    glBufferData(gl_array_buffer, flength * SizeOf(double), @data_r[0], GL_STATIC_DRAW);
+    // 0 - вершинные данные; 1 - 1 элемент на вершину (только Y) ; 0 - т.к. берем из видео карты;
+    // nil - тоже
     glVertexAttribPointer(0, 1, GL_DOUBLE, false, 0, 0);
     // включаем использование для вершинного буфера VAO (0)
     glEnableVertexAttribArray(0);
@@ -312,6 +313,11 @@ begin
     glBool[0] := GL_false;
   // перебинд массива VBA при каждом рисовании. Если не перебиндивать надо
   // в каждом тренде свой VBA
+
+
+  //glDisableClientState(GL_VERTEX_ARRAY);
+  //glDisableClientState(GL_Color_ARRAY);
+  //glBindBuffer(GL_ARRAY_buffer,0);
   BindVBA(sh);
   // включаем перед загрузкой параметров
   glUseProgramObjectARB(sh.m_program);

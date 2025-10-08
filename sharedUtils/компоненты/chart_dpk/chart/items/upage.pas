@@ -354,6 +354,11 @@ begin
   ax := getActiveaxis;
   // минимальный порядок
   minorder := log10(ax.min.y);
+  if ax.min.y=0 then
+    minorder :=-10;
+  if ax.max.y=0 then
+    minorder :=-9;
+
   // максимальный порядок
   maxorder := log10(ax.max.y);
 
@@ -798,7 +803,7 @@ end;
 
 Procedure cPage.ZoomfRect(var rect: fRect; ax: caxis);
 var
-  i: integer;
+  i, j: integer;
   zoomrect: fRect;
   o:cdrawobj;
   a:caxis;
@@ -822,11 +827,11 @@ begin
         a.ZoomfRect(zoomrect);
       end;
     end;
-  end;
-  for I := 0 to ax.ChildCount - 1 do
-  begin
-    o:=cdrawobj(ax.getChild(i));
-    o.doUpdateWorldSize(ax);
+    for j := 0 to ax.ChildCount - 1 do
+    begin
+      o:=cdrawobj(ax.getChild(j));
+      o.doUpdateWorldSize(ax);
+    end;
   end;
 end;
 
