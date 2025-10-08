@@ -388,13 +388,15 @@
     <File Path="units\uModelPointMng.pas"/>
     <File Path="units\uPeakFactorAlg.pas"/>
     <File Path="units\uPhaseAlg.pas"/>
+    <File Path="units\uProfile.pas"/>
     <File Path="units\uRTrig.pas"/>
+    <File Path="units\uSoundCardDac.pas"/>
     <File Path="units\uSpm.pas"/>
     <File Path="units\uSynchroPhaseAlg.pas"/>
     <File Path="units\uTahoAlg.pas"/>
-    <File Path="units\uTimeIntervalAlg.pas"/>
-    <File Path="units\uProfile.pas"/>
     <File Path="units\uThreshHolderAlg.pas"/>
+    <File Path="units\uTimeIntervalAlg.pas"/>
+    <File Path="units\uDacDevice.pas"/>
     <File Path="uBaseAlgBands.pas"/>
   </ProjectSortOrder>
 	<Transactions>

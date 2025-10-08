@@ -257,7 +257,9 @@ uses
   uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
   uThreshHolderAlg in 'units\uThreshHolderAlg.pas',
   uTresHoldFrame in 'forms\uTresHoldFrame.pas' {TresHoldFrame: TFrame},
-  uDACFrm in 'forms\uDACFrm.pas' {DACFrm};
+  uDACFrm in 'forms\uDACFrm.pas' {DACFrm},
+  uSoundCardDac in 'units\uSoundCardDac.pas',
+  uDacDevice in 'units\uDacDevice.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

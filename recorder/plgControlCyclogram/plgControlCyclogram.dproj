@@ -552,6 +552,8 @@
 			<DCCReference Include="forms\uDACFrm.pas">
 				<Form>DACFrm</Form>
 			</DCCReference>
+			<DCCReference Include="units\uSoundCardDac.pas"/>
+			<DCCReference Include="units\uDacDevice.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

@@ -988,6 +988,7 @@ END
 /* ..\..\sharedUtils\mera\database\uMDBFrm.dfm */
 /* ..\SharedRUnits\uRcClientFrm.dfm */
 /* ..\..\sharedUtils\mera\database\uDownloadRegsFrm.dfm */
+/* forms\uDACFrm.dfm */
 /* ..\..\sharedUtils\utils\./files/res/CURSORS.res */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uAxisForm.dfm */
@@ -1091,7 +1092,6 @@ END
 /* forms\uPressFrmEdit.dfm */
 /* forms\uPressFrm.dfm */
 /* forms\uTresHoldFrame.dfm */
-/* forms\uDACFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
+/* C:\Oburec\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */

@@ -1,0 +1,615 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{2A3F32A3-8A55-4170-86ED-FAC06098330D}</ProjectGuid>
+			<ProjectVersion>12.0</ProjectVersion>
+			<MainSource>plgControlCyclogram.dpr</MainSource>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_RangeChecking>true</DCC_RangeChecking>
+			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+			<DCC_DebugDCUs>true</DCC_DebugDCUs>
+			<DCC_MapFile>3</DCC_MapFile>
+			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
+			<DCC_UnitSearchPath>$(BDS)\AlphaControls\D2010\;..\..\sharedUtils\utils\xml;..\..\sharedUtils\objects;..\..\sharedUtils\objects\utils;..\..\sharedUtils\forms;..\..\sharedUtils\utils\files;..\..\sharedUtils\utils;..\..\sharedUtils\utils\PathUtils;..\..\sharedUtils\utils\jcl-2.3.1.4197;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows\obj;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes\containers;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;..\..\sharedUtils;..\..\sharedUtils\math;..\..\sharedUtils\компоненты\dcl_dpk;..\..\sharedUtils\ogl;..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source;..\..\sharedUtils\utils\lists;..\..\sharedUtils\utils\FastMM\;..\..\3d\3dComponents\components\Asutp ;..\..\3d\3dComponents\components\;..\..\3d\3dComponents\dialogs;..\..\3d\3dComponents\PropertEditors\;..\..\3d\core;..\..\3d\forms;..\..\3d\math;..\..\3d\objects;..\..\3d\tools;..\..\sharedUtils\ZipMaster;..\..\sharedUtils\math\alglib-2.6.0.delphi (1)\delphi\src\;..\..\sharedUtils\utils\socket;..\..\sharedUtils\math\FFT_койнов;..\..\sharedUtils\utils\FastMM4991;..\..\sharedUtils\utils\reports;..\..\sharedUtils\utils\reports\excel;..\..\sharedUtils\utils\FastMM4991\;..\..\sharedUtils\ogl\forms;..\..\recorder\SharedRUnits;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_DependencyCheckOutputName>C:\Program Files (x86)\Mera\Recorder\plugins\plgControlCyclogram.dll</DCC_DependencyCheckOutputName>
+			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+			<DCC_K>false</DCC_K>
+			<DCC_ExeOutput>C:\Program Files (x86)\Mera\Recorder\plugins\</DCC_ExeOutput>
+			<DCC_F>false</DCC_F>
+			<DCC_UsePackage>vclx;vcl;vclimg;dbrtl;Rave77VCL;bdertl;rtl;vclactnband;xmlrtl;vcldb;vcldbx;vcltouch;dsnap;dsnapcon;TeeUI;TeeDB;Tee;vclib;ibxpress;adortl;IndyCore;IndySystem;IndyProtocols;inet;intrawebdb_100_140;Intraweb_100_140;VclSmp;vclie;websnap;webdsnap;inetdb;inetdbbde;inetdbxpress;soaprtl;vclribbon;dbexpress;DbxCommonDriver;DataSnapIndy10ServerTransport;DataSnapProviderClient;DbxClientDriver;DataSnapServer;DBXInterBaseDriver;DBXMySQLDriver;dbxcds;DBXFirebirdDriver;DBXSybaseASEDriver;DBXSybaseASADriver;DBXOracleDriver;DBXMSSQLDriver;DBXInformixDriver;DBXDb2Driver;acnt2010_R</DCC_UsePackage>
+			<DCC_E>false</DCC_E>
+			<DCC_Platform>x86</DCC_Platform>
+			<DCC_N>false</DCC_N>
+			<BRCC_IncludePath>..\..\sharedUtils\utils\FastMM\;$(BRCC_IncludePath)</BRCC_IncludePath>
+			<GenDll>true</GenDll>
+			<ImageDebugInfo>true</ImageDebugInfo>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_S>false</DCC_S>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_MapFile>0</DCC_MapFile>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+			<DCC_RemoteDebug>true</DCC_RemoteDebug>
+			<DCC_DebugDCUs>true</DCC_DebugDCUs>
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="plgControlCyclogram.dpr">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="..\SharedRUnits\uRecBasicFactory.pas"/>
+			<DCCReference Include="..\SharedRUnits\uRecorderEvents.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\blaccess.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\CFREG.PAS"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\DevAPI.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\device.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\journal.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\modules.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\plugin.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\rcPlugin.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\recorder.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\signal.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\tags.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\transformers.pas"/>
+			<DCCReference Include="units\uControlObj.pas"/>
+			<DCCReference Include="forms\uControlEditFrame.pas">
+				<Form>ControlEditFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="forms\uModeFrame.pas">
+				<Form>ModeFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="forms\uControlCyclogramEditFrm.pas">
+				<Form>ControlCyclogramEditFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uControlDeskFrm.pas">
+				<Form>ControlDeskFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\objects\uBaseObj.pas"/>
+			<DCCReference Include="..\..\sharedUtils\objects\uBaseObjMng.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\lists\usetlist.pas"/>
+			<DCCReference Include="units\uRTrig.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\lists\uEventTypes.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\lists\ueventlist.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\uComponentServises.pas"/>
+			<DCCReference Include="forms\uCustomEditControlFrame.pas">
+				<Form>CustomControlEditFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="forms\uDacControlEditFrame.pas">
+				<Form>DACControlEditFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\SharedRUnits\uRvclService.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\uVTServices.pas"/>
+			<DCCReference Include="forms\uModesTabsFrame.pas">
+				<Form>ModesTabFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="forms\uModesTabsForm.pas">
+				<Form>ModesTabForm</Form>
+			</DCCReference>
+			<DCCReference Include="units\uControlsNP.pas"/>
+			<DCCReference Include="forms\uModesStepFrame.pas">
+				<Form>ModesStepFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\mera\database\uMeasureBase.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uAutoPage.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uAxis.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uBasePage.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uBasicTrend.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uBuffTrend.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uBuffTrend1d.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uBuffTrend2d.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uChartCursor.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uDoubleCursor.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uDrawObj.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uDrawObjMng.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uEdit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uFloatEdit.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uFloatLabel.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uFontMng.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uGistogram.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uGraphObj.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uGrid.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uGrid_.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uGrid_new.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uInfoPage.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uLabel.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uLegend.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uMarkers.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\upage.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uPageMng.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uPoint.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uSimpleTrend.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uTabObj.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uTextLabel.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uTrend.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\utils\lists\uChartEvents.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\utils\uText.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uAxisForm.pas">
+				<Form>AxisForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.pas">
+				<Form>ChartCfgForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateObjForm.pas">
+				<Form>CreateObjForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateObjFrm.pas">
+				<Form>CreateObjFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateTrendFrame.pas">
+				<Form>EditChartCfgFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCursorForm.pas">
+				<Form>CursorForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDoubleCursorForm.pas">
+				<Form>DoubleCursorForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjEditForm.pas">
+				<Form>DrawObjEditForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.pas">
+				<Form>DrawObjFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditChartObjFrame.pas">
+				<Form>EditDrawObjFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.pas">
+				<Form>EditMenuChartForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uGistForm.pas">
+				<Form>GistForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uGistFrame.pas">
+				<Form>GistFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uPageForm.pas">
+				<Form>PageForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTextLabelForm.pas">
+				<Form>TextLabelForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.pas">
+				<Form>TrendForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendFrame.pas">
+				<Form>TrendFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames\uChartInputFrame.pas">
+				<Form>ChartInputFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners\uChartClickFrListener.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners\uObjFrameListener.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners\uPageFrameListener.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\uCommonMath.pas"/>
+			<DCCReference Include="..\..\sharedUtils\objects\uTreeNode.pas"/>
+			<DCCReference Include="forms\uTrigFrame.pas">
+				<Form>TrigFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\objects\uBaseObjService.pas"/>
+			<DCCReference Include="..\SharedRUnits\uRCFunc.pas"/>
+			<DCCReference Include="..\SharedRUnits\RC_lib\uRcCtrls.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\database\uDBObject.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\database\uMDBFrm.pas">
+				<Form>MDBFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uMBaseControl.pas">
+				<Form>MBaseControl</Form>
+			</DCCReference>
+			<DCCReference Include="..\SharedRUnits\uRcClient.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\uPathMng.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\PathUtils\PathUtils.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\database\uDownloadRegsFrm.pas">
+				<Form>DownloadRegsFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\ZipMaster\ZipMstr.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\database\uMDBBaseObjFrame.pas">
+				<Form>MDBBaseObjFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\mera\database\uMDBTestObjFrame.pas">
+				<Form>MDBTestObjFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\SharedRUnits\uRcClientFrm.pas">
+				<Form>RcClientFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uAutoPropsFrm.pas">
+				<Form>AutoPropFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uTrigsFrm.pas">
+				<Form>TrigsFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\SharedRUnits\uTagsListFrame.pas">
+				<Form>TagsListFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\SharedRUnits\interfaces\iplgmngr.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\database\uMDBRegObjFrame.pas">
+				<Form>MDBRegObjFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\SharedRUnits\interfaces\scales.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\sdb.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\sdbview.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\transf.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\meconsts.pas"/>
+			<DCCReference Include="forms\uAlgFrm.pas">
+				<Form>AlgFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uAlgFrame.pas">
+				<Form>BaseAlgFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="forms\uAlgAddFrm.pas">
+				<Form>AddAlgFrm</Form>
+			</DCCReference>
+			<DCCReference Include="units\uBaseAlg.pas"/>
+			<DCCReference Include="forms\uIntegralAlgFrame.pas">
+				<Form>IntegralAlgFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="units\uIntegralAlg.pas"/>
+			<DCCReference Include="units\uBaseAlgNP.pas"/>
+			<DCCReference Include="forms\uTahoAlgFrame.pas">
+				<Form>TahoAlgFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="units\uTahoAlg.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\uFFT.pas"/>
+			<DCCReference Include="forms\uGrmsFrame.pas">
+				<Form>GRmsFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="units\uGrmsAlg.pas"/>
+			<DCCReference Include="forms\uPhaseFrame.pas">
+				<Form>PhaseFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="forms\uPolarGraph.pas">
+				<Form>PolarGraph</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uSpmChartEdit.pas">
+				<Form>SpmChartEditFrm</Form>
+			</DCCReference>
+			<DCCReference Include="units\uSynchroPhaseAlg.pas"/>
+			<DCCReference Include="forms\uSpmFrame.pas">
+				<Form>SpmFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="units\uGrmsSrcAlg.pas"/>
+			<DCCReference Include="forms\uGrmsSrcFrame.pas">
+				<Form>GrmsSrcFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="units\uFillingFactorAlg.pas"/>
+			<DCCReference Include="forms\uFillFctFrame.pas">
+				<Form>FillFctFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="forms\uControlWarnFrm.pas">
+				<Form>CntrlWrnChart</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uEditControlWrnFrm.pas">
+				<Form>EditCntlWrnFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uEditProfileFrm.pas">
+				<Form>EditProfileFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uCursorFrm.pas">
+				<Form>CursorFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\mera\ubuffsignal.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\uMeraFile.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\umeraSignal.pas"/>
+			<DCCReference Include="..\..\sharedUtils\mera\uSignalsUtils.pas"/>
+			<DCCReference Include="units\uPhaseAlg.pas"/>
+			<DCCReference Include="forms\uPhaseCrossSpmFrame.pas">
+				<Form>SynchroPhasePhrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="forms\uBandsFrm.pas">
+				<Form>BandsFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uFreqBand.pas"/>
+			<DCCReference Include="forms\uAHCorrectionFrm.pas">
+				<Form>AHCorrectionFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uSpmChart.pas">
+				<Form>SpmChart</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\uPolarGraphPage.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\socket\uScktComp.pas"/>
+			<DCCReference Include="forms\uEditPolarFrm.pas">
+				<Form>EditPolarFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uCyclogramReportFrm.pas">
+				<Form>CyclogramReportFrm</Form>
+			</DCCReference>
+			<DCCReference Include="units\uSpm.pas"/>
+			<DCCReference Include="forms\uTagInfoFrm.pas">
+				<Form>TagInfoFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uTagInfoEditFrm.pas">
+				<Form>TagInfoEditFrm</Form>
+			</DCCReference>
+			<DCCReference Include="units\uPeakFactorAlg.pas"/>
+			<DCCReference Include="forms\uPeakFactorFrame.pas">
+				<Form>PeakFactorFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\math\uHardwareMath.pas"/>
+			<DCCReference Include="..\..\sharedUtils\uCommonTypes.pas"/>
+			<DCCReference Include="forms\uComplexDiagram.pas">
+				<Form>ComplexDiagramFrm</Form>
+			</DCCReference>
+			<DCCReference Include="units\uCounterAlg.pas"/>
+			<DCCReference Include="forms\uCounterAlgFrame.pas">
+				<Form>CounterAlgFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\SharedRUnits\uRCTags.pas"/>
+			<DCCReference Include="forms\uIRDiagram.pas">
+				<Form>IRDiagramFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\lists\uQueue.pas"/>
+			<DCCReference Include="forms\uGenSignalsFrm.pas">
+				<Form>GenSignalsFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uGenSignalsEditFrm.pas">
+				<Form>GenSignalsEditFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uIRDiagramEditFrm.pas">
+				<Form>IRDiagrEditFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\u3dObj.pas">
+				<Form>ObjFrm3d</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uGLFrmEdit.pas">
+				<Form>ObjFrm3dEdit</Form>
+			</DCCReference>
+			<DCCReference Include="units\uAriphmAlg.pas"/>
+			<DCCReference Include="forms\uAriphmAlgFrame.pas">
+				<Form>AriphmAlgFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="units\uTimeIntervalAlg.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\reports\excel\uExcel.pas"/>
+			<DCCReference Include="..\..\sharedUtils\forms\uConfirmDlg.pas">
+				<Form>ConfirmFmr</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uEditPropertiesFrm.pas">
+				<Form>EditPropertiesFrm</Form>
+			</DCCReference>
+			<DCCReference Include="uBaseAlgBands.pas"/>
+			<DCCReference Include="forms\uAlgsSaveFrm.pas">
+				<Form>SaveAlgsFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\math\FFT_койнов\Iterative_FFT_sse.pas"/>
+			<DCCReference Include="forms\uSyncOscillogram.pas">
+				<Form>SyncOscFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uSyncOscillogramEditFrm.pas">
+				<Form>EditSyncOscFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\lists\uQueue2.pas"/>
+			<DCCReference Include="forms\uSRSFrm.pas">
+				<Form>SRSFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uEditSrsFrm.pas">
+				<Form>EditSrsFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\SharedRUnits\interfaces\uAlarms.pas"/>
+			<DCCReference Include="..\..\3d\forms\uTrfrmToolsFrame.pas">
+				<Form>TrfrmToolsFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\3d\forms\uTransformButtons.pas">
+				<Form>TransformToolsFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="forms\uPressFrm2.pas">
+				<Form>PressFrm2</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uPressFrmFrame2.pas">
+				<Form>PressFrmFrame2</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="forms\uPressFrmEdit2.pas">
+				<Form>PressFrmEdit2</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uPressFrm.pas">
+				<Form>PressCamFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uPressFrmFrame.pas">
+				<Form>PressFrmFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="forms\uPressFrmEdit.pas">
+				<Form>PressFrmEdit</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\компоненты\dcl_dpk\VistaProbar\rkVistaProBar.pas"/>
+			<DCCReference Include="..\..\sharedUtils\ogl\shader\uShader.pas"/>
+			<DCCReference Include="..\..\sharedUtils\компоненты\chart_dpk\chart\items\shaders\uLineLgShader.pas"/>
+			<DCCReference Include="forms\uThresholdsFrm.pas">
+				<Form>ThresholdFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uDigsFrm.pas">
+				<Form>DigsFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uDigsFrmEdit.pas">
+				<Form>DigsFrmEdit</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uEditGlObjFrm.pas">
+				<Form>EditGLObjFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\3d\objects\TextureGL.pas"/>
+			<DCCReference Include="..\..\3d\objects\uBaseCamera.pas"/>
+			<DCCReference Include="..\..\3d\objects\uBaseDeformer.pas"/>
+			<DCCReference Include="..\..\3d\objects\uBaseModificator.pas"/>
+			<DCCReference Include="..\..\3d\objects\uFreeCamera.pas"/>
+			<DCCReference Include="..\..\3d\objects\uGroupObjects.pas"/>
+			<DCCReference Include="..\..\3d\objects\uLight.pas"/>
+			<DCCReference Include="..\..\3d\objects\uLoadSkin.pas"/>
+			<DCCReference Include="..\..\3d\objects\uMaterial.pas"/>
+			<DCCReference Include="..\..\3d\objects\uMesh.pas"/>
+			<DCCReference Include="..\..\3d\objects\uMeshData.pas"/>
+			<DCCReference Include="..\..\3d\objects\uMeshObr.pas"/>
+			<DCCReference Include="..\..\3d\objects\uMNode.pas"/>
+			<DCCReference Include="..\..\3d\objects\uModList.pas"/>
+			<DCCReference Include="..\..\3d\objects\uNode.pas"/>
+			<DCCReference Include="..\..\3d\objects\uNodeObject.pas"/>
+			<DCCReference Include="..\..\3d\objects\uObaFile.pas"/>
+			<DCCReference Include="..\..\3d\objects\uObject.pas"/>
+			<DCCReference Include="..\..\3d\objects\uObjectTypes.pas"/>
+			<DCCReference Include="..\..\3d\objects\uObrFile.pas"/>
+			<DCCReference Include="..\..\3d\objects\uQNode.pas"/>
+			<DCCReference Include="..\..\3d\objects\uSceneList.pas"/>
+			<DCCReference Include="..\..\3d\objects\uSceneMng.pas"/>
+			<DCCReference Include="..\..\3d\objects\uShape.pas"/>
+			<DCCReference Include="..\..\3d\objects\uSkin.pas"/>
+			<DCCReference Include="..\..\3d\objects\uTestObjects.pas"/>
+			<DCCReference Include="..\..\3d\objects\uVBOMesh.pas"/>
+			<DCCReference Include="..\..\3d\tools\uselectools.pas"/>
+			<DCCReference Include="..\..\3d\core\uClickFrListener.pas"/>
+			<DCCReference Include="forms\uVertexEditFrame.pas">
+				<Form>VertexEditFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\3d\forms\uDeformerFrame.pas">
+				<Form>DeformerFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="units\u3dMoveEngine.pas"/>
+			<DCCReference Include="forms\u3dObjEditFrame.pas">
+				<Form>ObjEditFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="units\uModelPointMng.pas"/>
+			<DCCReference Include="forms\DataTransfFrm\TestUDPsender.pas">
+				<Form>TestUDPSenderFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uEditCurveFrm.pas">
+				<Form>EditCurveFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uLissajousCurve.pas">
+				<Form>LissajousFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\ulissajousCurveEdit.pas">
+				<Form>LisEditFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\uPerformanceTime.pas"/>
+			<DCCReference Include="units\uProfile.pas"/>
+			<DCCReference Include="forms\uSpmThresholdProfile.pas">
+				<Form>SpmThresholdProfileFrm</Form>
+			</DCCReference>
+			<DCCReference Include="units\uCreateComponents.pas"/>
+			<DCCReference Include="..\SharedRUnits\PluginClass.pas"/>
+			<DCCReference Include="..\SharedRUnits\uCompMng.pas"/>
+			<DCCReference Include="..\SharedRUnits\uFrmSync.pas">
+				<Form>FrmSync</Form>
+			</DCCReference>
+			<DCCReference Include="units\uThreshHolderAlg.pas"/>
+			<DCCReference Include="forms\uTresHoldFrame.pas">
+				<Form>TresHoldFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="forms\uDACFrm.pas">
+				<Form>DACFrm</Form>
+			</DCCReference>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Source>
+						<Source Name="MainSource">plgControlCyclogram.dpr</Source>
+					</Source>
+					<Parameters>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+						<Parameters Name="HostApplication">C:\Program Files (x86)\Mera\Recorder\Recorder.exe</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">1</VersionInfo>
+						<VersionInfo Name="MinorVer">1</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1049</VersionInfo>
+						<VersionInfo Name="CodePage">1251</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName">НПП Мера</VersionInfoKeys>
+						<VersionInfoKeys Name="FileDescription">Плагин &quot;циклограмма режимов&quot;</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">1.1.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName">plgControlCyclogram</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+					<Excluded_Packages/>
+				</Delphi.Personality>
+				<ModelSupport>False</ModelSupport>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>
