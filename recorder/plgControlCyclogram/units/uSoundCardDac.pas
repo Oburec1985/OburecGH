@@ -37,7 +37,7 @@
 interface
 
 uses
-  Classes, Windows, MMSystem, uDacDevice, sysutils;
+  Classes, Windows, MMSystem, uDacDevice, sysutils, SyncObjs;
 
 const
   NUM_BUFFERS = 4; // Количество используемых буферов
@@ -46,7 +46,7 @@ const
 type
   TSoundCardDac = class(TDacDevice)
   private
-    FLock: TCriticalSection; // Объект для синхронизации потоков
+    FLock: TRTLCriticalSection; // Объект для синхронизации потоков
     // Хендл устройства waveOut
     FDeviceHandle: HWAVEOUT;
     // Заголовки буферов
@@ -108,17 +108,16 @@ end;
 constructor TSoundCardDac.Create;
 begin
   inherited Create;
-  FLock := TCriticalSection.Create;
+  InitializeCriticalSection(FLock);
   FDeviceHandle := 0;
   FIsActive := False;
   FStopping := False;
-  FBufferSize := 4096; // Размер буфера по умолчанию
 end;
 
 destructor TSoundCardDac.Destroy;
 begin
   Close;
-  FLock.Free;
+  DeleteCriticalSection(FLock);
   inherited;
 end;
 
@@ -179,8 +178,10 @@ begin
   if ResultCode <> MMSYSERR_NOERROR then
     raise Exception.Create('Error opening waveOut device: ' + IntToStr(ResultCode));
 
-  // 3. Выделение памяти под буферы
-  FBufferSize := 4096; // Убедимся, что размер буфера установлен
+  // 3. Расчет размера и выделение памяти под буферы
+  FBufferSize := round(SampleRate * BufferSizeMS / 1000) * (Channels * BitsPerSample div 8);
+  if FBufferSize = 0 then FBufferSize := 4096; // Sanity check
+
   for i := 0 to NUM_BUFFERS - 1 do
   begin
     FBuffers[i] := AllocMem(FBufferSize);
@@ -195,32 +196,51 @@ procedure TSoundCardDac.Close;
 var
   i: Integer;
   StartTime: Cardinal;
+  isAllDone: Boolean;
 begin
-  FLock.Enter;
+  // Set the stopping flag. This needs to be thread-safe.
+  EnterCriticalSection(FLock);
   try
-    if FDeviceHandle = 0 then
-      Exit;
-
+    if FDeviceHandle = 0 then Exit;
     FStopping := True;
     FIsActive := False;
+  finally
+    LeaveCriticalSection(FLock);
+  end;
 
-    // Полный сброс устройства. Гарантирует, что все циклы прерваны
-    // и все буферы будут возвращены в callback
-    waveOutReset(FDeviceHandle);
+  // Reset the device. This will cause WOM_DONE messages to be sent for all pending buffers.
+  waveOutReset(FDeviceHandle);
 
-    // Ждем, пока callback не обработает все буферы
-    StartTime := GetTickCount;
-    while not AllHeadersDone do
-    begin
-      if (GetTickCount - StartTime) > 500 then Break; // Таймаут
-      Sleep(10);
+  // Now, wait for the callbacks to finish processing all those buffers.
+  // This loop does NOT hold the lock, so the callbacks can acquire it.
+  StartTime := GetTickCount;
+  while True do
+  begin
+    EnterCriticalSection(FLock);
+    try
+      isAllDone := AllHeadersDone;
+    finally
+      LeaveCriticalSection(FLock);
     end;
 
-    // Закрываем хендл ДО освобождения памяти
-    waveOutClose(FDeviceHandle);
-    FDeviceHandle := 0;
+    if isAllDone then
+      break; // Exit loop
 
-    // Освобождаем память, выделенную под буферы
+    // Use a timeout to prevent an infinite loop in case of an unexpected issue.
+    if (GetTickCount - StartTime) > 2000 then Break;
+    Sleep(10);
+  end;
+
+  // Now that all buffers are hopefully returned and unprepared, we can close the device.
+  EnterCriticalSection(FLock);
+  try
+    if FDeviceHandle <> 0 then
+    begin
+      waveOutClose(FDeviceHandle);
+      FDeviceHandle := 0;
+    end;
+
+    // Free memory buffers
     for i := 0 to NUM_BUFFERS - 1 do
     begin
       if FBuffers[i] <> nil then
@@ -230,7 +250,7 @@ begin
       end;
     end;
   finally
-    FLock.Leave;
+    LeaveCriticalSection(FLock);
   end;
 end;
 
@@ -242,29 +262,41 @@ begin
 end;
 
 procedure TSoundCardDac.Stop(AGraceful: Boolean = True);
+var
+  isAllDone: Boolean;
+  StartTime: Cardinal;
 begin
-  FLock.Enter;
+  EnterCriticalSection(FLock);
   try
     if not FIsActive then Exit;
-
     FStopping := True;
-
-    // Если мы в режиме бесконечного цикла, прерываем его
-    if FCurrentLoopCount = 0 then
-    begin
-      waveOutBreakLoop(FDeviceHandle);
-    end;
-
-    // В потоковом режиме просто перестаем подавать данные (флага FStopping достаточно)
-    // Для мгновенной остановки потокового режима можно вызвать Reset, но это делает Close
-    if not AGraceful then
-    begin
-       waveOutReset(FDeviceHandle);
-    end;
-
     FIsActive := False;
   finally
-    FLock.Leave;
+    LeaveCriticalSection(FLock);
+  end;
+
+  if FCurrentLoopCount = 0 then
+  begin
+    waveOutBreakLoop(FDeviceHandle);
+  end;
+
+  if not AGraceful then
+  begin;
+    waveOutReset(FDeviceHandle);
+    // Wait for callbacks to finish to prevent race conditions
+    StartTime := GetTickCount;
+    while True do
+    begin
+      EnterCriticalSection(FLock);
+      try
+        isAllDone := AllHeadersDone;
+      finally
+        LeaveCriticalSection(FLock);
+      end;
+      if isAllDone then break;
+      if (GetTickCount - StartTime) > 1000 then Break; // Timeout
+      Sleep(10);
+    end;
   end;
 end;
 
@@ -278,6 +310,9 @@ begin
   HeaderIndex := GetFreeHeaderIndex;
   if HeaderIndex = -1 then
     Exit; // Нет свободных буферов
+
+  if ASize > FBufferSize then
+    raise Exception.CreateFmt('QueueBuffer: Data size (%d) exceeds allocated buffer size (%d).', [ASize, FBufferSize]);
 
   // Копируем данные
   Move(ABuffer, FBuffers[HeaderIndex]^, ASize);
@@ -322,7 +357,7 @@ procedure TSoundCardDac.WaveOutCallback(hwo: HWAVEOUT; uMsg: UINT; dwInstance: D
 var
   Header: PWAVEHDR;
 begin
-  FLock.Enter;
+  EnterCriticalSection(FLock);
   try
     if (FDeviceHandle = 0) or (uMsg <> WOM_DONE) then
       Exit;
@@ -345,7 +380,7 @@ begin
     if Assigned(OnBufferEnd) and not FStopping and (FCurrentLoopCount <> 0) then
       OnBufferEnd(Self);
   finally
-    FLock.Leave;
+    LeaveCriticalSection(FLock);
   end;
 end;
 end.

@@ -106,13 +106,15 @@ begin
     FDacDevice.SampleRate := 44100;
     FDacDevice.BitsPerSample := 16;
     FDacDevice.Channels := 1;
+    FDacDevice.BufferSizeMS := 300; // Сообщаем ЦАП желаемый размер буфера
     FDacDevice.Open;
 
     case rgMode.ItemIndex of
       0: // Sin
       begin
-        FDacDevice.Start(0); // Loop infinitely
-        GenerateAndQueueData; // Generate and queue one buffer
+        FDacDevice.Start(1); // Play each buffer once to enable streaming
+        GenerateAndQueueData; // Queue first buffer
+        GenerateAndQueueData; // Queue second buffer to prevent gaps
       end;
       1: // SweepSin
       begin
@@ -130,8 +132,8 @@ end;
 
 procedure TDACFrm.DacBufferEndHandler(Sender: TObject);
 begin
-  // Этот обработчик нужен только для потоковых режимов, как SweepSin
-  if rgMode.ItemIndex = 1 then
+  // This handler is for all streaming modes (Sin, SweepSin, etc.)
+  if FDacDevice.IsActive then
     GenerateAndQueueData;
 end;
 
@@ -149,8 +151,6 @@ begin
 end;
 
 procedure TDACFrm.GenerateAndQueueData;
-const
-  BUFFER_SIZE_MS = 300; // 300 мс на буфер
 var
   i: Integer;
   Freq, Ampl, Value: Double;
@@ -159,7 +159,7 @@ var
   // Sweep vars
   StartFreq, EndFreq, SweepTime, CurrentTime, k: Double;
 begin
-  BufferSizeSamples := round(FDacDevice.SampleRate * BUFFER_SIZE_MS / 1000);
+  BufferSizeSamples := round(FDacDevice.SampleRate * FDacDevice.BufferSizeMS / 1000);
   SetLength(FBuffer, BufferSizeSamples);
 
   Ampl := StrToFloatDef(edAmpl.Text, 0.8);

@@ -28,6 +28,7 @@ type
     FSampleRate: Cardinal;
     FBitsPerSample: Cardinal;
     FChannels: Cardinal;
+    FBufferSizeMS: Cardinal;
   public
     constructor Create;
     destructor Destroy; override;
@@ -48,6 +49,7 @@ type
     property SampleRate: Cardinal read FSampleRate write FSampleRate; // Частота дискретизации (Гц)
     property BitsPerSample: Cardinal read FBitsPerSample write FBitsPerSample; // Битность (8, 16, ...)
     property Channels: Cardinal read FChannels write FChannels; // Количество каналов (1 - моно, 2 - стерео)
+    property BufferSizeMS: Cardinal read FBufferSizeMS write FBufferSizeMS; // Длительность буфера в мс
     property OnBufferEnd: TNotifyEvent read FOnBufferEnd write FOnBufferEnd; // Событие, возникающее после окончания воспроизведения буфера
   end;
 
@@ -59,6 +61,7 @@ begin
   FSampleRate := 44100;
   FBitsPerSample := 16;
   FChannels := 1;
+  FBufferSizeMS := 100; // Default buffer size
 end;
 
 destructor TDacDevice.Destroy;
