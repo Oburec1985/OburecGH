@@ -76,7 +76,7 @@ type
     destructor Destroy; override;
 
     // Открывает звуковое устройство waveOut
-    procedure Open; override;
+    function Open:cardinal;override;
     // Закрывает звуковое устройство и освобождает буферы
     procedure Close; override;
     // Устанавливает параметры и запускает воспроизведение
@@ -94,7 +94,7 @@ implementation
 // Статическая callback-функция, т.к. ее адрес передается в WinAPI
 procedure WaveOutProc(hwo: HWAVEOUT; uMsg: UINT;
                       dwInstance: DWORD;
-                      dwParam1: DWORD; dwParam2: DWORD);
+                      dwParam1: DWORD; dwParam2: DWORD);stdcall;
 var
   Instance: TSoundCardDac;
 begin
@@ -146,7 +146,7 @@ begin
   end;
 end;
 
-procedure TSoundCardDac.Open;
+function TSoundCardDac.Open:cardinal;
 var
   wfx: TWaveFormatEx;
   i: Integer;

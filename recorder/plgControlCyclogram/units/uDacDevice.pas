@@ -1,4 +1,4 @@
-unit uDacDevice;
+﻿unit uDacDevice;
 
 {******************************************************************************
  * Модуль абстрактного класса ЦАП (uDacDevice.pas)
@@ -27,6 +27,7 @@ type
     FOnBufferEnd: TNotifyEvent;
     FSampleRate: Cardinal;
     FBitsPerSample: Cardinal;
+    // Количество каналов (1 - моно, 2 - стерео)
     FChannels: Cardinal;
     FBufferSizeMS: Cardinal;
   public
@@ -34,7 +35,7 @@ type
     destructor Destroy; override;
 
     // Открывает и инициализирует устройство
-    procedure Open; virtual; abstract;
+    function Open:cardinal; virtual; abstract;
     // Закрывает устройство и освобождает ресурсы
     procedure Close; virtual; abstract;
     // Начинает воспроизведение. ALoopCount=1 - однократно, >1 - N раз, 0 - бесконечно

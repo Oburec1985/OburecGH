@@ -65,7 +65,8 @@ type
     procedure btnPlayStopClick(Sender: TObject); // Обработчик нажатия кнопки Play/Stop
     procedure FormCreate(Sender: TObject);     // Обработчик создания формы
     procedure FormDestroy(Sender: TObject);    // Обработчик закрытия формы
-    procedure rgModeClick(Sender: TObject);      // Обработчик смены режима
+    procedure rgModeClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);      // Обработчик смены режима
   private
     { Private declarations }
     FDacDevice: TDacDevice;       // Экземпляр класса ЦАП
@@ -106,7 +107,8 @@ begin
     FDacDevice.SampleRate := 44100;
     FDacDevice.BitsPerSample := 16;
     FDacDevice.Channels := 1;
-    FDacDevice.BufferSizeMS := 300; // Сообщаем ЦАП желаемый размер буфера
+    // Сообщаем ЦАП желаемый размер буфера в мс
+    FDacDevice.BufferSizeMS := 300;
     FDacDevice.Open;
 
     case rgMode.ItemIndex of
@@ -148,6 +150,11 @@ end;
 procedure TDACFrm.FormDestroy(Sender: TObject);
 begin
   FDacDevice.Free;
+end;
+
+procedure TDACFrm.FormShow(Sender: TObject);
+begin
+  //btnPlayStopClick(nil);
 end;
 
 procedure TDACFrm.GenerateAndQueueData;
