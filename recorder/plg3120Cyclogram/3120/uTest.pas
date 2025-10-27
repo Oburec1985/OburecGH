@@ -93,7 +93,7 @@ var
   c:cControlObj;
   p:cProgramObj;
   m:cmodeobj;
-  mname:string;
+  mname, dsc, fbname:string;
   I, j: Integer;
   t:ctask;
 begin
@@ -106,52 +106,94 @@ begin
   p.m_StartOnPlay:=true;
   p.m_enableOnStart:=true;
   g_conmng.Add(p);
-  for I := 0 to 8 do
+  for I := 0 to 7 do
   begin
     case i of
-      5:mname:='Номер передачи';
-      6:mname:='Торможение';
-      7:mname:='Поворот';
-      8:mname:='Авар. передача';
+      5:mname:=c_Break_Name;
+      6:mname:=c_Turn_Name;
+      7:mname:=c_Emerg_Name;
     else
       mname:='M'+inttostr(i+1);
     end;
     if i<5 then
     begin
-      c:=g_conmng.createControl(mname, 'cMNControl');
-      cMNControl(c).m_Mtag.tagname:=mname+'_Mtsk';
+      begin
+        c:=g_conmng.createControl(mname, 'cMNControl');
+        g_Marray[i]:=cmncontrol(c);
+      end;
+      cMNControl(c).m_Mtag.tagname:=mname+'_SetPoint_M_Nm';
+      cMNControl(c).m_Ntag.tagname:=mname+'_SetPoint_N_rpm';
       if cMNControl(c).m_Mtag.tag=nil then
       begin
-        cMNControl(c).m_Mtag.tag:=createScalar(mname+'_Mtsk', true);
+        cMNControl(c).m_Mtag.tag:=createScalar(cMNControl(c).m_Mtag.tagname, true);
       end;
-      cMNControl(c).m_Ntag.tagname:=mname+'_Ntsk';
       if cMNControl(c).m_Ntag.tag=nil then
       begin
-        cMNControl(c).m_Ntag.tag:=createScalar(mname+'_Ntsk', true);
+        cMNControl(c).m_Ntag.tag:=createScalar(cMNControl(c).m_Ntag.tagname, true);
       end;
-      cMNControl(c).m_MtagFB.tagname:=mname+'_Mfb';
+      // обратная связь по моменту
+      cMNControl(c).m_MtagFB.tagname:=mname+'(v)';
       if cMNControl(c).m_MtagFB.tag=nil then
       begin
-        cMNControl(c).m_MtagFB.tag:=createScalar(mname+'_Mfb', true);
+        cMNControl(c).m_MtagFB.tag:=createScalar(cMNControl(c).m_MtagFB.tagname, true);
       end;
-      cMNControl(c).m_NtagFB.tagname:=mname+'_Nfb';
+      // обратная связь по оборотам
+      //cMNControl(c).m_NtagFB.tagname:=mname+'_Nfb';
+      cMNControl(c).m_NtagFB.tagname:='Fm'+inttostr(i+1);
       if cMNControl(c).m_NtagFB.tag=nil then
       begin
-        cMNControl(c).m_NtagFB.tag:=createScalar(mname+'_Nfb', true);
+        cMNControl(c).m_NtagFB.tag:=createScalar(cMNControl(c).m_NtagFB.tagname, true);
       end;
+      // Команда старт
+      cMNControl(c).m_CmdStart.tagname:='Cmd_'+mname+'_Start';
+      if cMNControl(c).m_CmdStart.tag=nil then
+      begin
+        cMNControl(c).m_CmdStart.tag:=createScalar(cMNControl(c).m_CmdStart.tagname, true);
+      end;
+      // Команда стоп
+      cMNControl(c).m_CmdStop.tagname:='Cmd_'+mname+'_Stop';
+      if cMNControl(c).m_CmdStop.tag=nil then
+      begin
+        cMNControl(c).m_CmdStop.tag:=createScalar(cMNControl(c).m_CmdStop.tagname, true);
+      end;
+
     end
     else
     begin // создание и настройка актуаторов
-      c:=g_conmng.createControl(mname, 'cControlObj');
-      c.m_Tasktag.tagname:=mname+'_tsk';
+      c:=g_conmng.createControl(mname, 'cActControl');
+      case i of
+        5: // тормоз
+        begin
+          mname:='SP_Position_brake';
+          dsc:='Задание Положение актутораа тормоза ,в %';
+          fbname:='SP_brake_fb';
+        end;
+        6: // Поворот
+        begin
+          mname:='SP_Position_turnActuators';
+          dsc:='Задание Положение актуатора поворота ,в %';
+          fbname:='SP_turn_fb';
+        end;
+        7: // Авар. передача
+        begin
+          mname:='SP_Position_emergencyGearActuators';
+          dsc:='Задание Положение актуатора аварийной передачи ,в %';
+          fbname:='SP_emerg_fb';
+        end;
+      end;
+      c.m_Tasktag.tagname:=mname;
       if c.m_Tasktag.tag=nil then
       begin
-        c.m_Tasktag.tag:=createScalar(mname+'_tsk', true);
+        c.m_Tasktag.tag:=createScalar(mname, true);
       end;
+      c.m_TaskTag.describe:=dsc;
+      // FeedBack
+      c.m_FBtag.tagname:=mname;
       if c.m_FBtag.tag=nil then
       begin
-        c.m_Tasktag.tag:=createScalar(mname+'_fb', true);
+        c.m_FBtag.tag:=createScalar(fbname, true);
       end;
+      c.m_FBtag.describe:='Положение актуатора аварийной передачи ,в %';
     end;
     g_conmng.Add(c);
     p.AddControl(c);
@@ -191,7 +233,6 @@ begin
     end;
   end;
 end;
-
 
 
 end.

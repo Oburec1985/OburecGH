@@ -119,6 +119,8 @@ type
     procedure settagid(t: tagid);
 
     function ConvertIndInLoopBuff(i: integer): integer;
+    procedure setdecribe(s:string);
+    function getdescribe:string;
   public
     function GetIsScalar: boolean;
     function readyBlockCount: cardinal;
@@ -190,6 +192,7 @@ type
     property freq: double read getfreq write setfreq;
     property readyVals: cardinal read getReadyVals write setReadyVals;
     property lastindex: integer read getlastindex write m_lastindex;
+    property describe:string read getDescribe write setdecribe;
     // tagname; tagid
     Function ToStr:string;
     procedure FromStr(s:string);
@@ -1437,6 +1440,23 @@ procedure cTag.setBlock(b: IBlockAccess);
 begin
   fBlock := b;
   initTagData(fBlCount);
+end;
+
+procedure cTag.setdecribe(s: string);
+var
+  v:OleVariant;
+begin
+  v:=s;
+  if tag<>nil then
+    tag.SetProperty(TAGPROP_DESCRIBE,v);
+end;
+
+function cTag.getDescribe:string;
+var
+  v:OleVariant;
+begin
+  tag.GetProperty(TAGPROP_DESCRIBE,v);
+  result:=v;
 end;
 
 procedure cTag.setfreq(f: double);

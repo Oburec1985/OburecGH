@@ -126,7 +126,8 @@ type
     destructor destroy;override;
   end;
 
-  cStageFolder  = class;
+  cStageFolder = class;
+  cBladeFolder = class;
 
   // испытываемый объект
   cTurbFolder = class(cXmlFolder)
@@ -151,6 +152,7 @@ type
     procedure setBlCount(c:integer);
     function getBlCount:integer;
   public
+    function GetBlade(i: integer): cBladeFolder;
     // получить след или предыдущ лопатку
     function GetNext(b:cXmlFolder):cXmlFolder;
     function GetPrev(b:cXmlFolder):cXmlFolder;
@@ -1294,6 +1296,12 @@ begin
   end;
 end;
 
+function cStageFolder.GetBlade(i: integer): cBladeFolder;
+begin
+  result:=cBladeFolder(getchild(i));
+end;
+
+
 function cStageFolder.GetPrev(b: cXmlFolder): cXmlFolder;
 var
   bl:cBladeFolder;
@@ -1457,7 +1465,7 @@ var
   extr: PExtremum1d;
   date: TDateTime;
   res: boolean;
-  rng, rng2: olevariant;
+  rng, rng2, rng3: olevariant;
   str, str1, str2, repPath: string;
   tp:tpoint;
   p3:point3d;
@@ -1467,6 +1475,7 @@ var
   stage: cStageFolder;
   blade: cBladeFolder;
 begin
+  KillAllExcelProcesses;
   if tmpl='' then
   begin
     tmpl:=g_mbase.root.Absolutepath+'Template\Report_tmpl.xlsx';
@@ -1479,6 +1488,7 @@ begin
       VisibleExcel(true);
     end;
   end;
+  turb := g_mbase.SelectTurb;
   if fileexists(tmpl) then
   begin
     if not IsExcelFileOpen(tmpl) then
@@ -1486,12 +1496,11 @@ begin
       OpenWorkBook(tmpl);
     end;
 
-    turb := g_mbase.SelectTurb;
     stage := g_mbase.SelectStage;
     blade := g_mbase.SelectBlade;
 
     rng:=GetRange(1,'c_Sketch');
-    rng:=blade.m_ObjType;
+    rng.value:=blade.m_ObjType;
     rng:=GetRange(1,'c_BlCount');
     rng.value:=stage.BlCount;
     rng:=GetRange(1,'c_ToneCount');
@@ -1502,13 +1511,15 @@ begin
     rng.value:=blade.ToneCount;
     rng:=GetRange(1,'c_Tone');
     rng2:=GetRange(1,'c_Start');
+    // заполняем тоны в таблице лопаток (с позиции Start)
     for I := 0 to blade.ToneCount - 1 do
     begin
       SetCell(1, rng.Row-1, rng.Column+i, i+1);
       p3:=blade.Tone(i);
+      // тоны в таблице с c_Tone
       SetCell(1, rng.Row, rng.Column+i, p3.x);
       SetCell(1, rng.Row+1,rng.Column+i, p3.y);
-
+      // тоны в таблице с c_start
       SetCell(1, rng2.Row-1,rng2.Column+2+i*3, p3.x);
       SetCell(1, rng2.Row-1,rng2.Column+4+i*3, p3.y);
     end;
@@ -1516,9 +1527,13 @@ begin
     rng.value:=turb.m_ObjType;
     rng:=GetRange(1,'c_Stage');
     rng.value:=stage.StageNum;
+    rng:=GetRange(1,'c_decr');
+    // проход по лопаткам; rng2 - ячейка c_Start
     for I := 0 to stage.BlCount - 1 do
     begin
+      blade:=stage.getblade(i);
       SetCell(1, rng2.Row+i,rng2.Column+1, blade.m_sn);
+      // проход по тонам
       for j := 0 to blade.ToneCount - 1 do
       begin
         str := getSubStrByIndex(blade.m_resStr, ';', 1, j);
@@ -1527,32 +1542,34 @@ begin
         r:=rng2.Row+i;
         col:=rng2.Column+2+j*3;
         SetCell(1, r,col, strtofloatext(str2));
+        // декремент
+        str2 := getSubStrByIndex(str, '_', 1, 3);
+        col:=rng.Column+j;
+        SetCell(1, r, col, strtofloatext(str2));
       end;
-      str2 := getSubStrByIndex(str, '_', 1, 3);
-      rng:=GetRange(1,'c_Start');
-      //tp:=point(r,rng2.column+c*3+2+c2);
-      //rng:=GetRangeObj(1,tpoint(tp),tp);
-      rng:=GetRange(1,'c_decr');
-      rng.value:=strtofloatext(Str2);
       if blade.m_res=2 then
       begin
-        SetCell(1, rng.Row+i,rng.Column+1, 'годен');
+        SetCell(1, rng.Row+i,rng.Column+blade.ToneCount, 'годен');
       end;
-      if blade.m_res=1 then
+      if blade.m_res<>2 then
       begin
-        rng := GetRangeObj(1, point(rng2.row, rng.column),
-                              point(rng2.row, rng2.column+1));
-        rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
-        SetCell(1, rng2.Row+i,rng2.Column+1, 'не годен');
+        rng3 := GetRangeObj(1, point(rng2.row, rng.column),
+                              point(rng2.row, rng.column+blade.ToneCount));
+        rng3.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
+        SetCell(1, rng2.Row+i, rng.Column+blade.ToneCount, 'не годен');
       end;
     end;
-  end;
-  repPath := ExtractFileDir(turb.getFolder) + '\Report.xlsx';
-  SaveWorkBookAs(repPath);
-  if hideexcel then
+    repPath := ExtractFileDir(turb.getFolder) + '\Report.xlsx';
+    SaveWorkBookAs(repPath);
+    if hideexcel then
+    begin
+      CloseWorkBook;
+      CloseExcel;
+    end;
+  end
+  else
   begin
-    CloseWorkBook;
-    CloseExcel;
+    showmessage('Не найден шаблон '+ tmpl);
   end;
 end;
 

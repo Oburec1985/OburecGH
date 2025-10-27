@@ -337,6 +337,7 @@ procedure TTagInfoFrm.UpdateData;
 var
   i, v: integer;
   p: TTagInfoPair;
+  b:boolean;
 begin
   if m_tag.tag=nil then
     exit;
@@ -344,15 +345,28 @@ begin
   v := round(GetScalar(m_tag.tag));
   if v <> lastval then
   begin
+    b:=false;
     for i := 0 to count - 1 do
     begin
       p := m_textPairs[i];
       if p.v = v then
+      begin
+        b:=true;
         break;
+      end;
     end;
-    RichText.text := p.str;
-    RichText.Font.color := p.color;
-    RichText.color := p.bckgnd;
+    if b then
+    begin
+      RichText.text := p.str;
+      RichText.Font.color := p.color;
+      RichText.color := p.bckgnd;
+    end
+    else
+    begin
+      RichText.text := 'Нет значения';
+      RichText.Font.color := clBlack;
+      RichText.color := clGray;
+    end;
   end;
   lastval := v;
 end;

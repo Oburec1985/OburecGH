@@ -228,6 +228,11 @@ begin
   p:=cpage(c.getpage);
   a:=p.activeAxis;
   t:=cbasictrend(c.magniteObj);
+  if t.Count=0 then
+  begin
+    result:=1;
+    exit;
+  end;
   if p.LgX then
   begin
     x:=ValToLogScale(x,p2d(a.min.x,a.max.x));
@@ -242,7 +247,7 @@ begin
     end;
     hi:=t.GetHiInd(x+c.fmagniteValue);
     result:=t.getP2(LO).y;
-
+    ind:=lo;
     for I := lo+1 to hi do
     begin
       y:=t.getP2(i).y;
@@ -278,6 +283,10 @@ begin
     result:=0;
     ind:=-1;
     exit;
+  end;
+  if p.LgX then
+  begin
+    x:=ValToLogScale(x,p2d(a.min.x,a.max.x));
   end;
   if t<>nil then
   begin
@@ -371,7 +380,16 @@ begin
               GetMin(cursor, mouse.activeAxisPos.x, ind);
               commonalg:=false;
               if ind<>-1 then
-                newpos:=t.getp2(ind).x
+              begin
+                if p.lgx then
+                begin
+                  newpos:=evalLogPos(a.min.x, a.max.x, t.getp2(ind).x);
+                end
+                else
+                begin
+                  newpos:=t.getp2(ind).x
+                end;
+              end
               else
                 commonalg:=true;
             end;

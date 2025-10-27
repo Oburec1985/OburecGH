@@ -4,7 +4,7 @@ object FRFFrm: TFRFFrm
   Hint = #1042#1082#1083#1102#1095#1080#1090#1100'/'#1086#1090#1082#1083#1102#1095#1080#1090#1100' '#1088#1072#1089#1095#1077#1090
   Caption = 'FRFFrm'
   ClientHeight = 659
-  ClientWidth = 1097
+  ClientWidth = 1058
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,7 +17,7 @@ object FRFFrm: TFRFFrm
   PixelsPerInch = 120
   TextHeight = 17
   object Splitter1: TSplitter
-    Left = 775
+    Left = 736
     Top = 0
     Width = 7
     Height = 659
@@ -28,11 +28,12 @@ object FRFFrm: TFRFFrm
     Align = alRight
     Color = clBackground
     ParentColor = False
+    ExplicitLeft = 775
   end
   object SpmChart: cChart
     Left = 0
     Top = 0
-    Width = 775
+    Width = 736
     Height = 659
     Cursor = crSizeAll
     Align = alClient
@@ -45,9 +46,10 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitWidth = 775
   end
   object RightGB: TGroupBox
-    Left = 782
+    Left = 743
     Top = 0
     Width = 315
     Height = 659
@@ -57,7 +59,10 @@ object FRFFrm: TFRFFrm
     Margins.Bottom = 4
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
+    ParentShowHint = False
+    ShowHint = False
     TabOrder = 1
+    ExplicitLeft = 782
     object ShockCountLabel: TLabel
       Left = 8
       Top = 27
@@ -68,6 +73,8 @@ object FRFFrm: TFRFFrm
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = #1053#1072#1081#1076#1077#1085#1086' '#1091#1076#1072#1088#1086#1074
+      ParentShowHint = False
+      ShowHint = False
     end
     object ShockLabel: TLabel
       Left = 5
@@ -75,6 +82,8 @@ object FRFFrm: TFRFFrm
       Width = 47
       Height = 17
       Caption = #1059#1076#1072#1088#8470
+      ParentShowHint = False
+      ShowHint = False
     end
     object WinPosBtn: TSpeedButton
       Left = 94
@@ -256,13 +265,13 @@ object FRFFrm: TFRFFrm
         24003C24003C24003C23003D25003E290036}
       ParentShowHint = False
       ParentBiDiMode = False
-      ShowHint = True
+      ShowHint = False
       Transparent = False
       OnClick = WinPosBtnClick
     end
     object TrigLvlLabel: TLabel
-      Left = 124
-      Top = 86
+      Left = 117
+      Top = 89
       Width = 30
       Height = 23
       Margins.Left = 4
@@ -276,6 +285,8 @@ object FRFFrm: TFRFFrm
       Font.Name = 'YScaleLabel'
       Font.Style = []
       ParentFont = False
+      ParentShowHint = False
+      ShowHint = False
     end
     object ShockCountE: TEdit
       Left = 7
@@ -286,18 +297,22 @@ object FRFFrm: TFRFFrm
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
+      ParentShowHint = False
+      ShowHint = False
       TabOrder = 0
     end
     object SaveBtn: TButton
-      Left = 5
+      Left = 4
       Top = 150
-      Width = 87
+      Width = 86
       Height = 29
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
+      ParentShowHint = False
+      ShowHint = False
       TabOrder = 1
       OnClick = SaveBtnClick
     end
@@ -316,6 +331,8 @@ object FRFFrm: TFRFFrm
         0000008080000080800000808000000000000000000000000000000000000000
         0000000000000000000000808000008080000080800000808000008080000080
         800000808000008080000080800000808000}
+      ParentShowHint = False
+      ShowHint = False
       TabOrder = 2
       UpGlyph.Data = {
         0E010000424D0E01000000000000360000002800000009000000060000000100
@@ -335,6 +352,8 @@ object FRFFrm: TFRFFrm
       Top = 216
       Width = 136
       Height = 25
+      ParentShowHint = False
+      ShowHint = False
       TabOrder = 3
       Text = '0'
     end
@@ -348,12 +367,14 @@ object FRFFrm: TFRFFrm
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = #1059#1076#1072#1083#1080#1090#1100
+      ParentShowHint = False
+      ShowHint = False
       TabOrder = 4
       OnClick = DelBtnClick
     end
     object hideCB: TCheckBox
       Left = 173
-      Top = 48
+      Top = 52
       Width = 78
       Height = 23
       Margins.Left = 4
@@ -361,6 +382,8 @@ object FRFFrm: TFRFFrm
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = #1057#1082#1088#1099#1090#1100
+      ParentShowHint = False
+      ShowHint = False
       TabOrder = 5
       OnClick = hideCBClick
     end
@@ -375,6 +398,8 @@ object FRFFrm: TFRFFrm
         'h0'
         'h1'
         'h2')
+      ParentShowHint = False
+      ShowHint = False
       TabOrder = 6
       Visible = False
       OnClick = EstimatorRGClick
@@ -389,6 +414,8 @@ object FRFFrm: TFRFFrm
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = #1054#1082#1085#1086
+      ParentShowHint = False
+      ShowHint = False
       TabOrder = 7
       OnClick = UseWndFcbClick
     end
@@ -402,13 +429,15 @@ object FRFFrm: TFRFFrm
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = 'Welch'
+      ParentShowHint = False
+      ShowHint = False
       TabOrder = 8
       Visible = False
       OnClick = WelchCBClick
     end
     object DisableCB: TCheckBox
       Left = 115
-      Top = 48
+      Top = 52
       Width = 60
       Height = 23
       Margins.Left = 4
@@ -416,14 +445,16 @@ object FRFFrm: TFRFFrm
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = #1042#1082#1083'.'
+      ParentShowHint = False
+      ShowHint = False
       TabOrder = 9
       OnClick = DisableCBClick
     end
     object SignalsGroupBox: TGroupBox
       Left = 2
-      Top = 345
+      Top = 346
       Width = 311
-      Height = 159
+      Height = 158
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 10
@@ -431,7 +462,7 @@ object FRFFrm: TFRFFrm
         Left = 2
         Top = 19
         Width = 307
-        Height = 138
+        Height = 137
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -452,6 +483,8 @@ object FRFFrm: TFRFFrm
             Width = 65
           end>
         RowSelect = True
+        ParentShowHint = False
+        ShowHint = False
         TabOrder = 0
         ViewStyle = vsReport
         OnClick = SignalsLVClick
@@ -480,6 +513,8 @@ object FRFFrm: TFRFFrm
         'Coh'
         'Spm'
         'Phase')
+      ParentShowHint = False
+      ShowHint = False
       TabOrder = 11
       OnClick = ResTypeRGClick
     end
@@ -538,6 +573,8 @@ object FRFFrm: TFRFFrm
         Margins.Right = 4
         Margins.Bottom = 4
         Color = clWhite
+        ParentShowHint = False
+        ShowHint = False
         TabOrder = 0
       end
       object BladeNumEdit: TEdit
@@ -549,6 +586,8 @@ object FRFFrm: TFRFFrm
         Margins.Top = 4
         Margins.Right = 4
         Margins.Bottom = 4
+        ParentShowHint = False
+        ShowHint = False
         TabOrder = 1
       end
       object BladeSE: TSpinButton
@@ -566,6 +605,8 @@ object FRFFrm: TFRFFrm
           0000008080000080800000808000000000000000000000000000000000000000
           0000000000000000000000808000008080000080800000808000008080000080
           800000808000008080000080800000808000}
+        ParentShowHint = False
+        ShowHint = False
         TabOrder = 2
         UpGlyph.Data = {
           0E010000424D0E01000000000000360000002800000009000000060000000100
@@ -590,6 +631,8 @@ object FRFFrm: TFRFFrm
         Margins.Right = 4
         Margins.Bottom = 4
         Color = clWhite
+        ParentShowHint = False
+        ShowHint = False
         TabOrder = 3
       end
     end
@@ -603,6 +646,8 @@ object FRFFrm: TFRFFrm
       Margins.Right = 4
       Margins.Bottom = 4
       Increment = 0.100000000000000000
+      ParentShowHint = False
+      ShowHint = False
       TabOrder = 13
       OnChange = TrigFEChange
     end
@@ -616,6 +661,8 @@ object FRFFrm: TFRFFrm
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = #1057#1082#1088#1099#1090#1100' Excel'
+      ParentShowHint = False
+      ShowHint = False
       TabOrder = 14
       OnClick = HideExcelCBClick
     end
@@ -630,8 +677,27 @@ object FRFFrm: TFRFFrm
       Margins.Bottom = 4
       Caption = 'Out/In'
       Checked = True
+      ParentShowHint = False
+      ShowHint = False
       State = cbChecked
       TabOrder = 15
+      OnClick = Frf_YX_XY_CBClick
+    end
+    object useAvrCb: TCheckBox
+      Left = 169
+      Top = 279
+      Width = 112
+      Height = 22
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = #1059#1089#1088#1077#1076#1085#1103#1090#1100
+      Checked = True
+      ParentShowHint = False
+      ShowHint = False
+      State = cbChecked
+      TabOrder = 16
       OnClick = Frf_YX_XY_CBClick
     end
   end

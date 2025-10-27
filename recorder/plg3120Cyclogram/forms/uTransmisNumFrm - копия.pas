@@ -58,10 +58,6 @@ type
       State: TDragState; var Accept: Boolean);
     procedure ChannelsSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
-    procedure ChannelsSGSetEditText(Sender: TObject; ACol, ARow: Integer;
-      const Value: string);
-    procedure ChannelsSGKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
   public
     // список колонок
     m_Tags:tlist;
@@ -73,8 +69,6 @@ type
     m_resTag:ctag;
     // текущий замер состояний вычисляемый в RunTime
     m_values:array of boolean;
-
-    m_thresh_OverRow : Integer;
   private
     procedure InitSG;
     function gettag(i:integer):cTagRec;overload;
@@ -95,9 +89,6 @@ type
     procedure ValsToSg;
     procedure SgToVals;
     procedure UpdateState(row:integer);
-    procedure UpdateThresh(col:integer);
-    procedure UpdateThreshAll;
-    function GetThresh(col:integer): string;
     function tostr: string;
     procedure doUpdateTags(sender:tobject);
   public
@@ -119,7 +110,7 @@ implementation
 
 function encode(b:array of boolean):integer;
 var
-  i:integer;
+  i,j:integer;
 begin
   Result:=0;
   for I := 0 to length(b) - 1 do
@@ -133,6 +124,7 @@ end;
 
 procedure decode(v:integer; b:array of boolean);
 var
+  a:pboolarray;
   i:integer;
 begin
   for I := 0 to length(b) - 1 do
@@ -147,20 +139,17 @@ end;
 procedure TTransNumFrm.ChannelsSGDblClick(Sender: TObject);
 var
   pPnt: TPoint; // Координаты курсора
-  xCol, xRow: integer; // Адрес ячейки таблицы
+  xCol, xRow, ind: integer; // Адрес ячейки таблицы
   s:cStateRec;
+  I: TPoint;
 begin
   GetCursorPos(pPnt);
   pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
   // Находим позицию нашей ячейки
   xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
   xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
-
   if xRow>1 then
   begin
-    UpdateThreshAll;
-    if xRow = m_thresh_OverRow then Exit;
-
     if xCol>0 then
     begin
       s:=getState(xRow-2);
@@ -234,10 +223,10 @@ var
   sg: TStringGrid;
   Color: Integer;
   str: string;
+  I: Integer;
   st:cstaterec;
+  duplicateRow:boolean;
 begin
-  if ARow = m_thresh_OverRow then Exit;
-
   sg := TStringGrid(Sender);
   Color := sg.Canvas.Brush.Color;
   // окрас строки выбраного контрола
@@ -273,52 +262,6 @@ begin
     sg.Canvas.Brush.Color := Color;
   end
 
-end;
-
-procedure TTransNumFrm.ChannelsSGKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-var
-  t:cTagRec;
-  pPnt:tpoint;
-  xCol, xRow:integer;
-  val:string;
-begin
-  GetCursorPos(pPnt);
-  pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
-  // Находим позицию нашей ячейки
-  xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
-  xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
-  if key=VK_DELETE then
-  begin
-    if xcol>0 then
-    begin
-      t:=gettag(xcol-1);
-      if t<>nil then
-      begin
-        t.destroy;
-      end;
-    end;
-    ShowColumns;
-    updateStates;
-  end;
-end;
-
-procedure TTransNumFrm.ChannelsSGSetEditText(Sender: TObject; ACol,
-  ARow: Integer; const Value: string);
-var
-  t:cTagRec;
-begin
-  if acol>0 then
-  begin
-    if arow=m_thresh_OverRow then
-    begin
-      if isvalue(value) then
-      begin
-        t:=gettag(acol-1);
-        t.thresh.x:=strtofloat(value);
-      end;
-    end;
-  end;
 end;
 
 procedure TTransNumFrm.clearTags;
@@ -367,6 +310,8 @@ begin
 end;
 
 constructor TTransNumFrm.create(aowner: tcomponent);
+var
+  i:integer;
 begin
   inherited;
   m_Tags:=TList.Create;
@@ -381,14 +326,15 @@ begin
 end;
 
 destructor TTransNumFrm.destroy;
+var
+  I: Integer;
+  cb:TCheckBox;
 begin
   RemovePlgEvent(doUpdateTags, c_RUpdateData);
   m_tags.Destroy;
   m_States.Destroy;
   m_resTag.destroy;
   m_stateVals.destroy;
-
-  inherited;
 end;
 
 
@@ -434,7 +380,7 @@ end;
 
 function TTransNumFrm.CreateTag(s: string): cTagRec;
 var
-  I: Integer;
+  I, ind: Integer;
 begin
   i:=FindTag(s);
   if i=-1 then
@@ -521,7 +467,7 @@ var
   I, ind: Integer;
   rec:cStateRec;
 begin
-  //ChannelsSG.RowCount:=19;
+  ChannelsSG.RowCount:=19;
   ChannelsSG.ColCount:=3;
   ChannelsSG.Cells[0,0]:='Передача';
   ChannelsSG.Cells[0,1]:='Включаемый электромагнит';
@@ -543,11 +489,8 @@ begin
   ChannelsSG.Cells[0,r]:='Лев. вмд. ПХ';inc(r);
   ChannelsSG.Cells[0,r]:='Лев. вмд. ЗХ';inc(r);
   ChannelsSG.Cells[0,r]:='Блок ГТ';inc(r);
-  ChannelsSG.Cells[0,r]:='Давление больше'; m_thresh_OverRow := r; inc(r);
-  ChannelsSG.RowCount:=r;
   SGchange(ChannelsSG);
-  // rowCount-2 т.к. последний режим - не передача а часть интерфейса настройки порогов
-  for I := 2 to ChannelsSG.RowCount-2 do
+  for I := 2 to ChannelsSG.RowCount-1 do
   begin
     rec:=cStateRec.create;
     rec.code:=i-2;
@@ -557,7 +500,23 @@ begin
     rec.rowname:=ChannelsSG.Cells[0,i];
   end;
 end;
-// обновить заголовки таблицы
+
+procedure TTransNumFrm.SgToVals;
+var
+  r: Integer;
+  c: Integer;
+  s:cStateRec;
+begin
+  for r := 0 to m_States.Count - 1 do
+  begin
+    s:=getState(r);
+    for c := 0 to m_Tags.Count - 1 do
+    begin
+      s.b[c]:=ChannelsSG.Cells[c+1,r+2]='Вкл';
+    end;
+  end;
+end;
+
 procedure TTransNumFrm.ShowColumns;
 var
   I: Integer;
@@ -568,17 +527,16 @@ begin
   begin
     t:=gettag(i);
     ChannelsSG.Cells[1+i, 1]:=t.t.tagname;
-    ChannelsSG.Cells[1+i, ChannelsSG.RowCount-1]:=floattostr(t.thresh.x);
   end;
-
   SGChange(ChannelsSG);
 end;
 
 procedure TTransNumFrm.FromStr(s: string);
 var
   I, j, res: Integer;
-  state:cStateRec;
   t:cTagRec;
+  state:cStateRec;
+  n, next: cIntNode;
   str:string;
   c:integer;
 begin
@@ -592,10 +550,7 @@ begin
   begin
     str:=getSubStrByIndex(s, ';', 1, j);
     inc(j);
-    t:=CreateTag(str);
-    str:=getSubStrByIndex(s, ';', 1, j);
-    inc(j);
-    t.thresh.x:=StrToFloat(str);
+    CreateTag(str);
   end;
   setlength(m_values, m_Tags.Count);
   str:=getSubStrByIndex(s, ';', 1, j);
@@ -604,6 +559,7 @@ begin
   begin
     state:=getState(i);
     setlength(state.b, m_Tags.Count);
+
     inc(j);
     str:=getSubStrByIndex(s, ';', 1, j);
     state.cb.Checked:=StrToBool(str);
@@ -633,8 +589,6 @@ begin
   ValsToSg;
 end;
 
-// формат строки
-// <число тегов>;<тег>;<Thresh.x>;....<число режимов>;<режим используется>;<раскодировка (число)>;....
 function TTransNumFrm.tostr: string;
 var
   I: Integer;
@@ -642,11 +596,10 @@ var
   s:cStateRec;
 begin
   result:=inttostr(m_Tags.Count)+';';
-
   for I := 0 to m_Tags.Count - 1 do
   begin
     t:=gettag(i);
-    result:=result+t.t.tagname+';'+FloatToStr(t.thresh.x)+';';
+    result:=result+t.t.tagname+';';
   end;
   result:=result+inttostr(m_States.Count)+';';
   for I := 0 to m_States.Count - 1 do
@@ -662,6 +615,7 @@ var
   s:cStateRec;
   I, ind: Integer;
   str:string;
+  n:cIntNode;
 begin
   s:=getState(row-2);
   for I := 1 to ChannelsSG.ColCount - 1 do
@@ -682,52 +636,6 @@ begin
     s.color:=clGray;
   ind:=m_stateVals.AddObj(s.resNode);
   ChannelsSG.Invalidate;
-end;
-
-procedure TTransNumFrm.UpdateThresh(col:integer);
-var
-  t:cTagRec;
-  Value: Double;
-begin
-  t:=gettag(col);
-
-  if t <> nil then
-    begin
-      if not TryStrToFloat(ChannelsSG.Cells[col+1,m_thresh_OverRow], Value) then
-        begin
-          if ChannelsSG.Cells[col+1,m_thresh_OverRow] = '' then
-            begin
-              t.thresh.x := 2;
-            end
-          else
-            begin
-              MessageBox(0, PChar('Значение "' + ChannelsSG.Cells[col+1,m_thresh_OverRow] +
-                       '" не является корректным числом с плавающей точкой'), PChar('Ошибка конвертации числа'), MB_OK + MB_ICONERROR + MB_APPLMODAL + MB_TOPMOST);
-
-              ChannelsSG.Row := m_thresh_OverRow; // Устанавливаем номер строки
-              ChannelsSG.Col := col+1;            // Устанавливаем номер столбца
-              ChannelsSG.SetFocus();              // Передаем фокус сетке
-            end;
-        end
-      else
-        begin
-          t.thresh.x := Value;
-        end;
-    end;
-end;
-
-procedure TTransNumFrm.UpdateThreshAll;
-var i: Integer;
-begin
-  for i := 0 to m_Tags.Count - 1 do UpdateThresh(i);
-end;
-
-function TTransNumFrm.GetThresh(col:integer): string;
-var t:cTagRec;
-begin
-  t:=gettag(col);
-
-  if t <> nil then Result:=FloatToStr(t.thresh.x);
 end;
 
 procedure TTransNumFrm.updateStates;
@@ -757,29 +665,7 @@ begin
       if s.b[c] then
         ChannelsSG.Cells[c+1,r+2]:='Вкл.'
       else
-        ChannelsSG.Cells[c+1,r+2]:='Выкл';
-
-      if r+2 = m_thresh_OverRow then
-        ChannelsSG.Cells[c+1,m_thresh_OverRow]:=GetThresh(c);
-    end;
-  end;
-end;
-
-procedure TTransNumFrm.SgToVals;
-var
-  r: Integer;
-  c: Integer;
-  s:cStateRec;
-begin
-  for r := 0 to m_States.Count - 1 do
-  begin
-    s:=getState(r);
-    for c := 0 to m_Tags.Count - 1 do
-    begin
-      s.b[c]:=ChannelsSG.Cells[c+1,r+2]='Вкл';
-
-      if r+2 = m_thresh_OverRow then
-        UpdateThresh(c);
+        ChannelsSG.Cells[c+1,r+2]:='Выкл'
     end;
   end;
 end;
@@ -788,9 +674,6 @@ end;
 constructor cTagRec.create;
 begin
   t:=cTag.create;
-  // по умолчанию больше двух
-  thresh.x:=2;
-  thresh.y:=3;
 end;
 
 destructor cTagRec.destroy;
@@ -836,6 +719,7 @@ end;
 
 procedure cStateRec.decode(v: integer);
 var
+  a:pboolarray;
   i:integer;
 begin
   for I := 0 to length(b) - 1 do
@@ -851,7 +735,7 @@ end;
 
 function cStateRec.encode: integer;
 var
-  i:integer;
+  i,j:integer;
 begin
   if cb.Checked then
   begin

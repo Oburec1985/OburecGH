@@ -38,9 +38,10 @@ type
     // тип режима: тормозной (M)/ приводной (N)/ останов
     ModeType: TModeType;
     // запрет на рост быстрее
-    Nramp,
+    Nramp, Mramp,
     // текущее задание
     Task: double;
+    cmd_start, cmd_stop:boolean;
   end;
 
   cControlList = class(cbaseobj)
@@ -147,6 +148,24 @@ type
     destructor destroy; override;
   end;
 
+  // Актуатор
+  cActControl = class(cControlObj)
+  private
+    m_HystTag:ctag;
+  public
+    m_data: T3120Struct;
+  protected
+    procedure LoadObjAttributes(xmlNode: txmlnode; mng: tobject); override;
+    procedure SaveObjAttributes(xmlNode: txmlnode); override;
+  public
+    procedure stop;override;
+    procedure ApplyTask(t: tobject);override;
+    procedure SetTask(t: double); override;
+    function GetTask: double; override;
+    constructor create; override;
+    destructor destroy; override;
+  end;
+
   // регулятор
   cMNControl = class(cControlObj)
   private
@@ -156,6 +175,11 @@ type
     m_Mtag, m_Ntag: ctag;
     // тег измерения
     m_MtagFB, m_NtagFB: ctag;
+    m_CmdStart, m_CmdStop: ctag;
+    m_Ptag, m_Itag, m_Dtag,
+    m_ModeTag, m_DirTag,
+    // ограничители рампы
+    m_Nrmp, m_Mrmp: ctag;
     m_data: T3120Struct;
   protected
     procedure LoadObjAttributes(xmlNode: txmlnode; mng: tobject); override;
@@ -178,10 +202,16 @@ type
     function tagname: string;
   end;
 
+  function TModeTypeToInt(mt:TModeType):integer;
   function TModeTypeToStr(mt:TModeType):string;
   function strToModeType(s:string):TModeType;
 
 const
+ c_Break_Name = 'Тормоз';
+ c_Turn_Name = 'Поворот';
+ c_Emerg_Name = 'Авар. передача';
+
+
   // событие обновления состояния рекордера
   E_OnStopControlMng = $00000040;
   E_OnUpdateTrig = $00000080;
@@ -247,6 +277,38 @@ uses
   uModeObj;
 
 { cControlObj }
+
+Function IntToTPType(I: integer): TPType;
+begin
+  case I of
+    0:
+      result := ptNullPoly;
+    1:
+      result := ptlinePoly;
+    2:
+      result := ptCubePoly;
+  end;
+end;
+
+Function TPTypeToInt(pt: TPType): integer;
+begin
+  case pt of
+    ptNullPoly:
+      result := 0;
+    ptlinePoly:
+      result := 1;
+    ptCubePoly:
+      result := 2;
+  end;
+end;
+
+function TModeTypeToInt(mt:TModeType):integer;
+begin
+  case mt of
+    mtN:result:=0;
+    mtM:result:=1;
+  end;
+end;
 
 function TModeTypeToStr(mt:TModeType):string;
 begin
@@ -472,10 +534,6 @@ var
   pars: tstringlist;
 begin
   inherited;
-  //saveTag(m_Mtag, xmlNode);
-  //saveTag(m_Ntag, xmlNode);
-  //saveTag(m_MtagFB, xmlNode);
-  //saveTag(m_NtagFB, xmlNode);
 end;
 
 procedure cMNControl.LoadObjAttributes(xmlNode: txmlnode; mng: tobject);
@@ -483,16 +541,94 @@ var
   str: string;
 begin
   inherited;
-  m_Mtag.tagname:=name+'_Mtsk';
-  m_Ntag.tagname:=name+'_Ntsk';
-  m_MtagFB.tagname:=name+'_Mfb';
-  m_NtagFB.tagname:=name+'_Nfb';
-  //LoadTag(xmlNode, m_Mtag);
-  //LoadTag(xmlNode, m_Ntag);
-  //LoadTag(xmlNode, m_MtagFB);
-  //LoadTag(xmlNode, m_NtagFB);
-  // str := xmlNode.ReadAttributeString('Tags', '');
-  // ValsFromString(str);
+  m_Mtag.tagname:=name+'_SetPoint_M_Nm';
+  if m_Mtag.tag=nil then
+  begin
+    m_Mtag.tag:=createScalar(m_Mtag.tagname, true);
+  end;
+  m_Ntag.tagname:=name+'_SetPoint_N_rpm';
+  if m_Ntag.tag=nil then
+  begin
+    m_Ntag.tag:=createScalar(m_Ntag.tagname, true);
+  end;
+
+  m_CmdStart.tagname:='Cmd_'+name+'_Start';
+  if m_Mtag.tag=nil then
+  begin
+    m_CmdStart.tag:=createScalar(m_CmdStart.tagname, true);
+  end;
+  m_CmdStop.tagname:='Cmd_'+name+'_Stop';
+  if m_Mtag.tag=nil then
+  begin
+    m_CmdStop.tag:=createScalar(m_CmdStop.tagname, true);
+  end;
+
+
+  //m_MtagFB.tagname:=name+'_Mfb';
+  m_MtagFB.tagname:=name+'(v)';
+  //m_NtagFB.tagname:=name+'_Nfb';
+  m_NtagFB.tagname:='Fm'+name[2];
+  if m_Mtag.tag=nil then
+  begin
+    m_MtagFB.tag:=createScalar(m_MtagFB.tagname, true);
+  end;
+  if m_NtagFB.tag=nil then
+  begin
+    m_NtagFB.tag:=createScalar(m_NtagFB.tagname, true);
+  end;
+
+  m_Ptag.tagname:=name+'_Kp';
+  if m_Ptag.tag=nil then
+  begin
+    m_Ptag.tag:=createScalar(m_Ptag.tagname, true);
+  end;
+  m_Itag.tagname:=name+'_Ti';
+  if m_Itag.tag=nil then
+  begin
+    m_Itag.tag:=createScalar(m_Itag.tagname, true);
+  end;
+  m_Dtag.tagname:=name+'_Td';
+  if m_Dtag.tag=nil then
+  begin
+    m_Dtag.tag:=createScalar(m_Dtag.tagname, true);
+  end;
+  // Рампа N
+  m_Nrmp.tagname:=name+'_speed_N';
+  if m_Nrmp.tag=nil then
+  begin
+    m_Nrmp.tag:=createScalar(m_Nrmp.tagname, true);
+  end;
+  // рампа М
+  m_Mrmp.tagname:=name+'_speed_M';
+  if m_Mrmp.tag=nil then
+  begin
+    m_Mrmp.tag:=createScalar(m_Mrmp.tagname, true);
+  end;
+  // режим работы
+  m_ModeTag.tagname:=name+'_modeEngine';
+  if m_ModeTag.tag=nil then
+  begin
+    m_ModeTag.tag:=createScalar(m_ModeTag.tagname, true);
+  end;
+  // направление
+  m_DirTag.tagname:=name+'_EngineDirection';
+  if m_DirTag.tag=nil then
+  begin
+    m_DirTag.tag:=createScalar(m_DirTag.tagname, true);
+  end;
+
+  // Ком старт
+  m_CmdStart.tagname:='Cmd_'+name+'_Start';
+  if m_CmdStart.tag=nil then
+  begin
+    m_CmdStart.tag:=createScalar(m_CmdStart.tagname, true);
+  end;
+  // Ком стоп
+  m_CmdStop.tagname:='Cmd_'+name+'_Stop';
+  if m_CmdStop.tag=nil then
+  begin
+    m_CmdStop.tag:=createScalar(m_CmdStop.tagname, true);
+  end;
 end;
 
 procedure cMNControl.SetTask(t: double);
@@ -518,24 +654,69 @@ begin
     mtM: m_Mtag.PushValue(m_data.Task);
     mtStop:;
   end;
+  m_Ptag.PushValue(m_data.P);
+  m_Itag.PushValue(m_data.I);
+  m_Dtag.PushValue(m_data.D);
+  m_ModeTag.PushValue(TModeTypeToInt(m_data.ModeType));
+  if m_data.forw then
+    m_DirTag.PushValue(1)
+  else
+    m_DirTag.PushValue(0);
+
+  // команда старт
+  if m_data.cmd_start then
+    m_CmdStart.PushValue(1)
+  else
+    m_CmdStart.PushValue(0);
+  // команда стоп
+  if m_data.cmd_stop then
+    m_CmdStop.PushValue(1)
+  else
+    m_CmdStop.PushValue(0);
+
+  m_Nrmp.PushValue(m_data.Nramp);
+  m_Nrmp.PushValue(m_data.Mramp);
+  m_Mrmp.PushValue(m_data.Task);
 end;
 
 constructor cMNControl.create;
 begin
   inherited;
+  m_CmdStart := ctag.create;
+  m_CmdStop := ctag.create;
+
   m_Mtag := ctag.create;
   m_Ntag := ctag.create;
   m_MtagFB := ctag.create;
   m_NtagFB := ctag.create;
+
+  m_Ptag:=ctag.create;
+  m_Itag:=ctag.create;
+  m_Dtag:=ctag.create;
+  m_ModeTag:=ctag.create;
+  m_DirTag:=ctag.create;
+  m_Nrmp:=ctag.create;
+  m_Mrmp:=ctag.create;
 end;
 
 destructor cMNControl.destroy;
 begin
   inherited;
+  m_CmdStart.destroy;
+  m_CmdStop.destroy;
+
   m_Mtag.destroy;
   m_Ntag.destroy;
   m_MtagFB.destroy;
   m_NtagFB.destroy;
+
+  m_Ptag.destroy;
+  m_Itag.destroy;
+  m_Dtag.destroy;
+  m_ModeTag.destroy;
+  m_DirTag.destroy;
+  m_Nrmp.destroy;
+  m_Mrmp.destroy;
 end;
 
 function cMNControl.GetTask: double;
@@ -619,39 +800,6 @@ begin
   end;
 end;
 
-{
-  procedure cControlObj.StarCheckMode(m: cModeObj);
-  begin
-  fCurMode := m;
-  end;
-
-  procedure cControlObj.StopCheckMode;
-  begin
-
-  fCurMode := nil;
-  end; }
-
-{ procedure cControlObj.ApplyTags(t: cTask);
-  var
-  i: integer;
-  //tag: cTagPair;
-  begin
-  for i := 0 to t.m_tags.Count - 1 do
-  begin
-  //tag := cTagPair(t.m_tags.Objects[i]);
-  //if isAlive(tag.tag.tag) then
-  //  tag.tag.tag.PushValue(tag.value, -1);
-  end;
-  end; }
-
-{ procedure cControlObj.ApplyTask(t: cTask);
-  var
-  i: integer;
-  begin
-  fCurTask := t;
-  if t <> nil then
-  ApplyTags(t);
-  end; }
 
 procedure cControlObj.ApplyTask(t: tobject);
 begin
@@ -716,30 +864,6 @@ begin
   end;
 end;
 
-Function IntToTPType(I: integer): TPType;
-begin
-  case I of
-    0:
-      result := ptNullPoly;
-    1:
-      result := ptlinePoly;
-    2:
-      result := ptCubePoly;
-  end;
-end;
-
-Function TPTypeToInt(pt: TPType): integer;
-begin
-  case pt of
-    ptNullPoly:
-      result := 0;
-    ptlinePoly:
-      result := 1;
-    ptCubePoly:
-      result := 2;
-  end;
-end;
-
 function cControlObj.TagsToString: string;
 var
   I: integer;
@@ -800,6 +924,81 @@ begin
     if x >= r.x then
       result := true;
   end;
+end;
+
+{ cActControl }
+procedure cActControl.SaveObjAttributes(xmlNode: txmlnode);
+var
+  str: utf8string;
+  I, J, c: integer;
+  pars: tstringlist;
+begin
+  inherited;
+end;
+
+procedure cActControl.LoadObjAttributes(xmlNode: txmlnode; mng: tobject);
+var
+  str: string;
+begin
+  inherited;
+  if name=c_Break_Name then
+  begin
+    m_TaskTag.tagname:='SP_Position_brake';
+    m_FBtag.tagname:='SP_brake_fb';
+    m_HystTag.tagname:='Hyst_brakeActuators';
+  end
+  else
+  begin
+    if name=c_Turn_Name then
+    begin
+      m_TaskTag.tagname:='SP_Position_turnActuators';
+      m_FBtag.tagname:='SP_turn_fb';
+      m_HystTag.tagname:='Hyst_turnActuators';
+    end
+    else
+    begin
+      if name=c_Emerg_Name then
+      begin
+        m_TaskTag.tagname:='SP_Position_emergencyGearActuators';
+        m_FBtag.tagname:='SP_emerg_fb';
+        m_HystTag.tagname:='Hyst_emergencyGearActuators';
+      end
+    end;
+  end;
+end;
+
+procedure cActControl.SetTask(t: double);
+begin
+  m_data.Task := t;
+end;
+
+procedure cActControl.stop;
+begin
+  inherited;
+  m_taskTag.PushValue(0);
+end;
+
+procedure cActControl.ApplyTask(t: tobject);
+begin
+  m_data:=ctask(t).m_data;
+  m_taskTag.PushValue(m_data.Task);
+end;
+
+constructor cActControl.create;
+begin
+  inherited;
+  m_HystTag:=cTag.create;
+end;
+
+destructor cActControl.destroy;
+begin
+  inherited;
+  m_HystTag.destroy;
+end;
+
+function cActControl.GetTask: double;
+begin
+  result := m_data.Task;
 end;
 
 end.

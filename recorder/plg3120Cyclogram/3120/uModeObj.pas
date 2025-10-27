@@ -1635,7 +1635,9 @@ begin
           floattostr(m_data.Pthreshold)+';'+
           floattostr(m_data.MNthreshold)+';'+
           TModeTypeToStr(m_data.ModeType)+';'+
-          floattostr(m_data.Nramp);
+          floattostr(m_data.Nramp)+';'+
+          booltostr(m_data.cmd_start)+';'+
+          booltostr(m_data.cmd_stop);
 end;
 
 procedure cTask.strtodata(s:string);
@@ -1653,6 +1655,8 @@ begin
   m_data.MNthreshold:=strtofloatext(getSubStrByIndex(s,';',1,10));
   m_data.ModeType:=strToModeType(getSubStrByIndex(s,';',1,11));
   m_data.Nramp:=strtofloatext(getSubStrByIndex(s,';',1,12));
+  m_data.cmd_start:=StrtoBoolExt(getSubStrByIndex(s,';',1,13));
+  m_data.cmd_stop:=StrtoBoolExt(getSubStrByIndex(s,';',1,14));
 end;
 
 procedure cTask.DeleteCS;

@@ -416,6 +416,10 @@ var
   ldeep: integer;
   direxist: boolean;
 begin
+  if dir='' then
+  begin
+    dir:='.\';
+  end;
   dir:=AddSlashToPath(dir);
   direxist := DirectoryExists(dir);
   name:=LowerCase(name);

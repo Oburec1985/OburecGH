@@ -28,6 +28,9 @@ object TransNumFrm: TTransNumFrm
       Align = alRight
       Color = clBackground
       ParentColor = False
+      ExplicitLeft = 576
+      ExplicitTop = 176
+      ExplicitHeight = 100
     end
     object ChannelsSG: TStringGrid
       Left = 1
@@ -54,8 +57,6 @@ object TransNumFrm: TTransNumFrm
       OnDragDrop = ChannelsSGDragDrop
       OnDragOver = ChannelsSGDragOver
       OnDrawCell = ChannelsSGDrawCell
-      OnKeyDown = ChannelsSGKeyDown
-      OnSetEditText = ChannelsSGSetEditText
       ColWidths = (
         64
         64
@@ -95,48 +96,21 @@ object TransNumFrm: TTransNumFrm
         ExplicitHeight = 574
         inherited ChanNamesPanel: TPanel
           Width = 302
-          Height = 110
           ExplicitWidth = 302
-          ExplicitHeight = 110
-          inherited FrmTagPropLabel: TLabel
-            Top = 59
-            ExplicitTop = 59
-          end
           inherited FilterEdit: TEdit
             Width = 291
             ExplicitWidth = 291
           end
           inherited FrmTagPropValueEdit: TEdit
-            Top = 83
             Width = 175
-            ExplicitTop = 83
             ExplicitWidth = 175
-          end
-          inherited FrmTagPropNameCB: TComboBox
-            Top = 83
-            ExplicitTop = 83
           end
         end
         inherited TagsLV: TBtnListView
-          Top = 128
           Width = 302
-          Height = 444
-          Columns = <
-            item
-              Caption = #1048#1084#1103
-              Width = 65
-            end
-            item
-              Caption = #1058#1080#1087
-              Width = 65
-            end
-            item
-              Caption = 'Fs'
-              Width = 51
-            end>
-          ExplicitTop = 128
+          Height = 443
           ExplicitWidth = 302
-          ExplicitHeight = 444
+          ExplicitHeight = 443
         end
       end
     end

@@ -94,6 +94,7 @@ var
 begin
   TransNumFrm:=TTransNumFrm.Create(nil);
   TransNumFrm.show;
+  TransNumFrm.close;
   begin
   end;
 end;

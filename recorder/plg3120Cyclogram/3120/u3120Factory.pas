@@ -52,7 +52,6 @@ type
     procedure doStop;
   public
     procedure incFrmCounter;
-
     constructor create;
     destructor destroy; override;
     // создаем метки
@@ -112,6 +111,8 @@ procedure c3120Factory.doload(sender: tobject);
 var
   dir, name, path:string;
   b:boolean;
+  I, mnum: Integer;
+  c:cControlObj;
 begin
   inherited;
   /// перенес загрузку в инициализацию
@@ -129,6 +130,16 @@ begin
     end;
     if b then
       lcm;
+  end;
+  mnum:=0;
+  for I := 0 to g_conmng.ControlsCount - 1 do
+  begin
+    c:=g_conmng.getControlObj(i);
+    if c is cmncontrol then
+    begin
+      g_Marray[mnum]:=cmncontrol(c);
+      inc(mnum);
+    end;
   end;
 end;
 

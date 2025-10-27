@@ -360,6 +360,7 @@ type
     DempfLabel: TLabel;
     HideExcelCB: TCheckBox;
     Frf_YX_XY_CB: TCheckBox;
+    useAvrCb: TCheckBox;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -446,7 +447,10 @@ type
     procedure Showbladestatus(s: integer);
     // получить значение датчика в заданном X с учетом типа выбраной линии
     function GetSelectValue(s: csrsres; x:double; shockIndex:integer):double;
+    // количество сигналов чекнутых
+    function CheckedCount:integer;
   public
+    function getLine(s:cSRSres):cBuffTrend1d;
     // просчитать по линиям флаги и сравнить их с band
     // если не попадают в bands то лопатка бракованная
     // сразу сохраняет в БД отчет по лопатке в excel
@@ -464,8 +468,6 @@ type
     procedure ShowFrf(s: cSRSres; c: cSpmCfg; shInd: integer);
     procedure ShowSpm;
     procedure ShowPhase;
-    // сколько выбранных сигналов
-    function CheckedCount: integer;
     procedure UpdateView;
     // возвращает найден ли удар или нет. Вызов внутри updatedata
     function SearchTrig(t: cSRSTaho): boolean;
@@ -751,12 +753,14 @@ var
   extr: PExtremum1d;
   res: boolean;
   repPath, resStr: string;
-  v, vf, f1, f2, decrement: double;
+  v, vf, f1, f2, decrement, spmdx: double;
   minmax, p1,p2: point2d;
   d:TDoubleArray;
+  line:cBuffTrend1d;
 begin
   t := getTaho;
   cfg := t.getCfg;
+  spmdx:=  1/cfg.m_fftCount;
   bl := g_mbase.SelectBlade;
   result := true;
   for i := 0 to cfg.SRSCount - 1 do
@@ -764,14 +768,8 @@ begin
     s := cfg.GetSrs(i);
     s.m_checkres := false;
     b := m_bands.getband(bl.ToneCount - 1);
-
-    case ResTypeRG.ItemIndex of
-      0: d:=tdoublearray(s.lineFrf.data_r);
-      //0: d:=tdoublearray(s..data_r);
-      2: d:=tdoublearray(s.lineSpm.data_r);
-      1:;
-    end;
-
+    line:=getLine(s);
+    d:=tdoublearray(s.line.data_r);
     // поиск в экстремумов ограниченном джиапазоне (ограничение по концу посл тона)
     //FindMinMaxDouble(s.lineFrf.data_r, minmax.x, minmax.y);
     FindMinMaxDouble(d, minmax.x, minmax.y);
@@ -892,7 +890,8 @@ var
   turb: cTurbFolder;
 begin
   turb := g_mbase.SelectTurb;
-  turb.Buildreport('', g_FrfFactory.m_hideExcel);
+  if turb<>nil then
+    turb.Buildreport('', g_FrfFactory.m_hideExcel);
 end;
 
 procedure TFRFFrm.SaveReport(repname: string; bl: cBladeFolder);
@@ -1506,10 +1505,7 @@ begin
     x := b.m_freqband.m_realX;
     // tr:=cBuffTrend1d(l.parent);
     // UpdateBandNames создает привязки
-    case ResTypeRG.ItemIndex of
-      0: tr := ActiveSignal.lineFrf;
-      2: tr := ActiveSignal.lineSpm;
-    end;
+    tr := getline(ActiveSignal);
     if tr=nil then
       exit;
     l.parent := tr;
@@ -1622,10 +1618,7 @@ begin
     begin
       b.m_freqband.m_LineLabel.visible := false;
     end;
-    case ResTypeRG.ItemIndex of
-      0: l:=s.lineFrf;
-      2: l:=s.lineSpm;
-    end;
+    l:=getLine(s);
     if l.Count=0 then
       continue;
     b.m_f1i := l.GetLowInd(b.m_f1) + 1;
@@ -2222,11 +2215,6 @@ begin
   begin
     axSpm.lg := m_lgY;
   end;
-  //r.BottomLeft.x := m_minX;
-  //r.TopRight.x := m_maxX;
-  //r.BottomLeft.y := MinSpmY;
-  //r.TopRight.y := MaxSpmY;
-  //axSpm.ZoomfRect(r);
 end;
 
 function TFRFFrm.hideind: integer;
@@ -2240,6 +2228,8 @@ begin
     result := -1;
   end;
 end;
+
+
 
 procedure TFRFFrm.UpdateView;
 var
@@ -2393,8 +2383,24 @@ begin
   buildReport;
   if fileexists(g_FrfFactory.m_MeraFile) then
   begin
-    ShellExecute(0, nil, pwidechar(g_FrfFactory.m_ShockFile), nil, nil,
-      SW_HIDE);
+    //ShellExecute(0, nil, pwidechar(g_FrfFactory.m_ShockFile), nil, nil,
+    //  SW_HIDE);
+  end;
+end;
+
+function TFRFFrm.getLine(s: cSRSres): cBuffTrend1d;
+begin
+  case ResTypeRG.ItemIndex of
+    0:
+    begin
+      if useAvrCb.Checked then
+        result:=s.lineAvFRF
+      else
+        result:=s.lineFrf;
+    end;
+    1: result:=s.lineCoh;
+    2: result:=s.lineSpm;
+    3: result:=s.linePhase;
   end;
 end;
 
@@ -2915,11 +2921,14 @@ begin
   // изменяет видимость линий
   ShowLines;
   lcount := CheckedCount;
+  pageSpm.cursor.magniteObj:=nil;
   if lcount = 0 then
   begin
+    pageSpm.cursor.magniteObj:=getLine(s);
     case ResTypeRG.ItemIndex of
     0:
       begin
+
         if fShowLast then
           ShowFrf(s, c, -1)
         else
@@ -2934,7 +2943,8 @@ begin
   end
   else
   begin
-    // ShowLines(nil);
+    ShowLines;
+    pageSpm.cursor.magniteObj:=s.lineSpm;
   end;
   fShowLast := false;
   SpmChart.redraw;
@@ -3074,6 +3084,7 @@ var
   p2: point2;
   lp2:point2d;
   d:double;
+  line:cBuffTrend1d;
 begin
   if sender is cYCursor then
   begin
@@ -3115,6 +3126,15 @@ begin
     LVChange(SignalsLV);
     // поиск демпфирования
     s:=ActiveSignal;
+    line:=nil;
+    case ResTypeRG.ItemIndex of
+      0: line:=s.lineFrf;
+      1:;
+      2:line:=s.lineSpm;
+      3:;
+    end;
+    if line=nil then
+      exit;
     for j := 0 to m_bands.Count - 1 do
     begin
       b:=m_bands.getband(j);
@@ -3123,8 +3143,8 @@ begin
         lp2.x:=b.m_freqband.m_realX;
         if b.m_freqband.m_realX>0 then
         begin
-          lp2.y:=s.lineFrf.GetY(lp2.x);
-          d:=getDecrement(s.lineFrf, lp2);
+          lp2.y:=line.GetY(lp2.x);
+          d:=getDecrement(line, lp2);
           DempfE.Text:='F: '+formatstrnoe(lp2.x,3)+' D: '+formatstrnoe(d,4);
         end;
       end;

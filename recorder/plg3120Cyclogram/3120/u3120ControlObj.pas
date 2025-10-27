@@ -199,6 +199,7 @@ type
 
 var
   g_conmng: cControlMng;
+  g_Marray: array [0..4] of cMNControl;
 
 implementation
 
@@ -210,6 +211,7 @@ procedure cControlMng.regObjClasses;
 begin
   regclass(cControlObj);
   regclass(cMNControl);
+  regclass(cActControl);
   regclass(cModeObj);
   regclass(cProgramObj);
   regclass(cProgramList);

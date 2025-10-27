@@ -259,7 +259,8 @@ begin
   addplgevent('TFrm3120_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
   addplgevent('TFrm3120_doLeaveCfg', c_RC_LeaveCfg, doLeaveCfg);
   addplgevent('TFrm3120_doRcInit', E_RC_Init, doRcInit);
-  g_conmng.Events.AddEvent('TFrm3120_doStopControlMng', E_OnStopControlMng, doShowStop);
+  g_conmng.Events.AddEvent('TFrm3120_doStopControlMng', E_OnStopControlMng,
+    doShowStop);
 end;
 
 procedure TFrm3120.DestroyEvents;
@@ -702,7 +703,6 @@ begin
 end;
 
 procedure TFrm3120.TableModeSGDblClick(Sender: TObject);
-
 var
   m: cmodeobj;
   c: cControlobj;
@@ -875,7 +875,6 @@ var
   I: Integer;
   c: cControlobj;
 begin
-  TransNumFrm.show;
   // for i:=0 to  g_conmng.ControlsCount-1 do
   // begin
   // c:=g_conmng.getControlObj(i);
@@ -965,7 +964,6 @@ begin
   UpdateControlsPropSG;
 end;
 
-// обновить в таблице настройки контрола столбец с режимом
 procedure TFrm3120.UpdateControlsPropSGmode(m: cmodeobj);
 var
   I, j, k, n, ind: Integer;
@@ -997,7 +995,6 @@ begin
   end;
   if MNcontrol <> nil then
   begin
-    ControlPropSG.RowCount:=c_StopRow+1;
     ControlPropSG.Cells[I + 1, c_Prow] := formatstrnoe(MNcontrol.m_data.p,
       c_digits);
     ControlPropSG.Cells[I + 1, c_Irow] := formatstrnoe(MNcontrol.m_data.I,
@@ -1035,9 +1032,7 @@ begin
   end
   else
   begin
-    // отображаем актуаторы
-    ControlPropSG.RowCount:=2;
-    for j := 1 to 1 do
+    for j := 1 to 12 do
     begin
       ControlPropSG.Cells[I + 1, j] := '';
     end;

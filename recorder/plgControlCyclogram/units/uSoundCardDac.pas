@@ -46,7 +46,7 @@ const
 type
   TSoundCardDac = class(TDacDevice)
   private
-    FLock: TCriticalSection; // Объект для синхронизации потоков
+    //FLock: TCriticalSection; // Объект для синхронизации потоков
     // Хендл устройства waveOut
     FDeviceHandle: HWAVEOUT;
     // Заголовки буферов
@@ -108,7 +108,7 @@ end;
 constructor TSoundCardDac.Create;
 begin
   inherited Create;
-  FLock := TCriticalSection.Create;
+  //FLock := TCriticalSection.Create;
   FDeviceHandle := 0;
   FIsActive := False;
   FStopping := False;
@@ -118,7 +118,7 @@ end;
 destructor TSoundCardDac.Destroy;
 begin
   Close;
-  FLock.Free;
+  //FLock.Free;
   inherited;
 end;
 
@@ -196,7 +196,7 @@ var
   i: Integer;
   StartTime: Cardinal;
 begin
-  FLock.Enter;
+  //FLock.Enter;
   try
     if FDeviceHandle = 0 then
       Exit;
@@ -230,7 +230,7 @@ begin
       end;
     end;
   finally
-    FLock.Leave;
+    //FLock.Leave;
   end;
 end;
 
@@ -243,7 +243,7 @@ end;
 
 procedure TSoundCardDac.Stop(AGraceful: Boolean = True);
 begin
-  FLock.Enter;
+  //FLock.Enter;
   try
     if not FIsActive then Exit;
 
@@ -264,7 +264,7 @@ begin
 
     FIsActive := False;
   finally
-    FLock.Leave;
+    //FLock.Leave;
   end;
 end;
 
@@ -322,7 +322,7 @@ procedure TSoundCardDac.WaveOutCallback(hwo: HWAVEOUT; uMsg: UINT; dwInstance: D
 var
   Header: PWAVEHDR;
 begin
-  FLock.Enter;
+  //FLock.Enter;
   try
     if (FDeviceHandle = 0) or (uMsg <> WOM_DONE) then
       Exit;
@@ -345,7 +345,7 @@ begin
     if Assigned(OnBufferEnd) and not FStopping and (FCurrentLoopCount <> 0) then
       OnBufferEnd(Self);
   finally
-    FLock.Leave;
+    //FLock.Leave;
   end;
 end;
 end.

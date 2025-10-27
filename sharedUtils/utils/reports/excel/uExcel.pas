@@ -427,6 +427,7 @@ xlPasteAll                      =	-4104 ; // Вставка всех данны�
   // 0 - есть с таким именем; 1 - есть с таким номером; 2 - ошибка
   function SheetExists(const Workbook: olevariant;
                      const SheetName: string): integer;
+
 var
   E:OleVariant;
   excelhinst:cardinal;
@@ -434,6 +435,34 @@ var
 implementation
 uses
   forms, IOUtils;
+
+function IsExcelFileOpen(const FilePath: string): Boolean;
+var
+  Workbook: Variant;
+  i: Integer;
+begin
+  Result := False;
+  if VarIsEmpty(E) then
+  begin
+    // Подключаемся к запущенному экземпляру Excel (если он есть)
+    E := GetActiveOleObject('Excel.Application');
+  end
+  else
+  begin
+
+  end;
+  // Проверяем все открытые книги
+  for i := 1 to E.Workbooks.Count do
+  begin
+    Workbook := E.Workbooks[i];
+    if SameText(Workbook.FullName, ExpandFileName(FilePath)) then
+    begin
+      Result := True;
+      //ExcelApp.ActiveWorkbook:=Workbook;
+      Break;
+    end;
+  end;
+end;
 
 Function CheckVarObj(obj:oleVariant):boolean;
 begin
@@ -891,34 +920,6 @@ begin
   result := r0;
 end;
 
-
-function IsExcelFileOpen(const FilePath: string): Boolean;
-var
-  Workbook: Variant;
-  i: Integer;
-begin
-  Result := False;
-  if VarIsEmpty(E) then
-  begin
-    // Подключаемся к запущенному экземпляру Excel (если он есть)
-    E := GetActiveOleObject('Excel.Application');
-  end
-  else
-  begin
-
-  end;
-  // Проверяем все открытые книги
-  for i := 1 to E.Workbooks.Count do
-  begin
-    Workbook := E.Workbooks[i];
-    if SameText(Workbook.FullName, ExpandFileName(FilePath)) then
-    begin
-      Result := True;
-      //ExcelApp.ActiveWorkbook:=Workbook;
-      Break;
-    end;
-  end;
-end;
 
 function CheckExcelInstall:boolean;
 var

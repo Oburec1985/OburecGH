@@ -727,7 +727,12 @@ begin
   if i < 0 then
     result := nil
   else
-    result := cModeObj(fmodes.getChild(i));
+  begin
+    if i<fmodes.ChildCount then
+      result := cModeObj(fmodes.getChild(i))
+    else
+      result := nil;
+  end;
 end;
 
 function cProgramObj.getMode(name: string): cModeObj;

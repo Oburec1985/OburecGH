@@ -160,6 +160,13 @@ function GetRCStateChange: TRCstateChange;
 procedure logMessage(str: string);
 procedure LogRecorderMessage(str: string; log:boolean);
 
+function SetMDBProp(obj:integer;s:lpcstr):integer;
+function GetMDBProp(obj:integer;s:lpcstr):lpcstr;
+// получить путь к текущему испытанию
+function getMDBTestPath: lpcstr;
+function getMDBRegPath: lpcstr;
+
+
 
 var
   { В библиотеке создается всего один глобальный экземпляр plug-in`а,
@@ -182,6 +189,9 @@ const
   c_TagProp_nullpoly = 'nullpoly';
   c_Log_PlgClass = false;
   RS_Before_STOP = RS_STOP+RS_VIEW;
+
+  c_Pic = 'MBASECONTROL';
+  c_MDBFormName = 'Управление базой данных';
 
 implementation
 
@@ -824,6 +834,187 @@ begin
   { Для останова необходимо передать сообщение Recorder`у }
   result := FIRecorder.Notify(RCN_STOP, 0);
 end;
+
+
+// 0 - объект; 1 - тест; 2 - регистрция 3 - вкл/выкл DB
+// s - строка вида "prop;value"
+function GetMDBProp(obj:integer;s:lpcstr):lpcstr;
+var
+  rep: hresult;
+  val: OleVariant;
+  UISrv: tagVARIANT;
+  FormRegistrator: ICustomFormsRegistrator;
+  f: ICustomFormFactory;
+  cf: ICustomFactInterface;
+
+  ifrm: IVForm;
+  count: cardinal;
+  i: ULONG;
+  int: integer;
+  ws: widestring;
+  g: TGUID;
+begin
+  result:='';
+  rep := g_ir.GetProperty(RCPROP_UISERVERLINK, val);
+  UISrv := tagVARIANT(val);
+  if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
+  begin
+  end;
+   rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,FormRegistrator);
+  if FAILED(rep) or (FormRegistrator = niL) then
+  begin
+  end;
+  FormRegistrator.GetFactoriesCount(@count);
+  for i := 0 to count - 1 do
+  begin
+    FormRegistrator.GetFactoryByIndex(f, i);
+    f.GetFormTypeName(ws);
+    if ws = 'Управление базой данных' then
+    begin
+      cf := f as ICustomFactInterface;
+      int := 0;
+      (cf as ICustomFactInterface).getChild(int, ifrm);
+      result:=(ifrm as ICustomVFormInterface).GetCustomProperty2(obj, s);
+    end;
+  end;
+end;
+
+// 0 - объект; 1 - тест; 2 - регистрция ; s= 'save' - сохранить бд ; 3 вкл выкл DB s='1/0'
+// str "prop;value"
+function SetMDBProp(obj:integer;s:lpcstr):integer;
+var
+  rep: hresult;
+  val: OleVariant;
+  UISrv: tagVARIANT;
+  FormRegistrator: ICustomFormsRegistrator;
+  f: ICustomFormFactory;
+  cf: ICustomFactInterface;
+
+  ifrm: IVForm;
+
+  count: cardinal;
+  i: ULONG;
+  int: integer;
+  ws: widestring;
+  g: TGUID;
+begin
+  result:=-1;
+  rep := g_ir.GetProperty(RCPROP_UISERVERLINK, val);
+  UISrv := tagVARIANT(val);
+  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,FormRegistrator);
+  FormRegistrator.GetFactoriesCount(@count);
+  for i := 0 to count - 1 do
+  begin
+    FormRegistrator.GetFactoryByIndex(f, i);
+    f.GetFormTypeName(ws);
+    if ws = c_MDBFormName then
+    begin
+      cf := f as ICustomFactInterface;
+      int := 0;
+      (cf as ICustomFactInterface).getChild(int, ifrm);
+      result:=(ifrm as ICustomVFormInterface).SetCustomProperty(obj, s);
+    end;
+  end;
+end;
+
+
+function getMDBTestPath: lpcstr;
+var
+  rep: hresult;
+  val: OleVariant;
+  UISrv: tagVARIANT;
+  FormRegistrator: ICustomFormsRegistrator;
+  f: ICustomFormFactory;
+  cf: ICustomFactInterface;
+
+  ifrm: IVForm;
+
+  count: cardinal;
+  i: ULONG;
+  int: integer;
+  ws: widestring;
+  g: TGUID;
+begin
+  result := '';
+  rep := g_ir.GetProperty(RCPROP_UISERVERLINK, val);
+  UISrv := tagVARIANT(val);
+  if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
+  begin
+  end;
+  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,
+    FormRegistrator);
+  if FAILED(rep) or (FormRegistrator = niL) then
+  begin
+  end;
+  FormRegistrator.GetFactoriesCount(@count);
+  for i := 0 to count - 1 do
+  begin
+    FormRegistrator.GetFactoryByIndex(f, i);
+    f.GetFormTypeName(ws);
+    // f._Release;
+    if ws = c_MDBFormName then
+    begin
+      cf := f as ICustomFactInterface;
+      int := 0; (cf as ICustomFactInterface)
+      .getChild(int, ifrm);
+      // (cf as ICustomFactInterface).getChild(int, mdb);
+      // вернуть произвольное свойство tag - id того что хотим получить
+      // 0: путь к испытанию 1: путь к регистрации
+      result := (ifrm as ICustomVFormInterface).GetCustomProperty(0);
+    end;
+  end;
+end;
+
+function getMDBRegPath: lpcstr;
+var
+  rep: hresult;
+  val: OleVariant;
+  UISrv: tagVARIANT;
+  FormRegistrator: ICustomFormsRegistrator;
+  f: ICustomFormFactory;
+  cf: ICustomFactInterface;
+
+  mdb: IVForm;
+  lstr: lpcstr;
+
+  count: cardinal;
+  i: ULONG;
+  int: integer;
+  ws: widestring;
+  g: TGUID;
+begin
+  result := '';
+  rep := g_ir.GetProperty(RCPROP_UISERVERLINK, val);
+  UISrv := tagVARIANT(val);
+  if (FAILED(rep) or (UISrv.VT <> VT_UNKNOWN)) then
+  begin
+  end;
+  rep := iunknown(UISrv.pUnkVal).QueryInterface(IID_ICustomFormsRegistrator,
+    FormRegistrator);
+  if FAILED(rep) or (FormRegistrator = niL) then
+  begin
+  end;
+  FormRegistrator.GetFactoriesCount(@count);
+  for i := 0 to count - 1 do
+  begin
+    FormRegistrator.GetFactoryByIndex(f, i);
+    f.GetFormTypeName(ws);
+    // f._Release;
+    if ws = c_MDBFormName then
+    begin
+      cf := f as ICustomFactInterface;
+      int := 0;
+      // вернуть произвольное свойство tag - id того что хотим получить
+      // 0: путь к испытанию 1: путь к регистрации
+      // mdb:=(cf as ICustomFactInterface).getChild(int);
+      lstr := 'привет'; (cf as ICustomFactInterface)
+      .getChild(int, mdb);
+      result := (mdb as ICustomVFormInterface).GetCustomProperty(1);
+    end;
+  end;
+end;
+
+
 
 
 end.

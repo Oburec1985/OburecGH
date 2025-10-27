@@ -38,7 +38,9 @@ const
   c_PAlarmRow  = 7; c_PthresholdRow  = 8;
   c_MNAlarmRow  = 9; c_MNthresholdRow  = 10;
   c_ConditionRow  = 11; c_ModeRow  = 12;
-  c_NRampRow  = 13;
+  c_NRampRow  = 13; c_MRampRow = 14;
+  c_StartRow  = 15;
+  c_StopRow  = 16;
 
 implementation
 
@@ -59,6 +61,10 @@ begin
   m_t.m_data.MNthreshold:=strtofloatext(SG.Cells[1,c_MNthresholdRow]);
   m_t.m_data.ModeType:=strToModeType(SG.Cells[1,c_ModeRow]);
   m_t.m_data.Nramp:=strtofloatext(SG.Cells[1,c_NRampRow]);
+  m_t.m_data.Mramp:=strtofloatext(SG.Cells[1,c_MRampRow]);
+
+  m_t.m_data.cmd_start:=StrToB(SG.Cells[1,c_StartRow]);
+  m_t.m_data.cmd_stop:=StrToB(SG.Cells[1,c_StopRow]);
   close;
   cb(mode);
 end;
@@ -102,7 +108,9 @@ begin
     // тип режима
     if (xRow=c_TAlarmRow) or
        (xRow=c_PAlarmRow) or
-       (xRow=c_MNAlarmRow)
+       (xRow=c_MNAlarmRow) or
+       (xRow=c_StartRow) or
+       (xRow=c_StopRow)
     then
     begin
       if sg.Cells[xcol, xrow]='Вкл.' then
@@ -110,7 +118,6 @@ begin
       else
         sg.Cells[xcol, xrow]:='Вкл.'
     end;
-
   end;
 end;
 
@@ -153,7 +160,7 @@ begin
   m_t:=t;
   FormStyle:=fsStayOnTop;
   Show;
-  sg.RowCount:=14;
+  sg.RowCount:=17;
   sg.ColCount:=3;
   SG.cells[0,0]:='Канал';
   SG.cells[1,0]:='Значение';
@@ -197,6 +204,14 @@ begin
   end;
   SG.Cells[0,c_NRampRow]:='Ограничение скор. N';
   SG.Cells[1,c_NRampRow]:=floattostr(t.m_data.Nramp);
+  SG.Cells[0,c_MRampRow]:='Ограничение скор. M';
+  SG.Cells[1,c_MRampRow]:=floattostr(t.m_data.Mramp);
+
+  SG.Cells[0,c_StartRow]:='Команда Старт';
+  SG.Cells[1,c_StartRow]:=btostr(t.m_data.cmd_start);
+  SG.Cells[0,c_StopRow]:='Команда Стоп';
+  SG.Cells[1,c_StopRow]:=btostr(t.m_data.cmd_stop);
+
   SGChange(sg);
 end;
 

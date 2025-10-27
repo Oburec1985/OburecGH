@@ -190,6 +190,8 @@ var
   ThresholdFrm: TThresholdFrm;
 
 implementation
+uses
+  u3120ControlObj, uControlObj;
 
 {$R *.dfm}
 
@@ -891,9 +893,11 @@ end;
 
 procedure TThresholdGroup.ApplyAlarms(pd: PDataRec);
 var
-  I: Integer;
+  I, Mnum: Integer;
   a:TAlarms;
   d:double;
+  c:cControlObj;
+  s:string;
 begin
   for I := 0 to AlarmList.Count - 1 do
   begin
@@ -904,15 +908,46 @@ begin
     a.m_a_ll.SetEnabled(Variant_True);
     if pd.LvlTag<>nil then
     begin
-      d:=GetMean(pd.LvlTag);
-      a.m_a_ll.SetLevel(pd.LL*d);
-      a.m_a_l.SetLevel(pd.l*d);
-      a.m_a_h.SetLevel(pd.h*d);
-      a.m_a_hh.SetLevel(pd.hh*d);
-      a.m_a_ll.SetColor(pd.LLCol);
-      a.m_a_l.SetColor(pd.lCol);
-      a.m_a_h.SetColor(pd.hCol);
-      a.m_a_hh.SetColor(pd.hhCol);
+      s:=a.t.tagname;
+      // имя тега закодировано M1(v)... M5(v)
+      if s[1]='M' then
+      begin
+        Mnum:=strtoint(s[2]);
+        if g_Marray[Mnum-1].m_data.ModeType=mtM then
+        begin
+          d:=g_Marray[Mnum-1].m_Mtag.GetMeanEst;
+          a.SetEnabled(true);
+        end
+        else
+        begin
+          a.SetEnabled(false);
+        end;
+      end
+      else
+      // имя тега закодировано Fm1..Fm5
+      begin
+        Mnum:=strtoint(s[3]);
+        if g_Marray[Mnum-1].m_data.ModeType=mtN then
+        begin
+          d:=g_Marray[Mnum-1].m_Ntag.GetMeanEst;
+          a.SetEnabled(true);
+        end
+        else
+        begin
+          a.SetEnabled(false);
+        end;
+      end;
+      begin
+        //d:=GetMean(pd.LvlTag);
+        a.m_a_ll.SetLevel(pd.LL*d);
+        a.m_a_l.SetLevel(pd.l*d);
+        a.m_a_h.SetLevel(pd.h*d);
+        a.m_a_hh.SetLevel(pd.hh*d);
+        a.m_a_ll.SetColor(pd.LLCol);
+        a.m_a_l.SetColor(pd.lCol);
+        a.m_a_h.SetColor(pd.hCol);
+        a.m_a_hh.SetColor(pd.hhCol);
+      end;
     end
     else
     begin
@@ -944,7 +979,7 @@ begin
     begin
       g:=TThresholdGroup(m_subGroups.Items[i]);
       pd:=@g.m_data[0];
-      ApplyAlarms(pd);
+      g.ApplyAlarms(pd);
     end;
     pd:=@m_data[0];
     ApplyAlarms(pd);

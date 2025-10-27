@@ -588,6 +588,7 @@ begin
     TrigFE.OnChange:=nil;
     TrigFE.Value:=p2.y;
     TrigFE.OnChange:=p;
+    f_trigVal:=p2.y;
   end;
   if Sender is cDoubleCursor then
   begin
@@ -1064,7 +1065,6 @@ begin
       m_trigPoint:=f_point;
       if m_updateDrawInterval then
         m_trigInterval:=interval;
-      //edit1.text:=floattostr(m_trigInterval.x);
     end;
   end;
   // вычисляем что рисовать
@@ -1109,11 +1109,11 @@ begin
   if (m_comInterv.y-f_xScale)>m_comInterv.x then
     m_comInterv.x:=m_comInterv.y-f_xScale;
 end;
-
+                               // 1521012540
 function TGraphFrm.SearchTrig(t: cTag; p_threshold: double;
   var p_interval: point2d; var p_point: point2d): boolean;
 var
-  TrigTime, v, prev: double;
+  TrigTime, v, lT, prev: double;
   i, imin, start: integer;
   TrigRes:boolean;
 begin
@@ -1122,16 +1122,24 @@ begin
   p_point.y:=0;
   start:=t.getIndex(m_trigInterval.y);
   if start<0 then
-    start:=0;
+    start:=0
+  else
+  begin
+    start:=t.getIndex(m_trigInterval.y);
+    if start<0 then
+      start:=0;
+  end;
+
   for i := start to t.lastindex - 1 do
   begin
+    lt:=t.m_ReadData[i];
     v := t.m_ReadData[i];
     if m_lostate then // если триг сброшен
     begin
       // rise
       if v>p_threshold then
       begin
-        TrigTime:= t.getReadTime(i);
+        TrigTime:= lt;
         TrigRes:= true;
         m_lostate:=false;  // взводим триг
         p_interval.x:=TrigTime;
@@ -1145,7 +1153,11 @@ begin
     begin
       if v<p_threshold then
       begin
-        m_lostate:=true;
+        // взводим разрешение на поиск триггера после отрисовки
+        if (f_point.x+f_xScale)<lt then
+        begin
+          m_lostate:=true;
+        end;
       end;
     end
   end;

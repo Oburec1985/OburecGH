@@ -37,9 +37,6 @@ object EditPropertiesFrm: TEditPropertiesFrm
     ParentFont = False
     TabOrder = 0
     OnDblClick = SGDblClick
-    ExplicitTop = -165
-    ExplicitWidth = 461
-    ExplicitHeight = 456
     RowHeights = (
       32
       32)
@@ -51,7 +48,6 @@ object EditPropertiesFrm: TEditPropertiesFrm
     Height = 65
     Align = alBottom
     TabOrder = 1
-    ExplicitWidth = 461
     DesignSize = (
       633
       65)
@@ -85,7 +81,6 @@ object EditPropertiesFrm: TEditPropertiesFrm
       ParentFont = False
       TabOrder = 1
       OnClick = ApplyBtnClick
-      ExplicitLeft = 321
     end
   end
 end
