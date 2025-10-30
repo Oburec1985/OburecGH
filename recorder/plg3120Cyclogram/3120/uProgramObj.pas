@@ -46,6 +46,9 @@ type
   // объекты программ выполняются одновременно
   cProgramObj = class(cBaseProgramObj)
   public
+    // событие для след режима
+    fOnNextMode:TNotifyEvent;
+  public
     // Стартовать программу при старте циклограммы режимов
     m_StartOnPlay: boolean;
     m_enableOnStart: boolean;

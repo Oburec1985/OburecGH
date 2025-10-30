@@ -661,7 +661,7 @@ begin
 
   DacFrm:=TDACFrm.Create(nil);
   DacFrm.show;
-  DacFrm.close;
+  //DacFrm.close;
 end;
 
 procedure RecorderInit;

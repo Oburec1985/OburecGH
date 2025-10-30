@@ -4,7 +4,7 @@ interface
 
 uses
   tags,
-  uexcel, urcfunc, dialogs,
+  uexcel, urcfunc, dialogs, uProgramObj,
   uControlObj, uModeObj;
 
 type
@@ -58,6 +58,7 @@ var
   rngSig, rngDate,rng, ws: olevariant;
   date: tdatetime;
   t:itag;
+  v:double;
   book,fname, res, val: string;
 begin
   result := false;
@@ -107,7 +108,8 @@ begin
   if d.m<>nil then
   begin
     SetCell(1, r, rng.column, d.m.name);
-    SetCell(1, r, rng.column+1, floattostr(SecToTime(d.m.ModeLength, 1)));
+    v:=cprogramObj(d.m.parent).getModeTime;
+    SetCell(1, r, rng.column+1, floattostr(SecToTime(), 1)));
   end;
   // ставим сетку всего блока
   rng := GetRangeObj(1, point(r0, rngSig.column), point(r, c));

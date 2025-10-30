@@ -131,6 +131,7 @@ begin
     if b then
       lcm;
   end;
+  // упрощакем доступ к контролам
   mnum:=0;
   for I := 0 to g_conmng.ControlsCount - 1 do
   begin

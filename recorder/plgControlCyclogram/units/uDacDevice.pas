@@ -19,9 +19,18 @@
 interface
 
 uses
-  Classes;
+  Classes, uhardwaremath;
 
 type
+  // структура для настройки фильтра
+  TFilterSettings = record
+    // Коэффициент сглаживания (0 < Alpha <= 1)
+    // вес следующего значения
+    Alpha: Double;
+    PrevOutput: Double;   // Предыдущее выходное значение
+    IsFirstCall: Boolean; // Флаг первого вызова
+  end;
+
   TDacDevice = class(TObject)
   private
     FOnBufferEnd: TNotifyEvent;
@@ -54,7 +63,36 @@ type
     property OnBufferEnd: TNotifyEvent read FOnBufferEnd write FOnBufferEnd; // Событие, возникающее после окончания воспроизведения буфера
   end;
 
+  // тестовые функции для отработки ЦАП
+  function LowPassFilter(const Input: tdoublearray; var Settings: TFilterSettings): tdoublearray;
+
+
 implementation
+
+function LowPassFilter(const Input: tdoublearray; var Settings: TFilterSettings): tdoublearray;
+var
+  i, l: Integer;
+begin
+  SetLength(Result, Length(Input));
+
+  l:=Length(Input);
+  if l = 0 then
+    Exit;
+
+  // Инициализация при первом вызове
+  if Settings.IsFirstCall then
+  begin
+    Settings.PrevOutput := Input[0];
+    Settings.IsFirstCall := False;
+  end;
+
+  for i := 0 to l-1 do
+  begin
+    // Рекуррентная формула ФНЧ
+    Result[i] := Settings.Alpha * Input[i] + (1 - Settings.Alpha) * Settings.PrevOutput;
+    Settings.PrevOutput := Result[i];
+  end;
+end;
 
 constructor TDacDevice.Create;
 begin

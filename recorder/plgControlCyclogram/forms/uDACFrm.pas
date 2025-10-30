@@ -43,7 +43,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, uDacDevice, uSoundCardDac, Math;
+  Dialogs, StdCtrls, ExtCtrls, uDacDevice, uSoundCardDac, Math, ImgList,
+  uChart,uBuffTrend1d, upage, utextlabel, uaxis, utrend,
+  uHardwareMath;
 
 type
   TDACFrm = class(TForm)
@@ -61,12 +63,17 @@ type
     lblSweepTime: TLabel;           // Метка "Время развертки"
     edStartFreq: TEdit;             // Поле ввода начальной частоты (SweepSin)
     edEndFreq: TEdit;               // Поле ввода конечной частоты (SweepSin)
-    edSweepTime: TEdit;             // Поле ввода времени развертки (SweepSin)
+    edSweepTime: TEdit;
+    cChart1: cChart;
+    ImageList_32: TImageList;
+    ImageList_16: TImageList;
+    TestBtn: TButton;             // Поле ввода времени развертки (SweepSin)
     procedure btnPlayStopClick(Sender: TObject); // Обработчик нажатия кнопки Play/Stop
     procedure FormCreate(Sender: TObject);     // Обработчик создания формы
     procedure FormDestroy(Sender: TObject);    // Обработчик закрытия формы
     procedure rgModeClick(Sender: TObject);
-    procedure FormShow(Sender: TObject);      // Обработчик смены режима
+    procedure FormShow(Sender: TObject);
+    procedure TestBtnClick(Sender: TObject);      // Обработчик смены режима
   private
     { Private declarations }
     FDacDevice: TDacDevice;       // Экземпляр класса ЦАП
@@ -162,7 +169,7 @@ var
   i: Integer;
   Freq, Ampl, Value: Double;
   BufferSizeSamples: Integer;
-  
+
   // Sweep vars
   StartFreq, EndFreq, SweepTime, CurrentTime, k: Double;
 begin
@@ -213,6 +220,51 @@ end;
 procedure TDACFrm.rgModeClick(Sender: TObject);
 begin
   UpdateModeView;
+end;
+
+procedure TDACFrm.TestBtnClick(Sender: TObject);
+var
+  ar:tdoubleArray;
+  len, freq1, freq2,
+  dphase, // скорость фазы
+  aPhase, // ускорение фазы
+  Amp, phase:double;
+  fs:integer;
+  I, siglen: Integer;
+  tr:cbufftrend1d;
+  cfg:TFilterSettings;
+begin
+  fs:=1000;
+  // длина в секундах
+  len:=5;
+  siglen:=round(len*fs);
+  freq1:=10;
+  freq2:=50;
+  aPhase:=2*pi*(freq2-freq1)/(fs*fs*len); // ускорение фазы
+  dphase:=2*pi*freq1/fs; // скорость фазы
+  Amp:=1;
+  setlength(ar,siglen);
+  phase:=0;
+  for I := 0 to siglen - 1 do
+  begin
+    ar[i]:= Amp * Sin(phase);
+    phase:=phase+dphase;
+    dphase:=dphase+aphase;
+  end;
+  cfg.Alpha:=0.3;
+  cfg.IsFirstCall:=true;
+  cfg.PrevOutput:=0;
+  ar:=LowPassFilter(ar, cfg);
+  tr:=cbufftrend1d(cpage(cchart1.activePage).activeAxis.getChild(0));
+  if tr=nil then
+  begin
+    tr:=cBuffTrend1d.create;
+    tr.dx:=1/fs;
+    tr.name:='Test1000HzLpf';
+    cpage(cchart1.activePage).activeAxis.AddChild(tr);
+    tr.AddPoints(ar);
+    cpage(cchart1.activePage).normalise;
+  end;
 end;
 
 procedure TDACFrm.UpdateModeView;

@@ -2497,6 +2497,7 @@ object Frm3120: TFrm3120
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goFixedRowClick]
         ParentFont = False
         TabOrder = 0
+        OnClick = TableModeSGClick
         OnDblClick = TableModeSGDblClick
         OnDrawCell = TableModeSGDrawCell
         OnKeyDown = TableModeSGKeyDown

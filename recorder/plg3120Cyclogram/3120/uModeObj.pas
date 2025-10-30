@@ -946,6 +946,10 @@ begin
   StopCheckThreshold(false);
   // p.ResetModeCheckTime;
   factive := b;
+  if assigned(p.fOnNextMode) then
+  begin
+    p.fOnNextMode(self);
+  end;
 end;
 
 procedure cModeObj.setApplyed(b: boolean);

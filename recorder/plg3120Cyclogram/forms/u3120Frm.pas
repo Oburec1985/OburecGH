@@ -82,6 +82,7 @@ type
     procedure AlarmStopBtnClick(Sender: TObject);
     procedure ControlPropSGDblClick(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
+    procedure TableModeSGClick(Sender: TObject);
   private
     mThread: cardinal;
     // Режим подтверждения перехода
@@ -141,6 +142,7 @@ type
     procedure ModeTabSGEditCell(r, c: Integer; val: string);
     function toSec(t: double): double;
   public
+    procedure doNextMode(sender:tobject);
     procedure doStart;
     function SecToTime(t: double): double;
     // происходит в doRepaint
@@ -207,6 +209,12 @@ begin
   ControlPropE.text := '';
   if g_createGUI then
     Preview;
+end;
+
+procedure TFrm3120.doNextMode(sender: tobject);
+begin
+  ThresholdFrm.doUpdateData(self);
+  TableModeSG.Invalidate;
 end;
 
 procedure TFrm3120.doAddObj(Sender: TObject);
@@ -618,6 +626,7 @@ end;
 procedure TFrm3120.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 var
   SectionStr, s: string;
+  p:cProgramObj;
 begin
   inherited;
 
@@ -644,6 +653,10 @@ begin
 
   SGChange(TableModeSG);
   SGChange(ControlPropSG);
+
+  // упрощакем доступ к контролам
+  p:=g_conmng.getProgram(0);
+  p.fOnNextMode:=doNextMode;
 end;
 
 procedure TFrm3120.ConfirmManualSwitchMode(m: TObject);
@@ -699,6 +712,11 @@ begin
       TableModeSG.Invalidate;
     end;
   end;
+end;
+
+procedure TFrm3120.TableModeSGClick(Sender: TObject);
+begin
+  TableModeSG.Invalidate;
 end;
 
 procedure TFrm3120.TableModeSGDblClick(Sender: TObject);
@@ -808,9 +826,9 @@ begin
     begin
       if c is cMnControl then
       begin
-        if ACol = (p.ModeCount + 1) then
+        if ACol = (p.ModeCount + 1) then  // предпосл. колонка - момент
           a := ThresholdFrm.getalarm(cMnControl(c).m_Mtagfb.tagname)
-        else
+        else                              // посл. колонка - обороты
           a := ThresholdFrm.getalarm(cMnControl(c).m_Ntagfb.tagname);
       end;
     end;
@@ -1253,7 +1271,7 @@ begin
     end;
   end;
   UpdateTimers;
-  TableModeSG.Invalidate;
+  //TableModeSG.Invalidate;
   // UpdateControlsPropSG;
 end;
 
@@ -1409,6 +1427,7 @@ begin
       sg.Cells[m_insert, 0] := mname + '_';
     end;
   end;
+  TableModeSG.Invalidate;
 end;
 
 function TFrm3120.toSec(t: double): double;

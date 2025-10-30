@@ -167,12 +167,13 @@ type
     procedure setData(pdata:PDataRec);
     procedure createevents;
     procedure destroyevents;
-    procedure doUpdateData(Sender: TObject);
     procedure doChangeRState(Sender: TObject);
     procedure doStart;
     procedure doStop;
     procedure ShowTV;
   public
+    procedure doUpdateData(Sender: TObject);
+
     procedure AttachAlarms;
     function AddGroup:pVirtualNode;overload;
     function AddGroup(g: TThresholdGroup):pVirtualNode;overload;
@@ -960,6 +961,11 @@ begin
       a.m_a_h.SetColor(pd.hCol);
       a.m_a_hh.SetColor(pd.hhCol);
     end;
+    // пересчет уставок
+    //a.m_a_ll.Reset;
+    //a.m_a_l.Reset;
+    //a.m_a_h.Reset;
+    //a.m_a_hh.Reset;
   end;
 end;
 
