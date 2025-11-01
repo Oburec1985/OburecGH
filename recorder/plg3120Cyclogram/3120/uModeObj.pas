@@ -1637,30 +1637,53 @@ begin
           floattostr(m_data.Tthreshold)+';'+
           floattostr(m_data.Lthreshold)+';'+
           floattostr(m_data.Pthreshold)+';'+
-          floattostr(m_data.MNthreshold)+';'+
+          floattostr(m_data.Mthreshold)+';'+
+          floattostr(m_data.Nthreshold)+';'+
           TModeTypeToStr(m_data.ModeType)+';'+
           floattostr(m_data.Nramp)+';'+
           booltostr(m_data.cmd_start)+';'+
-          booltostr(m_data.cmd_stop);
+          booltostr(m_data.cmd_stop)+';'+
+          booltostr(m_data.forw);
 end;
 
 procedure cTask.strtodata(s:string);
+var
+  i:integer;
 begin
-  m_data.P:=strtofloatext(getSubStrByIndex(s,';',1,0));
-  m_data.I:=strtofloatext(getSubStrByIndex(s,';',1,1));
-  m_data.D:=strtofloatext(getSubStrByIndex(s,';',1,2));
-  m_data.TAlarm:=StrtoBoolExt(getSubStrByIndex(s,';',1,3));
-  m_data.LAlarm:=StrtoBoolExt(getSubStrByIndex(s,';',1,4));
-  m_data.Palarm:=StrtoBoolExt(getSubStrByIndex(s,';',1,5));
-  m_data.MNAlarm:=StrtoBoolExt(getSubStrByIndex(s,';',1,6));
-  m_data.Tthreshold:=strtofloatext(getSubStrByIndex(s,';',1,7));
-  m_data.Lthreshold:=strtofloatext(getSubStrByIndex(s,';',1,8));
-  m_data.Pthreshold:=strtofloatext(getSubStrByIndex(s,';',1,9));
-  m_data.MNthreshold:=strtofloatext(getSubStrByIndex(s,';',1,10));
-  m_data.ModeType:=strToModeType(getSubStrByIndex(s,';',1,11));
-  m_data.Nramp:=strtofloatext(getSubStrByIndex(s,';',1,12));
-  m_data.cmd_start:=StrtoBoolExt(getSubStrByIndex(s,';',1,13));
-  m_data.cmd_stop:=StrtoBoolExt(getSubStrByIndex(s,';',1,14));
+  i:=0;
+  m_data.P:=strtofloatext(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.I:=strtofloatext(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.D:=strtofloatext(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.TAlarm:=StrtoBoolExt(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.LAlarm:=StrtoBoolExt(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.Palarm:=StrtoBoolExt(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.MNAlarm:=StrtoBoolExt(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.Tthreshold:=strtofloatext(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.Lthreshold:=strtofloatext(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.Pthreshold:=strtofloatext(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.Mthreshold:=strtofloatext(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.Nthreshold:=strtofloatext(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.ModeType:=strToModeType(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.Nramp:=strtofloatext(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.cmd_start:=StrtoBoolExt(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.cmd_stop:=StrtoBoolExt(getSubStrByIndex(s,';',1,i));
+  inc(i);
+  m_data.forw:=strtoboolext(getSubStrByIndex(s,';',1,i));
 end;
 
 procedure cTask.DeleteCS;

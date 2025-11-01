@@ -20,7 +20,8 @@ type
   DataRec = record
     // если <>nil
     LvlTag:itag;
-    normal, HH, h, L, LL:double;
+    normal, // используется если задавать уставки отклонением normal+-hh
+    HH, h, L, LL:double;
     outRange:double;
     normalCol, outRangeCol, HHCol, hCol, LCol, LLCol:integer;
     // если не valid то ставим цвет серый outRangeCol
@@ -70,6 +71,8 @@ type
     // получить запись с уставками
     function AlarmData:PDataRec;overload;
     function AlarmData(i:integer):PDataRec;overload;
+    // костыль для 3120, вернет зачение опорного тега t
+    function DisableAlarmByTag(a:TAlarms):double;
     function GetAlarm(i:integer):TAlarms;overload;
     function GetAlarm(s:string):TAlarms;overload;
     function toString(i:integer):string;
@@ -82,7 +85,10 @@ type
     procedure clear;
     // обновить список аварий в тегах
     procedure ApplyAlarms;overload;
-    procedure ApplyAlarms(pd:PDataRec);overload;
+    // restype - 0 - абс; 1- от задания; 2 - от канала
+    procedure ApplyAlarms(pd:PDataRec; restype:integer);overload;
+    function EvalAlarmLvl: double;
+    procedure setEnabled(b:boolean);
     constructor create;
     destructor destroy;
   end;
@@ -144,6 +150,10 @@ type
     Label1: TLabel;
     BackGroundColorDialog: TColorDialog;
     TagsListFrame1: TTagsListFrame;
+    Restype: TRadioGroup;
+    NormalValueFE: TFloatSpinEdit;
+    AlarmTagCB: TRcComboBox;
+    Label2: TLabel;
     procedure TagsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
@@ -162,6 +172,7 @@ type
     m_AlarmHandler:AlarmHandler;
     m_Groups:TStringList;
     m_selGroup:TThresholdGroup;
+    m_AlarmTag:ctag;
   private
     procedure ShowGroup(g:TThresholdGroup; parent:pVirtualNode);
     procedure setData(pdata:PDataRec);
@@ -173,7 +184,8 @@ type
     procedure ShowTV;
   public
     procedure doUpdateData(Sender: TObject);
-
+    // пройти все аварии и найти максимальный уровень
+    function EvalAlarmLvl:double;
     procedure AttachAlarms;
     function AddGroup:pVirtualNode;overload;
     function AddGroup(g: TThresholdGroup):pVirtualNode;overload;
@@ -183,7 +195,7 @@ type
     procedure load(fname:string);
     procedure UpdateTagList;
     procedure clear;
-    //constructor create(aowner:tcomponent);override;
+    constructor create(aowner:tcomponent);override;
     destructor destroy;
   end;
 
@@ -278,6 +290,12 @@ begin
   RemovePlgEvent(doUpdateData, c_RUpdateData);
 end;
 
+constructor TThresholdFrm.create(aowner: tcomponent);
+begin
+  inherited;
+  m_AlarmTag:= cTag.create;
+end;
+
 procedure TThresholdFrm.createevents;
 begin
   addplgevent('TThresholdFrm_doUpdateData', c_RUpdateData, doUpdateData);
@@ -341,6 +359,7 @@ begin
     g:=TThresholdGroup(m_Groups.Objects[i]);
     g.ApplyAlarms;
   end;
+  EvalAlarmLvl;
 end;
 
 procedure TThresholdFrm.FormCreate(Sender: TObject);
@@ -471,8 +490,8 @@ begin
   begin
     g:=getGroup(i);
     // пропускаем служебные автосоздаваемые группы
-    if g.name='PressFrmAlarms' then
-      continue;
+    //if g.name='PressFrmAlarms' then
+    //  continue;
     inc(gCount);
     ifile.WriteString('G_'+inttostr(i), 'Name', g.name);
     if g.ControlTag<>nil then
@@ -496,6 +515,7 @@ begin
     ifile.WriteString('G_'+inttostr(i), 'Tags', str);
   end;
   ifile.WriteInteger('Main', 'GCount', gCount);
+  saveTagToIni(ifile,m_AlarmTag,'Main','AlarmTag');
   ifile.Destroy;
 end;
 
@@ -511,8 +531,20 @@ var
   new:boolean;
   a:TAlarms;
 begin
-  clear;
   ifile:=TIniFile.Create(fname);
+  c:=ifile.ReadInteger('Main', 'GCount', 0);
+  if c=0 then
+  begin
+    ifile.destroy;
+    exit;
+  end;
+  clear;
+  LoadExTagIni(ifile,m_AlarmTag,'Main','AlarmTag');
+  if m_AlarmTag.tag=nil then
+  begin
+    m_AlarmTag.tag:=createScalar('AlarmTag', true);
+  end;
+  s:=ifile.ReadString('G_'+inttostr(i), 'Name', '');
   c:=ifile.ReadInteger('Main', 'GCount', 0);
   for I := 0 to c - 1 do
   begin
@@ -527,7 +559,7 @@ begin
     g.setCount(c);
     for j := 0 to g.m_size - 1 do
     begin
-      s:=ifile.ReadString('G_'+inttostr(i),  'Data_'+inttostr(j), '10;5;-5;-10;255;65535;65535;255;0;1');
+      s:=ifile.ReadString('G_'+inttostr(i),  'Data_'+inttostr(j), '0;10;5;-5;-10;255;65535;65535;255;0;1');
       g.StringToData(s,j);
     end;
     g.initList:=true;
@@ -547,12 +579,14 @@ begin
         g.addtag(s1, new);
       end;
     end;
+    g.setEnabled(true);
   end;
   ifile.Destroy;
 end;
 
 procedure TThresholdFrm.setData(pdata: PDataRec);
 begin
+  NormalValueFE.Value:=pdata.normal;
   HHSe.Value:=pdata.HH;
   HSe.Value:=pdata.h;
   lSe.Value:=pdata.l;
@@ -780,6 +814,7 @@ begin
   end;
   m_selGroup.setCount(CountIE.IntNum);
   pd:=m_selGroup.AlarmData(NumSe.Value);
+  pd.normal:=NormalValueFE.Value;
   pd.HH:=HHSe.Value;
   pd.h:=HSe.Value;
   pd.l:=lSe.Value;
@@ -790,7 +825,7 @@ begin
   pd.llcol:=llColor.Color;
   pd.m_notvalid:=NotValidCB.Checked;
   pd.outRangeCol:=NormalColor.Color;
-  m_selGroup.ApplyAlarms(pd);
+  m_selGroup.ApplyAlarms(pd, 0);
   if ControTaglCB.ItemIndex>-1 then
   begin
     m_selGroup.ControlTag.tag:=ControTaglCB.gettag(ControTaglCB.ItemIndex);
@@ -801,6 +836,8 @@ procedure TThresholdFrm.UpdateTagList;
 begin
   TagsListFrame1.ShowChannels;
   ControTaglCB.updateTagsList;
+  AlarmTagCB.updateTagsList;
+  setComboBoxItem(m_AlarmTag.tagname, AlarmTagCB);
 end;
 
 { TThresholdGroup }
@@ -892,53 +929,107 @@ begin
   result:=@m_Data[i];
 end;
 
-procedure TThresholdGroup.ApplyAlarms(pd: PDataRec);
+function TThresholdGroup.DisableAlarmByTag(a:TAlarms):double;
+var
+  s:string;
+  Mnum:integer;
+begin
+  s:=a.t.tagname;
+  result:=0;
+  // имя тега закодировано M1(v)... M5(v)
+  if s[1]='M' then
+  begin
+    Mnum:=strtoint(s[2]);
+    if g_Marray[Mnum-1].m_data.ModeType=mtM then
+    begin
+      result:=g_Marray[Mnum-1].m_Mtag.GetMeanEst;
+      a.SetEnabled(true);
+    end
+    else
+    begin
+      a.SetEnabled(false);
+    end;
+  end
+  else
+  // имя тега закодировано Fm1..Fm5
+  begin
+    Mnum:=strtoint(s[3]);
+    if g_Marray[Mnum-1].m_data.ModeType=mtN then
+    begin
+      result:=g_Marray[Mnum-1].m_Ntag.GetMeanEst;
+      a.SetEnabled(true);
+    end
+    else
+    begin
+      a.SetEnabled(false);
+    end;
+  end;
+end;
+
+function TThresholdGroup.EvalAlarmLvl: double;
+var
+  ind,I: Integer;
+  a:TAlarms;
+begin
+  result:=0;
+  for I := 0 to AlarmList.Count - 1 do
+  begin
+    a:=TAlarms(AlarmList.Objects[i]);
+    //    0:m_a_hh:=ia;
+    //    1:m_a_h:=ia;
+    //    2:m_a_l:=ia;
+    //    3:m_a_ll:=ia;
+    ind:=a.ActiveAlInd;
+    if (ind=0) or (ind=3) then
+    begin
+      result:=2;
+      exit;
+    end;
+    if (ind=1) or (ind=2) then
+    begin
+      result:=1;
+    end;
+  end;
+end;
+
+function TThresholdFrm.EvalAlarmLvl: double;
+var
+  ind,I: Integer;
+  g:TThresholdGroup;
+  res:double;
+begin
+  result:=0;
+  for I := 0 to m_Groups.Count - 1 do
+  begin
+    g:=getGroup(i);
+    res:=g.EvalAlarmLvl;
+    if res>result then
+    begin
+      result:=res;
+      if res>1 then
+        break;
+    end;
+  end;
+  m_AlarmTag.PushValue(result);
+end;
+
+procedure TThresholdGroup.ApplyAlarms(pd: PDataRec; restype:integer);
 var
   I, Mnum: Integer;
   a:TAlarms;
   d:double;
   c:cControlObj;
-  s:string;
+  lvl:double;
 begin
   for I := 0 to AlarmList.Count - 1 do
   begin
     a:=TAlarms(AlarmList.Objects[i]);
-    a.m_a_hh.SetEnabled(Variant_True);
-    a.m_a_h.SetEnabled(Variant_True);
-    a.m_a_l.SetEnabled(Variant_True);
-    a.m_a_ll.SetEnabled(Variant_True);
+    a.SetEnabled(true);
     if pd.LvlTag<>nil then
     begin
-      s:=a.t.tagname;
-      // имя тега закодировано M1(v)... M5(v)
-      if s[1]='M' then
+      if restype=2 then
       begin
-        Mnum:=strtoint(s[2]);
-        if g_Marray[Mnum-1].m_data.ModeType=mtM then
-        begin
-          d:=g_Marray[Mnum-1].m_Mtag.GetMeanEst;
-          a.SetEnabled(true);
-        end
-        else
-        begin
-          a.SetEnabled(false);
-        end;
-      end
-      else
-      // имя тега закодировано Fm1..Fm5
-      begin
-        Mnum:=strtoint(s[3]);
-        if g_Marray[Mnum-1].m_data.ModeType=mtN then
-        begin
-          d:=g_Marray[Mnum-1].m_Ntag.GetMeanEst;
-          a.SetEnabled(true);
-        end
-        else
-        begin
-          a.SetEnabled(false);
-        end;
-      end;
-      begin
+        DisableAlarmByTag(a);
         //d:=GetMean(pd.LvlTag);
         a.m_a_ll.SetLevel(pd.LL*d);
         a.m_a_l.SetLevel(pd.l*d);
@@ -952,20 +1043,28 @@ begin
     end
     else
     begin
-      a.m_a_ll.SetLevel(pd.LL);
-      a.m_a_l.SetLevel(pd.l);
-      a.m_a_h.SetLevel(pd.h);
-      a.m_a_hh.SetLevel(pd.hh);
+      // задание цвета
       a.m_a_ll.SetColor(pd.LLCol);
       a.m_a_l.SetColor(pd.lCol);
       a.m_a_h.SetColor(pd.hCol);
       a.m_a_hh.SetColor(pd.hhCol);
+      DisableAlarmByTag(a);
+      if pd.normal=0 then
+      begin
+        a.m_a_ll.SetLevel(pd.LL);
+        a.m_a_l.SetLevel(pd.l);
+        a.m_a_h.SetLevel(pd.h);
+        a.m_a_hh.SetLevel(pd.hh);
+      end
+      else // абсолютно от задания
+      begin
+        a.m_a_ll.SetLevel(pd.normal-pd.LL);
+        a.m_a_l.SetLevel(pd.normal-pd.L);
+        a.m_a_h.SetLevel(pd.normal+pd.h);
+        a.m_a_hh.SetLevel(pd.normal+pd.hh);
+      end;
     end;
-    // пересчет уставок
-    //a.m_a_ll.Reset;
-    //a.m_a_l.Reset;
-    //a.m_a_h.Reset;
-    //a.m_a_hh.Reset;
+
   end;
 end;
 
@@ -985,10 +1084,10 @@ begin
     begin
       g:=TThresholdGroup(m_subGroups.Items[i]);
       pd:=@g.m_data[0];
-      g.ApplyAlarms(pd);
+      g.ApplyAlarms(pd, 0);
     end;
     pd:=@m_data[0];
-    ApplyAlarms(pd);
+    ApplyAlarms(pd, 0);
     exit;
   end;
   if m_lastControlVal<>v then
@@ -999,7 +1098,7 @@ begin
       if m_lastControlVal<m_size then
       begin
         pd:=@m_data[m_lastControlVal];
-        ApplyAlarms(pd);
+        ApplyAlarms(pd, 0);
       end;
     end;
   end;
@@ -1025,6 +1124,7 @@ begin
   ControlTag.useEcm:=false;
   m_lastControlVal:=-1;
   m_SubGroups:=tlist.create;
+
 end;
 
 destructor TThresholdGroup.destroy;
@@ -1111,6 +1211,18 @@ begin
   ControlTag.tagname:=ControlTag.tagname;
 end;
 
+procedure TThresholdGroup.setEnabled(b: boolean);
+var
+  I: Integer;
+  a:TAlarms;
+begin
+  for I := 0 to AlarmList.Count - 1 do
+  begin
+    a:=GetAlarm(i);
+    a.SetEnabled(b);
+  end;
+end;
+
 procedure TThresholdGroup.setCount(c: integer);
 begin
   if m_size<c then
@@ -1126,6 +1238,8 @@ begin
 end;
 
 
+
+
 procedure TThresholdGroup.StringToData(str: string; i: integer);
 var
   s:string;
@@ -1135,16 +1249,17 @@ begin
   begin
     s:=getSubStrByIndex(str, ';',1,j);
     case j of
-      0:m_Data[i].HH:=strtoFloatExt(s);
-      1:m_Data[i].H:=strtoFloatExt(s);
-      2:m_Data[i].l:=strtoFloatExt(s);
-      3:m_Data[i].ll:=strtoFloatExt(s);
-      4:m_Data[i].HHCol:=strtoint(s);
-      5:m_Data[i].HCol:=strtoint(s);
-      6:m_Data[i].lCol:=strtoint(s);
-      7:m_Data[i].llCol:=strtoint(s);
-      8:m_Data[i].outRangeCol:=strtoint(s);
-      9:
+      0:m_Data[i].normal:=strtoFloatExt(s);
+      1:m_Data[i].HH:=strtoFloatExt(s);
+      2:m_Data[i].H:=strtoFloatExt(s);
+      3:m_Data[i].l:=strtoFloatExt(s);
+      4:m_Data[i].ll:=strtoFloatExt(s);
+      5:m_Data[i].HHCol:=strtoint(s);
+      6:m_Data[i].HCol:=strtoint(s);
+      7:m_Data[i].lCol:=strtoint(s);
+      8:m_Data[i].llCol:=strtoint(s);
+      9:m_Data[i].outRangeCol:=strtoint(s);
+      10:
       begin
         if s='0' then
           m_Data[i].m_notvalid:=false
@@ -1157,7 +1272,8 @@ end;
 
 function TThresholdGroup.toString(i: integer): string;
 begin
-  result:=floattostr(m_Data[i].HH)+';'+floattostr(m_Data[i].h)+';'
+  result:=floattostr(m_Data[i].normal)+';'
+          +floattostr(m_Data[i].HH)+';'+floattostr(m_Data[i].h)+';'
           +floattostr(m_Data[i].l)+';'+floattostr(m_Data[i].ll)+';'
           +inttostr(m_Data[i].HHCol)+';'+inttostr(m_Data[i].HCol)+';'
           +inttostr(m_Data[i].lCol)+';'+inttostr(m_Data[i].llCol)+';'
@@ -1176,6 +1292,7 @@ begin
   m_OutRangeEnabled:=true;
   t:=cTag.create;
   t.useEcm:=false;
+  ActiveAlInd:=-1;
 end;
 
 destructor TAlarms.destroy;
@@ -1266,8 +1383,8 @@ begin
   begin
     m_a_hh.SetEnabled(Variant_True);
     m_a_h.SetEnabled(Variant_True);
-    m_a_l.SetEnabled(Variant_True);
-    m_a_ll.SetEnabled(Variant_True);
+    m_a_l.SetEnabled(Variant_False);
+    m_a_ll.SetEnabled(Variant_False);
   end
   else
   begin
@@ -1330,6 +1447,7 @@ begin
     a:=g.GetAlarm(s);
     if a<>nil then
     begin
+      nindex:=nindex-1;
       if flags>0 then
       begin
         a.activeA:=pAlarm;

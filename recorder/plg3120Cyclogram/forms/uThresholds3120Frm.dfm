@@ -223,6 +223,29 @@ object ThresholdFrm: TThresholdFrm
       ShowHint = True
       OnClick = UpdatePObjBtnClick
     end
+    object Label2: TLabel
+      Left = 272
+      Top = 20
+      Width = 141
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = #1059#1088#1086#1074#1077#1085#1100' '#1072#1074#1072#1088#1080#1081#1085#1086#1089#1090#1080
+    end
+    object AlarmTagCB: TRcComboBox
+      Left = 426
+      Top = 19
+      Width = 148
+      Height = 25
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      TabOrder = 0
+      Text = 'ControTaglCB'
+    end
   end
   object LeftPan: TPanel
     Left = 0
@@ -622,9 +645,34 @@ object ThresholdFrm: TThresholdFrm
       Text = '000'
       OnChange = CountIEChange
     end
+    object Restype: TRadioGroup
+      Left = 7
+      Top = 408
+      Width = 185
+      Height = 105
+      Caption = #1058#1080#1087' '#1091#1089#1090#1072#1074#1086#1082
+      ItemIndex = 0
+      Items.Strings = (
+        #1040#1073#1089#1086#1083#1102#1090#1085#1099#1077
+        #1054#1090' '#1079#1072#1076#1072#1085#1080#1103
+        #1054#1090#1085#1086#1089#1080#1090#1077#1083#1100#1085#1086' '#1082#1072#1085#1072#1083#1072)
+      TabOrder = 14
+    end
+    object NormalValueFE: TFloatSpinEdit
+      Left = 208
+      Top = 419
+      Width = 149
+      Height = 27
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Increment = 0.100000000000000000
+      TabOrder = 15
+    end
   end
   object BackGroundColorDialog: TColorDialog
-    Left = 248
-    Top = 410
+    Left = 88
+    Top = 42
   end
 end

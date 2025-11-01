@@ -3,7 +3,7 @@ unit uTest;
 interface
 
 uses
-  sysutils, graphics, urcfunc, uThresholds3120Frm,
+  sysutils, graphics, urcfunc, uThresholds3120Frm, uCommonMath,
   u3120ControlObj, uControlObj, uProgramObj, uModeObj, u3120Factory;
 
 type
@@ -15,6 +15,7 @@ type
 
 procedure testinit3120;
 procedure testinit3120Thresholds;
+procedure testinit3120ThresholdsAbs;
 
 implementation
 
@@ -88,16 +89,92 @@ begin
   g.m_SubGroups.Add(subG);
 end;
 
+procedure testinit3120ThresholdsAbs;
+var
+  g, subg:TThresholdGroup;
+  a:TAlarms;
+  AlarmData:PDataRec;
+  pTag:PTagRec;
+  new:boolean;
+  I: Integer;
+  c:cControlObj;
+  p:cprogramobj;
+  m:cmodeobj;
+  j: Integer;
+  t:ctask;
+  s:string;
+begin
+  ThresholdFrm.m_AlarmTag.tag:=createScalar('AlarmTag', true);
+  p:=g_conmng.getProgram(0);
+  for I := 0 to g_conmng.ControlsCount - 1 do
+  begin
+    c:=g_conmng.getControlObj(i);
+    if c is cMNControl then
+    begin
+      g:=TThresholdGroup.create;
+      g.ControlTag.tagname:=p.m_ModeIndTag.GetName;
+      g.name:='M'+inttostr(i+1);
+      ThresholdFrm.AddGroup(g);
+      // в группу можно добавлять оба тега т.к. один все равно автоотключается в зависимости от режима
+      G.addtag(cMNControl(c).m_MtagFB.tagname,new);
+      G.addtag(cMNControl(c).m_NtagFB.tagname,new);
+      g.m_useSubGroups:=false;
+      g.setCount(6);
+      for j := 0 to p.ModeCount - 1 do
+      begin
+        m:=p.getMode(j);
+        t:=m.GetTask(i);
+        g.m_Data[j].outRange:=0;
+        g.m_Data[j].normalCol:=clWhite;
+        g.m_Data[j].outRangeCol:=clRed;
+        g.m_Data[j].HHCol:=clWebOrange;
+        g.m_Data[j].HCol:=clYellow;
+        g.m_Data[j].LLCol:=clWebOrange;
+        g.m_Data[j].LCol:=clYellow;
+        g.m_Data[j].outRangeCol:=clRed;
+        g.m_Data[j].normal:=t.m_data.Task;
+        if i<3 then
+        begin
+          g.m_Data[j].HH:=50;
+          g.m_Data[j].h:=30;
+          g.m_Data[j].L:=30;
+          g.m_Data[j].LL:=50;
+        end
+        else
+        begin
+          g.m_Data[j].HH:=10;
+          g.m_Data[j].h:=6;
+          g.m_Data[j].L:=6;
+          g.m_Data[j].LL:=10;
+        end;
+      end;
+    end;
+  end;
+  // синхронизация с циклограммой
+  for I := 0 to ThresholdFrm.m_Groups.Count - 1 do
+  begin
+    g:=ThresholdFrm.getGroup(i);
+    c:=g_conmng.getControlObj(i);
+    for j := 0 to p.ModeCount - 1 do
+    begin
+      m:=p.getMode(j);
+      t:=m.GetTask(c.name);
+      t.m_data.Mthreshold:= g.m_Data[j].HH+g.m_Data[j].normal;
+      t.m_data.Nthreshold:= g.m_Data[j].HH+g.m_Data[j].normal;
+    end;
+  end;
+end;
+
 procedure testinit3120;
 var
   c:cControlObj;
   p:cProgramObj;
   m:cmodeobj;
-  mname, dsc, fbname:string;
+  mname, dsc, s, fbname:string;
   I, j: Integer;
+  b:boolean;
   t:ctask;
 begin
-  if g_conmng.ProgramCount>0 then exit;
   //g_conmng.clear;
   p:=cProgramObj.create;
   p.CreateStateTag;
@@ -156,7 +233,6 @@ begin
       begin
         cMNControl(c).m_CmdStop.tag:=createScalar(cMNControl(c).m_CmdStop.tagname, true);
       end;
-
     end
     else
     begin // создание и настройка актуаторов
@@ -198,11 +274,11 @@ begin
     g_conmng.Add(c);
     p.AddControl(c);
   end;
-  for I := 0 to 3 do
+  for I := 0 to 6 do
   begin
     m:=cmodeobj.create;
     case i of
-      3: m.name:='Стоп';
+      6: m.name:='Стоп';
       else
         m.name:='Режим_'+inttostr(i+1);
     end;
@@ -212,27 +288,44 @@ begin
     cmodeobj(m).CheckThreshold:=false;
     // время в течении которого ожидается проверка выхода на режим
     cmodeobj(m).CheckLength:=0;
+    // m1 по ПМИ len; M1;M2;M3;M4;M5;break;rot;emerg
+    case i of // проход по режимам
+      0: dsc:= '22;2045;2640;2640;35;35;100;50;100';
+      1: dsc:= '32;2028;1726;1726;35;35;100;50;100';
+      2: dsc:= '77;1994;1424;1424;35;35;100;50;100';
+      3: dsc:= '123;1996;1004;1004;35;35;100;50;100';
+      4: dsc:= '90;1996;593;593;35;35;100;50;100';
+      5: dsc:= '16;1772;578;578;35;35;100;50;100';
+      // режим стоп
+      6: dsc:= '22;0;0;0;0;0;100;50;100';
+    end;
+    s:=getSubStrByIndex(dsc,';',1,0);
     // длительность режима
-    m.ModeLength:=10;
+    m.ModeLength:=toSec(strtofloat(s),1);
     p.addmode(m);
-    for j := 0 to m.TaskCount - 1 do
+    for j := 0 to m.TaskCount-1 do
     begin
+      s:=getSubStrByIndex(dsc,';',1,j+1);
       t:=m.GetTask(j);
-      case j of
-        0:t.task := j;
-        1:t.task := j;
-        2:t.task := j;
-        3:t.task := j;
-
-        4:t.task := j;
-        5:t.task := j;
-        6:t.task := j;
-        7:t.task := j;
-      end;
       t.applyed := false;
+      if j<5 then
+      begin
+        if j=0 then
+          t.m_data.ModeType:=mtN
+        else
+          t.m_data.ModeType:=mtM
+      end;
+      t.task:=strtofloat(s);
+      if j=0 then // M1 по часовой
+        b:=true
+      else
+        b:=false;
+      t.m_data.forw:=b;
     end;
   end;
 end;
+
+
 
 
 end.

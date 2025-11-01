@@ -2409,6 +2409,7 @@ object Frm3120: TFrm3120
         ParentFont = False
         TabOrder = 0
         OnDblClick = ControlPropSGDblClick
+        OnDrawCell = ControlPropSGDrawCell
         RowHeights = (
           32
           32
@@ -2475,10 +2476,21 @@ object Frm3120: TFrm3120
       ParentCtl3D = False
       ParentFont = False
       TabOrder = 1
+      object Splitter1: TSplitter
+        Left = 380
+        Top = 25
+        Width = 4
+        Height = 410
+        Align = alRight
+        Color = clBackground
+        ParentColor = False
+        ExplicitLeft = 617
+        ExplicitHeight = 435
+      end
       object TableModeSG: TStringGrid
         Left = 1
         Top = 25
-        Width = 615
+        Width = 379
         Height = 410
         Margins.Left = 4
         Margins.Top = 4
@@ -2503,6 +2515,44 @@ object Frm3120: TFrm3120
         OnKeyDown = TableModeSGKeyDown
         OnSelectCell = TableModeSGSelectCell
         OnSetEditText = TableModeSGSetEditText
+        OnTopLeftChanged = TableModeSGTopLeftChanged
+        ColWidths = (
+          64
+          64
+          64
+          64
+          64)
+        RowHeights = (
+          32
+          32
+          32
+          32
+          32)
+      end
+      object ValsSG: TStringGrid
+        Left = 384
+        Top = 25
+        Width = 232
+        Height = 410
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Align = alRight
+        BevelInner = bvLowered
+        BevelKind = bkFlat
+        DefaultRowHeight = 32
+        FixedCols = 0
+        FixedRows = 0
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -15
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goFixedRowClick]
+        ParentFont = False
+        TabOrder = 1
+        OnDrawCell = ValsSGDrawCell
         ColWidths = (
           64
           64

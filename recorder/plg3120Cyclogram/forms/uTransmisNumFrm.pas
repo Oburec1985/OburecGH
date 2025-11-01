@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, uTagsListFrame, StdCtrls, Grids, uStringGridExt,
   ComCtrls, uCommonTypes, uCommonMath, mathfunction, uSetList,
-  uComponentServises, uRCFunc, tags, uRecorderEvents, pluginClass;
+  uModeObj, u3120ControlObj, uProgramObj,
+  uComponentServises, uRCFunc, tags, uRecorderEvents, pluginClass, uBtnListView;
 
 type
   boolArray =  array of boolean;
@@ -26,7 +27,8 @@ type
   // значение тегов для данного режима
   cStateRec = class
   public
-    rowname:string;
+    rowname,
+    mode:string;
     // индекс значения синхронизирован с индексом тега в m_Tags
     b:array of boolean;
     cb:TCheckBox;
@@ -51,6 +53,8 @@ type
     TagsListFrame1: TTagsListFrame;
     RightSplitter: TSplitter;
     ChannelsSG: TStringGrid;
+    ModeLinkCb: TCheckBox;
+    ModesLV: TBtnListView;
     procedure FormShow(Sender: TObject);
     procedure ChannelsSGDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure ChannelsSGDblClick(Sender: TObject);
@@ -68,7 +72,9 @@ type
     // список строк
     m_States:tlist;
     m_stateVals:cIntNodeList;
-    m_StateCount:integer;
+    m_StateCount,
+    // для отслеживания изменения передачи
+    lastRes:integer;
 
     m_resTag:ctag;
     // текущий замер состояний вычисляемый в RunTime
@@ -91,6 +97,7 @@ type
     // вычисляем сколько есть уникальных состояний и вычисляем их номера
     procedure CompileStates;
     procedure updateStates;
+    procedure ShowModeList;
   public
     procedure ValsToSg;
     procedure SgToVals;
@@ -114,6 +121,7 @@ var
 
 const
   clGrass = TColor($00A7FED0);
+
 
 implementation
 
@@ -185,13 +193,14 @@ procedure TTransNumFrm.ChannelsSGDragDrop(Sender, Source: TObject; X,
 var
   li:tlistitem;
   t0,t:ctagrec;
-  xCol, xRow:integer;
+  xCol, xRow, ModeCol:integer;
   str:string;
+  s:cStateRec;
 begin
+  xCol := TStringGrid(Sender).MouseCoord(X, Y).X;
+  xRow := TStringGrid(Sender).MouseCoord(X, Y).Y;
   if source=TagsListFrame1.TagsLV then
   begin
-    xCol := TStringGrid(Sender).MouseCoord(X, Y).X;
-    xRow := TStringGrid(Sender).MouseCoord(X, Y).Y;
     t0:=nil;
     if (xCol>-1) and (xRow>-1) then
     begin
@@ -216,16 +225,43 @@ begin
     ShowColumns;
     updateStates;
   end;
+  if Source=ModesLV then
+  begin
+    if xrow>1 then
+    begin
+      str:=ChannelsSG.Cells[ChannelsSG.ColCount-1, 1];
+      str:=ModesLV.Selected.Caption;
+      ChannelsSG.Cells[ChannelsSG.ColCount-1, xrow]:=str;
+      s:=getState(xrow-2);
+      s.mode:=str;
+      SGChange(ChannelsSG);
+    end;
+  end;
 end;
 
 procedure TTransNumFrm.ChannelsSGDragOver(Sender, Source: TObject; X,
   Y: Integer; State: TDragState; var Accept: Boolean);
+var
+  pPnt: TPoint; // Координаты курсора
+  ModeCol,row,col:integer;
+  s:string;
 begin
   Accept:=false;
-  if Source=TagsListFrame1.TagsLV then
+  if (Source=TagsListFrame1.TagsLV) or (Source=ModesLV) then
   begin
+    if source=modesLV then
+    begin
+      Row := TStringGrid(Sender).MouseCoord(X, Y).y;
+      if row<2 then
+      begin
+        Accept:=false;
+        exit;
+      end;
+    end;
     Accept:=true;
+    exit;
   end;
+
 end;
 
 procedure TTransNumFrm.ChannelsSGDrawCell(Sender: TObject; ACol, ARow: Integer;
@@ -272,7 +308,6 @@ begin
     sg.Canvas.TextOut(Rect.Left, Rect.Top, sg.Cells[ACol, ARow]);
     sg.Canvas.Brush.Color := Color;
   end
-
 end;
 
 procedure TTransNumFrm.ChannelsSGKeyDown(Sender: TObject; var Key: Word;
@@ -403,6 +438,8 @@ var
   I, res: Integer;
   t:cTagRec;
   s:cStateRec;
+  p:cProgramObj;
+  m:cmodeobj;
 begin
   for I := 0 to m_Tags.Count - 1 do
   begin
@@ -424,7 +461,27 @@ begin
   if res<>0 then
     m_resTag.tag.PushValue(result, -1)
   else
-    m_resTag.tag.PushValue(-1, -1)
+    m_resTag.tag.PushValue(-1, -1);
+  // переключение режима
+  if g_conmng.state<>c_Stop then
+  begin
+    if ModeLinkCb.Checked then
+    begin
+      if lastRes<>result then
+      begin
+        if s.mode<>'' then
+        begin
+          p:=g_conmng.getProgram(0);
+          m:=p.getmode(s.mode);
+          if not m.active then
+          begin
+            m.active:=true;
+          end;
+        end;
+      end;
+    end;
+  end;
+  lastRes:=result;
 end;
 
 function TTransNumFrm.CreateTag(t: itag): ctagrec;
@@ -513,6 +570,7 @@ end;
 procedure TTransNumFrm.FormShow(Sender: TObject);
 begin
   TagsListFrame1.ShowChannels;
+  ShowModeList;
 end;
 
 procedure TTransNumFrm.InitSG;
@@ -522,7 +580,7 @@ var
   rec:cStateRec;
 begin
   //ChannelsSG.RowCount:=19;
-  ChannelsSG.ColCount:=3;
+  ChannelsSG.ColCount:=4;
   ChannelsSG.Cells[0,0]:='Передача';
   ChannelsSG.Cells[0,1]:='Включаемый электромагнит';
   r:=2;
@@ -563,15 +621,34 @@ var
   I: Integer;
   t:cTagRec;
 begin
-  ChannelsSG.ColCount:=m_Tags.Count+1;
   for I := 0 to m_Tags.Count - 1 do
   begin
     t:=gettag(i);
     ChannelsSG.Cells[1+i, 1]:=t.t.tagname;
     ChannelsSG.Cells[1+i, ChannelsSG.RowCount-1]:=floattostr(t.thresh.x);
   end;
-
+  ChannelsSG.Cells[ChannelsSG.ColCount-1, 1]:='Режим';
   SGChange(ChannelsSG);
+end;
+
+procedure TTransNumFrm.ShowModeList;
+var
+  I: Integer;
+  li:tlistitem;
+  p:cProgramObj;
+  m:cModeObj;
+begin
+  ModesLV.Clear;
+  p:=g_conmng.getProgram(0);
+  if p<>nil then
+  begin
+    for I := 0 to p.ModeCount - 1 do
+    begin
+      m:=p.getmode(i);
+      li:=ModesLV.Items.Add;
+      li.Caption:=m.name;
+    end;
+  end;
 end;
 
 procedure TTransNumFrm.FromStr(s: string);
@@ -582,12 +659,18 @@ var
   str:string;
   c:integer;
 begin
-  str:=getSubStrByIndex(s, ';', 1, 0);
+  j:=0;
+
+  str:=getSubStrByIndex(s, ';', 1, j);
+  ModeLinkCb.Checked:=strtobool(str);
+  inc(j);
+
+  str:=getSubStrByIndex(s, ';', 1, j);
   c:=strtoIntExt(str);
+  inc(j);
   if c<1 then exit;
 
   clearTags;
-  j:=1;
   for I := 0 to c - 1 do
   begin
     str:=getSubStrByIndex(s, ';', 1, j);
@@ -598,6 +681,7 @@ begin
     t.thresh.x:=StrToFloat(str);
   end;
   setlength(m_values, m_Tags.Count);
+  ChannelsSG.ColCount:=m_Tags.Count+2;
   str:=getSubStrByIndex(s, ';', 1, j);
   c:=strtoint(str);
   for I := 0 to c - 1 do
@@ -610,6 +694,9 @@ begin
     inc(j);
     str:=getSubStrByIndex(s, ';', 1, j);
     res:=StrToIntext(str);
+    inc(j);
+    str:=getSubStrByIndex(s, ';', 1, j);
+    state.mode:=str;
     state.decode(res);
     state.res:=res;
   end;
@@ -641,7 +728,10 @@ var
   t:cTagRec;
   s:cStateRec;
 begin
-  result:=inttostr(m_Tags.Count)+';';
+  result:='';
+  result:=boolToStr(ModeLinkCb.Checked)+';';
+  result:=result+inttostr(m_Tags.Count)+';';
+
 
   for I := 0 to m_Tags.Count - 1 do
   begin
@@ -654,6 +744,7 @@ begin
     s:=getState(i);
     result:=result+booltostr(s.cb.Checked)+';';
     result:=result+inttostr(s.res)+';';
+    result:=result+s.mode+';';
   end;
 end;
 
@@ -664,7 +755,7 @@ var
   str:string;
 begin
   s:=getState(row-2);
-  for I := 1 to ChannelsSG.ColCount - 1 do
+  for I := 1 to ChannelsSG.ColCount - 2 do
   begin
     str:=ChannelsSG.Cells[i, row];
     s.b[i-1]:=str='Вкл.';
@@ -762,6 +853,7 @@ begin
       if r+2 = m_thresh_OverRow then
         ChannelsSG.Cells[c+1,m_thresh_OverRow]:=GetThresh(c);
     end;
+    ChannelsSG.Cells[ChannelsSG.ColCount-1, r+2]:=s.mode;
   end;
 end;
 

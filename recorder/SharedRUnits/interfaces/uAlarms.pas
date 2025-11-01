@@ -163,6 +163,11 @@ type
 		//	double dblVal,	// Значения
 		//	ULONG flags			// флаги,
 		//	)=0;
+
+    //    0:m_a_hh:=ia;
+    //    1:m_a_h:=ia;
+    //    2:m_a_l:=ia;
+    //    3:m_a_ll:=ia;
     function OnAlarmEvent(pTag: ITag; pAlarm:IAlarm; nIndex:integer; dblVal:double; flags:ULONG): HRESULT;stdcall;
   end;
 

@@ -28,7 +28,10 @@ function SelectNodeInTV(obj:tobject; tv:ttreeview):ttreenode;
 function getColumn(SG:tStringGrid; name:string):integer;
 // найти cnhjre в sg по имени. col - номер колонки в которой ищем имя
 function getRow(SG:tStringGrid; name:string; col:integer):integer;
-procedure SGChange(sg:tStringGrid);
+procedure SGChange(sg:tStringGrid); overload;
+// scale- масштаб при раздвиге колонок
+procedure SGChange(sg:tStringGrid; scale:double); overload;
+
 // выровнять колонки по максимальной ширине строки в таблице
 procedure LVChange(lv:tlistview);
 // возвращает false если попытались записать разные строки
@@ -289,6 +292,11 @@ begin
 end;
 
 procedure SGChange(sg:tStringGrid);
+begin
+  SGChange(sg, 1.5);
+end;
+
+procedure SGChange(sg:tStringGrid; scale:double);
 var
   x, y, w, fsize, oldfont: integer;
   s: string;
@@ -310,7 +318,7 @@ begin
           MaxWidth := w;
       end;
       //sg.ColWidths[x] := round(1.1*MaxWidth) + 5;
-      sg.ColWidths[x] := round(1.5*MaxWidth) + 5;
+      sg.ColWidths[x] := round(scale*MaxWidth) + 5;
       //sg.ColWidths[x] := 100;
     end;
   end;

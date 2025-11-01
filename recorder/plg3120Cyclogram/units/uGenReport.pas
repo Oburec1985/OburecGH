@@ -109,7 +109,7 @@ begin
   begin
     SetCell(1, r, rng.column, d.m.name);
     v:=cprogramObj(d.m.parent).getModeTime;
-    SetCell(1, r, rng.column+1, floattostr(SecToTime(), 1)));
+    //SetCell(1, r, rng.column+1, floattostr(SecToTime(), 1)));
   end;
   // ставим сетку всего блока
   rng := GetRangeObj(1, point(r0, rngSig.column), point(r, c));

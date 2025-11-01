@@ -115,7 +115,8 @@ var
   c:cControlObj;
 begin
   inherited;
-  /// перенес загрузку в инициализацию
+  ///exit;
+  // перенес загрузку в инициализацию
   path:=getRConfig;
   if not RStateConfig then
     ecm(b);

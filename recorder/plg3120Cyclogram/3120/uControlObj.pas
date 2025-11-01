@@ -24,6 +24,7 @@ type
   cControlObj = class;
   cControlList = class;
 
+  // 1 - момент 2 - обороты
   TModeType = (mtN, mtM, mtStop);
 
   T3120Struct = record
@@ -34,7 +35,7 @@ type
     // вкл защиту по температуре, по уровню, давл. масла, ур. масла, по оборотам/моменту
     TAlarm, LAlarm, Palarm, LPAlarm, MNAlarm: boolean;
     // уровень лд€ защиты по M/N
-    Tthreshold, Lthreshold, Pthreshold, MNthreshold: double;
+    Tthreshold, Lthreshold, Pthreshold, Mthreshold, Nthreshold: double;
     // тип режима: тормозной (M)/ приводной (N)/ останов
     ModeType: TModeType;
     // запрет на рост быстрее
@@ -102,7 +103,6 @@ type
     function CheckMode: boolean;
     function getInTol: boolean;
     procedure setInTol(b: boolean);
-
     // установить доп. свойства контрола на циклограмме.
     // вызываетс€ в cmode.exec, параметры читаютс€ из задачи cTask
     procedure SetTask(t: double); virtual;
@@ -179,12 +179,14 @@ type
     m_Ptag, m_Itag, m_Dtag,
     m_ModeTag, m_DirTag,
     // ограничители рампы
-    m_Nrmp, m_Mrmp: ctag;
+    m_Nrmp, m_Mrmp,
+    m_NAlarm, m_Malarm: ctag;
     m_data: T3120Struct;
   protected
     procedure LoadObjAttributes(xmlNode: txmlnode; mng: tobject); override;
     procedure SaveObjAttributes(xmlNode: txmlnode); override;
   public
+    procedure Start; virtual;
     procedure stop;override;
     procedure ApplyTask(t: tobject);override;
     procedure SetTask(t: double); override;
@@ -305,17 +307,18 @@ end;
 function TModeTypeToInt(mt:TModeType):integer;
 begin
   case mt of
-    mtN:result:=0;
+    mtStop:result:=0;
     mtM:result:=1;
+    mtN:result:=2;
   end;
 end;
 
 function TModeTypeToStr(mt:TModeType):string;
 begin
   case mt of
-    mtN: result:='0';
+    mtN: result:='2';
     mtM: result:='1';
-    mtStop: result:='2';
+    mtStop: result:='0';
   end;
 end;
 
@@ -327,9 +330,9 @@ begin
   begin
     i:=strtoint(s);
     case i of
-      0:result:=mtN;
+      0:result:=mtStop;
       1:result:=mtM;
-      2:result:=mtStop;
+      2:result:=mtN;
     end;
   end
   else
@@ -617,6 +620,18 @@ begin
     m_DirTag.tag:=createScalar(m_DirTag.tagname, true);
   end;
 
+  // «ащиты
+  m_Malarm.tagname:=name+'_Mal_HH';
+  if m_Malarm.tag=nil then
+  begin
+    m_Malarm.tag:=createScalar(m_Malarm.tagname, true);
+  end;
+  m_Nalarm.tagname:=name+'_Fal_HH';
+  if m_Nalarm.tag=nil then
+  begin
+    m_Nalarm.tag:=createScalar(m_Nalarm.tagname, true);
+  end;
+
   //  ом старт
   m_CmdStart.tagname:='Cmd_'+name+'_Start';
   if m_CmdStart.tag=nil then
@@ -636,14 +651,22 @@ begin
   m_data.Task := t;
 end;
 
+procedure cMNControl.Start;
+begin
+  inherited;
+  m_CmdStop.PushValue(0);
+end;
+
 procedure cMNControl.stop;
 begin
   inherited;
-  case m_data.ModeType of
-    mtN: m_Ntag.PushValue(0);
-    mtM: m_Mtag.PushValue(0);
-    mtStop:;
-  end;
+  m_CmdStop.PushValue(1);
+  m_CmdStart.PushValue(0);
+  //case m_data.ModeType of
+  //  mtN: m_Ntag.PushValue(0);
+  //  mtM: m_Mtag.PushValue(0);
+  //  mtStop:;
+  //end;
 end;
 
 procedure cMNControl.ApplyTask(t: tobject);
@@ -658,10 +681,10 @@ begin
   m_Itag.PushValue(m_data.I);
   m_Dtag.PushValue(m_data.D);
   m_ModeTag.PushValue(TModeTypeToInt(m_data.ModeType));
-  if m_data.forw then
-    m_DirTag.PushValue(1)
+  if m_data.forw then // по часовой
+    m_DirTag.PushValue(2)
   else
-    m_DirTag.PushValue(0);
+    m_DirTag.PushValue(1); // против
 
   // команда старт
   if m_data.cmd_start then
@@ -675,8 +698,10 @@ begin
     m_CmdStop.PushValue(0);
 
   m_Nrmp.PushValue(m_data.Nramp);
-  m_Nrmp.PushValue(m_data.Mramp);
-  m_Mrmp.PushValue(m_data.Task);
+  m_Mrmp.PushValue(m_data.Mramp);
+
+  m_MAlarm.PushValue(m_data.Mthreshold);
+  m_NAlarm.PushValue(m_data.Nthreshold);
 end;
 
 constructor cMNControl.create;
@@ -697,6 +722,9 @@ begin
   m_DirTag:=ctag.create;
   m_Nrmp:=ctag.create;
   m_Mrmp:=ctag.create;
+
+  m_NAlarm:=ctag.create;
+  m_Malarm:=ctag.create;
 end;
 
 destructor cMNControl.destroy;
@@ -717,6 +745,9 @@ begin
   m_DirTag.destroy;
   m_Nrmp.destroy;
   m_Mrmp.destroy;
+
+  m_NAlarm.destroy;
+  m_Malarm.destroy;
 end;
 
 function cMNControl.GetTask: double;
@@ -828,7 +859,7 @@ end;
 procedure cControlObj.stop;
 begin
   state := c_Stop;
-  m_TaskTag.PushValue(0);
+  //m_TaskTag.PushValue(0);
 end;
 
 Function cControlObj.PlayState: boolean;
@@ -975,7 +1006,7 @@ end;
 procedure cActControl.stop;
 begin
   inherited;
-  m_taskTag.PushValue(0);
+  //m_taskTag.PushValue(0);
 end;
 
 procedure cActControl.ApplyTask(t: tobject);

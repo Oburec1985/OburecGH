@@ -3,7 +3,7 @@ object TransNumFrm: TTransNumFrm
   Top = 0
   Caption = #1056#1072#1089#1095#1077#1090' '#1085#1086#1084#1077#1088#1072' '#1087#1077#1088#1077#1076#1072#1095#1080
   ClientHeight = 644
-  ClientWidth = 1004
+  ClientWidth = 1115
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,22 +17,23 @@ object TransNumFrm: TTransNumFrm
   object AlClientPan: TPanel
     Left = 0
     Top = 0
-    Width = 696
+    Width = 607
     Height = 576
     Align = alClient
     TabOrder = 0
     object RightSplitter: TSplitter
-      Left = 692
+      Left = 603
       Top = 1
       Height = 574
       Align = alRight
       Color = clBackground
       ParentColor = False
+      ExplicitLeft = 692
     end
     object ChannelsSG: TStringGrid
       Left = 1
       Top = 1
-      Width = 691
+      Width = 602
       Height = 574
       Margins.Left = 4
       Margins.Top = 4
@@ -71,7 +72,7 @@ object TransNumFrm: TTransNumFrm
     end
   end
   object RightPan: TPanel
-    Left = 696
+    Left = 807
     Top = 0
     Width = 308
     Height = 576
@@ -144,9 +145,44 @@ object TransNumFrm: TTransNumFrm
   object BottomPan: TPanel
     Left = 0
     Top = 576
-    Width = 1004
+    Width = 1115
     Height = 68
     Align = alBottom
     TabOrder = 2
+    object ModeLinkCb: TCheckBox
+      Left = 16
+      Top = 16
+      Width = 145
+      Height = 17
+      Caption = #1057#1074#1103#1079#1100' '#1089' '#1088#1077#1078#1080#1084#1072#1084#1080
+      TabOrder = 0
+    end
+  end
+  object ModesLV: TBtnListView
+    Left = 607
+    Top = 0
+    Width = 200
+    Height = 576
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
+    Align = alRight
+    Columns = <
+      item
+        Caption = #1056#1077#1078#1080#1084
+        Width = 65
+      end>
+    DragMode = dmAutomatic
+    MultiSelect = True
+    RowSelect = True
+    TabOrder = 3
+    ViewStyle = vsReport
+    BtnCol = 0
+    QuoteColumnBtnClick = False
+    QuoteColumnDblClick = False
+    DrawColorBox = False
+    ChangeTextColor = False
+    Editable = False
   end
 end

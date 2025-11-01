@@ -36,11 +36,13 @@ const
   c_Prow  =1;   c_Irow  =2;  c_Drow  =3; c_ForwRow  =4;
   c_TAlarmRow  = 5; c_TthresholdRow  = 6;
   c_PAlarmRow  = 7; c_PthresholdRow  = 8;
-  c_MNAlarmRow  = 9; c_MNthresholdRow  = 10;
-  c_ConditionRow  = 11; c_ModeRow  = 12;
-  c_NRampRow  = 13; c_MRampRow = 14;
-  c_StartRow  = 15;
-  c_StopRow  = 16;
+  c_MNAlarmRow  = 9;
+  c_MthresholdRow  = 10;
+  c_NthresholdRow  = 11;
+  c_ConditionRow  = 12; c_ModeRow  = 13;
+  c_NRampRow  = 14; c_MRampRow = 15;
+  c_StartRow  = 16;
+  c_StopRow  = 17;
 
 implementation
 
@@ -58,7 +60,8 @@ begin
   m_t.m_data.Palarm:=StrToB(SG.Cells[1,c_PAlarmRow]);
   m_t.m_data.Pthreshold:=strtofloatext(SG.Cells[1,c_PthresholdRow]);
   m_t.m_data.MNAlarm:=StrToB(SG.Cells[1,c_MNAlarmRow]);
-  m_t.m_data.MNthreshold:=strtofloatext(SG.Cells[1,c_MNthresholdRow]);
+  m_t.m_data.Mthreshold:=strtofloatext(SG.Cells[1,c_MthresholdRow]);
+  m_t.m_data.Nthreshold:=strtofloatext(SG.Cells[1,c_NthresholdRow]);
   m_t.m_data.ModeType:=strToModeType(SG.Cells[1,c_ModeRow]);
   m_t.m_data.Nramp:=strtofloatext(SG.Cells[1,c_NRampRow]);
   m_t.m_data.Mramp:=strtofloatext(SG.Cells[1,c_MRampRow]);
@@ -191,8 +194,11 @@ begin
   SG.Cells[0,c_MNAlarmRow]:='Защита M/N';
   SG.Cells[1,c_MNAlarmRow]:=btostr(t.m_data.MNAlarm);
 
-  SG.Cells[0,c_MNthresholdRow]:='Уровень M/N';
-  SG.Cells[1,c_MNthresholdRow]:=floattostr(t.m_data.MNthreshold);
+  SG.Cells[0,c_MthresholdRow]:='Уровень защиты M';
+  SG.Cells[1,c_MthresholdRow]:=floattostr(t.m_data.Mthreshold);
+
+  SG.Cells[0,c_NthresholdRow]:='Уровень защиты N';
+  SG.Cells[1,c_NthresholdRow]:=floattostr(t.m_data.Nthreshold);
 
   SG.Cells[0,c_ConditionRow]:='Работа по усл.';  //SG.Cells[1,c_ConditionRow]:=;
 
