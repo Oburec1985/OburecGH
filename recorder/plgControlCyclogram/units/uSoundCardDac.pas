@@ -87,6 +87,7 @@ type
     procedure QueueBuffer(const ABuffer; ASize: Integer); override;
     // Возвращает текущее состояние активности
     function IsActive: Boolean; override;
+    function GetDeviceList: TStringList; override;
   end;
 
 implementation
@@ -168,10 +169,10 @@ begin
   // 2. Открытие устройства вывода звука (функция WinAPI waveOutOpen)
   ResultCode := waveOutOpen(
     @FDeviceHandle,     // Указатель на хендл устройства (заполняется функцией)
-    WAVE_MAPPER,        // ID устройства: использовать системное устройство по умолчанию
+    UINT_PTR(DeviceID), // Идентификатор устройства. Может быть реальным ID или WAVE_MAPPER (-1) для устройства по умолчанию.
     @wfx,               // Указатель на структуру с форматом звука
-    DWORD(@WaveOutProc),// Адрес callback-функции для обработки сообщений
-    DWORD(Self),        // Пользовательские данные, передаваемые в callback (указатель на наш класс)
+    DWORD_PTR(@WaveOutProc),// Адрес callback-функции для обработки сообщений
+    DWORD_PTR(Self),    // Пользовательские данные, передаваемые в callback (указатель на наш класс)
     CALLBACK_FUNCTION   // Тип callback: функция
   );
 
@@ -351,6 +352,31 @@ end;
 function TSoundCardDac.IsActive: Boolean;
 begin
   Result := FIsActive;
+end;
+
+// Возвращает список доступных устройств вывода
+function TSoundCardDac.GetDeviceList: TStringList;
+var
+  DeviceCount: Integer;
+  i: Integer;
+  WaveOutCaps: TWaveOutCaps;
+begin
+  Result := TStringList.Create;
+  // Получаем количество доступных устройств вывода звука
+  DeviceCount := waveOutGetNumDevs;
+  if DeviceCount = 0 then
+    Exit;
+
+  // Итерируемся по всем устройствам и получаем их имена
+  for i := 0 to DeviceCount - 1 do
+  begin
+    // Получаем информацию о возможностях устройства
+    if waveOutGetDevCaps(i, @WaveOutCaps, SizeOf(TWaveOutCaps)) = MMSYSERR_NOERROR then
+    begin
+      // Добавляем имя устройства в список
+      Result.Add(WaveOutCaps.szPname);
+    end;
+  end;
 end;
 
 procedure TSoundCardDac.WaveOutCallback(hwo: HWAVEOUT; uMsg: UINT; dwInstance: DWORD; dwParam1: DWORD; dwParam2: DWORD);

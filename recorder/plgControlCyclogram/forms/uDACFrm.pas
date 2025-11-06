@@ -44,7 +44,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, uDacDevice, uSoundCardDac, Math, ImgList,
-  uChart,uBuffTrend1d, upage, utextlabel, uaxis, utrend,
+  uChart,uBuffTrend1d, upage, utextlabel, uaxis, utrend, inifiles,
   uHardwareMath;
 
 type
@@ -67,13 +67,17 @@ type
     cChart1: cChart;
     ImageList_32: TImageList;
     ImageList_16: TImageList;
-    TestBtn: TButton;             // Поле ввода времени развертки (SweepSin)
+    TestBtn: TButton;
+    cbDacDevices: TComboBox;
+    btnRefreshDevices: TButton;             // Поле ввода времени развертки (SweepSin)
     procedure btnPlayStopClick(Sender: TObject); // Обработчик нажатия кнопки Play/Stop
     procedure FormCreate(Sender: TObject);     // Обработчик создания формы
     procedure FormDestroy(Sender: TObject);    // Обработчик закрытия формы
     procedure rgModeClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure TestBtnClick(Sender: TObject);      // Обработчик смены режима
+    procedure btnRefreshDevicesClick(Sender: TObject);
+    procedure RefreshDeviceList;
   private
     { Private declarations }
     FDacDevice: TDacDevice;       // Экземпляр класса ЦАП
@@ -90,6 +94,10 @@ type
     procedure GenerateAndQueueData;
     // Обновляет видимость панелей с параметрами в зависимости от режима
     procedure UpdateModeView;
+    // сохранить конфигурацию
+    procedure save(ifile:tinifile);
+    // загрузить конфигурацию
+    procedure load(ifile:tinifile);
   public
     { Public declarations }
   end;
@@ -116,6 +124,7 @@ begin
     FDacDevice.Channels := 1;
     // Сообщаем ЦАП желаемый размер буфера в мс
     FDacDevice.BufferSizeMS := 300;
+    FDacDevice.DeviceID := cbDacDevices.ItemIndex;
     FDacDevice.Open;
 
     case rgMode.ItemIndex of
@@ -134,9 +143,13 @@ begin
         GenerateAndQueueData; // Queue first buffer
       end;
     end;
-
     btnPlayStop.Caption := 'Stop';
   end;
+end;
+
+procedure TDACFrm.btnRefreshDevicesClick(Sender: TObject);
+begin
+  RefreshDeviceList;
 end;
 
 procedure TDACFrm.DacBufferEndHandler(Sender: TObject);
@@ -152,6 +165,7 @@ begin
   FDacDevice.OnBufferEnd := DacBufferEndHandler;
   rgMode.ItemIndex := 0;
   UpdateModeView;
+  RefreshDeviceList;
 end;
 
 procedure TDACFrm.FormDestroy(Sender: TObject);
@@ -222,6 +236,29 @@ begin
   UpdateModeView;
 end;
 
+procedure TDACFrm.save(ifile: tinifile);
+begin
+  ifile.WriteInteger('DAC', 'Mode', rgMode.ItemIndex);
+  ifile.WriteString('DAC', 'Freq', edFreq.Text);
+  ifile.WriteString('DAC', 'Ampl', edAmpl.Text);
+  ifile.WriteString('DAC', 'StartFreq', edStartFreq.Text);
+  ifile.WriteString('DAC', 'EndFreq', edEndFreq.Text);
+  ifile.WriteString('DAC', 'SweepTime', edSweepTime.Text);
+  ifile.WriteInteger('DAC', 'DeviceID', cbDacDevices.ItemIndex);
+end;
+
+procedure TDACFrm.load(ifile: tinifile);
+begin
+  rgMode.ItemIndex := ifile.ReadInteger('DAC', 'Mode', 0);
+  edFreq.Text := ifile.ReadString('DAC', 'Freq', '1000');
+  edAmpl.Text := ifile.ReadString('DAC', 'Ampl', '0.8');
+  edStartFreq.Text := ifile.ReadString('DAC', 'StartFreq', '100');
+  edEndFreq.Text := ifile.ReadString('DAC', 'EndFreq', '10000');
+  edSweepTime.Text := ifile.ReadString('DAC', 'SweepTime', '10');
+  cbDacDevices.ItemIndex := ifile.ReadInteger('DAC', 'DeviceID', 0);
+  UpdateModeView;
+end;
+
 procedure TDACFrm.TestBtnClick(Sender: TObject);
 var
   ar:tdoubleArray;
@@ -271,6 +308,24 @@ procedure TDACFrm.UpdateModeView;
 begin
   gbSin.Visible := rgMode.ItemIndex = 0;
   gbSweepSin.Visible := rgMode.ItemIndex = 1;
+end;
+
+// Обновляет список доступных устройств вывода
+procedure TDACFrm.RefreshDeviceList;
+var
+  DeviceList: TStringList;
+begin
+  // Получаем список устройств от класса ЦАП
+  DeviceList := FDacDevice.GetDeviceList;
+  try
+    // Заполняем выпадающий список
+    cbDacDevices.Items.Assign(DeviceList);
+    // Выбираем первое устройство в списке по умолчанию
+    if cbDacDevices.Items.Count > 0 then
+      cbDacDevices.ItemIndex := 0;
+  finally
+    DeviceList.Free;
+  end;
 end;
 
 end.

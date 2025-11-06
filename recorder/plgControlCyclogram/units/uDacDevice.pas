@@ -39,6 +39,8 @@ type
     // Количество каналов (1 - моно, 2 - стерео)
     FChannels: Cardinal;
     FBufferSizeMS: Cardinal;
+    // номер устройства вывода в системе
+    FDeviceID: Integer;
   public
     constructor Create;
     destructor Destroy; override;
@@ -55,12 +57,16 @@ type
     procedure QueueBuffer(const ABuffer; ASize: Integer); virtual; abstract;
     // Проверяет, активно ли устройство в данный момент
     function IsActive: Boolean; virtual; abstract;
+    // Возвращает список доступных устройств вывода
+    function GetDeviceList: TStringList; virtual; abstract;
 
     property SampleRate: Cardinal read FSampleRate write FSampleRate; // Частота дискретизации (Гц)
     property BitsPerSample: Cardinal read FBitsPerSample write FBitsPerSample; // Битность (8, 16, ...)
     property Channels: Cardinal read FChannels write FChannels; // Количество каналов (1 - моно, 2 - стерео)
     property BufferSizeMS: Cardinal read FBufferSizeMS write FBufferSizeMS; // Длительность буфера в мс
     property OnBufferEnd: TNotifyEvent read FOnBufferEnd write FOnBufferEnd; // Событие, возникающее после окончания воспроизведения буфера
+    // Идентификатор устройства для воспроизведения
+    property DeviceID: Integer read FDeviceID write FDeviceID;
   end;
 
   // тестовые функции для отработки ЦАП
@@ -101,6 +107,7 @@ begin
   FBitsPerSample := 16;
   FChannels := 1;
   FBufferSizeMS := 100; // Default buffer size
+  FDeviceID := -1; // WAVE_MAPPER
 end;
 
 destructor TDacDevice.Destroy;
