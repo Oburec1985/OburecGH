@@ -19,7 +19,7 @@
 interface
 
 uses
-  Classes, uhardwaremath;
+  Classes, uhardwaremath, SyncObjs;
 
 type
   // структура для настройки фильтра
@@ -31,9 +31,26 @@ type
     IsFirstCall: Boolean; // Флаг первого вызова
   end;
 
+  TDacDevice = class;
+
+  // Поток для генерации данных в фоновом режиме
+  TDataGeneratorThread = class(TThread)
+  private
+    FDacDevice: TDacDevice;
+    // Событие для синхронизации потоков. Поток ждет этого события перед генерацией следующего блока.
+    FBufferReadyEvent: TEvent;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(ADacDevice: TDacDevice);
+    destructor Destroy; override;
+    property BufferReadyEvent: TEvent read FBufferReadyEvent;
+  end;
+
   TDacDevice = class(TObject)
   private
     FOnBufferEnd: TNotifyEvent;
+    FOnGenerateData: TNotifyEvent;
     FSampleRate: Cardinal;
     FBitsPerSample: Cardinal;
     // Количество каналов (1 - моно, 2 - стерео)
@@ -41,6 +58,9 @@ type
     FBufferSizeMS: Cardinal;
     // номер устройства вывода в системе
     FDeviceID: Integer;
+    FGeneratorThread: TDataGeneratorThread;
+    // Обработчик события OnBufferEnd. Вызывается из TSoundCardDac, когда буфер проигран.
+    procedure DoBufferEnd(Sender: TObject);
   public
     constructor Create;
     destructor Destroy; override;
@@ -50,9 +70,9 @@ type
     // Закрывает устройство и освобождает ресурсы
     procedure Close; virtual; abstract;
     // Начинает воспроизведение. ALoopCount=1 - однократно, >1 - N раз, 0 - бесконечно
-    procedure Start(ALoopCount: Cardinal = 1); virtual; abstract;
+    procedure Start(ALoopCount: Cardinal = 1); virtual;
     // Останавливает воспроизведение (плавно или мгновенно)
-    procedure Stop(AGraceful: Boolean = True); virtual; abstract;
+    procedure Stop(AGraceful: Boolean = True); virtual;
     // Ставит буфер с данными в очередь на воспроизведение
     procedure QueueBuffer(const ABuffer; ASize: Integer); virtual; abstract;
     // Проверяет, активно ли устройство в данный момент
@@ -65,6 +85,7 @@ type
     property Channels: Cardinal read FChannels write FChannels; // Количество каналов (1 - моно, 2 - стерео)
     property BufferSizeMS: Cardinal read FBufferSizeMS write FBufferSizeMS; // Длительность буфера в мс
     property OnBufferEnd: TNotifyEvent read FOnBufferEnd write FOnBufferEnd; // Событие, возникающее после окончания воспроизведения буфера
+    property OnGenerateData: TNotifyEvent read FOnGenerateData write FOnGenerateData;
     // Идентификатор устройства для воспроизведения
     property DeviceID: Integer read FDeviceID write FDeviceID;
   end;
@@ -100,6 +121,38 @@ begin
   end;
 end;
 
+{ TDataGeneratorThread }
+
+constructor TDataGeneratorThread.Create(ADacDevice: TDacDevice);
+begin
+  inherited Create(False);
+  FDacDevice := ADacDevice;
+  // Создаем событие, которое будет использоваться для пробуждения потока
+  FBufferReadyEvent := TEvent.Create(nil, True, False, '');
+  FreeOnTerminate := True;
+end;
+
+destructor TDataGeneratorThread.Destroy;
+begin
+  FBufferReadyEvent.Free;
+  inherited;
+end;
+
+procedure TDataGeneratorThread.Execute;
+begin
+  // Основной цикл потока
+  while not Terminated do
+  begin
+    // Вызываем событие для генерации данных
+    if Assigned(FDacDevice.OnGenerateData) then
+      FDacDevice.OnGenerateData(FDacDevice);
+    // Ждем, пока основной поток не сообщит, что буфер готов
+    FBufferReadyEvent.WaitFor(INFINITE);
+  end;
+end;
+
+{ TDacDevice }
+
 constructor TDacDevice.Create;
 begin
   inherited;
@@ -112,8 +165,37 @@ end;
 
 destructor TDacDevice.Destroy;
 begin
-
+  Stop;
   inherited;
+end;
+
+procedure TDacDevice.Start(ALoopCount: Cardinal = 1);
+begin
+  if IsActive then Exit;
+  // Создаем и запускаем поток для генерации данных
+  FGeneratorThread := TDataGeneratorThread.Create(Self);
+  // Назначаем обработчик события окончания буфера
+  OnBufferEnd := DoBufferEnd;
+  FGeneratorThread.Start;
+end;
+
+procedure TDacDevice.DoBufferEnd(Sender: TObject);
+begin
+  // Сообщаем потоку, что буфер готов для заполнения
+  FGeneratorThread.BufferReadyEvent.SetEvent;
+end;
+
+procedure TDacDevice.Stop(AGraceful: Boolean = True);
+begin
+  if not IsActive then Exit;
+  // Останавливаем поток генерации данных
+  if Assigned(FGeneratorThread) then
+  begin;
+    FGeneratorThread.Terminate;
+    FGeneratorThread.BufferReadyEvent.SetEvent; // Пробуждаем поток, чтобы он мог завершиться
+    FGeneratorThread.WaitFor;
+    FGeneratorThread := nil;
+  end;
 end;
 
 end.

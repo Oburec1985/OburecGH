@@ -88,8 +88,6 @@ type
     FSweepCurrentFreq: Double;    // Текущая частота для генератора SweepSin
     FSweepStartTime: Cardinal;    // Время начала для режима SweepSin
 
-    // Обработчик события окончания буфера от ЦАП
-    procedure DacBufferEndHandler(Sender: TObject);
     // Генерирует и отправляет в ЦАП следующий блок данных
     procedure GenerateAndQueueData;
     // Обновляет видимость панелей с параметрами в зависимости от режима
@@ -131,8 +129,6 @@ begin
       0: // Sin
       begin
         FDacDevice.Start(1); // Play each buffer once to enable streaming
-        GenerateAndQueueData; // Queue first buffer
-        GenerateAndQueueData; // Queue second buffer to prevent gaps
       end;
       1: // SweepSin
       begin
@@ -140,7 +136,6 @@ begin
         FSweepCurrentFreq := StrToFloatDef(edStartFreq.Text, 100);
         FSweepStartTime := GetTickCount;
         FDacDevice.Start(1); // Play each buffer once
-        GenerateAndQueueData; // Queue first buffer
       end;
     end;
     btnPlayStop.Caption := 'Stop';
@@ -152,17 +147,10 @@ begin
   RefreshDeviceList;
 end;
 
-procedure TDACFrm.DacBufferEndHandler(Sender: TObject);
-begin
-  // This handler is for all streaming modes (Sin, SweepSin, etc.)
-  if FDacDevice.IsActive then
-    GenerateAndQueueData;
-end;
-
 procedure TDACFrm.FormCreate(Sender: TObject);
 begin
   FDacDevice := TSoundCardDac.Create;
-  FDacDevice.OnBufferEnd := DacBufferEndHandler;
+  FDacDevice.OnGenerateData := GenerateAndQueueData;
   rgMode.ItemIndex := 0;
   UpdateModeView;
   RefreshDeviceList;

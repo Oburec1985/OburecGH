@@ -257,6 +257,7 @@ end;
 
 procedure TSoundCardDac.Start(ALoopCount: Cardinal = 1);
 begin
+  inherited Start(ALoopCount);
   FStopping := False;
   FCurrentLoopCount := ALoopCount;
   FIsActive := True;
@@ -267,6 +268,7 @@ var
   isAllDone: Boolean;
   StartTime: Cardinal;
 begin
+  inherited Stop(AGraceful);
   EnterCriticalSection(FLock);
   try
     if not FIsActive then Exit;
