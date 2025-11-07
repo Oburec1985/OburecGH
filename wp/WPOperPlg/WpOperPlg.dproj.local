@@ -23,7 +23,7 @@
     <File Path="forms"/>
     <File Path="forms\uIRGraphFrm.pas"/>
     <File Path="forms\uIRGraphFrm.dfm"/>
-    <File Path="C:\Oburec"/>
+    <File Path="..\..\..\..\2011"/>
     <File Path="..\..\..\oburec"/>
     <File Path="..\..\..\oburec\OburecGH"/>
     <File Path="..\..\..\oburec\OburecGH\sharedUtils"/>
