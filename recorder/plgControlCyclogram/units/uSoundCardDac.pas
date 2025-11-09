@@ -189,7 +189,7 @@ begin
     FillChar(FBuffers[i]^, FBufferSize, 0);
   end;
 
-  FIsActive := True;
+  //FIsActive := True; // true когда воспроизведение а не проинициализирован
   FStopping := False;
 end;
 

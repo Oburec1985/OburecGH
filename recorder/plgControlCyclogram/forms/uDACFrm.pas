@@ -89,7 +89,7 @@ type
     FSweepStartTime: Cardinal;    // Время начала для режима SweepSin
 
     // Генерирует и отправляет в ЦАП следующий блок данных
-    procedure GenerateAndQueueData;
+    procedure GenerateAndQueueData(sender:tobject);
     // Обновляет видимость панелей с параметрами в зависимости от режима
     procedure UpdateModeView;
     // сохранить конфигурацию
@@ -166,7 +166,7 @@ begin
   //btnPlayStopClick(nil);
 end;
 
-procedure TDACFrm.GenerateAndQueueData;
+procedure TDACFrm.GenerateAndQueueData(sender:tobject);
 var
   i: Integer;
   Freq, Ampl, Value: Double;

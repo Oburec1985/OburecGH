@@ -621,6 +621,7 @@ var
   I: Integer;
   t:cTagRec;
 begin
+  ChannelsSG.ColCount:=m_Tags.Count+2;
   for I := 0 to m_Tags.Count - 1 do
   begin
     t:=gettag(i);
