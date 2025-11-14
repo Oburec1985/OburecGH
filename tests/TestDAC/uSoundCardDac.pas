@@ -82,7 +82,7 @@ type
     // Отправляет буфер данных драйверу waveOut
     procedure QueueBuffer(const ABuffer; ASize: Integer); override;
     // Возвращает текущее состояние активности
-    function IsActive: Boolean; override;
+    function IsPlay: Boolean; override;
     function GetDeviceList: TStringList; override;
   end;
 
@@ -128,11 +128,19 @@ function TSoundCardDac.AllHeadersDone: Boolean;
 var
   i: Integer;
 begin
+  // Инициализируем результат как True, предполагая,
+  // что все буферы обработаны.
   Result := True;
+  // Проходим по всем буферам, используемым для воспроизведения.
   for i := 0 to NUM_BUFFERS - 1 do
   begin
+    // Проверяем флаг WHDR_PREPARED для каждого заголовка буфера.
+    // Если флаг установлен, это означает, что буфер все еще находится в
+    // распоряжении драйвера звуковой карты и не был возвращен.
     if (FWaveHeaders[i].dwFlags and WHDR_PREPARED) <> 0 then
     begin
+      // Если найден хотя бы один буфер, который еще не обработан,
+      // устанавливаем результат в False и прерываем цикл.
       Result := False;
       Break;
     end;
@@ -192,12 +200,11 @@ var
   isAllDone: Boolean;
 begin
   // Set the stopping flag. This needs to be thread-safe.
-  entercs;
-  FState:=stClosed;
+  State:=stClosed;
   if FDeviceHandle = 0 then Exit;
-  exitcs;
 
-  // Reset the device. This will cause WOM_DONE messages to be sent for all pending buffers.
+  // Reset the device. This will cause WOM_DONE messages
+  // to be sent for all pending buffers.
   waveOutReset(FDeviceHandle);
 
   // Now, wait for the callbacks to finish processing all those buffers.
@@ -206,11 +213,8 @@ begin
   while True do
   begin
     EnterCs;
-    try
-      isAllDone := AllHeadersDone;
-    finally
-      ExitCs;
-    end;
+    isAllDone := AllHeadersDone;
+    ExitCs;
 
     if isAllDone then
       break; // Exit loop
@@ -228,7 +232,7 @@ begin
     FDeviceHandle := 0;
   end;
 
-  // Free memory buffers
+  // освобождаем память буферов
   for i := 0 to NUM_BUFFERS - 1 do
   begin
     if FBuffers[i] <> nil then
@@ -243,7 +247,7 @@ end;
 procedure TSoundCardDac.Start(ALoopCount: Cardinal = 1);
 begin
   inherited Start(ALoopCount);
-  FState:=stPlay;
+  State:=stPlay;
   FCurrentLoopCount := ALoopCount;
 end;
 
@@ -282,7 +286,7 @@ var
   HeaderIndex: Integer;
   ResultCode: MMRESULT;
 begin
-  if FStopping then Exit;
+  if state<>stplay then Exit;
 
   HeaderIndex := GetFreeHeaderIndex;
   if HeaderIndex = -1 then
@@ -325,9 +329,9 @@ begin
   InterlockedIncrement(FQueuedBuffers);
 end;
 
-function TSoundCardDac.IsActive: Boolean;
+function TSoundCardDac.IsPlay: Boolean;
 begin
-  Result := FIsActive;
+  Result := state=stPlay;
 end;
 
 // Возвращает список доступных устройств вывода
@@ -359,7 +363,6 @@ procedure TSoundCardDac.WaveOutCallback(hwo: HWAVEOUT; uMsg: UINT; dwInstance: D
 var
   Header: PWAVEHDR;
 begin
-  entercs;
   if (FDeviceHandle = 0) or (uMsg <> WOM_DONE) then
     Exit;
 
@@ -373,13 +376,11 @@ begin
 
   InterlockedDecrement(FQueuedBuffers);
 
-  if FStopping and (FQueuedBuffers = 0) then
-  begin;
-    FIsActive := False;
-  end;
-
-  if Assigned(OnBufferEnd) and not FStopping and (FCurrentLoopCount <> 0) then
-    OnBufferEnd(Self);
-  exitcs;
+  //if FStopping and (FQueuedBuffers = 0) then
+  //begin;
+  //  FIsActive := False;
+  //end;
+  //and not FStopping and (FCurrentLoopCount <> 0)
+  doBufferEnd(Self);
 end;
 end.

@@ -1,0 +1,17 @@
+Прочти юниты unit1, uDacDevice, uSoundCardDac;
+Код пишем на codegear2010;
+Когда пишешь код комментируй что для чего;
+Прежде чем внести изменения расскажи план действий и запроси подтверждение;
+Отвечай на русском;
+
+Задание 1.
+// разберись почему падает: 
+procedure TDacDevice.Start(ALoopCount: Cardinal = 1);
+begin
+  if IsPlay then Exit;
+  // Создаем и запускаем поток для генерации данных
+  FGeneratorThread := TDataGeneratorThread.Create(Self);
+  
+  // тут падает
+  FGeneratorThread.Start;
+end;

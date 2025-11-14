@@ -39,11 +39,16 @@ type
     FDacDevice: TDacDevice;
     // Событие для синхронизации потоков. Поток ждет этого события перед генерацией следующего блока.
     FBufferReadyEvent: TEvent;
+    fstate:boolean;
+    cs:TRTLCriticalSection;
   protected
     procedure Execute; override;
+    function getstate:boolean;
+    procedure setstate(s:boolean);
   public
     constructor Create(ADacDevice: TDacDevice);
     destructor Destroy; override;
+    property state:boolean read getstate write setstate;
     property BufferReadyEvent: TEvent read FBufferReadyEvent;
   end;
 
@@ -66,10 +71,12 @@ type
     // номер устройства вывода в системе
     FDeviceID: Integer;
     FGeneratorThread: TDataGeneratorThread;
+  PUBLIC
+    name:string;
+  protected
     // Обработчик события OnBufferEnd. Вызывается из TSoundCardDac,
     // когда буфер проигран.
-    procedure DoBufferEnd(Sender: TObject);
-  protected
+    procedure DoBufferEnd(Sender: TObject);virtual;
     procedure setstate(s:TDACState);
     function getstate:TDACState;
   public
@@ -88,7 +95,7 @@ type
     // Ставит буфер с данными в очередь на воспроизведение
     procedure QueueBuffer(const ABuffer; ASize: Integer); virtual; abstract;
     // Проверяет, активно ли устройство в данный момент
-    function IsActive: Boolean; virtual; abstract;
+    function IsPlay: Boolean; virtual; abstract;
     // Возвращает список доступных устройств вывода
     function GetDeviceList: TStringList; virtual; abstract;
 
@@ -98,7 +105,7 @@ type
     property Channels: Cardinal read FChannels write FChannels;
     // Длительность буфера в мс
     property BufferSizeMS: Cardinal read FBufferSizeMS write FBufferSizeMS;
-    property OnBufferEnd: TNotifyEvent read FOnBufferEnd write FOnBufferEnd; // Событие, возникающее после окончания воспроизведения буфера
+    //property OnBufferEnd: TNotifyEvent read FOnBufferEnd write FOnBufferEnd; // Событие, возникающее после окончания воспроизведения буфера
     property OnGenerateData: TNotifyEvent read FOnGenerateData write FOnGenerateData;
     // Идентификатор устройства для воспроизведения
     property DeviceID: Integer read FDeviceID write FDeviceID;
@@ -140,7 +147,9 @@ end;
 
 constructor TDataGeneratorThread.Create(ADacDevice: TDacDevice);
 begin
-  inherited Create(False);
+  inherited Create(true);
+  InitializeCriticalSection(cs);
+
   FDacDevice := ADacDevice;
   // Создаем событие, которое будет использоваться для пробуждения потока
   FBufferReadyEvent := TEvent.Create(nil, True, False, '');
@@ -149,6 +158,8 @@ end;
 
 destructor TDataGeneratorThread.Destroy;
 begin
+  DeleteCriticalSection(cs);
+
   FBufferReadyEvent.Free;
   inherited;
 end;
@@ -163,7 +174,27 @@ begin
       FDacDevice.OnGenerateData(FDacDevice);
     // Ждем, пока основной поток не сообщит, что буфер готов
     FBufferReadyEvent.WaitFor(INFINITE);
+    if not state then
+    begin
+      suspend;
+    end;
   end;
+end;
+
+function TDataGeneratorThread.getstate: boolean;
+begin
+  EnterCriticalSection(cs);
+  result:=fstate;
+  LeaveCriticalSection(cs);
+end;
+
+procedure TDataGeneratorThread.setstate(s: boolean);
+begin
+  EnterCriticalSection(cs);
+  fstate:=s;
+  if s then
+    Resume();
+  LeaveCriticalSection(cs);
 end;
 
 { TDacDevice }
@@ -178,6 +209,8 @@ begin
   FChannels := 1;
   FBufferSizeMS := 100; // Default buffer size
   FDeviceID := -1; // WAVE_MAPPER
+
+  FGeneratorThread := TDataGeneratorThread.Create(Self);
 end;
 
 destructor TDacDevice.Destroy;
@@ -189,12 +222,13 @@ end;
 
 procedure TDacDevice.Start(ALoopCount: Cardinal = 1);
 begin
-  if IsActive then Exit;
+  if IsPlay then Exit;
   // Создаем и запускаем поток для генерации данных
-  FGeneratorThread := TDataGeneratorThread.Create(Self);
   // Назначаем обработчик события окончания буфера
-  OnBufferEnd := DoBufferEnd;
-  FGeneratorThread.Start;
+  //OnBufferEnd := DoBufferEnd;
+
+  // тут падает
+  FGeneratorThread.state:=true;
 end;
 
 procedure TDacDevice.DoBufferEnd(Sender: TObject);
@@ -229,7 +263,7 @@ end;
 
 procedure TDacDevice.Stop(AGraceful: Boolean = True);
 begin
-  if not IsActive then Exit;
+  if not IsPlay then Exit;
   // Останавливаем поток генерации данных
   if Assigned(FGeneratorThread) then
   begin;
