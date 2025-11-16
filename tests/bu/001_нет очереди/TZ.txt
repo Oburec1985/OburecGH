@@ -1,0 +1,20 @@
+Прочти юниты unit1, uDacDevice, uSoundCardDac;
+Код пишем на codegear2010;
+Когда пишешь код комментируй что для чего;
+Прежде чем внести изменения расскажи план действий и запроси подтверждение;
+Отвечай на русском;
+
+Задание 1.
+Прочти и откомментируй код процедуры
+procedure TDacDevice.Stop(AGraceful: Boolean = True);
+begin
+  if not IsPlay then Exit;
+  // Останавливаем поток генерации данных
+  if Assigned(FGeneratorThread) then
+  begin;
+    FGeneratorThread.Terminate;
+    FGeneratorThread.BufferReadyEvent.SetEvent; // Пробуждаем поток, чтобы он мог завершиться
+    FGeneratorThread.WaitFor;
+    FGeneratorThread := nil;
+  end;
+end;

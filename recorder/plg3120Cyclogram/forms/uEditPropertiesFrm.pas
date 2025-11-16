@@ -163,7 +163,7 @@ begin
   m_t:=t;
   FormStyle:=fsStayOnTop;
   Show;
-  sg.RowCount:=17;
+  sg.RowCount:=c_StopRow+1;
   sg.ColCount:=3;
   SG.cells[0,0]:='Канал';
   SG.cells[1,0]:='Значение';

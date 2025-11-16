@@ -33,49 +33,6 @@ type
 
   TDacDevice = class;
 
-  { TBlockQueue }
-  (*
-    Класс TBlockQueue реализует потокобезопасную циклическую очередь
-    для управления указателями на блоки данных.
-    Основные характеристики:
-    - Универсальность: Хранит универсальные указатели (Pointer), позволяя
-      использовать любые структуры данных для блоков.
-    - Управление памятью: Класс не владеет памятью блоков данных,
-      он только управляет указателями. Создание и освобождение памяти
-      является ответственностью пользователя класса.
-    - Перезапись при переполнении: При добавлении элемента в полную очередь
-      самый старый элемент перезаписывается.
-    - Отложенное удаление: Блоки не удаляются из очереди немедленно,
-      а помечаются как "удаленные".
-  *)
-  TBlockData = record
-    Data: Pointer;        // Универсальный указатель на структуру данных блока
-    IsDeleted: Boolean;   // Флаг, помечен ли блок как удаленный
-  end;
-
-  TBlockQueue = class
-  private
-    FBlocks: array of TBlockData; // Массив для хранения указателей и их состояния
-    FMaxBlocks: Cardinal;         // Максимальное количество блоков
-    FWriteIndex: Integer;         // Индекс для записи следующего блока
-    FReadIndex: Integer;          // Индекс для чтения самого старого блока
-    FCs: TRTLCriticalSection;     // Критическая секция для потокобезопасности
-
-    // Внутренний метод для поиска самого старого не удаленного блока
-    function FindOldestNonDeletedIndex: Integer;
-  public
-    // Конструктор: инициализирует очередь с заданным количеством блоков
-    constructor Create(AMaxBlocks: Cardinal);
-    // Деструктор
-    destructor Destroy; override;
-    // Добавляет указатель на блок данных в очередь.
-    procedure Add(ADataPtr: Pointer);
-    // Получает указатель на самый старый блок, не помеченный как удаленный.
-    function GetOldest(out ADataPtr: Pointer): Boolean;
-    // Помечает самый старый доступный блок как удаленный.
-    procedure MarkOldestAsDeleted;
-  end;
-
   // Поток для генерации данных в фоновом режиме
   TDataGeneratorThread = class(TThread)
   private
@@ -104,8 +61,6 @@ type
   TDacDevice = class(TObject)
   protected
     FState: TDACState;
-    FBufferSize: Cardinal;        // Размер одного буфера в байтах
-    FBlockQueue: TBlockQueue;     // Очередь блоков данных
   private
     FLock: TRTLCriticalSection; // Объект для синхронизации потоков
     FOnBufferEnd: TNotifyEvent;
@@ -126,8 +81,6 @@ type
     procedure DoBufferEnd(Sender: TObject);virtual;
     procedure setstate(s:TDACState);
     function getstate:TDACState;
-    // Рассчитывает размер буфера в байтах
-    procedure CalculateBufferSize; virtual;
   public
     constructor Create;
     destructor Destroy; override;
@@ -143,10 +96,6 @@ type
     procedure Stop(AGraceful: Boolean = True); virtual;
     // Ставит буфер с данными в очередь на воспроизведение
     procedure QueueBuffer(const ABuffer; ASize: Integer); virtual; abstract;
-    // Выделяет память для одного блока данных, специфичного для реализации ЦАП
-    function AllocateBlock: Pointer; virtual; abstract;
-    // Освобождает память, выделенную для блока данных
-    procedure FreeBlock(ABlock: Pointer); virtual; abstract;
     // Проверяет, активно ли устройство в данный момент
     function IsPlay: Boolean; virtual; abstract;
     // Возвращает список доступных устройств вывода
@@ -158,8 +107,6 @@ type
     property Channels: Cardinal read FChannels write FChannels;
     // Длительность буфера в мс
     property BufferSizeMS: Cardinal read FBufferSizeMS write FBufferSizeMS;
-    // Размер одного буфера в байтах
-    property BufferSize: Cardinal read FBufferSize;
     //property OnBufferEnd: TNotifyEvent read FOnBufferEnd write FOnBufferEnd; // Событие, возникающее после окончания воспроизведения буфера
     property OnGenerateData: TNotifyEvent read FOnGenerateData write FOnGenerateData;
     // Идентификатор устройства для воспроизведения
@@ -197,126 +144,6 @@ begin
     // Рекуррентная формула ФНЧ
     Result[i] := Settings.Alpha * Input[i] + (1 - Settings.Alpha) * Settings.PrevOutput;
     Settings.PrevOutput := Result[i];
-  end;
-end;
-
-{ TBlockQueue }
-
-constructor TBlockQueue.Create(AMaxBlocks: Cardinal);
-var
-  i: Integer;
-begin
-  inherited Create;
-  InitializeCriticalSection(FCs);
-
-  FMaxBlocks := AMaxBlocks;
-  FWriteIndex := 0;
-  FReadIndex := 0;
-
-  // Выделяем память под массив структур TBlockData
-  SetLength(FBlocks, FMaxBlocks);
-
-  // Инициализируем состояние блоков
-  for i := 0 to FMaxBlocks - 1 do
-  begin
-    FBlocks[i].Data := nil;
-    // Изначально все блоки помечены как "удаленные" (свободные)
-    FBlocks[i].IsDeleted := True;
-  end;
-end;
-
-destructor TBlockQueue.Destroy;
-begin
-  // Память, на которую указывают FBlocks[i].Data, здесь не освобождается,
-  // так как класс TBlockQueue не является ее владельцем.
-  DeleteCriticalSection(FCs);
-  inherited;
-end;
-
-procedure TBlockQueue.Add(ADataPtr: Pointer);
-begin
-  EnterCriticalSection(FCs);
-  try
-    // Если мы собираемся перезаписать блок, который является текущей точкой чтения,
-    // и этот блок содержит действительные (не удаленные) данные,
-    // то мы должны сдвинуть точку чтения вперед.
-    if (FWriteIndex = FReadIndex) and not FBlocks[FReadIndex].IsDeleted then
-    begin
-      FReadIndex := (FReadIndex + 1) mod FMaxBlocks;
-    end;
-
-    // Сохраняем указатель на данные в блоке
-    FBlocks[FWriteIndex].Data := ADataPtr;
-    // Снимаем флаг "удалено", т.к. блок теперь содержит новые данные
-    FBlocks[FWriteIndex].IsDeleted := False;
-
-    // Сдвигаем индекс записи на следующую позицию
-    FWriteIndex := (FWriteIndex + 1) mod FMaxBlocks;
-  finally
-    LeaveCriticalSection(FCs);
-  end;
-end;
-
-function TBlockQueue.FindOldestNonDeletedIndex: Integer;
-var
-  i: Integer;
-  CurrentIndex: Integer;
-begin
-  Result := -1;
-  CurrentIndex := FReadIndex;
-
-  // Проходим по всем блокам, начиная с FReadIndex, чтобы найти первый
-  // не удаленный блок.
-  for i := 0 to FMaxBlocks - 1 do
-  begin
-    if not FBlocks[CurrentIndex].IsDeleted then
-    begin
-      Result := CurrentIndex;
-      Exit;
-    end;
-    CurrentIndex := (CurrentIndex + 1) mod FMaxBlocks;
-  end;
-end;
-
-function TBlockQueue.GetOldest(out ADataPtr: Pointer): Boolean;
-var
-  Index: Integer;
-begin
-  EnterCriticalSection(FCs);
-  try
-    Index := FindOldestNonDeletedIndex;
-    if Index <> -1 then
-    begin
-      ADataPtr := FBlocks[Index].Data;
-      Result := True;
-    end
-    else
-    begin
-      ADataPtr := nil;
-      Result := False;
-    end;
-  finally
-    LeaveCriticalSection(FCs);
-  end;
-end;
-
-procedure TBlockQueue.MarkOldestAsDeleted;
-var
-  Index: Integer;
-begin
-  EnterCriticalSection(FCs);
-  try
-    Index := FindOldestNonDeletedIndex;
-    if Index <> -1 then
-    begin
-      // Помечаем найденный блок как удаленный
-      FBlocks[Index].IsDeleted := True;
-      // Сдвигаем FReadIndex, чтобы при следующем поиске начинать с блока,
-      // следующего за только что удаленным.
-      FReadIndex := (Index + 1) mod FMaxBlocks;
-    end;
-  finally
-    LeaveCriticalSection(FCs);
   end;
 end;
 
@@ -379,14 +206,6 @@ end;
 
 { TDacDevice }
 
-procedure TDacDevice.CalculateBufferSize;
-begin
-  // Расчет размера буфера в байтах
-  FBufferSize := round(FSampleRate * FBufferSizeMS / 1000) * (FChannels * FBitsPerSample div 8);
-  // Проверка на случай, если результат нулевой
-  if FBufferSize = 0 then FBufferSize := 4096;
-end;
-
 constructor TDacDevice.Create;
 begin
   inherited;
@@ -398,7 +217,6 @@ begin
   FBufferSizeMS := 100; // Default buffer size
   FDeviceID := -1; // WAVE_MAPPER
 
-  FBlockQueue := TBlockQueue.Create(NUM_BUFFERS);
   FGeneratorThread := TDataGeneratorThread.Create(Self);
 end;
 
@@ -418,9 +236,6 @@ begin
   FGeneratorThread.WaitFor;
   // Ожидаем полного завершения потока и освобождаем память.
   FreeAndNil(FGeneratorThread);
-
-  FBlockQueue.Free;
-
   inherited;
 end;
 

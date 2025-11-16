@@ -36,42 +36,43 @@ type
   { TBlockQueue }
   (*
     Класс TBlockQueue реализует потокобезопасную циклическую очередь
-    для управления указателями на блоки данных.
+    для управления блоками данных.
     Основные характеристики:
-    - Универсальность: Хранит универсальные указатели (Pointer), позволяя
-      использовать любые структуры данных для блоков.
-    - Управление памятью: Класс не владеет памятью блоков данных,
-      он только управляет указателями. Создание и освобождение памяти
-      является ответственностью пользователя класса.
+    - Фиксированный размер: Количество и размер блоков задаются при создании.
     - Перезапись при переполнении: При добавлении элемента в полную очередь
       самый старый элемент перезаписывается.
     - Отложенное удаление: Блоки не удаляются из очереди немедленно,
-      а помечаются как "удаленные".
+      а помечаются как "удаленные", что позволяет потребителю сигнала
+      сообщить о завершении обработки блока.
+    - Потокобезопасность: Доступ к очереди синхронизирован с помощью
+      критической секции.
   *)
   TBlockData = record
-    Data: Pointer;        // Универсальный указатель на структуру данных блока
+    Data: PAnsiChar;      // Указатель на данные блока
+    DataSize: Cardinal;   // Размер данных в блоке
     IsDeleted: Boolean;   // Флаг, помечен ли блок как удаленный
   end;
 
   TBlockQueue = class
   private
-    FBlocks: array of TBlockData; // Массив для хранения указателей и их состояния
+    FBlocks: array of TBlockData; // Массив для хранения блоков
     FMaxBlocks: Cardinal;         // Максимальное количество блоков
+    FBlockSize: Cardinal;         // Размер каждого блока в байтах
     FWriteIndex: Integer;         // Индекс для записи следующего блока
     FReadIndex: Integer;          // Индекс для чтения самого старого блока
     FCs: TRTLCriticalSection;     // Критическая секция для потокобезопасности
-
     // Внутренний метод для поиска самого старого не удаленного блока
     function FindOldestNonDeletedIndex: Integer;
   public
-    // Конструктор: инициализирует очередь с заданным количеством блоков
-    constructor Create(AMaxBlocks: Cardinal);
-    // Деструктор
+    // Конструктор: инициализирует очередь с заданным количеством и размером блоков
+    constructor Create(AMaxBlocks, ABlockSize: Cardinal);
+    // Деструктор: освобождает выделенную память
     destructor Destroy; override;
-    // Добавляет указатель на блок данных в очередь.
-    procedure Add(ADataPtr: Pointer);
-    // Получает указатель на самый старый блок, не помеченный как удаленный.
-    function GetOldest(out ADataPtr: Pointer): Boolean;
+    // Добавляет блок данных в очередь. Если очередь полна, старый блок перезаписывается.
+    procedure Add(const AData; ASize: Cardinal);
+    // Получает указатель на данные и размер самого старого блока, не помеченного как удаленный.
+    // Возвращает True в случае успеха, иначе False.
+    function GetOldest(out ADataPtr: PAnsiChar; out ADataSize: Cardinal): Boolean;
     // Помечает самый старый доступный блок как удаленный.
     procedure MarkOldestAsDeleted;
   end;
@@ -104,8 +105,6 @@ type
   TDacDevice = class(TObject)
   protected
     FState: TDACState;
-    FBufferSize: Cardinal;        // Размер одного буфера в байтах
-    FBlockQueue: TBlockQueue;     // Очередь блоков данных
   private
     FLock: TRTLCriticalSection; // Объект для синхронизации потоков
     FOnBufferEnd: TNotifyEvent;
@@ -126,8 +125,6 @@ type
     procedure DoBufferEnd(Sender: TObject);virtual;
     procedure setstate(s:TDACState);
     function getstate:TDACState;
-    // Рассчитывает размер буфера в байтах
-    procedure CalculateBufferSize; virtual;
   public
     constructor Create;
     destructor Destroy; override;
@@ -143,10 +140,6 @@ type
     procedure Stop(AGraceful: Boolean = True); virtual;
     // Ставит буфер с данными в очередь на воспроизведение
     procedure QueueBuffer(const ABuffer; ASize: Integer); virtual; abstract;
-    // Выделяет память для одного блока данных, специфичного для реализации ЦАП
-    function AllocateBlock: Pointer; virtual; abstract;
-    // Освобождает память, выделенную для блока данных
-    procedure FreeBlock(ABlock: Pointer); virtual; abstract;
     // Проверяет, активно ли устройство в данный момент
     function IsPlay: Boolean; virtual; abstract;
     // Возвращает список доступных устройств вывода
@@ -158,8 +151,6 @@ type
     property Channels: Cardinal read FChannels write FChannels;
     // Длительность буфера в мс
     property BufferSizeMS: Cardinal read FBufferSizeMS write FBufferSizeMS;
-    // Размер одного буфера в байтах
-    property BufferSize: Cardinal read FBufferSize;
     //property OnBufferEnd: TNotifyEvent read FOnBufferEnd write FOnBufferEnd; // Событие, возникающее после окончания воспроизведения буфера
     property OnGenerateData: TNotifyEvent read FOnGenerateData write FOnGenerateData;
     // Идентификатор устройства для воспроизведения
@@ -202,7 +193,7 @@ end;
 
 { TBlockQueue }
 
-constructor TBlockQueue.Create(AMaxBlocks: Cardinal);
+constructor TBlockQueue.Create(AMaxBlocks, ABlockSize: Cardinal);
 var
   i: Integer;
 begin
@@ -210,31 +201,40 @@ begin
   InitializeCriticalSection(FCs);
 
   FMaxBlocks := AMaxBlocks;
+  FBlockSize := ABlockSize;
   FWriteIndex := 0;
   FReadIndex := 0;
 
   // Выделяем память под массив структур TBlockData
   SetLength(FBlocks, FMaxBlocks);
 
-  // Инициализируем состояние блоков
+  // Для каждого блока выделяем память под данные
   for i := 0 to FMaxBlocks - 1 do
   begin
-    FBlocks[i].Data := nil;
+    FBlocks[i].Data := AllocMem(FBlockSize);
+    FBlocks[i].DataSize := 0;
     // Изначально все блоки помечены как "удаленные" (свободные)
     FBlocks[i].IsDeleted := True;
   end;
 end;
 
 destructor TBlockQueue.Destroy;
+var
+  i: Integer;
 begin
-  // Память, на которую указывают FBlocks[i].Data, здесь не освобождается,
-  // так как класс TBlockQueue не является ее владельцем.
+  // Освобождаем память, выделенную под данные каждого блока
+  for i := 0 to FMaxBlocks - 1 do
+    FreeMem(FBlocks[i].Data);
+
   DeleteCriticalSection(FCs);
   inherited;
 end;
 
-procedure TBlockQueue.Add(ADataPtr: Pointer);
+procedure TBlockQueue.Add(const AData; ASize: Cardinal);
 begin
+  if ASize > FBlockSize then
+    raise Exception.Create('Размер добавляемых данных превышает размер блока.');
+
   EnterCriticalSection(FCs);
   try
     // Если мы собираемся перезаписать блок, который является текущей точкой чтения,
@@ -245,8 +245,9 @@ begin
       FReadIndex := (FReadIndex + 1) mod FMaxBlocks;
     end;
 
-    // Сохраняем указатель на данные в блоке
-    FBlocks[FWriteIndex].Data := ADataPtr;
+    // Копируем данные в блок
+    Move(AData, FBlocks[FWriteIndex].Data^, ASize);
+    FBlocks[FWriteIndex].DataSize := ASize;
     // Снимаем флаг "удалено", т.к. блок теперь содержит новые данные
     FBlocks[FWriteIndex].IsDeleted := False;
 
@@ -278,7 +279,7 @@ begin
   end;
 end;
 
-function TBlockQueue.GetOldest(out ADataPtr: Pointer): Boolean;
+function TBlockQueue.GetOldest(out ADataPtr: PAnsiChar; out ADataSize: Cardinal): Boolean;
 var
   Index: Integer;
 begin
@@ -288,11 +289,11 @@ begin
     if Index <> -1 then
     begin
       ADataPtr := FBlocks[Index].Data;
+      ADataSize := FBlocks[Index].DataSize;
       Result := True;
     end
     else
     begin
-      ADataPtr := nil;
       Result := False;
     end;
   finally
@@ -379,14 +380,6 @@ end;
 
 { TDacDevice }
 
-procedure TDacDevice.CalculateBufferSize;
-begin
-  // Расчет размера буфера в байтах
-  FBufferSize := round(FSampleRate * FBufferSizeMS / 1000) * (FChannels * FBitsPerSample div 8);
-  // Проверка на случай, если результат нулевой
-  if FBufferSize = 0 then FBufferSize := 4096;
-end;
-
 constructor TDacDevice.Create;
 begin
   inherited;
@@ -398,7 +391,6 @@ begin
   FBufferSizeMS := 100; // Default buffer size
   FDeviceID := -1; // WAVE_MAPPER
 
-  FBlockQueue := TBlockQueue.Create(NUM_BUFFERS);
   FGeneratorThread := TDataGeneratorThread.Create(Self);
 end;
 
@@ -418,9 +410,6 @@ begin
   FGeneratorThread.WaitFor;
   // Ожидаем полного завершения потока и освобождаем память.
   FreeAndNil(FGeneratorThread);
-
-  FBlockQueue.Free;
-
   inherited;
 end;
 

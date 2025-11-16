@@ -3,7 +3,7 @@ object DACFrm: TDACFrm
   Top = 0
   Caption = 'DAC Control'
   ClientHeight = 489
-  ClientWidth = 703
+  ClientWidth = 704
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,7 +19,7 @@ object DACFrm: TDACFrm
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 703
+    Width = 704
     Height = 49
     Margins.Left = 2
     Margins.Top = 2
@@ -28,7 +28,6 @@ object DACFrm: TDACFrm
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 704
     object btnPlayStop: TButton
       Left = 25
       Top = 12
