@@ -2,22 +2,26 @@ object EditPropertiesFrm: TEditPropertiesFrm
   Left = 0
   Top = 0
   Caption = 'EditPropertiesFrm'
-  ClientHeight = 218
-  ClientWidth = 475
+  ClientHeight = 291
+  ClientWidth = 633
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -10
+  Font.Height = -13
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 96
-  TextHeight = 12
+  PixelsPerInch = 120
+  TextHeight = 16
   object SG: TStringGrid
     Left = 0
     Top = 0
-    Width = 475
-    Height = 170
+    Width = 633
+    Height = 227
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alClient
     BevelInner = bvLowered
     BevelKind = bkFlat
@@ -26,7 +30,7 @@ object EditPropertiesFrm: TEditPropertiesFrm
     RowCount = 2
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -11
+    Font.Height = -15
     Font.Name = 'Tahoma'
     Font.Style = []
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
@@ -39,51 +43,39 @@ object EditPropertiesFrm: TEditPropertiesFrm
   end
   object Panel1: TPanel
     Left = 0
-    Top = 170
-    Width = 475
-    Height = 48
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Top = 227
+    Width = 633
+    Height = 64
     Align = alBottom
     TabOrder = 1
     DesignSize = (
-      475
-      48)
+      633
+      64)
     object CancelBtn: TButton
-      Left = 12
-      Top = 5
-      Width = 85
-      Height = 39
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 16
+      Top = 7
+      Width = 113
+      Height = 52
       Anchors = [akLeft, akTop, akBottom]
       Caption = #1054#1090#1084#1077#1085#1072
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -17
+      Font.Height = -22
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
       TabOrder = 0
     end
     object ApplyBtn: TButton
-      Left = 370
-      Top = 5
-      Width = 98
-      Height = 39
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 493
+      Top = 7
+      Width = 131
+      Height = 52
       Anchors = [akTop, akRight, akBottom]
       Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -17
+      Font.Height = -22
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False

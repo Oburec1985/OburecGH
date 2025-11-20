@@ -2,92 +2,88 @@ object DACFrm: TDACFrm
   Left = 0
   Top = 0
   Caption = 'DAC Control'
-  ClientHeight = 489
-  ClientWidth = 704
+  ClientHeight = 652
+  ClientWidth = 939
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -10
+  Font.Height = -13
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 12
+  PixelsPerInch = 120
+  TextHeight = 16
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 704
-    Height = 49
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 939
+    Height = 65
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
     object btnPlayStop: TButton
-      Left = 19
-      Top = 12
-      Width = 79
-      Height = 25
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 25
+      Top = 16
+      Width = 106
+      Height = 33
       Caption = 'Play'
       TabOrder = 0
       OnClick = btnPlayStopClick
     end
     object cbDacDevices: TComboBox
-      Left = 102
-      Top = 14
-      Width = 188
+      Left = 136
+      Top = 19
+      Width = 251
       Height = 24
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
       Style = csDropDownList
       TabOrder = 1
     end
     object btnRefreshDevices: TButton
-      Left = 392
-      Top = 17
-      Width = 105
-      Height = 30
+      Left = 523
+      Top = 23
+      Width = 140
+      Height = 40
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Refresh'
       TabOrder = 2
       OnClick = btnRefreshDevicesClick
     end
     object btnSave: TButton
-      Left = 504
-      Top = 17
-      Width = 75
-      Height = 30
+      Left = 672
+      Top = 23
+      Width = 100
+      Height = 40
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Save'
       TabOrder = 3
     end
     object btnLoad: TButton
-      Left = 584
-      Top = 17
-      Width = 75
-      Height = 30
+      Left = 779
+      Top = 23
+      Width = 100
+      Height = 40
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Load'
       TabOrder = 4
     end
   end
   object rgMode: TRadioGroup
-    Left = 7
-    Top = 41
-    Width = 322
-    Height = 44
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Left = 9
+    Top = 55
+    Width = 430
+    Height = 58
     Caption = 'Mode'
     Columns = 2
     Items.Strings = (
@@ -97,154 +93,102 @@ object DACFrm: TDACFrm
     OnClick = rgModeClick
   end
   object gbSweepSin: TGroupBox
-    Left = 12
-    Top = 89
-    Width = 317
-    Height = 116
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Left = 16
+    Top = 119
+    Width = 423
+    Height = 154
     Caption = 'SweepSin Parameters'
     TabOrder = 2
     object lblStartFreq: TLabel
-      Left = 12
-      Top = 24
-      Width = 62
-      Height = 12
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 16
+      Top = 32
+      Width = 80
+      Height = 16
       Caption = 'Start Freq, Hz'
     end
     object lblEndFreq: TLabel
-      Left = 12
-      Top = 48
-      Width = 59
-      Height = 12
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 16
+      Top = 64
+      Width = 73
+      Height = 16
       Caption = 'End Freq, Hz'
     end
     object lblSweepTime: TLabel
-      Left = 12
-      Top = 72
-      Width = 64
-      Height = 12
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 16
+      Top = 96
+      Width = 86
+      Height = 16
       Caption = 'Sweep Time, s'
     end
     object edStartFreq: TEdit
-      Left = 96
-      Top = 22
-      Width = 91
+      Left = 128
+      Top = 29
+      Width = 121
       Height = 24
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
       TabOrder = 0
       Text = '100'
     end
     object edEndFreq: TEdit
-      Left = 96
-      Top = 46
-      Width = 91
+      Left = 128
+      Top = 61
+      Width = 121
       Height = 24
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
       TabOrder = 1
       Text = '10000'
     end
     object edSweepTime: TEdit
-      Left = 96
-      Top = 70
-      Width = 91
+      Left = 128
+      Top = 93
+      Width = 121
       Height = 24
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
       TabOrder = 2
       Text = '10'
     end
   end
   object gbSin: TGroupBox
-    Left = 6
-    Top = 89
-    Width = 323
-    Height = 116
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Left = 8
+    Top = 119
+    Width = 431
+    Height = 154
     Caption = 'Sin Parameters'
     TabOrder = 3
     object lblFreq: TLabel
-      Left = 12
-      Top = 24
-      Width = 38
-      Height = 12
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 16
+      Top = 32
+      Width = 48
+      Height = 16
       Caption = 'Freq, Hz'
     end
     object lblAmpl: TLabel
-      Left = 12
-      Top = 48
-      Width = 45
-      Height = 12
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 16
+      Top = 64
+      Width = 57
+      Height = 16
       Caption = 'Amplitude'
     end
     object edFreq: TEdit
-      Left = 96
-      Top = 22
-      Width = 91
+      Left = 128
+      Top = 29
+      Width = 121
       Height = 24
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
       TabOrder = 0
       Text = '1000'
     end
     object edAmpl: TEdit
-      Left = 96
-      Top = 46
-      Width = 91
+      Left = 128
+      Top = 61
+      Width = 121
       Height = 24
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
       TabOrder = 1
       Text = '0.8'
     end
   end
   object cChart1: cChart
-    Left = 12
-    Top = 209
-    Width = 637
-    Height = 274
+    Left = 16
+    Top = 279
+    Width = 849
+    Height = 365
     Cursor = crSizeAll
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
     Caption = 'cChart1'
     TabOrder = 4
     allowEditPages = False
@@ -254,14 +198,10 @@ object DACFrm: TDACFrm
     selectSize = 5
   end
   object TestBtn: TButton
-    Left = 560
-    Top = 180
-    Width = 79
-    Height = 25
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Left = 747
+    Top = 240
+    Width = 105
+    Height = 33
     Caption = 'Test'
     TabOrder = 5
     OnClick = TestBtnClick

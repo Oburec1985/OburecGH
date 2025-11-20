@@ -67,6 +67,7 @@ type
     CloseRep: TCheckBox;
     ValsSG: TStringGrid;
     Splitter1: TSplitter;
+    Button1: TButton;
     procedure TableModeSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure PlayBtnClick(Sender: TObject);
@@ -90,6 +91,10 @@ type
     procedure TableModeSGTopLeftChanged(Sender: TObject);
     procedure ControlPropSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
+    procedure ControlPropSGKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure ControlPropSGClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   private
     // канал программы. Для отслеживания перехода с 0 на 1
     m_prevState:double;
@@ -99,6 +104,9 @@ type
     m_CurControl: cControlobj;
     // выбраный в таблице режим
     m_curMode: cmodeobj;
+    // выбранный в OnClick режим в таблице редактирования свойств
+    SelectCell_m:cModeObj;
+    SelectCell_Col:integer;
 
     m_uiThread: Integer;
     // форма посчитана фабрикой класса. Нужно для ограничения числа форм
@@ -176,6 +184,7 @@ var
   g_3120Factory: c3120Factory;
 
 const
+
   c_colScale = 1.1;
   c_Munits = 'Нм';
   c_Rpmunits = 'Об/мин';
@@ -703,6 +712,27 @@ begin
   end;
 end;
 
+procedure TFrm3120.ControlPropSGClick(Sender: TObject);
+var
+  p: cProgramObj;
+  m: cmodeobj;
+  t: ctask;
+  c: cControlobj;
+  pPnt: TPoint; // Координаты курсора
+  xCol, xRow: Integer; // Адрес ячейки таблицы
+  str, Key: string;
+  changebool: Boolean;
+begin
+  GetCursorPos(pPnt);
+  pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
+  // Находим позицию нашей ячейки
+  xCol := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).X;
+  xRow := TStringGrid(Sender).MouseCoord(pPnt.X, pPnt.Y).Y;
+  p := g_conmng.getProgram(0);
+  SelectCell_m := p.getmode(xCol - 1);
+  SelectCell_Col:=xCol;
+end;
+
 procedure TFrm3120.ControlPropSGDblClick(Sender: TObject);
 var
   p: cProgramObj;
@@ -788,7 +818,7 @@ procedure TFrm3120.ControlPropSGDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
 begin
   //
-  if ControlPropSG.cells[acol,arow]='Против часовой' then
+  if ControlPropSG.cells[acol,arow]=c_left_str then
   begin
     ControlPropSG.Canvas.Brush.Color := clGrass;
     ControlPropSG.Canvas.FillRect(Rect);
@@ -797,6 +827,67 @@ begin
   end;
 end;
 
+
+procedure TFrm3120.ControlPropSGKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  m_t:ctask;
+  sg:tstringgrid;
+  col:integer;
+  str:string;
+begin
+  if key=VK_RETURN then
+  begin
+    if SelectCell_m<>nil then
+    begin
+      m_t:=SelectCell_m.GetTask(m_CurControl.name);
+      if m_t<>nil then
+      begin
+        sg:=ControlPropSG;
+        col:=SelectCell_Col;
+        m_t.applyed:=false;
+        m_t.m_data.P:=strtofloatext(SG.Cells[Col,c_Prow]);
+        m_t.m_data.I:=strtofloatext(SG.Cells[Col,c_Irow]);
+        m_t.m_data.D:=strtofloatext(SG.Cells[Col,c_Drow]);
+        str:=SG.Cells[Col,c_ForwRow];
+        if str='2' then
+        begin
+          str:=c_left_str;
+        end
+        else
+        begin
+          if (str='1') or (str='0') then
+          begin
+            str:=c_right_str;
+          end
+          else
+          begin
+            if (str<>c_left_str) and (str<>c_left_str) then
+            begin
+              // возвращаем что было
+              str:=dirtostr(m_t.m_data.forw);
+            end;
+          end;
+        end;
+        SG.Cells[Col,c_ForwRow]:=str;
+        m_t.m_data.forw:=dirtobool(str);
+        m_t.m_data.TAlarm:=StrToB(SG.Cells[Col,c_TAlarmRow]);
+        m_t.m_data.Tthreshold:=strtofloatext(SG.Cells[Col,c_TthresholdRow]);
+        m_t.m_data.Palarm:=StrToB(SG.Cells[Col,c_PAlarmRow]);
+        m_t.m_data.Pthreshold:=strtofloatext(SG.Cells[Col,c_PthresholdRow]);
+        m_t.m_data.MNAlarm:=StrToB(SG.Cells[Col,c_MNAlarmRow]);
+        m_t.m_data.Mthreshold:=strtofloatext(SG.Cells[Col,c_MthresholdRow]);
+        m_t.m_data.Nthreshold:=strtofloatext(SG.Cells[Col,c_NthresholdRow]);
+        m_t.m_data.ModeType:=strToModeType(SG.Cells[Col,c_ModeRow]);
+        m_t.m_data.Nramp:=strtofloatext(SG.Cells[Col,c_NRampRow]);
+        m_t.m_data.Mramp:=strtofloatext(SG.Cells[Col,c_MRampRow]);
+        m_t.m_data.cmd_start:=StrToB(SG.Cells[Col,c_StartRow]);
+        m_t.m_data.cmd_stop:=StrToB(SG.Cells[Col,c_StopRow]);
+        UpdateControlsPropSGmode(cmodeobj(SelectCell_m));
+      end;
+    end;
+  end;
+end;
 
 procedure TFrm3120.ValsSGDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
@@ -996,6 +1087,20 @@ begin
   // c.stop;
   // end;
   g_conmng.Stop;
+end;
+
+procedure TFrm3120.Button1Click(Sender: TObject);
+var
+  I: Integer;
+  c: cControlobj;
+begin
+  TransNumFrm.show;
+  // for i:=0 to  g_conmng.ControlsCount-1 do
+  // begin
+  // c:=g_conmng.getControlObj(i);
+  // c.stop;
+  // end;
+  //conmng.Stop;
 end;
 
 procedure TFrm3120.CancelEditMode;

@@ -660,7 +660,7 @@ begin
   compMng.Add(g_GenSignalsFactory);
 
   DacFrm:=TDACFrm.Create(nil);
-  DacFrm.show;
+  //DacFrm.show;
   //DacFrm.close;
 end;
 

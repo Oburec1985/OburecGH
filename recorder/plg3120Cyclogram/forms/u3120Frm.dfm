@@ -2349,8 +2349,8 @@ object Frm3120: TFrm3120
       TabOrder = 7
     end
     object CloseRep: TCheckBox
-      Left = 921
-      Top = 59
+      Left = 922
+      Top = 73
       Width = 194
       Height = 18
       Hint = #1055#1086#1083#1091#1095#1072#1090#1100' '#1085#1086#1090#1080#1092#1080#1082#1072#1094#1080#1080' '#1076#1083#1103' '#1085#1072#1089#1090#1088#1081#1086#1082#1080' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1086#1074' '#1080#1079' '#1087#1083#1072#1075#1080#1085#1086#1074
@@ -2358,6 +2358,21 @@ object Frm3120: TFrm3120
       ParentShowHint = False
       ShowHint = True
       TabOrder = 8
+    end
+    object Button1: TButton
+      Left = 863
+      Top = 102
+      Width = 128
+      Height = 28
+      Caption = #1055#1077#1088#1077#1076#1072#1095#1072
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -20
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 9
+      OnClick = Button1Click
     end
   end
   object Panel1: TPanel
@@ -2408,8 +2423,10 @@ object Frm3120: TFrm3120
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
         ParentFont = False
         TabOrder = 0
+        OnClick = ControlPropSGClick
         OnDblClick = ControlPropSGDblClick
         OnDrawCell = ControlPropSGDrawCell
+        OnKeyDown = ControlPropSGKeyDown
         RowHeights = (
           32
           32
@@ -2516,6 +2533,8 @@ object Frm3120: TFrm3120
         OnSelectCell = TableModeSGSelectCell
         OnSetEditText = TableModeSGSetEditText
         OnTopLeftChanged = TableModeSGTopLeftChanged
+        ExplicitLeft = -3
+        ExplicitTop = 27
         ColWidths = (
           64
           64

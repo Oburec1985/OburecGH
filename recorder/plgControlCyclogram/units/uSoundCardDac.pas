@@ -282,7 +282,7 @@ var
   HeaderIndex: Integer;
   ResultCode: MMRESULT;
 begin
-  if FStopping then Exit;
+  //if FStopping then Exit;
 
   HeaderIndex := GetFreeHeaderIndex;
   if HeaderIndex = -1 then
@@ -327,7 +327,7 @@ end;
 
 function TSoundCardDac.IsActive: Boolean;
 begin
-  Result := FIsActive;
+  //Result := FIsActive;
 end;
 
 // Возвращает список доступных устройств вывода
@@ -373,13 +373,14 @@ begin
 
   InterlockedDecrement(FQueuedBuffers);
 
-  if FStopping and (FQueuedBuffers = 0) then
+  //if FStopping and (FQueuedBuffers = 0) then
   begin;
-    FIsActive := False;
-  end;
+  //  FIsActive := False;
+  //end;
 
-  if Assigned(OnBufferEnd) and not FStopping and (FCurrentLoopCount <> 0) then
-    OnBufferEnd(Self);
+  //if Assigned(OnBufferEnd) and not FStopping and (FCurrentLoopCount <> 0) then
+  //  OnBufferEnd(Self);
   exitcs;
+  end;
 end;
 end.
