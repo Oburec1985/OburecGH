@@ -2533,8 +2533,6 @@ object Frm3120: TFrm3120
         OnSelectCell = TableModeSGSelectCell
         OnSetEditText = TableModeSGSetEditText
         OnTopLeftChanged = TableModeSGTopLeftChanged
-        ExplicitLeft = -3
-        ExplicitTop = 27
         ColWidths = (
           64
           64

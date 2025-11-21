@@ -1076,31 +1076,13 @@ begin
 end;
 
 procedure TFrm3120.AlarmStopBtnClick(Sender: TObject);
-var
-  I: Integer;
-  c: cControlobj;
 begin
-  TransNumFrm.show;
-  // for i:=0 to  g_conmng.ControlsCount-1 do
-  // begin
-  // c:=g_conmng.getControlObj(i);
-  // c.stop;
-  // end;
   g_conmng.Stop;
 end;
 
 procedure TFrm3120.Button1Click(Sender: TObject);
-var
-  I: Integer;
-  c: cControlobj;
 begin
   TransNumFrm.show;
-  // for i:=0 to  g_conmng.ControlsCount-1 do
-  // begin
-  // c:=g_conmng.getControlObj(i);
-  // c.stop;
-  // end;
-  //conmng.Stop;
 end;
 
 procedure TFrm3120.CancelEditMode;

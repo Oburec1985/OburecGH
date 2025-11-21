@@ -2,54 +2,51 @@ object TransNumFrm: TTransNumFrm
   Left = 0
   Top = 0
   Caption = #1056#1072#1089#1095#1077#1090' '#1085#1086#1084#1077#1088#1072' '#1087#1077#1088#1077#1076#1072#1095#1080
-  ClientHeight = 483
-  ClientWidth = 836
+  ClientHeight = 644
+  ClientWidth = 1115
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -10
+  Font.Height = -13
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 12
+  PixelsPerInch = 120
+  TextHeight = 16
   object AlClientPan: TPanel
     Left = 0
     Top = 0
-    Width = 455
-    Height = 432
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 607
+    Height = 576
     Align = alClient
     TabOrder = 0
     object RightSplitter: TSplitter
-      Left = 451
+      Left = 602
       Top = 1
-      Height = 430
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Width = 4
+      Height = 574
       Align = alRight
       Color = clBackground
       ParentColor = False
-      ExplicitLeft = 452
+      ExplicitLeft = 601
     end
     object ChannelsSG: TStringGrid
       Left = 1
       Top = 1
-      Width = 450
-      Height = 430
+      Width = 601
+      Height = 574
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alClient
       BevelInner = bvLowered
       BevelKind = bkFlat
       DefaultRowHeight = 32
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -11
+      Font.Height = -15
       Font.Name = 'Tahoma'
       Font.Style = []
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goFixedRowClick]
@@ -76,198 +73,122 @@ object TransNumFrm: TTransNumFrm
     end
   end
   object RightPan: TPanel
-    Left = 605
+    Left = 807
     Top = 0
-    Width = 231
-    Height = 432
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Width = 308
+    Height = 576
     Align = alRight
     TabOrder = 1
     inline TagsListFrame1: TTagsListFrame
       Left = 1
       Top = 1
-      Width = 229
-      Height = 430
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Width = 306
+      Height = 574
       Align = alClient
       TabOrder = 0
       ExplicitLeft = 1
       ExplicitTop = 1
-      ExplicitWidth = 229
-      ExplicitHeight = 430
+      ExplicitWidth = 306
+      ExplicitHeight = 574
       inherited FormChannelsGB: TGroupBox
-        Width = 229
-        Height = 430
-        Margins.Left = 3
-        Margins.Top = 3
-        Margins.Right = 3
-        Margins.Bottom = 3
-        ExplicitWidth = 229
-        ExplicitHeight = 430
+        Width = 306
+        Height = 574
+        ExplicitWidth = 306
+        ExplicitHeight = 574
         inherited ChanNamesPanel: TPanel
-          Top = 14
-          Width = 225
-          Height = 82
-          Margins.Left = 3
-          Margins.Top = 3
-          Margins.Right = 3
-          Margins.Bottom = 3
-          ExplicitTop = 14
-          ExplicitWidth = 225
-          ExplicitHeight = 82
+          Width = 302
+          Height = 109
+          ExplicitWidth = 302
+          ExplicitHeight = 109
           inherited FrmTagPropLabel: TLabel
-            Left = 4
-            Top = 44
-            Width = 46
-            Height = 12
-            Margins.Left = 3
-            Margins.Top = 3
-            Margins.Right = 3
-            Margins.Bottom = 3
-            ExplicitLeft = 4
-            ExplicitTop = 44
-            ExplicitWidth = 46
-            ExplicitHeight = 12
-          end
-          inherited FrmTagPropValue: TLabel
-            Left = 91
-            Top = 45
-            Width = 43
-            Height = 12
-            Margins.Left = 3
-            Margins.Top = 3
-            Margins.Right = 3
-            Margins.Bottom = 3
-            ExplicitLeft = 91
-            ExplicitTop = 45
-            ExplicitWidth = 43
-            ExplicitHeight = 12
+            Top = 59
+            ExplicitTop = 59
           end
           inherited FilterEdit: TEdit
-            Left = 4
-            Top = 6
-            Width = 218
-            Height = 20
-            Margins.Left = 3
-            Margins.Top = 3
-            Margins.Right = 3
-            Margins.Bottom = 3
-            ExplicitLeft = 4
-            ExplicitTop = 6
-            ExplicitWidth = 218
-            ExplicitHeight = 20
+            Width = 291
+            ExplicitWidth = 291
           end
           inherited FrmTagPropValueEdit: TEdit
-            Left = 91
-            Top = 62
-            Width = 131
-            Height = 20
-            Margins.Left = 3
-            Margins.Top = 3
-            Margins.Right = 3
-            Margins.Bottom = 3
-            ExplicitLeft = 91
-            ExplicitTop = 62
-            ExplicitWidth = 131
-            ExplicitHeight = 20
+            Top = 83
+            Width = 175
+            ExplicitTop = 83
+            ExplicitWidth = 175
           end
           inherited FrmTagPropNameCB: TComboBox
-            Left = 4
-            Top = 62
-            Width = 81
-            Height = 20
-            Margins.Left = 3
-            Margins.Top = 3
-            Margins.Right = 3
-            Margins.Bottom = 3
-            ExplicitLeft = 4
-            ExplicitTop = 62
-            ExplicitWidth = 81
-            ExplicitHeight = 20
-          end
-          inherited ShowScalarCB: TCheckBox
-            Left = 4
-            Top = 29
-            Width = 153
-            Height = 13
-            Margins.Left = 2
-            Margins.Top = 2
-            Margins.Right = 2
-            Margins.Bottom = 2
-            ExplicitLeft = 4
-            ExplicitTop = 29
-            ExplicitWidth = 153
-            ExplicitHeight = 13
+            Top = 83
+            ExplicitTop = 83
           end
         end
         inherited TagsLV: TBtnListView
-          Top = 96
-          Width = 225
-          Height = 332
-          Margins.Left = 3
-          Margins.Top = 3
-          Margins.Right = 3
-          Margins.Bottom = 3
+          Top = 127
+          Width = 302
+          Height = 445
           Columns = <
             item
               Caption = #1048#1084#1103
-              Width = 49
+              Width = 65
             end
             item
               Caption = #1058#1080#1087
-              Width = 49
+              Width = 65
             end
             item
               Caption = 'Fs'
-              Width = 38
+              Width = 51
             end>
-          ExplicitTop = 96
-          ExplicitWidth = 225
-          ExplicitHeight = 332
+          ExplicitTop = 127
+          ExplicitWidth = 302
+          ExplicitHeight = 445
         end
       end
     end
   end
   object BottomPan: TPanel
     Left = 0
-    Top = 432
-    Width = 836
-    Height = 51
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
+    Top = 576
+    Width = 1115
+    Height = 68
     Align = alBottom
     TabOrder = 2
+    object BlockChanLabel: TLabel
+      Left = 167
+      Top = 2
+      Width = 185
+      Height = 16
+      Caption = #1050#1072#1085#1072#1083' '#1073#1083#1086#1082#1080#1088#1086#1074#1082#1080' '#1090#1088#1072#1085#1089#1084#1080#1089#1089#1080#1080
+    end
     object ModeLinkCb: TCheckBox
-      Left = 12
-      Top = 12
-      Width = 109
-      Height = 13
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 16
+      Top = 16
+      Width = 145
+      Height = 17
       Caption = #1057#1074#1103#1079#1100' '#1089' '#1088#1077#1078#1080#1084#1072#1084#1080
       TabOrder = 0
     end
+    object BlockChanCB: TRcComboBox
+      Left = 167
+      Top = 24
+      Width = 145
+      Height = 24
+      TabOrder = 1
+      OnChange = BlockChanCBChange
+      OnDragDrop = BlockChanCBDragDrop
+    end
   end
   object ModesLV: TBtnListView
-    Left = 455
+    Left = 607
     Top = 0
-    Width = 150
-    Height = 432
+    Width = 200
+    Height = 576
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alRight
     Columns = <
       item
         Caption = #1056#1077#1078#1080#1084
-        Width = 49
+        Width = 65
       end>
     DragMode = dmAutomatic
     MultiSelect = True
