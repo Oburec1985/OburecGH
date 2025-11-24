@@ -167,7 +167,6 @@ function getMDBTestPath: lpcstr;
 function getMDBRegPath: lpcstr;
 
 
-
 var
   { В библиотеке создается всего один глобальный экземпляр plug-in`а,
     и соответсвенно есть переменная ссылка на интерфейс этого plug-in`а.
@@ -178,7 +177,9 @@ var
   // каталог Recorder-а
   g_startdir: string;
   // взводится после создания интерфейса пользователя
-  g_createGUI: boolean = false;
+  g_createGUI,
+  // рекордер проинициализирован (все теги созданы)
+  g_RcInit: boolean;
   // взводится если произошло событие загрузки при  запуске рекордера.
   // по идее интерфейс можно инициализировать только после завершения загрузки движка
   g_LoadEngine: boolean = false;
@@ -749,6 +750,7 @@ begin
         fact:=cRecBasicFactory(m_CompMng.Objects[i]);
         fact.doRecorderInit;
       end;
+      g_RcInit:=true;
       EList.CallAllEvents(E_RC_Init);
     end;
     PN_UPDATEDATA:

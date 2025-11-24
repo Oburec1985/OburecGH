@@ -1002,7 +1002,7 @@ END
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
-/* E:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uDACFrm.dfm */
+/* forms\uDACFrm.dfm */
 /* ..\SharedRUnits\uTagsListFrame.dfm */
 /* forms\uModesStepFrame.dfm */
 /* forms\uModesTabsFrame.dfm */
@@ -1047,7 +1047,7 @@ END
 /* forms\uEditPropertiesFrm.dfm */
 /* ..\..\sharedUtils\forms\uConfirmDlg.dfm */
 /* forms\uGenSignalsEditFrm.dfm */
-/* forms\uGenSignalsFrm.dfm */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uGenSignalsFrm.dfm */
 /* forms\uControlDeskFrm.dfm */
 /* forms\uCyclogramReportFrm.dfm */
 /* forms\uTagInfoFrm.dfm */
@@ -1092,6 +1092,6 @@ END
 /* forms\uPressFrmEdit.dfm */
 /* forms\uPressFrm.dfm */
 /* forms\uTresHoldFrame.dfm */
-/* E:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
-/* E:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
-/* E:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
+/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */

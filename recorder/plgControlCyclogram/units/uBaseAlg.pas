@@ -828,7 +828,7 @@ procedure cAlgMng.createEvents;
 begin
   AddPlgEvent('cAlgMng_doUpdateTags', c_RUpdateData, doUpdateTags);
   AddPlgEvent('cAlgMng_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
-  AddPlgEvent('cAlgMng_doChangeCfg', c_RC_LeaveCfg, doChangeCfg);
+  AddPlgEvent('cAlgMng_doChangeCfg', c_RC_LeaveCfg+E_RC_Init, doChangeCfg);
 end;
 
 procedure cAlgMng.DelAHNames(AHGrad: cAHgrad);
@@ -885,15 +885,15 @@ begin
     if a is cSrcAlg then
     begin
       // в методе ready зашита инициализация спектров
-      if not cSrcAlg(a).ready then
+      if g_RcInit then
       begin
-
+        cSrcAlg(a).Properties:=cSrcAlg(a).Properties;
       end;
     end;
     if a is cGrmsSrcAlg then
     begin
       // в методе ready зашита инициализация спектров
-      if not cGrmsSrcAlg(a).ready then
+      //if not cGrmsSrcAlg(a).ready then
       begin
 
       end;

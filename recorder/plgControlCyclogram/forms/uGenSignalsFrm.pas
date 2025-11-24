@@ -1095,6 +1095,14 @@ begin
         m_dPhVel:=c_2pi*m_dPhVel;
       end;
     end;
+  end
+  else
+  begin
+    if m_t.tag<>nil then
+    begin
+      // Hz рад/ сек
+      m_dPhase:=m_freq*c_2pi;
+    end;
   end;
 end;
 
