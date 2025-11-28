@@ -1764,6 +1764,13 @@ object Frm3120: TFrm3120
       ShowHint = True
       OnClick = SaveBtnClick
     end
+    object Label2: TLabel
+      Left = 863
+      Top = 136
+      Width = 106
+      Height = 24
+      Caption = #1055#1088#1086#1075#1088#1072#1084#1084#1099
+    end
     object PlayPanel: TPanel
       Left = 9
       Top = 39
@@ -2374,6 +2381,43 @@ object Frm3120: TFrm3120
       TabOrder = 9
       OnClick = Button1Click
     end
+    object ProgramsCB: TComboBox
+      Left = 863
+      Top = 163
+      Width = 145
+      Height = 32
+      TabOrder = 10
+      OnChange = ProgramsCBChange
+    end
+    object AddProgBtn: TButton
+      Left = 1013
+      Top = 163
+      Width = 43
+      Height = 32
+      Caption = '+'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -20
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 11
+      OnClick = AddProgBtnClick
+    end
+    object DelProgBtn: TButton
+      Left = 1062
+      Top = 163
+      Width = 43
+      Height = 32
+      Caption = '-'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -20
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 12
+    end
   end
   object Panel1: TPanel
     Left = 0
@@ -2420,13 +2464,14 @@ object Frm3120: TFrm3120
         Font.Height = -15
         Font.Name = 'Tahoma'
         Font.Style = []
-        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goFixedRowClick]
         ParentFont = False
         TabOrder = 0
-        OnClick = ControlPropSGClick
         OnDblClick = ControlPropSGDblClick
         OnDrawCell = ControlPropSGDrawCell
         OnKeyDown = ControlPropSGKeyDown
+        OnSelectCell = ControlPropSGSelectCell
+        OnSetEditText = ControlPropSGSetEditText
         RowHeights = (
           32
           32
@@ -2455,8 +2500,8 @@ object Frm3120: TFrm3120
           TabOrder = 0
         end
         object ModePropE: TEdit
-          Left = 223
-          Top = 17
+          Left = 183
+          Top = 19
           Width = 153
           Height = 32
           Font.Charset = DEFAULT_CHARSET
@@ -2466,7 +2511,6 @@ object Frm3120: TFrm3120
           Font.Style = []
           ParentFont = False
           TabOrder = 1
-          Visible = False
         end
       end
     end
@@ -2501,6 +2545,7 @@ object Frm3120: TFrm3120
         Align = alRight
         Color = clBackground
         ParentColor = False
+        OnMoved = Splitter1Moved
         ExplicitLeft = 617
         ExplicitHeight = 435
       end
@@ -2533,6 +2578,8 @@ object Frm3120: TFrm3120
         OnSelectCell = TableModeSGSelectCell
         OnSetEditText = TableModeSGSetEditText
         OnTopLeftChanged = TableModeSGTopLeftChanged
+        ExplicitLeft = -3
+        ExplicitTop = 27
         ColWidths = (
           64
           64
@@ -2570,6 +2617,8 @@ object Frm3120: TFrm3120
         ParentFont = False
         TabOrder = 1
         OnDrawCell = ValsSGDrawCell
+        ExplicitLeft = 383
+        ExplicitTop = 27
         ColWidths = (
           64
           64

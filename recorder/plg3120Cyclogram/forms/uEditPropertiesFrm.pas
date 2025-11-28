@@ -107,7 +107,7 @@ begin
       if sg.Cells[xcol, xrow]=c_left_str then
         sg.Cells[xcol, xrow]:=c_right_str
       else
-        sg.Cells[xcol, xrow]:=c_right_str
+        sg.Cells[xcol, xrow]:=c_left_str
     end;
     // тип режима
     if (xRow=c_TAlarmRow) or

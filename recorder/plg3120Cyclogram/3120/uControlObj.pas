@@ -596,13 +596,13 @@ begin
     m_Dtag.tag:=createScalar(m_Dtag.tagname, true);
   end;
   // Рампа N
-  m_Nrmp.tagname:=name+'_speed_N';
+  m_Nrmp.tagname:=name+'_Nrmp';
   if m_Nrmp.tag=nil then
   begin
     m_Nrmp.tag:=createScalar(m_Nrmp.tagname, true);
   end;
   // рампа М
-  m_Mrmp.tagname:=name+'_speed_M';
+  m_Mrmp.tagname:=name+'_Mrmp';
   if m_Mrmp.tag=nil then
   begin
     m_Mrmp.tag:=createScalar(m_Mrmp.tagname, true);
@@ -984,6 +984,7 @@ begin
     begin
       m_TaskTag.tagname:='SP_Position_turnActuators';
       m_FBtag.tagname:='SP_turn_fb';
+
       m_HystTag.tagname:='Hyst_turnActuators';
     end
     else
@@ -995,6 +996,18 @@ begin
         m_HystTag.tagname:='Hyst_emergencyGearActuators';
       end
     end;
+  end;
+  if m_TaskTag.tag=nil then
+  begin
+    m_TaskTag.tag:=createScalar(m_TaskTag.tagname, true);
+  end;
+  if m_HystTag.tag=nil then
+  begin
+    m_HystTag.tag:=createScalar(m_HystTag.tagname, true);
+  end;
+  if m_FBtag.tag=nil then
+  begin
+    m_FBtag.tag:=createScalar(m_FBtag.tagname, true);
   end;
 end;
 

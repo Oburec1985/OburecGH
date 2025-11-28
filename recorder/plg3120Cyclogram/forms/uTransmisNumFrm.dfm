@@ -2,7 +2,7 @@ object TransNumFrm: TTransNumFrm
   Left = 0
   Top = 0
   Caption = #1056#1072#1089#1095#1077#1090' '#1085#1086#1084#1077#1088#1072' '#1087#1077#1088#1077#1076#1072#1095#1080
-  ClientHeight = 644
+  ClientHeight = 823
   ClientWidth = 1115
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,24 +18,26 @@ object TransNumFrm: TTransNumFrm
     Left = 0
     Top = 0
     Width = 607
-    Height = 576
+    Height = 755
     Align = alClient
     TabOrder = 0
+    ExplicitHeight = 576
     object RightSplitter: TSplitter
       Left = 602
       Top = 1
       Width = 4
-      Height = 574
+      Height = 753
       Align = alRight
       Color = clBackground
       ParentColor = False
       ExplicitLeft = 601
+      ExplicitHeight = 574
     end
     object ChannelsSG: TStringGrid
       Left = 1
       Top = 1
       Width = 601
-      Height = 574
+      Height = 753
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -58,6 +60,7 @@ object TransNumFrm: TTransNumFrm
       OnDrawCell = ChannelsSGDrawCell
       OnKeyDown = ChannelsSGKeyDown
       OnSetEditText = ChannelsSGSetEditText
+      ExplicitHeight = 574
       ColWidths = (
         64
         64
@@ -76,14 +79,15 @@ object TransNumFrm: TTransNumFrm
     Left = 807
     Top = 0
     Width = 308
-    Height = 576
+    Height = 755
     Align = alRight
     TabOrder = 1
+    ExplicitHeight = 576
     inline TagsListFrame1: TTagsListFrame
       Left = 1
       Top = 1
       Width = 306
-      Height = 574
+      Height = 753
       Align = alClient
       TabOrder = 0
       ExplicitLeft = 1
@@ -92,7 +96,7 @@ object TransNumFrm: TTransNumFrm
       ExplicitHeight = 574
       inherited FormChannelsGB: TGroupBox
         Width = 306
-        Height = 574
+        Height = 753
         ExplicitWidth = 306
         ExplicitHeight = 574
         inherited ChanNamesPanel: TPanel
@@ -122,7 +126,7 @@ object TransNumFrm: TTransNumFrm
         inherited TagsLV: TBtnListView
           Top = 127
           Width = 302
-          Height = 445
+          Height = 624
           Columns = <
             item
               Caption = #1048#1084#1103
@@ -145,21 +149,22 @@ object TransNumFrm: TTransNumFrm
   end
   object BottomPan: TPanel
     Left = 0
-    Top = 576
+    Top = 755
     Width = 1115
     Height = 68
     Align = alBottom
     TabOrder = 2
+    ExplicitTop = 576
     object BlockChanLabel: TLabel
       Left = 167
-      Top = 2
+      Top = 7
       Width = 185
       Height = 16
       Caption = #1050#1072#1085#1072#1083' '#1073#1083#1086#1082#1080#1088#1086#1074#1082#1080' '#1090#1088#1072#1085#1089#1084#1080#1089#1089#1080#1080
     end
     object ModeLinkCb: TCheckBox
       Left = 16
-      Top = 16
+      Top = 6
       Width = 145
       Height = 17
       Caption = #1057#1074#1103#1079#1100' '#1089' '#1088#1077#1078#1080#1084#1072#1084#1080
@@ -167,19 +172,28 @@ object TransNumFrm: TTransNumFrm
     end
     object BlockChanCB: TRcComboBox
       Left = 167
-      Top = 24
+      Top = 29
       Width = 145
       Height = 24
       TabOrder = 1
       OnChange = BlockChanCBChange
       OnDragDrop = BlockChanCBDragDrop
     end
+    object BlockUseCB: TCheckBox
+      Left = 16
+      Top = 29
+      Width = 145
+      Height = 17
+      Caption = #1059#1095#1077#1090' '#1073#1083#1086#1082#1080#1088#1086#1074#1082#1080
+      TabOrder = 2
+      Visible = False
+    end
   end
   object ModesLV: TBtnListView
     Left = 607
     Top = 0
     Width = 200
-    Height = 576
+    Height = 755
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -201,5 +215,6 @@ object TransNumFrm: TTransNumFrm
     DrawColorBox = False
     ChangeTextColor = False
     Editable = False
+    ExplicitHeight = 576
   end
 end

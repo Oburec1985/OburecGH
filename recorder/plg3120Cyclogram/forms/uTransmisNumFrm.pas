@@ -58,6 +58,7 @@ type
     ModesLV: TBtnListView;
     BlockChanCB: TRcComboBox;
     BlockChanLabel: TLabel;
+    BlockUseCB: TCheckBox;
     procedure FormShow(Sender: TObject);
     procedure ChannelsSGDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure ChannelsSGDblClick(Sender: TObject);
@@ -81,11 +82,14 @@ type
     // для отслеживания изменения передачи
     lastRes:integer;
 
-    m_resTag:ctag;
+    m_resTag, m_BlockGTTag:ctag;
     // текущий замер состояний вычисляемый в RunTime
     m_values:array of boolean;
 
     m_thresh_OverRow : Integer;
+  private
+    // посл значение
+    fBlockGTVal:boolean;
   private
     procedure InitSG;
     function EvalStateColor(s:cStateRec; ind:integer):tcolor;
@@ -465,6 +469,9 @@ begin
 
   m_resTag:=cTag.create;
   m_resTag.tag:=createScalar('TransmitVal', true);
+
+  m_BlockGTTag:=cTag.create;
+  m_BlockGTTag.tag:=createScalar('BlockGtVal', true);
   initsg;
   AddPlgEvent('TTransNumFrm_doUpdateTags', c_RUpdateData, doUpdateTags);
 end;
@@ -476,6 +483,7 @@ begin
   m_States.Destroy;
   m_resTag.destroy;
   m_stateVals.destroy;
+  m_BlockGTTag.destroy;
 
   inherited;
 end;
@@ -502,6 +510,22 @@ begin
     // расчет бита по датчику
     m_values[i]:=t.eval;
   end;
+  if m_values[0] then
+  begin
+    if fBlockGTVal<>m_values[0] then
+    begin
+      m_BlockGTTag.tag.PushValue(1,-1);
+      fBlockGTVal:=m_values[0];
+    end;
+  end
+  else
+  begin
+    if fBlockGTVal<>m_values[0] then
+    begin
+      m_BlockGTTag.tag.PushValue(0,-1);
+      fBlockGTVal:=m_values[0];
+    end;
+  end;
   res:=encodeFunc(m_values);
   result:=-1;
   b:=false;
@@ -510,31 +534,62 @@ begin
     for I := 0 to m_States.Count - 1 do
     begin
       s:=getState(i);
+      // если нашли строку передачи
       if s.res=res then
       begin
-        //result:=i;
-        result:=s.code*2;
-        if m_values[0] then
+        if blockUseCB.checked then
         begin
-          result:=result+1;
+          result:=s.code*2;
+          if m_values[0] then
+          begin
+            result:=result+1;
+          end;
+          b:=true;
+          break;
+        end
+        else
+        begin
+          result:=s.code;
+          //if m_values[0] then
+          //begin
+          //  result:=result+1;
+          //end;
+          b:=true;
+          break;
         end;
-        b:=true;
-        break;
       end;
     end;
   end;
+  // если нашли строку передачи
   if b then
+  begin
     m_resTag.tag.PushValue(result, -1)
+  end
   else
   begin
-    if m_values[0] then
+    if blockUseCB.checked then
     begin
-      s:=getState(m_States.Count - 1);
-      m_resTag.tag.PushValue((m_States.Count-1)*2, -1);
-      result:=s.code;
+      if m_values[0] then
+      begin
+        s:=getState(m_States.Count - 1);
+        m_resTag.tag.PushValue((m_States.Count-1)*2, -1);
+        result:=s.code;
+      end
+      else
+        m_resTag.tag.PushValue(-1, -1)
     end
     else
-      m_resTag.tag.PushValue(-1, -1)
+    begin
+      if m_values[0] then
+      begin
+        s:=getState(m_States.Count);
+        m_resTag.tag.PushValue((m_States.Count), -1);
+      end
+      else
+      begin
+        m_resTag.tag.PushValue(-1, -1);
+      end;
+    end;
   end;
   // переключение режима
   if g_conmng.state<>c_Stop then

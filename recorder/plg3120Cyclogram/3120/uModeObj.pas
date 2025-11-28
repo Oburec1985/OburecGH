@@ -1448,6 +1448,7 @@ begin
   t.m_tolerance := m_tolerance;
   t.m_useTolerance := m_useTolerance;
   t.SplineInterp := SplineInterp;
+  t.m_data:=m_data;
 end;
 
 constructor cTask.create;
@@ -1641,6 +1642,7 @@ begin
           floattostr(m_data.Nthreshold)+';'+
           TModeTypeToStr(m_data.ModeType)+';'+
           floattostr(m_data.Nramp)+';'+
+          floattostr(m_data.Mramp)+';'+
           booltostr(m_data.cmd_start)+';'+
           booltostr(m_data.cmd_stop)+';'+
           booltostr(m_data.forw);
@@ -1679,12 +1681,15 @@ begin
   inc(i);
   m_data.Nramp:=strtofloatext(getSubStrByIndex(s,';',1,i));
   inc(i);
+  m_data.Mramp:=strtofloatext(getSubStrByIndex(s,';',1,i));
+  inc(i);
   m_data.cmd_start:=StrtoBoolExt(getSubStrByIndex(s,';',1,i));
   inc(i);
   m_data.cmd_stop:=StrtoBoolExt(getSubStrByIndex(s,';',1,i));
   inc(i);
   m_data.forw:=strtoboolext(getSubStrByIndex(s,';',1,i));
 end;
+
 
 procedure cTask.DeleteCS;
 begin

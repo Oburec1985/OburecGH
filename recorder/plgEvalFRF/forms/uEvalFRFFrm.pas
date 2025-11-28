@@ -221,14 +221,15 @@ type
     m_T1ClxData: TAlignDCmpx;
     // блок данных по которому идет расчет.
     m_T1data: TAlignDarray;
-    // спектр амплитуд
-    m_rms: TAlignDarray;
+    // усредненный комплекснеый спектр по серии ударов
+    m_avSpm:TAlignDCmpx;
+    // спектр амплитуд - усредненный
+    m_rms,
     // синтезированная передаточная характеристика (усредненная)
     m_frf, m_phase: TDoubleArray;
-    m_fltFrf: array of integer; // счетчик отбракованных точек
     line, lineSpm, lineCoh, lineFrf, linePhase,
     // усредненная Frf
-    lineAvFRF: cBuffTrend1d;
+    lineAvFRF, lineAvSpm: cBuffTrend1d;
     // список ударов (TDataBlock) (хранит спектры)
     m_shockList: TDataBlockList;
     // обработан последний удар
@@ -252,6 +253,7 @@ type
     fComIntervalLen: double;
   protected
     procedure setcfg(c: cSpmCfg);
+    procedure EvalAvrSpm;
   public
     procedure updateBlock(p_spmsize: integer; p_timeBlock: integer);
     property cfg: cSpmCfg read fcfg write setcfg;
@@ -269,7 +271,7 @@ type
   cSRSTaho = class
   public
     // профиль испытания
-    m_profile: cprofile;
+    //m_profile: cprofile;
 
     m_color: point3;
     m_frm: tform;
@@ -439,6 +441,7 @@ type
     fUpdateFrf: boolean; // обновился frf
     fShowLast: boolean; // обновился frf  в потоке
   protected
+    procedure EvalAvSpm;
     procedure doUpdateParams(sender: tobject);
     // расчет числа боков для усреднения
     procedure EvalWelchBCount;
@@ -769,7 +772,7 @@ begin
     s.m_checkres := false;
     b := m_bands.getband(bl.ToneCount - 1);
     line:=getLine(s);
-    d:=tdoublearray(s.line.data_r);
+    d:=tdoublearray(line.data_r);
     // поиск в экстремумов ограниченном джиапазоне (ограничение по концу посл тона)
     //FindMinMaxDouble(s.lineFrf.data_r, minmax.x, minmax.y);
     FindMinMaxDouble(d, minmax.x, minmax.y);
@@ -808,9 +811,9 @@ begin
         begin
           dec(k);
         end;
-        p1.x:=s.lineFrf.GetXByInd(k);
+        p1.x:=line.GetXByInd(k);
         p1.y:=d[k];
-        p2.x:=s.lineFrf.GetXByInd(extr.Index);
+        p2.x:=line.GetXByInd(extr.Index);
         p2.y:=d[extr.Index];
         f1:=EvalLineX(v, p1, p2);
 
@@ -819,9 +822,9 @@ begin
         begin
           inc(k);
         end;
-        p1.x:=s.lineFrf.GetXByInd(k);
+        p1.x:=line.GetXByInd(k);
         p1.y:=d[k];
-        p2.x:=s.lineFrf.GetXByInd(extr.Index);
+        p2.x:=line.GetXByInd(extr.Index);
         p2.y:=d[extr.Index];
         f2:=EvalLineX(v, p1, p2);
         vf:=2*p2.x;
@@ -857,7 +860,7 @@ begin
     if extr <> nil then
     begin
       v := extr.Value;
-      vf := s.lineFrf.GetXByInd(extr.Index);
+      vf := line.GetXByInd(extr.Index);
       decrement:=s.m_decrement[i];
     end
     else
@@ -1366,6 +1369,8 @@ procedure TFRFFrm.updateFrf(rebuildspm: boolean);
 var
   t: cSRSTaho;
   c: cSpmCfg;
+  I: Integer;
+  s:csrsres;
 begin
   if m_UseWelch then
   begin
@@ -1382,6 +1387,22 @@ begin
     t.evalCoh(hideind);
     t.evalFRF(hideind, m_estimator, rebuildspm);
     fUpdateFrf := true;
+  end;
+  EvalAvSpm;
+end;
+
+procedure TFRFFrm.EvalAvSpm;
+var
+  t: cSRSTaho;
+  I: Integer;
+  s:csrsres;
+begin
+  t:=getTaho;
+  // пересчет усредненных спектров
+  for i := 0 to t.cfg.SRSCount - 1 do
+  begin
+    s := t.cfg.GetSrs(i);
+    s.EvalAvrSpm;
   end;
 end;
 
@@ -1680,9 +1701,9 @@ begin
     GetMemAlignedArray_d(c.fportionsizei, s.m_T1data);
     // tCmxArray_d(cSRSres(s).m_T1ClxData.p)
     GetMemAlignedArray_cmpx_d(c.m_fftCount, s.m_T1ClxData);
-    GetMemAlignedArray_d(c.fHalfFft, s.m_rms);
+    GetMemAlignedArray_cmpx_d(c.fHalfFft, s.m_avSpm); // усредненный комплексный спектр
+    setlength(s.m_rms, c.fHalfFft);
     SetLength(s.m_frf, c.fHalfFft);
-    SetLength(s.m_fltFrf, c.fHalfFft);
     SetLength(s.m_phase, c.fHalfFft);
     // блок расчета когеренции
     SetLength(s.m_shockList.m_Cxy, c.fHalfFft);
@@ -1691,6 +1712,7 @@ begin
     SetLength(s.m_shockList.m_coh, c.fHalfFft);
 
     s.lineSpm.dx := c.fspmdx;
+    s.lineAvSpm.dx := c.fspmdx;
     s.linePhase.dx := c.fspmdx;
     s.lineCoh.dx := c.fspmdx;
     s.lineFrf.dx := c.fspmdx;
@@ -1709,13 +1731,13 @@ var
   a: caxis;
   bfrf: boolean;
 
-  prLine: cProfileLine;
+  //prLine: cProfileLine;
 begin
   t := getTaho;
   if t <> nil then
   begin
-    prLine := cProfileLine(t.m_profile.getline('Profile'));
-    prLine.exclude(m_profileline);
+    //prLine := cProfileLine(t.m_profile.getline('Profile'));
+    //prLine.exclude(m_profileline);
   end;
 
   for i := 0 to pageT.axises.ChildCount - 1 do
@@ -1808,6 +1830,19 @@ begin
 
       l := cBuffTrend1d.create;
       l.Color := s.m_color;
+      l.dx := c.fspmdx;
+      s.lineAvSpm := l;
+      s.lineAvSpm.name := s.name + '_AvSpm';
+      s.lineAvSpm.dx := c.fspmdx;
+      s.lineAvSpm.weight := 5;
+      s.lineAvSpm.visible := true;
+      //s.lineAvSpm.color:= s.m_color;
+      s.lineAvSpm.color:= black;
+      axSpm.AddChild(l);
+
+
+      l := cBuffTrend1d.create;
+      l.Color := s.m_color;
       axSpm.AddChild(l);
       s.linePhase := l;
       s.linePhase.dx := c.fspmdx;
@@ -1826,7 +1861,6 @@ begin
       l.Color := s.m_color;
       l.dx := c.fspmdx;
       axSpm.AddChild(l);
-
       s.lineAvFRF := l;
       s.lineAvFRF.name := s.name + '_AvFrf';
       s.lineAvFRF.weight := 5;
@@ -1849,9 +1883,9 @@ begin
     pageSpm.activeAxis.AddChild(m_profileline);
     m_profileline.visible := true;
 
-    prLine := cProfileLine(t.m_profile.getline('Profile'));
-    prLine.addline(m_profileline);
-    prLine.updatepoints;
+    //prLine := cProfileLine(t.m_profile.getline('Profile'));
+    //prLine.addline(m_profileline);
+    //prLine.updatepoints;
 
     fr.BottomLeft := p2(0, -2 * t.m_treshold);
     fr.TopRight := p2(m_Length, t.m_treshold * 2);
@@ -1975,6 +2009,7 @@ begin
             pcount);
           t.line.flength := pcount;
           m_lastTahoBlock.BuildSpm;
+          //showmessage('Taho BCount: ' + inttostr(t.m_shockList.count))
         end;
       end;
     end;
@@ -1994,12 +2029,14 @@ begin
       if b then // стоит еще добавить проверку на отвалившийся датчик. В случае если
       // какой то канал не накопил удар, игнорируем его по таймауту
       begin
+        t.evalCoh(hideind);
         t.evalFRF(hideind, m_estimator, false);
         fUpdateFrf := true;
         // показывать последний удар при обновлении
         fShowLast := true;
         // внутри вызывается t.fTrigState:=TrOff;
         t.resetTrig;
+        EvalAvSpm;
       end;
     end;
   end;
@@ -2049,7 +2086,7 @@ begin
         // если данные накопились и тахо тоже накопился
         if (comIntervalLen >= s.fComIntervalLen) then
         begin
-          // сброс в resettrig
+          // сброс в resettrig (serchtrig)
           s.fComIntervalLen := comIntervalLen;
           s.fComInt := common_interval;
           pcount := copyData(s.m_tag, common_interval, s.m_T1data);
@@ -2063,13 +2100,12 @@ begin
           if block = nil then
           begin
             block := s.m_shockList.addBlock(c.m_fftCount, // SpmSize
-              p2d(common_interval.x,
-                common_interval.x + pcount / s.m_tag.Freq), // timeStamp
+              p2d(common_interval.x, common_interval.x + pcount / s.m_tag.Freq), // timeStamp
               TDoubleArray(s.m_T1data.p), // timeData
               pcount); // timeData size
             block.m_timeMax := t.m_MaxTime;
+            // нормировка данных с учетом окон
             block.prepareData;
-
             block.BuildSpm;
             s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p), pcount);
             s.line.flength := pcount;
@@ -2088,7 +2124,8 @@ begin
               if dropCount < s.m_tag.lastindex then
                 s.m_tag.ResetTagDataTimeInd(dropCount);
             end;
-            t.evalCoh(hideind);
+            //showmessage('S BCount: ' + inttostr(s.m_shockList.count)+'t BCount: ' + inttostr(t.m_shockList.count));
+            // здесь еще не склеились блок данных отклика и воздействия!
           end;
         end;
       end;
@@ -2154,6 +2191,7 @@ begin
       ls.lineSpm.visible := false;
       ls.linePhase.visible := false;
       ls.lineCoh.visible := false;
+      ls.lineAvSpm.visible := false;
     end
     else
     begin
@@ -2172,6 +2210,7 @@ begin
             end;
             ls.lineAvFRF.visible := true;
             ls.lineSpm.visible := false;
+            ls.lineAvSpm.visible := false;
             ls.lineCoh.visible := false;
             ls.linePhase.visible := false;
           end;
@@ -2180,6 +2219,7 @@ begin
             ls.lineCoh.visible := true;
             ls.lineAvFRF.visible := false;
             ls.lineSpm.visible := false;
+            ls.lineAvSpm.visible := false;
             ls.linePhase.visible := false;
             ls.lineFrf.visible := false;
             ls.lineAvFRF.visible := false;
@@ -2189,6 +2229,7 @@ begin
             ls.lineCoh.visible := false;
             ls.lineAvFRF.visible := false;
             ls.lineSpm.visible := true;
+            ls.lineAvSpm.visible := true;
             ls.linePhase.visible := false;
             ls.lineFrf.visible := false;
             ls.lineAvFRF.visible := false;
@@ -2199,6 +2240,7 @@ begin
             ls.lineCoh.visible := false;
             ls.lineAvFRF.visible := false;
             ls.lineSpm.visible := false;
+            ls.lineAvSpm.visible := false;
             ls.linePhase.visible := true;
             ls.lineFrf.visible := false;
             ls.lineAvFRF.visible := false;
@@ -2445,7 +2487,7 @@ var
   s: cSRSres;
   tag: itag;
   ltag: ctag;
-  prof: cProfileLine;
+  //prof: cProfileLine;
 
 begin
   inherited;
@@ -2453,9 +2495,10 @@ begin
   if ltag <> nil then
   begin
     t := cSRSTaho.create;
-    prof := t.m_profile.getline('Profile');
-    prof.addline(m_profileline);
-    prof.updatepoints;
+    //prof := t.m_profile.getline('Profile');
+    //prof.addline(m_profileline);
+    //prof.updatepoints;
+
     if pageSpm.activeAxis.getChild('Profile') = nil then
     begin
       showmessage('nil');
@@ -2803,7 +2846,7 @@ begin
   for i := 0 to c.m_SRSList.Count - 1 do
   begin
     s := c.GetSrs(i);
-    s.lineAvFRF.visible := true;
+    //s.lineAvFRF.visible := true;
     // for j := 0 to s.m_shockList.Count - 1 do
     if (shock < s.m_shockList.Count) and (shock > -1) then
     begin
@@ -2878,7 +2921,7 @@ begin
     end;
   end;
 end;
-
+// отобразить данные блока
 procedure TFRFFrm.ShowSpm;
 var
   t: cSRSTaho;
@@ -2977,6 +3020,7 @@ var
   ind:integer;
   y, y1,y2, x1:double;
   db:TDataBlock;
+  line:cBuffTrend1d;
 begin
   result:=0;
   c:=s.cfg;
@@ -2984,29 +3028,41 @@ begin
   db:=s.m_shockList.getBlock(shockIndex);
   if db=nil then exit;
 
-  case ResTypeRG.ItemIndex of
-    0: // frf
+  if useAvrCb.Checked then
+  begin
+    line:=getLine(s);
+    if ind<length(line.data_r) then
     begin
-      y1:=db.m_frf[ind];
-      y2:=db.m_frf[ind+1];
+      y1:=line.data_r[ind];
+      y2:=line.data_r[ind+1];
     end;
-    1: // coh
-    begin
-      y1:=s.m_shockList.m_coh[ind];
-      y2:=s.m_shockList.m_coh[ind+1];
-    end;
-    2: // spm
-    begin
-      y1:=tdoublearray(db.m_mod.p)[ind];
-      y2:=tdoublearray(db.m_mod.p)[ind+1];
-    end;
-    3: // phase
-    begin
-      y1:=(180 / pi) * ArcTan
-              (s.m_shockList.m_Cxy[ind].im / s.m_shockList.m_Cxy[ind].Re);
-      y2:=(180 / pi) * ArcTan
-              (s.m_shockList.m_Cxy[ind+1].im /
-              s.m_shockList.m_Cxy[ind+1].Re);
+  end
+  else
+  begin
+    case ResTypeRG.ItemIndex of
+      0: // frf
+      begin
+        y1:=db.m_frf[ind];
+        y2:=db.m_frf[ind+1];
+      end;
+      1: // coh
+      begin
+        y1:=s.m_shockList.m_coh[ind];
+        y2:=s.m_shockList.m_coh[ind+1];
+      end;
+      2: // spm
+      begin
+        y1:=tdoublearray(db.m_mod.p)[ind];
+        y2:=tdoublearray(db.m_mod.p)[ind+1];
+      end;
+      3: // phase
+      begin
+        y1:=(180 / pi) * ArcTan
+                (s.m_shockList.m_Cxy[ind].im / s.m_shockList.m_Cxy[ind].Re);
+        y2:=(180 / pi) * ArcTan
+                (s.m_shockList.m_Cxy[ind+1].im /
+                s.m_shockList.m_Cxy[ind+1].Re);
+      end;
     end;
   end;
   x1:=ind * c.fspmdx;
@@ -3214,8 +3270,8 @@ begin
   begin
     a := pageT.getaxis(i);
     // ось X обновляем один раз (только для первой оси)
-    if i=0 then
-      rect := pageT.getbound(a);
+    //if i=0 then
+    rect := pageT.getbound(a);
     dy := rect.TopRight.y - rect.BottomLeft.y;
     dy := dy * 0.1;
     rect.TopRight.y := rect.TopRight.y + dy;
@@ -3318,6 +3374,7 @@ begin
     ShockIE.intnum := ShockIE.intnum + 1;
     ShowShock(ShockIE.intnum);
   end;
+  doOnZoom(nil);
 end;
 
 procedure TFRFFrm.TestCoh;
@@ -3405,10 +3462,10 @@ var
   pline: cProfileLine;
 begin
   inherited;
-  m_profile := cprofile.create;
-  m_profile.newline('Profile', 1);
-  m_profile.AddP(1, 1, ptlinePoly, false);
-  m_profile.AddP(1000, 1, ptlinePoly, false);
+  //m_profile := cprofile.create;
+  //m_profile.newline('Profile', 1);
+  //m_profile.AddP(1, 1, ptlinePoly, false);
+  //m_profile.AddP(1000, 1, ptlinePoly, false);
 
   m_treshold := 1;
   m_CohTreshold := 0.5;
@@ -3420,7 +3477,7 @@ end;
 
 destructor cSRSTaho.destroy;
 begin
-  m_profile.destroy;
+  //m_profile.destroy;
   m_tag.destroy;
   fSpmCfgList.destroy;
   m_shockList.destroy;
@@ -3441,8 +3498,9 @@ begin
     s := c.GetSrs(i);
     // getCommonInterval(s., t.TrigInterval);
     // ComIntervalLen:=common_interval.y-common_interval.x;
-    if (shockCount = s.m_shockList.Count) and
-      (m_shockList.m_LastBlock = s.m_shockList.m_LastBlock) then
+    if (shockCount = s.m_shockList.Count)
+        //and (m_shockList.m_LastBlock = s.m_shockList.m_LastBlock)
+    then
     begin
       s.m_shockList.evalCoh(m_shockList, hideind);
       s.lineCoh.AddPoints(s.m_shockList.m_coh, c.fHalfFft);
@@ -3949,6 +4007,35 @@ begin
     lineFrf.destroy;
   if lineAvFRF <> nil then
     lineAvFRF.destroy;
+  if lineAvSpm <> nil then
+    lineAvSpm.destroy;
+end;
+
+procedure cSRSres.EvalAvrSpm;
+var
+  I, j: Integer;
+  db:TDataBlock;
+  c:TComplex_d;
+begin
+  for I := 0 to m_shockList.Count - 1 do
+  begin
+    db := m_shockList.getBlock(i);
+    for j := 0 to length(m_frf) - 1 do
+    begin
+      c := TCmxArray_d(db.m_ClxData.p)[j];
+      if i=0 then
+      begin
+        TCmxArray_d(m_avSpm.p)[j]:=c;
+      end
+      else
+      begin
+        TCmxArray_d(m_avSpm.p)[j]:=c;
+      end;
+    end;
+  end;
+  MULT_SSE_al_cmpx_d(TCmxArray_d(m_avSpm.p), (1/m_shockList.Count));
+  EvalSpmMag(TCmxArray_d(m_avSpm.p),m_rms);
+  lineAvSpm.AddPoints(m_rms,length(m_rms));
 end;
 
 function cSRSres.getTaho: cSRSTaho;
@@ -4425,8 +4512,10 @@ var
   wnd: TSpmWnd;
 begin
   // тут бывает ошибка!!!
-  system.move(m_TimeBlock[0], TDoubleArray(m_TimeBlockFlt.p)[0],
-    m_TimeArrSize * sizeof(double));
+  if m_TimeArrSize=0 then
+    exit;
+
+  system.move(m_TimeBlock[0], TDoubleArray(m_TimeBlockFlt.p)[0], m_TimeArrSize * sizeof(double));
   wnd := TDataBlockList(m_owner).m_wnd;
   case wnd.wndfunc of
     wnd_rect:
@@ -4501,9 +4590,10 @@ begin
     begin
       delete(i);
       db.destroy;
+      dec(m_LastBlock);
       if m_LastBlock > i then
       begin
-        dec(m_LastBlock);
+        //dec(m_LastBlock);
         exit;
       end
       else
