@@ -240,7 +240,14 @@ begin
   m_blockcount := p_blockcount;
   m_overflow := p_overflow;
   fdx := p_dx;
-  m_spmdx := m_tag.tag.GetFreq / m_fftCount;
+  if m_tag.tag<>nil then
+  begin
+    m_spmdx := m_tag.tag.GetFreq / m_fftCount;
+  end
+  else
+  begin
+    m_spmdx := 0;
+  end;
   if m_Zoom then
   begin
     m_spmdx:=m_spmdx/Power(2,m_ZoomOrd);
@@ -256,7 +263,6 @@ begin
       m_overflowP := m_overflowP shr 1;
       fShift := fOutSize - m_overflowP;
     end;
-    fdx := fShift / m_tag.tag.GetFreq;
     fNullsPoints := 0;
   end
   else
@@ -265,6 +271,7 @@ begin
   begin
     fOutSize := round(p_dx * m_tag.tag.GetFreq);
     fShift := fOutSize;
+    fdx := fShift / m_tag.tag.GetFreq;
     m_blockcount := trunc(fOutSize / m_fftCount);
     if m_blockcount = 0 then
     begin
@@ -764,6 +771,7 @@ begin
   result := false;
   if m_tag = nil then
     exit;
+
   //if fOutSize = 0 then
   //  updateOutChan;   // нельзя делать в ready тк вызов в цикле
 
@@ -774,6 +782,12 @@ begin
   else
   begin
     m_tag.tag := getTagByName(m_tag.tagname);
+    // пересчет spmdx если на момент инициализации алгоритма тег не существовал
+    m_spmdx:=m_tag.freq/m_fftCount;
+    if m_Zoom then
+    begin
+      m_spmdx:=m_spmdx/Power(2,m_ZoomOrd);
+    end;
     if m_tag.tag <> nil then
     begin
       //updateOutChan;
@@ -957,6 +971,9 @@ begin
     m_tag.tag := getTagByName(m_tag.tagname);
     if m_tag.tag = nil then
     begin
+      // вызываем расчет памяти здесь иначе он вообще не произойдет позже
+      // когда канал будет создан
+      evalOutSize(m_overflow, m_fftCount, m_blockcount, fdx);
       adderror('cSpm.updateOutChan Отсутствует входной тег: ' + m_tag.tagname);
       exit;
     end;

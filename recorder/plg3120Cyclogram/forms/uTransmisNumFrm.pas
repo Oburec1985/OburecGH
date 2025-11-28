@@ -7,7 +7,8 @@ uses
   Dialogs, ExtCtrls, uTagsListFrame, StdCtrls, Grids, uStringGridExt,
   ComCtrls, uCommonTypes, uCommonMath, mathfunction, uSetList,
   uModeObj, u3120ControlObj, uProgramObj,
-  uComponentServises, uRCFunc, tags, uRecorderEvents, pluginClass, uBtnListView;
+  uComponentServises, uRCFunc, tags, uRecorderEvents, pluginClass, uBtnListView,
+  uRcCtrls;
 
 type
   boolArray =  array of boolean;
@@ -55,6 +56,9 @@ type
     ChannelsSG: TStringGrid;
     ModeLinkCb: TCheckBox;
     ModesLV: TBtnListView;
+    BlockChanCB: TRcComboBox;
+    BlockChanLabel: TLabel;
+    BlockUseCB: TCheckBox;
     procedure FormShow(Sender: TObject);
     procedure ChannelsSGDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure ChannelsSGDblClick(Sender: TObject);
@@ -66,6 +70,8 @@ type
       const Value: string);
     procedure ChannelsSGKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure BlockChanCBChange(Sender: TObject);
+    procedure BlockChanCBDragDrop(Sender, Source: TObject; X, Y: Integer);
   public
     // список колонок
     m_Tags:tlist;
@@ -76,13 +82,17 @@ type
     // для отслеживания изменения передачи
     lastRes:integer;
 
-    m_resTag:ctag;
+    m_resTag, m_BlockGTTag:ctag;
     // текущий замер состояний вычисляемый в RunTime
     m_values:array of boolean;
 
     m_thresh_OverRow : Integer;
   private
+    // посл значение
+    fBlockGTVal:boolean;
+  private
     procedure InitSG;
+    function EvalStateColor(s:cStateRec; ind:integer):tcolor;
     function gettag(i:integer):cTagRec;overload;
     function gettag(s:string):cTagRec;overload;
     function getState(i:integer):cStateRec;overload;
@@ -125,12 +135,13 @@ const
 
 implementation
 
-function encode(b:array of boolean):integer;
+function encodeFunc(b:array of boolean):integer;
 var
   i:integer;
 begin
   Result:=0;
-  for I := 0 to length(b) - 1 do
+  // Бит 0 - не смотрим (блок трансмиссии)
+  for I := 1 to length(b) - 1 do
   begin
     if b[i] then
     begin
@@ -143,14 +154,34 @@ procedure decode(v:integer; b:array of boolean);
 var
   i:integer;
 begin
-  for I := 0 to length(b) - 1 do
+  b[0]:=false;
+  for I := 1 to length(b) - 1 do
   begin
     b[i]:=((v shr i) and 1)=1;
   end;
 end;
 
-
 {$R *.dfm}
+procedure TTransNumFrm.BlockChanCBChange(Sender: TObject);
+var
+  t:ctagrec;
+  xCol:integer;
+  str:string;
+begin
+  if BlockChanCB.ItemIndex>-1 then
+  BEGIN
+    ChannelsSG.Cells[1, 1]:=BlockChanCB.text;
+  END;
+  t:=gettag(0);
+  t.t.tag:=nil;
+  t.t.tagname:=BlockChanCB.text;
+end;
+
+procedure TTransNumFrm.BlockChanCBDragDrop(Sender, Source: TObject; X,
+  Y: Integer);
+begin
+  BlockChanCBChange(nil);
+end;
 
 procedure TTransNumFrm.ChannelsSGDblClick(Sender: TObject);
 var
@@ -212,6 +243,10 @@ begin
     begin
       t0.t.tag:=nil;
       t0.t.tagname:=itag(li.data).GetName;
+      if xCol=1 then
+      begin
+        BlockChanCB.SetTagName(t0.t.tagname);
+      end;
     end
     else
     begin
@@ -262,6 +297,29 @@ begin
     exit;
   end;
 
+end;
+
+function TTransNumFrm.EvalStateColor(s:cStateRec; ind:integer):tcolor;
+var
+  i:integer;
+  ls:cStateRec;
+begin
+  result:=clWindow;
+  for I := 0 to m_States.Count - 1 do
+  begin
+    ls:=getState(i);
+    if ls<>s then
+    begin
+      if ls.code=s.code then
+      begin
+        if ind>i then
+        begin
+          result:=clGray;
+          exit;
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TTransNumFrm.ChannelsSGDrawCell(Sender: TObject; ACol, ARow: Integer;
@@ -411,6 +469,9 @@ begin
 
   m_resTag:=cTag.create;
   m_resTag.tag:=createScalar('TransmitVal', true);
+
+  m_BlockGTTag:=cTag.create;
+  m_BlockGTTag.tag:=createScalar('BlockGtVal', true);
   initsg;
   AddPlgEvent('TTransNumFrm_doUpdateTags', c_RUpdateData, doUpdateTags);
 end;
@@ -422,6 +483,7 @@ begin
   m_States.Destroy;
   m_resTag.destroy;
   m_stateVals.destroy;
+  m_BlockGTTag.destroy;
 
   inherited;
 end;
@@ -440,28 +502,95 @@ var
   s:cStateRec;
   p:cProgramObj;
   m:cmodeobj;
+  b:boolean;
 begin
   for I := 0 to m_Tags.Count - 1 do
   begin
     t:=gettag(i);
+    // расчет бита по датчику
     m_values[i]:=t.eval;
   end;
-  res:=encode(m_values);
-  result:=-1;
-  for I := 0 to m_States.Count - 1 do
+  if m_values[0] then
   begin
-    s:=getState(i);
-    if s.res=res then
+    if fBlockGTVal<>m_values[0] then
     begin
-      //result:=i;
-      result:=s.code;
-      break;
+      m_BlockGTTag.tag.PushValue(1,-1);
+      fBlockGTVal:=m_values[0];
+    end;
+  end
+  else
+  begin
+    if fBlockGTVal<>m_values[0] then
+    begin
+      m_BlockGTTag.tag.PushValue(0,-1);
+      fBlockGTVal:=m_values[0];
     end;
   end;
-  if res<>0 then
+  res:=encodeFunc(m_values);
+  result:=-1;
+  b:=false;
+  if (res<>0) then
+  begin
+    for I := 0 to m_States.Count - 1 do
+    begin
+      s:=getState(i);
+      // если нашли строку передачи
+      if s.res=res then
+      begin
+        if blockUseCB.checked then
+        begin
+          result:=s.code*2;
+          if m_values[0] then
+          begin
+            result:=result+1;
+          end;
+          b:=true;
+          break;
+        end
+        else
+        begin
+          result:=s.code;
+          //if m_values[0] then
+          //begin
+          //  result:=result+1;
+          //end;
+          b:=true;
+          break;
+        end;
+      end;
+    end;
+  end;
+  // если нашли строку передачи
+  if b then
+  begin
     m_resTag.tag.PushValue(result, -1)
+  end
   else
-    m_resTag.tag.PushValue(-1, -1);
+  begin
+    if blockUseCB.checked then
+    begin
+      if m_values[0] then
+      begin
+        s:=getState(m_States.Count - 1);
+        m_resTag.tag.PushValue((m_States.Count-1)*2, -1);
+        result:=s.code;
+      end
+      else
+        m_resTag.tag.PushValue(-1, -1)
+    end
+    else
+    begin
+      if m_values[0] then
+      begin
+        s:=getState(m_States.Count);
+        m_resTag.tag.PushValue((m_States.Count), -1);
+      end
+      else
+      begin
+        m_resTag.tag.PushValue(-1, -1);
+      end;
+    end;
+  end;
   // переключение режима
   if g_conmng.state<>c_Stop then
   begin
@@ -570,6 +699,7 @@ end;
 procedure TTransNumFrm.FormShow(Sender: TObject);
 begin
   TagsListFrame1.ShowChannels;
+  BlockChanCB.updateTagsList;
   ShowModeList;
 end;
 
@@ -677,6 +807,10 @@ begin
     str:=getSubStrByIndex(s, ';', 1, j);
     inc(j);
     t:=CreateTag(str);
+    if i=0 then
+    begin
+      BlockChanCB.SetTagName(t.t.tagname);
+    end;
     str:=getSubStrByIndex(s, ';', 1, j);
     inc(j);
     t.thresh.x:=StrToFloat(str);
@@ -700,6 +834,10 @@ begin
     state.mode:=str;
     state.decode(res);
     state.res:=res;
+    if state.rowname='Блок ГТ' then
+    begin
+      state.b[0]:=true;
+    end;
   end;
   m_stateVals.Listclear;
   for I := 0 to c - 1 do
@@ -931,9 +1069,14 @@ procedure cStateRec.decode(v: integer);
 var
   i:integer;
 begin
-  for I := 0 to length(b) - 1 do
+  //for I := 0 to length(b) - 1 do
+  //begin
+  //  b[i]:=((v shr i) and 1)=1;
+  //end;
+  b[0]:=false;
+  for I := 1 to length(b) - 1 do
   begin
-    b[i]:=((v shr i) and 1)=1;
+    b[i]:=((v shr (i)) and 1)=1;
   end;
 end;
 
@@ -948,14 +1091,12 @@ var
 begin
   if cb.Checked then
   begin
-    Result:=0;
-    for I := 0 to length(b) - 1 do
+    if rowname='Блок ГТ' then
     begin
-      if b[i] then
-      begin
-        Result :=Result+ 1 shl i;
-      end;
-    end;
+      Result:=1;
+    end
+    else
+      Result:=encodeFunc(b);
   end
   else
     result:=-1;

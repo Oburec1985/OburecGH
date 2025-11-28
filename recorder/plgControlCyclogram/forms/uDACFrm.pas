@@ -249,7 +249,7 @@ end;
 
 procedure TDACFrm.TestBtnClick(Sender: TObject);
 var
-  ar:tdoubleArray;
+//  ar:tdoubleArray;
   len, freq1, freq2,
   dphase, // скорость фазы
   aPhase, // ускорение фазы
@@ -268,18 +268,18 @@ begin
   aPhase:=2*pi*(freq2-freq1)/(fs*fs*len); // ускорение фазы
   dphase:=2*pi*freq1/fs; // скорость фазы
   Amp:=1;
-  setlength(ar,siglen);
+//  setlength(ar,siglen);
   phase:=0;
   for I := 0 to siglen - 1 do
   begin
-    ar[i]:= Amp * Sin(phase);
+//    ar[i]:= Amp * Sin(phase);
     phase:=phase+dphase;
     dphase:=dphase+aphase;
   end;
   cfg.Alpha:=0.3;
   cfg.IsFirstCall:=true;
   cfg.PrevOutput:=0;
-  ar:=LowPassFilter(ar, cfg);
+//  ar:=LowPassFilter(ar, cfg);
   tr:=cbufftrend1d(cpage(cchart1.activePage).activeAxis.getChild(0));
   if tr=nil then
   begin
@@ -287,7 +287,7 @@ begin
     tr.dx:=1/fs;
     tr.name:='Test1000HzLpf';
     cpage(cchart1.activePage).activeAxis.AddChild(tr);
-    tr.AddPoints(ar);
+//    tr.AddPoints(ar);
     cpage(cchart1.activePage).normalise;
   end;
 end;

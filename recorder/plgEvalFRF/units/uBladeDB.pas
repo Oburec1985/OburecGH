@@ -1553,7 +1553,7 @@ begin
       end;
       if blade.m_res<>2 then
       begin
-        rng3 := GetRangeObj(1, point(rng2.row, rng.column),
+        rng3 := GetRangeObj(1, point(rng2.row, rng2.column),
                               point(rng2.row, rng.column+blade.ToneCount));
         rng3.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
         SetCell(1, rng2.Row+i, rng.Column+blade.ToneCount, 'не годен');

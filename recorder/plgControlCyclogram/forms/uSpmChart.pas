@@ -1637,7 +1637,7 @@ begin
       initevents:=true;
       addplgevent('cSpmFactory_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
       g_algMng.Events.AddEvent('SpmChart_SpmSetProps',e_OnSetAlgProperties,doChangeAlgProps);
-      addplgevent('SpmChart_OnLeaveCfg', c_RC_LeaveCfg, doChangeCfg);
+      addplgevent('SpmChart_OnLeaveCfg', c_RC_LeaveCfg+E_RC_Init, doChangeCfg);
     end;
   end;
 end;
@@ -1648,7 +1648,7 @@ begin
   if g_algMng<>nil then
   begin
     g_algMng.Events.removeEvent(doChangeRState, e_OnSetAlgProperties);
-    removeplgEvent(doChangeCfg, c_RC_LeaveCfg);
+    removeplgEvent(doChangeCfg, c_RC_LeaveCfg+E_RC_Init);
   end;
 end;
 
@@ -1700,6 +1700,9 @@ var
 
   sChart:TSpmChart;
 begin
+  if not g_RcInit then
+    exit;
+
   for I := 0 to Count - 1 do
   begin
     sChart:=TSpmChart(getfrm(i));

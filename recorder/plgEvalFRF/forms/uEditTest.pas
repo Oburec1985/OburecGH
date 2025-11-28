@@ -37,6 +37,8 @@ type
     StageCountLabel: TLabel;
     StageCountSE: TSpinEdit;
     SideCB: TCheckBox;
+    Label2: TLabel;
+    BandCountIE: TSpinEdit;
     procedure OkBtnClick(Sender: TObject);
     procedure ProfileSGKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -46,6 +48,8 @@ type
     procedure TurbCBChange(Sender: TObject);
     procedure StageCBChange(Sender: TObject);
     procedure SideCBClick(Sender: TObject);
+    procedure BandCountIEChange(Sender: TObject);
+    procedure BlCountIEChange(Sender: TObject);
   private
     procedure init;
     procedure showbase;
@@ -70,6 +74,14 @@ implementation
 
 { TEditTestFrm }
 
+procedure TEditTestFrm.BandCountIEChange(Sender: TObject);
+begin
+  if BandCountIE.Value<>0 then
+  begin
+    ProfileSG.RowCount:=BandCountIE.Value+1;
+  end;
+end;
+
 procedure TEditTestFrm.BladeSeChange(Sender: TObject);
 var
   f, s, bl:cxmlfolder;
@@ -80,13 +92,22 @@ begin
     s:=f.selected;
     if s<>nil then
     begin
-      bl:=cxmlFolder(s.getChild(BladeSe.Value));
-      if bl<>nil then
+      if BladeSe.Value>-1 then
       begin
-        s.selected:=bl;
+        bl:=cxmlFolder(s.getChild(BladeSe.Value));
+        if bl<>nil then
+        begin
+          s.selected:=bl;
+        end;
+        SideCb.Checked:=cBladeFolder(bl).m_sideCB;
       end;
     end;
   end;
+end;
+
+procedure TEditTestFrm.BlCountIEChange(Sender: TObject);
+begin
+  bladeSe.MaxValue:=BlCountIE.Value-1;
 end;
 
 constructor TEditTestFrm.create(aowner: tcomponent);
@@ -113,7 +134,6 @@ begin
   ProfileSG.Cells[1,0]:='F1';
   ProfileSG.Cells[2,0]:='F2';
   ProfileSG.Cells[3,0]:='Допуск, %';
-
   DateLabel.Caption:= 'Дата: '+DateToStr(now);
 end;
 
@@ -171,7 +191,6 @@ end;
 procedure TEditTestFrm.ProfileSGKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-
   if key=VK_RETURN then
   begin
     SGChange(ProfileSG);
@@ -236,6 +255,7 @@ begin
     if s<>'' then
     begin
       c:=strtoint(s);
+      BandCountIE.Value:=c;
       ProfileSG.RowCount:=c+2;
     end;
     for r := 0 to c-1 do
@@ -273,6 +293,10 @@ begin
 end;
 
 procedure TEditTestFrm.SideCBClick(Sender: TObject);
+var
+  bl:cBladeFolder;
+  t:cTurbFolder;
+  s:cStageFolder;
 begin
   if SideCB.Checked then
   begin
@@ -282,6 +306,13 @@ begin
   begin
     SideCB.Caption:='Левая лопатка';
   end;
+  t:=g_mbase.SelectTurb;
+  if StageCB.ItemIndex=-1 then
+    s:=t.GetStage(0)
+  else
+    s:=t.GetStage(StageCB.ItemIndex);
+  bl:=s.GetBlade(BladeSe.Value);
+  bl.m_sideCB:=sidecb.Checked;
 end;
 
 procedure TEditTestFrm.Splitter2Moved(Sender: TObject);
