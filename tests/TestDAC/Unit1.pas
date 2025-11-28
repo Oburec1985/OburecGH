@@ -201,8 +201,11 @@ var
   // Sweep vars
   StartFreq, EndFreq, SweepTime, CurrentTime, k: Double;
 begin
-  BufferSizeSamples := round(FDacDevice.SampleRate * FDacDevice.BufferSizeMS / 1000);
-  SetLength(FBuffer, BufferSizeSamples);
+  if length(FBuffer)=0 then
+  begin
+    SetLength(FBuffer, BufferSizeSamples);
+    BufferSizeSamples := round(FDacDevice.SampleRate * FDacDevice.BufferSizeMS / 1000);
+  end;
 
   Ampl := StrToFloatDef(edAmpl.Text, 0.8);
   if Ampl > 1.0 then Ampl := 1.0;
