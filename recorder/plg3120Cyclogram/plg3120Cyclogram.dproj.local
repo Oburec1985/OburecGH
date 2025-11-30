@@ -104,6 +104,7 @@
     <File Path="..\SharedRUnits\interfaces\transf.pas"/>
     <File Path="..\SharedRUnits\interfaces\transformers.pas"/>
     <File Path="..\SharedRUnits\interfaces\waitwnd.pas"/>
+    <File Path="..\SharedRUnits\interfaces\uAlarms.pas"/>
     <File Path="..\SharedRUnits\PluginClass.pas"/>
     <File Path="..\SharedRUnits\uCompMng.pas"/>
     <File Path="..\SharedRUnits\uFrmSync.pas"/>
