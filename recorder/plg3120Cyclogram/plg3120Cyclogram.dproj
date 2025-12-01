@@ -117,6 +117,7 @@
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="units\uGenReport.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\uAlarms.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

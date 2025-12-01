@@ -277,6 +277,11 @@ begin
   for I := 0 to 6 do
   begin
     m:=cmodeobj.create;
+    if i<>0 then
+    begin
+      m.CheckThreshold:=true;
+    end;
+
     case i of
       6: m.name:='Стоп';
       else
@@ -308,6 +313,11 @@ begin
       s:=getSubStrByIndex(dsc,';',1,j+1);
       t:=m.GetTask(j);
       t.applyed := false;
+      // если включена проверка допусков
+      t.m_useTolerance:=m.CheckThreshold;
+      // ставим допуск 3 процента
+      t.m_tolerance:=3;
+
       if j<5 then
       begin
         if j=0 then

@@ -48,7 +48,8 @@ uses
   uExcel in '..\..\sharedUtils\utils\reports\excel\uExcel.pas',
   uTransmisNumFrm in 'forms\uTransmisNumFrm.pas' {TransNumFrm},
   uTagsListFrame in '..\SharedRUnits\uTagsListFrame.pas' {TagsListFrame: TFrame},
-  uGenReport in 'units\uGenReport.pas';
+  uGenReport in 'units\uGenReport.pas',
+  uAlarms in '..\SharedRUnits\interfaces\uAlarms.pas';
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 
