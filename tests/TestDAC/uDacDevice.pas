@@ -49,8 +49,10 @@ type
       а помечаются как "удаленные".
   *)
   TBlockData = record
-    Data: Pointer;        // Универсальный указатель на структуру данных блока
-    IsDeleted: Boolean;   // Флаг, помечен ли блок как удаленный
+    // Универсальный указатель на структуру данных блока
+    Data: Pointer;
+    // Флаг, помечен ли блок как удаленный
+    IsDeleted: Boolean;
   end;
 
   TBlockQueue = class
@@ -151,7 +153,7 @@ type
     function IsPlay: Boolean; virtual; abstract;
     // Возвращает список доступных устройств вывода
     function GetDeviceList: TStringList; virtual; abstract;
-
+  public
     property SampleRate: Cardinal read FSampleRate write FSampleRate; // Частота дискретизации (Гц)
     property BitsPerSample: Cardinal read FBitsPerSample write FBitsPerSample; // Битность (8, 16, ...)
     // Количество каналов (1 - моно, 2 - стерео)

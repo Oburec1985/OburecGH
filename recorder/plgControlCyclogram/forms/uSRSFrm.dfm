@@ -43,6 +43,7 @@ object SRSFrm: TSRSFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitLeft = 1
   end
   object RightGB: TGroupBox
     Left = 488

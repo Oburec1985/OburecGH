@@ -28,7 +28,6 @@ object DACFrm: TDACFrm
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 704
     object btnPlayStop: TButton
       Left = 25
       Top = 12
