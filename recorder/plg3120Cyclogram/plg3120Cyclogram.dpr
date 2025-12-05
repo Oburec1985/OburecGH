@@ -49,7 +49,12 @@ uses
   uTransmisNumFrm in 'forms\uTransmisNumFrm.pas' {TransNumFrm},
   uTagsListFrame in '..\SharedRUnits\uTagsListFrame.pas' {TagsListFrame: TFrame},
   uGenReport in 'units\uGenReport.pas',
-  uAlarms in '..\SharedRUnits\interfaces\uAlarms.pas';
+  uAlarms in '..\SharedRUnits\interfaces\uAlarms.pas',
+  uEditProg in 'forms\uEditProg.pas' {EditProgFrm},
+  uMyThreadImpulses in '..\SharedRUnits\uMyThreadImpulses.pas',
+  uMeasureBase in '..\..\sharedUtils\mera\database\uMeasureBase.pas',
+  u3120Db in '3120\u3120Db.pas',
+  uCPengine in 'units\uCPengine.pas';
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 

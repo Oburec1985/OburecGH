@@ -100,7 +100,6 @@ type
     // procedure setOwnerProg(p: cProgramObj);
     // procedure StarCheckMode(m: cModeObj);
     // procedure StopCheckMode;
-    function CheckMode: boolean;
     function getInTol: boolean;
     procedure setInTol(b: boolean);
     // установить доп. свойства контрола на циклограмме.
@@ -108,6 +107,11 @@ type
     procedure SetTask(t: double); virtual;
     function GetTask: double; virtual;
   public
+    // обратная связь. В простейшем случае ОС = задание
+    function getFB: double; virtual;
+    // проверка на допуск по контролу
+    function CheckMode: boolean;
+
     procedure createStateTags;
     // применить теги их задачи cTask
     // procedure ApplyTags(t: cTask);
@@ -186,6 +190,7 @@ type
     procedure LoadObjAttributes(xmlNode: txmlnode; mng: tobject); override;
     procedure SaveObjAttributes(xmlNode: txmlnode); override;
   public
+    function getFB: double; override;
     procedure Start; virtual;
     procedure stop;override;
     procedure ApplyTask(t: tobject);override;
@@ -750,6 +755,14 @@ begin
   m_Malarm.destroy;
 end;
 
+function cMNControl.getFB: double;
+begin
+  if m_data.ModeType=mtN then
+    result:=m_NtagFB.GetMeanEst
+  else
+    result:=m_MtagFB.GetMeanEst;
+end;
+
 function cMNControl.GetTask: double;
 begin
   result := m_data.Task;
@@ -758,6 +771,11 @@ end;
 function cControlObj.getProperties: string;
 begin
   // result := c_feedback_str + feedbackname + ';';
+end;
+
+function cControlObj.getFB: double;
+begin
+  result:=Task;
 end;
 
 function cControlObj.getimageindex: integer;

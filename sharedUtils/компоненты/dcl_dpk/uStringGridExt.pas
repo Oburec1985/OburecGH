@@ -3,10 +3,16 @@ unit uStringGridExt;
 interface
 uses
   Windows,  SysUtils, Classes, Graphics, Dialogs,
-  ComCtrls, controls, CommCtrl, Grids
+  ComCtrls, controls, CommCtrl, messages, Grids
   ;
 
 type
+  TNoWheelStringGrid = class(TStringGrid)
+  protected
+    procedure WndProc(var Msg: TMessage); override;
+  end;
+
+
   TStringGridExt = class(tstringgrid)
   public
     m_row, m_col:integer;
@@ -31,6 +37,20 @@ type
 implementation
 
 { TStringGridExt }
+
+{ TNoWheelStringGrid }
+
+procedure TNoWheelStringGrid.WndProc(var Msg: TMessage);
+begin
+  if Msg.Msg = WM_MOUSEWHEEL then
+  begin
+    Msg.Result := 0;  // сказать Windows “обработано”
+    Exit;             // и НЕ передавать в VCL
+  end;
+
+  inherited;
+end;
+
 
 constructor TStringGridExt.create(aowner: tcomponent);
 begin

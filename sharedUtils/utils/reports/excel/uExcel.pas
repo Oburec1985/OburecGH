@@ -425,8 +425,7 @@ xlPasteAll                      =	-4104 ; // Вставка всех данны�
   Function CheckVarObj(obj:oleVariant):boolean;
 
   // 0 - есть с таким именем; 1 - есть с таким номером; 2 - ошибка
-  function SheetExists(const Workbook: olevariant;
-                     const SheetName: string): integer;
+  function SheetExists(const Workbook: olevariant;const SheetName: string): integer;
 
 var
   E:OleVariant;
@@ -435,6 +434,7 @@ var
 implementation
 uses
   forms, IOUtils;
+
 
 function IsExcelFileOpen(const FilePath: string): Boolean;
 var
@@ -1055,11 +1055,11 @@ End;
 
 Function VisibleExcel(visible:boolean):boolean;
 begin
-  VisibleExcel:=true;
+  VisibleExcel:=visible;
   try
-  E.visible:=visible;
+    E.visible:=visible;
   except
-  VisibleExcel:=false;
+    VisibleExcel:=visible;
   end;
 End;
 
@@ -1077,6 +1077,7 @@ Function OpenWorkBook(file_:string):boolean;
 begin
   OpenWorkBook:=true;
   try
+    E.DisplayAlerts := False;
     E.Workbooks.Open(file_);
   except
     OpenWorkBook:=false;
@@ -1086,6 +1087,7 @@ End;
 Function  OpenWorkBookEx(file_:string):olevariant;
 begin
   try
+    E.DisplayAlerts := False;
     result:=E.Workbooks.Open(file_);
   except
     result:=0;
@@ -1224,6 +1226,7 @@ begin
   try
     if E.Workbooks.Count > 0 then
     begin
+      E.DisplayAlerts := False;
       E.ActiveWorkbook.Close;
     end
     else
@@ -1239,6 +1242,7 @@ Function  CloseWorkBook(wb:olevariant):boolean;overload;
 begin
   CloseWorkBook:=true;
   try
+    E.DisplayAlerts := False;
     wb.Close;
   except
     CloseWorkBook:=false;

@@ -317,6 +317,8 @@ begin
       t.m_useTolerance:=m.CheckThreshold;
       // ставим допуск 3 процента
       t.m_tolerance:=3;
+      // 0 - проценты 1 - абс. знач.
+      t.m_tolType:=0;
 
       if j<5 then
       begin

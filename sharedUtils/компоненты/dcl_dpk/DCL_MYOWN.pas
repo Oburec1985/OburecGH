@@ -463,6 +463,7 @@ begin
    RegisterComponents('Samples', [TAlignEdit]);
    RegisterComponents('Samples', [TVTree]);
    RegisterComponents('Samples', [TStringGridExt]);
+   RegisterComponents('Samples', [TNoWheelStringGrid]);
    //RegisterComponents('Samples', [TVistaProBar]);
 end;
 

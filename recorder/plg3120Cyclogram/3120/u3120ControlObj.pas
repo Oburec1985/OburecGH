@@ -387,7 +387,8 @@ begin
   end;
   if obj is cModeObj then
   begin
-    cModeObj(obj).CreateTasks;
+    if cModeObj(obj).TaskCount=0 then
+      cModeObj(obj).CreateTasks;
     cModeObj(obj).createTags;
   end;
 end;
@@ -428,9 +429,9 @@ end;
 
 procedure cControlMng.createEvents;
 begin
-  AddPlgEvent('cControlMng_doUpdateTags', c_RUpdateData, doUpdateTags);
-  AddPlgEvent('cControlMng_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
-  Events.AddEvent('cControlMng_doDestroyObjForTrig', E_OnDestroyObject, doDestroyObjForTrig);
+  AddPlgEvent('3120ControlMng_doUpdateTags', c_RUpdateData, doUpdateTags);
+  AddPlgEvent('3120ControlMng_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
+  Events.AddEvent('3120ControlMng_doDestroyObjForTrig', E_OnDestroyObject, doDestroyObjForTrig);
 end;
 
 procedure cControlMng.DestroyEvents;

@@ -2,8 +2,8 @@ object TransNumFrm: TTransNumFrm
   Left = 0
   Top = 0
   Caption = #1056#1072#1089#1095#1077#1090' '#1085#1086#1084#1077#1088#1072' '#1087#1077#1088#1077#1076#1072#1095#1080
-  ClientHeight = 823
-  ClientWidth = 1115
+  ClientHeight = 537
+  ClientWidth = 1028
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,16 +17,17 @@ object TransNumFrm: TTransNumFrm
   object AlClientPan: TPanel
     Left = 0
     Top = 0
-    Width = 607
-    Height = 755
+    Width = 520
+    Height = 469
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 576
+    ExplicitWidth = 607
+    ExplicitHeight = 755
     object RightSplitter: TSplitter
-      Left = 602
+      Left = 515
       Top = 1
       Width = 4
-      Height = 753
+      Height = 467
       Align = alRight
       Color = clBackground
       ParentColor = False
@@ -36,8 +37,8 @@ object TransNumFrm: TTransNumFrm
     object ChannelsSG: TStringGrid
       Left = 1
       Top = 1
-      Width = 601
-      Height = 753
+      Width = 514
+      Height = 467
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -60,7 +61,8 @@ object TransNumFrm: TTransNumFrm
       OnDrawCell = ChannelsSGDrawCell
       OnKeyDown = ChannelsSGKeyDown
       OnSetEditText = ChannelsSGSetEditText
-      ExplicitHeight = 574
+      ExplicitWidth = 601
+      ExplicitHeight = 753
       ColWidths = (
         64
         64
@@ -76,29 +78,30 @@ object TransNumFrm: TTransNumFrm
     end
   end
   object RightPan: TPanel
-    Left = 807
+    Left = 720
     Top = 0
     Width = 308
-    Height = 755
+    Height = 469
     Align = alRight
     TabOrder = 1
-    ExplicitHeight = 576
+    ExplicitLeft = 807
+    ExplicitHeight = 755
     inline TagsListFrame1: TTagsListFrame
       Left = 1
       Top = 1
       Width = 306
-      Height = 753
+      Height = 467
       Align = alClient
       TabOrder = 0
       ExplicitLeft = 1
       ExplicitTop = 1
       ExplicitWidth = 306
-      ExplicitHeight = 574
+      ExplicitHeight = 753
       inherited FormChannelsGB: TGroupBox
         Width = 306
-        Height = 753
+        Height = 467
         ExplicitWidth = 306
-        ExplicitHeight = 574
+        ExplicitHeight = 753
         inherited ChanNamesPanel: TPanel
           Width = 302
           Height = 109
@@ -126,7 +129,7 @@ object TransNumFrm: TTransNumFrm
         inherited TagsLV: TBtnListView
           Top = 127
           Width = 302
-          Height = 624
+          Height = 338
           Columns = <
             item
               Caption = #1048#1084#1103
@@ -142,19 +145,20 @@ object TransNumFrm: TTransNumFrm
             end>
           ExplicitTop = 127
           ExplicitWidth = 302
-          ExplicitHeight = 445
+          ExplicitHeight = 624
         end
       end
     end
   end
   object BottomPan: TPanel
     Left = 0
-    Top = 755
-    Width = 1115
+    Top = 469
+    Width = 1028
     Height = 68
     Align = alBottom
     TabOrder = 2
-    ExplicitTop = 576
+    ExplicitTop = 755
+    ExplicitWidth = 1115
     object BlockChanLabel: TLabel
       Left = 167
       Top = 7
@@ -190,10 +194,10 @@ object TransNumFrm: TTransNumFrm
     end
   end
   object ModesLV: TBtnListView
-    Left = 607
+    Left = 520
     Top = 0
     Width = 200
-    Height = 755
+    Height = 469
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -215,6 +219,7 @@ object TransNumFrm: TTransNumFrm
     DrawColorBox = False
     ChangeTextColor = False
     Editable = False
-    ExplicitHeight = 576
+    ExplicitLeft = 607
+    ExplicitHeight = 755
   end
 end

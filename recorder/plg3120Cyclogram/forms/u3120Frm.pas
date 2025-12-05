@@ -6,40 +6,22 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   inifiles,
   Dialogs, ImgList, ExtCtrls, Grids, ComCtrls, StdCtrls, Buttons,
-  recorder,
+  recorder, cfreg,
   uRecBasicFactory, uEventTypes, uRecorderEvents,
-  uComponentServises, uConfirmDlg,
+  uComponentServises, uConfirmDlg, uBaseObj,
   u3120Factory, u3120ControlObj,
   uControlObj, uModeObj, uProgramObj,
   MathFunction, uCommonMath,
   pluginclass, urcfunc, uTest,
   uThresholds3120Frm,
   uEditPropertiesFrm, uTransmisNumFrm,
-  uGenReport, cfreg,
-  activex, uPathMng,
-  pngimage;
+  uGenReport, uCpEngine,
+  activex, uPathMng, uEditProg, u3120Db, uMeasureBase,
+  pngimage, uStringGridExt;
 
 type
   TFrm3120 = class(TRecFrm)
     DeskGB: TGroupBox;
-    PlayPanel: TPanel;
-    PlayBtn: TSpeedButton;
-    PausePanel: TPanel;
-    PauseBtn: TSpeedButton;
-    StopPanel: TPanel;
-    StopBtn: TSpeedButton;
-    GroupBox3: TGroupBox;
-    ComTimeLabel: TLabel;
-    ModeTimeLabel: TLabel;
-    Label1: TLabel;
-    Label4: TLabel;
-    ComTimeEdit: TEdit;
-    ModeTimeEdit: TEdit;
-    ProgTimeEdit: TEdit;
-    TimeUnitsCB: TComboBox;
-    ModeStopTime: TEdit;
-    ContinueCB: TCheckBox;
-    ConfirmModeCB: TCheckBox;
     Timer1: TTimer;
     ImageListBtnStates: TImageList;
     OpenDialog1: TOpenDialog;
@@ -52,26 +34,50 @@ type
     Splitter3: TSplitter;
     TableModeGB: TGroupBox;
     TableModeSG: TStringGrid;
-    AlarmStopLabel: TLabel;
-    AlarmStopBtn: TImage;
-    PChLabel: TLabel;
-    FreqConvLamp: TImage;
     Panel3: TPanel;
     Edit1: TEdit;
     ReportBtn: TButton;
-    AlarmsBtn: TSpeedButton;
-    GetNotifyCB: TCheckBox;
-    StopOnPause: TCheckBox;
     ImageList1: TImageList;
-    SaveBtn: TSpeedButton;
-    CloseRep: TCheckBox;
-    ValsSG: TStringGrid;
     Splitter1: TSplitter;
+    ValsSG: TNoWheelStringGrid;
+    MainPanel: TPanel;
+    AlarmsBtn: TSpeedButton;
+    AlarmStopBtn: TImage;
+    AlarmStopLabel: TLabel;
     Button1: TButton;
-    ProgramsCB: TComboBox;
+    CloseRep: TCheckBox;
+    ConfirmModeCB: TCheckBox;
+    ContinueCB: TCheckBox;
+    EditProgBtn: TButton;
+    FreqConvLamp: TImage;
+    GetNotifyCB: TCheckBox;
+    GroupBox3: TGroupBox;
+    ComTimeLabel: TLabel;
+    ModeTimeLabel: TLabel;
+    Label1: TLabel;
+    Label4: TLabel;
+    ComTimeEdit: TEdit;
+    ModeTimeEdit: TEdit;
+    ProgTimeEdit: TEdit;
+    TimeUnitsCB: TComboBox;
+    ModeStopTime: TEdit;
     Label2: TLabel;
-    AddProgBtn: TButton;
-    DelProgBtn: TButton;
+    PausePanel: TPanel;
+    PauseBtn: TSpeedButton;
+    PChLabel: TLabel;
+    PlayPanel: TPanel;
+    PlayBtn: TSpeedButton;
+    ProgramsCB: TComboBox;
+    SaveBtn: TSpeedButton;
+    StopOnPause: TCheckBox;
+    StopPanel: TPanel;
+    StopBtn: TSpeedButton;
+    DBPanel: TPanel;
+    Label3: TLabel;
+    Label5: TLabel;
+    ObjNameCb: TComboBox;
+    OkDBbtn: TButton;
+    TestNameCb: TComboBox;
     procedure TableModeSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure PlayBtnClick(Sender: TObject);
@@ -105,10 +111,11 @@ type
       const Value: string);
     procedure ControlPropSGSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
+    procedure OkDBbtnClick(Sender: TObject);
   private
+    m_err:integer;
     // канал программы. Для отслеживания перехода с 0 на 1
     m_prevState: double;
-
     mThread: cardinal;
     // Режим подтверждения перехода
     m_CurControl: cControlobj;
@@ -125,9 +132,11 @@ type
     // форма посчитана фабрикой класса. Нужно для ограничения числа форм
     m_counted: Boolean;
     m_curCol, m_curRow: Integer;
-    finit, fload: Boolean;
+    finit, fload,
+    fneedUpdate: Boolean;
 
     m_val: string;
+    m_activProg, // индекс выбраной программы
     m_row, m_col: Integer;
     m_apply: Boolean;
     m_timerid, m_timerid_res: cardinal;
@@ -138,6 +147,8 @@ type
     m_saveBlockNum: Integer;
     m_excelTmplt: string; // путь к шаблону
     m_lastFile, m_ReportFile: string; // путь к отчету
+    // движок контрольных точек
+    m_CPeng:tCpEngine;
   protected
     function CurProg: cProgramObj;
     // вернуть значение с единицами
@@ -174,6 +185,8 @@ type
     // отредактирована ячейка
     procedure ModeTabSGEditCell(r, c: Integer; val: string);
     function toSec(t: double): double;
+    procedure setErrCode(e:integer);
+    procedure ShowInfoMessage(s:string);
   public
     procedure doNextMode(Sender: TObject);
     procedure doStart;
@@ -237,7 +250,15 @@ begin
 end;
 
 procedure TFrm3120.ProgramsCBChange(Sender: TObject);
+var
+  I: Integer;
+  p:cProgramObj;
 begin
+  for I := 0 to g_conmng.ProgramCount - 1 do
+  begin
+    p:=g_conmng.getProgram(i);
+    p.m_StartOnPlay:=(i=ProgramsCB.ItemIndex);
+  end;
   ShowCyclogram;
 end;
 
@@ -258,7 +279,7 @@ procedure TFrm3120.doNextMode(Sender: TObject);
 begin
   ThresholdFrm.doUpdateData(self);
   // обновляем теги аварий в
-  TableModeSG.Invalidate;
+  fneedUpdate:=true;
 end;
 
 procedure TFrm3120.doAddObj(Sender: TObject);
@@ -276,7 +297,11 @@ var
   // g:TThresholdGroup;
 begin
   finit := true;
+  Frm3120:=self;
   Preview;
+  ProgramsCB.ItemIndex:=m_activProg;
+  ProgramsCBChange(nil);
+  ShowCyclogram;
   // testInit;
   // if ThresholdFrm<>nil then
   begin
@@ -294,6 +319,7 @@ begin
   StopPanel.Color := clMoneyGreen;
   PlayPanel.Color := clBtnFace;
   PausePanel.Color := clBtnFace;
+  ProgramsCB.Enabled:=true;
   updateviews;
 end;
 
@@ -303,6 +329,8 @@ var
 begin
   mf := GetMeraFile;
   m_ReportFile := ExtractFileDir(mf) + '\Report' + '.xlsx';
+
+  m_CPeng.Prepare();
 end;
 
 procedure TFrm3120.CreateEvents;
@@ -311,14 +339,13 @@ begin
   addplgevent('TFrm3120_doChangeRState', c_RC_DoChangeRCState, doChangeRState);
   addplgevent('TFrm3120_doLeaveCfg', c_RC_LeaveCfg, doLeaveCfg);
   addplgevent('TFrm3120_doRcInit', E_RC_Init, doRcInit);
-  g_conmng.Events.AddEvent('TFrm3120_doStopControlMng', E_OnStopControlMng,
-    doShowStop);
+  g_conmng.Events.AddEvent('TFrm3120_doStopControlMng', E_OnStopControlMng, doShowStop);
 end;
 
 function TFrm3120.CurProg: cProgramObj;
 begin
   if ProgramsCB.ItemIndex>-1 then
-    g_conmng.getProgram(ProgramsCB.ItemIndex)
+    result:=g_conmng.getProgram(ProgramsCB.ItemIndex)
   else
   begin
     if g_conmng.ProgramCount=0 then
@@ -351,7 +378,7 @@ begin
     begin
       g_conmng.LoadState;
     end;
-    // tableModeSg.Invalidate;
+    tableModeSg.Invalidate;
   end
   else
   begin
@@ -364,7 +391,7 @@ begin
       end;
       g_conmng.continuePlay;
     end;
-    // tableModeSg.Invalidate;
+    tableModeSg.Invalidate;
   end;
   // подсветка панелек
   PlayPanel.Color := clMoneyGreen;
@@ -376,6 +403,7 @@ procedure TFrm3120.Stop;
 begin
   g_conmng.Stop;
   TableModeSG.FixedRows := 0;
+  ShowInfoMessage('Стоп');
 end;
 
 procedure TFrm3120.pause;
@@ -459,6 +487,7 @@ end;
 
 destructor TFrm3120.destroy;
 begin
+  m_CPeng.destroy;
   inherited;
 end;
 
@@ -542,62 +571,59 @@ var
   ec, I: Integer;
   str: string;
 begin
-  if self <> nil then
-  begin
-    Rstate := RStatePlay;
+  Rstate := RStatePlay;
 
-    EnablePult(Rstate);
-    Timer1.Interval := round(GetRefreshPeriod * 1000);
-    if Rstate then
+  EnablePult(Rstate);
+  Timer1.Interval := round(GetRefreshPeriod * 1000);
+  if Rstate then
+  begin
+    // ShowTrigs;
+    // m_timerid_res:=SetTimer(MainThreadID, m_timerid, Timer1.Interval, @TimeProc);
+    Timer1.Enabled := true
+  end
+  else
+  begin
+    // последняя итерация для срабатывания действий заложенных в стоптриг
+    p := CurProg;
+    if p <> nil then
     begin
-      // ShowTrigs;
-      // m_timerid_res:=SetTimer(MainThreadID, m_timerid, Timer1.Interval, @TimeProc);
-      Timer1.Enabled := true
+      p.exec;
+      for I := 0 to p.ControlCount - 1 do
+      begin
+        c := p.getOwnControl(I);
+        c.exec;
+      end;
+    end;
+    if g_conmng.configChanged then
+    begin
+      Preview;
+      g_conmng.configChanged := false;
+    end;
+    Stop;
+    // if g_conmng.state<>c_stop then showmessage('Остановили Timer в состоянии c_TryStop');
+    Timer1.Enabled := false;
+
+    if g_conmng.State <> c_stop then
+    begin
+      g_conmng.State := c_stop;
+    end;
+    if p <> nil then
+    begin
+      if p.ActiveMode <> nil then
+        str := p.ActiveMode.caption
+      else
+        str := '';
+    end;
+    ec := g_conmng.ErrorCount;
+    if ec <> 0 then
+    begin
+      // ActiveModeE.text :=str+' '+g_conmng.ErrorStr;
     end
     else
     begin
-      // последняя итерация для срабатывания действий заложенных в стоптриг
-      p := CurProg;
-      if p <> nil then
-      begin
-        p.exec;
-        for I := 0 to p.ControlCount - 1 do
-        begin
-          c := p.getOwnControl(I);
-          c.exec;
-        end;
-      end;
-      if g_conmng.configChanged then
-      begin
-        Preview;
-        g_conmng.configChanged := false;
-      end;
-      Stop;
-      // if g_conmng.state<>c_stop then showmessage('Остановили Timer в состоянии c_TryStop');
-      Timer1.Enabled := false;
-
-      if g_conmng.State <> c_stop then
-      begin
-        g_conmng.State := c_stop;
-      end;
-      if p <> nil then
-      begin
-        if p.ActiveMode <> nil then
-          str := p.ActiveMode.name
-        else
-          str := '';
-      end;
-      ec := g_conmng.ErrorCount;
-      if ec <> 0 then
-      begin
-        // ActiveModeE.text :=str+' '+g_conmng.ErrorStr;
-      end
-      else
-      begin
-        // ActiveModeE.text :=str;
-      end;
-      TableModeSG.Invalidate;
+      // ActiveModeE.text :=str;
     end;
+    TableModeSG.Invalidate;
   end;
 end;
 
@@ -622,6 +648,7 @@ procedure TFrm3120.PlayBtnClick(Sender: TObject);
 var
   b: Boolean;
 begin
+  ProgramsCB.Enabled:=false;
   TableModeSG.FixedRows := 1;
   b := PlayPanel.Color = clMoneyGreen;
   if b then
@@ -640,17 +667,18 @@ end;
 
 procedure TFrm3120.SaveBtnClick(Sender: TObject);
 var
-  dir, rep, tmplt, objpath, testpath, mdb: string;
+  dir, rep, tmplt, objpath, lpath, mdb: string;
   d: TDataReport;
   m: cmodeobj;
 begin
-  testpath := GetMDBTestPath;
+  //testpath := GetMDBTestPath;
+  lpath := testpath;
   if testpath <> '' then
   begin
-    objpath := TrimPath(testpath);
+    objpath := TrimPath(lpath);
     mdb := TrimPath(objpath);
     tmplt := FindFile('tmplt_report.xlsx', mdb, 2);
-    dir := testpath;
+    dir := lpath;
   end
   else
   begin
@@ -658,7 +686,9 @@ begin
   end;
   m := CurProg.ActiveMode;
   d.m := m;
-  genreport(dir, 'Report.xlsx', tmplt, false, d);
+  // сброс тегов
+  m_CPeng.resettags;
+  genreport(dir, 'Report.xlsx', tmplt, false, d, m_CPeng.m_tagslist);
 end;
 
 procedure TFrm3120.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -678,6 +708,10 @@ begin
   a_pIni.WriteBool(SectionStr, 'CloseRep', CloseRep.Checked);
   a_pIni.WriteInteger(SectionStr, 'Table_Controls_Splitter_Pos', RightGB.Width);
   a_pIni.WriteString(SectionStr, 'TransNumCfg', TransNumFrm.ToStr);
+  a_pIni.WriteInteger(SectionStr, 'ActivProg', ProgramsCB.ItemIndex);
+  a_pIni.WriteString(SectionStr, 'DBTestObj', ObjNameCb.text);
+  a_pIni.WriteString(SectionStr, 'DBTest', TestNameCb.text);
+
 
   dir := ExtractFileDir(a_pIni.FileName);
   ThresholdFrm.save(dir + '\Alarms.ini');
@@ -698,14 +732,18 @@ begin
   ContinueCB.Checked := a_pIni.ReadBool(SectionStr, 'ContinueCB', false);
   ConfirmModeCB.Checked := a_pIni.ReadBool(SectionStr, 'ConfirmModeCB', false);
   GetNotifyCB.Checked := a_pIni.ReadBool(SectionStr, 'GetNotifyCB', false);
-
   TimeUnitsCB.ItemIndex := a_pIni.ReadInteger(SectionStr, 'TimeUnitsCB', 0);
-
   CloseRep.Checked := a_pIni.ReadBool(SectionStr, 'CloseRep', false);
+  m_activProg:=a_pIni.ReadInteger(SectionStr, 'ActivProg', 0);
 
-  RightGB.Width := a_pIni.ReadInteger(SectionStr,
-    'Table_Controls_Splitter_Pos', RightGB.Width);
+  initdb;
+  m_CPeng:=TCPengine.create;
+  m_CPeng.init(TExtRecorderPack(g_plg));
+  ObjNameCb.text:=a_pIni.ReadString(SectionStr, 'DBTestObj', '');
+  TestNameCb.text:=a_pIni.ReadString(SectionStr, 'DBTest', '');
+  ShowDB(ObjNameCb, TestNameCb, ObjNameCb.text, TestNameCb.text);
 
+  RightGB.Width := a_pIni.ReadInteger(SectionStr, 'Table_Controls_Splitter_Pos', RightGB.Width);
   s := a_pIni.ReadString(SectionStr, 'TransNumCfg', '');
   if s <> '' then
   begin
@@ -821,7 +859,7 @@ begin
       if ConfirmModeCB.Checked then
       begin
         ConfirmFmr.SecCallBack(ConfirmManualSwitchMode, m);
-        ConfirmFmr.SetText('Установить режим ' + m.name);
+        ConfirmFmr.SetText('Установить режим ' + m.caption);
         ConfirmFmr.Execute;
       end
       else // безусловный переход
@@ -837,6 +875,7 @@ end;
 procedure TFrm3120.ControlPropSGDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
 begin
+  setErrCode(4);
   //
   if ControlPropSG.Cells[ACol, ARow] = c_left_str then
   begin
@@ -846,6 +885,7 @@ begin
       ControlPropSG.Cells[ACol, ARow]);
     ControlPropSG.Canvas.Brush.Color := Color;
   end;
+  setErrCode(0);
 end;
 
 procedure TFrm3120.ControlPropSGKeyDown(Sender: TObject; var Key: Word;
@@ -853,7 +893,7 @@ procedure TFrm3120.ControlPropSGKeyDown(Sender: TObject; var Key: Word;
 var
   m_t: ctask;
   sg: TStringGrid;
-  col: Integer;
+  col, r: Integer;
   str: string;
 begin
   if Key = VK_RETURN then
@@ -904,6 +944,10 @@ begin
         m_t.m_data.cmd_start := StrToB(sg.Cells[col, c_StartRow]);
         m_t.m_data.cmd_stop := StrToB(sg.Cells[col, c_StopRow]);
         UpdateControlsPropSGmode(cmodeobj(SelectCell_m));
+        // обновляем единицы измерения. Поиск строки по имени контрола в 0 колонке
+        r := getRow(TableModeSG, m_CurControl.name, 0);
+        col:= getColumn(TableModeSG, SelectCell_m.caption);
+        tableModeSg.Cells[col, r]:=getTaskVal(m_t);
       end;
     end;
   end;
@@ -915,6 +959,7 @@ procedure TFrm3120.ControlPropSGSelectCell(Sender: TObject; ACol, ARow: Integer;
 var
   p:cProgramObj;
 begin
+  setErrCode(8);
   p:=CurProg;
   if p<>nil then
   begin
@@ -924,10 +969,11 @@ begin
       if SelectCell_m<>nil then
       begin
         SelectCell_Col := aCol;
-        ModePropE.text:=SelectCell_m.name;
+        ModePropE.text:=SelectCell_m.caption;
       end;
     end;
   end;
+  setErrCode(0);
 end;
 
 procedure TFrm3120.ControlPropSGSetEditText(Sender: TObject; ACol,
@@ -945,7 +991,7 @@ begin
       if SelectCell_m<>nil then
       begin
         SelectCell_Col := aCol;
-        ModePropE.text:=SelectCell_m.name;
+        ModePropE.text:=SelectCell_m.caption;
       end;
     end;
   end;
@@ -965,6 +1011,13 @@ var
   a: TAlarms;
   b: Boolean;
 begin
+  if (arow<0) or (acol<0) then
+    exit;
+  if GetCurrentThreadId<>m_uiThread then
+  begin
+    exit;
+  end;
+  setErrCode(5);
   sg := TStringGrid(Sender);
   Color := sg.Canvas.Brush.Color;
   // красим заголовок
@@ -979,17 +1032,20 @@ begin
     sg.Canvas.FillRect(Rect);
     sg.Canvas.TextOut(Rect.Left, Rect.Top, sg.Cells[ACol, ARow]);
     sg.Canvas.Brush.Color := Color;
+    setErrCode(0);
     exit;
   end;
   p := CurProg;
   if p <> nil then
+  begin
     m := p.ActiveMode;
+    c := g_conmng.getControlObj(ARow - 2);
+  end;
   // измерения
   if (ACol = 0) or (ACol = 1) then
   begin
     str := sg.Cells[0, ARow];
     a := nil;
-    c := g_conmng.getControlObj(ARow - 2);
     if c <> nil then
     begin
       if c is cMnControl then
@@ -1014,11 +1070,33 @@ begin
     begin
       sg.Canvas.Brush.Color := clCream;
     end;
+    if m<>nil then
+    begin
+      t:=m.GetTask(c.name);
+      if t<>nil then
+      begin
+        if t.m_useTolerance then
+        begin
+          case t.ftolres of
+            // не контролим
+            0: sg.Canvas.Brush.Color := clCream;
+            // не в допуске
+            1: sg.Canvas.Brush.Color := clCream;
+            // в допуске
+            2: sg.Canvas.Brush.Color := clGrass;
+            // не проверяем
+            3: sg.Canvas.Brush.Color := clLtGray;
+          end;
+        end;
+      end;
+    end;
     sg.Canvas.FillRect(Rect);
     sg.Canvas.TextOut(Rect.Left, Rect.Top, sg.Cells[ACol, ARow]);
     sg.Canvas.Brush.Color := Color;
   end;
+  setErrCode(0);
 end;
+
 
 procedure TFrm3120.TableModeSGDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
@@ -1034,6 +1112,7 @@ var
   a: TAlarms;
   b: Boolean;
 begin
+  setErrCode(3);
   sg := TStringGrid(Sender);
   Color := sg.Canvas.Brush.Color;
   // красим заголовок
@@ -1048,6 +1127,7 @@ begin
     sg.Canvas.FillRect(Rect);
     sg.Canvas.TextOut(Rect.Left, Rect.Top, sg.Cells[ACol, ARow]);
     sg.Canvas.Brush.Color := Color;
+    setErrCode(0);
     exit;
   end;
 
@@ -1088,7 +1168,7 @@ begin
         // имя режима
         str := sg.Cells[ACol, 0];
         // окраска столбца
-        if str = m.name then
+        if str = m.caption then
         begin
           Color := sg.Canvas.Brush.Color;
           case p.State of
@@ -1126,6 +1206,7 @@ begin
       end;
     end;
   end;
+  setErrCode(0);
 end;
 
 
@@ -1145,8 +1226,10 @@ begin
 end;
 
 procedure TFrm3120.Button1Click(Sender: TObject);
+var
+  obj:cxmlfolder;
 begin
-  TransNumFrm.Show;
+  EditProgFrm.showPrograms(g_conmng);
 end;
 
 procedure TFrm3120.AddProgBtnClick(Sender: TObject);
@@ -1213,7 +1296,7 @@ begin
   // TableModeSG.Cells[col, 0] := m.Caption;
   if m_curMode = nil then
     exit;
-  m_curCol := getColumn(TableModeSG, m_curMode.name);
+  m_curCol := getColumn(TableModeSG, m_curMode.caption);
   if m_CurControl <> nil then
   begin
     m_curRow := getRow(TableModeSG, m_CurControl.name, 0);
@@ -1236,6 +1319,7 @@ var
   I, prevCol: Integer;
   find:boolean;
 begin
+  setErrCode(9);
   // showmessage('str: ' + inttostr(arow)+ '; col: '+inttostr(aCol));
   CancelEditMode;
   prevCol:=m_curRow;
@@ -1259,7 +1343,7 @@ begin
   begin
     SelectColsCount:=1;
     SelectCols[0]:=ACol;
-    Edit1.Text:=inttostr(SelectColsCount);
+    //Edit1.Text:=inttostr(SelectColsCount);
   end;
   // механика выбора нескольких колонок
   if getKeyState(VK_CONTROL)<0 then
@@ -1287,18 +1371,19 @@ begin
       SelectCols[SelectColsCount]:=acol;
       inc(SelectColsCount);
     end;
-    Edit1.Text:=inttostr(SelectColsCount);
+    //Edit1.Text:=inttostr(SelectColsCount);
   end;
 
   if m_curMode = nil then
     exit;
-  ModePropE.text := m_curMode.name;
+  ModePropE.text := m_curMode.caption;
   if m_curMode <> nil then
   begin
     UpdateControlsPropSG;
     if g_conmng.State <> c_play then
       TStringGrid(Sender).Invalidate;
   end;
+  setErrCode(0);
 end;
 
 procedure TFrm3120.TableModeSGSetEditText(Sender: TObject; ACol, ARow: Integer;
@@ -1311,7 +1396,9 @@ end;
 
 procedure TFrm3120.TableModeSGTopLeftChanged(Sender: TObject);
 begin
+  setErrCode(10);
   ValsSG.TopRow := TableModeSG.TopRow;
+  setErrCode(0);
 end;
 
 function TFrm3120.SecToTime(t: double): double;
@@ -1330,6 +1417,12 @@ procedure TFrm3120.SelectControl(c: cControlobj);
 begin
   m_CurControl := c;
   UpdateControlsPropSG;
+end;
+
+procedure TFrm3120.setErrCode(e: integer);
+begin
+  if m_err<>0 then
+    m_err:=e;
 end;
 
 // обновить в таблице настройки контрола столбец с режимом
@@ -1423,7 +1516,7 @@ begin
   v := round(GetMean(p.m_stateTag));
   if m_prevState <> v then
   begin
-    TableModeSG.Invalidate;
+    fneedUpdate:=true;
   end;
   m_prevState := round(v);
 end;
@@ -1437,7 +1530,7 @@ var
 begin
   if m_curMode = nil then
     exit;
-  m_curCol := getColumn(TableModeSG, m_curMode.name);
+  m_curCol := getColumn(TableModeSG, m_curMode.caption);
   if m_CurControl <> nil then
   begin
     m_curRow := getRow(TableModeSG, m_CurControl.name, 0);
@@ -1500,7 +1593,7 @@ begin
   for I := 0 to p.ModeCount - 1 do
   begin
     m := p.getmode(I);
-    ControlPropSG.Cells[1 + m.modeIndex, 0] := m.name;
+    ControlPropSG.Cells[1 + m.modeIndex, 0] := m.caption;
     UpdateControlsPropSGmode(m);
   end;
   SGChange(ControlPropSG, c_colScale);
@@ -1541,6 +1634,7 @@ begin
   end;
 end;
 
+
 procedure TFrm3120.ShowModes;
 var
   col, j, I: Integer;
@@ -1565,7 +1659,10 @@ end;
 
 procedure TFrm3120.Splitter1Moved(Sender: TObject);
 begin
+  exit;
+  setErrCode(6);
   SGChange(valsSG);
+  setErrCode(0);
 end;
 
 procedure TFrm3120.ShowCyclogram;
@@ -1575,25 +1672,22 @@ var
   p: cProgramObj;
   c: cControlobj;
 begin
-  // TableModeSG.RowCount:=10;
-  // TableModeSG.ColCount:=g_conmng.ModeCount;
+  setErrCode(11);
+  p:=CurProg;
   // имена режимов
-  TableModeSG.ColCount := g_conmng.ModeCount + 1;
-  p := CurProg;
+  TableModeSG.ColCount:=p.ModeCount + 1;
   for I := 0 to p.ModeCount - 1 do
   begin
     col := I + 1;
     m := p.getmode(I);
     // имя режима
-    TableModeSG.Cells[col, 0] := m.name;
+    TableModeSG.Cells[col, 0] := m.caption;
     // длительность режима
     TableModeSG.Cells[col, 1] := formatstrnoe(SecToTime(m.ModeLength),
       c_digits);
   end;
   ShowModes;
   ShowMeasured;
-  TableModeSG.Cells[p.ModeCount + 1, 0] := 'Измерено М';
-  TableModeSG.Cells[p.ModeCount + 2, 0] := 'Измерено N';
   ValsSG.Cells[0, 0] := 'Измерено М';
   ValsSG.Cells[1, 0] := 'Измерено N';
   // отображаем контролы
@@ -1604,6 +1698,35 @@ begin
   end;
   SGChange(TableModeSG, c_colScale);
   SGChange(ValsSG, c_colScale);
+  setErrCode(0);
+end;
+
+procedure TFrm3120.ShowInfoMessage(s: string);
+begin
+  case m_err of
+    0:
+    begin
+      if g_conmng.ErrorCount<>0 then
+      begin
+        edit1.text:=g_conmng.ErrorStr;
+      end
+      else
+      begin
+        if s<>'' then
+          edit1.text:=s;
+      end;
+    end;
+    1: edit1.text:='updateviews';
+    2: edit1.text:='UpdateView';
+    3: edit1.text:='TableModeSGDrawCell';
+    4: edit1.text:='ControlPropSGDrawCell';
+    5: edit1.text:='ValsSGDrawCell';
+    6: edit1.text:='Splitter1Moved';
+    7: edit1.text:='UpdateTimer';
+    8: edit1.text:='SelectCell';
+    9: edit1.text:='SelectCell';
+    10: edit1.text:='TopLeftChanged';
+  end;
 end;
 
 procedure TFrm3120.testInit;
@@ -1617,11 +1740,20 @@ begin
   end;
 
   TableModeSG.RowCount := 11;
-  TableModeSG.ColCount := c_MCount + 2;
+  TableModeSG.ColCount := c_MCount + 1;
   TableModeSG.Cells[0, 1] := 'Время работы';
 
+  //ValsSG:=TNoWheelStringGrid.create(nil);
+  //ValsSG.Font:=TableModeSG.Font;
+  //ValsSG.align:=alClient;
+  //ValsSG.BevelInner:=bvLowered;
+  //ValsSG.BevelKind:=bkFlat;
+  //ValsSG.Options:=TableModeSG.Options;
+  //ValsSG.parent:=panel4;
+  ValsSG.OnDrawCell:= ValsSGDrawCell;
   ValsSG.RowCount := 11;
-  ValsSG.ColCount := 3;
+  ValsSG.ColCount := 2;
+  ValsSG.EditorMode:=false;
 
   m_CurControl := g_conmng.getControlObj(0);
   Preview;
@@ -1633,33 +1765,47 @@ var
   s: string;
   ec: Integer;
 begin
+  if (not fneedupdate) and (g_conmng.state=c_play) then
+    exit;
+  setErrCode(1);
   p := CurProg;
   s := '';
   if p <> nil then
   begin
     if p.ActiveMode <> nil then
-      s := p.ActiveMode.name
+      s := p.ActiveMode.caption
     else
       s := '';
-    ec := g_conmng.ErrorCount;
-    if ec <> 0 then
-    begin
-      // ActiveModeE.text :=s+' '+g_conmng.ErrorStr;
-    end
-    else
-    begin
-      // ActiveModeE.text:=s;
-    end;
   end;
   UpdateTimers;
-  // TableModeSG.Invalidate;
-  // UpdateControlsPropSG;
+  TableModeSG.Invalidate;
+  if g_conmng.state=c_Play then
+  begin
+    case p.stateTag of
+      c_Prog_CheckTol: ShowInfoMessage('Выход на режим ' + p.ActiveMode.caption);
+      // программа закончилась
+      c_Prog_EndTag: ShowInfoMessage('Программа закончилась');
+      // программа проверяет режим
+      c_Prog_CheckModeTag: ShowInfoMessage('Проверка допусков ' + p.ActiveMode.caption);
+      // программа на бесконечном режиме
+      c_Prog_InfinitiModeTag: ShowInfoMessage('Бесконечный режим ' + p.ActiveMode.caption);
+      // программа продолжается
+      c_Prog_PlayTag: ShowInfoMessage('Работа ' + p.ActiveMode.caption);
+      // программа в паузе
+      c_Prog_PauseTag: ShowInfoMessage('Пауза ' + p.ActiveMode.caption);
+      // программа в стопе
+      c_Prog_StopTag: ShowInfoMessage('Стоп');
+    end;
+  end;
+  fneedUpdate:=false;
+  setErrCode(0);
 end;
 
 procedure TFrm3120.Timer1Timer(Sender: TObject);
 var
   tid: Integer;
 begin
+  setErrCode(7);
   tid := GetCurrentThreadId;
   // деления на случай необходимости вызова из разных потоков
   if tid = MainThreadID then
@@ -1669,7 +1815,8 @@ begin
       // пересчитываем реакцию регуляторов
       g_conmng.ExecControls;
       // отображаем
-      updateviews;
+      fneedUpdate:=true;
+      //updateviews;
     end;
   end
   else
@@ -1679,9 +1826,11 @@ begin
       // пересчитываем реакцию регуляторов
       g_conmng.ExecControls;
       // отображаем
-      updateviews;
+      fneedUpdate:=true;
+      //updateviews;
     end;
   end;
+  setErrCode(0);
 end;
 
 function TFrm3120.ToTime(sec: double; b_format: Boolean): string;
@@ -1703,7 +1852,11 @@ end;
 
 procedure TFrm3120.UpdateView;
 begin
+  showinfomessage('');
+  setErrCode(2);
+  updateviews;
   ShowMeasured;
+  setErrCode(0);
 end;
 
 procedure TFrm3120.TableModeSGKeyDown(Sender: TObject; var Key: Word;
@@ -1847,6 +2000,7 @@ procedure TFrm3120.ModeTabSGEditCell(r, c: Integer; val: string);
 var
   p: cProgramObj;
   m: cmodeobj;
+  o:cBaseObj;
   t: ctask;
   con: cControlobj;
   str: string;
@@ -1903,7 +2057,12 @@ begin
         // переименование режима
         if m.name <> TableModeSG.Cells[c, 0] then
         begin
-          m.name := TableModeSG.Cells[c, 0];
+          o:=g_conmng.getobj(TableModeSG.Cells[c, 0]);
+          if o<>nil then
+          begin
+            m.name :=p.name+'_'+TableModeSG.Cells[c, 0];
+            m.caption:=TableModeSG.Cells[c, 0];
+          end;
         end;
       end;
     end;
@@ -1940,6 +2099,28 @@ begin
       end;
     end;
   end;
+end;
+
+
+procedure TFrm3120.OkDBbtnClick(Sender: TObject);
+begin
+  createObj(ObjNameCB.text, TestNameCb.text);
+  // объект в combobox
+  if g_obj<>nil then
+  begin
+    ObjNameCB.AddItem(g_obj.name, g_obj);
+    setComboBoxItem(g_obj.name, ObjNameCB);
+  end;
+  if g_test<>nil then
+  begin
+    // испытание в combobox
+    TestNameCB.AddItem(g_test.caption, g_test);
+    setComboBoxItem(g_test.caption, TestNameCB);
+    OkDBbtn.ShowHint:=true;
+    OkDBbtn.Hint:=g_test.Absolutepath;
+  end;
+  CheckCBItemInd(ObjNameCB);
+  CheckCBItemInd(TestNameCB);
 end;
 
 end.

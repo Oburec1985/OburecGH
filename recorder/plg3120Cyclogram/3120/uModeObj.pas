@@ -45,14 +45,16 @@ type
     fStopControlValue: boolean;
     fapplyed: boolean;
     cs: TRTLCriticalSection;
+    // point.y задублирован с m_data.
+    fpoint: point2;
   public
+    // 0 - не исп, 1 - не допуск 2 - допуск
+    fTolRes:integer;
     m_data:T3120Struct;
   public
     TaskType: TPType;
     // компоненты касательных векторов
-    leftTang, rightTang,
-    // point.y задублирован с m_data.
-    point: point2;
+    leftTang, rightTang:point2;
     spline: cubicspline;
     // владелец задачи
     control: cControlObj;
@@ -76,6 +78,10 @@ type
     // задание применено
     function getApplyed: boolean;
     procedure setApplyed(b: boolean);
+    procedure setPoint(p2: point2);
+    // проверить что FB вошел в допуск
+    function CheckTaskRes: boolean;
+    function getTolRes: boolean;
   public
     procedure copytaskto(t: cTask);
     // доп задания контролу
@@ -99,7 +105,9 @@ type
     function strValue: string;
     function strUseTol: string;
     property task: double read GetTask write SetTask;
+    property point:point2 read fpoint write setpoint;
     property StopControlValue: boolean read fStopControlValue write SetStopControlValue;
+    property tolres: boolean read gettolres;
   public
     constructor create;
     destructor destroy;
@@ -126,6 +134,12 @@ type
     // время проверок на допуск
     fCheckLength: double;
     m_tryActive: boolean;
+    // при старте режима контрольная точка отбивается автоматом
+    AutoCp,
+    // контрольная точка снята
+    ProcCP: boolean;
+    // информация о режиме
+    modeStatus:string;
   private
     // применен режим или нет хотя бы один раз
     m_applyed: boolean;
@@ -140,6 +154,12 @@ type
     // проверять выход на режим. Следующий режим не начнется пока выбранные контролы не окажутся
     // в допуске fThrehold
     fCheckThrehold: boolean;
+    // не считать время на режиме пока не вошли в допуск
+    // если включена эта логика то fCheckThrehold в конце режима не используется
+    fStartTimeOnTolerance:boolean;
+    // зашли в допуск на режиме. Сбрасывается в setactive=true
+    // если включено fStartTimeOnTolerance взводим fInTolerance когда зайдем в допуск
+    fTrigInTolerance:boolean;
     // режим бесконечный - прервется по требованию пользователя или по триггеру
     fInfinity: boolean;
   protected
@@ -171,11 +191,14 @@ type
     // (resetCheck:boolean) - если resetCheck то fCurMode не сбрасывается
     // (сбрасываем только таймер но не останавливаем проверку)
     procedure StopCheckThreshold(resetCheck: boolean);
+    // проверка на режиме что контролы вошли в допуск
     function EvalThresholds: boolean;
     procedure StartCheckThreshold;
     function getNextMode: cModeObj;
     function getPrevMode: cModeObj;
     function CopyMode(before: boolean): cModeObj;
+    // создать копию режима но не привязывать к программе
+    function NewMode: cModeObj;
     // параметр u значение 0..1 задает точку получаемую при интерполяции между задачами
     function GetTaskValue(t: cTask; x: double): double; overload;
     function GetTaskValue(c: cControlObj; x: double): double; overload;
@@ -214,9 +237,13 @@ type
     property state: integer read getstate write setstate;
     property active: boolean read getactive write setactive;
     property ModeLength: double read getModeLen write setModeLen;
+    // время проверок выхода на режим. если -1 то проверка бесконечная
     property CheckLength: double read fCheckLength write fCheckLength;
     // необходим контроль режима на выход на допуск
     property CheckThreshold: boolean read fCheckThrehold write fCheckThrehold;
+    // не отсчитывать время на режиме пока хотя бы на одну итерацию не вошли в допуск
+    property StartTimeOnTolerance: boolean read fStartTimeOnTolerance write fStartTimeOnTolerance;
+    property TrigInTolerance: boolean read fTrigInTolerance write fTrigInTolerance;
     property Infinity: boolean read fInfinity write fInfinity;
     property MIndex: integer read findex write setindex;
     property applyed:boolean read m_applyed write setApplyed;
@@ -443,18 +470,33 @@ var
   i: integer;
   mng: cControlMng;
   con: cControlObj;
+  p:cProgramObj;
 begin
   mng := cControlMng(getmng);
-  for i := 0 to mng.ControlsCount - 1 do
+  if mng=nil then
   begin
-    con := mng.getControlObj(i);
-    createTask(con, 0);
+    p:=cProgramObj(parent);
+    for i := 0 to p.ControlCount - 1 do
+    begin
+      con := p.getOwnControl(i);
+      createTask(con, 0);
+    end;
+  end
+  else
+  begin
+    for i := 0 to mng.ControlsCount - 1 do
+    begin
+      con := mng.getControlObj(i);
+      createTask(con, 0);
+    end;
   end;
 end;
 
 constructor cModeObj.create;
 begin
   inherited;
+  // время проверки выхода на режим бесконечное
+  fCheckLength:=0.1;
 
   TaskList := tstringlist.create;
   TaskList.Sorted := true;
@@ -524,7 +566,7 @@ begin
     //c.StarCheckMode(self);
   end;
   p := cProgramObj(getmainparent);
-  //p.ResetModeCheckTime;
+  p.ResetModeCheckTime;
   fCheckProgres := true;
 end;
 
@@ -532,6 +574,7 @@ function cModeObj.EvalThresholds: boolean;
 var
   i: integer;
   c: cControlObj;
+  t:ctask;
   p: cProgramObj;
   res: boolean;
   di64, t64, freq: int64;
@@ -539,26 +582,30 @@ begin
   res := true;
   for i := 0 to TaskList.Count - 1 do
   begin
-    c := GetTask(i).control;
-    //res := c.CheckMode;
+    t:=GetTask(i);
+    // InTolerance обновляется в событии обновления тегов
+    //res := c.InTolerance;
+    res := t.CheckTaskRes;
     if not res then
     begin
       break;
     end;
   end;
   result := res;
+  if res then
+  begin
+    // взводим что заходили в допуска по режиму
+    TrigInTolerance:=true;
+  end;
   p := cProgramObj(getmainparent);
+  // считаем сколько времени стоим в допуске
   QueryPerformanceCounter(t64);
   if res then
   begin
     QueryPerformanceFrequency(freq);
     di64 := decI64(p.fCheckStartTime_i, t64);
     p.fCheckLength := di64 / freq;
-  end
-  else
-  begin
-    p.fCheckLength := 0;
-  end;
+  end; // сброс не прописываем делается в p.Exec
 end;
 
 procedure cModeObj.doRename;
@@ -673,6 +720,7 @@ begin
       end;
     end;
   end;
+  p.doExecMode(self);
   m_applyed := true;
 end;
 
@@ -708,6 +756,26 @@ begin
   cProgramObj(getmainparent).insertMode(result, result.MIndex);
   result.ModeLength := ModeLength;
   result.CreateTasks;
+  for i := 0 to TaskCount - 1 do
+  begin
+    t := GetTask(i);
+    t.copytaskto(result.GetTask(i));
+  end;
+end;
+
+function cModeObj.NewMode: cModeObj;
+var
+  i: integer;
+  t: cTask;
+begin
+  result := cModeObj.create;
+  result.ModeLength := ModeLength;
+  result.fparent:=parent.parent;
+  result.CreateTasks;
+  result.CheckThreshold:=CheckThreshold;
+  result.AutoCp:=AutoCp;
+  result.StartTimeOnTolerance:=StartTimeOnTolerance;
+  result.fparent:=nil;
   for i := 0 to TaskCount - 1 do
   begin
     t := GetTask(i);
@@ -941,7 +1009,9 @@ begin
   end;
   if b then
   begin
+    ProcCP:=false;
     p.factivemode := self;
+    fTrigInTolerance:=false;
     p.ResetModeT;
   end;
   // пишем индекс активного режима в тег
@@ -1161,6 +1231,9 @@ begin
   CheckLength := xmlNode.ReadAttributeFloat('CheckLength', 0);
   CheckThreshold := xmlNode.ReadAttributeBool('CheckThreshold', false);
   Infinity := xmlNode.ReadAttributeBool('Infinity', false);
+  AutoCp:=xmlNode.ReadAttributeBool('AutoCP', false);
+
+  StartTimeOnTolerance:= xmlNode.ReadAttributeBool('StartTimeOnCheckTol', false);
 
   TaskNode := xmlNode.NodeByName('TaskList');
   if TaskNode <> nil then
@@ -1222,6 +1295,8 @@ begin
   xmlNode.WriteAttributeFloat('CheckLength', CheckLength);
   xmlNode.WriteAttributeBool('CheckThreshold', CheckThreshold);
   xmlNode.WriteAttributeBool('Infinity', Infinity);
+  xmlNode.WriteAttributeBool('AutoCP', AutoCp);
+  xmlNode.WriteAttributeBool('StartTimeOnCheckTol', StartTimeOnTolerance);
   TaskNode := GetNode(xmlNode, 'TaskList');
   TaskNode.WriteAttributeFloat('NCount', TaskCount);
   for i := 0 to TaskCount - 1 do
@@ -1356,6 +1431,39 @@ begin
   end;
 end;
 
+function cTask.CheckTaskRes: boolean;
+var
+  thresh,fb, offset:double;
+begin
+  fTolRes:=0;
+  if m_useTolerance then
+  begin
+    if (m_data.cmd_stop) or (task=0) then
+    begin
+      result:=true;
+      ftolres:=3;
+    end
+    else
+    begin
+      fb:=control.getFb;
+      case m_tolType of
+        // проценты
+        0: thresh:=task*m_tolerance*0.01;
+        // абс знач
+        1: thresh:= m_tolerance;
+      end;
+      offset:=task-fb;
+      result:=(offset<thresh);
+      if result then
+        fTolres:=2
+      else
+        fTolres:=1;
+    end;
+  end
+  else
+    result:=true;
+end;
+
 procedure cTask.compilespline;
 var
   t0, t1, t2: cTask;
@@ -1453,6 +1561,7 @@ begin
   t.m_useTolerance := m_useTolerance;
   t.SplineInterp := SplineInterp;
   t.m_data:=m_data;
+  t.task:=task;
 end;
 
 constructor cTask.create;
@@ -1599,8 +1708,13 @@ end;
 
 procedure cTask.SetTask(d: double);
 begin
-  point.y := d;
+  fpoint.y:= d;
   m_data.Task:=d;
+end;
+
+function cTask.getTolRes: boolean;
+begin
+  result:=fTolRes=2;
 end;
 
 function cTask.getunits: string;
@@ -1713,6 +1827,11 @@ end;
 procedure cTask.setApplyed(b: boolean);
 begin
   fapplyed := b;
+end;
+
+procedure cTask.setPoint(p2: point2);
+begin
+  fpoint:=p2;
 end;
 
 function cTask.strUseTol: string;

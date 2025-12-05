@@ -960,12 +960,13 @@ end;
 
 procedure cBaseObj.LoadObjAttributes(xmlNode: txmlNode; mng: tobject);
 begin
-
+  caption:=xmlNode.ReadAttributeString('Caption', name);
 end;
 
 procedure cBaseObj.SaveObjAttributes(xmlNode: txmlNode);
 begin
   xmlNode.WriteAttributeBool('AutoCreate', autocreate);
+  xmlNode.WriteAttributeString('Caption', caption);
 end;
 
 procedure cBaseObj.OnEngCreate;

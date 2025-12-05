@@ -8,7 +8,7 @@ uses
   uCompMng, cfreg, uRecorderEvents, PluginClass, tags, Recorder, uRCFunc,
   uCommonMath, nativeXml,
   Generics.Collections, Controls, uRecBasicFactory,
-  u3120frm, uTransmisNumFrm,
+  u3120frm, uTransmisNumFrm, uEditProg,
   u3120Factory;
 
 type
@@ -95,8 +95,11 @@ begin
   TransNumFrm:=TTransNumFrm.Create(nil);
   TransNumFrm.show;
   TransNumFrm.close;
-  begin
-  end;
+
+  EditProgFrm:=TEditProgFrm.Create(nil);
+  EditProgFrm.show;
+  EditProgFrm.close;
+
 end;
 
 procedure destroyFormsRecorderUIThread(compMng: cCompMng);

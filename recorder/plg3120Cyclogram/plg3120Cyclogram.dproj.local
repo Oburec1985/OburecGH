@@ -85,6 +85,14 @@
     <Transaction>2025.09.26 15:14:31.848.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\Unit3.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\forms\uTransmisNumFrm.pas</Transaction>
     <Transaction>2025.09.26 15:14:31.848.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\Unit3.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\forms\uTransmisNumFrm.dfm</Transaction>
     <Transaction>2025.10.08 22:02:53.281.pas,C:\Oburec\OburecGH\recorder\plg3120Cyclogram\Unit1.pas=C:\Oburec\OburecGH\recorder\plg3120Cyclogram\units\uGenReport.pas</Transaction>
+    <Transaction>2025.12.02 19:03:20.973.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\Unit3.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\forms\uEditProg.pas</Transaction>
+    <Transaction>2025.12.02 19:03:20.973.dfm,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\Unit3.dfm=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\forms\uEditProg.dfm</Transaction>
+    <Transaction>2025.12.03 09:46:54.744.pas,F:\Oburec\delphi\2011\OburecGH\sharedUtils\utils\uMyThreadImpulses.pas=</Transaction>
+    <Transaction>2025.12.04 17:57:22.351.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\units\u3120DB.pas=</Transaction>
+    <Transaction>2025.12.04 18:30:31.312.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\3120\u3120DB.pas=</Transaction>
+    <Transaction>2025.12.04 18:37:04.841.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\Unit1.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\3120\u3120Db.pas</Transaction>
+    <Transaction>2025.12.04 18:39:28.574.pas,F:\Oburec\delphi\2011\OburecGH\sharedUtils\ZipMaster\ZipMstr.pas=</Transaction>
+    <Transaction>2025.12.05 13:12:38.428.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\Unit1.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plg3120Cyclogram\units\uCPengine.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
@@ -113,6 +121,7 @@
     <File Path="..\SharedRUnits\uRecorderEvents.pas"/>
     <File Path="..\SharedRUnits\uTagsListFrame.pas"/>
     <File Path="..\SharedRUnits\uTagsListFrame.dfm"/>
+    <File Path="..\SharedRUnits\uMyThreadImpulses.pas"/>
     <File Path="..\..\..\OburecGH"/>
     <File Path="..\..\3d"/>
     <File Path="..\..\3d\3dComponents"/>
@@ -128,6 +137,9 @@
     <File Path="..\..\sharedUtils\math"/>
     <File Path="..\..\sharedUtils\math\uListMath.pas"/>
     <File Path="..\..\sharedUtils\math\uMatrix.pas"/>
+    <File Path="..\..\sharedUtils\mera"/>
+    <File Path="..\..\sharedUtils\mera\database"/>
+    <File Path="..\..\sharedUtils\mera\database\uMeasureBase.pas"/>
     <File Path="..\..\sharedUtils\utils"/>
     <File Path="..\..\sharedUtils\utils\lists"/>
     <File Path="..\..\sharedUtils\utils\lists\usetlist.pas"/>
@@ -145,6 +157,7 @@
     <File Path="3120\uModeObj.pas"/>
     <File Path="3120\uProgramObj.pas"/>
     <File Path="3120\uTest.pas"/>
+    <File Path="3120\u3120Db.pas"/>
     <File Path="forms"/>
     <File Path="forms\u3120Frm.pas"/>
     <File Path="forms\u3120Frm.dfm"/>
@@ -154,9 +167,12 @@
     <File Path="forms\uEditPropertiesFrm.dfm"/>
     <File Path="forms\uTransmisNumFrm.pas"/>
     <File Path="forms\uTransmisNumFrm.dfm"/>
+    <File Path="forms\uEditProg.pas"/>
+    <File Path="forms\uEditProg.dfm"/>
     <File Path="units"/>
     <File Path="units\uCreateComponents.pas"/>
     <File Path="units\uGenReport.pas"/>
+    <File Path="units\uCPengine.pas"/>
     <File Path="uBaseProgramObj.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

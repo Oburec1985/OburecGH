@@ -812,7 +812,6 @@ begin
 
   CreateEvents;
   CallPlgEvents(E_MDBCreate);
-
 end;
 
 destructor TMBaseControl.destroy;

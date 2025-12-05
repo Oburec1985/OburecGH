@@ -48,6 +48,8 @@ type
   public
     // событие для след режима
     fOnNextMode:TNotifyEvent;
+    // событие в Mode.Exec
+    fOnExecMode:TNotifyEvent;
   public
     // Стартовать программу при старте циклограммы режимов
     m_StartOnPlay: boolean;
@@ -92,7 +94,8 @@ type
     // время начала проверки выхода на режим
     fCheckStartTime: double;
     fCheckStartTime_i: int64;
-    // фактическое время проведенное в допуске при выходе на режим
+    // фактическое (замеренное) время проведенное в допуске при выходе на режим
+    // с момента как зашли в допуск. Пока не выждем время в допуске на след реж не идем
     fCheckLength: double;
     factivemode: cModeObj;
 
@@ -112,7 +115,6 @@ type
     // обновляем время паузы на режиме
     procedure UpdateModePauseT;
     procedure ResetModePauseT;
-    procedure ResetModeCheckTime;
     procedure ContinueModePauseT;
     // обновляем время испытания
     procedure UpdateModeT;
@@ -121,6 +123,8 @@ type
 
     function getactive: boolean;override;
   public
+    procedure doExecMode(m:tobject);
+    procedure ResetModeCheckTime;
     // сброс времени режима и время паузы на режиме (если время режима ноль то и паузы на нем не было)
     procedure ResetModeT;
     procedure changeStateTag(v: integer);
@@ -217,6 +221,8 @@ const
   c_Cardmax = 4294967295;
 
   // значение для StateTag
+  // ждем выхода на режим (межрежимье)
+  c_Prog_CheckTol = 6;
   // программа закончилась
   c_Prog_EndTag = 5;
   // программа проверяет режим
@@ -414,6 +420,14 @@ begin
   inherited;
 end;
 
+procedure cProgramObj.doExecMode(m: tobject);
+begin
+  if Assigned(fOnExecMode) then
+  begin
+    fOnExecMode(m);
+  end;
+end;
+
 procedure cProgramObj.DoLincParent;
 begin
   inherited;
@@ -544,7 +558,7 @@ procedure cProgramObj.Exec;
 var
   i: integer;
   mode: cModeObj;
-  continueMode: boolean;
+  CheckTol, continueMode, endModeTime, newMode: boolean;
 begin
   case state of
     c_TryPlay:
@@ -570,21 +584,36 @@ begin
     mode := ActiveMode;
     if mode <> nil then
     begin
+      // расчет вышли на режим или нет
+      if not mode.TrigInTolerance then
+      begin
+        if mode.StartTimeOnTolerance  then
+        begin
+          mode.EvalThresholds;
+        end;
+      end;
+      endModeTime:=fModeT < mode.ModeLength;
       // mode.ModeLength - бесконечный режим, который может кончиться только по триггеру
       continueMode := (fModeT < mode.ModeLength) or (mode.Infinity);
-      if not continueMode then
+      if (not continueMode) and (not mode.StartTimeOnTolerance) then
       begin
         if mode.CheckThreshold then // нужна проверка перед переходом на новый режим
         begin
+          // в состоянии проверки - основная часть реж закончена
           if not mode.fCheckProgres then
           begin
             // сбрасываем время проверки
             mode.StartCheckThreshold;
           end;
           continueMode := true;
-          if (mode.EvalThresholds) and (state = c_Play) then
+          // логика контроля времени на режим не совместима с логикой считать время режима
+          // с момента когда вошли в допуск
+          CheckTol:=mode.EvalThresholds;
+          if (CheckTol) and (state = c_Play) and (not fInTolerance) then
           begin
-            if fCheckLength >= mode.fCheckLength then
+            // если время проверки превысило допустимое время проверки
+            // переходим на след. режим
+            if fCheckLength > mode.fCheckLength then
             begin
               continueMode := false;
               mode.StopCheckThreshold(false);
@@ -668,13 +697,27 @@ begin
             changeStateTag(c_Prog_InfinitiModeTag)
           else
           begin
-            if ActiveMode.fCheckProgres then
+            if ActiveMode.StartTimeOnTolerance then
             begin
-              changeStateTag(c_Prog_CheckModeTag);
+              if ActiveMode.TrigInTolerance then
+              begin
+                changeStateTag(c_Prog_PlayTag);
+              end
+              else // ждем выход на режим
+              begin
+                changeStateTag(c_Prog_CheckTol);
+              end;
             end
             else
             begin
-              changeStateTag(c_Prog_PlayTag);
+              if ActiveMode.fCheckProgres then
+              begin
+                changeStateTag(c_Prog_CheckModeTag);
+              end
+              else
+              begin
+                changeStateTag(c_Prog_PlayTag);
+              end;
             end;
           end;
         end
@@ -1235,29 +1278,6 @@ begin
   end;
 end;
 
-procedure cProgramObj.Start(p_resetTime: boolean);
-begin
-  // c_tryplay отличается тем что сперва проверяем нужно ли сделать старт программе по триггеру
-  state := c_TryPlay;
-  if p_resetTime then
-  begin
-    fStep := 0;
-    ResetModeT;
-    DropModesApplyedState;
-  end
-  else
-    ContinueModeT;
-  if p_resetTime then
-  begin
-    if ModeCount > 0 then
-    begin
-      factivemode := getMode(0);
-      factivemode.active := true;
-    end;
-    fCounter := 0;
-  end;
-end;
-
 procedure cProgramObj.ShowComponent(node: pointer; component: tcomponent);
 var
   vtv: TVTree;
@@ -1296,6 +1316,33 @@ procedure cProgramObj.Start;
 begin
   Start(true);
 end;
+
+procedure cProgramObj.Start(p_resetTime: boolean);
+var
+  I: Integer;
+  m:cmodeobj;
+begin
+  // c_tryplay отличается тем что сперва проверяем нужно ли сделать старт программе по триггеру
+  state := c_TryPlay;
+  if p_resetTime then
+  begin
+    fStep := 0;
+    ResetModeT;
+    DropModesApplyedState;
+  end
+  else
+    ContinueModeT;
+  if p_resetTime then
+  begin
+    if ModeCount > 0 then
+    begin
+      factivemode := getMode(0);
+      factivemode.active := true;
+    end;
+    fCounter := 0;
+  end;
+end;
+
 
 procedure cProgramObj.stop;
 begin
@@ -1345,13 +1392,26 @@ procedure cProgramObj.UpdateModeT;
 var
   di64, i64: int64;
   dx: double;
+  m:cmodeobj;
+  b:boolean;
 begin
   QueryPerformanceCounter(i64);
   di64 := decI64(fModeT1, i64);
+  m:=ActiveMode;
+  b:=true;
+  if m<>nil then
+  begin
+    // если включена логика считать время режима когда хоть раз ьзашли в допуск
+    if m.StartTimeOnTolerance then
+      b:=m.TrigInTolerance;
+  end;
   dx := di64 / g_conmng.m_Freq;
   fProgT := fProgT + dx;
+  if b then
+  begin
+    fModeT := fModeT + dx;
+  end;
   // предусмотреть защиту от переполнения таймера
-  fModeT := fModeT + dx;
   fModeT1 := i64;
 end;
 
