@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, uSpin, uProgramObj, uModeObj, uControlObj,
-  u3120ControlObj;
+  u3120ControlObj, uCpEngine;
 
 type
   TEditProgFrm = class(TForm)
@@ -24,7 +24,7 @@ type
     Panel1: TPanel;
     Button1: TButton;
     Button2: TButton;
-    ComboBox1: TComboBox;
+    RepTamplatesCb: TComboBox;
     TmpltLabel: TLabel;
     CpTimeSe: TFloatSpinEdit;
     CpLabel: TLabel;
@@ -72,6 +72,9 @@ begin
     t.m_tolType := ThresholdType.ItemIndex;
     t.m_useTolerance := m_curM.CheckThreshold;
   end;
+  g_cpEngine.m_Time:=CpTimeSe.Value;
+  g_cpEngine.m_avrTime:=AvrTimeSe.Value;
+  g_cpEngine.SelTmpltIndex:=RepTamplatesCb.ItemIndex;
 end;
 
 procedure TEditProgFrm.CopyProgBtnClick(Sender: TObject);
@@ -207,6 +210,16 @@ begin
       ShowProg(p);
     end;
   end;
+  // מעמבנאזאול Êׂ
+  CpTimeSe.Value:=g_cpEngine.m_Time;
+  AvrTimeSe.Value:=g_cpEngine.m_avrTime;
+  for I := 0 to g_cpEngine.TmpltCount - 1 do
+  begin
+    RepTamplatesCb.AddItem(extractfilename(g_cpEngine.getTmplt(i)), nil);
+  end;
+  if g_cpEngine.TmpltCount>0 then
+    RepTamplatesCb.ItemIndex:=g_cpEngine.SelTmpltIndex;
+
   show;
 end;
 

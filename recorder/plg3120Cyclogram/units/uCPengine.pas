@@ -24,23 +24,30 @@ type
   // процедура Start засекает время усреднения/ Stop - останавливает
   TCPengine = class
   public
-    curmode:cmodeobj;
+    // события старта отбивания контрольной точки и останова
+    fNewModeCp,
+    fstartCp,
+    fStopCp
+    :tnotifyEvent;
+    curmode, curmodeNotAutoCP:cmodeobj;
     // список TcpTag
     m_tagslist:tstringlist;
-    m_selitem:integer;
     m_needreadtags:boolean;
-    m_testDir:string;
-  protected
-    m_xlsTmplt:tstringlist; // шаблон excel
+    m_testDir, m_repName:string;
     // время усреднения на CP
     m_avrTime,
     // время до старта CP
     m_Time:double;
+
+  protected
+    m_SelTmplt:integer;
+    m_xlsTmplt:tstringlist; // шаблон excel
     // время старта измерений
     m_iT0:int64;
-    // 0 - стоп; 1 - работа
+    // 0 - стоп; 1 - работа; 2 пошел новый режим и пока не считали
     m_state:integer;
   protected
+    procedure setSelTmplt(i:integer);
     procedure OnExecMode(m:tobject);
     procedure clearTags;
     // событие обновления тегов
@@ -48,8 +55,12 @@ type
     // считать теги из шаблона отчета Excel
     procedure readTags(fname:string);
   public
+    function checkRepPath:boolean;
     procedure resettags;
-    function Tmplt:string;
+    procedure setTmplt(s:string);
+    function getTmplt:string;overload;
+    function getTmplt(i:integer):string;overload;
+    function TmpltCount:integer;
     // инициация событий. plg после добавления события updateTagsEvent будет вызывать
     // его у себя как callBack
     procedure Init(plg:TExtRecorderPack);
@@ -57,12 +68,37 @@ type
     procedure Prepare();
     procedure Start;
     procedure Stop;
+    procedure OpenReport;
+    // 0 - стоп; 1 - работа; 2 пошел новый режим и пока не считали
+    property state:integer read m_state write m_state;
+    property Tmplt:string read getTmplt write setTmplt;
+    property SelTmpltIndex:integer read m_SelTmplt write setSelTmplt;
     constructor create;
     destructor destroy;
   end;
 
+var g_CpEngine:TCPengine;
+
 implementation
+procedure InitExcel;
+begin
+  if not CheckExcelInstall then
+  begin
+    showmessage('Необходима установка Excel');
+    exit;
+  end;
+  if VarIsEmpty(E) then
+  begin
+    // if not CheckExcelRun then
+    begin
+      CreateExcel;
+      VisibleExcel(true);
+    end;
+  end;
+end;
 { ************  Реализация TCPengine  ************* }
+
+
 procedure TCPengine.clearTags;
 var
   i: Integer;
@@ -102,6 +138,7 @@ var
   i:integer;
   tagObj:TcpTag;
   d:TDataReport;
+  first:boolean;
 begin
   p:=cProgramObj(curmode.mainParent);
   // выжидаем время до старта
@@ -109,12 +146,22 @@ begin
   // старт точки
   if t>m_Time then
   begin
-    m_state := 1; // вкл. отбитие точки
-    // собираем выборки
-    for i := 0 to m_tagsList.Count - 1 do
+    first:=false;
+    if (m_state=0) or (m_state=2) then
     begin
-      tagObj := TcpTag(m_tagsList.Objects[i]);
-      tagObj.AddSample;
+      m_state := 1; // вкл. отбитие точки
+      first:=true;
+      if assigned(fstartCp) then
+        fstartCp(curmode);
+    end;
+    // собираем выборки
+    if first or (m_avrtime>0) then
+    begin
+      for i := 0 to m_tagsList.Count - 1 do
+      begin
+        tagObj := TcpTag(m_tagsList.Objects[i]);
+        tagObj.AddSample;
+      end;
     end;
   end;
   if t>m_Time+m_avrTime then
@@ -122,6 +169,8 @@ begin
     // собираем выборки
     // время истекло → останавливаем измерение
     m_state := 0;
+    if assigned(fstopCp) then
+      fstopCp(curmode);
     // усредняем
     for i := 0 to m_tagsList.Count - 1 do
     begin
@@ -129,7 +178,11 @@ begin
       tagObj.avr;
     end;
     d.m:=curmode;
-    genreport(TestPath, 'Report.xlsx', tmplt, false, d, m_tagsList);
+    // TestPath + '\' + 'Report.xlsx'
+    genreport(TestPath, 'Report.xlsx', tmplt,
+              true, // закрыть Excel
+              d,
+              m_tagsList);
     for i := 0 to m_tagsList.Count - 1 do
     begin
       tagObj := TcpTag(m_tagsList.Objects[i]);
@@ -149,8 +202,7 @@ begin
 
   m_xlsTmplt.Clear;
   mdb := BasePath;
-  FindFileExt('tmplt', mdb, 2, m_xlsTmplt);
-  ltmplt:=Tmplt;
+  FindFileExt('tmpl', mdb, 2, m_xlsTmplt);
   //dir:='c:\Mera Files\mdb\3120\template\tmplt_report.xlsx';
   //if fileexists(dir) then
   //  m_tagslist.Add(dir);
@@ -167,17 +219,58 @@ begin
       begin
         if cmodeobj(m).TrigInTolerance then
         begin
+          if curmode<>cmodeobj(m) then
+          begin
+            m_state:=2; // старт нового режима
+            if assigned(fNewModeCp) then
+              fNewModeCp(m);
+          end;
           curmode:=cmodeobj(m);
           doCP;
         end;
       end
       else
       begin
+        if curmode<>cmodeobj(m) then
+        begin
+          m_state:=2; // старт нового режима
+          if assigned(fNewModeCp) then
+            fNewModeCp(m);
+        end;
         curmode:=cmodeobj(m);
         doCP;
       end;
     end;
+
+  end
+  else
+  begin
+    if curmodeNotAutoCP<>m then
+    begin
+      fNewModeCp(m);
+    end;
   end;
+  curmodeNotAutoCP:=cmodeobj(m);
+end;
+
+function TCPengine.checkRepPath: boolean;
+var
+  rep:string;
+begin
+  rep:=TestPath + '\' + 'Report.xlsx';
+  result:= fileexists(rep);
+end;
+
+procedure TCPengine.OpenReport;
+var
+  rep:string;
+begin
+  rep:=TestPath + '\' + 'Report.xlsx';
+  if not fileexists(rep) then
+    exit;
+  KillAllExcelProcesses;
+  InitExcel;
+  OpenWorkBook(rep);
 end;
 
 procedure TCPengine.Prepare();
@@ -197,23 +290,6 @@ begin
     end;
   end;
   m_needReadTags:=false;
-end;
-
-procedure InitExcel;
-begin
-  if not CheckExcelInstall then
-  begin
-    showmessage('Необходима установка Excel');
-    exit;
-  end;
-  if VarIsEmpty(E) then
-  begin
-    // if not CheckExcelRun then
-    begin
-      CreateExcel;
-      VisibleExcel(true);
-    end;
-  end;
 end;
 
 
@@ -285,56 +361,48 @@ begin
     (m_tagsList.Objects[i] as TcpTag).Reset;
 end;
 
+procedure TCPengine.setSelTmplt(i: integer);
+begin
+  m_SelTmplt:=i;
+end;
+
+procedure TCPengine.setTmplt(s: string);
+var
+  I: Integer;
+begin
+  for I := 0 to m_xlsTmplt.Count - 1 do
+  begin
+    if m_xlsTmplt.Strings[i]=s then
+    begin
+      SelTmpltIndex:=i;
+      break;
+    end;
+  end;
+end;
+
 procedure TCPengine.Stop;
 begin
   m_state := 0;
 end;
 
 
-function TCPengine.Tmplt: string;
+function TCPengine.getTmplt: string;
 begin
-  if m_selitem<m_xlsTmplt.Count
+  if m_SelTmplt<m_xlsTmplt.Count
    then
-    result:=m_xlsTmplt.Strings[m_selitem]
+    result:=m_xlsTmplt.Strings[m_SelTmplt]
   else
     result:='';
 end;
-{
-procedure TCPengine.UpdateTagsEvent(Sender: TObject);
-var
-  i: Integer;
-  it, ifreq, di64: Int64;
-  dt:double;
-  tagObj: TcpTag;
+
+function TCPengine.getTmplt(i: integer): string;
 begin
-  if m_state = 0 then Exit; // если стоп — ничего не делаем
+  result:=m_xlsTmplt.Strings[i];
+end;
 
-  QueryPerformanceCounter(it);
-  QueryPerformanceFrequency(ifreq);
-  di64 := decI64(m_iT0, it);
-  dt := di64 / ifreq;
-
-  // усреднять до тех пор, пока не прошло заданное время
-  if dt < m_avrTime then
-  begin
-    // собираем выборки
-    for i := 0 to m_tagsList.Count - 1 do
-    begin
-      tagObj := TcpTag(m_tagsList.Objects[i]);
-      tagObj.AddSample;
-    end;
-  end
-  else
-  begin
-    // время истекло → останавливаем измерение
-    m_state := 0;
-    // усредняем
-    for i := 0 to m_tagsList.Count - 1 do
-    begin
-      tagObj := TcpTag(m_tagsList.Objects[i]);
-      tagObj.m_val:=tagObj.m_val/tagObj.num;
-    end;
-  end;
-end;}
+function TCPengine.TmpltCount: integer;
+begin
+  result:=m_xlsTmplt.Count;
+end;
 
 end.

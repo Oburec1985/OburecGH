@@ -2,26 +2,22 @@ object Frm3120: TFrm3120
   Left = 0
   Top = 0
   Caption = 'Frm3120'
-  ClientHeight = 620
-  ClientWidth = 1225
+  ClientHeight = 465
+  ClientWidth = 919
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -10
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  PixelsPerInch = 120
-  TextHeight = 16
+  PixelsPerInch = 96
+  TextHeight = 12
   object DeskGB: TGroupBox
     Left = 0
     Top = 0
-    Width = 1225
-    Height = 209
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Width = 919
+    Height = 157
     Align = alTop
     Caption = #1055#1091#1083#1100#1090' '#1091#1087#1088#1072#1074#1083#1077#1085#1080#1103
     Color = clBtnFace
@@ -29,7 +25,7 @@ object Frm3120: TFrm3120
     DockSite = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -20
+    Font.Height = -15
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentBackground = False
@@ -39,21 +35,23 @@ object Frm3120: TFrm3120
     TabOrder = 0
     object MainPanel: TPanel
       Left = 1
-      Top = 25
-      Width = 1038
-      Height = 183
+      Top = 19
+      Width = 778
+      Height = 137
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alClient
       TabOrder = 0
+      ExplicitLeft = -15
+      ExplicitTop = 17
       object AlarmsBtn: TSpeedButton
-        Left = 762
-        Top = 36
-        Width = 37
-        Height = 39
+        Left = 572
+        Top = 27
+        Width = 27
+        Height = 29
         Hint = #1055#1088#1086#1089#1084#1086#1090#1088' '#1082#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1080
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         BiDiMode = bdLeftToRight
         Glyph.Data = {
           360C0000424D360C000000000000360000002800000020000000200000000100
@@ -161,10 +159,14 @@ object Frm3120: TFrm3120
         OnClick = AlarmsBtnClick
       end
       object AlarmStopBtn: TImage
-        Left = 688
-        Top = 105
-        Width = 70
-        Height = 68
+        Left = 516
+        Top = 79
+        Width = 53
+        Height = 51
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Picture.Data = {
           0954506E67496D61676589504E470D0A1A0A0000000D49484452000001E00000
           01E008060000007DD4BE95000000097048597300000B1300000B1301009A9C18
@@ -980,17 +982,25 @@ object Frm3120: TFrm3120
         OnClick = AlarmStopBtnClick
       end
       object AlarmStopLabel: TLabel
-        Left = 687
-        Top = 82
-        Width = 106
-        Height = 24
+        Left = 515
+        Top = 62
+        Width = 82
+        Height = 18
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Caption = #1040#1074'. '#1086#1089#1090#1072#1085#1086#1074
       end
       object FreqConvLamp: TImage
-        Left = 688
-        Top = 30
-        Width = 66
-        Height = 51
+        Left = 516
+        Top = 23
+        Width = 50
+        Height = 38
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Picture.Data = {
           0954506E67496D61676589504E470D0A1A0A0000000D49484452000000F10000
           00BB08020000003B6AEF54000050C44944415478DAEDBD69AF25497ADF179167
@@ -1644,298 +1654,182 @@ object Frm3120: TFrm3120
         Proportional = True
       end
       object Label2: TLabel
-        Left = 831
-        Top = 117
-        Width = 106
-        Height = 24
+        Left = 623
+        Top = 88
+        Width = 78
+        Height = 18
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Caption = #1055#1088#1086#1075#1088#1072#1084#1084#1099
       end
       object PChLabel: TLabel
-        Left = 688
+        Left = 516
         Top = 2
-        Width = 134
-        Height = 24
+        Width = 104
+        Height = 18
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Caption = #1043#1086#1090#1086#1074#1085#1086#1089#1090#1100' '#1055#1063
       end
-      object SaveBtn: TSpeedButton
-        Left = 831
-        Top = 36
-        Width = 52
-        Height = 43
-        Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
-        AllowAllUp = True
-        BiDiMode = bdLeftToRight
-        Flat = True
-        Glyph.Data = {
-          360C0000424D360C000000000000360000002800000020000000200000000100
-          180000000000000C0000C40E0000C40E00000000000000000000F6F6F6F6F6F6
-          F2F2F2F6F6F6F2F2F2EFEFEFEEEEEEEAEAEADBDCDBD8D9D8DADCDAD8DAD9DFE0
-          DFE2E3E3E2E3E2DFE0DFE3E4E3E3E4E3DFE0DFE3E4E3E0E1E0DDDEDDDDDEDEDF
-          E0DFDDDEDDDEDFDEE0E1E0DCDEDDE0E1E0E5E6E5EDEDEDF2F2F2F2F2F2F2F2F2
-          EFEFEFF2F2F2F2F2F2EEEEEEDCDDDC979B99A2A5A49C9F9E9EA2A0A7AAA8BEC1
-          BFBEC1BFBCBFBDBABDBBBABDBBBBBEBCBABDBBB9BCBAB7BAB8B7BBB9B9BCBABC
-          BFBDBBBEBCBDC0BEBEC1BFBEC1BFBDC0BEC3C5C3D8D9D9ECECECF2F2F2F2F2F2
-          EFEFEFF2F2F2F2F2F2E3E7E4589E74386F4EC9CDCBFDFDFDFCFDFDFCFCFCFEFE
-          FEFEFEFEFEFEFEFEFEFE9E9E9E646464666666AAABABAEAFAF7E7F7FB3B4B45C
-          5C5C8E8F8FC6C7C7595A5A8E8F8FABACACBABBBBDADCDBEDEDEDF2F2F2F2F2F2
-          F2F2F2F6F6F6F4F4F47CA78E33B26730A05E5C7868F0F0F0FCFCFCFCFDFDFEFE
-          FEFFFFFFFFFFFFFEFEFE5252527D7F7EB3B5B4DBDBDB0A0B0A868786666767B6
-          B7B7B0B1B06B6B6B5353535A5C5B7B7B7B9E9E9ED6D8D7ECEDEDF6F6F6F6F6F6
-          F6F6F6F2F2F2C5D0CA2CA96130B56831B66B2A8D54929A96F5F6F6FBFCFCFBFC
-          FCFEFEFEFFFFFFFFFFFF5050502A2B2A616262A8A9A83B3C3B4D4E4D8484844F
-          4F4F4A4B4B8687864F4F4F3132317B7B7B9D9E9ED8DBD9EFF0F0F2F2F2F2F2F2
-          F2F2F2E2E6E442AF7629C0722FBF722EBF722BBF7135815ABCC1BEF9FAFAFAFB
-          FBFEFEFEFFFFFFFFFFFF5656563E3F3F5B5C5CEDEEEEF9FAFAEEEFEEF7F8F8E1
-          E2E2F4F7F6F5F7F7E2E3E3F7F8F87F8080A1A1A1D8DAD9EDEEEDF2F2F2F2F2F2
-          F0F1F077B7982FC67B28C67922C57726C77A2BC3762ABB7397B4A3FAFBFBFBFC
-          FCFEFEFEFFFFFFFFFFFFDFDFDFDEDFDEE0E1E1F9FAFAF6F7F7E7E8E8D3D5D4BD
-          C2BF96CCB2A3C9B9D9DCDBF8F9F9E6E7E7F6F7F7DBDCDBEFF0EFEFEFEFF2F2F2
-          F5F5F5C5D7CDB5CFC120BA7426CC7F1FCE8026B06DA8C1B3E6EBE8EFF4F1DCEC
-          E3E0E8E4D5DCD9C5CCC9AEC0B7A7BEB1B1C3BA97BCAC96C1AEA6D3BFA0EDC89A
-          E8C185DEB1B6F6DDC0DBCFF8FAF9FAFBFBFAFBFBD8DAD9EDEEEEEFEFEFEFEFEF
-          F2F2F2EEEEEEEEF0EF22B9741CD28521D08320B06FDDDFDFFAFAFA96C8AC4DBD
-          81A3BEAFBAD2C6BBE5D1A5F5D5C6FBE687EFC357E3A638D08A99E9C723BC6B07
-          AA4C07A145AEEFD2B8D9CAF8FAF9FAFBFBFCFDFDD8DAD8EDEEEDF2F2F2F2F2F2
-          F6F6F6F2F2F2F0F1F120BE7823D58819D3851EB171DEE0DFFBFBFB7BB494129F
-          50CAEDDA5AF5B30CF2910DF2917FF1C051E1A325E2914CD294B0EFD284E1B495
-          E4BCA8EDCCC4F6E4B5D5C5F7F9F8FAFBFAFDFDFDD9DBDAF0F1F1F2F2F2F2F2F2
-          F6F6F6F2F2F2EFF1F11CBE7818D58717D7861EB171DDDFDDFAFAFA79B1921087
-          4395D4B4B5FADD7BEEBC74EAB6D4FBEBE1FCF271E3B12EDE90C3F2DD71D7A325
-          B45F09A7479AE2C0B7D1C5F9FAF9FAFBFBFCFCFCD9DBDAEDEEEEF2F2F2F2F2F2
-          F2F2F2EFEFEFEDEFEE45C38931DD9138D58F36B779F2F4F2FBFCFC78AA8E1078
-          3E5DB384F2FCF864C69811D9836BE4B1BEF0DA0AE18511C571CAF4E480DFB165
-          CF947AD6A5C2F6E2B6D6C8F8FAF9F9FAFAFAFBFBDCDDDCEDEDEDEFEFEFEFEFEF
-          EFEFEFF2F2F2F2F2F2CFDBD4C5D6CCB4C5BBE5EEE8F6F7F6F9FAFA78A88D0D66
-          33288B53FBFDFDCAE2D628A96907B76416C57405BF6983D0ABDAFEF1A6EACA45
-          C37C35B46B86DCB0AED1C0F8F9F8F9FAF9F9FAFADADCDAEAEBEAF2F2F2F2F2F2
-          F2F2F2F6F6F6F6F6F6F1F1F1EAEBEAD7D9D8F6F7F6F9FAF9F9FAFA83AA932D6E
-          48337952DEF6EBF3FDFAD9F3E84BB67A30BA7338AD6CD0F7E7DBFEF194E2BA4E
-          C68367D096ADEFD1A9D5C2F8FAF9F9FAFAF9FAFADBDDDCECECECF2F2F2F2F2F2
-          F2F2F2F6F6F6F6F6F6F2F2F2EEEEEEDBDDDCF7F8F8F7F8F8F7F8F8A4BFAF6A90
-          7A6D957EC1DCD0F4FDFAE7F7F084C2A07EBE9B86BEA181C4A1CAF3E3BEF5DD5C
-          CB8E3FB8737CD9A9A8CFBBF8F9F9F7F8F8F8F9F8D8DAD9EAEBEAF6F6F6F2F2F2
-          EFEFEFF2F2F2F2F2F2EFEFEFEBECEBD9DBD9F6F7F6F7F8F8F7F8F7ACC2B5829A
-          8C769F88AFC9BDF8FCFB99C6AE94BDA888BA9FA6C8B694B9A49CCDB5B2F0D54D
-          C7856BCD98ABEACFACD3C1F5F7F5F7F8F8F7F8F7D9DCDAECECECF6F6F6F6F6F6
-          F2F2F2F6F6F6F2F2F2EFEFEFEAEAEAD9DBDAF5F6F5F6F7F6F5F6F5B1CDBD92A2
-          9A97ADA2A1BCB1EFFAF795B8A6AFBDB5DBF1E8E6FCF5B3D9C790C5AAB2DAC9B5
-          DBCAC6E7D8D6F0E3DAEDE2F6F7F6F6F7F6F6F7F6DADCDAEBECEBF2F2F2F2F2F2
-          EFEFEFF2F2F2F2F2F2EFEFEFEEEEEEDADCDBF4F5F4F4F5F4F4F5F4B9DAC8A6B7
-          ADA7B4ADA3BCB0B7E4D1B8D9C9A6CEB9A8C9B693BCA4ACB7B1AAB9B1B0B7B3B6
-          C7BDF0F3F1F3F5F3F3F5F3F4F5F4F5F6F5F4F5F4D8DBD9EAEBEBF2F2F2F2F2F2
-          EFEFEFF2F2F2F2F2F2EFEFEFEEEEEED7D9D7F1F2F1F2F2F2F3F3F3C9EBD9C0CE
-          C6BCC8C2B6CBC1BAC7C0BBC4BFBBC3BFBEC2BFBFC6C2BBC7C1BCC8C2C0C3C1BE
-          CDC4F0F2F0F3F4F3F2F3F2F2F3F2F3F3F3F3F4F3D6D8D7EDEDEDF2F2F2F2F2F2
-          F2F2F2F6F6F6F6F6F6F2F2F2F1F2F2D7D9D7F1F2F1F2F2F2F1F1F1F2F3F2B9E3
-          CFD2D5D3D1D3D2C9D4CFCFD5D2D0D1D0CED5D2CDD4D0D0D2D0D0D2D1D1D3D2C6
-          D5CCF1F2F1F2F2F2F2F3F2F2F2F2F2F2F2F1F1F1D4D6D5ECEDEDF6F6F6F6F6F6
-          F6F6F6F2F2F2F2F2F2EFEFEFEEEFEED5D7D5F0F0F0F1F1F1F1F1F1F1F1F1E4EE
-          E8BCE3D0D1E4DAE1E3E1DFE1DFDDE3E1DCE3E0DEE1E0DCE3E0DCE0DFDEE0DECC
-          DAD2EFEFEFF0F0F0EEEEEEEFEFEFF0F0F0EEEEEED4D6D5F0F0F0E8E8E8DADEDB
-          D9DDDAD6DAD8D6D9D7D9DDDAD6DAD8C0C5C2D4D7D5D5D8D5D4D9D6D5D9D6D4D8
-          D5D6D9D7C9D5CEAFD0BDB6D0C1B6D0C1B6D0C1B6CBBFB4CABEB9CEC1C5D6CBCC
-          D8D1E8E9E8E6E7E6E6E6E6E8E8E8E4E4E4E1E2E1CED0CEECEDEDB5C8BD7AB594
-          76AE8E76AE8E70AB8A6FAB8A6CA887639F7E69A5846AA48268A28068A281649D
-          7C669A7C639C7C5F97775F93765D91745C8F725C8D715C897068967CBCC6C0E1
-          E2E2D9DAD9D3D4D3D2D4D2D1D3D2D0D2D0C8CAC9CCCFCDF0F1F088BF9E56CB86
-          56CE8856CC8858CA8956CB8854CE884BC6804AC27E47C1793DBA7136B96F33B4
-          6A31AC6432A9642AA85F26A35B249F581F985219934E18914D16814598B1A3D2
-          D4D2BBBFBCACB1AEAAAEABA4A9A6A2A7A4949896D3D5D3F1F1F18BC3A25AD28D
-          60D79367D495B5EACDB7ECCF98E3B796DCB378D19D87D8AA71D099B1E5C75AC7
-          898BD2A9A4DCBB80CEA18AD1A89DD4B556B8801D9D5416964D198A4A94AD9FC5
-          C8C5A1A6A38688878284837F8180969796BBBDBBEBEBEBF2F2F28FC7A65FD794
-          62D99569DB9AF0FBF59AE4B97BDBA4DAF2E3DDF3E66DCE95D5F1E388D5A9ADE0
-          C3D7F1E388D3A757BE81E1F4E985CFA446B1731D9D54179C4F1A884A92AC9EC0
-          C4C1DDDFDEDBDBDBD5D6D6DBDCDBD0D2D1E9E9E9F2F2F2F6F6F691C9A865DA97
-          63DA9668DA99F2FAF5D9F4E586D9A9B8EACDE8F8EE5DC989E1F6EA45C27A3DBD
-          74D6F1E2D2EFDE83D0A3DFF3E732AD6622A3591E9E55129F4D1888498FA799BD
-          C1BFFAFAFAF5F5F5DEDFDED1D3D1EBECEBEFEFEFF2F2F2F2F2F292C9A967DB99
-          6AE19E6FDFA0E7F9EF91E3B471D79CE5F8EEDEF6E871D299DDF4E87BD4A19BDA
-          B6D8F1E37DCF9E58C182DEF2E62BA75F23A3591C9F541B9D531A884A8EA89ABE
-          C2BFF4F4F4DEDFDED0D2D0EEEEEEF5F5F5F2F2F2F6F6F6F2F2F28CCBA968DD9A
-          6AE19E6AE19EC4F2D8C2EFD690E1B3A1E5BD87D8A981D3A583D1A4BFEBD25ECC
-          8F9CDEB8AFE3C574CC979FD9B62CAB6121A2581E9E55199E52198A4A8AA495B7
-          BCB9DDDEDDD2D4D2EDEEEEF2F2F2F2F2F2EFEFEFF2F2F2EFEFEF96D3B25EE09A
-          67DE9A65DB9764D9965FD3905ED08E56C9864FC78345C47C47BF793FBD7438B8
-          6E34B3682FB16729A85E349B5F239C561E97521A904D188D4B1983478AA394BE
-          C3C0CFD1D0ECEDECF2F2F2EFEFEFEFEFEFF2F2F2F6F6F6F2F2F2CFE2D7B6DEC9
-          B6DFC9BBDCC8B5DEC8B7D9C5B6D8C4A2C5B0AACDB9A3CEB6A4CAB5A4C9B4A4C8
-          B3A1C4B09EC2AE9EC1AD9EC1AD9CBCAA9DBDAB9CBAA998B7A694B0A0B4BEB8D7
-          D8D7EBECEBF2F2F2F2F2F2EFEFEFEFEFEFF2F2F2F2F2F2EFEFEFF4F4F4F0F2F1
-          EDEFEEF0F1F1F0F1F1EDEEEEEAECEBE1E3E1DEE0DEDEE0DFDFE0E0DFE1E0E0E1
-          E1E2E3E2E1E2E1E1E2E1E2E3E2E2E3E2E2E3E2E1E2E1DCDEDCD7D9D7D9DBDAED
-          EDEDEFEFEFF2F2F2F6F6F6F2F2F2F2F2F2F6F6F6F6F6F6F2F2F2}
-        ParentShowHint = False
-        ParentBiDiMode = False
-        ShowHint = True
-        OnClick = SaveBtnClick
-      end
       object Button1: TButton
-        Left = 831
-        Top = 83
-        Width = 128
-        Height = 28
+        Left = 623
+        Top = 66
+        Width = 96
+        Height = 21
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Caption = #1055#1077#1088#1077#1076#1072#1095#1072
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -20
+        Font.Height = -15
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
         TabOrder = 0
         OnClick = Button1Click
       end
-      object CloseRep: TCheckBox
-        Left = 831
-        Top = 8
-        Width = 194
-        Height = 18
-        Hint = #1055#1086#1083#1091#1095#1072#1090#1100' '#1085#1086#1090#1080#1092#1080#1082#1072#1094#1080#1080' '#1076#1083#1103' '#1085#1072#1089#1090#1088#1081#1086#1082#1080' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1086#1074' '#1080#1079' '#1087#1083#1072#1075#1080#1085#1086#1074
-        Caption = #1047#1072#1082#1088#1099#1074#1072#1090#1100' '#1086#1090#1095#1077#1090
+      object ConfirmModeCB: TCheckBox
+        Left = 6
+        Top = 93
+        Width = 175
+        Height = 14
+        Hint = #1055#1086#1076#1090#1074#1077#1088#1078#1076#1072#1090#1100' '#1087#1077#1088#1077#1093#1086#1076' '#1085#1072' '#1088#1077#1078#1080#1084
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
+        Caption = #1055#1086#1076#1090#1074#1077#1088#1078#1076#1072#1090#1100' '#1088#1077#1078#1080#1084
         ParentShowHint = False
         ShowHint = True
         TabOrder = 1
       end
-      object ConfirmModeCB: TCheckBox
-        Left = 8
-        Top = 124
-        Width = 233
-        Height = 19
-        Hint = #1055#1086#1076#1090#1074#1077#1088#1078#1076#1072#1090#1100' '#1087#1077#1088#1077#1093#1086#1076' '#1085#1072' '#1088#1077#1078#1080#1084
-        Caption = #1055#1086#1076#1090#1074#1077#1088#1078#1076#1072#1090#1100' '#1088#1077#1078#1080#1084
+      object ContinueCB: TCheckBox
+        Left = 6
+        Top = 75
+        Width = 132
+        Height = 13
+        Hint = #1055#1088#1086#1076#1086#1083#1078#1072#1090#1100' '#1088#1072#1073#1086#1090#1091' '#1089' '#1087#1086#1089#1083'. '#1089#1086#1089#1090#1086#1103#1085#1080#1103
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
+        Caption = #1055#1088#1086#1076#1086#1083#1078#1080#1090#1100
         ParentShowHint = False
         ShowHint = True
         TabOrder = 2
       end
-      object ContinueCB: TCheckBox
-        Left = 8
-        Top = 100
-        Width = 176
-        Height = 17
-        Hint = #1055#1088#1086#1076#1086#1083#1078#1072#1090#1100' '#1088#1072#1073#1086#1090#1091' '#1089' '#1087#1086#1089#1083'. '#1089#1086#1089#1090#1086#1103#1085#1080#1103
-        Caption = #1055#1088#1086#1076#1086#1083#1078#1080#1090#1100
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 3
-      end
       object EditProgBtn: TButton
-        Left = 982
-        Top = 145
-        Width = 45
-        Height = 28
+        Left = 736
+        Top = 113
+        Width = 33
+        Height = 21
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Caption = '...'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -20
+        Font.Height = -15
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
-        TabOrder = 4
+        TabOrder = 3
         OnClick = Button1Click
       end
       object GetNotifyCB: TCheckBox
-        Left = 8
-        Top = 148
-        Width = 243
-        Height = 18
+        Left = 6
+        Top = 111
+        Width = 182
+        Height = 14
         Hint = #1055#1086#1083#1091#1095#1072#1090#1100' '#1085#1086#1090#1080#1092#1080#1082#1072#1094#1080#1080' '#1076#1083#1103' '#1085#1072#1089#1090#1088#1081#1086#1082#1080' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1086#1074' '#1080#1079' '#1087#1083#1072#1075#1080#1085#1086#1074
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1080#1079' '#1087#1083#1072#1075#1080#1085#1086#1074
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 5
+        TabOrder = 4
       end
       object GroupBox3: TGroupBox
-        Left = 246
-        Top = 21
-        Width = 435
-        Height = 156
+        Left = 185
+        Top = 16
+        Width = 326
+        Height = 117
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Caption = #1042#1088#1077#1084#1103':'
-        TabOrder = 6
+        TabOrder = 5
         object ComTimeLabel: TLabel
-          Left = 156
-          Top = 91
-          Width = 63
-          Height = 24
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 117
+          Top = 68
+          Width = 48
+          Height = 18
           Caption = #1054#1073#1097#1077#1077
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -20
+          Font.Height = -15
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
         end
         object ModeTimeLabel: TLabel
-          Left = 11
-          Top = 91
-          Width = 103
-          Height = 24
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 8
+          Top = 68
+          Width = 77
+          Height = 18
           Caption = #1053#1072' '#1088#1077#1078#1080#1084#1077
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -20
+          Font.Height = -15
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
         end
         object Label1: TLabel
-          Left = 11
-          Top = 28
-          Width = 131
-          Height = 24
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 8
+          Top = 21
+          Width = 97
+          Height = 18
           Caption = #1053#1072' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -20
+          Font.Height = -15
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
         end
         object Label4: TLabel
-          Left = 299
-          Top = 91
-          Width = 128
-          Height = 24
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 224
+          Top = 68
+          Width = 97
+          Height = 18
           Caption = #1044#1086' '#1089#1083#1077#1076'. '#1088#1077#1078'.'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -20
+          Font.Height = -15
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
         end
         object ComTimeEdit: TEdit
-          Left = 156
-          Top = 117
-          Width = 128
-          Height = 33
+          Left = 117
+          Top = 88
+          Width = 96
+          Height = 27
           Hint = #1042#1088#1077#1084#1103' '#1085#1072' '#1080#1089#1087#1099#1090#1072#1085#1080#1080
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -22
+          Font.Height = -17
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
@@ -1946,17 +1840,13 @@ object Frm3120: TFrm3120
           Text = '0'
         end
         object ModeTimeEdit: TEdit
-          Left = 11
-          Top = 117
-          Width = 133
-          Height = 33
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 8
+          Top = 88
+          Width = 100
+          Height = 27
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -22
+          Font.Height = -17
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
@@ -1965,17 +1855,13 @@ object Frm3120: TFrm3120
           Text = '0'
         end
         object ProgTimeEdit: TEdit
-          Left = 11
-          Top = 55
-          Width = 133
-          Height = 33
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 8
+          Top = 41
+          Width = 100
+          Height = 27
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -22
+          Font.Height = -17
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
@@ -1984,10 +1870,14 @@ object Frm3120: TFrm3120
           Text = '0'
         end
         object TimeUnitsCB: TComboBox
-          Left = 156
-          Top = 55
-          Width = 128
-          Height = 32
+          Left = 117
+          Top = 41
+          Width = 96
+          Height = 26
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           ItemIndex = 0
           TabOrder = 3
           Text = #1057#1077#1082#1091#1085#1076#1099
@@ -1997,18 +1887,14 @@ object Frm3120: TFrm3120
             #1063#1072#1089#1099)
         end
         object ModeStopTime: TEdit
-          Left = 299
-          Top = 117
-          Width = 128
-          Height = 33
+          Left = 224
+          Top = 88
+          Width = 96
+          Height = 27
           Hint = #1042#1088#1077#1084#1103' '#1085#1072' '#1080#1089#1087#1099#1090#1072#1085#1080#1080
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -22
+          Font.Height = -17
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
@@ -2020,21 +1906,21 @@ object Frm3120: TFrm3120
         end
       end
       object PausePanel: TPanel
-        Left = 73
-        Top = 7
-        Width = 63
-        Height = 58
-        TabOrder = 7
+        Left = 55
+        Top = 5
+        Width = 47
+        Height = 44
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
+        TabOrder = 6
         object PauseBtn: TSpeedButton
-          Left = 7
-          Top = 4
-          Width = 50
-          Height = 51
+          Left = 5
+          Top = 3
+          Width = 38
+          Height = 38
           Hint = #1055#1072#1091#1079#1072' '#1088#1072#1073#1086#1090#1099' '#1087#1086' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
           BiDiMode = bdLeftToRight
           Glyph.Data = {
             360C0000424D360C000000000000360000002800000020000000200000000100
@@ -2143,21 +2029,21 @@ object Frm3120: TFrm3120
         end
       end
       object PlayPanel: TPanel
-        Left = 9
-        Top = 7
-        Width = 62
-        Height = 58
-        TabOrder = 8
+        Left = 7
+        Top = 5
+        Width = 46
+        Height = 44
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
+        TabOrder = 7
         object PlayBtn: TSpeedButton
-          Left = 7
-          Top = 4
-          Width = 49
-          Height = 51
+          Left = 5
+          Top = 3
+          Width = 37
+          Height = 38
           Hint = #1056#1072#1073#1086#1090#1072' '#1087#1086' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
           BiDiMode = bdLeftToRight
           Glyph.Data = {
             360C0000424D360C000000000000360000002800000020000000200000000100
@@ -2266,40 +2152,48 @@ object Frm3120: TFrm3120
         end
       end
       object ProgramsCB: TComboBox
-        Left = 831
-        Top = 145
-        Width = 145
-        Height = 32
-        TabOrder = 9
+        Left = 623
+        Top = 109
+        Width = 109
+        Height = 26
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
+        TabOrder = 8
         OnChange = ProgramsCBChange
       end
       object StopOnPause: TCheckBox
-        Left = 8
-        Top = 76
-        Width = 243
-        Height = 19
+        Left = 6
+        Top = 57
+        Width = 182
+        Height = 14
         Hint = #1055#1086#1083#1091#1095#1072#1090#1100' '#1085#1086#1090#1080#1092#1080#1082#1072#1094#1080#1080' '#1076#1083#1103' '#1085#1072#1089#1090#1088#1081#1086#1082#1080' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1086#1074' '#1080#1079' '#1087#1083#1072#1075#1080#1085#1086#1074
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Caption = #1054#1089#1090#1072#1085#1086#1074' '#1085#1072' '#1087#1072#1091#1079#1077
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 10
+        TabOrder = 9
       end
       object StopPanel: TPanel
-        Left = 135
-        Top = 7
-        Width = 60
-        Height = 58
-        TabOrder = 11
+        Left = 101
+        Top = 5
+        Width = 45
+        Height = 44
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
+        TabOrder = 10
         object StopBtn: TSpeedButton
-          Left = 7
-          Top = 4
-          Width = 49
-          Height = 51
+          Left = 5
+          Top = 3
+          Width = 37
+          Height = 38
           Hint = #1054#1089#1090#1072#1085#1086#1074#1080#1090#1100' '#1087#1088#1086#1075#1088#1072#1084#1084#1091
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
           BiDiMode = bdLeftToRight
           Glyph.Data = {
             360C0000424D360C000000000000360000002800000020000000200000000100
@@ -2407,52 +2301,229 @@ object Frm3120: TFrm3120
           OnClick = StopBtnClick
         end
       end
+      object ReportPanel: TPanel
+        Left = 623
+        Top = 23
+        Width = 48
+        Height = 38
+        Color = clGradientActiveCaption
+        ParentBackground = False
+        TabOrder = 11
+        object SaveBtn: TSpeedButton
+          Left = 5
+          Top = 3
+          Width = 39
+          Height = 32
+          Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
+          AllowAllUp = True
+          BiDiMode = bdLeftToRight
+          Flat = True
+          Glyph.Data = {
+            360C0000424D360C000000000000360000002800000020000000200000000100
+            180000000000000C0000C40E0000C40E00000000000000000000F6F6F6F6F6F6
+            F2F2F2F6F6F6F2F2F2EFEFEFEEEEEEEAEAEADBDCDBD8D9D8DADCDAD8DAD9DFE0
+            DFE2E3E3E2E3E2DFE0DFE3E4E3E3E4E3DFE0DFE3E4E3E0E1E0DDDEDDDDDEDEDF
+            E0DFDDDEDDDEDFDEE0E1E0DCDEDDE0E1E0E5E6E5EDEDEDF2F2F2F2F2F2F2F2F2
+            EFEFEFF2F2F2F2F2F2EEEEEEDCDDDC979B99A2A5A49C9F9E9EA2A0A7AAA8BEC1
+            BFBEC1BFBCBFBDBABDBBBABDBBBBBEBCBABDBBB9BCBAB7BAB8B7BBB9B9BCBABC
+            BFBDBBBEBCBDC0BEBEC1BFBEC1BFBDC0BEC3C5C3D8D9D9ECECECF2F2F2F2F2F2
+            EFEFEFF2F2F2F2F2F2E3E7E4589E74386F4EC9CDCBFDFDFDFCFDFDFCFCFCFEFE
+            FEFEFEFEFEFEFEFEFEFE9E9E9E646464666666AAABABAEAFAF7E7F7FB3B4B45C
+            5C5C8E8F8FC6C7C7595A5A8E8F8FABACACBABBBBDADCDBEDEDEDF2F2F2F2F2F2
+            F2F2F2F6F6F6F4F4F47CA78E33B26730A05E5C7868F0F0F0FCFCFCFCFDFDFEFE
+            FEFFFFFFFFFFFFFEFEFE5252527D7F7EB3B5B4DBDBDB0A0B0A868786666767B6
+            B7B7B0B1B06B6B6B5353535A5C5B7B7B7B9E9E9ED6D8D7ECEDEDF6F6F6F6F6F6
+            F6F6F6F2F2F2C5D0CA2CA96130B56831B66B2A8D54929A96F5F6F6FBFCFCFBFC
+            FCFEFEFEFFFFFFFFFFFF5050502A2B2A616262A8A9A83B3C3B4D4E4D8484844F
+            4F4F4A4B4B8687864F4F4F3132317B7B7B9D9E9ED8DBD9EFF0F0F2F2F2F2F2F2
+            F2F2F2E2E6E442AF7629C0722FBF722EBF722BBF7135815ABCC1BEF9FAFAFAFB
+            FBFEFEFEFFFFFFFFFFFF5656563E3F3F5B5C5CEDEEEEF9FAFAEEEFEEF7F8F8E1
+            E2E2F4F7F6F5F7F7E2E3E3F7F8F87F8080A1A1A1D8DAD9EDEEEDF2F2F2F2F2F2
+            F0F1F077B7982FC67B28C67922C57726C77A2BC3762ABB7397B4A3FAFBFBFBFC
+            FCFEFEFEFFFFFFFFFFFFDFDFDFDEDFDEE0E1E1F9FAFAF6F7F7E7E8E8D3D5D4BD
+            C2BF96CCB2A3C9B9D9DCDBF8F9F9E6E7E7F6F7F7DBDCDBEFF0EFEFEFEFF2F2F2
+            F5F5F5C5D7CDB5CFC120BA7426CC7F1FCE8026B06DA8C1B3E6EBE8EFF4F1DCEC
+            E3E0E8E4D5DCD9C5CCC9AEC0B7A7BEB1B1C3BA97BCAC96C1AEA6D3BFA0EDC89A
+            E8C185DEB1B6F6DDC0DBCFF8FAF9FAFBFBFAFBFBD8DAD9EDEEEEEFEFEFEFEFEF
+            F2F2F2EEEEEEEEF0EF22B9741CD28521D08320B06FDDDFDFFAFAFA96C8AC4DBD
+            81A3BEAFBAD2C6BBE5D1A5F5D5C6FBE687EFC357E3A638D08A99E9C723BC6B07
+            AA4C07A145AEEFD2B8D9CAF8FAF9FAFBFBFCFDFDD8DAD8EDEEEDF2F2F2F2F2F2
+            F6F6F6F2F2F2F0F1F120BE7823D58819D3851EB171DEE0DFFBFBFB7BB494129F
+            50CAEDDA5AF5B30CF2910DF2917FF1C051E1A325E2914CD294B0EFD284E1B495
+            E4BCA8EDCCC4F6E4B5D5C5F7F9F8FAFBFAFDFDFDD9DBDAF0F1F1F2F2F2F2F2F2
+            F6F6F6F2F2F2EFF1F11CBE7818D58717D7861EB171DDDFDDFAFAFA79B1921087
+            4395D4B4B5FADD7BEEBC74EAB6D4FBEBE1FCF271E3B12EDE90C3F2DD71D7A325
+            B45F09A7479AE2C0B7D1C5F9FAF9FAFBFBFCFCFCD9DBDAEDEEEEF2F2F2F2F2F2
+            F2F2F2EFEFEFEDEFEE45C38931DD9138D58F36B779F2F4F2FBFCFC78AA8E1078
+            3E5DB384F2FCF864C69811D9836BE4B1BEF0DA0AE18511C571CAF4E480DFB165
+            CF947AD6A5C2F6E2B6D6C8F8FAF9F9FAFAFAFBFBDCDDDCEDEDEDEFEFEFEFEFEF
+            EFEFEFF2F2F2F2F2F2CFDBD4C5D6CCB4C5BBE5EEE8F6F7F6F9FAFA78A88D0D66
+            33288B53FBFDFDCAE2D628A96907B76416C57405BF6983D0ABDAFEF1A6EACA45
+            C37C35B46B86DCB0AED1C0F8F9F8F9FAF9F9FAFADADCDAEAEBEAF2F2F2F2F2F2
+            F2F2F2F6F6F6F6F6F6F1F1F1EAEBEAD7D9D8F6F7F6F9FAF9F9FAFA83AA932D6E
+            48337952DEF6EBF3FDFAD9F3E84BB67A30BA7338AD6CD0F7E7DBFEF194E2BA4E
+            C68367D096ADEFD1A9D5C2F8FAF9F9FAFAF9FAFADBDDDCECECECF2F2F2F2F2F2
+            F2F2F2F6F6F6F6F6F6F2F2F2EEEEEEDBDDDCF7F8F8F7F8F8F7F8F8A4BFAF6A90
+            7A6D957EC1DCD0F4FDFAE7F7F084C2A07EBE9B86BEA181C4A1CAF3E3BEF5DD5C
+            CB8E3FB8737CD9A9A8CFBBF8F9F9F7F8F8F8F9F8D8DAD9EAEBEAF6F6F6F2F2F2
+            EFEFEFF2F2F2F2F2F2EFEFEFEBECEBD9DBD9F6F7F6F7F8F8F7F8F7ACC2B5829A
+            8C769F88AFC9BDF8FCFB99C6AE94BDA888BA9FA6C8B694B9A49CCDB5B2F0D54D
+            C7856BCD98ABEACFACD3C1F5F7F5F7F8F8F7F8F7D9DCDAECECECF6F6F6F6F6F6
+            F2F2F2F6F6F6F2F2F2EFEFEFEAEAEAD9DBDAF5F6F5F6F7F6F5F6F5B1CDBD92A2
+            9A97ADA2A1BCB1EFFAF795B8A6AFBDB5DBF1E8E6FCF5B3D9C790C5AAB2DAC9B5
+            DBCAC6E7D8D6F0E3DAEDE2F6F7F6F6F7F6F6F7F6DADCDAEBECEBF2F2F2F2F2F2
+            EFEFEFF2F2F2F2F2F2EFEFEFEEEEEEDADCDBF4F5F4F4F5F4F4F5F4B9DAC8A6B7
+            ADA7B4ADA3BCB0B7E4D1B8D9C9A6CEB9A8C9B693BCA4ACB7B1AAB9B1B0B7B3B6
+            C7BDF0F3F1F3F5F3F3F5F3F4F5F4F5F6F5F4F5F4D8DBD9EAEBEBF2F2F2F2F2F2
+            EFEFEFF2F2F2F2F2F2EFEFEFEEEEEED7D9D7F1F2F1F2F2F2F3F3F3C9EBD9C0CE
+            C6BCC8C2B6CBC1BAC7C0BBC4BFBBC3BFBEC2BFBFC6C2BBC7C1BCC8C2C0C3C1BE
+            CDC4F0F2F0F3F4F3F2F3F2F2F3F2F3F3F3F3F4F3D6D8D7EDEDEDF2F2F2F2F2F2
+            F2F2F2F6F6F6F6F6F6F2F2F2F1F2F2D7D9D7F1F2F1F2F2F2F1F1F1F2F3F2B9E3
+            CFD2D5D3D1D3D2C9D4CFCFD5D2D0D1D0CED5D2CDD4D0D0D2D0D0D2D1D1D3D2C6
+            D5CCF1F2F1F2F2F2F2F3F2F2F2F2F2F2F2F1F1F1D4D6D5ECEDEDF6F6F6F6F6F6
+            F6F6F6F2F2F2F2F2F2EFEFEFEEEFEED5D7D5F0F0F0F1F1F1F1F1F1F1F1F1E4EE
+            E8BCE3D0D1E4DAE1E3E1DFE1DFDDE3E1DCE3E0DEE1E0DCE3E0DCE0DFDEE0DECC
+            DAD2EFEFEFF0F0F0EEEEEEEFEFEFF0F0F0EEEEEED4D6D5F0F0F0E8E8E8DADEDB
+            D9DDDAD6DAD8D6D9D7D9DDDAD6DAD8C0C5C2D4D7D5D5D8D5D4D9D6D5D9D6D4D8
+            D5D6D9D7C9D5CEAFD0BDB6D0C1B6D0C1B6D0C1B6CBBFB4CABEB9CEC1C5D6CBCC
+            D8D1E8E9E8E6E7E6E6E6E6E8E8E8E4E4E4E1E2E1CED0CEECEDEDB5C8BD7AB594
+            76AE8E76AE8E70AB8A6FAB8A6CA887639F7E69A5846AA48268A28068A281649D
+            7C669A7C639C7C5F97775F93765D91745C8F725C8D715C897068967CBCC6C0E1
+            E2E2D9DAD9D3D4D3D2D4D2D1D3D2D0D2D0C8CAC9CCCFCDF0F1F088BF9E56CB86
+            56CE8856CC8858CA8956CB8854CE884BC6804AC27E47C1793DBA7136B96F33B4
+            6A31AC6432A9642AA85F26A35B249F581F985219934E18914D16814598B1A3D2
+            D4D2BBBFBCACB1AEAAAEABA4A9A6A2A7A4949896D3D5D3F1F1F18BC3A25AD28D
+            60D79367D495B5EACDB7ECCF98E3B796DCB378D19D87D8AA71D099B1E5C75AC7
+            898BD2A9A4DCBB80CEA18AD1A89DD4B556B8801D9D5416964D198A4A94AD9FC5
+            C8C5A1A6A38688878284837F8180969796BBBDBBEBEBEBF2F2F28FC7A65FD794
+            62D99569DB9AF0FBF59AE4B97BDBA4DAF2E3DDF3E66DCE95D5F1E388D5A9ADE0
+            C3D7F1E388D3A757BE81E1F4E985CFA446B1731D9D54179C4F1A884A92AC9EC0
+            C4C1DDDFDEDBDBDBD5D6D6DBDCDBD0D2D1E9E9E9F2F2F2F6F6F691C9A865DA97
+            63DA9668DA99F2FAF5D9F4E586D9A9B8EACDE8F8EE5DC989E1F6EA45C27A3DBD
+            74D6F1E2D2EFDE83D0A3DFF3E732AD6622A3591E9E55129F4D1888498FA799BD
+            C1BFFAFAFAF5F5F5DEDFDED1D3D1EBECEBEFEFEFF2F2F2F2F2F292C9A967DB99
+            6AE19E6FDFA0E7F9EF91E3B471D79CE5F8EEDEF6E871D299DDF4E87BD4A19BDA
+            B6D8F1E37DCF9E58C182DEF2E62BA75F23A3591C9F541B9D531A884A8EA89ABE
+            C2BFF4F4F4DEDFDED0D2D0EEEEEEF5F5F5F2F2F2F6F6F6F2F2F28CCBA968DD9A
+            6AE19E6AE19EC4F2D8C2EFD690E1B3A1E5BD87D8A981D3A583D1A4BFEBD25ECC
+            8F9CDEB8AFE3C574CC979FD9B62CAB6121A2581E9E55199E52198A4A8AA495B7
+            BCB9DDDEDDD2D4D2EDEEEEF2F2F2F2F2F2EFEFEFF2F2F2EFEFEF96D3B25EE09A
+            67DE9A65DB9764D9965FD3905ED08E56C9864FC78345C47C47BF793FBD7438B8
+            6E34B3682FB16729A85E349B5F239C561E97521A904D188D4B1983478AA394BE
+            C3C0CFD1D0ECEDECF2F2F2EFEFEFEFEFEFF2F2F2F6F6F6F2F2F2CFE2D7B6DEC9
+            B6DFC9BBDCC8B5DEC8B7D9C5B6D8C4A2C5B0AACDB9A3CEB6A4CAB5A4C9B4A4C8
+            B3A1C4B09EC2AE9EC1AD9EC1AD9CBCAA9DBDAB9CBAA998B7A694B0A0B4BEB8D7
+            D8D7EBECEBF2F2F2F2F2F2EFEFEFEFEFEFF2F2F2F2F2F2EFEFEFF4F4F4F0F2F1
+            EDEFEEF0F1F1F0F1F1EDEEEEEAECEBE1E3E1DEE0DEDEE0DFDFE0E0DFE1E0E0E1
+            E1E2E3E2E1E2E1E1E2E1E2E3E2E2E3E2E2E3E2E1E2E1DCDEDCD7D9D7D9DBDAED
+            EDEDEFEFEFF2F2F2F6F6F6F2F2F2F2F2F2F6F6F6F6F6F6F2F2F2}
+          ParentShowHint = False
+          ParentBiDiMode = False
+          ShowHint = True
+          OnClick = SaveBtnClick
+        end
+      end
+      object OpenRepBtn: TButton
+        Left = 676
+        Top = 39
+        Width = 33
+        Height = 23
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
+        Caption = '...'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -15
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 12
+        OnClick = OpenRepBtnClick
+      end
+      object CloseRep: TCheckBox
+        Left = 623
+        Top = 6
+        Width = 146
+        Height = 14
+        Hint = #1055#1086#1083#1091#1095#1072#1090#1100' '#1085#1086#1090#1080#1092#1080#1082#1072#1094#1080#1080' '#1076#1083#1103' '#1085#1072#1089#1090#1088#1081#1086#1082#1080' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1086#1074' '#1080#1079' '#1087#1083#1072#1075#1080#1085#1086#1074
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
+        Caption = #1047#1072#1082#1088#1099#1074#1072#1090#1100' '#1086#1090#1095#1077#1090
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 13
+        Visible = False
+      end
     end
     object DBPanel: TPanel
-      Left = 1039
-      Top = 25
-      Width = 185
-      Height = 183
+      Left = 779
+      Top = 19
+      Width = 139
+      Height = 137
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alRight
       TabOrder = 1
       DesignSize = (
-        185
-        183)
+        139
+        137)
       object Label3: TLabel
-        Left = 16
-        Top = 4
-        Width = 66
-        Height = 24
+        Left = 12
+        Top = 3
+        Width = 51
+        Height = 18
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Anchors = [akTop, akRight]
         Caption = #1054#1073#1098#1077#1082#1090
       end
       object Label5: TLabel
-        Left = 16
-        Top = 68
-        Width = 100
-        Height = 24
+        Left = 12
+        Top = 51
+        Width = 75
+        Height = 18
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Anchors = [akTop, akRight]
         Caption = #1048#1089#1087#1099#1090#1072#1085#1080#1077
       end
       object ObjNameCb: TComboBox
-        Left = 16
-        Top = 31
-        Width = 145
-        Height = 32
+        Left = 12
+        Top = 21
+        Width = 109
+        Height = 26
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Anchors = [akTop, akRight]
         TabOrder = 0
-        OnChange = ProgramsCBChange
+        OnChange = ObjNameCbChange
       end
       object OkDBbtn: TButton
-        Left = 16
-        Top = 142
-        Width = 45
-        Height = 27
+        Left = 12
+        Top = 107
+        Width = 34
+        Height = 20
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Anchors = [akTop, akRight]
         Caption = 'Ok'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -20
+        Font.Height = -15
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
@@ -2460,51 +2531,61 @@ object Frm3120: TFrm3120
         OnClick = OkDBbtnClick
       end
       object TestNameCb: TComboBox
-        Left = 16
-        Top = 97
-        Width = 145
-        Height = 32
+        Left = 12
+        Top = 73
+        Width = 109
+        Height = 26
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Anchors = [akTop, akRight]
         TabOrder = 2
-        OnChange = ProgramsCBChange
+        OnChange = TestNameCbChange
       end
     end
   end
   object Panel1: TPanel
     Left = 0
-    Top = 209
-    Width = 1225
-    Height = 371
+    Top = 157
+    Width = 919
+    Height = 278
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alClient
     TabOrder = 1
     object Splitter3: TSplitter
-      Left = 688
+      Left = 516
       Top = 1
-      Width = 4
-      Height = 369
+      Height = 276
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alRight
       Color = clBackground
       ParentColor = False
-      ExplicitLeft = 617
-      ExplicitHeight = 435
+      ExplicitHeight = 277
     end
     object RightGB: TGroupBox
-      Left = 692
+      Left = 519
       Top = 1
-      Width = 532
-      Height = 369
+      Width = 399
+      Height = 276
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alRight
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1072
       TabOrder = 0
       object ControlPropSG: TStringGrid
         Left = 2
-        Top = 78
-        Width = 528
-        Height = 289
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Top = 59
+        Width = 395
+        Height = 215
         Align = alClient
         BevelInner = bvLowered
         BevelKind = bkFlat
@@ -2512,7 +2593,7 @@ object Frm3120: TFrm3120
         DefaultRowHeight = 32
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goFixedRowClick]
@@ -2532,32 +2613,45 @@ object Frm3120: TFrm3120
       end
       object Panel2: TPanel
         Left = 2
-        Top = 18
-        Width = 528
-        Height = 60
+        Top = 14
+        Width = 395
+        Height = 45
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Align = alTop
         TabOrder = 1
+        ExplicitTop = 19
         object ControlPropE: TEdit
-          Left = 15
-          Top = 19
-          Width = 153
-          Height = 32
+          Left = 11
+          Top = 14
+          Width = 115
+          Height = 26
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -20
+          Font.Height = -15
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
           TabOrder = 0
         end
         object ModePropE: TEdit
-          Left = 183
-          Top = 19
-          Width = 153
-          Height = 32
+          Left = 137
+          Top = 14
+          Width = 115
+          Height = 26
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -20
+          Font.Height = -15
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
@@ -2568,19 +2662,15 @@ object Frm3120: TFrm3120
     object TableModeGB: TGroupBox
       Left = 1
       Top = 1
-      Width = 687
-      Height = 369
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
+      Width = 515
+      Height = 276
       Align = alClient
       Caption = #1058#1072#1073#1083#1080#1094#1072' '#1088#1077#1078#1080#1084#1086#1074
       Color = clBtnFace
       Ctl3D = False
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -20
+      Font.Height = -15
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentBackground = False
@@ -2589,27 +2679,25 @@ object Frm3120: TFrm3120
       ParentFont = False
       TabOrder = 1
       object Splitter1: TSplitter
-        Left = 478
-        Top = 25
-        Width = 4
-        Height = 343
+        Left = 358
+        Top = 19
+        Height = 256
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Align = alRight
         Color = clBackground
         ParentColor = False
         OnMoved = Splitter1Moved
-        ExplicitLeft = 40
-        ExplicitTop = 49
-        ExplicitHeight = 410
+        ExplicitLeft = 359
+        ExplicitHeight = 257
       end
       object TableModeSG: TStringGrid
         Left = 1
-        Top = 25
-        Width = 477
-        Height = 343
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Top = 19
+        Width = 357
+        Height = 256
         Align = alClient
         BevelInner = bvLowered
         BevelKind = bkFlat
@@ -2617,7 +2705,7 @@ object Frm3120: TFrm3120
         FixedRows = 0
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goFixedRowClick]
@@ -2644,14 +2732,10 @@ object Frm3120: TFrm3120
           32)
       end
       object ValsSG: TNoWheelStringGrid
-        Left = 482
-        Top = 25
-        Width = 204
-        Height = 343
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Left = 361
+        Top = 19
+        Width = 153
+        Height = 256
         Align = alRight
         BevelInner = bvLowered
         BevelKind = bkFlat
@@ -2660,7 +2744,7 @@ object Frm3120: TFrm3120
         FixedRows = 0
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goFixedRowClick]
@@ -2668,6 +2752,8 @@ object Frm3120: TFrm3120
         ScrollBars = ssNone
         TabOrder = 1
         OnDrawCell = ValsSGDrawCell
+        ExplicitLeft = 360
+        ExplicitTop = 21
         ColWidths = (
           64
           64
@@ -2685,33 +2771,45 @@ object Frm3120: TFrm3120
   end
   object Panel3: TPanel
     Left = 0
-    Top = 580
-    Width = 1225
-    Height = 40
+    Top = 435
+    Width = 919
+    Height = 30
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
     Align = alBottom
     TabOrder = 2
     DesignSize = (
-      1225
-      40)
+      919
+      30)
     object Edit1: TEdit
-      Left = 7
-      Top = 7
-      Width = 1056
-      Height = 24
+      Left = 5
+      Top = 5
+      Width = 792
+      Height = 20
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
       Text = #1043#1086#1090#1086#1074' '#1082' '#1079#1072#1087#1091#1089#1082#1091
     end
     object ReportBtn: TButton
-      Left = 1075
-      Top = 5
-      Width = 128
-      Height = 28
+      Left = 806
+      Top = 4
+      Width = 96
+      Height = 21
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Anchors = [akTop, akRight]
       Caption = #1054#1090#1095#1077#1090
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -20
+      Font.Height = -15
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False

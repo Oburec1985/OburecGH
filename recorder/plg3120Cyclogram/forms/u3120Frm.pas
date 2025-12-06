@@ -45,7 +45,6 @@ type
     AlarmStopBtn: TImage;
     AlarmStopLabel: TLabel;
     Button1: TButton;
-    CloseRep: TCheckBox;
     ConfirmModeCB: TCheckBox;
     ContinueCB: TCheckBox;
     EditProgBtn: TButton;
@@ -68,7 +67,6 @@ type
     PlayPanel: TPanel;
     PlayBtn: TSpeedButton;
     ProgramsCB: TComboBox;
-    SaveBtn: TSpeedButton;
     StopOnPause: TCheckBox;
     StopPanel: TPanel;
     StopBtn: TSpeedButton;
@@ -78,6 +76,10 @@ type
     ObjNameCb: TComboBox;
     OkDBbtn: TButton;
     TestNameCb: TComboBox;
+    ReportPanel: TPanel;
+    SaveBtn: TSpeedButton;
+    OpenRepBtn: TButton;
+    CloseRep: TCheckBox;
     procedure TableModeSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure PlayBtnClick(Sender: TObject);
@@ -112,6 +114,9 @@ type
     procedure ControlPropSGSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure OkDBbtnClick(Sender: TObject);
+    procedure OpenRepBtnClick(Sender: TObject);
+    procedure TestNameCbChange(Sender: TObject);
+    procedure ObjNameCbChange(Sender: TObject);
   private
     m_err:integer;
     // канал программы. Для отслеживания перехода с 0 на 1
@@ -147,8 +152,6 @@ type
     m_saveBlockNum: Integer;
     m_excelTmplt: string; // путь к шаблону
     m_lastFile, m_ReportFile: string; // путь к отчету
-    // движок контрольных точек
-    m_CPeng:tCpEngine;
   protected
     function CurProg: cProgramObj;
     // вернуть значение с единицами
@@ -170,6 +173,10 @@ type
     procedure doRcInit(Sender: TObject);
     procedure doShowStop(Sender: TObject);
     procedure doLeaveCfg(Sender: TObject);
+    procedure doStartCp(mode: TObject);
+    procedure doStopCp(mode: TObject);
+    procedure doNewModeCp(mode: TObject);
+
     procedure EnablePult(b_state: Boolean);
     function getControlFromTableModeSGByRow(row: Integer): cControlobj;
     function getTableModeSGByCol(col: Integer): cmodeobj;
@@ -259,6 +266,8 @@ begin
     p:=g_conmng.getProgram(i);
     p.m_StartOnPlay:=(i=ProgramsCB.ItemIndex);
   end;
+  if g_conmng.ProgramCount=1 then
+    p.m_StartOnPlay:=true;
   ShowCyclogram;
 end;
 
@@ -330,7 +339,28 @@ begin
   mf := GetMeraFile;
   m_ReportFile := ExtractFileDir(mf) + '\Report' + '.xlsx';
 
-  m_CPeng.Prepare();
+  g_CpEngine.Prepare();
+end;
+
+procedure TFrm3120.doStartCp(mode: TObject);
+begin
+  ReportPanel.Color:=$000080FF;
+end;
+
+procedure TFrm3120.doStopCp(mode: TObject);
+begin
+  ReportPanel.Color:=clGradientActiveCaption;
+end;
+
+procedure TFrm3120.doNewModeCp(mode: TObject);
+begin
+  // нельзя вызывать КТ вручную пока н отбили циклограммой
+  if cmodeobj(mode).AutoCp then
+    ReportPanel.Color:=clGray
+  else
+  begin // можно вызывать КТ вручную
+    ReportPanel.Color:=clGradientActiveCaption;
+  end;
 end;
 
 procedure TFrm3120.CreateEvents;
@@ -487,7 +517,7 @@ end;
 
 destructor TFrm3120.destroy;
 begin
-  m_CPeng.destroy;
+  g_CpEngine.destroy;
   inherited;
 end;
 
@@ -671,6 +701,14 @@ var
   d: TDataReport;
   m: cmodeobj;
 begin
+  m := CurProg.ActiveMode;
+  if m.AutoCp then
+  begin
+    // не даем снимать КТ если режим пока не отбили по циклограмме
+    if g_CpEngine.state=2 then
+      exit;
+  end;
+
   //testpath := GetMDBTestPath;
   lpath := testpath;
   if testpath <> '' then
@@ -684,11 +722,14 @@ begin
   begin
     tmplt := 'c:\Mera Files\mdb\3120\template\tmplt_report.xlsx';
   end;
-  m := CurProg.ActiveMode;
+
   d.m := m;
   // сброс тегов
-  m_CPeng.resettags;
-  genreport(dir, 'Report.xlsx', tmplt, false, d, m_CPeng.m_tagslist);
+  g_CpEngine.resettags;
+  genreport(dir,
+            'Report.xlsx', tmplt,
+            true,
+            d,g_CpEngine.m_tagslist);
 end;
 
 procedure TFrm3120.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -709,8 +750,12 @@ begin
   a_pIni.WriteInteger(SectionStr, 'Table_Controls_Splitter_Pos', RightGB.Width);
   a_pIni.WriteString(SectionStr, 'TransNumCfg', TransNumFrm.ToStr);
   a_pIni.WriteInteger(SectionStr, 'ActivProg', ProgramsCB.ItemIndex);
+
   a_pIni.WriteString(SectionStr, 'DBTestObj', ObjNameCb.text);
   a_pIni.WriteString(SectionStr, 'DBTest', TestNameCb.text);
+  a_pIni.WriteFloat(SectionStr, 'Cp_AvrTime',g_CpEngine.m_avrTime);
+  a_pIni.WriteFloat(SectionStr, 'Cp_StartTime',g_CpEngine.m_Time);
+  a_pIni.WriteString(SectionStr, 'Cp_Tmplt',g_CpEngine.tmplt);
 
 
   dir := ExtractFileDir(a_pIni.FileName);
@@ -737,11 +782,22 @@ begin
   m_activProg:=a_pIni.ReadInteger(SectionStr, 'ActivProg', 0);
 
   initdb;
-  m_CPeng:=TCPengine.create;
-  m_CPeng.init(TExtRecorderPack(g_plg));
+  g_CpEngine:=TCPengine.create;
+  g_CpEngine.init(TExtRecorderPack(g_plg));
+  g_CpEngine.fstartCp:=doStartCp;
+  g_CpEngine.fstopCp:=doStopCp;
+  g_CpEngine.fNewModeCp:=doNewModeCp;
+
   ObjNameCb.text:=a_pIni.ReadString(SectionStr, 'DBTestObj', '');
   TestNameCb.text:=a_pIni.ReadString(SectionStr, 'DBTest', '');
   ShowDB(ObjNameCb, TestNameCb, ObjNameCb.text, TestNameCb.text);
+  g_CpEngine.m_avrTime:=a_pIni.ReadFloat(SectionStr, 'Cp_AvrTime', 1);
+  g_CpEngine.m_Time:=a_pIni.ReadFloat(SectionStr, 'Cp_StartTime', 1);
+  g_CpEngine.tmplt:=a_pIni.ReadString(SectionStr, 'Cp_Tmplt', '');
+  //if g_cpEngine.checkRepPath then
+  begin
+
+  end;
 
   RightGB.Width := a_pIni.ReadInteger(SectionStr, 'Table_Controls_Splitter_Pos', RightGB.Width);
   s := a_pIni.ReadString(SectionStr, 'TransNumCfg', '');
@@ -767,6 +823,10 @@ begin
   begin
     p:=g_conmng.getProgram(i);
     ProgramsCB.AddItem(p.name, p);
+  end;
+  if g_conmng.ProgramCount=1 then
+  begin
+    p.m_StartOnPlay:=true;
   end;
 end;
 
@@ -2102,6 +2162,26 @@ begin
 end;
 
 
+
+procedure TFrm3120.TestNameCbChange(Sender: TObject);
+begin
+  if testNameCb.ItemIndex>-1 then
+  begin
+    g_test:= cxmlfolder(testNameCb.items.objects[testNameCb.ItemIndex]);
+  end;
+end;
+
+procedure TFrm3120.ObjNameCbChange(Sender: TObject);
+begin
+  if testNameCb.ItemIndex>-1 then
+  begin
+    g_obj:= cxmlfolder(ObjNameCb.items.objects[ObjNameCb.ItemIndex]);
+    // работает с глобальным g_obj
+    ShowObj(TestNameCb);
+  end;
+
+end;
+
 procedure TFrm3120.OkDBbtnClick(Sender: TObject);
 begin
   createObj(ObjNameCB.text, TestNameCb.text);
@@ -2121,6 +2201,11 @@ begin
   end;
   CheckCBItemInd(ObjNameCB);
   CheckCBItemInd(TestNameCB);
+end;
+
+procedure TFrm3120.OpenRepBtnClick(Sender: TObject);
+begin
+  g_CpEngine.OpenReport;
 end;
 
 end.

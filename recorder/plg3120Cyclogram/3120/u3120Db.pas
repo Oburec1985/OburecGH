@@ -21,6 +21,7 @@ function TestPath:string;
 function BasePath:string;
 // отобразить объекты базы в CB
 procedure ShowDB(ObjCb, TestCb:tcombobox; selobj, seltest:string);
+procedure ShowObj(TestCb:tcombobox);
 
 var
   g_obj, g_test, g_reg:cXmlFolder;
@@ -28,10 +29,38 @@ var
 implementation
 
 procedure InitDB;
+var
+  dir:string;
 begin
   // объ€влена в uMeasureBase
   g_mbase:=cMBase.create;
-  g_mbase.InitBaseFolder('c:\Mera Files\3120Base\');
+  dir:='c:\Mera Files\3120Base';
+  if not DirectoryExists(dir) then
+  begin
+    ForceDirectories(dir);
+  end;
+  g_mbase.InitBaseFolder(dir);
+end;
+
+procedure ShowObj(TestCb:tcombobox);
+var
+  i:integer;
+  o:cxmlfolder;
+  s:string;
+begin
+  TestCb.Clear;
+  for I := 0 to g_obj.ChildCount - 1 do
+  begin
+    o:=cxmlfolder(g_obj.getChild(i));
+    TestCb.AddItem(o.name,o);
+  end;
+  if g_obj.ChildCount>0 then
+  begin
+    TestCb.ItemIndex:=0;
+    g_test:=cxmlfolder(TestCb.Items.Objects[0]);
+  end
+  else
+    g_test:=nil;
 end;
 
 procedure ShowDB(ObjCb, TestCb:tcombobox; selobj, seltest:string);
@@ -55,7 +84,10 @@ begin
     if Objcb.ItemIndex>-1 then
       g_obj:=cxmlfolder(Objcb.Items.Objects[Objcb.ItemIndex])
     else
+    begin
       g_obj:=nil;
+      exit;
+    end;
   end;
   if TestCb<>nil then
   begin

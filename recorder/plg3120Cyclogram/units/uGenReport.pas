@@ -182,6 +182,7 @@ begin
   rngDate := GetRange(1, 'c_data');
   r0 := rngDate.row;
   c0 := rngDate.column + 1;
+  // поиск пустой строки
   r := GetEmptyRow(1, rngDate.row, rngDate.column + 1);
   ws := E.ActiveWorkbook.Sheets[1];
   // смещение к сигналу +1
@@ -207,7 +208,7 @@ begin
   begin
     SetCell(1, r, rng.column, d.m.caption);
     v := cprogramObj(d.m.mainparent).getModeTime;
-    // SetCell(1, r, rng.column+1, floattostr(SecToTime(), 1)));
+    SetCell(1, r, rng.column+1, v);
   end;
   // ставим сетку всего блока
   rng := GetRangeObj(1, point(r0, rngSig.column), point(r, c));
