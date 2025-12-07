@@ -80,6 +80,7 @@ type
     SaveBtn: TSpeedButton;
     OpenRepBtn: TButton;
     CloseRep: TCheckBox;
+    LastCpLabel: TLabel;
     procedure TableModeSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure PlayBtnClick(Sender: TObject);
@@ -174,7 +175,9 @@ type
     procedure doShowStop(Sender: TObject);
     procedure doLeaveCfg(Sender: TObject);
     procedure doStartCp(mode: TObject);
+    // когда движок Cp завершает КТ
     procedure doStopCp(mode: TObject);
+    // когда в движок Cp попадает новый режим
     procedure doNewModeCp(mode: TObject);
 
     procedure EnablePult(b_state: Boolean);
@@ -196,6 +199,7 @@ type
     procedure ShowInfoMessage(s:string);
   public
     procedure doNextMode(Sender: TObject);
+    procedure doBeforeNextMode(Sender: TObject);
     procedure doStart;
     function SecToTime(t: double): double;
     // происходит в doRepaint
@@ -265,6 +269,11 @@ begin
   begin
     p:=g_conmng.getProgram(i);
     p.m_StartOnPlay:=(i=ProgramsCB.ItemIndex);
+    if p.m_StartOnPlay then
+    begin
+      p.fOnNextMode := doNextMode;
+      p.fBeforeNextMode := doBeforeNextMode;
+    end;
   end;
   if g_conmng.ProgramCount=1 then
     p.m_StartOnPlay:=true;
@@ -284,6 +293,19 @@ begin
     Preview;
 end;
 
+procedure TFrm3120.doBeforeNextMode(Sender: TObject);
+var
+  p:cProgramObj;
+  m:cmodeobj;
+begin
+  p:=CurProg;
+  m:=cmodeobj(sender);
+  if m.AutoCpEndMode then
+  begin
+    SaveBtnClick(sender);
+  end;
+end;
+
 procedure TFrm3120.doNextMode(Sender: TObject);
 begin
   ThresholdFrm.doUpdateData(self);
@@ -300,6 +322,8 @@ begin
   end;
 end;
 
+
+
 procedure TFrm3120.doRcInit(Sender: TObject);
 var
   I: Integer;
@@ -311,6 +335,11 @@ begin
   ProgramsCB.ItemIndex:=m_activProg;
   ProgramsCBChange(nil);
   ShowCyclogram;
+  if g_CpEngine.Tmplt<>'' then
+  begin
+    g_CpEngine.Prepare;
+  end;
+
   // testInit;
   // if ThresholdFrm<>nil then
   begin
@@ -338,8 +367,7 @@ var
 begin
   mf := GetMeraFile;
   m_ReportFile := ExtractFileDir(mf) + '\Report' + '.xlsx';
-
-  g_CpEngine.Prepare();
+  //g_CpEngine.Prepare();
 end;
 
 procedure TFrm3120.doStartCp(mode: TObject);
@@ -700,6 +728,7 @@ var
   dir, rep, tmplt, objpath, lpath, mdb: string;
   d: TDataReport;
   m: cmodeobj;
+  p:cProgramObj;
 begin
   m := CurProg.ActiveMode;
   if m.AutoCp then
@@ -730,6 +759,8 @@ begin
             'Report.xlsx', tmplt,
             true,
             d,g_CpEngine.m_tagslist);
+  p:=CurProg;
+  LastCpLabel.Caption:='КТ: '+formatstrnoe(p.getModeTime,3);
 end;
 
 procedure TFrm3120.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -813,6 +844,7 @@ begin
   // упрощакем доступ к контролам
   p := CurProg;
   p.fOnNextMode := doNextMode;
+  p.fBeforeNextMode := doBeforeNextMode;
 
   dir := ExtractFileDir(a_pIni.FileName);
   ThresholdFrm.load(dir + '\Alarms.ini');

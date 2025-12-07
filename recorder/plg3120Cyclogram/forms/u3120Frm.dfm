@@ -44,7 +44,7 @@ object Frm3120: TFrm3120
       Margins.Bottom = 2
       Align = alClient
       TabOrder = 0
-      ExplicitLeft = -15
+      ExplicitLeft = -3
       ExplicitTop = 17
       object AlarmsBtn: TSpeedButton
         Left = 572
@@ -983,7 +983,7 @@ object Frm3120: TFrm3120
       end
       object AlarmStopLabel: TLabel
         Left = 515
-        Top = 62
+        Top = 61
         Width = 82
         Height = 18
         Margins.Left = 2
@@ -1675,6 +1675,17 @@ object Frm3120: TFrm3120
         Margins.Bottom = 2
         Caption = #1043#1086#1090#1086#1074#1085#1086#1089#1090#1100' '#1055#1063
       end
+      object LastCpLabel: TLabel
+        Left = 676
+        Top = 21
+        Width = 24
+        Height = 18
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
+        Caption = #1050#1058':'
+      end
       object Button1: TButton
         Left = 623
         Top = 66
@@ -2153,7 +2164,7 @@ object Frm3120: TFrm3120
       end
       object ProgramsCB: TComboBox
         Left = 623
-        Top = 109
+        Top = 110
         Width = 109
         Height = 26
         Margins.Left = 2
@@ -2311,7 +2322,7 @@ object Frm3120: TFrm3120
         TabOrder = 11
         object SaveBtn: TSpeedButton
           Left = 5
-          Top = 3
+          Top = 2
           Width = 39
           Height = 32
           Hint = #1054#1073#1085#1086#1074#1080#1090#1100' '#1088#1077#1075#1091#1083#1103#1090#1086#1088
@@ -2622,7 +2633,6 @@ object Frm3120: TFrm3120
         Margins.Bottom = 2
         Align = alTop
         TabOrder = 1
-        ExplicitTop = 19
         object ControlPropE: TEdit
           Left = 11
           Top = 14
@@ -2752,8 +2762,6 @@ object Frm3120: TFrm3120
         ScrollBars = ssNone
         TabOrder = 1
         OnDrawCell = ValsSGDrawCell
-        ExplicitLeft = 360
-        ExplicitTop = 21
         ColWidths = (
           64
           64

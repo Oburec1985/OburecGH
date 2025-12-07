@@ -283,7 +283,7 @@ object EditProgFrm: TEditProgFrm
     end
   end
   object AutoCpCb: TCheckBox
-    Left = 312
+    Left = 307
     Top = 132
     Width = 247
     Height = 13
@@ -293,5 +293,17 @@ object EditProgFrm: TEditProgFrm
     Margins.Bottom = 2
     Caption = #1040#1074#1090#1086' ('#1082#1086#1085#1090#1088#1086#1083#1100#1085#1072#1103' '#1090#1086#1095#1082#1072')'
     TabOrder = 8
+  end
+  object AutoCpEndModeCb: TCheckBox
+    Left = 307
+    Top = 156
+    Width = 247
+    Height = 13
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Caption = #1040#1074#1090#1086' ('#1082#1086#1085#1090#1088#1086#1083#1100#1085#1072#1103' '#1090#1086#1095#1082#1072')'
+    TabOrder = 9
   end
 end

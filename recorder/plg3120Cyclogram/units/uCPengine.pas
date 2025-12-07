@@ -363,6 +363,8 @@ end;
 
 procedure TCPengine.setSelTmplt(i: integer);
 begin
+  if i<>SelTmpltIndex then
+    m_needReadTags:=true;
   m_SelTmplt:=i;
 end;
 
@@ -374,6 +376,8 @@ begin
   begin
     if m_xlsTmplt.Strings[i]=s then
     begin
+      if i<>SelTmpltIndex then
+        m_needReadTags:=true;
       SelTmpltIndex:=i;
       break;
     end;

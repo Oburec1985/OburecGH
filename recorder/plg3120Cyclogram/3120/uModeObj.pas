@@ -135,7 +135,7 @@ type
     fCheckLength: double;
     m_tryActive: boolean;
     // при старте режима контрольная точка отбивается автоматом
-    AutoCp,
+    AutoCp, AutoCpEndMode,
     // контрольная точка снята
     ProcCP: boolean;
     // информация о режиме
@@ -1007,6 +1007,7 @@ begin
       end;
     end;
   end;
+  // если активим режим
   if b then
   begin
     ProcCP:=false;
@@ -1232,6 +1233,7 @@ begin
   CheckThreshold := xmlNode.ReadAttributeBool('CheckThreshold', false);
   Infinity := xmlNode.ReadAttributeBool('Infinity', false);
   AutoCp:=xmlNode.ReadAttributeBool('AutoCP', false);
+  AutoCpEndMode:=xmlNode.ReadAttributeBool('AutoCpEndMode', false);
 
   StartTimeOnTolerance:= xmlNode.ReadAttributeBool('StartTimeOnCheckTol', false);
 
@@ -1296,6 +1298,7 @@ begin
   xmlNode.WriteAttributeBool('CheckThreshold', CheckThreshold);
   xmlNode.WriteAttributeBool('Infinity', Infinity);
   xmlNode.WriteAttributeBool('AutoCP', AutoCp);
+  xmlNode.WriteAttributeBool('AutoCpEndMode', AutoCpEndMode);
   xmlNode.WriteAttributeBool('StartTimeOnCheckTol', StartTimeOnTolerance);
   TaskNode := GetNode(xmlNode, 'TaskList');
   TaskNode.WriteAttributeFloat('NCount', TaskCount);

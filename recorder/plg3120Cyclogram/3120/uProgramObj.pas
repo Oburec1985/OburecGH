@@ -46,6 +46,8 @@ type
   // объекты программ выполняются одновременно
   cProgramObj = class(cBaseProgramObj)
   public
+    // событие перед переходом на след режим по времени
+    fBeforeNextMode:TNotifyEvent;
     // событие для след режима
     fOnNextMode:TNotifyEvent;
     // событие в Mode.Exec
@@ -79,7 +81,7 @@ type
     fcontrols: tstringlist;
     // время паузы на режиме
     fModePauseT: double;
-    fInTolerance: boolean;
+    //fInTolerance: boolean;
     // счетчик времени при выполнении посл шага паузы режима
     fModePauseTi: int64;
     // счетчик времени при выполнении посл шага программы
@@ -191,7 +193,7 @@ type
     procedure ClearModes;
     procedure addmode(m: cModeObj);
     procedure insertMode(m: cModeObj; modeIndex: integer);
-    property InTolerance: boolean read fInTolerance write fInTolerance;
+    //property InTolerance: boolean read fInTolerance write fInTolerance;
     property CheckLength: double read getCheckLength write fCheckLength;
     property ActiveMode: cModeObj read GetActiveMode write SetActiveMode;
     property enabled: boolean read fenabled write setEnabled;
@@ -585,6 +587,7 @@ begin
     if mode <> nil then
     begin
       // расчет вышли на режим или нет
+      // TrigInTolerance - показывает был ли вход в допуск
       if not mode.TrigInTolerance then
       begin
         if mode.StartTimeOnTolerance  then
@@ -595,9 +598,13 @@ begin
       endModeTime:=fModeT < mode.ModeLength;
       // mode.ModeLength - бесконечный режим, который может кончиться только по триггеру
       continueMode := (fModeT < mode.ModeLength) or (mode.Infinity);
-      if (not continueMode) and (not mode.StartTimeOnTolerance) then
+      // если режим закончен или не начаолся отсчет по причине невыхода на режим
+      if (not continueMode) and
+          (not mode.StartTimeOnTolerance) then
       begin
-        if mode.CheckThreshold then // нужна проверка перед переходом на новый режим
+        // нужна проверка перед переходом на новый режим
+        // не завершаем режим, пока не выйдем
+        if mode.CheckThreshold then
         begin
           // в состоянии проверки - основная часть реж закончена
           if not mode.fCheckProgres then
@@ -606,10 +613,12 @@ begin
             mode.StartCheckThreshold;
           end;
           continueMode := true;
-          // логика контроля времени на режим не совместима с логикой считать время режима
+          // логика контроля времени на режим не совместима
+          // с логикой считать время режима
           // с момента когда вошли в допуск
           CheckTol:=mode.EvalThresholds;
-          if (CheckTol) and (state = c_Play) and (not fInTolerance) then
+          //if (CheckTol) and (state = c_Play) and (not fInTolerance) then
+          if (CheckTol) and (state = c_Play) then
           begin
             // если время проверки превысило допустимое время проверки
             // переходим на след. режим
@@ -626,6 +635,7 @@ begin
           end;
         end;
       end;
+      // если не треб переход на нов режим
       if continueMode then
       begin
 
@@ -633,6 +643,8 @@ begin
       else
       begin
         // получаем следующий режим, резетим время, даем новое задание
+        if assigned(fBeforeNextMode) then
+          fBeforeNextMode(mode);
         mode := NextMode;
       end;
     end;
@@ -844,7 +856,7 @@ var
   actMode, m: cModeObj;
   i: integer;
 begin
-  fInTolerance := false;
+  //fInTolerance := false;
   actMode := GetActiveMode;
   result := nil;
   for i := 0 to ModeCount - 1 do

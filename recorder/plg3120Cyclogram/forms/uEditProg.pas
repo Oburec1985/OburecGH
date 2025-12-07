@@ -31,6 +31,7 @@ type
     AvrTimeLabel: TLabel;
     AvrTimeSe: TFloatSpinEdit;
     AutoCpCb: TCheckBox;
+    AutoCpEndModeCb: TCheckBox;
     procedure ApplyBtnClick(Sender: TObject);
     procedure ModesLBClick(Sender: TObject);
     procedure CopyProgBtnClick(Sender: TObject);
@@ -65,6 +66,7 @@ begin
   m_curM.CheckThreshold := EnableThresholdCb.Checked;
   m_curM.StartTimeOnTolerance := EnableThresholdCb.Checked;
   m_curM.AutoCp := AutoCpCb.Checked;
+  m_curM.AutoCpEndMode:=AutoCpEndModeCb.Checked;
   for I := 0 to m_curM.TaskCount - 1 do
   begin
     t := m_curM.GetTask(I);
@@ -162,6 +164,7 @@ begin
   ModeNameEdit.Text := m.name;
   EnableThresholdCb.Checked := m.CheckThreshold;
   AutoCpCb.Checked:= m.AutoCp;
+  AutoCpEndModeCb.Checked:=m_curM.AutoCpEndMode;
   t := m.GetTask(0);
   if t <> nil then
   begin
