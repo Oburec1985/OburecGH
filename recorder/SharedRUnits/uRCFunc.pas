@@ -1585,8 +1585,15 @@ var
   b: boolean;
   astr: ansistring;
   i:integer;
+  t:itag;
 begin
   b := false;
+  t:=getTagByName(s);
+  if t<>nil then
+  begin
+    if t=tag then
+      exit;
+  end;
   if (Gettagname <> s) or (tag=nil) then
   begin
     if useecm then
@@ -1601,12 +1608,12 @@ begin
       end;
     end;
     astr := s;
-    if tag <> nil then
+    if (tag <> nil) and (t=nil) then // переименовываем старый
     begin
       tag.SetName(pansichar(lpcstr(StrToAnsi(s))));
       // tag.SetName(pansichar(astr));
     end
-    else
+    else // назначаем новый
     begin
       tag := getTagByName(s);
     end;

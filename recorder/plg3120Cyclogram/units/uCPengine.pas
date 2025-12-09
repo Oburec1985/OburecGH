@@ -139,6 +139,7 @@ var
   tagObj:TcpTag;
   d:TDataReport;
   first:boolean;
+  err:integer;
 begin
   p:=cProgramObj(curmode.mainParent);
   // выжидаем время до старта
@@ -182,7 +183,7 @@ begin
     genreport(TestPath, 'Report.xlsx', tmplt,
               true, // закрыть Excel
               d,
-              m_tagsList);
+              m_tagsList, err);
     for i := 0 to m_tagsList.Count - 1 do
     begin
       tagObj := TcpTag(m_tagsList.Objects[i]);

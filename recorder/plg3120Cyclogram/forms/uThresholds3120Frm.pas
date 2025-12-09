@@ -85,7 +85,7 @@ type
     procedure clear;
     // обновить список аварий в тегах
     procedure ApplyAlarms;overload;
-    // restype - 0 - абс; 1- от задания; 2 - от канала
+    // restype - 0 - абс; 1- от задания абс; 2 - от задания %
     procedure ApplyAlarms(pd:PDataRec; restype:integer);overload;
     function EvalAlarmLvl: double;
     procedure setEnabled(b:boolean);
@@ -154,6 +154,7 @@ type
     NormalValueFE: TFloatSpinEdit;
     AlarmTagCB: TRcComboBox;
     Label2: TLabel;
+    Label3: TLabel;
     procedure TagsTVDragOver(Sender: TBaseVirtualTree; Source: TObject;
       Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
       var Effect: Integer; var Accept: Boolean);
@@ -183,6 +184,7 @@ type
     procedure doStop;
     procedure ShowTV;
   public
+    procedure SetControlTag(s:string);
     procedure doUpdateData(Sender: TObject);
     // пройти все аварии и найти максимальный уровень
     function EvalAlarmLvl:double;
@@ -519,6 +521,18 @@ begin
   ifile.Destroy;
 end;
 
+procedure TThresholdFrm.SetControlTag(s: string);
+var
+  I: Integer;
+  g:TThresholdGroup;
+begin
+  for I := 0 to m_Groups.Count - 1 do
+  begin
+    g:=getGroup(i);
+    g.ControlTag.tagname:=s;
+  end;
+end;
+
 procedure TThresholdFrm.load(fname: string);
 var
   ifile:tinifile;
@@ -658,6 +672,8 @@ begin
     end;
   end;
 end;
+
+
 
 procedure TThresholdFrm.TagsTVChange(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
@@ -926,7 +942,10 @@ end;
 
 function TThresholdGroup.AlarmData(i: integer): PDataRec;
 begin
-  result:=@m_Data[i];
+  if i>-1 then
+  begin
+    result:=@m_Data[i];
+  end;
 end;
 
 function TThresholdGroup.DisableAlarmByTag(a:TAlarms):double;

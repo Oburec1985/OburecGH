@@ -38,7 +38,7 @@ type
 function genreport(dir, repName, tmplt: string;
                    closeReport: boolean;
                    d: TDataReport;
-                   tlist: tstringlist): boolean;
+                   tlist: tstringlist; var err:integer): boolean;
 function SecToTime(t: double; p_type: integer): double;
 function GetVal(s: string; list: tstringlist): double;
 
@@ -153,7 +153,7 @@ begin
 end;
 
 function genreport(dir, repName: string; tmplt: string; closeReport: boolean;
-  d: TDataReport; tlist: tstringlist): boolean;
+  d: TDataReport; tlist: tstringlist; var err:integer): boolean;
 var
   r0, c0, r, c, i, j: integer;
   rngSig, rngDate, rng, ws: olevariant;
@@ -163,31 +163,41 @@ var
   book, fname, res, val: string;
 begin
   result := false;
+  err:=1;
   KillAllExcelProcesses;
   InitExcel;
   if fileexists(dir + '\' + repName) then
   begin
+    err:=2;
     book := dir + '\' + repName;
   end
   else
   begin
+    err:=3;
     if fileexists(tmplt) then
     begin
       book := tmplt;
     end;
   end;
+  err:=4;
   OpenWorkBook(book);
+  err:=5;
   // заполняем шапку
-
   rngDate := GetRange(1, 'c_data');
+  if not CheckVarObj(rngDate) then
+  begin
+    exit;
+  end;
   r0 := rngDate.row;
   c0 := rngDate.column + 1;
   // поиск пустой строки
+  err:=6;
   r := GetEmptyRow(1, rngDate.row, rngDate.column + 1);
   ws := E.ActiveWorkbook.Sheets[1];
   // смещение к сигналу +1
   c := c0;
   res := ws.cells[r0, c];
+  err:=7;
   // заполняем колонки с тегами
   while res <> '' do
   begin
@@ -196,8 +206,10 @@ begin
     Inc(c);
     res := ws.cells[r0, c];
   end;
+  err:=8;
   rngSig := GetRange(1, 'c_Signal');
   // путь к замеру
+  err:=9;
   SetCell(1, r, rngSig.column, GetMeraFile);
   // SetCell(1, r0, 4, 'Time:');
   date := now;
@@ -210,15 +222,19 @@ begin
     v := cprogramObj(d.m.mainparent).getModeTime;
     SetCell(1, r, rng.column+1, v);
   end;
+  err:=10;
   // ставим сетку всего блока
   rng := GetRangeObj(1, point(r0, rngSig.column), point(r, c));
   SetRangeBorder(rng);
+  err:=11;
   SaveWorkBookAs(dir + '\' + repName);
   if closeReport then
   begin
     CloseWorkBook;
     CloseExcel;
   end;
+  result:=true;
+  err:=0;
 end;
 
 end.

@@ -79,10 +79,10 @@ type
     function getApplyed: boolean;
     procedure setApplyed(b: boolean);
     procedure setPoint(p2: point2);
-    // проверить что FB вошел в допуск
-    function CheckTaskRes: boolean;
     function getTolRes: boolean;
   public
+    // проверить что FB вошел в допуск
+    function CheckTaskRes: boolean;
     procedure copytaskto(t: cTask);
     // доп задания контролу
     function TagsToString: string;
@@ -1455,7 +1455,7 @@ begin
         // абс знач
         1: thresh:= m_tolerance;
       end;
-      offset:=task-fb;
+      offset:=abs(task-fb);
       result:=(offset<thresh);
       if result then
         fTolres:=2

@@ -32,12 +32,18 @@ type
     AvrTimeSe: TFloatSpinEdit;
     AutoCpCb: TCheckBox;
     AutoCpEndModeCb: TCheckBox;
+    ProgNameEdit: TEdit;
+    ProgNameLabel: TLabel;
     procedure ApplyBtnClick(Sender: TObject);
     procedure ModesLBClick(Sender: TObject);
     procedure CopyProgBtnClick(Sender: TObject);
     procedure ProgLBClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ProgLBKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+  public
+    // время для отображения единиц
+    // 0 - sec' 1- min 2- час
+    m_units:integer;
   private
     m_curP: cprogramObj;
     m_curM: cModeObj;
@@ -57,16 +63,74 @@ uses
   u3120Frm;
 {$R *.dfm}
 
+function SecToTime(t: double; u:integer): double;
+begin
+  case u of
+    0:
+      result := t; // sec
+    1:
+      result := t / 60; // min
+    2:
+      result := t / 3600; // hour
+  end;
+end;
+
+
+function TimeToSec(t: double; u:integer): double;
+begin
+  case u of
+    0:
+      result := t; // sec
+    1:
+      result := t * 60; // min
+    2:
+      result := t * 3600; // hour
+  end;
+end;
+
 { TEditProgFrm }
 procedure TEditProgFrm.ApplyBtnClick(Sender: TObject);
 var
   I: Integer;
   t: cTask;
+  p:cProgramObj;
+  m:cmodeobj;
 begin
-  m_curM.CheckThreshold := EnableThresholdCb.Checked;
-  m_curM.StartTimeOnTolerance := EnableThresholdCb.Checked;
-  m_curM.AutoCp := AutoCpCb.Checked;
-  m_curM.AutoCpEndMode:=AutoCpEndModeCb.Checked;
+  if ModeNameEdit.text<>'' then
+  begin
+    if m_curM<>nil then
+    begin
+      m_curM.caption := ModeNameEdit.text;
+      m_curM.CheckThreshold := EnableThresholdCb.Checked;
+      m_curM.StartTimeOnTolerance := EnableThresholdCb.Checked;
+      m_curM.AutoCp := AutoCpCb.Checked;
+      m_curM.AutoCpEndMode:=AutoCpEndModeCb.Checked;
+
+      for I := 0 to ModesLB.Count - 1 do
+      begin
+        m:=cmodeObj(ModesLB.Items.Objects[i]);
+        if m=m_curM then
+        begin
+          ModesLB.Items[i]:=m.caption;
+          break;
+        end;
+      end;
+    end;
+  end;
+  if ProgNameEdit.text<>'' then
+  begin
+    if ProgNameEdit.text<>m_curP.name then
+    begin
+      m_curP.name:=ProgNameEdit.text;
+      m_curP.caption:=ProgNameEdit.text;
+    end;
+    ProgLB.Clear;
+    for I := 0 to g_conmng.ProgramCount - 1 do
+    begin
+      p:=g_conmng.getProgram(i);
+      ProgLB.AddItem(p.name, p);
+    end;
+  end;
   for I := 0 to m_curM.TaskCount - 1 do
   begin
     t := m_curM.GetTask(I);
@@ -74,8 +138,8 @@ begin
     t.m_tolType := ThresholdType.ItemIndex;
     t.m_useTolerance := m_curM.CheckThreshold;
   end;
-  g_cpEngine.m_Time:=CpTimeSe.Value;
-  g_cpEngine.m_avrTime:=AvrTimeSe.Value;
+  g_cpEngine.m_Time:=TimeToSec(CpTimeSe.Value, m_units);
+  g_cpEngine.m_avrTime:=TimeToSec(AvrTimeSe.Value, m_units);
   g_cpEngine.SelTmpltIndex:=RepTamplatesCb.ItemIndex;
 end;
 
@@ -111,7 +175,7 @@ end;
 
 procedure TEditProgFrm.FormClose(Sender: TObject; var Action: TCloseAction);
 var
-  i:integer;
+  i, ind:integer;
   p:cProgramObj;
 begin
   if g_conmng=nil then exit;
@@ -125,6 +189,7 @@ begin
         p := g_conmng.getProgram(I);
         Frm3120.ProgramsCB.AddItem(p.name, p);
       end;
+      Frm3120.ActiveProg:=Frm3120.ActiveProg;
     end;
   end;
 end;
@@ -152,16 +217,22 @@ procedure TEditProgFrm.ProgLBKeyDown(Sender: TObject; var Key: Word;
 var
   p:cProgramObj;
 begin
-  p:=cProgramObj(progLB.Items.Objects[progLB.ItemIndex]);
-  p.destroy;
-  showPrograms(g_conmng);
+  if progLB.ItemIndex>-1 then
+  begin
+    if key=VK_DELETE then
+    begin
+      p:=cProgramObj(progLB.Items.Objects[progLB.ItemIndex]);
+      p.destroy;
+      showPrograms(g_conmng);
+    end;
+  end;
 end;
 
 procedure TEditProgFrm.ShowMode(m: cModeObj);
 var
   t: cTask;
 begin
-  ModeNameEdit.Text := m.name;
+  ModeNameEdit.Text := m.caption;
   EnableThresholdCb.Checked := m.CheckThreshold;
   AutoCpCb.Checked:= m.AutoCp;
   AutoCpEndModeCb.Checked:=m_curM.AutoCpEndMode;
@@ -185,6 +256,7 @@ var
 begin
   m_curM := nil;
   ModesLB.Clear;
+  ProgNameEdit.Text:=p.caption;
   for I := 0 to p.modeCount - 1 do
   begin
     m := p.getMode(I);
@@ -200,6 +272,7 @@ procedure TEditProgFrm.showPrograms(mng: cControlMng);
 var
   I: Integer;
   p: cprogramObj;
+  s:string;
 begin
   m_curP := nil;
   ProgLB.Clear;
@@ -214,15 +287,22 @@ begin
     end;
   end;
   // отображаем КТ
-  CpTimeSe.Value:=g_cpEngine.m_Time;
-  AvrTimeSe.Value:=g_cpEngine.m_avrTime;
+  case m_units of
+    0:s:='сек';
+    1:s:='мин';
+    2:s:='час';
+  end;
+  CpLabel.Caption:='Время до снятия КТ, ' +s;
+  AvrTimeLabel.Caption:='Время усреднения КТ, ' +s;
+  CpTimeSe.Value:=sectotime(g_cpEngine.m_Time, m_units);
+  AvrTimeSe.Value:=sectotime(g_cpEngine.m_avrTime, m_units);
+  RepTamplatesCb.Clear;
   for I := 0 to g_cpEngine.TmpltCount - 1 do
   begin
     RepTamplatesCb.AddItem(extractfilename(g_cpEngine.getTmplt(i)), nil);
   end;
   if g_cpEngine.TmpltCount>0 then
     RepTamplatesCb.ItemIndex:=g_cpEngine.SelTmpltIndex;
-
   show;
 end;
 

@@ -368,6 +368,8 @@ object ThresholdFrm: TThresholdFrm
     Margins.Bottom = 4
     Align = alClient
     TabOrder = 3
+    ExplicitLeft = 229
+    ExplicitTop = -8
     object HHLabel: TLabel
       Left = 8
       Top = 93
@@ -466,6 +468,17 @@ object ThresholdFrm: TThresholdFrm
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = #1050#1086#1083#1080#1095#1077#1089#1090#1074#1086
+    end
+    object Label3: TLabel
+      Left = 267
+      Top = 410
+      Width = 52
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = #1047#1072#1076#1072#1085#1080#1077
     end
     object HHSe: TFloatSpinEdit
       Left = 7
@@ -647,21 +660,21 @@ object ThresholdFrm: TThresholdFrm
     end
     object Restype: TRadioGroup
       Left = 7
-      Top = 408
-      Width = 185
+      Top = 410
+      Width = 226
       Height = 105
       Caption = #1058#1080#1087' '#1091#1089#1090#1072#1074#1086#1082
       ItemIndex = 0
       Items.Strings = (
-        #1040#1073#1089#1086#1083#1102#1090#1085#1099#1077
-        #1054#1090' '#1079#1072#1076#1072#1085#1080#1103
-        #1054#1090#1085#1086#1089#1080#1090#1077#1083#1100#1085#1086' '#1082#1072#1085#1072#1083#1072)
+        #1055#1086#1089#1090#1086#1103#1085#1085#1086#1077' '#1079#1085#1072#1095'., '#1072#1073#1089'.'
+        #1057#1084#1077#1097'. '#1086#1090' '#1079#1072#1076#1072#1085#1080#1103', '#1072#1073#1089'.'
+        #1054#1090#1085#1086#1089#1080#1090#1077#1083#1100#1085#1086' '#1079#1072#1076#1072#1085#1080#1103', %')
       TabOrder = 14
     end
     object NormalValueFE: TFloatSpinEdit
-      Left = 208
-      Top = 419
-      Width = 149
+      Left = 267
+      Top = 435
+      Width = 90
       Height = 27
       Margins.Left = 4
       Margins.Top = 4
