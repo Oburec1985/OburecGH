@@ -32,6 +32,7 @@ type
   protected
     function getname:string;
   public
+    function mainFreq:double;
     procedure createlabel;
     procedure OnDestroyLabel(sender:tobject);
     procedure setchart(c:cchart);
@@ -127,6 +128,11 @@ begin
       exit;
     end;
   end;
+end;
+
+function tSpmBand.mainFreq: double;
+begin
+  result:=(m_f1+m_f2)/2;
 end;
 
 procedure tSpmBand.OnDestroyLabel(sender: tobject);

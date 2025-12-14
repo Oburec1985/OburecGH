@@ -167,6 +167,7 @@ type
     // d - коэф демпфирования
     // формат: f1...f2_a1_f1_d;f1...f2_an_fn_dn
     m_resStr:string;
+    // 2 -годен; 1 - не годен
     m_res:integer;
     m_sn:integer;
     // false - левая, true - правая
@@ -179,6 +180,8 @@ type
     procedure DoLincParent; override;
 
     function ObjType:string;
+    // допуск по отклонению на полосу
+    function GetTolerance:double;
     function BladeType:string;
     function BladeReport:string;overload;
     // параметр - путь к шаблону

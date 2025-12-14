@@ -504,6 +504,7 @@ var
   m:cmodeobj;
   b:boolean;
 begin
+  if m_Tags.Count=0 then exit;
   for I := 0 to m_Tags.Count - 1 do
   begin
     t:=gettag(i);

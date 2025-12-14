@@ -36,6 +36,8 @@ type
   TExtremum1d = record
     Index: Integer; // Индекс элемента в исходном массиве Y
     Value: Double;  // Значение экстремума (найденное Y-значение)
+    //BandNum:integer; // в полосе № (-1 если не попал в полосу)
+    //NumInBand:integer; // номер экстремума внутри той же полосы
   end;
 
   TExtremumSearchState = (

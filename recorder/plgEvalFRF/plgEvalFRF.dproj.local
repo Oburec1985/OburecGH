@@ -83,6 +83,10 @@
     <Transaction>2025.06.09 15:27:37.692.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\Unit1.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\units\uBladeDB.pas</Transaction>
     <Transaction>2025.06.09 23:15:47.016.pas,C:\Oburec\OburecGH\recorder\plgEvalFRF\Unit1.pas=C:\Oburec\OburecGH\recorder\plgEvalFRF\units\uSpmBand.pas</Transaction>
     <Transaction>2025.09.19 13:59:56.401.dproj,F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\plgEvakFRF.dproj=F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\plgEvalFRF.dproj</Transaction>
+    <Transaction>2025.12.14 22:04:08.012.pas,C:\Oburec\OburecGH\recorder\plgEvalFRF\forms\uEvalFRFFrm.pas=C:\Oburec\OburecGH\recorder\plgEvalFRF\forms\uEvalFRFFrm_.pas</Transaction>
+    <Transaction>2025.12.14 22:04:08.012.dfm,C:\Oburec\OburecGH\recorder\plgEvalFRF\forms\uEvalFRFFrm.dfm=C:\Oburec\OburecGH\recorder\plgEvalFRF\forms\uEvalFRFFrm_.dfm</Transaction>
+    <Transaction>2025.12.14 22:04:14.257.pas,C:\Oburec\OburecGH\recorder\plgEvalFRF\forms\uEvalFRFFrm_.pas=C:\Oburec\OburecGH\recorder\plgEvalFRF\forms\uEvalFRFFrm.pas</Transaction>
+    <Transaction>2025.12.14 22:04:14.257.dfm,C:\Oburec\OburecGH\recorder\plgEvalFRF\forms\uEvalFRFFrm_.dfm=C:\Oburec\OburecGH\recorder\plgEvalFRF\forms\uEvalFRFFrm.dfm</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
@@ -134,10 +138,10 @@
     <File Path="forms\uEditEvalFRFFrm.dfm"/>
     <File Path="forms\uEditTest.pas"/>
     <File Path="forms\uEditTest.dfm"/>
-    <File Path="forms\uEvalFRFFrm.pas"/>
-    <File Path="forms\uEvalFRFFrm.dfm"/>
     <File Path="forms\uSpmProfile.pas"/>
     <File Path="forms\uSpmProfile.dfm"/>
+    <File Path="forms\uEvalFRFFrm.pas"/>
+    <File Path="forms\uEvalFRFFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\uBladeDB.pas"/>
     <File Path="units\uCreateComponents.pas"/>

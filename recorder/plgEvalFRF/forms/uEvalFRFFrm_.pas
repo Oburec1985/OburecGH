@@ -1,4 +1,4 @@
-unit uEvalFRFFrm;
+unit uEvalFRFFrm_;
 
 interface
 
@@ -216,21 +216,6 @@ type
 
   cSRSTaho = class;
 
-  cExtremum = class
-  public
-    Index: Integer; // Индекс элемента в исходном массиве Y
-    Value: Double;  // Значение экстремума (найденное Y-значение)
-    Freq: Double;  // частота экстремума
-    BandNum:integer; // в полосе № (-1 если не попал в полосу)
-    Main:boolean; // главный экстремум в полосе
-    NumInBand:integer; // номер экстремума внут*ри той же полосы
-    decrement:double;
-    m_b:tSpmBand;
-  public
-    constructor create;
-    destructor destroy;
-  end;
-
   cSRSres = class
   public
     m_tag: ctag;
@@ -267,16 +252,15 @@ type
     // список найденных экстремумов на линии для сравненияс
     // полосами TExtremum1d
     m_extremums: tlist;
-    // Список экстремумов со всей служебной инфой
-    m_BandExtremums: tlist;
+    m_decrement: array of double;
+    // экстремумы совпали с диапазоном полос tspmband
+    m_checkres: boolean;
   private
     fcfg: cSpmCfg;
     fComInt: point2d;
     // найден общий интервал с взведенным тригом
     fComIntervalLen: double;
   protected
-    procedure clearExtremums;
-    function getExtremum(i:integer):cExtremum;
     procedure setcfg(c: cSpmCfg);
     procedure EvalAvrSpm;
   public
@@ -778,28 +762,24 @@ var
   cfg: cSpmCfg;
   i, j, k: integer;
   bl: cBladeFolder;
-
   b: tspmband;
   extr: PExtremum1d;
-  BandExtr, prevExtr:cExtremum;
-  // к какой полосе принадлежал предыдущий экстремум
-
-
-  res, bres: boolean;
+  res: boolean;
   repPath, resStr: string;
-  p3:point3d;
-  v, vf, f1, f2: double;
+  v, vf, f1, f2, decrement, spmdx: double;
   minmax, p1, p2: point2d;
   d: TDoubleArray;
   line: cBuffTrend1d;
 begin
   t := getTaho;
   cfg := t.getCfg;
+  spmdx := 1 / cfg.m_fftCount;
   bl := g_mbase.SelectBlade;
   result := true;
   for i := 0 to cfg.SRSCount - 1 do
   begin
     s := cfg.GetSrs(i);
+    s.m_checkres := false;
     b := m_bands.getband(bl.ToneCount - 1);
     line := getLine(s);
     d := TDoubleArray(line.data_r);
@@ -816,140 +796,93 @@ begin
     minmax.y := TrigFE.Value;
     minmax.x := 0.95 * TrigFE.Value;
     // массив, минмакс инд, уровни, выход
-    // за пределами последней полосы поиск не осуществляем
     FindExtremumsInY(d, 1, b.m_f2i, minmax.y, minmax.x, s.m_extremums);
     if s.m_extremums.Count = 0 then
     begin
       result := false;
+      s.m_checkres := false;
       break;
     end;
-    s.clearExtremums;
-    prevExtr:=nil;
     for j := 0 to s.m_extremums.Count - 1 do
     begin
-      BandExtr:=cExtremum.create;
-      s.m_BandExtremums.Add(BandExtr);
       extr := PExtremum1d(s.m_extremums[j]);
-      // индекс отсчета соотв экстремума
-      BandExtr.Index:=extr.Index;
-      // значение экстремума
-      BandExtr.Value:=extr.Value;
-      BandExtr.Freq:=BandExtr.Index*cfg.fspmdx;
-      // проверяем принадлежит ли экстремум полосе
-      for k := 0 to m_bands.Count - 1 do
+      if m_bands.Count > j then
+        b := m_bands.getband(j)
+      else
+        b := nil;
+      if b = nil then
+        break;
+      // экстремумы полос и найденные должны соответствовать др. другу
+      if b.m_fmaxi = extr.Index then
       begin
-        b:=m_bands.getband(k);
-        if bandExtr.Index>b.m_f1i then
+        // расчет демпфирования
+        v := extr.Value * 0.5;
+        k := extr.Index;
+        while d[k] > v do
         begin
-          // если попали в полосу
-          if bandExtr.Index<b.m_f2i then
-          begin
-            bandExtr.m_b:=b;
-            bandExtr.BandNum:=k;
-            if b.m_fmaxi=bandExtr.Index then
-            begin
-              bandExtr.Main:=true;
-            end;
-            bandExtr.NumInBand:=0;
-            // если не первый экстремум
-            if j>0 then
-            begin
-              if prevExtr.BandNum=k then
-              begin
-                bandExtr.NumInBand:=prevExtr.NumInBand+1;
-              end;
-            end;
-            break;
-          end;
+          dec(k);
         end;
-      end;
-      prevExtr:=bandExtr;
-      // расчет демпфирования
-      v := extr.Value * 0.5;
-      k := extr.Index;
-      // граница слева
-      while d[k] > v do
-      begin
-        dec(k);
-      end;
-      p1.x := line.GetXByInd(k);
-      p1.y := d[k];
-      p2.x := line.GetXByInd(extr.Index);
-      p2.y := d[extr.Index];
-      f1 := EvalLineX(v, p1, p2);
+        p1.x := line.GetXByInd(k);
+        p1.y := d[k];
+        p2.x := line.GetXByInd(extr.Index);
+        p2.y := d[extr.Index];
+        f1 := EvalLineX(v, p1, p2);
 
-      k := extr.Index;
-      // граница справа
-      while d[k] > v do
+        k := extr.Index;
+        while d[k] > v do
+        begin
+          inc(k);
+        end;
+        p1.x := line.GetXByInd(k);
+        p1.y := d[k];
+        p2.x := line.GetXByInd(extr.Index);
+        p2.y := d[extr.Index];
+        f2 := EvalLineX(v, p1, p2);
+        vf := 2 * p2.x;
+        s.m_decrement[j] := (f2 - f1) / vf;
+      end
+      else
       begin
-        inc(k);
+        result := false;
+        break;
       end;
-      p1.x := line.GetXByInd(k);
-      p1.y := d[k];
-      p2.x := line.GetXByInd(extr.Index);
-      p2.y := d[extr.Index];
-      f2 := EvalLineX(v, p1, p2);
-      vf := 2 * p2.x;
-      bandExtr.decrement := (f2 - f1) / vf;
+    end;
+    s.m_checkres := result;
+  end;
+  result := true;
+  for i := 0 to cfg.SRSCount - 1 do
+  begin
+    s := cfg.GetSrs(i);
+    if not s.m_checkres then
+    begin
+      result := false;
+      break;
     end;
   end;
   resStr := '';
-  for i := 0 to s.m_BandExtremums.Count - 1 do
+  for i := 0 to m_bands.Count - 1 do
   begin
-    BandExtr:=s.getExtremum(i);
-    if BandExtr.m_b<>nil then
+    b := m_bands[i];
+    extr := nil;
+    if i < s.m_extremums.Count then
     begin
-      resStr := resStr + floattostr(BandExtr.m_b.m_f1) +'..'
-                       + floattostr(BandExtr.m_b.m_f2) + '_'
-                       + floattostr(BandExtr.Value) + '_'
-                       + floattostr(BandExtr.Freq) + '_'
-                       + floattostr(BandExtr.decrement) + ';';
+      extr := PExtremum1d(s.m_extremums[i]);
+    end;
+    if extr <> nil then
+    begin
+      v := extr.Value;
+      vf := line.GetXByInd(extr.Index);
+      decrement := s.m_decrement[i];
     end
     else
     begin
-      resStr := resStr + '0' +'..'
-                       + '0' + '_'
-                       + floattostr(BandExtr.Value) + '_'
-                       + floattostr(BandExtr.Freq) + '_'
-                       + floattostr(BandExtr.decrement) + ';';
+      v := 0;
+      vf := 0;
     end;
+    resStr := resStr + floattostr(b.m_f1) + '..' + floattostr(b.m_f2)
+      + '_' + floattostr(v) + '_' + floattostr(vf) + '_' + floattostr
+      (decrement) + ';';
   end;
-  bres:=false; // датчик успешно нашел полосу
-  // нашли полосу
-  // проверка что все полосы совпали в главных экстремумах
-  for I := 0 to m_bands.Count - 1 do
-  begin
-    b:=tSpmBand(m_bands.Items[i]);
-    p3:=bl.tone(i);
-    res:=true;
-    for j := 0 to cfg.SRSCount - 1 do
-    begin
-      s:=cfg.GetSrs(j);
-      bres:=false;
-      for k := 0 to s.m_BandExtremums.Count - 1 do
-      begin
-        BandExtr:=s.getExtremum(k);
-        if BandExtr.m_b=b then
-        begin
-          if BandExtr.Main then
-          begin
-            // отклон от центральной частоты
-            vf:=b.mainFreq;
-            v:=(BandExtr.Freq-vf)/vf;
-            if v<p3.z then
-            begin
-              bres:=true; // в полосе есть корректный экстремум
-              break;
-            end;
-          end;
-        end;
-      end;
-      res:=res and bres;
-      if not res then
-        break;
-    end;
-  end;
-  result:=res;
   if result then
     bl.m_res := 2
   else
@@ -983,7 +916,7 @@ var
   s: cSRSres;
   cfg: cSpmCfg;
   b: tspmband;
-  extr: cExtremum;
+  extr: PExtremum1d;
   date: TDateTime;
   res: boolean;
   rng: olevariant;
@@ -1067,11 +1000,10 @@ begin
         begin
           if j < s.m_extremums.Count then
           begin
-            //// !!!!!!!!!!!!
-            extr := s.getExtremum(j);
-            v1 := extr.Freq;
+            extr := s.m_extremums[j];
+            v1 := s.lineFrf.GetXByInd(extr.Index);
             v := extr.Value;
-            d := extr.decrement;
+            d := s.m_decrement[j];
           end
           else
           begin
@@ -4085,19 +4017,6 @@ begin
 end;
 
 { cSRSres }
-procedure cSRSres.clearExtremums;
-var
-  I: Integer;
-  e:cExtremum;
-begin
-  for I := 0 to m_BandExtremums.Count - 1 do
-  begin
-    e:=cextremum(m_BandExtremums.Items[i]);
-    e.destroy;
-  end;
-  m_BandExtremums.Clear;
-end;
-
 constructor cSRSres.create;
 begin
   m_tag := ctag.create;
@@ -4106,7 +4025,8 @@ begin
   m_shockList.m_wnd.x1 := 0;
   m_shockList.m_wnd.x2 := 1;
   m_extremums := tlist.create;
-  m_BandExtremums:= tlist.create;
+  // с запасиком
+  setlength(m_decrement, 100);
 end;
 
 destructor cSRSres.destroy;
@@ -4117,8 +4037,6 @@ begin
   cfg.delSRS(self);
   cfg := nil;
   m_extremums.destroy;
-  clearExtremums;
-  m_BandExtremums.destroy;
   if line <> nil then
     line.destroy;
   if lineSpm <> nil then
@@ -4158,11 +4076,6 @@ begin
   MULT_SSE_al_cmpx_d(TCmxArray_d(m_avSpm.p), (1 / m_shockList.Count));
   EvalSpmMag(TCmxArray_d(m_avSpm.p), m_rms);
   lineAvSpm.AddPoints(m_rms, length(m_rms));
-end;
-
-function cSRSres.getExtremum(i: integer): cExtremum;
-begin
-  result:=cextremum(m_bandExtremums.Items[i]);
 end;
 
 function cSRSres.getTaho: cSRSTaho;
@@ -5145,21 +5058,6 @@ begin
     fTestObj := 1;
     result := true;
   end;
-end;
-
-{ TExtremum1d }
-
-constructor cExtremum.create;
-begin
-  m_b:=nil;
-  BandNum:=-1;
-  Main:=false;
-  NumInBand:=-1;
-end;
-
-destructor cExtremum.destroy;
-begin
-
 end;
 
 end.
