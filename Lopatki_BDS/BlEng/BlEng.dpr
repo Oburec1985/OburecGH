@@ -186,8 +186,9 @@ uses
   uquat in '..\..\3d\math\uquat.pas',
   uConfigFile3d in '..\..\3d\tools\uConfigFile3d.pas',
   RepODS in '..\..\sharedUtils\utils\reports\RepODS.pas',
-  RepODT in '..\..\sharedUtils\utils\reports\RepODT.pas',
-  uObaFile in '..\..\3d\objects\uObaFile.pas';
+  //uObaFile in '..\..\3d\objects\uObaFile.pas',
+  RepODT in '..\..\sharedUtils\utils\reports\RepODT.pas'
+  ;
 
 {$R *.res}
 
@@ -195,7 +196,7 @@ begin
   Application.Initialize;
   LoadStrings(extractfiledir(application.exename)+'\files\CfgFiles\Services.Ini');
   InitGlobalStrings;
-  //CreateObjForm:=TCreateObjForm.Create(nil);
+  CreateObjForm:=TCreateObjForm.Create(nil);
   Application.CreateForm(TMainBldForm, MainBldForm);
   Application.CreateForm(TCreateObjDlg, CreateObjDlg);
   Application.CreateForm(TCfgForm, CfgForm);

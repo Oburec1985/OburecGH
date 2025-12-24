@@ -20,36 +20,36 @@ object ChanFrame: TChanFrame
     object ImpulsCountLabel: TLabel
       Left = 9
       Top = 24
-      Width = 86
-      Height = 13
+      Width = 101
+      Height = 16
       Caption = #1063#1080#1089#1083#1086' '#1080#1084#1087#1091#1083#1100#1089#1086#1074
     end
     object ChanLVLabel: TLabel
       Left = 168
       Top = 24
-      Width = 104
-      Height = 13
+      Width = 119
+      Height = 16
       Caption = #1048#1084#1087#1091#1083#1100#1089#1099' '#1089' '#1076#1072#1090#1095#1080#1082#1072
     end
     object Label3: TLabel
       Left = 9
       Top = 114
-      Width = 23
-      Height = 13
+      Width = 29
+      Height = 16
       Caption = 'Ticks'
     end
     object Label4: TLabel
       Left = 9
       Top = 196
-      Width = 28
-      Height = 13
+      Width = 31
+      Height = 16
       Caption = 'Index'
     end
     object OverflowLabel: TLabel
       Left = 9
       Top = 154
-      Width = 44
-      Height = 13
+      Width = 51
+      Height = 16
       Caption = 'Overflow'
     end
     object ImpulsCountIE: TIntEdit
@@ -83,6 +83,8 @@ object ChanFrame: TChanFrame
       QuoteColumnBtnClick = False
       QuoteColumnDblClick = False
       DrawColorBox = False
+      ChangeTextColor = False
+      Editable = False
       ExplicitHeight = 232
     end
     object ShowAllCB: TCheckBox

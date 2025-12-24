@@ -98,9 +98,6 @@ type
     procedure SetTabText(x, y: integer); overload;
     procedure LoadObjAttributes(xmlNode: txmlNode; mng: tobject); override;
     procedure SaveObjAttributes(xmlNode: txmlNode); override;
-    // обновить координаты по которым отрисовываются оси.
-    // зависит от tabspace и размеров окна
-    procedure updateAxisPos;
     // происходит при обновлении minMax оси
     procedure DoChangeAxisScale(Sender: tobject);
     // обновить текст осей (в tedit-ах)
@@ -133,6 +130,9 @@ type
     procedure addaxis(a: caxis);
     procedure prepareYLgLineData;
     procedure prepareXLgLineData;
+    // обновить координаты по которым отрисовываются оси.
+    // зависит от tabspace и размеров окна
+    procedure updateAxisPos;
   protected
     // хедл окна
     function getHandle: thandle;
@@ -181,6 +181,7 @@ type
     // при призумливании события вызываются только для активной оси
     Procedure ZoomfRect(var rect: fRect); overload;
     Procedure ZoomfRect(var rect: fRect; ax: caxis); overload;
+    procedure UpdateChildWorldSize;
     // призумить весь график
     Procedure Normalise; overload;
     Procedure Normalise(a: caxis); overload;
@@ -323,6 +324,7 @@ begin
   Caption := xmlNode.ReadAttributeString('Caption');
   // видимость курсора
   cursor.visible := xmlNode.ReadAttributeBool('Cursor_visible');
+  updateAxisPos;
 end;
 
 procedure cPage.SaveObjAttributes(xmlNode: txmlNode);
@@ -835,6 +837,15 @@ begin
   end;
 end;
 
+procedure cPage.UpdateChildWorldSize;
+begin
+  XMaxEdit.doUpdateWorldSize(nil);
+  XMinEdit.doUpdateWorldSize(nil);
+  YMaxEdit.doUpdateWorldSize(nil);
+  YMinEdit.doUpdateWorldSize(nil);
+  PageLabel.doUpdateWorldSize(nil);
+end;
+
 // --------------------- Призумить прямоугольник ----------------------
 Procedure cPage.ZoomfRect(var rect: fRect);
 var
@@ -1231,7 +1242,6 @@ procedure cPage.ChangeSize;
 var
   ps: PaintStruct;
 begin
-
   if parent <> nil then
   begin
     bound := getClientBound;
@@ -1633,6 +1643,7 @@ begin
   SetTabText(cfg.pixelTabText);
   gridlinecount_X := round((rect.Right - rect.Left) / GridPixels);
   gridlinecount_Y := round((rect.Top - rect.bottom) / GridPixels);
+  UpdateChildWorldSize;
 end;
 
 function cPage.ModComponentName(p_name: string): string;

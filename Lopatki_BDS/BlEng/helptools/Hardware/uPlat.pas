@@ -282,7 +282,10 @@ end;
 
 function cPlat.getperiod:cardinal;
 begin
-  result:=Thread.period;
+  if Thread<>nil then
+    result:=Thread.period
+  else
+    result:=0;
 end;
 
 procedure cPlat.createTags;

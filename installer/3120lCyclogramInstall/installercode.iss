@@ -9,7 +9,7 @@ UninstallDisplayIcon={app}\plg3120Cyclogram.dll
 
 ;OutputDir=output
 OutputDir=\\Fserv\e\CLIENTS\Info\p3120_АО СКБМ_Муравейник_Коршунов\7. ЦР\Циклограмма\src\imstaller\
-OutputBaseFilename=plg3120Cyclogram_inst_v1.0
+OutputBaseFilename=plg3120Cyclogram_inst_v1.1
 
 [Types]
 Name: "full"; Description: "Полная установка"

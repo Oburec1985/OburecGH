@@ -58,16 +58,16 @@ begin
   TaskLV.Columns.Clear;
   // №
   col:=TaskLV.Columns.Add;
-  col.Caption:=v_ColNum;
+  col.Caption:=c_ColNum;
   // Имя задачи
   col:=TaskLV.Columns.Add;
-  col.Caption:=v_ColName;
+  col.Caption:=c_ColName;
   // время обновления (период потока)
   col:=TaskLV.Columns.Add;
   col.Caption:=v_UpdateTime;
   // размер кадра
   col:=TaskLV.Columns.Add;
-  col.Caption:=v_Time;
+  col.Caption:=c_Time;
   // Тахо датчик
   col:=TaskLV.Columns.Add;
   col.Caption:=v_Rot;
@@ -78,10 +78,10 @@ begin
   DataFileListLV.Columns.Clear;
   // №
   col:=DataFileListLV.Columns.Add;
-  col.Caption:=v_ColNum;
+  col.Caption:=c_ColNum;
   // Имя
   col:=DataFileListLV.Columns.Add;
-  col.Caption:=v_ColName;
+  col.Caption:=c_ColName;
   // Время когда был обработан замер
   col:=DataFileListLV.Columns.Add;
   col.Caption:=v_colProcTime;
@@ -101,10 +101,10 @@ begin
     t:=ctask(tproc.TaskList.getobj(i));
     li:=tasklv.Items.add;
     li.data:=t;
-    TaskLV.setsubitembycolumnname(v_ColNum,inttostr(i),li);
-    TaskLV.setsubitembycolumnname(v_ColName,t.name,li);
+    TaskLV.setsubitembycolumnname(c_ColNum,inttostr(i),li);
+    TaskLV.setsubitembycolumnname(c_ColName,t.name,li);
     // Обрабатываемый интервал
-    TaskLV.setsubitembycolumnname(v_Time,floattostr(t.Thread.dT),li);
+    TaskLV.setsubitembycolumnname(c_Time,floattostr(t.Thread.dT),li);
     // период
     TaskLV.setsubitembycolumnname(v_UpdateTime,
                                  floattostr(t.Thread.period),li);
@@ -130,8 +130,8 @@ begin
     id:=FileLoader.m_idList.GetID(i);
     li:=DataFileListLV.Items.add;
     li.Data:=id;
-    DataFileListLV.setsubitembycolumnname(v_ColNum,inttostr(i),li);
-    DataFileListLV.setsubitembycolumnname(v_ColName,id.fName,li);
+    DataFileListLV.setsubitembycolumnname(c_ColNum,inttostr(i),li);
+    DataFileListLV.setsubitembycolumnname(c_ColName,id.fName,li);
     DataFileListLV.setsubitembycolumnname(v_colProcTime,TimeToStr(id.time),li);
   end;
   LVChange(DataFileListLV);
@@ -149,8 +149,8 @@ begin
   id:=FileLoader.m_idList.GetID(i);
   li:=DataFileListLV.Items.add;
   li.Data:=id;
-  DataFileListLV.setsubitembycolumnname(v_ColNum,inttostr(i),li);
-  DataFileListLV.setsubitembycolumnname(v_ColName,id.fName,li);
+  DataFileListLV.setsubitembycolumnname(c_ColNum,inttostr(i),li);
+  DataFileListLV.setsubitembycolumnname(c_ColName,id.fName,li);
   DataFileListLV.setsubitembycolumnname(v_colProcTime,TimeToStr(id.time),li);
 end;
 

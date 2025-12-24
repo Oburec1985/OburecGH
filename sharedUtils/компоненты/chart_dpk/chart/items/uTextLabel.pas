@@ -273,14 +273,16 @@ end;
 
 procedure cTextLabel.DeleteEvents;
 begin
-  events.removeEvent(doOnUpdateAxis, e_onResize+E_OnZoom);
-  inherited;
+  // закомент от 17.12.25
+  //events.removeEvent(doOnUpdateAxis, e_onResize+E_OnZoom);
+  // закомент от 17.12.25
+  //inherited;
 end;
 
 procedure cTextLabel.CreateEvents;
 begin
-  //events.AddEvent('trendAddpoint', e_onAddpoint, doaddpoint);
-  events.AddEvent(name+'_OnUpadeteTextLabelBound', e_onResize+E_OnZoom, doOnUpdateAxis);
+  // закомент от 17.12.25
+  //events.AddEvent(name+'_OnUpadeteTextLabelBound', e_onResize+E_OnZoom, doOnUpdateAxis);
 end;
 
 procedure cTextLabel.doOnUpdateAxis(sender:tobject);

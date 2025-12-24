@@ -222,7 +222,10 @@ type
     Value: Double;  // «начение экстремума (найденное Y-значение)
     Freq: Double;  // частота экстремума
     BandNum:integer; // в полосе є (-1 если не попал в полосу)
-    Main:boolean; // главный экстремум в полосе
+    // главный экстремум в полосе
+    Main,
+    // в допуске
+    InTol:boolean;
     NumInBand:integer; // номер экстремума внут*ри той же полосы
     decrement:double;
     m_b:tSpmBand;
@@ -788,7 +791,13 @@ var
   res, bres: boolean;
   repPath, resStr: string;
   p3:point3d;
-  v, vf, f1, f2: double;
+  v, vf, f1, f2,
+  // относительный допуск
+  tol,
+  // абсолютный допуск
+  absTol,
+  // средн€€ частота
+  mainF: double;
   minmax, p1, p2: point2d;
   d: TDoubleArray;
   line: cBuffTrend1d;
@@ -888,17 +897,23 @@ begin
       p1.y := d[k];
       p2.x := line.GetXByInd(extr.Index);
       p2.y := d[extr.Index];
+
       f2 := EvalLineX(v, p1, p2);
       vf := 2 * p2.x;
       bandExtr.decrement := (f2 - f1) / vf;
     end;
   end;
   resStr := '';
+  tol:=bl.GetTolerance(0); // допуск на полосы в процентах
   for i := 0 to s.m_BandExtremums.Count - 1 do
   begin
     BandExtr:=s.getExtremum(i);
     if BandExtr.m_b<>nil then
     begin
+      absTol:=(BandExtr.m_b.m_f2-BandExtr.m_b.m_f1)*tol;
+      mainF:=(BandExtr.m_b.m_f2-BandExtr.m_b.m_f1)*0.5;
+      // провер€ем в допуске или нет
+      BandExtr.InTol:=abs(mainF-BandExtr.Freq)<absTol;
       resStr := resStr + floattostr(BandExtr.m_b.m_f1) +'..'
                        + floattostr(BandExtr.m_b.m_f2) + '_'
                        + floattostr(BandExtr.Value) + '_'

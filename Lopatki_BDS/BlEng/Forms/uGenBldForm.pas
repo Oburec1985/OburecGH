@@ -3,7 +3,8 @@ unit uGenBldForm;
 interface
 
 uses
-  Windows, SysUtils, Classes, Forms, StdCtrls, ComCtrls, uBaseObj, usensor, uTickData,
+  Windows, SysUtils, Classes, graphics,
+  Forms, StdCtrls, ComCtrls, uBaseObj, usensor, uTickData,
   uBtnListView, ExtCtrls, uChart, DCL_MYOWN, uBldEng, Controls, uBldObj, ustage,
   ubldMath, utrend, uaxis, uturbina, uBldCompProc, dialogs, uCompaundFrame,
   uBlInterfaceFrame, uMyMath, uCommonTypes, inifiles, uPoint, uCommonMath, Spin,
@@ -71,6 +72,8 @@ type
     Button1: TButton;
     SkipFirstLabel: TLabel;
     SkipFirstSE: TSpinEdit;
+    SName: TEdit;
+    SLabel: TLabel;
     procedure CfgTVChange(Sender: TObject; Node: TTreeNode);
     procedure BladesLVChanging(Sender: TObject; Item: TListItem;
       Change: TItemChange; var AllowChange: Boolean);
@@ -88,8 +91,10 @@ type
     cursensor:csensor;
     // точность преобразования кривой на графике в последовательность отрезков
     prec:integer;
+    // хранит настройки генерации импульсов по каждому датчику
     sensorStructs:tstringlist;
     OnLvChange:boolean;
+    m_tahoTrend, m_STrend:ctrend;
   private
     procedure showstage(s:cstage);
     procedure showCfg;
@@ -344,6 +349,18 @@ begin
   inherited;
   initChart:=false;
   initBladesLV(bladesLV);
+  m_tahoTrend:=TahoChart.activetrend;
+  if m_tahoTrend=nil then
+  begin
+    m_tahoTrend:=cpage(TahoChart.activePage).activeAxis.AddTrend;
+    m_tahoTrend.name:='Taho';
+  end;
+  m_STrend:=VibrationChart.activetrend;
+  if m_STrend=nil then
+  begin
+    m_STrend:=cpage(VibrationChart.activePage).activeAxis.AddTrend;
+    m_STrend.name:='Sensor';
+  end;
 end;
 
 destructor TGeneratorForm.destroy;
@@ -397,6 +414,8 @@ var
 begin
   // ссылка на чарт описывающий форму тахо
   trend:=ctrend(tahoChart.activetrend);
+  if trend=nil then exit;
+  
   // получаем максимальную частоту в чарте
   fmax:=cpage(tahochart.activepage).activeAxis.max.y;
   // получаем максимальное время в чарте
@@ -492,6 +511,8 @@ procedure TGeneratorForm.getEngine(e:cBldEng);
 begin
   eng:=e;
   loadcfg;
+  TahoChart.imagelist:=e.images_16;
+  VibrationChart.imagelist:=e.images_16;
 end;
 
 
@@ -579,6 +600,7 @@ function TGeneratorForm.ShowModal:integer;
 var
   s:SensorStruct;
 begin
+  cursensor:=nil;
   sensorStructs:=tstringlist.Create;
   sensorStructs.Sorted:=true;
   PrepareStages(eng);
@@ -655,6 +677,8 @@ var
   obj:SensorStruct;
   i:integer;
 begin
+  sname.text:=s.name;
+  sname.Color:=clwindow;
   if sensorStructs.Find(s.name,i) then
   begin
     obj:=SensorStruct(sensorStructs.Objects[i]);
@@ -671,6 +695,13 @@ var
   obj:SensorStruct;
   i:integer;
 begin
+  if s=nil then
+  begin
+    sname.Text:='Не выбран датчик';
+    sname.Color:=clPink;
+    exit;
+  end;
+
   if sensorStructs.Find(s.name,i) then
   begin
     obj:=SensorStruct(sensorStructs.Objects[i]);
@@ -796,6 +827,9 @@ var
   str, str2, filename, cfgfolder:string;
 begin
   f:=tstringlist.Create;
+  if eng=nil then
+    exit;
+
   filename:=eng.PathMng.findCfgPathFile(ChartCfgName);
   f.LoadFromFile(filename);
   // сохраняем данные настройки чарта для задания тахо в текстовой форме

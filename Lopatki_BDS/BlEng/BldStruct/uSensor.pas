@@ -526,9 +526,12 @@ begin
   end
   else
   begin
-    setlength(blades,cstage(stage).BladeCount);
-    PrepareBlades(blades,cstage(stage).shape.offset);
-    result:=cstage(stage).Shape.blades[skipblades]+firstBladeOffset;
+    if cstage(stage).BladeCount>0 then
+    begin
+      setlength(blades,cstage(stage).BladeCount);
+      PrepareBlades(blades,cstage(stage).shape.offset);
+      result:=cstage(stage).Shape.blades[skipblades]+firstBladeOffset;
+    end;
   end;
 end;
 

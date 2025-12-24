@@ -1726,6 +1726,7 @@ object Frm3120: TFrm3120
         ParentShowHint = False
         ShowHint = True
         TabOrder = 4
+        Visible = False
       end
       object GroupBox3: TGroupBox
         Left = 247
@@ -2155,13 +2156,14 @@ object Frm3120: TFrm3120
       object StopOnPause: TCheckBox
         Left = 8
         Top = 76
-        Width = 243
+        Width = 225
         Height = 19
         Hint = #1055#1086#1083#1091#1095#1072#1090#1100' '#1085#1086#1090#1080#1092#1080#1082#1072#1094#1080#1080' '#1076#1083#1103' '#1085#1072#1089#1090#1088#1081#1086#1082#1080' '#1088#1077#1075#1091#1083#1103#1090#1086#1088#1086#1074' '#1080#1079' '#1087#1083#1072#1075#1080#1085#1086#1074
         Caption = #1054#1089#1090#1072#1085#1086#1074' '#1085#1072' '#1087#1072#1091#1079#1077
         ParentShowHint = False
         ShowHint = True
         TabOrder = 9
+        Visible = False
       end
       object StopPanel: TPanel
         Left = 135
@@ -2702,6 +2704,7 @@ object Frm3120: TFrm3120
         ParentFont = False
         ScrollBars = ssNone
         TabOrder = 1
+        OnDblClick = ValsSGDblClick
         OnDrawCell = ValsSGDrawCell
         ColWidths = (
           64

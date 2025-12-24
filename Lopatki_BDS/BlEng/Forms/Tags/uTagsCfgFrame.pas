@@ -3,7 +3,7 @@ unit uTagsCfgFrame;
 interface
 
 uses
-  Windows, SysUtils, Classes, Controls, Forms,
+  Windows, SysUtils, Classes, Controls, Forms, uBaseObjService,
   StdCtrls, ComCtrls, uBtnListView, ExtCtrls, ImgList,
   uTagPropertiesFrame, ubldtimeproc, ToolWin, uComponentServises, utag,
   ubldengEventTypes, uBaseBldAlg, Dialogs, uBaseObj, uBldGlobalStrings;
@@ -118,9 +118,9 @@ procedure TTagsCfgFrame.changeitem(li:tlistitem;t:cbasetag);
 begin
   li.Data:=t;
   li.Checked:=t.active;
-  TagsLV.SetSubItemByColumnName(v_Num,inttostr(li.Index),li);
-  TagsLV.SetSubItemByColumnName(v_Name,t.name,li);
-  TagsLV.SetSubItemByColumnName(v_Type,t.typestring,li);
+  TagsLV.SetSubItemByColumnName(c_colNum,inttostr(li.Index),li);
+  TagsLV.SetSubItemByColumnName(c_colNum,t.name,li);
+  TagsLV.SetSubItemByColumnName(c_colNum,t.typestring,li);
   TagsLV.SetSubItemByColumnName(v_Dsc,t.dsc,li);
   if t.source<>nil then
   begin
@@ -153,12 +153,12 @@ var
 begin
   inherited;
   col:=tagsLV.Columns.Add;
-  col.Caption:=v_Num;
+  col.Caption:=c_colNum;
   col:=tagsLV.Columns.Add;
-  col.Caption:=v_Name;
+  col.Caption:=c_colName;
   col:=tagsLV.Columns.Add;
-  col.Caption:=v_Type;
-  col:=tagsLV.Columns.Add;
+  //col.Caption:=c_colNum;
+  //col:=tagsLV.Columns.Add;
   col.Caption:=v_Dsc;
   col:=tagsLV.Columns.Add;
   col.Caption:=v_Src;

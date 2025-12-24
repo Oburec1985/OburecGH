@@ -22,26 +22,26 @@ object ObjInterfaceFrame: TObjInterfaceFrame
       TabOrder = 0
       inline MainObjFrame: TCompaundFrame
         Left = 2
-        Top = 15
+        Top = 18
         Width = 443
-        Height = 234
+        Height = 231
         Align = alClient
         TabOrder = 0
         ExplicitLeft = 2
-        ExplicitTop = 15
+        ExplicitTop = 18
         ExplicitWidth = 443
-        ExplicitHeight = 234
+        ExplicitHeight = 231
         inherited MainObjSB: TScrollBox
           Width = 443
-          Height = 234
+          Height = 231
           ExplicitWidth = 443
-          ExplicitHeight = 234
+          ExplicitHeight = 231
           inherited Splitter1: TSplitter
-            Width = 422
+            Width = 418
             ExplicitWidth = 723
           end
           inherited BaseObjPropertyFrame1: TBaseObjPropertyFrame
-            Width = 422
+            Width = 418
             ExplicitWidth = 422
             inherited MetaDataLV: TBtnListView
               Width = 1689
@@ -49,7 +49,7 @@ object ObjInterfaceFrame: TObjInterfaceFrame
             end
           end
           inherited ChanFrame1: TChanFrame
-            Width = 422
+            Width = 418
             Height = 0
             ExplicitWidth = 422
             ExplicitHeight = 0
@@ -65,18 +65,18 @@ object ObjInterfaceFrame: TObjInterfaceFrame
             end
           end
           inherited SensorFrame1: TSensorFrame
-            Width = 422
+            Width = 418
             Height = 0
-            ExplicitWidth = 422
+            ExplicitWidth = 418
             ExplicitHeight = 0
             inherited SensorsGB: TGroupBox
               Top = -266
-              Width = 422
+              Width = 418
               ExplicitTop = -266
-              ExplicitWidth = 422
+              ExplicitWidth = 418
               inherited StateGB: TGroupBox
-                Width = 418
-                ExplicitWidth = 418
+                Width = 414
+                ExplicitWidth = 414
                 inherited PairsListView: TBtnListView
                   Width = 1916
                   ExplicitWidth = 1916
@@ -85,31 +85,31 @@ object ObjInterfaceFrame: TObjInterfaceFrame
             end
           end
           inherited StageFrame1: TStageFrame
-            Width = 422
+            Width = 418
             Height = 0
-            ExplicitWidth = 422
+            ExplicitWidth = 418
             ExplicitHeight = 0
             inherited StageGB: TGroupBox
-              Width = 422
+              Width = 418
               Height = 0
-              ExplicitWidth = 422
+              ExplicitWidth = 418
               ExplicitHeight = 0
               inherited SignalSetupPageControl: TPageControl
-                Width = 418
+                Width = 414
                 Height = 100
-                ExplicitWidth = 418
+                ExplicitWidth = 414
                 ExplicitHeight = 100
                 inherited TabSheet1: TTabSheet
-                  ExplicitWidth = 410
-                  ExplicitHeight = 72
+                  ExplicitWidth = 406
+                  ExplicitHeight = 69
                   inherited Splitter2: TSplitter
                     Left = 147
-                    Height = 72
+                    Height = 69
                     ExplicitLeft = 100
                     ExplicitHeight = 116
                   end
                   inherited BladesGB: TGroupBox
-                    Height = 72
+                    Height = 69
                     ExplicitHeight = 72
                     inherited Splitter1: TSplitter
                       Height = 55
@@ -122,8 +122,8 @@ object ObjInterfaceFrame: TObjInterfaceFrame
                     end
                   end
                   inherited ShapeGB: TGroupBox
-                    Width = 88
-                    Height = 72
+                    Width = 84
+                    Height = 69
                     ExplicitWidth = 88
                     ExplicitHeight = 72
                     inherited ShapeLV: TBtnListView
@@ -135,24 +135,24 @@ object ObjInterfaceFrame: TObjInterfaceFrame
                   end
                   inherited StagePropertysGB: TGroupBox
                     Left = 153
-                    Height = 72
+                    Height = 69
                     ExplicitLeft = 153
-                    ExplicitHeight = 72
+                    ExplicitHeight = 69
                   end
                 end
               end
             end
           end
           inherited TurbineFrame1: TTurbineFrame
-            Width = 422
+            Width = 418
             Height = 0
             Visible = True
-            ExplicitWidth = 422
+            ExplicitWidth = 418
             ExplicitHeight = 0
             inherited TurbinePropGB: TGroupBox
-              Width = 422
+              Width = 418
               Height = 0
-              ExplicitWidth = 422
+              ExplicitWidth = 418
               ExplicitHeight = 0
               inherited CfgTV: TTreeView
                 Width = 2062
@@ -165,17 +165,17 @@ object ObjInterfaceFrame: TObjInterfaceFrame
             end
           end
           inherited PairFrame1: TPairFrame
-            Width = 422
+            Width = 418
             Height = 0
-            ExplicitWidth = 422
+            ExplicitWidth = 418
             ExplicitHeight = 0
             inherited PairGB: TGroupBox
-              Width = 422
+              Width = 418
               Height = 0
-              ExplicitWidth = 422
+              ExplicitWidth = 418
               ExplicitHeight = 0
               DesignSize = (
-                422
+                418
                 0)
               inherited SensorsLV: TBtnListView
                 Width = 1280
@@ -186,9 +186,9 @@ object ObjInterfaceFrame: TObjInterfaceFrame
             end
           end
           inherited UTSFrame1: TUTSFrame
-            Width = 422
+            Width = 418
             Height = 0
-            ExplicitWidth = 422
+            ExplicitWidth = 418
             ExplicitHeight = 0
             inherited UTSLV: TBtnListView
               Height = 94
@@ -196,9 +196,9 @@ object ObjInterfaceFrame: TObjInterfaceFrame
             end
           end
           inherited Platframe1: TPlatframe
-            Width = 422
+            Width = 418
             Height = 0
-            ExplicitWidth = 422
+            ExplicitWidth = 418
             ExplicitHeight = 0
           end
         end

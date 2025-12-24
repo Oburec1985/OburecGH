@@ -225,8 +225,6 @@ end;
 function cStage.getBladeCount:integer;
 begin
   result:=length(shape.Blades);
-  if result=0 then
-    result:=-1;
 end;
 
 function cStage.FindSensorByChunNumber(chan:integer):csensor;
@@ -276,7 +274,8 @@ begin
       exit;
     end;
   end;
-  errorStage_noTaho(self,eng.flags);
+  //errorStage_noTaho(self,eng.flags);
+  errorStage_noTaho(self,0);
   result:=nil;
 end;
 

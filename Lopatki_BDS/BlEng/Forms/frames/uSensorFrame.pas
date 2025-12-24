@@ -101,7 +101,13 @@ begin
     taho:=stage.GetTaho;
     if taho<>nil then
     begin
-      TahoDivEdit.Text:=floattostr(csensor(obj).chan.ticks.count/taho.chan.ticks.count);
+      if (taho.chan<>nil) and (csensor(obj).chan<>nil) then
+      begin
+        if taho.chan.ticks.count=0 then
+          TahoDivEdit.Text:='0'
+        else
+          TahoDivEdit.Text:=floattostr(csensor(obj).chan.ticks.count/taho.chan.ticks.count)
+      end;
     end
     else
     begin

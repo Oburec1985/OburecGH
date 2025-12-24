@@ -59,24 +59,24 @@ begin
   TheresholdsLV.Columns.Clear;
   // Колонка с номером
   col:=TheresholdsLV.Columns.Add;
-  col.Caption:=v_ColNum;
+  col.Caption:=c_ColNum;
   col.width:=30;
   // Колонка с именем
   col:=TheresholdsLV.Columns.Add;
-  col.Caption:=v_ColName;
+  col.Caption:=c_ColName;
   col.width:=60;
   // Колонка с описанием
   col:=TheresholdsLV.Columns.Add;
-  col.Caption:=v_ColDSC;
+  col.Caption:=c_ColDSC;
   col.width:=60;
   // Колонка типом
   col:=TheresholdsLV.Columns.Add;
-  col.Caption:=v_ColType;
+  col.Caption:=c_ColType;
   col.width:=60;
   // Колонка с значением
   col:=TheresholdsLV.Columns.Add;
-  col.Caption:=v_ColValue;
-  col.width:=60;  
+  col.Caption:=c_ColValue;
+  col.width:=60;
 end;
 
 procedure TTagPropertiesFrame.linc(tp:cBldTimeProc);
@@ -128,11 +128,11 @@ var
 begin
   li:=TheresholdsLV.Items.add;
   li.Data:=a;
-  TheresholdsLV.SetSubItemByColumnName(v_colNum,inttostr(li.index),li);
-  TheresholdsLV.SetSubItemByColumnName(v_colName,a.name,li);
-  TheresholdsLV.SetSubItemByColumnName(v_colType,a.TypeString,li);
-  TheresholdsLV.SetSubItemByColumnName(v_colValue,floattostr(a.threshold),li);
-  TheresholdsLV.SetSubItemByColumnName(v_colDSC,a.dsc,li);
+  TheresholdsLV.SetSubItemByColumnName(c_colNum,inttostr(li.index),li);
+  TheresholdsLV.SetSubItemByColumnName(c_colName,a.name,li);
+  TheresholdsLV.SetSubItemByColumnName(c_colType,a.TypeString,li);
+  TheresholdsLV.SetSubItemByColumnName(c_colValue,floattostr(a.threshold),li);
+  TheresholdsLV.SetSubItemByColumnName(c_colDSC,a.dsc,li);
 end;
 
 procedure TTagPropertiesFrame.showAlarms;
@@ -157,11 +157,11 @@ var
 begin
   a:=calarm(item.data);
   editalarmform.editAlarm(calarm(item.data));
-  TheresholdsLV.SetSubItemByColumnName(v_colNum, inttostr(item.index), item);
-  TheresholdsLV.SetSubItemByColumnName(v_colName, a.name, item);
-  TheresholdsLV.SetSubItemByColumnName(v_colType, a.TypeString, item);
-  TheresholdsLV.SetSubItemByColumnName(v_colValue, floattostr(a.threshold), item);
-  TheresholdsLV.SetSubItemByColumnName(v_colDSC,a.dsc,item);
+  TheresholdsLV.SetSubItemByColumnName(c_colNum, inttostr(item.index), item);
+  TheresholdsLV.SetSubItemByColumnName(c_colName, a.name, item);
+  TheresholdsLV.SetSubItemByColumnName(c_colType, a.TypeString, item);
+  TheresholdsLV.SetSubItemByColumnName(c_colValue, floattostr(a.threshold), item);
+  TheresholdsLV.SetSubItemByColumnName(c_colDSC,a.dsc,item);
 end;
 
 end.

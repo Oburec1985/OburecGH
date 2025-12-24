@@ -88,23 +88,23 @@ var
 begin
   metadatalv.Columns.Clear;
   col:=metadatalv.Columns.Add;
-  col.Caption:=v_ColNum;
+  col.Caption:=c_ColNum;
   col.width:=100;
   // добавляем колонки с стандартными именами
   col:=metadatalv.Columns.Add;
-  col.Caption:=v_ColName;
+  col.Caption:=c_ColName;
   col.width:=100;
   // добавляем колонку тип
   col:=metadatalv.Columns.Add;
-  col.Caption:=v_ColType;
+  col.Caption:=c_ColType;
   col.width:=100;
   // добавляем колонку описание
   col:=metadatalv.Columns.Add;
-  col.Caption:=v_ColDsc;
+  col.Caption:=c_ColDsc;
   col.width:=100;
   // добавляем колонку значение
   col:=metadatalv.Columns.Add;
-  col.Caption:=v_ColValue;
+  col.Caption:=c_ColValue;
   col.width:=100;
 end;
 
@@ -156,11 +156,11 @@ var
   li:tlistitem;
 begin
   li:=MetaDataLv.Items.Add;
-  MetaDataLv.SetSubItemByColumnName(v_ColNum,inttostr(li.Index),li);
-  MetaDataLv.SetSubItemByColumnName(v_ColName,data.name,li);
-  MetaDataLv.SetSubItemByColumnName(v_ColType,data.ClassName,li);
-  MetaDataLv.SetSubItemByColumnName(v_ColDsc,data.dsc,li);
-  MetaDataLv.SetSubItemByColumnName(v_ColValue,data.SValue,li);
+  MetaDataLv.SetSubItemByColumnName(c_ColNum,inttostr(li.Index),li);
+  MetaDataLv.SetSubItemByColumnName(c_ColName,data.name,li);
+  MetaDataLv.SetSubItemByColumnName(c_ColType,data.ClassName,li);
+  MetaDataLv.SetSubItemByColumnName(c_ColDsc,data.dsc,li);
+  MetaDataLv.SetSubItemByColumnName(c_ColValue,data.SValue,li);
   li.Data:=data;
 end;
 

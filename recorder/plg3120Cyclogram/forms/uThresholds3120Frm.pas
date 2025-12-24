@@ -678,7 +678,8 @@ end;
 procedure TThresholdFrm.TagsTVChange(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
 var
-  d:pnodedata;
+  n:PVirtualNode;
+  d, pd:pnodedata;
   g:TThresholdGroup;
   a:TAlarms;
   pdata:PDataRec;
@@ -690,6 +691,7 @@ begin
     if tobject(d.Data) is TThresholdGroup then
     begin
       g:=TThresholdGroup(d.Data);
+      GroupNameEdit.text:=g.name;
       pdata:=g.AlarmData(NumSe.Value);
       CountIE.IntNum:=g.m_size;
       setData(pdata);
@@ -704,6 +706,22 @@ begin
     end;
     if tobject(d.Data) is TAlarms then
     begin
+      n:=node.Parent;
+      pd:=tagsTV.GetNodeData(node.Parent);
+      if tobject(pd.Data) is TThresholdGroup then
+      begin
+        g:=TThresholdGroup(pd.Data);
+        GroupNameEdit.text:=g.name;
+        m_selGroup:=g;
+        if m_selGroup<>nil then
+        begin
+          if m_selGroup.ControlTag<>nil then
+            setComboBoxItem(m_selGroup.ControlTag.tagname,ControTaglCB)
+          else
+            ControTaglCB.ItemIndex:=-1;
+        end;
+      end;
+      pd:=tagsTV.GetNodeData(node);
       a:=TAlarms(d.Data);
       pdata:=a.owner.AlarmData(NumSe.Value);
       CountIE.IntNum:=a.owner.m_size;

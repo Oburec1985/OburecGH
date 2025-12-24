@@ -23,22 +23,22 @@ object TurbineFrame: TTurbineFrame
     object StageCountLabel: TLabel
       Left = 5
       Top = 46
-      Width = 80
-      Height = 13
+      Width = 92
+      Height = 16
       Caption = #1063#1080#1089#1083#1086' '#1089#1090#1091#1087#1077#1085#1077#1081
     end
     object CfgLabel: TLabel
       Left = 140
       Top = 47
-      Width = 121
-      Height = 13
+      Width = 137
+      Height = 16
       Caption = #1050#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103' '#1090#1091#1088#1073#1080#1085#1099
     end
     object RecentFileLabel: TLabel
       Left = 5
       Top = 23
-      Width = 129
-      Height = 13
+      Width = 150
+      Height = 16
       Caption = #1053#1077#1076#1072#1074#1085#1080#1081' '#1092#1072#1081#1083' ('#1076#1072#1085#1085#1099#1077')'
     end
     object StageCountIE: TIntEdit

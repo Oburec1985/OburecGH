@@ -119,6 +119,7 @@ type
     procedure TestNameCbChange(Sender: TObject);
     procedure ObjNameCbChange(Sender: TObject);
     procedure EditProgBtnClick(Sender: TObject);
+    procedure ValsSGDblClick(Sender: TObject);
   private
     cs: TRTLCriticalSection;
     m_err: Integer;
@@ -1051,6 +1052,7 @@ var
   pPnt: TPoint; // Координаты курсора
   xCol, xRow: Integer; // Адрес ячейки таблицы
 begin
+  ValsSG.Width:=200;
   GetCursorPos(pPnt);
   pPnt := TStringGrid(Sender).ScreenToClient(pPnt);
   // Находим позицию нашей ячейки
@@ -1207,6 +1209,11 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TFrm3120.ValsSGDblClick(Sender: TObject);
+begin
+  SGChange(ValsSG);
 end;
 
 procedure TFrm3120.ValsSGDrawCell(Sender: TObject; ACol, ARow: Integer;
@@ -1437,8 +1444,14 @@ begin
 end;
 
 procedure TFrm3120.AlarmStopBtnClick(Sender: TObject);
+var
+  I: Integer;
 begin
   g_conmng.Stop;
+  for I := 0 to length(g_Marray) - 1 do
+  begin
+    g_Marray[i].m_CmdStop.PushValue(1);
+  end;
 end;
 
 procedure TFrm3120.Button1Click(Sender: TObject);

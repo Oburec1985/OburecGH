@@ -2,18 +2,16 @@ object CompaundFrame: TCompaundFrame
   Left = 0
   Top = 0
   Width = 451
-  Height = 581
+  Height = 304
   Align = alClient
   TabOrder = 0
-  ExplicitHeight = 304
   object MainObjSB: TScrollBox
     Left = 0
     Top = 0
     Width = 451
-    Height = 581
+    Height = 304
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 304
     object Splitter1: TSplitter
       Left = 0
       Top = 274
@@ -48,12 +46,18 @@ object CompaundFrame: TCompaundFrame
         Left = 279
         ExplicitLeft = 279
       end
+      inherited NameEdit: TEdit
+        Height = 24
+        ExplicitHeight = 24
+      end
       inherited TypeEdit: TEdit
         Left = 152
+        Height = 24
         ExplicitLeft = 152
+        ExplicitHeight = 24
       end
       inherited MetaDataLV: TBtnListView
-        Width = 821
+        Width = 972
         Height = 320
         ExplicitWidth = 821
         ExplicitHeight = 320
@@ -63,7 +67,7 @@ object CompaundFrame: TCompaundFrame
       Left = 0
       Top = 277
       Width = 447
-      Height = 300
+      Height = 23
       Align = alClient
       TabOrder = 1
       Visible = False
@@ -71,21 +75,37 @@ object CompaundFrame: TCompaundFrame
       ExplicitWidth = 447
       ExplicitHeight = 23
       inherited CommonGB: TGroupBox
-        Width = 447
-        Height = 300
+        Width = 598
+        Height = 90
         ExplicitWidth = 447
         ExplicitHeight = 23
         inherited ChanLVLabel: TLabel
           Left = 152
           ExplicitLeft = 152
         end
+        inherited ImpulsCountIE: TIntEdit
+          Height = 24
+          ExplicitHeight = 24
+        end
         inherited ChanLV: TBtnListView
           Left = 153
-          Width = 259
-          Height = 278
+          Width = 410
+          Height = 68
           ExplicitLeft = 153
           ExplicitWidth = 259
           ExplicitHeight = 1
+        end
+        inherited TickEdit: TIntEdit
+          Height = 24
+          ExplicitHeight = 24
+        end
+        inherited ResIndEdit: TIntEdit
+          Height = 24
+          ExplicitHeight = 24
+        end
+        inherited OverflowIE: TIntEdit
+          Height = 24
+          ExplicitHeight = 24
         end
       end
     end
@@ -93,7 +113,7 @@ object CompaundFrame: TCompaundFrame
       Left = 0
       Top = 277
       Width = 447
-      Height = 300
+      Height = 23
       Align = alClient
       Constraints.MinWidth = 265
       TabOrder = 2
@@ -102,11 +122,19 @@ object CompaundFrame: TCompaundFrame
       ExplicitWidth = 447
       ExplicitHeight = 23
       inherited SensorsGB: TGroupBox
-        Top = 34
+        Top = -243
         Width = 447
         Align = alBottom
         ExplicitTop = -243
         ExplicitWidth = 447
+        inherited OffsetFE: TFloatEdit
+          Height = 24
+          ExplicitHeight = 24
+        end
+        inherited ChunIE: TIntEdit
+          Height = 24
+          ExplicitHeight = 24
+        end
         inherited StateGB: TGroupBox
           Width = 443
           ExplicitWidth = 443
@@ -116,10 +144,22 @@ object CompaundFrame: TCompaundFrame
           end
           inherited PairsListView: TBtnListView
             Top = 36
-            Width = 1181
+            Width = 1332
             ExplicitTop = 36
             ExplicitWidth = 1181
           end
+        end
+        inherited TickCountIE: TIntEdit
+          Height = 24
+          ExplicitHeight = 24
+        end
+        inherited SkipBladeIE: TIntEdit
+          Height = 24
+          ExplicitHeight = 24
+        end
+        inherited TahoDivEdit: TEdit
+          Height = 24
+          ExplicitHeight = 24
         end
       end
     end
@@ -127,7 +167,7 @@ object CompaundFrame: TCompaundFrame
       Left = 0
       Top = 277
       Width = 447
-      Height = 300
+      Height = 23
       Align = alClient
       Constraints.MinWidth = 265
       TabOrder = 3
@@ -138,62 +178,58 @@ object CompaundFrame: TCompaundFrame
       ExplicitHeight = 23
       inherited StageGB: TGroupBox
         Width = 447
-        Height = 300
+        Height = 23
         ExplicitWidth = 447
         ExplicitHeight = 23
         inherited SignalSetupPageControl: TPageControl
           Width = 443
-          Height = 283
+          Height = 3
           ExplicitWidth = 443
-          ExplicitHeight = 6
+          ExplicitHeight = 3
           inherited TabSheet1: TTabSheet
             ExplicitWidth = 435
             inherited Splitter2: TSplitter
               Left = 316
-              Height = 255
               ExplicitLeft = 472
               ExplicitHeight = 234
             end
             inherited BladesGB: TGroupBox
               Left = 0
-              Height = 255
               ExplicitLeft = 0
+              ExplicitHeight = 9
               inherited Splitter1: TSplitter
-                Height = 238
-                ExplicitLeft = 812
-                ExplicitHeight = 234
+                Height = 1
+                ExplicitLeft = 140
+                ExplicitHeight = 238
               end
               inherited BladesLV: TBtnListView
-                Height = 238
+                Height = 1
+                ExplicitHeight = 1
               end
             end
             inherited ShapeGB: TGroupBox
               Width = 113
-              Height = 255
               ExplicitWidth = 113
+              ExplicitHeight = 9
               inherited ShapeLV: TBtnListView
-                Width = 109
-                Height = 238
+                Width = 257
+                Height = 1
                 ExplicitWidth = 109
+                ExplicitHeight = 233
               end
             end
             inherited StagePropertysGB: TGroupBox
               Left = 147
-              Height = 255
               ExplicitLeft = 147
             end
           end
           inherited TabSheet2: TTabSheet
-            ExplicitLeft = 4
-            ExplicitTop = 24
-            ExplicitWidth = 439
-            ExplicitHeight = 259
             inherited SensorsGB: TGroupBox
-              Height = 259
-              ExplicitHeight = 259
+              Width = 439
+              Height = 253
               inherited SensorsSG: TStringGrid
-                Height = 242
-                ExplicitHeight = 242
+                Width = 435
+                Height = 233
               end
             end
           end
@@ -204,7 +240,7 @@ object CompaundFrame: TCompaundFrame
       Left = 0
       Top = 277
       Width = 447
-      Height = 300
+      Height = 23
       Align = alClient
       Constraints.MinWidth = 265
       TabOrder = 4
@@ -215,16 +251,22 @@ object CompaundFrame: TCompaundFrame
       ExplicitHeight = 23
       inherited TurbinePropGB: TGroupBox
         Width = 447
-        Height = 300
+        Height = 23
         ExplicitWidth = 447
         ExplicitHeight = 23
+        inherited StageCountIE: TIntEdit
+          Height = 24
+          ExplicitHeight = 24
+        end
         inherited CfgTV: TTreeView
-          Width = 685
-          ExplicitWidth = 685
+          Width = 836
+          ExplicitWidth = 836
         end
         inherited RecentFileEdit: TEdit
-          Width = 826
+          Width = 977
+          Height = 24
           ExplicitWidth = 826
+          ExplicitHeight = 24
         end
       end
     end
@@ -232,7 +274,7 @@ object CompaundFrame: TCompaundFrame
       Left = 0
       Top = 277
       Width = 447
-      Height = 300
+      Height = 23
       Align = alClient
       Constraints.MinWidth = 265
       TabOrder = 5
@@ -243,19 +285,27 @@ object CompaundFrame: TCompaundFrame
       ExplicitHeight = 23
       inherited PairGB: TGroupBox
         Width = 447
-        Height = 300
+        Height = 23
         ExplicitWidth = 447
         ExplicitHeight = 23
         DesignSize = (
           447
-          300)
+          23)
         inherited SensorsLV: TBtnListView
           Top = 63
-          Width = 828
-          Height = 282
+          Width = 979
+          Height = 349
           ExplicitTop = 63
           ExplicitWidth = 828
-          ExplicitHeight = 5
+          ExplicitHeight = 282
+        end
+        inherited BladeLeftIE: TIntEdit
+          Height = 24
+          ExplicitHeight = 24
+        end
+        inherited BaseFE: TFloatEdit
+          Height = 24
+          ExplicitHeight = 24
         end
       end
     end
@@ -263,7 +313,7 @@ object CompaundFrame: TCompaundFrame
       Left = 0
       Top = 277
       Width = 447
-      Height = 300
+      Height = 23
       Align = alClient
       TabOrder = 6
       Visible = False
@@ -271,21 +321,29 @@ object CompaundFrame: TCompaundFrame
       ExplicitWidth = 447
       ExplicitHeight = 23
       inherited UTSLV: TBtnListView
-        Height = 278
-        ExplicitHeight = 1
+        Height = 345
+        ExplicitHeight = 278
       end
     end
     inline Platframe1: TPlatframe
       Left = 0
       Top = 277
       Width = 447
-      Height = 300
+      Height = 23
       Align = alClient
       TabOrder = 7
       Visible = False
       ExplicitTop = 277
       ExplicitWidth = 447
       ExplicitHeight = 23
+      inherited PeriodSE: TFloatSpinEdit
+        Height = 26
+        ExplicitHeight = 26
+      end
+      inherited FreqFE: TFloatSpinEdit
+        Height = 26
+        ExplicitHeight = 26
+      end
     end
   end
 end

@@ -52,12 +52,12 @@ begin
   li:=lv.items.add;
   // Если ступень всего одна, но датчикам ступени не сопоставлены, то относим
   // все датчики к одной ступени
-  lv.SetSubItemByColumnName(v_ColNum,inttostr(sensor.ChanNumber),li);
+  lv.SetSubItemByColumnName(c_ColNum,inttostr(sensor.ChanNumber),li);
   lv.SetSubItemByColumnName(v_ColImpulsNum,inttostr(chan.ticksCount),li);
-  lv.SetSubItemByColumnName(v_ColName,sensor.Name,li);
-  lv.SetSubItemByColumnName(v_ColSensorPos,floattostr(sensor.pos),li);
+  lv.SetSubItemByColumnName(c_ColName,sensor.Name,li);
+  lv.SetSubItemByColumnName(c_ColSensorPos,floattostr(sensor.pos),li);
   // вписать тип датчика
-  lv.SetSubItemByColumnName(v_ColType,sensor.sensorstring,li);
+  lv.SetSubItemByColumnName(c_ColType,sensor.sensorstring,li);
 end;
 
 procedure TLoadBldDlg.showbldfile(f:tobject);

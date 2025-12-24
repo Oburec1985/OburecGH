@@ -62,8 +62,8 @@ object TagsCfgFrame: TTagsCfgFrame
     QuoteColumnBtnClick = False
     QuoteColumnDblClick = False
     DrawColorBox = False
-    ExplicitLeft = 1
-    ExplicitTop = -6
+    ChangeTextColor = False
+    Editable = False
   end
   object TagPropertiesGB: TGroupBox
     Left = 161
@@ -75,7 +75,7 @@ object TagsCfgFrame: TTagsCfgFrame
     TabOrder = 2
     object Splitter2: TSplitter
       Left = 2
-      Top = 15
+      Top = 18
       Width = 286
       Height = 3
       Cursor = crVSplit
@@ -85,29 +85,33 @@ object TagsCfgFrame: TTagsCfgFrame
     end
     object TagGB: TGroupBox
       Left = 2
-      Top = 18
+      Top = 21
       Width = 286
-      Height = 129
+      Height = 126
       Align = alClient
       TabOrder = 0
       inline TagPropertiesFrame1: TTagPropertiesFrame
         Left = 2
-        Top = 15
+        Top = 18
         Width = 282
-        Height = 112
+        Height = 106
         Align = alClient
         TabOrder = 0
         ExplicitLeft = 2
-        ExplicitTop = 15
+        ExplicitTop = 18
         ExplicitWidth = 282
-        ExplicitHeight = 112
+        ExplicitHeight = 106
         inherited TagNameEdit: TEdit
           Width = 276
+          Height = 24
           ExplicitWidth = 276
+          ExplicitHeight = 24
         end
         inherited DscEdit: TEdit
           Width = 276
+          Height = 24
           ExplicitWidth = 276
+          ExplicitHeight = 24
         end
         inherited TheresholdsLV: TBtnListView
           Width = 276
@@ -117,7 +121,9 @@ object TagsCfgFrame: TTagsCfgFrame
         end
         inherited DrawObjEdit: TEdit
           Width = 229
+          Height = 24
           ExplicitWidth = 229
+          ExplicitHeight = 24
         end
         inherited DrawObjSelectBtn: TButton
           Left = 238
@@ -125,9 +131,9 @@ object TagsCfgFrame: TTagsCfgFrame
           ExplicitLeft = 238
         end
         inherited ToolBar: TToolBar
-          Top = 73
+          Top = 67
           Width = 282
-          ExplicitTop = 73
+          ExplicitTop = 67
           ExplicitWidth = 282
           inherited AddAlarmBtn: TToolButton
             OnClick = TagPropertiesFrame1AddTagBtnClick
@@ -150,8 +156,8 @@ object TagsCfgFrame: TTagsCfgFrame
     object TagNameLabel: TLabel
       Left = 8
       Top = 41
-      Width = 149
-      Height = 13
+      Width = 170
+      Height = 16
       Caption = #1055#1091#1090#1100' '#1082' '#1073#1072#1079#1077' '#1076#1072#1085#1085#1099#1093' '#1087#1086' '#1090#1077#1075#1072#1084
     end
     object LogTagsCheckBox: TCheckBox
@@ -166,7 +172,7 @@ object TagsCfgFrame: TTagsCfgFrame
       Left = 8
       Top = 60
       Width = 202
-      Height = 21
+      Height = 24
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 1
     end

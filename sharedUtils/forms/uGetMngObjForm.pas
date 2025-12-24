@@ -31,9 +31,9 @@ var
 begin
   objectslv.Columns.Clear;
   col:=objectslv.Columns.add;
-  col.Caption:=v_ColNum;
+  col.Caption:=c_ColNum;
   col:=objectslv.Columns.add;
-  col.Caption:=v_ColName;
+  col.Caption:=c_ColName;
 end;
 
 Constructor TGetMngObjForm.create(aOwner:tComponent);
@@ -54,8 +54,8 @@ begin
     li:=objectslv.items.add;
     obj:=mng.getobj(i);
     li.Data:=obj;
-    objectslv.SetSubItemByColumnName(v_ColNum,inttostr(i),li);
-    objectslv.SetSubItemByColumnName(v_ColName,obj.name,li);
+    objectslv.SetSubItemByColumnName(c_ColNum,inttostr(i),li);
+    objectslv.SetSubItemByColumnName(c_ColName,obj.name,li);
   end;
 end;
 

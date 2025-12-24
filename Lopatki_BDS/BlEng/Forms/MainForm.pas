@@ -14,7 +14,27 @@ uses
   uJournalForm, Buttons, ubldEngEventTypes, uChartInputFrame,
   uChartFrame, uDoubleCursor, uAlarmsHistoryForm, uProcessalgtask, uTaskMng,
   uEgineMonitorForm, ImgList, mathfunction, uPlat, uFileThread,
-  uBldGlobalStrings, uTag, uSetList, uMetaData, uEditTagForm,
+  uBldGlobalStrings, uTag, uSetList, uMetaData,
+  uEditTagForm,
+  uCreateObjForm,
+  uLoadBldForm, uChart, uStageReConfig, uSensorRepForm,
+  uPairShapeForm,
+  uCreateTrendForm,
+  uSaveSignalForm,
+  uBaseAlgForm,
+  uGetSkipBladesForm,
+  uBladeForm,
+  uEvalSkipBladesForm,
+  uGetSensorsForm,
+  uEditAlarmForm,
+  uDensityForm,
+  uGetTimeForm,
+  uPairRestoreForm,
+  uAddPropertieForm,
+  uHardwareCFGForm,
+  uEditGraphForm,
+  uBladeBase,
+  uXYTrendPos, uStageShapeForm,
   udrawobj, uSensor, me415;
 
 type
@@ -48,7 +68,6 @@ type
     PauseTimeBtn: TSpeedButton;
     AddTimeBtn: TSpeedButton;
     TimeScrollBox: TScrollBar;
-    ChartFrame1: TChartFrame;
     SysJournalMenu: TMenuItem;
     AlarmsMenu: TMenuItem;
     MonitorFormMenu: TMenuItem;
@@ -76,6 +95,7 @@ type
     MetaDataTypeLabel: TLabel;
     AddGraphBtn: TToolButton;
     TagsLV: TBtnListView;
+    MainChart: cChart;
     // происходит в onCreate формы
     procedure ConfigMenuItemClick(Sender: TObject);
     procedure HelpMenuClick(Sender: TObject);
@@ -138,7 +158,8 @@ type
     procedure lincframes;
     procedure CreateEvents;
   public
-
+    function GetMainChart:cchart;
+    constructor create(aowner:tcomponent);override;
   end;
 
 var
@@ -172,22 +193,20 @@ end;
 
 procedure TMainBldForm.ChartFrame1cChart1Draw(Sender: TObject);
 begin
-  ChartFrame1.cChart1.activePage.caption:=modname(ChartFrame1.cChart1.activePage.caption,false);
+  //ChartFrame1.cChart1.activePage.caption:=modname(ChartFrame1.cChart1.activePage.caption,false);
 end;
 
 procedure TMainBldForm.ChartFrame1cChart1Init(Sender: TObject);
 begin
-  ChartFrame1.cChart1.debugMode:=false;
-
-  ChartFrame1.cChart1Init(Sender);
+  //ChartFrame1.cChart1.debugMode:=false;
+  //ChartFrame1.cChart1Init(Sender);
   loadeng(self,eng);
-  ChartFrame1.cChart1.Resources:=extractfiledir(Application.ExeName)+c_curCfg;
+  //ChartFrame1.cChart1.Resources:=extractfiledir(Application.ExeName)+c_curCfg;
 end;
 
 procedure TMainBldForm.ChartFrame1PageCountSEChange(Sender: TObject);
 begin
-  ChartFrame1.PageCountSEChange(Sender);
-
+  //ChartFrame1.PageCountSEChange(Sender);
 end;
 
 procedure TMainBldForm.ConfigMenuItemClick(Sender: TObject);
@@ -202,11 +221,79 @@ end;
 
 procedure TMainBldForm.CopyToolBtnClick(Sender: TObject);
 begin
-  chartframe1.Chart.CopyScreenToClipboard;
+  //chartframe1.Chart.CopyScreenToClipboard;
+end;
+
+constructor TMainBldForm.create(aowner: tcomponent);
+begin
+  inherited;
 end;
 
 procedure TMainBldForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  if GeneratorForm<>nil then
+  begin
+    GeneratorForm.Destroy;
+  end;
+  if CfgForm<>nil then
+  begin
+    CfgForm.Destroy;
+  end;
+  if CreateObjForm<>nil then
+    CreateObjForm.destroy;
+  if EditTagForm<>nil then
+    EditTagForm.destroy;
+  if LoadBldDlg<>nil then
+    LoadBldDlg.destroy;
+  if SelAlgDlg<>nil then
+    SelAlgDlg.Destroy;
+  if XYTrendForm<>nil then
+    XYTrendForm.Destroy;
+  if StageShapeForm<>nil then
+    StageShapeForm.Destroy;
+  if StageReConfigForm<>nil then
+    StageReConfigForm.Destroy;
+  if SensorRepForm<>nil then
+    SensorRepForm.Destroy;
+  if PairShapeForm<>nil then
+    PairShapeForm.Destroy;
+  if SelGraphForm<>nil then
+    SelGraphForm.Destroy;
+  if SaveSignalsForm<>nil then
+    SaveSignalsForm.Destroy;
+  if BaseAlgForm<>nil then
+    BaseAlgForm.Destroy;
+  if GetSkipBladesForm<>nil then
+    GetSkipBladesForm.Destroy;
+  if BladeForm<>nil then
+    BladeForm.Destroy;
+  if EvalSkipBladesForm<>nil then
+    EvalSkipBladesForm.Destroy;
+  if EditProjForm<>nil then
+    EditProjForm.Destroy;
+  if BldTimeProcForm<>nil then
+    BldTimeProcForm.Destroy;
+  if SelectSensorsForm<>nil then
+    SelectSensorsForm.Destroy;
+  if EditAlarmForm<>nil then
+    EditAlarmForm.Destroy;
+  if EngineMonitorForm<>nil then
+    EngineMonitorForm.Destroy;
+  if DensityForm<>nil then
+    DensityForm.Destroy;
+  if GetTimeForm<>nil then
+    GetTimeForm.Destroy;
+  if PairRestoreForm<>nil then
+    PairRestoreForm.Destroy;
+  if AddPropertieForm<>nil then
+    AddPropertieForm.Destroy;
+  if HardwareCFGForm<>nil then
+    HardwareCFGForm.Destroy;
+  if EditGraphForm<>nil then
+    EditGraphForm.Destroy;
+  if BladeFrm<>nil then
+    BladeFrm.Destroy;
+
   // если не нажали кнопку стоп перед закрытием программы
   if PauseTimeBtn.Down then
   begin
@@ -215,7 +302,7 @@ begin
     begin
       cplatslist(eng.HardWare).stop;
     end;
-    chartframe1.t1:=0;
+    //chartframe1.t1:=0;
   end;
   SelectTags.destroy;
   selectTags:=nil;
@@ -247,16 +334,18 @@ begin
   eng.images_32:=ImageList_32;
   Helpmng:=cfilemng.Create(eng.PathMng.findCfgPathFile('HelpFiles.cfg'),
                            MainMenu, v_Helpfiles, testDocFileName);
-  chartframe1.linctproc(bldTimeProc);
+  //chartframe1.linctproc(bldTimeProc);
   CreateEvents;
   SelectTags:=cSetList.create;
   SelectTags.destroydata:=false;
 
     // получаем текущий тред
   eng.ThreadList.AddID('MainTHread',GetCurrentThreadID);
-  ChartFrame1.cChart1.OnDeadLock:=OnDeadLock;
-  ChartFrame1.cChart1.OnExitCS:=OnExitCS;
-  ChartFrame1.cChart1.OnEnterCS:=OnEnterCS;
+  //ChartFrame1.cChart1.name:='MainChart';
+  //ChartFrame1.cChart1.OnDeadLock:=OnDeadLock;
+  //ChartFrame1.cChart1.OnExitCS:=OnExitCS;
+  //ChartFrame1.cChart1.OnEnterCS:=OnEnterCS;
+  ChartFrame1cChart1Init(nil);
 end;
 
 procedure TMainBldForm.FormShow(Sender: TObject);
@@ -268,8 +357,8 @@ end;
 
 procedure TMainBldForm.GeneratorMenuItemClick(Sender: TObject);
 begin
-  //GeneratorForm.ShowModal;
-  form2.showmodal;
+  GeneratorForm.ShowModal;
+  //form2.showmodal;
 end;
 
 procedure TMainBldForm.HelpMenuClick(Sender: TObject);
@@ -298,18 +387,23 @@ begin
   cfgform.mainform:=self;
   SignalsTVFrame1.GetEng(eng);
   GeneratorForm.getEngine(eng);
-  BldtimeprocForm.linc(bldTimeProc,eng, ChartFrame1.cchart1);
+  //BldtimeprocForm.linc(bldTimeProc,eng, ChartFrame1.cchart1);
   //JournalForm.lincEng(eng);
   // Создаем фрейм для отображения координат графика
   frame:=TChartInputFrame.create(self);
   frame.parent:=MouseGB;
-  frame.lincchart(chartframe1.Chart);
+  //frame.lincchart(chartframe1.Chart);
   // монитор формы
   EngineMonitorForm.linc(eng);
 
   EditTagForm.Linc(bldTimeProc);
 end;
 
+
+function TMainBldForm.getmainChart: cchart;
+begin
+  result:=MainChart;
+end;
 
 procedure TMainBldForm.MonitorFormMenuClick(Sender: TObject);
 begin
@@ -320,7 +414,7 @@ end;
 procedure TMainBldForm.SelectAlgBtnClick(Sender: TObject);
 begin
   if curobjlist.count=0 then exit;
-  SelAlgDlg.getChart(chartframe1.Chart);
+  //SelAlgDlg.getChart(chartframe1.Chart);
   SelAlgDlg.getobj(curobjlist);
   SelAlgDlg.showmodal;
 end;
@@ -329,7 +423,7 @@ procedure TMainBldForm.SaveToImageToolBarClick(Sender: TObject);
 begin
   if SaveDialog.Execute(handle) then
   begin
-    chartframe1.Chart.SaveToFile(savedialog.FileName);
+    GetMainChart.SaveToFile(savedialog.FileName);
   end;
 end;
 
@@ -342,17 +436,17 @@ procedure TMainBldForm.CursorToolBtnClick(Sender: TObject);
 var
   obj:cDoubleCursor;
 begin
-  obj:=cDoubleCursor(chartframe1.Chart.activepage.getChild('cDoubleCursor'));
+  //obj:=cDoubleCursor(chartframe1.Chart.activepage.getChild('cDoubleCursor'));
   if obj<>nil then
   begin
     obj.visible:=not obj.visible;
     if obj.visible then
     begin
-      obj.x1:=chartframe1.Chart.activepage.m_viewport[0]+round(chartframe1.Chart.activepage.m_viewport[2]/2);
-      obj.x2:=chartframe1.Chart.activepage.m_viewport[0]+round(chartframe1.Chart.activepage.m_viewport[2]/2)+
-      round(chartframe1.Chart.activepage.m_viewport[2]/4);
+      //obj.x1:=chartframe1.Chart.activepage.m_viewport[0]+round(chartframe1.Chart.activepage.m_viewport[2]/2);
+      //obj.x2:=chartframe1.Chart.activepage.m_viewport[0]+round(chartframe1.Chart.activepage.m_viewport[2]/2)+
+      //round(chartframe1.Chart.activepage.m_viewport[2]/4);
     end;
-    chartframe1.Chart.redraw;
+    //chartframe1.Chart.redraw;
   end;
 end;
 
@@ -360,7 +454,7 @@ procedure TMainBldForm.DblCursorToolBtnClick(Sender: TObject);
 var
   obj:cDoubleCursor;
 begin
-  obj:=cDoubleCursor(chartframe1.Chart.activepage.getChild('cDoubleCursor'));
+  //obj:=cDoubleCursor(chartframe1.Chart.activepage.getChild('cDoubleCursor'));
   if obj.cursortype=c_SingleCursor then
     obj.cursortype:=c_doublecursor
   else
@@ -371,17 +465,17 @@ procedure TMainBldForm.DelToolBtnClick(Sender: TObject);
 var
   res:integer;
 begin
-  if not (chartframe1.Chart.selected is cpage) then
+  //if not (chartframe1.Chart.selected is cpage) then
   begin
-    if chartframe1.Chart.selected is caxis then
+    //if chartframe1.Chart.selected is caxis then
     begin
-      if cpage(chartframe1.Chart.activepage).getAxisCount=1 then
+      //if cpage(chartframe1.Chart.activepage).getAxisCount=1 then
         exit;
     end;
     res:=MessageDlg('Удалить объект?',mtConfirmation, mbOKCancel, 0);
     if res=1 then
     begin
-      chartframe1.Chart.deleteselected;
+      //chartframe1.Chart.deleteselected;
     end;
   end;
 end;
@@ -398,15 +492,15 @@ end;
 
 procedure TMainBldForm.BldTimeProcMenuClick(Sender: TObject);
 begin
-  BldTimeProcForm.showmodal(ChartFrame1.chart);
+  //BldTimeProcForm.showmodal(ChartFrame1.chart);
 end;
 
 procedure TMainBldForm.cChart1Draw(Sender: TObject);
 begin
-  inc(chartframe1.drawcount);
+  //inc(chartframe1.drawcount);
 
-  Caption:='MainForm'+' DrowCount='+inttostr(chartframe1.drawCount)+' FPS:' +
-            inttostr(chartframe1.fps)+' Cscounter: '+inttostr(entercsCounter-exitCSCounter);
+  //Caption:='MainForm'+' DrowCount='+inttostr(chartframe1.drawCount)+' FPS:' +
+  //          inttostr(chartframe1.fps)+' Cscounter: '+inttostr(entercsCounter-exitCSCounter);
 end;
 
 procedure TMainBldForm.CreateEvents;
@@ -430,7 +524,7 @@ var
 begin
   result:=1;
   // установка курсора
-  obj:=cDoubleCursor(chartframe1.Chart.activepage.getChild('cDoubleCursor'));
+  //obj:=cDoubleCursor(chartframe1.Chart.activepage.getChild('cDoubleCursor'));
   if obj<>nil then
   begin
     result:=obj.dx;
@@ -443,7 +537,7 @@ begin
   begin
     if fmode<>c_Demo then
       eng.clearTicks;
-    ChartFrame1.SetTimeLength(BldTimeProc.dt);
+    //ChartFrame1.SetTimeLength(BldTimeProc.dt);
     BldTimeProc.play(fMode);
   end
   else
@@ -453,7 +547,7 @@ begin
     begin
       cplatslist(eng.HardWare).stop;
     end;
-    chartframe1.t1:=0;
+    //chartframe1.t1:=0;
   end;
 end;
 
@@ -473,7 +567,7 @@ begin
     begin
       TimeScrollBox.Position:=trunc(((activetask.Thread.t1-activetask.Thread.t0)/activetask.Thread.TimeLength)*100);
       SetTimeLabel(nil);
-      obj:=cDoubleCursor(chartframe1.Chart.activepage.getChild('cDoubleCursor'));
+      //obj:=cDoubleCursor(chartframe1.Chart.activepage.getChild('cDoubleCursor'));
       if obj.visible then
       begin
         t0:=activetask.Thread.t0;
@@ -505,7 +599,7 @@ var
   obj:cDoubleCursor;
 begin
   // установка курсора
-  obj:=cDoubleCursor(chartframe1.Chart.activepage.getChild('cDoubleCursor'));
+  //obj:=cDoubleCursor(chartframe1.Chart.activepage.getChild('cDoubleCursor'));
 end;
 
 procedure TMainBldForm.SetTimeLabel(sender:tobject);
@@ -526,7 +620,7 @@ var
 begin
   // Теги
   col:=tagsLV.Columns.Add;
-  col.Caption:=v_Name;
+  col.Caption:=c_colNum;
   col.Width:=100;
   col:=tagsLV.Columns.Add;
   col.Caption:=v_Src;
@@ -613,7 +707,7 @@ begin
     tag:=cbasetag(selecttags.getNode(i));
     li:=tagslv.Items.Add;
     li.data:=tag;
-    tagslv.SetSubItemByColumnName(v_name,tag.name,li);
+    tagslv.SetSubItemByColumnName(c_colName,tag.name,li);
     if tag.source<>nil then
       tagslv.SetSubItemByColumnName(v_Src,cbaseobj(tag.source).name,li);
   end;
@@ -623,7 +717,7 @@ procedure TMainBldForm.TagsLVChange(Sender: TObject; Item: TListItem;
   Change: TItemChange);
 begin
   if TBtnListView(sender).Selected<>nil then
-    ChartFrame1.OnselectTag(TBtnListView(sender).Selected);
+    //ChartFrame1.OnselectTag(TBtnListView(sender).Selected);
 end;
 
 procedure TMainBldForm.TagsLVDblClickProcess(item: TListItem; lv: TListView);
@@ -658,8 +752,8 @@ end;
 
 procedure TMainBldForm.OnDeadLock(sender:tobject);
 begin
-  eng.getmessage(ChartFrame1.cChart1.deadlockdsc+'_'+
-                 eng.ThreadList.GetIDName(GetCurrentThreadId),c_infoMessage);
+  //eng.getmessage(ChartFrame1.cChart1.deadlockdsc+'_'+
+  //               eng.ThreadList.GetIDName(GetCurrentThreadId),c_infoMessage);
 end;
 
 procedure TMainBldForm.OnExitCS(sender:tobject);

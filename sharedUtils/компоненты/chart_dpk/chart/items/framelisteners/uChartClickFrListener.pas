@@ -418,6 +418,12 @@ var
 begin
   result.x:=-1;
   ltrend:=Activetrend;
+  if ltrend.count=0 then
+  begin
+    Result.X:=0;
+    Result.y:=0;
+    exit;
+  end;
   if ltrend<>nil then
   begin
     page:=getpage;

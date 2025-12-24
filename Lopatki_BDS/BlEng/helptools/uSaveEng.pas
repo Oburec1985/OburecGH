@@ -88,7 +88,7 @@ begin
   end;
   if ext='.xml' then
   begin
-    result:=LoadXMLFile(name,eng,tmainbldform(form).ChartFrame1.chart);
+    //result:=LoadXMLFile(name,eng,tmainbldform(form).ChartFrame1.chart);
   end;
   if result then
   begin

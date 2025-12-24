@@ -181,7 +181,7 @@ type
 
     function ObjType:string;
     // допуск по отклонению на полосу
-    function GetTolerance:double;
+    function GetTolerance(bnum:integer):double;
     function BladeType:string;
     function BladeReport:string;overload;
     // параметр - путь к шаблону
@@ -1226,6 +1226,14 @@ begin
   M_res:=node.ReadAttributeInteger('Result',-1);
   m_resStr:=node.ReadAttributeString('ResStr','');
   m_sideCB:=node.ReadAttributeBool('Side',false);
+end;
+
+function cBladeFolder.GetTolerance(bnum:integer): double;
+var
+  t:point3;
+begin
+  t:=tone(bnum);
+  result:=t.z;
 end;
 
 procedure cBladeFolder.getTones(list: blist);

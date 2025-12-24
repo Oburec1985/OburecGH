@@ -254,6 +254,17 @@ object GeneratorForm: TGeneratorForm
         Margins.Bottom = 4
         Caption = #1042#1088#1077#1084#1103' '#1079#1072#1087#1080#1089#1080', '#1089#1077#1082'.:'
       end
+      object SLabel: TLabel
+        Left = 6
+        Top = 254
+        Width = 48
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Caption = #1044#1072#1090#1095#1080#1082
+      end
       object ValueEdit: TFloatEdit
         Left = 177
         Top = 241
@@ -490,6 +501,14 @@ object GeneratorForm: TGeneratorForm
           Value = 0
         end
       end
+      object SName: TEdit
+        Left = 5
+        Top = 278
+        Width = 296
+        Height = 25
+        TabOrder = 8
+        Text = 'SName'
+      end
     end
     object SignalSetupPageControl: TPageControl
       Left = 2
@@ -500,7 +519,7 @@ object GeneratorForm: TGeneratorForm
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
-      ActivePage = VibrationTabSheet
+      ActivePage = TahoTabSheet
       Align = alClient
       TabOrder = 1
       object TahoTabSheet: TTabSheet
@@ -514,6 +533,7 @@ object GeneratorForm: TGeneratorForm
           Top = 0
           Width = 634
           Height = 293
+          Cursor = crSizeAll
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4

@@ -86,10 +86,13 @@ var
   I,count: Integer;
 begin
   count:=length(offsets);
-  blades[0]:=0;
-  for I := 1 to count - 1 do
+  if count>0 then
   begin
-    blades[i]:=offsets[i-1] + blades[i-1];
+    blades[0]:=0;
+    for I := 1 to count - 1 do
+    begin
+      blades[i]:=offsets[i-1] + blades[i-1];
+    end;
   end;
 end;
 

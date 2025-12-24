@@ -310,8 +310,10 @@ begin
   rect.BottomLeft.y := minP2.y;
   rect.topright.x := MaxP2.x;
   rect.topright.y := MaxP2.y;
-
-  ZoomfRect(rect);
+  if getpage<>nil then
+  begin
+    ZoomfRect(rect);
+  end;
 end;
 
 procedure cAxis.SaveObjAttributes(xmlNode: txmlNode);
@@ -342,6 +344,7 @@ begin
   end;
   if page = nil then
     exit;
+  page.updateaxispos;
   index := page.getaxiscount;
   // увеличиваем отступ для оси
   if index > 1 then
@@ -513,6 +516,10 @@ procedure cAxis.drawAxis;
 var
   page: cpage;
 begin
+  //if length(axisdata)=0 then
+  begin
+  //  exit;
+  end;
   page := cpage(getpage);
   page.setCommonVP;
   glMatrixMode(gl_projection);
@@ -742,6 +749,8 @@ begin
     end;
   end;
   page := cpage(getpage);
+  //if page<>nil then
+
   if page.lgx then
   begin
     if lrect.topright.x <= 0 then

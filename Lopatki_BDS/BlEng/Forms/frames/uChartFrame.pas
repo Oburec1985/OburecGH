@@ -25,8 +25,8 @@ type
     ToolBar1: TToolBar;
     PageCountSE: TSpinEdit;
     DigitsLV: TBtnListView;
-    cChart1: cChart;
     cChart2: cChart;
+    cChart1: cChart;
     procedure cChart1Init(Sender: TObject);
     procedure onUpdateTimeProcPlayFunc(sender:tobject);
     procedure glTurbineFrame1ApplyBtnClick(Sender: TObject);
@@ -79,9 +79,9 @@ var
 begin
   li:=DigitsLV.Items.Add;
   li.data:=tag;
-  DigitsLV.SetSubItemByColumnName(v_ColNum,inttostr(li.index),li);
-  DigitsLV.SetSubItemByColumnName(v_ColName,tag.name,li);
-  DigitsLV.SetSubItemByColumnName(v_ColType,tag.TypeString,li);
+  DigitsLV.SetSubItemByColumnName(c_ColNum,inttostr(li.index),li);
+  DigitsLV.SetSubItemByColumnName(c_ColName,tag.name,li);
+  DigitsLV.SetSubItemByColumnName(c_ColType,tag.TypeString,li);
   if tag.source<>nil then
   begin
     if tag.source is cBasebldalg then
@@ -93,8 +93,8 @@ begin
   begin
     str:='';
   end;
-  DigitsLV.SetSubItemByColumnName(v_ColAdress,str,li);
-  DigitsLV.SetSubItemByColumnName(v_ColValue,'',li);
+  DigitsLV.SetSubItemByColumnName(c_ColAdress,str,li);
+  DigitsLV.SetSubItemByColumnName(c_ColValue,'',li);
 end;
 
 procedure TChartFrame.InitTags;
@@ -123,12 +123,12 @@ begin
     if tag is cscalartag then
     begin
       val:=formatstr(cscalartag(tag).value,tproc.prec);
-      DigitsLV.SetSubItemByColumnName(v_ColValue,val,li);
+      DigitsLV.SetSubItemByColumnName(c_ColValue,val,li);
     end;
     if tag is c2scalartag then
     begin
       val:=formatstr(c2scalartag(tag).value.y,tproc.prec);
-      DigitsLV.SetSubItemByColumnName(v_ColValue,val,li);
+      DigitsLV.SetSubItemByColumnName(c_ColValue,val,li);
     end;
   end;
   DigitsLV.Invalidate;

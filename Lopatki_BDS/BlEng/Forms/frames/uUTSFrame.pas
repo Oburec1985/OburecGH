@@ -41,7 +41,7 @@ begin
 
   UTSLV.Columns.Clear;
   col:=UTSLV.Columns.Add;
-  col.Caption:=v_ColNum;
+  col.Caption:=c_ColNum;
   col.width:=100;
   // добавляем колонку время в тиках
   col:=UTSLV.Columns.Add;
@@ -49,7 +49,7 @@ begin
   col.width:=100;
   // добавляем колонку время в секундах
   col:=UTSLV.Columns.Add;
-  col.Caption:=v_Time;
+  col.Caption:=c_Time;
   col.width:=100;
 end;
 
@@ -58,9 +58,9 @@ var
   li:tlistitem;
 begin
   li:=UTSLV.items.Add;
-  UTSLV.SetSubItemByColumnName(v_ColNum, inttostr(li.Index), li);
+  UTSLV.SetSubItemByColumnName(c_ColNum, inttostr(li.Index), li);
   UTSLV.SetSubItemByColumnName(v_ColTick, ticktostr(tick),  li);
-  UTSLV.SetSubItemByColumnName(v_Time, floattostr(t), li);
+  UTSLV.SetSubItemByColumnName(c_Time, floattostr(t), li);
 end;
 
 procedure TUTSFrame.ShowTicks;

@@ -2,21 +2,19 @@ object TrendFrame: TTrendFrame
   Left = 0
   Top = 0
   Width = 451
-  Height = 324
+  Height = 304
   Align = alClient
   Constraints.MinHeight = 304
   TabOrder = 0
-  ExplicitHeight = 304
   object PointGB: TGroupBox
     Left = 0
     Top = 0
     Width = 451
-    Height = 324
+    Height = 304
     Align = alClient
     Caption = #1054#1090#1088#1080#1089#1086#1074#1082#1072' '#1074#1077#1088#1096#1080#1085
     Constraints.MinHeight = 168
     TabOrder = 0
-    ExplicitHeight = 304
     object ColorPointLabel: TLabel
       Left = 4
       Top = 17

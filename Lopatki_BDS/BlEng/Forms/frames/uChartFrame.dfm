@@ -1,30 +1,32 @@
 object ChartFrame: TChartFrame
   Left = 0
   Top = 0
-  Width = 451
-  Height = 304
+  Width = 1034
+  Height = 626
   Align = alClient
   TabOrder = 0
   TabStop = True
+  ExplicitWidth = 451
+  ExplicitHeight = 304
   object formulyarsTC: TPageControl
     Left = 0
     Top = 0
-    Width = 451
-    Height = 304
-    ActivePage = AutoPage
+    Width = 1034
+    Height = 626
+    ActivePage = ChartTabSheet
     Align = alClient
     TabOrder = 0
+    ExplicitWidth = 451
+    ExplicitHeight = 304
     object ChartTabSheet: TTabSheet
       Caption = #1043#1088#1072#1092#1080#1082#1080
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
+      ExplicitWidth = 443
       ExplicitHeight = 273
       object Splitter2: TSplitter
         Left = 0
         Top = 0
         Width = 5
-        Height = 502
+        Height = 595
         ExplicitLeft = 148
         ExplicitTop = -24
         ExplicitHeight = 512
@@ -32,33 +34,29 @@ object ChartFrame: TChartFrame
       object cChart1: cChart
         Left = 5
         Top = 0
-        Width = 669
-        Height = 502
+        Width = 1021
+        Height = 595
+        Cursor = crSizeAll
         Align = alClient
         Caption = 'cChart1'
+        Color = clActiveCaption
+        ParentBackground = False
         TabOrder = 0
         allowEditPages = False
         showTV = True
         showLegend = True
         selectSize = 5
-        ExplicitLeft = 274
-        ExplicitTop = -127
-        ExplicitWidth = 400
-        ExplicitHeight = 400
+        ExplicitLeft = 3
       end
     end
     object DigitFormTabSheet: TTabSheet
       Caption = #1062#1080#1092#1088#1086#1074#1086#1081' '#1092#1086#1088#1084#1091#1083#1103#1088
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 273
       object DigitsLV: TBtnListView
         Left = 0
         Top = 0
-        Width = 674
-        Height = 502
+        Width = 1026
+        Height = 595
         Align = alClient
         Columns = <>
         RowSelect = True
@@ -70,32 +68,22 @@ object ChartFrame: TChartFrame
         DrawColorBox = False
         ChangeTextColor = False
         Editable = False
-        ExplicitLeft = 176
-        ExplicitTop = 80
-        ExplicitWidth = 250
-        ExplicitHeight = 150
       end
     end
     object VisualTabSheet: TTabSheet
       Caption = #1043#1088#1072#1092#1080#1095#1077#1089#1082#1080#1081' '#1092#1086#1088#1084#1091#1083#1103#1088
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 273
       object TurbineGLGB: TGroupBox
         Left = 0
         Top = 0
-        Width = 674
-        Height = 502
+        Width = 1026
+        Height = 595
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 443
-        ExplicitHeight = 273
         object Splitter1: TSplitter
           Left = 2
-          Top = 491
-          Width = 670
+          Top = 584
+          Width = 1022
           Height = 9
           Cursor = crVSplit
           Align = alBottom
@@ -109,23 +97,31 @@ object ChartFrame: TChartFrame
         inline glTurbineFrame1: TglTurbineFrame
           Left = 2
           Top = 18
-          Width = 670
-          Height = 473
+          Width = 1022
+          Height = 566
           Align = alClient
           TabOrder = 0
           TabStop = True
           ExplicitLeft = 2
           ExplicitTop = 18
-          ExplicitWidth = 439
-          ExplicitHeight = 244
+          ExplicitWidth = 1022
+          ExplicitHeight = 566
           inherited EditTurbGB: TGroupBox
-            Height = 473
-            ExplicitHeight = 244
+            Height = 566
+            ExplicitHeight = 566
             inherited ApplyBtn: TButton
-              Top = 288
+              Top = 381
               OnClick = glTurbineFrame1ApplyBtnClick
-              ExplicitTop = 59
+              ExplicitTop = 381
             end
+          end
+          inherited cBaseGlComponent1: cBaseGlComponent
+            Width = 909
+            Height = 566
+            ExplicitLeft = 113
+            ExplicitTop = 0
+            ExplicitWidth = 909
+            ExplicitHeight = 566
           end
         end
       end
@@ -136,15 +132,16 @@ object ChartFrame: TChartFrame
       object ToolBar1: TToolBar
         Left = 0
         Top = 0
-        Width = 443
+        Width = 1026
         Height = 29
+        ButtonHeight = 26
         Caption = 'ToolBar1'
         TabOrder = 0
         object PageCountSE: TSpinEdit
           Left = 0
           Top = 0
           Width = 49
-          Height = 22
+          Height = 26
           Hint = #1063#1080#1089#1083#1086' '#1089#1090#1088#1072#1085#1080#1094
           MaxValue = 16
           MinValue = 1
@@ -158,8 +155,9 @@ object ChartFrame: TChartFrame
       object cChart2: cChart
         Left = 0
         Top = 29
-        Width = 443
-        Height = 247
+        Width = 1026
+        Height = 566
+        Cursor = crSizeAll
         Align = alClient
         Caption = 'cChart1'
         TabOrder = 1

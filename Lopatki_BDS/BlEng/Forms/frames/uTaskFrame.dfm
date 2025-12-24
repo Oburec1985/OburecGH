@@ -1,16 +1,14 @@
 object TaskFrame: TTaskFrame
   Left = 0
   Top = 0
-  Width = 644
-  Height = 412
+  Width = 451
+  Height = 304
   Align = alClient
   TabOrder = 0
-  ExplicitWidth = 451
-  ExplicitHeight = 304
   object Splitter1: TSplitter
     Left = 0
     Top = 224
-    Width = 644
+    Width = 451
     Height = 3
     Cursor = crVSplit
     Align = alTop
@@ -21,11 +19,10 @@ object TaskFrame: TTaskFrame
   object GroupBox1: TGroupBox
     Left = 0
     Top = 39
-    Width = 644
+    Width = 451
     Height = 185
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 451
     object TaskLV: TBtnListView
       Left = 2
       Top = 15
@@ -41,19 +38,19 @@ object TaskFrame: TTaskFrame
       QuoteColumnBtnClick = False
       QuoteColumnDblClick = False
       DrawColorBox = False
+      ChangeTextColor = False
+      Editable = False
       ExplicitWidth = 447
     end
   end
   object GroupBox2: TGroupBox
     Left = 0
     Top = 227
-    Width = 644
-    Height = 185
+    Width = 451
+    Height = 77
     Align = alClient
     Caption = #1057#1074#1086#1081#1089#1090#1074#1072' '#1079#1072#1076#1072#1095#1080
     TabOrder = 1
-    ExplicitWidth = 451
-    ExplicitHeight = 77
     object AlgLV: TBtnListView
       Left = 2
       Top = 15
@@ -68,6 +65,8 @@ object TaskFrame: TTaskFrame
       QuoteColumnBtnClick = False
       QuoteColumnDblClick = False
       DrawColorBox = False
+      ChangeTextColor = False
+      Editable = False
       ExplicitHeight = 60
     end
     object TaskPropertiesGB: TGroupBox
@@ -83,15 +82,15 @@ object TaskFrame: TTaskFrame
       object tahoLabel: TLabel
         Left = 7
         Top = 15
-        Width = 64
-        Height = 13
+        Width = 72
+        Height = 16
         Caption = #1058#1072#1093#1086' '#1076#1072#1090#1095#1080#1082
       end
       object FrameTimeLabel: TLabel
         Left = 180
         Top = 14
-        Width = 88
-        Height = 13
+        Width = 101
+        Height = 16
         Caption = #1042#1088#1077#1084#1103' '#1082#1072#1076#1088#1072', '#1089#1077#1082
       end
       object SelectSensorsBtn: TButton
@@ -117,7 +116,7 @@ object TaskFrame: TTaskFrame
         Height = 22
         Increment = 0.100000001490116100
         TabOrder = 2
-        Value = 0.100000001490116100
+        Value = 0.100000001490116000
       end
       object Button1: TButton
         Left = 296
@@ -133,7 +132,7 @@ object TaskFrame: TTaskFrame
   object ToolBar: TToolBar
     Left = 0
     Top = 0
-    Width = 644
+    Width = 451
     Height = 39
     ButtonHeight = 38
     ButtonWidth = 39
@@ -142,7 +141,6 @@ object TaskFrame: TTaskFrame
     ParentShowHint = False
     ShowHint = True
     TabOrder = 2
-    ExplicitWidth = 451
     object AddTagBtn: TToolButton
       Left = 0
       Top = 0
@@ -164,7 +162,7 @@ object TaskFrame: TTaskFrame
     Width = 32
     Left = 80
     Bitmap = {
-      494C010102000400040020002000FFFFFFFFFF00FFFFFFFFFFFFFFFF424D3600
+      494C010102000500040020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000002000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -696,6 +694,7 @@ object TaskFrame: TTaskFrame
       FFC003FFFFFFFFFF0000000000000000FFC003FFFFFFFFFF0000000000000000
       FFC003FFFFFFFFFF0000000000000000FFC007FFFFFFFFFF0000000000000000
       FFE007FFFFFFFFFF0000000000000000FFFFFFFFFFFFFFFF0000000000000000
-      FFFFFFFFFFFFFFFF0000000000000000}
+      FFFFFFFFFFFFFFFF000000000000000000000000000000000000000000000000
+      000000000000}
   end
 end

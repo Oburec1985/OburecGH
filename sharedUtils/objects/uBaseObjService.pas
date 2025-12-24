@@ -37,14 +37,18 @@ type
 
   procedure DeleteStrings;
 
+const
+  c_ColNum = '№';
+  c_ColName = 'Имя';
+  c_ColType = 'Тип';
+  c_ColAdress = 'Адрес';
+  c_ColValue = 'Значение';
+  c_ColDsc = 'Описание';
+  c_ColSensorPos = 'Положение';
+  c_StageStr = 'Ступень';
+  c_Time = 'Время';
+
 var
-  v_ColName,
-  v_ColNum,
-  v_ColAdress,
-  v_ColValue,
-  v_ColDSC,
-  v_Time,
-  v_ColType,
   v_recentfiles,
   v_Helpfiles,
   v_StrNotFound
@@ -61,10 +65,10 @@ begin
   begin
     li:=lv.items.add;
     li.ImageIndex:=obj.imageindex;
-    lv.SetSubItemByColumnName(v_ColName,obj.Name,li);
-    lv.SetSubItemByColumnName(v_ColNum,inttostr(li.Index),li);
+    lv.SetSubItemByColumnName('Имя',obj.Name,li);
+    lv.SetSubItemByColumnName('№',inttostr(li.Index),li);
     // вписать тип датчика
-    lv.SetSubItemByColumnName(v_ColType,obj.typestring,li);
+    lv.SetSubItemByColumnName('Тип',obj.typestring,li);
   end;
 end;
 
@@ -232,14 +236,6 @@ begin
     keys.Destroy;
     ifile.Destroy;
   end;
-
-  v_ColName:= GetConstString('ColName','№');
-  v_ColNum:= GetConstString('ColNum', 'Name');
-  v_ColType:= GetConstString('ColType', 'Type');
-  v_ColAdress:=GetConstString('ColAdress', 'Adress');
-  v_ColValue:=GetConstString('ColValue', 'Value');
-  v_ColDSC:=GetConstString('ColDsc', 'Dsc');
-  v_Time:=GetConstString('ColTime', 'Time');
   v_recentfiles:=GetConstString('RecentFiles', 'RecentFiles');
   v_Helpfiles:=GetConstString('Help', 'Help');
   v_StrNotFound:=GetConstString('StrNotFound', 'String Not Found');

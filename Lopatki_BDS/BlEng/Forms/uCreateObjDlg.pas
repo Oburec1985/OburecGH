@@ -152,8 +152,11 @@ begin
   end
   else
   begin
-    curobj.destroy;
-    curobj:=nil;
+    if curobj<>nil then
+    begin
+      curobj.destroy;
+      curobj:=nil;
+    end;
   end;
 end;
 

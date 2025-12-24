@@ -14,15 +14,15 @@ object BaseObjPropertyFrame: TBaseObjPropertyFrame
   object NameLabel: TLabel
     Left = 3
     Top = 1
-    Width = 65
-    Height = 13
+    Width = 74
+    Height = 16
     Caption = #1048#1084#1103' '#1086#1073#1098#1077#1082#1090#1072
   end
   object TypeLabel: TLabel
     Left = 131
     Top = 1
-    Width = 64
-    Height = 13
+    Width = 73
+    Height = 16
     Caption = #1058#1080#1087' '#1086#1073#1098#1077#1082#1090#1072
   end
   object TypeImage: TImage
@@ -35,8 +35,8 @@ object BaseObjPropertyFrame: TBaseObjPropertyFrame
   object Label1: TLabel
     Left = 3
     Top = 45
-    Width = 94
-    Height = 13
+    Width = 106
+    Height = 16
     Caption = #1057#1074#1086#1081#1089#1090#1074#1072' '#1086#1073#1098#1077#1082#1090#1072
   end
   object NameEdit: TEdit
@@ -88,6 +88,8 @@ object BaseObjPropertyFrame: TBaseObjPropertyFrame
     QuoteColumnBtnClick = False
     QuoteColumnDblClick = False
     DrawColorBox = False
+    ChangeTextColor = False
+    Editable = False
     ExplicitHeight = 110
   end
 end

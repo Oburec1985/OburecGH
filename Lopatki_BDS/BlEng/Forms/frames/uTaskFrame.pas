@@ -57,16 +57,16 @@ var
 begin
   // №
   col:=TaskLV.Columns.Add;
-  col.Caption:=v_ColNum;
+  col.Caption:=c_ColNum;
   // Имя задачи
   col:=TaskLV.Columns.Add;
-  col.Caption:=v_ColName;
+  col.Caption:=c_ColName;
   // время обновления (период потока)
   col:=TaskLV.Columns.Add;
   col.Caption:=v_UpdateTime;
   // размер кадра
   col:=TaskLV.Columns.Add;
-  col.Caption:=v_Time;
+  col.Caption:=c_Time;
   // Тахо датчик
   col:=TaskLV.Columns.Add;
   col.Caption:=v_Rot;
@@ -78,7 +78,7 @@ var
 begin
   // №
   col:=AlgLV.Columns.Add;
-  col.Caption:=v_ColNum;
+  col.Caption:=c_ColNum;
   // алгоритм
   col:=AlgLV.Columns.Add;
   col.Caption:=v_ColAlgName;
@@ -99,7 +99,7 @@ begin
       li:=AlgLV.items.add;
       li.data:=a;
       a:= task.Thread.getalg(i);
-      AlgLV.setsubitembycolumnname(v_ColNum,inttostr(i),li);
+      AlgLV.setsubitembycolumnname(c_ColNum,inttostr(i),li);
       AlgLV.setsubitembycolumnname(v_ColAlgName,a.name,li);
     end;
     Frametimese.Value:=task.Thread.dT;
@@ -124,10 +124,10 @@ begin
     t:=ctask(tproc.TaskList.getobj(i));
     li:=tasklv.Items.add;
     li.data:=t;
-    TaskLV.setsubitembycolumnname(v_ColNum, inttostr(i),li);
-    TaskLV.setsubitembycolumnname(v_ColName, t.name,li);
+    TaskLV.setsubitembycolumnname(c_ColNum, inttostr(i),li);
+    TaskLV.setsubitembycolumnname(c_ColName, t.name,li);
     // Обрабатываемый интервал
-    TaskLV.setsubitembycolumnname(v_Time, floattostr(t.Thread.dT),li);
+    TaskLV.setsubitembycolumnname(c_Time, floattostr(t.Thread.dT),li);
     // период
     TaskLV.setsubitembycolumnname(v_UpdateTime,
                                  floattostr(t.Thread.period),li);

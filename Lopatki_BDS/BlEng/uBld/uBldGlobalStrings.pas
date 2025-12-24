@@ -5,9 +5,6 @@ uses
   uBaseObjService;
 
 Var
-  v_Num,
-  v_Name,
-  v_Type,
   v_Src,
   v_Dsc,
   v_DrawObj,
@@ -24,7 +21,6 @@ Var
   v_Rot,
   v_Plats,
   v_Channels,
-  v_ColSensorPos,
   v_ColEdgeSensor,
   v_ColRootSensor,
   v_ColSkipBlades,
@@ -79,7 +75,6 @@ begin
   v_Rot:= GetConstString('Rot');
   v_Plats:=GetConstString('Plats');
   v_Channels:=GetConstString('Channels');
-  v_ColSensorPos:=GetConstString('ColSensorPos');
   v_ColRootSensor:= GetConstString('ColRootSensor');
   v_ColEdgeSensor:=GetConstString('ColEdgeSensor');
   v_ColSkipBlades:=GetConstString('ColSkipBlades');
@@ -111,9 +106,6 @@ begin
   v_ShortDscTrend:=GetConstString('ShortDscTrend');
   v_ShortDscMultiSensor:=GetConstString('ShortDscMultiSensor');
   v_OscTagDsc:=GetConstString('OscTagDsc');
-  v_Num:=GetConstString('ColNum');
-  v_Name:=GetConstString('ColName');
-  v_Type:=GetConstString('ColType');
   v_Src:=GetConstString('ColSrc');
   v_Dsc:=GetConstString('ColDsc');
   v_DrawObj:=GetConstString('ColDrawObj');

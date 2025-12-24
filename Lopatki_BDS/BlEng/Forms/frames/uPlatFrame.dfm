@@ -7,36 +7,36 @@ object Platframe: TPlatframe
   object BuffSizeLabel: TLabel
     Left = 304
     Top = 13
-    Width = 76
-    Height = 13
+    Width = 90
+    Height = 16
     Caption = #1056#1072#1079#1084#1077#1088' '#1073#1091#1092#1077#1088#1072
   end
   object PeriodLabel: TLabel
     Left = 152
     Top = 13
-    Width = 101
-    Height = 13
+    Width = 117
+    Height = 16
     Caption = #1055#1077#1088#1080#1086#1076' '#1086#1073#1085#1086#1074#1083#1077#1085#1080#1103
   end
   object Label1: TLabel
     Left = 3
     Top = 13
-    Width = 42
-    Height = 13
+    Width = 47
+    Height = 16
     Caption = #1063#1072#1089#1090#1086#1090#1072
   end
   object ModeLabel: TLabel
     Left = 504
     Top = 13
-    Width = 32
-    Height = 13
+    Width = 39
+    Height = 16
     Caption = #1056#1077#1078#1080#1084
   end
   object BufSizeCB: TComboBox
     Left = 304
     Top = 32
     Width = 169
-    Height = 21
+    Height = 24
     TabOrder = 0
     Text = '128'
     Items.Strings = (
@@ -55,7 +55,7 @@ object Platframe: TPlatframe
     Height = 22
     Increment = 0.100000001490116100
     TabOrder = 1
-    Value = 0.100000001490116100
+    Value = 0.100000001490116000
   end
   object FreqFE: TFloatSpinEdit
     Left = 3
@@ -70,7 +70,7 @@ object Platframe: TPlatframe
     Left = 504
     Top = 32
     Width = 169
-    Height = 21
+    Height = 24
     ItemIndex = 0
     TabOrder = 3
     Text = #1057#1080#1085#1093#1088#1086#1085#1085#1099#1081

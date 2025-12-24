@@ -18,50 +18,50 @@ object SensorFrame: TSensorFrame
     object TypeLabel: TLabel
       Left = 5
       Top = 16
-      Width = 64
-      Height = 13
+      Width = 73
+      Height = 16
       Caption = #1058#1080#1087' '#1076#1072#1090#1095#1080#1082#1072
     end
     object OffsetLabel: TLabel
       Left = 135
       Top = 16
-      Width = 103
-      Height = 13
+      Width = 118
+      Height = 16
       Caption = #1055#1086#1083#1086#1078#1077#1085#1080#1077' '#1076#1072#1090#1095#1080#1082#1072
     end
     object ChunLabel: TLabel
       Left = 244
       Top = 16
-      Width = 70
-      Height = 13
+      Width = 82
+      Height = 16
       Caption = #1053#1086#1084#1077#1088' '#1082#1072#1085#1072#1083#1072
     end
     object TickCountLabel: TLabel
       Left = 346
       Top = 18
-      Width = 63
-      Height = 13
+      Width = 72
+      Height = 16
       Caption = #1063#1080#1089#1083#1086' '#1090#1080#1082#1086#1074
     end
     object SkipBladesLabel: TLabel
       Left = 447
       Top = 18
-      Width = 105
-      Height = 13
+      Width = 118
+      Height = 16
       Caption = #1055#1088#1086#1087#1091#1089#1090#1080#1090#1100' '#1083#1086#1087#1072#1090#1086#1082
     end
     object TahoDivLabel: TLabel
       Left = 346
       Top = 57
-      Width = 94
-      Height = 13
+      Width = 107
+      Height = 16
       Caption = #1054#1090#1085#1086#1096#1077#1085#1080#1077' '#1082' '#1090#1072#1093#1086
     end
     object TypeCB: TComboBox
       Left = 5
       Top = 33
       Width = 124
-      Height = 21
+      Height = 24
       TabOrder = 0
       Items.Strings = (
         #1058#1072#1093#1086
@@ -98,22 +98,22 @@ object SensorFrame: TSensorFrame
       object PairsLVLabel: TLabel
         Left = 133
         Top = 18
-        Width = 57
-        Height = 13
+        Width = 66
+        Height = 16
         Caption = #1057#1087#1080#1089#1086#1082' '#1087#1072#1088
       end
       object StagesLabel: TLabel
         Left = 5
         Top = 18
-        Width = 43
-        Height = 13
+        Width = 48
+        Height = 16
         Caption = #1057#1090#1091#1087#1077#1085#1080
       end
       object StageCB: TComboBox
         Left = 3
         Top = 39
         Width = 124
-        Height = 21
+        Height = 24
         TabOrder = 0
       end
       object PairsListView: TBtnListView
@@ -142,6 +142,8 @@ object SensorFrame: TSensorFrame
         QuoteColumnBtnClick = False
         QuoteColumnDblClick = False
         DrawColorBox = False
+        ChangeTextColor = False
+        Editable = False
         ExplicitWidth = 1805
       end
     end

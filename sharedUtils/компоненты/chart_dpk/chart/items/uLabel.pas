@@ -76,7 +76,6 @@ type
     procedure SetHeigth(h: integer);
     procedure SetWidth(w: integer);
     procedure correctBorderOffset;
-    procedure doUpdateWorldSize(sender: tobject); override;
     procedure reEvalScales;
     // x - строка, y - символ
     function GetCharIndexByPos(p: point2): tpoint;
@@ -88,9 +87,13 @@ type
     function TextRightPos: single;
     function EvalRowBound(row: integer; font: cfont; startindex: integer;
       lastindex: integer): frect;
+    // добавлены пустые 17.12.25 для отмены события onResize и OnZoom
+    procedure DeleteEvents;override;
+    procedure CreateEvents;override;
   public
     property OnKeyEnter: TKeyEvent read fKeyDown write fKeyDown;
   public
+    procedure doUpdateWorldSize(sender: tobject); override;
     procedure setMng(m: tobject); override;
     function EvalRowHeigth: double; overload;
     function EvalRowHeigth(p_font: cfont): double; overload;
@@ -120,6 +123,16 @@ implementation
 
 uses
   uchart, uBasePage, upage, uaxis;
+
+procedure cLabel.DeleteEvents;
+begin
+
+end;
+
+procedure cLabel.CreateEvents;
+begin
+
+end;
 
 function cLabel.TestObj(p_p2: point2; dist: single): boolean;
 var

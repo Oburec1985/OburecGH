@@ -21,15 +21,15 @@ object DrawObjFrame: TDrawObjFrame
   object NameLabel: TLabel
     Left = 3
     Top = 10
-    Width = 65
-    Height = 13
+    Width = 74
+    Height = 16
     Caption = #1048#1084#1103' '#1086#1073#1098#1077#1082#1090#1072
   end
   object TypeLabel: TLabel
     Left = 131
     Top = 10
-    Width = 64
-    Height = 13
+    Width = 73
+    Height = 16
     Caption = #1058#1080#1087' '#1086#1073#1098#1077#1082#1090#1072
   end
   object TypeImage: TImage

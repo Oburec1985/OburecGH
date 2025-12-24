@@ -79,6 +79,7 @@ type
     procedure SetVisible(b:boolean);virtual;
   public
     // происходит когда обновился масштаб оси объекта
+    // e_onResize + E_OnZoom. Закомент в Events от 17.12.2025
     procedure doUpdateWorldSize(sender: tobject); virtual;
   public
     function getCarrierPage:cdrawobj;
@@ -306,6 +307,7 @@ var
 begin
   p := cbasepage(getpage);
   //if p<>nil then
+  if (GetFWidth<>0) and (GetFHeigth<>0) then
   begin
     result.x := round(p.getwidth * Size.x / GetFWidth);
     result.y := round(p.getheight * Size.y / GetFHeigth);

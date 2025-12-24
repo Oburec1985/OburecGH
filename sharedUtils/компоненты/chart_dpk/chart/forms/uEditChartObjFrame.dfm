@@ -2,10 +2,9 @@ object EditDrawObjFrame: TEditDrawObjFrame
   Left = 0
   Top = 0
   Width = 451
-  Height = 563
+  Height = 304
   Align = alClient
   TabOrder = 0
-  ExplicitHeight = 304
   object DrawObjGB: TGroupBox
     Left = 0
     Top = 0
@@ -16,15 +15,15 @@ object EditDrawObjFrame: TEditDrawObjFrame
     TabOrder = 0
     inline DrawObjFrame1: TDrawObjFrame
       Left = 2
-      Top = 15
+      Top = 18
       Width = 447
-      Height = 96
+      Height = 93
       Align = alClient
       TabOrder = 0
       ExplicitLeft = 2
-      ExplicitTop = 15
+      ExplicitTop = 18
       ExplicitWidth = 447
-      ExplicitHeight = 96
+      ExplicitHeight = 93
     end
   end
   object TrendGB: TGroupBox
@@ -37,18 +36,19 @@ object EditDrawObjFrame: TEditDrawObjFrame
     TabOrder = 1
     inline TrendFrame1: TTrendFrame
       Left = 2
-      Top = 15
+      Top = 18
       Width = 447
-      Height = 168
+      Height = 165
       Align = alClient
+      Constraints.MinHeight = 304
       TabOrder = 0
       ExplicitLeft = 2
-      ExplicitTop = 15
+      ExplicitTop = 18
       ExplicitWidth = 447
-      ExplicitHeight = 168
+      ExplicitHeight = 165
       inherited PointGB: TGroupBox
         Width = 447
-        Height = 168
+        Height = 165
         ExplicitWidth = 447
         ExplicitHeight = 168
       end
@@ -64,15 +64,15 @@ object EditDrawObjFrame: TEditDrawObjFrame
     TabOrder = 2
     inline GistFrame1: TGistFrame
       Left = 2
-      Top = 15
+      Top = 18
       Width = 447
-      Height = 142
+      Height = 139
       Align = alClient
       TabOrder = 0
       ExplicitLeft = 2
-      ExplicitTop = 15
+      ExplicitTop = 18
       ExplicitWidth = 447
-      ExplicitHeight = 142
+      ExplicitHeight = 139
     end
   end
 end

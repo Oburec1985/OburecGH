@@ -39,6 +39,9 @@
 			<Projects Include="..\recorder\plgOscill\plgOscill.dproj">
 				<Dependencies/>
 			</Projects>
+			<Projects Include="BlEng\BlEng.dproj">
+				<Dependencies/>
+			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -157,14 +160,23 @@
 		<Target Name="plgOscill:Make">
 			<MSBuild Targets="Make" Projects="..\recorder\plgOscill\plgOscill.dproj"/>
 		</Target>
+		<Target Name="BlEng">
+			<MSBuild Projects="BlEng\BlEng.dproj"/>
+		</Target>
+		<Target Name="BlEng:Clean">
+			<MSBuild Targets="Clean" Projects="BlEng\BlEng.dproj"/>
+		</Target>
+		<Target Name="BlEng:Make">
+			<MSBuild Targets="Make" Projects="BlEng\BlEng.dproj"/>
+		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;plgEvalFRF;ProjectFFT;plg3120Cyclogram;plgOscill"/>
+			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;plgEvalFRF;ProjectFFT;plg3120Cyclogram;plgOscill;BlEng"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;plgEvalFRF:Clean;ProjectFFT:Clean;plg3120Cyclogram:Clean;plgOscill:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;plgEvalFRF:Clean;ProjectFFT:Clean;plg3120Cyclogram:Clean;plgOscill:Clean;BlEng:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;plgEvalFRF:Make;ProjectFFT:Make;plg3120Cyclogram:Make;plgOscill:Make"/>
+			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;plgEvalFRF:Make;ProjectFFT:Make;plg3120Cyclogram:Make;plgOscill:Make;BlEng:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

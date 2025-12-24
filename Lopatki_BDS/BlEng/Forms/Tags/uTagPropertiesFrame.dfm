@@ -11,29 +11,29 @@ object TagPropertiesFrame: TTagPropertiesFrame
   object TagNameLabel: TLabel
     Left = 3
     Top = 5
-    Width = 45
-    Height = 13
+    Width = 52
+    Height = 16
     Caption = #1048#1084#1103' '#1090#1077#1075#1072
   end
   object DscLabel: TLabel
     Left = 3
     Top = 53
-    Width = 75
-    Height = 13
+    Width = 86
+    Height = 16
     Caption = #1054#1087#1080#1089#1072#1085#1080#1077' '#1090#1077#1075#1072
   end
   object TheresholdLabel: TLabel
     Left = 3
     Top = 141
-    Width = 42
-    Height = 13
+    Width = 46
+    Height = 16
     Caption = #1059#1089#1090#1072#1074#1082#1080
   end
   object DrawObjLabel: TLabel
     Left = 3
     Top = 95
-    Width = 55
-    Height = 13
+    Width = 62
+    Height = 16
     Caption = #1054#1090#1088#1080#1089#1086#1074#1082#1072
   end
   object TagNameEdit: TEdit
@@ -68,6 +68,8 @@ object TagPropertiesFrame: TTagPropertiesFrame
     QuoteColumnBtnClick = False
     QuoteColumnDblClick = False
     DrawColorBox = False
+    ChangeTextColor = False
+    Editable = False
   end
   object DrawObjEdit: TEdit
     Left = 3
@@ -123,7 +125,7 @@ object TagPropertiesFrame: TTagPropertiesFrame
     Left = 120
     Top = 344
     Bitmap = {
-      494C010103000400040020002000FFFFFFFFFF00FFFFFFFFFFFFFFFF424D3600
+      494C010103000500040020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000002000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -655,6 +657,7 @@ object TagPropertiesFrame: TTagPropertiesFrame
       FFE00FFFF03FFFFF0000000000000000FFE00FFFF03FFFFF0000000000000000
       FFE00FFFF07FFFFF0000000000000000FFE00FFFFFFFFFFF0000000000000000
       FFE00FFFFFFFFFFF0000000000000000FFFFFFFFFFFFFFFF0000000000000000
-      FFFFFFFFFFFFFFFF0000000000000000}
+      FFFFFFFFFFFFFFFF000000000000000000000000000000000000000000000000
+      000000000000}
   end
 end

@@ -52,23 +52,23 @@ var
 begin
   lv.Columns.Clear;
   col:=lv.Columns.Add;
-  col.Caption:=v_ColNum;
+  col.Caption:=c_ColNum;
   col.width:=100;
   // добавляем колонки с стандартными именами
   col:=lv.Columns.Add;
-  col.Caption:=v_ColName;
+  col.Caption:=c_ColName;
   col.width:=100;
   // добавляем колонку тип
   col:=lv.Columns.Add;
-  col.Caption:=v_ColType;
+  col.Caption:=c_ColType;
   col.width:=100;
   // добавляем колонку источник сигнала
   col:=lv.Columns.Add;
-  col.Caption:=v_ColAdress;
+  col.Caption:=c_ColAdress;
   col.width:=100;
   // добавляем колонку значение
   col:=lv.Columns.Add;
-  col.Caption:=v_ColValue;
+  col.Caption:=c_ColValue;
   col.width:=100;
 end;
 
@@ -78,10 +78,10 @@ var
 begin
   lv.Columns.Clear;
   col:=lv.Columns.Add;
-  col.Caption:=v_ColNum;
+  col.Caption:=c_ColNum;
   // добавляем колонки с стандартными именами
   col:=lv.Columns.Add;
-  col.Caption:=v_ColSensorPos;
+  col.Caption:=c_ColSensorPos;
 end;
 
 procedure showBladesInLV(lv:tbtnlistview; stage:cstage);
@@ -93,8 +93,8 @@ begin
   for I := 0 to stage.BladeCount - 1 do
   begin
     li:=lv.Items.Add;
-    lv.SetSubItemByColumnName(v_ColNum,inttostr(i),li);
-    lv.SetSubItemByColumnName(v_ColSensorPos,floattostr(stage.shape.Blades[i]),li);
+    lv.SetSubItemByColumnName(c_ColNum,inttostr(i),li);
+    lv.SetSubItemByColumnName(c_ColSensorPos,floattostr(stage.shape.Blades[i]),li);
   end;
 end;
 
@@ -109,8 +109,14 @@ begin
     for I := 0 to length(stage.Shape.offset) - 1 do
     begin
       li:=lv.Items.Add;
-      lv.SetSubItemByColumnName(v_ColNum,inttostr(i),li);
-      lv.SetSubItemByColumnName(v_ColSensorPos,formatstr(stage.Shape.offset[i],3),li);
+      lv.SetSubItemByColumnName(c_ColNum,inttostr(i),li);
+      if li.SubItems.Count<1 then
+      begin
+        li.subitems.add(formatstr(stage.Shape.offset[i],3));
+      end
+      else
+        li.subitems[1]:=formatstr(stage.Shape.offset[i],3);
+      //lv.SetSubItemByColumnName(c_ColSensorPos,formatstr(stage.Shape.offset[i],3),li);
     end;
   end;
 end;
@@ -127,8 +133,8 @@ begin
   li:=lv.items.add;
   lv.SetSubItemByColumnName
      (v_Stage,pair.stagename,li);
-  lv.SetSubItemByColumnName(v_ColNum,inttostr(li.index),li);
-  lv.SetSubItemByColumnName(v_ColName,pair.Name,li);
+  lv.SetSubItemByColumnName(c_ColNum,inttostr(li.index),li);
+  lv.SetSubItemByColumnName(c_ColName,pair.Name,li);
   for I := 0 to pair.SensorsCount - 1 do
   begin
     sensor:=pair.GetSensor(i);
@@ -166,19 +172,19 @@ var
   str:string;
 begin
   li:=lv.Items[index];
-  lv.GetSubItemByColumnName(v_Stage,li,str);
+  lv.GetSubItemByColumnName(c_StageStr,li,str);
   sensor.stagename:=str;
   // имя датчика
-  lv.GetSubItemByColumnName(v_ColName,li,str);
+  lv.GetSubItemByColumnName(c_ColName,li,str);
   sensor.name:=str;
   // тип датчика
-  lv.GetSubItemByColumnName(v_ColType,li,str);
+  lv.GetSubItemByColumnName(c_ColType,li,str);
   sensor.sensortype:=sensorstringToInt(str);
   // Номер канала датчика
-  lv.GetSubItemByColumnName(v_ColNum,li,str);
+  lv.GetSubItemByColumnName(c_ColNum,li,str);
   sensor.ChanNumber:=strtoint(str);
   // Позиция датчика
-  lv.GetSubItemByColumnName(v_ColSensorPos,li,str);
+  lv.GetSubItemByColumnName(c_ColSensorPos,li,str);
   if str<>'' then
   begin
     sensor.pos:=strtofloat(str);
@@ -254,7 +260,7 @@ end;
 function GetEngObj(lv:tbtnlistview;eng:cbldEng;li:tlistitem):cbldobj;
 var str:string;
 begin
-  lv.GetSubItemByColumnName(v_ColName,li,str);
+  lv.GetSubItemByColumnName(c_ColName,li,str);
   result:=cbldobj(eng.getobj(str));
 end;
 
@@ -394,14 +400,14 @@ var
 begin
   lv.Columns.Clear;
   col:=lv.Columns.Add;
-  col.Caption:=v_ColNum;
+  col.Caption:=c_ColNum;
   // колонка Имя
   col:=lv.Columns.Add;
-  col.Caption:=v_ColName;
+  col.Caption:=c_ColName;
   col.Width:=70;
   // колонка Тип
   col:=lv.Columns.Add;
-  col.Caption:=v_Stage;
+  col.Caption:=c_StageStr;
   col.Width:=70;
   // колонка Положение
   col:=lv.Columns.Add;
@@ -419,18 +425,18 @@ var
 begin
   lv.Columns.Clear;
   col:=lv.Columns.Add;
-  col.Caption:=v_ColNum;
+  col.Caption:=c_ColNum;
   // колонка Имя
   col:=lv.Columns.Add;
-  col.Caption:=v_ColName;
+  col.Caption:=c_ColName;
   col.Width:=70;
   // колонка Тип
   col:=lv.Columns.Add;
-  col.Caption:=v_ColType;
+  col.Caption:=c_ColType;
   col.Width:=70;
   // колонка Положение
   col:=lv.Columns.Add;
-  col.Caption:=v_ColSensorPos;
+  col.Caption:=c_ColSensorPos;
   col.Width:=70;
   // колонка Пропуск лопаток
   col:=lv.Columns.Add;
@@ -458,12 +464,12 @@ begin
   lv.SetSubItemByColumnName(v_Stage,sensor.stagename,li);
   // Если ступень всего одна, но датчикам ступени не сопоставлены, то относим
   // все датчики к одной ступени
-  lv.SetSubItemByColumnName(v_ColNum,inttostr(sensor.ChanNumber),li);
+  lv.SetSubItemByColumnName(c_ColNum,inttostr(sensor.ChanNumber),li);
   lv.SetSubItemByColumnName(v_ColImpulsNum,inttostr(sensor.ticksCount),li);
-  lv.SetSubItemByColumnName(v_ColName,sensor.Name,li);
-  lv.SetSubItemByColumnName(v_ColSensorPos,floattostr(sensor.pos),li);
+  lv.SetSubItemByColumnName(c_ColName,sensor.Name,li);
+  lv.SetSubItemByColumnName(c_ColSensorPos,floattostr(sensor.pos),li);
   // вписать тип датчика
-  lv.SetSubItemByColumnName(v_ColType,sensor.sensorstring,li);
+  lv.SetSubItemByColumnName(c_ColType,sensor.sensorstring,li);
   lv.SetSubItemByColumnName(v_ColSkipBlades,inttostr(sensor.skipBlade),li);
   lv.SetSubItemByColumnName(v_ColFirstOffset,floattostr(sensor.firstBladeOffset),li);
 end;

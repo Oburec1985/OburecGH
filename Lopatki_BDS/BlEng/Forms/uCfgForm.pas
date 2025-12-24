@@ -133,7 +133,7 @@ begin
   end;
   if ext='.xml' then
   begin
-    result:=LoadXMLFile(name, eng, tmainbldform(mainform).ChartFrame1.cChart1);
+    result:=LoadXMLFile(name, eng, tmainbldform(mainform).GetMainChart);
     if result then
       eng.curCfg:=name;
   end;
@@ -234,11 +234,11 @@ begin
     end;
     if ext='.xml' then
     begin
-      saveXMLFile(SaveDialog.FileName, eng, tMainBldForm(mainform).ChartFrame1.cChart1);
+      saveXMLFile(SaveDialog.FileName, eng, tMainBldForm(mainform).GetMainChart);
     end;
     if ext='.sdt' then
     begin
-      cursor:=cpage(tmainbldform(mainform).ChartFrame1.cChart1.activePage).cursor;
+      //cursor:=cpage(tmainbldform(mainform).ChartFrame1.cChart1.activePage).cursor;
       if GetTimeForm.showmodal_(eng, cursor.getx1, cursor.getx2)=mrok then
       begin
         SaveData(SaveDialog.FileName,eng.channels, GetTimeForm.StartTimeFE.Value, GetTimeForm.EndTimeFE.Value);
@@ -368,12 +368,15 @@ begin
   str:=extractfiledir(application.ExeName)+'\files\3d\resources.ini';
   //ObjInterfaceFrame1.glturbineframe1.cBaseGlComponent1.resources:=str;
   if RecentFilesMng=nil then
+  begin
     RecentFilesMng:=cFileMng.Create(eng.PathMng.findCfgPathFile('RecentFiles.cfg'),
-                                 MainMenu1, recentfiles,TestRecentFiles);
+                    MainMenu1, recentfiles,TestRecentFiles);
+  end;
   showObj(nil);
   WindowState:=wsMaximized;
   objinterfaceframe1.Visible:=false;
 end;
+
 // происходит при обновлении движка
 procedure TCfgForm.showObj(obj:tobject);
 begin
@@ -408,7 +411,7 @@ end;
 procedure TCfgForm.setselected(obj:cbldobj);
 begin
   selected:=obj;
-  ObjInterfaceFrame1.chart:=tmainbldform(mainform).ChartFrame1.cChart1;
+  //ObjInterfaceFrame1.chart:=tmainbldform(mainform).ChartFrame1.cChart1;
   ObjInterfaceFrame1.getObj(obj);
   if obj<>nil then
     objinterfaceframe1.Visible:=true;

@@ -144,7 +144,8 @@ begin
   clear;
   objects.Destroy;
   cRegClassesList(regclasses).Destroy;
-  //GetMngObjForm.destroy;
+  if GetMngObjForm<>nil then
+    GetMngObjForm.destroy;
 end;
 
 procedure cBaseObjMng.doAfterLoadXML;

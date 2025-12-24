@@ -1,0 +1,38 @@
+<Root>
+	<ObjectsCfg>
+		<cTurbine ObjType="cTurbine" Node="cTurbine" AutoCreate="false" Caption="cTurbine" Filename="">
+			<cStage ObjType="cStage" Node="cStage" AutoCreate="false" Caption="cStage" Diametr="100" BladeCount="30" blade_0="0" blade_1="12" blade_2="24" blade_3="36" blade_4="48" blade_5="60" blade_6="72" blade_7="84" blade_8="96" blade_9="108" blade_10="120" blade_11="132" blade_12="144" blade_13="156" blade_14="168" blade_15="180" blade_16="192" blade_17="204" blade_18="216" blade_19="228" blade_20="240" blade_21="252" blade_22="264" blade_23="276" blade_24="288" blade_25="300" blade_26="312" blade_27="324" blade_28="336" blade_29="348">
+				<Датчики ObjType="cSensorList" Node="Датчики" AutoCreate="true" Caption="Датчики">
+					<S_30 ObjType="cSensor" Node="S_30" AutoCreate="false" Caption="S_30" Chan="1" Position="30" SensorType="0" SkipBlades="0" FirstBladeOffset="-1"/>
+					<S_45 ObjType="cSensor" Node="S_45" AutoCreate="false" Caption="S_45" Chan="2" Position="45" SensorType="1" SkipBlades="0" FirstBladeOffset="-1"/>
+					<Тахо ObjType="cSensor" Node="Тахо" AutoCreate="false" Caption="Тахо" Chan="0" Position="0" SensorType="4" SkipBlades="0" FirstBladeOffset="-1"/>
+				</Датчики>
+				<Пары ObjType="cPairList" Node="Пары" AutoCreate="true" Caption="Пары"/>
+			</cStage>
+		</cTurbine>
+	</ObjectsCfg>
+	<UICfg>
+		<cPageMngList ObjType="cPageMngList" Node="cPageMngList" AutoCreate="false" Caption="cPageMngList" Color_R="0" Color_G="0" Color_B="0">
+			<Pages ObjType="cPageMng" Node="Pages" AutoCreate="false" Caption="Pages" Color_R="0" Color_G="0" Color_B="0">
+				<Page ObjType="cPage" Node="Page" AutoCreate="false" Caption="Page_0010" Color_R="1" Color_G="1" Color_B="1" Bound_Left="0" Bound_Right="1" Bound_Top="1" Bound_Bottom="0" Cursor_visible="true">
+					<Axises ObjType="cDrawObj" Node="Axises" AutoCreate="true" Caption="Axises" Color_R="0" Color_G="0" Color_B="0">
+						<cAxis ObjType="cAxis" Node="cAxis" AutoCreate="false" Caption="cAxis" Color_R="0" Color_G="0" Color_B="0" Min.X="0" Min.Y="0" Max.X="0" Max.Y="1"/>
+					</Axises>
+					<cDoubleCursor ObjType="cDoubleCursor" Node="cDoubleCursor" AutoCreate="true" Caption="cDoubleCursor" Color_R="1" Color_G="0" Color_B="0"/>
+					<PageLabel ObjType="cLabel" Node="PageLabel" AutoCreate="true" Caption="PageLabel" Color_R="0" Color_G="1" Color_B="0"/>
+					<XMaxEdit ObjType="cFloatLabel" Node="XMaxEdit" AutoCreate="true" Caption="XMaxEdit" Color_R="0" Color_G="1" Color_B="0"/>
+					<XMinEdit ObjType="cFloatLabel" Node="XMinEdit" AutoCreate="true" Caption="XMinEdit" Color_R="0" Color_G="1" Color_B="0"/>
+					<yMaxEdit ObjType="cFloatLabel" Node="yMaxEdit" AutoCreate="true" Caption="yMaxEdit" Color_R="0" Color_G="1" Color_B="0"/>
+					<YMinEdit ObjType="cFloatLabel" Node="YMinEdit" AutoCreate="true" Caption="YMinEdit" Color_R="0" Color_G="1" Color_B="0"/>
+				</Page>
+			</Pages>
+		</cPageMngList>
+	</UICfg>
+	<HardWare/>
+	<TaskCfg/>
+	<AlgCfg TahoName="" ScreenUpdateT="0"/>
+	<TagsMng TagsFolder="" LogTags="false"/>
+	<CommonProperties Folder="" FileName=""/>
+	<TagsMng TagsFolder="" LogTags="false"/>
+	<CommonProperties Folder="d:\oburec\data\data\280411\" FileName=""/>
+</Root>

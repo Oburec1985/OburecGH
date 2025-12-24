@@ -22,29 +22,29 @@ object PairFrame: TPairFrame
     object StageCountLabel: TLabel
       Left = 4
       Top = 19
-      Width = 105
-      Height = 13
+      Width = 118
+      Height = 16
       Caption = #1055#1088#1086#1087#1091#1089#1090#1080#1090#1100' '#1083#1086#1087#1072#1090#1086#1082
     end
     object StageLabel: TLabel
       Left = 151
       Top = 19
-      Width = 43
-      Height = 13
+      Width = 48
+      Height = 16
       Caption = #1057#1090#1091#1087#1077#1085#1100
     end
     object SensorNameLabel: TLabel
       Left = 314
       Top = 19
-      Width = 65
-      Height = 13
+      Width = 74
+      Height = 16
       Caption = #1048#1084#1103' '#1076#1072#1090#1095#1080#1082#1072
     end
     object BaseLabel: TLabel
       Left = 520
       Top = 19
-      Width = 23
-      Height = 13
+      Width = 28
+      Height = 16
       Caption = #1041#1072#1079#1072
     end
     object SensorsLV: TBtnListView
@@ -77,6 +77,8 @@ object PairFrame: TPairFrame
       QuoteColumnBtnClick = False
       QuoteColumnDblClick = False
       DrawColorBox = False
+      ChangeTextColor = False
+      Editable = False
     end
     object BladeLeftIE: TIntEdit
       Left = 4
@@ -90,7 +92,7 @@ object PairFrame: TPairFrame
       Left = 151
       Top = 38
       Width = 145
-      Height = 21
+      Height = 24
       TabOrder = 2
       Text = 'StageCB'
     end
@@ -98,7 +100,7 @@ object PairFrame: TPairFrame
       Left = 315
       Top = 38
       Width = 132
-      Height = 21
+      Height = 24
       TabOrder = 3
     end
     object SelectSensorsBtn: TButton

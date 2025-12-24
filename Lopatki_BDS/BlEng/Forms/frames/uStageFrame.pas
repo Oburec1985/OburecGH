@@ -162,7 +162,7 @@ begin
     begin
       s.pos:=s.EvalPosition;
       // Позиция датчика
-      col:=getcolumn(SensorsSG,v_ColSensorPos);
+      col:=getcolumn(SensorsSG,c_ColSensorPos);
       row:=getrow(SensorsSG,s.name,1);
       SensorsSG.Cells[col,row]:=formatstr(s.pos,4);
     end;
@@ -175,10 +175,10 @@ var
   strpos:string;
   pos:single;
 begin
-  tbtnlistview(lv).GetSubItemByColumnName(v_ColSensorPos,item,strpos);
+  tbtnlistview(lv).GetSubItemByColumnName(c_ColSensorPos,item,strpos);
   pos:=strtofloat(strpos);
   pos:=BladeForm.ShowModal(pos);
-  tbtnlistview(lv).SetSubItemByColumnName(v_ColSensorPos,formatstr(pos,4),item);
+  tbtnlistview(lv).SetSubItemByColumnName(c_ColSensorPos,formatstr(pos,4),item);
 end;
 
 procedure TStageFrame.AssigneBlades(obj:cbldobj);
@@ -193,7 +193,7 @@ begin
     li:=BladesLV.Items[i];
     if li=nil then
       exit;
-    tbtnlistview(BladesLV).GetSubItemByColumnName(v_ColSensorPos,li,strpos);
+    tbtnlistview(BladesLV).GetSubItemByColumnName(c_ColSensorPos,li,strpos);
     pos:=strtofloat(strpos);
     cStage(obj).Shape.blades[i]:=pos;
   end;
@@ -263,13 +263,13 @@ var
   col:integer;
 begin
   // Имя датчика
-  col:=getcolumn(sg,v_colName);
+  col:=getcolumn(sg,c_colName);
   s.name:=sg.Cells[col,row];
   // Тип датчика
-  col:=getcolumn(sg,v_ColType);
+  col:=getcolumn(sg,c_ColType);
   s.sensorstring:=sg.Cells[col,row];
   // Позиция датчика
-  col:=getcolumn(sg,v_ColSensorPos);
+  col:=getcolumn(sg,c_ColSensorPos);
   s.pos:=strtofloat(sg.Cells[col,row]);
   // Пропуск лопаток
   col:=getcolumn(sg,v_ColSkipBlades);
@@ -284,16 +284,16 @@ var
   col:integer;
 begin
   // номер строки
-  col:=getcolumn(sg,v_colNum);
+  col:=getcolumn(sg,c_colNum);
   sg.Cells[col,row]:=inttostr(row);
   // Имя датчика
-  col:=getcolumn(sg,v_colName);
+  col:=getcolumn(sg,c_colName);
   sg.Cells[col,row]:=s.name;
   // Тип датчика
-  col:=getcolumn(sg,v_ColType);
+  col:=getcolumn(sg,c_ColType);
   sg.Cells[col,row]:=s.sensorstring;
   // Позиция датчика
-  col:=getcolumn(sg,v_ColSensorPos);
+  col:=getcolumn(sg,c_ColSensorPos);
   sg.Cells[col,row]:=formatstr(s.pos,4);
   // Пропуск лопаток
   col:=getcolumn(sg,v_Colskipblades);
@@ -336,10 +336,10 @@ begin
   for I := 0 to 5 do
   begin
     case i of
-      0: SensorsSG.Cells[i,0]:=v_colNum;
-      1: SensorsSG.Cells[i,0]:=v_colName;
-      2: SensorsSG.Cells[i,0]:=v_ColType;
-      3: SensorsSG.Cells[i,0]:=v_ColSensorPos;
+      0: SensorsSG.Cells[i,0]:=c_colNum;
+      1: SensorsSG.Cells[i,0]:=c_colName;
+      2: SensorsSG.Cells[i,0]:=c_ColType;
+      3: SensorsSG.Cells[i,0]:=c_ColSensorPos;
       4: SensorsSG.Cells[i,0]:=v_ColSkipBlades;
       5: SensorsSG.Cells[i,0]:=v_ColFirstOffset;
     end;

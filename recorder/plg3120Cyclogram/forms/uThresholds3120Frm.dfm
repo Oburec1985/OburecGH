@@ -368,8 +368,6 @@ object ThresholdFrm: TThresholdFrm
     Margins.Bottom = 4
     Align = alClient
     TabOrder = 3
-    ExplicitLeft = 229
-    ExplicitTop = -8
     object HHLabel: TLabel
       Left = 8
       Top = 93

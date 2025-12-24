@@ -24,7 +24,6 @@ Var
   v_Rot,
   v_Plats,
   v_Channels,
-  v_ColSensorPos,
   v_ColEdgeSensor,
   v_ColRootSensor,
   v_ColSkipBlades,
@@ -79,7 +78,6 @@ begin
   v_Rot:= GetConstString('Rot');
   v_Plats:=GetConstString('Plats');
   v_Channels:=GetConstString('Channels');
-  v_ColSensorPos:=GetConstString('ColSensorPos');
   v_ColRootSensor:= GetConstString('ColRootSensor');
   v_ColEdgeSensor:=GetConstString('ColEdgeSensor');
   v_ColSkipBlades:=GetConstString('ColSkipBlades');
