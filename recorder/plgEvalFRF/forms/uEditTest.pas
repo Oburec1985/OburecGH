@@ -384,7 +384,13 @@ begin
         end;
         o.addProp('F1_'+inttostr(r), ProfileSG.Cells[1, r]);
         o.addProp('F2_'+inttostr(r), ProfileSG.Cells[2, r]);
-        o.addProp('Threshold_'+inttostr(r), ProfileSG.Cells[3, r]);
+        if ProfileSG.Cells[3, r]='' then
+        begin
+          ProfileSG.Cells[3, r]:=thresholdse.text;
+          o.addProp('Threshold_'+inttostr(r), thresholdse.text);
+        end
+        else
+          o.addProp('Threshold_'+inttostr(r), ProfileSG.Cells[3, r]);
       end;
     end;
   end;

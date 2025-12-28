@@ -819,10 +819,11 @@ end;
 function cAxis.p2ToP2i(p: point2; var res: boolean): tpoint;
 var
   viewport: array [0 .. 3] of glint;
-  px, py, pz: double;
+  dx, dy, px, py, pz: double;
   i: integer; // возвращаемые мировые координаты.
   wx, wy, wz: gldouble;
   ires: integer;
+  page:cpage;
 begin
   result.x := -1;
   result.y := -1;
@@ -833,7 +834,15 @@ begin
   py := p.y;
   pz := 0;
   res := false;
-  ires := gluProject(p.x, p.y, pz, @identMatrix4d, @projection,
+  page:=cpage(getpage);
+
+  dx:=page.MaxX-page.MinX;
+  wx:=page.m_viewport[0]+page.m_viewport[2]*(p.x-page.MinX)/dx;
+  dy:=MaxY-MinY;
+  wy:=page.m_viewport[1]+page.m_viewport[3]*(p.y-Miny)/dy;
+  result.X:=round(wx);
+  result.y:=round(wy);
+  {ires := gluProject(p.x, p.y, pz, @identMatrix4d, @projection,
     @cpage(getpage).m_viewport, wx, wy, wz);
   if ires = 1 then
   begin
@@ -844,7 +853,7 @@ begin
       result.y := round(wy);
       result.y := twincontrol(cpage(getpage).chart).Height - result.y;
     end;
-  end;
+  end;}
 end;
 
 procedure cAxis.UpdateAxisData(i: integer);

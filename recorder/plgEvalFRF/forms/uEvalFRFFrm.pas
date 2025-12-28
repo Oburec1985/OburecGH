@@ -24,7 +24,7 @@ uses
   uPathMng,
   opengl, uSimpleObjects,
   math, uDrawObj, uDoubleCursor, uBasicTrend, uProfile, uExcel,
-  uBladeDB, uSpmBand, uChartEvents,
+  uBladeDB, uSpmBand, uBladeReport, uChartEvents,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uBtnListView, uSpin;
 
 type
@@ -216,23 +216,6 @@ type
 
   cSRSTaho = class;
 
-  cExtremum = class
-  public
-    Index: Integer; // Индекс элемента в исходном массиве Y
-    Value: Double;  // Значение экстремума (найденное Y-значение)
-    Freq: Double;  // частота экстремума
-    BandNum:integer; // в полосе № (-1 если не попал в полосу)
-    // главный экстремум в полосе
-    Main,
-    // в допуске
-    InTol:boolean;
-    NumInBand:integer; // номер экстремума внут*ри той же полосы
-    decrement:double;
-    m_b:tSpmBand;
-  public
-    constructor create;
-    destructor destroy;
-  end;
 
   cSRSres = class
   public
@@ -903,6 +886,8 @@ begin
       bandExtr.decrement := (f2 - f1) / vf;
     end;
   end;
+  // датчик успешно нашел все полосы
+  s:=ActiveSignal;
   resStr := '';
   tol:=bl.GetTolerance(0); // допуск на полосы в процентах
   for i := 0 to s.m_BandExtremums.Count - 1 do
@@ -910,10 +895,13 @@ begin
     BandExtr:=s.getExtremum(i);
     if BandExtr.m_b<>nil then
     begin
-      absTol:=(BandExtr.m_b.m_f2-BandExtr.m_b.m_f1)*tol;
-      mainF:=(BandExtr.m_b.m_f2-BandExtr.m_b.m_f1)*0.5;
+      mainF:=(BandExtr.m_b.m_f2+BandExtr.m_b.m_f1)*0.5;
+      absTol:=100*abs(mainF-BandExtr.Freq)/mainF;
+      if absTol<tol then
+        BandExtr.InTol:=true
+      else
+        BandExtr.InTol:=false;
       // проверяем в допуске или нет
-      BandExtr.InTol:=abs(mainF-BandExtr.Freq)<absTol;
       resStr := resStr + floattostr(BandExtr.m_b.m_f1) +'..'
                        + floattostr(BandExtr.m_b.m_f2) + '_'
                        + floattostr(BandExtr.Value) + '_'
@@ -929,42 +917,8 @@ begin
                        + floattostr(BandExtr.decrement) + ';';
     end;
   end;
-  bres:=false; // датчик успешно нашел полосу
-  // нашли полосу
-  // проверка что все полосы совпали в главных экстремумах
-  for I := 0 to m_bands.Count - 1 do
-  begin
-    b:=tSpmBand(m_bands.Items[i]);
-    p3:=bl.tone(i);
-    res:=true;
-    for j := 0 to cfg.SRSCount - 1 do
-    begin
-      s:=cfg.GetSrs(j);
-      bres:=false;
-      for k := 0 to s.m_BandExtremums.Count - 1 do
-      begin
-        BandExtr:=s.getExtremum(k);
-        if BandExtr.m_b=b then
-        begin
-          if BandExtr.Main then
-          begin
-            // отклон от центральной частоты
-            vf:=b.mainFreq;
-            v:=(BandExtr.Freq-vf)/vf;
-            if v<p3.z then
-            begin
-              bres:=true; // в полосе есть корректный экстремум
-              break;
-            end;
-          end;
-        end;
-      end;
-      res:=res and bres;
-      if not res then
-        break;
-    end;
-  end;
-  result:=res;
+  bres:=CheckExtremList(s.m_BandExtremums, m_bands);
+  result:=bres;
   if result then
     bl.m_res := 2
   else
@@ -5162,19 +5116,5 @@ begin
   end;
 end;
 
-{ TExtremum1d }
-
-constructor cExtremum.create;
-begin
-  m_b:=nil;
-  BandNum:=-1;
-  Main:=false;
-  NumInBand:=-1;
-end;
-
-destructor cExtremum.destroy;
-begin
-
-end;
 
 end.

@@ -30,8 +30,6 @@ object EditTestFrm: TEditTestFrm
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-    ExplicitLeft = -7
-    ExplicitTop = -4
     object TurbLabel: TLabel
       Left = 13
       Top = 32

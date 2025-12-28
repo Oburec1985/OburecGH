@@ -39,7 +39,8 @@ uses
   uEditTest in 'forms\uEditTest.pas' {EditTestFrm},
   uBladeDB in 'units\uBladeDB.pas',
   uComponentServises in '..\..\sharedUtils\utils\uComponentServises.pas',
-  uSpmBand in 'units\uSpmBand.pas';
+  uSpmBand in 'units\uSpmBand.pas',
+  uBladeReport in 'units\uBladeReport.pas';
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 

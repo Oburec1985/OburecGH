@@ -5,7 +5,7 @@ uses
   windows,
   uDBObject, ubaseobj, pathutils, uCommonMath, sysutils, nativexml, classes, uPathMng, dialogs,
   inifiles, upoint, ucommontypes, uspmband,
-  variants, uExcel, u2dmath;
+  variants, uExcel, u2dmath, uBladeReport;
 
 type
   // структура для описания замера внутри регистрации
