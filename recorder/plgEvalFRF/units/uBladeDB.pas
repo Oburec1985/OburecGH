@@ -1345,8 +1345,13 @@ begin
         bl.setObjType(cBladeFolder(selected).ObjType);
       end;
       s:=inttostr(ChildCount+1);
-      if length(s)<2 then
-        s:='0'+s;
+      if length(s)=1 then
+        s:='00'+s
+      else
+      begin
+        if length(s)=2 then
+          s:='0'+s;
+      end;
       bl.name:='Bl_'+s;
       AddChild(bl);
     end
@@ -1548,6 +1553,10 @@ begin
       for j := 0 to blade.ToneCount - 1 do
       begin
         str := getSubStrByIndex(blade.m_resStr, ';', 1, j);
+        // numBand
+        str2 := getSubStrByIndex(str, '_', 1, 4);
+        //if str2<>'0' then
+        //  continue;
         // F
         str2 := getSubStrByIndex(str, '_', 1, 2);
         r:=rng2.Row+i;
@@ -1561,13 +1570,22 @@ begin
       if blade.m_res=2 then
       begin
         SetCell(1, rng.Row+i,rng.Column+blade.ToneCount, 'годен');
-      end;
-      if blade.m_res<>2 then
+      end
+      else
       begin
-        rng3 := GetRangeObj(1, point(rng2.row, rng2.column),
-                              point(rng2.row, rng.column+blade.ToneCount));
-        rng3.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
-        SetCell(1, rng2.Row+i, rng.Column+blade.ToneCount, 'не годен');
+        if blade.m_res=1 then
+        begin
+          rng3 := GetRangeObj(1, point(rng2.row, rng2.column),
+                                point(rng2.row, rng.column+1));
+          rng3.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
+          SetCell(1, rng2.Row+i, rng.Column+ // rng - столбец декремент
+                                 1, 'не годен');
+        end
+        else
+        begin
+          SetCell(1, rng2.Row+i, rng.Column+ // rng - столбец декремент
+                                 1, 'не испытана');
+        end;
       end;
     end;
     repPath := ExtractFileDir(turb.getFolder) + '\Report.xlsx';
@@ -1590,7 +1608,7 @@ var
   s:cString;
 begin
   o:=getObjType;
-  s:=o.getProp('StageBCount_'+inttostr(stageNum+1));
+  s:=o.getProp('StageBCount_'+inttostr(stageNum));
   if s<>nil then
     result:=strtoint(s.str)
   else

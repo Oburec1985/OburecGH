@@ -141,6 +141,7 @@ procedure TEditTestFrm.OkBtnClick(Sender: TObject);
 var
   f, s, bl:cxmlfolder;
   I: Integer;
+  str, pref:string;
 begin
   updateTypes;
   if TurbNameCb.text<>'' then
@@ -164,7 +165,14 @@ begin
 
       bl:=cBladeFolder.create;
       bl.setObjType(BladeCB.text);
-      bl.name:='Bl_'+inttostr(BladeSe.Value);
+      str:=BladeSe.text;
+      pref:='';
+      for i:=0 to (3-length(str))-1 do
+      begin
+        pref:=pref+'0';
+      end;
+      str:=pref+str;
+      bl.name:='Bl_'+str;
       s.AddChild(bl);
       f.selected:=bl;
     end
@@ -228,6 +236,7 @@ begin
       TurbNameCB.ItemIndex:=0;
     end;
   end;
+  t:=cTurbFolder(g_mbase.root.getChild(TurbNameCB.ItemIndex));
   BladeCB.ItemIndex:=0;
   if t<>nil then
   begin

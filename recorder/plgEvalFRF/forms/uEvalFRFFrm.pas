@@ -772,7 +772,7 @@ var
 
 
   res, bres: boolean;
-  repPath, resStr: string;
+  repPath, resStr, str: string;
   p3:point3d;
   v, vf, f1, f2,
   // относительный допуск
@@ -897,25 +897,23 @@ begin
     begin
       mainF:=(BandExtr.m_b.m_f2+BandExtr.m_b.m_f1)*0.5;
       absTol:=100*abs(mainF-BandExtr.Freq)/mainF;
+      BandExtr.error:=absTol;
       if absTol<tol then
         BandExtr.InTol:=true
       else
         BandExtr.InTol:=false;
-      // проверяем в допуске или нет
-      resStr := resStr + floattostr(BandExtr.m_b.m_f1) +'..'
-                       + floattostr(BandExtr.m_b.m_f2) + '_'
-                       + floattostr(BandExtr.Value) + '_'
-                       + floattostr(BandExtr.Freq) + '_'
-                       + floattostr(BandExtr.decrement) + ';';
+      str:=floattostr(BandExtr.m_b.m_f1) +'..'
+           + floattostr(BandExtr.m_b.m_f2);
     end
     else
     begin
-      resStr := resStr + '0' +'..'
-                       + '0' + '_'
-                       + floattostr(BandExtr.Value) + '_'
-                       + floattostr(BandExtr.Freq) + '_'
-                       + floattostr(BandExtr.decrement) + ';';
+      str:='0..0';
     end;
+    resStr := resStr + str + '_'
+                     + floattostr(BandExtr.Value) + '_'
+                     + floattostr(BandExtr.Freq) + '_'
+                     + floattostr(BandExtr.decrement)+'_'
+                     + inttostr(BandExtr.NumInBand)+';';
   end;
   bres:=CheckExtremList(s.m_BandExtremums, m_bands);
   result:=bres;
@@ -955,10 +953,11 @@ var
   extr: cExtremum;
   date: TDateTime;
   res: boolean;
-  rng: olevariant;
+  rng, sh: olevariant;
   str, repPath: string;
   minmax: point2d;
   v, v1, d: double;
+
 begin
   KillAllExcelProcesses;
   if not CheckVarObj(E) then
@@ -987,7 +986,10 @@ begin
     AddSheet('Page_01');
   end;
   // в пятом столбце строки идут заполненные подряд
-  r0 := GetEmptyRow(1, 1, 5);
+  //r0 := GetEmptyRow(1, 1, 5);
+  //sh:=E.ActiveWorkbook.Worksheets['Page_01'];
+  GetSheetDimensions('Page_01', r0, c );
+  inc(r0);
   SetCell(1, r0, 2, 'Blade:');
   SetCell(1, r0, 3, bl.m_sn);
   SetCell(1, r0, 4, 'Чертеж:');
@@ -1014,63 +1016,44 @@ begin
     SetCell(1, r, c + 1, 'A1');
     SetCell(1, r, c + 2, 'F1');
     SetCell(1, r, c + 3, 'Dekr');
-    SetCell(1, r, c + 4, 'Res');
+    SetCell(1, r, c + 4, 'NumBand');
+    SetCell(1, r, c + 5, 'Error, %');
+    SetCell(1, r, c + 6, 'Res');
+
     // проход по формам (полосам)
-    if m_bands.Count = 0 then
+    for j := 0 to s.m_BandExtremums.Count - 1 do
     begin
-      SetCell(1, r + 1 + j, c, floattostr(b.m_f1) + '...' + floattostr(b.m_f2));
-      SetCell(1, r + 1 + j, c + 1, 0);
-      SetCell(1, r + 1 + j, c + 2, 0);
-      rng := GetRangeObj(1, point(r + 1 + j, 2), point(r + 1 + j, 5));
-      SetCell(1, r + 1 + j, c + 3, 0);
-      SetCell(1, r + 1 + j, c + 4, 'Не испытан');
-    end
-    else
-    begin
-      for j := 0 to m_bands.Count - 1 do
+      extr := s.getExtremum(j);
+      b := extr.m_b;
+      if b<>nil then
       begin
-        b := m_bands.getband(j);
-        SetCell(1, r + 1 + j, c,
-          floattostr(b.m_f1) + '..' + floattostr(b.m_f2));
-        if s.m_extremums.Count > 0 then
+        str:=floattostr(b.m_f1) + '..' + floattostr(b.m_f2);
+        SetCell(1, r + 1 + j, c + 4, extr.NumInBand+1);
+        SetCell(1, r + 1 + j, c + 5, extr.error);
+        if extr.intol then
         begin
-          if j < s.m_extremums.Count then
-          begin
-            //// !!!!!!!!!!!!
-            extr := s.getExtremum(j);
-            v1 := extr.Freq;
-            v := extr.Value;
-            d := extr.decrement;
-          end
-          else
-          begin
-            v1 := 0;
-            v1 := 0;
-            d := 0;
-            extr := nil;
-          end;
-          SetCell(1, r + 1 + j, c + 1, v);
+          SetCell(1, r + 1 + j, c + 6, 'Годен');
         end
         else
         begin
-          v := 0;
-          SetCell(1, r + 1 + j, c + 1, 0);
-        end;
-        SetCell(1, r + 1 + j, c + 2, v1);
-        SetCell(1, r + 1 + j, c + 3, d);
-        if (v1 > b.m_f1) and (v1 < b.m_f2) then
-        begin
-          SetCell(1, r + 1 + j, c + 4, 'Годен');
-        end
-        else
-        begin
-          rng := GetRangeObj(1, point(r + 1 + j, c), point(r + 1 + j, c + 3));
+          rng := GetRangeObj(1, point(r + 1 + j, c), point(r + 1 + j, c + 6));
           rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
-          SetCell(1, r + 1 + j, c + 4, 'Не годен');
+          SetCell(1, r + 1 + j, c + 6, 'Не годен');
         end;
+      end
+      else
+      begin
+        str:='0..0';
       end;
+      SetCell(1, r + 1 + j, c, str);
+      v1 := extr.Freq;
+      v := extr.Value;
+      d := extr.decrement;
+      SetCell(1, r + 1 + j, c + 1, v);
+      SetCell(1, r + 1 + j, c + 2, v1);
+      SetCell(1, r + 1 + j, c + 3, d);
     end;
-    c := c + 4;
+    c := c + 7;
   end;
   // разметка заголовка
   rng := GetRangeObj(1, point(r, 2), point(r, c - 1));
