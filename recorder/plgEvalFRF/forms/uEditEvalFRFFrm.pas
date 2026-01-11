@@ -503,6 +503,15 @@ var
   I, j: Integer;
   selbl:cxmlfolder;
 begin
+  t:=m_SRS.getTaho;
+  if t.m_shockList.Count>0 then
+  begin
+    if MessageDlg('Удары будут очищены из памяти. Продолжить?',
+        mtConfirmation, [mbYes, mbNo], 0) = mrNo then
+    begin
+      exit;
+    end;
+  end;
   m_SRS.m_ShiftLeft:=LeftShiftEdit.FloatNum;
   m_SRS.m_Length:=LengthFE.FloatNum;
 

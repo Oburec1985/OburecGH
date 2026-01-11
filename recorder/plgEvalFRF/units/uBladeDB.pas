@@ -163,15 +163,17 @@ type
   // испытания
   cBladeFolder = class(cXmlFolder)
   public
+    m_sn:string;
     // результа последнего поиска частот
     // d - коэф демпфирования
     // формат: f1...f2_a1_f1_d;f1...f2_an_fn_dn
     m_resStr:string;
     // 2 -годен; 1 - не годен
     m_res:integer;
-    m_sn:integer;
     // false - левая, true - правая
     m_sideCB:boolean;
+    // моментный вес
+    m_weight:double;
   protected
     procedure getTones(list:blist);
     procedure doCreateFiles(node:txmlnode);override;

@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, uSpin, ExtCtrls, Grids, uStringGridExt, ubladeDB, uComponentServises,
-  Spin;
+  Spin, ComCtrls, uBtnListView;
 
 type
   TEditTestFrm = class(TForm)
@@ -24,7 +24,6 @@ type
     DateLabel: TLabel;
     GroupBox2: TGroupBox;
     OkBtn: TButton;
-    ObjPropSG: TStringGridExt;
     Splitter2: TSplitter;
     blNumSE: TLabel;
     BladeSe: TSpinEdit;
@@ -39,6 +38,10 @@ type
     SideCB: TCheckBox;
     Label2: TLabel;
     BandCountIE: TSpinEdit;
+    BladesGB: TGroupBox;
+    BladesLV: TBtnListView;
+    BladesControlPan: TPanel;
+    SelectAllCb: TCheckBox;
     procedure OkBtnClick(Sender: TObject);
     procedure ProfileSGKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -50,6 +53,9 @@ type
     procedure SideCBClick(Sender: TObject);
     procedure BandCountIEChange(Sender: TObject);
     procedure BlCountIEChange(Sender: TObject);
+    procedure SelectAllCbClick(Sender: TObject);
+    procedure BladesLVChange(Sender: TObject; Item: TListItem;
+      Change: TItemChange);
   private
     procedure init;
     procedure showbase;
@@ -60,6 +66,7 @@ type
     // показать свойства типа лопатки выбраной в поле "чертеж"
     procedure ShowTone;
     function ValidRowCount:integer;
+    procedure ShowBlades;
   public
     procedure Edit(f:tform);
     constructor create(aowner:tcomponent);
@@ -103,6 +110,13 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TEditTestFrm.BladesLVChange(Sender: TObject; Item: TListItem;
+  Change: TItemChange);
+begin
+  if BladesLV.SelCount<>BladesLV.Items.Count then
+    SelectAllCb.Checked:=false;
 end;
 
 procedure TEditTestFrm.BlCountIEChange(Sender: TObject);
@@ -205,6 +219,18 @@ begin
   end;
 end;
 
+procedure TEditTestFrm.SelectAllCbClick(Sender: TObject);
+var
+  I: Integer;
+  li:TListItem;
+begin
+  for I := 0 to BladesLV.items.Count - 1 do
+  begin
+    li:=BladesLV.Items[i];
+    li.Selected:=SelectAllCb.Checked;
+  end;
+end;
+
 procedure TEditTestFrm.showbase;
 var
   I: Integer;
@@ -249,6 +275,36 @@ begin
     ShowTone;
   end;
   SGChange(ProfileSG);
+end;
+
+procedure TEditTestFrm.ShowBlades;
+var
+  I: Integer;
+  t:cTurbFolder;
+  s:cStageFolder;
+  b:cBladeFolder;
+  li:tlistitem;
+  str:string;
+begin
+  t:=cTurbFolder(GetComboBoxItem(TurbNameCb));
+  if t=nil then exit;
+  if StageCB.ItemIndex=-1 then
+    s:=t.GetStage(0)
+  else
+    s:=t.GetStage(StageCB.ItemIndex);
+  BladesLV.Clear;
+  for I := 0 to s.BlCount - 1 do
+  begin
+    li:=BladesLV.Items.Add;
+    BladesLV.SetSubItemByColumnName('№',inttostr(i),li);
+    b:=s.GetBlade(i);
+    if b.m_sideCB then
+      str:='Правая'
+    else
+      str:='Левая';
+    BladesLV.SetSubItemByColumnName('Тип',str,li);
+    BladesLV.SetSubItemByColumnName('sn',b.m_sn,li);
+  end;
 end;
 
 procedure TEditTestFrm.ShowTone;
@@ -299,6 +355,7 @@ begin
     StageCB.Items.AddObject(inttostr(i+1), s);
   end;
   BlCountIE.Value:=t.GetBladeCount(strtoint(StageCB.Text));
+  ShowBlades;
 end;
 
 procedure TEditTestFrm.SideCBClick(Sender: TObject);
@@ -306,6 +363,8 @@ var
   bl:cBladeFolder;
   t:cTurbFolder;
   s:cStageFolder;
+  I: Integer;
+  li:tlistitem;
 begin
   if SideCB.Checked then
   begin
@@ -320,8 +379,24 @@ begin
     s:=t.GetStage(0)
   else
     s:=t.GetStage(StageCB.ItemIndex);
-  bl:=s.GetBlade(BladeSe.Value);
-  bl.m_sideCB:=sidecb.Checked;
+  if BladesLV.SelCount>0 then
+  begin
+    for I := 0 to BladesLV.items.Count - 1 do
+    begin
+      li:=BladesLV.Items[i];
+      if li.Selected then
+      begin
+        bl:=s.GetBlade(li.Index);
+        bl.m_sideCB:=sidecb.Checked;
+      end;
+    end;
+  end
+  else
+  begin
+    bl:=s.GetBlade(BladeSe.Value);
+    bl.m_sideCB:=sidecb.Checked;
+  end;
+  ShowBlades;
 end;
 
 procedure TEditTestFrm.Splitter2Moved(Sender: TObject);

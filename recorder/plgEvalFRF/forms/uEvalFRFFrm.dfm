@@ -421,7 +421,7 @@ object FRFFrm: TFRFFrm
     end
     object SignalsGroupBox: TGroupBox
       Left = 2
-      Top = 266
+      Top = 257
       Width = 237
       Height = 119
       Margins.Left = 2
@@ -431,6 +431,7 @@ object FRFFrm: TFRFFrm
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 10
+      ExplicitTop = 266
       object SignalsLV: TBtnListView
         Left = 2
         Top = 15
@@ -496,12 +497,14 @@ object FRFFrm: TFRFFrm
     end
     object BladeGB: TGroupBox
       Left = 2
-      Top = 385
+      Top = 376
       Width = 237
-      Height = 117
+      Height = 126
       Align = alBottom
       Caption = #1051#1086#1087#1072#1090#1082#1072
       TabOrder = 12
+      ExplicitLeft = 0
+      ExplicitTop = 375
       object BladeLabel: TLabel
         Left = 5
         Top = 16
@@ -517,16 +520,30 @@ object FRFFrm: TFRFFrm
         Caption = #1057#1090#1072#1090#1091#1089':'
       end
       object DempfLabel: TLabel
-        Left = 128
+        Left = 88
         Top = 54
         Width = 82
         Height = 13
         Caption = #1044#1077#1084#1087#1092#1080#1088#1086#1074#1072#1085#1080#1077
       end
+      object SnLabel: TLabel
+        Left = 89
+        Top = 16
+        Width = 16
+        Height = 13
+        Caption = 'Sn:'
+      end
+      object Label1: TLabel
+        Left = 170
+        Top = 16
+        Width = 21
+        Height = 13
+        Caption = #1042#1077#1089':'
+      end
       object StatusEdit: TEdit
         Left = 4
         Top = 73
-        Width = 117
+        Width = 79
         Height = 21
         Color = clWhite
         ParentShowHint = False
@@ -536,15 +553,15 @@ object FRFFrm: TFRFFrm
       object BladeNumEdit: TEdit
         Left = 3
         Top = 35
-        Width = 119
+        Width = 62
         Height = 21
         ParentShowHint = False
         ShowHint = False
         TabOrder = 1
       end
       object BladeSE: TSpinButton
-        Left = 127
-        Top = 35
+        Left = 68
+        Top = 37
         Width = 15
         Height = 19
         Margins.Left = 2
@@ -578,14 +595,32 @@ object FRFFrm: TFRFFrm
         OnUpClick = BladeSEUpClick
       end
       object DempfE: TEdit
-        Left = 127
+        Left = 87
         Top = 73
-        Width = 107
+        Width = 82
         Height = 21
         Color = clWhite
         ParentShowHint = False
         ShowHint = False
         TabOrder = 3
+      end
+      object Edit1: TEdit
+        Left = 87
+        Top = 35
+        Width = 66
+        Height = 21
+        ParentShowHint = False
+        ShowHint = False
+        TabOrder = 4
+      end
+      object Edit2: TEdit
+        Left = 168
+        Top = 35
+        Width = 66
+        Height = 21
+        ParentShowHint = False
+        ShowHint = False
+        TabOrder = 5
       end
     end
     object TrigFE: TFloatSpinEdit

@@ -374,6 +374,10 @@ type
     HideExcelCB: TCheckBox;
     Frf_YX_XY_CB: TCheckBox;
     useAvrCb: TCheckBox;
+    SnLabel: TLabel;
+    Edit1: TEdit;
+    Label1: TLabel;
+    Edit2: TEdit;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -4336,7 +4340,7 @@ begin
     blade := g_mbase.SelectBlade;
     if blade <> nil then
     begin
-      TFRFFrm(Frm).BladeNumEdit.Text := inttostr(blade.m_sn);
+      TFRFFrm(Frm).BladeNumEdit.Text := (blade.m_sn);
     end;
   end;
 end;

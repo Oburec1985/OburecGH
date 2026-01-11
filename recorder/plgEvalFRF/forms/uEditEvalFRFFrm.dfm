@@ -36,7 +36,6 @@ object EditFrfFrm: TEditFrfFrm
     OnDragOver = SignalsTVDragOver
     OnDragDrop = SignalsTVDragDrop
     OnKeyDown = SignalsTVKeyDown
-    ExplicitLeft = 2
     Columns = <>
   end
   inline TagsListFrame1: TTagsListFrame
