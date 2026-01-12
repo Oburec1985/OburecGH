@@ -494,7 +494,8 @@ end;
 
 procedure TEditFrfFrm.UpdateBtnClick(Sender: TObject);
 var
-  t:cSRSTaho;
+  t, tahocb:cSRSTaho;
+  it:itag;
   c:cSpmCfg;
   s:cSRSres;
   bl:TDataBlock;
@@ -502,8 +503,9 @@ var
   d:PNodeData;
   I, j: Integer;
   selbl:cxmlfolder;
+
 begin
-  t:=m_SRS.getTaho;
+  t:=GetSelectTaho;
   if t.m_shockList.Count>0 then
   begin
     if MessageDlg('Удары будут очищены из памяти. Продолжить?',
@@ -546,9 +548,18 @@ begin
     end;
   end;
 
-  t:=GetSelectTaho;
   if t=nil then
     exit;
+  it:=itag(pointer(getComboBoxItem(tahonamecb)));
+  if t.m_tag.tag<>it then
+  begin
+    t.m_tag.tag:=it;
+    n:=SignalsTV.GetNodeByPointer(t);
+    d:=SignalsTV.GetNodeData(n);
+    d.data:=t;
+    d.Caption:=t.m_tag.tagname;
+  end;
+
   c:=t.Cfg;
   t.m_shockList.m_wnd.x2:=LengthFE.FloatNum*0.7;
   if t=nil then exit;
