@@ -250,8 +250,7 @@ type
     m_incPNum: byte;
     // список найденных флагов (сравнивается с флагами в полосах)
     m_flags: array of point2d;
-    // список найденных экстремумов на линии для сравненияс
-    // полосами TExtremum1d
+    // список найденных экстремумов на линии для сравнения с полосами TExtremum1d
     m_extremums: tlist;
     // Список экстремумов со всей служебной инфой
     m_BandExtremums: tlist;
@@ -403,6 +402,8 @@ type
     procedure TrigFEChange(sender: tobject);
     procedure Frf_YX_XY_CBClick(sender: tobject);
   public
+    // тип отчета. Подробный/ ОТК
+    m_repType:boolean;
     m_Frf_YX: boolean;
     // отступ слева и длительность
     m_ShiftLeft, m_Length,
@@ -786,6 +787,7 @@ var
   // средняя частота
   mainF: double;
   minmax, p1, p2: point2d;
+  // данные из линии
   d: TDoubleArray;
   line: cBuffTrend1d;
 begin
@@ -864,30 +866,45 @@ begin
       v := extr.Value * 0.5;
       k := extr.Index;
       // граница слева
-      while d[k] > v do
+      while (d[k] > v) do
       begin
         dec(k);
+        if k<0 then
+        begin
+          break;
+          bandExtr.decrement:=-1;
+        end;
       end;
-      p1.x := line.GetXByInd(k);
-      p1.y := d[k];
-      p2.x := line.GetXByInd(extr.Index);
-      p2.y := d[extr.Index];
-      f1 := EvalLineX(v, p1, p2);
-
-      k := extr.Index;
-      // граница справа
-      while d[k] > v do
+      if k>0 then
       begin
-        inc(k);
-      end;
-      p1.x := line.GetXByInd(k);
-      p1.y := d[k];
-      p2.x := line.GetXByInd(extr.Index);
-      p2.y := d[extr.Index];
+        p1.x := line.GetXByInd(k);
+        p1.y := d[k];
+        p2.x := line.GetXByInd(extr.Index);
+        p2.y := d[extr.Index];
+        f1 := EvalLineX(v, p1, p2);
+        k := extr.Index;
+        // граница справа
+        while (d[k] > v) do
+        begin
+          inc(k);
+          if k=length(d) then
+          begin
+            bandExtr.decrement:=-1;
+            break;
+          end;
+        end;
+        if k<length(d) then
+        begin
+          p1.x := line.GetXByInd(k);
+          p1.y := d[k];
+          p2.x := line.GetXByInd(extr.Index);
+          p2.y := d[extr.Index];
 
-      f2 := EvalLineX(v, p1, p2);
-      vf := 2 * p2.x;
-      bandExtr.decrement := (f2 - f1) / vf;
+          f2 := EvalLineX(v, p1, p2);
+          vf := 2 * p2.x;
+          bandExtr.decrement := (f2 - f1) / vf;
+        end;
+      end;
     end;
   end;
   // датчик успешно нашел все полосы
@@ -944,7 +961,12 @@ var
 begin
   turb := g_mbase.SelectTurb;
   if turb <> nil then
-    turb.buildReport('', g_FrfFactory.m_hideExcel);
+  begin
+    if m_reptype then
+      uBladeReport.buildReportOtk('', 'Ivanov', g_FrfFactory.m_hideExcel, 2, 5)
+    else
+      uBladeReport.buildReport('', g_FrfFactory.m_hideExcel);
+  end;
 end;
 
 procedure TFRFFrm.SaveReport(repname: string; bl: cBladeFolder);
@@ -1666,7 +1688,6 @@ var
   p, max: double;
   l: cBuffTrend1d;
 begin
-
   act_s := ActiveSignal;
   for i := 0 to m_bands.Count - 1 do
   begin
@@ -2561,6 +2582,7 @@ begin
   m_maxX := strtofloatext(a_pIni.ReadString(str, 'Spm_maxX', '1000'));
   m_minY := strtofloatext(a_pIni.ReadString(str, 'Spm_minY', '0.0001'));
   m_maxY := strtofloatext(a_pIni.ReadString(str, 'Spm_maxY', '10'));
+  m_reptype := a_pIni.ReadBool(str, 'RepType', true);
   m_Frf_YX := a_pIni.ReadBool(str, 'Frf_YX', true);
   m_lgX := a_pIni.ReadBool(str, 'Spm_Lg_x', false);
   m_lgY := a_pIni.ReadBool(str, 'Spm_Lg_y', false);
@@ -2705,6 +2727,7 @@ var
   s: cSRSres;
   db, tb: TDataBlock;
 begin
+
   // dir := extractfiledir(g_FrfFactory.m_meraFile) + '\Shock';
   if g_mbase.SelectBlade = nil then
   begin
@@ -2728,6 +2751,8 @@ begin
   ifile := TIniFile.create(f);
   c := getTaho.cfg;
   t := getTaho;
+  if t.m_shockList.Count=0 then
+    exit;
   for i := 0 to c.SRSCount - 1 do
   begin
     s := c.GetSrs(i);
@@ -2803,6 +2828,7 @@ begin
     WriteFloatToIniMera(a_pIni, str, 'Spm_maxX', m_maxX);
     WriteFloatToIniMera(a_pIni, str, 'Spm_minY', m_minY);
     WriteFloatToIniMera(a_pIni, str, 'Spm_maxY', m_maxY);
+    a_pIni.WriteBool(str, 'RepType', m_reptype);
     a_pIni.WriteBool(str, 'Frf_YX', m_Frf_YX);
     a_pIni.WriteBool(str, 'Spm_Lg_x', m_lgX);
     a_pIni.WriteBool(str, 'Spm_Lg_y', m_lgY);
@@ -4209,6 +4235,12 @@ begin
       begin
         s := t.cfg.GetSrs(i);
         setlength(s.m_flags, c);
+      end;
+      for i := 0 to f.m_bands.Count - 1 do
+      begin
+        b:=tspmband(f.m_bands.Items[i]);
+        b.m_f1i := trunc(b.m_f1/t.cfg.fspmdx) + 1;
+        b.m_f2i := trunc(b.m_f2/t.cfg.fspmdx);
       end;
     end;
     f.UpdateBandNames;

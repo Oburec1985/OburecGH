@@ -1651,6 +1651,10 @@ var
   i, len: integer;
 begin
   buf := '';
+  //if p>1 then
+  //begin
+  //  src:=Copy(src, p, length(src)-p);
+  //end;
   len := length(src);
   if len=0 then
   begin

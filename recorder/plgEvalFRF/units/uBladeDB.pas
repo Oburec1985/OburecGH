@@ -33,9 +33,9 @@ type
   cXmlFolder = class(cDbFolder)
   public
     selected:cXmlFolder;
+    m_ObjType:string;
   protected
     m_dsc:string;
-    m_ObjType:string;
     m_Properties:tstringlist;
   private
     procedure clearProps;
@@ -136,9 +136,6 @@ type
     procedure  SetStageCount(c:integer);
   public
     function GetBladeCount(stageNum:integer):integer;
-    procedure Buildreport; overload;
-    // путь к шаблону
-    procedure Buildreport(tmpl:string; hideexcel:boolean);overload;
     function GetStage(i:integer):cstageFolder;
     property StageCount:integer read getstagecount write setstagecount;
   end;
@@ -214,6 +211,8 @@ type
     constructor create;override;
     destructor destroy;override;
   end;
+  // дешифровать тон из resStr лопатки
+  function getBand(b:point2d; blade:cbladefolder; threshold:double; var er:boolean):point3d;
 
   var
     g_mbase:cBladeBase;
@@ -1388,222 +1387,6 @@ begin
 end;
 
 { cTurbFolder }
-
-procedure cTurbFolder.Buildreport;
-var
-  r0, i, j, r, c: integer;
-  b: tspmband;
-  extr: PExtremum1d;
-  date: TDateTime;
-  res: boolean;
-  rng: olevariant;
-  str, str1, str2, repPath: string;
-  minmax: point2d;
-  v: double;
-  turb: cTurbFolder;
-  stage: cStageFolder;
-  blade: cBladeFolder;
-begin
-  if VarIsEmpty(E) then
-  begin
-    // if not CheckExcelRun then
-    begin
-      CreateExcel;
-      VisibleExcel(true);
-    end;
-  end;
-  turb := g_mbase.SelectTurb;
-  stage := g_mbase.SelectStage;
-  blade := g_mbase.SelectBlade;
-  repPath := turb.getFolder + 'Report.xlsx';
-  if fileexists(repPath) then
-  begin
-    if not IsExcelFileOpen(repPath) then
-    begin
-      OpenWorkBook(repPath);
-      ClearExcelSheet(E,1,false);
-    end
-  end
-  else
-  begin
-    AddWorkBook;
-    AddSheet('Page_01');
-  end;
-  r0 := GetEmptyRow(1, 1, 2);
-  SetCell(1, r0, 2, 'Турбина:');
-  SetCell(1, r0, 3, turb.ObjType);
-  SetCell(1, r0, 4, 'Ступень:');
-  SetCell(1, r0, 5, stage.m_sn);
-  inc(r0);
-  SetCell(1, r0, 2, 'Число лопаток:');
-  SetCell(1, r0, 3, stage.BlCount);
-  inc(r0);
-  SetCell(1, r0, 2, 'Лопатка');
-  SetCell(1, r0, 3, 'Band');
-  SetCell(1, r0, 4, 'A1');
-  SetCell(1, r0, 5, 'F1');
-  // проход по формам (полосам)
-  blade := nil;
-  for i := 0 to stage.BlCount - 1 do
-  begin
-    inc(r0);
-    blade := cBladeFolder(stage.GetNext(blade));
-    if i=0 then
-      c:=blade.ToneCount;
-    SetCell(1, r0, 2, blade.name);
-    // c - число тонов
-    for j := 0 to c - 1 do
-    begin
-      str := getSubStrByIndex(blade.m_resStr, ';', 1, j);
-      // f1..f2
-      str1 := getSubStrByIndex(str, '_', 1, 0);
-      SetCell(1, r0, 3, str1);
-      // A
-      str1 := getSubStrByIndex(str, '_', 1, 1);
-      // F
-      str2 := getSubStrByIndex(str, '_', 1, 2);
-      SetCell(1, r0, 4, strtofloatext(str1));
-      SetCell(1, r0, 5, strtofloatext(str2));
-      if blade.m_res = 1 then
-      begin
-        rng := GetRangeObj(1, point(r0, 2), point(r0, 5));
-        rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
-      end;
-    end;
-  end;
-  SaveWorkBookAs(repPath);
-  CloseWorkBook;
-  CloseExcel;
-end;
-
-procedure cTurbFolder.Buildreport(tmpl: string; hideexcel:boolean);
-var
-  r0, i, j, r,col, c, c2: integer;
-  b: tspmband;
-  extr: PExtremum1d;
-  date: TDateTime;
-  res: boolean;
-  rng, rng2, rng3: olevariant;
-  str, str1, str2, repPath: string;
-  tp:tpoint;
-  p3:point3d;
-  minmax: point2d;
-  v: double;
-  turb: cTurbFolder;
-  stage: cStageFolder;
-  blade: cBladeFolder;
-begin
-  KillAllExcelProcesses;
-  if tmpl='' then
-  begin
-    tmpl:=g_mbase.root.Absolutepath+'Template\Report_tmpl.xlsx';
-  end;
-  if VarIsEmpty(E) then
-  begin
-    // if not CheckExcelRun then
-    begin
-      CreateExcel;
-      VisibleExcel(true);
-    end;
-  end;
-  turb := g_mbase.SelectTurb;
-  if fileexists(tmpl) then
-  begin
-    if not IsExcelFileOpen(tmpl) then
-    begin
-      OpenWorkBook(tmpl);
-    end;
-
-    stage := g_mbase.SelectStage;
-    blade := g_mbase.SelectBlade;
-
-    rng:=GetRange(1,'c_Sketch');
-    rng.value:=blade.m_ObjType;
-    rng:=GetRange(1,'c_BlCount');
-    rng.value:=stage.BlCount;
-    rng:=GetRange(1,'c_ToneCount');
-    c:=rng.value;
-    rng:=GetRange(1,'c_ToneCount2');
-    c2:=rng.value;
-
-    rng.value:=blade.ToneCount;
-    rng:=GetRange(1,'c_Tone');
-    rng2:=GetRange(1,'c_Start');
-    // заполняем тоны в таблице лопаток (с позиции Start)
-    for I := 0 to blade.ToneCount - 1 do
-    begin
-      SetCell(1, rng.Row-1, rng.Column+i, i+1);
-      p3:=blade.Tone(i);
-      // тоны в таблице с c_Tone
-      SetCell(1, rng.Row, rng.Column+i, p3.x);
-      SetCell(1, rng.Row+1,rng.Column+i, p3.y);
-      // тоны в таблице с c_start
-      SetCell(1, rng2.Row-1,rng2.Column+2+i*3, p3.x);
-      SetCell(1, rng2.Row-1,rng2.Column+4+i*3, p3.y);
-    end;
-    rng:=GetRange(1,'c_Type');
-    rng.value:=turb.m_ObjType;
-    rng:=GetRange(1,'c_Stage');
-    rng.value:=stage.StageNum;
-    rng:=GetRange(1,'c_decr');
-    // проход по лопаткам; rng2 - ячейка c_Start
-    for I := 0 to stage.BlCount - 1 do
-    begin
-      blade:=stage.getblade(i);
-      SetCell(1, rng2.Row+i,rng2.Column+1, blade.m_sn);
-      // проход по тонам
-      for j := 0 to blade.ToneCount - 1 do
-      begin
-        str := getSubStrByIndex(blade.m_resStr, ';', 1, j);
-        // numBand
-        str2 := getSubStrByIndex(str, '_', 1, 4);
-        //if str2<>'0' then
-        //  continue;
-        // F
-        str2 := getSubStrByIndex(str, '_', 1, 2);
-        r:=rng2.Row+i;
-        col:=rng2.Column+2+j*3;
-        SetCell(1, r,col, strtofloatext(str2));
-        // декремент
-        str2 := getSubStrByIndex(str, '_', 1, 3);
-        col:=rng.Column+j;
-        SetCell(1, r, col, strtofloatext(str2));
-      end;
-      if blade.m_res=2 then
-      begin
-        SetCell(1, rng.Row+i,rng.Column+blade.ToneCount, 'годен');
-      end
-      else
-      begin
-        if blade.m_res=1 then
-        begin
-          rng3 := GetRangeObj(1, point(rng2.row, rng2.column),
-                                point(rng2.row, rng.column+1));
-          rng3.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
-          SetCell(1, rng2.Row+i, rng.Column+ // rng - столбец декремент
-                                 1, 'не годен');
-        end
-        else
-        begin
-          SetCell(1, rng2.Row+i, rng.Column+ // rng - столбец декремент
-                                 1, 'не испытана');
-        end;
-      end;
-    end;
-    repPath := ExtractFileDir(turb.getFolder) + '\Report.xlsx';
-    SaveWorkBookAs(repPath);
-    if hideexcel then
-    begin
-      CloseWorkBook;
-      CloseExcel;
-    end;
-  end
-  else
-  begin
-    showmessage('Не найден шаблон '+ tmpl);
-  end;
-end;
-
 function cTurbFolder.GetBladeCount(stageNum: integer): integer;
 var
   o:cObjType;
@@ -1643,5 +1426,75 @@ begin
   o:=getObjType;
   o.addProp('StageCount', inttostr(c));
 end;
+
+// + floattostr(BandExtr.Value) + '_'
+// + floattostr(BandExtr.Freq) + '_'
+// + floattostr(BandExtr.decrement)+'_'
+// + inttostr(BandExtr.NumInBand)+';';
+function getBand(b:point2d; blade:cbladefolder; threshold:double; var er:boolean):point3d;
+var
+  str,str1, s1:string;
+  ind, next,p,p2, num:integer;
+  f1,f2,A,F,d, err, resErr:double;
+begin
+  result.x:=0;
+  result.y:=0;
+  result.z:=0;
+  str:=GetSubString(blade.m_resStr, ';', 1, ind);
+  next:=0;
+  while str<>'' do
+  begin
+    p:=pos('..',str);
+    reserr:=0;
+    s1:=Copy(str, 1, p-1);
+    f1:=strtoFloatExt(s1);
+    p2:=pos('_',str);
+    s1:=Copy(str, p+2, p2-p-2);
+    f2:=strToFloatExt(s1);
+    ind:=p2;
+    s1:=GetSubString(Str, '_', ind+1, ind);
+    A:=strtoFloatExt(s1);
+    s1:=GetSubString(Str, '_', ind+1, ind);
+    F:=strtoFloatExt(s1);
+    s1:=GetSubString(Str, '_', ind+1, ind);
+    D:=strtoFloatExt(s1);
+    s1:=GetSubString(Str, '_', ind+1, ind);
+    next:=length(str)+1+next;
+    num:=strtoint(s1);
+    if num<>-1 then
+    begin
+      if (F>b.x) and (f<b.y) then
+      begin
+        if num=0 then
+        begin
+          result.x:=A;
+          result.y:=F;
+          result.z:=D;
+          err:=0.5*(f1+f2)-F;
+          resErr:=err;
+        end
+        else
+        begin
+          // выбираем более правильный экстремум в полосе!!!
+          if err>0.5*(f1+f2)-F then
+          begin
+            result.x:=A;
+            result.y:=F;
+            result.z:=D;
+            err:=0.5*(f1+f2)-F;
+            resErr:=err;
+          end;
+        end;
+      end;
+    end;
+    if f>b.y then
+    begin
+      er:=threshold>resErr;
+      exit;
+    end;
+    str:=GetSubString(blade.m_resStr, ';', next+1, ind);
+  end;
+end;
+
 
 end.
