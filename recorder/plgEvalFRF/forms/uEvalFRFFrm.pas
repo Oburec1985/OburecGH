@@ -374,9 +374,9 @@ type
     Frf_YX_XY_CB: TCheckBox;
     useAvrCb: TCheckBox;
     SnLabel: TLabel;
-    Edit1: TEdit;
+    SnEdit: TEdit;
     Label1: TLabel;
-    Edit2: TEdit;
+    WeightFe: TFloatEdit;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -401,6 +401,7 @@ type
     procedure HideExcelCBClick(sender: tobject);
     procedure TrigFEChange(sender: tobject);
     procedure Frf_YX_XY_CBClick(sender: tobject);
+    procedure SnEditKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   public
     // тип отчета. Подробный/ ОТК
     m_repType:boolean;
@@ -721,6 +722,13 @@ begin
         s.selected := bl;
         BladeNumEdit.Text := bl.caption;
         Showbladestatus(bl.m_res);
+        SnEdit.Text:=bl.m_sn;
+        WeightFe.FloatNum:=bl.m_weight;
+      end
+      else
+      begin
+        SnEdit.Text:=sb.m_sn;
+        WeightFe.FloatNum:=sb.m_weight;
       end;
     end;
   end;
@@ -743,6 +751,15 @@ begin
         s.selected := bl;
         BladeNumEdit.Text := (bl.caption);
         Showbladestatus(bl.m_res);
+        WeightFe.FloatNum:=bl.m_weight;
+        SnEdit.Text:=bl.m_sn;
+      end
+      else
+      begin
+        BladeNumEdit.Text := (sb.caption);
+        Showbladestatus(sb.m_res);
+        WeightFe.FloatNum:=sb.m_weight;
+        SnEdit.Text:=sb.m_sn;
       end;
     end;
   end;
@@ -963,7 +980,7 @@ begin
   if turb <> nil then
   begin
     if m_reptype then
-      uBladeReport.buildReportOtk('', 'Ivanov', g_FrfFactory.m_hideExcel, 2, 5)
+      uBladeReport.buildReportOtk('', 'Ivanov', g_FrfFactory.m_hideExcel, 2, 1)
     else
       uBladeReport.buildReport('', g_FrfFactory.m_hideExcel);
   end;
@@ -3059,6 +3076,28 @@ end;
 procedure TFRFFrm.SignalsLVColumnBtnClick(item: TListItem; lv: TListView);
 begin
   SignalsLVClick(nil);
+end;
+
+procedure TFRFFrm.SnEditKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  s: cStageFolder;
+  bl, sb: cBladeFolder;
+begin
+  if key<>VK_RETURN then
+    exit;
+
+  s := g_mbase.SelectStage;
+  if s <> nil then
+  begin
+    sb := g_mbase.SelectBlade;
+    if sb <> nil then
+    begin
+      sb.m_sn:=SnEdit.Text;
+      sb.m_weight:=WeightFe.FloatNum;
+      sb.CreateXMLDesc;
+    end;
+  end;
 end;
 
 procedure TFRFFrm.SPMcbClick(sender: tobject);

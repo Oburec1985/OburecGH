@@ -1200,6 +1200,8 @@ begin
   lpath:=Absolutepath;
   ForceDirectories(lpath);
   node.WriteAttributeInteger('Result',m_res);
+  node.WriteAttributeString('SN',m_sn);
+  node.WriteAttributeFloat('Weight',m_weight);
   node.WriteAttributeString('ResStr',m_resStr);
   node.WriteAttributeBool('Side',m_sideCB);
 end;
@@ -1227,6 +1229,8 @@ begin
   M_res:=node.ReadAttributeInteger('Result',-1);
   m_resStr:=node.ReadAttributeString('ResStr','');
   m_sideCB:=node.ReadAttributeBool('Side',false);
+  m_sn:=node.ReadAttributeString('SN','');
+  m_weight:=node.ReadAttributeFloat('Weight',0);
 end;
 
 function cBladeFolder.GetTolerance(bnum:integer): double;
@@ -1487,9 +1491,12 @@ begin
         end;
       end;
     end;
+    if (f>b.x) and (f<b.y) then
+    begin
+      er:=threshold<resErr;
+    end;
     if f>b.y then
     begin
-      er:=threshold>resErr;
       exit;
     end;
     str:=GetSubString(blade.m_resStr, ';', next+1, ind);

@@ -298,7 +298,9 @@ end;
 
 procedure BuildReportOtk(tmpl, Name:string; hideexcel:boolean; toneCount:integer; blCount:integer);
 var
-  r0, i, j, r, col, c: integer;
+  r0, i, j, r, col, c,
+  // количество колонок на лопатку
+  colWide: integer;
   date: TDateTime;
   rng, rng2: olevariant;
   str, repPath: string;
@@ -341,13 +343,16 @@ begin
     date:=now;
     rng.value:=FormatDateTime('dd.mm.yyyy hh:nn:ss', date);
     rng:=GetRange(1,'c_start');
+    rng2:=GetRange(1,'c_weight');
+    colWide:=rng2.column-rng.column+2;
     // заполняем тоны в таблице лопаток (с позиции Start)
     for I := 0 to stage.ChildCount - 1 do
     begin
       blade:=stage.GetBlade(i);
       r:=i div blCount;
       c:=i mod blCount;
-      SetCell(1, rng.Row+r, rng.Column+c, blade.m_sn);
+      SetCell(1, rng.Row+r, rng.Column+c*colWide, blade.m_sn);
+      SetCell(1, rng.Row+r, rng.Column+c*colWide+colWide-2, blade.m_weight);
       for j := 0 to toneCount - 1 do
       begin
         p3:=blade.Tone(j);
@@ -355,14 +360,18 @@ begin
         // Y - частота тона
         if lp3.y>0 then
         begin
-          SetCell(1, rng.Row+r+j+1, rng.Column+c+j+1, lp3.y);
+          SetCell(1, rng.Row+r, rng.Column+j+1+c*colWide, lp3.y);
           if er then
           begin
             rng2:=GetRangeObj(1,
-                              point(rng.Row+r+j+1, rng.Column+c+j+1),
-                              point(rng.Row+r+j+1, rng.Column+c+j+1));
+                              point(rng.Row+r, rng.Column+j+1+c*colWide),
+                              point(rng.Row+r, rng.Column+j+1+c*colWide));
             rng2.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
           end;
+        end
+        else
+        begin
+          SetCell(1, rng.Row+r, rng.Column+j+1+c*colWide, '-');
         end;
       end;
     end;
