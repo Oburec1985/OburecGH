@@ -1457,10 +1457,18 @@ begin
     f2:=strToFloatExt(s1);
     ind:=p2;
     s1:=GetSubString(Str, '_', ind+1, ind);
+    if ind<1 then
+      exit;
     A:=strtoFloatExt(s1);
     s1:=GetSubString(Str, '_', ind+1, ind);
+    if ind<1 then
+      exit;
     F:=strtoFloatExt(s1);
+    if ind<1 then
+      exit;
     s1:=GetSubString(Str, '_', ind+1, ind);
+    if ind<1 then
+      exit;
     D:=strtoFloatExt(s1);
     s1:=GetSubString(Str, '_', ind+1, ind);
     next:=length(str)+1+next;

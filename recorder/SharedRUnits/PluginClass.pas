@@ -51,6 +51,7 @@ type
     специальную форму}
   TExtRecorderPack = class(TInterfacedObject, IRecorderPlugin)
   public
+    m_UIThreadID: integer;
     // для прореживания LeaveConfig событий
     m_loadState,
     // взводится при leavecfg
@@ -71,7 +72,7 @@ type
     m_usememtag:boolean;
   protected
     m_rstate: dword;
-    m_UIThreadID: integer;
+
 
     m_journal: IJournal;
 

@@ -221,7 +221,7 @@ end;
 
 procedure TMainBldForm.CopyToolBtnClick(Sender: TObject);
 begin
-  //chartframe1.Chart.CopyScreenToClipboard;
+  MainChart.CopyScreenToClipboard;
 end;
 
 constructor TMainBldForm.create(aowner: tcomponent);

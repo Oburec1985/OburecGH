@@ -341,6 +341,7 @@ begin
       if left=-1 then
       begin
         result:=points2d[0].y;
+        exit;
       end;
       lp1:=points2d[left];
       lp2:=points2d[left+1];

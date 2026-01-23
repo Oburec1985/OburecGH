@@ -859,10 +859,6 @@ object MainBldForm: TMainBldForm
       Margins.Bottom = 4
       Caption = #1050#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object CfgGB: TGroupBox
         Left = 0
         Top = 0

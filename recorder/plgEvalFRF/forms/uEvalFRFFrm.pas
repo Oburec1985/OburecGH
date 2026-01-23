@@ -403,6 +403,8 @@ type
     procedure Frf_YX_XY_CBClick(sender: tobject);
     procedure SnEditKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   public
+    m_ReportBmp:TBitmap;
+    m_RenderReport:boolean;
     // тип отчета. Подробный/ ОТК
     m_repType:boolean;
     m_Frf_YX: boolean;
@@ -475,6 +477,7 @@ type
     // если не попадают в bands то лопатка бракованная
     // сразу сохраняет в БД отчет по лопатке в excel
     function CheckFlags: boolean;
+    procedure doSwapBuffers(sender:tobject);
     procedure SaveReport(repname: string; bl: cBladeFolder);
     // построить отчет по турбине
     procedure buildReport();
@@ -970,17 +973,28 @@ begin
   // сохраняем статус лопатки
   bl.CreateXMLDesc;
   SaveReport(repPath, bl);
+  // сохраняем картинку
 end;
 
 procedure TFRFFrm.buildReport;
 var
   turb: cTurbFolder;
+  s:cStageFolder;
+  b:cBladeFolder;
+  colCount, tonecount:integer;
 begin
   turb := g_mbase.SelectTurb;
   if turb <> nil then
   begin
     if m_reptype then
-      uBladeReport.buildReportOtk('', 'Ivanov', g_FrfFactory.m_hideExcel, 2, 1)
+    begin
+      colCount:=1;
+      s:=turb.GetStage(0);
+      b:=s.GetBlade(0);
+      tonecount:=b.ToneCount;
+      uBladeReport.buildReportOtk('', 'Ivanov', g_FrfFactory.m_hideExcel,
+                                  tonecount, colcount, m_bands)
+    end
     else
       uBladeReport.buildReport('', g_FrfFactory.m_hideExcel);
   end;
@@ -988,7 +1002,7 @@ end;
 
 procedure TFRFFrm.SaveReport(repname: string; bl: cBladeFolder);
 var
-  r0, i, j, r, c: integer;
+  r0, i, j, k, r,r2, c: integer;
   t: cSRSTaho;
   s: cSRSres;
   cfg: cSpmCfg;
@@ -996,11 +1010,12 @@ var
   extr: cExtremum;
   date: TDateTime;
   res: boolean;
-  rng, sh: olevariant;
+  rng, rng2, sh: olevariant;
   str, repPath: string;
   minmax: point2d;
   v, v1, d: double;
-
+  find:boolean;
+  pict:tbitmap;
 begin
   KillAllExcelProcesses;
   if not CheckVarObj(E) then
@@ -1088,6 +1103,7 @@ begin
       begin
         str:='0..0';
       end;
+      // полоса
       SetCell(1, r + 1 + j, c, str);
       v1 := extr.Freq;
       v := extr.Value;
@@ -1098,21 +1114,77 @@ begin
     end;
     c := c + 7;
   end;
+  k:=0;
+  r2:=r+j;
+  // заполняем не найденые полосы
+  for I := 0 to m_bands.Count - 1 do
+  begin
+    b:=m_bands.getband(i);
+    find:=false;
+    for j := 0 to s.m_BandExtremums.Count - 1 do
+    begin
+      extr := s.getExtremum(j);
+      if extr.m_b=b then
+      begin
+        find:=true;
+        break;
+      end;
+    end;
+    if not find then
+    begin
+      // полоса
+      inc(k);
+      rng2:=getRangeObj(1, point(r2+k, 2), point(r2+k, 2+3));
+      rng2.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
+      SetCell(1, r2+k, 2,  floattostr(b.m_f1) + '..' + floattostr(b.m_f2));
+      SetCell(1, r2+k, 2 + 1, 0);
+      SetCell(1, r2+k, 2 + 2, 0);
+      SetCell(1, r2+k, 2 + 3, 0);
+    end;
+  end;
   // разметка заголовка
   rng := GetRangeObj(1, point(r, 2), point(r, c - 1));
   // c_Excel_GrayInd = 15;
   rng.Interior.ColorIndex := 15;
   rng.Font.Bold := true;
   // ставим сетку всего блока
-  rng := GetRangeObj(1, point(r, 2), point(r + j, c - 1));
+  rng := GetRangeObj(1, point(r, 2), point(r + s.m_BandExtremums.Count +k, c - 1));
   SetRangeBorder(rng);
-  SaveWorkBookAs(repname);
+
+
+  //m_RenderReport:=true;
+  //while m_RenderReport do
+  //begin
+  //  SpmChart.Repaint;
+  //  Sleep(100);
+  //end;
+
+  // ставим картинку
+  rng := GetRangeObj(1, point(r, 3), point(r + s.m_BandExtremums.Count +k, c - 1+1));
+  //InsertWindowToExcel(rng, b.m_chart.Handle);
+  m_ReportBmp:=spmchart.getBitmap;
+  SetBmpToExcel(rng, m_ReportBmp);
+  m_ReportBmp.free;
   if g_FrfFactory.m_hideExcel then
   begin
     CloseWorkBook;
     CloseExcel;
   end;
 end;
+
+procedure TFRFFrm.doswapbuffers(Sender: TObject);
+begin
+  if GetCurrentThreadId=TExtRecorderPack(GPluginInstance).m_UIThreadID then
+  begin
+    if m_RenderReport then
+    begin
+      m_ReportBmp:=SpmChart.getBitmap;
+      spmchart.SaveWindowToFile('f:\5.jpeg');
+      m_RenderReport:=false;
+    end;
+  end;
+end;
+
 
 constructor TFRFFrm.create(Aowner: tcomponent);
 begin
@@ -1383,6 +1455,7 @@ begin
   ready := true;
 end;
 
+
 procedure TFRFFrm.doUpdateParams(sender: tobject);
 var
   t: cSRSTaho;
@@ -1500,6 +1573,7 @@ var
   r: frect;
 begin
   callDoOnZoom := true;
+  //SpmChart.OnSwapBuffers := doSwapBuffers;
   SpmChart.OnRBtnClick := RBtnClick;
   SpmChart.tabs.activeTab.addPage(true);
   SpmChart.OBJmNG.Events.AddEvent('SpmChart_OnZoom', e_OnChangeAxisScale,
@@ -2353,6 +2427,9 @@ var
   t: cSRSTaho;
   s: cSRSres;
 begin
+  //if GetCurrentThreadId<>TExtRecorderPack(GPluginInstance).m_UIThreadID then
+  //  showmessage('!');
+
   t := getTaho;
   if t = nil then
     exit;
@@ -2743,8 +2820,8 @@ var
   t: cSRSTaho;
   s: cSRSres;
   db, tb: TDataBlock;
-begin
 
+begin
   // dir := extractfiledir(g_FrfFactory.m_meraFile) + '\Shock';
   if g_mbase.SelectBlade = nil then
   begin
@@ -2820,6 +2897,7 @@ begin
     savedata(f, s.m_tag.tagname, s);
   end;
   ifile.destroy;
+  SpmChartDblClick(nil);
   CheckFlags;
 end;
 

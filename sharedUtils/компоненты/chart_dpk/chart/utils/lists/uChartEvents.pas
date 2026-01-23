@@ -15,6 +15,8 @@ const
   E_OnMouseMove = $00000100;
   // происходит при перерисовке страницы
   e_onDraw = $00000200;
+  // Вызов после SwapBuffers здесь корректно считать картинку
+  e_AfterSwapBuffers = $00400000;
   // происходит при перерисовке страницы
   e_onAddPoint = $00000400;
   // происходит при перерисовке страницы
@@ -38,7 +40,7 @@ const
   e_OnMoveCursor2 = $00100000;
   // сдвинули курсор Y
   e_OnMoveCursorY = $00200000;
-
+  //e_AfterSwapBuffers = $00400000;
 implementation
 
 end.

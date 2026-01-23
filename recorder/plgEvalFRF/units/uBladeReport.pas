@@ -34,7 +34,8 @@ type
   procedure Buildreport; overload;
   // путь к шаблону
   procedure Buildreport(tmpl:string; hideexcel:boolean);overload;
-  procedure BuildReportOtk(tmpl, name:string; hideexcel:boolean; toneCount:integer; blCount:integer);
+  procedure BuildReportOtk(tmpl, name:string; hideexcel:boolean; toneCount:integer; blCount:integer;
+              p_bandlist:blist);
 
 
 implementation
@@ -296,7 +297,10 @@ begin
   end;
 end;
 
-procedure BuildReportOtk(tmpl, Name:string; hideexcel:boolean; toneCount:integer; blCount:integer);
+procedure BuildReportOtk(tmpl, Name:string;
+                         hideexcel:boolean;
+                         toneCount:integer;
+                         blCount:integer; p_bandlist:blist);
 var
   r0, i, j, r, col, c,
   // количество колонок на лопатку
@@ -308,6 +312,7 @@ var
   tol, v: double;
   er:boolean;
 
+  b:tSpmBand;
   turb: cTurbFolder;
   stage: cStageFolder;
   blade: cBladeFolder;
@@ -337,13 +342,31 @@ begin
     tol:=blade.GetTolerance(0);
 
     rng:=GetRange(1,'c_type');
+    if not CheckVarObj(rng) then
+    begin
+      showmessage('не найден регион c_type в шаблоне');
+    end;
     rng.value:=turb.ObjType;
 
     rng:=GetRange(1,'c_date');
+    if not CheckVarObj(rng) then
+    begin
+      showmessage('не найден регион c_date в шаблоне');
+    end;
     date:=now;
     rng.value:=FormatDateTime('dd.mm.yyyy hh:nn:ss', date);
+
     rng:=GetRange(1,'c_start');
+    if not CheckVarObj(rng) then
+    begin
+      showmessage('не найден регион c_start в шаблоне');
+    end;
+
     rng2:=GetRange(1,'c_weight');
+    if not CheckVarObj(rng2) then
+    begin
+      showmessage('не найден регион c_weight в шаблоне');
+    end;
     colWide:=rng2.column-rng.column+2;
     // заполняем тоны в таблице лопаток (с позиции Start)
     for I := 0 to stage.ChildCount - 1 do
@@ -355,8 +378,32 @@ begin
       SetCell(1, rng.Row+r, rng.Column+c*colWide+colWide-2, blade.m_weight);
       for j := 0 to toneCount - 1 do
       begin
+        b:=p_bandlist.getBand(j);
+        if i=0 then
+        begin
+          b.stats.minF:=-1;
+          b.stats.maxF:=-1;
+        end;
         p3:=blade.Tone(j);
         lp3:=getBand(p2d(p3.x,p3.y), blade, tol, er);
+        if lp3.y<>0 then
+        begin
+          if b.stats.minF=-1 then
+            b.stats.minF:=lp3.y
+          else
+          begin
+            if lp3.y<b.stats.minF then
+              b.stats.minF:=lp3.y;
+          end;
+          if b.stats.maxF=-1 then
+            b.stats.maxF:=lp3.y
+          else
+          begin
+            if lp3.y>b.stats.maxF then
+              b.stats.maxF:=lp3.y;
+          end;
+        end;
+
         // Y - частота тона
         if lp3.y>0 then
         begin
@@ -373,6 +420,23 @@ begin
         begin
           SetCell(1, rng.Row+r, rng.Column+j+1+c*colWide, '-');
         end;
+      end;
+    end;
+    rng2:=GetRange(1,'c_tones');
+    rng:=GetRange(1,'c_tones_fact');
+    if not CheckVarObj(rng2) then
+    begin
+      showmessage('не найден регион c_tones в шаблоне');
+    end
+    else
+    begin
+      for I := 0 to p_bandlist.Count - 1 do
+      begin
+        b:=p_bandlist.getband(i);
+        SetCell(1, rng2.Row+i, rng2.Column, b.m_f1);
+        SetCell(1, rng2.Row+i, rng2.Column+2, b.m_f2);
+        SetCell(1, rng.Row+i, rng.Column, b.stats.minF);
+        SetCell(1, rng.Row+i, rng.Column+2, b.stats.maxF);
       end;
     end;
     repPath := ExtractFileDir(turb.getFolder) + '\ReportOTK.xlsx';

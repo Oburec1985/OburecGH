@@ -3,40 +3,38 @@ object FRFFrm: TFRFFrm
   Top = 0
   Hint = #1042#1082#1083#1102#1095#1080#1090#1100'/'#1086#1090#1082#1083#1102#1095#1080#1090#1100' '#1088#1072#1089#1095#1077#1090
   Caption = 'FRFFrm'
-  ClientHeight = 476
-  ClientWidth = 712
+  ClientHeight = 622
+  ClientWidth = 931
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   ShowHint = True
   OnCreate = FormCreate
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object Splitter1: TSplitter
-    Left = 466
+    Left = 609
     Top = 0
-    Width = 6
-    Height = 476
+    Width = 8
+    Height = 622
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alRight
     Color = clBackground
     ParentColor = False
-    ExplicitLeft = 568
-    ExplicitHeight = 577
   end
   object SpmChart: cChart
     Left = 0
     Top = 0
-    Width = 466
-    Height = 476
+    Width = 609
+    Height = 622
     Cursor = crSizeAll
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 0
@@ -47,51 +45,53 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitLeft = -176
-    ExplicitTop = 7
-    ExplicitWidth = 564
-    ExplicitHeight = 577
   end
   object RightGB: TGroupBox
-    Left = 472
+    Left = 617
     Top = 0
-    Width = 240
-    Height = 476
+    Width = 314
+    Height = 622
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     ParentShowHint = False
     ShowHint = False
     TabOrder = 1
-    ExplicitLeft = 574
-    ExplicitHeight = 577
     object ShockCountLabel: TLabel
-      Left = 6
-      Top = 21
-      Width = 84
-      Height = 13
+      Left = 8
+      Top = 27
+      Width = 105
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1053#1072#1081#1076#1077#1085#1086' '#1091#1076#1072#1088#1086#1074
       ParentShowHint = False
       ShowHint = False
     end
     object ShockLabel: TLabel
-      Left = 4
-      Top = 148
-      Width = 39
-      Height = 13
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 5
+      Top = 194
+      Width = 47
+      Height = 17
       Caption = #1059#1076#1072#1088#8470
       ParentShowHint = False
       ShowHint = False
     end
     object WinPosBtn: TSpeedButton
-      Left = 72
-      Top = 92
-      Width = 49
-      Height = 45
+      Left = 94
+      Top = 120
+      Width = 64
+      Height = 59
       Hint = #1054#1090#1082#1088#1099#1090#1100' '#1074' WinPos'
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       AllowAllUp = True
       BiDiMode = bdLeftToRight
       Glyph.Data = {
@@ -267,14 +267,18 @@ object FRFFrm: TFRFFrm
       OnClick = WinPosBtnClick
     end
     object TrigLvlLabel: TLabel
-      Left = 89
-      Top = 68
-      Width = 22
-      Height = 17
+      Left = 116
+      Top = 89
+      Width = 30
+      Height = 23
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Lvl.'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -15
+      Font.Height = -20
       Font.Name = 'YScaleLabel'
       Font.Style = []
       ParentFont = False
@@ -282,19 +286,27 @@ object FRFFrm: TFRFFrm
       ShowHint = False
     end
     object ShockCountE: TEdit
-      Left = 5
-      Top = 40
-      Width = 78
-      Height = 21
+      Left = 7
+      Top = 52
+      Width = 102
+      Height = 25
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       ParentShowHint = False
       ShowHint = False
       TabOrder = 0
     end
     object SaveBtn: TButton
       Left = 0
-      Top = 115
-      Width = 66
-      Height = 22
+      Top = 150
+      Width = 86
+      Height = 29
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
       ParentShowHint = False
       ShowHint = False
@@ -302,14 +314,10 @@ object FRFFrm: TFRFFrm
       OnClick = SaveBtnClick
     end
     object ShockSB: TSpinButton
-      Left = 112
-      Top = 165
-      Width = 15
-      Height = 19
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 146
+      Top = 216
+      Width = 20
+      Height = 25
       DownGlyph.Data = {
         0E010000424D0E01000000000000360000002800000009000000060000000100
         200000000000D800000000000000000000000000000000000000008080000080
@@ -337,24 +345,24 @@ object FRFFrm: TFRFFrm
       OnUpClick = ShockSBUpClick
     end
     object ShockIE: TIntEdit
-      Left = 5
-      Top = 165
-      Width = 104
-      Height = 21
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 7
+      Top = 216
+      Width = 136
+      Height = 25
       ParentShowHint = False
       ShowHint = False
       TabOrder = 3
       Text = '0'
     end
     object DelBtn: TButton
-      Left = 5
-      Top = 88
-      Width = 65
-      Height = 21
+      Left = 7
+      Top = 115
+      Width = 85
+      Height = 28
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1059#1076#1072#1083#1080#1090#1100
       ParentShowHint = False
       ShowHint = False
@@ -362,10 +370,14 @@ object FRFFrm: TFRFFrm
       OnClick = DelBtnClick
     end
     object hideCB: TCheckBox
-      Left = 132
-      Top = 40
-      Width = 60
-      Height = 17
+      Left = 173
+      Top = 52
+      Width = 78
+      Height = 23
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1057#1082#1088#1099#1090#1100
       ParentShowHint = False
       ShowHint = False
@@ -373,14 +385,10 @@ object FRFFrm: TFRFFrm
       OnClick = hideCBClick
     end
     object EstimatorRG: TRadioGroup
-      Left = 5
-      Top = 189
-      Width = 60
-      Height = 70
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Left = 7
+      Top = 247
+      Width = 78
+      Height = 92
       Caption = #1054#1094#1077#1085#1082#1072
       ItemIndex = 0
       Items.Strings = (
@@ -394,10 +402,14 @@ object FRFFrm: TFRFFrm
       OnClick = EstimatorRGClick
     end
     object UseWndFcb: TCheckBox
-      Left = 132
-      Top = 155
-      Width = 47
-      Height = 16
+      Left = 173
+      Top = 203
+      Width = 61
+      Height = 21
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1054#1082#1085#1086
       ParentShowHint = False
       ShowHint = False
@@ -405,10 +417,14 @@ object FRFFrm: TFRFFrm
       OnClick = UseWndFcbClick
     end
     object WelchCB: TCheckBox
-      Left = 132
-      Top = 171
-      Width = 59
-      Height = 18
+      Left = 173
+      Top = 224
+      Width = 77
+      Height = 23
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Welch'
       ParentShowHint = False
       ShowHint = False
@@ -417,10 +433,14 @@ object FRFFrm: TFRFFrm
       OnClick = WelchCBClick
     end
     object DisableCB: TCheckBox
-      Left = 88
-      Top = 40
-      Width = 46
-      Height = 17
+      Left = 115
+      Top = 52
+      Width = 60
+      Height = 23
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1042#1082#1083'.'
       ParentShowHint = False
       ShowHint = False
@@ -429,47 +449,35 @@ object FRFFrm: TFRFFrm
     end
     object SignalsGroupBox: TGroupBox
       Left = 2
-      Top = 229
-      Width = 236
-      Height = 119
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
+      Top = 299
+      Width = 310
+      Height = 156
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 10
-      ExplicitTop = 330
       object SignalsLV: TBtnListView
         Left = 2
-        Top = 15
-        Width = 232
-        Height = 102
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Top = 19
+        Width = 306
+        Height = 135
         Align = alClient
         Checkboxes = True
         Columns = <
           item
             Caption = #8470
-            Width = 38
           end
           item
             Caption = #1048#1084#1103
-            Width = 38
           end
           item
             Caption = 'X'
-            Width = 38
           end
           item
             Caption = 'Y'
-            Width = 38
           end
           item
             Caption = 'Ind'
+            Width = 65
           end>
         RowSelect = True
         ParentShowHint = False
@@ -487,10 +495,14 @@ object FRFFrm: TFRFFrm
       end
     end
     object ResTypeRG: TRadioGroup
-      Left = 132
-      Top = 57
-      Width = 70
-      Height = 71
+      Left = 173
+      Top = 75
+      Width = 91
+      Height = 92
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'ResTypeRG'
       ItemIndex = 2
       Items.Strings = (
@@ -505,76 +517,103 @@ object FRFFrm: TFRFFrm
     end
     object BladeGB: TGroupBox
       Left = 2
-      Top = 348
-      Width = 236
-      Height = 126
+      Top = 455
+      Width = 310
+      Height = 165
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alBottom
       Caption = #1051#1086#1087#1072#1090#1082#1072
       TabOrder = 12
-      ExplicitTop = 449
       object BladeLabel: TLabel
-        Left = 5
-        Top = 16
-        Width = 76
-        Height = 13
+        Left = 7
+        Top = 21
+        Width = 99
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1053#1086#1084#1077#1088' '#1083#1086#1087#1072#1090#1082#1080
       end
       object StatusLabel: TLabel
-        Left = 4
-        Top = 54
-        Width = 40
-        Height = 13
+        Left = 5
+        Top = 71
+        Width = 52
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1057#1090#1072#1090#1091#1089':'
       end
       object DempfLabel: TLabel
-        Left = 88
-        Top = 54
-        Width = 82
-        Height = 13
+        Left = 115
+        Top = 71
+        Width = 105
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1044#1077#1084#1087#1092#1080#1088#1086#1074#1072#1085#1080#1077
       end
       object SnLabel: TLabel
-        Left = 89
-        Top = 16
-        Width = 16
-        Height = 13
+        Left = 116
+        Top = 21
+        Width = 21
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'Sn:'
       end
       object Label1: TLabel
-        Left = 170
-        Top = 16
-        Width = 21
-        Height = 13
+        Left = 222
+        Top = 21
+        Width = 27
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = #1042#1077#1089':'
       end
       object StatusEdit: TEdit
-        Left = 4
-        Top = 73
-        Width = 79
-        Height = 21
+        Left = 5
+        Top = 95
+        Width = 104
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Color = clWhite
         ParentShowHint = False
         ShowHint = False
         TabOrder = 0
       end
       object BladeNumEdit: TEdit
-        Left = 3
-        Top = 35
-        Width = 62
-        Height = 21
+        Left = 4
+        Top = 46
+        Width = 81
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         ParentShowHint = False
         ShowHint = False
         TabOrder = 1
       end
       object BladeSE: TSpinButton
-        Left = 68
-        Top = 34
-        Width = 15
-        Height = 19
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
+        Left = 89
+        Top = 44
+        Width = 20
+        Height = 25
         DownGlyph.Data = {
           0E010000424D0E01000000000000360000002800000009000000060000000100
           200000000000D800000000000000000000000000000000000000008080000080
@@ -602,40 +641,56 @@ object FRFFrm: TFRFFrm
         OnUpClick = BladeSEUpClick
       end
       object DempfE: TEdit
-        Left = 87
-        Top = 73
-        Width = 82
-        Height = 21
+        Left = 114
+        Top = 95
+        Width = 107
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Color = clWhite
         ParentShowHint = False
         ShowHint = False
         TabOrder = 3
       end
       object SnEdit: TEdit
-        Left = 87
-        Top = 35
-        Width = 70
-        Height = 21
+        Left = 114
+        Top = 46
+        Width = 91
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         ParentShowHint = False
         ShowHint = False
         TabOrder = 4
         OnKeyDown = SnEditKeyDown
       end
       object WeightFe: TFloatEdit
-        Left = 170
-        Top = 35
-        Width = 46
-        Height = 21
+        Left = 222
+        Top = 46
+        Width = 60
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 5
         Text = '0.0'
         OnKeyDown = SnEditKeyDown
       end
     end
     object TrigFE: TFloatSpinEdit
-      Left = 5
-      Top = 64
-      Width = 78
-      Height = 22
+      Left = 7
+      Top = 84
+      Width = 102
+      Height = 27
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Increment = 0.100000000000000000
       ParentShowHint = False
       ShowHint = False
@@ -643,10 +698,14 @@ object FRFFrm: TFRFFrm
       OnChange = TrigFEChange
     end
     object HideExcelCB: TCheckBox
-      Left = 132
-      Top = 128
-      Width = 89
-      Height = 17
+      Left = 173
+      Top = 167
+      Width = 116
+      Height = 23
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1057#1082#1088#1099#1090#1100' Excel'
       ParentShowHint = False
       ShowHint = False
@@ -654,10 +713,14 @@ object FRFFrm: TFRFFrm
       OnClick = HideExcelCBClick
     end
     object Frf_YX_XY_CB: TCheckBox
-      Left = 129
-      Top = 195
-      Width = 128
-      Height = 17
+      Left = 169
+      Top = 255
+      Width = 167
+      Height = 22
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Out/In'
       Checked = True
       ParentShowHint = False
@@ -667,10 +730,14 @@ object FRFFrm: TFRFFrm
       OnClick = Frf_YX_XY_CBClick
     end
     object useAvrCb: TCheckBox
-      Left = 129
-      Top = 213
-      Width = 86
-      Height = 17
+      Left = 169
+      Top = 279
+      Width = 112
+      Height = 22
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = #1059#1089#1088#1077#1076#1085#1103#1090#1100
       Checked = True
       ParentShowHint = False

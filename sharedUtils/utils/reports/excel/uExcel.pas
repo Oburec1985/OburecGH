@@ -1,8 +1,10 @@
 ﻿unit uExcel;
 
 interface
-  uses Classes, Graphics,  TlHelp32,
-  ComObj, ActiveX, Variants, Windows, Messages, SysUtils;
+  uses
+  Classes, Graphics,  TlHelp32, Clipbrd, Controls,
+  Windows, SysUtils, PngImage, jpeg,
+  ComObj, ActiveX, Variants,  Messages;
 
 const
   ExcelApp = 'Excel.Application';
@@ -404,6 +406,10 @@ xlPasteAll                      =	-4104 ; // Вставка всех данны�
                            AContentsOnly: Boolean = False): Boolean;
   procedure SetCellFormula(sheet: OleVariant; row, col: integer; formula: string);
   procedure CopySheet(const sourceSheet, destSheet: string);
+
+  function InsertWindowToExcel(const rng: OleVariant; Hwnd: HWND; AQuality: Integer = 90): Boolean;
+  procedure SetBitmapToExcelDirect(const rng: OleVariant; bmp: graphics.TBitmap);
+  procedure  SetBmpToExcel(const rng: OleVariant; bmp:graphics.tbitmap);
   procedure DeleteSheetByName(const sheetName: string);
   procedure RenameSheet(const oldName, newName: string);
   procedure CopyRange(const sourceSheet, sourceRange, destSheet, destRange: string);
@@ -751,6 +757,156 @@ end;
 procedure CopySheet(const sourceSheet, destSheet: string);
 begin
   E.ActiveWorkbook.Sheets[sourceSheet].Copy(E.ActiveWorkbook.Sheets[destSheet]);
+end;
+
+function InsertWindowToExcel(const rng: OleVariant; Hwnd: HWND; AQuality: Integer = 90): Boolean;
+var
+  DC: HDC;
+  Bitmap: graphics.TBitmap;
+  JpegImg: TJPEGImage;
+  rect: TRect;
+  TempFile: string;
+  Excel: OleVariant;
+  Sheet: OleVariant;
+  Shape: OleVariant;
+begin
+  Result := False;
+  if VarIsEmpty(rng) or not IsWindow(Hwnd) then Exit;
+
+  // получаем размер окна
+  GetClientRect(Hwnd, rect);
+
+  Bitmap := graphics.TBitmap.Create;
+  try
+    Bitmap.Width := rect.Right;
+    Bitmap.Height := rect.Bottom;
+    Bitmap.PixelFormat := pf24bit;
+
+    // копируем содержимое окна
+    DC := GetDC(Hwnd);
+    try
+      BitBlt(Bitmap.Canvas.Handle, 0, 0, rect.Right, rect.Bottom, DC, 0, 0, SRCCOPY);
+    finally
+      ReleaseDC(Hwnd, DC);
+    end;
+
+    // создаём временный JPEG
+    TempFile := IncludeTrailingPathDelimiter(GetEnvironmentVariable('TEMP')) +
+                Format('TempChart_%d.jpg', [GetTickCount]);
+    JpegImg := TJPEGImage.Create;
+    try
+      JpegImg.Assign(Bitmap);
+      if (AQuality < 1) then AQuality := 1;
+      if (AQuality > 100) then AQuality := 100;
+      JpegImg.CompressionQuality := AQuality;
+      JpegImg.SaveToFile(TempFile);
+    finally
+      JpegImg.Free;
+    end;
+
+  finally
+    Bitmap.Free;
+  end;
+
+  // вставляем в Excel
+  try
+    Excel := rng.Application;
+    Sheet := rng.Worksheet;
+
+    Shape := Sheet.Shapes.AddPicture(
+      TempFile,
+      0,      // LinkToFile = False
+      1,      // SaveWithDocument = True
+      rng.Left,
+      rng.Top,
+      rng.Width,
+      rng.Height
+    );
+    Shape.Placement := 1; // xlMoveAndSize
+
+    Result := True;
+
+  finally
+    // удаляем временный файл
+    if FileExists(TempFile) then
+      DeleteFile(TempFile);
+  end;
+end;
+
+procedure SetBitmapToExcelDirect(const rng: OleVariant; bmp: graphics.TBitmap);
+var
+  TempFile: string;
+  Excel: OleVariant;
+  Sheet: OleVariant;
+  Shape: OleVariant;
+  PNG:TPngImage;
+begin
+  if VarIsEmpty(rng) or not Assigned(bmp) then Exit;
+
+  Excel := rng.Application;
+  Sheet := rng.Worksheet;
+
+  // сохраняем во временный PNG
+  TempFile := IncludeTrailingPathDelimiter(GetEnvironmentVariable('TEMP')) +
+              'TempChart.png';
+  try
+    PNG := TPngImage.Create;
+    try
+      PNG.Assign(bmp);
+      PNG.SaveToFile(TempFile);
+    finally
+      PNG.Free;
+    end;
+
+    // вставляем в Excel
+    Shape := Sheet.Shapes.AddPicture(
+      TempFile,
+      0,          // LinkToFile = False
+      1,          // SaveWithDocument = True
+      rng.Left,
+      rng.Top,
+      rng.Width,
+      rng.Height
+    );
+    Shape.Placement := 1; // xlMoveAndSize
+  finally
+    // файл можно удалить сразу после вставки
+    DeleteFile(TempFile);
+  end;
+end;
+
+
+
+procedure SetBmpToExcel(const rng: OleVariant; bmp:graphics.tbitmap);
+var
+  Excel: OleVariant;
+  Sheet: OleVariant;
+  Shape: OleVariant;
+begin
+  if VarIsEmpty(rng) then Exit;
+  if not Assigned(bmp) then Exit;
+
+  Excel := rng.Application;
+  Sheet := rng.Worksheet;
+
+  // кладём bitmap в буфер обмена
+  Clipboard.Assign(bmp);
+
+  // вставляем в Excel
+  Sheet.Activate; // важно, чтобы Selection ссылался на активный лист
+  Sheet.Paste;
+
+  // получаем вставленный объект
+  Shape := Excel.Selection.ShapeRange.Item(1);
+
+  // позиция и размер по ячейке
+  Shape.Left := rng.Left;
+  Shape.Top := rng.Top;
+  Shape.Width := rng.Width;
+  Shape.Height := rng.Height;
+
+  // привязка к ячейке
+  Shape.Placement := 1; // xlMoveAndSize
 end;
 
 procedure DeleteSheetByName(const sheetName: string);

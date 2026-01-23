@@ -3,7 +3,7 @@ unit uChart;
 interface
 
 uses classes, stdctrls, controls, messages, windows, types, ExtCtrls, ComCtrls,
-  graphics, Jpeg,
+  graphics, Jpeg, Clipbrd,
   sysUtils, dialogs,
   upage,
   uaxis,
@@ -112,6 +112,7 @@ type
     // происходит после инициализации
     fOninit: tNotifyEvent;
     fOnDraw: tNotifyEvent;
+    fSwapBuffers: tNotifyEvent;
     // происходит перед редактированием по правой кнопке
     // сюда добавлять пользовательские диалоги настройки
     fbeforeedit: tNotifyEvent;
@@ -182,6 +183,7 @@ type
     procedure SelectInTV(obj: cdrawobj);
     procedure SaveToFile(filename: string);
     procedure SaveWindowToFile(filename: string);
+    function  getBitmap:tbitmap;
     property activeTab: cPageMng read getActivePageMng write setactivepageMng;
     property activePage: cbasepage read getActivePage write setactivepage;
     property selected: cdrawobj read fselectObj write setselectObj;
@@ -230,6 +232,7 @@ type
     // происходит при инициализации
     property OnInit: tNotifyEvent read fOninit write fOninit;
     property OnDraw: tNotifyEvent read fOnDraw write fOnDraw;
+    property OnSwapBuffers: tNotifyEvent read fSwapBuffers write fSwapBuffers;
     property OnEditObj: tNotifyEvent read fOnEdit write fOnEdit;
     property OnCursorMove: tNotifyEvent read fOnCursorMove write fOnCursorMove;
     property OnSelectObj: tNotifyEvent read fOnSelectObj write fOnSelectObj;
@@ -657,6 +660,8 @@ begin
   OBJmNG.events.CallAllEvents(e_onDraw);
   SwapBuffers(dc);
   EndPaint(Handle, ps);
+  if assigned(fSwapBuffers) then
+    fSwapBuffers(self);
   logstr('Exit_renderscene');
   needPostMessage := true;
   // вероятно не коректно так делать (скорее надо вызывать в wm_size)
@@ -1082,6 +1087,103 @@ begin
     Bitmap.Free;
   end;
 end;
+{
+function cChart.getBitmap: TBitmap;
+var
+  w, h: Integer;
+  Pixels: array of TRGBTriple;
+  x, y: Integer;
+  Src: PRGBTriple;
+  Dst: PRGBQuad; // будем двигаться по строке указателями
+begin
+  Result := nil;
+  if not IsWindow(Handle) then Exit;
+
+  w := Width;
+  h := Height;
+
+  Result := TBitmap.Create;
+  Result.PixelFormat := pf32bit;
+  Result.SetSize(w, h);
+
+  SetLength(Pixels, w * h);
+
+  // читаем пиксели из OpenGL
+  glReadPixels(0, 0, w, h, GL_BGR_EXT, GL_UNSIGNED_BYTE, @Pixels[0]);
+
+  // копируем построчно с переворотом по Y
+  for y := 0 to h - 1 do
+  begin
+    Src := @Pixels[y * w];
+    Dst := Result.ScanLine[h - 1 - y]; // ScanLine — это Pointer на начало строки
+    // идём по строке через арифметику указателей
+    for x := 0 to w - 1 do
+    begin
+      Dst^.rgbRed      := Src^.rgbtRed;
+      Dst^.rgbGreen    := Src^.rgbtGreen;
+      Dst^.rgbBlue     := Src^.rgbtBlue;
+      Dst^.rgbReserved := $FF; // альфа = 255
+      Inc(Dst); // двигаем указатель на следующий TRGBQuad
+      Inc(Src); // двигаем указатель на следующий TRGBTriple
+    end;
+  end;
+end;}
+
+function cChart.getBitmap: TBitmap;
+var
+  Buffer: array of Byte;
+  j: Integer;
+  OldPackAlignment: GLint;
+begin
+  Result := nil;
+  //renderscene;
+  //redrawComponents;
+  if wglGetCurrentContext <> hrc then
+    wglMakeCurrent(dc, hrc);
+  glFinish;
+  // Сохраняем текущие настройки
+  glGetIntegerv(GL_PACK_ALIGNMENT, @OldPackAlignment);
+  try
+    // Устанавливаем выравнивание по 1 байту
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+    // Проверка размеров
+    if (Width <= 0) or (Height <= 0) then
+    begin
+      Result := TBitmap.Create;
+      Result.Width := 1;
+      Result.Height := 1;
+      Exit;
+    end;
+    // Выделяем буфер точного размера
+    SetLength(Buffer, Width * Height * 3);
+    // Создаем битмап
+    Result := TBitmap.Create;
+    try
+      Result.PixelFormat := pf24bit;
+      Result.Width := Width;
+      Result.Height := Height;
+      // Читаем данные
+      glReadPixels(0, 0, Width, Height, GL_BGR, GL_UNSIGNED_BYTE, @Buffer[0]);
+      // Копируем строки
+      for j := 0 to Height - 1 do
+      begin
+        Move(Buffer[(Height - 1 - j) * Width * 3],
+             Result.ScanLine[j]^,
+             Width * 3);
+      end;
+    except
+      FreeAndNil(Result);
+      raise;
+    end;
+  finally
+    // Всегда восстанавливаем настройки OpenGL
+    glPixelStorei(GL_PACK_ALIGNMENT, OldPackAlignment);
+  end;
+  if wglGetCurrentContext <> hrc then
+    wglMakeCurrent(dc, hrc);
+end;
+
 
 procedure cChart.SaveWindowToFile(filename: string);
 var
@@ -1093,79 +1195,47 @@ var
   rect: TRect;
 begin
   SimpleCaptureWindowToFile(Handle, filename);
-  { if not IsWindow(handle) then Exit;
-
-    // Получаем размеры клиентской области окна
-    Rect:=GetClientRect;
-    DC := GetDC(handle);
-    try
-    hMemDC := CreateCompatibleDC(DC);
-    try
-    hBmp := CreateCompatibleBitmap(DC, Rect.Right, Rect.Bottom);
-    try
-    hOldBmp := SelectObject(hMemDC, hBmp);
-    BitBlt(hMemDC, 0, 0, Rect.Right, Rect.Bottom, DC, 0, 0, SRCCOPY);
-    SelectObject(hMemDC, hOldBmp); // Восстанавливаем старый битмап
-
-    // Создаем TBitmap и загружаем данные
-    Bitmap := TBitmap.Create;
-    try
-    Bitmap.Width := Rect.Right;
-    Bitmap.Height := Rect.Bottom;
-    Bitmap.PixelFormat := pf24bit;
-
-    // Копируем данные из hBmp в TBitmap
-    BitBlt(Bitmap.Canvas.Handle, 0, 0, Rect.Right, Rect.Bottom,
-    hMemDC, 0, 0, SRCCOPY);
-
-    // Сохраняем в JPEG
-    JpegImg := TJPEGImage.Create;
-    try
-    JpegImg.Assign(Bitmap);
-    JpegImg.CompressionQuality := 90; // Качество сжатия
-    JpegImg.SaveToFile(FileName);
-    finally
-    JpegImg.Free;
-    end;
-    finally
-    Bitmap.Free;
-    end;
-    finally
-    DeleteObject(hBmp);
-    end;
-    finally
-    DeleteDC(hMemDC);
-    end;
-    finally
-    ReleaseDC(handle, DC);
-    end; }
 end;
 
+// работает в 26г. в exe - однопоточно
 procedure cChart.SaveToFile(filename: string);
 var
   bmp: TBitmap;
-  canva: tcanvas;
+  Buffer: array of Byte;
+  j: Integer;
+  OldPackAlignment: GLint;
 begin
   renderscene;
   redrawComponents;
-  // копируем контекст
-  canva := tcanvas.Create;
-  canva.Handle := dc;
-  bmp := TBitmap.Create;
-  bmp.Width := Width;
-  bmp.Height := Height;
-  bmp.Canvas.FillRect(BoundsRect);
-  canva.lock;
-  bmp.Canvas.lock;
-  bmp.Canvas.CopyRect(rect(0, 0, Width, Height), canva,
-    rect(0, 0, Width, Height));
-  canva.unlock;
-  bmp.Canvas.unlock;
-  bmp.SaveToFile(filename);
-  bmp.destroy;
-  canva.destroy;
+
   if wglGetCurrentContext <> hrc then
     wglMakeCurrent(dc, hrc);
+  glFinish;
+  // Запоминаем текущие настройки упаковки
+  glGetIntegerv(GL_PACK_ALIGNMENT, @OldPackAlignment);
+  // Устанавливаем выравнивание по 1 байту (без дополнения)
+  glPixelStorei(GL_PACK_ALIGNMENT, 1);
+  bmp := TBitmap.Create;
+  try
+    bmp.PixelFormat := pf24bit;
+    bmp.Width := Width;
+    bmp.Height := Height;
+    // Теперь можно выделять точный размер
+    SetLength(Buffer, Width * Height * 3);
+    // Читаем данные из OpenGL
+    glReadPixels(0, 0, Width, Height, GL_BGR, GL_UNSIGNED_BYTE, @Buffer[0]);
+    // Копируем строки в обратном порядке
+    for j := 0 to Height - 1 do
+    begin
+      Move(Buffer[(Height - 1 - j) * Width * 3],
+           bmp.ScanLine[j]^, Width * 3);
+    end;
+    bmp.SaveToFile(filename);
+  finally
+    bmp.Free;
+  end;
+  // Восстанавливаем настройки
+  glPixelStorei(GL_PACK_ALIGNMENT, OldPackAlignment);
 end;
 
 procedure cChart.deleteObj(obj: cdrawobj);
@@ -1185,22 +1255,49 @@ end;
 
 procedure cChart.CopyScreenToClipboard;
 var
-  dx, dy: integer;
-  hDestDC, hBM, hbmOld: thandle;
+  bmp: TBitmap;
+  Buffer: array of Byte;
+  j: Integer;
+  OldPackAlignment: GLint;
 begin
-  dx := Width;
-  dy := Height;
-  hDestDC := CreateCompatibleDC(dc);
-  hBM := CreateCompatibleBitmap(dc, dx, dy);
-  hbmOld := SelectObject(hDestDC, hBM);
-  BitBlt(hDestDC, 0, 0, dx, dy, dc, 0, 0, SRCCOPY);
-  OpenClipBoard(Handle);
-  EmptyClipBoard;
-  SetClipBoardData(CF_Bitmap, hBM);
-  CloseClipBoard;
-  SelectObject(hDestDC, hbmOld);
-  DeleteObject(hBM);
-  DeleteDC(hDestDC);
+  renderscene;
+  redrawComponents;
+  if wglGetCurrentContext <> hrc then
+    wglMakeCurrent(dc, hrc);
+  glFinish;
+  // Сохраняем и изменяем настройки выравнивания
+  glGetIntegerv(GL_PACK_ALIGNMENT, @OldPackAlignment);
+  glPixelStorei(GL_PACK_ALIGNMENT, 1); // Без выравнивания
+  bmp := TBitmap.Create;
+  try
+    bmp.PixelFormat := pf24bit;
+    bmp.Width := Width;
+    bmp.Height := Height;
+    // Теперь можно выделять точный размер
+    SetLength(Buffer, Width * Height * 3);
+    // Читаем из OpenGL
+    glReadPixels(0, 0, Width, Height, GL_BGR, GL_UNSIGNED_BYTE, @Buffer[0]);
+    // Копируем строки
+    for j := 0 to Height - 1 do
+    begin
+      Move(Buffer[(Height - 1 - j) * Width * 3],
+           bmp.ScanLine[j]^, Width * 3);
+    end;
+    // Копируем в буфер обмена
+    Clipboard.Open;
+    try
+      Clipboard.Clear;
+      Clipboard.Assign(bmp);
+    finally
+      Clipboard.Close;
+    end;
+  finally
+    bmp.Free;
+  end;
+  // Восстанавливаем настройки
+  glPixelStorei(GL_PACK_ALIGNMENT, OldPackAlignment);
+  if wglGetCurrentContext <> hrc then
+    wglMakeCurrent(dc, hrc);
 end;
 
 procedure cChart.doOnInsertPoint(data: TObject; subdata: TObject);
