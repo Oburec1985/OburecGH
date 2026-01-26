@@ -377,6 +377,8 @@ type
     SnEdit: TEdit;
     Label1: TLabel;
     WeightFe: TFloatEdit;
+    Label2: TLabel;
+    StageCB: TComboBox;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -402,6 +404,7 @@ type
     procedure TrigFEChange(sender: tobject);
     procedure Frf_YX_XY_CBClick(sender: tobject);
     procedure SnEditKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure StageCBChange(Sender: TObject);
   public
     m_ReportBmp:TBitmap;
     m_RenderReport:boolean;
@@ -443,7 +446,7 @@ type
     m_lastMDBfile,
     // Путь к последнему Mera файлу в который сохранили FRF
     // при формировании отчета
-    m_MeraFile: string;
+    m_MeraFile, gui_file, gui_section: string;
     // редактировать отклик
     m_corrS: boolean;
 
@@ -460,6 +463,7 @@ type
     fUpdateFrf: boolean; // обновился frf
     fShowLast: boolean; // обновился frf  в потоке
   protected
+    procedure ShowStages;
     procedure EvalAvSpm;
     procedure doUpdateParams(sender: tobject);
     // расчет числа боков для усреднения
@@ -477,7 +481,6 @@ type
     // если не попадают в bands то лопатка бракованная
     // сразу сохраняет в БД отчет по лопатке в excel
     function CheckFlags: boolean;
-    procedure doSwapBuffers(sender:tobject);
     procedure SaveReport(repname: string; bl: cBladeFolder);
     // построить отчет по турбине
     procedure buildReport();
@@ -1151,17 +1154,8 @@ begin
   rng := GetRangeObj(1, point(r, 2), point(r + s.m_BandExtremums.Count +k, c - 1));
   SetRangeBorder(rng);
 
-
-  //m_RenderReport:=true;
-  //while m_RenderReport do
-  //begin
-  //  SpmChart.Repaint;
-  //  Sleep(100);
-  //end;
-
   // ставим картинку
   rng := GetRangeObj(1, point(r, 3), point(r + s.m_BandExtremums.Count +k, c - 1+1));
-  //InsertWindowToExcel(rng, b.m_chart.Handle);
   m_ReportBmp:=spmchart.getBitmap;
   SetBmpToExcel(rng, m_ReportBmp);
   m_ReportBmp.free;
@@ -1172,18 +1166,6 @@ begin
   end;
 end;
 
-procedure TFRFFrm.doswapbuffers(Sender: TObject);
-begin
-  if GetCurrentThreadId=TExtRecorderPack(GPluginInstance).m_UIThreadID then
-  begin
-    if m_RenderReport then
-    begin
-      m_ReportBmp:=SpmChart.getBitmap;
-      spmchart.SaveWindowToFile('f:\5.jpeg');
-      m_RenderReport:=false;
-    end;
-  end;
-end;
 
 
 constructor TFRFFrm.create(Aowner: tcomponent);
@@ -2631,90 +2613,6 @@ begin
   end;
 end;
 
-procedure TFRFFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
-var
-  i, Count: integer;
-  t: cSRSTaho;
-  c: cSpmCfg;
-  s: cSRSres;
-  tag: itag;
-  ltag: ctag;
-  // prof: cProfileLine;
-
-begin
-  inherited;
-  ltag := LoadTagIni(a_pIni, str, 'Taho_Tag');
-  if ltag <> nil then
-  begin
-    t := cSRSTaho.create;
-    // prof := t.m_profile.getline('Profile');
-    // prof.addline(m_profileline);
-    // prof.updatepoints;
-
-    if pageSpm.activeAxis.getChild('Profile') = nil then
-    begin
-      showmessage('nil');
-    end;
-
-    t.m_color := ColorArray[0];
-    t.m_tag.tag := ltag.tag;
-    t.m_tag.tagname := ltag.tagname;
-    ltag.destroy;
-    c := cSpmCfg.create;
-    t.cfg := c;
-    addTaho(t);
-  end
-  else
-    exit;
-  m_ShiftLeft := strtofloatext(a_pIni.ReadString(str, 'ShiftLeft', '0.05'));
-  m_Length := strtofloatext(a_pIni.ReadString(str, 'Length', '0.05'));
-  // амплитуда для поиска события
-  t.m_treshold := strtofloatext(a_pIni.ReadString(str, 'Threshold', '0.05'));
-  m_spmTrig := strtofloatext(a_pIni.ReadString(str, 'TrigLvl', '0.05'));
-
-  m_minX := strtofloatext(a_pIni.ReadString(str, 'Spm_minX', '0'));
-  m_maxX := strtofloatext(a_pIni.ReadString(str, 'Spm_maxX', '1000'));
-  m_minY := strtofloatext(a_pIni.ReadString(str, 'Spm_minY', '0.0001'));
-  m_maxY := strtofloatext(a_pIni.ReadString(str, 'Spm_maxY', '10'));
-  m_reptype := a_pIni.ReadBool(str, 'RepType', true);
-  m_Frf_YX := a_pIni.ReadBool(str, 'Frf_YX', true);
-  m_lgX := a_pIni.ReadBool(str, 'Spm_Lg_x', false);
-  m_lgY := a_pIni.ReadBool(str, 'Spm_Lg_y', false);
-  NewAxis := a_pIni.ReadBool(str, 'TahoNewAxis', false);
-  m_saveT0 := a_pIni.ReadBool(str, 'SaveT0', false);
-  m_showflags := a_pIni.ReadBool(str, 'ShowFlags', false);
-  m_showBandLab := a_pIni.ReadBool(str, 'ShowBandLabels', false);
-  m_estimator := a_pIni.ReadInteger(str, 'Estimator', 1);
-  ResTypeRG.ItemIndex := a_pIni.ReadInteger(str, 'EvalType', 0);
-  HideExcelCB.Checked := a_pIni.ReadBool(str, 'HideExcel', false);
-  g_FrfFactory.m_hideExcel := HideExcelCB.Checked;
-  if c <> nil then
-  begin
-    c.m_capacity := a_pIni.ReadInteger(str, 'ShockCount', 5);
-    c.m_fftCount := a_pIni.ReadInteger(str, 'FFtnum', 32);
-    c.m_blockcount := a_pIni.ReadInteger(str, 'BlockCount', 1);
-    c.m_addNulls := a_pIni.ReadBool(str, 'AddNulls', false);
-    Count := a_pIni.ReadInteger(str, 'SigCount', 0);
-    for i := 0 to Count - 1 do
-    begin
-      ltag := LoadTagIni(a_pIni, str, 'Tag_' + inttostr(i));
-      if ltag <> nil then
-      begin
-        s := c.addSRS(pointer(ltag));
-        s.m_axis := a_pIni.ReadInteger(str, 'Axis_' + inttostr(i), 0);
-        s.m_incPNum := a_pIni.ReadInteger(str, 'Pinc_' + inttostr(i), 0);
-      end;
-    end;
-    c.typeres := a_pIni.ReadInteger(str, 'ResType', 0);
-  end;
-  m_WelchShift := a_pIni.ReadInteger(str, 'WelchShift', 32);
-  m_WelchCount := a_pIni.ReadInteger(str, 'WelchBlockCount', 4);
-  m_UseWelch := a_pIni.ReadBool(str, 'useWelch', true);
-  WelchCB.Checked := m_UseWelch;
-  UpdateChart;
-  ShowSignalsLV;
-  ShowLines;
-end;
 
 procedure savedata(dir: string; sname: string; db: TDoubleArray); overload;
 var
@@ -2815,12 +2713,11 @@ procedure TFRFFrm.SaveBtnClick(sender: tobject);
 var
   i, j, num: integer;
   ifile: TIniFile;
-  f, ident, dir: string;
+  f, ident, dir, str: string;
   c: cSpmCfg;
   t: cSRSTaho;
   s: cSRSres;
   db, tb: TDataBlock;
-
 begin
   // dir := extractfiledir(g_FrfFactory.m_meraFile) + '\Shock';
   if g_mbase.SelectBlade = nil then
@@ -2895,10 +2792,101 @@ begin
     // ident := extractfiledir(ident) + '\'+'AvFRF_'+s.m_tag.tagname+'.dat';
     saveHeader(ifile, 1 / c.fspmdx, 0, ident, 'Гц');
     savedata(f, s.m_tag.tagname, s);
+
   end;
   ifile.destroy;
   SpmChartDblClick(nil);
   CheckFlags;
+end;
+
+
+procedure TFRFFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
+var
+  i, Count: integer;
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s: cSRSres;
+  tag: itag;
+  ltag: ctag;
+  // prof: cProfileLine;
+  turb, stage, blade:cxmlfolder;
+  lstr:string;
+begin
+  inherited;
+  gui_file:= a_pIni.filename;
+  gui_section:=str;
+  ltag := LoadTagIni(a_pIni, str, 'Taho_Tag');
+  if ltag <> nil then
+  begin
+    t := cSRSTaho.create;
+    // prof := t.m_profile.getline('Profile');
+    // prof.addline(m_profileline);
+    // prof.updatepoints;
+
+    if pageSpm.activeAxis.getChild('Profile') = nil then
+    begin
+      showmessage('nil');
+    end;
+
+    t.m_color := ColorArray[0];
+    t.m_tag.tag := ltag.tag;
+    t.m_tag.tagname := ltag.tagname;
+    ltag.destroy;
+    c := cSpmCfg.create;
+    t.cfg := c;
+    addTaho(t);
+  end
+  else
+    exit;
+  m_ShiftLeft := strtofloatext(a_pIni.ReadString(str, 'ShiftLeft', '0.05'));
+  m_Length := strtofloatext(a_pIni.ReadString(str, 'Length', '0.05'));
+  // амплитуда для поиска события
+  t.m_treshold := strtofloatext(a_pIni.ReadString(str, 'Threshold', '0.05'));
+  m_spmTrig := strtofloatext(a_pIni.ReadString(str, 'TrigLvl', '0.05'));
+
+  m_minX := strtofloatext(a_pIni.ReadString(str, 'Spm_minX', '0'));
+  m_maxX := strtofloatext(a_pIni.ReadString(str, 'Spm_maxX', '1000'));
+  m_minY := strtofloatext(a_pIni.ReadString(str, 'Spm_minY', '0.0001'));
+  m_maxY := strtofloatext(a_pIni.ReadString(str, 'Spm_maxY', '10'));
+  m_reptype := a_pIni.ReadBool(str, 'RepType', true);
+  m_Frf_YX := a_pIni.ReadBool(str, 'Frf_YX', true);
+  m_lgX := a_pIni.ReadBool(str, 'Spm_Lg_x', false);
+  m_lgY := a_pIni.ReadBool(str, 'Spm_Lg_y', false);
+  NewAxis := a_pIni.ReadBool(str, 'TahoNewAxis', false);
+  m_saveT0 := a_pIni.ReadBool(str, 'SaveT0', false);
+  m_showflags := a_pIni.ReadBool(str, 'ShowFlags', false);
+  m_showBandLab := a_pIni.ReadBool(str, 'ShowBandLabels', false);
+  m_estimator := a_pIni.ReadInteger(str, 'Estimator', 1);
+  ResTypeRG.ItemIndex := a_pIni.ReadInteger(str, 'EvalType', 0);
+  HideExcelCB.Checked := a_pIni.ReadBool(str, 'HideExcel', false);
+  g_FrfFactory.m_hideExcel := HideExcelCB.Checked;
+  if c <> nil then
+  begin
+    c.m_capacity := a_pIni.ReadInteger(str, 'ShockCount', 5);
+    c.m_fftCount := a_pIni.ReadInteger(str, 'FFtnum', 32);
+    c.m_blockcount := a_pIni.ReadInteger(str, 'BlockCount', 1);
+    c.m_addNulls := a_pIni.ReadBool(str, 'AddNulls', false);
+    Count := a_pIni.ReadInteger(str, 'SigCount', 0);
+    for i := 0 to Count - 1 do
+    begin
+      ltag := LoadTagIni(a_pIni, str, 'Tag_' + inttostr(i));
+      if ltag <> nil then
+      begin
+        s := c.addSRS(pointer(ltag));
+        s.m_axis := a_pIni.ReadInteger(str, 'Axis_' + inttostr(i), 0);
+        s.m_incPNum := a_pIni.ReadInteger(str, 'Pinc_' + inttostr(i), 0);
+      end;
+    end;
+    c.typeres := a_pIni.ReadInteger(str, 'ResType', 0);
+  end;
+  m_WelchShift := a_pIni.ReadInteger(str, 'WelchShift', 32);
+  m_WelchCount := a_pIni.ReadInteger(str, 'WelchBlockCount', 4);
+  m_UseWelch := a_pIni.ReadBool(str, 'useWelch', true);
+  WelchCB.Checked := m_UseWelch;
+
+  UpdateChart;
+  ShowSignalsLV;
+  ShowLines;
 end;
 
 procedure TFRFFrm.SaveSettings(a_pIni: TIniFile; str: LPCSTR);
@@ -2907,6 +2895,8 @@ var
   t: cSRSTaho;
   c: cSpmCfg;
   s: cSRSres;
+
+  turb, stage, blade:cxmlfolder;
 begin
   inherited;
   t := getTaho;
@@ -2954,6 +2944,16 @@ begin
     a_pIni.WriteInteger(str, 'WelchBlockCount', m_WelchCount);
     a_pIni.WriteInteger(str, 'WelchShift', m_WelchShift);
     a_pIni.WriteBool(str, 'useWelch', m_UseWelch);
+
+    turb:=g_mbase.SelectTurb;
+    if turb<>nil then
+      a_pIni.WriteString(str, 'SelectTurb', turb.name);
+    stage:=g_mbase.selectStage;
+    if stage<>nil then
+      a_pIni.WriteString(str, 'SelectStage', stage.name);
+    blade:=g_mbase.SelectBlade;
+    if blade<>nil then
+      a_pIni.WriteString(str, 'SelectBlade', blade.name);
   end;
 end;
 
@@ -3101,6 +3101,27 @@ begin
           s.lineSpm.AddPoints(TDoubleArray(b.m_mod.p), c.fHalfFft);
       end;
     end;
+  end;
+end;
+
+procedure TFRFFrm.ShowStages;
+var
+  I: Integer;
+  t:cTurbFolder;
+  s:cStageFolder;
+begin
+  t:=g_mbase.SelectTurb;
+  if t<>nil then
+  begin
+    for I := 0 to t.StageCount - 1 do
+    begin
+      s:=t.GetStage(i);
+      StageCB.AddItem(s.name,s);
+    end;
+  end;
+  if g_mbase.selectStage<>nil then
+  begin
+    setComboBoxItem(g_mbase.selectStage.name, stageCb);
   end;
 end;
 
@@ -3470,7 +3491,8 @@ begin
     else
       v := TrigFE.Value;
     // пересчет позиции курсора по обновлению масштаба
-    Ycurs.setCursor(a, v);
+    if Ycurs<>nil then
+      Ycurs.setCursor(a, v);
   end;
   // нормализация времени
   for i := 0 to pageT.axises.ChildCount - 1 do
@@ -3513,6 +3535,16 @@ begin
       v := TrigFE.Value;
 
     Ycurs.setCursor(a, v);
+  end;
+end;
+
+procedure TFRFFrm.StageCBChange(Sender: TObject);
+begin
+  if stagecb.ItemIndex>-1 then
+  begin
+    g_mbase.SelectStage:=cstagefolder(stagecb.items.objects[stagecb.ItemIndex]);
+    g_mbase.SelectBlade:=g_mbase.SelectStage.GetBlade(0);
+    BladeSEDownClick(nil);
   end;
 end;
 
@@ -4456,6 +4488,10 @@ var
   t: cSRSTaho;
   c: cSpmCfg;
   blade: cBladeFolder;
+
+  stage, turb:cxmlfolder;
+  a_pIni:tinifile;
+  lstr:string;
 begin
   // exit;
   for i := 0 to m_CompList.Count - 1 do
@@ -4491,6 +4527,24 @@ begin
     begin
       TFRFFrm(Frm).BladeNumEdit.Text := (blade.m_sn);
     end;
+
+    a_pIni:=TIniFile.Create(TFRFFrm(Frm).gui_file);
+    lstr:=a_pIni.readString(TFRFFrm(Frm).gui_section, 'SelectTurb', '');
+    turb:=cxmlfolder(g_mbase.getobj(lstr));
+    if turb<>nil then
+      g_mbase.SelectTurb:=cTurbfolder(turb);
+
+    lstr:=a_pIni.readString(TFRFFrm(Frm).gui_section, 'SelectStage', '');
+    stage:=cxmlfolder(g_mbase.getobj(lstr));
+    if stage<>nil then
+      g_mbase.SelectStage:=cStagefolder(stage);
+
+    lstr:=a_pIni.readString(TFRFFrm(Frm).gui_section, 'SelectBlade', '');
+    blade:=cBladefolder(g_mbase.getobj(lstr));
+    if blade<>nil then
+      g_mbase.SelectBlade:=cbladefolder(blade);
+    a_pIni.Destroy;
+    TFRFFrm(Frm).ShowStages;
   end;
 end;
 

@@ -56,9 +56,13 @@ type
     procedure SelectAllCbClick(Sender: TObject);
     procedure BladesLVChange(Sender: TObject; Item: TListItem;
       Change: TItemChange);
+    procedure TurbNameCbKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     procedure init;
     procedure showbase;
+    procedure showbladetypes;
+    procedure showTurbs;
     procedure showTurb(t:cTurbFolder);
     procedure updateTypes;
     // перенести данные из Sg в тип лопатки
@@ -231,10 +235,24 @@ begin
   end;
 end;
 
-procedure TEditTestFrm.showbase;
+procedure TEditTestFrm.showbladetypes;
+var
+  I: Integer;
+  o:cObjType;
+begin
+  BladeCB.Clear;
+  for I := 0 to cBladeBaseFolder(g_mbase.m_BaseFolder).m_BladeTypes.count - 1 do
+  begin
+    o:=g_mbase.getBladeType(i);
+    BladeCB.AddItem(o.name, o);
+  end;
+end;
+
+procedure TEditTestFrm.showTurbs;
 var
   I: Integer;
   t:cTurbFolder;
+  str:string;
 begin
   // заполняем типы объектов
   turbCB.Clear;
@@ -242,27 +260,41 @@ begin
   begin
     turbcb.Items.AddObject(g_mbase.root.m_turbTypes.Strings[i], g_mbase.root.m_turbTypes.Objects[i]);
   end;
-  turbCB.ItemIndex:=0;
+  TurbNameCb.Clear;
+  for I := 0 to g_mbase.root.ChildCount - 1 do
+  begin
+    t:=cTurbFolder(g_mbase.m_BaseFolder.getChild(i));
+    TurbNameCb.AddItem(t.name, t);
+  end;
+  // установка выбраной турбины
+  if g_mbase.SelectTurb<>nil then
+  begin
+    setComboBoxItem(g_mbase.SelectTurb.name, turbnamecb);
+    str:=g_mbase.SelectTurb.ObjType;
+    setComboBoxItem(str, turbcb);
+  end
+  else
+  begin
+    turbCB.ItemIndex:=0;
+  end;
+end;
+
+procedure TEditTestFrm.showbase;
+var
+  I: Integer;
+  t:cTurbFolder;
+begin
+  // отобразить список турбин
+  showTurbs;
 
   BladeCB.clear;
   for I := 0 to g_mbase.root.m_BladeTypes.Count-1 do
   begin
-
     BladeCB.Items.AddObject(g_mbase.root.m_BladeTypes.Strings[i], g_mbase.root.m_BladeTypes.Objects[i]);
   end;
-
-  TurbNameCB.Clear;
-  t:=nil;
-  for I := 0 to g_mbase.root.ChildCount - 1 do
-  begin
-    t:=cTurbFolder(g_mbase.root.getChild(i));
-    TurbNameCB.AddItem(t.name, t);
-    if i=0 then
-    begin
-      TurbNameCB.ItemIndex:=0;
-    end;
-  end;
-  t:=cTurbFolder(g_mbase.root.getChild(TurbNameCB.ItemIndex));
+  // типы турбин
+  showbladetypes;
+  t:=g_mbase.SelectTurb;
   BladeCB.ItemIndex:=0;
   if t<>nil then
   begin
@@ -314,6 +346,7 @@ var
   r,c:integer;
 begin
   o:=g_mbase.root.getType(BladeCB.Text);
+  ClearGrid(ProfileSG, false);
   if o<>nil then
   begin
     s:=o.getval('ToneCount');
@@ -330,6 +363,7 @@ begin
       ProfileSG.Cells[3, r+1]:=o.getval('Threshold_'+inttostr(r+1));
     end;
   end;
+  SGChange(ProfileSG);
 end;
 
 procedure TEditTestFrm.showTurb(t: cTurbFolder);
@@ -429,12 +463,17 @@ end;
 procedure TEditTestFrm.updateTypes;
 var
   o:cObjType;
+  I: Integer;
+  bl:cBladeFolder;
+  s:cStageFolder;
+  t:cTurbFolder;
 begin
   ToneToType;
   // тип турбины
   o:=g_mbase.root.getType(TurbCB.text);
   if o<>nil then
   begin
+
   end
   else
   begin
@@ -444,8 +483,26 @@ begin
     TurbCB.AddItem(o.name, o);
     CheckCBItemInd(TurbCB);
   end;
+  // типы лопаток на ступенях
+  t:=g_mbase.SelectTurb;
+  t.ObjType:=TurbCB.text;
   o.setPropVal('StageCount', inttostr(StageCountSE.Value));
   o.setPropVal('StageBCount_'+stageCB.Text, inttostr(BlCountIE.Value));
+  if StageCB.ItemIndex=0 then
+  begin
+    StageCB.ItemIndex:=0;
+    StageCB.Text:='1';
+  end;
+  if StageCB.ItemIndex=-1 then
+    StageCB.ItemIndex:=0;
+  s:=t.GetStage(StageCB.ItemIndex);
+  if s.BlCount>0 then
+  begin
+    bl:=s.GetBlade(0);
+    o.setPropVal('StageBtype_'+inttostr(i), BladeCB.text);
+    BladeCB.Items.Add(BladeCB.text);
+    cBladeBaseFolder(g_mbase.m_BaseFolder).AddBladeType(BladeCB.text);
+  end;
 end;
 
 procedure TEditTestFrm.ToneToType;
@@ -481,18 +538,89 @@ begin
 end;
 
 procedure TEditTestFrm.TurbCBChange(Sender: TObject);
+var
+  str:string;
+  o:cObjType;
+  I: Integer;
 begin
-  TurbNameCbChange(Sender);
+  // установка типа турбины
+  o:=g_mbase.getType(TurbCB.text);
+  if o<>nil then
+  begin
+    StageCB.Text:='1';
+    str:=o.getval('StageCount');
+    StageCountSE.Value:=StrToIntDef(str, 0);
+
+    // число лопаток
+    str:=o.getval('StageBCount_1');
+    BlCountIE.Value:=StrToIntDef(str, 0);
+    str:=o.getval('StageBtype_1');
+    if str<>'' then
+    begin
+      setComboBoxItem(cturbfolder(g_mbase.root.selected).bladetype(0),BladeCB);
+    end;
+    ShowTone;
+  end;
 end;
 
 procedure TEditTestFrm.TurbNameCbChange(Sender: TObject);
+var
+  str:string;
+  I: Integer;
+  t:cTurbFolder;
+  s:cStageFolder;
 begin
   if CheckCBItemInd(tcombobox(Sender)) then
   begin
-    g_mbase.root.selected:=
-                cTurbFolder(g_mbase.root.
-                getChild(TurbNameCb.ItemIndex));
+    t:=cTurbFolder(g_mbase.root.getChild(TurbNameCb.ItemIndex));
+    if g_mbase.root.selected=t then exit;
+    g_mbase.root.selected:=t;
+    // установка типа турбины
+    str:=t.getObjTypeName;
+    setComboBoxItem(str,turbcb);
+    StageCB.Text:='1';
+    StageCountSE.Value:=t.StageCount;
+    stagecb.Clear;
+    for I := 0 to StageCountSE.Value - 1 do
+    begin
+      s:=t.GetStage(i);
+      if s=nil then
+      begin
+        s:=cStageFolder.create;
+        s.name:=t.name+'_Stage_'+StageCB.text;
+        cStageFolder(s).BlCount:=BlCountIE.Value;
+        t.AddChild(s);
+      end;
+      stagecb.Items.AddObject(inttostr(i+1), s);
+    end;
+    if StageCountSE.Value>0 then
+    begin
+      if g_mbase.selectStage<>nil then
+      begin
+        for I := 0 to stagecb.items.Count - 1 do
+        begin
+          if StageCB.Items.Objects[i]=g_mbase.selectStage then
+          begin
+            StageCB.ItemIndex:=i;
+            break;
+          end;
+        end;
+      end;
+    end;
+    // число лопаток
+    BlCountIE.Value:=cturbfolder(g_mbase.root.selected).GetBladeCount(0);
+    str:=cturbfolder(g_mbase.root.selected).bladetype(0);
+    cBladeBaseFolder(g_mbase.m_BaseFolder).AddBladeType(str);
+    showbladetypes;
+    setComboBoxItem(str,BladeCB);
+    ShowTone;
   end;
+end;
+
+procedure TEditTestFrm.TurbNameCbKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  TurbNameCbChange(TurbNameCb);
 end;
 
 function TEditTestFrm.ValidRowCount: integer;

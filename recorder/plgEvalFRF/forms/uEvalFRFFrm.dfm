@@ -3,8 +3,8 @@ object FRFFrm: TFRFFrm
   Top = 0
   Hint = #1042#1082#1083#1102#1095#1080#1090#1100'/'#1086#1090#1082#1083#1102#1095#1080#1090#1100' '#1088#1072#1089#1095#1077#1090
   Caption = 'FRFFrm'
-  ClientHeight = 622
-  ClientWidth = 931
+  ClientHeight = 547
+  ClientWidth = 939
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,10 +17,10 @@ object FRFFrm: TFRFFrm
   PixelsPerInch = 120
   TextHeight = 17
   object Splitter1: TSplitter
-    Left = 609
+    Left = 617
     Top = 0
     Width = 8
-    Height = 622
+    Height = 547
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -28,12 +28,14 @@ object FRFFrm: TFRFFrm
     Align = alRight
     Color = clBackground
     ParentColor = False
+    ExplicitLeft = 609
+    ExplicitHeight = 622
   end
   object SpmChart: cChart
     Left = 0
     Top = 0
-    Width = 609
-    Height = 622
+    Width = 617
+    Height = 547
     Cursor = crSizeAll
     Align = alClient
     Caption = 'cChart1'
@@ -45,12 +47,14 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitWidth = 609
+    ExplicitHeight = 622
   end
   object RightGB: TGroupBox
-    Left = 617
+    Left = 625
     Top = 0
     Width = 314
-    Height = 622
+    Height = 547
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -60,6 +64,8 @@ object FRFFrm: TFRFFrm
     ParentShowHint = False
     ShowHint = False
     TabOrder = 1
+    ExplicitLeft = 617
+    ExplicitHeight = 622
     object ShockCountLabel: TLabel
       Left = 8
       Top = 27
@@ -449,12 +455,13 @@ object FRFFrm: TFRFFrm
     end
     object SignalsGroupBox: TGroupBox
       Left = 2
-      Top = 299
+      Top = 224
       Width = 310
       Height = 156
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 10
+      ExplicitTop = 299
       object SignalsLV: TBtnListView
         Left = 2
         Top = 19
@@ -517,7 +524,7 @@ object FRFFrm: TFRFFrm
     end
     object BladeGB: TGroupBox
       Left = 2
-      Top = 455
+      Top = 380
       Width = 310
       Height = 165
       Margins.Left = 4
@@ -527,6 +534,7 @@ object FRFFrm: TFRFFrm
       Align = alBottom
       Caption = #1051#1086#1087#1072#1090#1082#1072
       TabOrder = 12
+      ExplicitTop = 455
       object BladeLabel: TLabel
         Left = 7
         Top = 21
@@ -581,6 +589,17 @@ object FRFFrm: TFRFFrm
         Margins.Right = 4
         Margins.Bottom = 4
         Caption = #1042#1077#1089':'
+      end
+      object Label2: TLabel
+        Left = 7
+        Top = 135
+        Width = 55
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Caption = #1057#1090#1091#1087#1077#1085#1100
       end
       object StatusEdit: TEdit
         Left = 5
@@ -643,7 +662,7 @@ object FRFFrm: TFRFFrm
       object DempfE: TEdit
         Left = 114
         Top = 95
-        Width = 107
+        Width = 91
         Height = 25
         Margins.Left = 4
         Margins.Top = 4
@@ -680,6 +699,15 @@ object FRFFrm: TFRFFrm
         TabOrder = 5
         Text = '0.0'
         OnKeyDown = SnEditKeyDown
+      end
+      object StageCB: TComboBox
+        Left = 113
+        Top = 127
+        Width = 96
+        Height = 25
+        TabOrder = 6
+        Text = 'StageCB'
+        OnChange = StageCBChange
       end
     end
     object TrigFE: TFloatSpinEdit

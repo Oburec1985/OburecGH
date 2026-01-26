@@ -6,7 +6,6 @@ uses
   uDBObject, ubaseobj,
   pathutils, uPathMng,
   u2dmath, uCommonMath, uCommonTypes, uspmband, uExcel;
-
 type
 
   cExtremum = class
@@ -80,7 +79,6 @@ begin
     break;
   end;
 end;
-
 
 procedure Buildreport;
 var

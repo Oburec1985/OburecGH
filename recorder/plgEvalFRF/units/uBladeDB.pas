@@ -52,6 +52,7 @@ type
     //procedure DoLincParent;override;
   public
     function getObjType:cobjtype;
+    function getObjTypeName:string;
     // получить путь к паке рядом с дескриптором
     function getFolder:string;
     // установить тип объекта
@@ -122,6 +123,8 @@ type
     // палучить тип из базы типов
     function getType(s:string):cObjType;
     function XMLDescPath:string;override;
+    function getBladeType(i:integer):cObjType;
+    function AddBladeType(s:string):cObjType;
     constructor create;override;
     destructor destroy;override;
   end;
@@ -137,6 +140,7 @@ type
   public
     function GetBladeCount(stageNum:integer):integer;
     function GetStage(i:integer):cstageFolder;
+    function bladetype(stagenum:integer):string;
     property StageCount:integer read getstagecount write setstagecount;
   end;
 
@@ -199,10 +203,17 @@ type
     procedure regObjClasses;override;
     // происходит вконце загрузки
     procedure doAfterLoadXML;override;
+  protected
+    function getSelectStage:cStageFolder;
+    procedure setSelectStage(s:cStageFolder);
+    function getSelectTurb:cTurbFolder;
+    procedure setSelectTurb(t:cTurbFolder);
+    function getSelectBlade: cBladeFolder;
+    procedure setSelectBlade (b: cBladeFolder);
   public
-    function SelectTurb:cTurbFolder;
-    function SelectStage:cStageFolder;
-    function SelectBlade:cBladeFolder;
+    function getBladeType(i:integer):cObjType;
+    // палучить тип из базы типов
+    function getType(s:string):cObjType;
     function root:cBladeBaseFolder;
     // каталог базы данных
     procedure InitBaseFolder(str:string);
@@ -210,6 +221,10 @@ type
     procedure UpdateXMLDescriptors;
     constructor create;override;
     destructor destroy;override;
+  public
+    property SelectTurb:cTurbFolder read getSelectTurb write setSelectTurb;
+    property selectStage:cStageFolder read getSelectStage write setSelectStage;
+    property SelectBlade:cBladeFolder read getSelectBlade write setSelectBlade;
   end;
   // дешифровать тон из resStr лопатки
   function getBand(b:point2d; blade:cbladefolder; threshold:double; var er:boolean):point3d;
@@ -285,9 +300,20 @@ begin
   end;
 end;
 
+function cBladeBase.getBladeType(i: integer): cObjType;
+begin
+  result:=cBladeBaseFolder(m_BaseFolder).getBladeType(i);
+end;
+
 function cBladeBase.getObjType(t:string): cObjtype;
 begin
   result:=root.getType(t);
+end;
+
+
+function cBladeBase.getType(s: string): cObjType;
+begin
+  result:=cBladeBaseFolder(m_BaseFolder).getType(s);
 end;
 
 procedure cBladeBase.InitBaseFolder(str: string);
@@ -298,7 +324,6 @@ var
   count:integer;
   I: Integer;
   objtype:cObjType;
-
 begin
   inherited;
   lstr:=str+'bladeMdb.xml';
@@ -319,15 +344,14 @@ begin
     objtype.owner:=cBladeBaseFolder(m_BaseFolder).m_turbTypes;
     cBladeBaseFolder(m_BaseFolder).m_turbTypes.AddObject(objtype.fname,objtype);
     // Типы лопаток
-    objtype:=cObjType.create;
-    objtype.fname:='62.403-0010.001';
-    objtype.addProp('Чертеж','62.403-0010.001');
-    objtype.owner:=cBladeBaseFolder(m_BaseFolder).m_BladeTypes;
-    cBladeBaseFolder(m_BaseFolder).m_BladeTypes.AddObject(objtype.fname,objtype);
-
+    cBladeBaseFolder(m_BaseFolder).AddBladeType('62.403-0010.001');
+    //objtype:=cObjType.create;
+    //objtype.fname:='62.403-0010.001';
+    //objtype.addProp('Чертеж','62.403-0010.001');
+    //objtype.owner:=cBladeBaseFolder(m_BaseFolder).m_BladeTypes;
+    //cBladeBaseFolder(m_BaseFolder).m_BladeTypes.AddObject(objtype.fname,objtype);
     cXmlFolder(m_BaseFolder).CreateXMLDesc;
   end;
-
 end;
 
 procedure cBladeBase.regObjClasses;
@@ -345,7 +369,19 @@ begin
   result:=cBladeBaseFolder(m_BaseFolder);
 end;
 
-function cBladeBase.SelectStage:cStageFolder;
+procedure cBladeBase.setSelectStage(s:cStageFolder);
+var
+  t:cTurbFolder;
+begin
+  t:=cTurbFolder(s.parent);
+  if t<>nil then
+  begin
+    SelectTurb:=t;
+    t.selected:=s;
+  end;
+end;
+
+function cBladeBase.getSelectStage:cStageFolder;
 var
   t:cTurbFolder;
 begin
@@ -367,7 +403,7 @@ begin
     result:=nil;
 end;
 
-function cBladeBase.SelectBlade: cBladeFolder;
+function cBladeBase.getSelectBlade: cBladeFolder;
 var
   s:cStageFolder;
 begin
@@ -388,7 +424,12 @@ begin
   end;
 end;
 
-function cBladeBase.SelectTurb: cTurbFolder;
+procedure cBladeBase.setSelectBlade(b: cBladeFolder);
+begin
+
+end;
+
+function cBladeBase.getSelectTurb: cTurbFolder;
 begin
   result:=nil;
   if root.selected=nil then
@@ -402,6 +443,12 @@ begin
   else
     result:=cTurbFolder(root.selected);
 end;
+
+procedure cBladeBase.setSelectTurb(t: cTurbFolder);
+begin
+  root.selected:=t;
+end;
+
 
 procedure cBladeBase.UpdateXMLDescriptors;
 var
@@ -631,6 +678,11 @@ begin
   result:=g_mbase.getObjType(m_ObjType);
 end;
 
+function cXmlFolder.getObjTypeName: string;
+begin
+  result:=m_ObjType;
+end;
+
 function cXmlFolder.getProperty(i: integer): string;
 var
   prop:cString;
@@ -832,6 +884,27 @@ begin
 end;
 
 
+function cBladeBaseFolder.AddBladeType(s: string): cObjType;
+var
+  I: Integer;
+  str:string;
+begin
+  for I := 0 to m_BladeTypes.Count - 1 do
+  begin
+    str:=m_BladeTypes.Strings[i];
+    if str=s then
+    begin
+      result:=cObjType(m_BladeTypes.Objects[i]);
+      exit;
+    end;
+  end;
+  Result:=cObjType.create;
+  Result.fname:=s;
+  Result.addProp('Чертеж',s);
+  Result.owner:=cBladeBaseFolder(self).m_BladeTypes;
+  m_BladeTypes.AddObject(Result.fname,result);
+end;
+
 constructor cBladeBaseFolder.create;
 begin
   inherited;
@@ -951,6 +1024,11 @@ begin
 
   tests:=node.FindNode('BladeType');
   LoadProp(tests, m_BladeTypes);
+end;
+
+function cBladeBaseFolder.getBladeType(i: integer): cObjType;
+begin
+  result:=cobjtype(m_BladeTypes.Objects[i]);
 end;
 
 function cBladeBaseFolder.getType(s:string): cObjType;
@@ -1120,6 +1198,10 @@ begin
   begin
     v:=cstring(proplist.Objects[ind]);
     v.str:=defv;
+  end
+  else
+  begin
+    addProp(t, 'defv');
   end;
 end;
 
@@ -1189,7 +1271,7 @@ end;
 
 function cBladeFolder.BladeType: string;
 begin
-
+  result:=m_ObjType;
 end;
 
 procedure cBladeFolder.doCreateFiles(node:txmlnode);
@@ -1391,13 +1473,36 @@ begin
 end;
 
 { cTurbFolder }
+function cTurbFolder.bladetype(stagenum: integer): string;
+var
+  o:cObjType;
+  s:cStageFolder;
+  b:cBladeFolder;
+begin
+  result:='';
+  o:=getObjType;
+  result:=o.getval('StageBtype_'+inttostr(stageNum));
+  if (result='') or (result='defv') then
+  begin
+    s:=GetStage(stagenum);
+    if s<>nil then
+    begin
+      if s.BlCount>0 then
+      begin
+        b:=s.GetBlade(0);
+        result:=b.BladeType;
+      end;
+    end;
+  end;
+end;
+
 function cTurbFolder.GetBladeCount(stageNum: integer): integer;
 var
   o:cObjType;
   s:cString;
 begin
   o:=getObjType;
-  s:=o.getProp('StageBCount_'+inttostr(stageNum));
+  s:=o.getProp('StageBCount_'+inttostr(stageNum+1));
   if s<>nil then
     result:=strtoint(s.str)
   else

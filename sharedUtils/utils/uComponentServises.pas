@@ -63,6 +63,7 @@ procedure GridRemoveColumn(SG : TStringGrid; ColNumber : integer);
 function MoveListViewItem(listView: TListView; ItemFrom, ItemTo: Word): Boolean;
 function CloneComponent(AAncestor: TComponent; parent:twincontrol; pname:string): TComponent;
 
+procedure ClearGrid(Grid: TStringGrid; ClearFixed: Boolean = False);
 
 const
   c_lightRed = $008080FF;
@@ -76,6 +77,47 @@ const
   c_ColAdr = 'јдрес';
   // добавок в пиксел€х при расчете ширины колонки в LV
   c_ColTabs = 15;
+
+procedure ClearGrid(Grid: TStringGrid; ClearFixed: Boolean = False);
+var
+  i, j: Integer;
+  StartRow, StartCol: Integer;
+begin
+  // ќпредел€ем с каких строк/столбцов начинать очистку
+  if ClearFixed then
+  begin
+    StartRow := 0;
+    StartCol := 0;
+  end
+  else
+  begin
+    StartRow := Grid.FixedRows;
+    StartCol := Grid.FixedCols;
+  end;
+
+  // ќчищаем €чейки
+  for i := StartRow to Grid.RowCount - 1 do
+  begin
+    for j := StartCol to Grid.ColCount - 1 do
+    begin
+      Grid.Cells[j, i] := '';
+    end;
+  end;
+
+  // ќчищаем объекты
+  for i := StartRow to Grid.RowCount - 1 do
+  begin
+    for j := StartCol to Grid.ColCount - 1 do
+    begin
+      if Assigned(Grid.Objects[j, i]) then
+      begin
+        Grid.Objects[j, i].Free;
+        Grid.Objects[j, i] := nil;
+      end;
+    end;
+  end;
+
+end;
 
 
 function CloneComponent(AAncestor: TComponent; parent:twincontrol; pname:string): TComponent;
