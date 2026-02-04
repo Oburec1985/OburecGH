@@ -6,6 +6,8 @@ uses
   comctrls, sysutils, extctrls, Graphics, grids, dialogs, windows, ShlObj,
   VirtualTrees, uVTServices, forms, uBaseObj, DCL_MYOWN, uCommonMath;
 
+// Если элемент есть то не добавляем
+function AddComboBoxItem(str:string; c:tcombobox):integer;
 // возвращает -1 если объект не найден
 function setComboBoxItem(str:string; c:tcombobox):integer;
 function GetComboBoxItem(c:tcombobox):tobject;
@@ -62,7 +64,6 @@ procedure GridRemoveColumn(SG : TStringGrid; ColNumber : integer);
 
 function MoveListViewItem(listView: TListView; ItemFrom, ItemTo: Word): Boolean;
 function CloneComponent(AAncestor: TComponent; parent:twincontrol; pname:string): TComponent;
-
 procedure ClearGrid(Grid: TStringGrid; ClearFixed: Boolean = False);
 
 const
@@ -564,6 +565,34 @@ begin
   if c.ItemIndex>=0 then
   begin
     result:=c.Items.Objects[c.ItemIndex];
+  end;
+end;
+
+function AddComboBoxItem(str:string; c:tcombobox):integer;
+var
+  I: Integer;
+begin
+  result:=-1;
+  for I := 0 to c.Items.Count - 1 do
+  begin
+    if (lowercase(c.Items[i])=lowercase(str)) then
+    begin
+      c.ItemIndex:=i;
+      c.text:=str;
+      result:=i;
+      CheckCBItemInd(c);
+      exit;
+    end;
+  end;
+  if str='' then
+  begin
+    c.ItemIndex:=-1;
+  end
+  else
+  begin
+    c.ItemIndex:=-1;
+    c.text:=str;
+    c.Items.Add(str);
   end;
 end;
 

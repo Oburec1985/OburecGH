@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, uSpin, ExtCtrls, Grids, uStringGridExt, ubladeDB, uComponentServises,
+  Dialogs, StdCtrls, uSpin, ExtCtrls, Grids, uStringGridExt, ubladeDB,
+  uComponentServises,
   Spin, ComCtrls, uBtnListView;
 
 type
@@ -58,59 +59,72 @@ type
       Change: TItemChange);
     procedure TurbNameCbKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure BladeCBChange(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     procedure init;
     procedure showbase;
     procedure showbladetypes;
     procedure showTurbs;
-    procedure showTurb(t:cTurbFolder);
+    procedure showTurb(t: cTurbFolder);
     procedure updateTypes;
     // перенести данные из Sg в тип лопатки
     procedure ToneToType;
     // показать свойства типа лопатки выбраной в поле "чертеж"
     procedure ShowTone;
-    function ValidRowCount:integer;
+    function ValidRowCount: integer;
     procedure ShowBlades;
+    // выбраная турбина в форме
+    function selectTurb: cTurbFolder;
   public
-    procedure Edit(f:tform);
-    constructor create(aowner:tcomponent);
+    m_frm:tform;
+  public
+    procedure Edit(f: TForm);
+    constructor create(aowner: tcomponent);
   end;
 
 var
+
   EditTestFrm: TEditTestFrm;
 
 implementation
+uses
+  uevalfrffrm;
 
 {$R *.dfm}
-
 { TEditTestFrm }
 
 procedure TEditTestFrm.BandCountIEChange(Sender: TObject);
 begin
-  if BandCountIE.Value<>0 then
+  if BandCountIE.Value <> 0 then
   begin
-    ProfileSG.RowCount:=BandCountIE.Value+1;
+    ProfileSG.RowCount := BandCountIE.Value + 1;
   end;
+end;
+
+procedure TEditTestFrm.BladeCBChange(Sender: TObject);
+begin
+  ShowTone;
 end;
 
 procedure TEditTestFrm.BladeSeChange(Sender: TObject);
 var
-  f, s, bl:cxmlfolder;
+  f, s, bl: cxmlfolder;
 begin
-  f:=g_mbase.SelectTurb;
-  if f<>nil then
+  f := g_mbase.SelectTurb;
+  if f <> nil then
   begin
-    s:=f.selected;
-    if s<>nil then
+    s := f.selected;
+    if s <> nil then
     begin
-      if BladeSe.Value>-1 then
+      if BladeSe.Value > -1 then
       begin
-        bl:=cxmlFolder(s.getChild(BladeSe.Value));
-        if bl<>nil then
+        bl := cxmlfolder(s.getChild(BladeSe.Value));
+        if bl <> nil then
         begin
-          s.selected:=bl;
+          s.selected := bl;
         end;
-        SideCb.Checked:=cBladeFolder(bl).m_sideCB;
+        SideCB.Checked := cBladeFolder(bl).m_sideCB;
       end;
     end;
   end;
@@ -119,13 +133,13 @@ end;
 procedure TEditTestFrm.BladesLVChange(Sender: TObject; Item: TListItem;
   Change: TItemChange);
 begin
-  if BladesLV.SelCount<>BladesLV.Items.Count then
-    SelectAllCb.Checked:=false;
+  if BladesLV.SelCount <> BladesLV.Items.Count then
+    SelectAllCb.Checked := false;
 end;
 
 procedure TEditTestFrm.BlCountIEChange(Sender: TObject);
 begin
-  bladeSe.MaxValue:=BlCountIE.Value-1;
+  BladeSe.MaxValue := BlCountIE.Value - 1;
 end;
 
 constructor TEditTestFrm.create(aowner: tcomponent);
@@ -134,90 +148,122 @@ begin
   init;
 end;
 
-procedure TEditTestFrm.Edit(f: tform);
+procedure TEditTestFrm.Edit(f: TForm);
 begin
+  m_frm:=f;
+  PersonE.text:=TFRFFrm(m_frm).m_Person;
   showbase;
-  if showmodal=mrok then
+  if showmodal = mrok then
   begin
+  end;
+end;
 
+procedure TEditTestFrm.FormClose(Sender: TObject; var Action: TCloseAction);
+var
+  s:cStageFolder;
+  t:cturbfolder;
+begin
+  t:=g_mbase.SelectTurb;
+  if t<>nil then
+  begin
+    if t.StageCount>0 then
+    begin
+      if StageCB.ItemIndex=-1 then
+      begin
+        StageCB.ItemIndex:=0;
+      end;
+      if t.StageCount>0 then
+      begin
+        s:=t.GetStage(StageCB.ItemIndex);
+        g_mbase.SelectStage:=s;
+      end;
+    end;
   end;
 end;
 
 procedure TEditTestFrm.init;
 begin
   // Поиск БД
-  ProfileSG.ColCount:=4;
-  ProfileSG.rowCount:=4;
-  ProfileSG.Cells[0,0]:='Тон №';
-  ProfileSG.Cells[1,0]:='F1';
-  ProfileSG.Cells[2,0]:='F2';
-  ProfileSG.Cells[3,0]:='Допуск, %';
-  DateLabel.Caption:= 'Дата: '+DateToStr(now);
+  ProfileSG.ColCount := 4;
+  ProfileSG.RowCount := 4;
+  ProfileSG.Cells[0, 0] := 'Тон №';
+  ProfileSG.Cells[1, 0] := 'F1';
+  ProfileSG.Cells[2, 0] := 'F2';
+  ProfileSG.Cells[3, 0] := 'Допуск, %';
+  DateLabel.Caption := 'Дата: ' + DateToStr(now);
 end;
 
 procedure TEditTestFrm.OkBtnClick(Sender: TObject);
 var
-  f, s, bl:cxmlfolder;
-  I: Integer;
-  str, pref:string;
+  f, s, bl: cxmlfolder;
+  I,j: integer;
+  str, pref: string;
+  o:cObjType;
 begin
-  updateTypes;
-  if TurbNameCb.text<>'' then
+  TFRFFrm(m_frm).m_Person:=PersonE.text;
+  if TurbNameCb.text <> '' then
   begin
-    f:=cxmlfolder(g_mbase.getobj(TurbNameCb.text));
-    if f=nil then
+    f := cxmlfolder(g_mbase.getobj(TurbNameCb.text));
+    if f = nil then
     begin
-      f:=cTurbFolder.create;
+      f := cTurbFolder.create;
       f.setObjType(TurbCB.text);
-      f.name:=TurbNameCb.text;
-      g_mbase.root.selected:=f;
+      f.name := TurbNameCb.text;
+      g_mbase.root.selected := f;
       g_mbase.root.AddChild(f);
-      TurbNameCb.AddItem(f.name, f);
-      setComboBoxItem(f.name,TurbNameCb);
+      AddComboBoxItem(f.name, TurbNameCb);
+      setComboBoxItem(f.name, TurbNameCb);
 
-      s:=cStageFolder.create;
-      s.name:=f.name+'_Stage_'+StageCB.text;
-      cStageFolder(s).BlCount:=BlCountIE.Value;
-      f.AddChild(s);
-      f.selected:=s;
-
-      bl:=cBladeFolder.create;
-      bl.setObjType(BladeCB.text);
-      str:=BladeSe.text;
-      pref:='';
-      for i:=0 to (3-length(str))-1 do
+      o:=g_mbase.getType(TurbCB.text);
+      for I := 0 to StageCountSE.Value - 1 do
       begin
-        pref:=pref+'0';
+        s := cStageFolder.create;
+        s.name := f.name + '_Stage_' + inttostr(i+1);
+        if o<>nil then
+          cStageFolder(s).BlCount := cturbfolder(f).GetBladeCount(i)
+        else
+          cStageFolder(s).BlCount := BlCountIE.Value;
+        for j := 0 to s.childCount - 1 do
+        begin
+          bl:=cbladefolder(s.getChild(j));
+          bl.fdefCaption:=false;
+        end;
+        f.AddChild(s);
+        for j := 0 to s.childCount - 1 do
+        begin
+          bl:=cbladefolder(s.getChild(j));
+          bl.fdefCaption:=true;
+        end;
+        if i=0 then
+          f.selected := s;
       end;
-      str:=pref+str;
-      bl.name:='Bl_'+str;
-      s.AddChild(bl);
-      f.selected:=bl;
     end
     else
     begin
       f.setObjType(TurbCB.text);
-      s:=g_mbase.SelectStage;
-      cStageFolder(s).BlCount:=BlCountIE.Value;
-      if cStageFolder(s).selected=nil then
+      s := g_mbase.SelectStage;
+      cStageFolder(s).BlCount := BlCountIE.Value;
+      if cStageFolder(s).selected = nil then
       begin
         for I := 0 to cStageFolder(s).ChildCount - 1 do
         begin
-          bl:=cBladeFolder(cStageFolder(s).getChild(i));
-          bl.setObjType(BladeCB.Text);
+          bl := cBladeFolder(cStageFolder(s).getChild(I));
+          bl.setObjType(BladeCB.text);
         end;
       end;
-      bl:=g_mbase.SelectBlade;
-      bl.setObjType(BladeCB.Text);
+      bl := g_mbase.SelectBlade;
+      bl.setObjType(BladeCB.text);
     end;
   end;
+  updateTypes;
   g_mbase.UpdateXMLDescriptors;
+  ShowBlades;
 end;
 
 procedure TEditTestFrm.ProfileSGKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  if key=VK_RETURN then
+  if Key = VK_RETURN then
   begin
     SGChange(ProfileSG);
   end;
@@ -225,85 +271,96 @@ end;
 
 procedure TEditTestFrm.SelectAllCbClick(Sender: TObject);
 var
-  I: Integer;
-  li:TListItem;
+  I: integer;
+  li: TListItem;
 begin
-  for I := 0 to BladesLV.items.Count - 1 do
+  for I := 0 to BladesLV.Items.Count - 1 do
   begin
-    li:=BladesLV.Items[i];
-    li.Selected:=SelectAllCb.Checked;
+    li := BladesLV.Items[I];
+    li.selected := SelectAllCb.Checked;
   end;
 end;
 
 procedure TEditTestFrm.showbladetypes;
 var
-  I: Integer;
-  o:cObjType;
+  I: integer;
+  o: cObjType;
 begin
   BladeCB.Clear;
-  for I := 0 to cBladeBaseFolder(g_mbase.m_BaseFolder).m_BladeTypes.count - 1 do
+  for I := 0 to cBladeBaseFolder(g_mbase.m_BaseFolder).m_BladeTypes.Count - 1 do
   begin
-    o:=g_mbase.getBladeType(i);
+    o := g_mbase.getBladeType(I);
     BladeCB.AddItem(o.name, o);
   end;
 end;
 
 procedure TEditTestFrm.showTurbs;
 var
-  I: Integer;
-  t:cTurbFolder;
-  str:string;
+  I: integer;
+  t: cTurbFolder;
+  str: string;
 begin
   // заполняем типы объектов
-  turbCB.Clear;
-  for I := 0 to g_mbase.root.m_turbTypes.Count-1 do
+  TurbCB.Clear;
+  for I := 0 to g_mbase.root.m_turbTypes.Count - 1 do
   begin
-    turbcb.Items.AddObject(g_mbase.root.m_turbTypes.Strings[i], g_mbase.root.m_turbTypes.Objects[i]);
+    TurbCB.Items.AddObject(g_mbase.root.m_turbTypes.Strings[I],
+      g_mbase.root.m_turbTypes.Objects[I]);
   end;
   TurbNameCb.Clear;
   for I := 0 to g_mbase.root.ChildCount - 1 do
   begin
-    t:=cTurbFolder(g_mbase.m_BaseFolder.getChild(i));
-    TurbNameCb.AddItem(t.name, t);
+    t := cTurbFolder(g_mbase.m_BaseFolder.getChild(I));
+    AddComboBoxItem(t.name, TurbNameCb);
   end;
   // установка выбраной турбины
-  if g_mbase.SelectTurb<>nil then
+  if g_mbase.SelectTurb <> nil then
   begin
-    setComboBoxItem(g_mbase.SelectTurb.name, turbnamecb);
-    str:=g_mbase.SelectTurb.ObjType;
-    setComboBoxItem(str, turbcb);
+    setComboBoxItem(g_mbase.SelectTurb.name, TurbNameCb);
+    str := g_mbase.SelectTurb.ObjType;
+    setComboBoxItem(str, TurbCB);
   end
   else
   begin
-    turbCB.ItemIndex:=0;
+    TurbCB.ItemIndex := 0;
   end;
+end;
+
+function TEditTestFrm.selectTurb: cTurbFolder;
+var
+  t:tobject;
+begin
+  result:=nil;
+  t:=cTurbFolder(GetComboBoxItem(TurbNameCb));
+  if t<>nil then
+    result:=cTurbFolder(t);
 end;
 
 procedure TEditTestFrm.showbase;
 var
-  I: Integer;
-  t:cTurbFolder;
+  I: integer;
+  t: cTurbFolder;
 begin
   // отобразить список турбин
   showTurbs;
-
-  BladeCB.clear;
-  for I := 0 to g_mbase.root.m_BladeTypes.Count-1 do
+  BladeCB.Clear;
+  for I := 0 to g_mbase.root.m_BladeTypes.Count - 1 do
   begin
-    BladeCB.Items.AddObject(g_mbase.root.m_BladeTypes.Strings[i], g_mbase.root.m_BladeTypes.Objects[i]);
+    BladeCB.Items.AddObject(g_mbase.root.m_BladeTypes.Strings[I],
+      g_mbase.root.m_BladeTypes.Objects[I]);
   end;
   // типы турбин
   showbladetypes;
-  t:=g_mbase.SelectTurb;
-  BladeCB.ItemIndex:=0;
-  if t<>nil then
+  t := g_mbase.SelectTurb;
+  BladeCB.ItemIndex := 0;
+  if t <> nil then
   begin
     showTurb(t);
     // ступень
-    t.selected:=cxmlfolder(t.getChild(0));
-    BlCountIE.Value:=cStageFolder(t.selected).BlCount;
+    t.selected := cxmlfolder(t.getChild(0));
+    BlCountIE.Value := cStageFolder(t.selected).BlCount;
     // лопатка
-    t.selected.selected:=cxmlfolder(t.selected.getChild(0));
+    t.selected.selected := cxmlfolder(t.selected.getChild(0));
     ShowTone;
   end;
   SGChange(ProfileSG);
@@ -311,56 +368,62 @@ end;
 
 procedure TEditTestFrm.ShowBlades;
 var
-  I: Integer;
-  t:cTurbFolder;
-  s:cStageFolder;
-  b:cBladeFolder;
-  li:tlistitem;
-  str:string;
+  I: integer;
+  t: cTurbFolder;
+  s: cStageFolder;
+  b: cBladeFolder;
+  li: TListItem;
+  str: string;
 begin
-  t:=cTurbFolder(GetComboBoxItem(TurbNameCb));
-  if t=nil then exit;
-  if StageCB.ItemIndex=-1 then
-    s:=t.GetStage(0)
+  t := g_mbase.SelectTurb;
+  if t = nil then
+    exit;
+  if StageCB.ItemIndex = -1 then
+    s := t.GetStage(0)
   else
-    s:=t.GetStage(StageCB.ItemIndex);
+    s := t.GetStage(StageCB.ItemIndex);
   BladesLV.Clear;
-  for I := 0 to s.BlCount - 1 do
+  BladesLV.clearcolors;
+  for I := 0 to s.ChildCount - 1 do
   begin
-    li:=BladesLV.Items.Add;
-    BladesLV.SetSubItemByColumnName('№',inttostr(i),li);
-    b:=s.GetBlade(i);
+    li := BladesLV.Items.Add;
+    BladesLV.SetSubItemByColumnName('№', inttostr(I), li);
+    b := s.GetBlade(I);
     if b.m_sideCB then
-      str:='Правая'
+      str := 'Правая'
     else
-      str:='Левая';
-    BladesLV.SetSubItemByColumnName('Тип',str,li);
-    BladesLV.SetSubItemByColumnName('sn',b.m_sn,li);
+      str := 'Левая';
+    if b.m_sideCB then
+    begin
+      BladesLV.addColorItem(li.Index, clgray);
+    end;
+    BladesLV.SetSubItemByColumnName('Тип', str, li);
+    BladesLV.SetSubItemByColumnName('sn', b.m_sn, li);
   end;
 end;
 
 procedure TEditTestFrm.ShowTone;
 var
-  o:cObjType;
-  s:string;
-  r,c:integer;
+  o: cObjType;
+  s: string;
+  r, c: integer;
 begin
-  o:=g_mbase.root.getType(BladeCB.Text);
+  o := g_mbase.root.getType(BladeCB.text);
   ClearGrid(ProfileSG, false);
-  if o<>nil then
+  if o <> nil then
   begin
-    s:=o.getval('ToneCount');
-    if s<>'' then
+    s := o.getval('ToneCount');
+    if s <> '' then
     begin
-      c:=strtoint(s);
-      BandCountIE.Value:=c;
-      ProfileSG.RowCount:=c+2;
+      c := strtoint(s);
+      BandCountIE.Value := c;
+      ProfileSG.RowCount := c + 2;
     end;
-    for r := 0 to c-1 do
+    for r := 0 to c - 1 do
     begin
-      ProfileSG.Cells[1, r+1]:=o.getval('F1_'+inttostr(r+1));
-      ProfileSG.Cells[2, r+1]:=o.getval('F2_'+inttostr(r+1));
-      ProfileSG.Cells[3, r+1]:=o.getval('Threshold_'+inttostr(r+1));
+      ProfileSG.Cells[1, r + 1] := o.getval('F1_' + inttostr(r + 1));
+      ProfileSG.Cells[2, r + 1] := o.getval('F2_' + inttostr(r + 1));
+      ProfileSG.Cells[3, r + 1] := o.getval('Threshold_' + inttostr(r + 1));
     end;
   end;
   SGChange(ProfileSG);
@@ -368,170 +431,194 @@ end;
 
 procedure TEditTestFrm.showTurb(t: cTurbFolder);
 var
-  I, c: Integer;
-  s:cStageFolder;
+  I, c: integer;
+  s: cStageFolder;
 begin
-  c:=t.StageCount;
-  if c=0 then
+  c := t.StageCount;
+  if c = 0 then
   begin
-    if t.childcount>0 then
+    if t.ChildCount > 0 then
     begin
-      c:=t.childcount;
-      t.StageCount:=c;
+      c := t.ChildCount;
+      t.StageCount := c;
     end;
   end;
-  StageCountSE.Value:=c;
+  StageCountSE.Value := c;
   StageCB.Items.Clear;
 
   for I := 0 to StageCountSE.Value - 1 do
   begin
-    s:=cStageFolder(t.getChild(i));
-    StageCB.Items.AddObject(inttostr(i+1), s);
+    s := cStageFolder(t.getChild(I));
+    StageCB.Items.AddObject(inttostr(I + 1), s);
   end;
-  BlCountIE.Value:=t.GetBladeCount(strtoint(StageCB.Text));
+  BlCountIE.Value := t.GetBladeCount(strtoint(StageCB.text));
   ShowBlades;
 end;
 
 procedure TEditTestFrm.SideCBClick(Sender: TObject);
 var
-  bl:cBladeFolder;
-  t:cTurbFolder;
-  s:cStageFolder;
-  I: Integer;
-  li:tlistitem;
+  bl: cBladeFolder;
+  t: cTurbFolder;
+  s: cStageFolder;
+  I: integer;
+  li: TListItem;
 begin
   if SideCB.Checked then
   begin
-    SideCB.Caption:= 'Правая лопатка';
+    SideCB.Caption := 'Правая лопатка';
   end
   else
   begin
-    SideCB.Caption:='Левая лопатка';
+    SideCB.Caption := 'Левая лопатка';
   end;
-  t:=g_mbase.SelectTurb;
-  if StageCB.ItemIndex=-1 then
-    s:=t.GetStage(0)
+  t := g_mbase.SelectTurb;
+  if StageCB.ItemIndex = -1 then
+    s := t.GetStage(0)
   else
-    s:=t.GetStage(StageCB.ItemIndex);
-  if BladesLV.SelCount>0 then
+    s := t.GetStage(StageCB.ItemIndex);
+  if BladesLV.SelCount > 0 then
   begin
-    for I := 0 to BladesLV.items.Count - 1 do
+    for I := 0 to BladesLV.Items.Count - 1 do
     begin
-      li:=BladesLV.Items[i];
-      if li.Selected then
+      li := BladesLV.Items[I];
+      if li.selected then
       begin
-        bl:=s.GetBlade(li.Index);
-        bl.m_sideCB:=sidecb.Checked;
+        bl := s.GetBlade(li.Index);
+        bl.m_sideCB := SideCB.Checked;
       end;
     end;
   end
   else
   begin
-    bl:=s.GetBlade(BladeSe.Value);
-    bl.m_sideCB:=sidecb.Checked;
+    bl := s.GetBlade(BladeSe.Value);
+    bl.m_sideCB := SideCB.Checked;
   end;
   ShowBlades;
 end;
 
 procedure TEditTestFrm.Splitter2Moved(Sender: TObject);
 begin
-  splitter1.Left:=Splitter2.Left;
+  Splitter1.Left := Splitter2.Left;
 end;
 
 procedure TEditTestFrm.StageCBChange(Sender: TObject);
 var
-  t:cTurbFolder;
-  s:cStageFolder;
+  t: cTurbFolder;
+  s: cStageFolder;
 begin
-  t:=g_mbase.SelectTurb;
-  s:=t.GetStage(StageCB.ItemIndex);
-  if s<>nil then
+  t := g_mbase.SelectTurb;
+  s := t.GetStage(StageCB.ItemIndex);
+  if s <> nil then
   begin
-    t.selected:=s;
-    BlCountIE.Value:=t.GetBladeCount(StageCB.ItemIndex);
+    t.selected := s;
+    BlCountIE.Value := t.GetBladeCount(StageCB.ItemIndex);
+    AddComboBoxItem(s.getBladeType, BladeCB);
+    ShowTone;
   end;
+  ShowBlades;
 end;
 
-function isValidRow(sg:tstringgrid;r:integer):boolean;
+function isValidRow(sg: tstringgrid; r: integer): boolean;
 begin
-  result:=false;
-  if sg.Cells[1,r]<>'' then
-    if sg.Cells[2,r]<>'' then
-      result:=true;
+  result := false;
+  if sg.Cells[1, r] <> '' then
+    if sg.Cells[2, r] <> '' then
+      result := true;
 end;
 
 procedure TEditTestFrm.updateTypes;
 var
-  o:cObjType;
+  o: cObjType;
+  bl: cBladeFolder;
+  s: cStageFolder;
+  t: cTurbFolder;
   I: Integer;
-  bl:cBladeFolder;
-  s:cStageFolder;
-  t:cTurbFolder;
 begin
   ToneToType;
   // тип турбины
-  o:=g_mbase.root.getType(TurbCB.text);
-  if o<>nil then
+  o := g_mbase.root.getType(TurbCB.text);
+  if o <> nil then
   begin
 
   end
   else
   begin
-    o:=cObjType.create;
-    o.name:=TurbCB.text;
-    g_mbase.root.m_turbTypes.AddObject(o.name,o);
+    o := cObjType.create;
+    o.name := TurbCB.text;
+    g_mbase.root.m_turbTypes.AddObject(o.name, o);
     TurbCB.AddItem(o.name, o);
     CheckCBItemInd(TurbCB);
   end;
   // типы лопаток на ступенях
-  t:=g_mbase.SelectTurb;
-  t.ObjType:=TurbCB.text;
+  t := g_mbase.SelectTurb;
+  t.ObjType := TurbCB.text;
   o.setPropVal('StageCount', inttostr(StageCountSE.Value));
-  o.setPropVal('StageBCount_'+stageCB.Text, inttostr(BlCountIE.Value));
-  if StageCB.ItemIndex=0 then
+  o.setPropVal('StageBCount_' + StageCB.text, inttostr(BlCountIE.Value));
+  if StageCB.ItemIndex = 0 then
   begin
-    StageCB.ItemIndex:=0;
-    StageCB.Text:='1';
+    StageCB.ItemIndex := 0;
+    StageCB.text := '1';
   end;
-  if StageCB.ItemIndex=-1 then
-    StageCB.ItemIndex:=0;
-  s:=t.GetStage(StageCB.ItemIndex);
-  if s.BlCount>0 then
+  if StageCB.ItemIndex = -1 then
   begin
-    bl:=s.GetBlade(0);
-    o.setPropVal('StageBtype_'+inttostr(i), BladeCB.text);
-    BladeCB.Items.Add(BladeCB.text);
+    StageCB.ItemIndex := 0;
+    s := t.GetStage(0);
+  end
+  else
+  begin
+    s := t.GetStage(StageCB.ItemIndex);
+  end;
+  if s=nil then
+  begin
+    s := cStageFolder.create;
+    s.name := t.name + '_Stage_' + StageCB.text;
+    t.AddChild(s);
+    for I := 0 to t.ChildCount - 1 do
+    begin
+      if t.GetStage(i)=s then
+      begin
+        AddComboBoxItem(inttostr(i+1),StageCB);
+        break;
+      end;
+    end;
+  end;
+  cStageFolder(s).BlCount := BlCountIE.Value;
+  if s.BlCount > 0 then
+  begin
+    bl := s.GetBlade(0);
+    o.setPropVal('StageBtype_' + inttostr(StageCB.ItemIndex), BladeCB.text);
+    AddComboBoxItem(BladeCB.text, BladeCB);
     cBladeBaseFolder(g_mbase.m_BaseFolder).AddBladeType(BladeCB.text);
   end;
 end;
 
 procedure TEditTestFrm.ToneToType;
 var
-  o:cObjType;
-  r:integer;
-  str:string;
+  o: cObjType;
+  r: integer;
+  str: string;
 begin
-  o:=g_mbase.root.getType(BladeCB.Text);
-  if o<>nil then
+  o := g_mbase.root.getType(BladeCB.text);
+  if o <> nil then
   begin
     o.addProp('ToneCount', inttostr(ValidRowCount));
-    for r := 1 to ProfileSG.rowCount - 1 do
+    for r := 1 to ProfileSG.RowCount - 1 do
     begin
       if isValidRow(ProfileSG, r) then
       begin
-        if ProfileSG.Cells[3,r]<>'' then
+        if ProfileSG.Cells[3, r] <> '' then
         begin
-          ProfileSG.Cells[3,r]:=ThresholdSE.Text;
+          ProfileSG.Cells[3, r] := ThresholdSE.text;
         end;
-        o.addProp('F1_'+inttostr(r), ProfileSG.Cells[1, r]);
-        o.addProp('F2_'+inttostr(r), ProfileSG.Cells[2, r]);
-        if ProfileSG.Cells[3, r]='' then
+        o.addProp('F1_' + inttostr(r), ProfileSG.Cells[1, r]);
+        o.addProp('F2_' + inttostr(r), ProfileSG.Cells[2, r]);
+        if ProfileSG.Cells[3, r] = '' then
         begin
-          ProfileSG.Cells[3, r]:=thresholdse.text;
-          o.addProp('Threshold_'+inttostr(r), thresholdse.text);
+          ProfileSG.Cells[3, r] := ThresholdSE.text;
+          o.addProp('Threshold_' + inttostr(r), ThresholdSE.text);
         end
         else
-          o.addProp('Threshold_'+inttostr(r), ProfileSG.Cells[3, r]);
+          o.addProp('Threshold_' + inttostr(r), ProfileSG.Cells[3, r]);
       end;
     end;
   end;
@@ -539,25 +626,46 @@ end;
 
 procedure TEditTestFrm.TurbCBChange(Sender: TObject);
 var
-  str:string;
-  o:cObjType;
-  I: Integer;
+  str: string;
+  o: cObjType;
+  I: integer;
+  t:cTurbFolder;
+  s:cstagefolder;
 begin
   // установка типа турбины
-  o:=g_mbase.getType(TurbCB.text);
-  if o<>nil then
+  o := g_mbase.getType(TurbCB.text);
+  if o <> nil then
   begin
-    StageCB.Text:='1';
-    str:=o.getval('StageCount');
-    StageCountSE.Value:=StrToIntDef(str, 0);
-
-    // число лопаток
-    str:=o.getval('StageBCount_1');
-    BlCountIE.Value:=StrToIntDef(str, 0);
-    str:=o.getval('StageBtype_1');
-    if str<>'' then
+    StageCB.text := '1';
+    str := o.getval('StageCount');
+    StageCountSE.Value := StrToIntDef(str, 0);
+    StageCB.Clear;
+    // выбраная турбина в форме
+    t:=selectTurb;
+    if t<>nil then
     begin
-      setComboBoxItem(cturbfolder(g_mbase.root.selected).bladetype(0),BladeCB);
+      for I := 0 to StageCountSE.Value - 1 do
+      begin
+        s := t.GetStage(I);
+        StageCB.Items.AddObject(inttostr(I + 1), s);
+        if i=0 then
+        begin
+          StageCB.ItemIndex:=0;
+        end;
+      end;
+    end;
+    // число лопаток
+    str := o.getval('StageBCount_1');
+    BlCountIE.Value := StrToIntDef(str, 0);
+    str := o.getval('StageBtype_1');
+    if str <> '' then
+    begin
+      if t<>nil then
+        setComboBoxItem(cTurbFolder(t).bladetype(0), BladeCB)
+      else
+      begin
+        setComboBoxItem(str, BladeCB);
+      end;
     end;
     ShowTone;
   end;
@@ -565,55 +673,57 @@ end;
 
 procedure TEditTestFrm.TurbNameCbChange(Sender: TObject);
 var
-  str:string;
-  I: Integer;
-  t:cTurbFolder;
-  s:cStageFolder;
+  str: string;
+  I: integer;
+  t: cTurbFolder;
+  s: cStageFolder;
 begin
-  if CheckCBItemInd(tcombobox(Sender)) then
+  if CheckCBItemInd(TComboBox(Sender)) then
   begin
-    t:=cTurbFolder(g_mbase.root.getChild(TurbNameCb.ItemIndex));
-    if g_mbase.root.selected=t then exit;
-    g_mbase.root.selected:=t;
+    t := cTurbFolder(g_mbase.root.getChild(TurbNameCb.ItemIndex));
+    if g_mbase.root.selected = t then
+      exit;
+    g_mbase.root.selected := t;
     // установка типа турбины
-    str:=t.getObjTypeName;
-    setComboBoxItem(str,turbcb);
-    StageCB.Text:='1';
-    StageCountSE.Value:=t.StageCount;
-    stagecb.Clear;
+    str := t.getObjTypeName;
+    setComboBoxItem(str, TurbCB);
+    StageCB.text := '1';
+    StageCountSE.Value := t.StageCount;
+    StageCB.Clear;
     for I := 0 to StageCountSE.Value - 1 do
     begin
-      s:=t.GetStage(i);
-      if s=nil then
+      s := t.GetStage(I);
+      if s = nil then
       begin
-        s:=cStageFolder.create;
-        s.name:=t.name+'_Stage_'+StageCB.text;
-        cStageFolder(s).BlCount:=BlCountIE.Value;
+        s := cStageFolder.create;
+        s.name := t.name + '_Stage_' + StageCB.text;
+        cStageFolder(s).BlCount := BlCountIE.Value;
         t.AddChild(s);
       end;
-      stagecb.Items.AddObject(inttostr(i+1), s);
+      StageCB.Items.AddObject(inttostr(I + 1), s);
     end;
-    if StageCountSE.Value>0 then
+    if StageCountSE.Value > 0 then
     begin
-      if g_mbase.selectStage<>nil then
+      if g_mbase.SelectStage <> nil then
       begin
-        for I := 0 to stagecb.items.Count - 1 do
+        for I := 0 to StageCB.Items.Count - 1 do
         begin
-          if StageCB.Items.Objects[i]=g_mbase.selectStage then
+          if StageCB.Items.Objects[I] = g_mbase.SelectStage then
           begin
-            StageCB.ItemIndex:=i;
+            StageCB.ItemIndex := I;
             break;
           end;
         end;
       end;
     end;
     // число лопаток
-    BlCountIE.Value:=cturbfolder(g_mbase.root.selected).GetBladeCount(0);
-    str:=cturbfolder(g_mbase.root.selected).bladetype(0);
+    BlCountIE.Value := cTurbFolder(g_mbase.root.selected).GetBladeCount(0);
+    str := cTurbFolder(g_mbase.root.selected).bladetype(0);
     cBladeBaseFolder(g_mbase.m_BaseFolder).AddBladeType(str);
     showbladetypes;
-    setComboBoxItem(str,BladeCB);
+    setComboBoxItem(str, BladeCB);
     ShowTone;
+    ShowBlades;
   end;
 end;
 
@@ -623,13 +733,14 @@ begin
   TurbNameCbChange(TurbNameCb);
 end;
 
+
 function TEditTestFrm.ValidRowCount: integer;
 var
-  r:integer;
-  str:string;
+  r: integer;
+  str: string;
 begin
-  result:=0;
-  for r := 1 to ProfileSG.rowCount - 1 do
+  result := 0;
+  for r := 1 to ProfileSG.RowCount - 1 do
   begin
     if isValidRow(ProfileSG, r) then
     begin

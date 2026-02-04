@@ -5,6 +5,7 @@ uses
   windows, classes, dialogs, sysutils, variants,
   uDBObject, ubaseobj,
   pathutils, uPathMng,
+  uBladeDb, uChart, graphics,
   u2dmath, uCommonMath, uCommonTypes, uspmband, uExcel;
 type
 
@@ -26,6 +27,17 @@ type
     constructor create;
     destructor destroy;
   end;
+
+  RepSignal = class
+  public
+    // cExtremum list
+    m_BandExtremums:tlist;
+    m_name:string;
+  public
+    constructor create;
+    destructor destroy;
+  end;
+
   // список найденных экстремумов на линии для сравненияс
   // l: tlist;
   function CheckExtremList(l:tlist; bands:blist):boolean;
@@ -36,10 +48,11 @@ type
   procedure BuildReportOtk(tmpl, name:string; hideexcel:boolean; toneCount:integer; blCount:integer;
               p_bandlist:blist);
 
+procedure SaveBladeReport(repname, meraFileName: string; slist:tlist; bands:blist;
+                      chart:cchart; bl: cBladeFolder; hideExcel:boolean);
+
 
 implementation
-uses
-  uBladeDb;
 
 
 { TExtremum1d }
@@ -169,7 +182,7 @@ end;
 
 procedure Buildreport(tmpl: string; hideexcel:boolean);
 var
-  r0, i, j, r,col, c, c2: integer;
+  r0, i, j, r,col, c, c2, tCount: integer;
   b: tspmband;
   extr: PExtremum1d;
   date: TDateTime;
@@ -177,12 +190,13 @@ var
   rng, rng2, rng3: olevariant;
   str, str1, str2, repPath: string;
   tp:tpoint;
-  p3:point3d;
+  p3, lp3:point3d;
   minmax: point2d;
   v: double;
   turb: cTurbFolder;
   stage: cStageFolder;
   blade: cBladeFolder;
+  err:boolean;
 begin
   KillAllExcelProcesses;
   if tmpl='' then
@@ -221,6 +235,10 @@ begin
     rng:=GetRange(1,'c_Tone');
     rng2:=GetRange(1,'c_Start');
     // заполняем тоны в таблице лопаток (с позиции Start)
+    if blade.ToneCount<c then
+      tCount:=blade.ToneCount
+    else
+      tCount:=c;
     for I := 0 to blade.ToneCount - 1 do
     begin
       SetCell(1, rng.Row-1, rng.Column+i, i+1);
@@ -243,41 +261,43 @@ begin
       blade:=stage.getblade(i);
       SetCell(1, rng2.Row+i,rng2.Column+1, blade.m_sn);
       // проход по тонам
-      for j := 0 to blade.ToneCount - 1 do
+      for j := 0 to tCount - 1 do
       begin
-        str := getSubStrByIndex(blade.m_resStr, ';', 1, j);
-        // numBand
-        str2 := getSubStrByIndex(str, '_', 1, 4);
-        //if str2<>'0' then
-        //  continue;
-        // F
-        str2 := getSubStrByIndex(str, '_', 1, 2);
+        p3:=blade.Tone(j); //p3.z - допуск
+        //lp3: z - демпфирование; y - частота тона (0 если не нашли)
+        lp3:=getBand(p2d(p3.x,p3.y), blade, p3.z, err);
         r:=rng2.Row+i;
         col:=rng2.Column+2+j*3;
-        SetCell(1, r,col, strtofloatext(str2));
+        SetCell(1, r, col, lp3.y);
+        if err or (lp3.y=0) then
+        begin
+          rng3 := GetRangeObj(1, point(r, col), point(r, col));
+          if blade.m_res=1 then
+            rng3.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
+        end;
         // декремент
-        str2 := getSubStrByIndex(str, '_', 1, 3);
         col:=rng.Column+j;
-        SetCell(1, r, col, strtofloatext(str2));
+        // демпфирование
+        SetCell(1, r, col, lp3.z);
       end;
       if blade.m_res=2 then
       begin
-        SetCell(1, rng.Row+i,rng.Column+blade.ToneCount, 'годен');
+        SetCell(1, rng.Row+i,rng.Column+tCount, 'годен');
       end
       else
       begin
         if blade.m_res=1 then
         begin
-          rng3 := GetRangeObj(1, point(rng2.row, rng2.column),
-                                point(rng2.row, rng.column+1));
+          rng3 := GetRangeObj(1, point(rng2.row+i, rng2.column),
+          // tCount - число тонов в протоколе
+                                point(rng2.row+i, rng.column+tCount));
           rng3.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
-          SetCell(1, rng2.Row+i, rng.Column+ // rng - столбец декремент
-                                 1, 'не годен');
+          SetCell(1, rng2.Row+i, rng.Column+tCount // rng - столбец декремент
+                                 , 'не годен');
         end
         else
         begin
-          SetCell(1, rng2.Row+i, rng.Column+ // rng - столбец декремент
-                                 1, 'не испытана');
+          SetCell(1, rng2.Row+i, rng.Column+tCount, 'не испытана');
         end;
       end;
     end;
@@ -298,7 +318,8 @@ end;
 procedure BuildReportOtk(tmpl, Name:string;
                          hideexcel:boolean;
                          toneCount:integer;
-                         blCount:integer; p_bandlist:blist);
+                         blCount:integer; // сколько лопаток в строку
+                         p_bandlist:blist);
 var
   r0, i, j, r, col, c,
   // количество колонок на лопатку
@@ -354,19 +375,37 @@ begin
     date:=now;
     rng.value:=FormatDateTime('dd.mm.yyyy hh:nn:ss', date);
 
+    rng:=GetRange(1,'c_name');
+    if not CheckVarObj(rng) then
+    begin
+      showmessage('не найден регион c_type в шаблоне');
+    end;
+    rng.value:=Name;
+
+    if blCount=0 then
+    begin
+      rng:=GetRange(1,'c_bladeCount');
+      if not CheckVarObj(rng) then
+      begin
+        blCount:=1;
+      end
+      else
+        blCount:=rng.value;
+    end;
+
     rng:=GetRange(1,'c_start');
     if not CheckVarObj(rng) then
     begin
       showmessage('не найден регион c_start в шаблоне');
     end;
-
     rng2:=GetRange(1,'c_weight');
     if not CheckVarObj(rng2) then
     begin
       showmessage('не найден регион c_weight в шаблоне');
     end;
-    colWide:=rng2.column-rng.column+2;
+    colWide:=rng2.column-rng.column+1;
     // заполняем тоны в таблице лопаток (с позиции Start)
+
     for I := 0 to stage.ChildCount - 1 do
     begin
       blade:=stage.GetBlade(i);
@@ -447,5 +486,180 @@ begin
   end;
 end;
 
+
+
+procedure SaveBladeReport(repname, meraFileName: string; slist:tlist; bands:blist;
+                      chart:cchart; bl: cBladeFolder; hideExcel:boolean);
+var
+  r0, i, j, k, r,r2, c: integer;
+  b: tspmband;
+  extr: cExtremum;
+  s:RepSignal;
+  date: TDateTime;
+  res: boolean;
+  rng, rng2, sh: olevariant;
+  str, repPath: string;
+  minmax: point2d;
+  v, v1, d: double;
+  find:boolean;
+  pict:tbitmap;
+  m_ReportBmp:TBitmap;
+begin
+  KillAllExcelProcesses;
+  if not CheckVarObj(E) then
+  begin
+    if not CheckExcelRun then
+    begin
+      CreateExcel;
+      VisibleExcel(true);
+    end;
+  end;
+
+  if fileexists(repname) then
+  begin
+    if not IsExcelFileOpen(repname) then
+    begin
+      OpenWorkBook(repname);
+    end
+    else
+    begin
+      VisibleExcel(true);
+    end;
+  end
+  else
+  begin
+    AddWorkBook;
+    AddSheet('Page_01');
+  end;
+  // в пятом столбце строки идут заполненные подряд
+  //r0 := GetEmptyRow(1, 1, 5);
+  //sh:=E.ActiveWorkbook.Worksheets['Page_01'];
+  GetSheetDimensions('Page_01', r0, c );
+  inc(r0);
+  SetCell(1, r0, 2, 'Blade:');
+  SetCell(1, r0, 3, bl.m_sn);
+  SetCell(1, r0, 4, 'Чертеж:');
+  SetCell(1, r0, 5, bl.ObjType);
+  SetCell(1, r0, 6, 'MeraFile:');
+  SetCell(1, r0, 7, meraFileName);
+
+  inc(r0);
+  SetCell(1, r0, 4, 'Time:');
+  date := now;
+  SetCell(1, r0, 5, DateToStr(date));
+  SetCell(1, r0 + 1, 5, TimeToStr(date));
+  r := r0 + 2;
+  c := 2;
+
+  for i := 0 to slist.count - 1 do
+  begin
+    s := repsignal(slist.Items[i]);
+    str := s.m_name;
+    SetCell(1, r - 1, c, str);
+    SetCell(1, r, c, 'Band');
+    SetCell(1, r, c + 1, 'A1');
+    SetCell(1, r, c + 2, 'F1');
+    SetCell(1, r, c + 3, 'Dekr');
+    SetCell(1, r, c + 4, 'NumBand');
+    SetCell(1, r, c + 5, 'Error, %');
+    SetCell(1, r, c + 6, 'Res');
+
+    // проход по формам (полосам)
+    if s.m_BandExtremums.Count=0 then exit;
+    for j := 0 to s.m_BandExtremums.Count - 1 do
+    begin
+      extr := cExtremum(s.m_BandExtremums.items[j]);
+      b := extr.m_b;
+      if b<>nil then
+      begin
+        str:=floattostr(b.m_f1) + '..' + floattostr(b.m_f2);
+        SetCell(1, r + 1 + j, c + 4, extr.NumInBand+1);
+        SetCell(1, r + 1 + j, c + 5, extr.error);
+        if extr.intol then
+        begin
+          SetCell(1, r + 1 + j, c + 6, 'Годен');
+        end
+        else
+        begin
+          rng := GetRangeObj(1, point(r + 1 + j, c), point(r + 1 + j, c + 6));
+          rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
+          SetCell(1, r + 1 + j, c + 6, 'Не годен');
+        end;
+      end
+      else
+      begin
+        str:='0..0';
+      end;
+      // полоса
+      SetCell(1, r + 1 + j, c, str);
+      v1 := extr.Freq;
+      v := extr.Value;
+      d := extr.decrement;
+      SetCell(1, r + 1 + j, c + 1, v);
+      SetCell(1, r + 1 + j, c + 2, v1);
+      SetCell(1, r + 1 + j, c + 3, d);
+    end;
+    c := c + 7;
+  end;
+  k:=0;
+  r2:=r+j;
+  // заполняем не найденые полосы
+  for I := 0 to bands.Count - 1 do
+  begin
+    b:=bands.getband(i);
+    find:=false;
+    for j := 0 to s.m_BandExtremums.Count - 1 do
+    begin
+      extr := cextremum(s.m_BandExtremums.Items[j]);
+      if extr.m_b=b then
+      begin
+        find:=true;
+        break;
+      end;
+    end;
+    if not find then
+    begin
+      // полоса
+      inc(k);
+      rng2:=getRangeObj(1, point(r2+k, 2), point(r2+k, 2+3));
+      rng2.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
+      SetCell(1, r2+k, 2,  floattostr(b.m_f1) + '..' + floattostr(b.m_f2));
+      SetCell(1, r2+k, 2 + 1, 0);
+      SetCell(1, r2+k, 2 + 2, 0);
+      SetCell(1, r2+k, 2 + 3, 0);
+    end;
+  end;
+  // разметка заголовка
+  rng := GetRangeObj(1, point(r, 2), point(r, c - 1));
+  // c_Excel_GrayInd = 15;
+  rng.Interior.ColorIndex := 15;
+  rng.Font.Bold := true;
+  // ставим сетку всего блока
+  rng := GetRangeObj(1, point(r, 2), point(r + s.m_BandExtremums.Count +k, c - 1));
+  SetRangeBorder(rng);
+
+  // ставим картинку
+  rng := GetRangeObj(1, point(r, 3+6), point(r + s.m_BandExtremums.Count +k, c - 1+1+6));
+  m_ReportBmp:=chart.getBitmap;
+  SetBmpToExcel(rng, m_ReportBmp);
+  m_ReportBmp.free;
+  SaveWorkBookAs(repname);
+  if hideExcel then
+  begin
+    CloseWorkBook;
+    CloseExcel;
+  end;
+end;
+
+
+{ RepSignal }
+
+constructor RepSignal.create;
+begin
+end;
+
+destructor RepSignal.destroy;
+begin
+end;
 
 end.

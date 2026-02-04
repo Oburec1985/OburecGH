@@ -3,7 +3,7 @@ object FRFFrm: TFRFFrm
   Top = 0
   Hint = #1042#1082#1083#1102#1095#1080#1090#1100'/'#1086#1090#1082#1083#1102#1095#1080#1090#1100' '#1088#1072#1089#1095#1077#1090
   Caption = 'FRFFrm'
-  ClientHeight = 547
+  ClientHeight = 665
   ClientWidth = 939
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,7 +20,7 @@ object FRFFrm: TFRFFrm
     Left = 617
     Top = 0
     Width = 8
-    Height = 547
+    Height = 665
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -35,7 +35,7 @@ object FRFFrm: TFRFFrm
     Left = 0
     Top = 0
     Width = 617
-    Height = 547
+    Height = 665
     Cursor = crSizeAll
     Align = alClient
     Caption = 'cChart1'
@@ -47,14 +47,12 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitWidth = 609
-    ExplicitHeight = 622
   end
   object RightGB: TGroupBox
     Left = 625
     Top = 0
     Width = 314
-    Height = 547
+    Height = 665
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -64,8 +62,6 @@ object FRFFrm: TFRFFrm
     ParentShowHint = False
     ShowHint = False
     TabOrder = 1
-    ExplicitLeft = 617
-    ExplicitHeight = 622
     object ShockCountLabel: TLabel
       Left = 8
       Top = 27
@@ -305,8 +301,8 @@ object FRFFrm: TFRFFrm
       TabOrder = 0
     end
     object SaveBtn: TButton
-      Left = 0
-      Top = 150
+      Left = 7
+      Top = 147
       Width = 86
       Height = 29
       Margins.Left = 4
@@ -455,13 +451,12 @@ object FRFFrm: TFRFFrm
     end
     object SignalsGroupBox: TGroupBox
       Left = 2
-      Top = 224
+      Top = 300
       Width = 310
       Height = 156
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 10
-      ExplicitTop = 299
       object SignalsLV: TBtnListView
         Left = 2
         Top = 19
@@ -524,9 +519,9 @@ object FRFFrm: TFRFFrm
     end
     object BladeGB: TGroupBox
       Left = 2
-      Top = 380
+      Top = 456
       Width = 310
-      Height = 165
+      Height = 207
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -534,7 +529,6 @@ object FRFFrm: TFRFFrm
       Align = alBottom
       Caption = #1051#1086#1087#1072#1090#1082#1072
       TabOrder = 12
-      ExplicitTop = 455
       object BladeLabel: TLabel
         Left = 7
         Top = 21
@@ -590,9 +584,9 @@ object FRFFrm: TFRFFrm
         Margins.Bottom = 4
         Caption = #1042#1077#1089':'
       end
-      object Label2: TLabel
-        Left = 7
-        Top = 135
+      object TurbLabel: TLabel
+        Left = 6
+        Top = 130
         Width = 55
         Height = 17
         Margins.Left = 4
@@ -706,6 +700,15 @@ object FRFFrm: TFRFFrm
         Width = 96
         Height = 25
         TabOrder = 6
+        Text = 'StageCB'
+        OnChange = StageCBChange
+      end
+      object TemplatesCb: TComboBox
+        Left = 113
+        Top = 167
+        Width = 166
+        Height = 25
+        TabOrder = 7
         Text = 'StageCB'
         OnChange = StageCBChange
       end

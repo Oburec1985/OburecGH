@@ -174,7 +174,7 @@ type
     // поскольку класс является чисто интерфесным и не содержит листа,
     // то необходимо в потомках переписывать процедуру удаления самого листа списка
     // более того
-  protected
+  public
     // сортировка может проводиться либо по имени либо по динамическому свойству.
     // перед сортировкой должен быть выполнен метод prepareMetaDataSort куда передается класс
     // и имя свойства по которому нужно сортировать
@@ -589,7 +589,7 @@ end;
 // Установка имени
 procedure cBaseObj.setname(str: string);
 var
-  index, lcount: integer;
+  i,index, lcount: integer;
   b: boolean;
   obj: cBaseObj;
   lname: string;
@@ -598,7 +598,19 @@ begin
   // отлинковываем от родителя
   if parent <> nil then
   begin
-    parent.childrens.removeobj(self);
+    // сортированые удаления не работают при нестандартном сортировщике
+    b:=false;
+    for I := 0 to parent.childrens.Count - 1 do
+    begin
+      if parent.childrens.getNode(i)=self then
+      begin
+        b:=true;
+        break;
+      end;
+    end;
+    if b then
+      parent.childrens.Delete(i);
+    //parent.childrens.removeobj(self);
   end;
   if cBaseObjMng(fBaseObjMng) <> nil then
   begin

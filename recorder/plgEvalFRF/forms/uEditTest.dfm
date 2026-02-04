@@ -11,6 +11,7 @@ object EditTestFrm: TEditTestFrm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnClose = FormClose
   PixelsPerInch = 120
   TextHeight = 24
   object TestGB: TGroupBox
@@ -26,25 +27,23 @@ object EditTestFrm: TEditTestFrm
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-    ExplicitWidth = 1099
-    ExplicitHeight = 296
     object TurbLabel: TLabel
-      Left = 16
+      Left = 8
       Top = 40
       Width = 136
       Height = 27
       Caption = #1058#1080#1087' '#1090#1091#1088#1073#1080#1085#1099':'
     end
     object StageLabel: TLabel
-      Left = 16
+      Left = 8
       Top = 93
       Width = 89
       Height = 27
       Caption = #1057#1090#1091#1087#1077#1085#1100':'
     end
     object SketchLabel: TLabel
-      Left = 16
-      Top = 157
+      Left = 8
+      Top = 149
       Width = 172
       Height = 27
       Caption = #1063#1077#1088#1090#1077#1078' '#1083#1086#1087#1072#1090#1082#1080':'
@@ -66,7 +65,7 @@ object EditTestFrm: TEditTestFrm
       ExplicitHeight = 264
     end
     object blNumSE: TLabel
-      Left = 14
+      Left = 6
       Top = 202
       Width = 161
       Height = 27
@@ -94,9 +93,9 @@ object EditTestFrm: TEditTestFrm
       Caption = #1050#1086#1083'-'#1074#1086':'
     end
     object TurbCB: TComboBox
-      Left = 188
+      Left = 180
       Top = 37
-      Width = 171
+      Width = 190
       Height = 35
       TabOrder = 0
       Text = 'TurbCB'
@@ -105,9 +104,9 @@ object EditTestFrm: TEditTestFrm
         #1043#1058#1069'-170.1')
     end
     object StageCB: TComboBox
-      Left = 188
+      Left = 180
       Top = 90
-      Width = 171
+      Width = 190
       Height = 35
       TabOrder = 1
       Text = '1'
@@ -116,19 +115,20 @@ object EditTestFrm: TEditTestFrm
         '1')
     end
     object BladeCB: TComboBox
-      Left = 188
-      Top = 157
-      Width = 171
+      Left = 180
+      Top = 149
+      Width = 190
       Height = 35
       TabOrder = 2
       Text = '1'
+      OnChange = BladeCBChange
       Items.Strings = (
         '1')
     end
     object BladeSe: TSpinEdit
-      Left = 188
+      Left = 180
       Top = 198
-      Width = 171
+      Width = 190
       Height = 38
       MaxValue = 1000
       MinValue = 0
@@ -170,7 +170,7 @@ object EditTestFrm: TEditTestFrm
       Value = 0
     end
     object SideCB: TCheckBox
-      Left = 16
+      Left = 8
       Top = 254
       Width = 187
       Height = 21
@@ -194,8 +194,6 @@ object EditTestFrm: TEditTestFrm
       Align = alRight
       Caption = #1051#1086#1087#1072#1090#1082#1080
       TabOrder = 8
-      ExplicitLeft = 634
-      ExplicitHeight = 265
       object BladesLV: TBtnListView
         Left = 2
         Top = 81
@@ -230,7 +228,6 @@ object EditTestFrm: TEditTestFrm
         DrawColorBox = False
         ChangeTextColor = False
         Editable = False
-        ExplicitHeight = 182
       end
       object BladesControlPan: TPanel
         Left = 2
@@ -273,11 +270,6 @@ object EditTestFrm: TEditTestFrm
     Font.Style = []
     ParentFont = False
     TabOrder = 1
-    ExplicitTop = 296
-    ExplicitWidth = 1099
-    DesignSize = (
-      1097
-      211)
     object ThresholdLabel: TLabel
       Left = 14
       Top = 69
@@ -315,13 +307,11 @@ object EditTestFrm: TEditTestFrm
       ExplicitHeight = 179
     end
     object Label2: TLabel
-      Left = 447
-      Top = 40
+      Left = 305
+      Top = 36
       Width = 142
       Height = 27
-      Anchors = [akTop, akRight]
       Caption = #1050#1086#1083'-'#1074#1086' '#1087#1086#1083#1086#1089':'
-      ExplicitLeft = 449
     end
     object ThresholdSE: TFloatSpinEdit
       Left = 150
@@ -360,7 +350,6 @@ object EditTestFrm: TEditTestFrm
       ShowHint = False
       TabOrder = 2
       OnKeyDown = ProfileSGKeyDown
-      ExplicitLeft = 634
       RowHeights = (
         24
         24
@@ -369,17 +358,15 @@ object EditTestFrm: TEditTestFrm
         23)
     end
     object BandCountIE: TSpinEdit
-      Left = 447
-      Top = 70
+      Left = 305
+      Top = 66
       Width = 135
       Height = 38
-      Anchors = [akTop, akRight]
       MaxValue = 0
       MinValue = 0
       TabOrder = 3
       Value = 0
       OnChange = BandCountIEChange
-      ExplicitLeft = 449
     end
   end
   object GroupBox2: TGroupBox
@@ -396,10 +383,8 @@ object EditTestFrm: TEditTestFrm
     Font.Style = []
     ParentFont = False
     TabOrder = 2
-    ExplicitTop = 507
-    ExplicitWidth = 1099
     object OkBtn: TButton
-      Left = 14
+      Left = 13
       Top = 40
       Width = 131
       Height = 48

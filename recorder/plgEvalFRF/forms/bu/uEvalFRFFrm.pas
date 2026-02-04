@@ -115,7 +115,6 @@ type
     m_ClxData: TAlignDCmpx;
   protected
   protected
-    // подготовка данных с учетом окна. Применяем окно, потом вычитаем среднее
     procedure prepareData;
     // вычислить амплитуду^2
     procedure evalmod2;
@@ -378,9 +377,8 @@ type
     SnEdit: TEdit;
     Label1: TLabel;
     WeightFe: TFloatEdit;
-    TurbLabel: TLabel;
+    Label2: TLabel;
     StageCB: TComboBox;
-    TemplatesCb: TComboBox;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -448,7 +446,7 @@ type
     m_lastMDBfile,
     // Путь к последнему Mera файлу в который сохранили FRF
     // при формировании отчета
-    m_MeraFile, gui_file, gui_section, m_activeTemplate, m_Person: string;
+    m_MeraFile, gui_file, gui_section: string;
     // редактировать отклик
     m_corrS: boolean;
 
@@ -998,34 +996,36 @@ begin
   turb := g_mbase.SelectTurb;
   if turb <> nil then
   begin
-    m_activeTemplate:=TemplatesCb.Items[TemplatesCb.ItemIndex];
-    if pos('ОТК',m_activeTemplate)>0 then
-      m_reptype:=true
-    else
-      m_reptype:=false;
     if m_reptype then
     begin
       colCount:=1;
       s:=turb.GetStage(0);
       b:=s.GetBlade(0);
       tonecount:=b.ToneCount;
-      uBladeReport.buildReportOtk(g_mbase.m_templates[TemplatesCb.ItemIndex],
-                                  m_Person,
-                                  g_FrfFactory.m_hideExcel,
-                                  tonecount, 0, m_bands)
+      uBladeReport.buildReportOtk('', 'Ivanov', g_FrfFactory.m_hideExcel,
+                                  tonecount, colcount, m_bands)
     end
     else
-      uBladeReport.buildReport(g_mbase.m_templates[TemplatesCb.ItemIndex],
-                               g_FrfFactory.m_hideExcel);
+      uBladeReport.buildReport('', g_FrfFactory.m_hideExcel);
   end;
 end;
 
 procedure TFRFFrm.SaveReport(repname: string; bl: cBladeFolder);
 var
-  i: integer;
+  r0, i, j, k, r,r2, c: integer;
   t: cSRSTaho;
   s: cSRSres;
   cfg: cSpmCfg;
+  b: tspmband;
+  extr: cExtremum;
+  date: TDateTime;
+  res: boolean;
+  rng, rng2, sh: olevariant;
+  str, repPath: string;
+  minmax: point2d;
+  v, v1, d: double;
+  find:boolean;
+  pict:tbitmap;
   repsig:RepSignal;
   slist:tlist;
 begin
@@ -1040,17 +1040,160 @@ begin
     repsig.m_BandExtremums:=s.m_BandExtremums;
     slist.Add(repsig);
   end;
-  SaveBladeReport(repname, m_MeraFile,
-                           slist, // список обработок
-                           m_bands, // список тонов лопатки
-                           spmchart, bl,
-                           g_FrfFactory.m_hideExcel);
+  SaveBladeReport(repname, m_MeraFile, slist, m_bands, spmchart, bl, g_FrfFactory.m_hideExcel);
   for i := 0 to cfg.SRSCount - 1 do
   begin
     repsig:=repsignal(slist.Items[i]);
     repsig.destroy;
   end;
   slist.Destroy;
+
+
+  KillAllExcelProcesses;
+  if not CheckVarObj(E) then
+  begin
+    if not CheckExcelRun then
+    begin
+      CreateExcel;
+      VisibleExcel(true);
+    end;
+  end;
+
+  if fileexists(repname) then
+  begin
+    if not IsExcelFileOpen(repname) then
+    begin
+      OpenWorkBook(repname);
+    end
+    else
+    begin
+      VisibleExcel(true);
+    end;
+  end
+  else
+  begin
+    AddWorkBook;
+    AddSheet('Page_01');
+  end;
+  // в пятом столбце строки идут заполненные подряд
+  //r0 := GetEmptyRow(1, 1, 5);
+  //sh:=E.ActiveWorkbook.Worksheets['Page_01'];
+  GetSheetDimensions('Page_01', r0, c );
+  inc(r0);
+  SetCell(1, r0, 2, 'Blade:');
+  SetCell(1, r0, 3, bl.m_sn);
+  SetCell(1, r0, 4, 'Чертеж:');
+  SetCell(1, r0, 5, bl.ObjType);
+  SetCell(1, r0, 6, 'MeraFile:');
+  SetCell(1, r0, 7, m_MeraFile);
+
+  inc(r0);
+  SetCell(1, r0, 4, 'Time:');
+  date := now;
+  SetCell(1, r0, 5, DateToStr(date));
+  SetCell(1, r0 + 1, 5, TimeToStr(date));
+  r := r0 + 2;
+  c := 2;
+
+  t := getTaho;
+  cfg := t.getCfg;
+  for i := 0 to cfg.SRSCount - 1 do
+  begin
+    s := cfg.GetSrs(i);
+    str := s.m_tag.tagname;
+    SetCell(1, r - 1, c, str);
+    SetCell(1, r, c, 'Band');
+    SetCell(1, r, c + 1, 'A1');
+    SetCell(1, r, c + 2, 'F1');
+    SetCell(1, r, c + 3, 'Dekr');
+    SetCell(1, r, c + 4, 'NumBand');
+    SetCell(1, r, c + 5, 'Error, %');
+    SetCell(1, r, c + 6, 'Res');
+
+    // проход по формам (полосам)
+    for j := 0 to s.m_BandExtremums.Count - 1 do
+    begin
+      extr := s.getExtremum(j);
+      b := extr.m_b;
+      if b<>nil then
+      begin
+        str:=floattostr(b.m_f1) + '..' + floattostr(b.m_f2);
+        SetCell(1, r + 1 + j, c + 4, extr.NumInBand+1);
+        SetCell(1, r + 1 + j, c + 5, extr.error);
+        if extr.intol then
+        begin
+          SetCell(1, r + 1 + j, c + 6, 'Годен');
+        end
+        else
+        begin
+          rng := GetRangeObj(1, point(r + 1 + j, c), point(r + 1 + j, c + 6));
+          rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
+          SetCell(1, r + 1 + j, c + 6, 'Не годен');
+        end;
+      end
+      else
+      begin
+        str:='0..0';
+      end;
+      // полоса
+      SetCell(1, r + 1 + j, c, str);
+      v1 := extr.Freq;
+      v := extr.Value;
+      d := extr.decrement;
+      SetCell(1, r + 1 + j, c + 1, v);
+      SetCell(1, r + 1 + j, c + 2, v1);
+      SetCell(1, r + 1 + j, c + 3, d);
+    end;
+    c := c + 7;
+  end;
+  k:=0;
+  r2:=r+j;
+  // заполняем не найденые полосы
+  for I := 0 to m_bands.Count - 1 do
+  begin
+    b:=m_bands.getband(i);
+    find:=false;
+    for j := 0 to s.m_BandExtremums.Count - 1 do
+    begin
+      extr := s.getExtremum(j);
+      if extr.m_b=b then
+      begin
+        find:=true;
+        break;
+      end;
+    end;
+    if not find then
+    begin
+      // полоса
+      inc(k);
+      rng2:=getRangeObj(1, point(r2+k, 2), point(r2+k, 2+3));
+      rng2.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
+      SetCell(1, r2+k, 2,  floattostr(b.m_f1) + '..' + floattostr(b.m_f2));
+      SetCell(1, r2+k, 2 + 1, 0);
+      SetCell(1, r2+k, 2 + 2, 0);
+      SetCell(1, r2+k, 2 + 3, 0);
+    end;
+  end;
+  // разметка заголовка
+  rng := GetRangeObj(1, point(r, 2), point(r, c - 1));
+  // c_Excel_GrayInd = 15;
+  rng.Interior.ColorIndex := 15;
+  rng.Font.Bold := true;
+  // ставим сетку всего блока
+  rng := GetRangeObj(1, point(r, 2), point(r + s.m_BandExtremums.Count +k, c - 1));
+  SetRangeBorder(rng);
+
+  // ставим картинку
+  rng := GetRangeObj(1, point(r, 3), point(r + s.m_BandExtremums.Count +k, c - 1+1));
+  m_ReportBmp:=spmchart.getBitmap;
+  SetBmpToExcel(rng, m_ReportBmp);
+  m_ReportBmp.free;
+  SaveWorkBookAs(repname);
+  if g_FrfFactory.m_hideExcel then
+  begin
+    CloseWorkBook;
+    CloseExcel;
+  end;
 end;
 
 
@@ -2580,8 +2723,8 @@ begin
   date:=now;
   //datestr:=DateToStr(date)+' '+TimeToStr(date);
   //f.WriteString(c_mainSection, c_Time, datestr);
-  ifile.WriteDateTime('Mera', 'time', date);
-  ifile.WriteDate('Mera', 'Date', date);
+  ifile.WriteDateTime(ident, 'time', date);
+  ifile.WriteDate(ident, 'Date', date);
   ifile.WriteString(ident, 'XFormat', 'R8');
   ifile.WriteString(ident, 'YFormat', 'R8');
   // Подпись оси x
@@ -2777,8 +2920,6 @@ begin
   m_WelchShift := a_pIni.ReadInteger(str, 'WelchShift', 32);
   m_WelchCount := a_pIni.ReadInteger(str, 'WelchBlockCount', 4);
   m_UseWelch := a_pIni.ReadBool(str, 'useWelch', true);
-  m_activeTemplate:=a_pIni.ReadString(str, 'ActiveTemplate', '');
-
   WelchCB.Checked := m_UseWelch;
 
   UpdateChart;
@@ -2841,9 +2982,6 @@ begin
     a_pIni.WriteInteger(str, 'WelchBlockCount', m_WelchCount);
     a_pIni.WriteInteger(str, 'WelchShift', m_WelchShift);
     a_pIni.WriteBool(str, 'useWelch', m_UseWelch);
-    if TemplatesCb.ItemIndex>-1 then
-      a_pIni.WriteString(str, 'ActiveTemplate', TemplatesCb.Items[TemplatesCb.ItemIndex]);
-    a_pIni.WriteString(str, 'Person', m_Person);
 
     turb:=g_mbase.SelectTurb;
     if turb<>nil then
@@ -3018,7 +3156,6 @@ begin
   t:=g_mbase.SelectTurb;
   if t<>nil then
   begin
-    TurbLabel.Caption:=t.caption;
     StageCB.clear;
     for I := 0 to t.StageCount - 1 do
     begin
@@ -3099,8 +3236,7 @@ begin
     sb := g_mbase.SelectBlade;
     if sb <> nil then
     begin
-      if SnEdit.Text<>'' then
-        sb.m_sn:=SnEdit.Text;
+      sb.m_sn:=SnEdit.Text;
       sb.m_weight:=WeightFe.FloatNum;
       sb.CreateXMLDesc;
     end;
@@ -3322,7 +3458,6 @@ begin
       end;
     end;
   end;
-
   if UseWndFcb.Checked then
   begin
     if SpmChart.activePage = pageT then
@@ -4459,17 +4594,7 @@ begin
     if blade<>nil then
       g_mbase.SelectBlade:=cbladefolder(blade);
     a_pIni.Destroy;
-
-    TFRFFrm(Frm).m_Person:=a_pIni.readString(TFRFFrm(Frm).gui_section, 'SelectBlade', 'Иванов И.И.');
     TFRFFrm(Frm).ShowStages;
-    for j := 0 to g_mbase.m_templates.Count - 1 do
-    begin
-      TFRFFrm(Frm).TemplatesCb.Items.Add(extractfilename(g_mbase.m_templates.strings[j]));
-      if TFRFFrm(Frm).m_activeTemplate<>'' then
-      begin
-        setComboBoxItem(TFRFFrm(Frm).m_activeTemplate, TFRFFrm(Frm).TemplatesCb);
-      end;
-    end;
   end;
 end;
 
@@ -4730,7 +4855,7 @@ end;
 
 procedure TDataBlock.prepareData;
 var
-  i, j, frind, toind, n : integer;
+  i, j, n: integer;
   x, dx, m: double;
   wnd: TSpmWnd;
 begin
@@ -4745,7 +4870,7 @@ begin
     wnd_rect:
       begin
         i := round(wnd.x1 * TahoFreq);
-        if i > 0 then
+        if n > 0 then
           ZeroMemory(@TDoubleArray(m_TimeBlockFlt.p)[0], i * sizeof(double));
         i := round(wnd.x2 * TahoFreq);
         n := m_TimeArrSize - i;
@@ -4754,19 +4879,9 @@ begin
       end;
     wnd_exp:
       begin
-        frind:=trunc(0.9*length(m_TimeBlock));
-        toind:=length(m_TimeBlock)-1;
-        m:=AverageSSE2(m_TimeBlock, frind, toind);
-        /// m := mean(m_TimeBlock);
-
         i := round(wnd.exp_x0 * TahoFreq);
-        if i > 0 then
-        begin
-          if i>(length(m_TimeBlock)-1) then
-            i:=length(m_TimeBlock)-1;
-          //ZeroMemory(@TDoubleArray(m_TimeBlockFlt.p)[0], i * sizeof(double));
-          FillDoubleSSE2(@TDoubleArray(m_TimeBlockFlt.p)[0], i, m);
-        end;
+        if n > 0 then
+          ZeroMemory(@TDoubleArray(m_TimeBlockFlt.p)[0], i * sizeof(double));
 
         j := round(wnd.x1 * TahoFreq);
         if j < 0 then
@@ -4779,7 +4894,7 @@ begin
 
         dx := 1 / TDataBlockList(m_owner).m_cfg.Freq;
         x := wnd.x1;
-
+        m := mean(m_TimeBlock);
         // обрабатываем только часть порции начиная с x0
         for i := 1 to n - 2 do
         begin
@@ -4793,9 +4908,8 @@ begin
         end;
       end;
   end;
-  frind:=trunc(0.9*length(m_TimeBlock));
-  toind:=length(m_TimeBlock)-1;
-  m:=AverageSSE2(m_TimeBlock, frind, toind);
+  // сдвиг нуля (центрирование)
+  m := mean(m_TimeBlock);
   SubtractFromArray_SSE_Double(TDoubleArray(m_TimeBlockFlt.p), m);
 end;
 
@@ -4880,8 +4994,8 @@ begin
   begin
     if i = hideind then
     begin
-      dec(n);
       continue;
+      dec(n);
     end;
     s := getBlock(i);
     t := TahoShockList.getBlock(i);
@@ -4896,8 +5010,6 @@ begin
       m_Syy[j] := t.m_mod2[j] + m_Syy[j];
     end;
   end;
-  if n=0 then
-    exit;
   // усреднение по серии ударов
   k := 1 / (n);
   for j := 0 to length(s.m_Cxy) - 1 do
@@ -4972,8 +5084,7 @@ begin
   for i := 0 to m_shockCount - 1 do
   begin
     d := getBlock(i);
-    if d<>nil then
-      d.prepareData;
+    d.prepareData;
   end;
 end;
 

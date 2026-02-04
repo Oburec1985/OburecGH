@@ -5,7 +5,7 @@ uses
   windows,
   uDBObject, ubaseobj, pathutils, uCommonMath, sysutils, nativexml, classes, uPathMng, dialogs,
   inifiles, upoint, ucommontypes, uspmband,
-  variants, uExcel, u2dmath, uBladeReport;
+  variants, uExcel, u2dmath;
 
 type
   // структура для описания замера внутри регистрации
@@ -142,6 +142,7 @@ type
     function GetStage(i:integer):cstageFolder;
     function bladetype(stagenum:integer):string;
     property StageCount:integer read getstagecount write setstagecount;
+    constructor create;
   end;
 
   // испытания
@@ -153,6 +154,7 @@ type
     procedure setBlCount(c:integer);
     function getBlCount:integer;
   public
+    function GetBladeType: string;
     function GetBlade(i: integer): cBladeFolder;
     // получить след или предыдущ лопатку
     function GetNext(b:cXmlFolder):cXmlFolder;
@@ -196,6 +198,8 @@ type
   cBladeBase = class(cDB)
   public
     m_sn:integer;
+    // список шаблонов
+    m_templates:TStringList;
   protected
     // вызывается в конструкторе cDB класса
     function createBaseFolder:cDBFolder;override;
@@ -219,6 +223,7 @@ type
     procedure InitBaseFolder(str:string);
     // Создать описатели
     procedure UpdateXMLDescriptors;
+    procedure sort;
     constructor create;override;
     destructor destroy;override;
   public
@@ -269,6 +274,7 @@ end;
 destructor cBladeBase.destroy;
 begin
   inherited;
+  m_templates.Destroy;
 end;
 
 
@@ -319,7 +325,7 @@ end;
 procedure cBladeBase.InitBaseFolder(str: string);
 var
   xml:tnativexml;
-  lstr, prop, val:string;
+  lstr, prop, val, tmpltDir:string;
   node, child, propnode:txmlnode;
   count:integer;
   I: Integer;
@@ -351,6 +357,21 @@ begin
     //objtype.owner:=cBladeBaseFolder(m_BaseFolder).m_BladeTypes;
     //cBladeBaseFolder(m_BaseFolder).m_BladeTypes.AddObject(objtype.fname,objtype);
     cXmlFolder(m_BaseFolder).CreateXMLDesc;
+  end;
+  m_templates:=TStringList.Create;
+  tmpltDir:=g_mbase.root.Absolutepath+'Template\';
+  if DirectoryExists(tmpltDir) then
+  begin
+    ScanDir(tmpltDir, '*', m_templates);
+    i:=0;
+    while I<m_templates.Count do
+    begin
+      if pos('~',m_templates.strings[i])>0 then
+      begin
+        m_templates.Delete(i);
+      end;
+      inc(i);
+    end;
   end;
 end;
 
@@ -449,6 +470,18 @@ begin
   root.selected:=t;
 end;
 
+
+procedure cBladeBase.sort;
+var
+  I: Integer;
+  o:cBaseObj;
+begin
+  for I := 0 to objects.Count-1 do
+  begin
+    o:=getobj(i);
+    o.childrens.SortChildrens;
+  end;
+end;
 
 procedure cBladeBase.UpdateXMLDescriptors;
 var
@@ -674,8 +707,19 @@ begin
 end;
 
 function cXmlFolder.getObjType: cobjtype;
+var
+  st:cstagefolder;
+  btype:string;
+  o:cobjtype;
 begin
   result:=g_mbase.getObjType(m_ObjType);
+  if (result=nil) or (m_ObjType='') then
+  begin
+    st:=cstagefolder(parent);
+    btype:=st.GetBladeType;
+    o:=g_mbase.getObjType(btype);
+    result:=o;
+  end;
 end;
 
 function cXmlFolder.getObjTypeName: string;
@@ -1467,6 +1511,33 @@ begin
   end;
 end;
 
+function cStageFolder.GetBladeType: string;
+var
+  bl:cBladeFolder;
+  t:cTurbFolder;
+  I: Integer;
+  s:cStageFolder;
+begin
+  t:=cTurbFolder(parent);
+  for I := 0 to t.GetStageCount - 1 do
+  begin
+    s:=t.GetStage(i);
+    if s=self then
+    begin
+      result:=t.bladetype(i);
+      if result<>'' then
+      begin
+        exit;
+      end;
+    end;
+  end;
+  if BlCount>0 then
+  begin
+    bl:=GetBlade(0);
+    result:=bl.getObjType.fname;
+  end;
+end;
+
 function cStageFolder.getBlCount: integer;
 begin
   result:=ChildCount;
@@ -1496,6 +1567,11 @@ begin
   end;
 end;
 
+constructor cTurbFolder.create;
+begin
+  inherited;
+end;
+
 function cTurbFolder.GetBladeCount(stageNum: integer): integer;
 var
   o:cObjType;
@@ -1503,10 +1579,12 @@ var
 begin
   o:=getObjType;
   s:=o.getProp('StageBCount_'+inttostr(stageNum+1));
+  result:=0;
   if s<>nil then
-    result:=strtoint(s.str)
-  else
-    result:=0;
+  begin
+    if s.str<>'defv' then
+      result:=strtoint(s.str)
+  end
 end;
 
 function cTurbFolder.GetStage(i: integer): cstageFolder;

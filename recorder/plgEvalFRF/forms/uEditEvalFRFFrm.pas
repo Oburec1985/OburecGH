@@ -141,6 +141,7 @@ procedure TEditFrfFrm.Edit(p_srs: tFRFfrm);
 begin
   m_SRS:=p_srs;
   ShowModal;
+  TFRFFrm(p_srs).UpdateSelected;
 end;
 
 procedure TEditFrfFrm.FFTBlockSizeIEChange(Sender: TObject);
@@ -280,7 +281,7 @@ begin
   t:=m_SRS.getTaho;
   if EditTestFrm=nil then
     EditTestFrm:=TEditTestFrm.create(nil);
-  EditTestFrm.edit(nil);
+  EditTestFrm.edit(m_SRS);
 end;
 
 procedure TEditFrfFrm.ShowSrsCfg;

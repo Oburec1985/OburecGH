@@ -7,8 +7,8 @@ DefaultDirName={pf}\Mera\Recorder\plugins
 DefaultGroupName=Mera
 UninstallDisplayIcon={app}\plgEvalFRF.dll
 
-OutputDir=output
-;OutputDir=\\Fserv\e\MERA\WORKS\ДСИ\УП\Skripnik\soft\recorder\plgEvalFRF\
+;OutputDir=output
+OutputDir=\\Fserv\e\CLIENTS\Info\p3218_ЛМЗ_MIC-224 виброметр_Баженова_РСС\7. ЦР\ПО\Plugins\001_27.01.26\
 OutputBaseFilename=plgEvalFRF_installer_v1.0
 
 [Types]
@@ -30,3 +30,4 @@ Source: "source\rcServer.dll"; DestDir: "{app}"; Components: Full
 Source: "source\files\shaders\LineLg.vert"; DestDir: "{app}\files\shaders"; Components: Full
 Source: "source\files\shaders\LineLg1d.vert"; DestDir: "{app}\files\shaders"; Components: Full
 Source: "source\files\Report_tmpl.xlsx"; DestDir: "c:\Mera Files\mdb\Template\Report_tmpl.xlsx"; Components: Full
+Source: "source\files\шаблон ОТК.xlsx"; DestDir: "c:\Mera Files\mdb\Template\шаблон ОТК.xlsx"; Components: Full

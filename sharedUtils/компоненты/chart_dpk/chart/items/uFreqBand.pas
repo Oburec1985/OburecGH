@@ -428,9 +428,10 @@ var
   p:cpage;
 begin
   p := cpage(getpage);
-  a:=p.activeAxis;
-  if True then
-
+  if p<>nil then
+  begin
+    a:=p.activeAxis;
+  end;
 end;
 
 procedure cFreqBand.CreateEvents;
@@ -443,11 +444,13 @@ end;
 procedure cFreqBand.DeleteEvents;
 begin
   inherited;
+  events.removeEvent(doUpdateTextLabels, e_OnChangeAxisScale);
   events.removeEvent(doUpdatePageSize, e_onResize);
 end;
 
 destructor cFreqBand.destroy;
 begin
+  DeleteEvents;
   cleartrendlabels;
   m_trendLabels.destroy;
   inherited;

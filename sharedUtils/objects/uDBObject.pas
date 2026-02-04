@@ -3,7 +3,7 @@ unit uDBObject;
 interface
 uses
   ubaseobj, uBaseObjMng, classes, upathmng, sysutils, Windows, uBaseObjService,
-  pathutils,  UDirChangeNotifier, messages;
+  pathutils,  UDirChangeNotifier, messages, uCommonmath;
 
 type
 
@@ -110,9 +110,19 @@ type
 
 implementation
 
+function NameComparator(p1, p2: pointer): integer;
+var
+  s1, s2: ansistring;
+begin
+  s1 := cBaseObj(p1).caption;
+  s2 := cBaseObj(p2).caption;
+  result := NameComparatorStrBaseNum(s1, s2);
+end;
+
 constructor cDBObject.create;
 begin
   inherited;
+
   destroydata:=true;
 end;
 
@@ -155,8 +165,8 @@ begin
   if pos(classname, name)>0 then
   begin
     str:=extractObjNamefromPath(str);
+    name:=str;
     caption:=str;
-    name:=caption;
   end;
 end;
 
@@ -378,6 +388,8 @@ end;
 constructor cDBFolder.create;
 begin
   inherited;
+  childrens.comparator:=NameComparator;
+  childrens.setcomparetype(3);
   fdeep:=1;
   fUseNotifier:=false;
   m_prefList:=tStringlist.Create;
