@@ -39,7 +39,7 @@
 			<Projects Include="BlEng\BlEng.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\..\MERA\2150 converter\Conv_2150.dproj">
+			<Projects Include="..\tests\TestDAC\Project1.dproj">
 				<Dependencies/>
 			</Projects>
 		</ItemGroup>
@@ -160,23 +160,23 @@
 		<Target Name="BlEng:Make">
 			<MSBuild Targets="Make" Projects="BlEng\BlEng.dproj"/>
 		</Target>
-		<Target Name="Conv_2150">
-			<MSBuild Projects="..\..\MERA\2150 converter\Conv_2150.dproj"/>
+		<Target Name="Project1">
+			<MSBuild Projects="..\tests\TestDAC\Project1.dproj"/>
 		</Target>
-		<Target Name="Conv_2150:Clean">
-			<MSBuild Targets="Clean" Projects="..\..\MERA\2150 converter\Conv_2150.dproj"/>
+		<Target Name="Project1:Clean">
+			<MSBuild Targets="Clean" Projects="..\tests\TestDAC\Project1.dproj"/>
 		</Target>
-		<Target Name="Conv_2150:Make">
-			<MSBuild Targets="Make" Projects="..\..\MERA\2150 converter\Conv_2150.dproj"/>
+		<Target Name="Project1:Make">
+			<MSBuild Targets="Make" Projects="..\tests\TestDAC\Project1.dproj"/>
 		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;plgEvalFRF;ProjectFFT;plgOscill;BlEng;Conv_2150"/>
+			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;plgEvalFRF;ProjectFFT;plgOscill;BlEng;Project1"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;plgEvalFRF:Clean;ProjectFFT:Clean;plgOscill:Clean;BlEng:Clean;Conv_2150:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;plgEvalFRF:Clean;ProjectFFT:Clean;plgOscill:Clean;BlEng:Clean;Project1:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;plgEvalFRF:Make;ProjectFFT:Make;plgOscill:Make;BlEng:Make;Conv_2150:Make"/>
+			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;plgEvalFRF:Make;ProjectFFT:Make;plgOscill:Make;BlEng:Make;Project1:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>
