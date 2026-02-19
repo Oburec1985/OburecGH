@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2015.02.03 12:11:54.267.dproj,C:\Users\Александр\Documents\RAD Studio\Projects\Project1.dproj=C:\DelphiProj\plgModbus.dproj</Transaction>
+    <Transaction>2015.02.03 13:16:35.464.pas,C:\DelphiProj\plgModbus\Unit1.pas=C:\DelphiProj\plgModbus\frmSettings.pas</Transaction>
+    <Transaction>2015.02.03 13:16:35.464.dfm,C:\DelphiProj\plgModbus\Unit1.dfm=C:\DelphiProj\plgModbus\frmSettings.dfm</Transaction>
+    <Transaction>2015.02.04 17:02:17.015.pas,C:\DelphiProj\plgModbus\Unit1.pas=C:\DelphiProj\plgModbus\UModbusRTUServ.pas</Transaction>
+    <Transaction>2015.02.04 20:47:23.088.pas,C:\DelphiProj\plgModbus\BCPort.pas=</Transaction>
+    <Transaction>2015.02.20 16:50:32.730.pas,C:\DelphiProj\plgModbus\Unit1.pas=C:\DelphiProj\plgModbus\UCommon.pas</Transaction>
+    <Transaction>2015.02.21 19:05:35.739.pas,C:\DelphiProj\plgModbus\TestFormUnit.pas=</Transaction>
+    <Transaction>2015.02.21 19:05:35.739.dfm,C:\DelphiProj\plgModbus\TestFormUnit.dfm=</Transaction>
+    <Transaction>2015.06.13 10:40:54.589.pas,C:\DelphiProj\plgModbus — TCP\UModbusRTUServ.pas=C:\DelphiProj\plgModbus — TCP\UModbusTCPServ.pas</Transaction>
+    <Transaction>2015.06.13 10:51:48.402.dproj,C:\DelphiProj\plgModbus — TCP\plgModbus.dproj=C:\DelphiProj\plgModbus — TCP\plgModbusTCP.dproj</Transaction>
+    <Transaction>2015.06.13 18:25:22.135.pas,C:\DelphiProj\plgModbus — TCP\Unit1.pas=C:\DelphiProj\plgModbus — TCP\TTCPServer.pas</Transaction>
+    <Transaction>2015.06.13 18:26:49.451.pas,C:\DelphiProj\plgModbus — TCP\Unit1.pas=C:\DelphiProj\plgModbus — TCP\UListenThread.pas</Transaction>
+    <Transaction>2015.06.13 18:28:35.078.pas,C:\DelphiProj\plgModbus — TCP\Unit1.pas=C:\DelphiProj\plgModbus — TCP\UConnectionThread.pas</Transaction>
+    <Transaction>2015.06.15 23:54:28.429.pas,C:\DelphiProj\plgModbus — TCP\Port\UnitPort.pas=</Transaction>
+    <Transaction>2015.06.15 23:54:31.385.pas,C:\DelphiProj\plgModbus — TCP\Port\UnitReadThread.pas=</Transaction>
+  </Transactions>
+</BorlandProject>

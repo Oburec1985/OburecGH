@@ -423,7 +423,7 @@ xlPasteAll                      =	-4104 ; // Вставка всех данны�
   function GetCell(sheet: OleVariant; row, col: integer): OleVariant;overload;
   function GetCellColor(sheet: OleVariant; cell: string; var er:integer): integer;
   function SetCellColor(sheet: OleVariant; cell: string; color: integer; var er:integer): boolean;
-  procedure GetSheetDimensions(sheet: OleVariant; out rowCount, colCount: integer);
+  function GetSheetDimensions(sheet: OleVariant; out rowCount, colCount: integer):boolean;
   // 0 - нет ошибки, 1 не найдена книга, 2 не найден лист, 3 не верный диапазон
   function ReadRangeAsText(sheet: OleVariant; start_cell, end_cell: string; var error:integer): string;
   function FindInWorkbook(searchText: string): string;
@@ -510,12 +510,22 @@ begin
   CloseFile(logFile);
 end;
 
-procedure GetSheetDimensions(sheet: OleVariant; out rowCount, colCount: integer);
-
+function GetSheetDimensions(sheet: OleVariant; out rowCount, colCount: integer):boolean;
+var
+  ws: OleVariant;
 begin
+  ws:=E.ActiveWorkbook.WorkSheets[sheet];
+  result:=CheckVarObj(ws);
+  if not result then
+  begin
+    rowCount:=0;
+    colCount:=0;
+    exit;
+  end;
   try
     rowCount := E.ActiveWorkbook.WorkSheets[sheet].Cells.SpecialCells(xlCellTypeLastCell).Row;
     colCount := E.ActiveWorkbook.WorkSheets[sheet].Cells.SpecialCells(xlCellTypeLastCell).Column;
+
   except
     rowCount := 0;
     colCount := 0;
@@ -1475,8 +1485,15 @@ var
   aSheet, oRng:oleVariant;
 begin
   SetCell:=0;
+  result:=0;
+  aSheet:=E.ActiveWorkbook.WorkSheets[sheet];
+  if not CheckVarObj(aSheet) then
+  begin
+    result:=1;
+    exit;
+  end;
   try
-    E.ActiveWorkbook.WorkSheets[sheet].cells[row,col]:=value;
+    aSheet.cells[row,col]:=value;
   except
     SetCell:=1;
   end;

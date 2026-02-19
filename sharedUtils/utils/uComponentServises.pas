@@ -592,7 +592,7 @@ begin
   begin
     c.ItemIndex:=-1;
     c.text:=str;
-    c.Items.Add(str);
+    result:=c.Items.Add(str);
   end;
 end;
 
@@ -621,7 +621,8 @@ begin
     c.ItemIndex:=-1;
     c.text:=str;
   end;
-  CheckCBItemInd(c);
+  if str<>'' then
+    CheckCBItemInd(c);
 end;
 
 function CheckCBItemInd(c:tcombobox):boolean;

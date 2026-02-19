@@ -3,7 +3,7 @@ object FRFFrm: TFRFFrm
   Top = 0
   Hint = #1042#1082#1083#1102#1095#1080#1090#1100'/'#1086#1090#1082#1083#1102#1095#1080#1090#1100' '#1088#1072#1089#1095#1077#1090
   Caption = 'FRFFrm'
-  ClientHeight = 665
+  ClientHeight = 871
   ClientWidth = 939
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -12,7 +12,6 @@ object FRFFrm: TFRFFrm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  ShowHint = True
   OnCreate = FormCreate
   PixelsPerInch = 120
   TextHeight = 17
@@ -20,7 +19,7 @@ object FRFFrm: TFRFFrm
     Left = 617
     Top = 0
     Width = 8
-    Height = 665
+    Height = 871
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -28,14 +27,12 @@ object FRFFrm: TFRFFrm
     Align = alRight
     Color = clBackground
     ParentColor = False
-    ExplicitLeft = 609
-    ExplicitHeight = 622
   end
   object SpmChart: cChart
     Left = 0
     Top = 0
     Width = 617
-    Height = 665
+    Height = 871
     Cursor = crSizeAll
     Align = alClient
     Caption = 'cChart1'
@@ -52,7 +49,7 @@ object FRFFrm: TFRFFrm
     Left = 625
     Top = 0
     Width = 314
-    Height = 665
+    Height = 871
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -287,11 +284,18 @@ object FRFFrm: TFRFFrm
       ParentShowHint = False
       ShowHint = False
     end
+    object WndLab: TLabel
+      Left = 170
+      Top = 319
+      Width = 33
+      Height = 17
+      Caption = #1054#1082#1085#1086
+    end
     object ShockCountE: TEdit
       Left = 7
       Top = 52
       Width = 102
-      Height = 25
+      Height = 21
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -302,9 +306,9 @@ object FRFFrm: TFRFFrm
     end
     object SaveBtn: TButton
       Left = 7
-      Top = 147
+      Top = 146
       Width = 86
-      Height = 29
+      Height = 31
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -350,7 +354,7 @@ object FRFFrm: TFRFFrm
       Left = 7
       Top = 216
       Width = 136
-      Height = 25
+      Height = 21
       ParentShowHint = False
       ShowHint = False
       TabOrder = 3
@@ -451,17 +455,20 @@ object FRFFrm: TFRFFrm
     end
     object SignalsGroupBox: TGroupBox
       Left = 2
-      Top = 300
+      Top = 506
       Width = 310
-      Height = 156
+      Height = 157
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 10
+      ExplicitLeft = 3
+      ExplicitTop = 505
+      ExplicitWidth = 308
       object SignalsLV: TBtnListView
-        Left = 2
-        Top = 19
-        Width = 306
-        Height = 135
+        Left = 3
+        Top = 20
+        Width = 303
+        Height = 134
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -519,9 +526,9 @@ object FRFFrm: TFRFFrm
     end
     object BladeGB: TGroupBox
       Left = 2
-      Top = 456
+      Top = 663
       Width = 310
-      Height = 207
+      Height = 206
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -529,6 +536,9 @@ object FRFFrm: TFRFFrm
       Align = alBottom
       Caption = #1051#1086#1087#1072#1090#1082#1072
       TabOrder = 12
+      ExplicitLeft = 3
+      ExplicitTop = 662
+      ExplicitWidth = 308
       object BladeLabel: TLabel
         Left = 7
         Top = 21
@@ -585,8 +595,8 @@ object FRFFrm: TFRFFrm
         Caption = #1042#1077#1089':'
       end
       object TurbLabel: TLabel
-        Left = 6
-        Top = 130
+        Left = 7
+        Top = 129
         Width = 55
         Height = 17
         Margins.Left = 4
@@ -599,7 +609,7 @@ object FRFFrm: TFRFFrm
         Left = 5
         Top = 95
         Width = 104
-        Height = 25
+        Height = 21
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -613,7 +623,7 @@ object FRFFrm: TFRFFrm
         Left = 4
         Top = 46
         Width = 81
-        Height = 25
+        Height = 21
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -657,7 +667,7 @@ object FRFFrm: TFRFFrm
         Left = 114
         Top = 95
         Width = 91
-        Height = 25
+        Height = 21
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -671,7 +681,7 @@ object FRFFrm: TFRFFrm
         Left = 114
         Top = 46
         Width = 91
-        Height = 25
+        Height = 21
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -685,7 +695,7 @@ object FRFFrm: TFRFFrm
         Left = 222
         Top = 46
         Width = 60
-        Height = 25
+        Height = 21
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -695,19 +705,19 @@ object FRFFrm: TFRFFrm
         OnKeyDown = SnEditKeyDown
       end
       object StageCB: TComboBox
-        Left = 113
-        Top = 127
-        Width = 96
-        Height = 25
+        Left = 115
+        Top = 129
+        Width = 97
+        Height = 21
         TabOrder = 6
         Text = 'StageCB'
         OnChange = StageCBChange
       end
       object TemplatesCb: TComboBox
-        Left = 113
+        Left = 112
         Top = 167
-        Width = 166
-        Height = 25
+        Width = 167
+        Height = 21
         TabOrder = 7
         Text = 'StageCB'
         OnChange = StageCBChange
@@ -717,7 +727,7 @@ object FRFFrm: TFRFFrm
       Left = 7
       Top = 84
       Width = 102
-      Height = 27
+      Height = 22
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -776,6 +786,42 @@ object FRFFrm: TFRFFrm
       State = cbChecked
       TabOrder = 16
       OnClick = Frf_YX_XY_CBClick
+    end
+    object WndCB: TComboBox
+      Left = 170
+      Top = 343
+      Width = 112
+      Height = 25
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      TabOrder = 17
+      Text = 'Rectangular'
+      OnChange = WndCBChange
+      Items.Strings = (
+        'Rectangular'
+        'Hamming'
+        'Hanning'
+        'Blackman'
+        'Flattop')
+    end
+    object useWndCb: TCheckBox
+      Left = 169
+      Top = 373
+      Width = 94
+      Height = 22
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = 'UseWnd'
+      Checked = True
+      ParentShowHint = False
+      ShowHint = False
+      State = cbChecked
+      TabOrder = 18
+      OnClick = useWndCbClick
     end
   end
 end

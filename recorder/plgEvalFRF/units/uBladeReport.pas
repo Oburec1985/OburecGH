@@ -45,7 +45,7 @@ type
   procedure Buildreport; overload;
   // путь к шаблону
   procedure Buildreport(tmpl:string; hideexcel:boolean);overload;
-  procedure BuildReportOtk(tmpl, name:string; hideexcel:boolean; toneCount:integer; blCount:integer;
+  procedure BuildReportOtk(tmpl, name:string; hideexcel:boolean; toneCount:integer;
               p_bandlist:blist);
 
 procedure SaveBladeReport(repname, meraFileName: string; slist:tlist; bands:blist;
@@ -318,12 +318,11 @@ end;
 procedure BuildReportOtk(tmpl, Name:string;
                          hideexcel:boolean;
                          toneCount:integer;
-                         blCount:integer; // сколько лопаток в строку
                          p_bandlist:blist);
 var
   r0, i, j, r, col, c,
   // количество колонок на лопатку
-  colWide: integer;
+  colWide, blCount: integer;
   date: TDateTime;
   rng, rng2: olevariant;
   str, repPath: string;
@@ -382,37 +381,28 @@ begin
     end;
     rng.value:=Name;
 
-    if blCount=0 then
-    begin
-      rng:=GetRange(1,'c_bladeCount');
-      if not CheckVarObj(rng) then
-      begin
-        blCount:=1;
-      end
-      else
-        blCount:=rng.value;
-    end;
-
     rng:=GetRange(1,'c_start');
     if not CheckVarObj(rng) then
     begin
       showmessage('не найден регион c_start в шаблоне');
+      exit;
     end;
-    rng2:=GetRange(1,'c_weight');
-    if not CheckVarObj(rng2) then
+    rng2:=GetRange(1,'c_stop');
+    if not CheckVarObj(rng) then
     begin
-      showmessage('не найден регион c_weight в шаблоне');
+      showmessage('не найден регион c_stop в шаблоне');
+      exit;
     end;
-    colWide:=rng2.column-rng.column+1;
+    blCount:=rng2.row-rng.row+1;
+    colWide:=toneCount+1;
     // заполняем тоны в таблице лопаток (с позиции Start)
-
     for I := 0 to stage.ChildCount - 1 do
     begin
       blade:=stage.GetBlade(i);
-      r:=i div blCount;
-      c:=i mod blCount;
+      c:=i div blCount;
+      r:=i mod blCount;
       SetCell(1, rng.Row+r, rng.Column+c*colWide, blade.m_sn);
-      SetCell(1, rng.Row+r, rng.Column+c*colWide+colWide-2, blade.m_weight);
+      //SetCell(1, rng.Row+r, rng.Column+c*colWide+colWide-2, blade.m_weight);
       for j := 0 to toneCount - 1 do
       begin
         b:=p_bandlist.getBand(j);
@@ -422,22 +412,28 @@ begin
           b.stats.maxF:=-1;
         end;
         p3:=blade.Tone(j);
-        lp3:=getBand(p2d(p3.x,p3.y), blade, tol, er);
-        if lp3.y<>0 then
+        //lp3:=getBand(p2d(p3.x,p3.y), blade, tol, er); result (A,F,D)
+        lp3:=getOTKBand(p2d(p3.x,p3.y), blade, 10, er);
+        if lp3.y=0 then
+          er:=true;
+        if not er then // бракованые лопатки не учитывать в разбросе
         begin
-          if b.stats.minF=-1 then
-            b.stats.minF:=lp3.y
-          else
+          if lp3.y<>0 then
           begin
-            if lp3.y<b.stats.minF then
-              b.stats.minF:=lp3.y;
-          end;
-          if b.stats.maxF=-1 then
-            b.stats.maxF:=lp3.y
-          else
-          begin
-            if lp3.y>b.stats.maxF then
-              b.stats.maxF:=lp3.y;
+            if b.stats.minF=-1 then
+              b.stats.minF:=lp3.y
+            else
+            begin
+              if lp3.y<b.stats.minF then
+                b.stats.minF:=lp3.y;
+            end;
+            if b.stats.maxF=-1 then
+              b.stats.maxF:=lp3.y
+            else
+            begin
+              if lp3.y>b.stats.maxF then
+                b.stats.maxF:=lp3.y;
+            end;
           end;
         end;
 
@@ -456,6 +452,10 @@ begin
         else
         begin
           SetCell(1, rng.Row+r, rng.Column+j+1+c*colWide, '-');
+          rng2:=GetRangeObj(1,
+                            point(rng.Row+r, rng.Column+j+1+c*colWide),
+                            point(rng.Row+r, rng.Column+j+1+c*colWide));
+          rng2.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
         end;
       end;
     end;
@@ -496,7 +496,8 @@ var
   extr: cExtremum;
   s:RepSignal;
   date: TDateTime;
-  res: boolean;
+  No_err, res: boolean;
+
   rng, rng2, sh: olevariant;
   str, repPath: string;
   minmax: point2d;
@@ -534,7 +535,11 @@ begin
   // в пятом столбце строки идут заполненные подряд
   //r0 := GetEmptyRow(1, 1, 5);
   //sh:=E.ActiveWorkbook.Worksheets['Page_01'];
-  GetSheetDimensions('Page_01', r0, c );
+  No_err:=GetSheetDimensions('Page_01', r0, c );
+  if not No_err then
+  begin
+    exit;
+  end;
   inc(r0);
   SetCell(1, r0, 2, 'Blade:');
   SetCell(1, r0, 3, bl.m_sn);

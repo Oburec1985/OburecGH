@@ -96,7 +96,7 @@ uses
 
 procedure TEditTestFrm.BandCountIEChange(Sender: TObject);
 begin
-  if BandCountIE.Value <> 0 then
+  if (BandCountIE.Value <> 0) and (BandCountIE.Value < 10) then
   begin
     ProfileSG.RowCount := BandCountIE.Value + 1;
   end;
@@ -162,6 +162,7 @@ procedure TEditTestFrm.FormClose(Sender: TObject; var Action: TCloseAction);
 var
   s:cStageFolder;
   t:cturbfolder;
+  ind:integer;
 begin
   t:=g_mbase.SelectTurb;
   if t<>nil then
@@ -170,11 +171,14 @@ begin
     begin
       if StageCB.ItemIndex=-1 then
       begin
+        ind:=0;
         StageCB.ItemIndex:=0;
-      end;
+      end
+      else
+        ind:=StageCB.ItemIndex;
       if t.StageCount>0 then
       begin
-        s:=t.GetStage(StageCB.ItemIndex);
+        s:=t.GetStage(ind);
         g_mbase.SelectStage:=s;
       end;
     end;
@@ -196,9 +200,8 @@ end;
 procedure TEditTestFrm.OkBtnClick(Sender: TObject);
 var
   f, s, bl: cxmlfolder;
-  I,j: integer;
+  I,j, tblCount: integer;
   str, pref: string;
-  o:cObjType;
 begin
   TFRFFrm(m_frm).m_Person:=PersonE.text;
   if TurbNameCb.text <> '' then
@@ -213,34 +216,67 @@ begin
       g_mbase.root.AddChild(f);
       AddComboBoxItem(f.name, TurbNameCb);
       setComboBoxItem(f.name, TurbNameCb);
-
-      o:=g_mbase.getType(TurbCB.text);
+      if TurbNameCb.ItemIndex>-1 then
+      begin
+        TurbNameCb.Items.Objects[i]:=f;
+      end;
+      AddComboBoxItem(TurbCB.text, TurbCB);
+      setComboBoxItem(TurbCB.text, TurbCB);
+      f.setObjType(TurbCB.text); // повтор!!!!
+      TurbCB.Color:=clWindow;
+      StageCB.Clear;
       for I := 0 to StageCountSE.Value - 1 do
       begin
         s := cStageFolder.create;
         s.name := f.name + '_Stage_' + inttostr(i+1);
-        if o<>nil then
-          cStageFolder(s).BlCount := cturbfolder(f).GetBladeCount(i)
+        if i>0 then
+        begin
+          tblCount:=cTurbFolder(f).GetBladeCount(i);
+        end
         else
-          cStageFolder(s).BlCount := BlCountIE.Value;
+          tblCount:=BlCountIE.Value;
+        cStageFolder(s).BlCount := tblCount;
         for j := 0 to s.childCount - 1 do
         begin
           bl:=cbladefolder(s.getChild(j));
+          bl.m_ObjType:=bladecb.text;
           bl.fdefCaption:=false;
         end;
         f.AddChild(s);
+        cStageFolder(s).SetBladeType(BladeCB.text);
         for j := 0 to s.childCount - 1 do
         begin
           bl:=cbladefolder(s.getChild(j));
           bl.fdefCaption:=true;
         end;
+        StageCB.AddItem(inttostr(i+1), s);
         if i=0 then
           f.selected := s;
       end;
+      if StageCountSE.Value>0 then
+        StageCB.ItemIndex:=0;
     end
     else
     begin
       f.setObjType(TurbCB.text);
+      TurbCB.Color:=clWindow;
+      //cTurbFolder(f).setbladetype(BladeCB.text);
+      pref:=StageCB.text;
+      StageCB.Clear;
+      for I := 0 to StageCountSE.Value - 1 do
+      begin
+        s := cTurbFolder(f).GetStage(I);
+        if s = nil then
+        begin
+          s := cStageFolder.create;
+          s.name := f.name + '_Stage_' + inttostr(i);
+          cStageFolder(s).BlCount := BlCountIE.Value;
+          cTurbFolder(f).AddChild(s);
+        end;
+        StageCB.Items.AddObject(inttostr(I + 1), s);
+      end;
+      setComboBoxItem(pref, StageCB);
+
       s := g_mbase.SelectStage;
       cStageFolder(s).BlCount := BlCountIE.Value;
       if cStageFolder(s).selected = nil then
@@ -251,8 +287,7 @@ begin
           bl.setObjType(BladeCB.text);
         end;
       end;
-      bl := g_mbase.SelectBlade;
-      bl.setObjType(BladeCB.text);
+      cStageFolder(s).SetBladeType(BladeCB.text);
     end;
   end;
   updateTypes;
@@ -285,6 +320,7 @@ procedure TEditTestFrm.showbladetypes;
 var
   I: integer;
   o: cObjType;
+  s:cStageFolder;
 begin
   BladeCB.Clear;
   for I := 0 to cBladeBaseFolder(g_mbase.m_BaseFolder).m_BladeTypes.Count - 1 do
@@ -296,7 +332,7 @@ end;
 
 procedure TEditTestFrm.showTurbs;
 var
-  I: integer;
+  I, ind: integer;
   t: cTurbFolder;
   str: string;
 begin
@@ -311,7 +347,8 @@ begin
   for I := 0 to g_mbase.root.ChildCount - 1 do
   begin
     t := cTurbFolder(g_mbase.m_BaseFolder.getChild(I));
-    AddComboBoxItem(t.name, TurbNameCb);
+    ind:=AddComboBoxItem(t.name, TurbNameCb);
+    turbnamecb.items.Objects[ind]:=t;
   end;
   // установка выбраной турбины
   if g_mbase.SelectTurb <> nil then
@@ -340,6 +377,7 @@ procedure TEditTestFrm.showbase;
 var
   I: integer;
   t: cTurbFolder;
+  s:cStageFolder;
 begin
   // отобразить список турбин
   showTurbs;
@@ -352,7 +390,13 @@ begin
   // типы турбин
   showbladetypes;
   t := g_mbase.SelectTurb;
-  BladeCB.ItemIndex := 0;
+  s:=g_mbase.selectStage;
+  if s<>nil then
+  begin
+    setComboBoxItem(s.GetBladeType,BladeCB);
+  end
+  else
+    BladeCB.ItemIndex := 0;
   if t <> nil then
   begin
     showTurb(t);
@@ -418,15 +462,15 @@ begin
       c := strtoint(s);
       BandCountIE.Value := c;
       ProfileSG.RowCount := c + 2;
+      for r := 0 to c - 1 do
+      begin
+        ProfileSG.Cells[1, r + 1] := o.getval('F1_' + inttostr(r + 1));
+        ProfileSG.Cells[2, r + 1] := o.getval('F2_' + inttostr(r + 1));
+        ProfileSG.Cells[3, r + 1] := o.getval('Threshold_' + inttostr(r + 1));
+      end;
     end;
-    for r := 0 to c - 1 do
-    begin
-      ProfileSG.Cells[1, r + 1] := o.getval('F1_' + inttostr(r + 1));
-      ProfileSG.Cells[2, r + 1] := o.getval('F2_' + inttostr(r + 1));
-      ProfileSG.Cells[3, r + 1] := o.getval('Threshold_' + inttostr(r + 1));
-    end;
+    SGChange(ProfileSG);
   end;
-  SGChange(ProfileSG);
 end;
 
 procedure TEditTestFrm.showTurb(t: cTurbFolder);
@@ -505,14 +549,28 @@ procedure TEditTestFrm.StageCBChange(Sender: TObject);
 var
   t: cTurbFolder;
   s: cStageFolder;
+  ind:integer;
 begin
   t := g_mbase.SelectTurb;
-  s := t.GetStage(StageCB.ItemIndex);
+  ind:=StageCB.ItemIndex;
+  if ind=-1 then
+    ind:=0;
+  s:=nil;
+  if t.StageCount>0 then
+  begin
+    s := t.GetStage(ind);
+    if s=nil then
+    begin
+      s:=cStageFolder.create;
+      s.name := t.name + '_Stage_' + inttostr(ind+1);
+      t.AddChild(s);
+    end;
+  end;
   if s <> nil then
   begin
     t.selected := s;
     BlCountIE.Value := t.GetBladeCount(StageCB.ItemIndex);
-    AddComboBoxItem(s.getBladeType, BladeCB);
+    setComboBoxItem(s.getBladeType, BladeCB);
     ShowTone;
   end;
   ShowBlades;
@@ -534,7 +592,6 @@ var
   t: cTurbFolder;
   I: Integer;
 begin
-  ToneToType;
   // тип турбины
   o := g_mbase.root.getType(TurbCB.text);
   if o <> nil then
@@ -546,14 +603,15 @@ begin
     o := cObjType.create;
     o.name := TurbCB.text;
     g_mbase.root.m_turbTypes.AddObject(o.name, o);
-    TurbCB.AddItem(o.name, o);
-    CheckCBItemInd(TurbCB);
   end;
   // типы лопаток на ступенях
   t := g_mbase.SelectTurb;
   t.ObjType := TurbCB.text;
+  o:=g_mbase.getType(TurbCB.text);
+  o.setPropVal('StageBType_'+StageCB.text, BladeCB.text);
   o.setPropVal('StageCount', inttostr(StageCountSE.Value));
   o.setPropVal('StageBCount_' + StageCB.text, inttostr(BlCountIE.Value));
+
   if StageCB.ItemIndex = 0 then
   begin
     StageCB.ItemIndex := 0;
@@ -585,11 +643,12 @@ begin
   cStageFolder(s).BlCount := BlCountIE.Value;
   if s.BlCount > 0 then
   begin
-    bl := s.GetBlade(0);
-    o.setPropVal('StageBtype_' + inttostr(StageCB.ItemIndex), BladeCB.text);
+    //bl := s.GetBlade(0);
+    //o.setPropVal('StageBtype_' + inttostr(StageCB.ItemIndex), BladeCB.text);
     AddComboBoxItem(BladeCB.text, BladeCB);
     cBladeBaseFolder(g_mbase.m_BaseFolder).AddBladeType(BladeCB.text);
   end;
+  ToneToType;
 end;
 
 procedure TEditTestFrm.ToneToType;
@@ -631,7 +690,11 @@ var
   I: integer;
   t:cTurbFolder;
   s:cstagefolder;
+  b:boolean;
 begin
+  b:=CheckCBItemInd(TurbCB);
+  if not b then
+    exit;
   // установка типа турбины
   o := g_mbase.getType(TurbCB.text);
   if o <> nil then
@@ -639,11 +702,17 @@ begin
     StageCB.text := '1';
     str := o.getval('StageCount');
     StageCountSE.Value := StrToIntDef(str, 0);
-    StageCB.Clear;
     // выбраная турбина в форме
     t:=selectTurb;
     if t<>nil then
     begin
+      if t.m_ObjType<>TurbCB.text then
+      begin
+        TurbCB.Color:=clYellow;
+      end
+      else
+        TurbCB.Color:=clWindow;
+      StageCB.Clear;
       for I := 0 to StageCountSE.Value - 1 do
       begin
         s := t.GetStage(I);
@@ -660,12 +729,7 @@ begin
     str := o.getval('StageBtype_1');
     if str <> '' then
     begin
-      if t<>nil then
-        setComboBoxItem(cTurbFolder(t).bladetype(0), BladeCB)
-      else
-      begin
-        setComboBoxItem(str, BladeCB);
-      end;
+      setComboBoxItem(str, BladeCB);
     end;
     ShowTone;
   end;
@@ -689,41 +753,32 @@ begin
     setComboBoxItem(str, TurbCB);
     StageCB.text := '1';
     StageCountSE.Value := t.StageCount;
-    StageCB.Clear;
-    for I := 0 to StageCountSE.Value - 1 do
-    begin
-      s := t.GetStage(I);
-      if s = nil then
-      begin
-        s := cStageFolder.create;
-        s.name := t.name + '_Stage_' + StageCB.text;
-        cStageFolder(s).BlCount := BlCountIE.Value;
-        t.AddChild(s);
-      end;
-      StageCB.Items.AddObject(inttostr(I + 1), s);
-    end;
+
+    //StageCB
+
     if StageCountSE.Value > 0 then
     begin
-      if g_mbase.SelectStage <> nil then
+      StageCB.clear;
+      for I := 0 to StageCountSE.Value - 1 do
       begin
-        for I := 0 to StageCB.Items.Count - 1 do
-        begin
-          if StageCB.Items.Objects[I] = g_mbase.SelectStage then
-          begin
-            StageCB.ItemIndex := I;
-            break;
-          end;
-        end;
+        StageCB.Items.AddObject(inttostr(i+1), t.GetStage(i));
       end;
+      StageCB.ItemIndex:=0;
+      // число лопаток
+      BlCountIE.Value := cTurbFolder(g_mbase.root.selected).GetBladeCount(0);
+      str :=t.bladetype(StageCB.ItemIndex);
+      //str := cTurbFolder(g_mbase.root.selected).bladetype(0);
+      if str<>'' then
+      begin
+        //showbladetypes;
+        setComboBoxItem(str, BladeCB);
+      end;
+      ShowTone;
+    end
+    else
+    begin
+      bladeslv.clear;
     end;
-    // число лопаток
-    BlCountIE.Value := cTurbFolder(g_mbase.root.selected).GetBladeCount(0);
-    str := cTurbFolder(g_mbase.root.selected).bladetype(0);
-    cBladeBaseFolder(g_mbase.m_BaseFolder).AddBladeType(str);
-    showbladetypes;
-    setComboBoxItem(str, BladeCB);
-    ShowTone;
-    ShowBlades;
   end;
 end;
 

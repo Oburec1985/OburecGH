@@ -137,6 +137,7 @@ end;
 
 function cBuffTrend1d.GetP2(i: integer): point2;
 begin
+
   case datatype of
     c_single:
       result := p2(dx * i + fx0, data_s[i]);

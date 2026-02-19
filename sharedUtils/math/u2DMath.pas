@@ -790,12 +790,23 @@ begin
   begin
     Exit; // Некорректный диапазон поиска или пустой массив
   end;
-  if y[StartIndex]>HiLevel then
-    CurrentState := esHi
-  else
-    CurrentState := esIdle; // Начинаем с состояния ожидания
   CurrentMax := -MaxDouble; // Инициализируем текущий максимум
   CurrentMaxIndex := -1;    // Инициализируем индекс максимума
+  if y[StartIndex]>HiLevel then
+  begin
+    if y[StartIndex-1]>=y[StartIndex] then
+      CurrentState := esHi
+    else
+    begin
+      CurrentState := esAboveHiLevel;
+      CurrentMax := y[StartIndex];
+      CurrentMaxIndex := StartIndex;
+    end;
+  end
+  else
+  begin
+    CurrentState := esHi; // Начинаем с состояния ожидания
+  end;
   // Перебор элементов массива Y в заданном диапазоне
   for i := StartIndex to EndIndex do
   begin

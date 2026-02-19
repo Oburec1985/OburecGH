@@ -141,6 +141,7 @@ type
     function GetBladeCount(stageNum:integer):integer;
     function GetStage(i:integer):cstageFolder;
     function bladetype(stagenum:integer):string;
+    procedure setbladetype(stagenum:integer; t:string);
     property StageCount:integer read getstagecount write setstagecount;
     constructor create;
   end;
@@ -154,6 +155,7 @@ type
     procedure setBlCount(c:integer);
     function getBlCount:integer;
   public
+    procedure SetBladeType(t:string);
     function GetBladeType: string;
     function GetBlade(i: integer): cBladeFolder;
     // получить след или предыдущ лопатку
@@ -183,7 +185,6 @@ type
     procedure doLoadDesc(node:txmlnode);override;
   public
     procedure DoLincParent; override;
-
     function ObjType:string;
     // допуск по отклонению на полосу
     function GetTolerance(bnum:integer):double;
@@ -231,8 +232,11 @@ type
     property selectStage:cStageFolder read getSelectStage write setSelectStage;
     property SelectBlade:cBladeFolder read getSelectBlade write setSelectBlade;
   end;
-  // дешифровать тон из resStr лопатки
+  // дешифровать тон из resStr лопатки. threshold - отклонение от центральной частоты
   function getBand(b:point2d; blade:cbladefolder; threshold:double; var er:boolean):point3d;
+  // логика изменена относительно предыдущей функции. threshold - отклонение от границы полосы
+  // er - true если вывалился за границу полосы но попал с учетом threshold
+  function getOTKBand(b:point2d; blade:cbladefolder; threshold:double; var er:boolean):point3d;
 
   var
     g_mbase:cBladeBase;
@@ -713,13 +717,13 @@ var
   o:cobjtype;
 begin
   result:=g_mbase.getObjType(m_ObjType);
-  if (result=nil) or (m_ObjType='') then
-  begin
-    st:=cstagefolder(parent);
-    btype:=st.GetBladeType;
-    o:=g_mbase.getObjType(btype);
-    result:=o;
-  end;
+  //if (result=nil) or (m_ObjType='') then
+  //begin
+  //  st:=cstagefolder(parent);
+  //  btype:=st.GetBladeType;
+  //  o:=g_mbase.getObjType(btype);
+  //  result:=o;
+  //end;
 end;
 
 function cXmlFolder.getObjTypeName: string;
@@ -1245,7 +1249,7 @@ begin
   end
   else
   begin
-    addProp(t, 'defv');
+    addProp(t, defv);
   end;
 end;
 
@@ -1390,8 +1394,18 @@ function cBladeFolder.Tone(i: integer): point3d;
 var
   o:cObjType;
   s1,s2,s3:string;
+  s:cStageFolder;
 begin
-  o:=getObjType;
+  if parent<>nil then
+  begin
+    s:=cstagefolder(parent);
+    s1:=s.GetBladeType;
+    o:=g_mbase.getObjType(s1);
+  end
+  else
+  begin
+    o:=getObjType;
+  end;
   s1:=o.getval('F1_'+inttostr(i+1));
   s2:=o.getval('F2_'+inttostr(i+1));
   s3:=o.getval('Threshold_'+inttostr(i+1));
@@ -1403,14 +1417,24 @@ end;
 function cBladeFolder.ToneCount: integer;
 var
   o:cObjType;
-  s:string;
+  s:cStageFolder;
+  str:string;
 begin
   result:=0;
-  o:=getObjType;
+  if parent<>nil then
+  begin
+    s:=cstagefolder(parent);
+    str:=s.GetBladeType;
+    o:=g_mbase.getObjType(str);
+  end
+  else
+  begin
+    o:=getObjType;
+  end;
   if o<>nil then
   begin
-    s:=o.getval('ToneCount');
-    result:=strtoint(s);
+    str:=o.getval('ToneCount');
+    result:=strtoint(str);
   end;
 end;
 
@@ -1466,6 +1490,7 @@ var
   bl:cBladeFolder;
   f, s:string;
 begin
+
   while c<>ChildCount do
   begin
     if c>ChildCount then
@@ -1517,8 +1542,10 @@ var
   t:cTurbFolder;
   I: Integer;
   s:cStageFolder;
+  o:cobjtype;
 begin
   t:=cTurbFolder(parent);
+  result:='';
   for I := 0 to t.GetStageCount - 1 do
   begin
     s:=t.GetStage(i);
@@ -1534,7 +1561,28 @@ begin
   if BlCount>0 then
   begin
     bl:=GetBlade(0);
-    result:=bl.getObjType.fname;
+    o:=bl.getObjType;
+    if o<>nil then
+      result:=bl.getObjType.fname;
+  end;
+end;
+
+procedure cStageFolder.SetBladeType(t:string);
+var
+  bl:cBladeFolder;
+  turb:cTurbFolder;
+  I: Integer;
+  s:cStageFolder;
+begin
+  turb:=cTurbFolder(parent);
+  for I := 0 to turb.GetStageCount - 1 do
+  begin
+    s:=turb.GetStage(i);
+    if s=self then
+    begin
+      turb.setbladetype(i, t);
+      exit;
+    end;
   end;
 end;
 
@@ -1552,7 +1600,7 @@ var
 begin
   result:='';
   o:=getObjType;
-  result:=o.getval('StageBtype_'+inttostr(stageNum));
+  result:=o.getval('StageBtype_'+inttostr(stageNum+1));
   if (result='') or (result='defv') then
   begin
     s:=GetStage(stagenum);
@@ -1567,6 +1615,16 @@ begin
   end;
 end;
 
+procedure cTurbFolder.setbladetype(stagenum:integer; t:string);
+var
+  o:cObjType;
+  s:cStageFolder;
+  b:cBladeFolder;
+begin
+  o:=getObjType;
+  o.setPropVal('StageBtype_'+inttostr(stageNum+1), t);
+end;
+
 constructor cTurbFolder.create;
 begin
   inherited;
@@ -1578,13 +1636,20 @@ var
   s:cString;
 begin
   o:=getObjType;
-  s:=o.getProp('StageBCount_'+inttostr(stageNum+1));
-  result:=0;
-  if s<>nil then
+  if o=nil then
   begin
-    if s.str<>'defv' then
-      result:=strtoint(s.str)
+    result:=1; // по умолчанию одна лопатка
   end
+  else
+  begin
+    s:=o.getProp('StageBCount_'+inttostr(stageNum+1));
+    result:=0;
+    if s<>nil then
+    begin
+      if s.str<>'defv' then
+        result:=strtoint(s.str)
+    end
+  end;
 end;
 
 function cTurbFolder.GetStage(i: integer): cstageFolder;
@@ -1598,9 +1663,16 @@ var
   s:cString;
 begin
   o:=getObjType;
-  s:=o.getProp('StageCount');
-  if s<>nil then
-    result:=strtoint(s.str)
+  if o<>nil then
+  begin
+    s:=o.getProp('StageCount');
+    if s<>nil then
+    begin
+      result:=strtoIntExt(s.str);
+    end
+    else
+      result:=0;
+  end
   else
     result:=0;
 end;
@@ -1612,6 +1684,85 @@ var
 begin
   o:=getObjType;
   o.addProp('StageCount', inttostr(c));
+end;
+
+function getOTKBand(b:point2d; blade:cbladefolder; threshold:double; var er:boolean):point3d;
+var
+  str,str1, s1:string;
+  ind, next,p,p2, num:integer;
+  f1,f2,A,F,d, err, resErr:double;
+begin
+  result.x:=0;
+  result.y:=0;
+  result.z:=0;
+  str:=GetSubString(blade.m_resStr, ';', 1, ind);
+  next:=0;
+  while str<>'' do
+  begin
+    p:=pos('..',str);
+    reserr:=0;
+    s1:=Copy(str, 1, p-1);
+    f1:=strtoFloatExt(s1);
+    p2:=pos('_',str);
+    s1:=Copy(str, p+2, p2-p-2);
+    f2:=strToFloatExt(s1);
+    ind:=p2;
+    s1:=GetSubString(Str, '_', ind+1, ind);
+    if ind<1 then
+      exit;
+    A:=strtoFloatExt(s1);
+    s1:=GetSubString(Str, '_', ind+1, ind);
+    if ind<1 then
+      exit;
+    F:=strtoFloatExt(s1);
+    if ind<1 then
+      exit;
+    s1:=GetSubString(Str, '_', ind+1, ind);
+    if ind<1 then
+      exit;
+    D:=strtoFloatExt(s1);
+    s1:=GetSubString(Str, '_', ind+1, ind);
+    next:=length(str)+1+next;
+    num:=strtoint(s1);
+    //if num<>-1 then
+    begin
+      if (f>(b.x-b.x*threshold/100)) and (f<(b.y+b.x*threshold/100)) then
+      begin
+        if num=0 then
+        begin
+          result.x:=A;
+          result.y:=F;
+          result.z:=D;
+          err:=0.5*(f1+f2)-F;
+          resErr:=err;
+        end
+        else
+        begin
+          // выбираем более правильный экстремум в полосе!!!
+          if err>0.5*(f1+f2)-F then
+          begin
+            result.x:=A;
+            result.y:=F;
+            result.z:=D;
+            err:=0.5*(f1+f2)-F;
+            resErr:=err;
+          end;
+        end;
+      end;
+    end;
+    if (f>(b.x-b.x*threshold/100)) and (f<(b.y+b.x*threshold/100)) then
+    begin
+      if (f>b.x) and (f<b.y) then
+        er:=false
+      else
+        er:=true;
+    end;
+    if f>b.y then
+    begin
+      exit;
+    end;
+    str:=GetSubString(blade.m_resStr, ';', next+1, ind);
+  end;
 end;
 
 // + floattostr(BandExtr.Value) + '_'

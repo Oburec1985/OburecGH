@@ -36,6 +36,7 @@ type
     // для экспоненциального окна определяет зануление слева
     exp_x0,
     // для прямоугольного окна все что слева от x1 зануляется
+    // для экспоненты - участок затухания
     x1, x2, y: double;
     // exp res = exp (ln(y)(x-x0)/(x1-x0))
   end;
@@ -381,6 +382,9 @@ type
     TurbLabel: TLabel;
     StageCB: TComboBox;
     TemplatesCb: TComboBox;
+    WndCB: TComboBox;
+    WndLab: TLabel;
+    useWndCb: TCheckBox;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -407,6 +411,8 @@ type
     procedure Frf_YX_XY_CBClick(sender: tobject);
     procedure SnEditKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure StageCBChange(Sender: TObject);
+    procedure WndCBChange(Sender: TObject);
+    procedure useWndCbClick(Sender: TObject);
   public
     m_ReportBmp:TBitmap;
     m_RenderReport:boolean;
@@ -538,10 +544,14 @@ type
 
   cFRFFactory = class(cRecBasicFactory)
   public
+    m_useWnd:boolean;
     // merafile
     m_MeraFile: string;
     m_ShockFile: string;
     m_hideExcel: boolean;
+    // окно спектра
+    fWnd:TWndFunc;
+    fPWnd:PWndFunc;
   private
     m_counter: integer;
   protected
@@ -780,6 +790,14 @@ begin
   end;
 end;
 
+procedure TFRFFrm.useWndCbClick(Sender: TObject);
+begin
+  g_FrfFactory.m_useWnd:=UseWndcb.Checked;
+  WndCBChange( nil);
+  // в программе не делается коррекция амплитуды спектра на
+  // дополнение нулями и оконную функцию ,т.к. важна только частота
+end;
+
 function TFRFFrm.CheckedCount: integer;
 var
   i, c: integer;
@@ -1012,7 +1030,7 @@ begin
       uBladeReport.buildReportOtk(g_mbase.m_templates[TemplatesCb.ItemIndex],
                                   m_Person,
                                   g_FrfFactory.m_hideExcel,
-                                  tonecount, 0, m_bands)
+                                  tonecount, m_bands)
     end
     else
       uBladeReport.buildReport(g_mbase.m_templates[TemplatesCb.ItemIndex],
@@ -1765,6 +1783,7 @@ begin
     a.clear;
   end;
   axSpm.clear;
+  pageSpm.cursor.magniteObj:=nil;
   if t = nil then
     exit;
   c := t.getCfg;
@@ -2402,7 +2421,6 @@ begin
   m_expWndline.enabled := UseWndFcb.Checked;
   m_expWndline.selectable := UseWndFcb.Checked;
   // пересчет с учетом окон
-
   for i := 0 to t.cfg.SRSCount - 1 do
   begin
     s := c.GetSrs(i);
@@ -2450,6 +2468,43 @@ begin
   end;
 end;
 
+procedure TFRFFrm.WndCBChange(Sender: TObject);
+var
+  I, j: Integer;
+  s:cSRSres;
+  t:cSRSTaho;
+  c:cSpmCfg;
+  db:TDataBlock;
+begin
+  t := getTaho;
+  c:=t.getCfg(0);
+  if WndCB.ItemIndex=-1 then
+    WndCB.ItemIndex:=0;
+  if c<>nil then
+  begin
+    g_FrfFactory.fPWnd:=GetFFTWnd(c.m_fftCount, WndCB.text);
+  end;
+  // перестройка спектра
+  for I := 0 to c.SRSCount - 1 do
+  begin
+    s := c.GetSrs(i);
+    for j := 0 to s.m_shockList.Count - 1 do
+    begin
+      db := s.m_shockList.getBlock(j);
+      //db.prepareData;
+      db.BuildSpm;
+    end;
+    for j := 0 to t.m_shockList.Count - 1 do
+    begin
+      db := t.m_shockList.getBlock(j);
+      //db.prepareData;
+      db.BuildSpm;
+    end;
+  end;
+  updateFrf(false);
+  UpdateView;
+end;
+
 function TFRFFrm.getLine(s: cSRSres): cBuffTrend1d;
 begin
   case ResTypeRG.ItemIndex of
@@ -2463,7 +2518,10 @@ begin
     1:
       result := s.lineCoh;
     2:
-      result := s.lineSpm;
+      if useAvrCb.Checked then
+        result := s.lineAvSpm
+      else
+        result := s.lineSpm;
     3:
       result := s.linePhase;
   end;
@@ -3029,6 +3087,7 @@ begin
   if g_mbase.selectStage<>nil then
   begin
     setComboBoxItem(g_mbase.selectStage.name, stageCb);
+    g_FrfFactory.CreateBands(self, g_mbase);
   end;
 end;
 
@@ -3134,6 +3193,11 @@ begin
   result := 0;
   c := s.cfg;
   ind := trunc(x / c.fspmdx);
+  if ind<0 then
+  begin
+    x:=0;
+    ind:=0;
+  end;
   db := s.m_shockList.getBlock(shockIndex);
   if db = nil then
     exit;
@@ -3459,6 +3523,7 @@ begin
     g_mbase.SelectBlade:=g_mbase.SelectStage.GetBlade(0);
     BladeSEDownClick(nil);
     g_FrfFactory.CreateBands(self, g_mbase);
+    SpmChartDblClick(nil);
   end;
 end;
 
@@ -3684,11 +3749,22 @@ begin
   ZeroMemory(@tb.m_WechSpm[0], length(tb.m_WechSpm) * sizeof(TComplex_d));
   for i := 0 to TFRFFrm(m_frm).m_WelchCount - 1 do
   begin
-    fft_al_d_sse(TDoubleArray(tb.m_TimeBlockFlt.p),
-      TCmxArray_d(tb.m_ClxData.p), plan);
-    // MULT_SSE_al_cmpx_d(TCmxArray_d(tb.m_ClxData.p), k);
-    fft_al_d_sse(TDoubleArray(sb.m_TimeBlockFlt.p),
-      TCmxArray_d(sb.m_ClxData.p), plan);
+    if g_FrfFactory.m_useWnd then
+    begin
+      fft_al_d_sse(TDoubleArray(tb.m_TimeBlockFlt.p),
+        TCmxArray_d(tb.m_ClxData.p), plan, g_FrfFactory.fPWnd);
+      // MULT_SSE_al_cmpx_d(TCmxArray_d(tb.m_ClxData.p), k);
+      fft_al_d_sse(TDoubleArray(sb.m_TimeBlockFlt.p),
+        TCmxArray_d(sb.m_ClxData.p), plan, g_FrfFactory.fPWnd);
+    end
+    else
+    begin
+      fft_al_d_sse(TDoubleArray(tb.m_TimeBlockFlt.p),
+        TCmxArray_d(tb.m_ClxData.p), plan);
+      // MULT_SSE_al_cmpx_d(TCmxArray_d(tb.m_ClxData.p), k);
+      fft_al_d_sse(TDoubleArray(sb.m_TimeBlockFlt.p),
+        TCmxArray_d(sb.m_ClxData.p), plan);
+    end;
     // MULT_SSE_al_cmpx_d(TCmxArray_d(sb.m_ClxData.p), k);
     plan.StartInd := TFRFFrm(m_frm).m_WelchShift + plan.StartInd;
     for j := 0 to halfNP - 1 do
@@ -4435,13 +4511,6 @@ begin
       end;
       TFRFFrm(Frm).UpdateBlocks;
     end;
-    CreateBands(TFRFFrm(Frm), g_mbase);
-
-    blade := g_mbase.SelectBlade;
-    if blade <> nil then
-    begin
-      TFRFFrm(Frm).BladeNumEdit.Text := (blade.m_sn);
-    end;
 
     a_pIni:=TIniFile.Create(TFRFFrm(Frm).gui_file);
     lstr:=a_pIni.readString(TFRFFrm(Frm).gui_section, 'SelectTurb', '');
@@ -4458,9 +4527,14 @@ begin
     blade:=cBladefolder(g_mbase.getobj(lstr));
     if blade<>nil then
       g_mbase.SelectBlade:=cbladefolder(blade);
-    a_pIni.Destroy;
 
-    TFRFFrm(Frm).m_Person:=a_pIni.readString(TFRFFrm(Frm).gui_section, 'SelectBlade', 'Иванов И.И.');
+    CreateBands(TFRFFrm(Frm), g_mbase);
+    blade := g_mbase.SelectBlade;
+    if blade <> nil then
+    begin
+      TFRFFrm(Frm).BladeNumEdit.Text := (blade.m_sn);
+    end;
+
     TFRFFrm(Frm).ShowStages;
     for j := 0 to g_mbase.m_templates.Count - 1 do
     begin
@@ -4470,6 +4544,9 @@ begin
         setComboBoxItem(TFRFFrm(Frm).m_activeTemplate, TFRFFrm(Frm).TemplatesCb);
       end;
     end;
+    a_pIni.Destroy;
+    // окно
+    TFRFFrm(Frm).WndCBChange(nil);
   end;
 end;
 
@@ -4577,15 +4654,40 @@ begin
   c := TDataBlockList(m_owner).m_cfg;
   if addnull then
   begin
-    fft_al_d_sse(TDoubleArray(m_TimeBlockFlt.p),
-      TDoubleArray(m_TimeBlockFltNull.p),
-      TCmxArray_d(m_ClxData.p), cSpmCfg(c).FFTProp);
+    if g_FrfFactory.m_useWnd then
+    begin
+      fft_al_d_sse(
+        TDoubleArray(m_TimeBlockFlt.p),
+        TDoubleArray(m_TimeBlockFltNull.p),
+        TCmxArray_d(m_ClxData.p),
+        cSpmCfg(c).FFTProp,
+        g_FrfFactory.fPWnd);
+    end
+    else
+    begin
+      fft_al_d_sse(
+        TDoubleArray(m_TimeBlockFlt.p),
+        TDoubleArray(m_TimeBlockFltNull.p),
+        TCmxArray_d(m_ClxData.p),
+        cSpmCfg(c).FFTProp);
+    end;
     k := 2 / m_TimeArrSize;
   end
   else
   begin
-    fft_al_d_sse(TDoubleArray(m_TimeBlockFlt.p), TCmxArray_d(m_ClxData.p),
-      cSpmCfg(c).FFTProp);
+    if g_FrfFactory.m_useWnd then
+    begin
+      fft_al_d_sse(TDoubleArray(m_TimeBlockFlt.p),
+                   TCmxArray_d(m_ClxData.p),
+                    cSpmCfg(c).FFTProp,
+                    g_FrfFactory.fPWnd);
+    end
+    else
+    begin
+      fft_al_d_sse(TDoubleArray(m_TimeBlockFlt.p),
+                   TCmxArray_d(m_ClxData.p),
+                    cSpmCfg(c).FFTProp);
+    end;
     // расчет первого спектра
     k := 2 / c.m_fftCount;
   end;
@@ -4724,7 +4826,12 @@ begin
   for i := 0 to m_shockCount - 1 do
   begin
     d := getBlock(i);
-    d.BuildSpm;
+    if d<>nil then
+      d.BuildSpm
+    else
+    begin
+///      delBlock(d);
+    end;
   end;
 end;
 
@@ -4838,15 +4945,15 @@ begin
       delete(i);
       db.destroy;
       dec(m_LastBlock);
-      if m_LastBlock > i then
+      if m_LastBlock =-1 then
       begin
-        // dec(m_LastBlock);
-        exit;
+        m_LastBlock:=Count-1;
       end
       else
       begin
 
       end;
+      exit;
     end;
   end;
 end;
