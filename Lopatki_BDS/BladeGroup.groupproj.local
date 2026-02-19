@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Default.Personality>
+<<<<<<< HEAD
 		<Projects ActiveProject="plgEvalFRF.dll"/>
+=======
+		<Projects ActiveProject="Project1.exe"/>
+>>>>>>> 4cf858b58054bda200c618bd0973724b3ddf9bac
 	</Default.Personality>
 </BorlandProject>
