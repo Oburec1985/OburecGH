@@ -290,12 +290,13 @@ object FRFFrm: TFRFFrm
       Width = 33
       Height = 17
       Caption = #1054#1082#1085#1086
+      Visible = False
     end
     object ShockCountE: TEdit
       Left = 7
       Top = 52
       Width = 102
-      Height = 21
+      Height = 25
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -305,10 +306,10 @@ object FRFFrm: TFRFFrm
       TabOrder = 0
     end
     object SaveBtn: TButton
-      Left = 7
-      Top = 146
+      Left = 8
+      Top = 150
       Width = 86
-      Height = 31
+      Height = 30
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -354,7 +355,7 @@ object FRFFrm: TFRFFrm
       Left = 7
       Top = 216
       Width = 136
-      Height = 21
+      Height = 25
       ParentShowHint = False
       ShowHint = False
       TabOrder = 3
@@ -461,14 +462,11 @@ object FRFFrm: TFRFFrm
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 10
-      ExplicitLeft = 3
-      ExplicitTop = 505
-      ExplicitWidth = 308
       object SignalsLV: TBtnListView
-        Left = 3
-        Top = 20
-        Width = 303
-        Height = 134
+        Left = 2
+        Top = 19
+        Width = 306
+        Height = 136
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -536,9 +534,6 @@ object FRFFrm: TFRFFrm
       Align = alBottom
       Caption = #1051#1086#1087#1072#1090#1082#1072
       TabOrder = 12
-      ExplicitLeft = 3
-      ExplicitTop = 662
-      ExplicitWidth = 308
       object BladeLabel: TLabel
         Left = 7
         Top = 21
@@ -609,7 +604,7 @@ object FRFFrm: TFRFFrm
         Left = 5
         Top = 95
         Width = 104
-        Height = 21
+        Height = 25
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -620,10 +615,10 @@ object FRFFrm: TFRFFrm
         TabOrder = 0
       end
       object BladeNumEdit: TEdit
-        Left = 4
+        Left = 5
         Top = 46
         Width = 81
-        Height = 21
+        Height = 25
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -666,8 +661,8 @@ object FRFFrm: TFRFFrm
       object DempfE: TEdit
         Left = 114
         Top = 95
-        Width = 91
-        Height = 21
+        Width = 182
+        Height = 25
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -681,7 +676,7 @@ object FRFFrm: TFRFFrm
         Left = 114
         Top = 46
         Width = 91
-        Height = 21
+        Height = 25
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -695,7 +690,7 @@ object FRFFrm: TFRFFrm
         Left = 222
         Top = 46
         Width = 60
-        Height = 21
+        Height = 25
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -707,8 +702,8 @@ object FRFFrm: TFRFFrm
       object StageCB: TComboBox
         Left = 115
         Top = 129
-        Width = 97
-        Height = 21
+        Width = 181
+        Height = 25
         TabOrder = 6
         Text = 'StageCB'
         OnChange = StageCBChange
@@ -716,8 +711,8 @@ object FRFFrm: TFRFFrm
       object TemplatesCb: TComboBox
         Left = 112
         Top = 167
-        Width = 167
-        Height = 21
+        Width = 184
+        Height = 25
         TabOrder = 7
         Text = 'StageCB'
         OnChange = StageCBChange
@@ -727,7 +722,7 @@ object FRFFrm: TFRFFrm
       Left = 7
       Top = 84
       Width = 102
-      Height = 22
+      Height = 27
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -798,6 +793,7 @@ object FRFFrm: TFRFFrm
       Margins.Bottom = 4
       TabOrder = 17
       Text = 'Rectangular'
+      Visible = False
       OnChange = WndCBChange
       Items.Strings = (
         'Rectangular'
@@ -816,11 +812,10 @@ object FRFFrm: TFRFFrm
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = 'UseWnd'
-      Checked = True
       ParentShowHint = False
       ShowHint = False
-      State = cbChecked
       TabOrder = 18
+      Visible = False
       OnClick = useWndCbClick
     end
   end

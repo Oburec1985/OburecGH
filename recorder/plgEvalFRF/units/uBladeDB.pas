@@ -1488,36 +1488,32 @@ end;
 procedure cStageFolder.setBlCount(c: integer);
 var
   bl:cBladeFolder;
+  i:integer;
   f, s:string;
 begin
-
-  while c<>ChildCount do
+  i:=0;
+  while c>ChildCount do
   begin
-    if c>ChildCount then
+    s:=inttostr(i+1);
+    if length(s)=1 then
+      s:='00'+s
+    else
+    begin
+      if length(s)=2 then
+        s:='0'+s;
+    end;
+    bl:=cBladeFolder(getChildrenByCaption('Bl_'+s));
+    if bl=nil then
     begin
       bl:=cBladeFolder.create;
       if cBladeFolder(selected)<>nil then
       begin
         bl.setObjType(cBladeFolder(selected).ObjType);
       end;
-      s:=inttostr(ChildCount+1);
-      if length(s)=1 then
-        s:='00'+s
-      else
-      begin
-        if length(s)=2 then
-          s:='0'+s;
-      end;
       bl.name:='Bl_'+s;
       AddChild(bl);
-    end
-    else
-    begin
-      bl:=cBladeFolder(getchild(ChildCount-1));
-      f:=bl.Absolutepath;
-      DeleteFile(f);
-      bl.destroy;
     end;
+    inc(i);
   end;
 end;
 

@@ -273,10 +273,15 @@ begin
           cStageFolder(s).BlCount := BlCountIE.Value;
           cTurbFolder(f).AddChild(s);
         end;
+        tblCount:=cTurbFolder(f).GetBladeCount(i);
+        if tblCount<>0 then
+        begin
+          if cStageFolder(s).BlCount<>tblCount then
+            cStageFolder(s).BlCount:=tblCount;
+        end;
         StageCB.Items.AddObject(inttostr(I + 1), s);
       end;
       setComboBoxItem(pref, StageCB);
-
       s := g_mbase.SelectStage;
       cStageFolder(s).BlCount := BlCountIE.Value;
       if cStageFolder(s).selected = nil then

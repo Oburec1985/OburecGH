@@ -537,7 +537,7 @@ begin
   m_SRS.UpdateBandNames;
   selbl:=g_mbase.SelectBlade;
   if selbl<>nil then
-    m_SRS.BladeNumEdit.Text:=selbl.name;
+    m_SRS.BladeNumEdit.Text:=selbl.caption;
   n:=SignalsTV.FocusedNode;
   d:=SignalsTV.GetNodeData(n);
   if d<>nil then

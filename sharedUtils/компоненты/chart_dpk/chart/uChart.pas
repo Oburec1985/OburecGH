@@ -433,6 +433,7 @@ begin
     if fileexists(shadername) then
     begin
       sh := cLineLgShader1d.Create(extractFilePath(shadername), s);
+
       m_ShaderMng.Add(sh);
       cLineLgShader1d(sh).BindLgShaderData;
       m_UseShaders := true;

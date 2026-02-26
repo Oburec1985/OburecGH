@@ -88,6 +88,7 @@
     <Transaction>2025.12.14 22:04:14.257.pas,C:\Oburec\OburecGH\recorder\plgEvalFRF\forms\uEvalFRFFrm_.pas=C:\Oburec\OburecGH\recorder\plgEvalFRF\forms\uEvalFRFFrm.pas</Transaction>
     <Transaction>2025.12.14 22:04:14.257.dfm,C:\Oburec\OburecGH\recorder\plgEvalFRF\forms\uEvalFRFFrm_.dfm=C:\Oburec\OburecGH\recorder\plgEvalFRF\forms\uEvalFRFFrm.dfm</Transaction>
     <Transaction>2025.12.28 01:45:02.153.pas,C:\Oburec\OburecGH\recorder\plgEvalFRF\Unit1.pas=C:\Oburec\OburecGH\recorder\plgEvalFRF\units\uBladeReport.pas</Transaction>
+    <Transaction>2026.02.26 13:25:48.030.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\Unit2.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\units\uExpFunction.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
@@ -148,5 +149,6 @@
     <File Path="units\uCreateComponents.pas"/>
     <File Path="units\uSpmBand.pas"/>
     <File Path="units\uBladeReport.pas"/>
+    <File Path="units\uExpFunction.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

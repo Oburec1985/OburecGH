@@ -16,7 +16,7 @@ type
     Freq: Double;  // частота экстремума
     error: Double;  // отклонение от центральной частоты
     BandNum:integer; // в полосе № (-1 если не попал в полосу)
-    // главный экстремум в полосе
+    // главный экстремум в полосе (по амплитуде)
     Main,
     // в допуске
     InTol:boolean;
@@ -73,23 +73,48 @@ function CheckExtremList(l:tlist; bands:blist):boolean;
 var
   I, bnum: Integer;
   e:cExtremum;
+  b:tspmband;
+  j: Integer;
+  d:double;
+  inTol:boolean;
 begin
   bnum:=0;
   result:=true;
-  for I := 0 to l.Count - 1 do
+  for I := 0 to bands.Count - 1 do
   begin
-    e:=cExtremum(l.Items[i]);
-    if e.InTol then
+    b:=tspmband(bands.Items[i]);
+    d:=-1;
+    InTol:=false;
+    // проверка в допуске полоса или нет
+    for j := 0 to l.Count - 1 do
     begin
-      if bnum=e.BandNum then
+      e:=cExtremum(l.Items[j]);
+      if (e.BandNum=i)  then
       begin
-        inc(bnum);
-        continue;
+        if d=-1 then
+        begin
+          // погрешность в %
+          d:=e.error;
+        end
+        else // ищем экстремум с минимальной погрешностью
+        begin
+          if e.error<d then
+          begin
+            d:=e.error;
+          end;
+        end;
+      end;
+      if (d<>-1) and (d<b.m_thresh) then
+      begin
+        inTol:=true;
+        break;
       end;
     end;
-    // если попался экстремум не в допуске или какая то полоса не заполнена экстремумом
-    result:=false;
-    break;
+    if not inTol then
+    begin
+      result:=false;
+      exit;
+    end;
   end;
 end;
 
@@ -322,7 +347,7 @@ procedure BuildReportOtk(tmpl, Name:string;
 var
   r0, i, j, r, col, c,
   // количество колонок на лопатку
-  colWide, blCount: integer;
+  colWide, colCount, blCount: integer;
   date: TDateTime;
   rng, rng2: olevariant;
   str, repPath: string;
@@ -381,6 +406,18 @@ begin
     end;
     rng.value:=Name;
 
+    rng:=GetRange(1,'c_ColCount');
+    if not CheckVarObj(rng) then
+    begin
+      showmessage('не найден регион c_ColCount в шаблоне');
+      colCount:=0;
+    end
+    else
+    begin
+      colCount:=rng.value;
+    end;
+
+
     rng:=GetRange(1,'c_start');
     if not CheckVarObj(rng) then
     begin
@@ -394,12 +431,15 @@ begin
       exit;
     end;
     blCount:=rng2.row-rng.row+1;
-    colWide:=toneCount+1;
+    if colCount>0 then
+      colWide:=colCount
+    else
+      colWide:=toneCount+1;
     // заполняем тоны в таблице лопаток (с позиции Start)
     for I := 0 to stage.ChildCount - 1 do
     begin
       blade:=stage.GetBlade(i);
-      c:=i div blCount;
+      c:=i div blCount; // номер блока по столбцам
       r:=i mod blCount;
       SetCell(1, rng.Row+r, rng.Column+c*colWide, blade.m_sn);
       //SetCell(1, rng.Row+r, rng.Column+c*colWide+colWide-2, blade.m_weight);

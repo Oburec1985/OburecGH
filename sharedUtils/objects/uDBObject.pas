@@ -507,8 +507,11 @@ begin
           o:=GetChildByPath(str);
           if o=nil then
           begin
-            AddChild(obj);
-            obj.path:=str;
+            if obj<>nil then
+            begin
+              AddChild(obj);
+              obj.path:=str;
+            end;
           end;
         end;
       end;

@@ -440,7 +440,7 @@ object EditTestFrm: TEditTestFrm
     Margins.Right = 2
     Margins.Bottom = 2
     Align = alBottom
-    Caption = #1055#1072#1088#1072#1077#1084#1090#1088#1099' '#1080#1089#1087#1099#1090#1072#1085#1080#1103
+    Caption = #1055#1072#1088#1072#1084#1077#1090#1088#1099' '#1080#1089#1087#1099#1090#1072#1085#1080#1103
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -17
@@ -449,7 +449,7 @@ object EditTestFrm: TEditTestFrm
     ParentFont = False
     TabOrder = 2
     object OkBtn: TButton
-      Left = 10
+      Left = 11
       Top = 32
       Width = 104
       Height = 38

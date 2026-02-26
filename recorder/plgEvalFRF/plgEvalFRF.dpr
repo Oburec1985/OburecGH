@@ -40,7 +40,8 @@ uses
   uBladeDB in 'units\uBladeDB.pas',
   uComponentServises in '..\..\sharedUtils\utils\uComponentServises.pas',
   uSpmBand in 'units\uSpmBand.pas',
-  uBladeReport in 'units\uBladeReport.pas';
+  uBladeReport in 'units\uBladeReport.pas',
+  uExpFunction in 'units\uExpFunction.pas';
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 

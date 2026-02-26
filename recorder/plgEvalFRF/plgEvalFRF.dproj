@@ -106,6 +106,7 @@
 			<DCCReference Include="..\..\sharedUtils\utils\uComponentServises.pas"/>
 			<DCCReference Include="units\uSpmBand.pas"/>
 			<DCCReference Include="units\uBladeReport.pas"/>
+			<DCCReference Include="units\uExpFunction.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

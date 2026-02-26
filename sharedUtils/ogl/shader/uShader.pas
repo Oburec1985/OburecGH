@@ -248,7 +248,8 @@ begin
   log := GetInfoLog(shader);
   if compiled <> 1 then
   begin
-    raise Exception.Create(log);
+    shader:=0;
+    //raise Exception.Create(log);
   end;
 end;
 
