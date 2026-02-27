@@ -4,7 +4,7 @@ object FRFFrm: TFRFFrm
   Hint = #1042#1082#1083#1102#1095#1080#1090#1100'/'#1086#1090#1082#1083#1102#1095#1080#1090#1100' '#1088#1072#1089#1095#1077#1090
   Caption = 'FRFFrm'
   ClientHeight = 871
-  ClientWidth = 939
+  ClientWidth = 991
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,7 +16,7 @@ object FRFFrm: TFRFFrm
   PixelsPerInch = 120
   TextHeight = 17
   object Splitter1: TSplitter
-    Left = 617
+    Left = 669
     Top = 0
     Width = 8
     Height = 871
@@ -27,11 +27,12 @@ object FRFFrm: TFRFFrm
     Align = alRight
     Color = clBackground
     ParentColor = False
+    ExplicitLeft = 617
   end
   object SpmChart: cChart
     Left = 0
     Top = 0
-    Width = 617
+    Width = 669
     Height = 871
     Cursor = crSizeAll
     Align = alClient
@@ -44,9 +45,10 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
+    ExplicitWidth = 617
   end
   object RightGB: TGroupBox
-    Left = 625
+    Left = 677
     Top = 0
     Width = 314
     Height = 871
@@ -59,6 +61,7 @@ object FRFFrm: TFRFFrm
     ParentShowHint = False
     ShowHint = False
     TabOrder = 1
+    ExplicitLeft = 625
     object ShockCountLabel: TLabel
       Left = 8
       Top = 27
@@ -306,10 +309,10 @@ object FRFFrm: TFRFFrm
       TabOrder = 0
     end
     object SaveBtn: TButton
-      Left = 8
-      Top = 150
+      Left = 7
+      Top = 145
       Width = 86
-      Height = 30
+      Height = 21
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -817,6 +820,21 @@ object FRFFrm: TFRFFrm
       TabOrder = 18
       Visible = False
       OnClick = useWndCbClick
+    end
+    object LoadBtn: TButton
+      Left = 7
+      Top = 167
+      Width = 86
+      Height = 21
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = #1047#1072#1075#1088#1091#1079#1080#1090#1100
+      ParentShowHint = False
+      ShowHint = False
+      TabOrder = 19
+      OnClick = LoadBtnClick
     end
   end
 end
