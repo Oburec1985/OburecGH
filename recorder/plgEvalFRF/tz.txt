@@ -1,0 +1,116 @@
+**Задание:**
+Доработать плагин `plgEvalFRF`. Необходимо добавить возможность загружать данные записанных ударов из файлов и подставлять их в графику вместо данных, получаемых в реальном времени. Логика должна быть следующей: программа смотрит в папку замера, и если там есть файлы в формате `<имя сигнала>_n.dat`, то данные из них подгружаются и проходят тот же конвейер обработки и отображения, что и "живые" данные.
+
+**Реализация:**
+
+1.  **Добавлена кнопка "Загрузить из файлов"** на форму `TFRFFrm`.
+    *   Изменен файл `forms/uEvalFRFFrm.dfm` для добавления `TButton` с именем `LoadFromFileBtn`.
+    *   В `forms/uEvalFRFFrm.pas` добавлены объявление компонента и его обработчика.
+
+2.  **Реализован обработчик `LoadFromFileBtnClick`**.
+    Код процедуры `TFRFFrm.LoadFromFileBtnClick`:
+    ```pascal
+    procedure TFRFFrm.LoadFromFileBtnClick(sender: TObject);
+    var
+      blade: cBladeFolder;
+      taho: cSRSTaho;
+      s: cSRSres;
+      i, j, shockNum: integer;
+      sigName, bladePath, fileName: string;
+      fileStream: TFileStream;
+      fileData: TDoubleArray;
+      fileSize, dataCount: integer;
+    begin
+      // 1. Get the current blade folder.
+      blade := g_mbase.SelectBlade;
+      if blade = nil then
+      begin
+        ShowMessage('Лопатка не выбрана.');
+        exit;
+      end;
+      bladePath := blade.Absolutepath;
+
+      // 2. Clear existing data.
+      doStart;
+
+      // 3. Load data for Tacho
+      taho := getTaho;
+      if taho = nil then exit;
+      sigName := taho.m_tag.tagname;
+      shockNum := 1;
+      while True do
+      begin
+        fileName := bladePath + '' + sigName + '_' + IntToStr(shockNum) + '.dat';
+        if not FileExists(fileName) then break;
+
+        fileStream := TFileStream.Create(fileName, fmOpenRead);
+        try
+          dataCount := fileStream.Size div SizeOf(Double);
+          SetLength(fileData, dataCount);
+          fileStream.ReadBuffer(fileData[0], fileStream.Size);
+        finally
+          fileStream.Free;
+        end;
+        taho.m_shockList.addBlock(taho.cfg.fHalfFft, p2d(Now, 0), fileData, dataCount);
+        inc(shockNum);
+      end;
+
+      // 4. Load data for SRS signals
+      for i := 0 to taho.cfg.SRSCount - 1 do
+      begin
+          s := taho.cfg.GetSrs(i);
+          sigName := s.m_tag.tagname;
+          shockNum := 1;
+          while True do
+          begin
+              fileName := bladePath + '' + sigName + '_' + IntToStr(shockNum) + '.dat';
+              if not FileExists(fileName) then break;
+
+              fileStream := TFileStream.Create(fileName, fmOpenRead);
+              try
+                  dataCount := fileStream.Size div SizeOf(Double);
+                  SetLength(fileData, dataCount);
+                  fileStream.ReadBuffer(fileData[0], fileStream.Size);
+              finally
+                  fileStream.Free;
+              end;
+              s.m_shockList.addBlock(taho.cfg.fHalfFft, p2d(Now, 0), fileData, dataCount);
+              inc(shockNum);
+          end;
+      end;
+
+      // 5. Process the new blocks.
+      for j := 0 to taho.m_shockList.Count - 1 do
+      begin
+        taho.m_shockList.getBlock(j).prepareData;
+        taho.m_shockList.getBlock(j).BuildSpm;
+      end;
+
+      for i := 0 to taho.cfg.SRSCount - 1 do
+      begin
+        s := taho.cfg.GetSrs(i);
+        for j := 0 to s.m_shockList.Count - 1 do
+        begin
+          s.m_shockList.getBlock(j).prepareData;
+          s.m_shockList.getBlock(j).BuildSpm;
+        end;
+      end;
+
+      // 6. Update FRF and UI
+      updateFrf(false);
+      UpdateView;
+      ShowLines;
+
+      // 7. Update shock count display
+      if taho.m_shockList.Count > 0 then
+      begin
+          ShockCountE.Text := inttostr(taho.m_shockList.Count);
+          ShockIE.intnum := 0;
+          ShowShock(0);
+      end
+      else
+      begin
+          ShockCountE.Text := '0';
+      end;
+    end;
+    ```
