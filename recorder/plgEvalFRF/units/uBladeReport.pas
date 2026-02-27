@@ -2,7 +2,7 @@ unit uBladeReport;
 
 interface
 uses
-  windows, classes, dialogs, sysutils, variants,
+  windows, classes, dialogs, sysutils, IOUtils, Types, variants,
   uDBObject, ubaseobj,
   pathutils, uPathMng,
   uBladeDb, uChart, graphics,
@@ -50,6 +50,8 @@ type
 
 procedure SaveBladeReport(repname, meraFileName: string; slist:tlist; bands:blist;
                       chart:cchart; bl: cBladeFolder; hideExcel:boolean);
+// возвращает подкаталог в папке Root внутри которого файл с расширением ext самый новый
+function GetDirWithNewestFile(const ARootPath: string; const AExtension: string): string;
 
 
 implementation
@@ -705,6 +707,45 @@ end;
 
 destructor RepSignal.destroy;
 begin
+end;
+
+
+
+function GetDirWithNewestFile(const ARootPath: string; const AExtension: string): string;
+var
+  CurrentDir: string;
+  FileName: string;
+  FileDate: TDateTime;
+  MaxDate: TDateTime;
+  SearchPattern: string;
+begin
+  Result := '';
+  MaxDate := 0;
+  SearchPattern := '*' + AExtension;
+
+  try
+    // TDirectory.GetDirectories возвращает массив строк (путей) ко всем подпапкам
+    for CurrentDir in TDirectory.GetDirectories(ARootPath) do
+    begin
+      // Ищем файлы с нужным расширением в текущей папке
+      for FileName in TDirectory.GetFiles(CurrentDir, SearchPattern) do
+      begin
+        // Получаем дату изменения файла
+        FileDate := TFile.GetLastWriteTime(FileName);
+
+        // Если этот файл новее всех предыдущих, запоминаем путь
+        if FileDate > MaxDate then
+        begin
+          MaxDate := FileDate;
+          Result := CurrentDir;
+        end;
+      end;
+    end;
+  except
+    on E: Exception do
+      // Здесь можно обработать ошибки доступа к папкам, если это необходимо
+      raise Exception.Create('Ошибка при поиске: ' + E.Message);
+  end;
 end;
 
 end.
