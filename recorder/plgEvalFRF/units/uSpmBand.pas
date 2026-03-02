@@ -10,7 +10,7 @@ uses
   ucommonmath, uDoubleCursor, uChartEvents, uLabel,
   uRecorderEvents, ubaseObj, uCommonTypes,
   uRCFunc, uBuffTrend1d, upage, utextlabel, uaxis, utrend,
-  PluginClass, ImgList, uChart, usetlist, ufreqband,
+  PluginClass3218, ImgList, uChart, usetlist, ufreqband,
   tags;
 
 

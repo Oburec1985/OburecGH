@@ -45,6 +45,7 @@ const
 type
   // Структура блока данных для TSoundCardDac
   PSoundCardBlock = ^TSoundCardBlock;
+
   TSoundCardBlock = record
     Samples: PAnsiChar; // Указатель на буфер с аудиоданными
     Header: TWaveHdr;   // Заголовок WAVE для WinAPI
@@ -57,7 +58,7 @@ type
 
     // Текущее значение для зацикливания
     FCurrentLoopCount: Cardinal;
-    // Счетчик буферов в очереди драйвера
+    // Счетчик буферов в очереди драйвера (сколько накопилось в очереди)
     FQueuedBuffers: Integer;
 
     // Приватный метод-обработчик callback-сообщений от драйвера
@@ -80,6 +81,7 @@ type
     // Возвращает текущее состояние активности
     function IsPlay: Boolean; override;
     function GetDeviceList: TStringList; override;
+    function CheckDone(i:integer):boolean;override;
 
     // Выделяет и освобождает память для блока данных TSoundCardBlock
     function AllocateBlock: Pointer; override;
@@ -130,6 +132,7 @@ begin
   // FBufferSize должен быть рассчитан в методе Open.
   if FBufferSize > 0 then
     Block^.Samples := AllocMem(FBufferSize);
+
   Result := Block;
 end;
 
@@ -199,6 +202,13 @@ begin
 
   //FIsActive := True; // true когда воспроизведение а не проинициализирован
   FState:= stOpened;
+end;
+
+function TSoundCardDac.CheckDone(i: integer): boolean;
+var
+  bl:TSoundCardBlock;
+begin
+
 end;
 
 procedure TSoundCardDac.Close;
@@ -307,7 +317,8 @@ begin
   if ResultCode <> MMSYSERR_NOERROR then
     raise Exception.Create('Error preparing waveOut header: ' + IntToStr(ResultCode));
 
-  // Отправляем на воспроизведение
+  // Отправляем на воспроизведение. После waveOutWrite нельзя менять буфер!!!
+  // можно поставить несколько буферов в очередь
   ResultCode := waveOutWrite(FDeviceHandle, @Block.Header, SizeOf(TWaveHdr));
   if ResultCode <> MMSYSERR_NOERROR then
   begin

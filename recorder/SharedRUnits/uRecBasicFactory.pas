@@ -527,7 +527,7 @@ begin
     // Parent Window создано в MainThread. При попытке очистить дочерний элемент
     // в другом потоке если дочерний элемент ниразу не был показан будет ошибка!!!
     m_pMasterWnd.Parent := nil;
-    m_pMasterWnd.destroy;
+    //m_pMasterWnd.destroy;
     m_pMasterWnd := nil;
   end;
   result := true;

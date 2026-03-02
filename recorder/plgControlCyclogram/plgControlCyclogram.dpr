@@ -252,14 +252,14 @@ uses
   uProfile in 'units\uProfile.pas',
   uSpmThresholdProfile in 'forms\uSpmThresholdProfile.pas' {SpmThresholdProfileFrm},
   uCreateComponents in 'units\uCreateComponents.pas',
-  PluginClass in '..\SharedRUnits\PluginClass.pas',
   uCompMng in '..\SharedRUnits\uCompMng.pas',
   uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
   uThreshHolderAlg in 'units\uThreshHolderAlg.pas',
   uTresHoldFrame in 'forms\uTresHoldFrame.pas' {TresHoldFrame: TFrame},
   uDACFrm in 'forms\uDACFrm.pas' {DACFrm},
   uSoundCardDac in 'units\uSoundCardDac.pas',
-  uDacDevice in 'units\uDacDevice.pas';
+  uDacDevice in 'units\uDacDevice.pas',
+  PluginClass in '..\SharedRUnits\PluginClass.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

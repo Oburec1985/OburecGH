@@ -92,7 +92,7 @@
 			<DCCReference Include="forms\uEvalFRFFrm.pas">
 				<Form>FRFFrm</Form>
 			</DCCReference>
-			<DCCReference Include="..\SharedRUnits\PluginClass.pas"/>
+			<DCCReference Include="PluginClass3218.pas"/>
 			<DCCReference Include="..\SharedRUnits\uFrmSync.pas">
 				<Form>FrmSync</Form>
 			</DCCReference>

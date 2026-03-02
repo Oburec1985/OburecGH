@@ -57,9 +57,13 @@
     <Transaction>2025.02.17 19:44:42.014.dfm,E:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\Unit3.dfm=E:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\forms\uEditGraphFrm.dfm</Transaction>
     <Transaction>2025.03.06 10:14:42.452.dproj,F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\plgTestClear.dproj=F:\Oburec\delphi\2011\OburecGH\recorder\plgTestClear\plgOscill.dproj</Transaction>
     <Transaction>2025.03.07 09:21:33.439.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgOscill\Unit1.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgOscill\units\uOscillSaver.pas</Transaction>
+    <Transaction>2026.03.02 16:33:36.064.pas,F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\PluginClass.pas=F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\PluginClass3218.pas</Transaction>
+    <Transaction>2026.03.02 16:55:51.455.pas,F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\PluginClass3218.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\PluginClass3218.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
+    <File Path="..\plgEvalFRF"/>
+    <File Path="..\plgEvalFRF\PluginClass3218.pas"/>
     <File Path="..\SharedRUnits"/>
     <File Path="..\SharedRUnits\interfaces"/>
     <File Path="..\SharedRUnits\interfaces\blaccess.pas"/>
@@ -76,7 +80,6 @@
     <File Path="..\SharedRUnits\interfaces\transf.pas"/>
     <File Path="..\SharedRUnits\interfaces\transformers.pas"/>
     <File Path="..\SharedRUnits\interfaces\waitwnd.pas"/>
-    <File Path="..\SharedRUnits\PluginClass.pas"/>
     <File Path="..\SharedRUnits\uCompMng.pas"/>
     <File Path="..\SharedRUnits\uFrmSync.pas"/>
     <File Path="..\SharedRUnits\uFrmSync.dfm"/>

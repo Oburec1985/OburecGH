@@ -1,2 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<BorlandProject/>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2026.03.02 16:33:36.001.pas,F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\PluginClass.pas=F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\PluginClass3218.pas</Transaction>
+    <Transaction>2026.03.02 16:55:51.439.pas,F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\PluginClass3218.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\PluginClass3218.pas</Transaction>
+    <Transaction>2026.03.02 18:42:49.787.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\PluginClass3218.pas=</Transaction>
+  </Transactions>
+</BorlandProject>

@@ -19,7 +19,7 @@ uses
   uTextLabel,
   uBuffTrend1d, utrend, uaxis, uYCursor,
   uCommonTypes,
-  pluginClass,
+  pluginClass3218,
   shellapi,
   uPathMng,
   opengl, uSimpleObjects,
@@ -1481,7 +1481,7 @@ begin
   end;
 end;
 
-// обновить значения меток.
+// обновить значения меток. привязано к doOnZoom
 procedure TFRFFrm.UpdateLabels;
 var
   i, j, k, ind: integer;
@@ -2748,6 +2748,8 @@ begin
     exit;
 
   t.m_shockList.Load(NewerestPath, t.m_tag.tagname);
+  ShockCountE.text:=inttostr(t.m_shockList.Count);
+  ShockIE.IntNum:=0;
   t.m_shockList.prepareData;
   t.m_shockList.BuidSpm;
   for i := 0 to c.SRSCount - 1 do
@@ -5105,7 +5107,8 @@ begin
     begin
       db.addnull := true;
       // выделяем память под блок с дополнением нулями
-      GetMemAlignedArray_d(m_cfg.m_fftCount - len, db.m_TimeBlockFltNull);
+      //GetMemAlignedArray_d(len + m_cfg.m_fftCount - len, db.m_TimeBlockFltNull);
+      GetMemAlignedArray_d(m_cfg.m_fftCount, db.m_TimeBlockFltNull);
     end;
     GetMemAlignedArray_cmpx_d(m_cfg.m_fftCount, db.m_ClxData);
     GetMemAlignedArray_d(m_cfg.m_fftCount, db.m_mod);

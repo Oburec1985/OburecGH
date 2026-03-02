@@ -12,6 +12,7 @@ type
   TFrmSync = class(TForm)
     procedure FormCreate(Sender: TObject);
   public
+    FPluginInstance:pointer;
     createThreadId:cardinal;
   protected
     fenterdestroy:boolean;
@@ -32,14 +33,14 @@ const
 
 implementation
 uses
-  PluginClass,
+  //PluginClass3218,
   uCreateComponents;
 
 {$R *.dfm}
 
 destructor TFrmSync.destroy;
 begin
-  //exit;
+  exit;
   fenterdestroy:=true;
   if GetCurrentThreadId=MainThreadID then
   begin
@@ -57,7 +58,7 @@ procedure TFrmSync.ProcNotifyFrmCreate(sender:tobject);
 begin
 //----------- не влияет на error 5
   createForms;
-  TExtRecorderPack(GPluginInstance).EList.CallAllEvents(c_RCreateFrmInMainThread);
+  //TExtRecorderPack(GPluginInstance).EList.CallAllEvents(c_RCreateFrmInMainThread);
 end;
 
 procedure TFrmSync.FormCreate(Sender: TObject);
@@ -71,7 +72,7 @@ procedure TFrmSync.ProcNotifyMessage(m: TMessage);
 var
   obj:tobject;
 begin
- 	if GPluginInstance = nil then
+ 	if FPluginInstance = nil then
   begin
 		m.Result := 0;
   end

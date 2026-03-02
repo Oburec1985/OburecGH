@@ -32,7 +32,7 @@ type
 implementation
 
 uses
-  uRecBasicFactory, pluginclass;
+  uRecBasicFactory;
 
 constructor cCompMng.create(r: irecorder);
 var
@@ -143,7 +143,7 @@ var
   count:integer;
   g:tguid;
 begin
-  cRecBasicFactory(f).setOwner(GPluginInstance);
+  //cRecBasicFactory(f).setOwner(GPluginInstance);
   f.GetInterface(IID_ICustomFormFactory, lf);
   lf.GetFactoryID(g);
   lf.GetFormTypeName(str);

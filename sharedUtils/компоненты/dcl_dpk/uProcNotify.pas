@@ -63,9 +63,12 @@ type
     constructor Create;
   end;
 
+var
+  g_loadState:boolean;
+
 implementation
-uses
-  PluginClass;
+//uses
+  //PluginClass3218;
 
 
 procedure cNonifyProcessor.setName(s: string);
@@ -127,7 +130,8 @@ begin
     end;
     PN_LEAVERCCONFIG:
     begin
-      if TExtRecorderPack(G_Plg).m_loadState then
+      //if TExtRecorderPack(G_Plg).m_loadState then
+      if g_loadState then
       begin
 
       end
@@ -190,7 +194,8 @@ begin
   b1:=(a_dwCommand=PN_RCLOADCONFIG);
   if b1 then
   begin
-    TExtRecorderPack(G_Plg).m_loadState:=true;
+    //TExtRecorderPack(G_Plg).m_loadState:=true;
+    g_loadState:=true;
     ecm(b);
   end;
   for i := 0 to count - 1 do
@@ -200,7 +205,8 @@ begin
   end;
   if b1 then
   begin
-    TExtRecorderPack(G_Plg).m_loadState:=false;
+    //TExtRecorderPack(G_Plg).m_loadState:=false;
+    g_loadState:=false;
     if b then
       lcm;
   end;

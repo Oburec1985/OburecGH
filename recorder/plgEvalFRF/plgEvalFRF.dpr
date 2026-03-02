@@ -33,7 +33,7 @@ uses
   waitwnd in '..\SharedRUnits\interfaces\waitwnd.pas',
   uEditEvalFRFFrm in 'forms\uEditEvalFRFFrm.pas' {EditFrfFrm},
   uEvalFRFFrm in 'forms\uEvalFRFFrm.pas' {FRFFrm},
-  PluginClass in '..\SharedRUnits\PluginClass.pas',
+  PluginClass3218 in 'PluginClass3218.pas',
   uFrmSync in '..\SharedRUnits\uFrmSync.pas' {FrmSync},
   uSpmProfile in 'forms\uSpmProfile.pas' {SpmProfileFrm},
   uEditTest in 'forms\uEditTest.pas' {EditTestFrm},
@@ -85,7 +85,7 @@ end;
 //а указатель. Причина такого объявления обоснована в документе описания.
 function CreatePluginClass: pointer{IRecorderPlugin}; cdecl;
 begin
-  GPluginInstance := TExtRecorderPack.Create;
+  GPluginInstance := TplgEvalFrf.Create;
   //Создание одного глобального экземпляра plug-in`а}
   result := pointer(GPluginInstance);
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -100,7 +100,7 @@ begin
   //Объект plug-in`а удаляет себя сам (как любой COM объект),
   //если счетчик ссылок его интерфейсов станет равен нулю.
   Result := RCERROR_NOERROR;
-  TExtRecorderPack(piPlg).destroyForms;
+  TplgEvalFrf(piPlg).destroyForms;
   GPluginInstance:=NIL;
   piPlg._release;
 end;

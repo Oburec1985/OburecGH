@@ -53,6 +53,10 @@ type
     Data: Pointer;
     // Флаг, помечен ли блок как удаленный
     IsDeleted: Boolean;
+    // номер блока (аналог времени)
+    index:integer;
+    // время блока
+    timestamp:double;
   end;
 
   TBlockQueue = class

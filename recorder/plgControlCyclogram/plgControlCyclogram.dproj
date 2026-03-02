@@ -539,7 +539,6 @@
 				<Form>SpmThresholdProfileFrm</Form>
 			</DCCReference>
 			<DCCReference Include="units\uCreateComponents.pas"/>
-			<DCCReference Include="..\SharedRUnits\PluginClass.pas"/>
 			<DCCReference Include="..\SharedRUnits\uCompMng.pas"/>
 			<DCCReference Include="..\SharedRUnits\uFrmSync.pas">
 				<Form>FrmSync</Form>
@@ -554,6 +553,7 @@
 			</DCCReference>
 			<DCCReference Include="units\uSoundCardDac.pas"/>
 			<DCCReference Include="units\uDacDevice.pas"/>
+			<DCCReference Include="..\SharedRUnits\PluginClass.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

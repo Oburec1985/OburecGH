@@ -5,7 +5,7 @@
 { НПП "ООО Мера" 2016г. }
 { --------------------------------------------------------------------- }
 
-unit PluginClass;
+unit PluginClass3218;
 
 interface
 
@@ -49,7 +49,7 @@ type
     ссылок соответсвенно. Класс реализует интерфейс IRecorderPlugin -
     интерфейс plug-in`а. Для отображения данных класс использует
     специальную форму}
-  TExtRecorderPack = class(TInterfacedObject, IRecorderPlugin)
+  TplgEvalFrf = class(TInterfacedObject, IRecorderPlugin)
   public
     m_UIThreadID: integer;
     // для прореживания LeaveConfig событий
@@ -204,7 +204,7 @@ function RStatePlay: boolean;
 begin
   // result:=TExtRecorderPack(GPluginInstance).FIRecorder.CheckState(RS_VIEW or RS_REC);
   result := not g_IR.CheckState(RS_stop);
-  if TExtRecorderPack(GPluginInstance).beforestop then
+  if TplgEvalFrf(GPluginInstance).beforestop then
     result := false;
 end;
 
@@ -219,7 +219,7 @@ end;
 
 function GetNP(name: string): cNonifyProcessor;
 begin
-  result := TExtRecorderPack(GPluginInstance).m_nplist.GetNP(name);
+  result := TplgEvalFrf(GPluginInstance).m_nplist.GetNP(name);
 end;
 
 function GetRCStateChange: TRCstateChange;
@@ -229,27 +229,27 @@ end;
 
 procedure AddPlgEvent(ename: string; etype: cardinal; e: tNotifyEvent);
 begin
-  TExtRecorderPack(GPluginInstance).EList.AddEvent(ename, etype, e);
+  TplgEvalFrf(GPluginInstance).EList.AddEvent(ename, etype, e);
 end;
 
 procedure CallPlgEvents(etype: cardinal);
 begin
-  TExtRecorderPack(GPluginInstance).EList.CallAllEvents(etype);
+  TplgEvalFrf(GPluginInstance).EList.CallAllEvents(etype);
 end;
 
 procedure CallPlgEvents(etype: cardinal; Sender: TObject);
 begin
-  TExtRecorderPack(GPluginInstance).EList.CallAllEventsWithSender(etype,
+  TplgEvalFrf(GPluginInstance).EList.CallAllEventsWithSender(etype,
     Sender);
 end;
 
 procedure RemovePlgEvent(e: tNotifyEvent; etype: cardinal);
 begin
-  TExtRecorderPack(GPluginInstance).EList.removeEvent(e, etype);
+  TplgEvalFrf(GPluginInstance).EList.removeEvent(e, etype);
 end;
 
 
-procedure TExtRecorderPack.destroyLog;
+procedure TplgEvalFrf.destroyLog;
 begin
   if g_logFile<>nil then
   begin
@@ -258,7 +258,7 @@ begin
   end;
 end;
 
-procedure TExtRecorderPack.doChangeRCState(Sender: TObject);
+procedure TplgEvalFrf.doChangeRCState(Sender: TObject);
 var
   newstate, statechange: dword;
 begin
@@ -339,7 +339,7 @@ begin
   end;
 end;
 
-procedure TExtRecorderPack.doStart;
+procedure TplgEvalFrf.doStart;
 var
   i:integer;
   f:cRecBasicFactory;
@@ -367,7 +367,7 @@ begin
 end;
 
 { Конструктор } { Создание формы тестового plug-in`а }
-constructor TExtRecorderPack.Create;
+constructor TplgEvalFrf.Create;
 begin
   m_loadState:=false;
   g_startdir := extractfiledir(Application.ExeName) + '\plugins\';
@@ -378,7 +378,7 @@ begin
   m_nplist := cNotifyProcessorList.Create;
 end;
 
-destructor TExtRecorderPack.destroy;
+destructor TplgEvalFrf.destroy;
 begin
   exit;
   g_startdir := '';
@@ -390,7 +390,7 @@ begin
   inherited;
 end;
 
-function TExtRecorderPack.CreateGUI: integer;
+function TplgEvalFrf.CreateGUI: integer;
 var
   // UISrv: tagVARIANT;
   val: OleVariant;
@@ -405,7 +405,7 @@ begin
   result := 0;
 end;
 
-function TExtRecorderPack.ProcessNotify(a_dwCommand: dword;
+function TplgEvalFrf.ProcessNotify(a_dwCommand: dword;
   a_dwData: dword): boolean;
 var
   pMsgInfo: PCB_MESSAGE;
@@ -489,7 +489,7 @@ end;
 
 // вызов из
 // function DestroyPluginClass(piPlg: IRecorderPlugin): integer; cdecl;
-procedure TExtRecorderPack.destroyForms;
+procedure TplgEvalFrf.destroyForms;
 begin
   exit;
 {$ifdef DEBUG}
@@ -512,12 +512,12 @@ begin
 {$endif}
 end;
 
-procedure TExtRecorderPack.ShowModalForm(frm: tform);
+procedure TplgEvalFrf.ShowModalForm(frm: tform);
 begin
   PostMessage(m_FrmSync.Handle, WM_ShowModalSettingsFrm, integer(frm), 0);
 end;
 
-function TExtRecorderPack.DestroyGUI: integer;
+function TplgEvalFrf.DestroyGUI: integer;
 begin
   // m_pProcessFormPtr.reset(nil);
   // Удаляем кнопки со страниц
@@ -543,7 +543,7 @@ begin
   result := 0;
 end;
 
-procedure TExtRecorderPack.GetJournal;
+procedure TplgEvalFrf.GetJournal;
 var
   val: OleVariant;
   tV: tagVariant;
@@ -560,7 +560,7 @@ begin
   end;
 end;
 
-procedure TExtRecorderPack.LoadConfName;
+procedure TplgEvalFrf.LoadConfName;
 var
   val: OleVariant;
   Ext: string;
@@ -576,7 +576,7 @@ function getConfigName: string;
 var
   val: OleVariant;
 begin
-  TExtRecorderPack(GPluginInstance).FIRecorder.GetProperty(RCPROP_CONFIGNAME,
+  TplgEvalFrf(GPluginInstance).FIRecorder.GetProperty(RCPROP_CONFIGNAME,
     val);
   result := val;
 end;
@@ -584,18 +584,18 @@ end;
 // IRecorderPlugin
 // Создание (инициализации внутренних полей) плагина
 // происходит автоматично самим рекордером
-function TExtRecorderPack._AddRef: integer;
+function TplgEvalFrf._AddRef: integer;
 begin
   inherited;
 end;
 
-function TExtRecorderPack._release: integer;
+function TplgEvalFrf._release: integer;
 begin
   inherited;
 end;
 
 
-function TExtRecorderPack._Create(pOwner: IRecorder): boolean; stdcall;
+function TplgEvalFrf._Create(pOwner: IRecorder): boolean; stdcall;
 var
   cfg: string;
 begin
@@ -621,14 +621,14 @@ end;
 
 
 // Конфигурирование
-function TExtRecorderPack.Config: boolean; stdcall;
+function TplgEvalFrf.Config: boolean; stdcall;
 begin
   { тестовому plug-in`у нечего настраивать }
   result := true; // завершено успешно
 end;
 
 // Вызов окна настройки
-function TExtRecorderPack.Edit: boolean; stdcall;
+function TplgEvalFrf.Edit: boolean; stdcall;
 begin
   // frmTestSettings.Show; {Тестовый plug-in имеет всего одно окно}
   result := true; // завершено успешно
@@ -636,36 +636,36 @@ begin
 end;
 
 // Запуск - активизация работы plug-in`а
-function TExtRecorderPack.Execute: boolean; stdcall;
+function TplgEvalFrf.Execute: boolean; stdcall;
 begin
   // frmTestSettings.Show;    // отображение формы
   result := true; // завершено успешно
 end;
 
-function TExtRecorderPack.getConfigName: string;
+function TplgEvalFrf.getConfigName: string;
 begin
   result := fConfigName;
 end;
 
 // Приостановка работы
-function TExtRecorderPack.Suspend: boolean; stdcall;
+function TplgEvalFrf.Suspend: boolean; stdcall;
 begin
   result := true; // завершено успешно
 end;
 
 // Возобновление работы
-function TExtRecorderPack.Resume: boolean; stdcall;
+function TplgEvalFrf.Resume: boolean; stdcall;
 begin
   result := true; // завершено успешно
 end;
 
-procedure TExtRecorderPack.setConfigName(const Value: string);
+procedure TplgEvalFrf.setConfigName(const Value: string);
 begin
   fConfigName := Value;
 end;
 
 // Уведомление о внешних событиях
-function TExtRecorderPack.Notify(const dwCommand: dword;
+function TplgEvalFrf.Notify(const dwCommand: dword;
   const dwData: dword): boolean; stdcall;
 var
   fact: cRecBasicFactory;
@@ -781,14 +781,14 @@ begin
 end;
 
 // Получение имени
-function TExtRecorderPack.GetName: LPCSTR; stdcall;
+function TplgEvalFrf.GetName: LPCSTR; stdcall;
 begin
   result := LPCSTR(GPluginInfo.Name);
   { Из глобальной структуры описания plug-in`а }
 end;
 
 // Получить свойство
-function TExtRecorderPack.GetProperty(const dwPropertyID: dword;
+function TplgEvalFrf.GetProperty(const dwPropertyID: dword;
   var Value: OleVariant): boolean; stdcall;
 begin
   case dwPropertyID of
@@ -803,21 +803,21 @@ begin
 end;
 
 // Задать свойство
-function TExtRecorderPack.SetProperty(const dwPropertyID: dword;
+function TplgEvalFrf.SetProperty(const dwPropertyID: dword;
   { const } Value: OleVariant): boolean; stdcall;
 begin
   result := false; { Свойств нет и устанавливать нечего }
 end;
 
 // Узнать можно ли завершить работу плагина
-function TExtRecorderPack.CanClose: boolean; stdcall;
+function TplgEvalFrf.CanClose: boolean; stdcall;
 begin
   // всегда можно закрыть plug-in
   result := true;
 end;
 
 // Завершить работу плагина
-function TExtRecorderPack.Close: boolean; stdcall;
+function TplgEvalFrf.Close: boolean; stdcall;
 begin
   exit;
   // FreeAndNil(frmTestSettings);
@@ -826,13 +826,13 @@ begin
 end;
 
 { Методы запуска и останова измерения }
-function TExtRecorderPack.StartMeasure: boolean;
+function TplgEvalFrf.StartMeasure: boolean;
 begin
   { Для запуска необходимо передать сообщение Recorder`у }
   result := FIRecorder.Notify(RCN_VIEW, 0);
 end;
 
-function TExtRecorderPack.StopMeasure: boolean;
+function TplgEvalFrf.StopMeasure: boolean;
 begin
   { Для останова необходимо передать сообщение Recorder`у }
   result := FIRecorder.Notify(RCN_STOP, 0);

@@ -5,7 +5,7 @@ interface
 
 uses
   types, ActiveX, forms, sysutils, windows, Classes, IniFiles, Dialogs,
-  uCompMng, cfreg, uRecorderEvents, PluginClass, tags, Recorder, uRCFunc,
+  uCompMng, cfreg, uRecorderEvents, PluginClass3218, tags, Recorder, uRCFunc,
   uCommonMath, nativeXml, uEditEvalFRFFrm,
   uSpmProfile,
   uEvalFRFFrm,
@@ -87,6 +87,7 @@ var
 begin
   g_FrfFactory:=cFRFFactory.create;
   CompMng.Add(g_FrfFactory);
+  cRecBasicFactory(g_FrfFactory).setOwner(GPluginInstance);
 end;
 
 procedure createFormsRecorderUIThread(compMng: cCompMng);

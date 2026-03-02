@@ -72,7 +72,7 @@
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="..\..\sharedUtils\math\uMatrix.pas"/>
-			<DCCReference Include="..\SharedRUnits\PluginClass.pas"/>
+			<DCCReference Include="..\plgEvalFRF\PluginClass3218.pas"/>
 			<DCCReference Include="..\SharedRUnits\uCompMng.pas"/>
 			<DCCReference Include="..\SharedRUnits\uRecBasicFactory.pas"/>
 			<DCCReference Include="..\SharedRUnits\uRecorderEvents.pas"/>

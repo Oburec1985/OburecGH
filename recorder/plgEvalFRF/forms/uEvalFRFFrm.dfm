@@ -34,7 +34,6 @@ object FRFFrm: TFRFFrm
     Top = 0
     Width = 669
     Height = 871
-    Cursor = crSizeAll
     Align = alClient
     Caption = 'cChart1'
     TabOrder = 0
@@ -45,7 +44,8 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitWidth = 617
+    ExplicitLeft = 1
+    ExplicitTop = 27
   end
   object RightGB: TGroupBox
     Left = 677
@@ -61,7 +61,6 @@ object FRFFrm: TFRFFrm
     ParentShowHint = False
     ShowHint = False
     TabOrder = 1
-    ExplicitLeft = 625
     object ShockCountLabel: TLabel
       Left = 8
       Top = 27
