@@ -690,8 +690,8 @@ end;
 procedure TFRFFrm.BladeSEDownClick(sender: tobject);
 var
   s: cStageFolder;
+  key:word;
   bl, sb: cBladeFolder;
-  Key: Word;
 begin
   s := g_mbase.SelectStage;
   if s <> nil then
@@ -3527,13 +3527,30 @@ begin
 end;
 
 procedure TFRFFrm.StageCBChange(sender: tobject);
+var
+  s:cStageFolder;
+  sb:cBladeFolder;
 begin
+  s := g_mbase.SelectStage;
+  if s <> nil then
+  begin
+    sb := g_mbase.SelectBlade;
+    if sb <> nil then
+    begin
+      if SnEdit.Text <> '' then
+        sb.m_sn := SnEdit.Text;
+      sb.m_weight := WeightFe.FloatNum;
+      sb.CreateXMLDesc;
+    end;
+  end;
   if StageCB.ItemIndex > -1 then
   begin
     g_mbase.SelectStage := cStageFolder
       (StageCB.Items.Objects[StageCB.ItemIndex]);
     g_mbase.SelectBlade := g_mbase.SelectStage.GetBlade(0);
-    BladeSEDownClick(nil);
+    BladeNumEdit.Text:=g_mbase.SelectBlade.caption;
+    SnEdit.text:=cbladefolder(g_mbase.SelectBlade).m_sn;
+    WeightFe.FloatNum:=cbladefolder(g_mbase.SelectBlade).m_weight;
     g_FrfFactory.CreateBands(self, g_mbase);
     SpmChartDblClick(nil);
   end;
