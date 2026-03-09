@@ -1034,24 +1034,27 @@ begin
   begin
     child:=node.Nodes[i];
     s:=child.name;
-    if slist.Find(s, j) then
+    if s<>'' then
     begin
-      objtype:=cObjType(slist.Objects[j]);
-    end
-    else
-    begin
-      objtype:=cObjType.create;
-      objType.name:=child.name;
-      objType.owner:=slist;
-      slist.AddObject(child.name, objType);
-    end;
-    objType.owner:=sList;
-    j:=child.ReadAttributeInteger('PropCount',0);
-    for k := 0 to j - 1 do
-    begin
-      s:=child.ReadAttributeString('Prop_'+inttostr(k), '');
-      s1:=child.ReadAttributeString('Prop_v_'+inttostr(k),'');
-      objType.addProp(s, s1);
+      if slist.Find(s, j) then
+      begin
+        objtype:=cObjType(slist.Objects[j]);
+      end
+      else
+      begin
+        objtype:=cObjType.create;
+        objType.name:=child.name;
+        objType.owner:=slist;
+        slist.AddObject(child.name, objType);
+      end;
+      objType.owner:=sList;
+      j:=child.ReadAttributeInteger('PropCount',0);
+      for k := 0 to j - 1 do
+      begin
+        s:=child.ReadAttributeString('Prop_'+inttostr(k), '');
+        s1:=child.ReadAttributeString('Prop_v_'+inttostr(k),'');
+        objType.addProp(s, s1);
+      end;
     end;
   end;
 end;

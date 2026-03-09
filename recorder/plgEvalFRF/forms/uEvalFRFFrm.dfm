@@ -44,8 +44,6 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitLeft = 1
-    ExplicitTop = 27
   end
   object RightGB: TGroupBox
     Left = 677
@@ -703,7 +701,7 @@ object FRFFrm: TFRFFrm
       end
       object StageCB: TComboBox
         Left = 115
-        Top = 129
+        Top = 127
         Width = 181
         Height = 25
         TabOrder = 6
