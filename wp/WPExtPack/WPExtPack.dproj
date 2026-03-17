@@ -75,9 +75,6 @@
 			<DCCReference Include="units\uFindMaxOper.pas">
 				<CoClasses>ExtOperAmpFind</CoClasses>
 			</DCCReference>
-			<DCCReference Include="forms\uNIIPMTenzopluginForm.pas">
-				<Form>NIIPMForm</Form>
-			</DCCReference>
 			<DCCReference Include="forms\uFindMaxForm.pas">
 				<Form>FindMaxForm</Form>
 			</DCCReference>

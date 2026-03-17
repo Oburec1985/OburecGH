@@ -44,7 +44,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, uDacDevice, uSoundCardDac, Math, ImgList,
-  inifiles;
+  inifiles,
+  uChart;
 
 type
   TDACFrm = class(TForm)
@@ -67,7 +68,8 @@ type
     ImageList_16: TImageList;
     TestBtn: TButton;
     cbDacDevices: TComboBox;
-    btnRefreshDevices: TButton;             // Поле ввода времени развертки (SweepSin)
+    btnRefreshDevices: TButton;
+    cChart1: cChart;             // Поле ввода времени развертки (SweepSin)
     procedure btnPlayStopClick(Sender: TObject); // Обработчик нажатия кнопки Play/Stop
     procedure FormCreate(Sender: TObject);     // Обработчик создания формы
     procedure FormDestroy(Sender: TObject);    // Обработчик закрытия формы

@@ -46,70 +46,70 @@
 #define GIFConsts_sBadBlock 65069
 #define GIFConsts_sUnsupportedClass 65070
 #define GIFConsts_sInvalidData 65071
-#define pnglang_EPNGUnexpectedEndText 65072
-#define pnglang_EPNGNoImageDataText 65073
-#define pnglang_EPNGCannotAddChunkText 65074
-#define pnglang_EPNGCannotAddInvalidImageText 65075
-#define pnglang_EPNGCouldNotLoadResourceText 65076
-#define pnglang_EPNGOutMemoryText 65077
-#define pnglang_EPNGCannotChangeTransparentText 65078
-#define pnglang_EPNGHeaderNotPresentText 65079
-#define pnglang_EInvalidNewSize 65080
-#define pnglang_EInvalidSpec 65081
-#define JConsts_sChangeJPGSize 65082
-#define JConsts_sJPEGError 65083
-#define JConsts_sJPEGImageFile 65084
+#define pnglang_EPNGUnknownCompressionText 65072
+#define pnglang_EPNGUnknownInterlaceText 65073
+#define pnglang_EPNGCannotAssignChunkText 65074
+#define pnglang_EPNGUnexpectedEndText 65075
+#define pnglang_EPNGNoImageDataText 65076
+#define pnglang_EPNGCannotAddChunkText 65077
+#define pnglang_EPNGCannotAddInvalidImageText 65078
+#define pnglang_EPNGCouldNotLoadResourceText 65079
+#define pnglang_EPNGOutMemoryText 65080
+#define pnglang_EPNGCannotChangeTransparentText 65081
+#define pnglang_EPNGHeaderNotPresentText 65082
+#define pnglang_EInvalidNewSize 65083
+#define pnglang_EInvalidSpec 65084
 #define GIFConsts_sOutOfData 65085
 #define GIFConsts_sTooManyColors 65086
 #define GIFConsts_sBadColorIndex 65087
-#define VirtualTrees_SCorruptStream2 65088
-#define VirtualTrees_SClipboardFailed 65089
-#define VirtualTrees_SCannotSetUserData 65090
-#define pnglang_EPngInvalidCRCText 65091
-#define pnglang_EPNGInvalidIHDRText 65092
-#define pnglang_EPNGMissingMultipleIDATText 65093
-#define pnglang_EPNGZLIBErrorText 65094
-#define pnglang_EPNGInvalidPaletteText 65095
-#define pnglang_EPNGInvalidFileHeaderText 65096
-#define pnglang_EPNGIHDRNotFirstText 65097
-#define pnglang_EPNGSizeExceedsText 65098
-#define pnglang_EPNGUnknownPalEntryText 65099
-#define pnglang_EPNGUnknownCriticalChunkText 65100
-#define pnglang_EPNGUnknownCompressionText 65101
-#define pnglang_EPNGUnknownInterlaceText 65102
-#define pnglang_EPNGCannotAssignChunkText 65103
-#define NativeXml_sCannotManipulate 65104
-#define NativeXml_sBeginEndMismatch 65105
-#define NativeXml_sLevelMismatch 65106
-#define NativeXml_sRootElementNotDefined 65107
-#define NativeXml_sNonDefaultChardata 65108
-#define NativeXml_sSignificantDigitsOutOfRange 65109
-#define NativeXml_sMissingDataInBinaryStream 65110
-#define NativeXml_sErrorCalcStreamLength 65111
-#define NativeXml_sXmlOwnerNotAssigned 65112
-#define NativeXml_sXmlParentNotAssigned 65113
-#define NativeXml_sCopyFromOnlyWithXmlNode 65114
-#define VirtualTrees_SWrongMoveError 65115
-#define VirtualTrees_SWrongStreamFormat 65116
-#define VirtualTrees_SWrongStreamVersion 65117
-#define VirtualTrees_SStreamTooSmall 65118
-#define VirtualTrees_SCorruptStream1 65119
+#define NativeXml_sXmlOwnerNotAssigned 65088
+#define NativeXml_sXmlParentNotAssigned 65089
+#define NativeXml_sCopyFromOnlyWithXmlNode 65090
+#define JConsts_sChangeJPGSize 65091
+#define JConsts_sJPEGError 65092
+#define JConsts_sJPEGImageFile 65093
+#define pnglang_EPngInvalidCRCText 65094
+#define pnglang_EPNGInvalidIHDRText 65095
+#define pnglang_EPNGMissingMultipleIDATText 65096
+#define pnglang_EPNGZLIBErrorText 65097
+#define pnglang_EPNGInvalidPaletteText 65098
+#define pnglang_EPNGInvalidFileHeaderText 65099
+#define pnglang_EPNGIHDRNotFirstText 65100
+#define pnglang_EPNGSizeExceedsText 65101
+#define pnglang_EPNGUnknownPalEntryText 65102
+#define pnglang_EPNGUnknownCriticalChunkText 65103
+#define NativeXml_sIllegalTag 65104
+#define NativeXml_sUnsupportedTag 65105
+#define NativeXml_sIllegalEndTag 65106
+#define NativeXml_sQuoteCharExpected 65107
+#define NativeXml_sCannotAddNode 65108
+#define NativeXml_sCannotAddAttribute 65109
+#define NativeXml_sCannotSetName 65110
+#define NativeXml_sCannotSetValue 65111
+#define NativeXml_sCannotManipulate 65112
+#define NativeXml_sBeginEndMismatch 65113
+#define NativeXml_sLevelMismatch 65114
+#define NativeXml_sRootElementNotDefined 65115
+#define NativeXml_sNonDefaultChardata 65116
+#define NativeXml_sSignificantDigitsOutOfRange 65117
+#define NativeXml_sMissingDataInBinaryStream 65118
+#define NativeXml_sErrorCalcStreamLength 65119
 #define OleConst_SPropDlgCaption 65120
 #define OleConst_SInvalidLicense 65121
 #define OleConst_SNotLicensed 65122
 #define OleConst_sNoRunningObject 65123
-#define NativeXml_sPrematureEnd 65124
-#define NativeXml_sUnknownEncoding 65125
-#define NativeXml_sUnsupportedEncoding 65126
-#define NativeXml_sDefaultCharUsed 65127
-#define NativeXml_sIllegalTag 65128
-#define NativeXml_sUnsupportedTag 65129
-#define NativeXml_sIllegalEndTag 65130
-#define NativeXml_sQuoteCharExpected 65131
-#define NativeXml_sCannotAddNode 65132
-#define NativeXml_sCannotAddAttribute 65133
-#define NativeXml_sCannotSetName 65134
-#define NativeXml_sCannotSetValue 65135
+#define VirtualTrees_SWrongMoveError 65124
+#define VirtualTrees_SWrongStreamFormat 65125
+#define VirtualTrees_SWrongStreamVersion 65126
+#define VirtualTrees_SStreamTooSmall 65127
+#define VirtualTrees_SCorruptStream1 65128
+#define VirtualTrees_SCorruptStream2 65129
+#define VirtualTrees_SClipboardFailed 65130
+#define VirtualTrees_SCannotSetUserData 65131
+#define NativeXml_sPrematureEnd 65132
+#define NativeXml_sUnknownEncoding 65133
+#define NativeXml_sUnsupportedEncoding 65134
+#define NativeXml_sDefaultCharUsed 65135
 #define ComStrs_sUDAssociated 65136
 #define ComStrs_sPageIndexError 65137
 #define ComStrs_sInvalidComCtl32 65138
@@ -550,6 +550,9 @@ BEGIN
 	GIFConsts_sBadBlock,	"Unknown GIF block type"
 	GIFConsts_sUnsupportedClass,	"Object type not supported for operation"
 	GIFConsts_sInvalidData,	"Invalid GIF data"
+	pnglang_EPNGUnknownCompressionText,	"This \"Portable Network Graphics\" image is encoded with an unknown compression scheme which could not be decoded."
+	pnglang_EPNGUnknownInterlaceText,	"This \"Portable Network Graphics\" image uses an unknown interlace scheme which could not be decoded."
+	pnglang_EPNGCannotAssignChunkText,	"The chunks must be compatible to be assigned."
 	pnglang_EPNGUnexpectedEndText,	"This \"Portable Network Graphics\" image is invalid because the decoder found an unexpected end of the file."
 	pnglang_EPNGNoImageDataText,	"This \"Portable Network Graphics\" image contains no data."
 	pnglang_EPNGCannotAddChunkText,	"The program tried to add a existent critical chunk to the current image which is not allowed."
@@ -560,15 +563,15 @@ BEGIN
 	pnglang_EPNGHeaderNotPresentText,	"This operation is not valid because the current image contains no valid header."
 	pnglang_EInvalidNewSize,	"The new size provided for image resizing is invalid."
 	pnglang_EInvalidSpec,	"The \"Portable Network Graphics\" could not be created because invalid image type parameters have being provided."
-	JConsts_sChangeJPGSize,	"Cannot change the size of a JPEG image"
-	JConsts_sJPEGError,	"JPEG error #%d"
-	JConsts_sJPEGImageFile,	"JPEG Image File"
 	GIFConsts_sOutOfData,	"Premature end of data"
 	GIFConsts_sTooManyColors,	"Color table overflow"
 	GIFConsts_sBadColorIndex,	"Invalid color index"
-	VirtualTrees_SCorruptStream2,	"Stream data corrupt. Unexpected data after node's end position."
-	VirtualTrees_SClipboardFailed,	"Clipboard operation failed."
-	VirtualTrees_SCannotSetUserData,	"Cannot set initial user data because there is not enough user data space allocated."
+	NativeXml_sXmlOwnerNotAssigned,	"XML owner is not assigned"
+	NativeXml_sXmlParentNotAssigned,	"XML parent is not assigned"
+	NativeXml_sCopyFromOnlyWithXmlNode,	"CopyFrom can only be used with TXmlNode descendants"
+	JConsts_sChangeJPGSize,	"Cannot change the size of a JPEG image"
+	JConsts_sJPEGError,	"JPEG error #%d"
+	JConsts_sJPEGImageFile,	"JPEG Image File"
 	pnglang_EPngInvalidCRCText,	"This \"Portable Network Graphics\" image is not valid because it contains invalid pieces of data (crc error)"
 	pnglang_EPNGInvalidIHDRText,	"The \"Portable Network Graphics\" image could not be loaded because one of its main piece of data (ihdr) might be corrupted"
 	pnglang_EPNGMissingMultipleIDATText,	"This \"Portable Network Graphics\" image is invalid because it has missing image parts."
@@ -579,33 +582,6 @@ BEGIN
 	pnglang_EPNGSizeExceedsText,	"This \"Portable Network Graphics\" image is not supported because either it's width or height exceeds the maximum size, which is 65535 pixels length."
 	pnglang_EPNGUnknownPalEntryText,	"There is no such palette entry."
 	pnglang_EPNGUnknownCriticalChunkText,	"This \"Portable Network Graphics\" image contains an unknown critical part which could not be decoded."
-	pnglang_EPNGUnknownCompressionText,	"This \"Portable Network Graphics\" image is encoded with an unknown compression scheme which could not be decoded."
-	pnglang_EPNGUnknownInterlaceText,	"This \"Portable Network Graphics\" image uses an unknown interlace scheme which could not be decoded."
-	pnglang_EPNGCannotAssignChunkText,	"The chunks must be compatible to be assigned."
-	NativeXml_sCannotManipulate,	"cannot manipulate nodes in this type of element"
-	NativeXml_sBeginEndMismatch,	"begin and end tag mismatch: \"%s\" and \"%s\" at line %d (pos %d)"
-	NativeXml_sLevelMismatch,	"level mismatch between subnode \"%s\" and endnode \"%s\" at line %d (pos %d)"
-	NativeXml_sRootElementNotDefined,	"XML root element not defined."
-	NativeXml_sNonDefaultChardata,	"non-default chardata at line %d (pos %d)"
-	NativeXml_sSignificantDigitsOutOfRange,	"significant digits out of range"
-	NativeXml_sMissingDataInBinaryStream,	"missing data in binary stream"
-	NativeXml_sErrorCalcStreamLength,	"error while calculating streamlength"
-	NativeXml_sXmlOwnerNotAssigned,	"XML owner is not assigned"
-	NativeXml_sXmlParentNotAssigned,	"XML parent is not assigned"
-	NativeXml_sCopyFromOnlyWithXmlNode,	"CopyFrom can only be used with TXmlNode descendants"
-	VirtualTrees_SWrongMoveError,	"Target node cannot be a child node of the node to be moved."
-	VirtualTrees_SWrongStreamFormat,	"Unable to load tree structure, the format is wrong."
-	VirtualTrees_SWrongStreamVersion,	"Unable to load tree structure, the version is unknown."
-	VirtualTrees_SStreamTooSmall,	"Unable to load tree structure, not enough data available."
-	VirtualTrees_SCorruptStream1,	"Stream data corrupt. A node's anchor chunk is missing."
-	OleConst_SPropDlgCaption,	"%s Properties"
-	OleConst_SInvalidLicense,	"License information for %s is invalid"
-	OleConst_SNotLicensed,	"License information for %s not found. You cannot use this control in design mode"
-	OleConst_sNoRunningObject,	"Unable to retrieve a pointer to a running object registered with OLE for %s/%s"
-	NativeXml_sPrematureEnd,	"stream terminated prematurely at pos %d"
-	NativeXml_sUnknownEncoding,	"unknown encoding"
-	NativeXml_sUnsupportedEncoding,	"unsupported encoding (%s)"
-	NativeXml_sDefaultCharUsed,	"default char used for codepage substitution"
 	NativeXml_sIllegalTag,	"illegal tag (\"%s\") at pos %d"
 	NativeXml_sUnsupportedTag,	"unsupported tag (\"%s\") at pos %d"
 	NativeXml_sIllegalEndTag,	"illegal end tag (\"%s\") at line %d (streampos %d)"
@@ -614,6 +590,30 @@ BEGIN
 	NativeXml_sCannotAddAttribute,	"cannot add attribute"
 	NativeXml_sCannotSetName,	"cannot set name on this type of element"
 	NativeXml_sCannotSetValue,	"cannot set value on this type of element"
+	NativeXml_sCannotManipulate,	"cannot manipulate nodes in this type of element"
+	NativeXml_sBeginEndMismatch,	"begin and end tag mismatch: \"%s\" and \"%s\" at line %d (pos %d)"
+	NativeXml_sLevelMismatch,	"level mismatch between subnode \"%s\" and endnode \"%s\" at line %d (pos %d)"
+	NativeXml_sRootElementNotDefined,	"XML root element not defined."
+	NativeXml_sNonDefaultChardata,	"non-default chardata at line %d (pos %d)"
+	NativeXml_sSignificantDigitsOutOfRange,	"significant digits out of range"
+	NativeXml_sMissingDataInBinaryStream,	"missing data in binary stream"
+	NativeXml_sErrorCalcStreamLength,	"error while calculating streamlength"
+	OleConst_SPropDlgCaption,	"%s Properties"
+	OleConst_SInvalidLicense,	"License information for %s is invalid"
+	OleConst_SNotLicensed,	"License information for %s not found. You cannot use this control in design mode"
+	OleConst_sNoRunningObject,	"Unable to retrieve a pointer to a running object registered with OLE for %s/%s"
+	VirtualTrees_SWrongMoveError,	"Target node cannot be a child node of the node to be moved."
+	VirtualTrees_SWrongStreamFormat,	"Unable to load tree structure, the format is wrong."
+	VirtualTrees_SWrongStreamVersion,	"Unable to load tree structure, the version is unknown."
+	VirtualTrees_SStreamTooSmall,	"Unable to load tree structure, not enough data available."
+	VirtualTrees_SCorruptStream1,	"Stream data corrupt. A node's anchor chunk is missing."
+	VirtualTrees_SCorruptStream2,	"Stream data corrupt. Unexpected data after node's end position."
+	VirtualTrees_SClipboardFailed,	"Clipboard operation failed."
+	VirtualTrees_SCannotSetUserData,	"Cannot set initial user data because there is not enough user data space allocated."
+	NativeXml_sPrematureEnd,	"stream terminated prematurely at pos %d"
+	NativeXml_sUnknownEncoding,	"unknown encoding"
+	NativeXml_sUnsupportedEncoding,	"unsupported encoding (%s)"
+	NativeXml_sDefaultCharUsed,	"default char used for codepage substitution"
 	ComStrs_sUDAssociated,	"%s is already associated with %s"
 	ComStrs_sPageIndexError,	"%d is an invalid PageIndex value.  PageIndex must be between 0 and %d"
 	ComStrs_sInvalidComCtl32,	"This control requires version 4.70 or greater of COMCTL32.DLL"
@@ -1082,13 +1082,12 @@ END
 /* forms\EditSignalPathFrm.dfm */
 /* forms\uGraphMngFrm.dfm */
 /* forms\uSelectPathForm.dfm */
-/* C:\Oburec\OburecGH\wp\WPExtPack\forms\uGenForm.dfm */
+/* forms\uGenForm.dfm */
+/* forms\uSelectIntervalFrm.dfm */
 /* forms\frames\uIntervalFrame.dfm */
 /* forms\uIntervalFrm.dfm */
 /* forms\uEditTubeFrm.dfm */
-/* forms\uSelectIntervalFrm.dfm */
-/* forms\uNIIPMTenzopluginForm.dfm */
-/* C:\Oburec\OburecGH\wp\WPExtPack\forms\uWPProcFrm.dfm */
+/* forms\uWPProcFrm.dfm */
 /* forms\uCorrectUTS.dfm */
 /* forms\uAddSignalFrm.dfm */
 /* forms\uKBHMFrm.dfm */
@@ -1109,7 +1108,7 @@ END
 /* forms\uBDIFrm.dfm */
 /* forms\uMNKFrm.dfm */
 /* forms\uSubRegsFrm.dfm */
-/* C:\Oburec\OburecGH\wp\WPExtPack\WPExtPack.tlb */
-/* C:\Oburec\OburecGH\wp\WPExtPack\WPExtPack.res */
-/* C:\Oburec\OburecGH\wp\WPExtPack\toolbarExtPack.res */
-/* C:\Oburec\OburecGH\wp\WPExtPack\WPExtPack.drf */
+/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\WPExtPack.tlb */
+/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\WPExtPack.res */
+/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\toolbarExtPack.res */
+/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\WPExtPack.drf */

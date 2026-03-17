@@ -16,7 +16,6 @@ uses
   uWPProcFrm in 'forms\uWPProcFrm.pas' {FxForm},
   Winpos_ole_TLB in '..\SharedWP\Winpos_ole_TLB.pas',
   uFindMaxOper in 'units\uFindMaxOper.pas' {ExtOperAmpFind: CoClass},
-  uNIIPMTenzopluginForm in 'forms\uNIIPMTenzopluginForm.pas' {NIIPMForm},
   uFindMaxForm in 'forms\uFindMaxForm.pas' {FindMaxForm},
   uGlobalStrings in '..\..\sharedUtils\utils\uGlobalStrings.pas',
   ubtnlistview in '..\..\sharedUtils\компоненты\dcl_dpk\ubtnlistview.pas',

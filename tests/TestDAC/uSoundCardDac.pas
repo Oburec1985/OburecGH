@@ -81,7 +81,7 @@ type
     // Возвращает текущее состояние активности
     function IsPlay: Boolean; override;
     function GetDeviceList: TStringList; override;
-    function CheckDone(i:integer):boolean;override;
+    //function CheckDone(i:integer):boolean;override;
 
     // Выделяет и освобождает память для блока данных TSoundCardBlock
     function AllocateBlock: Pointer; override;
@@ -204,12 +204,12 @@ begin
   FState:= stOpened;
 end;
 
-function TSoundCardDac.CheckDone(i: integer): boolean;
-var
-  bl:TSoundCardBlock;
-begin
+//function TSoundCardDac.CheckDone(i: integer): boolean;
+//var
+//  bl:TSoundCardBlock;
+//begin
 
-end;
+//end;
 
 procedure TSoundCardDac.Close;
 var
