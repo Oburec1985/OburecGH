@@ -110,9 +110,8 @@ procedure TDACFrm.btnPlayStopClick(Sender: TObject);
 begin
   if FDacDevice.IsPlay then
   begin
-    // Мгновенная остановка без ожидания окончания буферов
-    FDacDevice.Stop(False);
-    btnPlayStop.Caption := 'Play';
+    FDacDevice.Stop(True);
+    btnPlayStop.Caption := 'Stop';
   end
   else
   begin
@@ -127,7 +126,7 @@ begin
         FSweepStartTime := GetTickCount;
       end;
     end;
-    btnPlayStop.Caption := 'Play';
+    btnPlayStop.Caption := 'Stop';
 
     case FDacDevice.State of
       stClosed:
@@ -201,7 +200,6 @@ var
   Freq, Ampl, Value: Double;
   // Sweep vars
   StartFreq, EndFreq, SweepTime, CurrentTime, k: Double;
-  lBlockSize: Integer;
 begin
   if length(FBuffer)=0 then
   begin
@@ -247,8 +245,7 @@ begin
     end;
   end;
 
-  lBlockSize := Length(FBuffer) * SizeOf(Smallint);
-  FDacDevice.QueueBuffer(FBuffer[0], lBlockSize);
+  FDacDevice.QueueBuffer(FBuffer[0], Length(FBuffer) * SizeOf(Smallint));
 end;
 
 procedure TDACFrm.rgModeClick(Sender: TObject);

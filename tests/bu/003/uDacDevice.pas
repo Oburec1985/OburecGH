@@ -80,8 +80,6 @@ type
     function GetOldest(out ADataPtr: Pointer): Boolean;
     // Помечает самый старый доступный блок как удаленный.
     procedure MarkOldestAsDeleted;
-    // Очищает очередь без пересоздания. Память блоков не освобождается.
-    procedure Clear;
   end;
 
   // Поток для генерации данных в фоновом режиме
@@ -114,10 +112,10 @@ type
     FState: TDACState;
     FBufferSize: Cardinal;        // Размер одного буфера в байтах
     FBlockQueue: TBlockQueue;     // Очередь блоков данных
-    FOnGenerateData: TNotifyEvent;
   private
     FLock: TRTLCriticalSection; // Объект для синхронизации потоков
     FOnBufferEnd: TNotifyEvent;
+    FOnGenerateData: TNotifyEvent;
     FSampleRate: Cardinal;
     FBitsPerSample: Cardinal;
     // Количество каналов (1 - моно, 2 - стерео)
@@ -145,10 +143,6 @@ type
     destructor Destroy; override;
     procedure EnterCs;
     procedure ExitCs;
-    // Очищает очередь блоков без пересоздания. Память блоков не освобождается.
-    procedure ClearBlocks;
-    // Освобождает память всех блоков в очереди
-    procedure FreeAllBlocks;
     // Открывает и инициализирует устройство
     function Open:cardinal; virtual; abstract;
     // Закрывает устройство и освобождает ресурсы
@@ -332,28 +326,6 @@ begin
   end;
 end;
 
-procedure TBlockQueue.Clear;
-var
-  i: Integer;
-begin
-  EnterCriticalSection(FCs);
-  try
-    // Сбрасываем все указатели и помечаем блоки как удаленные
-    for i := 0 to FMaxBlocks - 1 do
-    begin
-      FBlocks[i].Data := nil;
-      FBlocks[i].IsDeleted := True;
-      FBlocks[i].index := 0;
-      FBlocks[i].timestamp := 0;
-    end;
-    // Сбрасываем индексы
-    FWriteIndex := 0;
-    FReadIndex := 0;
-  finally
-    LeaveCriticalSection(FCs);
-  end;
-end;
-
 { TDataGeneratorThread }
 
 constructor TDataGeneratorThread.Create(ADacDevice: TDacDevice);
@@ -389,6 +361,11 @@ begin
       // Вызываем событие для генерации данных
       if Assigned(FDacDevice.OnGenerateData) then
         FDacDevice.OnGenerateData(FDacDevice);
+      // не корректно ждать конца блока и только потом генерить, будут паузы.
+      // FBufferReadyEvent.WaitFor(INFINITE);
+      // возможна ли ситуация что я затру флаг если два буфера выполнились подряд?
+      // FBufferReadyEvent.ResetEvent;
+      // FBufferReadyEvent.WaitFor(100);
     end;
   end;
 end;
@@ -482,29 +459,6 @@ end;
 procedure TDacDevice.ExitCs;
 begin
   LeaveCriticalSection(FLock);
-end;
-
-procedure TDacDevice.ClearBlocks;
-var
-  block: Pointer;
-begin
-  // Очищаем очередь блоков. Память блоков не освобождается.
-  if Assigned(FBlockQueue) then
-    FBlockQueue.Clear;
-end;
-
-procedure TDacDevice.FreeAllBlocks;
-var
-  block: Pointer;
-begin
-  // Освобождаем память всех блоков в очереди
-  if not Assigned(FBlockQueue) then Exit;
-  
-  while FBlockQueue.GetOldest(block) do
-  begin
-    FreeBlock(block);
-    FBlockQueue.MarkOldestAsDeleted;
-  end;
 end;
 
 function TDacDevice.getstate: TDACState;
