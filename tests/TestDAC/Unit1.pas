@@ -111,7 +111,7 @@ begin
   if FDacDevice.IsPlay then
   begin
     FDacDevice.Stop(True);
-    btnPlayStop.Caption := 'Play';
+    btnPlayStop.Caption := 'Stop';
   end
   else
   begin
@@ -198,15 +198,13 @@ procedure TDACFrm.GenerateAndQueueData(sender:tobject);
 var
   i: Integer;
   Freq, Ampl, Value: Double;
-  BufferSizeSamples: Integer;
-
   // Sweep vars
   StartFreq, EndFreq, SweepTime, CurrentTime, k: Double;
 begin
   if length(FBuffer)=0 then
   begin
-    SetLength(FBuffer, BufferSizeSamples);
-    BufferSizeSamples := round(FDacDevice.SampleRate * FDacDevice.BufferSizeMS / 1000);
+    // FBuffer - длина задается в количестве отсчетов а не байт
+    SetLength(FBuffer, FDacDevice.BufferSize shr 1);
   end;
 
   Ampl := StrToFloatDef(edAmpl.Text, 0.8);

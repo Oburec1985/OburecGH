@@ -134,6 +134,10 @@ type
     function getstate:TDACState;
     // Рассчитывает размер буфера в байтах
     procedure CalculateBufferSize; virtual;
+    // Выделяет память для одного блока данных, специфичного для реализации ЦАП
+    function AllocateBlock: Pointer; virtual; abstract;
+    // Освобождает память, выделенную для блока данных
+    procedure FreeBlock(ABlock: Pointer); virtual; abstract;
   public
     constructor Create;
     destructor Destroy; override;
@@ -149,10 +153,6 @@ type
     procedure Stop(AGraceful: Boolean = True); virtual;
     // Ставит буфер с данными в очередь на воспроизведение
     procedure QueueBuffer(const ABuffer; ASize: Integer); virtual; abstract;
-    // Выделяет память для одного блока данных, специфичного для реализации ЦАП
-    function AllocateBlock: Pointer; virtual; abstract;
-    // Освобождает память, выделенную для блока данных
-    procedure FreeBlock(ABlock: Pointer); virtual; abstract;
     // Проверяет, активно ли устройство в данный момент
     function IsPlay: Boolean; virtual; abstract;
     // Возвращает список доступных устройств вывода
@@ -335,6 +335,7 @@ begin
 
   FDacDevice := ADacDevice;
   // Создаем событие, которое будет использоваться для пробуждения потока
+  //                                      bManualReset = true
   FBufferReadyEvent := TEvent.Create(nil, True, False, '');
 end;
 
@@ -360,9 +361,11 @@ begin
       // Вызываем событие для генерации данных
       if Assigned(FDacDevice.OnGenerateData) then
         FDacDevice.OnGenerateData(FDacDevice);
-      // Ждем, пока основной поток не сообщит, что буфер готов
-      // doBufferEnd
-      FBufferReadyEvent.WaitFor(INFINITE);
+      // не корректно ждать конца блока и только потом генерить, будут паузы.
+      // FBufferReadyEvent.WaitFor(INFINITE);
+      // возможна ли ситуация что я затру флаг если два буфера выполнились подряд?
+      // FBufferReadyEvent.ResetEvent;
+      // FBufferReadyEvent.WaitFor(100);
     end;
   end;
 end;
@@ -444,7 +447,7 @@ end;
 
 procedure TDacDevice.DoBufferEnd(Sender: TObject);
 begin
-  // Сообщаем потоку, что буфер готов для заполнения
+  // Сообщаем потоку, что буфер доигран, готов для заполнения
   FGeneratorThread.BufferReadyEvent.SetEvent;
 end;
 
@@ -478,7 +481,11 @@ begin
   if not IsPlay then Exit;
   // Останавливаем поток генерации данных
   FGeneratorThread.state:=false;
-
+  case Fstate of
+    stClosed: FState:=stClosed;
+    stOpened: FState:=stOpened;
+    stPlay: FState:=stOpened;
+  end;
 end;
 
 end.

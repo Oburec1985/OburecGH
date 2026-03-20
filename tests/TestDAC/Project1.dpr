@@ -7,7 +7,8 @@ uses
   uCommonMath in '..\..\sharedUtils\math\uCommonMath.pas',
   uCommonTypes in '..\..\sharedUtils\uCommonTypes.pas',
   MathFunction in '..\..\sharedUtils\math\MathFunction.pas',
-  Unit1 in 'Unit1.pas' {DACFrm};
+  Unit1 in 'Unit1.pas' {DACFrm},
+  uLogFile in '..\..\sharedUtils\utils\uLogFile.pas';
 
 {$R *.res}
 

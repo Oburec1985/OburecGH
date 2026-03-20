@@ -2,7 +2,7 @@ object DACFrm: TDACFrm
   Left = 0
   Top = 0
   Caption = 'DAC Control'
-  ClientHeight = 652
+  ClientHeight = 578
   ClientWidth = 937
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -193,9 +193,9 @@ object DACFrm: TDACFrm
   end
   object cChart1: cChart
     Left = 16
-    Top = 296
+    Top = 279
     Width = 881
-    Height = 232
+    Height = 291
     Cursor = crSizeAll
     Caption = 'cChart1'
     TabOrder = 5
