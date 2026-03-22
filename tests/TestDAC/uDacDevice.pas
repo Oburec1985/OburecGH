@@ -80,6 +80,8 @@ type
     function GetOldest(out ADataPtr: Pointer): Boolean;
     // Помечает самый старый доступный блок как удаленный.
     procedure MarkOldestAsDeleted;
+    // Очищает очередь без пересоздания. Память блоков не освобождается.
+    procedure Clear;
   end;
 
   // Поток для генерации данных в фоновом режиме
@@ -112,10 +114,10 @@ type
     FState: TDACState;
     FBufferSize: Cardinal;        // Размер одного буфера в байтах
     FBlockQueue: TBlockQueue;     // Очередь блоков данных
+    FOnGenerateData: TNotifyEvent;
   private
     FLock: TRTLCriticalSection; // Объект для синхронизации потоков
     FOnBufferEnd: TNotifyEvent;
-    FOnGenerateData: TNotifyEvent;
     FSampleRate: Cardinal;
     FBitsPerSample: Cardinal;
     // Количество каналов (1 - моно, 2 - стерео)
@@ -134,11 +136,19 @@ type
     function getstate:TDACState;
     // Рассчитывает размер буфера в байтах
     procedure CalculateBufferSize; virtual;
+    // Выделяет память для одного блока данных, специфичного для реализации ЦАП
+    function AllocateBlock: Pointer; virtual; abstract;
+    // Освобождает память, выделенную для блока данных
+    procedure FreeBlock(ABlock: Pointer); virtual; abstract;
   public
     constructor Create;
     destructor Destroy; override;
     procedure EnterCs;
     procedure ExitCs;
+    // Очищает очередь блоков без пересоздания. Память блоков не освобождается.
+    procedure ClearBlocks;
+    // Освобождает память всех блоков в очереди
+    procedure FreeAllBlocks;
     // Открывает и инициализирует устройство
     function Open:cardinal; virtual; abstract;
     // Закрывает устройство и освобождает ресурсы
@@ -149,10 +159,6 @@ type
     procedure Stop(AGraceful: Boolean = True); virtual;
     // Ставит буфер с данными в очередь на воспроизведение
     procedure QueueBuffer(const ABuffer; ASize: Integer); virtual; abstract;
-    // Выделяет память для одного блока данных, специфичного для реализации ЦАП
-    function AllocateBlock: Pointer; virtual; abstract;
-    // Освобождает память, выделенную для блока данных
-    procedure FreeBlock(ABlock: Pointer); virtual; abstract;
     // Проверяет, активно ли устройство в данный момент
     function IsPlay: Boolean; virtual; abstract;
     // Возвращает список доступных устройств вывода
@@ -326,6 +332,28 @@ begin
   end;
 end;
 
+procedure TBlockQueue.Clear;
+var
+  i: Integer;
+begin
+  EnterCriticalSection(FCs);
+  try
+    // Сбрасываем все указатели и помечаем блоки как удаленные
+    for i := 0 to FMaxBlocks - 1 do
+    begin
+      FBlocks[i].Data := nil;
+      FBlocks[i].IsDeleted := True;
+      FBlocks[i].index := 0;
+      FBlocks[i].timestamp := 0;
+    end;
+    // Сбрасываем индексы
+    FWriteIndex := 0;
+    FReadIndex := 0;
+  finally
+    LeaveCriticalSection(FCs);
+  end;
+end;
+
 { TDataGeneratorThread }
 
 constructor TDataGeneratorThread.Create(ADacDevice: TDacDevice);
@@ -335,6 +363,7 @@ begin
 
   FDacDevice := ADacDevice;
   // Создаем событие, которое будет использоваться для пробуждения потока
+  //                                      bManualReset = true
   FBufferReadyEvent := TEvent.Create(nil, True, False, '');
 end;
 
@@ -360,9 +389,6 @@ begin
       // Вызываем событие для генерации данных
       if Assigned(FDacDevice.OnGenerateData) then
         FDacDevice.OnGenerateData(FDacDevice);
-      // Ждем, пока основной поток не сообщит, что буфер готов
-      // doBufferEnd
-      FBufferReadyEvent.WaitFor(INFINITE);
     end;
   end;
 end;
@@ -444,7 +470,7 @@ end;
 
 procedure TDacDevice.DoBufferEnd(Sender: TObject);
 begin
-  // Сообщаем потоку, что буфер готов для заполнения
+  // Сообщаем потоку, что буфер доигран, готов для заполнения
   FGeneratorThread.BufferReadyEvent.SetEvent;
 end;
 
@@ -456,6 +482,29 @@ end;
 procedure TDacDevice.ExitCs;
 begin
   LeaveCriticalSection(FLock);
+end;
+
+procedure TDacDevice.ClearBlocks;
+var
+  block: Pointer;
+begin
+  // Очищаем очередь блоков. Память блоков не освобождается.
+  if Assigned(FBlockQueue) then
+    FBlockQueue.Clear;
+end;
+
+procedure TDacDevice.FreeAllBlocks;
+var
+  block: Pointer;
+begin
+  // Освобождаем память всех блоков в очереди
+  if not Assigned(FBlockQueue) then Exit;
+  
+  while FBlockQueue.GetOldest(block) do
+  begin
+    FreeBlock(block);
+    FBlockQueue.MarkOldestAsDeleted;
+  end;
 end;
 
 function TDacDevice.getstate: TDACState;
@@ -478,7 +527,11 @@ begin
   if not IsPlay then Exit;
   // Останавливаем поток генерации данных
   FGeneratorThread.state:=false;
-
+  case Fstate of
+    stClosed: FState:=stClosed;
+    stOpened: FState:=stOpened;
+    stPlay: FState:=stOpened;
+  end;
 end;
 
 end.

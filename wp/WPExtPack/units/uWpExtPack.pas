@@ -8,7 +8,6 @@ interface
 uses
   Windows, ActiveX, Classes, ComObj, uNiiPMlib_TLB, StdVcl, uBaseObjService,
   Winpos_ole_TLB, POSBase, SysUtils, Forms, uWPProcFrm, wpExtPack_TLB,
-  uNIIPMTenzopluginForm,
   uWPProc,
   dialogs,
   uLogFile,
@@ -175,7 +174,7 @@ begin
 
   hbmp := LoadBitmap(HInstance, 'UTSCor');
   WINPOS.CreatetoolbarButton(bar_ID, ID_TimeCor, hbmp,
-    'Коррекция времени'#10'Коррекция времени');
+    'Коррекция времени'#10'Коррекция времени F6');
 
   hbmp := LoadBitmap(HInstance, 'KBHM');
   WINPOS.CreatetoolbarButton(bar_ID, ID_RunKBHM, hbmp, 'KBHM БМП'#10'KBHM БМП');

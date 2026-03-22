@@ -44,7 +44,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, uDacDevice, uSoundCardDac, Math, ImgList,
-  inifiles;
+  inifiles,
+  uChart;
 
 type
   TDACFrm = class(TForm)
@@ -67,7 +68,8 @@ type
     ImageList_16: TImageList;
     TestBtn: TButton;
     cbDacDevices: TComboBox;
-    btnRefreshDevices: TButton;             // Поле ввода времени развертки (SweepSin)
+    btnRefreshDevices: TButton;
+    cChart1: cChart;             // Поле ввода времени развертки (SweepSin)
     procedure btnPlayStopClick(Sender: TObject); // Обработчик нажатия кнопки Play/Stop
     procedure FormCreate(Sender: TObject);     // Обработчик создания формы
     procedure FormDestroy(Sender: TObject);    // Обработчик закрытия формы
@@ -108,7 +110,8 @@ procedure TDACFrm.btnPlayStopClick(Sender: TObject);
 begin
   if FDacDevice.IsPlay then
   begin
-    FDacDevice.Stop(True);
+    // Мгновенная остановка без ожидания окончания буферов
+    FDacDevice.Stop(False);
     btnPlayStop.Caption := 'Play';
   end
   else
@@ -124,7 +127,7 @@ begin
         FSweepStartTime := GetTickCount;
       end;
     end;
-    btnPlayStop.Caption := 'Stop';
+    btnPlayStop.Caption := 'Play';
 
     case FDacDevice.State of
       stClosed:
@@ -196,15 +199,14 @@ procedure TDACFrm.GenerateAndQueueData(sender:tobject);
 var
   i: Integer;
   Freq, Ampl, Value: Double;
-  BufferSizeSamples: Integer;
-
   // Sweep vars
   StartFreq, EndFreq, SweepTime, CurrentTime, k: Double;
+  lBlockSize: Integer;
 begin
   if length(FBuffer)=0 then
   begin
-    SetLength(FBuffer, BufferSizeSamples);
-    BufferSizeSamples := round(FDacDevice.SampleRate * FDacDevice.BufferSizeMS / 1000);
+    // FBuffer - длина задается в количестве отсчетов а не байт
+    SetLength(FBuffer, FDacDevice.BufferSize shr 1);
   end;
 
   Ampl := StrToFloatDef(edAmpl.Text, 0.8);
@@ -245,7 +247,8 @@ begin
     end;
   end;
 
-  FDacDevice.QueueBuffer(FBuffer[0], Length(FBuffer) * SizeOf(Smallint));
+  lBlockSize := Length(FBuffer) * SizeOf(Smallint);
+  FDacDevice.QueueBuffer(FBuffer[0], lBlockSize);
 end;
 
 procedure TDACFrm.rgModeClick(Sender: TObject);

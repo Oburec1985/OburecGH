@@ -156,6 +156,8 @@
     <Transaction>2025.04.11 22:38:14.623.dfm,C:\Oburec\OburecGH\wp\WPExtPack\Unit3.dfm=C:\Oburec\OburecGH\wp\WPExtPack\forms\uLissajousFrm.dfm</Transaction>
     <Transaction>2025.06.04 14:05:11.321.pas,F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\Unit2.pas=F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\forms\uCounterFrm.pas</Transaction>
     <Transaction>2025.06.04 14:05:11.321.dfm,F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\Unit2.dfm=F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\forms\uCounterFrm.dfm</Transaction>
+    <Transaction>2026.03.10 11:41:26.098.pas,F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\forms\uNIIPMTenzopluginForm.pas=</Transaction>
+    <Transaction>2026.03.10 11:41:26.098.dfm,F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\forms\uNIIPMTenzopluginForm.dfm=</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\wp"/>
@@ -276,8 +278,6 @@
     <File Path="forms\uLissajousFrm.dfm"/>
     <File Path="forms\uMNKFrm.pas"/>
     <File Path="forms\uMNKFrm.dfm"/>
-    <File Path="forms\uNIIPMTenzopluginForm.pas"/>
-    <File Path="forms\uNIIPMTenzopluginForm.dfm"/>
     <File Path="forms\uRptFrm.pas"/>
     <File Path="forms\uRptFrm.dfm"/>
     <File Path="forms\uRzdFrm.pas"/>
@@ -321,7 +321,7 @@
     <File Path="units\uWPOpers.pas"/>
     <File Path="units\uWPproc.pas"/>
     <File Path="units\uWPProcServices.pas"/>
-    <File Path="WPExtPack.ridl"/>
     <File Path="WPExtPack_TLB.pas"/>
+    <File Path="WPExtPack.ridl"/>
   </ProjectSortOrder>
 </BorlandProject>

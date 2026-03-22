@@ -4551,15 +4551,18 @@ begin
   begin
     setFlag(opt, PGOPT_SYNCCURS);
   end;
-  case GetPageStyle of
-    c_pageStyle_Row:
-      GraphApi.SetPageDim(hpage, PAGE_DM_Vert, graphtable.y, graphtable.x);
-    c_pageStyle_col:
-      GraphApi.SetPageDim(hpage, PAGE_DM_HORZ, graphtable.y, graphtable.x);
-    c_pageStyle_table:
-      GraphApi.SetPageDim(hpage, PAGE_DM_TABLE, graphtable.y, graphtable.x);
+  if hpage<>0 then
+  begin
+    case GetPageStyle of
+      c_pageStyle_Row:
+        GraphApi.SetPageDim(hpage, PAGE_DM_Vert, graphtable.y, graphtable.x);
+      c_pageStyle_col:
+        GraphApi.SetPageDim(hpage, PAGE_DM_HORZ, graphtable.y, graphtable.x);
+      c_pageStyle_table:
+        GraphApi.SetPageDim(hpage, PAGE_DM_TABLE, graphtable.y, graphtable.x);
+    end;
+    GraphApi.SetPageOpt(hpage, opt, $FFFFFFFF);
   end;
-  GraphApi.SetPageOpt(hpage, opt, $FFFFFFFF);
 end;
 
 constructor cWPLine.create;

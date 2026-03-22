@@ -56,7 +56,7 @@ type
     // Хендл устройства waveOut
     FDeviceHandle: HWAVEOUT;
 
-    // Текущее значение для зацикливания
+    // Текущее значение для зацикливания. Если 0 - игра по циклу
     FCurrentLoopCount: Cardinal;
     // Счетчик буферов в очереди драйвера (сколько накопилось в очереди)
     FQueuedBuffers: Integer;
@@ -81,7 +81,7 @@ type
     // Возвращает текущее состояние активности
     function IsPlay: Boolean; override;
     function GetDeviceList: TStringList; override;
-    function CheckDone(i:integer):boolean;override;
+    //function CheckDone(i:integer):boolean;override;
 
     // Выделяет и освобождает память для блока данных TSoundCardBlock
     function AllocateBlock: Pointer; override;
@@ -191,7 +191,19 @@ begin
   // 3. Расчет размера буфера в байтах
   CalculateBufferSize;
 
-  // 4. Выделение и инициализация блоков данных
+  // 4. Очищаем очередь и выделяем новые блоки
+  // Используем ClearBlocks для сброса очереди без пересоздания
+  EnterCs;
+  try
+    // Освобождаем старые буферы если они есть
+    FreeAllBlocks;
+    // Очищаем очередь (сброс индексов)
+    ClearBlocks;
+  finally
+    ExitCs;
+  end;
+  
+  // 5. Выделение и инициализация блоков данных
   for i := 0 to NUM_BUFFERS - 1 do
   begin
     // Выделяем память для блока
@@ -204,17 +216,14 @@ begin
   FState:= stOpened;
 end;
 
-function TSoundCardDac.CheckDone(i: integer): boolean;
-var
-  bl:TSoundCardBlock;
-begin
+//function TSoundCardDac.CheckDone(i: integer): boolean;
+//var
+//  bl:TSoundCardBlock;
+//begin
 
-end;
+//end;
 
 procedure TSoundCardDac.Close;
-var
-  i: Integer;
-  block: Pointer;
 begin
   // Set the stopping flag. This needs to be thread-safe.
   State:=stClosed;
@@ -224,35 +233,41 @@ begin
   // to be sent for all pending buffers.
   waveOutReset(FDeviceHandle);
 
-  // TODO: Implement a robust waiting mechanism for all buffers to be returned.
-  // The old AllHeadersDone logic was removed. A new mechanism is needed here
-  // to ensure all callbacks have been processed before closing the device.
-  Sleep(200); // Temporary workaround
+  // Ждем пока драйвер вернет все буферы через callback
+  Sleep(100);
 
   // Now that all buffers are hopefully returned and unprepared, we can close the device.
   EnterCs;
-  if FDeviceHandle <> 0 then
-  begin
-    waveOutClose(FDeviceHandle);
-    FDeviceHandle := 0;
-  end;
-
-  // освобождаем память блоков
-  for i := 0 to NUM_BUFFERS - 1 do
-  begin
-    if FBlockQueue.GetOldest(block) then
+  try
+    if FDeviceHandle <> 0 then
     begin
-      FreeBlock(block);
-      FBlockQueue.MarkOldestAsDeleted;
+      waveOutClose(FDeviceHandle);
+      FDeviceHandle := 0;
     end;
+
+    // Освобождаем память всех блоков
+    FreeAllBlocks;
+    // Очищаем очередь (сброс индексов)
+    ClearBlocks;
+  finally
+    ExitCs;
   end;
-  exitcs;
 end;
 
 procedure TSoundCardDac.Start(ALoopCount: Cardinal = 1);
+var
+  i: Integer;
 begin
   inherited Start(ALoopCount);
   FCurrentLoopCount := ALoopCount;
+  
+  // Предварительно заполняем очередь буферами для безшовного воспроизведения
+  // Это гарантирует что в драйвере всегда есть несколько готовых буферов
+  for i := 0 to 1 do // Заполняем 2 буфера заранее
+  begin
+    if Assigned(FOnGenerateData) then
+      FOnGenerateData(Self);
+  end;
 end;
 
 procedure TSoundCardDac.Stop(AGraceful: Boolean = True);
@@ -264,12 +279,14 @@ begin
   begin
     waveOutBreakLoop(FDeviceHandle);
   end;
-  // если плавный останов
+  
+  // если плавный останов - ждем окончания буферов
   if not AGraceful then
-  begin;
+  begin
+    // Мгновенная остановка - сбрасываем все буферы
     waveOutReset(FDeviceHandle);
-    // TODO: Implement a robust waiting mechanism for all buffers to be returned.
-    Sleep(200); // Temporary workaround
+    // Ждем пока драйвер вернет все буферы через callback
+    Sleep(50);
   end;
 end;
 
@@ -281,9 +298,14 @@ var
 begin
   if state<>stplay then Exit;
 
+  // Проверка: не ставим в очередь больше NUM_BUFFERS
+  // Это предотвращает переполнение и гонку буферов
+  if FQueuedBuffers >= NUM_BUFFERS then
+    Exit;
+
   // Получаем самый старый (свободный) блок из очереди
   if not FBlockQueue.GetOldest(BlockPtr) then
-    Exit; // Нет свободных буферов
+    Exit; // Нет свободных буферов или буферы еще не вернулись
 
   Block := PSoundCardBlock(BlockPtr);
 
@@ -294,25 +316,24 @@ begin
   Move(ABuffer, Block.Samples^, ASize);
 
   // Готовим заголовок
-  with Block.Header do
+  Block.Header.lpData := Block.Samples;
+  Block.Header.dwBufferLength := ASize;
+  Block.Header.dwFlags := 0; // Сбрасываем флаги
+  Block.Header.dwUser := DWORD_PTR(Block); // Сохраняем указатель на наш блок
+
+  // Устанавливаем логику зацикливания
+  if FCurrentLoopCount = 0 then // 0 - наш флаг бесконечного цикла
   begin
-    lpData := Block.Samples;
-    dwBufferLength := ASize;
-    dwFlags := 0; // Сбрасываем флаги
-    dwUser := DWORD_PTR(Block); // Сохраняем указатель на наш блок
-
-    // Устанавливаем логику зацикливания
-    if FCurrentLoopCount = 0 then // 0 - наш флаг бесконечного цикла
-    begin
-      dwLoops := MAXDWORD; // Для WinAPI бесконечный цикл - это MAXDWORD
-      dwFlags := WHDR_BEGINLOOP or WHDR_ENDLOOP or WHDR_LOOP;
-    end
-    else
-    begin
-      dwLoops := FCurrentLoopCount; // Проигрываем заданное число раз
-    end;
+    Block.Header.dwLoops := MAXDWORD; // Для WinAPI бесконечный цикл - это MAXDWORD
+    Block.Header.dwFlags := WHDR_BEGINLOOP or WHDR_ENDLOOP or WHDR_LOOP;
+  end
+  else
+  begin
+    Block.Header.dwLoops := FCurrentLoopCount; // Проигрываем заданное число раз
   end;
-
+  // Блок-т память: Она сообщает системе, участок памяти нельзя перемещать или выгружать в файл подкачки
+  // (page file), пока драйвер с ним работает.
+  // Рег-т буфер: Драйвер получает прямой доступ к физическому адресу памяти.
   ResultCode := waveOutPrepareHeader(FDeviceHandle, @Block.Header, SizeOf(TWaveHdr));
   if ResultCode <> MMSYSERR_NOERROR then
     raise Exception.Create('Error preparing waveOut header: ' + IntToStr(ResultCode));
@@ -379,6 +400,8 @@ begin
   // Получаем указатель на наш блок, который мы сохранили в dwUser
   Block := PSoundCardBlock(Header.dwUser);
 
+  // как будто небезопасно!!!!
+  // по документации waveOutUnprepareHeader нельзя ставить в callback (поток драйвера)
   if (Header.dwFlags and WHDR_PREPARED) <> 0 then
   begin
     // драйвер отпускает буфер
@@ -389,7 +412,10 @@ begin
   if Assigned(Block) then
     FBlockQueue.Add(Block);
 
-  InterlockedDecrement(FQueuedBuffers);
-  doBufferEnd(Self);
+  // Уменьшаем счетчик только если он больше 0
+  if FQueuedBuffers > 0 then
+    InterlockedDecrement(FQueuedBuffers);
+  // DoBufferEnd больше не нужен - поток генерирует данные непрерывно
+  // doBufferEnd(Self);
 end;
 end.

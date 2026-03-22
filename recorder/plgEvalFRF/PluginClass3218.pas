@@ -222,6 +222,7 @@ begin
   result := TplgEvalFrf(GPluginInstance).m_nplist.GetNP(name);
 end;
 
+
 function GetRCStateChange: TRCstateChange;
 begin
   result := rcStateChange;

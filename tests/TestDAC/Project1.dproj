@@ -20,6 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_UnitSearchPath>..\..\sharedUtils\компоненты\chart_dpk\chart\;..\..\sharedUtils\utils\files;..\..\sharedUtils\utils;..\..\sharedUtils\utils\PathUtils;..\..\sharedUtils\utils\jcl-2.3.1.4197;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\sharedUtils\компоненты\VirtualTreeView;..\..\sharedUtils\компоненты\VirtualTreeView\VirtualEditTree;..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source;..\..\sharedUtils\utils\xml;..\..\sharedUtils\utils\reports;..\..\sharedUtils\utils\reports\ZipMaster19;..\..\3d\3dComponents;..\..\3d\3dComponents\components;..\..\3d\3dComponents\components\asutp;..\..\3d\objects;..\..\3d\core;..\..\3d\forms;..\..\3d\tools;..\..\3d\math;..\..\sharedUtils\utils\FastMM4991\;..\..\sharedUtils\компоненты\chart_dpk\chart;..\..\sharedUtils\компоненты\chart_dpk\chart\items;..\..\sharedUtils\компоненты\chart_dpk\chart\items\shaders;..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners;..\..\sharedUtils\компоненты\chart_dpk\chart\utils;..\..\sharedUtils\компоненты\chart_dpk\chart\utils\lists;..\..\sharedUtils\компоненты\chart_dpk\chart\forms;..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames;..\..\sharedUtils\ogl\shader;..\..\sharedUtils\ogl\forms;..\..\sharedUtils\ogl\dglOpenGL;..\..\..\3d\math;..\..\sharedUtils\math;..\..\sharedUtils\ogl;..\..\sharedUtils\forms;..\..\sharedUtils;..\..\sharedUtils\компоненты\dcl_dpk;..\..\sharedUtils\компоненты\dcl_dpk\VistaProbar;..\..\sharedUtils\objects;..\..\sharedUtils\objects\utils;..\..\sharedUtils\utils\lists;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_DependencyCheckOutputName>Project1.exe</DCC_DependencyCheckOutputName>
 			<DCC_K>false</DCC_K>
@@ -51,6 +52,7 @@
 			<DCCReference Include="Unit1.pas">
 				<Form>DACFrm</Form>
 			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\uLogFile.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
