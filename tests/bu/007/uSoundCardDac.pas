@@ -347,37 +347,33 @@ procedure TSoundCardDac.QueueBuffer(const ABuffer; ASize: Integer);
 var
   ResultCode: MMRESULT;
   Block: PSoundCardBlock;
-  lBlockData: TBlockData;
+  BlockPtr: Pointer;
   i:integer;
-  begin
+begin
   EnterCs;
   try
-  // Проверяем состояние - если не играем, выходим
-  if state<>stplay then Exit;
+    // Проверяем состояние - если не играем, выходим
+    if state<>stplay then Exit;
 
-  // Проверка: не ставим в очередь больше NUM_BUFFERS
-  // Это предотвращает переполнение и гонку буферов
-  if FQueuedBuffers >= NUM_BUFFERS then
-  begin
-    exit;
-  end;
+    // Проверка: не ставим в очередь больше NUM_BUFFERS
+    // Это предотвращает переполнение и гонку буферов
+    if FQueuedBuffers >= NUM_BUFFERS then
+    begin
+      exit;
+    end;
 
-  // Получаем самый старый (свободный) блок из очереди (по ссылке)
-  if not FBlockQueue.GetOldestBlock(lBlockData) then
-    exit; // Нет свободных буферов
+    // Получаем самый старый (свободный) блок из очереди
+    if not FBlockQueue.GetOldest(BlockPtr) then
+      exit; // Нет свободных буферов
 
-  Block := PSoundCardBlock(lBlockData.Data);
+    Block := PSoundCardBlock(BlockPtr);
 
-  if ASize > FBufferSize then
-    raise Exception.CreateFmt('QueueBuffer: Data size (%d) exceeds allocated buffer size (%d).', [ASize, FBufferSize]);
+    if ASize > FBufferSize then
+      raise Exception.CreateFmt('QueueBuffer: Data size (%d) exceeds allocated buffer size (%d).', [ASize, FBufferSize]);
 
-  // Копируем данные
-  Move(ABuffer, Block.Samples^, ASize);
+    // Копируем данные
+    Move(ABuffer, Block.Samples^, ASize);
 
-  // Присваиваем номер и время блока
-  lBlockData.index := FNextBlockIndex;
-  lBlockData.timestamp := Now;
-  Inc(FNextBlockIndex);
     // Полный сброс заголовка перед подготовкой
     FillChar(Block.Header, SizeOf(TWaveHdr), 0);
 

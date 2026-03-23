@@ -28,7 +28,7 @@ type
     // вес следующего значения
     Alpha: Double;
     PrevOutput: Double;   // Предыдущее выходное значение
-    IsFirstCall: Boolean; // Ф4лаг первого вызова
+    IsFirstCall: Boolean; // Флаг первого вызова
   end;
 
   TDacDevice = class;
@@ -78,8 +78,7 @@ type
     constructor Create(AMaxBlocks: Cardinal);
     // Деструктор
     destructor Destroy; override;
-    // Получает указатель на самый старый блок, не помеченный как
-    // удаленный. Блок именно данных
+    // Получает указатель на самый старый блок, не помеченный как удаленный.
     function GetOldest(out ADataPtr: Pointer): Boolean;
     // Помечает самый старый доступный блок как удаленный.
     procedure MarkOldestAsDeleted;
@@ -92,8 +91,6 @@ type
     function GetBlockData(AIndex: Integer): TBlockData;
     // Метод для получения индекса блока по указателю (-1 если не найден)
     function GetBlockIndex(ADataPtr: Pointer): Integer;
-    // Добавлена функция для возврата самого старого блока с его служебной информацией
-    function GetOldestBlock(var ABlockData: TBlockData): Boolean;
   end;
 
   // Поток для генерации данных в фоновом режиме
@@ -127,7 +124,6 @@ type
     FBufferSize: Cardinal;        // Размер одного буфера в байтах
     FBlockQueue: TBlockQueue;     // Очередь блоков данных
     FOnGenerateData: TNotifyEvent;
-    FNextBlockIndex: Integer;     // Следующий доступный индекс блока
   private
     FLock: TRTLCriticalSection; // Объект для синхронизации потоков
     FOnBufferEnd: TNotifyEvent;
@@ -407,28 +403,6 @@ begin
   end;
 end;
 
-function TBlockQueue.GetOldestBlock(var ABlockData: TBlockData): Boolean;
-var
-  Index: Integer;
-begin
-  EnterCriticalSection(FCs);
-  try
-    Index := FindOldestNonDeletedIndex;
-    if Index <> -1 then
-    begin
-      ABlockData := FBlocks[Index];
-      Result := True;
-    end
-    else
-    begin
-      FillChar(ABlockData, SizeOf(TBlockData), 0); // Обнуляем, если блок не найден
-      Result := False;
-    end;
-  finally
-    LeaveCriticalSection(FCs);
-  end;
-end;
-
 { TDataGeneratorThread }
 
 constructor TDataGeneratorThread.Create(ADacDevice: TDacDevice);
@@ -513,7 +487,6 @@ begin
 
   FBlockQueue := TBlockQueue.Create(NUM_BUFFERS);
   FGeneratorThread := TDataGeneratorThread.Create(Self);
-  FNextBlockIndex := 0;
 end;
 
 destructor TDacDevice.Destroy;

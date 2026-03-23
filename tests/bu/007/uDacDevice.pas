@@ -93,7 +93,7 @@ type
     // Метод для получения индекса блока по указателю (-1 если не найден)
     function GetBlockIndex(ADataPtr: Pointer): Integer;
     // Добавлена функция для возврата самого старого блока с его служебной информацией
-    function GetOldestBlock(var ABlockData: TBlockData): Boolean;
+    function GetOldestBlock(out ABlockData: TBlockData): Boolean;
   end;
 
   // Поток для генерации данных в фоновом режиме
@@ -127,7 +127,6 @@ type
     FBufferSize: Cardinal;        // Размер одного буфера в байтах
     FBlockQueue: TBlockQueue;     // Очередь блоков данных
     FOnGenerateData: TNotifyEvent;
-    FNextBlockIndex: Integer;     // Следующий доступный индекс блока
   private
     FLock: TRTLCriticalSection; // Объект для синхронизации потоков
     FOnBufferEnd: TNotifyEvent;
@@ -407,7 +406,7 @@ begin
   end;
 end;
 
-function TBlockQueue.GetOldestBlock(var ABlockData: TBlockData): Boolean;
+function TBlockQueue.GetOldestBlock(out ABlockData: TBlockData): Boolean;
 var
   Index: Integer;
 begin
@@ -513,7 +512,6 @@ begin
 
   FBlockQueue := TBlockQueue.Create(NUM_BUFFERS);
   FGeneratorThread := TDataGeneratorThread.Create(Self);
-  FNextBlockIndex := 0;
 end;
 
 destructor TDacDevice.Destroy;
