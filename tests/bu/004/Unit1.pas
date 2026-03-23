@@ -135,7 +135,7 @@ begin
     case FDacDevice.State of
       stClosed:
       begin
-        //logMessage('btnPlayStopClick: State=stClosed, calling Open');
+        logMessage('btnPlayStopClick: State=stClosed, calling Open');
         // Общие настройки
         FDacDevice.SampleRate := 44100;
         FDacDevice.BitsPerSample := 16;
@@ -144,15 +144,15 @@ begin
         FDacDevice.BufferSizeMS := 300;
         FDacDevice.DeviceID := cbDacDevices.ItemIndex;
         FDacDevice.Open;
-        //logMessage('btnPlayStopClick: after Open, calling Start');
+        logMessage('btnPlayStopClick: after Open, calling Start');
         FDacDevice.Start(1);
-        //logMessage('btnPlayStopClick: after Start');
+        logMessage('btnPlayStopClick: after Start');
       end;
       stOpened:
       begin
-        //logMessage('btnPlayStopClick: State=stOpened, calling Start');
+        logMessage('btnPlayStopClick: State=stOpened, calling Start');
         FDacDevice.Start(1);
-        //logMessage('btnPlayStopClick: after Start');
+        logMessage('btnPlayStopClick: after Start');
       end;
     end;
   end;

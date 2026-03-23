@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2025.11.12 21:13:54.515.pas,C:\Users\User12345\Documents\RAD Studio\Projects\Unit1.pas=C:\Oburec\OburecGH\tests\TestDAC\Unit1.pas</Transaction>
+    <Transaction>2025.11.12 21:13:54.515.dfm,C:\Users\User12345\Documents\RAD Studio\Projects\Unit1.dfm=C:\Oburec\OburecGH\tests\TestDAC\Unit1.dfm</Transaction>
+    <Transaction>2025.11.12 21:14:05.109.dproj,C:\Users\User12345\Documents\RAD Studio\Projects\Project1.dproj=C:\Oburec\OburecGH\tests\TestDAC\Project1.dproj</Transaction>
+    <Transaction>2025.11.12 21:16:19.672.pas,C:\Oburec\OburecGH\sharedUtils\math\uHardwareMath.pas=</Transaction>
+    <Transaction>2025.11.12 21:19:00.412.pas,C:\Oburec\OburecGH\tests\TestDAC\Unit1.pas=</Transaction>
+    <Transaction>2025.11.12 21:19:00.412.dfm,C:\Oburec\OburecGH\tests\TestDAC\Unit1.dfm=</Transaction>
+    <Transaction>2025.11.12 21:19:17.067.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uDACFrm.pas=C:\Oburec\OburecGH\tests\TestDAC\Unit1.pas</Transaction>
+    <Transaction>2025.11.12 21:19:17.067.dfm,C:\Oburec\OburecGH\recorder\plgControlCyclogram\forms\uDACFrm.dfm=C:\Oburec\OburecGH\tests\TestDAC\Unit1.dfm</Transaction>
+    <Transaction>2025.11.12 22:04:12.912.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\units\uSoundCardDac.pas=C:\Oburec\OburecGH\tests\TestDAC\uSoundCardDac.pas</Transaction>
+    <Transaction>2025.11.12 22:04:21.865.pas,C:\Oburec\OburecGH\recorder\plgControlCyclogram\units\uDacDevice.pas=C:\Oburec\OburecGH\tests\TestDAC\uDacDevice.pas</Transaction>
+  </Transactions>
+</BorlandProject>

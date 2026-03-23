@@ -432,14 +432,10 @@ begin
     end
     else
     begin
-      // Проверяем состояние устройства - генерируем только если play
-      if Assigned(FDacDevice) and (FDacDevice.State = stPlay) then
-      begin
-        // Вызываем событие для генерации данных
-        if Assigned(FDacDevice.OnGenerateData) then
-          FDacDevice.OnGenerateData(FDacDevice);
-      end;
-      sleep(FDacDevice.BufferSizeMS);
+      // Вызываем событие для генерации данных
+      if Assigned(FDacDevice.OnGenerateData) then
+        FDacDevice.OnGenerateData(FDacDevice);
+      //sleep(300);
     end;
   end;
 end;

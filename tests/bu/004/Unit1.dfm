@@ -178,7 +178,7 @@ object DACFrm: TDACFrm
     end
   end
   object gbSin: TGroupBox
-    Left = 7
+    Left = 6
     Top = 89
     Width = 323
     Height = 116
@@ -252,7 +252,6 @@ object DACFrm: TDACFrm
     Top = 209
     Width = 661
     Height = 219
-    Cursor = crSizeAll
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2

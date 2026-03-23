@@ -62,13 +62,12 @@ type
     FCurrentLoopCount: Cardinal;
     // Счетчик буферов в очереди драйвера (сколько накопилось в очереди)
     FQueuedBuffers: Integer;
+    // Событие для синхронизации - сигнализирует о завершении всех callback
+    FResetDoneEvent: THandle;
 
     // Приватный метод-обработчик callback-сообщений от драйвера
     procedure WaveOutCallback(hwo: HWAVEOUT; uMsg: UINT; dwInstance: DWORD;
       dwParam1: DWORD; dwParam2: DWORD);
-      
-    // Очищает все буферы: делает unprepare и сбрасывает флаги
-    procedure ResetAllBuffers;
   public
     constructor Create;
     destructor Destroy; override;
@@ -123,34 +122,6 @@ begin
   // Освобождаем очередь блоков
   FBlockQueue.Free;
   inherited;
-end;
-
-procedure TSoundCardDac.ResetAllBuffers;
-var
-  i: Integer;
-  Block: PSoundCardBlock;
-begin
-  // Проходим по всем блокам и делаем unprepare + сбрасываем флаги
-  EnterCs;
-  try
-    for i := 0 to FBlockQueue.MaxBlocks - 1 do
-    begin
-      if FBlockQueue.GetBlockData(i).Data <> nil then
-      begin
-        Block := PSoundCardBlock(FBlockQueue.GetBlockData(i).Data);
-        // Делаем unprepare если буфер подготовлен
-        if (Block.Header.dwFlags and WHDR_PREPARED) <> 0 then
-        begin
-          waveOutUnprepareHeader(FDeviceHandle, @Block.Header, SizeOf(TWaveHdr));
-        end;
-        // Сбрасываем флаги и dwLoops
-        Block.Header.dwFlags := 0;
-        Block.Header.dwLoops := 0;
-      end;
-    end;
-  finally
-    ExitCs;
-  end;
 end;
 
 function TSoundCardDac.AllocateBlock: Pointer;
@@ -266,11 +237,8 @@ begin
   if FDeviceHandle <> 0 then
   begin
     // Reset the device - эта функция блокирует до возврата всех буферов
+    // callback автоматически сделает unprepare для всех буферов
     waveOutReset(FDeviceHandle);
-    
-    // Проходим по всем блокам и делаем unprepare + сбрасываем флаги
-    ResetAllBuffers;
-    
     //logMessage('Close AFTER waveOutReset');
 
     // Now that all buffers are returned, we can close the device.
@@ -321,6 +289,9 @@ begin
 end;
 
 procedure TSoundCardDac.Stop(AGraceful: Boolean = True);
+var
+  i: Integer;
+  Block: PSoundCardBlock;
 begin
   //logMessage('Stop: BEGIN, state='+inttostr(integer(State)));
   inherited Stop(AGraceful);
@@ -340,8 +311,23 @@ begin
     // waveOutReset блокирует до возврата всех буферов
     waveOutReset(FDeviceHandle);
     
-    // Проходим по всем блокам и делаем unprepare + сбрасываем флаги
-    ResetAllBuffers;
+    // Проходим по всем блокам и делаем unprepare
+    EnterCs;
+    try
+      for i := 0 to FBlockQueue.MaxBlocks - 1 do
+      begin
+        if FBlockQueue.GetBlockData(i).Data <> nil then
+        begin
+          Block := PSoundCardBlock(FBlockQueue.GetBlockData(i).Data);
+          if (Block.Header.dwFlags and WHDR_PREPARED) <> 0 then
+          begin
+            waveOutUnprepareHeader(FDeviceHandle, @Block.Header, SizeOf(TWaveHdr));
+          end;
+        end;
+      end;
+    finally
+      ExitCs;
+    end;
     
     //logMessage('Stop: AFTER waveOutReset');
   end;
@@ -354,78 +340,72 @@ var
   BlockPtr: Pointer;
   i:integer;
 begin
-  EnterCs;
-  try
-    // Проверяем состояние - если не играем, выходим
-    if state<>stplay then Exit;
+  // Проверяем состояние - если не играем, выходим
+  if state<>stplay then Exit;
 
-    // Проверка: не ставим в очередь больше NUM_BUFFERS
-    // Это предотвращает переполнение и гонку буферов
-    if FQueuedBuffers >= NUM_BUFFERS then
-    begin
-      exit;
-    end;
-
-    // Получаем самый старый (свободный) блок из очереди
-    if not FBlockQueue.GetOldest(BlockPtr) then
-      exit; // Нет свободных буферов
-
-    Block := PSoundCardBlock(BlockPtr);
-
-    if ASize > FBufferSize then
-      raise Exception.CreateFmt('QueueBuffer: Data size (%d) exceeds allocated buffer size (%d).', [ASize, FBufferSize]);
-
-    // Копируем данные
-    Move(ABuffer, Block.Samples^, ASize);
-
-    // Полный сброс заголовка перед подготовкой
-    FillChar(Block.Header, SizeOf(TWaveHdr), 0);
-
-    // Готовим заголовок
-    Block.Header.lpData := Block.Samples;
-    Block.Header.dwBufferLength := ASize;
-    Block.Header.dwUser := DWORD_PTR(Block); // Сохраняем указатель на наш блок
-    // dwFlags и dwLoops уже = 0 после FillChar
-
-    // Сначала делаем prepare
-    ResultCode := waveOutPrepareHeader(FDeviceHandle, @Block.Header, SizeOf(TWaveHdr));
-    if ResultCode <> MMSYSERR_NOERROR then
-      raise Exception.Create('Error preparing waveOut header: ' + IntToStr(ResultCode));
-
-    // Устанавливаем логику зацикливания ПОСЛЕ prepare
-    if FCurrentLoopCount = 0 then // 0 - наш флаг бесконечного цикла
-    begin
-      Block.Header.dwLoops := MAXDWORD; // Для WinAPI бесконечный цикл - это MAXDWORD
-      Block.Header.dwFlags := WHDR_BEGINLOOP or WHDR_ENDLOOP or WHDR_LOOP;
-    end
-    else
-    begin
-      Block.Header.dwLoops := FCurrentLoopCount; // Проигрываем заданное число раз
-      // dwFlags остается 0 для однократного воспроизведения
-    end;
-
-    // Отправляем на воспроизведение. После waveOutWrite нельзя менять буфер!!!
-    // можно поставить несколько буферов в очередь
-    //logMessage('Flags='+inttostr(Block.Header.dwFlags));
-    ResultCode := waveOutWrite(FDeviceHandle, @Block.Header, SizeOf(TWaveHdr));
-    i:=integer(GetBlockIndex(Block));
-    if ResultCode <> MMSYSERR_NOERROR then
-    begin
-      //logMessage('Error writing to waveOut: ind='+inttostr(i)+' FQueuedBuffers='+inttostr(FQueuedBuffers)+' Flags='+inttostr(Block.Header.dwFlags));
-      // Если отправка не удалась, нужно отменить подготовку заголовка
-      waveOutUnprepareHeader(FDeviceHandle, @Block.Header, SizeOf(TWaveHdr));
-      //raise Exception.CreateFmt('Error writing to waveOut device: %d, FQueuedBuffers=%d, dwFlags=%d', [ResultCode, FQueuedBuffers, Block.Header.dwFlags]);
-    end
-    else
-      logMessage('QueueBuffer ind='+inttostr(i)+' FQueuedBuffers='+inttostr(FQueuedBuffers)+' Flags='+inttostr(Block.Header.dwFlags));
-
-    // Помечаем блок как "удаленный" из очереди доступных, так как он передан драйверу
-    FBlockQueue.MarkOldestAsDeleted;
-
-    InterlockedIncrement(FQueuedBuffers);
-  finally
-    ExitCs;
+  // Проверка: не ставим в очередь больше NUM_BUFFERS
+  // Это предотвращает переполнение и гонку буферов
+  if FQueuedBuffers >= NUM_BUFFERS then
+  begin
+    exit;
   end;
+
+  // Получаем самый старый (свободный) блок из очереди
+  if not FBlockQueue.GetOldest(BlockPtr) then
+    exit; // Нет свободных буферов
+
+  Block := PSoundCardBlock(BlockPtr);
+
+  if ASize > FBufferSize then
+    raise Exception.CreateFmt('QueueBuffer: Data size (%d) exceeds allocated buffer size (%d).', [ASize, FBufferSize]);
+
+  // Копируем данные
+  Move(ABuffer, Block.Samples^, ASize);
+
+  // Полный сброс заголовка перед подготовкой
+  FillChar(Block.Header, SizeOf(TWaveHdr), 0);
+
+  // Готовим заголовок
+  Block.Header.lpData := Block.Samples;
+  Block.Header.dwBufferLength := ASize;
+  Block.Header.dwUser := DWORD_PTR(Block); // Сохраняем указатель на наш блок
+  // dwFlags и dwLoops уже = 0 после FillChar
+
+  // Сначала делаем prepare
+  ResultCode := waveOutPrepareHeader(FDeviceHandle, @Block.Header, SizeOf(TWaveHdr));
+  if ResultCode <> MMSYSERR_NOERROR then
+    raise Exception.Create('Error preparing waveOut header: ' + IntToStr(ResultCode));
+
+  // Устанавливаем логику зацикливания ПОСЛЕ prepare
+  if FCurrentLoopCount = 0 then // 0 - наш флаг бесконечного цикла
+  begin
+    Block.Header.dwLoops := MAXDWORD; // Для WinAPI бесконечный цикл - это MAXDWORD
+    Block.Header.dwFlags := WHDR_BEGINLOOP or WHDR_ENDLOOP or WHDR_LOOP;
+  end
+  else
+  begin
+    Block.Header.dwLoops := FCurrentLoopCount; // Проигрываем заданное число раз
+    // dwFlags остается 0 для однократного воспроизведения
+  end;
+
+  // Отправляем на воспроизведение. После waveOutWrite нельзя менять буфер!!!
+  // можно поставить несколько буферов в очередь
+  ResultCode := waveOutWrite(FDeviceHandle, @Block.Header, SizeOf(TWaveHdr));
+  i:=integer(GetBlockIndex(Block));
+  if ResultCode <> MMSYSERR_NOERROR then
+  begin
+    logMessage('Error writing to waveOut: ind='+inttostr(i)+' FQueuedBuffers='+inttostr(FQueuedBuffers)+' Flags='+inttostr(Block.Header.dwFlags));
+    // Если отправка не удалась, нужно отменить подготовку заголовка
+    waveOutUnprepareHeader(FDeviceHandle, @Block.Header, SizeOf(TWaveHdr));
+    //raise Exception.CreateFmt('Error writing to waveOut device: %d, FQueuedBuffers=%d, dwFlags=%d', [ResultCode, FQueuedBuffers, Block.Header.dwFlags]);
+  end
+  else
+    logMessage('QueueBuffer ind='+inttostr(i)+' FQueuedBuffers='+inttostr(FQueuedBuffers)+' Flags='+inttostr(Block.Header.dwFlags));
+
+  // Помечаем блок как "удаленный" из очереди доступных, так как он передан драйверу
+  FBlockQueue.MarkOldestAsDeleted;
+
+  InterlockedIncrement(FQueuedBuffers);
 end;
 
 function TSoundCardDac.IsPlay: Boolean;
@@ -465,25 +445,20 @@ var
   //idx: Integer;
 begin
   if (uMsg <> WOM_DONE) then
-  begin
-    logMessage('WaveOutCallback uMsg <> WOM_DONE');
     Exit;
-  end;
+
   // Защита от гонок - проверяем хендл перед любыми операциями
   if FDeviceHandle = 0 then
-  begin
-    logMessage('WaveOutCallback FDeviceHandle =0');
     Exit;
-  end;
+
   Header := PWAVEHDR(dwParam1);
+
   if not Assigned(Header) then
-  begin
-    logMessage('WaveOutCallback not Assigned(Header)');
     Exit;
-  end;
 
   // Получаем указатель на наш блок, который мы сохранили в dwUser
   Block := PSoundCardBlock(Header.dwUser);
+
   // Делаем unprepare только если буфер подготовлен
   if (Header.dwFlags and WHDR_PREPARED) <> 0 then
   begin

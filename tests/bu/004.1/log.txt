@@ -1,0 +1,9 @@
+23.03.2026 18:15:29 tid: 7008;btnPlayStopClick: PLAY;Info
+23.03.2026 18:15:29 tid: 7008;QueueBuffer ind=0 FQueuedBuffers=0 Flags=16;Info
+23.03.2026 18:15:29 tid: 13180;QueueBuffer ind=0 FQueuedBuffers=1 Flags=18;Info
+23.03.2026 18:15:29 tid: 13180;QueueBuffer ind=3 FQueuedBuffers=3 Flags=18;Info
+23.03.2026 18:15:29 tid: 13180;QueueBuffer ind=0 FQueuedBuffers=3 Flags=18;Info
+23.03.2026 18:15:30 tid: 7008;btnPlayStopClick: STOP;Info
+23.03.2026 18:15:32 tid: 7008;btnPlayStopClick: PLAY;Info
+23.03.2026 18:15:32 tid: 13180;QueueBuffer ind=1 FQueuedBuffers=0 Flags=18;Info
+23.03.2026 18:15:45 tid: 7008;Error writing to waveOut: ind=1 FQueuedBuffers=0 Flags=18;Info

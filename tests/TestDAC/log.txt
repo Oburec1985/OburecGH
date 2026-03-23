@@ -1,0 +1,21 @@
+23.03.2026 18:51:40 tid: 4416;btnPlayStopClick: PLAY;Info
+23.03.2026 18:51:40 tid: 4416;WaveOutCallback uMsg <> WOM_DONE;Info
+23.03.2026 18:51:40 tid: 4416;QueueBuffer ind=0 FQueuedBuffers=0 Flags=18;Info
+23.03.2026 18:51:40 tid: 1176;QueueBuffer ind=1 FQueuedBuffers=1 Flags=18;Info
+23.03.2026 18:51:40 tid: 4416;QueueBuffer ind=2 FQueuedBuffers=2 Flags=18;Info
+23.03.2026 18:51:40 tid: 1176;QueueBuffer ind=3 FQueuedBuffers=2 Flags=18;Info
+23.03.2026 18:51:40 tid: 1176;QueueBuffer ind=0 FQueuedBuffers=2 Flags=18;Info
+23.03.2026 18:51:41 tid: 4416;btnPlayStopClick: STOP;Info
+23.03.2026 18:51:42 tid: 4416;btnPlayStopClick: PLAY;Info
+23.03.2026 18:51:42 tid: 4416;QueueBuffer ind=1 FQueuedBuffers=0 Flags=18;Info
+23.03.2026 18:51:42 tid: 1176;QueueBuffer ind=2 FQueuedBuffers=1 Flags=18;Info
+23.03.2026 18:51:42 tid: 4416;QueueBuffer ind=3 FQueuedBuffers=2 Flags=18;Info
+23.03.2026 18:51:42 tid: 1176;QueueBuffer ind=0 FQueuedBuffers=2 Flags=18;Info
+23.03.2026 18:51:42 tid: 4416;btnPlayStopClick: STOP;Info
+23.03.2026 18:51:43 tid: 4416;btnPlayStopClick: PLAY;Info
+23.03.2026 18:51:43 tid: 4416;QueueBuffer ind=1 FQueuedBuffers=0 Flags=18;Info
+23.03.2026 18:51:43 tid: 1176;QueueBuffer ind=2 FQueuedBuffers=1 Flags=18;Info
+23.03.2026 18:51:43 tid: 4416;QueueBuffer ind=3 FQueuedBuffers=2 Flags=18;Info
+23.03.2026 18:51:43 tid: 1176;QueueBuffer ind=0 FQueuedBuffers=2 Flags=18;Info
+23.03.2026 18:51:44 tid: 1176;QueueBuffer ind=1 FQueuedBuffers=2 Flags=18;Info
+23.03.2026 18:51:44 tid: 4416;btnPlayStopClick: STOP;Info
