@@ -128,7 +128,7 @@ type
   protected
     FState: TDACState;
     FBufferSize: Cardinal;        // Размер одного буфера в байтах
-    FOnGenerateData: TOnBufferEnd; // Событие генерации данных (передает буфер)
+    FOnGenerateData: TNotifyEvent;
     FNextBlockIndex: Integer;     // Следующий доступный индекс блока
     FBlockQueue: TBlockQueue;     // Очередь блоков данных
     FOnBufferEnd: TOnBufferEnd;
@@ -195,8 +195,8 @@ type
     // Размер одного буфера в байтах
     property BufferSize: Cardinal read FBufferSize;
     property OnBufferEnd: TOnBufferEnd read FOnBufferEnd write FOnBufferEnd;
-    // Событие генерации данных (передает буфер: P-указатель, Size-размер в байтах)
-    property OnGenerateData: TOnBufferEnd read FOnGenerateData write FOnGenerateData;
+    // Событие, возникающее после окончания воспроизведения буфера
+    property OnGenerateData: TNotifyEvent read FOnGenerateData write FOnGenerateData;
     // Идентификатор устройства для воспроизведения
     property DeviceID: Integer read FDeviceID write FDeviceID;
     property State: TDACState read getstate write setstate;
@@ -472,9 +472,9 @@ begin
       // Проверяем состояние устройства - генерируем только если play
       if Assigned(FDacDevice) and (FDacDevice.State = stPlay) then
       begin
-        // Вызываем событие для генерации данных (nil, 0 - данные не передаются)
+        // Вызываем событие для генерации данных
         if Assigned(FDacDevice.OnGenerateData) then
-          FDacDevice.OnGenerateData(nil, 0);
+          FDacDevice.OnGenerateData(FDacDevice);
       end;
       sleep(FDacDevice.BufferSizeMS);
     end;

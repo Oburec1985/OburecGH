@@ -28,6 +28,7 @@ object DACFrm: TDACFrm
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 703
     object btnPlayStop: TButton
       Left = 25
       Top = 12
@@ -295,6 +296,7 @@ object DACFrm: TDACFrm
     Top = 245
     Width = 661
     Height = 292
+    Cursor = crSizeAll
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2

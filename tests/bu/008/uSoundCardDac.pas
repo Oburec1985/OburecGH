@@ -313,7 +313,7 @@ begin
   begin
     //logMessage('Start: calling FOnGenerateData #'+inttostr(i));
     if Assigned(FOnGenerateData) then
-      FOnGenerateData(nil, 0); // nil, 0 - запрос на генерацию (данные будут в QueueBuffer)
+      FOnGenerateData(Self);
   end;
   //logMessage('Start: END');
 end;

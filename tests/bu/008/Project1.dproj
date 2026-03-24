@@ -53,7 +53,8 @@
 				<Form>DACFrm</Form>
 			</DCCReference>
 			<DCCReference Include="..\..\sharedUtils\utils\uLogFile.pas"/>
-			<DCCReference Include="uDacProgram.pas"/>
+			<DCCReference Include="uDACProgram.pas"/>
+			<DCCReference Include="uDacProgram_.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

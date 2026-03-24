@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chcp *)",
+      "Bash(type *)",
+      "Bash(echo. *)",
+      "Bash(powershell *)",
+      "Bash(findstr *)"
+    ]
+  }
+}
