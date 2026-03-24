@@ -70,6 +70,7 @@ type
     procedure btnPlayStopClick(Sender: TObject); // Обработчик нажатия кнопки Play/Stop
     procedure FormCreate(Sender: TObject);     // Обработчик создания формы
     procedure FormDestroy(Sender: TObject);    // Обработчик закрытия формы
+    procedure rgModeClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnRefreshDevicesClick(Sender: TObject);
     procedure RefreshDeviceList;
@@ -85,6 +86,11 @@ type
     FSimpleSinusProgram: TSimpleSinusProgram;
     FAccurateSinusProgram: TAccurateSinusProgram;
     FCurrentProgram: TDacProgram; // Текущая активная программа
+
+    // --- Состояние режима SweepSin ---
+    FSweepPhase: Double;          // Текущая фаза для генератора SweepSin
+    FSweepCurrentFreq: Double;    // Текущая частота для генератора SweepSin
+    FSweepStartTime: Cardinal;    // Время начала для режима SweepSin
 
     // Обновляет видимость панелей с параметрами в зависимости от режима
     procedure UpdateModeView;
@@ -109,28 +115,73 @@ implementation
 
 procedure TDACFrm.btnPlayStopClick(Sender: TObject);
 begin
-  if not Assigned(FCurrentProgram) then Exit;
-
-  if FCurrentProgram.IsPlaybackActive then
+  if FDacDevice.IsPlay then
   begin
     logMessage('btnPlayStopClick: STOP');
-    FCurrentProgram.StopPlayback(False);
+    // Останавливаем текущую программу
+    if Assigned(FCurrentProgram) then
+      FCurrentProgram.Stop;
+
+    // Останавливаем воспроизведение
+    FDacDevice.Stop(False);
     btnPlayStop.Caption := 'Play';
   end
   else
   begin
     logMessage('btnPlayStopClick: PLAY');
-    { Форма только задаёт параметры; открытие/подписка/старт — в программе. }
-    FCurrentProgram.ConfigureTransport(
-      cbDacDevices.ItemIndex,
-      44100, 16, 1, 300);
-    FCurrentProgram.Frequency := StrToFloatDef(edProgFreq.Text, 440);
-    FCurrentProgram.Amplitude := edProgAmpl.Value;
-    if FCurrentProgram is TAccurateSinusProgram then
-      TAccurateSinusProgram(FCurrentProgram).MinSamplesTarget :=
-        StrToIntDef(edMinSamples.Text, 1024);
+    case rgProgramType.ItemIndex of
+      0: // Sin - используем программу
+      begin
+        // Обновляем параметры программы перед запуском
+        if Assigned(FCurrentProgram) then
+        begin
+          FCurrentProgram.Frequency := StrToFloatDef(edProgFreq.Text, 440);
+          FCurrentProgram.Amplitude := edProgAmpl.Value;
+          // Для Accurate программы обновляем размер буфера
+          if FCurrentProgram is TAccurateSinusProgram then
+          begin
+            TAccurateSinusProgram(FCurrentProgram).MinSamplesTarget := StrToIntDef(edMinSamples.Text, 1024);
+          end;
+        end;
+      end;
+      1: // SweepSin - старая логика (пока без программы)
+      begin
+        FSweepPhase := 0;
+        FSweepCurrentFreq := StrToFloatDef(edProgFreq.Text, 100);
+        FSweepStartTime := GetTickCount;
+      end;
+    end;
     btnPlayStop.Caption := 'Stop';
-    FCurrentProgram.BeginPlayback(1);
+
+    case FDacDevice.State of
+      stClosed:
+      begin
+        // Общие настройки
+        FDacDevice.SampleRate := 44100;
+        FDacDevice.BitsPerSample := 16;
+        FDacDevice.Channels := 1;
+        FDacDevice.BufferSizeMS := 300;
+        FDacDevice.DeviceID := cbDacDevices.ItemIndex;
+        FDacDevice.Open;
+        // Запускаем программу (если режим Sin) до старта устройства,
+        // чтобы успеть подписаться на OnBufferEnd.
+        if (rgProgramType.ItemIndex = 0) and Assigned(FCurrentProgram) then
+          FCurrentProgram.Start;
+        if (rgProgramType.ItemIndex = 0) and (FCurrentProgram is TAccurateSinusProgram) then
+          TAccurateSinusProgram(FCurrentProgram).RefreshAlignedBuffers;
+        FDacDevice.Start(1);
+      end;
+      stOpened:
+      begin
+        // Запускаем программу (если режим Sin) до старта устройства,
+        // чтобы успеть подписаться на OnBufferEnd.
+        if (rgProgramType.ItemIndex = 0) and Assigned(FCurrentProgram) then
+          FCurrentProgram.Start;
+        if (rgProgramType.ItemIndex = 0) and (FCurrentProgram is TAccurateSinusProgram) then
+          TAccurateSinusProgram(FCurrentProgram).RefreshAlignedBuffers;
+        FDacDevice.Start(1);
+      end;
+    end;
   end;
 end;
 
@@ -148,6 +199,7 @@ begin
   FDacDevice := TSoundCardDac.Create;
   // OnGenerateData больше не нужен - программы сами подпишутся
   FDacDevice.name:='Тест DAQ';
+  rgProgramType.ItemIndex := 0;
   rgProgramType.ItemIndex := 0;
   UpdateModeView;
   RefreshDeviceList;
@@ -175,18 +227,23 @@ begin
   finally
     IniFile.Free;
   end;
-  if Assigned(FCurrentProgram) then
-    FCurrentProgram.StopPlayback(False);
+  FDacDevice.Stop(false);
+  FDacDevice.Close;
+  FDacDevice.Free;
 
+  // Освобождаем программы
   FSimpleSinusProgram.Free;
   FAccurateSinusProgram.Free;
-
-  FDacDevice.Free;
 end;
 
 procedure TDACFrm.FormShow(Sender: TObject);
 begin
   //btnPlayStopClick(nil);
+end;
+
+procedure TDACFrm.rgModeClick(Sender: TObject);
+begin
+  UpdateModeView;
 end;
 
 procedure TDACFrm.save(ifile: tinifile);

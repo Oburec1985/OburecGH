@@ -1,3 +1,2 @@
-24.03.2026 19:55:24 tid: 7948;btnPlayStopClick: PLAY;Info
-24.03.2026 19:55:24 tid: 7948;WaveOutCallback uMsg <> WOM_DONE;Info
-24.03.2026 19:55:24 tid: 3844;QueueBuffer ind=0 FQueuedBuffers=0 Flags=18;Info
+25.03.2026 0:13:02 tid: 10780;btnPlayStopClick: PLAY;Info
+25.03.2026 0:13:02 tid: 10780;WaveOutCallback uMsg <> WOM_DONE;Info

@@ -1,4 +1,4 @@
-unit uDACProgram;
+﻿unit uDACProgram;
 
 {******************************************************************************
  * Модуль управления сценариями ЦАП (uDACProgram.pas)
@@ -35,18 +35,6 @@ type
     fAmplitude: Double; // 0..1
     fActive: Boolean;
 
-    // Параметры транспорта (задаёт клиент/UI, применяются к fDevice при Open)
-    fTransportDeviceIndex: Integer;
-    fTransportSampleRate: Cardinal;
-    fTransportBitsPerSample: Cardinal;
-    fTransportChannels: Cardinal;
-    fTransportBufferSizeMS: Cardinal;
-
-    { Применить fTransport* к fDevice (только поля; Open отдельно). }
-    procedure ApplyTransportToDevice;
-    { После подписки OnBufferEnd и перед fDevice.Start — перевыделение буферов у Accurate и т.п. }
-    procedure DoPrepareAfterSubscribeBeforeDeviceStart; virtual;
-
     // Обработчик события устройства: подготовка буфера + вызов ProcessBuffer
     // (инициализация: OnBufferEnd(nil, 0))
     procedure OnDeviceBufferEnd(P: Pointer; Size: Integer); virtual;
@@ -74,18 +62,6 @@ type
     // Подписка на OnBufferEnd
     procedure Start; virtual;
     procedure Stop; virtual;
-
-    { Задать параметры устройства из UI (без Open/Start). }
-    procedure ConfigureTransport(const ADeviceIndex: Integer;
-      ASampleRate, ABitsPerSample, AChannels, ABufferSizeMS: Cardinal);
-
-    { Полный запуск: при необходимости Open, подписка, подготовка, fDevice.Start. }
-    procedure BeginPlayback(ALoopCount: Cardinal = 1); virtual;
-
-    { Останов воспроизведения: снятие подписки + fDevice.Stop. }
-    procedure StopPlayback(AGraceful: Boolean = False); virtual;
-
-    function IsPlaybackActive: Boolean;
 
     // Привязка к устройству
     procedure SetDevice(AValue: TDacDevice); virtual;
@@ -124,7 +100,6 @@ type
     // Выполняет перевыделение буферов под актуальный aligned size
     procedure ApplyAlignedBufferSize;
   protected
-    procedure DoPrepareAfterSubscribeBeforeDeviceStart; override;
     procedure ProcessBuffer(P: Pointer; Size: Integer); override;
     procedure SetFrequency(AValue: Double); override;
   public
@@ -156,14 +131,12 @@ constructor TDacProgram.Create;
 begin
   inherited Create;
   fCurrentPhase := 0;
+  //fSampleRate := 44100;
+  //fChannels := 1;
+  //fBitsPerSample := 16;
   fFrequency := 440;
   fAmplitude := 0.5;
   fActive := False;
-  fTransportDeviceIndex := 0;
-  fTransportSampleRate := 44100;
-  fTransportBitsPerSample := 16;
-  fTransportChannels := 1;
-  fTransportBufferSizeMS := 300;
 end;
 
 destructor TDacProgram.Destroy;
@@ -194,59 +167,6 @@ begin
   if fDevice = AValue then Exit;
   Stop;
   fDevice := AValue;
-end;
-
-procedure TDacProgram.ConfigureTransport(const ADeviceIndex: Integer;
-  ASampleRate, ABitsPerSample, AChannels, ABufferSizeMS: Cardinal);
-begin
-  fTransportDeviceIndex := ADeviceIndex;
-  fTransportSampleRate := ASampleRate;
-  fTransportBitsPerSample := ABitsPerSample;
-  fTransportChannels := AChannels;
-  fTransportBufferSizeMS := ABufferSizeMS;
-end;
-
-procedure TDacProgram.ApplyTransportToDevice;
-begin
-  if not Assigned(fDevice) then Exit;
-  fDevice.SampleRate := fTransportSampleRate;
-  fDevice.BitsPerSample := fTransportBitsPerSample;
-  fDevice.Channels := fTransportChannels;
-  fDevice.BufferSizeMS := fTransportBufferSizeMS;
-  fDevice.DeviceID := fTransportDeviceIndex;
-end;
-
-procedure TDacProgram.DoPrepareAfterSubscribeBeforeDeviceStart;
-begin
-end;
-
-procedure TDacProgram.BeginPlayback(ALoopCount: Cardinal);
-begin
-  if not Assigned(fDevice) then Exit;
-  if fDevice.IsPlay then Exit;
-
-  if fDevice.State = stClosed then
-  begin
-    ApplyTransportToDevice;
-    fDevice.Open;
-  end;
-
-  Start;
-  DoPrepareAfterSubscribeBeforeDeviceStart;
-  fDevice.Start(ALoopCount);
-end;
-
-procedure TDacProgram.StopPlayback(AGraceful: Boolean);
-begin
-  if not Assigned(fDevice) then Exit;
-  Stop;
-  if fDevice.IsPlay then
-    fDevice.Stop(AGraceful);
-end;
-
-function TDacProgram.IsPlaybackActive: Boolean;
-begin
-  Result := Assigned(fDevice) and fDevice.IsPlay;
 end;
 
 procedure TDacProgram.SetFrequency(AValue: Double);
@@ -468,11 +388,6 @@ begin
   if not Assigned(fDevice) then Exit;
   UpdatePeriodFromFrequency;
   ApplyAlignedBufferSize;
-end;
-
-procedure TAccurateSinusProgram.DoPrepareAfterSubscribeBeforeDeviceStart;
-begin
-  RefreshAlignedBuffers;
 end;
 
 procedure TAccurateSinusProgram.ProcessBuffer(P: Pointer; Size: Integer);
