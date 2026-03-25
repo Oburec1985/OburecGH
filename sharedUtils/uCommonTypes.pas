@@ -5,7 +5,9 @@ interface
 uses classes, types, windows, sysutils;
 
 type
-  PSmallIntArray  = array of smallint;
+  TSmallIntArray  = array of smallint;
+  PSmallIntArray  = ^TSmallIntArray;
+
   TDoubleArray = array of double;
   // тип интерпол€ции
   TPType = (ptNullPoly, ptlinePoly, ptCubePoly);

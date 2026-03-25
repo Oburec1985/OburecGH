@@ -128,7 +128,7 @@
 #define pnglang_EInvalidNewSize 65149
 #define pnglang_EInvalidSpec 65150
 #define IdResourceStrings_RSWinsockCallError 65151
-#define VirtualTrees_SCannotSetUserData 65152
+#define NativeXml_sCopyFromOnlyWithXmlNode 65152
 #define DBConsts_SBcdOverflow 65153
 #define DBConsts_SInvalidBcdValue 65154
 #define DBConsts_SCouldNotParseTimeStamp 65155
@@ -144,38 +144,38 @@
 #define pnglang_EPNGInvalidFileHeaderText 65165
 #define pnglang_EPNGIHDRNotFirstText 65166
 #define pnglang_EPNGSizeExceedsText 65167
-#define NativeXml_sLevelMismatch 65168
-#define NativeXml_sRootElementNotDefined 65169
-#define NativeXml_sNonDefaultChardata 65170
-#define NativeXml_sSignificantDigitsOutOfRange 65171
-#define NativeXml_sMissingDataInBinaryStream 65172
-#define NativeXml_sErrorCalcStreamLength 65173
-#define NativeXml_sXmlOwnerNotAssigned 65174
-#define NativeXml_sXmlParentNotAssigned 65175
-#define NativeXml_sCopyFromOnlyWithXmlNode 65176
-#define VirtualTrees_SWrongMoveError 65177
-#define VirtualTrees_SWrongStreamFormat 65178
-#define VirtualTrees_SWrongStreamVersion 65179
-#define VirtualTrees_SStreamTooSmall 65180
-#define VirtualTrees_SCorruptStream1 65181
-#define VirtualTrees_SCorruptStream2 65182
-#define VirtualTrees_SClipboardFailed 65183
+#define NativeXml_sIllegalEndTag 65168
+#define NativeXml_sQuoteCharExpected 65169
+#define NativeXml_sCannotAddNode 65170
+#define NativeXml_sCannotAddAttribute 65171
+#define NativeXml_sCannotSetName 65172
+#define NativeXml_sCannotSetValue 65173
+#define NativeXml_sCannotManipulate 65174
+#define NativeXml_sBeginEndMismatch 65175
+#define NativeXml_sLevelMismatch 65176
+#define NativeXml_sRootElementNotDefined 65177
+#define NativeXml_sNonDefaultChardata 65178
+#define NativeXml_sSignificantDigitsOutOfRange 65179
+#define NativeXml_sMissingDataInBinaryStream 65180
+#define NativeXml_sErrorCalcStreamLength 65181
+#define NativeXml_sXmlOwnerNotAssigned 65182
+#define NativeXml_sXmlParentNotAssigned 65183
 #define ComConst_SVarNotObject 65184
 #define ComConst_STooManyParams 65185
-#define NativeXml_sPrematureEnd 65186
-#define NativeXml_sUnknownEncoding 65187
-#define NativeXml_sUnsupportedEncoding 65188
-#define NativeXml_sDefaultCharUsed 65189
-#define NativeXml_sIllegalTag 65190
-#define NativeXml_sUnsupportedTag 65191
-#define NativeXml_sIllegalEndTag 65192
-#define NativeXml_sQuoteCharExpected 65193
-#define NativeXml_sCannotAddNode 65194
-#define NativeXml_sCannotAddAttribute 65195
-#define NativeXml_sCannotSetName 65196
-#define NativeXml_sCannotSetValue 65197
-#define NativeXml_sCannotManipulate 65198
-#define NativeXml_sBeginEndMismatch 65199
+#define VirtualTrees_SWrongMoveError 65186
+#define VirtualTrees_SWrongStreamFormat 65187
+#define VirtualTrees_SWrongStreamVersion 65188
+#define VirtualTrees_SStreamTooSmall 65189
+#define VirtualTrees_SCorruptStream1 65190
+#define VirtualTrees_SCorruptStream2 65191
+#define VirtualTrees_SClipboardFailed 65192
+#define VirtualTrees_SCannotSetUserData 65193
+#define NativeXml_sPrematureEnd 65194
+#define NativeXml_sUnknownEncoding 65195
+#define NativeXml_sUnsupportedEncoding 65196
+#define NativeXml_sDefaultCharUsed 65197
+#define NativeXml_sIllegalTag 65198
+#define NativeXml_sUnsupportedTag 65199
 #define ComStrs_sInsertError 65200
 #define ComStrs_sInvalidOwner 65201
 #define ComStrs_sRichEditInsertError 65202
@@ -634,7 +634,7 @@ BEGIN
 	pnglang_EInvalidNewSize,	"The new size provided for image resizing is invalid."
 	pnglang_EInvalidSpec,	"The \"Portable Network Graphics\" could not be created because invalid image type parameters have being provided."
 	IdResourceStrings_RSWinsockCallError,	"Error on call to Winsock2 library function %s"
-	VirtualTrees_SCannotSetUserData,	"Cannot set initial user data because there is not enough user data space allocated."
+	NativeXml_sCopyFromOnlyWithXmlNode,	"CopyFrom can only be used with TXmlNode descendants"
 	DBConsts_SBcdOverflow,	"BCD overflow"
 	DBConsts_SInvalidBcdValue,	"%s is not a valid BCD value"
 	DBConsts_SCouldNotParseTimeStamp,	"Could not parse SQL TimeStamp string"
@@ -650,30 +650,6 @@ BEGIN
 	pnglang_EPNGInvalidFileHeaderText,	"The file being read is not a valid \"Portable Network Graphics\" image because it contains an invalid header. This file may be corrupted, try obtaining it again"
 	pnglang_EPNGIHDRNotFirstText,	"This \"Portable Network Graphics\" image is not supported or it might be invalid.\r\n(IHDR chunk is not the first)"
 	pnglang_EPNGSizeExceedsText,	"This \"Portable Network Graphics\" image is not supported because either it's width or height exceeds the maximum size, which is 65535 pixels length."
-	NativeXml_sLevelMismatch,	"level mismatch between subnode \"%s\" and endnode \"%s\" at line %d (pos %d)"
-	NativeXml_sRootElementNotDefined,	"XML root element not defined."
-	NativeXml_sNonDefaultChardata,	"non-default chardata at line %d (pos %d)"
-	NativeXml_sSignificantDigitsOutOfRange,	"significant digits out of range"
-	NativeXml_sMissingDataInBinaryStream,	"missing data in binary stream"
-	NativeXml_sErrorCalcStreamLength,	"error while calculating streamlength"
-	NativeXml_sXmlOwnerNotAssigned,	"XML owner is not assigned"
-	NativeXml_sXmlParentNotAssigned,	"XML parent is not assigned"
-	NativeXml_sCopyFromOnlyWithXmlNode,	"CopyFrom can only be used with TXmlNode descendants"
-	VirtualTrees_SWrongMoveError,	"Target node cannot be a child node of the node to be moved."
-	VirtualTrees_SWrongStreamFormat,	"Unable to load tree structure, the format is wrong."
-	VirtualTrees_SWrongStreamVersion,	"Unable to load tree structure, the version is unknown."
-	VirtualTrees_SStreamTooSmall,	"Unable to load tree structure, not enough data available."
-	VirtualTrees_SCorruptStream1,	"Stream data corrupt. A node's anchor chunk is missing."
-	VirtualTrees_SCorruptStream2,	"Stream data corrupt. Unexpected data after node's end position."
-	VirtualTrees_SClipboardFailed,	"Clipboard operation failed."
-	ComConst_SVarNotObject,	"Variant does not reference an automation object"
-	ComConst_STooManyParams,	"Dispatch methods do not support more than 64 parameters"
-	NativeXml_sPrematureEnd,	"stream terminated prematurely at pos %d"
-	NativeXml_sUnknownEncoding,	"unknown encoding"
-	NativeXml_sUnsupportedEncoding,	"unsupported encoding (%s)"
-	NativeXml_sDefaultCharUsed,	"default char used for codepage substitution"
-	NativeXml_sIllegalTag,	"illegal tag (\"%s\") at pos %d"
-	NativeXml_sUnsupportedTag,	"unsupported tag (\"%s\") at pos %d"
 	NativeXml_sIllegalEndTag,	"illegal end tag (\"%s\") at line %d (streampos %d)"
 	NativeXml_sQuoteCharExpected,	"quote char expected at pos %d"
 	NativeXml_sCannotAddNode,	"cannot add node to this type of element"
@@ -682,6 +658,30 @@ BEGIN
 	NativeXml_sCannotSetValue,	"cannot set value on this type of element"
 	NativeXml_sCannotManipulate,	"cannot manipulate nodes in this type of element"
 	NativeXml_sBeginEndMismatch,	"begin and end tag mismatch: \"%s\" and \"%s\" at line %d (pos %d)"
+	NativeXml_sLevelMismatch,	"level mismatch between subnode \"%s\" and endnode \"%s\" at line %d (pos %d)"
+	NativeXml_sRootElementNotDefined,	"XML root element not defined."
+	NativeXml_sNonDefaultChardata,	"non-default chardata at line %d (pos %d)"
+	NativeXml_sSignificantDigitsOutOfRange,	"significant digits out of range"
+	NativeXml_sMissingDataInBinaryStream,	"missing data in binary stream"
+	NativeXml_sErrorCalcStreamLength,	"error while calculating streamlength"
+	NativeXml_sXmlOwnerNotAssigned,	"XML owner is not assigned"
+	NativeXml_sXmlParentNotAssigned,	"XML parent is not assigned"
+	ComConst_SVarNotObject,	"Variant does not reference an automation object"
+	ComConst_STooManyParams,	"Dispatch methods do not support more than 64 parameters"
+	VirtualTrees_SWrongMoveError,	"Target node cannot be a child node of the node to be moved."
+	VirtualTrees_SWrongStreamFormat,	"Unable to load tree structure, the format is wrong."
+	VirtualTrees_SWrongStreamVersion,	"Unable to load tree structure, the version is unknown."
+	VirtualTrees_SStreamTooSmall,	"Unable to load tree structure, not enough data available."
+	VirtualTrees_SCorruptStream1,	"Stream data corrupt. A node's anchor chunk is missing."
+	VirtualTrees_SCorruptStream2,	"Stream data corrupt. Unexpected data after node's end position."
+	VirtualTrees_SClipboardFailed,	"Clipboard operation failed."
+	VirtualTrees_SCannotSetUserData,	"Cannot set initial user data because there is not enough user data space allocated."
+	NativeXml_sPrematureEnd,	"stream terminated prematurely at pos %d"
+	NativeXml_sUnknownEncoding,	"unknown encoding"
+	NativeXml_sUnsupportedEncoding,	"unsupported encoding (%s)"
+	NativeXml_sDefaultCharUsed,	"default char used for codepage substitution"
+	NativeXml_sIllegalTag,	"illegal tag (\"%s\") at pos %d"
+	NativeXml_sUnsupportedTag,	"unsupported tag (\"%s\") at pos %d"
 	ComStrs_sInsertError,	"Unable to insert an item"
 	ComStrs_sInvalidOwner,	"Invalid owner"
 	ComStrs_sRichEditInsertError,	"RichEdit line insertion error"
@@ -1022,122 +1022,122 @@ END
 
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\Debug\Character.res */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\controls.res */
+/* ..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\buttons.res */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\dcl_dpk\spin.res */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\forms\uGetMngObjForm.dfm */
+/* ..\..\sharedUtils\компоненты\dcl_dpk\spin.res */
+/* ..\..\sharedUtils\forms\uGetMngObjForm.dfm */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\filectrl.res */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\ZipMaster\ZipMstr.res */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\mera\database\uDownloadRegsFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\uRcClientFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\mera\database\uMDBBaseObjFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\mera\database\uMDBTestObjFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\mera\database\uMDBRegObjFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\mera\database\uMDBFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uCustomEditControlFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uDacControlEditFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uControlEditFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\utils\./files/res/CURSORS.res */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjEditForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uPageForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCursorForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDoubleCursorForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTextLabelForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uAxisForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uModesStepFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uModesTabsFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uModesTabsForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTrigFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uModeFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\uTagsListFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTrigsFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\forms\uConfirmDlg.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uEditPropertiesFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uThresholdsFrm.dfm */
+/* ..\..\sharedUtils\ZipMaster\ZipMstr.res */
+/* ..\..\sharedUtils\mera\database\uMDBBaseObjFrame.dfm */
+/* ..\..\sharedUtils\mera\database\uMDBRegObjFrame.dfm */
+/* ..\..\sharedUtils\mera\database\uMDBTestObjFrame.dfm */
+/* ..\..\sharedUtils\mera\database\uMDBFrm.dfm */
+/* ..\SharedRUnits\uRcClientFrm.dfm */
+/* ..\..\sharedUtils\mera\database\uDownloadRegsFrm.dfm */
+/* forms\uModesStepFrame.dfm */
+/* ..\..\sharedUtils\utils\./files/res/CURSORS.res */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uAxisForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTextLabelForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDoubleCursorForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uCursorForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uPageForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjEditForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uGistFrame.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uGistForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendFrame.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
+/* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
+/* forms\uModesTabsFrame.dfm */
+/* forms\uModesTabsForm.dfm */
+/* ..\SharedRUnits\uTagsListFrame.dfm */
+/* forms\uTrigsFrm.dfm */
+/* forms\uTrigFrame.dfm */
+/* forms\uModeFrame.dfm */
+/* forms\uCustomEditControlFrame.dfm */
+/* forms\uDacControlEditFrame.dfm */
+/* forms\uControlEditFrame.dfm */
+/* forms\uThresholdsFrm.dfm */
+/* forms\uEditPropertiesFrm.dfm */
+/* ..\..\sharedUtils\forms\uConfirmDlg.dfm */
 /* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uControlDeskFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uCyclogramReportFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uControlCyclogramEditFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAlgFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uCounterAlgFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAlgAddFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPhaseFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPhaseCrossSpmFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTahoAlgFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uGrmsFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uGrmsSrcFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSpmFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAriphmAlgFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uFillFctFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPeakFactorFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uIntegralAlgFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uBandsFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAlgFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uEditProfileFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uEditControlWrnFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uCursorFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAlgsSaveFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSyncOscillogram.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSyncOscillogramEditFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uEditPolarFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPolarGraph.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTagInfoEditFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTagInfoFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uIRDiagramEditFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uIRDiagram.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uGenSignalsEditFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uGenSignalsFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uSelectLoadedObjects.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\DataTransfFrm\TestUDPsender.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\u3dObjEditFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uObjCtrFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uTrfrmToolsFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uDeformerFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uEditListForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\3d\forms\SelectObjectsFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\3d\forms\AnimationControlFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uTransformButtons.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\sharedUtils\ogl\forms\u3dSceneEditFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uSkinFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\u3dObj.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uGLFrmEdit.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uVertexEditFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uEditSrsFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uEditGlObjFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSpmThresholdProfile.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uEditCurveFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmEdit2.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrm2.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmFrame2.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uDigsFrmEdit.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uDigsFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uLissajousCurve.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\ulissajousCurveEdit.dfm */
+/* forms\uCyclogramReportFrm.dfm */
+/* forms\uControlCyclogramEditFrm.dfm */
+/* forms\uEditProfileFrm.dfm */
+/* forms\uAlgsSaveFrm.dfm */
+/* forms\uAlgAddFrm.dfm */
+/* forms\uBandsFrm.dfm */
+/* forms\uAlgFrame.dfm */
+/* forms\uIntegralAlgFrame.dfm */
+/* forms\uPeakFactorFrame.dfm */
+/* forms\uFillFctFrame.dfm */
+/* forms\uAriphmAlgFrame.dfm */
+/* forms\uSpmFrame.dfm */
+/* forms\uGrmsSrcFrame.dfm */
+/* forms\uGrmsFrame.dfm */
+/* forms\uTahoAlgFrame.dfm */
+/* forms\uPhaseCrossSpmFrame.dfm */
+/* forms\uPhaseFrame.dfm */
+/* forms\uCounterAlgFrame.dfm */
+/* forms\uAlgFrm.dfm */
+/* forms\uCursorFrm.dfm */
+/* forms\uEditControlWrnFrm.dfm */
+/* forms\uPolarGraph.dfm */
+/* forms\uEditPolarFrm.dfm */
+/* forms\uTagInfoEditFrm.dfm */
+/* forms\uTagInfoFrm.dfm */
+/* forms\uIRDiagramEditFrm.dfm */
+/* forms\uIRDiagram.dfm */
+/* forms\uGenSignalsFrm.dfm */
+/* forms\uGenSignalsEditFrm.dfm */
+/* ..\..\3d\forms\uSelectLoadedObjects.dfm */
+/* ..\..\3d\forms\uSkinFrame.dfm */
+/* ..\..\sharedUtils\ogl\forms\u3dSceneEditFrame.dfm */
+/* ..\..\3d\forms\uObjCtrFrame.dfm */
+/* ..\..\3d\forms\AnimationControlFrame.dfm */
+/* ..\..\3d\forms\uEditListForm.dfm */
+/* ..\..\3d\forms\SelectObjectsFrame.dfm */
+/* ..\..\3d\forms\uTransformButtons.dfm */
+/* ..\..\3d\forms\uDeformerFrame.dfm */
+/* ..\..\3d\forms\uTrfrmToolsFrame.dfm */
+/* forms\u3dObjEditFrame.dfm */
+/* forms\DataTransfFrm\TestUDPsender.dfm */
+/* forms\uVertexEditFrame.dfm */
+/* forms\uGLFrmEdit.dfm */
+/* forms\u3dObj.dfm */
+/* forms\uEditGlObjFrm.dfm */
+/* forms\uEditCurveFrm.dfm */
+/* forms\uSpmThresholdProfile.dfm */
+/* forms\uPressFrmEdit2.dfm */
+/* forms\uPressFrmFrame2.dfm */
+/* forms\uPressFrm2.dfm */
+/* forms\uDigsFrmEdit.dfm */
+/* forms\uDigsFrm.dfm */
+/* forms\ulissajousCurveEdit.dfm */
+/* forms\uLissajousCurve.dfm */
 /* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uDACFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSRSFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSpmChartEdit.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uSpmChart.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uControlWarnFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uMBaseControl.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\uFrmSync.dfm */
+/* forms\uSRSFrm.dfm */
+/* forms\uEditSrsFrm.dfm */
+/* forms\uSpmChartEdit.dfm */
+/* forms\uSpmChart.dfm */
+/* forms\uControlWarnFrm.dfm */
+/* forms\uSyncOscillogramEditFrm.dfm */
+/* forms\uSyncOscillogram.dfm */
+/* forms\uMBaseControl.dfm */
+/* ..\SharedRUnits\uFrmSync.dfm */
 /* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uEditChartObjFrame.dfm */
 /* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateTrendFrame.dfm */
 /* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateObjForm.dfm */
 /* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateObjFrm.dfm */
 /* F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\frames\uChartInputFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAutoPropsFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uAHCorrectionFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uComplexDiagram.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrmEdit.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uPressFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\forms\uTresHoldFrame.dfm */
+/* forms\uAutoPropsFrm.dfm */
+/* forms\uAHCorrectionFrm.dfm */
+/* forms\uComplexDiagram.dfm */
+/* forms\uPressFrmFrame.dfm */
+/* forms\uPressFrmEdit.dfm */
+/* forms\uPressFrm.dfm */
+/* forms\uTresHoldFrame.dfm */
 /* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\toolbarExtPack.res */
 /* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.res */
 /* F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\plgControlCyclogram.drf */

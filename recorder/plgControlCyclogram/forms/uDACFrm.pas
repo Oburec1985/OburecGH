@@ -45,57 +45,56 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, uDacDevice, uSoundCardDac, Math, ImgList,
   uChart,uBuffTrend1d, upage, utextlabel, uaxis, utrend, inifiles,
-  uHardwareMath;
+  uHardwareMath, uSpin,
+  ulogFile,
+  uCommonTypes,
+  uDACProgram, uAccuracyStepSin;
 
 type
   TDACFrm = class(TForm)
     pnlTop: TPanel;                  // Панель для кнопок управления
-    btnPlayStop: TButton;           // Кнопка "Play/Stop"
-    rgMode: TRadioGroup;            // Переключатель режимов (Sin/SweepSin)
-    gbSweepSin: TGroupBox;          // Группа параметров для режима SweepSin
-    gbSin: TGroupBox;               // Группа параметров для режима Sin
-    lblFreq: TLabel;                // Метка "Частота"
-    lblAmpl: TLabel;                // Метка "Амплитуда"
-    edFreq: TEdit;                  // Поле ввода для частоты (режим Sin)
-    edAmpl: TEdit;                  // Поле ввода для амплитуды
-    lblStartFreq: TLabel;           // Метка "Начальная частота"
-    lblEndFreq: TLabel;             // Метка "Конечная частота"
-    lblSweepTime: TLabel;           // Метка "Время развертки"
-    edStartFreq: TEdit;             // Поле ввода начальной частоты (SweepSin)
-    edEndFreq: TEdit;               // Поле ввода конечной частоты (SweepSin)
-    edSweepTime: TEdit;
-    cChart1: cChart;
+    btnPlayStop: TButton;
     ImageList_32: TImageList;
     ImageList_16: TImageList;
     TestBtn: TButton;
     cbDacDevices: TComboBox;
-    btnRefreshDevices: TButton;             // Поле ввода времени развертки (SweepSin)
+    rgProgramType: TRadioGroup;
+    gbProgram: TGroupBox;
+    lblProgFreq: TLabel;
+    lblProgAmpl: TLabel;
+    lblMinSamples: TLabel;
+    edProgFreq: TEdit;
+    edProgAmpl: TFloatSpinEdit;
+    edMinSamples: TEdit;             // Поле ввода времени развертки (SweepSin)
     procedure btnPlayStopClick(Sender: TObject); // Обработчик нажатия кнопки Play/Stop
     procedure FormCreate(Sender: TObject);     // Обработчик создания формы
     procedure FormDestroy(Sender: TObject);    // Обработчик закрытия формы
     procedure rgModeClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure TestBtnClick(Sender: TObject);      // Обработчик смены режима
     procedure btnRefreshDevicesClick(Sender: TObject);
     procedure RefreshDeviceList;
+    procedure rgProgramTypeClick(Sender: TObject);
+    procedure edProgFreqChange(Sender: TObject);
+    procedure edProgAmplChange(Sender: TObject);
   private
     { Private declarations }
     FDacDevice: TDacDevice;       // Экземпляр класса ЦАП
-    FBuffer: array of Smallint;   // Буфер для генерации звуковых данных (16-бит)
+    // --- Программы ЦАП ---
+    FSimpleSinusProgram: TSimpleSinusProgram;
+    FAccurateSinusProgram: TAccurateSinusProgram;
+    FCurrentProgram: TDacProgram; // Текущая активная программа
 
-    // --- Состояние режима SweepSin ---
-    FSweepPhase: Double;          // Текущая фаза для генератора SweepSin
-    FSweepCurrentFreq: Double;    // Текущая частота для генератора SweepSin
-    FSweepStartTime: Cardinal;    // Время начала для режима SweepSin
-
-    // Генерирует и отправляет в ЦАП следующий блок данных
-    procedure GenerateAndQueueData(sender:tobject);
     // Обновляет видимость панелей с параметрами в зависимости от режима
     procedure UpdateModeView;
     // сохранить конфигурацию
     procedure save(ifile:tinifile);
     // загрузить конфигурацию
     procedure load(ifile:tinifile);
+    // Обновляет видимость панелей с параметрами в зависимости от режима
+    // Инициализация программ ЦАП
+    procedure InitPrograms;
+    // Переключение между программами
+    procedure SetProgram(AProgramType: Integer);
   public
     { Public declarations }
   end;
@@ -108,37 +107,35 @@ implementation
 {$R *.dfm}
 
 procedure TDACFrm.btnPlayStopClick(Sender: TObject);
+var
+  d:tdacdata;
 begin
-  if FDacDevice.IsActive then
+  if not Assigned(FCurrentProgram) then Exit;
+
+  if FCurrentProgram.IsPlaybackActive then
   begin
-    FDacDevice.Stop(True);
+    logMessage('btnPlayStopClick: STOP');
+    FCurrentProgram.Stop(False);
     btnPlayStop.Caption := 'Play';
   end
   else
   begin
-    // Общие настройки
-    FDacDevice.SampleRate := 44100;
-    FDacDevice.BitsPerSample := 16;
-    FDacDevice.Channels := 1;
-    // Сообщаем ЦАП желаемый размер буфера в мс
-    FDacDevice.BufferSizeMS := 300;
-    FDacDevice.DeviceID := cbDacDevices.ItemIndex;
-    FDacDevice.Open;
+    logMessage('btnPlayStopClick: PLAY');
+    { Форма только задаёт параметры; открытие/подписка/старт — в программе. }
+    d.fTransportDeviceIndex:=cbDacDevices.ItemIndex;
+    d.fTransportSampleRate:=44100;
+    d.fTransportBitsPerSample:=16;
+    d.fTransportChannels:=1;
+    d.fTransportBufferSizeMS:=300;
+    FCurrentProgram.ConfigureTransport(d);
 
-    case rgMode.ItemIndex of
-      0: // Sin
-      begin
-        FDacDevice.Start(1); // Play each buffer once to enable streaming
-      end;
-      1: // SweepSin
-      begin
-        FSweepPhase := 0;
-        FSweepCurrentFreq := StrToFloatDef(edStartFreq.Text, 100);
-        FSweepStartTime := GetTickCount;
-        FDacDevice.Start(1); // Play each buffer once
-      end;
-    end;
+    FCurrentProgram.Frequency := StrToFloatDef(edProgFreq.Text, 440);
+    FCurrentProgram.Amplitude := edProgAmpl.Value;
+    if FCurrentProgram is TAccurateSinusProgram then
+      TAccurateSinusProgram(FCurrentProgram).MinSamplesTarget :=
+        StrToIntDef(edMinSamples.Text, 1024);
     btnPlayStop.Caption := 'Stop';
+    FCurrentProgram.Start(1);
   end;
 end;
 
@@ -147,17 +144,61 @@ begin
   RefreshDeviceList;
 end;
 
-procedure TDACFrm.FormCreate(Sender: TObject);
+procedure TDACFrm.edProgAmplChange(Sender: TObject);
 begin
+  // Обновляем амплитуду в обеих программах
+  FSimpleSinusProgram.Amplitude := edProgAmpl.Value;
+  FAccurateSinusProgram.Amplitude := edProgAmpl.Value;
+end;
+
+procedure TDACFrm.edProgFreqChange(Sender: TObject);
+begin
+  // Обновляем частоту в обеих программах
+  FCurrentProgram.Frequency := StrToFloatDef(edProgFreq.Text, 440);
+end;
+
+procedure TDACFrm.FormCreate(Sender: TObject);
+var
+  IniFile: TIniFile;
+begin
+  g_logFile:=cLogFile.create(ExtractFileDir(Application.ExeName)+'\log.txt', ';');
+
   FDacDevice := TSoundCardDac.Create;
-  FDacDevice.OnGenerateData := GenerateAndQueueData;
-  rgMode.ItemIndex := 0;
+  // OnGenerateData больше не нужен - программы сами подпишутся
+  FDacDevice.name:='Тест DAQ';
+  rgProgramType.ItemIndex := 0;
   UpdateModeView;
   RefreshDeviceList;
+
+  // Инициализация программ ЦАП
+  InitPrograms;
+
+  // Инициализация и загрузка настроек из INI-файла
+  IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
+  try
+    load(IniFile);
+  finally
+    IniFile.Free;
+  end;
 end;
 
 procedure TDACFrm.FormDestroy(Sender: TObject);
+var
+  IniFile: TIniFile;
 begin
+  // Сохранение настроек в INI-файл перед уничтожением формы
+  IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
+  try
+    save(IniFile);
+  finally
+    IniFile.Free;
+  end;
+  if Assigned(FCurrentProgram) then
+    FCurrentProgram.Stop(False);
+
+  //FSimpleSinusProgram.Free;
+  //FAccurateSinusProgram.Free;
+
   FDacDevice.Free;
 end;
 
@@ -166,57 +207,26 @@ begin
   //btnPlayStopClick(nil);
 end;
 
-procedure TDACFrm.GenerateAndQueueData(sender:tobject);
-var
-  i: Integer;
-  Freq, Ampl, Value: Double;
-  BufferSizeSamples: Integer;
-
-  // Sweep vars
-  StartFreq, EndFreq, SweepTime, CurrentTime, k: Double;
+procedure TDACFrm.InitPrograms;
 begin
-  BufferSizeSamples := round(FDacDevice.SampleRate * FDacDevice.BufferSizeMS / 1000);
-  SetLength(FBuffer, BufferSizeSamples);
+  // Создаем программы
+  FSimpleSinusProgram := TSimpleSinusProgram.Create;
+  FAccurateSinusProgram := TAccurateSinusProgram.Create;
 
-  Ampl := StrToFloatDef(edAmpl.Text, 0.8);
-  if Ampl > 1.0 then Ampl := 1.0;
-  if Ampl < 0 then Ampl := 0;
+  // Устанавливаем устройство для программ
+  FSimpleSinusProgram.SetDevice(FDacDevice);
+  FAccurateSinusProgram.SetDevice(FDacDevice);
 
-  case rgMode.ItemIndex of
-    0: // Sin
-    begin
-      Freq := StrToFloatDef(edFreq.Text, 1000);
-      for i := 0 to Length(FBuffer) - 1 do
-      begin
-        Value := Ampl * Sin(2 * PI * Freq * i / FDacDevice.SampleRate);
-        FBuffer[i] := round(Value * High(Smallint));
-      end;
-    end;
-    1: // SweepSin
-    begin
-      StartFreq := StrToFloatDef(edStartFreq.Text, 100);
-      EndFreq := StrToFloatDef(edEndFreq.Text, 10000);
-      SweepTime := StrToFloatDef(edSweepTime.Text, 10);
-      CurrentTime := (GetTickCount - FSweepStartTime) / 1000.0;
+  // Инициализируем параметры из UI
+  FSimpleSinusProgram.Frequency := StrToFloatDef(edProgFreq.Text, 440);
+  FSimpleSinusProgram.Amplitude := edProgAmpl.Value;
 
-      // Линейная интерполяция частоты
-      if SweepTime > 0 then
-        FSweepCurrentFreq := StartFreq + (EndFreq - StartFreq) * (CurrentTime / SweepTime)
-      else
-        FSweepCurrentFreq := StartFreq;
+  FAccurateSinusProgram.Frequency := StrToFloatDef(edProgFreq.Text, 440);
+  FAccurateSinusProgram.Amplitude := edProgAmpl.Value;
+  FAccurateSinusProgram.MinSamplesTarget := StrToIntDef(edMinSamples.Text, 1024);
 
-      if FSweepCurrentFreq > EndFreq then FSweepCurrentFreq := EndFreq;
-
-      for i := 0 to Length(FBuffer) - 1 do
-      begin
-        Value := Ampl * Sin(FSweepPhase);
-        FBuffer[i] := round(Value * High(Smallint));
-        FSweepPhase := FSweepPhase + 2 * PI * FSweepCurrentFreq / FDacDevice.SampleRate;
-      end;
-    end;
-  end;
-
-  FDacDevice.QueueBuffer(FBuffer[0], Length(FBuffer) * SizeOf(Smallint));
+  // По умолчанию используем простую программу
+  FCurrentProgram := FSimpleSinusProgram;
 end;
 
 procedure TDACFrm.rgModeClick(Sender: TObject);
@@ -224,78 +234,50 @@ begin
   UpdateModeView;
 end;
 
+procedure TDACFrm.rgProgramTypeClick(Sender: TObject);
+begin
+  SetProgram(rgProgramType.ItemIndex);
+  UpdateModeView;
+end;
+
 procedure TDACFrm.save(ifile: tinifile);
 begin
-  ifile.WriteInteger('DAC', 'Mode', rgMode.ItemIndex);
-  ifile.WriteString('DAC', 'Freq', edFreq.Text);
-  ifile.WriteString('DAC', 'Ampl', edAmpl.Text);
-  ifile.WriteString('DAC', 'StartFreq', edStartFreq.Text);
-  ifile.WriteString('DAC', 'EndFreq', edEndFreq.Text);
-  ifile.WriteString('DAC', 'SweepTime', edSweepTime.Text);
+  ifile.WriteInteger('DAC', 'Mode', rgProgramType.ItemIndex);
+  ifile.WriteInteger('DAC', 'ProgramType', rgProgramType.ItemIndex);
+  ifile.WriteString('DAC', 'Freq', edProgFreq.Text);
+  ifile.WriteString('DAC', 'Ampl', edProgAmpl.Text);
   ifile.WriteInteger('DAC', 'DeviceID', cbDacDevices.ItemIndex);
+  ifile.WriteString('DAC', 'MinSamples', edMinSamples.Text);
+end;
+
+procedure TDACFrm.SetProgram(AProgramType: Integer);
+begin
+  // Выбираем новую программу
+  case AProgramType of
+    0: FCurrentProgram := FSimpleSinusProgram;
+    1: FCurrentProgram := FAccurateSinusProgram;
+  else
+    FCurrentProgram := FSimpleSinusProgram;
+  end;
 end;
 
 procedure TDACFrm.load(ifile: tinifile);
 begin
-  rgMode.ItemIndex := ifile.ReadInteger('DAC', 'Mode', 0);
-  edFreq.Text := ifile.ReadString('DAC', 'Freq', '1000');
-  edAmpl.Text := ifile.ReadString('DAC', 'Ampl', '0.8');
-  edStartFreq.Text := ifile.ReadString('DAC', 'StartFreq', '100');
-  edEndFreq.Text := ifile.ReadString('DAC', 'EndFreq', '10000');
-  edSweepTime.Text := ifile.ReadString('DAC', 'SweepTime', '10');
+  rgProgramType.ItemIndex := ifile.ReadInteger('DAC', 'Mode', 0);
+  rgProgramType.ItemIndex := ifile.ReadInteger('DAC', 'ProgramType', 0);
+  edProgFreq.Text := ifile.ReadString('DAC', 'Freq', '440');
+  edProgAmpl.Text := ifile.ReadString('DAC', 'Ampl', '0.5');
   cbDacDevices.ItemIndex := ifile.ReadInteger('DAC', 'DeviceID', 0);
+  edMinSamples.Text := ifile.ReadString('DAC', 'MinSamples', '1024');
   UpdateModeView;
 end;
 
-procedure TDACFrm.TestBtnClick(Sender: TObject);
-var
-//  ar:tdoubleArray;
-  len, freq1, freq2,
-  dphase, // скорость фазы
-  aPhase, // ускорение фазы
-  Amp, phase:double;
-  fs:integer;
-  I, siglen: Integer;
-  tr:cbufftrend1d;
-  cfg:TFilterSettings;
-begin
-  fs:=1000;
-  // длина в секундах
-  len:=5;
-  siglen:=round(len*fs);
-  freq1:=10;
-  freq2:=50;
-  aPhase:=2*pi*(freq2-freq1)/(fs*fs*len); // ускорение фазы
-  dphase:=2*pi*freq1/fs; // скорость фазы
-  Amp:=1;
-//  setlength(ar,siglen);
-  phase:=0;
-  for I := 0 to siglen - 1 do
-  begin
-//    ar[i]:= Amp * Sin(phase);
-    phase:=phase+dphase;
-    dphase:=dphase+aphase;
-  end;
-  cfg.Alpha:=0.3;
-  cfg.IsFirstCall:=true;
-  cfg.PrevOutput:=0;
-//  ar:=LowPassFilter(ar, cfg);
-  tr:=cbufftrend1d(cpage(cchart1.activePage).activeAxis.getChild(0));
-  if tr=nil then
-  begin
-    tr:=cBuffTrend1d.create;
-    tr.dx:=1/fs;
-    tr.name:='Test1000HzLpf';
-    cpage(cchart1.activePage).activeAxis.AddChild(tr);
-//    tr.AddPoints(ar);
-    cpage(cchart1.activePage).normalise;
-  end;
-end;
 
 procedure TDACFrm.UpdateModeView;
 begin
-  gbSin.Visible := rgMode.ItemIndex = 0;
-  gbSweepSin.Visible := rgMode.ItemIndex = 1;
+  // Показываем поле MinSamples только для Accurate программы
+  lblMinSamples.Visible := rgProgramType.ItemIndex = 1;
+  edMinSamples.Visible := rgProgramType.ItemIndex = 1;
 end;
 
 // Обновляет список доступных устройств вывода

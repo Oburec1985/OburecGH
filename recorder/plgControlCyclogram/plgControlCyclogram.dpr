@@ -257,9 +257,11 @@ uses
   uThreshHolderAlg in 'units\uThreshHolderAlg.pas',
   uTresHoldFrame in 'forms\uTresHoldFrame.pas' {TresHoldFrame: TFrame},
   uDACFrm in 'forms\uDACFrm.pas' {DACFrm},
-  uSoundCardDac in 'units\uSoundCardDac.pas',
-  uDacDevice in 'units\uDacDevice.pas',
-  PluginClass in '..\SharedRUnits\PluginClass.pas';
+  PluginClass in '..\SharedRUnits\PluginClass.pas',
+  uAccuracyStepSin in 'units\DAC\uAccuracyStepSin.pas',
+  uDacDevice in 'units\DAC\uDacDevice.pas',
+  uDacProgram in 'units\DAC\uDacProgram.pas',
+  uSoundCardDac in 'units\DAC\uSoundCardDac.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

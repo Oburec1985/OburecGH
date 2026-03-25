@@ -551,9 +551,11 @@
 			<DCCReference Include="forms\uDACFrm.pas">
 				<Form>DACFrm</Form>
 			</DCCReference>
-			<DCCReference Include="units\uSoundCardDac.pas"/>
-			<DCCReference Include="units\uDacDevice.pas"/>
 			<DCCReference Include="..\SharedRUnits\PluginClass.pas"/>
+			<DCCReference Include="units\DAC\uAccuracyStepSin.pas"/>
+			<DCCReference Include="units\DAC\uDacDevice.pas"/>
+			<DCCReference Include="units\DAC\uDacProgram.pas"/>
+			<DCCReference Include="units\DAC\uSoundCardDac.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

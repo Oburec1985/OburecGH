@@ -2,8 +2,8 @@ object DACFrm: TDACFrm
   Left = 0
   Top = 0
   Caption = 'DAC Control'
-  ClientHeight = 652
-  ClientWidth = 939
+  ClientHeight = 285
+  ClientWidth = 610
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,11 +19,12 @@ object DACFrm: TDACFrm
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 939
+    Width = 610
     Height = 65
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 939
     object btnPlayStop: TButton
       Left = 25
       Top = 16
@@ -41,22 +42,9 @@ object DACFrm: TDACFrm
       Style = csDropDownList
       TabOrder = 1
     end
-    object btnRefreshDevices: TButton
-      Left = 523
-      Top = 23
-      Width = 140
-      Height = 40
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
-      Caption = 'Refresh'
-      TabOrder = 2
-      OnClick = btnRefreshDevicesClick
-    end
     object btnSave: TButton
-      Left = 672
-      Top = 23
+      Left = 394
+      Top = 11
       Width = 100
       Height = 40
       Margins.Left = 4
@@ -64,11 +52,11 @@ object DACFrm: TDACFrm
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = 'Save'
-      TabOrder = 3
+      TabOrder = 2
     end
     object btnLoad: TButton
-      Left = 779
-      Top = 23
+      Left = 501
+      Top = 11
       Width = 100
       Height = 40
       Margins.Left = 4
@@ -76,135 +64,92 @@ object DACFrm: TDACFrm
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = 'Load'
-      TabOrder = 4
+      TabOrder = 3
     end
   end
-  object rgMode: TRadioGroup
-    Left = 9
-    Top = 55
-    Width = 430
+  object TestBtn: TButton
+    Left = 389
+    Top = 87
+    Width = 105
+    Height = 33
+    Caption = 'Test'
+    TabOrder = 1
+  end
+  object rgProgramType: TRadioGroup
+    Left = 8
+    Top = 76
+    Width = 284
     Height = 58
-    Caption = 'Mode'
+    Caption = 'Program Type'
     Columns = 2
     Items.Strings = (
-      'Sin'
-      'SweepSin')
-    TabOrder = 1
-    OnClick = rgModeClick
-  end
-  object gbSweepSin: TGroupBox
-    Left = 16
-    Top = 119
-    Width = 423
-    Height = 154
-    Caption = 'SweepSin Parameters'
+      'Simple Sin'
+      'Accurate Sin')
     TabOrder = 2
-    object lblStartFreq: TLabel
-      Left = 16
-      Top = 32
-      Width = 80
-      Height = 16
-      Caption = 'Start Freq, Hz'
-    end
-    object lblEndFreq: TLabel
-      Left = 16
-      Top = 64
-      Width = 73
-      Height = 16
-      Caption = 'End Freq, Hz'
-    end
-    object lblSweepTime: TLabel
-      Left = 16
-      Top = 96
-      Width = 86
-      Height = 16
-      Caption = 'Sweep Time, s'
-    end
-    object edStartFreq: TEdit
-      Left = 128
-      Top = 29
-      Width = 121
-      Height = 24
-      TabOrder = 0
-      Text = '100'
-    end
-    object edEndFreq: TEdit
-      Left = 128
-      Top = 61
-      Width = 121
-      Height = 24
-      TabOrder = 1
-      Text = '10000'
-    end
-    object edSweepTime: TEdit
-      Left = 128
-      Top = 93
-      Width = 121
-      Height = 24
-      TabOrder = 2
-      Text = '10'
-    end
+    OnClick = rgProgramTypeClick
   end
-  object gbSin: TGroupBox
+  object gbProgram: TGroupBox
     Left = 8
-    Top = 119
-    Width = 431
-    Height = 154
-    Caption = 'Sin Parameters'
+    Top = 140
+    Width = 286
+    Height = 133
+    Caption = 'Program Parameters'
     TabOrder = 3
-    object lblFreq: TLabel
+    object lblProgFreq: TLabel
       Left = 16
       Top = 32
       Width = 48
       Height = 16
       Caption = 'Freq, Hz'
     end
-    object lblAmpl: TLabel
+    object lblProgAmpl: TLabel
       Left = 16
       Top = 64
       Width = 57
       Height = 16
       Caption = 'Amplitude'
     end
-    object edFreq: TEdit
+    object lblMinSamples: TLabel
+      Left = 16
+      Top = 96
+      Width = 73
+      Height = 16
+      Caption = 'Min Samples'
+      Visible = False
+    end
+    object edProgFreq: TEdit
       Left = 128
       Top = 29
       Width = 121
       Height = 24
       TabOrder = 0
-      Text = '1000'
+      Text = '440'
+      OnChange = edProgFreqChange
     end
-    object edAmpl: TEdit
+    object edProgAmpl: TFloatSpinEdit
       Left = 128
-      Top = 61
+      Top = 63
+      Width = 121
+      Height = 26
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Increment = 0.100000000000000000
+      MaxValue = 1.000000000000000000
+      TabOrder = 1
+      Value = 0.500000000000000000
+      OnChange = edProgAmplChange
+    end
+    object edMinSamples: TEdit
+      Left = 128
+      Top = 92
       Width = 121
       Height = 24
-      TabOrder = 1
-      Text = '0.8'
+      TabOrder = 2
+      Text = '1024'
+      Visible = False
     end
-  end
-  object cChart1: cChart
-    Left = 16
-    Top = 279
-    Width = 849
-    Height = 365
-    Cursor = crSizeAll
-    Caption = 'cChart1'
-    TabOrder = 4
-    allowEditPages = False
-    imagelist = ImageList_16
-    showTV = False
-    showLegend = False
-    selectSize = 5
-  end
-  object TestBtn: TButton
-    Left = 747
-    Top = 240
-    Width = 105
-    Height = 33
-    Caption = 'Test'
-    TabOrder = 5
-    OnClick = TestBtnClick
   end
   object ImageList_32: TImageList
     Height = 32
