@@ -6,8 +6,11 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, uDacDevice, uSoundCardDac, Math, ImgList,
   IniFiles, uChart, uBuffTrend1d, uPage, uTextLabel, uAxis, uTrend,
-  uHardwareMath, uSpin, ulogFile, uCommonTypes, uDACProgram,
-  uAccuracyStepSin, uRecBasicFactory;
+  uHardwareMath, uSpin, ulogFile, uCommonTypes,
+
+  uDACProgram,
+  uAccuracyStepSin,
+  uRecBasicFactory;
 
 type
   TDACFrm = class(TRecFrm)
@@ -38,7 +41,6 @@ type
     procedure btnPlayStopClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure FormShow(Sender: TObject);
     procedure btnRefreshDevicesClick(Sender: TObject);
     procedure rgModeClick(Sender: TObject);
     procedure rgProgramTypeClick(Sender: TObject);
@@ -349,10 +351,6 @@ begin
 
   if DACFrm = Self then
     DACFrm := nil;
-end;
-
-procedure TDACFrm.FormShow(Sender: TObject);
-begin
 end;
 
 procedure TDACFrm.btnRefreshDevicesClick(Sender: TObject);

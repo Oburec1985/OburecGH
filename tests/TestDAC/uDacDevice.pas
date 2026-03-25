@@ -523,7 +523,6 @@ end;
 
 procedure TDacDevice.FreeAllBlocks;
 var
-  block: Pointer;
   b:pBlockData;
   I: Integer;
 begin
@@ -532,7 +531,7 @@ begin
     b:=FBlockQueue.GetBlockData(i);
     if b.Data<>nil then
     begin
-      FreeBlock(block);
+      FreeBlock(b.data);
       b.Data:=nil;
     end;
   end;

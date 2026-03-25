@@ -13,7 +13,6 @@ object DACFrm: TDACFrm
   OldCreateOrder = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 12
   object pnlTop: TPanel
@@ -30,7 +29,7 @@ object DACFrm: TDACFrm
     TabOrder = 0
     object btnPlayStop: TButton
       Left = 19
-      Top = 12
+      Top = 11
       Width = 79
       Height = 25
       Margins.Left = 2
