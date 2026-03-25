@@ -659,9 +659,8 @@ begin
   g_GenSignalsFactory := cGenSignalsFactory.Create;
   compMng.Add(g_GenSignalsFactory);
 
-  DacFrm:=TDACFrm.Create(nil);
-  //DacFrm.show;
-  //DacFrm.close;
+  g_DacFrmFactory := cDacFrmFactory.Create;
+  compMng.Add(g_DacFrmFactory);
 end;
 
 procedure RecorderInit;

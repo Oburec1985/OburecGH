@@ -80,8 +80,21 @@ object DACFrm: TDACFrm
       TabOrder = 4
     end
   end
-  object rgProgramType: TRadioGroup
+  object rgMode: TRadioGroup
     Left = 0
+    Top = 71
+    Width = 284
+    Height = 58
+    Caption = 'Mode'
+    Columns = 2
+    Items.Strings = (
+      'Sin'
+      'SweepSin')
+    TabOrder = 1
+    OnClick = rgModeClick
+  end
+  object rgProgramType: TRadioGroup
+    Left = 300
     Top = 71
     Width = 284
     Height = 58
@@ -90,16 +103,73 @@ object DACFrm: TDACFrm
     Items.Strings = (
       'Simple Sin'
       'Accurate Sin')
-    TabOrder = 4
+    TabOrder = 2
     OnClick = rgProgramTypeClick
   end
-  object gbProgram: TGroupBox
+  object gbSweepSin: TGroupBox
     Left = 0
     Top = 135
     Width = 286
     Height = 133
-    Caption = 'Program Parameters'
+    Caption = 'SweepSin Parameters'
     TabOrder = 3
+    Visible = False
+    object lblStartFreq: TLabel
+      Left = 16
+      Top = 32
+      Width = 75
+      Height = 16
+      Caption = 'Start Freq, Hz'
+    end
+    object lblEndFreq: TLabel
+      Left = 16
+      Top = 64
+      Width = 72
+      Height = 16
+      Caption = 'End Freq, Hz'
+    end
+    object lblSweepTime: TLabel
+      Left = 16
+      Top = 96
+      Width = 85
+      Height = 16
+      Caption = 'Sweep Time, s'
+    end
+    object edStartFreq: TEdit
+      Left = 128
+      Top = 29
+      Width = 121
+      Height = 24
+      TabOrder = 0
+      Text = '100'
+      OnChange = edStartFreqChange
+    end
+    object edEndFreq: TEdit
+      Left = 128
+      Top = 61
+      Width = 121
+      Height = 24
+      TabOrder = 1
+      Text = '10000'
+      OnChange = edEndFreqChange
+    end
+    object edSweepTime: TEdit
+      Left = 128
+      Top = 93
+      Width = 121
+      Height = 24
+      TabOrder = 2
+      Text = '10'
+      OnChange = edSweepTimeChange
+    end
+  end
+  object gbProgram: TGroupBox
+    Left = 300
+    Top = 135
+    Width = 286
+    Height = 133
+    Caption = 'Program Parameters'
+    TabOrder = 4
     object lblProgFreq: TLabel
       Left = 16
       Top = 32
@@ -158,12 +228,12 @@ object DACFrm: TDACFrm
     end
   end
   object TestBtn: TButton
-    Left = 523
-    Top = 71
+    Left = 608
+    Top = 83
     Width = 105
     Height = 33
     Caption = 'Test'
-    TabOrder = 1
+    TabOrder = 5
   end
   object cChart1: cChart
     Left = 9
@@ -172,7 +242,7 @@ object DACFrm: TDACFrm
     Height = 390
     Cursor = crSizeAll
     Caption = 'cChart1'
-    TabOrder = 2
+    TabOrder = 6
     allowEditPages = False
     imagelist = ImageList_16
     showTV = False
@@ -4164,3 +4234,4 @@ object DACFrm: TDACFrm
       000000000000}
   end
 end
+
