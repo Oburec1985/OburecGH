@@ -2,7 +2,7 @@ object DACFrm: TDACFrm
   Left = 0
   Top = 0
   Caption = 'DAC Control'
-  ClientHeight = 214
+  ClientHeight = 324
   ClientWidth = 458
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -97,52 +97,49 @@ object DACFrm: TDACFrm
     Margins.Bottom = 2
     Caption = 'Test'
     TabOrder = 1
+    Visible = False
   end
-  object rgMode: TRadioGroup
-    Left = 6
-    Top = 57
-    Width = 213
+  object pcPrograms: TPageControl
+    Left = 8
+    Top = 59
+    Width = 435
     Height = 44
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
-    Caption = 'Mode'
-    Columns = 2
-    Items.Strings = (
-      'Sin'
-      'SweepSin')
+    ActivePage = tsSweepSin
     TabOrder = 2
-    OnClick = rgModeClick
-  end
-  object rgProgramType: TRadioGroup
-    Left = 227
-    Top = 57
-    Width = 213
-    Height = 44
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
-    Caption = 'Program Type'
-    Columns = 2
-    Items.Strings = (
-      'Simple Sin'
-      'Accurate Sin')
-    TabOrder = 3
-    OnClick = rgProgramTypeClick
+    OnChange = pcProgramsChange
+    object tsSin: TTabSheet
+      Caption = 'Sin'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+    end
+    object tsAccuracySin: TTabSheet
+      Caption = 'AccuracySin'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+    end
+    object tsSweepSin: TTabSheet
+      Caption = 'SweepSin'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+    end
   end
   object gbProgram: TGroupBox
-    Left = 6
-    Top = 105
+    Left = 7
+    Top = 108
     Width = 434
-    Height = 100
+    Height = 154
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
     Margins.Bottom = 2
     Caption = 'Signal Parameters'
-    TabOrder = 4
+    TabOrder = 3
     object lblProgFreq: TLabel
       Left = 12
       Top = 24
@@ -156,14 +153,6 @@ object DACFrm: TDACFrm
       Width = 45
       Height = 12
       Caption = 'Amplitude'
-    end
-    object lblMinSamples: TLabel
-      Left = 12
-      Top = 72
-      Width = 55
-      Height = 12
-      Caption = 'Min Samples'
-      Visible = False
     end
     object lblStartFreq: TLabel
       Left = 220
@@ -189,9 +178,16 @@ object DACFrm: TDACFrm
       Caption = 'Sweep Time, s'
       Visible = False
     end
+    object lblVectorTagName: TLabel
+      Left = 12
+      Top = 112
+      Width = 44
+      Height = 12
+      Caption = 'Tag name'
+    end
     object edProgFreq: TEdit
       Left = 96
-      Top = 22
+      Top = 20
       Width = 91
       Height = 20
       TabOrder = 0
@@ -209,22 +205,12 @@ object DACFrm: TDACFrm
       Value = 0.500000000000000000
       OnChange = edProgAmplChange
     end
-    object edMinSamples: TEdit
-      Left = 96
-      Top = 70
-      Width = 91
-      Height = 20
-      TabOrder = 2
-      Text = '1024'
-      Visible = False
-      OnChange = edMinSamplesChange
-    end
     object edStartFreq: TEdit
       Left = 320
       Top = 22
       Width = 91
       Height = 20
-      TabOrder = 3
+      TabOrder = 2
       Text = '100'
       Visible = False
       OnChange = edStartFreqChange
@@ -244,10 +230,27 @@ object DACFrm: TDACFrm
       Top = 70
       Width = 91
       Height = 20
-      TabOrder = 5
+      TabOrder = 3
       Text = '10'
       Visible = False
       OnChange = edSweepTimeChange
+    end
+    object cbVectorTag: TCheckBox
+      Left = 12
+      Top = 85
+      Width = 151
+      Height = 17
+      Caption = 'Duplicate to vector tag'
+      TabOrder = 5
+      OnClick = cbVectorTagClick
+    end
+    object edVectorTagName: TEdit
+      Left = 96
+      Top = 108
+      Width = 315
+      Height = 20
+      TabOrder = 6
+      OnChange = edVectorTagNameChange
     end
   end
   object ImageList_32: TImageList

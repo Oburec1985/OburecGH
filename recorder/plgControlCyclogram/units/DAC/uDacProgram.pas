@@ -3,9 +3,13 @@ unit uDACProgram;
 interface
 
 uses
-  Classes, SysUtils, Math, uCommonTypes, uDacDevice, uSoundCardDac;
+  Classes, SysUtils, Math, uCommonTypes, uDacDevice, uSoundCardDac,
+  uDacVectorTagMirror;
 
 type
+  TDoubleArray = array[0..0] of Double;
+  PDoubleArray = ^TDoubleArray;
+
   TDacProgram = class
   protected
     fDevice: TDacDevice;
@@ -14,10 +18,23 @@ type
     fAmplitude: Double;
     fActive: Boolean;
     fDacData: TDacData;
+    fWaveBuffer: array of Double;
+    fVectorTagBuffer: array of Double;
+    fVectorMirror: TDacVectorTagMirror;
+    fVectorTagEnabled: Boolean;
+    fVectorTagName: string;
     procedure ApplyTransportToDevice;
     procedure DoPrepareAfterSubscribeBeforeDeviceStart; virtual;
     procedure OnGenData(data: TObject); virtual;
-    procedure ProcessBuffer(P: Pointer; Size: Integer); virtual; abstract;
+    procedure ProcessBuffer(P: Pointer; Size: Integer); virtual;
+    procedure GenerateWaveSamples(Count: Integer); virtual; abstract;
+    function GetPlaybackBufferSize(ABufferSize: Integer): Integer; virtual;
+    function DefaultVectorTagName: string; virtual;
+    function GetFrameCount(ASize: Integer): Integer;
+    procedure EnsureWaveBufferSize(ACount: Integer);
+    function PrepareVectorTag: Boolean; virtual;
+    procedure MirrorWaveBuffer(ACount: Integer); virtual;
+    procedure WriteWaveBufferToPcm(P: Pointer; AFrameCount: Integer); virtual;
     function NormalizePhase(APhase: Double): Double;
     function GetAlignedSize(Freq: Double; MinSamples: Integer): Integer; virtual;
     procedure SetFrequency(AValue: Double); virtual;
@@ -32,16 +49,20 @@ type
     procedure Stop(AGraceful: Boolean = False); virtual;
     procedure ConfigureTransport(d: TDacData);
     function IsPlaybackActive: Boolean;
+    function UpdateVectorTag: Boolean;
     procedure SetDevice(AValue: TDacDevice); virtual;
     property Device: TDacDevice read fDevice;
     property Active: Boolean read fActive;
     property Frequency: Double read fFrequency write SetFrequency;
     property Amplitude: Double read fAmplitude write SetAmplitude;
+    property VectorTagEnabled: Boolean read fVectorTagEnabled write fVectorTagEnabled;
+    property VectorTagName: string read fVectorTagName write fVectorTagName;
   end;
 
   TSimpleSinusProgram = class(TDacProgram)
   protected
-    procedure ProcessBuffer(P: Pointer; Size: Integer); override;
+    function DefaultVectorTagName: string; override;
+    procedure GenerateWaveSamples(Count: Integer); override;
   public
     constructor Create; override;
   end;
@@ -56,7 +77,8 @@ type
     procedure SetEndFrequency(AValue: Double);
     procedure SetSweepTimeSec(AValue: Double);
   protected
-    procedure ProcessBuffer(P: Pointer; Size: Integer); override;
+    function DefaultVectorTagName: string; override;
+    procedure GenerateWaveSamples(Count: Integer); override;
   public
     constructor Create; override;
     procedure Start(ALoopCount: Cardinal = 1); override;
@@ -89,11 +111,15 @@ begin
   fDacData.fTransportBitsPerSample := 16;
   fDacData.fTransportChannels := 1;
   fDacData.fTransportBufferSizeMS := 300;
+  fVectorMirror := TDacVectorTagMirror.Create;
+  fVectorTagEnabled := False;
+  fVectorTagName := '';
 end;
 
 destructor TDacProgram.Destroy;
 begin
   Stop;
+  FreeAndNil(fVectorMirror);
   inherited;
 end;
 
@@ -155,6 +181,11 @@ begin
   Result := Assigned(fDevice) and fDevice.IsPlay;
 end;
 
+function TDacProgram.UpdateVectorTag: Boolean;
+begin
+  Result := PrepareVectorTag;
+end;
+
 procedure TDacProgram.SetFrequency(AValue: Double);
 begin
   if AValue < 0 then
@@ -174,6 +205,96 @@ begin
   else if AValue > 1 then
     AValue := 1;
   fAmplitude := AValue;
+end;
+
+function TDacProgram.GetPlaybackBufferSize(ABufferSize: Integer): Integer;
+begin
+  Result := ABufferSize;
+end;
+
+function TDacProgram.DefaultVectorTagName: string;
+begin
+  Result := 'DAC';
+end;
+
+function TDacProgram.GetFrameCount(ASize: Integer): Integer;
+var
+  lBytesPerFrame: Integer;
+begin
+  lBytesPerFrame := (BitsPerSample div 8) * Channels;
+  if lBytesPerFrame <= 0 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+  Result := ASize div lBytesPerFrame;
+end;
+
+procedure TDacProgram.EnsureWaveBufferSize(ACount: Integer);
+begin
+  if Length(fWaveBuffer) <> ACount then
+    SetLength(fWaveBuffer, ACount);
+  if fVectorTagEnabled and (Length(fVectorTagBuffer) <> ACount) then
+    SetLength(fVectorTagBuffer, ACount);
+end;
+
+function TDacProgram.PrepareVectorTag: Boolean;
+var
+  lTagName: string;
+begin
+  Result := False;
+  if not fVectorTagEnabled then
+    Exit;
+
+  lTagName := Trim(fVectorTagName);
+  if lTagName = '' then
+    lTagName := DefaultVectorTagName;
+
+  if lTagName = '' then
+    Exit;
+
+  Result := fVectorMirror.Configure(lTagName, SampleRate);
+end;
+
+procedure TDacProgram.MirrorWaveBuffer(ACount: Integer);
+var
+  i: Integer;
+  lTagName: string;
+begin
+  if (not fVectorTagEnabled) or (ACount <= 0) then
+    Exit;
+
+  if not PrepareVectorTag then
+    Exit;
+
+  for i := 0 to ACount - 1 do
+    fVectorTagBuffer[i] := fAmplitude * (0.5 + 0.5 * fWaveBuffer[i]);
+
+  fVectorMirror.WriteSamples(@fVectorTagBuffer[0], ACount);
+end;
+
+procedure TDacProgram.WriteWaveBufferToPcm(P: Pointer; AFrameCount: Integer);
+var
+  i: Integer;
+  lChannel: Integer;
+  lChannels: Integer;
+  lValue: SmallInt;
+  lSamples: PSmallIntArray;
+begin
+  if (P = nil) or (AFrameCount <= 0) or (BitsPerSample <> 16) then
+    Exit;
+
+  lChannels := Channels;
+  if lChannels <= 0 then
+    lChannels := 1;
+
+  lSamples := PSmallIntArray(P);
+  for i := 0 to AFrameCount - 1 do
+  begin
+    lValue := Round(fAmplitude * fWaveBuffer[i] * 32767);
+    for lChannel := 0 to lChannels - 1 do
+      TSmallIntArray(lSamples)[i * lChannels + lChannel] := lValue;
+  end;
 end;
 
 function TDacProgram.NormalizePhase(APhase: Double): Double;
@@ -217,6 +338,7 @@ var
   lBlockData: PBlockData;
   lBlock: PSoundCardBlock;
   lDataPtr: Pointer;
+  lDataSize: Integer;
 begin
   if not Assigned(fDevice) then
     Exit;
@@ -229,9 +351,30 @@ begin
   if (lBlock = nil) or (lBlock^.Samples = nil) then
     Exit;
 
+  lDataSize := GetPlaybackBufferSize(fDevice.BufferSize);
+  if lDataSize <= 0 then
+    lDataSize := fDevice.BufferSize
+  else if lDataSize > Integer(fDevice.BufferSize) then
+    lDataSize := fDevice.BufferSize;
+
+  lBlock.ValidBytes := lDataSize;
   lDataPtr := @lBlock.Samples[0];
-  ProcessBuffer(lDataPtr, fDevice.BufferSize);
+  ProcessBuffer(lDataPtr, lDataSize);
   fDevice.QueueBuffer;
+end;
+
+procedure TDacProgram.ProcessBuffer(P: Pointer; Size: Integer);
+var
+  lFrameCount: Integer;
+begin
+  lFrameCount := GetFrameCount(Size);
+  if lFrameCount <= 0 then
+    Exit;
+
+  EnsureWaveBufferSize(lFrameCount);
+  GenerateWaveSamples(lFrameCount);
+  MirrorWaveBuffer(lFrameCount);
+  WriteWaveBufferToPcm(P, lFrameCount);
 end;
 
 constructor TSimpleSinusProgram.Create;
@@ -239,25 +382,25 @@ begin
   inherited Create;
 end;
 
-procedure TSimpleSinusProgram.ProcessBuffer(P: Pointer; Size: Integer);
+function TSimpleSinusProgram.DefaultVectorTagName: string;
+begin
+  Result := 'DAC_Sin';
+end;
+
+procedure TSimpleSinusProgram.GenerateWaveSamples(Count: Integer);
 var
   lIndex: Integer;
-  lCount: Integer;
-  lSamples: PSmallIntArray;
   lStep: Double;
 begin
-  if (P = nil) or (Size <= 0) then
+  if Count <= 0 then
     Exit;
 
   fDevice.EnterCS;
   try
-    lSamples := PSmallIntArray(P);
     lStep := 2 * Pi * fFrequency / SampleRate;
-    lCount := Size shr 1;
-
-    for lIndex := 0 to lCount - 1 do
+    for lIndex := 0 to Count - 1 do
     begin
-      TSmallIntArray(lSamples)[lIndex] := Round(fAmplitude * Sin(fCurrentPhase) * 32767);
+      fWaveBuffer[lIndex] := Sin(fCurrentPhase);
       fCurrentPhase := fCurrentPhase + lStep;
       if fCurrentPhase > (2 * Pi) then
         fCurrentPhase := NormalizePhase(fCurrentPhase);
@@ -274,6 +417,11 @@ begin
   fEndFrequency := 10000;
   fSweepTimeSec := 10;
   fElapsedSamples := 0;
+end;
+
+function TSweepSinProgram.DefaultVectorTagName: string;
+begin
+  Result := 'DAC_SweepSin';
 end;
 
 procedure TSweepSinProgram.Start(ALoopCount: Cardinal);
@@ -303,26 +451,21 @@ begin
   fSweepTimeSec := AValue;
 end;
 
-procedure TSweepSinProgram.ProcessBuffer(P: Pointer; Size: Integer);
+procedure TSweepSinProgram.GenerateWaveSamples(Count: Integer);
 var
   lIndex: Integer;
-  lCount: Integer;
-  lSamples: PSmallIntArray;
   lFreq: Double;
   lRate: Double;
   lTimeSec: Double;
   lK: Double;
 begin
-  if (P = nil) or (Size <= 0) then
+  if Count <= 0 then
     Exit;
   if SampleRate <= 0 then
     Exit;
 
-  lSamples := PSmallIntArray(P);
-  lCount := Size shr 1;
   lRate := SampleRate;
-
-  for lIndex := 0 to lCount - 1 do
+  for lIndex := 0 to Count - 1 do
   begin
     if fSweepTimeSec > 0 then
     begin
@@ -335,7 +478,7 @@ begin
     else
       lFreq := fStartFrequency;
 
-    TSmallIntArray(lSamples)[lIndex] := Round(fAmplitude * Sin(fCurrentPhase) * 32767);
+    fWaveBuffer[lIndex] := Sin(fCurrentPhase);
     fCurrentPhase := fCurrentPhase + 2 * Pi * lFreq / lRate;
     if fCurrentPhase > (2 * Pi) then
       fCurrentPhase := NormalizePhase(fCurrentPhase);

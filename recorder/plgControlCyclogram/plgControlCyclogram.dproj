@@ -556,6 +556,7 @@
 			<DCCReference Include="units\DAC\uDacDevice.pas"/>
 			<DCCReference Include="units\DAC\uDacProgram.pas"/>
 			<DCCReference Include="units\DAC\uSoundCardDac.pas"/>
+			<DCCReference Include="units\DAC\uDacVectorTagMirror.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

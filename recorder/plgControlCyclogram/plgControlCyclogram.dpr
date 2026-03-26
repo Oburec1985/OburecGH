@@ -261,7 +261,8 @@ uses
   uAccuracyStepSin in 'units\DAC\uAccuracyStepSin.pas',
   uDacDevice in 'units\DAC\uDacDevice.pas',
   uDacProgram in 'units\DAC\uDacProgram.pas',
-  uSoundCardDac in 'units\DAC\uSoundCardDac.pas';
+  uSoundCardDac in 'units\DAC\uSoundCardDac.pas',
+  uDacVectorTagMirror in 'units\DAC\uDacVectorTagMirror.pas';
 
 //{$FPUTYPE SSE}
 {$R toolbarExtPack.res}

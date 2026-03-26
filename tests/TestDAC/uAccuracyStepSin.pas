@@ -5,103 +5,70 @@ uses
   Classes, SysUtils, Math,
   uDacDevice, uDacProgram, uSoundCardDac;
 type
-  { Синусоида с кратностью периодов }
+  { ????????? ? ?????????? ???????? }
   TAccurateSinusProgram = class(TSimpleSinusProgram)
   private
-    fMinSamplesTarget: Integer;
     fPeriodSamples: Integer;
     fUseAlignedPeriod: Boolean;
-    fMaxAlignedSamples: Integer; // защита от слишком больших буферов
+    fMaxAlignedSamples: Integer; // ¦Ю¦¦TА¦-¦-¦¬TЗ¦¦¦-¦¬¦¦ ¦-¦- TБ¦¬¦¬TИ¦¦¦-¦- ¦+¦¬¦¬¦-¦-TЛ¦¦ ¦-TЛTА¦-¦-¦-¦¦¦-¦-TЛ¦¦ ¦-TГTД¦¦TА
 
-    // Пересчитывает fPeriodSamples и флаг fUseAlignedPeriod по текущей частоте
+    // ¦Ю¦-¦-¦-¦-¦¬TП¦¦TВ TА¦-¦¬¦-¦¦TА ¦¬¦¦TА¦¬¦-¦+¦- ¦¬ ¦¬TА¦¬¦¬¦-¦-¦¦ ¦-¦-¦¬¦-¦-¦¦¦-¦-TБTВ¦¬ TВ¦-TЗ¦-¦-¦¦¦- TА¦¦¦¦¦¬¦-¦-
     procedure UpdatePeriodFromFrequency;
-    // Применяет новое значение MinSamplesTarget (и при необходимости вызывает ReallocateBuffers)
-    procedure SetMinSamplesTarget(AValue: Integer);
 
-    // Выполняет перевыделение буферов под актуальный aligned size
+    // ¦Я¦¦TА¦¦TБTЗ¦¬TВTЛ¦-¦-¦¦TВ ¦-¦-TГTВTА¦¦¦-¦-¦¬¦¦ ¦¬¦-TА¦-¦-¦¦TВTАTЛ ¦-TЛTА¦-¦-¦-¦¦¦-¦-¦-¦¦¦- TА¦¦¦¦¦¬¦-¦-
     procedure ApplyAlignedBufferSize;
   protected
     procedure DoPrepareAfterSubscribeBeforeDeviceStart; override;
+    function GetPlaybackBufferSize(ABufferSize: Integer): Integer; override;
     procedure ProcessBuffer(P: Pointer; Size: Integer); override;
     procedure SetFrequency(AValue: Double); override;
   public
     constructor Create; override;
 
-    { После Open устройства: пересчитать кратный периоду размер и ReallocateBuffers при необходимости }
+    { ¦Ю¦-¦-¦-¦-¦¬TП¦¦TВ ¦-¦-TГTВTА¦¦¦-¦-¦¬¦¦ ¦¬¦-TА¦-¦-¦¦TВTАTЛ TВ¦-TЗ¦-¦-¦¦¦- TА¦¦¦¦¦¬¦-¦- ¦¬¦¦TА¦¦¦+ ¦¬¦-¦¬TГTБ¦¦¦-¦- ¦¬ ¦¬¦-TБ¦¬¦¦ TБ¦-¦¦¦-TЛ TЗ¦-TБTВ¦-TВTЛ. }
     procedure RefreshAlignedBuffers;
-
-    property MinSamplesTarget: Integer read fMinSamplesTarget write SetMinSamplesTarget;
-    // Для диагностики
     property PeriodSamples: Integer read fPeriodSamples;
   end;
 
 implementation
 
+const
+  cMinAlignedSamples = 1024;
 
 { TAccurateSinusProgram }
 
 constructor TAccurateSinusProgram.Create;
 begin
   inherited Create;
-  fMinSamplesTarget := 1024;
   fPeriodSamples := 0;
   fUseAlignedPeriod := False;
 
-  // Защита: не более ~4 секунд моно/16-bit буфера (иначе слишком крупные аллокации)
+  // ¦Ч¦-TЙ¦¬TВ¦- ¦-TВ TБ¦¬¦¬TИ¦¦¦-¦- ¦+¦¬¦¬¦-¦-TЛTЕ ¦-TЛTА¦-¦-¦-¦¦¦-¦-TЛTЕ ¦-TГTД¦¦TА¦-¦-.
   fMaxAlignedSamples := 44100 * 4;
 end;
 
 procedure TAccurateSinusProgram.UpdatePeriodFromFrequency;
-var
-  lAlignedSamples: Integer;
 begin
   fPeriodSamples := 0;
   fUseAlignedPeriod := False;
 
   if (fFrequency <= 0) or (SampleRate <= 0) then Exit;
 
-  // Обновляем лимит по текущей SampleRate
+  // Recalculate the upper aligned-buffer limit from SampleRate.
   fMaxAlignedSamples := SampleRate * 4;
 
   fPeriodSamples := Round(SampleRate / fFrequency);
   if fPeriodSamples < 1 then fPeriodSamples := 1;
 
-  lAlignedSamples := GetAlignedSize(fFrequency, fMinSamplesTarget);
-  if lAlignedSamples > fMaxAlignedSamples then Exit;
+  if fPeriodSamples > fMaxAlignedSamples then Exit;
 
   fUseAlignedPeriod := True;
 end;
 
 procedure TAccurateSinusProgram.ApplyAlignedBufferSize;
-var
-  lAlignedSamples: Integer;
-  lBytesPerSample: Integer;
-  lNewBytes: Integer;
 begin
-  if not Assigned(fDevice) then Exit;
-  if (fDevice.State = stClosed) then Exit;
-  if not fUseAlignedPeriod then Exit;
-
-  // aligned sample count (на канал)
-  lAlignedSamples := GetAlignedSize(fFrequency, fMinSamplesTarget);
-  if lAlignedSamples <= 0 then Exit;
-
-  lBytesPerSample := (BitsPerSample div 8) * Channels;
-  if lBytesPerSample <= 0 then Exit;
-
-  lNewBytes := lAlignedSamples * lBytesPerSample;
-  if Integer(fDevice.BufferSize) <> lNewBytes then
-    fDevice.ReallocateBuffers(lNewBytes);
-end;
-
-procedure TAccurateSinusProgram.SetMinSamplesTarget(AValue: Integer);
-begin
-  if AValue < 64 then AValue := 64;
-  if fMinSamplesTarget = AValue then Exit;
-
-  fMinSamplesTarget := AValue;
-  UpdatePeriodFromFrequency;
-  ApplyAlignedBufferSize;
+  // Размер физического блока не меняем: AccuracySin сам выбирает
+  // полезную длину, кратную целому числу периодов.
 end;
 
 procedure TAccurateSinusProgram.SetFrequency(AValue: Double);
@@ -113,10 +80,10 @@ begin
 
   UpdatePeriodFromFrequency;
 
-  // Если перешли в простой режим — буферы не перевыделяем
+  // ¦ХTБ¦¬¦¬ TВ¦-TЗ¦-TЛ¦¦ TА¦¦¦¦¦¬¦- ¦-¦¦¦-¦-¦¬¦-¦-¦¦¦¦¦-, ¦-TБTВ¦-¦¦¦-TБTП ¦-¦- ¦-¦-TЛTЗ¦-¦-¦¦ ¦-¦¦¦¬TА¦¦TАTЛ¦-¦-¦-¦¦ ¦¦¦¦¦-¦¦TА¦-TЖ¦¬¦¬.
   if not fUseAlignedPeriod then Exit;
 
-  // Если размер должен измениться — перевыделяем буферы
+  // ¦Ф¦¬TП TВ¦-TЗ¦-¦-¦¦¦- TА¦¦¦¦¦¬¦-¦- ¦-¦-¦-¦-¦-¦¬TП¦¦¦- ¦-¦-TГTВTА¦¦¦-¦-¦¬¦¦ ¦¬¦-TА¦-¦-¦¦TВTАTЛ ¦-TЛTА¦-¦-¦-¦¬¦-¦-¦-¦¬TП.
   ApplyAlignedBufferSize;
 end;
 
@@ -132,26 +99,52 @@ begin
   RefreshAlignedBuffers;
 end;
 
+function TAccurateSinusProgram.GetPlaybackBufferSize(ABufferSize: Integer): Integer;
+var
+  lBytesPerSample: Integer;
+  lAvailableSamples: Integer;
+  lWholePeriods: Integer;
+begin
+  Result := ABufferSize;
+
+  if not fUseAlignedPeriod then
+    Exit;
+
+  lBytesPerSample := (BitsPerSample div 8) * Channels;
+  if lBytesPerSample <= 0 then
+    Exit;
+
+  lAvailableSamples := ABufferSize div lBytesPerSample;
+  if (fPeriodSamples <= 0) or (lAvailableSamples < fPeriodSamples) then
+    Exit;
+
+  lWholePeriods := lAvailableSamples div fPeriodSamples;
+  if lWholePeriods < 1 then
+    Exit;
+
+  Result := lWholePeriods * fPeriodSamples * lBytesPerSample;
+end;
+
 procedure TAccurateSinusProgram.ProcessBuffer(P: Pointer; Size: Integer);
 var
   i: Integer;
+  lSampleCount: Integer;
   lSamples: PSmallInt;
   lStep: Double;
 begin
-  if not fUseAlignedPeriod then
+  if (P = nil) or (Size <= 0) then Exit;
+
+  lSampleCount := Size shr 1;
+  if (not fUseAlignedPeriod) or (fPeriodSamples <= 0) or ((lSampleCount mod fPeriodSamples) <> 0) then
   begin
-    // Базовое поведение: просто синус с шагом по точной частоте
     inherited ProcessBuffer(P, Size);
     Exit;
   end;
 
-  if (P = nil) or (Size <= 0) then Exit;
   lSamples := PSmallInt(P);
-  // Шаг фазы задаём по целому числу сэмплов на период,
-  // чтобы в конце буфера не было дрейфа по фазе.
   lStep := (2 * Pi) / fPeriodSamples;
 
-  for i := 0 to fDevice.BufferSize - 1 do
+  for i := 0 to lSampleCount - 1 do
   begin
     lSamples^ := Round(fAmplitude * Sin(fCurrentPhase) * 32767);
     Inc(lSamples);
