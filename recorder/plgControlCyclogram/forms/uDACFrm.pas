@@ -206,16 +206,22 @@ var
   lEndFreq: Double;
   lSweepTime: Double;
 begin
-  if not Assigned(FCurrentProgram) then
+  if not Assigned(FDacDevice) then
     Exit;
+
   lFreq := StrToFloatDef(edProgFreq.Text, 440);
   lAmplitude := edProgAmpl.Value;
   lStartFreq := StrToFloatDef(edStartFreq.Text, 100);
   lEndFreq := StrToFloatDef(edEndFreq.Text, 10000);
   lSweepTime := StrToFloatDef(edSweepTime.Text, 10);
-  FCurrentProgram.VectorTagEnabled := cbVectorTag.Checked;
-  FCurrentProgram.VectorTagName := edVectorTagName.Text;
-  FCurrentProgram.UpdateVectorTag;
+
+  FDacDevice.VectorTagEnabled := cbVectorTag.Checked;
+  FDacDevice.VectorTagName := edVectorTagName.Text;
+  FDacDevice.UpdateVectorTag;
+
+  if not Assigned(FCurrentProgram) then
+    Exit;
+
   if FCurrentProgram is TSweepSinProgram then
   begin
     TSweepSinProgram(FCurrentProgram).StartFrequency := lStartFreq;
@@ -224,6 +230,7 @@ begin
     FCurrentProgram.Amplitude := lAmplitude;
     Exit;
   end;
+
   FCurrentProgram.Frequency := lFreq;
   FCurrentProgram.Amplitude := lAmplitude;
 end;
@@ -239,6 +246,7 @@ begin
   else
     lNewProgram := FSimpleSinusProgram;
   end;
+
   if FCurrentProgram = lNewProgram then
   begin
     if Assigned(FCurrentProgram) and FCurrentProgram.IsPlaybackActive then
@@ -247,19 +255,22 @@ begin
       btnPlayStop.Caption := 'Play';
     Exit;
   end;
+
   lWasActive := Assigned(FCurrentProgram) and FCurrentProgram.IsPlaybackActive;
   if lWasActive then
     FCurrentProgram.Stop(False);
+
   FCurrentProgram := lNewProgram;
   SyncProgramsFromUi;
+
   if lWasActive then
     FCurrentProgram.Start(1);
+
   if Assigned(FCurrentProgram) and FCurrentProgram.IsPlaybackActive then
     btnPlayStop.Caption := 'Stop'
   else
     btnPlayStop.Caption := 'Play';
 end;
-
 procedure TDACFrm.btnPlayStopClick(Sender: TObject);
 var
   lData: TDacData;

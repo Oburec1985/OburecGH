@@ -17,7 +17,6 @@ type
   protected
     procedure DoPrepareAfterSubscribeBeforeDeviceStart; override;
     function GetPlaybackBufferSize(ABufferSize: Integer): Integer; override;
-    function DefaultVectorTagName: string; override;
     procedure GenerateWaveSamples(Count: Integer); override;
     procedure SetFrequency(AValue: Double); override;
   public
@@ -116,11 +115,6 @@ begin
     Exit;
 
   Result := lWholePeriods * fPeriodSamples * lBytesPerSample;
-end;
-
-function TAccurateSinusProgram.DefaultVectorTagName: string;
-begin
-  Result := 'DAC_AccuracySin';
 end;
 
 procedure TAccurateSinusProgram.GenerateWaveSamples(Count: Integer);

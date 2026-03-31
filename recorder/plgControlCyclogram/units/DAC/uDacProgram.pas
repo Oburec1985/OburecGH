@@ -3,13 +3,9 @@ unit uDACProgram;
 interface
 
 uses
-  Classes, SysUtils, Math, uCommonTypes, uDacDevice, uSoundCardDac,
-  uDacVectorTagMirror;
+  Classes, SysUtils, Math, uCommonTypes, uDacDevice, uSoundCardDac;
 
 type
-  TDoubleArray = array[0..0] of Double;
-  PDoubleArray = ^TDoubleArray;
-
   TDacProgram = class
   protected
     fDevice: TDacDevice;
@@ -20,19 +16,14 @@ type
     fDacData: TDacData;
     fWaveBuffer: array of Double;
     fVectorTagBuffer: array of Double;
-    fVectorMirror: TDacVectorTagMirror;
-    fVectorTagEnabled: Boolean;
-    fVectorTagName: string;
     procedure ApplyTransportToDevice;
     procedure DoPrepareAfterSubscribeBeforeDeviceStart; virtual;
     procedure OnGenData(data: TObject); virtual;
     procedure ProcessBuffer(P: Pointer; Size: Integer); virtual;
     procedure GenerateWaveSamples(Count: Integer); virtual; abstract;
     function GetPlaybackBufferSize(ABufferSize: Integer): Integer; virtual;
-    function DefaultVectorTagName: string; virtual;
     function GetFrameCount(ASize: Integer): Integer;
     procedure EnsureWaveBufferSize(ACount: Integer);
-    function PrepareVectorTag: Boolean; virtual;
     procedure MirrorWaveBuffer(ACount: Integer); virtual;
     procedure WriteWaveBufferToPcm(P: Pointer; AFrameCount: Integer); virtual;
     function NormalizePhase(APhase: Double): Double;
@@ -55,13 +46,10 @@ type
     property Active: Boolean read fActive;
     property Frequency: Double read fFrequency write SetFrequency;
     property Amplitude: Double read fAmplitude write SetAmplitude;
-    property VectorTagEnabled: Boolean read fVectorTagEnabled write fVectorTagEnabled;
-    property VectorTagName: string read fVectorTagName write fVectorTagName;
   end;
 
   TSimpleSinusProgram = class(TDacProgram)
   protected
-    function DefaultVectorTagName: string; override;
     procedure GenerateWaveSamples(Count: Integer); override;
   public
     constructor Create; override;
@@ -77,7 +65,6 @@ type
     procedure SetEndFrequency(AValue: Double);
     procedure SetSweepTimeSec(AValue: Double);
   protected
-    function DefaultVectorTagName: string; override;
     procedure GenerateWaveSamples(Count: Integer); override;
   public
     constructor Create; override;
@@ -111,15 +98,11 @@ begin
   fDacData.fTransportBitsPerSample := 16;
   fDacData.fTransportChannels := 1;
   fDacData.fTransportBufferSizeMS := 300;
-  fVectorMirror := TDacVectorTagMirror.Create;
-  fVectorTagEnabled := False;
-  fVectorTagName := '';
 end;
 
 destructor TDacProgram.Destroy;
 begin
   Stop;
-  FreeAndNil(fVectorMirror);
   inherited;
 end;
 
@@ -137,6 +120,7 @@ begin
   end;
 
   fDevice.OnGenerateData := OnGenData;
+  fDevice.ResetVectorTagTime;
   fActive := True;
   DoPrepareAfterSubscribeBeforeDeviceStart;
   fCurrentPhase := 0;
@@ -183,7 +167,7 @@ end;
 
 function TDacProgram.UpdateVectorTag: Boolean;
 begin
-  Result := PrepareVectorTag;
+  Result := Assigned(fDevice) and fDevice.UpdateVectorTag;
 end;
 
 procedure TDacProgram.SetFrequency(AValue: Double);
@@ -212,11 +196,6 @@ begin
   Result := ABufferSize;
 end;
 
-function TDacProgram.DefaultVectorTagName: string;
-begin
-  Result := 'DAC';
-end;
-
 function TDacProgram.GetFrameCount(ASize: Integer): Integer;
 var
   lBytesPerFrame: Integer;
@@ -234,43 +213,22 @@ procedure TDacProgram.EnsureWaveBufferSize(ACount: Integer);
 begin
   if Length(fWaveBuffer) <> ACount then
     SetLength(fWaveBuffer, ACount);
-  if fVectorTagEnabled and (Length(fVectorTagBuffer) <> ACount) then
+  if Assigned(fDevice) and fDevice.VectorTagEnabled and
+    (Length(fVectorTagBuffer) <> ACount) then
     SetLength(fVectorTagBuffer, ACount);
-end;
-
-function TDacProgram.PrepareVectorTag: Boolean;
-var
-  lTagName: string;
-begin
-  Result := False;
-  if not fVectorTagEnabled then
-    Exit;
-
-  lTagName := Trim(fVectorTagName);
-  if lTagName = '' then
-    lTagName := DefaultVectorTagName;
-
-  if lTagName = '' then
-    Exit;
-
-  Result := fVectorMirror.Configure(lTagName, SampleRate);
 end;
 
 procedure TDacProgram.MirrorWaveBuffer(ACount: Integer);
 var
   i: Integer;
-  lTagName: string;
 begin
-  if (not fVectorTagEnabled) or (ACount <= 0) then
-    Exit;
-
-  if not PrepareVectorTag then
+  if (not Assigned(fDevice)) or (not fDevice.VectorTagEnabled) or (ACount <= 0) then
     Exit;
 
   for i := 0 to ACount - 1 do
     fVectorTagBuffer[i] := fAmplitude * (0.5 + 0.5 * fWaveBuffer[i]);
 
-  fVectorMirror.WriteSamples(@fVectorTagBuffer[0], ACount);
+  fDevice.WriteVectorSamples(@fVectorTagBuffer[0], ACount);
 end;
 
 procedure TDacProgram.WriteWaveBufferToPcm(P: Pointer; AFrameCount: Integer);
@@ -382,11 +340,6 @@ begin
   inherited Create;
 end;
 
-function TSimpleSinusProgram.DefaultVectorTagName: string;
-begin
-  Result := 'DAC_Sin';
-end;
-
 procedure TSimpleSinusProgram.GenerateWaveSamples(Count: Integer);
 var
   lIndex: Integer;
@@ -417,11 +370,6 @@ begin
   fEndFrequency := 10000;
   fSweepTimeSec := 10;
   fElapsedSamples := 0;
-end;
-
-function TSweepSinProgram.DefaultVectorTagName: string;
-begin
-  Result := 'DAC_SweepSin';
 end;
 
 procedure TSweepSinProgram.Start(ALoopCount: Cardinal);
