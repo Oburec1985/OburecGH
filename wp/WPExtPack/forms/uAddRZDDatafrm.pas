@@ -3,7 +3,7 @@ unit uAddRZDDatafrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, StdCtrls, ExtCtrls, ComCtrls, uBtnListView, Spin, uComponentServises,
   uCommonMath, Pathutils, uPathMng, uLogFile, inifiles,
   ShellAPI;

@@ -1,0 +1,2023 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid " Если сигнал UTS отсутствует для замера, то для него будет найде"
+msgstr ""
+
+msgid " Модуль выполняет коррекцию времени UTS сигналов на время старта"
+msgstr ""
+
+msgid " нуля. Корректирующее "
+msgstr ""
+
+msgid "+ Максимум"
+msgstr ""
+
+msgid ",сек"
+msgstr ""
+
+msgid "- Максимум"
+msgstr ""
+
+msgid ".XLSRep"
+msgstr ""
+
+msgid ".\\RZDmatrix\\RZDMatrix.rzd"
+msgstr ""
+
+msgid ".\\Tests\\"
+msgstr ""
+
+msgid "1-я произв."
+msgstr ""
+
+msgid "2-я произв."
+msgstr ""
+
+msgid "A1"
+msgstr ""
+
+msgid "A2"
+msgstr ""
+
+msgid "AddBtn"
+msgstr ""
+
+msgid "AddTagBtn"
+msgstr ""
+
+msgid "AllTest"
+msgstr ""
+
+msgid "Ampl ref."
+msgstr ""
+
+msgid "Ampl. impact"
+msgstr ""
+
+msgid "Apply"
+msgstr ""
+
+msgid "AutoCalibr"
+msgstr ""
+
+msgid "Axis X:"
+msgstr ""
+
+msgid "Axis Y:"
+msgstr ""
+
+msgid "C:\\Winpos\\FFTFltCfg\\test.txt"
+msgstr ""
+
+msgid "ChanCB"
+msgstr ""
+
+msgid "Chart"
+msgstr ""
+
+msgid "Clear"
+msgstr ""
+
+msgid "ComboBox1"
+msgstr ""
+
+msgid "Contains"
+msgstr ""
+
+msgid "Counter config"
+msgstr ""
+
+msgid "Cursors"
+msgstr ""
+
+msgid "D="
+msgstr ""
+
+msgid "DelTagBtn"
+msgstr ""
+
+msgid "Edit1"
+msgstr ""
+
+msgid "Ends with"
+msgstr ""
+
+msgid "Equal"
+msgstr ""
+
+msgid "EvalBtn"
+msgstr ""
+
+msgid "Exc"
+msgstr ""
+
+msgid "F"
+msgstr ""
+
+msgid "FFT фильтр"
+msgstr ""
+
+msgid "FFTCount"
+msgstr ""
+
+msgid "Filter trend"
+msgstr ""
+
+msgid "Fs"
+msgstr ""
+
+msgid "GetXBtn"
+msgstr ""
+
+msgid "GraphBtn"
+msgstr ""
+
+msgid "Gt Trel="
+msgstr ""
+
+msgid "Hi, lvl, %"
+msgstr ""
+
+msgid "Hz"
+msgstr ""
+
+msgid "ID"
+msgstr ""
+
+msgid "ID источника"
+msgstr ""
+
+msgid "Im"
+msgstr ""
+
+msgid "Im/Re"
+msgstr ""
+
+msgid "Impact"
+msgstr ""
+
+msgid "Impact len"
+msgstr ""
+
+msgid "Info:"
+msgstr ""
+
+msgid "L1"
+msgstr ""
+
+msgid "L1:"
+msgstr ""
+
+msgid "L1CB"
+msgstr ""
+
+msgid "L2"
+msgstr ""
+
+msgid "L2:"
+msgstr ""
+
+msgid "L3"
+msgstr ""
+
+msgid "L3:"
+msgstr ""
+
+msgid "Larger than"
+msgstr ""
+
+msgid "Level \"+\""
+msgstr ""
+
+msgid "Level \"-\""
+msgstr ""
+
+msgid "LgX"
+msgstr ""
+
+msgid "LgY"
+msgstr ""
+
+msgid "LineSrcCB"
+msgstr ""
+
+msgid "LinkBtn"
+msgstr ""
+
+msgid "LissajousFrm"
+msgstr ""
+
+msgid "Lo, lvl, %"
+msgstr ""
+
+msgid "MNKFrm"
+msgstr ""
+
+msgid "Max"
+msgstr ""
+
+msgid "Max1"
+msgstr ""
+
+msgid "Max2"
+msgstr ""
+
+msgid "Max3"
+msgstr ""
+
+msgid "Memo1"
+msgstr ""
+
+msgid "Min"
+msgstr ""
+
+msgid "Min1"
+msgstr ""
+
+msgid "Min2"
+msgstr ""
+
+msgid "Min3"
+msgstr ""
+
+msgid "NameEdit"
+msgstr ""
+
+msgid "Noise \"+\""
+msgstr ""
+
+msgid "Noise \"-\""
+msgstr ""
+
+msgid "Not contains"
+msgstr ""
+
+msgid "Not equal"
+msgstr ""
+
+msgid "P="
+msgstr ""
+
+msgid "PathEdit"
+msgstr ""
+
+msgid "Pause, sec"
+msgstr ""
+
+msgid "Poly"
+msgstr ""
+
+msgid "Portion, sec"
+msgstr ""
+
+msgid "PropEdit"
+msgstr ""
+
+msgid "Re"
+msgstr ""
+
+msgid "ReadGraph"
+msgstr ""
+
+msgid "Ref"
+msgstr ""
+
+msgid "Ref. len"
+msgstr ""
+
+msgid "Ref. shift"
+msgstr ""
+
+msgid "RefCount"
+msgstr ""
+
+msgid "RightGB"
+msgstr ""
+
+msgid "Rtf (выс. кач-во"
+msgstr ""
+
+msgid "Rtf отчет"
+msgstr ""
+
+msgid "S1"
+msgstr ""
+
+msgid "S2"
+msgstr ""
+
+msgid "S3"
+msgstr ""
+
+msgid "S4"
+msgstr ""
+
+msgid "Scale"
+msgstr ""
+
+msgid "ScaleCurveChart"
+msgstr ""
+
+msgid "ScriptFile.xml"
+msgstr ""
+
+msgid "SectShift"
+msgstr ""
+
+msgid "Shock"
+msgstr ""
+
+msgid "ShockCount"
+msgstr ""
+
+msgid "Signal"
+msgstr ""
+
+msgid "Signals"
+msgstr ""
+
+msgid "Sin Дб(20 Lg"
+msgstr ""
+
+msgid "Smaller than"
+msgstr ""
+
+msgid "SrcPath"
+msgstr ""
+
+msgid "Starts with"
+msgstr ""
+
+msgid "Sx"
+msgstr ""
+
+msgid "Sy"
+msgstr ""
+
+msgid "T1"
+msgstr ""
+
+msgid "T1, sec"
+msgstr ""
+
+msgid "T1="
+msgstr ""
+
+msgid "T2"
+msgstr ""
+
+msgid "T2, sec"
+msgstr ""
+
+msgid "T2="
+msgstr ""
+
+msgid "Tabs="
+msgstr ""
+
+msgid "ToolBar1"
+msgstr ""
+
+msgid "ToolBar2"
+msgstr ""
+
+msgid "ToolButton1"
+msgstr ""
+
+msgid "UnLinkBtn"
+msgstr ""
+
+msgid "VBScriptFrm"
+msgstr ""
+
+msgid "Vt Trel="
+msgstr ""
+
+msgid "X"
+msgstr ""
+
+msgid "X1"
+msgstr ""
+
+msgid "X1 значение (сек.):"
+msgstr ""
+
+msgid "X1:"
+msgstr ""
+
+msgid "X1CB"
+msgstr ""
+
+msgid "X2"
+msgstr ""
+
+msgid "X2 смещение от X1 (сек.):"
+msgstr ""
+
+msgid "X2:"
+msgstr ""
+
+msgid "X:"
+msgstr ""
+
+msgid "XCb"
+msgstr ""
+
+msgid "Y"
+msgstr ""
+
+msgid "Y:"
+msgstr ""
+
+msgid "cChart1"
+msgstr ""
+
+msgid "dF="
+msgstr ""
+
+msgid "dX"
+msgstr ""
+
+msgid "dX или N (число точек разбиения шкалы)"
+msgstr ""
+
+msgid "fs"
+msgstr ""
+
+msgid "g"
+msgstr ""
+
+msgid "hour"
+msgstr ""
+
+msgid "kHz"
+msgstr ""
+
+msgid "m/s"
+msgstr ""
+
+msgid "min"
+msgstr ""
+
+msgid "msec"
+msgstr ""
+
+msgid "rpm"
+msgstr ""
+
+msgid "sec"
+msgstr ""
+
+msgid "Абс."
+msgstr ""
+
+msgid "Абс. знач."
+msgstr ""
+
+msgid "Авто"
+msgstr ""
+
+msgid "Автокалибровка"
+msgstr ""
+
+msgid "Автоматические полосы"
+msgstr ""
+
+msgid "Амплитуда"
+msgstr ""
+
+msgid "Амплитуда/Фаза"
+msgstr ""
+
+msgid "Амплитулный спектр"
+msgstr ""
+
+msgid "Анализ экстремумов"
+msgstr ""
+
+msgid "База по испытаниям"
+msgstr ""
+
+msgid "Базовый каталог"
+msgstr ""
+
+msgid "Балансировать ноль"
+msgstr ""
+
+msgid "Балансировка нуля"
+msgstr ""
+
+msgid "Без общ. тчк."
+msgstr ""
+
+msgid "Более"
+msgstr ""
+
+msgid "В интервале"
+msgstr ""
+
+msgid "В отчет попадут каналы у которые есть свойство XLSRep=1"
+msgstr ""
+
+msgid "Верт. с смещ. внутрь"
+msgstr ""
+
+msgid "Верт. с смещ. наружу"
+msgstr ""
+
+msgid "Верт. тяга:"
+msgstr ""
+
+msgid "Верт. центр."
+msgstr ""
+
+msgid "Верт. центр. нагр."
+msgstr ""
+
+msgid "Вертикальные линии"
+msgstr ""
+
+msgid "Весь сигнал"
+msgstr ""
+
+msgid "Включить"
+msgstr ""
+
+msgid "Включить дату"
+msgstr ""
+
+msgid "Возвращаемый результат"
+msgstr ""
+
+msgid "Вписать с значениями имена оценок (Word)"
+msgstr ""
+
+msgid "Время"
+msgstr ""
+
+msgid "Время испытания"
+msgstr ""
+
+msgid "Время старта испытания прописано в Mera файле ключ DateTime"
+msgstr ""
+
+msgid "Все испытание"
+msgstr ""
+
+msgid "Все каналы"
+msgstr ""
+
+msgid "Все что выше кривой"
+msgstr ""
+
+msgid "Второй файл будет начинаться с секунды указанной в индикаторе (т"
+msgstr ""
+
+msgid "Выберите действие"
+msgstr ""
+
+msgid "Выбор второго файла, который будет присоединен в конец первого"
+msgstr ""
+
+msgid "Выбор границ испытания"
+msgstr ""
+
+msgid "Выбор границ испытания:"
+msgstr ""
+
+msgid "Выбор действия"
+msgstr ""
+
+msgid "Выбор замера"
+msgstr ""
+
+msgid "Выбор первого файла к которому будет присоединен второй"
+msgstr ""
+
+msgid "Выбор пути для сохранения результатов экспрес анализа в файл"
+msgstr ""
+
+msgid "Выбрать все оценки"
+msgstr ""
+
+msgid "Выбрать интервал для вычисления матрицы"
+msgstr ""
+
+msgid "Выбрать интервал для вычисления смещения нуля"
+msgstr ""
+
+msgid "Выбрать интервалы обработки для всех замеров по диапазону график"
+msgstr ""
+
+msgid "Выбрать интервалы обработки для всех замеров по курсору"
+msgstr ""
+
+msgid "Выбрать по курсору"
+msgstr ""
+
+msgid "Выделить все"
+msgstr ""
+
+msgid "Выключить"
+msgstr ""
+
+msgid "Выполнить макрос"
+msgstr ""
+
+msgid "Выход"
+msgstr ""
+
+msgid "Вычислить"
+msgstr ""
+
+msgid "Генератор"
+msgstr ""
+
+msgid "Генерить путь автоматом"
+msgstr ""
+
+msgid "Гор. нагр."
+msgstr ""
+
+msgid "Гор. смещ. внутрь"
+msgstr ""
+
+msgid "Гор. смещ. наружу"
+msgstr ""
+
+msgid "Гор. тяга:"
+msgstr ""
+
+msgid "Гориз. сила"
+msgstr ""
+
+msgid "Границы"
+msgstr ""
+
+msgid "Границы поиска"
+msgstr ""
+
+msgid "Графика"
+msgstr ""
+
+msgid "Графики"
+msgstr ""
+
+msgid "Графический объект не создан"
+msgstr ""
+
+msgid "Далее"
+msgstr ""
+
+msgid "Датчик №1:"
+msgstr ""
+
+msgid "Датчик №2:"
+msgstr ""
+
+msgid "Датчик №3:"
+msgstr ""
+
+msgid "Датчик №4:"
+msgstr ""
+
+msgid "Дб (20Lg"
+msgstr ""
+
+msgid "Диаметр"
+msgstr ""
+
+msgid "Диапазон графика"
+msgstr ""
+
+msgid "Длина интервала, сек."
+msgstr ""
+
+msgid "Длина сигнала"
+msgstr ""
+
+msgid "Длительность, с"
+msgstr ""
+
+msgid "Длительность, с:"
+msgstr ""
+
+msgid "Добавить"
+msgstr ""
+
+msgid "Добавить гистограмму"
+msgstr ""
+
+msgid "Добавить группу"
+msgstr ""
+
+msgid "Добавить канал"
+msgstr ""
+
+msgid "Добавить канал:"
+msgstr ""
+
+msgid "Добавить обратную связь"
+msgstr ""
+
+msgid "Добавить параметры"
+msgstr ""
+
+msgid "Добавить полосу"
+msgstr ""
+
+msgid "Добавить сигналы"
+msgstr ""
+
+msgid "Добавить тег"
+msgstr ""
+
+msgid "Добавить точку"
+msgstr ""
+
+msgid "Добавить/ Удалить сигналы"
+msgstr ""
+
+msgid "Добавление данных в базу"
+msgstr ""
+
+msgid "Добавление триггера"
+msgstr ""
+
+msgid "Доли"
+msgstr ""
+
+msgid "Дополнения"
+msgstr ""
+
+msgid "Дополнительно"
+msgstr ""
+
+msgid "Дополнять нулями"
+msgstr ""
+
+msgid "Допустимое отклонение в долях"
+msgstr ""
+
+msgid "Доступные сигналы"
+msgstr ""
+
+msgid "Ед."
+msgstr ""
+
+msgid "Единицы"
+msgstr ""
+
+msgid "Единицы для порога"
+msgstr ""
+
+msgid "Единицы измерения"
+msgstr ""
+
+msgid "Единицы измерения X:"
+msgstr ""
+
+msgid "Единицы измерения Y:"
+msgstr ""
+
+msgid "Единицы измерения:"
+msgstr ""
+
+msgid "Журнал"
+msgstr ""
+
+msgid "Завершить"
+msgstr ""
+
+msgid "Загрузить"
+msgstr ""
+
+msgid "Загрузить данные и расчитать матрицу"
+msgstr ""
+
+msgid "Загрузить настройки"
+msgstr ""
+
+msgid "Задать вручную"
+msgstr ""
+
+msgid "Заезд"
+msgstr ""
+
+msgid "Замер"
+msgstr ""
+
+msgid "Замер:"
+msgstr ""
+
+msgid "Заместить файл"
+msgstr ""
+
+msgid "Записывать начальное состояние \"1\""
+msgstr ""
+
+msgid "Значение"
+msgstr ""
+
+msgid "Изменить интервал обработки"
+msgstr ""
+
+msgid "Изменить оператор"
+msgstr ""
+
+msgid "Импорт"
+msgstr ""
+
+msgid "Импорт настроек полос в файл"
+msgstr ""
+
+msgid "Имя"
+msgstr ""
+
+msgid "Имя датчика"
+msgstr ""
+
+msgid "Имя замера"
+msgstr ""
+
+msgid "Имя замера по умолчанию:"
+msgstr ""
+
+msgid "Имя замера:"
+msgstr ""
+
+msgid "Имя испытания"
+msgstr ""
+
+msgid "Имя канала:"
+msgstr ""
+
+msgid "Имя линии"
+msgstr ""
+
+msgid "Имя параметра"
+msgstr ""
+
+msgid "Имя по умолчанию"
+msgstr ""
+
+msgid "Имя свойства:"
+msgstr ""
+
+msgid "Имя сигнала"
+msgstr ""
+
+msgid "Имя трубки допуска"
+msgstr ""
+
+msgid "Имя трубки допуска (расширение и путь указывать не требуется. Фа"
+msgstr ""
+
+msgid "Инд."
+msgstr ""
+
+msgid "Индекс 1"
+msgstr ""
+
+msgid "Индекс 2"
+msgstr ""
+
+msgid "Индекс:"
+msgstr ""
+
+msgid "Индексы"
+msgstr ""
+
+msgid "Инкремент, сек"
+msgstr ""
+
+msgid "Интервал \"вычисления нуля\":"
+msgstr ""
+
+msgid "Интервал обработки:"
+msgstr ""
+
+msgid "Искать \"+\" макс."
+msgstr ""
+
+msgid "Искать \"-\" макс."
+msgstr ""
+
+msgid "Искать интервал"
+msgstr ""
+
+msgid "Искать спады"
+msgstr ""
+
+msgid "Искать фронты"
+msgstr ""
+
+msgid "Искать экстремумы:"
+msgstr ""
+
+msgid "Исп. имена"
+msgstr ""
+
+msgid "Использовать БДИ"
+msgstr ""
+
+msgid "Использовать префиксы для поиска сигналов"
+msgstr ""
+
+msgid "Использовать фильтр"
+msgstr ""
+
+msgid "Используемые сигналы"
+msgstr ""
+
+msgid "Используется если галочка Определить сдвиг в каждом замере снята"
+msgstr ""
+
+msgid "Испытание"
+msgstr ""
+
+msgid "Источник"
+msgstr ""
+
+msgid "Источник:"
+msgstr ""
+
+msgid "Источники операторов"
+msgstr ""
+
+msgid "Источники сигналов"
+msgstr ""
+
+msgid "Исходная функция"
+msgstr ""
+
+msgid "Калибровка"
+msgstr ""
+
+msgid "Калибровка амплитуд фазных напряжений"
+msgstr ""
+
+msgid "Канал"
+msgstr ""
+
+msgid "Канал \"Старт\""
+msgstr ""
+
+msgid "Канал \"Стоп\""
+msgstr ""
+
+msgid "Канал сброса времени"
+msgstr ""
+
+msgid "Картинки отдельно"
+msgstr ""
+
+msgid "Каталог"
+msgstr ""
+
+msgid "Каталог замера"
+msgstr ""
+
+msgid "Каталог замера по умолчанию:"
+msgstr ""
+
+msgid "Каталог по умолчанию"
+msgstr ""
+
+msgid "Конец"
+msgstr ""
+
+msgid "Конец полосы"
+msgstr ""
+
+msgid "Конец, с:"
+msgstr ""
+
+msgid "Конечн. частота F2, Гц"
+msgstr ""
+
+msgid "Корректируемые UTS сигналы:"
+msgstr ""
+
+msgid "Коррекция времени"
+msgstr ""
+
+msgid "Кривая"
+msgstr ""
+
+msgid "Курсор"
+msgstr ""
+
+msgid "Легенда"
+msgstr ""
+
+msgid "Линейный закон"
+msgstr ""
+
+msgid "Линии"
+msgstr ""
+
+msgid "Линковать промежуточные вычисления в дерево сигналов"
+msgstr ""
+
+msgid "Логарифм"
+msgstr ""
+
+msgid "МПа"
+msgstr ""
+
+msgid "Максимальное число колонок:"
+msgstr ""
+
+msgid "Максимум"
+msgstr ""
+
+msgid "Масштаб"
+msgstr ""
+
+msgid "Матрица"
+msgstr ""
+
+msgid "Матрица влияния РЖД"
+msgstr ""
+
+msgid "Матрицы"
+msgstr ""
+
+msgid "Меандр"
+msgstr ""
+
+msgid "Менее"
+msgstr ""
+
+msgid "Менять амплитуду"
+msgstr ""
+
+msgid "Менять замер"
+msgstr ""
+
+msgid "Менять частоту"
+msgstr ""
+
+msgid "Минимум"
+msgstr ""
+
+msgid "Модуль"
+msgstr ""
+
+msgid "На одной оси"
+msgstr ""
+
+msgid "Назначение:"
+msgstr ""
+
+msgid "Назначить"
+msgstr ""
+
+msgid "Назначить канал"
+msgstr ""
+
+msgid "Наименование"
+msgstr ""
+
+msgid "Настройка алгоритма"
+msgstr ""
+
+msgid "Настройка выбора"
+msgstr ""
+
+msgid "Настройка границ"
+msgstr ""
+
+msgid "Настройка графики"
+msgstr ""
+
+msgid "Настройка интервала"
+msgstr ""
+
+msgid "Настройка отчета циклограммы (версия 24.08.18)"
+msgstr ""
+
+msgid "Настройка полос"
+msgstr ""
+
+msgid "Настройка расчета по спектру"
+msgstr ""
+
+msgid "Настройка расчета спектра"
+msgstr ""
+
+msgid "Настройка списка каналов для отчета"
+msgstr ""
+
+msgid "Настройка триггеров"
+msgstr ""
+
+msgid "Настройка уровней"
+msgstr ""
+
+msgid "Настройка фильтра"
+msgstr ""
+
+msgid "Нач. частота F1, Гц"
+msgstr ""
+
+msgid "Начало"
+msgstr ""
+
+msgid "Начало полосы"
+msgstr ""
+
+msgid "Начало, с:"
+msgstr ""
+
+msgid "Не активно"
+msgstr ""
+
+msgid "Не использовать проверку"
+msgstr ""
+
+msgid "Не найден канал UTS"
+msgstr ""
+
+msgid "Невидимая служебная форма для обработки сообщений"
+msgstr ""
+
+msgid "Нерекурсивный фильтр ФНЧ"
+msgstr ""
+
+msgid "Номер производной"
+msgstr ""
+
+msgid "Номер срабатывания"
+msgstr ""
+
+msgid "Нужно включить если замеры не содержат UTS но имеют одноименный "
+msgstr ""
+
+msgid "Обновить полосу"
+msgstr ""
+
+msgid "Обновить пути в базе"
+msgstr ""
+
+msgid "Обнулить"
+msgstr ""
+
+msgid "Обрабатываемые сигналы"
+msgstr ""
+
+msgid "Обработка БМП"
+msgstr ""
+
+msgid "Обратная связь"
+msgstr ""
+
+msgid "Обратное преобразование Фурье"
+msgstr ""
+
+msgid "Объект испытания"
+msgstr ""
+
+msgid "Оператор"
+msgstr ""
+
+msgid "Описание"
+msgstr ""
+
+msgid "Описание:"
+msgstr ""
+
+msgid "Определение источников сигналов"
+msgstr ""
+
+msgid "Определение нагруженности участка железнодорожного пути"
+msgstr ""
+
+msgid "Определить сдвиг в каждом замере по имени канала"
+msgstr ""
+
+msgid "Оси"
+msgstr ""
+
+msgid "Ось X:"
+msgstr ""
+
+msgid "Ось Y:"
+msgstr ""
+
+msgid "Отклик"
+msgstr ""
+
+msgid "Отклонение от среднего"
+msgstr ""
+
+msgid "Отклонение от среднего (МО)"
+msgstr ""
+
+msgid "Открыть отчет"
+msgstr ""
+
+msgid "Открыть отчет после создания"
+msgstr ""
+
+msgid "Открыть файл после создания"
+msgstr ""
+
+msgid "Отмена"
+msgstr ""
+
+msgid "Отображать допуски"
+msgstr ""
+
+msgid "Отрисовать графики"
+msgstr ""
+
+msgid "Отступ на старте, с"
+msgstr ""
+
+msgid "Отступ на стопе, с"
+msgstr ""
+
+msgid "Отступ слева:"
+msgstr ""
+
+msgid "Отступ справа:"
+msgstr ""
+
+msgid "Отчет"
+msgstr ""
+
+msgid "Отчет MS Excel"
+msgstr ""
+
+msgid "Отчет MS Word"
+msgstr ""
+
+msgid "Отчет циклограмма.xls"
+msgstr ""
+
+msgid "Оценки"
+msgstr ""
+
+msgid "Па"
+msgstr ""
+
+msgid "Параметр для расчета матрицы"
+msgstr ""
+
+msgid "Параметры"
+msgstr ""
+
+msgid "Параметры двигателя"
+msgstr ""
+
+msgid "Параметры расчета"
+msgstr ""
+
+msgid "Параметры сигнала"
+msgstr ""
+
+msgid "Первый импульс"
+msgstr ""
+
+msgid "Передискретизация"
+msgstr ""
+
+msgid "Переменные..."
+msgstr ""
+
+msgid "Перечень замеров"
+msgstr ""
+
+msgid "Период выполнения скрипта"
+msgstr ""
+
+msgid "Писать с разрывами"
+msgstr ""
+
+msgid "Питание:"
+msgstr ""
+
+msgid "Плагин пакетной обработки"
+msgstr ""
+
+msgid "По вертикали"
+msgstr ""
+
+msgid "По времени"
+msgstr ""
+
+msgid "По гистерезису"
+msgstr ""
+
+msgid "По горизонтали"
+msgstr ""
+
+msgid "По значению"
+msgstr ""
+
+msgid "По каналу"
+msgstr ""
+
+msgid "По курсору в графике WP"
+msgstr ""
+
+msgid "По триггерным сигналам"
+msgstr ""
+
+msgid "Поверх окон"
+msgstr ""
+
+msgid "Поддреживает комбинацию Ctrl+C"
+msgstr ""
+
+msgid "Поиск границ отображения"
+msgstr ""
+
+msgid "Поиск интервала"
+msgstr ""
+
+msgid "Поиск каналов"
+msgstr ""
+
+msgid "Поиск максимумов"
+msgstr ""
+
+msgid "Поиск экстремумов"
+msgstr ""
+
+msgid "Показать подсказки"
+msgstr ""
+
+msgid "Полином"
+msgstr ""
+
+msgid "Полный масштаб"
+msgstr ""
+
+msgid "Положение курсора"
+msgstr ""
+
+msgid "Положительные экстремумы"
+msgstr ""
+
+msgid "Пользовательское"
+msgstr ""
+
+msgid "Помощь"
+msgstr ""
+
+msgid "Поправка времени, с"
+msgstr ""
+
+msgid "Порог"
+msgstr ""
+
+msgid "Порог триггера"
+msgstr ""
+
+msgid "Порог триггера \"Старт\""
+msgstr ""
+
+msgid "Порог триггера \"Стоп\""
+msgstr ""
+
+msgid "Порог:"
+msgstr ""
+
+msgid "Пороговое значение"
+msgstr ""
+
+msgid "Порция"
+msgstr ""
+
+msgid "Порция, сек"
+msgstr ""
+
+msgid "Порядок фильтра:"
+msgstr ""
+
+msgid "Постоянная амплитуда"
+msgstr ""
+
+msgid "Постоянная частота"
+msgstr ""
+
+msgid "Построение гистограмм"
+msgstr ""
+
+msgid "Построение графики"
+msgstr ""
+
+msgid "При включении параметр \"Смещение второго файла игнорируется\""
+msgstr ""
+
+msgid "При превышении уровня начинают расчитываться максимумы"
+msgstr ""
+
+msgid "Прим."
+msgstr ""
+
+msgid "Применить"
+msgstr ""
+
+msgid "Пропуск"
+msgstr ""
+
+msgid "Пропуск между интервалами, сек."
+msgstr ""
+
+msgid "Прямоугольное"
+msgstr ""
+
+msgid "Пунктир"
+msgstr ""
+
+msgid "Путь"
+msgstr ""
+
+msgid "Путь в базе:"
+msgstr ""
+
+msgid "Путь к второму файлу"
+msgstr ""
+
+msgid "Путь к конфигурации"
+msgstr ""
+
+msgid "Путь к отчету"
+msgstr ""
+
+msgid "Путь к первому файлу"
+msgstr ""
+
+msgid "Путь к совмещенному файлу"
+msgstr ""
+
+msgid "Путь к файлу"
+msgstr ""
+
+msgid "Путь к файлу для экспорта импорта настроек полос"
+msgstr ""
+
+msgid "Путь к файлу:"
+msgstr ""
+
+msgid "Путь шаблона"
+msgstr ""
+
+msgid "Работа с Mera файлом"
+msgstr ""
+
+msgid "Разделить"
+msgstr ""
+
+msgid "Размах"
+msgstr ""
+
+msgid "Размер порции, с"
+msgstr ""
+
+msgid "Размер порции, сек."
+msgstr ""
+
+msgid "Распаковка СИКОН"
+msgstr ""
+
+msgid "Располагать оси рядом"
+msgstr ""
+
+msgid "Расположение графиков"
+msgstr ""
+
+msgid "Расположение осей"
+msgstr ""
+
+msgid "Расчет"
+msgstr ""
+
+msgid "Расчет алгоритма"
+msgstr ""
+
+msgid "Расчет максимальных границ испытания"
+msgstr ""
+
+msgid "Расчет нуля"
+msgstr ""
+
+msgid "Расчет операторов"
+msgstr ""
+
+msgid "Расчет спектра"
+msgstr ""
+
+msgid "Расчет угла для сельсин датчика"
+msgstr ""
+
+msgid "Расчитать воздействие на рельс"
+msgstr ""
+
+msgid "Рег."
+msgstr ""
+
+msgid "Редактирование пути"
+msgstr ""
+
+msgid "Редактирование сельсина"
+msgstr ""
+
+msgid "Редактировать"
+msgstr ""
+
+msgid "Редактируемый замер:"
+msgstr ""
+
+msgid "Редактор"
+msgstr ""
+
+msgid "Редактор трубок допуска"
+msgstr ""
+
+msgid "Результатирующий файл"
+msgstr ""
+
+msgid "Рисовать линию"
+msgstr ""
+
+msgid "Рисовать точки на линии"
+msgstr ""
+
+msgid "С"
+msgstr ""
+
+msgid "СКЗ"
+msgstr ""
+
+msgid "СКО1"
+msgstr ""
+
+msgid "СКО2"
+msgstr ""
+
+msgid "СКО3"
+msgstr ""
+
+msgid "Сбросить в конец"
+msgstr ""
+
+msgid "Сбросить в начало"
+msgstr ""
+
+msgid "Свойство"
+msgstr ""
+
+msgid "Сдвигать сигналы без UTS"
+msgstr ""
+
+msgid "Сделать по умолчанию"
+msgstr ""
+
+msgid "Сельсин"
+msgstr ""
+
+msgid "Сеч."
+msgstr ""
+
+msgid "Сечение"
+msgstr ""
+
+msgid "Сечение №:"
+msgstr ""
+
+msgid "Сигнал"
+msgstr ""
+
+msgid "Сигнал \"Начало отсчета\":"
+msgstr ""
+
+msgid "Сигнал:"
+msgstr ""
+
+msgid "Сигналы"
+msgstr ""
+
+msgid "Синхронизация курсоров по X"
+msgstr ""
+
+msgid "Скважность (Период/Длит. импульса)"
+msgstr ""
+
+msgid "Скрипты"
+msgstr ""
+
+msgid "Смещение"
+msgstr ""
+
+msgid "Смещение второго файла относительно первого"
+msgstr ""
+
+msgid "Смещение от Т1:"
+msgstr ""
+
+msgid "Смещение от Т2:"
+msgstr ""
+
+msgid "Смещение порции"
+msgstr ""
+
+msgid "Смещение секторов:"
+msgstr ""
+
+msgid "Соединить файлы"
+msgstr ""
+
+msgid "Создать 6"
+msgstr ""
+
+msgid "Создать отчет"
+msgstr ""
+
+msgid "Создать отчет (в каталоге с испытанием)"
+msgstr ""
+
+msgid "Создать теги"
+msgstr ""
+
+msgid "Состояние:"
+msgstr ""
+
+msgid "Сохранение в csv файл"
+msgstr ""
+
+msgid "Сохранение и результаты"
+msgstr ""
+
+msgid "Сохранение результата"
+msgstr ""
+
+msgid "Сохранение упрощенного Mera файла"
+msgstr ""
+
+msgid "Сохранить"
+msgstr ""
+
+msgid "Сохранить "
+msgstr ""
+
+msgid "Сохранить настройки"
+msgstr ""
+
+msgid "Спад"
+msgstr ""
+
+msgid "Спектр плотности мощности"
+msgstr ""
+
+msgid "Список выходных каналов"
+msgstr ""
+
+msgid "Список источников"
+msgstr ""
+
+msgid "Список неиспользуемых каналов"
+msgstr ""
+
+msgid "Список обработок"
+msgstr ""
+
+msgid "Список ошибок"
+msgstr ""
+
+msgid "Список сигналов"
+msgstr ""
+
+msgid "Список триггеров"
+msgstr ""
+
+msgid "Сплошная"
+msgstr ""
+
+msgid "Способ выбора"
+msgstr ""
+
+msgid "Старт"
+msgstr ""
+
+msgid "Старт, с:"
+msgstr ""
+
+msgid "Столбцов"
+msgstr ""
+
+msgid "Стоп"
+msgstr ""
+
+msgid "Стоп, с:"
+msgstr ""
+
+msgid "Страницы"
+msgstr ""
+
+msgid "Строк"
+msgstr ""
+
+msgid "Структура базы"
+msgstr ""
+
+msgid "Существующий источник"
+msgstr ""
+
+msgid "Считать автоматически по времени записи файла"
+msgstr ""
+
+msgid "Считать графику с объектов WinПОС"
+msgstr ""
+
+msgid "Таблица"
+msgstr ""
+
+msgid "Тест"
+msgstr ""
+
+msgid "Тестовый канал"
+msgstr ""
+
+msgid "Тип"
+msgstr ""
+
+msgid "Тип замера"
+msgstr ""
+
+msgid "Тип линии"
+msgstr ""
+
+msgid "Тип модуля"
+msgstr ""
+
+msgid "Тип окна"
+msgstr ""
+
+msgid "Тип оси для триггера"
+msgstr ""
+
+msgid "Тип отчета"
+msgstr ""
+
+msgid "Тип платы"
+msgstr ""
+
+msgid "Тип поиска"
+msgstr ""
+
+msgid "Тип триггера"
+msgstr ""
+
+msgid "Тип характеристики"
+msgstr ""
+
+msgid "Толщина"
+msgstr ""
+
+msgid "Точек FFT"
+msgstr ""
+
+msgid "Точек усреднения:"
+msgstr ""
+
+msgid "Тренд"
+msgstr ""
+
+msgid "Треугольное"
+msgstr ""
+
+msgid "Триггер"
+msgstr ""
+
+msgid "Триггер 1"
+msgstr ""
+
+msgid "Триггер 2"
+msgstr ""
+
+msgid "Триггер по старту"
+msgstr ""
+
+msgid "Триггер по стопу"
+msgstr ""
+
+msgid "Триггер1"
+msgstr ""
+
+msgid "Триггер2"
+msgstr ""
+
+msgid "Триггеры"
+msgstr ""
+
+msgid "Трубки допуска"
+msgstr ""
+
+msgid "Тчк усредн."
+msgstr ""
+
+msgid "Удалить"
+msgstr ""
+
+msgid "Удалить все"
+msgstr ""
+
+msgid "Удалить гистограмму"
+msgstr ""
+
+msgid "Удалить группу"
+msgstr ""
+
+msgid "Удалить канал"
+msgstr ""
+
+msgid "Удалить матрицу"
+msgstr ""
+
+msgid "Удалить обратную связь"
+msgstr ""
+
+msgid "Удалить полосу"
+msgstr ""
+
+msgid "Удалить сигналы"
+msgstr ""
+
+msgid "Удалить тег"
+msgstr ""
+
+msgid "Удалить точку"
+msgstr ""
+
+msgid "Уровень"
+msgstr ""
+
+msgid "Уровень \"+\""
+msgstr ""
+
+msgid "Уровень \"-\""
+msgstr ""
+
+msgid "Ускорение, g"
+msgstr ""
+
+msgid "Усреднять сигнал"
+msgstr ""
+
+msgid "Участок"
+msgstr ""
+
+msgid "Участок пути №:"
+msgstr ""
+
+msgid "Учитывается при расчете приведенной погрешности калибровки,  для"
+msgstr ""
+
+msgid "Учитывать время старта испытания"
+msgstr ""
+
+msgid "Фаза, рад."
+msgstr ""
+
+msgid "Файл"
+msgstr ""
+
+msgid "Фильтр"
+msgstr ""
+
+msgid "Фильтр по подстроке в имени"
+msgstr ""
+
+msgid "Фильтр по подстроке в описании"
+msgstr ""
+
+msgid "Фильтр по свойствам"
+msgstr ""
+
+msgid "Фильтрация"
+msgstr ""
+
+msgid "Формирование имени"
+msgstr ""
+
+msgid "Формирование каталога"
+msgstr ""
+
+msgid "Фронт"
+msgstr ""
+
+msgid "Ханнинг"
+msgstr ""
+
+msgid "Ханнинг (СКЗ"
+msgstr ""
+
+msgid "Цвет оси:"
+msgstr ""
+
+msgid "Цвет:"
+msgstr ""
+
+msgid "Цифровой ввод"
+msgstr ""
+
+msgid "Цифровой вывод"
+msgstr ""
+
+msgid "Частота"
+msgstr ""
+
+msgid "Частота дискретизации"
+msgstr ""
+
+msgid "Частота дискретизации:"
+msgstr ""
+
+msgid "Частота питания"
+msgstr ""
+
+msgid "Частота среза"
+msgstr ""
+
+msgid "Число блоков"
+msgstr ""
+
+msgid "Число полос"
+msgstr ""
+
+msgid "Число точек"
+msgstr ""
+
+msgid "Чувствительность кэкстремумам"
+msgstr ""
+
+msgid "Шаг по частоте, Гц"
+msgstr ""
+
+msgid "Шум"
+msgstr ""
+
+msgid "Шум \"+\""
+msgstr ""
+
+msgid "Шум \"-\""
+msgstr ""
+
+msgid "Экспоненциальный"
+msgstr ""
+
+msgid "Экспорт"
+msgstr ""
+
+msgid "Экспорт настроек полос в файл"
+msgstr ""
+
+msgid "авторасчет"
+msgstr ""
+
+msgid "без общ. тчк."
+msgstr ""
+
+msgid "значение пишется в индикатор \"Поправка времени\"."
+msgstr ""
+
+msgid "использовать матрицу замера"
+msgstr ""
+
+msgid "кПа"
+msgstr ""
+
+msgid "каналам (без учета UTS"
+msgstr ""
+
+msgid "л/c"
+msgstr ""
+
+msgid "мс"
+msgstr ""
+
+msgid "н канал с аналогичным именем как "
+msgstr ""
+
+msgid "при включении - поиск амплитуды происходит как отклонение от сре"
+msgstr ""
+
+msgid "сек."
+msgstr ""
+
+msgid "триггер 2"
+msgstr ""
+
+msgid "у канала начало отсчета, и будут скорректированы старты по всем "
+msgstr ""
+
+msgid "№"
+msgstr ""
+

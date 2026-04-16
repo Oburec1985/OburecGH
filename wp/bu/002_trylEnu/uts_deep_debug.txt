@@ -1,0 +1,193 @@
+--- UTS DFM STRINGS ---
+
+--- UTS PO ENTRIES ---
+#: forms\uCorrectUTS.dfm
+msgid " Если сигнал UTS отсутствует для замера, то для него будет найден канал с аналогичным именем как "
+msgstr "If the UTS signal is missing for a measurement, a channel with a name identical to the reference start channel will be used to correct start times for all channels (excluding UTS)."
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid " Модуль выполняет коррекцию времени UTS сигналов на время старта нуля. Корректирующее "
+msgstr "This module performs UTS signal time correction relative to zero start. The correction value is reported in the "Time Offset" indicator."
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "Время испытания"
+msgstr "Test duration"
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "Время старта испытания прописано в Mera файле ключ DateTime"
+msgstr "Время старта испытания прописано в Mera файле ключ DateTime"
+--------------------
+#: forms\uCorrectUTS.dfm
+#: forms\uSelectIntervalFrm.dfm
+msgid "Вычислить"
+msgstr "Evaluate"
+--------------------
+#: forms\frames\uWPNameFilterFrame.dfm
+#: forms\uCorrectUTS.dfm
+#: forms\uFFTfltFrm.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+#: forms\uWPProcFrm.dfm
+msgid "Добавить"
+msgstr "Add"
+--------------------
+#: forms\uBDIFrm.dfm
+#: forms\uCorrectUTS.dfm
+#: forms\uEditSignalsRepPropFrn.dfm
+#: forms\uExtBalanceSignalsFrm.dfm
+#: forms\uRptFrm.dfm
+#: forms\uScriptFrm.dfm
+#: forms\uSelsinFrm.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Имя"
+msgstr "Name"
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "Используется если галочка Определить сдвиг в каждом замере снята"
+msgstr "Используется если галочка Определить сдвиг в каждом замере снята"
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "Корректируемые UTS сигналы:"
+msgstr "Corrected UTS signals:"
+--------------------
+#: forms\uCorrectUTS.dfm
+#: forms\uWPProcFrm.dfm
+msgid "Коррекция времени"
+msgstr "Time Correction"
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "Не найден канал UTS"
+msgstr "UTS channel not found"
+--------------------
+#: forms\uCorrectUTS.dfm
+#: forms\uGraphMngFrm.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Номер срабатывания"
+msgstr "Trigger number"
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "Нужно включить если замеры не содержат UTS но имеют одноименный "
+msgstr "Нужно включить если замеры не содержат UTS но имеют одноименный "
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "Обнулить"
+msgstr "Reset"
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "Определить сдвиг в каждом замере по имени канала"
+msgstr "Determine shift in each measurement by channel name"
+--------------------
+#: forms\EditSignalPathFrm.dfm
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCorrectUTS.dfm
+#: forms\uCyclogramRepFrm.dfm
+#: forms\uEditSelsinFrm.dfm
+#: forms\uFFTInverseFrm.dfm
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+#: forms\uFrmHibFltFrm.dfm
+#: forms\uGenForm.dfm
+#: forms\uIntervalFrm.dfm
+#: forms\uSaveSimpleMeraFrm.dfm
+#: forms\uSelectPathForm.dfm
+#: forms\uSpmFrm.dfm
+#: forms\uTrigLvlEditFrm.dfm
+msgid "Отмена"
+msgstr "Cancel"
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "Перечень замеров"
+msgstr "List of measurements"
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "Поправка времени, с"
+msgstr "Time offset, s"
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "Пороговое значение"
+msgstr "Threshold value"
+--------------------
+#: forms\EditSignalPathFrm.dfm
+#: forms\uAddRZDDatafrm.dfm
+#: forms\uCorrectUTS.dfm
+#: forms\uEditSelsinFrm.dfm
+#: forms\uEditSignalsRepPropFrn.dfm
+#: forms\uEditTubeFrm.dfm
+#: forms\uExtBalanceSignalsFrm.dfm
+#: forms\uFFTInverseFrm.dfm
+#: forms\uFFTfltFrm.dfm
+#: forms\uFindMaxForm_.dfm
+#: forms\uFrmHibFltFrm.dfm
+#: forms\uGenForm.dfm
+#: forms\uGraphMngFrm.dfm
+#: forms\uIntervalFrm.dfm
+#: forms\uMNKFrm.dfm
+#: forms\uRzdFrm.dfm
+#: forms\uSelectIntervalFrm.dfm
+#: forms\uSelectPathForm.dfm
+#: forms\uSpmFrm.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Применить"
+msgstr "Apply"
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "Распаковка СИКОН"
+msgstr "SIKON Decoding"
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "Сдвигать сигналы без UTS"
+msgstr "Shift signals without UTS"
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "Сигнал \"Начало отсчета\":"
+msgstr "Сигнал \"Начало отсчета\":"
+--------------------
+#: forms\uCorrectUTS.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Спад"
+msgstr "Falling"
+--------------------
+#: forms\frames\uWPNameFilterFrame.dfm
+#: forms\uCorrectUTS.dfm
+#: forms\uTrigsFrm.dfm
+#: forms\uWPProcFrm.dfm
+msgid "Удалить"
+msgstr "Delete"
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "Учитывать время старта испытания"
+msgstr "Account for test start time"
+--------------------
+#: forms\uCorrectUTS.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Фронт"
+msgstr "Rising"
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "значение пишется в индикатор \"Поправка времени\"."
+msgstr "значение пишется в индикатор \"Поправка времени\"."
+--------------------
+#: forms\uCorrectUTS.dfm
+msgid "у канала начало отсчета, и будут скорректированы старты по всем каналам (без учета UTS"
+msgstr "у канала начало отсчета, и будут скорректированы старты по всем каналам (без учета UTS"
+--------------------
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uChangeSrcFrm.dfm
+#: forms\uCorrectUTS.dfm
+#: forms\uCyclogramRepFrm.dfm
+#: forms\uEditSignalsRepPropFrn.dfm
+#: forms\uEditTubeFrm.dfm
+#: forms\uFindMaxForm_.dfm
+#: forms\uGraphMngFrm.dfm
+#: forms\uLissajousFrm.dfm
+#: forms\uSelsinFrm.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uWPProcFrm.dfm
+msgid "№"
+msgstr ""
+--------------------

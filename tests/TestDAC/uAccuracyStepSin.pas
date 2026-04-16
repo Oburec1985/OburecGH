@@ -19,7 +19,7 @@ type
     procedure ApplyAlignedBufferSize;
   protected
     procedure DoPrepareAfterSubscribeBeforeDeviceStart; override;
-    function GetPlaybackBufferSize(ABufferSize: Integer): Integer; override;
+    //function GetPlaybackBufferSize(ABufferSize: Integer): Integer; override;
     procedure ProcessBuffer(P: Pointer; Size: Integer); override;
     procedure SetFrequency(AValue: Double); override;
   public
@@ -99,31 +99,31 @@ begin
   RefreshAlignedBuffers;
 end;
 
-function TAccurateSinusProgram.GetPlaybackBufferSize(ABufferSize: Integer): Integer;
-var
-  lBytesPerSample: Integer;
-  lAvailableSamples: Integer;
-  lWholePeriods: Integer;
-begin
-  Result := ABufferSize;
+//function TAccurateSinusProgram.GetPlaybackBufferSize(ABufferSize: Integer): Integer;
+//var
+//  lBytesPerSample: Integer;
+//  lAvailableSamples: Integer;
+//  lWholePeriods: Integer;
+//begin
+//  Result := ABufferSize;
+//
+//  if not fUseAlignedPeriod then
+ //   Exit;
 
-  if not fUseAlignedPeriod then
-    Exit;
+//  lBytesPerSample := (BitsPerSample div 8) * Channels;
+//  if lBytesPerSample <= 0 then
+//    Exit;
 
-  lBytesPerSample := (BitsPerSample div 8) * Channels;
-  if lBytesPerSample <= 0 then
-    Exit;
+//  lAvailableSamples := ABufferSize div lBytesPerSample;
+//  if (fPeriodSamples <= 0) or (lAvailableSamples < fPeriodSamples) then
+//    Exit;
 
-  lAvailableSamples := ABufferSize div lBytesPerSample;
-  if (fPeriodSamples <= 0) or (lAvailableSamples < fPeriodSamples) then
-    Exit;
+//  lWholePeriods := lAvailableSamples div fPeriodSamples;
+ // if lWholePeriods < 1 then
+//    Exit;
 
-  lWholePeriods := lAvailableSamples div fPeriodSamples;
-  if lWholePeriods < 1 then
-    Exit;
-
-  Result := lWholePeriods * fPeriodSamples * lBytesPerSample;
-end;
+//  Result := lWholePeriods * fPeriodSamples * lBytesPerSample;
+//end;
 
 procedure TAccurateSinusProgram.ProcessBuffer(P: Pointer; Size: Integer);
 var

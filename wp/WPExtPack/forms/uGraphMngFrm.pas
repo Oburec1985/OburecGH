@@ -3,7 +3,7 @@ unit uGraphMngFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, VirtualTrees, uVTServices, StdCtrls, ImgList, ComCtrls, uBtnListView, posbase,
   uWPProc, ExtCtrls, DCL_MYOWN, uSetList, Winpos_ole_TLB, ActiveX, Spin, uWPOpers, uWPServices;
 

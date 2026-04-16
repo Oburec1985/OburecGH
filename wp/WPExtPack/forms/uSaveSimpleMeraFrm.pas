@@ -3,7 +3,7 @@ unit uSaveSimpleMeraFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, ExtCtrls, uWPNameFilterFrame, StdCtrls;
 
 type

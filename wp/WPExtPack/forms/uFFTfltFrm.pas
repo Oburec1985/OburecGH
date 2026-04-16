@@ -3,7 +3,7 @@ unit uFFTfltFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, ComCtrls, uBtnListView, StdCtrls, Spin, ExtCtrls, uChart, uFFTflt,
   uWPservices, uCommonTypes, posbase, Winpos_ole_TLB,
   inifiles,

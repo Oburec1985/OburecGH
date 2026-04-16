@@ -3,7 +3,7 @@ unit uKBHMFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, ExtCtrls, uChart, ComCtrls, uBtnListView, StdCtrls, Buttons,
   VirtualTrees, uVTServices, Grids, AdvObj, BaseGrid, AdvGrid, inifiles,
   uWPProc, uCommonMath;

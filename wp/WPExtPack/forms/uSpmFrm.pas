@@ -3,7 +3,7 @@ unit uSpmFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, uwpSpmFrame, ExtCtrls, StdCtrls;
 
 type

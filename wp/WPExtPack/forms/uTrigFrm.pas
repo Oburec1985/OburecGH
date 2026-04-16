@@ -3,7 +3,7 @@ unit uTrigFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, PosBase, StdCtrls, DCL_MYOWN, ComCtrls, uBtnListView, uWPproc,
   ExtCtrls;
 

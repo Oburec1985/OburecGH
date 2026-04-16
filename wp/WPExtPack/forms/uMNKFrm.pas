@@ -3,7 +3,7 @@ unit uMNKFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uCommonMath,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm, uCommonMath,
   Dialogs, StdCtrls, DCL_MYOWN, Spin, uWPServices, uWPProcservices,uWPExtOperMNK;
 
 type

@@ -3,7 +3,7 @@ unit uBDIFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, StdCtrls, VirtualTrees, uVTServices, ComCtrls;
 
 type

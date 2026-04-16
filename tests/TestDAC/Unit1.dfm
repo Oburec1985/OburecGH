@@ -16,6 +16,13 @@ object DACFrm: TDACFrm
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 12
+  object Label1: TLabel
+    Left = 312
+    Top = 149
+    Width = 65
+    Height = 12
+    Caption = #1055#1088#1080#1074#1077#1090#1052#1077#1090#1082#1072
+  end
   object pnlTop: TPanel
     Left = 0
     Top = 0
@@ -43,15 +50,19 @@ object DACFrm: TDACFrm
     end
     object cbDacDevices: TComboBox
       Left = 108
-      Top = 16
+      Top = 14
       Width = 188
-      Height = 24
+      Height = 20
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
       Margins.Bottom = 2
       Style = csDropDownList
+      ItemIndex = 0
       TabOrder = 1
+      Text = #1055#1088#1080#1074#1077#1090
+      Items.Strings = (
+        #1055#1088#1080#1074#1077#1090)
     end
     object btnRefreshDevices: TButton
       Left = 392
@@ -133,7 +144,7 @@ object DACFrm: TDACFrm
       Left = 96
       Top = 22
       Width = 91
-      Height = 24
+      Height = 20
       Margins.Left = 2
       Margins.Top = 2
       Margins.Right = 2
@@ -146,7 +157,7 @@ object DACFrm: TDACFrm
       Left = 96
       Top = 47
       Width = 91
-      Height = 26
+      Height = 21
       Increment = 0.100000000000000000
       MaxValue = 1.000000000000000000
       TabOrder = 1
@@ -183,6 +194,14 @@ object DACFrm: TDACFrm
     showTV = False
     showLegend = False
     selectSize = 5
+  end
+  object Edit1: TEdit
+    Left = 312
+    Top = 112
+    Width = 267
+    Height = 20
+    TabOrder = 5
+    Text = #1055#1088#1080#1074#1077#1090
   end
   object ImageList_32: TImageList
     Height = 32

@@ -1,0 +1,101 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# 
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2026-04-10 23:55\n"
+"PO-Revision-Date: 2026-04-10 23:55\n"
+"Last-Translator: Somebody <your.email@address.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: dxgettext 1.2.2\n"
+
+#. DACFrm..Caption
+#: Unit1.dfm:4
+msgid "DAC Control"
+msgstr ""
+
+#. DACFrm..Font.Name
+#: Unit1.dfm:11
+msgid "Tahoma"
+msgstr ""
+
+#. DACFrm..Label1..Caption
+#: Unit1.dfm:24
+msgid "ПриветМетка"
+msgstr ""
+
+#. DACFrm..pnlTop..btnPlayStop..Caption
+#: Unit1.dfm:47
+msgid "Play"
+msgstr ""
+
+#. DACFrm..pnlTop..cbDacDevices..Text
+#: Unit1.dfm:63
+#. DACFrm..pnlTop..cbDacDevices....Items.Strings
+#: Unit1.dfm:65
+#. DACFrm..Edit1..Text
+#: Unit1.dfm:204
+msgid "Привет"
+msgstr ""
+
+#. DACFrm..pnlTop..btnRefreshDevices..Caption
+#: Unit1.dfm:72
+msgid "Refresh"
+msgstr ""
+
+#. DACFrm..pnlTop..btnSave..Caption
+#: Unit1.dfm:81
+msgid "Save"
+msgstr ""
+
+#. DACFrm..pnlTop..btnLoad..Caption
+#: Unit1.dfm:89
+msgid "Load"
+msgstr ""
+
+#. DACFrm..rgProgramType..Caption
+#: Unit1.dfm:102
+msgid "Program Type"
+msgstr ""
+
+#. DACFrm..rgProgramType....Items.Strings
+#: Unit1.dfm:105
+msgid "Simple Sin"
+msgstr ""
+
+#. DACFrm..rgProgramType....Items.Strings
+#: Unit1.dfm:106
+msgid "Accurate Sin"
+msgstr ""
+
+#. DACFrm..gbProgram..Caption
+#: Unit1.dfm:119
+msgid "Program Parameters"
+msgstr ""
+
+#. DACFrm..gbProgram..lblProgFreq..Caption
+#: Unit1.dfm:130
+msgid "Freq, Hz"
+msgstr ""
+
+#. DACFrm..gbProgram..lblProgAmpl..Caption
+#: Unit1.dfm:141
+msgid "Amplitude"
+msgstr ""
+
+#. DACFrm..TestBtn..Caption
+#: Unit1.dfm:177
+msgid "Test"
+msgstr ""
+
+#. DACFrm..cChart1..Caption
+#: Unit1.dfm:190
+msgid "cChart1"
+msgstr ""
+

@@ -1,0 +1,2093 @@
+﻿#: .\forms\uLissajousFrm.dfm:210
+msgid "Сигнал"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:209
+msgid "Поиск границ отображения"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:320
+msgid "Оператор"
+msgstr ""
+
+#: .\forms\uChangeSrcFrm.dfm:4
+msgid "Определение источников сигналов"
+msgstr ""
+
+#: .\forms\uScriptFrm.dfm:339
+msgid "Тест"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:885
+msgid "Гор. тяга:"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:289
+msgid "Построение графики"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:531
+msgid "Оси"
+msgstr ""
+
+#: .\forms\frames\uSpmFrame.dfm:61
+#: .\forms\frames\uWPSpmFrame.dfm:61
+msgid "Амплитулный спектр"
+msgstr ""
+
+#: .\forms\uMainFrm.dfm:167
+msgid "Результатирующий файл"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:1111
+#: .\forms\uFindMaxForm_.dfm:524
+msgid "Сохранение в csv файл"
+msgstr ""
+
+#: .\forms\uEdiSelsinFrm.dfm:4
+#: .\forms\uEditSelsinFrm.dfm:4
+msgid "Редактирование сельсина"
+msgstr ""
+
+#: .\forms\uMainFrm.dfm:51
+msgid "Путь к совмещенному файлу"
+msgstr ""
+
+#: .\forms\uIntervalFrm.dfm:4
+msgid "Настройка интервала"
+msgstr ""
+
+#: .\forms\uTrigFrm.dfm:87
+msgid "Смещение"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:586
+msgid "Цвет оси:"
+msgstr ""
+
+#: .\forms\uSelectIntervalFrm.dfm:55
+#: .\forms\frames\uIntervalFrame.dfm:26
+msgid "Начало, с:"
+msgstr ""
+
+#: .\forms\uMainFrm.dfm:96
+msgid "Выбор первого файла к которому будет присоединен второй"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3006
+msgid "Добавить гистограмму"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:212
+#: .\forms\back\uCyclogramRepFrm.dfm:176
+msgid "Фильтр"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3487
+msgid "Отчет"
+msgstr ""
+
+#: .\forms\uScriptFrm.dfm:334
+msgid "Переменные..."
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:223
+#: .\forms\back\uCyclogramRepFrm.dfm:183
+msgid "Канал сброса времени"
+msgstr ""
+
+#: .\forms\uSelectIntervalFrm.dfm:307
+msgid "Тестовый канал"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:231
+msgid "Триггер по стопу"
+msgstr ""
+
+#: .\forms\uSelectIntervalFrm.dfm:66
+#: .\forms\frames\uIntervalFrame.dfm:33
+msgid "Конец, с:"
+msgstr ""
+
+#: .\forms\uSelsinFrm.dfm:37
+msgid "Размер порции, сек."
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:1023
+#: .\forms\uFindMaxForm_.dfm:460
+msgid "Сохранение результата"
+msgstr ""
+
+#: .\forms\uSelectIntervalFrm.dfm:318
+#: .\forms\uWPProcFrm.dfm:85
+msgid "Обрабатываемые сигналы"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1567
+msgid "Индексы"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:381
+msgid "Абс."
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:924
+msgid "Синхронизация курсоров по X"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:505
+msgid "Расположение осей"
+msgstr ""
+
+#: .\forms\uAddSignalFrm.dfm:67
+msgid "Удалить сигналы"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:179
+msgid "Не найден канал UTS"
+msgstr ""
+
+#: .\forms\uExtBalanceSignalsFrm.dfm:58
+msgid "Начало"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:808
+msgid "Вертикальные линии"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1694
+#: .\forms\uTrigLvlEditFrm.dfm:31
+msgid "триггер 2"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:283
+msgid "Сдвигать сигналы без UTS"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:275
+msgid "Порог триггера "Старт""
+msgstr ""
+
+#: .\forms\uEdiSelsinFrm.dfm:240
+msgid "Автокалибровка"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:4
+#: .\forms\back\uCyclogramRepFrm.dfm:4
+msgid "Настройка отчета циклограммы (версия 24.08.18)"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:4
+msgid "Создать отчет"
+msgstr ""
+
+#: .\forms\frames\uWPNameFilterFrame.dfm:481
+msgid "Фильтр по свойствам"
+msgstr ""
+
+#: .\forms\uEdiSelsinFrm.dfm:119
+msgid "Калибровка амплитуд фазных напряжений"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:279
+#: .\forms\back\uCyclogramRepFrm.dfm:223
+msgid "сек."
+msgstr ""
+
+#: .\forms\uFFTfltFrm.dfm:432
+msgid "Редактировать"
+msgstr ""
+
+#: .\forms\uAddScriptItemFrm.dfm:115
+msgid "Единицы измерения Y:"
+msgstr ""
+
+#: .\forms\frames\uTmpltNameFrame.dfm:84
+msgid "Включить дату"
+msgstr ""
+
+#: .\forms\uExtBalanceSignalsFrm.dfm:86
+#: .\forms\uFindMaxForm.dfm:1143
+#: .\forms\uFindMaxForm_.dfm:545
+msgid "Список сигналов"
+msgstr ""
+
+#: .\forms\uAddRZDDatafrm.dfm:127
+msgid "Участок пути №:"
+msgstr ""
+
+#: .\forms\uSelsinFrm.dfm:287
+msgid "Модуль"
+msgstr ""
+
+#: .\forms\frames\uTmpltNameFrame.dfm:29
+msgid "Имя замера по умолчанию:"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:2285
+msgid "Открыть файл после создания"
+msgstr ""
+
+#: .\forms\uGenForm.dfm:77
+msgid "Нач. частота F1, Гц"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1909
+msgid "Отступ слева:"
+msgstr ""
+
+#: .\forms\uSelectIntervalFrm.dfm:222
+msgid "Не активно"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1531
+msgid "Сбросить в начало"
+msgstr ""
+
+#: .\forms\uFFTfltFrm.dfm:271
+msgid "Точек FFT"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:161
+#: .\forms\back\uCyclogramRepFrm.dfm:133
+msgid "Назначить канал"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:101
+msgid "Границы"
+msgstr ""
+
+#: .\forms\frames\uRZDTareFrame.dfm:164
+#: .\forms\frames\uRZDTareFrame.dfm:226
+msgid "Выбрать интервал для вычисления матрицы"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:329
+msgid "Время старта испытания прописано в Mera файле ключ DateTime"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2956
+msgid "Первый импульс"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:48
+msgid "Источники операторов"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1682
+#: .\forms\uTrigLvlEditFrm.dfm:24
+msgid "Триггер 1"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1798
+msgid "Число полос"
+msgstr ""
+
+#: .\forms\uFFTfltFrm.dfm:471
+#: .\forms\uFFTfltFrm.dfm:493
+#: .\forms\uRptFrm.dfm:1356
+#: .\forms\uRptFrm.dfm:1385
+msgid "Показать подсказки"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:283
+#: .\forms\uFindMaxForm_.dfm:132
+#: .\forms\uFindMaxForm_.dfm:240
+#: .\forms\uGraphMngFrm.dfm:120
+#: .\forms\uGraphMngFrm.dfm:575
+#: .\forms\uGraphMngFrm.dfm:736
+#: .\forms\uTrigFrm.dfm:68
+msgid "Единицы"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:66
+#: .\forms\back\uCyclogramRepFrm.dfm:53
+msgid "Триггер1"
+msgstr ""
+
+#: .\forms\frames\uSpmFrame.dfm:13
+#: .\forms\frames\uWPSpmFrame.dfm:13
+msgid "Тип окна"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:171
+#: .\forms\back\uCyclogramRepFrm.dfm:143
+msgid "Добавить обратную связь"
+msgstr ""
+
+#: .\forms\uEdiSelsinFrm.dfm:171
+msgid "СКО3"
+msgstr ""
+
+#: .\forms\uMainFrm.dfm:129
+msgid "Соединить файлы"
+msgstr ""
+
+#: .\forms\uTrigLvlEditFrm.dfm:4
+msgid "Настройка уровней"
+msgstr ""
+
+#: .\forms\uEdiSelsinFrm.dfm:56
+#: .\forms\uEditSelsinFrm.dfm:60
+msgid "Имя датчика"
+msgstr ""
+
+#: .\forms\uGenForm.dfm:22
+msgid "Параметры сигнала"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:742
+#: .\forms\back\uCyclogramRepFrm.dfm:439
+msgid "Выполнить макрос"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1342
+#: .\forms\uRzdFrm.dfm:3509
+msgid "Тип отчета"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:149
+msgid "Перечень замеров"
+msgstr ""
+
+#: .\forms\uGenForm.dfm:4
+#: .\forms\uWPProcFrm.dfm:399
+msgid "Генератор"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:99
+#: .\forms\back\uCyclogramRepFrm.dfm:79
+msgid "Список неиспользуемых каналов"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:62
+#: .\forms\back\uCyclogramRepFrm.dfm:50
+msgid "Обратная связь"
+msgstr ""
+
+#: .\forms\uEditSelsinFrm.dfm:167
+#: .\forms\uSelsinFrm.dfm:291
+msgid "Без общ. тчк."
+msgstr ""
+
+#: .\forms\uSpmFrm.dfm:4
+msgid "Настройка расчета спектра"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1557
+msgid "Курсор"
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:338
+#: .\forms\uTrigFrm.dfm:192
+#: .\forms\uTrigsFrm.dfm:464
+msgid "Абс. знач."
+msgstr ""
+
+#: .\forms\uSelectPathForm.dfm:42
+msgid "Старт, с:"
+msgstr ""
+
+#: .\forms\uMNKFrm.dfm:21
+#: .\forms\uRzdFrm.dfm:3292
+msgid "Полином"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3582
+#: .\forms\uTrigsFrm.dfm:1945
+#: .\forms\uTrigsFrm.dfm:1967
+msgid "Частота среза"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2260
+msgid "Расчет нуля"
+msgstr ""
+
+#: .\forms\frames\uSpmFrame.dfm:43
+#: .\forms\frames\uWPSpmFrame.dfm:43
+msgid "Прямоугольное"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:709
+msgid "Добавить точку"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:472
+#: .\forms\uFindMaxForm.dfm:1168
+#: .\forms\uFindMaxForm_.dfm:567
+msgid "Поддреживает комбинацию Ctrl+C"
+msgstr ""
+
+#: .\forms\uSelectIntervalFrm.dfm:88
+#: .\forms\uTrigFrm.dfm:61
+#: .\forms\uTrigsFrm.dfm:297
+msgid "ID источника"
+msgstr ""
+
+#: .\forms\uLissajousFrm.dfm:136
+msgid "Диаметр"
+msgstr ""
+
+#: .\forms\frames\uRZDTareFrame.dfm:58
+msgid "Интервал "вычисления нуля":"
+msgstr ""
+
+#: .\forms\uMainFrm.dfm:191
+msgid "Считать автоматически по времени записи файла"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:245
+#: .\forms\back\uCyclogramRepFrm.dfm:197
+msgid "Тип модуля"
+msgstr ""
+
+#: .\forms\uAddRZDDatafrm.dfm:68
+#: .\forms\uScriptFrm.dfm:106
+#: .\forms\uSelsinFrm.dfm:295
+msgid "Тип"
+msgstr ""
+
+#: .\forms\uEditSignalsRepPropFrn.dfm:124
+msgid "Выключить"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:220
+msgid "Триггер по старту"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:1024
+msgid "Ускорение, g"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:502
+#: .\forms\uFindMaxForm_.dfm:190
+msgid "Удалить полосу"
+msgstr ""
+
+#: .\forms\uScriptFrm.dfm:109
+#: .\forms\uTrigFrm.dfm:99
+msgid "Ед."
+msgstr ""
+
+#: .\forms\uEditTubeFrm.dfm:79
+msgid "Выход"
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:380
+msgid "+ Максимум"
+msgstr ""
+
+#: .\forms\uSelectIntervalFrm.dfm:211
+#: .\forms\frames\uIntervalFrame.dfm:19
+msgid "Канал "Стоп""
+msgstr ""
+
+#: .\forms\uAddSignalFrm.dfm:53
+#: .\forms\uEditSignalsRepPropFrn.dfm:29
+msgid "Выбор действия"
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:254
+msgid "Шум "+""
+msgstr ""
+
+#: .\forms\uAddSignalFrm.dfm:95
+msgid "Используемые сигналы"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:373
+#: .\forms\uExtBalanceSignalsFrm.dfm:127
+#: .\forms\uFFTfltFrm.dfm:507
+#: .\forms\uRptFrm.dfm:1376
+#: .\forms\uRzdFrm.dfm:2569
+#: .\forms\uWPProcFrm.dfm:233
+#: .\forms\back\uCyclogramRepFrm.dfm:289
+msgid "Загрузить"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:2091
+msgid "Имя параметра"
+msgstr ""
+
+#: .\forms\uLissajousFrm.dfm:123
+msgid "Инкремент, сек"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:2044
+msgid "Добавить параметры"
+msgstr ""
+
+#: .\forms\uTrigsFrm.dfm:1223
+msgid "Фильтрация"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:98
+#: .\forms\uGraphMngFrm.dfm:553
+msgid "Минимум"
+msgstr ""
+
+#: .\forms\uSubRegsFrm.dfm:4
+msgid "Редактируемый замер:"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:234
+#: .\forms\back\uCyclogramRepFrm.dfm:190
+msgid "Единицы измерения"
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:73
+#: .\forms\uFindMaxForm_.dfm:296
+#: .\forms\uFindMaxForm_.dfm:306
+#: .\forms\uFindMaxForm_.dfm:316
+#: .\forms\uFindMaxForm_.dfm:326
+#: .\forms\uFindMaxForm_.dfm:350
+#: .\forms\uFindMaxForm_.dfm:360
+msgid "При превышении уровня начинают расчитываться максимумы"
+msgstr ""
+
+#: .\forms\frames\uWPNameFilterFrame.dfm:452
+msgid "Фильтр по подстроке в имени"
+msgstr ""
+
+#: .\forms\frames\uTmpltNameFrame.dfm:15
+msgid "Путь шаблона"
+msgstr ""
+
+#: .\forms\frames\uTmpltNameFrame.dfm:112
+msgid "Генерить путь автоматом"
+msgstr ""
+
+#: .\forms\uEdiSelsinFrm.dfm:150
+msgid "СКО2"
+msgstr ""
+
+#: .\forms\uSelectIntervalFrm.dfm:182
+msgid "Настройка выбора"
+msgstr ""
+
+#: .\forms\uFrmHibFltFrm.dfm:255
+msgid "Весь сигнал"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:878
+msgid "Верт. тяга:"
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:289
+msgid "Искать экстремумы:"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:259
+#: .\forms\uRzdFrm.dfm:2688
+msgid "Сечение"
+msgstr ""
+
+#: .\forms\uSubRegsFrm.dfm:51
+msgid "Разделить"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:411
+msgid "Трубки допуска"
+msgstr ""
+
+#: .\forms\frames\uTmpltNameFrame.dfm:129
+msgid "Формирование имени"
+msgstr ""
+
+#: .\forms\uKBHMFrm.dfm:4
+msgid "Обработка БМП"
+msgstr ""
+
+#: .\forms\frames\uSpmFrame.dfm:20
+#: .\forms\frames\uWPSpmFrame.dfm:20
+msgid "Тип характеристики"
+msgstr ""
+
+#: .\forms\uMainFrm.dfm:58
+msgid "Список ошибок"
+msgstr ""
+
+#: .\forms\frames\uTmpltNameFrame.dfm:143
+msgid "Формирование каталога"
+msgstr ""
+
+#: .\forms\uAddScriptItemFrm.dfm:137
+#: .\forms\back\uAddScriptItemFrm.dfm:98
+msgid "Добавить канал:"
+msgstr ""
+
+#: .\forms\uSelectPathForm.dfm:23
+msgid "Замер:"
+msgstr ""
+
+#: .\forms\uFFTfltFrm.dfm:203
+msgid "Конец полосы"
+msgstr ""
+
+#: .\forms\uEditTubeFrm.dfm:113
+#: .\forms\uGenForm.dfm:268
+msgid "Имя сигнала"
+msgstr ""
+
+#: .\forms\uSelectPathForm.dfm:74
+msgid "Выбор границ испытания:"
+msgstr ""
+
+#: .\forms\uTrigFrm.dfm:4
+#: .\forms\uTrigsFrm.dfm:4
+msgid "Настройка триггеров"
+msgstr ""
+
+#: .\forms\uTrigsFrm.dfm:1235
+msgid "Точек усреднения:"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1920
+msgid "Отступ справа:"
+msgstr ""
+
+#: .\forms\uLissajousFrm.dfm:49
+msgid "Порция"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3499
+msgid "Открыть отчет"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2216
+#: .\forms\frames\uRZDTareFrame.dfm:166
+#: .\forms\frames\uRZDTareFrame.dfm:215
+msgid "Выбрать по курсору"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3299
+msgid "Расчитать воздействие на рельс"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3549
+msgid "Тчк усредн."
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:2345
+#: .\forms\uRptFrm.dfm:2414
+msgid "В отчет попадут каналы у которые есть свойство XLSRep=1"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:272
+msgid "Тип поиска"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:347
+msgid "Источники сигналов"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:58
+#: .\forms\uCyclogramRepFrm.dfm:120
+#: .\forms\uTrigFrm.dfm:33
+#: .\forms\uTrigsFrm.dfm:275
+#: .\forms\back\uCyclogramRepFrm.dfm:47
+#: .\forms\back\uCyclogramRepFrm.dfm:95
+msgid "Канал"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:181
+#: .\forms\back\uCyclogramRepFrm.dfm:153
+msgid "Удалить обратную связь"
+msgstr ""
+
+#: .\forms\uFFTInverseFrm.dfm:35
+msgid "Шаг по частоте, Гц"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:66
+msgid "Базовый каталог"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2254
+#: .\forms\frames\uRZDTareFrame.dfm:213
+msgid "Выбрать интервал для вычисления смещения нуля"
+msgstr ""
+
+#: .\forms\uAddScriptItemFrm.dfm:126
+#: .\forms\back\uAddScriptItemFrm.dfm:91
+msgid "Описание:"
+msgstr ""
+
+#: .\forms\uFFTInverseFrm.dfm:42
+msgid "Поиск каналов"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:1851
+msgid "Гор. смещ. внутрь"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1857
+#: .\forms\uSubRegsFrm.dfm:28
+msgid "Пропуск между интервалами, сек."
+msgstr ""
+
+#: .\forms\frames\uSpmFrame.dfm:108
+#: .\forms\frames\uWPSpmFrame.dfm:108
+msgid "Дополнять нулями"
+msgstr ""
+
+#: .\forms\uMainFrm.dfm:37
+msgid "Путь к второму файлу"
+msgstr ""
+
+#: .\forms\uTrigsFrm.dfm:1187
+msgid "По значению"
+msgstr ""
+
+#: .\forms\uTrigsFrm.dfm:319
+msgid "Тип оси для триггера"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:81
+#: .\forms\uFFTfltFrm.dfm:350
+#: .\forms\uTrigFrm.dfm:149
+#: .\forms\uTrigsFrm.dfm:510
+#: .\forms\uWPProcFrm.dfm:150
+#: .\forms\frames\uWPNameFilterFrame.dfm:368
+msgid "Добавить"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1621
+#: .\forms\uWPProcFrm.dfm:420
+msgid "Триггеры"
+msgstr ""
+
+#: .\forms\uMainFrm.dfm:44
+msgid "Смещение второго файла относительно первого"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:40
+#: .\forms\back\uCyclogramRepFrm.dfm:34
+msgid "Список выходных каналов"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1931
+msgid "Порог:"
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:268
+msgid "Шум "-""
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:913
+msgid "Датчик №3:"
+msgstr ""
+
+#: .\forms\uBDIFrm.dfm:142
+msgid "Имя испытания"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:521
+msgid "Легенда"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:2102
+#: .\forms\uRptFrm.dfm:2182
+#: .\forms\uScriptFrm.dfm:100
+#: .\forms\uTrigsFrm.dfm:1198
+#: .\forms\frames\uWPNameFilterFrame.dfm:38
+msgid "Значение"
+msgstr ""
+
+#: .\forms\uLissajousFrm.dfm:317
+#: .\forms\uSelectPathForm.dfm:81
+msgid "Сигнал:"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:1035
+#: .\forms\uFindMaxForm_.dfm:468
+msgid "Чувствительность кэкстремумам"
+msgstr ""
+
+#: .\forms\uScriptFrm.dfm:328
+msgid "Удалить все"
+msgstr ""
+
+#: .\forms\uFFTInverseFrm.dfm:4
+msgid "Обратное преобразование Фурье"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:308
+msgid "Распаковка СИКОН"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:2419
+msgid "Расчет максимальных границ испытания"
+msgstr ""
+
+#: .\forms\uFFTfltFrm.dfm:4
+msgid "FFT фильтр"
+msgstr ""
+
+#: .\forms\uExtBalanceSignalsFrm.dfm:72
+msgid "Конец"
+msgstr ""
+
+#: .\forms\uAddRZDDatafrm.dfm:105
+msgid "Имя замера:"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:74
+msgid "Графики"
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:135
+msgid "Отклонение от среднего"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2378
+msgid "Матрица влияния РЖД"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:73
+msgid "Обновить пути в базе"
+msgstr ""
+
+#: .\forms\frames\uRZDTareFrame.dfm:50
+msgid "Интервал обработки:"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2898
+msgid "Рег."
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:760
+msgid "Рисовать линию"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:253
+msgid "Отступ на стопе, с"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:899
+msgid "Путь к файлу:"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2641
+#: .\forms\uWPProcFrm.dfm:424
+msgid "Журнал"
+msgstr ""
+
+#: .\forms\uTrigsFrm.dfm:205
+msgid "X1 значение (сек.):"
+msgstr ""
+
+#: .\forms\uEditTubeFrm.dfm:4
+msgid "Редактор трубок допуска"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:906
+msgid "Датчик №2:"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:168
+msgid "Состояние:"
+msgstr ""
+
+#: .\forms\uAddScriptItemFrm.dfm:154
+msgid "Единицы измерения X:"
+msgstr ""
+
+#: .\forms\uGenForm.dfm:275
+msgid "Отклик"
+msgstr ""
+
+#: .\forms\uBDIFrm.dfm:110
+#: .\forms\uCorrectUTS.dfm:209
+#: .\forms\uEditSignalsRepPropFrn.dfm:62
+#: .\forms\uExtBalanceSignalsFrm.dfm:32
+#: .\forms\uRptFrm.dfm:2015
+#: .\forms\uRptFrm.dfm:2178
+#: .\forms\uScriptFrm.dfm:97
+#: .\forms\uSelsinFrm.dfm:235
+#: .\forms\uTrigFrm.dfm:81
+#: .\forms\uTrigsFrm.dfm:330
+msgid "Имя"
+msgstr ""
+
+#: .\forms\back\uAddScriptItemFrm.dfm:84
+msgid "Единицы измерения:"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:892
+msgid "Датчик №1:"
+msgstr ""
+
+#: .\forms\uAddRZDDatafrm.dfm:64
+#: .\forms\uScriptFrm.dfm:310
+msgid "Файл"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3426
+msgid "Каталог"
+msgstr ""
+
+#: .\forms\EditSignalPathFrm.dfm:4
+msgid "Редактирование пути"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:2263
+msgid "Максимальное число колонок:"
+msgstr ""
+
+#: .\forms\uBDIFrm.dfm:97
+msgid "Объект испытания"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:1547
+msgid "Гор. смещ. наружу"
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:4
+msgid "Поиск максимумов"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2901
+msgid "Сеч."
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:330
+#: .\forms\uFindMaxForm_.dfm:210
+msgid "Импорт настроек полос в файл"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:87
+msgid "Ось X:"
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:129
+msgid "Искать "-" макс."
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1887
+msgid "По каналу"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:2350
+msgid "Использовать фильтр"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:2379
+msgid "Выбрать все оценки"
+msgstr ""
+
+#: .\forms\uEditSelsinFrm.dfm:175
+msgid "Сельсин"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:714
+#: .\forms\back\uCyclogramRepFrm.dfm:419
+msgid "Искать фронты"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:946
+#: .\forms\uFindMaxForm_.dfm:410
+msgid "Сохранение и результаты"
+msgstr ""
+
+#: .\forms\uFFTfltFrm.dfm:90
+#: .\forms\uFFTfltFrm.dfm:133
+msgid "Инд."
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:348
+msgid "Обнулить"
+msgstr ""
+
+#: .\forms\uTrigsFrm.dfm:140
+msgid "Номер производной"
+msgstr ""
+
+#: .\forms\uSelsinFrm.dfm:60
+msgid "Расчет"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:940
+msgid "Верт. центр. нагр."
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2895
+msgid "Матрица"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:166
+msgid "Корректируемые UTS сигналы:"
+msgstr ""
+
+#: .\forms\uGenForm.dfm:29
+msgid "Частота дискретизации"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:252
+#: .\forms\uRzdFrm.dfm:2680
+msgid "Участок"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:868
+msgid "Столбцов"
+msgstr ""
+
+#: .\forms\uTrigFrm.dfm:96
+msgid "Фронт"
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:126
+msgid "Искать "+" макс."
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2938
+msgid "Построение гистограмм"
+msgstr ""
+
+#: .\forms\uTrigFrm.dfm:26
+#: .\forms\uTrigsFrm.dfm:26
+msgid "Список триггеров"
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:402
+msgid "Отклонение от среднего (МО)"
+msgstr ""
+
+#: .\forms\uFFTInverseFrm.dfm:28
+#: .\forms\uFrmHibFltFrm.dfm:36
+msgid "Число блоков"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:336
+#: .\forms\uFindMaxForm_.dfm:212
+#: .\forms\uRzdFrm.dfm:2491
+msgid "Импорт"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:688
+#: .\forms\uRzdFrm.dfm:3498
+#: .\forms\uRzdFrm.dfm:3522
+#: .\forms\back\uCyclogramRepFrm.dfm:401
+msgid "Открыть отчет после создания"
+msgstr ""
+
+#: .\forms\uSelectPathForm.dfm:57
+#: .\forms\uSelectPathForm.dfm:66
+msgid "Индекс:"
+msgstr ""
+
+#: .\forms\uEdiSelsinFrm.dfm:42
+#: .\forms\uEditSelsinFrm.dfm:45
+msgid "Частота питания"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:772
+msgid "Рисовать точки на линии"
+msgstr ""
+
+#: .\forms\uFrmHibFltFrm.dfm:4
+msgid "Настройка фильтра"
+msgstr ""
+
+#: .\forms\frames\uTmpltNameFrame.dfm:36
+msgid "Путь к отчету"
+msgstr ""
+
+#: .\forms\frames\uTmpltNameFrame.dfm:94
+msgid "Сделать по умолчанию"
+msgstr ""
+
+#: .\forms\uAddScriptItemFrm.dfm:41
+#: .\forms\back\uAddScriptItemFrm.dfm:33
+msgid "Добавить канал"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:681
+msgid "Имя линии"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:4
+msgid "Плагин пакетной обработки"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:2274
+msgid "Настройка расчета по спектру"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1658
+msgid "Смещение от Т1:"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1836
+msgid "По времени"
+msgstr ""
+
+#: .\forms\uFrmHibFltFrm.dfm:47
+msgid "Размер порции, с"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:791
+msgid "Удалить точку"
+msgstr ""
+
+#: .\forms\uEdiSelsinFrm.dfm:129
+msgid "СКО1"
+msgstr ""
+
+#: .\forms\uSelectIntervalFrm.dfm:26
+#: .\forms\frames\uIntervalFrame.dfm:88
+msgid "Способ выбора"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:73
+msgid "Время испытания"
+msgstr ""
+
+#: .\forms\uScriptFrm.dfm:331
+msgid "Выделить все"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:930
+#: .\forms\uRzdFrm.dfm:392
+msgid "Поверх окон"
+msgstr ""
+
+#: .\forms\uAddRZDDatafrm.dfm:116
+msgid "Путь в базе:"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2960
+#: .\forms\uRzdFrm.dfm:2999
+msgid "Пропуск"
+msgstr ""
+
+#: .\forms\uEditSelsinFrm.dfm:159
+msgid "Создать 6"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:823
+msgid "Сплошная"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:414
+#: .\forms\uTrigLvlEditFrm.dfm:55
+#: .\forms\back\uCyclogramRepFrm.dfm:318
+msgid "Далее"
+msgstr ""
+
+#: .\forms\uAddRZDDatafrm.dfm:249
+#: .\forms\uEditTubeFrm.dfm:69
+msgid "Назначить"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:911
+msgid "Загрузить настройки"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:323
+msgid "Параметры"
+msgstr ""
+
+#: .\forms\uSelsinFrm.dfm:4
+msgid "Расчет угла для сельсин датчика"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:301
+#: .\forms\uFindMaxForm_.dfm:171
+#: .\forms\uRptFrm.dfm:2318
+#: .\forms\uRptFrm.dfm:2361
+msgid "Путь к файлу для экспорта импорта настроек полос"
+msgstr ""
+
+#: .\forms\uEditSignalsRepPropFrn.dfm:110
+msgid "Включить"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:2405
+msgid "Использовать БДИ"
+msgstr ""
+
+#: .\forms\uFrmHibFltFrm.dfm:206
+#: .\forms\uTrigsFrm.dfm:2143
+msgid "Передискретизация"
+msgstr ""
+
+#: .\forms\uChangeSrcFrm.dfm:49
+msgid "Список источников"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:896
+#: .\forms\uFindMaxForm.dfm:907
+msgid "Уровень"
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:370
+msgid "- Максимум"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:70
+#: .\forms\back\uCyclogramRepFrm.dfm:56
+msgid "Триггер2"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3242
+msgid "dX или N (число точек разбиения шкалы)"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:397
+msgid "Дополнения"
+msgstr ""
+
+#: .\forms\uAddSignalFrm.dfm:26
+msgid "Доступные сигналы"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:1068
+#: .\forms\uFindMaxForm_.dfm:493
+msgid "Выбор пути для сохранения результатов экспрес анализа в файл"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2157
+#: .\forms\uRzdFrm.dfm:2293
+msgid "Параметр для расчета матрицы"
+msgstr ""
+
+#: .\forms\uEditSignalsRepPropFrn.dfm:4
+msgid "Настройка списка каналов для отчета"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:2019
+msgid "Описание"
+msgstr ""
+
+#: .\forms\uEditTubeFrm.dfm:33
+msgid "Путь к файлу"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:272
+msgid "Считать графику с объектов WinПОС"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2992
+msgid "Старт"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:43
+#: .\forms\uFindMaxForm_.dfm:37
+#: .\forms\uGenForm.dfm:362
+#: .\forms\uSelectPathForm.dfm:31
+#: .\forms\uSelectPathForm.dfm:145
+msgid "Выберите действие"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:2310
+msgid "Вписать с значениями имена оценок (Word)"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:923
+msgid "Сохранить настройки"
+msgstr ""
+
+#: .\forms\uTrigsFrm.dfm:117
+msgid "Анализ экстремумов"
+msgstr ""
+
+#: .\forms\uMainFrm.dfm:118
+msgid "При включении параметр "Смещение второго файла игнорируется""
+msgstr ""
+
+#: .\forms\uMainFrm.dfm:5
+msgid "Работа с Mera файлом"
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:247
+msgid "Уровень "+""
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:395
+msgid "Искать интервал"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:728
+#: .\forms\back\uCyclogramRepFrm.dfm:429
+msgid "Искать спады"
+msgstr ""
+
+#: .\forms\uSelectIntervalFrm.dfm:77
+#: .\forms\frames\uIntervalFrame.dfm:40
+msgid "Длительность, с:"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1544
+msgid "Сбросить в конец"
+msgstr ""
+
+#: .\forms\uGenForm.dfm:43
+msgid "Фаза, рад."
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:64
+msgid "Расчет алгоритма"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:407
+msgid "Скрипты"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:242
+#: .\forms\uTrigFrm.dfm:40
+#: .\forms\uTrigsFrm.dfm:253
+msgid "Отступ на старте, с"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:4
+msgid "Определение нагруженности участка железнодорожного пути"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3088
+msgid "Удалить гистограмму"
+msgstr ""
+
+#: .\forms\uScriptFrm.dfm:315
+msgid "Создать теги"
+msgstr ""
+
+#: .\forms\uLissajousFrm.dfm:371
+msgid "Тренд"
+msgstr ""
+
+#: .\forms\uTrigsFrm.dfm:194
+msgid "X2 смещение от X1 (сек.):"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:321
+#: .\forms\back\uCyclogramRepFrm.dfm:253
+msgid "Путь к конфигурации"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2727
+msgid "Удалить матрицу"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2242
+msgid "Допустимое отклонение в долях"
+msgstr ""
+
+#: .\forms\uGenForm.dfm:198
+msgid "Скважность (Период/Длит. импульса)"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:4416
+msgid "Изменить интервал обработки"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:920
+msgid "Датчик №4:"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:2125
+msgid "Прим."
+msgstr ""
+
+#: .\forms\uAddRZDDatafrm.dfm:211
+msgid "Сечение №:"
+msgstr ""
+
+#: .\forms\uEditSignalsRepPropFrn.dfm:99
+msgid "Имя свойства:"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2214
+msgid "Выбрать интервалы обработки для всех замеров по курсору"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3571
+#: .\forms\uTrigsFrm.dfm:1934
+#: .\forms\uTrigsFrm.dfm:1956
+msgid "Порядок фильтра:"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:4419
+msgid "Изменить оператор"
+msgstr ""
+
+#: .\forms\uChangeSrcFrm.dfm:30
+msgid "Существующий источник"
+msgstr ""
+
+#: .\forms\uFFTfltFrm.dfm:220
+msgid "Индекс 1"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:281
+msgid "Расчет операторов"
+msgstr ""
+
+#: .\forms\uExtBalanceSignalsFrm.dfm:4
+msgid "Балансировка нуля"
+msgstr ""
+
+#: .\forms\uFFTfltFrm.dfm:186
+msgid "Начало полосы"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3285
+msgid "Заезд"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3560
+#: .\forms\uTrigsFrm.dfm:1246
+msgid "Порция, сек"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1846
+#: .\forms\uSubRegsFrm.dfm:21
+msgid "Длина интервала, сек."
+msgstr ""
+
+#: .\forms\uFFTfltFrm.dfm:288
+msgid "Смещение порции"
+msgstr ""
+
+#: .\forms\uTrigsFrm.dfm:286
+msgid "Единицы для порога"
+msgstr ""
+
+#: .\forms\uGenForm.dfm:70
+msgid "Менять частоту"
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:261
+msgid "Уровень "-""
+msgstr ""
+
+#: .\forms\EditSignalPathFrm.dfm:78
+#: .\forms\uAddSignalFrm.dfm:80
+msgid "Добавить сигналы"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:41
+msgid "Сигнал "Начало отсчета":"
+msgstr ""
+
+#: .\forms\frames\uWPNameFilterFrame.dfm:461
+msgid "Фильтр по подстроке в описании"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2271
+msgid "Балансировать ноль"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:104
+msgid "Настройка границ"
+msgstr ""
+
+#: .\forms\uSelectPathForm.dfm:4
+msgid "Выбор замера"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:48
+msgid "Пороговое значение"
+msgstr ""
+
+#: .\forms\uGenForm.dfm:36
+msgid "Длительность, с"
+msgstr ""
+
+#: .\forms\uEditTubeFrm.dfm:116
+msgid "Имя трубки допуска"
+msgstr ""
+
+#: .\forms\uScriptFrm.dfm:342
+msgid "Помощь"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:90
+#: .\forms\uTrigsFrm.dfm:590
+#: .\forms\uWPProcFrm.dfm:140
+#: .\forms\frames\uWPNameFilterFrame.dfm:67
+msgid "Удалить"
+msgstr ""
+
+#: .\forms\uLissajousFrm.dfm:110
+#: .\forms\uRptFrm.dfm:1475
+#: .\forms\uTrigsFrm.dfm:430
+msgid "Время"
+msgstr ""
+
+#: .\forms\uTrigsFrm.dfm:157
+#: .\forms\uTrigsFrm.dfm:184
+msgid "Границы поиска"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3168
+msgid "Триггер"
+msgstr ""
+
+#: .\forms\frames\uTmpltNameFrame.dfm:47
+msgid "Отчет циклограмма.xls"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:677
+msgid "Кривая"
+msgstr ""
+
+#: .\forms\uFFTfltFrm.dfm:237
+msgid "Индекс 2"
+msgstr ""
+
+#: .\forms\uFFTfltFrm.dfm:254
+msgid "Масштаб"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1670
+msgid "Смещение от Т2:"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:977
+#: .\forms\uFindMaxForm_.dfm:430
+#: .\forms\uWPProcFrm.dfm:416
+msgid "Графика"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:331
+msgid "Учитывать время старта испытания"
+msgstr ""
+
+#: .\forms\uBDIFrm.dfm:129
+msgid "Испытание"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3486
+msgid "Создать отчет (в каталоге с испытанием)"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:56
+msgid "Поправка времени, с"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:692
+msgid "Цвет:"
+msgstr ""
+
+#: .\forms\uBDIFrm.dfm:4
+msgid "База по испытаниям"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2820
+msgid "Исп. имена"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:670
+msgid "Линии"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2568
+msgid "Загрузить данные и расчитать матрицу"
+msgstr ""
+
+#: .\forms\uSelectIntervalFrm.dfm:200
+#: .\forms\frames\uIntervalFrame.dfm:12
+msgid "Канал "Старт""
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:261
+#: .\forms\uFindMaxForm_.dfm:164
+msgid "Наименование"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2552
+msgid "Линковать промежуточные вычисления в дерево сигналов"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:364
+msgid "По гистерезису"
+msgstr ""
+
+#: .\forms\uScriptFrm.dfm:223
+#: .\forms\uScriptFrm.dfm:244
+msgid "Период выполнения скрипта"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:4
+msgid "Настройка графики"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:286
+msgid "Порог триггера "Стоп""
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:946
+#: .\forms\uWPProcFrm.dfm:61
+#: .\forms\uWPProcFrm.dfm:98
+msgid "Путь"
+msgstr ""
+
+#: .\forms\uAddScriptItemFrm.dfm:104
+#: .\forms\back\uAddScriptItemFrm.dfm:77
+msgid "Частота дискретизации:"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:542
+msgid "Ось Y:"
+msgstr ""
+
+#: .\forms\frames\uSpmFrame.dfm:74
+#: .\forms\frames\uWPSpmFrame.dfm:74
+msgid "Амплитуда"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:274
+#: .\forms\uSelectIntervalFrm.dfm:265
+msgid "Вычислить"
+msgstr ""
+
+#: .\forms\frames\uSpmFrame.dfm:27
+#: .\forms\frames\uWPSpmFrame.dfm:27
+msgid "Возвращаемый результат"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:2000
+msgid "Оценки"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:4
+msgid "Поиск экстремумов"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:275
+msgid "Отрисовать графики"
+msgstr ""
+
+#: .\forms\uKBHMFrm.dfm:178
+#: .\forms\uKBHMFrm.dfm:479
+#: .\forms\uSelsinFrm.dfm:69
+msgid "Удалить группу"
+msgstr ""
+
+#: .\forms\uKBHMFrm.dfm:104
+#: .\forms\uKBHMFrm.dfm:405
+#: .\forms\uSelsinFrm.dfm:146
+msgid "Добавить группу"
+msgstr ""
+
+#: .\forms\uLissajousFrm.dfm:302
+msgid "авторасчет"
+msgstr ""
+
+#: .\forms\frames\uWPNameFilterFrame.dfm:34
+msgid "Свойство"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:226
+#: .\forms\uFindMaxForm_.dfm:89
+msgid "Настройка алгоритма"
+msgstr ""
+
+#: .\forms\EditSignalPathFrm.dfm:59
+#: .\forms\uAddRZDDatafrm.dfm:47
+#: .\forms\uCorrectUTS.dfm:252
+#: .\forms\uEditSelsinFrm.dfm:139
+#: .\forms\uEditSignalsRepPropFrn.dfm:40
+#: .\forms\uEditTubeFrm.dfm:97
+#: .\forms\uExtBalanceSignalsFrm.dfm:136
+#: .\forms\uFFTfltFrm.dfm:48
+#: .\forms\uFFTInverseFrm.dfm:102
+#: .\forms\uFindMaxForm_.dfm:390
+#: .\forms\uFrmHibFltFrm.dfm:162
+#: .\forms\uGenForm.dfm:382
+#: .\forms\uGraphMngFrm.dfm:50
+#: .\forms\uIntervalFrm.dfm:69
+#: .\forms\uMNKFrm.dfm:65
+#: .\forms\uRzdFrm.dfm:2880
+#: .\forms\uSelectIntervalFrm.dfm:137
+#: .\forms\uSelectPathForm.dfm:166
+#: .\forms\uSpmFrm.dfm:115
+#: .\forms\uTrigFrm.dfm:159
+#: .\forms\uTrigsFrm.dfm:898
+#: .\forms\uTrigsFrm.dfm:1053
+msgid "Применить"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2543
+msgid "использовать матрицу замера"
+msgstr ""
+
+#: .\forms\uMainFrm.dfm:107
+msgid "Выбор второго файла, который будет присоединен в конец первого"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:169
+#: .\forms\uGraphMngFrm.dfm:623
+msgid "Логарифм"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3523
+msgid "Картинки отдельно"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:907
+msgid "Расположение графиков"
+msgstr ""
+
+#: .\forms\uAddRZDDatafrm.dfm:4
+msgid "Добавление данных в базу"
+msgstr ""
+
+#: .\forms\uSelectPathForm.dfm:49
+msgid "Стоп, с:"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:857
+msgid "Строк"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:262
+msgid "Используется если галочка Определить сдвиг в каждом замере снята"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:583
+msgid "Обновить полосу"
+msgstr ""
+
+#: .\forms\uTrigsFrm.dfm:341
+msgid "Замер"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:195
+msgid "Отображать допуски"
+msgstr ""
+
+#: .\forms\uBDIFrm.dfm:22
+msgid "Структура базы"
+msgstr ""
+
+#: .\forms\uFindMaxForm_.dfm:47
+msgid "Положение курсора"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:700
+#: .\forms\back\uCyclogramRepFrm.dfm:409
+msgid "Записывать начальное состояние "1""
+msgstr ""
+
+#: .\forms\uKBHMFrm.dfm:90
+#: .\forms\uKBHMFrm.dfm:391
+msgid "Параметры двигателя"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:1243
+msgid "Гор. нагр."
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:714
+msgid "Толщина"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3589
+msgid "Нерекурсивный фильтр ФНЧ"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2231
+#: .\forms\frames\uRZDTareFrame.dfm:228
+msgid "Диапазон графика"
+msgstr ""
+
+#: .\forms\EditSignalPathFrm.dfm:26
+msgid "Источник:"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:583
+#: .\forms\uFindMaxForm_.dfm:181
+msgid "Добавить полосу"
+msgstr ""
+
+#: .\forms\uExtBalanceSignalsFrm.dfm:65
+#: .\forms\uExtBalanceSignalsFrm.dfm:79
+msgid ",сек"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:295
+msgid "Определить сдвиг в каждом замере по имени канала"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:1809
+msgid "Автоматические полосы"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:725
+msgid "Тип линии"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:182
+#: .\forms\uGraphMngFrm.dfm:636
+msgid "Полный масштаб"
+msgstr ""
+
+#: .\forms\uMainFrm.dfm:119
+msgid "Писать с разрывами"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:932
+msgid "Положительные экстремумы"
+msgstr ""
+
+#: .\forms\uFFTInverseFrm.dfm:21
+#: .\forms\uFrmHibFltFrm.dfm:25
+#: .\forms\uMNKFrm.dfm:32
+#: .\forms\uRzdFrm.dfm:3419
+#: .\forms\uTrigsFrm.dfm:1978
+#: .\forms\frames\uSpmFrame.dfm:34
+#: .\forms\frames\uWPSpmFrame.dfm:34
+msgid "Число точек"
+msgstr ""
+
+#: .\forms\uScriptFrm.dfm:145
+msgid "Удалить тег"
+msgstr ""
+
+#: .\forms\uGenForm.dfm:134
+msgid "Менять амплитуду"
+msgstr ""
+
+#: .\forms\uChangeSrcFrm.dfm:27
+#: .\forms\uGraphMngFrm.dfm:703
+msgid "Источник"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:846
+msgid "Страницы"
+msgstr ""
+
+#: .\forms\uAddScriptItemFrm.dfm:54
+#: .\forms\uCyclogramRepFrm.dfm:151
+#: .\forms\back\uAddScriptItemFrm.dfm:42
+#: .\forms\back\uCyclogramRepFrm.dfm:123
+msgid "Удалить канал"
+msgstr ""
+
+#: .\forms\uScriptFrm.dfm:320
+msgid "Редактор"
+msgstr ""
+
+#: .\forms\uAddScriptItemFrm.dfm:93
+#: .\forms\uRptFrm.dfm:1898
+#: .\forms\back\uAddScriptItemFrm.dfm:70
+msgid "Имя канала:"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3623
+msgid "Усреднять сигнал"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:264
+msgid "Длина сигнала"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2169
+msgid "Использовать префиксы для поиска сигналов"
+msgstr ""
+
+#: .\forms\uAddScriptItemFrm.dfm:4
+#: .\forms\uScriptFrm.dfm:137
+#: .\forms\back\uAddScriptItemFrm.dfm:4
+msgid "Добавить тег"
+msgstr ""
+
+#: .\forms\frames\uTmpltNameFrame.dfm:22
+msgid "Каталог замера по умолчанию:"
+msgstr ""
+
+#: .\forms\uFrmHibFltFrm.dfm:191
+msgid "Авто"
+msgstr ""
+
+#: .\forms\uSelectIntervalFrm.dfm:4
+msgid "Выбор границ испытания"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:4
+#: .\forms\uWPProcFrm.dfm:403
+msgid "Коррекция времени"
+msgstr ""
+
+#: .\forms\uWPProcFrm.dfm:302
+msgid "Список обработок"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2653
+msgid "Матрицы"
+msgstr ""
+
+#: .\forms\uTrigFrm.dfm:177
+#: .\forms\uTrigFrm.dfm:205
+#: .\forms\uTrigsFrm.dfm:388
+#: .\forms\uTrigsFrm.dfm:445
+msgid "Тип триггера"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2620
+msgid "Параметры расчета"
+msgstr ""
+
+#: .\forms\uAddRZDDatafrm.dfm:163
+#: .\forms\uAddRZDDatafrm.dfm:182
+msgid "Тип замера"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:6675
+msgid "Дополнительно"
+msgstr ""
+
+#: .\forms\uGenForm.dfm:84
+msgid "Конечн. частота F2, Гц"
+msgstr ""
+
+#: .\forms\uEdiSelsinFrm.dfm:63
+#: .\forms\uEditSelsinFrm.dfm:67
+msgid "Смещение секторов:"
+msgstr ""
+
+#: .\forms\uEdiSelsinFrm.dfm:49
+#: .\forms\uEditSelsinFrm.dfm:53
+msgid "Питание:"
+msgstr ""
+
+#: .\forms\uAddSignalFrm.dfm:4
+msgid "Добавить/ Удалить сигналы"
+msgstr ""
+
+#: .\forms\EditSignalPathFrm.dfm:33
+msgid "Назначение:"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2582
+msgid "Заместить файл"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:294
+#: .\forms\uTrigFrm.dfm:90
+msgid "Порог"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:758
+#: .\forms\back\uCyclogramRepFrm.dfm:451
+msgid "Завершить"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:359
+#: .\forms\uExtBalanceSignalsFrm.dfm:118
+#: .\forms\uFFTfltFrm.dfm:484
+#: .\forms\uFindMaxForm.dfm:1116
+#: .\forms\uFindMaxForm_.dfm:525
+#: .\forms\uRptFrm.dfm:1405
+#: .\forms\uSaveSimpleMeraFrm.dfm:93
+#: .\forms\uWPProcFrm.dfm:206
+#: .\forms\back\uCyclogramRepFrm.dfm:279
+msgid "Сохранить"
+msgstr ""
+
+#: .\forms\uMainFrm.dfm:30
+msgid "Путь к первому файлу"
+msgstr ""
+
+#: .\forms\uBDIFrm.dfm:71
+#: .\forms\uGraphMngFrm.dfm:1003
+msgid "Графический объект не создан"
+msgstr ""
+
+#: .\forms\uCyclogramRepFrm.dfm:124
+#: .\forms\back\uCyclogramRepFrm.dfm:98
+msgid "Тип платы"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3232
+msgid "Доли"
+msgstr ""
+
+#: .\forms\uSaveSimpleMeraFrm.dfm:4
+msgid "Сохранение упрощенного Mera файла"
+msgstr ""
+
+#: .\forms\uTrigFrm.dfm:47
+#: .\forms\uTrigsFrm.dfm:308
+msgid "Порог триггера"
+msgstr ""
+
+#: .\forms\uTrigsFrm.dfm:103
+msgid "Добавление триггера"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:321
+#: .\forms\uFindMaxForm_.dfm:201
+#: .\forms\uRzdFrm.dfm:2482
+msgid "Экспорт"
+msgstr ""
+
+#: .\forms\EditSignalPathFrm.dfm:49
+#: .\forms\uCorrectUTS.dfm:243
+#: .\forms\uCyclogramRepFrm.dfm:400
+#: .\forms\uEditSelsinFrm.dfm:149
+#: .\forms\uFFTInverseFrm.dfm:92
+#: .\forms\uFindMaxForm.dfm:205
+#: .\forms\uFindMaxForm_.dfm:55
+#: .\forms\uFrmHibFltFrm.dfm:148
+#: .\forms\uGenForm.dfm:372
+#: .\forms\uIntervalFrm.dfm:59
+#: .\forms\uSaveSimpleMeraFrm.dfm:84
+#: .\forms\uSelectPathForm.dfm:157
+#: .\forms\uSpmFrm.dfm:102
+#: .\forms\uTrigLvlEditFrm.dfm:65
+#: .\forms\back\uCyclogramRepFrm.dfm:308
+msgid "Отмена"
+msgstr ""
+
+#: .\forms\uRptFrm.dfm:6677
+msgid "Расчет спектра"
+msgstr ""
+
+#: .\forms\uCorrectUTS.dfm:65
+#: .\forms\uGraphMngFrm.dfm:297
+#: .\forms\uGraphMngFrm.dfm:308
+#: .\forms\uTrigFrm.dfm:54
+#: .\forms\uTrigFrm.dfm:93
+#: .\forms\uTrigsFrm.dfm:264
+msgid "Номер срабатывания"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:2203
+msgid "Менять замер"
+msgstr ""
+
+#: .\forms\uGenForm.dfm:192
+msgid "Меандр"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:315
+#: .\forms\uFindMaxForm_.dfm:199
+msgid "Экспорт настроек полос в файл"
+msgstr ""
+
+#: .\forms\uFindMaxForm.dfm:411
+#: .\forms\uFindMaxForm_.dfm:233
+msgid "Настройка полос"
+msgstr ""
+
+#: .\forms\uFFTfltFrm.dfm:137
+#: .\forms\uRptFrm.dfm:2204
+msgid "Сигналы"
+msgstr ""
+
+#: .\forms\uGraphMngFrm.dfm:109
+#: .\forms\uGraphMngFrm.dfm:564
+msgid "Максимум"
+msgstr ""
+
+#: .\forms\uRzdFrm.dfm:3175
+msgid "Шум"
+msgstr ""
+
+#: .\forms\uFrmSync.dfm:4
+msgid "Невидимая служебная форма для обработки сообщений"
+msgstr ""
+

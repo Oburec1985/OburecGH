@@ -3,7 +3,7 @@ unit uScriptFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, ExtCtrls, StdCtrls, ComCtrls, ToolWin, ImgList, Menus, Buttons,
   OleCtrls, MSScriptControl_TLB, ActiveX, uWPproc, uBtnListView, comobj,
   uComponentServises, math, DCL_MYOWN, uCommonMath, inifiles, nativexml,

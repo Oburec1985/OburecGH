@@ -3,7 +3,7 @@ unit uRZDTareFrame;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, StdCtrls, DCL_MYOWN, ucommontypes,posbase, Winpos_ole_TLB, uWPProc,
   uWPservices;
 

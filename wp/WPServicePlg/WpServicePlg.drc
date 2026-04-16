@@ -8,106 +8,133 @@
   resources were bound to the produced executable.
 */
 
-#define OleConst_SNoWindowHandle 65248
-#define OleConst_SInvalidLicense 65249
-#define OleConst_SNotLicensed 65250
-#define OleConst_sNoRunningObject 65251
-#define Consts_SmkcDel 65264
-#define Consts_SmkcShift 65265
-#define Consts_SmkcCtrl 65266
-#define Consts_SmkcAlt 65267
-#define Consts_sAllFilter 65268
-#define Consts_SIconToClipboard 65269
-#define Consts_SInvalidPrinterOp 65270
-#define Consts_SNoDefaultPrinter 65271
-#define Consts_SDuplicateMenus 65272
-#define Consts_SDockedCtlNeedsName 65273
-#define Consts_SDockTreeRemoveError 65274
-#define Consts_SDockZoneNotFound 65275
-#define Consts_SDockZoneHasNoCtl 65276
-#define Consts_SDockZoneVersionConflict 65277
-#define OleConst_SBadPropValue 65278
-#define OleConst_SCannotActivate 65279
-#define Consts_SMsgDlgYesToAll 65280
-#define Consts_SMsgDlgClose 65281
-#define Consts_SmkcBkSp 65282
-#define Consts_SmkcTab 65283
-#define Consts_SmkcEsc 65284
-#define Consts_SmkcEnter 65285
-#define Consts_SmkcSpace 65286
-#define Consts_SmkcPgUp 65287
-#define Consts_SmkcPgDn 65288
-#define Consts_SmkcEnd 65289
-#define Consts_SmkcHome 65290
-#define Consts_SmkcLeft 65291
-#define Consts_SmkcUp 65292
-#define Consts_SmkcRight 65293
-#define Consts_SmkcDown 65294
-#define Consts_SmkcIns 65295
-#define Consts_SVBitmaps 65296
-#define Consts_SVTIFFImages 65297
-#define Consts_SMsgDlgWarning 65298
-#define Consts_SMsgDlgError 65299
-#define Consts_SMsgDlgInformation 65300
-#define Consts_SMsgDlgConfirm 65301
-#define Consts_SMsgDlgYes 65302
-#define Consts_SMsgDlgNo 65303
-#define Consts_SMsgDlgOK 65304
-#define Consts_SMsgDlgCancel 65305
-#define Consts_SMsgDlgHelp 65306
-#define Consts_SMsgDlgAbort 65307
-#define Consts_SMsgDlgRetry 65308
-#define Consts_SMsgDlgIgnore 65309
-#define Consts_SMsgDlgAll 65310
-#define Consts_SMsgDlgNoToAll 65311
-#define Consts_SNoMDIForm 65312
-#define Consts_SControlParentSetToSelf 65313
-#define Consts_SOKButton 65314
-#define Consts_SCancelButton 65315
-#define Consts_SYesButton 65316
-#define Consts_SNoButton 65317
-#define Consts_SHelpButton 65318
-#define Consts_SCloseButton 65319
-#define Consts_SIgnoreButton 65320
-#define Consts_SRetryButton 65321
-#define Consts_SAbortButton 65322
-#define Consts_SAllButton 65323
-#define Consts_SCannotDragForm 65324
-#define Consts_SVMetafiles 65325
-#define Consts_SVEnhMetafiles 65326
-#define Consts_SVIcons 65327
-#define Consts_SCannotFocus 65328
-#define Consts_SParentRequired 65329
-#define Consts_SParentGivenNotAParent 65330
-#define Consts_SMDIChildNotVisible 65331
-#define Consts_SVisibleChanged 65332
-#define Consts_SCannotShowModal 65333
-#define Consts_SMenuIndexError 65334
-#define Consts_SMenuReinserted 65335
-#define Consts_SMenuNotFound 65336
-#define Consts_SNoTimers 65337
-#define Consts_SNotPrinting 65338
-#define Consts_SPrinting 65339
-#define Consts_SPrinterIndexError 65340
-#define Consts_SInvalidPrinter 65341
-#define Consts_SDeviceOnPort 65342
-#define Consts_SGroupIndexTooLow 65343
+#define pnglang_EPNGUnknownInterlaceText 65232
+#define pnglang_EPNGCannotAssignChunkText 65233
+#define pnglang_EPNGUnexpectedEndText 65234
+#define pnglang_EPNGNoImageDataText 65235
+#define pnglang_EPNGCannotAddChunkText 65236
+#define pnglang_EPNGCannotAddInvalidImageText 65237
+#define pnglang_EPNGCouldNotLoadResourceText 65238
+#define pnglang_EPNGOutMemoryText 65239
+#define pnglang_EPNGCannotChangeTransparentText 65240
+#define pnglang_EPNGHeaderNotPresentText 65241
+#define pnglang_EInvalidNewSize 65242
+#define pnglang_EInvalidSpec 65243
+#define JConsts_sChangeJPGSize 65244
+#define JConsts_sJPEGError 65245
+#define JConsts_sJPEGImageFile 65246
+#define OleConst_SCannotActivate 65248
+#define OleConst_SNoWindowHandle 65249
+#define OleConst_SInvalidLicense 65250
+#define OleConst_SNotLicensed 65251
+#define OleConst_sNoRunningObject 65252
+#define pnglang_EPngInvalidCRCText 65253
+#define pnglang_EPNGInvalidIHDRText 65254
+#define pnglang_EPNGMissingMultipleIDATText 65255
+#define pnglang_EPNGZLIBErrorText 65256
+#define pnglang_EPNGInvalidPaletteText 65257
+#define pnglang_EPNGInvalidFileHeaderText 65258
+#define pnglang_EPNGIHDRNotFirstText 65259
+#define pnglang_EPNGSizeExceedsText 65260
+#define pnglang_EPNGUnknownPalEntryText 65261
+#define pnglang_EPNGUnknownCriticalChunkText 65262
+#define pnglang_EPNGUnknownCompressionText 65263
+#define Consts_SmkcIns 65264
+#define Consts_SmkcDel 65265
+#define Consts_SmkcShift 65266
+#define Consts_SmkcCtrl 65267
+#define Consts_SmkcAlt 65268
+#define Consts_sAllFilter 65269
+#define Consts_SIconToClipboard 65270
+#define Consts_SInvalidPrinterOp 65271
+#define Consts_SNoDefaultPrinter 65272
+#define Consts_SDuplicateMenus 65273
+#define Consts_SDockedCtlNeedsName 65274
+#define Consts_SDockTreeRemoveError 65275
+#define Consts_SDockZoneNotFound 65276
+#define Consts_SDockZoneHasNoCtl 65277
+#define Consts_SDockZoneVersionConflict 65278
+#define OleConst_SBadPropValue 65279
+#define Consts_SMsgDlgNoToAll 65280
+#define Consts_SMsgDlgYesToAll 65281
+#define Consts_SMsgDlgClose 65282
+#define Consts_SmkcBkSp 65283
+#define Consts_SmkcTab 65284
+#define Consts_SmkcEsc 65285
+#define Consts_SmkcEnter 65286
+#define Consts_SmkcSpace 65287
+#define Consts_SmkcPgUp 65288
+#define Consts_SmkcPgDn 65289
+#define Consts_SmkcEnd 65290
+#define Consts_SmkcHome 65291
+#define Consts_SmkcLeft 65292
+#define Consts_SmkcUp 65293
+#define Consts_SmkcRight 65294
+#define Consts_SmkcDown 65295
+#define Consts_SVIcons 65296
+#define Consts_SVBitmaps 65297
+#define Consts_SVTIFFImages 65298
+#define Consts_SMsgDlgWarning 65299
+#define Consts_SMsgDlgError 65300
+#define Consts_SMsgDlgInformation 65301
+#define Consts_SMsgDlgConfirm 65302
+#define Consts_SMsgDlgYes 65303
+#define Consts_SMsgDlgNo 65304
+#define Consts_SMsgDlgOK 65305
+#define Consts_SMsgDlgCancel 65306
+#define Consts_SMsgDlgHelp 65307
+#define Consts_SMsgDlgAbort 65308
+#define Consts_SMsgDlgRetry 65309
+#define Consts_SMsgDlgIgnore 65310
+#define Consts_SMsgDlgAll 65311
+#define Consts_SGroupIndexTooLow 65312
+#define Consts_SNoMDIForm 65313
+#define Consts_SControlParentSetToSelf 65314
+#define Consts_SOKButton 65315
+#define Consts_SCancelButton 65316
+#define Consts_SYesButton 65317
+#define Consts_SNoButton 65318
+#define Consts_SHelpButton 65319
+#define Consts_SCloseButton 65320
+#define Consts_SIgnoreButton 65321
+#define Consts_SRetryButton 65322
+#define Consts_SAbortButton 65323
+#define Consts_SAllButton 65324
+#define Consts_SCannotDragForm 65325
+#define Consts_SVMetafiles 65326
+#define Consts_SVEnhMetafiles 65327
+#define Consts_SWindowClass 65328
+#define Consts_SCannotFocus 65329
+#define Consts_SParentRequired 65330
+#define Consts_SParentGivenNotAParent 65331
+#define Consts_SMDIChildNotVisible 65332
+#define Consts_SVisibleChanged 65333
+#define Consts_SCannotShowModal 65334
+#define Consts_SMenuIndexError 65335
+#define Consts_SMenuReinserted 65336
+#define Consts_SMenuNotFound 65337
+#define Consts_SNoTimers 65338
+#define Consts_SNotPrinting 65339
+#define Consts_SPrinting 65340
+#define Consts_SPrinterIndexError 65341
+#define Consts_SInvalidPrinter 65342
+#define Consts_SDeviceOnPort 65343
 #define Consts_SInvalidImage 65344
-#define Consts_SChangeIconSize 65345
-#define Consts_SChangeWicSize 65346
-#define Consts_SOleGraphic 65347
-#define Consts_SUnknownExtension 65348
-#define Consts_SUnknownClipboardFormat 65349
-#define Consts_SOutOfResources 65350
-#define Consts_SNoCanvasHandle 65351
-#define Consts_SInvalidImageSize 65352
-#define Consts_SInvalidImageList 65353
-#define Consts_SReplaceImage 65354
-#define Consts_SImageIndexError 65355
-#define Consts_SImageReadFail 65356
-#define Consts_SImageWriteFail 65357
-#define Consts_SWindowDCError 65358
-#define Consts_SWindowClass 65359
+#define Consts_SScanLine 65345
+#define Consts_SChangeIconSize 65346
+#define Consts_SChangeWicSize 65347
+#define Consts_SOleGraphic 65348
+#define Consts_SUnknownExtension 65349
+#define Consts_SUnknownClipboardFormat 65350
+#define Consts_SOutOfResources 65351
+#define Consts_SNoCanvasHandle 65352
+#define Consts_SInvalidImageSize 65353
+#define Consts_SInvalidImageList 65354
+#define Consts_SReplaceImage 65355
+#define Consts_SImageIndexError 65356
+#define Consts_SImageReadFail 65357
+#define Consts_SImageWriteFail 65358
+#define Consts_SWindowDCError 65359
 #define ComConst_SObjectFactoryMissing 65360
 #define ComConst_STypeInfoMissing 65361
 #define ComConst_SBadTypeInfo 65362
@@ -286,10 +313,38 @@
 #define SysConst_SInvalidPointer 65535
 STRINGTABLE
 BEGIN
+	pnglang_EPNGUnknownInterlaceText,	"This \"Portable Network Graphics\" image uses an unknown interlace scheme which could not be decoded."
+	pnglang_EPNGCannotAssignChunkText,	"The chunks must be compatible to be assigned."
+	pnglang_EPNGUnexpectedEndText,	"This \"Portable Network Graphics\" image is invalid because the decoder found an unexpected end of the file."
+	pnglang_EPNGNoImageDataText,	"This \"Portable Network Graphics\" image contains no data."
+	pnglang_EPNGCannotAddChunkText,	"The program tried to add a existent critical chunk to the current image which is not allowed."
+	pnglang_EPNGCannotAddInvalidImageText,	"It's not allowed to add a new chunk because the current image is invalid."
+	pnglang_EPNGCouldNotLoadResourceText,	"The png image could not be loaded from the resource ID."
+	pnglang_EPNGOutMemoryText,	"Some operation could not be performed because the system is out of resources. Close some windows and try again."
+	pnglang_EPNGCannotChangeTransparentText,	"Setting bit transparency color is not allowed for png images containing alpha value for each pixel (COLOR_RGBALPHA and COLOR_GRAYSCALEALPHA)"
+	pnglang_EPNGHeaderNotPresentText,	"This operation is not valid because the current image contains no valid header."
+	pnglang_EInvalidNewSize,	"The new size provided for image resizing is invalid."
+	pnglang_EInvalidSpec,	"The \"Portable Network Graphics\" could not be created because invalid image type parameters have being provided."
+	JConsts_sChangeJPGSize,	"Cannot change the size of a JPEG image"
+	JConsts_sJPEGError,	"JPEG error #%d"
+	JConsts_sJPEGImageFile,	"JPEG Image File"
+	OleConst_SCannotActivate,	"OLE control activation failed"
 	OleConst_SNoWindowHandle,	"Could not obtain OLE control window handle"
 	OleConst_SInvalidLicense,	"License information for %s is invalid"
 	OleConst_SNotLicensed,	"License information for %s not found. You cannot use this control in design mode"
 	OleConst_sNoRunningObject,	"Unable to retrieve a pointer to a running object registered with OLE for %s/%s"
+	pnglang_EPngInvalidCRCText,	"This \"Portable Network Graphics\" image is not valid because it contains invalid pieces of data (crc error)"
+	pnglang_EPNGInvalidIHDRText,	"The \"Portable Network Graphics\" image could not be loaded because one of its main piece of data (ihdr) might be corrupted"
+	pnglang_EPNGMissingMultipleIDATText,	"This \"Portable Network Graphics\" image is invalid because it has missing image parts."
+	pnglang_EPNGZLIBErrorText,	"Could not decompress the image because it contains invalid compressed data.\r\n Description: "
+	pnglang_EPNGInvalidPaletteText,	"The \"Portable Network Graphics\" image contains an invalid palette."
+	pnglang_EPNGInvalidFileHeaderText,	"The file being read is not a valid \"Portable Network Graphics\" image because it contains an invalid header. This file may be corrupted, try obtaining it again"
+	pnglang_EPNGIHDRNotFirstText,	"This \"Portable Network Graphics\" image is not supported or it might be invalid.\r\n(IHDR chunk is not the first)"
+	pnglang_EPNGSizeExceedsText,	"This \"Portable Network Graphics\" image is not supported because either it's width or height exceeds the maximum size, which is 65535 pixels length."
+	pnglang_EPNGUnknownPalEntryText,	"There is no such palette entry."
+	pnglang_EPNGUnknownCriticalChunkText,	"This \"Portable Network Graphics\" image contains an unknown critical part which could not be decoded."
+	pnglang_EPNGUnknownCompressionText,	"This \"Portable Network Graphics\" image is encoded with an unknown compression scheme which could not be decoded."
+	Consts_SmkcIns,	"Ins"
 	Consts_SmkcDel,	"Del"
 	Consts_SmkcShift,	"Shift+"
 	Consts_SmkcCtrl,	"Ctrl+"
@@ -305,7 +360,7 @@ BEGIN
 	Consts_SDockZoneHasNoCtl,	" - Dock zone has no control"
 	Consts_SDockZoneVersionConflict,	"Error loading dock zone from the stream. Expecting version %d, but found %d."
 	OleConst_SBadPropValue,	"'%s' is not a valid property value"
-	OleConst_SCannotActivate,	"OLE control activation failed"
+	Consts_SMsgDlgNoToAll,	"N&o to All"
 	Consts_SMsgDlgYesToAll,	"Yes to &All"
 	Consts_SMsgDlgClose,	"&Close"
 	Consts_SmkcBkSp,	"BkSp"
@@ -321,7 +376,7 @@ BEGIN
 	Consts_SmkcUp,	"Up"
 	Consts_SmkcRight,	"Right"
 	Consts_SmkcDown,	"Down"
-	Consts_SmkcIns,	"Ins"
+	Consts_SVIcons,	"Icons"
 	Consts_SVBitmaps,	"Bitmaps"
 	Consts_SVTIFFImages,	"TIFF Images"
 	Consts_SMsgDlgWarning,	"Warning"
@@ -337,7 +392,7 @@ BEGIN
 	Consts_SMsgDlgRetry,	"&Retry"
 	Consts_SMsgDlgIgnore,	"&Ignore"
 	Consts_SMsgDlgAll,	"&All"
-	Consts_SMsgDlgNoToAll,	"N&o to All"
+	Consts_SGroupIndexTooLow,	"GroupIndex cannot be less than a previous menu item's GroupIndex"
 	Consts_SNoMDIForm,	"Cannot create form. No MDI forms are currently active"
 	Consts_SControlParentSetToSelf,	"A control cannot have itself as its parent"
 	Consts_SOKButton,	"OK"
@@ -353,7 +408,7 @@ BEGIN
 	Consts_SCannotDragForm,	"Cannot drag a form"
 	Consts_SVMetafiles,	"Metafiles"
 	Consts_SVEnhMetafiles,	"Enhanced Metafiles"
-	Consts_SVIcons,	"Icons"
+	Consts_SWindowClass,	"Error creating window class"
 	Consts_SCannotFocus,	"Cannot focus a disabled or invisible window"
 	Consts_SParentRequired,	"Control '%s' has no parent window"
 	Consts_SParentGivenNotAParent,	"Parent given is not a parent of '%s'"
@@ -369,8 +424,8 @@ BEGIN
 	Consts_SPrinterIndexError,	"Printer index out of range"
 	Consts_SInvalidPrinter,	"Printer selected is not valid"
 	Consts_SDeviceOnPort,	"%s on %s"
-	Consts_SGroupIndexTooLow,	"GroupIndex cannot be less than a previous menu item's GroupIndex"
 	Consts_SInvalidImage,	"Invalid image"
+	Consts_SScanLine,	"Scan line index out of range"
 	Consts_SChangeIconSize,	"Cannot change the size of an icon"
 	Consts_SChangeWicSize,	"Cannot change the size of a WIC Image"
 	Consts_SOleGraphic,	"Invalid operation on TOleGraphic"
@@ -385,7 +440,6 @@ BEGIN
 	Consts_SImageReadFail,	"Failed to read ImageList data from stream"
 	Consts_SImageWriteFail,	"Failed to write ImageList data to stream"
 	Consts_SWindowDCError,	"Error creating window device context"
-	Consts_SWindowClass,	"Error creating window class"
 	ComConst_SObjectFactoryMissing,	"Object factory for class %s missing"
 	ComConst_STypeInfoMissing,	"Type information missing for class %s"
 	ComConst_SBadTypeInfo,	"Incorrect type information for class %s"
@@ -566,13 +620,13 @@ END
 
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\Debug\Character.res */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\controls.res */
-/* ..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\buttons.res */
-/* ..\..\sharedUtils\компоненты\dcl_dpk\spin.res */
-/* ..\..\sharedUtils\forms\uGetMngObjForm.dfm */
-/* ..\..\sharedUtils\forms\ulogFrame.dfm */
-/* ..\..\sharedUtils\forms\uJournalForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPServicePlg\WpServicePlg.tlb */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPServicePlg\WpServicePlg.res */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPServicePlg\toolbarExtPack.res */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPServicePlg\WpServicePlg.drf */
+/* C:\Oburec\OburecGH\sharedUtils\компоненты\dcl_dpk\spin.res */
+/* C:\Oburec\OburecGH\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
+/* C:\Oburec\OburecGH\sharedUtils\forms\uGetMngObjForm.dfm */
+/* C:\Oburec\OburecGH\sharedUtils\forms\ulogFrame.dfm */
+/* C:\Oburec\OburecGH\sharedUtils\forms\uJournalForm.dfm */
+/* C:\Oburec\OburecGH\wp\WPServicePlg\WpServicePlg.tlb */
+/* C:\Oburec\OburecGH\wp\WPServicePlg\WpServicePlg.res */
+/* C:\Oburec\OburecGH\wp\WPServicePlg\toolbarExtPack.res */
+/* C:\Oburec\OburecGH\wp\WPServicePlg\WpServicePlg.drf */

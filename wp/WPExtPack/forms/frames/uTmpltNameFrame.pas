@@ -3,7 +3,7 @@ unit uTmpltNameFrame;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, StdCtrls, ExtCtrls, uCommonMath, uWPProc, PathUtils, inifiles,
   uComponentServises;
 

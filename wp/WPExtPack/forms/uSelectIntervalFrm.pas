@@ -3,7 +3,7 @@ unit uSelectIntervalFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, StdCtrls, Spin, ExtCtrls, DCL_MYOWN, ImgList, uChart, uWPProc,
   uCommonTypes, uDoubleCursor, uWPProcServices, upage, utrend, uaxis, uBufftrend1d,
   ComCtrls;

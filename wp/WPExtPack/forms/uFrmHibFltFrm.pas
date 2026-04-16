@@ -3,7 +3,7 @@ unit uFrmHibFltFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uCommonMath,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm, uCommonMath,
   Dialogs, StdCtrls, DCL_MYOWN, uWPservices, uWPProcServices, posbase, uWpProc, uWPExtOperHilbFilter;
 
 type

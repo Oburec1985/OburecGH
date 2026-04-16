@@ -3,7 +3,7 @@ unit uCounterFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, StdCtrls, uSpin, ComCtrls, uBtnListView, ExtCtrls,
   ComObj, types, ActiveX, WPExtPack_TLB, Winpos_ole_TLB,
   StdVcl, PosBase,

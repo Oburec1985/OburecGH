@@ -3,7 +3,7 @@ unit uSelectPathForm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, StdCtrls, DCL_MYOWN, uWPProc, ExtCtrls, uChart, ImgList, posbase;
 
 type

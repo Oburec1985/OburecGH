@@ -8,7 +8,7 @@ uses
   SysUtils,
   Classes,
   Graphics,
-  Controls, Forms,
+  Controls, Forms, uLocalizeForm,
   Dialogs, Grids, StdCtrls, ExtCtrls, uWPProc,
   Winpos_ole_TLB, PosBase, uBinFile, uComponentServises, uCommonMath,
   MathFunction, uWPServices, ImgList, uMarkers, uCommonTypes, shellapi,

@@ -3,7 +3,7 @@ unit uWPSpmFrame;
 interface
 
 uses
-  Windows, Messages, Classes, Graphics, Controls, Forms, sysutils,
+  Windows, Messages, Classes, Graphics, Controls, Forms, uLocalizeForm, sysutils,
   Dialogs, StdCtrls, uWPProcServices, uCommonMath;
 
 type

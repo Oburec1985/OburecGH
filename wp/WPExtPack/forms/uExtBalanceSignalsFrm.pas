@@ -3,7 +3,7 @@ unit uExtBalanceSignalsFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, StdCtrls, DCL_MYOWN, ComCtrls, uBtnListView, ExtCtrls,
   uExtBalanceSignals,uWPservices, uCommonTypes, posbase, Winpos_ole_TLB,
   inifiles,

@@ -98,6 +98,8 @@ uses
   uExtBalanceSignals in 'units\uExtBalanceSignals.pas',
   uExtBalanceSignalsFrm in 'forms\uExtBalanceSignalsFrm.pas' {BalanceZeroFrm},
   uLogFile in '..\..\sharedUtils\utils\uLogFile.pas',
+  uLocalizeForm in '..\..\sharedUtils\utils\uLocalizeForm.pas',
+  gnugettext in '..\..\sharedUtils\utils\gnugettext.pas',
   uFFTFlt in 'units\uFFTFlt.pas',
   uFFTfltFrm in 'forms\uFFTfltFrm.pas' {FFTFltFrm},
   uLissajousFrm in 'forms\uLissajousFrm.pas' {LissajousFrm},
@@ -167,5 +169,7 @@ exports dllgetclassobject Name 'DllGetClassObject',
   dllregisterserver name 'DllRegisterServer',
   dllunregisterserver Name 'DllUnregisterServer';
 begin
-
+  //textdomain('default');
+  //AddDomainForResourceString('default');
+  UseLanguage('en');
 end.

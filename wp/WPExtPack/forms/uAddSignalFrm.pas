@@ -3,7 +3,7 @@ unit uAddSignalFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs,   uWPProc, uCommonMath, uWPProcServices, uFindMaxOper,
   libniipm_tlb, uCorrectUTS, EditSignalPathFrm,
   uWPEvents, StdCtrls;

@@ -3,7 +3,7 @@ unit uFFTInverseFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   uCommonMath,  Dialogs, StdCtrls, DCL_MYOWN, uExtFFTInverse, posbase, Winpos_ole_TLB,
   uBaseObjService,  VirtualTrees, uVTServices, ImgList, uWPOpers, uWPservices, uCommonTypes,
   uComponentservises,  ComCtrls, CommCtrl, uBtnListView, ExtCtrls;

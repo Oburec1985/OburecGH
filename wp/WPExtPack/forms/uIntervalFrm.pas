@@ -3,7 +3,7 @@ unit uIntervalFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, uIntervalFrame, StdCtrls, ExtCtrls, uWpProc;
 
 type

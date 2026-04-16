@@ -1,0 +1,5589 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# 
+#, fuzzy
+msgid ""
+msgstr "Project-Id-Version: PACKAGE VERSION\nPOT-Creation-Date: 2026-04-11 02:36\nPO-Revision-Date: 2026-04-11 02:36\nLast-Translator: Somebody <your.email@address.com>\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\nX-Generator: dxgettext 1.2.2\n"
+
+#. MNKFrm..Caption
+#: forms/uMNKFrm.dfm:4
+msgid "MNKFrm"
+msgstr ""
+
+#. RptFrm..TopGB..ReportTypeRG..Caption
+#: forms/uRptFrm.dfm:1342
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..Reptype..Caption
+#: forms/uRzdFrm.dfm:3509
+#: .\forms\uRptFrm.dfm:1342
+#: .\forms\uRzdFrm.dfm:3509
+msgid "Тип отчета"
+msgstr "Report Type"
+
+#. RptFrm..Panel5..BandsTC..TabSheet2..Caption
+#: forms/uRptFrm.dfm:1567
+#: .\forms\uRptFrm.dfm:1567
+msgid "Индексы"
+msgstr "Indices"
+
+#. HilbFltFrm..LengthCB..Caption
+#: forms/uFrmHibFltFrm.dfm:255
+#: .\forms\uFrmHibFltFrm.dfm:255
+msgid "Весь сигнал"
+msgstr "Full Signal"
+
+#. KBHMFrm..ObjGB..PropSG..SearchFooter.FindPrevCaption
+#: forms/uKBHMFrm.dfm:352
+msgid "Find &previous"
+msgstr ""
+
+#. RZDFrm..PathPanel..VertPanel..useSignalPrefix..Caption
+#: forms/uRzdFrm.dfm:2169
+#: .\forms\uRzdFrm.dfm:2169
+msgid "Использовать префиксы для поиска сигналов"
+msgstr "Use Prefixes for Signal Search"
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..UnitsCB....Items.Strings
+#: forms/uFindMaxForm_.dfm:342
+#. TrigFrm..UnitsCB....Items.Strings
+#: forms/uTrigFrm.dfm:196
+#. TrigsFrm..AddTrigGB..CommonName..UnitsCB....Items.Strings
+#: forms/uTrigsFrm.dfm:468
+msgid "Дб (20Lg) (ШСВ)"
+msgstr ""
+
+#. MeraFileMngFrm..OpenDialog1..Filter
+#: forms/uMainFrm.dfm:196
+#. MeraFileMngFrm..OpenDialog2..Filter
+#: forms/uMainFrm.dfm:201
+#. MeraFileMngFrm..SaveDialog1..Filter
+#: forms/uMainFrm.dfm:206
+msgid "Mera файл|*.mera|Все файлы|*.*"
+msgstr ""
+
+#. CorrectUTSFrm..GroupBox1..DelBtn..Caption
+#: forms/uCorrectUTS.dfm:90
+#. TrigsFrm..AddTrigGB..Panel2..DelBtn..Hint
+#: forms/uTrigsFrm.dfm:590
+#. FxForm..SignalsGB..DelBtn..Caption
+#: forms/uWPProcFrm.dfm:140
+#. WPNameFltFrame..Panel1..Panel2..DelBtn..Hint
+#: forms/frames/uWPNameFilterFrame.dfm:67
+#: .\forms\uCorrectUTS.dfm:90
+#: .\forms\uTrigsFrm.dfm:590
+#: .\forms\uWPProcFrm.dfm:140
+#: .\forms\frames\uWPNameFilterFrame.dfm:67
+msgid "Удалить"
+msgstr "Delete"
+
+#. KBHMFrm..ObjGB..PropSG..SearchFooter.HintFindNext
+#: forms/uKBHMFrm.dfm:360
+msgid "Find next occurence"
+msgstr ""
+
+#. GenFrm..ActionGB..GroupBox3..AmpRG....Items.Strings
+#: forms/uGenForm.dfm:175
+msgid "Постоянная амплитуда"
+msgstr ""
+
+#. KBHMFrm..ObjGB..PropSG....FilterEdit.TypeNames.Strings
+#: forms/uKBHMFrm.dfm:314
+msgid "Smaller than"
+msgstr ""
+
+#. ScriptFrm..MainMenu1..N6..Caption
+#: forms/uScriptFrm.dfm:320
+#: .\forms\uScriptFrm.dfm:320
+msgid "Редактор"
+msgstr "Editor"
+
+#. AddRZDDataFrm..Panel2..Panel1..CalibrRG....Items.Strings
+#: forms/uAddRZDDatafrm.dfm:169
+msgid "Верт. с смещ. внутрь"
+msgstr ""
+
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:275
+msgid "Min3"
+msgstr ""
+
+#. RptFrm..TopGB..StayOnTopBtn..Hint
+#: forms/uRptFrm.dfm:930
+#. RZDFrm..PathPanel..VertPanel..StayOnTopBtn..Hint
+#: forms/uRzdFrm.dfm:392
+#: .\forms\uRptFrm.dfm:930
+#: .\forms\uRzdFrm.dfm:392
+msgid "Поверх окон"
+msgstr "Stay on Top"
+
+#. TrigFrm..UnitsRG..Caption
+#: forms/uTrigFrm.dfm:177
+#. TrigFrm..TrigTypeRG..Caption
+#: forms/uTrigFrm.dfm:205
+#. TrigsFrm..AddTrigGB..CommonName..TrigLvlTypeRG..Caption
+#: forms/uTrigsFrm.dfm:388
+#. TrigsFrm..AddTrigGB..CommonName..TrigTypeRG..Caption
+#: forms/uTrigsFrm.dfm:445
+#: .\forms\uTrigFrm.dfm:177
+#: .\forms\uTrigFrm.dfm:205
+#: .\forms\uTrigsFrm.dfm:388
+#: .\forms\uTrigsFrm.dfm:445
+msgid "Тип триггера"
+msgstr "Trigger Type"
+
+#. RptFrm..BandPanel..SetEstNamesCB..Caption
+#: forms/uRptFrm.dfm:2310
+#: .\forms\uRptFrm.dfm:2310
+msgid "Вписать с значениями имена оценок (Word)"
+msgstr "Write evaluation names with values (Word)"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Panel1..CurvsPanel..AddCurv..Hint
+#: forms/uFindMaxForm.dfm:583
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..IdentBandsGB..AddBandBtn..Caption
+#: forms/uFindMaxForm_.dfm:181
+#: .\forms\uFindMaxForm.dfm:583
+#: .\forms\uFindMaxForm_.dfm:181
+msgid "Добавить полосу"
+msgstr "Add Band"
+
+#. BDIFrm..SelObjLB..Hint
+#: forms/uBDIFrm.dfm:71
+#. GraphFrm..SelObjLB..Hint
+#: forms/uGraphMngFrm.dfm:1003
+#: .\forms\uBDIFrm.dfm:71
+#: .\forms\uGraphMngFrm.dfm:1003
+msgid "Графический объект не создан"
+msgstr "Graphics Object Not Created"
+
+#. SpmFrame..WndLabel..Caption
+#: forms/frames/uSpmFrame.dfm:13
+#. WPSpmFrame..WndLabel..Caption
+#: forms/frames/uWPSpmFrame.dfm:13
+#: .\forms\frames\uSpmFrame.dfm:13
+#: .\forms\frames\uWPSpmFrame.dfm:13
+msgid "Тип окна"
+msgstr "Window Type"
+
+#. CounterFrm..Caption
+#: forms/uCounterFrm.dfm:4
+msgid "Counter config"
+msgstr ""
+
+#. TrigsFrm..AddTrigGB..ExtremumTrigGB..Panel1..SearchIntervalTypeRG....Items.Strings
+#: forms/uTrigsFrm.dfm:161
+msgid "Более"
+msgstr ""
+
+#. RptFrm..BandPanel..MaxColCountLabel..Caption
+#: forms/uRptFrm.dfm:2263
+#: .\forms\uRptFrm.dfm:2263
+msgid "Максимальное число колонок:"
+msgstr "Max Columns:"
+
+#. CorrectUTSFrm..GroupBox1..TestTimeBtn..Caption
+#: forms/uCorrectUTS.dfm:348
+#: .\forms\uCorrectUTS.dfm:348
+msgid "Обнулить"
+msgstr "Reset to Zero"
+
+#. LissajousFrm..RightGB..pNumLabel..Caption
+#: forms/uLissajousFrm.dfm:49
+#: .\forms\uLissajousFrm.dfm:49
+msgid "Порция"
+msgstr "Chunk"
+
+#. CorrectUTSFrm..GroupBox1..NotUTSShiftCB..Caption
+#: forms/uCorrectUTS.dfm:283
+#: .\forms\uCorrectUTS.dfm:283
+msgid "Сдвигать сигналы без UTS"
+msgstr "Shift Signals Without UTS"
+
+#. KBHMFrm..ObjGB..EngControlPanel..EngAddBtn..Hint
+#: forms/uKBHMFrm.dfm:104
+#. KBHMFrm..ChanGB..GroupControlPanel..GroupAddBtn..Hint
+#: forms/uKBHMFrm.dfm:405
+#. SelsinFrm..GroupBox1..EngAddBtn..Hint
+#: forms/uSelsinFrm.dfm:146
+#: .\forms\uKBHMFrm.dfm:104
+#: .\forms\uKBHMFrm.dfm:405
+#: .\forms\uSelsinFrm.dfm:146
+msgid "Добавить группу"
+msgstr "Add Group"
+
+#. GraphFrm..TabControl..TabSheet2..AxisColor..Caption
+#: forms/uGraphMngFrm.dfm:586
+#: .\forms\uGraphMngFrm.dfm:586
+msgid "Цвет оси:"
+msgstr "Axis Color:"
+
+#. GenFrm..ActionGB..GroupBox3..A1Label..Caption
+#: forms/uGenForm.dfm:141
+msgid "A1"
+msgstr ""
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..BandList......Caption
+#: forms/uFindMaxForm_.dfm:108
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..X1..Caption
+#: forms/uFindMaxForm_.dfm:275
+msgid "X1"
+msgstr ""
+
+#. SelectIntervalFrm..Panel2..Panel3..Label8..Caption
+#: forms/uSelectIntervalFrm.dfm:318
+#. FxForm..ProcSignalsGB..GroupBox3..Caption
+#: forms/uWPProcFrm.dfm:85
+#: .\forms\uSelectIntervalFrm.dfm:318
+#: .\forms\uWPProcFrm.dfm:85
+msgid "Обрабатываемые сигналы"
+msgstr "Processed Signals"
+
+#. AddScriptItemFrm..Panel2..Panel3..Label1..Caption
+#: forms/uAddScriptItemFrm.dfm:137
+#. AddScriptItemFrm..Panel2..Panel3..Label1..Caption
+#: forms/back/uAddScriptItemFrm.dfm:98
+#: .\forms\uAddScriptItemFrm.dfm:137
+#: .\forms\back\uAddScriptItemFrm.dfm:98
+msgid "Добавить канал:"
+msgstr "Add Channel:"
+
+#. EditSignalsListFrm..GroupBox1..Caption
+#: forms/uAddSignalFrm.dfm:26
+#: .\forms\uAddSignalFrm.dfm:26
+msgid "Доступные сигналы"
+msgstr "Available Signals"
+
+#. ScriptFrm..PanelTools..ToolBar2..ToolButton1..Caption
+#: forms/uScriptFrm.dfm:153
+msgid "ToolButton1"
+msgstr ""
+
+#. MeraFileMngFrm..EvalOffsetCheckBox..Caption
+#: forms/uMainFrm.dfm:191
+#: .\forms\uMainFrm.dfm:191
+msgid "Считать автоматически по времени записи файла"
+msgstr "Auto-calculate by File timestamp"
+
+#. GraphFrm..TabControl..TabSheet1..ShowLegendCB..Caption
+#: forms/uGraphMngFrm.dfm:521
+#: .\forms\uGraphMngFrm.dfm:521
+msgid "Легенда"
+msgstr "Legend"
+
+#. TmpltNameFrame..NameRG....Items.Strings
+#: forms/frames/uTmpltNameFrame.dfm:133
+msgid "Имя замера"
+msgstr ""
+
+#. MeraFileMngFrm..SelectPathBtn1..Hint
+#: forms/uMainFrm.dfm:96
+#: .\forms\uMainFrm.dfm:96
+msgid "Выбор первого файла к которому будет присоединен второй"
+msgstr "Select First File for Merging"
+
+#. SignalPathFrm..Label1..Caption
+#: forms/EditSignalPathFrm.dfm:26
+#: .\forms\EditSignalPathFrm.dfm:26
+msgid "Источник:"
+msgstr "Source:"
+
+#. GenFrm..TabControl..ShockPage..RefNameE..Text
+#: forms/uGenForm.dfm:343
+msgid "Ref"
+msgstr ""
+
+#. AddRZDDataFrm..Panel2..Panel1..CalibrRG....Items.Strings
+#: forms/uAddRZDDatafrm.dfm:168
+msgid "Верт. с смещ. наружу"
+msgstr ""
+
+#. GraphFrm..TabControl..TabSheet2..UnitsYEdit..Text
+#: forms/uGraphMngFrm.dfm:650
+msgid "Edit1"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..TabSheet1..Panel2..DelGist..Hint
+#: forms/uRzdFrm.dfm:3088
+#: .\forms\uRzdFrm.dfm:3088
+msgid "Удалить гистограмму"
+msgstr ""
+
+#. TrigsFrm..AddTrigGB..ExtremumTrigGB..Caption
+#: forms/uTrigsFrm.dfm:117
+#. TrigsFrm..AddTrigGB..CommonName..TrigTypeRG....Items.Strings
+#: forms/uTrigsFrm.dfm:449
+#: .\forms\uTrigsFrm.dfm:117
+msgid "Анализ экстремумов"
+msgstr "Extremes Analysis"
+
+#. CorrectUTSFrm..GroupBox1..GroupBox2..Caption
+#: forms/uCorrectUTS.dfm:149
+#: .\forms\uCorrectUTS.dfm:149
+msgid "Перечень замеров"
+msgstr "Measurement List"
+
+#. MeraFileMngFrm..Caption
+#: forms/uMainFrm.dfm:5
+#: .\forms\uMainFrm.dfm:5
+msgid "Работа с Mera файлом"
+msgstr "Working with Mera file"
+
+#. BalanceZeroFrm..Panel2..Label2..Caption
+#: forms/uExtBalanceSignalsFrm.dfm:65
+#. BalanceZeroFrm..Panel2..Label5..Caption
+#: forms/uExtBalanceSignalsFrm.dfm:79
+#: .\forms\uExtBalanceSignalsFrm.dfm:65
+#: .\forms\uExtBalanceSignalsFrm.dfm:79
+msgid ",сек"
+msgstr ",sec"
+
+#. EditTubeFrm..Caption
+#: forms/uEditTubeFrm.dfm:4
+#: .\forms\uEditTubeFrm.dfm:4
+msgid "Редактор трубок допуска"
+msgstr "Tolerance Tubes Editor"
+
+#. CorrectUTSFrm..GroupBox1..RadioGroup1....Items.Strings
+#: forms/uCorrectUTS.dfm:139
+#. TrigFrm..TrigLV......Caption
+#: forms/uTrigFrm.dfm:96
+#. TrigFrm..UnitsRG....Items.Strings
+#: forms/uTrigFrm.dfm:180
+#. TrigsFrm..AddTrigGB..CommonName..TrigLvlTypeRG....Items.Strings
+#: forms/uTrigsFrm.dfm:391
+#: .\forms\uTrigFrm.dfm:96
+msgid "Фронт"
+msgstr "Edge"
+
+#. EditSelsinFrm..L1CB..Text
+#: forms/uEdiSelsinFrm.dfm:71
+#. EditSelsinFrm..L1CB..Text
+#: forms/uEditSelsinFrm.dfm:75
+msgid "L1CB"
+msgstr ""
+
+#. TmpltNameFrame..FolderLabel..Caption
+#: forms/frames/uTmpltNameFrame.dfm:22
+#: .\forms\frames\uTmpltNameFrame.dfm:22
+msgid "Каталог замера по умолчанию:"
+msgstr "Default Measurement Directory:"
+
+#. CorrectUTSFrm..GroupBox1..Label3..Caption
+#: forms/uCorrectUTS.dfm:56
+#: .\forms\uCorrectUTS.dfm:56
+msgid "Поправка времени, с"
+msgstr "Time Correction, sec"
+
+#. RZDFrm..PathPanel..VertPanel..FmaxLabel..Caption
+#: forms/uRzdFrm.dfm:802
+msgid "Vt Trel="
+msgstr ""
+
+#. TrigsFrm..AddTrigGB..Caption
+#: forms/uTrigsFrm.dfm:103
+#: .\forms\uTrigsFrm.dfm:103
+msgid "Добавление триггера"
+msgstr "Add Trigger"
+
+#. CounterFrm..Label3..Caption
+#: forms/uCounterFrm.dfm:48
+msgid "Portion, sec"
+msgstr ""
+
+#. TmpltNameFrame..TmpltEdit..Text
+#: forms/frames/uTmpltNameFrame.dfm:47
+#: .\forms\frames\uTmpltNameFrame.dfm:47
+msgid "Отчет циклограмма.xls"
+msgstr "Cyclogram Report.xls"
+
+#. MeraFileMngFrm..Start1..Caption
+#: forms/uMainFrm.dfm:44
+#: .\forms\uMainFrm.dfm:44
+msgid "Смещение второго файла относительно первого"
+msgstr "Second File Offset Relative to First"
+
+#. SelectPathFrm..GroupBox1..StartLabel..Caption
+#: forms/uSelectPathForm.dfm:42
+#: .\forms\uSelectPathForm.dfm:42
+msgid "Старт, с:"
+msgstr "Start, sec:"
+
+#. GraphFrm..TabControl..TabSheet1..XmaxLabel..Caption
+#: forms/uGraphMngFrm.dfm:109
+#. GraphFrm..TabControl..TabSheet2..YmaxLabel..Caption
+#: forms/uGraphMngFrm.dfm:564
+#: .\forms\uGraphMngFrm.dfm:109
+#: .\forms\uGraphMngFrm.dfm:564
+msgid "Максимум"
+msgstr "Maximum"
+
+#. CyclogramRepFrm..CommonGB..FallCB..Caption
+#: forms/uCyclogramRepFrm.dfm:728
+#. CyclogramRepFrm..CommonGB..FallCB..Caption
+#: forms/back/uCyclogramRepFrm.dfm:429
+#: .\forms\uCyclogramRepFrm.dfm:728
+#: .\forms\back\uCyclogramRepFrm.dfm:429
+msgid "Искать спады"
+msgstr "Search Falls"
+
+#. RptFrm..Panel5..BandsTC..РўСЂРёРіРіРµСЂС‹..Label10..Caption
+#: forms/uRptFrm.dfm:1670
+#: .\forms\uRptFrm.dfm:1670
+msgid "Смещение от Т2:"
+msgstr "Offset from T2:"
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..MatrixLV......Caption
+#: forms/uRzdFrm.dfm:2901
+#: .\forms\uRzdFrm.dfm:2901
+msgid "Сеч."
+msgstr "Section"
+
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:263
+msgid "Max1"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..MatrixLV......Caption
+#: forms/uRzdFrm.dfm:2916
+msgid "Poly"
+msgstr ""
+
+#. RZDFrm..MatrixPanel..LinkEvalWP..Caption
+#: forms/uRzdFrm.dfm:2552
+#: .\forms\uRzdFrm.dfm:2552
+msgid "Линковать промежуточные вычисления в дерево сигналов"
+msgstr "Link intermediate calculations to signal tree"
+
+#. RZDFrm..MatrixPanel..LoadBtnPanel..CreateMatrixBtn..Hint
+#: forms/uRzdFrm.dfm:2568
+#: .\forms\uRzdFrm.dfm:2568
+msgid "Загрузить данные и расчитать матрицу"
+msgstr "Load Data and Calculate Matrix"
+
+#. EditSelsinFrm..CommonPntCB..Caption
+#: forms/uEditSelsinFrm.dfm:167
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:291
+#: .\forms\uEditSelsinFrm.dfm:167
+#: .\forms\uSelsinFrm.dfm:291
+msgid "Без общ. тчк."
+msgstr "No Common Point"
+
+#. RptFrm..Panel5..BandsTC..РўСЂРёРіРіРµСЂС‹..Label12..Caption
+#: forms/uRptFrm.dfm:1694
+#. TrigLvlFrm..Label2..Caption
+#: forms/uTrigLvlEditFrm.dfm:31
+#: .\forms\uRptFrm.dfm:1694
+#: .\forms\uTrigLvlEditFrm.dfm:31
+msgid "триггер 2"
+msgstr "Trigger 2"
+
+#. CyclogramRepFrm..CommonGB..Label3..Caption
+#: forms/uCyclogramRepFrm.dfm:321
+#. CyclogramRepFrm..CommonGB..Label3..Caption
+#: forms/back/uCyclogramRepFrm.dfm:253
+#: .\forms\uCyclogramRepFrm.dfm:321
+#: .\forms\back\uCyclogramRepFrm.dfm:253
+msgid "Путь к конфигурации"
+msgstr "Configuration Path"
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..BandList......Caption
+#: forms/uFindMaxForm_.dfm:117
+msgid "Level \"-\""
+msgstr ""
+
+#. AddRZDDataFrm..Panel2..Panel1..CalibrRG....Items.Strings
+#: forms/uAddRZDDatafrm.dfm:166
+msgid "Верт. центр."
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..FltPanel..TrendPortionFLabel..Caption
+#: forms/uRzdFrm.dfm:3560
+#. TrigsFrm..AddTrigGB..FilterGB..Label13..Caption
+#: forms/uTrigsFrm.dfm:1246
+#: .\forms\uRzdFrm.dfm:3560
+#: .\forms\uTrigsFrm.dfm:1246
+msgid "Порция, сек"
+msgstr "Chunk, sec"
+
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..Label7..Caption
+#: forms/uGraphMngFrm.dfm:330
+#. RptFrm..Panel5..BandsTC..TabSheet1..X2Label..Caption
+#: forms/uRptFrm.dfm:1496
+#. RptFrm..Panel5..BandsTC..TabSheet2..Label5..Caption
+#: forms/uRptFrm.dfm:1589
+#. RptFrm..Panel5..BandsTC..РўСЂРёРіРіРµСЂС‹..Label7..Caption
+#: forms/uRptFrm.dfm:1646
+msgid "X2:"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..JournalTS..Caption
+#: forms/uRzdFrm.dfm:2641
+#. FxForm..MainMenu1..N3..Caption
+#: forms/uWPProcFrm.dfm:424
+#: .\forms\uRzdFrm.dfm:2641
+#: .\forms\uWPProcFrm.dfm:424
+msgid "Журнал"
+msgstr "Log"
+
+#. SelectIntervalFrm..Panel2..Panel3..ChanCB..Text
+#: forms/uSelectIntervalFrm.dfm:331
+#. SelectIntervalFrm..Panel2..Panel3..srccb..Text
+#: forms/uSelectIntervalFrm.dfm:345
+msgid "ChanCB"
+msgstr ""
+
+#. RZDFrm..PathPanel..BaseFolderPanel..BaseFolderLabel..Caption
+#: forms/uRzdFrm.dfm:66
+#: .\forms\uRzdFrm.dfm:66
+msgid "Базовый каталог"
+msgstr "Base Directory"
+
+#. SelectPathFrm..GroupBox1..StopLabel..Caption
+#: forms/uSelectPathForm.dfm:49
+#: .\forms\uSelectPathForm.dfm:49
+msgid "Стоп, с:"
+msgstr "Stop, sec:"
+
+#. FxForm..ProcSignalsGB..GroupBox3..SrcLV......Caption
+#: forms/uWPProcFrm.dfm:104
+#: .\forms\uWPProcFrm.dfm:104
+msgid "Настройка границ"
+msgstr "Limits Setup"
+
+#. KBHMFrm..ObjGB..PropSG....FilterEdit.TypeNames.Strings
+#: forms/uKBHMFrm.dfm:307
+msgid "Starts with"
+msgstr ""
+
+#. SelectIntervalFrm..AutoGroup..Label5..Caption
+#: forms/uSelectIntervalFrm.dfm:200
+#. IntervalFrame..Label5..Caption
+#: forms/frames/uIntervalFrame.dfm:12
+#: .\forms\uSelectIntervalFrm.dfm:200
+#: .\forms\frames\uIntervalFrame.dfm:12
+msgid "Канал \"Старт\""
+msgstr "Start Channel"
+
+#. CorrectUTSFrm..GroupBox1..GroupBox2..SignalsLB..Hint
+#: forms/uCorrectUTS.dfm:179
+#: .\forms\uCorrectUTS.dfm:179
+msgid "Не найден канал UTS"
+msgstr "UTS Channel Not Found"
+
+#. FxForm..ProcSignalsGB..GroupBox3..SrcLV......Caption
+#: forms/uWPProcFrm.dfm:101
+#: .\forms\uWPProcFrm.dfm:101
+msgid "Границы"
+msgstr "Limits"
+
+#. TmpltNameFrame..MakeDefaultNameBtn..Caption
+#: forms/frames/uTmpltNameFrame.dfm:94
+#: .\forms\frames\uTmpltNameFrame.dfm:94
+msgid "Сделать по умолчанию"
+msgstr "Set as Default"
+
+#. TmpltNameFrame..NameLabel..Caption
+#: forms/frames/uTmpltNameFrame.dfm:29
+#: .\forms\frames\uTmpltNameFrame.dfm:29
+msgid "Имя замера по умолчанию:"
+msgstr "Default Measurement Name:"
+
+#. FFTFltFrm..RightPanel..ScalesLV......Caption
+#: forms/uFFTfltFrm.dfm:94
+msgid "F"
+msgstr ""
+
+#. RZDFrm..PathPanel..VertPanel..SelectIntervalGraphBtn....Hint
+#: forms/uRzdFrm.dfm:2229
+msgid "Выбрать интервалы обработки для всех замеров по диапазону графика"
+msgstr ""
+
+#. ScriptFrm..PanelTools..ToolBar2..DelTagBtn..Hint
+#: forms/uScriptFrm.dfm:145
+#: .\forms\uScriptFrm.dfm:145
+msgid "Удалить тег"
+msgstr "Delete Tag"
+
+#. CorrectUTSFrm..GroupBox1..Label1..Caption
+#: forms/uCorrectUTS.dfm:41
+#: .\forms\uCorrectUTS.dfm:41
+msgid "Сигнал \"Начало отсчета\":"
+msgstr "Signal 'Origin Start':"
+
+#. SelectIntervalFrm..ModeRG..Caption
+#: forms/uSelectIntervalFrm.dfm:26
+#. IntervalFrame..ModeRG..Caption
+#: forms/frames/uIntervalFrame.dfm:88
+#: .\forms\uSelectIntervalFrm.dfm:26
+#: .\forms\frames\uIntervalFrame.dfm:88
+msgid "Способ выбора"
+msgstr "Selection Method"
+
+#. FindMaxForm..Caption
+#: forms/uFindMaxForm.dfm:4
+#: .\forms\uFindMaxForm.dfm:4
+msgid "Поиск экстремумов"
+msgstr "Extremes Search"
+
+#. SelectIntervalFrm..AutoGroup..Label6..Caption
+#: forms/uSelectIntervalFrm.dfm:211
+#. IntervalFrame..Label6..Caption
+#: forms/frames/uIntervalFrame.dfm:19
+#: .\forms\uSelectIntervalFrm.dfm:211
+#: .\forms\frames\uIntervalFrame.dfm:19
+msgid "Канал \"Стоп\""
+msgstr "Stop Channel"
+
+#. RZDTareFrame..SelectIntervalCursorBtn..Hint
+#: forms/frames/uRZDTareFrame.dfm:164
+#. RZDTareFrame..SelectIntervalGraphBtn..Hint
+#: forms/frames/uRZDTareFrame.dfm:226
+#: .\forms\frames\uRZDTareFrame.dfm:164
+#: .\forms\frames\uRZDTareFrame.dfm:226
+msgid "Выбрать интервал для вычисления матрицы"
+msgstr "Select Interval for Matrix calculation"
+
+#. RptFrm..MainMenu1..N1..N2..Caption
+#: forms/uRptFrm.dfm:6677
+#: .\forms\uRptFrm.dfm:6677
+msgid "Расчет спектра"
+msgstr "Spectrum Calculation"
+
+#. RptFrm..BandPanel..RepFilterCB..Caption
+#: forms/uRptFrm.dfm:2350
+#: .\forms\uRptFrm.dfm:2350
+msgid "Использовать фильтр"
+msgstr "Use Filter"
+
+#. CyclogramRepFrm..GroupBox3..ToolBar1..AddBtn..Hint
+#: forms/uCyclogramRepFrm.dfm:161
+#. CyclogramRepFrm..GroupBox3..ToolBar1..AddBtn..Hint
+#: forms/back/uCyclogramRepFrm.dfm:133
+#: .\forms\uCyclogramRepFrm.dfm:161
+#: .\forms\back\uCyclogramRepFrm.dfm:133
+msgid "Назначить канал"
+msgstr "Assign Channel"
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..UnitsCB....Items.Strings
+#: forms/uFindMaxForm_.dfm:343
+#. TrigFrm..UnitsCB....Items.Strings
+#: forms/uTrigFrm.dfm:197
+#. TrigsFrm..AddTrigGB..CommonName..UnitsCB....Items.Strings
+#: forms/uTrigsFrm.dfm:469
+msgid "Дб (10Lg) (Sin)"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..ReportCB..Hint
+#: forms/uRzdFrm.dfm:3486
+#: .\forms\uRzdFrm.dfm:3486
+msgid "Создать отчет (в каталоге с испытанием)"
+msgstr "Create Report (in trial directory)"
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..MatrixLV......Caption
+#: forms/uRzdFrm.dfm:2895
+#: .\forms\uRzdFrm.dfm:2895
+msgid "Матрица"
+msgstr "Matrix"
+
+#. TrigsFrm..AddTrigGB..FilterGB..Caption
+#: forms/uTrigsFrm.dfm:1223
+#: .\forms\uTrigsFrm.dfm:1223
+msgid "Фильтрация"
+msgstr "Filtering"
+
+#. TrigsFrm..AddTrigGB..ExtremumTrigGB..Panel1..SearchIntervalTab..TabSheet1..Label6..Caption
+#: forms/uTrigsFrm.dfm:205
+#: .\forms\uTrigsFrm.dfm:205
+msgid "X1 значение (сек.):"
+msgstr "X1 Value (sec):"
+
+#. MeraFileMngFrm..SelectPathBtn2..Hint
+#: forms/uMainFrm.dfm:107
+#: .\forms\uMainFrm.dfm:107
+msgid "Выбор второго файла, который будет присоединен в конец первого"
+msgstr "Select Second File (Join To End)"
+
+#. GraphFrm..TabControl..TabSheet3..Caption
+#: forms/uGraphMngFrm.dfm:670
+#: .\forms\uGraphMngFrm.dfm:670
+msgid "Линии"
+msgstr "Lines"
+
+#. FFTFltFrm..EditCurvePanel..FFTCountLabel..Caption
+#: forms/uFFTfltFrm.dfm:271
+#: .\forms\uFFTfltFrm.dfm:271
+msgid "Точек FFT"
+msgstr "FFT Points"
+
+#. CyclogramRepFrm..GroupBox3..ToolBar1..AddBtn..Caption
+#: forms/uCyclogramRepFrm.dfm:162
+#. CyclogramRepFrm..GroupBox3..ToolBar1..AddBtn..Caption
+#: forms/back/uCyclogramRepFrm.dfm:134
+msgid "AddBtn"
+msgstr ""
+
+#. TrigsFrm..AddTrigGB..ExtremumTrigGB..Panel1..SearchIntervalTypeRG..Caption
+#: forms/uTrigsFrm.dfm:157
+#. TrigsFrm..AddTrigGB..ExtremumTrigGB..Panel1..SearchIntervalTab..TabSheet1..Caption
+#: forms/uTrigsFrm.dfm:184
+#: .\forms\uTrigsFrm.dfm:157
+#: .\forms\uTrigsFrm.dfm:184
+msgid "Границы поиска"
+msgstr "Search Limits"
+
+#. SpmFrm..Caption
+#: forms/uSpmFrm.dfm:4
+#: .\forms\uSpmFrm.dfm:4
+msgid "Настройка расчета спектра"
+msgstr "Spectrum Calculation Setup"
+
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:255
+msgid "SectShift"
+msgstr ""
+
+#. KBHMFrm..Caption
+#: forms/uKBHMFrm.dfm:4
+#: .\forms\uKBHMFrm.dfm:4
+msgid "Обработка БМП"
+msgstr "BMP Processing"
+
+#. KBHMFrm..ObjGB..PropSG..SearchFooter.FindNextCaption
+#: forms/uKBHMFrm.dfm:351
+msgid "Find &next"
+msgstr ""
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..NameLabel..Caption
+#: forms/uFindMaxForm.dfm:261
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..IdentBandsGB..NameLabel..Caption
+#: forms/uFindMaxForm_.dfm:164
+#: .\forms\uFindMaxForm.dfm:261
+#: .\forms\uFindMaxForm_.dfm:164
+msgid "Наименование"
+msgstr "Display Name"
+
+#. RZDFrm..PathPanel..VertPanel..TareNamePanel..LabelsPanel..VFLabel..Caption
+#: forms/uRzdFrm.dfm:878
+#: .\forms\uRzdFrm.dfm:878
+msgid "Верт. тяга:"
+msgstr "Vert. Thrust:"
+
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..Label6..Caption
+#: forms/uGraphMngFrm.dfm:319
+#. RptFrm..Panel5..BandsTC..TabSheet1..X1Label..Caption
+#: forms/uRptFrm.dfm:1485
+#. RptFrm..Panel5..BandsTC..TabSheet2..Label4..Caption
+#: forms/uRptFrm.dfm:1578
+#. RptFrm..Panel5..BandsTC..РўСЂРёРіРіРµСЂС‹..Label6..Caption
+#: forms/uRptFrm.dfm:1635
+msgid "X1:"
+msgstr ""
+
+#. FindMaxForm..BandTS..SavePage..GroupBox2..SaveBtn..Caption
+#: forms/uFindMaxForm.dfm:1116
+#. FindMaxForm..TabPanel..SavePage..GroupBox2..SaveBtn..Caption
+#: forms/uFindMaxForm_.dfm:525
+msgid "Сохранить "
+msgstr ""
+
+#. ScriptFrm..PanelTools..ListViewItems......Caption
+#: forms/uScriptFrm.dfm:112
+msgid "RefCount"
+msgstr ""
+
+#. LissajousFrm..RightGB..Label5..Caption
+#: forms/uLissajousFrm.dfm:110
+#. RptFrm..Panel5..BandsTC..TabSheet1..Caption
+#: forms/uRptFrm.dfm:1475
+#. TrigsFrm..AddTrigGB..CommonName..AxTypeRG..Text
+#: forms/uTrigsFrm.dfm:430
+#. TrigsFrm..AddTrigGB..CommonName..AxTypeRG....Items.Strings
+#: forms/uTrigsFrm.dfm:432
+#: .\forms\uLissajousFrm.dfm:110
+#: .\forms\uRptFrm.dfm:1475
+#: .\forms\uTrigsFrm.dfm:430
+msgid "Время"
+msgstr "Time"
+
+#. EditSelsinFrm..GroupBox1..Caption
+#: forms/uEdiSelsinFrm.dfm:119
+#: .\forms\uEdiSelsinFrm.dfm:119
+msgid "Калибровка амплитуд фазных напряжений"
+msgstr "Phase Voltage Amplitude Calibration"
+
+#. GraphFrm..TabControl..TabSheet3..LineNameLabel..Caption
+#: forms/uGraphMngFrm.dfm:681
+#: .\forms\uGraphMngFrm.dfm:681
+msgid "Имя линии"
+msgstr "Line Name"
+
+#. GenFrm..TabControl..MeandrTS..Caption
+#: forms/uGenForm.dfm:192
+#: .\forms\uGenForm.dfm:192
+msgid "Меандр"
+msgstr "Square Wave"
+
+#. KBHMFrm..ObjGB..PropSG..FilterDropDownClear
+#: forms/uKBHMFrm.dfm:305
+msgid "(All)"
+msgstr ""
+
+#. CyclogramRepFrm..GroupBox3..GroupBox4..ChanTypeRG....Items.Strings
+#: forms/uCyclogramRepFrm.dfm:250
+#. CyclogramRepFrm..GroupBox3..GroupBox4..ChanTypeRG....Items.Strings
+#: forms/back/uCyclogramRepFrm.dfm:202
+msgid "Цифровой ввод"
+msgstr ""
+
+#. SelectIntervalFrm..ModeRG....Items.Strings
+#: forms/uSelectIntervalFrm.dfm:28
+#. IntervalFrame..ModeRG....Items.Strings
+#: forms/frames/uIntervalFrame.dfm:90
+msgid "По курсору в графике WP"
+msgstr ""
+
+#. TrigsFrm..AddTrigGB..ExtremumTrigGB..Panel1..ExtremumTypeRG....Items.Strings
+#: forms/uTrigsFrm.dfm:144
+msgid "1-я произв."
+msgstr ""
+
+#. RZDFrm..PathPanel..VertPanel..TareNamePanel..TareFramePageControl..H_Page..Caption
+#: forms/uRzdFrm.dfm:1243
+#: .\forms\uRzdFrm.dfm:1243
+msgid "Гор. нагр."
+msgstr "Hor. Load"
+
+#. SignalPathFrm..CancelBtn..Caption
+#: forms/EditSignalPathFrm.dfm:49
+#. CorrectUTSFrm..GroupBox1..CancelBtn..Caption
+#: forms/uCorrectUTS.dfm:243
+#. CyclogramRepFrm..CommonGB..Panel1..CancelBtn..Caption
+#: forms/uCyclogramRepFrm.dfm:400
+#. EditSelsinFrm..CancelBtn..Caption
+#: forms/uEditSelsinFrm.dfm:149
+#. FFTInverseFrm..GroupBox1..CancelBtn..Caption
+#: forms/uFFTInverseFrm.dfm:92
+#. FindMaxForm..ActionGB..CancelBtn..Caption
+#: forms/uFindMaxForm.dfm:205
+#. FindMaxForm..ActionGB..CancelBtn..Caption
+#: forms/uFindMaxForm_.dfm:55
+#. HilbFltFrm..GroupBox1..CancelBtn..Caption
+#: forms/uFrmHibFltFrm.dfm:148
+#. GenFrm..GroupBox1..CancelBtn..Caption
+#: forms/uGenForm.dfm:372
+#. IntervalFrm..Panel2..CancelBtn..Caption
+#: forms/uIntervalFrm.dfm:59
+#. SaveSimpleMeraFrm..Panel2..CancelBtn..Caption
+#: forms/uSaveSimpleMeraFrm.dfm:84
+#. SelectPathFrm..GroupBox2..Button1..Caption
+#: forms/uSelectPathForm.dfm:157
+#. SpmFrm..Panel2..CancelBtn..Caption
+#: forms/uSpmFrm.dfm:102
+#. TrigLvlFrm..CancelBtn..Caption
+#: forms/uTrigLvlEditFrm.dfm:65
+#. CyclogramRepFrm..CommonGB..Panel1..CancelBtn..Caption
+#: forms/back/uCyclogramRepFrm.dfm:308
+#: .\forms\EditSignalPathFrm.dfm:49
+#: .\forms\uCorrectUTS.dfm:243
+#: .\forms\uCyclogramRepFrm.dfm:400
+#: .\forms\uEditSelsinFrm.dfm:149
+#: .\forms\uFFTInverseFrm.dfm:92
+#: .\forms\uFindMaxForm.dfm:205
+#: .\forms\uFindMaxForm_.dfm:55
+#: .\forms\uFrmHibFltFrm.dfm:148
+#: .\forms\uGenForm.dfm:372
+#: .\forms\uIntervalFrm.dfm:59
+#: .\forms\uSaveSimpleMeraFrm.dfm:84
+#: .\forms\uSelectPathForm.dfm:157
+#: .\forms\uSpmFrm.dfm:102
+#: .\forms\uTrigLvlEditFrm.dfm:65
+#: .\forms\back\uCyclogramRepFrm.dfm:308
+msgid "Отмена"
+msgstr "Cancel"
+
+#. GraphFrm..TabControl..РЎС‚СЂР°РЅРёС†С‹..PageStyleRG....Items.Strings
+#: forms/uGraphMngFrm.dfm:911
+msgid "Таблица"
+msgstr ""
+
+#. RZDFrm..PathPanel..VertPanel..ChangeTestByCutCB..Caption
+#: forms/uRzdFrm.dfm:2203
+#: .\forms\uRzdFrm.dfm:2203
+msgid "Менять замер"
+msgstr "Change Measurement"
+
+#. GenFrm..TabControl..ShockPage..RefLenL..Caption
+#: forms/uGenForm.dfm:240
+msgid "Ref. len"
+msgstr ""
+
+#. Form2..GroupBox1..Caption
+#: forms/uChangeSrcFrm.dfm:49
+#: .\forms\uChangeSrcFrm.dfm:49
+msgid "Список источников"
+msgstr "Source List"
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..BandList......Caption
+#: forms/uFindMaxForm_.dfm:135
+#: .\forms\uFindMaxForm_.dfm:135
+msgid "Отклонение от среднего"
+msgstr "Mean Deviation"
+
+#. RptFrm..RightPanel..RightPC..OptionsTS..Caption
+#: forms/uRptFrm.dfm:2000
+#: .\forms\uRptFrm.dfm:2000
+msgid "Оценки"
+msgstr "Evaluations"
+
+#. FFTFltFrm..EditCurvePanel..F2Label..Caption
+#: forms/uFFTfltFrm.dfm:203
+#: .\forms\uFFTfltFrm.dfm:203
+msgid "Конец полосы"
+msgstr "Band End"
+
+#. RZDTareFrame..OpenDialog1..Filter
+#: forms/frames/uRZDTareFrame.dfm:235
+msgid "mera файл|*.mera"
+msgstr ""
+
+#. CyclogramRepFrm..GroupBox1..ChansLV......Caption
+#: forms/uCyclogramRepFrm.dfm:62
+#. CyclogramRepFrm..GroupBox1..ChansLV......Caption
+#: forms/back/uCyclogramRepFrm.dfm:50
+#: .\forms\uCyclogramRepFrm.dfm:62
+#: .\forms\back\uCyclogramRepFrm.dfm:50
+msgid "Обратная связь"
+msgstr "Feedback"
+
+#. EditSelsinFrm..GroupBox1..SKO1Label..Caption
+#: forms/uEdiSelsinFrm.dfm:129
+#: .\forms\uEdiSelsinFrm.dfm:129
+msgid "СКО1"
+msgstr "RMS1"
+
+#. HilbFltFrm..ResampleCB..Caption
+#: forms/uFrmHibFltFrm.dfm:206
+#. TrigsFrm..AddTrigGB..FilterGB..ResampleCB..Caption
+#: forms/uTrigsFrm.dfm:2143
+#: .\forms\uFrmHibFltFrm.dfm:206
+#: .\forms\uTrigsFrm.dfm:2143
+msgid "Передискретизация"
+msgstr "Resampling"
+
+#. TrigsFrm..AddTrigGB..CommonName..FolderLabel..Caption
+#: forms/uTrigsFrm.dfm:341
+#: .\forms\uTrigsFrm.dfm:341
+msgid "Замер"
+msgstr "Measurement"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..UnitsCB....Items.Strings
+#: forms/uFindMaxForm.dfm:386
+msgid "ШСВ Дб(10 Lg)"
+msgstr ""
+
+#. FFTInverseFrm..Panel1..ChannelsLV......Caption
+#: forms/uFFTInverseFrm.dfm:175
+msgid "FFTCount"
+msgstr ""
+
+#. KBHMFrm..ObjGB..PropSG..FilterDropDown.TextChecked
+#: forms/uKBHMFrm.dfm:303
+msgid "Checked"
+msgstr ""
+
+#. TmpltNameFrame..DateCB..Caption
+#: forms/frames/uTmpltNameFrame.dfm:84
+#: .\forms\frames\uTmpltNameFrame.dfm:84
+msgid "Включить дату"
+msgstr "Include Date"
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..TabSheet1..Panel2..Label2..Caption
+#: forms/uRzdFrm.dfm:3168
+#: .\forms\uRzdFrm.dfm:3168
+msgid "Триггер"
+msgstr "Trigger"
+
+#. CorrectUTSFrm..GroupBox1..NumFrontLabel..Caption
+#: forms/uCorrectUTS.dfm:65
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..StartNumberLabel..Caption
+#: forms/uGraphMngFrm.dfm:297
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..StopNumberLabel..Caption
+#: forms/uGraphMngFrm.dfm:308
+#. TrigFrm..TrigNumberLabel..Caption
+#: forms/uTrigFrm.dfm:54
+#. TrigFrm..TrigLV......Caption
+#: forms/uTrigFrm.dfm:93
+#. TrigsFrm..TriListGB..VTree1......WideText
+#: forms/uTrigsFrm.dfm:77
+#. TrigsFrm..AddTrigGB..CommonName..TrigNumberLabel..Caption
+#: forms/uTrigsFrm.dfm:264
+#: .\forms\uCorrectUTS.dfm:65
+#: .\forms\uGraphMngFrm.dfm:297
+#: .\forms\uGraphMngFrm.dfm:308
+#: .\forms\uTrigFrm.dfm:54
+#: .\forms\uTrigFrm.dfm:93
+#: .\forms\uTrigsFrm.dfm:264
+msgid "Номер срабатывания"
+msgstr "Activation Number"
+
+#. RZDFrm..PathPanel..VertPanel..TareNamePanel..LabelsPanel..S3Label..Caption
+#: forms/uRzdFrm.dfm:913
+#: .\forms\uRzdFrm.dfm:913
+msgid "Датчик №3:"
+msgstr "Sensor #3:"
+
+#. EditRepPropFrm..Panel1..Label1..Caption
+#: forms/uEditSignalsRepPropFrn.dfm:99
+#: .\forms\uEditSignalsRepPropFrn.dfm:99
+msgid "Имя свойства:"
+msgstr "Property Name:"
+
+#. Form2..Caption
+#: forms/uChangeSrcFrm.dfm:4
+#: .\forms\uChangeSrcFrm.dfm:4
+msgid "Определение источников сигналов"
+msgstr "Define Signal Sources"
+
+#. SpmFrame..SpmTypeCB..Text
+#: forms/frames/uSpmFrame.dfm:61
+#. SpmFrame..SpmTypeCB....Items.Strings
+#: forms/frames/uSpmFrame.dfm:63
+#. WPSpmFrame..SpmTypeCB..Text
+#: forms/frames/uWPSpmFrame.dfm:61
+#. WPSpmFrame..SpmTypeCB....Items.Strings
+#: forms/frames/uWPSpmFrame.dfm:63
+#: .\forms\frames\uSpmFrame.dfm:61
+#: .\forms\frames\uWPSpmFrame.dfm:61
+msgid "Амплитулный спектр"
+msgstr "Amplitude Spectrum"
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..PosCB..Caption
+#: forms/uFindMaxForm_.dfm:380
+#: .\forms\uFindMaxForm_.dfm:380
+msgid "+ Максимум"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..TabSheet1..Panel2..Label3..Caption
+#: forms/uRzdFrm.dfm:3175
+#: .\forms\uRzdFrm.dfm:3175
+msgid "Шум"
+msgstr "Noise"
+
+#. RptFrm..Panel5..AutoBandsPC..AutoBandsIntervalPage..Label3..Caption
+#: forms/uRptFrm.dfm:1846
+#. SubRegsFrm..Label3..Caption
+#: forms/uSubRegsFrm.dfm:21
+#: .\forms\uRptFrm.dfm:1846
+#: .\forms\uSubRegsFrm.dfm:21
+msgid "Длина интервала, сек."
+msgstr "Interval Duration, sec."
+
+#. GraphFrm..TabControl..РЎС‚СЂР°РЅРёС†С‹..SyncCursorsCB..Caption
+#: forms/uGraphMngFrm.dfm:924
+#: .\forms\uGraphMngFrm.dfm:924
+msgid "Синхронизация курсоров по X"
+msgstr "Cursor Sync (X)"
+
+#. HilbFltFrm..Caption
+#: forms/uFrmHibFltFrm.dfm:4
+#: .\forms\uFrmHibFltFrm.dfm:4
+msgid "Настройка фильтра"
+msgstr "Filter Setup"
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..TabSheet1..GistLV......Caption
+#: forms/uRzdFrm.dfm:2960
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..TabSheet1..Panel2..GistShiftLabel..Caption
+#: forms/uRzdFrm.dfm:2999
+#: .\forms\uRzdFrm.dfm:2960
+#: .\forms\uRzdFrm.dfm:2999
+msgid "Пропуск"
+msgstr "Gap"
+
+#. RZDFrm..PathPanel..VertPanel..TareNamePanel..LabelsPanel..S4Label..Caption
+#: forms/uRzdFrm.dfm:920
+#: .\forms\uRzdFrm.dfm:920
+msgid "Датчик №4:"
+msgstr "Sensor #4:"
+
+#. CorrectUTSFrm..GroupBox1..SICONCB..Caption
+#: forms/uCorrectUTS.dfm:308
+#: .\forms\uCorrectUTS.dfm:308
+msgid "Распаковка СИКОН"
+msgstr "SIKON Unpacking"
+
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..ExtImagesCB..Caption
+#: forms/uRzdFrm.dfm:3523
+#: .\forms\uRzdFrm.dfm:3523
+msgid "Картинки отдельно"
+msgstr "Separate Images"
+
+#. LissajousFrm..RightGB..SigLV......Caption
+#: forms/uLissajousFrm.dfm:210
+#: .\forms\uLissajousFrm.dfm:210
+msgid "Сигнал"
+msgstr "Signal"
+
+#. BDIFrm..GroupBox1..BaseTV......WideText
+#: forms/uBDIFrm.dfm:62
+#. FFTInverseFrm..Panel1..SigTV......WideText
+#: forms/uFFTInverseFrm.dfm:152
+#. GraphFrm..GraphTV......WideText
+#: forms/uGraphMngFrm.dfm:995
+#. KBHMFrm..ChanGB..GraphTV......WideText
+#: forms/uKBHMFrm.dfm:572
+#. RptFrm..RightPanel..RightPC..SignalsTS..SignalsTV......WideText
+#: forms/uRptFrm.dfm:2234
+#. ScriptFrm..PanelTools..BaseTV......WideText
+#: forms/uScriptFrm.dfm:187
+msgid "Объект"
+msgstr ""
+
+#. GenFrm..TabControl..ShockPage..ShockCountL..Caption
+#: forms/uGenForm.dfm:233
+msgid "ShockCount"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..MatrixLV......Caption
+#: forms/uRzdFrm.dfm:2913
+msgid "S4"
+msgstr ""
+
+#. FindMaxForm..ActionGB..ApplyBtn..Caption
+#: forms/uFindMaxForm_.dfm:64
+#: .\forms\uFindMaxForm_.dfm:64
+msgid "Расчет алгоритма"
+msgstr ""
+
+#. TrigFrm..Label4..Caption
+#: forms/uTrigFrm.dfm:26
+#. TrigsFrm..TriListGB..Caption
+#: forms/uTrigsFrm.dfm:26
+#: .\forms\uTrigFrm.dfm:26
+#: .\forms\uTrigsFrm.dfm:26
+msgid "Список триггеров"
+msgstr "Trigger List"
+
+#. FFTFltFrm..EditCurvePanel..SaveCfgCB..Text
+#: forms/uFFTfltFrm.dfm:476
+#. FFTFltFrm..EditCurvePanel..LoadCfgCB..Text
+#: forms/uFFTfltFrm.dfm:498
+msgid "C:\\Winpos\\FFTFltCfg\\test.txt"
+msgstr ""
+
+#. MeraFileMngFrm..Label3..Caption
+#: forms/uMainFrm.dfm:51
+#: .\forms\uMainFrm.dfm:51
+msgid "Путь к совмещенному файлу"
+msgstr "Path to Merged File"
+
+#. RptFrm..Panel5..AutoBandsPC..TabSheet3..Label17..Caption
+#: forms/uRptFrm.dfm:1909
+#: .\forms\uRptFrm.dfm:1909
+msgid "Отступ слева:"
+msgstr "Left Offset:"
+
+#. TrigsFrm..AddTrigGB..ExtremumTrigGB..Panel1..ExtremumTypeRG..Caption
+#: forms/uTrigsFrm.dfm:140
+#: .\forms\uTrigsFrm.dfm:140
+msgid "Номер производной"
+msgstr "Derivative Order"
+
+#. BDIFrm..TabControl..TestTab..Caption
+#: forms/uBDIFrm.dfm:129
+#: .\forms\uBDIFrm.dfm:129
+msgid "Испытание"
+msgstr "Trial"
+
+#. AddRZDDataFrm..Panel2..SigNameLabel..Caption
+#: forms/uAddRZDDatafrm.dfm:105
+#: .\forms\uAddRZDDatafrm.dfm:105
+msgid "Имя замера:"
+msgstr "Measurement Name:"
+
+#. GraphFrm..TabControl..TabSheet1..ScaleXCB..Caption
+#: forms/uGraphMngFrm.dfm:182
+#. GraphFrm..TabControl..TabSheet2..ScaleYCB..Caption
+#: forms/uGraphMngFrm.dfm:636
+#: .\forms\uGraphMngFrm.dfm:182
+#: .\forms\uGraphMngFrm.dfm:636
+msgid "Полный масштаб"
+msgstr "Full Scale"
+
+#. GenFrm..ActionGB..GroupBox2..F2Label..Caption
+#: forms/uGenForm.dfm:84
+#: .\forms\uGenForm.dfm:84
+msgid "Конечн. частота F2, Гц"
+msgstr "Ending F2, Hz"
+
+#. RZDTareFrame..Label3..Caption
+#: forms/frames/uRZDTareFrame.dfm:50
+#: .\forms\frames\uRZDTareFrame.dfm:50
+msgid "Интервал обработки:"
+msgstr "Processing Interval:"
+
+#. LissajousFrm..RightGB..Label7..Caption
+#: forms/uLissajousFrm.dfm:136
+#: .\forms\uLissajousFrm.dfm:136
+msgid "Диаметр"
+msgstr "Diameter"
+
+#. FxForm..Caption
+#: forms/uWPProcFrm.dfm:4
+#: .\forms\uWPProcFrm.dfm:4
+msgid "Плагин пакетной обработки"
+msgstr "Batch Processing Plugin"
+
+#. MeraFileMngFrm..Button1..Caption
+#: forms/uMainFrm.dfm:129
+#: .\forms\uMainFrm.dfm:129
+msgid "Соединить файлы"
+msgstr "Join Files"
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..TabSheet1..Panel2..dXCB..Hint
+#: forms/uRzdFrm.dfm:3242
+#: .\forms\uRzdFrm.dfm:3242
+msgid "dX или N (число точек разбиения шкалы)"
+msgstr "dX or N (Number of scale division points)"
+
+#. RptFrm..Panel5..AutoBandsPC..TabSheet3..Label18..Caption
+#: forms/uRptFrm.dfm:1920
+#: .\forms\uRptFrm.dfm:1920
+msgid "Отступ справа:"
+msgstr "Right Offset:"
+
+#. CyclogramRepFrm..GroupBox3..ToolBar1..DelBtn..Caption
+#: forms/uCyclogramRepFrm.dfm:152
+#. CyclogramRepFrm..GroupBox3..ToolBar1..DelBtn..Caption
+#: forms/back/uCyclogramRepFrm.dfm:124
+msgid "GetXBtn"
+msgstr ""
+
+#. SelectPathFrm..Caption
+#: forms/uSelectPathForm.dfm:4
+#: .\forms\uSelectPathForm.dfm:4
+msgid "Выбор замера"
+msgstr "Select Measurement"
+
+#. FindMaxForm..BandTS..SavePage..GroupBox1..cChart1..Caption
+#: forms/uFindMaxForm.dfm:990
+#. FindMaxForm..TabPanel..SavePage..GroupBox1..cChart1..Caption
+#: forms/uFindMaxForm_.dfm:439
+#. SelectPathFrm..cChart1..Caption
+#: forms/uSelectPathForm.dfm:177
+msgid "cChart1"
+msgstr ""
+
+#. TrigsFrm..AddTrigGB..ExtremumTrigGB..Panel1..ExtremumTypeRG....Items.Strings
+#: forms/uTrigsFrm.dfm:145
+msgid "2-я произв."
+msgstr ""
+
+#. CorrectUTSFrm..GroupBox1..NamedShiftCB..Caption
+#: forms/uCorrectUTS.dfm:295
+#: .\forms\uCorrectUTS.dfm:295
+msgid "Определить сдвиг в каждом замере по имени канала"
+msgstr "Determine offset in each measurement by channel name"
+
+#. GenFrm..TabControl..ShockPage..RefShiftL..Caption
+#: forms/uGenForm.dfm:254
+msgid "Ref. shift"
+msgstr ""
+
+#. RptFrm..TopGB..Label8..Caption
+#: forms/uRptFrm.dfm:911
+#: .\forms\uRptFrm.dfm:911
+msgid "Загрузить настройки"
+msgstr "Load Settings"
+
+#. RptFrm..RightPanel..RightPC..OptionsTS..ParamsGB..Panel3..Panel4..DelParamBtn..Caption
+#: forms/uRptFrm.dfm:2162
+#. ScriptFrm..MainMenu1..N1..N19..Caption
+#: forms/uScriptFrm.dfm:312
+#. ScriptFrm..MainMenu1..N6..N25..Caption
+#: forms/uScriptFrm.dfm:322
+#. ScriptFrm..MainMenu1..N6..N21..Caption
+#: forms/uScriptFrm.dfm:325
+#. ScriptFrm..MainMenu1..N17..N27..Caption
+#: forms/uScriptFrm.dfm:344
+msgid "-"
+msgstr ""
+
+#. RZDFrm..PathPanel..VertPanel..sectionLabel..Caption
+#: forms/uRzdFrm.dfm:259
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..Panel1..CutLabel..Caption
+#: forms/uRzdFrm.dfm:2688
+#: .\forms\uRzdFrm.dfm:259
+#: .\forms\uRzdFrm.dfm:2688
+msgid "Сечение"
+msgstr "Section"
+
+#. FFTFltFrm..Caption
+#: forms/uFFTfltFrm.dfm:4
+#: .\forms\uFFTfltFrm.dfm:4
+msgid "FFT фильтр"
+msgstr "FFT Filter"
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..Panel1..mat_s3Label..Caption
+#: forms/uRzdFrm.dfm:2720
+msgid "3:"
+msgstr ""
+
+#. RZDFrm..MatrixPanel..MatrixGB..Caption
+#: forms/uRzdFrm.dfm:2378
+#: .\forms\uRzdFrm.dfm:2378
+msgid "Матрица влияния РЖД"
+msgstr "RZD Influence Matrix"
+
+#. TrigFrm..Caption
+#: forms/uTrigFrm.dfm:4
+#. TrigsFrm..Caption
+#: forms/uTrigsFrm.dfm:4
+#: .\forms\uTrigFrm.dfm:4
+#: .\forms\uTrigsFrm.dfm:4
+msgid "Настройка триггеров"
+msgstr "Trigger Settings"
+
+#. SelectPathFrm..Label1..Caption
+#: forms/uSelectPathForm.dfm:23
+#: .\forms\uSelectPathForm.dfm:23
+msgid "Замер:"
+msgstr "Measurement:"
+
+#. CorrectUTSFrm..GroupBox1..NamedShiftCB....Hint
+#: forms/uCorrectUTS.dfm:294
+msgid ""
+"Нужно включить если замеры не содержат UTS но имеют одноименный сигнал с информацией о начале испытания. Если корректируется один замер можно не включать."
+msgstr ""
+
+#. GenFrm..ActionGB..LengthLabel..Caption
+#: forms/uGenForm.dfm:36
+#: .\forms\uGenForm.dfm:36
+msgid "Длительность, с"
+msgstr "Duration, sec"
+
+#. BalanceZeroFrm..Panel2..Label3..Caption
+#: forms/uExtBalanceSignalsFrm.dfm:86
+#. FindMaxForm..SignalsGB..SignalsListGB..Caption
+#: forms/uFindMaxForm.dfm:1143
+#. FindMaxForm..SignalsGB..GroupBox7..Caption
+#: forms/uFindMaxForm_.dfm:545
+#: .\forms\uExtBalanceSignalsFrm.dfm:86
+#: .\forms\uFindMaxForm.dfm:1143
+#: .\forms\uFindMaxForm_.dfm:545
+msgid "Список сигналов"
+msgstr "Signal List"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..PointsLV......Caption
+#: forms/uFindMaxForm.dfm:443
+#. LissajousFrm..RightGB..Label2..Caption
+#: forms/uLissajousFrm.dfm:77
+msgid "Y"
+msgstr ""
+
+#. KBHMFrm..ObjGB..PropSG....FilterEdit.TypeNames.Strings
+#: forms/uKBHMFrm.dfm:312
+msgid "Not equal"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..TabSheet1..GistLV......Caption
+#: forms/uRzdFrm.dfm:2956
+#: .\forms\uRzdFrm.dfm:2956
+msgid "Первый импульс"
+msgstr "First Pulse"
+
+#. RptFrm..RightPanel..RightPC..OptionsTS..OptsLV......Caption
+#: forms/uRptFrm.dfm:2019
+#: .\forms\uRptFrm.dfm:2019
+msgid "Описание"
+msgstr ""
+
+#. RZDFrm..PathPanel..VertPanel..TareNamePanel..LabelsPanel..S2Label..Caption
+#: forms/uRzdFrm.dfm:906
+#: .\forms\uRzdFrm.dfm:906
+msgid "Датчик №2:"
+msgstr "Sensor #2:"
+
+#. EditRepPropFrm..Caption
+#: forms/uEditSignalsRepPropFrn.dfm:4
+#: .\forms\uEditSignalsRepPropFrn.dfm:4
+msgid "Настройка списка каналов для отчета"
+msgstr "Report Channels List Setup"
+
+#. TrigFrm..TrigTypeRG....Items.Strings
+#: forms/uTrigFrm.dfm:210
+msgid "Стоп"
+msgstr ""
+
+#. RptFrm..BandPanel..UseMDBCB..Caption
+#: forms/uRptFrm.dfm:2405
+#: .\forms\uRptFrm.dfm:2405
+msgid "Использовать БДИ"
+msgstr "Use TDB"
+
+#. MeraFileMngFrm..PrtCB..Caption
+#: forms/uMainFrm.dfm:119
+#: .\forms\uMainFrm.dfm:119
+msgid "Писать с разрывами"
+msgstr "Write with Gaps"
+
+#. GenFrm..ActionGB..GroupBox2..Caption
+#: forms/uGenForm.dfm:70
+#: .\forms\uGenForm.dfm:70
+msgid "Менять частоту"
+msgstr "Change Frequency"
+
+#. RZDFrm..PathPanel..VertPanel..RegionLabel..Caption
+#: forms/uRzdFrm.dfm:252
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..Panel1..RegLabel..Caption
+#: forms/uRzdFrm.dfm:2680
+#: .\forms\uRzdFrm.dfm:252
+#: .\forms\uRzdFrm.dfm:2680
+msgid "Участок"
+msgstr "Track Section"
+
+#. SubRegsFrm..SubdivBtn..Caption
+#: forms/uSubRegsFrm.dfm:51
+#: .\forms\uSubRegsFrm.dfm:51
+msgid "Разделить"
+msgstr "Split"
+
+#. GenFrm..ActionGB..GroupBox2..FreqRG....Items.Strings
+#: forms/uGenForm.dfm:112
+#. GenFrm..ActionGB..GroupBox3..AmpRG....Items.Strings
+#: forms/uGenForm.dfm:176
+msgid "Линейный закон"
+msgstr ""
+
+#. EditSelsinFrm..CreateAllCB..Caption
+#: forms/uEditSelsinFrm.dfm:159
+#: .\forms\uEditSelsinFrm.dfm:159
+msgid "Создать 6"
+msgstr "Create 6"
+
+#. MNKFrm..PolyLabel..Caption
+#: forms/uMNKFrm.dfm:21
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..PolyLabel..Caption
+#: forms/uRzdFrm.dfm:3292
+#: .\forms\uMNKFrm.dfm:21
+#: .\forms\uRzdFrm.dfm:3292
+msgid "Полином"
+msgstr "Polynomial"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Panel1..CurvsPanel..CurveTypePC..РљСЂРёРІР°СЏ..Xlabel..Caption
+#: forms/uFindMaxForm.dfm:691
+msgid "X:"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..TabSheet1..Caption
+#: forms/uRzdFrm.dfm:2938
+#: .\forms\uRzdFrm.dfm:2938
+msgid "Построение гистограмм"
+msgstr "Histogram Plotting"
+
+#. SpmFrame..WndCB....Items.Strings
+#: forms/frames/uSpmFrame.dfm:48
+#. WPSpmFrame..WndCB....Items.Strings
+#: forms/frames/uWPSpmFrame.dfm:48
+msgid "Ханнинг (СКЗ)"
+msgstr ""
+
+#. SpmFrame..SpmResLabel..Caption
+#: forms/frames/uSpmFrame.dfm:27
+#. WPSpmFrame..SpmResLabel..Caption
+#: forms/frames/uWPSpmFrame.dfm:27
+#: .\forms\frames\uSpmFrame.dfm:27
+#: .\forms\frames\uWPSpmFrame.dfm:27
+msgid "Возвращаемый результат"
+msgstr "Return Result"
+
+#. RptFrm..RightPanel..RightPC..OptionsTS..ParamsGB..Caption
+#: forms/uRptFrm.dfm:2044
+#: .\forms\uRptFrm.dfm:2044
+msgid "Добавить параметры"
+msgstr "Add Parameters"
+
+#. HilbFltFrm..Label4..Caption
+#: forms/uFrmHibFltFrm.dfm:69
+#. ScriptFrm..Panel1..T2Label..Caption
+#: forms/uScriptFrm.dfm:237
+msgid "T2"
+msgstr ""
+
+#. FindMaxForm..BandTS..SavePage..Caption
+#: forms/uFindMaxForm.dfm:946
+#. FindMaxForm..TabPanel..SavePage..Caption
+#: forms/uFindMaxForm_.dfm:410
+#: .\forms\uFindMaxForm.dfm:946
+#: .\forms\uFindMaxForm_.dfm:410
+msgid "Сохранение и результаты"
+msgstr "Saving and Results"
+
+#. RZDFrm..ScrollBox1..EvalGB..FltPanel..LPFOrderLabel..Caption
+#: forms/uRzdFrm.dfm:3571
+#. TrigsFrm..AddTrigGB..FilterGB..Label2..Caption
+#: forms/uTrigsFrm.dfm:1934
+#. TrigsFrm..AddTrigGB..FilterGB..Label10..Caption
+#: forms/uTrigsFrm.dfm:1956
+#: .\forms\uRzdFrm.dfm:3571
+#: .\forms\uTrigsFrm.dfm:1934
+#: .\forms\uTrigsFrm.dfm:1956
+msgid "Порядок фильтра:"
+msgstr "Filter Order:"
+
+#. RZDFrm..ScrollBox1..EvalGB..Caption
+#: forms/uRzdFrm.dfm:2620
+#: .\forms\uRzdFrm.dfm:2620
+msgid "Параметры расчета"
+msgstr "Calculation Parameters"
+
+#. RZDFrm..PathPanel..VertPanel..SelectIntervalCursorBtn..Hint
+#: forms/uRzdFrm.dfm:2214
+#: .\forms\uRzdFrm.dfm:2214
+msgid "Выбрать интервалы обработки для всех замеров по курсору"
+msgstr "Select Processing Intervals for all measurements by cursor"
+
+#. FFTFltFrm..RightPanel..ScalesLV......Caption
+#: forms/uFFTfltFrm.dfm:97
+msgid "Scale"
+msgstr ""
+
+#. GenFrm..TabControl..ShockPage..ImpactE..Text
+#: forms/uGenForm.dfm:335
+msgid "Impact"
+msgstr ""
+
+#. RptFrm..RightPanel..RightPC..OptionsTS..ParamsGB..Panel3..Panel4..Label1..Caption
+#: forms/uRptFrm.dfm:2091
+#: .\forms\uRptFrm.dfm:2091
+msgid "Имя параметра"
+msgstr "Parameter Name"
+
+#. FxForm..OperatorsGB..GroupBox1..Caption
+#: forms/uWPProcFrm.dfm:347
+#: .\forms\uWPProcFrm.dfm:347
+msgid "Источники сигналов"
+msgstr "Signal Sources"
+
+#. SelectIntervalFrm..Panel1..Label3..Caption
+#: forms/uSelectIntervalFrm.dfm:77
+#. IntervalFrame..Label3..Caption
+#: forms/frames/uIntervalFrame.dfm:40
+#: .\forms\uSelectIntervalFrm.dfm:77
+#: .\forms\frames\uIntervalFrame.dfm:40
+msgid "Длительность, с:"
+msgstr "Duration, sec:"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..UnitsCB....Items.Strings
+#: forms/uFindMaxForm.dfm:385
+msgid "Sin Дб(20 Lg)"
+msgstr ""
+
+#. KBHMFrm..ObjGB..PropSG....FilterEdit.TypeNames.Strings
+#: forms/uKBHMFrm.dfm:311
+msgid "Equal"
+msgstr ""
+
+#. AddRZDDataFrm..Caption
+#: forms/uAddRZDDatafrm.dfm:4
+#: .\forms\uAddRZDDatafrm.dfm:4
+msgid "Добавление данных в базу"
+msgstr "Add Data to DB"
+
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:247
+msgid "L3"
+msgstr ""
+
+#. SelectPathFrm..GroupBox1..FolderLabel..Caption
+#: forms/uSelectPathForm.dfm:74
+#: .\forms\uSelectPathForm.dfm:74
+msgid "Выбор границ испытания:"
+msgstr "Select Test Limits:"
+
+#. AddRZDDataFrm..Panel2..Panel1..CalibrRG..Caption
+#: forms/uAddRZDDatafrm.dfm:163
+#. AddRZDDataFrm..Panel2..Panel1..TypeRG..Caption
+#: forms/uAddRZDDatafrm.dfm:182
+#: .\forms\uAddRZDDatafrm.dfm:163
+#: .\forms\uAddRZDDatafrm.dfm:182
+msgid "Тип замера"
+msgstr "Measurement Type"
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..negCB..Caption
+#: forms/uFindMaxForm_.dfm:370
+#: .\forms\uFindMaxForm_.dfm:370
+msgid "- Максимум"
+msgstr "- Maximum"
+
+#. RptFrm..Panel5..BandsTC..РўСЂРёРіРіРµСЂС‹..Label11..Caption
+#: forms/uRptFrm.dfm:1682
+#. TrigLvlFrm..Label1..Caption
+#: forms/uTrigLvlEditFrm.dfm:24
+#: .\forms\uRptFrm.dfm:1682
+#: .\forms\uTrigLvlEditFrm.dfm:24
+msgid "Триггер 1"
+msgstr "Trigger 1"
+
+#. KBHMFrm..ObjGB..PropSG..PrintSettings.PageNumSep
+#: forms/uKBHMFrm.dfm:349
+msgid "/"
+msgstr ""
+
+#. FindMaxForm..BandTS..SavePage..GroupBox2..SavePathLabel..Caption
+#: forms/uFindMaxForm.dfm:1023
+#. FindMaxForm..TabPanel..SavePage..GroupBox2..SavePathLabel..Caption
+#: forms/uFindMaxForm_.dfm:460
+#: .\forms\uFindMaxForm.dfm:1023
+#: .\forms\uFindMaxForm_.dfm:460
+msgid "Сохранение результата"
+msgstr "Save Result"
+
+#. Form2..BtnListView1......Caption
+#: forms/uChangeSrcFrm.dfm:24
+#. CorrectUTSFrm..GroupBox1..GroupBox2..UTSLV......Caption
+#: forms/uCorrectUTS.dfm:206
+#. CyclogramRepFrm..GroupBox1..ChansLV......Caption
+#: forms/uCyclogramRepFrm.dfm:54
+#. CyclogramRepFrm..GroupBox3..CommonLV......Caption
+#: forms/uCyclogramRepFrm.dfm:116
+#. EditRepPropFrm..ChannelsList......Caption
+#: forms/uEditSignalsRepPropFrn.dfm:58
+#. EditTubeFrm..SignalsLV......Caption
+#: forms/uEditTubeFrm.dfm:110
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..BandList......Caption
+#: forms/uFindMaxForm_.dfm:105
+#. GraphFrm..SrcLV......Caption
+#: forms/uGraphMngFrm.dfm:942
+#. LissajousFrm..GraphLV......Caption
+#: forms/uLissajousFrm.dfm:402
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:231
+#. TrigFrm..TrigLV......Caption
+#: forms/uTrigFrm.dfm:78
+#. FxForm..ProcSignalsGB..GroupBox2..OpersSrc......Caption
+#: forms/uWPProcFrm.dfm:58
+#. FxForm..ProcSignalsGB..GroupBox3..SrcLV......Caption
+#: forms/uWPProcFrm.dfm:95
+#. FxForm..OperatorsGB..OperatorsLV......Caption
+#: forms/uWPProcFrm.dfm:317
+#. CyclogramRepFrm..GroupBox1..ChansLV......Caption
+#: forms/back/uCyclogramRepFrm.dfm:44
+#. CyclogramRepFrm..GroupBox3..CommonLV......Caption
+#: forms/back/uCyclogramRepFrm.dfm:92
+msgid "№"
+msgstr ""
+
+#. TrigFrm..TrigTheresholdLabel..Caption
+#: forms/uTrigFrm.dfm:47
+#. TrigsFrm..AddTrigGB..CommonName..LvlLabel..Caption
+#: forms/uTrigsFrm.dfm:308
+#: .\forms\uTrigFrm.dfm:47
+#: .\forms\uTrigsFrm.dfm:308
+msgid "Порог триггера"
+msgstr "Trigger Threshold"
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..TabSheet1..Panel2..GistDxFE..Text
+#: forms/uRzdFrm.dfm:3205
+msgid "0.2"
+msgstr ""
+
+#. EditSelsinFrm..Label12..Caption
+#: forms/uEdiSelsinFrm.dfm:42
+#. EditSelsinFrm..Label12..Caption
+#: forms/uEditSelsinFrm.dfm:45
+#: .\forms\uEdiSelsinFrm.dfm:42
+#: .\forms\uEditSelsinFrm.dfm:45
+msgid "Частота питания"
+msgstr "Supply Frequency"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..Label3..Caption
+#: forms/uFindMaxForm.dfm:272
+#: .\forms\uFindMaxForm.dfm:272
+msgid "Тип поиска"
+msgstr "Search Type"
+
+#. KBHMFrm..ObjGB..EngControlPanel..EngDelBtn..Hint
+#: forms/uKBHMFrm.dfm:178
+#. KBHMFrm..ChanGB..GroupControlPanel..GroupDelBtn..Hint
+#: forms/uKBHMFrm.dfm:479
+#. SelsinFrm..GroupBox1..EngDelBtn..Hint
+#: forms/uSelsinFrm.dfm:69
+#: .\forms\uKBHMFrm.dfm:178
+#: .\forms\uKBHMFrm.dfm:479
+#: .\forms\uSelsinFrm.dfm:69
+msgid "Удалить группу"
+msgstr "Delete Group"
+
+#. CyclogramRepFrm..CommonGB..NullCB..Caption
+#: forms/uCyclogramRepFrm.dfm:700
+#. CyclogramRepFrm..CommonGB..NullCB..Caption
+#: forms/back/uCyclogramRepFrm.dfm:409
+#: .\forms\uCyclogramRepFrm.dfm:700
+#: .\forms\back\uCyclogramRepFrm.dfm:409
+msgid "Записывать начальное состояние \"1\""
+msgstr "Record Initial State '1'"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Panel1..CurvsPanel..CurveTypePC..РљСЂРёРІР°СЏ..AddPoint..Hint
+#: forms/uFindMaxForm.dfm:709
+#: .\forms\uFindMaxForm.dfm:709
+msgid "Добавить точку"
+msgstr "Add Point"
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..MatrixLV......Caption
+#: forms/uRzdFrm.dfm:2907
+msgid "S2"
+msgstr ""
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..Caption
+#: forms/uFindMaxForm.dfm:226
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..Caption
+#: forms/uFindMaxForm_.dfm:89
+#: .\forms\uFindMaxForm.dfm:226
+#: .\forms\uFindMaxForm_.dfm:89
+msgid "Настройка алгоритма"
+msgstr "Algorithm Setup"
+
+#. CorrectUTSFrm..GroupBox1..Memo1......Lines.Strings
+#: forms/uCorrectUTS.dfm:125
+msgid ""
+" Если сигнал UTS отсутствует для замера, то для него будет найден канал с аналогичным именем как "
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..Panel1..mat_S2label..Caption
+#: forms/uRzdFrm.dfm:2704
+msgid "2:"
+msgstr ""
+
+#. CorrectUTSFrm..GroupBox1..GroupBox2..Label2..Caption
+#: forms/uCorrectUTS.dfm:166
+#: .\forms\uCorrectUTS.dfm:166
+msgid "Корректируемые UTS сигналы:"
+msgstr "Corrected UTS Signals:"
+
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..Label3..Caption
+#: forms/uGraphMngFrm.dfm:264
+#: .\forms\uGraphMngFrm.dfm:264
+msgid "Длина сигнала"
+msgstr "Signal Duration"
+
+#. AddScriptItemFrm..Panel2..Panel3..UnitsCBY..Text
+#: forms/uAddScriptItemFrm.dfm:203
+#. AddScriptItemFrm..Panel2..Panel3..UnitsCBY....Items.Strings
+#: forms/uAddScriptItemFrm.dfm:205
+msgid "g"
+msgstr ""
+
+#. SpmFrame..NulCB..Caption
+#: forms/frames/uSpmFrame.dfm:108
+#. WPSpmFrame..NulCB..Caption
+#: forms/frames/uWPSpmFrame.dfm:108
+#: .\forms\frames\uSpmFrame.dfm:108
+#: .\forms\frames\uWPSpmFrame.dfm:108
+msgid "Дополнять нулями"
+msgstr "Zero Padding"
+
+#. RptFrm..Panel5..BandsTC..РўСЂРёРіРіРµСЂС‹..Label9..Caption
+#: forms/uRptFrm.dfm:1658
+#: .\forms\uRptFrm.dfm:1658
+msgid "Смещение от Т1:"
+msgstr "Offset from T1:"
+
+#. TrigsFrm..AddTrigGB..CommonName..Label4..Caption
+#: forms/uTrigsFrm.dfm:319
+#: .\forms\uTrigsFrm.dfm:319
+msgid "Тип оси для триггера"
+msgstr "Trigger Axis Type"
+
+#. GraphFrm..Caption
+#: forms/uGraphMngFrm.dfm:4
+#: .\forms\uGraphMngFrm.dfm:4
+msgid "Настройка графики"
+msgstr "Graphics Settings"
+
+#. GraphFrm..TabControl..TabSheet1..XAxisLabel..Caption
+#: forms/uGraphMngFrm.dfm:87
+#: .\forms\uGraphMngFrm.dfm:87
+msgid "Ось X:"
+msgstr "X Axis:"
+
+#. SelectIntervalFrm..Caption
+#: forms/uSelectIntervalFrm.dfm:4
+#: .\forms\uSelectIntervalFrm.dfm:4
+msgid "Выбор границ испытания"
+msgstr "Test Limits Selection"
+
+#. RptFrm..Panel5..BandsTC..TabSheet1..AbsDropToStartBtn..Caption
+#: forms/uRptFrm.dfm:1531
+#: .\forms\uRptFrm.dfm:1531
+msgid "Сбросить в начало"
+msgstr "Reset to Start"
+
+#. GraphFrm..TabControl..TabSheet1..AxisStyleRG....Items.Strings
+#: forms/uGraphMngFrm.dfm:507
+msgid "На одной оси"
+msgstr ""
+
+#. AddScriptItemFrm..Panel2..Panel3..UnitsCBY....Items.Strings
+#: forms/uAddScriptItemFrm.dfm:206
+msgid "m/s"
+msgstr ""
+
+#. GraphFrm..UnitsCB..Text
+#: forms/uGraphMngFrm.dfm:1024
+#. GraphFrm..UnitsCB....Items.Strings
+#: forms/uGraphMngFrm.dfm:1026
+#: .\forms\uGraphMngFrm.dfm:1024
+msgid "Ускорение, g"
+msgstr "Acceleration, g"
+
+#. FFTFltFrm..EditCurvePanel..SaveCfgCB..Hint
+#: forms/uFFTfltFrm.dfm:471
+#. FFTFltFrm..EditCurvePanel..LoadCfgCB..Hint
+#: forms/uFFTfltFrm.dfm:493
+#. RptFrm..TopGB..LoadCfgCB..Hint
+#: forms/uRptFrm.dfm:1356
+#. RptFrm..TopGB..SaveCfgCB..Hint
+#: forms/uRptFrm.dfm:1385
+#: .\forms\uFFTfltFrm.dfm:471
+#: .\forms\uFFTfltFrm.dfm:493
+#: .\forms\uRptFrm.dfm:1356
+#: .\forms\uRptFrm.dfm:1385
+msgid "Показать подсказки"
+msgstr "Show Tooltips"
+
+#. TrigsFrm..AddTrigGB..ExtremumTrigGB..Panel1..SearchIntervalTypeRG....Items.Strings
+#: forms/uTrigsFrm.dfm:163
+msgid "В интервале"
+msgstr ""
+
+#. CorrectUTSFrm..GroupBox1..ResSE..Hint
+#: forms/uCorrectUTS.dfm:262
+#: .\forms\uCorrectUTS.dfm:262
+msgid "Используется если галочка Определить сдвиг в каждом замере снята"
+msgstr "Used if 'Determine offset in each measurement' is unchecked"
+
+#. SpmFrame..WndCB....Items.Strings
+#: forms/frames/uSpmFrame.dfm:46
+#. WPSpmFrame..WndCB....Items.Strings
+#: forms/frames/uWPSpmFrame.dfm:46
+msgid "Треугольное"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..Reptype....Items.Strings
+#: forms/uRzdFrm.dfm:3514
+msgid "HTML отчет"
+msgstr ""
+
+#. CounterFrm..GroupBox1..SignalsLV......Caption
+#: forms/uCounterFrm.dfm:107
+msgid "Signal"
+msgstr ""
+
+#. SpmFrame..SpmTypeCB....Items.Strings
+#: forms/frames/uSpmFrame.dfm:66
+#. WPSpmFrame..SpmTypeCB....Items.Strings
+#: forms/frames/uWPSpmFrame.dfm:66
+msgid "Im/Re"
+msgstr ""
+
+#. KBHMFrm..ObjGB..PropSG....FilterEdit.TypeNames.Strings
+#: forms/uKBHMFrm.dfm:310
+msgid "Not contains"
+msgstr ""
+
+#. SelectIntervalFrm..Panel1..Label2..Caption
+#: forms/uSelectIntervalFrm.dfm:66
+#. IntervalFrame..Label2..Caption
+#: forms/frames/uIntervalFrame.dfm:33
+#: .\forms\uSelectIntervalFrm.dfm:66
+#: .\forms\frames\uIntervalFrame.dfm:33
+msgid "Конец, с:"
+msgstr "End, sec:"
+
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..Label1..Caption
+#: forms/uGraphMngFrm.dfm:242
+#. TrigFrm..TrigShiftLabel..Caption
+#: forms/uTrigFrm.dfm:40
+#. TrigsFrm..AddTrigGB..CommonName..TrigShiftLabel..Caption
+#: forms/uTrigsFrm.dfm:253
+#: .\forms\uGraphMngFrm.dfm:242
+#: .\forms\uTrigFrm.dfm:40
+#: .\forms\uTrigsFrm.dfm:253
+msgid "Отступ на старте, с"
+msgstr "Start Offset, sec."
+
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..Reptype....Items.Strings
+#: forms/uRzdFrm.dfm:3513
+msgid "Pdf отчет"
+msgstr ""
+
+#. GenFrm..Caption
+#: forms/uGenForm.dfm:4
+#. FxForm..MainMenu1..ExtMenuItem..GeneratorMenuItem..Caption
+#: forms/uWPProcFrm.dfm:399
+#: .\forms\uGenForm.dfm:4
+#: .\forms\uWPProcFrm.dfm:399
+msgid "Генератор"
+msgstr "Generator"
+
+#. SpmFrame..WndCB....Items.Strings
+#: forms/frames/uSpmFrame.dfm:47
+#. WPSpmFrame..WndCB....Items.Strings
+#: forms/frames/uWPSpmFrame.dfm:47
+msgid "Ханнинг"
+msgstr ""
+
+#. CyclogramRepFrm..GroupBox3..GroupBox4..UnitsCB....Items.Strings
+#: forms/uCyclogramRepFrm.dfm:282
+#. CyclogramRepFrm..GroupBox3..GroupBox4..UnitsCB....Items.Strings
+#: forms/back/uCyclogramRepFrm.dfm:226
+msgid "мс"
+msgstr ""
+
+#. LissajousFrm..RightGB..BuildTrend..Caption
+#: forms/uLissajousFrm.dfm:371
+#: .\forms\uLissajousFrm.dfm:371
+msgid "Тренд"
+msgstr "Trend"
+
+#. AddScriptItemFrm..Panel2..Panel3..UnitsCBY....Items.Strings
+#: forms/uAddScriptItemFrm.dfm:208
+msgid "кПа"
+msgstr ""
+
+#. EditTubeFrm..GroupBox1..Button2..Caption
+#: forms/uEditTubeFrm.dfm:79
+#: .\forms\uEditTubeFrm.dfm:79
+msgid "Выход"
+msgstr "Exit"
+
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..StopThresholdLabel..Caption
+#: forms/uGraphMngFrm.dfm:286
+#: .\forms\uGraphMngFrm.dfm:286
+msgid "Порог триггера \"Стоп\""
+msgstr "Stop Trigger Threshold"
+
+#. FFTInverseFrm..Label2..Caption
+#: forms/uFFTInverseFrm.dfm:42
+#: .\forms\uFFTInverseFrm.dfm:42
+msgid "Поиск каналов"
+msgstr "Search Channels"
+
+#. FxForm..LoadScriptGB..ToolBar1..ReadGraph..Hint
+#: forms/uWPProcFrm.dfm:272
+#: .\forms\uWPProcFrm.dfm:272
+msgid "Считать графику с объектов WinПОС"
+msgstr "Read Graphics from WinPOS Objects"
+
+#. CyclogramRepFrm..GroupBox3..GroupBox4..Label5..Caption
+#: forms/uCyclogramRepFrm.dfm:234
+#. CyclogramRepFrm..GroupBox3..GroupBox4..Label5..Caption
+#: forms/back/uCyclogramRepFrm.dfm:190
+#: .\forms\uCyclogramRepFrm.dfm:234
+#: .\forms\back\uCyclogramRepFrm.dfm:190
+msgid "Единицы измерения"
+msgstr "Measurement Units"
+
+#. RptFrm..Panel5..AutoBandsPC..AutoBandsIntervalPage..Caption
+#: forms/uRptFrm.dfm:1836
+#: .\forms\uRptFrm.dfm:1836
+msgid "По времени"
+msgstr "By Time"
+
+#. TrigsFrm..AddTrigGB..CommonName..TrigTypeRG....Items.Strings
+#: forms/uTrigsFrm.dfm:448
+#. TrigsFrm..AddTrigGB..lvlGB..Caption
+#: forms/uTrigsFrm.dfm:1187
+#: .\forms\uTrigsFrm.dfm:1187
+msgid "По значению"
+msgstr "By Value"
+
+#. CorrectUTSFrm..GroupBox1..UseDateTimeCB..Caption
+#: forms/uCorrectUTS.dfm:331
+#: .\forms\uCorrectUTS.dfm:331
+msgid "Учитывать время старта испытания"
+msgstr "Consider Trial Start Time"
+
+#. KBHMFrm..ObjGB..PropSG..SearchFooter.HighLightCaption
+#: forms/uKBHMFrm.dfm:358
+msgid "Highlight"
+msgstr ""
+
+#. EditSignalsListFrm..GroupBox2..Caption
+#: forms/uAddSignalFrm.dfm:53
+#. EditRepPropFrm..GroupBox1..Caption
+#: forms/uEditSignalsRepPropFrn.dfm:29
+#: .\forms\uAddSignalFrm.dfm:53
+#: .\forms\uEditSignalsRepPropFrn.dfm:29
+msgid "Выбор действия"
+msgstr "Action Selection"
+
+#. KBHMFrm..ObjGB..PropSG..Version
+#: forms/uKBHMFrm.dfm:370
+msgid "7.8.7.0"
+msgstr ""
+
+#. GenFrm..ActionGB..Caption
+#: forms/uGenForm.dfm:22
+#: .\forms\uGenForm.dfm:22
+msgid "Параметры сигнала"
+msgstr "Signal Parameters"
+
+#. EditSelsinFrm..Label5..Caption
+#: forms/uEdiSelsinFrm.dfm:63
+#. EditSelsinFrm..Label5..Caption
+#: forms/uEditSelsinFrm.dfm:67
+#: .\forms\uEdiSelsinFrm.dfm:63
+#: .\forms\uEditSelsinFrm.dfm:67
+msgid "Смещение секторов:"
+msgstr "Sector Offset:"
+
+#. GenFrm..TabControl..ShockPage..InfoLabel..Caption
+#: forms/uGenForm.dfm:282
+msgid "Info:"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..Panel1..mat_UseNamesCB..Caption
+#: forms/uRzdFrm.dfm:2820
+#: .\forms\uRzdFrm.dfm:2820
+msgid "Исп. имена"
+msgstr "Used Names"
+
+#. AddScriptItemFrm..Panel2..Panel3..FsEdit..Text
+#: forms/uAddScriptItemFrm.dfm:179
+#. BalanceZeroFrm..Panel2..BeginFE..Text
+#: forms/uExtBalanceSignalsFrm.dfm:94
+#. BalanceZeroFrm..Panel2..EndFE..Text
+#: forms/uExtBalanceSignalsFrm.dfm:102
+#. FFTInverseFrm..dFfe..Text
+#: forms/uFFTInverseFrm.dfm:114
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..ThresholdE..Text
+#: forms/uFindMaxForm.dfm:398
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Panel1..CurvsPanel..CurveTypePC..РљСЂРёРІР°СЏ..Yedit..Text
+#: forms/uFindMaxForm.dfm:876
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Panel1..CurvsPanel..CurveTypePC..РљСЂРёРІР°СЏ..Xedit..Text
+#: forms/uFindMaxForm.dfm:888
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Panel1..CurvsPanel..CurveTypePC..РЈСЂРѕРІРµРЅСЊ..LvlFE..Text
+#: forms/uFindMaxForm.dfm:919
+#. HilbFltFrm..TimeFE..Text
+#: forms/uFrmHibFltFrm.dfm:122
+#. HilbFltFrm..T1fe..Text
+#: forms/uFrmHibFltFrm.dfm:232
+#. HilbFltFrm..T2fe..Text
+#: forms/uFrmHibFltFrm.dfm:244
+#. GraphFrm..TabControl..TabSheet1..XFEmin..Text
+#: forms/uGraphMngFrm.dfm:132
+#. GraphFrm..TabControl..TabSheet1..XFEmax..Text
+#: forms/uGraphMngFrm.dfm:145
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..StartXFE..Text
+#: forms/uGraphMngFrm.dfm:369
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..StopXFE..Text
+#: forms/uGraphMngFrm.dfm:383
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..SignalLengthFE..Text
+#: forms/uGraphMngFrm.dfm:410
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..StartThresholdFE..Text
+#: forms/uGraphMngFrm.dfm:424
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..StopThresholdFE..Text
+#: forms/uGraphMngFrm.dfm:438
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..TrigX1FE..Text
+#: forms/uGraphMngFrm.dfm:478
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..TrigX2FE..Text
+#: forms/uGraphMngFrm.dfm:492
+#. GraphFrm..TabControl..TabSheet2..YmaxFE..Text
+#: forms/uGraphMngFrm.dfm:598
+#. GraphFrm..TabControl..TabSheet2..YminFE..Text
+#: forms/uGraphMngFrm.dfm:611
+#. LissajousFrm..RightGB..StartFe..Text
+#: forms/uLissajousFrm.dfm:282
+#. RptFrm..Panel5..BandsTC..TabSheet1..X2FE..Text
+#: forms/uRptFrm.dfm:1508
+#. RptFrm..Panel5..BandsTC..TabSheet1..X1FE..Text
+#: forms/uRptFrm.dfm:1520
+#. RptFrm..Panel5..AutoBandsPC..TabSheet3..AutoBOffset2..Text
+#: forms/uRptFrm.dfm:1951
+#. RptFrm..Panel5..AutoBandsPC..TabSheet3..AutoBOffset1..Text
+#: forms/uRptFrm.dfm:1959
+#. RZDFrm..MatrixPanel..MatrixGB..G11..Text
+#: forms/uRzdFrm.dfm:2386
+#. RZDFrm..MatrixPanel..MatrixGB..G21..Text
+#: forms/uRzdFrm.dfm:2394
+#. RZDFrm..MatrixPanel..MatrixGB..G31..Text
+#: forms/uRzdFrm.dfm:2402
+#. RZDFrm..MatrixPanel..MatrixGB..G41..Text
+#: forms/uRzdFrm.dfm:2410
+#. RZDFrm..MatrixPanel..MatrixGB..G42..Text
+#: forms/uRzdFrm.dfm:2418
+#. RZDFrm..MatrixPanel..MatrixGB..G32..Text
+#: forms/uRzdFrm.dfm:2426
+#. RZDFrm..MatrixPanel..MatrixGB..G22..Text
+#: forms/uRzdFrm.dfm:2434
+#. RZDFrm..MatrixPanel..MatrixGB..G12..Text
+#: forms/uRzdFrm.dfm:2442
+#. RZDFrm..MatrixPanel..MatrixGB..G43..Text
+#: forms/uRzdFrm.dfm:2450
+#. RZDFrm..MatrixPanel..MatrixGB..G33..Text
+#: forms/uRzdFrm.dfm:2458
+#. RZDFrm..MatrixPanel..MatrixGB..G23..Text
+#: forms/uRzdFrm.dfm:2466
+#. RZDFrm..MatrixPanel..MatrixGB..G13..Text
+#: forms/uRzdFrm.dfm:2474
+#. ScriptFrm..Panel1..ScriptDT..Text
+#: forms/uScriptFrm.dfm:252
+#. ScriptFrm..Panel1..T1FE..Text
+#: forms/uScriptFrm.dfm:261
+#. ScriptFrm..Panel1..T2FE..Text
+#: forms/uScriptFrm.dfm:270
+#. SelectIntervalFrm..Panel1..LengthE..Text
+#: forms/uSelectIntervalFrm.dfm:100
+#. SelectIntervalFrm..Panel1..StartE..Text
+#: forms/uSelectIntervalFrm.dfm:112
+#. SelectIntervalFrm..Panel1..StopE..Text
+#: forms/uSelectIntervalFrm.dfm:125
+#. SelectPathFrm..GroupBox1..FloatEdit1..Text
+#: forms/uSelectPathForm.dfm:89
+#. SelectPathFrm..GroupBox1..FloatEdit2..Text
+#: forms/uSelectPathForm.dfm:97
+#. TrigFrm..TrigShiftE..Text
+#: forms/uTrigFrm.dfm:125
+#. TrigLvlFrm..Trig1FE..Text
+#: forms/uTrigLvlEditFrm.dfm:39
+#. TrigLvlFrm..Trig2FE..Text
+#: forms/uTrigLvlEditFrm.dfm:47
+#. TrigsFrm..AddTrigGB..CommonName..TrigShiftE..Text
+#: forms/uTrigsFrm.dfm:353
+#. AddScriptItemFrm..Panel2..Panel3..FsEdit..Text
+#: forms/back/uAddScriptItemFrm.dfm:121
+#. IntervalFrame..LengthE..Text
+#: forms/frames/uIntervalFrame.dfm:64
+#. IntervalFrame..StartE..Text
+#: forms/frames/uIntervalFrame.dfm:72
+#. IntervalFrame..StopE..Text
+#: forms/frames/uIntervalFrame.dfm:80
+#. RZDTareFrame..T1FE..Text
+#: forms/frames/uRZDTareFrame.dfm:179
+#. RZDTareFrame..T2FE..Text
+#: forms/frames/uRZDTareFrame.dfm:188
+#. RZDTareFrame..NullFE1..Text
+#: forms/frames/uRZDTareFrame.dfm:197
+#. RZDTareFrame..NullFE2..Text
+#: forms/frames/uRZDTareFrame.dfm:206
+msgid "0.0"
+msgstr ""
+
+#. CyclogramRepFrm..CommonGB..FrontCB..Caption
+#: forms/uCyclogramRepFrm.dfm:714
+#. CyclogramRepFrm..CommonGB..FrontCB..Caption
+#: forms/back/uCyclogramRepFrm.dfm:419
+#: .\forms\uCyclogramRepFrm.dfm:714
+#: .\forms\back\uCyclogramRepFrm.dfm:419
+msgid "Искать фронты"
+msgstr "Search Edges"
+
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..StopTrigLabel..Caption
+#: forms/uGraphMngFrm.dfm:231
+#: .\forms\uGraphMngFrm.dfm:231
+msgid "Триггер по стопу"
+msgstr "Stop Trigger"
+
+#. RZDFrm..PathPanel..VertPanel..FmaxEdit..Hint
+#: forms/uRzdFrm.dfm:2242
+#: .\forms\uRzdFrm.dfm:2242
+msgid "Допустимое отклонение в долях"
+msgstr "Tolerance in Fractions"
+
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..Reptype....Items.Strings
+#: forms/uRzdFrm.dfm:3512
+msgid "Rtf (выс. кач-во)"
+msgstr ""
+
+#. IntervalFrm..Caption
+#: forms/uIntervalFrm.dfm:4
+#: .\forms\uIntervalFrm.dfm:4
+msgid "Настройка интервала"
+msgstr "Interval Setup"
+
+#. EditSelsinFrm..Label1..Caption
+#: forms/uEdiSelsinFrm.dfm:35
+#. EditSelsinFrm..Label1..Caption
+#: forms/uEditSelsinFrm.dfm:38
+msgid "L3:"
+msgstr ""
+
+#. ScriptFrm..PanelTools..ToolBar2..Caption
+#: forms/uScriptFrm.dfm:131
+msgid "ToolBar2"
+msgstr ""
+
+#. AddScriptItemFrm..UnitsCBX....Items.Strings
+#: forms/uAddScriptItemFrm.dfm:232
+msgid "Hz"
+msgstr ""
+
+#. AddRZDDataFrm..Panel2..Panel1..CalibrRG....Items.Strings
+#: forms/uAddRZDDatafrm.dfm:167
+msgid "Гориз. сила"
+msgstr ""
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..MOOffsetCB....Hint
+#: forms/uFindMaxForm_.dfm:401
+msgid ""
+"при включении - поиск амплитуды происходит как отклонение от среднего, а не абсолютный уровень"
+msgstr ""
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..BandList......Caption
+#: forms/uFindMaxForm_.dfm:129
+#: .\forms\uFindMaxForm_.dfm:129
+msgid "Искать \"-\" макс."
+msgstr "Search \"-\" Max"
+
+#. RptFrm..BandPanel..Label15..Caption
+#: forms/uRptFrm.dfm:2274
+#: .\forms\uRptFrm.dfm:2274
+msgid "Настройка расчета по спектру"
+msgstr "Spectrum Calculation Setup"
+
+#. KBHMFrm..ObjGB..PropSG..SearchFooter.MatchCaseCaption
+#: forms/uKBHMFrm.dfm:363
+msgid "Match case"
+msgstr ""
+
+#. CyclogramRepFrm..GroupBox3..GroupBox4..ChanTypeRG....Items.Strings
+#: forms/uCyclogramRepFrm.dfm:248
+#. CyclogramRepFrm..GroupBox3..GroupBox4..ChanTypeRG....Items.Strings
+#: forms/back/uCyclogramRepFrm.dfm:200
+msgid "Все каналы"
+msgstr ""
+
+#. RptFrm..Panel5..Panel1..AutoBandsCountLabel..Caption
+#: forms/uRptFrm.dfm:1798
+#: .\forms\uRptFrm.dfm:1798
+msgid "Число полос"
+msgstr ""
+
+#. AddScriptItemFrm..Panel2..Panel3..UnitsLabel..Caption
+#: forms/uAddScriptItemFrm.dfm:115
+#: .\forms\uAddScriptItemFrm.dfm:115
+msgid "Единицы измерения Y:"
+msgstr "Y Units:"
+
+#. CorrectUTSFrm..GroupBox1..UseDateTimeCB..Hint
+#: forms/uCorrectUTS.dfm:329
+#: .\forms\uCorrectUTS.dfm:329
+msgid "Время старта испытания прописано в Mera файле ключ DateTime"
+msgstr ""
+
+#. CyclogramRepFrm..GroupBox3..GroupBox4..ChanTypeRG..Caption
+#: forms/uCyclogramRepFrm.dfm:245
+#. CyclogramRepFrm..GroupBox3..GroupBox4..ChanTypeRG..Caption
+#: forms/back/uCyclogramRepFrm.dfm:197
+#: .\forms\uCyclogramRepFrm.dfm:245
+#: .\forms\back\uCyclogramRepFrm.dfm:197
+msgid "Тип модуля"
+msgstr "Module Type"
+
+#. FFTFltFrm..EditCurvePanel..Label5..Caption
+#: forms/uFFTfltFrm.dfm:254
+#: .\forms\uFFTfltFrm.dfm:254
+msgid "Масштаб"
+msgstr "Scale"
+
+#. RptFrm..Panel5..BandsTC..РўСЂРёРіРіРµСЂС‹..ShiftTrig1FE..Text
+#: forms/uRptFrm.dfm:1733
+#. RptFrm..Panel5..BandsTC..РўСЂРёРіРіРµСЂС‹..ShiftTrig2FE..Text
+#: forms/uRptFrm.dfm:1746
+#. RptFrm..Panel5..BandsTC..РўСЂРёРіРіРµСЂС‹..Trig1Res..Text
+#: forms/uRptFrm.dfm:1760
+#. RptFrm..Panel5..BandsTC..РўСЂРёРіРіРµСЂС‹..Trig2Res..Text
+#: forms/uRptFrm.dfm:1774
+msgid "0.8"
+msgstr ""
+
+#. GraphFrm..TabControl..TabSheet3..DrawPointsCB..Caption
+#: forms/uGraphMngFrm.dfm:772
+#: .\forms\uGraphMngFrm.dfm:772
+msgid "Рисовать точки на линии"
+msgstr "Draw Dots on Line"
+
+#. CorrectUTSFrm..GroupBox1..Memo1....Lines.Strings
+#: forms/uCorrectUTS.dfm:122
+msgid "значение пишется в индикатор \"Поправка времени\"."
+msgstr ""
+
+#. CounterFrm..Panel1..CursorsBtn..Caption
+#: forms/uCounterFrm.dfm:268
+msgid "Cursors"
+msgstr ""
+
+#. RptFrm..TopGB..ReportTypeRG....Items.Strings
+#: forms/uRptFrm.dfm:1345
+msgid "Отчет MS Excel"
+msgstr ""
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..LevelLabel..Caption
+#: forms/uFindMaxForm_.dfm:247
+#: .\forms\uFindMaxForm_.dfm:247
+msgid "Уровень \"+\""
+msgstr ""
+
+#. AddScriptItemFrm..Panel2..Panel3..UnitsLabel..Caption
+#: forms/back/uAddScriptItemFrm.dfm:84
+#: .\forms\back\uAddScriptItemFrm.dfm:84
+msgid "Единицы измерения:"
+msgstr "Measurement Units:"
+
+#. FindMaxForm..BandTS..SavePage..GroupBox2..CheckBox1..Caption
+#: forms/uFindMaxForm.dfm:1086
+#. FindMaxForm..TabPanel..SavePage..GroupBox2..CheckBox1..Caption
+#: forms/uFindMaxForm_.dfm:503
+msgid "LgX"
+msgstr ""
+
+#. LissajousFrm..GraphLV......Caption
+#: forms/uLissajousFrm.dfm:410
+msgid "Sy"
+msgstr ""
+
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:243
+msgid "L2"
+msgstr ""
+
+#. GraphFrm..TabControl..TabSheet1..AxisStyleRG....Items.Strings
+#: forms/uGraphMngFrm.dfm:508
+msgid "Располагать оси рядом"
+msgstr ""
+
+#. FxForm..LoadScriptGB..ToolBar1..EvalBtn..Hint
+#: forms/uWPProcFrm.dfm:281
+#: .\forms\uWPProcFrm.dfm:281
+msgid "Расчет операторов"
+msgstr "Operator calculation"
+
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..FindIntervalCB..Caption
+#: forms/uGraphMngFrm.dfm:395
+#: .\forms\uGraphMngFrm.dfm:395
+msgid "Искать интервал"
+msgstr "Search Interval"
+
+#. RZDFrm..PathPanel..VertPanel..TareNamePanel..TareFramePageControl..Hout_Page..Caption
+#: forms/uRzdFrm.dfm:1547
+#: .\forms\uRzdFrm.dfm:1547
+msgid "Гор. смещ. наружу"
+msgstr "Hor. Offset Outward"
+
+#. EditSelsinFrm..NameEdit..Text
+#: forms/uEdiSelsinFrm.dfm:112
+#. EditSelsinFrm..NameEdit..Text
+#: forms/uEditSelsinFrm.dfm:121
+msgid "NameEdit"
+msgstr ""
+
+#. ScriptFrm..MainMenu1..N6..N13..Caption
+#: forms/uScriptFrm.dfm:334
+#: .\forms\uScriptFrm.dfm:334
+msgid "Переменные..."
+msgstr "Variables..."
+
+#. EditTubeFrm..GroupBox1..Label2....Caption
+#: forms/uEditTubeFrm.dfm:42
+msgid ""
+"Имя трубки допуска (расширение и путь указывать не требуется. Файл допусков должен лежать рядом с файлом *.mera)"
+msgstr ""
+
+#. RptFrm..BandPanel..OpenFileCB..Caption
+#: forms/uRptFrm.dfm:2285
+#: .\forms\uRptFrm.dfm:2285
+msgid "Открыть файл после создания"
+msgstr "Open File After Creation"
+
+#. RZDFrm..PathPanel..VertPanel..SelectIntervalCursorBtn..Caption
+#: forms/uRzdFrm.dfm:2216
+#. RZDTareFrame..SelectIntervalCursorBtn..Caption
+#: forms/frames/uRZDTareFrame.dfm:166
+#. RZDTareFrame..NullBtn..Caption
+#: forms/frames/uRZDTareFrame.dfm:215
+#: .\forms\uRzdFrm.dfm:2216
+#: .\forms\frames\uRZDTareFrame.dfm:166
+#: .\forms\frames\uRZDTareFrame.dfm:215
+msgid "Выбрать по курсору"
+msgstr "Select by Cursor"
+
+#. FFTFltFrm..EditCurvePanel..F1indLabel..Caption
+#: forms/uFFTfltFrm.dfm:220
+#: .\forms\uFFTfltFrm.dfm:220
+msgid "Индекс 1"
+msgstr "Index 1"
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..UnitsCB..Text
+#: forms/uFindMaxForm_.dfm:338
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..UnitsCB....Items.Strings
+#: forms/uFindMaxForm_.dfm:340
+#. TrigFrm..UnitsCB..Text
+#: forms/uTrigFrm.dfm:192
+#. TrigFrm..UnitsCB....Items.Strings
+#: forms/uTrigFrm.dfm:194
+#. TrigsFrm..AddTrigGB..CommonName..UnitsCB..Text
+#: forms/uTrigsFrm.dfm:464
+#. TrigsFrm..AddTrigGB..CommonName..UnitsCB....Items.Strings
+#: forms/uTrigsFrm.dfm:466
+#: .\forms\uFindMaxForm_.dfm:338
+#: .\forms\uTrigFrm.dfm:192
+#: .\forms\uTrigsFrm.dfm:464
+msgid "Абс. знач."
+msgstr "Abs. Value"
+
+#. AddScriptItemFrm..UnitsCBX....Items.Strings
+#: forms/uAddScriptItemFrm.dfm:233
+msgid "kHz"
+msgstr ""
+
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..Label2..Caption
+#: forms/uGraphMngFrm.dfm:253
+#: .\forms\uGraphMngFrm.dfm:253
+msgid "Отступ на стопе, с"
+msgstr "Stop Offset, sec."
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..PointsLV......Caption
+#: forms/uFindMaxForm.dfm:439
+#. LissajousFrm..RightGB..Label1..Caption
+#: forms/uLissajousFrm.dfm:66
+msgid "X"
+msgstr ""
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Panel1..CurvsPanel..DelCurv..Hint
+#: forms/uFindMaxForm.dfm:502
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..IdentBandsGB..DelBandBtn..Caption
+#: forms/uFindMaxForm_.dfm:190
+#: .\forms\uFindMaxForm.dfm:502
+#: .\forms\uFindMaxForm_.dfm:190
+msgid "Удалить полосу"
+msgstr "Delete Band"
+
+#. SelectIntervalFrm..ModeRG....Items.Strings
+#: forms/uSelectIntervalFrm.dfm:30
+#. IntervalFrame..ModeRG....Items.Strings
+#: forms/frames/uIntervalFrame.dfm:92
+msgid "По триггерным сигналам"
+msgstr ""
+
+#. GraphFrm..TabControl..TabSheet3..DrawLineCB..Caption
+#: forms/uGraphMngFrm.dfm:760
+#: .\forms\uGraphMngFrm.dfm:760
+msgid "Рисовать линию"
+msgstr "Draw Line"
+
+#. EditRepPropFrm..Panel1..PropEdit..Text
+#: forms/uEditSignalsRepPropFrn.dfm:140
+msgid "PropEdit"
+msgstr ""
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..AlgTypeCB..Text
+#: forms/uFindMaxForm.dfm:364
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..AlgTypeCB....Items.Strings
+#: forms/uFindMaxForm.dfm:367
+#: .\forms\uFindMaxForm.dfm:364
+msgid "По гистерезису"
+msgstr "By Hysteresis"
+
+#. FrmSync..Caption
+#: forms/uFrmSync.dfm:4
+#: .\forms\uFrmSync.dfm:4
+msgid "Невидимая служебная форма для обработки сообщений"
+msgstr "Internal Message Handler Form"
+
+#. GraphFrm..TabControl..TabSheet1..ProfileCB..Caption
+#: forms/uGraphMngFrm.dfm:195
+#: .\forms\uGraphMngFrm.dfm:195
+msgid "Отображать допуски"
+msgstr "Show Tolerances"
+
+#. AddRZDDataFrm..Panel2..Panel1..TypeRG....Items.Strings
+#: forms/uAddRZDDatafrm.dfm:185
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..TestLabel..Caption
+#: forms/uRzdFrm.dfm:3285
+#: .\forms\uRzdFrm.dfm:3285
+msgid "Заезд"
+msgstr "Run"
+
+#. FxForm..LoadScriptGB..ToolBar1..GraphBtn..Caption
+#: forms/uWPProcFrm.dfm:290
+msgid "GraphBtn"
+msgstr ""
+
+#. BalanceZeroFrm..Caption
+#: forms/uExtBalanceSignalsFrm.dfm:4
+#: .\forms\uExtBalanceSignalsFrm.dfm:4
+msgid "Балансировка нуля"
+msgstr "Zero Balancing"
+
+#. RZDTareFrame..Label4..Caption
+#: forms/frames/uRZDTareFrame.dfm:58
+#: .\forms\frames\uRZDTareFrame.dfm:58
+msgid "Интервал \"вычисления нуля\":"
+msgstr "Zeroing Interval:"
+
+#. RZDFrm..ScrollBox1..EvalGB..FltPanel..LPFCB..Caption
+#: forms/uRzdFrm.dfm:3589
+#: .\forms\uRzdFrm.dfm:3589
+msgid "Нерекурсивный фильтр ФНЧ"
+msgstr "Non-recursive LPF"
+
+#. GraphFrm..TabControl..РЎС‚СЂР°РЅРёС†С‹..PageStyleRG..Caption
+#: forms/uGraphMngFrm.dfm:907
+#: .\forms\uGraphMngFrm.dfm:907
+msgid "Расположение графиков"
+msgstr "Chart Layout"
+
+#. CyclogramRepFrm..GroupBox3..ToolBar1..UnLinkBtn..Caption
+#: forms/uCyclogramRepFrm.dfm:182
+#. CyclogramRepFrm..GroupBox3..ToolBar1..UnLinkBtn..Caption
+#: forms/back/uCyclogramRepFrm.dfm:154
+msgid "UnLinkBtn"
+msgstr ""
+
+#. FFTFltFrm..EditCurvePanel..OffsetLabel..Caption
+#: forms/uFFTfltFrm.dfm:288
+#: .\forms\uFFTfltFrm.dfm:288
+msgid "Смещение порции"
+msgstr "Chunk Offset"
+
+#. TrigFrm..TrigLV......Caption
+#: forms/uTrigFrm.dfm:87
+#. TrigsFrm..TriListGB..VTree1......WideText
+#: forms/uTrigsFrm.dfm:83
+#: .\forms\uTrigFrm.dfm:87
+msgid "Смещение"
+msgstr "Offset"
+
+#. SelectIntervalFrm..Panel2..Panel3..Label4..Caption
+#: forms/uSelectIntervalFrm.dfm:307
+#: .\forms\uSelectIntervalFrm.dfm:307
+msgid "Тестовый канал"
+msgstr "Test Channel"
+
+#. AddScriptItemFrm..Panel1..Button1..Caption
+#: forms/uAddScriptItemFrm.dfm:41
+#. AddScriptItemFrm..Panel1..Button1..Caption
+#: forms/back/uAddScriptItemFrm.dfm:33
+#: .\forms\uAddScriptItemFrm.dfm:41
+#: .\forms\back\uAddScriptItemFrm.dfm:33
+msgid "Добавить канал"
+msgstr "Add Channel"
+
+#. AddRZDDataFrm..Panel2..AplyBtn1..Caption
+#: forms/uAddRZDDatafrm.dfm:249
+#. EditTubeFrm..GroupBox1..Button1..Caption
+#: forms/uEditTubeFrm.dfm:69
+#: .\forms\uAddRZDDatafrm.dfm:249
+#: .\forms\uEditTubeFrm.dfm:69
+msgid "Назначить"
+msgstr "Assign"
+
+#. AddScriptItemFrm..Caption
+#: forms/uAddScriptItemFrm.dfm:4
+#. ScriptFrm..PanelTools..ToolBar2..AddTagBtn..Hint
+#: forms/uScriptFrm.dfm:137
+#. AddScriptItemFrm..Caption
+#: forms/back/uAddScriptItemFrm.dfm:4
+#: .\forms\uAddScriptItemFrm.dfm:4
+#: .\forms\uScriptFrm.dfm:137
+#: .\forms\back\uAddScriptItemFrm.dfm:4
+msgid "Добавить тег"
+msgstr "Add Tag"
+
+#. FxForm..ProcSignalsGB..GroupBox2..Caption
+#: forms/uWPProcFrm.dfm:48
+#: .\forms\uWPProcFrm.dfm:48
+msgid "Источники операторов"
+msgstr "Operator Sources"
+
+#. FindMaxForm..BandTS..SavePage..GroupBox2..SaveBtn..Hint
+#: forms/uFindMaxForm.dfm:1111
+#. FindMaxForm..TabPanel..SavePage..GroupBox2..SaveBtn..Hint
+#: forms/uFindMaxForm_.dfm:524
+#: .\forms\uFindMaxForm.dfm:1111
+#: .\forms\uFindMaxForm_.dfm:524
+msgid "Сохранение в csv файл"
+msgstr "Save to CSV"
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..Panel1..mat_s4label..Caption
+#: forms/uRzdFrm.dfm:2712
+msgid "4:"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..ReportCB..Caption
+#: forms/uRzdFrm.dfm:3487
+#: .\forms\uRzdFrm.dfm:3487
+msgid "Отчет"
+msgstr "Report"
+
+#. GenFrm..TabControl..ShockPage..Caption
+#: forms/uGenForm.dfm:211
+msgid "Shock"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..Panel1..DelMatrixBtn..Hint
+#: forms/uRzdFrm.dfm:2727
+#: .\forms\uRzdFrm.dfm:2727
+msgid "Удалить матрицу"
+msgstr "Delete Matrix"
+
+#. RZDFrm..PathPanel..VertPanel..Hout_DLabel..Caption
+#: forms/uRzdFrm.dfm:267
+msgid "D="
+msgstr ""
+
+#. EditSignalsListFrm..GroupBox3..Caption
+#: forms/uAddSignalFrm.dfm:95
+#: .\forms\uAddSignalFrm.dfm:95
+msgid "Используемые сигналы"
+msgstr "Signals in Use"
+
+#. TmpltNameFrame..AutoPathCB..Caption
+#: forms/frames/uTmpltNameFrame.dfm:112
+#: .\forms\frames\uTmpltNameFrame.dfm:112
+msgid "Генерить путь автоматом"
+msgstr "Auto-generate Path"
+
+#. TmpltNameFrame..tmpltLabel..Caption
+#: forms/frames/uTmpltNameFrame.dfm:15
+#: .\forms\frames\uTmpltNameFrame.dfm:15
+msgid "Путь шаблона"
+msgstr "Template Path"
+
+#. CyclogramRepFrm..GroupBox1..ChansLV......Caption
+#: forms/uCyclogramRepFrm.dfm:70
+#. CyclogramRepFrm..GroupBox1..ChansLV......Caption
+#: forms/back/uCyclogramRepFrm.dfm:56
+#: .\forms\uCyclogramRepFrm.dfm:70
+#: .\forms\back\uCyclogramRepFrm.dfm:56
+msgid "Триггер2"
+msgstr "Trigger 2"
+
+#. SelectIntervalFrm..Panel1..IDLabel..Caption
+#: forms/uSelectIntervalFrm.dfm:88
+#. TrigFrm..Label5..Caption
+#: forms/uTrigFrm.dfm:61
+#. TrigsFrm..AddTrigGB..CommonName..SrcIDLabel..Caption
+#: forms/uTrigsFrm.dfm:297
+#: .\forms\uSelectIntervalFrm.dfm:88
+#: .\forms\uTrigFrm.dfm:61
+#: .\forms\uTrigsFrm.dfm:297
+msgid "ID источника"
+msgstr "Source ID"
+
+#. RptFrm..Panel5..AutoBandsPC..TabSheet3..Caption
+#: forms/uRptFrm.dfm:1887
+#: .\forms\uRptFrm.dfm:1887
+msgid "По каналу"
+msgstr "By Channel"
+
+#. SpmFrame..WndCB....Items.Strings
+#: forms/frames/uSpmFrame.dfm:50
+#. WPSpmFrame..WndCB....Items.Strings
+#: forms/frames/uWPSpmFrame.dfm:50
+msgid "Блэкман (СКЗ)"
+msgstr ""
+
+#. GraphFrm..TabControl..РЎС‚СЂР°РЅРёС†С‹..PageStyleRG....Items.Strings
+#: forms/uGraphMngFrm.dfm:910
+msgid "По вертикали"
+msgstr ""
+
+#. FxForm..OperatorsGB..GroupBox1..VTree1......WideText
+#: forms/uWPProcFrm.dfm:380
+msgid "Свойства"
+msgstr ""
+
+#. FindMaxForm..ActionGB..Label3..Caption
+#: forms/uFindMaxForm_.dfm:47
+#: .\forms\uFindMaxForm_.dfm:47
+msgid "Положение курсора"
+msgstr "Cursor Position"
+
+#. FFTFltFrm..EditCurvePanel..dFLabel..Caption
+#: forms/uFFTfltFrm.dfm:305
+msgid "dF="
+msgstr ""
+
+#. TrigsFrm..AddTrigGB..CommonName..AxTypeRG....Items.Strings
+#: forms/uTrigsFrm.dfm:433
+msgid "Частота"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..Caption
+#: forms/uRzdFrm.dfm:2653
+#: .\forms\uRzdFrm.dfm:2653
+msgid "Матрицы"
+msgstr "Matrices"
+
+#. AddScriptItemFrm..Panel1..Button2..Caption
+#: forms/uAddScriptItemFrm.dfm:54
+#. CyclogramRepFrm..GroupBox3..ToolBar1..DelBtn..Hint
+#: forms/uCyclogramRepFrm.dfm:151
+#. AddScriptItemFrm..Panel1..Button2..Caption
+#: forms/back/uAddScriptItemFrm.dfm:42
+#. CyclogramRepFrm..GroupBox3..ToolBar1..DelBtn..Hint
+#: forms/back/uCyclogramRepFrm.dfm:123
+#: .\forms\uAddScriptItemFrm.dfm:54
+#: .\forms\uCyclogramRepFrm.dfm:151
+#: .\forms\back\uAddScriptItemFrm.dfm:42
+#: .\forms\back\uCyclogramRepFrm.dfm:123
+msgid "Удалить канал"
+msgstr "Delete Channel"
+
+#. GraphFrm..TabControl..TabSheet1..AxisStyleRG..Caption
+#: forms/uGraphMngFrm.dfm:505
+#: .\forms\uGraphMngFrm.dfm:505
+msgid "Расположение осей"
+msgstr "Axes Layout"
+
+#. FxForm..MainMenu1..ExtMenuItem..N5..Caption
+#: forms/uWPProcFrm.dfm:411
+#: .\forms\uWPProcFrm.dfm:411
+msgid "Трубки допуска"
+msgstr "Tolerance Tubes"
+
+#. GraphFrm..TabControl..TabSheet3..LineBaseCB..Caption
+#: forms/uGraphMngFrm.dfm:808
+#: .\forms\uGraphMngFrm.dfm:808
+msgid "Вертикальные линии"
+msgstr "Vertical Lines"
+
+#. RZDFrm..PathPanel..VertPanel..SelectIntervalGraphBtn..Caption
+#: forms/uRzdFrm.dfm:2231
+#. RZDTareFrame..SelectIntervalGraphBtn..Caption
+#: forms/frames/uRZDTareFrame.dfm:228
+#: .\forms\uRzdFrm.dfm:2231
+#: .\forms\frames\uRZDTareFrame.dfm:228
+msgid "Диапазон графика"
+msgstr "Chart Range"
+
+#. RZDFrm..PathPanel..VertPanel..NullBtn..Hint
+#: forms/uRzdFrm.dfm:2254
+#. RZDTareFrame..NullBtn..Hint
+#: forms/frames/uRZDTareFrame.dfm:213
+#: .\forms\uRzdFrm.dfm:2254
+#: .\forms\frames\uRZDTareFrame.dfm:213
+msgid "Выбрать интервал для вычисления смещения нуля"
+msgstr "Select Interval for Zero Offset calculation"
+
+#. TrigsFrm..AddTrigGB..ExtremumTrigGB..Panel1..SearchIntervalTypeRG....Items.Strings
+#: forms/uTrigsFrm.dfm:162
+msgid "Менее"
+msgstr ""
+
+#. AddScriptItemFrm..Panel2..Panel3..FSLabel..Caption
+#: forms/uAddScriptItemFrm.dfm:104
+#. AddScriptItemFrm..Panel2..Panel3..FSLabel..Caption
+#: forms/back/uAddScriptItemFrm.dfm:77
+#: .\forms\uAddScriptItemFrm.dfm:104
+#: .\forms\back\uAddScriptItemFrm.dfm:77
+msgid "Частота дискретизации:"
+msgstr "Sampling Rate:"
+
+#. CounterFrm..Panel1..Label1..Caption
+#: forms/uCounterFrm.dfm:190
+msgid "T1, sec"
+msgstr ""
+
+#. RptFrm..Panel2..UpdateBandBtn..Hint
+#: forms/uRptFrm.dfm:583
+#: .\forms\uRptFrm.dfm:583
+msgid "Обновить полосу"
+msgstr "Update Band"
+
+#. RZDFrm..PathPanel..VertPanel..DrawGraphBtn..Hint
+#: forms/uRzdFrm.dfm:275
+#: .\forms\uRzdFrm.dfm:275
+msgid "Отрисовать графики"
+msgstr "Plot Charts"
+
+#. RZDFrm..PathPanel..VertPanel..FmaxAbsLabel..Caption
+#: forms/uRzdFrm.dfm:829
+#. RZDFrm..PathPanel..VertPanel..GtmaxAbsLabel..Caption
+#: forms/uRzdFrm.dfm:838
+msgid "Tabs="
+msgstr ""
+
+#. CorrectUTSFrm..GroupBox1..NumFrontIE..Text
+#: forms/uCorrectUTS.dfm:322
+#. FFTInverseFrm..nBlocksIE..Text
+#: forms/uFFTInverseFrm.dfm:74
+#. HilbFltFrm..nBlocksIE..Text
+#: forms/uFrmHibFltFrm.dfm:109
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..StartTrigNumber..Text
+#: forms/uGraphMngFrm.dfm:452
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..StoptTrigNumber..Text
+#: forms/uGraphMngFrm.dfm:465
+#. GraphFrm..TabControl..TabSheet3..LineWidthEdit..Text
+#: forms/uGraphMngFrm.dfm:838
+#. RptFrm..Panel5..BandsTC..TabSheet2..X1IE..Text
+#: forms/uRptFrm.dfm:1601
+#. RptFrm..Panel5..BandsTC..TabSheet2..X2IE..Text
+#: forms/uRptFrm.dfm:1613
+#. RptFrm..Panel5..Panel1..BandCountIE..Text
+#: forms/uRptFrm.dfm:1824
+#. RZDFrm..ScrollBox1..EvalGB..FltPanel..TrendPortionIE..Text
+#: forms/uRzdFrm.dfm:3602
+#. SelectIntervalFrm..Panel1..idIE..Text
+#: forms/uSelectIntervalFrm.dfm:169
+#. SelectPathFrm..GroupBox1..IntEdit1..Text
+#: forms/uSelectPathForm.dfm:106
+#. SelectPathFrm..GroupBox1..IntEdit2..Text
+#: forms/uSelectPathForm.dfm:116
+#. TrigFrm..TrigNumberIE..Text
+#: forms/uTrigFrm.dfm:141
+#. TrigFrm..IntEdit1..Text
+#: forms/uTrigFrm.dfm:169
+#. TrigsFrm..AddTrigGB..CommonName..TrigNumberIE..Text
+#: forms/uTrigsFrm.dfm:365
+#. TrigsFrm..AddTrigGB..CommonName..SrcID..Text
+#: forms/uTrigsFrm.dfm:405
+#. TrigsFrm..AddTrigGB..FilterGB..FilterIE..Text
+#: forms/uTrigsFrm.dfm:1990
+#. TrigsFrm..AddTrigGB..FilterGB..HPFOrder..Text
+#: forms/uTrigsFrm.dfm:2067
+#. TrigsFrm..AddTrigGB..FilterGB..IntEdit1..Text
+#: forms/uTrigsFrm.dfm:2092
+msgid "000"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..TabSheet1..Panel2..GistProcCB..Caption
+#: forms/uRzdFrm.dfm:3232
+#: .\forms\uRzdFrm.dfm:3232
+msgid "Доли"
+msgstr "Fractions"
+
+#. CyclogramRepFrm..GroupBox3..ToolBar1..LinkBtn..Hint
+#: forms/uCyclogramRepFrm.dfm:171
+#. CyclogramRepFrm..GroupBox3..ToolBar1..LinkBtn..Hint
+#: forms/back/uCyclogramRepFrm.dfm:143
+#: .\forms\uCyclogramRepFrm.dfm:171
+#: .\forms\back\uCyclogramRepFrm.dfm:143
+msgid "Добавить обратную связь"
+msgstr "Add Feedback"
+
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:283
+msgid "AutoCalibr"
+msgstr ""
+
+#. KBHMFrm..ObjGB..PropSG..FilterDropDown.TextUnChecked
+#: forms/uKBHMFrm.dfm:304
+msgid "Unchecked"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..Reptype....Items.Strings
+#: forms/uRzdFrm.dfm:3511
+msgid "Rtf отчет"
+msgstr ""
+
+#. EditTubeFrm..SignalsLV......Caption
+#: forms/uEditTubeFrm.dfm:113
+#. GenFrm..TabControl..ShockPage..SigNameLabel..Caption
+#: forms/uGenForm.dfm:268
+#: .\forms\uEditTubeFrm.dfm:113
+#: .\forms\uGenForm.dfm:268
+msgid "Имя сигнала"
+msgstr "Signal Name"
+
+#. EditSignalsListFrm..GroupBox2..DelBtn..Caption
+#: forms/uAddSignalFrm.dfm:67
+#: .\forms\uAddSignalFrm.dfm:67
+msgid "Удалить сигналы"
+msgstr "Delete Signals"
+
+#. CorrectUTSFrm..GroupBox1..ThresheldLabel..Caption
+#: forms/uCorrectUTS.dfm:48
+#: .\forms\uCorrectUTS.dfm:48
+msgid "Пороговое значение"
+msgstr "Threshold Value"
+
+#. RptFrm..TopGB..SaveCfgLabel..Caption
+#: forms/uRptFrm.dfm:923
+#: .\forms\uRptFrm.dfm:923
+msgid "Сохранить настройки"
+msgstr "Save Settings"
+
+#. KBHMFrm..ObjGB..PropSG..SearchFooter.HintHighlight
+#: forms/uKBHMFrm.dfm:362
+msgid "Highlight occurences"
+msgstr ""
+
+#. AddScriptItemFrm..Panel2..Panel3..NameLabel..Caption
+#: forms/uAddScriptItemFrm.dfm:93
+#. RptFrm..Panel5..AutoBandsPC..TabSheet3..Label16..Caption
+#: forms/uRptFrm.dfm:1898
+#. AddScriptItemFrm..Panel2..Panel3..NameLabel..Caption
+#: forms/back/uAddScriptItemFrm.dfm:70
+#: .\forms\uAddScriptItemFrm.dfm:93
+#: .\forms\uRptFrm.dfm:1898
+#: .\forms\back\uAddScriptItemFrm.dfm:70
+msgid "Имя канала:"
+msgstr "Channel Name:"
+
+#. RZDFrm..PathPanel..VertPanel..Hout_D..Hint
+#: forms/uRzdFrm.dfm:2157
+#. RZDFrm..PathPanel..VertPanel..PAlfaEdit..Hint
+#: forms/uRzdFrm.dfm:2293
+#: .\forms\uRzdFrm.dfm:2157
+#: .\forms\uRzdFrm.dfm:2293
+msgid "Параметр для расчета матрицы"
+msgstr "Matrix calculation parameter"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..UnitsLabel..Caption
+#: forms/uFindMaxForm.dfm:283
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..BandList......Caption
+#: forms/uFindMaxForm_.dfm:132
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..UnitsLabel..Caption
+#: forms/uFindMaxForm_.dfm:240
+#. GraphFrm..TabControl..TabSheet1..UnitsXLabel..Caption
+#: forms/uGraphMngFrm.dfm:120
+#. GraphFrm..TabControl..TabSheet2..UnitsYLabel..Caption
+#: forms/uGraphMngFrm.dfm:575
+#. GraphFrm..TabControl..TabSheet3..UnitsLabel..Caption
+#: forms/uGraphMngFrm.dfm:736
+#. TrigFrm..UnitsLabel..Caption
+#: forms/uTrigFrm.dfm:68
+#: .\forms\uFindMaxForm.dfm:283
+#: .\forms\uFindMaxForm_.dfm:132
+#: .\forms\uFindMaxForm_.dfm:240
+#: .\forms\uGraphMngFrm.dfm:120
+#: .\forms\uGraphMngFrm.dfm:575
+#: .\forms\uGraphMngFrm.dfm:736
+#: .\forms\uTrigFrm.dfm:68
+msgid "Единицы"
+msgstr "Units"
+
+#. LissajousFrm..RightGB..YCb..Text
+#: forms/uLissajousFrm.dfm:168
+msgid "ComboBox1"
+msgstr ""
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..NameEdit..Hint
+#: forms/uFindMaxForm.dfm:301
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..IdentBandsGB..NameEdit..Hint
+#: forms/uFindMaxForm_.dfm:171
+#. RptFrm..BandPanel..SpmEdit..Hint
+#: forms/uRptFrm.dfm:2318
+#. RptFrm..BandPanel..FltName..Hint
+#: forms/uRptFrm.dfm:2361
+#: .\forms\uFindMaxForm.dfm:301
+#: .\forms\uFindMaxForm_.dfm:171
+#: .\forms\uRptFrm.dfm:2318
+#: .\forms\uRptFrm.dfm:2361
+msgid "Путь к файлу для экспорта импорта настроек полос"
+msgstr "Path for Band Settings Export/Import"
+
+#. GraphFrm..TabControl..TabSheet3..LineTypeCB..Text
+#: forms/uGraphMngFrm.dfm:823
+#. GraphFrm..TabControl..TabSheet3..LineTypeCB....Items.Strings
+#: forms/uGraphMngFrm.dfm:825
+#: .\forms\uGraphMngFrm.dfm:823
+msgid "Сплошная"
+msgstr "Solid"
+
+#. MeraFileMngFrm..Label4..Caption
+#: forms/uMainFrm.dfm:58
+#: .\forms\uMainFrm.dfm:58
+msgid "Список ошибок"
+msgstr "Error List"
+
+#. RZDTareFrame..T1Label..Caption
+#: forms/frames/uRZDTareFrame.dfm:18
+#. RZDTareFrame..Label1..Caption
+#: forms/frames/uRZDTareFrame.dfm:34
+msgid "T1="
+msgstr ""
+
+#. CyclogramRepFrm..GroupBox3..GroupBox4..Label1..Caption
+#: forms/uCyclogramRepFrm.dfm:212
+#. CyclogramRepFrm..GroupBox3..GroupBox4..Label1..Caption
+#: forms/back/uCyclogramRepFrm.dfm:176
+#: .\forms\uCyclogramRepFrm.dfm:212
+#: .\forms\back\uCyclogramRepFrm.dfm:176
+msgid "Фильтр"
+msgstr "Filter"
+
+#. LissajousFrm..RightGB..Label6..Caption
+#: forms/uLissajousFrm.dfm:123
+#: .\forms\uLissajousFrm.dfm:123
+msgid "Инкремент, сек"
+msgstr "Increment, sec"
+
+#. ScriptFrm..MainMenu1..N17..Caption
+#: forms/uScriptFrm.dfm:342
+#: .\forms\uScriptFrm.dfm:342
+msgid "Помощь"
+msgstr "Help"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Panel1..CurvsLB..Hint
+#: forms/uFindMaxForm.dfm:472
+#. FindMaxForm..SignalsGB..ExtremumLB..Hint
+#: forms/uFindMaxForm.dfm:1168
+#. FindMaxForm..SignalsGB..ExtremumLB..Hint
+#: forms/uFindMaxForm_.dfm:567
+#: .\forms\uFindMaxForm.dfm:472
+#: .\forms\uFindMaxForm.dfm:1168
+#: .\forms\uFindMaxForm_.dfm:567
+msgid "Поддреживает комбинацию Ctrl+C"
+msgstr ""
+
+#. FxForm..LoadScriptGB..ToolBar1..GraphBtn..Hint
+#: forms/uWPProcFrm.dfm:289
+#: .\forms\uWPProcFrm.dfm:289
+msgid "Построение графики"
+msgstr "Generate Graphics"
+
+#. TmpltNameFrame..NameRG....Items.Strings
+#: forms/frames/uTmpltNameFrame.dfm:132
+msgid "Имя по умолчанию"
+msgstr ""
+
+#. RptFrm..Panel5..AutoBandsPC..TabSheet3..Label13..Caption
+#: forms/uRptFrm.dfm:1931
+#: .\forms\uRptFrm.dfm:1931
+msgid "Порог:"
+msgstr "Threshold:"
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..BandList......Caption
+#: forms/uFindMaxForm_.dfm:111
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..F2Label..Caption
+#: forms/uFindMaxForm_.dfm:282
+msgid "X2"
+msgstr ""
+
+#. AddRZDDataFrm..Panel2..CalibrPanel..Label1..Caption
+#: forms/uAddRZDDatafrm.dfm:211
+#: .\forms\uAddRZDDatafrm.dfm:211
+msgid "Сечение №:"
+msgstr ""
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..BandList......Caption
+#: forms/uFindMaxForm_.dfm:120
+msgid "Noise \"+\""
+msgstr ""
+
+#. SpmFrame..SpmTypeLabel..Caption
+#: forms/frames/uSpmFrame.dfm:20
+#. WPSpmFrame..SpmTypeLabel..Caption
+#: forms/frames/uWPSpmFrame.dfm:20
+#: .\forms\frames\uSpmFrame.dfm:20
+#: .\forms\frames\uWPSpmFrame.dfm:20
+msgid "Тип характеристики"
+msgstr "Characteristic Type"
+
+#. BDIFrm..GroupBox1..Caption
+#: forms/uBDIFrm.dfm:22
+#: .\forms\uBDIFrm.dfm:22
+msgid "Структура базы"
+msgstr "DB Structure"
+
+#. CounterFrm..GroupBox1..Panel2..Button1..Caption
+#: forms/uCounterFrm.dfm:149
+#. CounterFrm..Panel1..EvalBtn..Caption
+#: forms/uCounterFrm.dfm:241
+msgid "Apply"
+msgstr ""
+
+#. FxForm..PopupMenu1..B1..Caption
+#: forms/uWPProcFrm.dfm:4416
+#: .\forms\uWPProcFrm.dfm:4416
+msgid "Изменить интервал обработки"
+msgstr "Modify Processing Interval"
+
+#. SpmFrame..WndCB....Items.Strings
+#: forms/frames/uSpmFrame.dfm:52
+#. WPSpmFrame..WndCB....Items.Strings
+#: forms/frames/uWPSpmFrame.dfm:52
+msgid "Flat-Top (СКЗ)"
+msgstr ""
+
+#. AddScriptItemFrm..Panel2..Panel3..Label2..Caption
+#: forms/uAddScriptItemFrm.dfm:154
+#: .\forms\uAddScriptItemFrm.dfm:154
+msgid "Единицы измерения X:"
+msgstr "X Units:"
+
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:267
+msgid "Min2"
+msgstr ""
+
+#. EditSelsinFrm..GroupBox1..SKO3Label..Caption
+#: forms/uEdiSelsinFrm.dfm:171
+#: .\forms\uEdiSelsinFrm.dfm:171
+msgid "СКО3"
+msgstr ""
+
+#. ScriptFrm..MainMenu1..N1..N4..Caption
+#: forms/uScriptFrm.dfm:315
+#: .\forms\uScriptFrm.dfm:315
+msgid "Создать теги"
+msgstr "Create Tags"
+
+#. GenFrm..TabControl..ShockPage..ImpactLenL..Caption
+#: forms/uGenForm.dfm:247
+msgid "Impact len"
+msgstr ""
+
+#. SelectIntervalFrm..AutoGroup..ActiveLabel..Caption
+#: forms/uSelectIntervalFrm.dfm:222
+#: .\forms\uSelectIntervalFrm.dfm:222
+msgid "Не активно"
+msgstr "Inactive"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..UnitsCB..Text
+#: forms/uFindMaxForm.dfm:381
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..UnitsCB....Items.Strings
+#: forms/uFindMaxForm.dfm:383
+#: .\forms\uFindMaxForm.dfm:381
+msgid "Абс."
+msgstr "Abs."
+
+#. CorrectUTSFrm..GroupBox1..SICONCB....Hint
+#: forms/uCorrectUTS.dfm:307
+msgid ""
+"Нужно включить если замеры не содержат UTS но имеют одноименный сигнал с информацией о начале испытания"
+msgstr ""
+
+#. FFTInverseFrm..Panel1..ChannelsLV......Caption
+#: forms/uFFTInverseFrm.dfm:171
+msgid "Im"
+msgstr ""
+
+#. LissajousFrm..RightGB..Panel1..Label4..Caption
+#: forms/uLissajousFrm.dfm:317
+#. SelectPathFrm..GroupBox1..NameLabel..Caption
+#: forms/uSelectPathForm.dfm:81
+#: .\forms\uLissajousFrm.dfm:317
+#: .\forms\uSelectPathForm.dfm:81
+msgid "Сигнал:"
+msgstr "Signal:"
+
+#. TmpltNameFrame..Label2..Caption
+#: forms/frames/uTmpltNameFrame.dfm:36
+#: .\forms\frames\uTmpltNameFrame.dfm:36
+msgid "Путь к отчету"
+msgstr "Report Path"
+
+#. TrigsFrm..TriListGB..VTree1......WideText
+#: forms/uTrigsFrm.dfm:89
+msgid "Результат"
+msgstr ""
+
+#. RZDFrm..PathPanel..VertPanel..TareNamePanel..TareFramePageControl..Hin_Page..Caption
+#: forms/uRzdFrm.dfm:1851
+#: .\forms\uRzdFrm.dfm:1851
+msgid "Гор. смещ. внутрь"
+msgstr "Hor. Offset Inward"
+
+#. RptFrm..RightPanel..RightPC..OptionsTS..ParamsGB..Panel3..Panel4..Label2..Caption
+#: forms/uRptFrm.dfm:2102
+#. RptFrm..RightPanel..RightPC..OptionsTS..ParamsGB..Panel3..ParamsPropLV......Caption
+#: forms/uRptFrm.dfm:2182
+#. ScriptFrm..PanelTools..ListViewItems......Caption
+#: forms/uScriptFrm.dfm:100
+#. TrigsFrm..AddTrigGB..lvlGB..Label8..Caption
+#: forms/uTrigsFrm.dfm:1198
+#. WPNameFltFrame..Panel1..PropList......Caption
+#: forms/frames/uWPNameFilterFrame.dfm:38
+#: .\forms\uRptFrm.dfm:2102
+#: .\forms\uRptFrm.dfm:2182
+#: .\forms\uScriptFrm.dfm:100
+#: .\forms\uTrigsFrm.dfm:1198
+#: .\forms\frames\uWPNameFilterFrame.dfm:38
+msgid "Значение"
+msgstr "Value"
+
+#. MeraFileMngFrm..PrtCB..Hint
+#: forms/uMainFrm.dfm:118
+#: .\forms\uMainFrm.dfm:118
+msgid "При включении параметр \"Смещение второго файла игнорируется\""
+msgstr ""
+
+#. FFTFltFrm..ScaleCurveChart..Caption
+#: forms/uFFTfltFrm.dfm:523
+msgid "ScaleCurveChart"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..Hin_EvalBtn..Hint
+#: forms/uRzdFrm.dfm:3299
+#: .\forms\uRzdFrm.dfm:3299
+msgid "Расчитать воздействие на рельс"
+msgstr "Calculate Rail Interaction"
+
+#. CorrectUTSFrm..GroupBox1..Memo1......Lines.Strings
+#: forms/uCorrectUTS.dfm:121
+msgid ""
+" Модуль выполняет коррекцию времени UTS сигналов на время старта нуля. Корректирующее "
+msgstr ""
+
+#. GraphFrm..TabControl..TabSheet2..YAxisLabel..Caption
+#: forms/uGraphMngFrm.dfm:542
+#: .\forms\uGraphMngFrm.dfm:542
+msgid "Ось Y:"
+msgstr "Y Axis:"
+
+#. SelectIntervalFrm..ModeRG....Items.Strings
+#: forms/uSelectIntervalFrm.dfm:31
+#. IntervalFrame..ModeRG....Items.Strings
+#: forms/frames/uIntervalFrame.dfm:93
+msgid "Все испытание"
+msgstr ""
+
+#. TrigsFrm..AddTrigGB..ExtremumTrigGB..Panel1..SearchIntervalTypeRG....Items.Strings
+#: forms/uTrigsFrm.dfm:160
+msgid "Не использовать проверку"
+msgstr ""
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..BandList......Caption
+#: forms/uFindMaxForm_.dfm:114
+msgid "Level \"+\""
+msgstr ""
+
+#. SpmFrame..SpmTypeCB....Items.Strings
+#: forms/frames/uSpmFrame.dfm:65
+#. WPSpmFrame..SpmTypeCB....Items.Strings
+#: forms/frames/uWPSpmFrame.dfm:65
+msgid "Амплитуда/Фаза"
+msgstr ""
+
+#. GraphFrm..TabControl..РЎС‚СЂР°РЅРёС†С‹..Label5..Caption
+#: forms/uGraphMngFrm.dfm:857
+#: .\forms\uGraphMngFrm.dfm:857
+msgid "Строк"
+msgstr "Rows"
+
+#. AddScriptItemFrm..Panel2..Panel3..UnitsCBY....Items.Strings
+#: forms/uAddScriptItemFrm.dfm:210
+msgid "С"
+msgstr ""
+
+#. Form2..BtnListView1......Caption
+#: forms/uChangeSrcFrm.dfm:27
+#. GraphFrm..TabControl..TabSheet3..LineSrcLabel..Caption
+#: forms/uGraphMngFrm.dfm:703
+#: .\forms\uChangeSrcFrm.dfm:27
+#: .\forms\uGraphMngFrm.dfm:703
+msgid "Источник"
+msgstr "Source"
+
+#. CyclogramRepFrm..GroupBox3..ToolBar1..UnLinkBtn..Hint
+#: forms/uCyclogramRepFrm.dfm:181
+#. CyclogramRepFrm..GroupBox3..ToolBar1..UnLinkBtn..Hint
+#: forms/back/uCyclogramRepFrm.dfm:153
+#: .\forms\uCyclogramRepFrm.dfm:181
+#: .\forms\back\uCyclogramRepFrm.dfm:153
+msgid "Удалить обратную связь"
+msgstr "Delete Feedback"
+
+#. CounterFrm..Panel1..Label2..Caption
+#: forms/uCounterFrm.dfm:201
+msgid "T2, sec"
+msgstr ""
+
+#. EditSelsinFrm..GroupBox1..Label8..Caption
+#: forms/uEdiSelsinFrm.dfm:136
+#. EditSelsinFrm..GroupBox1..Label11..Caption
+#: forms/uEdiSelsinFrm.dfm:157
+#. EditSelsinFrm..GroupBox1..Label15..Caption
+#: forms/uEdiSelsinFrm.dfm:178
+msgid "Max"
+msgstr ""
+
+#. RZDFrm..PathPanel..VertPanel..NullBtn..Caption
+#: forms/uRzdFrm.dfm:2260
+#: .\forms\uRzdFrm.dfm:2260
+msgid "Расчет нуля"
+msgstr "Zeroing calculation"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Panel1..CurvsPanel..CurveTypePC..РЈСЂРѕРІРµРЅСЊ..Caption
+#: forms/uFindMaxForm.dfm:896
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Panel1..CurvsPanel..CurveTypePC..РЈСЂРѕРІРµРЅСЊ..LvlLabel..Caption
+#: forms/uFindMaxForm.dfm:907
+#: .\forms\uFindMaxForm.dfm:896
+#: .\forms\uFindMaxForm.dfm:907
+msgid "Уровень"
+msgstr "Level"
+
+#. FFTInverseFrm..Label3..Caption
+#: forms/uFFTInverseFrm.dfm:35
+#: .\forms\uFFTInverseFrm.dfm:35
+msgid "Шаг по частоте, Гц"
+msgstr "Frequency Step, Hz"
+
+#. WPNameFltFrame..Panel1..Panel2..NameFltCB..Caption
+#: forms/frames/uWPNameFilterFrame.dfm:452
+#: .\forms\frames\uWPNameFilterFrame.dfm:452
+msgid "Фильтр по подстроке в имени"
+msgstr "Name Substring Filter"
+
+#. FFTInverseFrm..Label1..Caption
+#: forms/uFFTInverseFrm.dfm:28
+#. HilbFltFrm..Label1..Caption
+#: forms/uFrmHibFltFrm.dfm:36
+#: .\forms\uFFTInverseFrm.dfm:28
+#: .\forms\uFrmHibFltFrm.dfm:36
+msgid "Число блоков"
+msgstr "Number of Blocks"
+
+#. RZDFrm..PathPanel..VertPanel..TareNamePanel..TareFramePageControl..VC_Page..Caption
+#: forms/uRzdFrm.dfm:940
+#: .\forms\uRzdFrm.dfm:940
+msgid "Верт. центр. нагр."
+msgstr "Vert. Center Load"
+
+#. TrigFrm..TrigTypeRG....Items.Strings
+#: forms/uTrigFrm.dfm:208
+msgid "Поиск интервала"
+msgstr ""
+
+#. CyclogramRepFrm..GroupBox3..CommonLV......Caption
+#: forms/uCyclogramRepFrm.dfm:124
+#. CyclogramRepFrm..GroupBox3..CommonLV......Caption
+#: forms/back/uCyclogramRepFrm.dfm:98
+#: .\forms\uCyclogramRepFrm.dfm:124
+#: .\forms\back\uCyclogramRepFrm.dfm:98
+msgid "Тип платы"
+msgstr "Board Type"
+
+#. SignalPathFrm..Button1..Caption
+#: forms/EditSignalPathFrm.dfm:78
+#. EditSignalsListFrm..GroupBox2..AddBtn..Caption
+#: forms/uAddSignalFrm.dfm:80
+#: .\forms\EditSignalPathFrm.dfm:78
+#: .\forms\uAddSignalFrm.dfm:80
+msgid "Добавить сигналы"
+msgstr "Add Signals"
+
+#. RptFrm..RightPanel..RightPC..OptionsTS..ParamsGB..Panel3..Panel4..AddParamBtn..Caption
+#: forms/uRptFrm.dfm:2149
+msgid "+"
+msgstr ""
+
+#. SaveSimpleMeraFrm..Caption
+#: forms/uSaveSimpleMeraFrm.dfm:4
+#: .\forms\uSaveSimpleMeraFrm.dfm:4
+msgid "Сохранение упрощенного Mera файла"
+msgstr "Save Simplified Mera File"
+
+#. SelsinFrm..Caption
+#: forms/uSelsinFrm.dfm:4
+#: .\forms\uSelsinFrm.dfm:4
+msgid "Расчет угла для сельсин датчика"
+msgstr "Calculate Synchro Angle"
+
+#. AddRZDDataFrm..Panel2..Panel1..TypeRG....Items.Strings
+#: forms/uAddRZDDatafrm.dfm:186
+msgid "Калибровка"
+msgstr ""
+
+#. FxForm..SignalsGB..StatusBar1......Text
+#: forms/uWPProcFrm.dfm:168
+#: .\forms\uWPProcFrm.dfm:168
+msgid "Состояние:"
+msgstr "State:"
+
+#. KBHMFrm..ObjGB..PropSG..HTMLSettings.ImageFolder
+#: forms/uKBHMFrm.dfm:325
+msgid "images"
+msgstr ""
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..ExpBtn..Caption
+#: forms/uFindMaxForm.dfm:321
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..IdentBandsGB..ExpBtn..Caption
+#: forms/uFindMaxForm_.dfm:201
+#. RZDFrm..MatrixPanel..ExpMatrixBtn..Caption
+#: forms/uRzdFrm.dfm:2482
+#: .\forms\uFindMaxForm.dfm:321
+#: .\forms\uFindMaxForm_.dfm:201
+#: .\forms\uRzdFrm.dfm:2482
+msgid "Экспорт"
+msgstr "Export"
+
+#. LissajousFrm..Caption
+#: forms/uLissajousFrm.dfm:4
+msgid "LissajousFrm"
+msgstr ""
+
+#. LissajousFrm..RightGB..AutoCB..Caption
+#: forms/uLissajousFrm.dfm:302
+#: .\forms\uLissajousFrm.dfm:302
+msgid "авторасчет"
+msgstr "Auto-calc"
+
+#. CyclogramRepFrm..GroupBox3..GroupBox4..UnitsCB..Text
+#: forms/uCyclogramRepFrm.dfm:279
+#. CyclogramRepFrm..GroupBox3..GroupBox4..UnitsCB....Items.Strings
+#: forms/uCyclogramRepFrm.dfm:281
+#. CyclogramRepFrm..GroupBox3..GroupBox4..UnitsCB..Text
+#: forms/back/uCyclogramRepFrm.dfm:223
+#. CyclogramRepFrm..GroupBox3..GroupBox4..UnitsCB....Items.Strings
+#: forms/back/uCyclogramRepFrm.dfm:225
+#: .\forms\uCyclogramRepFrm.dfm:279
+#: .\forms\back\uCyclogramRepFrm.dfm:223
+msgid "сек."
+msgstr "sec"
+
+#. GenFrm..ActionGB..FSLabel..Caption
+#: forms/uGenForm.dfm:29
+#: .\forms\uGenForm.dfm:29
+msgid "Частота дискретизации"
+msgstr "Sampling Frequency"
+
+#. MeraFileMngFrm..SelectPathBtn3..Hint
+#: forms/uMainFrm.dfm:167
+#: .\forms\uMainFrm.dfm:167
+msgid "Результатирующий файл"
+msgstr "Resulting File"
+
+#. GenFrm..ActionGB..GroupBox2..FreqRG....Items.Strings
+#: forms/uGenForm.dfm:111
+msgid "Постоянная частота"
+msgstr ""
+
+#. RZDFrm..MatrixPanel..ExportMatrixPath..Text
+#: forms/uRzdFrm.dfm:2504
+#. RZDFrm..MatrixPanel..ImportMatrixPath..Text
+#: forms/uRzdFrm.dfm:2516
+msgid ".\\RZDmatrix\\RZDMatrix.rzd"
+msgstr ""
+
+#. CounterFrm..ThresholdLabel1..Caption
+#: forms/uCounterFrm.dfm:26
+msgid "Hi, lvl, %"
+msgstr ""
+
+#. FxForm..PopupMenu1..N4..Caption
+#: forms/uWPProcFrm.dfm:4419
+#: .\forms\uWPProcFrm.dfm:4419
+msgid "Изменить оператор"
+msgstr "Edit Operator"
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..BandList......Caption
+#: forms/uFindMaxForm_.dfm:123
+msgid "Noise \"-\""
+msgstr ""
+
+#. AddScriptItemFrm..UnitsCBX....Items.Strings
+#: forms/uAddScriptItemFrm.dfm:234
+msgid "rpm"
+msgstr ""
+
+#. ScriptFrm..PanelTools..ToolBar2..DelTagBtn..Caption
+#: forms/uScriptFrm.dfm:146
+msgid "DelTagBtn"
+msgstr ""
+
+#. BDIFrm..TabControl..ObjTab..Caption
+#: forms/uBDIFrm.dfm:97
+#: .\forms\uBDIFrm.dfm:97
+msgid "Объект испытания"
+msgstr "Test Object"
+
+#. RZDFrm..Caption
+#: forms/uRzdFrm.dfm:4
+#: .\forms\uRzdFrm.dfm:4
+msgid "Определение нагруженности участка железнодорожного пути"
+msgstr "Determining Railway Track Stress State"
+
+#. CounterFrm..FilterTrendCB..Caption
+#: forms/uCounterFrm.dfm:278
+msgid "Filter trend"
+msgstr ""
+
+#. AddScriptItemFrm..Panel2..Panel3..UnitsCBY....Items.Strings
+#: forms/uAddScriptItemFrm.dfm:211
+msgid "л/c"
+msgstr ""
+
+#. GraphFrm..TabControl..РЎС‚СЂР°РЅРёС†С‹..Label4..Caption
+#: forms/uGraphMngFrm.dfm:868
+#: .\forms\uGraphMngFrm.dfm:868
+msgid "Столбцов"
+msgstr "Columns"
+
+#. KBHMFrm..ObjGB..PropSG..FloatFormat
+#: forms/uKBHMFrm.dfm:322
+msgid "%.2f"
+msgstr ""
+
+#. RptFrm..BandPanel..EvalMaxLengthCB..Caption
+#: forms/uRptFrm.dfm:2419
+#: .\forms\uRptFrm.dfm:2419
+msgid "Расчет максимальных границ испытания"
+msgstr "Max Test Limits calculation"
+
+#. RptFrm..Panel5..BandsTC..TabSheet1..CursorRngBtn..Caption
+#: forms/uRptFrm.dfm:1557
+#: .\forms\uRptFrm.dfm:1557
+msgid "Курсор"
+msgstr "Cursor"
+
+#. ScriptFrm..PanelTools..ListViewItems......Caption
+#: forms/uScriptFrm.dfm:109
+#. TrigFrm..TrigLV......Caption
+#: forms/uTrigFrm.dfm:99
+#: .\forms\uScriptFrm.dfm:109
+#: .\forms\uTrigFrm.dfm:99
+msgid "Ед."
+msgstr "Unit"
+
+#. CorrectUTSFrm..GroupBox1..RadioGroup1....Items.Strings
+#: forms/uCorrectUTS.dfm:140
+#. TrigFrm..UnitsRG....Items.Strings
+#: forms/uTrigFrm.dfm:181
+#. TrigsFrm..AddTrigGB..CommonName..TrigLvlTypeRG....Items.Strings
+#: forms/uTrigsFrm.dfm:392
+msgid "Спад"
+msgstr ""
+
+#. EditSelsinFrm..Label4..Caption
+#: forms/uEdiSelsinFrm.dfm:56
+#. EditSelsinFrm..Label4..Caption
+#: forms/uEditSelsinFrm.dfm:60
+#: .\forms\uEdiSelsinFrm.dfm:56
+#: .\forms\uEditSelsinFrm.dfm:60
+msgid "Имя датчика"
+msgstr "Sensor Name"
+
+#. FindMaxForm..Caption
+#: forms/uFindMaxForm_.dfm:4
+#: .\forms\uFindMaxForm_.dfm:4
+msgid "Поиск максимумов"
+msgstr "Search Maxima"
+
+#. ScriptFrm..Caption
+#: forms/uScriptFrm.dfm:4
+msgid "VBScriptFrm"
+msgstr ""
+
+#. AddRZDDataFrm..LV1......Caption
+#: forms/uAddRZDDatafrm.dfm:64
+#. ScriptFrm..MainMenu1..N1..Caption
+#: forms/uScriptFrm.dfm:310
+#: .\forms\uAddRZDDatafrm.dfm:64
+#: .\forms\uScriptFrm.dfm:310
+msgid "Файл"
+msgstr "File"
+
+#. BalanceZeroFrm..Panel2..Label4..Caption
+#: forms/uExtBalanceSignalsFrm.dfm:72
+#: .\forms\uExtBalanceSignalsFrm.dfm:72
+msgid "Конец"
+msgstr "End"
+
+#. TmpltNameFrame..NameRG....Items.Strings
+#: forms/frames/uTmpltNameFrame.dfm:134
+msgid "Пользовательское"
+msgstr ""
+
+#. RZDFrm..PathPanel..VertPanel..GtmaxEdit....Hint
+#: forms/uRzdFrm.dfm:2281
+msgid ""
+"Учитывается при расчете приведенной погрешности калибровки,  для расчета диапазона"
+msgstr ""
+
+#. MeraFileMngFrm..Font.Name
+#: forms/uMainFrm.dfm:14
+#. MeraFileMngFrm..FileE1..Font.Name
+#: forms/uMainFrm.dfm:70
+#. MeraFileMngFrm..FileE2..Font.Name
+#: forms/uMainFrm.dfm:85
+#. MeraFileMngFrm..ErrorLogLB..Font.Name
+#: forms/uMainFrm.dfm:142
+#. MeraFileMngFrm..FileE3..Font.Name
+#: forms/uMainFrm.dfm:156
+msgid "Arial"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..Panel1..Mat_S1label..Caption
+#: forms/uRzdFrm.dfm:2696
+msgid "1:"
+msgstr ""
+
+#. FFTFltFrm..EditCurvePanel..F1Label..Caption
+#: forms/uFFTfltFrm.dfm:186
+#: .\forms\uFFTfltFrm.dfm:186
+msgid "Начало полосы"
+msgstr "Band Start"
+
+#. CyclogramRepFrm..CommonGB..SaveCfgBtn..Caption
+#: forms/uCyclogramRepFrm.dfm:359
+#. BalanceZeroFrm..Panel2..SaveBtn..Caption
+#: forms/uExtBalanceSignalsFrm.dfm:118
+#. FFTFltFrm..EditCurvePanel..SaveBtn..Caption
+#: forms/uFFTfltFrm.dfm:484
+#. RptFrm..TopGB..SaveCfgBtn..Caption
+#: forms/uRptFrm.dfm:1405
+#. SaveSimpleMeraFrm..Panel2..OkBtn..Caption
+#: forms/uSaveSimpleMeraFrm.dfm:93
+#. FxForm..LoadScriptGB..SaveBtn..Caption
+#: forms/uWPProcFrm.dfm:206
+#. CyclogramRepFrm..CommonGB..SaveCfgBtn..Caption
+#: forms/back/uCyclogramRepFrm.dfm:279
+#: .\forms\uCyclogramRepFrm.dfm:359
+#: .\forms\uExtBalanceSignalsFrm.dfm:118
+#: .\forms\uFFTfltFrm.dfm:484
+#: .\forms\uFindMaxForm.dfm:1116
+#: .\forms\uFindMaxForm_.dfm:525
+#: .\forms\uRptFrm.dfm:1405
+#: .\forms\uSaveSimpleMeraFrm.dfm:93
+#: .\forms\uWPProcFrm.dfm:206
+#: .\forms\back\uCyclogramRepFrm.dfm:279
+msgid "Сохранить"
+msgstr "Save"
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..MatrixLV......Caption
+#: forms/uRzdFrm.dfm:2910
+msgid "S3"
+msgstr ""
+
+#. RZDFrm..SaveDialog1..Filter
+#: forms/uRzdFrm.dfm:3654
+msgid "Матрица влияния РЖД|*.rzd"
+msgstr ""
+
+#. LissajousFrm..Chart..Caption
+#: forms/uLissajousFrm.dfm:383
+#. SelectIntervalFrm..Panel2..cChart1..Caption
+#: forms/uSelectIntervalFrm.dfm:360
+msgid "Chart"
+msgstr ""
+
+#. GenFrm..TabControl..MeandrTS..Label1..Caption
+#: forms/uGenForm.dfm:198
+#: .\forms\uGenForm.dfm:198
+msgid "Скважность (Период/Длит. импульса)"
+msgstr "Duty Cycle (Period/Pulse Width)"
+
+#. KBHMFrm..ObjGB..PropSG..SearchFooter.HintFindPrev
+#: forms/uKBHMFrm.dfm:361
+msgid "Find previous occurence"
+msgstr ""
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Caption
+#: forms/uFindMaxForm.dfm:411
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Caption
+#: forms/uFindMaxForm_.dfm:233
+#: .\forms\uFindMaxForm.dfm:411
+#: .\forms\uFindMaxForm_.dfm:233
+msgid "Настройка полос"
+msgstr "Band Setup"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..ImportBtn..Hint
+#: forms/uFindMaxForm.dfm:330
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..IdentBandsGB..ImportBtn..Hint
+#: forms/uFindMaxForm_.dfm:210
+#: .\forms\uFindMaxForm.dfm:330
+#: .\forms\uFindMaxForm_.dfm:210
+msgid "Импорт настроек полос в файл"
+msgstr "Import Band Settings to File"
+
+#. RptFrm..Caption
+#: forms/uRptFrm.dfm:4
+#: .\forms\uRptFrm.dfm:4
+msgid "Создать отчет"
+msgstr "Create Report"
+
+#. RZDFrm..PathPanel..VertPanel..FmaxAbsFE....Hint
+#: forms/uRzdFrm.dfm:2308
+#. RZDFrm..PathPanel..VertPanel..GtmaxAbsFE....Hint
+#: forms/uRzdFrm.dfm:2323
+msgid ""
+"Учитывается при расчете приведенной погрешности калибровки,  для расчета диапазона. Диапазон равен максимальной силе в заезде или указанному параметру"
+msgstr ""
+
+#. FFTFltFrm..EditCurvePanel..F2indLabel..Caption
+#: forms/uFFTfltFrm.dfm:237
+#: .\forms\uFFTfltFrm.dfm:237
+msgid "Индекс 2"
+msgstr "Index 2"
+
+#. CorrectUTSFrm..GroupBox1..TestTimeLabel..Caption
+#: forms/uCorrectUTS.dfm:73
+#: .\forms\uCorrectUTS.dfm:73
+msgid "Время испытания"
+msgstr "Trial Time"
+
+#. RptFrm..TopGB..ReportTypeRG....Items.Strings
+#: forms/uRptFrm.dfm:1346
+msgid "Отчет MS Word"
+msgstr ""
+
+#. CorrectUTSFrm..GroupBox1..Memo1......Lines.Strings
+#: forms/uCorrectUTS.dfm:128
+msgid ""
+"у канала начало отсчета, и будут скорректированы старты по всем каналам (без учета UTS)"
+msgstr ""
+
+#. SignalPathFrm..SrcPath..Text
+#: forms/EditSignalPathFrm.dfm:70
+msgid "SrcPath"
+msgstr ""
+
+#. GraphFrm..TabControl..TabSheet1..Caption
+#: forms/uGraphMngFrm.dfm:74
+#: .\forms\uGraphMngFrm.dfm:74
+msgid "Графики"
+msgstr "Charts"
+
+#. EditSelsinFrm..L2CB..Text
+#: forms/uEdiSelsinFrm.dfm:79
+#. EditSelsinFrm..L3CB..Text
+#: forms/uEdiSelsinFrm.dfm:87
+#. EditSelsinFrm..ExcCB..Text
+#: forms/uEdiSelsinFrm.dfm:104
+#. EditSelsinFrm..L2CB..Text
+#: forms/uEditSelsinFrm.dfm:84
+#. EditSelsinFrm..L3CB..Text
+#: forms/uEditSelsinFrm.dfm:93
+#. EditSelsinFrm..ExcCB..Text
+#: forms/uEditSelsinFrm.dfm:112
+#. RptFrm..Panel5..BandsTC..РўСЂРёРіРіРµСЂС‹..X1CB..Text
+#: forms/uRptFrm.dfm:1706
+#. RptFrm..Panel5..BandsTC..РўСЂРёРіРіРµСЂС‹..X2CB..Text
+#: forms/uRptFrm.dfm:1719
+msgid "X1CB"
+msgstr ""
+
+#. RZDFrm..MatrixPanel..UseMFmatrix..Caption
+#: forms/uRzdFrm.dfm:2543
+#: .\forms\uRzdFrm.dfm:2543
+msgid "использовать матрицу замера"
+msgstr "Use Measurement Matrix"
+
+#. CyclogramRepFrm..CommonGB..ShowReportCB..Caption
+#: forms/uCyclogramRepFrm.dfm:688
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..OpenReportCB..Hint
+#: forms/uRzdFrm.dfm:3498
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..ExtImagesCB..Hint
+#: forms/uRzdFrm.dfm:3522
+#. CyclogramRepFrm..CommonGB..ShowReportCB..Caption
+#: forms/back/uCyclogramRepFrm.dfm:401
+#: .\forms\uCyclogramRepFrm.dfm:688
+#: .\forms\uRzdFrm.dfm:3498
+#: .\forms\uRzdFrm.dfm:3522
+#: .\forms\back\uCyclogramRepFrm.dfm:401
+msgid "Открыть отчет после создания"
+msgstr "Open Report After Creation"
+
+#. RptFrm..Panel5..BandsTC..TabSheet1..AbsDropToEndBtn..Caption
+#: forms/uRptFrm.dfm:1544
+#: .\forms\uRptFrm.dfm:1544
+msgid "Сбросить в конец"
+msgstr "Reset to End"
+
+#. EditSelsinFrm..STypeCB..Caption
+#: forms/uEditSelsinFrm.dfm:175
+#: .\forms\uEditSelsinFrm.dfm:175
+msgid "Сельсин"
+msgstr "Synchro"
+
+#. CyclogramRepFrm..GroupBox3..ToolBar1..LinkBtn..Caption
+#: forms/uCyclogramRepFrm.dfm:172
+#. CyclogramRepFrm..GroupBox3..ToolBar1..LinkBtn..Caption
+#: forms/back/uCyclogramRepFrm.dfm:144
+msgid "LinkBtn"
+msgstr ""
+
+#. GraphFrm..TabControl..TabSheet2..Caption
+#: forms/uGraphMngFrm.dfm:531
+#: .\forms\uGraphMngFrm.dfm:531
+msgid "Оси"
+msgstr "Axes"
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..NoiseNegLabel..Caption
+#: forms/uFindMaxForm_.dfm:268
+#: .\forms\uFindMaxForm_.dfm:268
+msgid "Шум \"-\""
+msgstr ""
+
+#. KBHMFrm..ObjGB..PropSG..SearchFooter.HintClose
+#: forms/uKBHMFrm.dfm:359
+msgid "Close"
+msgstr ""
+
+#. SelsinFrm..GroupBox1..Label3..Caption
+#: forms/uSelsinFrm.dfm:37
+#: .\forms\uSelsinFrm.dfm:37
+msgid "Размер порции, сек."
+msgstr "Chunk Size, sec."
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..TabSheet1..Panel2..GistStartLabel..Caption
+#: forms/uRzdFrm.dfm:2992
+#. TrigFrm..TrigTypeRG....Items.Strings
+#: forms/uTrigFrm.dfm:209
+#: .\forms\uRzdFrm.dfm:2992
+msgid "Старт"
+msgstr "Start"
+
+#. EditRepPropFrm..Panel1..OffBtn..Caption
+#: forms/uEditSignalsRepPropFrn.dfm:124
+#: .\forms\uEditSignalsRepPropFrn.dfm:124
+msgid "Выключить"
+msgstr "Disable"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..AlgTypeCB....Items.Strings
+#: forms/uFindMaxForm.dfm:368
+msgid "Все что выше кривой"
+msgstr ""
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..BandList......Caption
+#: forms/uFindMaxForm_.dfm:126
+#: .\forms\uFindMaxForm_.dfm:126
+msgid "Искать \"+\" макс."
+msgstr "Search \"+\" Max"
+
+#. AddScriptItemFrm..Panel2..Panel3..UnitsCBY....Items.Strings
+#: forms/uAddScriptItemFrm.dfm:209
+msgid "МПа"
+msgstr ""
+
+#. SignalPathFrm..Font.Name
+#: forms/EditSignalPathFrm.dfm:13
+#. AddRZDDataFrm..Font.Name
+#: forms/uAddRZDDatafrm.dfm:11
+#. AddScriptItemFrm..Font.Name
+#: forms/uAddScriptItemFrm.dfm:11
+#. AddScriptItemFrm..Panel2..Panel3..Label1..Font.Name
+#: forms/uAddScriptItemFrm.dfm:141
+#. EditSignalsListFrm..Font.Name
+#: forms/uAddSignalFrm.dfm:11
+#. BDIFrm..Font.Name
+#: forms/uBDIFrm.dfm:11
+#. BDIFrm..GroupBox1..Font.Name
+#: forms/uBDIFrm.dfm:26
+#. BDIFrm..GroupBox1..BaseTV..Font.Name
+#: forms/uBDIFrm.dfm:44
+#. BDIFrm..GroupBox1..BaseTV..Header.Font.Name
+#: forms/uBDIFrm.dfm:50
+#. BDIFrm..TabControl..Font.Name
+#: forms/uBDIFrm.dfm:91
+#. BDIFrm..TabControl..ObjTab..UnitsXLabel..Font.Name
+#: forms/uBDIFrm.dfm:114
+#. BDIFrm..TabControl..TestTab..Label1..Font.Name
+#: forms/uBDIFrm.dfm:146
+#. Form2..Font.Name
+#: forms/uChangeSrcFrm.dfm:11
+#. CorrectUTSFrm..Font.Name
+#: forms/uCorrectUTS.dfm:12
+#. CorrectUTSFrm..GroupBox1..Font.Name
+#: forms/uCorrectUTS.dfm:27
+#. CorrectUTSFrm..GroupBox1..StartSignalCB..Font.Name
+#: forms/uCorrectUTS.dfm:102
+#. CorrectUTSFrm..GroupBox1..Memo1..Font.Name
+#: forms/uCorrectUTS.dfm:116
+#. CorrectUTSFrm..GroupBox1..GroupBox2..Label2..Font.Name
+#: forms/uCorrectUTS.dfm:170
+#. CorrectUTSFrm..GroupBox1..GroupBox2..SignalsLB..Font.Name
+#: forms/uCorrectUTS.dfm:185
+#. CorrectUTSFrm..GroupBox1..GroupBox2..UTSLV..Font.Name
+#: forms/uCorrectUTS.dfm:214
+#. CounterFrm..Font.Name
+#: forms/uCounterFrm.dfm:12
+#. CounterFrm..GroupBox1..Font.Name
+#: forms/uCounterFrm.dfm:90
+#. CyclogramRepFrm..Font.Name
+#: forms/uCyclogramRepFrm.dfm:11
+#. EditSelsinFrm..Font.Name
+#: forms/uEdiSelsinFrm.dfm:11
+#. EditSelsinFrm..Font.Name
+#: forms/uEditSelsinFrm.dfm:11
+#. EditRepPropFrm..Font.Name
+#: forms/uEditSignalsRepPropFrn.dfm:12
+#. EditTubeFrm..Font.Name
+#: forms/uEditTubeFrm.dfm:11
+#. BalanceZeroFrm..Font.Name
+#: forms/uExtBalanceSignalsFrm.dfm:11
+#. FFTFltFrm..Font.Name
+#: forms/uFFTfltFrm.dfm:13
+#. FFTFltFrm..ActionPanel..ApplyBtn..Font.Name
+#: forms/uFFTfltFrm.dfm:52
+#. FFTFltFrm..RightPanel..ScalesLV..Font.Name
+#: forms/uFFTfltFrm.dfm:102
+#. FFTFltFrm..RightPanel..SignalsLV..Font.Name
+#: forms/uFFTfltFrm.dfm:145
+#. FFTFltFrm..EditCurvePanel..F1Label..Font.Name
+#: forms/uFFTfltFrm.dfm:190
+#. FFTFltFrm..EditCurvePanel..F2Label..Font.Name
+#: forms/uFFTfltFrm.dfm:207
+#. FFTFltFrm..EditCurvePanel..F1indLabel..Font.Name
+#: forms/uFFTfltFrm.dfm:224
+#. FFTFltFrm..EditCurvePanel..F2indLabel..Font.Name
+#: forms/uFFTfltFrm.dfm:241
+#. FFTFltFrm..EditCurvePanel..Label5..Font.Name
+#: forms/uFFTfltFrm.dfm:258
+#. FFTFltFrm..EditCurvePanel..FFTCountLabel..Font.Name
+#: forms/uFFTfltFrm.dfm:275
+#. FFTFltFrm..EditCurvePanel..OffsetLabel..Font.Name
+#: forms/uFFTfltFrm.dfm:292
+#. FFTFltFrm..EditCurvePanel..dFLabel..Font.Name
+#: forms/uFFTfltFrm.dfm:309
+#. FFTFltFrm..EditCurvePanel..SetScaleBtn..Font.Name
+#: forms/uFFTfltFrm.dfm:354
+#. FFTFltFrm..EditCurvePanel..OffsetSE..Font.Name
+#: forms/uFFTfltFrm.dfm:372
+#. FFTFltFrm..EditCurvePanel..pCountIE..Font.Name
+#: forms/uFFTfltFrm.dfm:388
+#. FFTFltFrm..EditCurvePanel..EditScaleBtn..Font.Name
+#: forms/uFFTfltFrm.dfm:436
+#. FFTInverseFrm..Font.Name
+#: forms/uFFTInverseFrm.dfm:11
+#. FFTInverseFrm..Panel1..SigTV..Header.Font.Name
+#: forms/uFFTInverseFrm.dfm:141
+#. FindMaxForm..Font.Name
+#: forms/uFindMaxForm.dfm:11
+#. FindMaxForm..Font.Name
+#: forms/uFindMaxForm_.dfm:11
+#. HilbFltFrm..Font.Name
+#: forms/uFrmHibFltFrm.dfm:11
+#. FrmSync..Font.Name
+#: forms/uFrmSync.dfm:11
+#. GenFrm..Font.Name
+#: forms/uGenForm.dfm:11
+#. GraphFrm..Font.Name
+#: forms/uGraphMngFrm.dfm:11
+#. GraphFrm..GraphTV..Header.Font.Name
+#: forms/uGraphMngFrm.dfm:980
+#. IntervalFrm..Font.Name
+#: forms/uIntervalFrm.dfm:13
+#. KBHMFrm..Font.Name
+#: forms/uKBHMFrm.dfm:11
+#. KBHMFrm..ObjGB..PropSG..Font.Name
+#: forms/uKBHMFrm.dfm:262
+#. KBHMFrm..ObjGB..PropSG..ControlLook.DropDownHeader.Font.Name
+#: forms/uKBHMFrm.dfm:285
+#. KBHMFrm..ObjGB..PropSG..ControlLook.DropDownFooter.Font.Name
+#: forms/uKBHMFrm.dfm:292
+#. KBHMFrm..ObjGB..PropSG..FilterDropDown.Font.Name
+#: forms/uKBHMFrm.dfm:301
+#. KBHMFrm..ObjGB..PropSG..FixedFont.Name
+#: forms/uKBHMFrm.dfm:320
+#. KBHMFrm..ObjGB..PropSG..PrintSettings.Font.Name
+#: forms/uKBHMFrm.dfm:331
+#. KBHMFrm..ObjGB..PropSG..PrintSettings.FixedFont.Name
+#: forms/uKBHMFrm.dfm:336
+#. KBHMFrm..ObjGB..PropSG..SearchFooter.Font.Name
+#: forms/uKBHMFrm.dfm:356
+#. KBHMFrm..ChanGB..GraphTV..Header.Font.Name
+#: forms/uKBHMFrm.dfm:562
+#. LissajousFrm..Font.Name
+#: forms/uLissajousFrm.dfm:11
+#. LissajousFrm..RightGB..pNumLabel..Font.Name
+#: forms/uLissajousFrm.dfm:53
+#. LissajousFrm..RightGB..F1Label..Font.Name
+#: forms/uLissajousFrm.dfm:88
+#. LissajousFrm..RightGB..Label3..Font.Name
+#: forms/uLissajousFrm.dfm:101
+#. LissajousFrm..RightGB..Label5..Font.Name
+#: forms/uLissajousFrm.dfm:114
+#. LissajousFrm..RightGB..Label6..Font.Name
+#: forms/uLissajousFrm.dfm:127
+#. LissajousFrm..RightGB..Label7..Font.Name
+#: forms/uLissajousFrm.dfm:140
+#. LissajousFrm..RightGB..pCount..Font.Name
+#: forms/uLissajousFrm.dfm:240
+#. LissajousFrm..RightGB..Panel1..Label4..Font.Name
+#: forms/uLissajousFrm.dfm:321
+#. MNKFrm..Font.Name
+#: forms/uMNKFrm.dfm:11
+#. RptFrm..Font.Name
+#: forms/uRptFrm.dfm:12
+#. RptFrm..RightPanel..RightPC..SignalsTS..SignalsTV..Header.Font.Name
+#: forms/uRptFrm.dfm:2222
+#. RZDFrm..Font.Name
+#: forms/uRzdFrm.dfm:13
+#. RZDFrm..PathPanel..VTree1..Header.Font.Name
+#: forms/uRzdFrm.dfm:2347
+#. SaveSimpleMeraFrm..Font.Name
+#: forms/uSaveSimpleMeraFrm.dfm:11
+#. ScriptFrm..Font.Name
+#: forms/uScriptFrm.dfm:11
+#. ScriptFrm..PanelTools..BaseTV..Font.Name
+#: forms/uScriptFrm.dfm:170
+#. ScriptFrm..PanelTools..BaseTV..Header.Font.Name
+#: forms/uScriptFrm.dfm:176
+#. ScriptFrm..RichEdit1..Font.Name
+#: forms/uScriptFrm.dfm:301
+#. SelectIntervalFrm..Font.Name
+#: forms/uSelectIntervalFrm.dfm:11
+#. SelectIntervalFrm..Panel1..ApplyBtn..Font.Name
+#: forms/uSelectIntervalFrm.dfm:141
+#. SelectIntervalFrm..AutoGroup..Font.Name
+#: forms/uSelectIntervalFrm.dfm:187
+#. SelectIntervalFrm..AutoGroup..ActiveLabel..Font.Name
+#: forms/uSelectIntervalFrm.dfm:226
+#. SelectIntervalFrm..AutoGroup..EvalBtn..Font.Name
+#: forms/uSelectIntervalFrm.dfm:269
+#. SelectPathFrm..Font.Name
+#: forms/uSelectPathForm.dfm:13
+#. SelsinFrm..Font.Name
+#: forms/uSelsinFrm.dfm:11
+#. SpmFrm..Font.Name
+#: forms/uSpmFrm.dfm:13
+#. SubRegsFrm..Font.Name
+#: forms/uSubRegsFrm.dfm:11
+#. TrigFrm..Font.Name
+#: forms/uTrigFrm.dfm:13
+#. TrigLvlFrm..Font.Name
+#: forms/uTrigLvlEditFrm.dfm:11
+#. TrigsFrm..Font.Name
+#: forms/uTrigsFrm.dfm:11
+#. TrigsFrm..TriListGB..VTree1..Header.Font.Name
+#: forms/uTrigsFrm.dfm:44
+#. FxForm..Font.Name
+#: forms/uWPProcFrm.dfm:11
+#. FxForm..SignalsGB..StatusBar1..Font.Name
+#: forms/uWPProcFrm.dfm:164
+#. FxForm..OperatorsGB..GroupBox1..VTree1..Header.Font.Name
+#: forms/uWPProcFrm.dfm:361
+#. AddScriptItemFrm..Font.Name
+#: forms/back/uAddScriptItemFrm.dfm:11
+#. AddScriptItemFrm..Panel2..Panel3..Label1..Font.Name
+#: forms/back/uAddScriptItemFrm.dfm:102
+#. CyclogramRepFrm..Font.Name
+#: forms/back/uCyclogramRepFrm.dfm:11
+msgid "Tahoma"
+msgstr ""
+
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..StartTrigLabel..Caption
+#: forms/uGraphMngFrm.dfm:220
+#: .\forms\uGraphMngFrm.dfm:220
+msgid "Триггер по старту"
+msgstr "Start Trigger"
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..NoisePositiveLabel..Caption
+#: forms/uFindMaxForm_.dfm:254
+#: .\forms\uFindMaxForm_.dfm:254
+msgid "Шум \"+\""
+msgstr ""
+
+#. FxForm..MainMenu1..ExtMenuItem..N2..Caption
+#: forms/uWPProcFrm.dfm:407
+#: .\forms\uWPProcFrm.dfm:407
+msgid "Скрипты"
+msgstr "Scripts"
+
+#. SpmFrame..WndCB....Items.Strings
+#: forms/frames/uSpmFrame.dfm:49
+#. WPSpmFrame..WndCB....Items.Strings
+#: forms/frames/uWPSpmFrame.dfm:49
+msgid "Блэкман"
+msgstr ""
+
+#. AddRZDDataFrm..Panel2..RegionLabel..Caption
+#: forms/uAddRZDDatafrm.dfm:127
+#: .\forms\uAddRZDDatafrm.dfm:127
+msgid "Участок пути №:"
+msgstr "Track Section ID:"
+
+#. FxForm..LoadScriptGB..ToolBar1..EvalBtn..Caption
+#: forms/uWPProcFrm.dfm:282
+msgid "EvalBtn"
+msgstr ""
+
+#. Form2..BtnListView1......Caption
+#: forms/uChangeSrcFrm.dfm:33
+#. TrigFrm..TrigLV......Caption
+#: forms/uTrigFrm.dfm:84
+#. FxForm..ProcSignalsGB..GroupBox2..OpersSrc......Caption
+#: forms/uWPProcFrm.dfm:64
+#. FxForm..ProcSignalsGB..GroupBox3..SrcLV......Caption
+#: forms/uWPProcFrm.dfm:107
+msgid "ID"
+msgstr ""
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..ImportBtn..Caption
+#: forms/uFindMaxForm.dfm:336
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..IdentBandsGB..ImportBtn..Caption
+#: forms/uFindMaxForm_.dfm:212
+#. RZDFrm..MatrixPanel..ImpMatrixBtn..Caption
+#: forms/uRzdFrm.dfm:2491
+#: .\forms\uFindMaxForm.dfm:336
+#: .\forms\uFindMaxForm_.dfm:212
+#: .\forms\uRzdFrm.dfm:2491
+msgid "Импорт"
+msgstr "Import"
+
+#. GenFrm..TabControl..ShockPage..RefNameLabel..Caption
+#: forms/uGenForm.dfm:275
+#: .\forms\uGenForm.dfm:275
+msgid "Отклик"
+msgstr "Response"
+
+#. EditSelsinFrm..GroupBox1..AutoCalibrCB..Caption
+#: forms/uEdiSelsinFrm.dfm:240
+#: .\forms\uEdiSelsinFrm.dfm:240
+msgid "Автокалибровка"
+msgstr "Auto-Calibration"
+
+#. WPNameFltFrame..Panel1..Panel2..PropFltCB..Caption
+#: forms/frames/uWPNameFilterFrame.dfm:481
+#: .\forms\frames\uWPNameFilterFrame.dfm:481
+msgid "Фильтр по свойствам"
+msgstr "Property Filter"
+
+#. RptFrm..Panel5..AutoBandsPC..TabSheet3..Threshold..Text
+#: forms/uRptFrm.dfm:1967
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..TabSheet1..Panel2..GistTrigFE..Text
+#: forms/uRzdFrm.dfm:3213
+#. TrigFrm..TrigTheresholdE..Text
+#: forms/uTrigFrm.dfm:133
+#. TrigsFrm..AddTrigGB..CommonName..LvlEdit..Text
+#: forms/uTrigsFrm.dfm:417
+#. TrigsFrm..AddTrigGB..lvlGB..TrigResEdit..Text
+#: forms/uTrigsFrm.dfm:1210
+#. TrigsFrm..AddTrigGB..FilterGB..FilterFE..Text
+#: forms/uTrigsFrm.dfm:2002
+#. TrigsFrm..AddTrigGB..FilterGB..HPFfe..Text
+#: forms/uTrigsFrm.dfm:2079
+#. TrigsFrm..AddTrigGB..FilterGB..FloatEdit1..Text
+#: forms/uTrigsFrm.dfm:2104
+msgid "0.5"
+msgstr ""
+
+#. CounterFrm..Panel1..AllTestBtn..Caption
+#: forms/uCounterFrm.dfm:255
+msgid "AllTest"
+msgstr ""
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Panel1..CurvsPanel..CurveTypePC..РљСЂРёРІР°СЏ..Caption
+#: forms/uFindMaxForm.dfm:677
+#: .\forms\uFindMaxForm.dfm:677
+msgid "Кривая"
+msgstr "Curve"
+
+#. KBHMFrm..ObjGB..PropSG....FilterEdit.TypeNames.Strings
+#: forms/uKBHMFrm.dfm:315
+msgid "Clear"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..FltPanel..TrendPortionILabel..Caption
+#: forms/uRzdFrm.dfm:3549
+#: .\forms\uRzdFrm.dfm:3549
+msgid "Тчк усредн."
+msgstr "Avg. Points"
+
+#. FFTInverseFrm..Caption
+#: forms/uFFTInverseFrm.dfm:4
+#: .\forms\uFFTInverseFrm.dfm:4
+msgid "Обратное преобразование Фурье"
+msgstr "Inverse Fourier Transform"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Panel1..CurvsPanel..CurveTypePC..РљСЂРёРІР°СЏ..YLabel..Caption
+#: forms/uFindMaxForm.dfm:702
+msgid "Y:"
+msgstr ""
+
+#. EditTubeFrm..GroupBox1..Label1..Caption
+#: forms/uEditTubeFrm.dfm:33
+#: .\forms\uEditTubeFrm.dfm:33
+msgid "Путь к файлу"
+msgstr ""
+
+#. KBHMFrm..ObjGB..PropSG..HTMLSettings.ImageBaseName
+#: forms/uKBHMFrm.dfm:326
+msgid "img"
+msgstr ""
+
+#. RZDFrm..PathPanel..VertPanel..TareNamePanel..LabelsPanel..S1Label..Caption
+#: forms/uRzdFrm.dfm:892
+#: .\forms\uRzdFrm.dfm:892
+msgid "Датчик №1:"
+msgstr "Sensor #1:"
+
+#. BalanceZeroFrm..Panel2..PathEdit..Text
+#: forms/uExtBalanceSignalsFrm.dfm:110
+msgid "PathEdit"
+msgstr ""
+
+#. GenFrm..TabControl..ShockPage..PauseLabel..Caption
+#: forms/uGenForm.dfm:261
+msgid "Pause, sec"
+msgstr ""
+
+#. CyclogramRepFrm..GroupBox3..GroupBox4..ChanTypeRG....Items.Strings
+#: forms/uCyclogramRepFrm.dfm:249
+#. CyclogramRepFrm..GroupBox3..GroupBox4..ChanTypeRG....Items.Strings
+#: forms/back/uCyclogramRepFrm.dfm:201
+msgid "Цифровой вывод"
+msgstr ""
+
+#. CyclogramRepFrm..CommonGB..LoadBtn..Caption
+#: forms/uCyclogramRepFrm.dfm:333
+#. EditTubeFrm..GroupBox1..OpenBtn..Caption
+#: forms/uEditTubeFrm.dfm:59
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..PathBtn..Caption
+#: forms/uFindMaxForm.dfm:350
+#. FindMaxForm..BandTS..SavePage..GroupBox2..SavePathBtn..Caption
+#: forms/uFindMaxForm.dfm:1073
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..IdentBandsGB..PathBtn..Caption
+#: forms/uFindMaxForm_.dfm:222
+#. FindMaxForm..TabPanel..SavePage..GroupBox2..SavePathBtn..Caption
+#: forms/uFindMaxForm_.dfm:494
+#. LissajousFrm..RightGB..OkBtn..Caption
+#: forms/uLissajousFrm.dfm:293
+#. MeraFileMngFrm..SelectPathBtn1..Caption
+#: forms/uMainFrm.dfm:98
+#. MeraFileMngFrm..SelectPathBtn2..Caption
+#: forms/uMainFrm.dfm:109
+#. MeraFileMngFrm..SelectPathBtn3..Caption
+#: forms/uMainFrm.dfm:169
+#. RptFrm..BandPanel..SpmBtn..Caption
+#: forms/uRptFrm.dfm:2336
+#. RptFrm..BandPanel..EditFltBtn..Caption
+#: forms/uRptFrm.dfm:2392
+#. RZDFrm..PathPanel..BaseFolderPanel..BaseFolderBtn..Caption
+#: forms/uRzdFrm.dfm:232
+#. RZDFrm..MatrixPanel..ExportMatrixBtn..Caption
+#: forms/uRzdFrm.dfm:2525
+#. RZDFrm..MatrixPanel..ImportMatrixBtn..Caption
+#: forms/uRzdFrm.dfm:2535
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..TestPathBtn..Caption
+#: forms/uRzdFrm.dfm:3453
+#. ScriptFrm..Panel1..Button1..Caption
+#: forms/uScriptFrm.dfm:287
+#. FxForm..LoadScriptGB..SelectSavePathBtn..Caption
+#: forms/uWPProcFrm.dfm:243
+#. FxForm..LoadScriptGB..SelectLoadPathBtn..Caption
+#: forms/uWPProcFrm.dfm:253
+#. CyclogramRepFrm..CommonGB..LoadBtn..Caption
+#: forms/back/uCyclogramRepFrm.dfm:261
+#. RZDTareFrame..PathBtn..Caption
+#: forms/frames/uRZDTareFrame.dfm:154
+#. TmpltNameFrame..FolderBtn..Caption
+#: forms/frames/uTmpltNameFrame.dfm:65
+#. TmpltNameFrame..TmpltBtn..Caption
+#: forms/frames/uTmpltNameFrame.dfm:75
+#. TmpltNameFrame..PathBtn..Caption
+#: forms/frames/uTmpltNameFrame.dfm:157
+msgid "..."
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..TestsFolderE..Text
+#: forms/uRzdFrm.dfm:3478
+msgid ".\\Tests\\"
+msgstr ""
+
+#. TmpltNameFrame..FolderRG....Items.Strings
+#: forms/frames/uTmpltNameFrame.dfm:147
+msgid "Каталог замера"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..FltPanel..TrendCB..Caption
+#: forms/uRzdFrm.dfm:3623
+#: .\forms\uRzdFrm.dfm:3623
+msgid "Усреднять сигнал"
+msgstr "Average Signal"
+
+#. CyclogramRepFrm..GroupBox1..ChansLV......Caption
+#: forms/uCyclogramRepFrm.dfm:66
+#. CyclogramRepFrm..GroupBox1..ChansLV......Caption
+#: forms/back/uCyclogramRepFrm.dfm:53
+#: .\forms\uCyclogramRepFrm.dfm:66
+#: .\forms\back\uCyclogramRepFrm.dfm:53
+msgid "Триггер1"
+msgstr "Trigger 1"
+
+#. RZDFrm..PathPanel..VertPanel..NullCb..Caption
+#: forms/uRzdFrm.dfm:2271
+#: .\forms\uRzdFrm.dfm:2271
+msgid "Балансировать ноль"
+msgstr "Balance Zero"
+
+#. FindMaxForm..BandTS..SavePage..GroupBox2..LgY..Caption
+#: forms/uFindMaxForm.dfm:1057
+#. FindMaxForm..TabPanel..SavePage..GroupBox2..LgY..Caption
+#: forms/uFindMaxForm_.dfm:482
+msgid "LgY"
+msgstr ""
+
+#. WPNameFltFrame..Panel1..Panel2..DscFltCB..Caption
+#: forms/frames/uWPNameFilterFrame.dfm:461
+#: .\forms\frames\uWPNameFilterFrame.dfm:461
+msgid "Фильтр по подстроке в описании"
+msgstr "Description Substring Filter"
+
+#. RZDFrm..PathPanel..BaseFolderPanel..UpdatePathBtn..Hint
+#: forms/uRzdFrm.dfm:73
+#: .\forms\uRzdFrm.dfm:73
+msgid "Обновить пути в базе"
+msgstr "Update DB Paths"
+
+#. FFTFltFrm..RightPanel..SignalsLV......Caption
+#: forms/uFFTfltFrm.dfm:137
+#. RptFrm..RightPanel..RightPC..SignalsTS..Caption
+#: forms/uRptFrm.dfm:2204
+#: .\forms\uFFTfltFrm.dfm:137
+#: .\forms\uRptFrm.dfm:2204
+msgid "Сигналы"
+msgstr "Signals"
+
+#. GenFrm..ActionGB..GroupBox3..A2Label..Caption
+#: forms/uGenForm.dfm:148
+msgid "A2"
+msgstr ""
+
+#. AddScriptItemFrm..Panel2..Panel3..UnitsCBY....Items.Strings
+#: forms/uAddScriptItemFrm.dfm:207
+msgid "Па"
+msgstr ""
+
+#. RptFrm..MainMenu1..N1..Caption
+#: forms/uRptFrm.dfm:6675
+#: .\forms\uRptFrm.dfm:6675
+msgid "Дополнительно"
+msgstr "Advanced"
+
+#. RZDFrm..PathPanel..VertPanel..TareNamePanel..LabelsPanel..HFLabel..Caption
+#: forms/uRzdFrm.dfm:885
+#: .\forms\uRzdFrm.dfm:885
+msgid "Гор. тяга:"
+msgstr "Hor. Thrust:"
+
+#. KBHMFrm..ObjGB..PropSG..ActiveCellFont.Name
+#: forms/uKBHMFrm.dfm:272
+#. KBHMFrm..ObjGB..PropSG..PrintSettings.HeaderFont.Name
+#: forms/uKBHMFrm.dfm:341
+#. KBHMFrm..ObjGB..PropSG..PrintSettings.FooterFont.Name
+#: forms/uKBHMFrm.dfm:346
+msgid "MS Sans Serif"
+msgstr ""
+
+#. RZDTareFrame..T2Label..Caption
+#: forms/frames/uRZDTareFrame.dfm:26
+#. RZDTareFrame..Label2..Caption
+#: forms/frames/uRZDTareFrame.dfm:42
+msgid "T2="
+msgstr ""
+
+#. SelectIntervalFrm..ModeRG....Items.Strings
+#: forms/uSelectIntervalFrm.dfm:29
+#. IntervalFrame..ModeRG....Items.Strings
+#: forms/frames/uIntervalFrame.dfm:91
+msgid "Задать вручную"
+msgstr ""
+
+#. SpmFrame..SpmTypeCB....Items.Strings
+#: forms/frames/uSpmFrame.dfm:64
+#. WPSpmFrame..SpmTypeCB....Items.Strings
+#: forms/frames/uWPSpmFrame.dfm:64
+msgid "Спектр плотности мощности"
+msgstr ""
+
+#. MeraFileMngFrm..StartSE1....Hint
+#: forms/uMainFrm.dfm:180
+msgid ""
+"Второй файл будет начинаться с секунды указанной в индикаторе (т.е. время не должно быть больше чем длина первого файла)"
+msgstr ""
+
+#. GenFrm..ActionGB..GroupBox2..F1Label..Caption
+#: forms/uGenForm.dfm:77
+#: .\forms\uGenForm.dfm:77
+msgid "Нач. частота F1, Гц"
+msgstr "Starting F1, Hz"
+
+#. RZDFrm..PathPanel..VertPanel..TareNamePanel..LabelsPanel..VCPathLabel..Caption
+#: forms/uRzdFrm.dfm:899
+#: .\forms\uRzdFrm.dfm:899
+msgid "Путь к файлу:"
+msgstr "File Path:"
+
+#. HilbFltFrm..Label2..Caption
+#: forms/uFrmHibFltFrm.dfm:47
+#: .\forms\uFrmHibFltFrm.dfm:47
+msgid "Размер порции, с"
+msgstr "Chunk Size, sec."
+
+#. RZDFrm..PathPanel..VertPanel..FmaxEdit..Text
+#: forms/uRzdFrm.dfm:2247
+#. RZDFrm..PathPanel..VertPanel..GtmaxEdit..Text
+#: forms/uRzdFrm.dfm:2286
+msgid "0,1"
+msgstr ""
+
+#. FFTInverseFrm..NumPointsLabel..Caption
+#: forms/uFFTInverseFrm.dfm:21
+#. HilbFltFrm..NumPointsLabel..Caption
+#: forms/uFrmHibFltFrm.dfm:25
+#. MNKFrm..Label1..Caption
+#: forms/uMNKFrm.dfm:32
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..Label1..Caption
+#: forms/uRzdFrm.dfm:3419
+#. TrigsFrm..AddTrigGB..FilterGB..NumPointsLabel..Caption
+#: forms/uTrigsFrm.dfm:1978
+#. SpmFrame..NumPointsLabel..Caption
+#: forms/frames/uSpmFrame.dfm:34
+#. WPSpmFrame..NumPointsLabel..Caption
+#: forms/frames/uWPSpmFrame.dfm:34
+#: .\forms\uFFTInverseFrm.dfm:21
+#: .\forms\uFrmHibFltFrm.dfm:25
+#: .\forms\uMNKFrm.dfm:32
+#: .\forms\uRzdFrm.dfm:3419
+#: .\forms\uTrigsFrm.dfm:1978
+#: .\forms\frames\uSpmFrame.dfm:34
+#: .\forms\frames\uWPSpmFrame.dfm:34
+msgid "Число точек"
+msgstr "Number of points"
+
+#. FindMaxForm..BandTS..SavePage..GroupBox2..Label2..Caption
+#: forms/uFindMaxForm.dfm:1035
+#. FindMaxForm..TabPanel..SavePage..GroupBox2..Label2..Caption
+#: forms/uFindMaxForm_.dfm:468
+#: .\forms\uFindMaxForm.dfm:1035
+#: .\forms\uFindMaxForm_.dfm:468
+msgid "Чувствительность кэкстремумам"
+msgstr "Extremes Sensitivity"
+
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:287
+#: .\forms\uSelsinFrm.dfm:287
+msgid "Модуль"
+msgstr "Module"
+
+#. GraphFrm..TabControl..TabSheet1..XminLabel..Caption
+#: forms/uGraphMngFrm.dfm:98
+#. GraphFrm..TabControl..TabSheet2..YminLabel..Caption
+#: forms/uGraphMngFrm.dfm:553
+#: .\forms\uGraphMngFrm.dfm:98
+#: .\forms\uGraphMngFrm.dfm:553
+msgid "Минимум"
+msgstr "Minimum"
+
+#. EditTubeFrm..SignalsLV......Caption
+#: forms/uEditTubeFrm.dfm:116
+#: .\forms\uEditTubeFrm.dfm:116
+msgid "Имя трубки допуска"
+msgstr "Tolerance Tube Name"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..ThresholdLabel..Caption
+#: forms/uFindMaxForm.dfm:294
+#. TrigFrm..TrigLV......Caption
+#: forms/uTrigFrm.dfm:90
+#. TrigsFrm..TriListGB..VTree1......WideText
+#: forms/uTrigsFrm.dfm:71
+#: .\forms\uFindMaxForm.dfm:294
+#: .\forms\uTrigFrm.dfm:90
+msgid "Порог"
+msgstr "Threshold"
+
+#. HilbFltFrm..AutoCB..Caption
+#: forms/uFrmHibFltFrm.dfm:191
+#: .\forms\uFrmHibFltFrm.dfm:191
+msgid "Авто"
+msgstr "Auto"
+
+#. Form2..BtnListView1......Caption
+#: forms/uChangeSrcFrm.dfm:30
+#: .\forms\uChangeSrcFrm.dfm:30
+msgid "Существующий источник"
+msgstr "Existing Source"
+
+#. KBHMFrm..ObjGB..PropSG....FilterEdit.TypeNames.Strings
+#: forms/uKBHMFrm.dfm:309
+msgid "Contains"
+msgstr ""
+
+#. CyclogramRepFrm..GroupBox3..GroupBox4..Label4..Caption
+#: forms/uCyclogramRepFrm.dfm:223
+#. CyclogramRepFrm..GroupBox3..GroupBox4..Label4..Caption
+#: forms/back/uCyclogramRepFrm.dfm:183
+#: .\forms\uCyclogramRepFrm.dfm:223
+#: .\forms\back\uCyclogramRepFrm.dfm:183
+msgid "Канал сброса времени"
+msgstr "Time Reset Channel"
+
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:259
+msgid "Min1"
+msgstr ""
+
+#. CounterFrm..ThresholdLabel2..Caption
+#: forms/uCounterFrm.dfm:37
+msgid "Lo, lvl, %"
+msgstr ""
+
+#. FFTFltFrm..RightPanel..ScalesLV......Caption
+#: forms/uFFTfltFrm.dfm:90
+#. FFTFltFrm..RightPanel..SignalsLV......Caption
+#: forms/uFFTfltFrm.dfm:133
+#: .\forms\uFFTfltFrm.dfm:90
+#: .\forms\uFFTfltFrm.dfm:133
+msgid "Инд."
+msgstr "Index"
+
+#. FindMaxForm..BandTS..SavePage..GroupBox2..SavePathBtn..Hint
+#: forms/uFindMaxForm.dfm:1068
+#. FindMaxForm..TabPanel..SavePage..GroupBox2..SavePathBtn..Hint
+#: forms/uFindMaxForm_.dfm:493
+#: .\forms\uFindMaxForm.dfm:1068
+#: .\forms\uFindMaxForm_.dfm:493
+msgid "Выбор пути для сохранения результатов экспрес анализа в файл"
+msgstr "Select path for Express Analysis Results saving"
+
+#. GenFrm..ActionGB..GroupBox2..FreqRG....Items.Strings
+#: forms/uGenForm.dfm:113
+#. GenFrm..ActionGB..GroupBox3..AmpRG....Items.Strings
+#: forms/uGenForm.dfm:177
+msgid "Экспоненциальный"
+msgstr ""
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..LevelPosLabel..Caption
+#: forms/uFindMaxForm_.dfm:261
+#: .\forms\uFindMaxForm_.dfm:261
+msgid "Уровень \"-\""
+msgstr ""
+
+#. TrigsFrm..AddTrigGB..CommonName..UnitsLabel..Caption
+#: forms/uTrigsFrm.dfm:286
+#: .\forms\uTrigsFrm.dfm:286
+msgid "Единицы для порога"
+msgstr "Threshold Units"
+
+#. BDIFrm..TabControl..TestTab..Label1..Caption
+#: forms/uBDIFrm.dfm:142
+#: .\forms\uBDIFrm.dfm:142
+msgid "Имя испытания"
+msgstr "Test Name"
+
+#. HilbFltFrm..Label3..Caption
+#: forms/uFrmHibFltFrm.dfm:58
+#. ScriptFrm..Panel1..T1Label..Caption
+#: forms/uScriptFrm.dfm:230
+msgid "T1"
+msgstr ""
+
+#. RZDFrm..MatrixPanel..DelMatrixOnExpCB..Caption
+#: forms/uRzdFrm.dfm:2582
+#: .\forms\uRzdFrm.dfm:2582
+msgid "Заместить файл"
+msgstr "Overwrite File"
+
+#. EditSelsinFrm..Label6..Caption
+#: forms/uEdiSelsinFrm.dfm:21
+#. EditSelsinFrm..Label6..Caption
+#: forms/uEditSelsinFrm.dfm:24
+msgid "L1:"
+msgstr ""
+
+#. ScriptFrm..Panel1..Label1..Caption
+#: forms/uScriptFrm.dfm:223
+#. ScriptFrm..Panel1..PathLabel..Caption
+#: forms/uScriptFrm.dfm:244
+#: .\forms\uScriptFrm.dfm:223
+#: .\forms\uScriptFrm.dfm:244
+msgid "Период выполнения скрипта"
+msgstr "Script Execution Period"
+
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..Caption
+#: forms/uGraphMngFrm.dfm:209
+#: .\forms\uGraphMngFrm.dfm:209
+msgid "Поиск границ отображения"
+msgstr "Search View Limits"
+
+#. RptFrm..BandPanel..SelectAllEstsCB..Caption
+#: forms/uRptFrm.dfm:2379
+#: .\forms\uRptFrm.dfm:2379
+msgid "Выбрать все оценки"
+msgstr "Select All Evaluations"
+
+#. GenFrm..ActionGB..Label2..Caption
+#: forms/uGenForm.dfm:43
+#: .\forms\uGenForm.dfm:43
+msgid "Фаза, рад."
+msgstr "Phase, rad."
+
+#. FxForm..MainMenu1..ExtMenuItem..Caption
+#: forms/uWPProcFrm.dfm:397
+#: .\forms\uWPProcFrm.dfm:397
+msgid "Дополнения"
+msgstr "Add-ons"
+
+#. GraphFrm..TabControl..TabSheet3..LineTypeLabel..Caption
+#: forms/uGraphMngFrm.dfm:725
+#: .\forms\uGraphMngFrm.dfm:725
+msgid "Тип линии"
+msgstr "Line Type"
+
+#. CyclogramRepFrm..Caption
+#: forms/uCyclogramRepFrm.dfm:4
+#. CyclogramRepFrm..Caption
+#: forms/back/uCyclogramRepFrm.dfm:4
+#: .\forms\uCyclogramRepFrm.dfm:4
+#: .\forms\back\uCyclogramRepFrm.dfm:4
+msgid "Настройка отчета циклограммы (версия 24.08.18)"
+msgstr ""
+
+#. TrigsFrm..AddTrigGB..ExtremumTrigGB..Panel1..SearchIntervalTab..TabSheet1..Label7..Caption
+#: forms/uTrigsFrm.dfm:194
+#: .\forms\uTrigsFrm.dfm:194
+msgid "X2 смещение от X1 (сек.):"
+msgstr "X2 Offset from X1 (sec):"
+
+#. LissajousFrm..RightGB..Label3..Caption
+#: forms/uLissajousFrm.dfm:97
+msgid "Axis Y:"
+msgstr ""
+
+#. GraphFrm..TabControl..TabSheet3..LineColorLabel..Caption
+#: forms/uGraphMngFrm.dfm:692
+#: .\forms\uGraphMngFrm.dfm:692
+msgid "Цвет:"
+msgstr "Color:"
+
+#. KBHMFrm..ObjGB..PropSG..PrintSettings.DateFormat
+#: forms/uKBHMFrm.dfm:327
+msgid "dd/mm/yyyy"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..MatrixLV......Caption
+#: forms/uRzdFrm.dfm:2898
+#: .\forms\uRzdFrm.dfm:2898
+msgid "Рег."
+msgstr "Reg."
+
+#. CorrectUTSFrm..GroupBox1..EvalBtn..Caption
+#: forms/uCorrectUTS.dfm:274
+#. SelectIntervalFrm..AutoGroup..EvalBtn..Caption
+#: forms/uSelectIntervalFrm.dfm:265
+#: .\forms\uCorrectUTS.dfm:274
+#: .\forms\uSelectIntervalFrm.dfm:265
+msgid "Вычислить"
+msgstr "Calculate"
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..MOOffsetCB..Caption
+#: forms/uFindMaxForm_.dfm:402
+#: .\forms\uFindMaxForm_.dfm:402
+msgid "Отклонение от среднего (МО)"
+msgstr "Mean Deviation (RMS)"
+
+#. SpmFrame..SpmResCB....Items.Strings
+#: forms/frames/uSpmFrame.dfm:77
+#. WPSpmFrame..SpmResCB....Items.Strings
+#: forms/frames/uWPSpmFrame.dfm:77
+msgid "Размах"
+msgstr ""
+
+#. BalanceZeroFrm..Panel2..Label1..Caption
+#: forms/uExtBalanceSignalsFrm.dfm:58
+#: .\forms\uExtBalanceSignalsFrm.dfm:58
+msgid "Начало"
+msgstr "Start"
+
+#. AddScriptItemFrm..UnitsCBX..Text
+#: forms/uAddScriptItemFrm.dfm:226
+#. AddScriptItemFrm..UnitsCBX....Items.Strings
+#: forms/uAddScriptItemFrm.dfm:228
+msgid "sec"
+msgstr ""
+
+#. GraphFrm..TabControl..РЎС‚СЂР°РЅРёС†С‹..Caption
+#: forms/uGraphMngFrm.dfm:846
+#: .\forms\uGraphMngFrm.dfm:846
+msgid "Страницы"
+msgstr "Pages"
+
+#. FFTInverseFrm..Panel1..ChannelsLV......Caption
+#: forms/uFFTInverseFrm.dfm:167
+msgid "Re"
+msgstr ""
+
+#. ScriptFrm..MainMenu1..N16..Caption
+#: forms/uScriptFrm.dfm:339
+#: .\forms\uScriptFrm.dfm:339
+msgid "Тест"
+msgstr "Test"
+
+#. RptFrm..RightPanel..RightPC..OptionsTS..ParamsGB..Panel3..Panel4..ApplyParamBtn..Caption
+#: forms/uRptFrm.dfm:2125
+#: .\forms\uRptFrm.dfm:2125
+msgid "Прим."
+msgstr "Note"
+
+#. FFTFltFrm..EditCurvePanel..EditScaleBtn..Caption
+#: forms/uFFTfltFrm.dfm:432
+#: .\forms\uFFTfltFrm.dfm:432
+msgid "Редактировать"
+msgstr "Edit"
+
+#. SpmFrame..WndCB..Text
+#: forms/frames/uSpmFrame.dfm:43
+#. SpmFrame..WndCB....Items.Strings
+#: forms/frames/uSpmFrame.dfm:45
+#. WPSpmFrame..WndCB..Text
+#: forms/frames/uWPSpmFrame.dfm:43
+#. WPSpmFrame..WndCB....Items.Strings
+#: forms/frames/uWPSpmFrame.dfm:45
+#: .\forms\frames\uSpmFrame.dfm:43
+#: .\forms\frames\uWPSpmFrame.dfm:43
+msgid "Прямоугольное"
+msgstr "Rectangular"
+
+#. RZDFrm..ScrollBox1..EvalGB..FltPanel..LPFfreqLabel..Caption
+#: forms/uRzdFrm.dfm:3582
+#. TrigsFrm..AddTrigGB..FilterGB..Label9..Caption
+#: forms/uTrigsFrm.dfm:1945
+#. TrigsFrm..AddTrigGB..FilterGB..Label11..Caption
+#: forms/uTrigsFrm.dfm:1967
+#: .\forms\uRzdFrm.dfm:3582
+#: .\forms\uTrigsFrm.dfm:1945
+#: .\forms\uTrigsFrm.dfm:1967
+msgid "Частота среза"
+msgstr "Cutoff Frequency"
+
+#. LissajousFrm..GraphLV......Caption
+#: forms/uLissajousFrm.dfm:406
+msgid "Sx"
+msgstr ""
+
+#. KBHMFrm..ObjGB..PropSG....FilterEdit.TypeNames.Strings
+#: forms/uKBHMFrm.dfm:313
+msgid "Larger than"
+msgstr ""
+
+#. SignalPathFrm..Label2..Caption
+#: forms/EditSignalPathFrm.dfm:33
+#: .\forms\EditSignalPathFrm.dfm:33
+msgid "Назначение:"
+msgstr "Destination:"
+
+#. EditSelsinFrm..GroupBox1..SKOMax1..Text
+#: forms/uEdiSelsinFrm.dfm:193
+#. EditSelsinFrm..GroupBox1..SKOMin1..Text
+#: forms/uEdiSelsinFrm.dfm:201
+#. EditSelsinFrm..GroupBox1..SKOMax2..Text
+#: forms/uEdiSelsinFrm.dfm:209
+#. EditSelsinFrm..GroupBox1..SKOMin2..Text
+#: forms/uEdiSelsinFrm.dfm:217
+#. EditSelsinFrm..GroupBox1..SKOMax3..Text
+#: forms/uEdiSelsinFrm.dfm:225
+#. EditSelsinFrm..GroupBox1..SKOMin3..Text
+#: forms/uEdiSelsinFrm.dfm:233
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..TabSheet1..Panel2..GistNoiseFE..Text
+#: forms/uRzdFrm.dfm:3221
+#. RZDFrm..ScrollBox1..EvalGB..FltPanel..TrendPortionFE..Text
+#: forms/uRzdFrm.dfm:3615
+msgid "0.1"
+msgstr ""
+
+#. CyclogramRepFrm..CommonGB..MacrosCB..Caption
+#: forms/uCyclogramRepFrm.dfm:742
+#. CyclogramRepFrm..CommonGB..MacrosCB..Caption
+#: forms/back/uCyclogramRepFrm.dfm:439
+#: .\forms\uCyclogramRepFrm.dfm:742
+#: .\forms\back\uCyclogramRepFrm.dfm:439
+msgid "Выполнить макрос"
+msgstr "Run Macro"
+
+#. CyclogramRepFrm..GroupBox1..ChansLV......Caption
+#: forms/uCyclogramRepFrm.dfm:58
+#. CyclogramRepFrm..GroupBox3..CommonLV......Caption
+#: forms/uCyclogramRepFrm.dfm:120
+#. TrigFrm..TrigLabel..Caption
+#: forms/uTrigFrm.dfm:33
+#. TrigsFrm..AddTrigGB..CommonName..TrigLabel..Caption
+#: forms/uTrigsFrm.dfm:275
+#. CyclogramRepFrm..GroupBox1..ChansLV......Caption
+#: forms/back/uCyclogramRepFrm.dfm:47
+#. CyclogramRepFrm..GroupBox3..CommonLV......Caption
+#: forms/back/uCyclogramRepFrm.dfm:95
+#: .\forms\uCyclogramRepFrm.dfm:58
+#: .\forms\uCyclogramRepFrm.dfm:120
+#: .\forms\uTrigFrm.dfm:33
+#: .\forms\uTrigsFrm.dfm:275
+#: .\forms\back\uCyclogramRepFrm.dfm:47
+#: .\forms\back\uCyclogramRepFrm.dfm:95
+msgid "Канал"
+msgstr "Channel"
+
+#. CorrectUTSFrm..Caption
+#: forms/uCorrectUTS.dfm:4
+#. FxForm..MainMenu1..ExtMenuItem..N1..Caption
+#: forms/uWPProcFrm.dfm:403
+#: .\forms\uCorrectUTS.dfm:4
+#: .\forms\uWPProcFrm.dfm:403
+msgid "Коррекция времени"
+msgstr "Time Correction"
+
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Label1..Caption
+#: forms/uFindMaxForm_.dfm:289
+#: .\forms\uFindMaxForm_.dfm:289
+msgid "Искать экстремумы:"
+msgstr "Search Extremes:"
+
+#. SignalPathFrm..Caption
+#: forms/EditSignalPathFrm.dfm:4
+#: .\forms\EditSignalPathFrm.dfm:4
+msgid "Редактирование пути"
+msgstr "Edit Path"
+
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:251
+msgid "Exc"
+msgstr ""
+
+#. ScriptFrm..MainMenu1..N6..N24..Caption
+#: forms/uScriptFrm.dfm:331
+#: .\forms\uScriptFrm.dfm:331
+msgid "Выделить все"
+msgstr "Select All"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Panel1..CurvsPanel..PositiveCB..Caption
+#: forms/uFindMaxForm.dfm:932
+#: .\forms\uFindMaxForm.dfm:932
+msgid "Положительные экстремумы"
+msgstr "Positive Extremes"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..ExpBtn..Hint
+#: forms/uFindMaxForm.dfm:315
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..IdentBandsGB..ExpBtn..Hint
+#: forms/uFindMaxForm_.dfm:199
+#: .\forms\uFindMaxForm.dfm:315
+#: .\forms\uFindMaxForm_.dfm:199
+msgid "Экспорт настроек полос в файл"
+msgstr "Export Band Settings to File"
+
+#. AddScriptItemFrm..UnitsCBX....Items.Strings
+#: forms/uAddScriptItemFrm.dfm:230
+#. EditSelsinFrm..GroupBox1..Label9..Caption
+#: forms/uEdiSelsinFrm.dfm:143
+#. EditSelsinFrm..GroupBox1..Label13..Caption
+#: forms/uEdiSelsinFrm.dfm:164
+#. EditSelsinFrm..GroupBox1..Label16..Caption
+#: forms/uEdiSelsinFrm.dfm:185
+msgid "min"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..TabSheet1..Panel2..AddGist..Hint
+#: forms/uRzdFrm.dfm:3006
+#: .\forms\uRzdFrm.dfm:3006
+msgid "Добавить гистограмму"
+msgstr "Add Histogram"
+
+#. GraphFrm..TabControl..TabSheet1..LogXCB..Caption
+#: forms/uGraphMngFrm.dfm:169
+#. GraphFrm..TabControl..TabSheet2..LogYCB..Caption
+#: forms/uGraphMngFrm.dfm:623
+#: .\forms\uGraphMngFrm.dfm:169
+#: .\forms\uGraphMngFrm.dfm:623
+msgid "Логарифм"
+msgstr "Logarithm"
+
+#. RptFrm..Panel5..Panel1..AutoBandsCB..Caption
+#: forms/uRptFrm.dfm:1809
+#: .\forms\uRptFrm.dfm:1809
+msgid "Автоматические полосы"
+msgstr "Automatic Bands"
+
+#. EditSelsinFrm..Label7..Caption
+#: forms/uEdiSelsinFrm.dfm:28
+#. EditSelsinFrm..Label7..Caption
+#: forms/uEditSelsinFrm.dfm:31
+msgid "L2:"
+msgstr ""
+
+#. CyclogramRepFrm..CommonGB..Panel1..OkBtn..Caption
+#: forms/uCyclogramRepFrm.dfm:414
+#. TrigLvlFrm..OkBtn..Caption
+#: forms/uTrigLvlEditFrm.dfm:55
+#. CyclogramRepFrm..CommonGB..Panel1..OkBtn..Caption
+#: forms/back/uCyclogramRepFrm.dfm:318
+#: .\forms\uCyclogramRepFrm.dfm:414
+#: .\forms\uTrigLvlEditFrm.dfm:55
+#: .\forms\back\uCyclogramRepFrm.dfm:318
+msgid "Далее"
+msgstr "Next"
+
+#. RptFrm..BandPanel..FltName..Text
+#: forms/uRptFrm.dfm:2368
+msgid ".XLSRep"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..TestsFolderLabel..Caption
+#: forms/uRzdFrm.dfm:3426
+#: .\forms\uRzdFrm.dfm:3426
+msgid "Каталог"
+msgstr "Directory"
+
+#. RZDFrm..PathPanel..VertPanel..GtmaxLabel..Caption
+#: forms/uRzdFrm.dfm:811
+msgid "Gt Trel="
+msgstr ""
+
+#. CounterFrm..GroupBox1..Caption
+#: forms/uCounterFrm.dfm:86
+msgid "Signals"
+msgstr ""
+
+#. SpmFrame..SpmResCB....Items.Strings
+#: forms/frames/uSpmFrame.dfm:78
+#. WPSpmFrame..SpmResCB....Items.Strings
+#: forms/frames/uWPSpmFrame.dfm:78
+msgid "СКЗ"
+msgstr ""
+
+#. RZDFrm..PathPanel..VertPanel..PAlfaLabel..Caption
+#: forms/uRzdFrm.dfm:820
+msgid "P="
+msgstr ""
+
+#. LissajousFrm..RightGB..Caption
+#: forms/uLissajousFrm.dfm:42
+msgid "RightGB"
+msgstr ""
+
+#. SubRegsFrm..Caption
+#: forms/uSubRegsFrm.dfm:4
+#: .\forms\uSubRegsFrm.dfm:4
+msgid "Редактируемый замер:"
+msgstr "Editable Measurement:"
+
+#. EditSelsinFrm..Caption
+#: forms/uEdiSelsinFrm.dfm:4
+#. EditSelsinFrm..Caption
+#: forms/uEditSelsinFrm.dfm:4
+#: .\forms\uEdiSelsinFrm.dfm:4
+#: .\forms\uEditSelsinFrm.dfm:4
+msgid "Редактирование сельсина"
+msgstr "Edit Synchro"
+
+#. RptFrm..Panel5..AutoBandsPC..AutoBandsIntervalPage..Label14..Caption
+#: forms/uRptFrm.dfm:1857
+#. SubRegsFrm..Label14..Caption
+#: forms/uSubRegsFrm.dfm:28
+#: .\forms\uRptFrm.dfm:1857
+#: .\forms\uSubRegsFrm.dfm:28
+msgid "Пропуск между интервалами, сек."
+msgstr "Interval Gap, sec."
+
+#. EditSignalsListFrm..Caption
+#: forms/uAddSignalFrm.dfm:4
+#: .\forms\uAddSignalFrm.dfm:4
+msgid "Добавить/ Удалить сигналы"
+msgstr "Add/Remove Signals"
+
+#. GenFrm..TabControl..ShockPage..RefAmpl..Caption
+#: forms/uGenForm.dfm:226
+msgid "Ampl ref."
+msgstr ""
+
+#. EditRepPropFrm..Panel1..OnBtn..Caption
+#: forms/uEditSignalsRepPropFrn.dfm:110
+#: .\forms\uEditSignalsRepPropFrn.dfm:110
+msgid "Включить"
+msgstr "Enable"
+
+#. SpmFrame..WndCB....Items.Strings
+#: forms/frames/uSpmFrame.dfm:51
+#. WPSpmFrame..WndCB....Items.Strings
+#: forms/frames/uWPSpmFrame.dfm:51
+msgid "Flat-Top"
+msgstr ""
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..EditBandGB..Panel1..CurvsPanel..CurveTypePC..РљСЂРёРІР°СЏ..DelPoint..Hint
+#: forms/uFindMaxForm.dfm:791
+#: .\forms\uFindMaxForm.dfm:791
+msgid "Удалить точку"
+msgstr "Delete Point"
+
+#. ScriptFrm..MainMenu1..N6..N22..Caption
+#: forms/uScriptFrm.dfm:328
+#: .\forms\uScriptFrm.dfm:328
+msgid "Удалить все"
+msgstr "Delete All"
+
+#. SpmFrame..SpmResCB..Text
+#: forms/frames/uSpmFrame.dfm:74
+#. SpmFrame..SpmResCB....Items.Strings
+#: forms/frames/uSpmFrame.dfm:76
+#. WPSpmFrame..SpmResCB..Text
+#: forms/frames/uWPSpmFrame.dfm:74
+#. WPSpmFrame..SpmResCB....Items.Strings
+#: forms/frames/uWPSpmFrame.dfm:76
+#: .\forms\frames\uSpmFrame.dfm:74
+#: .\forms\frames\uWPSpmFrame.dfm:74
+msgid "Амплитуда"
+msgstr "Amplitude"
+
+#. FindMaxForm..BandTS..AlgOptsTabSheet..AlgOptsGB..SaveBandGB..UnitsCB....Items.Strings
+#: forms/uFindMaxForm.dfm:384
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..UnitsCB....Items.Strings
+#: forms/uFindMaxForm_.dfm:341
+#. TrigFrm..UnitsCB....Items.Strings
+#: forms/uTrigFrm.dfm:195
+#. TrigsFrm..AddTrigGB..CommonName..UnitsCB....Items.Strings
+#: forms/uTrigsFrm.dfm:467
+msgid "%"
+msgstr ""
+
+#. AddRZDDataFrm..LV1......Caption
+#: forms/uAddRZDDatafrm.dfm:68
+#. ScriptFrm..PanelTools..ListViewItems......Caption
+#: forms/uScriptFrm.dfm:106
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:295
+#. TrigsFrm..TriListGB..VTree1......WideText
+#: forms/uTrigsFrm.dfm:66
+#: .\forms\uAddRZDDatafrm.dfm:68
+#: .\forms\uScriptFrm.dfm:106
+#: .\forms\uSelsinFrm.dfm:295
+msgid "Тип"
+msgstr "Type"
+
+#. FindMaxForm..ActionGB..Caption
+#: forms/uFindMaxForm.dfm:43
+#. FindMaxForm..ActionGB..Caption
+#: forms/uFindMaxForm_.dfm:37
+#. GenFrm..GroupBox1..Caption
+#: forms/uGenForm.dfm:362
+#. SelectPathFrm..GroupBox1..Caption
+#: forms/uSelectPathForm.dfm:31
+#. SelectPathFrm..GroupBox2..Caption
+#: forms/uSelectPathForm.dfm:145
+#: .\forms\uFindMaxForm.dfm:43
+#: .\forms\uFindMaxForm_.dfm:37
+#: .\forms\uGenForm.dfm:362
+#: .\forms\uSelectPathForm.dfm:31
+#: .\forms\uSelectPathForm.dfm:145
+msgid "Выберите действие"
+msgstr ""
+
+#. GraphFrm..SrcLV......Caption
+#: forms/uGraphMngFrm.dfm:946
+#. FxForm..ProcSignalsGB..GroupBox2..OpersSrc......Caption
+#: forms/uWPProcFrm.dfm:61
+#. FxForm..ProcSignalsGB..GroupBox3..SrcLV......Caption
+#: forms/uWPProcFrm.dfm:98
+#: .\forms\uGraphMngFrm.dfm:946
+#: .\forms\uWPProcFrm.dfm:61
+#: .\forms\uWPProcFrm.dfm:98
+msgid "Путь"
+msgstr "Path"
+
+#. RptFrm..Panel5..BandsTC..РўСЂРёРіРіРµСЂС‹..Caption
+#: forms/uRptFrm.dfm:1621
+#. FxForm..MainMenu1..TrigsMenu..Caption
+#: forms/uWPProcFrm.dfm:420
+#: .\forms\uRptFrm.dfm:1621
+#: .\forms\uWPProcFrm.dfm:420
+msgid "Триггеры"
+msgstr "Triggers"
+
+#. SelsinFrm..GroupBox1..EvalBtn..Caption
+#: forms/uSelsinFrm.dfm:60
+#: .\forms\uSelsinFrm.dfm:60
+msgid "Расчет"
+msgstr "Calculation"
+
+#. GraphFrm..TabControl..TabSheet3..LineWidthLabel..Caption
+#: forms/uGraphMngFrm.dfm:714
+#: .\forms\uGraphMngFrm.dfm:714
+msgid "Толщина"
+msgstr "Thickness"
+
+#. LissajousFrm..RightGB..XCb..Text
+#: forms/uLissajousFrm.dfm:154
+msgid "XCb"
+msgstr ""
+
+#. AddScriptItemFrm..Panel2..Panel3..DscLabel..Caption
+#: forms/uAddScriptItemFrm.dfm:126
+#. AddScriptItemFrm..Panel2..Panel3..DscLabel..Caption
+#: forms/back/uAddScriptItemFrm.dfm:91
+#: .\forms\uAddScriptItemFrm.dfm:126
+#: .\forms\back\uAddScriptItemFrm.dfm:91
+msgid "Описание:"
+msgstr "Description:"
+
+#. BDIFrm..Caption
+#: forms/uBDIFrm.dfm:4
+#: .\forms\uBDIFrm.dfm:4
+msgid "База по испытаниям"
+msgstr ""
+
+#. GraphFrm..TabControl..TabSheet3..LineTypeCB....Items.Strings
+#: forms/uGraphMngFrm.dfm:826
+msgid "Пунктир"
+msgstr ""
+
+#. MeraFileMngFrm..Label1..Caption
+#: forms/uMainFrm.dfm:30
+#: .\forms\uMainFrm.dfm:30
+msgid "Путь к первому файлу"
+msgstr "First File Path"
+
+#. EditSelsinFrm..GroupBox1..SKO2Label..Caption
+#: forms/uEdiSelsinFrm.dfm:150
+#: .\forms\uEdiSelsinFrm.dfm:150
+msgid "СКО2"
+msgstr ""
+
+#. CounterFrm..GroupBox1..SignalsLV......Caption
+#: forms/uCounterFrm.dfm:111
+#. FFTFltFrm..RightPanel..SignalsLV......Caption
+#: forms/uFFTfltFrm.dfm:140
+#. LissajousFrm..RightGB..SigLV......Caption
+#: forms/uLissajousFrm.dfm:214
+#. ScriptFrm..PanelTools..ListViewItems......Caption
+#: forms/uScriptFrm.dfm:103
+msgid "Fs"
+msgstr ""
+
+#. TrigLvlFrm..Caption
+#: forms/uTrigLvlEditFrm.dfm:4
+#: .\forms\uTrigLvlEditFrm.dfm:4
+msgid "Настройка уровней"
+msgstr "Level Settings"
+
+#. SelectIntervalFrm..Panel1..Label1..Caption
+#: forms/uSelectIntervalFrm.dfm:55
+#. IntervalFrame..Label1..Caption
+#: forms/frames/uIntervalFrame.dfm:26
+#: .\forms\uSelectIntervalFrm.dfm:55
+#: .\forms\frames\uIntervalFrame.dfm:26
+msgid "Начало, с:"
+msgstr "Start, sec:"
+
+#. CyclogramRepFrm..GroupBox3..ToolBar1..Caption
+#: forms/uCyclogramRepFrm.dfm:145
+#. ScriptFrm..ToolBar1..Caption
+#: forms/uScriptFrm.dfm:37
+#. FxForm..LoadScriptGB..ToolBar1..Caption
+#: forms/uWPProcFrm.dfm:264
+#. CyclogramRepFrm..GroupBox3..ToolBar1..Caption
+#: forms/back/uCyclogramRepFrm.dfm:117
+msgid "ToolBar1"
+msgstr ""
+
+#. TmpltNameFrame..FolderRG..Caption
+#: forms/frames/uTmpltNameFrame.dfm:143
+#: .\forms\frames\uTmpltNameFrame.dfm:143
+msgid "Формирование каталога"
+msgstr "Directory Formatting"
+
+#. AddScriptItemFrm..UnitsCBX....Items.Strings
+#: forms/uAddScriptItemFrm.dfm:231
+msgid "hour"
+msgstr ""
+
+#. ScriptFrm..Memo1....Lines.Strings
+#: forms/uScriptFrm.dfm:208
+msgid "Memo1"
+msgstr ""
+
+#. CyclogramRepFrm..GroupBox3..Caption
+#: forms/uCyclogramRepFrm.dfm:99
+#. CyclogramRepFrm..GroupBox3..Caption
+#: forms/back/uCyclogramRepFrm.dfm:79
+#: .\forms\uCyclogramRepFrm.dfm:99
+#: .\forms\back\uCyclogramRepFrm.dfm:79
+msgid "Список неиспользуемых каналов"
+msgstr "Unused Channels List"
+
+#. FindMaxForm..ActionGB..FloatSpinEdit1..Hint
+#: forms/uFindMaxForm_.dfm:73
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..LevelPosSE..Hint
+#: forms/uFindMaxForm_.dfm:296
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..NoisePosSE..Hint
+#: forms/uFindMaxForm_.dfm:306
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..LevelNegSE..Hint
+#: forms/uFindMaxForm_.dfm:316
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..NoiseNegSE..Hint
+#: forms/uFindMaxForm_.dfm:326
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..X1SE..Hint
+#: forms/uFindMaxForm_.dfm:350
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..X2SE..Hint
+#: forms/uFindMaxForm_.dfm:360
+#: .\forms\uFindMaxForm_.dfm:73
+#: .\forms\uFindMaxForm_.dfm:296
+#: .\forms\uFindMaxForm_.dfm:306
+#: .\forms\uFindMaxForm_.dfm:316
+#: .\forms\uFindMaxForm_.dfm:326
+#: .\forms\uFindMaxForm_.dfm:350
+#: .\forms\uFindMaxForm_.dfm:360
+msgid "При превышении уровня начинают расчитываться максимумы"
+msgstr "Maxima calculation starts when level is exceeded"
+
+#. RptFrm..BandPanel..RepFilterCB..Hint
+#: forms/uRptFrm.dfm:2345
+#. RptFrm..BandPanel..EvalMaxLengthCB..Hint
+#: forms/uRptFrm.dfm:2414
+#: .\forms\uRptFrm.dfm:2345
+#: .\forms\uRptFrm.dfm:2414
+msgid "В отчет попадут каналы у которые есть свойство XLSRep=1"
+msgstr ""
+
+#. TmpltNameFrame..NameRG..Caption
+#: forms/frames/uTmpltNameFrame.dfm:129
+#: .\forms\frames\uTmpltNameFrame.dfm:129
+msgid "Формирование имени"
+msgstr "Name Formatting"
+
+#. FxForm..OperatorsGB..Caption
+#: forms/uWPProcFrm.dfm:302
+#: .\forms\uWPProcFrm.dfm:302
+msgid "Список обработок"
+msgstr "Processings List"
+
+#. CyclogramRepFrm..GroupBox1..Caption
+#: forms/uCyclogramRepFrm.dfm:40
+#. CyclogramRepFrm..GroupBox1..Caption
+#: forms/back/uCyclogramRepFrm.dfm:34
+#: .\forms\uCyclogramRepFrm.dfm:40
+#: .\forms\back\uCyclogramRepFrm.dfm:34
+msgid "Список выходных каналов"
+msgstr "Output Channels List"
+
+#. SignalPathFrm..AddBtn..Caption
+#: forms/EditSignalPathFrm.dfm:59
+#. AddRZDDataFrm..ApplyGB..ApplyBtnMR..Caption
+#: forms/uAddRZDDatafrm.dfm:47
+#. CorrectUTSFrm..GroupBox1..ApplyBtn..Caption
+#: forms/uCorrectUTS.dfm:252
+#. EditSelsinFrm..OkBtn..Caption
+#: forms/uEditSelsinFrm.dfm:139
+#. EditRepPropFrm..GroupBox1..ApplyBtn..Caption
+#: forms/uEditSignalsRepPropFrn.dfm:40
+#. EditTubeFrm..GroupBox1..OpenFileBtn..Caption
+#: forms/uEditTubeFrm.dfm:97
+#. BalanceZeroFrm..Panel2..ApplyBtn..Caption
+#: forms/uExtBalanceSignalsFrm.dfm:136
+#. FFTFltFrm..ActionPanel..ApplyBtn..Caption
+#: forms/uFFTfltFrm.dfm:48
+#. FFTInverseFrm..GroupBox1..ApplyBtn..Caption
+#: forms/uFFTInverseFrm.dfm:102
+#. FindMaxForm..TabPanel..AlgOptsTabSheet..AlgOptsGB..EditBandGB..ApplyBandItemBtn..Caption
+#: forms/uFindMaxForm_.dfm:390
+#. HilbFltFrm..GroupBox1..ApplyBtn..Caption
+#: forms/uFrmHibFltFrm.dfm:162
+#. GenFrm..GroupBox1..ApplyBtn..Caption
+#: forms/uGenForm.dfm:382
+#. GraphFrm..ActionGB..OkBtn..Caption
+#: forms/uGraphMngFrm.dfm:50
+#. IntervalFrm..Panel2..ApplyBtn..Caption
+#: forms/uIntervalFrm.dfm:69
+#. MNKFrm..ApplyBtn..Caption
+#: forms/uMNKFrm.dfm:65
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..Panel1..ApplyBtn..Caption
+#: forms/uRzdFrm.dfm:2880
+#. SelectIntervalFrm..Panel1..ApplyBtn..Caption
+#: forms/uSelectIntervalFrm.dfm:137
+#. SelectPathFrm..GroupBox2..Button2..Caption
+#: forms/uSelectPathForm.dfm:166
+#. SpmFrm..Panel2..ApplyBtn..Caption
+#: forms/uSpmFrm.dfm:115
+#. TrigFrm..TrigApplyBtn..Caption
+#: forms/uTrigFrm.dfm:159
+#. TrigsFrm..AddTrigGB..Panel2..ApplySBtn..Hint
+#: forms/uTrigsFrm.dfm:898
+#. TrigsFrm..AddTrigGB..Panel2..EvalBtn..Hint
+#: forms/uTrigsFrm.dfm:1053
+#: .\forms\EditSignalPathFrm.dfm:59
+#: .\forms\uAddRZDDatafrm.dfm:47
+#: .\forms\uCorrectUTS.dfm:252
+#: .\forms\uEditSelsinFrm.dfm:139
+#: .\forms\uEditSignalsRepPropFrn.dfm:40
+#: .\forms\uEditTubeFrm.dfm:97
+#: .\forms\uExtBalanceSignalsFrm.dfm:136
+#: .\forms\uFFTfltFrm.dfm:48
+#: .\forms\uFFTInverseFrm.dfm:102
+#: .\forms\uFindMaxForm_.dfm:390
+#: .\forms\uFrmHibFltFrm.dfm:162
+#: .\forms\uGenForm.dfm:382
+#: .\forms\uGraphMngFrm.dfm:50
+#: .\forms\uIntervalFrm.dfm:69
+#: .\forms\uMNKFrm.dfm:65
+#: .\forms\uRzdFrm.dfm:2880
+#: .\forms\uSelectIntervalFrm.dfm:137
+#: .\forms\uSelectPathForm.dfm:166
+#: .\forms\uSpmFrm.dfm:115
+#: .\forms\uTrigFrm.dfm:159
+#: .\forms\uTrigsFrm.dfm:898
+#: .\forms\uTrigsFrm.dfm:1053
+msgid "Применить"
+msgstr "Apply"
+
+#. CyclogramRepFrm..CommonGB..LoadCfgBtn..Caption
+#: forms/uCyclogramRepFrm.dfm:373
+#. BalanceZeroFrm..Panel2..LoadBtn..Caption
+#: forms/uExtBalanceSignalsFrm.dfm:127
+#. FFTFltFrm..EditCurvePanel..LoadBtn..Caption
+#: forms/uFFTfltFrm.dfm:507
+#. RptFrm..TopGB..LoadBtn..Caption
+#: forms/uRptFrm.dfm:1376
+#. RZDFrm..MatrixPanel..LoadBtnPanel..CreateMatrixBtn..Caption
+#: forms/uRzdFrm.dfm:2569
+#. FxForm..LoadScriptGB..LoadBtn..Caption
+#: forms/uWPProcFrm.dfm:233
+#. CyclogramRepFrm..CommonGB..LoadCfgBtn..Caption
+#: forms/back/uCyclogramRepFrm.dfm:289
+#: .\forms\uCyclogramRepFrm.dfm:373
+#: .\forms\uExtBalanceSignalsFrm.dfm:127
+#: .\forms\uFFTfltFrm.dfm:507
+#: .\forms\uRptFrm.dfm:1376
+#: .\forms\uRzdFrm.dfm:2569
+#: .\forms\uWPProcFrm.dfm:233
+#: .\forms\back\uCyclogramRepFrm.dfm:289
+msgid "Загрузить"
+msgstr "Load"
+
+#. SelectPathFrm..GroupBox1..I1Label..Caption
+#: forms/uSelectPathForm.dfm:57
+#. SelectPathFrm..GroupBox1..I2Label..Caption
+#: forms/uSelectPathForm.dfm:66
+#: .\forms\uSelectPathForm.dfm:57
+#: .\forms\uSelectPathForm.dfm:66
+msgid "Индекс:"
+msgstr "Index:"
+
+#. RZDFrm..PathPanel..VertPanel..PAlfaEdit..Text
+#: forms/uRzdFrm.dfm:2298
+msgid "0.994"
+msgstr ""
+
+#. AddRZDDataFrm..Panel2..Label2..Caption
+#: forms/uAddRZDDatafrm.dfm:116
+#: .\forms\uAddRZDDatafrm.dfm:116
+msgid "Путь в базе:"
+msgstr "DB Path:"
+
+#. SelectIntervalFrm..AutoGroup..Caption
+#: forms/uSelectIntervalFrm.dfm:182
+#: .\forms\uSelectIntervalFrm.dfm:182
+msgid "Настройка выбора"
+msgstr "Selection Setup"
+
+#. MeraFileMngFrm..Label2..Caption
+#: forms/uMainFrm.dfm:37
+#: .\forms\uMainFrm.dfm:37
+msgid "Путь к второму файлу"
+msgstr "Second File Path"
+
+#. RZDFrm..ScrollBox1..EvalGB..Panel3..OpenReportCB..Caption
+#: forms/uRzdFrm.dfm:3499
+#: .\forms\uRzdFrm.dfm:3499
+msgid "Открыть отчет"
+msgstr "Open Report"
+
+#. BDIFrm..TabControl..ObjTab..UnitsXLabel..Caption
+#: forms/uBDIFrm.dfm:110
+#. CorrectUTSFrm..GroupBox1..GroupBox2..UTSLV......Caption
+#: forms/uCorrectUTS.dfm:209
+#. EditRepPropFrm..ChannelsList......Caption
+#: forms/uEditSignalsRepPropFrn.dfm:62
+#. BalanceZeroFrm..Panel1..ChannelsLV......Caption
+#: forms/uExtBalanceSignalsFrm.dfm:32
+#. RptFrm..RightPanel..RightPC..OptionsTS..OptsLV......Caption
+#: forms/uRptFrm.dfm:2015
+#. RptFrm..RightPanel..RightPC..OptionsTS..ParamsGB..Panel3..ParamsPropLV......Caption
+#: forms/uRptFrm.dfm:2178
+#. ScriptFrm..PanelTools..ListViewItems......Caption
+#: forms/uScriptFrm.dfm:97
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:235
+#. TrigFrm..TrigLV......Caption
+#: forms/uTrigFrm.dfm:81
+#. TrigsFrm..TriListGB..VTree1......WideText
+#: forms/uTrigsFrm.dfm:60
+#. TrigsFrm..AddTrigGB..CommonName..Label1..Caption
+#: forms/uTrigsFrm.dfm:330
+#: .\forms\uBDIFrm.dfm:110
+#: .\forms\uCorrectUTS.dfm:209
+#: .\forms\uEditSignalsRepPropFrn.dfm:62
+#: .\forms\uExtBalanceSignalsFrm.dfm:32
+#: .\forms\uRptFrm.dfm:2015
+#: .\forms\uRptFrm.dfm:2178
+#: .\forms\uScriptFrm.dfm:97
+#: .\forms\uSelsinFrm.dfm:235
+#: .\forms\uTrigFrm.dfm:81
+#: .\forms\uTrigsFrm.dfm:330
+msgid "Имя"
+msgstr "Name"
+
+#. KBHMFrm..ObjGB..Caption
+#: forms/uKBHMFrm.dfm:90
+#. KBHMFrm..ChanGB..Caption
+#: forms/uKBHMFrm.dfm:391
+#: .\forms\uKBHMFrm.dfm:90
+#: .\forms\uKBHMFrm.dfm:391
+msgid "Параметры двигателя"
+msgstr "Engine Parameters"
+
+#. FxForm..OperatorsGB..OperatorsLV......Caption
+#: forms/uWPProcFrm.dfm:323
+#: .\forms\uWPProcFrm.dfm:323
+msgid "Параметры"
+msgstr "Parameters"
+
+#. FxForm..OperatorsGB..OperatorsLV......Caption
+#: forms/uWPProcFrm.dfm:320
+#. FxForm..OperatorsGB..GroupBox1..VTree1......WideText
+#: forms/uWPProcFrm.dfm:376
+#: .\forms\uWPProcFrm.dfm:320
+msgid "Оператор"
+msgstr "Operator"
+
+#. ScriptFrm..PanelTools..ToolBar2..AddTagBtn..Caption
+#: forms/uScriptFrm.dfm:138
+msgid "AddTagBtn"
+msgstr ""
+
+#. GenFrm..TabControl..ShockPage..AmplImpactLabel..Caption
+#: forms/uGenForm.dfm:219
+msgid "Ampl. impact"
+msgstr ""
+
+#. KBHMFrm..ObjGB..PropSG....FilterEdit.TypeNames.Strings
+#: forms/uKBHMFrm.dfm:308
+msgid "Ends with"
+msgstr ""
+
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:279
+msgid "Max3"
+msgstr ""
+
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:239
+msgid "L1"
+msgstr ""
+
+#. TrigsFrm..AddTrigGB..ExtremumTrigGB..Panel1..ExtremumTypeRG....Items.Strings
+#: forms/uTrigsFrm.dfm:143
+msgid "Исходная функция"
+msgstr ""
+
+#. FxForm..LoadScriptGB..ToolBar1..ReadGraph..Caption
+#: forms/uWPProcFrm.dfm:273
+msgid "ReadGraph"
+msgstr ""
+
+#. AddScriptItemFrm..UnitsCBX....Items.Strings
+#: forms/uAddScriptItemFrm.dfm:229
+msgid "msec"
+msgstr ""
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..MatrixTS..MatrixLV......Caption
+#: forms/uRzdFrm.dfm:2904
+msgid "S1"
+msgstr ""
+
+#. GenFrm..ActionGB..GroupBox3..Caption
+#: forms/uGenForm.dfm:134
+#: .\forms\uGenForm.dfm:134
+msgid "Менять амплитуду"
+msgstr "Change Amplitude"
+
+#. SelsinFrm..GroupBox1..dTfe..Text
+#: forms/uSelsinFrm.dfm:49
+msgid "0.3"
+msgstr ""
+
+#. GraphFrm..TabControl..TabSheet3..LineSrcCB..Text
+#: forms/uGraphMngFrm.dfm:797
+msgid "LineSrcCB"
+msgstr ""
+
+#. WPNameFltFrame..Panel1..PropList......Caption
+#: forms/frames/uWPNameFilterFrame.dfm:34
+#: .\forms\frames\uWPNameFilterFrame.dfm:34
+msgid "Свойство"
+msgstr "Property"
+
+#. GraphFrm..TabControl..TabSheet1..GroupBox1..StartThresholdLabel..Caption
+#: forms/uGraphMngFrm.dfm:275
+#: .\forms\uGraphMngFrm.dfm:275
+msgid "Порог триггера \"Старт\""
+msgstr "Start Trigger Threshold"
+
+#. TrigsFrm..AddTrigGB..FilterGB..Label3..Caption
+#: forms/uTrigsFrm.dfm:1235
+#: .\forms\uTrigsFrm.dfm:1235
+msgid "Точек усреднения:"
+msgstr "Averaging Points:"
+
+#. TmpltNameFrame..FolderRG....Items.Strings
+#: forms/frames/uTmpltNameFrame.dfm:146
+msgid "Каталог по умолчанию"
+msgstr ""
+
+#. FindMaxForm..BandTS..SavePage..GroupBox1..Caption
+#: forms/uFindMaxForm.dfm:977
+#. FindMaxForm..TabPanel..SavePage..GroupBox1..Caption
+#: forms/uFindMaxForm_.dfm:430
+#. FxForm..MainMenu1..GraphMenu..Caption
+#: forms/uWPProcFrm.dfm:416
+#: .\forms\uFindMaxForm.dfm:977
+#: .\forms\uFindMaxForm_.dfm:430
+#: .\forms\uWPProcFrm.dfm:416
+msgid "Графика"
+msgstr "Graphics"
+
+#. LissajousFrm..RightGB..F1Label..Caption
+#: forms/uLissajousFrm.dfm:84
+msgid "Axis X:"
+msgstr ""
+
+#. SelsinFrm..ChansLV......Caption
+#: forms/uSelsinFrm.dfm:271
+msgid "Max2"
+msgstr ""
+
+#. ScriptFrm..Panel1..PathEdit..Text
+#: forms/uScriptFrm.dfm:279
+msgid "ScriptFile.xml"
+msgstr ""
+
+#. GraphFrm..TabControl..РЎС‚СЂР°РЅРёС†С‹..PageStyleRG....Items.Strings
+#: forms/uGraphMngFrm.dfm:909
+msgid "По горизонтали"
+msgstr ""
+
+#. CyclogramRepFrm..CommonGB..MacrosEdit..Text
+#: forms/uCyclogramRepFrm.dfm:758
+#. CyclogramRepFrm..CommonGB..MacrosEdit..Text
+#: forms/back/uCyclogramRepFrm.dfm:451
+#: .\forms\uCyclogramRepFrm.dfm:758
+#: .\forms\back\uCyclogramRepFrm.dfm:451
+msgid "Завершить"
+msgstr "Finish"
+
+#. RZDFrm..ScrollBox1..EvalGB..JournalPageControl..TabSheet1..Panel2..dXCB..Caption
+#: forms/uRzdFrm.dfm:3243
+msgid "dX"
+msgstr ""
+
+#. CorrectUTSFrm..GroupBox1..AddBtn..Caption
+#: forms/uCorrectUTS.dfm:81
+#. FFTFltFrm..EditCurvePanel..SetScaleBtn..Caption
+#: forms/uFFTfltFrm.dfm:350
+#. TrigFrm..AddTrigBtn..Caption
+#: forms/uTrigFrm.dfm:149
+#. TrigsFrm..AddTrigGB..Panel2..AddBtn..Hint
+#: forms/uTrigsFrm.dfm:510
+#. FxForm..SignalsGB..AddBtn..Caption
+#: forms/uWPProcFrm.dfm:150
+#. WPNameFltFrame..Panel1..Panel2..AddBtn..Hint
+#: forms/frames/uWPNameFilterFrame.dfm:368
+#: .\forms\uCorrectUTS.dfm:81
+#: .\forms\uFFTfltFrm.dfm:350
+#: .\forms\uTrigFrm.dfm:149
+#: .\forms\uTrigsFrm.dfm:510
+#: .\forms\uWPProcFrm.dfm:150
+#: .\forms\frames\uWPNameFilterFrame.dfm:368
+msgid "Добавить"
+msgstr "Add"
+
+#. EditSelsinFrm..Label2..Caption
+#: forms/uEdiSelsinFrm.dfm:49
+#. EditSelsinFrm..Label2..Caption
+#: forms/uEditSelsinFrm.dfm:53
+#: .\forms\uEdiSelsinFrm.dfm:49
+#: .\forms\uEditSelsinFrm.dfm:53
+msgid "Питание:"
+msgstr "Power:"
+

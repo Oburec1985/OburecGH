@@ -20,6 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_Define>LANG_EN ;$(DCC_Define)</DCC_Define>
 			<DCC_PentiumSafeDivide>true</DCC_PentiumSafeDivide>
 			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_ConsoleTarget>true</DCC_ConsoleTarget>
@@ -241,6 +242,8 @@
 				<Form>BalanceZeroFrm</Form>
 			</DCCReference>
 			<DCCReference Include="..\..\sharedUtils\utils\uLogFile.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\uLocalizeForm.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\gnugettext.pas"/>
 			<DCCReference Include="units\uFFTFlt.pas"/>
 			<DCCReference Include="forms\uFFTfltFrm.pas">
 				<Form>FFTFltFrm</Form>

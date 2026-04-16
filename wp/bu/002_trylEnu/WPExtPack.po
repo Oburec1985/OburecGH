@@ -1,0 +1,2960 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: WPExtPack\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: forms\uCorrectUTS.dfm
+msgid " Если сигнал UTS отсутствует для замера, то для него будет найден канал с аналогичным именем как "
+msgstr "If the UTS signal is missing for a measurement, a channel with a name identical to the reference start channel will be used to correct start times for all channels (excluding UTS)."
+
+#: forms\uCorrectUTS.dfm
+msgid " Модуль выполняет коррекцию времени UTS сигналов на время старта нуля. Корректирующее "
+msgstr "This module performs UTS signal time correction relative to zero start. The correction value is reported in the "Time Offset" indicator."
+
+#: forms\uFindMaxForm_.dfm
+msgid "+ Максимум"
+msgstr "+ Максимум"
+
+#: forms\uExtBalanceSignalsFrm.dfm
+msgid ",сек"
+msgstr ",сек"
+
+#: forms\uFindMaxForm_.dfm
+msgid "- Максимум"
+msgstr "- Максимум"
+
+#: forms\uRptFrm.dfm
+msgid ".XLSRep"
+msgstr ""
+
+#: forms\uRzdFrm.dfm
+msgid ".\\RZDmatrix\\RZDMatrix.rzd"
+msgstr ""
+
+#: forms\uRzdFrm.dfm
+msgid ".\\Tests\\"
+msgstr ""
+
+#: forms\uTrigsFrm.dfm
+msgid "1-я произв."
+msgstr "1-я произв."
+
+#: forms\uTrigsFrm.dfm
+msgid "2-я произв."
+msgstr "2-я произв."
+
+#: forms\uGenForm.dfm
+msgid "A1"
+msgstr ""
+
+#: forms\uGenForm.dfm
+msgid "A2"
+msgstr ""
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "AddBtn"
+msgstr ""
+
+#: forms\uScriptFrm.dfm
+msgid "AddTagBtn"
+msgstr ""
+
+#: forms\uCounterFrm.dfm
+msgid "AllTest"
+msgstr ""
+
+#: forms\uGenForm.dfm
+msgid "Ampl ref."
+msgstr ""
+
+#: forms\uGenForm.dfm
+msgid "Ampl. impact"
+msgstr ""
+
+#: forms\uCounterFrm.dfm
+msgid "Apply"
+msgstr ""
+
+#: forms\uSelsinFrm.dfm
+msgid "AutoCalibr"
+msgstr ""
+
+#: forms\uLissajousFrm.dfm
+msgid "Axis X:"
+msgstr ""
+
+#: forms\uLissajousFrm.dfm
+msgid "Axis Y:"
+msgstr ""
+
+#: forms\uFFTfltFrm.dfm
+msgid "C:\\Winpos\\FFTFltCfg\\test.txt"
+msgstr ""
+
+#: forms\uSelectIntervalFrm.dfm
+msgid "ChanCB"
+msgstr ""
+
+#: forms\uLissajousFrm.dfm
+#: forms\uSelectIntervalFrm.dfm
+msgid "Chart"
+msgstr ""
+
+#: forms\uKBHMFrm.dfm
+msgid "Clear"
+msgstr ""
+
+#: forms\uLissajousFrm.dfm
+msgid "ComboBox1"
+msgstr ""
+
+#: forms\uKBHMFrm.dfm
+msgid "Contains"
+msgstr ""
+
+#: forms\uCounterFrm.dfm
+msgid "Counter config"
+msgstr ""
+
+#: forms\uCounterFrm.dfm
+msgid "Cursors"
+msgstr ""
+
+#: forms\uRzdFrm.dfm
+msgid "D="
+msgstr ""
+
+#: forms\uScriptFrm.dfm
+msgid "DelTagBtn"
+msgstr ""
+
+#: forms\uGraphMngFrm.dfm
+msgid "Edit1"
+msgstr ""
+
+#: forms\uKBHMFrm.dfm
+msgid "Ends with"
+msgstr ""
+
+#: forms\uKBHMFrm.dfm
+msgid "Equal"
+msgstr ""
+
+#: forms\uWPProcFrm.dfm
+msgid "EvalBtn"
+msgstr ""
+
+#: forms\uSelsinFrm.dfm
+msgid "Exc"
+msgstr ""
+
+#: forms\uFFTfltFrm.dfm
+msgid "F"
+msgstr ""
+
+#: forms\uFFTfltFrm.dfm
+msgid "FFT фильтр"
+msgstr "FFT фильтр"
+
+#: forms\uFFTInverseFrm.dfm
+msgid "FFTCount"
+msgstr ""
+
+#: forms\uCounterFrm.dfm
+msgid "Filter trend"
+msgstr ""
+
+#: forms\uCounterFrm.dfm
+#: forms\uFFTfltFrm.dfm
+#: forms\uLissajousFrm.dfm
+msgid "Fs"
+msgstr ""
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "GetXBtn"
+msgstr ""
+
+#: forms\uWPProcFrm.dfm
+msgid "GraphBtn"
+msgstr ""
+
+#: forms\uRzdFrm.dfm
+msgid "Gt Trel="
+msgstr ""
+
+#: forms\uCounterFrm.dfm
+msgid "Hi, lvl, %"
+msgstr ""
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "Hz"
+msgstr ""
+
+#: forms\uChangeSrcFrm.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uWPProcFrm.dfm
+msgid "ID"
+msgstr ""
+
+#: forms\uSelectIntervalFrm.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "ID источника"
+msgstr "ID источника"
+
+#: forms\uFFTInverseFrm.dfm
+msgid "Im"
+msgstr ""
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+msgid "Im/Re"
+msgstr ""
+
+#: forms\uGenForm.dfm
+msgid "Impact"
+msgstr ""
+
+#: forms\uGenForm.dfm
+msgid "Impact len"
+msgstr ""
+
+#: forms\uGenForm.dfm
+msgid "Info:"
+msgstr ""
+
+#: forms\uSelsinFrm.dfm
+msgid "L1"
+msgstr ""
+
+#: forms\uEdiSelsinFrm.dfm
+#: forms\uEditSelsinFrm.dfm
+msgid "L1:"
+msgstr ""
+
+#: forms\uEdiSelsinFrm.dfm
+#: forms\uEditSelsinFrm.dfm
+msgid "L1CB"
+msgstr ""
+
+#: forms\uSelsinFrm.dfm
+msgid "L2"
+msgstr ""
+
+#: forms\uEdiSelsinFrm.dfm
+#: forms\uEditSelsinFrm.dfm
+msgid "L2:"
+msgstr ""
+
+#: forms\uSelsinFrm.dfm
+msgid "L3"
+msgstr ""
+
+#: forms\uEdiSelsinFrm.dfm
+#: forms\uEditSelsinFrm.dfm
+msgid "L3:"
+msgstr ""
+
+#: forms\uKBHMFrm.dfm
+msgid "Larger than"
+msgstr ""
+
+#: forms\uFindMaxForm_.dfm
+msgid "Level \"+\""
+msgstr ""
+
+#: forms\uFindMaxForm_.dfm
+msgid "Level \"-\""
+msgstr ""
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "LgX"
+msgstr ""
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "LgY"
+msgstr ""
+
+#: forms\uGraphMngFrm.dfm
+msgid "LineSrcCB"
+msgstr ""
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "LinkBtn"
+msgstr ""
+
+#: forms\uLissajousFrm.dfm
+msgid "LissajousFrm"
+msgstr ""
+
+#: forms\uCounterFrm.dfm
+msgid "Lo, lvl, %"
+msgstr ""
+
+#: forms\uMNKFrm.dfm
+msgid "MNKFrm"
+msgstr ""
+
+#: forms\uEdiSelsinFrm.dfm
+msgid "Max"
+msgstr ""
+
+#: forms\uSelsinFrm.dfm
+msgid "Max1"
+msgstr ""
+
+#: forms\uSelsinFrm.dfm
+msgid "Max2"
+msgstr ""
+
+#: forms\uSelsinFrm.dfm
+msgid "Max3"
+msgstr ""
+
+#: forms\uScriptFrm.dfm
+msgid "Memo1"
+msgstr ""
+
+#: forms\uEdiSelsinFrm.dfm
+msgid "Min"
+msgstr ""
+
+#: forms\uSelsinFrm.dfm
+msgid "Min1"
+msgstr ""
+
+#: forms\uSelsinFrm.dfm
+msgid "Min2"
+msgstr ""
+
+#: forms\uSelsinFrm.dfm
+msgid "Min3"
+msgstr ""
+
+#: forms\uEdiSelsinFrm.dfm
+#: forms\uEditSelsinFrm.dfm
+msgid "NameEdit"
+msgstr ""
+
+#: forms\uFindMaxForm_.dfm
+msgid "Noise \"+\""
+msgstr ""
+
+#: forms\uFindMaxForm_.dfm
+msgid "Noise \"-\""
+msgstr ""
+
+#: forms\uKBHMFrm.dfm
+msgid "Not contains"
+msgstr ""
+
+#: forms\uKBHMFrm.dfm
+msgid "Not equal"
+msgstr ""
+
+#: forms\uRzdFrm.dfm
+msgid "P="
+msgstr ""
+
+#: forms\uExtBalanceSignalsFrm.dfm
+msgid "PathEdit"
+msgstr ""
+
+#: forms\uGenForm.dfm
+msgid "Pause, sec"
+msgstr ""
+
+#: forms\uRzdFrm.dfm
+msgid "Poly"
+msgstr ""
+
+#: forms\uCounterFrm.dfm
+msgid "Portion, sec"
+msgstr ""
+
+#: forms\uEditSignalsRepPropFrn.dfm
+msgid "PropEdit"
+msgstr ""
+
+#: forms\uFFTInverseFrm.dfm
+msgid "Re"
+msgstr ""
+
+#: forms\uWPProcFrm.dfm
+msgid "ReadGraph"
+msgstr ""
+
+#: forms\uGenForm.dfm
+msgid "Ref"
+msgstr ""
+
+#: forms\uGenForm.dfm
+msgid "Ref. len"
+msgstr ""
+
+#: forms\uGenForm.dfm
+msgid "Ref. shift"
+msgstr ""
+
+#: forms\uScriptFrm.dfm
+msgid "RefCount"
+msgstr ""
+
+#: forms\uLissajousFrm.dfm
+msgid "RightGB"
+msgstr ""
+
+#: forms\uRzdFrm.dfm
+msgid "Rtf (выс. кач-во"
+msgstr "Rtf (выс. кач-во"
+
+#: forms\uRzdFrm.dfm
+msgid "Rtf отчет"
+msgstr "Rtf отчет"
+
+#: forms\uRzdFrm.dfm
+msgid "S1"
+msgstr ""
+
+#: forms\uRzdFrm.dfm
+msgid "S2"
+msgstr ""
+
+#: forms\uRzdFrm.dfm
+msgid "S3"
+msgstr ""
+
+#: forms\uRzdFrm.dfm
+msgid "S4"
+msgstr ""
+
+#: forms\uFFTfltFrm.dfm
+msgid "Scale"
+msgstr ""
+
+#: forms\uFFTfltFrm.dfm
+msgid "ScaleCurveChart"
+msgstr ""
+
+#: forms\uScriptFrm.dfm
+msgid "ScriptFile.xml"
+msgstr ""
+
+#: forms\uSelsinFrm.dfm
+msgid "SectShift"
+msgstr ""
+
+#: forms\uGenForm.dfm
+msgid "Shock"
+msgstr ""
+
+#: forms\uGenForm.dfm
+msgid "ShockCount"
+msgstr ""
+
+#: forms\uCounterFrm.dfm
+msgid "Signal"
+msgstr ""
+
+#: forms\uCounterFrm.dfm
+msgid "Signals"
+msgstr ""
+
+#: forms\uFindMaxForm.dfm
+msgid "Sin Дб(20 Lg"
+msgstr "Sin Дб(20 Lg"
+
+#: forms\uKBHMFrm.dfm
+msgid "Smaller than"
+msgstr ""
+
+#: forms\EditSignalPathFrm.dfm
+msgid "SrcPath"
+msgstr ""
+
+#: forms\uKBHMFrm.dfm
+msgid "Starts with"
+msgstr ""
+
+#: forms\uLissajousFrm.dfm
+msgid "Sx"
+msgstr ""
+
+#: forms\uLissajousFrm.dfm
+msgid "Sy"
+msgstr ""
+
+#: forms\uFrmHibFltFrm.dfm
+#: forms\uScriptFrm.dfm
+msgid "T1"
+msgstr ""
+
+#: forms\uCounterFrm.dfm
+msgid "T1, sec"
+msgstr ""
+
+#: forms\frames\uRZDTareFrame.dfm
+msgid "T1="
+msgstr ""
+
+#: forms\uFrmHibFltFrm.dfm
+#: forms\uScriptFrm.dfm
+msgid "T2"
+msgstr ""
+
+#: forms\uCounterFrm.dfm
+msgid "T2, sec"
+msgstr ""
+
+#: forms\frames\uRZDTareFrame.dfm
+msgid "T2="
+msgstr ""
+
+#: forms\uRzdFrm.dfm
+msgid "Tabs="
+msgstr ""
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+#: forms\uScriptFrm.dfm
+#: forms\uWPProcFrm.dfm
+msgid "ToolBar1"
+msgstr ""
+
+#: forms\uScriptFrm.dfm
+msgid "ToolBar2"
+msgstr ""
+
+#: forms\uScriptFrm.dfm
+msgid "ToolButton1"
+msgstr ""
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "UnLinkBtn"
+msgstr ""
+
+#: forms\uScriptFrm.dfm
+msgid "VBScriptFrm"
+msgstr ""
+
+#: forms\uRzdFrm.dfm
+msgid "Vt Trel="
+msgstr ""
+
+#: forms\uFindMaxForm.dfm
+#: forms\uLissajousFrm.dfm
+msgid "X"
+msgstr ""
+
+#: forms\uFindMaxForm_.dfm
+msgid "X1"
+msgstr ""
+
+#: forms\uTrigsFrm.dfm
+msgid "X1 значение (сек.):"
+msgstr "X1 значение (сек.):"
+
+#: forms\uGraphMngFrm.dfm
+#: forms\uRptFrm.dfm
+msgid "X1:"
+msgstr ""
+
+#: forms\uEdiSelsinFrm.dfm
+#: forms\uEditSelsinFrm.dfm
+#: forms\uRptFrm.dfm
+msgid "X1CB"
+msgstr ""
+
+#: forms\uFindMaxForm_.dfm
+msgid "X2"
+msgstr ""
+
+#: forms\uTrigsFrm.dfm
+msgid "X2 смещение от X1 (сек.):"
+msgstr "X2 смещение от X1 (сек.):"
+
+#: forms\uGraphMngFrm.dfm
+#: forms\uRptFrm.dfm
+msgid "X2:"
+msgstr ""
+
+#: forms\uFindMaxForm.dfm
+msgid "X:"
+msgstr ""
+
+#: forms\uLissajousFrm.dfm
+msgid "XCb"
+msgstr ""
+
+#: forms\uFindMaxForm.dfm
+#: forms\uLissajousFrm.dfm
+msgid "Y"
+msgstr ""
+
+#: forms\uFindMaxForm.dfm
+msgid "Y:"
+msgstr ""
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+#: forms\uSelectPathForm.dfm
+msgid "cChart1"
+msgstr ""
+
+#: forms\uFFTfltFrm.dfm
+msgid "dF="
+msgstr ""
+
+#: forms\uRzdFrm.dfm
+msgid "dX"
+msgstr ""
+
+#: forms\uRzdFrm.dfm
+msgid "dX или N (число точек разбиения шкалы)"
+msgstr "dX или N (число точек разбиения шкалы)"
+
+#: forms\uScriptFrm.dfm
+msgid "fs"
+msgstr ""
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "g"
+msgstr ""
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "hour"
+msgstr ""
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "kHz"
+msgstr ""
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "m/s"
+msgstr ""
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "min"
+msgstr ""
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "msec"
+msgstr ""
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "rpm"
+msgstr ""
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "sec"
+msgstr ""
+
+#: forms\uFindMaxForm.dfm
+msgid "Абс."
+msgstr "Абс."
+
+#: forms\uFindMaxForm_.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Абс. знач."
+msgstr "Абс. знач."
+
+#: forms\uFrmHibFltFrm.dfm
+msgid "Авто"
+msgstr "Авто"
+
+#: forms\uEdiSelsinFrm.dfm
+msgid "Автокалибровка"
+msgstr "Автокалибровка"
+
+#: forms\uRptFrm.dfm
+msgid "Автоматические полосы"
+msgstr "Автоматические полосы"
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+msgid "Амплитуда"
+msgstr "Амплитуда"
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+msgid "Амплитуда/Фаза"
+msgstr "Амплитуда/Фаза"
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+msgid "Амплитулный спектр"
+msgstr "Амплитулный спектр"
+
+#: forms\uTrigsFrm.dfm
+msgid "Анализ экстремумов"
+msgstr "Анализ экстремумов"
+
+#: forms\uBDIFrm.dfm
+msgid "База по испытаниям"
+msgstr "База по испытаниям"
+
+#: forms\uRzdFrm.dfm
+msgid "Базовый каталог"
+msgstr "Базовый каталог"
+
+#: forms\uRzdFrm.dfm
+msgid "Балансировать ноль"
+msgstr "Балансировать ноль"
+
+#: forms\uExtBalanceSignalsFrm.dfm
+msgid "Балансировка нуля"
+msgstr "Балансировка нуля"
+
+#: forms\uEditSelsinFrm.dfm
+msgid "Без общ. тчк."
+msgstr "Без общ. тчк."
+
+#: forms\uTrigsFrm.dfm
+msgid "Более"
+msgstr "Более"
+
+#: forms\uTrigsFrm.dfm
+msgid "В интервале"
+msgstr "В интервале"
+
+#: forms\uRptFrm.dfm
+msgid "В отчет попадут каналы у которые есть свойство XLSRep=1"
+msgstr "В отчет попадут каналы у которые есть свойство XLSRep=1"
+
+#: forms\uAddRZDDatafrm.dfm
+msgid "Верт. с смещ. внутрь"
+msgstr "Верт. с смещ. внутрь"
+
+#: forms\uAddRZDDatafrm.dfm
+msgid "Верт. с смещ. наружу"
+msgstr "Верт. с смещ. наружу"
+
+#: forms\uRzdFrm.dfm
+msgid "Верт. тяга:"
+msgstr "Верт. тяга:"
+
+#: forms\uAddRZDDatafrm.dfm
+msgid "Верт. центр."
+msgstr "Верт. центр."
+
+#: forms\uRzdFrm.dfm
+msgid "Верт. центр. нагр."
+msgstr "Верт. центр. нагр."
+
+#: forms\uGraphMngFrm.dfm
+msgid "Вертикальные линии"
+msgstr "Вертикальные линии"
+
+#: forms\uFrmHibFltFrm.dfm
+msgid "Весь сигнал"
+msgstr "Весь сигнал"
+
+#: forms\uEditSignalsRepPropFrn.dfm
+msgid "Включить"
+msgstr "Включить"
+
+#: forms\frames\uTmpltNameFrame.dfm
+msgid "Включить дату"
+msgstr "Включить дату"
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+msgid "Возвращаемый результат"
+msgstr "Возвращаемый результат"
+
+#: forms\uRptFrm.dfm
+msgid "Вписать с значениями имена оценок (Word)"
+msgstr "Вписать с значениями имена оценок (Word)"
+
+#: forms\uLissajousFrm.dfm
+#: forms\uRptFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Время"
+msgstr "Время"
+
+#: forms\uCorrectUTS.dfm
+msgid "Время испытания"
+msgstr "Test duration"
+
+#: forms\uCorrectUTS.dfm
+msgid "Время старта испытания прописано в Mera файле ключ DateTime"
+msgstr "Время старта испытания прописано в Mera файле ключ DateTime"
+
+#: forms\frames\uIntervalFrame.dfm
+#: forms\uSelectIntervalFrm.dfm
+msgid "Все испытание"
+msgstr "Все испытание"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Все каналы"
+msgstr "Все каналы"
+
+#: forms\uFindMaxForm.dfm
+msgid "Все что выше кривой"
+msgstr "Все что выше кривой"
+
+#: forms\uMainFrm.dfm
+msgid "Второй файл будет начинаться с секунды указанной в индикаторе (т"
+msgstr "Второй файл будет начинаться с секунды указанной в индикаторе (т"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+#: forms\uGenForm.dfm
+#: forms\uSelectPathForm.dfm
+msgid "Выберите действие"
+msgstr "Выберите действие"
+
+#: forms\uMainFrm.dfm
+msgid "Выбор второго файла, который будет присоединен в конец первого"
+msgstr "Выбор второго файла, который будет присоединен в конец первого"
+
+#: forms\uSelectIntervalFrm.dfm
+msgid "Выбор границ испытания"
+msgstr "Выбор границ испытания"
+
+#: forms\uSelectPathForm.dfm
+msgid "Выбор границ испытания:"
+msgstr "Выбор границ испытания:"
+
+#: forms\uAddSignalFrm.dfm
+#: forms\uEditSignalsRepPropFrn.dfm
+msgid "Выбор действия"
+msgstr "Выбор действия"
+
+#: forms\uSelectPathForm.dfm
+msgid "Выбор замера"
+msgstr "Выбор замера"
+
+#: forms\uMainFrm.dfm
+msgid "Выбор первого файла к которому будет присоединен второй"
+msgstr "Выбор первого файла к которому будет присоединен второй"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "Выбор пути для сохранения результатов экспрес анализа в файл"
+msgstr "Выбор пути для сохранения результатов экспрес анализа в файл"
+
+#: forms\uRptFrm.dfm
+msgid "Выбрать все оценки"
+msgstr "Выбрать все оценки"
+
+#: forms\frames\uRZDTareFrame.dfm
+msgid "Выбрать интервал для вычисления матрицы"
+msgstr "Выбрать интервал для вычисления матрицы"
+
+#: forms\frames\uRZDTareFrame.dfm
+#: forms\uRzdFrm.dfm
+msgid "Выбрать интервал для вычисления смещения нуля"
+msgstr "Выбрать интервал для вычисления смещения нуля"
+
+#: forms\uRzdFrm.dfm
+msgid "Выбрать интервалы обработки для всех замеров по диапазону график"
+msgstr "Выбрать интервалы обработки для всех замеров по диапазону график"
+
+#: forms\uRzdFrm.dfm
+msgid "Выбрать интервалы обработки для всех замеров по курсору"
+msgstr "Выбрать интервалы обработки для всех замеров по курсору"
+
+#: forms\frames\uRZDTareFrame.dfm
+#: forms\uRzdFrm.dfm
+msgid "Выбрать по курсору"
+msgstr "Выбрать по курсору"
+
+#: forms\uScriptFrm.dfm
+msgid "Выделить все"
+msgstr "Выделить все"
+
+#: forms\uEditSignalsRepPropFrn.dfm
+msgid "Выключить"
+msgstr "Выключить"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Выполнить макрос"
+msgstr "Выполнить макрос"
+
+#: forms\uEditTubeFrm.dfm
+msgid "Выход"
+msgstr "Выход"
+
+#: forms\uCorrectUTS.dfm
+#: forms\uSelectIntervalFrm.dfm
+msgid "Вычислить"
+msgstr "Evaluate"
+
+#: forms\uGenForm.dfm
+#: forms\uWPProcFrm.dfm
+msgid "Генератор"
+msgstr "Генератор"
+
+#: forms\frames\uTmpltNameFrame.dfm
+msgid "Генерить путь автоматом"
+msgstr "Генерить путь автоматом"
+
+#: forms\uRzdFrm.dfm
+msgid "Гор. нагр."
+msgstr "Гор. нагр."
+
+#: forms\uRzdFrm.dfm
+msgid "Гор. смещ. внутрь"
+msgstr "Гор. смещ. внутрь"
+
+#: forms\uRzdFrm.dfm
+msgid "Гор. смещ. наружу"
+msgstr "Гор. смещ. наружу"
+
+#: forms\uRzdFrm.dfm
+msgid "Гор. тяга:"
+msgstr "Гор. тяга:"
+
+#: forms\uAddRZDDatafrm.dfm
+msgid "Гориз. сила"
+msgstr "Гориз. сила"
+
+#: forms\uWPProcFrm.dfm
+msgid "Границы"
+msgstr "Границы"
+
+#: forms\uTrigsFrm.dfm
+msgid "Границы поиска"
+msgstr "Границы поиска"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+#: forms\uWPProcFrm.dfm
+msgid "Графика"
+msgstr "Графика"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Графики"
+msgstr "Графики"
+
+#: forms\uBDIFrm.dfm
+#: forms\uGraphMngFrm.dfm
+msgid "Графический объект не создан"
+msgstr "Графический объект не создан"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+#: forms\uTrigLvlEditFrm.dfm
+msgid "Далее"
+msgstr "Далее"
+
+#: forms\uRzdFrm.dfm
+msgid "Датчик №1:"
+msgstr "Датчик №1:"
+
+#: forms\uRzdFrm.dfm
+msgid "Датчик №2:"
+msgstr "Датчик №2:"
+
+#: forms\uRzdFrm.dfm
+msgid "Датчик №3:"
+msgstr "Датчик №3:"
+
+#: forms\uRzdFrm.dfm
+msgid "Датчик №4:"
+msgstr "Датчик №4:"
+
+#: forms\uFindMaxForm_.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Дб (20Lg"
+msgstr "Дб (20Lg"
+
+#: forms\uLissajousFrm.dfm
+msgid "Диаметр"
+msgstr "Диаметр"
+
+#: forms\frames\uRZDTareFrame.dfm
+#: forms\uRzdFrm.dfm
+msgid "Диапазон графика"
+msgstr "Диапазон графика"
+
+#: forms\uRptFrm.dfm
+#: forms\uSubRegsFrm.dfm
+msgid "Длина интервала, сек."
+msgstr "Длина интервала, сек."
+
+#: forms\uGraphMngFrm.dfm
+msgid "Длина сигнала"
+msgstr "Длина сигнала"
+
+#: forms\uGenForm.dfm
+msgid "Длительность, с"
+msgstr "Длительность, с"
+
+#: forms\frames\uIntervalFrame.dfm
+#: forms\uSelectIntervalFrm.dfm
+msgid "Длительность, с:"
+msgstr "Длительность, с:"
+
+#: forms\frames\uWPNameFilterFrame.dfm
+#: forms\uCorrectUTS.dfm
+#: forms\uFFTfltFrm.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+#: forms\uWPProcFrm.dfm
+msgid "Добавить"
+msgstr "Add"
+
+#: forms\uRzdFrm.dfm
+msgid "Добавить гистограмму"
+msgstr "Добавить гистограмму"
+
+#: forms\uKBHMFrm.dfm
+#: forms\uSelsinFrm.dfm
+msgid "Добавить группу"
+msgstr "Добавить группу"
+
+#: forms\back\uAddScriptItemFrm.dfm
+#: forms\uAddScriptItemFrm.dfm
+msgid "Добавить канал"
+msgstr "Добавить канал"
+
+#: forms\back\uAddScriptItemFrm.dfm
+#: forms\uAddScriptItemFrm.dfm
+msgid "Добавить канал:"
+msgstr "Добавить канал:"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Добавить обратную связь"
+msgstr "Добавить обратную связь"
+
+#: forms\uRptFrm.dfm
+msgid "Добавить параметры"
+msgstr "Добавить параметры"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "Добавить полосу"
+msgstr "Добавить полосу"
+
+#: forms\EditSignalPathFrm.dfm
+#: forms\uAddSignalFrm.dfm
+msgid "Добавить сигналы"
+msgstr "Добавить сигналы"
+
+#: forms\back\uAddScriptItemFrm.dfm
+#: forms\uAddScriptItemFrm.dfm
+#: forms\uScriptFrm.dfm
+msgid "Добавить тег"
+msgstr "Добавить тег"
+
+#: forms\uFindMaxForm.dfm
+msgid "Добавить точку"
+msgstr "Добавить точку"
+
+#: forms\uAddSignalFrm.dfm
+msgid "Добавить/ Удалить сигналы"
+msgstr "Добавить/ Удалить сигналы"
+
+#: forms\uAddRZDDatafrm.dfm
+msgid "Добавление данных в базу"
+msgstr "Добавление данных в базу"
+
+#: forms\uTrigsFrm.dfm
+msgid "Добавление триггера"
+msgstr "Добавление триггера"
+
+#: forms\uRzdFrm.dfm
+msgid "Доли"
+msgstr "Доли"
+
+#: forms\uWPProcFrm.dfm
+msgid "Дополнения"
+msgstr "Дополнения"
+
+#: forms\uRptFrm.dfm
+msgid "Дополнительно"
+msgstr "Дополнительно"
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+msgid "Дополнять нулями"
+msgstr "Дополнять нулями"
+
+#: forms\uRzdFrm.dfm
+msgid "Допустимое отклонение в долях"
+msgstr "Допустимое отклонение в долях"
+
+#: forms\uAddSignalFrm.dfm
+msgid "Доступные сигналы"
+msgstr "Доступные сигналы"
+
+#: forms\uScriptFrm.dfm
+#: forms\uTrigFrm.dfm
+msgid "Ед."
+msgstr "Ед."
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+#: forms\uGraphMngFrm.dfm
+#: forms\uTrigFrm.dfm
+msgid "Единицы"
+msgstr "Единицы"
+
+#: forms\uTrigsFrm.dfm
+msgid "Единицы для порога"
+msgstr "Единицы для порога"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Единицы измерения"
+msgstr "Единицы измерения"
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "Единицы измерения X:"
+msgstr "Единицы измерения X:"
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "Единицы измерения Y:"
+msgstr "Единицы измерения Y:"
+
+#: forms\back\uAddScriptItemFrm.dfm
+msgid "Единицы измерения:"
+msgstr "Единицы измерения:"
+
+#: forms\uRzdFrm.dfm
+#: forms\uWPProcFrm.dfm
+msgid "Журнал"
+msgstr "Журнал"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Завершить"
+msgstr "Завершить"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+#: forms\uExtBalanceSignalsFrm.dfm
+#: forms\uFFTfltFrm.dfm
+#: forms\uRptFrm.dfm
+#: forms\uRzdFrm.dfm
+#: forms\uWPProcFrm.dfm
+msgid "Загрузить"
+msgstr "Загрузить"
+
+#: forms\uRzdFrm.dfm
+msgid "Загрузить данные и расчитать матрицу"
+msgstr "Загрузить данные и расчитать матрицу"
+
+#: forms\uRptFrm.dfm
+msgid "Загрузить настройки"
+msgstr "Загрузить настройки"
+
+#: forms\frames\uIntervalFrame.dfm
+#: forms\uSelectIntervalFrm.dfm
+msgid "Задать вручную"
+msgstr "Задать вручную"
+
+#: forms\uAddRZDDatafrm.dfm
+#: forms\uRzdFrm.dfm
+msgid "Заезд"
+msgstr "Заезд"
+
+#: forms\uTrigsFrm.dfm
+msgid "Замер"
+msgstr "Замер"
+
+#: forms\uSelectPathForm.dfm
+msgid "Замер:"
+msgstr "Замер:"
+
+#: forms\uRzdFrm.dfm
+msgid "Заместить файл"
+msgstr "Заместить файл"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Записывать начальное состояние \"1\""
+msgstr "Записывать начальное состояние \"1\""
+
+#: forms\frames\uWPNameFilterFrame.dfm
+#: forms\uRptFrm.dfm
+#: forms\uScriptFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Значение"
+msgstr "Значение"
+
+#: forms\uWPProcFrm.dfm
+msgid "Изменить интервал обработки"
+msgstr "Изменить интервал обработки"
+
+#: forms\uWPProcFrm.dfm
+msgid "Изменить оператор"
+msgstr "Изменить оператор"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+#: forms\uRzdFrm.dfm
+msgid "Импорт"
+msgstr "Импорт"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "Импорт настроек полос в файл"
+msgstr "Импорт настроек полос в файл"
+
+#: forms\uBDIFrm.dfm
+#: forms\uCorrectUTS.dfm
+#: forms\uEditSignalsRepPropFrn.dfm
+#: forms\uExtBalanceSignalsFrm.dfm
+#: forms\uRptFrm.dfm
+#: forms\uScriptFrm.dfm
+#: forms\uSelsinFrm.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Имя"
+msgstr "Name"
+
+#: forms\uEdiSelsinFrm.dfm
+#: forms\uEditSelsinFrm.dfm
+msgid "Имя датчика"
+msgstr "Имя датчика"
+
+#: forms\frames\uTmpltNameFrame.dfm
+msgid "Имя замера"
+msgstr "Имя замера"
+
+#: forms\frames\uTmpltNameFrame.dfm
+msgid "Имя замера по умолчанию:"
+msgstr "Имя замера по умолчанию:"
+
+#: forms\uAddRZDDatafrm.dfm
+msgid "Имя замера:"
+msgstr "Имя замера:"
+
+#: forms\uBDIFrm.dfm
+msgid "Имя испытания"
+msgstr "Имя испытания"
+
+#: forms\back\uAddScriptItemFrm.dfm
+#: forms\uAddScriptItemFrm.dfm
+#: forms\uRptFrm.dfm
+msgid "Имя канала:"
+msgstr "Имя канала:"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Имя линии"
+msgstr "Имя линии"
+
+#: forms\uRptFrm.dfm
+msgid "Имя параметра"
+msgstr "Имя параметра"
+
+#: forms\frames\uTmpltNameFrame.dfm
+msgid "Имя по умолчанию"
+msgstr "Имя по умолчанию"
+
+#: forms\uEditSignalsRepPropFrn.dfm
+msgid "Имя свойства:"
+msgstr "Имя свойства:"
+
+#: forms\uEditTubeFrm.dfm
+#: forms\uGenForm.dfm
+msgid "Имя сигнала"
+msgstr "Имя сигнала"
+
+#: forms\uEditTubeFrm.dfm
+msgid "Имя трубки допуска"
+msgstr "Имя трубки допуска"
+
+#: forms\uEditTubeFrm.dfm
+msgid "Имя трубки допуска (расширение и путь указывать не требуется. Фа"
+msgstr "Имя трубки допуска (расширение и путь указывать не требуется. Фа"
+
+#: forms\uFFTfltFrm.dfm
+msgid "Инд."
+msgstr "Инд."
+
+#: forms\uFFTfltFrm.dfm
+msgid "Индекс 1"
+msgstr "Индекс 1"
+
+#: forms\uFFTfltFrm.dfm
+msgid "Индекс 2"
+msgstr "Индекс 2"
+
+#: forms\uSelectPathForm.dfm
+msgid "Индекс:"
+msgstr "Индекс:"
+
+#: forms\uRptFrm.dfm
+msgid "Индексы"
+msgstr "Индексы"
+
+#: forms\uLissajousFrm.dfm
+msgid "Инкремент, сек"
+msgstr "Инкремент, сек"
+
+#: forms\frames\uRZDTareFrame.dfm
+msgid "Интервал \"вычисления нуля\":"
+msgstr "Интервал \"вычисления нуля\":"
+
+#: forms\frames\uRZDTareFrame.dfm
+msgid "Интервал обработки:"
+msgstr "Интервал обработки:"
+
+#: forms\uFindMaxForm_.dfm
+msgid "Искать \"+\" макс."
+msgstr "Искать \"+\" макс."
+
+#: forms\uFindMaxForm_.dfm
+msgid "Искать \"-\" макс."
+msgstr "Искать \"-\" макс."
+
+#: forms\uGraphMngFrm.dfm
+msgid "Искать интервал"
+msgstr "Искать интервал"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Искать спады"
+msgstr "Искать спады"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Искать фронты"
+msgstr "Искать фронты"
+
+#: forms\uFindMaxForm_.dfm
+msgid "Искать экстремумы:"
+msgstr "Искать экстремумы:"
+
+#: forms\uRzdFrm.dfm
+msgid "Исп. имена"
+msgstr "Исп. имена"
+
+#: forms\uRptFrm.dfm
+msgid "Использовать БДИ"
+msgstr "Использовать БДИ"
+
+#: forms\uRzdFrm.dfm
+msgid "Использовать префиксы для поиска сигналов"
+msgstr "Использовать префиксы для поиска сигналов"
+
+#: forms\uRptFrm.dfm
+msgid "Использовать фильтр"
+msgstr "Использовать фильтр"
+
+#: forms\uAddSignalFrm.dfm
+msgid "Используемые сигналы"
+msgstr "Используемые сигналы"
+
+#: forms\uCorrectUTS.dfm
+msgid "Используется если галочка Определить сдвиг в каждом замере снята"
+msgstr "Используется если галочка Определить сдвиг в каждом замере снята"
+
+#: forms\uBDIFrm.dfm
+msgid "Испытание"
+msgstr "Испытание"
+
+#: forms\uChangeSrcFrm.dfm
+#: forms\uGraphMngFrm.dfm
+msgid "Источник"
+msgstr "Источник"
+
+#: forms\EditSignalPathFrm.dfm
+msgid "Источник:"
+msgstr "Источник:"
+
+#: forms\uWPProcFrm.dfm
+msgid "Источники операторов"
+msgstr "Источники операторов"
+
+#: forms\uWPProcFrm.dfm
+msgid "Источники сигналов"
+msgstr "Источники сигналов"
+
+#: forms\uTrigsFrm.dfm
+msgid "Исходная функция"
+msgstr "Исходная функция"
+
+#: forms\uAddRZDDatafrm.dfm
+msgid "Калибровка"
+msgstr "Калибровка"
+
+#: forms\uEdiSelsinFrm.dfm
+msgid "Калибровка амплитуд фазных напряжений"
+msgstr "Калибровка амплитуд фазных напряжений"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Канал"
+msgstr "Канал"
+
+#: forms\frames\uIntervalFrame.dfm
+#: forms\uSelectIntervalFrm.dfm
+msgid "Канал \"Старт\""
+msgstr "Канал \"Старт\""
+
+#: forms\frames\uIntervalFrame.dfm
+#: forms\uSelectIntervalFrm.dfm
+msgid "Канал \"Стоп\""
+msgstr "Канал \"Стоп\""
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Канал сброса времени"
+msgstr "Канал сброса времени"
+
+#: forms\uRzdFrm.dfm
+msgid "Картинки отдельно"
+msgstr "Картинки отдельно"
+
+#: forms\uRzdFrm.dfm
+msgid "Каталог"
+msgstr "Каталог"
+
+#: forms\frames\uTmpltNameFrame.dfm
+msgid "Каталог замера"
+msgstr "Каталог замера"
+
+#: forms\frames\uTmpltNameFrame.dfm
+msgid "Каталог замера по умолчанию:"
+msgstr "Каталог замера по умолчанию:"
+
+#: forms\frames\uTmpltNameFrame.dfm
+msgid "Каталог по умолчанию"
+msgstr "Каталог по умолчанию"
+
+#: forms\uExtBalanceSignalsFrm.dfm
+msgid "Конец"
+msgstr "Конец"
+
+#: forms\uFFTfltFrm.dfm
+msgid "Конец полосы"
+msgstr "Конец полосы"
+
+#: forms\frames\uIntervalFrame.dfm
+#: forms\uSelectIntervalFrm.dfm
+msgid "Конец, с:"
+msgstr "Конец, с:"
+
+#: forms\uGenForm.dfm
+msgid "Конечн. частота F2, Гц"
+msgstr "Конечн. частота F2, Гц"
+
+#: forms\uCorrectUTS.dfm
+msgid "Корректируемые UTS сигналы:"
+msgstr "Corrected UTS signals:"
+
+#: forms\uCorrectUTS.dfm
+#: forms\uWPProcFrm.dfm
+msgid "Коррекция времени"
+msgstr "Time Correction"
+
+#: forms\uFindMaxForm.dfm
+msgid "Кривая"
+msgstr "Кривая"
+
+#: forms\uRptFrm.dfm
+msgid "Курсор"
+msgstr "Курсор"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Легенда"
+msgstr "Легенда"
+
+#: forms\uGenForm.dfm
+msgid "Линейный закон"
+msgstr "Линейный закон"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Линии"
+msgstr "Линии"
+
+#: forms\uRzdFrm.dfm
+msgid "Линковать промежуточные вычисления в дерево сигналов"
+msgstr "Линковать промежуточные вычисления в дерево сигналов"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Логарифм"
+msgstr "Логарифм"
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "МПа"
+msgstr "МПа"
+
+#: forms\uRptFrm.dfm
+msgid "Максимальное число колонок:"
+msgstr "Максимальное число колонок:"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Максимум"
+msgstr "Максимум"
+
+#: forms\uFFTfltFrm.dfm
+msgid "Масштаб"
+msgstr "Масштаб"
+
+#: forms\uRzdFrm.dfm
+msgid "Матрица"
+msgstr "Матрица"
+
+#: forms\uRzdFrm.dfm
+msgid "Матрица влияния РЖД"
+msgstr "Матрица влияния РЖД"
+
+#: forms\uRzdFrm.dfm
+msgid "Матрицы"
+msgstr "Матрицы"
+
+#: forms\uGenForm.dfm
+msgid "Меандр"
+msgstr "Меандр"
+
+#: forms\uTrigsFrm.dfm
+msgid "Менее"
+msgstr "Менее"
+
+#: forms\uGenForm.dfm
+msgid "Менять амплитуду"
+msgstr "Менять амплитуду"
+
+#: forms\uRzdFrm.dfm
+msgid "Менять замер"
+msgstr "Менять замер"
+
+#: forms\uGenForm.dfm
+msgid "Менять частоту"
+msgstr "Менять частоту"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Минимум"
+msgstr "Минимум"
+
+#: forms\uSelsinFrm.dfm
+msgid "Модуль"
+msgstr "Модуль"
+
+#: forms\uGraphMngFrm.dfm
+msgid "На одной оси"
+msgstr "На одной оси"
+
+#: forms\EditSignalPathFrm.dfm
+msgid "Назначение:"
+msgstr "Назначение:"
+
+#: forms\uAddRZDDatafrm.dfm
+#: forms\uEditTubeFrm.dfm
+msgid "Назначить"
+msgstr "Назначить"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Назначить канал"
+msgstr "Назначить канал"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "Наименование"
+msgstr "Наименование"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "Настройка алгоритма"
+msgstr "Настройка алгоритма"
+
+#: forms\uSelectIntervalFrm.dfm
+msgid "Настройка выбора"
+msgstr "Настройка выбора"
+
+#: forms\uWPProcFrm.dfm
+msgid "Настройка границ"
+msgstr "Настройка границ"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Настройка графики"
+msgstr "Настройка графики"
+
+#: forms\uIntervalFrm.dfm
+msgid "Настройка интервала"
+msgstr "Настройка интервала"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Настройка отчета циклограммы (версия 24.08.18)"
+msgstr "Настройка отчета циклограммы (версия 24.08.18)"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "Настройка полос"
+msgstr "Настройка полос"
+
+#: forms\uRptFrm.dfm
+msgid "Настройка расчета по спектру"
+msgstr "Настройка расчета по спектру"
+
+#: forms\uSpmFrm.dfm
+msgid "Настройка расчета спектра"
+msgstr "Настройка расчета спектра"
+
+#: forms\uEditSignalsRepPropFrn.dfm
+msgid "Настройка списка каналов для отчета"
+msgstr "Настройка списка каналов для отчета"
+
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Настройка триггеров"
+msgstr "Настройка триггеров"
+
+#: forms\uTrigLvlEditFrm.dfm
+msgid "Настройка уровней"
+msgstr "Настройка уровней"
+
+#: forms\uFrmHibFltFrm.dfm
+msgid "Настройка фильтра"
+msgstr "Настройка фильтра"
+
+#: forms\uGenForm.dfm
+msgid "Нач. частота F1, Гц"
+msgstr "Нач. частота F1, Гц"
+
+#: forms\uExtBalanceSignalsFrm.dfm
+msgid "Начало"
+msgstr "Начало"
+
+#: forms\uFFTfltFrm.dfm
+msgid "Начало полосы"
+msgstr "Начало полосы"
+
+#: forms\frames\uIntervalFrame.dfm
+#: forms\uSelectIntervalFrm.dfm
+msgid "Начало, с:"
+msgstr "Начало, с:"
+
+#: forms\uSelectIntervalFrm.dfm
+msgid "Не активно"
+msgstr "Не активно"
+
+#: forms\uTrigsFrm.dfm
+msgid "Не использовать проверку"
+msgstr "Не использовать проверку"
+
+#: forms\uCorrectUTS.dfm
+msgid "Не найден канал UTS"
+msgstr "UTS channel not found"
+
+#: forms\uFrmSync.dfm
+msgid "Невидимая служебная форма для обработки сообщений"
+msgstr "Невидимая служебная форма для обработки сообщений"
+
+#: forms\uRzdFrm.dfm
+msgid "Нерекурсивный фильтр ФНЧ"
+msgstr "Нерекурсивный фильтр ФНЧ"
+
+#: forms\uTrigsFrm.dfm
+msgid "Номер производной"
+msgstr "Номер производной"
+
+#: forms\uCorrectUTS.dfm
+#: forms\uGraphMngFrm.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Номер срабатывания"
+msgstr "Trigger number"
+
+#: forms\uCorrectUTS.dfm
+msgid "Нужно включить если замеры не содержат UTS но имеют одноименный "
+msgstr "Нужно включить если замеры не содержат UTS но имеют одноименный "
+
+#: forms\uRptFrm.dfm
+msgid "Обновить полосу"
+msgstr "Обновить полосу"
+
+#: forms\uRzdFrm.dfm
+msgid "Обновить пути в базе"
+msgstr "Обновить пути в базе"
+
+#: forms\uCorrectUTS.dfm
+msgid "Обнулить"
+msgstr "Reset"
+
+#: forms\uSelectIntervalFrm.dfm
+#: forms\uWPProcFrm.dfm
+msgid "Обрабатываемые сигналы"
+msgstr "Обрабатываемые сигналы"
+
+#: forms\uKBHMFrm.dfm
+msgid "Обработка БМП"
+msgstr "Обработка БМП"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Обратная связь"
+msgstr "Обратная связь"
+
+#: forms\uFFTInverseFrm.dfm
+msgid "Обратное преобразование Фурье"
+msgstr "Обратное преобразование Фурье"
+
+#: forms\uBDIFrm.dfm
+msgid "Объект испытания"
+msgstr "Объект испытания"
+
+#: forms\uWPProcFrm.dfm
+msgid "Оператор"
+msgstr "Оператор"
+
+#: forms\uRptFrm.dfm
+msgid "Описание"
+msgstr "Описание"
+
+#: forms\back\uAddScriptItemFrm.dfm
+#: forms\uAddScriptItemFrm.dfm
+msgid "Описание:"
+msgstr "Описание:"
+
+#: forms\uChangeSrcFrm.dfm
+msgid "Определение источников сигналов"
+msgstr "Определение источников сигналов"
+
+#: forms\uRzdFrm.dfm
+msgid "Определение нагруженности участка железнодорожного пути"
+msgstr "Определение нагруженности участка железнодорожного пути"
+
+#: forms\uCorrectUTS.dfm
+msgid "Определить сдвиг в каждом замере по имени канала"
+msgstr "Determine shift in each measurement by channel name"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Оси"
+msgstr "Оси"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Ось X:"
+msgstr "Ось X:"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Ось Y:"
+msgstr "Ось Y:"
+
+#: forms\uGenForm.dfm
+msgid "Отклик"
+msgstr "Отклик"
+
+#: forms\uFindMaxForm_.dfm
+msgid "Отклонение от среднего"
+msgstr "Отклонение от среднего"
+
+#: forms\uFindMaxForm_.dfm
+msgid "Отклонение от среднего (МО)"
+msgstr "Отклонение от среднего (МО)"
+
+#: forms\uRzdFrm.dfm
+msgid "Открыть отчет"
+msgstr "Открыть отчет"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+#: forms\uRzdFrm.dfm
+msgid "Открыть отчет после создания"
+msgstr "Открыть отчет после создания"
+
+#: forms\uRptFrm.dfm
+msgid "Открыть файл после создания"
+msgstr "Открыть файл после создания"
+
+#: forms\EditSignalPathFrm.dfm
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCorrectUTS.dfm
+#: forms\uCyclogramRepFrm.dfm
+#: forms\uEditSelsinFrm.dfm
+#: forms\uFFTInverseFrm.dfm
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+#: forms\uFrmHibFltFrm.dfm
+#: forms\uGenForm.dfm
+#: forms\uIntervalFrm.dfm
+#: forms\uSaveSimpleMeraFrm.dfm
+#: forms\uSelectPathForm.dfm
+#: forms\uSpmFrm.dfm
+#: forms\uTrigLvlEditFrm.dfm
+msgid "Отмена"
+msgstr "Cancel"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Отображать допуски"
+msgstr "Отображать допуски"
+
+#: forms\uRzdFrm.dfm
+msgid "Отрисовать графики"
+msgstr "Отрисовать графики"
+
+#: forms\uGraphMngFrm.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Отступ на старте, с"
+msgstr "Отступ на старте, с"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Отступ на стопе, с"
+msgstr "Отступ на стопе, с"
+
+#: forms\uRptFrm.dfm
+msgid "Отступ слева:"
+msgstr "Отступ слева:"
+
+#: forms\uRptFrm.dfm
+msgid "Отступ справа:"
+msgstr "Отступ справа:"
+
+#: forms\uRzdFrm.dfm
+msgid "Отчет"
+msgstr "Отчет"
+
+#: forms\uRptFrm.dfm
+msgid "Отчет MS Excel"
+msgstr "Отчет MS Excel"
+
+#: forms\uRptFrm.dfm
+msgid "Отчет MS Word"
+msgstr "Отчет MS Word"
+
+#: forms\frames\uTmpltNameFrame.dfm
+msgid "Отчет циклограмма.xls"
+msgstr "Отчет циклограмма.xls"
+
+#: forms\uRptFrm.dfm
+msgid "Оценки"
+msgstr "Оценки"
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "Па"
+msgstr "Па"
+
+#: forms\uRzdFrm.dfm
+msgid "Параметр для расчета матрицы"
+msgstr "Параметр для расчета матрицы"
+
+#: forms\uWPProcFrm.dfm
+msgid "Параметры"
+msgstr "Параметры"
+
+#: forms\uKBHMFrm.dfm
+msgid "Параметры двигателя"
+msgstr "Параметры двигателя"
+
+#: forms\uRzdFrm.dfm
+msgid "Параметры расчета"
+msgstr "Параметры расчета"
+
+#: forms\uGenForm.dfm
+msgid "Параметры сигнала"
+msgstr "Параметры сигнала"
+
+#: forms\uRzdFrm.dfm
+msgid "Первый импульс"
+msgstr "Первый импульс"
+
+#: forms\uFrmHibFltFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Передискретизация"
+msgstr "Передискретизация"
+
+#: forms\uScriptFrm.dfm
+msgid "Переменные..."
+msgstr "Переменные..."
+
+#: forms\uCorrectUTS.dfm
+msgid "Перечень замеров"
+msgstr "List of measurements"
+
+#: forms\uScriptFrm.dfm
+msgid "Период выполнения скрипта"
+msgstr "Период выполнения скрипта"
+
+#: forms\uMainFrm.dfm
+msgid "Писать с разрывами"
+msgstr "Писать с разрывами"
+
+#: forms\uEdiSelsinFrm.dfm
+#: forms\uEditSelsinFrm.dfm
+msgid "Питание:"
+msgstr "Питание:"
+
+#: forms\uWPProcFrm.dfm
+msgid "Плагин пакетной обработки"
+msgstr "Плагин пакетной обработки"
+
+#: forms\uGraphMngFrm.dfm
+msgid "По вертикали"
+msgstr "По вертикали"
+
+#: forms\uRptFrm.dfm
+msgid "По времени"
+msgstr "По времени"
+
+#: forms\uFindMaxForm.dfm
+msgid "По гистерезису"
+msgstr "По гистерезису"
+
+#: forms\uGraphMngFrm.dfm
+msgid "По горизонтали"
+msgstr "По горизонтали"
+
+#: forms\uTrigsFrm.dfm
+msgid "По значению"
+msgstr "По значению"
+
+#: forms\uRptFrm.dfm
+msgid "По каналу"
+msgstr "По каналу"
+
+#: forms\frames\uIntervalFrame.dfm
+#: forms\uSelectIntervalFrm.dfm
+msgid "По курсору в графике WP"
+msgstr "По курсору в графике WP"
+
+#: forms\frames\uIntervalFrame.dfm
+#: forms\uSelectIntervalFrm.dfm
+msgid "По триггерным сигналам"
+msgstr "По триггерным сигналам"
+
+#: forms\uRptFrm.dfm
+#: forms\uRzdFrm.dfm
+msgid "Поверх окон"
+msgstr "Поверх окон"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "Поддреживает комбинацию Ctrl+C"
+msgstr "Поддреживает комбинацию Ctrl+C"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Поиск границ отображения"
+msgstr "Поиск границ отображения"
+
+#: forms\uTrigFrm.dfm
+msgid "Поиск интервала"
+msgstr "Поиск интервала"
+
+#: forms\uFFTInverseFrm.dfm
+msgid "Поиск каналов"
+msgstr "Поиск каналов"
+
+#: forms\uFindMaxForm_.dfm
+msgid "Поиск максимумов"
+msgstr "Поиск максимумов"
+
+#: forms\uFindMaxForm.dfm
+msgid "Поиск экстремумов"
+msgstr "Поиск экстремумов"
+
+#: forms\uFFTfltFrm.dfm
+#: forms\uRptFrm.dfm
+msgid "Показать подсказки"
+msgstr "Показать подсказки"
+
+#: forms\uMNKFrm.dfm
+#: forms\uRzdFrm.dfm
+msgid "Полином"
+msgstr "Полином"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Полный масштаб"
+msgstr "Полный масштаб"
+
+#: forms\uFindMaxForm_.dfm
+msgid "Положение курсора"
+msgstr "Положение курсора"
+
+#: forms\uFindMaxForm.dfm
+msgid "Положительные экстремумы"
+msgstr "Положительные экстремумы"
+
+#: forms\frames\uTmpltNameFrame.dfm
+msgid "Пользовательское"
+msgstr "Пользовательское"
+
+#: forms\uScriptFrm.dfm
+msgid "Помощь"
+msgstr "Помощь"
+
+#: forms\uCorrectUTS.dfm
+msgid "Поправка времени, с"
+msgstr "Time offset, s"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uTrigFrm.dfm
+msgid "Порог"
+msgstr "Порог"
+
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Порог триггера"
+msgstr "Порог триггера"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Порог триггера \"Старт\""
+msgstr "Порог триггера \"Старт\""
+
+#: forms\uGraphMngFrm.dfm
+msgid "Порог триггера \"Стоп\""
+msgstr "Порог триггера \"Стоп\""
+
+#: forms\uRptFrm.dfm
+msgid "Порог:"
+msgstr "Порог:"
+
+#: forms\uCorrectUTS.dfm
+msgid "Пороговое значение"
+msgstr "Threshold value"
+
+#: forms\uLissajousFrm.dfm
+msgid "Порция"
+msgstr "Порция"
+
+#: forms\uRzdFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Порция, сек"
+msgstr "Порция, сек"
+
+#: forms\uRzdFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Порядок фильтра:"
+msgstr "Порядок фильтра:"
+
+#: forms\uGenForm.dfm
+msgid "Постоянная амплитуда"
+msgstr "Постоянная амплитуда"
+
+#: forms\uGenForm.dfm
+msgid "Постоянная частота"
+msgstr "Постоянная частота"
+
+#: forms\uRzdFrm.dfm
+msgid "Построение гистограмм"
+msgstr "Построение гистограмм"
+
+#: forms\uWPProcFrm.dfm
+msgid "Построение графики"
+msgstr "Построение графики"
+
+#: forms\uMainFrm.dfm
+msgid "При включении параметр \"Смещение второго файла игнорируется\""
+msgstr "При включении параметр \"Смещение второго файла игнорируется\""
+
+#: forms\uFindMaxForm_.dfm
+msgid "При превышении уровня начинают расчитываться максимумы"
+msgstr "При превышении уровня начинают расчитываться максимумы"
+
+#: forms\uRptFrm.dfm
+msgid "Прим."
+msgstr "Прим."
+
+#: forms\EditSignalPathFrm.dfm
+#: forms\uAddRZDDatafrm.dfm
+#: forms\uCorrectUTS.dfm
+#: forms\uEditSelsinFrm.dfm
+#: forms\uEditSignalsRepPropFrn.dfm
+#: forms\uEditTubeFrm.dfm
+#: forms\uExtBalanceSignalsFrm.dfm
+#: forms\uFFTInverseFrm.dfm
+#: forms\uFFTfltFrm.dfm
+#: forms\uFindMaxForm_.dfm
+#: forms\uFrmHibFltFrm.dfm
+#: forms\uGenForm.dfm
+#: forms\uGraphMngFrm.dfm
+#: forms\uIntervalFrm.dfm
+#: forms\uMNKFrm.dfm
+#: forms\uRzdFrm.dfm
+#: forms\uSelectIntervalFrm.dfm
+#: forms\uSelectPathForm.dfm
+#: forms\uSpmFrm.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Применить"
+msgstr "Apply"
+
+#: forms\uRzdFrm.dfm
+msgid "Пропуск"
+msgstr "Пропуск"
+
+#: forms\uRptFrm.dfm
+#: forms\uSubRegsFrm.dfm
+msgid "Пропуск между интервалами, сек."
+msgstr "Пропуск между интервалами, сек."
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+msgid "Прямоугольное"
+msgstr "Прямоугольное"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Пунктир"
+msgstr "Пунктир"
+
+#: forms\uGraphMngFrm.dfm
+#: forms\uWPProcFrm.dfm
+msgid "Путь"
+msgstr "Путь"
+
+#: forms\uAddRZDDatafrm.dfm
+msgid "Путь в базе:"
+msgstr "Путь в базе:"
+
+#: forms\uMainFrm.dfm
+msgid "Путь к второму файлу"
+msgstr "Путь к второму файлу"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Путь к конфигурации"
+msgstr "Путь к конфигурации"
+
+#: forms\frames\uTmpltNameFrame.dfm
+msgid "Путь к отчету"
+msgstr "Путь к отчету"
+
+#: forms\uMainFrm.dfm
+msgid "Путь к первому файлу"
+msgstr "Путь к первому файлу"
+
+#: forms\uMainFrm.dfm
+msgid "Путь к совмещенному файлу"
+msgstr "Путь к совмещенному файлу"
+
+#: forms\uEditTubeFrm.dfm
+msgid "Путь к файлу"
+msgstr "Путь к файлу"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+#: forms\uRptFrm.dfm
+msgid "Путь к файлу для экспорта импорта настроек полос"
+msgstr "Путь к файлу для экспорта импорта настроек полос"
+
+#: forms\uRzdFrm.dfm
+msgid "Путь к файлу:"
+msgstr "Путь к файлу:"
+
+#: forms\frames\uTmpltNameFrame.dfm
+msgid "Путь шаблона"
+msgstr "Путь шаблона"
+
+#: forms\uMainFrm.dfm
+msgid "Работа с Mera файлом"
+msgstr "Работа с Mera файлом"
+
+#: forms\uSubRegsFrm.dfm
+msgid "Разделить"
+msgstr "Разделить"
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+msgid "Размах"
+msgstr "Размах"
+
+#: forms\uFrmHibFltFrm.dfm
+msgid "Размер порции, с"
+msgstr "Размер порции, с"
+
+#: forms\uSelsinFrm.dfm
+msgid "Размер порции, сек."
+msgstr "Размер порции, сек."
+
+#: forms\uCorrectUTS.dfm
+msgid "Распаковка СИКОН"
+msgstr "SIKON Decoding"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Располагать оси рядом"
+msgstr "Располагать оси рядом"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Расположение графиков"
+msgstr "Расположение графиков"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Расположение осей"
+msgstr "Расположение осей"
+
+#: forms\uSelsinFrm.dfm
+msgid "Расчет"
+msgstr "Расчет"
+
+#: forms\uFindMaxForm_.dfm
+msgid "Расчет алгоритма"
+msgstr "Расчет алгоритма"
+
+#: forms\uRptFrm.dfm
+msgid "Расчет максимальных границ испытания"
+msgstr "Расчет максимальных границ испытания"
+
+#: forms\uRzdFrm.dfm
+msgid "Расчет нуля"
+msgstr "Расчет нуля"
+
+#: forms\uWPProcFrm.dfm
+msgid "Расчет операторов"
+msgstr "Расчет операторов"
+
+#: forms\uRptFrm.dfm
+msgid "Расчет спектра"
+msgstr "Расчет спектра"
+
+#: forms\uSelsinFrm.dfm
+msgid "Расчет угла для сельсин датчика"
+msgstr "Расчет угла для сельсин датчика"
+
+#: forms\uRzdFrm.dfm
+msgid "Расчитать воздействие на рельс"
+msgstr "Расчитать воздействие на рельс"
+
+#: forms\uRzdFrm.dfm
+msgid "Рег."
+msgstr "Рег."
+
+#: forms\EditSignalPathFrm.dfm
+msgid "Редактирование пути"
+msgstr "Редактирование пути"
+
+#: forms\uEdiSelsinFrm.dfm
+#: forms\uEditSelsinFrm.dfm
+msgid "Редактирование сельсина"
+msgstr "Редактирование сельсина"
+
+#: forms\uFFTfltFrm.dfm
+msgid "Редактировать"
+msgstr "Редактировать"
+
+#: forms\uSubRegsFrm.dfm
+msgid "Редактируемый замер:"
+msgstr "Редактируемый замер:"
+
+#: forms\uScriptFrm.dfm
+msgid "Редактор"
+msgstr "Редактор"
+
+#: forms\uEditTubeFrm.dfm
+msgid "Редактор трубок допуска"
+msgstr "Редактор трубок допуска"
+
+#: forms\uMainFrm.dfm
+msgid "Результатирующий файл"
+msgstr "Результатирующий файл"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Рисовать линию"
+msgstr "Рисовать линию"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Рисовать точки на линии"
+msgstr "Рисовать точки на линии"
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "С"
+msgstr "С"
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+msgid "СКЗ"
+msgstr "СКЗ"
+
+#: forms\uEdiSelsinFrm.dfm
+msgid "СКО1"
+msgstr "СКО1"
+
+#: forms\uEdiSelsinFrm.dfm
+msgid "СКО2"
+msgstr "СКО2"
+
+#: forms\uEdiSelsinFrm.dfm
+msgid "СКО3"
+msgstr "СКО3"
+
+#: forms\uRptFrm.dfm
+msgid "Сбросить в конец"
+msgstr "Сбросить в конец"
+
+#: forms\uRptFrm.dfm
+msgid "Сбросить в начало"
+msgstr "Сбросить в начало"
+
+#: forms\frames\uWPNameFilterFrame.dfm
+msgid "Свойство"
+msgstr "Свойство"
+
+#: forms\uCorrectUTS.dfm
+msgid "Сдвигать сигналы без UTS"
+msgstr "Shift signals without UTS"
+
+#: forms\frames\uTmpltNameFrame.dfm
+msgid "Сделать по умолчанию"
+msgstr "Сделать по умолчанию"
+
+#: forms\uEditSelsinFrm.dfm
+msgid "Сельсин"
+msgstr "Сельсин"
+
+#: forms\uRzdFrm.dfm
+msgid "Сеч."
+msgstr "Сеч."
+
+#: forms\uRzdFrm.dfm
+msgid "Сечение"
+msgstr "Сечение"
+
+#: forms\uAddRZDDatafrm.dfm
+msgid "Сечение №:"
+msgstr "Сечение №:"
+
+#: forms\uLissajousFrm.dfm
+msgid "Сигнал"
+msgstr "Сигнал"
+
+#: forms\uCorrectUTS.dfm
+msgid "Сигнал \"Начало отсчета\":"
+msgstr "Сигнал \"Начало отсчета\":"
+
+#: forms\uLissajousFrm.dfm
+#: forms\uSelectPathForm.dfm
+msgid "Сигнал:"
+msgstr "Сигнал:"
+
+#: forms\uFFTfltFrm.dfm
+#: forms\uRptFrm.dfm
+msgid "Сигналы"
+msgstr "Сигналы"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Синхронизация курсоров по X"
+msgstr "Синхронизация курсоров по X"
+
+#: forms\uGenForm.dfm
+msgid "Скважность (Период/Длит. импульса)"
+msgstr "Скважность (Период/Длит. импульса)"
+
+#: forms\uWPProcFrm.dfm
+msgid "Скрипты"
+msgstr "Скрипты"
+
+#: forms\uTrigFrm.dfm
+msgid "Смещение"
+msgstr "Смещение"
+
+#: forms\uMainFrm.dfm
+msgid "Смещение второго файла относительно первого"
+msgstr "Смещение второго файла относительно первого"
+
+#: forms\uRptFrm.dfm
+msgid "Смещение от Т1:"
+msgstr "Смещение от Т1:"
+
+#: forms\uRptFrm.dfm
+msgid "Смещение от Т2:"
+msgstr "Смещение от Т2:"
+
+#: forms\uFFTfltFrm.dfm
+msgid "Смещение порции"
+msgstr "Смещение порции"
+
+#: forms\uEdiSelsinFrm.dfm
+#: forms\uEditSelsinFrm.dfm
+msgid "Смещение секторов:"
+msgstr "Смещение секторов:"
+
+#: forms\uMainFrm.dfm
+msgid "Соединить файлы"
+msgstr "Соединить файлы"
+
+#: forms\uEditSelsinFrm.dfm
+msgid "Создать 6"
+msgstr "Создать 6"
+
+#: forms\uRptFrm.dfm
+msgid "Создать отчет"
+msgstr "Создать отчет"
+
+#: forms\uRzdFrm.dfm
+msgid "Создать отчет (в каталоге с испытанием)"
+msgstr "Создать отчет (в каталоге с испытанием)"
+
+#: forms\uScriptFrm.dfm
+msgid "Создать теги"
+msgstr "Создать теги"
+
+#: forms\uWPProcFrm.dfm
+msgid "Состояние:"
+msgstr "Состояние:"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "Сохранение в csv файл"
+msgstr "Сохранение в csv файл"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "Сохранение и результаты"
+msgstr "Сохранение и результаты"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "Сохранение результата"
+msgstr "Сохранение результата"
+
+#: forms\uSaveSimpleMeraFrm.dfm
+msgid "Сохранение упрощенного Mera файла"
+msgstr "Сохранение упрощенного Mera файла"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+#: forms\uExtBalanceSignalsFrm.dfm
+#: forms\uFFTfltFrm.dfm
+#: forms\uRptFrm.dfm
+#: forms\uSaveSimpleMeraFrm.dfm
+#: forms\uWPProcFrm.dfm
+msgid "Сохранить"
+msgstr "Сохранить"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "Сохранить "
+msgstr "Сохранить "
+
+#: forms\uRptFrm.dfm
+msgid "Сохранить настройки"
+msgstr "Сохранить настройки"
+
+#: forms\uCorrectUTS.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Спад"
+msgstr "Falling"
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+msgid "Спектр плотности мощности"
+msgstr "Спектр плотности мощности"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Список выходных каналов"
+msgstr "Список выходных каналов"
+
+#: forms\uChangeSrcFrm.dfm
+msgid "Список источников"
+msgstr "Список источников"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Список неиспользуемых каналов"
+msgstr "Список неиспользуемых каналов"
+
+#: forms\uWPProcFrm.dfm
+msgid "Список обработок"
+msgstr "Список обработок"
+
+#: forms\uMainFrm.dfm
+msgid "Список ошибок"
+msgstr "Список ошибок"
+
+#: forms\uExtBalanceSignalsFrm.dfm
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "Список сигналов"
+msgstr "Список сигналов"
+
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Список триггеров"
+msgstr "Список триггеров"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Сплошная"
+msgstr "Сплошная"
+
+#: forms\frames\uIntervalFrame.dfm
+#: forms\uSelectIntervalFrm.dfm
+msgid "Способ выбора"
+msgstr "Способ выбора"
+
+#: forms\uRzdFrm.dfm
+#: forms\uTrigFrm.dfm
+msgid "Старт"
+msgstr "Старт"
+
+#: forms\uSelectPathForm.dfm
+msgid "Старт, с:"
+msgstr "Старт, с:"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Столбцов"
+msgstr "Столбцов"
+
+#: forms\uTrigFrm.dfm
+msgid "Стоп"
+msgstr "Стоп"
+
+#: forms\uSelectPathForm.dfm
+msgid "Стоп, с:"
+msgstr "Стоп, с:"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Страницы"
+msgstr "Страницы"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Строк"
+msgstr "Строк"
+
+#: forms\uBDIFrm.dfm
+msgid "Структура базы"
+msgstr "Структура базы"
+
+#: forms\uChangeSrcFrm.dfm
+msgid "Существующий источник"
+msgstr "Существующий источник"
+
+#: forms\uMainFrm.dfm
+msgid "Считать автоматически по времени записи файла"
+msgstr "Считать автоматически по времени записи файла"
+
+#: forms\uWPProcFrm.dfm
+msgid "Считать графику с объектов WinПОС"
+msgstr "Считать графику с объектов WinПОС"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Таблица"
+msgstr "Таблица"
+
+#: forms\uScriptFrm.dfm
+msgid "Тест"
+msgstr "Тест"
+
+#: forms\uSelectIntervalFrm.dfm
+msgid "Тестовый канал"
+msgstr "Тестовый канал"
+
+#: forms\uAddRZDDatafrm.dfm
+#: forms\uScriptFrm.dfm
+#: forms\uSelsinFrm.dfm
+msgid "Тип"
+msgstr "Тип"
+
+#: forms\uAddRZDDatafrm.dfm
+msgid "Тип замера"
+msgstr "Тип замера"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Тип линии"
+msgstr "Тип линии"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Тип модуля"
+msgstr "Тип модуля"
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+msgid "Тип окна"
+msgstr "Тип окна"
+
+#: forms\uTrigsFrm.dfm
+msgid "Тип оси для триггера"
+msgstr "Тип оси для триггера"
+
+#: forms\uRptFrm.dfm
+#: forms\uRzdFrm.dfm
+msgid "Тип отчета"
+msgstr "Тип отчета"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Тип платы"
+msgstr "Тип платы"
+
+#: forms\uFindMaxForm.dfm
+msgid "Тип поиска"
+msgstr "Тип поиска"
+
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Тип триггера"
+msgstr "Тип триггера"
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+msgid "Тип характеристики"
+msgstr "Тип характеристики"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Толщина"
+msgstr "Толщина"
+
+#: forms\uFFTfltFrm.dfm
+msgid "Точек FFT"
+msgstr "Точек FFT"
+
+#: forms\uTrigsFrm.dfm
+msgid "Точек усреднения:"
+msgstr "Точек усреднения:"
+
+#: forms\uLissajousFrm.dfm
+msgid "Тренд"
+msgstr "Тренд"
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+msgid "Треугольное"
+msgstr "Треугольное"
+
+#: forms\uRzdFrm.dfm
+msgid "Триггер"
+msgstr "Триггер"
+
+#: forms\uRptFrm.dfm
+#: forms\uTrigLvlEditFrm.dfm
+msgid "Триггер 1"
+msgstr "Триггер 1"
+
+#: forms\uTrigLvlEditFrm.dfm
+msgid "Триггер 2"
+msgstr "Триггер 2"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Триггер по старту"
+msgstr "Триггер по старту"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Триггер по стопу"
+msgstr "Триггер по стопу"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Триггер1"
+msgstr "Триггер1"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Триггер2"
+msgstr "Триггер2"
+
+#: forms\uRptFrm.dfm
+#: forms\uWPProcFrm.dfm
+msgid "Триггеры"
+msgstr "Триггеры"
+
+#: forms\uWPProcFrm.dfm
+msgid "Трубки допуска"
+msgstr "Трубки допуска"
+
+#: forms\uRzdFrm.dfm
+msgid "Тчк усредн."
+msgstr "Тчк усредн."
+
+#: forms\frames\uWPNameFilterFrame.dfm
+#: forms\uCorrectUTS.dfm
+#: forms\uTrigsFrm.dfm
+#: forms\uWPProcFrm.dfm
+msgid "Удалить"
+msgstr "Delete"
+
+#: forms\uScriptFrm.dfm
+msgid "Удалить все"
+msgstr "Удалить все"
+
+#: forms\uRzdFrm.dfm
+msgid "Удалить гистограмму"
+msgstr "Удалить гистограмму"
+
+#: forms\uKBHMFrm.dfm
+#: forms\uSelsinFrm.dfm
+msgid "Удалить группу"
+msgstr "Удалить группу"
+
+#: forms\back\uAddScriptItemFrm.dfm
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uAddScriptItemFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Удалить канал"
+msgstr "Удалить канал"
+
+#: forms\uRzdFrm.dfm
+msgid "Удалить матрицу"
+msgstr "Удалить матрицу"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Удалить обратную связь"
+msgstr "Удалить обратную связь"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "Удалить полосу"
+msgstr "Удалить полосу"
+
+#: forms\uAddSignalFrm.dfm
+msgid "Удалить сигналы"
+msgstr "Удалить сигналы"
+
+#: forms\uScriptFrm.dfm
+msgid "Удалить тег"
+msgstr "Удалить тег"
+
+#: forms\uFindMaxForm.dfm
+msgid "Удалить точку"
+msgstr "Удалить точку"
+
+#: forms\uFindMaxForm.dfm
+msgid "Уровень"
+msgstr "Уровень"
+
+#: forms\uFindMaxForm_.dfm
+msgid "Уровень \"+\""
+msgstr "Уровень \"+\""
+
+#: forms\uFindMaxForm_.dfm
+msgid "Уровень \"-\""
+msgstr "Уровень \"-\""
+
+#: forms\uGraphMngFrm.dfm
+msgid "Ускорение, g"
+msgstr "Ускорение, g"
+
+#: forms\uRzdFrm.dfm
+msgid "Усреднять сигнал"
+msgstr "Усреднять сигнал"
+
+#: forms\uRzdFrm.dfm
+msgid "Участок"
+msgstr "Участок"
+
+#: forms\uAddRZDDatafrm.dfm
+msgid "Участок пути №:"
+msgstr "Участок пути №:"
+
+#: forms\uRzdFrm.dfm
+msgid "Учитывается при расчете приведенной погрешности калибровки,  для"
+msgstr "Учитывается при расчете приведенной погрешности калибровки,  для"
+
+#: forms\uCorrectUTS.dfm
+msgid "Учитывать время старта испытания"
+msgstr "Account for test start time"
+
+#: forms\uGenForm.dfm
+msgid "Фаза, рад."
+msgstr "Фаза, рад."
+
+#: forms\uAddRZDDatafrm.dfm
+#: forms\uScriptFrm.dfm
+msgid "Файл"
+msgstr "Файл"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Фильтр"
+msgstr "Фильтр"
+
+#: forms\frames\uWPNameFilterFrame.dfm
+msgid "Фильтр по подстроке в имени"
+msgstr "Фильтр по подстроке в имени"
+
+#: forms\frames\uWPNameFilterFrame.dfm
+msgid "Фильтр по подстроке в описании"
+msgstr "Фильтр по подстроке в описании"
+
+#: forms\frames\uWPNameFilterFrame.dfm
+msgid "Фильтр по свойствам"
+msgstr "Фильтр по свойствам"
+
+#: forms\uTrigsFrm.dfm
+msgid "Фильтрация"
+msgstr "Фильтрация"
+
+#: forms\frames\uTmpltNameFrame.dfm
+msgid "Формирование имени"
+msgstr "Формирование имени"
+
+#: forms\frames\uTmpltNameFrame.dfm
+msgid "Формирование каталога"
+msgstr "Формирование каталога"
+
+#: forms\uCorrectUTS.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Фронт"
+msgstr "Rising"
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+msgid "Ханнинг"
+msgstr "Ханнинг"
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+msgid "Ханнинг (СКЗ"
+msgstr "Ханнинг (СКЗ"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Цвет оси:"
+msgstr "Цвет оси:"
+
+#: forms\uGraphMngFrm.dfm
+msgid "Цвет:"
+msgstr "Цвет:"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Цифровой ввод"
+msgstr "Цифровой ввод"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "Цифровой вывод"
+msgstr "Цифровой вывод"
+
+#: forms\uTrigsFrm.dfm
+msgid "Частота"
+msgstr "Частота"
+
+#: forms\uGenForm.dfm
+msgid "Частота дискретизации"
+msgstr "Частота дискретизации"
+
+#: forms\back\uAddScriptItemFrm.dfm
+#: forms\uAddScriptItemFrm.dfm
+msgid "Частота дискретизации:"
+msgstr "Частота дискретизации:"
+
+#: forms\uEdiSelsinFrm.dfm
+#: forms\uEditSelsinFrm.dfm
+msgid "Частота питания"
+msgstr "Частота питания"
+
+#: forms\uRzdFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Частота среза"
+msgstr "Частота среза"
+
+#: forms\uFFTInverseFrm.dfm
+#: forms\uFrmHibFltFrm.dfm
+msgid "Число блоков"
+msgstr "Число блоков"
+
+#: forms\uRptFrm.dfm
+msgid "Число полос"
+msgstr "Число полос"
+
+#: forms\frames\uSpmFrame.dfm
+#: forms\frames\uWPSpmFrame.dfm
+#: forms\uFFTInverseFrm.dfm
+#: forms\uFrmHibFltFrm.dfm
+#: forms\uMNKFrm.dfm
+#: forms\uRzdFrm.dfm
+#: forms\uTrigsFrm.dfm
+msgid "Число точек"
+msgstr "Число точек"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "Чувствительность кэкстремумам"
+msgstr "Чувствительность кэкстремумам"
+
+#: forms\uFFTInverseFrm.dfm
+msgid "Шаг по частоте, Гц"
+msgstr "Шаг по частоте, Гц"
+
+#: forms\uRzdFrm.dfm
+msgid "Шум"
+msgstr "Шум"
+
+#: forms\uFindMaxForm_.dfm
+msgid "Шум \"+\""
+msgstr "Шум \"+\""
+
+#: forms\uFindMaxForm_.dfm
+msgid "Шум \"-\""
+msgstr "Шум \"-\""
+
+#: forms\uGenForm.dfm
+msgid "Экспоненциальный"
+msgstr "Экспоненциальный"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+#: forms\uRzdFrm.dfm
+msgid "Экспорт"
+msgstr "Экспорт"
+
+#: forms\uFindMaxForm.dfm
+#: forms\uFindMaxForm_.dfm
+msgid "Экспорт настроек полос в файл"
+msgstr "Экспорт настроек полос в файл"
+
+#: forms\uLissajousFrm.dfm
+msgid "авторасчет"
+msgstr "авторасчет"
+
+#: forms\uSelsinFrm.dfm
+msgid "без общ. тчк."
+msgstr "без общ. тчк."
+
+#: forms\uCorrectUTS.dfm
+msgid "значение пишется в индикатор \"Поправка времени\"."
+msgstr "значение пишется в индикатор \"Поправка времени\"."
+
+#: forms\uRzdFrm.dfm
+msgid "использовать матрицу замера"
+msgstr "использовать матрицу замера"
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "кПа"
+msgstr "кПа"
+
+#: forms\uAddScriptItemFrm.dfm
+msgid "л/c"
+msgstr "л/c"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "мс"
+msgstr "мс"
+
+#: forms\uFindMaxForm_.dfm
+msgid "при включении - поиск амплитуды происходит как отклонение от сре"
+msgstr "при включении - поиск амплитуды происходит как отклонение от сре"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uCyclogramRepFrm.dfm
+msgid "сек."
+msgstr "сек."
+
+#: forms\uRptFrm.dfm
+msgid "триггер 2"
+msgstr "триггер 2"
+
+#: forms\uCorrectUTS.dfm
+msgid "у канала начало отсчета, и будут скорректированы старты по всем каналам (без учета UTS"
+msgstr "у канала начало отсчета, и будут скорректированы старты по всем каналам (без учета UTS"
+
+#: forms\back\uCyclogramRepFrm.dfm
+#: forms\uChangeSrcFrm.dfm
+#: forms\uCorrectUTS.dfm
+#: forms\uCyclogramRepFrm.dfm
+#: forms\uEditSignalsRepPropFrn.dfm
+#: forms\uEditTubeFrm.dfm
+#: forms\uFindMaxForm_.dfm
+#: forms\uGraphMngFrm.dfm
+#: forms\uLissajousFrm.dfm
+#: forms\uSelsinFrm.dfm
+#: forms\uTrigFrm.dfm
+#: forms\uWPProcFrm.dfm
+msgid "№"
+msgstr ""
+

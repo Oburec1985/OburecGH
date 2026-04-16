@@ -3,7 +3,7 @@ unit uWPProcFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, ComCtrls, uBtnListView, Winpos_ole_TLB, POSBase, StdCtrls, ugenform,
   uComponentServises, uWPProc, inifiles, ExtCtrls, uWPProcServices, DCL_MYOWN, Menus,
   VirtualTrees, ImgList, uVTServices, uCorrectUTS, EditSignalPathFrm, uSelectIntervalFrm,

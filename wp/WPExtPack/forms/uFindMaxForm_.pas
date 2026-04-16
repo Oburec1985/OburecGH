@@ -3,7 +3,7 @@ unit uFindMaxForm_;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, ComCtrls, uBtnListView, StdCtrls, uSpin, ExtCtrls, uChart, uWPProc,
   Winpos_ole_TLB, PosBase, uBinFile, uComponentServises, uCommonMath,
   MathFunction,

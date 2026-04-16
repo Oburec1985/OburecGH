@@ -2,6 +2,7 @@ program Project1;
 
 uses
   Forms,
+  gnugettext,
   uDacDevice in 'uDacDevice.pas',
   uSoundCardDac in 'uSoundCardDac.pas',
   uCommonMath in '..\..\sharedUtils\math\uCommonMath.pas',
@@ -16,6 +17,9 @@ uses
 
 begin
   Application.Initialize;
+  //textdomain('default');
+  //AddDomainForResourceString('default');
+  UseLanguage('en');
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TDACFrm, DACFrm);
   Application.Run;

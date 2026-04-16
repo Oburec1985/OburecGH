@@ -3,7 +3,7 @@ unit uChangeSrcFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, ComCtrls, uBtnListView, StdCtrls;
 
 type

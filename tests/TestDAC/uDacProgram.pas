@@ -212,10 +212,7 @@ begin
   fAmplitude := AValue;
 end;
 
-function TDacProgram.GetPlaybackBufferSize(ABufferSize: Integer): Integer;
-begin
-  Result := ABufferSize;
-end;
+
 
 function TDacProgram.NormalizePhase(APhase: Double): Double;
 var

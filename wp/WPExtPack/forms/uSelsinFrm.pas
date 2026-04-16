@@ -3,7 +3,7 @@ unit uSelsinFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, StdCtrls, DCL_MYOWN, uwpproc, ucommonmath, ucommontypes, Winpos_ole_TLB,
   posbase, math, uWPProcServices, Spin, ComCtrls, uBtnListView, uEditSelsinFrm,
   Buttons, inifiles, uComponentServises, uwpOpers;

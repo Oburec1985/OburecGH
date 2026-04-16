@@ -1,0 +1,464 @@
+Заезд|Run
+Сечение|Section
+Участок|Track Section
+Нагруженность|Stress/Loading
+Тарировка|Calibration
+Сельсин|Synchro
+Триггер|Trigger
+Порог|Threshold
+СКО|RMS
+Датчик|Sensor
+Тяга|Thrust
+Гор.|Hor.
+Верт.|Vert.
+Трубки допуска|Tolerance Tubes
+Поправка|Correction
+Число точек|Number of points
+Частота среза|Cut-off Frequency
+Усреднять сигнал|Average Signal
+БДИ|TDB
+СИКОН|SIKON
+Mera файл|Mera file
+Сигнал|Signal
+Поиск границ отображения|Search View Limits
+Оператор|Operator
+Определение источников сигналов|Define Signal Sources
+Тест|Test
+Гор. тяга:|Hor. Thrust:
+Верт. тяга:|Vert. Thrust:
+Построение графики|Generate Graphics
+Оси|Axes
+Амплитулный спектр|Amplitude Spectrum
+Результатирующий файл|Resulting File
+Сохранение в csv файл|Save to CSV
+Редактирование сельсина|Edit Synchro
+Путь к совмещенному файлу|Path to Merged File
+Настройка интервала|Interval Setup
+Смещение|Offset
+Цвет оси:|Axis Color:
+Начало, с:|Start, sec:
+Выбор первого файла к которому будет присоединен второй|Select First File for Merging
+Добавить гистограмму|Add Histogram
+Фильтр|Filter
+Отчет|Report
+Переменные...|Variables...
+Канал сброса времени|Time Reset Channel
+Тестовый канал|Test Channel
+Триггер по стопу|Stop Trigger
+Конец, с:|End, sec:
+Размер порции, сек.|Chunk Size, sec.
+Сохранение результата|Save Result
+Обрабатываемые сигналы|Processed Signals
+Индексы|Indices
+Абс.|Abs.
+Синхронизация курсоров по X|Cursor Sync (X)
+Расположение осей|Axes Layout
+Удалить сигналы|Delete Signals
+Не найден канал UTS|UTS Channel Not Found
+Начало|Start
+Вертикальные линии|Vertical Lines
+триггер 2|Trigger 2
+Триггер 1|Trigger 1
+Сдвигать сигналы без UTS|Shift Signals Without UTS
+Порог триггера "Старт"|Start Trigger Threshold
+Автокалибровка|Auto-Calibration
+Настройка отчета циклограммы|Cyclogram Report Setup
+Создать отчет|Create Report
+Фильтр по свойствам|Property Filter
+Калибровка амплитуд фазных напряжений|Phase Voltage Amplitude Calibration
+сек.|sec
+Редактировать|Edit
+Единицы измерения Y:|Y Units:
+Включить дату|Include Date
+Список сигналов|Signal List
+Участок пути №:|Track Section ID:
+Модуль|Module
+Имя замера по умолчанию:|Default Measurement Name:
+Открыть файл после создания|Open File After Creation
+Нач. частота F1, Гц|Starting F1, Hz
+Отступ слева:|Left Offset:
+Не активно|Inactive
+Сбросить в начало|Reset to Start
+Точек FFT|FFT Points
+Назначить канал|Assign Channel
+Границы|Limits
+Выбрать интервал для вычисления матрицы|Select Interval for Matrix calculation
+Результатирующий|Resulting
+Первый импульс|First Pulse
+Источники операторов|Operator Sources
+Показать подсказки|Show Tooltips
+Единицы|Units
+Триггер1|Trigger 1
+Тип окна|Window Type
+Добавить обратную связь|Add Feedback
+Соединить файлы|Join Files
+Настройка уровней|Level Settings
+Имя датчика|Sensor Name
+Параметры сигнала|Signal Parameters
+Выполнить макрос|Run Macro
+Тип отчета|Report Type
+Перечень замеров|Measurement List
+Генератор|Generator
+Список неиспользуемых каналов|Unused Channels List
+Обратная связь|Feedback
+Без общ. тчк.|No Common Point
+Настройка расчета спектра|Spectrum Calculation Setup
+Курсор|Cursor
+Абс. знач.|Abs. Value
+Старт, с:|Start, sec:
+Полином|Polynomial
+Частота среза|Cutoff Frequency
+Расчет нуля|Zeroing calculation
+Прямоугольное|Rectangular
+Добавить точку|Add Point
+ID источника|Source ID
+Диаметр|Diameter
+Интервал "вычисления нуля":|Zeroing Interval:
+Считать автоматически по времени записи файла|Auto-calculate by File timestamp
+Тип модуля|Module Type
+Тип|Type
+Выключить|Disable
+Триггер по старту|Start Trigger
+Ускорение, g|Acceleration, g
+Удалить полосу|Delete Band
+Ед.|Unit
+Выход|Exit
+Канал "Стоп"|Stop Channel
+Выбор действия|Action Selection
+Шум +|Noise +
+Используемые сигналы|Signals in Use
+Загрузить|Load
+Имя параметра|Parameter Name
+Инкремент, сек|Increment, sec
+Добавить параметры|Add Parameters
+Фильтрация|Filtering
+Минимум|Minimum
+Редактируемый замер:|Editable Measurement:
+Единицы измерения|Measurement Units
+При превышении уровня начинают расчитываться максимумы|Maxima calculation starts when level is exceeded
+Фильтр по подстроке в имени|Name Substring Filter
+Путь шаблона|Template Path
+Генерить путь автоматом|Auto-generate Path
+Настройка выбора|Selection Setup
+Весь сигнал|Full Signal
+Верт. тяга:|Vert. Thrust:
+Искать экстремумы:|Search Extremes:
+Сечение|Section
+Разделить|Split
+Трубки допуска|Tolerance Tubes
+Формирование имени|Name Formatting
+Обработка БМП|BMP Processing
+Тип характеристики|Characteristic Type
+Список ошибок|Error List
+Формирование каталога|Directory Formatting
+Добавить канал:|Add Channel:
+Замер:|Measurement:
+Конец полосы|Band End
+Имя сигнала|Signal Name
+Выбор границ испытания:|Select Test Limits:
+Настройка триггеров|Trigger Settings
+Точек усреднения:|Averaging Points:
+Отступ справа:|Right Offset:
+Порция|Chunk
+Открыть отчет|Open Report
+Выбрать по курсору|Select by Cursor
+Расчитать воздействие на рельс|Calculate Rail Interaction
+Тчк усредн.|Avg. Points
+Тип поиска|Search Type
+Источники сигналов|Signal Sources
+Канал|Channel
+Удалить обратную связь|Delete Feedback
+Шаг по частоте, Гц|Frequency Step, Hz
+Базовый каталог|Base Directory
+Выбрать интервал для вычисления смещения нуля|Select Interval for Zero Offset calculation
+Описание:|Description:
+Поиск каналов|Search Channels
+Гор. смещ. внутрь|Hor. Offset Inward
+Пропуск между интервалами, сек.|Interval Gap, sec.
+Дополнять нулями|Zero Padding
+Путь к второму файлу|Second File Path
+По значению|By Value
+Тип оси для триггера|Trigger Axis Type
+Добавить|Add
+Триггеры|Triggers
+Смещение второго файла относительно первого|Second File Offset Relative to First
+Список выходных каналов|Output Channels List
+Порог:|Threshold:
+Шум -|Noise -
+Датчик №3:|Sensor #3:
+Имя испытания|Test Name
+Легенда|Legend
+Значение|Value
+Сигнал:|Signal:
+Чувствительность кэкстремумам|Extremes Sensitivity
+Удалить все|Delete All
+Обратное преобразование Фурье|Inverse Fourier Transform
+Распаковка СИКОН|SIKON Unpacking
+Расчет максимальных границ испытания|Max Test Limits calculation
+FFT фильтр|FFT Filter
+Конец|End
+Имя замера:|Measurement Name:
+Графики|Charts
+Отклонение от среднего|Mean Deviation
+Матрица влияния РЖД|RZD Influence Matrix
+Обновить пути в базе|Update DB Paths
+Интервал обработки:|Processing Interval:
+Рег.|Reg.
+Рисовать линию|Draw Line
+Отступ на стопе, с|Stop Offset, sec.
+Путь к файлу:|File Path:
+Журнал|Log
+X1 значение (сек.):|X1 Value (sec):
+Редактор трубок допуска|Tolerance Tubes Editor
+Датчик №2:|Sensor #2:
+Состояние:|State:
+Единицы измерения X:|X Units:
+Отклик|Response
+Имя|Name
+Единицы измерения:|Measurement Units:
+Датчик №1:|Sensor #1:
+Файл|File
+Каталог|Directory
+Редактирование пути|Edit Path
+Максимальное число колонок:|Max Columns:
+Объект испытания|Test Object
+Гор. смещ. наружу|Hor. Offset Outward
+Поиск максимумов|Search Maxima
+Сеч.|Section
+Импорт настроек полос в файл|Import Band Settings to File
+Ось X:|X Axis:
+Искать "-" макс.|Search "-" Max
+По каналу|By Channel
+Использовать фильтр|Use Filter
+Выбрать все оценки|Select All Evaluations
+Сельсин|Synchro
+Искать фронты|Search Edges
+Сохранение и результаты|Saving and Results
+Инд.|Index
+Обнулить|Reset to Zero
+Номер производной|Derivative Order
+Расчет|Calculation
+Верт. центр. нагр.|Vert. Center Load
+Матрица|Matrix
+Корректируемые UTS сигналы:|Corrected UTS Signals:
+Частота дискретизации|Sampling Frequency
+Участок|Track Section
+Столбцов|Columns
+Фронт|Edge
+Искать "+" макс.|Search "+" Max
+Построение гистограмм|Histogram Plotting
+Список триггеров|Trigger List
+Отклонение от среднего (МО)|Mean Deviation (RMS)
+Число блоков|Number of Blocks
+Импорт|Import
+Открыть отчет после создания|Open Report After Creation
+Индекс:|Index:
+Частота питания|Supply Frequency
+Рисовать точки на линии|Draw Dots on Line
+Настройка фильтра|Filter Setup
+Путь к отчету|Report Path
+Сделать по умолчанию|Set as Default
+Добавить канал|Add Channel
+Имя линии|Line Name
+Плагин пакетной обработки|Batch Processing Plugin
+Настройка расчета по спектру|Spectrum Calculation Setup
+Смещение от Т1:|Offset from T1:
+По времени|By Time
+Размер порции, с|Chunk Size, sec.
+Удалить точку|Delete Point
+СКО1|RMS1
+Способ выбора|Selection Method
+Время испытания|Trial Time
+Выделить все|Select All
+Поверх окон|Stay on Top
+Путь в базе:|DB Path:
+Пропуск|Gap
+Создать 6|Create 6
+Сплошная|Solid
+Далее|Next
+Назначить|Assign
+Загрузить настройки|Load Settings
+Параметры|Parameters
+Расчет угла для сельсин датчика|Calculate Synchro Angle
+Путь к файлу для экспорта импорта настроек полос|Path for Band Settings Export/Import
+Включить|Enable
+Использовать БДИ|Use TDB
+Передискретизация|Resampling
+Список источников|Source List
+Уровень|Level
+- Максимум|- Maximum
+Триггер2|Trigger 2
+dX или N (число точек разбиения шкалы)|dX or N (Number of scale division points)
+Дополнения|Add-ons
+Доступные сигналы|Available Signals
+Выбор пути для сохранения результатов экспрес анализа в файл|Select path for Express Analysis Results saving
+Параметр для расчета матрицы|Matrix calculation parameter
+Настройка списка каналов для отчета|Report Channels List Setup
+Считать графику с объектов WinПОС|Read Graphics from WinPOS Objects
+Старт|Start
+Вписать с значениями имена оценок (Word)|Write evaluation names with values (Word)
+Сохранить настройки|Save Settings
+Анализ экстремумов|Extremes Analysis
+При включении параметр "Смещение второго файла инорируется"|When enabled, 'Second file offset' is ignored
+Работа с Mera файлом|Working with Mera file
+Искать интервал|Search Interval
+Искать спады|Search Falls
+Длительность, с:|Duration, sec:
+Сбросить в конец|Reset to End
+Фаза, рад.|Phase, rad.
+Скрипты|Scripts
+Отступ на старте, с|Start Offset, sec.
+Определение нагруженности участка железнодорожного пути|Determining Railway Track Stress State
+Создать теги|Create Tags
+Тренд|Trend
+X2 смещение от X1 (сек.):|X2 Offset from X1 (sec):
+Путь к конфигурации|Configuration Path
+Удалить матрицу|Delete Matrix
+Допустимое отклонение в долях|Tolerance in Fractions
+Скважность (Период/Длит. импульса)|Duty Cycle (Period/Pulse Width)
+Изменить интервал обработки|Modify Processing Interval
+Датчик №4:|Sensor #4:
+Прим.|Note
+Имя свойства:|Property Name:
+Выбрать интервалы обработки для всех замеров по курсору|Select Processing Intervals for all measurements by cursor
+Порядок фильтра:|Filter Order:
+Изменить оператор|Edit Operator
+Существующий источник|Existing Source
+Индекс 1|Index 1
+Расчет операторов|Operator calculation
+Балансировка нуля|Zero Balancing
+Начало полосы|Band Start
+Порция, сек|Chunk, sec
+Длина интервала, сек.|Interval Duration, sec.
+Смещение порции|Chunk Offset
+Единицы для порога|Threshold Units
+Менять частоту|Change Frequency
+Добавить сигналы|Add Signals
+Сигнал "Начало отсчета":|Signal 'Origin Start':
+Фильтр по подстроке в описании|Description Substring Filter
+Балансировать ноль|Balance Zero
+Настройка границ|Limits Setup
+Выбор замера|Select Measurement
+Пороговое значение|Threshold Value
+Длительность, с|Duration, sec
+Имя трубки допуска|Tolerance Tube Name
+Помощь|Help
+Удалить|Delete
+Время|Time
+Границы поиска|Search Limits
+Триггер|Trigger
+Отчет циклограмма.xls|Cyclogram Report.xls
+Кривая|Curve
+Индекс 2|Index 2
+Масштаб|Scale
+Смещение от Т2:|Offset from T2:
+Графика|Graphics
+Учитывать время старта испытания|Consider Trial Start Time
+Испытание|Trial
+Создать отчет (в каталоге с испытанием)|Create Report (in trial directory)
+Поправка времени, с|Time Correction, sec
+Цвет:|Color:
+Исп. имена|Used Names
+Линии|Lines
+Загрузить данные и расчитать матрицу|Load Data and Calculate Matrix
+Канал "Старт"|Start Channel
+Наименование|Display Name
+Линковать промежуточные вычисления в дерево сигналов|Link intermediate calculations to signal tree
+По гистерезису|By Hysteresis
+Период выполнения скрипта|Script Execution Period
+Настройка графики|Graphics Settings
+Порог триггера "Стоп"|Stop Trigger Threshold
+Путь|Path
+Частота дискретизации:|Sampling Rate:
+Ось Y:|Y Axis:
+Амплитуда|Amplitude
+Вычислить|Calculate
+Возвращаемый результат|Return Result
+Оценки|Evaluations
+Поиск экстремумов|Extremes Search
+Отрисовать графики|Plot Charts
+Удалить группу|Delete Group
+Добавить группу|Add Group
+авторасчет|Auto-calc
+Свойство|Property
+Настройка алгоритма|Algorithm Setup
+Применить|Apply
+использовать матрицу замера|Use Measurement Matrix
+Выбор второго файла, который будет присоединен в конец первого|Select Second File (Join To End)
+Логарифм|Logarithm
+Картинки отдельно|Separate Images
+Расположение графиков|Chart Layout
+Добавление данных в базу|Add Data to DB
+Стоп, с:|Stop, sec:
+Строк|Rows
+Используется если галочка Определить сдвиг в каждом замере снята|Used if 'Determine offset in each measurement' is unchecked
+Обновить полосу|Update Band
+Замер|Measurement
+Отображать допуски|Show Tolerances
+Структура базы|DB Structure
+Положение курсора|Cursor Position
+Записывать начальное состояние "1"|Record Initial State '1'
+Параметры двигателя|Engine Parameters
+Гор. нагр.|Hor. Load
+Толщина|Thickness
+Нерекурсивный фильтр ФНЧ|Non-recursive LPF
+Диапазон графика|Chart Range
+Источник:|Source:
+Добавить полосу|Add Band
+,сек|,sec
+Определить сдвиг в каждом замере по имени канала|Determine offset in each measurement by channel name
+Автоматические полосы|Automatic Bands
+Тип линии|Line Type
+Полный масштаб|Full Scale
+Писать с разрывами|Write with Gaps
+Положительные экстремумы|Positive Extremes
+Число точек|Number of points
+Удалить тег|Delete Tag
+Менять амплитуду|Change Amplitude
+Источник|Source
+Страницы|Pages
+Удалить канал|Delete Channel
+Редактор|Editor
+Имя канала:|Channel Name:
+Усреднять сигнал|Average Signal
+Длина сигнала|Signal Duration
+Использовать префиксы для поиска сигналов|Use Prefixes for Signal Search
+Добавить тег|Add Tag
+Каталог замера по умолчанию:|Default Measurement Directory:
+Авто|Auto
+Выбор границ испытания|Test Limits Selection
+Коррекция времени|Time Correction
+Список обработок|Processings List
+Матрицы|Matrices
+Тип триггера|Trigger Type
+Параметры расчета|Calculation Parameters
+Тип замера|Measurement Type
+Дополнительно|Advanced
+Конечн. частота F2, Гц|Ending F2, Hz
+Смещение секторов:|Sector Offset:
+Питание:|Power:
+Добавить/ Удалить сигналы|Add/Remove Signals
+Назначение:|Destination:
+Заместить файл|Overwrite File
+Порог|Threshold
+Завершить|Finish
+Сохранить|Save
+Путь к первому файлу|First File Path
+Графический объект не создан|Graphics Object Not Created
+Тип платы|Board Type
+Доли|Fractions
+Сохранение упрощенного Mera файла|Save Simplified Mera File
+Порог триггера|Trigger Threshold
+Добавление триггера|Add Trigger
+Экспорт|Export
+Отмена|Cancel
+Расчет спектра|Spectrum Calculation
+Номер срабатывания|Activation Number
+Менять замер|Change Measurement
+Меандр|Square Wave
+Экспорт настроек полос в файл|Export Band Settings to File
+Настройка полос|Band Setup
+Сигналы|Signals
+Максимум|Maximum
+Шум|Noise
+Невидимая служебная форма для обработки сообщений|Internal Message Handler Form

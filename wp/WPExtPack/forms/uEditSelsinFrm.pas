@@ -3,7 +3,7 @@ unit uEditSelsinFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, Spin, StdCtrls, DCL_MYOWN, uwpproc, ucommontypes, uComponentServises;
 
 type

@@ -3,7 +3,7 @@ unit uCorrectUTS;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, StdCtrls, ExtCtrls, Spin, uSpin, DCL_MYOWN, uWPProc, posBase,
   inifiles, ComCtrls, uBtnListView, uComponentServises, uCommonMath, uCommonTypes;
 

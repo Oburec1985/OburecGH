@@ -1,9 +1,9 @@
-п»їunit uRzdFrm;
+unit uRzdFrm;
 
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, StdCtrls, ExtCtrls, ComCtrls, DCL_MYOWN, Buttons, Spin,
   inifiles, posbase, Winpos_ole_TLB,
   uWPProc, uRZDTareFrame, ucommonmath, uCommontypes, uwpopers, mathfunction,
@@ -46,16 +46,16 @@ type
     i1, i2, i3, i4: double;
   end;
 
-  // СЃС‚СЂСѓРєС‚СѓСЂР° РѕРїРёСЃР°РЅРёСЏ СЃРѕР·РґР°РЅРёСЏ РІРµРєС‚РѕСЂР° Ei
+  // структура описания создания вектора Ei
   TEi = record
-    sname, // РёРјСЏ РґР°С‚С‡РёРєР° РїРѕ РєРѕС‚РѕСЂРѕРјСѓ РїРѕСЃС‚СЂРѕРµРЅ
-    fname, // РёРјСЏ СЃРёР»С‹ РїРѕ РєРѕС‚РѕСЂРѕРјСѓ РїРѕСЃС‚СЂРѕРµРЅ
-    // СЃСЃС‹Р»РєР° РЅР° СѓР·Р»С‹ РІ РґРµСЂРµРІРµ WP
+    sname, // имя датчика по которому построен
+    fname, // имя силы по которому построен
+    // ссылка на узлы в дереве WP
     nCloud, nPoly: iwpnode;
     cloud, poly: iwpSignal;
     str_sname, str_fName: string;
     fmax: double;
-    // Р·РЅР°С‡РµРЅРёРµ РєРѕРјРїРѕРЅРµРЅС‚Р° РІРµРєС‚РѕСЂР° f
+    // значение компонента вектора f
     ei: double;
     polyC: array of double;
     result: boolean;
@@ -64,7 +64,7 @@ type
   smatrix = record
     mf: string;
     vt, gt, s1, s2, s3, s4: string;
-    // РёРЅС‚РµСЂРІР°Р» РІСЂРµРјРµРЅРё
+    // интервал времени
     t1t2: point2d;
   end;
 
@@ -74,29 +74,29 @@ type
     m_active: boolean;
     vtmax: array [0 .. 3] of double;
     gtmax: array [0 .. 3] of double;
-    // 3 РїРѕСЃР»РµРґРЅРёС… РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРЅС‹С… СЃРёРіРЅР°Р»Р° РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РїСЂРё РїРѕСЃС‚СЂРѕРµРЅРёРё С„-С†РёРё СЃСЂР°РІРЅРµРЅРёСЏ
+    // 3 последних восстановленных сигнала используется при построении ф-ции сравнения
     lastn1, lastn2, lastn3: string;
     n1, n2, n3: iwpnode;
-    // СЃРёРіРЅР°Р»С‹ РїРѕ РєРѕС‚РѕСЂС‹Рј РїРѕСЃС‡РёС‚Р°РЅР° РјР°С‚СЂРёС†Р°
+    // сигналы по которым посчитана матрица
     sensors: array [0 .. 3] of smatrix;
-    // РµСЃР»Рё True С‚Рѕ РёСЃРїРѕР»СЊР·СѓСЋС‚СЃСЏ Р°Р±СЃРѕР»СЋС‚РЅС‹Рµ РёРјРµРЅР° РґР°С‚С‡РёРєРѕРІ РёРЅР°С‡Рµ РёС‰РµРј РґР°С‚С‡РёРєРё РІ Р·Р°РјРµСЂРµ РїРѕ РїСЂРµС„РёРєСЃР°Рј
+    // если True то используются абсолютные имена датчиков иначе ищем датчики в замере по префиксам
     useSNames: boolean;
-    // РЅР°Р№РґРµРЅС‹Рµ РёРјРµРЅР° РїРѕ РїСЂРµС„РёРєСЃР°Рј
+    // найденые имена по префиксам
     fs1, fs2, fs3, fs4: string;
-    // РёРјРµРЅР° РґР°С‚С‡РёРєРѕРІ РґР»СЏ РєРѕС‚РѕСЂС‹С… СЃС‚СЂРѕРёС‚СЃСЏ РјР°С‚СЂРёС†Р° РїСЂРµРґСѓСЃС‚Р°РЅРѕРІР»РµРЅРЅС‹Рµ
+    // имена датчиков для которых строится матрица предустановленные
     ls1, ls2, ls3, ls4: string;
-    // СѓС‡Р°СЃС‚РѕРє РґР»СЏ РєРѕС‚РѕСЂРѕРіРѕ СЃС‚СЂРѕРёС‚СЃСЏ РјР°С‚СЂРёС†Р°
+    // участок для которого строится матрица
     region: string;
-    // СЃРµС‡РµРЅРёРµ РґР»СЏ РєРѕС‚РѕСЂРіРѕ СЃС‚СЂРѕРёС‚СЃСЏ РјР°С‚СЂРёС†Р°
+    // сечение для которго строится матрица
     cut: integer;
-    // РјР°С‚СЂРёС†Р° РєРѕСЌС„РёС†РёРµРЅС‚РѕРІ
+    // матрица коэфициентов
     m: d2array;
-    // СЃС‚РµРїРµРЅСЊ РїРѕР»РёРЅРѕРјР°
+    // степень полинома
     poly: integer;
-    // РїРѕСЃР»РµРґРЅРёРµ РїРѕСЃС‡РёС‚Р°РЅРЅС‹Рµ СЃРёРіРЅР°Р»С‹
+    // последние посчитанные сигналы
     resVt, resGt: iwpSignal;
   public
-    // РІРѕР·РІСЂР°С‰Р°РµС‚ РёРјСЏ РІ РёРЅРё С„Р°Р№Р»Рµ
+    // возвращает имя в ини файле
     function GetIniName: string;
     procedure UpdateSNames(mf: string); overload;
     procedure UpdateSNames(src: csrc); overload;
@@ -104,7 +104,7 @@ type
     function getRow(i: integer): string;
     function Infostr: string;
     function regionNum: integer;
-    // РІРѕР·РІСЂР°С‰Р°РµС‚ РїСЂРёСЃС‚Р°РІРєСѓ Рє РёРјРµРЅРё СЃРёРіРЅР°Р»Р° РІРёРґР° _1_reg_01
+    // возвращает приставку к имени сигнала вида _1_reg_01
     function GetResPostfix: string;
     constructor create;
   protected
@@ -114,10 +114,10 @@ type
     function gets4: string;
     function gets(index: integer): string;
 
-    // РјРµРЅСЏРµС‚ РґС‹1СЋСЋРґС‹4 (С‚РѕР»СЊРєРѕ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј!!!)
+    // меняет ды1ююды4 (только для редактирования пользователем!!!)
     procedure sets(index: integer; str: string);
   public
-    // СѓСЃС‚Р°РЅРѕРІРєР° РѕР±РЅРѕРІР»СЏРµС‚ С‚РѕР»СЊРєРѕ РёРјРµРЅР° РїРѕ РїРѕРёСЃРєСѓ
+    // установка обновляет только имена по поиску
     property s1: string read gets1 write fs1;
     property s2: string read gets2 write fs2;
     property s3: string read gets3 write fs3;
@@ -341,35 +341,35 @@ type
     f_updFolder: string;
     ThreadCount: integer;
     m_logindex: integer;
-    // РїСЂРµС„РёРєСЃ РґР»СЏ D1, D2,D3,D4,Fh,Fv
+    // префикс для D1, D2,D3,D4,Fh,Fv
     m_D1Pref, m_D2Pref, m_D3Pref, m_D4Pref, m_FhPref, m_FvPref,
-    // РїСЂРµС„РёРєСЃ РґР»СЏ СѓС‡Р°СЃС‚РєР°
+    // префикс для участка
     m_regionPref,
-    // РїСЂРµС„РёРєСЃ РґР»СЏ Р·Р°РµР·РґР°
+    // префикс для заезда
     m_TestPref,
-    // РїСЂРµС„РёРєСЃ РґР»СЏ СЃРµС‡РµРЅРёСЏ
+    // префикс для сечения
     m_sectionPref: string;
-    // С‚РµРєСѓС‰РёР№ РёСЃС‚РѕС‡РЅРёРє СЃРёРіРЅР°Р»Р° РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё
+    // текущий источник сигнала для обработки
     m_src,
-    // РёСЃС‚РѕС‡РЅРёРєРё СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёРµ РЅР°РіСЂСѓР¶РµРЅРёСЏРј
+    // источники соответствующие нагружениям
     vc_src, h_src, hout_src, hin_src: csrc;
-    // СЃРµРєС†РёСЏ РёРЅРё С„Р°Р№Р»Р° РІ РєРѕС‚РѕСЂСѓСЋ СЃРѕС…СЂР°РЅСЏСЋС‚СЃСЏ РЅР°СЃС‚СЂРѕР№РєРё Рё РїСѓС‚СЊ Рє РёРЅРё С„Р°Р№Р»Сѓ
+    // секция ини файла в которую сохраняются настройки и путь к ини файлу
     m_section, m_cfg, m_VCPref, m_H_Pref, m_Hin_Pref, m_Hout_Pref: string;
 
     m_wpMng: cwpobjmng;
-    // Р“СЂР°С„РёРєР° РґР»СЏ РІС‹Р±РѕСЂР° СѓС‡Р°СЃС‚РєРѕРІ РІСЂРµРјРµРЅ РїРѕ РєСѓСЂСЃРѕСЂР°Рј
+    // Графика для выбора участков времен по курсорам
     graph: array [0 .. 3] of tgraphstruct;
-    // РІРµРєС‚РѕСЂР° РґР»СЏ СЂР°СЃС‡РµС‚Р° РјР°С‚СЂРёС†С‹ СЃРёР»С‹
+    // вектора для расчета матрицы силы
     e1, e2, e3, e4: array [0 .. 3] of TEi;
-    // Р·Р°РІРёСЃРёРјРѕСЃС‚СЊ РІРµСЂС‚ РѕС‚ РіРѕСЂ С‚СЏРіРё РІ РІС‚РѕСЂРѕРј СЌРєСЃРїРµСЂРёРјРµРЅС‚Рµ
+    // зависимость верт от гор тяги в втором эксперименте
     m_F2zFy, m_F2zFy_poly: iwpSignal;
-    m_F2zFyValue, m_F2zFyMaxX: double; // Р·РЅР°С‡РµРЅРёРµ РїРѕР»РёРЅРѕРјР° Fz(Fy)
+    m_F2zFyValue, m_F2zFyMaxX: double; // значение полинома Fz(Fy)
     e1norm, e2norm, e3norm, e4norm: TVec4;
-    // РјР°С‚СЂРёС†Р° РїРѕ РІРµРєС‚РѕСЂР°Рј ei Рё СЂРµР·СѓР»СЊС‚РёСЂСѓСЋС‰Р°СЏ РјР°С‚СЂРёС†Р°
+    // матрица по векторам ei и результирующая матрица
     E, G: d2array;
     m_matrix: TRZDMatrix;
     MatrixList: tlist;
-    // Р±Р°Р·Р° РґР°РЅРЅС‹С…
+    // база данных
     m_DB: cRZDbase;
 
     f_updDBCS: TRTLCriticalSection;
@@ -390,19 +390,19 @@ type
     procedure FillMatrixSensorsCB;
     procedure ClearMList;
     procedure addMatrix(m: TRZDMatrix);
-    // РћР±РЅРѕРІРёС‚СЊ РёРјРµРЅР° РґР°С‚С‡РёРєРѕРІ РјР°С‚СЂРёС†С‹ РЅР° РѕСЃРЅРѕРІР°РЅРёРё РёРјРµРЅ РґР°С‚С‡РёРєРѕРІ С„СЂРµР№РјР°
+    // Обновить имена датчиков матрицы на основании имен датчиков фрейма
     procedure UpdateMatrixNames(m: TRZDMatrix; fr: TRZDTareFrame);
     procedure ShowMatrixList;
-    // РїРѕР»СѓС‡РёС‚СЊ РёР· ShowMatrixList СЃС‚Р°С‚СѓСЃС‹ Р°РєС‚РёРІРЅРѕСЃС‚Рё РјР°С‚СЂРёС†
+    // получить из ShowMatrixList статусы активности матриц
     // procedure getActStatusForM;
-    // РѕР±РЅРѕРІРёС‚СЊ СЂР°Р·РјРµСЂ РїРѕСЂС†РёРё РґР»СЏ С„РёР»РґСЊС‚СЂР° "С‚СЂРµРЅРґ"
+    // обновить размер порции для филдьтра "тренд"
     procedure UpdateIPortion;
     procedure UpdateFPortion;
-    // СЃС‡РёС‚С‹РІР°РµС‚ РјР°РєСЃРёРјР°Р»СЊРЅСѓСЋ С‡Р°СЃС‚РѕС‚Сѓ РѕРїСЂРѕСЃР° СЃСЂРµРґРё РІСЃРµС… РґР°С‚С‡РёРєРѕРІ РёР· РёРЅРё С„Р°Р№Р»Р°
+    // считывает максимальную частоту опроса среди всех датчиков из ини файла
     function maxFS(s1, s2, s3, s4, vt, gt, mera: string): double;
     function GetregionPath: string;
     Procedure GetNumFromSectionCB;
-    // Р·Р°РіСЂСѓР·РєР° РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С… РїРѕ РІС‹Р±СЂР°РЅРЅРѕРјСѓ РїСѓС‚Рё
+    // загрузка источника данных по выбранному пути
     function LoadSrc(str: string): csrc;
     procedure LoadVCSrc;
     procedure LoadHSrc;
@@ -410,20 +410,20 @@ type
     procedure LoadHoutSrc;
     procedure SaveToIniTareFrame(ifile: tinifile; fr: TRZDTareFrame);
     procedure LoadfromIniTareFrame(ifile: tinifile; fr: TRZDTareFrame);
-    // Р—Р°РїРѕР»РЅСЏРµРј РєРѕРјР±РѕР±РѕРєСЃС‹ РґРѕСЃС‚СѓРїРЅС‹РјРё СЃРёРіРЅР°Р»Р°РјРё
+    // Заполняем комбобоксы доступными сигналами
     procedure FillCB(V_cb, H_cb, D1_cb, D2_cb, D3_cb, D4_cb: TComboBox;
       merafile: string);
     procedure FillVCCB;
     procedure FillHCB;
     procedure FillHoutCB;
     procedure FillHinCB;
-    // РїСЂРѕРІРµСЂРєРё РєР°С‚Р°Р»РѕРіРѕРІ
+    // проверки каталогов
     procedure CheckBaseFolder;
     function checkImportFolder: boolean;
-    // СЃС‡РёС‚С‹РІР°РµРј СЃРїРёСЃРѕРє СѓС‡Р°СЃС‚РєРѕРІ
+    // считываем список участков
     procedure ReadRegionFolders;
     procedure ReadSegments(RegionPath: string);
-    // Р·Р°РїРѕР»РЅСЏРµРј РїСѓС‚Рё Рє СЃРёРіРЅР°Р»Р°Рј РєР°Р»РёР±СЂРѕРІРєРё
+    // заполняем пути к сигналам калибровки
     procedure ReadTests(segmentpath: string);
 
     procedure createEvents;
@@ -438,11 +438,11 @@ type
 
     procedure LinkEiSignals(E: array of TEi);
     function GetAbsRelFmax(fmax, rel, p_abs: double): double;
-    // РїРѕСЃС‚СЂРѕРёС‚СЊ СЃСЂР°РІРЅРЅРµРёРµ РґРІСѓС… СЃРёРіРЅР°Р»РѕРІ РїРѕ С„РѕСЂРјСѓР»Рµ
+    // построить сравннеие двух сигналов по формуле
     // s1-s2/f(base,f);
     function BuildCompare(s1, base: iwpSignal; fmax, rel: double;
       resfolder: string; var res1, res2: iwpSignal): iwpSignal;
-    // p2list - РїРѕР»РЅС‹Р№ РїРµСЂРµС‡РµРЅСЊ РІСЃРµС… СЌРєСЃС‚СЂРµРјСѓРјРѕРІ gtForce - РµСЃР»Рё true, С‚Рѕ РёС‰РµС‚СЃСЏ РЅРµ РјР°РєСЃРёРјСѓРј РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅС‹Р№ СЃРёР»С‹, Р° Р·РµРЅР°С‡РµРЅРёРµ СЃРёР»С‹ РєРѕРіРґР° Р±С‹Р» РјР°РєСЃРёРјСѓРј РЅР° РІРµСЂС‚РёРєР°Р»СЊРЅРѕР№ СЃРёР»Рµ
+    // p2list - полный перечень всех экстремумов gtForce - если true, то ищется не максимум горизонтальный силы, а зеначение силы когда был максимум на вертикальной силе
     function BuildGistogram(s: iwpSignal; dx: double; dxN: integer;
       lvl, noise: double; start, shift: integer; folder, gistname: string;
       usep2List: boolean; var p2list: cP2dList; gtForce: boolean): iwpSignal;
@@ -453,44 +453,44 @@ type
       var pageIndex: integer);
 
     procedure addEiJournal(p_name: string; E: array of TEi; enorm: TVec4);
-    // РїРѕСЃС‚СЂРѕРµРЅРёРµ СЂРµР· РјР°С‚СЂРёС†С‹
+    // построение рез матрицы
     function buildG: d2array;
     function getformmatrix: d2array;
     procedure ApplyMatrix(s1, s2, s3, s4: iwpSignal; p_g: d2array;
       srcpath: string; sname: string; m: TRZDMatrix);
-    // РІРѕР·РІСЂР°С‰Р°РµС‚ РЎРћР—Р”РђРќРќР«Р™ Р’РќРћР’Р¬ СЃС‚СЂРёРЅРі Р»РёСЃС‚ СЃРѕРґРµСЂР¶Р°С‰РёР№ РёРјРµРЅР° РґР°С‚С‡РёРєРѕРІ СЃРѕРѕС‚РЅРѕСЃСЏС‰РёРµСЃСЏ СЃ СЃРµС‡РµРЅРёРµРј
+    // возвращает СОЗДАННЫЙ ВНОВЬ стринг лист содержащий имена датчиков соотносящиеся с сечением
     function GetSensorsNameWithPref(src: csrc; sect: integer): tstringlist;
       overload;
     function GetSensorsNameWithPref(mf: string; sect: integer): tstringlist;
       overload;
-    // Р—Р°РіСЂСѓР·РєР° РґР°РЅРЅС‹С… РґР»СЏ РїРѕСЃС‚СЂРѕРµРЅРёСЏ РјР°С‚СЂРёС†С‹
+    // Загрузка данных для построения матрицы
     function PrepareDataforMatrix: boolean;
-    // РїРѕР»СѓС‡РёС‚СЊ РїРѕ РёРЅРґРµРєСЃСѓ РєРѕРјР±РѕР±РѕРєСЃ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ СЃРІРѕР№С‚СЃРІ РјР°С‚СЂРёС†С‹
+    // получить по индексу комбобокс для редактирования свойтсв матрицы
     function GetSensCB(i: integer): TComboBox;
-    // РѕС‚РѕР±СЂР°Р·РёС‚СЊ РёСЃС…РѕРґРЅС‹Рµ СЃРёРіРЅР°Р»С‹ РґР»СЏ РІС‹Р±РѕСЂРєРё СЃРёРіРЅР°Р»РѕРІ РїРѕ РєСѓСЂСЃРѕСЂСѓ
-    // РІРѕР·РІСЂР°С‰Р°РµС‚ hpage РЅР° РєРѕС‚РѕСЂРѕРј РѕС‚РѕР±СЂР°Р¶РµРЅС‹ РіСЂР°С„РёРєРё
+    // отобразить исходные сигналы для выборки сигналов по курсору
+    // возвращает hpage на котором отображены графики
     function ShowTimeGraphs(p: integer; fr: TRZDTareFrame; src: csrc;
       graphname: string): tgraphstruct;
     function CheckSrc: boolean;
-    // РїРѕР»СѓС‡РёС‚СЊ СЃРёРіРЅР°Р» СЃ СѓС‡РµС‚РѕРј С„РёР»СЊС‚СЂРѕРІ
+    // получить сигнал с учетом фильтров
     function GetSignal(src: csrc; sname: string; calibr: boolean;
       var findSignal: boolean): iwpSignal;
-    // РїРѕР»СѓС‡РёС‚СЊ РїСѓС‚СЊ СЃ СѓС‡РµС‚РѕРј Р±Р°Р·РѕРІРѕРіРѕ РєР°С‚Р°Р»РѕРіР°
+    // получить путь с учетом базового каталога
     function gettestpath: string;
     procedure createDB;
     procedure UpdateDB; overload;
     procedure UpdateDB(str: string); overload;
-    // РїРµСЂРµС‡РёС‚Р°С‚СЊ РєР°С‚Р°Р»РѕРіРё Р±Р°Р·С‹ РґР°РЅРЅС‹С…
+    // перечитать каталоги базы данных
     // procedure UpdateDB;
     procedure copyFile(str: string; p: crzdpars);
-    // РѕР±РЅРѕРІР»СЏРµРј Р±Р°Р·Сѓ
+    // обновляем базу
     procedure doUpdateBase(Sender: TObject);
     procedure doUpdateBaseMessage(Sender: TObject);
     procedure UpdateHandler(var Message: TMessage); message wm_UpdateFolder;
   public
     function GetCalibrFolder: string;
     function GetTestsFolder: string;
-    // filename - РїСѓС‚СЊ Рє РљРђРўРђР›РћР“РЈ СЃ РјРµСЂР° С„Р°Р№Р»РѕРј
+    // filename - путь к КАТАЛОГУ с мера файлом
     function testDir(filename: string): boolean;
   public
     procedure Init(p_section, p_cfg: string; p_wpMng: cwpobjmng);
@@ -515,7 +515,7 @@ var
 
 const
   c_TestVersion = false;
-  // С‡РёСЃР»Рѕ Р·РЅР°С‡Р°С‰РёС… С†РёС„СЂ
+  // число значащих цифр
   c_digits = 3;
 
 implementation
@@ -526,7 +526,7 @@ const
 {$R *.dfm}
 
   { TRZDFrm }
-  // РјР°СЃС€С‚Р°Р± Р»РёР±Рѕ РјРёРЅ РјР°С… СЃ Р·Р°РґР°РЅРЅС‹Рј РѕС‚СЃС‚СѓРїРѕРј РёР»Рё РѕС‚ РјРёРЅ РґРѕ РјР°РєСЃ*2
+  // масштаб либо мин мах с заданным отступом или от мин до макс*2
 procedure setGistXScale(hline: integer; rangeview: point2d);
 var
   G: tgraphstruct;
@@ -635,8 +635,8 @@ begin
   begin
     // OpenDialog1.Options := [ofOldStyleDialog, fdoForceFileSystem];
     str := BaseFolderEdit.Text;
-    // if SelectDirectory('Р’С‹Р±РѕСЂ Р±Р°Р·РѕРІРѕРіРѕ РєР°С‚Р°Р»РѕРіР°', '',str) then
-    if SelectDirectoryLoc('Р’С‹Р±РѕСЂ Р±Р°Р·РѕРІРѕРіРѕ РєР°С‚Р°Р»РѕРіР°', str) then
+    // if SelectDirectory('Выбор базового каталога', '',str) then
+    if SelectDirectoryLoc('Выбор базового каталога', str) then
     begin
       BaseFolderEdit.Text := str;
     end;
@@ -672,7 +672,7 @@ var
   subStr: string;
   i: integer;
 begin
-  // РџСѓС‚СЊ Рє Р·Р°РјРµСЂСѓ РґР»СЏ С‚Р°СЂРёСЂРѕРІРєРё РІРµСЂС‚РёРєР°Р»СЊРЅРѕ С†РµРЅС‚СЂР°Р»СЊРЅРѕРіРѕ РЅР°РіСЂСѓР¶РµРЅРёСЏ
+  // Путь к замеру для тарировки вертикально центрального нагружения
   for i := 1 to length(fr.name) - 1 do
   begin
     if fr.name[i] = '_' then
@@ -736,7 +736,7 @@ begin
   ifile.writeFloat(m_section, '', GistTrigFE.FloatNum);
   ifile.writeFloat(m_section, '', GistNoiseFE.FloatNum);
 
-  // РїР°СЂР°РјРµС‚СЂ РїРѕ РєРѕС‚РѕСЂРѕРјСѓ РІС‹С‡РёСЃР»СЏРµС‚СЃСЏ РїСЂРёРІРµРґРµРЅРЅР°СЏ РїРѕРіСЂРµС€РЅРѕСЃС‚СЊ
+  // параметр по которому вычисляется приведенная погрешность
   v_MaxF := IniReadFloatEx(ifile, m_section, 'MaxF', 10);
   FmaxEdit.FloatNum := IniReadFloatEx(ifile, m_section, 'VtMaxRel', 0.1);
   FmaxAbsFE.FloatNum := IniReadFloatEx(ifile, m_section, 'VtMaxAbs', 1);
@@ -762,7 +762,7 @@ begin
   v_GistAxXScale := ifile.ReadBool(m_section, 'GistAxXScale', true);
   v_bitScale := IniReadFloatEx(ifile, m_section, 'BitScale', 0.8);
 
-  // Р·Р°РіСЂСѓР¶Р°РµРј РїСЂРµС„РёРєСЃС‹
+  // загружаем префиксы
   m_D1Pref := ifile.readString(m_section, 'D1Prefix', 'NV');
   if m_D1Pref = '' then
     m_D1Pref := 'VN';
@@ -807,7 +807,7 @@ begin
   if m_Hout_Pref = '' then
     m_Hout_Pref := 'Hout_';
 
-  // РџСѓС‚СЊ Рє Р·Р°РјРµСЂСѓ РґР»СЏ С‚Р°СЂРёСЂРѕРІРєРё РІРµСЂС‚РёРєР°Р»СЊРЅРѕ С†РµРЅС‚СЂР°Р»СЊРЅРѕРіРѕ РЅР°РіСЂСѓР¶РµРЅРёСЏ
+  // Путь к замеру для тарировки вертикально центрального нагружения
   LoadfromIniTareFrame(ifile, VC_Frame);
   LoadfromIniTareFrame(ifile, H_Frame);
   LoadfromIniTareFrame(ifile, Hin_Frame);
@@ -816,18 +816,18 @@ begin
   BaseFolderEdit.Text := ifile.readString(m_section, 'BaseFolder', '');
 
   TestsFolderE.Text := ifile.readString(m_section, 'TestsFolder', '.\Tests');
-  // РїСѓС‚СЊ Рє Р·Р°РµР·РґСѓ
+  // путь к заезду
   TestPath.Text := ifile.readString(m_section, 'TestPath', '');
   TestPathChange(nil);
 
-  // СѓС‡Р°СЃС‚РѕРє
+  // участок
   str := ifile.readString(m_section, 'Region', '');
   if str <> '' then
   begin
     RegionCB.Text := str;
     RegionSE.Value := strtoint(getendnum(RegionCB.Text));
   end;
-  // СЃРµС‡РµРЅРёРµ
+  // сечение
   str := ifile.readString(m_section, 'Section', '');
   if str <> '' then
   begin
@@ -846,12 +846,12 @@ begin
 
   PolySE.Value := ifile.ReadInteger(m_section, 'Poly', 3);
   PolyCount.intnum := ifile.ReadInteger(m_section, 'PolyCount', 100);
-  // РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СѓСЃСЂРµРґРЅРµРЅРёРµ
+  // использовать усреднение
   TrendCB.Checked := ifile.ReadBool(m_section, 'UseTrend', false);
   TrendPortionIE.intnum := ifile.ReadInteger(m_section, 'TrendNumPoints', 0);
   TrendPortionFE.FloatNum := IniReadFloatEx(ifile, m_section, 'TrendPortion',
     0);
-  // РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ lopassfilter
+  // использовать lopassfilter
   LPFCB.Checked := ifile.ReadBool(m_section, 'UseLPF', false);
   LPFOrder.intnum := ifile.ReadInteger(m_section, 'LPFOrder', 1);
   LPFfreq.FloatNum := IniReadFloatEx(ifile, m_section, 'LPFfreq', 0);
@@ -883,7 +883,7 @@ var
   subStr: string;
   i: integer;
 begin
-  // РџСѓС‚СЊ Рє Р·Р°РјРµСЂСѓ РґР»СЏ С‚Р°СЂРёСЂРѕРІРєРё РІРµСЂС‚РёРєР°Р»СЊРЅРѕ С†РµРЅС‚СЂР°Р»СЊРЅРѕРіРѕ РЅР°РіСЂСѓР¶РµРЅРёСЏ
+  // Путь к замеру для тарировки вертикально центрального нагружения
   for i := 1 to length(fr.name) - 1 do
   begin
     if fr.name[i] = '_' then
@@ -897,9 +897,9 @@ begin
   ifile.writeFloat(m_section, subStr + '_' + 'T1', fr.T1FE.FloatNum);
   ifile.writeFloat(m_section, subStr + '_' + 'T2', fr.T2FE.FloatNum);
   ifile.writeString(m_section, subStr + '_' + 'Path', fr.Path.Text);
-  // РІРµСЂС‚. СЃРёР»Р°
+  // верт. сила
   ifile.writeString(m_section, subStr + '_' + 'VF', fr.VFCbox.Text);
-  // РІРµСЂС‚. СЃРёР»Р°
+  // верт. сила
   ifile.writeString(m_section, subStr + '_' + 'HF', fr.HFCbox.Text);
   ifile.writeString(m_section, subStr + '_' + 'S1', fr.S1Cbox.Text);
   ifile.writeString(m_section, subStr + '_' + 'S2', fr.S2Cbox.Text);
@@ -953,11 +953,11 @@ begin
   ifile.writeFloat(m_section, 'BitScale', v_bitScale);
 
   ifile.writeString(m_section, 'BaseFolder', BaseFolderEdit.Text);
-  // РєР°С‚Р°Р»РѕРі РґР»СЏ СЃРїРёСЃРєР° Р·Р°РµР·РґРѕРІ
+  // каталог для списка заездов
   ifile.writeString(m_section, 'TestsFolder', TestsFolderE.Text);
-  // СѓС‡Р°СЃС‚РѕРє
+  // участок
   ifile.writeString(m_section, 'Region', RegionCB.Text);
-  // СЃРµС‡РµРЅРёРµ
+  // сечение
   ifile.writeString(m_section, 'Section', sectionCB.Text);
   ifile.writeFloat(m_section, 'Dout', Hout_D.FloatNum);
 
@@ -968,22 +968,22 @@ begin
 
   ifile.writeString(m_section, 'ExportMatrixPath', ExportMatrixPath.Text);
   ifile.writeString(m_section, 'ImportMatrixPath', ImportMatrixPath.Text);
-  // РїСѓС‚СЊ Рє Р·Р°РµР·РґСѓ
+  // путь к заезду
   ifile.writeString(m_section, 'TestPath', TestPath.Text);
   ifile.writeString(m_section, 'T1', '');
   ifile.writeString(m_section, 'T2', '');
   ifile.writeInteger(m_section, 'Poly', PolySE.Value);
   ifile.writeInteger(m_section, 'PolyCount', PolyCount.intnum);
 
-  // РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СѓСЃСЂРµРґРЅРµРЅРёРµ
+  // использовать усреднение
   ifile.WriteBool(m_section, 'UseTrend', TrendCB.Checked);
   ifile.writeInteger(m_section, 'TrendNumPoints', TrendPortionIE.intnum);
   ifile.writeFloat(m_section, 'TrendPortion', TrendPortionFE.FloatNum);
-  // РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ lopassfilter
+  // использовать lopassfilter
   ifile.WriteBool(m_section, 'UseLPF', LPFCB.Checked);
   ifile.writeInteger(m_section, 'LPFOrder', LPFOrder.intnum);
   ifile.writeFloat(m_section, 'LPFfreq', LPFfreq.FloatNum);
-  // СЃРѕС…СЂР°РЅСЏРµРј РїСЂРµС„РёРєСЃС‹
+  // сохраняем префиксы
   ifile.writeString(m_section, 'D1prefix', m_D1Pref);
   ifile.writeString(m_section, 'D2prefix', m_D2Pref);
   ifile.writeString(m_section, 'D3prefix', m_D3Pref);
@@ -1035,7 +1035,7 @@ var
 begin
   if MatrixLV.Selected = nil then
     exit;
-  // РѕР±СЂР°Р±РѕС‚РєР° СЃРІРѕР№СЃС‚РІР° СЃРµС‡РµРЅРёРµ
+  // обработка свойства сечение
   cut := -1;
   for i := 0 to MatrixLV.Items.count - 1 do
   begin
@@ -1059,7 +1059,7 @@ begin
     Matrix_CutSE.Text := ''
   else
     Matrix_CutSE.Value := cut;
-  // РѕР±СЂР°Р±РѕС‚РєР° СЃРІРѕР№СЃС‚РІР° СЂРµРіРёРѕРЅ
+  // обработка свойства регион
   reg := '-1';
   for i := 0 to MatrixLV.Items.count - 1 do
   begin
@@ -1083,7 +1083,7 @@ begin
     MatrixRegSE.Text := ''
   else
     MatrixRegSE.Text := reg;
-  // РѕР±СЂР°Р±РѕС‚РєР° СЃРІРѕР№СЃС‚РІР° РёСЃРєР°С‚СЊ РёРјРµРЅР°
+  // обработка свойства искать имена
   usenames := 1;
   for i := 0 to MatrixLV.Items.count - 1 do
   begin
@@ -1093,7 +1093,7 @@ begin
     SetMultiSelectComponentBool(mat_UseNamesCB, m.useSNames);
   end;
   endMultiSelect(mat_UseNamesCB);
-  // РѕР±СЂР°Р±РѕС‚РєР° СЃРІРѕР№СЃС‚РІР° РёРјРµРЅ РґР°С‚С‡РёРєРѕРІ
+  // обработка свойства имен датчиков
   for i := 0 to MatrixLV.Items.count - 1 do
   begin
     if MatrixLV.Items[i].Selected then
@@ -1117,7 +1117,7 @@ begin
       end;
     end;
   end;
-  // РѕР±СЂР°Р±РѕС‚РєР° РјР°С‚СЂРёС†С‹
+  // обработка матрицы
   if MatrixLV.SelCount = 1 then
   begin
     ShowG(m.m);
@@ -1195,7 +1195,7 @@ var
   ifile: tinifile;
   list: tstringlist;
 begin
-  // Р·Р°РіСЂСѓР·РєР° РёРјРµРЅ РґР°С‚С‡РёРєРѕРІ
+  // загрузка имен датчиков
   ifile := tinifile.create(merafile);
   list := tstringlist.create;
   ifile.ReadSections(list);
@@ -1358,11 +1358,11 @@ begin
   noise := GistNoiseFE.FloatNum;
   if GistProcCB.Checked then
     noise := noise * (vt.MaxY - vt.MinY);
-  cutstr := '_РЎРµС‡.' + inttostr(m.cut);
+  cutstr := '_Сеч.' + inttostr(m.cut);
   trigval := trig;
   if Abs(vt.MinY) > Abs(vt.MaxY) then
     trigval := -trigval;
-  // СЃРѕР·РґР°РµРј СЃС‚СЂР°РЅРёС†Сѓ СЃ С‚СЂРёРіРіРµСЂРЅС‹Рј СѓСЂРѕРІРЅРµРј
+  // создаем страницу с триггерным уровнем
   graph := createline(vt);
   trigsignal := iwpSignal(WP.CreateSignalXY(5, 5));
   trigsignal.size := 2;
@@ -1379,35 +1379,35 @@ begin
   str := 'Lvl=' + formatstrNoE(trigval, c_digits)
     + #10 + 'noise=' + formatstrNoE(noise, c_digits) + #10;
   IWPGraphs(WP.GraphAPI).AddComment(graph.hgraph, str, 3, 3, 10, 5);
-  // СЃРѕР·РґР°РµРј РіРёСЃС‚РѕРіСЂР°РјРјС‹
+  // создаем гистограммы
   vt_gist := BuildGistogram(vt, GistDxFE.FloatNum, GistNIE.intnum, trig, noise,
-    0, 0, folder, 'Р’РµСЂС‚. СЃРёР»Р°' + cutstr, false, p2list, false);
+    0, 0, folder, 'Верт. сила' + cutstr, false, p2list, false);
 
-  // dx - РЅРµ РєРѕСЂСЂРµРєС‚РЅРѕ РѕР±РЅРѕРІР»СЏРµС‚СЃСЏ РЅР° РѕСЃРЅРѕРІР°РЅРёРё С‡РёСЃР»Р° С‚РѕС‡РµРє РґР»СЏ РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅРѕР№ СЃРёР»С‹ С‚.Рє.
-  // РґРёР°РїР°Р·РѕРЅ РѕРїСЂРµРґРµР»СЏРµС‚СЃСЏ РЅР° РѕСЃРЅРѕРІР°РЅРёРё gt.MaxY - gt.MinY. Р’ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕСЃС‚Рё РІ РіРёСЃС‚РѕРіСЂР°РјРјСѓ РїРѕРїР°РґР°СЋС‚ СЃРёР»С‹ РЅРµ Max Рё Min Р°
-  // СЃРёР»С‹ РґРµР№СЃС‚РІСѓСЋС‰РёРµ РЅР° РјРѕРјРµРЅС‚ РјР°РєСЃРёРјСѓРјР° РІ РІРµСЂС‚. Рё РіРѕСЂ-С… РѕСЃСЏС…
+  // dx - не корректно обновляется на основании числа точек для горизонтальной силы т.к.
+  // диапазон определяется на основании gt.MaxY - gt.MinY. В действительности в гистограмму попадают силы не Max и Min а
+  // силы действующие на момент максимума в верт. и гор-х осях
   gt_gist := BuildGistogram(gt, GistDxFE.FloatNum, GistNIE.intnum, trig, noise,
-    0, 0, folder, 'Р“РѕСЂ. СЃРёР»Р°' + cutstr, false, p2list, true);
+    0, 0, folder, 'Гор. сила' + cutstr, false, p2list, true);
 
   gt1 := BuildGistogram(gt, GistDxFE.FloatNum, GistNIE.intnum, trig, noise, 0,
-    1, folder, 'РќР°Р±РµРіР°СЋС‰Р°СЏ. РѕСЃСЊ' + cutstr, false, p2list, true);
+    1, folder, 'Набегающая. ось' + cutstr, false, p2list, true);
   gt2 := BuildGistogram(gt, GistDxFE.FloatNum, GistNIE.intnum, trig, noise, 1,
-    1, folder, 'Р’РµРґРѕРјР°СЏ РѕСЃСЊ' + cutstr, false, p2list, true);
+    1, folder, 'Ведомая ось' + cutstr, false, p2list, true);
   p2list.Destroy;
 
   probabl1 := BuildProbabilityDistribution(vt_gist, PAlfaEdit.FloatNum);
-  probabl1.sname := 'Р Р°СЃРїСЂРµРґ.РІРµСЂС‚.СЃРёР»С‹' + cutstr;
+  probabl1.sname := 'Распред.верт.силы' + cutstr;
   WP.Link(folder, probabl1.sname, probabl1);
 
   probabl2 := BuildProbabilityDistribution(gt1, PAlfaEdit.FloatNum);
-  probabl2.sname := 'Р Р°СЃРїСЂРµРґ.Gt_РІРµРґСѓС‰.' + cutstr;
+  probabl2.sname := 'Распред.Gt_ведущ.' + cutstr;
   WP.Link(folder, probabl2.sname, probabl2);
 
   probabl3 := BuildProbabilityDistribution(gt2, PAlfaEdit.FloatNum);
-  probabl3.sname := 'Р Р°СЃРїСЂРµРґ.Gt_РІРµРґРѕРј.' + cutstr;
+  probabl3.sname := 'Распред.Gt_ведом.' + cutstr;
   WP.Link(folder, probabl3.sname, probabl3);
 
-  // СЃРѕР·РґР°РµРј РіСЂР°С„РёРєРё РєР°Р»РёР±СЂРѕРІРѕС‡РЅРѕР№ РјР°С‚СЂРёС†С‹
+  // создаем графики калибровочной матрицы
   dbfld := m_DB.getCalibr(m.region, m.cut);
   calibr := false;
   if dbfld <> nil then
@@ -1420,7 +1420,7 @@ begin
     if (vc <> nil) and (h <> nil) and (hin <> nil) and (hout <> nil) then
     begin
       calibr := true;
-      // РІРµСЂС‚РёРєР°Р»СЊРЅР°СЏ СЃРёР»Р°
+      // вертикальная сила
       l_s := dbfld.getvc;
       l_sr := dbfld.getvcres;
       s1 := l_s.getSignalObj(m.sensors[0].vt).Signal;
@@ -1436,8 +1436,8 @@ begin
         s2 := sig.Signal
       else
       begin
-        JournalLB.AddItem('РќРµ РЅР°Р№РґРµРЅ СЂРµР·СѓР»СЊС‚Р°С‚ С‚Р°СЂРёСЂРѕРІРєРё Vt' + ' РЎРµС‡РµРЅРёРµ:' +
-            inttostr(m.cut) + ' Р РµРіРёРѕРЅ:' + m.region + ' РІ СЃРёРіРЅР°Р»Рµ ' +
+        JournalLB.AddItem('Не найден результат тарировки Vt' + ' Сечение:' +
+            inttostr(m.cut) + ' Регион:' + m.region + ' в сигнале ' +
             extractfilename(l_sr.merafile.filename), nil);
         exit;
       end;
@@ -1459,13 +1459,13 @@ begin
       graph := createline(s1, graph.hgraph, graph.haxis);
       graph := createline(s2, graph.hgraph, graph.haxis);
 
-      str := 'Р’РµСЂС‚РёРєР°Р»СЊРЅРѕ';
+      str := 'Вертикально';
       IWPGraphs(WP.GraphAPI).AddComment(graph.hgraph, str, 45, 3,
         c_CommentDx * 4, c_CommentDy);
 
       IWPGraphs(WP.GraphAPI).SetGraphOpt(graph.hgraph, 0,
         GROPT_SHOWNAME + GROPT_SHOWLEGEND);
-      // РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅР°СЏ СЃРёР»Р°
+      // горизонтальная сила
       l_s := dbfld.geth;
       l_sr := dbfld.gethres;
       s1 := l_s.getSignalObj(m.sensors[1].vt).Signal;
@@ -1494,12 +1494,12 @@ begin
       graph := createline(s1, graph.hgraph, graph.haxis);
       graph := createline(s2, graph.hgraph, graph.haxis);
 
-      str := 'Р“РѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅРѕ';
+      str := 'Горизонтально';
       IWPGraphs(WP.GraphAPI).AddComment(graph.hgraph, str, 45, 3,
         c_CommentDx * 4, c_CommentDy);
       IWPGraphs(WP.GraphAPI).SetGraphOpt(graph.hgraph, 0,
         GROPT_SHOWNAME + GROPT_SHOWLEGEND);
-      // РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅР°СЏ РЅР°СЂСѓР¶Сѓ
+      // горизонтальная наружу
       l_s := dbfld.gethout;
       l_sr := dbfld.gethoutres;
       s1 := l_s.getSignalObj(m.sensors[2].vt).Signal;
@@ -1528,12 +1528,12 @@ begin
       graph := createline(s1, graph.hgraph, graph.haxis);
       graph := createline(s2, graph.hgraph, graph.haxis);
 
-      str := 'Р’РµСЂС‚РёРєР°Р»СЊРЅРѕ РЅР°СЂСѓР¶Сѓ';
+      str := 'Вертикально наружу';
       IWPGraphs(WP.GraphAPI).AddComment(graph.hgraph, str, 45, 3,
         c_CommentDx * 5, c_CommentDy);
       IWPGraphs(WP.GraphAPI).SetGraphOpt(graph.hgraph, 0,
         GROPT_SHOWNAME + GROPT_SHOWLEGEND);
-      // РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅР°СЏ РІРЅСѓС‚СЂСЊ
+      // горизонтальная внутрь
       l_s := dbfld.gethin;
       l_sr := dbfld.gethinres;
       s1 := l_s.getSignalObj(m.sensors[3].vt).Signal;
@@ -1562,7 +1562,7 @@ begin
       graph := createline(s1, graph.hgraph, graph.haxis);
       graph := createline(s2, graph.hgraph, graph.haxis);
 
-      str := 'Р’РµСЂС‚РёРєР°Р»СЊРЅРѕ РІРЅСѓС‚СЂСЊ';
+      str := 'Вертикально внутрь';
       IWPGraphs(WP.GraphAPI).AddComment(graph.hgraph, str, 45, 3,
         c_CommentDx * 5, c_CommentDy);
       IWPGraphs(WP.GraphAPI).SetGraphOpt(graph.hgraph, 0,
@@ -1570,7 +1570,7 @@ begin
     end;
   end;
 
-  // СЃРѕР·РґР°РµРј РіРёСЃС‚РѕРіСЂР°РјРјС‹
+  // создаем гистограммы
   if calibr then
   begin
     graph := createline(vt_gist, graph.hpage);
@@ -1587,15 +1587,15 @@ begin
   IWPGraphs(WP.GraphAPI).SetGraphOpt(graph.hgraph, 0,
     GROPT_SHOWNAME + GROPT_SHOWLEGEND);
 
-  // РґРІРµ РіРёСЃС‚РѕРіСЂР°РјРјС‹
-  // Р“РёСЃС‚РѕРіСЂР°РјРјР° РІРµРґСѓС‰РµР№ РѕСЃРё
+  // две гистограммы
+  // Гистограмма ведущей оси
   graph := createline(gt1, graph.hpage);
   setGistXScale(graph.hline, m_gistGtViewRange);
   IWPGraphs(WP.GraphAPI).SetGraphOpt(graph.hgraph, 0,
     GROPT_SHOWNAME + GROPT_SHOWLEGEND);
   color := clGreen;
   IWPGraphs(WP.GraphAPI).SetLineOpt(graph.hline, 0, LNOPT_color, 0, color);
-  // Р“РёСЃС‚РѕРіСЂР°РјРјР° РІРµРґРѕРјРѕР№ РѕСЃРё
+  // Гистограмма ведомой оси
   // graph := createline(gt2, graph.hgraph, graph.haxis);
   graph := createline(gt2, graph.hpage);
   setGistXScale(graph.hline, m_gistGtViewRange);
@@ -1604,7 +1604,7 @@ begin
   color := clred;
   IWPGraphs(WP.GraphAPI).SetLineOpt(graph.hline, 0, LNOPT_color, 0, color);
 
-  // Р“СЂР°С„РёРє СЃ 3-СЏ РєРѕРјРјРµРЅС‚Р°РјРё
+  // График с 3-я комментами
   graph.hgraph := IWPGraphs(WP.GraphAPI).CreateGraph(graph.hpage);
   graph.haxis := 0;
   graph.hline := 0;
@@ -1632,7 +1632,7 @@ begin
     mo := strtofloat(gt1.GetProperty('MO'));
     max := strtofloat(gt1.GetProperty('GistMax'));
     n := strtoint(gt1.GetProperty('GistN'));
-    str := 'РќР°Р±РµРі. РѕСЃСЊ' + #10 + 'Gt_max(P)=' + formatstrNoE(trig, c_digits)
+    str := 'Набег. ось' + #10 + 'Gt_max(P)=' + formatstrNoE(trig, c_digits)
       + #10 + 'Gt_max=' + formatstrNoE(max, c_digits)
       + #10 + 'Gt_mean=' + formatstrNoE(mo, c_digits) + #10 + 'N=' + inttostr
       (n) + #10 + 'dX=' + formatstrNoE(gt1.DeltaX, c_digits);
@@ -1651,7 +1651,7 @@ begin
     mo := strtofloat(gt2.GetProperty('MO'));
     max := strtofloat(gt2.GetProperty('GistMax'));
     n := strtoint(gt1.GetProperty('GistN'));
-    str := 'Р’РµРґРѕРј. РѕСЃСЊ' + #10 + 'Gt_max(P)=' + formatstrNoE(trig, c_digits)
+    str := 'Ведом. ось' + #10 + 'Gt_max(P)=' + formatstrNoE(trig, c_digits)
       + #10 + 'Gt_max=' + formatstrNoE(max, c_digits)
       + #10 + 'Gt_mean=' + formatstrNoE(mo, c_digits) + #10 + 'N=' + inttostr
       (n) + #10 + 'dX=' + formatstrNoE(gt2.DeltaX, c_digits);
@@ -1663,7 +1663,7 @@ begin
   IWPGraphs(WP.GraphAPI).SetGraphOpt(graph.hgraph, 0,
     GROPT_SHOWNAME + GROPT_SHOWLEGEND + GROPT_SUBGRID);
 
-  // РЎРѕС…СЂР°РЅРµРЅРёРµ РѕС‚С‡РµС‚Р°
+  // Сохранение отчета
   for i := length(folder) downto 1 do
   begin
     if folder[i] = '/' then
@@ -1674,7 +1674,7 @@ begin
   end;
   l_s := m_wpMng.GetSrc(folder);
   folder := trimname(folder);
-  folder := folder + ' Р”Р°С‚Р°:' + l_s.merafile.date;
+  folder := folder + ' Дата:' + l_s.merafile.date;
   addRepPageFR(graph, datetostr(l_date), inttostr(m.cut), folder, calibr,
     l_s.merafile.filename, m_pageIndex);
 end;
@@ -1692,7 +1692,7 @@ Begin
     TMP.Width := NewWidth;
     TMP.Height := NewHeight;
     // TransparentColor:=clBlack;
-    // cliprect - СЂРµР·СѓР»СЊС‚СЂСѓСЋС‰РёРµ РіР°Р±Р°СЂРёС‚С‹, bmp - РёСЃС…РѕРґРЅР°СЏ РєР°СЂС‚РёРЅРєР°
+    // cliprect - результрующие габариты, bmp - исходная картинка
 
     // StretchDraw(ClipRect, BMP);
     SetStretchBltMode(TMP.canvas.handle, ColorOnColor);
@@ -1726,12 +1726,12 @@ begin
   inc(pageIndex);
 
   txt := frxReport1.FindObject('From') as TfrxMemoView;
-  txt.Text := 'РўР°СЂРёСЂРѕРІРєР° РѕС‚ ' + date;
+  txt.Text := 'Тарировка от ' + date;
   txt := frxReport1.FindObject('Cut') as TfrxMemoView;
-  txt.Text := 'РЎРµС‡РµРЅРёРµ:' + cut;
+  txt.Text := 'Сечение:' + cut;
   txt := frxReport1.FindObject('TestMemo') as TfrxMemoView;
-  txt.Text := 'РСЃРїС‹С‚Р°РЅРёРµ ' + testcaption;
-  // Р·Р°РїРѕР»РЅСЏРµРј РєР°СЂС‚РёРЅРєСѓ
+  txt.Text := 'Испытание ' + testcaption;
+  // заполняем картинку
   BMP := frxReport1.FindObject('Bmp1') as TfrxPictureView;
   if not def_init then
   begin
@@ -1752,7 +1752,7 @@ begin
     m_log.addInfoMes('after_WP.SaveImage');
   if ExtImagesCB.Checked then
   begin
-    // fastreport СЂР°Р±РѕС‚Р°РµС‚ С‚РѕР»СЊРєРѕ СЃ png
+    // fastreport работает только с png
     fpath := extractfiledir(filepath) + '\graph' + inttostr(pageIndex) + '.png';
     png := TPNGImage.create;
     png.CompressionLevel := 7;
@@ -1786,7 +1786,7 @@ begin
         if Reptype.ItemIndex=1 then
           Reptype.ItemIndex:=2;
       end;
-      // РµСЃР»Рё РЅРµ rtf СЃ РІС‹СЃРѕРєРёРј РєР°С‡РµСЃС‚РІРѕРј
+      // если не rtf с высоким качеством
       if Reptype.ItemIndex = 1 then
       begin
         if m_log <> nil then
@@ -1815,7 +1815,7 @@ begin
       end;
     end;
   end;
-  // СЃРѕР·РґР°РµРј СЃС‚СЂР°РЅРёС†Сѓ РѕС‚С‡РµС‚Р° РІ РїР°РјСЏС‚Рё
+  // создаем страницу отчета в памяти
   frxReport1.PrepareReport(false);
   frxReport1.PrintOptions.ShowDialog := false;
 end;
@@ -1826,8 +1826,8 @@ var
   i, matrix_region: integer;
   n: iwpnode;
   dir, filename, folder, cutstr, str, str1: string;
-  // РїСЂРё РѕР±СЂР°Р±РѕС‚РєРµ РјР°С‚СЂРёС†Р° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ РїСЂРёРјРµРЅРµРЅР° СЃ С‚РµРј СЂРµРіРёРѕРЅРѕРј? РєРѕС‚РѕСЂС‹Р№ СѓРєР°Р·Р°РЅ РІ РїРѕСЃС‚С„РёРєСЃРµ РёСЃРїС‹С‚Р°РЅРёСЏ
-  // РµСЃР»Рё РїРѕСЃС‚С„РёРєСЃ РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РёР»Рё РјР°С‚СЂРёС† СЃ РЅСѓР¶РЅС‹Рј СЂРµРіРёРѕРЅРѕРј РЅРµ РЅР°Р№РґРµРЅРѕ РёСЃРїРѕР»СЊР·СѓСЋС‚СЃСЏ РІС‹Р±СЂР°РЅРЅС‹Рµ РјР°С‚СЂРёС†С‹ РІ ListView
+  // при обработке матрица должна быть применена с тем регионом? который указан в постфиксе испытания
+  // если постфикс отсутствует или матриц с нужным регионом не найдено используются выбранные матрицы в ListView
   findmatrixregion: boolean;
   resSrc: csrc;
   s, vt, gt: cwpsignal;
@@ -1843,8 +1843,8 @@ begin
     CheckFolderComponent(TestPath, TestPath.Hint, false);
     exit;
   end;
-  m_log.addInfoMes('Р—Р°РіСЂСѓР·РєР° С„Р°Р№Р»Р° СѓСЃРїРµС€РЅР°');
-  // СѓРєРѕСЂР°С‡РёРІР°РµРј РїСѓС‚С‚СЊ СЃ РєРѕРЅС†Р° РЅР° 1 СѓСЂРѕРІРµРЅСЊ
+  m_log.addInfoMes('Загрузка файла успешна');
+  // укорачиваем путть с конца на 1 уровень
   str := TrimPath(str);
   if str[length(str)] = '\' then
   begin
@@ -1893,33 +1893,33 @@ begin
       end;
     end;
   end;
-  m_log.addInfoMes('РѕР±СЂР°Р±РѕС‚РєР° РјР°С‚СЂРёС† - СѓСЃРїРµС€РЅРѕ');
+  m_log.addInfoMes('обработка матриц - успешно');
   n := WP.Get(m_src.name + '/RZDForce') as iwpnode;
   dir := extractfiledir(m_src.merafile.filename);
   WP.SaveUSML(n.absolutepath, dir + '\RZDforce.mera');
-  // СЃРѕС…СЂР°РЅСЏРµРј РјР°С‚СЂРёС†Сѓ СЂСЏРґРѕРј СЃ Р·Р°РјРµСЂРѕРј
+  // сохраняем матрицу рядом с замером
   for i := 0 to MatrixList.count - 1 do
   begin
     m := MatrixList.Items[i];
     ExportMatrix(m, dir + '\matrix.rzd');
   end;
   resSrc := m_wpMng.GetSrc(n.absolutepath);
-  m_log.addInfoMes('РїРѕР»СѓС‡РµРЅРёРµ РєР°С‚Р°Р»РѕРіР° СЂРµР·СѓР»СЊС‚РёСЂСѓСЋС‰РµРіРѕ СЃРёРіРЅР°Р»Р°');
+  m_log.addInfoMes('получение каталога результирующего сигнала');
   if m=nil then
   begin
-    m_log.addErrorMes('РќРµ РЅР°Р№РґРµРЅС‹ РјР°С‚СЂРёС†С‹ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё');
+    m_log.addErrorMes('Не найдены матрицы для обработки');
     exit;
   end;
   //if not Supports(m.resVt, DIID_IWPSignal) then
   //begin
-  //  m_log.addErrorMes('РќРµ РїРѕСЃС‡РёС‚Р°РЅ СЃРёРіРЅР°Р» VT');
+  //  m_log.addErrorMes('Не посчитан сигнал VT');
   //  exit;
   //end;
   //folder := GetSignalFolder(m.resVt);
   folder := n.absolutepath;
-  m_log.addInfoMes('РїРѕСЃС‚СЂРѕРµРЅРёРµ РіРёСЃС‚РѕРіСЂР°Рј');
+  m_log.addInfoMes('построение гистограм');
   i := 0;
-  // РєРѕСЂСЂРµРєС‚РЅРѕ СЂР°Р±РѕС‚Р°РµС‚ С‚РѕР»СЊРєРѕ СЃ РѕРґРЅРѕР№ РјР°С‚СЂРёС†РµР№
+  // корректно работает только с одной матрицей
   for i := 0 to GistLV.Items.count - 1 do
   begin
     G := cGist(GistLV.Items[i].data);
@@ -1936,24 +1936,24 @@ begin
 
     BuildGistogram(m.resVt, GistDxFE.FloatNum, GistNIE.intnum, trig, noise,
       G.start, G.shift, folder,
-      'Р’РµСЂС‚. СЃРёР»Р°:' + cutstr + ' РЎС‚Р°СЂС‚:' + inttostr(G.start)
-        + ' РџСЂРѕРїСѓСЃРє:' + inttostr(G.shift), false, p2list, false);
+      'Верт. сила:' + cutstr + ' Старт:' + inttostr(G.start)
+        + ' Пропуск:' + inttostr(G.shift), false, p2list, false);
     BuildGistogram(m.resGt, GistDxFE.FloatNum, GistNIE.intnum, trig, noise,
       G.start, G.shift, folder,
-      'Р“РѕСЂ. СЃРёР»Р°:' + cutstr + ' РЎС‚Р°СЂС‚:' + inttostr(G.start)
-        + ' РџСЂРѕРїСѓСЃРє:' + inttostr(G.shift), false, p2list, true);
+      'Гор. сила:' + cutstr + ' Старт:' + inttostr(G.start)
+        + ' Пропуск:' + inttostr(G.shift), false, p2list, true);
     p2list.Destroy;
   end;
 
-  cutstr := '_РЎРµС‡.' + inttostr(m.cut);
+  cutstr := '_Сеч.' + inttostr(m.cut);
 
-  // СЃРѕР·РґР°РЅРёРµ РѕС‚С‡РµС‚Р°
+  // создание отчета
   frxReport1.PreviewPages.clear();
   frxRTFExport1.OpenAfterExport := OpenReportCB.Checked;
   frxPDFExport1.OpenAfterExport := OpenReportCB.Checked;
   frxHTMLExport1.OpenAfterExport := OpenReportCB.Checked;
   m_pageIndex := 0;
-  m_log.addInfoMes('РґРѕ РїРѕСЃС‚СЂРѕРµРЅРёСЏ РѕС‚С‡РµС‚Р°');
+  m_log.addInfoMes('до построения отчета');
   for i := 0 to MatrixList.count - 1 do
   begin
     m := MatrixList.Items[i];
@@ -1967,7 +1967,7 @@ begin
         BuildReport(vt.Signal, gt.Signal, m);
     end;
   end;
-  m_log.addInfoMes('РїРѕСЃР»Рµ РїРѕСЃС‚СЂРѕРµРЅРёСЏ РѕС‚С‡РµС‚Р°');
+  m_log.addInfoMes('после построения отчета');
   case Reptype.ItemIndex of
     0:
       filename := dir + '\RZDreport.rtf';
@@ -1981,7 +1981,7 @@ begin
   if fileuse(filename) then
     exit;
   case Reptype.ItemIndex of
-    0: // СЌРєСЃРїРѕСЂС‚ РІ Rtf
+    0: // экспорт в Rtf
       begin
         frxRTFExport1.filename := filename;
         frxRTFExport1.OverwritePrompt := false;
@@ -1989,7 +1989,7 @@ begin
         frxRTFExport1.ExportEMF := false;
         frxReport1.Export(frxRTFExport1);
       end;
-    1: // СЌРєСЃРїРѕСЂС‚ РІ Rtf СЃ РІС‹СЃ. РєР°С‡РµСЃС‚РІРѕРј
+    1: // экспорт в Rtf с выс. качеством
       begin
         frxRTFExport1.filename := filename;
         frxRTFExport1.ExportEMF := true;
@@ -1997,14 +1997,14 @@ begin
         frxRTFExport1.ShowDialog := false;
         frxReport1.Export(frxRTFExport1);
       end;
-    2: // СЌРєСЃРїРѕСЂС‚ РІ РџР”Р¤
+    2: // экспорт в ПДФ
       begin
         frxPDFExport1.filename := filename;
         frxPDFExport1.OverwritePrompt := false;
         frxPDFExport1.ShowDialog := false;
         frxReport1.Export(frxPDFExport1);
       end;
-    3: // СЌРєСЃРїРѕСЂС‚ РІ HTML
+    3: // экспорт в HTML
       begin
         frxHTMLExport1.filename := filename;
         frxHTMLExport1.OverwritePrompt := false;
@@ -2043,7 +2043,7 @@ begin
   if DataObject.GetData(FmtEtc, Medium) = S_OK then
     try
       try
-        // РІС‚РѕСЂРѕР№ РїР°СЂР°РјРµС‚СЂ iFile - РїСЂРё ffffff - С‡РёСЃР»Рѕ С„Р°Р№Р»РѕРІ, РёРЅР°С‡Рµ РёРЅРґРµРєСЃ С„Р°Р№Р»Р°
+        // второй параметр iFile - при ffffff - число файлов, иначе индекс файла
         FileCount := DragQueryFile(Medium.hGlobal, $FFFFFFFF, nil, 0);
         for i := 0 to FileCount - 1 do
         begin
@@ -2164,7 +2164,7 @@ begin
   str := RelativePathToAbsolute(BaseFolderEdit.Text, ExportMatrixPath.Text);
   // dir:=extractfiledir(str)+'\RZDmatrix\';
   // str:=dir+ExtractFileName(STR);
-  ExportMatrixPath.Hint := 'РџСѓС‚СЊ: ' + str;
+  ExportMatrixPath.Hint := 'Путь: ' + str;
 end;
 
 procedure TRZDFrm.ImportMatrixPathChange(Sender: TObject);
@@ -2174,7 +2174,7 @@ end;
 
 procedure TRZDFrm.BaseFolderEditChange(Sender: TObject);
 begin
-  // РёС‰РµРј РїР°РїРєСѓ
+  // ищем папку
   if CheckFolderComponent(BaseFolderEdit, true) then
   BEGIN
     ReadRegionFolders;
@@ -2250,8 +2250,8 @@ begin
   str := RelativePathToAbsolute(BaseFolderEdit.Text, ImportMatrixPath.Text);
   dir := extractfiledir(str);
   str := dir + '\' + extractfilename(str);
-  ImportMatrixPath.Hint := 'РџСѓС‚СЊ: ' + str;
-  // РёС‰РµРј С„Р°Р№Р»
+  ImportMatrixPath.Hint := 'Путь: ' + str;
+  // ищем файл
   result := CheckFolderComponent(ImportMatrixPath, str, false);
   if result then
   begin
@@ -2295,7 +2295,7 @@ end;
 
 procedure TRZDFrm.EvalFzFy(interval: point2d; Fz, Fy: iwpSignal; name: string);
 var
-  // РєРѕСЌС„С„РёС†РёРµРЅС‚С‹ РїРѕР»РёРЅРѕРјР°
+  // коэффициенты полинома
   ci: array of double;
   x, y: olevariant;
   p, p2: point2d;
@@ -2321,7 +2321,7 @@ begin
   setlength(ci, 1);
   buildMNK(0, x, y, size, ci);
 
-  // РґРѕР±Р°РІР»СЏРµРј Р·Р°РїРёСЃСЊ РІ Р¶СѓСЂРЅР°Р»
+  // добавляем запись в журнал
   str := name + ' Poly:';
   for i := 0 to length(ci) - 1 do
   begin
@@ -2329,7 +2329,7 @@ begin
   end;
   JournalLB.AddItem(str, nil);
 
-  // СЃРѕР·РґР°РµРј Р°РїСЂРѕРєСЃРёРјРёСЂСѓСЋС‰РёР№ РїРѕР»РёРЅРѕРј РІ РґРµСЂРµРІРµ СЃРёРіРЅР°Р»РѕРІ
+  // создаем апроксимирующий полином в дереве сигналов
   m_F2zFy_poly := iwpSignal(WP.CreateSignalXY(VT_R8, VT_R8)) as iwpSignal;
   m_F2zFy_poly.size := 2;
   m_F2zFy_poly.sname := name + '_poly';
@@ -2343,7 +2343,7 @@ begin
   p2.x := m_F2zFy.MaxX;
   m_F2zFy_poly.SetX(1, p2.x);
   m_F2zFy_poly.SetY(1, p2.y);
-  // СѓСЂРѕРІРµРЅСЊ РїСЂСЏРјРѕР№ РЅР° РїРѕР»РёРЅРѕРјРµ
+  // уровень прямой на полиноме
   m_F2zFyValue := p2.y;
   if Abs(m_F2zFy.MaxX) > Abs(m_F2zFy.MinX) then
     m_F2zFyMaxX := m_F2zFy.MaxX
@@ -2351,12 +2351,12 @@ begin
     m_F2zFyMaxX := m_F2zFy.MinX;
   JournalLB.AddItem('Fz(Fy)=' + formatstrNoE(p2.y, c_digits), nil);
 
-  // РіСЂР°С„РёРєР°
+  // графика
   if LinkEvalWP.Checked then
   begin
     WP.Link('Signals/MNK/', m_F2zFy.sname, m_F2zFy);
     WP.Link('Signals/MNK/', m_F2zFy_poly.sname, m_F2zFy_poly);
-    // СЃС‚СЂРѕРёРј РіСЂР°С„РёРєСѓ
+    // строим графику
     graph := createline(m_F2zFy);
     IWPGraphs(WP.GraphAPI).SetLineOpt(graph.hline, LNOPT_ONLYPOINTS,
       LNOPT_ONLYPOINTS, 0, $00D2D5);
@@ -2367,7 +2367,7 @@ end;
 
 function TRZDFrm.EvalEi(interval: point2d; s, V: iwpSignal; name: string): TEi;
 var
-  // РєРѕСЌС„С„РёС†РёРµРЅС‚С‹ РїРѕР»РёРЅРѕРјР°
+  // коэффициенты полинома
   ci: array of double;
   x, y: olevariant;
   p, p2: point2d;
@@ -2384,7 +2384,7 @@ begin
     V := GetIntervalSignal(interval, V);
   end;
 
-  // СЃС‚СЂРѕРёРј РѕР±Р»Р°РєРѕ С‚РѕС‡РµРє
+  // строим облако точек
   result.cloud := BuildWPDependence(V, s);
   result.cloud.sname := name + '_cloud';
   result.cloud.comment := 'Y:' + s.sname + '_X:' + V.sname;
@@ -2398,13 +2398,13 @@ begin
 
   buildMNK(PolySE.Value, x, y, size, ci);
   setlength(result.polyC, PolySE.Value + 1);
-  // СЃРѕС…СЂР°РЅСЏРµРј РєРѕСЌС„РёС†РёРµРЅС‚С‹
+  // сохраняем коэфициенты
   for i := 0 to PolySE.Value do
   begin
     result.polyC[i] := ci[i];
   end;
 
-  // РґРѕР±Р°РІР»СЏРµРј Р·Р°РїРёСЃСЊ РІ Р¶СѓСЂРЅР°Р»
+  // добавляем запись в журнал
   str := name + ' Poly:';
   for i := 0 to length(ci) - 1 do
   begin
@@ -2412,7 +2412,7 @@ begin
   end;
   JournalLB.AddItem(str, nil);
 
-  // СЃРѕР·РґР°РµРј Р°РїСЂРѕРєСЃРёРјРёСЂСѓСЋС‰РёР№ РїРѕР»РёРЅРѕРј РІ РґРµСЂРµРІРµ СЃРёРіРЅР°Р»РѕРІ
+  // создаем апроксимирующий полином в дереве сигналов
   if PolySE.Value < 2 then
   begin
     result.poly := iwpSignal(WP.CreateSignalXY(VT_R8, VT_R8)) as iwpSignal;
@@ -2476,9 +2476,9 @@ begin
   vt := src.GetSignal(fr.VFCbox.Text);
   gt := src.GetSignal(fr.HFCbox.Text);
 
-  // РіСЂР°С„РёРєР°
+  // графика
   graph.hpage := p;
-  // СЃС‚СЂРѕРёРј РіСЂР°С„РёРєСѓ
+  // строим графику
   if p = 0 then
     graph := createline(s1)
   else
@@ -2486,7 +2486,7 @@ begin
   graph := createline(s2, graph.hgraph, graph.haxis);
   graph := createline(s3, graph.hgraph, graph.haxis);
   graph := createline(s4, graph.hgraph, graph.haxis);
-  // РІ РЅРѕРІСѓСЋ РѕСЃСЊ
+  // в новую ось
   // graph := createline(vt, graph.hgraph, graph.haxis);
   // graph := createline(gt, graph.hgraph, graph.haxis);
   graph := createlineNewAx(vt, graph.hgraph);
@@ -2500,21 +2500,21 @@ begin
   if FormStyle = fsNormal then
   begin
     FormStyle := fsStayOnTop;
-    StayOnTopBtn.Hint := 'РџРѕРІРµСЂС… РѕРєРѕРЅ';
+    StayOnTopBtn.Hint := 'Поверх окон';
     StayOnTopBtn.Down := true;
   end
   else
   begin
     FormStyle := fsNormal;
     StayOnTopBtn.Down := false;
-    StayOnTopBtn.Hint := 'РЎРєСЂС‹РІР°С‚СЊ РѕРєРЅРѕ';
+    StayOnTopBtn.Hint := 'Скрывать окно';
   end;
 end;
 
-// Р—Р°РіСЂСѓР·РєР° РґР°РЅРЅС‹С… РґР»СЏ РїРѕСЃС‚СЂРѕРµРЅРёСЏ РјР°С‚СЂРёС†С‹
+// Загрузка данных для построения матрицы
 function TRZDFrm.PrepareDataforMatrix: boolean;
 begin
-  // Р·Р°РіСЂСѓР¶Р°РµРј РёСЃС‚РѕС‡РЅРёРєРё
+  // загружаем источники
   LoadVCSrc;
   LoadHSrc;
   LoadHinCSrc;
@@ -2581,7 +2581,7 @@ begin
   begin
     nullInterval := Hout_Frame.GetNullInterval;
   end;
-  // Р±Р°Р»Р°РЅСЃРёСЂРѕРІРєР° РЅСѓР»СЏ
+  // балансировка нуля
   if calibr then
   begin
     if nullInterval.x <> nullInterval.y then
@@ -2616,15 +2616,15 @@ begin
   if (vc_src = nil) or (h_src = nil) or (hout_src = nil) or (hin_src = nil) then
   begin
     result := false;
-    CreateMatrixBtn.Caption := 'Р—Р°РіСЂСѓР·РёС‚СЊ';
+    CreateMatrixBtn.Caption := 'Загрузить';
     LoadBtnPanel.color := clBtnFace;
-    DrawGraphBtn.Hint := 'РќРµ Р·Р°РіСЂСѓР¶РµРЅС‹ СЃРёРіРЅР°Р»С‹';
+    DrawGraphBtn.Hint := 'Не загружены сигналы';
   end
   else
   begin
-    CreateMatrixBtn.Caption := 'РЎРѕР·РґР°С‚СЊ';
+    CreateMatrixBtn.Caption := 'Создать';
     LoadBtnPanel.color := clGreen;
-    DrawGraphBtn.Hint := 'РћС‚СЂРёСЃРѕРІР°С‚СЊ РіСЂР°С„РёРєРё';
+    DrawGraphBtn.Hint := 'Отрисовать графики';
   end;
 end;
 
@@ -2635,7 +2635,7 @@ begin
   result := true;
   if (s.MaxX < interval.x) or (s.MinX > interval.y) then
   begin
-    JournalLB.AddItem('РРЅС‚РµСЂРІР°Р» СЃРёРіРЅР°Р»Р° РЅРµ СЃРѕРІРїР°РґР°РµС‚ СЃ РІС‹Р±СЂР°РЅС‹Рј РёРЅС‚РµСЂРІР°Р»РѕРј!' +
+    JournalLB.AddItem('Интервал сигнала не совпадает с выбраным интервалом!' +
         formatstrNoE(s.MinX, c_digits) + '..' + formatstrNoE(s.MaxX, c_digits),
       nil);
     result := false;
@@ -2672,7 +2672,7 @@ begin
   end;
   JournalLB.clear;
 
-  // РЎС‡РёС‚Р°РµРј E1
+  // Считаем E1
   src := vc_src;
   frame := VC_Frame;
   s := GetSignal(src, frame.S1Cbox.Text, NullCb.Checked, b);
@@ -2680,7 +2680,7 @@ begin
   interval := frame.GetInterval;
 
   interval1 := interval;
-  JournalLB.AddItem('РРЅС‚РµСЂРІР°Р»: ' + formatstrNoE(interval.x,
+  JournalLB.AddItem('Интервал: ' + formatstrNoE(interval.x,
       c_digits) + '..' + formatstrNoE(interval.y, c_digits), nil);
   if not checkSignalInterval(s, interval) then
   begin
@@ -2704,13 +2704,13 @@ begin
   begin
     if e1[i].result = false then
     begin
-      JournalLB.AddItem('РќРµ СѓРґР°Р»РѕСЃСЊ СЂР°СЃС‡РёС‚Р°С‚СЊ e1', nil);
+      JournalLB.AddItem('Не удалось расчитать e1', nil);
       setJournalAlarm(true);
       exit;
     end;
   end;
 
-  // РЅСѓР¶РЅРѕ Р»Рё СѓС‡РёС‚С‹РІР°С‚СЊ Р·РЅР°Рє fmax?
+  // нужно ли учитывать знак fmax?
   e1norm.i1 := e1[0].ei / e1[0].fmax;
   e1norm.i2 := e1[1].ei / e1[1].fmax;
   e1norm.i3 := e1[2].ei / e1[2].fmax;
@@ -2724,7 +2724,7 @@ begin
   gt[0] := getAbsMax(f.MaxY, f.MinY);
   JournalLB.AddItem('', nil);
 
-  // РЎС‡РёС‚Р°РµРј E2
+  // Считаем E2
   src := h_src;
   frame := H_Frame;
   s := GetSignal(src, frame.S1Cbox.Text, NullCb.Checked, b);
@@ -2732,7 +2732,7 @@ begin
   interval := frame.GetInterval;
   interval2 := interval;
 
-  JournalLB.AddItem('РРЅС‚РµСЂРІР°Р»: ' + formatstrNoE(interval.x,
+  JournalLB.AddItem('Интервал: ' + formatstrNoE(interval.x,
       c_digits) + '..' + formatstrNoE(interval.y, c_digits), nil);
   if not checkSignalInterval(s, interval) then
   begin
@@ -2756,7 +2756,7 @@ begin
   begin
     if e2[i].result = false then
     begin
-      JournalLB.AddItem('РќРµ СѓРґР°Р»РѕСЃСЊ СЂР°СЃС‡РёС‚Р°С‚СЊ e2', nil);
+      JournalLB.AddItem('Не удалось расчитать e2', nil);
       setJournalAlarm(true);
       exit;
     end;
@@ -2805,7 +2805,7 @@ begin
   gt[1] := getAbsMax(f.MaxY, f.MinY); ;
   JournalLB.AddItem('', nil);
 
-  // РЎС‡РёС‚Р°РµРј E3
+  // Считаем E3
   src := hout_src;
   frame := Hout_Frame;
   s := GetSignal(src, frame.S1Cbox.Text, NullCb.Checked, b);
@@ -2813,7 +2813,7 @@ begin
   interval := frame.GetInterval;
   interval3 := interval;
 
-  JournalLB.AddItem('РРЅС‚РµСЂРІР°Р»: ' + formatstrNoE(interval.x,
+  JournalLB.AddItem('Интервал: ' + formatstrNoE(interval.x,
       c_digits) + '..' + formatstrNoE(interval.y, c_digits), nil);
   if not checkSignalInterval(s, interval) then
   begin
@@ -2838,7 +2838,7 @@ begin
   begin
     if e3[i].result = false then
     begin
-      JournalLB.AddItem('РќРµ СѓРґР°Р»РѕСЃСЊ СЂР°СЃС‡РёС‚Р°С‚СЊ e3', nil);
+      JournalLB.AddItem('Не удалось расчитать e3', nil);
       setJournalAlarm(true);
       exit;
     end;
@@ -2849,7 +2849,7 @@ begin
   e3norm.i3 := c * (e3[2].ei);
   e3norm.i4 := c * (e3[3].ei);
   LinkEiSignals(e3);
-  addEiJournal('РґРѕРї. e3', e3, e3norm);
+  addEiJournal('доп. e3', e3, e3norm);
 
   f := GetSignal(src, frame.VFCbox.Text, NullCb.Checked, b);
   f := GetIntervalSignal(interval, f);
@@ -2858,7 +2858,7 @@ begin
   f := GetIntervalSignal(interval, f);
   gt[2] := getAbsMax(f.MaxY, f.MinY); ;
   JournalLB.AddItem('', nil);
-  // РЎС‡РёС‚Р°РµРј E4
+  // Считаем E4
   src := hin_src;
   frame := Hin_Frame;
   s := GetSignal(src, frame.S1Cbox.Text, NullCb.Checked, b);
@@ -2866,7 +2866,7 @@ begin
   interval := frame.GetInterval;
   interval4 := interval;
 
-  JournalLB.AddItem('РРЅС‚РµСЂРІР°Р»: ' + formatstrNoE(interval.x,
+  JournalLB.AddItem('Интервал: ' + formatstrNoE(interval.x,
       c_digits) + '..' + formatstrNoE(interval.y, c_digits), nil);
   if not checkSignalInterval(s, interval) then
     exit;
@@ -2884,7 +2884,7 @@ begin
   begin
     if e4[i].result = false then
     begin
-      JournalLB.AddItem('РќРµ СѓРґР°Р»РѕСЃСЊ СЂР°СЃС‡РёС‚Р°С‚СЊ e4', nil);
+      JournalLB.AddItem('Не удалось расчитать e4', nil);
       setJournalAlarm(true);
       exit;
     end;
@@ -2895,7 +2895,7 @@ begin
   e4norm.i3 := c * (e4[2].ei);
   e4norm.i4 := c * (e4[3].ei);
   LinkEiSignals(e4);
-  addEiJournal('РґРѕРї. e4 ', e4, e4norm);
+  addEiJournal('доп. e4 ', e4, e4norm);
 
   f := GetSignal(src, frame.VFCbox.Text, NullCb.Checked, b);
   f := GetIntervalSignal(interval, f);
@@ -2904,7 +2904,7 @@ begin
   f := GetIntervalSignal(interval, f);
   gt[3] := getAbsMax(f.MaxY, f.MinY); ;
   JournalLB.AddItem('', nil);
-  // Р’С‹С‡РёСЃР»СЏРµРј РѕРєРѕРЅС‡Р°С‚РµР»СЊРЅРѕ e3
+  // Вычисляем окончательно e3
   c := 1 / (2 * Hout_D.FloatNum);
   e3norm.i1 := c * (e3norm.i1 - e4norm.i1);
   e3norm.i2 := c * (e3norm.i2 - e4norm.i2);
@@ -2983,7 +2983,7 @@ begin
   end;
   addMatrix(m_matrix);
   ShowMatrixList;
-  // РїСЂРѕРІРµСЂРєР° РєР°С‡РµСЃС‚РІР° СЂР°Р±РѕС‚С‹ РјР°С‚СЂРёС†С‹
+  // проверка качества работы матрицы
   m_matrix.useSNames := true;
   UpdateMatrixNames(m_matrix, VC_Frame);
   if m_matrix.ApplyMatrix(vc_src) then
@@ -3077,25 +3077,25 @@ begin
         begin
           lsrc := vc_src;
           frame := VC_Frame;
-          lcaption := 'РЎСЂР°РІРЅРµРЅРёРµ РґР»СЏ РЅР°РіСЂ-РёСЏ РІРµСЂС‚. СЃРёР»РѕР№'
+          lcaption := 'Сравнение для нагр-ия верт. силой'
         end;
       1:
         begin
           lsrc := h_src;
           frame := H_Frame;
-          lcaption := 'РЎСЂР°РІРЅРµРЅРёРµ РґР»СЏ РЅР°РіСЂ-РёСЏ РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅРѕР№ СЃРёР»РѕР№';
+          lcaption := 'Сравнение для нагр-ия горизонтальной силой';
         end;
       2:
         begin
           lsrc := hout_src;
           frame := Hout_Frame;
-          lcaption := 'РЎСЂР°РІРЅРµРЅРёРµ РґР»СЏ РЅР°РіСЂ-РёСЏ РІРµСЂС‚. СЃРёР»РѕР№ СЃ СЃРјРµС‰РµРЅРёРµРј РЅР°СЂСѓР¶Сѓ';
+          lcaption := 'Сравнение для нагр-ия верт. силой с смещением наружу';
         end;
       3:
         begin
           lsrc := hin_src;
           frame := Hin_Frame;
-          lcaption := 'РЎСЂР°РІРЅРµРЅРёРµ РґР»СЏ РЅР°РіСЂ-РёСЏ РІРµСЂС‚. СЃРёР»РѕР№ СЃ СЃРјРµС‰РµРЅРёРµРј РІРЅСѓС‚СЂСЊ';
+          lcaption := 'Сравнение для нагр-ия верт. силой с смещением внутрь';
         end;
     end;
     if src = lsrc then
@@ -3124,11 +3124,11 @@ begin
   p := createline(f, p.hgraph, p.haxis);
 
   // p := createline(res, p.hpage);
-  // res1 - СЃРёРіРЅР°Р» СЂР°Р·РЅРёС†Р° РјРµР¶РґСѓ РёСЃС…РѕРґРЅС‹Рј Рё СЂР°СЃС‡РёС‚Р°РЅРЅС‹Рј
+  // res1 - сигнал разница между исходным и расчитанным
   p := createline(res1, p.hpage);
-  // res - СЃРёРіРЅР°Р» СЃСЂР°РІРЅРµРЅРёРµ
+  // res - сигнал сравнение
   // p := createline(res, p.hgraph, p.haxis);
-  // res2 - Р·РЅР°РјРµРЅР°С‚РµР»СЊ
+  // res2 - знаменатель
   p := createline(res2, p.hgraph, p.haxis);
   lcolor := clred;
   IWPGraphs(WP.GraphAPI).SetLineOpt(p.hline, LNOPT_color + LNOPT_WIDTH,
@@ -3179,8 +3179,8 @@ begin
 
   li := GistLV.Items.Add;
   li.data := gist;
-  GistLV.SetSubItemByColumnName('РџРµСЂРІС‹Р№ РёРјРїСѓР»СЊСЃ', inttostr(gist.start), li);
-  GistLV.SetSubItemByColumnName('РџСЂРѕРїСѓСЃРє', inttostr(gist.shift), li);
+  GistLV.SetSubItemByColumnName('Первый импульс', inttostr(gist.start), li);
+  GistLV.SetSubItemByColumnName('Пропуск', inttostr(gist.shift), li);
 end;
 
 procedure TRZDFrm.setJournalAlarm(b:boolean);
@@ -3313,7 +3313,7 @@ begin
     endnum := strtoint(getendnum(str1));
     if endnum < CutSE.Value then
     begin
-      // РїСЂРѕР±СѓРµРј СѓР№С‚Рё Рє Р±Р»РёР¶Р°Р№С€РµРјСѓ РЅР°РІРµСЂС…
+      // пробуем уйти к ближайшему наверх
       if (sectionCB.ItemIndex + 1) < (sectionCB.Items.count) then
       begin
         sectionCB.ItemIndex := sectionCB.ItemIndex + 1;
@@ -3321,7 +3321,7 @@ begin
     end;
     if endnum > CutSE.Value then
     begin
-      // РїСЂРѕР±СѓРµРј СѓР№С‚Рё Рє Р±Р»РёР¶Р°Р№С€РµРјСѓ РІРЅРёР·
+      // пробуем уйти к ближайшему вниз
       if (sectionCB.ItemIndex - 1) > -1 then
       begin
         sectionCB.ItemIndex := sectionCB.ItemIndex - 1;
@@ -3514,10 +3514,10 @@ end;
 procedure TRZDFrm.ApplyMatrix(s1, s2, s3, s4: iwpSignal; p_g: d2array;
   srcpath: string; sname: string; m: TRZDMatrix);
 var
-  // РјР°РєСЃРёРјР°Р»СЊРЅР°СЏ С‡Р°СЃС‚РѕС‚Р° РѕРїСЂРѕСЃР° СЃСЂРµРґРё СЃРёРіРЅР°Р»РѕРІ
+  // максимальная частота опроса среди сигналов
   V, v1, v2, v3, v4, DeltaX, maxFS, min, max: double;
   interval: point2d;
-  // РґР°С‚С‡РёРє СЃ РјР°РєСЃРёРјР°Р»СЊРЅРѕР№ С‡Р°СЃС‚РѕС‚РѕР№ РґРёСЃРєСЂРµС‚РёР·Р°С†РёРё
+  // датчик с максимальной частотой дискретизации
   i, start, stop: integer;
   s, r1, r2, r3: iwpSignal;
   folder, str: string;
@@ -3541,7 +3541,7 @@ begin
   end;
   DeltaX := maxFS;
   maxFS := 1 / maxFS;
-  // РЅР°С…РѕРґРёРј РёРЅС‚РµСЂРІР°Р» РѕР±СЂР°Р±РѕС‚РєРё
+  // находим интервал обработки
   interval.x := s1.MinX;
   if s2.MinX > interval.x then
     interval.x := s2.MinX;
@@ -3549,7 +3549,7 @@ begin
     interval.x := s3.MinX;
   if s4.MinX > interval.x then
     interval.x := s4.MinX;
-  // РЅР°С…РѕРґРёРј РёРЅС‚РµСЂРІР°Р» РѕР±СЂР°Р±РѕС‚РєРё
+  // находим интервал обработки
   interval.y := s1.MaxX;
   if s2.MaxX < interval.y then
     interval.y := s2.MaxX;
@@ -3590,7 +3590,7 @@ begin
   r3 := s.Clone(start, stop - start) as iwpSignal;
   r3.sname := 'M_' + sname;
 
-  JournalLB.AddItem('Р Р°СЃС‡РµС‚ РјР°С‚СЂРёС†С‹', nil);
+  JournalLB.AddItem('Расчет матрицы', nil);
   str := 's1: ' + s1.sname + ';' + 's2: ' + s2.sname + ';' + 's3: ' +
     s3.sname + ';' + 's4: ' + s4.sname;
   JournalLB.AddItem(str, nil);
@@ -3616,20 +3616,20 @@ begin
         min := v3;
       if v4 < min then
         min := v4;
-      JournalLB.AddItem('РњР°РєСЃРёРјР°Р»СЊРЅР°СЏ РЅРµСЃРёРЅС…СЂРѕРЅРЅРѕСЃС‚СЊ: ' + formatstrNoE
+      JournalLB.AddItem('Максимальная несинхронность: ' + formatstrNoE
           (max - min, c_digits), nil);
     end;
     v1 := s1.GetY(i);
     v2 := s2.GetY(i);
     v3 := s3.GetY(i);
     v4 := s4.GetY(i);
-    /// Р›РѕРіРёСЂРѕРІР°РЅРёРµ Р·РЅР°С‡РµРЅРёСЏ
+    /// Логирование значения
     if v_Log then
     begin
       // if i = m_logindex then
       if i = 2593 then
       begin
-        JournalLB.AddItem('РРЅРґРµРєСЃ РѕС‚СЃС‡РµС‚Р°: ' + inttostr(m_logindex), nil);
+        JournalLB.AddItem('Индекс отсчета: ' + inttostr(m_logindex), nil);
         str := formatstrNoE(v1, 4) + '; ' + formatstrNoE(v2, 4)
           + '; ' + formatstrNoE(v3, 4) + '; ' + formatstrNoE(v4, 4);
         JournalLB.AddItem(str, nil);
@@ -3783,7 +3783,7 @@ var
   s: iwpSignal;
   str: string;
 begin
-  // РіСЂР°С„РёРєР°
+  // графика
   graph.hpage := 0;
   if LinkEvalWP.Checked then
   begin
@@ -3793,7 +3793,7 @@ begin
           E[i].cloud));
       E[i].nPoly := iwpnode(WP.Link('Signals/MNK/', E[i].poly.sname,
           E[i].poly));
-      // СЃС‚СЂРѕРёРј РіСЂР°С„РёРєСѓ
+      // строим графику
       if graph.hpage = 0 then
       begin
         graph := createline(iwpSignal(E[i].nCloud.Reference));
@@ -3806,7 +3806,7 @@ begin
       IWPGraphs(WP.GraphAPI).SetLineOpt(graph.hline, LNOPT_ONLYPOINTS,
         LNOPT_ONLYPOINTS, 0, $00D2D5);
       graph := createline(E[i].poly, graph.hgraph, graph.haxis);
-      // С†РІРµС‚ С‚СЂРµРЅРґР°
+      // цвет тренда
       color := clred;
       IWPGraphs(WP.GraphAPI).SetLineOpt(graph.hline, LNOPT_color + LNOPT_WIDTH,
         LNOPT_color + LNOPT_WIDTH, 3, color);
@@ -3823,15 +3823,15 @@ function TRZDFrm.BuildGistogram(s: iwpSignal; dx: double; dxN: integer;
   lvl, noise: double; start, shift: integer; folder, gistname: string;
   usep2List: boolean; var p2list: cP2dList; gtForce: boolean): iwpSignal;
 var
-  // РїРѕР»РЅС‹Р№ СЃРїРёСЃРѕРє СЌРєСЃС‚СЂРµРјСѓРјРѕРІ
+  // полный список экстремумов
   res,
-  // РїСЂРѕСЂРµР¶РµРЅРЅС‹Рµ РёРјРїСѓР»СЊСЃС‹ СЃ СѓС‡РµС‚РѕРј РїСЂРѕРїСѓСЃРєР° РѕСЃРµР№
+  // прореженные импульсы с учетом пропуска осей
   res1: cP2dList;
   p2, p: point2d;
   p2dptr: Ppoint2d;
   findtrg: boolean;
   i, lshift, j, ind, count: integer;
-  // СЌРєСЃС‚СЂРµРјСѓРј РЅР° СѓС‡Р°СЃС‚РєРµ
+  // экстремум на участке
   localmax, localmax_x, V, sum, min, max, SIGshift: double;
 begin
   res1 := cP2dList.create;
@@ -3843,7 +3843,7 @@ begin
     begin
       if v_Log then
       begin
-        JournalLB.AddItem('РўРѕС‡РєРё РЅР° РіРёСЃС‚РѕРіСЂР°РјРјСѓ Vt', nil);
+        JournalLB.AddItem('Точки на гистограмму Vt', nil);
         JournalLB.AddItem('lvl=' + formatstrNoE(lvl,
             c_digits) + ' noise=' + formatstrNoE(noise, c_digits), nil);
       end;
@@ -3867,7 +3867,7 @@ begin
         end
         else
         begin
-          // РїСЂРѕРІРµСЂСЏРµРј РІС‹С€Р»Рё РјС‹ Р·Р° СѓСЂРѕРІРµРЅСЊ РіРёСЃС‚РµСЂРµР·РёСЃР° РёР»Рё РЅРµС‚
+          // проверяем вышли мы за уровень гистерезиса или нет
           if findtrg then
           begin
             if V + noise > lvl then
@@ -3897,7 +3897,7 @@ begin
     end;
   end
   else
-  // РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅР°СЏ СЃРёР»Р°
+  // горизонтальная сила
   begin
     res := p2list;
     for i := 0 to res.count - 1 do
@@ -3914,12 +3914,12 @@ begin
       end;
     end;
   end;
-  // РІС‹С‡РёСЃР»СЏРµРј РјРёРЅРёРјР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РёРјРїСѓР»СЊСЃР° СЃРёРіРЅР°Р»Р°
+  // вычисляем минимальное значение импульса сигнала
   min := Abs(s.MaxY);
   max := -1;
   if v_Log and gtForce then
   begin
-    JournalLB.AddItem('РўРѕС‡РєРё РЅР° РіРёСЃС‚РѕРіСЂР°РјРјСѓ Gt', nil);
+    JournalLB.AddItem('Точки на гистограмму Gt', nil);
   end;
   for j := start to res.count - 1 do
   begin
@@ -3962,7 +3962,7 @@ begin
   lshift := 0;
   sum := 0;
   count := 0;
-  // СЃРґРІРёР¶РєР° РѕСЃРё x РґР»СЏ РІС‹СЂР°РІРЅРёРІР°РЅРёСЏ РјРёРЅРёРјСѓРјР° РІ РєСЂР°С‚РЅСѓСЋ РіРёСЃС‚РѕРіСЂР°РјРјСѓ
+  // сдвижка оси x для выравнивания минимума в кратную гистограмму
   V := dx * ROUND(min / dx);
   result.StartX := result.StartX - V;
   for j := start to res.count - 1 do
@@ -3992,7 +3992,7 @@ begin
   result.SetProperty('MO', floattostr(sum / res.count));
   result.SetProperty('GistMax', floattostr(max));
   result.SetProperty('GistMin', floattostr(min));
-  // РЅРѕСЂРјРёСЂРѕРІРєР° СЃРёРіРЅР°Р»Р°
+  // нормировка сигнала
   for i := 0 to result.size - 1 do
   begin
     V := result.GetY(i);
@@ -4002,10 +4002,10 @@ begin
       result.SetY(i, V / (count * dx));
     end;
   end;
-  // РІС‹С‡РёСЃР»СЏРµРј РґРѕРІРµСЂРёС‚РµР»СЊРЅС‹Р№ РёРЅС‚РµСЂРІР°Р»
-  // С†РµРЅР° РґРµР»РµРЅРёСЏ РѕРґРЅРѕРіРѕ РёРјРїСѓР»СЊСЃР°
+  // вычисляем доверительный интервал
+  // цена деления одного импульса
   // v:=1/res.Count;
-  // РёРјРїСѓР»СЊСЃ РЅР° РєРѕС‚РѕСЂРѕРј РјС‹ РµС‰Рµ РјРµРЅСЊС€Рµ РґРѕРІРµСЂРёС‚РµР»СЊРЅРѕРіРѕ РёРЅС‚РµСЂРІР°Р»Р°
+  // импульс на котором мы еще меньше доверительного интервала
   V := 1 / res1.count;
   j := trunc(PAlfaEdit.FloatNum * res1.count) - 1;
   if j > -1 then
@@ -4055,14 +4055,14 @@ begin
     result := v2;
 end;
 
-// base - С‚Р°СЂРёСЂРѕРІРѕС‡РЅР°СЏ СЃРёР»Р°, s1 - СЂР°СЃС‡РёС‚Р°РЅРЅР°СЏ
+// base - тарировочная сила, s1 - расчитанная
 function TRZDFrm.BuildCompare(s1, base: iwpSignal; fmax, rel: double;
   resfolder: string; var res1, res2: iwpSignal): iwpSignal;
 var
-  // РјР°РєСЃРёРјР°Р»СЊРЅР°СЏ С‡Р°СЃС‚РѕС‚Р° РѕРїСЂРѕСЃР° СЃСЂРµРґРё СЃРёРіРЅР°Р»РѕРІ
+  // максимальная частота опроса среди сигналов
   DeltaX, maxFS, min, max, lmax, V: double;
   interval: point2d;
-  // РґР°С‚С‡РёРє СЃ РјР°РєСЃРёРјР°Р»СЊРЅРѕР№ С‡Р°СЃС‚РѕС‚РѕР№ РґРёСЃРєСЂРµС‚РёР·Р°С†РёРё
+  // датчик с максимальной частотой дискретизации
   i, start, stop: integer;
   res: iwpSignal;
 begin
@@ -4084,11 +4084,11 @@ begin
     base := Resample(base, maxFS);
   end;
 
-  // РЅР°С…РѕРґРёРј РёРЅС‚РµСЂРІР°Р» РѕР±СЂР°Р±РѕС‚РєРё
+  // находим интервал обработки
   interval.x := s1.MinX;
   if base.MinX > interval.x then
     interval.x := base.MinX;
-  // РЅР°С…РѕРґРёРј РёРЅС‚РµСЂРІР°Р» РѕР±СЂР°Р±РѕС‚РєРё
+  // находим интервал обработки
   interval.y := s1.MaxX;
   if base.MaxX < interval.y then
     interval.y := base.MaxX;
@@ -4147,7 +4147,7 @@ var
   laststr: string;
 begin
   list := tstringlist.create;
-  // СЃРєР°РЅРёСЂСѓРµРјС‹Р№ РєР°С‚Р°Р»РѕРі, РјР°СЃРєР°, СЃРїРёСЃРѕРє СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ
+  // сканируемый каталог, маска, список результатов
   FindFolders(GetCalibrFolder, '*' + m_regionPref + '*', list, 1);
 
   laststr := RegionCB.Text;
@@ -4179,7 +4179,7 @@ var
   sectiontext: string;
 begin
   list := tstringlist.create;
-  // СЃРєР°РЅРёСЂСѓРµРјС‹Р№ РєР°С‚Р°Р»РѕРі, РјР°СЃРєР°, СЃРїРёСЃРѕРє СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ
+  // сканируемый каталог, маска, список результатов
   FindFolders(RegionPath, '*' + m_sectionPref + '*', list, 1);
   sectiontext := sectionCB.Text;
   sectionCB.clear;
@@ -4227,7 +4227,7 @@ begin
   end;
 end;
 
-// Р·Р°РїРѕР»РЅСЏРµРј РїСѓС‚Рё Рє СЃРёРіРЅР°Р»Р°Рј РєР°Р»РёР±СЂРѕРІРєРё
+// заполняем пути к сигналам калибровки
 procedure TRZDFrm.ReadTests(segmentpath: string);
 var
   list: tstringlist;
@@ -4235,7 +4235,7 @@ var
   vc_str, h_str, hin_str, hout_str: string;
 begin
   list := tstringlist.create;
-  // СЃРєР°РЅРёСЂСѓРµРјС‹Р№ РєР°С‚Р°Р»РѕРі, РјР°СЃРєР°, СЃРїРёСЃРѕРє СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ
+  // сканируемый каталог, маска, список результатов
   FindFileext('*.mera', segmentpath, 2, list);
   vc_str := VC_Frame.Path.Text;
   VC_Frame.Path.clear;
@@ -4287,7 +4287,7 @@ begin
   FillHinCB;
 
   UpdateIPortion;
-  // РѕР±РЅРѕРІР»СЏРµРј СЃС‚Р°С‚СѓСЃ РєРЅРѕРїРєРё Р—Р°РіСЂСѓР·РёС‚СЊ/РЎРѕР·РґР°С‚СЊ. Р•СЃР»Рё РїСЂРѕРїРёСЃР°РЅ РЅРѕРІС‹Р№ Р·Р°РјРµСЂ С‚Рѕ src СЃР±СЂР°СЃС‹РІР°РµС‚СЃСЏ
+  // обновляем статус кнопки Загрузить/Создать. Если прописан новый замер то src сбрасывается
   VC_FramePathChange(nil);
   H_FramePathChange(nil);
   Hin_FramePathChange(nil);
@@ -4340,12 +4340,12 @@ begin
   begin
     if strtoIntExt(str1)>RegionSE.Value then
     begin
-      // СѓРјРµРЅСЊС€Р°РµРј СЃС‡РµС‚С‡РёРє
+      // уменьшаем счетчик
       operation:=1;
     end
     else
     begin
-      // СѓРІРµР»РёС‡РёРІР°РµРј СЃС‡РµС‚С‡РёРє
+      // увеличиваем счетчик
       operation:=2;
     end;
   end;
@@ -4396,10 +4396,10 @@ begin
     Path := GetRegPath(GetCalibrFolder, RegionCB.Text);
     ReadSegments(Path);
     RegionSE.OnChange:=e;
-    // РїСЂРµРґРѕС‚РІСЂР°С‰Р°РµРј   RegionCBChange(nil);
+    // предотвращаем   RegionCBChange(nil);
     exit;
   end;
-  // СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ СЃРїРёРЅР±Р°С‚РѕРЅР° СЃ С‚РµРєСЃС‚РѕРј regionCB (РіР»Р°РІРЅС‹Р№ СЂРµРіРёРѕРЅCB)
+  // синхронизация спинбатона с текстом regionCB (главный регионCB)
   RegionCBChange(nil);
 end;
 
@@ -4522,25 +4522,25 @@ begin
         begin
           fr := VC_Frame;
           src := vc_src;
-          str[i] := 'Р’РµСЂС‚. С†РµРЅС‚СЂ. РЅР°РіСЂСѓР¶РµРЅРёРµ';
+          str[i] := 'Верт. центр. нагружение';
         end;
       1:
         begin
           fr := H_Frame;
           src := h_src;
-          str[i] := 'Р’РµСЂС‚. СЃ СЃРјРµС‰РµРЅРёРµРј РїРѕ РіРѕСЂ-Р»Рё';
+          str[i] := 'Верт. с смещением по гор-ли';
         end;
       2:
         begin
           fr := Hout_Frame;
           src := hout_src;
-          str[i] := 'Р“РѕСЂ. СЃ СЃРјРµС‰РµРЅРёРµРј РЅР°СЂСѓР¶Сѓ';
+          str[i] := 'Гор. с смещением наружу';
         end;
       3:
         begin
           fr := Hin_Frame;
           src := hin_src;
-          str[i] := 'Р“РѕСЂ. СЃ СЃРјРµС‰РµРЅРёРµРј РІРЅСѓС‚СЂСЊ';
+          str[i] := 'Гор. с смещением внутрь';
         end;
     end;
     graph[i] := ShowTimeGraphs(page, VC_Frame, src, str[i]);
@@ -4570,7 +4570,7 @@ begin
   end
   else
   begin
-    dXCB.Caption := 'N (С‡РёСЃР»Рѕ С‚РѕС‡РµРє)';
+    dXCB.Caption := 'N (число точек)';
     GistNIE.Visible := true;
     GistDxFE.Visible := false;
   end;
@@ -4820,7 +4820,7 @@ var
 begin
   if not fileexists(str) then
     exit;
-  // СѓРґР°Р»СЏРµРј РїСЂРѕС€Р»С‹Рµ РјР°С‚СЂРёС†С‹
+  // удаляем прошлые матрицы
   ClearMList;
   sections := tstringlist.create;
   ini := tinifile.create(str);
@@ -4909,7 +4909,7 @@ begin
     ini.writeFloat(fname, 't1_' + pref, m.sensors[i].t1t2.x);
     ini.writeFloat(fname, 't2_' + pref, m.sensors[i].t1t2.y);
   end;
-  // РЎРѕС…СЂР°РЅСЏРµРј С‚РѕР»СЊРєРѕ РїСЂРµРґСѓСЃС‚Р°РЅРѕРІР»РµРЅРЅС‹Рµ РёРјРµРЅР°
+  // Сохраняем только предустановленные имена
   ini.writeString(fname, 'Date', m.date);
   ini.writeString(fname, 'S1', m.ls1);
   ini.writeString(fname, 'S2', m.ls2);
@@ -4993,13 +4993,13 @@ begin
     li := MatrixLV.Items.Add;
     li.data := m;
     li.Checked := m.m_active;
-    MatrixLV.SetSubItemByColumnName('РњР°С‚СЂРёС†Р°', m.Infostr, li);
-    MatrixLV.SetSubItemByColumnName('Р РµРі.', m.region, li);
-    MatrixLV.SetSubItemByColumnName('РЎРµС‡.', inttostr(m.cut), li);
+    MatrixLV.SetSubItemByColumnName('Матрица', m.Infostr, li);
+    MatrixLV.SetSubItemByColumnName('Рег.', m.region, li);
+    MatrixLV.SetSubItemByColumnName('Сеч.', inttostr(m.cut), li);
     MatrixLV.SetSubItemByColumnName('Poly', inttostr(m.poly), li);
     if m.cut = CutSE.Value then
     begin
-      // РѕС‚РѕР±СЂР°Р¶Р°РµС‚ РЅР° С„РѕСЂРјРµ РјР°С‚СЂРёС†Сѓ
+      // отображает на форме матрицу
       if m.region = RegionCB.Text then
         ShowG(m.m);
     end;
@@ -5023,7 +5023,7 @@ begin
     if (s1 = '') or (s2 = '') or (s1 = '') or (s2 = '') then
     begin
       RZDFrm.JournalLB.AddItem(
-        'РќРµ РѕРїСЂРµРґРµР»РµРЅ РѕРґРёРЅ РёР· СЃРёРіРЅР°Р»РѕРІ, РїРѕРїС‹С‚РєР° РїРѕРёСЃРєР° РїРѕ РїСЂРµС„РёРєСЃР°Рј...', nil);
+        'Не определен один из сигналов, попытка поиска по префиксам...', nil);
       exit;
     end;
   end
@@ -5043,7 +5043,7 @@ begin
   end
   else
   begin
-    RZDFrm.JournalLB.AddItem('РќРµ РЅР°Р№РґРµРЅС‹ СЃРёРіРЅР°Р»С‹', nil);
+    RZDFrm.JournalLB.AddItem('Не найдены сигналы', nil);
   end;
 end;
 
@@ -5195,9 +5195,9 @@ begin
   begin
     f_needUpdateDB := false;
     capt := RZDFrm.Caption;
-    RZDFrm.Caption := 'РћР±РЅРѕРІР»РµРЅРёРµ Р±Р°Р·С‹ РґР°РЅРЅС‹С…';
+    RZDFrm.Caption := 'Обновление базы данных';
     m_DB.m_BaseFolder.Path := BaseFolderEdit.Text;
-    // РѕС‚РѕР±СЂР°Р¶РµРЅРёРµ РІ РґРµСЂРµРІРµ
+    // отображение в дереве
     doUpdateBase(nil);
     RZDFrm.Caption := capt;
   end;
@@ -5214,11 +5214,11 @@ begin
     f_needUpdateDB := false;
     // inc(ThreadCount);
     capt := RZDFrm.Caption;
-    RZDFrm.Caption := 'РћР±РЅРѕРІР»РµРЅРёРµ Р±Р°Р·С‹ РґР°РЅРЅС‹С…';
+    RZDFrm.Caption := 'Обновление базы данных';
     fld := GetPathLevel(m_DB.m_BaseFolder.absolutepath, str, 1);
     // log.addInfoMes('UpdateDB_1');
     m_DB.UpdateDB(fld);
-    // РѕС‚РѕР±СЂР°Р¶РµРЅРёРµ РІ РґРµСЂРµРІРµ
+    // отображение в дереве
     doUpdateBase(nil);
     RZDFrm.Caption := capt;
   end;

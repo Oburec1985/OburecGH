@@ -3,7 +3,7 @@ unit uGenForm;
 interface
 
 uses
-  Windows, SysUtils, Classes, Forms,
+  Windows, SysUtils, Classes, Forms, uLocalizeForm,
   ComCtrls, StdCtrls, DCL_MYOWN, uSpin, Spin, ExtCtrls, posBase,
   winpos_ole_tlb, Controls;
 

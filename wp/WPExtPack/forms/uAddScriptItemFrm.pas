@@ -3,7 +3,7 @@ unit uAddScriptItemFrm;
 interface
 
 uses
-  Windows, SysUtils, Classes, Graphics, Controls, Forms,
+  Windows, SysUtils, Classes, Graphics, Controls, Forms, uLocalizeForm,
   StdCtrls, DCL_MYOWN, uScriptFrm, uWPproc, POSBase, Winpos_ole_TLB,
   VirtualTrees, uVTServices, ExtCtrls, ImgList, usetlist, uWPServices;
 

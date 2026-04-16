@@ -3,7 +3,7 @@ unit uWPNameFilterFrame;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uWPProc,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm, uWPProc,
   Dialogs, StdCtrls, ExtCtrls, ComCtrls, uBtnListView, inifiles, posbase, Winpos_ole_TLB,
   Buttons;
 

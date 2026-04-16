@@ -62,9 +62,9 @@
 #define GIFConsts_sOutOfData 65085
 #define GIFConsts_sTooManyColors 65086
 #define GIFConsts_sBadColorIndex 65087
-#define NativeXml_sXmlOwnerNotAssigned 65088
-#define NativeXml_sXmlParentNotAssigned 65089
-#define NativeXml_sCopyFromOnlyWithXmlNode 65090
+#define VirtualTrees_SCorruptStream2 65088
+#define VirtualTrees_SClipboardFailed 65089
+#define VirtualTrees_SCannotSetUserData 65090
 #define JConsts_sChangeJPGSize 65091
 #define JConsts_sJPEGError 65092
 #define JConsts_sJPEGImageFile 65093
@@ -78,38 +78,38 @@
 #define pnglang_EPNGSizeExceedsText 65101
 #define pnglang_EPNGUnknownPalEntryText 65102
 #define pnglang_EPNGUnknownCriticalChunkText 65103
-#define NativeXml_sIllegalTag 65104
-#define NativeXml_sUnsupportedTag 65105
-#define NativeXml_sIllegalEndTag 65106
-#define NativeXml_sQuoteCharExpected 65107
-#define NativeXml_sCannotAddNode 65108
-#define NativeXml_sCannotAddAttribute 65109
-#define NativeXml_sCannotSetName 65110
-#define NativeXml_sCannotSetValue 65111
-#define NativeXml_sCannotManipulate 65112
-#define NativeXml_sBeginEndMismatch 65113
-#define NativeXml_sLevelMismatch 65114
-#define NativeXml_sRootElementNotDefined 65115
-#define NativeXml_sNonDefaultChardata 65116
-#define NativeXml_sSignificantDigitsOutOfRange 65117
-#define NativeXml_sMissingDataInBinaryStream 65118
-#define NativeXml_sErrorCalcStreamLength 65119
+#define NativeXml_sCannotManipulate 65104
+#define NativeXml_sBeginEndMismatch 65105
+#define NativeXml_sLevelMismatch 65106
+#define NativeXml_sRootElementNotDefined 65107
+#define NativeXml_sNonDefaultChardata 65108
+#define NativeXml_sSignificantDigitsOutOfRange 65109
+#define NativeXml_sMissingDataInBinaryStream 65110
+#define NativeXml_sErrorCalcStreamLength 65111
+#define NativeXml_sXmlOwnerNotAssigned 65112
+#define NativeXml_sXmlParentNotAssigned 65113
+#define NativeXml_sCopyFromOnlyWithXmlNode 65114
+#define VirtualTrees_SWrongMoveError 65115
+#define VirtualTrees_SWrongStreamFormat 65116
+#define VirtualTrees_SWrongStreamVersion 65117
+#define VirtualTrees_SStreamTooSmall 65118
+#define VirtualTrees_SCorruptStream1 65119
 #define OleConst_SPropDlgCaption 65120
 #define OleConst_SInvalidLicense 65121
 #define OleConst_SNotLicensed 65122
 #define OleConst_sNoRunningObject 65123
-#define VirtualTrees_SWrongMoveError 65124
-#define VirtualTrees_SWrongStreamFormat 65125
-#define VirtualTrees_SWrongStreamVersion 65126
-#define VirtualTrees_SStreamTooSmall 65127
-#define VirtualTrees_SCorruptStream1 65128
-#define VirtualTrees_SCorruptStream2 65129
-#define VirtualTrees_SClipboardFailed 65130
-#define VirtualTrees_SCannotSetUserData 65131
-#define NativeXml_sPrematureEnd 65132
-#define NativeXml_sUnknownEncoding 65133
-#define NativeXml_sUnsupportedEncoding 65134
-#define NativeXml_sDefaultCharUsed 65135
+#define NativeXml_sPrematureEnd 65124
+#define NativeXml_sUnknownEncoding 65125
+#define NativeXml_sUnsupportedEncoding 65126
+#define NativeXml_sDefaultCharUsed 65127
+#define NativeXml_sIllegalTag 65128
+#define NativeXml_sUnsupportedTag 65129
+#define NativeXml_sIllegalEndTag 65130
+#define NativeXml_sQuoteCharExpected 65131
+#define NativeXml_sCannotAddNode 65132
+#define NativeXml_sCannotAddAttribute 65133
+#define NativeXml_sCannotSetName 65134
+#define NativeXml_sCannotSetValue 65135
 #define ComStrs_sUDAssociated 65136
 #define ComStrs_sPageIndexError 65137
 #define ComStrs_sInvalidComCtl32 65138
@@ -566,9 +566,9 @@ BEGIN
 	GIFConsts_sOutOfData,	"Premature end of data"
 	GIFConsts_sTooManyColors,	"Color table overflow"
 	GIFConsts_sBadColorIndex,	"Invalid color index"
-	NativeXml_sXmlOwnerNotAssigned,	"XML owner is not assigned"
-	NativeXml_sXmlParentNotAssigned,	"XML parent is not assigned"
-	NativeXml_sCopyFromOnlyWithXmlNode,	"CopyFrom can only be used with TXmlNode descendants"
+	VirtualTrees_SCorruptStream2,	"Stream data corrupt. Unexpected data after node's end position."
+	VirtualTrees_SClipboardFailed,	"Clipboard operation failed."
+	VirtualTrees_SCannotSetUserData,	"Cannot set initial user data because there is not enough user data space allocated."
 	JConsts_sChangeJPGSize,	"Cannot change the size of a JPEG image"
 	JConsts_sJPEGError,	"JPEG error #%d"
 	JConsts_sJPEGImageFile,	"JPEG Image File"
@@ -582,14 +582,6 @@ BEGIN
 	pnglang_EPNGSizeExceedsText,	"This \"Portable Network Graphics\" image is not supported because either it's width or height exceeds the maximum size, which is 65535 pixels length."
 	pnglang_EPNGUnknownPalEntryText,	"There is no such palette entry."
 	pnglang_EPNGUnknownCriticalChunkText,	"This \"Portable Network Graphics\" image contains an unknown critical part which could not be decoded."
-	NativeXml_sIllegalTag,	"illegal tag (\"%s\") at pos %d"
-	NativeXml_sUnsupportedTag,	"unsupported tag (\"%s\") at pos %d"
-	NativeXml_sIllegalEndTag,	"illegal end tag (\"%s\") at line %d (streampos %d)"
-	NativeXml_sQuoteCharExpected,	"quote char expected at pos %d"
-	NativeXml_sCannotAddNode,	"cannot add node to this type of element"
-	NativeXml_sCannotAddAttribute,	"cannot add attribute"
-	NativeXml_sCannotSetName,	"cannot set name on this type of element"
-	NativeXml_sCannotSetValue,	"cannot set value on this type of element"
 	NativeXml_sCannotManipulate,	"cannot manipulate nodes in this type of element"
 	NativeXml_sBeginEndMismatch,	"begin and end tag mismatch: \"%s\" and \"%s\" at line %d (pos %d)"
 	NativeXml_sLevelMismatch,	"level mismatch between subnode \"%s\" and endnode \"%s\" at line %d (pos %d)"
@@ -598,22 +590,30 @@ BEGIN
 	NativeXml_sSignificantDigitsOutOfRange,	"significant digits out of range"
 	NativeXml_sMissingDataInBinaryStream,	"missing data in binary stream"
 	NativeXml_sErrorCalcStreamLength,	"error while calculating streamlength"
-	OleConst_SPropDlgCaption,	"%s Properties"
-	OleConst_SInvalidLicense,	"License information for %s is invalid"
-	OleConst_SNotLicensed,	"License information for %s not found. You cannot use this control in design mode"
-	OleConst_sNoRunningObject,	"Unable to retrieve a pointer to a running object registered with OLE for %s/%s"
+	NativeXml_sXmlOwnerNotAssigned,	"XML owner is not assigned"
+	NativeXml_sXmlParentNotAssigned,	"XML parent is not assigned"
+	NativeXml_sCopyFromOnlyWithXmlNode,	"CopyFrom can only be used with TXmlNode descendants"
 	VirtualTrees_SWrongMoveError,	"Target node cannot be a child node of the node to be moved."
 	VirtualTrees_SWrongStreamFormat,	"Unable to load tree structure, the format is wrong."
 	VirtualTrees_SWrongStreamVersion,	"Unable to load tree structure, the version is unknown."
 	VirtualTrees_SStreamTooSmall,	"Unable to load tree structure, not enough data available."
 	VirtualTrees_SCorruptStream1,	"Stream data corrupt. A node's anchor chunk is missing."
-	VirtualTrees_SCorruptStream2,	"Stream data corrupt. Unexpected data after node's end position."
-	VirtualTrees_SClipboardFailed,	"Clipboard operation failed."
-	VirtualTrees_SCannotSetUserData,	"Cannot set initial user data because there is not enough user data space allocated."
+	OleConst_SPropDlgCaption,	"%s Properties"
+	OleConst_SInvalidLicense,	"License information for %s is invalid"
+	OleConst_SNotLicensed,	"License information for %s not found. You cannot use this control in design mode"
+	OleConst_sNoRunningObject,	"Unable to retrieve a pointer to a running object registered with OLE for %s/%s"
 	NativeXml_sPrematureEnd,	"stream terminated prematurely at pos %d"
 	NativeXml_sUnknownEncoding,	"unknown encoding"
 	NativeXml_sUnsupportedEncoding,	"unsupported encoding (%s)"
 	NativeXml_sDefaultCharUsed,	"default char used for codepage substitution"
+	NativeXml_sIllegalTag,	"illegal tag (\"%s\") at pos %d"
+	NativeXml_sUnsupportedTag,	"unsupported tag (\"%s\") at pos %d"
+	NativeXml_sIllegalEndTag,	"illegal end tag (\"%s\") at line %d (streampos %d)"
+	NativeXml_sQuoteCharExpected,	"quote char expected at pos %d"
+	NativeXml_sCannotAddNode,	"cannot add node to this type of element"
+	NativeXml_sCannotAddAttribute,	"cannot add attribute"
+	NativeXml_sCannotSetName,	"cannot set name on this type of element"
+	NativeXml_sCannotSetValue,	"cannot set value on this type of element"
 	ComStrs_sUDAssociated,	"%s is already associated with %s"
 	ComStrs_sPageIndexError,	"%d is an invalid PageIndex value.  PageIndex must be between 0 and %d"
 	ComStrs_sInvalidComCtl32,	"This control requires version 4.70 or greater of COMCTL32.DLL"
@@ -1108,7 +1108,7 @@ END
 /* forms\uBDIFrm.dfm */
 /* forms\uMNKFrm.dfm */
 /* forms\uSubRegsFrm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\WPExtPack.tlb */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\WPExtPack.res */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\toolbarExtPack.res */
-/* F:\Oburec\delphi\2011\OburecGH\wp\WPExtPack\WPExtPack.drf */
+/* C:\Oburec\OburecGH\wp\WPExtPack\WPExtPack.tlb */
+/* C:\Oburec\OburecGH\wp\WPExtPack\WPExtPack.res */
+/* C:\Oburec\OburecGH\wp\WPExtPack\toolbarExtPack.res */
+/* C:\Oburec\OburecGH\wp\WPExtPack\WPExtPack.drf */

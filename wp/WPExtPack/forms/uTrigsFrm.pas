@@ -3,7 +3,7 @@ unit uTrigsFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, ExtCtrls, ComCtrls, uBtnListView, StdCtrls, DCL_MYOWN, Buttons, uWPproc,
   VirtualTrees, uVTServices, ImgList, ActiveX, uCommonMath, uBaseObj, uWpEvents,
   jpeg;

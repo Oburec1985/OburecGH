@@ -5,7 +5,8 @@
     <Transaction>2026.03.02 16:55:51.439.pas,F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\PluginClass3218.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\PluginClass3218.pas</Transaction>
     <Transaction>2026.03.02 18:42:49.787.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\PluginClass3218.pas=</Transaction>
     <Transaction>2026.03.25 19:06:37.761.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgControlCyclogram\units\uSoundCardDac.pas=</Transaction>
-  </Transactions>  <ProjectSortOrder AutoSort="0" SortType="0">
+  </Transactions>
+	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
     <File Path="..\SharedRUnits"/>
     <File Path="..\SharedRUnits\interfaces"/>

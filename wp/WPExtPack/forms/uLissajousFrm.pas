@@ -3,7 +3,7 @@ unit uLissajousFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, ExtCtrls, ComCtrls, uBtnListView, StdCtrls, ImgList, ToolWin,
   uWPproc, uCommonMath, NativeXML, uComponentServises, uExcel, ulogfile,
   uSetList, inifiles, PathUtils, uTrigLvlEditFrm, uTmpltNameFrame,

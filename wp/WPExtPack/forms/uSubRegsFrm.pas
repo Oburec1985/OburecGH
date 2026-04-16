@@ -3,7 +3,7 @@ unit uSubRegsFrm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, uLocalizeForm,
   Dialogs, StdCtrls, DCL_MYOWN,
   uCommonTypes, uCommonMath,
   Winpos_ole_TLB, POSBase, uWPservices,

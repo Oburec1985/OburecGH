@@ -1,0 +1,90 @@
+MSGID RAW: ' Если сигнал UTS отсутствует для замера, то для него будет найден канал с аналогичным именем как '
+MSGSTR: 'If the UTS signal is missing for a measurement, a channel with a similar name to the start point channel will be found, and starts for all channels will be corrected (without UTS).'
+----------------------------------------
+MSGID RAW: ' Модуль выполняет коррекцию времени UTS сигналов на время старта нуля. Корректирующее '
+MSGSTR: 'Module performs UTS signal time correction based on zero start time. The correction value is written to the '
+----------------------------------------
+MSGID RAW: 'Время испытания'
+MSGSTR: 'Test duration'
+----------------------------------------
+MSGID RAW: 'Время старта испытания прописано в Mera файле ключ DateTime'
+MSGSTR: 'Время старта испытания прописано в Mera файле ключ DateTime'
+----------------------------------------
+MSGID RAW: 'Вычислить'
+MSGSTR: 'Evaluate'
+----------------------------------------
+MSGID RAW: 'Добавить'
+MSGSTR: 'Add'
+----------------------------------------
+MSGID RAW: 'Имя'
+MSGSTR: 'Name'
+----------------------------------------
+MSGID RAW: 'Используется если галочка Определить сдвиг в каждом замере снята'
+MSGSTR: 'Determine shift in each measurement by channel name'
+----------------------------------------
+MSGID RAW: 'Корректируемые UTS сигналы:'
+MSGSTR: 'Corrected UTS signals:'
+----------------------------------------
+MSGID RAW: 'Коррекция времени'
+MSGSTR: 'Time Correction'
+----------------------------------------
+MSGID RAW: 'Не найден канал UTS'
+MSGSTR: 'UTS channel not found'
+----------------------------------------
+MSGID RAW: 'Номер срабатывания'
+MSGSTR: 'Trigger number'
+----------------------------------------
+MSGID RAW: 'Нужно включить если замеры не содержат UTS но имеют одноименный '
+MSGSTR: 'Нужно включить если замеры не содержат UTS но имеют одноименный '
+----------------------------------------
+MSGID RAW: 'Обнулить'
+MSGSTR: 'Reset'
+----------------------------------------
+MSGID RAW: 'Определить сдвиг в каждом замере по имени канала'
+MSGSTR: 'Determine shift in each measurement by channel name'
+----------------------------------------
+MSGID RAW: 'Отмена'
+MSGSTR: 'Cancel'
+----------------------------------------
+MSGID RAW: 'Перечень замеров'
+MSGSTR: 'List of measurements'
+----------------------------------------
+MSGID RAW: 'Поправка времени, с'
+MSGSTR: 'Time offset, s'
+----------------------------------------
+MSGID RAW: 'Пороговое значение'
+MSGSTR: 'Threshold value'
+----------------------------------------
+MSGID RAW: 'Применить'
+MSGSTR: 'Apply'
+----------------------------------------
+MSGID RAW: 'Распаковка СИКОН'
+MSGSTR: 'SIKON Decoding'
+----------------------------------------
+MSGID RAW: 'Сдвигать сигналы без UTS'
+MSGSTR: 'Shift signals without UTS'
+----------------------------------------
+MSGID RAW: 'Сигнал \\'
+MSGSTR: 'Start point'
+----------------------------------------
+MSGID RAW: 'Спад'
+MSGSTR: 'Falling'
+----------------------------------------
+MSGID RAW: 'Удалить'
+MSGSTR: 'Delete'
+----------------------------------------
+MSGID RAW: 'Учитывать время старта испытания'
+MSGSTR: 'Account for test start time'
+----------------------------------------
+MSGID RAW: 'Фронт'
+MSGSTR: 'Rising'
+----------------------------------------
+MSGID RAW: 'значение пишется в индикатор \\'
+MSGSTR: 'значение пишется в индикатор \\'
+----------------------------------------
+MSGID RAW: 'у канала начало отсчета, и будут скорректированы старты по всем каналам (без учета UTS'
+MSGSTR: 'у канала начало отсчета, и будут скорректированы старты по всем каналам (без учета UTS'
+----------------------------------------
+MSGID RAW: '№'
+MSGSTR: ''
+----------------------------------------
