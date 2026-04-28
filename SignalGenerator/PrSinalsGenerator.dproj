@@ -72,7 +72,6 @@
 			<DCCReference Include="..\sharedUtils\utils\lists\uvectorlist.pas"/>
 			<DCCReference Include="..\sharedUtils\компоненты\dcl_dpk\uSpin.pas"/>
 			<DCCReference Include="..\sharedUtils\компоненты\dcl_dpk\DCL_MYOWN.pas"/>
-			<DCCReference Include="..\sharedUtils\компоненты\dcl_dpk\Spin.pas"/>
 			<DCCReference Include="..\sharedUtils\компоненты\dcl_dpk\uAlignEdit.pas"/>
 			<DCCReference Include="..\sharedUtils\компоненты\dcl_dpk\ubtnlistview.pas"/>
 			<DCCReference Include="..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas"/>

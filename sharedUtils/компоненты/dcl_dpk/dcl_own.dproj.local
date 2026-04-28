@@ -18,6 +18,8 @@
     <Transaction>2025.05.06 19:43:37.545.pas,F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\dcl_dpk\Unit1.pas=F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\dcl_dpk\uProcNotify.pas</Transaction>
     <Transaction>2025.05.06 19:46:13.106.pas,F:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\dcl_dpk\uProcNotify.pas=F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\uProcNotify.pas</Transaction>
     <Transaction>2025.05.06 19:51:07.028.pas,F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\uProcNotify.pas=</Transaction>
+    <Transaction>2026.04.28 14:44:12.425.pas,E:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\dcl_dpk\Spin.pas=</Transaction>
+    <Transaction>2026.04.28 14:44:25.789.pas,E:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\dcl_dpk\uSpin.pas=</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\..\sharedUtils"/>
@@ -29,8 +31,9 @@
     <File Path="DCL_MYOWN.pas"/>
     <File Path="uAlignEdit.pas"/>
     <File Path="ubtnlistview.pas"/>
-    <File Path="uSpin.pas"/>
     <File Path="uStringGridExt.pas"/>
+    <File Path="uSpin.pas"/>
+    <File Path="uSpinFiltered.pas"/>
     <File Path="bdertl.dcp"/>
     <File Path="dbrtl.dcp"/>
     <File Path="inet.dcp"/>

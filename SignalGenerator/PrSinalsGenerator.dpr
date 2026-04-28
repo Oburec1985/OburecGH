@@ -17,7 +17,6 @@ uses
   uvectorlist in '..\sharedUtils\utils\lists\uvectorlist.pas',
   uSpin in '..\sharedUtils\компоненты\dcl_dpk\uSpin.pas',
   DCL_MYOWN in '..\sharedUtils\компоненты\dcl_dpk\DCL_MYOWN.pas',
-  Spin in '..\sharedUtils\компоненты\dcl_dpk\Spin.pas',
   uAlignEdit in '..\sharedUtils\компоненты\dcl_dpk\uAlignEdit.pas',
   ubtnlistview in '..\sharedUtils\компоненты\dcl_dpk\ubtnlistview.pas',
   uChart in '..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas',

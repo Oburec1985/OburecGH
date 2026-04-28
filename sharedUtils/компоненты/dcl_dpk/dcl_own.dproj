@@ -73,6 +73,7 @@
 			<DCCReference Include="..\..\utils\uVTServices.pas"/>
 			<DCCReference Include="uStringGridExt.pas"/>
 			<DCCReference Include="VistaProbar\rkVistaProBar.pas"/>
+			<DCCReference Include="uSpinFiltered.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

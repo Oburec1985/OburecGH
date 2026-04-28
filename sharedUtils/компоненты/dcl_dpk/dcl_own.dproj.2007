@@ -54,6 +54,7 @@
     <DCCReference Include="DCL_MYOWN.pas" />
     <DCCReference Include="uAlignEdit.pas" />
     <DCCReference Include="uBtnListView.pas" />
+    <DCCReference Include="uSpinFiltered.pas" />
     <DCCReference Include="uSpin.pas" />
   </ItemGroup>
 </Project>

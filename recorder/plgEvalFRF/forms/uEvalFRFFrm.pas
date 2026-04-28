@@ -24,8 +24,9 @@ uses
   uPathMng,
   opengl, uSimpleObjects,
   math, uDrawObj, uDoubleCursor, uBasicTrend, uProfile, uExcel,
-  uBladeDB, uSpmBand, uBladeReport, uChartEvents, uExpFunction,
-  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Spin, Buttons, uBtnListView, uSpin;
+  uBladeDB, uSpmBand, uBladeReport, uChartEvents, uExpFunction, spin,
+  Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Buttons, uBtnListView, uSpin,
+  uSpinFiltered;
 
 type
   TSpmWndFunc = (wnd_no, wnd_rect, wnd_exp, // окно с формулой *e^(-x), где x 0...1 (1 при времени)
@@ -307,7 +308,6 @@ type
     ShockCountLabel: TLabel;
     ShockCountE: TEdit;
     SaveBtn: TButton;
-    ShockSB: TSpinButton;
     ShockIE: TIntEdit;
     ShockLabel: TLabel;
     WinPosBtn: TSpeedButton;
@@ -345,6 +345,7 @@ type
     WndLab: TLabel;
     useWndCb: TCheckBox;
     LoadBtn: TButton;
+    FilteredSpinButton1: TFilteredSpinButton;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -447,6 +448,8 @@ type
     // загрузить из БД серию ударов по текущей лопатке
     procedure LoadSignals;
   public
+    // номер удара с учетом ShockIE
+    function GetShockNum:integer;
     function getLine(s: cSRSres): cBuffTrend1d;
     // просчитать по линиям флаги и сравнить их с band
     // если не попадают в bands то лопатка бракованная
@@ -561,7 +564,7 @@ const
 implementation
 
 uses
-  uEditEvalFRFFrm, uCreateComponents;
+  uEditEvalFRFFrm;
 {$R *.dfm}
 
 function copyData(t: ctag; var time: point2d; buf: TAlignDarray): integer;
@@ -1058,7 +1061,10 @@ var
   c: cSpmCfg;
   i: integer;
 begin
+  result:=nil;
   t := getTaho;
+  if t=nil then
+    exit;
   if SignalsLV.ItemIndex = -1 then
     s := t.cfg.GetSrs(0)
   else
@@ -1407,6 +1413,7 @@ begin
   updateFrf(false);
   UpdateView;
 end;
+
 
 procedure TFRFFrm.FormCreate(sender: tobject);
 var
@@ -2301,7 +2308,7 @@ begin
         if fShowLast then
           ShowFrf(s, c, -1)
         else
-          ShowFrf(s, c, ShockIE.intnum);
+          ShowFrf(s, c, GetShockNum);
       end;
       if CheckedCount = 0 then
       begin
@@ -2390,8 +2397,8 @@ begin
     end;
     if t.m_shockList.Count <> 0 then
     begin
-      if ShockIE.intnum < t.m_shockList.Count then
-        j := ShockIE.intnum
+      if GetShockNum < t.m_shockList.Count then
+        j := GetShockNum
       else
         j := 0;
       db := t.m_shockList.getBlock(j);
@@ -2459,6 +2466,11 @@ begin
   end;
   updateFrf(false);
   UpdateView;
+end;
+
+function TFRFFrm.GetShockNum:integer;
+begin
+  result:=ShockIE.IntNum-1;
 end;
 
 function TFRFFrm.getLine(s: cSRSres): cBuffTrend1d;
@@ -2719,9 +2731,9 @@ begin
   c := t.cfg;
   if t.m_shockList.Count>0 then
   begin
-    if ShockIE.intnum >= 0 then
+    if GetShockNum >= 0 then
     begin
-      ShowShock(ShockIE.intnum);
+      ShowShock(GetShockNum);
     end;
     doOnZoom(nil);
   end;
@@ -2749,7 +2761,7 @@ begin
 
   t.m_shockList.Load(NewerestPath, t.m_tag.tagname);
   ShockCountE.text:=inttostr(t.m_shockList.Count);
-  ShockIE.IntNum:=0;
+  ShockIE.IntNum:=1;
   t.m_shockList.prepareData;
   t.m_shockList.BuidSpm;
   for i := 0 to c.SRSCount - 1 do
@@ -3063,7 +3075,7 @@ begin
     s := ActiveSignal;
     if s <> nil then
     begin
-      b := s.m_shockList.getBlock(ShockIE.intnum);
+      b := s.m_shockList.getBlock(GetShockNum);
       if b <> nil then
       begin
         if s.lineSpm <> nil then
@@ -3131,7 +3143,7 @@ begin
           if fShowLast then
             ShowFrf(s, c, -1)
           else
-            ShowFrf(s, c, ShockIE.intnum);
+            ShowFrf(s, c, GetShockNum);
         end;
       2:
         begin
@@ -3185,7 +3197,7 @@ var
 begin
   t := getTaho;
   c := t.getCfg;
-  s := c.GetSrs(ShockIE.intnum);
+  s := c.GetSrs(GetShockNum);
   s.lineFrf.visible := ResTypeRG.ItemIndex = 0;
   s.lineAvFRF.visible := ResTypeRG.ItemIndex = 0;
   s.lineSpm.visible := ResTypeRG.ItemIndex = 2;
@@ -3362,7 +3374,7 @@ begin
       ind := trunc(x1 / s.cfg.fspmdx);
       SignalsLV.SetSubItemByColumnName('Ind', inttostr(ind), li);
       SignalsLV.SetSubItemByColumnName('X', formatstr(x1, 4), li);
-      y := GetSelectValue(s, x1, ShockIE.intnum);
+      y := GetSelectValue(s, x1, GetShockNum);
       SignalsLV.SetSubItemByColumnName('Y', formatstrnoe(y, 4), li);
     end;
     LVChange(SignalsLV);
@@ -3417,7 +3429,7 @@ begin
           s.m_shockList.prepareData;
           s.m_shockList.BuidSpm;
           // перерисовка линий датчиков по занулению слева от x0
-          tb := s.m_shockList.getBlock(ShockIE.intnum);
+          tb := s.m_shockList.getBlock(GetShockNum);
           s.line.AddPoints(TDoubleArray(tb.m_TimeBlockFlt.p), tb.m_TimeArrSize);
         end
         else
@@ -3433,7 +3445,7 @@ begin
       end;
       if t.m_shockList.Count <> 0 then
       begin
-        tb := t.m_shockList.getBlock(ShockIE.intnum);
+        tb := t.m_shockList.getBlock(GetShockNum);
         t.line.AddPoints(TDoubleArray(tb.m_TimeBlockFlt.p), tb.m_TimeArrSize);
       end;
     end;
@@ -3502,7 +3514,8 @@ begin
     end;
   end;
   s := ActiveSignal;
-  UpdateBands(s);
+  if s<>nil then
+    UpdateBands(s);
   // UpdateLabels;
 end;
 
@@ -3572,6 +3585,8 @@ begin
   SpmChart.Repaint;
 end;
 
+
+
 procedure TFRFFrm.ShockSBDownClick(sender: tobject);
 var
   t: cSRSTaho;
@@ -3580,10 +3595,10 @@ begin
   t := getTaho;
   if t = nil then
     exit;
-  if ShockIE.intnum > 0 then
+  if GetShockNum> 0 then
   begin
     ShockIE.intnum := ShockIE.intnum - 1;
-    ShowShock(ShockIE.intnum);
+    ShowShock(GetShockNum);
   end;
   doOnZoom(nil);
 end;
@@ -3617,10 +3632,10 @@ begin
   if t = nil then
     exit;
   c := t.cfg;
-  if ShockIE.intnum < t.m_shockList.Count - 1 then
+  if GetShockNum < t.m_shockList.Count - 1 then
   begin
     ShockIE.intnum := ShockIE.intnum + 1;
-    ShowShock(ShockIE.intnum);
+    ShowShock(GetShockNum);
   end;
   doOnZoom(nil);
 end;

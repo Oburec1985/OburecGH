@@ -78,7 +78,6 @@ Source: "..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendFrame.dfm"; De
 Source: "..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames\uChartInputFrame.pas"; DestDir: "{app}"; Components: program
 Source: "..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames\uChartInputFrame.dfm"; DestDir: "{app}"; Components: program
 
-Source: "..\..\sharedUtils\компоненты\dcl_dpk\Spin.pas"; DestDir: "{app}"; Components: program
 Source: "..\..\sharedUtils\компоненты\dcl_dpk\uAlignEdit.pas"; DestDir: "{app}"; Components: program
 Source: "..\..\sharedUtils\компоненты\dcl_dpk\ubtnlistview.pas"; DestDir: "{app}"; Components: program
 Source: "..\..\sharedUtils\компоненты\dcl_dpk\uSpin.pas"; DestDir: "{app}"; Components: program

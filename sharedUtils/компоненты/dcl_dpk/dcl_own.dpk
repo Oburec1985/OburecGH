@@ -41,6 +41,7 @@ contains
   uAlignEdit in 'uAlignEdit.pas',
   uVTServices in '..\..\utils\uVTServices.pas',
   uStringGridExt in 'uStringGridExt.pas',
-  rkVistaProBar in 'VistaProbar\rkVistaProBar.pas';
+  rkVistaProBar in 'VistaProbar\rkVistaProBar.pas',
+  uSpinFiltered in 'uSpinFiltered.pas';
 
 end.

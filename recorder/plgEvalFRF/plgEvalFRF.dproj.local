@@ -111,10 +111,10 @@
     <File Path="..\SharedRUnits\interfaces\transformers.pas"/>
     <File Path="..\SharedRUnits\interfaces\waitwnd.pas"/>
     <File Path="..\SharedRUnits\uCompMng.pas"/>
-    <File Path="..\SharedRUnits\uFrmSync.pas"/>
-    <File Path="..\SharedRUnits\uFrmSync.dfm"/>
     <File Path="..\SharedRUnits\uRecBasicFactory.pas"/>
     <File Path="..\SharedRUnits\uRecorderEvents.pas"/>
+    <File Path="..\SharedRUnits\uFrmSync.pas"/>
+    <File Path="..\SharedRUnits\uFrmSync.dfm"/>
     <File Path="..\..\..\OburecGH"/>
     <File Path="..\..\3d"/>
     <File Path="..\..\3d\3dComponents"/>
@@ -122,10 +122,10 @@
     <File Path="..\..\3d\3dComponents\components\Asutp"/>
     <File Path="..\..\3d\3dComponents\components\Asutp\uGlTurbine.pas"/>
     <File Path="..\..\3d\forms"/>
-    <File Path="..\..\3d\forms\uObjCtrFrame.pas"/>
-    <File Path="..\..\3d\forms\uObjCtrFrame.dfm"/>
     <File Path="..\..\3d\forms\uTrfrmToolsFrame.pas"/>
     <File Path="..\..\3d\forms\uTrfrmToolsFrame.dfm"/>
+    <File Path="..\..\3d\forms\uObjCtrFrame.pas"/>
+    <File Path="..\..\3d\forms\uObjCtrFrame.dfm"/>
     <File Path="..\..\sharedUtils"/>
     <File Path="..\..\sharedUtils\math"/>
     <File Path="..\..\sharedUtils\math\uListMath.pas"/>
@@ -133,8 +133,8 @@
     <File Path="..\..\sharedUtils\utils"/>
     <File Path="..\..\sharedUtils\utils\lists"/>
     <File Path="..\..\sharedUtils\utils\lists\usetlist.pas"/>
-    <File Path="..\..\sharedUtils\utils\uComponentServises.pas"/>
     <File Path="..\..\sharedUtils\utils\uLogFile.pas"/>
+    <File Path="..\..\sharedUtils\utils\uComponentServises.pas"/>
     <File Path="..\..\sharedUtils\uCommonTypes.pas"/>
     <File Path="forms"/>
     <File Path="forms\uEditEvalFRFFrm.pas"/>

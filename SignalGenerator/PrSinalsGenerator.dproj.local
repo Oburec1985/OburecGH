@@ -159,7 +159,6 @@
     <File Path="..\sharedUtils\компоненты\chart_dpk\chart\uChart.pas"/>
     <File Path="..\sharedUtils\компоненты\dcl_dpk"/>
     <File Path="..\sharedUtils\компоненты\dcl_dpk\DCL_MYOWN.pas"/>
-    <File Path="..\sharedUtils\компоненты\dcl_dpk\Spin.pas"/>
     <File Path="..\sharedUtils\компоненты\dcl_dpk\uAlignEdit.pas"/>
     <File Path="..\sharedUtils\компоненты\dcl_dpk\ubtnlistview.pas"/>
     <File Path="..\sharedUtils\компоненты\dcl_dpk\uSpin.pas"/>
