@@ -1644,6 +1644,7 @@ END
 /* ..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source\VirtualTrees.res */
 /* c:\program files (x86)\embarcadero\rad studio\7.0\lib\buttons.res */
 /* ..\..\sharedUtils\компоненты\dcl_dpk\spin.res */
+/* c:\program files (x86)\embarcadero\rad studio\7.0\lib\spin.res */
 /* ..\..\sharedUtils\forms\uGetMngObjForm.dfm */
 /* ..\..\sharedUtils\utils\./files/res/CURSORS.res */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.dfm */
@@ -1706,12 +1707,12 @@ END
 /* Forms\Algoritms\uStageReConfig.dfm */
 /* Forms\uEgineMonitorForm.dfm */
 /* ..\..\3d\forms\uSelectLoadedObjects.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uObjCtrFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uEditListForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\3d\forms\SelectObjectsFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\3d\forms\AnimationControlFrame.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uTransformButtons.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\3d\forms\uDeformerFrame.dfm */
+/* ..\..\3d\forms\uObjCtrFrame.dfm */
+/* ..\..\3d\forms\AnimationControlFrame.dfm */
+/* ..\..\3d\forms\uEditListForm.dfm */
+/* ..\..\3d\forms\SelectObjectsFrame.dfm */
+/* ..\..\3d\forms\uTransformButtons.dfm */
+/* ..\..\3d\forms\uDeformerFrame.dfm */
 /* Forms\frames\uGlTurbineFrame.dfm */
 /* Forms\frames\uChartFrame.dfm */
 /* ..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames\uChartInputFrame.dfm */
@@ -1741,5 +1742,5 @@ END
 /* Forms\uProgramForm.dfm */
 /* Forms\MainForm.dfm */
 /* ..\..\sharedUtils\forms\uDBForm.dfm */
-/* F:\Oburec\delphi\2011\OburecGH\Lopatki_BDS\BlEng\BlEng.res */
-/* F:\Oburec\delphi\2011\OburecGH\Lopatki_BDS\BlEng\BlEng.drf */
+/* E:\Oburec\delphi\2011\OburecGH\Lopatki_BDS\BlEng\BlEng.res */
+/* E:\Oburec\delphi\2011\OburecGH\Lopatki_BDS\BlEng\BlEng.drf */

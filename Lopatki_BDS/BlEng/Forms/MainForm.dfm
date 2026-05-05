@@ -2,57 +2,53 @@ object MainBldForm: TMainBldForm
   AlignWithMargins = True
   Left = 0
   Top = 0
-  Align = alClient
   AutoSize = True
   Caption = 'MainBldForm'
-  ClientHeight = 777
-  ClientWidth = 916
+  ClientHeight = 549
+  ClientWidth = 845
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -14
+  Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
   Menu = MainMenu
   OldCreateOrder = False
-  Position = poDesigned
+  Position = poDefault
   OnClose = FormClose
   OnCreate = FormCreate
   OnShow = FormShow
-  PixelsPerInch = 120
-  TextHeight = 17
+  PixelsPerInch = 96
+  TextHeight = 13
   object Splitter1: TSplitter
-    Left = 633
-    Top = 119
-    Width = 6
-    Height = 658
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Left = 629
+    Top = 100
+    Width = 5
+    Height = 449
     Align = alRight
-    ExplicitLeft = 815
-    ExplicitTop = 131
-    ExplicitHeight = 646
+    ExplicitLeft = 484
+    ExplicitTop = 91
+    ExplicitHeight = 503
   end
   object MainGB: TGroupBox
     Left = 0
-    Top = 119
-    Width = 633
-    Height = 658
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Top = 100
+    Width = 629
+    Height = 449
     Align = alClient
     Caption = #1055#1086#1083#1077' '#1086#1090#1086#1073#1088#1072#1078#1077#1085#1080#1103
     TabOrder = 0
+    ExplicitWidth = 484
+    ExplicitHeight = 494
     object MainChart: cChart
       Left = 2
-      Top = 19
-      Width = 629
-      Height = 637
-      Cursor = crSizeAll
+      Top = 15
+      Width = 625
+      Height = 432
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alClient
       Caption = 'MainChart'
       TabOrder = 0
@@ -60,12 +56,14 @@ object MainBldForm: TMainBldForm
       showTV = False
       showLegend = False
       selectSize = 5
+      ExplicitWidth = 480
+      ExplicitHeight = 477
     end
   end
   object ToolBar2: TToolBar
     Left = 0
     Top = 0
-    Width = 916
+    Width = 845
     Height = 39
     ButtonHeight = 38
     ButtonWidth = 39
@@ -74,6 +72,7 @@ object MainBldForm: TMainBldForm
     ParentShowHint = False
     ShowHint = True
     TabOrder = 1
+    ExplicitWidth = 700
     object CursorToolBtn: TToolButton
       Left = 0
       Top = 0
@@ -678,38 +677,30 @@ object MainBldForm: TMainBldForm
   object MouseGB: TGroupBox
     Left = 0
     Top = 39
-    Width = 916
-    Height = 80
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Width = 845
+    Height = 61
     Align = alTop
     Caption = #1050#1086#1086#1088#1076#1080#1085#1072#1090#1099' '#1084#1099#1096#1080
     TabOrder = 2
+    ExplicitWidth = 700
   end
   object PageControl1: TPageControl
-    Left = 639
-    Top = 119
-    Width = 277
-    Height = 658
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
+    Left = 634
+    Top = 100
+    Width = 211
+    Height = 449
     ActivePage = TabSheet1
     Align = alRight
     TabOrder = 3
+    ExplicitLeft = 489
+    ExplicitHeight = 494
     object TabSheet1: TTabSheet
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
       Caption = #1058#1077#1075#1080
+      ExplicitHeight = 466
       object ToolBar3: TToolBar
         Left = 0
         Top = 0
-        Width = 269
+        Width = 203
         Height = 39
         ButtonHeight = 38
         ButtonWidth = 39
@@ -735,110 +726,78 @@ object MainBldForm: TMainBldForm
       object FilterGB: TGroupBox
         Left = 0
         Top = 39
-        Width = 269
-        Height = 254
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Width = 203
+        Height = 194
         Align = alTop
         Caption = #1060#1080#1083#1100#1090#1088#1072#1094#1080#1103
         TabOrder = 1
         object MetaDataValueLabel: TLabel
-          Left = 7
-          Top = 133
-          Width = 60
-          Height = 17
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 5
+          Top = 102
+          Width = 48
+          Height = 13
           Caption = #1047#1085#1072#1095#1077#1085#1080#1077
         end
         object Label1: TLabel
-          Left = 4
-          Top = 20
-          Width = 109
-          Height = 17
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 3
+          Top = 15
+          Width = 85
+          Height = 13
           Caption = #1048#1084#1103' '#1084#1077#1090#1072#1076#1072#1085#1085#1099#1093
         end
         object Label2: TLabel
-          Left = 7
-          Top = 194
-          Width = 116
-          Height = 17
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 5
+          Top = 148
+          Width = 90
+          Height = 13
           Caption = #1048#1089#1090#1086#1095#1085#1080#1082' '#1076#1072#1085#1085#1099#1093
         end
         object MetaDataTypeLabel: TLabel
-          Left = 7
-          Top = 76
-          Width = 108
-          Height = 17
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 5
+          Top = 58
+          Width = 84
+          Height = 13
           Caption = #1058#1080#1087' '#1084#1077#1090#1072#1076#1072#1085#1085#1099#1093
         end
         object MetaDataValueEdit: TEdit
-          Left = 7
-          Top = 158
-          Width = 224
-          Height = 25
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 5
+          Top = 121
+          Width = 172
+          Height = 21
           TabOrder = 0
         end
         object MetaDataNameEdit: TEdit
-          Left = 7
-          Top = 42
-          Width = 224
-          Height = 25
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 5
+          Top = 32
+          Width = 172
+          Height = 21
           TabOrder = 1
         end
         object SrcEdit: TEdit
-          Left = 7
-          Top = 218
-          Width = 224
-          Height = 25
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 5
+          Top = 167
+          Width = 172
+          Height = 21
           TabOrder = 2
           OnChange = SearchEditChange
         end
         object MetaDataTypeCB: TComboBox
-          Left = 7
-          Top = 101
-          Width = 224
-          Height = 25
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Left = 5
+          Top = 77
+          Width = 172
+          Height = 21
           TabOrder = 3
         end
       end
       object TagsLV: TBtnListView
         Left = 0
-        Top = 293
-        Width = 269
-        Height = 333
+        Top = 233
+        Width = 203
+        Height = 188
+        Margins.Left = 2
+        Margins.Top = 2
+        Margins.Right = 2
+        Margins.Bottom = 2
         Align = alClient
         Columns = <>
         RowSelect = True
@@ -850,51 +809,37 @@ object MainBldForm: TMainBldForm
         DrawColorBox = False
         ChangeTextColor = False
         Editable = False
+        ExplicitHeight = 233
       end
     end
     object TabSheet2: TTabSheet
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
       Caption = #1050#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103
       ImageIndex = 1
+      ExplicitHeight = 370
       object CfgGB: TGroupBox
         Left = 0
         Top = 0
-        Width = 269
-        Height = 626
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
+        Width = 203
+        Height = 421
         Align = alClient
         Caption = #1050#1086#1085#1092#1080#1075#1091#1088#1072#1094#1080#1103' '#1090#1091#1088#1073#1080#1085#1099
         TabOrder = 0
+        ExplicitHeight = 370
         object Splitter3: TSplitter
           Left = 2
-          Top = 261
-          Width = 265
-          Height = 7
+          Top = 142
+          Width = 199
+          Height = 5
           Cursor = crVSplit
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
           Align = alBottom
-          ExplicitLeft = 3
-          ExplicitTop = 239
-          ExplicitWidth = 261
+          ExplicitTop = 203
+          ExplicitWidth = 202
         end
         object CfgTV: TTreeView
           Left = 2
-          Top = 58
-          Width = 265
-          Height = 203
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Top = 54
+          Width = 199
+          Height = 88
           Align = alClient
           Indent = 19
           MultiSelect = True
@@ -904,17 +849,20 @@ object MainBldForm: TMainBldForm
           TabOrder = 0
           OnChange = CfgTVChange
           OnHint = CfgTVHint
+          ExplicitHeight = 117
         end
         object ToolBar1: TToolBar
           Left = 2
-          Top = 19
-          Width = 265
+          Top = 15
+          Width = 199
           Height = 39
           ButtonHeight = 38
           ButtonWidth = 39
           Caption = 'ToolBar1'
           Images = ImageList_32
           TabOrder = 1
+          ExplicitTop = 19
+          ExplicitWidth = 265
           object ToolButton1: TToolButton
             Left = 0
             Top = 0
@@ -925,41 +873,30 @@ object MainBldForm: TMainBldForm
         end
         object SignalsGB: TGroupBox
           Left = 2
-          Top = 268
-          Width = 265
-          Height = 356
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
+          Top = 147
+          Width = 199
+          Height = 272
           Align = alBottom
           Caption = #1057#1087#1080#1089#1086#1082' '#1089#1080#1075#1085#1072#1083#1086#1074
           TabOrder = 2
+          ExplicitTop = 96
           inline SignalsTVFrame1: TSignalsTVFrame
             Left = 2
-            Top = 19
-            Width = 261
-            Height = 335
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
+            Top = 15
+            Width = 195
+            Height = 255
             Align = alClient
             TabOrder = 0
             TabStop = True
             ExplicitLeft = 2
-            ExplicitTop = 19
-            ExplicitWidth = 261
-            ExplicitHeight = 335
+            ExplicitTop = 15
+            ExplicitWidth = 195
+            ExplicitHeight = 255
             inherited SignalsTV: TTreeView
-              Width = 261
-              Height = 335
-              Margins.Left = 4
-              Margins.Top = 4
-              Margins.Right = 4
-              Margins.Bottom = 4
-              ExplicitWidth = 261
-              ExplicitHeight = 335
+              Width = 195
+              Height = 255
+              ExplicitWidth = 195
+              ExplicitHeight = 255
             end
           end
         end

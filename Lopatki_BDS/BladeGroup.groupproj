@@ -39,6 +39,9 @@
 			<Projects Include="BlEng\BlEng.dproj">
 				<Dependencies/>
 			</Projects>
+			<Projects Include="..\..\..\..\AGrav\temp\VBProtocolMadi\VBProtocolMadi.dproj">
+				<Dependencies/>
+			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -157,14 +160,23 @@
 		<Target Name="BlEng:Make">
 			<MSBuild Targets="Make" Projects="BlEng\BlEng.dproj"/>
 		</Target>
+		<Target Name="VBProtocolMadi">
+			<MSBuild Projects="..\..\..\..\AGrav\temp\VBProtocolMadi\VBProtocolMadi.dproj"/>
+		</Target>
+		<Target Name="VBProtocolMadi:Clean">
+			<MSBuild Targets="Clean" Projects="..\..\..\..\AGrav\temp\VBProtocolMadi\VBProtocolMadi.dproj"/>
+		</Target>
+		<Target Name="VBProtocolMadi:Make">
+			<MSBuild Targets="Make" Projects="..\..\..\..\AGrav\temp\VBProtocolMadi\VBProtocolMadi.dproj"/>
+		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;plgEvalFRF;ProjectFFT;plgOscill;BlEng"/>
+			<CallTarget Targets="dcl_own;GlPackage;ComponentsLib;RC_lib;plgControlCyclogram;WpServicePlg;WPExtPack;WpOperPlg;plgEvalFRF;ProjectFFT;plgOscill;BlEng;VBProtocolMadi"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;plgEvalFRF:Clean;ProjectFFT:Clean;plgOscill:Clean;BlEng:Clean"/>
+			<CallTarget Targets="dcl_own:Clean;GlPackage:Clean;ComponentsLib:Clean;RC_lib:Clean;plgControlCyclogram:Clean;WpServicePlg:Clean;WPExtPack:Clean;WpOperPlg:Clean;plgEvalFRF:Clean;ProjectFFT:Clean;plgOscill:Clean;BlEng:Clean;VBProtocolMadi:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;plgEvalFRF:Make;ProjectFFT:Make;plgOscill:Make;BlEng:Make"/>
+			<CallTarget Targets="dcl_own:Make;GlPackage:Make;ComponentsLib:Make;RC_lib:Make;plgControlCyclogram:Make;WpServicePlg:Make;WPExtPack:Make;WpOperPlg:Make;plgEvalFRF:Make;ProjectFFT:Make;plgOscill:Make;BlEng:Make;VBProtocolMadi:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

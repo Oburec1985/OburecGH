@@ -1,0 +1,111 @@
+2026-04-30 19:15:53.726 [INFO] thread=38484 TMainFrm.FormCreate enter form=$00000000015F6F60
+2026-04-30 19:15:53.726 [INFO] thread=38484 TChartObjectManager.Create self=$00000000015E6630
+2026-04-30 19:15:53.727 [DEBUG] thread=38484 TChartBaseObject.SetName self=$00000000015CF240 old="TChartModel" new="ChartModel"
+2026-04-30 19:15:53.727 [DEBUG] thread=38484 TChartModel.Clear self=$00000000015CF240
+2026-04-30 19:15:53.727 [DEBUG] thread=38484 TChartBaseObject.ClearChildren self=$00000000015CF240 count=0
+2026-04-30 19:15:53.727 [DEBUG] thread=38484 TChartBaseObject.Create self=$00000000015CF240 class=TChartModel name="ChartModel"
+2026-04-30 19:15:53.728 [INFO] thread=38484 TChartObjectManager.SetRoot manager=$00000000015E6630 old=nil new=$00000000015CF240
+2026-04-30 19:15:53.728 [DEBUG] thread=38484 TChartObjectManager.RegisterTree manager=$00000000015E6630 object=$00000000015CF240
+2026-04-30 19:15:53.728 [DEBUG] thread=38484 TChartObjectManager.RegisterObject manager=$00000000015E6630 object=$00000000015CF240
+2026-04-30 19:15:53.728 [INFO] thread=38484 TMainFrm.FormCreate chart=$00000000015F8920 manager=$00000000015E6630 model=$00000000015CF240
+2026-04-30 19:15:53.728 [INFO] thread=38484 TMainFrm.FormCreate renderer assigned
+2026-04-30 19:15:53.728 [INFO] thread=38484 TMainFrm.FormCreate leave title="Skeleton Test" background=FF333333
+2026-04-30 19:15:55.914 [INFO] thread=38484 btnSaveClick enter
+2026-04-30 19:15:55.914 [INFO] thread=38484 btnSaveClick serializer created serializer=$00000000015D9C50
+2026-04-30 19:15:55.914 [INFO] thread=38484 btnSaveClick stringlist created list=$000000000163E670
+2026-04-30 19:15:55.914 [INFO] thread=38484 btnSaveClick before SaveToString chart=$00000000015F8920 manager=$00000000015E6630 model=$00000000015CF240 title="Skeleton Test" background=FF333333
+2026-04-30 19:15:55.914 [DEBUG] thread=38484 TJsonChartSerializer._AddRef self=$00000000015D9C50 result=-1
+2026-04-30 19:15:55.914 [INFO] thread=38484 TChartObjectManager.SaveToString enter manager=$00000000015E6630 root=$00000000015CF240 count=1 serializer_assigned=True
+2026-04-30 19:15:55.915 [INFO] thread=38484 SaveObject enter serializer=$00000000015D9C50 object=$00000000015CF240
+2026-04-30 19:15:55.915 [DEBUG] thread=38484 ObjectToJson enter object=$00000000015CF240 class=TChartModel name="ChartModel" children=0
+2026-04-30 19:15:55.915 [DEBUG] thread=38484 TChartModel.SaveJsonAttributes self=$00000000015CF240 title="Skeleton Test" background=FF333333 json=$00000000015E69B0
+2026-04-30 19:15:55.915 [DEBUG] thread=38484 ObjectToJson attributes saved object=$00000000015CF240
+2026-04-30 19:15:55.915 [DEBUG] thread=38484 ObjectToJson leave object=$00000000015CF240
+2026-04-30 19:15:55.915 [INFO] thread=38484 SaveObject success serializer=$00000000015D9C50 json_length=168 json="{ "ObjType" : "TChartModel", "Name" : "ChartModel", "Caption" : "Chart", "Attributes" : { "Title" : "Skeleton Test", "BackgroundColor" : "FF333333" }, "Children" : [] }"
+2026-04-30 19:15:55.915 [INFO] thread=38484 TChartObjectManager.SaveToString leave manager=$00000000015E6630 result_length=168
+2026-04-30 19:15:55.916 [DEBUG] thread=38484 TJsonChartSerializer._Release self=$00000000015D9C50 result=-1
+2026-04-30 19:15:55.916 [INFO] thread=38484 btnSaveClick after SaveToString text_length=170 text="{ "ObjType" : "TChartModel", "Name" : "ChartModel", "Caption" : "Chart", "Attributes" : { "Title" : "Skeleton Test", "BackgroundColor" : "FF333333" }, "Children" : [] }
+"
+2026-04-30 19:15:55.916 [INFO] thread=38484 btnSaveClick file saved chart_model.json
+2026-04-30 19:15:57.225 [INFO] thread=38484 btnSaveClick message shown
+2026-04-30 19:15:57.225 [INFO] thread=38484 btnSaveClick finally before lText.Free list=$000000000163E670
+2026-04-30 19:15:57.225 [INFO] thread=38484 btnSaveClick finally after lText.Free
+2026-04-30 19:15:57.226 [INFO] thread=38484 btnSaveClick finally before lSerializer.Free serializer=$00000000015D9C50
+2026-04-30 19:15:57.226 [INFO] thread=38484 btnSaveClick finally after lSerializer.Free
+2026-04-30 19:15:57.226 [INFO] thread=38484 btnSaveClick leave
+2026-04-30 19:15:59.530 [INFO] thread=38484 btnChangeColorClick enter old_background=FF333333
+2026-04-30 19:15:59.530 [INFO] thread=38484 btnChangeColorClick new_background=FF8C7F0A
+2026-04-30 19:15:59.531 [INFO] thread=38484 btnChangeColorClick leave
+2026-04-30 19:16:00.313 [INFO] thread=38484 btnLoadClick enter
+2026-04-30 19:16:00.314 [INFO] thread=38484 btnLoadClick serializer created serializer=$00000000015D9D50
+2026-04-30 19:16:00.314 [INFO] thread=38484 btnLoadClick stringlist created list=$000000000163E670
+2026-04-30 19:16:00.314 [INFO] thread=38484 btnLoadClick file loaded text_length=170 text="{ "ObjType" : "TChartModel", "Name" : "ChartModel", "Caption" : "Chart", "Attributes" : { "Title" : "Skeleton Test", "BackgroundColor" : "FF333333" }, "Children" : [] }
+"
+2026-04-30 19:16:00.314 [DEBUG] thread=38484 TJsonChartSerializer._AddRef self=$00000000015D9D50 result=-1
+2026-04-30 19:16:00.314 [INFO] thread=38484 TChartObjectManager.LoadFromString enter manager=$00000000015E6630 root=$00000000015CF240 data_length=170 serializer_assigned=True
+2026-04-30 19:16:00.314 [INFO] thread=38484 LoadObject enter serializer=$00000000015D9D50 object=$00000000015CF240 data_length=170 data="{ "ObjType" : "TChartModel", "Name" : "ChartModel", "Caption" : "Chart", "Attributes" : { "Title" : "Skeleton Test", "BackgroundColor" : "FF333333" }, "Children" : [] }
+"
+2026-04-30 19:16:00.315 [DEBUG] thread=38484 LoadObject parsed json class=TJSONObject
+2026-04-30 19:16:00.315 [DEBUG] thread=38484 JsonToObject enter json=$00000000015E6910 object=$00000000015CF240
+2026-04-30 19:16:00.315 [DEBUG] thread=38484 TChartBaseObject.SetName self=$00000000015CF240 old="ChartModel" new="ChartModel"
+2026-04-30 19:16:00.315 [DEBUG] thread=38484 JsonToObject identity loaded object=$00000000015CF240 name="ChartModel" caption="Chart"
+2026-04-30 19:16:00.315 [DEBUG] thread=38484 TChartModel.LoadJsonAttributes self=$00000000015CF240 json=$00000000015E6A30
+2026-04-30 19:16:00.315 [DEBUG] thread=38484 JsonToObject attributes loaded object=$00000000015CF240
+2026-04-30 19:16:00.315 [DEBUG] thread=38484 TChartBaseObject.ClearChildren self=$00000000015CF240 count=0
+2026-04-30 19:16:00.316 [DEBUG] thread=38484 JsonToObject children count=0 object=$00000000015CF240
+2026-04-30 19:16:00.316 [DEBUG] thread=38484 JsonToObject leave object=$00000000015CF240
+2026-04-30 19:16:00.316 [INFO] thread=38484 LoadObject success serializer=$00000000015D9D50
+2026-04-30 19:16:00.316 [DEBUG] thread=38484 TChartObjectManager.RegisterTree manager=$00000000015E6630 object=$00000000015CF240
+2026-04-30 19:16:00.317 [DEBUG] thread=38484 TChartObjectManager.RegisterObject manager=$00000000015E6630 object=$00000000015CF240
+2026-04-30 19:16:00.317 [INFO] thread=38484 TChartObjectManager.LoadFromString leave manager=$00000000015E6630 count=1
+2026-04-30 19:16:00.317 [DEBUG] thread=38484 TJsonChartSerializer._Release self=$00000000015D9D50 result=-1
+2026-04-30 19:16:00.317 [INFO] thread=38484 btnLoadClick after LoadFromString model=$00000000015CF240 title="Skeleton Test" background=FF333333
+2026-04-30 19:16:00.317 [INFO] thread=38484 btnLoadClick chart invalidated
+2026-04-30 19:16:01.280 [INFO] thread=38484 btnLoadClick message shown
+2026-04-30 19:16:01.280 [INFO] thread=38484 btnLoadClick finally before lText.Free list=$000000000163E670
+2026-04-30 19:16:01.280 [INFO] thread=38484 btnLoadClick finally after lText.Free
+2026-04-30 19:16:01.281 [INFO] thread=38484 btnLoadClick finally before lSerializer.Free serializer=$00000000015D9D50
+2026-04-30 19:16:01.281 [INFO] thread=38484 btnLoadClick finally after lSerializer.Free
+2026-04-30 19:16:01.281 [INFO] thread=38484 btnLoadClick leave
+2026-04-30 19:16:02.112 [INFO] thread=38484 TChartObjectManager.Destroy enter self=$00000000015E6630 root=$00000000015CF240 count=1
+2026-04-30 19:16:02.112 [DEBUG] thread=38484 TChartBaseObject.Destroy enter self=$00000000015CF240 class=TChartModel name="ChartModel" children=0 parent=nil manager=$00000000015E6630
+2026-04-30 19:16:02.112 [DEBUG] thread=38484 TChartBaseObject.ClearChildren self=$00000000015CF240 count=0
+2026-04-30 19:16:02.112 [DEBUG] thread=38484 TChartObjectManager.UnregisterObject manager=$00000000015E6630 object=$00000000015CF240
+2026-04-30 19:16:02.112 [DEBUG] thread=38484 TChartBaseObject.Destroy leave self=$00000000015CF240
+2026-04-30 19:16:02.112 [INFO] thread=38484 TChartObjectManager.Destroy leave self=$00000000015E6630
+2026-05-04 12:16:44.616 [INFO] thread=36772 TMainFrm.FormCreate enter form=$00000000014EAE80
+2026-05-04 12:16:44.642 [INFO] thread=36772 TChartObjectManager.Create self=$00000000014DA550
+2026-05-04 12:16:44.642 [DEBUG] thread=36772 TChartBaseObject.SetName self=$00000000014C3160 old="TChartModel" new="ChartModel"
+2026-05-04 12:16:44.643 [DEBUG] thread=36772 TChartModel.Clear self=$00000000014C3160
+2026-05-04 12:16:44.643 [DEBUG] thread=36772 TChartBaseObject.ClearChildren self=$00000000014C3160 count=0
+2026-05-04 12:16:44.643 [DEBUG] thread=36772 TChartBaseObject.Create self=$00000000014C3160 class=TChartModel name="ChartModel"
+2026-05-04 12:16:44.643 [INFO] thread=36772 TChartObjectManager.SetRoot manager=$00000000014DA550 old=nil new=$00000000014C3160
+2026-05-04 12:16:44.643 [DEBUG] thread=36772 TChartObjectManager.RegisterTree manager=$00000000014DA550 object=$00000000014C3160
+2026-05-04 12:16:44.643 [DEBUG] thread=36772 TChartObjectManager.RegisterObject manager=$00000000014DA550 object=$00000000014C3160
+2026-05-04 12:16:44.671 [INFO] thread=36772 TMainFrm.FormCreate chart=$00000000014EC840 manager=$00000000014DA550 model=$00000000014C3160
+2026-05-04 12:16:44.671 [INFO] thread=36772 TMainFrm.FormCreate renderer assigned
+2026-05-04 12:16:44.672 [INFO] thread=36772 TMainFrm.FormCreate leave title="Skeleton Test" background=FF333333
+2026-05-04 12:16:47.557 [INFO] thread=36772 btnChangeColorClick enter old_background=FF333333
+2026-05-04 12:16:47.558 [INFO] thread=36772 btnChangeColorClick new_background=FF8C7F0A
+2026-05-04 12:16:47.558 [INFO] thread=36772 btnChangeColorClick leave
+2026-05-04 12:16:48.191 [INFO] thread=36772 btnChangeColorClick enter old_background=FF8C7F0A
+2026-05-04 12:16:48.191 [INFO] thread=36772 btnChangeColorClick new_background=FF97C4A9
+2026-05-04 12:16:48.191 [INFO] thread=36772 btnChangeColorClick leave
+2026-05-04 12:16:48.622 [INFO] thread=36772 btnChangeColorClick enter old_background=FF97C4A9
+2026-05-04 12:16:48.622 [INFO] thread=36772 btnChangeColorClick new_background=FFB716A5
+2026-05-04 12:16:48.622 [INFO] thread=36772 btnChangeColorClick leave
+2026-05-04 12:16:49.158 [INFO] thread=36772 btnChangeColorClick enter old_background=FFB716A5
+2026-05-04 12:16:49.158 [INFO] thread=36772 btnChangeColorClick new_background=FFD821CB
+2026-05-04 12:16:49.158 [INFO] thread=36772 btnChangeColorClick leave
+2026-05-04 12:16:49.534 [INFO] thread=36772 btnChangeColorClick enter old_background=FFD821CB
+2026-05-04 12:16:49.534 [INFO] thread=36772 btnChangeColorClick new_background=FF9A4EB2
+2026-05-04 12:16:49.534 [INFO] thread=36772 btnChangeColorClick leave
+2026-05-04 12:16:49.677 [INFO] thread=36772 btnChangeColorClick enter old_background=FF9A4EB2
+2026-05-04 12:16:49.677 [INFO] thread=36772 btnChangeColorClick new_background=FFDBA252
+2026-05-04 12:16:49.677 [INFO] thread=36772 btnChangeColorClick leave
+2026-05-04 12:16:51.422 [INFO] thread=36772 TChartObjectManager.Destroy enter self=$00000000014DA550 root=$00000000014C3160 count=1
+2026-05-04 12:16:51.423 [DEBUG] thread=36772 TChartBaseObject.Destroy enter self=$00000000014C3160 class=TChartModel name="ChartModel" children=0 parent=nil manager=$00000000014DA550
+2026-05-04 12:16:51.423 [DEBUG] thread=36772 TChartBaseObject.ClearChildren self=$00000000014C3160 count=0
+2026-05-04 12:16:51.423 [DEBUG] thread=36772 TChartObjectManager.UnregisterObject manager=$00000000014DA550 object=$00000000014C3160
+2026-05-04 12:16:51.423 [DEBUG] thread=36772 TChartBaseObject.Destroy leave self=$00000000014C3160
+2026-05-04 12:16:51.423 [INFO] thread=36772 TChartObjectManager.Destroy leave self=$00000000014DA550
