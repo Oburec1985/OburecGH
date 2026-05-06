@@ -91,6 +91,8 @@
     <Transaction>2026.02.26 13:25:48.030.pas,F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\Unit2.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\units\uExpFunction.pas</Transaction>
     <Transaction>2026.03.02 16:33:35.932.pas,F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\PluginClass.pas=F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\PluginClass3218.pas</Transaction>
     <Transaction>2026.03.02 16:55:51.409.pas,F:\Oburec\delphi\2011\OburecGH\recorder\SharedRUnits\PluginClass3218.pas=F:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\PluginClass3218.pas</Transaction>
+    <Transaction>2026.05.06 14:04:33.624.pas,E:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\Unit3.pas=E:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\forms\uPeakFrm.pas</Transaction>
+    <Transaction>2026.05.06 14:04:33.624.dfm,E:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\Unit3.dfm=E:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\forms\uPeakFrm.dfm</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\recorder"/>
@@ -145,6 +147,8 @@
     <File Path="forms\uEvalFRFFrm.dfm"/>
     <File Path="forms\uSpmProfile.pas"/>
     <File Path="forms\uSpmProfile.dfm"/>
+    <File Path="forms\uPeakFrm.pas"/>
+    <File Path="forms\uPeakFrm.dfm"/>
     <File Path="units"/>
     <File Path="units\uBladeDB.pas"/>
     <File Path="units\uBladeReport.pas"/>

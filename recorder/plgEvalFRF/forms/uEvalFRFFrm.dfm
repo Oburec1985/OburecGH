@@ -746,5 +746,17 @@ object FRFFrm: TFRFFrm
       OnDownClick = ShockSBDownClick
       OnUpClick = ShockSBUpClick
     end
+    object ShowPeaks: TCheckBox
+      Left = 6
+      Top = 285
+      Width = 91
+      Height = 17
+      Caption = #1069#1082#1089#1090#1088#1077#1084#1091#1084#1099
+      ParentShowHint = False
+      ShowHint = False
+      TabOrder = 20
+      Visible = False
+      OnClick = useWndCbClick
+    end
   end
 end

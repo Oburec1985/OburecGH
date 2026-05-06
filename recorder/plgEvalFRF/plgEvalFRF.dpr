@@ -41,7 +41,8 @@ uses
   uComponentServises in '..\..\sharedUtils\utils\uComponentServises.pas',
   uSpmBand in 'units\uSpmBand.pas',
   uBladeReport in 'units\uBladeReport.pas',
-  uExpFunction in 'units\uExpFunction.pas';
+  uExpFunction in 'units\uExpFunction.pas',
+  uPeakFrm in 'forms\uPeakFrm.pas' {PeakFrm};
 
 //rcPlugin in 'interfaces\rcPlugin.pas';
 

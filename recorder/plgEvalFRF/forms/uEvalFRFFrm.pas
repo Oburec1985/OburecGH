@@ -26,6 +26,7 @@ uses
   math, uDrawObj, uDoubleCursor, uBasicTrend, uProfile, uExcel,
   uBladeDB, uSpmBand, uBladeReport, uChartEvents, uExpFunction, spin,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Buttons, uBtnListView, uSpin,
+  uPeakFrm,
   uSpinFiltered;
 
 type
@@ -346,6 +347,7 @@ type
     useWndCb: TCheckBox;
     LoadBtn: TButton;
     FilteredSpinButton1: TFilteredSpinButton;
+    ShowPeaks: TCheckBox;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -1220,13 +1222,13 @@ var
   i: integer;
 begin
   t := getTaho;
-  td := t.m_shockList.getBlock(ShockIE.intnum);
+  td := t.m_shockList.getBlock(GetShockNum);
   t.m_shockList.delBlock(td);
   for i := 0 to t.cfg.SRSCount - 1 do
   begin
     hideCB.Checked := false;
     s := t.cfg.GetSrs(i);
-    sd := s.m_shockList.getBlock(ShockIE.intnum);
+    sd := s.m_shockList.getBlock(GetShockNum);
     if sd = nil then
       exit;
     s.m_shockList.delBlock(sd);
@@ -2261,7 +2263,7 @@ function TFRFFrm.hideind: integer;
 begin
   if hideCB.Checked then
   begin
-    result := ShockIE.intnum;
+    result := GetShockNum;
   end
   else
   begin
@@ -2470,7 +2472,10 @@ end;
 
 function TFRFFrm.GetShockNum:integer;
 begin
-  result:=ShockIE.IntNum-1;
+  if ShockIE.IntNum=0 then
+    result:=0
+  else
+    result:=ShockIE.IntNum-1;
 end;
 
 function TFRFFrm.getLine(s: cSRSres): cBuffTrend1d;
@@ -4383,10 +4388,12 @@ begin
   m_picname := c_Pic;
   m_Guid := IID_SRS;
   createevents;
+  PeakFrm:=TPeakFrm.Create(nil);
 end;
 
 destructor cFRFFactory.destroy;
 begin
+  PeakFrm.destroy;
   destroyevents;
   inherited;
 end;
