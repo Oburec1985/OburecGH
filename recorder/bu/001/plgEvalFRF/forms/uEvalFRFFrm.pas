@@ -27,7 +27,6 @@ uses
   uBladeDB, uSpmBand, uBladeReport, uChartEvents, uExpFunction, spin,
   Dialogs, ExtCtrls, StdCtrls, DCL_MYOWN, Buttons, uBtnListView, uSpin,
   uPeakFrm,
-  ulogfile,
   uSpinFiltered;
 
 type
@@ -378,7 +377,6 @@ type
     procedure WndCBChange(sender: tobject);
     procedure useWndCbClick(sender: tobject);
     procedure LoadBtnClick(sender: tobject);
-    procedure ShowPeaksClick(sender: tobject);
   public
     m_ReportBmp: TBitmap;
     m_RenderReport: boolean;
@@ -818,10 +816,113 @@ begin
   for i := 0 to cfg.SRSCount - 1 do
   begin
     s := cfg.GetSrs(i);
-    if not EvalFRFPeaks(self, s, true) then
+    b := m_bands.getband(bl.ToneCount - 1);
+    line := getLine(s);
+    d := TDoubleArray(line.data_r);
+    // поиск в экстремумов ограниченном джиапазоне (ограничение по концу посл тона)
+    // FindMinMaxDouble(s.lineFrf.data_r, minmax.x, minmax.y);
+    // FindMinMaxDouble(d, minmax.x, minmax.y);
+    // minmax.y:=0.01*(minmax.y-minmax.x)+minmax.x;
+    // minmax.x:=0.005*(minmax.y-minmax.x)+minmax.x;
+    if TrigFE.Value <= 0 then
+    begin
+      showmessage('Установить уровень Trig >0');
+      exit;
+    end;
+    minmax.y := TrigFE.Value;
+    minmax.x := 0.95 * TrigFE.Value;
+    // массив, минмакс инд, уровни, выход
+    // за пределами последней полосы поиск не осуществляем
+    FindExtremumsInY(d, 1, b.m_f2i, minmax.y, minmax.x, s.m_extremums);
+    if s.m_extremums.Count = 0 then
     begin
       result := false;
       break;
+    end;
+    s.clearExtremums;
+    prevExtr := nil;
+    for j := 0 to s.m_extremums.Count - 1 do
+    begin
+      BandExtr := cExtremum.create;
+      s.m_BandExtremums.Add(BandExtr);
+      extr := PExtremum1d(s.m_extremums[j]);
+      // индекс отсчета соотв экстремума
+      BandExtr.Index := extr.Index;
+      // значение экстремума
+      BandExtr.Value := extr.Value;
+      BandExtr.Freq := BandExtr.Index * cfg.fspmdx;
+      // проверяем принадлежит ли экстремум полосе
+      for k := 0 to m_bands.Count - 1 do
+      begin
+        b := m_bands.getband(k);
+        if BandExtr.Index > b.m_f1i then
+        begin
+          // если попали в полосу
+          if BandExtr.Index < b.m_f2i then
+          begin
+            BandExtr.m_b := b;
+            BandExtr.BandNum := k;
+            if b.m_fmaxi = BandExtr.Index then
+            begin
+              BandExtr.Main := true;
+            end;
+            BandExtr.NumInBand := 0;
+            // если не первый экстремум
+            if j > 0 then
+            begin
+              if prevExtr.BandNum = k then
+              begin
+                BandExtr.NumInBand := prevExtr.NumInBand + 1;
+              end;
+            end;
+            break;
+          end;
+        end;
+      end;
+      prevExtr := BandExtr;
+      // расчет демпфирования
+      v := extr.Value * 0.5;
+      k := extr.Index;
+      // граница слева
+      while (d[k] > v) do
+      begin
+        dec(k);
+        if k < 0 then
+        begin
+          break;
+          BandExtr.decrement := -1;
+        end;
+      end;
+      if k > 0 then
+      begin
+        p1.x := line.GetXByInd(k);
+        p1.y := d[k];
+        p2.x := line.GetXByInd(extr.Index);
+        p2.y := d[extr.Index];
+        f1 := EvalLineX(v, p1, p2);
+        k := extr.Index;
+        // граница справа
+        while (d[k] > v) do
+        begin
+          inc(k);
+          if k = length(d) then
+          begin
+            BandExtr.decrement := -1;
+            break;
+          end;
+        end;
+        if k < length(d) then
+        begin
+          p1.x := line.GetXByInd(k);
+          p1.y := d[k];
+          p2.x := line.GetXByInd(extr.Index);
+          p2.y := d[extr.Index];
+
+          f2 := EvalLineX(v, p1, p2);
+          vf := 2 * p2.x;
+          BandExtr.decrement := (f2 - f1) / vf;
+        end;
+      end;
     end;
   end;
   // датчик успешно нашел все полосы
@@ -1321,9 +1422,6 @@ var
   p: cpage;
   r: frect;
 begin
-  if g_logFile = nil then
-    g_logFile := cLogFile.Create('e:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\log\log.txt', ';');
-
   callDoOnZoom := true;
   // SpmChart.OnSwapBuffers := doSwapBuffers;
   SpmChart.OnRBtnClick := RBtnClick;
@@ -1364,8 +1462,6 @@ begin
   else
     Frf_YX_XY_CB.caption := 'In/Out';
   m_Frf_YX := Frf_YX_XY_CB.Checked;
-  if (PeakFrm <> nil) and PeakFrm.Visible and ShowPeaks.Checked then
-    PeakFrm.ShowFRFPeaks(self);
 end;
 
 procedure TFRFFrm.UpdateBandNames;
@@ -1819,6 +1915,7 @@ begin
     // еще не накопился целиком
     if t.fTrigState <> TrFall then
     begin
+      // logMessage('RBlock: ' + inttostr(t.m_tag.m_readyBlock));
       sig_interval := t.m_tag.getPortionTime;
       siglen := sig_interval.y;
       // logMessage('SLen: ' + floattostr(siglen));
@@ -2231,17 +2328,7 @@ begin
   begin
     ShowPhase;
   end;
-  if (PeakFrm <> nil) and PeakFrm.Visible and ShowPeaks.Checked then
-    PeakFrm.ShowFRFPeaks(self);
   SpmChart.redraw;
-end;
-
-procedure TFRFFrm.ShowPeaksClick(sender: tobject);
-begin
-  if ShowPeaks.Checked then
-    PeakFrm.ShowFRFPeaks(self)
-  else
-    PeakFrm.Hide;
 end;
 
 procedure TFRFFrm.UseWndFcbClick(sender: tobject);
@@ -3272,10 +3359,7 @@ begin
     p := TrigFE.OnChange;
     TrigFE.OnChange := nil;
     TrigFE.Value := p2.y;
-    m_spmTrig := TrigFE.Value;
     TrigFE.OnChange := p;
-    if (PeakFrm <> nil) and PeakFrm.Visible and ShowPeaks.Checked then
-      PeakFrm.ShowFRFPeaks(self);
   end;
   // если курсор на спектрах
   if SpmChart.activePage = pageSpm then
@@ -3496,7 +3580,6 @@ var
   a: caxis;
   v: double;
 begin
-  m_spmTrig := TrigFE.Value;
   p := pageSpm;
   a := p.activeAxis;
   if a.lg then
@@ -3505,8 +3588,6 @@ begin
     v := TrigFE.Value;
   Ycurs.setCursor(a, v);
   SpmChart.Repaint;
-  if (PeakFrm <> nil) and PeakFrm.Visible and ShowPeaks.Checked then
-    PeakFrm.ShowFRFPeaks(self);
 end;
 
 

@@ -755,7 +755,8 @@ object FRFFrm: TFRFFrm
       ParentShowHint = False
       ShowHint = False
       TabOrder = 20
-      OnClick = ShowPeaksClick
+      Visible = False
+      OnClick = useWndCbClick
     end
   end
 end

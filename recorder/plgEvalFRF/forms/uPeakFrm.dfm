@@ -1,7 +1,7 @@
 object PeakFrm: TPeakFrm
   Left = 0
   Top = 0
-  Caption = #1057#1087#1080#1089#1086#1082' '#1101#1082#1089#1090#1088#1077#1084#1091#1084#1086#1074
+  Caption = 'Список экстремумов'
   ClientHeight = 467
   ClientWidth = 635
   Color = clBtnFace
@@ -14,18 +14,68 @@ object PeakFrm: TPeakFrm
   OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 13
-  object ProfileSG: TStringGridExt
+  object TrigStatusLabel: TLabel
+    Left = 0
+    Top = 445
+    Width = 635
+    Height = 22
+    Align = alBottom
+    AutoSize = False
+    Color = 14537983
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clMaroon
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentColor = False
+    ParentFont = False
+    Layout = tlCenter
+    Visible = False
+  end
+  object DebugPanel: TPanel
     Left = 0
     Top = 0
     Width = 635
-    Height = 467
+    Height = 30
+    Align = alTop
+    BevelOuter = bvNone
+    TabOrder = 0
+    object DebugLogBtn: TButton
+      Left = 6
+      Top = 3
+      Width = 130
+      Height = 23
+      Caption = 'Лог расчета'
+      TabOrder = 0
+      OnClick = DebugLogBtnClick
+    end
+    object PeakStatusLabel: TLabel
+      Left = 146
+      Top = 4
+      Width = 180
+      Height = 21
+      AutoSize = False
+      Caption = 'Полосы не найдены'
+      Color = 16757940
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clMaroon
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = [fsBold]
+      ParentColor = False
+      ParentFont = False
+      Layout = tlCenter
+    end
+  end
+  object ProfileSG: TStringGridExt
+    Left = 0
+    Top = 30
+    Width = 635
+    Height = 415
     Align = alClient
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
-    TabOrder = 0
-    ExplicitLeft = 2
-    ExplicitTop = 15
-    ExplicitWidth = 204
-    ExplicitHeight = 354
+    TabOrder = 1
+    OnDrawCell = ProfileSGDrawCell
     ColWidths = (
       64
       65
