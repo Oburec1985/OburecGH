@@ -592,6 +592,7 @@ object FRFFrm: TFRFFrm
         ParentShowHint = False
         ShowHint = False
         TabOrder = 4
+        OnChange = SnEditChange
         OnKeyDown = SnEditKeyDown
       end
       object WeightFe: TFloatEdit

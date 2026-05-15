@@ -163,6 +163,7 @@ type
     function GetPrev(b:cXmlFolder):cXmlFolder;
     function StageNum:integer;
     property BlCount:integer read getBlCount write setBlCount;
+    constructor create;override;
   end;
 
   // испытания
@@ -1465,6 +1466,11 @@ begin
   end;
 end;
 
+constructor cStageFolder.create;
+begin
+  inherited;
+end;
+
 function cStageFolder.GetBlade(i: integer): cBladeFolder;
 begin
   result:=cBladeFolder(getchild(i));
@@ -1670,7 +1676,10 @@ begin
       result:=strtoIntExt(s.str);
     end
     else
-      result:=0;
+    begin
+      addpropertie('StageCount', IntToStr(ChildCount));
+      result:=ChildCount;
+    end;
   end
   else
     result:=0;

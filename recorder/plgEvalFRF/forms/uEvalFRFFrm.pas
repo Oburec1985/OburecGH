@@ -374,6 +374,7 @@ type
     procedure TrigFEChange(sender: tobject);
     procedure Frf_YX_XY_CBClick(sender: tobject);
     procedure SnEditKeyDown(sender: tobject; var Key: Word; Shift: TShiftState);
+    procedure SnEditChange(sender: tobject);
     procedure StageCBChange(sender: tobject);
     procedure WndCBChange(sender: tobject);
     procedure useWndCbClick(sender: tobject);
@@ -451,6 +452,10 @@ type
     function CheckedCount: integer;
     // загрузить из БД серию ударов по текущей лопатке
     procedure LoadSignals;
+    procedure UpdateSnEditStatus;
+    function FindBladeBySn(const ASn: string; var AStage: cStageFolder; var ABlade: cBladeFolder): boolean;
+    function SelectBladeBySn(const ASn: string): boolean;
+    function EnsureSelectedBladeSn: boolean;
   public
     // номер удара с учетом ShockIE
     function GetShockNum:integer;
@@ -715,11 +720,13 @@ begin
         BladeNumEdit.Text := bl.caption;
         Showbladestatus(bl.m_res);
         SnEdit.Text := bl.m_sn;
+        UpdateSnEditStatus;
         WeightFe.FloatNum := bl.m_weight;
       end
       else
       begin
         SnEdit.Text := sb.m_sn;
+        UpdateSnEditStatus;
         WeightFe.FloatNum := sb.m_weight;
         Showbladestatus(sb.m_res);
       end;
@@ -749,6 +756,7 @@ begin
         Showbladestatus(bl.m_res);
         WeightFe.FloatNum := bl.m_weight;
         SnEdit.Text := bl.m_sn;
+        UpdateSnEditStatus;
       end
       else
       begin
@@ -756,6 +764,7 @@ begin
         Showbladestatus(sb.m_res);
         WeightFe.FloatNum := sb.m_weight;
         SnEdit.Text := sb.m_sn;
+        UpdateSnEditStatus;
       end;
     end;
   end;
@@ -1085,6 +1094,97 @@ begin
         StatusEdit.Color := clWindow;
       end;
   end;
+end;
+
+
+procedure TFRFFrm.UpdateSnEditStatus;
+begin
+  if (g_mbase <> nil) and (g_mbase.SelectBlade <> nil) and
+    (trim(SnEdit.Text) = '') then
+    SnEdit.Color := clPink
+  else
+    SnEdit.Color := clWindow;
+end;
+
+function TFRFFrm.FindBladeBySn(const ASn: string; var AStage: cStageFolder;
+  var ABlade: cBladeFolder): boolean;
+var
+  t: cTurbFolder;
+  s: cStageFolder;
+  b: cBladeFolder;
+  i, j: integer;
+  sn: string;
+begin
+  result := false;
+  AStage := nil;
+  ABlade := nil;
+  sn := trim(ASn);
+  if (sn = '') or (g_mbase = nil) then
+    exit;
+  t := g_mbase.SelectTurb;
+  if t = nil then
+    exit;
+  for i := 0 to t.StageCount - 1 do
+  begin
+    s := t.GetStage(i);
+    if s = nil then
+      continue;
+    for j := 0 to s.BlCount - 1 do
+    begin
+      b := s.GetBlade(j);
+      if AnsiCompareText(trim(b.m_sn), sn) = 0 then
+      begin
+        AStage := s;
+        ABlade := b;
+        result := true;
+        exit;
+      end;
+    end;
+  end;
+end;
+
+function TFRFFrm.SelectBladeBySn(const ASn: string): boolean;
+var
+  s: cStageFolder;
+  b: cBladeFolder;
+begin
+  result := false;
+  if not FindBladeBySn(ASn, s, b) then
+    exit;
+  g_mbase.SelectStage := s;
+  g_mbase.SelectBlade := b;
+  if StageCB.Items.IndexOfObject(s) >= 0 then
+    StageCB.ItemIndex := StageCB.Items.IndexOfObject(s);
+  BladeNumEdit.Text := b.caption;
+  SnEdit.Text := b.m_sn;
+  WeightFe.FloatNum := b.m_weight;
+  Showbladestatus(b.m_res);
+  UpdateSnEditStatus;
+  g_FrfFactory.CreateBands(self, g_mbase);
+  SpmChartDblClick(nil);
+  result := true;
+end;
+function TFRFFrm.EnsureSelectedBladeSn: boolean;
+var
+  bl: cBladeFolder;
+begin
+  result := false;
+  if (g_mbase = nil) or (g_mbase.SelectBlade = nil) then
+    exit;
+  bl := g_mbase.SelectBlade;
+  if (trim(SnEdit.Text) <> '') and SelectBladeBySn(SnEdit.Text) then
+    bl := g_mbase.SelectBlade;
+  if trim(SnEdit.Text) = '' then
+    SnEdit.Text := trim(bl.m_sn);
+  UpdateSnEditStatus;
+  if trim(SnEdit.Text) = '' then
+  begin
+    StatusEdit.Text := 'Не указан серийный номер';
+    StatusEdit.Color := clPink;
+    exit;
+  end;
+  bl.m_sn := trim(SnEdit.Text);
+  result := true;
 end;
 
 procedure TFRFFrm.ShowFrf(s: cSRSres; c: cSpmCfg; shInd: integer);
@@ -2565,6 +2665,9 @@ begin
     exit;
   end;
 
+  if not EnsureSelectedBladeSn then
+    exit;
+
   dir := extractfiledir(g_mbase.SelectBlade.getFolder) + '\Shock';
   f := dir + '\' + trimext(extractfilename(g_FrfFactory.m_MeraFile))
     + '_Shocks.mera';
@@ -3084,6 +3187,10 @@ begin
   SignalsLVClick(nil);
 end;
 
+procedure TFRFFrm.SnEditChange(sender: tobject);
+begin
+  UpdateSnEditStatus;
+end;
 procedure TFRFFrm.SnEditKeyDown(sender: tobject; var Key: Word;
   Shift: TShiftState);
 var
@@ -3093,14 +3200,17 @@ begin
   if Key <> VK_RETURN then
     exit;
 
+  if (sender = SnEdit) and SelectBladeBySn(SnEdit.Text) then
+    exit;
+
   s := g_mbase.SelectStage;
   if s <> nil then
   begin
     sb := g_mbase.SelectBlade;
     if sb <> nil then
     begin
-      if SnEdit.Text <> '' then
-        sb.m_sn := SnEdit.Text;
+      sb.m_sn := trim(SnEdit.Text);
+      UpdateSnEditStatus;
       sb.m_weight := WeightFe.FloatNum;
       sb.CreateXMLDesc;
     end;
@@ -3463,7 +3573,7 @@ end;
 procedure TFRFFrm.StageCBChange(sender: tobject);
 var
   s:cStageFolder;
-  sb:cBladeFolder;
+  bl, sb:cBladeFolder;
 begin
   s := g_mbase.SelectStage;
   if s <> nil then
@@ -3471,10 +3581,13 @@ begin
     sb := g_mbase.SelectBlade;
     if sb <> nil then
     begin
-      if SnEdit.Text <> '' then
-        sb.m_sn := SnEdit.Text;
-      sb.m_weight := WeightFe.FloatNum;
-      sb.CreateXMLDesc;
+      if not (FindBladeBySn(SnEdit.Text, s, bl) and (bl <> sb)) then
+      begin
+        sb.m_sn := trim(SnEdit.Text);
+        UpdateSnEditStatus;
+        sb.m_weight := WeightFe.FloatNum;
+        sb.CreateXMLDesc;
+      end;
     end;
   end;
   if StageCB.ItemIndex > -1 then
@@ -3484,6 +3597,7 @@ begin
     g_mbase.SelectBlade := g_mbase.SelectStage.GetBlade(0);
     BladeNumEdit.Text:=g_mbase.SelectBlade.caption;
     SnEdit.text:=cbladefolder(g_mbase.SelectBlade).m_sn;
+    UpdateSnEditStatus;
     WeightFe.FloatNum:=cbladefolder(g_mbase.SelectBlade).m_weight;
     g_FrfFactory.CreateBands(self, g_mbase);
     SpmChartDblClick(nil);
@@ -4502,7 +4616,9 @@ begin
     blade := g_mbase.SelectBlade;
     if blade <> nil then
     begin
-      TFRFFrm(Frm).BladeNumEdit.Text := (blade.m_sn);
+      TFRFFrm(Frm).BladeNumEdit.Text := blade.caption;
+      TFRFFrm(Frm).SnEdit.Text := blade.m_sn;
+      TFRFFrm(Frm).UpdateSnEditStatus;
     end;
 
     TFRFFrm(Frm).ShowStages;
