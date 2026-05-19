@@ -1,0 +1,1260 @@
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=0; f_iEnd=0;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=17280; portion=2,885609992987E-5..0,30002885609993; portionLen=0,3;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=245; base=244,263888888889; d=0,736111111111114;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2; v=243; base=244,263888888889; d=1,26388888888889;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=16; v=247; base=244,263888888889; d=2,73611111111111;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=140; v=241; base=244,263888888889; d=3,26388888888889;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=617; v=249; base=244,263888888889; d=4,73611111111111;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9830; v=239; base=244,263888888889; d=5,26388888888889;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=17280;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=17280;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=17280;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=17280;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:25 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=17280;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=51840; portion=2,885609992987E-5..0,90002885609993; portionLen=0,9;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=31680;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=243; base=244,024305555556; d=1,02430555555554;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1; v=241; base=244,024305555556; d=3,02430555555554;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1001; v=239; base=244,024305555556; d=5,02430555555554;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=0,55002885609993..1,20002885609993; portionLen=0,65;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=245; base=243,493055555556; d=1,50694444444446;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1; v=241; base=243,493055555556; d=2,49305555555554;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=81; v=247; base=243,493055555556; d=3,50694444444446;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1902; v=239; base=243,493055555556; d=4,49305555555554;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=13680; v=249; base=243,493055555556; d=5,50694444444446;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=0,85002885609993..1,50002885609993; portionLen=0,65;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=245; base=243,704861111111; d=1,29513888888889;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=20; v=247; base=243,704861111111; d=3,29513888888889;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=551; v=239; base=243,704861111111; d=4,70486111111111;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=7438; v=249; base=243,704861111111; d=5,29513888888889;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=1,15002885609993..1,80002885609993; portionLen=0,65;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=245; base=244,239583333333; d=0,760416666666657;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2; v=243; base=244,239583333333; d=1,23958333333334;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=6; v=247; base=244,239583333333; d=2,76041666666666;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=192; v=241; base=244,239583333333; d=3,23958333333334;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1853; v=239; base=244,239583333333; d=5,23958333333334;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:26 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=1,45002885609993..2,10002885609993; portionLen=0,65;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=245; base=243,767361111111; d=1,23263888888889;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=11; v=247; base=243,767361111111; d=3,23263888888889;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2719; v=239; base=243,767361111111; d=4,76736111111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5500; v=249; base=243,767361111111; d=5,23263888888889;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5502; v=237; base=243,767361111111; d=6,76736111111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5517; v=251; base=243,767361111111; d=7,23263888888889;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5520; v=235; base=243,767361111111; d=8,76736111111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5525; v=255; base=243,767361111111; d=11,2326388888889;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5526; v=257; base=243,767361111111; d=13,2326388888889;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5538; v=267; base=243,767361111111; d=23,2326388888889;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5555; v=269; base=243,767361111111; d=25,2326388888889;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5591; v=215; base=243,767361111111; d=28,7673611111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5593; v=209; base=243,767361111111; d=34,7673611111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5594; v=207; base=243,767361111111; d=36,7673611111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5595; v=203; base=243,767361111111; d=40,7673611111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5606; v=201; base=243,767361111111; d=42,7673611111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5746; v=287; base=243,767361111111; d=43,2326388888889;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5922; v=289; base=243,767361111111; d=45,2326388888889;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=6841; v=197; base=243,767361111111; d=46,7673611111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=6849; v=195; base=243,767361111111; d=48,7673611111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=1,75002885609993..2,40002885609993; portionLen=0,65;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=253; base=239,940972222222; d=13,0590277777778;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1; v=255; base=239,940972222222; d=15,0590277777778;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=3; v=257; base=239,940972222222; d=17,0590277777778;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=166; v=259; base=239,940972222222; d=19,0590277777778;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=207; v=219; base=239,940972222222; d=20,9409722222222;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=254; v=261; base=239,940972222222; d=21,0590277777778;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=294; v=217; base=239,940972222222; d=22,9409722222222;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=295; v=215; base=239,940972222222; d=24,9409722222222;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=298; v=213; base=239,940972222222; d=26,9409722222222;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=302; v=211; base=239,940972222222; d=28,9409722222222;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=395; v=209; base=239,940972222222; d=30,9409722222222;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=8265; v=271; base=239,940972222222; d=31,0590277777778;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=8269; v=273; base=239,940972222222; d=33,0590277777778;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=2,05002885609993..2,70002885609993; portionLen=0,65;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=241; base=240,736111111111; d=0,263888888888886;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1; v=243; base=240,736111111111; d=2,26388888888889;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=8; v=237; base=240,736111111111; d=3,73611111111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=13; v=235; base=240,736111111111; d=5,73611111111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=16; v=233; base=240,736111111111; d=7,73611111111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=21; v=231; base=240,736111111111; d=9,73611111111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=100; v=229; base=240,736111111111; d=11,7361111111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=102; v=227; base=240,736111111111; d=13,7361111111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=191; v=225; base=240,736111111111; d=15,7361111111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=199; v=221; base=240,736111111111; d=19,7361111111111;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2440; v=261; base=240,736111111111; d=20,2638888888889;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=3403; v=263; base=240,736111111111; d=22,2638888888889;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=4202; v=265; base=240,736111111111; d=24,2638888888889;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:27 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=2,35002885609993..3,00002885609993; portionLen=0,65;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=239; base=246,680555555556; d=7,68055555555554;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=218; v=255; base=246,680555555556; d=8,31944444444446;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=221; v=257; base=246,680555555556; d=10,3194444444445;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2674; v=259; base=246,680555555556; d=12,3194444444445;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2763; v=261; base=246,680555555556; d=14,3194444444445;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=7207; v=231; base=246,680555555556; d=15,6805555555555;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=2,65002885609993..3,30002885609993; portionLen=0,65;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=249; base=245,6875; d=3,3125;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=4; v=251; base=245,6875; d=5,3125;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=232; v=239; base=245,6875; d=6,6875;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=456; v=253; base=245,6875; d=7,3125;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=752; v=237; base=245,6875; d=8,6875;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2793; v=235; base=245,6875; d=10,6875;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=2,95002885609993..3,60002885609993; portionLen=0,65;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=245; base=243,069444444444; d=1,93055555555554;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=13; v=241; base=243,069444444444; d=2,06944444444446;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=21; v=239; base=243,069444444444; d=4,06944444444446;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=427; v=249; base=243,069444444444; d=5,93055555555554;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=470; v=237; base=243,069444444444; d=6,06944444444446;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2449; v=251; base=243,069444444444; d=7,93055555555554;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=11306; v=235; base=243,069444444444; d=8,06944444444446;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=3,25002885609993..3,90002885609993; portionLen=0,65;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=247; base=245,885416666667; d=1,11458333333334;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1; v=243; base=245,885416666667; d=2,88541666666666;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=25; v=249; base=245,885416666667; d=3,11458333333334;Info
+19.05.2026 12:09:28 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=63; v=251; base=245,885416666667; d=5,11458333333334;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2998; v=239; base=245,885416666667; d=6,88541666666666;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=3351; v=237; base=245,885416666667; d=8,88541666666666;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=8096; v=235; base=245,885416666667; d=10,8854166666667;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=11007; v=229; base=245,885416666667; d=16,8854166666667;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=11008; v=227; base=245,885416666667; d=18,8854166666667;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=11012; v=225; base=245,885416666667; d=20,8854166666667;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=11030; v=287; base=245,885416666667; d=41,1145833333333;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=11043; v=313; base=245,885416666667; d=67,1145833333333;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=11095; v=161; base=245,885416666667; d=84,8854166666667;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=11096; v=153; base=245,885416666667; d=92,8854166666667;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=11099; v=145; base=245,885416666667; d=100,885416666667;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=3,55002885609993..4,20002885609993; portionLen=0,65;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=223; base=249,086805555556; d=26,0868055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=24; v=279; base=249,086805555556; d=29,9131944444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=26; v=283; base=249,086805555556; d=33,9131944444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=28; v=285; base=249,086805555556; d=35,9131944444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=31; v=287; base=249,086805555556; d=37,9131944444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=32; v=289; base=249,086805555556; d=39,9131944444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=165; v=209; base=249,086805555556; d=40,0868055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=166; v=207; base=249,086805555556; d=42,0868055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=168; v=203; base=249,086805555556; d=46,0868055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=170; v=201; base=249,086805555556; d=48,0868055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=172; v=197; base=249,086805555556; d=52,0868055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=694; v=195; base=249,086805555556; d=54,0868055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=696; v=193; base=249,086805555556; d=56,0868055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1274; v=307; base=249,086805555556; d=57,9131944444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2454; v=191; base=249,086805555556; d=58,0868055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=3255; v=189; base=249,086805555556; d=60,0868055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=3259; v=187; base=249,086805555556; d=62,0868055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=3,85002885609993..4,50002885609993; portionLen=0,65;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=239; base=238,788194444444; d=0,211805555555543;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1; v=243; base=238,788194444444; d=4,21180555555554;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2; v=245; base=238,788194444444; d=6,21180555555554;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=3; v=247; base=238,788194444444; d=8,21180555555554;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5; v=251; base=238,788194444444; d=12,2118055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9; v=255; base=238,788194444444; d=16,2118055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=12; v=257; base=238,788194444444; d=18,2118055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=14; v=259; base=238,788194444444; d=20,2118055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=19; v=261; base=238,788194444444; d=22,2118055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=20; v=263; base=238,788194444444; d=24,2118055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=492; v=213; base=238,788194444444; d=25,7881944444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=493; v=211; base=238,788194444444; d=27,7881944444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=495; v=209; base=238,788194444444; d=29,7881944444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=498; v=207; base=238,788194444444; d=31,7881944444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=499; v=205; base=238,788194444444; d=33,7881944444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=506; v=203; base=238,788194444444; d=35,7881944444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=8992; v=275; base=238,788194444444; d=36,2118055555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=4,15002885609993..4,80002885609993; portionLen=0,65;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=249; base=238,993055555556; d=10,0069444444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1; v=251; base=238,993055555556; d=12,0069444444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=165; v=253; base=238,993055555556; d=14,0069444444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=207; v=223; base=238,993055555556; d=15,9930555555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=247; v=255; base=238,993055555556; d=16,0069444444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=256; v=257; base=238,993055555556; d=18,0069444444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=912; v=219; base=238,993055555556; d=19,9930555555555;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=964; v=261; base=238,993055555556; d=22,0069444444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=4213; v=263; base=238,993055555556; d=24,0069444444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5016; v=265; base=238,993055555556; d=26,0069444444445;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:29 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=4,45002885609993..5,10002885609993; portionLen=0,65;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=239; base=243,888888888889; d=4,88888888888889;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1; v=237; base=243,888888888889; d=6,88888888888889;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=3; v=235; base=243,888888888889; d=8,88888888888889;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=15; v=233; base=243,888888888889; d=10,8888888888889;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=58; v=255; base=243,888888888889; d=11,1111111111111;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=144; v=257; base=243,888888888889; d=13,1111111111111;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=6260; v=229; base=243,888888888889; d=14,8888888888889;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=4,75002885609993..5,40002885609993; portionLen=0,65;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=243; base=243,934027777778; d=0,934027777777772;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1; v=241; base=243,934027777778; d=2,93402777777777;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2; v=239; base=243,934027777778; d=4,93402777777777;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=26; v=249; base=243,934027777778; d=5,06597222222223;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=79; v=237; base=243,934027777778; d=6,93402777777777;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=124; v=251; base=243,934027777778; d=7,06597222222223;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=170; v=235; base=243,934027777778; d=8,93402777777777;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1392; v=233; base=243,934027777778; d=10,9340277777778;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=7945; v=255; base=243,934027777778; d=11,0659722222222;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=5,05002885609993..5,70002885609993; portionLen=0,65;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=241; base=241,194444444444; d=0,194444444444457;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1; v=245; base=241,194444444444; d=3,80555555555554;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=13; v=247; base=241,194444444444; d=5,80555555555554;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=574; v=235; base=241,194444444444; d=6,19444444444446;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=668; v=233; base=241,194444444444; d=8,19444444444446;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5103; v=251; base=241,194444444444; d=9,80555555555554;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=6696; v=253; base=241,194444444444; d=11,8055555555555;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:30 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=5,35002885609993..6,00002885609993; portionLen=0,65;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=243; base=243,725694444444; d=0,725694444444457;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1; v=245; base=243,725694444444; d=1,27430555555554;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=14; v=239; base=243,725694444444; d=4,72569444444446;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=418; v=249; base=243,725694444444; d=5,27430555555554;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1029; v=251; base=243,725694444444; d=7,27430555555554;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9003; v=233; base=243,725694444444; d=10,7256944444445;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9007; v=231; base=243,725694444444; d=12,7256944444445;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9025; v=263; base=243,725694444444; d=19,2743055555555;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9026; v=281; base=243,725694444444; d=37,2743055555555;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9038; v=283; base=243,725694444444; d=39,2743055555555;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9082; v=199; base=243,725694444444; d=44,7256944444445;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9090; v=197; base=243,725694444444; d=46,7256944444445;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9091; v=187; base=243,725694444444; d=56,7256944444445;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9092; v=177; base=243,725694444444; d=66,7256944444445;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=10340; v=173; base=243,725694444444; d=70,7256944444445;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=10341; v=171; base=243,725694444444; d=72,7256944444445;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=5,65002885609993..6,30002885609993; portionLen=0,65;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=247; base=242,020833333333; d=4,97916666666666;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=6; v=237; base=242,020833333333; d=5,02083333333334;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=7; v=235; base=242,020833333333; d=7,02083333333334;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=10; v=233; base=242,020833333333; d=9,02083333333334;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=11; v=229; base=242,020833333333; d=13,0208333333333;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=12; v=227; base=242,020833333333; d=15,0208333333333;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=16; v=225; base=242,020833333333; d=17,0208333333333;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=17; v=223; base=242,020833333333; d=19,0208333333333;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=21; v=221; base=242,020833333333; d=21,0208333333333;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=25; v=219; base=242,020833333333; d=23,0208333333333;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=29; v=217; base=242,020833333333; d=25,0208333333333;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=406; v=269; base=242,020833333333; d=26,9791666666667;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=440; v=215; base=242,020833333333; d=27,0208333333333;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=442; v=213; base=242,020833333333; d=29,0208333333333;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=443; v=211; base=242,020833333333; d=31,0208333333333;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=444; v=209; base=242,020833333333; d=33,0208333333333;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=446; v=207; base=242,020833333333; d=35,0208333333333;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=450; v=205; base=242,020833333333; d=37,0208333333333;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=3798; v=203; base=242,020833333333; d=39,0208333333333;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=3889; v=201; base=242,020833333333; d=41,0208333333333;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=5,95002885609993..6,60002885609993; portionLen=0,65;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=225; base=235,9375; d=10,9375;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=30; v=247; base=235,9375; d=11,0625;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=117; v=249; base=235,9375; d=13,0625;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=120; v=251; base=235,9375; d=15,0625;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=210; v=255; base=235,9375; d=19,0625;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=530; v=215; base=235,9375; d=20,9375;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=789; v=213; base=235,9375; d=22,9375;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2936; v=259; base=235,9375; d=23,0625;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=3735; v=261; base=235,9375; d=25,0625;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=4967; v=263; base=235,9375; d=27,0625;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5934; v=265; base=235,9375; d=29,0625;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=6983; v=267; base=235,9375; d=31,0625;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=6986; v=269; base=235,9375; d=33,0625;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=6993; v=271; base=235,9375; d=35,0625;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=6,25002885609993..6,90002885609993; portionLen=0,65;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=247; base=242,340277777778; d=4,65972222222223;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2; v=249; base=242,340277777778; d=6,65972222222223;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=4; v=251; base=242,340277777778; d=8,65972222222223;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9; v=253; base=242,340277777778; d=10,6597222222222;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=53; v=231; base=242,340277777778; d=11,3402777777778;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=141; v=229; base=242,340277777778; d=13,3402777777778;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1025; v=227; base=242,340277777778; d=15,3402777777778;Info
+19.05.2026 12:09:31 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1682; v=259; base=242,340277777778; d=16,6597222222222;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2209; v=261; base=242,340277777778; d=18,6597222222222;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=6262; v=263; base=242,340277777778; d=20,6597222222222;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=6,55002885609993..7,20002885609993; portionLen=0,65;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=249; base=245,128472222222; d=3,87152777777777;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=19; v=241; base=245,128472222222; d=4,12847222222223;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=28; v=239; base=245,128472222222; d=6,12847222222223;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=158; v=253; base=245,128472222222; d=7,87152777777777;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=163; v=255; base=245,128472222222; d=9,87152777777777;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=301; v=235; base=245,128472222222; d=10,1284722222222;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1433; v=233; base=245,128472222222; d=12,1284722222222;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=4266; v=231; base=245,128472222222; d=14,1284722222222;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=6,85002885609993..7,50002885609993; portionLen=0,65;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=241; base=243,951388888889; d=2,95138888888889;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=3; v=239; base=243,951388888889; d=4,95138888888889;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=44; v=249; base=243,951388888889; d=5,04861111111111;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=225; v=251; base=243,951388888889; d=7,04861111111111;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=719; v=235; base=243,951388888889; d=8,95138888888889;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5430; v=253; base=243,951388888889; d=9,04861111111111;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=7696; v=255; base=243,951388888889; d=11,0486111111111;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=7,15002885609993..7,80002885609993; portionLen=0,65;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=241; base=240,8125; d=0,1875;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1; v=239; base=240,8125; d=1,8125;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=14; v=243; base=240,8125; d=2,1875;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=30; v=245; base=240,8125; d=4,1875;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=322; v=235; base=240,8125; d=5,8125;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=461; v=247; base=240,8125; d=6,1875;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=999; v=249; base=240,8125; d=8,1875;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=3562; v=251; base=240,8125; d=10,1875;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:32 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=7,45002885609993..8,10002885609993; portionLen=0,65;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=247; base=246,239583333333; d=0,760416666666657;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1; v=245; base=246,239583333333; d=1,23958333333334;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2; v=249; base=246,239583333333; d=2,76041666666666;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=30; v=243; base=246,239583333333; d=3,23958333333334;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=96; v=251; base=246,239583333333; d=4,76041666666666;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2990; v=253; base=246,239583333333; d=6,76041666666666;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=4989; v=239; base=246,239583333333; d=7,23958333333334;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=6572; v=237; base=246,239583333333; d=9,23958333333334;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9311; v=257; base=246,239583333333; d=10,7604166666667;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9323; v=259; base=246,239583333333; d=12,7604166666667;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9324; v=261; base=246,239583333333; d=14,7604166666667;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9357; v=231; base=246,239583333333; d=15,2395833333333;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9359; v=223; base=246,239583333333; d=23,2395833333333;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9361; v=219; base=246,239583333333; d=27,2395833333333;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9362; v=215; base=246,239583333333; d=31,2395833333333;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9373; v=213; base=246,239583333333; d=33,2395833333333;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9376; v=211; base=246,239583333333; d=35,2395833333333;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9378; v=207; base=246,239583333333; d=39,2395833333333;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9380; v=205; base=246,239583333333; d=41,2395833333333;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=10619; v=201; base=246,239583333333; d=45,2395833333333;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=7,75002885609993..8,40002885609993; portionLen=0,649999999999999;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=247; base=243,517361111111; d=3,48263888888889;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=7; v=239; base=243,517361111111; d=4,51736111111111;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=14; v=237; base=243,517361111111; d=6,51736111111111;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=45; v=251; base=243,517361111111; d=7,48263888888889;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=49; v=253; base=243,517361111111; d=9,48263888888889;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=52; v=255; base=243,517361111111; d=11,4826388888889;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=56; v=257; base=243,517361111111; d=13,4826388888889;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=61; v=259; base=243,517361111111; d=15,4826388888889;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=205; v=227; base=243,517361111111; d=16,5173611111111;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=632; v=225; base=243,517361111111; d=18,5173611111111;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=638; v=223; base=243,517361111111; d=20,5173611111111;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=729; v=221; base=243,517361111111; d=22,5173611111111;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1435; v=219; base=243,517361111111; d=24,5173611111111;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1436; v=217; base=243,517361111111; d=26,5173611111111;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1527; v=215; base=243,517361111111; d=28,5173611111111;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1531; v=213; base=243,517361111111; d=30,5173611111111;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=8,05002885609993..8,70002885609993; portionLen=0,65;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=227; base=237,868055555556; d=10,8680555555555;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=7; v=225; base=237,868055555556; d=12,8680555555555;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=47; v=251; base=237,868055555556; d=13,1319444444445;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2691; v=253; base=237,868055555556; d=15,1319444444445;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=3213; v=255; base=237,868055555556; d=17,1319444444445;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=3219; v=257; base=237,868055555556; d=19,1319444444445;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=5164; v=259; base=237,868055555556; d=21,1319444444445;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=6747; v=261; base=237,868055555556; d=23,1319444444445;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=0; state=1; f_iEnd=0;Info
+19.05.2026 12:09:33 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=8,35002885609993..9,00002885609993; portionLen=0,65;Info
+19.05.2026 12:09:34 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:34 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=0; v=243; base=245,166666666667; d=2,16666666666666;Info
+19.05.2026 12:09:34 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=2; v=241; base=245,166666666667; d=4,16666666666666;Info
+19.05.2026 12:09:34 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=33; v=251; base=245,166666666667; d=5,83333333333334;Info
+19.05.2026 12:09:34 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=67; v=239; base=245,166666666667; d=6,16666666666666;Info
+19.05.2026 12:09:34 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=71; v=237; base=245,166666666667; d=8,16666666666666;Info
+19.05.2026 12:09:34 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1346; v=255; base=245,166666666667; d=9,83333333333334;Info
+19.05.2026 12:09:34 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=1967; v=257; base=245,166666666667; d=11,8333333333333;Info
+19.05.2026 12:09:34 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9230; v=233; base=245,166666666667; d=12,1666666666667;Info
+19.05.2026 12:09:34 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=10976; v=231; base=245,166666666667; d=14,1666666666667;Info
+19.05.2026 12:09:34 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=1; interval=0..0;Info
+19.05.2026 12:09:34 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=0;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=17280; portion=2,885609992987E-5..0,30002885609993; portionLen=0,3;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=244,263888888889; maxD=5,26388888888889; maxV=239; scan=0..17280;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=17280;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=17280;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=17280;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=17280;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=17280;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=34560; portion=2,885609992987E-5..0,60002885609993; portionLen=0,6;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=14400;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=244,298611111111; maxD=5,29861111111111; maxV=239; scan=2880..20160;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=0,25002885609993..0,90002885609993; portionLen=0,65;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=244,024305555556; maxD=5,02430555555554; maxV=239; scan=2880..20160;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:43 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=0,55002885609993..1,20002885609993; portionLen=0,65;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=243,493055555556; maxD=5,50694444444446; maxV=249; scan=2880..20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=0,85002885609993..1,50002885609993; portionLen=0,65;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=243,704861111111; maxD=5,29513888888889; maxV=249; scan=2880..20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=1,15002885609993..1,80002885609993; portionLen=0,65;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=244,239583333333; maxD=5,23958333333334; maxV=239; scan=2880..20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:44 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=1,45002885609993..2,10002885609993; portionLen=0,65;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=243,767361111111; maxD=48,7673611111111; maxV=195; scan=2880..20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=1,75002885609993..2,40002885609993; portionLen=0,65;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=239,940972222222; maxD=33,0590277777778; maxV=273; scan=2880..20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=2,05002885609993..2,70002885609993; portionLen=0,65;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=240,736111111111; maxD=24,2638888888889; maxV=265; scan=2880..20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:45 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=2,35002885609993..3,00002885609993; portionLen=0,65;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=246,680555555556; maxD=15,6805555555555; maxV=231; scan=2880..20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=2,65002885609993..3,30002885609993; portionLen=0,65;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=245,6875; maxD=10,6875; maxV=235; scan=2880..20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=2,95002885609993..3,60002885609993; portionLen=0,65;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=243,069444444444; maxD=8,06944444444446; maxV=235; scan=2880..20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=0..0;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=3,25002885609993..3,90002885609993; portionLen=0,65;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=11043; v=313; base=245,885416666667; d=67,1145833333333;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG SearchTrig: TrFall maxTime=3,74174760609993; interval=3,69174760535487..4,04174759939441; f_iEnd=28323;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=1; state=2; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:46 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=2; f_iEnd=28323;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=2; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=2; f_iEnd=28323;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=2; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=2; f_iEnd=28323;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: TrEnd pcount=20159; lastindex=37440;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: first feedback block added; s=1 датчик X; blockIndex=0;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: shock completed; tahoBlocks=1;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=28323;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=37440;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=28323;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=37440;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=28323;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=54720; portion=3,55002885609993..4,50002885609993; portionLen=0,95;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=28323;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=252,444444444444; maxD=49,4444444444445; maxV=203; scan=0..26397;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=26397;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=26397;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=26397;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=43677; portion=4,04174760609993..4,80002885609993; portionLen=0,75828125;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=23517;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=238,993055555556; maxD=26,0069444444445; maxV=265; scan=2880..20160;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:47 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=4,45002885609993..5,10002885609993; portionLen=0,65;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=243,888888888889; maxD=14,8888888888889; maxV=229; scan=2880..20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=4,75002885609993..5,40002885609993; portionLen=0,65;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=243,934027777778; maxD=11,0659722222222; maxV=255; scan=2880..20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=5,05002885609993..5,70002885609993; portionLen=0,65;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=241,194444444444; maxD=11,8055555555555; maxV=253; scan=2880..20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=3,69174760535487..4,04174759939441;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:48 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=5,35002885609993..6,00002885609993; portionLen=0,65;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9091; v=187; base=243,725694444444; d=56,7256944444445;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: TrRise i=9092; v=177; base=243,725694444444; d=66,7256944444445;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: TrFall maxTime=5,80787607832215; interval=5,75787607757709..6,10787607161663; f_iEnd=26372;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=1; state=2; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=2; f_iEnd=26372;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=2; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=2; f_iEnd=26372;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: TrEnd pcount=20159; lastindex=37440;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: first feedback block added; s=1 датчик X; blockIndex=1;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: shock completed; tahoBlocks=2;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=26372;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=37440;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=26372;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=37440;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=26372;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=54720; portion=5,65002885609993..6,60002885609993; portionLen=0,95;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=26372;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=248,458333333333; maxD=37,4583333333333; maxV=211; scan=0..28348;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=28348;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=28348;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=28348;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=28348;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=28348;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=45628; portion=6,10787607832215..6,90002885609993; portionLen=0,792152777777778;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=25468;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=242,340277777778; maxD=20,6597222222222; maxV=263; scan=2880..20160;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:49 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=6,55002885609993..7,20002885609993; portionLen=0,65;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=245,128472222222; maxD=14,1284722222222; maxV=231; scan=2880..20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=6,85002885609993..7,50002885609993; portionLen=0,65;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=243,951388888889; maxD=11,0486111111111; maxV=255; scan=2880..20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=7,15002885609993..7,80002885609993; portionLen=0,65;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=240,8125; maxD=10,1875; maxV=251; scan=2880..20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:50 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=true; lastindex=37440; portion=7,45002885609993..8,10002885609993; portionLen=0,65;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG SearchTrig: dropCount=17280;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG SearchTrig: no trigger; base=246,239583333333; maxD=45,2395833333333; maxV=201; scan=2880..20160;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG updatedata: enter; srcTag=1 датчик X; srsCount=1;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG SearchTrig: tag=1 датчик X; freq=57600; threshold=50; state=0; f_iEnd=20160;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG SearchTrig: UpdateTagData=false; tag=1 датчик X; lastindex=20160;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG updatedata: SearchTrig result=0; state=0; interval=5,75787607757709..6,10787607161663;Info
+19.05.2026 12:09:51 tid: 552;NO_TAHO_DEBUG updatedata: skip duplicate src sensor=1 датчик X;Info

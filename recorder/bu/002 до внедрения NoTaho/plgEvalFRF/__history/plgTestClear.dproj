@@ -1,0 +1,171 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{2A3F32A3-8A55-4170-86ED-FAC06098330D}</ProjectGuid>
+			<ProjectVersion>12.0</ProjectVersion>
+			<MainSource>plgTestClear.dpr</MainSource>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_RangeChecking>true</DCC_RangeChecking>
+			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+			<ImageDebugInfo>true</ImageDebugInfo>
+			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+			<DCC_MapFile>3</DCC_MapFile>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<BRCC_IncludePath>..\..\sharedUtils\utils\FastMM\;$(BRCC_IncludePath)</BRCC_IncludePath>
+			<DCC_UsePackage>vclx;vcl;vclimg;dbrtl;Rave77VCL;bdertl;rtl;vclactnband;xmlrtl;vcldb;vcldbx;vcltouch;dsnap;dsnapcon;TeeUI;TeeDB;Tee;vclib;ibxpress;adortl;IndyCore;IndySystem;IndyProtocols;inet;intrawebdb_100_140;Intraweb_100_140;VclSmp;vclie;websnap;webdsnap;inetdb;inetdbbde;inetdbxpress;soaprtl;vclribbon;dbexpress;DbxCommonDriver;DataSnapIndy10ServerTransport;DataSnapProviderClient;DbxClientDriver;DataSnapServer;DBXInterBaseDriver;DBXMySQLDriver;dbxcds;DBXFirebirdDriver;DBXSybaseASEDriver;DBXSybaseASADriver;DBXOracleDriver;DBXMSSQLDriver;DBXInformixDriver;DBXDb2Driver;acnt2010_R</DCC_UsePackage>
+			<DCC_UnitSearchPath>$(BDS)\AlphaControls\D2010\;..\..\sharedUtils\utils\xml;..\..\sharedUtils\objects;..\..\sharedUtils\objects\utils;..\..\sharedUtils\forms;..\..\sharedUtils\utils\files;..\..\sharedUtils\utils;..\..\sharedUtils\utils\PathUtils;..\..\sharedUtils\utils\jcl-2.3.1.4197;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows\obj;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes\containers;..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;..\..\sharedUtils;..\..\sharedUtils\math;..\..\sharedUtils\компоненты\dcl_dpk;..\..\sharedUtils\ogl;..\..\sharedUtils\компоненты\VirtualTreeView\VirtualTreeViewV5.1.1\Source;..\..\sharedUtils\utils\lists;..\..\sharedUtils\utils\FastMM\;..\..\3d\3dComponents\components\Asutp ;..\..\3d\3dComponents\components\;..\..\3d\3dComponents\dialogs;..\..\3d\3dComponents\PropertEditors\;..\..\3d\core;..\..\3d\forms;..\..\3d\math;..\..\3d\objects;..\..\3d\tools;..\SharedRUnits;..\SharedRUnits\mebius;..\SharedRUnits\interfaces;..\SharedRUnits\RC_lib;..\..\sharedUtils\math\FFT_койнов;..\..\sharedUtils\utils\FastMM4991;..\..\sharedUtils\utils\FastMM4991\;..\..\sharedUtils\компоненты\chart_dpk;..\..\sharedUtils\компоненты\chart_dpk\chart;..\..\sharedUtils\компоненты\chart_dpk\chart\items;..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners;..\..\sharedUtils\компоненты\chart_dpk\chart\forms;..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames;..\..\sharedUtils\компоненты\chart_dpk\chart\utils;..\..\sharedUtils\компоненты\chart_dpk\chart\utils\lists;..\..\sharedUtils\компоненты\chart_dpk\chart\items\shaders;..\..\sharedUtils\ogl\shader;..\..\sharedUtils\ogl\forms;..\..\sharedUtils\ogl\dglOpenGL;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_ExeOutput>C:\Program Files (x86)\Mera\Recorder\plugins\</DCC_ExeOutput>
+			<DCC_DependencyCheckOutputName>C:\Program Files (x86)\Mera\Recorder\plugins\plgTestClear.dll</DCC_DependencyCheckOutputName>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
+			<DCC_K>false</DCC_K>
+			<DCC_F>false</DCC_F>
+			<DCC_Platform>x86</DCC_Platform>
+			<DCC_N>false</DCC_N>
+			<DCC_E>false</DCC_E>
+			<DCC_S>false</DCC_S>
+			<GenDll>true</GenDll>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="plgTestClear.dpr">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="forms\uExtFrm.pas">
+				<Form>ExtFrm</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\utils\uLogFile.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\lists\usetlist.pas"/>
+			<DCCReference Include="..\..\sharedUtils\utils\uComponentServises.pas"/>
+			<DCCReference Include="..\..\sharedUtils\math\uListMath.pas"/>
+			<DCCReference Include="..\..\sharedUtils\uCommonTypes.pas"/>
+			<DCCReference Include="..\..\3d\3dComponents\components\Asutp\uGlTurbine.pas"/>
+			<DCCReference Include="..\..\3d\forms\uTrfrmToolsFrame.pas">
+				<Form>TrfrmToolsFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\3d\forms\uObjCtrFrame.pas">
+				<Form>CtrlViewFrame</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\sharedUtils\math\uMatrix.pas"/>
+			<DCCReference Include="..\SharedRUnits\PluginClass.pas"/>
+			<DCCReference Include="..\SharedRUnits\uCompMng.pas"/>
+			<DCCReference Include="..\SharedRUnits\uRecBasicFactory.pas"/>
+			<DCCReference Include="..\SharedRUnits\uRecorderEvents.pas"/>
+			<DCCReference Include="units\uCreateComponents.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\blaccess.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\CFREG.PAS"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\DevAPI.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\device.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\journal.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\modules.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\plugin.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\rcPlugin.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\recorder.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\signal.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\tags.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\transf.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\transformers.pas"/>
+			<DCCReference Include="..\SharedRUnits\interfaces\waitwnd.pas"/>
+			<DCCReference Include="units\uRecFactory.pas">
+				<Form>/,uSyncThread in &apos;..\..\wp\WPExtPack\units\uSyncThread.pas&apos;</Form>
+			</DCCReference>
+			<DCCReference Include="..\SharedRUnits\uFrmSync.pas">
+				<Form>FrmSync</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uGrapfForm.pas">
+				<Form>GraphFrm</Form>
+			</DCCReference>
+			<DCCReference Include="forms\uEditGraphFrm.pas">
+				<Form>EditGraphFrm</Form>
+			</DCCReference>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Source>
+						<Source Name="MainSource">plgTestClear.dpr</Source>
+					</Source>
+					<Parameters>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+						<Parameters Name="HostApplication">C:\Program Files (x86)\Mera\Recorder\Recorder.exe</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">1</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1049</VersionInfo>
+						<VersionInfo Name="CodePage">1251</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName"/>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+					<Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\bcboffice2k140.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\bcbofficexp140.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dcloffice2k140.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dclofficexp140.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+					</Excluded_Packages>
+				</Delphi.Personality>
+				<ModelSupport>False</ModelSupport>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>

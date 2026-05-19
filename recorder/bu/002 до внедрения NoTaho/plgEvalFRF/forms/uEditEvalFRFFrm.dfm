@@ -179,7 +179,6 @@ object EditFrfFrm: TEditFrfFrm
         Height = 21
         TabOrder = 3
         Text = 'TrigNameCB'
-        OnChange = TahoModeChanged
       end
       object NoTahoCb: TCheckBox
         Left = 11
@@ -188,7 +187,6 @@ object EditFrfFrm: TEditFrfFrm
         Height = 16
         Caption = #1041#1077#1079' '#1076#1072#1090#1095#1080#1082#1072' '#1089#1080#1083#1099
         TabOrder = 4
-        OnClick = TahoModeChanged
       end
     end
     object SPMGB: TGroupBox
@@ -199,8 +197,6 @@ object EditFrfFrm: TEditFrfFrm
       Align = alTop
       Caption = 'SPMGB'
       TabOrder = 1
-      ExplicitLeft = 2
-      ExplicitTop = 125
       object FFTBlockSizeLabel: TLabel
         Left = 8
         Top = 22

@@ -52,7 +52,7 @@ object PeakFrm: TPeakFrm
     object PeakStatusLabel: TLabel
       Left = 146
       Top = 4
-      Width = 260
+      Width = 180
       Height = 21
       AutoSize = False
       Caption = 'Полосы не найдены'
@@ -65,39 +65,6 @@ object PeakFrm: TPeakFrm
       ParentColor = False
       ParentFont = False
       Layout = tlCenter
-    end
-    object RatioStatusLabel: TLabel
-      Left = 412
-      Top = 4
-      Width = 145
-      Height = 21
-      AutoSize = False
-      Caption = 'Мин/макс: -'
-      Color = clBtnFace
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'Tahoma'
-      Font.Style = [fsBold]
-      ParentColor = False
-      ParentFont = False
-      Layout = tlCenter
-    end
-    object RatioLimitLabel: TLabel
-      Left = 560
-      Top = 8
-      Width = 38
-      Height = 13
-      Caption = 'Порог'
-    end
-    object RatioLimitEdit: TEdit
-      Left = 602
-      Top = 4
-      Width = 48
-      Height = 21
-      TabOrder = 1
-      Text = '0,2'
-      OnChange = RatioLimitEditChange
     end
   end
   object ProfileSG: TStringGridExt

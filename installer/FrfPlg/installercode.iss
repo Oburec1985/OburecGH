@@ -8,8 +8,8 @@ DefaultGroupName=Mera
 UninstallDisplayIcon={app}\plgEvalFRF.dll
 
 ;OutputDir=output
-OutputDir=\\Fserv\e\CLIENTS\Info\p3218_ЛМЗ_MIC-224 виброметр_Баженова_РСС\7. ЦР\ПО\Plugins\001_27.01.26\
-OutputBaseFilename=plgEvalFRF_installer_v2.8
+OutputDir=\\Fserv\e\CLIENTS\Info\p3218_ЛМЗ_MIC-224 виброметр_Баженова_РСС\7. ЦР\ПО\Plugins\002_19.05.26\
+OutputBaseFilename=plgEvalFRF_installer_v3
 
 [Types]
 Name: "full"; Description: "Полная установка"

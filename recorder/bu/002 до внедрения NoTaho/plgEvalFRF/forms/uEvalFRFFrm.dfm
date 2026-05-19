@@ -30,6 +30,7 @@ object FRFFrm: TFRFFrm
     Top = 0
     Width = 576
     Height = 666
+    Cursor = crSizeAll
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -44,7 +45,6 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitLeft = 3
   end
   object RightGB: TGroupBox
     Left = 582

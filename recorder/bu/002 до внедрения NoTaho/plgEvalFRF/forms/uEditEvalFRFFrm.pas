@@ -89,7 +89,6 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ProfileBtnClick(Sender: TObject);
-    procedure TahoModeChanged(Sender: TObject);
   public
     m_SRS:TFRFFrm;
   private
@@ -99,8 +98,6 @@ type
     // обновить списки тегов в элементах
     Procedure UpdateTags;
     procedure ShowSrsCfg;
-    procedure UpdateTahoNodeCaption;
-    procedure StoreActiveThreshold;
     function GetSelectTaho:cSRSTaho;
   public
     procedure Edit(p_srs:TFRFFrm);
@@ -123,18 +120,11 @@ begin
   if lt=nil then
   begin
     t:=TahoNameCB.gettag;
-    if (t<>nil) or NoTahoCb.Checked then
+    if t<>nil then
     begin
       lt:=cSRSTaho.Create;
-      lt.m_noTaho:=NoTahoCb.Checked;
-      if t<>nil then
-      begin
-        lt.m_tag.tag:=t;
-        lt.m_tag.tagname:=string(t.GetName);
-      end;
+      lt.m_tag.tag:=t;
       lt.m_treshold:=ThresholdFE.FloatNum;
-      lt.m_tresholdForce:=lt.m_treshold;
-      lt.m_tresholdNoTaho:=lt.m_treshold;
       m_SRS.m_ShiftLeft:=LeftShiftEdit.FloatNum;
       m_SRS.m_Length:=LengthFE.FloatNum;
       m_SRS.addTaho(lt);
@@ -152,7 +142,6 @@ procedure TEditFrfFrm.Edit(p_srs: tFRFfrm);
 begin
   m_SRS:=p_srs;
   ShowModal;
-  StoreActiveThreshold;
   TFRFFrm(p_srs).UpdateSelected;
 end;
 
@@ -197,9 +186,8 @@ begin
   t:=GetSelectTaho;
   if t<>nil then
   begin
-    FFTdxFE.FloatNum:=csrstaho(t).WorkFreq/FFTBlockSizeIE.IntNum;
-    if csrstaho(t).WorkFreq<>0 then
-      BlockSizeFE.FloatNum:=FFTBlockSizeIE.IntNum/csrstaho(t).WorkFreq;
+    FFTdxFE.FloatNum:=csrstaho(t).m_tag.freq/FFTBlockSizeIE.IntNum;
+    BlockSizeFE.FloatNum:=FFTBlockSizeIE.IntNum/csrstaho(t).m_tag.freq;
   end;
 end;
 
@@ -230,9 +218,8 @@ begin
   t:=GetSelectTaho;
   if t<>nil then
   begin
-    FFTdxFE.FloatNum:=csrstaho(t).WorkFreq/FFTBlockSizeIE.IntNum;
-    if csrstaho(t).WorkFreq<>0 then
-      BlockSizeFE.FloatNum:=FFTBlockSizeIE.IntNum/csrstaho(t).WorkFreq;
+    FFTdxFE.FloatNum:=csrstaho(t).m_tag.freq/FFTBlockSizeIE.IntNum;
+    BlockSizeFE.FloatNum:=FFTBlockSizeIE.IntNum/csrstaho(t).m_tag.freq;
   end;
 end;
 
@@ -364,27 +351,10 @@ end;
 procedure TEditFrfFrm.ShowTaho(t: cSrsTaho);
 var
   c:cSpmCfg;
-  p, pNoTaho:TNotifyEvent;
 begin
-  if (t.m_tag.tag = nil) and (t.m_tag.tagname <> '') then
-    t.m_tag.tag := getTagByName(t.m_tag.tagname);
-  if (t.m_tag.tag <> nil) and (t.m_tag.tagname = '') then
-    t.m_tag.tagname := string(t.m_tag.tag.GetName);
-  p:=TahoNameCB.OnChange;
-  pNoTaho:=NoTahoCb.OnClick;
-  TahoNameCB.OnChange:=nil;
-  NoTahoCb.OnClick:=nil;
-  try
-    NoTahoCb.Checked:=t.m_noTaho;
-    setComboBoxItem(t.m_tag.tagname,TahoNameCB);
-  finally
-    NoTahoCb.OnClick:=pNoTaho;
-    TahoNameCB.OnChange:=p;
-  end;
-  if t.m_noTaho then
-    t.m_treshold:=t.m_tresholdNoTaho
-  else
-    t.m_treshold:=t.m_tresholdForce;
+  setComboBoxItem(t.name,TahoNameCB);
+  if t.m_tag.tag=nil then
+    t.m_tag.tag:=getTagByName(t.m_tag.tagname);
   ThresholdFE.FloatNum:=t.m_treshold;
   LeftShiftEdit.FloatNum:=m_SRS.m_ShiftLeft;
   LengthFE.FloatNum:=m_SRS.m_Length;
@@ -392,9 +362,9 @@ begin
   FFTBlockSizeIE.IntNum:=c.m_fftCount;
   //FFTShiftIE.IntNum:=c.m_fftCount;
   if c.m_fftCount<>0 then
-    FFTdxFE.FloatNum:=csrstaho(c.taho).WorkFreq/c.m_fftCount;
-  if csrstaho(c.taho).WorkFreq<>0 then
-    BlockSizeFE.FloatNum:=FFTBlockSizeIE.IntNum/csrstaho(c.taho).WorkFreq;
+    FFTdxFE.FloatNum:=csrstaho(c.taho).m_tag.freq/c.m_fftCount;
+  if csrstaho(c.taho).m_tag.freq<>0 then
+    BlockSizeFE.FloatNum:=FFTBlockSizeIE.IntNum/csrstaho(c.taho).m_tag.freq;
   ShCountIE.IntNum:=1;
   ShCountIE.IntNum:=c.m_capacity;
   CohThresholdFE.FloatNum:=t.m_CohTreshold;
@@ -524,75 +494,6 @@ begin
   end;
 end;
 
-procedure TEditFrfFrm.StoreActiveThreshold;
-var
-  t: cSRSTaho;
-begin
-  t := GetSelectTaho;
-  if t = nil then
-    t := m_SRS.getTaho;
-  if t = nil then
-    exit;
-  t.m_treshold := ThresholdFE.FloatNum;
-  if NoTahoCb.Checked then
-    t.m_tresholdNoTaho := t.m_treshold
-  else
-    t.m_tresholdForce := t.m_treshold;
-end;
-procedure TEditFrfFrm.TahoModeChanged(Sender: TObject);
-begin
-  UpdateTahoNodeCaption;
-end;
-
-procedure TEditFrfFrm.UpdateTahoNodeCaption;
-var
-  t: cSRSTaho;
-  it: itag;
-  n: PVirtualNode;
-  d: PNodeData;
-begin
-  t := GetSelectTaho;
-  if t = nil then
-    t := m_SRS.getTaho;
-  if t = nil then
-    exit;
-
-  if t.m_noTaho then
-    t.m_tresholdNoTaho := ThresholdFE.FloatNum
-  else
-    t.m_tresholdForce := ThresholdFE.FloatNum;
-
-  t.m_noTaho := NoTahoCb.Checked;
-  if t.m_noTaho then
-  begin
-    m_SRS.ResTypeRG.ItemIndex := 2;
-    t.m_treshold := t.m_tresholdNoTaho;
-  end
-  else
-  begin
-    t.m_treshold := t.m_tresholdForce;
-    it := itag(pointer(getComboBoxItem(TahoNameCB)));
-    if it = nil then
-      it := TahoNameCB.gettag;
-    if it <> nil then
-    begin
-      t.m_tag.tag := it;
-      t.m_tag.tagname := string(it.GetName);
-    end;
-  end;
-  ThresholdFE.FloatNum := t.m_treshold;
-
-  n := SignalsTV.GetNodeByPointer(t);
-  if n = nil then
-    exit;
-  d := SignalsTV.GetNodeData(n);
-  if d <> nil then
-  begin
-    d.data := t;
-    d.Caption := t.name;
-    SignalsTV.InvalidateNode(n);
-  end;
-end;
 procedure TEditFrfFrm.UpdateBtnClick(Sender: TObject);
 var
   t, tahocb:cSRSTaho;
@@ -651,16 +552,20 @@ begin
 
   if t=nil then
     exit;
-  UpdateTahoNodeCaption;
+  it:=itag(pointer(getComboBoxItem(tahonamecb)));
+  if t.m_tag.tag<>it then
+  begin
+    t.m_tag.tag:=it;
+    n:=SignalsTV.GetNodeByPointer(t);
+    d:=SignalsTV.GetNodeData(n);
+    d.data:=t;
+    d.Caption:=t.m_tag.tagname;
+  end;
 
   c:=t.Cfg;
   t.m_shockList.m_wnd.x2:=LengthFE.FloatNum*0.7;
   if t=nil then exit;
   t.m_treshold:=ThresholdFE.FloatNum;
-  if t.m_noTaho then
-    t.m_tresholdNoTaho:=t.m_treshold
-  else
-    t.m_tresholdForce:=t.m_treshold;
   c.m_fftCount:=FFTBlockSizeIE.IntNum;
   c.m_blockcount:=ShCountIE.IntNum;
   c.m_addNulls:=NullCB.Checked;
@@ -677,16 +582,8 @@ begin
 end;
 
 procedure TEditFrfFrm.UpdateTags;
-var
-  p:TNotifyEvent;
 begin
-  p:=TahoNameCB.OnChange;
-  TahoNameCB.OnChange:=nil;
-  try
-    TahoNameCB.updateTagsList;
-  finally
-    TahoNameCB.OnChange:=p;
-  end;
+  TahoNameCB.updateTagsList;
   TagsListFrame1.ShowChannels;
 end;
 
@@ -704,7 +601,7 @@ begin
   t:=GetSelectTaho;
   if t=nil then exit;
 
-  lastpos:=trunc(LengthFE.FloatNum*t.WorkFreq)-FFTBlockSizeIE.IntNum;
+  lastpos:=trunc(LengthFE.FloatNum*t.m_tag.freq)-FFTBlockSizeIE.IntNum;
   if lastpos>0 then
   begin
     if FFTShiftIE.IntNum>0 then

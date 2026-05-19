@@ -11,30 +11,18 @@ type
     DebugPanel: TPanel;
     DebugLogBtn: TButton;
     PeakStatusLabel: TLabel;
-    RatioStatusLabel: TLabel;
-    RatioLimitLabel: TLabel;
-    RatioLimitEdit: TEdit;
     ProfileSG: TStringGridExt;
     TrigStatusLabel: TLabel;
     procedure DebugLogBtnClick(Sender: TObject);
     procedure ProfileSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
-    procedure RatioLimitEditChange(Sender: TObject);
   private
     { Private declarations }
     FBands: TObject;
     FFRFFrm: TObject;
-    FBandRatio: double;
-    FBandRatioValid: boolean;
-    FBandRatioBlocked: boolean;
-    FUpdatingRatioLimit: boolean;
     procedure FillGrid(AExtremums: TList);
     procedure UpdateBandStatus(AExtremums: TList);
     procedure SetTrigStatus(const AText: string; AColor: TColor);
-    function GetRatioLimit: double;
-    function CalcBandValueRatio(AExtremums: TList): boolean;
-    procedure UpdateRatioStatus;
-    function RatioStatusText: string;
     function IsAllBandsFound(AExtremums: TList): boolean;
     function IsNearBandBoundary(AExtremum: TObject): boolean;
   public
@@ -63,7 +51,6 @@ const
   cPeakColIndex = 3;
   cNearBandTolPercent = 10;
   cPeakDebugLogLimit = 200;
-  cDefaultBandRatioLimit = 0.2;
 
 procedure ClearBandExtremums(AList: TList);
 var
@@ -406,120 +393,8 @@ begin
   result := true;
 end;
 
-function TPeakFrm.GetRatioLimit: double;
-var
-  s: string;
-begin
-  result := cDefaultBandRatioLimit;
-  if RatioLimitEdit = nil then
-    exit;
-  s := Trim(RatioLimitEdit.Text);
-  if s = '' then
-    exit;
-  s := StringReplace(s, '.', DecimalSeparator, [rfReplaceAll]);
-  s := StringReplace(s, ',', DecimalSeparator, [rfReplaceAll]);
-  try
-    result := StrToFloat(s);
-  except
-    result := cDefaultBandRatioLimit;
-  end;
-  if result < 0 then
-    result := 0;
-  if result > 1 then
-    result := 1;
-end;
-
-function TPeakFrm.CalcBandValueRatio(AExtremums: TList): boolean;
-var
-  i, count, bandIndex: integer;
-  bands: bList;
-  extr: cExtremum;
-  bandValues: array of double;
-  minV, maxV, v: double;
-begin
-  result := false;
-  FBandRatioValid := false;
-  FBandRatioBlocked := false;
-  FBandRatio := 0;
-  if (AExtremums = nil) or (FBands = nil) then
-    exit;
-  bands := bList(FBands);
-  if bands.Count < 2 then
-    exit;
-  SetLength(bandValues, bands.Count);
-  for i := 0 to high(bandValues) do
-    bandValues[i] := -1;
-  for i := 0 to AExtremums.Count - 1 do
-  begin
-    extr := cExtremum(AExtremums.Items[i]);
-    if (extr <> nil) and (extr.BandNum >= 0) and (extr.BandNum < bands.Count) then
-    begin
-      v := abs(extr.Value);
-      if v > bandValues[extr.BandNum] then
-        bandValues[extr.BandNum] := v;
-    end;
-  end;
-  minV := 1.0E308;
-  maxV := 0;
-  count := 0;
-  for bandIndex := 0 to high(bandValues) do
-  begin
-    v := bandValues[bandIndex];
-    if v >= 0 then
-    begin
-      if v < minV then
-        minV := v;
-      if v > maxV then
-        maxV := v;
-      inc(count);
-    end;
-  end;
-  if (count < 2) or (maxV <= 0) then
-    exit;
-  FBandRatio := minV / maxV;
-  FBandRatioValid := true;
-  FBandRatioBlocked := FBandRatio < GetRatioLimit;
-  result := true;
-end;
-
-procedure TPeakFrm.UpdateRatioStatus;
-var
-  limit: double;
-begin
-  if RatioStatusLabel = nil then
-    exit;
-  limit := GetRatioLimit;
-  if not FBandRatioValid then
-  begin
-    RatioStatusLabel.Caption := 'Мин/макс: -';
-    RatioStatusLabel.Color := clBtnFace;
-    RatioStatusLabel.Font.Color := clWindowText;
-    exit;
-  end;
-  RatioStatusLabel.Caption := 'Мин/макс: ' + FloatToStrF(FBandRatio, ffFixed, 5, 3) +
-    ' >= ' + FloatToStrF(limit, ffFixed, 5, 3);
-  if FBandRatioBlocked then
-  begin
-    RatioStatusLabel.Color := RGB(255, 180, 180);
-    RatioStatusLabel.Font.Color := clMaroon;
-  end
-  else
-  begin
-    RatioStatusLabel.Color := RGB(181, 220, 150);
-    RatioStatusLabel.Font.Color := clGreen;
-  end;
-end;
-function TPeakFrm.RatioStatusText: string;
-begin
-  if not FBandRatioValid then
-    result := ''
-  else
-    result := ' мин/макс=' + FloatToStrF(FBandRatio, ffFixed, 5, 3);
-end;
 procedure TPeakFrm.UpdateBandStatus(AExtremums: TList);
 begin
-  CalcBandValueRatio(AExtremums);
-  UpdateRatioStatus;
   if (AExtremums = nil) or (FBands = nil) then
   begin
     PeakStatusLabel.Caption := 'Полосы не найдены';
@@ -527,21 +402,15 @@ begin
     PeakStatusLabel.Font.Color := clMaroon;
     exit;
   end;
-  if IsAllBandsFound(AExtremums) and not FBandRatioBlocked then
+  if IsAllBandsFound(AExtremums) then
   begin
-    PeakStatusLabel.Caption := 'Все полосы найдены' + RatioStatusText;
+    PeakStatusLabel.Caption := 'Все полосы найдены';
     PeakStatusLabel.Color := RGB(181, 220, 150);
     PeakStatusLabel.Font.Color := clGreen;
   end
-  else if IsAllBandsFound(AExtremums) and FBandRatioBlocked then
-  begin
-    PeakStatusLabel.Caption := 'Удар не найден' + RatioStatusText;
-    PeakStatusLabel.Color := RGB(255, 180, 180);
-    PeakStatusLabel.Font.Color := clMaroon;
-  end
   else
   begin
-    PeakStatusLabel.Caption := 'Не все полосы найдены' + RatioStatusText;
+    PeakStatusLabel.Caption := 'Не все полосы найдены';
     PeakStatusLabel.Color := RGB(255, 180, 180);
     PeakStatusLabel.Font.Color := clMaroon;
   end;
@@ -706,22 +575,6 @@ begin
   DrawText(ProfileSG.Canvas.Handle, PChar(s), length(s), Rect, flags);
 end;
 
-procedure TPeakFrm.RatioLimitEditChange(Sender: TObject);
-var
-  f: TFRFFrm;
-  s: cSRSres;
-begin
-  if FUpdatingRatioLimit then
-    exit;
-  f := TFRFFrm(FFRFFrm);
-  if f = nil then
-    exit;
-  f.m_peakRatioLimit := GetRatioLimit;
-  s := f.ActiveSignal;
-  if s = nil then
-    exit;
-  FillGrid(s.m_BandExtremums);
-end;
 procedure TPeakFrm.SetTrigStatus(const AText: string; AColor: TColor);
 begin
   TrigStatusLabel.Caption := AText;
@@ -746,12 +599,6 @@ begin
   if s = nil then
     exit;
   FBands := f.m_bands;
-  FUpdatingRatioLimit := true;
-  try
-    RatioLimitEdit.Text := FloatToStrF(f.m_peakRatioLimit, ffFixed, 5, 3);
-  finally
-    FUpdatingRatioLimit := false;
-  end;
   EvalFRFPeaks(f, s, true);
   FillGrid(s.m_BandExtremums);
   show;

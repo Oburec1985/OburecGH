@@ -251,7 +251,7 @@ type
     m_frm: tform;
     m_CohTreshold,
     // Амплдитуда для обнаружения события
-    m_treshold, m_tresholdForce, m_tresholdNoTaho: double;
+    m_treshold: double;
     m_tag: ctag;
     // блок данных по которому идет расчет. Размер fportionsizei = length*ShockCount
     m_T1data: TAlignDarray;
@@ -267,8 +267,6 @@ type
     m_shockList: TDataBlockList;
     // окно на удар
     m_corrTaho: boolean;
-    // режим без отдельного датчика силы: триггер берется по первому каналу обратной связи
-    m_noTaho: boolean;
   private // переменные для обсчета в алгоритме обработки
     v_min, v_max: double;
     f_imin, f_imax, // индексы отсчетов содержащих максимум и минимум в текущем ударе
@@ -293,8 +291,6 @@ type
   public
     property cfg: cSpmCfg read getCfg write setcfg;
     function CfgCount: integer;
-    function WorkTag: ctag;
-    function WorkFreq: double;
     // длина корректируемых окном данных
     function corrLen: double;
     procedure evalCoh(hideind: integer);
@@ -395,7 +391,7 @@ type
     // отступ слева и длительность
     m_ShiftLeft, m_Length,
     // уровень для флагов на спектре
-    m_spmTrig, m_peakRatioLimit: double;
+    m_spmTrig: double;
 
     ready: boolean;
     // показывать флажки на максимумы
@@ -494,7 +490,6 @@ type
     procedure UpdateChart;
     procedure doStart;
     procedure addTaho(t: cSRSTaho);
-    procedure StoreTahoThreshold;
     function getTaho: cSRSTaho;
     function getRes(s: string): cSRSres;
     procedure RBtnClick(sender: tobject);
@@ -596,14 +591,6 @@ begin
   end;
   result := int.y - int.x;
   move(t.m_ReadData[int.x], buf.p^, result * sizeof(double));
-end;
-
-procedure DebugNoTahoLog(const AText: string);
-begin
-  // CODEx DEBUG: временный лог режима без датчика силы, убрать после разбора поиска удара.
-  //if g_logFile = nil then
-  //  g_logFile := cLogFile.Create('e:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\log\log.txt', ';');
-  logMessage('NO_TAHO_DEBUG ' + AText);
 end;
 
 function TextLabelsComparator(p1, p2: pointer): integer;
@@ -709,18 +696,6 @@ end;
 
 { TSRSFrm }
 
-procedure TFRFFrm.StoreTahoThreshold;
-var
-  t: cSRSTaho;
-begin
-  t := getTaho;
-  if t = nil then
-    exit;
-  if t.m_noTaho then
-    t.m_tresholdNoTaho := t.m_treshold
-  else
-    t.m_tresholdForce := t.m_treshold;
-end;
 procedure TFRFFrm.addTaho(t: cSRSTaho);
 begin
   t.m_frm := self;
@@ -985,7 +960,6 @@ begin
   m_labList := tlist.create;
   m_showBandLab := false;
   m_showflags := false;
-  m_peakRatioLimit := 0.2;
   inherited;
 end;
 
@@ -1308,7 +1282,6 @@ var
   t: cSRSTaho;
   i: integer;
   s: cSRSres;
-  srcTag: ctag;
 begin
   m_lastMDBfile := '';
   m_lastTahoBlock := nil;
@@ -1317,10 +1290,9 @@ begin
   if t = nil then
     exit;
   t.fTrigState := TrOff;
-  srcTag := t.WorkTag;
-  if srcTag <> nil then
+  if t.m_tag <> nil then
   begin
-    srcTag.doOnStart;
+    t.m_tag.doOnStart;
     t.m_shockList.clearData;
     t.f_iEnd := 0;
     t.m_MaxTime := 0;
@@ -1400,13 +1372,10 @@ begin
   t := getTaho;
   if t = nil then
     exit;
-  if (t.m_shockList.Count > 0) or t.m_noTaho then
+  if t.m_shockList.Count > 0 then
   begin
-    if not t.m_noTaho then
-    begin
-      t.evalCoh(hideind);
-      t.evalWelchFrf(m_estimator);
-    end;
+    t.evalCoh(hideind);
+    t.evalWelchFrf(m_estimator);
     fUpdateFrf := true;
   end;
 end;
@@ -1428,13 +1397,10 @@ begin
     exit;
   c := t.getCfg;
 
-  if (t.m_shockList.Count > 0) or t.m_noTaho then
+  if t.m_shockList.Count > 0 then
   begin
-    if not t.m_noTaho then
-    begin
-      t.evalCoh(hideind);
-      t.evalFRF(hideind, m_estimator, rebuildspm);
-    end;
+    t.evalCoh(hideind);
+    t.evalFRF(hideind, m_estimator, rebuildspm);
     fUpdateFrf := true;
   end;
   EvalAvSpm;
@@ -1474,8 +1440,8 @@ var
   p: cpage;
   r: frect;
 begin
-  //if g_logFile = nil then
-  //  g_logFile := cLogFile.Create('e:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\log\log.txt', ';');
+  if g_logFile = nil then
+    g_logFile := cLogFile.Create('e:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\log\log.txt', ';');
 
   callDoOnZoom := true;
   // SpmChart.OnSwapBuffers := doSwapBuffers;
@@ -1734,16 +1700,16 @@ var
 begin
   refresh := GetREFRESHPERIOD;
   lt := getTaho;
-  if lt.WorkFreq <> 0 then
-    lt.line.dx := 1 / lt.WorkFreq;
+  if lt.m_tag.Freq <> 0 then
+    lt.line.dx := 1 / lt.m_tag.Freq;
 
   c := lt.cfg;
   c.fHalfFft := c.m_fftCount shr 1;
   // размер блока для расчета в секундах
   c.fportionsize := m_Length * c.m_blockcount;
-  c.fportionsizei := round(c.fportionsize * lt.WorkFreq);
+  c.fportionsizei := round(c.fportionsize * lt.m_tag.Freq);
   c.fOutSize := c.m_fftCount * c.m_blockcount;
-  c.fspmdx := lt.WorkFreq / c.m_fftCount;
+  c.fspmdx := lt.m_tag.Freq / c.m_fftCount;
   c.FFTProp := GetFFTPlan(c.m_fftCount);
   c.FFTProp.StartInd := 0;
 
@@ -1841,8 +1807,8 @@ begin
     l.Color := t.m_color;
     t.line := l;
     t.line.name := t.name;
-    if t.WorkFreq <> 0 then
-      l.dx := 1 / t.WorkFreq
+    if t.m_tag.Freq = 0 then
+      l.dx := 1 / t.m_tag.Freq
     else
       l.dx := 0;
 
@@ -1872,8 +1838,8 @@ begin
       l.Color := s.m_color;
       s.line := l;
       s.line.name := s.name;
-      if s.m_tag.Freq <> 0 then
-        l.dx := 1 / s.m_tag.Freq
+      if t.m_tag.Freq = 0 then
+        l.dx := 1 / t.m_tag.Freq
       else
         l.dx := 0;
 
@@ -1959,53 +1925,32 @@ end;
 
 function TFRFFrm.SearchTrig(t: cSRSTaho): boolean;
 var
-  i, pcount, dropCount, baseCount: integer;
+  i, pcount, dropCount: integer;
   sig_interval, common_interval: point2d;
-  v, cmpV, baseValue, baseSum, maxCmpV, maxRawV, siglen, dropLen: double;
-  srcTag: ctag;
+  v, siglen, dropLen: double;
   b: boolean;
   s: cSRSres;
-  block: TDataBlock;
 begin
   result := false;
-  srcTag := t.WorkTag;
-  if srcTag = nil then
-  begin
-    if t.m_noTaho then
-      DebugNoTahoLog('SearchTrig: WorkTag=nil');
-    exit;
-  end;
-  if t.m_noTaho then
-    DebugNoTahoLog('SearchTrig: tag=' + srcTag.tagname +
-      '; freq=' + FloatToStr(srcTag.Freq) +
-      '; threshold=' + FloatToStr(t.m_treshold) +
-      '; state=' + IntToStr(ord(t.fTrigState)) +
-      '; f_iEnd=' + IntToStr(t.f_iEnd));
-  if srcTag.UpdateTagData(true) then
+  if t.m_tag.UpdateTagData(true) then
   begin
     // не отбрасываем данные если находимся в состоянии когда триг найден но
     // еще не накопился целиком
     if t.fTrigState <> TrFall then
     begin
-      sig_interval := srcTag.getPortionTime;
+      sig_interval := t.m_tag.getPortionTime;
       siglen := sig_interval.y;
-      if t.m_noTaho then
-        DebugNoTahoLog('SearchTrig: UpdateTagData=true; lastindex=' + IntToStr(srcTag.lastindex) +
-          '; portion=' + FloatToStr(sig_interval.x) + '..' + FloatToStr(sig_interval.y) +
-          '; portionLen=' + FloatToStr(srcTag.getPortionLen));
       // logMessage('SLen: ' + floattostr(siglen));
-      dropLen := srcTag.getPortionLen - m_Length;
+      dropLen := t.m_tag.getPortionLen - m_Length;
       if dropLen > 0 then // при этом условии гарантированно остается 2*blocklen
       begin
-        dropCount := trunc(dropLen * srcTag.Freq);
+        dropCount := trunc(dropLen * t.m_tag.Freq);
         if t.f_iEnd > 0 then
         begin
           if dropCount > t.f_iEnd then
             dropCount := t.f_iEnd;
         end;
-        if t.m_noTaho then
-          DebugNoTahoLog('SearchTrig: dropCount=' + IntToStr(dropCount));
-        srcTag.ResetTagDataTimeInd(dropCount); // 1,000027805
+        t.m_tag.ResetTagDataTimeInd(dropCount); // 1,000027805
         // logMessage('ReadDataTime: ' +floattostr(t.m_tag.m_ReadDataTime));
         t.f_iEnd := t.f_iEnd - dropCount;
         if t.f_iEnd < 0 then
@@ -2016,53 +1961,23 @@ begin
         end;
       end;
     end;
-    baseValue := srcTag.m_ReadData[0];
-    if t.m_noTaho then
-    begin
-      // CODEx DEBUG: для режима без датчика силы считаем порог от фона канала обратной связи.
-      baseCount := min(srcTag.lastindex, max(16, round(srcTag.Freq * 0.01)));
-      baseSum := 0;
-      for i := 0 to baseCount - 1 do
-        baseSum := baseSum + srcTag.m_ReadData[i];
-      if baseCount > 0 then
-        baseValue := baseSum / baseCount;
-    end;
-    t.v_min := baseValue;
-    if t.m_noTaho then
-      t.v_max := 0
-    else
-      t.v_max := baseValue;
-    maxCmpV := 0;
-    maxRawV := 0;
+    t.v_min := t.m_tag.m_ReadData[0];
+    t.v_max := t.m_tag.m_ReadData[0];
     // поиск триггера
     if t.fTrigState = TrOff then
     begin
-      for i := t.f_iEnd to srcTag.lastindex - 1 do
+      for i := t.f_iEnd to t.m_tag.lastindex - 1 do
       // for i := 0 to t.m_tag.lastindex - 1 do
       begin
-        v := srcTag.m_ReadData[i];
-        if t.m_noTaho then
-          cmpV := abs(v - baseValue)
-        else
-          cmpV := v;
-        if cmpV > maxCmpV then
+        v := t.m_tag.m_ReadData[i];
+        if v > t.m_treshold then
         begin
-          maxCmpV := cmpV;
-          maxRawV := v;
-        end;
-        if cmpV > t.m_treshold then
-        begin
-          if cmpV > t.v_max then
+          if v > t.v_max then
           begin
             // logMessage('SLen2: ' + floattostr(siglen));
             t.fTrigState := TrRise;
-            t.v_max := cmpV;
+            t.v_max := v;
             t.f_imax := i;
-            if t.m_noTaho then
-              DebugNoTahoLog('SearchTrig: TrRise i=' + IntToStr(i) +
-                '; v=' + FloatToStr(v) +
-                '; base=' + FloatToStr(baseValue) +
-                '; d=' + FloatToStr(cmpV));
           end;
         end
         else
@@ -2071,16 +1986,12 @@ begin
           begin
             t.fTrigState := TrFall;
             // считаем границы порции
-            t.m_MaxTime := srcTag.getReadTime(t.f_imax);
+            t.m_MaxTime := t.m_tag.getReadTime(t.f_imax);
             // logMessage('MaxTime: ' +floattostr(t.m_MaxTime));
             t.TrigInterval.x := t.m_MaxTime - m_ShiftLeft;
             t.TrigInterval.y := t.TrigInterval.x + m_Length;
             // logMessage('TrigInterval: ' +floattostr(t.TrigInterval.x)+'...'+floattostr(t.TrigInterval.y));
-            t.f_iEnd := srcTag.getIndex(t.TrigInterval.y);
-            if t.m_noTaho then
-              DebugNoTahoLog('SearchTrig: TrFall maxTime=' + FloatToStr(t.m_MaxTime) +
-                '; interval=' + FloatToStr(t.TrigInterval.x) + '..' + FloatToStr(t.TrigInterval.y) +
-                '; f_iEnd=' + IntToStr(t.f_iEnd));
+            t.f_iEnd := t.m_tag.getIndex(t.TrigInterval.y);
             result := true;
             break;
           end;
@@ -2089,27 +2000,17 @@ begin
       // сдвигаем индекс проанализированных данных т.к. отбрасываемые данные ограничены iEnd
       // в противном случае можно отбросить не проанализированные данные
       if t.fTrigState = TrOff then
-      begin
-        if t.m_noTaho then
-          DebugNoTahoLog('SearchTrig: no trigger; base=' + FloatToStr(baseValue) +
-            '; maxD=' + FloatToStr(maxCmpV) +
-            '; maxV=' + FloatToStr(maxRawV) +
-            '; scan=' + IntToStr(t.f_iEnd) + '..' + IntToStr(srcTag.lastindex));
-        t.f_iEnd := srcTag.lastindex;
-      end;
+        t.f_iEnd := t.m_tag.lastindex;
     end;
     // если триггер найден
     if t.fTrigState = TrFall then
     begin
       inc(t.fShockInd);
       // если данных накопилось на целиковый удар
-      if t.f_iEnd <= srcTag.lastindex then
+      if t.f_iEnd <= t.m_tag.lastindex then
       begin
         t.fTrigState := TrEnd;
-        pcount := copyData(srcTag, t.TrigInterval, t.m_T1data);
-        if t.m_noTaho then
-          DebugNoTahoLog('SearchTrig: TrEnd pcount=' + IntToStr(pcount) +
-            '; lastindex=' + IntToStr(srcTag.lastindex));
+        pcount := copyData(t.m_tag, t.TrigInterval, t.m_T1data);
         t.fDataCount := pcount;
         /// дополнять нулями
         if pcount < t.cfg.m_fftCount then
@@ -2119,7 +2020,7 @@ begin
         begin
           // AddBlock делать без перевыделения памяти!!!
           m_lastTahoBlock := t.m_shockList.addBlock(t.cfg.m_fftCount,
-            p2d(t.TrigInterval.x, t.TrigInterval.x + pcount / srcTag.Freq),
+            p2d(t.TrigInterval.x, t.TrigInterval.x + pcount / t.m_tag.Freq),
             TDoubleArray(t.m_T1data.p), pcount);
           m_lastTahoBlock.m_timeMax := t.m_MaxTime;
           // накладываем окно
@@ -2129,27 +2030,6 @@ begin
             pcount);
           t.line.flength := pcount;
           m_lastTahoBlock.BuildSpm;
-          if t.m_noTaho and (t.cfg.SRSCount > 0) then
-          begin
-            s := t.cfg.GetSrs(0);
-            if (s <> nil) and (s.m_tag = srcTag) and
-              (s.m_shockList.getBlock(t.m_MaxTime) = nil) then
-            begin
-              block := s.m_shockList.addBlock(t.cfg.m_fftCount,
-                p2d(t.TrigInterval.x, t.TrigInterval.x + pcount / srcTag.Freq),
-                TDoubleArray(t.m_T1data.p), pcount);
-              block.m_timeMax := t.m_MaxTime;
-              block.prepareData;
-              block.BuildSpm;
-              s.line.AddPoints(TDoubleArray(block.m_TimeBlockFlt.p), pcount);
-              s.line.flength := pcount;
-              block.m_connectedInd := m_lastTahoBlock.index;
-              s.m_shockProcessed := true;
-              if t.m_noTaho then
-                DebugNoTahoLog('SearchTrig: first feedback block added; s=' + s.m_tag.tagname +
-                  '; blockIndex=' + IntToStr(block.index));
-            end;
-          end;
           // showmessage('Taho BCount: ' + inttostr(t.m_shockList.count))
         end;
       end;
@@ -2163,8 +2043,6 @@ begin
         s := t.cfg.GetSrs(i);
         if s.m_shockProcessed = false then
         begin
-          if t.m_noTaho then
-            DebugNoTahoLog('SearchTrig: wait sensor=' + s.m_tag.tagname);
           b := false;
           break;
         end;
@@ -2172,13 +2050,8 @@ begin
       if b then // стоит еще добавить проверку на отвалившийся датчик. В случае если
       // какой то канал не накопил удар, игнорируем его по таймауту
       begin
-        if not t.m_noTaho then
-        begin
-          t.evalCoh(hideind);
-          t.evalFRF(hideind, m_estimator, false);
-        end;
-        if t.m_noTaho then
-          DebugNoTahoLog('SearchTrig: shock completed; tahoBlocks=' + IntToStr(t.m_shockList.Count));
+        t.evalCoh(hideind);
+        t.evalFRF(hideind, m_estimator, false);
         fUpdateFrf := true;
         // показывать последний удар при обновлении
         fShowLast := true;
@@ -2187,10 +2060,7 @@ begin
         EvalAvSpm;
       end;
     end;
-  end
-  else if t.m_noTaho then
-    DebugNoTahoLog('SearchTrig: UpdateTagData=false; tag=' + srcTag.tagname +
-      '; lastindex=' + IntToStr(srcTag.lastindex));
+  end;
 end;
 
 procedure TFRFFrm.updatedata;
@@ -2198,43 +2068,25 @@ var
   t: cSRSTaho;
   c: cSpmCfg;
   s: cSRSres;
-  i, pcount, dropCount, baseCount: integer;
+  i, pcount, dropCount: integer;
   sig_interval, common_interval: point2d;
   find: boolean;
   block: TDataBlock;
   siglen, comIntervalLen, refresh, dropLen: double;
-  srcTag: ctag;
 begin
   if not ready then
     exit;
   t := getTaho;
   c := t.cfg;
-  srcTag := t.WorkTag;
-  if t.m_noTaho and (srcTag <> nil) then
-    DebugNoTahoLog('updatedata: enter; srcTag=' + srcTag.tagname +
-      '; srsCount=' + IntToStr(c.SRSCount));
-  if (srcTag = nil) or (srcTag.Freq = 0) then
-    exit;
-  refresh := srcTag.BlockSize / srcTag.Freq;
+  refresh := t.m_tag.BlockSize / t.m_tag.Freq;
   if m_Length < refresh then
     m_Length := refresh;
   // поиск удара. внутри обновляются данные по тахо, ущется удар, обновляется автомат trigstate
   find := SearchTrig(t);
-  if t.m_noTaho then
-    DebugNoTahoLog('updatedata: SearchTrig result=' + IntToStr(ord(find)) +
-      '; state=' + IntToStr(ord(t.fTrigState)) +
-      '; interval=' + FloatToStr(t.TrigInterval.x) + '..' + FloatToStr(t.TrigInterval.y));
 
   for i := 0 to c.SRSCount - 1 do
   begin
     s := c.GetSrs(i);
-    if t.m_noTaho and (s.m_tag = srcTag) then
-    begin
-      s.m_shockProcessed := true;
-      if t.m_noTaho then
-        DebugNoTahoLog('updatedata: skip duplicate src sensor=' + s.m_tag.tagname);
-      continue;
-    end;
     if s.m_tag.UpdateTagData(true) then
     begin
       sig_interval := s.m_tag.getPortionTime;
@@ -2886,13 +2738,13 @@ begin
         saveHeader(ifile, s.m_tag.Freq, 0, ident, 'с');
       savedata(f, s.m_tag.tagname + '_' + inttostr(num), db, false);
 
-      if (i = 0) and (not t.m_noTaho) then
+      if i = 0 then
       begin
         ident := t.m_tag.tagname + '_' + inttostr(num);
         if m_saveT0 then
-          saveHeader(ifile, t.WorkFreq, tb.m_timeStamp.x, ident, 'с')
+          saveHeader(ifile, t.m_tag.Freq, tb.m_timeStamp.x, ident, 'с')
         else
-          saveHeader(ifile, t.WorkFreq, 0, ident, 'с');
+          saveHeader(ifile, t.m_tag.Freq, 0, ident, 'с');
         savedata(f, ident, tb, true);
       end;
     end;
@@ -2973,17 +2825,14 @@ var
   // prof: cProfileLine;
   turb, stage, blade: cxmlfolder;
   lstr: string;
-  noTaho: boolean;
 begin
   inherited;
   gui_file := a_pIni.filename;
   gui_section := str;
-  noTaho := a_pIni.ReadBool(str, 'NoTaho', false);
   ltag := LoadTagIni(a_pIni, str, 'Taho_Tag');
-  if (ltag <> nil) or noTaho then
+  if ltag <> nil then
   begin
     t := cSRSTaho.create;
-    t.m_noTaho := noTaho;
     // prof := t.m_profile.getline('Profile');
     // prof.addline(m_profileline);
     // prof.updatepoints;
@@ -2994,12 +2843,9 @@ begin
     end;
 
     t.m_color := ColorArray[0];
-    if ltag <> nil then
-    begin
-      t.m_tag.tag := ltag.tag;
-      t.m_tag.tagname := ltag.tagname;
-      ltag.destroy;
-    end;
+    t.m_tag.tag := ltag.tag;
+    t.m_tag.tagname := ltag.tagname;
+    ltag.destroy;
     c := cSpmCfg.create;
     t.cfg := c;
     addTaho(t);
@@ -3009,15 +2855,8 @@ begin
   m_ShiftLeft := strtofloatext(a_pIni.ReadString(str, 'ShiftLeft', '0.05'));
   m_Length := strtofloatext(a_pIni.ReadString(str, 'Length', '0.05'));
   // амплитуда для поиска события
-  t.m_tresholdForce := strtofloatext(a_pIni.ReadString(str, 'Threshold', '0.05'));
-  t.m_tresholdNoTaho := strtofloatext(a_pIni.ReadString(str, 'NoTahoThreshold',
-    a_pIni.ReadString(str, 'Threshold', '0.05')));
-  if t.m_noTaho then
-    t.m_treshold := t.m_tresholdNoTaho
-  else
-    t.m_treshold := t.m_tresholdForce;
+  t.m_treshold := strtofloatext(a_pIni.ReadString(str, 'Threshold', '0.05'));
   m_spmTrig := strtofloatext(a_pIni.ReadString(str, 'TrigLvl', '0.05'));
-  m_peakRatioLimit := strtofloatext(a_pIni.ReadString(str, 'PeakRatioLimit', '0.2'));
 
   m_minX := strtofloatext(a_pIni.ReadString(str, 'Spm_minX', '0'));
   m_maxX := strtofloatext(a_pIni.ReadString(str, 'Spm_maxX', '1000'));
@@ -3033,8 +2872,6 @@ begin
   m_showBandLab := a_pIni.ReadBool(str, 'ShowBandLabels', false);
   m_estimator := a_pIni.ReadInteger(str, 'Estimator', 1);
   ResTypeRG.ItemIndex := a_pIni.ReadInteger(str, 'EvalType', 0);
-  if t.m_noTaho then
-    ResTypeRG.ItemIndex := 2;
   HideExcelCB.Checked := a_pIni.ReadBool(str, 'HideExcel', false);
   g_FrfFactory.m_hideExcel := HideExcelCB.Checked;
   if c <> nil then
@@ -3079,20 +2916,15 @@ var
   turb, stage, blade: cxmlfolder;
 begin
   inherited;
-  StoreTahoThreshold;
   t := getTaho;
   if t <> nil then
   begin
-    if (t.m_tag <> nil) and ((t.m_tag.tag <> nil) or (t.m_tag.tagname <> '')) then
-      saveTagToIni(a_pIni, t.m_tag, str, 'Taho_Tag');
-    a_pIni.WriteBool(str, 'NoTaho', t.m_noTaho);
+    saveTagToIni(a_pIni, t.m_tag, str, 'Taho_Tag');
     WriteFloatToIniMera(a_pIni, str, 'ShiftLeft', m_ShiftLeft);
-    WriteFloatToIniMera(a_pIni, str, 'Threshold', t.m_tresholdForce);
-    WriteFloatToIniMera(a_pIni, str, 'NoTahoThreshold', t.m_tresholdNoTaho);
+    WriteFloatToIniMera(a_pIni, str, 'Threshold', t.m_treshold);
     WriteFloatToIniMera(a_pIni, str, 'Length', m_Length);
     WriteFloatToIniMera(a_pIni, str, 'CohThreshold', t.m_CohTreshold);
     WriteFloatToIniMera(a_pIni, str, 'TrigLvl', TrigFE.Value);
-    WriteFloatToIniMera(a_pIni, str, 'PeakRatioLimit', m_peakRatioLimit);
 
     WriteFloatToIniMera(a_pIni, str, 'Spm_minX', m_minX);
     WriteFloatToIniMera(a_pIni, str, 'Spm_maxX', m_maxX);
@@ -3837,7 +3669,7 @@ begin
   c := t.cfg;
   if t = nil then
     exit;
-  lastpos := trunc(m_Length * t.WorkFreq) - c.m_fftCount;
+  lastpos := trunc(m_Length * t.m_tag.Freq) - c.m_fftCount;
   if lastpos > 0 then
     m_WelchCount := trunc(lastpos / m_WelchShift) + 1
   else
@@ -3935,32 +3767,6 @@ begin
   result := fSpmCfgList.Count;
 end;
 
-function cSRSTaho.WorkTag: ctag;
-var
-  c: cSpmCfg;
-  s: cSRSres;
-begin
-  result := m_tag;
-  if not m_noTaho then
-    exit;
-  c := cfg;
-  if (c <> nil) and (c.SRSCount > 0) then
-  begin
-    s := c.GetSrs(0);
-    if s <> nil then
-      result := s.m_tag;
-  end;
-end;
-
-function cSRSTaho.WorkFreq: double;
-var
-  tag: ctag;
-begin
-  result := 0;
-  tag := WorkTag;
-  if tag <> nil then
-    result := tag.Freq;
-end;
 function cSRSTaho.corrLen: double;
 var
   c: cSpmCfg;
@@ -3980,10 +3786,7 @@ begin
   // m_profile.AddP(1000, 1, ptlinePoly, false);
 
   m_treshold := 1;
-  m_tresholdForce := m_treshold;
-  m_tresholdNoTaho := m_treshold;
   m_CohTreshold := 0.5;
-  m_noTaho := false;
   m_tag := ctag.create;
   fSpmCfgList := tlist.create;
 
@@ -4316,10 +4119,7 @@ end;
 
 function cSRSTaho.name: string;
 begin
-  if m_noTaho then
-    result := 'Без датчика силы'
-  else
-    result := m_tag.tagname;
+  result := m_tag.tagname;
 end;
 
 { сSpmCfg }
@@ -4451,7 +4251,7 @@ end;
 
 function cSpmCfg.Freq: double;
 begin
-  result := cSRSTaho(taho).WorkFreq;
+  result := cSRSTaho(taho).m_tag.Freq;
 end;
 
 function cSpmCfg.GetSrs(i: integer): cSRSres;

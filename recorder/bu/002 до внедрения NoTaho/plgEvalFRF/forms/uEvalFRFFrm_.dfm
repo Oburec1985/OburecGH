@@ -3,8 +3,8 @@ object FRFFrm: TFRFFrm
   Top = 0
   Hint = #1042#1082#1083#1102#1095#1080#1090#1100'/'#1086#1090#1082#1083#1102#1095#1080#1090#1100' '#1088#1072#1089#1095#1077#1090
   Caption = 'FRFFrm'
-  ClientHeight = 666
-  ClientWidth = 822
+  ClientHeight = 504
+  ClientWidth = 809
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,24 +12,25 @@ object FRFFrm: TFRFFrm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  ShowHint = True
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object Splitter1: TSplitter
-    Left = 576
+    Left = 563
     Top = 0
-    Width = 6
-    Height = 666
+    Width = 5
+    Height = 504
     Align = alRight
     Color = clBackground
     ParentColor = False
-    ExplicitLeft = 512
   end
   object SpmChart: cChart
     Left = 0
     Top = 0
-    Width = 576
-    Height = 666
+    Width = 563
+    Height = 504
+    Cursor = crSizeAll
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -44,13 +45,12 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitLeft = 3
   end
   object RightGB: TGroupBox
-    Left = 582
+    Left = 568
     Top = 0
-    Width = 240
-    Height = 666
+    Width = 241
+    Height = 504
     Align = alRight
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     ParentShowHint = False
@@ -273,18 +273,6 @@ object FRFFrm: TFRFFrm
       ParentShowHint = False
       ShowHint = False
     end
-    object WndLab: TLabel
-      Left = 130
-      Top = 244
-      Width = 26
-      Height = 13
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
-      Caption = #1054#1082#1085#1086
-      Visible = False
-    end
     object ShockCountE: TEdit
       Left = 5
       Top = 40
@@ -295,20 +283,55 @@ object FRFFrm: TFRFFrm
       TabOrder = 0
     end
     object SaveBtn: TButton
-      Left = 5
-      Top = 111
+      Left = 0
+      Top = 115
       Width = 66
-      Height = 16
+      Height = 22
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
       ParentShowHint = False
       ShowHint = False
       TabOrder = 1
       OnClick = SaveBtnClick
     end
+    object ShockSB: TSpinButton
+      Left = 112
+      Top = 165
+      Width = 15
+      Height = 19
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
+      DownGlyph.Data = {
+        0E010000424D0E01000000000000360000002800000009000000060000000100
+        200000000000D800000000000000000000000000000000000000008080000080
+        8000008080000080800000808000008080000080800000808000008080000080
+        8000008080000080800000808000000000000080800000808000008080000080
+        8000008080000080800000808000000000000000000000000000008080000080
+        8000008080000080800000808000000000000000000000000000000000000000
+        0000008080000080800000808000000000000000000000000000000000000000
+        0000000000000000000000808000008080000080800000808000008080000080
+        800000808000008080000080800000808000}
+      ParentShowHint = False
+      ShowHint = False
+      TabOrder = 2
+      UpGlyph.Data = {
+        0E010000424D0E01000000000000360000002800000009000000060000000100
+        200000000000D800000000000000000000000000000000000000008080000080
+        8000008080000080800000808000008080000080800000808000008080000080
+        8000000000000000000000000000000000000000000000000000000000000080
+        8000008080000080800000000000000000000000000000000000000000000080
+        8000008080000080800000808000008080000000000000000000000000000080
+        8000008080000080800000808000008080000080800000808000000000000080
+        8000008080000080800000808000008080000080800000808000008080000080
+        800000808000008080000080800000808000}
+      OnDownClick = ShockSBDownClick
+      OnUpClick = ShockSBUpClick
+    end
     object ShockIE: TIntEdit
       Left = 5
       Top = 165
-      Width = 96
+      Width = 104
       Height = 21
       Margins.Left = 2
       Margins.Top = 2
@@ -316,7 +339,7 @@ object FRFFrm: TFRFFrm
       Margins.Bottom = 2
       ParentShowHint = False
       ShowHint = False
-      TabOrder = 2
+      TabOrder = 3
       Text = '0'
     end
     object DelBtn: TButton
@@ -327,7 +350,7 @@ object FRFFrm: TFRFFrm
       Caption = #1059#1076#1072#1083#1080#1090#1100
       ParentShowHint = False
       ShowHint = False
-      TabOrder = 3
+      TabOrder = 4
       OnClick = DelBtnClick
     end
     object hideCB: TCheckBox
@@ -338,7 +361,7 @@ object FRFFrm: TFRFFrm
       Caption = #1057#1082#1088#1099#1090#1100
       ParentShowHint = False
       ShowHint = False
-      TabOrder = 4
+      TabOrder = 5
       OnClick = hideCBClick
     end
     object EstimatorRG: TRadioGroup
@@ -358,7 +381,7 @@ object FRFFrm: TFRFFrm
         'h2')
       ParentShowHint = False
       ShowHint = False
-      TabOrder = 5
+      TabOrder = 6
       Visible = False
       OnClick = EstimatorRGClick
     end
@@ -370,7 +393,7 @@ object FRFFrm: TFRFFrm
       Caption = #1054#1082#1085#1086
       ParentShowHint = False
       ShowHint = False
-      TabOrder = 6
+      TabOrder = 7
       OnClick = UseWndFcbClick
     end
     object WelchCB: TCheckBox
@@ -381,7 +404,7 @@ object FRFFrm: TFRFFrm
       Caption = 'Welch'
       ParentShowHint = False
       ShowHint = False
-      TabOrder = 7
+      TabOrder = 8
       Visible = False
       OnClick = WelchCBClick
     end
@@ -393,13 +416,13 @@ object FRFFrm: TFRFFrm
       Caption = #1042#1082#1083'.'
       ParentShowHint = False
       ShowHint = False
-      TabOrder = 8
+      TabOrder = 9
       OnClick = DisableCBClick
     end
     object SignalsGroupBox: TGroupBox
       Left = 2
-      Top = 386
-      Width = 236
+      Top = 265
+      Width = 237
       Height = 120
       Margins.Left = 2
       Margins.Top = 2
@@ -407,11 +430,11 @@ object FRFFrm: TFRFFrm
       Margins.Bottom = 2
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
-      TabOrder = 9
+      TabOrder = 10
       object SignalsLV: TBtnListView
         Left = 2
         Top = 15
-        Width = 232
+        Width = 233
         Height = 103
         Margins.Left = 2
         Margins.Top = 2
@@ -468,17 +491,17 @@ object FRFFrm: TFRFFrm
         'Phase')
       ParentShowHint = False
       ShowHint = False
-      TabOrder = 10
+      TabOrder = 11
       OnClick = ResTypeRGClick
     end
     object BladeGB: TGroupBox
       Left = 2
-      Top = 506
-      Width = 236
-      Height = 158
+      Top = 385
+      Width = 237
+      Height = 117
       Align = alBottom
       Caption = #1051#1086#1087#1072#1090#1082#1072
-      TabOrder = 11
+      TabOrder = 12
       object BladeLabel: TLabel
         Left = 5
         Top = 16
@@ -494,44 +517,16 @@ object FRFFrm: TFRFFrm
         Caption = #1057#1090#1072#1090#1091#1089':'
       end
       object DempfLabel: TLabel
-        Left = 88
-        Top = 55
-        Width = 50
+        Left = 128
+        Top = 54
+        Width = 82
         Height = 13
-        Caption = #1044#1077#1084#1087#1092'-'#1080#1077
-      end
-      object SnLabel: TLabel
-        Left = 89
-        Top = 16
-        Width = 16
-        Height = 13
-        Caption = 'Sn:'
-      end
-      object Label1: TLabel
-        Left = 162
-        Top = 16
-        Width = 21
-        Height = 13
-        Caption = #1042#1077#1089':'
-      end
-      object FPressLabel: TLabel
-        Left = 162
-        Top = 55
-        Width = 6
-        Height = 13
-        Caption = 'F'
-      end
-      object TurbLabel: TLabel
-        Left = 5
-        Top = 99
-        Width = 43
-        Height = 13
-        Caption = #1057#1090#1091#1087#1077#1085#1100
+        Caption = #1044#1077#1084#1087#1092#1080#1088#1086#1074#1072#1085#1080#1077
       end
       object StatusEdit: TEdit
         Left = 4
         Top = 73
-        Width = 79
+        Width = 117
         Height = 21
         Color = clWhite
         ParentShowHint = False
@@ -539,17 +534,17 @@ object FRFFrm: TFRFFrm
         TabOrder = 0
       end
       object BladeNumEdit: TEdit
-        Left = 4
+        Left = 3
         Top = 35
-        Width = 62
+        Width = 119
         Height = 21
         ParentShowHint = False
         ShowHint = False
         TabOrder = 1
       end
       object BladeSE: TSpinButton
-        Left = 68
-        Top = 34
+        Left = 127
+        Top = 35
         Width = 15
         Height = 19
         Margins.Left = 2
@@ -583,68 +578,14 @@ object FRFFrm: TFRFFrm
         OnUpClick = BladeSEUpClick
       end
       object DempfE: TEdit
-        Left = 89
-        Top = 71
-        Width = 68
+        Left = 127
+        Top = 73
+        Width = 107
         Height = 21
         Color = clWhite
         ParentShowHint = False
         ShowHint = False
         TabOrder = 3
-      end
-      object SnEdit: TEdit
-        Left = 87
-        Top = 35
-        Width = 70
-        Height = 21
-        ParentShowHint = False
-        ShowHint = False
-        TabOrder = 4
-        OnChange = SnEditChange
-        OnKeyDown = SnEditKeyDown
-      end
-      object WeightFe: TFloatEdit
-        Left = 162
-        Top = 35
-        Width = 58
-        Height = 21
-        TabOrder = 5
-        Text = '0.0'
-        OnKeyDown = SnEditKeyDown
-      end
-      object FPressFE: TFloatEdit
-        Left = 162
-        Top = 71
-        Width = 55
-        Height = 21
-        TabOrder = 6
-        Text = '0.0'
-      end
-      object StageCB: TComboBox
-        Left = 88
-        Top = 97
-        Width = 138
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        TabOrder = 7
-        Text = 'StageCB'
-        OnChange = StageCBChange
-      end
-      object TemplatesCb: TComboBox
-        Left = 86
-        Top = 128
-        Width = 140
-        Height = 21
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        TabOrder = 8
-        Text = #1064#1072#1073#1083#1086#1085' '#1086#1090#1095#1077#1090#1072
-        OnChange = StageCBChange
       end
     end
     object TrigFE: TFloatSpinEdit
@@ -655,7 +596,7 @@ object FRFFrm: TFRFFrm
       Increment = 0.100000000000000000
       ParentShowHint = False
       ShowHint = False
-      TabOrder = 12
+      TabOrder = 13
       OnChange = TrigFEChange
     end
     object HideExcelCB: TCheckBox
@@ -666,7 +607,7 @@ object FRFFrm: TFRFFrm
       Caption = #1057#1082#1088#1099#1090#1100' Excel'
       ParentShowHint = False
       ShowHint = False
-      TabOrder = 13
+      TabOrder = 14
       OnClick = HideExcelCBClick
     end
     object Frf_YX_XY_CB: TCheckBox
@@ -679,7 +620,7 @@ object FRFFrm: TFRFFrm
       ParentShowHint = False
       ShowHint = False
       State = cbChecked
-      TabOrder = 14
+      TabOrder = 15
       OnClick = Frf_YX_XY_CBClick
     end
     object useAvrCb: TCheckBox
@@ -692,87 +633,8 @@ object FRFFrm: TFRFFrm
       ParentShowHint = False
       ShowHint = False
       State = cbChecked
-      TabOrder = 15
-      OnClick = Frf_YX_XY_CBClick
-    end
-    object WndCB: TComboBox
-      Left = 130
-      Top = 262
-      Width = 86
-      Height = 21
       TabOrder = 16
-      Text = 'Rectangular'
-      Visible = False
-      OnChange = WndCBChange
-      Items.Strings = (
-        'Rectangular'
-        'Hamming'
-        'Hanning'
-        'Blackman'
-        'Flattop')
-    end
-    object useWndCb: TCheckBox
-      Left = 129
-      Top = 285
-      Width = 72
-      Height = 17
-      Caption = 'UseWnd'
-      ParentShowHint = False
-      ShowHint = False
-      TabOrder = 17
-      Visible = False
-      OnClick = useWndCbClick
-    end
-    object LoadBtn: TButton
-      Left = 5
-      Top = 128
-      Width = 66
-      Height = 16
-      Caption = #1047#1072#1075#1088#1091#1079#1080#1090#1100
-      ParentShowHint = False
-      ShowHint = False
-      TabOrder = 18
-      OnClick = LoadBtnClick
-    end
-    object FilteredSpinButton1: TFilteredSpinButton
-      Left = 103
-      Top = 162
-      Width = 20
-      Height = 25
-      DownGlyph.Data = {
-        0E010000424D0E01000000000000360000002800000009000000060000000100
-        200000000000D800000000000000000000000000000000000000008080000080
-        8000008080000080800000808000008080000080800000808000008080000080
-        8000008080000080800000808000000000000080800000808000008080000080
-        8000008080000080800000808000000000000000000000000000008080000080
-        8000008080000080800000808000000000000000000000000000000000000000
-        0000008080000080800000808000000000000000000000000000000000000000
-        0000000000000000000000808000008080000080800000808000008080000080
-        800000808000008080000080800000808000}
-      TabOrder = 19
-      UpGlyph.Data = {
-        0E010000424D0E01000000000000360000002800000009000000060000000100
-        200000000000D800000000000000000000000000000000000000008080000080
-        8000008080000080800000808000008080000080800000808000008080000080
-        8000000000000000000000000000000000000000000000000000000000000080
-        8000008080000080800000000000000000000000000000000000000000000080
-        8000008080000080800000808000008080000000000000000000000000000080
-        8000008080000080800000808000008080000080800000808000000000000080
-        8000008080000080800000808000008080000080800000808000008080000080
-        800000808000008080000080800000808000}
-      OnDownClick = ShockSBDownClick
-      OnUpClick = ShockSBUpClick
-    end
-    object ShowPeaks: TCheckBox
-      Left = 6
-      Top = 285
-      Width = 91
-      Height = 17
-      Caption = #1069#1082#1089#1090#1088#1077#1084#1091#1084#1099
-      ParentShowHint = False
-      ShowHint = False
-      TabOrder = 20
-      OnClick = ShowPeaksClick
+      OnClick = Frf_YX_XY_CBClick
     end
   end
 end
