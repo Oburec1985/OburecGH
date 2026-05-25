@@ -109,3 +109,36 @@
 2026-05-04 12:16:51.423 [DEBUG] thread=36772 TChartObjectManager.UnregisterObject manager=$00000000014DA550 object=$00000000014C3160
 2026-05-04 12:16:51.423 [DEBUG] thread=36772 TChartBaseObject.Destroy leave self=$00000000014C3160
 2026-05-04 12:16:51.423 [INFO] thread=36772 TChartObjectManager.Destroy leave self=$00000000014DA550
+2026-05-25 19:28:04.112 [INFO] thread=9288 TMainFrm.FormCreate enter form=$000000000159D7B0
+2026-05-25 19:28:04.122 [INFO] thread=9288 TChartObjectManager.Create self=$000000000158CEC0
+2026-05-25 19:28:04.122 [DEBUG] thread=9288 TChartBaseObject.SetName self=$0000000001575C50 old="TChartModel" new="ChartModel"
+2026-05-25 19:28:04.122 [DEBUG] thread=9288 TChartModel.Clear self=$0000000001575C50
+2026-05-25 19:28:04.122 [DEBUG] thread=9288 TChartBaseObject.ClearChildren self=$0000000001575C50 count=0
+2026-05-25 19:28:04.122 [DEBUG] thread=9288 TChartBaseObject.Create self=$0000000001575C50 class=TChartModel name="ChartModel"
+2026-05-25 19:28:04.123 [INFO] thread=9288 TChartObjectManager.SetRoot manager=$000000000158CEC0 old=nil new=$0000000001575C50
+2026-05-25 19:28:04.123 [DEBUG] thread=9288 TChartObjectManager.RegisterTree manager=$000000000158CEC0 object=$0000000001575C50
+2026-05-25 19:28:04.123 [DEBUG] thread=9288 TChartObjectManager.RegisterObject manager=$000000000158CEC0 object=$0000000001575C50
+2026-05-25 19:28:04.123 [INFO] thread=9288 TMainFrm.FormCreate chart=$000000000159F170 manager=$000000000158CEC0 model=$0000000001575C50
+2026-05-25 19:28:04.123 [INFO] thread=9288 TMainFrm.FormCreate renderer assigned
+2026-05-25 19:28:04.123 [INFO] thread=9288 TMainFrm.FormCreate leave title="Skeleton Test" background=FF333333
+2026-05-25 19:28:07.255 [INFO] thread=9288 btnChangeColorClick enter old_background=FF333333
+2026-05-25 19:28:07.256 [INFO] thread=9288 btnChangeColorClick new_background=FF8C7F0A
+2026-05-25 19:28:07.256 [INFO] thread=9288 btnChangeColorClick leave
+2026-05-25 19:28:07.832 [INFO] thread=9288 btnChangeColorClick enter old_background=FF8C7F0A
+2026-05-25 19:28:07.832 [INFO] thread=9288 btnChangeColorClick new_background=FF97C4A9
+2026-05-25 19:28:07.833 [INFO] thread=9288 btnChangeColorClick leave
+2026-05-25 19:28:07.993 [INFO] thread=9288 btnChangeColorClick enter old_background=FF97C4A9
+2026-05-25 19:28:07.993 [INFO] thread=9288 btnChangeColorClick new_background=FFB716A5
+2026-05-25 19:28:07.993 [INFO] thread=9288 btnChangeColorClick leave
+2026-05-25 19:28:08.120 [INFO] thread=9288 btnChangeColorClick enter old_background=FFB716A5
+2026-05-25 19:28:08.120 [INFO] thread=9288 btnChangeColorClick new_background=FFD821CB
+2026-05-25 19:28:08.120 [INFO] thread=9288 btnChangeColorClick leave
+2026-05-25 19:28:08.264 [INFO] thread=9288 btnChangeColorClick enter old_background=FFD821CB
+2026-05-25 19:28:08.264 [INFO] thread=9288 btnChangeColorClick new_background=FF9A4EB2
+2026-05-25 19:28:08.264 [INFO] thread=9288 btnChangeColorClick leave
+2026-05-25 19:28:09.559 [INFO] thread=9288 TChartObjectManager.Destroy enter self=$000000000158CEC0 root=$0000000001575C50 count=1
+2026-05-25 19:28:09.559 [DEBUG] thread=9288 TChartBaseObject.Destroy enter self=$0000000001575C50 class=TChartModel name="ChartModel" children=0 parent=nil manager=$000000000158CEC0
+2026-05-25 19:28:09.559 [DEBUG] thread=9288 TChartBaseObject.ClearChildren self=$0000000001575C50 count=0
+2026-05-25 19:28:09.559 [DEBUG] thread=9288 TChartObjectManager.UnregisterObject manager=$000000000158CEC0 object=$0000000001575C50
+2026-05-25 19:28:09.559 [DEBUG] thread=9288 TChartBaseObject.Destroy leave self=$0000000001575C50
+2026-05-25 19:28:09.559 [INFO] thread=9288 TChartObjectManager.Destroy leave self=$000000000158CEC0

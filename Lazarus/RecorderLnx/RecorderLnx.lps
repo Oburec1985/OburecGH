@@ -8,9 +8,9 @@
       <Unit>
         <Filename Value="RecorderLnx.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="4"/>
         <CursorPos X="42" Y="19"/>
-        <UsageCount Value="22"/>
+        <UsageCount Value="26"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -20,32 +20,46 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <IsVisibleTab Value="True"/>
-        <TopLine Value="170"/>
-        <CursorPos X="79" Y="181"/>
-        <UsageCount Value="22"/>
+        <TopLine Value="600"/>
+        <CursorPos X="78" Y="621"/>
+        <UsageCount Value="26"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderStateMachine.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="2"/>
         <TopLine Value="25"/>
         <CursorPos X="65" Y="47"/>
-        <UsageCount Value="22"/>
+        <UsageCount Value="26"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderRunControlSettings.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="3"/>
         <TopLine Value="171"/>
         <CursorPos X="55" Y="116"/>
-        <UsageCount Value="22"/>
+        <UsageCount Value="26"/>
         <Loaded Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="Core\uRecorderFormModel.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="146"/>
+        <CursorPos X="94" Y="169"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI\uFormPagesDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="21"/>
+      </Unit>
     </Units>
-    <JumpHistory HistoryIndex="5">
+    <JumpHistory HistoryIndex="15">
       <Position>
         <Filename Value="Core\uRecorderRunControlSettings.pas"/>
         <Caret Line="6" Column="58"/>
@@ -68,7 +82,47 @@
       </Position>
       <Position>
         <Filename Value="UI\uMainForm.pas"/>
-        <Caret Line="23" Column="40" TopLine="104"/>
+        <Caret Line="162" Column="32" TopLine="140"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="107" Column="30" TopLine="89"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="162" Column="22" TopLine="130"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="173" Column="22" TopLine="141"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="183" Column="22" TopLine="151"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="193" Column="22" TopLine="161"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="204" Column="22" TopLine="172"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="350" Column="3" TopLine="316"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="107" Column="15" TopLine="89"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="349" Column="8" TopLine="323"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="76" Column="15" TopLine="57"/>
       </Position>
     </JumpHistory>
     <RunParams>

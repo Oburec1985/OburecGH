@@ -24,27 +24,22 @@ unit uMainForm;
 interface
 
 uses
-  Classes, SysUtils, Types, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  Grids, Buttons, ImgList,
-  uRecorderStateMachine, uRecorderRunControlSettings, uRecorderUiTestData;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
+  Grids, Buttons, ImgList, ComCtrls,
+  uRecorderStateMachine, uRecorderRunControlSettings, uRecorderFormModel,
+  uRecorderUiTestData, uFormPagesDialog;
 
 type
-  TRecorderCommandIcon = (
-    rciSettings,
-    rciSave,
-    rciStop,
-    rciPreview,
-    rciRecord,
-    rciTrigger
-  );
-
   { TMainForm }
 
   TMainForm = class(TForm)
     btnActiveForm: TButton;
+    btnAddComponent: TButton;
+    btnAddPage: TButton;
     btnAutoForm: TButton;
     btnBaseForm: TButton;
     btnClearSearch: TButton;
+    btnDeleteComponent: TButton;
     btnPreview: TSpeedButton;
     btnRecord: TSpeedButton;
     btnSaveConfig: TSpeedButton;
@@ -66,6 +61,10 @@ type
     sgFormular: TStringGrid;
     SplitterLog: TSplitter;
     procedure btnClearSearchClick(Sender: TObject);
+    procedure btnAddComponentClick(Sender: TObject);
+    procedure btnDeleteComponentClick(Sender: TObject);
+    procedure btnFormPagesClick(Sender: TObject);
+    procedure btnPageClick(Sender: TObject);
     procedure btnPreviewClick(Sender: TObject);
     procedure btnRecordClick(Sender: TObject);
     procedure btnSaveConfigClick(Sender: TObject);
@@ -75,8 +74,20 @@ type
     procedure edTagSearchChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure pnToolbarClick(Sender: TObject);
+    procedure sgFormularSelectCell(Sender: TObject; aCol, aRow: Integer;
+      var CanSelect: Boolean);
   private
+    fComponentFactory: TRecorderComponentFactory;
+    fFormFactory: TRecorderFormFactory;
+    fFormManager: TRecorderFormManager;
+    fNextComponentNo: Integer;
+    fNextPageNo: Integer;
+    fEditorCanvas: TPanel;
+    fEditorShell: TPanel;
+    fEditorToolbar: TPanel;
+    fPageControl: TPageControl;
+    fSelectedComponentRow: Integer;
+    fSyncingPages: Boolean;
     fStateMachine: TRecorderStateMachine;
     fRunSettings: TRecorderRunControlSettings;
     fProjectConfigDir: string;
@@ -85,11 +96,34 @@ type
     { Добавляет строку в журнал с локальным временем. }
     procedure AddLog(const AMessage: string);
 
-    { Добавляет bitmap-иконку в список ресурсов правого пульта. }
-    function AddCommandImage(AIcon: TRecorderCommandIcon): Integer;
+    { Создает начальную модель формуляров, которой управляет главный экран. }
+    procedure InitializeFormPages;
 
-    { Назначает кнопке glyph из списка ресурсов формы. }
-    procedure AssignCommandGlyph(AButton: TSpeedButton; AImageIndex: Integer);
+    { Добавляет страницу в модель и делает ее активной, если нужно. }
+    function AddPageToModel(const AName, ATitle: string): TRecorderFormPage;
+
+    { Обновляет верхние вкладки формуляров по текущему менеджеру. }
+    procedure RefreshPageButtons;
+
+    { Создает верхний PageControl формуляров. Фиксированные кнопки .lfm остаются
+      только как ранняя дизайнерская заготовка и скрываются при запуске. }
+    procedure EnsurePageControl;
+
+    { Реагирует на выбор вкладки формуляра пользователем. }
+    procedure PageControlChange(Sender: TObject);
+
+    { Отображает компоненты активной страницы в центральной таблице. }
+    procedure RenderActivePage;
+
+    { Создает раннюю область редактора мнемосхемы с тулбаром и пустым полотном. }
+    procedure EnsureEditorSurface;
+
+    { Переключает центральную область между табличным просмотром модели и
+      заготовкой редактора мнемосхемы. }
+    procedure ShowEditorSurface(AVisible: Boolean);
+
+    { Добавляет на активную страницу модельный компонент TagValue. }
+    procedure AddTagValueComponentToActivePage;
 
     { Создает dev-структуру config/projects/default и дефолтный run-control.ini. }
     procedure EnsureDevConfig;
@@ -144,16 +178,23 @@ procedure TMainForm.FormCreate(Sender: TObject);
 begin
   Caption := 'RecorderLnx - config/projects/default';
 
+  fSelectedComponentRow := -1;
   fStateMachine := TRecorderStateMachine.Create;
   fStateMachine.OnStateChanged := @StateMachineStateChanged;
 
   fRunSettings := TRecorderRunControlSettings.Create;
+  fComponentFactory := TRecorderComponentFactory.Create;
+  fComponentFactory.RegisterDefaultComponents;
+  fFormFactory := TRecorderFormFactory.Create(fComponentFactory);
+  fFormManager := TRecorderFormManager.Create;
   fProjectConfigDir := IncludeTrailingPathDelimiter(GetDevProjectDir) +
     CDefaultProjectConfigDir;
   fRunControlFileName := IncludeTrailingPathDelimiter(fProjectConfigDir) + CRunControlFileName;
 
   SetupCommandButtons;
-  FillPlaceholderFormular(sgFormular);
+  EnsurePageControl;
+  EnsureEditorSurface;
+  InitializeFormPages;
   RebuildTagList('');
   EnsureDevConfig;
   LoadRunSettings;
@@ -163,13 +204,112 @@ end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(fFormManager);
+  FreeAndNil(fFormFactory);
+  FreeAndNil(fComponentFactory);
   FreeAndNil(fRunSettings);
   FreeAndNil(fStateMachine);
 end;
 
-procedure TMainForm.pnToolbarClick(Sender: TObject);
+procedure TMainForm.sgFormularSelectCell(Sender: TObject; aCol, aRow: Integer;
+  var CanSelect: Boolean);
 begin
+  if aRow > 0 then
+    fSelectedComponentRow := aRow
+  else
+    fSelectedComponentRow := -1;
+end;
 
+procedure TMainForm.btnPageClick(Sender: TObject);
+var
+  lPageIndex: Integer;
+begin
+  if not (Sender is TButton) then
+    Exit;
+
+  lPageIndex := TButton(Sender).Tag;
+  if (lPageIndex < 0) or (lPageIndex >= fFormManager.PageCount) then
+    Exit;
+
+  fFormManager.SetActivePageById(fFormManager.Pages[lPageIndex].Id);
+  RefreshPageButtons;
+  RenderActivePage;
+end;
+
+procedure TMainForm.PageControlChange(Sender: TObject);
+var
+  lPageIndex: Integer;
+begin
+  if fSyncingPages or (fPageControl = nil) then
+    Exit;
+
+  lPageIndex := fPageControl.ActivePageIndex;
+  if (lPageIndex < 0) or (lPageIndex >= fFormManager.PageCount) then
+    Exit;
+
+  fFormManager.SetActivePageById(fFormManager.Pages[lPageIndex].Id);
+  RenderActivePage;
+end;
+
+procedure TMainForm.btnFormPagesClick(Sender: TObject);
+var
+  lDialog: TFormPagesDialog;
+begin
+  try
+    lDialog := TFormPagesDialog.CreateDialog(Self, fFormManager, fFormFactory,
+      fNextPageNo);
+    try
+      if lDialog.ShowModal in [mrOk, mrCancel] then
+      begin
+        fNextPageNo := lDialog.NextPageNo;
+        RefreshPageButtons;
+        RenderActivePage;
+        AddLog('Form pages dialog closed.');
+      end;
+    finally
+      lDialog.Free;
+    end;
+  except
+    on E: Exception do
+      LogCommandError('Form pages', E);
+  end;
+end;
+
+procedure TMainForm.btnAddComponentClick(Sender: TObject);
+begin
+  try
+    AddTagValueComponentToActivePage;
+    RenderActivePage;
+  except
+    on E: Exception do
+      LogCommandError('Add component', E);
+  end;
+end;
+
+procedure TMainForm.btnDeleteComponentClick(Sender: TObject);
+var
+  lPage: TRecorderFormPage;
+  lComponentIndex: Integer;
+  lComponentId: string;
+begin
+  try
+    lPage := fFormManager.ActivePage;
+    if lPage = nil then
+      Exit;
+
+    lComponentIndex := fSelectedComponentRow - 1;
+    if (lComponentIndex < 0) or (lComponentIndex >= lPage.ComponentCount) then
+      Exit;
+
+    lComponentId := lPage.Components[lComponentIndex].Id;
+    lPage.DeleteComponent(lComponentIndex);
+    fSelectedComponentRow := -1;
+    AddLog('Form component deleted: ' + lComponentId);
+    RenderActivePage;
+  except
+    on E: Exception do
+      LogCommandError('Delete component', E);
+  end;
 end;
 
 procedure TMainForm.btnPreviewClick(Sender: TObject);
@@ -244,89 +384,261 @@ begin
   mmLog.Lines.Add(FormatDateTime('hh:nn:ss.zzz', Now) + ' ' + AMessage);
 end;
 
-function TMainForm.AddCommandImage(AIcon: TRecorderCommandIcon): Integer;
+procedure TMainForm.InitializeFormPages;
 var
-  lBitmap: TBitmap;
-  lPoints: array[0..2] of TPoint;
+  lPage: TRecorderFormPage;
 begin
-  lBitmap := TBitmap.Create;
+  fNextPageNo := 0;
+  fNextComponentNo := 0;
+
+  Inc(fNextPageNo);
+  lPage := AddPageToModel('DigitalForm', 'Digital form');
+  fFormManager.SetActivePageById(lPage.Id);
+  AddTagValueComponentToActivePage;
+
+  Inc(fNextPageNo);
+  AddPageToModel('BasePage', 'Base page');
+
+  Inc(fNextPageNo);
+  AddPageToModel('Automatic', 'Automatic');
+
+  RefreshPageButtons;
+  RenderActivePage;
+end;
+
+function TMainForm.AddPageToModel(const AName,
+  ATitle: string): TRecorderFormPage;
+begin
+  Result := fFormFactory.CreateBlankPage(AName, AName, ATitle);
   try
-    lBitmap.SetSize(24, 24);
-    lBitmap.PixelFormat := pf24bit;
-    lBitmap.TransparentColor := clFuchsia;
-    lBitmap.Transparent := True;
-
-    lBitmap.Canvas.Brush.Color := clFuchsia;
-    lBitmap.Canvas.FillRect(Rect(0, 0, 24, 24));
-    lBitmap.Canvas.Pen.Color := clBlack;
-    lBitmap.Canvas.Pen.Width := 2;
-    lBitmap.Canvas.Brush.Color := clBlack;
-
-    case AIcon of
-      rciSettings:
-        begin
-          lBitmap.Canvas.Pen.Color := clGray;
-          lBitmap.Canvas.Ellipse(8, 8, 16, 16);
-          lBitmap.Canvas.Line(12, 3, 12, 7);
-          lBitmap.Canvas.Line(12, 17, 12, 21);
-          lBitmap.Canvas.Line(3, 12, 7, 12);
-          lBitmap.Canvas.Line(17, 12, 21, 12);
-          lBitmap.Canvas.Line(5, 5, 8, 8);
-          lBitmap.Canvas.Line(16, 16, 19, 19);
-          lBitmap.Canvas.Line(19, 5, 16, 8);
-          lBitmap.Canvas.Line(8, 16, 5, 19);
-          lBitmap.Canvas.Brush.Color := clSilver;
-          lBitmap.Canvas.Ellipse(10, 10, 14, 14);
-        end;
-      rciSave:
-        begin
-          lBitmap.Canvas.Brush.Color := clSkyBlue;
-          lBitmap.Canvas.Rectangle(5, 4, 19, 20);
-          lBitmap.Canvas.Brush.Color := clWhite;
-          lBitmap.Canvas.Rectangle(8, 6, 16, 10);
-          lBitmap.Canvas.Brush.Color := clNavy;
-          lBitmap.Canvas.Rectangle(8, 14, 16, 19);
-        end;
-      rciStop:
-        begin
-          lBitmap.Canvas.Brush.Color := clBlack;
-          lBitmap.Canvas.Rectangle(8, 8, 16, 16);
-        end;
-      rciPreview:
-        begin
-          lBitmap.Canvas.Brush.Color := clNavy;
-          lPoints[0] := Point(8, 6);
-          lPoints[1] := Point(18, 12);
-          lPoints[2] := Point(8, 18);
-          lBitmap.Canvas.Polygon(lPoints);
-        end;
-      rciRecord:
-        begin
-          lBitmap.Canvas.Brush.Color := clRed;
-          lBitmap.Canvas.Pen.Color := clMaroon;
-          lBitmap.Canvas.Ellipse(7, 7, 17, 17);
-        end;
-      rciTrigger:
-        begin
-          lBitmap.Canvas.Pen.Color := clBlue;
-          lBitmap.Canvas.Pen.Width := 2;
-          lBitmap.Canvas.Line(3, 15, 7, 15);
-          lBitmap.Canvas.Line(7, 15, 9, 8);
-          lBitmap.Canvas.Line(9, 8, 13, 19);
-          lBitmap.Canvas.Line(13, 19, 16, 10);
-          lBitmap.Canvas.Line(16, 10, 21, 10);
-        end;
-    end;
-
-    Result := ilCommandButtons.AddMasked(lBitmap, clFuchsia);
-  finally
-    lBitmap.Free;
+    fFormManager.AddPage(Result);
+  except
+    Result.Free;
+    raise;
   end;
 end;
 
-procedure TMainForm.AssignCommandGlyph(AButton: TSpeedButton; AImageIndex: Integer);
+procedure TMainForm.EnsurePageControl;
 begin
-  ilCommandButtons.GetBitmap(AImageIndex, AButton.Glyph);
+  if fPageControl <> nil then
+    Exit;
+
+  btnActiveForm.Visible := False;
+  btnBaseForm.Visible := False;
+  btnAutoForm.Visible := False;
+
+  fPageControl := TPageControl.Create(Self);
+  fPageControl.Parent := pnToolbar;
+  fPageControl.Left := 66;
+  fPageControl.Top := 4;
+  fPageControl.Width := 390;
+  fPageControl.Height := 38;
+  fPageControl.Anchors := [akLeft, akTop, akRight];
+  fPageControl.TabOrder := 0;
+  fPageControl.OnChange := @PageControlChange;
+
+  btnAddComponent.Left := fPageControl.Left + fPageControl.Width + 28;
+  btnDeleteComponent.Left := btnAddComponent.Left + btnAddComponent.Width + 6;
+end;
+
+procedure TMainForm.RefreshPageButtons;
+var
+  I: Integer;
+  lPage: TRecorderFormPage;
+  lTab: TTabSheet;
+  lActiveIndex: Integer;
+begin
+  EnsurePageControl;
+
+  fSyncingPages := True;
+  try
+    while fPageControl.PageCount < fFormManager.PageCount do
+    begin
+      lTab := TTabSheet.Create(fPageControl);
+      lTab.PageControl := fPageControl;
+    end;
+
+    while fPageControl.PageCount > fFormManager.PageCount do
+      fPageControl.Pages[fPageControl.PageCount - 1].Free;
+
+    lActiveIndex := -1;
+    for I := 0 to fFormManager.PageCount - 1 do
+    begin
+      lPage := fFormManager.Pages[I];
+      fPageControl.Pages[I].Caption := lPage.Title;
+      fPageControl.Pages[I].Tag := I;
+
+      if lPage = fFormManager.ActivePage then
+        lActiveIndex := I;
+    end;
+
+    if lActiveIndex >= 0 then
+      fPageControl.ActivePageIndex := lActiveIndex
+    else if fPageControl.PageCount > 0 then
+      fPageControl.ActivePageIndex := 0;
+  finally
+    fSyncingPages := False;
+  end;
+
+  btnAddComponent.Enabled := fFormManager.ActivePage <> nil;
+  btnDeleteComponent.Enabled := (fFormManager.ActivePage <> nil) and
+    (fFormManager.ActivePage.ComponentCount > 0);
+end;
+
+procedure TMainForm.RenderActivePage;
+var
+  lPage: TRecorderFormPage;
+  I: Integer;
+  lComponent: TRecorderVisualComponent;
+  lBounds: TRecorderRect;
+begin
+  lPage := fFormManager.ActivePage;
+  fSelectedComponentRow := -1;
+
+  sgFormular.ColCount := 6;
+  sgFormular.FixedRows := 1;
+  sgFormular.Cells[0, 0] := 'Type';
+  sgFormular.Cells[1, 0] := 'Id';
+  sgFormular.Cells[2, 0] := 'Name';
+  sgFormular.Cells[3, 0] := 'Tag';
+  sgFormular.Cells[4, 0] := 'Bounds';
+  sgFormular.Cells[5, 0] := 'Text/Format';
+
+  if lPage = nil then
+  begin
+    ShowEditorSurface(False);
+    sgFormular.RowCount := 1;
+    Caption := 'RecorderLnx - config/projects/default';
+    Exit;
+  end;
+
+  Caption := 'RecorderLnx - config/projects/default - ' + lPage.Title;
+  ShowEditorSurface(lPage.ComponentCount = 0);
+  if fEditorShell.Visible then
+  begin
+    RefreshPageButtons;
+    Exit;
+  end;
+
+  sgFormular.RowCount := lPage.ComponentCount + 1;
+
+  for I := 0 to lPage.ComponentCount - 1 do
+  begin
+    lComponent := lPage.Components[I];
+    lBounds := lComponent.Bounds;
+    sgFormular.Cells[0, I + 1] := lComponent.TypeId;
+    sgFormular.Cells[1, I + 1] := lComponent.Id;
+    sgFormular.Cells[2, I + 1] := lComponent.Name;
+    sgFormular.Cells[3, I + 1] := lComponent.TagName;
+    sgFormular.Cells[4, I + 1] := Format('%d,%d %dx%d',
+      [lBounds.Left, lBounds.Top, lBounds.Width, lBounds.Height]);
+
+    if lComponent is TRecorderStaticTextComponent then
+      sgFormular.Cells[5, I + 1] := TRecorderStaticTextComponent(lComponent).Text
+    else if lComponent is TRecorderTagValueComponent then
+      sgFormular.Cells[5, I + 1] := TRecorderTagValueComponent(lComponent).DisplayFormat
+    else
+      sgFormular.Cells[5, I + 1] := '';
+  end;
+
+  RefreshPageButtons;
+end;
+
+procedure TMainForm.AddTagValueComponentToActivePage;
+var
+  lPage: TRecorderFormPage;
+  lComponent: TRecorderTagValueComponent;
+begin
+  lPage := fFormManager.ActivePage;
+  if lPage = nil then
+    raise ERecorderFormError.Create('Cannot add component without active page');
+
+  Inc(fNextComponentNo);
+  lComponent := TRecorderTagValueComponent(
+    fComponentFactory.CreateComponent(TRecorderTagValueComponent.TypeId));
+  try
+    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
+    lComponent.Name := Format('TagValue%d', [fNextComponentNo]);
+    lComponent.TagName := 'MemTag';
+    lComponent.SetBounds(8, 8 + lPage.ComponentCount * 28, 160, 24);
+    lPage.AddComponent(lComponent);
+  except
+    lComponent.Free;
+    raise;
+  end;
+
+  AddLog('Form component added: ' + lComponent.Id);
+end;
+
+procedure TMainForm.EnsureEditorSurface;
+var
+  lButton: TSpeedButton;
+begin
+  if fEditorShell <> nil then
+    Exit;
+
+  fEditorShell := TPanel.Create(Self);
+  fEditorShell.Parent := pnMain;
+  fEditorShell.Align := alClient;
+  fEditorShell.BevelOuter := bvNone;
+  fEditorShell.Visible := False;
+
+  fEditorToolbar := TPanel.Create(Self);
+  fEditorToolbar.Parent := fEditorShell;
+  fEditorToolbar.Align := alTop;
+  fEditorToolbar.Height := 32;
+  fEditorToolbar.BevelOuter := bvLowered;
+
+  lButton := TSpeedButton.Create(Self);
+  lButton.Parent := fEditorToolbar;
+  lButton.Left := 4;
+  lButton.Top := 4;
+  lButton.Width := 24;
+  lButton.Height := 24;
+  lButton.Caption := '\';
+  lButton.Hint := 'Edit mnemonic';
+  lButton.ShowHint := True;
+
+  lButton := TSpeedButton.Create(Self);
+  lButton.Parent := fEditorToolbar;
+  lButton.Left := 34;
+  lButton.Top := 4;
+  lButton.Width := 24;
+  lButton.Height := 24;
+  lButton.Caption := '+';
+  lButton.Hint := 'Add component';
+  lButton.ShowHint := True;
+  lButton.OnClick := @btnAddComponentClick;
+
+  lButton := TSpeedButton.Create(Self);
+  lButton.Parent := fEditorToolbar;
+  lButton.Left := 64;
+  lButton.Top := 4;
+  lButton.Width := 24;
+  lButton.Height := 24;
+  lButton.Caption := '-';
+  lButton.Hint := 'Delete selected component';
+  lButton.ShowHint := True;
+  lButton.OnClick := @btnDeleteComponentClick;
+
+  fEditorCanvas := TPanel.Create(Self);
+  fEditorCanvas.Parent := fEditorShell;
+  fEditorCanvas.Align := alClient;
+  fEditorCanvas.BevelOuter := bvNone;
+  fEditorCanvas.Color := clWhite;
+  fEditorCanvas.ParentBackground := False;
+end;
+
+procedure TMainForm.ShowEditorSurface(AVisible: Boolean);
+begin
+  EnsureEditorSurface;
+  fEditorShell.Visible := AVisible;
+  sgFormular.Visible := not AVisible;
+
+  if AVisible then
+    fEditorShell.BringToFront
+  else
+    sgFormular.BringToFront;
 end;
 
 procedure TMainForm.EnsureDevConfig;
@@ -399,52 +711,32 @@ begin
 end;
 
 procedure TMainForm.SetupCommandButtons;
-var
-  lSettingsImage: Integer;
-  lSaveImage: Integer;
-  lStopImage: Integer;
-  lPreviewImage: Integer;
-  lRecordImage: Integer;
-  lTriggerImage: Integer;
 begin
-  ilCommandButtons.Clear;
-  ilCommandButtons.Width := 24;
-  ilCommandButtons.Height := 24;
-
-  lSettingsImage := AddCommandImage(rciSettings);
-  lSaveImage := AddCommandImage(rciSave);
-  lStopImage := AddCommandImage(rciStop);
-  lPreviewImage := AddCommandImage(rciPreview);
-  lRecordImage := AddCommandImage(rciRecord);
-  lTriggerImage := AddCommandImage(rciTrigger);
+  btnAddPage.Caption := '[]';
+  btnAddPage.Hint := 'Formulars';
+  btnAddPage.ShowHint := True;
 
   btnSettings.Caption := '';
-  AssignCommandGlyph(btnSettings, lSettingsImage);
   btnSettings.Hint := 'Settings';
   btnSettings.ShowHint := True;
 
-  btnSaveConfig.Caption := '';
-  AssignCommandGlyph(btnSaveConfig, lSaveImage);
+  btnSaveConfig.Caption := 'Save';
   btnSaveConfig.Hint := 'Save current config';
   btnSaveConfig.ShowHint := True;
 
   btnStop.Caption := '';
-  AssignCommandGlyph(btnStop, lStopImage);
   btnStop.Hint := 'Stop';
   btnStop.ShowHint := True;
 
   btnPreview.Caption := '';
-  AssignCommandGlyph(btnPreview, lPreviewImage);
   btnPreview.Hint := 'View';
   btnPreview.ShowHint := True;
 
   btnRecord.Caption := '';
-  AssignCommandGlyph(btnRecord, lRecordImage);
   btnRecord.Hint := 'Record';
   btnRecord.ShowHint := True;
 
-  btnTrigger.Caption := '';
-  AssignCommandGlyph(btnTrigger, lTriggerImage);
+  btnTrigger.Caption := 'Trigger';
   btnTrigger.Hint := 'Trigger / condition met';
   btnTrigger.ShowHint := True;
 
