@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="12"/>
+    <BuildModes Active="Default"/>
+    <Units>
+      <Unit>
+        <Filename Value="RecorderLnx.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="3"/>
+        <CursorPos X="42" Y="19"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI\uMainForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="MainForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="170"/>
+        <CursorPos X="79" Y="181"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core\uRecorderStateMachine.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="25"/>
+        <CursorPos X="65" Y="47"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core\uRecorderRunControlSettings.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="171"/>
+        <CursorPos X="55" Y="116"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="5">
+      <Position>
+        <Filename Value="Core\uRecorderRunControlSettings.pas"/>
+        <Caret Line="6" Column="58"/>
+      </Position>
+      <Position>
+        <Filename Value="Core\uRecorderRunControlSettings.pas"/>
+        <Caret Line="21" Column="60"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="24" Column="59"/>
+      </Position>
+      <Position>
+        <Filename Value="Core\uRecorderStateMachine.pas"/>
+        <Caret Line="165" Column="59" TopLine="145"/>
+      </Position>
+      <Position>
+        <Filename Value="Core\uRecorderStateMachine.pas"/>
+        <Caret Line="170" Column="90" TopLine="145"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="23" Column="40" TopLine="104"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>

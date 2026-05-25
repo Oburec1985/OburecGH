@@ -1,0 +1,9 @@
+lib/
+backup/
+*.bak
+*.ppu
+*.o
+*.or
+*.res
+*.compiled
+*.dbg

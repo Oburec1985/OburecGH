@@ -1,0 +1,242 @@
+object MainForm: TMainForm
+  Left = 160
+  Height = 720
+  Top = 90
+  Width = 1064
+  Caption = 'RecorderLnx'
+  ClientHeight = 720
+  ClientWidth = 1064
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  object pnToolbar: TPanel
+    Left = 0
+    Height = 44
+    Top = 0
+    Width = 1064
+    Align = alTop
+    BevelOuter = bvLowered
+    ClientHeight = 44
+    ClientWidth = 1064
+    TabOrder = 0
+    OnClick = pnToolbarClick
+    object btnActiveForm: TButton
+      Left = 12
+      Height = 30
+      Top = 7
+      Width = 132
+      Caption = 'Digital form'
+      TabOrder = 0
+    end
+    object btnBaseForm: TButton
+      Left = 150
+      Height = 30
+      Top = 7
+      Width = 116
+      Caption = 'Base page'
+      TabOrder = 1
+    end
+    object btnAutoForm: TButton
+      Left = 272
+      Height = 30
+      Top = 7
+      Width = 128
+      Caption = 'Automatic'
+      TabOrder = 2
+    end
+  end
+  object pnRight: TPanel
+    Left = 874
+    Height = 676
+    Top = 44
+    Width = 190
+    Align = alRight
+    BevelOuter = bvLowered
+    ClientHeight = 676
+    ClientWidth = 190
+    TabOrder = 1
+    object pnRightStatus: TPanel
+      Left = 1
+      Height = 72
+      Top = 1
+      Width = 188
+      Align = alTop
+      BevelOuter = bvNone
+      ClientHeight = 72
+      ClientWidth = 188
+      Color = clSilver
+      ParentBackground = False
+      ParentColor = False
+      TabOrder = 0
+      object lbState: TLabel
+        Left = 0
+        Height = 15
+        Top = 0
+        Width = 188
+        Align = alTop
+        Alignment = taCenter
+        Caption = 'Stop'
+        Font.Style = [fsBold]
+        ParentColor = False
+        ParentFont = False
+      end
+      object lbTime: TLabel
+        Left = 0
+        Height = 15
+        Top = 15
+        Width = 188
+        Align = alTop
+        Alignment = taCenter
+        Caption = '00:00:00'
+        ParentColor = False
+      end
+    end
+    object pnRightCommands: TPanel
+      Left = 1
+      Height = 132
+      Top = 73
+      Width = 188
+      Align = alTop
+      BevelOuter = bvNone
+      ClientHeight = 132
+      ClientWidth = 188
+      TabOrder = 1
+      object btnSettings: TSpeedButton
+        Left = 8
+        Height = 30
+        Top = 8
+        Width = 52
+        ShowHint = True
+        ParentShowHint = False
+        OnClick = btnSettingsClick
+      end
+      object btnSaveConfig: TSpeedButton
+        Left = 68
+        Height = 30
+        Top = 8
+        Width = 52
+        ShowHint = True
+        ParentShowHint = False
+        OnClick = btnSaveConfigClick
+      end
+      object btnStop: TSpeedButton
+        Left = 8
+        Height = 30
+        Top = 48
+        Width = 52
+        ShowHint = True
+        ParentShowHint = False
+        OnClick = btnStopClick
+      end
+      object btnPreview: TSpeedButton
+        Left = 68
+        Height = 30
+        Top = 48
+        Width = 52
+        ShowHint = True
+        ParentShowHint = False
+        OnClick = btnPreviewClick
+      end
+      object btnRecord: TSpeedButton
+        Left = 128
+        Height = 30
+        Top = 48
+        Width = 52
+        ShowHint = True
+        ParentShowHint = False
+        OnClick = btnRecordClick
+      end
+      object btnTrigger: TSpeedButton
+        Left = 8
+        Height = 30
+        Top = 88
+        Width = 172
+        ShowHint = True
+        ParentShowHint = False
+        OnClick = btnTriggerClick
+      end
+    end
+    object pnTagSearch: TPanel
+      Left = 1
+      Height = 36
+      Top = 205
+      Width = 188
+      Align = alTop
+      BevelOuter = bvNone
+      ClientHeight = 36
+      ClientWidth = 188
+      TabOrder = 2
+      object edTagSearch: TEdit
+        Left = 8
+        Height = 23
+        Top = 4
+        Width = 142
+        TabOrder = 0
+        OnChange = edTagSearchChange
+      end
+      object btnClearSearch: TButton
+        Left = 156
+        Height = 28
+        Top = 4
+        Width = 24
+        Caption = 'X'
+        TabOrder = 1
+        OnClick = btnClearSearchClick
+      end
+    end
+    object lbTags: TListBox
+      Left = 1
+      Height = 434
+      Top = 241
+      Width = 188
+      Align = alClient
+      ItemHeight = 0
+      TabOrder = 3
+    end
+  end
+  object pnMain: TPanel
+    Left = 0
+    Height = 676
+    Top = 44
+    Width = 874
+    Align = alClient
+    BevelOuter = bvNone
+    ClientHeight = 676
+    ClientWidth = 874
+    TabOrder = 2
+    object SplitterLog: TSplitter
+      Cursor = crVSplit
+      Left = 0
+      Height = 5
+      Top = 551
+      Width = 874
+      Align = alBottom
+      ResizeAnchor = akBottom
+    end
+    object mmLog: TMemo
+      Left = 0
+      Height = 120
+      Top = 556
+      Width = 874
+      Align = alBottom
+      ReadOnly = True
+      ScrollBars = ssAutoVertical
+      TabOrder = 0
+    end
+    object sgFormular: TStringGrid
+      Left = 0
+      Height = 551
+      Top = 0
+      Width = 874
+      Align = alClient
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing]
+      RowCount = 2
+      TabOrder = 1
+    end
+  end
+  object ilCommandButtons: TImageList
+    Height = 24
+    Width = 24
+    Left = 448
+    Top = 96
+  end
+end
