@@ -211,8 +211,7 @@ end;
 
 function TFormPagesDialog.PageDescription(APage: TRecorderFormPage): string;
 begin
-  if (APage.Id = 'DigitalForm') or (APage.Id = 'BasePage') or
-    (APage.Id = 'Automatic') then
+  if (APage.Id = 'DigitalForm') or (APage.Id = 'BasePage') then
     Result := 'Built-in page'
   else
     Result := 'Mnemonic page';

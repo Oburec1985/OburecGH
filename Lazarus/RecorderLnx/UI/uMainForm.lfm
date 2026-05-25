@@ -1,106 +1,63 @@
 object MainForm: TMainForm
-  Left = 160
-  Height = 720
-  Top = 90
-  Width = 1064
+  Left = 134
+  Height = 1050
+  Top = 169
+  Width = 1596
   Caption = 'RecorderLnx'
-  ClientHeight = 720
-  ClientWidth = 1064
+  ClientHeight = 1050
+  ClientWidth = 1596
+  DesignTimePPI = 144
+  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   object pnToolbar: TPanel
     Left = 0
-    Height = 44
+    Height = 66
     Top = 0
-    Width = 1064
+    Width = 1596
     Align = alTop
     BevelOuter = bvLowered
-    ClientHeight = 44
-    ClientWidth = 1064
+    ClientHeight = 66
+    ClientWidth = 1596
     TabOrder = 0
-    object btnActiveForm: TButton
-      Left = 68
-      Height = 30
-      Top = 7
-      Width = 132
-      Caption = 'Digital form'
-      OnClick = btnPageClick
-      TabOrder = 0
-    end
-    object btnBaseForm: TButton
-      Left = 206
-      Height = 30
-      Top = 7
-      Width = 116
-      Caption = 'Base page'
-      OnClick = btnPageClick
-      TabOrder = 1
-    end
-    object btnAutoForm: TButton
-      Left = 328
-      Height = 30
-      Top = 7
-      Width = 128
-      Caption = 'Automatic'
-      OnClick = btnPageClick
-      TabOrder = 2
-    end
     object btnAddPage: TButton
-      Left = 8
-      Height = 34
-      Top = 5
-      Width = 34
+      Left = 12
+      Height = 51
+      Top = 8
+      Width = 51
       Caption = '[]'
+      TabOrder = 0
       OnClick = btnFormPagesClick
-      TabOrder = 3
-    end
-    object btnAddComponent: TButton
-      Left = 486
-      Height = 30
-      Top = 7
-      Width = 74
-      Caption = '+Comp'
-      OnClick = btnAddComponentClick
-      TabOrder = 4
-    end
-    object btnDeleteComponent: TButton
-      Left = 566
-      Height = 30
-      Top = 7
-      Width = 74
-      Caption = '-Comp'
-      OnClick = btnDeleteComponentClick
-      TabOrder = 5
     end
   end
   object pnRight: TPanel
-    Left = 874
-    Height = 676
-    Top = 44
-    Width = 190
+    Left = 1311
+    Height = 984
+    Top = 66
+    Width = 285
     Align = alRight
     BevelOuter = bvLowered
-    ClientHeight = 676
-    ClientWidth = 190
+    ClientHeight = 984
+    ClientWidth = 285
     TabOrder = 1
     object pnRightStatus: TPanel
       Left = 1
-      Height = 72
+      Height = 108
       Top = 1
-      Width = 188
+      Width = 283
       Align = alTop
       BevelOuter = bvNone
-      ClientHeight = 72
-      ClientWidth = 188
+      ClientHeight = 108
+      ClientWidth = 283
       Color = clSilver
       ParentBackground = False
       ParentColor = False
       TabOrder = 0
       object lbState: TLabel
         Left = 0
-        Height = 15
+        Height = 25
         Top = 0
-        Width = 188
+        Width = 283
         Align = alTop
         Alignment = taCenter
         Caption = 'Stop'
@@ -110,9 +67,9 @@ object MainForm: TMainForm
       end
       object lbTime: TLabel
         Left = 0
-        Height = 15
-        Top = 15
-        Width = 188
+        Height = 25
+        Top = 25
+        Width = 283
         Align = alTop
         Alignment = taCenter
         Caption = '00:00:00'
@@ -121,19 +78,19 @@ object MainForm: TMainForm
     end
     object pnRightCommands: TPanel
       Left = 1
-      Height = 150
-      Top = 73
-      Width = 188
+      Height = 225
+      Top = 109
+      Width = 283
       Align = alTop
       BevelOuter = bvNone
-      ClientHeight = 150
-      ClientWidth = 188
+      ClientHeight = 225
+      ClientWidth = 283
       TabOrder = 1
       object btnSettings: TSpeedButton
-        Left = 8
-        Height = 42
-        Top = 8
-        Width = 42
+        Left = 12
+        Height = 63
+        Top = 12
+        Width = 63
         Images = ilCommandButtons
         ImageIndex = 0
         ImageWidth = 32
@@ -142,19 +99,19 @@ object MainForm: TMainForm
         OnClick = btnSettingsClick
       end
       object btnSaveConfig: TSpeedButton
-        Left = 58
-        Height = 42
-        Top = 8
-        Width = 42
+        Left = 87
+        Height = 63
+        Top = 12
+        Width = 63
         ShowHint = True
         ParentShowHint = False
         OnClick = btnSaveConfigClick
       end
       object btnStop: TSpeedButton
-        Left = 8
-        Height = 42
-        Top = 58
-        Width = 42
+        Left = 12
+        Height = 63
+        Top = 87
+        Width = 63
         Images = ilCommandButtons
         ImageIndex = 3
         ImageWidth = 32
@@ -163,10 +120,10 @@ object MainForm: TMainForm
         OnClick = btnStopClick
       end
       object btnPreview: TSpeedButton
-        Left = 58
-        Height = 42
-        Top = 58
-        Width = 42
+        Left = 87
+        Height = 63
+        Top = 87
+        Width = 63
         Images = ilCommandButtons
         ImageIndex = 2
         ImageWidth = 32
@@ -175,10 +132,10 @@ object MainForm: TMainForm
         OnClick = btnPreviewClick
       end
       object btnRecord: TSpeedButton
-        Left = 108
-        Height = 42
-        Top = 58
-        Width = 42
+        Left = 162
+        Height = 63
+        Top = 87
+        Width = 63
         Images = ilCommandButtons
         ImageIndex = 1
         ImageWidth = 32
@@ -187,10 +144,10 @@ object MainForm: TMainForm
         OnClick = btnRecordClick
       end
       object btnTrigger: TSpeedButton
-        Left = 8
-        Height = 32
-        Top = 108
-        Width = 142
+        Left = 12
+        Height = 48
+        Top = 162
+        Width = 213
         ShowHint = True
         ParentShowHint = False
         OnClick = btnTriggerClick
@@ -198,27 +155,27 @@ object MainForm: TMainForm
     end
     object pnTagSearch: TPanel
       Left = 1
-      Height = 36
-      Top = 223
-      Width = 188
+      Height = 54
+      Top = 334
+      Width = 283
       Align = alTop
       BevelOuter = bvNone
-      ClientHeight = 36
-      ClientWidth = 188
+      ClientHeight = 54
+      ClientWidth = 283
       TabOrder = 2
       object edTagSearch: TEdit
-        Left = 8
-        Height = 23
-        Top = 4
-        Width = 142
+        Left = 12
+        Height = 33
+        Top = 6
+        Width = 213
         TabOrder = 0
         OnChange = edTagSearchChange
       end
       object btnClearSearch: TButton
-        Left = 156
-        Height = 28
-        Top = 4
-        Width = 24
+        Left = 234
+        Height = 42
+        Top = 6
+        Width = 36
         Caption = 'X'
         TabOrder = 1
         OnClick = btnClearSearchClick
@@ -226,9 +183,9 @@ object MainForm: TMainForm
     end
     object lbTags: TListBox
       Left = 1
-      Height = 416
-      Top = 259
-      Width = 188
+      Height = 595
+      Top = 388
+      Width = 283
       Align = alClient
       ItemHeight = 0
       TabOrder = 3
@@ -236,28 +193,28 @@ object MainForm: TMainForm
   end
   object pnMain: TPanel
     Left = 0
-    Height = 676
-    Top = 44
-    Width = 874
+    Height = 984
+    Top = 66
+    Width = 1311
     Align = alClient
     BevelOuter = bvNone
-    ClientHeight = 676
-    ClientWidth = 874
+    ClientHeight = 984
+    ClientWidth = 1311
     TabOrder = 2
     object SplitterLog: TSplitter
       Cursor = crVSplit
       Left = 0
-      Height = 5
-      Top = 551
-      Width = 874
+      Height = 8
+      Top = 796
+      Width = 1311
       Align = alBottom
       ResizeAnchor = akBottom
     end
     object mmLog: TMemo
       Left = 0
-      Height = 120
-      Top = 556
-      Width = 874
+      Height = 180
+      Top = 804
+      Width = 1311
       Align = alBottom
       ReadOnly = True
       ScrollBars = ssAutoVertical
@@ -265,21 +222,67 @@ object MainForm: TMainForm
     end
     object sgFormular: TStringGrid
       Left = 0
-      Height = 551
+      Height = 796
       Top = 0
-      Width = 874
+      Width = 1311
       Align = alClient
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing]
       RowCount = 2
-      OnSelectCell = sgFormularSelectCell
       TabOrder = 1
+      OnSelectCell = sgFormularSelectCell
     end
   end
   object ilCommandButtons: TImageList
     Height = 42
     Width = 42
-    Left = 448
-    Top = 96
+    Left = 440
+    Top = 200
+    Bitmap = {
+      4C7A0C0000002A0000002A0000009B0400000000000078DAED9DBB6EE2401846
+      E7A15014E55D28A2483C07A2DA82629FC2559A34A953D2A54A957D00D7D116E9
+      BCB6B386C1173C3673F97F7338FA24071B38CC0DDB034E610A0000484C792BCC
+      B65EA823CECB2589BC9DFD5A11598689CAD68B6304D7C1BA1CB9C56C03731D63
+      BA0ED5F7D45BE8FAF7E178C93594A78BC714D7989EC7F5D5F2886F08CFBEB639
+      F8DA8DA3E5EA54F71EDAA84BDBEC75BCE07AD39E4AEA5D4B3FD23C2E891DE795
+      7C6E6AD90FD1B45FA7693F59CB7187A6E3386DC7C583DE46DE790600805BE64F
+      FEB7208410420821446BECF30CB2FD0A2BB27CBB7E45C7174F5F8E325CF1A41F
+      49F7D4327E6AFA3C22841042082184104208218490C5CFC7D9BFEB91381F37F4
+      3BA942D83C8270CF514721AE78D28FA47B6A193F998F23841042082184104208
+      21842C7DFE6D2CA93DB7DBED68F0C4134F3CF1D4EBA9E1F3881042082184C808
+      57EC0400E07FD7F94E284F9F37699ECD3598B4781A732E2DB1DE3BAE423D8BD6
+      75B8447A5A82ED6B8689F16C176221D0B3C7515C7F1F7114E1E9E098DCD3D131
+      A9E704C7649E131D9378CE708CEE39D33199E702F6EBF0BCEC3974AD54919E9D
+      DF8FCAF23C5ECFB5C753CA71DCC977A03CC51D1F2BF2ECEB479CE30000000000
+      B88979B810C778BECF2F843A66C6539067C4738E5E3C239CC355EDE9F2FAE793
+      99C1CFDD47F53CCE837AF07479FDBEFB5DDF9716CF2BEBFDEDEDEDF85CD57293
+      F67D7DDB8CADB3EFF7D23E2F95934B5B7479FCB59E2EAFEFD25FFADE53EB31C1
+      3CA78C950E651F749C9F324606F80E4190FD102D9EECD7E1E9D153C3711C0000
+      000000000040481ECCE7E4F31B9BFA1CC76B21D5534B794A6B0B1BEBBBE929EA
+      D8A7E7EFB21E366693F43D8C7936EB5397F5123C4DB9DCEE5FAF89FAD8123C69
+      9F78E2E9D7537A7FFF2CEF7AB0C6A71FCFCF82FD10000000000080DB45CB772A
+      17EF797A023CF18CEF39E68167584F476F3C67FE8DA70ECF6BBDF00CEB39E08D
+      279E8BF6E4F888DFC6010000000000C0CDCF6BCE3D3EAEB6FDFA2E92044F3CAF
+      F5344F3F97227BDF77D73DEECF2F57F6FC94C6F3F1E5E4D0F66CFCDB99E27AAD
+      E77B99BB9687EDF9FCDDBDBF794F7765BE3EC27B568EE6FEFF6BDE9F966DCF5F
+      1F3FF73F9A7EF7AF97389E95DFF3FEDCB9AF7DDAA9DD2396E750D95EF2B4B78B
+      D93EA778DADBD8ED4092E7595B9E50DF313D3BE5F8916E9CBFE4D98C9F77331D
+      6378367D7B2831C62517CFBBBD2C4F69FB214D42788498EFF2ED19EA58498B27
+      0000000000A49FF398E339F97F065CB91D9E78E28927E327F5BE08CFA193C494
+      279E8C9FD43B9E5E3DCDD64C0AE58927E3BCE13787000000000000007C4F60D4
+      33CFF3A8C1134F9F9E87EAB957BB631FC8D6A7C7EC0E6556AB72F950FF9DD51E
+      EBB36D6278368E87DDEAF43AEBECE8617B368E79B68E5E9EEDF26ACA6C5DF9E4
+      D9717D56AE77710CE5B9CEF24E1D5665BC2ACB383FEC6ACF55E969CCAAF43567
+      EF479C67E9782897DBED4362BD57EBABE5AA5C53B4CF29FDA829FF75FD9C99E8
+      71A9791F97DAAAEF79045F637AE879041F9E31F6F9B478020000000000000048
+      9FE39A73FDCF103797E7C5134F099E5AFA51AF9FD07AD7E829BD1F69F2645CC2
+      73A99E1AF6EB0000000062F00FAF30AFA1
+    }
+  end
+  object ilCommandButtons1: TImageList
+    Height = 42
+    Width = 42
+    Left = 840
+    Top = 176
     Bitmap = {
       4C7A040000002A0000002A000000301800000000000078DAED5B077454D799DE
       6C9275763739BB27E76CC9D94D6C079084681218DBC18E0D36B6B38E631B8301

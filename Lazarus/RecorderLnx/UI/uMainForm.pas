@@ -25,21 +25,16 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  Grids, Buttons, ImgList, ComCtrls,
+  Grids, Buttons, ImgList, ComCtrls, Spin, Math, TAGraph, TASeries,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderFormModel,
-  uRecorderUiTestData, uFormPagesDialog;
+  uRecorderUiTestData, uFormPagesDialog, uFormEditorController;
 
 type
   { TMainForm }
 
   TMainForm = class(TForm)
-    btnActiveForm: TButton;
-    btnAddComponent: TButton;
     btnAddPage: TButton;
-    btnAutoForm: TButton;
-    btnBaseForm: TButton;
     btnClearSearch: TButton;
-    btnDeleteComponent: TButton;
     btnPreview: TSpeedButton;
     btnRecord: TSpeedButton;
     btnSaveConfig: TSpeedButton;
@@ -48,6 +43,7 @@ type
     btnTrigger: TSpeedButton;
     edTagSearch: TEdit;
     ilCommandButtons: TImageList;
+    ilCommandButtons1: TImageList;
     lbState: TLabel;
     lbTags: TListBox;
     lbTime: TLabel;
@@ -64,7 +60,6 @@ type
     procedure btnAddComponentClick(Sender: TObject);
     procedure btnDeleteComponentClick(Sender: TObject);
     procedure btnFormPagesClick(Sender: TObject);
-    procedure btnPageClick(Sender: TObject);
     procedure btnPreviewClick(Sender: TObject);
     procedure btnRecordClick(Sender: TObject);
     procedure btnSaveConfigClick(Sender: TObject);
@@ -74,6 +69,7 @@ type
     procedure edTagSearchChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure sgFormularSelectCell(Sender: TObject; aCol, aRow: Integer;
       var CanSelect: Boolean);
   private
@@ -85,6 +81,19 @@ type
     fEditorCanvas: TPanel;
     fEditorShell: TPanel;
     fEditorToolbar: TPanel;
+    fFormEditor: TFormEditorController;
+    fEditModeButton: TSpeedButton;
+    fAddOscillogramButton: TSpeedButton;
+    fAddTextButton: TSpeedButton;
+    fAddSpectrumButton: TSpeedButton;
+    fAddDigitalButton: TSpeedButton;
+    fAddTagTableButton: TSpeedButton;
+    fAddButtonButton: TSpeedButton;
+    fAddComboBoxButton: TSpeedButton;
+    fDeleteComponentButton: TSpeedButton;
+    fBaseToolbar: TPanel;
+    fBaseChartsPanel: TPanel;
+    fOscillogramCountEdit: TSpinEdit;
     fPageControl: TPageControl;
     fSelectedComponentRow: Integer;
     fSyncingPages: Boolean;
@@ -105,25 +114,71 @@ type
     { Обновляет верхние вкладки формуляров по текущему менеджеру. }
     procedure RefreshPageButtons;
 
-    { Создает верхний PageControl формуляров. Фиксированные кнопки .lfm остаются
-      только как ранняя дизайнерская заготовка и скрываются при запуске. }
+    { Создает верхний PageControl формуляров. }
     procedure EnsurePageControl;
 
     { Реагирует на выбор вкладки формуляра пользователем. }
     procedure PageControlChange(Sender: TObject);
 
-    { Отображает компоненты активной страницы в центральной таблице. }
+    { Отображает активную страницу: встроенную таблицу или пользовательскую мнемосхему. }
     procedure RenderActivePage;
 
     { Создает раннюю область редактора мнемосхемы с тулбаром и пустым полотном. }
     procedure EnsureEditorSurface;
 
-    { Переключает центральную область между табличным просмотром модели и
-      заготовкой редактора мнемосхемы. }
+    { Создает тулбар базовой страницы с количеством осциллограмм. }
+    procedure EnsureBaseToolbar;
+
+    { Переключает центральную область между таблицей и редактором. }
     procedure ShowEditorSurface(AVisible: Boolean);
 
-    { Добавляет на активную страницу модельный компонент TagValue. }
+    { Показывает или прячет тулбар встроенной базовой страницы. }
+    procedure ShowBaseToolbar(AVisible: Boolean);
+
+    { Возвращает True для встроенных страниц, которые не редактируются как мнемосхемы. }
+    function IsBuiltInPage(APage: TRecorderFormPage): Boolean;
+
+    { Возвращает True для пользовательских мнемосхем. }
+    function IsUserMnemonicPage(APage: TRecorderFormPage): Boolean;
+
+    { Рисует встроенный цифровой формуляр. }
+    procedure RenderDigitalPage;
+
+    { Рисует встроенную базовую страницу с таблицей осциллограмм. }
+    procedure RenderBasePage;
+
+    { Перестраивает набор осциллограмм на базовой странице. }
+    procedure RebuildBaseOscillograms(ACount: Integer);
+
+    { Создает одну тестовую осциллограмму на базе стандартного TChart. }
+    function CreateOscillogramChart(AIndex: Integer): TChart;
+
+    { Рисует пользовательскую мнемосхему и включает допустимые команды редактора. }
+    procedure RenderMnemonicPage(APage: TRecorderFormPage);
+
+    { Рисует прочую встроенную страницу без тулбара компонентов. }
+    procedure RenderBuiltInPage(APage: TRecorderFormPage);
+
+    { Обновляет доступность редактора и его кнопок для текущей страницы. }
+    procedure UpdateEditorAvailability(APage: TRecorderFormPage);
+
+    { Обновляет таблицу осциллограмм при изменении спинбатона. }
+    procedure OscillogramCountChange(Sender: TObject);
+
+    { Пересчитывает габариты осциллограмм при изменении размера базовой страницы. }
+    procedure BaseChartsPanelResize(Sender: TObject);
+
+    { Добавляет на активную страницу тестовую текстовую метку. }
+    procedure AddStaticTextComponentToActivePage;
+
+    { Добавляет на активную страницу тестовый цифровой индикатор TagValue. }
     procedure AddTagValueComponentToActivePage;
+
+    { Обработчик кнопки добавления цифрового индикатора на полотне. }
+    procedure AddDigitalIndicatorClick(Sender: TObject);
+
+    { Переключает режим редактирования мнемосхемы. }
+    procedure EditModeClick(Sender: TObject);
 
     { Создает dev-структуру config/projects/default и дефолтный run-control.ini. }
     procedure EnsureDevConfig;
@@ -134,6 +189,12 @@ type
       При запуске exe из lib/x86_64-win64 поднимаемся на два уровня выше.
     }
     function GetDevProjectDir: string;
+
+    { Возвращает активную страницу для контроллера редактора мнемосхем. }
+    function GetActiveEditorPage: TRecorderFormPage;
+
+    { Вызывается контроллером после изменения layout активной мнемосхемы. }
+    procedure FormEditorChanged;
 
     { Заполняет центральный формуляр и список тегов временными демонстрационными данными. }
     { Загружает настройки запуска/остановки из проектного каталога. }
@@ -171,12 +232,22 @@ const
   CDefaultProjectConfigDir = 'config' + DirectorySeparator + 'projects' +
     DirectorySeparator + 'default';
   CRunControlFileName = 'run-control.ini';
+  CIconEditForm = 4;
+  CIconOscillogram = 5;
+  CIconTextLabel = 6;
+  CIconSpectrum = 7;
+  CIconDigitalIndicator = 8;
+  CIconTagTable = 9;
+  CIconButton = 10;
+  CIconComboBox = 11;
 
 { TMainForm }
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   Caption := 'RecorderLnx - config/projects/default';
+  KeyPreview := True;
+  OnKeyDown := @FormKeyDown;
 
   fSelectedComponentRow := -1;
   fStateMachine := TRecorderStateMachine.Create;
@@ -194,6 +265,9 @@ begin
   SetupCommandButtons;
   EnsurePageControl;
   EnsureEditorSurface;
+  EnsureBaseToolbar;
+  fFormEditor := TFormEditorController.Create(fEditorCanvas, @GetActiveEditorPage);
+  fFormEditor.OnChanged := @FormEditorChanged;
   InitializeFormPages;
   RebuildTagList('');
   EnsureDevConfig;
@@ -204,11 +278,19 @@ end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(fFormEditor);
   FreeAndNil(fFormManager);
   FreeAndNil(fFormFactory);
   FreeAndNil(fComponentFactory);
   FreeAndNil(fRunSettings);
   FreeAndNil(fStateMachine);
+end;
+
+procedure TMainForm.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if fFormEditor <> nil then
+    fFormEditor.HandleKeyDown(Key, Shift);
 end;
 
 procedure TMainForm.sgFormularSelectCell(Sender: TObject; aCol, aRow: Integer;
@@ -218,22 +300,6 @@ begin
     fSelectedComponentRow := aRow
   else
     fSelectedComponentRow := -1;
-end;
-
-procedure TMainForm.btnPageClick(Sender: TObject);
-var
-  lPageIndex: Integer;
-begin
-  if not (Sender is TButton) then
-    Exit;
-
-  lPageIndex := TButton(Sender).Tag;
-  if (lPageIndex < 0) or (lPageIndex >= fFormManager.PageCount) then
-    Exit;
-
-  fFormManager.SetActivePageById(fFormManager.Pages[lPageIndex].Id);
-  RefreshPageButtons;
-  RenderActivePage;
 end;
 
 procedure TMainForm.PageControlChange(Sender: TObject);
@@ -248,6 +314,8 @@ begin
     Exit;
 
   fFormManager.SetActivePageById(fFormManager.Pages[lPageIndex].Id);
+  if fFormEditor <> nil then
+    fFormEditor.ClearSelection;
   RenderActivePage;
 end;
 
@@ -262,6 +330,8 @@ begin
       if lDialog.ShowModal in [mrOk, mrCancel] then
       begin
         fNextPageNo := lDialog.NextPageNo;
+        if fFormEditor <> nil then
+          fFormEditor.ClearSelection;
         RefreshPageButtons;
         RenderActivePage;
         AddLog('Form pages dialog closed.');
@@ -278,33 +348,19 @@ end;
 procedure TMainForm.btnAddComponentClick(Sender: TObject);
 begin
   try
-    AddTagValueComponentToActivePage;
+    AddStaticTextComponentToActivePage;
     RenderActivePage;
   except
     on E: Exception do
-      LogCommandError('Add component', E);
+      LogCommandError('Add text label', E);
   end;
 end;
 
 procedure TMainForm.btnDeleteComponentClick(Sender: TObject);
-var
-  lPage: TRecorderFormPage;
-  lComponentIndex: Integer;
-  lComponentId: string;
 begin
   try
-    lPage := fFormManager.ActivePage;
-    if lPage = nil then
-      Exit;
-
-    lComponentIndex := fSelectedComponentRow - 1;
-    if (lComponentIndex < 0) or (lComponentIndex >= lPage.ComponentCount) then
-      Exit;
-
-    lComponentId := lPage.Components[lComponentIndex].Id;
-    lPage.DeleteComponent(lComponentIndex);
-    fSelectedComponentRow := -1;
-    AddLog('Form component deleted: ' + lComponentId);
+    if fFormEditor <> nil then
+      fFormEditor.DeleteSelected;
     RenderActivePage;
   except
     on E: Exception do
@@ -394,13 +450,9 @@ begin
   Inc(fNextPageNo);
   lPage := AddPageToModel('DigitalForm', 'Digital form');
   fFormManager.SetActivePageById(lPage.Id);
-  AddTagValueComponentToActivePage;
 
   Inc(fNextPageNo);
   AddPageToModel('BasePage', 'Base page');
-
-  Inc(fNextPageNo);
-  AddPageToModel('Automatic', 'Automatic');
 
   RefreshPageButtons;
   RenderActivePage;
@@ -423,22 +475,15 @@ begin
   if fPageControl <> nil then
     Exit;
 
-  btnActiveForm.Visible := False;
-  btnBaseForm.Visible := False;
-  btnAutoForm.Visible := False;
-
   fPageControl := TPageControl.Create(Self);
   fPageControl.Parent := pnToolbar;
-  fPageControl.Left := 66;
+  fPageControl.Left := btnAddPage.Left + btnAddPage.Width + 8;
   fPageControl.Top := 4;
-  fPageControl.Width := 390;
-  fPageControl.Height := 38;
+  fPageControl.Width := pnToolbar.ClientWidth - fPageControl.Left - 8;
+  fPageControl.Height := pnToolbar.ClientHeight - 8;
   fPageControl.Anchors := [akLeft, akTop, akRight];
   fPageControl.TabOrder := 0;
   fPageControl.OnChange := @PageControlChange;
-
-  btnAddComponent.Left := fPageControl.Left + fPageControl.Width + 28;
-  btnDeleteComponent.Left := btnAddComponent.Left + btnAddComponent.Width + 6;
 end;
 
 procedure TMainForm.RefreshPageButtons;
@@ -479,69 +524,75 @@ begin
   finally
     fSyncingPages := False;
   end;
-
-  btnAddComponent.Enabled := fFormManager.ActivePage <> nil;
-  btnDeleteComponent.Enabled := (fFormManager.ActivePage <> nil) and
-    (fFormManager.ActivePage.ComponentCount > 0);
 end;
 
 procedure TMainForm.RenderActivePage;
 var
   lPage: TRecorderFormPage;
-  I: Integer;
-  lComponent: TRecorderVisualComponent;
-  lBounds: TRecorderRect;
 begin
   lPage := fFormManager.ActivePage;
-  fSelectedComponentRow := -1;
-
-  sgFormular.ColCount := 6;
-  sgFormular.FixedRows := 1;
-  sgFormular.Cells[0, 0] := 'Type';
-  sgFormular.Cells[1, 0] := 'Id';
-  sgFormular.Cells[2, 0] := 'Name';
-  sgFormular.Cells[3, 0] := 'Tag';
-  sgFormular.Cells[4, 0] := 'Bounds';
-  sgFormular.Cells[5, 0] := 'Text/Format';
 
   if lPage = nil then
   begin
     ShowEditorSurface(False);
-    sgFormular.RowCount := 1;
+    ShowBaseToolbar(False);
+    UpdateEditorAvailability(nil);
     Caption := 'RecorderLnx - config/projects/default';
     Exit;
   end;
 
   Caption := 'RecorderLnx - config/projects/default - ' + lPage.Title;
-  ShowEditorSurface(lPage.ComponentCount = 0);
-  if fEditorShell.Visible then
-  begin
-    RefreshPageButtons;
-    Exit;
-  end;
+  UpdateEditorAvailability(lPage);
 
-  sgFormular.RowCount := lPage.ComponentCount + 1;
-
-  for I := 0 to lPage.ComponentCount - 1 do
-  begin
-    lComponent := lPage.Components[I];
-    lBounds := lComponent.Bounds;
-    sgFormular.Cells[0, I + 1] := lComponent.TypeId;
-    sgFormular.Cells[1, I + 1] := lComponent.Id;
-    sgFormular.Cells[2, I + 1] := lComponent.Name;
-    sgFormular.Cells[3, I + 1] := lComponent.TagName;
-    sgFormular.Cells[4, I + 1] := Format('%d,%d %dx%d',
-      [lBounds.Left, lBounds.Top, lBounds.Width, lBounds.Height]);
-
-    if lComponent is TRecorderStaticTextComponent then
-      sgFormular.Cells[5, I + 1] := TRecorderStaticTextComponent(lComponent).Text
-    else if lComponent is TRecorderTagValueComponent then
-      sgFormular.Cells[5, I + 1] := TRecorderTagValueComponent(lComponent).DisplayFormat
-    else
-      sgFormular.Cells[5, I + 1] := '';
-  end;
+  if lPage.Id = 'DigitalForm' then
+    RenderDigitalPage
+  else if lPage.Id = 'BasePage' then
+    RenderBasePage
+  else if IsUserMnemonicPage(lPage) then
+    RenderMnemonicPage(lPage)
+  else
+    RenderBuiltInPage(lPage);
 
   RefreshPageButtons;
+end;
+
+procedure TMainForm.AddStaticTextComponentToActivePage;
+var
+  lPage: TRecorderFormPage;
+  lComponent: TRecorderStaticTextComponent;
+begin
+  lPage := fFormManager.ActivePage;
+  if lPage = nil then
+    raise ERecorderFormError.Create('Cannot add component without active page');
+  if not IsUserMnemonicPage(lPage) then
+    raise ERecorderFormError.Create('Components can be added only to user mnemonic pages');
+
+  Inc(fNextComponentNo);
+  lComponent := TRecorderStaticTextComponent(
+    fComponentFactory.CreateComponent(TRecorderStaticTextComponent.TypeId));
+  try
+    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
+    lComponent.Name := Format('TextLabel%d', [fNextComponentNo]);
+    lComponent.Text := 'Text label';
+    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 180, 28);
+    lPage.AddComponent(lComponent);
+  except
+    lComponent.Free;
+    raise;
+  end;
+
+  AddLog('Form component added: ' + lComponent.Id);
+end;
+
+procedure TMainForm.AddDigitalIndicatorClick(Sender: TObject);
+begin
+  try
+    AddTagValueComponentToActivePage;
+    RenderActivePage;
+  except
+    on E: Exception do
+      LogCommandError('Add digital indicator', E);
+  end;
 end;
 
 procedure TMainForm.AddTagValueComponentToActivePage;
@@ -552,15 +603,18 @@ begin
   lPage := fFormManager.ActivePage;
   if lPage = nil then
     raise ERecorderFormError.Create('Cannot add component without active page');
+  if not IsUserMnemonicPage(lPage) then
+    raise ERecorderFormError.Create('Components can be added only to user mnemonic pages');
 
   Inc(fNextComponentNo);
   lComponent := TRecorderTagValueComponent(
     fComponentFactory.CreateComponent(TRecorderTagValueComponent.TypeId));
   try
     lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
-    lComponent.Name := Format('TagValue%d', [fNextComponentNo]);
+    lComponent.Name := Format('DigitalIndicator%d', [fNextComponentNo]);
     lComponent.TagName := 'MemTag';
-    lComponent.SetBounds(8, 8 + lPage.ComponentCount * 28, 160, 24);
+    lComponent.DisplayFormat := '0.0';
+    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 180, 32);
     lPage.AddComponent(lComponent);
   except
     lComponent.Free;
@@ -568,6 +622,13 @@ begin
   end;
 
   AddLog('Form component added: ' + lComponent.Id);
+end;
+
+procedure TMainForm.EditModeClick(Sender: TObject);
+begin
+  if fFormEditor <> nil then
+    fFormEditor.Enabled := (fEditModeButton <> nil) and fEditModeButton.Down and
+      IsUserMnemonicPage(fFormManager.ActivePage);
 end;
 
 procedure TMainForm.EnsureEditorSurface;
@@ -593,26 +654,127 @@ begin
   lButton.Parent := fEditorToolbar;
   lButton.Left := 4;
   lButton.Top := 4;
-  lButton.Width := 24;
+  lButton.Width := 30;
   lButton.Height := 24;
-  lButton.Caption := '\';
+  lButton.Caption := '';
+  lButton.Images := ilCommandButtons;
+  lButton.ImageIndex := CIconEditForm;
+  lButton.ImageWidth := 20;
   lButton.Hint := 'Edit mnemonic';
   lButton.ShowHint := True;
+  lButton.GroupIndex := 1;
+  lButton.AllowAllUp := True;
+  lButton.OnClick := @EditModeClick;
+  fEditModeButton := lButton;
 
   lButton := TSpeedButton.Create(Self);
   lButton.Parent := fEditorToolbar;
-  lButton.Left := 34;
+  lButton.Left := 38;
   lButton.Top := 4;
-  lButton.Width := 24;
+  lButton.Width := 30;
   lButton.Height := 24;
-  lButton.Caption := '+';
-  lButton.Hint := 'Add component';
+  lButton.Caption := '';
+  lButton.Images := ilCommandButtons;
+  lButton.ImageIndex := CIconOscillogram;
+  lButton.ImageWidth := 20;
+  lButton.Hint := 'Add oscillogram';
+  lButton.ShowHint := True;
+  lButton.Enabled := False;
+  fAddOscillogramButton := lButton;
+
+  lButton := TSpeedButton.Create(Self);
+  lButton.Parent := fEditorToolbar;
+  lButton.Left := 72;
+  lButton.Top := 4;
+  lButton.Width := 30;
+  lButton.Height := 24;
+  lButton.Caption := '';
+  lButton.Images := ilCommandButtons;
+  lButton.ImageIndex := CIconTextLabel;
+  lButton.ImageWidth := 20;
+  lButton.Hint := 'Add text label';
   lButton.ShowHint := True;
   lButton.OnClick := @btnAddComponentClick;
+  fAddTextButton := lButton;
 
   lButton := TSpeedButton.Create(Self);
   lButton.Parent := fEditorToolbar;
-  lButton.Left := 64;
+  lButton.Left := 106;
+  lButton.Top := 4;
+  lButton.Width := 30;
+  lButton.Height := 24;
+  lButton.Caption := '';
+  lButton.Images := ilCommandButtons;
+  lButton.ImageIndex := CIconSpectrum;
+  lButton.ImageWidth := 20;
+  lButton.Hint := 'Add spectrum';
+  lButton.ShowHint := True;
+  lButton.Enabled := False;
+  fAddSpectrumButton := lButton;
+
+  lButton := TSpeedButton.Create(Self);
+  lButton.Parent := fEditorToolbar;
+  lButton.Left := 140;
+  lButton.Top := 4;
+  lButton.Width := 30;
+  lButton.Height := 24;
+  lButton.Caption := '';
+  lButton.Images := ilCommandButtons;
+  lButton.ImageIndex := CIconDigitalIndicator;
+  lButton.ImageWidth := 20;
+  lButton.Hint := 'Add digital indicator';
+  lButton.ShowHint := True;
+  lButton.OnClick := @AddDigitalIndicatorClick;
+  fAddDigitalButton := lButton;
+
+  lButton := TSpeedButton.Create(Self);
+  lButton.Parent := fEditorToolbar;
+  lButton.Left := 174;
+  lButton.Top := 4;
+  lButton.Width := 30;
+  lButton.Height := 24;
+  lButton.Caption := '';
+  lButton.Images := ilCommandButtons;
+  lButton.ImageIndex := CIconTagTable;
+  lButton.ImageWidth := 20;
+  lButton.Hint := 'Add tag table';
+  lButton.ShowHint := True;
+  lButton.Enabled := False;
+  fAddTagTableButton := lButton;
+
+  lButton := TSpeedButton.Create(Self);
+  lButton.Parent := fEditorToolbar;
+  lButton.Left := 208;
+  lButton.Top := 4;
+  lButton.Width := 30;
+  lButton.Height := 24;
+  lButton.Caption := '';
+  lButton.Images := ilCommandButtons;
+  lButton.ImageIndex := CIconButton;
+  lButton.ImageWidth := 20;
+  lButton.Hint := 'Add button';
+  lButton.ShowHint := True;
+  lButton.Enabled := False;
+  fAddButtonButton := lButton;
+
+  lButton := TSpeedButton.Create(Self);
+  lButton.Parent := fEditorToolbar;
+  lButton.Left := 242;
+  lButton.Top := 4;
+  lButton.Width := 30;
+  lButton.Height := 24;
+  lButton.Caption := '';
+  lButton.Images := ilCommandButtons;
+  lButton.ImageIndex := CIconComboBox;
+  lButton.ImageWidth := 20;
+  lButton.Hint := 'Add combo box';
+  lButton.ShowHint := True;
+  lButton.Enabled := False;
+  fAddComboBoxButton := lButton;
+
+  lButton := TSpeedButton.Create(Self);
+  lButton.Parent := fEditorToolbar;
+  lButton.Left := 282;
   lButton.Top := 4;
   lButton.Width := 24;
   lButton.Height := 24;
@@ -620,6 +782,7 @@ begin
   lButton.Hint := 'Delete selected component';
   lButton.ShowHint := True;
   lButton.OnClick := @btnDeleteComponentClick;
+  fDeleteComponentButton := lButton;
 
   fEditorCanvas := TPanel.Create(Self);
   fEditorCanvas.Parent := fEditorShell;
@@ -627,6 +790,46 @@ begin
   fEditorCanvas.BevelOuter := bvNone;
   fEditorCanvas.Color := clWhite;
   fEditorCanvas.ParentBackground := False;
+end;
+
+procedure TMainForm.EnsureBaseToolbar;
+var
+  lLabel: TLabel;
+begin
+  if fBaseToolbar <> nil then
+    Exit;
+
+  fBaseToolbar := TPanel.Create(Self);
+  fBaseToolbar.Parent := pnMain;
+  fBaseToolbar.Align := alTop;
+  fBaseToolbar.Height := 36;
+  fBaseToolbar.BevelOuter := bvLowered;
+  fBaseToolbar.Visible := False;
+
+  lLabel := TLabel.Create(Self);
+  lLabel.Parent := fBaseToolbar;
+  lLabel.Left := 8;
+  lLabel.Top := 9;
+  lLabel.Caption := 'Oscillogram count';
+
+  fOscillogramCountEdit := TSpinEdit.Create(Self);
+  fOscillogramCountEdit.Parent := fBaseToolbar;
+  fOscillogramCountEdit.Left := 128;
+  fOscillogramCountEdit.Top := 4;
+  fOscillogramCountEdit.Width := 64;
+  fOscillogramCountEdit.MinValue := 1;
+  fOscillogramCountEdit.MaxValue := 16;
+  fOscillogramCountEdit.Value := 2;
+  fOscillogramCountEdit.OnChange := @OscillogramCountChange;
+
+  fBaseChartsPanel := TPanel.Create(Self);
+  fBaseChartsPanel.Parent := pnMain;
+  fBaseChartsPanel.Align := alClient;
+  fBaseChartsPanel.BevelOuter := bvNone;
+  fBaseChartsPanel.Color := clWhite;
+  fBaseChartsPanel.ParentBackground := False;
+  fBaseChartsPanel.Visible := False;
+  fBaseChartsPanel.OnResize := @BaseChartsPanelResize;
 end;
 
 procedure TMainForm.ShowEditorSurface(AVisible: Boolean);
@@ -639,6 +842,212 @@ begin
     fEditorShell.BringToFront
   else
     sgFormular.BringToFront;
+end;
+
+procedure TMainForm.ShowBaseToolbar(AVisible: Boolean);
+begin
+  EnsureBaseToolbar;
+  fBaseToolbar.Visible := AVisible;
+  if fBaseChartsPanel <> nil then
+    fBaseChartsPanel.Visible := AVisible;
+  if AVisible then
+  begin
+    if fBaseChartsPanel <> nil then
+      fBaseChartsPanel.BringToFront;
+    fBaseToolbar.BringToFront;
+  end;
+end;
+
+function TMainForm.IsBuiltInPage(APage: TRecorderFormPage): Boolean;
+begin
+  Result := (APage <> nil) and
+    ((APage.Id = 'DigitalForm') or (APage.Id = 'BasePage'));
+end;
+
+function TMainForm.IsUserMnemonicPage(APage: TRecorderFormPage): Boolean;
+begin
+  Result := (APage <> nil) and (not IsBuiltInPage(APage));
+end;
+
+procedure TMainForm.RenderDigitalPage;
+begin
+  ShowBaseToolbar(False);
+  ShowEditorSurface(False);
+  sgFormular.Visible := True;
+  sgFormular.Align := alClient;
+  FillDigitalFormular(sgFormular);
+end;
+
+procedure TMainForm.RenderBasePage;
+var
+  lCount: Integer;
+begin
+  ShowEditorSurface(False);
+  ShowBaseToolbar(True);
+  sgFormular.Visible := False;
+
+  if fOscillogramCountEdit <> nil then
+    lCount := fOscillogramCountEdit.Value
+  else
+    lCount := 1;
+
+  RebuildBaseOscillograms(lCount);
+end;
+
+procedure TMainForm.RebuildBaseOscillograms(ACount: Integer);
+var
+  I: Integer;
+  lChart: TChart;
+  lRow: Integer;
+  lCol: Integer;
+  lRows: Integer;
+  lCols: Integer;
+  lLeft: Integer;
+  lTop: Integer;
+  lWidth: Integer;
+  lHeight: Integer;
+  lCellHeight: Integer;
+  lItemsInRow: Integer;
+  lRowCellWidth: Integer;
+begin
+  EnsureBaseToolbar;
+  if ACount < 1 then
+    ACount := 1;
+
+  while fBaseChartsPanel.ControlCount > 0 do
+    fBaseChartsPanel.Controls[0].Free;
+
+  lRows := Max(1, Round(Sqrt(ACount)));
+  lCols := Ceil(ACount / lRows);
+  lCellHeight := Max(1, fBaseChartsPanel.ClientHeight div lRows);
+
+  for I := 0 to ACount - 1 do
+  begin
+    lRow := I div lCols;
+    lCol := I mod lCols;
+    lItemsInRow := Min(lCols, ACount - lRow * lCols);
+    lRowCellWidth := Max(1, fBaseChartsPanel.ClientWidth div lItemsInRow);
+    lLeft := lCol * lRowCellWidth;
+    lTop := lRow * lCellHeight;
+    lWidth := lRowCellWidth;
+    lHeight := lCellHeight;
+
+    if lCol = lItemsInRow - 1 then
+      lWidth := fBaseChartsPanel.ClientWidth - lLeft;
+    if lRow = lRows - 1 then
+      lHeight := fBaseChartsPanel.ClientHeight - lTop;
+
+    lChart := CreateOscillogramChart(I);
+    lChart.Parent := fBaseChartsPanel;
+    lChart.SetBounds(lLeft, lTop, lWidth, lHeight);
+    lChart.Anchors := [akLeft, akTop];
+  end;
+end;
+
+function TMainForm.CreateOscillogramChart(AIndex: Integer): TChart;
+var
+  lSeries: TLineSeries;
+  I: Integer;
+  lX: Double;
+  lName: string;
+begin
+  lName := Format('%d sensor %s', [AIndex div 3 + 1,
+    Chr(Ord('X') + (AIndex mod 3))]);
+
+  Result := TChart.Create(Self);
+  Result.BorderStyle := bsSingle;
+  Result.Title.Text.Text := lName;
+  Result.Title.Visible := True;
+  Result.Legend.Visible := False;
+  Result.LeftAxis.Grid.Visible := True;
+  Result.BottomAxis.Grid.Visible := True;
+  Result.BottomAxis.Title.Caption := 'X';
+  Result.LeftAxis.Range.UseMin := True;
+  Result.LeftAxis.Range.UseMax := True;
+  Result.LeftAxis.Range.Min := -32000;
+  Result.LeftAxis.Range.Max := 32000;
+  Result.BottomAxis.Range.UseMin := True;
+  Result.BottomAxis.Range.UseMax := True;
+  Result.BottomAxis.Range.Min := 0;
+  Result.BottomAxis.Range.Max := 10;
+
+  lSeries := TLineSeries.Create(Result);
+  lSeries.SeriesColor := clBlue;
+  for I := 0 to 100 do
+  begin
+    lX := I / 10;
+    lSeries.AddXY(lX, Sin((lX + AIndex) * 1.2) * 12000);
+  end;
+  Result.AddSeries(lSeries);
+end;
+
+procedure TMainForm.RenderMnemonicPage(APage: TRecorderFormPage);
+begin
+  ShowBaseToolbar(False);
+  ShowEditorSurface(True);
+  if fFormEditor <> nil then
+    fFormEditor.Render;
+end;
+
+procedure TMainForm.RenderBuiltInPage(APage: TRecorderFormPage);
+begin
+  ShowBaseToolbar(False);
+  ShowEditorSurface(False);
+  sgFormular.Visible := True;
+  sgFormular.Align := alClient;
+  FillPlaceholderFormular(sgFormular);
+end;
+
+procedure TMainForm.UpdateEditorAvailability(APage: TRecorderFormPage);
+var
+  lCanEdit: Boolean;
+begin
+  lCanEdit := IsUserMnemonicPage(APage);
+
+  if fEditModeButton <> nil then
+  begin
+    fEditModeButton.Visible := lCanEdit;
+    if not lCanEdit then
+      fEditModeButton.Down := False;
+  end;
+
+  if fAddOscillogramButton <> nil then
+    fAddOscillogramButton.Visible := lCanEdit;
+  if fAddTextButton <> nil then
+    fAddTextButton.Visible := lCanEdit;
+  if fAddSpectrumButton <> nil then
+    fAddSpectrumButton.Visible := lCanEdit;
+  if fAddDigitalButton <> nil then
+    fAddDigitalButton.Visible := lCanEdit;
+  if fAddTagTableButton <> nil then
+    fAddTagTableButton.Visible := lCanEdit;
+  if fAddButtonButton <> nil then
+    fAddButtonButton.Visible := lCanEdit;
+  if fAddComboBoxButton <> nil then
+    fAddComboBoxButton.Visible := lCanEdit;
+  if fDeleteComponentButton <> nil then
+    fDeleteComponentButton.Visible := lCanEdit;
+
+  if fEditorToolbar <> nil then
+    fEditorToolbar.Visible := lCanEdit;
+  if fFormEditor <> nil then
+    fFormEditor.Enabled := lCanEdit and (fEditModeButton <> nil) and
+      fEditModeButton.Down;
+end;
+
+procedure TMainForm.OscillogramCountChange(Sender: TObject);
+begin
+  if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) and
+    (fFormManager.ActivePage.Id = 'BasePage') then
+    RenderBasePage;
+end;
+
+procedure TMainForm.BaseChartsPanelResize(Sender: TObject);
+begin
+  if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) and
+    (fFormManager.ActivePage.Id = 'BasePage') and
+    (fOscillogramCountEdit <> nil) then
+    RebuildBaseOscillograms(fOscillogramCountEdit.Value);
 end;
 
 procedure TMainForm.EnsureDevConfig;
@@ -683,6 +1092,19 @@ begin
   Result := ExpandFileName(IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)) +
     '..' + DirectorySeparator + '..');
   Result := IncludeTrailingPathDelimiter(Result);
+end;
+
+function TMainForm.GetActiveEditorPage: TRecorderFormPage;
+begin
+  if IsUserMnemonicPage(fFormManager.ActivePage) then
+    Result := fFormManager.ActivePage
+  else
+    Result := nil;
+end;
+
+procedure TMainForm.FormEditorChanged;
+begin
+  { Layout already lives in the active TRecorderFormPage model. }
 end;
 
 procedure TMainForm.LoadRunSettings;
