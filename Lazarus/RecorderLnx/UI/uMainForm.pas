@@ -27,7 +27,9 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   Grids, Buttons, ImgList, ComCtrls, Spin, Math, TAGraph, TASeries,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderFormModel,
-  uRecorderUiTestData, uFormPagesDialog, uFormEditorController;
+  uRecorderCoreServices, uRecorderTags, uRecorderDataSources,
+  uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
+  uFormEditorController;
 
 type
   { TMainForm }
@@ -99,6 +101,14 @@ type
     fSyncingPages: Boolean;
     fStateMachine: TRecorderStateMachine;
     fRunSettings: TRecorderRunControlSettings;
+    fEventBus: TRecorderEventBus;
+    fTagRegistry: TRecorderTagRegistry;
+    fEventQueue: TRecorderEventSnapshotQueue;
+    fTimeSystem: TRecorderTimeSystem;
+    fDataSourceManager: TRecorderDataSourceManager;
+    fLatestTagValues: TStringList;
+    fUiUpdateTimer: TTimer;
+    fDataSourcesConfigured: Boolean;
     fProjectConfigDir: string;
     fRunControlFileName: string;
 
@@ -206,11 +216,32 @@ type
     { Применяет фильтр поиска к списку тегов-заглушек. }
     procedure RebuildTagList(const AFilter: string);
 
+    { Создает отладочный источник MemTag и подключает его к общему registry.
+
+      Источник нужен как первый живой канал данных: worker-thread пишет в тег,
+      а UI получает обновления через очередь снимков событий. }
+    procedure EnsureDemoDataSources;
+
+    { Запускает worker-thread источников данных для режимов View/Record. }
+    procedure StartDataSources;
+
+    { Останавливает worker-thread источников данных и дочитывает очередь. }
+    procedure StopDataSources;
+
+    { Вычитывает очередь снимков событий в UI thread и обновляет отображение. }
+    procedure DrainUiEventQueue(Sender: TObject);
+
+    { Применяет один снимок события обновления тега к UI-модели значений. }
+    procedure ApplyTagEventSnapshot(ASnapshot: TRecorderEventSnapshot);
+
     { Настраивает командные кнопки правого пульта как кнопки-символы. }
     procedure SetupCommandButtons;
 
     { Обновляет текстовый индикатор состояния из fStateMachine.State. }
     procedure UpdateStateView;
+
+    { Updates the status-display time text from TRecorderTimeSystem. }
+    procedure UpdateTimeView;
 
     { Единая обработка ошибок команд UI. }
     procedure LogCommandError(const ACommand: string; E: Exception);
@@ -254,6 +285,20 @@ begin
   fStateMachine.OnStateChanged := @StateMachineStateChanged;
 
   fRunSettings := TRecorderRunControlSettings.Create;
+  fEventBus := TRecorderEventBus.Create;
+  fTagRegistry := TRecorderTagRegistry.Create(fEventBus);
+  fEventQueue := TRecorderEventSnapshotQueue.Create(fEventBus);
+  fTimeSystem := TRecorderTimeSystem.Create;
+  fDataSourceManager := TRecorderDataSourceManager.Create;
+  fLatestTagValues := TStringList.Create;
+  fLatestTagValues.CaseSensitive := False;
+  fLatestTagValues.Sorted := False;
+  fLatestTagValues.Duplicates := dupAccept;
+  fUiUpdateTimer := TTimer.Create(Self);
+  fUiUpdateTimer.Enabled := False;
+  fUiUpdateTimer.Interval := fTimeSystem.DisplayUpdateMs;
+  fUiUpdateTimer.OnTimer := @DrainUiEventQueue;
+
   fComponentFactory := TRecorderComponentFactory.Create;
   fComponentFactory.RegisterDefaultComponents;
   fFormFactory := TRecorderFormFactory.Create(fComponentFactory);
@@ -270,6 +315,7 @@ begin
     fComponentFactory);
   fFormEditor.OnChanged := @FormEditorChanged;
   InitializeFormPages;
+  EnsureDemoDataSources;
   RebuildTagList('');
   EnsureDevConfig;
   LoadRunSettings;
@@ -279,10 +325,19 @@ end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
+  if fUiUpdateTimer <> nil then
+    fUiUpdateTimer.Enabled := False;
+  StopDataSources;
   FreeAndNil(fFormEditor);
   FreeAndNil(fFormManager);
   FreeAndNil(fFormFactory);
   FreeAndNil(fComponentFactory);
+  FreeAndNil(fDataSourceManager);
+  FreeAndNil(fTimeSystem);
+  FreeAndNil(fEventQueue);
+  FreeAndNil(fTagRegistry);
+  FreeAndNil(fEventBus);
+  FreeAndNil(fLatestTagValues);
   FreeAndNil(fRunSettings);
   FreeAndNil(fStateMachine);
 end;
@@ -871,12 +926,41 @@ begin
 end;
 
 procedure TMainForm.RenderDigitalPage;
+var
+  I: Integer;
+  lTag: TRecorderTag;
+  lValue: string;
 begin
   ShowBaseToolbar(False);
   ShowEditorSurface(False);
   sgFormular.Visible := True;
   sgFormular.Align := alClient;
-  FillDigitalFormular(sgFormular);
+
+  sgFormular.ColCount := 5;
+  sgFormular.RowCount := Max(2, fTagRegistry.TagCount + 1);
+  sgFormular.FixedCols := 0;
+  sgFormular.FixedRows := 1;
+  sgFormular.Cells[0, 0] := 'Name';
+  sgFormular.Cells[1, 0] := 'Address';
+  sgFormular.Cells[2, 0] := 'Unit';
+  sgFormular.Cells[3, 0] := 'Value';
+  sgFormular.Cells[4, 0] := 'Description';
+
+  for I := 0 to fTagRegistry.TagCount - 1 do
+  begin
+    lTag := fTagRegistry.Tags[I];
+    lValue := fLatestTagValues.Values[lTag.Name];
+    if lValue = '' then
+      lValue := lTag.TextValue;
+    if lValue = '' then
+      lValue := '-';
+
+    sgFormular.Cells[0, I + 1] := lTag.Name;
+    sgFormular.Cells[1, I + 1] := lTag.Address;
+    sgFormular.Cells[2, I + 1] := lTag.UnitName;
+    sgFormular.Cells[3, I + 1] := lValue;
+    sgFormular.Cells[4, I + 1] := lTag.Description;
+  end;
 end;
 
 procedure TMainForm.RenderBasePage;
@@ -1124,13 +1208,114 @@ begin
 end;
 
 procedure TMainForm.RebuildTagList(const AFilter: string);
+var
+  I: Integer;
+  lFilter: string;
+  lTag: TRecorderTag;
+  lValue: string;
 begin
   lbTags.Items.BeginUpdate;
   try
-    FillPlaceholderTagList(lbTags.Items, AFilter);
+    lbTags.Items.Clear;
+    lFilter := LowerCase(Trim(AFilter));
+
+    for I := 0 to fTagRegistry.TagCount - 1 do
+    begin
+      lTag := fTagRegistry.Tags[I];
+      if (lFilter <> '') and
+        (Pos(lFilter, LowerCase(lTag.Name + ' ' + lTag.Address + ' ' +
+        lTag.Description)) = 0) then
+        Continue;
+
+      lValue := fLatestTagValues.Values[lTag.Name];
+      if lValue = '' then
+        lValue := lTag.TextValue;
+      if lValue = '' then
+        lValue := '-';
+
+      lbTags.Items.Add(Format('%s     %s', [lTag.Name, lValue]));
+    end;
   finally
     lbTags.Items.EndUpdate;
   end;
+end;
+
+procedure TMainForm.EnsureDemoDataSources;
+var
+  lSource: IRecorderDataSource;
+begin
+  if fDataSourcesConfigured then
+    Exit;
+
+  lSource := TMockSineDataSource.Create('debug.memtag', 'MemTag', 250,
+    100.0, 0.25);
+  fDataSourceManager.AddSource(lSource);
+  fDataSourceManager.ConfigureTagsAll(fTagRegistry);
+  fDataSourcesConfigured := True;
+  AddLog('Demo data source configured: debug.memtag -> MemTag.');
+end;
+
+procedure TMainForm.StartDataSources;
+begin
+  EnsureDemoDataSources;
+  if not fDataSourceManager.Running then
+  begin
+    fDataSourceManager.StartAll;
+    fUiUpdateTimer.Enabled := True;
+    AddLog('Data sources started.');
+  end;
+end;
+
+procedure TMainForm.StopDataSources;
+begin
+  if fUiUpdateTimer <> nil then
+    fUiUpdateTimer.Enabled := False;
+
+  if (fDataSourceManager <> nil) and fDataSourceManager.Running then
+  begin
+    fDataSourceManager.StopAll;
+    DrainUiEventQueue(nil);
+    AddLog('Data sources stopped.');
+  end;
+end;
+
+procedure TMainForm.DrainUiEventQueue(Sender: TObject);
+var
+  lChanged: Boolean;
+  lSnapshot: TRecorderEventSnapshot;
+begin
+  lChanged := False;
+  repeat
+    lSnapshot := fEventQueue.Pop;
+    if lSnapshot = nil then
+      Break;
+    try
+      ApplyTagEventSnapshot(lSnapshot);
+      lChanged := True;
+    finally
+      lSnapshot.Free;
+    end;
+  until False;
+
+  if lChanged then
+  begin
+    RebuildTagList(edTagSearch.Text);
+    if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) and
+      (fFormManager.ActivePage.Id = 'DigitalForm') then
+      RenderDigitalPage;
+  end;
+
+  UpdateTimeView;
+end;
+
+procedure TMainForm.ApplyTagEventSnapshot(ASnapshot: TRecorderEventSnapshot);
+begin
+  if (ASnapshot = nil) or (not ASnapshot.HasTagData) then
+    Exit;
+
+  fLatestTagValues.Values[ASnapshot.TagName] :=
+    FormatFloat('0.000', ASnapshot.Value);
+  fTimeSystem.UpdateFromTagSample(ASnapshot.TimeSec);
 end;
 
 procedure TMainForm.SetupCommandButtons;
@@ -1171,7 +1356,7 @@ end;
 procedure TMainForm.UpdateStateView;
 begin
   lbState.Caption := TRecorderStateMachine.StateToString(fStateMachine.State);
-  lbTime.Caption := '00:00:00';
+  UpdateTimeView;
 
   case fStateMachine.State of
     rsStop:
@@ -1188,6 +1373,14 @@ begin
   lbTime.ParentColor := True;
 end;
 
+procedure TMainForm.UpdateTimeView;
+begin
+  if fTimeSystem <> nil then
+    lbTime.Caption := fTimeSystem.Snapshot.DisplayText
+  else
+    lbTime.Caption := '00:00:00';
+end;
+
 procedure TMainForm.LogCommandError(const ACommand: string; E: Exception);
 begin
   AddLog(ACommand + ' failed: ' + E.Message);
@@ -1196,6 +1389,20 @@ end;
 procedure TMainForm.StateMachineStateChanged(ASender: TObject;
   AOldState, ANewState: TRecorderState);
 begin
+  case ANewState of
+    rsPreview, rsRecord:
+      begin
+        if not (AOldState in [rsPreview, rsRecord]) then
+          fTimeSystem.Start;
+        StartDataSources;
+      end;
+    rsStop:
+      begin
+        StopDataSources;
+        fTimeSystem.Stop;
+      end;
+  end;
+
   UpdateStateView;
   AddLog(Format('State changed: %s -> %s',
     [TRecorderStateMachine.StateToString(AOldState),

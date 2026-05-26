@@ -1,0 +1,18 @@
+LOG file: D:\works\OburecGH\Lazarus\Tests\RecorderTests\TimeSystem\lib\RecorderTimeSystemTest.log
+--- Recorder time system test ---
+--- FormatDuration ---
+OK zero -> 00:00:00
+OK seconds -> 00:00:12
+OK hours -> 01:01:01
+--- External tag/UTS time ---
+OK tag time display -> 00:02:05
+SNAP tag elapsed=0,000 tag=125,750 uts=0,000 text=00:02:05
+OK UTS time display -> 02:00:01
+SNAP uts elapsed=0,000 tag=126,000 uts=7201,000 text=02:00:01
+--- Elapsed start/stop ---
+OK elapsed snapshot is running
+OK elapsed time advanced
+SNAP elapsed=0,046 text=00:00:00
+OK elapsed snapshot stopped
+SNAP stopped elapsed=0,000 text=00:00:00
+RESULT time system test passed.

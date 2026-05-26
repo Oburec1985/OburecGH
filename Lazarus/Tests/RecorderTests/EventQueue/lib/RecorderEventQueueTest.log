@@ -1,0 +1,9 @@
+LOG file: D:\works\OburecGH\Lazarus\Tests\RecorderTests\EventQueue\lib\RecorderEventQueueTest.log
+--- Recorder event snapshot queue test ---
+SOURCE id=mock.queue.sine tag=QueueSineTag update=25ms
+MANAGER start
+MANAGER stop errors=0 queued=3
+QUEUE pop #1 kind=5 name=QueueSineTag tag=QueueSineTag t=0,000 value=0,000
+QUEUE pop #2 kind=5 name=QueueSineTag tag=QueueSineTag t=0,025 value=0,156
+QUEUE pop #3 kind=5 name=QueueSineTag tag=QueueSineTag t=0,050 value=0,309
+RESULT event snapshot queue test passed, events=3.

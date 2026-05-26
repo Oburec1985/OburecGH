@@ -10,7 +10,7 @@
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="42" Y="19"/>
-        <UsageCount Value="33"/>
+        <UsageCount Value="40"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uMainForm.pas"/>
@@ -18,9 +18,9 @@
         <ComponentName Value="MainForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <TopLine Value="27"/>
-        <CursorPos X="86" Y="41"/>
-        <UsageCount Value="33"/>
+        <TopLine Value="1264"/>
+        <CursorPos X="75" Y="1301"/>
+        <UsageCount Value="40"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit>
@@ -30,7 +30,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="25"/>
         <CursorPos X="65" Y="47"/>
-        <UsageCount Value="33"/>
+        <UsageCount Value="40"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderRunControlSettings.pas"/>
@@ -38,7 +38,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="169"/>
         <CursorPos X="55" Y="116"/>
-        <UsageCount Value="33"/>
+        <UsageCount Value="40"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderFormModel.pas"/>
@@ -46,43 +46,59 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="146"/>
         <CursorPos X="94" Y="169"/>
-        <UsageCount Value="28"/>
+        <UsageCount Value="35"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core\uRecorderCoreServices.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="27"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core\uRecorderTags.pas"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="404"/>
+        <CursorPos X="56" Y="431"/>
+        <UsageCount Value="27"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core\uRecorderDataSources.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="27"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core\uRecorderEventQueue.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="27"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core\uRecorderDataStorage.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="27"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core\uRecorderTimeSystem.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="20"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uFormPagesDialog.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="28"/>
+        <UsageCount Value="35"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uFormEditorController.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="1"/>
-        <TopLine Value="103"/>
-        <CursorPos X="65" Y="134"/>
-        <UsageCount Value="26"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="57"/>
+        <CursorPos X="112" Y="78"/>
+        <UsageCount Value="33"/>
         <Loaded Value="True"/>
       </Unit>
     </Units>
     <JumpHistory HistoryIndex="29">
-      <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="49" Column="26" TopLine="15"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="51" Column="24" TopLine="17"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="197" Column="34" TopLine="263"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-      </Position>
       <Position>
         <Filename Value="UI\uFormEditorController.pas"/>
         <Caret Line="64" Column="30" TopLine="31"/>
@@ -180,6 +196,26 @@
       <Position>
         <Filename Value="UI\uFormEditorController.pas"/>
         <Caret Line="551" Column="31" TopLine="531"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uFormEditorController.pas"/>
+        <Caret Line="88" Column="48" TopLine="69"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uFormEditorController.pas"/>
+        <Caret Line="78" Column="112" TopLine="57"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="1296" Column="84" TopLine="1289"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="1306" Column="53" TopLine="1288"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="1314" Column="64" TopLine="1288"/>
       </Position>
     </JumpHistory>
     <RunParams>

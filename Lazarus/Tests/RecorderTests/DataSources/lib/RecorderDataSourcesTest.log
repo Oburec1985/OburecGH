@@ -1,0 +1,60 @@
+LOG file: D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.log
+--- Recorder data source test ---
+CREATE source id=mock.sine.1 update=250ms tag=SineTag
+CONFIGURE tag name=SineTag address=virtual unit=a.u. source=mock.sine.1
+START source state=Running
+TICK #1
+EVENT #1 tag=SineTag t=0,000 value=0,000
+TICK #2
+EVENT #2 tag=SineTag t=0,250 value=1,000
+TICK #3
+EVENT #3 tag=SineTag t=0,500 value=0,000
+TICK #4
+EVENT #4 tag=SineTag t=0,750 value=-1,000
+TICK #5
+EVENT #5 tag=SineTag t=1,000 value=0,000
+SNAPSHOT SineTag count=5
+  [0] t=0,000 value=0,000
+  [1] t=0,250 value=1,000
+  [2] t=0,500 value=0,000
+  [3] t=0,750 value=-1,000
+  [4] t=1,000 value=0,000
+STOP source state=Stopped
+RESULT mock sine data source test passed.
+
+--- Recorder data source thread test ---
+CREATE thread source id=mock.sine.thread update=20ms tag=ThreadSineTag
+THREAD start
+EVENT #1 tag=ThreadSineTag t=0,000 value=0,000
+EVENT #2 tag=ThreadSineTag t=0,020 value=1,176
+EVENT #3 tag=ThreadSineTag t=0,040 value=1,902
+THREAD terminate requested
+EVENT #4 tag=ThreadSineTag t=0,060 value=1,902
+THREAD stopped ticks=4 state=Stopped error=""
+SNAPSHOT ThreadSineTag count=4
+  [0] t=0,000 value=0,000
+  [1] t=0,020 value=1,176
+  [2] t=0,040 value=1,902
+  [3] t=0,060 value=1,902
+RESULT data source thread test passed.
+
+--- Recorder data source manager test ---
+MANAGER add sources count=2 ids=mock.manager.a,mock.manager.b
+MANAGER configure tags tagA=ManagerSineA tagB=ManagerSineB
+MANAGER start running=True
+EVENT #1 tag=ManagerSineA t=0,000 value=0,000
+EVENT #2 tag=ManagerSineB t=0,000 value=0,000
+EVENT #3 tag=ManagerSineA t=0,025 value=0,309
+EVENT #4 tag=ManagerSineB t=0,040 value=0,373
+EVENT #5 tag=ManagerSineA t=0,050 value=0,588
+EVENT #6 tag=ManagerSineB t=0,080 value=0,723
+MANAGER stopped running=False errors=0
+SNAPSHOT ManagerSineA count=3
+  [0] t=0,000 value=0,000
+  [1] t=0,025 value=0,309
+  [2] t=0,050 value=0,588
+SNAPSHOT ManagerSineB count=3
+  [0] t=0,000 value=0,000
+  [1] t=0,040 value=0,373
+  [2] t=0,080 value=0,723
+RESULT data source manager test passed.

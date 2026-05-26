@@ -1,0 +1,34 @@
+LOG file: D:\works\OburecGH\Lazarus\Tests\RecorderTests\Storage\lib\RecorderStorageTest.log
+--- Recorder storage test ---
+ROOT dir: D:\works\OburecGH\Lazarus\Tests\RecorderTests\Storage\lib\recording-test-20260526-130207-883
+FRAME opened no=1 name=0001 dir=D:\works\OburecGH\Lazarus\Tests\RecorderTests\Storage\lib\recording-test-20260526-130207-883\0001\
+CSV opened: D:\works\OburecGH\Lazarus\Tests\RecorderTests\Storage\lib\recording-test-20260526-130207-883\0001\tags.csv
+FRAME info: D:\works\OburecGH\Lazarus\Tests\RecorderTests\Storage\lib\recording-test-20260526-130207-883\0001\frame.ini
+  [Frame]
+  Number=1
+  Name=0001
+  Project=RecorderStorageTest
+  CreatedLocal=2026-05-26 13:02:07.883
+  Comment=first frame
+CSV data: D:\works\OburecGH\Lazarus\Tests\RecorderTests\Storage\lib\recording-test-20260526-130207-883\0001\tags.csv
+  TagName;TimeSec;Value
+  MemTag;0;10
+  MemTag;0.25;12.5
+  MemTag;0.5;15
+FRAME closed
+FRAME opened no=2 name=0002 dir=D:\works\OburecGH\Lazarus\Tests\RecorderTests\Storage\lib\recording-test-20260526-130207-883\0002\
+CSV opened: D:\works\OburecGH\Lazarus\Tests\RecorderTests\Storage\lib\recording-test-20260526-130207-883\0002\tags.csv
+FRAME info: D:\works\OburecGH\Lazarus\Tests\RecorderTests\Storage\lib\recording-test-20260526-130207-883\0002\frame.ini
+  [Frame]
+  Number=2
+  Name=0002
+  Project=RecorderStorageTest
+  CreatedLocal=2026-05-26 13:02:07.885
+  Comment=second frame
+CSV data: D:\works\OburecGH\Lazarus\Tests\RecorderTests\Storage\lib\recording-test-20260526-130207-883\0002\tags.csv
+  TagName;TimeSec;Value
+  MemTag;0;110
+  MemTag;0.25;112.5
+  MemTag;0.5;115
+FRAME closed
+RESULT storage test passed.
