@@ -12,6 +12,32 @@ unit uFormEditorController;
     UI adapter/controller. Работает поверх TRecorderFormPage и LCL-controls,
     не содержит логики сбора данных, тегов, записи или потоков источников.
 
+  Алгоритм работы:
+    1. MainForm создает TFormEditorController для панели-полотна и передает
+       callback AGetPage. Callback возвращает текущий TRecorderFormPage.
+    2. Render полностью перестраивает LCL-представление активной страницы:
+       каждый TRecorderVisualComponent получает временный TPanel на полотне.
+       Эти TPanel не являются моделью и не сохраняются в конфигурацию.
+    3. Выбор хранится как список индексов компонентов страницы. Одинарный клик
+       выбирает компонент, Ctrl+клик добавляет/убирает его из выбора, протяжка
+       пустого места создает прямоугольник выбора.
+    4. Текущая операция хранится в fOperation. Операция выбирается только
+       мышью: клик по центру выбранного компонента начинает move/drag, клик по
+       краям или фиолетовым ручкам выделения начинает resize. Отдельной кнопки
+       выбора операции пока нет.
+    5. При старте операции BeginOperation запоминает стартовую точку мыши,
+       общий прямоугольник группы и стартовые Bounds всех выбранных компонентов.
+       UpdateOperation каждый раз пересчитывает модельные Bounds относительно
+       этих стартовых значений, поэтому накопительная ошибка от предыдущих
+       MouseMove не нарастает.
+    6. Клавиатура используется для точной правки геометрии: стрелки двигают
+       выбранные компоненты на 1 пиксель, Ctrl+Shift+стрелки двигают на 5
+       пикселей, Ctrl+стрелки меняют размер на 1 пиксель, Shift+стрелки меняют
+       размер на 5 пикселей.
+    7. Ctrl+C сохраняет снимки выбранных компонентов во внутренний буфер
+       редактора. Ctrl+V создает новые компоненты через TRecorderComponentFactory,
+       копирует свойства, добавляет их на активную страницу и выделяет вставку.
+
   Ограничения:
     Используются кроссплатформенные LCL-события вместо прямых WinAPI-сообщений.
     При Enabled = False обработчики остаются подключенными, но edit-функции
@@ -29,6 +55,13 @@ uses
 type
   PRecorderRect = ^TRecorderRect;
 
+  { Текущая мышиная операция редактора.
+
+    feoNone - редактор ничего не тащит.
+    feoDrag - перемещение выбранных компонентов мышью.
+    feoSelectRect - выделение протяжкой пустого места.
+    feoResize* - изменение размера выбранной группы за соответствующий край
+      или угол. Эти операции запускаются только мышью по краям/ручкам. }
   TFormEditorOperation = (
     feoNone,
     feoDrag,
@@ -46,11 +79,33 @@ type
   TGetEditorPageEvent = function: TRecorderFormPage of object;
   TEditorNotifyEvent = procedure of object;
 
-  { TFormEditorController }
+  { TFormEditorClipboardItem
+
+    Снимок одного компонента для внутреннего copy/paste. Это не живой
+    TRecorderVisualComponent: элемент буфера не зарегистрирован в фабрике и не
+    принадлежит странице. Реальный компонент создается только при Paste. }
+  TFormEditorClipboardItem = class
+  public
+    Bounds: TRecorderRect;
+    DisplayFormat: string;
+    Name: string;
+    TagName: string;
+    Text: string;
+    TypeId: string;
+  end;
+
+  { TFormEditorController
+
+    Управляет design-time поведением мнемосхемы: отрисовкой временных LCL
+    контролов по доменной модели, выбором компонентов, мышиным drag/resize и
+    клавиатурным точным перемещением. Контроллер не владеет TRecorderFormPage:
+    страница каждый раз берется через callback AGetPage. }
 
   TFormEditorController = class
   private
     fCanvas: TPanel;
+    fClipboard: TList;
+    fComponentFactory: TRecorderComponentFactory;
     fEnabled: Boolean;
     fGetPage: TGetEditorPageEvent;
     fOnChanged: TEditorNotifyEvent;
@@ -78,8 +133,19 @@ type
     procedure UpdateOperation(X, Y: Integer);
     procedure EndOperation;
     procedure ClearDragStartBounds;
+    procedure ClearClipboard;
     procedure RenderLive;
     procedure NotifyChanged;
+    procedure CopySelected;
+    procedure PasteClipboard;
+    function ClipboardItemFromComponent(
+      AComponent: TRecorderVisualComponent): TFormEditorClipboardItem;
+    function CreateComponentFromClipboard(
+      AItem: TFormEditorClipboardItem): TRecorderVisualComponent;
+    function UniqueComponentId(APage: TRecorderFormPage;
+      const ABaseId: string): string;
+    function UniqueComponentName(APage: TRecorderFormPage;
+      const ABaseName: string): string;
     function IsSelected(AIndex: Integer): Boolean;
     procedure SelectIndex(AIndex: Integer; AAdd: Boolean);
     procedure ToggleIndex(AIndex: Integer);
@@ -93,11 +159,33 @@ type
     function RecorderRectToRect(const ABounds: TRecorderRect): TRect;
     function RectsIntersectPartial(const A, B: TRect): Boolean;
   public
-    constructor Create(ACanvas: TPanel; AGetPage: TGetEditorPageEvent);
+    { Создает контроллер для полотна.
+
+      ACanvas - панель, внутри которой строится редактор мнемосхемы.
+      AGetPage - callback, возвращающий активную страницу модели. }
+    constructor Create(ACanvas: TPanel; AGetPage: TGetEditorPageEvent;
+      AComponentFactory: TRecorderComponentFactory);
     destructor Destroy; override;
+
+    { Снимает выделение со всех компонентов, не меняя модель страницы. }
     procedure ClearSelection;
+
+    { Полностью перестраивает визуальное представление активной страницы. }
     procedure Render;
+
+    { Удаляет выбранные компоненты из активной страницы. }
     procedure DeleteSelected;
+
+    { Обрабатывает клавиатуру редактора.
+
+      Стрелки двигают выбранные компоненты на 1 пиксель.
+      Ctrl+Shift+стрелки двигают выбранные компоненты на 5 пикселей.
+      Ctrl+стрелки меняют размер на 1 пиксель.
+      Shift+стрелки меняют размер на 5 пикселей.
+      Ctrl+C копирует выбранные компоненты.
+      Ctrl+V вставляет компоненты со смещением.
+      Delete обрабатывается снаружи в MainForm, чтобы команда могла быть
+      переиспользована кнопкой тулбара. }
     procedure HandleKeyDown(var Key: Word; Shift: TShiftState);
     property Enabled: Boolean read fEnabled write SetEnabled;
     property OnChanged: TEditorNotifyEvent read fOnChanged write fOnChanged;
@@ -107,20 +195,25 @@ implementation
 
 const
   CMinComponentSize = 8;
+  CPasteOffset = 16;
   CResizeHandleSize = 8;
   CResizeHotZone = 5;
 
 constructor TFormEditorController.Create(ACanvas: TPanel;
-  AGetPage: TGetEditorPageEvent);
+  AGetPage: TGetEditorPageEvent; AComponentFactory: TRecorderComponentFactory);
 begin
   inherited Create;
   if ACanvas = nil then
     raise ERecorderFormError.Create('Editor canvas cannot be nil');
   if not Assigned(AGetPage) then
     raise ERecorderFormError.Create('Editor page provider cannot be nil');
+  if AComponentFactory = nil then
+    raise ERecorderFormError.Create('Editor component factory cannot be nil');
 
   fCanvas := ACanvas;
   fGetPage := AGetPage;
+  fComponentFactory := AComponentFactory;
+  fClipboard := TList.Create;
   fSelected := TList.Create;
   fDragStartBounds := TList.Create;
 
@@ -133,7 +226,9 @@ end;
 destructor TFormEditorController.Destroy;
 begin
   EndOperation;
+  ClearClipboard;
   ClearDragStartBounds;
+  fClipboard.Free;
   fDragStartBounds.Free;
   fSelected.Free;
   inherited Destroy;
@@ -200,6 +295,10 @@ var
   end;
 
 begin
+  { В этой первой версии контроллер не переиспользует LCL-контролы, а строит
+    их заново из модели. Это проще для проверки геометрии и выбора; когда
+    появятся тяжелые визуальные компоненты, этот участок стоит заменить на
+    обновление существующих view по Id компонента. }
   while fCanvas.ControlCount > 0 do
     fCanvas.Controls[0].Free;
 
@@ -269,6 +368,9 @@ begin
     lShape.BringToFront;
   end;
 
+  { Общая рамка группы нужна для группового масштабирования: тянем одну рамку,
+    а UpdateOperation пропорционально пересчитывает Bounds всех выбранных
+    компонентов относительно стартовой группы. }
   if GetGroupBounds(lGroupBounds) then
   begin
     lShape := TShape.Create(fCanvas);
@@ -310,6 +412,9 @@ begin
   if lPage = nil then
     Exit;
 
+  { Удаляем с конца списка компонентов страницы, чтобы индексы еще не удаленных
+    элементов не сдвигались под ногами. fSelected может быть в любом порядке,
+    поэтому каждый раз ищем максимальный выбранный индекс. }
   while fSelected.Count > 0 do
   begin
     lMaxPos := 0;
@@ -332,6 +437,7 @@ end;
 
 procedure TFormEditorController.HandleKeyDown(var Key: Word; Shift: TShiftState);
 var
+  lResize: Boolean;
   lStep: Integer;
   lDeltaW: Integer;
   lDeltaH: Integer;
@@ -342,11 +448,35 @@ var
   lComponent: TRecorderVisualComponent;
   lBounds: TRecorderRect;
 begin
-  if (not fEnabled) or (fSelected.Count = 0) then
+  if not fEnabled then
     Exit;
 
+  if (ssCtrl in Shift) and (Key = VK_C) then
+  begin
+    CopySelected;
+    Key := 0;
+    Exit;
+  end;
+
+  if (ssCtrl in Shift) and (Key = VK_V) then
+  begin
+    PasteClipboard;
+    Key := 0;
+    Exit;
+  end;
+
+  if fSelected.Count = 0 then
+    Exit;
+
+  { Клавиатура редактора:
+    - стрелки без модификаторов двигают выбранные компоненты на 1 пиксель;
+    - Ctrl+Shift+стрелки двигают выбранные компоненты на 5 пикселей;
+    - Ctrl+стрелки меняют размер на 1 пиксель;
+    - Shift+стрелки меняют размер на 5 пикселей. }
+  lResize := ((ssCtrl in Shift) or (ssShift in Shift)) and
+    (not ((ssCtrl in Shift) and (ssShift in Shift)));
   lStep := 1;
-  if (ssCtrl in Shift) and (ssShift in Shift) then
+  if ssShift in Shift then
     lStep := 5;
 
   lDeltaW := 0;
@@ -354,7 +484,7 @@ begin
   lDeltaX := 0;
   lDeltaY := 0;
 
-  if ssCtrl in Shift then
+  if lResize then
   begin
     case Key of
       VK_LEFT: lDeltaW := -lStep;
@@ -368,10 +498,10 @@ begin
   else
   begin
     case Key of
-      VK_LEFT: lDeltaX := -1;
-      VK_RIGHT: lDeltaX := 1;
-      VK_UP: lDeltaY := -1;
-      VK_DOWN: lDeltaY := 1;
+      VK_LEFT: lDeltaX := -lStep;
+      VK_RIGHT: lDeltaX := lStep;
+      VK_UP: lDeltaY := -lStep;
+      VK_DOWN: lDeltaY := lStep;
     else
       Exit;
     end;
@@ -401,6 +531,8 @@ begin
   if (not fEnabled) or (Button <> mbLeft) then
     Exit;
 
+  { Клик по пустому полотну начинает прямоугольное выделение. Без Ctrl старое
+    выделение сбрасывается, с Ctrl новое выделение добавляется к текущему. }
   if not (ssCtrl in Shift) then
     ClearSelection;
 
@@ -454,6 +586,8 @@ begin
     SelectIndex(lIndex, False);
 
   lPoint := fCanvas.ScreenToClient(TControl(Sender).ClientToScreen(Point(X, Y)));
+  { Операция определяется положением мыши: край выбранного компонента запускает
+    resize, центральная зона - обычное перемещение. }
   lOperation := GetResizeOperationAtControlPoint(TControl(Sender), X, Y);
   if lOperation = feoNone then
     lOperation := feoDrag;
@@ -502,6 +636,7 @@ begin
     Exit;
 
   lPoint := fCanvas.ScreenToClient(TControl(Sender).ClientToScreen(Point(X, Y)));
+  { Ручки вокруг групповой рамки хранят тип resize-операции в Tag. }
   BeginOperation(TFormEditorOperation(TControl(Sender).Tag), lPoint.X, lPoint.Y);
 end;
 
@@ -523,6 +658,8 @@ begin
   if AOperation = feoSelectRect then
     Exit;
 
+  { Сохраняем стартовые Bounds один раз на MouseDown. Все MouseMove считают
+    новое состояние от этих значений, а не от уже измененной модели. }
   GetGroupBounds(fStartGroupBounds);
   lPage := GetActivePage;
   if lPage = nil then
@@ -577,6 +714,7 @@ begin
     Exit;
 
   lNewGroup := fStartGroupBounds;
+  { Сначала пересчитываем новый прямоугольник группы по активному краю/углу. }
   case fOperation of
     feoDrag:
       begin
@@ -663,11 +801,139 @@ begin
   fDragStartBounds.Clear;
 end;
 
+procedure TFormEditorController.ClearClipboard;
+var
+  I: Integer;
+begin
+  for I := 0 to fClipboard.Count - 1 do
+    TObject(fClipboard[I]).Free;
+  fClipboard.Clear;
+end;
+
 procedure TFormEditorController.RenderLive;
 begin
   Render;
   fCanvas.Invalidate;
   fCanvas.Update;
+end;
+
+procedure TFormEditorController.CopySelected;
+var
+  I: Integer;
+  lPage: TRecorderFormPage;
+  lIndex: Integer;
+begin
+  lPage := GetActivePage;
+  if (lPage = nil) or (fSelected.Count = 0) then
+    Exit;
+
+  ClearClipboard;
+  for I := 0 to fSelected.Count - 1 do
+  begin
+    lIndex := Integer(PtrUInt(fSelected[I]));
+    if (lIndex >= 0) and (lIndex < lPage.ComponentCount) then
+      fClipboard.Add(ClipboardItemFromComponent(lPage.Components[lIndex]));
+  end;
+end;
+
+procedure TFormEditorController.PasteClipboard;
+var
+  I: Integer;
+  lPage: TRecorderFormPage;
+  lItem: TFormEditorClipboardItem;
+  lComponent: TRecorderVisualComponent;
+begin
+  lPage := GetActivePage;
+  if (lPage = nil) or (fClipboard.Count = 0) then
+    Exit;
+
+  ClearSelection;
+  for I := 0 to fClipboard.Count - 1 do
+  begin
+    lItem := TFormEditorClipboardItem(fClipboard[I]);
+      lComponent := CreateComponentFromClipboard(lItem);
+    try
+      lComponent.Id := UniqueComponentId(lPage, lItem.TypeId + '.copy');
+      lComponent.Name := UniqueComponentName(lPage, lItem.Name + 'Copy');
+      lComponent.TagName := lItem.TagName;
+      lComponent.SetBounds(lItem.Bounds.Left + CPasteOffset,
+        lItem.Bounds.Top + CPasteOffset, lItem.Bounds.Width,
+        lItem.Bounds.Height);
+
+      if lComponent is TRecorderStaticTextComponent then
+        TRecorderStaticTextComponent(lComponent).Text := lItem.Text
+      else if lComponent is TRecorderTagValueComponent then
+        TRecorderTagValueComponent(lComponent).DisplayFormat :=
+          lItem.DisplayFormat;
+
+      lPage.AddComponent(lComponent);
+      fSelected.Add(Pointer(PtrUInt(lPage.ComponentCount - 1)));
+
+      { Сдвигаем сам буфер, чтобы повторные Ctrl+V не ложились в то же место. }
+      Inc(lItem.Bounds.Left, CPasteOffset);
+      Inc(lItem.Bounds.Top, CPasteOffset);
+    except
+      lComponent.Free;
+      raise;
+    end;
+  end;
+
+  NotifyChanged;
+  Render;
+end;
+
+function TFormEditorController.ClipboardItemFromComponent(
+  AComponent: TRecorderVisualComponent): TFormEditorClipboardItem;
+begin
+  Result := TFormEditorClipboardItem.Create;
+  Result.Bounds := AComponent.Bounds;
+  Result.Name := AComponent.Name;
+  Result.TagName := AComponent.TagName;
+  Result.TypeId := AComponent.TypeId;
+
+  if AComponent is TRecorderStaticTextComponent then
+    Result.Text := TRecorderStaticTextComponent(AComponent).Text
+  else if AComponent is TRecorderTagValueComponent then
+    Result.DisplayFormat := TRecorderTagValueComponent(AComponent).DisplayFormat;
+end;
+
+function TFormEditorController.CreateComponentFromClipboard(
+  AItem: TFormEditorClipboardItem): TRecorderVisualComponent;
+begin
+  Result := fComponentFactory.CreateComponent(AItem.TypeId);
+end;
+
+function TFormEditorController.UniqueComponentId(APage: TRecorderFormPage;
+  const ABaseId: string): string;
+var
+  lIndex: Integer;
+begin
+  lIndex := 1;
+  repeat
+    Result := Format('%s.%s%d', [APage.Id, ABaseId, lIndex]);
+    Inc(lIndex);
+  until APage.FindComponentById(Result) = nil;
+end;
+
+function TFormEditorController.UniqueComponentName(APage: TRecorderFormPage;
+  const ABaseName: string): string;
+var
+  I: Integer;
+  lIndex: Integer;
+  lExists: Boolean;
+begin
+  lIndex := 1;
+  repeat
+    Result := Format('%s%d', [ABaseName, lIndex]);
+    lExists := False;
+    for I := 0 to APage.ComponentCount - 1 do
+      if SameText(APage.Components[I].Name, Result) then
+      begin
+        lExists := True;
+        Break;
+      end;
+    Inc(lIndex);
+  until not lExists;
 end;
 
 function TFormEditorController.IsSelected(AIndex: Integer): Boolean;
@@ -776,6 +1042,8 @@ var
   lOperation: TFormEditorOperation;
   lCursor: TCursor;
 begin
+  { Cursor показывает, какая операция начнется при MouseDown: на ручках и краях
+    выбранного компонента будет resize, в центре компонента - move/drag. }
   if (not fEnabled) or (AControl = nil) then
     lCursor := crDefault
   else if (AControl.Hint = 'Resize selection') and
@@ -808,6 +1076,9 @@ var
   lRight: Integer;
   lBottom: Integer;
 begin
+  { Групповой прямоугольник - минимальная рамка, вмещающая все выбранные
+    компоненты. Он используется и для рисования общей рамки, и как база
+    пропорционального resize нескольких компонентов. }
   Result := False;
   lPage := GetActivePage;
   if (lPage = nil) or (fSelected.Count = 0) then

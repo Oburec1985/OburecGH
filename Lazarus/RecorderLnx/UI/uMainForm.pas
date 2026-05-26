@@ -266,7 +266,8 @@ begin
   EnsurePageControl;
   EnsureEditorSurface;
   EnsureBaseToolbar;
-  fFormEditor := TFormEditorController.Create(fEditorCanvas, @GetActiveEditorPage);
+  fFormEditor := TFormEditorController.Create(fEditorCanvas, @GetActiveEditorPage,
+    fComponentFactory);
   fFormEditor.OnChanged := @FormEditorChanged;
   InitializeFormPages;
   RebuildTagList('');
