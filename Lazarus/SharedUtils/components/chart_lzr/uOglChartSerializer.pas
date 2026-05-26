@@ -5,7 +5,7 @@ unit uOglChartSerializer;
 interface
 
 uses
-  Classes, SysUtils, fpjson, jsonparser, uOglChartTypes, uOglChartModel,
+  Classes, SysUtils, fpjson, jsonparser, uOglChartTypes, uOglChartBaseObj,
   uOglChartLog;
 
 type

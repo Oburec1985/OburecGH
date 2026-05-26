@@ -2,20 +2,31 @@
 
 Тут будут тесты-примеры RecorderLnx. Каждый пример должен одновременно показывать использование класса и проверять ожидаемое поведение.
 
+## Общий принцип
+
+Тесты лежат рядом с проверяемым примером и собираются в собственный `lib`
+каталог.
+
+Запуск всех тестов:
+
+```powershell
+.\Tests\RecorderTests\run-recorder-tests.ps1
+```
+
+Шаблон сборки на Windows:
+
+```powershell
+C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe -MObjFPC -FuC:\Oburec\OburecGH\Lazarus\RecorderLnx\Core -FUC:\Oburec\OburecGH\Lazarus\Tests\RecorderTests\<TestName>\lib -oC:\Oburec\OburecGH\Lazarus\Tests\RecorderTests\<TestName>\lib\<ProgramName>.exe C:\Oburec\OburecGH\Lazarus\Tests\RecorderTests\<TestName>\<ProgramName>.lpr
+```
+
 ## StateMachine
 
 `StateMachine/RecorderStateMachineTest.lpr` проверяет базовые переходы `TRecorderStateMachine`, модель настроек запуска/остановки `TRecorderRunControlSettings` и сохранение/загрузку этих настроек в INI-файл.
 
-Сборка на Windows:
+Сборка:
 
 ```powershell
-C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe -MObjFPC -FuD:\works\OburecGH\Lazarus\RecorderLnx\Core -FUD:\works\OburecGH\Lazarus\Tests\RecorderTests\StateMachine\lib -oD:\works\OburecGH\Lazarus\Tests\RecorderTests\StateMachine\lib\RecorderStateMachineTest.exe D:\works\OburecGH\Lazarus\Tests\RecorderTests\StateMachine\RecorderStateMachineTest.lpr
-```
-
-Запуск:
-
-```powershell
-D:\works\OburecGH\Lazarus\Tests\RecorderTests\StateMachine\lib\RecorderStateMachineTest.exe
+C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe -MObjFPC -FuC:\Oburec\OburecGH\Lazarus\RecorderLnx\Core -FUC:\Oburec\OburecGH\Lazarus\Tests\RecorderTests\StateMachine\lib -oC:\Oburec\OburecGH\Lazarus\Tests\RecorderTests\StateMachine\lib\RecorderStateMachineTest.exe C:\Oburec\OburecGH\Lazarus\Tests\RecorderTests\StateMachine\RecorderStateMachineTest.lpr
 ```
 
 ## FormModel
@@ -25,14 +36,17 @@ D:\works\OburecGH\Lazarus\Tests\RecorderTests\StateMachine\lib\RecorderStateMach
 `TRecorderFormFactory`, а также первые модельные компоненты `StaticText` и
 `TagValue`.
 
-Сборка на Windows:
+Сборка:
 
 ```powershell
-C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe -MObjFPC -FuD:\works\OburecGH\Lazarus\RecorderLnx\Core -FUD:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\lib -oD:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\lib\RecorderFormModelTest.exe D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\RecorderFormModelTest.lpr
+C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe -MObjFPC -FuC:\Oburec\OburecGH\Lazarus\RecorderLnx\Core -FUC:\Oburec\OburecGH\Lazarus\Tests\RecorderTests\FormModel\lib -oC:\Oburec\OburecGH\Lazarus\Tests\RecorderTests\FormModel\lib\RecorderFormModelTest.exe C:\Oburec\OburecGH\Lazarus\Tests\RecorderTests\FormModel\RecorderFormModelTest.lpr
 ```
 
-Запуск:
+## Остальные тесты-примеры
 
-```powershell
-D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\lib\RecorderFormModelTest.exe
-```
+- `CoreServices/RecorderCoreServicesTest.lpr`
+- `DataSources/RecorderDataSourcesTest.lpr`
+- `EventQueue/RecorderEventQueueTest.lpr`
+- `Storage/RecorderStorageTest.lpr`
+- `Tags/RecorderTagsTest.lpr`
+- `TimeSystem/RecorderTimeSystemTest.lpr`

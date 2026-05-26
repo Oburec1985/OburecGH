@@ -1,0 +1,62 @@
+# RecorderLnx: current safe plan
+
+Date: 2026-05-26
+
+This note fixes the current working boundary: the original Recorder sources are
+not available locally, so local work should avoid Recorder core behavior and any
+change that needs comparison with the original implementation.
+
+## Current local structure
+
+- `RecorderLnx/Core` contains the current domain/core model:
+  state machine, run-control settings, form model, event bus, tag registry,
+  data sources, storage, event queue, and time system.
+- `RecorderLnx/UI` contains the Lazarus UI shell, pages dialog, and form editor
+  controller.
+- `RecorderLnx/config` contains the local default app and run-control INI files.
+- `Tests/RecorderTests` contains console tests/examples for the current
+  RecorderLnx core modules.
+- `SharedUtils` contains shared helper units and chart code.
+
+## Safe work now
+
+- UI-only improvements in `RecorderLnx/UI` that do not change core contracts:
+  layout, captions, command button state, editor ergonomics, tag list display,
+  page/dialog behavior, and visual polish.
+- Developer configuration and documentation:
+  project notes, test/build instructions, local config defaults, and cleanup of
+  stale hard-coded paths in docs.
+- Test harness improvements around existing behavior:
+  scripts or notes for running the current `Tests/RecorderTests` examples,
+  without redefining expected Recorder behavior from memory.
+- Build hygiene:
+  Lazarus project metadata, output folders, ignored generated files, and warning
+  cleanup when the behavior is mechanically obvious.
+- Mock/demo data used only for UI scaffolding, clearly separated from real
+  Recorder devices, notify events, plugins, and acquisition logic.
+
+## Defer until original Recorder source is available
+
+- Recording/playback semantics, start/stop/trigger behavior, and state-machine
+  changes that must match the original Recorder.
+- Device, notify, plugin, channel, and external data acquisition integration.
+- Storage format decisions that must remain compatible with real Recorder data.
+- Time-source policy beyond the already isolated display model.
+- Any migration logic or compatibility layer that depends on original Recorder
+  naming, file layout, event order, or side effects.
+
+## Suggested next tasks
+
+1. Review `RecorderLnx/UI/uMainForm.pas` for UI-only rough edges:
+   disabled/enabled command states, empty tag-list states, captions, and dialog
+   flow.
+2. Keep a separate compatibility backlog for items that need the original
+   Recorder source.
+
+## Done in this pass
+
+- Added this safe-plan note.
+- Updated `Tests/RecorderTests/README.md`.
+- Added `Tests/RecorderTests/run-recorder-tests.ps1`.
+- Verified `RecorderLnx` build with `C:\lazarus\lazbuild.exe`.
+- Built and ran all current console `RecorderTests` with direct FPC.

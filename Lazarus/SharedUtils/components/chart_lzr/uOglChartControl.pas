@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, LCLIntf, LCLType, Controls, OpenGLContext, SyncObjs,
-  uOglChartTypes, uOglChartModel;
+  uOglChartTypes, uOglChartChart, uOglChartMng;
 
 type
   { TOglChartControl - LCL-компонент для отображения графиков через OpenGL.
