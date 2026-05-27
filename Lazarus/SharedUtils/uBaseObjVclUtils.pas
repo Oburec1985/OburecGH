@@ -5,7 +5,7 @@ unit uBaseObjVclUtils;
 interface
 
 uses
-  Classes, SysUtils, ComCtrls, ubaseobjLaz;
+  Classes, SysUtils, ComCtrls, uBaseObjLaz;
 
 // --- Аннотации ---
 // Рекурсивно добавляет узлы из иерархии TBaseObj в TTreeView.

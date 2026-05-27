@@ -5,7 +5,7 @@ unit testBaseObj;
 interface
 
 uses
-  Classes, SysUtils, ubaseobjLaz;
+  Classes, SysUtils, uBaseObjLaz;
 
 var
   Root: TBaseObj;

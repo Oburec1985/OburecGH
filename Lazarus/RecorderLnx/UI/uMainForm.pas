@@ -29,7 +29,7 @@ uses
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderFormModel,
   uRecorderCoreServices, uRecorderTags, uRecorderDataSources,
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
-  uFormEditorController;
+  uFormEditorController, uRecorderSettingsDialog;
 
 type
   { TMainForm }
@@ -478,7 +478,26 @@ end;
 
 procedure TMainForm.btnSettingsClick(Sender: TObject);
 begin
-  AddLog('Settings dialog placeholder: detailed project settings will be added after core models.');
+  try
+    if fStateMachine.State <> rsStop then
+    begin
+      fStateMachine.Stop;
+      AddLog('Configuration mode requested: Recorder stopped before settings.');
+    end;
+
+    AddLog('Configuration mode: settings dialog opened.');
+    if ShowRecorderSettingsDialog(Self, fRunSettings, fTagRegistry, ilCommandButtons) then
+    begin
+      SaveRunSettings;
+      RebuildTagList(edTagSearch.Text);
+      AddLog('Project settings applied: ' + fRunControlFileName);
+    end
+    else
+      AddLog('Configuration mode: settings dialog closed without applying OK.');
+  except
+    on E: Exception do
+      LogCommandError('Settings', E);
+  end;
 end;
 
 procedure TMainForm.btnClearSearchClick(Sender: TObject);
