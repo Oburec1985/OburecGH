@@ -10,7 +10,7 @@
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="42" Y="19"/>
-        <UsageCount Value="40"/>
+        <UsageCount Value="55"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uMainForm.pas"/>
@@ -19,8 +19,8 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <TopLine Value="1264"/>
-        <CursorPos X="75" Y="1301"/>
-        <UsageCount Value="40"/>
+        <CursorPos X="40" Y="1278"/>
+        <UsageCount Value="55"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit>
@@ -30,7 +30,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="25"/>
         <CursorPos X="65" Y="47"/>
-        <UsageCount Value="40"/>
+        <UsageCount Value="55"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderRunControlSettings.pas"/>
@@ -38,7 +38,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="169"/>
         <CursorPos X="55" Y="116"/>
-        <UsageCount Value="40"/>
+        <UsageCount Value="55"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderFormModel.pas"/>
@@ -46,176 +46,224 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="146"/>
         <CursorPos X="94" Y="169"/>
-        <UsageCount Value="35"/>
+        <UsageCount Value="50"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderCoreServices.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="27"/>
+        <UsageCount Value="42"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderTags.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="1"/>
-        <TopLine Value="404"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="401"/>
         <CursorPos X="56" Y="431"/>
-        <UsageCount Value="27"/>
-        <Loaded Value="True"/>
+        <UsageCount Value="42"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderDataSources.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="27"/>
+        <UsageCount Value="42"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderEventQueue.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="27"/>
+        <UsageCount Value="42"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderDataStorage.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="27"/>
+        <UsageCount Value="42"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderTimeSystem.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="20"/>
+        <UsageCount Value="35"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uFormPagesDialog.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="35"/>
+        <EditorIndex Value="2"/>
+        <UsageCount Value="50"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uFormEditorController.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="57"/>
         <CursorPos X="112" Y="78"/>
+        <UsageCount Value="48"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderSettingsDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="294"/>
+        <CursorPos X="55" Y="317"/>
         <UsageCount Value="33"/>
         <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\SharedUtils\components\chart_lzr\uOglChartBaseObj.pas"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="17"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\SharedUtils\components\chart_lzr\lzrobrpack.pas"/>
+        <UnitName Value="LzrObrPack"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="74" Y="23"/>
+        <UsageCount Value="17"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus\lcl\include\customform.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="2022"/>
+        <CursorPos X="57" Y="2043"/>
+        <UsageCount Value="16"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus\lcl\include\control.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="3989"/>
+        <CursorPos X="96" Y="4020"/>
+        <UsageCount Value="11"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus\fpc\3.2.2\source\rtl\objpas\sysutils\sysstrh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="65"/>
+        <CursorPos X="10" Y="85"/>
+        <UsageCount Value="10"/>
       </Unit>
     </Units>
     <JumpHistory HistoryIndex="29">
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="64" Column="30" TopLine="31"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="373" TopLine="360"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="65" Column="30" TopLine="31"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="381" TopLine="360"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="70" Column="29" TopLine="36"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="382" TopLine="360"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="128" Column="22" TopLine="94"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="385" TopLine="360"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="386" TopLine="360"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="34" Column="12" TopLine="4"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="387" TopLine="360"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="459" Column="26" TopLine="425"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="389" TopLine="360"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="581" Column="12" TopLine="548"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="391" TopLine="360"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="758" Column="12" TopLine="724"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="393" TopLine="361"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="34" Column="12" TopLine="13"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="395" TopLine="363"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="457" Column="13" TopLine="425"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="389" Column="64" TopLine="360"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="445" Column="3" TopLine="425"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="1010" Column="13" TopLine="988"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="35" Column="36" TopLine="11"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="90" Column="15" TopLine="71"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="456" Column="42" TopLine="425"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="305" Column="54" TopLine="288"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="88" Column="14" TopLine="69"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="308" Column="31" TopLine="288"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="727" Column="3" TopLine="717"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="322" Column="46" TopLine="288"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="758" Column="12" TopLine="724"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="308" TopLine="294"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="34" Column="12" TopLine="13"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="313" TopLine="294"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="459" Column="26" TopLine="425"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="314" TopLine="294"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="541" Column="109" TopLine="526"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="315" TopLine="294"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="546" Column="115" TopLine="490"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="316" TopLine="294"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="317" TopLine="297"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="101" Column="28" TopLine="68"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="318" TopLine="297"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="345" TopLine="317"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="319" Column="13" TopLine="287"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="551" Column="31" TopLine="531"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="313" Column="44" TopLine="287"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="88" Column="48" TopLine="69"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="315" Column="20" TopLine="288"/>
       </Position>
       <Position>
-        <Filename Value="UI\uFormEditorController.pas"/>
-        <Caret Line="78" Column="112" TopLine="57"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="317" TopLine="288"/>
       </Position>
       <Position>
-        <Filename Value="UI\uMainForm.pas"/>
-        <Caret Line="1296" Column="84" TopLine="1289"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="319" TopLine="288"/>
       </Position>
       <Position>
-        <Filename Value="UI\uMainForm.pas"/>
-        <Caret Line="1306" Column="53" TopLine="1288"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="323" Column="36" TopLine="294"/>
       </Position>
       <Position>
-        <Filename Value="UI\uMainForm.pas"/>
-        <Caret Line="1314" Column="64" TopLine="1288"/>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="318" Column="54" TopLine="294"/>
       </Position>
     </JumpHistory>
     <RunParams>
