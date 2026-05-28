@@ -14,7 +14,7 @@ type
     Ось задаёт систему координат для дочерних графиков.
     Y-ось обычно владеет сериями, X-ось может быть общей от страницы
     или индивидуальной для серии. }
-  cAxis = class(cDrawObj)
+  cAxis = class(cMoveObj)
   private
     fScale: TChartAxisScale;
     fMinValue: Double;

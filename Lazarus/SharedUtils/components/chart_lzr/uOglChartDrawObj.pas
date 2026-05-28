@@ -52,12 +52,14 @@ type
     fSelected: Boolean;
     fCanMove: Boolean;
     fCanResize: Boolean;
+    fLocked: Boolean;
   public
     procedure AssignDefaultProperties; override;
 
     property Selected: Boolean read fSelected write fSelected;
     property CanMove: Boolean read fCanMove write fCanMove;
     property CanResize: Boolean read fCanResize write fCanResize;
+    property Locked: Boolean read fLocked write fLocked;
   end;
 
   TChartDrawObject = cDrawObj;
@@ -87,6 +89,7 @@ begin
   fSelected := False;
   fCanMove := True;
   fCanResize := True;
+  fLocked := False;
 end;
 
 end.

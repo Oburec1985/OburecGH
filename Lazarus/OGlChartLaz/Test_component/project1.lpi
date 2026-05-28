@@ -119,6 +119,10 @@
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTypes.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\math\u2DMath.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -129,7 +133,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\..\SharedUtils;..\..\SharedUtils\components\chart_lzr"/>
+      <OtherUnitFiles Value="..\..\SharedUtils;..\..\SharedUtils\math;..\..\SharedUtils\components\chart_lzr"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

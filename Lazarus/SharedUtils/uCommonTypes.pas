@@ -5,12 +5,13 @@ unit uCommonTypes;
   Используй эти типы во всех компонентах SharedUtils, чтобы избежать
   лишних преобразований при совместной работе модулей. }
 
-{$mode objfpc}{$H+}
+{$mode delphi}{$H+}
+
 
 interface
 
 uses
-  Classes, SysUtils, Types; // Types содержит TPoint, TRect и др. стандартные типы LCL/FPC
+  Classes, SysUtils, Types, Math; // Types содержит TPoint, TRect и др. стандартные типы LCL/FPC
 
 type
   { Массивы примитивов }
@@ -23,15 +24,15 @@ type
   { 2D точка (Single - для рендера/OpenGL) }
   point2 = record
     x, y: Single;
-    class operator Add     (a, b: point2): point2; static;
-    class operator Subtract(a, b: point2): point2; static;
+    class operator Add     (a, b: point2): point2;
+    class operator Subtract(a, b: point2): point2;
   end;
 
   { 2D точка (Double - для данных/вычислений) }
   point2d = record
     x, y: Double;
-    class operator Add     (a, b: point2d): point2d; static;
-    class operator Subtract(a, b: point2d): point2d; static;
+    class operator Add     (a, b: point2d): point2d;
+    class operator Subtract(a, b: point2d): point2d;
   end;
 
   pPoint2d = ^point2d;
@@ -44,16 +45,16 @@ type
   { 3D точка (Single) }
   point3 = record
     x, y, z: Single;
-    class operator Add     (a, b: point3): point3; static;
-    class operator Subtract(a, b: point3): point3; static;
+    class operator Add     (a, b: point3): point3;
+    class operator Subtract(a, b: point3): point3;
   end;
 
   { 3D точка (Double) }
   point3d = record
     x, y, z: Double;
-    class operator Add     (a, b: point3d): point3d; static;
-    class operator Subtract(a, b: point3d): point3d; static;
-    class operator Implicit(p: point3d): point3; static;
+    class operator Add     (a, b: point3d): point3d;
+    class operator Subtract(a, b: point3d): point3d;
+    class operator Implicit(p: point3d): point3;
   end;
 
   { 4D точка (Double) - гомогенные координаты / RGBA }

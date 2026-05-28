@@ -199,8 +199,8 @@
     <File Path="units\POSBase.pas"/>
     <File Path="units\UWPEvents.pas"/>
     <File Path="units\uWpServicePlg.pas"/>
-    <File Path="WPServicePack_TLB.pas"/>
     <File Path="Winpos_ole_TLB.pas"/>
+    <File Path="WPServicePack_TLB.pas"/>
     <File Path="WPServicePlg.ridl"/>
   </ProjectSortOrder>
 </BorlandProject>

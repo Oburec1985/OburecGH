@@ -1,0 +1,116 @@
+2026-05-29 01:55:40.259: TOglChart.KeyDown: Key=46
+2026-05-29 01:55:40.260: SelectListener.KeyDown: Key=46
+2026-05-29 01:55:40.260:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:55:40.260:   Deleting point 10
+2026-05-29 01:55:50.193: TOglChart.KeyDown: Key=45
+2026-05-29 01:55:50.193: SelectListener.KeyDown: Key=45
+2026-05-29 01:55:50.193:   SelectedObject is cBasePage (Name: PageTrend)
+2026-05-29 01:55:59.884: TOglChart.KeyDown: Key=45
+2026-05-29 01:55:59.885: SelectListener.KeyDown: Key=45
+2026-05-29 01:55:59.885:   SelectedObject is cBasePage (Name: PageTrend)
+2026-05-29 01:56:25.232: TOglChart.KeyDown: Key=45
+2026-05-29 01:56:25.246: SelectListener.KeyDown: Key=45
+2026-05-29 01:56:25.246:   SelectedObject is cBasePage (Name: PageOwnX)
+2026-05-29 01:56:30.319: TOglChart.KeyDown: Key=45
+2026-05-29 01:56:30.320: SelectListener.KeyDown: Key=45
+2026-05-29 01:56:30.320:   SelectedObject is cBasePage (Name: PageBars)
+2026-05-29 01:56:36.125: TOglChart.KeyDown: Key=45
+2026-05-29 01:56:36.125: SelectListener.KeyDown: Key=45
+2026-05-29 01:56:36.126:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:56:36.126:   Inserting point at values X=6,16822451353073, Y=0,723163843154907
+2026-05-29 01:56:40.520: TOglChart.KeyDown: Key=45
+2026-05-29 01:56:40.520: SelectListener.KeyDown: Key=45
+2026-05-29 01:56:40.520:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:56:40.521:   Inserting point at values X=7,47897201776505, Y=0,757062137126923
+2026-05-29 01:56:44.585: TOglChart.KeyDown: Key=45
+2026-05-29 01:56:44.585: SelectListener.KeyDown: Key=45
+2026-05-29 01:56:44.585:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:56:44.586:   Inserting point at values X=8,42990672588348, Y=0,711864411830902
+2026-05-29 01:56:47.217: TOglChart.KeyDown: Key=45
+2026-05-29 01:56:47.217: SelectListener.KeyDown: Key=45
+2026-05-29 01:56:47.217:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:56:47.217:   Inserting point at values X=10,0233644247055, Y=0,666666686534882
+2026-05-29 01:56:48.039: TOglChart.KeyDown: Key=45
+2026-05-29 01:56:48.040: SelectListener.KeyDown: Key=45
+2026-05-29 01:56:48.040:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:56:48.040:   Inserting point at values X=10,0233644247055, Y=0,666666686534882
+2026-05-29 01:56:49.844: TOglChart.KeyDown: Key=45
+2026-05-29 01:56:49.845: SelectListener.KeyDown: Key=45
+2026-05-29 01:56:49.845:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:56:49.845:   Inserting point at values X=2,44158877432346, Y=0,740113019943237
+2026-05-29 01:56:58.206: TOglChart.KeyDown: Key=46
+2026-05-29 01:56:58.206: SelectListener.KeyDown: Key=46
+2026-05-29 01:56:58.206:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:56:58.207:   Deleting point 10
+2026-05-29 01:56:59.332: TOglChart.KeyDown: Key=46
+2026-05-29 01:56:59.332: SelectListener.KeyDown: Key=46
+2026-05-29 01:56:59.332:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:56:59.332:   Deleting point 10
+2026-05-29 01:58:02.953: TOglChart.KeyDown: Key=45
+2026-05-29 01:58:02.954: SelectListener.KeyDown: Key=45
+2026-05-29 01:58:02.954:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:58:02.954:   Inserting point at values X=8,42990672588348, Y=0,694915235042572
+2026-05-29 01:58:05.697: TOglChart.KeyDown: Key=45
+2026-05-29 01:58:05.697: SelectListener.KeyDown: Key=45
+2026-05-29 01:58:05.697:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:58:05.697:   Inserting point at values X=6,39953297376633, Y=0,785310745239258
+2026-05-29 01:58:06.184: TOglChart.KeyDown: Key=45
+2026-05-29 01:58:06.185: SelectListener.KeyDown: Key=45
+2026-05-29 01:58:06.185:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:58:06.185:   Inserting point at values X=6,37383145093918, Y=0,819209039211273
+2026-05-29 01:58:07.943: TOglChart.KeyDown: Key=45
+2026-05-29 01:58:07.943: SelectListener.KeyDown: Key=45
+2026-05-29 01:58:07.943:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:58:07.944:   Inserting point at values X=4,39485976099968, Y=0,610169470310211
+2026-05-29 01:58:09.416: TOglChart.KeyDown: Key=46
+2026-05-29 01:58:09.416: SelectListener.KeyDown: Key=46
+2026-05-29 01:58:09.416:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:58:09.416:   Deleting point 5
+2026-05-29 01:58:10.881: TOglChart.KeyDown: Key=46
+2026-05-29 01:58:10.881: SelectListener.KeyDown: Key=46
+2026-05-29 01:58:10.881:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:58:10.882:   Deleting point 5
+2026-05-29 01:58:12.304: TOglChart.KeyDown: Key=46
+2026-05-29 01:58:12.304: SelectListener.KeyDown: Key=46
+2026-05-29 01:58:12.306:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:58:12.306:   Deleting point 5
+2026-05-29 01:58:12.951: TOglChart.KeyDown: Key=46
+2026-05-29 01:58:12.951: SelectListener.KeyDown: Key=46
+2026-05-29 01:58:12.951:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:58:12.951:   Deleting point 5
+2026-05-29 01:58:15.127: TOglChart.KeyDown: Key=46
+2026-05-29 01:58:15.127: SelectListener.KeyDown: Key=46
+2026-05-29 01:58:15.129:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:58:15.129:   Deleting point 2
+2026-05-29 01:58:16.131: TOglChart.KeyDown: Key=46
+2026-05-29 01:58:16.131: SelectListener.KeyDown: Key=46
+2026-05-29 01:58:16.131:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:58:16.132:   Deleting point 2
+2026-05-29 01:58:18.373: TOglChart.KeyDown: Key=46
+2026-05-29 01:58:18.374: SelectListener.KeyDown: Key=46
+2026-05-29 01:58:18.374:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:58:18.374:   Deleting point 2
+2026-05-29 01:58:22.969: TOglChart.KeyDown: Key=46
+2026-05-29 01:58:22.970: SelectListener.KeyDown: Key=46
+2026-05-29 01:58:22.970:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:58:22.970:   Deleting point 3
+2026-05-29 01:58:24.511: TOglChart.KeyDown: Key=46
+2026-05-29 01:58:24.511: SelectListener.KeyDown: Key=46
+2026-05-29 01:58:24.511:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:58:24.511:   Deleting point 3
+2026-05-29 01:59:55.473: TOglChart.KeyDown: Key=46
+2026-05-29 01:59:55.473: SelectListener.KeyDown: Key=46
+2026-05-29 01:59:55.475:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:59:55.475:   Deleting point 7
+2026-05-29 01:59:58.343: TOglChart.KeyDown: Key=46
+2026-05-29 01:59:58.343: SelectListener.KeyDown: Key=46
+2026-05-29 01:59:58.343:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 01:59:58.344:   Deleting point 7
+2026-05-29 02:01:55.527: TOglChart.KeyDown: Key=46
+2026-05-29 02:01:55.527: SelectListener.KeyDown: Key=46
+2026-05-29 02:01:55.527:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 02:01:55.528:   Deleting point 6
+2026-05-29 02:01:56.825: TOglChart.KeyDown: Key=46
+2026-05-29 02:01:56.825: SelectListener.KeyDown: Key=46
+2026-05-29 02:01:56.826:   SelectedObject is cTrend (Name: TrendLine)
+2026-05-29 02:01:56.826:   Deleting point 6
