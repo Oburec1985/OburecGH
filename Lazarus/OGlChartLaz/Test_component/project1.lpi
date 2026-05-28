@@ -48,7 +48,6 @@
       <Unit>
         <Filename Value="..\..\SharedUtils\uBaseObjLaz.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="uBaseObjLaz"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\uBaseObjVclUtils.pas"/>

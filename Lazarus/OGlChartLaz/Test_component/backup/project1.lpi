@@ -48,7 +48,6 @@
       <Unit>
         <Filename Value="..\..\SharedUtils\uBaseObjLaz.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="ubaseobjLaz"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\uBaseObjVclUtils.pas"/>
@@ -67,37 +66,58 @@
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartControl.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="uOglChartControl"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartFontMng.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="uOglChartFontMng"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartLog.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="uOglChartLog"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartModel.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="uOglChartModel"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartBaseObj.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartDrawObj.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartPage.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartAxis.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartChart.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartMng.pas"/>
+        <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="uOglChartRenderer"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartSerializer.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="uOglChartSerializer"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTypes.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="uOglChartTypes"/>
       </Unit>
     </Units>
   </ProjectOptions>

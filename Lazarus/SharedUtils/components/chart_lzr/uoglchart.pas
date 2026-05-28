@@ -6,23 +6,32 @@ interface
 
 uses
   Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs,
-  OpenGLContext, uOglChartTypes, uOglChartChart, uOglChartMng, uOglChartRenderer;
+  OpenGLContext, uOglChartTypes, uOglChartChart, uOglChartMng, uOglChartRenderer,
+  uOglChartFrameListener, uOglChartBaseObj;
 
 type
   { TOglChart - LCL/OpenGL-хост компонента графика.
     Хранит модель и делегирует отрисовку renderer-слою. }
-  TOglChart = class(TOpenGLControl, IOpenGLContextHost)
+  TOglChart = class(TOpenGLControl, IOpenGLContextHost, IChartControl)
   private
     fObjectManager: TChartObjectManager;
     fRenderer: IChartRenderer;
     fOpenGLRenderer: TOpenGLChartRenderer;
     fIsRendererInitialized: Boolean;
+    fListeners: TList;
 
     function GetModel: TChartModel;
     procedure SetModel(AValue: TChartModel);
+    function GetSelectedObject: cBaseObj;
+    procedure SetSelectedObject(AValue: cBaseObj);
+    function GetHoveredObject: cBaseObj;
+    procedure SetHoveredObject(AValue: cBaseObj);
   protected
     procedure Resize; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean; override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure KeyPress(var Key: char); override;
   public
@@ -31,6 +40,13 @@ type
 
     procedure Paint; override;
     procedure Redraw;
+
+    procedure AddFrameListener(AListener: TChartFrameListener);
+    procedure RemoveFrameListener(AListener: TChartFrameListener);
+
+    { IChartControl }
+    function GetRenderer: TObject;
+    function GetModel: TObject;
 
     { IOpenGLContextHost }
     procedure MakeCurrent; reintroduce;
@@ -41,6 +57,8 @@ type
     property Model: TChartModel read GetModel write SetModel;
     property ObjectManager: TChartObjectManager read fObjectManager;
     property Renderer: IChartRenderer read fRenderer write fRenderer;
+    property SelectedObject: cBaseObj read GetSelectedObject write SetSelectedObject;
+    property HoveredObject: cBaseObj read GetHoveredObject write SetHoveredObject;
   end;
 
 procedure Register;
@@ -58,13 +76,27 @@ begin
   fRenderer := fOpenGLRenderer;
   fObjectManager := TChartObjectManager.Create;
   fObjectManager.Root.BackgroundColor := $FFFFFFFF;
+
+  fListeners := TList.Create;
+  AddFrameListener(TChartPanZoomListener.Create);
+  AddFrameListener(TChartSelectListener.Create);
 end;
 
 destructor TOglChart.Destroy;
+var
+  I: Integer;
 begin
   fRenderer := nil;
   fOpenGLRenderer := nil;
   FreeAndNil(fObjectManager);
+
+  if Assigned(fListeners) then
+  begin
+    for I := 0 to fListeners.Count - 1 do
+      TObject(fListeners[I]).Free;
+    FreeAndNil(fListeners);
+  end;
+
   inherited Destroy;
 end;
 
@@ -91,17 +123,100 @@ begin
 end;
 
 procedure TOglChart.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  lHandled: Boolean;
+  I: Integer;
 begin
   inherited MouseDown(Button, Shift, X, Y);
   SetFocus;
-  if (Button = mbLeft) and Assigned(fOpenGLRenderer) and fOpenGLRenderer.MouseDown(X, Y) then
+
+  lHandled := False;
+  for I := 0 to fListeners.Count - 1 do
+    if TChartFrameListener(fListeners[I]).Enabled then
+    begin
+      TChartFrameListener(fListeners[I]).MouseDown(Self, Button, Shift, X, Y, lHandled);
+      if lHandled then
+        Break;
+    end;
+
+  if not lHandled and (Button = mbLeft) and Assigned(fOpenGLRenderer) and fOpenGLRenderer.MouseDown(X, Y, ssDouble in Shift) then
     Redraw;
 end;
 
+procedure TOglChart.MouseMove(Shift: TShiftState; X, Y: Integer);
+var
+  lHandled: Boolean;
+  I: Integer;
+begin
+  inherited MouseMove(Shift, X, Y);
+
+  lHandled := False;
+  for I := 0 to fListeners.Count - 1 do
+    if TChartFrameListener(fListeners[I]).Enabled then
+    begin
+      TChartFrameListener(fListeners[I]).MouseMove(Self, Shift, X, Y, lHandled);
+      if lHandled then
+        Break;
+    end;
+end;
+
+procedure TOglChart.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  lHandled: Boolean;
+  I: Integer;
+begin
+  inherited MouseUp(Button, Shift, X, Y);
+
+  lHandled := False;
+  for I := 0 to fListeners.Count - 1 do
+    if TChartFrameListener(fListeners[I]).Enabled then
+    begin
+      TChartFrameListener(fListeners[I]).MouseUp(Self, Button, Shift, X, Y, lHandled);
+      if lHandled then
+        Break;
+    end;
+end;
+
+function TOglChart.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;
+var
+  lHandled: Boolean;
+  I: Integer;
+  lClientPos: TPoint;
+begin
+  Result := inherited DoMouseWheel(Shift, WheelDelta, MousePos);
+
+  lClientPos := ScreenToClient(MousePos);
+
+  lHandled := False;
+  for I := 0 to fListeners.Count - 1 do
+    if TChartFrameListener(fListeners[I]).Enabled then
+    begin
+      TChartFrameListener(fListeners[I]).MouseWheel(Self, Shift, WheelDelta, lClientPos.X, lClientPos.Y, lHandled);
+      if lHandled then
+      begin
+        Result := True;
+        Break;
+      end;
+    end;
+end;
+
 procedure TOglChart.KeyDown(var Key: Word; Shift: TShiftState);
+var
+  lHandled: Boolean;
+  I: Integer;
 begin
   inherited KeyDown(Key, Shift);
-  if Assigned(fOpenGLRenderer) and fOpenGLRenderer.KeyDown(Key) then
+
+  lHandled := False;
+  for I := 0 to fListeners.Count - 1 do
+    if TChartFrameListener(fListeners[I]).Enabled then
+    begin
+      TChartFrameListener(fListeners[I]).KeyDown(Self, Key, Shift, lHandled);
+      if lHandled then
+        Break;
+    end;
+
+  if not lHandled and Assigned(fOpenGLRenderer) and fOpenGLRenderer.KeyDown(Key) then
   begin
     Key := 0;
     Redraw;
@@ -109,9 +224,22 @@ begin
 end;
 
 procedure TOglChart.KeyPress(var Key: char);
+var
+  lHandled: Boolean;
+  I: Integer;
 begin
   inherited KeyPress(Key);
-  if Assigned(fOpenGLRenderer) and fOpenGLRenderer.TextInput(Key) then
+
+  lHandled := False;
+  for I := 0 to fListeners.Count - 1 do
+    if TChartFrameListener(fListeners[I]).Enabled then
+    begin
+      TChartFrameListener(fListeners[I]).KeyPress(Self, Key, lHandled);
+      if lHandled then
+        Break;
+    end;
+
+  if not lHandled and Assigned(fOpenGLRenderer) and fOpenGLRenderer.TextInput(Key) then
   begin
     Key := #0;
     Redraw;
@@ -119,8 +247,14 @@ begin
 end;
 
 procedure TOglChart.Paint;
+var
+  I: Integer;
 begin
   inherited MakeCurrent;
+
+  for I := 0 to fListeners.Count - 1 do
+    if TChartFrameListener(fListeners[I]).Enabled then
+      TChartFrameListener(fListeners[I]).FrameStarted(Self);
 
   if Assigned(fRenderer) then
   begin
@@ -133,6 +267,10 @@ begin
     fRenderer.Resize(Width, Height);
     fRenderer.Render(Model);
   end;
+
+  for I := 0 to fListeners.Count - 1 do
+    if TChartFrameListener(fListeners[I]).Enabled then
+      TChartFrameListener(fListeners[I]).FrameEnded(Self);
 
   inherited SwapBuffers;
 end;
@@ -161,6 +299,64 @@ function TOglChart.GetHeight: Integer;
 begin
   Result := Height;
 end;
+
+
+function TOglChart.GetSelectedObject: cBaseObj;
+begin
+  if Assigned(fOpenGLRenderer) then
+    Result := fOpenGLRenderer.SelectedObject
+  else
+    Result := nil;
+end;
+
+procedure TOglChart.SetSelectedObject(AValue: cBaseObj);
+begin
+  if Assigned(fOpenGLRenderer) then
+  begin
+    fOpenGLRenderer.SelectedObject := AValue;
+    Redraw;
+  end;
+end;
+
+function TOglChart.GetHoveredObject: cBaseObj;
+begin
+  if Assigned(fOpenGLRenderer) then
+    Result := fOpenGLRenderer.HoveredObject
+  else
+    Result := nil;
+end;
+
+procedure TOglChart.SetHoveredObject(AValue: cBaseObj);
+begin
+  if Assigned(fOpenGLRenderer) then
+  begin
+    fOpenGLRenderer.HoveredObject := AValue;
+    Redraw;
+  end;
+end;
+
+procedure TOglChart.AddFrameListener(AListener: TChartFrameListener);
+begin
+  if Assigned(AListener) and (fListeners.IndexOf(AListener) < 0) then
+    fListeners.Add(AListener);
+end;
+
+procedure TOglChart.RemoveFrameListener(AListener: TChartFrameListener);
+begin
+  if Assigned(AListener) then
+    fListeners.Remove(AListener);
+end;
+
+function TOglChart.GetRenderer: TObject;
+begin
+  Result := fOpenGLRenderer;
+end;
+
+function TOglChart.GetModel: TObject;
+begin
+  Result := Model;
+end;
+
 
 procedure Register;
 begin

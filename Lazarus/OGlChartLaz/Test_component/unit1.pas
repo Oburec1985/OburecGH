@@ -37,15 +37,7 @@ implementation
 
 { TForm1 }
 
-function AxisOrientationToText(AOrientation: TChartAxisOrientation): string;
-begin
-  case AOrientation of
-    caoX: Result := 'X';
-    caoY: Result := 'Y';
-  else
-    Result := '?';
-  end;
-end;
+
 
 function AxisScaleToText(AScale: TChartAxisScale): string;
 begin
@@ -72,12 +64,17 @@ begin
   if AObject is cAxis then
   begin
     lAxis := cAxis(AObject);
-    Result := Result + Format(' [%s, %s, %.4g..%.4g]', [
-      AxisOrientationToText(lAxis.Orientation),
+    Result := Result + Format(' [%s, %.4g..%.4g]', [
       AxisScaleToText(lAxis.Scale),
       lAxis.MinValue,
       lAxis.MaxValue
     ]);
+    if lAxis.UseOwnX then
+      Result := Result + Format(' [OwnX: %s, %.4g..%.4g]', [
+        AxisScaleToText(lAxis.XScale),
+        lAxis.XMinValue,
+        lAxis.XMaxValue
+      ]);
   end
   else if AObject is cBuffTrend1d then
     Result := Result + Format(' [count=%d, dx=%.4g]', [
@@ -141,18 +138,11 @@ begin
   end;
 end;
 
-procedure AddAxisPair(APage: cBasePage; const ANamePrefix: string; out AXAxis, AYAxis: cAxis);
+procedure AddAxis(APage: cBasePage; const ANamePrefix: string; out AYAxis: cAxis);
 begin
-  AXAxis := cAxis.Create;
-  AXAxis.Name := ANamePrefix + 'AxisX';
-  AXAxis.Caption := ANamePrefix + ' X';
-  AXAxis.Orientation := caoX;
-  APage.AddChild(AXAxis);
-
   AYAxis := cAxis.Create;
   AYAxis.Name := ANamePrefix + 'AxisY';
   AYAxis.Caption := ANamePrefix + ' Y';
-  AYAxis.Orientation := caoY;
   APage.AddChild(AYAxis);
 end;
 
@@ -165,20 +155,18 @@ begin
   AModel.AddChild(Result);
 end;
 
-function AddLine(AYAxis, AXAxis: cAxis; const AName, ACaption: string; AColor: Cardinal): cTrend;
+function AddLine(AYAxis: cAxis; const AName, ACaption: string; AColor: Cardinal): cTrend;
 begin
   Result := cTrend.Create;
   Result.Name := AName;
   Result.Caption := ACaption;
   Result.Color := AColor;
-  Result.XAxis := AXAxis;
   AYAxis.AddChild(Result);
 end;
 
 procedure CreateTestChart(AChart: TOglChart);
 var
   lPage: cBasePage;
-  lAxisX: cAxis;
   lAxisY: cAxis;
   lSeries: cTrend;
   lBuff: cBuffTrend1d;
@@ -187,12 +175,12 @@ begin
   AChart.Model.BackgroundColor := $FFFFFFFF;
 
   lPage := AddPage(AChart.Model, 'PageTrend', 'Page_Trend');
-  AddAxisPair(lPage, 'Trend', lAxisX, lAxisY);
-  lAxisX.MinValue := 0;
-  lAxisX.MaxValue := 11;
+  lPage.XMinValue := 0;
+  lPage.XMaxValue := 11;
+  AddAxis(lPage, 'Trend', lAxisY);
   lAxisY.MinValue := 0;
   lAxisY.MaxValue := 1;
-  lSeries := AddLine(lAxisY, lAxisX, 'TrendLine', 'Trend line', $FF303030);
+  lSeries := AddLine(lAxisY, 'TrendLine', 'Trend line', $FF303030);
   lSeries.AddPoint(0, 0.22);
   lSeries.AddPoint(1, 0.36);
   lSeries.AddPoint(2, 0.31);
@@ -207,12 +195,12 @@ begin
   lSeries.AddPoint(11, 0.66);
 
   lPage := AddPage(AChart.Model, 'PageSignals', 'Page_Signals');
-  AddAxisPair(lPage, 'Signals', lAxisX, lAxisY);
-  lAxisX.MinValue := 0;
-  lAxisX.MaxValue := 9;
+  lPage.XMinValue := 0;
+  lPage.XMaxValue := 9;
+  AddAxis(lPage, 'Signals', lAxisY);
   lAxisY.MinValue := 0.4;
   lAxisY.MaxValue := 0.75;
-  lSeries := AddLine(lAxisY, lAxisX, 'SignalBlue', 'Signal blue', $FFFF0000);
+  lSeries := AddLine(lAxisY, 'SignalBlue', 'Signal blue', $FFFF0000);
   lSeries.AddPoint(0, 0.48);
   lSeries.AddPoint(1, 0.56);
   lSeries.AddPoint(2, 0.41);
@@ -224,7 +212,7 @@ begin
   lSeries.AddPoint(8, 0.58);
   lSeries.AddPoint(9, 0.72);
 
-  lSeries := AddLine(lAxisY, lAxisX, 'SignalRed', 'Signal red', $FF0000FF);
+  lSeries := AddLine(lAxisY, 'SignalRed', 'Signal red', $FF0000FF);
   lSeries.AddPoint(0, 0.42);
   lSeries.AddPoint(1, 0.47);
   lSeries.AddPoint(2, 0.50);
@@ -237,16 +225,15 @@ begin
   lSeries.AddPoint(9, 0.55);
 
   lPage := AddPage(AChart.Model, 'PageBars', 'Page_Bars');
-  AddAxisPair(lPage, 'Bars', lAxisX, lAxisY);
-  lAxisX.MinValue := 0;
-  lAxisX.MaxValue := 9;
+  lPage.XMinValue := 0;
+  lPage.XMaxValue := 9;
+  AddAxis(lPage, 'Bars', lAxisY);
   lAxisY.MinValue := 0;
   lAxisY.MaxValue := 1;
   lBuff := cBuffTrend1d.Create;
   lBuff.Name := 'BottomBuff1d';
   lBuff.Caption := 'Bottom buffer 1D';
   lBuff.Color := $FF0090D0;
-  lBuff.XAxis := lAxisX;
   lBuff.X0 := 0;
   lBuff.DX := 1;
   lBuff.AddValue(0.32);
@@ -260,6 +247,23 @@ begin
   lBuff.AddValue(0.69);
   lBuff.AddValue(0.80);
   lAxisY.AddChild(lBuff);
+
+  lPage := AddPage(AChart.Model, 'PageOwnX', 'Page_OwnX');
+  lPage.XMinValue := 0;
+  lPage.XMaxValue := 10;
+  AddAxis(lPage, 'OwnX', lAxisY);
+  lAxisY.MinValue := 0;
+  lAxisY.MaxValue := 100;
+  lAxisY.UseOwnX := True;
+  lAxisY.XMinValue := 50;
+  lAxisY.XMaxValue := 150;
+  lAxisY.XScale := casLinear;
+  lSeries := AddLine(lAxisY, 'OwnXLine', 'Own X line', $FF00FF00);
+  lSeries.AddPoint(60, 10);
+  lSeries.AddPoint(80, 50);
+  lSeries.AddPoint(100, 30);
+  lSeries.AddPoint(120, 90);
+  lSeries.AddPoint(140, 70);
 
   AChart.Redraw;
 end;

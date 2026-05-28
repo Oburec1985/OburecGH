@@ -6,11 +6,20 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls,
-  uOglChart, uOglChartModel, ImgList;
+  uOglChart, uOglChartBaseObj, uOglChartPage, uOglChartAxis, uOglChartTrend,
+  uOglChartChart, ImgList, uOglChartFrameListener;
 
 type
 
   { TForm1 }
+
+  { TTestLogListener
+    Тестовый слушатель для демонстрации работы системы фрейм-листенеров.
+    Выводит информацию о кликах в консоль/лог. }
+  TTestLogListener = class(TChartFrameListener)
+  public
+    procedure MouseDown(ASender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer; var Handled: Boolean); override;
+  end;
 
   TForm1 = class(TForm)
     Button1: TButton;
@@ -36,15 +45,7 @@ implementation
 
 { TForm1 }
 
-function AxisOrientationToText(AOrientation: TChartAxisOrientation): string;
-begin
-  case AOrientation of
-    caoX: Result := 'X';
-    caoY: Result := 'Y';
-  else
-    Result := '?';
-  end;
-end;
+
 
 function AxisScaleToText(AScale: TChartAxisScale): string;
 begin
@@ -71,12 +72,17 @@ begin
   if AObject is cAxis then
   begin
     lAxis := cAxis(AObject);
-    Result := Result + Format(' [%s, %s, %.4g..%.4g]', [
-      AxisOrientationToText(lAxis.Orientation),
+    Result := Result + Format(' [%s, %.4g..%.4g]', [
       AxisScaleToText(lAxis.Scale),
       lAxis.MinValue,
       lAxis.MaxValue
     ]);
+    if lAxis.UseOwnX then
+      Result := Result + Format(' [OwnX: %s, %.4g..%.4g]', [
+        AxisScaleToText(lAxis.XScale),
+        lAxis.XMinValue,
+        lAxis.XMaxValue
+      ]);
   end
   else if AObject is cBuffTrend1d then
     Result := Result + Format(' [count=%d, dx=%.4g]', [
@@ -90,10 +96,27 @@ begin
     Result := Result + Format(' (%d)', [AObject.ChildCount]);
 end;
 
+function ChartObjectImageIndex(AObject: TChartBaseObject): Integer;
+begin
+  Result := 0;
+  if not Assigned(AObject) then
+    Exit;
+
+  if AObject is TChartModel then
+    Result := 0
+  else if AObject is cBasePage then
+    Result := 1
+  else if AObject is cAxis then
+    Result := 2
+  else if AObject is cSeries then
+    Result := 2;
+end;
+
 procedure TForm1.AddChartTreeNode(AParentNode: TTreeNode; AObject: TChartBaseObject);
 var
   lNode: TTreeNode;
   lIndex: Integer;
+  lImageIndex: Integer;
 begin
   if not Assigned(AObject) then
     Exit;
@@ -102,6 +125,10 @@ begin
     lNode := TreeView1.Items.AddChildObject(AParentNode, ChartObjectTreeText(AObject), AObject)
   else
     lNode := TreeView1.Items.AddObject(nil, ChartObjectTreeText(AObject), AObject);
+
+  lImageIndex := ChartObjectImageIndex(AObject);
+  lNode.ImageIndex := lImageIndex;
+  lNode.SelectedIndex := lImageIndex;
 
   for lIndex := 0 to AObject.ChildCount - 1 do
     AddChartTreeNode(lNode, AObject.Children[lIndex]);
@@ -119,22 +146,12 @@ begin
   end;
 end;
 
-procedure AddAxisPair(APage: cBasePage; const ANamePrefix: string);
-var
-  lAxisX: cAxis;
-  lAxisY: cAxis;
+procedure AddAxis(APage: cBasePage; const ANamePrefix: string; out AYAxis: cAxis);
 begin
-  lAxisX := cAxis.Create;
-  lAxisX.Name := ANamePrefix + 'AxisX';
-  lAxisX.Caption := ANamePrefix + ' X';
-  lAxisX.Orientation := caoX;
-  APage.AddChild(lAxisX);
-
-  lAxisY := cAxis.Create;
-  lAxisY.Name := ANamePrefix + 'AxisY';
-  lAxisY.Caption := ANamePrefix + ' Y';
-  lAxisY.Orientation := caoY;
-  APage.AddChild(lAxisY);
+  AYAxis := cAxis.Create;
+  AYAxis.Name := ANamePrefix + 'AxisY';
+  AYAxis.Caption := ANamePrefix + ' Y';
+  APage.AddChild(AYAxis);
 end;
 
 function AddPage(AModel: cChart; const AName, ACaption: string): cBasePage;
@@ -146,18 +163,19 @@ begin
   AModel.AddChild(Result);
 end;
 
-function AddLine(APage: cBasePage; const AName, ACaption: string; AColor: Cardinal): cTrend;
+function AddLine(AYAxis: cAxis; const AName, ACaption: string; AColor: Cardinal): cTrend;
 begin
   Result := cTrend.Create;
   Result.Name := AName;
   Result.Caption := ACaption;
   Result.Color := AColor;
-  APage.AddChild(Result);
+  AYAxis.AddChild(Result);
 end;
 
 procedure CreateTestChart(AChart: TOglChart);
 var
   lPage: cBasePage;
+  lAxisY: cAxis;
   lSeries: cTrend;
   lBuff: cBuffTrend1d;
 begin
@@ -165,8 +183,12 @@ begin
   AChart.Model.BackgroundColor := $FFFFFFFF;
 
   lPage := AddPage(AChart.Model, 'PageTrend', 'Page_Trend');
-  AddAxisPair(lPage, 'Trend');
-  lSeries := AddLine(lPage, 'TrendLine', 'Trend line', $FF303030);
+  lPage.XMinValue := 0;
+  lPage.XMaxValue := 11;
+  AddAxis(lPage, 'Trend', lAxisY);
+  lAxisY.MinValue := 0;
+  lAxisY.MaxValue := 1;
+  lSeries := AddLine(lAxisY, 'TrendLine', 'Trend line', $FF303030);
   lSeries.AddPoint(0, 0.22);
   lSeries.AddPoint(1, 0.36);
   lSeries.AddPoint(2, 0.31);
@@ -181,8 +203,12 @@ begin
   lSeries.AddPoint(11, 0.66);
 
   lPage := AddPage(AChart.Model, 'PageSignals', 'Page_Signals');
-  AddAxisPair(lPage, 'Signals');
-  lSeries := AddLine(lPage, 'SignalBlue', 'Signal blue', $FFFF0000);
+  lPage.XMinValue := 0;
+  lPage.XMaxValue := 9;
+  AddAxis(lPage, 'Signals', lAxisY);
+  lAxisY.MinValue := 0.4;
+  lAxisY.MaxValue := 0.75;
+  lSeries := AddLine(lAxisY, 'SignalBlue', 'Signal blue', $FFFF0000);
   lSeries.AddPoint(0, 0.48);
   lSeries.AddPoint(1, 0.56);
   lSeries.AddPoint(2, 0.41);
@@ -194,7 +220,7 @@ begin
   lSeries.AddPoint(8, 0.58);
   lSeries.AddPoint(9, 0.72);
 
-  lSeries := AddLine(lPage, 'SignalRed', 'Signal red', $FF0000FF);
+  lSeries := AddLine(lAxisY, 'SignalRed', 'Signal red', $FF0000FF);
   lSeries.AddPoint(0, 0.42);
   lSeries.AddPoint(1, 0.47);
   lSeries.AddPoint(2, 0.50);
@@ -207,7 +233,11 @@ begin
   lSeries.AddPoint(9, 0.55);
 
   lPage := AddPage(AChart.Model, 'PageBars', 'Page_Bars');
-  AddAxisPair(lPage, 'Bars');
+  lPage.XMinValue := 0;
+  lPage.XMaxValue := 9;
+  AddAxis(lPage, 'Bars', lAxisY);
+  lAxisY.MinValue := 0;
+  lAxisY.MaxValue := 1;
   lBuff := cBuffTrend1d.Create;
   lBuff.Name := 'BottomBuff1d';
   lBuff.Caption := 'Bottom buffer 1D';
@@ -224,9 +254,46 @@ begin
   lBuff.AddValue(0.64);
   lBuff.AddValue(0.69);
   lBuff.AddValue(0.80);
-  lPage.AddChild(lBuff);
+  lAxisY.AddChild(lBuff);
+
+  lPage := AddPage(AChart.Model, 'PageOwnX', 'Page_OwnX');
+  lPage.XMinValue := 0;
+  lPage.XMaxValue := 10;
+  AddAxis(lPage, 'OwnX', lAxisY);
+  lAxisY.MinValue := 0;
+  lAxisY.MaxValue := 100;
+  lAxisY.UseOwnX := True;
+  lAxisY.XMinValue := 50;
+  lAxisY.XMaxValue := 150;
+  lAxisY.XScale := casLinear;
+  lSeries := AddLine(lAxisY, 'OwnXLine', 'Own X line', $FF00FF00);
+  lSeries.AddPoint(60, 10);
+  lSeries.AddPoint(80, 50);
+  lSeries.AddPoint(100, 30);
+  lSeries.AddPoint(120, 90);
+  lSeries.AddPoint(140, 70);
 
   AChart.Redraw;
+end;
+
+function ObjName(AObj: TObject): string;
+begin
+  if Assigned(AObj) and (AObj is TChartBaseObject) then
+    Result := TChartBaseObject(AObj).Name
+  else
+    Result := 'nil';
+end;
+
+procedure TTestLogListener.MouseDown(ASender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer; var Handled: Boolean);
+var
+  lChart: TOglChart;
+begin
+  lChart := TOglChart(ASender);
+  WriteLn(Format('TestLogListener: Clicked at X=%d, Y=%d. SelectedObject=%s, HoveredObject=%s', [
+    X, Y,
+    ObjName(lChart.SelectedObject),
+    ObjName(lChart.HoveredObject)
+  ]));
 end;
 
 constructor TForm1.Create(AOwner: TComponent);
@@ -238,10 +305,11 @@ end;
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   CreateTestChart(OglChart1);
+  OglChart1.AddFrameListener(TTestLogListener.Create);
   TreeView1.MultiSelect := True;
   TreeView1.Images := ImageList1;
   TreeView1.Font.Size := 10;
-  Button1.Visible := False;
+  Button1.Visible := True;
   BuildChartTree;
 end;
 

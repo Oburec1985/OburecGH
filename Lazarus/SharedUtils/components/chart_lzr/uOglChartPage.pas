@@ -5,14 +5,14 @@ unit uOglChartPage;
 interface
 
 uses
-  uOglChartDrawObj;
+  uOglChartDrawObj, uOglChartAxis;
 
 type
   TChartPageAlign = (cpaNone, cpaAuto, cpaClient, cpaTop, cpaBottom, cpaLeft, cpaRight);
 
   { cBasePage
-    РЎС‚СЂР°РЅРёС†Р° С‡Р°СЂС‚Р°: СЂР°РјРєР°, С„РѕРЅ Рё РїРѕР»РµР·РЅР°СЏ РѕР±Р»Р°СЃС‚СЊ СЃРµС‚РєРё.
-    PixelTabSpace Р·Р°РґР°С‘С‚ РїРёРєСЃРµР»СЊРЅС‹Рµ РѕС‚СЃС‚СѓРїС‹ РѕС‚ СЂР°РјРєРё РґРѕ viewport-Р° РіСЂР°С„РёРєР°. }
+    Страница чарта: рамка, фон и полезная область сетки.
+    PixelTabSpace задаёт пиксельные отступы от рамки до viewport-а графика. }
   cBasePage = class(cMoveObj)
   private
     fAlign: TChartPageAlign;
@@ -21,6 +21,9 @@ type
     fFillColor: Cardinal;
     fBorderWidth: Single;
     fPixelTabSpace: TChartPixelRect;
+    fXMinValue: Double;
+    fXMaxValue: Double;
+    fXScale: TChartAxisScale;
   public
     procedure AssignDefaultProperties; override;
 
@@ -30,6 +33,9 @@ type
     property FillColor: Cardinal read fFillColor write fFillColor;
     property BorderWidth: Single read fBorderWidth write fBorderWidth;
     property PixelTabSpace: TChartPixelRect read fPixelTabSpace write fPixelTabSpace;
+    property XMinValue: Double read fXMinValue write fXMinValue;
+    property XMaxValue: Double read fXMaxValue write fXMaxValue;
+    property XScale: TChartAxisScale read fXScale write fXScale;
   end;
 
   TChartPage = cBasePage;
@@ -51,6 +57,9 @@ begin
   fAlign := cpaAuto;
   fAlignWeight := 1;
   SetFloatRect(0.04, 0.06, 0.96, 0.94);
+  fXMinValue := 0;
+  fXMaxValue := 1;
+  fXScale := casLinear;
 end;
 
 end.
