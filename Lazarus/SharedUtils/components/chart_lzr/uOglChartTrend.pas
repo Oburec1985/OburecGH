@@ -5,7 +5,9 @@ unit uOglChartTrend;
 interface
 
 uses
-  Classes, SysUtils, uOglChartTypes, uCommonTypes, uOglChartDrawObj, uOglChartAxis;
+  Classes, SysUtils, uOglChartTypes,
+  //uCommonTypes,
+  uOglChartDrawObj, uOglChartAxis;
 
 type
   TBeziePointType = (bptCorner, bptSmooth, bptNull);
@@ -29,28 +31,50 @@ type
   end;
 
   { cBaseTrend }
+  /// <summary>
+  /// Базовый класс для всех серий трендов и линий на графике.
+  /// </summary>
   cBaseTrend = class(cDrawObj)
+  private
+    fGLListID: Cardinal;                // ID скомпилированного списка OpenGL
+    fGLListContextVersion: Cardinal;    // Версия контекста OpenGL для списка
   public
     procedure AssignDefaultProperties; override;
+    /// <summary> Идентификатор списка OpenGL для ускоренной отрисовки. </summary>
+    property GLListID: Cardinal read fGLListID write fGLListID;
+    /// <summary> Версия контекста для контроля пересоздания окна. </summary>
+    property GLListContextVersion: Cardinal read fGLListContextVersion write fGLListContextVersion;
   end;
 
   { cLineSeries }
+  /// <summary>
+  /// Серия линий графика, состоящая из набора 2D точек с вещественными координатами.
+  /// </summary>
   cLineSeries = class(cBaseTrend)
   private
-    fPoints: array of TChartPoint;
+    fPoints: array of TChartPoint;       // Внутренний динамический массив точек
 
     function GetPoint(AIndex: Integer): TChartPoint;
     function GetPointCount: Integer;
   public
     procedure AssignDefaultProperties; override;
+    /// <summary> Полная очистка точек серии. </summary>
     procedure ClearPoints;
+    /// <summary> Добавление одной точки в конец серии. </summary>
     procedure AddPoint(AX, AY: Double);
+    /// <summary> Пакетное (быстрое) добавление массива точек. </summary>
+    procedure AddPoints(const APoints: array of TChartPoint);
 
+    /// <summary> Доступ к точкам по индексу. </summary>
     property Points[AIndex: Integer]: TChartPoint read GetPoint;
+    /// <summary> Общее количество точек в серии. </summary>
     property PointCount: Integer read GetPointCount;
   end;
 
   { cTrend }
+  /// <summary>
+  /// Класс сплайнового тренда, поддерживающий опорные точки Безье и сглаживание.
+  /// </summary>
   cTrend = class(cLineSeries)
   private
     fBeziePoints: array of cBeziePoint;
@@ -79,22 +103,33 @@ type
   end;
 
   { cBuffTrend1d }
+  /// <summary>
+  /// Одномерный буферизованный тренд с равномерным шагом по оси X.
+  /// </summary>
   cBuffTrend1d = class(cBaseTrend)
   private
-    fX0: Double;
-    fDX: Double;
-    fValues: array of Double;
+    fX0: Double;                         // Начальная координата X
+    fDX: Double;                        // Шаг по оси X между точками
+    fValues: array of Double;           // Массив Y-значений точек
 
     function GetCount: Integer;
     function GetValue(AIndex: Integer): Double;
   public
     procedure AssignDefaultProperties; override;
+    /// <summary> Очистка буфера значений. </summary>
     procedure ClearValues;
+    /// <summary> Добавление одиночного Y-значения. </summary>
     procedure AddValue(AY: Double);
+    /// <summary> Пакетное (быстрое) добавление массива Y-значений. </summary>
+    procedure AddValues(const AValues: array of Double);
 
+    /// <summary> Начальная точка на оси X. </summary>
     property X0: Double read fX0 write fX0;
+    /// <summary> Шаг точек на оси X. </summary>
     property DX: Double read fDX write fDX;
+    /// <summary> Доступ к Y-значениям по индексу. </summary>
     property Values[AIndex: Integer]: Double read GetValue;
+    /// <summary> Количество точек в буфере. </summary>
     property Count: Integer read GetCount;
   end;
 
@@ -156,6 +191,7 @@ end;
 procedure cLineSeries.ClearPoints;
 begin
   SetLength(fPoints, 0);
+  GLListID := 0;
 end;
 
 procedure cLineSeries.AddPoint(AX, AY: Double);
@@ -166,6 +202,19 @@ begin
   SetLength(fPoints, lIndex + 1);
   fPoints[lIndex].X := AX;
   fPoints[lIndex].Y := AY;
+  GLListID := 0;
+end;
+
+procedure cLineSeries.AddPoints(const APoints: array of TChartPoint);
+var
+  lOldLen, lNewLen, i: Integer;
+begin
+  lOldLen := Length(fPoints);
+  lNewLen := lOldLen + Length(APoints);
+  SetLength(fPoints, lNewLen);
+  for i := 0 to High(APoints) do
+    fPoints[lOldLen + i] := APoints[i];
+  GLListID := 0;
 end;
 
 { cTrend }
@@ -423,6 +472,7 @@ end;
 procedure cBuffTrend1d.ClearValues;
 begin
   SetLength(fValues, 0);
+  GLListID := 0;
 end;
 
 procedure cBuffTrend1d.AddValue(AY: Double);
@@ -432,6 +482,19 @@ begin
   lIndex := Length(fValues);
   SetLength(fValues, lIndex + 1);
   fValues[lIndex] := AY;
+  GLListID := 0;
+end;
+
+procedure cBuffTrend1d.AddValues(const AValues: array of Double);
+var
+  lOldLen, lNewLen, i: Integer;
+begin
+  lOldLen := Length(fValues);
+  lNewLen := lOldLen + Length(AValues);
+  SetLength(fValues, lNewLen);
+  for i := 0 to High(AValues) do
+    fValues[lOldLen + i] := AValues[i];
+  GLListID := 0;
 end;
 
 { cBuffTrend2d }

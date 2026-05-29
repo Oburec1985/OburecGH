@@ -75,6 +75,9 @@
         <PackageName Value="lazopenglcontext"/>
       </Item>
       <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+      <Item>
         <PackageName Value="FCL"/>
       </Item>
     </RequiredPkgs>

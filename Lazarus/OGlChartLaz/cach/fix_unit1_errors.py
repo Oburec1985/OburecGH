@@ -1,99 +1,43 @@
 import os
 
-FILE_PATH = r"c:\Oburec\OburecGH\Lazarus\OGlChartLaz\Test_component\unit1.pas"
+def main():
+    target_file = r"d:\works\OburecGH\Lazarus\OGlChartLaz\Test_component\unit1.pas"
+    
+    with open(target_file, 'rb') as f:
+        content = f.read()
 
-print(f"Modifying {os.path.basename(FILE_PATH)} to fix compilation errors...")
-with open(FILE_PATH, 'rb') as f:
-    raw_data = f.read()
+    # Ищем начало испорченного блока
+    start_marker = b"function AddLine(AYAxis: cAxis; const AName, ACaption: string; AColor: Cardinal): cTrend;\r\nbegin\r\n"
+    if start_marker not in content:
+        start_marker = b"function AddLine(AYAxis: cAxis; const AName, ACaption: string; AColor: Cardinal): cTrend;\nbegin\n"
 
-# Decode as cp1251
-text = raw_data.decode('cp1251')
+    end_marker = b"AYAxis.AddChild(Result);\r\nend;"
+    if end_marker not in content:
+        end_marker = b"AYAxis.AddChild(Result);\nend;"
 
-# Normalize newlines
-text = text.replace('\r\n', '\n').replace('\r', '\n')
+    if start_marker in content and end_marker in content:
+        idx_start = content.index(start_marker) + len(start_marker)
+        # Ищем end_marker после idx_start
+        idx_end = content.index(end_marker, idx_start) + len(end_marker)
+        
+        good_body = b"""  Result := cTrend.Create;
+  Result.Name := AName;
+  Result.Caption := ACaption;
+  Result.Color := AColor;
+  AYAxis.AddChild(Result);
+end;"""
+        # Нормализуем переводы строк в соответствии с исходным файлом
+        if b"\r\n" in start_marker:
+            good_body = good_body.replace(b'\n', b'\r\n').replace(b'\r\r\n', b'\r\n')
+        else:
+            good_body = good_body.replace(b'\r\n', b'\n')
 
-# 1. Update uses in unit1.pas to include Math, uOglChartRenderer, uOglChartTypes, uOglChartDrawObj
-old_uses_part = """  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ExtCtrls,
-  uOglChart, uOglChartBaseObj, uOglChartPage, uOglChartAxis, uOglChartTrend,
-  uOglChartChart, ImgList;"""
-
-new_uses_part = """  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ExtCtrls,
-  Math, uOglChart, uOglChartBaseObj, uOglChartPage, uOglChartAxis, uOglChartTrend,
-  uOglChartChart, uOglChartRenderer, uOglChartTypes, uOglChartDrawObj, ImgList;"""
-
-if old_uses_part in text:
-    text = text.replace(old_uses_part, new_uses_part)
-    print("  Successfully updated uses clause.")
-else:
-    # Try alternate formatting
-    old_uses_alt = "  uOglChart, uOglChartBaseObj, uOglChartPage, uOglChartAxis, uOglChartTrend,\n  uOglChartChart, ImgList;"
-    new_uses_alt = "  uOglChart, uOglChartBaseObj, uOglChartPage, uOglChartAxis, uOglChartTrend,\n  uOglChartChart, uOglChartRenderer, uOglChartTypes, uOglChartDrawObj, ImgList;"
-    if old_uses_alt in text:
-        text = text.replace(old_uses_alt, new_uses_alt)
-        print("  Successfully updated uses clause (alt).")
+        new_content = content[:idx_start] + good_body + content[idx_end:]
+        with open(target_file, 'wb') as f:
+            f.write(new_content)
+        print("AddLine successfully fixed via markers!")
     else:
-        print("  FAIL: uses clause match not found!")
+        print("Error: markers not found")
 
-# 2. Fix variable scope and nesting inside OglChart1MouseMove
-old_mouse_move = """procedure TForm1.OglChart1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-var
-  lRenderer: TOpenGLChartRenderer;
-  lModel: TChartModel;
-  lPage: TChartPage;
-  lRect, lContentRect: TChartPixelRect;
-  lSelectedAxis: TChartAxis;
-  lAxisXVal, lAxisYVal: Double;
-  lIdx: Integer;
-  lPageFound: Boolean;
-  lPageX, lPageY: Integer;
-begin"""
-
-new_mouse_move = """procedure TForm1.OglChart1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-var
-  lRenderer: TOpenGLChartRenderer;
-  lModel: TChartModel;
-  lPage: TChartPage;
-  lRect, lContentRect: TChartPixelRect;
-  lSelectedAxis: TChartAxis;
-  lAxisXVal, lAxisYVal: Double;
-  lIdx, lInnerIdx: Integer;
-  lPageFound: Boolean;
-  lPageX, lPageY: Integer;
-begin"""
-
-if old_mouse_move in text:
-    text = text.replace(old_mouse_move, new_mouse_move)
-    print("  Successfully declared lInnerIdx in OglChart1MouseMove.")
-else:
-    print("  FAIL: old_mouse_move var declaration not found!")
-
-# 3. Replace internal loop to use lInnerIdx instead of lIdx
-old_inner_loop = """            // Если не выбрана ось, берем первую ось этой страницы
-            for lIdx := 0 to lPage.ChildCount - 1 do
-              if lPage.Children[lIdx] is TChartAxis then
-              begin
-                lSelectedAxis := TChartAxis(lPage.Children[lIdx]);
-                Break;
-              end;"""
-
-new_inner_loop = """            // Если не выбрана ось, берем первую ось этой страницы
-            for lInnerIdx := 0 to lPage.ChildCount - 1 do
-              if lPage.Children[lInnerIdx] is TChartAxis then
-              begin
-                lSelectedAxis := TChartAxis(lPage.Children[lInnerIdx]);
-                Break;
-              end;"""
-
-if old_inner_loop in text:
-    text = text.replace(old_inner_loop, new_inner_loop)
-    print("  Successfully replaced nested loop variable with lInnerIdx.")
-else:
-    print("  FAIL: old_inner_loop not found!")
-
-# Restore CRLF line endings
-text = text.replace('\n', '\r\n')
-
-# Save file
-with open(FILE_PATH, 'w', encoding='cp1251', newline='') as f:
-    f.write(text)
-print("Saved file successfully.")
+if __name__ == '__main__':
+    main()

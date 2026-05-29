@@ -5,7 +5,7 @@ unit uOglChartRenderer;
 interface
 
 uses
-  Classes, SysUtils, Math, gl, uOglChartTypes, uOglChartBaseObj,
+  Classes, SysUtils, Math, gl, glext, uOglChartTypes, uOglChartBaseObj,
   uOglChartDrawObj, uOglChartPage, uOglChartAxis, uOglChartTrend,
   uOglChartChart, uOglChartFontMng;
 
@@ -32,6 +32,11 @@ type
   TOpenGLChartRenderer = class(TInterfacedObject, IChartRenderer)
   private
     fHost: IOpenGLContextHost;
+    fUseShader: Boolean;
+    fProgram: GLuint;
+    fProgram1d: GLuint;
+    fShaderInitialized: Boolean;
+    procedure InitShaders;
     fPageRect: TChartPixelRect;
     fFontMng: cOglFontMng;
     fTextHits: array of TChartTextHit;
@@ -40,6 +45,10 @@ type
     fEditCursor: Integer;
     fEditSelectionStart: Integer;
     fEditSelectionLength: Integer;
+    fSelectedObject: TChartBaseObject;
+    fHoveredObject: TChartBaseObject;
+    fSelectionRectActive: Boolean;
+    fSelectionRect: TChartPixelRect;
 
     procedure Apply2DView;
     procedure SetGLColor(AColor: Cardinal);
@@ -53,8 +62,6 @@ type
     procedure BuildXTicks(APage: TChartPage; AAxis: TChartAxis; ATargetCount: Integer; out ATicks: TChartTickArray);
     function FormatTick(AValue, AStep: Double): string;
     function ValueToPixel(AValue, AMin, AMax: Double; APixelMin, APixelMax: Single): Single;
-    function AxisValueToPixel(AAxis: TChartAxis; AValue: Double; APixelMin, APixelMax: Single): Single;
-    function XValueToPixel(APage: TChartPage; AAxis: TChartAxis; AValue: Double; APixelMin, APixelMax: Single): Single;
 
     procedure DrawLine(AX1, AY1, AX2, AY2: Single);
     procedure DrawRect(const ARect: TChartPixelRect);
@@ -68,19 +75,206 @@ type
     procedure DrawPageFrame(APage: TChartPage; const ARect: TChartPixelRect);
     procedure DrawLineSeries(ASeries: TChartLineSeries; const ARect: TChartPixelRect; APage: TChartPage; AYAxis: TChartAxis);
     procedure DrawBuffTrend1d(ATrend: cBuffTrend1d; const ARect: TChartPixelRect; APage: TChartPage; AYAxis: TChartAxis);
+    procedure DrawTrendPoints(ATrend: cTrend; const ARect: TChartPixelRect; APage: TChartPage; AYAxis: TChartAxis);
     procedure RenderObject(AObject: TChartBaseObject; const ARect: TChartPixelRect; APage: TChartPage; AYAxis: TChartAxis);
     procedure RenderPage(APage: TChartPage);
+    procedure DrawHighlights;
+    procedure DrawHighlightRect(const ARect: TChartPixelRect; AColor: Cardinal);
   public
     destructor Destroy; override;
+    function GetPageRect(APage: TChartPage): TChartPixelRect;
+    function GetPageContentRect(APage: TChartPage): TChartPixelRect;
+    function GetTextHitAt(AX, AY: Integer; out AHit: TChartTextHit): Boolean;
+    function PixelToXValue(APage: TChartPage; AAxis: TChartAxis; APixelX, ALeft, ARight: Single): Double;
+    function PixelToAxisValue(AAxis: TChartAxis; APixelY, ABottom, ATop: Single): Double;
+    function GetAxisHitAt(AModel: TChartModel; AX, AY: Integer; out AAxis: TChartAxis): Boolean;
+    function AxisValueToPixel(AAxis: TChartAxis; AValue: Double; APixelMin, APixelMax: Single): Single;
+    function XValueToPixel(APage: TChartPage; AAxis: TChartAxis; AValue: Double; APixelMin, APixelMax: Single): Single;
+
+    property SelectedObject: TChartBaseObject read fSelectedObject write fSelectedObject;
+    property HoveredObject: TChartBaseObject read fHoveredObject write fHoveredObject;
+    property SelectionRectActive: Boolean read fSelectionRectActive write fSelectionRectActive;
+    property SelectionRect: TChartPixelRect read fSelectionRect write fSelectionRect;
     procedure Initialize(AHost: IOpenGLContextHost);
     procedure Resize(AWidth, AHeight: Integer);
     procedure Render(AModel: TObject);
-    function MouseDown(AX, AY: Integer): Boolean;
+    function MouseDown(AX, AY: Integer; ADoubleClick: Boolean): Boolean;
     function KeyDown(AKey: Word): Boolean;
     function TextInput(const AText: string): Boolean;
   end;
 
 implementation
+
+procedure LogToFile(const AMsg: string);
+var
+  F: TextFile;
+  lLogPath: string;
+begin
+  lLogPath := ExtractFilePath(ParamStr(0)) + 'chart_events.log';
+  AssignFile(F, lLogPath);
+  try
+    if FileExists(lLogPath) then
+      Append(F)
+    else
+      Rewrite(F);
+    WriteLn(F, FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now) + ': ' + AMsg);
+  finally
+    CloseFile(F);
+  end;
+end;
+
+const
+  SHADER_LINE_LG_VERT = 
+    'uniform vec4 a_minmax;'#10 +
+    'uniform ivec2 a_Lg;'#10 +
+    'float Log10(float x) {'#10 +
+    '  x = log2(x)/log2(10.0);'#10 +
+    '  return(x);'#10 +
+    '}'#10 +
+    'void main() {'#10 +
+    '  float rate, lgMax, lgMin, lgRange, range, test;'#10 +
+    '  gl_Position = gl_Vertex;'#10 +
+    '  gl_FrontColor = gl_Color;'#10 +
+    '  if (a_Lg[0] == 1) {'#10 +
+    '    lgMax = Log10(a_minmax[1]);'#10 +
+    '    if (a_minmax[0] <= 0.0) lgMin = -12.0;'#10 +
+    '    else lgMin = Log10(a_minmax[0]);'#10 +
+    '    lgRange = lgMax - lgMin;'#10 +
+    '    range = a_minmax[1] - a_minmax[0];'#10 +
+    '    lgRange = 1.0 / lgRange;'#10 +
+    '    if (gl_Position[0] <= 0.0) {'#10 +
+    '      rate = 0.0;'#10 +
+    '      gl_Position[0] = a_minmax[0] - 200.0;'#10 +
+    '    } else {'#10 +
+    '      rate = (Log10(gl_Position[0]) - lgMin) * lgRange;'#10 +
+    '      gl_Position[0] = range * rate + a_minmax[0];'#10 +
+    '    }'#10 +
+    '  }'#10 +
+    '  if (a_Lg[1] == 1) {'#10 +
+    '    lgMax = Log10(a_minmax[3]);'#10 +
+    '    if (a_minmax[2] <= 0.0) lgMin = -12.0;'#10 +
+    '    else lgMin = Log10(a_minmax[2]);'#10 +
+    '    lgRange = lgMax - lgMin;'#10 +
+    '    range = a_minmax[3] - a_minmax[2];'#10 +
+    '    lgRange = 1.0 / lgRange;'#10 +
+    '    if (gl_Position[1] <= 0.0) {'#10 +
+    '      rate = 0.0;'#10 +
+    '      gl_Position[1] = a_minmax[2] - 200.0;'#10 +
+    '    } else {'#10 +
+    '      rate = (Log10(gl_Position[1]) - lgMin) * lgRange;'#10 +
+    '      gl_Position[1] = range * rate + a_minmax[2];'#10 +
+    '    }'#10 +
+    '  }'#10 +
+    '  gl_Position = gl_ModelViewProjectionMatrix * gl_Position;'#10 +
+    '}';
+
+  SHADER_LINE_LG_1D_VERT = 
+    '#version 130'#10 +
+    'uniform vec4 a_minmax;'#10 +
+    'uniform vec2 a_LinePar;'#10 +
+    'uniform ivec2 a_Lg;'#10 +
+    'float Log10(float x) {'#10 +
+    '  x = log2(x)/log2(10.0);'#10 +
+    '  return(x);'#10 +
+    '}'#10 +
+    'void main() {'#10 +
+    '  float rate, lgMax, lgMin, lgRange, range, test;'#10 +
+    '  gl_Position = gl_Vertex;'#10 +
+    '  gl_Position[0] = a_LinePar[0] + a_LinePar[1] * float(gl_VertexID);'#10 +
+    '  gl_Position[1] = gl_Vertex[0];'#10 +
+    '  gl_FrontColor = gl_Color;'#10 +
+    '  if (a_Lg[0] == 1) {'#10 +
+    '    lgMax = Log10(a_minmax[1]);'#10 +
+    '    if (a_minmax[0] <= 0.0) lgMin = -12.0;'#10 +
+    '    else lgMin = Log10(a_minmax[0]);'#10 +
+    '    lgRange = lgMax - lgMin;'#10 +
+    '    range = a_minmax[1] - a_minmax[0];'#10 +
+    '    lgRange = 1.0 / lgRange;'#10 +
+    '    if (gl_Position[0] <= 0.0) {'#10 +
+    '      rate = 0.0;'#10 +
+    '      gl_Position[0] = a_minmax[0] - 200.0;'#10 +
+    '    } else {'#10 +
+    '      rate = (Log10(gl_Position[0]) - lgMin) * lgRange;'#10 +
+    '      gl_Position[0] = range * rate + a_minmax[0];'#10 +
+    '    }'#10 +
+    '  }'#10 +
+    '  if (a_Lg[1] == 1) {'#10 +
+    '    lgMax = Log10(a_minmax[3]);'#10 +
+    '    if (a_minmax[2] <= 0.0) lgMin = -12.0;'#10 +
+    '    else lgMin = Log10(a_minmax[2]);'#10 +
+    '    lgRange = lgMax - lgMin;'#10 +
+    '    range = a_minmax[3] - a_minmax[2];'#10 +
+    '    lgRange = 1.0 / lgRange;'#10 +
+    '    if (gl_Position[1] <= 0.0) {'#10 +
+    '      rate = 0.0;'#10 +
+    '      gl_Position[1] = a_minmax[2] - 200.0;'#10 +
+    '    } else {'#10 +
+    '      rate = (Log10(gl_Position[1]) - lgMin) * lgRange;'#10 +
+    '      gl_Position[1] = range * rate + a_minmax[2];'#10 +
+    '    }'#10 +
+    '  }'#10 +
+    '  gl_Position = gl_ModelViewProjectionMatrix * gl_Position;'#10 +
+    '}';
+
+function CreateShader(AShaderType: GLenum; const ASource: string): GLuint;
+var
+  lShader: GLuint;
+  lStatus: GLint;
+  lLogLen: GLint;
+  lLog: string;
+  lSourcePtr: PAnsiChar;
+  lSourceLen: GLint;
+begin
+  lShader := glCreateShader(AShaderType);
+  lSourcePtr := PAnsiChar(ASource);
+  lSourceLen := Length(ASource);
+  glShaderSource(lShader, 1, @lSourcePtr, @lSourceLen);
+  glCompileShader(lShader);
+  
+  glGetShaderiv(lShader, GL_COMPILE_STATUS, @lStatus);
+  if lStatus = GL_FALSE then
+  begin
+    glGetShaderiv(lShader, GL_INFO_LOG_LENGTH, @lLogLen);
+    SetLength(lLog, lLogLen);
+    glGetShaderInfoLog(lShader, lLogLen, nil, PAnsiChar(lLog));
+    LogToFile('Shader compile error: ' + lLog);
+    glDeleteShader(lShader);
+    Exit(0);
+  end;
+  Result := lShader;
+end;
+
+function CreateProgram(AVertexSource: string): GLuint;
+var
+  lVertexShader: GLuint;
+  lProgram: GLuint;
+  lStatus: GLint;
+  lLogLen: GLint;
+  lLog: string;
+begin
+  Result := 0;
+  lVertexShader := CreateShader(GL_VERTEX_SHADER, AVertexSource);
+  if lVertexShader = 0 then Exit;
+  
+  lProgram := glCreateProgram();
+  glAttachShader(lProgram, lVertexShader);
+  glLinkProgram(lProgram);
+  
+  glGetProgramiv(lProgram, GL_LINK_STATUS, @lStatus);
+  if lStatus = GL_FALSE then
+  begin
+    glGetProgramiv(lProgram, GL_INFO_LOG_LENGTH, @lLogLen);
+    SetLength(lLog, lLogLen);
+    glGetProgramInfoLog(lProgram, lLogLen, nil, PAnsiChar(lLog));
+    LogToFile('Program link error: ' + lLog);
+    glDeleteProgram(lProgram);
+    glDeleteShader(lVertexShader);
+    Exit;
+  end;
+  
+  glDeleteShader(lVertexShader);
+  Result := lProgram;
+end;
 
 const
   VK_BACK = 8;
@@ -92,8 +286,34 @@ const
 
 { TOpenGLChartRenderer }
 
+procedure TOpenGLChartRenderer.InitShaders;
+begin
+  fShaderInitialized := False;
+  if not Load_GL_version_2_0 then
+  begin
+    LogToFile('Failed to load OpenGL 2.0 extensions.');
+    Exit;
+  end;
+
+  fProgram := CreateProgram(SHADER_LINE_LG_VERT);
+  fProgram1d := CreateProgram(SHADER_LINE_LG_1D_VERT);
+
+  if (fProgram <> 0) and (fProgram1d <> 0) then
+  begin
+    fShaderInitialized := True;
+    LogToFile('Shaders initialized successfully.');
+  end
+  else
+    LogToFile('Failed to initialize shaders.');
+end;
+
 destructor TOpenGLChartRenderer.Destroy;
 begin
+  if fShaderInitialized then
+  begin
+    glDeleteProgram(fProgram);
+    glDeleteProgram(fProgram1d);
+  end;
   fFontMng.Free;
   inherited Destroy;
 end;
@@ -104,6 +324,10 @@ begin
   if not Assigned(fFontMng) then
     fFontMng := cOglFontMng.Create;
   fHost.MakeCurrent;
+  
+  if not fShaderInitialized then
+    InitShaders;
+
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 end;
@@ -361,8 +585,46 @@ begin
 end;
 
 function TOpenGLChartRenderer.PageContentRect(APage: TChartPage): TChartPixelRect;
+var
+  lTotalOffset: Single;
+  lYTicks: TChartTickArray;
+  lAxisFont: cOglFont;
+  lYAxis: TChartAxis;
+  lText: string;
+  lMaxTextWidth, lTextWidth: Single;
+  I, J, lYAxisIdx: Integer;
 begin
-  Result.Left := fPageRect.Left + APage.PixelTabSpace.Left;
+  lTotalOffset := 0;
+  lYAxisIdx := 0;
+  if Assigned(APage) then
+  begin
+    for I := 0 to APage.ChildCount - 1 do
+      if APage.Children[I] is TChartAxis then
+      begin
+        lYAxis := TChartAxis(APage.Children[I]);
+        if lYAxisIdx > 0 then
+        begin
+          BuildAxisTicks(lYAxis, 8, lYTicks);
+          if lYAxis = fSelectedObject then
+            lAxisFont := fFontMng.Font(cfAxisSelected)
+          else
+            lAxisFont := fFontMng.Font(cfAxisLabel);
+
+          lMaxTextWidth := 0;
+          for J := 0 to High(lYTicks) do
+          begin
+            lText := lYTicks[J].Text;
+            lTextWidth := lAxisFont.TextPixelWidth(lText);
+            if lTextWidth > lMaxTextWidth then
+              lMaxTextWidth := lTextWidth;
+          end;
+          lTotalOffset := lTotalOffset + lMaxTextWidth + 15;
+        end;
+        Inc(lYAxisIdx);
+      end;
+  end;
+
+  Result.Left := fPageRect.Left + APage.PixelTabSpace.Left + Round(lTotalOffset);
   Result.Top := fPageRect.Top + APage.PixelTabSpace.Top;
   Result.Right := fPageRect.Right - APage.PixelTabSpace.Right;
   Result.Bottom := fPageRect.Bottom - APage.PixelTabSpace.Bottom;
@@ -375,6 +637,15 @@ end;
 
 function TOpenGLChartRenderer.PageToPixelRect(APage: TChartPage): TChartPixelRect;
 begin
+  if not Assigned(fHost) or not Assigned(APage) then
+  begin
+    Result.Left := 0;
+    Result.Top := 0;
+    Result.Right := 0;
+    Result.Bottom := 0;
+    Exit;
+  end;
+
   Result.Left := Round(APage.FloatRect.Left * fHost.GetWidth);
   Result.Top := Round(APage.FloatRect.Top * fHost.GetHeight);
   Result.Right := Round(APage.FloatRect.Right * fHost.GetWidth);
@@ -600,6 +871,8 @@ var
   lYTicks: TChartTickArray;
   lFont: cOglFont;
   lText: string;
+  lAxisOffset: Single;
+  lMaxTextWidth, lTextWidth: Single;
 begin
   lPrimaryAxis := GetPrimaryXAxis(APage);
 
@@ -654,32 +927,56 @@ begin
   end;
 
   // Draw all Y axes
+  lAxisOffset := 0;
   for I := 0 to APage.ChildCount - 1 do
     if APage.Children[I] is TChartAxis then
     begin
       lYAxis := TChartAxis(APage.Children[I]);
       BuildAxisTicks(lYAxis, 8, lYTicks);
 
-      SetGLColor($FF404040);
-      glLineWidth(1);
+      if lYAxis = fSelectedObject then
+        lFont := fFontMng.Font(cfAxisSelected)
+      else
+        lFont := fFontMng.Font(cfAxisLabel);
+
+      lX := ARect.Left - lAxisOffset;
+
+      // Устанавливаем цвет оси по ее свойству Color
+      SetGLColor(lYAxis.Color);
+      glLineWidth(1.5);
+      // Отрисовываем вертикальную линию для каждой оси Y отдельно!
+      DrawLine(lX, ARect.Top, lX, ARect.Bottom);
+
+      // Отрисовываем тики для каждой оси
       for lIndex := 0 to High(lYTicks) do
       begin
         lY := AxisValueToPixel(lYAxis, lYTicks[lIndex].Value, ARect.Bottom, ARect.Top);
-        DrawLine(ARect.Left - CTick, lY, ARect.Left, lY);
+        DrawLine(lX - CTick, lY, lX, lY);
       end;
 
+      // Отрисовываем текстовые метки осей
       for lIndex := 0 to High(lYTicks) do
       begin
         lText := lYTicks[lIndex].Text;
         lY := AxisValueToPixel(lYAxis, lYTicks[lIndex].Value, ARect.Bottom, ARect.Top) -
           lFont.TextPixelHeight / 2;
         if Abs(lYTicks[lIndex].Value - lYAxis.MinValue) < 1E-9 then
-          DrawEditableText(lText, ARect.Left - lFont.TextPixelWidth(lText) - 7, lY, lFont, lYAxis, nil, celAxisMin)
+          DrawEditableText(lText, lX - lFont.TextPixelWidth(lText) - 7, lY, lFont, lYAxis, nil, celAxisMin)
         else if Abs(lYTicks[lIndex].Value - lYAxis.MaxValue) < 1E-9 then
-          DrawEditableText(lText, ARect.Left - lFont.TextPixelWidth(lText) - 7, lY, lFont, lYAxis, nil, celAxisMax)
+          DrawEditableText(lText, lX - lFont.TextPixelWidth(lText) - 7, lY, lFont, lYAxis, nil, celAxisMax)
         else
-          DrawText(lText, ARect.Left - lFont.TextPixelWidth(lText) - 7, lY, lFont);
+          DrawText(lText, lX - lFont.TextPixelWidth(lText) - 7, lY, lFont);
       end;
+
+      // Вычисляем ширину для следующей оси Y
+      lMaxTextWidth := 0.0;
+      for lIndex := 0 to High(lYTicks) do
+      begin
+        lTextWidth := lFont.TextPixelWidth(lYTicks[lIndex].Text);
+        if lTextWidth > lMaxTextWidth then
+          lMaxTextWidth := lTextWidth;
+      end;
+      lAxisOffset := lAxisOffset + lMaxTextWidth + 15;
     end;
 end;
 
@@ -702,21 +999,83 @@ var
   lPoint: TChartPoint;
   lX: Single;
   lY: Single;
+  lXMin, lXMax, lYMin, lYMax: Double;
+  lMinMax: array[0..3] of GLfloat;
+  lLg: array[0..1] of GLint;
+  lMinMaxLoc, lLgLoc: GLint;
 begin
   if not Assigned(ASeries) or (ASeries.PointCount <= 0) or not Assigned(AYAxis) then
     Exit;
 
   SetGLColor(ASeries.Color);
   glLineWidth(2.3);
-  glBegin(GL_LINE_STRIP);
-  for lIndex := 0 to ASeries.PointCount - 1 do
+
+  if fUseShader and fShaderInitialized then
   begin
-    lPoint := ASeries.Points[lIndex];
-    lX := XValueToPixel(APage, AYAxis, lPoint.X, ARect.Left, ARect.Right);
-    lY := AxisValueToPixel(AYAxis, lPoint.Y, ARect.Bottom, ARect.Top);
-    glVertex2f(lX, lY);
+    if AYAxis.UseOwnX then
+    begin
+      lXMin := AYAxis.XMinValue;
+      lXMax := AYAxis.XMaxValue;
+    end
+    else
+    begin
+      lXMin := APage.XMinValue;
+      lXMax := APage.XMaxValue;
+    end;
+    lYMin := AYAxis.MinValue;
+    lYMax := AYAxis.MaxValue;
+
+    glUseProgram(fProgram);
+
+    lMinMax[0] := lXMin;
+    lMinMax[1] := lXMax;
+    lMinMax[2] := lYMin;
+    lMinMax[3] := lYMax;
+    lMinMaxLoc := glGetUniformLocation(fProgram, 'a_minmax');
+    glUniform4fv(lMinMaxLoc, 1, @lMinMax[0]);
+
+    if AYAxis.UseOwnX then
+    begin
+      if AYAxis.XScale = casLog10 then lLg[0] := 1 else lLg[0] := 0;
+    end
+    else
+    begin
+      if APage.XScale = casLog10 then lLg[0] := 1 else lLg[0] := 0;
+    end;
+    if AYAxis.Scale = casLog10 then lLg[1] := 1 else lLg[1] := 0;
+    
+    lLgLoc := glGetUniformLocation(fProgram, 'a_Lg');
+    glUniform2iv(lLgLoc, 1, @lLg[0]);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix;
+    glTranslatef(ARect.Left, ARect.Bottom, 0);
+    glScalef((ARect.Right - ARect.Left) / (lXMax - lXMin), (ARect.Top - ARect.Bottom) / (lYMax - lYMin), 1.0);
+    glTranslatef(-lXMin, -lYMin, 0);
+
+    glBegin(GL_LINE_STRIP);
+    for lIndex := 0 to ASeries.PointCount - 1 do
+    begin
+      lPoint := ASeries.Points[lIndex];
+      glVertex2f(lPoint.X, lPoint.Y);
+    end;
+    glEnd;
+
+    glPopMatrix;
+    glUseProgram(0);
+  end
+  else
+  begin
+    glBegin(GL_LINE_STRIP);
+    for lIndex := 0 to ASeries.PointCount - 1 do
+    begin
+      lPoint := ASeries.Points[lIndex];
+      lX := XValueToPixel(APage, AYAxis, lPoint.X, ARect.Left, ARect.Right);
+      lY := AxisValueToPixel(AYAxis, lPoint.Y, ARect.Bottom, ARect.Top);
+      glVertex2f(lX, lY);
+    end;
+    glEnd;
   end;
-  glEnd;
 end;
 
 procedure TOpenGLChartRenderer.DrawBuffTrend1d(ATrend: cBuffTrend1d; const ARect: TChartPixelRect;
@@ -725,20 +1084,87 @@ var
   lIndex: Integer;
   lX: Single;
   lY: Single;
+  lXMin, lXMax, lYMin, lYMax: Double;
+  lMinMax: array[0..3] of GLfloat;
+  lLg: array[0..1] of GLint;
+  lLinePar: array[0..1] of GLfloat;
+  lMinMaxLoc, lLgLoc, lLineParLoc: GLint;
 begin
   if not Assigned(ATrend) or (ATrend.Count <= 0) or not Assigned(AYAxis) then
     Exit;
 
   SetGLColor(ATrend.Color);
   glLineWidth(2.3);
-  glBegin(GL_LINE_STRIP);
-  for lIndex := 0 to ATrend.Count - 1 do
+
+  if fUseShader and fShaderInitialized then
   begin
-    lX := XValueToPixel(APage, AYAxis, ATrend.X0 + lIndex * ATrend.DX, ARect.Left, ARect.Right);
-    lY := AxisValueToPixel(AYAxis, ATrend.Values[lIndex], ARect.Bottom, ARect.Top);
-    glVertex2f(lX, lY);
+    if AYAxis.UseOwnX then
+    begin
+      lXMin := AYAxis.XMinValue;
+      lXMax := AYAxis.XMaxValue;
+    end
+    else
+    begin
+      lXMin := APage.XMinValue;
+      lXMax := APage.XMaxValue;
+    end;
+    lYMin := AYAxis.MinValue;
+    lYMax := AYAxis.MaxValue;
+
+    glUseProgram(fProgram1d);
+
+    lMinMax[0] := lXMin;
+    lMinMax[1] := lXMax;
+    lMinMax[2] := lYMin;
+    lMinMax[3] := lYMax;
+    lMinMaxLoc := glGetUniformLocation(fProgram1d, 'a_minmax');
+    glUniform4fv(lMinMaxLoc, 1, @lMinMax[0]);
+
+    if AYAxis.UseOwnX then
+    begin
+      if AYAxis.XScale = casLog10 then lLg[0] := 1 else lLg[0] := 0;
+    end
+    else
+    begin
+      if APage.XScale = casLog10 then lLg[0] := 1 else lLg[0] := 0;
+    end;
+    if AYAxis.Scale = casLog10 then lLg[1] := 1 else lLg[1] := 0;
+    
+    lLgLoc := glGetUniformLocation(fProgram1d, 'a_Lg');
+    glUniform2iv(lLgLoc, 1, @lLg[0]);
+
+    lLinePar[0] := ATrend.X0;
+    lLinePar[1] := ATrend.DX;
+    lLineParLoc := glGetUniformLocation(fProgram1d, 'a_LinePar');
+    glUniform2fv(lLineParLoc, 1, @lLinePar[0]);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix;
+    glTranslatef(ARect.Left, ARect.Bottom, 0);
+    glScalef((ARect.Right - ARect.Left) / (lXMax - lXMin), (ARect.Top - ARect.Bottom) / (lYMax - lYMin), 1.0);
+    glTranslatef(-lXMin, -lYMin, 0);
+
+    glBegin(GL_LINE_STRIP);
+    for lIndex := 0 to ATrend.Count - 1 do
+    begin
+      glVertex2f(ATrend.Values[lIndex], 0);
+    end;
+    glEnd;
+
+    glPopMatrix;
+    glUseProgram(0);
+  end
+  else
+  begin
+    glBegin(GL_LINE_STRIP);
+    for lIndex := 0 to ATrend.Count - 1 do
+    begin
+      lX := XValueToPixel(APage, AYAxis, ATrend.X0 + lIndex * ATrend.DX, ARect.Left, ARect.Right);
+      lY := AxisValueToPixel(AYAxis, ATrend.Values[lIndex], ARect.Bottom, ARect.Top);
+      glVertex2f(lX, lY);
+    end;
+    glEnd;
   end;
-  glEnd;
 end;
 
 procedure TOpenGLChartRenderer.RenderObject(AObject: TChartBaseObject; const ARect: TChartPixelRect;
@@ -760,7 +1186,11 @@ begin
   if AObject is cBuffTrend1d then
     DrawBuffTrend1d(cBuffTrend1d(AObject), ARect, APage, lYAxis)
   else if AObject is TChartLineSeries then
+  begin
     DrawLineSeries(TChartLineSeries(AObject), ARect, APage, lYAxis);
+    if AObject is cTrend then
+      DrawTrendPoints(cTrend(AObject), ARect, APage, lYAxis);
+  end;
 
   for lIndex := 0 to AObject.ChildCount - 1 do
     RenderObject(AObject.Children[lIndex], ARect, APage, lYAxis);
@@ -781,11 +1211,15 @@ begin
   lContentRect := PageContentRect(APage);
   lYAxis := GetPrimaryXAxis(APage);
 
+  glEnable(GL_SCISSOR_TEST);
+  glScissor(fPageRect.Left, fHost.GetHeight - fPageRect.Bottom,
+    Max(1, fPageRect.Right - fPageRect.Left),
+    Max(1, fPageRect.Bottom - fPageRect.Top));
+
   DrawPageFrame(APage, fPageRect);
   DrawGrid(lContentRect, APage, lYAxis);
   DrawAxes(lContentRect, APage);
 
-  glEnable(GL_SCISSOR_TEST);
   glScissor(lContentRect.Left, fHost.GetHeight - lContentRect.Bottom,
     Max(1, lContentRect.Right - lContentRect.Left),
     Max(1, lContentRect.Bottom - lContentRect.Top));
@@ -826,23 +1260,53 @@ begin
   for lIndex := 0 to lModel.ChildCount - 1 do
     if lModel.Children[lIndex] is TChartPage then
       RenderPage(TChartPage(lModel.Children[lIndex]));
+
+  DrawHighlights;
+
+  if fSelectionRectActive then
+  begin
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    // Заливка полупрозрачным синим цветом
+    SetGLColor($403C7DFF);
+    FillRect(fSelectionRect);
+    
+    // Рамка
+    SetGLColor($FF3C7DFF);
+    glLineWidth(1.5);
+    DrawRect(fSelectionRect);
+    
+    glDisable(GL_BLEND);
+  end;
 end;
 
-function TOpenGLChartRenderer.MouseDown(AX, AY: Integer): Boolean;
+function TOpenGLChartRenderer.MouseDown(AX, AY: Integer; ADoubleClick: Boolean): Boolean;
 var
   I: Integer;
 begin
   Result := False;
   fActiveHit.Axis := nil;
+  fActiveHit.Page := nil;
+  fActiveHit.Kind := celNone;
   for I := 0 to High(fTextHits) do
     if (AX >= fTextHits[I].Rect.Left) and (AX <= fTextHits[I].Rect.Right) and
       (AY >= fTextHits[I].Rect.Top) and (AY <= fTextHits[I].Rect.Bottom) then
     begin
       fActiveHit := fTextHits[I];
       fEditText := fTextHits[I].Text;
-      fEditCursor := fTextHits[I].Font.HitCharIndex(fEditText, AX, fTextHits[I].TextLeft);
-      fEditSelectionStart := fEditCursor;
-      fEditSelectionLength := 1;
+      if ADoubleClick then
+      begin
+        fEditSelectionStart := 1;
+        fEditSelectionLength := Length(fEditText);
+        fEditCursor := Length(fEditText) + 1;
+      end
+      else
+      begin
+        fEditCursor := fTextHits[I].Font.HitCharIndex(fEditText, AX, fTextHits[I].TextLeft);
+        fEditSelectionStart := fEditCursor;
+        fEditSelectionLength := 0;
+      end;
       Result := True;
       Exit;
     end;
@@ -852,7 +1316,7 @@ function TOpenGLChartRenderer.KeyDown(AKey: Word): Boolean;
 var
   lValue: Double;
 begin
-  Result := Assigned(fActiveHit.Axis);
+  Result := fActiveHit.Kind <> celNone;
   if not Result then
     Exit;
 
@@ -908,7 +1372,7 @@ var
   lValue: Double;
   lChar: Char;
 begin
-  Result := Assigned(fActiveHit.Axis);
+  Result := fActiveHit.Kind <> celNone;
   if not Result or (AText = '') then
     Exit;
 
@@ -950,6 +1414,317 @@ begin
         fActiveHit.Page.XMaxValue := lValue;
     end;
   end;
+end;
+
+procedure TOpenGLChartRenderer.DrawHighlightRect(const ARect: TChartPixelRect; AColor: Cardinal);
+begin
+  SetGLColor(AColor);
+  glLineWidth(1.2);
+  DrawRect(ARect);
+end;
+
+procedure TOpenGLChartRenderer.DrawHighlights;
+var
+  lHovered, lSelected: TChartBaseObject;
+  lIndex: Integer;
+  lPageRect: TChartPixelRect;
+begin
+  lHovered := fHoveredObject;
+  lSelected := fSelectedObject;
+
+  // 1. Highlight hovered page or axis text hit
+  if Assigned(lHovered) then
+  begin
+    if lHovered is TChartPage then
+    begin
+      lPageRect := PageToPixelRect(TChartPage(lHovered));
+      DrawHighlightRect(lPageRect, $50FFCC00); // semi-transparent yellow highlight frame
+    end
+    else if lHovered is TChartAxis then
+    begin
+      for lIndex := 0 to High(fTextHits) do
+        if fTextHits[lIndex].Axis = lHovered then
+          DrawHighlightRect(fTextHits[lIndex].Rect, $80FFCC00);
+    end;
+  end;
+
+  // 2. Highlight selected page or axis text hit
+  if Assigned(lSelected) then
+  begin
+    if lSelected is TChartPage then
+    begin
+      lPageRect := PageToPixelRect(TChartPage(lSelected));
+      SetGLColor($FFFF3300); // Bold orange/red border
+      glLineWidth(3);
+      DrawRect(lPageRect);
+    end
+    else if lSelected is TChartAxis then
+    begin
+      for lIndex := 0 to High(fTextHits) do
+        if fTextHits[lIndex].Axis = lSelected then
+        begin
+          SetGLColor($FFFF3300);
+          glLineWidth(1.5);
+          DrawRect(fTextHits[lIndex].Rect);
+        end;
+    end;
+  end;
+end;
+
+function TOpenGLChartRenderer.GetPageRect(APage: TChartPage): TChartPixelRect;
+begin
+  Result := PageToPixelRect(APage);
+end;
+
+function TOpenGLChartRenderer.GetPageContentRect(APage: TChartPage): TChartPixelRect;
+begin
+  fPageRect := PageToPixelRect(APage);
+  Result := PageContentRect(APage);
+end;
+
+function TOpenGLChartRenderer.GetTextHitAt(AX, AY: Integer; out AHit: TChartTextHit): Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  for I := 0 to High(fTextHits) do
+    if (AX >= fTextHits[I].Rect.Left) and (AX <= fTextHits[I].Rect.Right) and
+       (AY >= fTextHits[I].Rect.Top) and (AY <= fTextHits[I].Rect.Bottom) then
+    begin
+      AHit := fTextHits[I];
+      Result := True;
+      Exit;
+    end;
+end;
+
+function TOpenGLChartRenderer.PixelToXValue(APage: TChartPage; AAxis: TChartAxis; APixelX, ALeft, ARight: Single): Double;
+var
+  lMin, lMax: Double;
+begin
+  lMin := 0;
+  lMax := 1;
+  if Assigned(AAxis) and AAxis.UseOwnX then
+  begin
+    lMin := AAxis.XMinValue;
+    lMax := AAxis.XMaxValue;
+  end
+  else if Assigned(APage) then
+  begin
+    lMin := APage.XMinValue;
+    lMax := APage.XMaxValue;
+  end;
+  if ARight = ALeft then
+    Exit(lMin);
+  Result := lMin + (APixelX - ALeft) / (ARight - ALeft) * (lMax - lMin);
+end;
+
+function TOpenGLChartRenderer.PixelToAxisValue(AAxis: TChartAxis; APixelY, ABottom, ATop: Single): Double;
+begin
+  if not Assigned(AAxis) then
+    Exit(0);
+  if ABottom = ATop then
+    Exit(AAxis.MinValue);
+  if AAxis.Scale = casLog10 then
+    Result := Power(10, Log10(Max(AAxis.MinValue, 1E-12)) + (APixelY - ABottom) / (ATop - ABottom) * (Log10(Max(AAxis.MaxValue, 1E-12)) - Log10(Max(AAxis.MinValue, 1E-12))))
+  else
+    Result := AAxis.MinValue + (APixelY - ABottom) / (ATop - ABottom) * (AAxis.MaxValue - AAxis.MinValue);
+end;
+
+
+procedure TOpenGLChartRenderer.DrawTrendPoints(ATrend: cTrend; const ARect: TChartPixelRect;
+  APage: TChartPage; AYAxis: TChartAxis);
+var
+  lIndex: Integer;
+  lPoint: TChartPoint;
+  lX, lY: Single;
+  lXLeft, lYLeft, lXRight, lYRight: Single;
+  lType: TBeziePointType;
+  bp: cBeziePoint;
+begin
+  if not Assigned(ATrend) or (ATrend.BeziePointCount <= 0) or not Assigned(AYAxis) or not ATrend.ShowPoints then
+    Exit;
+
+  for lIndex := 0 to ATrend.BeziePointCount - 1 do
+  begin
+    bp := ATrend.BeziePoints[lIndex];
+    lPoint := bp.Point;
+    lX := XValueToPixel(APage, AYAxis, lPoint.X, ARect.Left, ARect.Right);
+    lY := AxisValueToPixel(AYAxis, lPoint.Y, ARect.Bottom, ARect.Top);
+    lType := bp.PointType;
+
+    // Draw tangent lines and control points if smooth and selected
+    if (lType = bptSmooth) and bp.Selected then
+    begin
+      lXLeft := XValueToPixel(APage, AYAxis, bp.Left.X, ARect.Left, ARect.Right);
+      lYLeft := AxisValueToPixel(AYAxis, bp.Left.Y, ARect.Bottom, ARect.Top);
+      lXRight := XValueToPixel(APage, AYAxis, bp.Right.X, ARect.Left, ARect.Right);
+      lYRight := AxisValueToPixel(AYAxis, bp.Right.Y, ARect.Bottom, ARect.Top);
+
+      // Tangent vector lines (gray lines)
+      SetGLColor($FF808080); 
+      glLineWidth(1.0);
+      glBegin(GL_LINES);
+      glVertex2f(lX, lY);
+      glVertex2f(lXLeft, lYLeft);
+      glVertex2f(lX, lY);
+      glVertex2f(lXRight, lYRight);
+      glEnd;
+
+      // Handle control points: GREEN squares of size 8x8 (half-size 4.0) with black border
+      SetGLColor($FF00D000); // Bright green
+      glBegin(GL_QUADS);
+      glVertex2f(lXLeft - 4, lYLeft - 4);
+      glVertex2f(lXLeft + 4, lYLeft - 4);
+      glVertex2f(lXLeft + 4, lYLeft + 4);
+      glVertex2f(lXLeft - 4, lYLeft + 4);
+
+      glVertex2f(lXRight - 4, lYRight - 4);
+      glVertex2f(lXRight + 4, lYRight - 4);
+      glVertex2f(lXRight + 4, lYRight + 4);
+      glVertex2f(lXRight - 4, lYRight + 4);
+      glEnd;
+
+      // Black outline for green handles
+      SetGLColor($FF000000);
+      glLineWidth(1.0);
+      glBegin(GL_LINE_LOOP);
+      glVertex2f(lXLeft - 4, lYLeft - 4);
+      glVertex2f(lXLeft + 4, lYLeft - 4);
+      glVertex2f(lXLeft + 4, lYLeft + 4);
+      glVertex2f(lXLeft - 4, lYLeft + 4);
+      glEnd;
+      glBegin(GL_LINE_LOOP);
+      glVertex2f(lXRight - 4, lYRight - 4);
+      glVertex2f(lXRight + 4, lYRight - 4);
+      glVertex2f(lXRight + 4, lYRight + 4);
+      glVertex2f(lXRight - 4, lYRight + 4);
+      glEnd;
+    end;
+
+    // Fill color: Red if selected, Blue otherwise
+    if bp.Selected then
+      SetGLColor($FFFF3C3C)
+    else
+      SetGLColor($FF3C7DFF);
+
+    case lType of
+      bptCorner: // Square
+        begin
+          glBegin(GL_QUADS);
+          glVertex2f(lX - 4, lY - 4);
+          glVertex2f(lX + 4, lY - 4);
+          glVertex2f(lX + 4, lY + 4);
+          glVertex2f(lX - 4, lY + 4);
+          glEnd;
+        end;
+      bptSmooth: // Diamond
+        begin
+          glBegin(GL_QUADS);
+          glVertex2f(lX, lY - 5);
+          glVertex2f(lX + 5, lY);
+          glVertex2f(lX, lY + 5);
+          glVertex2f(lX - 5, lY);
+          glEnd;
+        end;
+      bptNull: // Triangle
+        begin
+          glBegin(GL_TRIANGLES);
+          glVertex2f(lX - 5, lY + 4);
+          glVertex2f(lX + 5, lY + 4);
+          glVertex2f(lX, lY - 5);
+          glEnd;
+        end;
+    end;
+
+    // Black border outline
+    SetGLColor($FF000000);
+    glLineWidth(1.0);
+    case lType of
+      bptCorner:
+        begin
+          glBegin(GL_LINE_LOOP);
+          glVertex2f(lX - 4, lY - 4);
+          glVertex2f(lX + 4, lY - 4);
+          glVertex2f(lX + 4, lY + 4);
+          glVertex2f(lX - 4, lY + 4);
+          glEnd;
+        end;
+      bptSmooth:
+        begin
+          glBegin(GL_LINE_LOOP);
+          glVertex2f(lX, lY - 5);
+          glVertex2f(lX + 5, lY);
+          glVertex2f(lX, lY + 5);
+          glVertex2f(lX - 5, lY);
+          glEnd;
+        end;
+      bptNull:
+        begin
+          glBegin(GL_LINE_LOOP);
+          glVertex2f(lX - 5, lY + 4);
+          glVertex2f(lX + 5, lY + 4);
+          glVertex2f(lX, lY - 5);
+          glEnd;
+        end;
+    end;
+  end;
+end;
+
+function TOpenGLChartRenderer.GetAxisHitAt(AModel: TChartModel; AX, AY: Integer; out AAxis: TChartAxis): Boolean;
+var
+  lIndex, I, J: Integer;
+  lPage: TChartPage;
+  lPageRect, lContentRect: TChartPixelRect;
+  lYAxis: TChartAxis;
+  lAxisX, lAxisOffset: Single;
+  lYTicks: TChartTickArray;
+  lAxisFont: cOglFont;
+  lMaxTextWidth, lTextWidth: Integer;
+  lText: string;
+begin
+  AAxis := nil;
+  for lIndex := 0 to AModel.ChildCount - 1 do
+    if AModel.Children[lIndex] is TChartPage then
+    begin
+      lPage := TChartPage(AModel.Children[lIndex]);
+      lPageRect := GetPageRect(lPage);
+      if (AX >= lPageRect.Left) and (AX <= lPageRect.Right) and
+         (AY >= lPageRect.Top) and (AY <= lPageRect.Bottom) then
+      begin
+        lContentRect := GetPageContentRect(lPage);
+        lAxisOffset := 0;
+        for I := 0 to lPage.ChildCount - 1 do
+          if lPage.Children[I] is TChartAxis then
+          begin
+            lYAxis := TChartAxis(lPage.Children[I]);
+            lAxisX := lContentRect.Left - lAxisOffset;
+
+            if (AY >= lContentRect.Top) and (AY <= lContentRect.Bottom) and
+               (Abs(AX - lAxisX) <= 10) then
+            begin
+              AAxis := lYAxis;
+              Exit(True);
+            end;
+
+            BuildAxisTicks(lYAxis, 8, lYTicks);
+            if lYAxis = fSelectedObject then
+              lAxisFont := fFontMng.Font(cfAxisSelected)
+            else
+              lAxisFont := fFontMng.Font(cfAxisLabel);
+
+            lMaxTextWidth := 0;
+            for J := 0 to High(lYTicks) do
+            begin
+              lText := lYTicks[J].Text;
+              lTextWidth := lAxisFont.TextPixelWidth(lText);
+              if lTextWidth > lMaxTextWidth then
+                lMaxTextWidth := lTextWidth;
+            end;
+            lAxisOffset := lAxisOffset + lMaxTextWidth + 15;
+          end;
+      end;
+    end;
+  Result := False;
 end;
 
 end.

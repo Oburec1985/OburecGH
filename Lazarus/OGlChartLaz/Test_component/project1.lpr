@@ -10,19 +10,51 @@ uses
   athreads,
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, Unit1, uBaseObjLaz, uBaseObjVclUtils, u2DMath
-  { you can add units after this };
+  SysUtils, Forms, Unit1;
 
 {$R *.res}
 
+var
+  lLogFile: TextFile;
 begin
-  RequireDerivedFormResource:=True;
-  Application.Scaled:=True;
-  {$PUSH}{$WARN 5044 OFF}
-  Application.MainFormOnTaskbar:=True;
-  {$POP}
-  Application.Initialize;
-  Application.CreateForm(TForm1, Form1);
-  Application.Run;
+  AssignFile(lLogFile, ExtractFilePath(ParamStr(0)) + 'init_trace.log');
+  Rewrite(lLogFile);
+  WriteLn(lLogFile, 'App starting...');
+  CloseFile(lLogFile);
+
+  try
+    RequireDerivedFormResource:=True;
+    Application.Scaled:=True;
+    {$PUSH}{$WARN 5044 OFF}
+    Application.MainFormOnTaskbar:=True;
+    {$POP}
+    
+    AssignFile(lLogFile, ExtractFilePath(ParamStr(0)) + 'init_trace.log');
+    Append(lLogFile);
+    WriteLn(lLogFile, 'Calling Application.Initialize...');
+    CloseFile(lLogFile);
+    Application.Initialize;
+    
+    AssignFile(lLogFile, ExtractFilePath(ParamStr(0)) + 'init_trace.log');
+    Append(lLogFile);
+    WriteLn(lLogFile, 'Calling Application.CreateForm...');
+    CloseFile(lLogFile);
+    Application.CreateForm(TForm1, Form1);
+    
+    AssignFile(lLogFile, ExtractFilePath(ParamStr(0)) + 'init_trace.log');
+    Append(lLogFile);
+    WriteLn(lLogFile, 'Calling Application.Run...');
+    CloseFile(lLogFile);
+    Application.Run;
+  except
+    on E: Exception do
+    begin
+      AssignFile(lLogFile, ExtractFilePath(ParamStr(0)) + 'init_trace.log');
+      Append(lLogFile);
+      WriteLn(lLogFile, 'EXCEPTION: ' + E.ClassName + ' - ' + E.Message);
+      CloseFile(lLogFile);
+      raise;
+    end;
+  end;
 end.
 

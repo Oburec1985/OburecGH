@@ -18,8 +18,9 @@
         <ComponentName Value="MainForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <TopLine Value="1264"/>
-        <CursorPos X="40" Y="1278"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="1249"/>
+        <CursorPos X="40" Y="1265"/>
         <UsageCount Value="55"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -85,6 +86,7 @@
         <Filename Value="UI\uFormPagesDialog.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="2"/>
+        <CursorPos X="22" Y="5"/>
         <UsageCount Value="50"/>
         <Loaded Value="True"/>
       </Unit>
@@ -102,10 +104,9 @@
         <ComponentName Value="RecorderSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="294"/>
-        <CursorPos X="55" Y="317"/>
+        <TopLine Value="295"/>
+        <CursorPos X="27" Y="296"/>
         <UsageCount Value="33"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -143,20 +144,14 @@
         <CursorPos X="10" Y="85"/>
         <UsageCount Value="10"/>
       </Unit>
+      <Unit>
+        <Filename Value="..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="36" Y="9"/>
+        <UsageCount Value="10"/>
+      </Unit>
     </Units>
-    <JumpHistory HistoryIndex="29">
-      <Position>
-        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
-        <Caret Line="373" TopLine="360"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
-        <Caret Line="381" TopLine="360"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
-        <Caret Line="382" TopLine="360"/>
-      </Position>
+    <JumpHistory HistoryIndex="28">
       <Position>
         <Filename Value="UI\uRecorderSettingsDialog.pas"/>
         <Caret Line="385" TopLine="360"/>
@@ -264,6 +259,14 @@
       <Position>
         <Filename Value="UI\uRecorderSettingsDialog.pas"/>
         <Caret Line="318" Column="54" TopLine="294"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="296" Column="27" TopLine="295"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="1225" Column="91" TopLine="1210"/>
       </Position>
     </JumpHistory>
     <RunParams>

@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 551
+  Left = 326
   Height = 525
-  Top = 34
+  Top = 286
   Width = 1407
   Caption = 'Form1'
   ClientHeight = 525
@@ -14,6 +14,14 @@ object Form1: TForm1
     Top = 0
     Width = 992
     Align = alClient
+  end
+  object Splitter1: TSplitter
+    Left = 987
+    Height = 525
+    Top = 0
+    Width = 5
+    Align = alRight
+    ResizeAnchor = akRight
   end
   object TreeView1: TTreeView
     Left = 992
@@ -93,5 +101,12 @@ object Form1: TForm1
       4EC7DBF274EC949FC26E7536B2872EE06E6F07E57139A3FF9B3BB8B2B24285C3
       E1875A5D5DA1369BFB1F797C7C37
     }
+  end
+  object StatusBar1: TStatusBar
+    Left = 0
+    Height = 23
+    Top = 502
+    Width = 1407
+    Panels = <>
   end
 end

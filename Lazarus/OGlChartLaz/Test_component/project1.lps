@@ -8,9 +8,9 @@
       <Unit>
         <Filename Value="project1.lpr"/>
         <IsPartOfProject Value="True"/>
-        <CursorPos X="74" Y="11"/>
-        <UsageCount Value="34"/>
-        <Loaded Value="True"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="124" Y="16"/>
+        <UsageCount Value="44"/>
       </Unit>
       <Unit>
         <Filename Value="unit1.pas"/>
@@ -19,140 +19,146 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Unit1"/>
-        <EditorIndex Value="1"/>
-        <TopLine Value="173"/>
-        <CursorPos X="18" Y="183"/>
-        <UsageCount Value="34"/>
+        <TopLine Value="290"/>
+        <CursorPos X="40" Y="309"/>
+        <UsageCount Value="44"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\uBaseObjLaz.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="31"/>
+        <UsageCount Value="41"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\uBaseObjVclUtils.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="31"/>
+        <UsageCount Value="41"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uoglchart.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uOglChart"/>
-        <EditorIndex Value="11"/>
-        <TopLine Value="319"/>
-        <CursorPos X="58" Y="327"/>
-        <UsageCount Value="31"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="369"/>
+        <CursorPos X="9" Y="378"/>
+        <UsageCount Value="41"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\lzrobrpack.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="lzrObrPack"/>
-        <UsageCount Value="27"/>
+        <UsageCount Value="37"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartControl.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="12"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="27"/>
         <CursorPos X="43" Y="33"/>
-        <UsageCount Value="27"/>
-        <Loaded Value="True"/>
+        <UsageCount Value="37"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartFontMng.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="10"/>
+        <EditorIndex Value="-1"/>
         <CursorPos X="87" Y="14"/>
-        <UsageCount Value="27"/>
-        <Loaded Value="True"/>
+        <UsageCount Value="37"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartLog.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="27"/>
+        <UsageCount Value="37"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartModel.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="8"/>
-        <TopLine Value="4"/>
+        <EditorIndex Value="-1"/>
         <CursorPos X="71" Y="15"/>
-        <UsageCount Value="27"/>
-        <Loaded Value="True"/>
+        <UsageCount Value="37"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartBaseObj.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="4"/>
-        <TopLine Value="113"/>
-        <CursorPos X="68" Y="123"/>
-        <UsageCount Value="27"/>
-        <Loaded Value="True"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="110"/>
+        <CursorPos X="41" Y="121"/>
+        <UsageCount Value="37"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartDrawObj.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="9"/>
-        <CursorPos X="72" Y="14"/>
-        <UsageCount Value="27"/>
-        <Loaded Value="True"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="31"/>
+        <CursorPos X="137" Y="45"/>
+        <UsageCount Value="37"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartPage.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="27"/>
+        <UsageCount Value="37"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartAxis.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="7"/>
-        <TopLine Value="21"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="15"/>
         <CursorPos X="63" Y="32"/>
-        <UsageCount Value="27"/>
-        <Loaded Value="True"/>
+        <UsageCount Value="37"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="6"/>
-        <TopLine Value="17"/>
-        <CursorPos X="72" Y="32"/>
-        <UsageCount Value="27"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <CursorPos X="64" Y="17"/>
+        <UsageCount Value="37"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartChart.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="27"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="7"/>
+        <CursorPos X="28" Y="20"/>
+        <UsageCount Value="37"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartMng.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="5"/>
-        <UsageCount Value="27"/>
-        <Loaded Value="True"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="37"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="2"/>
-        <CursorPos X="65" Y="16"/>
-        <UsageCount Value="27"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="36"/>
+        <CursorPos X="79" Y="51"/>
+        <UsageCount Value="37"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartSerializer.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="27"/>
+        <UsageCount Value="37"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTypes.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="27"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="11"/>
+        <CursorPos X="101" Y="28"/>
+        <UsageCount Value="37"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\math\u2DMath.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="138"/>
+        <CursorPos X="76" Y="149"/>
+        <UsageCount Value="32"/>
       </Unit>
       <Unit>
         <Filename Value="..\sharedUnits\uBaseObjLaz.pas"/>
@@ -183,107 +189,140 @@
         <UsageCount Value="11"/>
       </Unit>
       <Unit>
-        <Filename Value="..\..\SharedUtils\math\u2DMath.pas"/>
-        <IsPartOfProject Value="True"/>
-        <EditorIndex Value="3"/>
-        <TopLine Value="138"/>
-        <CursorPos X="76" Y="149"/>
-        <UsageCount Value="22"/>
+        <Filename Value="C:\lazarus\lcl\include\control.inc"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="3995"/>
+        <CursorPos X="67" Y="4010"/>
+        <UsageCount Value="12"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartLineHelper.pas"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="2"/>
+        <CursorPos X="32" Y="7"/>
+        <UsageCount Value="12"/>
         <Loaded Value="True"/>
       </Unit>
     </Units>
-    <JumpHistory HistoryIndex="22">
+    <JumpHistory HistoryIndex="29">
       <Position>
-        <Filename Value="unit1.pas"/>
-        <Caret Line="135" Column="29" TopLine="128"/>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
+        <Caret Line="127" Column="31" TopLine="123"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
+        <Caret Line="138" Column="57" TopLine="128"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
+        <Caret Line="130" Column="22" TopLine="121"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
+        <Caret Line="1447" Column="127" TopLine="1425"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
+        <Caret Line="143" Column="55" TopLine="122"/>
       </Position>
       <Position>
         <Filename Value="unit1.pas"/>
-        <Caret Line="79" Column="3" TopLine="69"/>
-      </Position>
-      <Position>
-        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartModel.pas"/>
-        <Caret Line="126" Column="3" TopLine="117"/>
+        <Caret Line="234" Column="32" TopLine="226"/>
       </Position>
       <Position>
         <Filename Value="unit1.pas"/>
-        <Caret Line="245" Column="7" TopLine="235"/>
+        <Caret Line="246" Column="79" TopLine="226"/>
       </Position>
       <Position>
         <Filename Value="unit1.pas"/>
-        <Caret Line="24" Column="15" TopLine="15"/>
+        <Caret Line="572" Column="10" TopLine="555"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uoglchart.pas"/>
+        <Caret Line="44" Column="15" TopLine="25"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uoglchart.pas"/>
+        <Caret Line="336" Column="3" TopLine="333"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uoglchart.pas"/>
+        <Caret Line="43" Column="20" TopLine="24"/>
       </Position>
       <Position>
         <Filename Value="unit1.pas"/>
-        <Caret Line="119" Column="35" TopLine="110"/>
+        <Caret Line="563" Column="51" TopLine="555"/>
       </Position>
       <Position>
         <Filename Value="unit1.pas"/>
-        <Caret Line="23" Column="15" TopLine="14"/>
       </Position>
       <Position>
         <Filename Value="unit1.pas"/>
-        <Caret Line="112" Column="44" TopLine="105"/>
+        <Caret Line="307" Column="31" TopLine="290"/>
       </Position>
       <Position>
         <Filename Value="unit1.pas"/>
-        <Caret Line="183" Column="18" TopLine="172"/>
+        <Caret Line="309" Column="40" TopLine="290"/>
       </Position>
       <Position>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
-        <Caret Line="49" Column="3" TopLine="27"/>
+        <Caret Line="70" Column="15" TopLine="51"/>
       </Position>
       <Position>
-        <Filename Value="unit1.pas"/>
-        <Caret Line="183" Column="18" TopLine="173"/>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
+        <Caret Line="220" Column="38" TopLine="214"/>
       </Position>
       <Position>
-        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
-        <Caret Line="1327" Column="33" TopLine="1311"/>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
       </Position>
       <Position>
-        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
-        <Caret Line="1740" Column="66" TopLine="1727"/>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
+        <Caret Line="63" TopLine="40"/>
       </Position>
       <Position>
-        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
-        <Caret Line="10" Column="80"/>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
+        <Caret Line="92" Column="29" TopLine="58"/>
       </Position>
       <Position>
-        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
-        <Caret Line="388" Column="17" TopLine="376"/>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
+        <Caret Line="339" Column="9" TopLine="327"/>
       </Position>
       <Position>
-        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
-        <Caret Line="1152" Column="75" TopLine="1140"/>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
+        <Caret Line="340" Column="19" TopLine="327"/>
       </Position>
       <Position>
-        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
-        <Caret Line="930" Column="40" TopLine="928"/>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
+        <Caret Line="342" Column="32" TopLine="327"/>
       </Position>
       <Position>
-        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
-        <Caret Line="926" Column="61" TopLine="913"/>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
+        <Caret Line="344" Column="15" TopLine="327"/>
       </Position>
       <Position>
-        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
-        <Caret Line="18" Column="68" TopLine="3"/>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
+        <Caret Line="345" Column="15" TopLine="327"/>
       </Position>
       <Position>
-        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
-        <Caret Line="12" Column="74"/>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
+        <Caret Line="349" Column="24" TopLine="327"/>
       </Position>
       <Position>
-        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartBaseObj.pas"/>
-        <Caret Line="122" Column="66" TopLine="113"/>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
+        <Caret Line="351" Column="21" TopLine="327"/>
       </Position>
       <Position>
-        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartBaseObj.pas"/>
-        <Caret Line="120" Column="74" TopLine="113"/>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
+        <Caret Line="352" Column="17" TopLine="327"/>
       </Position>
       <Position>
-        <Filename Value="..\..\SharedUtils\math\u2DMath.pas"/>
-        <Caret Line="13" Column="86"/>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
+        <Caret Line="353" Column="89" TopLine="327"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
+        <Caret Line="354" Column="89" TopLine="327"/>
       </Position>
     </JumpHistory>
     <RunParams>

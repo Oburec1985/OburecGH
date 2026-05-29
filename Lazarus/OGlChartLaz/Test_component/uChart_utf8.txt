@@ -1,0 +1,1443 @@
+﻿unit uChart;
+
+interface
+
+uses classes, stdctrls, controls, messages, windows, types, ExtCtrls, ComCtrls,
+  graphics, Jpeg, Clipbrd,
+  sysUtils, dialogs,
+  upage,
+  uaxis,
+  ucommonmath,
+  uEventList,
+  uFrameListener,
+  uCommonTypes,
+  uChartClickFrListener,
+  uChartEvents,
+  utrend,
+  uBaseObjService,
+  udrawobj,ubtnlistview,
+  ulegend,
+  uDoubleCursor,
+  uCursors,
+  uObjFrameListener,
+  uPageFrameListener,
+  uPageMng,
+  uComponentServises,
+  uDrawObjMng,
+  uEventTypes,
+  uShader,
+  uConfigFile3d,
+  uBasePage,
+  uLineLgShader;
+
+type
+  TMouseZoomEvent = procedure(Sender: TObject; UpScale: boolean) of object;
+
+  cChart = class(tPanel)
+  public
+    debugLB: tlistbox;
+    tabs: cPageMngList;
+    OBJmNG: cDrawObjMng;
+    dc: hdc;
+    hrc: HGLRC;
+    // модификаторы оконной процедуры
+    frList: cFrameList;
+    // опции отрисовки
+    settings: cardinal;
+    // нуждается в перерисовке. Не предназначен для установки пользователем.
+    // в концуе оконной процедуры если true будет вызван метод redraw
+    needRedraw: boolean;
+    // блокирует needRedraw
+    RedrawOnDemand: boolean;
+    // необходимо перерисовать TV
+    needRedrawTV: boolean;
+    // пользовательские нажатия
+    mouse: smousestruct;
+    // дерево отображения структуры компонентов
+    tv: ttreeview;
+    // легенда
+    legend: clegend;
+    // идентификатор обьекта который менял курсор. Если какой-то объект
+    // поменял курсор то сбросить его в дефолтный имеет право только он
+    cursorowner: integer;
+    // блокировка оконной процедуры. Управляется с помощью blockwndproc
+    cs: TRTLCriticalSection;
+
+    // путь к папке с ресурсами
+    path: string;
+
+    m_ShaderMng: cShaderManager;
+    m_UseShaders: boolean;
+
+    initGl: boolean;
+    // используется framlistener-ами например при двойном клике по метке текста.
+    // после взвода отключается при выходе из wndProc
+    fDisableInheritedWndProc: boolean;
+    fDisabledMsg: integer;
+  protected
+    fselectObj: cdrawobj;
+    // разрешать таскать границы страниц
+    fAllowEditPages: boolean;
+    // размер выделяющей области при клике
+    // (в координатах чарта(пересчитывается из пиксельного размера))
+    fselectSize: integer;
+    // флаг который защищает от многократного вызова postmessage
+    // устанавливается в True после renderscene
+    needPostMessage: boolean;
+    // число запросов к генерации имени курсора. каждый новый запрос увеличивает на 1
+    cursowners: integer;
+    EditMenuChartForm: TObject;
+  public
+    // происходит когда мышкой зазумили ось
+    fMouseZoomEvent: TMouseZoomEvent;
+    OnDeadLock: tNotifyEvent;
+    OnEnterCS: tNotifyEvent;
+    OnExitCS: tNotifyEvent;
+    deadLockDSC: string;
+    debugMode: boolean;
+  protected
+    fOnMovePoint: TDoubleDataEvent;
+    fOnDesroyObj: tNotifyEvent;
+    fOnObjEndDrag: tNotifyEvent;
+    fOnMouseMove: tNotifyEvent;
+    // подменяет fOnEdit
+    fOnRightBtnClick: tNotifyEvent;
+    // происходит при добавлении точки к тренду. первый параметр - тренд (cTrend),
+    // второй - точка cBeziePoint
+    fOnAddPoint: TDoubleDataEvent;
+    fOnInsertPoint: TDoubleDataEvent;
+    // происходит при выделении точки
+    fOnSelectPoint: tNotifyEvent;
+    fOnKeyDown: TKeyEvent;
+    // происходит после инициализации
+    fOninit: tNotifyEvent;
+    fOnDraw: tNotifyEvent;
+    fSwapBuffers: tNotifyEvent;
+    // происходит перед редактированием по правой кнопке
+    // сюда добавлять пользовательские диалоги настройки
+    fbeforeedit: tNotifyEvent;
+    // сюда добавлять реакцию на редактирование
+    fafteredit: tNotifyEvent;
+    // вызывается при редактировании объекта
+    fOnEdit: tNotifyEvent;
+    fOnCursorMove: tNotifyEvent;
+    fOnSelectObj: tNotifyEvent;
+  protected
+    procedure doOnCursorMove(Sender: TObject);
+    // событие происходит
+    procedure doOnMouseMove(Sender: TObject);
+    // происходит при обновлении структуры компонента
+    procedure doOnUpdateCfg(Sender: TObject);
+  protected
+    procedure renderscene;
+    procedure wndProc(var Message: TMessage); override;
+    procedure GetGlContext(H: Hwnd);
+    procedure deletecontext;
+    procedure UpdateMouse(var message: TMessage);
+    // создание объектов движка компонента
+    procedure CreateEngStructs;
+    procedure destroyEngStructs;
+    // создание модификаторов оконной процедуры
+    procedure CreateFrameListeners;
+    procedure lincEvents;
+    procedure CreateParams(var Params: TCreateParams);
+    procedure redrawComponents;
+    procedure setactivepage(page: cbasepage);
+    function getActivePage: cbasepage;
+    procedure setactivepageMng(tab: cPageMng);
+    function getActivePageMng: cPageMng;
+    procedure initscene;
+    function gettrend: ctrend;
+    // обновить дерево объектов
+    procedure updateTV;
+    procedure doOnDeleteObj(Sender: TObject);
+  public
+    procedure doZoomEvent(Sender: TObject; b: boolean);
+    procedure doOnInsertPoint(data: TObject; subdata: TObject);
+  protected
+    procedure setpath(p_path: string);
+    procedure setselectObj(obj: cdrawobj);
+    function getShowLegend: boolean;
+    procedure setShowLegend(v: boolean);
+    function getShowTV: boolean;
+    procedure setShowTV(v: boolean);
+    procedure setimagelist(im: timagelist);
+    function getimagelist: timagelist;
+    procedure setAllowEditPages(b: boolean);
+    function getAllowEditPages: boolean;
+    // происходит при выборе нового объекта в дереве
+    procedure doTVClick(Sender: TObject);
+    procedure doRBtnClick(Sender: TObject);
+    procedure CfgTVChange(Sender: TObject; Node: TTreeNode);
+    procedure TVMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: integer);
+    procedure LoadShaders;
+  public
+    Constructor Create(AOwner: TComponent); override;
+    destructor destroy; override;
+    procedure EnterCS;
+    procedure ExitCS;
+  public
+    // если привязан debugLB то будет добавлена строка
+    procedure logstr(str: string);
+    procedure SelectInTV(obj: cdrawobj);
+    procedure SaveToFile(filename: string);
+    procedure SaveWindowToFile(filename: string);
+    function  getBitmap:tbitmap;
+    property activeTab: cPageMng read getActivePageMng write setactivepageMng;
+    property activePage: cbasepage read getActivePage write setactivepage;
+    property selected: cdrawobj read fselectObj write setselectObj;
+    // с - новый курсор
+    procedure setcursor(c: integer; cursowner: integer); overload;
+    // гет контрол - перехватить управление палюбому
+    procedure setcursor(c: integer; cursowner: integer; getControl: boolean);
+      overload;
+    // убить объект
+    procedure deleteObj(obj: cdrawobj);
+    // убить выбранный
+    procedure deleteselected;
+    // копировать в клипборт
+    procedure CopyScreenToClipboard;
+    property activetrend: ctrend read gettrend;
+    function GenCursOwnerName: integer;
+    function addPage: cpage;
+    function addTab: cPageMng;
+    function GetPage(i: integer): cpage; overload;
+    function GetPage(p_name: string): cpage; overload;
+    // перерисовывает окно послыая сообщение wm_paint
+    procedure redraw;
+    function getcolor(i: integer): point3;
+    procedure doSelectObj(Sender: TObject);
+  published
+    property OnMouseZoom: TMouseZoomEvent read fMouseZoomEvent write
+      fMouseZoomEvent;
+    // события
+    property OnRightMBtnClick
+      : tNotifyEvent read fOnMouseMove write fOnMouseMove;
+    property OnKeyDown;
+    property OnObjEndDrag: tNotifyEvent read fOnObjEndDrag write fOnObjEndDrag;
+    property OnMouseMove: tNotifyEvent read fOnMouseMove write fOnMouseMove;
+    property OnDestroyObj: tNotifyEvent read fOnDesroyObj write fOnDesroyObj;
+    property OnRBtnClick: tNotifyEvent read fOnRightBtnClick write
+      fOnRightBtnClick;
+    property OnMovePoint: TDoubleDataEvent read fOnMovePoint write fOnMovePoint;
+    // происходит при добавлении точки к тренду. первый параметр - тренд (cTrend),
+    // второй - точка cBeziePoint
+    property OnAddPoint: TDoubleDataEvent read fOnAddPoint write fOnAddPoint;
+    property OnInsertPoint
+      : TDoubleDataEvent read fOnInsertPoint write fOnInsertPoint;
+    // происходит при выделении точки
+    property OnSelectPoint
+      : tNotifyEvent read fOnSelectPoint write fOnSelectPoint;
+    // происходит при инициализации
+    property OnInit: tNotifyEvent read fOninit write fOninit;
+    property OnDraw: tNotifyEvent read fOnDraw write fOnDraw;
+    property OnSwapBuffers: tNotifyEvent read fSwapBuffers write fSwapBuffers;
+    property OnEditObj: tNotifyEvent read fOnEdit write fOnEdit;
+    property OnCursorMove: tNotifyEvent read fOnCursorMove write fOnCursorMove;
+    property OnSelectObj: tNotifyEvent read fOnSelectObj write fOnSelectObj;
+    // происходит перед редактированием по правой кнопке
+    // сюда добавлять пользовательские диалоги настройки
+    property onbeforeedit: tNotifyEvent read fbeforeedit write fbeforeedit;
+    property onafteredit: tNotifyEvent read fafteredit write fafteredit;
+
+    property allowEditPages: boolean read getAllowEditPages write
+      setAllowEditPages;
+    property imagelist: timagelist read getimagelist write setimagelist;
+    property Resources: string read path write setpath;
+    property showTV: boolean read getShowTV write setShowTV;
+    property showLegend: boolean read getShowLegend write setShowLegend;
+    property selectSize: integer read fselectSize write fselectSize;
+  end;
+
+var
+  g_initGL: boolean = false;
+  g_configfile: cCfgFile;
+
+const
+  // рисовать селектирующий прямойгольник
+  c_drawSelRect = $000001;
+
+  c_BlockWndProc = $000001;
+  c_InWndProc = $000002;
+
+implementation
+
+uses
+  uEditMenuChartForm, dglopengl, Forms;
+
+// пока хотьт раз не вызовешь не работает шейдерное рисование линий
+Procedure ProcDrawSelectRect;
+const Colors:array [0..19] of single = (0.2,0.2,0.2,0.1,  0.2,0.2,0.2,0.1, 0.2,0.2,0.2,0.1,  0.2,0.2,0.2,0.1, 0.2,0.2,0.2,0.1 );
+var
+  RectData:Array [0..1] of point2;
+  a:caxis;
+  p:cpage;
+begin
+  RectData[0]:=p2(0,0);
+  RectData[1]:=p2(0,0);
+  glEnableClientState(GL_COLOR_ARRAY);
+  glEnableClientState(GL_VERTEX_ARRAY) ;        // вкл. режим рисования
+  glColorPointer(4, GL_FLOAT, 0,@Colors[0]);    // указатель на массив цветов
+  glVertexPointer(2, GL_FLOAT, 0,@RectData[0]); // указатель на массив данных
+  glDrawArrays(GL_LINE_STRIP,0,2);
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_COLOR_ARRAY);
+end;
+
+
+// ==========================Получение Gl контекста======================
+procedure cChart.GetGlContext(H: Hwnd);
+var
+  index, nPixelFormat: integer;
+  rect: TRect;
+
+  pfd: TPixelFormatDescriptor;
+  p: cpage;
+  res: boolean;
+begin
+  if not g_initGL then
+    g_initGL := InitOpenGL('opengl32.dll', 'glu32.dll');
+  dc := GetDC(Handle);
+
+  hrc := CreateRenderingContext(dc, [opDoubleBuffered], 32, 24, 8, 0, 0, 0);
+  ActivateRenderingContext(dc, hrc, true);
+
+  res := wglMakeCurrent(dc, hrc);
+
+  initGl := true;
+  p := cpage(activePage);
+  if p <> nil then
+  begin
+    p.SetPointSize(5);
+    index := p.getaxiscount;
+    // увеличиваем отступ для оси
+    if index > 1 then
+    begin
+      rect := p.GetPixelTabSpace;
+      rect.Left := rect.Left + c_axisTab;
+      p.settabspace(rect);
+    end;
+  end;
+  if m_ShaderMng <> nil then
+  begin
+    m_ShaderMng.GetInfo;
+    if m_ShaderMng.m_ExtSupported then
+      LoadShaders;
+  end;
+  ProcDrawSelectRect;
+end;
+
+procedure cChart.deletecontext;
+begin
+  // перед удалением контекста надо сбросить текущий контекст OpenGL подсистемы
+  wglMakeCurrent(0, 0);
+  wglDeleteContext(hrc);
+end;
+
+procedure cChart.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+  // WS_CLIPCHILDREN - не перерисовывать дочернее окно, при перерисовке родительского
+  Params.Style := Params.Style or WS_CLIPCHILDREN;
+end;
+
+// Войти в настройку движка
+procedure cChart.CfgTVChange(Sender: TObject; Node: TTreeNode);
+begin
+  selected := cdrawobj(Node.data);
+end;
+
+Constructor cChart.Create(AOwner: TComponent);
+var
+  dc: hdc;
+begin
+  inherited Create(AOwner);
+  RedrawOnDemand := false;
+  InitializeCriticalSection(cs);
+  selectSize := 5;
+  cursor := crdefault;
+  cursowners := 1;
+  cursorowner := -1;
+  OBJmNG := cDrawObjMng.Create;
+  OBJmNG.chart := self;
+  // создание менеджера дерева
+  tv := ttreeview.Create(self);
+  tv.visible := false;
+  tv.name := 'ChartTV';
+  tv.visible := false;
+  tv.Parent := self;
+  tv.Align := alleft;
+  tv.Width := 200;
+  tv.OnClick := doTVClick;
+  tv.OnChange := CfgTVChange;
+  tv.OnMouseUp := TVMouseUp;
+  // создание легенды
+  legend := clegend.Create(self);
+  legend.name := 'ChartLegend';
+  legend.visible := false;
+  // Создание событий
+  lincEvents;
+  initGl := false;
+
+  Parent := TWinControl(AOwner);
+  Width := 400;
+  Height := 400;
+  top := 10;
+  Left := 10;
+  settings := 0;
+  EditMenuChartForm := tEditMenuChartForm.Create(nil);
+  tEditMenuChartForm(EditMenuChartForm).linc(self);
+  selected := nil;
+
+  // Перенесено из CreateStructs 23.01.23
+  tabs := cPageMngList.Create;
+  OBJmNG.Add(tabs);
+  tabs.chart := self;
+
+  tabs.activeTab := tabs.addTab;
+  tabs.activeTab.lincchart(self);
+
+  cpage(tabs.activeTab.addPage(true));
+  ///
+
+  debugMode := false;
+
+  if g_configfile = nil then
+  begin
+    g_configfile := cCfgFile.Create('resources.ini');
+  end;
+  g_configfile.addref;
+  m_ShaderMng := cShaderManager.Create;
+end;
+
+procedure cChart.LoadShaders;
+var
+  shadername, s: string;
+  sh: cshader;
+begin
+  logstr('EnterLoadShaders');
+  s := 'LineLg';
+  shadername := g_configfile.findShaderFile(s);
+  if shadername <> '' then
+  begin
+    sh := cLineLgShader.Create(extractFilePath(shadername), s);
+    m_ShaderMng.Add(sh);
+    cLineLgShader(sh).BindLgShaderData;
+    m_UseShaders := true;
+  end;
+  s := 'LineLg1d';
+  shadername := g_configfile.findShaderFile(s);
+  if shadername <> '' then
+  begin
+    if fileexists(shadername) then
+    begin
+      sh := cLineLgShader1d.Create(extractFilePath(shadername), s);
+
+      m_ShaderMng.Add(sh);
+      cLineLgShader1d(sh).BindLgShaderData;
+      m_UseShaders := true;
+    end;
+  end;
+  logstr('ExitLoadShaders');
+end;
+
+procedure cChart.logstr(str: string);
+begin
+  if debugLB <> nil then
+  begin
+    debugLB.AddItem(str, nil);
+  end;
+end;
+
+destructor cChart.destroy;
+begin
+  if initGl then
+  begin
+    destroyEngStructs;
+    deletecontext;
+  end;
+  m_ShaderMng.destroy;
+
+  initGl := false;
+  // if m_ShaderMng <> nil then
+  // begin
+  // m_ShaderMng.destroy;
+  if g_configfile <> nil then
+  begin
+    g_configfile.release;
+    g_configfile := nil;
+  end;
+  // end;
+  tv.destroy;
+  tv := nil;
+
+  // if Owner = nil then
+  if legend <> nil then
+    legend.destroy;
+  legend := nil;
+
+  tabs := nil;
+  OBJmNG.destroy;
+  OBJmNG := nil;
+
+  EditMenuChartForm.destroy;
+  EditMenuChartForm := nil;
+
+  DeleteCriticalSection(cs);
+  // showmessage('delChart');
+  inherited;
+end;
+
+function cChart.GetPage(i: integer): cpage;
+begin
+  result := activeTab.GetPage(i);
+end;
+
+function cChart.GetPage(p_name: string): cpage;
+begin
+  result := activeTab.GetPage(p_name);
+end;
+
+function cChart.addPage: cpage;
+begin
+  result := activeTab.addPage(true);
+  if activePage = nil then
+    activePage := result;
+end;
+
+procedure cChart.CreateEngStructs;
+begin
+  OBJmNG.initfonts;
+  // нельзя переносить до инициации контекста! в Create
+  // tabs.LincChart(self);
+  // создаем список оконных процедур
+  frList := cFrameList.Create(self);
+  CreateFrameListeners;
+  updateTV;
+end;
+
+function cChart.getimagelist: timagelist;
+begin
+  result := OBJmNG.images_32;
+end;
+
+procedure cChart.setimagelist(im: timagelist);
+begin
+  OBJmNG.images_32 := im;
+  if tv <> nil then
+    tv.Images := im;
+end;
+
+procedure cChart.destroyEngStructs;
+begin
+  frList.destroy;
+  frList := nil;
+end;
+
+procedure cChart.UpdateMouse(var message: TMessage);
+var
+  p, p_: point2;
+  p2i: tpoint;
+  page: cdrawobj;
+begin
+  if tabs = nil then
+    exit;
+  case message.Msg of
+    wm_mousemove:
+      begin
+        page := activePage;
+        // Преобразразование стрейфа
+        p2i.X := loWord(message.lParam);
+        // Преобразование кооржинат по y
+        if message.lParam > 0 then
+          mouse.ipos.Y := hiWord(message.lParam);
+        if mouse.ipos.Y > Height then
+          mouse.ipos.Y := 0;
+        p2i.Y := Height - mouse.ipos.Y;
+        mouse.ipos_inv.Y := Height - mouse.ipos.Y;
+        // Преобразование кооржинат по x
+        if p2i.X < 65000 then
+        begin
+          mouse.ipos.X := p2i.X;
+          mouse.ipos_inv.X := p2i.X;
+        end
+        else // Если ушли в зашкал по x
+        begin
+          if page <> nil then
+          begin
+            if page is cpage then
+            begin
+              mouse.pos.X := cpage(page).activeAxis.min.X;
+              mouse.ipos.X := 0;
+              mouse.ipos_inv.X := 0;
+            end;
+          end;
+        end;
+        if page <> nil then
+        begin
+          if page is cpage then
+          begin
+            if cpage(page).activeAxis <> nil then
+            begin
+              p := cpage(page).p2itoP2(mouse.ipos_inv);
+              mouse.strafe := p2(p.X - mouse.pos.X, p.Y - mouse.pos.Y);
+              mouse.pos := p2(p.X, p.Y);
+
+              p_ := cpage(page).Point2ToTrend(mouse.pos,
+                cpage(page).activeAxis);
+              mouse.activeAxisstrafe := p2d(p_.X - mouse.activeAxisPos.X,
+                p_.Y - mouse.activeAxisPos.Y);
+              mouse.activeAxisPos := p_;
+            end;
+          end;
+        end;
+        // вызов событий передвижения мыши
+        if OBJmNG.events <> nil then
+          OBJmNG.events.CallAllEvents(E_OnMouseMove);
+      end;
+    wm_lbuttondown:
+      begin
+        mouse.DragBegginPos := mouse.ipos;
+        mouse.mousedown := true;
+      end;
+    wm_rbuttondown:
+      begin
+        if Assigned(fOnRightBtnClick) then
+          doRBtnClick(self)
+        else
+          tEditMenuChartForm(EditMenuChartForm).ShowModal;
+      end;
+    wm_lbuttonup:
+      begin
+        mouse.mousedown := false;
+      end;
+  end;
+end;
+
+procedure cChart.redraw;
+begin
+
+  if needPostMessage then
+  begin
+    if tabs <> nil then
+    begin
+      needRedraw := false;
+      // windows.InvalidateRect(m_wndContext.handle, nil, false);
+      // renderscene;
+      needPostMessage := false;
+      postmessage(Handle, WM_PAINT, 0, 0);
+      // redrawComponents;
+    end;
+  end;
+end;
+
+procedure cChart.renderscene;
+var
+  ps: PaintStruct;
+  res: boolean;
+begin
+  if not initGl then
+    exit;
+
+  logstr('Enter_renderscene');
+  updateTV;
+  // если не коментировать wglMakeCurrent происходит утечка памяти
+  if wglGetCurrentContext <> hrc then
+  begin
+    wglMakeCurrent(dc, hrc);
+    if not res then
+    begin
+      // showmessage('wglCurrent false');
+    end;
+  end;
+  BeginPaint(Handle, ps);
+  glClearColor(0.9, 0.9, 0.9, 1);
+  glClear(GL_COLOR_BUFFER_BIT); // очистка буфера цвета
+  if activeTab <> nil then
+  begin
+    activeTab.draw;
+  end;
+  OBJmNG.events.CallAllEvents(e_onDraw);
+  SwapBuffers(dc);
+  EndPaint(Handle, ps);
+  if assigned(fSwapBuffers) then
+    fSwapBuffers(self);
+  logstr('Exit_renderscene');
+  needPostMessage := true;
+  // вероятно не коректно так делать (скорее надо вызывать в wm_size)
+  // wglMakeCurrent(0,0);
+end;
+
+procedure cChart.wndProc(var Message: TMessage);
+var
+  i, j: integer;
+  tab: cPageMng;
+  page: cpage;
+begin
+  // E-nterCS;
+  if initGl then
+  begin
+    if tabs <> nil then
+    begin
+      // обновление координат мыши
+      UpdateMouse(message);
+      // вызов модификаторов оконной процедуры
+      if frList <> nil then
+      begin
+        if tabs.activeTab <> nil then
+          frList.wndProc(message, mouse);
+      end;
+    end;
+  end;
+  // отрисовка окна
+  case message.Msg of
+    CM_EXIT:
+      begin
+
+      end;
+    WM_KEYDown:
+      begin
+        // cpage(activePage).caption:='k_down';
+      end;
+    WM_KEYup:
+      begin
+        // cpage(activePage).caption:='k_Up';
+      end;
+    WM_PAINT:
+      begin
+        renderscene;
+        if Assigned(fOnDraw) then
+        begin
+          fOnDraw(self);
+        end;
+      end;
+    wm_size:
+      begin
+        initscene;
+        if activeTab <> nil then
+        begin
+          // activeTab.doalign(activeTab.GetPage(0));
+          updateTV;
+          for i := 0 to tabs.ChildCount - 1 do
+          begin
+            tab := tabs.getTab(i);
+            for j := 0 to tab.ChildCount - 1 do
+            begin
+              page := tab.GetPage(j);
+              // page.ChangeSize;
+              page.updateRelativeBound;
+            end;
+          end;
+          OBJmNG.events.CallAllEvents(e_OnChartResize);
+        end;
+      end;
+  end;
+  // активизация перерисовки окна
+  if not RedrawOnDemand then
+  begin
+    if needRedraw then
+    begin
+      redraw;
+    end;
+  end;
+  if message.Msg <> cn_keydown then
+  begin
+    if not fDisableInheritedWndProc then
+    begin
+      inherited;
+    end
+    else
+    begin
+      if fDisabledMsg <> Message.Msg then
+      begin
+        inherited;
+      end
+      else
+      begin
+        fDisableInheritedWndProc := false;
+        fDisabledMsg := 0;
+      end;
+    end;
+  end;
+end;
+
+procedure cChart.CreateFrameListeners;
+var
+  fr: cFrameListener;
+begin
+  fr := cDoubleCursorFrameListener.Create(self);
+  frList.Add(fr);
+  fr := cClickFrListener.Create(self);
+  frList.Add(fr);
+  fr := cObjFrListener.Create(self);
+  frList.Add(fr);
+  fr := cPageFrListener.Create(self);
+  frList.Add(fr);
+end;
+
+procedure cChart.doRBtnClick(Sender: TObject);
+begin
+  if Assigned(fOnRightBtnClick) then
+  begin
+    fOnRightBtnClick(Sender);
+  end;
+end;
+
+procedure cChart.doOnMouseMove(Sender: TObject);
+begin
+  if Assigned(fOnMouseMove) then
+  begin
+    if activePage <> nil then
+      fOnMouseMove(self);
+  end;
+end;
+
+procedure cChart.lincEvents;
+begin
+  OBJmNG.events.AddEvent('ChartOnCursorMove', e_OnMoveCursor + e_OnMoveCursor2,
+    doOnCursorMove);
+  OBJmNG.events.AddEvent('OnMouseMove', E_OnMouseMove, doOnMouseMove);
+  // происходит при обновлении структуры компонента
+  OBJmNG.events.AddEvent('OnCfgUpdate', e_onLincParent + E_OnEngUpdateList,
+    doOnUpdateCfg);
+  // происходит при обновлении имени
+  OBJmNG.events.AddEvent('OnNameUpdate', e_onChangeName, doOnUpdateCfg);
+  // происходит при удалении объекта
+  OBJmNG.events.AddEvent('OnDestroy', E_OnDestroyObject, doOnDeleteObj);
+  OBJmNG.events.AddEvent('e_OnMoveCursorY', e_OnMoveCursorY, doOnCursorMove);
+end;
+
+procedure cChart.redrawComponents;
+var
+  i: integer;
+begin
+  for i := 0 to componentcount - 1 do
+  begin
+    TWinControl(components[i]).Repaint;
+  end;
+end;
+
+procedure cChart.setactivepageMng(tab: cPageMng);
+begin
+  if tabs <> nil then
+    tabs.activeTab := tab;
+end;
+
+procedure cChart.setAllowEditPages(b: boolean);
+begin
+  fAllowEditPages := b;
+end;
+
+function cChart.getAllowEditPages: boolean;
+begin
+  result := fAllowEditPages;
+end;
+
+function cChart.getActivePageMng: cPageMng;
+begin
+  if tabs <> nil then
+    result := tabs.activeTab
+  else
+    result := nil;
+end;
+
+procedure cChart.setactivepage(page: cbasepage);
+var
+  tab: cPageMng;
+begin
+  if activeTab = nil then
+  begin
+    if page.Parent <> nil then
+      activeTab := cPageMng(page.Parent);
+  end;
+  if activeTab <> nil then
+  begin
+    tab := activeTab;
+    tab.activePage := page;
+  end;
+end;
+
+function cChart.getActivePage: cbasepage;
+begin
+  if activeTab <> nil then
+  begin
+    result := activeTab.activePage;
+  end
+  else
+    result := nil;
+end;
+
+procedure cChart.initscene;
+begin
+  logstr('Enter_initscene');
+  if HandleAllocated then
+  begin
+    if not initGl then
+    begin
+      GetGlContext(Handle);
+      CreateEngStructs;
+      setpath(path);
+      if Assigned(fOninit) then
+        fOninit(self);
+    end;
+  end;
+  logstr('Exit_initscene');
+end;
+
+function cChart.gettrend: ctrend;
+var
+  axis: caxis;
+  obj: cdrawobj;
+begin
+  result := nil;
+  if activePage <> nil then
+  begin
+    axis := cpage(activePage).activeAxis;
+    if axis <> nil then
+    begin
+      obj := selected;
+      if obj <> nil then
+      begin
+        if obj is ctrend then
+        begin
+          if obj.Parent = axis then
+          begin
+            result := ctrend(obj);
+            exit;
+          end;
+        end;
+      end;
+      obj := cdrawobj(cpage(activePage).activeAxis.getchild(0));
+      if obj is ctrend then
+        result := ctrend(obj);
+    end;
+  end;
+end;
+
+function cChart.getShowTV: boolean;
+begin
+  result := tv.visible;
+end;
+
+procedure cChart.setShowTV(v: boolean);
+var
+  page: cpage;
+begin
+  if v = tv.visible then
+    exit;
+
+  tv.visible := v;
+  page := cpage(activePage);
+  if page <> nil then
+  begin
+    page.ChangeSize;
+    redraw;
+    updateTV;
+  end;
+end;
+
+procedure ShowPage(tv: ttreeview; page: cpage);
+begin
+
+end;
+
+procedure cChart.SelectInTV(obj: cdrawobj);
+var
+  Node: TTreeNode;
+begin
+  if tv <> nil then
+  begin
+    Node := FindNodeInTV(obj, tv);
+    if Node <> nil then
+    begin
+      // tv.Select(node,[]);
+      Node.Focused := true;
+      Node.selected := true;
+      Node.Expanded := true;
+    end;
+  end;
+end;
+
+procedure cChart.updateTV;
+begin
+  if needRedrawTV then
+  begin
+    needRedrawTV := false;
+    tv.Items.Clear;
+    showInTreeView(tv, tabs);
+  end;
+end;
+
+procedure cChart.doOnUpdateCfg(Sender: TObject);
+begin
+  needRedrawTV := true;
+end;
+
+procedure cChart.doSelectObj(Sender: TObject);
+begin
+  if Assigned(fOnSelectObj) then
+    fOnSelectObj(Sender);
+end;
+
+procedure cChart.doTVClick(Sender: TObject);
+begin
+  if tv.selected <> nil then
+  begin
+    selected := cdrawobj(tv.selected.data);
+  end;
+end;
+
+procedure cChart.doZoomEvent(Sender: TObject; b: boolean);
+begin
+  if Assigned(fMouseZoomEvent) then
+  begin
+    fMouseZoomEvent(Sender, b);
+  end;
+end;
+
+procedure cChart.TVMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: integer);
+begin
+  if Button = mbRight then
+  begin
+    tEditMenuChartForm(EditMenuChartForm).ShowModal;
+  end;
+end;
+
+procedure cChart.setcursor(c: integer; cursowner: integer);
+begin
+  // если новый владелец не -1, если владеле = новый владелец,
+  if (cursowner = -1) or (cursowner = cursorowner) or (cursorowner = -1) then
+  begin
+    if (cursor <> c) then
+    begin
+      cursor := c;
+      if cursorowner <> cursowner then
+        cursorowner := cursowner;
+      if cursor = crdefault then
+      begin
+        cursorowner := -1;
+      end
+      else
+      begin
+        // showmessage('c');
+      end;
+      SetCursorByHinst(cursor, Handle);
+    end
+  end;
+end;
+
+procedure cChart.setcursor(c: integer; cursowner: integer; getControl: boolean);
+begin
+  // если новый владелец -1, если владеле = новый владелец,
+  if (cursowner = -1) or (cursowner = cursorowner) or (cursorowner = -1)
+    or getControl then
+  begin
+    if (cursor <> c) then
+    begin
+      cursor := c;
+      if cursorowner <> cursowner then
+        cursorowner := cursowner;
+      if cursor = crdefault then
+      begin
+        cursorowner := -1;
+      end;
+      SetCursorByHinst(cursor, Handle);
+    end
+  end;
+end;
+
+function SimpleCaptureWindowToFile(Hwnd: Hwnd;
+  const AFileName: string): boolean;
+var
+  dc: hdc;
+  Bitmap: TBitmap;
+  JpegImg: TJPEGImage;
+  rect: TRect;
+begin
+  result := false;
+  if not IsWindow(Hwnd) then
+    exit;
+
+  GetClientRect(Hwnd, rect);
+  Bitmap := TBitmap.Create;
+  try
+    Bitmap.Width := rect.Right;
+    Bitmap.Height := rect.Bottom;
+    Bitmap.PixelFormat := pf24bit;
+
+    dc := GetDC(Hwnd);
+    try
+      BitBlt(Bitmap.Canvas.Handle, 0, 0, rect.Right, rect.Bottom, dc, 0, 0,
+        SRCCOPY);
+    finally
+      ReleaseDC(Hwnd, dc);
+    end;
+
+    JpegImg := TJPEGImage.Create;
+    try
+      JpegImg.Assign(Bitmap);
+      JpegImg.CompressionQuality := 90;
+      JpegImg.SaveToFile(AFileName);
+      result := true;
+    finally
+      JpegImg.Free;
+    end;
+  finally
+    Bitmap.Free;
+  end;
+end;
+{
+function cChart.getBitmap: TBitmap;
+var
+  w, h: Integer;
+  Pixels: array of TRGBTriple;
+  x, y: Integer;
+  Src: PRGBTriple;
+  Dst: PRGBQuad; // будем двигаться по строке указателями
+begin
+  Result := nil;
+  if not IsWindow(Handle) then Exit;
+
+  w := Width;
+  h := Height;
+
+  Result := TBitmap.Create;
+  Result.PixelFormat := pf32bit;
+  Result.SetSize(w, h);
+
+  SetLength(Pixels, w * h);
+
+  // читаем пиксели из OpenGL
+  glReadPixels(0, 0, w, h, GL_BGR_EXT, GL_UNSIGNED_BYTE, @Pixels[0]);
+
+  // копируем построчно с переворотом по Y
+  for y := 0 to h - 1 do
+  begin
+    Src := @Pixels[y * w];
+    Dst := Result.ScanLine[h - 1 - y]; // ScanLine — это Pointer на начало строки
+    // идём по строке через арифметику указателей
+    for x := 0 to w - 1 do
+    begin
+      Dst^.rgbRed      := Src^.rgbtRed;
+      Dst^.rgbGreen    := Src^.rgbtGreen;
+      Dst^.rgbBlue     := Src^.rgbtBlue;
+      Dst^.rgbReserved := $FF; // альфа = 255
+      Inc(Dst); // двигаем указатель на следующий TRGBQuad
+      Inc(Src); // двигаем указатель на следующий TRGBTriple
+    end;
+  end;
+end;}
+
+function cChart.getBitmap: TBitmap;
+var
+  Buffer: array of Byte;
+  j: Integer;
+  OldPackAlignment: GLint;
+begin
+  Result := nil;
+  //renderscene;
+  //redrawComponents;
+  if wglGetCurrentContext <> hrc then
+    wglMakeCurrent(dc, hrc);
+  glFinish;
+  // Сохраняем текущие настройки
+  glGetIntegerv(GL_PACK_ALIGNMENT, @OldPackAlignment);
+  try
+    // Устанавливаем выравнивание по 1 байту
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+    // Проверка размеров
+    if (Width <= 0) or (Height <= 0) then
+    begin
+      Result := TBitmap.Create;
+      Result.Width := 1;
+      Result.Height := 1;
+      Exit;
+    end;
+    // Выделяем буфер точного размера
+    SetLength(Buffer, Width * Height * 3);
+    // Создаем битмап
+    Result := TBitmap.Create;
+    try
+      Result.PixelFormat := pf24bit;
+      Result.Width := Width;
+      Result.Height := Height;
+      // Читаем данные
+      glReadPixels(0, 0, Width, Height, GL_BGR, GL_UNSIGNED_BYTE, @Buffer[0]);
+      // Копируем строки
+      for j := 0 to Height - 1 do
+      begin
+        Move(Buffer[(Height - 1 - j) * Width * 3],
+             Result.ScanLine[j]^,
+             Width * 3);
+      end;
+    except
+      FreeAndNil(Result);
+      raise;
+    end;
+  finally
+    // Всегда восстанавливаем настройки OpenGL
+    glPixelStorei(GL_PACK_ALIGNMENT, OldPackAlignment);
+  end;
+  if wglGetCurrentContext <> hrc then
+    wglMakeCurrent(dc, hrc);
+end;
+
+
+procedure cChart.SaveWindowToFile(filename: string);
+var
+  hMemDC: hdc;
+  dc: hdc;
+  hBmp, hOldBmp: thandle;
+  Bitmap: TBitmap;
+  JpegImg: TJPEGImage;
+  rect: TRect;
+begin
+  SimpleCaptureWindowToFile(Handle, filename);
+end;
+
+// работает в 26г. в exe - однопоточно
+procedure cChart.SaveToFile(filename: string);
+var
+  bmp: TBitmap;
+  Buffer: array of Byte;
+  j: Integer;
+  OldPackAlignment: GLint;
+begin
+  renderscene;
+  redrawComponents;
+
+  if wglGetCurrentContext <> hrc then
+    wglMakeCurrent(dc, hrc);
+  glFinish;
+  // Запоминаем текущие настройки упаковки
+  glGetIntegerv(GL_PACK_ALIGNMENT, @OldPackAlignment);
+  // Устанавливаем выравнивание по 1 байту (без дополнения)
+  glPixelStorei(GL_PACK_ALIGNMENT, 1);
+  bmp := TBitmap.Create;
+  try
+    bmp.PixelFormat := pf24bit;
+    bmp.Width := Width;
+    bmp.Height := Height;
+    // Теперь можно выделять точный размер
+    SetLength(Buffer, Width * Height * 3);
+    // Читаем данные из OpenGL
+    glReadPixels(0, 0, Width, Height, GL_BGR, GL_UNSIGNED_BYTE, @Buffer[0]);
+    // Копируем строки в обратном порядке
+    for j := 0 to Height - 1 do
+    begin
+      Move(Buffer[(Height - 1 - j) * Width * 3],
+           bmp.ScanLine[j]^, Width * 3);
+    end;
+    bmp.SaveToFile(filename);
+  finally
+    bmp.Free;
+  end;
+  // Восстанавливаем настройки
+  glPixelStorei(GL_PACK_ALIGNMENT, OldPackAlignment);
+end;
+
+procedure cChart.deleteObj(obj: cdrawobj);
+begin
+  if obj is cdrawobj then
+  begin
+    if obj is cPageMngList then
+      exit;
+    obj.destroy;
+  end;
+end;
+
+procedure cChart.deleteselected;
+begin
+  deleteObj(fselectObj);
+end;
+
+procedure cChart.CopyScreenToClipboard;
+var
+  bmp: TBitmap;
+  Buffer: array of Byte;
+  j: Integer;
+  OldPackAlignment: GLint;
+begin
+  renderscene;
+  redrawComponents;
+  if wglGetCurrentContext <> hrc then
+    wglMakeCurrent(dc, hrc);
+  glFinish;
+  // Сохраняем и изменяем настройки выравнивания
+  glGetIntegerv(GL_PACK_ALIGNMENT, @OldPackAlignment);
+  glPixelStorei(GL_PACK_ALIGNMENT, 1); // Без выравнивания
+  bmp := TBitmap.Create;
+  try
+    bmp.PixelFormat := pf24bit;
+    bmp.Width := Width;
+    bmp.Height := Height;
+    // Теперь можно выделять точный размер
+    SetLength(Buffer, Width * Height * 3);
+    // Читаем из OpenGL
+    glReadPixels(0, 0, Width, Height, GL_BGR, GL_UNSIGNED_BYTE, @Buffer[0]);
+    // Копируем строки
+    for j := 0 to Height - 1 do
+    begin
+      Move(Buffer[(Height - 1 - j) * Width * 3],
+           bmp.ScanLine[j]^, Width * 3);
+    end;
+    // Копируем в буфер обмена
+    Clipboard.Open;
+    try
+      Clipboard.Clear;
+      Clipboard.Assign(bmp);
+    finally
+      Clipboard.Close;
+    end;
+  finally
+    bmp.Free;
+  end;
+  // Восстанавливаем настройки
+  glPixelStorei(GL_PACK_ALIGNMENT, OldPackAlignment);
+  if wglGetCurrentContext <> hrc then
+    wglMakeCurrent(dc, hrc);
+end;
+
+procedure cChart.doOnInsertPoint(data: TObject; subdata: TObject);
+begin
+  if Assigned(fOnInsertPoint) then
+  begin
+    fOnInsertPoint(data, subdata);
+  end;
+end;
+
+procedure cChart.doOnCursorMove(Sender: TObject);
+begin
+  if Assigned(fOnCursorMove) then
+    fOnCursorMove(Sender);
+end;
+
+procedure cChart.doOnDeleteObj(Sender: TObject);
+begin
+  if tabs <> nil then
+  begin
+    if Sender = activePage then
+    begin
+      activePage := nil;
+    end;
+    if Sender = tabs.activeTab then
+    begin
+      tabs.activeTab := nil;
+    end;
+    if Sender = tabs then
+    begin
+      tabs := nil;
+    end;
+    redraw;
+  end;
+  if Assigned(fOnDesroyObj) then
+  begin
+    fOnDesroyObj(Sender);
+  end;
+end;
+
+function cChart.GenCursOwnerName: integer;
+begin
+  result := cursowners;
+  inc(cursowners);
+end;
+
+procedure cChart.setselectObj(obj: cdrawobj);
+begin
+  fselectObj := obj;
+  if obj = nil then
+    exit;
+  if (not(obj is cPageMng)) and (not(obj is cPageMngList)) then
+  begin
+    if obj is cpage then
+      activePage := cpage(obj)
+    else
+    begin
+      // activePage := cpage(obj.GetParentByClassName('cPage'));
+      activePage := cbasepage(obj.getCarrierPage);
+    end;
+  end;
+  doSelectObj(obj);
+end;
+
+function cChart.addTab: cPageMng;
+begin
+  result := tabs.addTab;
+end;
+
+procedure cChart.EnterCS;
+begin
+  EnterCriticalSection(cs);
+end;
+
+procedure cChart.ExitCS;
+begin
+  LeaveCriticalSection(cs);
+end;
+
+procedure cChart.setpath(p_path: string);
+var
+  // shader: cshader;
+  lpath, shadername: string;
+
+begin
+  path := p_path;
+  if initGl then
+  begin
+
+  end;
+end;
+
+function cChart.getShowLegend: boolean;
+begin
+  if legend <> nil then
+    result := legend.visible
+  else
+    result := false;
+end;
+
+procedure cChart.setShowLegend(v: boolean);
+begin
+  if legend <> nil then
+  begin
+    if v <> legend.visible then
+      legend.visible := v;
+  end;
+end;
+
+function cChart.getcolor(i: integer): point3;
+begin
+  case i of
+    0:
+      result := blue;
+    1:
+      result := green;
+    2:
+      result := red;
+    3:
+      result := yellow;
+    4:
+      result := black;
+    5:
+      result := purple;
+    6:
+      result := acid;
+    7:
+      result := bRIGHTbLUE;
+    8:
+      result := Orange;
+    9:
+      result := violet;
+    10:
+      result := brightyellow;
+    11:
+      result := Lilac;
+  else
+    result := blue;
+  end
+end;
+
+end.

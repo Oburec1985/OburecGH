@@ -5,30 +5,29 @@ unit Unit1;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls,
-  uOglChart, uOglChartBaseObj, uOglChartPage, uOglChartAxis, uOglChartTrend,
-  uOglChartChart, ImgList, uOglChartFrameListener;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ExtCtrls,
+  Math, uOglChart, uOglChartBaseObj, uOglChartPage, uOglChartAxis, uOglChartTrend,
+  uOglChartChart, uOglChartRenderer, uOglChartTypes, uOglChartDrawObj, ImgList;
 
 type
 
   { TForm1 }
 
-  { TTestLogListener
-    Тестовый слушатель для демонстрации работы системы фрейм-листенеров.
-    Выводит информацию о кликах в консоль/лог. }
-  TTestLogListener = class(TChartFrameListener)
-  public
-    procedure MouseDown(ASender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer; var Handled: Boolean); override;
-  end;
-
   TForm1 = class(TForm)
     Button1: TButton;
     ImageList1: TImageList;
     OglChart1: TOglChart;
+    Splitter1: TSplitter;
     TreeView1: TTreeView;
+    StatusBar1: TStatusBar;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure OglChart1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
   private
+    fMouseCoordsText: string;
+    fFpsText: string;
+    procedure UpdateStatusBar;
+    procedure OglChart1AfterRender(Sender: TObject; ARenderTimeMs: Double);
     procedure AddChartTreeNode(AParentNode: TTreeNode; AObject: TChartBaseObject);
     procedure BuildChartTree;
 
@@ -42,6 +41,32 @@ var
 implementation
 
 {$R *.lfm}
+
+procedure TForm1.UpdateStatusBar;
+var
+  lSelText: string;
+begin
+  lSelText := 'Selected: None';
+  if Assigned(OglChart1.SelectedObject) then
+  begin
+    lSelText := 'Selected: ' + OglChart1.SelectedObject.Name;
+    if OglChart1.SelectedObject.Caption <> '' then
+      lSelText := lSelText + ' ("' + OglChart1.SelectedObject.Caption + '")';
+  end;
+  StatusBar1.SimpleText := fMouseCoordsText + ' | ' + lSelText + ' | ' + fFpsText;
+end;
+
+procedure TForm1.OglChart1AfterRender(Sender: TObject; ARenderTimeMs: Double);
+var
+  lFps: Double;
+begin
+  if ARenderTimeMs > 0 then
+    lFps := 1000.0 / ARenderTimeMs
+  else
+    lFps := 0;
+  fFpsText := Format('Render: %.2f ms (%.1f FPS)', [ARenderTimeMs, lFps]);
+  UpdateStatusBar;
+end;
 
 { TForm1 }
 
@@ -176,6 +201,7 @@ procedure CreateTestChart(AChart: TOglChart);
 var
   lPage: cBasePage;
   lAxisY: cAxis;
+  lAxisY2: cAxis;
   lSeries: cTrend;
   lBuff: cBuffTrend1d;
 begin
@@ -189,26 +215,32 @@ begin
   lAxisY.MinValue := 0;
   lAxisY.MaxValue := 1;
   lSeries := AddLine(lAxisY, 'TrendLine', 'Trend line', $FF303030);
-  lSeries.AddPoint(0, 0.22);
-  lSeries.AddPoint(1, 0.36);
-  lSeries.AddPoint(2, 0.31);
-  lSeries.AddPoint(3, 0.58);
-  lSeries.AddPoint(4, 0.48);
-  lSeries.AddPoint(5, 0.74);
-  lSeries.AddPoint(6, 0.69);
-  lSeries.AddPoint(7, 0.86);
-  lSeries.AddPoint(8, 0.63);
-  lSeries.AddPoint(9, 0.78);
-  lSeries.AddPoint(10, 0.52);
-  lSeries.AddPoint(11, 0.66);
+  lSeries.ShowPoints := True;
+  lSeries.Smooth := True;
+  lSeries.AddBeziePoint(0, 0.22, bptCorner);
+  lSeries.AddBeziePoint(1, 0.36, bptSmooth);
+  lSeries.AddBeziePoint(2, 0.31, bptSmooth);
+  lSeries.AddBeziePoint(3, 0.58, bptCorner);
+  lSeries.AddBeziePoint(4, 0.48, bptSmooth);
+  lSeries.AddBeziePoint(5, 0.74, bptSmooth);
+  lSeries.AddBeziePoint(6, 0.69, bptCorner);
+  lSeries.AddBeziePoint(7, 0.86, bptSmooth);
+  lSeries.AddBeziePoint(8, 0.63, bptSmooth);
+  lSeries.AddBeziePoint(9, 0.78, bptCorner);
+  lSeries.AddBeziePoint(10, 0.52, bptSmooth);
+  lSeries.AddBeziePoint(11, 0.66, bptCorner);
+  lSeries.GenerateSplinePoints();
 
   lPage := AddPage(AChart.Model, 'PageSignals', 'Page_Signals');
   lPage.XMinValue := 0;
   lPage.XMaxValue := 9;
+
+  // Первая ось Y (синяя в ABGR)
   AddAxis(lPage, 'Signals', lAxisY);
   lAxisY.MinValue := 0.4;
   lAxisY.MaxValue := 0.75;
-  lSeries := AddLine(lAxisY, 'SignalBlue', 'Signal blue', $FFFF0000);
+  lAxisY.Color := $FF0000FF; // Синий
+  lSeries := AddLine(lAxisY, 'SignalBlue', 'Signal blue', $FF0000FF);
   lSeries.AddPoint(0, 0.48);
   lSeries.AddPoint(1, 0.56);
   lSeries.AddPoint(2, 0.41);
@@ -220,7 +252,12 @@ begin
   lSeries.AddPoint(8, 0.58);
   lSeries.AddPoint(9, 0.72);
 
-  lSeries := AddLine(lAxisY, 'SignalRed', 'Signal red', $FF0000FF);
+  // Вторая ось Y (красная в ABGR)
+  AddAxis(lPage, 'Signals2', lAxisY2);
+  lAxisY2.MinValue := 0.3;
+  lAxisY2.MaxValue := 0.9;
+  lAxisY2.Color := $FFFF0000; // Красный
+  lSeries := AddLine(lAxisY2, 'SignalRed', 'Signal red', $FFFF0000);
   lSeries.AddPoint(0, 0.42);
   lSeries.AddPoint(1, 0.47);
   lSeries.AddPoint(2, 0.50);
@@ -276,26 +313,6 @@ begin
   AChart.Redraw;
 end;
 
-function ObjName(AObj: TObject): string;
-begin
-  if Assigned(AObj) and (AObj is TChartBaseObject) then
-    Result := TChartBaseObject(AObj).Name
-  else
-    Result := 'nil';
-end;
-
-procedure TTestLogListener.MouseDown(ASender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer; var Handled: Boolean);
-var
-  lChart: TOglChart;
-begin
-  lChart := TOglChart(ASender);
-  WriteLn(Format('TestLogListener: Clicked at X=%d, Y=%d. SelectedObject=%s, HoveredObject=%s', [
-    X, Y,
-    ObjName(lChart.SelectedObject),
-    ObjName(lChart.HoveredObject)
-  ]));
-end;
-
 constructor TForm1.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -305,7 +322,11 @@ end;
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   CreateTestChart(OglChart1);
-  OglChart1.AddFrameListener(TTestLogListener.Create);
+  OglChart1.OnMouseMove := @OglChart1MouseMove;
+  OglChart1.OnAfterRender := @OglChart1AfterRender;
+  fMouseCoordsText := 'Chart px: (0, 0) | Page: NAN | Axis Val: (X: NAN, Y: NAN)';
+  fFpsText := 'Render: 0.00 ms (0.0 FPS)';
+  UpdateStatusBar;
   TreeView1.MultiSelect := True;
   TreeView1.Images := ImageList1;
   TreeView1.Font.Size := 10;
@@ -316,6 +337,100 @@ end;
 procedure TForm1.Button1Click(Sender: TObject);
 begin
   BuildChartTree;
+end;
+
+
+procedure TForm1.OglChart1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+var
+  lRenderer: TOpenGLChartRenderer;
+  lModel: TChartModel;
+  lPage: TChartPage;
+  lRect, lContentRect: TChartPixelRect;
+  lSelectedAxis: TChartAxis;
+  lAxisXVal, lAxisYVal: Double;
+  lIdx, lInnerIdx: Integer;
+  lPageFound: Boolean;
+  lPageX, lPageY: Integer;
+begin
+  lRenderer := TOpenGLChartRenderer(OglChart1.GetRenderer);
+  lModel := OglChart1.Model;
+  lPageFound := False;
+  lAxisXVal := NaN;
+  lAxisYVal := NaN;
+  lRect.Left := 0;
+  lRect.Top := 0;
+  lPageX := 0;
+  lPageY := 0;
+
+  if Assigned(lRenderer) and Assigned(lModel) then
+  begin
+    for lIdx := 0 to lModel.ChildCount - 1 do
+    begin
+      if lModel.Children[lIdx] is TChartPage then
+      begin
+        lPage := TChartPage(lModel.Children[lIdx]);
+        lRect := lRenderer.GetPageRect(lPage);
+        if (X >= lRect.Left) and (X <= lRect.Right) and
+           (Y >= lRect.Top) and (Y <= lRect.Bottom) then
+        begin
+          lPageFound := True;
+          lPageX := X - lRect.Left;
+          lPageY := Y - lRect.Top;
+          
+          // Ищем выбранную ось или ось выбранного тренда
+          lSelectedAxis := nil;
+          if OglChart1.SelectedObject is TChartAxis then
+            lSelectedAxis := TChartAxis(OglChart1.SelectedObject)
+          else if OglChart1.SelectedObject is cTrend then
+          begin
+            if Assigned(OglChart1.SelectedObject.Parent) and (OglChart1.SelectedObject.Parent is TChartAxis) then
+              lSelectedAxis := TChartAxis(OglChart1.SelectedObject.Parent);
+          end
+          else
+          begin
+            // Если не выбрана ось, берем первую ось этой страницы
+            for lInnerIdx := 0 to lPage.ChildCount - 1 do
+              if lPage.Children[lInnerIdx] is TChartAxis then
+              begin
+                lSelectedAxis := TChartAxis(lPage.Children[lInnerIdx]);
+                Break;
+              end;
+          end;
+
+          lContentRect := lRenderer.GetPageContentRect(lPage);
+          if (X >= lContentRect.Left) and (X <= lContentRect.Right) and
+             (Y >= lContentRect.Top) and (Y <= lContentRect.Bottom) then
+          begin
+            lAxisXVal := lRenderer.PixelToXValue(lPage, lSelectedAxis, X, lContentRect.Left, lContentRect.Right);
+            lAxisYVal := lRenderer.PixelToAxisValue(lSelectedAxis, Y, lContentRect.Bottom, lContentRect.Top);
+          end;
+          Break;
+        end;
+      end;
+    end;
+  end;
+
+  if not lPageFound then
+  begin
+    fMouseCoordsText := Format(
+      'Chart px: (%d, %d) | Page: NAN (outside page) | Axis Val: (X: NAN, Y: NAN)',
+      [X, Y]
+    );
+  end
+  else
+  begin
+    if IsNaN(lAxisXVal) or IsNaN(lAxisYVal) then
+      fMouseCoordsText := Format(
+        'Chart px: (%d, %d) | Page px: (%d, %d) | Axis Val: (X: NAN, Y: NAN)',
+        [X, Y, lPageX, lPageY]
+      )
+    else
+      fMouseCoordsText := Format(
+        'Chart px: (%d, %d) | Page px: (%d, %d) | Axis Val: (X: %.4f, Y: %.4f)',
+        [X, Y, lPageX, lPageY, lAxisXVal, lAxisYVal]
+      );
+  end;
+  UpdateStatusBar;
 end;
 
 end.

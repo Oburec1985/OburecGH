@@ -30,6 +30,8 @@ type
     procedure Render(AModel: TObject);
   end;
 
+  
+
   { Интерфейс сериализатора модели. }
   IChartSerializer = interface
     ['{D5E6F7A8-B9C0-D1E2-F3A4-B5C6D7E8F9A0}']
@@ -44,6 +46,9 @@ type
     function GetModel: TObject;
     procedure Redraw;
   end;
+
+var
+  gGLContextVersion: Cardinal = 0;
 
 implementation
 

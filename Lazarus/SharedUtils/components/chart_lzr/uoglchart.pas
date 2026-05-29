@@ -62,13 +62,18 @@ type
     property Renderer: IChartRenderer read fRenderer write fRenderer;
     property SelectedObject: cBaseObj read GetSelectedObject write SetSelectedObject;
     property HoveredObject: cBaseObj read GetHoveredObject write SetHoveredObject;
+  published
+    property Align;
+    property AutoResizeViewport;
   end;
 
 procedure Register;
 
 implementation
 
+{$IFDEF WINDOWS}
 uses Windows;
+{$ENDIF}
 
 procedure LogToFile(const AMsg: string);
 var
@@ -295,16 +300,25 @@ begin
     lFreq := 0;
     lStart := 0;
     lEnd := 0;
+    {$IFDEF WINDOWS}
     QueryPerformanceFrequency(lFreq);
     QueryPerformanceCounter(lStart);
+    {$ELSE}
+    lStart := GetTickCount64;
+    {$ENDIF}
     
     fRenderer.Render(Model);
     
+    {$IFDEF WINDOWS}
     QueryPerformanceCounter(lEnd);
     if lFreq > 0 then
       lRenderTimeMs := (lEnd - lStart) * 1000.0 / lFreq
     else
       lRenderTimeMs := 0;
+    {$ELSE}
+    lEnd := GetTickCount64;
+    lRenderTimeMs := lEnd - lStart;
+    {$ENDIF}
       
     if Assigned(fOnAfterRender) then
       fOnAfterRender(Self, lRenderTimeMs);
@@ -404,5 +418,8 @@ procedure Register;
 begin
   RegisterComponents('Samples', [TOglChart]);
 end;
+
+initialization
+  Classes.RegisterClass(TOglChart);
 
 end.

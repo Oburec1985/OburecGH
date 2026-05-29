@@ -3,3 +3,6 @@
 *.~*
 *.identcache
 *.drc
+*.ppu
+*.o
+*.obj
