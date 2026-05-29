@@ -2,12 +2,20 @@ unit uOglChartAxis;
 
 {$mode objfpc}{$H+}
 
+{
+  Модуль uOglChartAxis
+  Описание: Содержит класс cAxis (TChartAxis), представляющий ось графика в компоненте TOglChart.
+            Задает систему координат, масштабы и границы для трендов.
+}
+
 interface
 
 uses
   uOglChartDrawObj;
 
 type
+  { TChartAxisScale }
+  // Тип масштабирования оси (линейный или логарифмический)
   TChartAxisScale = (casLinear, casLog10);
 
   { cAxis }
@@ -24,7 +32,11 @@ type
     fXMinValue: Double;                 // Индивидуальный минимум X
     fXMaxValue: Double;                 // Индивидуальный максимум X
     fXScale: TChartAxisScale;            // Индивидуальный масштаб X (линейный или логарифм)
+  private
   public
+    /// <summary>
+    /// Заполнение свойств оси значениями по умолчанию.
+    /// </summary>
     procedure AssignDefaultProperties; override;
 
     /// <summary> Тип шкалы оси Y (линейная/логарифмическая). </summary>
@@ -47,6 +59,11 @@ type
 
 implementation
 
+{ cAxis }
+
+/// <summary>
+/// Задает свойства по умолчанию для оси: линейный масштаб, диапазон [0..1] для X и Y.
+/// </summary>
 procedure cAxis.AssignDefaultProperties;
 begin
   inherited AssignDefaultProperties;

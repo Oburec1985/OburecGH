@@ -1,13 +1,15 @@
 unit Unit1;
 
 {$mode objfpc}{$H+}
+{$codepage cp1251}
 
 interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ExtCtrls,
   Math, uOglChart, uOglChartBaseObj, uOglChartPage, uOglChartAxis, uOglChartTrend,
-  uOglChartChart, uOglChartRenderer, uOglChartTypes, uOglChartDrawObj, ImgList;
+  uOglChartChart, uOglChartRenderer, uOglChartTypes, uOglChartDrawObj, ImgList,
+  uOglChartTextLabel;
 
 type
 
@@ -17,7 +19,10 @@ type
     ImageList1: TImageList;
     OglChart1: TOglChart;
     Splitter1: TSplitter;
-    StatusBar1: TStatusBar;
+    PanelStatus: TPanel;
+    lblMouseCoords: TLabel;
+    edtSelectedObject: TEdit;
+    edtFps: TEdit;
     PanelRight: TPanel;
     TreeView1: TTreeView;
     PanelLogControls: TPanel;
@@ -57,6 +62,8 @@ procedure TForm1.UpdateStatusBar;
 var
   lSelText: string;
 begin
+  lblMouseCoords.Caption := fMouseCoordsText;
+
   lSelText := 'Selected: None';
   if Assigned(OglChart1.SelectedObject) then
   begin
@@ -64,7 +71,9 @@ begin
     if OglChart1.SelectedObject.Caption <> '' then
       lSelText := lSelText + ' ("' + OglChart1.SelectedObject.Caption + '")';
   end;
-  StatusBar1.SimpleText := fMouseCoordsText + ' | ' + lSelText + ' | ' + fFpsText;
+  edtSelectedObject.Text := lSelText;
+
+  edtFps.Text := fFpsText;
 end;
 
 procedure TForm1.OglChart1AfterRender(Sender: TObject; ARenderTimeMs: Double);
@@ -264,6 +273,27 @@ begin
   AYAxis.AddChild(Result);
 end;
 
+function AddFlag(APage: cBasePage; ATrend: cBaseTrend; AX: Double; const AText: string): TChartFlagLabel;
+var
+  lYVal: Double;
+begin
+  Result := TChartFlagLabel.Create;
+  Result.Name := 'Flag_' + ATrend.Name;
+  Result.Caption := AText;
+  Result.Trend := ATrend;
+  Result.WorldX := AX;
+  Result.AnchorX := AX;
+  Result.Width := 140;
+  Result.Height := 30;
+  Result.Text := AText;
+  Result.IsWorldY := True; // Включаем перемещение по Y вместе с графиком
+  if GetTrendValueAtX(ATrend, AX, lYVal) then
+    Result.WorldY := lYVal + (cAxis(ATrend.Parent).MaxValue - cAxis(ATrend.Parent).MinValue) * 0.1
+  else
+    Result.WorldY := 0.0;
+  APage.AddChild(Result);
+end;
+
 procedure CreateTestChart(AChart: TOglChart);
 var
   lPage: cBasePage;
@@ -306,6 +336,10 @@ begin
   lSeries.AddBeziePoint(11, 0.66, bptCorner);
   lSeries.GenerateSplinePoints();
 
+  // Добавляем флаг
+  if GetTrendValueAtX(lSeries, 5.0, lVal) then
+    AddFlag(lPage, lSeries, 5.0, Format('Trend: %.3f', [lVal]));
+
   lPage := AddPage(AChart.Model, 'PageSignals', 'Page_Signals');
   lPage.XMinValue := 0;
   lPage.XMaxValue := 9;
@@ -327,6 +361,10 @@ begin
   lSeries.AddPoint(8, 0.58);
   lSeries.AddPoint(9, 0.72);
 
+  // Добавляем флаг на синий сигнал
+  if GetTrendValueAtX(lSeries, 3.0, lVal) then
+    AddFlag(lPage, lSeries, 3.0, Format('Blue: %.3f', [lVal]));
+
   // Ось Y (красная)
   AddAxis(lPage, 'Signals2', lAxisY2);
   lAxisY2.MinValue := 0.3;
@@ -343,6 +381,10 @@ begin
   lSeries.AddPoint(7, 0.51);
   lSeries.AddPoint(8, 0.62);
   lSeries.AddPoint(9, 0.55);
+
+  // Добавляем флаг на красный сигнал
+  if GetTrendValueAtX(lSeries, 6.0, lVal) then
+    AddFlag(lPage, lSeries, 6.0, Format('Red: %.3f', [lVal]));
 
   lPage := AddPage(AChart.Model, 'PageBars', 'Page_Bars');
   lPage.XMinValue := 0;

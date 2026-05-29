@@ -10,7 +10,7 @@ uses
   athreads,
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  SysUtils, Forms, Unit1;
+  SysUtils, Forms, uOglChartLineHelper, uOglChartFrameListener, Unit1;
 
 {$R *.res}
 

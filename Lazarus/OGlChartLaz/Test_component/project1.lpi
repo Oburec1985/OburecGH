@@ -123,6 +123,14 @@
         <Filename Value="..\..\SharedUtils\math\u2DMath.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartLineHelper.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

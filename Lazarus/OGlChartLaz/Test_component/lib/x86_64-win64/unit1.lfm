@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 326
+  Left = 217
   Height = 525
-  Top = 286
+  Top = 103
   Width = 1407
   Caption = 'Form1'
   ClientHeight = 525
@@ -10,14 +10,14 @@ object Form1: TForm1
   LCLVersion = '4.2.0.0'
   object OglChart1: TOglChart
     Left = 0
-    Height = 525
+    Height = 489
     Top = 0
-    Width = 992
+    Width = 987
     Align = alClient
   end
   object Splitter1: TSplitter
     Left = 987
-    Height = 525
+    Height = 489
     Top = 0
     Width = 5
     Align = alRight
@@ -25,17 +25,17 @@ object Form1: TForm1
   end
   object PanelRight: TPanel
     Left = 992
-    Height = 525
+    Height = 489
     Top = 0
     Width = 415
     Align = alRight
     BevelOuter = bvNone
-    ClientHeight = 525
+    ClientHeight = 489
     ClientWidth = 415
     TabOrder = 1
     object TreeView1: TTreeView
       Left = 0
-      Height = 425
+      Height = 359
       Top = 0
       Width = 415
       Align = alClient
@@ -45,7 +45,7 @@ object Form1: TForm1
     object PanelLogControls: TPanel
       Left = 0
       Height = 130
-      Top = 395
+      Top = 359
       Width = 415
       Align = alBottom
       ClientHeight = 130
@@ -53,35 +53,36 @@ object Form1: TForm1
       TabOrder = 1
       object lblSelectedAxis: TLabel
         Left = 10
-        Height = 20
+        Height = 25
         Top = 8
-        Width = 390
+        Width = 175
         Caption = 'Выбранная ось: нет'
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object cbLogY: TCheckBox
         Left = 10
-        Height = 25
+        Height = 29
         Top = 35
-        Width = 190
+        Width = 151
         Caption = 'Логарифм по Y'
         TabOrder = 0
         OnChange = cbLogYChange
       end
       object cbLogX: TCheckBox
         Left = 210
-        Height = 25
+        Height = 29
         Top = 35
-        Width = 190
+        Width = 152
         Caption = 'Логарифм по X'
         TabOrder = 1
         OnChange = cbLogXChange
       end
       object cbUseShader: TCheckBox
         Left = 10
-        Height = 25
+        Height = 29
         Top = 65
-        Width = 390
+        Width = 220
         Caption = 'Использовать шейдеры'
         Checked = True
         State = cbChecked
@@ -97,6 +98,43 @@ object Form1: TForm1
         TabOrder = 3
         OnClick = Button1Click
       end
+    end
+  end
+  object PanelStatus: TPanel
+    Left = 0
+    Height = 40
+    Top = 485
+    Width = 1407
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 40
+    ClientWidth = 1407
+    TabOrder = 2
+    object lblMouseCoords: TLabel
+      Left = 10
+      Height = 20
+      Top = 10
+      Width = 600
+      Caption = 'Coords'
+      ParentColor = False
+    end
+    object edtSelectedObject: TEdit
+      Left = 620
+      Height = 28
+      Top = 6
+      Width = 450
+      Anchors = [akTop, akLeft, akRight]
+      ReadOnly = True
+      TabOrder = 0
+    end
+    object edtFps: TEdit
+      Left = 1080
+      Height = 28
+      Top = 6
+      Width = 317
+      Anchors = [akTop, akRight]
+      ReadOnly = True
+      TabOrder = 1
     end
   end
   object ImageList1: TImageList
@@ -159,12 +197,5 @@ object Form1: TForm1
       4EC7DBF274EC949FC26E7536B2872EE06E6F07E57139A3FF9B3BB8B2B24285C3
       E1875A5D5DA1369BFB1F797C7C37
     }
-  end
-  object StatusBar1: TStatusBar
-    Left = 0
-    Height = 23
-    Top = 502
-    Width = 1407
-    Panels = <>
   end
 end

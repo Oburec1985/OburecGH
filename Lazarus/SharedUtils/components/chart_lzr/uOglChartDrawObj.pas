@@ -2,17 +2,27 @@ unit uOglChartDrawObj;
 
 {$mode objfpc}{$H+}
 
+{
+  Модуль uOglChartDrawObj
+  Описание: Содержит базовые типы координат (точки, прямоугольники) и классы cDrawObj, cMoveObj,
+            которые лежат в основе визуальных и интерактивных элементов интерфейса чарта.
+}
+
 interface
 
 uses
   uOglChartBaseObj;
 
 type
+  { TChartPoint }
+  // Точка на графике (вещественные координаты X, Y)
   TChartPoint = record
     X: Double;
     Y: Double;
   end;
 
+  { TChartFloatRect }
+  // Прямоугольник в нормализованных координатах [0..1]
   TChartFloatRect = record
     Left: Double;
     Top: Double;
@@ -20,6 +30,8 @@ type
     Bottom: Double;
   end;
 
+  { TChartPixelRect }
+  // Прямоугольник в экранных пикселях
   TChartPixelRect = record
     Left: Integer;
     Top: Integer;
@@ -27,16 +39,18 @@ type
     Bottom: Integer;
   end;
 
-  { cDrawObj
-    Р‘Р°Р·РѕРІС‹Р№ РѕС‚СЂРёСЃРѕРІС‹РІР°РµРјС‹Р№ РѕР±СЉРµРєС‚. РљРѕРѕСЂРґРёРЅР°С‚С‹ FloatRect РЅРѕСЂРјР°Р»РёР·РѕРІР°РЅС‹
-    РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ СЂРѕРґРёС‚РµР»СЊСЃРєРѕР№ РѕР±Р»Р°СЃС‚Рё, Р° РєРѕРЅРєСЂРµС‚РЅС‹Р№ renderer РїРµСЂРµРІРѕРґРёС‚ РёС… РІ РїРёРєСЃРµР»Рё. }
+  { cDrawObj }
+  // Базовый отрисовываемый объект. Координаты FloatRect нормализованы
+  // относительно родительской области, а конкретный renderer переводит их в пиксели.
   cDrawObj = class(cBaseObj)
   private
-    fVisible: Boolean;
-    fColor: Cardinal;
-    fFloatRect: TChartFloatRect;
+    fVisible: Boolean;                   // Флаг видимости объекта
+    fColor: Cardinal;                    // Цвет объекта (RGBA формат)
+    fFloatRect: TChartFloatRect;        // Нормализованные координаты объекта
   public
+    // Установка свойств по умолчанию
     procedure AssignDefaultProperties; override;
+    // Установка координат нормализованного прямоугольника объекта
     procedure SetFloatRect(ALeft, ATop, ARight, ABottom: Double);
 
     property Visible: Boolean read fVisible write fVisible;
@@ -44,15 +58,15 @@ type
     property FloatRect: TChartFloatRect read fFloatRect write fFloatRect;
   end;
 
-  { cMoveObj
-    РћСЃРЅРѕРІР° РёРЅС‚РµСЂР°РєС‚РёРІРЅС‹С… РѕР±СЉРµРєС‚РѕРІ: РІС‹Р±СЂР°РЅРЅРѕСЃС‚СЊ, РїРµСЂРµРјРµС‰РµРЅРёРµ Рё resize.
-    РќРёР·РєРѕСѓСЂРѕРІРЅРµРІС‹Рµ СЃРѕР±С‹С‚РёСЏ РјС‹С€Рё Р±СѓРґСѓС‚ РґРµР»РµРіРёСЂРѕРІР°С‚СЊСЃСЏ СЃСЋРґР° РїРѕР·Р¶Рµ. }
+  { cMoveObj }
+  // Основа интерактивных объектов: выбранность, перемещение и изменение размера (resize).
+  // Низкоуровневые события мыши делегируются сюда через листенеры.
   cMoveObj = class(cDrawObj)
   private
-    fSelected: Boolean;
-    fCanMove: Boolean;
-    fCanResize: Boolean;
-    fLocked: Boolean;
+    fSelected: Boolean;                  // Флаг выделения объекта
+    fCanMove: Boolean;                   // Разрешено ли перемещение
+    fCanResize: Boolean;                 // Разрешено ли изменение размеров
+    fLocked: Boolean;                    // Заблокирован ли объект для интерактивных изменений
   public
     procedure AssignDefaultProperties; override;
 
@@ -67,14 +81,22 @@ type
 
 implementation
 
+{ cDrawObj }
+
+/// <summary>
+/// Задание базовых свойств видимости и координат по умолчанию.
+/// </summary>
 procedure cDrawObj.AssignDefaultProperties;
 begin
   inherited AssignDefaultProperties;
   fVisible := True;
-  fColor := $FF000000;
+  fColor := $FF000000; // Черный цвет
   SetFloatRect(0.04, 0.06, 0.96, 0.94);
 end;
 
+/// <summary>
+/// Устанавливает нормализованные координаты прямоугольника объекта.
+/// </summary>
 procedure cDrawObj.SetFloatRect(ALeft, ATop, ARight, ABottom: Double);
 begin
   fFloatRect.Left := ALeft;
@@ -83,6 +105,11 @@ begin
   fFloatRect.Bottom := ABottom;
 end;
 
+{ cMoveObj }
+
+/// <summary>
+/// Установка интерактивных свойств объекта по умолчанию.
+/// </summary>
 procedure cMoveObj.AssignDefaultProperties;
 begin
   inherited AssignDefaultProperties;

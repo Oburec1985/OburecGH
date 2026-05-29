@@ -38,6 +38,14 @@
         <UnitName Value="uOglChartTrend"/>
       </Item>
       <Item>
+        <Filename Value="uOglChartTextLabel.pas"/>
+        <UnitName Value="uOglChartTextLabel"/>
+      </Item>
+      <Item>
+        <Filename Value="uOglChartTextLabelTests.pas"/>
+        <UnitName Value="uOglChartTextLabelTests"/>
+      </Item>
+      <Item>
         <Filename Value="uOglChartChart.pas"/>
         <UnitName Value="uOglChartChart"/>
       </Item>

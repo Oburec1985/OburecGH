@@ -2,32 +2,52 @@ unit uOglChartLog;
 
 {$mode objfpc}{$H+}
 
+{
+  Модуль uOglChartLog
+  Описание: Обеспечивает потокобезопасное ведение отладочных логов компонента OGlChart.
+            Поддерживает уровни логирования DEBUG, INFO, WARNING, ERROR и форматированный вывод.
+}
+
 interface
 
 uses
   Classes, SysUtils, SyncObjs;
 
+// Задает имя файла для сохранения лога
 procedure ChartLogSetFileName(const AFileName: string);
+// Возвращает текущее имя файла лога
 function ChartLogFileName: string;
+// Выводит отладочное сообщение
 procedure ChartLogDebug(const AMessage: string);
+// Выводит информационное сообщение
 procedure ChartLogInfo(const AMessage: string);
+// Выводит предупреждение
 procedure ChartLogWarning(const AMessage: string);
+// Выводит ошибку
 procedure ChartLogError(const AMessage: string);
+// Выводит описание исключения
 procedure ChartLogException(const AContext: string; E: Exception);
+// Преобразует указатель объекта в шестнадцатеричную строку (для логирования адресов)
 function ChartPtr(AObject: TObject): string;
 
 implementation
 
 var
-  gLogLock: TCriticalSection = nil;
-  gLogFileName: string = '';
+  gLogLock: TCriticalSection = nil;      // Критическая секция для защиты файла лога при многопоточном доступе
+  gLogFileName: string = '';             // Путь к файлу лога
 
+/// <summary>
+/// Вычисляет имя лог-файла по умолчанию в папке исполняемого файла программы.
+/// </summary>
 function DefaultLogFileName: string;
 begin
   Result := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
     'oglchart_debug.log';
 end;
 
+/// <summary>
+/// Инициализирует критическую секцию логирования, если она еще не создана.
+/// </summary>
 procedure EnsureLogLock;
 begin
   if not Assigned(gLogLock) then
@@ -52,6 +72,10 @@ begin
   end;
 end;
 
+/// <summary>
+/// Записывает сообщение в лог-файл.
+/// Добавляет временную метку, приоритет, ID текущего потока и переданный текст.
+/// </summary>
 procedure WriteLog(const APriority, AMessage: string);
 var
   F: TextFile;
@@ -63,6 +87,7 @@ begin
     LFileName := ChartLogFileName;
     AssignFile(F, LFileName);
     try
+      // Если файл существует — дописываем, иначе создаем новый
       if FileExists(LFileName) then
         Append(F)
       else
@@ -101,6 +126,9 @@ begin
   WriteLog('ERROR', AMessage);
 end;
 
+/// <summary>
+/// Записывает информацию об исключении.
+/// </summary>
 procedure ChartLogException(const AContext: string; E: Exception);
 begin
   if Assigned(E) then
@@ -113,6 +141,9 @@ begin
     ChartLogError(AContext + ' exception=nil');
 end;
 
+/// <summary>
+/// Преобразует адрес объекта в строку формата $XXXXXXXX для отладки жизненного цикла объектов.
+/// </summary>
 function ChartPtr(AObject: TObject): string;
 begin
   if Assigned(AObject) then

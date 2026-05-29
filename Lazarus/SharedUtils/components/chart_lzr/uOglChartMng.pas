@@ -2,19 +2,26 @@ unit uOglChartMng;
 
 {$mode objfpc}{$H+}
 
+{
+  Модуль uOglChartMng
+  Описание: Содержит класс cChartMng (TChartObjectManager), который управляет жизненным циклом
+            корневой модели чарта (cChart) и ведет плоский реестр всех объектов дерева
+            для быстрого поиска, сериализации и интеграции с инспектором объектов.
+}
+
 interface
 
 uses
   Classes, SysUtils, uOglChartTypes, uOglChartLog, uOglChartBaseObj, uOglChartChart;
 
 type
-  { cChartMng
-    Р’Р»Р°РґРµРµС‚ РєРѕСЂРЅРµРІРѕР№ РјРѕРґРµР»СЊСЋ Рё РІРµРґС‘С‚ РїР»РѕСЃРєРёР№ СЂРµРµСЃС‚СЂ РѕР±СЉРµРєС‚РѕРІ РґР»СЏ РїРѕРёСЃРєР°,
-    СЃРµСЂРёР°Р»РёР·Р°С†РёРё Рё Р±СѓРґСѓС‰РµРіРѕ РёРЅСЃРїРµРєС‚РѕСЂР°. }
+  { cChartMng }
+  // Владеет корневой моделью и ведёт плоский реестр объектов для поиска,
+  // сериализации и будущего инспектора.
   cChartMng = class(cChartObjRegistry)
   private
-    fObjects: TList;
-    fRoot: cChart;
+    fObjects: TList;                     // Список всех зарегистрированных объектов в дереве модели
+    fRoot: cChart;                       // Корневой объект модели чарта
 
     function GetObject(AIndex: Integer): cBaseObj;
     function GetCount: Integer;
@@ -22,16 +29,27 @@ type
     constructor Create; virtual;
     destructor Destroy; override;
 
+    // Регистрация отдельного объекта в реестре
     procedure RegisterObject(AObject: cBaseObj); override;
+    // Разрегистрация отдельного объекта
     procedure UnregisterObject(AObject: cBaseObj); override;
+    // Рекурсивная регистрация всего поддерева объектов
     procedure RegisterTree(AObject: cBaseObj); override;
+    // Рекурсивная разрегистрация всего поддерева объектов
     procedure UnregisterTree(AObject: cBaseObj); override;
 
+    // Очистка данных модели чарта (сбрасывает настройки и удаляет страницы)
     procedure Clear;
+    // Автоматическое позиционирование всех страниц модели по сетке
     procedure AlignPagesAuto(AAspect: Double = 1);
+    // Устанавливает новый корневой объект модели
     procedure SetRoot(ARoot: cChart);
+    // Добавляет объект в дерево под родителя ARoot и регистрирует его
     procedure Add(AObject, ARoot: cBaseObj);
+    // Находит зарегистрированный объект по его уникальному имени
     function FindObject(const AName: string): cBaseObj;
+    
+    // Сохранение и загрузка всей структуры модели через IChartSerializer
     function SaveToString(ASerializer: IChartSerializer): string;
     procedure LoadFromString(ASerializer: IChartSerializer; const AData: string);
 
@@ -44,11 +62,14 @@ type
 
 implementation
 
+{ cChartMng }
+
 constructor cChartMng.Create;
 begin
   inherited Create;
   fObjects := TList.Create;
   ChartLogInfo('cChartMng.Create self=' + ChartPtr(Self));
+  // Создаем корневой элемент чарта по умолчанию
   SetRoot(cChart.Create);
 end;
 
@@ -62,6 +83,9 @@ begin
   inherited Destroy;
 end;
 
+/// <summary>
+/// Регистрирует объект в плоском списке менеджера и связывает объект с этим менеджером.
+/// </summary>
 procedure cChartMng.RegisterObject(AObject: cBaseObj);
 begin
   if not Assigned(AObject) or (fObjects.IndexOf(AObject) >= 0) then
@@ -70,6 +94,9 @@ begin
   AObject.Manager := Self;
 end;
 
+/// <summary>
+/// Удаляет объект из плоского списка и разрывает связь объекта с менеджером.
+/// </summary>
 procedure cChartMng.UnregisterObject(AObject: cBaseObj);
 begin
   if not Assigned(AObject) then
@@ -79,6 +106,9 @@ begin
     AObject.Manager := nil;
 end;
 
+/// <summary>
+/// Рекурсивно регистрирует объект и всех его дочерних потомков в дереве.
+/// </summary>
 procedure cChartMng.RegisterTree(AObject: cBaseObj);
 var
   I: Integer;
@@ -90,6 +120,9 @@ begin
     RegisterTree(AObject.Children[I]);
 end;
 
+/// <summary>
+/// Рекурсивно разрегистрирует объект и всех его потомков.
+/// </summary>
 procedure cChartMng.UnregisterTree(AObject: cBaseObj);
 var
   I: Integer;
@@ -111,6 +144,9 @@ begin
   Result := fObjects.Count;
 end;
 
+/// <summary>
+/// Очищает содержимое корневого элемента чарта и пересоздает плоский реестр.
+/// </summary>
 procedure cChartMng.Clear;
 begin
   if Assigned(fRoot) then
@@ -121,12 +157,18 @@ begin
   end;
 end;
 
+/// <summary>
+/// Вызывает автовыравнивание страниц в корневой модели чарта.
+/// </summary>
 procedure cChartMng.AlignPagesAuto(AAspect: Double);
 begin
   if Assigned(fRoot) then
     fRoot.AlignPagesAuto(AAspect);
 end;
 
+/// <summary>
+/// Меняет корневую модель чарта. Освобождает предыдущую модель и регистрирует новое дерево.
+/// </summary>
 procedure cChartMng.SetRoot(ARoot: cChart);
 begin
   if fRoot = ARoot then
@@ -138,6 +180,10 @@ begin
   RegisterTree(fRoot);
 end;
 
+/// <summary>
+/// Добавляет объект AObject к родителю ARoot. Если родитель не указан, объект не связывается в дерево,
+/// но регистрируется в плоском списке.
+/// </summary>
 procedure cChartMng.Add(AObject, ARoot: cBaseObj);
 begin
   if not Assigned(AObject) then
@@ -147,6 +193,9 @@ begin
   RegisterTree(AObject);
 end;
 
+/// <summary>
+/// Выполняет линейный поиск объекта в плоском списке по имени (без учета регистра).
+/// </summary>
 function cChartMng.FindObject(const AName: string): cBaseObj;
 var
   I: Integer;
@@ -157,6 +206,9 @@ begin
       Exit(Objects[I]);
 end;
 
+/// <summary>
+/// Сохраняет корневой объект в строку через сериализатор.
+/// </summary>
 function cChartMng.SaveToString(ASerializer: IChartSerializer): string;
 begin
   Result := '';
@@ -164,6 +216,9 @@ begin
     Result := ASerializer.SaveObject(fRoot);
 end;
 
+/// <summary>
+/// Загружает состояние корневого объекта из строки и заново выстраивает плоский список зарегистрированных объектов.
+/// </summary>
 procedure cChartMng.LoadFromString(ASerializer: IChartSerializer; const AData: string);
 begin
   if Assigned(fRoot) and Assigned(ASerializer) then

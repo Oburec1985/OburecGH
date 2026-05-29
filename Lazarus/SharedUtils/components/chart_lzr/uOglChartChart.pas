@@ -2,6 +2,13 @@ unit uOglChartChart;
 
 {$mode objfpc}{$H+}
 
+{
+  Модуль uOglChartChart
+  Описание: Содержит класс cChart (TChartModel), корневой объект объектной модели чарта.
+            Управляет глобальными свойствами отображения, разметкой страниц (PageArea),
+            и их автоматическим выравниванием.
+}
+
 interface
 
 uses
@@ -9,23 +16,29 @@ uses
   uOglChartTypes, uOglChartLog, uOglChartBaseObj, uOglChartDrawObj, uOglChartPage;
 
 type
-  { cChart
-    РљРѕСЂРЅРµРІРѕР№ РѕР±СЉРµРєС‚ РјРѕРґРµР»Рё. РҐСЂР°РЅРёС‚ РіР»РѕР±Р°Р»СЊРЅС‹Рµ РЅР°СЃС‚СЂРѕР№РєРё Рё СЂР°СЃРєР»Р°РґС‹РІР°РµС‚ СЃС‚СЂР°РЅРёС†С‹
-    РІ РЅРѕСЂРјР°Р»РёР·РѕРІР°РЅРЅРѕР№ РѕР±Р»Р°СЃС‚Рё PageArea. }
+  { cChart }
+  // Корневой объект модели. Хранит глобальные настройки и раскладывает страницы
+  // в нормализованной области PageArea.
   cChart = class(cBaseObj)
   private
-    fTitle: string;
-    fBackgroundColor: Cardinal;
-    fPageArea: TChartFloatRect;
-    fPageGapX: Double;
-    fPageGapY: Double;
+    fTitle: string;                      // Заголовок чарта
+    fBackgroundColor: Cardinal;          // Цвет заднего фона чарта (RGBA)
+    fPageArea: TChartFloatRect;          // Область размещения страниц (нормализованные координаты от 0 до 1)
+    fPageGapX: Double;                   // Горизонтальный интервал между страницами
+    fPageGapY: Double;                   // Вертикальный интервал между страницами
   public
+    // Свойства по умолчанию
     procedure AssignDefaultProperties; override;
+    // Очистка объекта и удаление дочерних элементов
     procedure Clear;
+    // Автоматическое позиционирование страниц с учетом соотношения сторон
     procedure AlignPagesAuto(AAspect: Double = 1);
+    
+    // Сохранение и загрузка параметров в/из JSON
     procedure SaveJsonAttributes(AJson: TJSONObject); override;
     procedure LoadJsonAttributes(AJson: TJSONObject); override;
 
+    // Сериализация и десериализация через интерфейс IChartSerializer
     function Serialize(ASerializer: IChartSerializer): string;
     procedure Deserialize(ASerializer: IChartSerializer; const AData: string);
 
@@ -40,6 +53,11 @@ type
 
 implementation
 
+{ cChart }
+
+/// <summary>
+/// Установка начальных свойств чарта.
+/// </summary>
 procedure cChart.AssignDefaultProperties;
 begin
   inherited AssignDefaultProperties;
@@ -48,10 +66,13 @@ begin
   Clear;
 end;
 
+/// <summary>
+/// Сброс всех свойств в значения по умолчанию и очистка всех дочерних страниц.
+/// </summary>
 procedure cChart.Clear;
 begin
   fTitle := 'New Chart';
-  fBackgroundColor := $FF000000;
+  fBackgroundColor := $FF000000; // Черный фон по умолчанию
   fPageArea.Left := 0.012;
   fPageArea.Top := 0.018;
   fPageArea.Right := 0.988;
@@ -61,6 +82,12 @@ begin
   ClearChildren;
 end;
 
+/// <summary>
+/// Автоматическое расположение дочерних страниц (cBasePage), имеющих выравнивание cpaAuto,
+/// в виде сетки внутри области PageArea.
+/// Параметры:
+///   AAspect - Соотношение сторон области вывода для оптимизации сетки
+/// </summary>
 procedure cChart.AlignPagesAuto(AAspect: Double);
 var
   lPages: TList;
@@ -85,6 +112,7 @@ begin
 
   lPages := TList.Create;
   try
+    // Разделяем страницы: cpaClient растягивается на всю область, cpaAuto выстраивается в сетку
     for lIndex := 0 to ChildCount - 1 do
       if Children[lIndex] is cBasePage then
       begin
@@ -98,6 +126,7 @@ begin
     if lPages.Count = 0 then
       Exit;
 
+    // Рассчитываем оптимальное число столбцов и строк в сетке
     if lPages.Count <= 1 then
       lCols := 1
     else
@@ -116,6 +145,7 @@ begin
     lAreaHeight := fPageArea.Bottom - fPageArea.Top;
     lCellHeight := (lAreaHeight - (lRows - 1) * fPageGapY) / lRows;
 
+    // Позиционируем каждую страницу в своей ячейке сетки
     for lPageIndex := 0 to lPages.Count - 1 do
     begin
       lPage := cBasePage(lPages[lPageIndex]);
@@ -133,6 +163,9 @@ begin
   end;
 end;
 
+/// <summary>
+/// Сохранение атрибутов модели в JSON.
+/// </summary>
 procedure cChart.SaveJsonAttributes(AJson: TJSONObject);
 begin
   inherited SaveJsonAttributes(AJson);
@@ -140,6 +173,9 @@ begin
   AJson.Add('BackgroundColor', IntToHex(fBackgroundColor, 8));
 end;
 
+/// <summary>
+/// Загрузка атрибутов модели из JSON.
+/// </summary>
 procedure cChart.LoadJsonAttributes(AJson: TJSONObject);
 begin
   inherited LoadJsonAttributes(AJson);
@@ -151,6 +187,9 @@ begin
     fBackgroundColor := StrToQWord('$' + AJson.Strings['BackgroundColor']);
 end;
 
+/// <summary>
+/// Сериализация объекта в строку.
+/// </summary>
 function cChart.Serialize(ASerializer: IChartSerializer): string;
 begin
   Result := '';
@@ -158,6 +197,9 @@ begin
     Result := ASerializer.SaveObject(Self);
 end;
 
+/// <summary>
+/// Десериализация объекта из строки.
+/// </summary>
 procedure cChart.Deserialize(ASerializer: IChartSerializer; const AData: string);
 begin
   if Assigned(ASerializer) then

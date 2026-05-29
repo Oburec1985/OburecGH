@@ -2,6 +2,13 @@ unit uOglChart;
 
 {$mode ObjFPC}{$H+}
 
+{
+  Модуль uOglChart
+  Описание: Содержит основной визуальный компонент TOglChart для Lazarus (LCL).
+            Интегрирует все части библиотеки: модель (TChartModel), рендерер (TOpenGLChartRenderer),
+            систему событий/слушателей (TChartFrameListener) и обеспечивает их взаимодействие.
+}
+
 interface
 
 uses
@@ -11,16 +18,18 @@ uses
 
 type
   TChartAfterRenderEvent = procedure(Sender: TObject; ARenderTimeMs: Double) of object;
-  { TOglChart - LCL/OpenGL-С…РѕСЃС‚ РєРѕРјРїРѕРЅРµРЅС‚Р° РіСЂР°С„РёРєР°.
-    РҐСЂР°РЅРёС‚ РјРѕРґРµР»СЊ Рё РґРµР»РµРіРёСЂСѓРµС‚ РѕС‚СЂРёСЃРѕРІРєСѓ renderer-СЃР»РѕСЋ. }
+
+  { TOglChart }
+  // LCL/OpenGL-хост компонента графика.
+  // Хранит модель и делегирует отрисовку renderer-слою.
   TOglChart = class(TOpenGLControl, IOpenGLContextHost, IChartControl)
   private
-    fObjectManager: TChartObjectManager;
-    fRenderer: IChartRenderer;
-    fOpenGLRenderer: TOpenGLChartRenderer;
-    fIsRendererInitialized: Boolean;
-    fListeners: TList;
-    fOnAfterRender: TChartAfterRenderEvent;
+    fObjectManager: TChartObjectManager; // Менеджер объектов чарта
+    fRenderer: IChartRenderer;           // Интерфейс рендерера
+    fOpenGLRenderer: TOpenGLChartRenderer; // Конкретный OpenGL рендерер
+    fIsRendererInitialized: Boolean;     // Флаг успешной инициализации рендерера
+    fListeners: TList;                   // Список слушателей событий мыши/клавиатуры
+    fOnAfterRender: TChartAfterRenderEvent; // Событие после отрисовки кадра
 
     function GetModel: TChartModel;
     procedure SetModel(AValue: TChartModel);
@@ -29,7 +38,9 @@ type
     function GetHoveredObject: cBaseObj;
     procedure SetHoveredObject(AValue: cBaseObj);
   protected
+    // Переопределение изменения размеров компонента
     procedure Resize; override;
+    // Обработка событий мыши и клавиатуры
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -40,10 +51,14 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
+    // Перерисовка кадра
     procedure Paint; override;
+    // Потокобезопасный вызов инвалидации контрола
     procedure Redraw;
 
+    // Регистрация слушателя событий графического окна
     procedure AddFrameListener(AListener: TChartFrameListener);
+    // Удаление слушателя событий
     procedure RemoveFrameListener(AListener: TChartFrameListener);
 
     { IChartControl }
@@ -75,6 +90,9 @@ implementation
 uses Windows;
 {$ENDIF}
 
+/// <summary>
+/// Записывает отладочные сообщения событий ввода/вывода в локальный текстовый файл.
+/// </summary>
 procedure LogToFile(const AMsg: string);
 var
   F: TextFile;
@@ -95,6 +113,10 @@ end;
 
 { TOglChart }
 
+/// <summary>
+/// Инициализация компонента, создание рендерера по умолчанию (TOpenGLChartRenderer),
+/// менеджера объектов и добавление стандартных слушателей событий (зум, панорамирование, выделение).
+/// </summary>
 constructor TOglChart.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -106,6 +128,7 @@ begin
   fObjectManager.Root.BackgroundColor := $FFFFFFFF;
 
   fListeners := TList.Create;
+  // Добавление стандартных слушателей перетаскивания (Pan/Zoom) и выделения элементов
   AddFrameListener(TChartPanZoomListener.Create);
   AddFrameListener(TChartSelectListener.Create);
 end;
@@ -150,6 +173,10 @@ begin
   Redraw;
 end;
 
+/// <summary>
+/// Обработчик нажатия кнопки мыши. Сначала передает управление зарегистрированным слушателям,
+/// затем (если событие не обработано) – встроенным методам рендерера для выделения или редактирования точек.
+/// </summary>
 procedure TOglChart.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   lHandled: Boolean;
@@ -171,6 +198,9 @@ begin
     Redraw;
 end;
 
+/// <summary>
+/// Обработчик перемещения мыши. Передает событие слушателям для панорамирования или зума области.
+/// </summary>
 procedure TOglChart.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   lHandled: Boolean;
@@ -188,6 +218,9 @@ begin
     end;
 end;
 
+/// <summary>
+/// Обработчик отпускания кнопки мыши.
+/// </summary>
 procedure TOglChart.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   lHandled: Boolean;
@@ -205,6 +238,9 @@ begin
     end;
 end;
 
+/// <summary>
+/// Обработчик вращения колесика мыши для зума относительно курсора мыши.
+/// </summary>
 function TOglChart.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;
 var
   lHandled: Boolean;
@@ -228,6 +264,9 @@ begin
     end;
 end;
 
+/// <summary>
+/// Обработчик нажатия клавиш. Используется для горячих клавиш и удаления точек (Del).
+/// </summary>
 procedure TOglChart.KeyDown(var Key: Word; Shift: TShiftState);
 var
   lHandled: Boolean;
@@ -252,6 +291,9 @@ begin
   end;
 end;
 
+/// <summary>
+/// Ввод текста с клавиатуры для редактирования названий объектов на графике.
+/// </summary>
 procedure TOglChart.KeyPress(var Key: char);
 var
   lHandled: Boolean;
@@ -275,6 +317,10 @@ begin
   end;
 end;
 
+/// <summary>
+/// Отрисовка кадра. Инициализирует рендерер, вызывает Render и вычисляет время отрисовки в миллисекундах.
+/// Вызывает события FrameStarted и FrameEnded у слушателей.
+/// </summary>
 procedure TOglChart.Paint;
 var
   I: Integer;
@@ -356,7 +402,6 @@ begin
   Result := Height;
 end;
 
-
 function TOglChart.GetSelectedObject: cBaseObj;
 begin
   if Assigned(fOpenGLRenderer) then
@@ -412,7 +457,6 @@ function TOglChart.GetModel: TObject;
 begin
   Result := Model;
 end;
-
 
 procedure Register;
 begin

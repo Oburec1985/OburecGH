@@ -14,16 +14,27 @@ type
   { TForm1 }
 
   TForm1 = class(TForm)
-    Button1: TButton;
     ImageList1: TImageList;
     OglChart1: TOglChart;
     Splitter1: TSplitter;
-    TreeView1: TTreeView;
     StatusBar1: TStatusBar;
+    PanelRight: TPanel;
+    TreeView1: TTreeView;
+    PanelLogControls: TPanel;
+    lblSelectedAxis: TLabel;
+    cbLogY: TCheckBox;
+    cbLogX: TCheckBox;
+    cbUseShader: TCheckBox;
+    btnRefreshTree: TButton;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure OglChart1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure cbLogYChange(Sender: TObject);
+    procedure cbLogXChange(Sender: TObject);
+    procedure cbUseShaderChange(Sender: TObject);
+    procedure TreeView1SelectionChanged(Sender: TObject);
   private
+    fUpdatingControls: Boolean;
     fMouseCoordsText: string;
     fFpsText: string;
     procedure UpdateStatusBar;
@@ -59,6 +70,10 @@ end;
 procedure TForm1.OglChart1AfterRender(Sender: TObject; ARenderTimeMs: Double);
 var
   lFps: Double;
+  lSelected: TChartBaseObject;
+  lAxis: TChartAxis;
+  i: Integer;
+  lNodeToSelect: TTreeNode;
 begin
   if ARenderTimeMs > 0 then
     lFps := 1000.0 / ARenderTimeMs
@@ -66,6 +81,58 @@ begin
     lFps := 0;
   fFpsText := Format('Render: %.2f ms (%.1f FPS)', [ARenderTimeMs, lFps]);
   UpdateStatusBar;
+
+  lSelected := TChartBaseObject(OglChart1.SelectedObject);
+  lAxis := nil;
+  if Assigned(lSelected) then
+  begin
+    if lSelected is TChartAxis then
+      lAxis := TChartAxis(lSelected)
+    else if (lSelected is cTrend) and Assigned(lSelected.Parent) and (lSelected.Parent is TChartAxis) then
+      lAxis := TChartAxis(lSelected.Parent);
+  end;
+
+  fUpdatingControls := True;
+  try
+    if Assigned(lAxis) then
+    begin
+      if lblSelectedAxis.Caption <> 'Выбранная ось: ' + lAxis.Name then
+      begin
+        lblSelectedAxis.Caption := 'Выбранная ось: ' + lAxis.Name;
+        cbLogY.Enabled := True;
+        cbLogX.Enabled := True;
+        cbLogY.Checked := lAxis.Scale = casLog10;
+        cbLogX.Checked := lAxis.XScale = casLog10;
+
+        lNodeToSelect := nil;
+        for i := 0 to TreeView1.Items.Count - 1 do
+        begin
+          if TreeView1.Items[i].Data = Pointer(lAxis) then
+          begin
+            lNodeToSelect := TreeView1.Items[i];
+            Break;
+          end;
+        end;
+        if Assigned(lNodeToSelect) and (TreeView1.Selected <> lNodeToSelect) then
+          TreeView1.Selected := lNodeToSelect;
+      end;
+    end
+    else
+    begin
+      if lblSelectedAxis.Caption <> 'Выбранная ось: нет' then
+      begin
+        lblSelectedAxis.Caption := 'Выбранная ось: нет';
+        cbLogY.Enabled := False;
+        cbLogX.Enabled := False;
+        cbLogY.Checked := False;
+        cbLogX.Checked := False;
+        if TreeView1.Selected <> nil then
+          TreeView1.Selected := nil;
+      end;
+    end;
+  finally
+    fUpdatingControls := False;
+  end;
 end;
 
 { TForm1 }
@@ -204,6 +271,14 @@ var
   lAxisY2: cAxis;
   lSeries: cTrend;
   lBuff: cBuffTrend1d;
+  lPerfPage: cBasePage;
+  lPerfAxis1D, lPerfAxis2D: cAxis;
+  lBuff1D: cBuffTrend1d;
+  lBuff2D: cBuffTrend2d;
+  i: Integer;
+  lVal: Double;
+  lArrValues: array of Double;
+  lArrPoints: array of TChartPoint;
 begin
   AChart.ObjectManager.Clear;
   AChart.Model.BackgroundColor := $FFFFFFFF;
@@ -235,11 +310,11 @@ begin
   lPage.XMinValue := 0;
   lPage.XMaxValue := 9;
 
-  // Первая ось Y (синяя в ABGR)
+  // Ось Y (синяя)
   AddAxis(lPage, 'Signals', lAxisY);
   lAxisY.MinValue := 0.4;
   lAxisY.MaxValue := 0.75;
-  lAxisY.Color := $FF0000FF; // Синий
+  lAxisY.Color := $FF0000FF;
   lSeries := AddLine(lAxisY, 'SignalBlue', 'Signal blue', $FF0000FF);
   lSeries.AddPoint(0, 0.48);
   lSeries.AddPoint(1, 0.56);
@@ -252,11 +327,11 @@ begin
   lSeries.AddPoint(8, 0.58);
   lSeries.AddPoint(9, 0.72);
 
-  // Вторая ось Y (красная в ABGR)
+  // Ось Y (красная)
   AddAxis(lPage, 'Signals2', lAxisY2);
   lAxisY2.MinValue := 0.3;
   lAxisY2.MaxValue := 0.9;
-  lAxisY2.Color := $FFFF0000; // Красный
+  lAxisY2.Color := $FFFF0000;
   lSeries := AddLine(lAxisY2, 'SignalRed', 'Signal red', $FFFF0000);
   lSeries.AddPoint(0, 0.42);
   lSeries.AddPoint(1, 0.47);
@@ -310,6 +385,52 @@ begin
   lSeries.AddPoint(120, 90);
   lSeries.AddPoint(140, 70);
 
+  // Страница тестирования производительности с большим объемом точек (100 тысяч точек)
+  lPerfPage := AddPage(AChart.Model, 'PagePerf', 'Page_Performance_100k');
+  lPerfPage.XMinValue := 0;
+  lPerfPage.XMaxValue := 100000;
+
+  // cBuffTrend1d (синий график)
+  AddAxis(lPerfPage, 'PerfAxis1D', lPerfAxis1D);
+  lPerfAxis1D.MinValue := 0;
+  lPerfAxis1D.MaxValue := 1;
+  lPerfAxis1D.Color := $FF0000FF;
+  
+  lBuff1D := cBuffTrend1d.Create;
+  lBuff1D.Name := 'Buff1D_100k';
+  lBuff1D.Caption := 'cBuffTrend1d (100k pts)';
+  lBuff1D.Color := $FF0000FF;
+  lBuff1D.X0 := 0;
+  lBuff1D.DX := 1;
+  SetLength(lArrValues, 100000);
+  for i := 0 to 99999 do
+  begin
+    lArrValues[i] := Sin(i / 1000.0) * 0.4 + 0.5;
+  end;
+  lBuff1D.AddValues(lArrValues);
+  SetLength(lArrValues, 0);
+  lPerfAxis1D.AddChild(lBuff1D);
+
+  // cBuffTrend2d (зеленый график)
+  AddAxis(lPerfPage, 'PerfAxis2D', lPerfAxis2D);
+  lPerfAxis2D.MinValue := 0;
+  lPerfAxis2D.MaxValue := 1;
+  lPerfAxis2D.Color := $FF00D000;
+  
+  lBuff2D := cBuffTrend2d.Create;
+  lBuff2D.Name := 'Buff2D_100k';
+  lBuff2D.Caption := 'cBuffTrend2d (100k pts)';
+  lBuff2D.Color := $FF00D000;
+  SetLength(lArrPoints, 100000);
+  for i := 0 to 99999 do
+  begin
+    lArrPoints[i].X := i;
+    lArrPoints[i].Y := Sin(i / 1000.0) * 0.4 + 0.5;
+  end;
+  lBuff2D.AddPoints(lArrPoints);
+  SetLength(lArrPoints, 0);
+  lPerfAxis2D.AddChild(lBuff2D);
+
   AChart.Redraw;
 end;
 
@@ -330,7 +451,7 @@ begin
   TreeView1.MultiSelect := True;
   TreeView1.Images := ImageList1;
   TreeView1.Font.Size := 10;
-  Button1.Visible := True;
+  btnRefreshTree.Visible := True;
   BuildChartTree;
 end;
 
@@ -432,5 +553,83 @@ begin
   end;
   UpdateStatusBar;
 end;
+
+
+procedure TForm1.cbLogYChange(Sender: TObject);
+var
+  lAxis: TChartAxis;
+begin
+  if fUpdatingControls then Exit;
+  if Assigned(OglChart1.SelectedObject) and (OglChart1.SelectedObject is TChartAxis) then
+  begin
+    lAxis := TChartAxis(OglChart1.SelectedObject);
+    if cbLogY.Checked then
+      lAxis.Scale := casLog10
+    else
+      lAxis.Scale := casLinear;
+    OglChart1.Redraw;
+    BuildChartTree;
+  end;
+end;
+
+procedure TForm1.cbLogXChange(Sender: TObject);
+var
+  lAxis: TChartAxis;
+begin
+  if fUpdatingControls then Exit;
+  if Assigned(OglChart1.SelectedObject) and (OglChart1.SelectedObject is TChartAxis) then
+  begin
+    lAxis := TChartAxis(OglChart1.SelectedObject);
+    if cbLogX.Checked then
+      lAxis.XScale := casLog10
+    else
+      lAxis.XScale := casLinear;
+    OglChart1.Redraw;
+    BuildChartTree;
+  end;
+end;
+
+procedure TForm1.cbUseShaderChange(Sender: TObject);
+var
+  lRenderer: TOpenGLChartRenderer;
+begin
+  lRenderer := TOpenGLChartRenderer(OglChart1.GetRenderer);
+  if Assigned(lRenderer) then
+  begin
+    lRenderer.UseShader := cbUseShader.Checked;
+    OglChart1.Redraw;
+  end;
+end;
+
+procedure TForm1.TreeView1SelectionChanged(Sender: TObject);
+var
+  lAxis: TChartAxis;
+begin
+  fUpdatingControls := True;
+  try
+    if Assigned(TreeView1.Selected) and Assigned(TreeView1.Selected.Data) and (TObject(TreeView1.Selected.Data) is TChartAxis) then
+    begin
+      lAxis := TChartAxis(TreeView1.Selected.Data);
+      OglChart1.SelectedObject := lAxis;
+      lblSelectedAxis.Caption := 'Выбранная ось: ' + lAxis.Name;
+      cbLogY.Enabled := True;
+      cbLogX.Enabled := True;
+      cbLogY.Checked := lAxis.Scale = casLog10;
+      cbLogX.Checked := lAxis.XScale = casLog10;
+    end
+    else
+    begin
+      lblSelectedAxis.Caption := 'Выбранная ось: нет';
+      cbLogY.Enabled := False;
+      cbLogX.Enabled := False;
+      cbLogY.Checked := False;
+      cbLogX.Checked := False;
+    end;
+  finally
+    fUpdatingControls := False;
+  end;
+end;
+
+
 
 end.

@@ -2,6 +2,13 @@ unit uOglChartControl;
 
 {$mode objfpc}{$H+}
 
+{
+  Модуль uOglChartControl
+  Описание: Содержит визуальный компонент TOglChartControl, основанный на TOpenGLControl.
+            Связывает логическую модель TChartModel, менеджер объектов TChartObjectManager
+            и рендерер IChartRenderer для отрисовки графиков в окне LCL.
+}
+
 interface
 
 uses
@@ -9,23 +16,28 @@ uses
   uOglChartTypes, uOglChartChart, uOglChartMng;
 
 type
-  { TOglChartControl - LCL-РєРѕРјРїРѕРЅРµРЅС‚ РґР»СЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ РіСЂР°С„РёРєРѕРІ С‡РµСЂРµР· OpenGL.
-    РќР°СЃР»РµРґСѓРµС‚СЃСЏ РѕС‚ TOpenGLControl РґР»СЏ РєСЂРѕСЃСЃРїР»Р°С‚С„РѕСЂРјРµРЅРЅРѕРіРѕ СѓРїСЂР°РІР»РµРЅРёСЏ РєРѕРЅС‚РµРєСЃС‚РѕРј. }
+  { TOglChartControl }
+  // LCL-компонент для отображения графиков через OpenGL.
+  // Наследуется от TOpenGLControl для кроссплатформенного управления графическим контекстом.
   TOglChartControl = class(TOpenGLControl, IOpenGLContextHost)
   private
-    fObjectManager: TChartObjectManager;
-    fRenderer: IChartRenderer;
-    fLock: TCriticalSection;
-    fIsInitialized: Boolean;
+    fObjectManager: TChartObjectManager; // Менеджер объектов модели чарта
+    fRenderer: IChartRenderer;           // Рендерер для отрисовки графиков
+    fLock: TCriticalSection;             // Критическая секция для потокобезопасности при изменении модели
+    fIsInitialized: Boolean;             // Флаг инициализации OpenGL контекста
     
     function GetModel: TChartModel;
     procedure SetModel(AValue: TChartModel);
   protected
+    // Основная процедура отрисовки компонента
     procedure Paint; override;
+    // Обработчик изменения размеров компонента
     procedure Resize; override;
     
     { IOpenGLContextHost }
+    // Активирует текущий контекст OpenGL для потока
     procedure MakeCurrent; reintroduce;
+    // Переключает передний и задний буферы кадра
     procedure SwapBuffers; reintroduce;
     function GetWidth: Integer;
     function GetHeight: Integer;
@@ -33,7 +45,8 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    procedure InvalidateChart; // РџРѕС‚РѕРєРѕР±РµР·РѕРїР°СЃРЅС‹Р№ РІС‹Р·РѕРІ РїРµСЂРµСЂРёСЃРѕРІРєРё
+    // Потокобезопасный вызов перерисовки компонента
+    procedure InvalidateChart;
 
     property Model: TChartModel read GetModel write SetModel;
     property ObjectManager: TChartObjectManager read fObjectManager;
@@ -44,6 +57,9 @@ implementation
 
 { TOglChartControl }
 
+/// <summary>
+/// Создание контрола чарта с настройками контекста OpenGL по умолчанию.
+/// </summary>
 constructor TOglChartControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -51,10 +67,13 @@ begin
   fObjectManager := TChartObjectManager.Create;
   fIsInitialized := False;
   
-  // РќР°СЃС‚СЂРѕР№РєРё РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РґР»СЏ OpenGLContext
+  // Настройки по умолчанию для OpenGLContext
   AutoResizeViewport := True;
 end;
 
+/// <summary>
+/// Безопасное освобождение менеджера объектов и критической секции.
+/// </summary>
 destructor TOglChartControl.Destroy;
 begin
   fLock.Enter;
@@ -83,6 +102,10 @@ begin
   InvalidateChart;
 end;
 
+/// <summary>
+/// Отрисовка чарта. При первом вызове инициализирует рендерер.
+/// Гарантирует MakeCurrent и SwapBuffers для корректной работы буферов кадра.
+/// </summary>
 procedure TOglChartControl.Paint;
 begin
   if not fIsInitialized then
@@ -105,6 +128,9 @@ begin
   end;
 end;
 
+/// <summary>
+/// Обновление вьюпорта при изменении геометрии контрола.
+/// </summary>
 procedure TOglChartControl.Resize;
 begin
   inherited Resize;
@@ -135,11 +161,15 @@ begin
   Result := Height;
 end;
 
+/// <summary>
+/// Потокобезопасный вызов перерисовки. Если вызов происходит не из основного GUI-потока,
+/// выполнение перенаправляется в очередь TThread.Queue.
+/// </summary>
 procedure TOglChartControl.InvalidateChart;
 begin
-  { РњРµС‚РѕРґ Invalidate РІ LCL РѕР±С‹С‡РЅРѕ РїРѕС‚РѕРєРѕР±РµР·РѕРїР°СЃРµРЅ (С‡РµСЂРµР· PostMessage), 
-    РЅРѕ РґР»СЏ РіР°СЂР°РЅС‚РёРё РјРѕР¶РЅРѕ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЏРІРЅС‹Р№ РІС‹Р·РѕРІ С‡РµСЂРµР· РѕС‡РµСЂРµРґСЊ СЃРѕРѕР±С‰РµРЅРёР№ 
-    РёР»Рё TThread.ForceQueue РµСЃР»Рё РјС‹ РЅРµ РІ РѕСЃРЅРѕРІРЅРѕРј РїРѕС‚РѕРєРµ. }
+  { Метод Invalidate в LCL обычно потокобезопасен (через PostMessage), 
+    но для гарантии мы используем явный вызов через TThread.Queue, 
+    если мы находимся не в основном потоке. }
   if TThread.CurrentThread.ThreadID = MainThreadID then
     Invalidate
   else

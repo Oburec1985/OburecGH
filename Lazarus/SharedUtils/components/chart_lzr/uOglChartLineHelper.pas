@@ -3,6 +3,13 @@ unit uOglChartLineHelper;
 {$mode objfpc}{$H+}
 {$codepage cp1251}
 
+{
+  Модуль uOglChartLineHelper
+  Описание: Содержит вспомогательные процедуры для рендеринга серий линий (TChartLineSeries),
+            буферизованных одномерных трендов (cBuffTrend1d) и опорных узлов Безье (cTrend)
+            с использованием стандартного OpenGL или шейдеров с логарифмическим масштабированием.
+}
+
 interface
 
 uses
@@ -10,10 +17,9 @@ uses
   uOglChartPage, uOglChartAxis, uOglChartTrend;
 
 type
-  /// <summary>
-  /// Интерфейс обратного вызова для рендерера для преобразования значений в пиксели
-  /// и настройки цвета без создания жесткой круговой зависимости между модулями.
-  /// </summary>
+  { IChartOffsetHelper }
+  // Интерфейс обратного вызова для рендерера для преобразования значений в пиксели
+  // и настройки цвета без создания жесткой круговой зависимости между модулями.
   IChartOffsetHelper = interface
     ['{E8A375A2-2B3D-4A23-9D27-C8C1F4A579B1}']
     function XValueToPixel(APage: TChartPage; AAxis: TChartAxis; AValue: Double; APixelMin, APixelMax: Single): Single;
@@ -21,9 +27,7 @@ type
     procedure SetGLColor(AColor: Cardinal);
   end;
 
-/// <summary>
-/// Отрисовывает стандартную серию линий TChartLineSeries.
-/// </summary>
+// Отрисовывает стандартную серию линий TChartLineSeries.
 procedure RenderLineSeries(
   ARenderer: TObject;
   ASeries: TChartLineSeries; 
@@ -35,9 +39,7 @@ procedure RenderLineSeries(
   AShaderProgram: GLuint
 );
 
-/// <summary>
-/// Отрисовывает одномерный буферизированный тренд cBuffTrend1d.
-/// </summary>
+// Отрисовывает одномерный буферизированный тренд cBuffTrend1d.
 procedure RenderBuffTrend1d(
   ARenderer: TObject;
   ATrend: cBuffTrend1d;
@@ -49,9 +51,7 @@ procedure RenderBuffTrend1d(
   AShaderProgram: GLuint
 );
 
-/// <summary>
-/// Отрисовывает опорные точки и касательные линии для сплайнов cTrend.
-/// </summary>
+// Отрисовывает опорные точки и касательные линии для сплайнов cTrend.
 procedure RenderTrendPoints(
   ARenderer: TObject;
   ATrend: cTrend;
@@ -62,15 +62,21 @@ procedure RenderTrendPoints(
 
 implementation
 
-procedure RenderLineSeries( ARenderer: TObject;
-                            ASeries: TChartLineSeries;
-                            const ARect: TChartPixelRect;
-                            APage: TChartPage;
-                            AYAxis: TChartAxis;
-                            AUseShader: Boolean;
-                            AShaderInitialized: Boolean;
-                            AShaderProgram: GLuint
-                          );
+/// <summary>
+/// Отрисовывает набор точек TChartLineSeries в виде соединенных линий GL_LINE_STRIP.
+/// Если включен шейдер, передает параметры шкал (линейная/логарифм) в виде униформ-переменных.
+/// Для оптимизации серий с числом точек более 2000 использует компилируемые списки glGenLists.
+/// </summary>
+procedure RenderLineSeries(
+  ARenderer: TObject;
+  ASeries: TChartLineSeries;
+  const ARect: TChartPixelRect;
+  APage: TChartPage;
+  AYAxis: TChartAxis;
+  AUseShader: Boolean;
+  AShaderInitialized: Boolean;
+  AShaderProgram: GLuint
+);
 var
   lIndex: Integer;
   lPoint: TChartPoint;
@@ -91,6 +97,7 @@ begin
   lRendererObj.SetGLColor(ASeries.Color);
   glLineWidth(2.3);
 
+  // Использование шейдерного конвейера отрисовки (для поддержки логарифмических осей на GPU)
   if AUseShader and AShaderInitialized then
   begin
     if AYAxis.UseOwnX then
@@ -108,6 +115,7 @@ begin
 
     glUseProgram(AShaderProgram);
 
+    // Передаем границы шкал в шейдер
     lMinMax[0] := lXMin;
     lMinMax[1] := lXMax;
     lMinMax[2] := lYMin;
@@ -115,6 +123,7 @@ begin
     lMinMaxLoc := glGetUniformLocation(AShaderProgram, 'a_minmax');
     glUniform4fv(lMinMaxLoc, 1, @lMinMax[0]);
 
+    // Передаем флаги логарифмического масштабирования
     if AYAxis.UseOwnX then
     begin
       if AYAxis.XScale = casLog10 then lLg[0] := 1 else lLg[0] := 0;
@@ -128,12 +137,14 @@ begin
     lLgLoc := glGetUniformLocation(AShaderProgram, 'a_Lg');
     glUniform2iv(lLgLoc, 1, @lLg[0]);
 
+    // Трансформируем модельно-видовую матрицу в пиксельное пространство
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix;
     glTranslatef(ARect.Left, ARect.Bottom, 0);
     glScalef((ARect.Right - ARect.Left) / (lXMax - lXMin), (ARect.Top - ARect.Bottom) / (lYMax - lYMin), 1.0);
     glTranslatef(-lXMin, -lYMin, 0);
 
+    // Быстрая отрисовка через дисплейные списки OpenGL при большом числе точек
     if ASeries.PointCount > 2000 then
     begin
       if (ASeries.GLListID = 0) or (ASeries.GLListContextVersion <> gGLContextVersion) then
@@ -168,6 +179,7 @@ begin
   end
   else
   begin
+    // Классический медленный рендеринг на CPU с переводом координат в пиксели для каждой вершины
     glBegin(GL_LINE_STRIP);
     for lIndex := 0 to ASeries.PointCount - 1 do
     begin
@@ -180,6 +192,9 @@ begin
   end;
 end;
 
+/// <summary>
+/// Отрисовывает буферизированный тренд cBuffTrend1d (где X0 – начало отсчета, DX – шаг сетки).
+/// </summary>
 procedure RenderBuffTrend1d(
   ARenderer: TObject;
   ATrend: cBuffTrend1d;
@@ -210,6 +225,7 @@ begin
   lRendererObj.SetGLColor(ATrend.Color);
   glLineWidth(2.3);
 
+  // Использование шейдерного рендеринга
   if AUseShader and AShaderInitialized then
   begin
     if AYAxis.UseOwnX then
@@ -227,6 +243,7 @@ begin
 
     glUseProgram(AShaderProgram);
 
+    // Установка границ вьюпорта в шейдере
     lMinMax[0] := lXMin;
     lMinMax[1] := lXMax;
     lMinMax[2] := lYMin;
@@ -234,6 +251,7 @@ begin
     lMinMaxLoc := glGetUniformLocation(AShaderProgram, 'a_minmax');
     glUniform4fv(lMinMaxLoc, 1, @lMinMax[0]);
 
+    // Установка шкал логарифмирования в шейдере
     if AYAxis.UseOwnX then
     begin
       if AYAxis.XScale = casLog10 then lLg[0] := 1 else lLg[0] := 0;
@@ -247,6 +265,8 @@ begin
     lLgLoc := glGetUniformLocation(AShaderProgram, 'a_Lg');
     glUniform2iv(lLgLoc, 1, @lLg[0]);
 
+    // Передаем параметры шага линии: a_LinePar.x = X0, a_LinePar.y = DX.
+    // Шейдер сам вычислит X-координату вершины на основе ее индекса.
     lLinePar[0] := ATrend.X0;
     lLinePar[1] := ATrend.DX;
     lLineParLoc := glGetUniformLocation(AShaderProgram, 'a_LinePar');
@@ -258,6 +278,7 @@ begin
     glScalef((ARect.Right - ARect.Left) / (lXMax - lXMin), (ARect.Top - ARect.Bottom) / (lYMax - lYMin), 1.0);
     glTranslatef(-lXMin, -lYMin, 0);
 
+    // Рендеринг через списки дисплея
     if ATrend.Count > 2000 then
     begin
       if (ATrend.GLListID = 0) or (ATrend.GLListContextVersion <> gGLContextVersion) then
@@ -267,7 +288,9 @@ begin
         glBegin(GL_LINE_STRIP);
         for lIndex := 0 to ATrend.Count - 1 do
         begin
-          glVertex2f(ATrend.Values[lIndex], 0);
+          // Передаем Y-значение в качестве X, а в качестве Y передаем индекс вершины
+          // Шейдер восстановит реальную геометрию по формуле X0 + index * DX.
+          glVertex2f(ATrend.Values[lIndex], lIndex);
         end;
         glEnd;
         glEndList;
@@ -280,7 +303,7 @@ begin
       glBegin(GL_LINE_STRIP);
       for lIndex := 0 to ATrend.Count - 1 do
       begin
-        glVertex2f(ATrend.Values[lIndex], 0);
+        glVertex2f(ATrend.Values[lIndex], lIndex);
       end;
       glEnd;
     end;
@@ -290,6 +313,7 @@ begin
   end
   else
   begin
+    // Классическая CPU-отрисовка без шейдеров
     glBegin(GL_LINE_STRIP);
     for lIndex := 0 to ATrend.Count - 1 do
     begin
@@ -301,6 +325,10 @@ begin
   end;
 end;
 
+/// <summary>
+/// Отрисовывает маркеры контрольных точек Безье, зеленые касательные усы управления
+/// и соединяющие линии для редактируемого сплайна cTrend.
+/// </summary>
 procedure RenderTrendPoints(
   ARenderer: TObject;
   ATrend: cTrend;
