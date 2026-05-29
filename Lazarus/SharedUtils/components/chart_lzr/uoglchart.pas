@@ -10,6 +10,7 @@ uses
   uOglChartFrameListener, uOglChartBaseObj;
 
 type
+  TChartAfterRenderEvent = procedure(Sender: TObject; ARenderTimeMs: Double) of object;
   { TOglChart - LCL/OpenGL-хост компонента графика.
     Хранит модель и делегирует отрисовку renderer-слою. }
   TOglChart = class(TOpenGLControl, IOpenGLContextHost, IChartControl)
@@ -19,6 +20,7 @@ type
     fOpenGLRenderer: TOpenGLChartRenderer;
     fIsRendererInitialized: Boolean;
     fListeners: TList;
+    fOnAfterRender: TChartAfterRenderEvent;
 
     function GetModel: TChartModel;
     procedure SetModel(AValue: TChartModel);
@@ -55,6 +57,7 @@ type
     function GetHeight: Integer;
 
     property Model: TChartModel read GetModel write SetModel;
+    property OnAfterRender: TChartAfterRenderEvent read fOnAfterRender write fOnAfterRender;
     property ObjectManager: TChartObjectManager read fObjectManager;
     property Renderer: IChartRenderer read fRenderer write fRenderer;
     property SelectedObject: cBaseObj read GetSelectedObject write SetSelectedObject;
@@ -64,6 +67,26 @@ type
 procedure Register;
 
 implementation
+
+uses Windows;
+
+procedure LogToFile(const AMsg: string);
+var
+  F: TextFile;
+  lLogPath: string;
+begin
+  lLogPath := ExtractFilePath(ParamStr(0)) + 'chart_events.log';
+  AssignFile(F, lLogPath);
+  try
+    if FileExists(lLogPath) then
+      Append(F)
+    else
+      Rewrite(F);
+    WriteLn(F, FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now) + ': ' + AMsg);
+  finally
+    CloseFile(F);
+  end;
+end;
 
 { TOglChart }
 
@@ -205,6 +228,7 @@ var
   lHandled: Boolean;
   I: Integer;
 begin
+  LogToFile('TOglChart.KeyDown: Key=' + IntToStr(Key));
   inherited KeyDown(Key, Shift);
 
   lHandled := False;
@@ -249,6 +273,8 @@ end;
 procedure TOglChart.Paint;
 var
   I: Integer;
+  lStart, lEnd, lFreq: Int64;
+  lRenderTimeMs: Double;
 begin
   inherited MakeCurrent;
 
@@ -265,7 +291,23 @@ begin
     end;
 
     fRenderer.Resize(Width, Height);
+    
+    lFreq := 0;
+    lStart := 0;
+    lEnd := 0;
+    QueryPerformanceFrequency(lFreq);
+    QueryPerformanceCounter(lStart);
+    
     fRenderer.Render(Model);
+    
+    QueryPerformanceCounter(lEnd);
+    if lFreq > 0 then
+      lRenderTimeMs := (lEnd - lStart) * 1000.0 / lFreq
+    else
+      lRenderTimeMs := 0;
+      
+    if Assigned(fOnAfterRender) then
+      fOnAfterRender(Self, lRenderTimeMs);
   end;
 
   for I := 0 to fListeners.Count - 1 do

@@ -11,7 +11,7 @@ uses
 
 type
   { TChartFrameListener
-    Р‘Р°Р·РѕРІС‹Р№ РєР»Р°СЃСЃ СЃР»СѓС€Р°С‚РµР»СЏ СЃРѕР±С‹С‚РёР№ РєР°РґСЂР° Рё РјС‹С€Рё РґР»СЏ OglChart. }
+    Базовый класс слушателя событий кадра и мыши для OglChart. }
   TChartFrameListener = class(TObject)
   private
     fEnabled: Boolean;
@@ -34,16 +34,20 @@ type
   end;
 
   { TChartSelectListener
-    РЎР»СѓС€Р°С‚РµР»СЊ РґР»СЏ РІС‹РґРµР»РµРЅРёСЏ Рё РїРѕРґСЃРІРµС‚РєРё РѕР±СЉРµРєС‚РѕРІ РіСЂР°С„РёРєР° (СЃС‚СЂР°РЅРёС†, РѕСЃРµР№) РїСЂРё РЅР°РІРµРґРµРЅРёРё РјС‹С€Рё Рё РєР»РёРєР°С…. }
+    Слушатель для выделения и подсветки объектов графика (страниц, осей) при наведении мыши и кликах. }
   TChartSelectListener = class(TChartFrameListener)
   public
     constructor Create; override;
     procedure MouseDown(ASender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer; var Handled: Boolean); override;
     procedure MouseMove(ASender: TObject; Shift: TShiftState; X, Y: Integer; var Handled: Boolean); override;
+    procedure KeyPress(ASender: TObject; var Key: Char; var Handled: Boolean); override;
+    procedure KeyDown(ASender: TObject; var Key: Word; Shift: TShiftState; var Handled: Boolean); override;
   end;
 
+  TChartDragPart = (cdpPoint, cdpLeft, cdpRight);
+
   { TChartPanZoomListener
-    РЎР»СѓС€Р°С‚РµР»СЊ РґР»СЏ РїР°РЅРѕСЂР°РјРёСЂРѕРІР°РЅРёСЏ (РїРµСЂРµС‚Р°СЃРєРёРІР°РЅРёСЏ РїСЂР°РІРѕР№ РєРЅРѕРїРєРѕР№ РјС‹С€Рё) Рё РјР°СЃС€С‚Р°Р±РёСЂРѕРІР°РЅРёСЏ (РєРѕР»РµСЃРёРєРѕРј РјС‹С€Рё). }
+    Слушатель для панорамирования (перетаскивания правой кнопкой мыши) и масштабирования (колесиком мыши). }
   TChartPanZoomListener = class(TChartFrameListener)
   private
     fIsPanning: Boolean;
@@ -57,6 +61,10 @@ type
     fIsZoomSelecting: Boolean;
     fZoomStartX: Integer;
     fZoomStartY: Integer;
+    fDragTrend: cTrend;
+    fDragPointIdx: Integer;
+    fIsDraggingPoint: Boolean;
+    fDragPart: TChartDragPart;
   public
     constructor Create; override;
     property SnapSensitivity: Integer read fSnapSensitivity write fSnapSensitivity;
@@ -67,6 +75,24 @@ type
   end;
 
 implementation
+
+procedure LogToFile(const AMsg: string);
+var
+  F: TextFile;
+  lLogPath: string;
+begin
+  lLogPath := ExtractFilePath(ParamStr(0)) + 'chart_events.log';
+  AssignFile(F, lLogPath);
+  try
+    if FileExists(lLogPath) then
+      Append(F)
+    else
+      Rewrite(F);
+    WriteLn(F, FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now) + ': ' + AMsg);
+  finally
+    CloseFile(F);
+  end;
+end;
 
 { TChartFrameListener }
 
@@ -129,6 +155,16 @@ var
   lPage: TChartPage;
   lPageRect: TChartPixelRect;
   lIndex: Integer;
+  lSelectedAxis: TChartAxis;
+  lContentRect: TChartPixelRect;
+  lYAxis: TChartAxis;
+  lTrend, lTempTrend: cTrend;
+  lPoint: TChartPoint;
+  lX, lY: Single;
+  I, J, K, lIdx: Integer;
+  lTempAxis: TChartAxis;
+  lInnerIdx, lPointIdx: Integer;
+  lHasSelectedPoint: Boolean;
 begin
   if not Enabled then Exit;
 
@@ -137,19 +173,90 @@ begin
     lRenderer := TOpenGLChartRenderer(lControl.GetRenderer);
     if not Assigned(lRenderer) then Exit;
 
-    // 1. РџСЂРѕРІРµСЂСЏРµРј РїРѕРїР°РґР°РЅРёРµ РІ С‚РµРєСЃС‚РѕРІС‹Рµ РјРµС‚РєРё (РѕСЃРё, Р·РЅР°С‡РµРЅРёСЏ)
+    // 1. Проверяем попадание в текстовые метки (оси, значения)
     if lRenderer.GetTextHitAt(X, Y, lHit) then
     begin
-      if Assigned(lHit.Axis) then
+      if Assigned(lHit.Axis) and not lHit.Axis.Locked then
         lRenderer.SelectedObject := lHit.Axis
-      else if Assigned(lHit.Page) then
+      else if Assigned(lHit.Page) and not lHit.Page.Locked then
         lRenderer.SelectedObject := lHit.Page;
       lControl.Redraw;
-      // РќРµ РїРѕРјРµС‡Р°РµРј РєР°Рє Handled, С‡С‚РѕР±С‹ СЃСЂР°Р±РѕС‚Р°Р» СЃС‚Р°РЅРґР°СЂС‚РЅС‹Р№ С‚РµРєСЃС‚РѕРІС‹Р№ СЂРµРґР°РєС‚РѕСЂ СЂРµРЅРґРµСЂР°!
+      // Не помечаем как Handled, чтобы сработал стандартный текстовый редактор рендера!
       Exit;
     end;
 
-    // 2. РџСЂРѕРІРµСЂСЏРµРј РїРѕРїР°РґР°РЅРёРµ РІ СЃР°РјСѓ СЃС‚СЂР°РЅРёС†Сѓ
+    lModel := TChartModel(lControl.GetModel);
+    // 1.5. Проверяем попадание в вертикальную ось Y
+    if lRenderer.GetAxisHitAt(lModel, X, Y, lSelectedAxis) then
+    begin
+      lRenderer.SelectedObject := lSelectedAxis;
+      lControl.Redraw;
+      Handled := True;
+      Exit;
+    end;
+
+    // 1.8. Проверяем попадание в вершины тренда (cTrend)
+    if Assigned(lModel) then
+    begin
+      for lIndex := 0 to lModel.ChildCount - 1 do
+        if lModel.Children[lIndex] is TChartPage then
+        begin
+          lPage := TChartPage(lModel.Children[lIndex]);
+          if not lPage.Locked then
+          begin
+            lPageRect := lRenderer.GetPageRect(lPage);
+            if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
+               (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
+            begin
+              lContentRect := lRenderer.GetPageContentRect(lPage);
+              
+              for I := 0 to lPage.ChildCount - 1 do
+                if lPage.Children[I] is TChartAxis then
+                begin
+                  lYAxis := TChartAxis(lPage.Children[I]);
+                  for J := 0 to lYAxis.ChildCount - 1 do
+                    if lYAxis.Children[J] is cTrend then
+                    begin
+                      lTrend := cTrend(lYAxis.Children[J]);
+                      if lTrend.ShowPoints then
+                      begin
+                        for K := 0 to lTrend.BeziePointCount - 1 do
+                        begin
+                          lPoint := lTrend.BeziePoints[K].Point;
+                          lX := lRenderer.XValueToPixel(lPage, lYAxis, lPoint.X, lContentRect.Left, lContentRect.Right);
+                          lY := lRenderer.AxisValueToPixel(lYAxis, lPoint.Y, lContentRect.Bottom, lContentRect.Top);
+
+                          if (Abs(X - lX) <= 6) and (Abs(Y - lY) <= 6) then
+                          begin
+                            // Снимаем выделение со всех вершин всех трендов страницы
+                            for lIdx := 0 to lPage.ChildCount - 1 do
+                              if lPage.Children[lIdx] is TChartAxis then
+                              begin
+                                lTempAxis := TChartAxis(lPage.Children[lIdx]);
+                                for lInnerIdx := 0 to lTempAxis.ChildCount - 1 do
+                                  if lTempAxis.Children[lInnerIdx] is cTrend then
+                                  begin
+                                    lTempTrend := cTrend(lTempAxis.Children[lInnerIdx]);
+                                    for lPointIdx := 0 to lTempTrend.BeziePointCount - 1 do
+                                      lTempTrend.BeziePoints[lPointIdx].Selected := False;
+                                  end;
+                              end;
+                            lTrend.BeziePoints[K].Selected := True;
+                            lRenderer.SelectedObject := lTrend;
+                            lControl.Redraw;
+                            Handled := True;
+                            Exit;
+                          end;
+                        end;
+                      end;
+                    end;
+                end;
+            end;
+          end;
+        end;
+    end;
+
+    // 2. Проверяем попадание в саму страницу
     lModel := TChartModel(lControl.GetModel);
     if Assigned(lModel) then
     begin
@@ -157,23 +264,169 @@ begin
         if lModel.Children[lIndex] is TChartPage then
         begin
           lPage := TChartPage(lModel.Children[lIndex]);
-          lPageRect := lRenderer.GetPageRect(lPage);
-          if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
-             (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
+          if not lPage.Locked then
           begin
-            lRenderer.SelectedObject := lPage;
-            lControl.Redraw;
-            Handled := True;
-            Exit;
+            lPageRect := lRenderer.GetPageRect(lPage);
+            if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
+               (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
+            begin
+              // Если до этого был выделен тренд, сначала проверяем, есть ли выделенные вершины
+              if Assigned(lRenderer.SelectedObject) and (lRenderer.SelectedObject is cTrend) then
+              begin
+                lTrend := cTrend(lRenderer.SelectedObject);
+                lHasSelectedPoint := False;
+                for K := 0 to lTrend.BeziePointCount - 1 do
+                  if lTrend.BeziePoints[K].Selected then
+                  begin
+                    lHasSelectedPoint := True;
+                    Break;
+                  end;
+
+                if lHasSelectedPoint then
+                begin
+                  // Снимаем выделение со всех вершин тренда, но САМ тренд оставляем активным
+                  for K := 0 to lTrend.BeziePointCount - 1 do
+                    lTrend.BeziePoints[K].Selected := False;
+                  lControl.Redraw;
+                  Handled := True;
+                  Exit;
+                end;
+              end;
+
+              lRenderer.SelectedObject := lPage;
+              lControl.Redraw;
+              Handled := True;
+              Exit;
+            end;
           end;
         end;
     end;
 
-    // РЎРЅРёРјР°РµРј РІС‹РґРµР»РµРЅРёРµ, РµСЃР»Рё РєР»РёРєРЅСѓР»Рё РїРѕ РїСѓСЃС‚РѕРјСѓ РјРµСЃС‚Сѓ
+    // Снимаем выделение, если кликнули по пустому месту
     if Assigned(lRenderer.SelectedObject) then
     begin
       lRenderer.SelectedObject := nil;
       lControl.Redraw;
+    end;
+  end;
+end;
+
+procedure TChartSelectListener.KeyDown(ASender: TObject; var Key: Word; Shift: TShiftState; var Handled: Boolean);
+var
+  lControl: IChartControl;
+  lRenderer: TOpenGLChartRenderer;
+  lTrend: cTrend;
+  lAxis: TChartAxis;
+  lPage: TChartPage;
+  lContentRect: TChartPixelRect;
+  lXRange, lYRange: Double;
+  I, lNewIdx: Integer;
+  lMousePos: TPoint;
+  lMouseX, lMouseY: Integer;
+begin
+  if not Enabled then Exit;
+
+  LogToFile('SelectListener.KeyDown: Key=' + IntToStr(Key));
+
+  if (Key in [45, 46]) and Supports(ASender, IChartControl, lControl) then // 45 = VK_INSERT, 46 = VK_DELETE
+  begin
+    lRenderer := TOpenGLChartRenderer(lControl.GetRenderer);
+    if Assigned(lRenderer) then
+    begin
+      if Assigned(lRenderer.SelectedObject) then
+        LogToFile('  SelectedObject is ' + lRenderer.SelectedObject.ClassName + ' (Name: ' + lRenderer.SelectedObject.Name + ')')
+      else
+        LogToFile('  SelectedObject is nil');
+
+      if (lRenderer.SelectedObject is cTrend) then
+      begin
+        lTrend := cTrend(lRenderer.SelectedObject);
+        if Key = 46 then // VK_DELETE
+        begin
+          for I := 0 to lTrend.BeziePointCount - 1 do
+          begin
+            if lTrend.BeziePoints[I].Selected then
+            begin
+              LogToFile('  Deleting point ' + IntToStr(I));
+              lTrend.DeleteBeziePoint(I);
+              // Снимаем выделение со всех оставшихся вершин тренда
+              for lNewIdx := 0 to lTrend.BeziePointCount - 1 do
+                lTrend.BeziePoints[lNewIdx].Selected := False;
+              lControl.Redraw;
+              Handled := True;
+              Exit;
+            end;
+          end;
+        end
+        else if Key = 45 then // VK_INSERT
+        begin
+          if Assigned(lTrend.Parent) and (lTrend.Parent is TChartAxis) then
+          begin
+            lAxis := TChartAxis(lTrend.Parent);
+            if Assigned(lAxis.Parent) and (lAxis.Parent is TChartPage) then
+            begin
+              lPage := TChartPage(lAxis.Parent);
+              lContentRect := lRenderer.GetPageContentRect(lPage);
+              
+              lMousePos := TControl(ASender).ScreenToClient(Mouse.CursorPos);
+              lMouseX := lMousePos.X;
+              lMouseY := lMousePos.Y;
+
+              lXRange := lRenderer.PixelToXValue(lPage, nil, lMouseX, lContentRect.Left, lContentRect.Right);
+              lYRange := lRenderer.PixelToAxisValue(lAxis, lMouseY, lContentRect.Bottom, lContentRect.Top);
+
+              LogToFile('  Inserting point at values X=' + FloatToStr(lXRange) + ', Y=' + FloatToStr(lYRange));
+
+              lTrend.InsertBeziePoint(lXRange, lYRange, bptCorner);
+              lControl.Redraw;
+              Handled := True;
+              Exit;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TChartSelectListener.KeyPress(ASender: TObject; var Key: Char; var Handled: Boolean);
+var
+  lControl: IChartControl;
+  lRenderer: TOpenGLChartRenderer;
+  lTrend: cTrend;
+  I: Integer;
+begin
+  if not Enabled then Exit;
+
+  if (Key in ['1', '2', '3', 't', 'T']) and Supports(ASender, IChartControl, lControl) then
+  begin
+    lRenderer := TOpenGLChartRenderer(lControl.GetRenderer);
+    if Assigned(lRenderer) and Assigned(lRenderer.SelectedObject) and (lRenderer.SelectedObject is cTrend) then
+    begin
+      lTrend := cTrend(lRenderer.SelectedObject);
+      for I := 0 to lTrend.BeziePointCount - 1 do
+      begin
+        if lTrend.BeziePoints[I].Selected then
+        begin
+          case Key of
+            '1': lTrend.BeziePoints[I].PointType := bptCorner;
+            '2': lTrend.BeziePoints[I].PointType := bptSmooth;
+            '3': lTrend.BeziePoints[I].PointType := bptNull;
+            't', 'T': 
+              begin
+                case lTrend.BeziePoints[I].PointType of
+                  bptCorner: lTrend.BeziePoints[I].PointType := bptSmooth;
+                  bptSmooth: lTrend.BeziePoints[I].PointType := bptNull;
+                  bptNull: lTrend.BeziePoints[I].PointType := bptCorner;
+                end;
+              end;
+          end;
+          lTrend.GenerateSplinePoints;
+          lControl.Redraw;
+          Handled := True;
+          Exit;
+        end;
+      end;
     end;
   end;
 end;
@@ -198,16 +451,16 @@ begin
 
     lNewHover := nil;
 
-    // 1. РџСЂРѕРІРµСЂСЏРµРј РїРѕРїР°РґР°РЅРёРµ РІ С‚РµРєСЃС‚РѕРІС‹Рµ РјРµС‚РєРё
+    // 1. Проверяем попадание в текстовые метки
     if lRenderer.GetTextHitAt(X, Y, lHit) then
     begin
-      if Assigned(lHit.Axis) then
+      if Assigned(lHit.Axis) and not lHit.Axis.Locked then
         lNewHover := lHit.Axis
-      else if Assigned(lHit.Page) then
+      else if Assigned(lHit.Page) and not lHit.Page.Locked then
         lNewHover := lHit.Page;
     end;
 
-    // 2. Р•СЃР»Рё РјРµС‚РєР° РЅРµ РЅР°Р№РґРµРЅР°, РїСЂРѕРІРµСЂСЏРµРј СЃР°РјСѓ СЃС‚СЂР°РЅРёС†Сѓ
+    // 2. Если метка не найдена, проверяем саму страницу
     if not Assigned(lNewHover) then
     begin
       lModel := TChartModel(lControl.GetModel);
@@ -217,12 +470,15 @@ begin
           if lModel.Children[lIndex] is TChartPage then
           begin
             lPage := TChartPage(lModel.Children[lIndex]);
-            lPageRect := lRenderer.GetPageRect(lPage);
-            if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
-               (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
+            if not lPage.Locked then
             begin
-              lNewHover := lPage;
-              Break;
+              lPageRect := lRenderer.GetPageRect(lPage);
+              if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
+                 (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
+              begin
+                lNewHover := lPage;
+                Break;
+              end;
             end;
           end;
       end;
@@ -240,6 +496,7 @@ procedure FitPageZoom(APage: TChartPage);
 var
   lPageMinX, lPageMaxX: Double;
   lHasPageX: Boolean;
+  lSpan: Double;
 
   procedure ProcessObject(AObject: TChartBaseObject; ACurrentAxis: TChartAxis);
   var
@@ -250,6 +507,7 @@ var
     lAxisMinY, lAxisMaxY: Double;
     lAxisMinX, lAxisMaxX: Double;
     lHasAxisY, lHasAxisX: Boolean;
+    lSpan: Double;
   begin
     if not Assigned(AObject) then Exit;
 
@@ -320,6 +578,12 @@ var
         begin
           lAxisMinY := lAxisMinY - 1.0;
           lAxisMaxY := lAxisMaxY + 1.0;
+        end
+        else
+        begin
+          lSpan := lAxisMaxY - lAxisMinY;
+          lAxisMinY := lAxisMinY - lSpan * 0.1;
+          lAxisMaxY := lAxisMaxY + lSpan * 0.1;
         end;
         lAxis.MinValue := lAxisMinY;
         lAxis.MaxValue := lAxisMaxY;
@@ -331,6 +595,12 @@ var
         begin
           lAxisMinX := lAxisMinX - 1.0;
           lAxisMaxX := lAxisMaxX + 1.0;
+        end
+        else
+        begin
+          lSpan := lAxisMaxX - lAxisMinX;
+          lAxisMinX := lAxisMinX - lSpan * 0.1;
+          lAxisMaxX := lAxisMaxX + lSpan * 0.1;
         end;
         lAxis.XMinValue := lAxisMinX;
         lAxis.XMaxValue := lAxisMaxX;
@@ -358,6 +628,12 @@ begin
     begin
       lPageMinX := lPageMinX - 1.0;
       lPageMaxX := lPageMaxX + 1.0;
+    end
+    else
+    begin
+      lSpan := lPageMaxX - lPageMinX;
+      lPageMinX := lPageMinX - lSpan * 0.1;
+      lPageMaxX := lPageMaxX + lSpan * 0.1;
     end;
     APage.XMinValue := lPageMinX;
     APage.XMaxValue := lPageMaxX;
@@ -378,6 +654,10 @@ begin
   fIsZoomSelecting := False;
   fZoomStartX := 0;
   fZoomStartY := 0;
+  fIsDraggingPoint := False;
+  fDragTrend := nil;
+  fDragPointIdx := -1;
+  fDragPart := cdpPoint;
 end;
 
 procedure TChartPanZoomListener.MouseDown(ASender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer; var Handled: Boolean);
@@ -389,6 +669,14 @@ var
   lPageRect, lContentRect: TChartPixelRect;
   lIndex: Integer;
   lInnerIndex: Integer;
+  lYAxis: TChartAxis;
+  lTrend, lTempTrend: cTrend;
+  lPoint: TChartPoint;
+  lX, lY: Single;
+  lXLeft, lYLeft, lXRight, lYRight: Single;
+  J, K, lIdx, I: Integer;
+  lTempAxis: TChartAxis;
+  lInnerIdx, lPointIdx: Integer;
 begin
   if not Enabled then Exit;
 
@@ -400,48 +688,164 @@ begin
 
     if Button = mbLeft then
     begin
+      // 0.5. Проверяем попадание в вершины тренда для перетаскивания (mbLeft)
+      for lIndex := 0 to lModel.ChildCount - 1 do
+        if lModel.Children[lIndex] is TChartPage then
+        begin
+          lPage := TChartPage(lModel.Children[lIndex]);
+          if not lPage.Locked then
+          begin
+            lPageRect := lRenderer.GetPageRect(lPage);
+            if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
+               (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
+            begin
+              lContentRect := lRenderer.GetPageContentRect(lPage);
+              
+              for I := 0 to lPage.ChildCount - 1 do
+                if lPage.Children[I] is TChartAxis then
+                begin
+                  lYAxis := TChartAxis(lPage.Children[I]);
+                  for J := 0 to lYAxis.ChildCount - 1 do
+                    if lYAxis.Children[J] is cTrend then
+                    begin
+                      lTrend := cTrend(lYAxis.Children[J]);
+                      if lTrend.ShowPoints then
+                      begin
+                        for K := 0 to lTrend.BeziePointCount - 1 do
+                        begin
+                          lPoint := lTrend.BeziePoints[K].Point;
+                          lX := lRenderer.XValueToPixel(lPage, lYAxis, lPoint.X, lContentRect.Left, lContentRect.Right);
+                          lY := lRenderer.AxisValueToPixel(lYAxis, lPoint.Y, lContentRect.Bottom, lContentRect.Top);
+
+                          // Если вершина сглаженная и выделена, сначала проверяем её направляющие векторы (усы)
+                          if (lTrend.BeziePoints[K].PointType = bptSmooth) and lTrend.BeziePoints[K].Selected then
+                          begin
+                            lXLeft := lRenderer.XValueToPixel(lPage, lYAxis, lTrend.BeziePoints[K].Left.X, lContentRect.Left, lContentRect.Right);
+                            lYLeft := lRenderer.AxisValueToPixel(lYAxis, lTrend.BeziePoints[K].Left.Y, lContentRect.Bottom, lContentRect.Top);
+                            lXRight := lRenderer.XValueToPixel(lPage, lYAxis, lTrend.BeziePoints[K].Right.X, lContentRect.Left, lContentRect.Right);
+                            lYRight := lRenderer.AxisValueToPixel(lYAxis, lTrend.BeziePoints[K].Right.Y, lContentRect.Bottom, lContentRect.Top);
+
+                            if (Abs(X - lXLeft) <= 6) and (Abs(Y - lYLeft) <= 6) then
+                            begin
+                              fIsDraggingPoint := True;
+                              fDragTrend := lTrend;
+                              fDragPointIdx := K;
+                              fDragPart := cdpLeft;
+                              fActivePage := lPage;
+                              Handled := True;
+                              Exit;
+                            end;
+
+                            if (Abs(X - lXRight) <= 6) and (Abs(Y - lYRight) <= 6) then
+                            begin
+                              fIsDraggingPoint := True;
+                              fDragTrend := lTrend;
+                              fDragPointIdx := K;
+                              fDragPart := cdpRight;
+                              fActivePage := lPage;
+                              Handled := True;
+                              Exit;
+                            end;
+                          end;
+
+                          if (Abs(X - lX) <= 6) and (Abs(Y - lY) <= 6) then
+                          begin
+                            fIsDraggingPoint := True;
+                            fDragTrend := lTrend;
+                            fDragPointIdx := K;
+                            fDragPart := cdpPoint;
+                            fActivePage := lPage;
+
+                            // Снимаем выделение со всех вершин всех трендов страницы
+                            for lIdx := 0 to lPage.ChildCount - 1 do
+                              if lPage.Children[lIdx] is TChartAxis then
+                              begin
+                                lTempAxis := TChartAxis(lPage.Children[lIdx]);
+                                for lInnerIdx := 0 to lTempAxis.ChildCount - 1 do
+                                  if lTempAxis.Children[lInnerIdx] is cTrend then
+                                  begin
+                                    lTempTrend := cTrend(lTempAxis.Children[lInnerIdx]);
+                                    for lPointIdx := 0 to lTempTrend.BeziePointCount - 1 do
+                                      lTempTrend.BeziePoints[lPointIdx].Selected := False;
+                                  end;
+                              end;
+                            lTrend.BeziePoints[K].Selected := True;
+                            lRenderer.SelectedObject := lTrend;
+                            lControl.Redraw;
+                            Handled := True;
+                            Exit;
+                          end;
+                        end;
+                      end;
+                    end;
+                end;
+            end;
+          end;
+        end;
+
       // 1. Изменение размеров выделенной страницы
       if (fResizingBorder > 0) and Assigned(lRenderer.SelectedObject) and (lRenderer.SelectedObject is TChartPage) then
       begin
-        fIsResizing := True;
-        fActivePage := TChartPage(lRenderer.SelectedObject);
+        lPage := TChartPage(lRenderer.SelectedObject);
+        if not lPage.Locked then
+        begin
+          fIsResizing := True;
+          fActivePage := lPage;
 
-        for lInnerIndex := 0 to lModel.ChildCount - 1 do
-          if lModel.Children[lInnerIndex] is TChartPage then
-            TChartPage(lModel.Children[lInnerIndex]).Align := cpaNone;
+          for lInnerIndex := 0 to lModel.ChildCount - 1 do
+            if lModel.Children[lInnerIndex] is TChartPage then
+              TChartPage(lModel.Children[lInnerIndex]).Align := cpaNone;
 
-        fLastX := X;
-        fLastY := Y;
-        Handled := True;
-        Exit;
+          fLastX := X;
+          fLastY := Y;
+          Handled := True;
+          Exit;
+        end;
       end;
 
-      // 2. Если зажат Ctrl, проверяем клик: внутри plot area (зум) или снаружи (перетаскивание страницы)
+      // 2. Если зажат Ctrl, то это режим зума по рамке (только внутри plot area)
       if ssCtrl in Shift then
       begin
         for lIndex := 0 to lModel.ChildCount - 1 do
           if lModel.Children[lIndex] is TChartPage then
           begin
             lPage := TChartPage(lModel.Children[lIndex]);
-            lPageRect := lRenderer.GetPageRect(lPage);
-            if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
-               (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
+            if not lPage.Locked then
             begin
-              lContentRect := lRenderer.GetPageContentRect(lPage);
-              if (X >= lContentRect.Left) and (X <= lContentRect.Right) and
-                 (Y >= lContentRect.Top) and (Y <= lContentRect.Bottom) then
+              lPageRect := lRenderer.GetPageRect(lPage);
+              if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
+                 (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
               begin
-                // Клик внутри области построения - начинаем выделение зума
-                fIsZoomSelecting := True;
-                fZoomStartX := X;
-                fZoomStartY := Y;
-                fActivePage := lPage;
-                Handled := True;
-                Exit;
-              end
-              else
+                lContentRect := lRenderer.GetPageContentRect(lPage);
+                if (X >= lContentRect.Left) and (X <= lContentRect.Right) and
+                   (Y >= lContentRect.Top) and (Y <= lContentRect.Bottom) then
+                begin
+                  // Клик внутри области построения - начинаем выделение зума
+                  fIsZoomSelecting := True;
+                  fZoomStartX := X;
+                  fZoomStartY := Y;
+                  fActivePage := lPage;
+                  Handled := True;
+                  Exit;
+                end;
+              end;
+            end;
+          end;
+      end;
+
+      // 3. Если зажат Shift, то это режим перемещения страницы
+      if ssShift in Shift then
+      begin
+        for lIndex := 0 to lModel.ChildCount - 1 do
+          if lModel.Children[lIndex] is TChartPage then
+          begin
+            lPage := TChartPage(lModel.Children[lIndex]);
+            if not lPage.Locked then
+            begin
+              lPageRect := lRenderer.GetPageRect(lPage);
+              if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
+                 (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
               begin
-                // Клик вне области построения - перемещаем страницу
                 fMovingPage := True;
                 fActivePage := lPage;
 
@@ -466,16 +870,19 @@ begin
         if lModel.Children[lIndex] is TChartPage then
         begin
           lPage := TChartPage(lModel.Children[lIndex]);
-          lPageRect := lRenderer.GetPageRect(lPage);
-          if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
-             (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
+          if not lPage.Locked then
           begin
-            fIsPanning := True;
-            fLastX := X;
-            fLastY := Y;
-            fActivePage := lPage;
-            Handled := True;
-            Exit;
+            lPageRect := lRenderer.GetPageRect(lPage);
+            if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
+               (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
+            begin
+              fIsPanning := True;
+              fLastX := X;
+              fLastY := Y;
+              fActivePage := lPage;
+              Handled := True;
+              Exit;
+            end;
           end;
         end;
     end;
@@ -578,6 +985,45 @@ begin
 
     lWidth := Max(1.0, TControl(ASender).Width);
     lHeight := Max(1.0, TControl(ASender).Height);
+
+    // 0.2. Состояние перетаскивания вершины тренда
+    if fIsDraggingPoint and Assigned(fDragTrend) and Assigned(fActivePage) then
+    begin
+      lContentRect := lRenderer.GetPageContentRect(fActivePage);
+      lAxis := nil;
+      if Assigned(fDragTrend.Parent) and (fDragTrend.Parent is TChartAxis) then
+        lAxis := TChartAxis(fDragTrend.Parent);
+      if not Assigned(lAxis) then
+      begin
+        for lIndex := 0 to fActivePage.ChildCount - 1 do
+          if fActivePage.Children[lIndex] is TChartAxis then
+          begin
+            lAxis := TChartAxis(fActivePage.Children[lIndex]);
+            Break;
+          end;
+      end;
+
+      if Assigned(lAxis) then
+      begin
+        lXRange := lRenderer.PixelToXValue(fActivePage, nil, X, lContentRect.Left, lContentRect.Right);
+        lYRange := lRenderer.PixelToAxisValue(lAxis, Y, lContentRect.Bottom, lContentRect.Top);
+
+        if lXRange < fActivePage.XMinValue then lXRange := fActivePage.XMinValue;
+        if lXRange > fActivePage.XMaxValue then lXRange := fActivePage.XMaxValue;
+
+        if lYRange < lAxis.MinValue then lYRange := lAxis.MinValue;
+        if lYRange > lAxis.MaxValue then lYRange := lAxis.MaxValue;
+
+        case fDragPart of
+          cdpPoint: fDragTrend.UpdateBeziePoint(fDragPointIdx, lXRange, lYRange);
+          cdpLeft: fDragTrend.UpdateBezieLeft(fDragPointIdx, lXRange, lYRange);
+          cdpRight: fDragTrend.UpdateBezieRight(fDragPointIdx, lXRange, lYRange);
+        end;
+        lControl.Redraw;
+        Handled := True;
+        Exit;
+      end;
+    end;
 
     // 0. Состояние выделения области зумирования (Ctrl + Drag)
     if fIsZoomSelecting and Assigned(fActivePage) then
@@ -745,10 +1191,11 @@ begin
         TControl(ASender).Cursor := crSizeWE
       else if fResizingBorder in [3, 4] then
         TControl(ASender).Cursor := crSizeNS
-      else if ssCtrl in Shift then
+      else if ssShift in Shift then
       begin
-        // Если курсор внутри выделенной страницы с зажатым Ctrl
-        if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
+        // Если курсор внутри выделенной страницы с зажатым Shift
+        if not TChartPage(lRenderer.SelectedObject).Locked and
+           (X >= lPageRect.Left) and (X <= lPageRect.Right) and
            (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
           TControl(ASender).Cursor := crSizeAll
         else
@@ -759,22 +1206,25 @@ begin
     end
     else
     begin
-      // Если выделенной страницы нет, но зажат Ctrl, меняем курсор над любой страницей
+      // Если выделенной страницы нет, но зажат Shift, меняем курсор над любой незаблокированной страницей
       lPage := nil;
       for lIndex := 0 to lModel.ChildCount - 1 do
         if lModel.Children[lIndex] is TChartPage then
         begin
           lTempPage := TChartPage(lModel.Children[lIndex]);
-          lPageRect := lRenderer.GetPageRect(lTempPage);
-          if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
-             (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
+          if not lTempPage.Locked then
           begin
-            lPage := lTempPage;
-            Break;
+            lPageRect := lRenderer.GetPageRect(lTempPage);
+            if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
+               (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
+            begin
+              lPage := lTempPage;
+              Break;
+            end;
           end;
         end;
 
-      if Assigned(lPage) and (ssCtrl in Shift) then
+      if Assigned(lPage) and (ssShift in Shift) then
         TControl(ASender).Cursor := crSizeAll
       else
         TControl(ASender).Cursor := crDefault;
@@ -867,6 +1317,15 @@ begin
 
     if Button = mbLeft then
     begin
+      if fIsDraggingPoint then
+      begin
+        fIsDraggingPoint := False;
+        fDragTrend := nil;
+        fDragPointIdx := -1;
+        fActivePage := nil;
+        Handled := True;
+      end;
+
       if fIsResizing or fMovingPage then
       begin
         fIsResizing := False;
@@ -912,7 +1371,7 @@ begin
     lModel := TChartModel(lControl.GetModel);
     if not Assigned(lRenderer) or not Assigned(lModel) then Exit;
 
-    // РќР°С…РѕРґРёРј СЃС‚СЂР°РЅРёС†Сѓ РїРѕРґ РјС‹С€РєРѕР№ РґР»СЏ РјР°СЃС€С‚Р°Р±РёСЂРѕРІР°РЅРёСЏ
+    // Находим страницу под мышкой для масштабирования
     lPage := nil;
     for lIndex := 0 to lModel.ChildCount - 1 do
       if lModel.Children[lIndex] is TChartPage then
@@ -926,7 +1385,7 @@ begin
         end;
       end;
 
-    if Assigned(lPage) then
+    if Assigned(lPage) and not lPage.Locked then
     begin
       lContentRect := lRenderer.GetPageContentRect(lPage);
       if WheelDelta < 0 then
@@ -934,12 +1393,12 @@ begin
       else
         lZoomFactor := 1.0 / 1.1;
 
-      // РњР°СЃС€С‚Р°Р±РёСЂРѕРІР°РЅРёРµ РїРѕ РѕСЃРё X РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РєСѓСЂСЃРѕСЂР° РјС‹С€Рё
+      // Масштабирование по оси X относительно курсора мыши
       lMouseValX := lRenderer.PixelToXValue(lPage, nil, X, lContentRect.Left, lContentRect.Right);
       lPage.XMinValue := lMouseValX - (lMouseValX - lPage.XMinValue) * lZoomFactor;
       lPage.XMaxValue := lMouseValX + (lPage.XMaxValue - lMouseValX) * lZoomFactor;
 
-      // РњР°СЃС€С‚Р°Р±РёСЂРѕРІР°РЅРёРµ РїРѕ РѕСЃСЏРј Y РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РєСѓСЂСЃРѕСЂР° РјС‹С€Рё
+      // Масштабирование по осям Y относительно курсора мыши
       for lIndex := 0 to lPage.ChildCount - 1 do
         if lPage.Children[lIndex] is TChartAxis then
         begin
