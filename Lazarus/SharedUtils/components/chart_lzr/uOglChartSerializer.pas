@@ -12,7 +12,7 @@ interface
 
 uses
   Classes, SysUtils, fpjson, jsonparser, uOglChartTypes, uOglChartBaseObj,
-  uOglChartLog, uOglChartPage, uOglChartAxis, uOglChartTrend, uOglChartTextLabel;
+  uOglChartLog, uOglChartPage, uOglChartAxis, uOglChartTrend, uOglChartTextLabel, uOglChartCursor;
 
 type
   { TJsonChartSerializer }
@@ -201,7 +201,9 @@ begin
         else if SameText(lTypeStr, 'TChartTextLabel') then
           lChild := TChartTextLabel.Create
         else if SameText(lTypeStr, 'TChartFlagLabel') then
-          lChild := TChartFlagLabel.Create;
+          lChild := TChartFlagLabel.Create
+        else if SameText(lTypeStr, 'TChartCursor') then
+          lChild := TChartCursor.Create;
       end;
       
       if not Assigned(lChild) then

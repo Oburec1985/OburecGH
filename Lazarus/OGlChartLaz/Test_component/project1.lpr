@@ -13,7 +13,8 @@ uses
   SysUtils, Forms, uOglChartLineHelper, uOglChartFrameListener,
   uOglChartLabelEditListener, uOglChartPageGeometryListener,
   uOglChartPanZoomListener, uOglChartSelectListener,
-  uOglChartVertexEditListener, Unit1;
+  uOglChartVertexEditListener, Unit1, uOglChartCursorTest, uOglChartCursor,
+  uOglChartCursorListener;
 
 {$R *.res}
 
@@ -26,6 +27,7 @@ begin
   CloseFile(lLogFile);
 
   try
+    RunCursorTests;
     RequireDerivedFormResource:=True;
     Application.Scaled:=True;
     {$PUSH}{$WARN 5044 OFF}

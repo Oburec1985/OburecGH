@@ -10,7 +10,10 @@ uses
   athreads,
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  SysUtils, Forms, uOglChartLineHelper, uOglChartFrameListener, Unit1;
+  SysUtils, Forms, uOglChartLineHelper, uOglChartFrameListener,
+  uOglChartLabelEditListener, uOglChartPageGeometryListener,
+  uOglChartPanZoomListener, uOglChartSelectListener,
+  uOglChartVertexEditListener, Unit1, uOglChartCursorTest;
 
 {$R *.res}
 
@@ -23,6 +26,7 @@ begin
   CloseFile(lLogFile);
 
   try
+    RunCursorTests;
     RequireDerivedFormResource:=True;
     Application.Scaled:=True;
     {$PUSH}{$WARN 5044 OFF}

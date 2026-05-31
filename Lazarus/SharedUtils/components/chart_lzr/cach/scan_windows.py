@@ -1,17 +1,17 @@
-# -*- coding: utf-8 -*-
+import subprocess
+import time
 import win32gui
-import win32process
-import psutil
 
-def callback(hwnd, extra):
-    title = win32gui.GetWindowText(hwnd)
-    if title:
-        try:
-            _, pid = win32process.GetWindowThreadProcessId(hwnd)
-            name = psutil.Process(pid).name()
-            if "Form1" in title or "project1" in title or "python" in name.lower():
-                print(f"HWND: {hwnd} | Title: '{title}' | PID: {pid} | Process: {name}")
-        except Exception:
-            pass
+proc = subprocess.Popen([r"C:\Oburec\OburecGH\Lazarus\OGlChartLaz\Test_component\project1_test.exe"])
+time.sleep(3.0)
 
-win32gui.EnumWindows(callback, None)
+def enum_win(h, _):
+    if win32gui.IsWindowVisible(h):
+        title = win32gui.GetWindowText(h)
+        cls = win32gui.GetClassName(h)
+        if title:
+            print(f"HWND: {h}, Class: '{cls}', Text: '{title}'")
+
+win32gui.EnumWindows(enum_win, None)
+proc.terminate()
+print("Scan finished.")

@@ -34,15 +34,10 @@ type
     /// </summary>
 
     constructor Create; override;
-
     procedure MouseDown(ASender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer; var Handled: Boolean); override;
-
     procedure MouseMove(ASender: TObject; Shift: TShiftState; X, Y: Integer; var Handled: Boolean); override;
-
     procedure MouseUp(ASender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer; var Handled: Boolean); override;
-
     procedure KeyDown(ASender: TObject; var Key: Word; Shift: TShiftState; var Handled: Boolean); override;
-
     procedure KeyPress(ASender: TObject; var Key: Char; var Handled: Boolean); override;
   end;
 

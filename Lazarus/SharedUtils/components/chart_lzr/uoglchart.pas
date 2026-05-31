@@ -12,7 +12,7 @@ uses
   OpenGLContext, uOglChartTypes, uOglChartChart, uOglChartMng, uOglChartRenderer,
   uOglChartFrameListener, uOglChartSelectListener, uOglChartPanZoomListener,
   uOglChartPageGeometryListener, uOglChartVertexEditListener,
-  uOglChartLabelEditListener, uOglChartBaseObj;
+  uOglChartLabelEditListener, uOglChartBaseObj, uOglChartCursorListener;
 
 type
   TChartAfterRenderEvent = procedure(Sender: TObject; ARenderTimeMs: Double) of object;
@@ -144,6 +144,7 @@ begin
   fObjectManager := TChartObjectManager.Create;
   fObjectManager.Root.BackgroundColor := $FFFFFFFF;
   fListeners := TList.Create;
+  AddFrameListener(TChartCursorListener.Create);
   // Добавление стандартных слушателей перетаскивания (Pan/Zoom) и выделения элементов
   AddFrameListener(TChartPanZoomListener.Create);
     AddFrameListener(TChartPageGeometryListener.Create);

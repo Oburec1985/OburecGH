@@ -151,6 +151,14 @@
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartVertexEditListener.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartCursor.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartCursorListener.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
