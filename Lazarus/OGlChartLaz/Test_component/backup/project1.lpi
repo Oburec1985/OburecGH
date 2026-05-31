@@ -61,7 +61,7 @@
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\lzrobrpack.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="lzrObrPack"/>
+        <UnitName Value="LzrObrPack"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartControl.pas"/>
@@ -129,6 +129,26 @@
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartSelectListener.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartLabelEditListener.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartPageGeometryListener.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartPanZoomListener.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartVertexEditListener.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
     </Units>

@@ -77,6 +77,30 @@
         <Filename Value="uOglChartTypes.pas"/>
         <UnitName Value="uOglChartTypes"/>
       </Item>
+      <Item>
+        <Filename Value="uOglChartFrameListener.pas"/>
+        <UnitName Value="uOglChartFrameListener"/>
+      </Item>
+      <Item>
+        <Filename Value="uOglChartSelectListener.pas"/>
+        <UnitName Value="uOglChartSelectListener"/>
+      </Item>
+      <Item>
+        <Filename Value="uOglChartPanZoomListener.pas"/>
+        <UnitName Value="uOglChartPanZoomListener"/>
+      </Item>
+      <Item>
+        <Filename Value="uOglChartPageGeometryListener.pas"/>
+        <UnitName Value="uOglChartPageGeometryListener"/>
+      </Item>
+      <Item>
+        <Filename Value="uOglChartVertexEditListener.pas"/>
+        <UnitName Value="uOglChartVertexEditListener"/>
+      </Item>
+      <Item>
+        <Filename Value="uOglChartLabelEditListener.pas"/>
+        <UnitName Value="uOglChartLabelEditListener"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

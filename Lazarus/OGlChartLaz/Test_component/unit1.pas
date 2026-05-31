@@ -483,6 +483,30 @@ begin
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
+  function FindNodeByName(AObject: TChartBaseObject; const AName: string): TChartBaseObject;
+  var
+    lIndex: Integer;
+    lRes: TChartBaseObject;
+  begin
+    Result := nil;
+    if not Assigned(AObject) then Exit;
+    if AObject.Name = AName then
+    begin
+      Result := AObject;
+      Exit;
+    end;
+    for lIndex := 0 to AObject.ChildCount - 1 do
+    begin
+      lRes := FindNodeByName(AObject.Children[lIndex], AName);
+      if Assigned(lRes) then
+      begin
+        Result := lRes;
+        Exit;
+      end;
+    end;
+  end;
+var
+  lFound: TChartBaseObject;
 begin
   CreateTestChart(OglChart1);
   OglChart1.OnMouseMove := @OglChart1MouseMove;
@@ -495,6 +519,14 @@ begin
   TreeView1.Font.Size := 10;
   btnRefreshTree.Visible := True;
   BuildChartTree;
+
+  // Always select PerfAxis1DAxisY on startup for testing zoom isolation
+  lFound := FindNodeByName(OglChart1.Model, 'PerfAxis1DAxisY');
+  if Assigned(lFound) then
+  begin
+    OglChart1.SelectedObject := lFound;
+    UpdateStatusBar;
+  end;
 end;
 
 procedure TForm1.Button1Click(Sender: TObject);
