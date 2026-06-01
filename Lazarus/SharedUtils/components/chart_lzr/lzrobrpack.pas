@@ -11,7 +11,10 @@ uses
   uOglChart, uOglChartBaseObj, uOglChartDrawObj, uOglChartPage, uOglChartAxis, 
   uOglChartTrend, uOglChartTextLabel, uOglChartTextLabelTests, uOglChartChart, 
   uOglChartMng, uOglChartModel, uOglChartRenderer, uOglChartFontMng, 
-  uOglChartLog, uOglChartSerializer, uOglChartTypes, LazarusPackageIntf;
+  uOglChartLog, uOglChartSerializer, uOglChartTypes, uOglChartFrameListener, 
+  uOglChartSelectListener, uOglChartPanZoomListener, 
+  uOglChartPageGeometryListener, uOglChartVertexEditListener, 
+  uOglChartLabelEditListener, LazarusPackageIntf;
 
 implementation
 

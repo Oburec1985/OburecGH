@@ -290,6 +290,10 @@ type
     }
     function TrySetActivePageById(const AId: string): Boolean;
 
+    { Удаляет все страницы и сбрасывает активную страницу.
+      Используется при загрузке GUI-модели проекта из файлового пакета. }
+    procedure Clear;
+
     property ActivePage: TRecorderFormPage read fActivePage;
     property PageCount: Integer read GetPageCount;
     property Pages[AIndex: Integer]: TRecorderFormPage read GetPage;
@@ -751,6 +755,16 @@ begin
   Result := lPage <> nil;
   if Result then
     fActivePage := lPage;
+end;
+
+procedure TRecorderFormManager.Clear;
+var
+  I: Integer;
+begin
+  for I := 0 to fPages.Count - 1 do
+    TObject(fPages[I]).Free;
+  fPages.Clear;
+  fActivePage := nil;
 end;
 
 { TRecorderComponentFactory }

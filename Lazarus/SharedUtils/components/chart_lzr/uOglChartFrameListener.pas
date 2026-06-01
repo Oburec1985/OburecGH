@@ -1,8 +1,11 @@
 unit uOglChartFrameListener;
-{$mode objfpc}{$H+}
+
+{ objfpc}{+}
+
 interface
+
 uses
-  Classes, SysUtils, Controls;
+  Classes, SysUtils, Controls, LCLType;
 
 type
   /// <summary>
@@ -13,61 +16,20 @@ type
   private
     fEnabled: Boolean;
   public
-    /// <summary>
-    /// Конструктор по умолчанию. Активирует слушатель событий.
-    /// </summary>
-
     constructor Create; virtual;
-    /// <summary>
-    /// Деструктор. Освобождает занятые ресурсы.
-    /// </summary>
-
     destructor Destroy; override;
-    /// <summary>
-    /// Вызывается перед началом отрисовки очередного кадра графика.
-    /// </summary>
-    /// <param name="ASender">Экземпляр TOglChart, инициировавший событие.</param>
 
     procedure FrameStarted(ASender: TObject); virtual;
-    /// <summary>
-    /// Вызывается сразу после завершения отрисовки кадра.
-    /// </summary>
-    /// <param name="ASender">Экземпляр TOglChart, инициировавший событие.</param>
-
     procedure FrameEnded(ASender: TObject); virtual;
-    /// <summary>
-    /// Обработчик нажатия кнопки мыши.
-    /// </summary>
 
     procedure MouseDown(ASender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer; var Handled: Boolean); virtual;
-    /// <summary>
-    /// Обработчик перемещения мыши.
-    /// </summary>
-
     procedure MouseMove(ASender: TObject; Shift: TShiftState; X, Y: Integer; var Handled: Boolean); virtual;
-    /// <summary>
-    /// Обработчик отпускания кнопки мыши.
-    /// </summary>
-
     procedure MouseUp(ASender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer; var Handled: Boolean); virtual;
-    /// <summary>
-    /// Обработчик прокрутки колесика мыши.
-    /// </summary>
-
     procedure MouseWheel(ASender: TObject; Shift: TShiftState; WheelDelta: Integer; X, Y: Integer; var Handled: Boolean); virtual;
-    /// <summary>
-    /// Обработчик нажатия клавиши клавиатуры (системные коды клавиш).
-    /// </summary>
 
     procedure KeyDown(ASender: TObject; var Key: Word; Shift: TShiftState; var Handled: Boolean); virtual;
-    /// <summary>
-    /// Обработчик ввода символа с клавиатуры.
-    /// </summary>
-
     procedure KeyPress(ASender: TObject; var Key: Char; var Handled: Boolean); virtual;
-    /// <summary>
-    /// Определяет, активен ли данный слушатель событий.
-    /// </summary>
+
     property Enabled: Boolean read fEnabled write fEnabled;
   end;
 
@@ -76,7 +38,6 @@ procedure LogToFile(const AMsg: string);
 implementation
 
 procedure LogToFile(const AMsg: string);
-
 var
   F: TextFile;
   lLogPath: string;
@@ -92,7 +53,6 @@ begin
   finally
     CloseFile(F);
   end;
-
 end;
 
 { TChartFrameListener }
@@ -141,4 +101,3 @@ begin
 end;
 
 end.
-

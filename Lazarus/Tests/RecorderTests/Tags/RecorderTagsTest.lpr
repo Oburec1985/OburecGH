@@ -131,6 +131,77 @@ begin
   end;
 end;
 
+procedure TestTagBlockEstimates;
+var
+  lBus: TRecorderEventBus;
+  lProbe: TTagEventProbe;
+  lRegistry: TRecorderTagRegistry;
+  lTag: TRecorderTag;
+  lBlock: TRecorderSignalSnapshot;
+  lEstimate: TRecorderTagEstimate;
+  lTimes: array[0..2] of Double;
+  lValues: array[0..2] of Double;
+begin
+  Writeln('--- Recorder tag block estimates test ---');
+
+  lBus := TRecorderEventBus.Create;
+  lProbe := TTagEventProbe.Create;
+  lRegistry := TRecorderTagRegistry.Create(lBus);
+  try
+    lBus.Subscribe(@lProbe.HandleEvent);
+    lTag := lRegistry.CreateTag('BlockTag', 8);
+
+    lTimes[0] := 10.0;
+    lTimes[1] := 10.1;
+    lTimes[2] := 10.2;
+    lValues[0] := 1.0;
+    lValues[1] := 2.0;
+    lValues[2] := 4.0;
+
+    lRegistry.PublishBlock('BlockTag', lTimes, lValues, 3);
+
+    lBlock := lTag.LastBlockSnapshot;
+    PrintSnapshot('SNAPSHOT BlockTag last block', lBlock);
+
+    AssertEquals(lProbe.Count, 1, 'block publishes one event');
+    AssertEquals(lBlock.Count, 3, 'last block count');
+    AssertEquals(lBlock.Times[0], 10.0, 'last block first time');
+    AssertEquals(lBlock.Values[2], 4.0, 'last block last value');
+
+    lEstimate := lTag.Estimate(tekMean);
+    AssertTrue(lEstimate.Valid, 'mean estimate valid');
+    AssertEquals(lEstimate.Value, 7.0 / 3.0, 'mean estimate');
+    lEstimate := lTag.Estimate(tekRmsValue);
+    AssertEquals(lEstimate.Value, Sqrt(7.0), 'rms value estimate');
+    lEstimate := lTag.Estimate(tekRmsDeviation);
+    AssertEquals(lEstimate.Value, Sqrt(7.0 / 3.0), 'rms deviation estimate');
+    lEstimate := lTag.Estimate(tekPeak);
+    AssertEquals(lEstimate.Value, 1.5, 'peak estimate');
+    lEstimate := lTag.Estimate(tekPeakToPeak);
+    AssertEquals(lEstimate.Value, 3.0, 'peak-to-peak estimate');
+    lEstimate := lTag.Estimate(tekMinimum);
+    AssertEquals(lEstimate.Value, 1.0, 'minimum estimate');
+    lEstimate := lTag.Estimate(tekMaximum);
+    AssertEquals(lEstimate.Value, 4.0, 'maximum estimate');
+    lEstimate := lTag.Estimate(tekPeakToPeakByRmsDeviation);
+    AssertEquals(lEstimate.Value, 2.0 * Sqrt(2.0) * Sqrt(7.0 / 3.0),
+      'p2p by rmsd estimate');
+
+    lRegistry.PublishValue('BlockTag', 11.0, 9.0);
+    lBlock := lTag.LastBlockSnapshot;
+    AssertEquals(lBlock.Count, 1, 'single value updates last block');
+    lEstimate := lTag.Estimate(tekMean);
+    AssertEquals(lEstimate.Value, 9.0, 'single value estimate');
+
+    Writeln('RESULT tag block estimates test passed.');
+  finally
+    lRegistry.Free;
+    lProbe.Free;
+    lBus.Free;
+  end;
+end;
+
 begin
   TestTagRegistryAndSignalBuffer;
+  TestTagBlockEstimates;
 end.

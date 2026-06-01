@@ -304,6 +304,203 @@ begin
   end;
 end;
 
+procedure WriteDouble(AStream: TStream; AValue: Double);
+begin
+  AStream.WriteBuffer(AValue, SizeOf(AValue));
+end;
+
+procedure TestMeraFileDataSource;
+var
+  lBus: TRecorderEventBus;
+  lDataFileName: string;
+  lDir: string;
+  lIni: TStringList;
+  lMeraFileName: string;
+  lProbe: TDataSourceEventProbe;
+  lRegistry: TRecorderTagRegistry;
+  lSelected: TStringList;
+  lSnapshot: TRecorderSignalSnapshot;
+  lSource: TRecorderMeraFileDataSource;
+  lStream: TFileStream;
+  lTag: TRecorderTag;
+begin
+  LogLine('--- Recorder MERA file data source test ---');
+
+  lDir := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + 'mera_test';
+  ForceDirectories(lDir);
+  lMeraFileName := IncludeTrailingPathDelimiter(lDir) + 'sample.mera';
+  lDataFileName := IncludeTrailingPathDelimiter(lDir) + 'SignalA.dat';
+
+  lIni := TStringList.Create;
+  try
+    lIni.Add('[MERA]');
+    lIni.Add('');
+    lIni.Add('[SignalA]');
+    lIni.Add('Address=A1');
+    lIni.Add('YFormat=R8');
+    lIni.Add('YUnits=mm');
+    lIni.Add('Freq=2');
+    lIni.Add('Start=1');
+    lIni.SaveToFile(lMeraFileName);
+  finally
+    lIni.Free;
+  end;
+
+  lStream := TFileStream.Create(lDataFileName, fmCreate);
+  try
+    WriteDouble(lStream, 10.0);
+    WriteDouble(lStream, 20.0);
+    WriteDouble(lStream, 30.0);
+  finally
+    lStream.Free;
+  end;
+
+  lBus := TRecorderEventBus.Create;
+  lProbe := TDataSourceEventProbe.Create;
+  lRegistry := TRecorderTagRegistry.Create(lBus);
+  lSelected := TStringList.Create;
+  lSource := nil;
+  try
+    lBus.Subscribe(@lProbe.HandleEvent);
+    lSelected.Add('Mera.SignalA');
+    lSource := TRecorderMeraFileDataSource.Create('mera.test', lMeraFileName,
+      10, lSelected);
+    lSource.ConfigureTags(lRegistry);
+    lTag := lRegistry.FindByName('Mera.SignalA');
+    AssertTrue(lTag <> nil, 'MERA source creates selected tag');
+    AssertEquals(lRegistry.TagCount, 1, 'MERA selected tag count');
+
+    lSource.Start;
+    lSource.Tick;
+    lSource.Stop;
+
+    lSnapshot := lTag.Snapshot;
+    PrintSnapshot('SNAPSHOT Mera.SignalA', lSnapshot);
+
+    AssertEquals(lProbe.Count, 1, 'MERA vector block event count');
+    AssertEquals(lSnapshot.Count, 3, 'MERA snapshot count');
+    AssertEquals(lSnapshot.Times[0], 1.0, 'MERA sample 0 time');
+    AssertEquals(lSnapshot.Times[1], 1.5, 'MERA sample 1 time');
+    AssertEquals(lSnapshot.Times[2], 2.0, 'MERA sample 2 time');
+    AssertEquals(lSnapshot.Values[0], 10.0, 'MERA sample 0 value');
+    AssertEquals(lSnapshot.Values[1], 20.0, 'MERA sample 1 value');
+    AssertEquals(lSnapshot.Values[2], 30.0, 'MERA sample 2 value');
+
+    LogLine('RESULT MERA file data source test passed.');
+  finally
+    lSource.Free;
+    lSelected.Free;
+    lRegistry.Free;
+    lProbe.Free;
+    lBus.Free;
+  end;
+end;
+
+procedure TestMeraScalarTimeFileDataSource;
+var
+  lBus: TRecorderEventBus;
+  lDataFileName: string;
+  lDir: string;
+  lIni: TStringList;
+  lMeraFileName: string;
+  lProbe: TDataSourceEventProbe;
+  lRegistry: TRecorderTagRegistry;
+  lSelected: TStringList;
+  lSnapshot: TRecorderSignalSnapshot;
+  lSource: TRecorderMeraFileDataSource;
+  lStream: TFileStream;
+  lTag: TRecorderTag;
+  lXFileName: string;
+begin
+  LogLine('--- Recorder MERA scalar .x time data source test ---');
+
+  lDir := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + 'mera_scalar_test';
+  ForceDirectories(lDir);
+  lMeraFileName := IncludeTrailingPathDelimiter(lDir) + 'sample.mera';
+  lDataFileName := IncludeTrailingPathDelimiter(lDir) + 'ScalarA.dat';
+  lXFileName := IncludeTrailingPathDelimiter(lDir) + 'ScalarA.x';
+
+  lIni := TStringList.Create;
+  try
+    lIni.Add('[MERA]');
+    lIni.Add('');
+    lIni.Add('[ScalarA]');
+    lIni.Add('Address=S1');
+    lIni.Add('YFormat=R8');
+    lIni.Add('XFormat=R8');
+    lIni.Add('YUnits=N');
+    lIni.Add('Freq=0');
+    lIni.Add('Start=0');
+    lIni.SaveToFile(lMeraFileName);
+  finally
+    lIni.Free;
+  end;
+
+  lStream := TFileStream.Create(lDataFileName, fmCreate);
+  try
+    WriteDouble(lStream, 100.0);
+    WriteDouble(lStream, 200.0);
+    WriteDouble(lStream, 300.0);
+  finally
+    lStream.Free;
+  end;
+
+  lStream := TFileStream.Create(lXFileName, fmCreate);
+  try
+    WriteDouble(lStream, 0.0);
+    WriteDouble(lStream, 0.05);
+    WriteDouble(lStream, 0.20);
+  finally
+    lStream.Free;
+  end;
+
+  lBus := TRecorderEventBus.Create;
+  lProbe := TDataSourceEventProbe.Create;
+  lRegistry := TRecorderTagRegistry.Create(lBus);
+  lSelected := TStringList.Create;
+  lSource := nil;
+  try
+    lBus.Subscribe(@lProbe.HandleEvent);
+    lSelected.Add('Mera.ScalarA');
+    lSource := TRecorderMeraFileDataSource.Create('mera.scalar.test',
+      lMeraFileName, 20, lSelected, 128);
+    lSource.ConfigureTags(lRegistry);
+    lTag := lRegistry.FindByName('Mera.ScalarA');
+    AssertTrue(lTag <> nil, 'MERA scalar source creates selected tag');
+
+    lSource.Start;
+    lSource.Tick;
+    Sleep(70);
+    lSource.Tick;
+    lSnapshot := lTag.Snapshot;
+    AssertEquals(lSnapshot.Count, 2, 'MERA scalar publishes due samples only');
+
+    Sleep(160);
+    lSource.Tick;
+    lSource.Stop;
+
+    lSnapshot := lTag.Snapshot;
+    PrintSnapshot('SNAPSHOT Mera.ScalarA', lSnapshot);
+
+    AssertEquals(lProbe.Count, 3, 'MERA scalar event count');
+    AssertEquals(lSnapshot.Count, 3, 'MERA scalar snapshot count');
+    AssertEquals(lSnapshot.Times[0], 0.0, 'MERA scalar sample 0 time');
+    AssertEquals(lSnapshot.Times[1], 0.05, 'MERA scalar sample 1 time');
+    AssertEquals(lSnapshot.Times[2], 0.20, 'MERA scalar sample 2 time');
+    AssertEquals(lSnapshot.Values[0], 100.0, 'MERA scalar sample 0 value');
+    AssertEquals(lSnapshot.Values[1], 200.0, 'MERA scalar sample 1 value');
+    AssertEquals(lSnapshot.Values[2], 300.0, 'MERA scalar sample 2 value');
+
+    LogLine('RESULT MERA scalar .x time data source test passed.');
+  finally
+    lSource.Free;
+    lSelected.Free;
+    lRegistry.Free;
+    lProbe.Free;
+    lBus.Free;
+  end;
+end;
+
 begin
   OpenLog;
   try
@@ -312,6 +509,10 @@ begin
     TestDataSourceThread;
     LogLine('');
     TestDataSourceManager;
+    LogLine('');
+    TestMeraFileDataSource;
+    LogLine('');
+    TestMeraScalarTimeFileDataSource;
   finally
     CloseLog;
   end;

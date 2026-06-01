@@ -87,11 +87,24 @@ type
   TFormEditorClipboardItem = class
   public
     Bounds: TRecorderRect;
+    Id: string;
     DisplayFormat: string;
     Name: string;
     TagName: string;
     Text: string;
     TypeId: string;
+  end;
+
+  TFormEditorUndoState = class
+  private
+    fItems: TList;
+    fSelectedIds: TStringList;
+  public
+    PageId: string;
+    constructor Create;
+    destructor Destroy; override;
+    property Items: TList read fItems;
+    property SelectedIds: TStringList read fSelectedIds;
   end;
 
   { TFormEditorController
@@ -115,6 +128,8 @@ type
     fDragStartPoint: TPoint;
     fDragStartBounds: TList;
     fStartGroupBounds: TRecorderRect;
+    fUndoStack: TList;
+    fOperationUndoSaved: Boolean;
     procedure CanvasMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure CanvasMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
@@ -134,6 +149,12 @@ type
     procedure EndOperation;
     procedure ClearDragStartBounds;
     procedure ClearClipboard;
+    procedure ClearUndoStack;
+    procedure PushUndoState;
+    procedure RestoreUndoState(AState: TFormEditorUndoState);
+    function CreateUndoState(APage: TRecorderFormPage): TFormEditorUndoState;
+    function CreateComponentFromSnapshot(
+      AItem: TFormEditorClipboardItem): TRecorderVisualComponent;
     procedure RenderLive;
     procedure NotifyChanged;
     procedure CopySelected;
@@ -175,6 +196,9 @@ type
 
     { Удаляет выбранные компоненты из активной страницы. }
     procedure DeleteSelected;
+    procedure RememberUndoStep;
+    procedure UndoLastStep;
+    procedure ClearUndoHistory;
 
     { Обрабатывает клавиатуру редактора.
 
@@ -198,6 +222,25 @@ const
   CPasteOffset = 16;
   CResizeHandleSize = 8;
   CResizeHotZone = 5;
+  CUndoDepth = 5;
+
+constructor TFormEditorUndoState.Create;
+begin
+  inherited Create;
+  fItems := TList.Create;
+  fSelectedIds := TStringList.Create;
+end;
+
+destructor TFormEditorUndoState.Destroy;
+var
+  I: Integer;
+begin
+  for I := 0 to fItems.Count - 1 do
+    TObject(fItems[I]).Free;
+  fItems.Free;
+  fSelectedIds.Free;
+  inherited Destroy;
+end;
 
 constructor TFormEditorController.Create(ACanvas: TPanel;
   AGetPage: TGetEditorPageEvent; AComponentFactory: TRecorderComponentFactory);
@@ -216,6 +259,7 @@ begin
   fClipboard := TList.Create;
   fSelected := TList.Create;
   fDragStartBounds := TList.Create;
+  fUndoStack := TList.Create;
 
   fCanvas.OnMouseDown := @CanvasMouseDown;
   fCanvas.OnMouseMove := @CanvasMouseMove;
@@ -227,9 +271,11 @@ destructor TFormEditorController.Destroy;
 begin
   EndOperation;
   ClearClipboard;
+  ClearUndoStack;
   ClearDragStartBounds;
   fClipboard.Free;
   fDragStartBounds.Free;
+  fUndoStack.Free;
   fSelected.Free;
   inherited Destroy;
 end;
@@ -412,6 +458,11 @@ begin
   if lPage = nil then
     Exit;
 
+  if fSelected.Count = 0 then
+    Exit;
+
+  PushUndoState;
+
   { Удаляем с конца списка компонентов страницы, чтобы индексы еще не удаленных
     элементов не сдвигались под ногами. fSelected может быть в любом порядке,
     поэтому каждый раз ищем максимальный выбранный индекс. }
@@ -460,7 +511,16 @@ begin
 
   if (ssCtrl in Shift) and (Key = VK_V) then
   begin
+    if fClipboard.Count > 0 then
+      PushUndoState;
     PasteClipboard;
+    Key := 0;
+    Exit;
+  end;
+
+  if (ssCtrl in Shift) and (Key = VK_Z) then
+  begin
+    UndoLastStep;
     Key := 0;
     Exit;
   end;
@@ -510,6 +570,8 @@ begin
   lPage := GetActivePage;
   if lPage = nil then
     Exit;
+
+  PushUndoState;
 
   for I := 0 to fSelected.Count - 1 do
   begin
@@ -652,6 +714,7 @@ begin
 
   ClearDragStartBounds;
   fOperation := AOperation;
+  fOperationUndoSaved := False;
   fDragStartPoint := Point(X, Y);
   SetCaptureControl(fCanvas);
 
@@ -712,6 +775,12 @@ begin
   lPage := GetActivePage;
   if lPage = nil then
     Exit;
+
+  if (not fOperationUndoSaved) and ((lDeltaX <> 0) or (lDeltaY <> 0)) then
+  begin
+    PushUndoState;
+    fOperationUndoSaved := True;
+  end;
 
   lNewGroup := fStartGroupBounds;
   { Сначала пересчитываем новый прямоугольник группы по активному краю/углу. }
@@ -786,6 +855,7 @@ end;
 procedure TFormEditorController.EndOperation;
 begin
   fOperation := feoNone;
+  fOperationUndoSaved := False;
   if GetCaptureControl = fCanvas then
     SetCaptureControl(nil);
   ClearDragStartBounds;
@@ -808,6 +878,138 @@ begin
   for I := 0 to fClipboard.Count - 1 do
     TObject(fClipboard[I]).Free;
   fClipboard.Clear;
+end;
+
+procedure TFormEditorController.ClearUndoStack;
+var
+  I: Integer;
+begin
+  for I := 0 to fUndoStack.Count - 1 do
+    TObject(fUndoStack[I]).Free;
+  fUndoStack.Clear;
+end;
+
+function TFormEditorController.CreateUndoState(
+  APage: TRecorderFormPage): TFormEditorUndoState;
+var
+  I: Integer;
+  lIndex: Integer;
+begin
+  Result := TFormEditorUndoState.Create;
+  try
+    Result.PageId := APage.Id;
+    for I := 0 to APage.ComponentCount - 1 do
+      Result.Items.Add(ClipboardItemFromComponent(APage.Components[I]));
+
+    for I := 0 to fSelected.Count - 1 do
+    begin
+      lIndex := Integer(PtrUInt(fSelected[I]));
+      if (lIndex >= 0) and (lIndex < APage.ComponentCount) then
+        Result.SelectedIds.Add(APage.Components[lIndex].Id);
+    end;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+procedure TFormEditorController.PushUndoState;
+var
+  lPage: TRecorderFormPage;
+begin
+  lPage := GetActivePage;
+  if lPage = nil then
+    Exit;
+
+  fUndoStack.Add(CreateUndoState(lPage));
+  while fUndoStack.Count > CUndoDepth do
+  begin
+    TObject(fUndoStack[0]).Free;
+    fUndoStack.Delete(0);
+  end;
+end;
+
+function TFormEditorController.CreateComponentFromSnapshot(
+  AItem: TFormEditorClipboardItem): TRecorderVisualComponent;
+begin
+  Result := fComponentFactory.CreateComponent(AItem.TypeId);
+  try
+    Result.Id := AItem.Id;
+    Result.Name := AItem.Name;
+    Result.TagName := AItem.TagName;
+    Result.Bounds := AItem.Bounds;
+
+    if Result is TRecorderStaticTextComponent then
+      TRecorderStaticTextComponent(Result).Text := AItem.Text
+    else if Result is TRecorderTagValueComponent then
+      TRecorderTagValueComponent(Result).DisplayFormat := AItem.DisplayFormat;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+procedure TFormEditorController.RestoreUndoState(AState: TFormEditorUndoState);
+var
+  I: Integer;
+  lPage: TRecorderFormPage;
+  lItem: TFormEditorClipboardItem;
+  lComponent: TRecorderVisualComponent;
+begin
+  if AState = nil then
+    Exit;
+
+  lPage := GetActivePage;
+  if (lPage = nil) or (not SameText(lPage.Id, AState.PageId)) then
+    Exit;
+
+  ClearSelection;
+  while lPage.ComponentCount > 0 do
+    lPage.DeleteComponent(lPage.ComponentCount - 1);
+
+  for I := 0 to AState.Items.Count - 1 do
+  begin
+    lItem := TFormEditorClipboardItem(AState.Items[I]);
+    lComponent := CreateComponentFromSnapshot(lItem);
+    try
+      lPage.AddComponent(lComponent);
+    except
+      lComponent.Free;
+      raise;
+    end;
+
+    if AState.SelectedIds.IndexOf(lComponent.Id) >= 0 then
+      fSelected.Add(Pointer(PtrUInt(lPage.ComponentCount - 1)));
+  end;
+end;
+
+procedure TFormEditorController.RememberUndoStep;
+begin
+  PushUndoState;
+end;
+
+procedure TFormEditorController.ClearUndoHistory;
+begin
+  ClearUndoStack;
+end;
+
+procedure TFormEditorController.UndoLastStep;
+var
+  lState: TFormEditorUndoState;
+begin
+  if (not fEnabled) or (fUndoStack.Count = 0) then
+    Exit;
+
+  lState := TFormEditorUndoState(fUndoStack[fUndoStack.Count - 1]);
+  fUndoStack.Delete(fUndoStack.Count - 1);
+  try
+    RestoreUndoState(lState);
+  finally
+    lState.Free;
+  end;
+
+  NotifyChanged;
+  Render;
 end;
 
 procedure TFormEditorController.RenderLive;
@@ -887,6 +1089,7 @@ function TFormEditorController.ClipboardItemFromComponent(
 begin
   Result := TFormEditorClipboardItem.Create;
   Result.Bounds := AComponent.Bounds;
+  Result.Id := AComponent.Id;
   Result.Name := AComponent.Name;
   Result.TagName := AComponent.TagName;
   Result.TypeId := AComponent.TypeId;

@@ -1,0 +1,830 @@
+{
+		"format" : "RecorderLnx.ProjectConfig",
+		"version" : 1,
+		"dataSources" : [
+				{
+						"sourceId" : "debug.memtag",
+						"moduleType" : "virtual",
+						"defaultPollFrequencyHz" : 4.0000000000000000E+000
+				},
+				{
+						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
+						"moduleType" : "MC-201",
+						"defaultPollFrequencyHz" : 5.7600000000000000E+004
+				}
+		],
+		"tags" : [
+				{
+						"id" : 1,
+						"name" : "MemTag",
+						"address" : "virtual",
+						"unit" : "a.u.",
+						"description" : "Mock sine signal",
+						"sourceId" : "debug.memtag",
+						"moduleType" : "virtual",
+						"pollFrequencyHz" : 4.0000000000000000E+000,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						}
+				},
+				{
+						"id" : 3,
+						"name" : "Mera.1_датчик_X",
+						"address" : "1- 2- 1",
+						"unit" : "В",
+						"description" : "1 датчик X; type=R4; freq=57600; file=1 датчик X.dat",
+						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
+						"moduleType" : "MC-201",
+						"pollFrequencyHz" : 5.7600000000000000E+004,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						}
+				},
+				{
+						"id" : 5,
+						"name" : "Mera.1_датчик_Y",
+						"address" : "1- 2- 2",
+						"unit" : "В",
+						"description" : "1 датчик Y; type=R4; freq=57600; file=1 датчик Y.dat",
+						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
+						"moduleType" : "MC-201",
+						"pollFrequencyHz" : 5.7600000000000000E+004,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						}
+				},
+				{
+						"id" : 7,
+						"name" : "Mera.1_датчик_Z",
+						"address" : "1- 2- 3",
+						"unit" : "В",
+						"description" : "1 датчик Z; type=R4; freq=57600; file=1 датчик Z.dat",
+						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
+						"moduleType" : "MC-201",
+						"pollFrequencyHz" : 5.7600000000000000E+004,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						}
+				},
+				{
+						"id" : 9,
+						"name" : "Mera.2_датчик_X",
+						"address" : "1- 2- 4",
+						"unit" : "В",
+						"description" : "2 датчик X; type=R4; freq=57600; file=2 датчик X.dat",
+						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
+						"moduleType" : "MC-201",
+						"pollFrequencyHz" : 5.7600000000000000E+004,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						}
+				},
+				{
+						"id" : 11,
+						"name" : "Mera.2_датчик_Y",
+						"address" : "1- 3- 1",
+						"unit" : "В",
+						"description" : "2 датчик Y; type=R4; freq=57600; file=2 датчик Y.dat",
+						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
+						"moduleType" : "MC-201",
+						"pollFrequencyHz" : 5.7600000000000000E+004,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						}
+				},
+				{
+						"id" : 13,
+						"name" : "Mera.2_датчик_Z",
+						"address" : "1- 3- 2",
+						"unit" : "В",
+						"description" : "2 датчик Z; type=R4; freq=57600; file=2 датчик Z.dat",
+						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
+						"moduleType" : "MC-201",
+						"pollFrequencyHz" : 5.7600000000000000E+004,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						}
+				},
+				{
+						"id" : 15,
+						"name" : "Mera.3_датчик_X",
+						"address" : "1- 3- 3",
+						"unit" : "В",
+						"description" : "3 датчик X; type=R4; freq=57600; file=3 датчик X.dat",
+						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
+						"moduleType" : "MC-201",
+						"pollFrequencyHz" : 5.7600000000000000E+004,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						}
+				},
+				{
+						"id" : 17,
+						"name" : "Mera.3_датчик_Y",
+						"address" : "1- 3- 4",
+						"unit" : "В",
+						"description" : "3 датчик Y; type=R4; freq=57600; file=3 датчик Y.dat",
+						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
+						"moduleType" : "MC-201",
+						"pollFrequencyHz" : 5.7600000000000000E+004,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						}
+				},
+				{
+						"id" : 19,
+						"name" : "Mera.3_датчик_Z",
+						"address" : "1- 4- 1",
+						"unit" : "В",
+						"description" : "3 датчик Z; type=R4; freq=57600; file=3 датчик Z.dat",
+						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
+						"moduleType" : "MC-201",
+						"pollFrequencyHz" : 5.7600000000000000E+004,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						}
+				},
+				{
+						"id" : 21,
+						"name" : "Mera.xRotTag",
+						"address" : "virtual",
+						"unit" : "-",
+						"description" : "xRotTag; type=R8; freq=0; file=xRotTag.dat",
+						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
+						"moduleType" : "R8",
+						"pollFrequencyHz" : 0.0000000000000000E+000,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						}
+				},
+				{
+						"id" : 23,
+						"name" : "Mera.yRotTag",
+						"address" : "virtual",
+						"unit" : "-",
+						"description" : "yRotTag; type=R8; freq=0; file=yRotTag.dat",
+						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
+						"moduleType" : "R8",
+						"pollFrequencyHz" : 0.0000000000000000E+000,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						}
+				},
+				{
+						"id" : 25,
+						"name" : "Mera.zRotTag",
+						"address" : "virtual",
+						"unit" : "-",
+						"description" : "zRotTag; type=R8; freq=0; file=zRotTag.dat",
+						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
+						"moduleType" : "R8",
+						"pollFrequencyHz" : 0.0000000000000000E+000,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						}
+				},
+				{
+						"id" : 27,
+						"name" : "Mera.молоток",
+						"address" : "1- 4- 2",
+						"unit" : "В",
+						"description" : "молоток; type=R4; freq=57600; file=молоток.dat",
+						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
+						"moduleType" : "MC-201",
+						"pollFrequencyHz" : 5.7600000000000000E+004,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						}
+				}
+		]
+}

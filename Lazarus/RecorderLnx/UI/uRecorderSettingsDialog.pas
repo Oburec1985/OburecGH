@@ -6,8 +6,9 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  ComCtrls, ImgList, Grids,
-  uRecorderStateMachine, uRecorderRunControlSettings, uRecorderTags, uMeraFile;
+  ComCtrls, ImgList, Grids, Buttons,
+  uRecorderStateMachine, uRecorderRunControlSettings, uRecorderTags, uMeraFile,
+  uRecorderCommandImages;
 
 type
   { TRecorderSettingsDialog }
@@ -17,9 +18,9 @@ type
     fPageControl: TPageControl;
     fApplyButton: TButton;
     fHardwareTree: TTreeView;
-    btnDeviceAdd: TButton;
-    btnChannelAdd: TButton;
-    btnChannelRemove: TButton;
+    btnDeviceAdd: TBitBtn;
+    btnChannelAdd: TBitBtn;
+    btnChannelRemove: TBitBtn;
     pnChannelMoveButtons: TPanel;
     spChannels: TSplitter;
     fAvailableChannelsGrid: TStringGrid;
@@ -83,7 +84,6 @@ type
     procedure ClearMeraSignals;
     function AvailableSignalByGridRow(ARow: Integer): TMeraSignalInfo;
     function SelectedSignalByGridRow(ARow: Integer): TMeraSignalInfo;
-    function MakeMeraTagName(ASignal: TMeraSignalInfo): string;
     procedure LoadMeraFile(const AFileName: string);
     procedure PopulateChannelGrids;
     procedure PopulateHardwareTree;
@@ -92,6 +92,7 @@ type
     procedure SetRunSettings(AValue: TRecorderRunControlSettings);
     procedure SetTagRegistry(AValue: TRecorderTagRegistry);
     procedure SetDeviceImageList(AValue: TCustomImageList);
+    procedure SetDialogButtonImages;
     procedure InitializeHardwareTree;
     procedure BuildUi;
     procedure BuildRecorderTab(ATab: TTabSheet);
@@ -202,12 +203,33 @@ begin
   Result.Style := csDropDownList;
 end;
 
+procedure AssignButtonImage(AButton: TBitBtn; AImages: TCustomImageList;
+  AIndex: Integer);
+var
+  lBitmap: TBitmap;
+begin
+  if (AButton = nil) or (AImages = nil) or (AIndex < 0) or
+    (AIndex >= AImages.Count) then
+    Exit;
+
+  lBitmap := TBitmap.Create;
+  try
+    AImages.GetBitmap(AIndex, lBitmap);
+    AButton.Caption := '';
+    AButton.Glyph.Assign(lBitmap);
+    AButton.Layout := blGlyphTop;
+    AButton.Margin := 0;
+  finally
+    lBitmap.Free;
+  end;
+end;
+
 { TRecorderSettingsDialog }
 
 const
-  CDeviceRootImageIndex = 12;
-  CDeviceControllerImageIndex = 13;
-  CDeviceModuleImageIndex = 14;
+  CDeviceRootImageIndex = CIconDeviceRoot;
+  CDeviceControllerImageIndex = CIconDeviceController;
+  CDeviceModuleImageIndex = CIconDeviceModule;
   CMeraSampleFile = 'D:\works\mera\mera files signals\shocks\signal0005\signal0005.mera';
 
 constructor TRecorderSettingsDialog.Create(AOwner: TComponent);
@@ -245,6 +267,28 @@ begin
     fHardwareTree.Images := fDeviceImageList;
     fHardwareTree.ImagesWidth := 16;
   end;
+  SetDialogButtonImages;
+end;
+
+procedure TRecorderSettingsDialog.SetDialogButtonImages;
+var
+  lButton: TComponent;
+begin
+  AssignButtonImage(btnDeviceAdd, fDeviceImageList, CIconAdd);
+  AssignButtonImage(btnChannelAdd, fDeviceImageList, CIconAdd);
+  AssignButtonImage(btnChannelRemove, fDeviceImageList, CIconRemove);
+
+  lButton := FindComponent('btnDeviceDelete');
+  if lButton is TBitBtn then
+    AssignButtonImage(TBitBtn(lButton), fDeviceImageList, CIconRemove);
+
+  lButton := FindComponent('btnDeviceSetup');
+  if lButton is TBitBtn then
+    AssignButtonImage(TBitBtn(lButton), fDeviceImageList, CIconProperty);
+
+  lButton := FindComponent('btnDeviceSearch');
+  if lButton is TBitBtn then
+    AssignButtonImage(TBitBtn(lButton), fDeviceImageList, CIconSearch);
 end;
 
 procedure TRecorderSettingsDialog.AddMeraSignal(ASignal: TMeraSignalInfo);
@@ -270,7 +314,7 @@ begin
     if not lSignal.Selected then
       Continue;
 
-    lTagName := MakeMeraTagName(lSignal);
+    lTagName := MeraSignalToRecorderTagName(lSignal);
     lTag := fTagRegistry.FindByName(lTagName);
     if lTag = nil then
       lTag := fTagRegistry.CreateTag(lTagName, 4096);
@@ -278,8 +322,10 @@ begin
     lTag.Address := lSignal.Address;
     lTag.UnitName := lSignal.UnitsName;
     lTag.SourceId := 'Mera file: ' + fMeraFileName;
+    lTag.ModuleType := lSignal.ModuleName;
+    lTag.PollFrequencyHz := lSignal.FrequencyHz;
     lTag.Description := Format('%s; type=%s; freq=%s; file=%s',
-      [lSignal.Name, lSignal.ModuleName, FormatFloat('0.######', lSignal.FrequencyHz),
+      [lSignal.Name, lSignal.DataTypeName, FormatFloat('0.######', lSignal.FrequencyHz),
       ExtractFileName(lSignal.FileName)]);
   end;
 end;
@@ -331,20 +377,6 @@ begin
     if lRow = ARow then
       Exit(lSignal);
   end;
-end;
-
-function TRecorderSettingsDialog.MakeMeraTagName(ASignal: TMeraSignalInfo): string;
-begin
-  Result := '';
-  if ASignal = nil then
-    Exit;
-
-  Result := Trim(ASignal.Name);
-  Result := StringReplace(Result, ' ', '_', [rfReplaceAll]);
-  Result := StringReplace(Result, '-', '_', [rfReplaceAll]);
-  if Result = '' then
-    Result := 'MeraSignal';
-  Result := 'Mera.' + Result;
 end;
 
 procedure TRecorderSettingsDialog.LoadMeraFile(const AFileName: string);
@@ -494,7 +526,7 @@ begin
       lSignal := TMeraSignalInfo(fMeraSignals[I]);
       if not lSignal.Selected then
         Continue;
-      fSelectedChannelsGrid.Cells[0, lRow] := MakeMeraTagName(lSignal);
+      fSelectedChannelsGrid.Cells[0, lRow] := MeraSignalToRecorderTagName(lSignal);
       fSelectedChannelsGrid.Cells[1, lRow] := lSignal.Address;
       fSelectedChannelsGrid.Cells[2, lRow] := lSignal.ModuleName;
       fSelectedChannelsGrid.Cells[3, lRow] := FormatFloat('0.######', lSignal.FrequencyHz);

@@ -29,7 +29,8 @@ uses
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderFormModel,
   uRecorderCoreServices, uRecorderTags, uRecorderDataSources,
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
-  uFormEditorController, uRecorderSettingsDialog;
+  uFormEditorController, uRecorderSettingsDialog, uTagSettingsDialog,
+  uRecorderCommandImages, uRecorderProjectFiles;
 
 type
   { TMainForm }
@@ -46,6 +47,7 @@ type
     edTagSearch: TEdit;
     ilCommandButtons: TImageList;
     ilCommandButtons1: TImageList;
+    ilTagDialogButtons: TImageList;
     lbState: TLabel;
     lbTags: TListBox;
     lbTime: TLabel;
@@ -72,6 +74,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure lbTagsDblClick(Sender: TObject);
     procedure sgFormularSelectCell(Sender: TObject; aCol, aRow: Integer;
       var CanSelect: Boolean);
   private
@@ -156,12 +159,16 @@ type
 
     { Рисует встроенную базовую страницу с таблицей осциллограмм. }
     procedure RenderBasePage;
+    function FormatTagEstimate(ATag: TRecorderTag;
+      AKind: TRecorderTagEstimateKind): string;
 
     { Перестраивает набор осциллограмм на базовой странице. }
     procedure RebuildBaseOscillograms(ACount: Integer);
+    procedure RefreshBaseOscillograms;
 
     { Создает одну тестовую осциллограмму на базе стандартного TChart. }
     function CreateOscillogramChart(AIndex: Integer): TChart;
+    procedure FillOscillogramChart(AChart: TChart; ATag: TRecorderTag);
 
     { Рисует пользовательскую мнемосхему и включает допустимые команды редактора. }
     procedure RenderMnemonicPage(APage: TRecorderFormPage);
@@ -212,9 +219,14 @@ type
 
     { Сохраняет настройки запуска/остановки в проектный каталог. }
     procedure SaveRunSettings;
+    procedure LoadProjectPackage;
+    procedure SaveProjectPackage;
+    procedure ResetProjectCounters;
 
     { Применяет фильтр поиска к списку тегов-заглушек. }
     procedure RebuildTagList(const AFilter: string);
+    procedure CollectSelectedTags(ATags: TList);
+    procedure OpenSelectedTagSettings;
 
     { Создает отладочный источник MemTag и подключает его к общему registry.
 
@@ -262,15 +274,8 @@ implementation
 const
   CDefaultProjectConfigDir = 'config' + DirectorySeparator + 'projects' +
     DirectorySeparator + 'default';
-  CRunControlFileName = 'run-control.ini';
-  CIconEditForm = 4;
-  CIconOscillogram = 5;
-  CIconTextLabel = 6;
-  CIconSpectrum = 7;
-  CIconDigitalIndicator = 8;
-  CIconTagTable = 9;
-  CIconButton = 10;
-  CIconComboBox = 11;
+  CProjectBaseName = 'default';
+  COldRunControlFileName = 'run-control.ini';
 
 { TMainForm }
 
@@ -305,8 +310,10 @@ begin
   fFormManager := TRecorderFormManager.Create;
   fProjectConfigDir := IncludeTrailingPathDelimiter(GetDevProjectDir) +
     CDefaultProjectConfigDir;
-  fRunControlFileName := IncludeTrailingPathDelimiter(fProjectConfigDir) + CRunControlFileName;
+  fRunControlFileName := RecorderProjectFileSet(fProjectConfigDir,
+    CProjectBaseName).RunControlFileName;
 
+  LoadRecorderCommandImages(ilCommandButtons);
   SetupCommandButtons;
   EnsurePageControl;
   EnsureEditorSurface;
@@ -314,11 +321,13 @@ begin
   fFormEditor := TFormEditorController.Create(fEditorCanvas, @GetActiveEditorPage,
     fComponentFactory);
   fFormEditor.OnChanged := @FormEditorChanged;
-  InitializeFormPages;
-  EnsureDemoDataSources;
-  RebuildTagList('');
   EnsureDevConfig;
+  InitializeFormPages;
   LoadRunSettings;
+  LoadProjectPackage;
+  if fTagRegistry.TagCount = 0 then
+    EnsureDemoDataSources;
+  RebuildTagList('');
   UpdateStateView;
   AddLog('RecorderLnx started.');
 end;
@@ -358,6 +367,11 @@ begin
     fSelectedComponentRow := -1;
 end;
 
+procedure TMainForm.lbTagsDblClick(Sender: TObject);
+begin
+  OpenSelectedTagSettings;
+end;
+
 procedure TMainForm.PageControlChange(Sender: TObject);
 var
   lPageIndex: Integer;
@@ -371,7 +385,10 @@ begin
 
   fFormManager.SetActivePageById(fFormManager.Pages[lPageIndex].Id);
   if fFormEditor <> nil then
+  begin
     fFormEditor.ClearSelection;
+    fFormEditor.ClearUndoHistory;
+  end;
   RenderActivePage;
 end;
 
@@ -387,7 +404,10 @@ begin
       begin
         fNextPageNo := lDialog.NextPageNo;
         if fFormEditor <> nil then
+        begin
           fFormEditor.ClearSelection;
+          fFormEditor.ClearUndoHistory;
+        end;
         RefreshPageButtons;
         RenderActivePage;
         AddLog('Form pages dialog closed.');
@@ -468,8 +488,7 @@ end;
 procedure TMainForm.btnSaveConfigClick(Sender: TObject);
 begin
   try
-    SaveRunSettings;
-    AddLog('Project run-control config saved: ' + fRunControlFileName);
+    SaveProjectPackage;
   except
     on E: Exception do
       LogCommandError('Save config', E);
@@ -488,9 +507,11 @@ begin
     AddLog('Configuration mode: settings dialog opened.');
     if ShowRecorderSettingsDialog(Self, fRunSettings, fTagRegistry, ilCommandButtons) then
     begin
-      SaveRunSettings;
+      SaveProjectPackage;
+      fDataSourceManager.Clear;
+      fDataSourcesConfigured := False;
       RebuildTagList(edTagSearch.Text);
-      AddLog('Project settings applied: ' + fRunControlFileName);
+      AddLog('Project settings applied.');
     end
     else
       AddLog('Configuration mode: settings dialog closed without applying OK.');
@@ -642,6 +663,9 @@ begin
   if not IsUserMnemonicPage(lPage) then
     raise ERecorderFormError.Create('Components can be added only to user mnemonic pages');
 
+  if fFormEditor <> nil then
+    fFormEditor.RememberUndoStep;
+
   Inc(fNextComponentNo);
   lComponent := TRecorderStaticTextComponent(
     fComponentFactory.CreateComponent(TRecorderStaticTextComponent.TypeId));
@@ -680,6 +704,9 @@ begin
     raise ERecorderFormError.Create('Cannot add component without active page');
   if not IsUserMnemonicPage(lPage) then
     raise ERecorderFormError.Create('Components can be added only to user mnemonic pages');
+
+  if fFormEditor <> nil then
+    fFormEditor.RememberUndoStep;
 
   Inc(fNextComponentNo);
   lComponent := TRecorderTagValueComponent(
@@ -947,39 +974,94 @@ end;
 procedure TMainForm.RenderDigitalPage;
 var
   I: Integer;
+  J: TRecorderTagEstimateKind;
+  lFirstTagRow: Boolean;
+  lRow: Integer;
+  lRowCount: Integer;
   lTag: TRecorderTag;
-  lValue: string;
+
+  function EnabledEstimateCount(ATag: TRecorderTag): Integer;
+  var
+    lKind: TRecorderTagEstimateKind;
+  begin
+    Result := 0;
+    if ATag = nil then
+      Exit;
+
+    for lKind := tekMean to tekPeakToPeakByRmsDeviation do
+      if ATag.EstimateSettings.EnabledKinds[lKind] then
+        Inc(Result);
+  end;
 begin
   ShowBaseToolbar(False);
   ShowEditorSurface(False);
   sgFormular.Visible := True;
   sgFormular.Align := alClient;
 
-  sgFormular.ColCount := 5;
-  sgFormular.RowCount := Max(2, fTagRegistry.TagCount + 1);
+  { Digital form follows per-tag estimate settings: one grid row is created
+    only for each estimate enabled on the tag's "Additional" tab. }
+  lRowCount := 1;
+  for I := 0 to fTagRegistry.TagCount - 1 do
+    Inc(lRowCount, EnabledEstimateCount(fTagRegistry.Tags[I]));
+  if lRowCount < 2 then
+    lRowCount := 2;
+
+  sgFormular.ColCount := 6;
+  sgFormular.RowCount := lRowCount;
   sgFormular.FixedCols := 0;
   sgFormular.FixedRows := 1;
   sgFormular.Cells[0, 0] := 'Name';
-  sgFormular.Cells[1, 0] := 'Address';
-  sgFormular.Cells[2, 0] := 'Unit';
-  sgFormular.Cells[3, 0] := 'Value';
-  sgFormular.Cells[4, 0] := 'Description';
+  sgFormular.Cells[1, 0] := 'Estimate';
+  sgFormular.Cells[2, 0] := 'Address';
+  sgFormular.Cells[3, 0] := 'Unit';
+  sgFormular.Cells[4, 0] := 'Value';
+  sgFormular.Cells[5, 0] := 'Description';
+
+  lRow := 1;
 
   for I := 0 to fTagRegistry.TagCount - 1 do
   begin
     lTag := fTagRegistry.Tags[I];
-    lValue := fLatestTagValues.Values[lTag.Name];
-    if lValue = '' then
-      lValue := lTag.TextValue;
-    if lValue = '' then
-      lValue := '-';
+    lFirstTagRow := True;
+    for J := tekMean to tekPeakToPeakByRmsDeviation do
+    begin
+      if not lTag.EstimateSettings.EnabledKinds[J] then
+        Continue;
 
-    sgFormular.Cells[0, I + 1] := lTag.Name;
-    sgFormular.Cells[1, I + 1] := lTag.Address;
-    sgFormular.Cells[2, I + 1] := lTag.UnitName;
-    sgFormular.Cells[3, I + 1] := lValue;
-    sgFormular.Cells[4, I + 1] := lTag.Description;
+      if lFirstTagRow then
+      begin
+        sgFormular.Cells[0, lRow] := lTag.Name;
+        sgFormular.Cells[2, lRow] := lTag.Address;
+        sgFormular.Cells[5, lRow] := lTag.Description;
+        lFirstTagRow := False;
+      end
+      else
+      begin
+        sgFormular.Cells[0, lRow] := '';
+        sgFormular.Cells[2, lRow] := '';
+        sgFormular.Cells[5, lRow] := '';
+      end;
+
+      sgFormular.Cells[1, lRow] := RecorderTagEstimateKindToShortName(J);
+      sgFormular.Cells[3, lRow] := lTag.UnitName;
+      sgFormular.Cells[4, lRow] := FormatTagEstimate(lTag, J);
+      Inc(lRow);
+    end;
   end;
+end;
+
+function TMainForm.FormatTagEstimate(ATag: TRecorderTag;
+  AKind: TRecorderTagEstimateKind): string;
+var
+  lEstimate: TRecorderTagEstimate;
+begin
+  Result := '-';
+  if ATag = nil then
+    Exit;
+
+  lEstimate := ATag.Estimate(AKind);
+  if lEstimate.Valid then
+    Result := FormatFloat('0.000', lEstimate.Value);
 end;
 
 procedure TMainForm.RenderBasePage;
@@ -1048,41 +1130,122 @@ begin
   end;
 end;
 
+procedure TMainForm.RefreshBaseOscillograms;
+var
+  I: Integer;
+  lChart: TChart;
+  lTag: TRecorderTag;
+begin
+  if (fBaseChartsPanel = nil) or (fTagRegistry = nil) then
+    Exit;
+
+  for I := 0 to fBaseChartsPanel.ControlCount - 1 do
+    if fBaseChartsPanel.Controls[I] is TChart then
+    begin
+      lChart := TChart(fBaseChartsPanel.Controls[I]);
+      if fTagRegistry.TagCount > 0 then
+        lTag := fTagRegistry.Tags[I mod fTagRegistry.TagCount]
+      else
+        lTag := nil;
+      FillOscillogramChart(lChart, lTag);
+    end;
+end;
+
 function TMainForm.CreateOscillogramChart(AIndex: Integer): TChart;
 var
   lSeries: TLineSeries;
-  I: Integer;
-  lX: Double;
-  lName: string;
+  lTag: TRecorderTag;
 begin
-  lName := Format('%d sensor %s', [AIndex div 3 + 1,
-    Chr(Ord('X') + (AIndex mod 3))]);
-
   Result := TChart.Create(Self);
   Result.BorderStyle := bsSingle;
-  Result.Title.Text.Text := lName;
   Result.Title.Visible := True;
   Result.Legend.Visible := False;
   Result.LeftAxis.Grid.Visible := True;
   Result.BottomAxis.Grid.Visible := True;
-  Result.BottomAxis.Title.Caption := 'X';
+  Result.BottomAxis.Title.Caption := 't, s';
   Result.LeftAxis.Range.UseMin := True;
   Result.LeftAxis.Range.UseMax := True;
-  Result.LeftAxis.Range.Min := -32000;
-  Result.LeftAxis.Range.Max := 32000;
   Result.BottomAxis.Range.UseMin := True;
   Result.BottomAxis.Range.UseMax := True;
-  Result.BottomAxis.Range.Min := 0;
-  Result.BottomAxis.Range.Max := 10;
 
   lSeries := TLineSeries.Create(Result);
   lSeries.SeriesColor := clBlue;
-  for I := 0 to 100 do
-  begin
-    lX := I / 10;
-    lSeries.AddXY(lX, Sin((lX + AIndex) * 1.2) * 12000);
-  end;
   Result.AddSeries(lSeries);
+
+  if fTagRegistry.TagCount > 0 then
+    lTag := fTagRegistry.Tags[AIndex mod fTagRegistry.TagCount]
+  else
+    lTag := nil;
+  FillOscillogramChart(Result, lTag);
+end;
+
+procedure TMainForm.FillOscillogramChart(AChart: TChart; ATag: TRecorderTag);
+var
+  I: Integer;
+  lMaxValue: Double;
+  lMinValue: Double;
+  lSeries: TLineSeries;
+  lSnapshot: TRecorderSignalSnapshot;
+begin
+  if AChart = nil then
+    Exit;
+
+  if AChart.SeriesCount = 0 then
+  begin
+    lSeries := TLineSeries.Create(AChart);
+    AChart.AddSeries(lSeries);
+  end
+  else
+    lSeries := TLineSeries(AChart.Series[0]);
+
+  lSeries.Clear;
+  if ATag = nil then
+  begin
+    AChart.Title.Text.Text := 'No tag';
+    AChart.BottomAxis.Range.Min := 0;
+    AChart.BottomAxis.Range.Max := 1;
+    AChart.LeftAxis.Range.Min := -1;
+    AChart.LeftAxis.Range.Max := 1;
+    Exit;
+  end;
+
+  lSnapshot := ATag.Snapshot;
+  AChart.Title.Text.Text := ATag.Name;
+  if lSnapshot.Count = 0 then
+  begin
+    AChart.BottomAxis.Range.Min := 0;
+    AChart.BottomAxis.Range.Max := 1;
+    AChart.LeftAxis.Range.Min := -1;
+    AChart.LeftAxis.Range.Max := 1;
+    Exit;
+  end;
+
+  lMinValue := lSnapshot.Values[0];
+  lMaxValue := lSnapshot.Values[0];
+  for I := 0 to lSnapshot.Count - 1 do
+  begin
+    lSeries.AddXY(lSnapshot.Times[I], lSnapshot.Values[I]);
+    if lSnapshot.Values[I] < lMinValue then
+      lMinValue := lSnapshot.Values[I];
+    if lSnapshot.Values[I] > lMaxValue then
+      lMaxValue := lSnapshot.Values[I];
+  end;
+
+  AChart.BottomAxis.Range.Min := lSnapshot.Times[0];
+  AChart.BottomAxis.Range.Max := lSnapshot.Times[lSnapshot.Count - 1];
+  if AChart.BottomAxis.Range.Min = AChart.BottomAxis.Range.Max then
+    AChart.BottomAxis.Range.Max := AChart.BottomAxis.Range.Min + 1.0;
+
+  if lMinValue = lMaxValue then
+  begin
+    AChart.LeftAxis.Range.Min := lMinValue - 1.0;
+    AChart.LeftAxis.Range.Max := lMaxValue + 1.0;
+  end
+  else
+  begin
+    AChart.LeftAxis.Range.Min := lMinValue - Abs(lMaxValue - lMinValue) * 0.05;
+    AChart.LeftAxis.Range.Max := lMaxValue + Abs(lMaxValue - lMinValue) * 0.05;
+  end;
 end;
 
 procedure TMainForm.RenderMnemonicPage(APage: TRecorderFormPage);
@@ -1212,11 +1375,20 @@ begin
 end;
 
 procedure TMainForm.LoadRunSettings;
+var
+  lOldFileName: string;
 begin
   if FileExists(fRunControlFileName) then
   begin
     fRunSettings.LoadFromFile(fRunControlFileName);
     AddLog('Project run-control config loaded: ' + fRunControlFileName);
+  end;
+  lOldFileName := IncludeTrailingPathDelimiter(fProjectConfigDir) +
+    COldRunControlFileName;
+  if (not FileExists(fRunControlFileName)) and FileExists(lOldFileName) then
+  begin
+    fRunSettings.LoadFromFile(lOldFileName);
+    AddLog('Legacy run-control config loaded: ' + lOldFileName);
   end;
 end;
 
@@ -1224,6 +1396,87 @@ procedure TMainForm.SaveRunSettings;
 begin
   ForceDirectories(fProjectConfigDir);
   fRunSettings.SaveToFile(fRunControlFileName);
+end;
+
+procedure TMainForm.LoadProjectPackage;
+var
+  lFiles: TRecorderProjectFileSet;
+begin
+  lFiles := RecorderProjectFileSet(fProjectConfigDir, CProjectBaseName);
+
+  LoadRecorderProjectConfig(lFiles.MainConfigFileName, fTagRegistry);
+  if FileExists(lFiles.MainConfigFileName) then
+    AddLog('Project main config loaded: ' + lFiles.MainConfigFileName);
+
+  LoadRecorderGuiConfig(lFiles.GuiFileName, fFormManager, fComponentFactory);
+  if FileExists(lFiles.GuiFileName) then
+  begin
+    ResetProjectCounters;
+    if fFormEditor <> nil then
+    begin
+      fFormEditor.ClearSelection;
+      fFormEditor.ClearUndoHistory;
+    end;
+    RefreshPageButtons;
+    RenderActivePage;
+    AddLog('Project GUI config loaded: ' + lFiles.GuiFileName);
+  end;
+end;
+
+procedure TMainForm.SaveProjectPackage;
+var
+  lFiles: TRecorderProjectFileSet;
+begin
+  lFiles := RecorderProjectFileSet(fProjectConfigDir, CProjectBaseName);
+  ForceDirectories(lFiles.DirectoryName);
+
+  SaveRunSettings;
+  SaveRecorderProjectConfig(lFiles.MainConfigFileName, fTagRegistry);
+  SaveRecorderGuiConfig(lFiles.GuiFileName, fFormManager);
+
+  AddLog('Project package saved: ' + lFiles.BaseName);
+  AddLog('  main config: ' + lFiles.MainConfigFileName);
+  AddLog('  GUI config: ' + lFiles.GuiFileName);
+  AddLog('  run-control: ' + lFiles.RunControlFileName);
+end;
+
+procedure TMainForm.ResetProjectCounters;
+var
+  I: Integer;
+  J: Integer;
+  lNumber: Integer;
+  lPage: TRecorderFormPage;
+
+  function TrailingNumber(const AText: string): Integer;
+  var
+    K: Integer;
+    lDigits: string;
+  begin
+    lDigits := '';
+    for K := Length(AText) downto 1 do
+      if AText[K] in ['0'..'9'] then
+        lDigits := AText[K] + lDigits
+      else if lDigits <> '' then
+        Break;
+    Result := StrToIntDef(lDigits, 0);
+  end;
+begin
+  fNextPageNo := fFormManager.PageCount;
+  fNextComponentNo := 0;
+  for I := 0 to fFormManager.PageCount - 1 do
+  begin
+    lPage := fFormManager.Pages[I];
+    lNumber := TrailingNumber(lPage.Id);
+    if lNumber > fNextPageNo then
+      fNextPageNo := lNumber;
+
+    for J := 0 to lPage.ComponentCount - 1 do
+    begin
+      lNumber := TrailingNumber(lPage.Components[J].Id);
+      if lNumber > fNextComponentNo then
+        fNextComponentNo := lNumber;
+    end;
+  end;
 end;
 
 procedure TMainForm.RebuildTagList(const AFilter: string);
@@ -1252,23 +1505,116 @@ begin
       if lValue = '' then
         lValue := '-';
 
-      lbTags.Items.Add(Format('%s     %s', [lTag.Name, lValue]));
+      lbTags.Items.AddObject(Format('%s     %s', [lTag.Name, lValue]), lTag);
     end;
   finally
     lbTags.Items.EndUpdate;
   end;
 end;
 
+procedure TMainForm.CollectSelectedTags(ATags: TList);
+var
+  I: Integer;
+begin
+  if ATags = nil then
+    Exit;
+  ATags.Clear;
+
+  for I := 0 to lbTags.Items.Count - 1 do
+    if lbTags.Selected[I] and (lbTags.Items.Objects[I] is TRecorderTag) then
+      ATags.Add(lbTags.Items.Objects[I]);
+
+  if (ATags.Count = 0) and (lbTags.ItemIndex >= 0) and
+    (lbTags.Items.Objects[lbTags.ItemIndex] is TRecorderTag) then
+    ATags.Add(lbTags.Items.Objects[lbTags.ItemIndex]);
+end;
+
+procedure TMainForm.OpenSelectedTagSettings;
+var
+  lTags: TList;
+begin
+  lTags := TList.Create;
+  try
+    CollectSelectedTags(lTags);
+    if lTags.Count = 0 then
+      Exit;
+
+    if ShowTagSettingsDialog(Self, fTagRegistry, lTags, ilTagDialogButtons) then
+    begin
+      RebuildTagList(edTagSearch.Text);
+      AddLog(Format('Tag settings updated: %d channel(s).', [lTags.Count]));
+    end;
+  except
+    on E: Exception do
+      LogCommandError('Tag settings', E);
+  end;
+  lTags.Free;
+end;
+
 procedure TMainForm.EnsureDemoDataSources;
 var
+  I: Integer;
+  lFileIndex: Integer;
+  lFileName: string;
+  lFiles: TStringList;
   lSource: IRecorderDataSource;
+  lTag: TRecorderTag;
+  lTagNames: TStringList;
+const
+  CMeraSourcePrefix = 'Mera file: ';
 begin
   if fDataSourcesConfigured then
     Exit;
 
+  fDataSourceManager.Clear;
+
   lSource := TMockSineDataSource.Create('debug.memtag', 'MemTag', 250,
     100.0, 0.25);
   fDataSourceManager.AddSource(lSource);
+
+  lFiles := TStringList.Create;
+  try
+    lFiles.CaseSensitive := False;
+    lFiles.Sorted := False;
+    for I := 0 to fTagRegistry.TagCount - 1 do
+    begin
+      lTag := fTagRegistry.Tags[I];
+      if Pos(CMeraSourcePrefix, lTag.SourceId) <> 1 then
+        Continue;
+
+      lFileName := Trim(Copy(lTag.SourceId, Length(CMeraSourcePrefix) + 1, MaxInt));
+      if lFileName = '' then
+        Continue;
+
+      lFileIndex := lFiles.IndexOf(lFileName);
+      if lFileIndex < 0 then
+      begin
+        lTagNames := TStringList.Create;
+        lTagNames.CaseSensitive := False;
+        lFileIndex := lFiles.AddObject(lFileName, lTagNames);
+      end
+      else
+        lTagNames := TStringList(lFiles.Objects[lFileIndex]);
+
+      if lTagNames.IndexOf(lTag.Name) < 0 then
+        lTagNames.Add(lTag.Name);
+    end;
+
+    for I := 0 to lFiles.Count - 1 do
+    begin
+      lTagNames := TStringList(lFiles.Objects[I]);
+      lSource := TRecorderMeraFileDataSource.Create('mera.file.' + IntToStr(I + 1),
+        lFiles[I], 100, lTagNames);
+      fDataSourceManager.AddSource(lSource);
+      AddLog(Format('MERA playback source configured: %s (%d channels).',
+        [ExtractFileName(lFiles[I]), lTagNames.Count]));
+    end;
+  finally
+    for I := 0 to lFiles.Count - 1 do
+      lFiles.Objects[I].Free;
+    lFiles.Free;
+  end;
+
   fDataSourceManager.ConfigureTagsAll(fTagRegistry);
   fDataSourcesConfigured := True;
   AddLog('Demo data source configured: debug.memtag -> MemTag.');
@@ -1321,7 +1667,10 @@ begin
     RebuildTagList(edTagSearch.Text);
     if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) and
       (fFormManager.ActivePage.Id = 'DigitalForm') then
-      RenderDigitalPage;
+      RenderDigitalPage
+    else if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) and
+      (fFormManager.ActivePage.Id = 'BasePage') then
+      RefreshBaseOscillograms;
   end;
 
   UpdateTimeView;
@@ -1344,22 +1693,37 @@ begin
   btnAddPage.ShowHint := True;
 
   btnSettings.Caption := '';
+  btnSettings.Images := ilCommandButtons;
+  btnSettings.ImageIndex := CIconSettings;
+  btnSettings.ImageWidth := 32;
   btnSettings.Hint := 'Settings';
   btnSettings.ShowHint := True;
 
-  btnSaveConfig.Caption := 'Save';
+  btnSaveConfig.Caption := '';
+  btnSaveConfig.Images := ilCommandButtons;
+  btnSaveConfig.ImageIndex := CIconSaveConfig;
+  btnSaveConfig.ImageWidth := 32;
   btnSaveConfig.Hint := 'Save current config';
   btnSaveConfig.ShowHint := True;
 
   btnStop.Caption := '';
+  btnStop.Images := ilCommandButtons;
+  btnStop.ImageIndex := CIconStop;
+  btnStop.ImageWidth := 32;
   btnStop.Hint := 'Stop';
   btnStop.ShowHint := True;
 
   btnPreview.Caption := '';
+  btnPreview.Images := ilCommandButtons;
+  btnPreview.ImageIndex := CIconView;
+  btnPreview.ImageWidth := 32;
   btnPreview.Hint := 'View';
   btnPreview.ShowHint := True;
 
   btnRecord.Caption := '';
+  btnRecord.Images := ilCommandButtons;
+  btnRecord.ImageIndex := CIconRecord;
+  btnRecord.ImageWidth := 32;
   btnRecord.Hint := 'Record';
   btnRecord.ShowHint := True;
 

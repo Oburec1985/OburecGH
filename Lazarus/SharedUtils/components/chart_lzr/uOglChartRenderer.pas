@@ -1006,7 +1006,7 @@ begin
     lTextWidth := 0;
     for I := 0 to lLines.Count - 1 do
       lTextWidth := Max(lTextWidth, lFont.TextPixelWidth(lLines[I]));
-    lTextHeight := lLines.Count * lFont.TextPixelHeight;
+    lTextHeight := lLines.Count * lFont.TextPixelHeight + (lLines.Count - 1) * 2;
     
     lRect.Left := Round(AXPixel + 2);
     lRect.Right := Round(AXPixel + 2 + lTextWidth + 12);
@@ -1023,7 +1023,7 @@ begin
     SetGLColor($FF101010); // Темный текст для контраста
     for I := 0 to lLines.Count - 1 do
     begin
-      DrawText(lLines[I], lRect.Left + 6, lRect.Top + 4 + I * lFont.TextPixelHeight, lFont);
+      DrawText(lLines[I], lRect.Left + 6, lRect.Top + 4 + I * (lFont.TextPixelHeight + 2), lFont);
     end;
   finally
     lLines.Free;

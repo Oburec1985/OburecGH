@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, SysUtils,
-  uRecorderTags;
+  uRecorderTags, uMeraFile;
 
 type
   ERecorderDataSourceError = class(Exception);
@@ -145,6 +145,39 @@ type
     property PhaseRad: Double read fPhaseRad write fPhaseRad;
     property TimeSec: Double read fTimeSec;
     property SampleIndex: Int64 read fSampleIndex;
+  end;
+
+  { TRecorderMeraFileDataSource
+
+    Built-in playback source for MERA files. It replaces the old plugin layer:
+    selected MERA channels are mapped to recorder tags and Tick publishes file
+    samples into TRecorderTagRegistry. }
+  TRecorderMeraFileDataSource = class(TRecorderDataSourceBase)
+  private
+    fBlockLength: Cardinal;
+    fFileName: string;
+    fLoop: Boolean;
+    fPlayRangeMinSec: Double;
+    fPlaybackSpeed: Cardinal;
+    fPlaybackSignals: TList;
+    fStartTickMs: QWord;
+    fSelectedTagNames: TStringList;
+    function IsSignalSelected(ASignal: TMeraSignalInfo): Boolean;
+  protected
+    procedure DoCreateTags(ARegistry: TRecorderTagRegistry); override;
+    procedure DoTick; override;
+  public
+    constructor Create(const ASourceId, AFileName: string; AUpdateTimeMs: Cardinal;
+      ASelectedTagNames: TStrings = nil; ABlockLength: Cardinal = 128;
+      APlaybackSpeed: Cardinal = 1);
+    destructor Destroy; override;
+    procedure Start; override;
+    procedure Stop; override;
+
+    property FileName: string read fFileName;
+    property BlockLength: Cardinal read fBlockLength;
+    property LoopPlayback: Boolean read fLoop write fLoop;
+    property PlaybackSpeed: Cardinal read fPlaybackSpeed;
   end;
 
   { TRecorderDataSourceThread
@@ -351,6 +384,8 @@ begin
   lTag.UnitName := 'a.u.';
   lTag.Description := 'Mock sine signal';
   lTag.SourceId := SourceId;
+  lTag.ModuleType := 'virtual';
+  lTag.PollFrequencyHz := 1000.0 / UpdateTimeMs;
 end;
 
 procedure TMockSineDataSource.DoTick;
@@ -364,6 +399,440 @@ begin
 
   Inc(fSampleIndex);
   fTimeSec := fTimeSec + (UpdateTimeMs / 1000.0);
+end;
+
+type
+  TMeraPlaybackSignal = class
+  private
+    fCachedTimeSec: Double;
+    fCachedValue: Double;
+    fDataStream: TFileStream;
+    fHasCachedSample: Boolean;
+    fInfo: TMeraSignalInfo;
+    fSampleIndex: Int64;
+    fTagName: string;
+    fTimeStream: TFileStream;
+    function GetDataSize: Integer;
+    function IsScalar: Boolean;
+    function ReadRawValue(out AValue: Double): Boolean;
+    function ReadSample(out ATimeSec, AValue: Double): Boolean;
+    function EnsureCachedSample: Boolean;
+  public
+    constructor Create(ASignal: TMeraSignalInfo);
+    destructor Destroy; override;
+    procedure Open;
+    procedure Close;
+    procedure Rewind;
+    function PublishNext(ARegistry: TRecorderTagRegistry): Boolean;
+    function PublishScalarDue(ARegistry: TRecorderTagRegistry; APlayTimeSec: Double;
+      AMaxSamples: Integer): Boolean;
+    function PublishVectorDue(ARegistry: TRecorderTagRegistry; APlayTimeSec: Double;
+      ABlockLength: Cardinal; AMaxBlocks: Integer): Boolean;
+    property TagName: string read fTagName;
+  end;
+
+constructor TMeraPlaybackSignal.Create(ASignal: TMeraSignalInfo);
+begin
+  inherited Create;
+  if ASignal = nil then
+    raise ERecorderDataSourceError.Create('MERA signal cannot be nil');
+
+  fInfo := ASignal;
+  fTagName := MeraSignalToRecorderTagName(ASignal);
+end;
+
+destructor TMeraPlaybackSignal.Destroy;
+begin
+  Close;
+  inherited Destroy;
+end;
+
+function TMeraPlaybackSignal.GetDataSize: Integer;
+begin
+  Result := MeraValueTypeSize(fInfo.DataType);
+end;
+
+function TMeraPlaybackSignal.IsScalar: Boolean;
+begin
+  Result := fInfo.HasXData or (fInfo.FrequencyHz <= 0);
+end;
+
+procedure TMeraPlaybackSignal.Open;
+begin
+  Close;
+  if not FileExists(fInfo.FileName) then
+    raise ERecorderDataSourceError.CreateFmt('MERA data file not found: %s',
+      [fInfo.FileName]);
+
+  fDataStream := TFileStream.Create(fInfo.FileName, fmOpenRead or fmShareDenyNone);
+  if fInfo.HasXData then
+  begin
+    if not FileExists(fInfo.XFileName) then
+      raise ERecorderDataSourceError.CreateFmt('MERA time file not found: %s',
+        [fInfo.XFileName]);
+    fTimeStream := TFileStream.Create(fInfo.XFileName, fmOpenRead or fmShareDenyNone);
+  end;
+  Rewind;
+end;
+
+procedure TMeraPlaybackSignal.Close;
+begin
+  FreeAndNil(fTimeStream);
+  FreeAndNil(fDataStream);
+end;
+
+procedure TMeraPlaybackSignal.Rewind;
+begin
+  if fDataStream <> nil then
+    fDataStream.Position := 0;
+  if fTimeStream <> nil then
+    fTimeStream.Position := 0;
+  fSampleIndex := 0;
+  fCachedTimeSec := 0;
+  fCachedValue := 0;
+  fHasCachedSample := False;
+end;
+
+function TMeraPlaybackSignal.ReadRawValue(out AValue: Double): Boolean;
+var
+  lDouble: Double;
+  lSingle: Single;
+  lInt32: LongInt;
+  lUInt32: LongWord;
+  lInt16: SmallInt;
+  lUInt16: Word;
+begin
+  Result := False;
+  AValue := 0;
+  if (fDataStream = nil) or (fDataStream.Position + GetDataSize > fDataStream.Size) then
+    Exit;
+
+  case fInfo.DataType of
+    mvtFloat64:
+      begin
+        fDataStream.ReadBuffer(lDouble, SizeOf(lDouble));
+        AValue := lDouble;
+      end;
+    mvtFloat32:
+      begin
+        fDataStream.ReadBuffer(lSingle, SizeOf(lSingle));
+        AValue := lSingle;
+      end;
+    mvtInt32:
+      begin
+        fDataStream.ReadBuffer(lInt32, SizeOf(lInt32));
+        AValue := lInt32;
+      end;
+    mvtUInt32:
+      begin
+        fDataStream.ReadBuffer(lUInt32, SizeOf(lUInt32));
+        AValue := lUInt32;
+      end;
+    mvtInt16:
+      begin
+        fDataStream.ReadBuffer(lInt16, SizeOf(lInt16));
+        AValue := lInt16;
+      end;
+    mvtUInt16:
+      begin
+        fDataStream.ReadBuffer(lUInt16, SizeOf(lUInt16));
+        AValue := lUInt16;
+      end;
+  end;
+  Result := True;
+end;
+
+function TMeraPlaybackSignal.ReadSample(out ATimeSec, AValue: Double): Boolean;
+begin
+  Result := False;
+  ATimeSec := 0;
+  AValue := 0;
+
+  if fTimeStream <> nil then
+  begin
+    if fTimeStream.Position + SizeOf(Double) > fTimeStream.Size then
+      Exit;
+    fTimeStream.ReadBuffer(ATimeSec, SizeOf(Double));
+    ATimeSec := ATimeSec + fInfo.StartSec;
+  end
+  else
+  begin
+    if fInfo.FrequencyHz <= 0 then
+      Exit;
+    ATimeSec := fInfo.StartSec + (fSampleIndex / fInfo.FrequencyHz);
+  end;
+
+  if not ReadRawValue(AValue) then
+    Exit;
+
+  Inc(fSampleIndex);
+  Result := True;
+end;
+
+function TMeraPlaybackSignal.EnsureCachedSample: Boolean;
+begin
+  Result := fHasCachedSample;
+  if Result then
+    Exit;
+
+  Result := ReadSample(fCachedTimeSec, fCachedValue);
+  fHasCachedSample := Result;
+end;
+
+function TMeraPlaybackSignal.PublishNext(ARegistry: TRecorderTagRegistry): Boolean;
+var
+  lTimeSec: Double;
+  lValue: Double;
+begin
+  Result := False;
+  if ARegistry = nil then
+    Exit;
+
+  if not ReadSample(lTimeSec, lValue) then
+    Exit;
+
+  ARegistry.PublishValue(fTagName, lTimeSec, lValue);
+  Result := True;
+end;
+
+function TMeraPlaybackSignal.PublishScalarDue(ARegistry: TRecorderTagRegistry;
+  APlayTimeSec: Double; AMaxSamples: Integer): Boolean;
+var
+  lPublished: Integer;
+begin
+  Result := False;
+  lPublished := 0;
+  while (lPublished < AMaxSamples) and EnsureCachedSample and
+    (fCachedTimeSec <= APlayTimeSec) do
+  begin
+    ARegistry.PublishValue(fTagName, fCachedTimeSec, fCachedValue);
+    fHasCachedSample := False;
+    Inc(lPublished);
+    Result := True;
+  end;
+end;
+
+function TMeraPlaybackSignal.PublishVectorDue(ARegistry: TRecorderTagRegistry;
+  APlayTimeSec: Double; ABlockLength: Cardinal; AMaxBlocks: Integer): Boolean;
+var
+  I: Integer;
+  lBlocks: Integer;
+  lCount: Integer;
+  lTimeSec: Double;
+  lTimes: TRecorderDoubleArray;
+  lValue: Double;
+  lValues: TRecorderDoubleArray;
+begin
+  Result := False;
+  if (ARegistry = nil) or IsScalar or (fInfo.FrequencyHz <= 0) then
+    Exit;
+  if ABlockLength = 0 then
+    ABlockLength := 1;
+
+  lBlocks := 0;
+  SetLength(lTimes, ABlockLength);
+  SetLength(lValues, ABlockLength);
+  while (lBlocks < AMaxBlocks) and
+    (fInfo.StartSec + (fSampleIndex / fInfo.FrequencyHz) <= APlayTimeSec) do
+  begin
+    lCount := 0;
+    for I := 0 to ABlockLength - 1 do
+    begin
+      if not ReadRawValue(lValue) then
+        Break;
+
+      lTimeSec := fInfo.StartSec + (fSampleIndex / fInfo.FrequencyHz);
+      lTimes[lCount] := lTimeSec;
+      lValues[lCount] := lValue;
+      Inc(lCount);
+      Inc(fSampleIndex);
+    end;
+
+    if lCount = 0 then
+      Break;
+
+    ARegistry.PublishBlock(fTagName, lTimes, lValues, lCount);
+    Result := True;
+    Inc(lBlocks);
+  end;
+end;
+
+{ TRecorderMeraFileDataSource }
+
+constructor TRecorderMeraFileDataSource.Create(const ASourceId, AFileName: string;
+  AUpdateTimeMs: Cardinal; ASelectedTagNames: TStrings; ABlockLength: Cardinal;
+  APlaybackSpeed: Cardinal);
+begin
+  if AFileName = '' then
+    raise ERecorderDataSourceError.Create('MERA file name cannot be empty');
+  if APlaybackSpeed = 0 then
+    raise ERecorderDataSourceError.Create('MERA playback speed must be positive');
+
+  inherited Create(ASourceId, 'MERA file playback', AUpdateTimeMs);
+  if ABlockLength = 0 then
+    ABlockLength := 1;
+
+  fFileName := AFileName;
+  fBlockLength := ABlockLength;
+  fPlaybackSpeed := APlaybackSpeed;
+  fPlaybackSignals := TList.Create;
+  fSelectedTagNames := TStringList.Create;
+  fSelectedTagNames.CaseSensitive := False;
+  fSelectedTagNames.Sorted := False;
+  if ASelectedTagNames <> nil then
+    fSelectedTagNames.Assign(ASelectedTagNames);
+end;
+
+destructor TRecorderMeraFileDataSource.Destroy;
+begin
+  Stop;
+  while fPlaybackSignals.Count > 0 do
+  begin
+    TObject(fPlaybackSignals[0]).Free;
+    fPlaybackSignals.Delete(0);
+  end;
+  fPlaybackSignals.Free;
+  fSelectedTagNames.Free;
+  inherited Destroy;
+end;
+
+function TRecorderMeraFileDataSource.IsSignalSelected(ASignal: TMeraSignalInfo): Boolean;
+begin
+  Result := (fSelectedTagNames.Count = 0) or
+    (fSelectedTagNames.IndexOf(MeraSignalToRecorderTagName(ASignal)) >= 0);
+end;
+
+procedure TRecorderMeraFileDataSource.DoCreateTags(ARegistry: TRecorderTagRegistry);
+var
+  I: Integer;
+  lSignal: TMeraSignalInfo;
+  lSignals: TList;
+  lTag: TRecorderTag;
+  lTagName: string;
+begin
+  lSignals := TList.Create;
+  try
+    LoadMeraSignalsFromFile(fFileName, lSignals);
+    for I := 0 to lSignals.Count - 1 do
+    begin
+      lSignal := TMeraSignalInfo(lSignals[I]);
+      if not IsSignalSelected(lSignal) then
+        Continue;
+
+      lTagName := MeraSignalToRecorderTagName(lSignal);
+      lTag := ARegistry.FindByName(lTagName);
+      if lTag = nil then
+        lTag := ARegistry.CreateTag(lTagName, 4096);
+
+      lTag.Address := lSignal.Address;
+      lTag.UnitName := lSignal.UnitsName;
+      lTag.ModuleType := lSignal.ModuleName;
+      lTag.PollFrequencyHz := lSignal.FrequencyHz;
+      if lTag.SourceId = '' then
+        lTag.SourceId := 'Mera file: ' + fFileName;
+      lTag.Description := Format('%s; type=%s; freq=%s; file=%s',
+        [lSignal.Name, lSignal.DataTypeName,
+        FormatFloat('0.######', lSignal.FrequencyHz),
+        ExtractFileName(lSignal.FileName)]);
+    end;
+  finally
+    ClearMeraSignals(lSignals);
+    lSignals.Free;
+  end;
+end;
+
+procedure TRecorderMeraFileDataSource.Start;
+var
+  I: Integer;
+  lHasRange: Boolean;
+  lSignal: TMeraSignalInfo;
+  lSignals: TList;
+  lPlaybackSignal: TMeraPlaybackSignal;
+begin
+  inherited Start;
+  lHasRange := False;
+  fPlayRangeMinSec := 0;
+  fStartTickMs := GetTickCount64;
+
+  lSignals := TList.Create;
+  try
+    LoadMeraSignalsFromFile(fFileName, lSignals);
+    for I := 0 to lSignals.Count - 1 do
+    begin
+      lSignal := TMeraSignalInfo(lSignals[I]);
+      if not IsSignalSelected(lSignal) then
+        Continue;
+      if (not lHasRange) or (lSignal.StartSec < fPlayRangeMinSec) then
+      begin
+        fPlayRangeMinSec := lSignal.StartSec;
+        lHasRange := True;
+      end;
+
+      lPlaybackSignal := TMeraPlaybackSignal.Create(lSignal);
+      try
+        lPlaybackSignal.Open;
+        fPlaybackSignals.Add(lPlaybackSignal);
+        lSignals[I] := nil;
+        lPlaybackSignal := nil;
+      finally
+        lPlaybackSignal.Free;
+      end;
+    end;
+  finally
+    ClearMeraSignals(lSignals);
+    lSignals.Free;
+  end;
+end;
+
+procedure TRecorderMeraFileDataSource.Stop;
+begin
+  while fPlaybackSignals.Count > 0 do
+  begin
+    TObject(fPlaybackSignals[0]).Free;
+    fPlaybackSignals.Delete(0);
+  end;
+  inherited Stop;
+end;
+
+procedure TRecorderMeraFileDataSource.DoTick;
+var
+  I: Integer;
+  lAnyPublished: Boolean;
+  lPlayTimeSec: Double;
+  lSignal: TMeraPlaybackSignal;
+  lSignalPublished: Boolean;
+const
+  CScalarSamplesPerTickLimit = 4096;
+  CVectorBlocksPerTickLimit = 16;
+begin
+  lPlayTimeSec := fPlayRangeMinSec +
+    (((GetTickCount64 - fStartTickMs) / 1000.0) * fPlaybackSpeed);
+  lAnyPublished := False;
+  for I := 0 to fPlaybackSignals.Count - 1 do
+  begin
+    lSignal := TMeraPlaybackSignal(fPlaybackSignals[I]);
+    if lSignal.IsScalar then
+      lSignalPublished := lSignal.PublishScalarDue(Registry, lPlayTimeSec,
+        CScalarSamplesPerTickLimit)
+    else
+      lSignalPublished := lSignal.PublishVectorDue(Registry, lPlayTimeSec,
+        fBlockLength, CVectorBlocksPerTickLimit);
+
+    if (not lSignalPublished) and fLoop then
+    begin
+      lSignal.Rewind;
+      if lSignal.IsScalar then
+        lSignalPublished := lSignal.PublishScalarDue(Registry, lPlayTimeSec,
+          CScalarSamplesPerTickLimit)
+      else
+        lSignalPublished := lSignal.PublishVectorDue(Registry, lPlayTimeSec,
+          fBlockLength, CVectorBlocksPerTickLimit);
+    end;
+    lAnyPublished := lSignalPublished or lAnyPublished;
+  end;
+
+  if not lAnyPublished then
+    Exit;
 end;
 
 { TRecorderDataSourceThread }
