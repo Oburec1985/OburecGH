@@ -123,6 +123,15 @@ begin
     AssertEquals(lSnapshot.Values[0], 11.0, 'oldest sample value after ring overwrite');
     AssertEquals(lSnapshot.Values[2], 13.0, 'latest sample value');
 
+    lMemTag.EnsureBufferCapacity(6);
+    lRegistry.PublishValue('MemTag', 0.4, 14.0);
+    lRegistry.PublishValue('MemTag', 0.5, 15.0);
+    lRegistry.PublishValue('MemTag', 0.6, 16.0);
+    lSnapshot := lMemTag.Snapshot;
+    AssertEquals(lSnapshot.Count, 6, 'expanded buffer keeps older samples');
+    AssertEquals(lSnapshot.Times[0], 0.1, 'expanded buffer first preserved time');
+    AssertEquals(lSnapshot.Values[5], 16.0, 'expanded buffer latest value');
+
     Writeln('RESULT tags registry and signal buffer test passed.');
   finally
     lRegistry.Free;

@@ -61,7 +61,7 @@ var
   lSaved: TRecorderRunControlSettings;
   lLoaded: TRecorderRunControlSettings;
 begin
-  lFileName := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
+  lFileName := IncludeTrailingPathDelimiter(GetTempDir(False)) +
     'run-control-settings-test.ini';
 
   lSaved := TRecorderRunControlSettings.Create;
@@ -73,6 +73,9 @@ begin
     lSaved.StartEdge := rseRising;
     lSaved.StopCondition := rstopDuration;
     lSaved.StopDelayMs := 15000;
+    lSaved.ScreenUpdateMs := 750;
+    lSaved.DisplayBufferMs := 1250;
+    lSaved.DataUpdateMs := 200;
     lSaved.SaveToFile(lFileName);
 
     lLoaded.LoadFromFile(lFileName);
@@ -86,6 +89,9 @@ begin
     if lLoaded.StopCondition <> rstopDuration then
       raise Exception.Create('loaded StopCondition mismatch');
     AssertEquals(lLoaded.StopDelayMs, 15000, 'loaded StopDelayMs');
+    AssertEquals(lLoaded.ScreenUpdateMs, 750, 'loaded ScreenUpdateMs');
+    AssertEquals(lLoaded.DisplayBufferMs, 1250, 'loaded DisplayBufferMs');
+    AssertEquals(lLoaded.DataUpdateMs, 200, 'loaded DataUpdateMs');
 
     Writeln('Run control settings save/load test passed.');
   finally

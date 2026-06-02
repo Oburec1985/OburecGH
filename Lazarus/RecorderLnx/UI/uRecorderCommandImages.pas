@@ -1,5 +1,18 @@
 unit uRecorderCommandImages;
 
+{
+  ћодуль uRecorderCommandImages
+
+  Ќазначение:
+    ¬спомогательный модуль дл€ загрузки графических ресурсов (иконок и растровых
+    изображений) командных кнопок и элементов интерфейса RecorderLnx из общего
+    каталога картинок.
+
+  ћесто в архитектуре:
+    UI слой (UI layer/assets helper). ѕредоставл€ет константы индексов изображений
+    и процедуру загрузки списка изображений.
+}
+
 {$mode objfpc}{$H+}
 
 interface
@@ -8,18 +21,19 @@ uses
   Classes, SysUtils, Graphics, ImgList;
 
 const
+  { »ндексы изображений в списке картинок }
   CIconSettings = 0;
   CIconRecord = 1;
   CIconView = 2;
   CIconStop = 3;
   CIconEditForm = 15;
-  CIconOscillogram = 16;
-  CIconTextLabel = 17;
-  CIconSpectrum = 18;
-  CIconDigitalIndicator = 19;
+  CIconOscillogram = 5;
+  CIconTextLabel = 6;
+  CIconSpectrum = 7;
+  CIconDigitalIndicator = 8;
   CIconTagTable = 20;
-  CIconButton = 21;
-  CIconComboBox = 22;
+  CIconButton = 10;
+  CIconComboBox = 11;
   CIconDeviceRoot = 23;
   CIconDeviceController = 24;
   CIconDeviceModule = 25;
@@ -36,6 +50,7 @@ const
   CRecorderOriginalImageCount = 15;
   CRecorderCommandImageCount = 35;
 
+{ «агружает командные иконки и изображени€ в переданный список изображений }
 procedure LoadRecorderCommandImages(AImages: TCustomImageList);
 
 implementation

@@ -1,19 +1,20 @@
 unit uRecorderTimeSystem;
 
 {
-  Unit uRecorderTimeSystem
+  Модуль uRecorderTimeSystem
 
-  Purpose:
-    Central time model for RecorderLnx. The original Recorder can show several
-    time domains in the status display: PC time, recorder elapsed time, hardware
-    channel/tag time and UTS time. This unit keeps that policy outside LCL forms
-    so UI code only asks for a snapshot and renders it.
+  Назначение:
+    Центральная модель времени для проекта RecorderLnx. Оригинальный регистратор (Recorder)
+    может отображать несколько временных областей в строке состояния: системное время ПК,
+    время, прошедшее с момента старта записи, аппаратное время канала/тега и время UTS.
+    Этот модуль инкапсулирует логику выбора и форматирования времени независимо от LCL,
+    позволяя UI запрашивать готовый снимок состояния (snapshot) для отрисовки.
 
-  Architecture:
-    Core/domain unit, cross-platform and LCL-free. The first implementation is
-    intentionally small: it stores the selected display source, start moment,
-    last tag sample time and last UTS time. Later the same class can be fed by a
-    dedicated display/update thread or by hardware source metadata.
+  Архитектура:
+    Ядро системы (Core/domain), кроссплатформенное и независимое от визуальных компонентов LCL.
+    Текущая реализация хранит выбранный источник времени, момент старта, время последнего
+    полученного тега и последнее время UTS. В дальнейшем класс может обновляться из
+    выделенного потока или метаданных аппаратных источников.
 }
 
 {$mode objfpc}{$H+}
@@ -24,23 +25,25 @@ uses
   Classes, SysUtils;
 
 type
-  { Selects the time domain shown on the Recorder status display. }
+  { TRecorderTimeSourceKind
+    Определяет временную область, отображаемую в статусной строке регистратора. }
   TRecorderTimeSourceKind = (
-    rtskPcTime,
-    rtskElapsedTime,
-    rtskTagTime,
-    rtskUtsTime
+    rtskPcTime,        { Системное время ПК }
+    rtskElapsedTime,   { Прошедшее время с момента запуска }
+    rtskTagTime,       { Аппаратное время тега/канала }
+    rtskUtsTime        { Время UTS }
   );
 
-  { Immutable status-display time snapshot.
-
-    SourceKind       - selected display source.
-    Running          - True while data flow is active.
-    StartLocalTime   - PC date/time captured at Start.
-    ElapsedSec       - monotonic elapsed time from Start.
-    LastTagTimeSec   - latest hardware/channel/tag sample time.
-    LastUtsTimeSec   - latest UTS time value when available.
-    DisplayText      - already formatted text for a compact status display. }
+  { TRecorderTimeSnapshot
+    Неизменяемый снимок состояния времени для отображения на форме.
+    
+    SourceKind       - выбранный источник времени для отображения.
+    Running          - True, если процесс записи/сбора данных активен.
+    StartLocalTime   - локальное время ПК в момент старта.
+    ElapsedSec       - монотонно увеличивающееся прошедшее время в секундах с момента старта.
+    LastTagTimeSec   - последнее известное время аппаратного тега в секундах.
+    LastUtsTimeSec   - последнее известное время UTS в секундах.
+    DisplayText      - готовая отформатированная строка для компактного показа в строке состояния. }
   TRecorderTimeSnapshot = record
     SourceKind: TRecorderTimeSourceKind;
     Running: Boolean;
@@ -52,21 +55,21 @@ type
   end;
 
   { TRecorderTimeSystem
-
-    Owns RecorderLnx time-display policy. All public methods are protected by a
-    critical section because future data/display workers may update/read it from
-    different threads. }
+    Класс управления политикой отображения времени в RecorderLnx.
+    Все открытые методы защищены критической секцией fLock для обеспечения потокобезопасности,
+    так как будущие рабочие потоки могут обновлять или читать данные параллельно с основным потоком UI. }
   TRecorderTimeSystem = class
   private
-    fDisplayUpdateMs: Integer;
-    fLastTagTimeSec: Double;
-    fLastUtsTimeSec: Double;
-    fLock: TRTLCriticalSection;
-    fResetAtStart: Boolean;
-    fRunning: Boolean;
-    fSourceKind: TRecorderTimeSourceKind;
-    fStartLocalTime: TDateTime;
-    fStartTickMs: QWord;
+    fDisplayUpdateMs: Integer;       { Интервал обновления дисплея в мс }
+    fLastTagTimeSec: Double;         { Время последнего тега }
+    fLastUtsTimeSec: Double;         { Время последнего UTS }
+    fLock: TRTLCriticalSection;      { Критическая секция для защиты внутренних данных }
+    fResetAtStart: Boolean;          { Флаг сброса внешних данных времени при старте }
+    fRunning: Boolean;               { Флаг активности записи }
+    fSourceKind: TRecorderTimeSourceKind; { Текущий выбранный источник времени }
+    fStartLocalTime: TDateTime;      { Системное время старта }
+    fStartTickMs: QWord;             { Монотонное время старта в миллисекундах }
+    
     function GetDisplayUpdateMs: Integer;
     function GetResetAtStart: Boolean;
     function GetSourceKind: TRecorderTimeSourceKind;
@@ -75,33 +78,34 @@ type
     procedure SetSourceKind(AValue: TRecorderTimeSourceKind);
     function InternalElapsedSec(ANowTickMs: QWord): Double;
   public
+    { Конструктор инициализирует критическую секцию и значения по умолчанию }
     constructor Create;
+    { Деструктор корректно освобождает критическую секцию }
     destructor Destroy; override;
 
-    { Starts or restarts the active time interval.
-
-      The start point is both PC date/time and monotonic tick counter. If
-      ResetAtStart is True, last external tag/UTS times are cleared too. }
+    { Запускает или перезапускает активный временной интервал.
+      Фиксирует системное время ПК и монотонный счетчик тиков.
+      Если ResetAtStart установлен в True, сбрасывает также последние внешние значения тега и UTS. }
     procedure Start;
 
-    { Stops the active interval without clearing the latest measured values. }
+    { Останавливает активный интервал, сохраняя последние измеренные значения времени. }
     procedure Stop;
 
-    { Clears elapsed and external time values. }
+    { Сбрасывает прошедшее время и внешние временные значения. }
     procedure Reset;
 
-    { Updates external time domains from a received tag/channel sample.
-
-      ATagTimeSec - hardware/channel/sample time in seconds.
-      AUtsTimeSec - UTS time in seconds; pass a negative value when unavailable. }
+    { Обновляет внешние временные области на основе полученного тега или примера данных канала.
+      ATagTimeSec - аппаратное время в секундах.
+      AUtsTimeSec - время UTS в секундах; передайте отрицательное значение, если оно недоступно. }
     procedure UpdateFromTagSample(ATagTimeSec: Double; AUtsTimeSec: Double = -1);
 
-    { Returns a thread-safe copy formatted for the status display. }
+    { Возвращает потокобезопасную копию состояния, отформатированную для строки статуса. }
     function Snapshot: TRecorderTimeSnapshot;
 
-    { Formats seconds as HH:MM:SS for compact Recorder-like displays. }
+    { Статический метод для форматирования секунд в строку вида ЧЧ:ММ:СС }
     class function FormatDuration(ASeconds: Double): string; static;
 
+    { Свойства класса }
     property SourceKind: TRecorderTimeSourceKind read GetSourceKind write SetSourceKind;
     property ResetAtStart: Boolean read GetResetAtStart write SetResetAtStart;
     property DisplayUpdateMs: Integer read GetDisplayUpdateMs write SetDisplayUpdateMs;

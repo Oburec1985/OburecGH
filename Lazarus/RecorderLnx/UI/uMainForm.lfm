@@ -6,6 +6,7 @@ object MainForm: TMainForm
   Caption = 'RecorderLnx'
   ClientHeight = 700
   ClientWidth = 1064
+  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   object pnToolbar: TPanel
@@ -1628,6 +1629,8 @@ object MainForm: TMainForm
   object ilTagDialogButtons: TImageList
     Height = 32
     Width = 32
+    Left = 416
+    Top = 152
     Bitmap = {
       4C7A0700000020000000200000007A0E00000000000078DAED9B095854E51AC7
       ED96B69BA2E296B9B57AB3BAEE608264EE964B68947BA6E9B5D0725F48041720

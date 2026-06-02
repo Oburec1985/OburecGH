@@ -8,7 +8,7 @@ uses
   {$ENDIF}
   Interfaces,
   Forms,
-  uMainForm;
+  uMainForm, uSharedFileLogger;
 
 begin
   RequireDerivedFormResource := True;

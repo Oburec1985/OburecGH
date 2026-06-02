@@ -3,9 +3,9 @@
 		"version" : 1,
 		"dataSources" : [
 				{
-						"sourceId" : "debug.memtag",
-						"moduleType" : "virtual",
-						"defaultPollFrequencyHz" : 4.0000000000000000E+000
+						"sourceId" : "debug.diagnostics",
+						"moduleType" : "diagnostics",
+						"defaultPollFrequencyHz" : 5.0000000000000000E+000
 				},
 				{
 						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
@@ -17,12 +17,12 @@
 				{
 						"id" : 1,
 						"name" : "MemTag",
-						"address" : "virtual",
-						"unit" : "a.u.",
-						"description" : "Mock sine signal",
-						"sourceId" : "debug.memtag",
-						"moduleType" : "virtual",
-						"pollFrequencyHz" : 4.0000000000000000E+000,
+						"address" : "diagnostics.memory",
+						"unit" : "MB",
+						"description" : "Recorder process memory usage",
+						"sourceId" : "debug.diagnostics",
+						"moduleType" : "diagnostics",
+						"pollFrequencyHz" : 5.0000000000000000E+000,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -777,6 +777,64 @@
 						"sourceId" : "Mera file: D:\\works\\mera\\mera files signals\\shocks\\signal0005\\signal0005.mera",
 						"moduleType" : "MC-201",
 						"pollFrequencyHz" : 5.7600000000000000E+004,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						}
+				},
+				{
+						"id" : 28,
+						"name" : "CpuUsage",
+						"address" : "diagnostics.cpu",
+						"unit" : "%",
+						"description" : "Recorder process CPU usage",
+						"sourceId" : "debug.diagnostics",
+						"moduleType" : "diagnostics",
+						"pollFrequencyHz" : 5.0000000000000000E+000,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,

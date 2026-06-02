@@ -1,16 +1,16 @@
 unit uFormPagesDialog;
 
 {
-  uFormPagesDialog
+  Модуль uFormPagesDialog
 
-  Purpose:
-    Modal editor for RecorderLnx screen pages. The dialog works with the core
-    form model and does not create visual scheme components itself except for
-    adding a blank mnemonic page.
+  Назначение:
+    Модальный редактор/диалог для управления страницами (мнемосхемами) RecorderLnx.
+    Диалог работает с доменной моделью форм (TRecorderFormManager) и позволяет
+    создавать пустые мнемосхемы, переименовывать их, удалять и менять порядок.
 
-  Architecture:
-    UI layer. Domain operations stay in TRecorderFormManager and
-    TRecorderFormFactory.
+  Архитектура:
+    Слой пользовательского интерфейса (UI layer). Доменные операции осуществляются
+    через TRecorderFormManager и TRecorderFormFactory.
 }
 
 {$mode objfpc}{$H+}
@@ -23,17 +23,18 @@ uses
   uRecorderFormModel;
 
 type
-  { TFormPagesDialog }
-
+  { TFormPagesDialog
+    Диалоговое окно для работы со страницами формуляров. }
   TFormPagesDialog = class(TForm)
   private
-    fActivating: Boolean;
-    fFactory: TRecorderFormFactory;
-    fGrid: TStringGrid;
-    fManager: TRecorderFormManager;
-    fNameEdit: TEdit;
-    fNextPageNo: Integer;
-    fUpdating: Boolean;
+    fActivating: Boolean;                  { Флаг процесса активации страницы }
+    fFactory: TRecorderFormFactory;        { Фабрика создания форм }
+    fGrid: TStringGrid;                    { Таблица со списком страниц }
+    fManager: TRecorderFormManager;        { Менеджер форм }
+    fNameEdit: TEdit;                      { Поле редактирования имени выбранной страницы }
+    fNextPageNo: Integer;                  { Счетчик номера следующей создаваемой страницы }
+    fUpdating: Boolean;                    { Флаг внутренней синхронизации и обновления UI }
+    
     procedure ActivateSelectedPage;
     procedure AddMnemonicClick(Sender: TObject);
     procedure ActivateClick(Sender: TObject);
@@ -49,6 +50,10 @@ type
     function PageDescription(APage: TRecorderFormPage): string;
     function UniquePageId: string;
   public
+    { Конструктор диалогового окна
+      AManager   - ссылка на менеджер форм.
+      AFactory   - ссылка на фабрику форм.
+      ANextPageNo - начальный номер для генерации новых страниц. }
     constructor CreateDialog(AOwner: TComponent; AManager: TRecorderFormManager;
       AFactory: TRecorderFormFactory; ANextPageNo: Integer);
     property NextPageNo: Integer read fNextPageNo;

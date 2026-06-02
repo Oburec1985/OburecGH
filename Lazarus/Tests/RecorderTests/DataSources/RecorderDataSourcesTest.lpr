@@ -17,7 +17,8 @@ uses
   SysUtils,
   uRecorderCoreServices,
   uRecorderDataSources,
-  uRecorderTags;
+  uRecorderTags,
+  uSharedFileLogger;
 
 type
   TDataSourceEventProbe = class
@@ -28,17 +29,14 @@ type
   end;
 
 var
-  g_Log: TextFile;
+  g_Log: TSharedFileLogger;
   g_LogOpened: Boolean = False;
 
 procedure LogLine(const AText: string);
 begin
   Writeln(AText);
   if g_LogOpened then
-  begin
-    Writeln(g_Log, AText);
-    Flush(g_Log);
-  end;
+    g_Log.Info(AText);
 end;
 
 procedure LogFmt(const AFormat: string; const AArgs: array of const);
@@ -51,8 +49,9 @@ var
   lLogFileName: string;
 begin
   lLogFileName := ChangeFileExt(ParamStr(0), '.log');
-  AssignFile(g_Log, lLogFileName);
-  Rewrite(g_Log);
+  if FileExists(lLogFileName) then
+    DeleteFile(lLogFileName);
+  g_Log := TSharedFileLogger.Create(lLogFileName);
   g_LogOpened := True;
   LogLine('LOG file: ' + lLogFileName);
 end;
@@ -62,7 +61,7 @@ begin
   if g_LogOpened then
   begin
     g_LogOpened := False;
-    CloseFile(g_Log);
+    FreeAndNil(g_Log);
   end;
 end;
 
@@ -501,6 +500,54 @@ begin
   end;
 end;
 
+procedure TestDiagnosticsDataSource;
+var
+  lBus: TRecorderEventBus;
+  lCpuSnapshot: TRecorderSignalSnapshot;
+  lCpuTag: TRecorderTag;
+  lMemorySnapshot: TRecorderSignalSnapshot;
+  lMemoryTag: TRecorderTag;
+  lRegistry: TRecorderTagRegistry;
+  lSource: TRecorderDiagnosticsDataSource;
+begin
+  LogLine('--- Recorder diagnostics data source test ---');
+  lBus := TRecorderEventBus.Create;
+  lRegistry := TRecorderTagRegistry.Create(lBus);
+  lSource := TRecorderDiagnosticsDataSource.Create('diagnostics.test', 200,
+    'MemTag', 'CpuUsage');
+  try
+    lSource.ConfigureTags(lRegistry);
+    lMemoryTag := lRegistry.FindByName('MemTag');
+    lCpuTag := lRegistry.FindByName('CpuUsage');
+    AssertTrue(lMemoryTag <> nil, 'Diagnostics creates MemTag');
+    AssertTrue(lCpuTag <> nil, 'Diagnostics creates CpuUsage');
+    AssertEquals(lRegistry.TagCount, 2, 'Diagnostics tag count');
+    AssertTrue(lMemoryTag.UnitName = 'MB', 'MemTag unit');
+    AssertTrue(lCpuTag.UnitName = '%', 'CpuUsage unit');
+
+    lSource.Start;
+    lSource.Tick;
+    Sleep(220);
+    lSource.Tick;
+    lSource.Stop;
+
+    lMemorySnapshot := lMemoryTag.Snapshot;
+    lCpuSnapshot := lCpuTag.Snapshot;
+    PrintSnapshot('SNAPSHOT MemTag', lMemorySnapshot);
+    PrintSnapshot('SNAPSHOT CpuUsage', lCpuSnapshot);
+    AssertEquals(lMemorySnapshot.Count, 2, 'MemTag sample count');
+    AssertEquals(lCpuSnapshot.Count, 2, 'CpuUsage sample count');
+    AssertTrue(lMemorySnapshot.Values[0] >= 0, 'MemTag value non-negative');
+    AssertTrue(lCpuSnapshot.Values[0] >= 0, 'CpuUsage value non-negative');
+    AssertTrue(lCpuSnapshot.Values[0] <= 100, 'CpuUsage value <= 100');
+    LogLine('RESULT diagnostics data source test passed.');
+  finally
+    lSource.Free;
+    lRegistry.Free;
+    lBus.Free;
+  end;
+end;
+
 begin
   OpenLog;
   try
@@ -513,6 +560,8 @@ begin
     TestMeraFileDataSource;
     LogLine('');
     TestMeraScalarTimeFileDataSource;
+    LogLine('');
+    TestDiagnosticsDataSource;
   finally
     CloseLog;
   end;
