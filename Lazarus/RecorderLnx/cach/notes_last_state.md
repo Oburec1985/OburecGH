@@ -1,0 +1,12 @@
+# Текущее состояние работы
+- **Файлы**: 
+  - `uOglChartFontMng.pas` (динамический WideChar кэш для корректной поддержки кириллицы на всех ОС, явное `UTF8Encode(WideString(lChar))`)
+  - `uOglChartRenderer.pas` (делегирование DrawText)
+  - `uRecorderOglOscillogramView.pas` (PageCaptionFontSize для TRecorderOglOscillogramSurface)
+  - `uOglChartTextLabelTests.pas` (юнит-тесты TOglFontTest)
+  - `uRecorderDataSources.pas` (защита от отсутствия файла Mera во время DoCreateTags и Start)
+  - `uRecorderSettingsDialog.pas` (отображение иконки нерабочего устройства с индексом 31 для Mera-источника, пункт меню "Настройка источника..." с диалогом выбора файла TOpenDialog для переопределения пути к Mera-файлу и обновления SourceId у тегов)
+- **Статус**: 
+  - Добавлен пункт меню "Настройка источника..." для переопределения пути к Mera-файлу.
+  - При выборе нового пути теги обновляют свои `SourceId` на новый путь, а UI дерева и сеток автоматически перерисовывается.
+  - Сборка проходит успешно.

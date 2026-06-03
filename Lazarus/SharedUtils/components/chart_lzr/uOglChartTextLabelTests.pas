@@ -7,11 +7,18 @@ interface
 uses
   Classes, SysUtils, fpcunit, testregistry, fpjson,
   uOglChartTypes, uOglChartBaseObj, uOglChartDrawObj, uOglChartPage,
-  uOglChartAxis, uOglChartTrend, uOglChartTextLabel, uOglChartSerializer;
+  uOglChartAxis, uOglChartTrend, uOglChartTextLabel, uOglChartSerializer, uOglChartFontMng;
 
 type
   { TChartTextLabelTest }
-  TChartTextLabelTest = class(TTestCase)
+    { TOglFontTest }
+  TOglFontTest = class(TTestCase)
+  published
+    procedure TestFontAtlasInitialization;
+    procedure TestFontScaling;
+  end;
+
+TChartTextLabelTest = class(TTestCase)
   published
     // “ест создани€ и инициализации свойств TChartTextLabel
     procedure TestTextLabelInitialization;
@@ -122,6 +129,52 @@ begin
   end;
 end;
 
+
+
+{ TOglFontTest }
+
+procedure TOglFontTest.TestFontAtlasInitialization;
+var
+  lFont: cOglFont;
+  lWidth: Integer;
+begin
+  lFont := cOglFont.Create('Arial', 1.0, $FFFFFFFF, False);
+  try
+    gUseTextureAtlas := True;
+    
+    lWidth := lFont.CharPixelWidth(' ');
+    AssertTrue('Space width should be positive', lWidth > 0);
+    
+    lWidth := lFont.CharPixelWidth('A');
+    AssertTrue('Char width should be positive', lWidth > 0);
+    
+    AssertTrue('Text width of hello should be positive', lFont.TextPixelWidth('Hello') > 0);
+    AssertTrue('Text height should be positive', lFont.TextPixelHeight > 0);
+  finally
+    lFont.Free;
+  end;
+end;
+
+procedure TOglFontTest.TestFontScaling;
+var
+  lFont: cOglFont;
+  lHeight1, lHeight2: Integer;
+begin
+  lFont := cOglFont.Create('Arial', 1.0, $FFFFFFFF, False);
+  try
+    gUseTextureAtlas := True;
+    lHeight1 := lFont.TextPixelHeight;
+    
+    lFont.Scale := 2.0;
+    lHeight2 := lFont.TextPixelHeight;
+    
+    AssertTrue('Height should increase with scale', lHeight2 > lHeight1);
+  finally
+    lFont.Free;
+  end;
+end;
+
 initialization
   RegisterTest(TChartTextLabelTest);
-end.
+
+  RegisterTest(TOglFontTest);end.

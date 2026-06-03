@@ -136,6 +136,7 @@ type
     procedure ReloadCurrentMeraSource;
     procedure HardwareDeleteSourceClick(Sender: TObject);
     procedure HardwareReloadSourceClick(Sender: TObject);
+    procedure HardwareEditSourceClick(Sender: TObject);
     
     // Методы инициализации и обновления интерфейса
     procedure PopulateChannelGrids;
@@ -834,6 +835,56 @@ begin
   ReloadCurrentMeraSource;
 end;
 
+procedure TRecorderSettingsDialog.HardwareEditSourceClick(Sender: TObject);
+var
+  lDialog: TOpenDialog;
+  lOldSourceId, lNewSourceId: string;
+  I: Integer;
+  lTag: TRecorderTag;
+begin
+  if fMeraFileName = '' then
+    Exit;
+
+  lDialog := TOpenDialog.Create(Self);
+  try
+    lDialog.Title := 'Выберите файл Mera';
+    lDialog.Filter := 'Mera file (*.mera)|*.mera|All files (*.*)|*.*';
+    lDialog.InitialDir := ExtractFilePath(fMeraFileName);
+    lDialog.FileName := ExtractFileName(fMeraFileName);
+    if lDialog.Execute then
+    begin
+      lOldSourceId := MeraSourceId(fMeraFileName);
+      fMeraFileName := lDialog.FileName;
+      fMeraFolder := ExtractFilePath(lDialog.FileName);
+      lNewSourceId := MeraSourceId(fMeraFileName);
+
+      if fTagRegistry <> nil then
+      begin
+        fTagRegistry.RegisterActiveSource(lNewSourceId);
+        for I := 0 to fTagRegistry.TagCount - 1 do
+        begin
+          lTag := fTagRegistry.Tags[I];
+          if SameText(lTag.SourceId, lOldSourceId) then
+            lTag.SourceId := lNewSourceId;
+        end;
+      end;
+
+      if FileExists(fMeraFileName) then
+      begin
+        LoadMeraSignalsFromFile(fMeraFileName, fMeraSignals);
+        MarkSignalsFromRegistry;
+      end
+      else
+        ClearMeraSignals;
+
+      PopulateHardwareTree;
+      PopulateChannelGrids;
+    end;
+  finally
+    lDialog.Free;
+  end;
+end;
+
 procedure TRecorderSettingsDialog.PopulateHardwareTree;
 var
   lRootNode: TTreeNode;
@@ -855,8 +906,16 @@ begin
     begin
       lSourceNode := fHardwareTree.Items.AddChild(lRootNode,
         'Mera File - ' + ExtractFileName(fMeraFileName));
-      lSourceNode.ImageIndex := CDeviceControllerImageIndex;
-      lSourceNode.SelectedIndex := CDeviceControllerImageIndex;
+      if FileExists(fMeraFileName) then
+      begin
+        lSourceNode.ImageIndex := CDeviceControllerImageIndex;
+        lSourceNode.SelectedIndex := CDeviceControllerImageIndex;
+      end
+      else
+      begin
+        lSourceNode.ImageIndex := 31;
+        lSourceNode.SelectedIndex := 31;
+      end;
 
       for I := 0 to fMeraSignals.Count - 1 do
       begin
@@ -1036,6 +1095,11 @@ begin
     lItem := TMenuItem.Create(lPopup);
     lItem.Caption := 'Перечитать теги источника';
     lItem.OnClick := @HardwareReloadSourceClick;
+    lPopup.Items.Add(lItem);
+
+    lItem := TMenuItem.Create(lPopup);
+    lItem.Caption := 'Настройка источника...';
+    lItem.OnClick := @HardwareEditSourceClick;
     lPopup.Items.Add(lItem);
 
     lItem := TMenuItem.Create(lPopup);

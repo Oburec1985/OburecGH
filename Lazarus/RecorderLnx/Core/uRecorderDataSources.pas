@@ -313,7 +313,7 @@ uses
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF}
-  Math;
+  Math, LazFileUtils;
 
 {$IFDEF MSWINDOWS}
 type
@@ -1010,6 +1010,9 @@ var
   end;
 
 begin
+  if not FileExistsUTF8(fFileName) then
+    Exit;
+
   lSignals := TList.Create;
   try
     LoadMeraSignalsFromFile(fFileName, lSignals);
@@ -1094,6 +1097,9 @@ begin
   lSourceId := 'Mera file: ' + fFileName;
   fPlayRangeMinSec := 0;
   fStartTickMs := GetTickCount64;
+
+  if not FileExistsUTF8(fFileName) then
+    Exit;
 
   lSignals := TList.Create;
   try

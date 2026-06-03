@@ -111,6 +111,10 @@ type
     procedure ResetFpsMeasure;
     procedure SetAxisRange(AAxis: TChartAxis; AMinValue, AMaxValue: Double);
     procedure UpdatePageCaption(APage: TChartPage; ATag: TRecorderTag);
+    private
+    fPageCaptionFontSize: Integer;
+    function GetPageCaptionFontSize: Integer;
+    procedure SetPageCaptionFontSize(AValue: Integer);
   public
     constructor Create(AOwner: TComponent); override;
 
@@ -128,6 +132,7 @@ type
     property ChartControl: TOglChart read fChart;
     property Count: Integer read fCount;
     property FpsText: string read GetFpsText;
+      property PageCaptionFontSize: Integer read GetPageCaptionFontSize write SetPageCaptionFontSize;
   end;
 
 { Ensures that APanel contains ACount oscillograms and lays them out.
@@ -151,7 +156,7 @@ implementation
 
 uses
   SysUtils, Math, Graphics,
-  uOglChartDrawObj, uRecorderDebugLog;
+  uOglChartDrawObj, uRecorderDebugLog, uOglChartRenderer, uOglChartFontMng;
 
 function FormatEnabledEstimateCaption(ATag: TRecorderTag): string;
 var
@@ -563,6 +568,30 @@ begin
   fModel.PageArea := lPageArea;
   fModel.PageGapX := 0.004;
   fModel.PageGapY := 0.006;
+  SetPageCaptionFontSize(10);
+end;
+
+function TRecorderOglOscillogramSurface.GetPageCaptionFontSize: Integer;
+begin
+  Result := fPageCaptionFontSize;
+end;
+
+procedure TRecorderOglOscillogramSurface.SetPageCaptionFontSize(AValue: Integer);
+var
+  lRenderer: TOpenGLChartRenderer;
+begin
+  if AValue < 5 then AValue := 5;
+  if AValue > 48 then AValue := 48;
+  fPageCaptionFontSize := AValue;
+  if fChart <> nil then
+  begin
+    lRenderer := TOpenGLChartRenderer(fChart.GetRenderer);
+    if Assigned(lRenderer) and Assigned(lRenderer.FontManager) then
+    begin
+      lRenderer.FontManager.Font(cfPageCaption).Scale := AValue / 7.2;
+      fChart.Redraw;
+    end;
+  end;
 end;
 
 procedure TRecorderOglOscillogramSurface.ChartAfterRender(Sender: TObject;

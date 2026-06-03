@@ -1224,51 +1224,10 @@ begin
 end;
 
 procedure TOpenGLChartRenderer.DrawText(const AText: string; AX, AY: Single; AFont: cOglFont);
-
-var
-  I: Integer;
-  lRow: Integer;
-  lCol: Integer;
-  lGlyphRow: string;
-  lX: Single;
-  lY: Single;
-  lScale: Single;
-  lAdvanceX: Single;
-  lWideText: WideString;
 begin
   if not Assigned(AFont) then
     Exit;
-  lWideText := UTF8Decode(AText);
-  lScale := AFont.Scale;
-  SetGLColor(AFont.Color);
-  glBegin(GL_QUADS);
-  for I := 1 to Length(lWideText) do
-    for lRow := 0 to 6 do
-    begin
-      lGlyphRow := GlyphRow(lWideText[I], lRow);
-      for lCol := 1 to Length(lGlyphRow) do
-        if lGlyphRow[lCol] = '1' then
-        begin
-          lAdvanceX := AFont.TextPixelWidth(UTF8Encode(Copy(lWideText, 1, I - 1)));
-          lX := AX + lAdvanceX + (lCol - 1) * lScale;
-          lY := AY + lRow * lScale;
-          glVertex2f(lX, lY);
-          glVertex2f(lX + lScale, lY);
-          glVertex2f(lX + lScale, lY + lScale);
-          glVertex2f(lX, lY + lScale);
-          if AFont.Bold then
-          begin
-            glVertex2f(lX + 1, lY);
-            glVertex2f(lX + lScale + 1, lY);
-            glVertex2f(lX + lScale + 1, lY + lScale);
-            glVertex2f(lX + 1, lY + lScale);
-          end;
-
-        end;
-
-    end;
-
-  glEnd;
+  AFont.DrawText(AText, AX, AY);
 end;
 
 procedure TOpenGLChartRenderer.DrawEditableText(const AText: string; AX, AY: Single; AFont: cOglFont;
