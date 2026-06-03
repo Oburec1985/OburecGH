@@ -9,14 +9,15 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
   Constraints.MinHeight = 520
   Constraints.MinWidth = 760
   Position = poOwnerFormCenter
+  LCLVersion = '4.2.0.0'
   object fPageControl: TPageControl
     Left = 0
     Height = 519
     Top = 0
     Width = 890
-    ActivePage = tsPlugins
+    ActivePage = tsChannels
     Align = alClient
-    TabIndex = 3
+    TabIndex = 2
     TabOrder = 0
     object tsRecorder: TTabSheet
       Caption = 'Рекордер'
@@ -631,7 +632,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         object btnChannelAdd: TBitBtn
           Left = 6
           Height = 30
-          Top = 322
+          Top = 200
           Width = 30
           Caption = '>'
           Font.Color = clBlue
@@ -642,7 +643,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         object btnChannelRemove: TBitBtn
           Left = 6
           Height = 30
-          Top = 358
+          Top = 238
           Width = 30
           Caption = '<'
           Font.Color = clBlue
@@ -661,35 +662,46 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         ClientHeight = 471
         ClientWidth = 651
         TabOrder = 2
-        object edSelectedChannelsFilter: TEdit
-          Left = 24
-          Height = 23
-          Top = 18
-          Width = 646
-          Anchors = [akTop, akLeft, akRight]
+        object pnFilter: TPanel
+          Left = 0
+          Height = 36
+          Top = 0
+          Width = 651
+          Align = alTop
+          BevelOuter = bvNone
+          ClientHeight = 36
+          ClientWidth = 651
           TabOrder = 0
-          Text = 'Filter'
-        end
-        object btnSelectedChannelsClear: TButton
-          Left = 621
-          Height = 24
-          Top = 18
-          Width = 24
-          Anchors = [akTop, akRight]
-          Caption = 'X'
-          TabOrder = 1
+          object edSelectedChannelsFilter: TEdit
+            Left = 8
+            Height = 23
+            Top = 6
+            Width = 600
+            Anchors = [akTop, akLeft, akRight]
+            TabOrder = 0
+            Text = 'Filter'
+          end
+          object btnSelectedChannelsClear: TButton
+            Left = 616
+            Height = 24
+            Top = 6
+            Width = 24
+            Anchors = [akTop, akRight]
+            Caption = 'X'
+            TabOrder = 1
+          end
         end
         object fSelectedChannelsGrid: TStringGrid
           Left = 0
-          Height = 428
-          Top = 43
+          Height = 435
+          Top = 36
           Width = 651
-          Align = alBottom
+          Align = alClient
           ColCount = 7
           FixedCols = 0
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowSelect]
           RowCount = 2
-          TabOrder = 2
+          TabOrder = 1
           OnDragDrop = fSelectedChannelsGridDragDrop
           OnDragOver = fSelectedChannelsGridDragOver
         end

@@ -254,11 +254,14 @@ type
     публикует rceDataUpdated при записи значения. }
   TRecorderTagRegistry = class
   private
+    fActiveSourceIds: TStringList;                     { Active data source ids for detached tag indication }
     fEventBus: TRecorderEventBus;                     { Ссылка на шину событий }
     fLastUpdateData: TRecorderTagUpdateEventData;     { Кэшированный объект события для снижения аллокаций }
     fNextId: TRecorderTagId;                          { Счетчик следующего ID }
     fSelectedTagName: string;                         { Имя текущего выбранного тега }
     fTags: TList;                                     { Список тегов (TRecorderTag) }
+    function GetActiveSourceCount: Integer;
+    function GetActiveSourceId(AIndex: Integer): string;
     function GetSelectedTag: TRecorderTag;
     function GetTag(AIndex: Integer): TRecorderTag;
     function GetTagCount: Integer;
@@ -282,6 +285,11 @@ type
     { Ищет тег по имени без учета регистра. Возвращает nil, если тег не найден. }
     function FindByName(const AName: string): TRecorderTag;
 
+    procedure RegisterActiveSource(const ASourceId: string);
+    procedure UnregisterActiveSource(const ASourceId: string);
+    procedure ClearActiveSources;
+    function IsSourceActive(const ASourceId: string): Boolean;
+
     { Публикует новое значение тега и отправляет событие rceDataUpdated. }
     procedure PublishValue(const ATagName: string; ATimeSec, AValue: Double);
     { Публикует блок значений тега и отправляет событие rceDataUpdated. }
@@ -290,7 +298,10 @@ type
 
     { Удаляет все теги и очищает счетчик id. }
     procedure Clear;
+    procedure RemoveTag(ATag: TRecorderTag);
 
+    property ActiveSourceCount: Integer read GetActiveSourceCount;
+    property ActiveSourceIds[AIndex: Integer]: string read GetActiveSourceId;
     property EventBus: TRecorderEventBus read fEventBus write fEventBus;
     property SelectedTag: TRecorderTag read GetSelectedTag;
     property SelectedTagName: string read fSelectedTagName write fSelectedTagName;
@@ -749,6 +760,9 @@ constructor TRecorderTagRegistry.Create(AEventBus: TRecorderEventBus);
 begin
   inherited Create;
   fEventBus := AEventBus;
+  fActiveSourceIds := TStringList.Create;
+  fActiveSourceIds.CaseSensitive := False;
+  fActiveSourceIds.Sorted := False;
   fTags := TList.Create;
   fNextId := 1;
 end;
@@ -759,6 +773,16 @@ begin
   fLastUpdateData.Free;
   fTags.Free;
   inherited Destroy;
+end;
+
+function TRecorderTagRegistry.GetActiveSourceCount: Integer;
+begin
+  Result := fActiveSourceIds.Count;
+end;
+
+function TRecorderTagRegistry.GetActiveSourceId(AIndex: Integer): string;
+begin
+  Result := fActiveSourceIds[AIndex];
 end;
 
 function TRecorderTagRegistry.GetSelectedTag: TRecorderTag;
@@ -824,6 +848,39 @@ begin
       Exit(GetTag(I));
 end;
 
+procedure TRecorderTagRegistry.RegisterActiveSource(const ASourceId: string);
+var
+  lSourceId: string;
+begin
+  lSourceId := Trim(ASourceId);
+  if lSourceId = '' then
+    Exit;
+  if fActiveSourceIds.IndexOf(lSourceId) < 0 then
+    fActiveSourceIds.Add(lSourceId);
+end;
+
+procedure TRecorderTagRegistry.UnregisterActiveSource(const ASourceId: string);
+var
+  lIndex: Integer;
+begin
+  lIndex := fActiveSourceIds.IndexOf(Trim(ASourceId));
+  if lIndex >= 0 then
+    fActiveSourceIds.Delete(lIndex);
+end;
+
+procedure TRecorderTagRegistry.ClearActiveSources;
+begin
+  fActiveSourceIds.Clear;
+end;
+
+function TRecorderTagRegistry.IsSourceActive(const ASourceId: string): Boolean;
+var
+  lSourceId: string;
+begin
+  lSourceId := Trim(ASourceId);
+  Result := (lSourceId = '') or (fActiveSourceIds.IndexOf(lSourceId) >= 0);
+end;
+
 procedure TRecorderTagRegistry.PublishValue(const ATagName: string; ATimeSec,
   AValue: Double);
 var
@@ -877,6 +934,15 @@ begin
     lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, lTag.Name,
       lTag.TextValue, ACount, fLastUpdateData);
     fEventBus.Publish(lEvent);
+  end;
+end;
+
+procedure TRecorderTagRegistry.RemoveTag(ATag: TRecorderTag);
+begin
+  if ATag <> nil then
+  begin
+    fTags.Remove(ATag);
+    ATag.Free;
   end;
 end;
 

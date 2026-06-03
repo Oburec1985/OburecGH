@@ -21,7 +21,7 @@ unit uRecorderFormModel;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, uRecorderTags;
 
 type
   { TRecorderRect
@@ -98,30 +98,52 @@ type
     property Factory: TRecorderComponentFactoryBase read fFactory;
   end;
 
-  { TRecorderStaticTextComponent
-    Текстовая подпись без привязки к тегу. Нужна для заголовков, обозначений,
-    статических пояснений и проверки механики размещения компонентов. }
+  TRecorderTagValueNameMode = (tvnmNone, tvnmTop, tvnmLeft);
+
   TRecorderStaticTextComponent = class(TRecorderVisualComponent)
   private
-    fText: string;                     { Отображаемый текст }
+    fText: string;
+    fFontName: string;
+    fFontSize: Integer;
+    fFontColor: LongInt;
+    fFontStyleBold: Boolean;
+    fFontStyleItalic: Boolean;
   protected
     class function GetTypeId: string; override;
   public
+    constructor Create; override;
     property Text: string read fText write fText;
+    property FontName: string read fFontName write fFontName;
+    property FontSize: Integer read fFontSize write fFontSize;
+    property FontColor: LongInt read fFontColor write fFontColor;
+    property FontStyleBold: Boolean read fFontStyleBold write fFontStyleBold;
+    property FontStyleItalic: Boolean read fFontStyleItalic write fFontStyleItalic;
   end;
 
-  { TRecorderTagValueComponent
-    Модельный компонент значения тега. В первой версии хранит только имя тега и
-    формат вывода; фактические значения придут из tag registry/notify позже. }
   TRecorderTagValueComponent = class(TRecorderVisualComponent)
   private
-    fDisplayFormat: string;            { Формат вывода вещественного числа }
+    fDisplayFormat: string;
+    fFontName: string;
+    fFontSize: Integer;
+    fFontColor: LongInt;
+    fFontStyleBold: Boolean;
+    fFontStyleItalic: Boolean;
+    fShowNameMode: TRecorderTagValueNameMode;
+    fEstimateKind: TRecorderTagEstimateKind;
+    fUseDefaultEstimate: Boolean;
   protected
     class function GetTypeId: string; override;
   public
-    { Конструктор инициализирует формат по умолчанию }
     constructor Create; override;
     property DisplayFormat: string read fDisplayFormat write fDisplayFormat;
+    property FontName: string read fFontName write fFontName;
+    property FontSize: Integer read fFontSize write fFontSize;
+    property FontColor: LongInt read fFontColor write fFontColor;
+    property FontStyleBold: Boolean read fFontStyleBold write fFontStyleBold;
+    property FontStyleItalic: Boolean read fFontStyleItalic write fFontStyleItalic;
+    property ShowNameMode: TRecorderTagValueNameMode read fShowNameMode write fShowNameMode;
+    property EstimateKind: TRecorderTagEstimateKind read fEstimateKind write fEstimateKind;
+    property UseDefaultEstimate: Boolean read fUseDefaultEstimate write fUseDefaultEstimate;
   end;
 
   { TRecorderOscillogramComponent
@@ -420,10 +442,29 @@ begin
   Result := 'TagValue';
 end;
 
+constructor TRecorderStaticTextComponent.Create;
+begin
+  inherited Create;
+  fText := 'Text';
+  fFontName := 'Tahoma';
+  fFontSize := 10;
+  fFontColor := 0;
+  fFontStyleBold := False;
+  fFontStyleItalic := False;
+end;
+
 constructor TRecorderTagValueComponent.Create;
 begin
   inherited Create;
   fDisplayFormat := '0.###';
+  fFontName := 'Tahoma';
+  fFontSize := 10;
+  fFontColor := 0;
+  fFontStyleBold := True;
+  fFontStyleItalic := False;
+  fShowNameMode := tvnmTop;
+  fEstimateKind := tekMean;
+  fUseDefaultEstimate := True;
 end;
 
 { TRecorderOscillogramComponent }

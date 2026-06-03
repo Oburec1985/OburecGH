@@ -36,6 +36,7 @@ type
     rceStopped,              { Запись остановлена }
     rceAfterStop,            { После останова записи }
     rceDataUpdated,          { Обновление данных/семплов }
+    rceAlarmChanged,         { Изменение состояния тревоги/уставки тега }
     rceSaveConfig,           { Событие сохранения конфигурации }
     rceLoadConfig,           { Событие загрузки конфигурации }
     rceImportSettings,       { Импорт настроек }

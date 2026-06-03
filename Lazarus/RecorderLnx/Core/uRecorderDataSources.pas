@@ -132,6 +132,8 @@ type
     fSampleIndex: Int64;         { Индекс текущего семпла }
     fTagName: string;            { Имя целевого тега }
     fTimeSec: Double;            { Модельное время генератора в секундах }
+    fTag: TRecorderTag;
+    function GetTagName: string;
   protected
     { Создание тега синусоиды }
     procedure DoCreateTags(ARegistry: TRecorderTagRegistry); override;
@@ -148,7 +150,7 @@ type
     constructor Create(const ASourceId, ATagName: string; AUpdateTimeMs: Cardinal;
       AAmplitude, AFrequencyHz: Double; APhaseRad: Double = 0);
 
-    property TagName: string read fTagName;
+    property TagName: string read GetTagName;
     property Amplitude: Double read fAmplitude write fAmplitude;
     property FrequencyHz: Double read fFrequencyHz write fFrequencyHz;
     property PhaseRad: Double read fPhaseRad write fPhaseRad;
@@ -164,6 +166,10 @@ type
     fLastWallTickMs: QWord;
     fMemoryTagName: string;
     fTimeSec: Double;
+    fMemoryTag: TRecorderTag;
+    fCpuTag: TRecorderTag;
+    function GetMemoryTagName: string;
+    function GetCpuTagName: string;
     function GetProcessCpuUsagePercent: Double;
     function GetProcessMemoryMb: Double;
   protected
@@ -173,8 +179,8 @@ type
     constructor Create(const ASourceId: string; AUpdateTimeMs: Cardinal;
       const AMemoryTagName: string = 'MemTag'; const ACpuTagName: string = 'CpuUsage');
 
-    property MemoryTagName: string read fMemoryTagName;
-    property CpuTagName: string read fCpuTagName;
+    property MemoryTagName: string read GetMemoryTagName;
+    property CpuTagName: string read GetCpuTagName;
   end;
 
   { TRecorderMeraFileDataSource
@@ -190,8 +196,9 @@ type
     fPlaybackSpeed: Cardinal;             { Коэффициент скорости воспроизведения }
     fPlaybackSignals: TList;              { Список проигрываемых сигналов TMeraPlaybackSignal }
     fStartTickMs: QWord;                  { Системное время старта воспроизведения }
-    fSelectedTagNames: TStringList;       { Список выбранных тегов }
+    fSelectedTagNames: TStringList;       { Список выбранных адресов каналов }
     function IsSignalSelected(ASignal: TMeraSignalInfo): Boolean;
+    function IsSignalTagSelected(const ATagName: string): Boolean;
   protected
     { Создание тегов для всех выбранных сигналов MERA }
     procedure DoCreateTags(ARegistry: TRecorderTagRegistry); override;
@@ -303,11 +310,14 @@ function RecorderDataSourceStateToString(AState: TRecorderDataSourceState): stri
 implementation
 
 uses
-  { MSWINDOWS}Windows,{}
+  {$IFDEF MSWINDOWS}
+  Windows,
+  {$ENDIF}
   Math;
 
-{ MSWINDOWS}
+{$IFDEF MSWINDOWS}
 type
+  { WinAPI-счетчики процесса нужны только для Windows-диагностики памяти. }
   TProcessMemoryCounters = record
     cb: DWORD;
     PageFaultCount: DWORD;
@@ -323,7 +333,7 @@ type
 
 function GetProcessMemoryInfo(Process: THandle; var Counters: TProcessMemoryCounters;
   Size: DWORD): BOOL; stdcall; external 'psapi.dll';
-{}
+{$ENDIF}
 
 function RecorderDataSourceStateToString(AState: TRecorderDataSourceState): string;
 begin
@@ -431,20 +441,42 @@ begin
   fPhaseRad := APhaseRad;
 end;
 
+function TMockSineDataSource.GetTagName: string;
+begin
+  if fTag <> nil then
+    Result := fTag.Name
+  else
+    Result := fTagName;
+end;
+
 procedure TMockSineDataSource.DoCreateTags(ARegistry: TRecorderTagRegistry);
 var
   lTag: TRecorderTag;
+  I: Integer;
 begin
-  lTag := ARegistry.FindByName(fTagName);
-  if lTag = nil then
-    lTag := ARegistry.CreateTag(fTagName, 4096);
+  fTag := nil;
+  for I := 0 to ARegistry.TagCount - 1 do
+    if SameText(ARegistry.Tags[I].SourceId, SourceId) then
+    begin
+      fTag := ARegistry.Tags[I];
+      Break;
+    end;
 
-  lTag.Address := 'virtual';
-  lTag.UnitName := 'a.u.';
-  lTag.Description := 'Mock sine signal';
-  lTag.SourceId := SourceId;
-  lTag.ModuleType := 'virtual';
-  lTag.PollFrequencyHz := 1000.0 / UpdateTimeMs;
+  if fTag <> nil then
+    fTagName := fTag.Name
+  else
+  begin
+    fTag := ARegistry.FindByName(fTagName);
+    if fTag = nil then
+      fTag := ARegistry.CreateTag(fTagName, 4096);
+  end;
+
+  fTag.Address := 'virtual';
+  fTag.UnitName := 'a.u.';
+  fTag.Description := 'Mock sine signal';
+  fTag.SourceId := SourceId;
+  fTag.ModuleType := 'virtual';
+  fTag.PollFrequencyHz := 1000.0 / UpdateTimeMs;
 end;
 
 procedure TMockSineDataSource.DoTick;
@@ -452,7 +484,7 @@ var
   lValue: Double;
 begin
   lValue := fAmplitude * Sin((2 * Pi * fFrequencyHz * fTimeSec) + fPhaseRad);
-  Registry.PublishValue(fTagName, fTimeSec, lValue);
+  Registry.PublishValue(TagName, fTimeSec, lValue);
 
   Inc(fSampleIndex);
   fTimeSec := fTimeSec + (UpdateTimeMs / 1000.0);
@@ -476,29 +508,70 @@ begin
   fTimeSec := 0;
 end;
 
+function TRecorderDiagnosticsDataSource.GetMemoryTagName: string;
+begin
+  if fMemoryTag <> nil then
+    Result := fMemoryTag.Name
+  else
+    Result := fMemoryTagName;
+end;
+
+function TRecorderDiagnosticsDataSource.GetCpuTagName: string;
+begin
+  if fCpuTag <> nil then
+    Result := fCpuTag.Name
+  else
+    Result := fCpuTagName;
+end;
+
 procedure TRecorderDiagnosticsDataSource.DoCreateTags(ARegistry: TRecorderTagRegistry);
 var
   lTag: TRecorderTag;
+  I: Integer;
 begin
-  lTag := ARegistry.FindByName(fMemoryTagName);
-  if lTag = nil then
-    lTag := ARegistry.CreateTag(fMemoryTagName, 4096);
-  lTag.Address := 'diagnostics.memory';
-  lTag.UnitName := 'MB';
-  lTag.Description := 'Recorder process memory usage';
-  lTag.SourceId := SourceId;
-  lTag.ModuleType := 'diagnostics';
-  lTag.PollFrequencyHz := 1000.0 / UpdateTimeMs;
+  fMemoryTag := nil;
+  fCpuTag := nil;
+  for I := 0 to ARegistry.TagCount - 1 do
+  begin
+    lTag := ARegistry.Tags[I];
+    if SameText(lTag.SourceId, SourceId) then
+    begin
+      if SameText(lTag.Address, 'diagnostics.memory') then
+        fMemoryTag := lTag
+      else if SameText(lTag.Address, 'diagnostics.cpu') then
+        fCpuTag := lTag;
+    end;
+  end;
 
-  lTag := ARegistry.FindByName(fCpuTagName);
-  if lTag = nil then
-    lTag := ARegistry.CreateTag(fCpuTagName, 4096);
-  lTag.Address := 'diagnostics.cpu';
-  lTag.UnitName := '%';
-  lTag.Description := 'Recorder process CPU usage';
-  lTag.SourceId := SourceId;
-  lTag.ModuleType := 'diagnostics';
-  lTag.PollFrequencyHz := 1000.0 / UpdateTimeMs;
+  if fMemoryTag <> nil then
+    fMemoryTagName := fMemoryTag.Name
+  else
+  begin
+    fMemoryTag := ARegistry.FindByName(fMemoryTagName);
+    if fMemoryTag = nil then
+      fMemoryTag := ARegistry.CreateTag(fMemoryTagName, 4096);
+  end;
+  fMemoryTag.Address := 'diagnostics.memory';
+  fMemoryTag.UnitName := 'MB';
+  fMemoryTag.Description := 'Recorder process memory usage';
+  fMemoryTag.SourceId := SourceId;
+  fMemoryTag.ModuleType := 'diagnostics';
+  fMemoryTag.PollFrequencyHz := 1000.0 / UpdateTimeMs;
+
+  if fCpuTag <> nil then
+    fCpuTagName := fCpuTag.Name
+  else
+  begin
+    fCpuTag := ARegistry.FindByName(fCpuTagName);
+    if fCpuTag = nil then
+      fCpuTag := ARegistry.CreateTag(fCpuTagName, 4096);
+  end;
+  fCpuTag.Address := 'diagnostics.cpu';
+  fCpuTag.UnitName := '%';
+  fCpuTag.Description := 'Recorder process CPU usage';
+  fCpuTag.SourceId := SourceId;
+  fCpuTag.ModuleType := 'diagnostics';
+  fCpuTag.PollFrequencyHz := 1000.0 / UpdateTimeMs;
 end;
 
 function TRecorderDiagnosticsDataSource.GetProcessMemoryMb: Double;
@@ -577,8 +650,8 @@ end;
 
 procedure TRecorderDiagnosticsDataSource.DoTick;
 begin
-  Registry.PublishValue(fMemoryTagName, fTimeSec, GetProcessMemoryMb);
-  Registry.PublishValue(fCpuTagName, fTimeSec, GetProcessCpuUsagePercent);
+  Registry.PublishValue(MemoryTagName, fTimeSec, GetProcessMemoryMb);
+  Registry.PublishValue(CpuTagName, fTimeSec, GetProcessCpuUsagePercent);
   fTimeSec := fTimeSec + (UpdateTimeMs / 1000.0);
 end;
 
@@ -905,17 +978,37 @@ end;
 
 function TRecorderMeraFileDataSource.IsSignalSelected(ASignal: TMeraSignalInfo): Boolean;
 begin
-  Result := (fSelectedTagNames.Count = 0) or
-    (fSelectedTagNames.IndexOf(MeraSignalToRecorderTagName(ASignal)) >= 0);
+  Result := (fSelectedTagNames.Count = 0) or IsSignalTagSelected(ASignal.Address);
+end;
+
+function TRecorderMeraFileDataSource.IsSignalTagSelected(
+  const ATagName: string): Boolean;
+begin
+  Result := fSelectedTagNames.IndexOf(ATagName) >= 0;
 end;
 
 procedure TRecorderMeraFileDataSource.DoCreateTags(ARegistry: TRecorderTagRegistry);
 var
   I: Integer;
+  J: Integer;
   lSignal: TMeraSignalInfo;
   lSignals: TList;
   lTag: TRecorderTag;
-  lTagName: string;
+  lUpdated: Boolean;
+
+  procedure UpdateTag(ATag: TRecorderTag);
+  begin
+    ATag.Address := lSignal.Address;
+    ATag.UnitName := lSignal.UnitsName;
+    ATag.ModuleType := lSignal.ModuleName;
+    ATag.PollFrequencyHz := lSignal.FrequencyHz;
+    ATag.SourceId := 'Mera file: ' + fFileName;
+    ATag.Description := Format('%s; type=%s; freq=%s; file=%s',
+      [lSignal.Name, lSignal.DataTypeName,
+      FormatFloat('0.######', lSignal.FrequencyHz),
+      ExtractFileName(lSignal.FileName)]);
+  end;
+
 begin
   lSignals := TList.Create;
   try
@@ -926,38 +1019,79 @@ begin
       if not IsSignalSelected(lSignal) then
         Continue;
 
-      lTagName := MeraSignalToRecorderTagName(lSignal);
-      lTag := ARegistry.FindByName(lTagName);
-      if lTag = nil then
-        lTag := ARegistry.CreateTag(lTagName, 4096);
+      lUpdated := False;
+      for J := 0 to ARegistry.TagCount - 1 do
+      begin
+        lTag := ARegistry.Tags[J];
+        if SameText(lTag.SourceId, 'Mera file: ' + fFileName) and
+          SameText(lTag.Address, lSignal.Address) then
+        begin
+          UpdateTag(lTag);
+          lUpdated := True;
+        end;
+      end;
 
-      lTag.Address := lSignal.Address;
-      lTag.UnitName := lSignal.UnitsName;
-      lTag.ModuleType := lSignal.ModuleName;
-      lTag.PollFrequencyHz := lSignal.FrequencyHz;
-      if lTag.SourceId = '' then
-        lTag.SourceId := 'Mera file: ' + fFileName;
-      lTag.Description := Format('%s; type=%s; freq=%s; file=%s',
-        [lSignal.Name, lSignal.DataTypeName,
-        FormatFloat('0.######', lSignal.FrequencyHz),
-        ExtractFileName(lSignal.FileName)]);
+      if not lUpdated then
+      begin
+        lTag := ARegistry.CreateTag(MeraSignalToRecorderTagName(lSignal), 4096);
+        UpdateTag(lTag);
+      end;
     end;
   finally
     ClearMeraSignals(lSignals);
     lSignals.Free;
   end;
 end;
-
 procedure TRecorderMeraFileDataSource.Start;
 var
   I: Integer;
+  J: Integer;
   lHasRange: Boolean;
+  lLinked: Boolean;
+  lSourceId: string;
   lSignal: TMeraSignalInfo;
   lSignals: TList;
-  lPlaybackSignal: TMeraPlaybackSignal;
+  lTag: TRecorderTag;
+
+  procedure AddPlaybackSignal(ASourceSignal: TMeraSignalInfo; const ATagName: string);
+  var
+    lPlaybackSignal: TMeraPlaybackSignal;
+    lSignalCopy: TMeraSignalInfo;
+  begin
+    lSignalCopy := TMeraSignalInfo.Create;
+    try
+      lSignalCopy.Name := ATagName;
+      lSignalCopy.Address := ASourceSignal.Address;
+      lSignalCopy.ModuleName := ASourceSignal.ModuleName;
+      lSignalCopy.DataTypeName := ASourceSignal.DataTypeName;
+      lSignalCopy.DataType := ASourceSignal.DataType;
+      lSignalCopy.FrequencyHz := ASourceSignal.FrequencyHz;
+      lSignalCopy.StartSec := ASourceSignal.StartSec;
+      lSignalCopy.UnitsName := ASourceSignal.UnitsName;
+      lSignalCopy.Description := ASourceSignal.Description;
+      lSignalCopy.FileName := ASourceSignal.FileName;
+      lSignalCopy.XFileName := ASourceSignal.XFileName;
+      lSignalCopy.HasXData := ASourceSignal.HasXData;
+      lSignalCopy.Enabled := ASourceSignal.Enabled;
+      lSignalCopy.Selected := ASourceSignal.Selected;
+
+      lPlaybackSignal := TMeraPlaybackSignal.Create(lSignalCopy);
+      try
+        lPlaybackSignal.Open;
+        fPlaybackSignals.Add(lPlaybackSignal);
+        lPlaybackSignal := nil;
+      finally
+        lPlaybackSignal.Free;
+      end;
+    finally
+      lSignalCopy.Free;
+    end;
+  end;
+
 begin
   inherited Start;
   lHasRange := False;
+  lSourceId := 'Mera file: ' + fFileName;
   fPlayRangeMinSec := 0;
   fStartTickMs := GetTickCount64;
 
@@ -975,15 +1109,21 @@ begin
         lHasRange := True;
       end;
 
-      lPlaybackSignal := TMeraPlaybackSignal.Create(lSignal);
-      try
-        lPlaybackSignal.Open;
-        fPlaybackSignals.Add(lPlaybackSignal);
-        lSignals[I] := nil;
-        lPlaybackSignal := nil;
-      finally
-        lPlaybackSignal.Free;
-      end;
+      lLinked := False;
+      if Registry <> nil then
+        for J := 0 to Registry.TagCount - 1 do
+        begin
+          lTag := Registry.Tags[J];
+          if SameText(lTag.SourceId, lSourceId) and
+            SameText(lTag.Address, lSignal.Address) then
+          begin
+            AddPlaybackSignal(lSignal, lTag.Name);
+            lLinked := True;
+          end;
+        end;
+
+      if not lLinked then
+        AddPlaybackSignal(lSignal, MeraSignalToRecorderTagName(lSignal));
     end;
   finally
     ClearMeraSignals(lSignals);

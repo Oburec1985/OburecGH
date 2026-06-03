@@ -14,7 +14,8 @@ program RecorderTagsTest;
 uses
   SysUtils,
   uRecorderCoreServices,
-  uRecorderTags;
+  uRecorderTags,
+  uRecorderAlarms;
 
 type
   TTagEventProbe = class
@@ -210,7 +211,52 @@ begin
   end;
 end;
 
+procedure TestTagAlarmEngine;
+var
+  lEngine: IRecorderAlarmEngine;
+  lHighAlarm: TRecorderTagSetpoint;
+  lHighWarning: TRecorderTagSetpoint;
+  lTag: TRecorderTag;
+begin
+  Writeln('--- Recorder tag alarm engine test ---');
+
+  lTag := TRecorderTag.Create(1, 'AlarmTag', 8);
+  try
+    lHighWarning := lTag.Setpoints[tskHighWarning];
+    lHighWarning.Enabled := True;
+    lHighWarning.Threshold := 5.0;
+    lTag.Setpoints[tskHighWarning] := lHighWarning;
+
+    lHighAlarm := lTag.Setpoints[tskHighAlarm];
+    lHighAlarm.Enabled := True;
+    lHighAlarm.Threshold := 10.0;
+    lTag.Setpoints[tskHighAlarm] := lHighAlarm;
+
+    lEngine := TRecorderAlarmEngine.Create as IRecorderAlarmEngine;
+    lEngine.ProcessTagValue(lTag, 0.0, 0.0);
+    AssertEquals(Ord(lEngine.GetTagAlarmLevel(lTag)), Ord(ralNone),
+      'alarm level starts as OK');
+
+    lEngine.ProcessTagValue(lTag, 0.1, 6.0);
+    AssertEquals(Ord(lEngine.GetTagAlarmLevel(lTag)), Ord(ralWarning),
+      'warning level after high warning threshold');
+
+    lEngine.ProcessTagValue(lTag, 0.2, 12.0);
+    AssertEquals(Ord(lEngine.GetTagAlarmLevel(lTag)), Ord(ralAlarm),
+      'alarm level after high alarm threshold');
+
+    lEngine.ProcessTagValue(lTag, 0.3, 0.0);
+    AssertEquals(Ord(lEngine.GetTagAlarmLevel(lTag)), Ord(ralNone),
+      'alarm level resets after value returns to normal');
+
+    Writeln('RESULT tag alarm engine test passed.');
+  finally
+    lTag.Free;
+  end;
+end;
+
 begin
   TestTagRegistryAndSignalBuffer;
   TestTagBlockEstimates;
+  TestTagAlarmEngine;
 end.

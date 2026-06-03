@@ -28,7 +28,8 @@ interface
 uses
   Classes, SysUtils,
   uRecorderCoreServices,
-  uRecorderTags;
+  uRecorderTags,
+  uRecorderAlarms;
 
 type
   { Класс исключения для очереди событий }
@@ -49,6 +50,11 @@ type
   TRecorderEventSnapshot = class
   private
     fHasTagData: Boolean;          { Флаг наличия данных тега }
+    fAlarmActive: Boolean;         { Флаг входа в тревогу; False - выход }
+    fAlarmKind: TRecorderTagSetpointKind; { Тип сработавшей уставки }
+    fAlarmLevel: TRecorderAlarmLevel;     { Уровень тревоги }
+    fAlarmThreshold: Double;       { Порог сработавшей уставки }
+    fHasAlarmData: Boolean;        { Флаг наличия данных тревоги }
     fIntValue: Int64;              { Числовой параметр }
     fKind: TRecorderEventKind;     { Тип события }
     fName: string;                 { Имя события }
@@ -67,6 +73,11 @@ type
     property Text: string read fText;
     property IntValue: Int64 read fIntValue;
     property HasTagData: Boolean read fHasTagData;
+    property AlarmActive: Boolean read fAlarmActive;
+    property AlarmKind: TRecorderTagSetpointKind read fAlarmKind;
+    property AlarmLevel: TRecorderAlarmLevel read fAlarmLevel;
+    property AlarmThreshold: Double read fAlarmThreshold;
+    property HasAlarmData: Boolean read fHasAlarmData;
     property TagName: string read fTagName;
     property TimeSec: Double read fTimeSec;
     property Value: Double read fValue;
@@ -116,6 +127,7 @@ implementation
 
 constructor TRecorderEventSnapshot.CreateFromEvent(const AEvent: TRecorderEvent);
 var
+  lAlarmData: TRecorderAlarmEventData;
   lTagData: TRecorderTagUpdateEventData;
 begin
   inherited Create;
@@ -135,6 +147,21 @@ begin
       fTagName := AEvent.Name;
     fTimeSec := lTagData.TimeSec;
     fValue := lTagData.Value;
+  end
+  else if AEvent.Data is TRecorderAlarmEventData then
+  begin
+    lAlarmData := TRecorderAlarmEventData(AEvent.Data);
+    fHasAlarmData := True;
+    fAlarmActive := lAlarmData.Active;
+    fAlarmKind := lAlarmData.Kind;
+    fAlarmLevel := lAlarmData.Level;
+    fAlarmThreshold := lAlarmData.Threshold;
+    if lAlarmData.Tag <> nil then
+      fTagName := lAlarmData.Tag.Name
+    else
+      fTagName := AEvent.Name;
+    fTimeSec := lAlarmData.TimeSec;
+    fValue := lAlarmData.Value;
   end;
 end;
 

@@ -60,6 +60,10 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="Core/uRecorderDebugLog.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
         <Filename Value="Core/uRecorderTags.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
@@ -69,6 +73,10 @@
       </Unit>
       <Unit>
         <Filename Value="Core/uRecorderEventQueue.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderAlarms.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -120,6 +128,14 @@
       </Unit>
       <Unit>
         <Filename Value="../SharedUtils/uSharedFileLogger.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../SharedUtils/mera/uMeraFile.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../Tests/RecorderTests/UITestData/uRecorderUiTestData.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
     </Units>

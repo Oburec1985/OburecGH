@@ -118,8 +118,55 @@ type
     property FileOpen: Boolean read fFileOpen;
   end;
 
+  { TRecorderMeraTagWriter
+    Writes one MERA descriptor record.mera plus binary R8 data/time files
+    for every recorded tag. The layout is readable by uMeraFile loader. }
+  TRecorderMeraTagWriter = class
+  private
+    fFrameDir: string;
+    fFileOpen: Boolean;
+    fLock: TRTLCriticalSection;
+    fSignals: TList;
+    function FloatToMera(AValue: Double): string;
+    function FindSignal(const ATagName: string): TObject;
+    function MakeSectionName(const ATagName: string): string;
+    procedure RequireOpen;
+    procedure WriteDescriptor;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Open(const AFrameDir: string);
+    procedure WriteSample(const ATagName, AUnitName, ADescription: string;
+      ATimeSec, AValue: Double; APollFrequencyHz: Double);
+    procedure Flush;
+    procedure Close;
+    property FileOpen: Boolean read fFileOpen;
+  end;
 implementation
 
+type
+  { TRecorderMeraSignalWriter
+    Internal writer for one MERA channel. }
+  TRecorderMeraSignalWriter = class
+  public
+    TagName: string;
+    SectionName: string;
+    SignalUnitName: string;
+    Description: string;
+    FrequencyHz: Double;
+    DataStream: TFileStream;
+    TimeStream: TFileStream;
+    destructor Destroy; override;
+  end;
+
+{ TRecorderMeraSignalWriter }
+
+destructor TRecorderMeraSignalWriter.Destroy;
+begin
+  FreeAndNil(DataStream);
+  FreeAndNil(TimeStream);
+  inherited Destroy;
+end;
 { TRecorderRecordFrameManager }
 
 constructor TRecorderRecordFrameManager.Create(const ARootDir: string);
@@ -339,4 +386,195 @@ begin
   end;
 end;
 
+{ TRecorderMeraTagWriter }
+
+constructor TRecorderMeraTagWriter.Create;
+begin
+  inherited Create;
+  fSignals := TList.Create;
+  InitCriticalSection(fLock);
+end;
+
+destructor TRecorderMeraTagWriter.Destroy;
+begin
+  Close;
+  DoneCriticalSection(fLock);
+  FreeAndNil(fSignals);
+  inherited Destroy;
+end;
+
+function TRecorderMeraTagWriter.FloatToMera(AValue: Double): string;
+var
+  lFormatSettings: TFormatSettings;
+begin
+  lFormatSettings := DefaultFormatSettings;
+  lFormatSettings.DecimalSeparator := '.';
+  Result := FloatToStr(AValue, lFormatSettings);
+end;
+
+function TRecorderMeraTagWriter.FindSignal(const ATagName: string): TObject;
+var
+  I: Integer;
+  lSignal: TRecorderMeraSignalWriter;
+begin
+  Result := nil;
+  for I := 0 to fSignals.Count - 1 do
+  begin
+    lSignal := TRecorderMeraSignalWriter(fSignals[I]);
+    if SameText(lSignal.TagName, ATagName) then
+      Exit(lSignal);
+  end;
+end;
+
+function TRecorderMeraTagWriter.MakeSectionName(const ATagName: string): string;
+var
+  I: Integer;
+  lBase: string;
+  lCandidate: string;
+  lIndex: Integer;
+begin
+  lBase := Trim(ATagName);
+  for I := 1 to Length(lBase) do
+    if not (lBase[I] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
+      lBase[I] := '_';
+  while Pos('__', lBase) > 0 do
+    lBase := StringReplace(lBase, '__', '_', [rfReplaceAll]);
+  while (Length(lBase) > 0) and (lBase[1] = '_') do
+    Delete(lBase, 1, 1);
+  while (Length(lBase) > 0) and (lBase[Length(lBase)] = '_') do
+    Delete(lBase, Length(lBase), 1);
+  if lBase = '' then
+    lBase := 'Signal';
+
+  lCandidate := lBase;
+  lIndex := 1;
+  while FileExists(IncludeTrailingPathDelimiter(fFrameDir) + lCandidate + '.dat') or
+    FileExists(IncludeTrailingPathDelimiter(fFrameDir) + lCandidate + '.x') do
+  begin
+    Inc(lIndex);
+    lCandidate := Format('%s_%d', [lBase, lIndex]);
+  end;
+  Result := lCandidate;
+end;
+
+procedure TRecorderMeraTagWriter.RequireOpen;
+begin
+  if not fFileOpen then
+    raise ERecorderDataStorageError.Create('MERA writer is not open');
+end;
+
+procedure TRecorderMeraTagWriter.WriteDescriptor;
+var
+  I: Integer;
+  lText: TStringList;
+  lSignal: TRecorderMeraSignalWriter;
+begin
+  if Trim(fFrameDir) = '' then
+    Exit;
+
+  lText := TStringList.Create;
+  try
+    lText.Add('[MERA]');
+    lText.Add('Format=RecorderLnx.MERA');
+    lText.Add('Version=1');
+    lText.Add('');
+    for I := 0 to fSignals.Count - 1 do
+    begin
+      lSignal := TRecorderMeraSignalWriter(fSignals[I]);
+      lText.Add('[' + lSignal.SectionName + ']');
+      lText.Add('Name=' + lSignal.TagName);
+      lText.Add('Address=' + lSignal.TagName);
+      lText.Add('ModName=RecorderLnx');
+      lText.Add('YFormat=R8');
+      lText.Add('XFormat=R8');
+      lText.Add('YUnits=' + lSignal.SignalUnitName);
+      lText.Add('Freq=' + FloatToMera(lSignal.FrequencyHz));
+      lText.Add('Start=0');
+      lText.Add('Comment=' + lSignal.Description);
+      lText.Add('');
+    end;
+    lText.SaveToFile(IncludeTrailingPathDelimiter(fFrameDir) + 'record.mera');
+  finally
+    lText.Free;
+  end;
+end;
+
+procedure TRecorderMeraTagWriter.Open(const AFrameDir: string);
+begin
+  if Trim(AFrameDir) = '' then
+    raise ERecorderDataStorageError.Create('Frame directory cannot be empty');
+
+  Close;
+  fFrameDir := IncludeTrailingPathDelimiter(AFrameDir);
+  ForceDirectories(fFrameDir);
+  fFileOpen := True;
+end;
+
+procedure TRecorderMeraTagWriter.WriteSample(const ATagName, AUnitName,
+  ADescription: string; ATimeSec, AValue: Double; APollFrequencyHz: Double);
+var
+  lSignalObject: TObject;
+  lSignal: TRecorderMeraSignalWriter;
+begin
+  if Trim(ATagName) = '' then
+    raise ERecorderDataStorageError.Create('Tag name cannot be empty');
+
+  EnterCriticalSection(fLock);
+  try
+    RequireOpen;
+    lSignalObject := FindSignal(ATagName);
+    if lSignalObject = nil then
+    begin
+      lSignal := TRecorderMeraSignalWriter.Create;
+      try
+        lSignal.TagName := ATagName;
+        lSignal.SectionName := MakeSectionName(ATagName);
+        lSignal.SignalUnitName := AUnitName;
+        lSignal.Description := ADescription;
+        lSignal.FrequencyHz := APollFrequencyHz;
+        lSignal.DataStream := TFileStream.Create(fFrameDir + lSignal.SectionName + '.dat', fmCreate);
+        lSignal.TimeStream := TFileStream.Create(fFrameDir + lSignal.SectionName + '.x', fmCreate);
+        fSignals.Add(lSignal);
+        lSignal := nil;
+      finally
+        lSignal.Free;
+      end;
+      lSignal := TRecorderMeraSignalWriter(fSignals[fSignals.Count - 1]);
+    end
+    else
+      lSignal := TRecorderMeraSignalWriter(lSignalObject);
+
+    lSignal.DataStream.WriteBuffer(AValue, SizeOf(AValue));
+    lSignal.TimeStream.WriteBuffer(ATimeSec, SizeOf(ATimeSec));
+  finally
+    LeaveCriticalSection(fLock);
+  end;
+end;
+
+procedure TRecorderMeraTagWriter.Flush;
+begin
+  { TFileStream buffers are owned by OS/file handle; durable flush is performed
+    by closing streams in Close. The method is kept for writer API symmetry. }
+end;
+
+procedure TRecorderMeraTagWriter.Close;
+var
+  I: Integer;
+begin
+  EnterCriticalSection(fLock);
+  try
+    if fFileOpen then
+    begin
+      Flush;
+      WriteDescriptor;
+      fFileOpen := False;
+    end;
+    for I := fSignals.Count - 1 downto 0 do
+      TObject(fSignals[I]).Free;
+    fSignals.Clear;
+    fFrameDir := '';
+  finally
+    LeaveCriticalSection(fLock);
+  end;
+end;
 end.

@@ -46,6 +46,8 @@ const
   CIconChannelCurve = 32;
   CIconSearch = 33;
   CIconFolderOpen = 34;
+  CIconRight = 36;
+  CIconLeft = 35;
 
   CRecorderOriginalImageCount = 15;
   CRecorderCommandImageCount = 35;

@@ -18,12 +18,13 @@ unit uTagSettingsDialog;
 }
 
 {$mode objfpc}{$H+}
+{$codepage cp1251}
 
 interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
-  Buttons, Dialogs, ImgList, uRecorderTags;
+  Buttons, Dialogs, ImgList, uRecorderTags, uMeraFile;
 
 type
   { TTagSettingsDialog }
@@ -32,10 +33,12 @@ type
   TTagSettingsDialog = class(TForm)
   private
     fApplyButton: TButton;                               // Кнопка "Применить"
+    fAddressButton: TSpeedButton;                        // Кнопка выбора адреса/канала из активного источника
     fAutoRangeCheck: TCheckBox;                          // Флаг автодиапазона
     fAutoUnitCheck: TCheckBox;                           // Флаг автоматического определения единиц измерения
     fDescriptionEdit: TEdit;                             // Поле ввода описания тега
     fDefaultEstimateCombo: TComboBox;                    // Выбор оценки по умолчанию
+    fDetachedSourceLabel: TLabel;                        // Предупреждение о теге с удаленным источником данных
     fEstimateChecks: array[TRecorderTagEstimateKind] of TCheckBox; // Флаги вычисления различных оценок
     fFrequencyCombo: TComboBox;                          // Частота опроса канала
     fHardwareCurveCheck: TCheckBox;                      // Флаг использования аппаратной калибровки
@@ -56,11 +59,14 @@ type
     fSmoothingCheck: TCheckBox;                          // Флаг усреднения/сглаживания (фильтрации)
     fSmoothingKEdit: TEdit;                              // Коэффициент сглаживания k
     fTagRegistry: TRecorderTagRegistry;                  // Реестр тегов
+    fSourceWarningLabel: TLabel;                         // Предупреждение об отвязанном источнике
+    fSelectedMeraFileName: string;                       // Путь выбранного Mera-файла
     fTags: TList;                                        // Список редактируемых тегов (TRecorderTag)
     fUnitCombo: TComboBox;                               // Единица измерения канала
     
     // Внутренние методы обработчиков UI
     procedure ApplyButtonClick(Sender: TObject);
+    procedure AddressButtonClick(Sender: TObject);
     procedure OkButtonClick(Sender: TObject);
     
     // Динамическое конструирование интерфейса
@@ -71,6 +77,10 @@ type
     // Обмен данными между UI и тегами
     procedure LoadFromTags;
     procedure StoreToTags;
+    procedure ApplyMeraSignalToCurrentTag(const ASourceId: string;
+      ASignal: TMeraSignalInfo);
+    function SelectActiveMeraSignal(out ASourceId: string;
+      out ASignal: TMeraSignalInfo): Boolean;
     
     // Функции проверки согласованности значений при множественном выборе
     function AllBool(AGetter: Integer): Integer;
@@ -90,6 +100,9 @@ type
     
     // Дополнительные проверки и чтение чисел
     function FrequencyCanBeEdited: Boolean;
+    function HasDetachedSource: Boolean;
+    function IsSignalAlreadyLinked(const ASourceId: string;
+      ASignal: TMeraSignalInfo; AExceptTag: TRecorderTag): Boolean;
     function ReadFloat(const AText: string; out AValue: Double): Boolean;
     
     { Быстрое приведение к типу TRecorderTag по индексу }
@@ -100,10 +113,7 @@ type
     destructor Destroy; override;
   end;
 
-{ Отображение диалога настройки тегов. Возвращает True при успешном сохранении изменений }
-function ShowTagSettingsDialog(AOwner: TComponent;
-  ATagRegistry: TRecorderTagRegistry; ATags: TList;
-  AImages: TCustomImageList = nil): Boolean;
+function ShowTagSettingsDialog(AOwner: TComponent; ATagRegistry: TRecorderTagRegistry; ATags: TList; AImages: TCustomImageList = nil): Boolean;
 
 implementation
 
@@ -115,6 +125,48 @@ const
   CTagDialogIconAdd = 4;
   CTagDialogIconRemove = 5;
   CTagDialogIconChannelCurve = 6;
+
+function ShowSelectSignalDialog(AOwner: TComponent; AList: TStrings; var ASelectedIndex: Integer): Boolean;
+var
+  lForm: TForm;
+  lListBox: TListBox;
+  lOkBtn, lCancelBtn: TButton;
+begin
+  lForm := TForm.CreateNew(AOwner, 1);
+  try
+    lForm.Caption := 'Выбор сигнала источника';
+    lForm.SetBounds(0, 0, 350, 450);
+    lForm.Position := poOwnerFormCenter;
+    lForm.BorderStyle := bsDialog;
+    
+    lListBox := TListBox.Create(lForm);
+    lListBox.Parent := lForm;
+    lListBox.SetBounds(10, 10, 314, 340);
+    lListBox.Items.Assign(AList);
+    
+    lOkBtn := TButton.Create(lForm);
+    lOkBtn.Parent := lForm;
+    lOkBtn.SetBounds(140, 370, 80, 25);
+    lOkBtn.Caption := 'OK';
+    lOkBtn.ModalResult := mrOk;
+    lOkBtn.Default := True;
+    
+    lCancelBtn := TButton.Create(lForm);
+    lCancelBtn.Parent := lForm;
+    lCancelBtn.SetBounds(230, 370, 80, 25);
+    lCancelBtn.Caption := 'Отмена';
+    lCancelBtn.ModalResult := mrCancel;
+    
+    if lListBox.Items.Count > 0 then
+      lListBox.ItemIndex := 0;
+      
+    Result := lForm.ShowModal = mrOk;
+    if Result then
+      ASelectedIndex := lListBox.ItemIndex;
+  finally
+    lForm.Free;
+  end;
+end;
 
 function ShowTagSettingsDialog(AOwner: TComponent;
   ATagRegistry: TRecorderTagRegistry; ATags: TList;
@@ -213,7 +265,7 @@ begin
   BorderStyle := bsDialog;
   Caption := 'Настройка канала';
   ClientWidth := 560;
-  ClientHeight := 580;
+  ClientHeight := 600;
   Position := poScreenCenter;
 
   lTabs := TPageControl.Create(Self);
@@ -235,7 +287,7 @@ begin
 
   lGroup := TGroupBox.Create(Self);
   lGroup.Parent := lTab;
-  lGroup.SetBounds(8, 8, 520, 166);
+  lGroup.SetBounds(8, 8, 520, 186);
   lGroup.Caption := 'Общие параметры';
 
   AddLabel(lGroup, 12, 22, 'Имя');
@@ -259,7 +311,9 @@ begin
   AddLabel(lGroup, 12, 52, 'Адрес');
   fModuleEdit := AddEdit(lGroup, 72, 48, 250);
   fModuleEdit.ReadOnly := True;
-  AddButton(lGroup, 330, 44, CTagDialogIconAddress, '...', 'Выбор адреса канала');
+  fAddressButton := AddButton(lGroup, 330, 44, CTagDialogIconAddress, '...',
+    'Выбор адреса канала');
+  fAddressButton.OnClick := @AddressButtonClick;
 
   AddLabel(lGroup, 12, 86, 'Описание');
   fDescriptionEdit := AddEdit(lGroup, 72, 82, 380);
@@ -275,9 +329,17 @@ begin
   fFrequencyCombo.Items.Add('100000.0');
   AddLabel(lGroup, 268, 124, 'Гц');
 
+  fDetachedSourceLabel := TLabel.Create(Self);
+  fDetachedSourceLabel.Parent := lGroup;
+  fDetachedSourceLabel.SetBounds(72, 152, 440, 18);
+  fDetachedSourceLabel.Caption := 'Внимание: источник данных отвязан!';
+  fDetachedSourceLabel.Font.Color := clRed;
+  fDetachedSourceLabel.Font.Style := [fsBold];
+  fDetachedSourceLabel.Visible := False;
+
   lGroup := TGroupBox.Create(Self);
   lGroup.Parent := lTab;
-  lGroup.SetBounds(8, 184, 520, 78);
+  lGroup.SetBounds(8, 204, 520, 78);
   lGroup.Caption := 'Диапазон значений';
 
   AddLabel(lGroup, 12, 24, 'Нижний');
@@ -291,7 +353,7 @@ begin
 
   lGroup := TGroupBox.Create(Self);
   lGroup.Parent := lTab;
-  lGroup.SetBounds(8, 274, 520, 74);
+  lGroup.SetBounds(8, 294, 520, 74);
   lGroup.Caption := 'Аппаратная КХ';
   fHardwareCurveCheck := TCheckBox.Create(Self);
   fHardwareCurveCheck.Parent := lGroup;
@@ -303,7 +365,7 @@ begin
 
   lGroup := TGroupBox.Create(Self);
   lGroup.Parent := lTab;
-  lGroup.SetBounds(8, 360, 520, 74);
+  lGroup.SetBounds(8, 380, 520, 74);
   lGroup.Caption := 'Канальная ГХ';
   TCheckBox.Create(Self).Parent := lGroup;
   TCheckBox(lGroup.Controls[lGroup.ControlCount - 1]).SetBounds(8, 22, 16, 20);
@@ -316,7 +378,7 @@ begin
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := lTab;
-  lLabel.SetBounds(72, 462, 320, 24);
+  lLabel.SetBounds(72, 482, 320, 24);
   lLabel.Caption := 'Настройка виртуального канала';
 
   lPanel := TPanel.Create(Self);
@@ -803,6 +865,206 @@ begin
   Result := AllString(4, lValue);
 end;
 
+function TTagSettingsDialog.HasDetachedSource: Boolean;
+var
+  I: Integer;
+  lSourceId: string;
+begin
+  Result := False;
+  for I := 0 to fTags.Count - 1 do
+  begin
+    lSourceId := Trim(TagAt(I).SourceId);
+    if (lSourceId <> '') and not fTagRegistry.IsSourceActive(lSourceId) then
+      Exit(True);
+  end;
+end;
+
+function TTagSettingsDialog.IsSignalAlreadyLinked(const ASourceId: string;
+  ASignal: TMeraSignalInfo; AExceptTag: TRecorderTag): Boolean;
+var
+  I: Integer;
+  lTag: TRecorderTag;
+begin
+  Result := False;
+  if ASignal = nil then
+    Exit;
+
+  for I := 0 to fTagRegistry.TagCount - 1 do
+  begin
+    lTag := fTagRegistry.Tags[I];
+    if lTag = AExceptTag then
+      Continue;
+    if SameText(lTag.SourceId, ASourceId) and SameText(lTag.Address, ASignal.Address) then
+      Exit(True);
+  end;
+end;
+
+function TTagSettingsDialog.SelectActiveMeraSignal(out ASourceId: string;
+  out ASignal: TMeraSignalInfo): Boolean;
+const
+  CMeraSourcePrefix = 'Mera file: ';
+var
+  I: Integer;
+  lDialog: TForm;
+  lList: TListBox;
+  lPanel: TPanel;
+  lButton: TButton;
+  lSignals: TList;
+  lSourceIds: TStringList;
+  lSourceId: string;
+  lFileName: string;
+  lSignal: TMeraSignalInfo;
+begin
+  Result := False;
+  ASourceId := '';
+  ASignal := nil;
+
+  lSignals := TList.Create;
+  lSourceIds := TStringList.Create;
+  lDialog := TForm.CreateNew(Self, 1);
+  try
+    lDialog.Caption := 'Выбор канала источника данных';
+    lDialog.Position := poOwnerFormCenter;
+    lDialog.BorderStyle := bsDialog;
+    lDialog.ClientWidth := 560;
+    lDialog.ClientHeight := 400;
+
+    lList := TListBox.Create(lDialog);
+    lList.Parent := lDialog;
+    lList.Align := alClient;
+
+    lPanel := TPanel.Create(lDialog);
+    lPanel.Parent := lDialog;
+    lPanel.Align := alBottom;
+    lPanel.Height := 42;
+    lPanel.BevelOuter := bvNone;
+
+    lButton := TButton.Create(lDialog);
+    lButton.Parent := lPanel;
+    lButton.SetBounds(390, 8, 74, 26);
+    lButton.Caption := 'OK';
+    lButton.Default := True;
+    lButton.ModalResult := mrOk;
+
+    lButton := TButton.Create(lDialog);
+    lButton.Parent := lPanel;
+    lButton.SetBounds(470, 8, 74, 26);
+    lButton.Caption := 'Отмена';
+    lButton.Cancel := True;
+    lButton.ModalResult := mrCancel;
+
+    for I := 0 to fTagRegistry.ActiveSourceCount - 1 do
+    begin
+      lSourceId := fTagRegistry.ActiveSourceIds[I];
+      if Pos(CMeraSourcePrefix, lSourceId) <> 1 then
+        Continue;
+
+      lFileName := Trim(Copy(lSourceId, Length(CMeraSourcePrefix) + 1, MaxInt));
+      if not FileExists(lFileName) then
+        Continue;
+
+      LoadMeraSignalsFromFile(lFileName, lSignals);
+      while lSignals.Count > 0 do
+      begin
+        lSignal := TMeraSignalInfo(lSignals[0]);
+        lSignals.Delete(0);
+        if IsSignalAlreadyLinked(lSourceId, lSignal, TagAt(0)) then
+        begin
+          lSignal.Free;
+          Continue;
+        end;
+        lSourceIds.Add(lSourceId);
+        lList.Items.AddObject(Format('%s  [%s]  %s',
+          [lSignal.Name, lSignal.Address, ExtractFileName(lFileName)]), lSignal);
+      end;
+    end;
+
+    if lList.Items.Count = 0 then
+    begin
+      MessageDlg('Выбор канала', 'Нет доступных каналов активного источника данных.',
+        mtInformation, [mbOK], 0);
+      Exit;
+    end;
+
+    lList.ItemIndex := 0;
+    if lDialog.ShowModal = mrOk then
+      Result := lList.ItemIndex >= 0;
+
+    if Result then
+    begin
+      ASourceId := lSourceIds[lList.ItemIndex];
+      ASignal := TMeraSignalInfo(lList.Items.Objects[lList.ItemIndex]);
+      lList.Items.Objects[lList.ItemIndex] := nil;
+    end;
+  finally
+    for I := 0 to lDialog.ComponentCount - 1 do
+      if lDialog.Components[I] is TListBox then
+      begin
+        lList := TListBox(lDialog.Components[I]);
+        while lList.Items.Count > 0 do
+        begin
+          TObject(lList.Items.Objects[0]).Free;
+          lList.Items.Delete(0);
+        end;
+        Break;
+      end;
+    lDialog.Free;
+    ClearMeraSignals(lSignals);
+    lSignals.Free;
+    lSourceIds.Free;
+  end;
+end;
+
+procedure TTagSettingsDialog.ApplyMeraSignalToCurrentTag(const ASourceId: string;
+  ASignal: TMeraSignalInfo);
+var
+  lExisting: TRecorderTag;
+  lTag: TRecorderTag;
+  lTagName: string;
+begin
+  if (fTags.Count <> 1) or (ASignal = nil) then
+    Exit;
+
+  lTag := TagAt(0);
+  lTagName := MeraSignalToRecorderTagName(ASignal);
+  lExisting := fTagRegistry.FindByName(lTagName);
+  if (lExisting <> nil) and (lExisting <> lTag) then
+    raise ERecorderTagError.Create('Tag name already exists: ' + lTagName);
+
+  lTag.Name := lTagName;
+  lTag.Address := ASignal.Address;
+  lTag.UnitName := ASignal.UnitsName;
+  lTag.SourceId := ASourceId;
+  lTag.ModuleType := ASignal.ModuleName;
+  lTag.PollFrequencyHz := ASignal.FrequencyHz;
+  lTag.Description := Format('%s; type=%s; freq=%s; file=%s',
+    [ASignal.Name, ASignal.DataTypeName, FormatFloat('0.######',
+    ASignal.FrequencyHz), ExtractFileName(ASignal.FileName)]);
+end;
+
+procedure TTagSettingsDialog.AddressButtonClick(Sender: TObject);
+var
+  lSignal: TMeraSignalInfo;
+  lSourceId: string;
+begin
+  if fTags.Count <> 1 then
+  begin
+    MessageDlg('Выбор канала',
+      'Адрес можно связывать с источником только для одного выбранного тега.',
+      mtInformation, [mbOK], 0);
+    Exit;
+  end;
+
+  if not SelectActiveMeraSignal(lSourceId, lSignal) then
+    Exit;
+  try
+    ApplyMeraSignalToCurrentTag(lSourceId, lSignal);
+    LoadFromTags;
+  finally
+    lSignal.Free;
+  end;
+end;
+
 { Загрузка текущих параметров тегов в элементы интерфейса }
 procedure TTagSettingsDialog.LoadFromTags;
 var
@@ -814,19 +1076,26 @@ var
   lIndex: Integer;
   lInt: Integer;
   lSetpointKind: TRecorderTagSetpointKind;
+  lJ: Integer;
+  lSourceActive: Boolean;
+  lTagTemp: TRecorderTag;
 begin
   if fTags.Count = 1 then
   begin
     Caption := 'Настройка канала ' + TagAt(0).Name;
     fNameEdit.Text := TagAt(0).Name;
     fNameEdit.Enabled := True;
+    fAddressButton.Enabled := fTagRegistry.ActiveSourceCount > 0;
   end
   else
   begin
     Caption := Format('Настройка каналов (%d)', [fTags.Count]);
     fNameEdit.Text := '';
     fNameEdit.Enabled := False;
+    fAddressButton.Enabled := False;
   end;
+
+  fDetachedSourceLabel.Visible := HasDetachedSource;
 
   if AllString(1, lText) then
     fUnitCombo.Text := lText
@@ -836,6 +1105,21 @@ begin
     fModuleEdit.Text := lText
   else
     fModuleEdit.Text := '';
+
+  lSourceActive := True;
+  for lJ := 0 to fTags.Count - 1 do
+  begin
+    lTagTemp := TagAt(lJ);
+    if (lTagTemp.SourceId <> '') and (lTagTemp.SourceId <> 'manual') and (lTagTemp.SourceId <> 'debug.diagnostics') then
+    begin
+      if not fTagRegistry.IsSourceActive(lTagTemp.SourceId) then
+      begin
+        lSourceActive := False;
+        Break;
+      end;
+    end;
+  end;
+  fSourceWarningLabel.Visible := not lSourceActive;
 
   if AllString(3, lText) then
     fDescriptionEdit.Text := lText
@@ -983,6 +1267,11 @@ begin
   for I := 0 to fTags.Count - 1 do
   begin
     lTag := TagAt(I);
+    if fSelectedMeraFileName <> '' then
+    begin
+      lTag.Address := Trim(fModuleEdit.Text);
+      lTag.SourceId := 'Mera file: ' + fSelectedMeraFileName;
+    end;
     if Trim(fUnitCombo.Text) <> '' then
       lTag.UnitName := Trim(fUnitCombo.Text);
     if Trim(fDescriptionEdit.Text) <> '' then

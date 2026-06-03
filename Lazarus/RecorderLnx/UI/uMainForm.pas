@@ -29,20 +29,23 @@ unit uMainForm;
 }
 
 {$mode objfpc}{$H+}
+{$codepage cp1251}
 
 interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  Grids, Buttons, ImgList, ComCtrls, Spin, Math,
+  Grids, Buttons, ImgList, ComCtrls, Spin, Math, Menus, LConvEncoding,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderFormModel,
   uRecorderCoreServices, uRecorderTags, uRecorderDataSources,
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
   uFormEditorController, uRecorderSettingsDialog, uTagSettingsDialog,
   uRecorderCommandImages, uRecorderProjectFiles, uRecorderDigitalPageView,
-  uRecorderOglOscillogramView, uRecorderDebugLog;
+  uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage;
 
 type
+  TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
+
   { TMainForm }
 
   { Класс главной формы приложения RecorderLnx }
@@ -51,7 +54,8 @@ type
     btnClearSearch: TButton;                     // Кнопка очистки фильтра поиска тегов
     btnPreview: TSpeedButton;                    // Кнопка запуска просмотра (без записи)
     btnRecord: TSpeedButton;                     // Кнопка запуска записи данных
-    btnSaveConfig: TSpeedButton;                 // Кнопка сохранения текущей конфигурации проекта
+    btnSaveConfig: TSpeedButton;
+    btnSaveConfigAs: TSpeedButton;                 // Кнопка сохранения текущей конфигурации проекта
     btnSettings: TSpeedButton;                   // Кнопка вызова общего диалога настроек
     btnStop: TSpeedButton;                       // Кнопка останова сбора/записи
     btnTrigger: TSpeedButton;                    // Кнопка принудительного старта по выполнению условий
@@ -80,6 +84,7 @@ type
     procedure btnPreviewClick(Sender: TObject);
     procedure btnRecordClick(Sender: TObject);
     procedure btnSaveConfigClick(Sender: TObject);
+    procedure btnSaveConfigAsClick(Sender: TObject);
     procedure btnSettingsClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
     procedure btnTriggerClick(Sender: TObject);
@@ -89,6 +94,8 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure lbTagsClick(Sender: TObject);
     procedure lbTagsDblClick(Sender: TObject);
+    procedure sgFormularPrepareCanvas(sender: TObject; aCol, aRow: Integer;
+      aState: TGridDrawState);
     procedure sgFormularSelectCell(Sender: TObject; aCol, aRow: Integer;
       var CanSelect: Boolean);
   private
@@ -118,6 +125,11 @@ type
     fBaseToolbar: TPanel;                         // Тулбар управления графиками
     fBaseChartsPanel: TPanel;                     // Область размещения графиков TChart
     fOscillogramCountEdit: TSpinEdit;             // Поле количества одновременно отображаемых графиков
+    fBaseFpsLabel: TLabel;                        // Отдельный индикатор FPS базовой страницы
+    fLogFilterPanel: TPanel;                      // Панель фильтров нижнего журнала
+    fLogShowSystemCheck: TCheckBox;               // Показывать системные события
+    fLogShowDataCheck: TCheckBox;                 // Показывать диагностические/data события
+    fLogShowAlarmsCheck: TCheckBox;               // Показывать события тревог
     fPageControl: TPageControl;                   // Визуальный контейнер вкладок формуляров
     fSelectedComponentRow: Integer;               // Номер выбранной строки в таблице формуляра
     fSyncingPages: Boolean;                       // Флаг предотвращения рекурсивного вызова при обновлении вкладок
@@ -128,13 +140,18 @@ type
     fEventBus: TRecorderEventBus;                 // Локальная шина обмена внутренними событиями
     fTagRegistry: TRecorderTagRegistry;           // Общий реестр тегов и каналов
     fEventQueue: TRecorderEventSnapshotQueue;     // Очередь снимков значений для UI-потока
+    fAlarmEngine: IRecorderAlarmEngine;           // Движок тревог/уставок для отображающих компонентов
     fTimeSystem: TRecorderTimeSystem;             // Подсистема контроля времени
     fDataSourceManager: TRecorderDataSourceManager; // Менеджер источников сбора данных
     fLatestTagValues: TStringList;                // Буфер последних текстовых значений тегов для отображения
+    fLogLines: TStringList;                       // Полная история нижнего журнала с категориями
     fUiUpdateTimer: TTimer;                       // Таймер периодического обновления UI из очереди событий
     fDataSourcesConfigured: Boolean;              // Флаг готовности источников данных
     fProjectConfigDir: string;                    // Каталог конфигурационных файлов проекта
     fRunControlFileName: string;                  // Путь к файлу настроек сбора/записи
+    fConfigPopupMenu: TPopupMenu;                 // Меню операций сохранения/загрузки конфигурации
+    fRecordFrameManager: TRecorderRecordFrameManager; // Менеджер каталогов кадров записи
+    fMeraWriter: TRecorderMeraTagWriter;          // Writer MERA files of current record
     fDiagLastLogTickMs: QWord;                    // Время последнего диагностического лога
     fDiagUiTicks: Integer;                        // Количество тиков UI за период диагностики
     fDiagDataEvents: Integer;                     // Количество событий данных за период диагностики
@@ -146,7 +163,15 @@ type
       AAllowAllUp: Boolean = False; AEnabled: Boolean = True;
       const ACaption: string = ''; AImageWidth: Integer = 25): TSpeedButton;
     { Добавляет строку в журнал с локальным временем. }
-    procedure AddLog(const AMessage: string);
+    procedure AddLog(const AMessage: string; AKind: TRecorderLogKind = rlkSystem);
+    { Создает галочки фильтрации нижнего журнала. }
+    procedure EnsureLogFilterPanel;
+    { Обработчик изменения фильтров нижнего журнала. }
+    procedure LogFilterChanged(Sender: TObject);
+    { Перестраивает видимый журнал по текущим галочкам. }
+    procedure RefreshLogView;
+    { Возвращает True, если категория журнала сейчас видима. }
+    function LogKindVisible(AKind: TRecorderLogKind): Boolean;
     { Создает начальную модель формуляров, которой управляет главный экран. }
     procedure InitializeFormPages;
     { Добавляет страницу в модель и делает ее активной, если нужно. }
@@ -218,6 +243,19 @@ type
     // Загрузка/сохранение конфигураций проекта
     procedure LoadProjectPackage;
     procedure SaveProjectPackage;
+    { Переназначает текущий каталог пакета конфигурации проекта. }
+    procedure SetProjectConfigDir(const ADirectoryName: string);
+    { Создает popup-меню кнопки конфигурации с Save/Load/Save As. }
+    procedure EnsureConfigPopupMenu;
+    { Показывает popup-меню операций конфигурации. }
+    procedure ShowConfigPopupMenu;
+    { Команды popup-меню конфигурации. }
+    procedure SaveCurrentConfigClick(Sender: TObject);
+    procedure SaveConfigAsClick(Sender: TObject);
+    procedure LoadConfigFromClick(Sender: TObject);
+    { Открывает/закрывает MERA-запись текущего сеанса Record. }
+    procedure OpenRecordFrame;
+    procedure CloseRecordFrame;
     { Пересчитывает автоинкрементные счетчики на основе загруженной структуры gui }
     procedure ResetProjectCounters;
     { Применяет фильтр поиска к списку тегов. }
@@ -253,6 +291,8 @@ type
     { Обработчик события ядра: фиксирует переход состояния в журнале и на форме. }
     procedure StateMachineStateChanged(ASender: TObject;
       AOldState, ANewState: TRecorderState);
+    procedure OnMenuEditSelectedTags(Sender: TObject);
+    procedure UpdateActiveSourceIds;
   public
   end;
 
@@ -272,8 +312,11 @@ const
 { TMainForm }
 
 procedure TMainForm.FormCreate(Sender: TObject);
+var
+  lPopupMenu: TPopupMenu;
+  lMenuItem: TMenuItem;
 begin
-  Caption := 'RecorderLnx - config/projects/default';
+  Caption := 'RecorderLnx';
   KeyPreview := True;
   OnKeyDown := @FormKeyDown;
 
@@ -285,9 +328,11 @@ begin
   fEventBus := TRecorderEventBus.Create;
   fTagRegistry := TRecorderTagRegistry.Create(fEventBus);
   fEventQueue := TRecorderEventSnapshotQueue.Create(fEventBus);
+  fAlarmEngine := TRecorderAlarmEngine.Create(fEventBus) as IRecorderAlarmEngine;
   fTimeSystem := TRecorderTimeSystem.Create;
   fDataSourceManager := TRecorderDataSourceManager.Create;
   fLatestTagValues := TStringList.Create;
+  fLogLines := TStringList.Create;
   fLatestTagValues.CaseSensitive := False;
   fLatestTagValues.Sorted := False;
   fLatestTagValues.Duplicates := dupAccept;
@@ -300,22 +345,32 @@ begin
   fComponentFactory := TRecorderComponentFactory.Create;
   fComponentFactory.RegisterDefaultComponents;
   fFormFactory := TRecorderFormFactory.Create(fComponentFactory);
+  sgFormular.OnPrepareCanvas := @sgFormularPrepareCanvas;
   fFormManager := TRecorderFormManager.Create;
-  fProjectConfigDir := IncludeTrailingPathDelimiter(GetDevProjectDir) +
-    CDefaultProjectConfigDir;
-  fRunControlFileName := RecorderProjectFileSet(fProjectConfigDir,
-    CProjectBaseName).RunControlFileName;
+  SetProjectConfigDir(IncludeTrailingPathDelimiter(GetDevProjectDir) +
+    CDefaultProjectConfigDir);
 
   LoadRecorderCommandImages(ilCommandButtons);
   SetupCommandButtons;
+  EnsureLogFilterPanel;
   EnsurePageControl;
   EnsureEditorSurface;
   EnsureBaseToolbar;
   fFormEditor := TFormEditorController.Create(fEditorCanvas, @GetActiveEditorPage,
     fComponentFactory);
   fFormEditor.OnChanged := @FormEditorChanged;
-  fFormEditor.SetDataContext(fTagRegistry, fRunSettings.DisplayBufferMs / 1000);
+  fFormEditor.SetDataContext(fTagRegistry, fAlarmEngine, fRunSettings.DisplayBufferMs / 1000);
   lbTags.OnClick := @lbTagsClick;
+  UpdateActiveSourceIds;
+  
+  // Создание контекстного меню для настройки каналов
+  lPopupMenu := TPopupMenu.Create(Self);
+  lMenuItem := TMenuItem.Create(lPopupMenu);
+  lMenuItem.Caption := 'Настроить выделенные каналы...';
+  lMenuItem.OnClick := @OnMenuEditSelectedTags;
+  lPopupMenu.Items.Add(lMenuItem);
+  lbTags.PopupMenu := lPopupMenu;
+
   EnsureDevConfig;
   InitializeFormPages;
   LoadRunSettings;
@@ -337,12 +392,17 @@ begin
   FreeAndNil(fFormManager);
   FreeAndNil(fFormFactory);
   FreeAndNil(fComponentFactory);
+  CloseRecordFrame;
+  FreeAndNil(fMeraWriter);
+  FreeAndNil(fRecordFrameManager);
   FreeAndNil(fDataSourceManager);
   FreeAndNil(fTimeSystem);
+  fAlarmEngine := nil;
   FreeAndNil(fEventQueue);
   FreeAndNil(fTagRegistry);
   FreeAndNil(fEventBus);
   FreeAndNil(fLatestTagValues);
+  FreeAndNil(fLogLines);
   FreeAndNil(fRunSettings);
   FreeAndNil(fStateMachine);
 end;
@@ -363,6 +423,37 @@ begin
     fSelectedComponentRow := -1;
 end;
 
+procedure TMainForm.sgFormularPrepareCanvas(sender: TObject; aCol, aRow: Integer;
+  aState: TGridDrawState);
+var
+  lTagName: string;
+  lTag: TRecorderTag;
+  lColor: LongInt;
+  lRowIdx: Integer;
+begin
+  if (aRow > 0) and (gdSelected in aState) then Exit;
+  if (aRow > 0) and (fTagRegistry <> nil) and (fAlarmEngine <> nil) then
+  begin
+    lRowIdx := aRow;
+    while (lRowIdx > 0) and (sgFormular.Cells[0, lRowIdx] = '') do
+      Dec(lRowIdx);
+    if lRowIdx > 0 then
+    begin
+      lTagName := sgFormular.Cells[0, lRowIdx];
+      lTag := fTagRegistry.FindByName(lTagName);
+      if lTag <> nil then
+      begin
+        lColor := fAlarmEngine.GetTagAlarmColor(lTag);
+        if lColor <> 0 then
+        begin
+          sgFormular.Canvas.Brush.Color := TColor(lColor);
+          sgFormular.Canvas.Font.Color := clBlack;
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure TMainForm.lbTagsClick(Sender: TObject);
 begin
   UpdateSelectedTagFromList;
@@ -376,6 +467,31 @@ end;
 procedure TMainForm.lbTagsDblClick(Sender: TObject);
 begin
   UpdateSelectedTagFromList;
+  OpenSelectedTagSettings;
+end;
+
+procedure TMainForm.UpdateActiveSourceIds;
+var
+  I: Integer;
+  lTag: TRecorderTag;
+const
+  CMeraSourcePrefix = 'Mera file: ';
+begin
+  if fTagRegistry = nil then Exit;
+  fTagRegistry.ClearActiveSources;
+  fTagRegistry.RegisterActiveSource('manual');
+  fTagRegistry.RegisterActiveSource('debug.diagnostics');
+  
+  for I := 0 to fTagRegistry.TagCount - 1 do
+  begin
+    lTag := fTagRegistry.Tags[I];
+    if Pos(CMeraSourcePrefix, lTag.SourceId) = 1 then
+      fTagRegistry.RegisterActiveSource(lTag.SourceId);
+  end;
+end;
+
+procedure TMainForm.OnMenuEditSelectedTags(Sender: TObject);
+begin
   OpenSelectedTagSettings;
 end;
 
@@ -454,6 +570,8 @@ end;
 procedure TMainForm.btnPreviewClick(Sender: TObject);
 begin
   try
+    if fStateMachine.State = rsPreview then
+      Exit;
     fStateMachine.StartPreview(rscManual);
   except
     on E: Exception do
@@ -489,6 +607,16 @@ begin
   except
     on E: Exception do
       LogCommandError('Stop', E);
+  end;
+end;
+
+procedure TMainForm.btnSaveConfigAsClick(Sender: TObject);
+begin
+  try
+    SaveConfigAsClick(Sender);
+  except
+    on E: Exception do
+      LogCommandError('Save config as', E);
   end;
 end;
 
@@ -539,13 +667,90 @@ begin
   RebuildTagList(edTagSearch.Text);
 end;
 
-procedure TMainForm.AddLog(const AMessage: string);
+procedure TMainForm.AddLog(const AMessage: string; AKind: TRecorderLogKind);
 var
   lLine: string;
 begin
   lLine := FormatDateTime('hh:nn:ss.zzz', Now) + ' ' + AMessage;
-  mmLog.Lines.Add(lLine);
+  if fLogLines <> nil then
+    fLogLines.AddObject(lLine, TObject(PtrInt(Ord(AKind))));
+  if (mmLog <> nil) and LogKindVisible(AKind) then
+    mmLog.Lines.Add(lLine);
   RecorderDebugLog(lLine);
+end;
+
+procedure TMainForm.EnsureLogFilterPanel;
+begin
+  if fLogFilterPanel <> nil then
+    Exit;
+
+  fLogFilterPanel := TPanel.Create(Self);
+  fLogFilterPanel.Parent := pnMain;
+  fLogFilterPanel.Align := alBottom;
+  fLogFilterPanel.Height := 26;
+  fLogFilterPanel.BevelOuter := bvNone;
+
+  fLogShowSystemCheck := TCheckBox.Create(Self);
+  fLogShowSystemCheck.Parent := fLogFilterPanel;
+  fLogShowSystemCheck.SetBounds(8, 3, 86, 20);
+  fLogShowSystemCheck.Caption := 'Система';
+  fLogShowSystemCheck.Checked := True;
+  fLogShowSystemCheck.OnChange := @LogFilterChanged;
+
+  fLogShowDataCheck := TCheckBox.Create(Self);
+  fLogShowDataCheck.Parent := fLogFilterPanel;
+  fLogShowDataCheck.SetBounds(102, 3, 74, 20);
+  fLogShowDataCheck.Caption := 'Данные';
+  fLogShowDataCheck.Checked := True;
+  fLogShowDataCheck.OnChange := @LogFilterChanged;
+
+  fLogShowAlarmsCheck := TCheckBox.Create(Self);
+  fLogShowAlarmsCheck.Parent := fLogFilterPanel;
+  fLogShowAlarmsCheck.SetBounds(184, 3, 82, 20);
+  fLogShowAlarmsCheck.Caption := 'Тревоги';
+  fLogShowAlarmsCheck.Checked := True;
+  fLogShowAlarmsCheck.OnChange := @LogFilterChanged;
+end;
+
+procedure TMainForm.LogFilterChanged(Sender: TObject);
+begin
+  RefreshLogView;
+end;
+
+procedure TMainForm.RefreshLogView;
+var
+  I: Integer;
+  lKind: TRecorderLogKind;
+begin
+  if (mmLog = nil) or (fLogLines = nil) then
+    Exit;
+
+  mmLog.Lines.BeginUpdate;
+  try
+    mmLog.Lines.Clear;
+    for I := 0 to fLogLines.Count - 1 do
+    begin
+      lKind := TRecorderLogKind(PtrInt(fLogLines.Objects[I]));
+      if LogKindVisible(lKind) then
+        mmLog.Lines.Add(fLogLines[I]);
+    end;
+  finally
+    mmLog.Lines.EndUpdate;
+  end;
+end;
+
+function TMainForm.LogKindVisible(AKind: TRecorderLogKind): Boolean;
+begin
+  case AKind of
+    rlkSystem:
+      Result := (fLogShowSystemCheck = nil) or fLogShowSystemCheck.Checked;
+    rlkData:
+      Result := (fLogShowDataCheck = nil) or fLogShowDataCheck.Checked;
+    rlkAlarm:
+      Result := (fLogShowAlarmsCheck = nil) or fLogShowAlarmsCheck.Checked;
+  else
+    Result := True;
+  end;
 end;
 
 procedure TMainForm.InitializeFormPages;
@@ -645,11 +850,11 @@ begin
     ShowEditorSurface(False);
     ShowBaseToolbar(False);
     UpdateEditorAvailability(nil);
-    Caption := 'RecorderLnx - config/projects/default';
+    Caption := 'RecorderLnx - ' + fProjectConfigDir;
     Exit;
   end;
 
-  Caption := 'RecorderLnx - config/projects/default - ' + lPage.Title;
+  Caption := 'RecorderLnx - ' + fProjectConfigDir + ' - ' + lPage.Title;
   UpdateEditorAvailability(lPage);
 
   if lPage.Id = 'DigitalForm' then
@@ -886,6 +1091,13 @@ begin
   fOscillogramCountEdit.Value := 2;
   fOscillogramCountEdit.OnChange := @OscillogramCountChange;
 
+  fBaseFpsLabel := TLabel.Create(Self);
+  fBaseFpsLabel.Parent := fBaseToolbar;
+  fBaseFpsLabel.Left := 208;
+  fBaseFpsLabel.Top := 9;
+  fBaseFpsLabel.AutoSize := True;
+  fBaseFpsLabel.Caption := 'FPS -';
+
   fBaseChartsPanel := TPanel.Create(Self);
   fBaseChartsPanel.Parent := pnMain;
   fBaseChartsPanel.Align := alClient;
@@ -900,12 +1112,22 @@ procedure TMainForm.ShowEditorSurface(AVisible: Boolean);
 begin
   EnsureEditorSurface;
   fEditorShell.Visible := AVisible;
-  sgFormular.Visible := not AVisible;
 
+  { The editor shell and the built-in digital grid share pnMain with the base
+    oscillogram surface. When the editor is hidden we send it back explicitly so
+    stale child-window pixels cannot stay above OpenGL charts until the next
+    external repaint message. }
   if AVisible then
-    fEditorShell.BringToFront
+  begin
+    sgFormular.Visible := False;
+    fEditorShell.BringToFront;
+  end
   else
+  begin
+    fEditorShell.SendToBack;
+    sgFormular.Visible := True;
     sgFormular.BringToFront;
+  end;
 end;
 
 procedure TMainForm.ShowBaseToolbar(AVisible: Boolean);
@@ -917,7 +1139,10 @@ begin
   if AVisible then
   begin
     if fBaseChartsPanel <> nil then
+    begin
       fBaseChartsPanel.BringToFront;
+      fBaseChartsPanel.Invalidate;
+    end;
     fBaseToolbar.BringToFront;
   end;
 end;
@@ -940,7 +1165,7 @@ begin
   ShowEditorSurface(False);
   sgFormular.Visible := True;
   sgFormular.Align := alClient;
-  RenderRecorderDigitalPage(sgFormular, fTagRegistry);
+  RenderRecorderDigitalPage(sgFormular, fTagRegistry, fAlarmEngine);
 end;
 
 procedure TMainForm.RenderBasePage;
@@ -949,8 +1174,8 @@ var
   lPage: TRecorderFormPage;
 begin
   ShowEditorSurface(False);
-  ShowBaseToolbar(True);
   sgFormular.Visible := False;
+  ShowBaseToolbar(True);
 
   lPage := nil;
   if fFormManager <> nil then
@@ -976,6 +1201,8 @@ begin
   end;
 
   RebuildBaseOscillograms(lCount);
+  RefreshBaseOscillograms;
+  RepaintRecorderOglOscillograms(fBaseChartsPanel);
 end;
 
 procedure TMainForm.RebuildBaseOscillograms(ACount: Integer);
@@ -988,7 +1215,9 @@ end;
 procedure TMainForm.RefreshBaseOscillograms;
 begin
   RefreshRecorderOglOscillograms(fBaseChartsPanel, fTagRegistry,
-    fRunSettings.DisplayBufferMs / 1000);
+    fRunSettings.DisplayBufferMs / 1000, fStateMachine.State = rsPreview);
+  if fBaseFpsLabel <> nil then
+    fBaseFpsLabel.Caption := RecorderOglOscillogramsFpsText(fBaseChartsPanel);
 end;
 
 procedure TMainForm.RenderMnemonicPage(APage: TRecorderFormPage);
@@ -997,7 +1226,7 @@ begin
   ShowEditorSurface(True);
   if fFormEditor <> nil then
   begin
-    fFormEditor.SetDataContext(fTagRegistry, fRunSettings.DisplayBufferMs / 1000);
+    fFormEditor.SetDataContext(fTagRegistry, fAlarmEngine, fRunSettings.DisplayBufferMs / 1000);
     fFormEditor.Render;
   end;
 end;
@@ -1172,6 +1401,8 @@ begin
   lFiles := RecorderProjectFileSet(fProjectConfigDir, CProjectBaseName);
 
   LoadRecorderProjectConfig(lFiles.MainConfigFileName, fTagRegistry);
+  if fAlarmEngine <> nil then
+    fAlarmEngine.Reset;
   if FileExists(lFiles.MainConfigFileName) then
     AddLog('Project main config loaded: ' + lFiles.MainConfigFileName);
 
@@ -1208,6 +1439,122 @@ begin
   AddLog('  run-control: ' + lFiles.RunControlFileName);
 end;
 
+procedure TMainForm.SetProjectConfigDir(const ADirectoryName: string);
+var
+  lFiles: TRecorderProjectFileSet;
+begin
+  fProjectConfigDir := IncludeTrailingPathDelimiter(ExpandFileName(ADirectoryName));
+  lFiles := RecorderProjectFileSet(fProjectConfigDir, CProjectBaseName);
+  fRunControlFileName := lFiles.RunControlFileName;
+
+  FreeAndNil(fRecordFrameManager);
+  fRecordFrameManager := TRecorderRecordFrameManager.Create(
+    IncludeTrailingPathDelimiter(lFiles.DirectoryName) + 'records');
+  Caption := 'RecorderLnx - ' + fProjectConfigDir;
+end;
+
+procedure TMainForm.EnsureConfigPopupMenu;
+var
+  lMenuItem: TMenuItem;
+begin
+  if fConfigPopupMenu <> nil then
+    Exit;
+
+  fConfigPopupMenu := TPopupMenu.Create(Self);
+
+  lMenuItem := TMenuItem.Create(fConfigPopupMenu);
+  lMenuItem.Caption := CP1251ToUTF8('Сохранить текущую конфигурацию');
+  lMenuItem.OnClick := @SaveCurrentConfigClick;
+  fConfigPopupMenu.Items.Add(lMenuItem);
+
+  lMenuItem := TMenuItem.Create(fConfigPopupMenu);
+  lMenuItem.Caption := CP1251ToUTF8('Сохранить конфигурацию в каталог...');
+  lMenuItem.OnClick := @SaveConfigAsClick;
+  fConfigPopupMenu.Items.Add(lMenuItem);
+
+  lMenuItem := TMenuItem.Create(fConfigPopupMenu);
+  lMenuItem.Caption := CP1251ToUTF8('Загрузить конфигурацию из каталога...');
+  lMenuItem.OnClick := @LoadConfigFromClick;
+  fConfigPopupMenu.Items.Add(lMenuItem);
+end;
+
+procedure TMainForm.ShowConfigPopupMenu;
+var
+  lPoint: TPoint;
+begin
+  EnsureConfigPopupMenu;
+  lPoint := btnSaveConfig.ClientToScreen(Point(0, btnSaveConfig.Height));
+  fConfigPopupMenu.PopUp(lPoint.X, lPoint.Y);
+end;
+
+procedure TMainForm.SaveCurrentConfigClick(Sender: TObject);
+begin
+  try
+    SaveProjectPackage;
+  except
+    on E: Exception do
+      LogCommandError('Save config', E);
+  end;
+end;
+
+procedure TMainForm.SaveConfigAsClick(Sender: TObject);
+var
+  lDir: string;
+begin
+  lDir := fProjectConfigDir;
+  if not SelectDirectory(CP1251ToUTF8('Выберите каталог для сохранения конфигурации'), '', lDir) then
+    Exit;
+
+  SetProjectConfigDir(lDir);
+  SaveProjectPackage;
+  AddLog('Project config directory changed: ' + fProjectConfigDir);
+end;
+
+procedure TMainForm.LoadConfigFromClick(Sender: TObject);
+var
+  lDir: string;
+begin
+  lDir := fProjectConfigDir;
+  if not SelectDirectory(CP1251ToUTF8('Выберите каталог конфигурации для загрузки'), '', lDir) then
+    Exit;
+
+  if fStateMachine.State <> rsStop then
+    fStateMachine.Stop;
+  SetProjectConfigDir(lDir);
+  LoadRunSettings;
+  ApplyDisplayTimingSettings;
+  LoadProjectPackage;
+  fDataSourceManager.Clear;
+  fDataSourcesConfigured := False;
+  RebuildTagList(edTagSearch.Text);
+  RenderActivePage;
+  AddLog('Project config loaded from directory: ' + fProjectConfigDir);
+end;
+
+procedure TMainForm.OpenRecordFrame;
+var
+  lFrameDir: string;
+begin
+  if fMeraWriter = nil then
+    fMeraWriter := TRecorderMeraTagWriter.Create;
+  if fMeraWriter.FileOpen then
+    Exit;
+  if fRecordFrameManager = nil then
+    SetProjectConfigDir(fProjectConfigDir);
+
+  lFrameDir := fRecordFrameManager.OpenNextFrame;
+  fRecordFrameManager.WriteFrameInfo(CProjectBaseName, 'RecorderLnx MERA record');
+  fMeraWriter.Open(lFrameDir);
+  AddLog('MERA recording opened: ' + lFrameDir);
+end;
+
+procedure TMainForm.CloseRecordFrame;
+begin
+  if fMeraWriter <> nil then
+    fMeraWriter.Close;
+  if fRecordFrameManager <> nil then
+    fRecordFrameManager.CloseFrame;
+end;
 procedure TMainForm.ResetProjectCounters;
 var
   I: Integer;
@@ -1324,6 +1671,8 @@ begin
 
     if ShowTagSettingsDialog(Self, fTagRegistry, lTags, ilTagDialogButtons) then
     begin
+      if fAlarmEngine <> nil then
+        fAlarmEngine.Reset;
       RebuildTagList(edTagSearch.Text);
       AddLog(Format('Tag settings updated: %d channel(s).', [lTags.Count]));
     end;
@@ -1385,8 +1734,8 @@ begin
       else
         lTagNames := TStringList(lFiles.Objects[lFileIndex]);
 
-      if lTagNames.IndexOf(lTag.Name) < 0 then
-        lTagNames.Add(lTag.Name);
+      if lTagNames.IndexOf(lTag.Address) < 0 then
+        lTagNames.Add(lTag.Address);
     end;
 
     for I := 0 to lFiles.Count - 1 do
@@ -1408,6 +1757,7 @@ begin
   EnsureTagSignalBufferCapacities;
   fDataSourcesConfigured := True;
   AddLog('Diagnostics data source configured: MemTag, CpuUsage.');
+  UpdateActiveSourceIds;
 end;
 
 procedure TMainForm.EnsureTagSignalBufferCapacities;
@@ -1500,6 +1850,12 @@ begin
     begin
       RefreshBaseOscillograms;
       Inc(fDiagRenderCount);
+    end
+    else if IsUserMnemonicPage(fFormManager.ActivePage) then
+    begin
+      if fFormEditor <> nil then
+        fFormEditor.RefreshLive;
+      Inc(fDiagRenderCount);
     end;
   end;
 
@@ -1521,7 +1877,7 @@ begin
 
   AddLog(Format('Update diag: elapsed=%d ms uiTicks=%d dataEvents=%d renders=%d screenTimer=%d ms dataUpdate=%d ms',
     [lElapsedMs, fDiagUiTicks, fDiagDataEvents, fDiagRenderCount,
-    fUiUpdateTimer.Interval, fRunSettings.DataUpdateMs]));
+    fUiUpdateTimer.Interval, fRunSettings.DataUpdateMs]), rlkData);
   fDiagLastLogTickMs := lNowMs;
   fDiagUiTicks := 0;
   fDiagDataEvents := 0;
@@ -1529,13 +1885,40 @@ begin
 end;
 
 procedure TMainForm.ApplyTagEventSnapshot(ASnapshot: TRecorderEventSnapshot);
+var
+  lTag: TRecorderTag;
 begin
-  if (ASnapshot = nil) or (not ASnapshot.HasTagData) then
+  if ASnapshot = nil then
+    Exit;
+
+  if ASnapshot.HasAlarmData then
+  begin
+    if ASnapshot.AlarmActive then
+      AddLog('[ALARM] ' + ASnapshot.Text, rlkAlarm)
+    else
+      AddLog('[ALARM RESET] ' + ASnapshot.Text, rlkAlarm);
+    Exit;
+  end;
+
+  if not ASnapshot.HasTagData then
     Exit;
 
   fLatestTagValues.Values[ASnapshot.TagName] :=
     FormatFloat('0.000', ASnapshot.Value);
   fTimeSystem.UpdateFromTagSample(ASnapshot.TimeSec);
+
+  if (fStateMachine <> nil) and (fStateMachine.State = rsRecord) and
+    (fMeraWriter <> nil) and fMeraWriter.FileOpen then
+  begin
+    lTag := fTagRegistry.FindByName(ASnapshot.TagName);
+    if lTag <> nil then
+      fMeraWriter.WriteSample(ASnapshot.TagName, lTag.UnitName,
+        lTag.Description, ASnapshot.TimeSec, ASnapshot.Value,
+        lTag.PollFrequencyHz)
+    else
+      fMeraWriter.WriteSample(ASnapshot.TagName, '', '', ASnapshot.TimeSec,
+        ASnapshot.Value, 0);
+  end;
 end;
 
 { Инициализация графических кнопок панели управления сбором }
@@ -1557,6 +1940,13 @@ begin
   btnSaveConfig.ImageIndex := CIconSaveConfig;
   btnSaveConfig.ImageWidth := 32;
   btnSaveConfig.Hint := 'Save current config';
+  
+  btnSaveConfigAs.Caption := '';
+  btnSaveConfigAs.Images := ilCommandButtons;
+  btnSaveConfigAs.ImageIndex := CIconSaveConfig;
+  btnSaveConfigAs.ImageWidth := 32;
+  btnSaveConfigAs.Hint := 'Save config as...';
+  btnSaveConfigAs.ShowHint := True;
   btnSaveConfig.ShowHint := True;
 
   btnStop.Caption := '';
@@ -1627,6 +2017,9 @@ end;
 procedure TMainForm.StateMachineStateChanged(ASender: TObject;
   AOldState, ANewState: TRecorderState);
 begin
+  if (ANewState = rsRecord) and (AOldState <> rsRecord) then
+    OpenRecordFrame;
+
   case ANewState of
     rsPreview, rsRecord:
       begin
@@ -1637,9 +2030,13 @@ begin
     rsStop:
       begin
         StopDataSources;
+        CloseRecordFrame;
         fTimeSystem.Stop;
       end;
   end;
+
+  if (AOldState = rsRecord) and (ANewState <> rsRecord) and (ANewState <> rsStop) then
+    CloseRecordFrame;
 
   UpdateStateView;
   AddLog(Format('State changed: %s -> %s',

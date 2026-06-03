@@ -1093,10 +1093,22 @@ begin
   end;
 end;
 
-function GlyphRow(AChar: Char; ARow: Integer): string;
+function UpCaseWide(AChar: WideChar): WideChar;
+begin
+  if (AChar >= #$0430) and (AChar <= #$044F) then
+    Result := WideChar(Ord(AChar) - 32)
+  else if AChar = #$0451 then
+    Result := #$0401
+  else if (AChar >= 'a') and (AChar <= 'z') then
+    Result := WideChar(Ord(AChar) - 32)
+  else
+    Result := AChar;
+end;
+
+function GlyphRow(AChar: WideChar; ARow: Integer): string;
 begin
   Result := '00000';
-  case UpCase(AChar) of
+  case UpCaseWide(AChar) of
     'A': case ARow of 0: Result := '01110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11111'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '10001'; end;
     'B': case ARow of 0: Result := '11110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11110'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '11110'; end;
     'C': case ARow of 0: Result := '01111'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '10000'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '01111'; end;
@@ -1137,6 +1149,39 @@ begin
     ',': case ARow of 5: Result := '00100'; 6: Result := '01000'; end;
     '-': if ARow = 3 then Result := '01110';
     '_': if ARow = 6 then Result := '11111';
+    #$0410: case ARow of 0: Result := '01110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11111'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '10001'; end;
+    #$0411: case ARow of 0: Result := '11111'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '11110'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '11110'; end;
+    #$0412: case ARow of 0: Result := '11110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11110'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '11110'; end;
+    #$0413: case ARow of 0: Result := '11111'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '10000'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '10000'; end;
+    #$0414: case ARow of 0: Result := '01110'; 1: Result := '01010'; 2: Result := '01010'; 3: Result := '01010'; 4: Result := '01010'; 5: Result := '11111'; 6: Result := '10001'; end;
+    #$0415: case ARow of 0: Result := '11111'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '11110'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '11111'; end;
+    #$0416: case ARow of 0: Result := '10101'; 1: Result := '10101'; 2: Result := '01110'; 3: Result := '00100'; 4: Result := '01110'; 5: Result := '10101'; 6: Result := '10101'; end;
+    #$0417: case ARow of 0: Result := '11110'; 1: Result := '00001'; 2: Result := '00010'; 3: Result := '01100'; 4: Result := '00010'; 5: Result := '00001'; 6: Result := '11110'; end;
+    #$0418: case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '10011'; 3: Result := '10101'; 4: Result := '11001'; 5: Result := '10001'; 6: Result := '10001'; end;
+    #$0419: case ARow of 0: Result := '10101'; 1: Result := '10001'; 2: Result := '10011'; 3: Result := '10101'; 4: Result := '11001'; 5: Result := '10001'; 6: Result := '10001'; end;
+    #$041A: case ARow of 0: Result := '10001'; 1: Result := '10010'; 2: Result := '10100'; 3: Result := '11000'; 4: Result := '10100'; 5: Result := '10010'; 6: Result := '10001'; end;
+    #$041B: case ARow of 0: Result := '01111'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '10001'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '10001'; end;
+    #$041C: case ARow of 0: Result := '10001'; 1: Result := '11011'; 2: Result := '10101'; 3: Result := '10101'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '10001'; end;
+    #$041D: case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11111'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '10001'; end;
+    #$041E: case ARow of 0: Result := '01110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '10001'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '01110'; end;
+    #$041F: case ARow of 0: Result := '11111'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '10001'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '10001'; end;
+    #$0420: case ARow of 0: Result := '11110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11110'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '10000'; end;
+    #$0421: case ARow of 0: Result := '01111'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '10000'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '01111'; end;
+    #$0422: case ARow of 0: Result := '11111'; 1: Result := '00100'; 2: Result := '00100'; 3: Result := '00100'; 4: Result := '00100'; 5: Result := '00100'; 6: Result := '00100'; end;
+    #$0423: case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '01010'; 3: Result := '00100'; 4: Result := '01000'; 5: Result := '10000'; 6: Result := '10000'; end;
+    #$0424: case ARow of 0: Result := '00100'; 1: Result := '01110'; 2: Result := '10101'; 3: Result := '10101'; 4: Result := '01110'; 5: Result := '00100'; 6: Result := '00100'; end;
+    #$0425: case ARow of 0: Result := '10001'; 1: Result := '01010'; 2: Result := '00100'; 3: Result := '00100'; 4: Result := '00100'; 5: Result := '01010'; 6: Result := '10001'; end;
+    #$0426: case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '10001'; 4: Result := '10001'; 5: Result := '11111'; 6: Result := '00001'; end;
+    #$0427: case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '01111'; 4: Result := '00001'; 5: Result := '00001'; 6: Result := '00001'; end;
+    #$0428: case ARow of 0: Result := '10101'; 1: Result := '10101'; 2: Result := '10101'; 3: Result := '10101'; 4: Result := '10101'; 5: Result := '11111'; 6: Result := '00000'; end;
+    #$0429: case ARow of 0: Result := '10101'; 1: Result := '10101'; 2: Result := '10101'; 3: Result := '10101'; 4: Result := '10101'; 5: Result := '11111'; 6: Result := '00001'; end;
+    #$042A: case ARow of 0: Result := '11000'; 1: Result := '01000'; 2: Result := '01000'; 3: Result := '01110'; 4: Result := '01001'; 5: Result := '01001'; 6: Result := '01110'; end;
+    #$042B: case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11101'; 4: Result := '10011'; 5: Result := '10011'; 6: Result := '11101'; end;
+    #$042C: case ARow of 0: Result := '10000'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '11110'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '11110'; end;
+    #$042D: case ARow of 0: Result := '11110'; 1: Result := '00001'; 2: Result := '00001'; 3: Result := '01110'; 4: Result := '00001'; 5: Result := '00001'; 6: Result := '11110'; end;
+    #$042E: case ARow of 0: Result := '10001'; 1: Result := '10101'; 2: Result := '10101'; 3: Result := '11111'; 4: Result := '10101'; 5: Result := '10101'; 6: Result := '10001'; end;
+    #$042F: case ARow of 0: Result := '01111'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '01111'; 4: Result := '01001'; 5: Result := '10001'; 6: Result := '10001'; end;
+    #$0401: case ARow of 0: Result := '01010'; 1: Result := '11111'; 2: Result := '10000'; 3: Result := '11110'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '11111'; end;
   end;
 
 end;
@@ -1189,20 +1234,22 @@ var
   lY: Single;
   lScale: Single;
   lAdvanceX: Single;
+  lWideText: WideString;
 begin
   if not Assigned(AFont) then
     Exit;
+  lWideText := UTF8Decode(AText);
   lScale := AFont.Scale;
   SetGLColor(AFont.Color);
   glBegin(GL_QUADS);
-  for I := 1 to Length(AText) do
+  for I := 1 to Length(lWideText) do
     for lRow := 0 to 6 do
     begin
-      lGlyphRow := GlyphRow(AText[I], lRow);
+      lGlyphRow := GlyphRow(lWideText[I], lRow);
       for lCol := 1 to Length(lGlyphRow) do
         if lGlyphRow[lCol] = '1' then
         begin
-          lAdvanceX := AFont.TextPixelWidth(Copy(AText, 1, I - 1));
+          lAdvanceX := AFont.TextPixelWidth(UTF8Encode(Copy(lWideText, 1, I - 1)));
           lX := AX + lAdvanceX + (lCol - 1) * lScale;
           lY := AY + lRow * lScale;
           glVertex2f(lX, lY);

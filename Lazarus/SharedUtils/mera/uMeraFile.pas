@@ -73,8 +73,7 @@ begin
   Result := StringReplace(Result, ' ', '_', [rfReplaceAll]);
   Result := StringReplace(Result, '-', '_', [rfReplaceAll]);
   if Result = '' then
-    Result := 'MeraSignal';
-  Result := 'Mera.' + Result;
+    Result := 'Signal';
 end;
 
 function MeraValueTypeSize(AValueType: TMeraValueType): Integer;

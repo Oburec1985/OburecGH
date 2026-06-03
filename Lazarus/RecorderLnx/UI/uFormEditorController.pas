@@ -50,7 +50,7 @@ interface
 
 uses
   Classes, SysUtils, Types, Math, Controls, ExtCtrls, Graphics, Buttons,
-  LCLType, uRecorderFormModel, uRecorderTags, uRecorderOglOscillogramView;
+  LCLType, uRecorderFormModel, uRecorderTags, uRecorderOglOscillogramView, uRecorderAlarms, uComponentSettingsDialog;
 
 type
   PRecorderRect = ^TRecorderRect;
@@ -135,7 +135,8 @@ type
     fStartGroupBounds: TRecorderRect;              { Стартовые групповые границы выделения }
     fUndoStack: TList;                             { Стек отката изменений (TFormEditorUndoState) }
     fTagRegistry: TRecorderTagRegistry;            { Реестр тегов для live-компонентов }
-    fOperationUndoSaved: Boolean;                  { Флаг сохранения состояния Undo для текущей операции }
+    fOperationUndoSaved: Boolean;
+    fAlarmEngine: IRecorderAlarmEngine;                  { Флаг сохранения состояния Undo для текущей операции }
 
     procedure CanvasMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -143,6 +144,8 @@ type
     procedure CanvasMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure ComponentMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure ComponentMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure ChildMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure ChildMouseUp(Sender: TObject; Button: TMouseButton;
@@ -201,10 +204,11 @@ type
 
     { Задает контекст данных для live-компонентов на мнемосхеме. }
     procedure SetDataContext(ATagRegistry: TRecorderTagRegistry;
-      ADisplaySeconds: Double);
+      AAlarmEngine: IRecorderAlarmEngine; ADisplaySeconds: Double);
 
     { Полностью перестраивает визуальное представление активной страницы. }
     procedure Render;
+    procedure RefreshLive;
 
     { Удаляет выбранные компоненты из активной страницы. }
     procedure DeleteSelected;
@@ -330,9 +334,10 @@ begin
 end;
 
 procedure TFormEditorController.SetDataContext(ATagRegistry: TRecorderTagRegistry;
-  ADisplaySeconds: Double);
+  AAlarmEngine: IRecorderAlarmEngine; ADisplaySeconds: Double);
 begin
   fTagRegistry := ATagRegistry;
+  fAlarmEngine := AAlarmEngine;
   if ADisplaySeconds > 0 then
     fDisplaySeconds := ADisplaySeconds
   else
@@ -388,7 +393,7 @@ begin
     lPanel.Tag := I;
     lPanel.OnMouseDown := @ComponentMouseDown;
     lPanel.OnMouseMove := @ChildMouseMove;
-    lPanel.OnMouseUp := @ChildMouseUp;
+    lPanel.OnMouseUp := @ComponentMouseUp;
     lPanel.Cursor := crDefault;
     lPanel.ParentBackground := False;
     lPanel.BevelOuter := bvLowered;
@@ -424,13 +429,13 @@ begin
       lOsc.AbsoluteTagName := lComponent.TagName;
       lOsc.OnMouseDown := @ComponentMouseDown;
       lOsc.OnMouseMove := @ChildMouseMove;
-      lOsc.OnMouseUp := @ChildMouseUp;
+      lOsc.OnMouseUp := @ComponentMouseUp;
       if lOsc.ChartControl <> nil then
       begin
         lOsc.ChartControl.Tag := I;
         lOsc.ChartControl.OnMouseDown := @ComponentMouseDown;
         lOsc.ChartControl.OnMouseMove := @ChildMouseMove;
-        lOsc.ChartControl.OnMouseUp := @ChildMouseUp;
+        lOsc.ChartControl.OnMouseUp := @ComponentMouseUp;
       end;
       lOsc.Refresh(fTagRegistry, fDisplaySeconds);
     end
@@ -706,6 +711,40 @@ begin
 
   lPoint := fCanvas.ScreenToClient(TControl(Sender).ClientToScreen(Point(X, Y)));
   UpdateOperation(lPoint.X, lPoint.Y);
+end;
+
+procedure TFormEditorController.ComponentMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  lPoint: TPoint;
+  lIndex: Integer;
+  lPage: TRecorderFormPage;
+  lComp: TRecorderVisualComponent;
+begin
+  if not fEnabled then Exit;
+  if Button = mbRight then
+  begin
+    lIndex := TControl(Sender).Tag;
+    lPage := GetActivePage;
+    if (lPage <> nil) and (lIndex >= 0) and (lIndex < lPage.ComponentCount) then
+    begin
+      lComp := lPage.Components[lIndex];
+      if ShowComponentSettingsDialog(fCanvas, lComp, fTagRegistry) then
+      begin
+        NotifyChanged;
+        Render;
+      end;
+    end;
+    Exit;
+  end;
+  if Button = mbLeft then
+  begin
+    lPoint := fCanvas.ScreenToClient(TControl(Sender).ClientToScreen(Point(X, Y)));
+    if fOperation <> feoNone then
+      UpdateOperation(lPoint.X, lPoint.Y);
+    EndOperation;
+    Render;
+  end;
 end;
 
 procedure TFormEditorController.ChildMouseUp(Sender: TObject;
@@ -1047,11 +1086,80 @@ begin
   Render;
 end;
 
-procedure TFormEditorController.RenderLive;
+procedure TFormEditorController.RefreshLive;
+var
+  I: Integer;
+  lControl: TControl;
+  lOsc: TRecorderOglOscillogram;
 begin
-  Render;
+  for I := 0 to fCanvas.ControlCount - 1 do
+  begin
+    lControl := fCanvas.Controls[I];
+    if lControl is TPanel then
+    begin
+      if TPanel(lControl).ControlCount > 0 then
+      begin
+        if TPanel(lControl).Controls[0] is TRecorderOglOscillogram then
+        begin
+          lOsc := TRecorderOglOscillogram(TPanel(lControl).Controls[0]);
+          lOsc.Refresh(fTagRegistry, fDisplaySeconds);
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TFormEditorController.RenderLive;
+var
+  I: Integer;
+  lBounds: TRecorderRect;
+  lControl: TControl;
+  lPage: TRecorderFormPage;
+  lSelectionShapeIndex: Integer;
+  lGroupBounds: TRecorderRect;
+begin
+  lPage := GetActivePage;
+  if (lPage = nil) or (fOperation = feoNone) then
+  begin
+    Render;
+    Exit;
+  end;
+
+  { During mouse drag/resize we must not rebuild child controls. Recreating an
+    embedded OpenGL oscillogram on every MouseMove blocks the UI thread and makes
+    the mnemonic editor feel frozen. Here we only move already-created controls
+    and selection adorners; the final MouseUp still performs a full Render. }
+  for I := 0 to fCanvas.ControlCount - 1 do
+  begin
+    lControl := fCanvas.Controls[I];
+    if (not (lControl is TShape)) and (lControl.Hint <> 'Resize selection') and
+      (lControl.Tag >= 0) and (lControl.Tag < lPage.ComponentCount) then
+    begin
+      lBounds := lPage.Components[lControl.Tag].Bounds;
+      lControl.SetBounds(lBounds.Left, lBounds.Top, lBounds.Width,
+        lBounds.Height);
+    end;
+  end;
+
+  lSelectionShapeIndex := 0;
+  for I := 0 to fCanvas.ControlCount - 1 do
+    if (fCanvas.Controls[I] is TShape) and fCanvas.Controls[I].Visible then
+    begin
+      if lSelectionShapeIndex < fSelected.Count then
+      begin
+        lBounds := lPage.Components[Integer(PtrUInt(
+          fSelected[lSelectionShapeIndex]))].Bounds;
+        fCanvas.Controls[I].SetBounds(lBounds.Left - 2, lBounds.Top - 2,
+          lBounds.Width + 4, lBounds.Height + 4);
+      end
+      else if GetGroupBounds(lGroupBounds) then
+        fCanvas.Controls[I].SetBounds(lGroupBounds.Left - 4,
+          lGroupBounds.Top - 4, lGroupBounds.Width + 8,
+          lGroupBounds.Height + 8);
+      Inc(lSelectionShapeIndex);
+    end;
+
   fCanvas.Invalidate;
-  fCanvas.Update;
 end;
 
 procedure TFormEditorController.CopySelected;

@@ -6,10 +6,11 @@ interface
 
 uses
   Grids,
-  uRecorderTags;
+  uRecorderTags,
+  uRecorderAlarms;
 
 procedure RenderRecorderDigitalPage(AGrid: TStringGrid;
-  ATagRegistry: TRecorderTagRegistry);
+  ATagRegistry: TRecorderTagRegistry; const AAlarmEngine: IRecorderAlarmEngine);
 
 implementation
 
@@ -44,7 +45,7 @@ begin
 end;
 
 procedure RenderRecorderDigitalPage(AGrid: TStringGrid;
-  ATagRegistry: TRecorderTagRegistry);
+  ATagRegistry: TRecorderTagRegistry; const AAlarmEngine: IRecorderAlarmEngine);
 var
   I: Integer;
   J: TRecorderTagEstimateKind;
@@ -63,7 +64,7 @@ begin
   if lRowCount < 2 then
     lRowCount := 2;
 
-  AGrid.ColCount := 6;
+  AGrid.ColCount := 7;
   AGrid.RowCount := lRowCount;
   AGrid.FixedCols := 0;
   AGrid.FixedRows := 1;
@@ -72,7 +73,8 @@ begin
   AGrid.Cells[2, 0] := 'Address';
   AGrid.Cells[3, 0] := 'Unit';
   AGrid.Cells[4, 0] := 'Value';
-  AGrid.Cells[5, 0] := 'Description';
+  AGrid.Cells[5, 0] := 'Alarm';
+  AGrid.Cells[6, 0] := 'Description';
 
   if ATagRegistry = nil then
     Exit;
@@ -91,7 +93,11 @@ begin
       begin
         AGrid.Cells[0, lRow] := lTag.Name;
         AGrid.Cells[2, lRow] := lTag.Address;
-        AGrid.Cells[5, lRow] := lTag.Description;
+        if AAlarmEngine <> nil then
+          AGrid.Cells[5, lRow] := AAlarmEngine.GetTagAlarmText(lTag)
+        else
+          AGrid.Cells[5, lRow] := '-';
+        AGrid.Cells[6, lRow] := lTag.Description;
         lFirstTagRow := False;
       end
       else
@@ -99,6 +105,7 @@ begin
         AGrid.Cells[0, lRow] := '';
         AGrid.Cells[2, lRow] := '';
         AGrid.Cells[5, lRow] := '';
+        AGrid.Cells[6, lRow] := '';
       end;
 
       AGrid.Cells[1, lRow] := RecorderTagEstimateKindToShortName(J);

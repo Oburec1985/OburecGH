@@ -34,7 +34,7 @@ type
     constructor Create(const AName: string; AScale: Single; AColor: Cardinal; ABold: Boolean);
     
     // Возвращает ширину одного символа в пикселях
-    function CharPixelWidth(AChar: Char): Integer;
+    function CharPixelWidth(AChar: WideChar): Integer;
     // Вычисляет общую ширину строки в пикселях
     function TextPixelWidth(const AText: string): Integer;
     // Возвращает высоту текста в пикселях
@@ -80,7 +80,7 @@ end;
 /// <summary>
 /// Вычисляет пиксельную ширину символа на основе масштаба и стиля Bold.
 /// </summary>
-function cOglFont.CharPixelWidth(AChar: Char): Integer;
+function cOglFont.CharPixelWidth(AChar: WideChar): Integer;
 begin
   // Пробел считается чуть уже обычных моноширинных символов
   if AChar = ' ' then
@@ -97,10 +97,12 @@ end;
 function cOglFont.TextPixelWidth(const AText: string): Integer;
 var
   I: Integer;
+  lWideText: WideString;
 begin
+  lWideText := UTF8Decode(AText);
   Result := 0;
-  for I := 1 to Length(AText) do
-    Inc(Result, CharPixelWidth(AText[I]));
+  for I := 1 to Length(lWideText) do
+    Inc(Result, CharPixelWidth(lWideText[I]));
 end;
 
 /// <summary>
@@ -121,15 +123,16 @@ function cOglFont.HitCharIndex(const AText: string; AX, ATextLeft: Integer): Int
 var
   I: Integer;
   lX: Integer;
+  lWideText: WideString;
 begin
-  Result := Length(AText) + 1;
+  lWideText := UTF8Decode(AText);
+  Result := Length(lWideText) + 1;
   lX := ATextLeft;
-  for I := 1 to Length(AText) do
+  for I := 1 to Length(lWideText) do
   begin
-    // Если клик левее середины символа I, возвращаем индекс I
-    if AX < lX + CharPixelWidth(AText[I]) div 2 then
+    if AX < lX + CharPixelWidth(lWideText[I]) div 2 then
       Exit(I);
-    Inc(lX, CharPixelWidth(AText[I]));
+    Inc(lX, CharPixelWidth(lWideText[I]));
   end;
 end;
 
