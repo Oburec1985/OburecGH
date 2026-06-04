@@ -167,6 +167,8 @@ type
     fModuleType: string;                                       { Тип модуля/устройства }
     fName: string;                                             { Уникальное имя тега }
     fPollFrequencyHz: Double;                                  { Частота опроса в Гц }
+    fSensorCalibrationName: string;                            { Канальная датчиковая градуировка }
+    fAmplifierCalibrationName: string;                         { Канальная усилительная градуировка }
     fRangeMax: Double;                                         { Максимум шкалы }
     fRangeMin: Double;                                         { Минимум шкалы }
     fSignalBuffer: TRecorderSignalBuffer;                      { Буфер сигнала }
@@ -211,6 +213,8 @@ type
     property UnitName: string read fUnitName write fUnitName;
     property Description: string read fDescription write fDescription;
     property PollFrequencyHz: Double read fPollFrequencyHz write fPollFrequencyHz;
+    property SensorCalibrationName: string read fSensorCalibrationName write fSensorCalibrationName;
+    property AmplifierCalibrationName: string read fAmplifierCalibrationName write fAmplifierCalibrationName;
     property ModuleType: string read fModuleType write fModuleType;
     property RangeMin: Double read fRangeMin write fRangeMin;
     property RangeMax: Double read fRangeMax write fRangeMax;
@@ -242,11 +246,18 @@ type
     fTag: TRecorderTag;
     fTimeSec: Double;
     fValue: Double;
+    fSampleCount: Integer;
+    fTimes: TRecorderDoubleArray;
+    fValues: TRecorderDoubleArray;
   public
-    constructor Create(ATag: TRecorderTag; ATimeSec, AValue: Double);
+    constructor Create(ATag: TRecorderTag; ATimeSec, AValue: Double); overload;
+    constructor CreateBlock(ATag: TRecorderTag; const ATimes, AValues: array of Double; ACount: Integer);
     property Tag: TRecorderTag read fTag;
     property TimeSec: Double read fTimeSec;
     property Value: Double read fValue;
+    property SampleCount: Integer read fSampleCount;
+    property Times: TRecorderDoubleArray read fTimes;
+    property Values: TRecorderDoubleArray read fValues;
   end;
 
   { TRecorderTagRegistry
@@ -752,6 +763,35 @@ begin
   fTag := ATag;
   fTimeSec := ATimeSec;
   fValue := AValue;
+  fSampleCount := 1;
+  SetLength(fTimes, 1);
+  SetLength(fValues, 1);
+  fTimes[0] := ATimeSec;
+  fValues[0] := AValue;
+end;
+
+constructor TRecorderTagUpdateEventData.CreateBlock(ATag: TRecorderTag;
+  const ATimes, AValues: array of Double; ACount: Integer);
+var
+  I: Integer;
+begin
+  inherited Create;
+  if ACount <= 0 then
+    raise ERecorderTagError.Create('Tag update block cannot be empty');
+  if (ACount > Length(ATimes)) or (ACount > Length(AValues)) then
+    raise ERecorderTagError.Create('Tag update block count exceeds data length');
+
+  fTag := ATag;
+  fSampleCount := ACount;
+  SetLength(fTimes, ACount);
+  SetLength(fValues, ACount);
+  for I := 0 to ACount - 1 do
+  begin
+    fTimes[I] := ATimes[I];
+    fValues[I] := AValues[I];
+  end;
+  fTimeSec := fTimes[ACount - 1];
+  fValue := fValues[ACount - 1];
 end;
 
 { TRecorderTagRegistry }
@@ -909,7 +949,6 @@ var
   lEvent: TRecorderEvent;
   lTag: TRecorderTag;
   lTimeSec: Double;
-  lValue: Double;
 begin
   if ACount <= 0 then
     Exit;
@@ -922,7 +961,6 @@ begin
 
   lTag.AddSamples(ATimes, AValues, ACount);
   lTimeSec := ATimes[ACount - 1];
-  lValue := AValues[ACount - 1];
   RecorderDebugLog(Format('Tag block: tag=%s count=%d first=%.6f last=%.6f bufferCount=%d bufferCapacity=%d',
     [lTag.Name, ACount, ATimes[0], lTimeSec, lTag.SignalBuffer.Count,
     lTag.SignalBuffer.Capacity]));
@@ -930,7 +968,7 @@ begin
   if fEventBus <> nil then
   begin
     fLastUpdateData.Free;
-    fLastUpdateData := TRecorderTagUpdateEventData.Create(lTag, lTimeSec, lValue);
+    fLastUpdateData := TRecorderTagUpdateEventData.CreateBlock(lTag, ATimes, AValues, ACount);
     lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, lTag.Name,
       lTag.TextValue, ACount, fLastUpdateData);
     fEventBus.Publish(lEvent);

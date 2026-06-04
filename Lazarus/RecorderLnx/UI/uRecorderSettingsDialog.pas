@@ -100,10 +100,12 @@ type
     procedure fHardwareTreeDblClick(Sender: TObject);
     procedure fHardwareTreeKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure WorkDirBrowseClick(Sender: TObject);
   private
     fRunSettings: TRecorderRunControlSettings;   // Ссылка на объект настроек запуска/останова
     fTagRegistry: TRecorderTagRegistry;         // Ссылка на реестр тегов приложения
     fDeviceImageList: TCustomImageList;         // Список картинок для дерева устройств
+    fTagDialogImageList: TCustomImageList;      // Список иконок диалога настройки тегов
     fMeraFolder: string;                        // Путь к последней папке импортированного Mera-файла
     fMeraFileName: string;                      // Имя импортированного Mera-файла
     fMeraSignals: TList;                        // Список TMeraSignalInfo, загруженных из файла
@@ -167,6 +169,7 @@ type
     
     // Свойства доступа к зависимостям
     property DeviceImageList: TCustomImageList read fDeviceImageList write SetDeviceImageList;
+    property TagDialogImageList: TCustomImageList read fTagDialogImageList write fTagDialogImageList;
     property RunSettings: TRecorderRunControlSettings read fRunSettings write SetRunSettings;
     property TagRegistry: TRecorderTagRegistry read fTagRegistry write SetTagRegistry;
   end;
@@ -175,7 +178,8 @@ type
 function ShowRecorderSettingsDialog(AOwner: TComponent;
   ARunSettings: TRecorderRunControlSettings;
   ATagRegistry: TRecorderTagRegistry = nil;
-  ADeviceImageList: TCustomImageList = nil): Boolean;
+  ADeviceImageList: TCustomImageList = nil;
+  ATagDialogImageList: TCustomImageList = nil): Boolean;
 
 implementation
 
@@ -185,13 +189,15 @@ implementation
 function ShowRecorderSettingsDialog(AOwner: TComponent;
   ARunSettings: TRecorderRunControlSettings;
   ATagRegistry: TRecorderTagRegistry;
-  ADeviceImageList: TCustomImageList): Boolean;
+  ADeviceImageList: TCustomImageList;
+  ATagDialogImageList: TCustomImageList): Boolean;
 var
   lDialog: TRecorderSettingsDialog;
 begin
   lDialog := TRecorderSettingsDialog.Create(AOwner);
   try
     lDialog.DeviceImageList := ADeviceImageList;
+    lDialog.TagDialogImageList := ATagDialogImageList;
     lDialog.TagRegistry := ATagRegistry;
     lDialog.RunSettings := ARunSettings;
     Result := lDialog.ShowModal = mrOk;
@@ -340,6 +346,9 @@ begin
     btnChannelEdit.ShowHint := True;
     btnChannelEdit.OnClick := @btnChannelEditClick;
   end;
+
+  if FindComponent('btnWorkDirBrowse') is TButton then
+    TButton(FindComponent('btnWorkDirBrowse')).OnClick := @WorkDirBrowseClick;
 
   if fSelectedChannelsGrid <> nil then
   begin
@@ -568,6 +577,7 @@ end;
 
 procedure TRecorderSettingsDialog.OpenSelectedChannelTagSettings;
 var
+  lDialogOk: Boolean;
   lTag: TRecorderTag;
   lTags: TList;
 begin
@@ -578,7 +588,11 @@ begin
   lTags := TList.Create;
   try
     lTags.Add(lTag);
-    if ShowTagSettingsDialog(Self, fTagRegistry, lTags, fDeviceImageList) then
+    if fTagDialogImageList <> nil then
+      lDialogOk := ShowTagSettingsDialog(Self, fTagRegistry, lTags, fTagDialogImageList)
+    else
+      lDialogOk := ShowTagSettingsDialog(Self, fTagRegistry, lTags, fDeviceImageList);
+    if lDialogOk then
     begin
       MarkSignalsFromRegistry;
       PopulateHardwareTree;
@@ -1257,6 +1271,7 @@ begin
   lButton.Width := 54;
   lButton.Height := 26;
   lButton.Caption := '...';
+  lButton.OnClick := @WorkDirBrowseClick;
   fTemplateCheck := AddCheck(Self, lGroup, 12, 204, 'Шаблон');
   fTemplateButton := TButton.Create(Self);
   fTemplateButton.Parent := lGroup;
@@ -1442,6 +1457,8 @@ begin
   fScreenUpdateEdit.Text := FormatFloat('0.###', fRunSettings.ScreenUpdateMs / 1000);
   fBufferSecondsEdit.Text := FormatFloat('0.###', fRunSettings.DisplayBufferMs / 1000);
   fDataUpdateEdit.Text := FormatFloat('0.###', fRunSettings.DataUpdateMs / 1000);
+  fWorkDirEdit.Text := IncludeTrailingPathDelimiter(fRunSettings.RecordRootDir);
+  fFrameDirEdit.Text := IncludeTrailingPathDelimiter(fRunSettings.RecordRootDir) + '0001';
   fResetTimeCheck.Checked := True;
 
   UpdateConditionControls;
@@ -1481,6 +1498,7 @@ begin
     fRunSettings.DisplayBufferMs);
   fRunSettings.DataUpdateMs := ReadSecondsAsMs(fDataUpdateEdit,
     fRunSettings.DataUpdateMs);
+  fRunSettings.RecordRootDir := IncludeTrailingPathDelimiter(Trim(fWorkDirEdit.Text));
   fRunSettings.RequireValid;
 end;
 
@@ -1531,6 +1549,19 @@ begin
   Result := Round(lSeconds * 1000);
 end;
 
+
+procedure TRecorderSettingsDialog.WorkDirBrowseClick(Sender: TObject);
+var
+  lDir: string;
+begin
+  lDir := Trim(fWorkDirEdit.Text);
+  if lDir = '' then
+    lDir := 'C:\USML\';
+  if not SelectDirectory('Выберите рабочий каталог для записи MERA-файлов', '', lDir) then
+    Exit;
+  fWorkDirEdit.Text := IncludeTrailingPathDelimiter(lDir);
+  fFrameDirEdit.Text := IncludeTrailingPathDelimiter(lDir) + '0001';
+end;
 procedure TRecorderSettingsDialog.ApplyButtonClick(Sender: TObject);
 begin
   StoreToSettings;

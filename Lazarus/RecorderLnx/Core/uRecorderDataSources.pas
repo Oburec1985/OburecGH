@@ -978,9 +978,11 @@ end;
 
 function TRecorderMeraFileDataSource.IsSignalSelected(ASignal: TMeraSignalInfo): Boolean;
 begin
-  Result := (fSelectedTagNames.Count = 0) or IsSignalTagSelected(ASignal.Address);
+  Result := (fSelectedTagNames.Count = 0) or
+    IsSignalTagSelected(ASignal.Address) or
+    IsSignalTagSelected(ASignal.Name) or
+    IsSignalTagSelected(MeraSignalToRecorderTagName(ASignal));
 end;
-
 function TRecorderMeraFileDataSource.IsSignalTagSelected(
   const ATagName: string): Boolean;
 begin
@@ -1002,6 +1004,8 @@ var
     ATag.UnitName := lSignal.UnitsName;
     ATag.ModuleType := lSignal.ModuleName;
     ATag.PollFrequencyHz := lSignal.FrequencyHz;
+    ATag.SensorCalibrationName := lSignal.SensorCalibrationName;
+    ATag.AmplifierCalibrationName := lSignal.AmplifierCalibrationName;
     ATag.SourceId := 'Mera file: ' + fFileName;
     ATag.Description := Format('%s; type=%s; freq=%s; file=%s',
       [lSignal.Name, lSignal.DataTypeName,
@@ -1072,6 +1076,8 @@ var
       lSignalCopy.StartSec := ASourceSignal.StartSec;
       lSignalCopy.UnitsName := ASourceSignal.UnitsName;
       lSignalCopy.Description := ASourceSignal.Description;
+      lSignalCopy.SensorCalibrationName := ASourceSignal.SensorCalibrationName;
+      lSignalCopy.AmplifierCalibrationName := ASourceSignal.AmplifierCalibrationName;
       lSignalCopy.FileName := ASourceSignal.FileName;
       lSignalCopy.XFileName := ASourceSignal.XFileName;
       lSignalCopy.HasXData := ASourceSignal.HasXData;

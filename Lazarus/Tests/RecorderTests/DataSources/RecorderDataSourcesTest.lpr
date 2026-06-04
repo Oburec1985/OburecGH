@@ -339,6 +339,8 @@ begin
     lIni.Add('YFormat=R8');
     lIni.Add('YUnits=mm');
     lIni.Add('Freq=2');
+    lIni.Add('tare0=SensorGX');
+    lIni.Add('tare1=AmplifierGX');
     lIni.Add('Start=1');
     lIni.SaveToFile(lMeraFileName);
   finally
@@ -361,12 +363,14 @@ begin
   lSource := nil;
   try
     lBus.Subscribe(@lProbe.HandleEvent);
-    lSelected.Add('Mera.SignalA');
+    lSelected.Add('SignalA');
     lSource := TRecorderMeraFileDataSource.Create('mera.test', lMeraFileName,
       10, lSelected);
     lSource.ConfigureTags(lRegistry);
-    lTag := lRegistry.FindByName('Mera.SignalA');
+    lTag := lRegistry.FindByName('SignalA');
     AssertTrue(lTag <> nil, 'MERA source creates selected tag');
+    AssertTrue(lTag.SensorCalibrationName = 'SensorGX', 'MERA source preserves sensor GX');
+    AssertTrue(lTag.AmplifierCalibrationName = 'AmplifierGX', 'MERA source preserves amplifier GX');
     AssertEquals(lRegistry.TagCount, 1, 'MERA selected tag count');
 
     lSource.Start;
@@ -374,7 +378,7 @@ begin
     lSource.Stop;
 
     lSnapshot := lTag.Snapshot;
-    PrintSnapshot('SNAPSHOT Mera.SignalA', lSnapshot);
+    PrintSnapshot('SNAPSHOT SignalA', lSnapshot);
 
     AssertEquals(lProbe.Count, 1, 'MERA vector block event count');
     AssertEquals(lSnapshot.Count, 3, 'MERA snapshot count');
@@ -460,11 +464,11 @@ begin
   lSource := nil;
   try
     lBus.Subscribe(@lProbe.HandleEvent);
-    lSelected.Add('Mera.ScalarA');
+    lSelected.Add('ScalarA');
     lSource := TRecorderMeraFileDataSource.Create('mera.scalar.test',
       lMeraFileName, 20, lSelected, 128);
     lSource.ConfigureTags(lRegistry);
-    lTag := lRegistry.FindByName('Mera.ScalarA');
+    lTag := lRegistry.FindByName('ScalarA');
     AssertTrue(lTag <> nil, 'MERA scalar source creates selected tag');
 
     lSource.Start;
@@ -479,7 +483,7 @@ begin
     lSource.Stop;
 
     lSnapshot := lTag.Snapshot;
-    PrintSnapshot('SNAPSHOT Mera.ScalarA', lSnapshot);
+    PrintSnapshot('SNAPSHOT ScalarA', lSnapshot);
 
     AssertEquals(lProbe.Count, 3, 'MERA scalar event count');
     AssertEquals(lSnapshot.Count, 3, 'MERA scalar snapshot count');

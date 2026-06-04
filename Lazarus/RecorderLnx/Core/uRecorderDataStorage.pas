@@ -23,7 +23,7 @@ unit uRecorderDataStorage;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, LazUTF8, LConvEncoding;
 
 type
   { Базовое исключение для ошибок хранилища данных }
@@ -138,6 +138,9 @@ type
     procedure Open(const AFrameDir: string);
     procedure WriteSample(const ATagName, AUnitName, ADescription: string;
       ATimeSec, AValue: Double; APollFrequencyHz: Double);
+    procedure WriteBlock(const ATagName, AUnitName, ADescription,
+      ASensorCalibration, AAmplifierCalibration: string; const ATimes,
+      AValues: array of Double; ACount: Integer; APollFrequencyHz: Double);
     procedure Flush;
     procedure Close;
     property FileOpen: Boolean read fFileOpen;
@@ -154,8 +157,19 @@ type
     SignalUnitName: string;
     Description: string;
     FrequencyHz: Double;
+    ValueFormatName: string;
+    StartTimeSec: Double;
+    ExplicitXRequired: Boolean;
+    SensorCalibrationName: string;
+    AmplifierCalibrationName: string;
+    SampleCount: Int64;
+    LastTimeSec: Double;
+    HasLastTime: Boolean;
+    HasPortions: Boolean;
     DataStream: TFileStream;
     TimeStream: TFileStream;
+    PtrStream: TFileStream;
+    PrtStream: TFileStream;
     destructor Destroy; override;
   end;
 
@@ -165,6 +179,8 @@ destructor TRecorderMeraSignalWriter.Destroy;
 begin
   FreeAndNil(DataStream);
   FreeAndNil(TimeStream);
+  FreeAndNil(PtrStream);
+  FreeAndNil(PrtStream);
   inherited Destroy;
 end;
 { TRecorderRecordFrameManager }
@@ -426,6 +442,8 @@ begin
   end;
 end;
 
+function MeraFileSystemName(const AFileName: string): string; forward;
+
 function TRecorderMeraTagWriter.MakeSectionName(const ATagName: string): string;
 var
   I: Integer;
@@ -435,7 +453,7 @@ var
 begin
   lBase := Trim(ATagName);
   for I := 1 to Length(lBase) do
-    if not (lBase[I] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
+    if lBase[I] in ['\', '/', ':', '*', '?', '"', '<', '>', '|', #0..#31] then
       lBase[I] := '_';
   while Pos('__', lBase) > 0 do
     lBase := StringReplace(lBase, '__', '_', [rfReplaceAll]);
@@ -448,8 +466,8 @@ begin
 
   lCandidate := lBase;
   lIndex := 1;
-  while FileExists(IncludeTrailingPathDelimiter(fFrameDir) + lCandidate + '.dat') or
-    FileExists(IncludeTrailingPathDelimiter(fFrameDir) + lCandidate + '.x') do
+  while FileExists(MeraFileSystemName(IncludeTrailingPathDelimiter(fFrameDir) + lCandidate + '.dat')) or
+    FileExists(MeraFileSystemName(IncludeTrailingPathDelimiter(fFrameDir) + lCandidate + '.x')) do
   begin
     Inc(lIndex);
     lCandidate := Format('%s_%d', [lBase, lIndex]);
@@ -457,6 +475,106 @@ begin
   Result := lCandidate;
 end;
 
+function MeraDescriptorFileName(const AFrameDir: string): string;
+var
+  lDir: string;
+begin
+  lDir := ExcludeTrailingPathDelimiter(AFrameDir);
+  Result := IncludeTrailingPathDelimiter(AFrameDir) + ExtractFileName(lDir) + '.mera';
+end;
+
+function MeraFileSystemName(const AFileName: string): string;
+begin
+  Result := UTF8ToSys(AFileName);
+end;
+
+procedure SaveMeraTextFile(const AFileName, AText: string);
+var
+  lBytes: AnsiString;
+  lStream: TFileStream;
+begin
+  lBytes := AnsiString(UTF8ToCP1251(AText));
+  lStream := TFileStream.Create(MeraFileSystemName(AFileName), fmCreate);
+  try
+    if Length(lBytes) > 0 then
+      lStream.WriteBuffer(lBytes[1], Length(lBytes));
+  finally
+    lStream.Free;
+  end;
+end;
+
+function ExtractMeraValueFormat(const ADescription: string): string;
+var
+  lText: string;
+  lPos: Integer;
+begin
+  Result := 'R8';
+  lText := ADescription;
+  lPos := Pos('type=', LowerCase(lText));
+  if lPos <= 0 then
+    Exit;
+
+  Delete(lText, 1, lPos + Length('type=') - 1);
+  lPos := Pos(';', lText);
+  if lPos > 0 then
+    lText := Copy(lText, 1, lPos - 1);
+  lText := UpperCase(Trim(lText));
+  if (lText = 'R4') or (lText = 'R8') then
+    Result := lText;
+end;
+
+procedure WriteMeraValues(AStream: TStream; const AValues: array of Double;
+  ACount: Integer; const AFormatName: string);
+var
+  I: Integer;
+  lSingle: Single;
+begin
+  if SameText(AFormatName, 'R4') then
+    for I := 0 to ACount - 1 do
+    begin
+      lSingle := AValues[I];
+      AStream.WriteBuffer(lSingle, SizeOf(lSingle));
+    end
+  else
+    AStream.WriteBuffer(AValues[0], ACount * SizeOf(Double));
+end;
+
+function MeraBlockHasExplicitX(const ATimes: array of Double; ACount: Integer;
+  AFrequencyHz: Double): Boolean;
+var
+  I: Integer;
+  lExpectedStep: Double;
+  lGapLimit: Double;
+begin
+  Result := AFrequencyHz <= 0;
+  if Result or (ACount <= 1) then
+    Exit;
+
+  lExpectedStep := 1.0 / AFrequencyHz;
+  lGapLimit := 0.5 / AFrequencyHz;
+  for I := 1 to ACount - 1 do
+    if Abs((ATimes[I] - ATimes[I - 1]) - lExpectedStep) > lGapLimit then
+      Exit(True);
+end;
+
+procedure EnsureMeraTimeStream(ASignal: TRecorderMeraSignalWriter;
+  const AFrameDir: string);
+var
+  I: Int64;
+  lTime: Double;
+begin
+  if ASignal.TimeStream <> nil then
+    Exit;
+
+  ASignal.TimeStream := TFileStream.Create(MeraFileSystemName(AFrameDir +
+    ASignal.SectionName + '.x'), fmCreate);
+  if (ASignal.SampleCount > 0) and (ASignal.FrequencyHz > 0) then
+    for I := 0 to ASignal.SampleCount - 1 do
+    begin
+      lTime := ASignal.StartTimeSec + I / ASignal.FrequencyHz;
+      ASignal.TimeStream.WriteBuffer(lTime, SizeOf(lTime));
+    end;
+end;
 procedure TRecorderMeraTagWriter.RequireOpen;
 begin
   if not fFileOpen then
@@ -485,15 +603,34 @@ begin
       lText.Add('Name=' + lSignal.TagName);
       lText.Add('Address=' + lSignal.TagName);
       lText.Add('ModName=RecorderLnx');
-      lText.Add('YFormat=R8');
-      lText.Add('XFormat=R8');
+      lText.Add('XUnitsId=4294967553');
+      lText.Add('XUnits=' + CP1251ToUTF8('сек'));
+      lText.Add('YFormat=' + lSignal.ValueFormatName);
+      lText.Add('YFile=' + lSignal.SectionName + '.dat');
+      if lSignal.ExplicitXRequired then
+      begin
+        lText.Add('XFormat=R8');
+        lText.Add('XFile=' + lSignal.SectionName + '.x');
+      end;
+      if lSignal.HasPortions then
+      begin
+        lText.Add('PtrFile=' + lSignal.SectionName + '.ptr');
+        lText.Add('PrtFile=' + lSignal.SectionName + '.prt');
+      end;
       lText.Add('YUnits=' + lSignal.SignalUnitName);
-      lText.Add('Freq=' + FloatToMera(lSignal.FrequencyHz));
-      lText.Add('Start=0');
+      if not lSignal.ExplicitXRequired then
+      begin
+        lText.Add('Freq=' + FloatToMera(lSignal.FrequencyHz));
+        lText.Add('Start=' + FloatToMera(lSignal.StartTimeSec));
+      end;
+      if Trim(lSignal.SensorCalibrationName) <> '' then
+        lText.Add('tare0="' + lSignal.SensorCalibrationName + '"');
+      if Trim(lSignal.AmplifierCalibrationName) <> '' then
+        lText.Add('tare1="' + lSignal.AmplifierCalibrationName + '"');
       lText.Add('Comment=' + lSignal.Description);
       lText.Add('');
     end;
-    lText.SaveToFile(IncludeTrailingPathDelimiter(fFrameDir) + 'record.mera');
+    SaveMeraTextFile(MeraDescriptorFileName(fFrameDir), lText.Text);
   finally
     lText.Free;
   end;
@@ -513,11 +650,32 @@ end;
 procedure TRecorderMeraTagWriter.WriteSample(const ATagName, AUnitName,
   ADescription: string; ATimeSec, AValue: Double; APollFrequencyHz: Double);
 var
+  lTimes: array[0..0] of Double;
+  lValues: array[0..0] of Double;
+begin
+  lTimes[0] := ATimeSec;
+  lValues[0] := AValue;
+  WriteBlock(ATagName, AUnitName, ADescription, '', '', lTimes, lValues, 1,
+    APollFrequencyHz);
+end;
+
+procedure TRecorderMeraTagWriter.WriteBlock(const ATagName, AUnitName,
+  ADescription, ASensorCalibration, AAmplifierCalibration: string; const ATimes,
+  AValues: array of Double; ACount: Integer; APollFrequencyHz: Double);
+var
+  lExpectedTime: Double;
+  lGapLimit: Double;
+  lLine: AnsiString;
+  lOffset: Int64;
   lSignalObject: TObject;
   lSignal: TRecorderMeraSignalWriter;
 begin
   if Trim(ATagName) = '' then
     raise ERecorderDataStorageError.Create('Tag name cannot be empty');
+  if ACount <= 0 then
+    Exit;
+  if (ACount > Length(ATimes)) or (ACount > Length(AValues)) then
+    raise ERecorderDataStorageError.Create('MERA block count exceeds data length');
 
   EnterCriticalSection(fLock);
   try
@@ -532,8 +690,15 @@ begin
         lSignal.SignalUnitName := AUnitName;
         lSignal.Description := ADescription;
         lSignal.FrequencyHz := APollFrequencyHz;
-        lSignal.DataStream := TFileStream.Create(fFrameDir + lSignal.SectionName + '.dat', fmCreate);
-        lSignal.TimeStream := TFileStream.Create(fFrameDir + lSignal.SectionName + '.x', fmCreate);
+        lSignal.ValueFormatName := ExtractMeraValueFormat(ADescription);
+        lSignal.StartTimeSec := ATimes[0];
+        lSignal.ExplicitXRequired := MeraBlockHasExplicitX(ATimes, ACount,
+          APollFrequencyHz);
+        lSignal.SensorCalibrationName := ASensorCalibration;
+        lSignal.AmplifierCalibrationName := AAmplifierCalibration;
+        lSignal.DataStream := TFileStream.Create(MeraFileSystemName(fFrameDir + lSignal.SectionName + '.dat'), fmCreate);
+        if lSignal.ExplicitXRequired then
+          EnsureMeraTimeStream(lSignal, fFrameDir);
         fSignals.Add(lSignal);
         lSignal := nil;
       finally
@@ -544,8 +709,50 @@ begin
     else
       lSignal := TRecorderMeraSignalWriter(lSignalObject);
 
-    lSignal.DataStream.WriteBuffer(AValue, SizeOf(AValue));
-    lSignal.TimeStream.WriteBuffer(ATimeSec, SizeOf(ATimeSec));
+    if (Trim(lSignal.SignalUnitName) = '') and (Trim(AUnitName) <> '') then
+      lSignal.SignalUnitName := AUnitName;
+    if (Trim(lSignal.Description) = '') and (Trim(ADescription) <> '') then
+      lSignal.Description := ADescription;
+    if (lSignal.FrequencyHz <= 0) and (APollFrequencyHz > 0) then
+      lSignal.FrequencyHz := APollFrequencyHz;
+    if (Trim(lSignal.ValueFormatName) = '') or SameText(lSignal.ValueFormatName, 'R8') then
+      lSignal.ValueFormatName := ExtractMeraValueFormat(ADescription);
+    if MeraBlockHasExplicitX(ATimes, ACount, lSignal.FrequencyHz) then
+      lSignal.ExplicitXRequired := True;
+    if (Trim(lSignal.SensorCalibrationName) = '') and
+      (Trim(ASensorCalibration) <> '') then
+      lSignal.SensorCalibrationName := ASensorCalibration;
+    if (Trim(lSignal.AmplifierCalibrationName) = '') and
+      (Trim(AAmplifierCalibration) <> '') then
+      lSignal.AmplifierCalibrationName := AAmplifierCalibration;
+
+    if lSignal.HasLastTime and (lSignal.FrequencyHz > 0) then
+    begin
+      lExpectedTime := lSignal.LastTimeSec + (1.0 / lSignal.FrequencyHz);
+      lGapLimit := 0.5 / lSignal.FrequencyHz;
+      if Abs(ATimes[0] - lExpectedTime) > lGapLimit then
+      begin
+        lSignal.HasPortions := True;
+        lOffset := lSignal.SampleCount;
+        lLine := AnsiString(FloatToMera(ATimes[0]) + ' ' + IntToStr(lOffset) + LineEnding);
+        if lSignal.PtrStream = nil then
+          lSignal.PtrStream := TFileStream.Create(MeraFileSystemName(fFrameDir + lSignal.SectionName + '.ptr'), fmCreate);
+        if lSignal.PrtStream = nil then
+          lSignal.PrtStream := TFileStream.Create(MeraFileSystemName(fFrameDir + lSignal.SectionName + '.prt'), fmCreate);
+        lSignal.PtrStream.WriteBuffer(lLine[1], Length(lLine));
+        lSignal.PrtStream.WriteBuffer(lLine[1], Length(lLine));
+      end;
+    end;
+
+    WriteMeraValues(lSignal.DataStream, AValues, ACount, lSignal.ValueFormatName);
+    if lSignal.ExplicitXRequired then
+    begin
+      EnsureMeraTimeStream(lSignal, fFrameDir);
+      lSignal.TimeStream.WriteBuffer(ATimes[0], ACount * SizeOf(Double));
+    end;
+    Inc(lSignal.SampleCount, ACount);
+    lSignal.LastTimeSec := ATimes[ACount - 1];
+    lSignal.HasLastTime := True;
   finally
     LeaveCriticalSection(fLock);
   end;

@@ -76,6 +76,7 @@ begin
     lSaved.ScreenUpdateMs := 750;
     lSaved.DisplayBufferMs := 1250;
     lSaved.DataUpdateMs := 200;
+    lSaved.RecordRootDir := IncludeTrailingPathDelimiter(GetTempDir(False)) + 'recorder-mera-records';
     lSaved.SaveToFile(lFileName);
 
     lLoaded.LoadFromFile(lFileName);
@@ -92,6 +93,7 @@ begin
     AssertEquals(lLoaded.ScreenUpdateMs, 750, 'loaded ScreenUpdateMs');
     AssertEquals(lLoaded.DisplayBufferMs, 1250, 'loaded DisplayBufferMs');
     AssertEquals(lLoaded.DataUpdateMs, 200, 'loaded DataUpdateMs');
+    AssertEquals(lLoaded.RecordRootDir, lSaved.RecordRootDir, 'loaded RecordRootDir');
 
     Writeln('Run control settings save/load test passed.');
   finally

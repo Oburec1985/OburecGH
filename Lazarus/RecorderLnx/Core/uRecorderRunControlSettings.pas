@@ -69,6 +69,7 @@ type
     fScreenUpdateMs: Cardinal;                     { Период обновления экрана в мс }
     fDisplayBufferMs: Cardinal;                    { Длина отображаемого окна данных в мс }
     fDataUpdateMs: Cardinal;                       { Период обновления источников данных в мс }
+    fRecordRootDir: string;                        { Корневой каталог записи MERA-кадров }
 
     function ValidateStart(out AMessage: string): Boolean;
     function ValidateStop(out AMessage: string): Boolean;
@@ -139,6 +140,7 @@ type
     property ScreenUpdateMs: Cardinal read fScreenUpdateMs write fScreenUpdateMs;
     property DisplayBufferMs: Cardinal read fDisplayBufferMs write fDisplayBufferMs;
     property DataUpdateMs: Cardinal read fDataUpdateMs write fDataUpdateMs;
+    property RecordRootDir: string read fRecordRootDir write fRecordRootDir;
   end;
 
 implementation
@@ -168,6 +170,7 @@ begin
   fScreenUpdateMs := 500;
   fDisplayBufferMs := 1000;
   fDataUpdateMs := 300;
+  fRecordRootDir := 'C:\USML\';
 end;
 
 function TRecorderRunControlSettings.ValidateStart(out AMessage: string): Boolean;
@@ -332,6 +335,7 @@ begin
     lIni.WriteInteger('Display', 'ScreenUpdateMs', fScreenUpdateMs);
     lIni.WriteInteger('Display', 'DisplayBufferMs', fDisplayBufferMs);
     lIni.WriteInteger('Display', 'DataUpdateMs', fDataUpdateMs);
+    lIni.WriteString('Record', 'RootDir', fRecordRootDir);
   finally
     lIni.Free;
   end;
@@ -363,6 +367,7 @@ begin
       fDisplayBufferMs);
     fDataUpdateMs := lIni.ReadInteger('Display', 'DataUpdateMs',
       fDataUpdateMs);
+    fRecordRootDir := lIni.ReadString('Record', 'RootDir', fRecordRootDir);
   finally
     lIni.Free;
   end;

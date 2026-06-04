@@ -124,6 +124,8 @@ begin
     Result := TRecorderTagValueComponent.TypeId
   else if AComponent is TRecorderOscillogramComponent then
     Result := TRecorderOscillogramComponent.TypeId
+  else if AComponent is TRecorderTrendComponent then
+    Result := TRecorderTrendComponent.TypeId
   else
     Result := AComponent.ClassName;
 end;
@@ -438,10 +440,14 @@ procedure SaveRecorderGuiConfig(const AFileName: string;
 var
   I: Integer;
   J: Integer;
+  K: Integer;
+  lAxis: TRecorderTrendAxis;
   lComponent: TRecorderVisualComponent;
   lIni: TIniFile;
+  lLine: TRecorderTrendLine;
   lPage: TRecorderFormPage;
   lSection: string;
+  lTrend: TRecorderTrendComponent;
 begin
   if AForms = nil then
     raise ERecorderFormError.Create('Form manager is not assigned');
@@ -494,7 +500,36 @@ begin
           lIni.WriteInteger(lSection, 'TagOffset',
             TRecorderOscillogramComponent(lComponent).TagOffset);
         end;
-      end;
+        if lComponent is TRecorderTrendComponent then
+        begin
+          lTrend := TRecorderTrendComponent(lComponent);
+          lIni.WriteFloat(lSection, 'DurationSec', lTrend.DurationSec);
+          lIni.WriteFloat(lSection, 'UpdatePeriodSec', lTrend.UpdatePeriodSec);
+          lIni.WriteInteger(lSection, 'YAxisMode', Ord(lTrend.YAxisMode));
+          lIni.WriteBool(lSection, 'LegendVisible', lTrend.LegendVisible);
+          lIni.WriteBool(lSection, 'ShowCurrentValues', lTrend.ShowCurrentValues);
+          lIni.WriteInteger(lSection, 'AxisCount', lTrend.AxisCount);
+          lIni.WriteInteger(lSection, 'LineCount', lTrend.LineCount);
+          for K := 0 to lTrend.AxisCount - 1 do
+          begin
+            lAxis := lTrend.Axes[K];
+            lIni.WriteString(lSection, Format('Axis%dName', [K]), lAxis.Name);
+            lIni.WriteInteger(lSection, Format('Axis%dColor', [K]), lAxis.Color);
+            lIni.WriteFloat(lSection, Format('Axis%dRangeMin', [K]), lAxis.RangeMin);
+            lIni.WriteFloat(lSection, Format('Axis%dRangeMax', [K]), lAxis.RangeMax);
+          end;
+          for K := 0 to lTrend.LineCount - 1 do
+          begin
+            lLine := lTrend.Lines[K];
+            lIni.WriteString(lSection, Format('Line%dName', [K]), lLine.Name);
+            lIni.WriteString(lSection, Format('Line%dTagName', [K]), lLine.TagName);
+            lIni.WriteInteger(lSection, Format('Line%dEstimateKind', [K]), Ord(lLine.EstimateKind));
+            lIni.WriteInteger(lSection, Format('Line%dAxisIndex', [K]), lLine.AxisIndex);
+            lIni.WriteInteger(lSection, Format('Line%dColor', [K]), lLine.Color);
+            lIni.WriteInteger(lSection, Format('Line%dWidth', [K]), lLine.Width);
+            lIni.WriteBool(lSection, Format('Line%dVisible', [K]), lLine.Visible);
+          end;
+        end;      end;
     end;
   finally
     lIni.Free;
@@ -506,10 +541,15 @@ procedure LoadRecorderGuiConfig(const AFileName: string;
 var
   I: Integer;
   J: Integer;
+  K: Integer;
+  lAxis: TRecorderTrendAxis;
   lComponent: TRecorderVisualComponent;
   lCount: Integer;
+  lItemCount: Integer;
+  lLine: TRecorderTrendLine;
   lPage: TRecorderFormPage;
   lSection: string;
+  lTrend: TRecorderTrendComponent;
   lTypeId: string;
   lIni: TIniFile;
 begin
@@ -572,7 +612,38 @@ begin
             TRecorderOscillogramComponent(lComponent).TagOffset :=
               lIni.ReadInteger(lSection, 'TagOffset', 0);
           end;
-          lPage.AddComponent(lComponent);
+          if lComponent is TRecorderTrendComponent then
+          begin
+            lTrend := TRecorderTrendComponent(lComponent);
+            lTrend.DurationSec := lIni.ReadFloat(lSection, 'DurationSec', lTrend.DurationSec);
+            lTrend.UpdatePeriodSec := lIni.ReadFloat(lSection, 'UpdatePeriodSec', lTrend.UpdatePeriodSec);
+            lTrend.YAxisMode := TRecorderTrendYAxisMode(lIni.ReadInteger(lSection, 'YAxisMode', Ord(lTrend.YAxisMode)));
+            lTrend.LegendVisible := lIni.ReadBool(lSection, 'LegendVisible', lTrend.LegendVisible);
+            lTrend.ShowCurrentValues := lIni.ReadBool(lSection, 'ShowCurrentValues', lTrend.ShowCurrentValues);
+            lTrend.ClearAxes;
+            lItemCount := lIni.ReadInteger(lSection, 'AxisCount', 1);
+            for K := 0 to lItemCount - 1 do
+            begin
+              lAxis := lTrend.AddAxis;
+              lAxis.Name := lIni.ReadString(lSection, Format('Axis%dName', [K]), lAxis.Name);
+              lAxis.Color := lIni.ReadInteger(lSection, Format('Axis%dColor', [K]), lAxis.Color);
+              lAxis.RangeMin := lIni.ReadFloat(lSection, Format('Axis%dRangeMin', [K]), lAxis.RangeMin);
+              lAxis.RangeMax := lIni.ReadFloat(lSection, Format('Axis%dRangeMax', [K]), lAxis.RangeMax);
+            end;
+            lTrend.ClearLines;
+            lItemCount := lIni.ReadInteger(lSection, 'LineCount', 0);
+            for K := 0 to lItemCount - 1 do
+            begin
+              lLine := lTrend.AddLine;
+              lLine.Name := lIni.ReadString(lSection, Format('Line%dName', [K]), lLine.Name);
+              lLine.TagName := lIni.ReadString(lSection, Format('Line%dTagName', [K]), lLine.TagName);
+              lLine.EstimateKind := TRecorderTagEstimateKind(lIni.ReadInteger(lSection, Format('Line%dEstimateKind', [K]), Ord(lLine.EstimateKind)));
+              lLine.AxisIndex := lIni.ReadInteger(lSection, Format('Line%dAxisIndex', [K]), lLine.AxisIndex);
+              lLine.Color := lIni.ReadInteger(lSection, Format('Line%dColor', [K]), lLine.Color);
+              lLine.Width := lIni.ReadInteger(lSection, Format('Line%dWidth', [K]), lLine.Width);
+              lLine.Visible := lIni.ReadBool(lSection, Format('Line%dVisible', [K]), lLine.Visible);
+            end;
+          end;          lPage.AddComponent(lComponent);
           lComponent := nil;
         finally
           lComponent.Free;

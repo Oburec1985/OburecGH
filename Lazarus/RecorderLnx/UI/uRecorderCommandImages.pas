@@ -27,7 +27,7 @@ const
   CIconView = 2;
   CIconStop = 3;
   CIconEditForm = 15;
-  CIconOscillogram = 5;
+  CIconOscillogram = 49;
   CIconTextLabel = 6;
   CIconSpectrum = 7;
   CIconDigitalIndicator = 8;
@@ -46,11 +46,13 @@ const
   CIconChannelCurve = 32;
   CIconSearch = 33;
   CIconFolderOpen = 34;
-  CIconRight = 36;
   CIconLeft = 35;
+  CIconRight = 36;
+  CIconRunWp = 37;
+  CIconTrends = 5;
 
   CRecorderOriginalImageCount = 15;
-  CRecorderCommandImageCount = 35;
+  CRecorderCommandImageCount = 38;
 
 { Загружает командные иконки и изображения в переданный список изображений }
 procedure LoadRecorderCommandImages(AImages: TCustomImageList);
@@ -127,6 +129,9 @@ begin
   AddIconFile(AImages, ImageFile('from_rcguisrv\res\Scales.ico')); // CIconChannelCurve
   AddIconFile(AImages, ImageFile('from_rcguisrv\ico\search.ico')); // CIconSearch
   AddIconFile(AImages, ImageFile('foldero.ico'));               // CIconFolderOpen
+  AddIconFile(AImages, ImageFile('from_rcguisrv\res\arw_rl.ico')); // CIconLeft
+  AddIconFile(AImages, ImageFile('from_rcguisrv\res\arw_lr.ico')); // CIconRight
+  AddIconFile(AImages, ImageFile('from_rcguisrv\ico\play.ico')); // CIconRunWp
 end;
 
 end.

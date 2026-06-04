@@ -77,11 +77,18 @@ function ShowComponentSettingsDialog(AOwner: TComponent; AComponent: TRecorderVi
 
 implementation
 
+uses
+  uRecorderTrendSettingsDialog;
+
 function ShowComponentSettingsDialog(AOwner: TComponent; AComponent: TRecorderVisualComponent;
   ATagRegistry: TRecorderTagRegistry): Boolean;
 var
   lDialog: TComponentSettingsDialog;
 begin
+  if AComponent is TRecorderTrendComponent then
+    Exit(ShowRecorderTrendSettingsDialog(AOwner,
+      TRecorderTrendComponent(AComponent), ATagRegistry));
+
   lDialog := TComponentSettingsDialog.CreateDialog(AOwner, AComponent, ATagRegistry);
   try
     Result := lDialog.ShowModal = mrOk;

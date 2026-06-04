@@ -6,9 +6,8 @@ uses
   {$IFDEF UNIX}
   cthreads,
   {$ENDIF}
-  Interfaces,
-  Forms,
-  uMainForm, uSharedFileLogger;
+  Interfaces, Forms, uMainForm, uComponentSettingsDialog,
+  uRecorderTrendSettingsDialog, uRecorderTrendView, uSharedFileLogger;
 
 begin
   RequireDerivedFormResource := True;

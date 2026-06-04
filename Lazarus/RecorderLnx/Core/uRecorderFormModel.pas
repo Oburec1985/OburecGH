@@ -37,8 +37,7 @@ type
     Width: Integer;
     Height: Integer;
   end;
-
-  { TRecorderFormPageMode
+{ TRecorderFormPageMode
     Режим страницы формуляра.
     
     fpmView - страница отображает данные и не меняет состав компонентов.
@@ -162,7 +161,89 @@ type
     property TagOffset: Integer read fTagOffset write fTagOffset;
   end;
 
-  { TRecorderComponentFactoryBase
+
+  TRecorderTrendAxis = class
+  private
+    fColor: LongInt;
+    fName: string;
+    fRangeMax: Double;
+    fRangeMin: Double;
+  public
+    constructor Create;
+    procedure Assign(ASource: TRecorderTrendAxis);
+    property Name: string read fName write fName;
+    property Color: LongInt read fColor write fColor;
+    property RangeMin: Double read fRangeMin write fRangeMin;
+    property RangeMax: Double read fRangeMax write fRangeMax;
+  end;
+
+  TRecorderTrendLine = class
+  private
+    fAxisIndex: Integer;
+    fColor: LongInt;
+    fEstimateKind: TRecorderTagEstimateKind;
+    fName: string;
+    fTagName: string;
+    fVisible: Boolean;
+    fWidth: Integer;
+  public
+    constructor Create;
+    procedure Assign(ASource: TRecorderTrendLine);
+    property Name: string read fName write fName;
+    property TagName: string read fTagName write fTagName;
+    property EstimateKind: TRecorderTagEstimateKind read fEstimateKind
+      write fEstimateKind;
+    property AxisIndex: Integer read fAxisIndex write fAxisIndex;
+    property Color: LongInt read fColor write fColor;
+    property Width: Integer read fWidth write fWidth;
+    property Visible: Boolean read fVisible write fVisible;
+  end;
+
+  TRecorderTrendYAxisMode = (
+    tyamSimple,
+    tyamRow,
+    tyamColumn,
+    tyamFree
+  );
+
+  TRecorderTrendComponent = class(TRecorderVisualComponent)
+  private
+    fAxes: TList;
+    fDurationSec: Double;
+    fLegendVisible: Boolean;
+    fLines: TList;
+    fShowCurrentValues: Boolean;
+    fUpdatePeriodSec: Double;
+    fYAxisMode: TRecorderTrendYAxisMode;
+    function GetAxis(AIndex: Integer): TRecorderTrendAxis;
+    function GetAxisCount: Integer;
+    function GetLine(AIndex: Integer): TRecorderTrendLine;
+    function GetLineCount: Integer;
+  protected
+    class function GetTypeId: string; override;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    function AddAxis: TRecorderTrendAxis;
+    function AddLine: TRecorderTrendLine;
+    procedure AssignTrend(ASource: TRecorderTrendComponent);
+    procedure ClearAxes;
+    procedure ClearLines;
+    procedure DeleteAxis(AIndex: Integer);
+    procedure DeleteLine(AIndex: Integer);
+    property AxisCount: Integer read GetAxisCount;
+    property Axes[AIndex: Integer]: TRecorderTrendAxis read GetAxis;
+    property LineCount: Integer read GetLineCount;
+    property Lines[AIndex: Integer]: TRecorderTrendLine read GetLine;
+    property DurationSec: Double read fDurationSec write fDurationSec;
+    property UpdatePeriodSec: Double read fUpdatePeriodSec
+      write fUpdatePeriodSec;
+    property YAxisMode: TRecorderTrendYAxisMode read fYAxisMode
+      write fYAxisMode;
+    property LegendVisible: Boolean read fLegendVisible write fLegendVisible;
+    property ShowCurrentValues: Boolean read fShowCurrentValues
+      write fShowCurrentValues;
+  end;  { TRecorderComponentFactoryBase
     Фабрика одного типа модельных компонентов. Она создает компоненты и ведет
     реестр своих дочерних экземпляров, чтобы удаление формы/компонента не
     оставляло у фабрики устаревшие ссылки. }
@@ -225,6 +306,11 @@ type
 
   { Фабрика компонента осциллограммы }
   TRecorderOscillogramFactory = class(TRecorderComponentFactoryBase)
+  public
+    constructor Create; reintroduce;
+  end;
+
+  TRecorderTrendFactory = class(TRecorderComponentFactoryBase)
   public
     constructor Create; reintroduce;
   end;
@@ -481,7 +567,168 @@ begin
   fTagOffset := 0;
 end;
 
-{ TRecorderComponentFactoryBase }
+
+{ TRecorderTrendAxis }
+
+constructor TRecorderTrendAxis.Create;
+begin
+  inherited Create;
+  fName := 'Y';
+  fColor := $0000FF;
+  fRangeMin := 0;
+  fRangeMax := 1;
+end;
+
+procedure TRecorderTrendAxis.Assign(ASource: TRecorderTrendAxis);
+begin
+  if ASource = nil then
+    Exit;
+  fName := ASource.Name;
+  fColor := ASource.Color;
+  fRangeMin := ASource.RangeMin;
+  fRangeMax := ASource.RangeMax;
+end;
+
+{ TRecorderTrendLine }
+
+constructor TRecorderTrendLine.Create;
+begin
+  inherited Create;
+  fName := 'Line';
+  fTagName := '';
+  fEstimateKind := tekMean;
+  fAxisIndex := 0;
+  fColor := $0000FF;
+  fWidth := 1;
+  fVisible := True;
+end;
+
+procedure TRecorderTrendLine.Assign(ASource: TRecorderTrendLine);
+begin
+  if ASource = nil then
+    Exit;
+  fName := ASource.Name;
+  fTagName := ASource.TagName;
+  fEstimateKind := ASource.EstimateKind;
+  fAxisIndex := ASource.AxisIndex;
+  fColor := ASource.Color;
+  fWidth := ASource.Width;
+  fVisible := ASource.Visible;
+end;
+
+{ TRecorderTrendComponent }
+
+class function TRecorderTrendComponent.GetTypeId: string;
+begin
+  Result := 'Trend';
+end;
+
+constructor TRecorderTrendComponent.Create;
+begin
+  inherited Create;
+  fAxes := TList.Create;
+  fLines := TList.Create;
+  fDurationSec := 100.0;
+  fUpdatePeriodSec := 1.0;
+  fYAxisMode := tyamRow;
+  fLegendVisible := True;
+  fShowCurrentValues := False;
+  AddAxis;
+end;
+
+destructor TRecorderTrendComponent.Destroy;
+begin
+  ClearLines;
+  ClearAxes;
+  fLines.Free;
+  fAxes.Free;
+  inherited Destroy;
+end;
+
+function TRecorderTrendComponent.GetAxis(AIndex: Integer): TRecorderTrendAxis;
+begin
+  Result := TRecorderTrendAxis(fAxes[AIndex]);
+end;
+
+function TRecorderTrendComponent.GetAxisCount: Integer;
+begin
+  Result := fAxes.Count;
+end;
+
+function TRecorderTrendComponent.GetLine(AIndex: Integer): TRecorderTrendLine;
+begin
+  Result := TRecorderTrendLine(fLines[AIndex]);
+end;
+
+function TRecorderTrendComponent.GetLineCount: Integer;
+begin
+  Result := fLines.Count;
+end;
+
+function TRecorderTrendComponent.AddAxis: TRecorderTrendAxis;
+begin
+  Result := TRecorderTrendAxis.Create;
+  fAxes.Add(Result);
+end;
+
+function TRecorderTrendComponent.AddLine: TRecorderTrendLine;
+begin
+  Result := TRecorderTrendLine.Create;
+  fLines.Add(Result);
+end;
+
+procedure TRecorderTrendComponent.AssignTrend(ASource: TRecorderTrendComponent);
+var
+  I: Integer;
+begin
+  if ASource = nil then
+    Exit;
+  fDurationSec := ASource.DurationSec;
+  fUpdatePeriodSec := ASource.UpdatePeriodSec;
+  fYAxisMode := ASource.YAxisMode;
+  fLegendVisible := ASource.LegendVisible;
+  fShowCurrentValues := ASource.ShowCurrentValues;
+  ClearAxes;
+  for I := 0 to ASource.AxisCount - 1 do
+    AddAxis.Assign(ASource.Axes[I]);
+  if fAxes.Count = 0 then
+    AddAxis;
+  ClearLines;
+  for I := 0 to ASource.LineCount - 1 do
+    AddLine.Assign(ASource.Lines[I]);
+end;
+
+procedure TRecorderTrendComponent.ClearAxes;
+begin
+  while fAxes.Count > 0 do
+  begin
+    TObject(fAxes[0]).Free;
+    fAxes.Delete(0);
+  end;
+end;
+
+procedure TRecorderTrendComponent.ClearLines;
+begin
+  while fLines.Count > 0 do
+  begin
+    TObject(fLines[0]).Free;
+    fLines.Delete(0);
+  end;
+end;
+
+procedure TRecorderTrendComponent.DeleteAxis(AIndex: Integer);
+begin
+  TObject(fAxes[AIndex]).Free;
+  fAxes.Delete(AIndex);
+  if fAxes.Count = 0 then
+    AddAxis;
+end;
+
+procedure TRecorderTrendComponent.DeleteLine(AIndex: Integer);
+begin
+  TObject(fLines[AIndex]).Free;
+  fLines.Delete(AIndex);
+end;{ TRecorderComponentFactoryBase }
 
 constructor TRecorderComponentFactoryBase.Create(const ATypeId,
   ATypeName: string; AComponentClass: TRecorderVisualComponentClass;
@@ -585,6 +832,15 @@ constructor TRecorderOscillogramFactory.Create;
 begin
   inherited Create(TRecorderOscillogramComponent.TypeId, 'Oscillogram',
     TRecorderOscillogramComponent, 360, 220, True);
+end;
+
+
+{ TRecorderTrendFactory }
+
+constructor TRecorderTrendFactory.Create;
+begin
+  inherited Create(TRecorderTrendComponent.TypeId, 'Trend',
+    TRecorderTrendComponent, 400, 300, False);
 end;
 
 { TRecorderFormPage }
@@ -916,6 +1172,7 @@ begin
   RegisterFactory(TRecorderStaticTextFactory.Create);
   RegisterFactory(TRecorderTagValueFactory.Create);
   RegisterFactory(TRecorderOscillogramFactory.Create);
+  RegisterFactory(TRecorderTrendFactory.Create);
 end;
 
 { TRecorderFormFactory }

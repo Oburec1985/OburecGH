@@ -28,6 +28,8 @@ type
     StartSec: Double;
     UnitsName: string;
     Description: string;
+    SensorCalibrationName: string;
+    AmplifierCalibrationName: string;
     FileName: string;
     XFileName: string;
     HasXData: Boolean;
@@ -170,6 +172,8 @@ begin
           lSignal.ModuleName := lSignal.DataTypeName;
         lSignal.UnitsName := MeraTextToUtf8(lIni.ReadString(lIniSection, 'YUnits', ''));
         lSignal.Description := MeraTextToUtf8(lIni.ReadString(lIniSection, 'Comment', ''));
+        lSignal.SensorCalibrationName := MeraTextToUtf8(lIni.ReadString(lIniSection, 'tare0', ''));
+        lSignal.AmplifierCalibrationName := MeraTextToUtf8(lIni.ReadString(lIniSection, 'tare1', ''));
         lFreqText := lIni.ReadString(lIniSection, 'Freq', '0');
         lFreqText := StringReplace(lFreqText, '.', DefaultFormatSettings.DecimalSeparator, [rfReplaceAll]);
         if not TryStrToFloat(lFreqText, lSignal.FrequencyHz) then

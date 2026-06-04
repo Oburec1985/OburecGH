@@ -35,7 +35,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  Grids, Buttons, ImgList, ComCtrls, Spin, Math, Menus, LConvEncoding,
+  Grids, Buttons, ImgList, ComCtrls, Spin, Math, Menus, LConvEncoding, LCLIntf,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderFormModel,
   uRecorderCoreServices, uRecorderTags, uRecorderDataSources,
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
@@ -54,6 +54,7 @@ type
     btnClearSearch: TButton;                     // Кнопка очистки фильтра поиска тегов
     btnPreview: TSpeedButton;                    // Кнопка запуска просмотра (без записи)
     btnRecord: TSpeedButton;                     // Кнопка запуска записи данных
+    btnRunWinpos: TSpeedButton;                  // Кнопка запуска Winpos для последнего MERA-файла
     btnSaveConfig: TSpeedButton;
     btnSaveConfigAs: TSpeedButton;                 // Кнопка сохранения текущей конфигурации проекта
     btnSettings: TSpeedButton;                   // Кнопка вызова общего диалога настроек
@@ -61,7 +62,6 @@ type
     btnTrigger: TSpeedButton;                    // Кнопка принудительного старта по выполнению условий
     edTagSearch: TEdit;                          // Поле поиска (фильтрации) тегов
     ilCommandButtons: TImageList;                // Список картинок для кнопок управления
-    ilCommandButtons1: TImageList;               // Дополнительный список картинок
     ilTagDialogButtons: TImageList;              // Список картинок для кнопок настройки каналов
     lbState: TLabel;                             // Текстовый индикатор текущего состояния автомата
     lbTags: TListBox;                            // Список тегов проекта с их текущими значениями
@@ -83,6 +83,7 @@ type
     procedure btnFormPagesClick(Sender: TObject);
     procedure btnPreviewClick(Sender: TObject);
     procedure btnRecordClick(Sender: TObject);
+    procedure btnRunWinposClick(Sender: TObject);
     procedure btnSaveConfigClick(Sender: TObject);
     procedure btnSaveConfigAsClick(Sender: TObject);
     procedure btnSettingsClick(Sender: TObject);
@@ -113,6 +114,7 @@ type
     fFormEditor: TFormEditorController;           // Контроллер логики перетаскивания и редактирования
     fEditModeButton: TSpeedButton;                // Кнопка включения режима конструктора
     fAddOscillogramButton: TSpeedButton;          // Кнопка добавления осциллограммы
+    fAddTrendButton: TSpeedButton;                // Кнопка добавления тренда
     fAddTextButton: TSpeedButton;                 // Кнопка добавления текстового поля
     fAddSpectrumButton: TSpeedButton;             // Кнопка добавления графика спектра
     fAddDigitalButton: TSpeedButton;              // Кнопка добавления цифрового индикатора
@@ -164,6 +166,16 @@ type
       const ACaption: string = ''; AImageWidth: Integer = 25): TSpeedButton;
     { Добавляет строку в журнал с локальным временем. }
     procedure AddLog(const AMessage: string; AKind: TRecorderLogKind = rlkSystem);
+    { Возвращает текущий корневой каталог MERA-записи. }
+    function CurrentRecordRootDir: string;
+    { Обновляет менеджер каталогов записи из текущих настроек. }
+    procedure UpdateRecordFrameManager;
+    { Возвращает каталог текущего или следующего MERA-замера. }
+    function CurrentMeasureDir: string;
+    { Обновляет заголовок главного окна. }
+    procedure UpdateMainCaption;
+    { Возвращает путь к последнему записанному record.mera. }
+    function LastRecordedMeraFileName: string;
     { Создает галочки фильтрации нижнего журнала. }
     procedure EnsureLogFilterPanel;
     { Обработчик изменения фильтров нижнего журнала. }
@@ -220,8 +232,12 @@ type
     procedure AddTagValueComponentToActivePage;
     { Добавляет на активную страницу осциллограмму OpenGL. }
     procedure AddOscillogramComponentToActivePage;
+    { Добавляет на активную страницу компонент тренда. }
+    procedure AddTrendComponentToActivePage;
     { Обработчик кнопки добавления осциллограммы на полотне. }
     procedure AddOscillogramClick(Sender: TObject);
+    { Обработчик кнопки добавления тренда на полотне. }
+    procedure AddTrendClick(Sender: TObject);
     { Обработчик кнопки добавления цифрового индикатора на полотне. }
     procedure AddDigitalIndicatorClick(Sender: TObject);
     { Переключает режим редактирования мнемосхемы. }
@@ -620,6 +636,17 @@ begin
   end;
 end;
 
+
+procedure TMainForm.btnRunWinposClick(Sender: TObject);
+var
+  lMeraFileName: string;
+begin
+  lMeraFileName := LastRecordedMeraFileName;
+  if lMeraFileName = '' then
+    Exit;
+
+  OpenDocument(lMeraFileName);
+end;
 procedure TMainForm.btnSaveConfigClick(Sender: TObject);
 begin
   try
@@ -640,9 +667,10 @@ begin
     end;
 
     AddLog('Configuration mode: settings dialog opened.');
-    if ShowRecorderSettingsDialog(Self, fRunSettings, fTagRegistry, ilCommandButtons) then
+    if ShowRecorderSettingsDialog(Self, fRunSettings, fTagRegistry, ilCommandButtons, ilTagDialogButtons) then
     begin
       ApplyDisplayTimingSettings;
+      UpdateRecordFrameManager;
       SaveProjectPackage;
       fDataSourceManager.Clear;
       fDataSourcesConfigured := False;
@@ -667,6 +695,83 @@ begin
   RebuildTagList(edTagSearch.Text);
 end;
 
+
+function TMainForm.CurrentRecordRootDir: string;
+begin
+  Result := '';
+  if fRunSettings <> nil then
+    Result := Trim(fRunSettings.RecordRootDir);
+  if Result = '' then
+    Result := IncludeTrailingPathDelimiter(fProjectConfigDir) + 'records';
+  Result := IncludeTrailingPathDelimiter(ExpandFileName(Result));
+end;
+
+procedure TMainForm.UpdateRecordFrameManager;
+var
+  lRootDir: string;
+begin
+  lRootDir := CurrentRecordRootDir;
+  if (fRecordFrameManager <> nil) and SameText(fRecordFrameManager.RootDir, lRootDir) then
+  begin
+    UpdateMainCaption;
+    Exit;
+  end;
+
+  FreeAndNil(fRecordFrameManager);
+  fRecordFrameManager := TRecorderRecordFrameManager.Create(lRootDir);
+  UpdateMainCaption;
+end;
+
+function TMainForm.CurrentMeasureDir: string;
+var
+  lFrameNo: Integer;
+begin
+  Result := '';
+  if fRecordFrameManager = nil then
+    Exit;
+
+  if fRecordFrameManager.Recording and
+    (fRecordFrameManager.CurrentFrameDir <> '') then
+  begin
+    Result := IncludeTrailingPathDelimiter(fRecordFrameManager.CurrentFrameDir);
+    Exit;
+  end;
+
+  lFrameNo := fRecordFrameManager.FindLastFrameNo + 1;
+  Result := IncludeTrailingPathDelimiter(fRecordFrameManager.RootDir) +
+    TRecorderRecordFrameManager.FormatFrameName(lFrameNo);
+  Result := IncludeTrailingPathDelimiter(Result);
+end;
+procedure TMainForm.UpdateMainCaption;
+var
+  lCaption: string;
+begin
+  lCaption := 'RecorderLnx - ' + fProjectConfigDir + ' - MERA: ' + CurrentMeasureDir;
+  if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) then
+    lCaption := lCaption + ' - ' + fFormManager.ActivePage.Title;
+  Caption := lCaption;
+end;
+
+function TMainForm.LastRecordedMeraFileName: string;
+var
+  lFrameNo: Integer;
+  lFrameDir: string;
+begin
+  Result := '';
+  if fRecordFrameManager = nil then
+    Exit;
+
+  lFrameNo := fRecordFrameManager.FindLastFrameNo;
+  if lFrameNo <= 0 then
+    Exit;
+
+  lFrameDir := IncludeTrailingPathDelimiter(fRecordFrameManager.RootDir) +
+    TRecorderRecordFrameManager.FormatFrameName(lFrameNo);
+  Result := IncludeTrailingPathDelimiter(lFrameDir) +
+    ExtractFileName(ExcludeTrailingPathDelimiter(lFrameDir)) + '.mera';
+  if not FileExists(Result) then
+    Result := '';
+end;
 procedure TMainForm.AddLog(const AMessage: string; AKind: TRecorderLogKind);
 var
   lLine: string;
@@ -850,11 +955,11 @@ begin
     ShowEditorSurface(False);
     ShowBaseToolbar(False);
     UpdateEditorAvailability(nil);
-    Caption := 'RecorderLnx - ' + fProjectConfigDir;
+    UpdateMainCaption;
     Exit;
   end;
 
-  Caption := 'RecorderLnx - ' + fProjectConfigDir + ' - ' + lPage.Title;
+  UpdateMainCaption;
   UpdateEditorAvailability(lPage);
 
   if lPage.Id = 'DigitalForm' then
@@ -944,6 +1049,82 @@ begin
 
   AddLog('Form component added: ' + lComponent.Id);
 end;
+
+procedure TMainForm.AddTrendClick(Sender: TObject);
+begin
+  try
+    AddTrendComponentToActivePage;
+    RenderActivePage;
+  except
+    on E: Exception do
+      LogCommandError('Add trend', E);
+  end;
+end;
+
+procedure TMainForm.AddTrendComponentToActivePage;
+var
+  lAxis: TRecorderTrendAxis;
+  lLine: TRecorderTrendLine;
+  lPage: TRecorderFormPage;
+  lComponent: TRecorderTrendComponent;
+  lTag: TRecorderTag;
+begin
+  lPage := fFormManager.ActivePage;
+  if lPage = nil then
+    raise ERecorderFormError.Create('Cannot add component without active page');
+  if not IsUserMnemonicPage(lPage) then
+    raise ERecorderFormError.Create('Components can be added only to user mnemonic pages');
+
+  if fFormEditor <> nil then
+    fFormEditor.RememberUndoStep;
+
+  Inc(fNextComponentNo);
+  lComponent := TRecorderTrendComponent(
+    fComponentFactory.CreateComponent(TRecorderTrendComponent.TypeId));
+  try
+    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
+    lComponent.Name := Format('Trend%d', [fNextComponentNo]);
+    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 400, 300);
+
+    lTag := nil;
+    if fTagRegistry <> nil then
+    begin
+      lTag := fTagRegistry.SelectedTag;
+      if (lTag = nil) and (fTagRegistry.TagCount > 0) then
+        lTag := fTagRegistry.Tags[0];
+    end;
+
+    if lTag <> nil then
+    begin
+      lComponent.TagName := lTag.Name;
+      if lComponent.AxisCount > 0 then
+      begin
+        lAxis := lComponent.Axes[0];
+        lAxis.Name := lTag.UnitName;
+        if lAxis.Name = '' then
+          lAxis.Name := 'Y';
+        if lTag.RangeMax > lTag.RangeMin then
+        begin
+          lAxis.RangeMin := lTag.RangeMin;
+          lAxis.RangeMax := lTag.RangeMax;
+        end;
+      end;
+      lLine := lComponent.AddLine;
+      lLine.Name := lTag.Name;
+      lLine.TagName := lTag.Name;
+      lLine.EstimateKind := tekMean;
+      lLine.AxisIndex := 0;
+    end;
+
+    lPage.AddComponent(lComponent);
+  except
+    lComponent.Free;
+    raise;
+  end;
+
+  AddLog('Form component added: ' + lComponent.Id);
+end;
+
 procedure TMainForm.AddDigitalIndicatorClick(Sender: TObject);
 begin
   try
@@ -1045,13 +1226,14 @@ begin
 
   fEditModeButton := AddEditMnemoToolBarButton(4, CIconEditForm, 'Edit mnemonic', @EditModeClick, 1, True);
   fAddOscillogramButton := AddEditMnemoToolBarButton(38, CIconOscillogram, 'Add oscillogram', @AddOscillogramClick);
-  fAddTextButton := AddEditMnemoToolBarButton(72, CIconTextLabel, 'Add text label', @btnAddComponentClick);
-  fAddSpectrumButton := AddEditMnemoToolBarButton(106, CIconSpectrum, 'Add spectrum', nil, 0, False, False);
-  fAddDigitalButton := AddEditMnemoToolBarButton(140, CIconDigitalIndicator, 'Add digital indicator', @AddDigitalIndicatorClick);
-  fAddTagTableButton := AddEditMnemoToolBarButton(174, CIconTagTable, 'Add tag table', nil, 0, False, False);
-  fAddButtonButton := AddEditMnemoToolBarButton(208, CIconButton, 'Add button', nil, 0, False, False);
-  fAddComboBoxButton := AddEditMnemoToolBarButton(242, CIconComboBox, 'Add combo box', nil, 0, False, False);
-  fDeleteComponentButton := AddEditMnemoToolBarButton(282, -1, 'Delete selected component', @btnDeleteComponentClick, 0, False, True, '-');
+  fAddTrendButton := AddEditMnemoToolBarButton(72, CIconTrends, 'Add trend', @AddTrendClick);
+  fAddTextButton := AddEditMnemoToolBarButton(106, CIconTextLabel, 'Add text label', @btnAddComponentClick);
+  fAddSpectrumButton := AddEditMnemoToolBarButton(140, CIconSpectrum, 'Add spectrum', nil, 0, False, False);
+  fAddDigitalButton := AddEditMnemoToolBarButton(174, CIconDigitalIndicator, 'Add digital indicator', @AddDigitalIndicatorClick);
+  fAddTagTableButton := AddEditMnemoToolBarButton(208, CIconTagTable, 'Add tag table', nil, 0, False, False);
+  fAddButtonButton := AddEditMnemoToolBarButton(242, CIconButton, 'Add button', nil, 0, False, False);
+  fAddComboBoxButton := AddEditMnemoToolBarButton(276, CIconComboBox, 'Add combo box', nil, 0, False, False);
+  fDeleteComponentButton := AddEditMnemoToolBarButton(316, -1, 'Delete selected component', @btnDeleteComponentClick, 0, False, True, '-');
 
   fEditorCanvas := TPanel.Create(Self);
   fEditorCanvas.Parent := fEditorShell;
@@ -1256,6 +1438,8 @@ begin
 
   if fAddOscillogramButton <> nil then
     fAddOscillogramButton.Visible := lCanEdit;
+  if fAddTrendButton <> nil then
+    fAddTrendButton.Visible := lCanEdit;
   if fAddTextButton <> nil then
     fAddTextButton.Visible := lCanEdit;
   if fAddSpectrumButton <> nil then
@@ -1372,6 +1556,7 @@ begin
     fRunSettings.LoadFromFile(lOldFileName);
     AddLog('Legacy run-control config loaded: ' + lOldFileName);
   end;
+  UpdateRecordFrameManager;
 end;
 
 procedure TMainForm.SaveRunSettings;
@@ -1447,10 +1632,7 @@ begin
   lFiles := RecorderProjectFileSet(fProjectConfigDir, CProjectBaseName);
   fRunControlFileName := lFiles.RunControlFileName;
 
-  FreeAndNil(fRecordFrameManager);
-  fRecordFrameManager := TRecorderRecordFrameManager.Create(
-    IncludeTrailingPathDelimiter(lFiles.DirectoryName) + 'records');
-  Caption := 'RecorderLnx - ' + fProjectConfigDir;
+  UpdateRecordFrameManager;
 end;
 
 procedure TMainForm.EnsureConfigPopupMenu;
@@ -1545,6 +1727,7 @@ begin
   lFrameDir := fRecordFrameManager.OpenNextFrame;
   fRecordFrameManager.WriteFrameInfo(CProjectBaseName, 'RecorderLnx MERA record');
   fMeraWriter.Open(lFrameDir);
+  UpdateMainCaption;
   AddLog('MERA recording opened: ' + lFrameDir);
 end;
 
@@ -1554,6 +1737,7 @@ begin
     fMeraWriter.Close;
   if fRecordFrameManager <> nil then
     fRecordFrameManager.CloseFrame;
+  UpdateMainCaption;
 end;
 procedure TMainForm.ResetProjectCounters;
 var
@@ -1912,12 +2096,13 @@ begin
   begin
     lTag := fTagRegistry.FindByName(ASnapshot.TagName);
     if lTag <> nil then
-      fMeraWriter.WriteSample(ASnapshot.TagName, lTag.UnitName,
-        lTag.Description, ASnapshot.TimeSec, ASnapshot.Value,
-        lTag.PollFrequencyHz)
+      fMeraWriter.WriteBlock(ASnapshot.TagName, lTag.UnitName,
+        lTag.Description, lTag.SensorCalibrationName,
+        lTag.AmplifierCalibrationName, ASnapshot.Times, ASnapshot.Values,
+        ASnapshot.SampleCount, lTag.PollFrequencyHz)
     else
-      fMeraWriter.WriteSample(ASnapshot.TagName, '', '', ASnapshot.TimeSec,
-        ASnapshot.Value, 0);
+      fMeraWriter.WriteBlock(ASnapshot.TagName, '', '', '', '',
+        ASnapshot.Times, ASnapshot.Values, ASnapshot.SampleCount, 0);
   end;
 end;
 
@@ -1927,6 +2112,15 @@ begin
   btnAddPage.Caption := '[]';
   btnAddPage.Hint := 'Formulars';
   btnAddPage.ShowHint := True;
+
+  btnSettings.SetBounds(8, 8, 40, 42);
+  btnSaveConfig.SetBounds(54, 8, 40, 42);
+  btnSaveConfigAs.SetBounds(100, 8, 40, 42);
+  btnRunWinpos.SetBounds(146, 8, 40, 42);
+  btnStop.SetBounds(16, 58, 42, 42);
+  btnPreview.SetBounds(66, 58, 42, 42);
+  btnRecord.SetBounds(116, 58, 42, 42);
+  btnTrigger.SetBounds(16, 108, 142, 32);
 
   btnSettings.Caption := '';
   btnSettings.Images := ilCommandButtons;
@@ -1948,6 +2142,13 @@ begin
   btnSaveConfigAs.Hint := 'Save config as...';
   btnSaveConfigAs.ShowHint := True;
   btnSaveConfig.ShowHint := True;
+
+  btnRunWinpos.Caption := '';
+  btnRunWinpos.Images := ilCommandButtons;
+  btnRunWinpos.ImageIndex := CIconRunWp;
+  btnRunWinpos.ImageWidth := 32;
+  btnRunWinpos.Hint := 'Run Winpos';
+  btnRunWinpos.ShowHint := True;
 
   btnStop.Caption := '';
   btnStop.Images := ilCommandButtons;

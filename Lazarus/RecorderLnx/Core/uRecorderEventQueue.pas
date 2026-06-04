@@ -62,6 +62,9 @@ type
     fText: string;                 { Текстовый параметр }
     fTimeSec: Double;              { Время измерения }
     fValue: Double;                { Значение измерения }
+    fSampleCount: Integer;         { Число точек в блоке }
+    fTimes: TRecorderDoubleArray;  { Времена блока }
+    fValues: TRecorderDoubleArray; { Значения блока }
   public
     { Создает снимок на основе события core-шины.
       AEvent - исходное событие. Объект AEvent.Data не сохраняется, из него
@@ -81,6 +84,9 @@ type
     property TagName: string read fTagName;
     property TimeSec: Double read fTimeSec;
     property Value: Double read fValue;
+    property SampleCount: Integer read fSampleCount;
+    property Times: TRecorderDoubleArray read fTimes;
+    property Values: TRecorderDoubleArray read fValues;
   end;
 
   { TRecorderEventSnapshotQueue
@@ -127,6 +133,7 @@ implementation
 
 constructor TRecorderEventSnapshot.CreateFromEvent(const AEvent: TRecorderEvent);
 var
+  I: Integer;
   lAlarmData: TRecorderAlarmEventData;
   lTagData: TRecorderTagUpdateEventData;
 begin
@@ -147,6 +154,14 @@ begin
       fTagName := AEvent.Name;
     fTimeSec := lTagData.TimeSec;
     fValue := lTagData.Value;
+    fSampleCount := lTagData.SampleCount;
+    SetLength(fTimes, fSampleCount);
+    SetLength(fValues, fSampleCount);
+    for I := 0 to fSampleCount - 1 do
+    begin
+      fTimes[I] := lTagData.Times[I];
+      fValues[I] := lTagData.Values[I];
+    end;
   end
   else if AEvent.Data is TRecorderAlarmEventData then
   begin
@@ -162,6 +177,11 @@ begin
       fTagName := AEvent.Name;
     fTimeSec := lAlarmData.TimeSec;
     fValue := lAlarmData.Value;
+    fSampleCount := 1;
+    SetLength(fTimes, 1);
+    SetLength(fValues, 1);
+    fTimes[0] := fTimeSec;
+    fValues[0] := fValue;
   end;
 end;
 

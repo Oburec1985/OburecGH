@@ -1318,7 +1318,7 @@ begin
   end;
 
   if Assigned(APage) and (APage.Caption <> '') then
-    DrawText(APage.Caption, fPageRect.Left + 6, fPageRect.Top + 6, fFontMng.Font(cfPageCaption));
+    DrawText(APage.Caption, fPageRect.Left + APage.PixelTabSpace.Left, fPageRect.Top + 6, fFontMng.Font(cfPageCaption));
   lFont := fFontMng.Font(cfGridTick);
   for lIndex := 0 to High(lXTicks) do
   begin

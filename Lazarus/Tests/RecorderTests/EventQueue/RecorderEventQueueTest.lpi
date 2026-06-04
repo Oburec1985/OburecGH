@@ -20,6 +20,11 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
+    <RequiredPackages>
+      <Item>
+        <PackageName Value="LazUtils"/>
+      </Item>
+    </RequiredPackages>
     <Units>
       <Unit>
         <Filename Value="RecorderEventQueueTest.lpr"/>
@@ -30,7 +35,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
-      <OtherUnitFiles Value="../../../RecorderLnx/Core"/>
+      <OtherUnitFiles Value="../../../RecorderLnx/Core;../../../SharedUtils;../../../SharedUtils/mera"/>
       <UnitOutputDirectory Value="lib"/>
     </SearchPaths>
     <Linking>

@@ -2,33 +2,27 @@ unit uRecorderOglOscillogramView;
 
 {
   Unit uRecorderOglOscillogramView
-
   Purpose:
     LCL wrapper for OpenGL oscillogram controls used on RecorderLnx formulars.
     Chart controls are intentionally long-lived: switching pages or resizing the
     base page must relayout existing controls instead of recreating OpenGL state.
-
   FPS policy:
     FPS is measured only when the caller explicitly enables it, normally in
     Preview mode. The value is calculated from rendered frames collected during
     an approximately one-second display window, not from a single render time.
 }
-
 {$mode objfpc}{$H+}
-
 interface
 
 uses
   Classes, Controls, ExtCtrls, StdCtrls,
   uOglChart, uOglChartChart, uOglChartPage, uOglChartAxis,
-  uOglChartTrend, uRecorderFormModel, uRecorderTags;
-
+  uOglChartTrend, uRecorderFormModel, uRecorderTags, uRecorderVisualControl;
 type
   { TRecorderOglOscillogram
-
     Thin RecorderLnx wrapper around oglChart. It owns a default chart model with
     one page, one axis and one buffered trend. }
-  TRecorderOglOscillogram = class(TPanel)
+  TRecorderOglOscillogram = class(TPanel, IVForm)
   private
     fAbsoluteTagName: string;
     fBindingMode: TRecorderTagBindingMode;
@@ -55,6 +49,11 @@ type
     procedure SetChartTitle(const ATitle: string);
     procedure SetXRange(ADisplaySeconds: Double);
   public
+    { IVForm }
+    procedure Configure(AComponent: TRecorderVisualComponent; ATagRegistry: TRecorderTagRegistry);
+    procedure RefreshControl(ATagRegistry: TRecorderTagRegistry; ADisplaySeconds: Double);
+    function GetChartControl: TOglChart;
+
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
@@ -62,13 +61,11 @@ type
     procedure ConfigureDefault;
 
     { Refreshes chart data from the tag registry.
-
       ATagRegistry     - source tag registry.
       ADisplaySeconds  - visible time window in seconds.
       AMeasureFps      - True only while RecorderLnx measures display-loop FPS. }
     procedure Refresh(ATagRegistry: TRecorderTagRegistry;
       ADisplaySeconds: Double; AMeasureFps: Boolean = False);
-
     { Forces an immediate LCL/OpenGL repaint after a page becomes visible.
       This is used on tab switching: OpenGL controls can keep an invalidated
       back buffer until the next window message, while Recorder users expect the
@@ -83,7 +80,6 @@ type
   end;
 
   { TRecorderOglOscillogramSurface
-
     Host for the built-in Base page. Unlike TRecorderOglOscillogram, this class
     creates only one TOglChart/OpenGL context and places all oscillograms as
     TChartPage children inside one chart model. This avoids Win32 child-window
@@ -121,11 +117,9 @@ type
     { Recreates the internal chart pages only when the count changes. }
     procedure Rebuild(ATagRegistry: TRecorderTagRegistry; ACount: Integer;
       ADisplaySeconds: Double);
-
     { Refreshes all page trends from tag snapshots. }
     procedure Refresh(ATagRegistry: TRecorderTagRegistry;
       ADisplaySeconds: Double; AMeasureFps: Boolean = False);
-
     { Forces a paint of the single OpenGL context. }
     procedure ForceRepaint;
 
@@ -140,12 +134,10 @@ type
 procedure RebuildRecorderOglOscillograms(AOwner: TComponent; APanel: TPanel;
   ATagRegistry: TRecorderTagRegistry; ACount: Integer;
   ADisplaySeconds: Double);
-
 { Refreshes all existing oscillograms on APanel. }
 procedure RefreshRecorderOglOscillograms(APanel: TPanel;
   ATagRegistry: TRecorderTagRegistry; ADisplaySeconds: Double;
   AMeasureFps: Boolean = False);
-
 { Immediately repaints already-created oscillograms on APanel. }
 procedure RepaintRecorderOglOscillograms(APanel: TPanel);
 
@@ -157,7 +149,6 @@ implementation
 uses
   SysUtils, Math, Graphics,
   uOglChartDrawObj, uRecorderDebugLog, uOglChartRenderer, uOglChartFontMng;
-
 function FormatEnabledEstimateCaption(ATag: TRecorderTag): string;
 var
   lEstimate: TRecorderTagEstimate;
@@ -168,7 +159,6 @@ begin
   Result := '';
   if ATag = nil then
     Exit;
-
   lSettings := ATag.EstimateSettings;
   lParts := TStringList.Create;
   try
@@ -205,7 +195,6 @@ begin
 end;
 
 { TRecorderOglOscillogram }
-
 constructor TRecorderOglOscillogram.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -224,6 +213,26 @@ begin
   inherited Destroy;
 end;
 
+procedure TRecorderOglOscillogram.Configure(AComponent: TRecorderVisualComponent; ATagRegistry: TRecorderTagRegistry);
+begin
+  if fChart = nil then
+    ConfigureDefault;
+  fBindingMode := TRecorderOscillogramComponent(AComponent).BindingMode;
+  fTagOffset := TRecorderOscillogramComponent(AComponent).TagOffset;
+  fAbsoluteTagName := AComponent.TagName;
+  Refresh(ATagRegistry, 1.0);
+end;
+
+procedure TRecorderOglOscillogram.RefreshControl(ATagRegistry: TRecorderTagRegistry; ADisplaySeconds: Double);
+begin
+  Refresh(ATagRegistry, ADisplaySeconds);
+end;
+
+function TRecorderOglOscillogram.GetChartControl: TOglChart;
+begin
+  Result := fChart;
+end;
+
 procedure TRecorderOglOscillogram.ConfigureDefault;
 var
   lChart: TOglChart;
@@ -235,7 +244,6 @@ var
 begin
   while ControlCount > 0 do
     Controls[0].Free;
-
   fInfoLabel := TLabel.Create(Self);
   fInfoLabel.Parent := Self;
   fInfoLabel.Align := alTop;
@@ -245,13 +253,11 @@ begin
   fInfoLabel.Font.Color := $00404040;
   fInfoLabel.BorderSpacing.Around := 4;
   fInfoLabel.Caption := 'Tag: None | FPS: -';
-
   lChart := TOglChart.Create(Self);
   lChart.Parent := Self;
   lChart.Align := alClient;
   lChart.AutoResizeViewport := True;
   lChart.OnAfterRender := @ChartAfterRender;
-
   lModel := TChartModel.Create;
   lModel.Title := '';
   lModel.BackgroundColor := $FFFFFFFF;
@@ -260,7 +266,6 @@ begin
   lPageArea.Right := 1.0;
   lPageArea.Bottom := 1.0;
   lModel.PageArea := lPageArea;
-
   lPage := TChartPage.Create;
   lPage.Name := 'Page1';
   lPage.Caption := '';
@@ -269,25 +274,21 @@ begin
   lPage.BorderColor := $FF707070;
   lPage.XMinValue := 0;
   lPage.XMaxValue := 1;
-
   lAxis := TChartAxis.Create;
   lAxis.Name := 'Axis1';
   lAxis.Caption := '';
   lAxis.MinValue := -1;
   lAxis.MaxValue := 1;
-
   lTrend := cBuffTrend1d.Create;
   lTrend.Name := 'Signal';
   lTrend.Caption := '';
   lTrend.Color := $FFFF0000;
   lTrend.X0 := 0;
   lTrend.DX := 1;
-
   lAxis.AddChild(lTrend);
   lPage.AddChild(lAxis);
   lModel.AddChild(lPage);
   lChart.Model := lModel;
-
   fChart := lChart;
   fModel := lModel;
   fPage := lPage;
@@ -306,7 +307,6 @@ begin
     lTagName := fCurrentTagName
   else
     lTagName := 'None';
-
   fFpsLastRenderTimeMs := ARenderTimeMs;
   if fFpsMeasureEnabled then
   begin
@@ -353,7 +353,6 @@ begin
   Result := nil;
   if (ATagRegistry = nil) or (ATagRegistry.TagCount = 0) then
     Exit;
-
   if fBindingMode = rtbmAbsoluteTag then
   begin
     if fAbsoluteTagName <> '' then
@@ -398,7 +397,6 @@ var
 begin
   if fAxis = nil then
     Exit;
-
   if SameValue(AMinValue, AMaxValue) then
   begin
     AMinValue := AMinValue - 1.0;
@@ -447,21 +445,17 @@ var
 begin
   if ADisplaySeconds <= 0 then
     ADisplaySeconds := 1.0;
-
   if fFpsMeasureEnabled <> AMeasureFps then
     ResetFpsMeasure;
   fFpsMeasureEnabled := AMeasureFps;
-
   Inc(fFrameNo);
   SetXRange(ADisplaySeconds);
   if fTrend = nil then
     Exit;
-
   lTrend := cBuffTrend1d(fTrend);
   lTrend.ClearValues;
   lTrend.X0 := 0;
   lTrend.DX := 1;
-
   lTag := ResolveTag(ATagRegistry);
   if lTag = nil then
   begin
@@ -474,7 +468,6 @@ begin
   end;
 
   fCurrentTagName := lTag.Name;
-
   lSnapshot := lTag.Snapshot;
   SetChartTitle(Format('%s frame:%d', [lTag.Name, fFrameNo]));
   if lSnapshot.Count = 0 then
@@ -493,7 +486,6 @@ begin
   begin
     if lSnapshot.Times[I] < lDisplayStart then
       Continue;
-
     if lFirst then
     begin
       lMinValue := lSnapshot.Values[I];
@@ -521,7 +513,6 @@ begin
     SetAxisRange(-1, 1)
   else
     SetAxisRange(lMinValue, lMaxValue);
-
   RecorderDebugLog(Format('Ogl osc render: tag=%s points=%d frame=%d window=%.3f',
     [lTag.Name, lPointCount, fFrameNo, ADisplaySeconds]));
   if fChart is TOglChart then
@@ -533,7 +524,6 @@ begin
   Invalidate;
   if fInfoLabel <> nil then
     fInfoLabel.Invalidate;
-
   if fChart <> nil then
   begin
     fChart.Invalidate;
@@ -542,7 +532,6 @@ begin
 end;
 
 { TRecorderOglOscillogramSurface }
-
 constructor TRecorderOglOscillogramSurface.Create(AOwner: TComponent);
 var
   lPageArea: TChartFloatRect;
@@ -552,13 +541,11 @@ begin
   Caption := '';
   ParentBackground := False;
   Color := clWhite;
-
   fChart := TOglChart.Create(Self);
   fChart.Parent := Self;
   fChart.Align := alClient;
   fChart.AutoResizeViewport := True;
   fChart.OnAfterRender := @ChartAfterRender;
-
   fModel := fChart.Model;
   fModel.BackgroundColor := $FFFFFFFF;
   lPageArea.Left := 0.002;
@@ -602,7 +589,6 @@ begin
   fFpsLastRenderTimeMs := ARenderTimeMs;
   if not fFpsMeasureEnabled then
     Exit;
-
   lNowMs := GetTickCount64;
   if fFpsWindowFirstFrameMs = 0 then
   begin
@@ -688,7 +674,6 @@ var
 begin
   if AAxis = nil then
     Exit;
-
   if AMinValue = AMaxValue then
   begin
     AAxis.MinValue := AMinValue - 1.0;
@@ -710,12 +695,10 @@ var
 begin
   if APage = nil then
     Exit;
-
   if ATag <> nil then
     lTagName := ATag.Name
   else
     lTagName := 'None';
-
   lEstimateText := FormatEnabledEstimateCaption(ATag);
   if lEstimateText <> '' then
     APage.Caption := Format('Tag: %s | %s', [lTagName, lEstimateText])
@@ -738,7 +721,6 @@ begin
     ACount := 16;
   if ADisplaySeconds <= 0 then
     ADisplaySeconds := 1.0;
-
   fDisplaySeconds := ADisplaySeconds;
   if (fCount = ACount) and (fModel <> nil) and
     (fModel.ChildCount = ACount) then
@@ -765,14 +747,12 @@ begin
     lPage.XMinValue := 0;
     lPage.XMaxValue := ADisplaySeconds;
     fModel.AddChild(lPage);
-
     lAxis := TChartAxis.Create;
     lAxis.Name := Format('Axis%d', [I + 1]);
     lAxis.Caption := 'Y';
     lAxis.MinValue := -1;
     lAxis.MaxValue := 1;
     lPage.AddChild(lAxis);
-
     lTrend := cBuffTrend1d.Create;
     lTrend.Name := Format('Trend%d', [I + 1]);
     lTrend.Caption := 'Signal';
@@ -806,13 +786,11 @@ var
 begin
   if ADisplaySeconds <= 0 then
     ADisplaySeconds := 1.0;
-
   if fFpsMeasureEnabled <> AMeasureFps then
     ResetFpsMeasure;
   fFpsMeasureEnabled := AMeasureFps;
   fDisplaySeconds := ADisplaySeconds;
   Inc(fFrameNo);
-
   for I := 0 to fCount - 1 do
   begin
     lPage := GetPage(I);
@@ -820,13 +798,11 @@ begin
     lTrend := GetTrend(I);
     if (lPage = nil) or (lAxis = nil) or (lTrend = nil) then
       Continue;
-
     lPage.XMinValue := 0;
     lPage.XMaxValue := ADisplaySeconds;
     lTrend.ClearValues;
     lTrend.X0 := 0;
     lTrend.DX := 1;
-
     lTag := ResolveTag(ATagRegistry, I);
     UpdatePageCaption(lPage, lTag);
     if lTag = nil then
@@ -850,7 +826,6 @@ begin
     begin
       if lSnapshot.Times[lValueIndex] < lDisplayStart then
         Continue;
-
       if lFirst then
       begin
         lMinValue := lSnapshot.Values[lValueIndex];
@@ -908,17 +883,14 @@ begin
     Exit;
   if ACount < 1 then
     ACount := 1;
-
   lSurface := nil;
   for I := 0 to APanel.ControlCount - 1 do
     if APanel.Controls[I] is TRecorderOglOscillogramSurface then
       lSurface := TRecorderOglOscillogramSurface(APanel.Controls[I]);
-
   if lSurface = nil then
   begin
     while APanel.ControlCount > 0 do
       APanel.Controls[0].Free;
-
     lSurface := TRecorderOglOscillogramSurface.Create(AOwner);
     lSurface.Parent := APanel;
     lSurface.Align := alClient;
@@ -936,7 +908,6 @@ var
 begin
   if APanel = nil then
     Exit;
-
   for I := 0 to APanel.ControlCount - 1 do
     if APanel.Controls[I] is TRecorderOglOscillogramSurface then
     begin
@@ -952,7 +923,6 @@ var
 begin
   if APanel = nil then
     Exit;
-
   APanel.Invalidate;
   for I := 0 to APanel.ControlCount - 1 do
     if APanel.Controls[I] is TRecorderOglOscillogramSurface then
@@ -970,7 +940,6 @@ begin
   Result := 'FPS -';
   if APanel = nil then
     Exit;
-
   for I := 0 to APanel.ControlCount - 1 do
     if APanel.Controls[I] is TRecorderOglOscillogramSurface then
       Exit(TRecorderOglOscillogramSurface(APanel.Controls[I]).FpsText);
