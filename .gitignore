@@ -1,8 +1,26 @@
-
+# Delphi compilation and IDE files
 *.dcu
 *.~*
 *.identcache
 *.drc
+*.local
+*.stat
+*.tvsconfig
+*.skincfg
+*.map
+**/__history/
+
+# Lazarus / Free Pascal compilation and IDE files
 *.ppu
 *.o
 *.obj
+*.compiled
+*.lps
+*.lps.bak
+*.bak
+*.or
+**/backup/
+**/lib/x86_64-win64/
+**/lib/x86_64-linux/
+**/lib/i386-win32/
+**/lib/i386-linux/
