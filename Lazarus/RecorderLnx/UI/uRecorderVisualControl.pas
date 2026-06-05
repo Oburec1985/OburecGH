@@ -184,6 +184,9 @@ var
   lTag: TRecorderTag;
   lValueStr: string;
 begin
+  if not IsVisible then
+    Exit;
+
   if (fComponent = nil) or (ATagRegistry = nil) then
     Exit;
     

@@ -157,10 +157,10 @@ begin
     fSampleCount := lTagData.SampleCount;
     SetLength(fTimes, fSampleCount);
     SetLength(fValues, fSampleCount);
-    for I := 0 to fSampleCount - 1 do
+    if fSampleCount > 0 then
     begin
-      fTimes[I] := lTagData.Times[I];
-      fValues[I] := lTagData.Values[I];
+      Move(lTagData.Times[0], fTimes[0], fSampleCount * SizeOf(Double));
+      Move(lTagData.Values[0], fValues[0], fSampleCount * SizeOf(Double));
     end;
   end
   else if AEvent.Data is TRecorderAlarmEventData then

@@ -332,6 +332,7 @@ var
   lPopupMenu: TPopupMenu;
   lMenuItem: TMenuItem;
 begin
+  RegisterThreadName(GetThreadID, 'UIThread');
   Caption := 'RecorderLnx';
   KeyPreview := True;
   OnKeyDown := @FormKeyDown;
@@ -397,6 +398,7 @@ begin
   RebuildTagList('');
   UpdateStateView;
   AddLog('RecorderLnx started.');
+
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -1950,6 +1952,7 @@ var
   lBlockSamples: Integer;
   lCapacity: Integer;
   lDisplaySeconds: Double;
+  lPortionLength: Integer;
   lRequired: Integer;
   lTag: TRecorderTag;
 begin
@@ -1963,6 +1966,10 @@ begin
   for I := 0 to fTagRegistry.TagCount - 1 do
   begin
     lTag := fTagRegistry.Tags[I];
+    lPortionLength := lTag.EstimateSettings.PortionLength;
+    if lPortionLength < 1 then
+      lPortionLength := 1;
+
     lCapacity := 4096;
     if lTag.PollFrequencyHz > 0 then
     begin
@@ -1972,6 +1979,8 @@ begin
       if lRequired > lCapacity then
         lCapacity := lRequired;
     end;
+    if lPortionLength + 1 > lCapacity then
+      lCapacity := lPortionLength + 1;
     lTag.EnsureBufferCapacity(lCapacity);
   end;
 end;
@@ -2004,7 +2013,11 @@ procedure TMainForm.DrainUiEventQueue(Sender: TObject);
 var
   lChanged: Boolean;
   lSnapshot: TRecorderEventSnapshot;
+  lStart: QWord;
+  lCount: Integer;
 begin
+  lStart := GetTickCount64;
+  lCount := 0;
   Inc(fDiagUiTicks);
   lChanged := False;
   repeat
@@ -2014,6 +2027,7 @@ begin
     try
       ApplyTagEventSnapshot(lSnapshot);
       Inc(fDiagDataEvents);
+      Inc(lCount);
       lChanged := True;
     finally
       lSnapshot.Free;
@@ -2045,6 +2059,9 @@ begin
 
   UpdateTimeView;
   LogUpdateDiagnostics;
+  if GetTickCount64 - lStart > 10 then
+    RecorderDebugLog(Format('[UI] DrainUiEventQueue: Count=%d, Time=%d ms, ThreadID=%d',
+      [lCount, GetTickCount64 - lStart, PtrUInt(GetThreadID)]));
 end;
 
 procedure TMainForm.LogUpdateDiagnostics;

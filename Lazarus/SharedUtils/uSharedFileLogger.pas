@@ -20,6 +20,7 @@ type
     fLock: TCriticalSection;
     fMaxBytes: Int64;
     fMaxFiles: Integer;
+    fThreadNames: TStringList;
     function LevelToString(ALevel: TSharedLogLevel): string;
     procedure RotateIfNeeded;
     procedure WriteLineUnlocked(const ALine: string);
@@ -30,6 +31,7 @@ type
 
     procedure Configure(const AFileName: string; AMaxBytes: Int64 = 10 * 1024 * 1024;
       AMaxFiles: Integer = 5);
+    procedure RegisterThreadName(AThreadID: TThreadID; const AName: string);
     procedure Log(ALevel: TSharedLogLevel; const AMessage: string);
     procedure Debug(const AMessage: string);
     procedure Info(const AMessage: string);
@@ -44,6 +46,7 @@ type
   end;
 
 function SharedLogger: TSharedFileLogger;
+procedure RegisterThreadName(AThreadID: TThreadID; const AName: string);
 
 implementation
 
@@ -68,12 +71,14 @@ constructor TSharedFileLogger.Create(const AFileName: string; AMaxBytes: Int64;
 begin
   inherited Create;
   fLock := TCriticalSection.Create;
+  fThreadNames := TStringList.Create;
   fEnabled := True;
   Configure(AFileName, AMaxBytes, AMaxFiles);
 end;
 
 destructor TSharedFileLogger.Destroy;
 begin
+  fThreadNames.Free;
   fLock.Free;
   inherited Destroy;
 end;
@@ -165,15 +170,47 @@ begin
   end;
 end;
 
+procedure TSharedFileLogger.RegisterThreadName(AThreadID: TThreadID; const AName: string);
+begin
+  fLock.Enter;
+  try
+    fThreadNames.Values[IntToStr(AThreadID)] := AName;
+  finally
+    fLock.Leave;
+  end;
+end;
+
+procedure RegisterThreadName(AThreadID: TThreadID; const AName: string);
+begin
+  SharedLogger.RegisterThreadName(AThreadID, AName);
+end;
+
 procedure TSharedFileLogger.Log(ALevel: TSharedLogLevel; const AMessage: string);
 var
   lLine: string;
+  lThreadID: TThreadID;
+  lThreadName: string;
 begin
   if not fEnabled then
     Exit;
 
-  lLine := Format('%s [%s] %s', [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now),
-    LevelToString(ALevel), AMessage]);
+  lThreadID := GetThreadID;
+  lThreadName := '';
+  fLock.Enter;
+  try
+    if fThreadNames <> nil then
+      lThreadName := fThreadNames.Values[IntToStr(lThreadID)];
+  finally
+    fLock.Leave;
+  end;
+
+  if lThreadName <> '' then
+    lLine := Format('%s [%s] [TID:%d|%s] %s', [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now),
+      LevelToString(ALevel), PtrUInt(lThreadID), lThreadName, AMessage])
+  else
+    lLine := Format('%s [%s] [TID:%d] %s', [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now),
+      LevelToString(ALevel), PtrUInt(lThreadID), AMessage]);
+
   fLock.Enter;
   try
     try

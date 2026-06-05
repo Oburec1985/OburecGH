@@ -267,7 +267,6 @@ type
   private
     fActiveSourceIds: TStringList;                     { Active data source ids for detached tag indication }
     fEventBus: TRecorderEventBus;                     { Ссылка на шину событий }
-    fLastUpdateData: TRecorderTagUpdateEventData;     { Кэшированный объект события для снижения аллокаций }
     fNextId: TRecorderTagId;                          { Счетчик следующего ID }
     fSelectedTagName: string;                         { Имя текущего выбранного тега }
     fTags: TList;                                     { Список тегов (TRecorderTag) }
@@ -327,6 +326,17 @@ function RecorderTagEstimateKindToName(AKind: TRecorderTagEstimateKind): string;
 { Вычисляет оценку сигнала по переданному снимку }
 function CalculateRecorderTagEstimate(const ASnapshot: TRecorderSignalSnapshot;
   AKind: TRecorderTagEstimateKind): TRecorderTagEstimate;
+{ Вычисляет оценку по непрерывному диапазону точек снимка без копирования массива.
+  AStartIndex - индекс первой точки диапазона.
+  ACount      - количество точек диапазона. }
+function CalculateRecorderTagEstimateRange(const ASnapshot: TRecorderSignalSnapshot;
+  AStartIndex, ACount: Integer; AKind: TRecorderTagEstimateKind): TRecorderTagEstimate;
+{ Возвращает расчетный размер порции оценки по частоте тега и периоду данных. }
+function RecorderTagDefaultEstimatePortionLength(APollFrequencyHz: Double;
+  ADataUpdateMs: Cardinal): Integer;
+{ Проверяет, похож ли размер порции на автоматический дефолт, а не ручную настройку. }
+function RecorderTagEstimatePortionLengthIsAuto(AValue: Integer;
+  APollFrequencyHz: Double; ADataUpdateMs: Cardinal): Boolean;
 
 implementation
 
@@ -369,8 +379,15 @@ end;
 
 function CalculateRecorderTagEstimate(const ASnapshot: TRecorderSignalSnapshot;
   AKind: TRecorderTagEstimateKind): TRecorderTagEstimate;
+begin
+  Result := CalculateRecorderTagEstimateRange(ASnapshot, 0, ASnapshot.Count, AKind);
+end;
+
+function CalculateRecorderTagEstimateRange(const ASnapshot: TRecorderSignalSnapshot;
+  AStartIndex, ACount: Integer; AKind: TRecorderTagEstimateKind): TRecorderTagEstimate;
 var
   I: Integer;
+  lIndex: Integer;
   lMean: Extended;
   lMin: Double;
   lMax: Double;
@@ -379,26 +396,28 @@ var
 begin
   FillChar(Result, SizeOf(Result), 0);
   Result.Kind := AKind;
-  Result.Count := ASnapshot.Count;
-  if ASnapshot.Count <= 0 then
+  Result.Count := ACount;
+  if (ACount <= 0) or (AStartIndex < 0) or
+    (AStartIndex + ACount > ASnapshot.Count) then
     Exit;
 
   Result.Valid := True;
-  Result.StartTimeSec := ASnapshot.Times[0];
-  Result.EndTimeSec := ASnapshot.Times[ASnapshot.Count - 1];
+  Result.StartTimeSec := ASnapshot.Times[AStartIndex];
+  Result.EndTimeSec := ASnapshot.Times[AStartIndex + ACount - 1];
 
-  lMin := ASnapshot.Values[0];
-  lMax := ASnapshot.Values[0];
+  lMin := ASnapshot.Values[AStartIndex];
+  lMax := ASnapshot.Values[AStartIndex];
   lSum := 0.0;
-  for I := 0 to ASnapshot.Count - 1 do
+  for I := 0 to ACount - 1 do
   begin
-    lSum := lSum + ASnapshot.Values[I];
-    if ASnapshot.Values[I] < lMin then
-      lMin := ASnapshot.Values[I];
-    if ASnapshot.Values[I] > lMax then
-      lMax := ASnapshot.Values[I];
+    lIndex := AStartIndex + I;
+    lSum := lSum + ASnapshot.Values[lIndex];
+    if ASnapshot.Values[lIndex] < lMin then
+      lMin := ASnapshot.Values[lIndex];
+    if ASnapshot.Values[lIndex] > lMax then
+      lMax := ASnapshot.Values[lIndex];
   end;
-  lMean := lSum / ASnapshot.Count;
+  lMean := lSum / ACount;
 
   case AKind of
     tekMean:
@@ -406,20 +425,26 @@ begin
     tekRmsValue:
       begin
         lSum := 0.0;
-        for I := 0 to ASnapshot.Count - 1 do
-          lSum := lSum + ASnapshot.Values[I] * ASnapshot.Values[I];
-        Result.Value := Sqrt(lSum / ASnapshot.Count);
+        for I := 0 to ACount - 1 do
+        begin
+          lIndex := AStartIndex + I;
+          lSum := lSum + ASnapshot.Values[lIndex] * ASnapshot.Values[lIndex];
+        end;
+        Result.Value := Sqrt(lSum / ACount);
       end;
     tekRmsDeviation:
       begin
-        if ASnapshot.Count = 1 then
+        if ACount = 1 then
           Result.Value := 0.0
         else
         begin
           lVarianceSum := 0.0;
-          for I := 0 to ASnapshot.Count - 1 do
-            lVarianceSum := lVarianceSum + Sqr(ASnapshot.Values[I] - lMean);
-          Result.Value := Sqrt(lVarianceSum / (ASnapshot.Count - 1));
+          for I := 0 to ACount - 1 do
+          begin
+            lIndex := AStartIndex + I;
+            lVarianceSum := lVarianceSum + Sqr(ASnapshot.Values[lIndex] - lMean);
+          end;
+          Result.Value := Sqrt(lVarianceSum / (ACount - 1));
         end;
       end;
     tekPeak:
@@ -432,24 +457,48 @@ begin
       Result.Value := lMax;
     tekPeakToPeakByRmsDeviation:
       begin
-        if ASnapshot.Count = 1 then
+        if ACount = 1 then
           Result.Value := 0.0
         else
         begin
           lVarianceSum := 0.0;
-          for I := 0 to ASnapshot.Count - 1 do
-            lVarianceSum := lVarianceSum + Sqr(ASnapshot.Values[I] - lMean);
+          for I := 0 to ACount - 1 do
+          begin
+            lIndex := AStartIndex + I;
+            lVarianceSum := lVarianceSum + Sqr(ASnapshot.Values[lIndex] - lMean);
+          end;
           Result.Value := 2.0 * Sqrt(2.0) *
-            Sqrt(lVarianceSum / (ASnapshot.Count - 1));
+            Sqrt(lVarianceSum / (ACount - 1));
         end;
       end;
     tekLastValue:
-      Result.Value := ASnapshot.Values[ASnapshot.Count - 1];
+      Result.Value := ASnapshot.Values[AStartIndex + ACount - 1];
   end;
 end;
 
-{ TRecorderSignalBuffer }
+function RecorderTagDefaultEstimatePortionLength(APollFrequencyHz: Double;
+  ADataUpdateMs: Cardinal): Integer;
+begin
+  if ADataUpdateMs = 0 then
+    ADataUpdateMs := 300;
+  if APollFrequencyHz <= 0 then
+    Result := 1
+  else
+    Result := Round(APollFrequencyHz * ADataUpdateMs / 1000.0);
+  if Result < 1 then
+    Result := 1;
+end;
 
+function RecorderTagEstimatePortionLengthIsAuto(AValue: Integer;
+  APollFrequencyHz: Double; ADataUpdateMs: Cardinal): Boolean;
+const
+  CRecorderLegacyDefaultPortionLength = 17280;
+begin
+  Result := (AValue = CRecorderLegacyDefaultPortionLength) or
+    (AValue = RecorderTagDefaultEstimatePortionLength(APollFrequencyHz,
+    ADataUpdateMs));
+end;
+{ TRecorderSignalBuffer }
 constructor TRecorderSignalBuffer.Create(ACapacity: Integer);
 begin
   inherited Create;
@@ -555,6 +604,11 @@ begin
     fLastBlockCount := ACount;
     SetLength(fLastBlockTimes, ACount);
     SetLength(fLastBlockValues, ACount);
+    if ACount > 0 then
+    begin
+      Move(ATimes[0], fLastBlockTimes[0], ACount * SizeOf(Double));
+      Move(AValues[0], fLastBlockValues[0], ACount * SizeOf(Double));
+    end;
     for I := 0 to ACount - 1 do
     begin
       if fCount < fCapacity then
@@ -570,8 +624,6 @@ begin
 
       fTimes[lIndex] := ATimes[I];
       fValues[lIndex] := AValues[I];
-      fLastBlockTimes[I] := ATimes[I];
-      fLastBlockValues[I] := AValues[I];
     end;
   finally
     LeaveCriticalSection(fLock);
@@ -647,11 +699,10 @@ begin
     Result.Count := fLastBlockCount;
     SetLength(Result.Times, fLastBlockCount);
     SetLength(Result.Values, fLastBlockCount);
-
-    for I := 0 to fLastBlockCount - 1 do
+    if fLastBlockCount > 0 then
     begin
-      Result.Times[I] := fLastBlockTimes[I];
-      Result.Values[I] := fLastBlockValues[I];
+      Move(fLastBlockTimes[0], Result.Times[0], fLastBlockCount * SizeOf(Double));
+      Move(fLastBlockValues[0], Result.Values[0], fLastBlockCount * SizeOf(Double));
     end;
   finally
     LeaveCriticalSection(fLock);
@@ -810,7 +861,6 @@ end;
 destructor TRecorderTagRegistry.Destroy;
 begin
   Clear;
-  fLastUpdateData.Free;
   fTags.Free;
   inherited Destroy;
 end;
@@ -926,6 +976,7 @@ procedure TRecorderTagRegistry.PublishValue(const ATagName: string; ATimeSec,
 var
   lEvent: TRecorderEvent;
   lTag: TRecorderTag;
+  lEventData: TRecorderTagUpdateEventData;
 begin
   lTag := FindByName(ATagName);
   if lTag = nil then
@@ -935,11 +986,14 @@ begin
 
   if fEventBus <> nil then
   begin
-    fLastUpdateData.Free;
-    fLastUpdateData := TRecorderTagUpdateEventData.Create(lTag, ATimeSec, AValue);
-    lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, lTag.Name,
-      lTag.TextValue, 1, fLastUpdateData);
-    fEventBus.Publish(lEvent);
+    lEventData := TRecorderTagUpdateEventData.Create(lTag, ATimeSec, AValue);
+    try
+      lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, lTag.Name,
+        lTag.TextValue, 1, lEventData);
+      fEventBus.Publish(lEvent);
+    finally
+      lEventData.Free;
+    end;
   end;
 end;
 
@@ -949,6 +1003,7 @@ var
   lEvent: TRecorderEvent;
   lTag: TRecorderTag;
   lTimeSec: Double;
+  lEventData: TRecorderTagUpdateEventData;
 begin
   if ACount <= 0 then
     Exit;
@@ -967,11 +1022,14 @@ begin
 
   if fEventBus <> nil then
   begin
-    fLastUpdateData.Free;
-    fLastUpdateData := TRecorderTagUpdateEventData.CreateBlock(lTag, ATimes, AValues, ACount);
-    lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, lTag.Name,
-      lTag.TextValue, ACount, fLastUpdateData);
-    fEventBus.Publish(lEvent);
+    lEventData := TRecorderTagUpdateEventData.CreateBlock(lTag, ATimes, AValues, ACount);
+    try
+      lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, lTag.Name,
+        lTag.TextValue, ACount, lEventData);
+      fEventBus.Publish(lEvent);
+    finally
+      lEventData.Free;
+    end;
   end;
 end;
 

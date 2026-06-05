@@ -148,7 +148,10 @@ implementation
 
 uses
   SysUtils, Math, Graphics,
-  uOglChartDrawObj, uRecorderDebugLog, uOglChartRenderer, uOglChartFontMng;
+  uOglChartDrawObj, uRecorderDebugLog, uOglChartRenderer, uOglChartFontMng, uSharedAlgorithms;
+
+type
+  TDoubleSearch = specialize TBinarySearch<Double>;
 function FormatEnabledEstimateCaption(ATag: TRecorderTag): string;
 var
   lEstimate: TRecorderTagEstimate;
@@ -442,6 +445,7 @@ var
   lSnapshot: TRecorderSignalSnapshot;
   lTag: TRecorderTag;
   lTrend: cBuffTrend1d;
+  lStartIdx: Integer;
 begin
   if ADisplaySeconds <= 0 then
     ADisplaySeconds := 1.0;
@@ -482,10 +486,9 @@ begin
   lDisplayStart := Max(lSnapshot.Times[0], lEndTime - ADisplaySeconds);
   lFirst := True;
   lPointCount := 0;
-  for I := 0 to lSnapshot.Count - 1 do
+  lStartIdx := TDoubleSearch.FindFirstGreaterOrEqual(lSnapshot.Times, lSnapshot.Count, lDisplayStart);
+  for I := lStartIdx to lSnapshot.Count - 1 do
   begin
-    if lSnapshot.Times[I] < lDisplayStart then
-      Continue;
     if lFirst then
     begin
       lMinValue := lSnapshot.Values[I];
@@ -783,6 +786,7 @@ var
   lTrend: cBuffTrend1d;
   lAxis: TChartAxis;
   lValueIndex: Integer;
+  lStartIdx: Integer;
 begin
   if ADisplaySeconds <= 0 then
     ADisplaySeconds := 1.0;
@@ -822,10 +826,9 @@ begin
     lDisplayStart := Max(lSnapshot.Times[0], lEndTime - ADisplaySeconds);
     lFirst := True;
     lPointCount := 0;
-    for lValueIndex := 0 to lSnapshot.Count - 1 do
+    lStartIdx := TDoubleSearch.FindFirstGreaterOrEqual(lSnapshot.Times, lSnapshot.Count, lDisplayStart);
+    for lValueIndex := lStartIdx to lSnapshot.Count - 1 do
     begin
-      if lSnapshot.Times[lValueIndex] < lDisplayStart then
-        Continue;
       if lFirst then
       begin
         lMinValue := lSnapshot.Values[lValueIndex];

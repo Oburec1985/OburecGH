@@ -155,7 +155,6 @@ type
     property FrequencyHz: Double read fFrequencyHz write fFrequencyHz;
     property PhaseRad: Double read fPhaseRad write fPhaseRad;
     property TimeSec: Double read fTimeSec;
-    property SampleIndex: Int64 read fSampleIndex;
   end;
 
   { TRecorderDiagnosticsDataSource }
@@ -693,7 +692,6 @@ type
     { Публикует векторные блоки данных }
     function PublishVectorDue(ARegistry: TRecorderTagRegistry; APlayTimeSec: Double;
       AUpdateTimeMs: Cardinal; ABlockLength: Cardinal; AMaxBlocks: Integer): Boolean;
-    
     property TagName: string read fTagName;
   end;
 
@@ -710,6 +708,7 @@ end;
 destructor TMeraPlaybackSignal.Destroy;
 begin
   Close;
+  FreeAndNil(fInfo);
   inherited Destroy;
 end;
 
@@ -1085,6 +1084,7 @@ var
       lSignalCopy.Selected := ASourceSignal.Selected;
 
       lPlaybackSignal := TMeraPlaybackSignal.Create(lSignalCopy);
+      lSignalCopy := nil;
       try
         lPlaybackSignal.Open;
         fPlaybackSignals.Add(lPlaybackSignal);
@@ -1193,7 +1193,6 @@ begin
   if not lAnyPublished then
     Exit;
 end;
-
 { TRecorderDataSourceThread }
 
 constructor TRecorderDataSourceThread.Create(const ASource: IRecorderDataSource);
@@ -1224,18 +1223,48 @@ begin
 end;
 
 procedure TRecorderDataSourceThread.Execute;
+var
+  lElapsed: QWord;
+  lNextTickMs: QWord;
+  lNow: QWord;
+  lSleepMs: QWord;
+  lStart: QWord;
 begin
   try
     fSource.Start;
+    lNextTickMs := GetTickCount64;
     while not Terminated do
     begin
+      lStart := GetTickCount64;
       fSource.Tick;
       Inc(fTickCount);
-      SleepInterruptible(fSource.UpdateTimeMs);
+      lElapsed := GetTickCount64 - lStart;
+      if lElapsed > 10 then
+        RecorderDebugLog(Format('[DataSource:%s] Tick took %d ms on Thread %d',
+          [fSource.SourceId, lElapsed, PtrUInt(GetThreadID)]));
+
+      Inc(lNextTickMs, fSource.UpdateTimeMs);
+      lNow := GetTickCount64;
+      if lNextTickMs <= lNow then
+      begin
+        if lNow - lNextTickMs >= fSource.UpdateTimeMs then
+          lNextTickMs := lNow + fSource.UpdateTimeMs
+        else
+          lNextTickMs := lNow + 1;
+      end;
+
+      lSleepMs := lNextTickMs - lNow;
+      if lSleepMs > High(Cardinal) then
+        lSleepMs := High(Cardinal);
+      SleepInterruptible(Cardinal(lSleepMs));
     end;
   except
     on E: Exception do
+    begin
       fLastErrorMessage := E.ClassName + ': ' + E.Message;
+      RecorderDebugLog(Format('[DataSource:%s] Thread stopped by exception: %s',
+        [fSource.SourceId, fLastErrorMessage]));
+    end;
   end;
 
   try
@@ -1351,6 +1380,7 @@ begin
       lContext := GetSourceContext(I);
       lContext.Thread := TRecorderDataSourceThread.Create(lContext.Source);
       lContext.Thread.Start;
+      RegisterThreadName(lContext.Thread.ThreadID, 'Src_' + lContext.Source.SourceId);
     end;
     fRunning := True;
   except

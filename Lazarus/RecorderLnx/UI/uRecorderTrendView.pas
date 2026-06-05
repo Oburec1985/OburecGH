@@ -15,7 +15,7 @@ uses
   Classes, Controls, Graphics, Math, SysUtils, ExtCtrls,
   uOglChart, uOglChartChart, uOglChartPage, uOglChartAxis,
   uOglChartTrend, uOglChartTypes, uOglChartDrawObj,
-  uRecorderFormModel, uRecorderTags, uRecorderVisualControl;
+  uRecorderFormModel, uRecorderTags, uRecorderVisualControl, uSharedAlgorithms, uRecorderDebugLog;
 
 type
   { TRecorderTrendView
@@ -31,19 +31,27 @@ type
       LastValue: Double;
       HasValue: Boolean;
       OglSeries: cLineSeries;
-    end;
+          LastBlockKind: string;
+      LastPortionLength: Integer;
+      LastPointsAdded: Integer;
+      LastSnapshotCount: Integer;
+      LastBlockCount: Integer;
+      LastSnapshotTime: Double;
+end;
   private
     fComponent: TRecorderTrendComponent;
     fSeries: array of TTrendSeries;
-    fStartTime: Double;
     fTagRegistry: TRecorderTagRegistry;
     fChart: TOglChart;
     fModel: TChartModel;
     fLegendPaintBox: TPaintBox;
+    fLastTrendDiagTickMs: QWord;
     procedure AddPoint(ALineIndex: Integer; ATime, AValue: Double);
-    function EstimateSlice(const ASnapshot: TRecorderSignalSnapshot;
-      AStartTime, AEndTime: Double; AKind: TRecorderTagEstimateKind;
-      out AValue: Double): Boolean;
+    procedure AddScalarPoint(ALineIndex: Integer; const ASnapshot: TRecorderSignalSnapshot);
+    function EffectivePortionLength(ATag: TRecorderTag): Integer;
+    function EstimatePortion(const ASnapshot: TRecorderSignalSnapshot;
+      AStartIndex, ACount: Integer; AKind: TRecorderTagEstimateKind;
+      out ATime, AValue: Double): Boolean;
     procedure EnsureSeries;
     procedure PruneSeries(ALineIndex: Integer);
     procedure DrawLegend(ACanvas: TCanvas; const ARect: TRect);
@@ -65,6 +73,9 @@ type
 
 implementation
 
+type
+  TDoubleSearch = specialize TBinarySearch<Double>;
+
 constructor TRecorderTrendView.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -72,7 +83,6 @@ begin
   Caption := '';
   ParentBackground := False;
   Color := clWhite;
-  fStartTime := 0;
 end;
 
 destructor TRecorderTrendView.Destroy;
@@ -265,6 +275,12 @@ begin
       fSeries[I].Count := 0;
       fSeries[I].LastValue := 0;
       fSeries[I].HasValue := False;
+      fSeries[I].LastBlockKind := '';
+      fSeries[I].LastPortionLength := 0;
+      fSeries[I].LastPointsAdded := 0;
+      fSeries[I].LastSnapshotCount := 0;
+      fSeries[I].LastBlockCount := 0;
+      fSeries[I].LastSnapshotTime := 0;
     end;
   end;
 end;
@@ -298,6 +314,48 @@ begin
   lSeries^.LastValue := AValue;
   lSeries^.HasValue := True;
   PruneSeries(ALineIndex);
+end;
+
+procedure TRecorderTrendView.AddScalarPoint(ALineIndex: Integer;
+  const ASnapshot: TRecorderSignalSnapshot);
+var
+  lPointTime: Double;
+  lValue: Double;
+begin
+  if (ASnapshot.Count <= 0) or (ALineIndex < 0) or
+    (ALineIndex >= Length(fSeries)) then
+    Exit;
+
+  lPointTime := ASnapshot.Times[ASnapshot.Count - 1];
+  if (fSeries[ALineIndex].LastProcessedTime > 0) and
+    (lPointTime <= fSeries[ALineIndex].LastProcessedTime) then
+    Exit;
+
+  lValue := ASnapshot.Values[ASnapshot.Count - 1];
+  AddPoint(ALineIndex, lPointTime, lValue);
+  fSeries[ALineIndex].LastProcessedTime := lPointTime;
+end;
+
+function TRecorderTrendView.EffectivePortionLength(ATag: TRecorderTag): Integer;
+var
+  lLastBlock: TRecorderSignalSnapshot;
+  lTrendPeriodMs: Cardinal;
+begin
+  Result := 1;
+  if ATag = nil then
+    Exit;
+
+  lTrendPeriodMs := Round(Max(0.001, fComponent.UpdatePeriodSec) * 1000.0);
+  Result := ATag.EstimateSettings.PortionLength;
+  lLastBlock := ATag.LastBlockSnapshot;
+
+  if RecorderTagEstimatePortionLengthIsAuto(Result, ATag.PollFrequencyHz,
+    lTrendPeriodMs) or ((lLastBlock.Count > 1) and (Result = lLastBlock.Count)) then
+    Result := RecorderTagDefaultEstimatePortionLength(ATag.PollFrequencyHz,
+      lTrendPeriodMs);
+
+  if Result < 1 then
+    Result := 1;
 end;
 
 procedure TRecorderTrendView.PruneSeries(ALineIndex: Integer);
@@ -348,63 +406,48 @@ begin
   end;
 end;
 
-function TRecorderTrendView.EstimateSlice(
-  const ASnapshot: TRecorderSignalSnapshot; AStartTime, AEndTime: Double;
-  AKind: TRecorderTagEstimateKind; out AValue: Double): Boolean;
+function TRecorderTrendView.EstimatePortion(
+  const ASnapshot: TRecorderSignalSnapshot; AStartIndex, ACount: Integer;
+  AKind: TRecorderTagEstimateKind; out ATime, AValue: Double): Boolean;
 var
-  I: Integer;
-  lCount: Integer;
-  lTimes: array of Double;
-  lValues: array of Double;
   lEstimate: TRecorderTagEstimate;
-  lSlice: TRecorderSignalSnapshot;
 begin
   Result := False;
+  ATime := 0;
   AValue := 0;
-  if ASnapshot.Count <= 0 then
+  if (ACount <= 0) or (AStartIndex < 0) or
+    (AStartIndex + ACount > ASnapshot.Count) then
     Exit;
 
-  SetLength(lTimes, ASnapshot.Count);
-  SetLength(lValues, ASnapshot.Count);
-  lCount := 0;
-  for I := 0 to ASnapshot.Count - 1 do
-    if (ASnapshot.Times[I] > AStartTime) and
-      (ASnapshot.Times[I] <= AEndTime) then
-    begin
-      lTimes[lCount] := ASnapshot.Times[I];
-      lValues[lCount] := ASnapshot.Values[I];
-      Inc(lCount);
-    end;
-
-  if lCount = 0 then
-    Exit;
-
-  SetLength(lTimes, lCount);
-  SetLength(lValues, lCount);
-  lSlice.Count := lCount;
-  lSlice.Times := lTimes;
-  lSlice.Values := lValues;
-  lEstimate := CalculateRecorderTagEstimate(lSlice, AKind);
+  lEstimate := CalculateRecorderTagEstimateRange(ASnapshot, AStartIndex,
+    ACount, AKind);
   Result := lEstimate.Valid;
   if Result then
+  begin
+    ATime := (ASnapshot.Times[AStartIndex] +
+      ASnapshot.Times[AStartIndex + ACount - 1]) / 2.0;
     AValue := lEstimate.Value;
+  end;
 end;
-
 procedure TRecorderTrendView.RefreshTrend;
 var
   I: Integer;
-  lEndTime: Double;
   lLine: TRecorderTrendLine;
-  lPeriod: Double;
   lSnapshot: TRecorderSignalSnapshot;
   lTag: TRecorderTag;
   lValue: Double;
+  lPointTime: Double;
   lMaxT, lMinT: Double;
+  lStartIdx: Integer;
+  lPortionLength: Integer;
+  lNowTick: QWord;
+  lDiagLine: Integer;
+  lRecorderNow: Double;
+  lLagSec: Double;
 begin
   if (fComponent = nil) or (fTagRegistry = nil) then
     Exit;
 
-  lPeriod := Max(0.001, fComponent.UpdatePeriodSec);
   for I := 0 to fComponent.LineCount - 1 do
   begin
     lLine := fComponent.Lines[I];
@@ -419,22 +462,42 @@ begin
     if lSnapshot.Count = 0 then
       Continue;
 
-    if fSeries[I].LastProcessedTime <= 0 then
+    fSeries[I].LastPointsAdded := 0;
+    fSeries[I].LastSnapshotCount := lSnapshot.Count;
+    fSeries[I].LastSnapshotTime := lSnapshot.Times[lSnapshot.Count - 1];
+    fSeries[I].LastBlockCount := lTag.LastBlockSnapshot.Count;
+
+    if lTag.LastBlockSnapshot.Count <= 1 then
     begin
-      fSeries[I].LastProcessedTime := Max(lSnapshot.Times[0],
-        lSnapshot.Times[lSnapshot.Count - 1] - lPeriod);
-      if fStartTime <= 0 then
-        fStartTime := fSeries[I].LastProcessedTime;
+      lValue := fSeries[I].Count;
+      AddScalarPoint(I, lSnapshot);
+      fSeries[I].LastBlockKind := 'scalar';
+      fSeries[I].LastPortionLength := 1;
+      fSeries[I].LastPointsAdded := fSeries[I].Count - Trunc(lValue);
+      Continue;
     end;
 
-    lEndTime := fSeries[I].LastProcessedTime + lPeriod;
-    while lEndTime <= lSnapshot.Times[lSnapshot.Count - 1] + 1E-9 do
+    lPortionLength := EffectivePortionLength(lTag);
+    fSeries[I].LastBlockKind := 'vector';
+    fSeries[I].LastPortionLength := lPortionLength;
+
+    if fSeries[I].LastProcessedTime <= 0 then
+      lStartIdx := 0
+    else
+      lStartIdx := TDoubleSearch.FindFirstGreater(lSnapshot.Times,
+        lSnapshot.Count, fSeries[I].LastProcessedTime);
+
+    while lStartIdx + lPortionLength <= lSnapshot.Count do
     begin
-      if EstimateSlice(lSnapshot, lEndTime - lPeriod, lEndTime,
-        lLine.EstimateKind, lValue) then
-        AddPoint(I, lEndTime - fStartTime, lValue);
-      fSeries[I].LastProcessedTime := lEndTime;
-      lEndTime := lEndTime + lPeriod;
+      if EstimatePortion(lSnapshot, lStartIdx, lPortionLength,
+        lLine.EstimateKind, lPointTime, lValue) then
+      begin
+        AddPoint(I, lPointTime, lValue);
+        Inc(fSeries[I].LastPointsAdded);
+        fSeries[I].LastProcessedTime :=
+          lSnapshot.Times[lStartIdx + lPortionLength - 1];
+      end;
+      Inc(lStartIdx, lPortionLength);
     end;
   end;
 
@@ -444,6 +507,31 @@ begin
       lMaxT := Max(lMaxT, fSeries[I].Times[fSeries[I].Count - 1]);
 
   lMinT := Max(0.0, lMaxT - Max(1.0, fComponent.DurationSec));
+
+  lNowTick := GetTickCount64;
+  if (fLastTrendDiagTickMs = 0) or (lNowTick - fLastTrendDiagTickMs >= 1000) then
+  begin
+    fLastTrendDiagTickMs := lNowTick;
+    lDiagLine := -1;
+    lRecorderNow := 0;
+    for I := 0 to fComponent.LineCount - 1 do
+      if (I < Length(fSeries)) and (fSeries[I].LastSnapshotTime > lRecorderNow) then
+      begin
+        lRecorderNow := fSeries[I].LastSnapshotTime;
+        lDiagLine := I;
+      end;
+    lLagSec := lRecorderNow - lMaxT;
+    if lDiagLine >= 0 then
+      RecorderDebugLog(Format('Trend diag: comp=%s recNow=%.6f trendMax=%.6f lag=%.6f window=[%.6f..%.6f] line=%d tag=%s kind=%s snap=%d block=%d portion=%d added=%d lastProcessed=%.6f visible=%s',
+        [fComponent.Name, lRecorderNow, lMaxT, lLagSec, lMinT, Max(lMinT + 1.0, lMaxT),
+         lDiagLine, fComponent.Lines[lDiagLine].TagName, fSeries[lDiagLine].LastBlockKind,
+         fSeries[lDiagLine].LastSnapshotCount, fSeries[lDiagLine].LastBlockCount,
+         fSeries[lDiagLine].LastPortionLength, fSeries[lDiagLine].LastPointsAdded,
+         fSeries[lDiagLine].LastProcessedTime, BoolToStr(IsVisible, True)]));
+  end;
+
+  if not IsVisible then
+    Exit;
 
   if fModel <> nil then
   begin
@@ -463,7 +551,6 @@ begin
 
   Invalidate;
 end;
-
 procedure TRecorderTrendView.RefreshControl(ATagRegistry: TRecorderTagRegistry;
   ADisplaySeconds: Double);
 begin

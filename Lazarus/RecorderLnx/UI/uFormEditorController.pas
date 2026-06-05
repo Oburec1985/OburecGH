@@ -924,6 +924,13 @@ begin
     Exit;
   end;
 
+  if Key = VK_DELETE then
+  begin
+    DeleteSelected;
+    Key := 0;
+    Exit;
+  end;
+
 
 
   if fSelected.Count = 0 then

@@ -89,6 +89,7 @@ type
   private
     fNextToken: Integer;              { Счетчик для генерации следующего токена }
     fSubscriptions: TList;            { Список активных подписок (TSubscription) }
+    fLock: TRTLCriticalSection;
     function GetSubscription(AIndex: Integer): TSubscription;
   public
     { Создает пустую шину событий }
@@ -288,6 +289,8 @@ type
   end;
 
 implementation
+uses
+  uRecorderDebugLog;
 
 { TRecorderEventBus }
 
@@ -296,6 +299,7 @@ begin
   inherited Create;
   fSubscriptions := TList.Create;
   fNextToken := 1;
+  InitCriticalSection(fLock);
 end;
 
 destructor TRecorderEventBus.Destroy;
@@ -305,6 +309,7 @@ begin
   for I := 0 to fSubscriptions.Count - 1 do
     TObject(fSubscriptions[I]).Free;
   fSubscriptions.Free;
+  DoneCriticalSection(fLock);
   inherited Destroy;
 end;
 
@@ -324,7 +329,12 @@ begin
   lSubscription.Token := fNextToken;
   lSubscription.Handler := AHandler;
   Inc(fNextToken);
-  fSubscriptions.Add(lSubscription);
+  EnterCriticalSection(fLock);
+  try
+    fSubscriptions.Add(lSubscription);
+  finally
+    LeaveCriticalSection(fLock);
+  end;
   Result := lSubscription.Token;
 end;
 
@@ -334,15 +344,20 @@ var
   lSubscription: TSubscription;
 begin
   Result := False;
-  for I := 0 to fSubscriptions.Count - 1 do
-  begin
-    lSubscription := GetSubscription(I);
-    if lSubscription.Token = AToken then
+  EnterCriticalSection(fLock);
+  try
+    for I := 0 to fSubscriptions.Count - 1 do
     begin
-      fSubscriptions.Delete(I);
-      lSubscription.Free;
-      Exit(True);
+      lSubscription := GetSubscription(I);
+      if lSubscription.Token = AToken then
+      begin
+        fSubscriptions.Delete(I);
+        lSubscription.Free;
+        Exit(True);
+      end;
     end;
+  finally
+    LeaveCriticalSection(fLock);
   end;
 end;
 
@@ -351,21 +366,39 @@ var
   I: Integer;
   lSnapshot: TList;
   lSubscription: TSubscription;
+  lStart: QWord;
 begin
+  lStart := GetTickCount64;
   lSnapshot := TList.Create;
   try
-    for I := 0 to fSubscriptions.Count - 1 do
-      lSnapshot.Add(fSubscriptions[I]);
+    EnterCriticalSection(fLock);
+    try
+      for I := 0 to fSubscriptions.Count - 1 do
+        lSnapshot.Add(fSubscriptions[I]);
+    finally
+      LeaveCriticalSection(fLock);
+    end;
 
     for I := 0 to lSnapshot.Count - 1 do
     begin
       lSubscription := TSubscription(lSnapshot[I]);
-      if fSubscriptions.IndexOf(lSubscription) >= 0 then
+      EnterCriticalSection(fLock);
+      try
+        if fSubscriptions.IndexOf(lSubscription) < 0 then
+          lSubscription := nil;
+      finally
+        LeaveCriticalSection(fLock);
+      end;
+
+      if lSubscription <> nil then
         lSubscription.Handler(Self, AEvent);
     end;
   finally
     lSnapshot.Free;
   end;
+  if GetTickCount64 - lStart > 5 then
+    RecorderDebugLog(Format('[EventBus] Publish: Kind=%d, Time=%d ms, ThreadID=%d',
+      [Ord(AEvent.Kind), GetTickCount64 - lStart, PtrUInt(GetThreadID)]));
 end;
 
 class function TRecorderEventBus.MakeEvent(AKind: TRecorderEventKind;
