@@ -133,6 +133,63 @@ begin
 
 end;
 
+function ResolveSelectedAxis(APage: TChartPage; ASelected: TChartBaseObject): TChartAxis;
+begin
+  Result := nil;
+  if (not Assigned(APage)) or (not Assigned(ASelected)) then
+    Exit;
+  if (ASelected is TChartAxis) and (ASelected.Parent = APage) then
+    Exit(TChartAxis(ASelected));
+  if (ASelected is cBaseTrend) and Assigned(ASelected.Parent) and
+    (ASelected.Parent is TChartAxis) and (ASelected.Parent.Parent = APage) then
+    Exit(TChartAxis(ASelected.Parent));
+end;
+
+procedure ApplyPresetZoomY(AAxis: TChartAxis);
+begin
+  if not Assigned(AAxis) then
+    Exit;
+  if AAxis.HasPresetRange and (AAxis.PresetMaxValue > AAxis.PresetMinValue) then
+  begin
+    AAxis.MinValue := AAxis.PresetMinValue;
+    AAxis.MaxValue := AAxis.PresetMaxValue;
+  end;
+end;
+
+procedure ApplyPresetZoomY(APage: TChartPage; ASelected: TChartBaseObject);
+var
+  I: Integer;
+  lAxis: TChartAxis;
+  lSelectedAxis: TChartAxis;
+begin
+  if not Assigned(APage) then
+    Exit;
+  lSelectedAxis := ResolveSelectedAxis(APage, ASelected);
+  if Assigned(lSelectedAxis) then
+  begin
+    ApplyPresetZoomY(lSelectedAxis);
+    Exit;
+  end;
+
+  for I := 0 to APage.ChildCount - 1 do
+    if APage.Children[I] is TChartAxis then
+    begin
+      lAxis := TChartAxis(APage.Children[I]);
+      ApplyPresetZoomY(lAxis);
+    end;
+end;
+
+procedure ApplyPresetZoomYAll(APage: TChartPage);
+var
+  I: Integer;
+begin
+  if not Assigned(APage) then
+    Exit;
+  for I := 0 to APage.ChildCount - 1 do
+    if APage.Children[I] is TChartAxis then
+      ApplyPresetZoomY(TChartAxis(APage.Children[I]));
+end;
+
 procedure ProcessObjectBounds(AObject: TChartBaseObject; APage: TChartPage; var APageMinX, APageMaxX: Double; var AHasPageX: Boolean; var ABounds: TAxisBoundsArray);
 
 var
@@ -508,6 +565,7 @@ var
   lModel: TChartModel;
   lPage: TChartPage;
   lPageRect, lContentRect: TChartPixelRect;
+  lTextHit: TChartTextHit;
   lIndex: Integer;
 begin
   if not Enabled then Exit;
@@ -518,6 +576,30 @@ begin
     if not Assigned(lRenderer) or not Assigned(lModel) then Exit;
     if Button = mbLeft then
     begin
+      if ssDouble in Shift then
+      begin
+        if lRenderer.GetTextHitAt(X, Y, lTextHit) then
+          Exit;
+
+        for lIndex := 0 to lModel.ChildCount - 1 do
+          if lModel.Children[lIndex] is TChartPage then
+          begin
+            lPage := TChartPage(lModel.Children[lIndex]);
+            if not lPage.Locked then
+            begin
+              lPageRect := lRenderer.GetPageRect(lPage);
+              if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
+                 (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
+              begin
+                ApplyPresetZoomYAll(lPage);
+                lControl.Redraw;
+                Handled := True;
+                Exit;
+              end;
+            end;
+          end;
+      end;
+
       // Если зажат Ctrl, то это режим зума по рамке (только внутри plot area)
       if ssCtrl in Shift then
       begin
@@ -693,7 +775,7 @@ begin
       // 1. Полный масштаб при движении влево и вверх
       if (X < fZoomStartX) and (Y < fZoomStartY) then
       begin
-        FitPageZoom(fActivePage);
+        ApplyPresetZoomY(fActivePage, lRenderer.SelectedObject);
         lControl.Redraw;
         Handled := True;
       end

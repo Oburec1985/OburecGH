@@ -30,7 +30,7 @@ type
       Count: Integer;
       LastValue: Double;
       HasValue: Boolean;
-      OglSeries: cLineSeries;
+      OglSeries: cBuffTrendQueue;
           LastBlockKind: string;
       LastPortionLength: Integer;
       LastPointsAdded: Integer;
@@ -46,9 +46,12 @@ end;
     fModel: TChartModel;
     fLegendPaintBox: TPaintBox;
     fLastTrendDiagTickMs: QWord;
+    fConfiguredAxisCount: Integer;
     procedure AddPoint(ALineIndex: Integer; ATime, AValue: Double);
     procedure AddScalarPoint(ALineIndex: Integer; const ASnapshot: TRecorderSignalSnapshot);
-    function EffectivePortionLength(ATag: TRecorderTag): Integer;
+    function EffectivePortionLength(ATag: TRecorderTag;
+      ALastBlockCount: Integer): Integer;
+    procedure RebuildOglSeries(ALineIndex: Integer);
     function EstimatePortion(const ASnapshot: TRecorderSignalSnapshot;
       AStartIndex, ACount: Integer; AKind: TRecorderTagEstimateKind;
       out ATime, AValue: Double): Boolean;
@@ -96,18 +99,24 @@ var
   I, J, K: Integer;
   lPage: TChartPage;
   lAxis: TChartAxis;
-  lOglLine: cLineSeries;
+  lOglLine: cBuffTrendQueue;
   lCompLine: TRecorderTrendLine;
   lCompAxis: TRecorderTrendAxis;
   lPageArea: TChartFloatRect;
   lTabSpace: TChartPixelRect;
   lPageCount: Integer;
+  lAxisCount: Integer;
+  lQueueCapacity: Integer;
   lPages: array of TChartPage;
   lOglAxes: array of TChartAxis;
 begin
-  if (fComponent = AComponent) and (fComponent <> nil) then
+  if (fComponent = AComponent) and (fComponent <> nil) and
+    (Length(fSeries) = TRecorderTrendComponent(AComponent).LineCount) and
+    (fConfiguredAxisCount = TRecorderTrendComponent(AComponent).AxisCount) then
   begin
     fTagRegistry := ATagRegistry;
+    lQueueCapacity := Max(64, Ceil(Max(1.0, fComponent.DurationSec) / Max(0.001, fComponent.UpdatePeriodSec) * 1.1) + 16);
+    SetLength(lOglAxes, fComponent.AxisCount);
     for I := 0 to fComponent.AxisCount - 1 do
     begin
       lCompAxis := fComponent.Axes[I];
@@ -135,6 +144,10 @@ begin
       begin
         lAxis.MinValue := lCompAxis.RangeMin;
         lAxis.MaxValue := lCompAxis.RangeMax;
+        lAxis.PresetMinValue := lCompAxis.RangeMin;
+        lAxis.PresetMaxValue := lCompAxis.RangeMax;
+        lAxis.HasPresetRange := True;
+        lOglAxes[I] := lAxis;
       end;
     end;
 
@@ -145,6 +158,11 @@ begin
       begin
         fSeries[I].OglSeries.Color := (lCompLine.Color and $00FFFFFF) or $FF000000;
         fSeries[I].OglSeries.Visible := lCompLine.Visible;
+        fSeries[I].OglSeries.Allocate(lQueueCapacity);
+        J := Max(0, Min(lCompLine.AxisIndex, fComponent.AxisCount - 1));
+        if (J < Length(lOglAxes)) and Assigned(lOglAxes[J]) and
+          (fSeries[I].OglSeries.Parent <> lOglAxes[J]) then
+          lOglAxes[J].AddChild(fSeries[I].OglSeries);
       end;
     end;
 
@@ -181,6 +199,7 @@ begin
   end;
 
   fModel.ClearChildren;
+  fConfiguredAxisCount := 0;
 
   if fComponent = nil then
   begin
@@ -189,10 +208,8 @@ begin
     Exit;
   end;
 
-  if (fComponent.YAxisMode = tyamSimple) or (fComponent.AxisCount <= 1) then
-    lPageCount := 1
-  else
-    lPageCount := fComponent.AxisCount;
+  lPageCount := 1;
+  lAxisCount := Max(1, fComponent.AxisCount);
 
   SetLength(lPages, lPageCount);
   for I := 0 to lPageCount - 1 do
@@ -205,7 +222,10 @@ begin
     
     // Сдвигаем верхнюю границу графика вниз (с 16 до 30) для заголовка страницы,
     // чтобы он не накладывался на верхние деления осей.
-    lTabSpace.Left := 50;
+    if fComponent.YAxisMode = tyamSimple then
+      lTabSpace.Left := 50
+    else
+      lTabSpace.Left := 50 + (lAxisCount - 1) * 46;
     lTabSpace.Top := 30;
     lTabSpace.Right := 12;
     lTabSpace.Bottom := 28;
@@ -228,12 +248,12 @@ begin
     lAxis.Name := lCompAxis.Name;
     lAxis.MinValue := lCompAxis.RangeMin;
     lAxis.MaxValue := lCompAxis.RangeMax;
+    lAxis.PresetMinValue := lCompAxis.RangeMin;
+    lAxis.PresetMaxValue := lCompAxis.RangeMax;
+    lAxis.HasPresetRange := True;
     lOglAxes[I] := lAxis;
 
-    if fComponent.YAxisMode = tyamSimple then
-      lPages[0].AddChild(lAxis)
-    else
-      lPages[I].AddChild(lAxis);
+    lPages[0].AddChild(lAxis);
   end;
 
   EnsureSeries;
@@ -241,7 +261,8 @@ begin
   for I := 0 to fComponent.LineCount - 1 do
   begin
     lCompLine := fComponent.Lines[I];
-    lOglLine := cLineSeries.Create;
+    lOglLine := cBuffTrendQueue.Create;
+    lOglLine.Allocate(Max(64, Ceil(Max(1.0, fComponent.DurationSec) / Max(0.001, fComponent.UpdatePeriodSec) * 1.1) + 16));
     lOglLine.Name := lCompLine.Name;
     lOglLine.Color := (lCompLine.Color and $00FFFFFF) or $FF000000;
     lOglLine.Visible := lCompLine.Visible;
@@ -255,6 +276,7 @@ begin
       lOglAxes[J].AddChild(lOglLine);
   end;
 
+  fConfiguredAxisCount := fComponent.AxisCount;
   UpdateLegendLayout;
   fChart.Redraw;
   Invalidate;
@@ -294,28 +316,14 @@ begin
     Exit;
 
   lSeries := @fSeries[ALineIndex];
-  if lSeries^.Count >= Length(lSeries^.Times) then
-  begin
-    if Length(lSeries^.Times) = 0 then
-    begin
-      SetLength(lSeries^.Times, 256);
-      SetLength(lSeries^.Values, 256);
-    end
-    else
-    begin
-      SetLength(lSeries^.Times, Length(lSeries^.Times) * 2);
-      SetLength(lSeries^.Values, Length(lSeries^.Values) * 2);
-    end;
-  end;
+  if lSeries^.OglSeries = nil then
+    Exit;
 
-  lSeries^.Times[lSeries^.Count] := ATime;
-  lSeries^.Values[lSeries^.Count] := AValue;
-  Inc(lSeries^.Count);
+  lSeries^.OglSeries.AddPoint(ATime, AValue);
+  lSeries^.Count := lSeries^.OglSeries.Count;
   lSeries^.LastValue := AValue;
   lSeries^.HasValue := True;
-  PruneSeries(ALineIndex);
 end;
-
 procedure TRecorderTrendView.AddScalarPoint(ALineIndex: Integer;
   const ASnapshot: TRecorderSignalSnapshot);
 var
@@ -336,9 +344,9 @@ begin
   fSeries[ALineIndex].LastProcessedTime := lPointTime;
 end;
 
-function TRecorderTrendView.EffectivePortionLength(ATag: TRecorderTag): Integer;
+function TRecorderTrendView.EffectivePortionLength(ATag: TRecorderTag;
+  ALastBlockCount: Integer): Integer;
 var
-  lLastBlock: TRecorderSignalSnapshot;
   lTrendPeriodMs: Cardinal;
 begin
   Result := 1;
@@ -347,10 +355,9 @@ begin
 
   lTrendPeriodMs := Round(Max(0.001, fComponent.UpdatePeriodSec) * 1000.0);
   Result := ATag.EstimateSettings.PortionLength;
-  lLastBlock := ATag.LastBlockSnapshot;
 
   if RecorderTagEstimatePortionLengthIsAuto(Result, ATag.PollFrequencyHz,
-    lTrendPeriodMs) or ((lLastBlock.Count > 1) and (Result = lLastBlock.Count)) then
+    lTrendPeriodMs) or ((ALastBlockCount > 1) and (Result = ALastBlockCount)) then
     Result := RecorderTagDefaultEstimatePortionLength(ATag.PollFrequencyHz,
       lTrendPeriodMs);
 
@@ -358,54 +365,16 @@ begin
     Result := 1;
 end;
 
-procedure TRecorderTrendView.PruneSeries(ALineIndex: Integer);
-var
-  I: Integer;
-  lKeepFrom: Integer;
-  lMinTime: Double;
-  lSeries: ^TTrendSeries;
+procedure TRecorderTrendView.RebuildOglSeries(ALineIndex: Integer);
 begin
-  if (fComponent = nil) or (ALineIndex < 0) or
-    (ALineIndex >= Length(fSeries)) then
-    Exit;
-
-  lSeries := @fSeries[ALineIndex];
-  if lSeries^.Count <= 0 then
-    Exit;
-
-  lMinTime := lSeries^.Times[lSeries^.Count - 1] -
-    Max(1.0, fComponent.DurationSec);
-  lKeepFrom := 0;
-  while (lKeepFrom < lSeries^.Count) and
-    (lSeries^.Times[lKeepFrom] < lMinTime) do
-    Inc(lKeepFrom);
-
-  if lKeepFrom <= 0 then
-  begin
-    if lSeries^.OglSeries <> nil then
-    begin
-      lSeries^.OglSeries.ClearPoints;
-      for I := 0 to lSeries^.Count - 1 do
-        lSeries^.OglSeries.AddPoint(lSeries^.Times[I], lSeries^.Values[I]);
-    end;
-    Exit;
-  end;
-
-  for I := lKeepFrom to lSeries^.Count - 1 do
-  begin
-    lSeries^.Times[I - lKeepFrom] := lSeries^.Times[I];
-    lSeries^.Values[I - lKeepFrom] := lSeries^.Values[I];
-  end;
-  Dec(lSeries^.Count, lKeepFrom);
-
-  if lSeries^.OglSeries <> nil then
-  begin
-    lSeries^.OglSeries.ClearPoints;
-    for I := 0 to lSeries^.Count - 1 do
-      lSeries^.OglSeries.AddPoint(lSeries^.Times[I], lSeries^.Values[I]);
-  end;
+  { cBuffTrendQueue is the storage itself, so there is no secondary OGL series
+    to rebuild in the realtime path. }
 end;
-
+procedure TRecorderTrendView.PruneSeries(ALineIndex: Integer);
+begin
+  { The queue has fixed capacity and drops old points by moving its logical
+    first index, without shifting or reallocating arrays. }
+end;
 function TRecorderTrendView.EstimatePortion(
   const ASnapshot: TRecorderSignalSnapshot; AStartIndex, ACount: Integer;
   AKind: TRecorderTagEstimateKind; out ATime, AValue: Double): Boolean;
@@ -433,7 +402,7 @@ procedure TRecorderTrendView.RefreshTrend;
 var
   I: Integer;
   lLine: TRecorderTrendLine;
-  lSnapshot: TRecorderSignalSnapshot;
+  lLastBlock: TRecorderSignalSnapshot;
   lTag: TRecorderTag;
   lValue: Double;
   lPointTime: Double;
@@ -458,44 +427,44 @@ begin
     if lTag = nil then
       Continue;
 
-    lSnapshot := lTag.Snapshot;
-    if lSnapshot.Count = 0 then
+    lLastBlock := lTag.LastBlockSnapshot;
+    if lLastBlock.Count = 0 then
       Continue;
 
     fSeries[I].LastPointsAdded := 0;
-    fSeries[I].LastSnapshotCount := lSnapshot.Count;
-    fSeries[I].LastSnapshotTime := lSnapshot.Times[lSnapshot.Count - 1];
-    fSeries[I].LastBlockCount := lTag.LastBlockSnapshot.Count;
+    fSeries[I].LastSnapshotCount := lTag.SignalBuffer.Count;
+    fSeries[I].LastSnapshotTime := lLastBlock.Times[lLastBlock.Count - 1];
+    fSeries[I].LastBlockCount := lLastBlock.Count;
 
-    if lTag.LastBlockSnapshot.Count <= 1 then
+    if lLastBlock.Count <= 1 then
     begin
       lValue := fSeries[I].Count;
-      AddScalarPoint(I, lSnapshot);
+      AddScalarPoint(I, lLastBlock);
       fSeries[I].LastBlockKind := 'scalar';
       fSeries[I].LastPortionLength := 1;
       fSeries[I].LastPointsAdded := fSeries[I].Count - Trunc(lValue);
       Continue;
     end;
 
-    lPortionLength := EffectivePortionLength(lTag);
+    lPortionLength := EffectivePortionLength(lTag, lLastBlock.Count);
     fSeries[I].LastBlockKind := 'vector';
     fSeries[I].LastPortionLength := lPortionLength;
 
     if fSeries[I].LastProcessedTime <= 0 then
       lStartIdx := 0
     else
-      lStartIdx := TDoubleSearch.FindFirstGreater(lSnapshot.Times,
-        lSnapshot.Count, fSeries[I].LastProcessedTime);
+      lStartIdx := TDoubleSearch.FindFirstGreater(lLastBlock.Times,
+        lLastBlock.Count, fSeries[I].LastProcessedTime);
 
-    while lStartIdx + lPortionLength <= lSnapshot.Count do
+    while lStartIdx + lPortionLength <= lLastBlock.Count do
     begin
-      if EstimatePortion(lSnapshot, lStartIdx, lPortionLength,
+      if EstimatePortion(lLastBlock, lStartIdx, lPortionLength,
         lLine.EstimateKind, lPointTime, lValue) then
       begin
         AddPoint(I, lPointTime, lValue);
         Inc(fSeries[I].LastPointsAdded);
         fSeries[I].LastProcessedTime :=
-          lSnapshot.Times[lStartIdx + lPortionLength - 1];
+          lLastBlock.Times[lStartIdx + lPortionLength - 1];
       end;
       Inc(lStartIdx, lPortionLength);
     end;
@@ -503,8 +472,9 @@ begin
 
   lMaxT := 0;
   for I := 0 to fComponent.LineCount - 1 do
-    if (I < Length(fSeries)) and (fSeries[I].Count > 0) then
-      lMaxT := Max(lMaxT, fSeries[I].Times[fSeries[I].Count - 1]);
+    if (I < Length(fSeries)) and (fSeries[I].OglSeries <> nil) and
+      (fSeries[I].OglSeries.Count > 0) then
+      lMaxT := Max(lMaxT, fSeries[I].OglSeries.LastTime);
 
   lMinT := Max(0.0, lMaxT - Max(1.0, fComponent.DurationSec));
 

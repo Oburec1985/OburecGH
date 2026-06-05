@@ -17,7 +17,8 @@ const
 
 procedure RecorderDebugLog(const AMessage: string);
 begin
-  SharedLogger.Debug(AMessage);
+  { Hot-path diagnostics are disabled by default: file append per data block
+    makes the process working set grow during long preview runs. }
 end;
 
 procedure RegisterThreadName(AThreadID: TThreadID; const AName: string);
@@ -26,6 +27,7 @@ begin
 end;
 
 initialization
+  SharedLogger.Enabled := False;
   if FileExists(CRecorderLogFile) then
     DeleteFile(CRecorderLogFile);
   SharedLogger.Configure(CRecorderLogFile);

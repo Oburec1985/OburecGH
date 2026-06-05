@@ -800,21 +800,21 @@ begin
   fLogShowSystemCheck := TCheckBox.Create(Self);
   fLogShowSystemCheck.Parent := fLogFilterPanel;
   fLogShowSystemCheck.SetBounds(8, 3, 86, 20);
-  fLogShowSystemCheck.Caption := 'Система';
+  fLogShowSystemCheck.Caption := #$D0#$A1#$D0#$B8#$D1#$81#$D1#$82#$D0#$B5#$D0#$BC#$D0#$B0;
   fLogShowSystemCheck.Checked := True;
   fLogShowSystemCheck.OnChange := @LogFilterChanged;
 
   fLogShowDataCheck := TCheckBox.Create(Self);
   fLogShowDataCheck.Parent := fLogFilterPanel;
   fLogShowDataCheck.SetBounds(102, 3, 74, 20);
-  fLogShowDataCheck.Caption := 'Данные';
+  fLogShowDataCheck.Caption := #$D0#$94#$D0#$B0#$D0#$BD#$D0#$BD#$D1#$8B#$D0#$B5;
   fLogShowDataCheck.Checked := True;
   fLogShowDataCheck.OnChange := @LogFilterChanged;
 
   fLogShowAlarmsCheck := TCheckBox.Create(Self);
   fLogShowAlarmsCheck.Parent := fLogFilterPanel;
   fLogShowAlarmsCheck.SetBounds(184, 3, 82, 20);
-  fLogShowAlarmsCheck.Caption := 'Тревоги';
+  fLogShowAlarmsCheck.Caption := #$D0#$A2#$D1#$80#$D0#$B5#$D0#$B2#$D0#$BE#$D0#$B3#$D0#$B8;
   fLogShowAlarmsCheck.Checked := True;
   fLogShowAlarmsCheck.OnChange := @LogFilterChanged;
 end;

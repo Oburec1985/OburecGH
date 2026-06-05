@@ -32,6 +32,9 @@ type
     fXMinValue: Double;                 // Индивидуальный минимум X
     fXMaxValue: Double;                 // Индивидуальный максимум X
     fXScale: TChartAxisScale;            // Индивидуальный масштаб X (линейный или логарифм)
+    fPresetMinValue: Double;             // Преднастроенный минимум шкалы Y
+    fPresetMaxValue: Double;             // Преднастроенный максимум шкалы Y
+    fHasPresetRange: Boolean;            // Признак заданного преднастроенного диапазона Y
   private
   public
     /// <summary>
@@ -53,6 +56,9 @@ type
     property XMaxValue: Double read fXMaxValue write fXMaxValue;
     /// <summary> Тип собственной шкалы по оси X. </summary>
     property XScale: TChartAxisScale read fXScale write fXScale;
+    property PresetMinValue: Double read fPresetMinValue write fPresetMinValue;
+    property PresetMaxValue: Double read fPresetMaxValue write fPresetMaxValue;
+    property HasPresetRange: Boolean read fHasPresetRange write fHasPresetRange;
   end;
 
   TChartAxis = cAxis;
@@ -76,6 +82,9 @@ begin
   fXMinValue := 0;
   fXMaxValue := 1;
   fXScale := casLinear;
+  fPresetMinValue := fMinValue;
+  fPresetMaxValue := fMaxValue;
+  fHasPresetRange := False;
 end;
 
 end.

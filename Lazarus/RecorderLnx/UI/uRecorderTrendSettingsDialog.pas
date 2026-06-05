@@ -9,6 +9,7 @@ unit uRecorderTrendSettingsDialog;
 }
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 
 interface
 
@@ -64,10 +65,12 @@ type
     procedure AddLineClick(Sender: TObject);
     procedure AxisColorClick(Sender: TObject);
     procedure AxisSelectionChange(Sender: TObject);
+    procedure AxisScaleDblClick(Sender: TObject);
     procedure BuildUi;
     procedure DeleteAxisClick(Sender: TObject);
     procedure DeleteLineClick(Sender: TObject);
     procedure FillTagCombo;
+    procedure LineAxisChange(Sender: TObject);
     procedure LineColorClick(Sender: TObject);
     procedure LineSelectionChange(Sender: TObject);
     procedure LoadAxisControls(AIndex: Integer);
@@ -82,6 +85,8 @@ type
     procedure StoreAxisControls;
     procedure StoreLineControls;
     procedure StoreToComponent;
+    procedure SelectAxis(AIndex: Integer);
+    procedure SelectLineAxis;
     function ColorText(AColor: TColor): string;
   public
     constructor CreateDialog(AOwner: TComponent;
@@ -114,11 +119,11 @@ begin
   fSelectedAxis := -1;
   fSelectedLine := -1;
 
-  Caption := 'Trend settings - ' + AComponent.Name;
+  Caption := 'Настройка параметров тренда - ' + AComponent.Name;
   BorderStyle := bsDialog;
   Position := poOwnerFormCenter;
   ClientWidth := 640;
-  ClientHeight := 600;
+  ClientHeight := 620;
 
   BuildUi;
   LoadFromComponent;
@@ -172,143 +177,147 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, 12, 160, 18);
-  lLabel.Caption := 'Lines';
+  lLabel.Caption := 'Линии';
 
   fLineList := TListBox.Create(Self);
   fLineList.Parent := Self;
-  fLineList.SetBounds(12, 32, 255, 145);
+  fLineList.SetBounds(12, 32, 340, 135);
   fLineList.OnClick := @LineSelectionChange;
 
   fAddLineButton := TButton.Create(Self);
   fAddLineButton.Parent := Self;
-  fAddLineButton.SetBounds(275, 32, 80, 25);
-  fAddLineButton.Caption := 'Add';
+  fAddLineButton.SetBounds(360, 32, 80, 25);
+  fAddLineButton.Caption := 'Добавить';
   fAddLineButton.OnClick := @AddLineClick;
 
   fDeleteLineButton := TButton.Create(Self);
   fDeleteLineButton.Parent := Self;
-  fDeleteLineButton.SetBounds(275, 62, 80, 25);
-  fDeleteLineButton.Caption := 'Delete';
+  fDeleteLineButton.SetBounds(360, 62, 80, 25);
+  fDeleteLineButton.Caption := 'Удалить';
   fDeleteLineButton.OnClick := @DeleteLineClick;
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
-  lLabel.SetBounds(12, 190, 80, 18);
-  lLabel.Caption := 'Name';
+  lLabel.SetBounds(12, 190, 70, 18);
+  lLabel.Caption := 'Название';
   fLineNameEdit := TEdit.Create(Self);
   fLineNameEdit.Parent := Self;
-  fLineNameEdit.SetBounds(92, 186, 180, 24);
+  fLineNameEdit.SetBounds(78, 186, 150, 24);
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
-  lLabel.SetBounds(292, 190, 80, 18);
-  lLabel.Caption := 'Tag';
+  lLabel.SetBounds(250, 190, 70, 18);
+  lLabel.Caption := 'Канал';
   fLineTagCombo := TComboBox.Create(Self);
   fLineTagCombo.Parent := Self;
-  fLineTagCombo.SetBounds(372, 186, 250, 24);
+  fLineTagCombo.SetBounds(315, 186, 150, 24);
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
-  lLabel.SetBounds(12, 220, 80, 18);
-  lLabel.Caption := 'Estimate';
+  lLabel.SetBounds(12, 220, 70, 18);
+  lLabel.Caption := 'Оценка';
   fLineEstimateCombo := TComboBox.Create(Self);
   fLineEstimateCombo.Parent := Self;
-  fLineEstimateCombo.SetBounds(92, 216, 180, 24);
+  fLineEstimateCombo.SetBounds(78, 216, 150, 24);
   fLineEstimateCombo.Style := csDropDownList;
   for lKind := Low(TRecorderTagEstimateKind) to High(TRecorderTagEstimateKind) do
     fLineEstimateCombo.Items.Add(RecorderTagEstimateKindToShortName(lKind));
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
-  lLabel.SetBounds(292, 220, 80, 18);
-  lLabel.Caption := 'Axis';
+  lLabel.SetBounds(250, 220, 70, 18);
+  lLabel.Caption := 'Ось';
   fLineAxisCombo := TComboBox.Create(Self);
   fLineAxisCombo.Parent := Self;
-  fLineAxisCombo.SetBounds(372, 216, 250, 24);
+  fLineAxisCombo.SetBounds(315, 216, 150, 24);
   fLineAxisCombo.Style := csDropDownList;
+  fLineAxisCombo.OnChange := @LineAxisChange;
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
-  lLabel.SetBounds(12, 250, 80, 18);
-  lLabel.Caption := 'Color';
+  lLabel.SetBounds(12, 250, 70, 18);
+  lLabel.Caption := 'Цвет';
   fLineColorEdit := TEdit.Create(Self);
   fLineColorEdit.Parent := Self;
-  fLineColorEdit.SetBounds(92, 246, 100, 24);
+  fLineColorEdit.SetBounds(78, 246, 120, 24);
+  fLineColorEdit.OnDblClick := @LineColorClick;
   fLineColorButton := TButton.Create(Self);
   fLineColorButton.Parent := Self;
-  fLineColorButton.SetBounds(198, 246, 32, 24);
+  fLineColorButton.SetBounds(204, 246, 32, 24);
   fLineColorButton.Caption := '...';
   fLineColorButton.OnClick := @LineColorClick;
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
-  lLabel.SetBounds(292, 250, 80, 18);
-  lLabel.Caption := 'Width';
+  lLabel.SetBounds(250, 250, 70, 18);
+  lLabel.Caption := 'Толщина';
   fLineWidthEdit := TEdit.Create(Self);
   fLineWidthEdit.Parent := Self;
-  fLineWidthEdit.SetBounds(372, 246, 70, 24);
+  fLineWidthEdit.SetBounds(315, 246, 70, 24);
   fLineVisibleCheck := TCheckBox.Create(Self);
   fLineVisibleCheck.Parent := Self;
-  fLineVisibleCheck.SetBounds(470, 248, 100, 20);
-  fLineVisibleCheck.Caption := 'Visible';
+  fLineVisibleCheck.SetBounds(395, 248, 70, 20);
+  fLineVisibleCheck.Caption := 'Видна';
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, 292, 160, 18);
-  lLabel.Caption := 'Y axes';
+  lLabel.Caption := 'Оси Y';
   fAxisList := TListBox.Create(Self);
   fAxisList.Parent := Self;
-  fAxisList.SetBounds(12, 312, 255, 100);
+  fAxisList.SetBounds(12, 312, 220, 100);
   fAxisList.OnClick := @AxisSelectionChange;
+  fAxisList.OnDblClick := @AxisScaleDblClick;
 
   fAddAxisButton := TButton.Create(Self);
   fAddAxisButton.Parent := Self;
-  fAddAxisButton.SetBounds(275, 312, 80, 25);
-  fAddAxisButton.Caption := 'Add';
+  fAddAxisButton.SetBounds(240, 312, 80, 25);
+  fAddAxisButton.Caption := 'Добавить';
   fAddAxisButton.OnClick := @AddAxisClick;
 
   fDeleteAxisButton := TButton.Create(Self);
   fDeleteAxisButton.Parent := Self;
-  fDeleteAxisButton.SetBounds(275, 342, 80, 25);
-  fDeleteAxisButton.Caption := 'Delete';
+  fDeleteAxisButton.SetBounds(240, 342, 80, 25);
+  fDeleteAxisButton.Caption := 'Удалить';
   fDeleteAxisButton.OnClick := @DeleteAxisClick;
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
-  lLabel.SetBounds(372, 312, 80, 18);
-  lLabel.Caption := 'Axis name';
+  lLabel.SetBounds(330, 312, 80, 18);
+  lLabel.Caption := 'Название';
   fAxisNameEdit := TEdit.Create(Self);
   fAxisNameEdit.Parent := Self;
-  fAxisNameEdit.SetBounds(452, 308, 170, 24);
+  fAxisNameEdit.SetBounds(410, 308, 55, 24);
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
-  lLabel.SetBounds(372, 342, 80, 18);
-  lLabel.Caption := 'Range';
+  lLabel.SetBounds(330, 342, 80, 18);
+  lLabel.Caption := 'Диапазон';
   fAxisMinEdit := TEdit.Create(Self);
   fAxisMinEdit.Parent := Self;
-  fAxisMinEdit.SetBounds(452, 338, 80, 24);
+  fAxisMinEdit.SetBounds(410, 338, 65, 24);
   fAxisMaxEdit := TEdit.Create(Self);
   fAxisMaxEdit.Parent := Self;
-  fAxisMaxEdit.SetBounds(542, 338, 80, 24);
+  fAxisMaxEdit.SetBounds(480, 338, 65, 24);
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
-  lLabel.SetBounds(372, 372, 80, 18);
-  lLabel.Caption := 'Axis color';
+  lLabel.SetBounds(330, 372, 80, 18);
+  lLabel.Caption := 'Цвет оси';
   fAxisColorEdit := TEdit.Create(Self);
   fAxisColorEdit.Parent := Self;
-  fAxisColorEdit.SetBounds(452, 368, 100, 24);
+  fAxisColorEdit.SetBounds(410, 368, 100, 24);
+  fAxisColorEdit.OnDblClick := @AxisColorClick;
   fAxisColorButton := TButton.Create(Self);
   fAxisColorButton.Parent := Self;
-  fAxisColorButton.SetBounds(558, 368, 32, 24);
+  fAxisColorButton.SetBounds(515, 368, 32, 24);
   fAxisColorButton.Caption := '...';
   fAxisColorButton.OnClick := @AxisColorClick;
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, 438, 100, 18);
-  lLabel.Caption := 'Duration, sec';
+  lLabel.Caption := 'Интервал, сек';
   fDurationEdit := TEdit.Create(Self);
   fDurationEdit.Parent := Self;
   fDurationEdit.SetBounds(112, 434, 90, 24);
@@ -316,7 +325,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(225, 438, 105, 18);
-  lLabel.Caption := 'Period, sec';
+  lLabel.Caption := 'Период, сек';
   fUpdatePeriodEdit := TEdit.Create(Self);
   fUpdatePeriodEdit.Parent := Self;
   fUpdatePeriodEdit.SetBounds(330, 434, 90, 24);
@@ -324,36 +333,36 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, 468, 100, 18);
-  lLabel.Caption := 'Y axis mode';
+  lLabel.Caption := 'Тип оси Y';
   fYAxisModeCombo := TComboBox.Create(Self);
   fYAxisModeCombo.Parent := Self;
   fYAxisModeCombo.SetBounds(112, 464, 160, 24);
   fYAxisModeCombo.Style := csDropDownList;
-  fYAxisModeCombo.Items.Add('Common');
-  fYAxisModeCombo.Items.Add('Rows');
-  fYAxisModeCombo.Items.Add('Columns');
-  fYAxisModeCombo.Items.Add('Free');
+  fYAxisModeCombo.Items.Add('Общая ось');
+  fYAxisModeCombo.Items.Add('Строки');
+  fYAxisModeCombo.Items.Add('Колонки');
+  fYAxisModeCombo.Items.Add('Индивидуальные оси');
 
   fLegendVisibleCheck := TCheckBox.Create(Self);
   fLegendVisibleCheck.Parent := Self;
   fLegendVisibleCheck.SetBounds(330, 466, 95, 20);
-  fLegendVisibleCheck.Caption := 'Legend';
+  fLegendVisibleCheck.Caption := 'Легенда';
   fShowCurrentValuesCheck := TCheckBox.Create(Self);
   fShowCurrentValuesCheck.Parent := Self;
   fShowCurrentValuesCheck.SetBounds(430, 466, 170, 20);
-  fShowCurrentValuesCheck.Caption := 'Current values';
+  fShowCurrentValuesCheck.Caption := 'Текущие значения';
 
   fOkButton := TButton.Create(Self);
   fOkButton.Parent := Self;
-  fOkButton.SetBounds(432, 558, 90, 26);
+  fOkButton.SetBounds(440, 558, 90, 26);
   fOkButton.Caption := 'OK';
   fOkButton.Default := True;
   fOkButton.OnClick := @OkButtonClick;
 
   fCancelButton := TButton.Create(Self);
   fCancelButton.Parent := Self;
-  fCancelButton.SetBounds(528, 558, 90, 26);
-  fCancelButton.Caption := 'Cancel';
+  fCancelButton.SetBounds(536, 558, 90, 26);
+  fCancelButton.Caption := 'Отмена';
   fCancelButton.ModalResult := mrCancel;
 end;
 
@@ -443,6 +452,7 @@ begin
     begin
       fLineList.ItemIndex := 0;
       LoadLineControls(0);
+      SelectLineAxis;
     end
     else
       LoadLineControls(-1);
@@ -559,9 +569,24 @@ end;
 procedure TRecorderTrendSettingsDialog.LineSelectionChange(Sender: TObject);
 begin
   StoreLineControls;
+  StoreAxisControls;
   fUpdating := True;
   try
     LoadLineControls(fLineList.ItemIndex);
+    SelectLineAxis;
+  finally
+    fUpdating := False;
+  end;
+end;
+
+procedure TRecorderTrendSettingsDialog.LineAxisChange(Sender: TObject);
+begin
+  if fUpdating then
+    Exit;
+  StoreLineControls;
+  fUpdating := True;
+  try
+    SelectLineAxis;
   finally
     fUpdating := False;
   end;
@@ -576,6 +601,61 @@ begin
   finally
     fUpdating := False;
   end;
+end;
+
+procedure TRecorderTrendSettingsDialog.SelectAxis(AIndex: Integer);
+begin
+  if (AIndex < 0) or (AIndex >= fDraft.AxisCount) then
+  begin
+    fAxisList.ItemIndex := -1;
+    LoadAxisControls(-1);
+    Exit;
+  end;
+  fAxisList.ItemIndex := AIndex;
+  LoadAxisControls(AIndex);
+end;
+
+procedure TRecorderTrendSettingsDialog.SelectLineAxis;
+var
+  lAxisIndex: Integer;
+begin
+  if (fSelectedLine < 0) or (fSelectedLine >= fDraft.LineCount) then
+    Exit;
+  lAxisIndex := fDraft.Lines[fSelectedLine].AxisIndex;
+  if (fLineAxisCombo.ItemIndex >= 0) and (fLineAxisCombo.ItemIndex < fDraft.AxisCount) then
+    lAxisIndex := fLineAxisCombo.ItemIndex;
+  SelectAxis(lAxisIndex);
+end;
+
+procedure TRecorderTrendSettingsDialog.AxisScaleDblClick(Sender: TObject);
+var
+  lAxisIndex: Integer;
+  lLine: TRecorderTrendLine;
+  lTag: TRecorderTag;
+begin
+  StoreLineControls;
+  StoreAxisControls;
+  if (fSelectedLine < 0) or (fSelectedLine >= fDraft.LineCount) then
+    Exit;
+  lLine := fDraft.Lines[fSelectedLine];
+  lAxisIndex := lLine.AxisIndex;
+  if (lAxisIndex < 0) or (lAxisIndex >= fDraft.AxisCount) then
+    Exit;
+  if fAxisList.ItemIndex <> lAxisIndex then
+    Exit;
+  if fTagRegistry = nil then
+    Exit;
+  lTag := fTagRegistry.FindByName(lLine.TagName);
+  if lTag = nil then
+    Exit;
+
+  fDraft.Axes[lAxisIndex].RangeMin := lTag.RangeMin;
+  fDraft.Axes[lAxisIndex].RangeMax := lTag.RangeMax;
+  if Trim(lTag.UnitName) <> '' then
+    fDraft.Axes[lAxisIndex].Name := lTag.UnitName;
+  RefreshAxisList;
+  SelectAxis(lAxisIndex);
+  LoadLineControls(fSelectedLine);
 end;
 
 procedure TRecorderTrendSettingsDialog.AddLineClick(Sender: TObject);

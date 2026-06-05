@@ -13,7 +13,8 @@ unit uOglChartTrend;
 interface
 
 uses
-  Classes, SysUtils, uOglChartTypes, uOglChartDrawObj, uOglChartAxis;
+  Classes, SysUtils, uOglChartTypes, uOglChartDrawObj, uOglChartAxis,
+  uSharedQueue;
 
 type
   { TBeziePointType }
@@ -140,6 +141,31 @@ type
     property Count: Integer read GetCount;
   end;
 
+  { cBuffTrendQueue }
+  // 2D queue trend with preallocated storage for realtime sliding windows.
+  cBuffTrendQueue = class(cBaseTrend)
+  private
+    fPoints: specialize cQueue<TChartPoint>;
+    function GetCapacity: Integer;
+    function GetCount: Integer;
+    function GetPoint(AIndex: Integer): TChartPoint;
+    function GetFirstTime: Double;
+    function GetLastTime: Double;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure AssignDefaultProperties; override;
+
+    procedure Allocate(ACapacity: Integer);
+    procedure ClearPoints;
+    procedure AddPoint(AX, AY: Double);
+
+    property Capacity: Integer read GetCapacity;
+    property Count: Integer read GetCount;
+    property Points[AIndex: Integer]: TChartPoint read GetPoint;
+    property FirstTime: Double read GetFirstTime;
+    property LastTime: Double read GetLastTime;
+  end;
   { cBuffTrend2d }
   // Зарезервирован под двумерные карты или растровые графики
   cBuffTrend2d = class(cLineSeries)
@@ -529,6 +555,88 @@ begin
   SetLength(fValues, lNewLen);
   for i := 0 to High(AValues) do
     fValues[lOldLen + i] := AValues[i];
+  GLListID := 0;
+end;
+
+{ cBuffTrendQueue }
+
+constructor cBuffTrendQueue.Create;
+begin
+  inherited Create;
+  fPoints := specialize cQueue<TChartPoint>.Create;
+end;
+
+destructor cBuffTrendQueue.Destroy;
+begin
+  fPoints.Free;
+  inherited Destroy;
+end;
+
+procedure cBuffTrendQueue.AssignDefaultProperties;
+begin
+  inherited AssignDefaultProperties;
+  Name := 'BuffTrendQueue';
+  Caption := 'Buffer trend queue';
+  Color := $FFFF0000;
+end;
+
+function cBuffTrendQueue.GetCapacity: Integer;
+begin
+  if fPoints = nil then
+    Result := 0
+  else
+    Result := fPoints.Capacity;
+end;
+
+function cBuffTrendQueue.GetCount: Integer;
+begin
+  if fPoints = nil then
+    Result := 0
+  else
+    Result := fPoints.Count;
+end;
+
+function cBuffTrendQueue.GetPoint(AIndex: Integer): TChartPoint;
+begin
+  Result := fPoints[AIndex];
+end;
+
+function cBuffTrendQueue.GetFirstTime: Double;
+begin
+  if Count <= 0 then
+    Result := 0
+  else
+    Result := Points[0].X;
+end;
+
+function cBuffTrendQueue.GetLastTime: Double;
+begin
+  if Count <= 0 then
+    Result := 0
+  else
+    Result := Points[Count - 1].X;
+end;
+
+procedure cBuffTrendQueue.Allocate(ACapacity: Integer);
+begin
+  fPoints.SetCapacity(ACapacity);
+  GLListID := 0;
+end;
+
+procedure cBuffTrendQueue.ClearPoints;
+begin
+  if fPoints <> nil then
+    fPoints.Clear;
+  GLListID := 0;
+end;
+
+procedure cBuffTrendQueue.AddPoint(AX, AY: Double);
+var
+  lPoint: TChartPoint;
+begin
+  lPoint.X := AX;
+  lPoint.Y := AY;
+  fPoints.PushBack(lPoint);
   GLListID := 0;
 end;
 

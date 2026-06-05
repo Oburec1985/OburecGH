@@ -137,6 +137,7 @@ type
     /// <summary> Отрисовка одномерного буферизованного тренда cBuffTrend1d (оптимизировано под шейдеры). </summary>
 
     procedure DrawBuffTrend1d(ATrend: cBuffTrend1d; const ARect: TChartPixelRect; APage: TChartPage; AYAxis: TChartAxis);
+    procedure DrawBuffTrendQueue(ATrend: cBuffTrendQueue; const ARect: TChartPixelRect; APage: TChartPage; AYAxis: TChartAxis);
     /// <summary> Отрисовка базового тренда cBaseTrend (определяет и перенаправляет вызовы). </summary>
 
     procedure DrawBaseTrend(ATrend: cBaseTrend; const ARect: TChartPixelRect; APage: TChartPage; AYAxis: TChartAxis);
@@ -912,6 +913,8 @@ function TOpenGLChartRenderer.GetTrendValueAtX(ATrend: cBaseTrend; AWorldX: Doub
 var
   lLine: cLineSeries;
   lBuff: cBuffTrend1d;
+  lQueue: cBuffTrendQueue;
+  lPoint1, lPoint2: TChartPoint;
   I: Integer;
   lIdx: Integer;
   lX1, lX2, lY1, lY2: Double;
@@ -959,7 +962,42 @@ begin
       end;
     end;
   end
-  else if ATrend is cBuffTrend1d then
+  else if ATrend is cBuffTrendQueue then
+  begin
+    lQueue := cBuffTrendQueue(ATrend);
+    if lQueue.Count = 0 then Exit;
+    if lQueue.Count = 1 then
+    begin
+      AValueY := lQueue.Points[0].Y;
+      Exit(True);
+    end;
+
+    if AWorldX <= lQueue.Points[0].X then
+    begin
+      AValueY := lQueue.Points[0].Y;
+      Exit(True);
+    end;
+    if AWorldX >= lQueue.Points[lQueue.Count - 1].X then
+    begin
+      AValueY := lQueue.Points[lQueue.Count - 1].Y;
+      Exit(True);
+    end;
+
+    for I := 0 to lQueue.Count - 2 do
+    begin
+      lPoint1 := lQueue.Points[I];
+      lPoint2 := lQueue.Points[I + 1];
+      if (AWorldX >= lPoint1.X) and (AWorldX <= lPoint2.X) then
+      begin
+        if lPoint2.X <> lPoint1.X then
+          lRatio := (AWorldX - lPoint1.X) / (lPoint2.X - lPoint1.X)
+        else
+          lRatio := 0;
+        AValueY := lPoint1.Y + lRatio * (lPoint2.Y - lPoint1.Y);
+        Exit(True);
+      end;
+    end;
+  end  else if ATrend is cBuffTrend1d then
   begin
     lBuff := cBuffTrend1d(ATrend);
     if lBuff.Count = 0 then Exit;
@@ -1414,7 +1452,9 @@ procedure TOpenGLChartRenderer.DrawBaseTrend(ATrend: cBaseTrend; const ARect: TC
 begin
   if not Assigned(ATrend) then
     Exit;
-  if ATrend is cBuffTrend1d then
+  if ATrend is cBuffTrendQueue then
+    DrawBuffTrendQueue(cBuffTrendQueue(ATrend), ARect, APage, AYAxis)
+  else if ATrend is cBuffTrend1d then
     DrawBuffTrend1d(cBuffTrend1d(ATrend), ARect, APage, AYAxis)
   else if ATrend is TChartLineSeries then
   begin
@@ -1431,6 +1471,12 @@ begin
   RenderBuffTrend1d(Self, ATrend, ARect, APage, AYAxis, fUseShader, fShaderInitialized, fProgram1d);
 end;
 
+procedure TOpenGLChartRenderer.DrawBuffTrendQueue(ATrend: cBuffTrendQueue;
+  const ARect: TChartPixelRect; APage: TChartPage; AYAxis: TChartAxis);
+begin
+  RenderBuffTrendQueue(Self, ATrend, ARect, APage, AYAxis, fUseShader,
+    fShaderInitialized, fProgram);
+end;
 procedure TOpenGLChartRenderer.DrawTextLabel(ALabel: TChartTextLabel; APage: TChartPage; const ARect: TChartPixelRect);
 
 var
@@ -1646,7 +1692,8 @@ var
   lAxisIdx: Integer;
   lAxis: TChartAxis;
 begin
-  if Assigned(AModel) and (AModel is TChartModel) then
+  if (GetEnvironmentVariable('RECORDER_CHART_RENDER_LOG') = '1') and
+    Assigned(AModel) and (AModel is TChartModel) then
   begin
     lModel := TChartModel(AModel);
     LogToFile('=== TOpenGLChartRenderer.Render ===');

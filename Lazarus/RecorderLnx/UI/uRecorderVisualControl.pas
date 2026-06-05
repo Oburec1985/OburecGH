@@ -182,6 +182,7 @@ procedure TRecorderTagValueView.RefreshControl(ATagRegistry: TRecorderTagRegistr
   ADisplaySeconds: Double);
 var
   lTag: TRecorderTag;
+  lValue: Double;
   lValueStr: string;
 begin
   if not IsVisible then
@@ -191,8 +192,11 @@ begin
     Exit;
     
   lTag := ATagRegistry.FindByName(fComponent.TagName);
-  if (lTag <> nil) and (lTag.Snapshot.Count > 0) then
-    lValueStr := FormatFloat('0.000', lTag.Snapshot.Values[lTag.Snapshot.Count - 1])
+  if (lTag <> nil) and (lTag.SignalBuffer.Count > 0) then
+  begin
+    lValue := lTag.SignalBuffer.LatestValue;
+    lValueStr := FormatFloat('0.000', lValue);
+  end
   else
     lValueStr := '0.0';
     

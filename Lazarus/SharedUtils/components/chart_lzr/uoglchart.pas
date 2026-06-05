@@ -26,6 +26,7 @@ type
     fOpenGLRenderer: TOpenGLChartRenderer; // Конкретный OpenGL рендерер
     fIsRendererInitialized: Boolean;     // Флаг успешной инициализации рендерера
     fListeners: TList;                   // Список слушателей событий мыши/клавиатуры
+    fMouseInputEnabled: Boolean;         // Разрешает собственную интерактивность графика
     fOnAfterRender: TChartAfterRenderEvent; // Событие после отрисовки кадра
 
     function GetModel: TChartModel;
@@ -90,7 +91,8 @@ type
     property Model: TChartModel read GetModel write SetModel;
     property OnAfterRender: TChartAfterRenderEvent read fOnAfterRender write fOnAfterRender;
     property ObjectManager: TChartObjectManager read fObjectManager;
-    property Renderer: IChartRenderer read fRenderer write fRenderer;
+    property Renderer: IChartRenderer read fRenderer write fRenderer;
+    property MouseInputEnabled: Boolean read fMouseInputEnabled write fMouseInputEnabled;
     property SelectedObject: cBaseObj read GetSelectedObject write SetSelectedObject;
     property HoveredObject: cBaseObj read GetHoveredObject write SetHoveredObject;
   published
@@ -137,7 +139,8 @@ end;
 constructor TOglChart.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  AutoResizeViewport := True;
+  AutoResizeViewport := True;
+  fMouseInputEnabled := True;
   TabStop := True;
   fOpenGLRenderer := TOpenGLChartRenderer.Create;
   fRenderer := fOpenGLRenderer;
@@ -207,6 +210,9 @@ var
 begin
   inherited MouseDown(Button, Shift, X, Y);
   SetFocus;
+
+  if not fMouseInputEnabled then
+    Exit;
   lHandled := False;
   for I := 0 to fListeners.Count - 1 do
     if TChartFrameListener(fListeners[I]).Enabled then
@@ -233,6 +239,9 @@ begin
   if Cursor <> crDefault then
     Cursor := crDefault;
   inherited MouseMove(Shift, X, Y);
+
+  if not fMouseInputEnabled then
+    Exit;
   lHandled := False;
   for I := 0 to fListeners.Count - 1 do
     if TChartFrameListener(fListeners[I]).Enabled then
@@ -255,6 +264,9 @@ var
   I: Integer;
 begin
   inherited MouseUp(Button, Shift, X, Y);
+
+  if not fMouseInputEnabled then
+    Exit;
   lHandled := False;
   for I := 0 to fListeners.Count - 1 do
     if TChartFrameListener(fListeners[I]).Enabled then
@@ -278,6 +290,8 @@ var
   lClientPos: TPoint;
 begin
   Result := inherited DoMouseWheel(Shift, WheelDelta, MousePos);
+  if not fMouseInputEnabled then
+    Exit(Result);
   lClientPos := ScreenToClient(MousePos);
   lHandled := False;
   for I := 0 to fListeners.Count - 1 do

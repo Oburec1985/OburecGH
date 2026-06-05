@@ -583,10 +583,19 @@ begin
     lPagePanel.BevelOuter := bvNone;
     lPagePanel.Color := clWhite;
     lPagePanel.ParentBackground := False;
+    lPagePanel.OnMouseDown := @CanvasMouseDown;
+    lPagePanel.OnMouseMove := @CanvasMouseMove;
+    lPagePanel.OnMouseUp := @CanvasMouseUp;
+    lPagePanel.Cursor := crDefault;
     fPagePanels.AddObject(lPage.Id, lPagePanel);
   end
   else
     lPagePanel := TPanel(fPagePanels.Objects[lPagePanelIdx]);
+
+  lPagePanel.OnMouseDown := @CanvasMouseDown;
+  lPagePanel.OnMouseMove := @CanvasMouseMove;
+  lPagePanel.OnMouseUp := @CanvasMouseUp;
+  lPagePanel.Cursor := crDefault;
 
 
   // Показываем только активную панель
@@ -694,7 +703,7 @@ begin
         TControlAccess(lControl).OnMouseDown := @ComponentMouseDown;
         TControlAccess(lControl).OnMouseMove := @ChildMouseMove;
         TControlAccess(lControl).OnMouseUp := @ComponentMouseUp;
-        lControl.Enabled := not fEnabled;
+        lControl.Enabled := True;
 
 
         if Supports(lControl, IVForm, lVisualCtrl) then
@@ -707,6 +716,7 @@ begin
             lChart.OnMouseDown := @ComponentMouseDown;
             lChart.OnMouseMove := @ChildMouseMove;
             lChart.OnMouseUp := @ComponentMouseUp;
+            lChart.MouseInputEnabled := not fEnabled;
           end;
 
           lVisualCtrl.RefreshControl(fTagRegistry, fDisplaySeconds);
@@ -753,9 +763,12 @@ begin
         if lPanel.ControlCount > 0 then
         begin
           lCtrl := lPanel.Controls[0];
-          lCtrl.Enabled := not fEnabled;
+          lCtrl.Enabled := True;
           if Supports(lCtrl, IVForm, lVisualCtrl) then
           begin
+            lChart := lVisualCtrl.GetChartControl;
+            if lChart <> nil then
+              lChart.MouseInputEnabled := not fEnabled;
             lVisualCtrl.Configure(lComponent, fTagRegistry);
             lVisualCtrl.RefreshControl(fTagRegistry, fDisplaySeconds);
           end;

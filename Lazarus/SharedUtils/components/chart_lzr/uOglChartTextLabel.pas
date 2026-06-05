@@ -98,6 +98,7 @@ function GetTrendValueAtX(ATrend: cBaseTrend; AX: Double; out AY: Double): Boole
 var
   lLine: cLineSeries;
   lBuff: cBuffTrend1d;
+  lQueue: cBuffTrendQueue;
   I: Integer;
   lPt1, lPt2: TChartPoint;
   lIdx: Integer;
@@ -138,7 +139,36 @@ begin
       AY := lLine.Points[lLine.PointCount - 1].Y;
     Result := True;
   end
-  else if ATrend is cBuffTrend1d then
+  else if ATrend is cBuffTrendQueue then
+  begin
+    lQueue := cBuffTrendQueue(ATrend);
+    if lQueue.Count = 0 then Exit;
+    if lQueue.Count = 1 then
+    begin
+      AY := lQueue.Points[0].Y;
+      Exit(True);
+    end;
+
+    for I := 0 to lQueue.Count - 2 do
+    begin
+      lPt1 := lQueue.Points[I];
+      lPt2 := lQueue.Points[I + 1];
+      if ((lPt1.X <= AX) and (AX <= lPt2.X)) or ((lPt2.X <= AX) and (AX <= lPt1.X)) then
+      begin
+        if Abs(lPt2.X - lPt1.X) < 1E-9 then
+          AY := lPt1.Y
+        else
+          AY := lPt1.Y + (lPt2.Y - lPt1.Y) * (AX - lPt1.X) / (lPt2.X - lPt1.X);
+        Exit(True);
+      end;
+    end;
+
+    if AX < lQueue.Points[0].X then
+      AY := lQueue.Points[0].Y
+    else
+      AY := lQueue.Points[lQueue.Count - 1].Y;
+    Result := True;
+  end  else if ATrend is cBuffTrend1d then
   begin
     lBuff := cBuffTrend1d(ATrend);
     if lBuff.Count = 0 then Exit;

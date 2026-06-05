@@ -45,6 +45,17 @@ procedure RenderBuffTrend1d(
   AShaderInitialized: Boolean;
   AShaderProgram: GLuint
 );
+// Отрисовывает предвыделенную очередь 2D-точек cBuffTrendQueue.
+procedure RenderBuffTrendQueue(
+  ARenderer: TObject;
+  ATrend: cBuffTrendQueue;
+  const ARect: TChartPixelRect;
+  APage: TChartPage;
+  AYAxis: TChartAxis;
+  AUseShader: Boolean;
+  AShaderInitialized: Boolean;
+  AShaderProgram: GLuint
+);
 // Отрисовывает опорные точки и касательные линии для сплайнов cTrend.
 procedure RenderTrendPoints(
   ARenderer: TObject;
@@ -88,7 +99,8 @@ begin
   lRendererObj.SetGLColor(ASeries.Color);
   glLineWidth(2.3);
   // Использование шейдерного конвейера отрисовки (для поддержки логарифмических осей на GPU)
-  if AUseShader and AShaderInitialized then
+  glUseProgram(0);
+  if False and AUseShader and AShaderInitialized then
   begin
     if AYAxis.UseOwnX then
     begin
@@ -129,7 +141,7 @@ begin
     glScalef((ARect.Right - ARect.Left) / (lXMax - lXMin), (ARect.Top - ARect.Bottom) / (lYMax - lYMin), 1.0);
     glTranslatef(-lXMin, -lYMin, 0);
     // Быстрая отрисовка через дисплейные списки OpenGL при большом числе точек
-    if ASeries.PointCount > 2000 then
+    if False and (ASeries.PointCount > 2000) then
     begin
       if (ASeries.GLListID = 0) or (ASeries.GLListContextVersion <> gGLContextVersion) then
       begin
@@ -253,7 +265,7 @@ begin
     glScalef((ARect.Right - ARect.Left) / (lXMax - lXMin), (ARect.Top - ARect.Bottom) / (lYMax - lYMin), 1.0);
     glTranslatef(-lXMin, -lYMin, 0);
     // Рендеринг через списки дисплея
-    if ATrend.Count > 2000 then
+    if False and (ATrend.Count > 2000) then
     begin
       if (ATrend.GLListID = 0) or (ATrend.GLListContextVersion <> gGLContextVersion) then
       begin
@@ -299,6 +311,100 @@ begin
   end;
 end;
 
+procedure RenderBuffTrendQueue(
+  ARenderer: TObject;
+  ATrend: cBuffTrendQueue;
+  const ARect: TChartPixelRect;
+  APage: TChartPage;
+  AYAxis: TChartAxis;
+  AUseShader: Boolean;
+  AShaderInitialized: Boolean;
+  AShaderProgram: GLuint
+);
+var
+  lIndex: Integer;
+  lPoint: TChartPoint;
+  lX: Single;
+  lY: Single;
+  lXMin, lXMax, lYMin, lYMax: Double;
+  lMinMax: array[0..3] of GLfloat;
+  lLg: array[0..1] of GLint;
+  lMinMaxLoc, lLgLoc: GLint;
+  lRendererObj: IChartOffsetHelper;
+begin
+  if not Assigned(ATrend) or (ATrend.Count <= 0) or not Assigned(AYAxis) or not Assigned(ARenderer) then
+    Exit;
+  if not Supports(ARenderer, IChartOffsetHelper, lRendererObj) then
+    Exit;
+
+  lRendererObj.SetGLColor(ATrend.Color);
+  glLineWidth(2.3);
+
+  if AUseShader and AShaderInitialized then
+  begin
+    if AYAxis.UseOwnX then
+    begin
+      lXMin := AYAxis.XMinValue;
+      lXMax := AYAxis.XMaxValue;
+    end
+    else
+    begin
+      lXMin := APage.XMinValue;
+      lXMax := APage.XMaxValue;
+    end;
+    lYMin := AYAxis.MinValue;
+    lYMax := AYAxis.MaxValue;
+
+    glUseProgram(AShaderProgram);
+    lMinMax[0] := lXMin;
+    lMinMax[1] := lXMax;
+    lMinMax[2] := lYMin;
+    lMinMax[3] := lYMax;
+    lMinMaxLoc := glGetUniformLocation(AShaderProgram, 'a_minmax');
+    glUniform4fv(lMinMaxLoc, 1, @lMinMax[0]);
+
+    if AYAxis.UseOwnX then
+    begin
+      if AYAxis.XScale = casLog10 then lLg[0] := 1 else lLg[0] := 0;
+    end
+    else
+    begin
+      if APage.XScale = casLog10 then lLg[0] := 1 else lLg[0] := 0;
+    end;
+    if AYAxis.Scale = casLog10 then lLg[1] := 1 else lLg[1] := 0;
+    lLgLoc := glGetUniformLocation(AShaderProgram, 'a_Lg');
+    glUniform2iv(lLgLoc, 1, @lLg[0]);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix;
+    glTranslatef(ARect.Left, ARect.Bottom, 0);
+    glScalef((ARect.Right - ARect.Left) / (lXMax - lXMin), (ARect.Top - ARect.Bottom) / (lYMax - lYMin), 1.0);
+    glTranslatef(-lXMin, -lYMin, 0);
+
+    glBegin(GL_LINE_STRIP);
+    for lIndex := 0 to ATrend.Count - 1 do
+    begin
+      lPoint := ATrend.Points[lIndex];
+      glVertex2f(lPoint.X, lPoint.Y);
+    end;
+    glEnd;
+
+    glPopMatrix;
+    glUseProgram(0);
+  end
+  else
+  begin
+    glBegin(GL_LINE_STRIP);
+    for lIndex := 0 to ATrend.Count - 1 do
+    begin
+      lPoint := ATrend.Points[lIndex];
+      lX := lRendererObj.XValueToPixel(APage, AYAxis, lPoint.X, ARect.Left, ARect.Right);
+      lY := lRendererObj.AxisValueToPixel(AYAxis, lPoint.Y, ARect.Bottom, ARect.Top);
+      glVertex2f(lX, lY);
+    end;
+    glEnd;
+  end;
+end;
 /// <summary>
 /// Отрисовывает маркеры контрольных точек Безье, зеленые касательные усы управления
 /// и соединяющие линии для редактируемого сплайна cTrend.
