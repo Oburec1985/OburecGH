@@ -23,7 +23,7 @@ unit uRecorderTags;
 interface
 
 uses
-  Classes, SysUtils,
+  Classes, SysUtils, Math,
   uRecorderCoreServices;
 
 type
@@ -162,6 +162,7 @@ type
     fDescription: string;                                      { Описание тега }
     fAutoRange: Boolean;                                       { Автоматический диапазон шкалы }
     fAutoUnit: Boolean;                                        { Автоматические единицы измерения }
+    fCalibrationNames: TStringList;                          { Цепочка имен канальных ГХ }
     fId: TRecorderTagId;                                       { Уникальный ID тега }
     fEstimateSettings: TRecorderTagEstimateSettings;           { Настройки расчета оценок }
     fModuleType: string;                                       { Тип модуля/устройства }
@@ -220,6 +221,7 @@ type
     property RangeMax: Double read fRangeMax write fRangeMax;
     property AutoRange: Boolean read fAutoRange write fAutoRange;
     property AutoUnit: Boolean read fAutoUnit write fAutoUnit;
+    property CalibrationNames: TStringList read fCalibrationNames;
     property EstimateSettings: TRecorderTagEstimateSettings read fEstimateSettings
       write fEstimateSettings;
     property Setpoints[AKind: TRecorderTagSetpointKind]: TRecorderTagSetpoint
@@ -263,6 +265,64 @@ type
   { TRecorderTagRegistry
     Реестр тегов RecorderLnx. Владеет тегами, обеспечивает уникальность id/name и
     публикует rceDataUpdated при записи значения. }
+
+  TRecorderCalibrationKind = (rckScale, rckPiecewiseLinear);
+
+  TRecorderCalibrationPoint = class
+  public
+    X: Double;
+    Y: Double;
+    constructor Create(AX, AY: Double);
+  end;
+
+  TRecorderCalibration = class
+  private
+    fName: string;
+    fDescription: string;
+    fUnitIn: string;
+    fUnitOut: string;
+    fExtrapolation: Boolean;
+    fKind: TRecorderCalibrationKind;
+    fScale: Double;
+    fPoints: TList; // List of TRecorderCalibrationPoint
+    function GetPoint(AIndex: Integer): TRecorderCalibrationPoint;
+    function GetPointCount: Integer;
+  public
+    constructor Create(AKind: TRecorderCalibrationKind);
+    destructor Destroy; override;
+    procedure AddPoint(AX, AY: Double);
+    procedure Assign(ASource: TRecorderCalibration);
+    function Clone: TRecorderCalibration;
+    function Transform(AValue: Double): Double;
+    procedure ClearPoints;
+    function PointAt(AIndex: Integer): TRecorderCalibrationPoint;
+    property Name: string read fName write fName;
+    property Description: string read fDescription write fDescription;
+    property UnitIn: string read fUnitIn write fUnitIn;
+    property UnitOut: string read fUnitOut write fUnitOut;
+    property Extrapolation: Boolean read fExtrapolation write fExtrapolation;
+    property Kind: TRecorderCalibrationKind read fKind write fKind;
+    property Scale: Double read fScale write fScale;
+    property PointCount: Integer read GetPointCount;
+  end;
+
+  TRecorderCalibrationList = class
+  private
+    fList: TList; // List of TRecorderCalibration
+    function GetCount: Integer;
+    function GetItem(AIndex: Integer): TRecorderCalibration;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Add(ACalibration: TRecorderCalibration);
+    procedure AddCopy(ACalibration: TRecorderCalibration);
+    procedure Delete(AIndex: Integer);
+    procedure Exchange(AIndex1, AIndex2: Integer);
+    procedure Clear;
+    property Count: Integer read GetCount;
+    property Items[AIndex: Integer]: TRecorderCalibration read GetItem; default;
+  end;
+
   TRecorderTagRegistry = class
   private
     fActiveSourceIds: TStringList;                     { Active data source ids for detached tag indication }
@@ -270,6 +330,7 @@ type
     fNextId: TRecorderTagId;                          { Счетчик следующего ID }
     fSelectedTagName: string;                         { Имя текущего выбранного тега }
     fTags: TList;                                     { Список тегов (TRecorderTag) }
+    fCalibrations: TRecorderCalibrationList;
     function GetActiveSourceCount: Integer;
     function GetActiveSourceId(AIndex: Integer): string;
     function GetSelectedTag: TRecorderTag;
@@ -294,6 +355,8 @@ type
 
     { Ищет тег по имени без учета регистра. Возвращает nil, если тег не найден. }
     function FindByName(const AName: string): TRecorderTag;
+    function FindCalibrationByName(const AName: string): TRecorderCalibration;
+    function TransformTagValue(ATag: TRecorderTag; AValue: Double): Double;
 
     procedure RegisterActiveSource(const ASourceId: string);
     procedure UnregisterActiveSource(const ASourceId: string);
@@ -316,6 +379,7 @@ type
     property SelectedTag: TRecorderTag read GetSelectedTag;
     property SelectedTagName: string read fSelectedTagName write fSelectedTagName;
     property TagCount: Integer read GetTagCount;
+    property Calibrations: TRecorderCalibrationList read fCalibrations;
     property Tags[AIndex: Integer]: TRecorderTag read GetTag;
   end;
 
@@ -743,12 +807,15 @@ begin
   fSetpoints[tskLowAlarm].Threshold := -10.0;
   fSetpoints[tskLowAlarm].Color := $0000FF;
   fSetpointSoundUntilEnd := True;
+  fCalibrationNames := TStringList.Create;
+  fCalibrationNames.CaseSensitive := False;
   fSignalBuffer := TRecorderSignalBuffer.Create(ACapacity);
 end;
 
 destructor TRecorderTag.Destroy;
 begin
   fSignalBuffer.Free;
+  fCalibrationNames.Free;
   inherited Destroy;
 end;
 
@@ -856,11 +923,14 @@ begin
   fActiveSourceIds.Sorted := False;
   fTags := TList.Create;
   fNextId := 1;
+  fCalibrations := TRecorderCalibrationList.Create;
 end;
 
 destructor TRecorderTagRegistry.Destroy;
 begin
   Clear;
+  fCalibrations.Free;
+  fActiveSourceIds.Free;
   fTags.Free;
   inherited Destroy;
 end;
@@ -938,6 +1008,32 @@ begin
       Exit(GetTag(I));
 end;
 
+
+function TRecorderTagRegistry.FindCalibrationByName(const AName: string): TRecorderCalibration;
+var
+  I: Integer;
+begin
+  Result := nil;
+  for I := 0 to fCalibrations.Count - 1 do
+    if (fCalibrations[I] <> nil) and SameText(fCalibrations[I].Name, AName) then
+      Exit(fCalibrations[I]);
+end;
+
+function TRecorderTagRegistry.TransformTagValue(ATag: TRecorderTag; AValue: Double): Double;
+var
+  I: Integer;
+  lCalibration: TRecorderCalibration;
+begin
+  Result := AValue;
+  if ATag = nil then
+    Exit;
+  for I := 0 to ATag.CalibrationNames.Count - 1 do
+  begin
+    lCalibration := FindCalibrationByName(ATag.CalibrationNames[I]);
+    if lCalibration <> nil then
+      Result := lCalibration.Transform(Result);
+  end;
+end;
 procedure TRecorderTagRegistry.RegisterActiveSource(const ASourceId: string);
 var
   lSourceId: string;
@@ -977,16 +1073,18 @@ var
   lEvent: TRecorderEvent;
   lTag: TRecorderTag;
   lEventData: TRecorderTagUpdateEventData;
+  lValue: Double;
 begin
   lTag := FindByName(ATagName);
   if lTag = nil then
     raise ERecorderTagError.CreateFmt('Tag not found: %s', [ATagName]);
 
-  lTag.AddSample(ATimeSec, AValue);
+  lValue := TransformTagValue(lTag, AValue);
+  lTag.AddSample(ATimeSec, lValue);
 
   if fEventBus <> nil then
   begin
-    lEventData := TRecorderTagUpdateEventData.Create(lTag, ATimeSec, AValue);
+    lEventData := TRecorderTagUpdateEventData.Create(lTag, ATimeSec, lValue);
     try
       lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, lTag.Name,
         lTag.TextValue, 1, lEventData);
@@ -1004,6 +1102,8 @@ var
   lTag: TRecorderTag;
   lTimeSec: Double;
   lEventData: TRecorderTagUpdateEventData;
+  lValues: TRecorderDoubleArray;
+  I: Integer;
 begin
   if ACount <= 0 then
     Exit;
@@ -1014,7 +1114,10 @@ begin
   if lTag = nil then
     raise ERecorderTagError.CreateFmt('Tag not found: %s', [ATagName]);
 
-  lTag.AddSamples(ATimes, AValues, ACount);
+  SetLength(lValues, ACount);
+  for I := 0 to ACount - 1 do
+    lValues[I] := TransformTagValue(lTag, AValues[I]);
+  lTag.AddSamples(ATimes, lValues, ACount);
   lTimeSec := ATimes[ACount - 1];
   RecorderDebugLog(Format('Tag block: tag=%s count=%d first=%.6f last=%.6f bufferCount=%d bufferCapacity=%d',
     [lTag.Name, ACount, ATimes[0], lTimeSec, lTag.SignalBuffer.Count,
@@ -1022,7 +1125,7 @@ begin
 
   if fEventBus <> nil then
   begin
-    lEventData := TRecorderTagUpdateEventData.CreateBlock(lTag, ATimes, AValues, ACount);
+    lEventData := TRecorderTagUpdateEventData.CreateBlock(lTag, ATimes, lValues, ACount);
     try
       lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, lTag.Name,
         lTag.TextValue, ACount, lEventData);
@@ -1051,6 +1154,227 @@ begin
   fTags.Clear;
   fSelectedTagName := '';
   fNextId := 1;
+end;
+
+
+{ TRecorderCalibrationPoint }
+
+constructor TRecorderCalibrationPoint.Create(AX, AY: Double);
+begin
+  X := AX;
+  Y := AY;
+end;
+
+{ TRecorderCalibration }
+
+constructor TRecorderCalibration.Create(AKind: TRecorderCalibrationKind);
+begin
+  inherited Create;
+  fKind := AKind;
+  fPoints := TList.Create;
+  fScale := 1.0;
+  fExtrapolation := True;
+end;
+
+destructor TRecorderCalibration.Destroy;
+begin
+  ClearPoints;
+  fPoints.Free;
+  inherited Destroy;
+end;
+
+procedure TRecorderCalibration.AddPoint(AX, AY: Double);
+begin
+  fPoints.Add(TRecorderCalibrationPoint.Create(AX, AY));
+end;
+
+
+procedure TRecorderCalibration.Assign(ASource: TRecorderCalibration);
+var
+  I: Integer;
+  lPoint: TRecorderCalibrationPoint;
+begin
+  if ASource = nil then
+    Exit;
+  fName := ASource.Name;
+  fDescription := ASource.Description;
+  fUnitIn := ASource.UnitIn;
+  fUnitOut := ASource.UnitOut;
+  fExtrapolation := ASource.Extrapolation;
+  fKind := ASource.Kind;
+  fScale := ASource.Scale;
+  ClearPoints;
+  for I := 0 to ASource.PointCount - 1 do
+  begin
+    lPoint := ASource.PointAt(I);
+    if lPoint <> nil then
+      AddPoint(lPoint.X, lPoint.Y);
+  end;
+end;
+
+function TRecorderCalibration.Clone: TRecorderCalibration;
+begin
+  Result := TRecorderCalibration.Create(fKind);
+  Result.Assign(Self);
+end;
+
+function TRecorderCalibration.Transform(AValue: Double): Double;
+var
+  I: Integer;
+  lA: TRecorderCalibrationPoint;
+  lB: TRecorderCalibrationPoint;
+  lX1: Double;
+  lX2: Double;
+begin
+  Result := AValue;
+  case fKind of
+    rckScale:
+      Result := AValue * fScale;
+    rckPiecewiseLinear:
+      begin
+        if fPoints.Count = 0 then
+          Exit;
+        if fPoints.Count = 1 then
+        begin
+          lA := PointAt(0);
+          if lA <> nil then
+            Result := lA.Y;
+          Exit;
+        end;
+
+        for I := 0 to fPoints.Count - 2 do
+        begin
+          lA := PointAt(I);
+          lB := PointAt(I + 1);
+          if (lA = nil) or (lB = nil) then
+            Continue;
+          lX1 := Min(lA.X, lB.X);
+          lX2 := Max(lA.X, lB.X);
+          if (AValue >= lX1) and (AValue <= lX2) then
+          begin
+            if SameValue(lA.X, lB.X) then
+              Result := lB.Y
+            else
+              Result := lA.Y + (AValue - lA.X) * (lB.Y - lA.Y) / (lB.X - lA.X);
+            Exit;
+          end;
+        end;
+
+        if (not fExtrapolation) and (AValue < PointAt(0).X) then
+        begin
+          Result := PointAt(0).Y;
+          Exit;
+        end;
+        if (not fExtrapolation) and (AValue > PointAt(fPoints.Count - 1).X) then
+        begin
+          Result := PointAt(fPoints.Count - 1).Y;
+          Exit;
+        end;
+
+        if AValue < PointAt(0).X then
+        begin
+          lA := PointAt(0);
+          lB := PointAt(1);
+        end
+        else
+        begin
+          lA := PointAt(fPoints.Count - 2);
+          lB := PointAt(fPoints.Count - 1);
+        end;
+        if SameValue(lA.X, lB.X) then
+          Result := lB.Y
+        else
+          Result := lA.Y + (AValue - lA.X) * (lB.Y - lA.Y) / (lB.X - lA.X);
+      end;
+  end;
+end;
+procedure TRecorderCalibration.ClearPoints;
+var
+  I: Integer;
+begin
+  for I := 0 to fPoints.Count - 1 do
+    TObject(fPoints[I]).Free;
+  fPoints.Clear;
+end;
+
+function TRecorderCalibration.PointAt(AIndex: Integer): TRecorderCalibrationPoint;
+begin
+  Result := GetPoint(AIndex);
+end;
+
+function TRecorderCalibration.GetPoint(AIndex: Integer): TRecorderCalibrationPoint;
+begin
+  if (AIndex >= 0) and (AIndex < fPoints.Count) then
+    Result := TRecorderCalibrationPoint(fPoints[AIndex])
+  else
+    Result := nil;
+end;
+
+function TRecorderCalibration.GetPointCount: Integer;
+begin
+  Result := fPoints.Count;
+end;
+
+{ TRecorderCalibrationList }
+
+constructor TRecorderCalibrationList.Create;
+begin
+  inherited Create;
+  fList := TList.Create;
+end;
+
+destructor TRecorderCalibrationList.Destroy;
+begin
+  Clear;
+  fList.Free;
+  inherited Destroy;
+end;
+
+procedure TRecorderCalibrationList.Add(ACalibration: TRecorderCalibration);
+begin
+  fList.Add(ACalibration);
+end;
+
+procedure TRecorderCalibrationList.AddCopy(ACalibration: TRecorderCalibration);
+begin
+  if ACalibration <> nil then
+    Add(ACalibration.Clone);
+end;
+
+procedure TRecorderCalibrationList.Delete(AIndex: Integer);
+begin
+  if (AIndex >= 0) and (AIndex < fList.Count) then
+  begin
+    TObject(fList[AIndex]).Free;
+    fList.Delete(AIndex);
+  end;
+end;
+
+procedure TRecorderCalibrationList.Exchange(AIndex1, AIndex2: Integer);
+begin
+  fList.Exchange(AIndex1, AIndex2);
+end;
+
+procedure TRecorderCalibrationList.Clear;
+var
+  I: Integer;
+begin
+  for I := 0 to fList.Count - 1 do
+    TObject(fList[I]).Free;
+  fList.Clear;
+end;
+
+function TRecorderCalibrationList.GetCount: Integer;
+begin
+  Result := fList.Count;
+end;
+
+function TRecorderCalibrationList.GetItem(AIndex: Integer): TRecorderCalibration;
+begin
+  if (AIndex >= 0) and (AIndex < fList.Count) then
+    Result := TRecorderCalibration(fList[AIndex])
+  else
+    Result := nil;
 end;
 
 end.

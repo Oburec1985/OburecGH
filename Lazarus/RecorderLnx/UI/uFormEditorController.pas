@@ -190,6 +190,7 @@ type
     procedure SetEnabled(AValue: Boolean);
 
     function GetActivePage: TRecorderFormPage;
+    function GetActivePagePanel: TPanel;
 
     procedure BeginOperation(AOperation: TFormEditorOperation; X, Y: Integer);
 
@@ -466,6 +467,28 @@ end;
 
 
 
+function TFormEditorController.GetActivePagePanel: TPanel;
+
+var
+
+  lPage: TRecorderFormPage;
+  lPagePanelIdx: Integer;
+begin
+  Result := nil;
+  if fPagePanels = nil then
+    Exit;
+
+  lPage := GetActivePage;
+  if lPage = nil then
+    Exit;
+
+  lPagePanelIdx := fPagePanels.IndexOf(lPage.Id);
+  if lPagePanelIdx >= 0 then
+    Result := TPanel(fPagePanels.Objects[lPagePanelIdx]);
+end;
+
+
+
 procedure TFormEditorController.NotifyChanged;
 
 begin
@@ -528,8 +551,8 @@ var
   procedure AddHandle(AOperation: TFormEditorOperation; ALeft, ATop: Integer);
 
   begin
-    lHandle := TPanel.Create(fCanvas);
-    lHandle.Parent := fCanvas;
+    lHandle := TPanel.Create(lPagePanel);
+    lHandle.Parent := lPagePanel;
     lHandle.SetBounds(ALeft, ATop, CResizeHandleSize, CResizeHandleSize);
     lHandle.Tag := Ord(AOperation);
     lHandle.Color := clFuchsia;
@@ -596,6 +619,18 @@ begin
   lPagePanel.OnMouseMove := @CanvasMouseMove;
   lPagePanel.OnMouseUp := @CanvasMouseUp;
   lPagePanel.Cursor := crDefault;
+
+
+  I := 0;
+  while I < lPagePanel.ControlCount do
+  begin
+    lCtrl := lPagePanel.Controls[I];
+    if (lCtrl is TShape) or
+      ((lCtrl is TPanel) and (lCtrl.Hint = 'Resize selection')) then
+      lCtrl.Free
+    else
+      Inc(I);
+  end;
 
 
   // Показываем только активную панель
@@ -797,8 +832,8 @@ begin
   begin
     lComponent := lPage.Components[Integer(PtrUInt(fSelected[I]))];
     lBounds := lComponent.Bounds;
-    lShape := TShape.Create(fCanvas);
-    lShape.Parent := fCanvas;
+    lShape := TShape.Create(lPagePanel);
+    lShape.Parent := lPagePanel;
     lShape.SetBounds(lBounds.Left - 2, lBounds.Top - 2,
       lBounds.Width + 4, lBounds.Height + 4);
     lShape.Brush.Style := bsClear;
@@ -812,8 +847,8 @@ begin
 
   if GetGroupBounds(lGroupBounds) then
   begin
-    lShape := TShape.Create(fCanvas);
-    lShape.Parent := fCanvas;
+    lShape := TShape.Create(lPagePanel);
+    lShape.Parent := lPagePanel;
     lShape.SetBounds(lGroupBounds.Left - 4, lGroupBounds.Top - 4,
       lGroupBounds.Width + 8, lGroupBounds.Height + 8);
     lShape.Brush.Style := bsClear;
@@ -1262,6 +1297,7 @@ var
   lNewGroup: TRecorderRect;
   lScaleX: Double;
   lScaleY: Double;
+  lPagePanel: TPanel;
 begin
   if fOperation = feoNone then
     Exit;
@@ -1275,8 +1311,11 @@ begin
   begin
     if fSelectionFrame = nil then
     begin
-      fSelectionFrame := TShape.Create(fCanvas);
-      fSelectionFrame.Parent := fCanvas;
+      lPagePanel := GetActivePagePanel;
+      if lPagePanel = nil then
+        lPagePanel := fCanvas;
+      fSelectionFrame := TShape.Create(lPagePanel);
+      fSelectionFrame.Parent := lPagePanel;
       fSelectionFrame.Brush.Style := bsClear;
       fSelectionFrame.Pen.Color := clRed;
       fSelectionFrame.Pen.Style := psDot;
@@ -1691,14 +1730,18 @@ begin
 
 
 
+  lPagePanel := GetActivePagePanel;
+  if lPagePanel = nil then
+    Exit;
+
   lSelectionShapeIndex := 0;
-  for I := 0 to fCanvas.ControlCount - 1 do
-    if (fCanvas.Controls[I] is TShape) and fCanvas.Controls[I].Visible then
+  for I := 0 to lPagePanel.ControlCount - 1 do
+    if (lPagePanel.Controls[I] is TShape) and lPagePanel.Controls[I].Visible then
     begin
       if lSelectionShapeIndex < fSelected.Count then
       begin
         lBounds := lPage.Components[Integer(PtrUInt(fSelected[lSelectionShapeIndex]))].Bounds;
-        fCanvas.Controls[I].SetBounds(lBounds.Left - 2, lBounds.Top - 2,
+        lPagePanel.Controls[I].SetBounds(lBounds.Left - 2, lBounds.Top - 2,
           lBounds.Width + 4, lBounds.Height + 4);
         Inc(lSelectionShapeIndex);
       end
@@ -1706,40 +1749,40 @@ begin
       begin
         if GetGroupBounds(lGroupBounds) then
         begin
-          fCanvas.Controls[I].SetBounds(lGroupBounds.Left - 4,
+          lPagePanel.Controls[I].SetBounds(lGroupBounds.Left - 4,
             lGroupBounds.Top - 4, lGroupBounds.Width + 8,
             lGroupBounds.Height + 8);
-          for J := 0 to fCanvas.ControlCount - 1 do
-            if (fCanvas.Controls[J] is TPanel) and
-              (fCanvas.Controls[J].Hint = 'Resize selection') then
+          for J := 0 to lPagePanel.ControlCount - 1 do
+            if (lPagePanel.Controls[J] is TPanel) and
+              (lPagePanel.Controls[J].Hint = 'Resize selection') then
             begin
-              case TFormEditorOperation(fCanvas.Controls[J].Tag) of
-                feoResizeTopLeft: fCanvas.Controls[J].SetBounds(
+              case TFormEditorOperation(lPagePanel.Controls[J].Tag) of
+                feoResizeTopLeft: lPagePanel.Controls[J].SetBounds(
                     lGroupBounds.Left - 8, lGroupBounds.Top - 8,
                     CResizeHandleSize, CResizeHandleSize);
-                feoResizeTop: fCanvas.Controls[J].SetBounds(
+                feoResizeTop: lPagePanel.Controls[J].SetBounds(
                     lGroupBounds.Left + lGroupBounds.Width div 2 - 4,
                     lGroupBounds.Top - 8, CResizeHandleSize, CResizeHandleSize);
-                feoResizeTopRight: fCanvas.Controls[J].SetBounds(
+                feoResizeTopRight: lPagePanel.Controls[J].SetBounds(
                     lGroupBounds.Left + lGroupBounds.Width,
                     lGroupBounds.Top - 8, CResizeHandleSize, CResizeHandleSize);
-                feoResizeLeft: fCanvas.Controls[J].SetBounds(
+                feoResizeLeft: lPagePanel.Controls[J].SetBounds(
                     lGroupBounds.Left - 8,
                     lGroupBounds.Top + lGroupBounds.Height div 2 - 4,
                     CResizeHandleSize, CResizeHandleSize);
-                feoResizeRight: fCanvas.Controls[J].SetBounds(
+                feoResizeRight: lPagePanel.Controls[J].SetBounds(
                     lGroupBounds.Left + lGroupBounds.Width,
                     lGroupBounds.Top + lGroupBounds.Height div 2 - 4,
                     CResizeHandleSize, CResizeHandleSize);
-                feoResizeBottomLeft: fCanvas.Controls[J].SetBounds(
+                feoResizeBottomLeft: lPagePanel.Controls[J].SetBounds(
                     lGroupBounds.Left - 8,
                     lGroupBounds.Top + lGroupBounds.Height, CResizeHandleSize,
                     CResizeHandleSize);
-                feoResizeBottom: fCanvas.Controls[J].SetBounds(
+                feoResizeBottom: lPagePanel.Controls[J].SetBounds(
                     lGroupBounds.Left + lGroupBounds.Width div 2 - 4,
                     lGroupBounds.Top + lGroupBounds.Height, CResizeHandleSize,
                     CResizeHandleSize);
-                feoResizeBottomRight: fCanvas.Controls[J].SetBounds(
+                feoResizeBottomRight: lPagePanel.Controls[J].SetBounds(
                     lGroupBounds.Left + lGroupBounds.Width,
                     lGroupBounds.Top + lGroupBounds.Height, CResizeHandleSize,
                     CResizeHandleSize);

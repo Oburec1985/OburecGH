@@ -25,7 +25,7 @@ uses
   Classes, SysUtils, Math, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   ComCtrls, ImgList, Grids, Buttons, Menus, LCLType,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderTags, uMeraFile,
-  uRecorderCommandImages, uTagSettingsDialog;
+  uRecorderCommandImages, uTagSettingsDialog, uComponentServices;
 
 type
   { TRecorderSettingsDialog }
@@ -1074,6 +1074,9 @@ begin
       lSelectedTags.Free;
     end;
   end;
+
+  SGChange(fAvailableChannelsGrid);
+  SGChange(fSelectedChannelsGrid);
 end;
 
 { Переключение активности сигнала по двойному клику в дереве аппаратных модулей }

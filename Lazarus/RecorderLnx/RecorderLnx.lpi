@@ -113,6 +113,9 @@
       <Unit>
         <Filename Value="UI/uTagSettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="TagSettingsDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
         <Filename Value="UI/uRecorderDigitalPageView.pas"/>

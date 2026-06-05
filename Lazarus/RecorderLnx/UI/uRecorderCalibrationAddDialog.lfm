@@ -1,0 +1,45 @@
+object RecorderCalibrationAddDialog: TRecorderCalibrationAddDialog
+  Left = 350
+  Height = 240
+  Top = 220
+  Width = 440
+  BorderStyle = bsSizeable
+  Caption = 'Добавление градуировочной характеристики'
+  ClientHeight = 240
+  ClientWidth = 440
+  OnCreate = FormCreate
+  Position = poOwnerFormCenter
+  LCLVersion = '3.6'
+  object lbTypes: TListBox
+    Left = 8
+    Height = 160
+    Top = 8
+    Width = 424
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    ItemHeight = 0
+    OnDblClick = lbTypesDblClick
+    TabOrder = 0
+  end
+  object btnAdd: TButton
+    Left = 8
+    Height = 27
+    Top = 184
+    Width = 90
+    Anchors = [akLeft, akBottom]
+    Caption = 'Добавить'
+    Default = True
+    ModalResult = 1
+    TabOrder = 1
+  end
+  object btnCancel: TButton
+    Left = 112
+    Height = 27
+    Top = 184
+    Width = 90
+    Anchors = [akLeft, akBottom]
+    Cancel = True
+    Caption = 'Отмена'
+    ModalResult = 2
+    TabOrder = 2
+  end
+end

@@ -9,11 +9,12 @@ unit uRecorderTrendSettingsDialog;
 }
 
 {$mode objfpc}{$H+}
-{$codepage UTF8}
+{$codepage cp1251}
 
 interface
 
 uses
+  LConvEncoding,
   Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, Dialogs,
   uRecorderFormModel, uRecorderTags;
 
@@ -119,7 +120,7 @@ begin
   fSelectedAxis := -1;
   fSelectedLine := -1;
 
-  Caption := 'РќР°СЃС‚СЂРѕР№РєР° РїР°СЂР°РјРµС‚СЂРѕРІ С‚СЂРµРЅРґР° - ' + AComponent.Name;
+  Caption := CP1251ToUTF8('Настройка параметров тренда - ') + AComponent.Name;
   BorderStyle := bsDialog;
   Position := poOwnerFormCenter;
   ClientWidth := 640;
@@ -177,7 +178,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, 12, 160, 18);
-  lLabel.Caption := 'Р›РёРЅРёРё';
+  lLabel.Caption := CP1251ToUTF8('Линии');
 
   fLineList := TListBox.Create(Self);
   fLineList.Parent := Self;
@@ -187,19 +188,19 @@ begin
   fAddLineButton := TButton.Create(Self);
   fAddLineButton.Parent := Self;
   fAddLineButton.SetBounds(360, 32, 80, 25);
-  fAddLineButton.Caption := 'Р”РѕР±Р°РІРёС‚СЊ';
+  fAddLineButton.Caption := CP1251ToUTF8('Добавить');
   fAddLineButton.OnClick := @AddLineClick;
 
   fDeleteLineButton := TButton.Create(Self);
   fDeleteLineButton.Parent := Self;
   fDeleteLineButton.SetBounds(360, 62, 80, 25);
-  fDeleteLineButton.Caption := 'РЈРґР°Р»РёС‚СЊ';
+  fDeleteLineButton.Caption := CP1251ToUTF8('Удалить');
   fDeleteLineButton.OnClick := @DeleteLineClick;
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, 190, 70, 18);
-  lLabel.Caption := 'РќР°Р·РІР°РЅРёРµ';
+  lLabel.Caption := CP1251ToUTF8('Название');
   fLineNameEdit := TEdit.Create(Self);
   fLineNameEdit.Parent := Self;
   fLineNameEdit.SetBounds(78, 186, 150, 24);
@@ -207,7 +208,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(250, 190, 70, 18);
-  lLabel.Caption := 'РљР°РЅР°Р»';
+  lLabel.Caption := CP1251ToUTF8('Канал');
   fLineTagCombo := TComboBox.Create(Self);
   fLineTagCombo.Parent := Self;
   fLineTagCombo.SetBounds(315, 186, 150, 24);
@@ -215,7 +216,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, 220, 70, 18);
-  lLabel.Caption := 'РћС†РµРЅРєР°';
+  lLabel.Caption := CP1251ToUTF8('Оценка');
   fLineEstimateCombo := TComboBox.Create(Self);
   fLineEstimateCombo.Parent := Self;
   fLineEstimateCombo.SetBounds(78, 216, 150, 24);
@@ -226,7 +227,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(250, 220, 70, 18);
-  lLabel.Caption := 'РћСЃСЊ';
+  lLabel.Caption := CP1251ToUTF8('Ось');
   fLineAxisCombo := TComboBox.Create(Self);
   fLineAxisCombo.Parent := Self;
   fLineAxisCombo.SetBounds(315, 216, 150, 24);
@@ -236,7 +237,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, 250, 70, 18);
-  lLabel.Caption := 'Р¦РІРµС‚';
+  lLabel.Caption := CP1251ToUTF8('Цвет');
   fLineColorEdit := TEdit.Create(Self);
   fLineColorEdit.Parent := Self;
   fLineColorEdit.SetBounds(78, 246, 120, 24);
@@ -250,19 +251,19 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(250, 250, 70, 18);
-  lLabel.Caption := 'РўРѕР»С‰РёРЅР°';
+  lLabel.Caption := CP1251ToUTF8('Толщина');
   fLineWidthEdit := TEdit.Create(Self);
   fLineWidthEdit.Parent := Self;
   fLineWidthEdit.SetBounds(315, 246, 70, 24);
   fLineVisibleCheck := TCheckBox.Create(Self);
   fLineVisibleCheck.Parent := Self;
   fLineVisibleCheck.SetBounds(395, 248, 70, 20);
-  fLineVisibleCheck.Caption := 'Р’РёРґРЅР°';
+  fLineVisibleCheck.Caption := CP1251ToUTF8('Видна');
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, 292, 160, 18);
-  lLabel.Caption := 'РћСЃРё Y';
+  lLabel.Caption := CP1251ToUTF8('Оси Y');
   fAxisList := TListBox.Create(Self);
   fAxisList.Parent := Self;
   fAxisList.SetBounds(12, 312, 220, 100);
@@ -272,19 +273,19 @@ begin
   fAddAxisButton := TButton.Create(Self);
   fAddAxisButton.Parent := Self;
   fAddAxisButton.SetBounds(240, 312, 80, 25);
-  fAddAxisButton.Caption := 'Р”РѕР±Р°РІРёС‚СЊ';
+  fAddAxisButton.Caption := CP1251ToUTF8('Добавить');
   fAddAxisButton.OnClick := @AddAxisClick;
 
   fDeleteAxisButton := TButton.Create(Self);
   fDeleteAxisButton.Parent := Self;
   fDeleteAxisButton.SetBounds(240, 342, 80, 25);
-  fDeleteAxisButton.Caption := 'РЈРґР°Р»РёС‚СЊ';
+  fDeleteAxisButton.Caption := CP1251ToUTF8('Удалить');
   fDeleteAxisButton.OnClick := @DeleteAxisClick;
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(330, 312, 80, 18);
-  lLabel.Caption := 'РќР°Р·РІР°РЅРёРµ';
+  lLabel.Caption := CP1251ToUTF8('Название');
   fAxisNameEdit := TEdit.Create(Self);
   fAxisNameEdit.Parent := Self;
   fAxisNameEdit.SetBounds(410, 308, 55, 24);
@@ -292,7 +293,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(330, 342, 80, 18);
-  lLabel.Caption := 'Р”РёР°РїР°Р·РѕРЅ';
+  lLabel.Caption := CP1251ToUTF8('Диапазон');
   fAxisMinEdit := TEdit.Create(Self);
   fAxisMinEdit.Parent := Self;
   fAxisMinEdit.SetBounds(410, 338, 65, 24);
@@ -303,7 +304,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(330, 372, 80, 18);
-  lLabel.Caption := 'Р¦РІРµС‚ РѕСЃРё';
+  lLabel.Caption := CP1251ToUTF8('Цвет оси');
   fAxisColorEdit := TEdit.Create(Self);
   fAxisColorEdit.Parent := Self;
   fAxisColorEdit.SetBounds(410, 368, 100, 24);
@@ -317,7 +318,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, 438, 100, 18);
-  lLabel.Caption := 'РРЅС‚РµСЂРІР°Р», СЃРµРє';
+  lLabel.Caption := CP1251ToUTF8('Интервал, сек');
   fDurationEdit := TEdit.Create(Self);
   fDurationEdit.Parent := Self;
   fDurationEdit.SetBounds(112, 434, 90, 24);
@@ -325,7 +326,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(225, 438, 105, 18);
-  lLabel.Caption := 'РџРµСЂРёРѕРґ, СЃРµРє';
+  lLabel.Caption := CP1251ToUTF8('Период, сек');
   fUpdatePeriodEdit := TEdit.Create(Self);
   fUpdatePeriodEdit.Parent := Self;
   fUpdatePeriodEdit.SetBounds(330, 434, 90, 24);
@@ -333,24 +334,24 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, 468, 100, 18);
-  lLabel.Caption := 'РўРёРї РѕСЃРё Y';
+  lLabel.Caption := CP1251ToUTF8('Тип оси Y');
   fYAxisModeCombo := TComboBox.Create(Self);
   fYAxisModeCombo.Parent := Self;
   fYAxisModeCombo.SetBounds(112, 464, 160, 24);
   fYAxisModeCombo.Style := csDropDownList;
-  fYAxisModeCombo.Items.Add('РћР±С‰Р°СЏ РѕСЃСЊ');
-  fYAxisModeCombo.Items.Add('РЎС‚СЂРѕРєРё');
-  fYAxisModeCombo.Items.Add('РљРѕР»РѕРЅРєРё');
-  fYAxisModeCombo.Items.Add('РРЅРґРёРІРёРґСѓР°Р»СЊРЅС‹Рµ РѕСЃРё');
+  fYAxisModeCombo.Items.Add(CP1251ToUTF8('Общая ось'));
+  fYAxisModeCombo.Items.Add(CP1251ToUTF8('Строки'));
+  fYAxisModeCombo.Items.Add(CP1251ToUTF8('Колонки'));
+  fYAxisModeCombo.Items.Add(CP1251ToUTF8('Индивидуальные оси'));
 
   fLegendVisibleCheck := TCheckBox.Create(Self);
   fLegendVisibleCheck.Parent := Self;
   fLegendVisibleCheck.SetBounds(330, 466, 95, 20);
-  fLegendVisibleCheck.Caption := 'Р›РµРіРµРЅРґР°';
+  fLegendVisibleCheck.Caption := CP1251ToUTF8('Легенда');
   fShowCurrentValuesCheck := TCheckBox.Create(Self);
   fShowCurrentValuesCheck.Parent := Self;
   fShowCurrentValuesCheck.SetBounds(430, 466, 170, 20);
-  fShowCurrentValuesCheck.Caption := 'РўРµРєСѓС‰РёРµ Р·РЅР°С‡РµРЅРёСЏ';
+  fShowCurrentValuesCheck.Caption := CP1251ToUTF8('Текущие значения');
 
   fOkButton := TButton.Create(Self);
   fOkButton.Parent := Self;
@@ -362,7 +363,7 @@ begin
   fCancelButton := TButton.Create(Self);
   fCancelButton.Parent := Self;
   fCancelButton.SetBounds(536, 558, 90, 26);
-  fCancelButton.Caption := 'РћС‚РјРµРЅР°';
+  fCancelButton.Caption := CP1251ToUTF8('Отмена');
   fCancelButton.ModalResult := mrCancel;
 end;
 

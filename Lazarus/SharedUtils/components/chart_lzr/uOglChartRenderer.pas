@@ -680,16 +680,17 @@ begin
   lOriginalMin := AMin;
   lOriginalMax := AMax;
   lStep := NiceStep(AMax - AMin, ATargetCount);
+  if lStep <= 0 then
+    lStep := 1;
   lValue := Ceil(AMin / lStep) * lStep;
   lIndex := 0;
   SetLength(ATicks, 1);
   ATicks[0].Value := lOriginalMin;
   ATicks[0].Text := FormatTick(lOriginalMin, lStep);
   lIndex := 1;
-  while lValue <= AMax + lStep * 0.5 do
+  while lValue < lOriginalMax - lStep * 1E-6 do
   begin
-    if (Abs(lValue - lOriginalMin) > lStep * 1E-6) and
-      (Abs(lValue - lOriginalMax) > lStep * 1E-6) then
+    if lValue > lOriginalMin + lStep * 1E-6 then
     begin
       SetLength(ATicks, lIndex + 1);
       ATicks[lIndex].Value := lValue;
@@ -1337,6 +1338,35 @@ var
   lText: string;
   lAxisOffset: Single;
   lMaxTextWidth, lTextWidth: Single;
+  lLabelTop, lMinLabelTop, lMaxLabelTop: Single;
+  lIsMinTick, lIsMaxTick, lHideTickText: Boolean;
+
+  function ClampYLabelTop(AY: Single; AFont: cOglFont): Single;
+  var
+    lTextHeight: Single;
+  begin
+    if Assigned(AFont) then
+      lTextHeight := AFont.TextPixelHeight
+    else
+      lTextHeight := 0;
+    Result := AY - lTextHeight / 2;
+    if Result < ARect.Top then
+      Result := ARect.Top;
+    if Result + lTextHeight > ARect.Bottom then
+      Result := ARect.Bottom - lTextHeight;
+  end;
+
+  function YLabelIntersects(ATop1, ATop2: Single; AFont: cOglFont): Boolean;
+  var
+    lTextHeight: Single;
+  begin
+    if Assigned(AFont) then
+      lTextHeight := AFont.TextPixelHeight
+    else
+      lTextHeight := 0;
+    Result := (ATop1 < ATop2 + lTextHeight) and (ATop2 < ATop1 + lTextHeight);
+  end;
+
 begin
   lPrimaryAxis := GetPrimaryXAxis(APage);
   SetGLColor($FF303030);
@@ -1403,6 +1433,8 @@ begin
         lFont := fFontMng.Font(cfAxisSelected)
       else
         lFont := fFontMng.Font(cfGridTick);
+      lMinLabelTop := ClampYLabelTop(AxisValueToPixel(lYAxis, lYAxis.MinValue, ARect.Bottom, ARect.Top), lFont);
+      lMaxLabelTop := ClampYLabelTop(AxisValueToPixel(lYAxis, lYAxis.MaxValue, ARect.Bottom, ARect.Top), lFont);
       lMaxTextWidth := 0;
       for lIndex := 0 to High(lYTicks) do
       begin
@@ -1414,12 +1446,18 @@ begin
         lTextWidth := lFont.TextPixelWidth(lText);
         if lTextWidth > lMaxTextWidth then
           lMaxTextWidth := lTextWidth;
-        if Abs(lYTicks[lIndex].Value - lYAxis.MinValue) < 1E-9 then
-          DrawEditableText(lText, lX - lTextWidth - 7, lY - lFont.TextPixelHeight / 2, lFont, lYAxis, nil, celAxisMin)
-        else if Abs(lYTicks[lIndex].Value - lYAxis.MaxValue) < 1E-9 then
-          DrawEditableText(lText, lX - lTextWidth - 7, lY - lFont.TextPixelHeight / 2, lFont, lYAxis, nil, celAxisMax)
-        else
-          DrawText(lText, lX - lTextWidth - 7, lY - lFont.TextPixelHeight / 2, lFont);
+        lLabelTop := ClampYLabelTop(lY, lFont);
+        lIsMinTick := Abs(lYTicks[lIndex].Value - lYAxis.MinValue) < 1E-9;
+        lIsMaxTick := Abs(lYTicks[lIndex].Value - lYAxis.MaxValue) < 1E-9;
+        lHideTickText := (not lIsMinTick) and (not lIsMaxTick) and
+          (YLabelIntersects(lLabelTop, lMinLabelTop, lFont) or
+           YLabelIntersects(lLabelTop, lMaxLabelTop, lFont));
+        if lIsMinTick then
+          DrawEditableText(lText, lX - lTextWidth - 7, lLabelTop, lFont, lYAxis, nil, celAxisMin)
+        else if lIsMaxTick then
+          DrawEditableText(lText, lX - lTextWidth - 7, lLabelTop, lFont, lYAxis, nil, celAxisMax)
+        else if not lHideTickText then
+          DrawText(lText, lX - lTextWidth - 7, lLabelTop, lFont);
       end;
 
       if lMaxTextWidth < 30.0 then

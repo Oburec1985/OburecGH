@@ -188,13 +188,13 @@ begin
   begin
     fModel := TChartModel.Create;
     fModel.BackgroundColor := $FFFFFFFF;
-    lPageArea.Left := 0.01;
-    lPageArea.Top := 0.02;
-    lPageArea.Right := 0.99;
-    lPageArea.Bottom := 0.98;
+    lPageArea.Left := 0.002;
+    lPageArea.Top := 0.004;
+    lPageArea.Right := 0.998;
+    lPageArea.Bottom := 0.996;
     fModel.PageArea := lPageArea;
-    fModel.PageGapX := 0.01;
-    fModel.PageGapY := 0.01;
+    fModel.PageGapX := 0.004;
+    fModel.PageGapY := 0.004;
     fChart.Model := fModel;
   end;
 
@@ -220,15 +220,10 @@ begin
     lPage.FillColor := $FFFFFFFF;
     lPage.BorderColor := $FF808080;
     
-    // Сдвигаем верхнюю границу графика вниз (с 16 до 30) для заголовка страницы,
-    // чтобы он не накладывался на верхние деления осей.
-    if fComponent.YAxisMode = tyamSimple then
-      lTabSpace.Left := 50
-    else
-      lTabSpace.Left := 50 + (lAxisCount - 1) * 46;
-    lTabSpace.Top := 30;
-    lTabSpace.Right := 12;
-    lTabSpace.Bottom := 28;
+    lTabSpace.Left := 42;
+    lTabSpace.Top := 20;
+    lTabSpace.Right := 8;
+    lTabSpace.Bottom := 22;
     lPage.PixelTabSpace := lTabSpace;
     lPage.XMinValue := 0;
     lPage.XMaxValue := Max(1.0, fComponent.DurationSec);

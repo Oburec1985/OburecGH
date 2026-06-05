@@ -36,6 +36,7 @@ type
     fFpsWindowLastFrameMs: QWord;
     fFrameNo: Integer;
     fInfoLabel: TLabel;
+    fInfoText: string;
     fTagOffset: Integer;
     fTagSlotIndex: Integer;
     fModel: TObject;
@@ -48,6 +49,7 @@ type
     procedure SetAxisRange(AMinValue, AMaxValue: Double);
     procedure SetChartTitle(const ATitle: string);
     procedure SetXRange(ADisplaySeconds: Double);
+    procedure UpdateInfoLabel(ATag: TRecorderTag);
   public
     { IVForm }
     procedure Configure(AComponent: TRecorderVisualComponent; ATagRegistry: TRecorderTagRegistry);
@@ -152,6 +154,24 @@ uses
 
 type
   TDoubleSearch = specialize TBinarySearch<Double>;
+
+function OscillogramEstimateShortName(AKind: TRecorderTagEstimateKind): string;
+begin
+  case AKind of
+    tekMean: Result := 'M';
+    tekRmsValue: Result := 'rms';
+    tekRmsDeviation: Result := 'sko';
+    tekPeak: Result := 'A';
+    tekPeakToPeak: Result := 'p2p';
+    tekMinimum: Result := 'min';
+    tekMaximum: Result := 'max';
+    tekPeakToPeakByRmsDeviation: Result := 'p2p/sko';
+    tekLastValue: Result := 'last';
+  else
+    Result := RecorderTagEstimateKindToShortName(AKind);
+  end;
+end;
+
 function FormatEnabledEstimateCaption(ATag: TRecorderTag): string;
 var
   lEstimate: TRecorderTagEstimate;
@@ -173,10 +193,10 @@ begin
         lEstimate := ATag.Estimate(lKind);
         if lEstimate.Valid then
           lParts.Add(Format('%s=%s',
-            [RecorderTagEstimateKindToShortName(lKind),
+            [OscillogramEstimateShortName(lKind),
             FormatFloat('0.###', lEstimate.Value)]))
         else
-          lParts.Add(RecorderTagEstimateKindToShortName(lKind) + '=-');
+          lParts.Add(OscillogramEstimateShortName(lKind) + '=-');
       end;
 
     if lParts.Count = 0 then
@@ -184,10 +204,10 @@ begin
       lEstimate := ATag.Estimate(lSettings.DefaultKind);
       if lEstimate.Valid then
         lParts.Add(Format('%s=%s',
-          [RecorderTagEstimateKindToShortName(lSettings.DefaultKind),
+          [OscillogramEstimateShortName(lSettings.DefaultKind),
           FormatFloat('0.###', lEstimate.Value)]))
       else
-        lParts.Add(RecorderTagEstimateKindToShortName(lSettings.DefaultKind) +
+        lParts.Add(OscillogramEstimateShortName(lSettings.DefaultKind) +
           '=-');
     end;
 
@@ -255,7 +275,8 @@ begin
   fInfoLabel.Font.Style := [fsBold];
   fInfoLabel.Font.Color := $00404040;
   fInfoLabel.BorderSpacing.Around := 4;
-  fInfoLabel.Caption := 'Tag: None | FPS: -';
+  fInfoText := 'Tag: None';
+  fInfoLabel.Caption := 'Tag: None';
   lChart := TOglChart.Create(Self);
   lChart.Parent := Self;
   lChart.Align := alClient;
@@ -304,12 +325,7 @@ procedure TRecorderOglOscillogram.ChartAfterRender(Sender: TObject;
   ARenderTimeMs: Double);
 var
   lNowMs: QWord;
-  lTagName: string;
 begin
-  if fCurrentTagName <> '' then
-    lTagName := fCurrentTagName
-  else
-    lTagName := 'None';
   fFpsLastRenderTimeMs := ARenderTimeMs;
   if fFpsMeasureEnabled then
   begin
@@ -335,15 +351,12 @@ begin
       fFpsWindowFrames := 0;
     end;
 
-    fInfoLabel.Caption := Format('Tag: %s | FPS: %.1f (render %.2f ms)',
-      [lTagName, fFpsMeasured, ARenderTimeMs]);
   end
   else
-  begin
     ResetFpsMeasure;
-    fInfoLabel.Caption := Format('Tag: %s | FPS: - (render %.2f ms)',
-      [lTagName, ARenderTimeMs]);
-  end;
+
+  if (fInfoLabel <> nil) and (fInfoLabel.Caption <> fInfoText) then
+    fInfoLabel.Caption := fInfoText;
 end;
 
 function TRecorderOglOscillogram.ResolveTag(
@@ -432,6 +445,25 @@ begin
   end;
 end;
 
+procedure TRecorderOglOscillogram.UpdateInfoLabel(ATag: TRecorderTag);
+var
+  lEstimateText: string;
+begin
+  if ATag = nil then
+    fInfoText := 'Tag: None'
+  else
+  begin
+    lEstimateText := FormatEnabledEstimateCaption(ATag);
+    if lEstimateText <> '' then
+      fInfoText := Format('Tag: %s | %s', [ATag.Name, lEstimateText])
+    else
+      fInfoText := Format('Tag: %s', [ATag.Name]);
+  end;
+
+  if fInfoLabel <> nil then
+    fInfoLabel.Caption := fInfoText;
+end;
+
 procedure TRecorderOglOscillogram.Refresh(ATagRegistry: TRecorderTagRegistry;
   ADisplaySeconds: Double; AMeasureFps: Boolean);
 var
@@ -464,6 +496,7 @@ begin
   if lTag = nil then
   begin
     fCurrentTagName := '';
+    UpdateInfoLabel(nil);
     SetChartTitle(Format('No tag frame:%d', [fFrameNo]));
     SetAxisRange(-1, 1);
     if fChart is TOglChart then
@@ -472,6 +505,7 @@ begin
   end;
 
   fCurrentTagName := lTag.Name;
+  UpdateInfoLabel(lTag);
   lSnapshot := lTag.Snapshot;
   SetChartTitle(Format('%s frame:%d', [lTag.Name, fFrameNo]));
   if lSnapshot.Count = 0 then

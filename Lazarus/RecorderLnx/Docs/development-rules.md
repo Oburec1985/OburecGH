@@ -19,6 +19,7 @@ Date: 2026-06-04
   convert the whole unit to UTF-8 and update the directive in the same change.
 - After any encoding-sensitive UI edit, rebuild with `lazbuild -B` and open the
   touched dialog/form once to verify Cyrillic captions are readable.
+- При создании или изменении диалоговых окон и форм старайтесь проектировать их визуально через формы .lfm, а не создавать элементы интерфейса динамически в коде. Это упрощает их последующее редактирование и локализацию, а также предотвращает проблемы с кодировкой строк при ручном задании Caption в Pascal-коде.
 
 ## Safe Editing Practice
 

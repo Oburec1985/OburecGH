@@ -166,6 +166,127 @@ begin
     Result := TJSONArray(lData);
 end;
 
+
+function CalibrationKindToConfigName(AKind: TRecorderCalibrationKind): string;
+begin
+  case AKind of
+    rckScale: Result := 'scale';
+  else
+    Result := 'piecewiseLinear';
+  end;
+end;
+
+function ConfigNameToCalibrationKind(const AName: string): TRecorderCalibrationKind;
+begin
+  if SameText(AName, 'scale') then
+    Result := rckScale
+  else
+    Result := rckPiecewiseLinear;
+end;
+
+procedure SaveCalibrationList(AJson: TJSONArray; AList: TRecorderCalibrationList);
+var
+  I: Integer;
+  J: Integer;
+  lCalibration: TRecorderCalibration;
+  lItem: TJSONObject;
+  lPoint: TJSONObject;
+  lPoints: TJSONArray;
+  lPt: TRecorderCalibrationPoint;
+begin
+  if AList = nil then
+    Exit;
+  for I := 0 to AList.Count - 1 do
+  begin
+    lCalibration := AList[I];
+    if lCalibration = nil then
+      Continue;
+    lItem := TJSONObject.Create;
+    AJson.Add(lItem);
+    lItem.Add('type', CalibrationKindToConfigName(lCalibration.Kind));
+    lItem.Add('name', lCalibration.Name);
+    lItem.Add('description', lCalibration.Description);
+    lItem.Add('unitIn', lCalibration.UnitIn);
+    lItem.Add('unitOut', lCalibration.UnitOut);
+    lItem.Add('extrapolation', lCalibration.Extrapolation);
+    lItem.Add('scale', lCalibration.Scale);
+    lPoints := JsonArray(lItem, 'points');
+    for J := 0 to lCalibration.PointCount - 1 do
+    begin
+      lPt := lCalibration.PointAt(J);
+      if lPt = nil then
+        Continue;
+      lPoint := TJSONObject.Create;
+      lPoints.Add(lPoint);
+      lPoint.Add('x', lPt.X);
+      lPoint.Add('y', lPt.Y);
+    end;
+  end;
+end;
+
+procedure LoadCalibrationList(AJson: TJSONArray; AList: TRecorderCalibrationList);
+var
+  I: Integer;
+  J: Integer;
+  lCalibration: TRecorderCalibration;
+  lItem: TJSONObject;
+  lPoint: TJSONObject;
+  lPoints: TJSONArray;
+begin
+  if AList = nil then
+    Exit;
+  AList.Clear;
+  if AJson = nil then
+    Exit;
+
+  for I := 0 to AJson.Count - 1 do
+  begin
+    if not (AJson.Items[I] is TJSONObject) then
+      Continue;
+    lItem := TJSONObject(AJson.Items[I]);
+    lCalibration := TRecorderCalibration.Create(ConfigNameToCalibrationKind(
+      lItem.Get('type', 'piecewiseLinear')));
+    try
+      lCalibration.Name := lItem.Get('name', lCalibration.Name);
+      lCalibration.Description := lItem.Get('description', '');
+      lCalibration.UnitIn := lItem.Get('unitIn', '');
+      lCalibration.UnitOut := lItem.Get('unitOut', '');
+      lCalibration.Extrapolation := lItem.Get('extrapolation', True);
+      lCalibration.Scale := lItem.Get('scale', 1.0);
+      lPoints := FindArray(lItem, 'points');
+      if lPoints <> nil then
+        for J := 0 to lPoints.Count - 1 do
+          if lPoints.Items[J] is TJSONObject then
+          begin
+            lPoint := TJSONObject(lPoints.Items[J]);
+            lCalibration.AddPoint(lPoint.Get('x', 0.0), lPoint.Get('y', 0.0));
+          end;
+      AList.Add(lCalibration);
+      lCalibration := nil;
+    finally
+      lCalibration.Free;
+    end;
+  end;
+end;
+
+procedure SaveTagCalibrationPipeline(AJson: TJSONArray; ATag: TRecorderTag);
+var
+  I: Integer;
+begin
+  for I := 0 to ATag.CalibrationNames.Count - 1 do
+    AJson.Add(ATag.CalibrationNames[I]);
+end;
+
+procedure LoadTagCalibrationPipeline(AJson: TJSONArray; ATag: TRecorderTag);
+var
+  I: Integer;
+begin
+  ATag.CalibrationNames.Clear;
+  if AJson = nil then
+    Exit;
+  for I := 0 to AJson.Count - 1 do
+    ATag.CalibrationNames.Add(AJson.Strings[I]);
+end;
 procedure SaveTagEstimates(AJson: TJSONObject; ATag: TRecorderTag);
 var
   lArray: TJSONArray;
@@ -332,6 +453,7 @@ begin
     lRoot.Add('format', 'RecorderLnx.ProjectConfig');
     lRoot.Add('version', 1);
     SaveDataSources(lRoot, ATags);
+    SaveCalibrationList(JsonArray(lRoot, 'calibrations'), ATags.Calibrations);
 
     lTags := JsonArray(lRoot, 'tags');
     for I := 0 to ATags.TagCount - 1 do
@@ -354,6 +476,7 @@ begin
       lTagJson.Add('autoUnit', lTag.AutoUnit);
       SaveTagEstimates(JsonObject(lTagJson, 'estimates'), lTag);
       SaveTagSetpoints(JsonObject(lTagJson, 'setpoints'), lTag);
+      SaveTagCalibrationPipeline(JsonArray(lTagJson, 'calibrationPipeline'), lTag);
     end;
 
     lText := TStringList.Create;
@@ -402,6 +525,7 @@ begin
       Exit;
 
     ATags.Clear;
+    LoadCalibrationList(FindArray(lRoot, 'calibrations'), ATags.Calibrations);
     for I := 0 to lTags.Count - 1 do
     begin
       if not (lTags.Items[I] is TJSONObject) then
@@ -424,6 +548,7 @@ begin
         lTag.AutoUnit := lTagJson.Get('autoUnit', lTag.AutoUnit);
         LoadTagEstimates(FindObject(lTagJson, 'estimates'), lTag);
         LoadTagSetpoints(FindObject(lTagJson, 'setpoints'), lTag);
+        LoadTagCalibrationPipeline(FindArray(lTagJson, 'calibrationPipeline'), lTag);
         ATags.AddTag(lTag);
         lTag := nil;
       finally

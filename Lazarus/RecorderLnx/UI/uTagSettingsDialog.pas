@@ -1,4 +1,4 @@
-unit uTagSettingsDialog;
+﻿unit uTagSettingsDialog;
 
 {
   Модуль uTagSettingsDialog
@@ -24,55 +24,135 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
-  Buttons, Dialogs, ImgList, uRecorderTags, uMeraFile;
+  Buttons, Dialogs, ImgList, uRecorderTags, uMeraFile, uComponentServices,
+  uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
+  uRecorderCalibrationListDialog;
 
 type
   { TTagSettingsDialog }
 
   { Диалоговое окно настройки свойств тега (канала) }
   TTagSettingsDialog = class(TForm)
+  published
+    fPageControl: TPageControl;
+    tsParams: TTabSheet;
+    gbGeneral: TGroupBox;
+    lbName: TLabel;
+    fNameEdit: TEdit;
+    lbUnit: TLabel;
+    fUnitCombo: TComboBox;
+    fAutoUnitCheck: TCheckBox;
+    lbModule: TLabel;
+    fModuleEdit: TEdit;
+    fAddressButton: TSpeedButton;
+    lbDescription: TLabel;
+    fDescriptionEdit: TEdit;
+    fDescriptionEditBtn: TSpeedButton;
+    lbFrequency: TLabel;
+    fFrequencyCombo: TComboBox;
+    lbHz: TLabel;
+    fDetachedSourceLabel: TLabel;
+    gbRange: TGroupBox;
+    lbMin: TLabel;
+    fMinEdit: TEdit;
+    lbMax: TLabel;
+    fMaxEdit: TEdit;
+    fAutoRangeCheck: TCheckBox;
+    gbHardwareCurve: TGroupBox;
+    fHardwareCurveCheck: TCheckBox;
+    fHardwareCurveEdit: TEdit;
+    fHardwareCurveSelectBtn: TSpeedButton;
+    fHardwareCurveSetupBtn: TSpeedButton;
+    gbChannelCurve: TGroupBox;
+    fChannelCurveCheck: TCheckBox;
+    fChannelCurveEdit: TEdit;
+    fChannelCurveSelectBtn: TSpeedButton;
+    fChannelCurveAddBtn: TSpeedButton;
+    fChannelCurveDeleteBtn: TSpeedButton;
+    fChannelCurveEditBtn: TSpeedButton;
+    lbVirtualChannelInfo: TLabel;
+    tsAdditional: TTabSheet;
+    gbEstimates: TGroupBox;
+    fEstimateCheckMO: TCheckBox;
+    fEstimateCheckSKZ: TCheckBox;
+    fEstimateCheckSKO: TCheckBox;
+    fEstimateCheckPeak: TCheckBox;
+    fEstimateCheckPeakPeak: TCheckBox;
+    fEstimateCheckMin: TCheckBox;
+    fEstimateCheckMax: TCheckBox;
+    fEstimateCheckPeakPeakByRms: TCheckBox;
+    lbDefaultEstimate: TLabel;
+    fDefaultEstimateCombo: TComboBox;
+    gbPortion: TGroupBox;
+    fPortionLengthEdit: TEdit;
+    lbPortionUnit: TLabel;
+    gbSmoothing: TGroupBox;
+    fSmoothingCheck: TCheckBox;
+    fSmoothingKEdit: TEdit;
+    gbChannelProps: TGroupBox;
+    fScadaCheck: TCheckBox;
+    tsSetpoints: TTabSheet;
+    pnSetpoint0: TPanel;
+    lbSetpointName0: TLabel;
+    fSetpointEnabledCheck0: TCheckBox;
+    pnSetpointUnit0: TPanel;
+    fSetpointThresholdEdit0: TEdit;
+    lbSetpointText0_1: TLabel;
+    lbSetpointText0_2: TLabel;
+    fSetpointColorPanel0: TPanel;
+    pnSetpoint1: TPanel;
+    lbSetpointName1: TLabel;
+    fSetpointEnabledCheck1: TCheckBox;
+    pnSetpointUnit1: TPanel;
+    fSetpointThresholdEdit1: TEdit;
+    lbSetpointText1_1: TLabel;
+    lbSetpointText1_2: TLabel;
+    fSetpointColorPanel1: TPanel;
+    pnSetpoint2: TPanel;
+    lbSetpointName2: TLabel;
+    fSetpointEnabledCheck2: TCheckBox;
+    pnSetpointUnit2: TPanel;
+    fSetpointThresholdEdit2: TEdit;
+    lbSetpointText2_1: TLabel;
+    lbSetpointText2_2: TLabel;
+    fSetpointColorPanel2: TPanel;
+    pnSetpoint3: TPanel;
+    lbSetpointName3: TLabel;
+    fSetpointEnabledCheck3: TCheckBox;
+    pnSetpointUnit3: TPanel;
+    fSetpointThresholdEdit3: TEdit;
+    lbSetpointText3_1: TLabel;
+    lbSetpointText3_2: TLabel;
+    fSetpointColorPanel3: TPanel;
+    pnSetpointAdd: TPanel;
+    lbSetpointAddName: TLabel;
+    fSetpointHysteresisCheck: TCheckBox;
+    fSetpointStatusChannelCheck: TCheckBox;
+    fSetpointSoundCheck: TCheckBox;
+    pnBottom: TPanel;
+    btnOk: TButton;
+    btnCancel: TButton;
+    fApplyButton: TButton;
   private
-    fApplyButton: TButton;                               // Кнопка "Применить"
-    fAddressButton: TSpeedButton;                        // Кнопка выбора адреса/канала из активного источника
-    fAutoRangeCheck: TCheckBox;                          // Флаг автодиапазона
-    fAutoUnitCheck: TCheckBox;                           // Флаг автоматического определения единиц измерения
-    fDescriptionEdit: TEdit;                             // Поле ввода описания тега
-    fDefaultEstimateCombo: TComboBox;                    // Выбор оценки по умолчанию
-    fDetachedSourceLabel: TLabel;                        // Предупреждение о теге с удаленным источником данных
-    fEstimateChecks: array[TRecorderTagEstimateKind] of TCheckBox; // Флаги вычисления различных оценок
-    fFrequencyCombo: TComboBox;                          // Частота опроса канала
-    fHardwareCurveCheck: TCheckBox;                      // Флаг использования аппаратной калибровки
-    fHardwareCurveEdit: TEdit;                           // Путь/имя аппаратной КХ
     fImages: TCustomImageList;                           // Список иконок для диалога
-    fMaxEdit: TEdit;                                     // Максимальное значение шкалы
-    fMinEdit: TEdit;                                     // Минимальное значение шкалы
-    fModuleEdit: TEdit;                                  // Поле адреса/модуля канала
-    fNameEdit: TEdit;                                    // Имя канала (доступно только при одиночном выборе)
-    fPortionLengthEdit: TEdit;                           // Длина порции данных для оценок (в отсчетах)
-    fScadaCheck: TCheckBox;                              // Флаг передачи данных в SCADA
-    fSetpointColorPanels: array[TRecorderTagSetpointKind] of TPanel; // Цвета отображения для каждой уставки
-    fSetpointEnabledChecks: array[TRecorderTagSetpointKind] of TCheckBox; // Флаги активности уставок
-    fSetpointHysteresisCheck: TCheckBox;                 // Включение гистерезиса уставок
-    fSetpointSoundCheck: TCheckBox;                      // Флаг прослушивания звука оповещения до конца
-    fSetpointStatusChannelCheck: TCheckBox;              // Использование канала состояния уставки
-    fSetpointThresholdEdits: array[TRecorderTagSetpointKind] of TEdit; // Значения порогов уставок
-    fSmoothingCheck: TCheckBox;                          // Флаг усреднения/сглаживания (фильтрации)
-    fSmoothingKEdit: TEdit;                              // Коэффициент сглаживания k
     fTagRegistry: TRecorderTagRegistry;                  // Реестр тегов
-    fSourceWarningLabel: TLabel;                         // Предупреждение об отвязанном источнике
     fSelectedMeraFileName: string;                       // Путь выбранного Mera-файла
     fTags: TList;                                        // Список редактируемых тегов (TRecorderTag)
-    fUnitCombo: TComboBox;                               // Единица измерения канала
+    fEstimateChecks: array[TRecorderTagEstimateKind] of TCheckBox; // Флаги вычисления различных оценок
+    fSetpointColorPanels: array[TRecorderTagSetpointKind] of TPanel; // Цвета отображения для каждой уставки
+    fSetpointEnabledChecks: array[TRecorderTagSetpointKind] of TCheckBox; // Флаги активности уставок
+    fSetpointThresholdEdits: array[TRecorderTagSetpointKind] of TEdit; // Значения порогов уставок
     
     // Внутренние методы обработчиков UI
     procedure ApplyButtonClick(Sender: TObject);
     procedure AddressButtonClick(Sender: TObject);
     procedure OkButtonClick(Sender: TObject);
-    
-    // Динамическое конструирование интерфейса
-    procedure BuildUi;
-    procedure BuildAdditionalTab(ATab: TTabSheet);
-    procedure BuildSetpointsTab(ATab: TTabSheet);
+    procedure SelectCalibrationButtonClick(Sender: TObject);
+    procedure AddCalibrationButtonClick(Sender: TObject);
+    procedure DeleteCalibrationButtonClick(Sender: TObject);
+    procedure EditCalibrationButtonClick(Sender: TObject);
+    procedure AssignSpeedButtonImage(AButton: TSpeedButton; AImageIndex: Integer);
+    procedure UpdateChannelCurveText;
     
     // Обмен данными между UI и тегами
     procedure LoadFromTags;
@@ -117,6 +197,8 @@ type
 function ShowTagSettingsDialog(AOwner: TComponent; ATagRegistry: TRecorderTagRegistry; ATags: TList; AImages: TCustomImageList = nil): Boolean;
 
 implementation
+
+{$R *.lfm}
 
 const
   CTagDialogIconAddress = 0;
@@ -186,7 +268,7 @@ end;
 constructor TTagSettingsDialog.CreateDialog(AOwner: TComponent;
   ATagRegistry: TRecorderTagRegistry; ATags: TList; AImages: TCustomImageList);
 begin
-  inherited CreateNew(AOwner, 1);
+  inherited Create(AOwner);
   if ATagRegistry = nil then
     raise ERecorderTagError.Create('Tag registry cannot be nil');
   if (ATags = nil) or (ATags.Count = 0) then
@@ -196,7 +278,50 @@ begin
   fImages := AImages;
   fTags := TList.Create;
   fTags.Assign(ATags);
-  BuildUi;
+
+  // Инициализируем массивы ссылками на компоненты формы LFM
+  fEstimateChecks[tekMean] := fEstimateCheckMO;
+  fEstimateChecks[tekRmsValue] := fEstimateCheckSKZ;
+  fEstimateChecks[tekRmsDeviation] := fEstimateCheckSKO;
+  fEstimateChecks[tekPeak] := fEstimateCheckPeak;
+  fEstimateChecks[tekPeakToPeak] := fEstimateCheckPeakPeak;
+  fEstimateChecks[tekMinimum] := fEstimateCheckMin;
+  fEstimateChecks[tekMaximum] := fEstimateCheckMax;
+  fEstimateChecks[tekPeakToPeakByRmsDeviation] := fEstimateCheckPeakPeakByRms;
+  fEstimateChecks[tekLastValue] := nil;
+
+  fSetpointEnabledChecks[tskHighAlarm] := fSetpointEnabledCheck0;
+  fSetpointEnabledChecks[tskHighWarning] := fSetpointEnabledCheck1;
+  fSetpointEnabledChecks[tskLowWarning] := fSetpointEnabledCheck2;
+  fSetpointEnabledChecks[tskLowAlarm] := fSetpointEnabledCheck3;
+
+  fSetpointThresholdEdits[tskHighAlarm] := fSetpointThresholdEdit0;
+  fSetpointThresholdEdits[tskHighWarning] := fSetpointThresholdEdit1;
+  fSetpointThresholdEdits[tskLowWarning] := fSetpointThresholdEdit2;
+  fSetpointThresholdEdits[tskLowAlarm] := fSetpointThresholdEdit3;
+
+  fSetpointColorPanels[tskHighAlarm] := fSetpointColorPanel0;
+  fSetpointColorPanels[tskHighWarning] := fSetpointColorPanel1;
+  fSetpointColorPanels[tskLowWarning] := fSetpointColorPanel2;
+  fSetpointColorPanels[tskLowAlarm] := fSetpointColorPanel3;
+  fAddressButton.OnClick := @AddressButtonClick;
+  fChannelCurveSelectBtn.OnClick := @SelectCalibrationButtonClick;
+  fChannelCurveAddBtn.OnClick := @AddCalibrationButtonClick;
+  fChannelCurveDeleteBtn.OnClick := @DeleteCalibrationButtonClick;
+  fChannelCurveEditBtn.OnClick := @EditCalibrationButtonClick;
+  fHardwareCurveSelectBtn.OnClick := @SelectCalibrationButtonClick;
+  fHardwareCurveSetupBtn.OnClick := @EditCalibrationButtonClick;
+  btnOk.OnClick := @OkButtonClick;
+  fApplyButton.OnClick := @ApplyButtonClick;
+
+  AssignSpeedButtonImage(fAddressButton, CTagDialogIconAddress);
+  AssignSpeedButtonImage(fDescriptionEditBtn, CTagDialogIconEdit);
+  AssignSpeedButtonImage(fHardwareCurveSelectBtn, CTagDialogIconProperty);
+  AssignSpeedButtonImage(fHardwareCurveSetupBtn, CTagDialogIconHardwareCurve);
+  AssignSpeedButtonImage(fChannelCurveSelectBtn, CTagDialogIconProperty);
+  AssignSpeedButtonImage(fChannelCurveAddBtn, CTagDialogIconAdd);
+  AssignSpeedButtonImage(fChannelCurveDeleteBtn, CTagDialogIconRemove);
+  AssignSpeedButtonImage(fChannelCurveEditBtn, CTagDialogIconChannelCurve);
   LoadFromTags;
 end;
 
@@ -206,391 +331,35 @@ begin
   inherited Destroy;
 end;
 
+
+procedure TTagSettingsDialog.AssignSpeedButtonImage(AButton: TSpeedButton; AImageIndex: Integer);
+begin
+  if (AButton = nil) or (fImages = nil) or (AImageIndex < 0) or
+    (AImageIndex >= fImages.Count) then
+    Exit;
+  AButton.Images := fImages;
+  AButton.ImageIndex := AImageIndex;
+  AButton.ImageWidth := 32;
+  AButton.Caption := '';
+end;
+
+procedure TTagSettingsDialog.UpdateChannelCurveText;
+begin
+  if fTags.Count = 0 then
+    Exit;
+  if TagAt(0).CalibrationNames.Count > 0 then
+    fChannelCurveEdit.Text :=
+      TagAt(0).CalibrationNames[TagAt(0).CalibrationNames.Count - 1]
+  else
+    fChannelCurveEdit.Text := '';
+  fChannelCurveCheck.Checked := fChannelCurveEdit.Text <> '';
+end;
 function TTagSettingsDialog.TagAt(AIndex: Integer): TRecorderTag;
 begin
   Result := TRecorderTag(fTags[AIndex]);
 end;
 
 { Динамическое создание UI для поддержки автономного существования без DFM }
-procedure TTagSettingsDialog.BuildUi;
-var
-  lTabs: TPageControl;
-  lTab: TTabSheet;
-  lAdditionalTab: TTabSheet;
-  lSetpointsTab: TTabSheet;
-  lGroup: TGroupBox;
-  lPanel: TPanel;
-  lOkButton: TButton;
-  lCancelButton: TButton;
-  lLabel: TLabel;
-
-  // Вложенная утилита добавления текстовой метки
-  function AddLabel(AParent: TWinControl; ALeft, ATop: Integer;
-    const ACaption: string): TLabel;
-  begin
-    Result := TLabel.Create(Self);
-    Result.Parent := AParent;
-    Result.Left := ALeft;
-    Result.Top := ATop + 4;
-    Result.Caption := ACaption;
-  end;
-
-  // Вложенная утилита добавления текстового поля
-  function AddEdit(AParent: TWinControl; ALeft, ATop, AWidth: Integer): TEdit;
-  begin
-    Result := TEdit.Create(Self);
-    Result.Parent := AParent;
-    Result.SetBounds(ALeft, ATop, AWidth, 23);
-  end;
-
-  // Вложенная утилита добавления кнопки с иконкой
-  function AddButton(AParent: TWinControl; ALeft, ATop, AImageIndex: Integer;
-    const ACaption, AHint: string): TSpeedButton;
-  begin
-    Result := TSpeedButton.Create(Self);
-    Result.Parent := AParent;
-    Result.SetBounds(ALeft, ATop, 34, 32);
-    Result.Caption := ACaption;
-    if (fImages <> nil) and (AImageIndex >= 0) and (AImageIndex < fImages.Count) then
-    begin
-      Result.Images := fImages;
-      Result.ImageIndex := AImageIndex;
-      Result.ImageWidth := 32;
-      Result.Caption := '';
-    end;
-    Result.Hint := AHint;
-    Result.ShowHint := True;
-  end;
-
-begin
-  BorderStyle := bsDialog;
-  Caption := 'Настройка канала';
-  ClientWidth := 560;
-  ClientHeight := 600;
-  Position := poScreenCenter;
-
-  lTabs := TPageControl.Create(Self);
-  lTabs.Parent := Self;
-  lTabs.Align := alClient;
-  lTabs.BorderSpacing.Around := 8;
-  lTabs.BorderSpacing.Bottom := 46;
-
-  lTab := TTabSheet.Create(Self);
-  lTab.PageControl := lTabs;
-  lTab.Caption := 'Параметры';
-
-  lAdditionalTab := TTabSheet.Create(Self);
-  lAdditionalTab.PageControl := lTabs;
-  lAdditionalTab.Caption := 'Дополнительно';
-  lSetpointsTab := TTabSheet.Create(Self);
-  lSetpointsTab.PageControl := lTabs;
-  lSetpointsTab.Caption := 'Уставки';
-
-  lGroup := TGroupBox.Create(Self);
-  lGroup.Parent := lTab;
-  lGroup.SetBounds(8, 8, 520, 186);
-  lGroup.Caption := 'Общие параметры';
-
-  AddLabel(lGroup, 12, 22, 'Имя');
-  fNameEdit := AddEdit(lGroup, 72, 18, 250);
-
-  AddLabel(lGroup, 334, 22, 'ед.');
-  fUnitCombo := TComboBox.Create(Self);
-  fUnitCombo.Parent := lGroup;
-  fUnitCombo.SetBounds(362, 18, 80, 23);
-  fUnitCombo.Items.Add('-');
-  fUnitCombo.Items.Add('a.u.');
-  fUnitCombo.Items.Add('V');
-  fUnitCombo.Items.Add('mV');
-  fUnitCombo.Items.Add('g');
-  fUnitCombo.Items.Add('Hz');
-  fAutoUnitCheck := TCheckBox.Create(Self);
-  fAutoUnitCheck.Parent := lGroup;
-  fAutoUnitCheck.SetBounds(450, 20, 58, 20);
-  fAutoUnitCheck.Caption := 'Авто';
-
-  AddLabel(lGroup, 12, 52, 'Адрес');
-  fModuleEdit := AddEdit(lGroup, 72, 48, 250);
-  fModuleEdit.ReadOnly := True;
-  fAddressButton := AddButton(lGroup, 330, 44, CTagDialogIconAddress, '...',
-    'Выбор адреса канала');
-  fAddressButton.OnClick := @AddressButtonClick;
-
-  AddLabel(lGroup, 12, 86, 'Описание');
-  fDescriptionEdit := AddEdit(lGroup, 72, 82, 380);
-  AddButton(lGroup, 460, 78, CTagDialogIconEdit, '*', 'Редактировать описание');
-
-  AddLabel(lGroup, 12, 124, 'Частота опроса');
-  fFrequencyCombo := TComboBox.Create(Self);
-  fFrequencyCombo.Parent := lGroup;
-  fFrequencyCombo.SetBounds(132, 120, 128, 23);
-  fFrequencyCombo.Items.Add('100.0');
-  fFrequencyCombo.Items.Add('1000.0');
-  fFrequencyCombo.Items.Add('57600.0');
-  fFrequencyCombo.Items.Add('100000.0');
-  AddLabel(lGroup, 268, 124, 'Гц');
-
-  fDetachedSourceLabel := TLabel.Create(Self);
-  fDetachedSourceLabel.Parent := lGroup;
-  fDetachedSourceLabel.SetBounds(72, 152, 440, 18);
-  fDetachedSourceLabel.Caption := 'Внимание: источник данных отвязан!';
-  fDetachedSourceLabel.Font.Color := clRed;
-  fDetachedSourceLabel.Font.Style := [fsBold];
-  fDetachedSourceLabel.Visible := False;
-  fSourceWarningLabel := fDetachedSourceLabel;
-
-  lGroup := TGroupBox.Create(Self);
-  lGroup.Parent := lTab;
-  lGroup.SetBounds(8, 204, 520, 78);
-  lGroup.Caption := 'Диапазон значений';
-
-  AddLabel(lGroup, 12, 24, 'Нижний');
-  fMinEdit := AddEdit(lGroup, 72, 20, 90);
-  AddLabel(lGroup, 210, 24, 'Верхний');
-  fMaxEdit := AddEdit(lGroup, 272, 20, 90);
-  fAutoRangeCheck := TCheckBox.Create(Self);
-  fAutoRangeCheck.Parent := lGroup;
-  fAutoRangeCheck.SetBounds(420, 22, 58, 20);
-  fAutoRangeCheck.Caption := 'Авто';
-
-  lGroup := TGroupBox.Create(Self);
-  lGroup.Parent := lTab;
-  lGroup.SetBounds(8, 294, 520, 74);
-  lGroup.Caption := 'Аппаратная КХ';
-  fHardwareCurveCheck := TCheckBox.Create(Self);
-  fHardwareCurveCheck.Parent := lGroup;
-  fHardwareCurveCheck.SetBounds(8, 22, 16, 20);
-  fHardwareCurveEdit := AddEdit(lGroup, 30, 22, 360);
-  fHardwareCurveEdit.ReadOnly := True;
-  AddButton(lGroup, 400, 16, CTagDialogIconProperty, '...', 'Выбор аппаратной характеристики');
-  AddButton(lGroup, 438, 16, CTagDialogIconHardwareCurve, 'f/c', 'Настройка аппаратной характеристики');
-
-  lGroup := TGroupBox.Create(Self);
-  lGroup.Parent := lTab;
-  lGroup.SetBounds(8, 380, 520, 74);
-  lGroup.Caption := 'Канальная ГХ';
-  TCheckBox.Create(Self).Parent := lGroup;
-  TCheckBox(lGroup.Controls[lGroup.ControlCount - 1]).SetBounds(8, 22, 16, 20);
-  TCheckBox(lGroup.Controls[lGroup.ControlCount - 1]).Checked := True;
-  AddEdit(lGroup, 30, 22, 290).ReadOnly := True;
-  AddButton(lGroup, 330, 16, CTagDialogIconProperty, '...', 'Выбор канальной градуировки');
-  AddButton(lGroup, 368, 16, CTagDialogIconAdd, '+', 'Добавить градуировку');
-  AddButton(lGroup, 406, 16, CTagDialogIconRemove, 'x', 'Удалить градуировку');
-  AddButton(lGroup, 444, 16, CTagDialogIconChannelCurve, 'f/c', 'Настройка канальной градуировки');
-
-  lLabel := TLabel.Create(Self);
-  lLabel.Parent := lTab;
-  lLabel.SetBounds(72, 482, 320, 24);
-  lLabel.Caption := 'Настройка виртуального канала';
-
-  lPanel := TPanel.Create(Self);
-  lPanel.Parent := Self;
-  lPanel.Align := alBottom;
-  lPanel.Height := 42;
-  lPanel.BevelOuter := bvNone;
-
-  lOkButton := TButton.Create(Self);
-  lOkButton.Parent := lPanel;
-  lOkButton.SetBounds(316, 8, 74, 26);
-  lOkButton.Caption := 'OK';
-  lOkButton.ModalResult := mrNone;
-  lOkButton.OnClick := @OkButtonClick;
-
-  lCancelButton := TButton.Create(Self);
-  lCancelButton.Parent := lPanel;
-  lCancelButton.SetBounds(396, 8, 74, 26);
-  lCancelButton.Caption := 'Отмена';
-  lCancelButton.ModalResult := mrCancel;
-
-  fApplyButton := TButton.Create(Self);
-  fApplyButton.Parent := lPanel;
-  fApplyButton.SetBounds(476, 8, 74, 26);
-  fApplyButton.Caption := 'Применить';
-  fApplyButton.OnClick := @ApplyButtonClick;
-
-  BuildAdditionalTab(lAdditionalTab);
-  BuildSetpointsTab(lSetpointsTab);
-end;
-
-{ Конструирование вкладки математических оценок и усреднения }
-procedure TTagSettingsDialog.BuildAdditionalTab(ATab: TTabSheet);
-const
-  CEstimateCaptions: array[TRecorderTagEstimateKind] of string = (
-    'математическое ожидание (МО) precision: default',
-    'среднеквадратическое значение (СКЗ) precision: default',
-    'среднеквадратическое отклонение (СКО) precision: default',
-    'амплитуда (Пик) precision: default',
-    'размах (Пик-Пик) precision: default',
-    'Минимальное значение (Минимум) precision: default',
-    'Максимальное значение (Максимум) precision: default',
-    'Размах по среднеквадратическому отклонению (ПП по СКО) precision: default',
-    'последнее значение precision: default'
-  );
-var
-  lGroup: TGroupBox;
-  lKind: TRecorderTagEstimateKind;
-  lIndex: Integer;
-  lLabel: TLabel;
-begin
-  lGroup := TGroupBox.Create(Self);
-  lGroup.Parent := ATab;
-  lGroup.SetBounds(8, 8, 520, 250);
-  lGroup.Caption := 'Вычисляемые оценки';
-
-  lIndex := 0;
-  for lKind := Low(TRecorderTagEstimateKind) to tekPeakToPeakByRmsDeviation do
-  begin
-    fEstimateChecks[lKind] := TCheckBox.Create(Self);
-    fEstimateChecks[lKind].Parent := lGroup;
-    fEstimateChecks[lKind].SetBounds(12, 20 + lIndex * 18, 490, 18);
-    fEstimateChecks[lKind].Caption := CEstimateCaptions[lKind];
-    Inc(lIndex);
-  end;
-  fEstimateChecks[tekLastValue] := nil;
-
-  lLabel := TLabel.Create(Self);
-  lLabel.Parent := ATab;
-  lLabel.SetBounds(16, 274, 130, 20);
-  lLabel.Caption := 'Оценка по умолчанию';
-
-  fDefaultEstimateCombo := TComboBox.Create(Self);
-  fDefaultEstimateCombo.Parent := ATab;
-  fDefaultEstimateCombo.SetBounds(150, 270, 370, 23);
-  fDefaultEstimateCombo.Style := csDropDownList;
-  for lKind := Low(TRecorderTagEstimateKind) to tekPeakToPeakByRmsDeviation do
-    fDefaultEstimateCombo.Items.AddObject(
-      RecorderTagEstimateKindToShortName(lKind), TObject(PtrInt(Ord(lKind))));
-
-  lGroup := TGroupBox.Create(Self);
-  lGroup.Parent := ATab;
-  lGroup.SetBounds(16, 306, 200, 58);
-  lGroup.Caption := 'Длина порции';
-  fPortionLengthEdit := TEdit.Create(Self);
-  fPortionLengthEdit.Parent := lGroup;
-  fPortionLengthEdit.SetBounds(12, 22, 104, 23);
-  lLabel := TLabel.Create(Self);
-  lLabel.Parent := lGroup;
-  lLabel.SetBounds(124, 26, 60, 18);
-  lLabel.Caption := 'отсчетов';
-
-  lGroup := TGroupBox.Create(Self);
-  lGroup.Parent := ATab;
-  lGroup.SetBounds(244, 306, 276, 58);
-  lGroup.Caption := 'Усреднение y''=kx+(1-k)y';
-  fSmoothingCheck := TCheckBox.Create(Self);
-  fSmoothingCheck.Parent := lGroup;
-  fSmoothingCheck.SetBounds(12, 24, 46, 18);
-  fSmoothingCheck.Caption := 'k=';
-  fSmoothingKEdit := TEdit.Create(Self);
-  fSmoothingKEdit.Parent := lGroup;
-  fSmoothingKEdit.SetBounds(62, 22, 92, 23);
-
-  lGroup := TGroupBox.Create(Self);
-  lGroup.Parent := ATab;
-  lGroup.SetBounds(8, 376, 520, 74);
-  lGroup.Caption := 'Свойства канала';
-  fScadaCheck := TCheckBox.Create(Self);
-  fScadaCheck.Parent := lGroup;
-  fScadaCheck.SetBounds(16, 22, 120, 20);
-  fScadaCheck.Caption := 'SCADA';
-end;
-
-{ Конструирование вкладки аварийных и предупредительных уставок }
-procedure TTagSettingsDialog.BuildSetpointsTab(ATab: TTabSheet);
-const
-  CSetpointNames: array[TRecorderTagSetpointKind] of string = (
-    'Верхняя аварийная',
-    'Верхняя предупредительная',
-    'Нижняя предупредительная',
-    'Нижняя аварийная'
-  );
-var
-  lKind: TRecorderTagSetpointKind;
-  lTop: Integer;
-  lRow: TPanel;
-  lLabel: TLabel;
-  lUnitLabel: TPanel;
-  lText: TLabel;
-begin
-  for lKind := Low(TRecorderTagSetpointKind) to High(TRecorderTagSetpointKind) do
-  begin
-    lTop := 8 + Ord(lKind) * 82;
-    lRow := TPanel.Create(Self);
-    lRow.Parent := ATab;
-    lRow.SetBounds(16, lTop, 510, 78);
-    lRow.BevelOuter := bvLowered;
-
-    lLabel := TLabel.Create(Self);
-    lLabel.Parent := lRow;
-    lLabel.SetBounds(12, 8, 190, 18);
-    lLabel.Caption := CSetpointNames[lKind];
-    lLabel.Font.Style := [fsBold];
-
-    fSetpointEnabledChecks[lKind] := TCheckBox.Create(Self);
-    fSetpointEnabledChecks[lKind].Parent := lRow;
-    fSetpointEnabledChecks[lKind].SetBounds(12, 34, 52, 20);
-    fSetpointEnabledChecks[lKind].Caption := 'Вкл';
-
-    lUnitLabel := TPanel.Create(Self);
-    lUnitLabel.Parent := lRow;
-    lUnitLabel.SetBounds(226, 12, 18, 20);
-    lUnitLabel.Caption := 'm';
-    lUnitLabel.BorderStyle := bsSingle;
-    lUnitLabel.BevelOuter := bvNone;
-
-    fSetpointThresholdEdits[lKind] := TEdit.Create(Self);
-    fSetpointThresholdEdits[lKind].Parent := lRow;
-    fSetpointThresholdEdits[lKind].SetBounds(246, 10, 72, 23);
-
-    lText := TLabel.Create(Self);
-    lText.Parent := lRow;
-    lText.SetBounds(68, 34, 150, 42);
-    lText.Font.Color := clBlue;
-    lText.Caption := 'Запись: выкл' + LineEnding +
-      'Звук: выкл.' + LineEnding + 'Брать из: значение';
-
-    lText := TLabel.Create(Self);
-    lText.Parent := lRow;
-    lText.SetBounds(332, 34, 90, 42);
-    lText.Font.Color := clBlue;
-    lText.Caption := 'Выдать в:' + LineEnding +
-      'Значение: 1' + LineEnding + 'Гистерезис: 0%';
-
-    fSetpointColorPanels[lKind] := TPanel.Create(Self);
-    fSetpointColorPanels[lKind].Parent := lRow;
-    fSetpointColorPanels[lKind].SetBounds(434, 28, 32, 28);
-    fSetpointColorPanels[lKind].BevelOuter := bvLowered;
-  end;
-
-  lRow := TPanel.Create(Self);
-  lRow.Parent := ATab;
-  lRow.SetBounds(16, 338, 510, 86);
-  lRow.BevelOuter := bvLowered;
-
-  lLabel := TLabel.Create(Self);
-  lLabel.Parent := lRow;
-  lLabel.SetBounds(12, 8, 120, 18);
-  lLabel.Caption := 'Дополнительно';
-  lLabel.Font.Style := [fsBold];
-
-  fSetpointHysteresisCheck := TCheckBox.Create(Self);
-  fSetpointHysteresisCheck.Parent := lRow;
-  fSetpointHysteresisCheck.SetBounds(198, 8, 130, 20);
-  fSetpointHysteresisCheck.Caption := 'Вкл. гистерезис';
-
-  fSetpointStatusChannelCheck := TCheckBox.Create(Self);
-  fSetpointStatusChannelCheck.Parent := lRow;
-  fSetpointStatusChannelCheck.SetBounds(12, 34, 176, 20);
-  fSetpointStatusChannelCheck.Caption := 'Канал состояния уставки:';
-  fSetpointStatusChannelCheck.Font.Color := clBlue;
-
-  fSetpointSoundCheck := TCheckBox.Create(Self);
-  fSetpointSoundCheck.Parent := lRow;
-  fSetpointSoundCheck.SetBounds(12, 58, 250, 20);
-  fSetpointSoundCheck.Caption := 'Прослушать звуковое оповещение до конца';
-end;
-
-{ Возвращает True, если текстовое свойство совпадает для всех тегов }
 function TTagSettingsDialog.AllString(AKind: Integer; out AValue: string): Boolean;
 var
   I: Integer;
@@ -987,7 +756,8 @@ begin
         end;
         lSourceIds.Add(lSourceId);
         lList.Items.AddObject(Format('%s  [%s]  %s',
-          [lSignal.Name, lSignal.Address, ExtractFileName(lFileName)]), lSignal);
+          [LclText(lSignal.Name), LclText(lSignal.Address),
+          ExtractFileName(lFileName)]), lSignal);
       end;
     end;
 
@@ -1133,7 +903,7 @@ begin
       end;
     end;
   end;
-  fSourceWarningLabel.Visible := not lSourceActive;
+  fDetachedSourceLabel.Visible := not lSourceActive;
 
   if AllString(3, lText) then
     fDescriptionEdit.Text := lText
@@ -1168,6 +938,8 @@ begin
     fAutoRangeCheck.State := cbGrayed
   else
     fAutoRangeCheck.Checked := lBool > 0;
+
+  UpdateChannelCurveText;
 
   for lEstimateKind := Low(TRecorderTagEstimateKind) to tekPeakToPeakByRmsDeviation do
   begin
@@ -1371,6 +1143,110 @@ procedure TTagSettingsDialog.OkButtonClick(Sender: TObject);
 begin
   StoreToTags;
   ModalResult := mrOk;
+end;
+
+
+procedure TTagSettingsDialog.SelectCalibrationButtonClick(Sender: TObject);
+var
+  lSelected: TRecorderCalibration;
+begin
+  if fTags.Count <> 1 then
+  begin
+    MessageDlg('Канальная ГХ',
+      'Выбор ГХ из списка доступен только для одного выбранного тега.',
+      mtInformation, [mbOK], 0);
+    Exit;
+  end;
+
+  lSelected := nil;
+  if ShowRecorderCalibrationListDialog(Self, fTagRegistry.Calibrations, lSelected) and
+    (lSelected <> nil) then
+  begin
+    if TagAt(0).CalibrationNames.Count = 0 then
+      TagAt(0).CalibrationNames.Add(lSelected.Name)
+    else
+      TagAt(0).CalibrationNames[TagAt(0).CalibrationNames.Count - 1] :=
+        lSelected.Name;
+    UpdateChannelCurveText;
+  end;
+end;
+
+procedure TTagSettingsDialog.AddCalibrationButtonClick(Sender: TObject);
+var
+  I: Integer;
+  lKind: TRecorderCalibrationKind;
+  lCalibration: TRecorderCalibration;
+begin
+  if not ShowRecorderCalibrationAddDialog(Self, lKind) then
+    Exit;
+
+  lCalibration := TRecorderCalibration.Create(lKind);
+  try
+    lCalibration.Name := 'ГХ ' + IntToStr(fTagRegistry.Calibrations.Count + 1);
+    if lKind = rckPiecewiseLinear then
+    begin
+      lCalibration.AddPoint(0, 0);
+      lCalibration.AddPoint(1, 1);
+    end;
+
+    if not ShowRecorderCalibrationPropertiesDialog(Self, lCalibration) then
+      Exit;
+
+  fTagRegistry.Calibrations.Add(lCalibration);
+  for I := 0 to fTags.Count - 1 do
+    if TagAt(I).CalibrationNames.Count = 0 then
+      TagAt(I).CalibrationNames.Add(lCalibration.Name)
+    else
+      TagAt(I).CalibrationNames[TagAt(I).CalibrationNames.Count - 1] :=
+        lCalibration.Name;
+    lCalibration := nil;
+    UpdateChannelCurveText;
+  finally
+    lCalibration.Free;
+  end;
+end;
+
+procedure TTagSettingsDialog.DeleteCalibrationButtonClick(Sender: TObject);
+var
+  I: Integer;
+begin
+  for I := 0 to fTags.Count - 1 do
+    TagAt(I).CalibrationNames.Clear;
+  UpdateChannelCurveText;
+end;
+
+procedure TTagSettingsDialog.EditCalibrationButtonClick(Sender: TObject);
+var
+  lCalibration: TRecorderCalibration;
+begin
+  if fTags.Count <> 1 then
+  begin
+    MessageDlg('Канальная ГХ',
+      'ГХ можно редактировать только для одного выбранного тега.',
+      mtInformation, [mbOK], 0);
+    Exit;
+  end;
+
+  if TagAt(0).CalibrationNames.Count = 0 then
+  begin
+    MessageDlg('Канальная ГХ',
+      'У выбранного тега нет назначенной ГХ.',
+      mtInformation, [mbOK], 0);
+    Exit;
+  end;
+
+  lCalibration := fTagRegistry.FindCalibrationByName(
+    TagAt(0).CalibrationNames[TagAt(0).CalibrationNames.Count - 1]);
+  if lCalibration = nil then
+  begin
+    MessageDlg('Канальная ГХ',
+      'Назначенная ГХ не найдена в списке характеристик.',
+      mtInformation, [mbOK], 0);
+    Exit;
+  end;
+
+  if ShowRecorderCalibrationPropertiesDialog(Self, lCalibration) then
+    UpdateChannelCurveText;
 end;
 
 end.

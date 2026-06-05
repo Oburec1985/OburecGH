@@ -7,7 +7,8 @@ interface
 uses
   Grids,
   uRecorderTags,
-  uRecorderAlarms;
+  uRecorderAlarms,
+  uComponentServices;
 
 procedure RenderRecorderDigitalPage(AGrid: TStringGrid;
   ATagRegistry: TRecorderTagRegistry; const AAlarmEngine: IRecorderAlarmEngine);
@@ -91,13 +92,13 @@ begin
 
       if lFirstTagRow then
       begin
-        AGrid.Cells[0, lRow] := lTag.Name;
-        AGrid.Cells[2, lRow] := lTag.Address;
+        AGrid.Cells[0, lRow] := LclText(lTag.Name);
+        AGrid.Cells[2, lRow] := LclText(lTag.Address);
         if AAlarmEngine <> nil then
-          AGrid.Cells[5, lRow] := AAlarmEngine.GetTagAlarmText(lTag)
+          AGrid.Cells[5, lRow] := LclText(AAlarmEngine.GetTagAlarmText(lTag))
         else
           AGrid.Cells[5, lRow] := '-';
-        AGrid.Cells[6, lRow] := lTag.Description;
+        AGrid.Cells[6, lRow] := LclText(lTag.Description);
         lFirstTagRow := False;
       end
       else
@@ -109,11 +110,13 @@ begin
       end;
 
       AGrid.Cells[1, lRow] := RecorderTagEstimateKindToShortName(J);
-      AGrid.Cells[3, lRow] := lTag.UnitName;
+      AGrid.Cells[3, lRow] := LclText(lTag.UnitName);
       AGrid.Cells[4, lRow] := FormatTagEstimate(lTag, J);
       Inc(lRow);
     end;
   end;
+
+  SGChange(AGrid);
 end;
 
 end.
