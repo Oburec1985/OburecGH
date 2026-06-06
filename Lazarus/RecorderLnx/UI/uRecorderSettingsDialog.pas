@@ -25,7 +25,8 @@ uses
   Classes, SysUtils, Math, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   ComCtrls, ImgList, Grids, Buttons, Menus, LCLType,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderTags, uMeraFile,
-  uRecorderCommandImages, uTagSettingsDialog, uComponentServices;
+  uRecorderCommandImages, uTagSettingsDialog, uComponentServices,
+  uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderFrequencyBandsDialog;
 
 type
   { TRecorderSettingsDialog }
@@ -44,6 +45,24 @@ type
     spChannels: TSplitter;                      // Разделитель между сетками доступных и выбранных каналов
     fAvailableChannelsGrid: TStringGrid;        // Таблица доступных для выбора каналов
     fSelectedChannelsGrid: TStringGrid;         // Таблица выбранных (активных) каналов
+    spChannelAlgorithms: TSplitter;             // Разделитель между каналами и алгоритмами
+    fAlgorithmsTree: TTreeView;                 // Дерево алгоритмов каналов
+    fAlgorithmKindCombo: TComboBox;             // Тип создаваемого алгоритма
+    btnAlgorithmAdd: TBitBtn;                   // Создать алгоритм по выбранным каналам
+    btnAlgorithmRemove: TBitBtn;                // Удалить узел алгоритма
+    btnAlgorithmConfig: TBitBtn;                // Применить параметры FFT-узла
+    btnFrequencyBands: TBitBtn;                 // Настроить частотные полосы
+    fAlgorithmFftSizeEdit: TEdit;               // Размер FFT
+    fAlgorithmSampleRateEdit: TEdit;            // Частота опроса
+    fAlgorithmPortionLabel: TLabel;             // Размер порции в секундах
+    fAlgorithmAverageBlocksEdit: TEdit;         // Количество блоков усреднения
+    fAlgorithmOverlapEdit: TEdit;               // Перекрытие FFT
+    fAlgorithmOverlapCombo: TComboBox;          // Режим перекрытия FFT
+    fAlgorithmWindowCombo: TComboBox;           // Оконная функция
+    fAlgorithmNormalizeCombo: TComboBox;        // Нормировка спектра
+    fAlgorithmZeroPadCheck: TCheckBox;          // Дополнять нулями
+    fAlgorithmAhCorrectionCheck: TCheckBox;     // Коррекция АЧХ
+    fAlgorithmIntegrationGroup: TRadioGroup;    // Режим интегрирования
 
     // Поля ввода общих настроек
     fScreenUpdateEdit: TEdit;                   // Период обновления экрана (сек)
@@ -97,6 +116,17 @@ type
       State: TDragState; var Accept: Boolean);
     procedure fSelectedChannelsGridDblClick(Sender: TObject);
     procedure fSelectedChannelsGridMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure fAlgorithmsTreeChange(Sender: TObject; Node: TTreeNode);
+    procedure fAlgorithmsTreeDragDrop(Sender, Source: TObject; X, Y: Integer);
+    procedure fAlgorithmsTreeDragOver(Sender, Source: TObject; X, Y: Integer;
+      State: TDragState; var Accept: Boolean);
+    procedure btnAlgorithmAddClick(Sender: TObject);
+    procedure btnAlgorithmRemoveClick(Sender: TObject);
+    procedure btnAlgorithmConfigClick(Sender: TObject);
+    procedure btnFrequencyBandsClick(Sender: TObject);
+    procedure fAlgorithmAhCorrectionCheckChange(Sender: TObject);
+    procedure fAlgorithmFftParamChange(Sender: TObject);
+    procedure fAlgorithmOverlapComboChange(Sender: TObject);
     procedure fHardwareTreeDblClick(Sender: TObject);
     procedure fHardwareTreeKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -112,6 +142,8 @@ type
     fSelectedChannelTags: TList;                // Row-map выбранных каналов на TRecorderTag
     fSelectedSortColumn: Integer;               // Колонка текущей сортировки выбранных каналов
     fSelectedSortAscending: Boolean;            // Направление текущей сортировки
+    fSpectrumConfigTree: TRecorderSpectrumConfigTree; // Черновая модель алгоритмов вкладки каналов
+    fFrequencyBands: TRecorderFrequencyBandList; // Черновая модель частотных полос
     
     // Вспомогательные методы работы с Mera-сигналами
     procedure AddMeraSignal(ASignal: TMeraSignalInfo);
@@ -125,6 +157,11 @@ type
     procedure SortSelectedTags(ATags: TList);
     procedure SortSelectedChannelsByColumn(AColumn: Integer);
     procedure OpenSelectedChannelTagSettings;
+    procedure AddSpectrumAlgorithmsFromSelectedChannels;
+    procedure AddSpectrumAlgorithmForTag(ATag: TRecorderTag;
+      ATargetNode: TRecorderSpectrumConfigNode);
+    function CreateSpectrumConfigNode(ATag: TRecorderTag): TRecorderSpectrumConfigNode;
+    function SelectedSpectrumConfigNode: TRecorderSpectrumConfigNode;
     procedure CreateSelectedMeraTags;
     procedure ClearMeraSignals;
     procedure RestoreMeraSignalsFromTags;
@@ -143,6 +180,11 @@ type
     // Методы инициализации и обновления интерфейса
     procedure PopulateChannelGrids;
     procedure PopulateHardwareTree;
+    procedure PopulateAlgorithmsTree;
+    procedure InitializeAlgorithmControls;
+    procedure LoadSelectedAlgorithmSettings;
+    procedure StoreSelectedAlgorithmSettings;
+    procedure UpdateAlgorithmDerivedControls;
     procedure SetGridHeaders;
     procedure ToggleHardwareSignal(ANode: TTreeNode);
     procedure SetRunSettings(AValue: TRecorderRunControlSettings);
@@ -330,6 +372,8 @@ begin
   inherited Create(AOwner);
   fMeraSignals := TList.Create;
   fSelectedChannelTags := TList.Create;
+  fSpectrumConfigTree := TRecorderSpectrumConfigTree.Create;
+  fFrequencyBands := TRecorderFrequencyBandList.Create;
   fSelectedSortColumn := 2;
   fSelectedSortAscending := True;
 
@@ -354,9 +398,24 @@ begin
   begin
     fSelectedChannelsGrid.OnDblClick := @fSelectedChannelsGridDblClick;
     fSelectedChannelsGrid.OnMouseDown := @fSelectedChannelsGridMouseDown;
+    fSelectedChannelsGrid.DragMode := dmAutomatic;
   end;
+  if fAlgorithmsTree <> nil then
+  begin
+    fAlgorithmsTree.Images := fDeviceImageList;
+    fAlgorithmsTree.ImagesWidth := 16;
+  end;
+  if fAlgorithmFftSizeEdit <> nil then
+    fAlgorithmFftSizeEdit.OnChange := @fAlgorithmFftParamChange;
+  if fAlgorithmSampleRateEdit <> nil then
+    fAlgorithmSampleRateEdit.OnChange := @fAlgorithmFftParamChange;
+  if fAlgorithmOverlapCombo <> nil then
+    fAlgorithmOverlapCombo.OnChange := @fAlgorithmOverlapComboChange;
+  if fAlgorithmAhCorrectionCheck <> nil then
+    fAlgorithmAhCorrectionCheck.OnChange := @fAlgorithmAhCorrectionCheckChange;
 
   SetGridHeaders;
+  InitializeAlgorithmControls;
   InitializeHardwareTree;
   UpdateConditionControls;
 end;
@@ -364,6 +423,9 @@ end;
 destructor TRecorderSettingsDialog.Destroy;
 begin
   ClearMeraSignals;
+  fFrequencyBands.Free;
+  fSpectrumConfigTree.Free;
+  fSelectedChannelTags.Free;
   fMeraSignals.Free;
   inherited Destroy;
 end;
@@ -387,6 +449,11 @@ begin
   begin
     fHardwareTree.Images := fDeviceImageList;
     fHardwareTree.ImagesWidth := 16;
+  end;
+  if fAlgorithmsTree <> nil then
+  begin
+    fAlgorithmsTree.Images := fDeviceImageList;
+    fAlgorithmsTree.ImagesWidth := 16;
   end;
   SetDialogButtonImages;
 end;
@@ -601,6 +668,288 @@ begin
   finally
     lTags.Free;
   end;
+end;
+
+function TRecorderSettingsDialog.SelectedSpectrumConfigNode: TRecorderSpectrumConfigNode;
+var
+  lNode: TTreeNode;
+begin
+  Result := nil;
+  if fAlgorithmsTree = nil then
+    Exit;
+  lNode := fAlgorithmsTree.Selected;
+  while lNode <> nil do
+  begin
+    if TObject(lNode.Data) is TRecorderSpectrumConfigNode then
+      Exit(TRecorderSpectrumConfigNode(lNode.Data));
+    lNode := lNode.Parent;
+  end;
+end;
+
+function TRecorderSettingsDialog.CreateSpectrumConfigNode(
+  ATag: TRecorderTag): TRecorderSpectrumConfigNode;
+var
+  lSettings: TRecorderSpectrumSettings;
+begin
+  Result := fSpectrumConfigTree.AddNode('spectrum.' +
+    IntToStr(fSpectrumConfigTree.NodeCount + 1),
+    'Спектр ' + IntToStr(fSpectrumConfigTree.NodeCount + 1));
+  lSettings := Result.Settings;
+  if (ATag <> nil) and (ATag.PollFrequencyHz > 0) then
+    lSettings.SampleRateHz := ATag.PollFrequencyHz;
+  Result.Settings := lSettings;
+end;
+
+procedure TRecorderSettingsDialog.AddSpectrumAlgorithmForTag(ATag: TRecorderTag;
+  ATargetNode: TRecorderSpectrumConfigNode);
+var
+  I: Integer;
+  lNode: TRecorderSpectrumConfigNode;
+  lBinding: TRecorderSpectrumTagBinding;
+begin
+  if ATag = nil then
+    Exit;
+
+  lNode := ATargetNode;
+  if lNode = nil then
+    lNode := CreateSpectrumConfigNode(ATag);
+
+  for I := 0 to lNode.BindingCount - 1 do
+    if SameText(lNode.Bindings[I].SourceTagName, ATag.Name) then
+      Exit;
+
+  lBinding := lNode.AddBinding(ATag.Name);
+  lBinding.OutputPrefix := ATag.Name + '_spm';
+end;
+
+procedure TRecorderSettingsDialog.AddSpectrumAlgorithmsFromSelectedChannels;
+var
+  lSelection: TGridRect;
+  lRow: Integer;
+  lTop: Integer;
+  lBottom: Integer;
+  lTag: TRecorderTag;
+  lTargetNode: TRecorderSpectrumConfigNode;
+  lSettings: TRecorderSpectrumSettings;
+begin
+  if (fSelectedChannelsGrid = nil) or (fAlgorithmKindCombo = nil) then
+    Exit;
+  if fAlgorithmKindCombo.ItemIndex < 0 then
+    fAlgorithmKindCombo.ItemIndex := 0;
+  if fAlgorithmKindCombo.Text <> 'Спектр' then
+    Exit;
+
+  lSelection := fSelectedChannelsGrid.Selection;
+  lTop := lSelection.Top;
+  lBottom := lSelection.Bottom;
+  if lTop > lBottom then
+  begin
+    lTop := lSelection.Bottom;
+    lBottom := lSelection.Top;
+  end;
+
+  lTargetNode := SelectedSpectrumConfigNode;
+  if lTargetNode = nil then
+    lTargetNode := CreateSpectrumConfigNode(nil);
+
+  for lRow := lTop to lBottom do
+  begin
+    lTag := SelectedTagByGridRow(lRow);
+    if lTag <> nil then
+    begin
+      if (lTargetNode.Settings.SampleRateHz <= 0) and (lTag.PollFrequencyHz > 0) then
+      begin
+        lSettings := lTargetNode.Settings;
+        lSettings.SampleRateHz := lTag.PollFrequencyHz;
+        lTargetNode.Settings := lSettings;
+      end;
+      AddSpectrumAlgorithmForTag(lTag, lTargetNode);
+    end;
+  end;
+  PopulateAlgorithmsTree;
+  LoadSelectedAlgorithmSettings;
+end;
+
+procedure TRecorderSettingsDialog.InitializeAlgorithmControls;
+begin
+  if fAlgorithmKindCombo <> nil then
+  begin
+    fAlgorithmKindCombo.Items.Clear;
+    fAlgorithmKindCombo.Items.Add('Спектр');
+    fAlgorithmKindCombo.ItemIndex := 0;
+  end;
+  if fAlgorithmWindowCombo <> nil then
+  begin
+    fAlgorithmWindowCombo.Items.Clear;
+    fAlgorithmWindowCombo.Items.Add('Rect');
+    fAlgorithmWindowCombo.Items.Add('Hann');
+    fAlgorithmWindowCombo.Items.Add('Hamming');
+    fAlgorithmWindowCombo.Items.Add('Blackman');
+    fAlgorithmWindowCombo.Items.Add('FlatTop');
+    fAlgorithmWindowCombo.ItemIndex := Ord(swkHann);
+  end;
+  if fAlgorithmOverlapCombo <> nil then
+  begin
+    fAlgorithmOverlapCombo.Items.Clear;
+    fAlgorithmOverlapCombo.Items.Add(RecorderSpectrumOverlapName(somNone));
+    fAlgorithmOverlapCombo.Items.Add(RecorderSpectrumOverlapName(somHalf));
+    fAlgorithmOverlapCombo.Items.Add(RecorderSpectrumOverlapName(somQuarter));
+    fAlgorithmOverlapCombo.ItemIndex := Ord(somNone);
+  end;
+  if fAlgorithmIntegrationGroup <> nil then
+  begin
+    fAlgorithmIntegrationGroup.Items.Clear;
+    fAlgorithmIntegrationGroup.Items.Add(RecorderSpectrumIntegrationName(simNone));
+    fAlgorithmIntegrationGroup.Items.Add(RecorderSpectrumIntegrationName(simSingle));
+    fAlgorithmIntegrationGroup.Items.Add(RecorderSpectrumIntegrationName(simDouble));
+    fAlgorithmIntegrationGroup.ItemIndex := Ord(simNone);
+  end;
+  if fAlgorithmNormalizeCombo <> nil then
+  begin
+    fAlgorithmNormalizeCombo.Visible := False;
+    fAlgorithmNormalizeCombo.ItemIndex := Ord(snmNone);
+  end;
+  PopulateAlgorithmsTree;
+end;
+
+procedure TRecorderSettingsDialog.PopulateAlgorithmsTree;
+var
+  I: Integer;
+  J: Integer;
+  lRoot: TTreeNode;
+  lNode: TRecorderSpectrumConfigNode;
+  lConfigTreeNode: TTreeNode;
+  lBinding: TRecorderSpectrumTagBinding;
+begin
+  if fAlgorithmsTree = nil then
+    Exit;
+
+  fAlgorithmsTree.Items.BeginUpdate;
+  try
+    fAlgorithmsTree.Items.Clear;
+    lRoot := fAlgorithmsTree.Items.Add(nil, 'Алгоритмы');
+    lRoot.Data := nil;
+    for I := 0 to fSpectrumConfigTree.NodeCount - 1 do
+    begin
+      lNode := fSpectrumConfigTree.Nodes[I];
+      lConfigTreeNode := fAlgorithmsTree.Items.AddChild(lRoot,
+        lNode.DisplayName);
+      lConfigTreeNode.Data := lNode;
+      lConfigTreeNode.ImageIndex := CIconSpectrum;
+      lConfigTreeNode.SelectedIndex := CIconSpectrum;
+      for J := 0 to lNode.BindingCount - 1 do
+      begin
+        lBinding := lNode.Bindings[J];
+        with fAlgorithmsTree.Items.AddChild(lConfigTreeNode,
+          lBinding.SourceTagName + ' -> ' + lBinding.OutputPrefix) do
+          Data := lBinding;
+      end;
+      lConfigTreeNode.Expand(True);
+    end;
+    lRoot.Expand(True);
+    if fAlgorithmsTree.Selected = nil then
+      fAlgorithmsTree.Selected := lRoot;
+  finally
+    fAlgorithmsTree.Items.EndUpdate;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.LoadSelectedAlgorithmSettings;
+var
+  lNode: TRecorderSpectrumConfigNode;
+  lSettings: TRecorderSpectrumSettings;
+begin
+  lNode := SelectedSpectrumConfigNode;
+  if lNode = nil then
+    Exit;
+  lSettings := lNode.Settings;
+  if fAlgorithmFftSizeEdit <> nil then
+    fAlgorithmFftSizeEdit.Text := IntToStr(lSettings.FFTSize);
+  if fAlgorithmSampleRateEdit <> nil then
+    fAlgorithmSampleRateEdit.Text := FormatFloat('0.###', lSettings.SampleRateHz);
+  if fAlgorithmAverageBlocksEdit <> nil then
+    fAlgorithmAverageBlocksEdit.Text := IntToStr(lSettings.AverageBlockCount);
+  if fAlgorithmOverlapEdit <> nil then
+    fAlgorithmOverlapEdit.Text := IntToStr(lSettings.Overlap);
+  if fAlgorithmOverlapCombo <> nil then
+    fAlgorithmOverlapCombo.ItemIndex := Ord(lSettings.OverlapMode);
+  if fAlgorithmWindowCombo <> nil then
+    fAlgorithmWindowCombo.ItemIndex := Ord(lSettings.WindowKind);
+  if fAlgorithmZeroPadCheck <> nil then
+    fAlgorithmZeroPadCheck.Checked := lSettings.ZeroPad;
+  if fAlgorithmAhCorrectionCheck <> nil then
+    fAlgorithmAhCorrectionCheck.Checked := lSettings.AhCorrectionEnabled;
+  if fAlgorithmIntegrationGroup <> nil then
+    fAlgorithmIntegrationGroup.ItemIndex := Ord(lSettings.IntegrationMode);
+  UpdateAlgorithmDerivedControls;
+end;
+
+procedure TRecorderSettingsDialog.StoreSelectedAlgorithmSettings;
+var
+  lNode: TRecorderSpectrumConfigNode;
+  lSettings: TRecorderSpectrumSettings;
+  lInt: Integer;
+begin
+  lNode := SelectedSpectrumConfigNode;
+  if lNode = nil then
+    Exit;
+
+  lSettings := lNode.Settings;
+  if (fAlgorithmFftSizeEdit <> nil) and
+    TryStrToInt(Trim(fAlgorithmFftSizeEdit.Text), lInt) then
+    lSettings.FFTSize := lInt;
+  if (fAlgorithmOverlapEdit <> nil) and
+    TryStrToInt(Trim(fAlgorithmOverlapEdit.Text), lInt) then
+    lSettings.Overlap := lInt;
+  if fAlgorithmSampleRateEdit <> nil then
+    lSettings.SampleRateHz := ReadFloatEdit(fAlgorithmSampleRateEdit,
+      lSettings.SampleRateHz);
+  if (fAlgorithmAverageBlocksEdit <> nil) and
+    TryStrToInt(Trim(fAlgorithmAverageBlocksEdit.Text), lInt) then
+    lSettings.AverageBlockCount := lInt;
+  if (fAlgorithmOverlapCombo <> nil) and (fAlgorithmOverlapCombo.ItemIndex >= 0) then
+    lSettings.OverlapMode := TRecorderSpectrumOverlapMode(
+      fAlgorithmOverlapCombo.ItemIndex);
+  if (fAlgorithmWindowCombo <> nil) and (fAlgorithmWindowCombo.ItemIndex >= 0) then
+    lSettings.WindowKind := TRecorderSpectrumWindowKind(fAlgorithmWindowCombo.ItemIndex);
+  if fAlgorithmZeroPadCheck <> nil then
+    lSettings.ZeroPad := fAlgorithmZeroPadCheck.Checked;
+  if fAlgorithmAhCorrectionCheck <> nil then
+    lSettings.AhCorrectionEnabled := fAlgorithmAhCorrectionCheck.Checked;
+  if (fAlgorithmIntegrationGroup <> nil) and
+    (fAlgorithmIntegrationGroup.ItemIndex >= 0) then
+    lSettings.IntegrationMode := TRecorderSpectrumIntegrationMode(
+      fAlgorithmIntegrationGroup.ItemIndex);
+  lSettings.NormalizeMode := snmNone;
+
+  lSettings.Validate;
+  lNode.Settings := lSettings;
+  UpdateAlgorithmDerivedControls;
+end;
+
+procedure TRecorderSettingsDialog.UpdateAlgorithmDerivedControls;
+var
+  lFftSize: Integer;
+  lSampleRate: Double;
+  lPortionSec: Double;
+begin
+  if fAlgorithmPortionLabel = nil then
+    Exit;
+  lFftSize := 0;
+  lSampleRate := 0.0;
+  if fAlgorithmFftSizeEdit <> nil then
+    TryStrToInt(Trim(fAlgorithmFftSizeEdit.Text), lFftSize);
+  if fAlgorithmSampleRateEdit <> nil then
+    lSampleRate := ReadFloatEdit(fAlgorithmSampleRateEdit, 0.0);
+
+  if (lFftSize > 0) and (lSampleRate > 0.0) then
+  begin
+    lPortionSec := lFftSize / lSampleRate;
+    fAlgorithmPortionLabel.Caption := 'порция: ' +
+      FormatFloat('0.###', lPortionSec) + ' с';
+  end
+  else
+    fAlgorithmPortionLabel.Caption := 'порция: - с';
 end;
 
 { Marks signals already represented in registry. Name matches relink existing tags
@@ -1714,6 +2063,148 @@ begin
   if lRow = 0 then
     SortSelectedChannelsByColumn(lCol);
 end;
+
+procedure TRecorderSettingsDialog.fAlgorithmsTreeChange(Sender: TObject;
+  Node: TTreeNode);
+begin
+  LoadSelectedAlgorithmSettings;
+end;
+
+procedure TRecorderSettingsDialog.fAlgorithmsTreeDragDrop(Sender,
+  Source: TObject; X, Y: Integer);
+var
+  lDropNode: TTreeNode;
+begin
+  if Source = fSelectedChannelsGrid then
+  begin
+    lDropNode := fAlgorithmsTree.GetNodeAt(X, Y);
+    if lDropNode <> nil then
+      fAlgorithmsTree.Selected := lDropNode;
+    AddSpectrumAlgorithmsFromSelectedChannels;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.fAlgorithmsTreeDragOver(Sender,
+  Source: TObject; X, Y: Integer; State: TDragState; var Accept: Boolean);
+begin
+  Accept := Source = fSelectedChannelsGrid;
+end;
+
+procedure TRecorderSettingsDialog.btnAlgorithmAddClick(Sender: TObject);
+begin
+  AddSpectrumAlgorithmsFromSelectedChannels;
+end;
+
+procedure TRecorderSettingsDialog.btnAlgorithmRemoveClick(Sender: TObject);
+var
+  lSelected: TTreeNode;
+  lParentNode: TRecorderSpectrumConfigNode;
+  lBinding: TRecorderSpectrumTagBinding;
+  I: Integer;
+begin
+  if (fAlgorithmsTree = nil) or (fAlgorithmsTree.Selected = nil) then
+    Exit;
+
+  lSelected := fAlgorithmsTree.Selected;
+  if TObject(lSelected.Data) is TRecorderSpectrumTagBinding then
+  begin
+    lBinding := TRecorderSpectrumTagBinding(lSelected.Data);
+    lParentNode := SelectedSpectrumConfigNode;
+    if lParentNode <> nil then
+      for I := lParentNode.BindingCount - 1 downto 0 do
+        if lParentNode.Bindings[I] = lBinding then
+        begin
+          lParentNode.DeleteBinding(I);
+          Break;
+        end;
+  end
+  else if TObject(lSelected.Data) is TRecorderSpectrumConfigNode then
+  begin
+    for I := fSpectrumConfigTree.NodeCount - 1 downto 0 do
+      if fSpectrumConfigTree.Nodes[I] = TObject(lSelected.Data) then
+      begin
+        fSpectrumConfigTree.DeleteNode(I);
+        Break;
+      end;
+  end;
+
+  PopulateAlgorithmsTree;
+end;
+
+procedure TRecorderSettingsDialog.btnAlgorithmConfigClick(Sender: TObject);
+begin
+  try
+    StoreSelectedAlgorithmSettings;
+  except
+    on E: Exception do
+      MessageDlg('Настройка спектра', E.Message, mtError, [mbOK], 0);
+  end;
+end;
+
+procedure TRecorderSettingsDialog.btnFrequencyBandsClick(Sender: TObject);
+begin
+  ShowRecorderFrequencyBandsDialog(Self, fFrequencyBands);
+end;
+
+procedure TRecorderSettingsDialog.fAlgorithmAhCorrectionCheckChange(
+  Sender: TObject);
+var
+  lNode: TRecorderSpectrumConfigNode;
+  lSettings: TRecorderSpectrumSettings;
+  lProfile: string;
+begin
+  if (fAlgorithmAhCorrectionCheck = nil) or
+    (not fAlgorithmAhCorrectionCheck.Checked) then
+    Exit;
+
+  lNode := SelectedSpectrumConfigNode;
+  if lNode = nil then
+    Exit;
+
+  lSettings := lNode.Settings;
+  lProfile := lSettings.AhCorrectionProfileName;
+  if lProfile = '' then
+    lProfile := 'default';
+  if InputQuery('Коррекция АЧХ', 'Профиль коэффициентов спектра', lProfile) then
+  begin
+    lSettings.AhCorrectionEnabled := True;
+    lSettings.AhCorrectionProfileName := lProfile;
+    lNode.Settings := lSettings;
+  end
+  else
+    fAlgorithmAhCorrectionCheck.Checked := lSettings.AhCorrectionEnabled;
+end;
+
+procedure TRecorderSettingsDialog.fAlgorithmFftParamChange(Sender: TObject);
+begin
+  UpdateAlgorithmDerivedControls;
+end;
+
+procedure TRecorderSettingsDialog.fAlgorithmOverlapComboChange(Sender: TObject);
+var
+  lFftSize: Integer;
+  lOverlap: Integer;
+begin
+  if (fAlgorithmOverlapCombo = nil) or (fAlgorithmFftSizeEdit = nil) or
+    (fAlgorithmOverlapEdit = nil) then
+    Exit;
+  if fAlgorithmOverlapCombo.ItemIndex < 0 then
+    Exit;
+  if not TryStrToInt(Trim(fAlgorithmFftSizeEdit.Text), lFftSize) then
+    Exit;
+
+  case TRecorderSpectrumOverlapMode(fAlgorithmOverlapCombo.ItemIndex) of
+    somHalf:
+      lOverlap := lFftSize div 2;
+    somQuarter:
+      lOverlap := lFftSize div 4;
+  else
+    lOverlap := 0;
+  end;
+  fAlgorithmOverlapEdit.Text := IntToStr(lOverlap);
+  UpdateAlgorithmDerivedControls;
+end;
+
 procedure TRecorderSettingsDialog.fAvailableChannelsGridMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
@@ -1767,7 +2258,8 @@ end;
 initialization
   RegisterClasses([
     TPageControl, TTabSheet, TPanel, TGroupBox, TLabel, TEdit, TCheckBox,
-    TRadioButton, TComboBox, TButton, TTreeView, TStringGrid, TSplitter
+    TRadioButton, TRadioGroup, TComboBox, TButton, TTreeView, TStringGrid,
+    TSplitter
   ]);
 
 end.

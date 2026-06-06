@@ -1,4 +1,9 @@
 unit uOglChartPanZoomListener;
+
+{
+  Модуль uOglChartPanZoomListener
+  Описание: Слушатель для панорамирования (скролла) и масштабирования (зума) графиков.
+}
 {$mode objfpc}{$H+}
 interface
 uses

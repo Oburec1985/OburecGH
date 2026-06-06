@@ -1,11 +1,17 @@
 // Ѕиблиотека математических функций
 unit MathFunction;
 
+{$mode delphi}
+
+{$IFDEF FPC}
+  {$DEFINE GEOMETRY_NO_ASM}
+{$ENDIF}
+
 interface
 
 uses
   // OpenGL, Math;
-  Windows, ExtCtrls, SysUtils, OpenGL, Math, Forms, StdCtrls, Classes,
+  Windows, ExtCtrls, SysUtils, {$IFDEF FPC}gl{$ELSE}OpenGL{$ENDIF}, Math, Forms, StdCtrls, Classes,
   uCommonTypes, uCommonMath;
 
 Type
@@ -151,10 +157,14 @@ function MaxFloat(const v: array of single): single; overload;
 { : Returns the maximum of given values. }
 function MaxFloat(const v1, v2: single): single; overload;
 function MaxFloat(const v1, v2: double): double; overload;
+{$IFNDEF FPC}
 function MaxFloat(const v1, v2: Extended): Extended; overload;
+{$ENDIF}
 function MaxFloat(const v1, v2, v3: single): single; overload;
 function MaxFloat(const v1, v2, v3: double): double; overload;
+{$IFNDEF FPC}
 function MaxFloat(const v1, v2, v3: Extended): Extended; overload;
+{$ENDIF}
 // линейна€ интерпол€ци€ P3. t - параметр 0..1 p = p2*t +p1*(1-t)
 function InterpolateP3(p1, p2: point3; t: single): point3;
 // пересчитать координаты во вьюпорт. rect - координаты мира
@@ -177,6 +187,7 @@ const
   axisZ: point3 = (x: 0; y: 0; z: 1);
   axisO: point3 = (x: 0; y: 0; z: 0);
 
+{$IFNDEF FPC}
 procedure glTexCoordPointer(size: GLint; atype: GLenum; stride: GLsizei;
   data: pointer); stdcall; external OpenGL32;
 procedure glVertexPointer(size: GLint; atype: GLenum; stride: GLsizei;
@@ -205,12 +216,15 @@ procedure glGenTextures(n: GLsizei; textures: PGLuint); stdcall;
 external OpenGL32;
 // ---------------------------------------------------------------------
 procedure glLightModeli(n: GLenum; u: GLuint); stdcall; external OpenGL32;
+{$ENDIF}
 
 const
-  GL_VERTEX_ARRAY = $8074;
+  {$IFNDEF FPC}
+GL_VERTEX_ARRAY = $8074;
   GL_COLOR_ARRAY = $8076;
   GL_Normal_ARRAY = $8075;
   GL_TEXTURE_COORD_ARRAY = $8078;
+{$ENDIF}
   degres = 0.017453293; // число радиан в градусе
   radians = 57.295779513; // число градусов в радиане
 
@@ -1607,7 +1621,8 @@ end;
 
     // MaxFloat
     //
-    function MaxFloat(const v1, v2: Extended): Extended;
+    {$IFNDEF FPC}
+function MaxFloat(const v1, v2: Extended): Extended;
 {$IFDEF GEOMETRY_NO_ASM}
     begin
       if v1 > v2 then
@@ -1623,6 +1638,7 @@ asm
    ffree   st(1)
 {$ENDIF}
 end;
+{$ENDIF}
 
       // MaxFloat
       //
@@ -1690,7 +1706,8 @@ end;
 
           // MaxFloat
           //
-          function MaxFloat(const v1, v2, v3: Extended): Extended;
+          {$IFNDEF FPC}
+function MaxFloat(const v1, v2, v3: Extended): Extended;
 {$IFDEF GEOMETRY_NO_ASM}
           begin
             if v1 >= v2 then
@@ -1719,6 +1736,7 @@ asm
    ffree   st(1)
 {$ENDIF}
 end;
+{$ENDIF}
 
 function InterpolateP3(p1, p2: point3; t: single): point3;
 begin

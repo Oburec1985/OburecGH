@@ -1,5 +1,10 @@
 unit uOglChartTextLabelTests;
 
+{
+  Модуль uOglChartTextLabelTests
+  Описание: Модульные тесты для проверки позиционирования, переноса строк и сериализации меток.
+}
+
 {$mode objfpc}{$H+}
 
 interface

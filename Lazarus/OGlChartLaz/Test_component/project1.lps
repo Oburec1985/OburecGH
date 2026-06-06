@@ -8,10 +8,10 @@
       <Unit>
         <Filename Value="project1.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="3"/>
         <TopLine Value="24"/>
         <CursorPos X="43" Y="48"/>
-        <UsageCount Value="62"/>
+        <UsageCount Value="63"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -24,17 +24,17 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="661"/>
         <CursorPos X="48" Y="671"/>
-        <UsageCount Value="62"/>
+        <UsageCount Value="63"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\uBaseObjLaz.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="59"/>
+        <UsageCount Value="60"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\uBaseObjVclUtils.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="59"/>
+        <UsageCount Value="60"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uoglchart.pas"/>
@@ -43,14 +43,14 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="247"/>
         <CursorPos X="26" Y="261"/>
-        <UsageCount Value="59"/>
+        <UsageCount Value="60"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\lzrobrpack.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="LzrObrPack"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="56"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartControl.pas"/>
@@ -58,29 +58,29 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="30"/>
         <CursorPos X="43" Y="33"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="56"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartFontMng.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="6"/>
         <TopLine Value="128"/>
         <CursorPos X="13" Y="144"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="56"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartLog.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="56"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartModel.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="71" Y="15"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="56"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartBaseObj.pas"/>
@@ -88,7 +88,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="109"/>
         <CursorPos Y="123"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="56"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartDrawObj.pas"/>
@@ -96,7 +96,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="31"/>
         <CursorPos X="137" Y="45"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="56"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartPage.pas"/>
@@ -104,7 +104,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="29"/>
         <CursorPos X="29" Y="43"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="56"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartAxis.pas"/>
@@ -112,7 +112,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="15"/>
         <CursorPos X="63" Y="32"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="56"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
@@ -120,7 +120,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="275"/>
         <CursorPos X="48" Y="291"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="56"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartChart.pas"/>
@@ -128,22 +128,21 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="7"/>
         <CursorPos X="28" Y="20"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="56"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartMng.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="56"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="6"/>
-        <TopLine Value="1225"/>
-        <CursorPos X="60" Y="1245"/>
-        <UsageCount Value="55"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="1222"/>
+        <CursorPos X="44" Y="1236"/>
+        <UsageCount Value="56"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -151,7 +150,7 @@
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="63" Y="18"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="56"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartTypes.pas"/>
@@ -159,7 +158,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="11"/>
         <CursorPos X="101" Y="28"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="56"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\math\u2DMath.pas"/>
@@ -167,7 +166,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="138"/>
         <CursorPos X="76" Y="149"/>
-        <UsageCount Value="50"/>
+        <UsageCount Value="51"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartLineHelper.pas"/>
@@ -175,7 +174,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="290"/>
         <CursorPos Y="52"/>
-        <UsageCount Value="38"/>
+        <UsageCount Value="39"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas"/>
@@ -183,32 +182,33 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="121"/>
         <CursorPos X="38" Y="127"/>
-        <UsageCount Value="38"/>
+        <UsageCount Value="39"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartSelectListener.pas"/>
         <IsPartOfProject Value="True"/>
         <TopLine Value="173"/>
         <CursorPos X="59" Y="180"/>
-        <UsageCount Value="28"/>
+        <UsageCount Value="29"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartLabelEditListener.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
-        <WindowIndex Value="-1"/>
-        <TopLine Value="-1"/>
-        <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="28"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="22"/>
+        <CursorPos X="55" Y="36"/>
+        <UsageCount Value="29"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartPageGeometryListener.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="5"/>
         <TopLine Value="92"/>
         <CursorPos X="96" Y="103"/>
-        <UsageCount Value="28"/>
+        <UsageCount Value="29"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -217,33 +217,34 @@
         <EditorIndex Value="1"/>
         <TopLine Value="646"/>
         <CursorPos X="37" Y="666"/>
-        <UsageCount Value="28"/>
+        <UsageCount Value="29"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartVertexEditListener.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
+        <EditorIndex Value="9"/>
         <TopLine Value="58"/>
         <CursorPos X="34" Y="43"/>
-        <UsageCount Value="28"/>
+        <UsageCount Value="29"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartCursor.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="7"/>
+        <EditorIndex Value="8"/>
         <TopLine Value="16"/>
         <CursorPos X="57" Y="18"/>
-        <UsageCount Value="25"/>
+        <UsageCount Value="26"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\SharedUtils\components\chart_lzr\uOglChartCursorListener.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="3"/>
-        <TopLine Value="67"/>
-        <CursorPos X="8" Y="100"/>
-        <UsageCount Value="25"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="1124"/>
+        <CursorPos Y="410"/>
+        <UsageCount Value="26"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>

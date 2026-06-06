@@ -1,5 +1,7 @@
 unit uCommonMath;
 
+{$mode delphi}
+
 interface
 
 uses
@@ -85,7 +87,9 @@ function DeleteChars(src: string; ch: char): string;
 function replaceChar(Str: string; ch, newchar: char): string;
 function replaceSpace(Str: string; newchar: char): string;
 function isdig(ch:ansichar):boolean;overload;
+{$IFNDEF FPC}
 function isdig(ch:char):boolean;overload;
+{$ENDIF}
 // получить подстроку содержащую номер
 function GetBaseNum(str:string):string;
 // получить подстроку содержащую номер в конце после _
@@ -808,6 +812,15 @@ begin
 end;
 
 function GetObjectClass(APointer: Pointer): TClass;
+{$IFDEF FPC}
+begin
+  try
+    Result := TClass(PPointer(APointer)^);
+  except
+    Result := nil;
+  end;
+end;
+{$ELSE}
 var
   LMemInfo: TMemoryBasicInformation;
 
@@ -879,6 +892,7 @@ begin
   if not InternalIsValidClass(Pointer(Result), 0) then
     Result := nil;
 end;
+{$ENDIF}
 
 Function IniReadFloatEx(ifile:tinifile;section, key:string;default:double):double;
 var
@@ -1181,15 +1195,17 @@ begin
 end;
 
 
-function isdig(ch:ansichar):boolean;
+function isdig(ch:ansichar):boolean; overload;
 begin
   result:=pos(ch,chars)>0;
 end;
 
-function isdig(ch:char):boolean;
+{$IFNDEF FPC}
+function isdig(ch:char):boolean; overload;
 begin
   result:=pos(ch,chars)>0;
 end;
+{$ENDIF}
 
 function getendnum(str:string):string;
 var
@@ -1397,6 +1413,11 @@ begin
 end;
 
 function TailPos(const S, SubStr: AnsiString; fromPos: integer): integer;
+{$IFDEF FPC}
+begin
+  Result := PosEx(SubStr, S, fromPos);
+end;
+{$ELSE}
 asm
         PUSH EDI
         PUSH ESI
@@ -1442,8 +1463,8 @@ asm
 @@3: POP EBX
         POP ESI
         POP EDI
-end
-;
+end;
+{$ENDIF}
 
 Function trimChars(str:string):string;
 var

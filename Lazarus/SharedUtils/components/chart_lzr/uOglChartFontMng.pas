@@ -90,7 +90,7 @@ type
 implementation
 
 uses
-  Math, gl, glext, Graphics;
+  Math, gl, glext, Graphics, SysUtils;
 
 { cOglFont }
 
@@ -275,6 +275,7 @@ end;
 procedure cOglFont.BuildTextureAtlas;
 var
   lBitmap: TBitmap;
+  lFile: TextFile;
   lWidth, lHeight: Integer;
   lChar: WideChar;
   lText: string;
@@ -298,7 +299,16 @@ begin
   lBitmap := TBitmap.Create;
   try
     lBitmap.PixelFormat := pf32bit;
-    lBitmap.Canvas.Font.Name := fName;
+    // Обеспечиваем ненулевой размер битмапа для корректной работы GDI / Canvas.TextHeight
+    lBitmap.Width := 32;
+    lBitmap.Height := 32;
+    
+    // Подменяем логическое имя шрифта на реальный системный шрифт для рисования
+    if (fName = 'PageCaption') or (fName = 'AxisLabel') or (fName = 'AxisSelected') or
+       (fName = 'GridTick') or (fName = 'Legend') or (fName = 'Debug') then
+      lBitmap.Canvas.Font.Name := 'Arial'
+    else
+      lBitmap.Canvas.Font.Name := fName;
     
     lBitmap.Canvas.Font.Size := Round(fScale * 7.2);
     if fBold then
@@ -346,28 +356,51 @@ begin
       lX := lX + lCharWidth;
     end;
 
-    lRawData := lBitmap.RawImage.Data;
-    lLineStride := lBitmap.RawImage.Description.BytesPerLine;
-    for lRow := 0 to lTexHeight - 1 do
-    begin
-      lPixelPtr := PDWord(lRawData + lRow * lLineStride);
-      for lCol := 0 to lTexWidth - 1 do
+    lRawData := nil;
+    GetMem(lRawData, lTexWidth * lTexHeight * 4);
+    try
+      lPixelPtr := PDWord(lRawData);
+      for lRow := 0 to lTexHeight - 1 do
       begin
-        lColorVal := lPixelPtr^;
-        lAlpha := lColorVal and $FF;
-        lPixelPtr^ := (Cardinal(lAlpha) shl 24) or $00FFFFFF;
-        Inc(lPixelPtr);
+        for lCol := 0 to lTexWidth - 1 do
+        begin
+          lColorVal := lBitmap.Canvas.Pixels[lCol, lRow];
+          lAlpha := Byte(lColorVal); // Получаем яркость (Red) для маски шрифта
+          lPixelPtr^ := (Cardinal(lAlpha) shl 24) or $00FFFFFF;
+          Inc(lPixelPtr);
+        end;
       end;
+
+      glGenTextures(1, @fTextureId);
+      glBindTexture(GL_TEXTURE_2D, fTextureId);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, lTexWidth, lTexHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, lRawData);
+    finally
+      FreeMem(lRawData);
     end;
 
-    glGenTextures(1, @fTextureId);
-    glBindTexture(GL_TEXTURE_2D, fTextureId);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, lTexWidth, lTexHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, lRawData);
+    // Сохраняем атлас в файл для визуальной диагностики
+    try
+      lBitmap.SaveToFile('font_atlas_' + fName + '.bmp');
+    except
+    end;
+
+    // Логирование параметров шрифта в файл
+    try
+      AssignFile(lFile, 'font_debug.log');
+      if FileExists('font_debug.log') then
+        Append(lFile)
+      else
+        Rewrite(lFile);
+      WriteLn(lFile, Format('Font: %s, Scale: %.2f, Height: %d, TexWidth: %d, TexHeight: %d, SpaceWidth: %d, AWidth: %d',
+        [fName, fScale, lHeight, lTexWidth, lTexHeight, CharPixelWidth(' '), CharPixelWidth('A')]));
+      CloseFile(lFile);
+    except
+    end;
 
     fTextHeight := lHeight;
   finally

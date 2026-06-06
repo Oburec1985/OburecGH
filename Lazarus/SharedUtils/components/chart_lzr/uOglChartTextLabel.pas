@@ -1,5 +1,10 @@
 unit uOglChartTextLabel;
 
+{
+  Модуль uOglChartTextLabel
+  Описание: Классы текстовых меток и флажков с привязкой к координатам графика или экрана.
+}
+
 {$mode objfpc}{$H+}
 
 interface

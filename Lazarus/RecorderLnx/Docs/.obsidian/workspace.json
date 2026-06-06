@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "README_MnemonicControls.md",
+                "file": "notes_spectra_lazarus.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "README_MnemonicControls"
+              "title": "notes_spectra_lazarus"
             }
           }
         ]
@@ -78,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 200
   },
   "right": {
     "id": "056049d145f292ee",
@@ -185,10 +185,15 @@
   },
   "active": "5887f9d2481b1755",
   "lastOpenFiles": [
-    "original-recorder-trend-component.md",
-    "original-recorder-block-recording.md",
+    "notes_spectrum_math_benchmarks.md",
+    "spectrum_best_pipeline.md",
+    "notes_spectra_lazarus.md",
+    "data_sources_architecture.md",
     "development-rules.md",
+    "original-recorder-block-recording.md",
     "README_MnemonicControls.md",
+    "original-recorder-trend-component.md",
+    "notes_spectra_lazarus.md.resolved",
     "current-plan.md"
   ]
 }

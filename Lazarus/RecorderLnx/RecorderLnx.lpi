@@ -92,6 +92,14 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="Core/uRecorderSpectrumEngine.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderFrequencyBands.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
         <Filename Value="UI/uFormPagesDialog.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
@@ -105,6 +113,10 @@
         <ComponentName Value="RecorderSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderFrequencyBandsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="UI/uRecorderCommandImages.pas"/>

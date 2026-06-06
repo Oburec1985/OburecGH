@@ -1,4 +1,9 @@
 unit uOglChartVertexEditListener;
+
+{
+  Модуль uOglChartVertexEditListener
+  Описание: Слушатель для интерактивного редактирования точек полигональных объектов на графике.
+}
 {$mode objfpc}{$H+}
 interface
 uses

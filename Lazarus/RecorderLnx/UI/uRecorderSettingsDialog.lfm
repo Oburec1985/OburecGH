@@ -656,33 +656,33 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         Left = 227
         Height = 491
         Top = 0
-        Width = 655
+        Width = 340
         Align = alClient
         Caption = 'Выбранные каналы'
         ClientHeight = 471
-        ClientWidth = 651
+        ClientWidth = 336
         TabOrder = 2
         object pnFilter: TPanel
           Left = 0
           Height = 36
           Top = 0
-          Width = 651
+          Width = 336
           Align = alTop
           BevelOuter = bvNone
           ClientHeight = 36
-          ClientWidth = 651
+          ClientWidth = 336
           TabOrder = 0
           object edSelectedChannelsFilter: TEdit
             Left = 8
             Height = 23
             Top = 6
-            Width = 600
+            Width = 285
             Anchors = [akTop, akLeft, akRight]
             TabOrder = 0
             Text = 'Filter'
           end
           object btnSelectedChannelsClear: TButton
-            Left = 616
+            Left = 302
             Height = 24
             Top = 6
             Width = 24
@@ -695,15 +695,267 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
           Left = 0
           Height = 435
           Top = 36
-          Width = 651
+          Width = 336
           Align = alClient
           ColCount = 7
+          DragMode = dmAutomatic
           FixedCols = 0
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowSelect]
           RowCount = 2
           TabOrder = 1
           OnDragDrop = fSelectedChannelsGridDragDrop
           OnDragOver = fSelectedChannelsGridDragOver
+        end
+      end
+      object spChannelAlgorithms: TSplitter
+        Left = 567
+        Height = 491
+        Top = 0
+        Width = 5
+        Align = alRight
+      end
+      object gbChannelAlgorithms: TGroupBox
+        Left = 572
+        Height = 491
+        Top = 0
+        Width = 310
+        Align = alRight
+        Caption = 'Алгоритмы'
+        ClientHeight = 471
+        ClientWidth = 306
+        TabOrder = 3
+        object pnAlgorithmTop: TPanel
+          Left = 0
+          Height = 38
+          Top = 0
+          Width = 306
+          Align = alTop
+          BevelOuter = bvNone
+          ClientHeight = 38
+          ClientWidth = 306
+          TabOrder = 0
+          object fAlgorithmKindCombo: TComboBox
+            Left = 8
+            Height = 23
+            Top = 8
+            Width = 184
+            ItemHeight = 15
+            Items.Strings = (
+              'Спектр'
+            )
+            Style = csDropDownList
+            TabOrder = 0
+          end
+          object btnAlgorithmAdd: TBitBtn
+            Left = 200
+            Height = 26
+            Hint = 'Создать алгоритм для выбранных каналов'
+            Top = 6
+            Width = 30
+            Caption = '+'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 1
+            OnClick = btnAlgorithmAddClick
+          end
+          object btnAlgorithmRemove: TBitBtn
+            Left = 236
+            Height = 26
+            Hint = 'Удалить выбранный алгоритм'
+            Top = 6
+            Width = 30
+            Caption = '-'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 2
+            OnClick = btnAlgorithmRemoveClick
+          end
+          object btnFrequencyBands: TBitBtn
+            Left = 272
+            Height = 26
+            Hint = 'Настроить частотные полосы'
+            Top = 6
+            Width = 30
+            Caption = '...'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 3
+            OnClick = btnFrequencyBandsClick
+          end
+        end
+        object pnAlgorithmSettings: TPanel
+          Left = 0
+          Height = 214
+          Top = 257
+          Width = 306
+          Align = alBottom
+          BevelOuter = bvNone
+          ClientHeight = 214
+          ClientWidth = 306
+          TabOrder = 1
+          object lbAlgorithmFftSize: TLabel
+            Left = 8
+            Height = 15
+            Top = 10
+            Width = 24
+            Caption = 'FFT'
+            ParentColor = False
+          end
+          object lbAlgorithmSampleRate: TLabel
+            Left = 112
+            Height = 15
+            Top = 10
+            Width = 86
+            Caption = 'Частота опроса'
+            ParentColor = False
+          end
+          object fAlgorithmPortionLabel: TLabel
+            Left = 214
+            Height = 15
+            Top = 10
+            Width = 62
+            Caption = 'порция: - с'
+            ParentColor = False
+          end
+          object lbAlgorithmOverlap: TLabel
+            Left = 112
+            Height = 15
+            Top = 50
+            Width = 73
+            Caption = 'Перекрытие'
+            ParentColor = False
+          end
+          object lbAlgorithmWindow: TLabel
+            Left = 8
+            Height = 15
+            Top = 90
+            Width = 35
+            Caption = 'Окно'
+            ParentColor = False
+          end
+          object lbAlgorithmAverage: TLabel
+            Left = 8
+            Height = 15
+            Top = 50
+            Width = 69
+            Caption = 'Усреднение'
+            ParentColor = False
+          end
+          object fAlgorithmFftSizeEdit: TEdit
+            Left = 8
+            Height = 23
+            Top = 24
+            Width = 92
+            TabOrder = 0
+            Text = '8192'
+          end
+          object fAlgorithmSampleRateEdit: TEdit
+            Left = 112
+            Height = 23
+            Top = 24
+            Width = 84
+            TabOrder = 1
+            Text = '0'
+          end
+          object fAlgorithmAverageBlocksEdit: TEdit
+            Left = 8
+            Height = 23
+            Top = 64
+            Width = 92
+            TabOrder = 2
+            Text = '1'
+          end
+          object fAlgorithmOverlapCombo: TComboBox
+            Left = 112
+            Height = 23
+            Top = 64
+            Width = 92
+            ItemHeight = 15
+            Items.Strings = (
+              'без перекрытия'
+              '1/2'
+              '1/4'
+            )
+            Style = csDropDownList
+            TabOrder = 3
+          end
+          object fAlgorithmOverlapEdit: TEdit
+            Left = 214
+            Height = 23
+            Top = 64
+            Width = 62
+            TabOrder = 4
+            Text = '0'
+          end
+          object fAlgorithmWindowCombo: TComboBox
+            Left = 8
+            Height = 23
+            Top = 104
+            Width = 92
+            ItemHeight = 15
+            Items.Strings = (
+              'Rect'
+              'Hann'
+              'Hamming'
+              'Blackman'
+              'FlatTop'
+            )
+            Style = csDropDownList
+            TabOrder = 5
+          end
+          object fAlgorithmZeroPadCheck: TCheckBox
+            Left = 112
+            Height = 19
+            Top = 106
+            Width = 132
+            Caption = 'Дополнять нулями'
+            TabOrder = 6
+          end
+          object fAlgorithmAhCorrectionCheck: TCheckBox
+            Left = 112
+            Height = 19
+            Top = 130
+            Width = 116
+            Caption = 'Коррекция АЧХ'
+            TabOrder = 7
+          end
+          object fAlgorithmIntegrationGroup: TRadioGroup
+            Left = 8
+            Height = 58
+            Top = 142
+            Width = 188
+            Caption = 'Интегрирование'
+            Columns = 3
+            Items.Strings = (
+              'без'
+              'x1'
+              'x2'
+            )
+            TabOrder = 8
+          end
+          object btnAlgorithmConfig: TBitBtn
+            Left = 206
+            Height = 28
+            Top = 172
+            Width = 88
+            Caption = 'Применить'
+            TabOrder = 9
+            OnClick = btnAlgorithmConfigClick
+          end
+        end
+        object fAlgorithmsTree: TTreeView
+          Left = 0
+          Height = 219
+          Top = 38
+          Width = 306
+          Align = alClient
+          DragMode = dmAutomatic
+          ReadOnly = True
+          TabOrder = 2
+          Options = [tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+          OnChange = fAlgorithmsTreeChange
+          OnDragDrop = fAlgorithmsTreeDragDrop
+          OnDragOver = fAlgorithmsTreeDragOver
         end
       end
     end

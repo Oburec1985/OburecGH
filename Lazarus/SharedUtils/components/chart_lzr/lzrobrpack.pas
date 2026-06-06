@@ -4,6 +4,11 @@
 
 unit LzrObrPack;
 
+{
+  Модуль lzrobrpack
+  Описание: Пакет регистрации визуальных компонентов OGlChart для среды Lazarus LCL.
+}
+
 {$warn 5023 off : no warning about unused units}
 interface
 

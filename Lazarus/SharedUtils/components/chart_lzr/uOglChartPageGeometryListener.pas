@@ -1,5 +1,10 @@
 unit uOglChartPageGeometryListener;
 
+{
+  Модуль uOglChartPageGeometryListener
+  Описание: Слушатель для изменения размеров страниц и перемещения их границ мышью.
+}
+
 { objfpc}{+}
 
 interface

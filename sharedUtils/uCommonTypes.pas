@@ -1,5 +1,7 @@
 unit uCommonTypes;
 
+{$mode delphi}
+
 interface
 
 uses classes, types, windows, sysutils;
@@ -206,6 +208,9 @@ implementation
 
 uses
   ucommonmath, mathfunction;
+
+
+
 
 function getSubStrByIndex(src: string; tabs: char;
   p_start, index: integer): string;

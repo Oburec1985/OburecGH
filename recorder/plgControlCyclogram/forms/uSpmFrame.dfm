@@ -1,5 +1,5 @@
 inherited SpmFrame: TSpmFrame
-  Height = 387
+  Height = 424
   ParentBackground = False
   ParentColor = False
   object ChannelLabel: TLabel [2]
@@ -45,7 +45,7 @@ inherited SpmFrame: TSpmFrame
   end
   object SpmPan: TPanel
     Left = 0
-    Top = 178
+    Top = 215
     Width = 451
     Height = 209
     Align = alBottom

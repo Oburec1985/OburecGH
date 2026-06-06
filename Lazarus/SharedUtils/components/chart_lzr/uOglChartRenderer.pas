@@ -1649,7 +1649,7 @@ begin
       for I := 0 to lLines.Count - 1 do
       begin
         // ≈сли текст выходит за пределы рамки по вертикали, прекращаем отрисовку
-        if lLineY + lFont.TextPixelHeight > lLabelRect.Bottom - 2 then
+        if (I > 0) and (lLineY + lFont.TextPixelHeight > lLabelRect.Bottom - 2) then
           Break;
         DrawText(lLines[I], lLabelRect.Left + 4, lLineY, lFont);
         lLineY := lLineY + lFont.TextPixelHeight + 2;

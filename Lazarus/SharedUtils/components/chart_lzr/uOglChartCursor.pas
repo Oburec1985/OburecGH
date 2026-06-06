@@ -1,5 +1,10 @@
 unit uOglChartCursor;
 
+{
+  Модуль uOglChartCursor
+  Описание: Класс интерактивного курсора-визира для измерения текущих значений трендов.
+}
+
 { objfpc}{+}
 
 interface

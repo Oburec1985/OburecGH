@@ -1,5 +1,10 @@
 unit uOglChartFrameListener;
 
+{
+  Модуль uOglChartFrameListener
+  Описание: Слушатель и диспетчер кадров для синхронизации перерисовки графиков.
+}
+
 { objfpc}{+}
 
 interface
